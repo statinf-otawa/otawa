@@ -1,4 +1,9 @@
-2004-07-15   casse <hugues.casse@irit.fr>
+2004-09-06 casse <hugues.casse@irit.fr>
+* Auto{conf|make} build system improving for more flexiblity (selection of
+optional module -- currently gliss or heptane, path for external dependencies
+-- elm or glissppc).
+
+2004-07-15 casse <hugues.casse@irit.fr>
 
 * PROG: new method for building the CFG taking a positive view a branch (a CFG starts at a called block or if a function label exists for it).
 * EXAMPLES: dumpcfg now inlines the function in its output (warning: "bl 1" or recursive function all are not yet supported).

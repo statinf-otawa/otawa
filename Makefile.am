@@ -2,7 +2,7 @@ SUBDIRS=src examples include
 
 EXTRA_DIST=Doxyfile
 
-pkgdata_DATA=$(shell if test $(USE_DOX) = no; then echo html; fi)
+pkgdata_DATA=$(shell if test $(USE_DOX) = yes; then echo html; fi)
 
 install-data-local:
 	cp -R html $(pkgdatadir)

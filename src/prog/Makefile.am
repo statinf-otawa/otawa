@@ -22,5 +22,5 @@ libprog_a_SOURCES = \
 	CFGInfo.cpp \
 	CFG.cpp \
 	properties.cpp
-INCLUDES=-I../../include -I../../elm/include
+INCLUDES=-I../../include -I@ELM_PATH@/include
 CXXFLAGS=-g3

@@ -1,4 +1,5 @@
 lib_LIBRARIES=libgliss.a
+
 libgliss_a_SOURCES = \
 	loader.cpp \
 	platform.cpp \
@@ -9,5 +10,8 @@ libgliss_a_SOURCES = \
 	ControlInst.cpp \
 	Symbol.cpp
 
-INCLUDES=-I../../include -I../../elm/include -I../../gliss-ppc/include -I../../gliss-ppc/extern
+INCLUDES = \
+	-I../../include \
+	-I@ELM_PATH@/include \
+	@GLISSPPC_CFLAGS@
 CXXFLAGS=-g3

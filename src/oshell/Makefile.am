@@ -13,7 +13,11 @@ oshell_SOURCES= \
 
 YFLAGS=-d
 CXXFLAGS=-g3
-INCLUDES=-I../../include -I../../elm/include
-oshell_LDADD=-L../../elm/src -L../prog -L../gliss -L../../gliss-ppc/lib -L../heptane -lothept -lgliss -lprog -lelm -lemul
+INCLUDES=-I../../include -I@ELM_PATH@/include
+oshell_LDADD= \
+	-L../heptane -lothept \
+	@GLISSPPC_LDADD@ \
+	-L../prog -lprog \
+	-L@ELM_PATH@/src -lelm
 
 oshell_DEPENDENCIES=../gliss/libgliss.a ../prog/libprog.a ../heptane/libothept.a
