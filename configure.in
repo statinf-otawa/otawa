@@ -107,7 +107,7 @@ if test $with_lp_solve != no; then
 	else
 		LP_SOLVE_PATH=$with_lp_solve
 	fi
-	if test ! -e "$LP_SOLVE_PATH/lpklib.a"; then
+	if test ! -e "$LP_SOLVE_PATH/liblpk.a"; then
 		if test $with_lp_solve = yes; then
 			AC_MSG_RESULT([not found])
 		else
@@ -121,7 +121,7 @@ if test $with_lp_solve != no; then
 		fi
 		LP_SOLVE_DEF=-DLP_SOLVE
 		LP_SOLVE_LIB=lp_solve
-		LP_SOLVE_LDADD="$LP_SOLVE_PATH/lpklib.a -lm"
+		LP_SOLVE_LDADD="-L$LP_SOLVE_PATH/ -llpk -lm"
 		LP_SOLVE_CFLAGS="-DLP_SOLVE_ENABLED -I$LP_SOLVE_PATH"
 	fi
 fi
