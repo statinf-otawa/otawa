@@ -7,7 +7,7 @@
 #ifndef OTAWA_PROG_FRAMEWORK_H
 #define OTAWA_PROG_FRAMEWORK_H
 
-#include <elm/datastruct/Collection.h>
+#include <elm/Collection.h>
 #include <otawa/properties.h>
 #include <otawa/prog/Process.h>
 
@@ -20,6 +20,9 @@ class File;
 class Inst;
 class Manager;
 class Platform;
+namespace ilp {
+	class System;
+}
 
 // FrameWork class
 class FrameWork: public Process {
@@ -32,7 +35,7 @@ public:
 	inline Process *process(void) const { return proc; };
 	
 	// Process overload
-	virtual const Collection<File *> *files(void) const { return proc->files(); };
+	virtual const elm::Collection<File *> *files(void) const { return proc->files(); };
 	virtual File *createFile(void) { return proc->createFile(); };
 	virtual File *loadFile(elm::CString path) { return proc->loadFile(path); };
 	virtual Platform *platform(void) { return proc->platform(); };
@@ -44,6 +47,9 @@ public:
 	void buildCFG(void);
 	CFGInfo *getCFGInfo(void);
 	CFG *getStartCFG(void);
+	
+	// ILP support
+	ilp::System *newILPSystem(bool max = true);
 };
 
 };	// otawa
