@@ -1,0 +1,18 @@
+Otawa 0.1 (2.18.04)
+
+First version.
+Most of interface class are provided but neither loader, nor architecture is
+actually available. GLISS should be used for providing PPC support.
+
+NOTE
+Otawa 0.1 has been developed with GCC 3.3.1 but it should work with any GCC.
+It requires also the ELM library, V0.1. Just unzip it and compile it in the base
+directory of Otawa or add it in default include and library files.
+
+TO DO
+- Use GLISS for reading PPC architecture.
+- Use GLISS library as the PPC ELF loader.
+- Incorporating the Heptane compilation chain in the PPC ELF loader.
+- Add AST classes.
+- Add Heptane AST information for building the AST.
+
