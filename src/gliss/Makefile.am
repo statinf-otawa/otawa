@@ -5,7 +5,9 @@ libgliss_a_SOURCES = \
 	Process.cpp \
 	File.cpp \
 	CodeSegment.cpp \
-	Instruction.cpp
+	Inst.cpp \
+	ControlInst.cpp \
+	Symbol.cpp
 
 INCLUDES=-I../../include -I../../elm/include -I../../gliss-ppc/include -I../../gliss-ppc/extern
 CXXFLAGS=-g3
