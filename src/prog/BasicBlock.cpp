@@ -43,6 +43,7 @@ BasicBlock::BasicBlock(Inst *inst): flags(0) {
 /**
  * Get the target basic block if the last branch instruction is taken.
  * @return Target basic block or null if the last instruction is not a branch.
+ * @deprecated{Use @ref Edge class instead.}
  */
 BasicBlock *BasicBlock::getTaken(void) {
 	for(elm::Iterator<Edge *> edge(outEdges()); edge; edge++)
@@ -55,6 +56,7 @@ BasicBlock *BasicBlock::getTaken(void) {
 /**
  * Get the following basic block if the last branch instruction is not taken.
  * @return Following basic block or null if the last instruction is a sub-program return.
+ * @deprecated{Use @ref Edge class instead.}
  */
 BasicBlock *BasicBlock::getNotTaken(void) {
 	for(elm::Iterator<Edge *> edge(outEdges()); edge; edge++)
@@ -67,6 +69,7 @@ BasicBlock *BasicBlock::getNotTaken(void) {
 /**
  * Set the target basic block of the branch last instruction.
  * @param bb	New target basic block.
+ * @deprecated{Use @ref Edge class instead.}
  */
 void BasicBlock::setTaken(BasicBlock *bb) {
 	assert(bb);
@@ -78,6 +81,7 @@ void BasicBlock::setTaken(BasicBlock *bb) {
 /**
  * Set the following basic block.
  * @param bb	New following basic block.
+ * @deprecated{Use @ref Edge class instead.}
  */
 void BasicBlock::setNotTaken(BasicBlock *bb) {
 	assert(bb);
@@ -199,6 +203,61 @@ BasicBlock::~BasicBlock(void) {
 	if(_head)
 		delete _head;
 };
+
+
+/**
+ * @fn void BasicBlock::addInEdge(Edge *edge);
+ * Add an input edge to the basic block input list.
+ * @param edge	Edge to add.
+ */
+
+
+/**
+ * @fn void BasicBlock::addOutEdge(Edge *edge);
+ * Add an output edge to the basic block output list.
+ * @param edge	Edge to add.
+ */
+
+
+/**
+ * @fn void BasicBlock::removeInEdge(Edge *edge);
+ * Remove an input edge from the basic block input list.
+ * @param edge	Edge to remove.
+ */
+
+
+/**
+ * @fn void BasicBlock::removeOutEdge(Edge *edge);
+ * Remove an output edge from the basic block output list.
+ * @param edge	Edge to remove.
+ */
+
+
+/**
+ * @fn IteratorInst<Edge *> *BasicBlock::inEdges(void);
+ * Get an iterator on the input edges.
+ * @return	Iterator on output edges.
+ */
+
+
+/**
+ * @fn IteratorInst<Edge *> *BasicBlock::outEdges(void);
+ * Get an iterator on the output edges.
+ * @return	Iterator on output edges.
+ */
+
+
+/**
+ * @fn IteratorInst<Inst *> *BasicBlock::visit(void);
+ * Get an iterator on the instructions of the baic block.
+ * @return	Iterator on instructions.
+ */
+
+
+/**
+ * @fn BasicBlock::operator IteratorInst<Inst *> *(void);
+ * Same as @ref visit() but allows passing basic block in @ref Iterator class.
+ */
 
 
 /**
