@@ -71,4 +71,36 @@ namespace otawa {
  * @return		Found instruction or null if it cannot be found.
  */
 
+
+/**
+ * Find the address of the given label. For performing it, it looks iteratively
+ * one each file of the process until finding it.
+ * @param label		Label to find.
+ * @return			Found address or null.
+ */
+address_t Process::findLabel(String& label) {
+	address_t result = 0;
+	for(Iterator<File *> file(files()->visit()); file; file++) {
+		result = file->findLabel(label);
+		if(result)
+			break;
+	}
+	return result;
+}
+
+
+/**
+ * find the instruction at the given label if the label matches a code
+ * segment.
+ * @param label		Label to look for.
+ * @return			Matching instruction or null.
+ */
+Inst *Process::findInstAt(String& label) {
+	address_t addr = findLabel(label);
+	if(!addr)
+		return 0;
+	else
+		return findInstAt(addr);
+}
+
 } // otawa
