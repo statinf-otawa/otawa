@@ -8,13 +8,14 @@
 #define OTAWA_BASE_H
 
 #include <stdarg.h>
+#include <elm/utility.h>
 #include <elm/string.h>
 
 namespace otawa {
 using namespace elm;
 
 // Exception class
-class Exception {
+class Exception: public elm::Exception {
 	String msg;
 protected:
 	void build(CString format, va_list args);
@@ -24,7 +25,7 @@ public:
 	Exception(const char *format, va_list args);
 	Exception(const char *format, ...);
 	virtual ~Exception(void);
-	inline const String& getMessage(void) const { return msg; };
+	virtual String message(void) { return msg; };
 };
 
 // Base types

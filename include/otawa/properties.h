@@ -23,8 +23,10 @@ class Property {
 	friend class PropList;
 	Property *next;
 	id_t id;
-public:
+protected:
 	virtual ~Property(void) { };
+	virtual Property *copy(void) { return new Property(id); };
+public:
 	static id_t getID(CString name);
 	inline Property(id_t _id): id(_id) { };
 	inline Property(CString name): id(getID(name)) { };
@@ -39,6 +41,7 @@ protected:
 	inline GenericProperty(id_t id, T _value): Property(id), value(_value) { };
 	inline GenericProperty(CString name, T _value): Property(name), value(_value) { };
 	virtual ~GenericProperty(void) { };
+	virtual Property *copy(void) { return new GenericProperty<T>(getID(), value); };
 public:
 	static GenericProperty<T> *make(id_t id, const T value) {
 		return new GenericProperty(id, value);
@@ -49,15 +52,17 @@ public:
 // PropList class
 class PropList {
 	Property *head;
+protected:
+	virtual Property *getDeep(id_t id);
 public:
+	inline PropList(const PropList& props) { addProps(props); };
 	inline PropList(void): head(0) { };
-	inline ~PropList(void) { clear(); };
+	inline ~PropList(void) { clearProps(); };
 
 	// Property access
 	Property *getProp(id_t id);
 	void setProp(Property *prop);
 	void removeProp(id_t id);
-	void clear(void);
 	inline void setProp(id_t id) { setProp(new Property(id)); };
 	
 	// Property value access
@@ -65,6 +70,10 @@ public:
 	template <class T> inline Option<T> get(id_t id);
 	template <class T> inline T& use(id_t id);
 	template <class T> inline void set(id_t id, const T value);
+
+	// Global management
+	void clearProps(void);
+	void addProps(const PropList& props);
 };
 
 
