@@ -311,7 +311,7 @@ void Call::process(BasicBlock *bb, int& index) {
 	// Display the following BBs for an inlined call
 	else if(bb->isCall() && inline_calls) {
 		
-		// Look not-taken tagey
+		// Look not-taken target
 		BasicBlock *target = bb->getNotTaken();
 		assert(target);
 		int next = map->get(target, -1);
@@ -349,19 +349,21 @@ void Call::process(BasicBlock *bb, int& index) {
 		// Not taken
 		BasicBlock *target = bb->getNotTaken();
 		if(target) {
-			int next = map->get(target, -1);
-			assert(next >= 0);
-			next += base;
-			cout << ' ' << next;
+			int target_num = map->get(target, -1);
+			assert(target_num >= 0);
+			target_num += base;
+			cout << ' ' << target_num;
 		}
 		
 		// Taken
-		target = bb->getNotTaken();
-		if(target) {
-			int next = map->get(target, -1);
-			assert(next >= 0);
-			next += base;
-			cout << ' ' << next;
+		if(!bb->isCall()) {
+			target = bb->getTaken();
+			if(target) {
+				int target_num = map->get(target, -1);
+				assert(target_num >= 0);
+				target_num += base;
+				cout << ' ' << target_num;
+			}
 		}
 	}
 	
