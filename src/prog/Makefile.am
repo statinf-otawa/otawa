@@ -1,4 +1,5 @@
 lib_LIBRARIES=libprog.a
+
 libprog_a_SOURCES = \
 	BlockAST.cpp \
 	FunAST.cpp \
@@ -27,6 +28,18 @@ libprog_a_SOURCES = \
 	prop_Property.cpp \
 	ilp_Var.cpp \
 	ilp_Constraint.cpp \
-	ilp_System.h
-INCLUDES=-I../../include @ELM_CFLAGS@
-CXXFLAGS=-g3
+	ilp_System.cpp \
+	proc_Processor.cpp \
+	proc_CFGProcessor.cpp \
+	ipet_IPET.cpp \
+	ipet_TrivialBBTime.cpp 
+	
+INCLUDES=\
+	-I../../include \
+	@ELM_CFLAGS@
+	
+CXXFLAGS=\
+	-g3 \
+	@LP_SOLVE_DEF@
+
+
