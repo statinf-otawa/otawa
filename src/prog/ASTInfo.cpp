@@ -38,7 +38,7 @@ ASTInfo::ASTInfo(Process *proc) {
 
 
 /**
- * @fn Collection<FunAST *>& ASTInfo::functions(void);
+ * @fn elm::Collection<FunAST *>& ASTInfo::functions(void);
  * Get the colleciton of functions.
  * @return Function collection.
  */
