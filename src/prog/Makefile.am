@@ -24,6 +24,9 @@ libprog_a_SOURCES = \
 	Edge.cpp \
 	prop_Identifier.cpp \
 	prop_PropList.cpp \
-	prop_Property.cpp
+	prop_Property.cpp \
+	ilp_Var.cpp \
+	ilp_Constraint.cpp \
+	ilp_System.h
 INCLUDES=-I../../include @ELM_CFLAGS@
 CXXFLAGS=-g3
