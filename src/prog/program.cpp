@@ -170,8 +170,23 @@ id_t File::ID_Label = Property::getID("otawa.File.Label");
 /**
  * @fn address_t File::findLabel(const String& label);
  * Find the address of the given label.
- * @param label Label to find.	
+ * @param label Label to find.
  * @return	Address of the label or null if label is not found.
+ */
+
+
+/**
+ * @fn Symbol *File::findSymbol(String name);
+ * Find a symbol  by its name.
+ * @param name	Symbol name.
+ * @return		Found symbol or null.
+ */
+
+
+/**
+ * @fn elm::datastruct::Collection<Symbol *>& symbols(void) ;
+ * Get the collection of existing symbols.
+ * @return	Symbol collection.
  */
 
 }; // namespace otawa
