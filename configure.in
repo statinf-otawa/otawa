@@ -70,11 +70,17 @@ AC_OUTPUT([
 	Makefile
 	src/Makefile
 	src/prog/Makefile
+	src/ipet/Makefile
 	src/gliss/Makefile
 	src/oshell/Makefile
 	src/heptane/Makefile
 	include/Makefile
 	include/otawa/Makefile
+	include/otawa/ast/Makefile
+	include/otawa/cfg/Makefile
+	include/otawa/gliss/Makefile
+	include/otawa/prog/Makefile
+	include/otawa/prop/Makefile
 	examples/Makefile
 	examples/dumpcfg/Makefile
 ], [])
