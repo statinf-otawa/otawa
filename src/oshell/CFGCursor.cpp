@@ -53,21 +53,21 @@ void CFGCursor::list(Output& out) {
  */
 void CFGCursor::build(void) {
 	built = true;
-	genstruct::DLList< AutoPtr<BasicBlock> > remain;
+	genstruct::DLList<BasicBlock *> remain;
 	remain.addLast(cfg->entry());	
 	
 	// Find all basic blocks
 	for(int num = 0; !remain.isEmpty(); num++) {
 		
 		// Get the current BB
-		AutoPtr<BasicBlock> bb = remain.first();
+		BasicBlock *bb = remain.first();
 		remain.removeFirst();
 		if(bbs.contains(bb))
 			continue;
 		bbs.insert(bb);
 		
 		// Display not-taken
-		AutoPtr<BasicBlock> target = bb->getNotTaken();
+		BasicBlock *target = bb->getNotTaken();
 		if(target && !bbs.contains(target))
 			remain.addLast(target);
 
@@ -101,11 +101,11 @@ id_t CFGCursor::ID_Number = Property::getID("OShell.Number");
  * Display the graph of the CFG.
  * @param bb	Basic bloc to display.
  */
-int CFGCursor::ListVisitor::process(AutoPtr<BasicBlock> bb) {
+int CFGCursor::ListVisitor::process(BasicBlock *bb) {
 	
 	// Display header
 	out << "BB " << bb->use<int>(ID_Number) << ": ";
-	AutoPtr<BasicBlock> target = bb->getNotTaken();
+	BasicBlock *target = bb->getNotTaken();
 	if(target)
 		out << " NT(" << target->use<int>(ID_Number) << ')';
 	if(bb->isReturn())

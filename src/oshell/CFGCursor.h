@@ -18,17 +18,17 @@ namespace otawa {
 class CFGCursor: public Cursor {
 	CFG *cfg;
 	bool built;
-	genstruct::SortedBinTree< AutoPtr<BasicBlock> > bbs;
+	genstruct::SortedBinTree< BasicBlock *> bbs;
 	void build(void);
 	static id_t ID_Number;
 
 	// Visitor for numbering basic blocks
 	class BasicBlockVisitor
-	: public genstruct::SortedBinTree< AutoPtr<BasicBlock> >::Visitor {
+	: public genstruct::SortedBinTree<BasicBlock *>::Visitor {
 		int cnt;
 	public:
 		inline BasicBlockVisitor(void): cnt(0) { };
-		int process(AutoPtr<BasicBlock> bb) {
+		int process(BasicBlock *bb) {
 			bb->set<int>(ID_Number, cnt++);
 			return 1;
 		}
@@ -36,11 +36,11 @@ class CFGCursor: public Cursor {
 	
 	// Visitor for listing the CFG
 	class ListVisitor
-	: public genstruct::SortedBinTree< AutoPtr<BasicBlock> >::Visitor {
+	: public genstruct::SortedBinTree<BasicBlock *>::Visitor {
 		Output& out;
 	public:
 		inline ListVisitor(Output& _out): out(_out) { };
-		int process(AutoPtr<BasicBlock> bb);
+		int process(BasicBlock *bb);
 	};
 	
 public:

@@ -38,7 +38,7 @@ void FrameWorkCursor::list(Output& out) {
 	out << '\n';
 	
 	// Display CFG if any
-	AutoPtr<CFGInfo> info = fw->get< AutoPtr<CFGInfo> >(CFGInfo::ID, 0);
+	CFGInfo *info = fw->get<CFGInfo *>(CFGInfo::ID, 0);
 	if(info) {
 		out << "CFG:\n";
 		i = 0;

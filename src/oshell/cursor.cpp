@@ -17,15 +17,15 @@
 namespace otawa {
 
 // BasicBlock comparator
-class BasicBlockComparator: public elm::Comparator< AutoPtr<BasicBlock> > {
+class BasicBlockComparator: public elm::Comparator<BasicBlock *> {
 public:
-	virtual int compare(AutoPtr<BasicBlock> v1, AutoPtr<BasicBlock> v2) {
+	virtual int compare(BasicBlock *v1, BasicBlock *v2) {
 		return v1->address() - v2->address();
 	}
 	static BasicBlockComparator comp;
 };
 BasicBlockComparator BasicBlockComparator::comp;
-Comparator< AutoPtr<BasicBlock> >& Comparator< AutoPtr<BasicBlock> >::def = otawa::BasicBlockComparator::comp;
+Comparator<BasicBlock *>& Comparator<BasicBlock *>::def = otawa::BasicBlockComparator::comp;
 	
 /**
  * @class GoException

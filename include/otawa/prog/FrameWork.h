@@ -42,7 +42,7 @@ public:
 	
 	// CFG Management
 	void buildCFG(void);
-	AutoPtr<CFGInfo> getCFGInfo(void);
+	CFGInfo *getCFGInfo(void);
 	CFG *getStartCFG(void);
 };
 
