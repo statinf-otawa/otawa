@@ -80,7 +80,7 @@ void CodeSegment::build(void) {
 		switch(inst->ident) {
 		case ID_BL_:
 			if(inst->instrinput[0].val.Int24 == 1) {
-				code.insts.addLast(new Inst(*this, addr));
+				code._insts.addLast(new Inst(*this, addr));
 				break;
 			}
 		case ID_B_:
@@ -95,10 +95,10 @@ void CodeSegment::build(void) {
 		case ID_BCLR_:
 		case ID_BCLRL_:
 		case ID_SC:
-			code.insts.addLast(new ControlInst(*this, addr));
+			code._insts.addLast(new ControlInst(*this, addr));
 			break;
 		default:
-			code.insts.addLast(new Inst(*this, addr));
+			code._insts.addLast(new Inst(*this, addr));
 			break;
 		}
 		
@@ -191,7 +191,7 @@ size_t CodeSegment::Code::size(void) {
  * @return First instruction.
  */
 Inst *CodeSegment::Code::first(void) const {
-	return (Inst *)insts.first();
+	return (Inst *)_insts.first();
 }
 
 
@@ -200,7 +200,7 @@ Inst *CodeSegment::Code::first(void) const {
  * @return Last instruction.
  */
 Inst *CodeSegment::Code::last(void) const {
-	return (Inst *)insts.last();
+	return (Inst *)_insts.last();
 }
 
 
@@ -219,11 +219,29 @@ CodeSegment::Code::Code(memory_t *memory, address_t address, size_t size)
  * Free all instructions.
  */
 CodeSegment::Code::~Code(void) {
-	while(!insts.isEmpty()) {
-		Inst *inst = (Inst *)insts.first();
-		insts.removeFirst();
+	while(!_insts.isEmpty()) {
+		Inst *inst = (Inst *)_insts.first();
+		_insts.removeFirst();
 		delete inst;
 	}
 }
+
+// Internal class
+class InstIter: public IteratorInst<otawa::Inst *> {
+	inhstruct::DLList& list;
+	Inst *cur;
+public:
+	inline InstIter(inhstruct::DLList& _list): list(_list),
+		cur((Inst *)_list.first()) { };
+	virtual bool ended(void) const { return cur->atEnd(); };
+	virtual Inst *item(void) const { return cur; };
+	virtual void next(void) { cur = (Inst *)cur->next(); };
+};
+
+// Code overload
+IteratorInst<otawa::Inst *> *CodeSegment::Code::insts(void) {
+	return new InstIter(_insts);
+}
+
 
 } } // otawa::gliss

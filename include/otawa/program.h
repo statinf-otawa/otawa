@@ -53,6 +53,7 @@ public:
 	virtual Inst *first(void) const = 0;
 	virtual Inst *last(void) const = 0;
 	virtual Code *toCode(void) { return this; };
+	virtual IteratorInst<Inst *> *insts(void) = 0;
 };
 
 

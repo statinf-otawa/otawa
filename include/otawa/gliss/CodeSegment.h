@@ -20,7 +20,7 @@ class CodeSegment: public ::otawa::Segment {
 	// Code representation
 	class Code: public otawa::Code {
 	public:
-		inhstruct::DLList insts;
+		inhstruct::DLList _insts;
 		memory_t *mem;
 		address_t addr;
 		size_t _size;
@@ -32,6 +32,7 @@ class CodeSegment: public ::otawa::Segment {
 		size_t size(void);
 		virtual Inst *first(void) const;
 		virtual Inst *last(void) const;
+		virtual IteratorInst<otawa::Inst *> *insts(void);
 	};
 
 	// attributes
