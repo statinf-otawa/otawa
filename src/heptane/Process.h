@@ -7,7 +7,7 @@
 #ifndef OTAWA_HEPTANE_PROCESS_H
 #define OTAWA_HEPTANE_PROCESS_H
 
-#include <gliss.h>
+#include <otawa/gliss.h>
 
 namespace otawa { namespace heptane {
 
