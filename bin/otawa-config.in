@@ -1,14 +1,27 @@
 #!@BASH_PATH@
 
+# Initialization
 option=
+cflags=
+libs=
+cflags_text="-I@prefix@/include @ELM_CFLAGS@"
+libs_text="-L@prefix@/lib -lprog -lgliss @ELM_LDADD@"
 
+# Decode options
 while test "$1" != ""; do
 	if test "$1" == "--cflags"; then
-		echo "-I@prefix@/include @ELM_CFLAGS@ "
+		cflags=ok;
 		option=ok
 	elif test "$1" == "--libs"; then
-		echo "-L@prefix@/lib -lprog -lgliss @ELM_LDADD@ @GLISSPPC_LDADD@"
+		libs=ok
 		option=ok
+	elif test "$1" == "glissppc"; then
+		libs_text="$libs_text @GLISSPPC_LDADD@"
+	elif test "$1" == "lp_solve"; then
+		libs_text="$libs_text @LP_SOLVE_LDADD@"
+	elif test "$1" == "--version"; then
+		echo "@PACKAGE@ @VERSION@"
+		exit
 	else
 		option=
 		echo "ERROR: unknown option '$1'."
@@ -17,6 +30,15 @@ while test "$1" != ""; do
 	shift
 done
 
+# Check options
 if test "$option" == ""; then
-	echo "SYNTAX: otawa-config [--cflags] [--libs]"
+	echo "SYNTAX: otawa-config [--cflags] [--libs] [lp_solve] [glissppc]"
+fi
+
+# Perform display
+if test "$cflags" == "ok"; then
+	echo $cflags_text
+fi
+if test "$libs" == "ok"; then
+	echo $libs_text
 fi
