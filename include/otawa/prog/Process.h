@@ -19,7 +19,7 @@ class Platform;
 class Manager;
 	
 // Process class
-class Process {
+class Process: public ProgObject {
 public:
 	virtual ~Process(void) { };
 	virtual const elm::datastruct::Collection<File *> *files(void) const = 0;
@@ -28,6 +28,7 @@ public:
 	virtual Platform *platform(void) = 0;
 	virtual Manager *manager(void) = 0;
 	virtual Inst *start(void) = 0;
+	virtual Inst *findInstAt(address_t addr) = 0;
 };
 
 } // otawa
