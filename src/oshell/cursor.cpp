@@ -25,7 +25,8 @@ public:
 	static BasicBlockComparator comp;
 };
 BasicBlockComparator BasicBlockComparator::comp;
-Comparator<BasicBlock *>& Comparator<BasicBlock *>::def = otawa::BasicBlockComparator::comp;
+template <> Comparator<BasicBlock *>& Comparator<BasicBlock *>::def
+	= otawa::BasicBlockComparator::comp;
 	
 /**
  * @class GoException
