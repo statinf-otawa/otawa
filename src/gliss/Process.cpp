@@ -7,6 +7,16 @@
 
 #include <otawa/gliss.h>
 
+// Trace
+#ifndef NDEBUG
+//#define GLISS_PROCESS_TRACE
+#ifdef GLISS_PROCESS_TRACE
+#	define TRACE(str) cerr << __FILE__ << ':' << __LINE__ << ": " << str << '\n';
+#else
+#	define TRACE(str)
+#endif
+#endif
+
 // Elf Header information
 extern Elf32_Ehdr Ehdr;
 
@@ -22,6 +32,7 @@ namespace otawa { namespace gliss {
  * @param _man	Caller manager.
  */
 Process::Process(Manager *_man, PropList& props): man(_man) {
+	TRACE(this << ".Process::Process(" << _man << ", " << &props << ')');
 	static char *default_argv[] = { "", 0 };
 	static char *default_envp[] = { 0 };
 	argc = props.get<int>(Loader::ID_Argc, 1);
@@ -98,6 +109,7 @@ Manager *Process::manager(void) {
  * Free all files.
  */
 Process::~Process(void) {
+	TRACE(this << ".Process::~Process()");
 	for(Iterator<otawa::File *> file(_files); file; file++)
 		delete (File *)*file;
 }
