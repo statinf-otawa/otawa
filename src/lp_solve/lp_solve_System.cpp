@@ -77,10 +77,25 @@ Var *System::getVar(ilp::Var *var) {
  */
 System::~System(void) {
 	Constraint *cons = conss;
-	while(cons) {
-		Constraint *next = cons->next();
+	while(cons)
 		delete cons;
-		cons = next;
+}
+
+
+/**
+ * Remove a constraint from the system.
+ * @param cons	Constraint to remove.
+ */
+void System::removeConstraint(Constraint *cons) {
+	if(cons == conss)
+		conss = conss->nxt;
+	else {
+		for(Constraint *prev = conss, *cur = conss->nxt; cur;
+		prev = cur, cur = cur->nxt)
+			if(cur == cons) {
+				prev->nxt = cur->nxt;
+				break;
+			}
 	}
 }
 

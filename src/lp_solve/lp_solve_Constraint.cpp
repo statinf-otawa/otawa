@@ -33,6 +33,7 @@ Constraint::~Constraint(void) {
 		delete fact;
 		fact = next;
 	}
+	sys->removeConstraint(this);
 }
 
 
