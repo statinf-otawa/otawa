@@ -34,7 +34,7 @@ Fixed versions of GLISS and GLISS-PPC are available from "~casse".
   I have not yet archived because I do not know if it must be inserted in the
 otawa CVS archive. For using, you may get it from "~casse/elm.tgz" and
 then uncompress it in otawa root directory. Then, you may compile it.
-	> tar xvfz ~casse/elm.gz
+	> tar xvfz ~casse/elm.tgz
 	> cd elm
 	> ./configure
 	> make
@@ -42,6 +42,7 @@ then uncompress it in otawa root directory. Then, you may compile it.
 (3) WORKING IN OTAWA
   Go in otawa and prepare the configuration:
   	> cd otawa
+	> autoheader
 	> aclocal
 	> autoconf
 	> automake --add-missing
