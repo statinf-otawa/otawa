@@ -228,7 +228,7 @@ CFG *CFGInfo::findCFG(BasicBlock *bb) {
  * Get the collection of CFG.
  * @return CFG collection.
  */
-const datastruct::Collection<CFG *>& CFGInfo::cfgs(void) {
+const elm::Collection<CFG *>& CFGInfo::cfgs(void) {
 	if(!built)
 		build();
 	return _cfgs;
