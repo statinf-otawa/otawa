@@ -37,10 +37,10 @@ public:
 // Cursor abstract class
 class Cursor: public Lock {
 protected:
-	Locked<Cursor> bck;
+	AutoPtr<Cursor> bck;
 	inline Cursor(void) { };
 	inline Cursor(Cursor *back): bck(back) { };
-	inline Cursor *back(void) const { return *bck; };
+	inline Cursor *back(void) const { return &bck; };
 public:
 	static Cursor *get(FrameWork *fw);
 	virtual ~Cursor(void) { };
@@ -49,22 +49,29 @@ public:
 	virtual void list(Output& out) { };
 	virtual void display(Output& out) { };
 	virtual Cursor *go(CString name) {
-		throw GoException();
+		if(bck)
+			bck->go(name);
+		else
+			throw GoException();
 	};
-	virtual Locked<Cursor> back(void) {
+	virtual AutoPtr<Cursor> back(void) {
 		if(bck.isNull())
 			throw BackException();
 		else
 			return bck;
 	};
 	virtual void perform(Output& out, int count, CString argv[]) {
-		throw PerformException("Undefined command.");
+		if(bck)
+			bck->perform(out, count, argv);
+		else
+			throw PerformException("Undefined command.");
 	};
 	virtual void help(Output& out) {
+		if(bck)
+			bck->help(out);
 	};
 };
 	
 }
 
 #endif	// OTAWA_OSHELL_H
-

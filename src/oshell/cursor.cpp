@@ -16,15 +16,15 @@
 namespace otawa {
 
 // BasicBlock comparator
-class BasicBlockComparator: public elm::Comparator<BasicBlock *> {
+class BasicBlockComparator: public elm::Comparator< AutoPtr<BasicBlock> > {
 public:
-	virtual int compare(BasicBlock *v1, BasicBlock *v2) {
+	virtual int compare(AutoPtr<BasicBlock> v1, AutoPtr<BasicBlock> v2) {
 		return v1->address() - v2->address();
 	}
 	static BasicBlockComparator comp;
 };
 BasicBlockComparator BasicBlockComparator::comp;
-Comparator<BasicBlock *>& Comparator<BasicBlock *>::def = otawa::BasicBlockComparator::comp;
+Comparator< AutoPtr<BasicBlock> >& Comparator< AutoPtr<BasicBlock> >::def = otawa::BasicBlockComparator::comp;
 	
 /**
  * Cursor used for examining CFG.
@@ -32,34 +32,38 @@ Comparator<BasicBlock *>& Comparator<BasicBlock *>::def = otawa::BasicBlockCompa
 class CFGCursor: public Cursor {
 	CFG *cfg;
 	bool built;
-	genstruct::SortedBinTree<BasicBlock *> bbs;
+	genstruct::SortedBinTree< AutoPtr<BasicBlock> > bbs;
 	void build(void);
 	static id_t ID_Number;
 
 	// Visitor for numbering basic blocks
-	class BasicBlockVisitor: public genstruct::SortedBinTree<BasicBlock *>::Visitor {
+	class BasicBlockVisitor: public genstruct::SortedBinTree< AutoPtr<BasicBlock> >::Visitor {
 		int cnt;
 	public:
 		inline BasicBlockVisitor(void): cnt(0) { };
-		int process(BasicBlock *bb) {
+		int process(AutoPtr<BasicBlock> bb) {
 			bb->set<int>(ID_Number, cnt++);
 			return 1;
 		}
 	};
 	
 	// Visitor for listing the CFG
-	class ListVisitor: public genstruct::SortedBinTree<BasicBlock *>::Visitor {
+	class ListVisitor: public genstruct::SortedBinTree< AutoPtr<BasicBlock> >::Visitor {
 		Output& out;
 	public:
 		inline ListVisitor(Output& _out): out(_out) { };
-		int process(BasicBlock *bb);
+		int process(AutoPtr<BasicBlock> bb);
 	};
 public:
 	CFGCursor(Cursor *back, CFG *_cfg): Cursor(back), cfg(_cfg), built(false) {
 	};
 	virtual void path(Output& out) {
 		back()->path(out);
-		out << "/CFG" << cfg->entry()->address();
+		String name = cfg->entry()->get<String>(File::ID_Label, "");
+		if(name)
+			out << '/' << name;
+		else
+			out << "/CFG" << cfg->entry()->address();
 	};	
 	virtual void list(Output& out);
 };
@@ -124,7 +128,7 @@ public:
 		for(Inst *inst = _code->first(); !inst->atEnd(); inst = inst->next())
 			if(addr == inst->address())
 				return new InstCursor(this, inst);
-		throw GoException();
+		return back()->go(name);
 	};
 };
 
@@ -157,7 +161,7 @@ public:
 	virtual void list(Output& out) {
 		out << "Items: \n";
 		int i = 0;
-		for(Iterator<ProgItem *> iter = seg->items(); iter; iter++, i++) {
+		for(Iterator<ProgItem *> iter(seg->items()); iter; iter++, i++) {
 			out << '\t' << i << ':' << iter->name() << '(';
 			out << (iter->toCode() ? "code" : "data");
 			out << ") [" << iter->address() << ':' << (int)iter->size() << "]\n";
@@ -168,7 +172,7 @@ public:
 	
 	virtual Cursor *go(CString name) {
 		int num = atoi(&name);
-		for(Iterator<ProgItem *> iter = seg->items(); iter; iter++, num--)
+		for(Iterator<ProgItem *> iter(seg->items()); iter; iter++, num--)
 			if(!num) {
 				Code *code = iter->toCode();
 				if(!code)
@@ -176,7 +180,7 @@ public:
 				else
 					return new CodeCursor(this, code);
 			}
-		throw GoException();
+		return back()->go(name);
 	};
 };
 
@@ -200,7 +204,7 @@ public:
 	virtual void list(Output& out) {
 		out << "Segments: \n";
 		int i = 0;
-		for(Iterator<Segment *> iter = _file->segments(); iter; iter++, i++) {
+		for(Iterator<Segment *> iter(_file->segments()); iter; iter++, i++) {
 			out << '\t' << i << ':' << iter->name()
 				 << " [" << iter->address()
 				 << ':' << (int)iter->size() << ']';
@@ -216,10 +220,10 @@ public:
 	
 	virtual Cursor *go(CString name) {
 		int num = atoi(&name);
-		for(Iterator<Segment *> iter = _file->segments(); iter; iter++, num--)
+		for(Iterator<Segment *> iter(_file->segments()); iter; iter++, num--)
 			if(!num)
 				return new SegmentCursor(this, *iter);
-		throw GoException();
+		return back()->go(name);
 	};
 		
 };
@@ -241,7 +245,7 @@ public:
 	
 	virtual Cursor *go(CString name);
 	
-	virtual Locked<Cursor> back(void) {
+	virtual AutoPtr<Cursor> back(void) {
 		throw BackException();
 	};
 	
@@ -262,7 +266,7 @@ public:
 			cfg(out);			
 		}
 		else
-			Cursor::perform(out, argc, argv);
+			back()->perform(out, argc, argv);
 	};
 	
 	virtual void help(Output& out) {
@@ -402,7 +406,7 @@ void FrameWorkCursor::load(Output& out, CString path) {
  * @param out	Output.
  */
 void FrameWorkCursor::cfg(Output& out) {
-	fw->getCFG();
+	fw->getCFGInfo();
 	out << "CFG Built.\n";
 }
 
@@ -412,7 +416,7 @@ void FrameWorkCursor::list(Output& out) {
 	// Display files
 	out << "Files: \n";
 	int i = 0;
-	for(Iterator<File *> iter = fw->files(); iter; iter++, i++)
+	for(Iterator<File *> iter(*fw->files()); iter; iter++, i++)
 		out << '\t' << i << ": " << iter->name() << '\n';
 	if(!i)
 		out << "<none>\n";
@@ -422,7 +426,7 @@ void FrameWorkCursor::list(Output& out) {
 	if(info) {
 		out << "CFG:\n";
 		i = 0;
-		for(Iterator<CFG *> cfg = info->cfgs(); cfg; cfg++, i++) {
+		for(Iterator<CFG *> cfg(info->cfgs()); cfg; cfg++, i++) {
 			out << "\tC" << i << ':' << cfg->entry()->address();
 			Option<String> label = cfg->get<String>(File::ID_Label);
 			if(label)
@@ -441,7 +445,7 @@ Cursor *FrameWorkCursor::go(CString name) {
 		if(!info)
 			throw GoException();
 		int num = atoi(&name + 1);
-		for(Iterator<CFG *> cfg = info->cfgs(); cfg; cfg++, num--)
+		for(Iterator<CFG *> cfg(info->cfgs()); cfg; cfg++, num--)
 			if(!num)
 				return new CFGCursor(this, *cfg);
 		throw GoException();
@@ -449,26 +453,34 @@ Cursor *FrameWorkCursor::go(CString name) {
 	
 	// CFG traversal by name
 	else if(name[0] == '@') {
-		CFGInfo *info = fw->get<CFGInfo *>(CFGInfo::ID, 0);
-		if(!info)
-			throw GoException();
-		for(Iterator<CFG *> cfg = info->cfgs(); cfg; cfg++) {
-			Option<String> label = cfg->get<String>(File::ID_Label);
-			if(label && *label == name.chars() + 1)
-				return new CFGCursor(this, *cfg);
+		if(name[1] == '\0') {
+			CFG *cfg = fw->getStartCFG();
+			if(cfg)
+				return new CFGCursor(this, cfg);
 		}
-		throw GoException();
+		else {
+			CFGInfo *info = fw->get<CFGInfo *>(CFGInfo::ID, 0);
+			if(!info)
+				throw GoException();
+			for(Iterator<CFG *> cfg(info->cfgs()); cfg; cfg++) {
+				Option<String> label = cfg->get<String>(File::ID_Label);
+				if(label && *label == name.chars() + 1)
+					return new CFGCursor(this, *cfg);
+			}
+		}
 	}
 	
 	// Segment traversal
 	else {
 		int num = atoi(&name);
-		for(Iterator<File *> iter = fw->files(); iter; iter++, num--)
+		for(Iterator<File *> iter(*fw->files()); iter; iter++, num--)
 			if(!num) {
 				return new FileCursor(this, *iter);
 			}
-		throw GoException();
 	}
+	
+	// Pass to parent
+	return back()->go(name);
 }
 
 
@@ -482,21 +494,21 @@ id_t CFGCursor::ID_Number = Property::getID("OShell.Number");
  */
 void CFGCursor::build(void) {
 	built = true;
-	genstruct::DLList<BasicBlock *> remain;
+	genstruct::DLList< AutoPtr<BasicBlock> > remain;
 	remain.addLast(cfg->entry());	
 	
 	// Find all basic blocks
 	for(int num = 0; !remain.isEmpty(); num++) {
 		
 		// Get the current BB
-		BasicBlock *bb = remain.first();
+		AutoPtr<BasicBlock> bb = remain.first();
 		remain.removeFirst();
 		if(bbs.contains(bb))
 			continue;
 		bbs.insert(bb);
 		
 		// Display not-taken
-		BasicBlock *target = bb->getNotTaken();
+		AutoPtr<BasicBlock> target = bb->getNotTaken();
 		if(target && !bbs.contains(target))
 			remain.addLast(target);
 
@@ -526,11 +538,11 @@ void CFGCursor::list(Output& out) {
 	ListVisitor visitor(out);
 	bbs.visit(&visitor);
 }
-int CFGCursor::ListVisitor::process(BasicBlock *bb) {
+int CFGCursor::ListVisitor::process(AutoPtr<BasicBlock> bb) {
 	
 	// Display header
 	out << "BB " << bb->use<int>(ID_Number) << ": ";
-	BasicBlock *target = bb->getNotTaken();
+	AutoPtr<BasicBlock> target = bb->getNotTaken();
 	if(target)
 		out << " NT(" << target->use<int>(ID_Number) << ')';
 	if(bb->isReturn())
@@ -554,21 +566,17 @@ int CFGCursor::ListVisitor::process(BasicBlock *bb) {
 
 	// Disassemble basic block
 	PseudoInst *pseudo;
-	for(Inst *inst = bb->head()->next(); !inst->atEnd(); inst = inst->next()) {
-		if((pseudo = inst->toPseudo()) && pseudo->id() == BasicBlock::ID)
-			break;
-		else {
+	for(Iterator<Inst *> inst(*bb); inst; inst++) {
 			
-			// Put the label
-			Option<String> label = inst->get<String>(File::ID_Label);
-			if(label)
-				out << '\t' << *label << ":\n";
+		// Put the label
+		Option<String> label = inst->get<String>(File::ID_Label);
+		if(label)
+			out << '\t' << *label << ":\n";
 			
-			// Disassemble the instruction
-			out << "\t\t" << inst->address() << ' ';
-			inst->dump(out);
-			out << '\n';
-		}
+		// Disassemble the instruction
+		out << "\t\t" << inst->address() << ' ';
+		inst->dump(out);
+		out << '\n';
 	}
 }
 
