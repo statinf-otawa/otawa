@@ -3,8 +3,8 @@
 #---------------------------------------------------------------------------
 # General configuration options
 #---------------------------------------------------------------------------
-PROJECT_NAME           = 
-PROJECT_NUMBER         = 
+PROJECT_NAME           = Otawa
+PROJECT_NUMBER         = 0.1
 OUTPUT_DIRECTORY       = 
 OUTPUT_LANGUAGE        = English
 USE_WINDOWS_ENCODING   = NO
@@ -62,7 +62,8 @@ INPUT                  = src/prog/ \
                          include/otawa/ \
 						 include/otawa/cfg \
 						 include/otawa/prog \
-						 include/otawa/ast
+						 include/otawa/ast \
+						 include/otawa/prop
 FILE_PATTERNS          = 
 RECURSIVE              = NO
 EXCLUDE                = 
