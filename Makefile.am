@@ -1,4 +1,4 @@
-SUBDIRS=src include
+SUBDIRS=src examples include
 
 EXTRA_DIST=Doxyfile
 
@@ -12,4 +12,3 @@ uninstall-local:
 
 html: Doxyfile
 	doxygen
-
