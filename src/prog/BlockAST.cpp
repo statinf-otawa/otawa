@@ -46,6 +46,14 @@ BlockAST::~BlockAST(void) {
  * Get the entry basic block of the AST block.
  */
 
+
+/**
+ * @fn Inst *BlockAST::first();
+ * Get the first instruction of the block.
+ * @return	Block first instruction.
+ */
+
+
 /**
  * The property matching the given identifier is put on the first instruction
  * of the AST. The property contains a pointer to the block AST.

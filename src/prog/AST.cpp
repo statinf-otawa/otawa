@@ -89,6 +89,13 @@ static UndefAST undef_inst;
 
 
 /**
+ * @fn CallAST *AST::toCall(void);
+ * Get the call AST if this AST is a call, null else.
+ * @return Call AST or null.
+  */
+
+
+/**
  * Unique instance of the NOP AST.
  */
 AST& AST::NOP = nop_inst;
