@@ -92,19 +92,18 @@ Or if you use the version 1.6:
 
 4. lp_solve Package
 
+  The lp_solve package may be used for providing ILP support. OTAWA works
+with version 4.0 of lp_solve but the compilation does not work with versions
+less than 2.0.
+
   The lp_solve package may be retrieved from address
-http://www.cs.sunysb.edu/~algorith/implement/lpsolve/distrib/.
-	$ wget http://www.cs.sunysb.edu/~algorith/implement/lpsolve/distrib/lp_solve_2.0.tar.gz
+ftp://ftp.es.ele.tue.nl/pub/lp_solve/old_versions_which_you_probably_dont_want/.
+
+	$ wget ftp://ftp.es.ele.tue.nl/pub/lp_solve/old_versions_which_you_probably_dont_want/ftp://ftp.es.ele.tue.nl/pub/lp_solve/old_versions_which_you_probably_dont_want/lp_solve_4.0.tar.gz
 
   Uncompress it and compile it:
-  	$ tar xvfz lp_solve_2.0.tar.gz
-  	$ cd lp_solve_2.0
- 
-  Modify the Makefile to use the CFLAGS for the gcc compiler and launch the
-compilation:
-  	$ make
- 
-  Link the lp_solve_2.0 directory as lp_solve:
+  	$ tar xvfz lp_solve_4.0.tar.gz
+  	$ cd lp_solve_4.0
+  	$ make -f Makefile.linux
   	$ cd ..
   	$ ln -s lp_solve-2.0 lp_solve
- 
