@@ -17,13 +17,13 @@ namespace otawa {
 // GoException class
 class GoException: public Exception {
 public:
-	virtual CString message(void);
+	virtual String message(void);
 };
 
 // BackException class
 class BackException: public Exception {
 public:
-	virtual CString message(void);
+	virtual String message(void);
 };
 
 // PerformException class
@@ -31,7 +31,7 @@ class PerformException: public Exception {
 	CString msg;
 public:
 	inline PerformException(CString message): msg(message) { };
-	virtual CString message(void) { return msg; };	
+	virtual String message(void) { return msg; };	
 };
 
 // Cursor abstract class
