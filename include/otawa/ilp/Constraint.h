@@ -22,6 +22,8 @@ public:
 		GT = 2
 	} comparator_t;
 
+	virtual ~Constraint(void) { };
+
 	virtual double coefficient(Var *var = 0) const = 0;
 	virtual comparator_t comparator(void) const = 0;
 
