@@ -5,7 +5,8 @@
  *	gliss/CodeSegment.cpp -- gliss::CodeSegment class implementation.
  */
 
-#include "gliss.h"
+#include <otawa/gliss.h>
+#include <otawa/gliss/Symbol.h>
 
 namespace otawa { namespace gliss {
 
@@ -77,9 +78,13 @@ void CodeSegment::build(void) {
 	
 		// Look for its kind
 		switch(inst->ident) {
+		case ID_BL_:
+			if(inst->instrinput[0].val.Int24 == 1) {
+				code.insts.addLast(new Inst(*this, addr));
+				break;
+			}
 		case ID_B_:
 		case ID_BA_:
-		case ID_BL_:
 		case ID_BLA_:
 		case ID_BC_:
 		case ID_BCA_:
@@ -108,27 +113,32 @@ void CodeSegment::build(void) {
 		/ Tables.sec_header_tbl[Tables.symtbl_ndx].sh_entsize;
 	for(int i = 0; i < sym_cnt; i++) {
 		address_t addr = 0;
+		symbol_kind_t kind;
 		
 		// Function symbol
 		if(ELF32_ST_TYPE(syms[i].st_info)== STT_FUNC
-		&& syms[i].st_shndx != SHN_UNDEF)
+		&& syms[i].st_shndx != SHN_UNDEF) {
+			kind = SYMBOL_Function;
 			addr = (address_t)syms[i].st_value;
+		}
 		
 		// Simple label symbol
 		else if(ELF32_ST_TYPE(syms[i].st_info)== STT_NOTYPE
-		&& syms[i].st_shndx == Text.txt_index)
+		&& syms[i].st_shndx == Text.txt_index) {
+			kind = SYMBOL_Label;
 			addr = (address_t)syms[i].st_value;
+		}
 
 		// Build the label if required
 		if(addr) {
 			String label(&names[syms[i].st_name]);
-			file.labels.put(label, addr);
+			Symbol *sym = new Symbol(file, label, kind, addr);
+			file.syms.put(label, sym);
 			Inst *inst = (Inst *)findByAddress(addr);
 			if(inst)
 				inst->set<String>(File::ID_Label, label);
 		}
 	}
-	file.labels_init = true;
 }
 
 

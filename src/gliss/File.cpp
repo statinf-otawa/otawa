@@ -5,7 +5,7 @@
  *	gliss/File.cpp -- gliss::File class implementation.
  */
 
-#include "gliss.h"
+#include <otawa/gliss.h>
 
 // Elf Header information
 extern Elf32_Ehdr Ehdr;
@@ -100,18 +100,8 @@ const elm::datastruct::Collection<Segment *>& File::segments(void) const {
  * @retrun		Address of the label or null.
  */
 address_t File::findLabel(const String& label) {
-	
-	// Need to initialize labels?
-	if(!labels_init)
-		for(Iterator<Segment *> seg(segs); seg; seg++)
-			for(Iterator<ProgItem *> item(seg->items()); item; item++);
-	
-	// Look for the label
-	Option<address_t> addr = labels.get(label);
-	if(addr)
-		return *addr;
-	else
-		return 0;
+	otawa::Symbol *sym = findSymbol(label);
+	return sym ? sym->address() : 0;
 }
 
 
@@ -131,5 +121,29 @@ otawa::Inst *File::findByAddress(address_t addr) {
 	return 0;
 }
 
+
+// elm::File overload
+otawa::Symbol *File::findSymbol(String name) {
+	
+	// Need to initialize labels?
+	if(!labels_init) {
+		for(Iterator<Segment *> seg(segs); seg; seg++)
+			for(Iterator<ProgItem *> item(seg->items()); item; item++);
+		labels_init = true;
+	}
+	
+	// Look for the label
+	Option<otawa::Symbol *> sym = syms.get(name);
+	if(sym)
+		return *sym;
+	else
+		return 0;
+}
+
+
+// elm::File overload
+const elm::datastruct::Collection<otawa::Symbol *>& File::symbols(void) {
+	return syms.items();
+}
 
 } } // otawa::gliss
