@@ -6,7 +6,7 @@
  */
 
 #include <otawa/properties.h>
-#include <elm/data/hashtable.h>
+#include <elm/genstruct/HashTable.h>
 using namespace elm;
 
 namespace otawa {
@@ -19,7 +19,7 @@ namespace otawa {
  */
 
 // Property names store
-static data::HashTable<String, id_t> ids;
+static genstruct::HashTable<String, id_t> ids;
 static id_t top_id = 1;
 
 /**

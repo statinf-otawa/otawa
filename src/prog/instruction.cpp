@@ -475,5 +475,27 @@ namespace otawa {
  * @return	Pseudo-instruction identifier.
  */
 
+/**
+ * Internal: empty list of operands.
+ */
+datastruct::Vector<Operand *> PseudoInst::null;
+
+/**
+ * Compute the address of this pseudo-instruction.
+ */
+address_t PseudoInst::address(void) {
+	for(Inst *inst = next(); !inst->atEnd(); inst = inst->next())
+		if(!inst->isPseudo())
+			return inst->address();
+	return 0;
+}
+
+/**
+ * Dump the pseudo-instruction.
+ * @param out	Output to perform the dump on.
+ */
+void PseudoInst::dump(io::Output& out) {
+	out << "pseudo <" << (unsigned int)_id << '>';
+}
 
 }	// otawa

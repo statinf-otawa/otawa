@@ -5,7 +5,9 @@
  *	cfg.cpp -- control flow graph classes implementation.
  */
 
-#include <elm/collection.h>
+#include <assert.h>
+#include <elm/debug.h>
+#include <elm/datastruct/Collection.h>
 #include <otawa/cfg.h>
 
 namespace otawa {
@@ -25,6 +27,7 @@ namespace otawa {
  */
 BasicBlock::BasicBlock(Inst *head) {
 	_head = new Mark(this);
+	assert(head->previous()->atBegin() || !head->previous()->isPseudo());
 	head->insertBefore(_head);
 }
 
@@ -73,7 +76,12 @@ id_t BasicBlock::ID = Property::getID("otawa.BasicBlock");
 /**
  * Identifier for retrieving CFG information from the workspace properties.
  */
-id_t CFGInfo::ID_CFG = Property::getID("otawa.CFGInfo");
+id_t CFGInfo::ID = Property::getID("otawa.CFGInfo");
+
+/**
+ * Identifier for marking basic blocks entries of a CFG.
+ */
+id_t CFGInfo::ID_Entry = Property::getID("otawa.CFGEntry");
 
 /**
  * Remove all CFG stored in this CFG information.
@@ -83,7 +91,7 @@ void CFGInfo::clear(void) {
 	/* Remove CFGs */
 	while(!_cfgs.isEmpty())
 		delete _cfgs[0];
-		_cfgs.removeHead();
+		_cfgs.removeAt(0);
 	
 	/* Remove basic blocks. */
 	PseudoInst *pseudo;
@@ -111,18 +119,22 @@ BasicBlock *CFGInfo::nextBB(Inst *inst) {
 		
 		// Instruction found (no BB): create it
 		if(!pseudo) {
-			BasicBlock *bb = new BasicBlock(inst->next());
+			BasicBlock *bb = new BasicBlock(node);
 			bb->set<bool>(ID_Entry, true);
+			assert(bb);
 			return bb;
 		}
 		
 		// Is the BB pseudo?
-		if(pseudo->id() == BasicBlock::ID)
+		if(pseudo->id() == BasicBlock::ID) {
 			return ((BasicBlock::Mark *)pseudo)->bb();
+		}
 	}
 	
 	// End-of-code
-	return 0;
+	BasicBlock *bb = new BasicBlock(inst->next());
+	bb->set<bool>(ID_Entry, false);
+	return bb;
 }
 
 
@@ -132,8 +144,15 @@ BasicBlock *CFGInfo::nextBB(Inst *inst) {
  * @return				Found or created BB.
  */
 BasicBlock *CFGInfo::thisBB(Inst *inst) {
+	
+	// Straight in BB?
+	PseudoInst *pseudo = inst->toPseudo();
+	if(pseudo && pseudo->id() == BasicBlock::ID)
+		return ((BasicBlock::Mark *)pseudo)->bb();
+	
+	// Look backward
 	for(Inst *node = inst->previous(); !node->atBegin(); node = node->previous()) {
-		PseudoInst *pseudo = inst->toPseudo();
+		pseudo = node->toPseudo();
 		
 		// No pseudo, require to create the BB
 		if(!pseudo)
@@ -157,29 +176,31 @@ BasicBlock *CFGInfo::thisBB(Inst *inst) {
  * @param	code	Code to add.
  */
 void CFGInfo::addCode(Code *code) {
-	ControlInst *ctrl;
 	PseudoInst *pseudo;
 	
 	// Add the initial basic block
 	_codes.add(code);
 	BasicBlock *bb = new BasicBlock(code->first());
-	data::Vector<BasicBlock *> entries;
+	bb->set<bool>(ID_Entry, true);
+	genstruct::Vector<BasicBlock *> entries;
 	
 	// Find the basic blocks
 	for(Inst *inst = code->first(); !inst->atEnd(); inst = inst->next())
-		if(ctrl = inst->toControl()) {
+		if(inst->isControl()) {
 			
 			// Found BB starting on next instruction
 			BasicBlock *bb = nextBB(inst);
-			if(bb)
+			assert(bb);
+			if(inst->isCall() || inst->isConditional())
 				bb->use<bool>(ID_Entry) = false;
 			
 			// Found BB starting on target instruction
-			Inst *target = ctrl->target();
+			Inst *target = inst->target();
 			if(target) {
 				BasicBlock *bb = thisBB(target);
-				if(!target->isCall())
-					bb->use<bool>(ID_Entry) &= ~false;
+				assert(bb);
+				if(!inst->isCall())
+					bb->use<bool>(ID_Entry) = false;
 				else
 					entries.add(bb);
 			}
@@ -203,20 +224,20 @@ void CFGInfo::addCode(Code *code) {
 		}
 		
 		// End of block
-		else if(ctrl = inst->toControl()) {
-			Inst *target = ctrl->target();
+		else if(inst->isControl() && !inst->isCall()) {
+			Inst *target = inst->target();
 			if(target) {
 				BasicBlock *target_bb = thisBB(target);
 				assert(target_bb);
 				bb->setTaken(target_bb);
 			}
-			follow = ctrl->isCall() || (ctrl->isConditional());
+			follow = inst->isCall() || inst->isConditional();
 		}
 	}
 	
 	// Build the CFG
-	for(data::Vector<BasicBlock *>::Iterator iter = entries; iter; iter++)
-		_cfgs.addTail(new CFG(code, *iter));
+	for(int i = 0; i < entries.length(); i++)
+		_cfgs.add(new CFG(code, entries[i]));
 }
 
 

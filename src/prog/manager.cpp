@@ -7,6 +7,7 @@
 
 #include <otawa/platform.h>
 #include <otawa/manager.h>
+#include <otawa/cfg.h>
 
 namespace otawa {
 
@@ -229,6 +230,39 @@ FrameWork::~FrameWork(void) {
  * Get the associated process.
  * @return	Associated process.
  */
+
+/**
+ * Build the CFG of the project.
+ */
+void FrameWork::buildCFG(void) {
+	
+	// Get a CFG information descriptor
+	CFGInfo *info = get<CFGInfo *>(CFGInfo::ID, 0);
+	if(info)
+		info->clear();
+	else
+		info = new CFGInfo();
+	
+	// Build the new one
+	for(Iterator<File *> file = files(); file; file++)
+		for(Iterator<Segment *> seg = file->segments(); seg; seg++)
+			for(Iterator<ProgItem *> item(seg->items()); item; item++)
+				if(seg->flags() & Segment::EXECUTABLE)
+					info->addCode((Code *)*item);
+	
+	// Install the new info
+	set<CFGInfo *>(CFGInfo::ID, info);	
+}
+
+/**
+ * Get the CFG of the project. If it does not exists, built it.
+ */
+CFGInfo *FrameWork::getCFG(void) {
+	CFGInfo *info = get<CFGInfo *>(CFGInfo::ID, 0);
+	if(!info)
+		buildCFG();
+	return use<CFGInfo *>(CFGInfo::ID);
+}
 
 
 /**
