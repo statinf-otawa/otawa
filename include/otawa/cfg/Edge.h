@@ -13,7 +13,8 @@ namespace otawa {
 typedef enum edge_kind_t {
 	EDGE_Null,
 	EDGE_Taken,
-	EDGE_NotTaken
+	EDGE_NotTaken,
+	EDGE_Call
 } edge_kind_t;
 
 // Classes
