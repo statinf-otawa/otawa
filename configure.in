@@ -65,31 +65,67 @@ AC_SUBST(HEPTANE_CFLAGS)
 AC_SUBST(HEPTANE_LDADD)
 
 
-AC_ARG_WITH(glissppc, [  --with-glissppc[=PATH]  Add support for Gliss PPC (default yes)],,with_glissppc=yes)
-if test $with_glissppc = no; then
+AC_ARG_WITH(glissppc, [  --with-glissppc[=PATH]  Add support for Gliss PPC],,with_glissppc=maybe)
+if test "$with_glissppc" = no; then
 	if test $enable_heptane = yes; then
 		AC_MSG_WARN([glissppc is mandatory when using heptane.])
 		with_glissppc=yes
 	fi
 fi
 if test $with_glissppc != no; then
-	if test $with_glissppc = yes; then
+	AC_MSG_CHECKING([for glissppc])
+	if test $with_glissppc = yes -o $with_glissppc = maybe; then
 		GLISSPPC_PATH=$PWD/gliss-ppc
 	else
 		GLISSPPC_PATH=$with_glissppc
 	fi
 	if test ! -d "$GLISSPPC_PATH"; then
-		AC_MSG_ERROR([GLISS PPC cannot be found at $GLISSPPC_PATH.])
+		if $with_glissppc = yes; then
+			AC_MSG_ERROR([GLISS PPC cannot be found at $GLISSPPC_PATH.])
+		fi
+	else
+		if test $with_glissppc = yes -o $with_glissppc = maybe; then
+			AC_MSG_RESULT([found at $GLISSPPC_PATH]);
+		else
+			AC_MSG_RESULT([found])
+		fi
+		GLISSPPC_LIB=gliss
+		GLISSPPC_LDADD="-L$PWD/src/gliss -lgliss -L$GLISSPPC_PATH/lib -lemul"
+		GLISSPPC_CFLAGS="-DGLISSPPC_ENABLED -I$GLISSPPC_PATH/include -I$GLISSPPC_PATH/extern"
 	fi
-	AC_MSG_RESULT([Assuming Gliss PPC at $GLISSPPC_PATH.])
-	GLISSPPC_LIB=gliss
-	GLISSPPC_LDADD="-L$PWD/src/gliss -lgliss -L$GLISSPPC_PATH/lib -lemul"
-	GLISSPPC_CFLAGS="-DGLISSPPC_ENABLED -I$GLISSPPC_PATH/include -I$GLISSPPC_PATH/extern"
 fi
 AC_SUBST(GLISSPPC_LIB)
 AC_SUBST(GLISSPPC_LDADD)
 AC_SUBST(GLISSPPC_CFLAGS)
 
+AC_ARG_WITH(lp_solve, [  --with-lp_solve=PATH  Add support for lp_solve (default yes)],,with_lp_solve=yes)
+if test $with_lp_solve != no; then
+	AC_MSG_CHECKING([for lp_solve])
+	if test $with_lp_solve = yes; then
+		LP_SOLVE_PATH=$PWD/lp_solve
+	else
+		LP_SOLVE_PATH=$with_lp_solve
+	fi
+	if test ! -e "$LP_SOLVE_PATH/lpklib.a"; then
+		if test $with_lp_solve = yes; then
+			AC_MSG_RESULT([not found])
+		else
+			AC_MSG_ERROR([lp_solve cannot be found at $LP_SOLVE_PATH.])
+		fi
+	else
+		if test $with_lp_solve = yes; then
+			AC_MSG_RESULT([found at $LP_SOLVE_PATH])
+		else
+			AC_MSG_RESULT([found])
+		fi
+		LP_SOLVE_LIB=lp_solve
+		LP_SOLVE_LDADD="LP_SOLVE_PATH/lpklib.a -lm"
+		LP_SOLVE_CFLAGS="-DLP_SOLVE_ENABLED -I$LP_SOLVE_PATH/include"
+	fi
+fi
+AC_SUBST(LP_SOLVE_LIB)
+AC_SUBST(LP_SOLVE_LDADD)
+AC_SUBST(LP_SOLVE_CFLAGS)
 
 AC_OUTPUT([
 	Makefile
@@ -105,6 +141,7 @@ AC_OUTPUT([
 	include/otawa/gliss/Makefile
 	include/otawa/prog/Makefile
 	include/otawa/prop/Makefile
+	include/otawa/ilp/Makefile
 	examples/Makefile
 	examples/dumpcfg/Makefile
 	bin/Makefile
