@@ -161,10 +161,11 @@ void BasicBlock::release(void) {
  */
 size_t BasicBlock::getBlockSize(void) const {
 	assert(_head);
+	Inst *inst;
 	PseudoInst *pseudo;
 	
 	// Find the next BB marker
-	for(Inst *inst = _head->next(); !inst->atEnd(); inst = inst->next())
+	for(inst = _head->next(); !inst->atEnd(); inst = inst->next())
 		if((pseudo = inst->toPseudo()) && pseudo->id() == ID)
 			return inst->address() - address();
 
