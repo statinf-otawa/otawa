@@ -7,11 +7,12 @@
 #ifndef OTAWA_MANAGER_H
 #define OTAWA_MANAGER_H
 
-#include <elm/obj/vector.h>
+#include <elm/datastruct/Vector.h>
 #include <otawa/properties.h>
 #include <otawa/base.h>
 #include <otawa/platform.h>
 #include <otawa/program.h>
+#include <otawa/cfg.h>
 using namespace elm;
 
 namespace otawa {
@@ -82,6 +83,8 @@ public:
 	FrameWork(Process *_proc);
 	~FrameWork(void);
 	inline Process *getProcess(void) const { return proc; };
+	
+	// File management
 	virtual const Collection<File *> *files(void) const
 		{ return proc->files(); };
 	virtual File *createFile(void)
@@ -92,15 +95,19 @@ public:
 		{ return proc->platform(); };
 	virtual Manager *manager(void) const
 		{ return proc->manager(); };
+	
+	// CFG Management
+	void buildCFG(void);
+	CFGInfo *getCFG(void);
 };
 
 
 // Manager class
 class Manager {
 	friend class FrameWork;
-	obj::Vector<Loader *> loaders;
-	obj::Vector<Platform *> platforms;
-	obj::Vector<FrameWork *> frameworks;
+	datastruct::Vector<Loader *> loaders;
+	datastruct::Vector<Platform *> platforms;
+	datastruct::Vector<FrameWork *> frameworks;
 public:
 	Manager(void);
 	~Manager(void);
@@ -114,4 +121,3 @@ public:
 };
 
 #endif	// OTAWA_MANAGER_H
-

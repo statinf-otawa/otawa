@@ -9,8 +9,8 @@
 
 #include <assert.h>
 #include <elm/string.h>
-#include <elm/sequence.h>
-#include <elm/data/dllist.h>
+#include <elm/inhstruct/DLList.h>
+#include <elm/datastruct/Collection.h>
 #include <otawa/base.h>
 #include <otawa/properties.h>
 #include <otawa/instruction.h>
@@ -47,10 +47,10 @@ public:
 
 // Code class
 class Inst;
-class Code: public ProgItem, public inh::DLList {
+class Code: public ProgItem, public inhstruct::DLList {
 public:
-	inline Inst *first(void) const { return (Inst *)inh::DLList::first(); };
-	inline Inst *last(void) const { return (Inst *)inh::DLList::last(); };
+	inline Inst *first(void) const { return (Inst *)inhstruct::DLList::first(); };
+	inline Inst *last(void) const { return (Inst *)inhstruct::DLList::last(); };
 	virtual Code *toCode(void) { return this; };
 };
 
@@ -76,7 +76,7 @@ public:
 	virtual int flags(void) = 0;
 	virtual address_t address(void) = 0;
 	virtual size_t size(void) = 0;
-	virtual Sequence<ProgItem *>& items(void) = 0;
+	virtual datastruct::Collection<ProgItem *>& items(void) = 0;
 };
 
 
@@ -85,7 +85,7 @@ public:
 class File: public ProgObject {
 public:
 	virtual CString name(void) = 0;
-	virtual const Collection<Segment *>& segments(void) const = 0;
+	virtual const datastruct::Collection<Segment *>& segments(void) const = 0;
 };
 
 

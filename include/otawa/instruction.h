@@ -8,9 +8,9 @@
 #define OTAWA_INSTRUCTION_H
 
 #include <elm/string.h>
-#include <elm/collection.h>
-#include <elm/inh/dllist.h>
-#include <elm/obj/vector.h>
+#include <elm/datastruct/Collection.h>
+#include <elm/inhstruct/DLList.h>
+#include <elm/datastruct/Vector.h>
 #include <elm/io.h>
 #include <otawa/program.h>
 #include <otawa/platform.h>
@@ -18,6 +18,7 @@
 
 namespace otawa {
 using namespace elm;
+using namespace elm::datastruct;
 
 // Declaration
 class Operand;
@@ -175,10 +176,10 @@ public:
 };
 
 // Inst class
-class Inst: public inh::DLNode, public PropList {
+class Inst: public inhstruct::DLNode, public PropList {
 public:
-	inline Inst *next(void) const { return (Inst *)inh::DLNode::next(); };
-	inline Inst *previous(void) const { return (Inst *)inh::DLNode::previous(); };
+	inline Inst *next(void) const { return (Inst *)inhstruct::DLNode::next(); };
+	inline Inst *previous(void) const { return (Inst *)inhstruct::DLNode::previous(); };
 
 	virtual address_t address(void) = 0;
 	virtual size_t size(void) = 0;
@@ -198,40 +199,28 @@ public:
 	virtual bool isReturn(void) { return false; };
 	virtual bool isPseudo(void) { return false; };
 	
-	virtual MemInst *toMem(void) { return 0; };
-	virtual ControlInst *toControl(void) { return 0; };
+	// Pseudo access
 	virtual PseudoInst *toPseudo(void) { return 0; };
-};
-
-
-// MemInst class
-class MemInst: public Inst {
-public:
-	virtual Type *type(void) = 0;
-	virtual Address *mem(void) = 0;
-	virtual bool isMem(void) { return true; };
-	virtual MemInst *toMem(void) { return this; };
-};
-
-
-// ControlInst class
-class ControlInst: public Inst {
-public:
-	virtual bool isConditional(void) = 0;
-	virtual Inst *target(void) = 0;
-	virtual bool isControl(void) { return true; };
-	virtual ControlInst *toControl(void) { return this; };
+	
+	// For control instruction
+	virtual bool isConditional(void) { return false; };
+	virtual Inst *target(void) { return 0; };
+	
+	// For memory instructions
+	virtual Type *type(void) { return 0; };
+	virtual Address *mem(void) { return 0; };
 };
 
 
 // PseudoInst class
-class PseudoInst: public Inst {
+class PseudoInst: public virtual Inst {
 	id_t _id;
-	static obj::Vector<Operand *> null;
+	static datastruct::Vector<Operand *> null;
 public:
 	inline PseudoInst(id_t id): _id(id) { };
 	inline id_t id(void) const { return _id; };
-	virtual address_t address(void) { return 0; };
+	virtual address_t address(void);
+	virtual void dump(io::Output& out);
 	virtual size_t size(void) { return 0; };
 	virtual Collection<Operand *> *getOps(void) { return &null; };
 	virtual Collection<Operand *> *getReadOps(void) { return &null; };
