@@ -308,50 +308,60 @@ void Call::process(BasicBlock *bb, int& index) {
 			cout << ' ' << ret;
 	}
 	
-	// Display the following BBs
-	else {
+	// Display the following BBs for an inlined call
+	else if(bb->isCall() && inline_calls) {
 		
+		// Look not-taken tagey
+		BasicBlock *target = bb->getNotTaken();
+		assert(target);
+		int next = map->get(target, -1);
+		assert(next >= 0);
+		next += base;
+		
+		// Look taken target
+		target = bb->getTaken();
+		assert(target);
+		
+		// Check circularity
+		CFG *called_cfg = info->findCFG(target);
+		Call *call;
+		for(call = this; call; call = call->getBack())
+			if(call->_cfg == called_cfg) {
+				if(link_rec)
+					break;
+				else
+					throw CircularityException(new Call(this, info, called_cfg, next));
+			}
+
+		// Add the function call
+		if(!call) {
+			call = new Call(this, info, called_cfg, next);
+			call->put();
+		}
+				
+		// Put the target
+		cout << ' ' << call->getBase();
+	}
+	
+	// Display following BBs
+	else {
+
 		// Not taken
-		int next = -1;
 		BasicBlock *target = bb->getNotTaken();
 		if(target) {
-			next = map->get(target, -1);
+			int next = map->get(target, -1);
 			assert(next >= 0);
 			next += base;
 			cout << ' ' << next;
 		}
 		
 		// Taken
-		target = bb->getTaken();
+		target = bb->getNotTaken();
 		if(target) {
-			if(!bb->isCall()) {
-				int to = map->get(target, -1);
-				assert(to >= 0);
-				cout << ' ' << (to + base);
-			}
-			else if(inline_calls) {
-				assert(next >= 0);
-
-				// Check circularity
-				CFG *called_cfg = info->findCFG(target);
-				Call *call;
-				for(call = this; call; call = call->getBack())
-					if(call->_cfg == called_cfg) {
-						if(link_rec)
-							break;
-						else
-							throw CircularityException(new Call(this, info, called_cfg, next));
-					}
-
-				// Add the function call
-				if(!call) {
-					call = new Call(this, info, called_cfg, next);
-					call->put();
-				}
-				
-				// Put the target
-				cout << ' ' << call->getBase();
-			}
+			int next = map->get(target, -1);
+			assert(next >= 0);
+			next += base;
+			cout << ' ' << next;
 		}
 	}
 	
