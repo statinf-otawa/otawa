@@ -1,3 +1,8 @@
+2004-07-15   casse <hugues.casse@irit.fr>
+
+* PROG: new method for building the CFG taking a positive view a branch (a CFG starts at a called block or if a function label exists for it).
+* EXAMPLES: dumpcfg now inlines the function in its output (warning: "bl 1" or recursive function all are not yet supported).
+
 2004-03-08  casse <hugues.casse@irit.fr>
 
 * GLISS: added support for labels found in code (dissassembling and
