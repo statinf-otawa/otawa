@@ -11,20 +11,19 @@
 
 namespace otawa { namespace ilp {
 	
-// Inequality type
-typedef enum ilp_constraint_t {
-	ILP_EQ,
-	ILP_GT,
-	ILP_GE,
-	ILP_LT,
-	ILP_LE
-} ilp_constraint_t;
-
 // Constraint class
 class Constraint {
 public:
-	virtual double coef(Var *var = 0) const = 0;
-	virtual ilp_constraint_t comp(void) const = 0;
+	typedef enum comparator_t {
+		LT = -2,
+		LE = -1,
+		EQ = 0,
+		GE = 1,
+		GT = 2
+	} comparator_t;
+
+	virtual double coefficient(Var *var = 0) const = 0;
+	virtual comparator_t comparator(void) const = 0;
 
 	virtual void add(double coef, Var *var = 0) = 0;
 	virtual void sub(double coef, Var *var = 0) = 0;
