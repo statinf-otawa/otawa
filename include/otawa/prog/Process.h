@@ -8,7 +8,7 @@
 #define OTAWA_PROGRAM_PROCESS_H
 
 #include <elm/string.h>
-#include <elm/datastruct/Collection.h>
+#include <elm/Collection.h>
 #include <otawa/instruction.h>
 
 namespace otawa {
@@ -22,7 +22,7 @@ class Manager;
 class Process: public ProgObject {
 public:
 	virtual ~Process(void) { };
-	virtual const elm::datastruct::Collection<File *> *files(void) const = 0;
+	virtual const elm::Collection<File *> *files(void) const = 0;
 	virtual File *createFile(void) = 0;
 	virtual File *loadFile(elm::CString path) = 0;
 	virtual Platform *platform(void) = 0;
