@@ -1,21 +1,32 @@
 BUILD NOTES
 -----------
 
-  This file describes resources coming from thrid-party development
-that are not stored under CVS and that needs to be available for building
-otawa.
+  This file describes how to build Otawa from a developer point of view.
+The unique mandatory dependency concerns Elm library that may be check-out from
+the Otawa CVS repository (look at section 2 for compiling elm):
+	$ cvs co elm
 
+  Optional dependencies includes third-party programs that may be downloaded
+from developers websites (sections 3 and 4). For making compilation easier,
+you may create in Otawa directory a directory called "extern" and unarchive and
+compile third-party dependencies in it. In this way, you do not need to pass
+special arguments to configure for finding dependencies:
+	$ cd otawa
+	$ mkdir extern
+
+  The first section, that follows, shows how to compile Otawa for developing
+purpose.
 
 1. Compiling Otawa
 
   Go in otawa and prepare the configuration:
-  	> cd otawa
-	> autoheader
-	> aclocal
-	> autoconf
-	> automake --add-missing
-	> ./configure <options>
-	> make
+  	$ cd otawa
+	$ autoheader
+	$ aclocal
+	$ autoconf
+	$ automake --add-missing
+	$ ./configure <options>
+	$ make
 
   Type "configure --help" for the list of configuration option. Otawa specific
 configuration options are:
@@ -28,6 +39,9 @@ configuration options are:
 	--with-glissppc=PATH: allow specifiying the path to the Gliss PPC package.
 	--without-glissppc: do not use the Gliss PPC module.
 	
+	--with-lp_solve=yes: use lp_solve assumed to be in extern sub-directory.
+	--with-lp_solve=PATH: use lp_solve at the given path.
+	
 	--enable-heptane: use the Heptane AST loader (default, require glissppc).
 	--disable-heptane: do not use the Heptane AST loader.
 	
@@ -37,50 +51,60 @@ configuration options are:
 
 2. Compiling Elm Library
 
-  I have not yet archived because I do not know if it must be inserted in the
-otawa CVS archive. For using, you may get it from "~casse/elm.tgz" and
-then uncompress it. Then, you may compile it.
-	> tar xvfz ~casse/elm.tgz
-	> cd elm
-	> ./configure
-	> make
-	
-  As a default behaviour, Otawa assumes elm directory is located in the Otawa top
-level directory but with "--with-elm" configuration option, you may put it
-anywhere.
+  Elm may be got from OTAWA CVS repository:
+  	$ cvs co elm
+  Then you may compile with the following commands:
+  	$ cd elm
+	$ autoheader
+	$ aclocal
+	$ autoconf
+	$ automake --add-missing
+	$ ./configure <options>
+	$ make
 
-
+  	
 3. Compiling Gliss PPC Package
 
-You must uncompress the GLISS PPC archive 'ppc.tgz' the 'gliss.tgz' at the same
-level. Then perform:
-	> tar xvfz PATH_TO_ARCHIVE/gliss.tgz
-	> tar xvfz PATH_TO_ARCHIVE/ppc.tgz
-	
-  Then, you have to compile both packages
-  	> cd gliss
-	> make
-	> cd ../ppc
-	
-  Add the option line to the Makefile:
+  You can get the Gliss archive and the PowerPC Gliss implementation at the
+address http://www.irit.fr/recherches/ARCHI/MARCH/.
+	$ wget http://www.irit.fr/recherches/ARCHI/MARCH/GEP/gliss.tgz
+	$ wget http://www.irit.fr/recherches/ARCHI/MARCH/GEP/ppc.tgz
+
+  Uncompress these archives:
+  	$ tar xvfz gliss.tgz
+  	$ tar xvfz ppc.tgz
+
+  Add the option line to the Makefile of ppc directory:
   		OPT=-DEMUL_DISASM
 Or if you use the version 1.6:
 		OPT=-DISS_DISASM
-	
-Then you can build the PCC simulator:	
-	> make all
-	
-  As a default behaviour, Otawa assumes Gliss PPC directory is called "gliss-ppc"
-and is located in the Otawa top level directory but with "--with-glissppc"
-configuration option, you may put it anywhere.
+  
+  And compile them:
+  	$ cd gliss
+  	$ make all
+  	$ cd ..
+  	$ cd ppc
+  	$ make all
+ 
+ And rename the "ppc" directory to "gliss-ppc":
+ 	$ mv ppc gliss-ppc
 
-4. Simple dependency resolution
 
-  A simpler way of configuring and compiling Otawa is to put dependencies in the
-OTAWA directory.
-	otawa/elm
-	otawa/gliss
-	otawa/gliss-ppc
+4. lp_solve Package
 
-  As a default, Otawa will look for these locations for resolving its
-dependencies.
+  The lp_solve package may be retrieved from address
+http://www.cs.sunysb.edu/~algorith/implement/lpsolve/distrib/.
+	$ wget http://www.cs.sunysb.edu/~algorith/implement/lpsolve/distrib/lp_solve_2.0.tar.gz
+
+  Uncompress it and compile it:
+  	$ tar xvfz lp_solve_2.0.tar.gz
+  	$ cd lp_solve_2.0
+ 
+  Modify the Makefile to use the CFLAGS for the gcc compiler and launch the
+compilation:
+  	$ make
+ 
+  Link the lp_solve_2.0 directory as lp_solve:
+  	$ cd ..
+  	$ ln -s lp_solve-2.0 lp_solve
+ 
