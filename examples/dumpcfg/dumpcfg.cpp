@@ -47,23 +47,61 @@ public:
  */
 class Call: public genstruct::SortedBinMap<AutoPtr<BasicBlock>, int>::Visitor {
 	AutoPtr<CFGInfo> info;
+	int usage;
+	CFG *_cfg;
 	call_map_t map;
 	int base, ret;
+	Call *back;
 	static genstruct::DLList<Call *> calls;
 	static int top;
 	static id_t ID_Map;
 
 	void build_map(CFG *cfg);
 	void process(void);
+	~Call(void);
 public:
-	Call(AutoPtr<CFGInfo> info, CFG *cfg, int _ret);
+	Call(Call *back, AutoPtr<CFGInfo> info, CFG *cfg, int _ret);
+	void lock(void);
+	void unlock(void);
+	inline void put(void);
 	inline int getBase(void) const { return base; };
 	inline int getReturn(void) const { return ret; };
+	inline Call *getBack(void) const { return back; };
+	inline CFG *getCFG(void) const { return _cfg; };
 	static void output(AutoPtr<CFGInfo> info, CFG *cfg);
 	
 	// Visistor overload
 	virtual void process(AutoPtr<BasicBlock> bb, int& index);
 };
+
+
+// CircularityException class
+class CircularityException {
+	Call *call;
+public:
+	inline CircularityException(Call *_call): call(_call) { };
+	void display(elm::io::Output& out);
+};
+
+
+
+/**
+ * Display the error message when a circularity is found in function calls.
+ * @param out	Output stream.
+ */
+void CircularityException::display(elm::io::Output& out) {
+	Call *cur;
+	out << "ERROR: circularity found in function calls.\nERROR: ";
+	out << "(" << call->getCFG()->label() << " <- ";
+	for(cur = call->getBack(); cur->getCFG() != call->getCFG(); cur = cur->getBack()) {
+		assert(cur);
+		out << " <- " << cur->getCFG()->label();
+	}
+	out << cur->getCFG()->label() << ") ";
+	for(cur = cur->getBack(); cur; cur = cur->getBack())
+		out << " <- " << cur->getCFG()->label();
+	out << '\n';
+}
 
 
 /**
@@ -85,16 +123,45 @@ id_t Call::ID_Map = Property::getID("Call.Map");
 
 
 /**
+ * Delete the call.
+ */
+Call::~Call(void) {
+	if(back)
+		back->unlock();
+}
+
+
+/**
+ * Lock the call.
+ */
+void Call::lock(void) {
+	usage++;
+}
+
+
+/**
+ * Unlock the call.
+ */
+void Call::unlock(void) {
+	usage--;
+	/*if(!usage)
+		delete this;*/
+}
+
+
+/**
  * Build a new inlined function call.
+ * @param _back		Calling call.
  * @param _info		CFG information data structure.
  * @param cfg		CFG to process.
  * @param _ret		Index of the BB to return to.
  */
-Call::Call(AutoPtr<CFGInfo> _info, CFG *cfg, int _ret)
-: info(_info), base(top), ret(_ret) {
+Call::Call(Call *_back, AutoPtr<CFGInfo> _info, CFG *cfg, int _ret)
+: info(_info), base(top), ret(_ret), _cfg(cfg), back(_back), usage(1) {
 	
-	// Push the call
-	calls.addLast(this);
+	// Lock the back
+	if(back)
+		back->lock();
 
 	// Build the CFG if not already built
 	map = cfg->get<call_map_t>(ID_Map, 0);
@@ -106,6 +173,22 @@ Call::Call(AutoPtr<CFGInfo> _info, CFG *cfg, int _ret)
 
 	// Allocate BB numbers
 	top += map->count();
+}
+
+
+/**
+ * Put a call in the call queue.
+ * @return	True for success, false if there a recursivity.
+ */
+void Call::put(void) {
+
+	// Check circularity
+	for(Call *call = getBack(); call; call = call->getBack())
+		if(call->_cfg == _cfg)
+			throw CircularityException(this);
+
+	// Add the call
+	calls.addLast(this);
 }
 
 
@@ -163,12 +246,19 @@ void Call::process(void) {
  * @param cfg	CFG to output.
  */
 void Call::output(AutoPtr<CFGInfo> info, CFG *cfg) {
-	Call *call = new Call(info, cfg, -1);
-	while(!calls.isEmpty()) {
-		call = calls.first();
-		calls.removeFirst();
-		call->process();
-		delete call;
+	Call *call = new Call(0, info, cfg, -1);
+	call->put();
+	try {
+		while(!calls.isEmpty()) {
+			call = calls.first();
+			calls.removeFirst();
+			call->process();
+			call->unlock();
+		}
+	}
+	catch(CircularityException exn) {
+		cerr << '\n';
+		exn.display(cerr);
 	}
 }
 
@@ -214,8 +304,9 @@ void Call::process(AutoPtr<BasicBlock> bb, int& index) {
 			} else {
 				assert(next >= 0);
 				// cout << "CALL ON " << &target << ".\n";
-				Call *call = new Call(info, info->findCFG(target), next);
+				Call *call = new Call(this, info, info->findCFG(target), next);
 				cout << ' ' << call->getBase();
+				call->put();
 			}
 		}
 	}
