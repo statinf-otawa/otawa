@@ -67,19 +67,13 @@ int ListVisitor::process(AutoPtr<BasicBlock> bb) {
 		<< ' ' << (bb->address() + bb->getBlockSize() - 4);
 	
 	// Display the following BBs
-	int cnt = 0;
 	AutoPtr<BasicBlock> target = bb->getNotTaken();
-	if(target) {
-		cnt++;
+	if(target)
 		out << ' ' << target->use<int>(ID_Number);
-	}
 	target = bb->getTaken();
-	if(target && !bb->isCall()) {
-		cnt++;
+	if(target && !bb->isCall())
 		out << ' ' << target->use<int>(ID_Number);
-	}
-	if(cnt < 2)
-		out << " -1";
+	out << " -1";
 	
 	// End of line
 	out << '\n';
