@@ -8,7 +8,7 @@
 #include <elm/io/io.h>
 #include <otawa/manager.h>
 #define ISS_DISASM
-#include "gliss.h"
+#include <otawa/gliss.h>
 
 namespace otawa { namespace gliss {
 
