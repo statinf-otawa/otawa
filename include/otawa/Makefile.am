@@ -5,7 +5,9 @@ SUBDIRS= \
 	gliss \
 	prog \
 	prop \
-	ilp
+	ilp \
+	proc \
+	ipet
 
 # Headers
 includeotawadir=$(includedir)/otawa
@@ -20,4 +22,5 @@ includeotawa_HEADERS = \
 	program.h \
 	properties.h \
 	type.h \
-	ilp.h
+	ilp.h \
+	otawa.h
