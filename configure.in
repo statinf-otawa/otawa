@@ -119,11 +119,13 @@ if test $with_lp_solve != no; then
 		else
 			AC_MSG_RESULT([found])
 		fi
+		LP_SOLVE_DEF=-DLP_SOLVE
 		LP_SOLVE_LIB=lp_solve
-		LP_SOLVE_LDADD="LP_SOLVE_PATH/lpklib.a -lm"
-		LP_SOLVE_CFLAGS="-DLP_SOLVE_ENABLED -I$LP_SOLVE_PATH/include"
+		LP_SOLVE_LDADD="$LP_SOLVE_PATH/lpklib.a -lm"
+		LP_SOLVE_CFLAGS="-DLP_SOLVE_ENABLED -I$LP_SOLVE_PATH"
 	fi
 fi
+AC_SUBST(LP_SOLVE_DEF)
 AC_SUBST(LP_SOLVE_LIB)
 AC_SUBST(LP_SOLVE_LDADD)
 AC_SUBST(LP_SOLVE_CFLAGS)
@@ -135,6 +137,14 @@ AC_OUTPUT([
 	src/gliss/Makefile
 	src/oshell/Makefile
 	src/heptane/Makefile
+	src/lp_solve/Makefile
+	examples/Makefile
+	examples/dumpcfg/Makefile
+	bin/Makefile
+	bin/otawa-config
+	test/Makefile
+	test/lp_solve/Makefile
+	test/ipet/Makefile
 	include/Makefile
 	include/otawa/Makefile
 	include/otawa/ast/Makefile
@@ -143,8 +153,6 @@ AC_OUTPUT([
 	include/otawa/prog/Makefile
 	include/otawa/prop/Makefile
 	include/otawa/ilp/Makefile
-	examples/Makefile
-	examples/dumpcfg/Makefile
-	bin/Makefile
-	bin/otawa-config
+	include/otawa/proc/Makefile
+	include/otawa/ipet/Makefile
 ], [])
