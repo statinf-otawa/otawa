@@ -10,6 +10,20 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/CFGInfo.h>
 
+// Trace
+#ifndef NDEBUG
+//#	define TRACE_CFG_INFO
+#	ifdef TRACE_CFG_INFO
+#		define TRACE(str) \
+			{ \
+				cerr << __FILE__ << ':' << __LINE__ << ": " << str << '\n'; \
+				cerr.flush(); \
+			}
+#	else
+#		define TRACE(str)
+#	endif
+#endif
+
 namespace otawa {
 
 /**
@@ -33,7 +47,9 @@ id_t CFGInfo::ID_Entry = Property::getID("otawa.CFGEntry");
  * @param fw	Framework that the CFG information applies to.
  */
 CFGInfo::CFGInfo(FrameWork *_fw): built(false), fw(_fw) {
-	fw->set< AutoPtr<CFGInfo> >(ID, this);
+	TRACE(this << ".CFGInfo::CFGInfo(" << _fw << ")");
+	//fw->set<CFGInfo *>(ID, this);
+	fw->setProp(new LockedProperty<CFGInfo *>(ID, this));
 }
 
 
@@ -41,6 +57,7 @@ CFGInfo::CFGInfo(FrameWork *_fw): built(false), fw(_fw) {
  * Delete the CFG information contained in this program.
  */
 CFGInfo::~CFGInfo(void) {
+	TRACE(this << ".CFGInfo::~CFGInfo()");	
 	clear();
 }
 
@@ -57,32 +74,30 @@ void CFGInfo::clear(void) {
 	_cfgs.clear();
 	
 	/* Release basic block */
-	for(Iterator<Code *> iter(_codes.visit()); iter; iter++)
-		for(Inst *inst = (*iter)->first(); !inst->atEnd(); ) {
-			if((pseudo = inst->toPseudo()) && pseudo->id() == BasicBlock::ID) {
-				inst = pseudo->next();
-				((BasicBlock::Mark *)pseudo)->bb()->release();
-			}
-			else
-				inst = inst->next();
-		}
+	while(!bbs.isEmpty()) {
+		BasicBlock *bb = (BasicBlock *)bbs.first();
+		bbs.removeFirst();
+		delete bb;
+	}
 }
+
 
 /**
  * Find the basic block starting on the next instruction. If none exists, create
  * it.
  * @param inst		Instructtion to find the BB after.
- * @return				Found or created BB or null if end-of-code is reached.
+ * @return			Found or created BB or null if end-of-code is reached.
  */
-AutoPtr<BasicBlock> CFGInfo::nextBB(Inst *inst) {
+BasicBlock *CFGInfo::nextBB(Inst *inst) {
 	for(Inst *node = inst->next(); !node->atEnd(); node = node->next()) {
 		PseudoInst *pseudo = node->toPseudo();
 		
 		// Instruction found (no BB): create it
 		if(!pseudo) {
-			AutoPtr<BasicBlock> bb = new BasicBlock(node);
-			bb->set<bool>(ID_Entry, false);
+			BasicBlock *bb = new BasicBlock(node);
 			assert(bb);
+			bbs.addLast(bb);
+			bb->set<bool>(ID_Entry, false);
 			return bb;
 		}
 		
@@ -93,7 +108,8 @@ AutoPtr<BasicBlock> CFGInfo::nextBB(Inst *inst) {
 	}
 	
 	// End-of-code
-	AutoPtr<BasicBlock> bb = new BasicBlock(inst->next());
+	BasicBlock *bb = new BasicBlock(inst->next());
+	bbs.addLast(bb);
 	bb->set<bool>(ID_Entry, false);
 	return bb;
 }
@@ -104,12 +120,12 @@ AutoPtr<BasicBlock> CFGInfo::nextBB(Inst *inst) {
  * @param inst		Instruction starting the BB.
  * @return				Found or created BB.
  */
-AutoPtr<BasicBlock> CFGInfo::thisBB(Inst *inst) {
+BasicBlock *CFGInfo::thisBB(Inst *inst) {
 	
 	// Straight in BB?
 	PseudoInst *pseudo = inst->toPseudo();
 	if(pseudo && pseudo->id() == BasicBlock::ID)
-		return &((BasicBlock::Mark *)pseudo)->bb();
+		return ((BasicBlock::Mark *)pseudo)->bb();
 	
 	// Look backward
 	for(Inst *node = inst->previous(); !node->atBegin(); node = node->previous()) {
@@ -125,7 +141,8 @@ AutoPtr<BasicBlock> CFGInfo::thisBB(Inst *inst) {
 	}
 	
 	// At start, create the BB
-	AutoPtr<BasicBlock> bb = new BasicBlock(inst);
+	BasicBlock *bb = new BasicBlock(inst);
+	bbs.addLast(bb);
 	bb->set<bool>(ID_Entry, false);
 	return bb;
 }
@@ -168,7 +185,7 @@ BasicBlock *CFGInfo::findBB(Inst *inst) {
 	PseudoInst *pseudo;
 	while(!inst->atBegin()) {
 		if((pseudo = inst->toPseudo()) && pseudo->id() == BasicBlock::ID)
-			return &((BasicBlock::Mark *)pseudo)->bb();
+			return ((BasicBlock::Mark *)pseudo)->bb();
 		inst = inst->previous();
 	}
 	assert(0);
@@ -189,7 +206,7 @@ BasicBlock *CFGInfo::findBB(Inst *inst) {
 CFG *CFGInfo::findCFG(Inst *inst) {
 	
 	// Get the basic block
-	AutoPtr<BasicBlock> bb = findBB(inst);
+	BasicBlock *bb = findBB(inst);
 	assert(bb);
 	
 	// Look for a CFG
@@ -202,7 +219,7 @@ CFG *CFGInfo::findCFG(Inst *inst) {
  * @param bb	Basic block to look at.
  * @return	Found CFG or this BB is not a CFG start.
  */
-CFG *CFGInfo::findCFG(AutoPtr<BasicBlock> bb) {
+CFG *CFGInfo::findCFG(BasicBlock *bb) {
 	return bb->get<CFG *>(CFG::ID, 0);
 }
 
@@ -254,7 +271,7 @@ void CFGInfo::buildCFG(Code *code) {
 	PseudoInst *pseudo;
 	
 	// Add the initial basic block
-	AutoPtr<BasicBlock> bb = thisBB(code->first());
+	BasicBlock *bb = thisBB(code->first());
 	
 	// Find the basic blocks
 	for(Inst *inst = code->first(); !inst->atEnd(); inst = inst->next())
@@ -263,19 +280,19 @@ void CFGInfo::buildCFG(Code *code) {
 			// Found BB starting on target instruction			
 			Inst *target = inst->target();
 			if(target) {
-				AutoPtr<BasicBlock> bb = thisBB(target);
+				BasicBlock *bb = thisBB(target);
 				assert(bb);
 				if(inst->isCall())
 					bb->use<bool>(ID_Entry) = true;
 			}
 
 			// Found BB starting on next instruction
-			AutoPtr<BasicBlock> bb = nextBB(inst);
+			BasicBlock *bb = nextBB(inst);
 			assert(bb);
 		}
 	
 	// Build the graph
-	genstruct::Vector< AutoPtr<BasicBlock> > entries;
+	genstruct::Vector<BasicBlock *> entries;
 	bb = 0;
 	bool follow = true;
 	for(Inst *inst = code->first(); !inst->atEnd(); inst = inst->next()) {
@@ -284,7 +301,7 @@ void CFGInfo::buildCFG(Code *code) {
 		if((pseudo = inst->toPseudo()) && pseudo->id() == BasicBlock::ID) {
 			
 			// Record not-taken edge
-			AutoPtr<BasicBlock> next_bb = ((BasicBlock::Mark *)pseudo)->bb();
+			BasicBlock *next_bb = ((BasicBlock::Mark *)pseudo)->bb();
 			if(bb && follow)
 				bb->setNotTaken(next_bb);
 			
@@ -304,7 +321,7 @@ void CFGInfo::buildCFG(Code *code) {
 			// Record the taken edge
 			Inst *target = inst->target();
 			if(target) {
-				AutoPtr<BasicBlock> target_bb = thisBB(target);
+				BasicBlock *target_bb = thisBB(target);
 				assert(target_bb);
 				bb->setTaken(target_bb);
 			}
@@ -331,7 +348,7 @@ void CFGInfo::buildCFG(Code *code) {
  * @param inst	Subprogram startup.
  */
 void CFGInfo::addSubProgram(Inst *inst) {
-	AutoPtr<BasicBlock> bb = thisBB(inst);
+	BasicBlock *bb = thisBB(inst);
 	bb->set<bool>(ID_Entry, true);
 }
 

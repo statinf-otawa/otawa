@@ -264,4 +264,5 @@ Property *PropList::getDeep(id_t id) {
  */
 
 
-};
+}	// otawa
+

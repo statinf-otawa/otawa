@@ -21,6 +21,7 @@ libprog_a_SOURCES = \
 	BasicBlock.cpp \
 	CFGInfo.cpp \
 	CFG.cpp \
+	Edge.cpp \
 	properties.cpp
 INCLUDES=-I../../include -I@ELM_PATH@/include
 CXXFLAGS=-g3

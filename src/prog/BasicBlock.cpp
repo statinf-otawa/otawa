@@ -9,9 +9,6 @@
 
 namespace otawa {
 
-/*operator BasicBlock::Iterator::IteratorInst<Inst *> *(void);
-{ return new Iterator(this); };*/
-
 /**
  * @class BasicBlock
  * Represent a basic block in the strictess meaning: a sequence of instructions
@@ -44,31 +41,48 @@ BasicBlock::BasicBlock(Inst *inst): flags(0) {
 
 
 /**
- * @fn elm::AutoPtr<BasicBlock> BasicBlock::getTaken(void) const;
  * Get the target basic block if the last branch instruction is taken.
  * @return Target basic block or null if the last instruction is not a branch.
  */
+BasicBlock *BasicBlock::getTaken(void) {
+	for(elm::Iterator<Edge *> edge(outEdges()); edge; edge++)
+		if(edge->kind() == EDGE_Taken)
+			return edge->target();
+	return 0;
+}
 
 
 /**
- * @fn elm::AutoPtr<BasicBlock> BasicBlock::getNotTaken(void) const;
  * Get the following basic block if the last branch instruction is not taken.
  * @return Following basic block or null if the last instruction is a sub-program return.
  */
+BasicBlock *BasicBlock::getNotTaken(void) {
+	for(elm::Iterator<Edge *> edge(outEdges()); edge; edge++)
+		if(edge->kind() == EDGE_NotTaken)
+			return edge->target();
+	return 0;
+}
 
 
 /**
- * @fn void BasicBlock::setTaken(elm::AutoPtr<BasicBlock> bb);
  * Set the target basic block of the branch last instruction.
  * @param bb	New target basic block.
  */
+void BasicBlock::setTaken(BasicBlock *bb) {
+	assert(bb);
+	new Edge(this, bb, EDGE_Taken);
+}
+
 
 
 /**
- * @fn void BasicBlock::setNotTaken(elm::AutoPtr<BasicBlock> bb);	
  * Set the following basic block.
  * @param bb	New following basic block.
  */
+void BasicBlock::setNotTaken(BasicBlock *bb) {
+	assert(bb);
+	new Edge(this, bb, EDGE_NotTaken);
+}
 
 
 /**
@@ -121,7 +135,7 @@ id_t BasicBlock::ID = Property::getID("otawa.BasicBlock");
  */
 
 /**
- * @fn BasicBlock::Mark::Mark(AutoPtr<BasicBlock> bb);
+ * @fn BasicBlock::Mark::Mark(BasicBlock *bb);
  * Constructor for the given basic block.
  * @param bb	Basic block marked by this pseudo-instruction.
  */
@@ -133,26 +147,10 @@ id_t BasicBlock::ID = Property::getID("otawa.BasicBlock");
 
 
 /**
- * @fn AutoPtr<BasicBlock> BasicBlock::Mark::bb(void) const;
+ * @fn BasicBlock *BasicBlock::Mark::bb(void) const;
  * Get the basic block associated with this marker.
  * @return	Basic block.
  */
-
-
-/**
- * Release the basic blocks links whatever the netring links.
- * This method is usually called by CFGInfo for removing all CFG.
- */
-void BasicBlock::release(void) {
-	
-	// Remove mark
-	_head->remove();
-	delete _head;
-	
-	// Remove output edges
-	tkn = 0;
-	ntkn = 0;
-}
 
 
 /**
@@ -172,6 +170,15 @@ size_t BasicBlock::getBlockSize(void) const {
 	// Else this is the last block
 	return 0;
 }
+
+
+/**
+ * Delete the basic block.
+ */
+BasicBlock::~BasicBlock(void) {
+	if(_head)
+		delete _head;
+};
 
 
 /**
@@ -198,5 +205,22 @@ Inst *BasicBlock::Iterator::item(void) const {
 void BasicBlock::Iterator::next(void) {
 	inst = inst->next();
 }
+
+
+/*
+ * Iterator for edges
+ */
+bool BasicBlock::EdgeIterator::ended(void) const {
+	return iter.ended();
+}
+
+Edge *BasicBlock::EdgeIterator::item(void) const {
+	return iter.item();
+}
+
+void BasicBlock::EdgeIterator::next(void) {
+	iter.next();
+}
+
 
 } // otawa

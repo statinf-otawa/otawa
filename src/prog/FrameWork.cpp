@@ -8,6 +8,16 @@
 #include <otawa/manager.h>
 #include <otawa/prog/FrameWork.h>
 
+// Trace
+#ifndef NDEBUG
+//#define FRAMEWORK_TRACE
+#ifdef FRAMEWORK_TRACE
+#	define TRACE(str) cerr << __FILE__ << ':' << __LINE__ << ": " << str << '\n';
+#else
+#	define TRACE(str)
+#endif
+#endif
+
 namespace otawa {
 
 /**
@@ -22,6 +32,7 @@ namespace otawa {
  * @param _proc	Process to use.
  */
 FrameWork::FrameWork(Process *_proc): proc(_proc) {
+	TRACE(this << ".FrameWork::FrameWork(" << _proc << ')');
 	assert(_proc);
 	addProps(*_proc);
 	Manager *man = _proc->manager();
@@ -33,6 +44,7 @@ FrameWork::FrameWork(Process *_proc): proc(_proc) {
  * Delete the framework and the associated process.
  */
 FrameWork::~FrameWork(void) {
+	TRACE(this << ".FrameWork::~FrameWork()");
 	clearProps();
 	Manager *man = proc->manager();
 	man->frameworks.remove(this);
@@ -46,7 +58,7 @@ FrameWork::~FrameWork(void) {
 void FrameWork::buildCFG(void) {
 	
 	// Get a CFG information descriptor
-	AutoPtr<CFGInfo> info = get< AutoPtr<CFGInfo> >(CFGInfo::ID, 0);
+	CFGInfo *info = get<CFGInfo *>(CFGInfo::ID, 0);
 	if(info)
 		info->clear();
 	else
@@ -69,11 +81,11 @@ void FrameWork::buildCFG(void) {
 /**
  * Get the CFG of the project. If it does not exists, built it.
  */
-AutoPtr<CFGInfo> FrameWork::getCFGInfo(void) {
-	AutoPtr<CFGInfo> info = get< AutoPtr<CFGInfo> >(CFGInfo::ID, 0);
+CFGInfo *FrameWork::getCFGInfo(void) {
+	CFGInfo *info = get<CFGInfo *>(CFGInfo::ID, 0);
 	if(!info)
 		buildCFG();
-	return use< AutoPtr<CFGInfo> >(CFGInfo::ID);
+	return use<CFGInfo *>(CFGInfo::ID);
 }
 
 
@@ -89,7 +101,7 @@ CFG *FrameWork::getStartCFG(void) {
 		return 0;
 	
 	// Get the CFG information
-	AutoPtr<CFGInfo> info = getCFGInfo();
+	CFGInfo *info = getCFGInfo();
 	
 	// Find CFG attached to the entry
 	return info->findCFG(_start);

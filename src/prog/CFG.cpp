@@ -27,7 +27,7 @@ id_t CFG::ID = Property::getID("otawa.CFG");
  * Constructor. Add a property to the basic block for quick retrieval of
  * the matching CFG.
  */
-CFG::CFG(Code *code, AutoPtr<BasicBlock> entry): ent(entry), _code(code) {
+CFG::CFG(Code *code, BasicBlock *entry): ent(entry), _code(code) {
 	assert(code && entry);
 	ent->set<CFG *>(ID, this);
 	Option<String> label = entry->get<String>(File::ID_Label);
@@ -69,8 +69,8 @@ address_t CFG::address(void) {
 
 
 // Function for handling removal of CFGInfo
-GenericProperty<CFGInfo *>::~GenericProperty(void) {
+/*GenericProperty<CFGInfo *>::~GenericProperty(void) {
 	delete value;
-}
+}*/
 
 } // namespace otawa
