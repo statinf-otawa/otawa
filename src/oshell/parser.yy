@@ -174,8 +174,8 @@ namespace otawa { namespace gliss {
 	extern otawa::Loader& loader;
 } } // otawa::gliss;
 
-//#define LOADER	Loader::LOADER_Heptane_PowerPC
-#define LOADER	Loader::LOADER_Gliss_PowerPC
+#define LOADER	Loader::LOADER_Heptane_PowerPC
+//#define LOADER	Loader::LOADER_Gliss_PowerPC
 
 int main(void) {
 
@@ -183,7 +183,7 @@ int main(void) {
 	manager = new Manager();
 	PropList args;
 	FrameWork *fw = new FrameWork(
-		Loader::LOADER_Heptane_PowerPC.create(manager, args));
+		Loader::LOADER_Gliss_PowerPC.create(manager, args));
 	
 	// Start the interpreter
 	cursor = Cursor::get(fw);
