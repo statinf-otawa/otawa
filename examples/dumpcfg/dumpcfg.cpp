@@ -7,16 +7,14 @@
 
 #include <elm/io.h>
 #include <elm/genstruct/DLList.h>
-#include <elm/genstruct/SortedBinTree.h>
+#include <elm/genstruct/SortedBinMap.h>
+#include <elm/genstruct/DLList.h>
 #include <otawa/manager.h>
 
 using namespace elm;
 using namespace otawa;
 
-
-// Globals
-static id_t ID_Number = Property::getID("dumpcfg.number");
-
+typedef genstruct::SortedBinMap<AutoPtr<BasicBlock>, int> *call_map_t;
 
 // BasicBlock comparator
 class BasicBlockComparator: public elm::Comparator< AutoPtr<BasicBlock> > {
@@ -31,53 +29,83 @@ Comparator< AutoPtr<BasicBlock> >& Comparator< AutoPtr<BasicBlock> >::def
 	= BasicBlockComparator::comp;
 	
 
-// BasicBlockVisitor class
-class BasicBlockVisitor
-: public genstruct::SortedBinTree< AutoPtr<BasicBlock> >::Visitor {
+// CountVisitor class
+class CountVisitor
+: public genstruct::SortedBinMap< AutoPtr<BasicBlock>, int >::Visitor {
 	int cnt;
 public:
-	inline BasicBlockVisitor(void): cnt(0) { };
-	int process(AutoPtr<BasicBlock> bb) {
-		bb->set<int>(ID_Number, cnt++);
-		return 1;
+	inline CountVisitor(void): cnt(0) { };
+	virtual void process(AutoPtr<BasicBlock> bb, int& index) {
+		index = cnt;
+		cnt++;
 	}
 };
 
 
-// CFG Visitor
-class ListVisitor
-: public genstruct::SortedBinTree< AutoPtr<BasicBlock> >::Visitor {
-	io::Output& out;
+/**
+ * This class is used for storing information about each call to inline.
+ */
+class Call: public genstruct::SortedBinMap<AutoPtr<BasicBlock>, int>::Visitor {
+	AutoPtr<CFGInfo> info;
+	call_map_t map;
+	int base, ret;
+	static genstruct::DLList<Call *> calls;
+	static int top;
+	static id_t ID_Map;
+
+	void build_map(CFG *cfg);
+	void process(void);
 public:
-	inline ListVisitor(io::Output& _out): out(_out) { };
-	int process(AutoPtr<BasicBlock> bb);
+	Call(AutoPtr<CFGInfo> info, CFG *cfg, int _ret);
+	inline int getBase(void) const { return base; };
+	inline int getReturn(void) const { return ret; };
+	static void output(AutoPtr<CFGInfo> info, CFG *cfg);
+	
+	// Visistor overload
+	virtual void process(AutoPtr<BasicBlock> bb, int& index);
 };
 
 
 /**
- * Process each BB in the given list for displaying one line by BB.
- * @param bb	BasicBlock to process.
- * @return	Not used.
+ * Queue of all function call remaining to process.
  */
-int ListVisitor::process(AutoPtr<BasicBlock> bb) {
+genstruct::DLList<Call *> Call::calls;
+
+
+/**
+ * Top number for the basic blocks.
+ */
+int Call::top = 0;
+
+
+/**
+ * Map property identifier.
+ */
+id_t Call::ID_Map = Property::getID("Call.Map");
+
+
+/**
+ * Build a new inlined function call.
+ * @param _info		CFG information data structure.
+ * @param cfg		CFG to process.
+ * @param _ret		Index of the BB to return to.
+ */
+Call::Call(AutoPtr<CFGInfo> _info, CFG *cfg, int _ret)
+: info(_info), base(top), ret(_ret) {
 	
-	// Display header
-	out << bb->use<int>(ID_Number)
-		<< ' ' << bb->address()
-		<< ' ' << (bb->address() + bb->getBlockSize() - 4);
-	
-	// Display the following BBs
-	AutoPtr<BasicBlock> target = bb->getNotTaken();
-	if(target)
-		out << ' ' << target->use<int>(ID_Number);
-	target = bb->getTaken();
-	if(target && !bb->isCall())
-		out << ' ' << target->use<int>(ID_Number);
-	out << " -1";
-	
-	// End of line
-	out << '\n';
-	return 1;
+	// Push the call
+	calls.addLast(this);
+
+	// Build the CFG if not already built
+	map = cfg->get<call_map_t>(ID_Map, 0);
+	if(!map) {
+		map = new genstruct::SortedBinMap<AutoPtr<BasicBlock>, int>;
+		build_map(cfg);
+ 		cfg->set<call_map_t>(ID_Map, map);
+	}
+
+	// Allocate BB numbers
+	top += map->count();
 }
 
 
@@ -86,41 +114,120 @@ int ListVisitor::process(AutoPtr<BasicBlock> bb) {
  * @param cfg	CFG to use.
  * @param bbs	Ordered list of BB in the CFG.
  */
-static void build(CFG *cfg,
-genstruct::SortedBinTree< AutoPtr<BasicBlock> >& bbs) {
+void Call::build_map(CFG *cfg) {
 	
 	/* Initialize list of BB to process */
 	genstruct::DLList< AutoPtr<BasicBlock> > remain;
 	remain.addLast(cfg->entry());	
 	
 	// Find all basic blocks
-	for(int num = 0; !remain.isEmpty(); num++) {
+	while(!remain.isEmpty()) {
 		
 		// Get the current BB
 		AutoPtr<BasicBlock> bb = remain.first();
 		remain.removeFirst();
-		if(bbs.contains(bb))
+		if(map->exists(bb))
 			continue;
-		bbs.insert(bb);
+		map->put(bb, 0);
 		
 		// Process not-taken
 		AutoPtr<BasicBlock> target = bb->getNotTaken();
-		if(target && !bbs.contains(target))
+		if(target && !map->exists(target))
 			remain.addLast(target);
 
 		// Process taken
 		if(!bb->isCall()) {
 			target = bb->getTaken();
-			if(target && !bbs.contains(target))
+			if(target && !map->exists(target))
 				remain.addLast(target);
 		}
+	}
+
+	// Give number to basic blocks
+	CountVisitor count_visitor;
+	map->visit(count_visitor);	
+}
+
+
+/**
+ * Process this call, that is, output the matching CFG.
+ */
+void Call::process(void) {
+	map->visit(*this);
+}
+
+
+/**
+ * Output the given CFG.
+ * @param info	CFG information.
+ * @param cfg	CFG to output.
+ */
+void Call::output(AutoPtr<CFGInfo> info, CFG *cfg) {
+	Call *call = new Call(info, cfg, -1);
+	while(!calls.isEmpty()) {
+		call = calls.first();
+		calls.removeFirst();
+		call->process();
+		delete call;
 	}
 }
 
 
 /**
+ * Process each BB in the given list for displaying one line by BB.
+ * @param bb		Basic block to process.
+ * @param index	Basic block index.
+ */
+void Call::process(AutoPtr<BasicBlock> bb, int& index) {
+	
+	// Display header
+	cout << (index + base)
+		<< ' ' << bb->address()
+		<< ' ' << (bb->address() + bb->getBlockSize() - 4);
+	
+	// Is it a return ?
+	if(bb->isReturn()) {
+		if(ret != -1)
+			cout << ' ' << ret;
+	}
+	
+	// Display the following BBs
+	else {
+		
+		// Not taken
+		int next = -1;
+		AutoPtr<BasicBlock> target = bb->getNotTaken();
+		if(target) {
+			next = map->get(target, -1);
+			assert(next >= 0);
+			next += base;
+			cout << ' ' << next;
+		}
+		
+		// Taken
+		target = bb->getTaken();
+		if(target) {
+			if(!bb->isCall()) {
+				int to = map->get(target, -1);
+				assert(to >= 0);
+				cout << ' ' << (to + base);
+			} else {
+				assert(next >= 0);
+				// cout << "CALL ON " << &target << ".\n";
+				Call *call = new Call(info, info->findCFG(target), next);
+				cout << ' ' << call->getBase();
+			}
+		}
+	}
+	
+	// End of line
+	cout << " -1\n";
+}
+
+
+/**
  * Process the given CFG, that is, build the sorted list of BB in the CFG and then display it.
-* @param fw		Framework to use.
+ * @param fw		Framework to use.
  * @param name	Name of the function to process.
  */
 static void process(FrameWork *fw, CString name) {
@@ -152,18 +259,9 @@ static void process(FrameWork *fw, CString name) {
 			 << "\" does not match sub-programm entry.\n";
 		return;
 	}
-		
-	// Build list of the CFG
-	genstruct::SortedBinTree< AutoPtr<BasicBlock> > bbs;
-	build(cfg, bbs);
-
-	// Give number to basic blocks
-	BasicBlockVisitor bb_visitor;
-	bbs.visit(&bb_visitor);
 	
-	// Display the basic blocks
-	ListVisitor list_visitor(cout);
-	bbs.visit(&list_visitor);
+	// Output the CFG
+	Call::output(info, cfg);
 }
 
 
