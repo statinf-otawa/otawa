@@ -20,6 +20,16 @@ As the GLISS PPC requires gliss on the upper level, you must also uncompress GLI
 	> cd ../gliss-ppc
 	> make all
 
+NOTE: a bug in GLISS prevents actually from linking with Otawa.
+Fixed versions of GLISS and GLISS-PPC are available from "~casse".
+	> cd otawa
+	> tar xvfz ~casse/gliss.tgz
+	> tar xvfz ~casse/gliss-ppc.tgz
+  	> cd gliss
+	> make
+	> cd ../gliss-ppc
+	> make all
+
 (2) ELM DEPENDENCY
   I have not yet archived because I do not know if it must be inserted in the
 otawa CVS archive. For using, you may get it from "~casse/elm.tgz" and
@@ -34,7 +44,7 @@ then uncompress it in otawa root directory. Then, you may compile it.
   	> cd otawa
 	> aclocal
 	> autoconf
-	> automake
+	> automake --add-missing
 	> ./configure
 Then you may compile it:
 	> make
