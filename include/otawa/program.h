@@ -11,9 +11,11 @@
 #include <elm/string.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/datastruct/Collection.h>
+#include <elm/datastruct/Map.h>
 #include <otawa/base.h>
 #include <otawa/properties.h>
 #include <otawa/instruction.h>
+#include <otawa/prog/Symbol.h>
 
 namespace otawa {
 
@@ -87,6 +89,8 @@ public:
 	virtual CString name(void) = 0;
 	virtual const datastruct::Collection<Segment *>& segments(void) const = 0;
 	virtual address_t findLabel(const String& label) = 0;
+	virtual Symbol *findSymbol(String name) = 0;
+	virtual const elm::datastruct::Collection<Symbol *>& symbols(void) = 0;
 };
 
 
