@@ -13,12 +13,12 @@ namespace otawa {
 /**
  * @class CFGProcessor
  * This is a specialization of the processor class dedicated to CFG
- * processing. The @ref Processor::process() method just take each CFG of the
- * framework and apply the processor on.
+ * processing. The @ref Processor::processFrameWork() method just take each
+ * CFG of the framework and apply the processor on.
  */
 
 /**
- * @fn void CFGProcessor::process(CFG *cfg);
+ * @fn void CFGProcessor::processCFG(CFG *cfg);
  * Process the given CFG.
  * @param CFG	CFG to process.
  */
