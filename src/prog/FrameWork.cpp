@@ -57,7 +57,7 @@ void FrameWork::buildCFG(void) {
 		for(Iterator<Segment *> seg(file->segments()); seg; seg++)
 			for(Iterator<ProgItem *> item(seg->items()); item; item++)
 				if(seg->flags() & Segment::EXECUTABLE)
-					info->addCode((Code *)*item);
+					info->addCode((Code *)*item, *file);
 	
 	// Add the entry point
 	Inst *_start = start();
