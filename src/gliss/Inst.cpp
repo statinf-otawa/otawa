@@ -8,6 +8,8 @@
 #include <elm/io.h>
 #include <otawa/gliss.h>
 
+using namespace elm;
+
 namespace otawa { namespace gliss {
 
 	
