@@ -29,7 +29,7 @@ protected:
 public:
 	FrameWork(Process *_proc);
 	~FrameWork(void);
-	inline Process *getProcess(void) const { return proc; };
+	inline Process *process(void) const { return proc; };
 	
 	// Process overload
 	virtual const Collection<File *> *files(void) const { return proc->files(); };
