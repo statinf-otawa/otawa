@@ -45,6 +45,7 @@ then uncompress it. Then, you may compile it.
 	> cd elm
 	> ./configure
 	> make
+	
   As a default behaviour, Otawa assumes elm directory is located in the Otawa top
 level directory but with "--with-elm" configuration option, you may put it
 anywhere.
@@ -56,11 +57,20 @@ You must uncompress the GLISS PPC archive 'ppc.tgz' the 'gliss.tgz' at the same
 level. Then perform:
 	> tar xvfz PATH_TO_ARCHIVE/gliss.tgz
 	> tar xvfz PATH_TO_ARCHIVE/ppc.tgz
+	
   Then, you have to compile both packages
   	> cd gliss
 	> make
 	> cd ../ppc
+	
+  Add the option line to the Makefile:
+  		OPT=-DEMUL_DISASM
+Or if you use the version 1.6:
+		OPT=-DISS_DISASM
+	
+Then you can build the PCC simulator:	
 	> make all
+	
   As a default behaviour, Otawa assumes Gliss PPC directory is called "gliss-ppc"
 and is located in the Otawa top level directory but with "--with-glissppc"
 configuration option, you may put it anywhere.
