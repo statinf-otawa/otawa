@@ -83,49 +83,6 @@ UnsupportedPlatformException::UnsupportedPlatformException(const char *format, .
 
 
 /**
- * @class Process
- * A process is the realization of a program on a platform. It represents the
- * program and its implementation on the platform. A process may be formed
- * by many files in case of shared object for example. A process provides the
- * information needed for simulating, analyzing or transforming a program.
- */
-
-/**
- * @fn const Collection<File *> *Process::getFiles(void) const
- * Get the list of files used in this process.
- * @return	List of files.
- */
-
-/**
- * @fn File *Process::createFile(void)
- * Build an empty file.
- * @return	The created file.
- */
-
-/**
- * @fn	File *Process::loadFile(CString path)
- * Load an existing file.
- * @param path	Path to the file to load.
- * @return	The loaded file.
- * @exception LoadException							Error during the load.
- * @exception UnsupportedPlatformException	Platform of the file does
- * not match the platform of the process.
- */
-
-/**
- * @fn Platform *Process::getPlatform(void) const
- * Get the platform of the process.
- * @return Process platform.
- */
-
-/**
- * @fn Manager *Process::getManager(void) const
- * Get the manager owning this process.
- * @return Process manager.
- */
-
-
-/**
  * @class Loader
  * This interface is implemented by all objects that may build and provide
  * a process. Many kind of loader may exists from the simple binary
@@ -168,101 +125,58 @@ UnsupportedPlatformException::UnsupportedPlatformException(const char *format, .
 /**
  * Identifier of the property indicating the name (CString) of the platform to use.
  */	
-id_t Loader::ID_PlatformName = Property::getID("otawa::PlatformName");
+id_t Loader::ID_PlatformName = Property::getID("otawa.PlatformName");
 
 /**
  * Identifier of the property indicating a name (CString) of the loader to use..
  */	
-id_t Loader::ID_LoaderName = Property::getID("otawa::LoaderName");
+id_t Loader::ID_LoaderName = Property::getID("otawa.LoaderName");
 
 /**
  * Identifier of the property indicating a platform (Platform *) to use.
  */	
-id_t Loader::ID_Platform = Property::getID("otawa::Platform");
+id_t Loader::ID_Platform = Property::getID("otawa.Platform");
 
 /**
  * Identifier of the property indicating the loader to use.
  */	
-id_t Loader::ID_Loader = Property::getID("otawa::Loader");
+id_t Loader::ID_Loader = Property::getID("otawa.Loader");
 
 /**
  * Identifier of the property indicating the identifier (PlatformId) of the loader to use.
  */	
-id_t Loader::ID_PlatformId = Property::getID("otawa::PlatformId");
+id_t Loader::ID_PlatformId = Property::getID("otawa.PlatformId");
+
+/**
+ * Argument count as passed to the program (int).
+ */	
+id_t Loader::ID_Argc = Property::getID("otawa.Argc");
+
+/**
+ * Argument values as passed to the program (char **).
+ */	
+id_t Loader::ID_Argv = Property::getID("otawa.Argv");
+
+/**
+ * Argument values as passed to the program (char **).
+ */	
+id_t Loader::ID_Envp = Property::getID("otawa.Envp");
+
 
 /**
  * Name of the "Heptane" loader.
  */
-CString Loader::LOADER_Heptane = "heptane";
+CString Loader::LOADER_NAME_Heptane = "heptane";
+
+/**
+ * Name of the "GLISS PowerPC" loader.
+ */
+CString Loader::LOADER_NAME_Gliss_PowerPC = "gliss-powerpc";
 
 /**
  * Name of the default PowerPC platform.
  */
-CString Loader::PLATFORM_PowerPC_GLiss = "powerpc/ppc601-elf/gliss-gliss";
-
-
-/**
- * @class FrameWork
- * A framework represents a program, its run-time and all information about
- * WCET computation or any other analysis.
- */
-
-/**
- * Build a framework with the given process.
- * @param _proc	Process to use.
- */
-FrameWork::FrameWork(Process *_proc): proc(_proc) {
-	Manager *mgr = proc->manager();
-	mgr->frameworks.add(this);
-}
-
-/**
- * Delete the framework and the associated process.
- */
-FrameWork::~FrameWork(void) {
-	Manager *mgr = proc->manager();
-	mgr->frameworks.remove(this);
-	delete proc;
-}
-
-/**
- * @fn Process *FrameWork::getProcess(void) const
- * Get the associated process.
- * @return	Associated process.
- */
-
-/**
- * Build the CFG of the project.
- */
-void FrameWork::buildCFG(void) {
-	
-	// Get a CFG information descriptor
-	CFGInfo *info = get<CFGInfo *>(CFGInfo::ID, 0);
-	if(info)
-		info->clear();
-	else
-		info = new CFGInfo();
-	
-	// Build the new one
-	for(Iterator<File *> file = files(); file; file++)
-		for(Iterator<Segment *> seg = file->segments(); seg; seg++)
-			for(Iterator<ProgItem *> item(seg->items()); item; item++)
-				if(seg->flags() & Segment::EXECUTABLE)
-					info->addCode((Code *)*item);
-	
-	// Install the new info
-	set<CFGInfo *>(CFGInfo::ID, info);	
-}
-
-/**
- * Get the CFG of the project. If it does not exists, built it.
- */
-CFGInfo *FrameWork::getCFG(void) {
-	CFGInfo *info = get<CFGInfo *>(CFGInfo::ID, 0);
-	if(!info)
-		buildCFG();
-	return use<CFGInfo *>(CFGInfo::ID);
-}
+CString Loader::PLATFORM_NAME_PowerPC_Gliss = "powerpc/ppc601-elf/gliss-gliss";
 
 
 /**
@@ -355,4 +269,3 @@ Manager::Manager(void) {
 }
 
 }
-

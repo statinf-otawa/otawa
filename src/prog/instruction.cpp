@@ -377,18 +377,6 @@ namespace otawa {
  */
 
 /**
- * @fn  MemInst *Inst::toMem(void);
- * Get the memory access representation of this instruction.
- * @return Memory access representation or null.
- */
-
-/**
- * @fn ControlInst *Inst::toControl(void);
- * Get the control representation of this instruction.
- * @return Control representation or null.
- */
-
-/**
  * @fn PseudoInst *Inst::toPseudo(void);
  * Get the representation of this pseudo-instruction.
  * @return Pseudo-instruction representation or null.
@@ -421,33 +409,25 @@ namespace otawa {
  */
 
 /**
- * @fn Type *MemInst::type(void);
+ * @fn Type *Inst::type(void);
  * Get the type of the accessed object.
  * @return Accessed data type.
  */
 
 /**
- * @fn Address *MemInst::mem(void);
+ * @fn Address *Inst::mem(void);
  * Get the accessed address in memory.
  * @return Accessed addres.
  */
 
-
 /**
- * @class ControlInst
- * This class represents instructions changing the flow of control. It provides
- * information about the the target instruction and the conditional nature
- * of this branch.
- */
-
-/**
- * @fn bool ControlInst::isConditional(void);
+ * @fn bool Inst::isConditional(void);
  * Test if this instruction is conditional.
  * @return True if the instruction is conditional, false else.
  */
 
 /**
- * @fn Address *ControlInst::target(void);
+ * @fn Address *Inst::target(void);
  * Get the target of the branch.
  * @return Target address of the branch.
  */

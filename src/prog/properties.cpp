@@ -100,6 +100,15 @@ id_t Property::getID(CString name) {
  * @return	Value of the property.
  */
 
+/**
+ * @fn GenericProperty<T> *GenericProperty::make(id_t id, const T value);
+ * Build a new generic property with the given data. Defining the constructor as is, allows
+ * replacing the default building behaviour by specialized ones.
+ * @param id		Identifier of the property.
+ * @param value	Value of the property.
+ * @return		Built property.
+ */
+
 
 /**
  * @class PropList
@@ -138,6 +147,8 @@ void PropList::setProp(Property *prop) {
 		if(cur->id == prop->id) {
 			if(prev)
 				prev->next = cur->next;
+			else
+				head = cur->next;
 			delete cur;
 			break;
 		}
@@ -211,6 +222,12 @@ void PropList::clear(void) {
  * Set the value of a property.
  * @param id		Identifier of the property.
  * @param value	Value of the property.
+ */
+
+
+/**
+ * @class PropValue
+ * Classes requiring information about the life of properties must implement this interface.
  */
 
 };
