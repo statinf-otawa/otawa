@@ -18,4 +18,4 @@ INCLUDES= \
 	-I../gliss \
 	@GLISSPPC_CFLAGS@
 CXXFLAGS=-g3
-YFLAG=-d
+YFLAG=-dv

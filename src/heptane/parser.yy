@@ -46,6 +46,10 @@ void yyerror(const char *msg) {
 %token SEQ IF WHILE DOWHILE FOR CODE APPEL VIDE
 %token NUMBER UN_OP BIN_OP BI_OP
 
+%left BIN_OP BI_OP '='
+
+%nonassoc UN_OP
+
 %type <ast> ast asts
 
 %%
