@@ -131,7 +131,7 @@ namespace otawa {
  */
 
 /**
- * @fn Collection<ProgItem *> Segment::items(void);
+ * @fn elm::Collection<ProgItem *> Segment::items(void);
  * Get the items contained in the segment.
  * @return Collection of items in the segment.
  */
@@ -156,7 +156,7 @@ namespace otawa {
  */
 
 /**
- * @fn const datastruct::Collection<Segment *> File::segments(void) const;
+ * @fn const elm::Collection<Segment *> File::segments(void) const;
  * Get the segments composing the files.
  * @return Collection of the segments in the file.
  */
@@ -184,7 +184,7 @@ id_t File::ID_Label = Property::getID("otawa.File.Label");
 
 
 /**
- * @fn elm::datastruct::Collection<Symbol *>& symbols(void) ;
+ * @fn elm::Collection<Symbol *>& symbols(void) ;
  * Get the collection of existing symbols.
  * @return	Symbol collection.
  */

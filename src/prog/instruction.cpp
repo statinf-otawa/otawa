@@ -302,19 +302,19 @@ namespace otawa {
  */
 
 /**
- * @fn Collection<Operand *> Inst::getOps(void);
+ * @fn elm::Collection<Operand *> Inst::getOps(void);
  * Get the operands of the instruction.
  * @return Instruction operands.
  */
 
 /**
- * @fn Collection<Operand *> Inst::getReadOps(void);
+ * @fn elm::Collection<Operand *> Inst::getReadOps(void);
  * Get the read operands of the instruction.
  * @return Instruction read operands.
  */
 
 /**
- * @fn Collection<Operand *> Inst::getWrittenOps(void);
+ * @fn elm::Collection<Operand *> Inst::getWrittenOps(void);
  * Get the written operands of the instruction.
  * @return Instruction written operands.
  */

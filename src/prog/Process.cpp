@@ -19,7 +19,7 @@ namespace otawa {
 
 
 /**
- * @fn const Collection<File *> *Process::files(void) const
+ * @fn const elm::Collection<File *> *Process::files(void) const
  * Get the list of files used in this process.
  * @return	List of files.
  */
