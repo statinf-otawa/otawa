@@ -1,4 +1,2 @@
-SUBDIRS=\
-	lp_solve \
-	ipet
+SUBDIRS=@TESTS@
 

@@ -11,6 +11,7 @@ AC_STDC_HEADERS
 AC_HAVE_HEADERS(string.h)
 AC_PATH_PROG(BASH_PATH, bash)
 
+TESTS=
 
 AC_ARG_ENABLE(doc,
 	[  --enable-doc		  Enable documentation generation [default=yes]],
@@ -123,12 +124,15 @@ if test $with_lp_solve != no; then
 		LP_SOLVE_LIB=lp_solve
 		LP_SOLVE_LDADD="-L$LP_SOLVE_PATH/ -llpk -lm"
 		LP_SOLVE_CFLAGS="-DLP_SOLVE_ENABLED -I$LP_SOLVE_PATH"
+		TESTS="$TESTS lp_solve ipet"
 	fi
 fi
 AC_SUBST(LP_SOLVE_DEF)
 AC_SUBST(LP_SOLVE_LIB)
 AC_SUBST(LP_SOLVE_LDADD)
 AC_SUBST(LP_SOLVE_CFLAGS)
+
+AC_SUBST(TESTS)
 
 AC_OUTPUT([
 	Makefile
