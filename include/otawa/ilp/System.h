@@ -14,8 +14,9 @@ namespace otawa { namespace ilp {
 // System class
 class System {
 public:
-	virtual Constraint *newConstraint(ilp_constraint_t comp, double constant = 0) = 0;
-	virtual boolean solve(void) = 0;
+	virtual Constraint *newConstraint(Constraint::comparator_t comp,
+		double constant = 0) = 0;
+	virtual bool solve(void) = 0;
 	virtual void addObjectFunction(double coef, Var *var = 0) = 0;
 	virtual double valueOf(Var *var) = 0;
 	virtual double value(void) = 0;
