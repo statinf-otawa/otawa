@@ -32,9 +32,5 @@ WORD  [^ \t\v\n]+
 "help"		return HELP;
 "dump"		return DUMP;
 {WORD}		oshell_lval.str = strdup(yytext); return WORD;
-.			BEGIN(SWALLOW);
-
-<SWALLOW>\n	BEGIN(INITIAL); return ERROR;
-<SWALLOW>.		;
 
 %%
