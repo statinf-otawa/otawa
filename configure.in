@@ -1,0 +1,20 @@
+AC_INIT(src/test.cpp)
+AM_INIT_AUTOMAKE(Otawa, 0.1)
+AM_CONFIG_HEADER(config.h)
+
+AC_PROG_CXX
+AC_PROG_RANLIB
+AC_PROG_YACC
+AM_PROG_LEX
+AC_STDC_HEADERS
+AC_HAVE_HEADERS(string.h)
+
+AC_OUTPUT([
+	Makefile
+	src/Makefile
+	src/prog/Makefile
+	src/gliss/Makefile
+	src/oshell/Makefile
+	include/Makefile
+	include/otawa/Makefile
+], [])
