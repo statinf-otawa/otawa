@@ -32,7 +32,7 @@ namespace otawa {
  * <dl>
  * 	<dt>ni</dt><dd>Count of executions of basic block i.</dd>
  *  <dt>ik</dt><dd>Count of traversal of input edge k in basic block i</dd>
- *  <dt>ik</dt><dd>Count of traversal of output edge k in basic block i</dd>
+ *  <dt>ok</dt><dd>Count of traversal of output edge k in basic block i</dd>
  * </dl>
  * 
  * <p>Then, it set the object function as maximizing the following expression:</p>
