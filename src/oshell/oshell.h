@@ -47,6 +47,7 @@ public:
 	virtual void path(Output& out) { };
 	virtual void info(Output& out) { };
 	virtual void list(Output& out) { };
+	virtual void display(Output& out) { };
 	virtual Cursor *go(CString name) {
 		throw GoException();
 	};

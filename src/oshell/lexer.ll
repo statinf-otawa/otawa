@@ -20,14 +20,15 @@ WORD  [^ \t\v\n]+
 %%
 
 {BLANK}	;
-\n				return NL;
+\n			return NL;
 "back"		return BACK;
-"list"			return LIST;
+"list"		return LIST;
 "info"		return INFO;
 "quit"		return QUIT;
 "exit"		return QUIT;
-"go"			return GO;
+"go"		return GO;
 "help"		return HELP;
+"dump"		return DUMP;
 {WORD}	yylval.str = strdup(yytext); return WORD;
 .				BEGIN(SWALLOW);
 

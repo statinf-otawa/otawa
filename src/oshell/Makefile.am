@@ -9,3 +9,4 @@ CXXFLAGS=-g3
 INCLUDES=-I../../include -I../../elm/include
 oshell_LDADD=-L../../elm/src -L../prog -L../gliss -L../../gliss-ppc/lib -lgliss -lprog -lelm -lemul
 
+oshell_DEPENDENCIES=../gliss/libgliss.a ../prog/libprog.a
