@@ -7,7 +7,7 @@
 
 #include <assert.h>
 #include <elm/debug.h>
-#include <elm/datastruct/Collection.h>
+#include <elm/Collection.h>
 #include <otawa/cfg.h>
 
 namespace otawa {
@@ -68,9 +68,60 @@ address_t CFG::address(void) {
 }
 
 
-// Function for handling removal of CFGInfo
-/*GenericProperty<CFGInfo *>::~GenericProperty(void) {
-	delete value;
-}*/
+/**
+ * @see elm::datastruct::Collection::visit()
+ */
+IteratorInst<BasicBlock *> *CFG::visit(void) const {
+	return new BBIterator(this);
+}
+
+
+/**
+ * @see elm::Collection::empty()
+ */
+MutableCollection<BasicBlock *> *CFG::empty(void) const {
+	return 0;
+}
+
+
+/**
+ * @class CFG::BBIterator
+ * This iterator is used for visiting all basic blocks of the CFG.
+ */
+
+
+/**
+ * @fn CFG::BBIterator::BBIterator(CFG *cfg);
+ * Build a basic block iterator.
+ * @param cfg	Used CFG.
+ */
+
+
+/**
+ * @see elm::Iterator::ended()
+ */
+bool CFG::BBIterator::ended(void) const {
+	return pos >= bbs.length();
+}
+
+
+/**
+ * @see elm::Iterator::item()
+ */
+BasicBlock *CFG::BBIterator::item(void) const {
+	return bbs[pos];
+}
+
+
+/**
+ * @see elm::Iterator::next()
+ */
+void CFG::BBIterator::next(void) {
+	BasicBlock *bb = bbs[pos];
+	for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+		if(!bbs.contains(edge->target()))
+			bbs.add(edge->target());
+	pos++;
+}
 
 } // namespace otawa
