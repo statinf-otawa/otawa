@@ -23,11 +23,11 @@ int main(void) {
 	// Load the file
 	Manager *man = new Manager();
 	PropList args;
-	args.set<Loader *>(Loader::ID_Loader, &otawa::gliss::loader); 
+	args.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC); 
 	FrameWork *fw = man->load(PATH, args);
 	
 	// Display the file
-	for(Iterator<File *> file(fw->files()); file; file++) {
+	for(Iterator<File *> file(*fw->files()); file; file++) {
 		printf("FILE: %s\n", &file->name());
 		
 		for(Iterator<Segment *> seg(file->segments()); seg; seg++) {
