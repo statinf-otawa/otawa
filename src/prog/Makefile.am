@@ -26,13 +26,19 @@ libprog_a_SOURCES = \
 	prop_Identifier.cpp \
 	prop_PropList.cpp \
 	prop_Property.cpp \
+	prop_DeletableProperty.cpp \
 	ilp_Var.cpp \
 	ilp_Constraint.cpp \
 	ilp_System.cpp \
 	proc_Processor.cpp \
 	proc_CFGProcessor.cpp \
+	proc_BBProcessor.cpp \
 	ipet_IPET.cpp \
-	ipet_TrivialBBTime.cpp 
+	ipet_TrivialBBTime.cpp \
+	ipet_VarAssignment.cpp \
+	Process.cpp \
+	ipet_BasicConstraintsBuilder.cpp \
+	ipet_WCETComputation.cpp
 	
 INCLUDES=\
 	-I../../include \
