@@ -184,7 +184,7 @@ void FrameWorkCursor::perform(Output& out, int argc, CString argv[]) {
 		cfg(out);			
 	}
 	else
-		back()->perform(out, argc, argv);
+		Cursor::perform(out, argc, argv);
 }
 
 // Cursor overload
