@@ -7,7 +7,7 @@
 #ifndef OTAWA_HEPTANE_LOADER_H
 #define OTAWA_HEPTANE_LOADER_H
 
-#include <gliss.h>
+#include <otawa/gliss.h>
 
 namespace otawa { namespace heptane {
 
