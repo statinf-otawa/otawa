@@ -17,9 +17,30 @@ namespace otawa {
 
 
 /**
- * This identifier is used for storing the time of execution in cycle of a
- * basic block.
+ * This identifier is used for storing the time of execution in cycles (int)
+ * of the program area it applies to.
  */
-Identifier IPET::ID_BB_Time("ipet.bb_time");
+Identifier IPET::ID_Time("ipet.time");
+
+
+/**
+ * This identifier is used for storing in basic blocks and edges the variables
+ * (otawa::ilp::Var *) used in ILP resolution.
+ */
+Identifier IPET::ID_Var("ipet.var");
+
+
+/**
+ * Identifier of annotations used for storing ILP system (otawa::ilp::System *)
+ * in the CFG object.
+ */
+Identifier IPET::ID_System("ipet.system");
+
+
+/**
+ * Identifier of annotation used for storing for storing the WCET value (int)
+ * in the CFG of the computed function.
+ */
+Identifier IPET::ID_WCET("ipet.wcet");
 
 } // otawa
