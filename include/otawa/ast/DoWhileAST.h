@@ -13,11 +13,16 @@ namespace otawa {
 
 // DoWhileAST class
 class DoWhileAST: public AST {
-	AST *bod, *cnd;
-protected:
-	~DoWhileAST(void);
+	AutoPtr<AST> bod, cnd;
 public:
-	DoWhileAST(AST *body, AST *condition);
+	DoWhileAST(AutoPtr<AST> body, AutoPtr<AST> condition);
+	inline AutoPtr<AST> condition(void) const { return cnd; };
+	inline AutoPtr<AST> body(void) const { return bod; };
+	
+	// AST overload
+	virtual Inst *first(void);
+	virtual ast_kind_t kind(void) const { return AST_DoWhile; };
+	virtual AutoPtr<DoWhileAST> toDoWhile(void) { return this; };
 
 };
 	

@@ -13,16 +13,16 @@ namespace otawa {
 
 // SeqAST class
 class SeqAST: public AST {
-	AST *c1, *c2;
+	AutoPtr<AST> c1, c2;
 public:
-	SeqAST(AST *child1, AST *child2);
-	virtual ~SeqAST(void);
-	inline AST *child1(void) const { return c1; };
-	inline AST *child2(void) const { return c2; };
+	SeqAST(AutoPtr<AST> child1, AutoPtr<AST> child2);
+	inline AutoPtr<AST> child1(void) const { return c1; };
+	inline AutoPtr<AST> child2(void) const { return c2; };
 	
 	// AST overload
+	virtual Inst *first(void);
 	virtual ast_kind_t kind(void) const { return AST_Seq; };
-	virtual SeqAST *toSeq(void) { return this; };
+	virtual AutoPtr<SeqAST> toSeq(void) { return this; };
 };
 	
 } // otawa

@@ -18,16 +18,16 @@ class ASTInfo: public PropList {
 	friend class CallAST;
 	friend class FunAST;
 	friend class GenericProperty<ASTInfo *>;
-	Vector<FunAST *> funs;
-	HashTable<String, FunAST *> _map;
-	void add(FunAST *fun);
-	ASTInfo(FrameWork *_fw);
-	~ASTInfo(void);
+	Vector<AutoPtr <FunAST> > funs;
+	HashTable<String, AutoPtr<FunAST> > _map;
+	void add(AutoPtr<FunAST> fun);
+	ASTInfo(Process *proc);
 public:
 	static const id_t ID;
-	FunAST *getFunction(Inst *inst);
-	inline Map<String, FunAST *>& map(void) { return _map; };
-	inline Collection<FunAST *>& functions(void) { return funs; };
+	static ASTInfo *getInfo(Process *proc);
+	AutoPtr<FunAST> getFunction(Inst *inst);
+	inline Map<String, AutoPtr<FunAST> >& map(void) { return _map; };
+	inline Collection< AutoPtr<FunAST> >& functions(void) { return funs; };
 };
 	
 } // otawa

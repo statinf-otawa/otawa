@@ -15,21 +15,22 @@
 namespace otawa {
 
 // FunAST class
-class FunAST {
+class FunAST: public Lock {
 	friend class ASTInfo;
 	ASTInfo *info;
 	Inst *ent;
 	String _name;
-	AST *_ast;
+	AutoPtr<AST> _ast;
 	~FunAST(void);
-	void setAst(AST *ast);
 public:
 	static const id_t ID;
 	FunAST(FrameWork *fw, Inst *entry, String name = "");
 	FunAST(ASTInfo *info, Inst *entry, String name = "");
 	inline Inst *entry(void) const { return ent; };
 	inline const String& name(void) const { return _name; };
-	inline AST *ast(void) const { return _ast; };
+	inline AutoPtr<AST> ast(void) const { return _ast; };
+	void setAst(AutoPtr<AST> ast);
+	inline void setName(const String& name) { _name = name; };
 };
 
 } // otawa

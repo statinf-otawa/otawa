@@ -7,6 +7,7 @@
 #ifndef OTAWA_AST_AST_H
 #define OTAWA_AST_AST_H
 
+#include <elm/utility.h>
 #include <otawa/instruction.h>
 
 namespace otawa {
@@ -22,7 +23,8 @@ class ForAST;
 	
 // AST Kind
 typedef enum ast_kind_t {
-	AST_Nop = 0,
+	AST_Undef,
+	AST_Nop,
 	AST_Block,
 	AST_Call,
 	AST_Seq,
@@ -33,22 +35,25 @@ typedef enum ast_kind_t {
 } ast_kind_t;
 
 // AST Class
-class AST: public ProgObject, public Lock {
+class AST: public Lock, public ProgObject {
 	friend class FunAST;
 protected:
 	virtual ~AST(void) { };
 public:
 	static AST& NOP;
-	inline void release(void) { if(this != &NOP) delete this; };
+	static AST& UNDEF;
 	virtual ast_kind_t kind(void) const = 0;
+	virtual Inst *first(void) = 0;
+	
 	virtual bool isNOP(void) { return false; };
-	virtual BlockAST *toBlock(void) { return 0; };
-	virtual CallAST *toCall(void) { return 0; };
-	virtual SeqAST *toSeq(void) { return 0; };
-	virtual IfAST *toIf(void) { return 0; };
-	virtual WhileAST *toWhile(void) { return 0; };
-	virtual DoWhileAST *toDoWhile(void) { return 0; };
-	virtual ForAST *toFor(void) { return 0; };
+	virtual bool isUndef(void) { return false; };
+	virtual AutoPtr<BlockAST> toBlock(void) { return 0; };
+	virtual AutoPtr<CallAST> toCall(void) { return 0; };
+	virtual AutoPtr<SeqAST> toSeq(void) { return 0; };
+	virtual AutoPtr<IfAST> toIf(void) { return 0; };
+	virtual AutoPtr<WhileAST> toWhile(void) { return 0; };
+	virtual AutoPtr<DoWhileAST> toDoWhile(void) { return 0; };
+	virtual AutoPtr<ForAST> toFor(void) { return 0; };
 };
 	
 }	// otawa
