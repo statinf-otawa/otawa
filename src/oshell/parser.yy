@@ -182,13 +182,8 @@ int main(void) {
 	// Build the framework
 	manager = new Manager();
 	PropList args;
-<<<<<<< parser.yy
-	FrameWork *fw = new FrameWork(
-		LOADER.create(manager, args));
-=======
 	FrameWork *fw = new FrameWork(
 		Loader::LOADER_Heptane_PowerPC.create(manager, args));
->>>>>>> 1.5
 	
 	// Start the interpreter
 	cursor = Cursor::get(fw);
