@@ -6,6 +6,7 @@
  */
 
 #include <elm/io/io.h>
+#include <otawa/manager.h>
 #define ISS_DISASM
 #include "gliss.h"
 
@@ -32,8 +33,8 @@ CString Loader::getName(void) const {
  * @param props	Properties.
  * @return	Created process or null if there is an error.
  */
-Process *Loader::load(Manager *man, CString path, PropList& props) {
-	Process *proc = create(man, props);
+otawa::Process *Loader::load(Manager *man, CString path, PropList& props) {
+	otawa::Process *proc = create(man, props);
 	if(!proc->loadFile(path)) {
 		delete proc;
 		return 0;
@@ -47,9 +48,9 @@ Process *Loader::load(Manager *man, CString path, PropList& props) {
  * Create an empty process.
  * @param man		Caller manager.
  * @param props	Properties.
- * @return	Created process.
+ * @return		Created process.
  */
-Process *Loader::create(Manager *man, PropList& props) {
+otawa::Process *Loader::create(Manager *man, PropList& props) {
 	return new Process(man, props);
 }
 

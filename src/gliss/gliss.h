@@ -60,7 +60,7 @@ class ControlInst: public Inst {
 	virtual void scanCustom(instruction_t *inst);
 public:
 	inline ControlInst(CodeSegment& segment, address_t address)
-		: Inst(segment, address) { }; 
+		: Inst(segment, address), _target(0) { }; 
 
 	// Inst overload	
 	virtual bool isControl(void);
@@ -135,6 +135,7 @@ class File: public ::otawa::File {
 	elm::datastruct::Vector<Segment *> segs;
 	state_t *state;
 	genstruct::HashTable<String, address_t> labels;
+	bool labels_init;
 public:
 	File(String _path, int argc, char **argv, char **envp);
 	~File(void);
@@ -149,8 +150,9 @@ public:
 
 
 // Process class
-class Process: public ::otawa::Process {
+class Process: public otawa::Process {
 	elm::datastruct::Vector<otawa::File *> _files;
+protected:
 	Manager *man;
 	int argc;
 	char **argv, **envp;
@@ -167,6 +169,7 @@ public:
 	virtual ::otawa::Platform *platform(void);
 	virtual ::otawa::Manager *manager(void);
 	virtual otawa::Inst *start(void);
+	virtual otawa::Inst *findInstAt(address_t addr);
 };
 
 
@@ -176,8 +179,8 @@ public:
 
 	// otawa::Loader overload
 	virtual CString getName(void) const;
-	virtual Process *load(Manager *_man, CString path, PropList& props);
-	virtual Process *create(Manager *_man, PropList& props);
+	virtual otawa::Process *load(Manager *_man, CString path, PropList& props);
+	virtual otawa::Process *create(Manager *_man, PropList& props);
 };
 
 

@@ -102,16 +102,19 @@ bool ControlInst::isControl(void) {
 
 // Overloaded
 bool ControlInst::isBranch(void) {
+	scan();
 	return !(flags & (FLAG_Call | FLAG_Return));
 }
 
 // Overloaded
 bool ControlInst::isCall(void) {
+	scan();
 	return flags & FLAG_Call;
 }
 
 // Overloaded
 bool ControlInst::isReturn(void) {
+	scan();
 	return flags & FLAG_Return;
 }
 

@@ -23,7 +23,8 @@ namespace otawa { namespace gliss {
  * Build a GLISS PowerPC file by loading the given path.
  * @param _path	Path of the file to load.
  */
-File::File(String _path, int argc, char **argv, char **envp): path(_path) {
+File::File(String _path, int argc, char **argv, char **envp)
+: path(_path), labels_init(false) {
 	
 	// System configuration
     void *system_list[5+1];
@@ -66,7 +67,7 @@ File::File(String _path, int argc, char **argv, char **envp): path(_path) {
  * Destructor.
  */
 File::~File(void) {
-	clear();
+	clearProps();
 	if(state) {
 		for(Iterator<Segment *> seg(segs); seg; seg++)
 			delete (CodeSegment *)*seg;
@@ -99,6 +100,13 @@ const elm::datastruct::Collection<Segment *>& File::segments(void) const {
  * @retrun		Address of the label or null.
  */
 address_t File::findLabel(const String& label) {
+	
+	// Need to initialize labels?
+	if(!labels_init)
+		for(Iterator<Segment *> seg(segs); seg; seg++)
+			for(Iterator<ProgItem *> item(seg->items()); item; item++);
+	
+	// Look for the label
 	Option<address_t> addr = labels.get(label);
 	if(addr)
 		return *addr;

@@ -98,7 +98,6 @@ Manager *Process::manager(void) {
  * Free all files.
  */
 Process::~Process(void) {
-	io::cout << "~Process\n";
 	for(Iterator<otawa::File *> file(_files); file; file++)
 		delete (File *)*file;
 }
@@ -107,9 +106,22 @@ Process::~Process(void) {
 otawa::Inst *Process::start(void) {
 	if(!start_addr)
 		return 0;
-	else  {
+	else  if(!_files.count())
+		return 0;
+	else {
 		File *file = (File *)_files[0];
 		return file->findByAddress(start_addr);
+	}
+}
+
+
+// otawa::Process overload
+otawa::Inst *Process::findInstAt(address_t addr) {
+	if(!_files.count())
+		return 0;
+	else {
+		File *file = (File *)_files[0];
+		return file->findByAddress(addr);
 	}
 }
 

@@ -128,6 +128,7 @@ void CodeSegment::build(void) {
 				inst->set<String>(File::ID_Label, label);
 		}
 	}
+	file.labels_init = true;
 }
 
 
