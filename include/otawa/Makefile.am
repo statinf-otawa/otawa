@@ -4,7 +4,8 @@ SUBDIRS= \
 	cfg \
 	gliss \
 	prog \
-	prop
+	prop \
+	ilp
 
 # Headers
 includeotawadir=$(includedir)/otawa
@@ -18,4 +19,5 @@ includeotawa_HEADERS = \
 	platform.h \
 	program.h \
 	properties.h \
-	type.h
+	type.h \
+	ilp.h
