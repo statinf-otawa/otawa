@@ -23,6 +23,8 @@ public:
 	CFG(Code *code, AutoPtr<BasicBlock> entry);
 	inline AutoPtr<BasicBlock> entry(void) const { return ent; };
 	inline Code *code(void) const { return _code; };
+	String label(void);
+	address_t address(void);
 };
 
 } // otawa
