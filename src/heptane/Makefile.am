@@ -1,6 +1,5 @@
 lib_LIBRARIES=libothept.a
 libothept_a_SOURCES =  \
-	heptane.cpp \
 	Loader.cpp \
 	parser.yy \
 	lexer.ll \
