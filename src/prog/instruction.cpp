@@ -464,10 +464,16 @@ datastruct::Vector<Operand *> PseudoInst::null;
  * Compute the address of this pseudo-instruction.
  */
 address_t PseudoInst::address(void) {
+
+	// Look forward
 	for(Inst *inst = next(); !inst->atEnd(); inst = inst->next())
 		if(!inst->isPseudo())
 			return inst->address();
-	return 0;
+	
+	// Look backward
+	for(Inst *inst = previous(); !inst->atBegin(); inst = inst->previous())
+		if(!inst->isPseudo())
+			return inst->address() + inst->size();
 }
 
 /**
