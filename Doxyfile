@@ -63,7 +63,9 @@ INPUT                  = src/prog/ \
 						 include/otawa/cfg \
 						 include/otawa/prog \
 						 include/otawa/ast \
-						 include/otawa/prop
+						 include/otawa/prop \
+						 include/otawa/proc \
+						 include/otawa/ilp
 FILE_PATTERNS          = 
 RECURSIVE              = NO
 EXCLUDE                = 
@@ -175,8 +177,8 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Configuration::addtions related to external references   
 #---------------------------------------------------------------------------
-TAGFILES               = 
-GENERATE_TAGFILE       = 
+TAGFILES               = extern/elm/html/elm.tag=../extern/elm/html
+GENERATE_TAGFILE       = html/otawa.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = YES
 PERL_PATH              = /usr/bin/perl
