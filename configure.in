@@ -9,6 +9,7 @@ AC_PROG_YACC
 AM_PROG_LEX
 AC_STDC_HEADERS
 AC_HAVE_HEADERS(string.h)
+AC_PATH_PROG(BASH_PATH, bash)
 
 
 AC_ARG_ENABLE(doc,
@@ -103,4 +104,6 @@ AC_OUTPUT([
 	include/otawa/prop/Makefile
 	examples/Makefile
 	examples/dumpcfg/Makefile
+	bin/Makefile
+	bin/otawa-config
 ], [])
