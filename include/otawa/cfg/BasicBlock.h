@@ -84,6 +84,7 @@ public:
 	inline Mark *head(void) const { return _head; };
 	inline address_t address(void) const { return _head->address(); };
 	size_t getBlockSize(void) const;
+	int countInstructions(void) const;
 	
 	// Edge management
 	inline void addInEdge(Edge *edge) { ins.addFirst(edge); };
