@@ -22,11 +22,12 @@ fi
 
 
 AC_ARG_WITH(elm, [  --with-elm[=PATH]	Set the path to the Elm library (default $PWD/elm).],,with_elm=yes)
+AC_MSG_CHECKING([for elm])
 if test $with_elm = 'no'; then
 	AC_MSG_ERROR([Elm library is mandatory.])
 elif test $with_elm = 'yes'; then
-	if test -d $PWD/elm; then
-		ELM_PATH=$PWD/elm
+	if test -d $PWD/extern/elm; then
+		ELM_PATH=$PWD/extern/elm
 		ELM_CFLAGS=-I$ELM_PATH/include
 		ELM_LDADD="-L$ELM_PATH/src -lelm"
 	elif test -d $HOME/local/include/elm && -f $HOME/local/lib/libelm.a; then
@@ -44,12 +45,12 @@ elif test $with_elm = 'yes'; then
 	else
 		AC_MSG_ERROR([Cannot found the Elm library!])
 	fi
-	AC_MSG_RESULT([Assuming elm at $ELM_PATH.])
 else
 	ELM_PATH=$with_elm
 	ELM_CFLAGS=-I$ELM_PATH/include
 	ELM_LDADD="-L$ELM_PATH/lib -lelm"
 fi
+AC_MSG_RESULT([assumed at $ELM_PATH])
 AC_SUBST(ELM_CFLAGS)
 AC_SUBST(ELM_LDADD)
 
@@ -75,7 +76,7 @@ fi
 if test $with_glissppc != no; then
 	AC_MSG_CHECKING([for glissppc])
 	if test $with_glissppc = yes -o $with_glissppc = maybe; then
-		GLISSPPC_PATH=$PWD/gliss-ppc
+		GLISSPPC_PATH=$PWD/extern/gliss-ppc
 	else
 		GLISSPPC_PATH=$with_glissppc
 	fi
@@ -102,7 +103,7 @@ AC_ARG_WITH(lp_solve, [  --with-lp_solve=PATH  Add support for lp_solve (default
 if test $with_lp_solve != no; then
 	AC_MSG_CHECKING([for lp_solve])
 	if test $with_lp_solve = yes; then
-		LP_SOLVE_PATH=$PWD/lp_solve
+		LP_SOLVE_PATH=$PWD/extern/lp_solve
 	else
 		LP_SOLVE_PATH=$with_lp_solve
 	fi
