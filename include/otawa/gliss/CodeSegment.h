@@ -52,7 +52,7 @@ public:
 	virtual int flags(void);
 	virtual address_t address(void);
 	virtual size_t size(void);
-	virtual datastruct::Collection<ProgItem *>& items(void);
+	virtual elm::Collection<ProgItem *>& items(void);
 };
 	
 } } // otawa::gliss

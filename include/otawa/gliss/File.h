@@ -31,10 +31,10 @@ public:
 
 	// ::otawa::File overload
 	virtual CString name(void);
-	virtual const elm::datastruct::Collection<Segment *>& segments(void) const;
+	virtual const elm::Collection<Segment *>& segments(void) const;
 	virtual address_t findLabel(const String& label);
 	virtual otawa::Symbol *findSymbol(String name);
-	virtual const elm::datastruct::Collection<otawa::Symbol *>& symbols(void);
+	virtual const elm::Collection<otawa::Symbol *>& symbols(void);
 };
 
 } } // otawa::gliss

@@ -44,8 +44,8 @@ public:
 	BasicBlock *findBB(Inst *inst);
 	CFG *findCFG(Inst *inst);
 	CFG *findCFG(BasicBlock *bb);
-	const datastruct::Collection<CFG *>& cfgs(void);
-	inline const datastruct::Collection<Code *>& codes(void) const
+	const elm::Collection<CFG *>& cfgs(void);
+	inline const elm::Collection<Code *>& codes(void) const
 		{ return _codes; };
 };
 

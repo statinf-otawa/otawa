@@ -37,9 +37,9 @@ public:
 	virtual address_t address(void);
 	virtual size_t size(void);
 	virtual void dump(io::Output& out);
-	virtual Collection<Operand *> *getOps(void);
-	virtual Collection<Operand *> *getReadOps(void);
-	virtual Collection<Operand *> *getWrittenOps(void);
+	virtual elm::Collection<Operand *> *getOps(void);
+	virtual elm::Collection<Operand *> *getReadOps(void);
+	virtual elm::Collection<Operand *> *getWrittenOps(void);
 };
 	
 } } // otawa::gliss
