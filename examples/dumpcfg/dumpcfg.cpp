@@ -5,16 +5,45 @@
  *	examples/dumpcfg/dumpcfg.cpp -- example dumping the description of a CFG.
  */
 
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <elm/io.h>
 #include <elm/genstruct/DLList.h>
 #include <elm/genstruct/SortedBinMap.h>
 #include <elm/genstruct/DLList.h>
+#include <elm/options.h>
 #include <otawa/manager.h>
 
 using namespace elm;
 using namespace otawa;
 
+
+// Types
 typedef genstruct::SortedBinMap<AutoPtr<BasicBlock>, int> *call_map_t;
+
+
+// Command class
+class Command: public option::Manager {
+	bool one;
+	otawa::Manager manager;
+	FrameWork *fw;
+	AutoPtr<CFGInfo> info;
+	void dump(CString name);
+public:
+	Command(void);
+	void run(int argc, char **argv);
+	
+	// Manager overload
+	virtual void 	process (String arg);
+};
+
+
+// Options
+static Command command;
+static option::BoolOption inline_calls(command, 'i', "inline", "Inline the function calls.", false);
+static option::BoolOption link_rec(command, 'r', "recursive", "Replace recursive calls by CFG loop links.", false);
+
 
 // BasicBlock comparator
 class BasicBlockComparator: public elm::Comparator< AutoPtr<BasicBlock> > {
@@ -54,7 +83,7 @@ class Call: public genstruct::SortedBinMap<AutoPtr<BasicBlock>, int>::Visitor {
 	Call *back;
 	static genstruct::DLList<Call *> calls;
 	static int top;
-	static id_t ID_Map;
+	static otawa::id_t ID_Map;
 
 	void build_map(CFG *cfg);
 	void process(void);
@@ -119,7 +148,7 @@ int Call::top = 0;
 /**
  * Map property identifier.
  */
-id_t Call::ID_Map = Property::getID("Call.Map");
+otawa::id_t Call::ID_Map = Property::getID("Call.Map");
 
 
 /**
@@ -181,13 +210,6 @@ Call::Call(Call *_back, AutoPtr<CFGInfo> _info, CFG *cfg, int _ret)
  * @return	True for success, false if there a recursivity.
  */
 void Call::put(void) {
-
-	// Check circularity
-	for(Call *call = getBack(); call; call = call->getBack())
-		if(call->_cfg == _cfg)
-			throw CircularityException(this);
-
-	// Add the call
 	calls.addLast(this);
 }
 
@@ -252,8 +274,12 @@ void Call::output(AutoPtr<CFGInfo> info, CFG *cfg) {
 		while(!calls.isEmpty()) {
 			call = calls.first();
 			calls.removeFirst();
+			cout << "# " << call->_cfg->label() << '\n';
+			/*for(Call *cur = call->getBack(); cur; cur = cur->getBack())
+				cout << "<-" << cur->getCFG()->label();
+			cout << '\n';*/
 			call->process();
-			call->unlock();
+			//call->unlock();	!!DEBUG!!
 		}
 	}
 	catch(CircularityException exn) {
@@ -301,12 +327,29 @@ void Call::process(AutoPtr<BasicBlock> bb, int& index) {
 				int to = map->get(target, -1);
 				assert(to >= 0);
 				cout << ' ' << (to + base);
-			} else {
+			}
+			else if(inline_calls) {
 				assert(next >= 0);
-				// cout << "CALL ON " << &target << ".\n";
-				Call *call = new Call(this, info, info->findCFG(target), next);
+
+				// Check circularity
+				CFG *called_cfg = info->findCFG(target);
+				Call *call;
+				for(call = this; call; call = call->getBack())
+					if(call->_cfg == called_cfg) {
+						if(link_rec)
+							break;
+						else
+							throw CircularityException(new Call(this, info, called_cfg, next));
+					}
+
+				// Add the function call
+				if(!call) {
+					call = new Call(this, info, called_cfg, next);
+					call->put();
+				}
+				
+				// Put the target
 				cout << ' ' << call->getBase();
-				call->put();
 			}
 		}
 	}
@@ -321,7 +364,7 @@ void Call::process(AutoPtr<BasicBlock> bb, int& index) {
  * @param fw		Framework to use.
  * @param name	Name of the function to process.
  */
-static void process(FrameWork *fw, CString name) {
+void Command::dump(CString name) {
 	
 	// Get the CFG information
 	AutoPtr<CFGInfo> info = fw->getCFGInfo();
@@ -356,6 +399,61 @@ static void process(FrameWork *fw, CString name) {
 }
 
 
+
+/**
+ * Build the command.
+ */
+Command::Command(void): one(false), fw(0) {
+	program = "DumpCFG";
+	version = "0.2";
+	author = "Hugues Cassé";
+	copyright = "Copyright (c) 2004, IRIT-UPS France";
+	description = "Dump to the standard output the CFG of functions."
+		"If no function name is given, the main function is dumped.";
+	free_argument_description = "[function names...]";
+}
+
+
+/**
+ * Run the command.
+ * @param argc	Argument count.
+ * @param argv	Argument vector.
+ */
+void Command::run(int argc, char **argv) {
+	parse(argc, argv);
+	if(!fw) {
+		displayHelp();
+		throw option::OptionException();
+	}
+	if(!one)
+		process("main");
+}
+
+
+/**
+ * Process the free arguments.
+ * @param arg	Free param value.
+ */
+void Command::process (String arg) {
+
+	// First free argument is binary path
+	if(!fw) {
+		PropList props;
+		props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
+		fw = manager.load(arg.toCString(), props);
+		info = fw->getCFGInfo();
+	}
+	
+	// Process function names
+	else {
+		one = true;
+		cout << '!' << arg << '\n';
+		dump(arg.toCString());
+		cout << '\n';
+	}
+}
+
+
 /**
  * "dumpcfg" entry point.
  * @param argc		Argument count.
@@ -363,40 +461,15 @@ static void process(FrameWork *fw, CString name) {
  * @return		0 for success, >0 for error.
  */
 int main(int argc, char **argv) {
-	Manager manager;
-	
-	// Scan the arguments
-	if(argc < 2) {
-		cerr << "dumpcfg\nSYNTAX: dumpcfg <file> (<function> ...)?\n";
+	try {
+		command.run(argc, argv);
+		return 0;
+	}
+	catch(option::OptionException _) {
 		return 1;
 	}
-	
-	// Load the file
-	PropList props;
-	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
-	FrameWork *fw;
-	try {
-		fw = manager.load(argv[1], props);
-	} catch(LoadException e) {
+	catch(LoadException e) {
 		cerr << "ERROR: " << e.message() << '\n';
 		return 2;
 	}
-	
-	// Compute the CFG
-	AutoPtr<CFGInfo> info = fw->getCFGInfo();
-	
-	// Process only the main
-	if(argc == 2)
-		process(fw, "main");
-	
-	// Process the arguments
-	else
-		for(int i = 2; i < argc; i++) {
-			cout << argv[i] << '\n';
-			process(fw, argv[i]);
-			cout << '\n';
-		}
-	
-	// All is fine
-	return 0;	
 }
