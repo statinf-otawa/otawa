@@ -16,7 +16,7 @@ namespace otawa { namespace heptane {
  * Implementation of Heptane loader.
  */
 
-	
+
 // otawa::Loader overload
 CString Loader::getName(void) const {
 	return Loader::LOADER_NAME_Heptane;
