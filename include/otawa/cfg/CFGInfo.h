@@ -9,6 +9,7 @@
 
 #include <elm/utility.h>
 #include <elm/datastruct/Vector.h>
+#include <elm/inhstruct/DLList.h>
 #include <otawa/cfg/BasicBlock.h>
 
 namespace otawa {
@@ -26,22 +27,23 @@ class CFGInfo: public elm::Lock {
 	FrameWork *fw;
 	datastruct::Vector<Code *> _codes;
 	datastruct::Vector<CFG *> _cfgs;
-	AutoPtr<BasicBlock> nextBB(Inst *inst);
-	AutoPtr<BasicBlock> thisBB(Inst *inst);
+	elm::inhstruct::DLList bbs;
+	BasicBlock *nextBB(Inst *inst);
+	BasicBlock *thisBB(Inst *inst);
 	void build(void);
 	void buildCFG(Code *code);
 	bool built;
 public:
 	static const id_t ID;
 	CFGInfo(FrameWork *fw);
-	~CFGInfo(void);
+	virtual ~CFGInfo(void);
 	void clear(void);
 	void addCode(Code *code, File *file = 0);
 	void addFile(File *file);
 	void addSubProgram(Inst *inst);
 	BasicBlock *findBB(Inst *inst);
 	CFG *findCFG(Inst *inst);
-	CFG *findCFG(AutoPtr<BasicBlock> bb);
+	CFG *findCFG(BasicBlock *bb);
 	const datastruct::Collection<CFG *>& cfgs(void);
 	inline const datastruct::Collection<Code *>& codes(void) const
 		{ return _codes; };

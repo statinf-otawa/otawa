@@ -7,15 +7,18 @@
 #ifndef OTAWA_CFG_BASIC_BLOCK_H
 #define OTAWA_CFG_BASIC_BLOCK_H
 
+#include <elm/genstruct/SLList.h>
+#include <elm/inhstruct/DLList.h>
 #include <elm/utility.h>
 #include <elm/Iterator.h>
 #include <otawa/program.h>
 #include <otawa/instruction.h>
+#include <otawa/cfg/Edge.h>
 
 namespace otawa {
 
 // BaseBlock class
-class BasicBlock: public Lock, public ProgObject {
+class BasicBlock: public elm::inhstruct::DLNode, public ProgObject {
 public:
 	class Mark;
 private:
@@ -25,14 +28,14 @@ private:
 	static const unsigned long FLAG_Return = 0x04;
 	Mark *_head;
 	unsigned long flags;
-	elm::AutoPtr<BasicBlock> tkn, ntkn;
+	elm::genstruct::SLList<Edge *> ins, outs;
 	
 	// Private methods
-	inline void setTaken(elm::AutoPtr<BasicBlock> bb) { tkn = bb; };
-	inline void setNotTaken(elm::AutoPtr<BasicBlock> bb) { ntkn = bb; };
+	~BasicBlock(void);
+	void setTaken(BasicBlock *bb);
+	void setNotTaken(BasicBlock *bb);
 	inline unsigned long getFlags(void) const { return flags; };
 	inline void setFlags(unsigned long _flags) { flags = _flags; };
-	void release(void);
 
 	// Iterator
 	class Iterator: public IteratorInst<Inst *> {
@@ -43,6 +46,17 @@ private:
 		virtual Inst *item(void) const;
 		virtual void next(void);
 	};
+	
+	// EdgeIterator
+	class EdgeIterator: public IteratorInst<Edge *> {
+		elm::genstruct::SLList<Edge *>::Iterator iter;
+	public:
+		inline EdgeIterator(elm::genstruct::SLList<Edge *> &list)
+		: iter(list) { };
+		virtual bool ended(void) const;
+		virtual Edge *item(void) const;
+		virtual void next(void);
+	};
 
 public:
 	static id_t ID;
@@ -50,12 +64,12 @@ public:
 
 	// Mark class
 	class Mark: public PseudoInst {
-		AutoPtr<BasicBlock> _bb;
+		friend class BasicBlock;
+		BasicBlock *_bb;
+		inline ~Mark(void) { remove(); _bb->_head = 0; };
 	public:
-		inline Mark(AutoPtr<BasicBlock> bb): PseudoInst(ID), _bb(bb) {
-		};
-		inline ~Mark(void) { _bb->_head = 0; };
-		inline AutoPtr<BasicBlock> bb(void) const  { return _bb; };
+		inline Mark(BasicBlock *bb): PseudoInst(ID), _bb(bb) { };
+		inline BasicBlock *bb(void) const  { return _bb; };
 	};	
 
 	// Methods
@@ -65,11 +79,19 @@ public:
 	inline bool isReturn(void) const { return (flags & FLAG_Return) != 0; };
 	inline bool isTargetUnknown(void) const
 		{ return (flags & FLAG_Unknown) != 0; };
-	inline elm::AutoPtr<BasicBlock> getTaken(void) const { return tkn; };
-	inline elm::AutoPtr<BasicBlock> getNotTaken(void) const { return ntkn; };
+	BasicBlock *getTaken(void);
+	BasicBlock *getNotTaken(void);
 	inline Mark *head(void) const { return _head; };
 	inline address_t address(void) const { return _head->address(); };
 	size_t getBlockSize(void) const;
+	
+	// Edge management
+	inline void addInEdge(Edge *edge) { ins.addFirst(edge); };
+	void addOutEdge(Edge *edge) { outs.addFirst(edge); };
+	void removeInEdge(Edge *edge) { ins.remove(edge); };
+	void removeOutEdge(Edge *edge) { outs.remove(edge); };
+	inline IteratorInst<Edge *> *inEdges(void) { return new EdgeIterator(ins); };
+	inline IteratorInst<Edge *> *outEdges(void) { return new EdgeIterator(outs); };
 };
 
 } // otawa
