@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <elm/utility.h>
 #include <otawa/prop/Property.h>
+#include <otawa/prop/DeletableProperty.h>
 
 namespace otawa {
 	
@@ -33,13 +34,22 @@ public:
 	void addProp(Property *prop);
 	void removeAllProp(Identifier *id);
 	
-	// Property value access
+	// Property value access with identifier pointer (DEPRECATED)
 	template <class T> inline T get(Identifier *id, const T def_value);
 	template <class T> inline elm::Option<T> get(Identifier *id);
 	template <class T> inline T& use(Identifier *id);
 	template <class T> inline void set(Identifier *id, const T value);
 	template <class T> inline void add(Identifier *id, const T value);
 	template <class T> inline void addLocked(Identifier *id, const T value);
+
+	// Property value access with identifier reference
+	template <class T> inline T get(Identifier& id, const T def_value);
+	template <class T> inline elm::Option<T> get(Identifier& id);
+	template <class T> inline T& use(Identifier& id);
+	template <class T> inline void set(Identifier& id, const T value);
+	template <class T> inline void add(Identifier& id, const T value);
+	template <class T> inline void addLocked(Identifier& id, const T value);
+	template <class T> inline void addDeletable(Identifier& id, const T value);
 
 	// Global management
 	void clearProps(void);
@@ -124,6 +134,42 @@ inline void PropList::add(Identifier *id, const T value) {
 template <class T>
 inline void PropList::addLocked(Identifier *id, const T value) {
 	addProp(LockedProperty<T>::make(id, value));
+}
+
+template <class T> T PropList::get(Identifier& id, const T def_value) {
+	Property *prop = getProp(&id);
+	return !prop ? def_value : ((GenericProperty<T> *)prop)->getValue();
+};
+
+template <class T> elm::Option<T> PropList::get(Identifier& id) {
+	Property *prop = getProp(&id);
+	return !prop ? elm::Option<T>() : elm::Option<T>(((GenericProperty<T> *)prop)->getValue());
+};
+
+template <class T> T& PropList::use(Identifier& id) {
+	Property *prop = getProp(&id);
+	if(!prop)
+		assert(0);
+	return ((GenericProperty<T> *)prop)->getValue();
+};
+
+template <class T> void PropList::set(Identifier& id, const T value) {
+	setProp(GenericProperty<T>::make(&id, value));
+};
+
+template <class T>
+inline void PropList::add(Identifier& id, const T value) {
+	addProp(GenericProperty<T>::make(&id, value));
+};
+
+template <class T>
+inline void PropList::addLocked(Identifier& id, const T value) {
+	addProp(LockedProperty<T>::make(&id, value));
+}
+
+template <class T>
+inline void PropList::addDeletable(Identifier& id, const T value) {
+	addProp(new DeletableProperty<T>(id, value));
 }
 
 };	// otawa
