@@ -173,6 +173,26 @@ size_t BasicBlock::getBlockSize(void) const {
 
 
 /**
+ * Count the number of instructions in the basic block.
+ * @return	Number of instruction in the basic block.
+ */
+int BasicBlock::countInstructions(void) const {
+	assert(_head);
+	Inst *inst;
+	int cnt = 0;
+	PseudoInst *pseudo;
+
+	for(inst = _head->next(); !inst->atEnd(); inst = inst->next()) {
+		pseudo = inst->toPseudo();
+		if(!pseudo)
+			cnt++;
+		else if(pseudo->id() == ID)
+			break;
+	}
+	return cnt;
+}
+
+/**
  * Delete the basic block.
  */
 BasicBlock::~BasicBlock(void) {
