@@ -6,3 +6,29 @@
 pseudo-instruction instead of a real instruction.
 * PROG: added label table support in otawa::File and gliss::File.
 * OSHELL: full support for labels in disassembing, CFG display and retrieval.
+
+2004-03-18  casse <hugues.casse@laposte.net>
+
+* GLISS: cleanup in gliss plug-in for filling the rule: one header and one
+  source by top-level class.
+* PROG: one header and one source by top-level class.
+* PROG: added support for retrieving and using in CFG the real program entry
+  point, support for retriving entry point CFG and recording sub-program in the
+  CFG computation.
+* PROG: safe deletion of the full Otawa framework.
+* PROG: prototypes fixes for CFGInfo methods.
+* PROG: added BasicBlock::getBlockSize().
+* OSHELL: unprocessed commands from the current level are passed back to the
+  parent level.
+* OSHELL: cursor for named functions now displays the name.
+* PROG: added iterator for BasicBlock.
+
+2004-05-25  casse <hugues.casse@laposte.net>
+
+* GLISS: bug fixes.
+* PROG: bug fixes, added AST support.
+* HEPTANE: module added (add only support for loading .ast file).
+* OSHELL: added support for AST.
+* EXAMPLES/DUMPCFG: example program outputting CFG of functions.
+
+
