@@ -32,7 +32,7 @@ id_t CFGInfo::ID_Entry = Property::getID("otawa.CFGEntry");
  * Build a new CFGInfo.
  * @param fw	Framework that the CFG information applies to.
  */
-CFGInfo::CFGInfo(FrameWork *fw): built(false) {
+CFGInfo::CFGInfo(FrameWork *_fw): built(false), fw(_fw) {
 	fw->set< AutoPtr<CFGInfo> >(ID, this);
 }
 
@@ -81,7 +81,7 @@ AutoPtr<BasicBlock> CFGInfo::nextBB(Inst *inst) {
 		// Instruction found (no BB): create it
 		if(!pseudo) {
 			AutoPtr<BasicBlock> bb = new BasicBlock(node);
-			bb->set<bool>(ID_Entry, true);
+			bb->set<bool>(ID_Entry, false);
 			assert(bb);
 			return bb;
 		}
@@ -126,7 +126,7 @@ AutoPtr<BasicBlock> CFGInfo::thisBB(Inst *inst) {
 	
 	// At start, create the BB
 	AutoPtr<BasicBlock> bb = new BasicBlock(inst);
-	bb->set<bool>(ID_Entry, true);
+	bb->set<bool>(ID_Entry, false);
 	return bb;
 }
 
@@ -134,9 +134,21 @@ AutoPtr<BasicBlock> CFGInfo::thisBB(Inst *inst) {
 /**
  * Add the given code to the CFG information.
  * @param	code	Code to add.
+ * @param file	Owner file.
  */
-void CFGInfo::addCode(Code *code) {
+void CFGInfo::addCode(Code *code, File *file) {
+	
+	// Add the code
 	_codes.add(code);
+	
+	// Add the functions entries
+	if(file)
+		for(Iterator<Symbol *> sym(file->symbols()); sym; sym++)
+			if(sym->kind() == SYMBOL_Function) {
+				Inst *inst = sym->findInst();
+				if(inst)
+					addSubProgram(inst);
+			}
 }
 
 
@@ -177,15 +189,21 @@ BasicBlock *CFGInfo::findBB(Inst *inst) {
 CFG *CFGInfo::findCFG(Inst *inst) {
 	
 	// Get the basic block
-	BasicBlock *bb = findBB(inst);
+	AutoPtr<BasicBlock> bb = findBB(inst);
 	assert(bb);
 	
 	// Look for a CFG
-	CFG *cfg = bb->get<CFG *>(CFG::ID, 0);
-	if(cfg)
-		return cfg;
-	else
-		return 0;
+	return findCFG(bb);
+}
+
+
+/**
+ * Find the CFG starting at the given basic block.
+ * @param bb	Basic block to look at.
+ * @return	Found CFG or this BB is not a CFG start.
+ */
+CFG *CFGInfo::findCFG(AutoPtr<BasicBlock> bb) {
+	return bb->get<CFG *>(CFG::ID, 0);
 }
 
 
@@ -217,6 +235,11 @@ void CFGInfo::build(void) {
 		return;
 	built = true;
 	
+	// Find and mark the start
+	Inst *start = fw->start();
+	if(start)
+		addSubProgram(start);
+	
 	// Compute CFG for each code piece
 	for(Iterator<Code *> code(_codes); code; code++)
 		buildCFG(*code);
@@ -242,15 +265,13 @@ void CFGInfo::buildCFG(Code *code) {
 			if(target) {
 				AutoPtr<BasicBlock> bb = thisBB(target);
 				assert(bb);
-				if(!inst->isCall())
-					bb->use<bool>(ID_Entry) = false;
+				if(inst->isCall())
+					bb->use<bool>(ID_Entry) = true;
 			}
 
 			// Found BB starting on next instruction
 			AutoPtr<BasicBlock> bb = nextBB(inst);
 			assert(bb);
-			if(inst->isCall() || inst->isConditional())
-				bb->use<bool>(ID_Entry) = false;
 		}
 	
 	// Build the graph
@@ -310,7 +331,8 @@ void CFGInfo::buildCFG(Code *code) {
  * @param inst	Subprogram startup.
  */
 void CFGInfo::addSubProgram(Inst *inst) {
-	thisBB(inst);
+	AutoPtr<BasicBlock> bb = thisBB(inst);
+	bb->set<bool>(ID_Entry, true);
 }
 
 } // otawa
