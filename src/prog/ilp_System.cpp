@@ -5,7 +5,12 @@
  *	src/ilp_System.h -- documentation of the system interface.
  */
 
+#include <otawa/otawa.h>
 #include <otawa/ilp/System.h>
+#ifdef LP_SOLVE
+#	include <otawa/lp_solve/System.h>
+#endif
+
 
 namespace otawa { namespace ilp {
 
@@ -17,7 +22,7 @@ namespace otawa { namespace ilp {
 
 
 /**
- * @fn Constraint& Sytem::newConstraint(ilp_constraint_t comp, double constant = 0);
+ * @fn Constraint *Sytem::newConstraint(Constraint::comparator_t comp, double constant = 0);
  * Build a new constraint that may be initialized by the user. As the ILP system
  * manage the memory of the constraint, the constraint must never be deleted
  * by the user.
@@ -59,4 +64,26 @@ namespace otawa { namespace ilp {
  * @return	Object function optimum.
  */
 
-} } // otawa::ilp
+} // ilp
+
+
+/*
+ *  !!IMPORT!!
+ * This method should be contained in FrameWork.cpp but, for avoiding mandatory
+ * linkage with ILP engine, it has been moved here.
+ */
+
+/**
+ * Build an ILP system with the default ILP engine.
+ * @param max	True for a maximized system, false for a minimized.
+ * @return		ILP system ready to use, NULL fi there is no support for ILP.
+ */
+ilp::System *FrameWork::newILPSystem(bool max) {
+#	ifdef LP_SOLVE
+		return new lp_solve::System(max);
+#	else
+		return 0;
+#	endif
+}
+
+} // otawa
