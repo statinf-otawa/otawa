@@ -49,6 +49,24 @@ public:
 	inline T& getValue(void) { return value; };
 };
 
+// LockedProperty class
+template <class T> class LockedProperty: public GenericProperty<T> {
+protected:
+	virtual ~LockedProperty(void) {
+		getValue()->unlock();
+	};
+	virtual Property *copy(void) {
+		return new LockedProperty<T>(getID(), getValue());
+	};
+public:
+	inline LockedProperty(id_t id, T _value): GenericProperty<T>(id, _value) {
+		getValue()->lock();
+	};
+	inline LockedProperty(CString name, T _value): GenericProperty<T>(name, _value) {
+		getValue()->lock();
+	};
+};
+
 // PropList class
 class PropList {
 	Property *head;
@@ -96,6 +114,20 @@ template <class T> void PropList::set(id_t id, const T value) {
 	setProp(GenericProperty<T>::make(id, value));
 };
 
+
+// Lock Specialization
+/*template <> inline GenericProperty<Lock *>::~GenericProperty(void) {
+	value->unlock();
 };
+template <> inline GenericProperty<Lock *>::GenericProperty(id_t id, Lock *_value)
+: Property(id), value(_value) {
+	value->lock();
+};
+template <> inline GenericProperty<Lock *>::GenericProperty(CString name, Lock *_value)
+: Property(name), value(_value) {
+	value->lock();
+};*/
+
+};	// otawa
 
 #endif		// PROJECT_PROPERTIES_H
