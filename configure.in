@@ -9,6 +9,8 @@ AM_PROG_LEX
 AC_STDC_HEADERS
 AC_HAVE_HEADERS(string.h)
 
+AC_CHECK_PROG(USE_DOX,doxygen,yes)
+
 AC_OUTPUT([
 	Makefile
 	src/Makefile
