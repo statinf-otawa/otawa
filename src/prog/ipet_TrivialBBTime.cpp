@@ -34,11 +34,10 @@ namespace otawa {
 
 
 /**
- * See @ref CFGProcessor::processCFG(CFG *cfg).
+ * See @ref CFGProcessor::processBB().
  */
-void TrivialBBTime::processCFG(CFG *cfg) {
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-		bb->set<int>(&IPET::ID_BB_Time, dep * bb->countInstructions());
+void TrivialBBTime::processBB(BasicBlock *bb) {
+	bb->set<int>(&IPET::ID_Time, dep * bb->countInstructions());
 }
 
 } // otawa
