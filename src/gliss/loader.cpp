@@ -87,7 +87,7 @@ CString File::name(void) {
  * Get the segments in the file.
  * @return Segments of the file.
  */
-const elm::Collection<Segment *>& File::segments(void) const {
+const elm::datastruct::Collection<Segment *>& File::segments(void) const {
 	return segs;
 }
 
@@ -117,7 +117,7 @@ void Process::clear(void) {
  * Get the list of loaded files.
  * @return	Loader files.
  */
-const elm::Collection<otawa::File *> *Process::files(void) const {
+const elm::datastruct::Collection<otawa::File *> *Process::files(void) const {
 	return &_files;
 }
 
@@ -247,7 +247,7 @@ size_t CodeSegment::size(void) {
 }
 
 // Overloaded
-Sequence<ProgItem *>& CodeSegment::items(void) {
+Collection<ProgItem *>& CodeSegment::items(void) {
 	if(!built)
 		build();
 	return _items;
@@ -262,15 +262,47 @@ int CodeSegment::flags(void) {
  * Build the code and the instructions in the current segment.
  */
 void CodeSegment::build(void) {
+	code_t buffer[20];
+	instruction_t *inst;
 	
 	// Link the code
 	built = true;
 	_items.add(&code);
 	
 	// Build the instructions
+	
 	for(offset_t off = 0; off < code._size; off += 4) {
-		Inst *inst = new Inst(*this, code.addr + off);
-		code.addTail(inst);
+		address_t addr = code.addr + off;
+		
+		// Get the instruction
+		iss_fetch((::address_t)(unsigned long)addr, buffer);
+		inst = iss_decode((::address_t)(unsigned long)addr, buffer);
+		assert(inst);
+	
+		// Look for its kind
+		switch(inst->ident) {
+		case ID_B_:
+		case ID_BA_:
+		case ID_BL_:
+		case ID_BLA_:
+		case ID_BC_:
+		case ID_BCA_:
+		case ID_BCL_:
+		case ID_BCLA_:
+		case ID_BCCTR_:
+		case ID_BCCTRL_:
+		case ID_BCLR_:
+		case ID_BCLRL_:
+		case ID_SC:
+			code.addLast(new ControlInst(*this, addr));
+			break;
+		default:
+			code.addLast(new Inst(*this, addr));
+			break;
+		}
+		
+		// Cleanup
+		iss_free(inst);
 	}
 }
 
@@ -298,50 +330,24 @@ size_t CodeSegment::Code::size(void) {
 
 
 /**
- * @class Inst
- * Representation of instructions in Gliss.
+ * Find an instructions thanks to its address.
+ * @param addr	Address of the instruction to find.
+ * @return			Found instruction or null if not found.
  */
-
-// Overloaded
-address_t Inst::address(void) {
-	return addr;
-}
-
-// Overloaded
-size_t Inst::size(void) {
-	return 4;
-}
-
-// Overloaded
-Collection<Operand *> *Inst::getOps(void) {
-	return 0;	// !!TODO!!
-}
-
-// Overloaded
-Collection<Operand *> *Inst::getReadOps(void) {
-	return 0;	// !!TODO!!
-}
-
-// Overloaded
-Collection<Operand *> *Inst::getWrittenOps(void) {
-	return 0;	// !!TODO!!
-}
-
-// Overloaded
-void Inst::dump(io::Output& out) {
+otawa::Inst *CodeSegment::findByAddress(address_t addr) {
 	
-	// Display the hex value
+	// In the segement ?
+	if(addr < code.address() || addr >= code.address() + code.size())
+		return 0;
 	
-	
-	// Disassemble the statement
-	code_t buffer[20];
-	char out_buffer[200];
-	instruction_t *inst;
-	iss_fetch((::address_t)(unsigned long)addr, buffer);
-	inst = iss_decode((::address_t)(unsigned long)addr, buffer);
-	iss_disasm(out_buffer, inst);
-	out << out_buffer;
-	iss_free(inst);
+	// Look in the instruction
+	/* !!TODO!! May be improved using an indirect table.
+	 * Issue: manage the indirect table with modifications of the code.
+	 */
+	for(otawa::Inst *inst = code.first(); !inst->atEnd(); inst = inst->next())
+		if(inst->address() == addr)
+			return inst;
+	return 0;
 }
 
 

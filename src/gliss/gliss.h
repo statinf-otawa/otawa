@@ -7,17 +7,38 @@
 #ifndef OTAWA_GLISS_GLISS_H
 #define OTAWA_GLISS_GLISS_H
 
-#include <elm/obj/vector.h>
+#include <elm/datastruct/Vector.h>
 #include <otawa/manager.h>
 #include <otawa/program.h>
 #include <otawa/instruction.h>
 #include <emul.h>
 #include <elfread.h>
 
+// Power instruction kinds
+#define OTAWA_COMP 0
+#define OTAWA_LOAD 64
+#define OTAWA_STORE 65
+#define OTAWA_BRANCH_REL 128
+#define OTAWA_BRANCH_ABS 129
+#define OTAWA_BRANCH_LINK 130
+#define OTAWA_BRANCH_LINK_ABS 131
+#define OTAWA_BRANCH_COND_MEM 132
+#define OTAWA_BRANCH_COND_REL 133
+#define OTAWA_BRANCH_COND_ABS 134
+#define OTAWA_BRANCH_COND_LINK 135
+#define OTAWA_BRANCH_COND_LINK_ABS 136
+#define OTAWA_BRANCH_COND_CTR 137
+#define OTAWA_BRANCH_COND_CTR_LINK 138
+#define OTAWA_BRANCH_COND_LR 139
+#define OTAWA_BRANCH_COND_LR_LINK 140
+#define OTAWA_SYSCALL 196
+
+
 namespace otawa { namespace gliss {
 
 // Classes
 class Inst;
+class ControlInst;
 class Platform;
 class CodeSegment;
 class DataSegment;
@@ -26,9 +47,18 @@ class DataSegment;
 class Inst: public otawa::Inst {
 	CodeSegment& seg;
 	address_t addr;
-	bool built;
+protected:
+	unsigned long flags;
+	const static unsigned long FLAG_Built = 0x01;
+	const static unsigned long FLAG_Cond = 0x02;
+	const static unsigned long FLAG_Call = 0x04;
+	const static unsigned long FLAG_Return = 0x8;
+	void scan(void);
+	virtual void scanCustom(instruction_t *inst) { };
+	inline CodeSegment& segment(void) const { return seg; };
 public:
-	inline Inst(CodeSegment& segment, address_t address): seg(segment), addr(address), built(false) { }; 
+	inline Inst(CodeSegment& segment, address_t address)
+		: seg(segment), addr(address), flags(0) { }; 
 
 	// Inst overload
 	virtual address_t address(void);
@@ -37,6 +67,26 @@ public:
 	virtual Collection<Operand *> *getOps(void);
 	virtual Collection<Operand *> *getReadOps(void);
 	virtual Collection<Operand *> *getWrittenOps(void);
+};
+
+
+// ControlInst class
+class ControlInst: public Inst {
+	Inst *_target;
+	virtual void scanCustom(instruction_t *inst);
+public:
+	inline ControlInst(CodeSegment& segment, address_t address)
+		: Inst(segment, address) { }; 
+
+	// Inst overload	
+	virtual bool isControl(void);
+	virtual bool isBranch(void);
+	virtual bool isCall(void);
+	virtual bool isReturn(void);
+
+	// ControlInst overload
+	virtual bool isConditional(void);
+	virtual otawa::Inst *target(void);
 };
 
 
@@ -67,18 +117,19 @@ class CodeSegment: public ::otawa::Segment {
 	String _name;
 	Code code;
 	bool built;
-	obj::Vector<ProgItem *> _items;
+	datastruct::Vector<ProgItem *> _items;
 	void build(void);
 
 public:
 	CodeSegment(CString name, memory_t *memory, address_t address, size_t size);
+	otawa::Inst *findByAddress(address_t addr);
 
 	// Segment overload
 	virtual CString name(void);
 	virtual int flags(void);
 	virtual address_t address(void);
 	virtual size_t size(void);
-	virtual Sequence<ProgItem *>& items(void);
+	virtual datastruct::Collection<ProgItem *>& items(void);
 };
 
 
@@ -90,7 +141,7 @@ class DataSegment: public ::otawa::Segment {
 // File class
 class File: public ::otawa::File {
 	String path;
-	elm::obj::Vector<Segment *> segs;
+	elm::datastruct::Vector<Segment *> segs;
 	state_t *state;
 public:
 	File(String _path);
@@ -99,20 +150,20 @@ public:
 
 	// ::otawa::File overload
 	CString name(void);
-	const elm::Collection<Segment *>& segments(void) const;
+	const elm::datastruct::Collection<Segment *>& segments(void) const;
 };
 
 
 // Process class
 class Process: public ::otawa::Process {
-	elm::obj::Vector<otawa::File *> _files;
+	elm::datastruct::Vector<otawa::File *> _files;
 	Manager *man;
 public:
 	Process(Manager *_man);
 	void clear(void);
 
 	// elm::Process overload
-	virtual const elm::Collection<otawa::File *> *files(void) const;
+	virtual const elm::datastruct::Collection<otawa::File *> *files(void) const;
 	virtual ::otawa::File *createFile(void);
 	virtual ::otawa::File *loadFile(CString path);
 	virtual ::otawa::Platform *platform(void) const;
@@ -138,4 +189,3 @@ extern otawa::Loader& loader;
 } }	// otawa::gliss
 
 #endif	// OTAWA_GLISS_GLISS_H
-
