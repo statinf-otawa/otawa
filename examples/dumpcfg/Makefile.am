@@ -6,11 +6,11 @@ CXXFLAGS=-g3
 
 INCLUDES= \
 	-I../../include \
-	-I@ELM_PATH@/include
+	@ELM_CFLAGS@
 
 dumpcfg_LDADD= \
 	-L../../src/prog -lprog \
-	-L@ELM_PATH@/src -lelm \
+	@ELM_LDADD@ \
 	-L../../src/gliss -lgliss \
 	@GLISSPPC_LDADD@
 

@@ -25,5 +25,5 @@ libprog_a_SOURCES = \
 	prop_Identifier.cpp \
 	prop_PropList.cpp \
 	prop_Property.cpp
-INCLUDES=-I../../include -I@ELM_PATH@/include
+INCLUDES=-I../../include @ELM_CFLAGS@
 CXXFLAGS=-g3

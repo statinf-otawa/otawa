@@ -12,6 +12,6 @@ libgliss_a_SOURCES = \
 
 INCLUDES = \
 	-I../../include \
-	-I@ELM_PATH@/include \
+	@ELM_CFLAGS@ \
 	@GLISSPPC_CFLAGS@
 CXXFLAGS=-g3
