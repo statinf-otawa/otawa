@@ -65,18 +65,20 @@ template <class T>
 class LockedProperty: public GenericProperty<T> {
 protected:
 	virtual ~LockedProperty(void) {
-		getValue()->unlock();
+		GenericProperty<T>::getValue()->unlock();
 	};
 	virtual Property *copy(void) {
-		return new LockedProperty<T>(getID(), getValue());
+		return new LockedProperty<T>(
+			GenericProperty<T>::getID(),
+			GenericProperty<T>::getValue());
 	};
 public:
 	inline LockedProperty(Identifier *id, T _value)
-		: GenericProperty<T>(id, _value) { getValue()->lock(); };
+		: GenericProperty<T>(id, _value) { GenericProperty<T>::getValue()->lock(); };
 	inline LockedProperty(Identifier& id, T _value)
-		: GenericProperty<T>(id, _value) { getValue()->lock(); };
+		: GenericProperty<T>(id, _value) { GenericProperty<T>::getValue()->lock(); };
 	inline LockedProperty(elm::CString name, T _value)
-		: GenericProperty<T>(name, _value) { getValue()->lock(); };
+		: GenericProperty<T>(name, _value) { GenericProperty<T>::getValue()->lock(); };
 };
 
 

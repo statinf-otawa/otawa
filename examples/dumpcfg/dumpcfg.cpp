@@ -55,7 +55,7 @@ public:
 	static BasicBlockComparator comp;
 };
 BasicBlockComparator BasicBlockComparator::comp;
-Comparator<BasicBlock *>& Comparator<BasicBlock *>::def
+template <> Comparator<BasicBlock *>& Comparator<BasicBlock *>::def
 	= BasicBlockComparator::comp;
 	
 
