@@ -8,6 +8,7 @@
 #define OTAWA_PROG_FRAMEWORK_H
 
 #include <elm/datastruct/Collection.h>
+#include <otawa/properties.h>
 #include <otawa/prog/Process.h>
 
 namespace otawa {
@@ -21,8 +22,10 @@ class Manager;
 class Platform;
 
 // FrameWork class
-class FrameWork: public Process, public PropList {
+class FrameWork: public Process {
 	Process *proc;
+protected:
+	virtual Property *getDeep(id_t id) { return proc->getProp(id); };
 public:
 	FrameWork(Process *_proc);
 	~FrameWork(void);
@@ -35,10 +38,11 @@ public:
 	virtual Platform *platform(void) { return proc->platform(); };
 	virtual Manager *manager(void) { return proc->manager(); };
 	virtual Inst *start(void) { return proc->start(); };
+	virtual Inst *findInstAt(address_t addr) { return proc->findInstAt(addr); };
 	
 	// CFG Management
 	void buildCFG(void);
-	CFGInfo *getCFGInfo(void);
+	AutoPtr<CFGInfo> getCFGInfo(void);
 	CFG *getStartCFG(void);
 };
 
