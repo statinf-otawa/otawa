@@ -63,6 +63,16 @@ CFGInfo::~CFGInfo(void) {
 
 
 /**
+ * Add the given file to the files supported by this CFG information.
+ * @param file	Added file.
+ */
+void CFGInfo::addFile(File *file) {
+	// !!NOT IMPLEMENTED!!
+	assert(0);
+}
+
+
+/**
  * Remove all CFG stored in this CFG information.
  */
 void CFGInfo::clear(void) {
@@ -303,7 +313,7 @@ void CFGInfo::buildCFG(Code *code) {
 			// Record not-taken edge
 			BasicBlock *next_bb = ((BasicBlock::Mark *)pseudo)->bb();
 			if(bb && follow)
-				bb->setNotTaken(next_bb);
+				new Edge(bb, next_bb, EDGE_NotTaken);
 			
 			// Initialize new BB
 			bb = next_bb;
@@ -323,7 +333,7 @@ void CFGInfo::buildCFG(Code *code) {
 			if(target) {
 				BasicBlock *target_bb = thisBB(target);
 				assert(target_bb);
-				bb->setTaken(target_bb);
+				new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
 			}
 			
 			// Record BB flags
@@ -350,6 +360,20 @@ void CFGInfo::buildCFG(Code *code) {
 void CFGInfo::addSubProgram(Inst *inst) {
 	BasicBlock *bb = thisBB(inst);
 	bb->set<bool>(ID_Entry, true);
+}
+
+
+/**
+ * Find the CFG starting at the given label.
+ * @param label		Label of the first instruction of the CFG.
+ * @return			Matching CFG or null.
+ */
+CFG *CFGInfo::findCFG(String label) {
+	Inst *inst = fw->Process::findInstAt(label);
+	if(!inst)
+		return 0;
+	else
+		return findCFG(inst);
 }
 
 } // otawa
