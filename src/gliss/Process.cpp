@@ -5,7 +5,7 @@
  *	gliss/Process.cpp -- gliss::Process class implementation.
  */
 
-#include "gliss.h"
+#include <otawa/gliss.h>
 
 // Elf Header information
 extern Elf32_Ehdr Ehdr;
