@@ -75,10 +75,13 @@ fi
 if test $with_glissppc != no; then
 	if test $with_glissppc = yes; then
 		GLISSPPC_PATH=$PWD/gliss-ppc
-		AC_MSG_RESULT([Assuming Gliss PPC at $GLISSPPC_PATH.])
 	else
 		GLISSPPC_PATH=$with_glissppc
 	fi
+	if test ! -d "$GLISSPPC_PATH"; then
+		AC_MSG_ERROR([GLISS PPC cannot be found at $GLISSPPC_PATH.])
+	fi
+	AC_MSG_RESULT([Assuming Gliss PPC at $GLISSPPC_PATH.])
 	GLISSPPC_LIB=gliss
 	GLISSPPC_LDADD="-L$PWD/src/gliss -lgliss -L$GLISSPPC_PATH/lib -lemul"
 	GLISSPPC_CFLAGS="-DGLISSPPC_ENABLED -I$GLISSPPC_PATH/include -I$GLISSPPC_PATH/extern"
