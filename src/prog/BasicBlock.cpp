@@ -35,9 +35,11 @@ BasicBlock::BasicBlock(Inst *inst): flags(0) {
 	inst->insertBefore(_head);
 	
 	// Look for a label
-	Option<String> label = inst->get<String>(File::ID_Label);
-	if(label)
-		set<String>(File::ID_Label, *label);
+	if(!inst->atEnd()) {
+		Option<String> label = inst->get<String>(File::ID_Label);
+		if(label)
+			set<String>(File::ID_Label, *label);
+	}
 }
 
 

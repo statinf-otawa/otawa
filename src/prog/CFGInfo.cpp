@@ -33,7 +33,7 @@ id_t CFGInfo::ID_Entry = Property::getID("otawa.CFGEntry");
  * @param fw	Framework that the CFG information applies to.
  */
 CFGInfo::CFGInfo(FrameWork *fw): built(false) {
-	fw->set<CFGInfo *>(ID, this);
+	fw->set< AutoPtr<CFGInfo> >(ID, this);
 }
 
 
@@ -74,13 +74,13 @@ void CFGInfo::clear(void) {
  * @param inst		Instructtion to find the BB after.
  * @return				Found or created BB or null if end-of-code is reached.
  */
-BasicBlock *CFGInfo::nextBB(Inst *inst) {
+AutoPtr<BasicBlock> CFGInfo::nextBB(Inst *inst) {
 	for(Inst *node = inst->next(); !node->atEnd(); node = node->next()) {
 		PseudoInst *pseudo = node->toPseudo();
 		
 		// Instruction found (no BB): create it
 		if(!pseudo) {
-			BasicBlock *bb = new BasicBlock(node);
+			AutoPtr<BasicBlock> bb = new BasicBlock(node);
 			bb->set<bool>(ID_Entry, true);
 			assert(bb);
 			return bb;
@@ -88,12 +88,12 @@ BasicBlock *CFGInfo::nextBB(Inst *inst) {
 		
 		// Is the BB pseudo?
 		if(pseudo->id() == BasicBlock::ID) {
-			return &((BasicBlock::Mark *)pseudo)->bb();
+			return ((BasicBlock::Mark *)pseudo)->bb();
 		}
 	}
 	
 	// End-of-code
-	BasicBlock *bb = new BasicBlock(inst->next());
+	AutoPtr<BasicBlock> bb = new BasicBlock(inst->next());
 	bb->set<bool>(ID_Entry, false);
 	return bb;
 }
@@ -104,7 +104,7 @@ BasicBlock *CFGInfo::nextBB(Inst *inst) {
  * @param inst		Instruction starting the BB.
  * @return				Found or created BB.
  */
-BasicBlock *CFGInfo::thisBB(Inst *inst) {
+AutoPtr<BasicBlock> CFGInfo::thisBB(Inst *inst) {
 	
 	// Straight in BB?
 	PseudoInst *pseudo = inst->toPseudo();
@@ -121,11 +121,11 @@ BasicBlock *CFGInfo::thisBB(Inst *inst) {
 		
 		// Is it a BB pseudo?
 		else if(pseudo->id() == BasicBlock::ID)
-			return &((BasicBlock::Mark *)pseudo)->bb();
+			return ((BasicBlock::Mark *)pseudo)->bb();
 	}
 	
 	// At start, create the BB
-	BasicBlock *bb = new BasicBlock(inst);
+	AutoPtr<BasicBlock> bb = new BasicBlock(inst);
 	bb->set<bool>(ID_Entry, true);
 	return bb;
 }
@@ -231,7 +231,7 @@ void CFGInfo::buildCFG(Code *code) {
 	PseudoInst *pseudo;
 	
 	// Add the initial basic block
-	BasicBlock *bb = thisBB(code->first());
+	AutoPtr<BasicBlock> bb = thisBB(code->first());
 	
 	// Find the basic blocks
 	for(Inst *inst = code->first(); !inst->atEnd(); inst = inst->next())
@@ -240,21 +240,21 @@ void CFGInfo::buildCFG(Code *code) {
 			// Found BB starting on target instruction			
 			Inst *target = inst->target();
 			if(target) {
-				BasicBlock *bb = thisBB(target);
+				AutoPtr<BasicBlock> bb = thisBB(target);
 				assert(bb);
 				if(!inst->isCall())
 					bb->use<bool>(ID_Entry) = false;
 			}
 
 			// Found BB starting on next instruction
-			BasicBlock *bb = nextBB(inst);
+			AutoPtr<BasicBlock> bb = nextBB(inst);
 			assert(bb);
 			if(inst->isCall() || inst->isConditional())
 				bb->use<bool>(ID_Entry) = false;
 		}
 	
 	// Build the graph
-	genstruct::Vector<BasicBlock *> entries;
+	genstruct::Vector< AutoPtr<BasicBlock> > entries;
 	bb = 0;
 	bool follow = true;
 	for(Inst *inst = code->first(); !inst->atEnd(); inst = inst->next()) {
@@ -263,7 +263,7 @@ void CFGInfo::buildCFG(Code *code) {
 		if((pseudo = inst->toPseudo()) && pseudo->id() == BasicBlock::ID) {
 			
 			// Record not-taken edge
-			BasicBlock *next_bb = &((BasicBlock::Mark *)pseudo)->bb();
+			AutoPtr<BasicBlock> next_bb = ((BasicBlock::Mark *)pseudo)->bb();
 			if(bb && follow)
 				bb->setNotTaken(next_bb);
 			
@@ -283,7 +283,7 @@ void CFGInfo::buildCFG(Code *code) {
 			// Record the taken edge
 			Inst *target = inst->target();
 			if(target) {
-				BasicBlock *target_bb = thisBB(target);
+				AutoPtr<BasicBlock> target_bb = thisBB(target);
 				assert(target_bb);
 				bb->setTaken(target_bb);
 			}

@@ -1,6 +1,5 @@
 lib_LIBRARIES=libprog.a
 libprog_a_SOURCES = \
-	AST.cpp \
 	BlockAST.cpp \
 	FunAST.cpp \
 	ASTInfo.cpp \
@@ -8,15 +7,17 @@ libprog_a_SOURCES = \
 	SeqAST.cpp \
 	IfAST.cpp \
 	WhileAST.cpp \
+	DoWhileAST.cpp \
+	ForAST.cpp \
+	AST.cpp \
 	base.cpp \
 	program.cpp \
 	manager.cpp \
 	platform.cpp \
 	instruction.cpp \
 	type.cpp \
-	Process.cpp \
+	Loader.cpp \
 	FrameWork.cpp \
-	Process.cpp \
 	BasicBlock.cpp \
 	CFGInfo.cpp \
 	CFG.cpp \

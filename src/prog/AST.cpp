@@ -7,6 +7,11 @@
 
 #include <otawa/ast/AST.h>
 
+/*
+ * !!IMPROVEMENT!!
+ * An AST type UNDEFINED may be added for qualifyingnot-available function body or AST part.
+ */
+
 namespace otawa {
 
 /**
@@ -14,10 +19,26 @@ namespace otawa {
  */
 class NOPAST: public AST {
 public:
+	inline NOPAST(void) { lock(); };
 	virtual ast_kind_t kind(void) const { return AST_Nop; };
 	virtual bool isNOP(void) { return true; };
+	virtual Inst *first(void) { return 0; };
 };
 static NOPAST nop_inst;
+
+
+/**
+ * Undef AST class.
+ */
+class UndefAST: public AST {
+public:
+	inline UndefAST(void) { lock(); };
+	virtual ast_kind_t kind(void) const { return AST_Undef; };
+	virtual bool isUndef(void) { return true; };
+	virtual Inst *first(void) { return 0; };
+};
+static UndefAST undef_inst;
+
 
 
 /**
@@ -66,15 +87,30 @@ static NOPAST nop_inst;
  * @return Repetition AST or null.
   */
 
+
 /**
  * Unique instance of the NOP AST.
  */
-static const AST::AST& NOP = nop_inst;
+AST& AST::NOP = nop_inst;
+
+
+/**
+ * Unique instance of the Undef AST.
+ */
+AST& AST::UNDEF = undef_inst;
+
 
 /**
  * @fn bool AST::isNOP(void);
  * Test if the AST is the NOP AST.
  * @return True if it is the NOP AST, false else.
+ */
+
+
+/**
+ * @fn bool AST::isUndef(void);
+ * Test if the AST is the undefined AST.
+ * @return True if it is the undefined AST, false else.
  */
 
 } // otawa

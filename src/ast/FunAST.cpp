@@ -32,7 +32,7 @@ const id_t FunAST::ID = Property::getID("otawa.ast.fun");
  * @param name	Function name.
  */
 FunAST::FunAST(FrameWork *fw, Inst *entry, String name)
-: ent(entry), _name(name), _ast(&AST::NOP) {
+: ent(entry), _name(name), _ast(&AST::UNDEF) {
 	
 	// Mark the entry
 	ent->set<FunAST *>(ID, this);
@@ -59,7 +59,7 @@ FunAST::FunAST(FrameWork *fw, Inst *entry, String name)
  * @param name	Function name.
  */
 FunAST::FunAST(ASTInfo *info, Inst *entry, String name)
-: ent(entry), _name(name), _ast(&AST::NOP) {
+: ent(entry), _name(name), _ast(&AST::UNDEF) {
 	
 	// Mark the entry
 	ent->set<FunAST *>(ID, this);
@@ -79,8 +79,6 @@ FunAST::FunAST(ASTInfo *info, Inst *entry, String name)
  */
 FunAST::~FunAST(void) {
 	ent->removeProp(ID);
-	if(_ast != &AST::NOP)
-		delete _ast;
 }
 
 
@@ -109,10 +107,8 @@ FunAST::~FunAST(void) {
  * Modify the AST representing the body of this function.
  * @param ast New body AST.
  */
-void FunAST::setAst(AST *ast) {
-	if(!ast)
-		ast = &AST::NOP;
-	
+void FunAST::setAst(AutoPtr<AST> ast) {
+	_ast = ast;
 }
 
 

@@ -20,7 +20,7 @@ namespace otawa {
  */
 
 // Property names store
-static genstruct::HashTable<String, id_t> ids;
+static genstruct::HashTable<String, id_t> *ids;
 static id_t top_id = 1;
 
 /**
@@ -33,14 +33,18 @@ static id_t top_id = 1;
 id_t Property::getID(CString name) {
 	String sname(name);
 	
+	// Need to allocate the ID table ?
+	if(!ids)
+		ids = new genstruct::HashTable<String, id_t>();
+	
 	// Already defined
-	Option<id_t> result = ids.get(sname);
+	Option<id_t> result = ids->get(sname);
 	if(result)
 		return *result;
 	
 	// Create it
 	id_t id = top_id++;
-	ids.put(sname, id);
+	ids->put(sname, id);
 	return id;
 }
 
@@ -117,12 +121,27 @@ id_t Property::getID(CString name) {
  * call.
  */
 
+
+/**
+ * Add all properties from the given property list.
+ * @param props	Property list to clone.
+ */
+void PropList::addProps(const PropList& props) {
+	for(Property *cur = props.head; cur; cur = cur->next) {
+		Property *copy = cur->copy();
+		setProp(copy);
+	}
+}
+
+
 /**
  * Find a property by its identifier.
  * @param id	Identifier of the property to find.
  * @return			Found property or null.
  */
 Property *PropList::getProp(id_t id) {
+	
+	/* Look in this list */
 	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next)
 		if(cur->id == id) {
 			if(prev) {
@@ -132,7 +151,9 @@ Property *PropList::getProp(id_t id) {
 			}
 			return cur;
 		}
-	return 0;
+		
+	/* Perform deep search */
+	return getDeep(id);
 }
 
 
@@ -185,7 +206,7 @@ void PropList::removeProp(id_t id) {
 /**
  * Remove all properties from the list.
  */
-void PropList::clear(void) {
+void PropList::clearProps(void) {
 	for(Property *cur = head, *next; cur; cur = next) {
 		next = cur->next;
 		delete cur;
@@ -226,8 +247,21 @@ void PropList::clear(void) {
 
 
 /**
+ * This protected method is called when the usual property retrieval method fails. It lets a chance
+ * for sub-classes to provide special ways for getting properties. It may be used, for example,
+ * for implementing lazy evaluation of special values or for merging property list of many objects.
+ * @param id	Identifier of the looked property.
+ * @return	Return the found property or null.
+ */
+Property *PropList::getDeep(id_t id) {
+	return 0;
+}
+
+
+/**
  * @class PropValue
  * Classes requiring information about the life of properties must implement this interface.
  */
+
 
 };

@@ -63,7 +63,9 @@ Exception::~Exception(void) {
  * Build the message using "printf" style format and arguments.
  */
 void Exception::build(CString format, va_list args) {
-	// !!TODO!!
+	StringBuffer buffer;
+	buffer.print(&format, args);
+	msg = buffer.toString();
 }
 
 

@@ -16,20 +16,11 @@ namespace otawa {
 
 
 /**
- * Delete its children.
- */
-WhileAST::~WhileAST(void) {
-	cnd->release();
-	bod->release();
-}
-
-
-/**
  * Build a new "while" AST.
  * @param condition	Iteration condition.
  * @param body		Iteration body.
  */
-WhileAST::WhileAST(AST *condition, AST *body)
+WhileAST::WhileAST(AutoPtr<AST> condition, AutoPtr<AST> body)
 : cnd(condition), bod(body) {
 	assert(condition && body);
 }
@@ -47,5 +38,11 @@ WhileAST::WhileAST(AST *condition, AST *body)
  * Get the body of the iteration.
  * @return Iteration body.
  */
-	
+
+
+// AST overload
+Inst *WhileAST::first(void) {
+	return cnd->first();
+}
+
 }	// otawa

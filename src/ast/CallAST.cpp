@@ -21,7 +21,7 @@ namespace otawa {
  * @param caller	Start of caller block.
  * @param _fun	Called function.
  */
-CallAST::CallAST(Inst *caller, FunAST *_fun): BlockAST(caller), fun(_fun) {
+CallAST::CallAST(Inst *caller, AutoPtr<FunAST> _fun): BlockAST(caller), fun(_fun) {
 }
 
 

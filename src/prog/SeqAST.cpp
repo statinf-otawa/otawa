@@ -21,18 +21,8 @@ namespace otawa {
  * @param child1	First child.
  * @param child2	Second child.
  */
-SeqAST::SeqAST(AST *child1, AST *child2): c1(child1), c2(child2) {
-}
-
-
-/**
- * Delete its children.
- */
-SeqAST::~SeqAST(void) {
-	if(c1 != &NOP)
-		c1->release();
-	if(c2 != &NOP)
-		c2->release();
+SeqAST::SeqAST(AutoPtr<AST> child1, AutoPtr<AST> child2)
+: c1(child1), c2(child2) {
 }
 
 
@@ -48,5 +38,14 @@ SeqAST::~SeqAST(void) {
  * Get the second child AST of the sequence.
  * @return Second child in sequence.
  */
+
+
+// AST Overload
+Inst *SeqAST::first(void) {
+	Inst *result = c1->first();
+	if(!result)
+		result = c2->first();
+	return result;
+}
 
 } // otawa

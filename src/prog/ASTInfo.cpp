@@ -24,10 +24,10 @@ const id_t ASTInfo::ID = Property::getID("otawa.ast.info");
 	
 /**
  * Build an new AST info linked to the given framework.
- * @param fw	Framework to link to.
+ * @param proc	Process to link to.
  */
-ASTInfo::ASTInfo(FrameWork *fw) {
-	fw->set<ASTInfo *>(ID, this);
+ASTInfo::ASTInfo(Process *proc) {
+	proc->set<ASTInfo *>(ID, this);
 }
 
 /**
@@ -48,7 +48,7 @@ ASTInfo::ASTInfo(FrameWork *fw) {
  * Add a function to the AST information.
  * @param fun Function to add.
  */
-void ASTInfo::add(FunAST *fun) {
+void ASTInfo::add(AutoPtr<FunAST> fun) {
 	
 	// Add it to the list
 	funs.add(fun);
@@ -57,15 +57,6 @@ void ASTInfo::add(FunAST *fun) {
 	String name = fun->name();
 	if(name)
 		_map.put(name, fun);
-}
-
-
-/**
- * Destructor.
- */
-ASTInfo::~ASTInfo(void) {
-	for(Iterator<FunAST *> fun(funs); fun; fun++)
-		delete *fun;
 }
 
 
@@ -81,7 +72,7 @@ GenericProperty<ASTInfo *>::~GenericProperty(void) {
  * @param inst	First instruction of the function.
  * @return	Found or created AST function.
  */
-FunAST *ASTInfo::getFunction(Inst *inst) {
+AutoPtr<FunAST> ASTInfo::getFunction(Inst *inst) {
 	
 	// Look in the instruction
 	FunAST *fun = inst->get<FunAST *>(FunAST::ID, 0);
@@ -94,5 +85,21 @@ FunAST *ASTInfo::getFunction(Inst *inst) {
 	return fun;
 }
 
+
+/**
+ * Find or create the AST information attached to the given process.
+ * @param proc	Process to look in.
+ * @return		AST information of the process.
+ */
+ASTInfo *ASTInfo::getInfo(Process *proc) {
+	
+	// Look in the process
+	elm::Option<ASTInfo *> result = proc->get<ASTInfo *>(ID);
+	if(result)
+		return *result;
+	
+	// Else build it
+	return new ASTInfo(proc);
+}
 
 } // otawa

@@ -63,4 +63,12 @@ namespace otawa {
   * @return Address of the first instruction of the program or null if it unknown.
   */
 
+
+/**
+ * @fn Inst *Process::findInstAt(address_t addr);
+ * Find the instruction at the given address.
+ * @param addr	Address of instruction to retrieve.
+ * @return		Found instruction or null if it cannot be found.
+ */
+
 } // otawa
