@@ -8,18 +8,18 @@
 #define OTAWA_IPET_TRIVIALBBTIME_H
 
 #include <assert.h>
-#include <otawa/proc/CFGProcessor.h>
+#include <otawa/proc/BBProcessor.h>
 
 namespace otawa {
 	
-class TrivialBBTime: public CFGProcessor {
+class TrivialBBTime: public BBProcessor {
 	int dep;
 public:
 	inline TrivialBBTime(int depth = 1);
 	inline int depth(void) const;
 
-	// CFGProcessor overload
-	void processCFG(CFG *cfg);
+	// BBProcessor overload
+	void processBB(BasicBlock *bb);
 };
 
 

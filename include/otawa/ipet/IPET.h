@@ -13,7 +13,10 @@ namespace otawa {
 	
 class IPET {
 public:
-	static Identifier ID_BB_Time;
+	static Identifier ID_Time;
+	static Identifier ID_Var;
+	static Identifier ID_System;
+	static Identifier ID_WCET;
 };
 		
 } // otawa
