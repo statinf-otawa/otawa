@@ -1,0 +1,22 @@
+#!@BASH_PATH@
+
+option=
+
+while test "$1" != ""; do
+	if test "$1" == "--cflags"; then
+		echo "-I@prefix@/include @ELM_CFLAGS@ "
+		option=ok
+	elif test "$1" == "--libs"; then
+		echo "-L@prefix@/lib -lprog -lgliss @ELM_LDADD@ @GLISSPPC_LDADD@"
+		option=ok
+	else
+		option=
+		echo "ERROR: unknown option '$1'."
+		break
+	fi
+	shift
+done
+
+if test "$option" == ""; then
+	echo "SYNTAX: otawa-config [--cflags] [--libs]"
+fi
