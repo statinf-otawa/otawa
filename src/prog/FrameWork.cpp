@@ -8,6 +8,7 @@
 #include <otawa/manager.h>
 #include <otawa/prog/FrameWork.h>
 
+
 // Trace
 #ifndef NDEBUG
 //#define FRAMEWORK_TRACE
