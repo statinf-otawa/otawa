@@ -35,17 +35,37 @@ CFG::CFG(Code *code, AutoPtr<BasicBlock> entry): ent(entry), _code(code) {
 		set<String>(File::ID_Label, *label);
 }
 
+
 /**
  * @fn BasicBlock *CFG::entry(void) const;
  * Get the entry basic block of the CFG.
  * @return Entry basic block.
  */
 
+
 /**
  * @fn Code *CFG::code(void) const;
  * Get the code containing the CFG.
  * @return Container code.
  */
+
+
+/**
+ * Get the CFG name, that is, the label associated with the entry of the CFG.
+ * @return	CFG label or an empty string.
+ */
+String CFG::label(void) {
+	return ent->get<String>(File::ID_Label, "");
+}
+
+
+/**
+ * Get the address of the first instruction of the CFG.
+ * @return	Return address of the first instruction.
+ */
+address_t CFG::address(void) {
+	return ent->address();
+}
 
 
 // Function for handling removal of CFGInfo
