@@ -24,12 +24,33 @@ AC_ARG_WITH(elm, [  --with-elm[=PATH]	Set the path to the Elm library (default $
 if test $with_elm = 'no'; then
 	AC_MSG_ERROR([Elm library is mandatory.])
 elif test $with_elm = 'yes'; then
-	ELM_PATH=$PWD/elm
+	if test -d $PWD/elm; then
+		ELM_PATH=$PWD/elm
+		ELM_CFLAGS=-I$ELM_PATH/include
+		ELM_LDADD="-L$ELM_PATH/src -lelm"
+	elif test -d $HOME/local/include/elm && -f $HOME/local/lib/libelm.a; then
+		ELM_PATH=$HOME/local
+		ELM_CFLAGS=-I$(ELM_PATH)/include
+		ELM_LDADD="-L$(ELM_PATH)/lib -lelm"
+	elif test -d /usr/local/include/elm && -f /usr/local/lib/libelm.a; then
+		ELM_PATH=/usr/local
+		ELM_CFLAGS=-I$(ELM_PATH)/include
+		ELM_LDADD="-L$(ELM_PATH)/lib -lelm"
+	elif test -d /usr/include/elm && -f /usr/lib/libelm.a; then
+		ELM_PATH=/usr/
+		ELM_CFLAGS=
+		ELM_LDADD=
+	else
+		AC_MSG_ERROR([Cannot found the Elm library!])
+	fi
 	AC_MSG_RESULT([Assuming elm at $ELM_PATH.])
 else
 	ELM_PATH=$with_elm
+	ELM_CFLAGS=-I$ELM_PATH/include
+	ELM_LDADD="-L$ELM_PATH/lib -lelm"
 fi
-AC_SUBST(ELM_PATH)
+AC_SUBST(ELM_CFLAGS)
+AC_SUBST(ELM_LDADD)
 
 
 AC_ARG_ENABLE(heptane, [  --enable-heptane [default=yes]],,enable_heptane=yes)
