@@ -20,7 +20,7 @@ using namespace otawa;
 
 
 // Types
-typedef genstruct::SortedBinMap<AutoPtr<BasicBlock>, int> *call_map_t;
+typedef genstruct::SortedBinMap<BasicBlock *, int> *call_map_t;
 
 
 // Command class
@@ -28,10 +28,11 @@ class Command: public option::Manager {
 	bool one;
 	otawa::Manager manager;
 	FrameWork *fw;
-	AutoPtr<CFGInfo> info;
+	CFGInfo *info;
 	void dump(CString name);
 public:
 	Command(void);
+	~Command(void);
 	void run(int argc, char **argv);
 	
 	// Manager overload
@@ -46,25 +47,25 @@ static option::BoolOption link_rec(command, 'r', "recursive", "Replace recursive
 
 
 // BasicBlock comparator
-class BasicBlockComparator: public elm::Comparator< AutoPtr<BasicBlock> > {
+class BasicBlockComparator: public elm::Comparator<BasicBlock *> {
 public:
-	virtual int compare(AutoPtr<BasicBlock> v1, AutoPtr<BasicBlock> v2) {
+	virtual int compare(BasicBlock *v1, BasicBlock *v2) {
 		return v1->address() - v2->address();
 	}
 	static BasicBlockComparator comp;
 };
 BasicBlockComparator BasicBlockComparator::comp;
-Comparator< AutoPtr<BasicBlock> >& Comparator< AutoPtr<BasicBlock> >::def
+Comparator<BasicBlock *>& Comparator<BasicBlock *>::def
 	= BasicBlockComparator::comp;
 	
 
 // CountVisitor class
 class CountVisitor
-: public genstruct::SortedBinMap< AutoPtr<BasicBlock>, int >::Visitor {
+: public genstruct::SortedBinMap<BasicBlock *, int >::Visitor {
 	int cnt;
 public:
 	inline CountVisitor(void): cnt(0) { };
-	virtual void process(AutoPtr<BasicBlock> bb, int& index) {
+	virtual void process(BasicBlock *bb, int& index) {
 		index = cnt;
 		cnt++;
 	}
@@ -74,8 +75,8 @@ public:
 /**
  * This class is used for storing information about each call to inline.
  */
-class Call: public genstruct::SortedBinMap<AutoPtr<BasicBlock>, int>::Visitor {
-	AutoPtr<CFGInfo> info;
+class Call: public genstruct::SortedBinMap<BasicBlock *, int>::Visitor {
+	CFGInfo *info;
 	int usage;
 	CFG *_cfg;
 	call_map_t map;
@@ -89,7 +90,7 @@ class Call: public genstruct::SortedBinMap<AutoPtr<BasicBlock>, int>::Visitor {
 	void process(void);
 	~Call(void);
 public:
-	Call(Call *back, AutoPtr<CFGInfo> info, CFG *cfg, int _ret);
+	Call(Call *back, CFGInfo *info, CFG *cfg, int _ret);
 	void lock(void);
 	void unlock(void);
 	inline void put(void);
@@ -97,10 +98,10 @@ public:
 	inline int getReturn(void) const { return ret; };
 	inline Call *getBack(void) const { return back; };
 	inline CFG *getCFG(void) const { return _cfg; };
-	static void output(AutoPtr<CFGInfo> info, CFG *cfg);
+	static void output(CFGInfo *info, CFG *cfg);
 	
 	// Visistor overload
-	virtual void process(AutoPtr<BasicBlock> bb, int& index);
+	virtual void process(BasicBlock *bb, int& index);
 };
 
 
@@ -185,7 +186,7 @@ void Call::unlock(void) {
  * @param cfg		CFG to process.
  * @param _ret		Index of the BB to return to.
  */
-Call::Call(Call *_back, AutoPtr<CFGInfo> _info, CFG *cfg, int _ret)
+Call::Call(Call *_back, CFGInfo *_info, CFG *cfg, int _ret)
 : info(_info), base(top), ret(_ret), _cfg(cfg), back(_back), usage(1) {
 	
 	// Lock the back
@@ -195,7 +196,7 @@ Call::Call(Call *_back, AutoPtr<CFGInfo> _info, CFG *cfg, int _ret)
 	// Build the CFG if not already built
 	map = cfg->get<call_map_t>(ID_Map, 0);
 	if(!map) {
-		map = new genstruct::SortedBinMap<AutoPtr<BasicBlock>, int>;
+		map = new genstruct::SortedBinMap<BasicBlock *, int>;
 		build_map(cfg);
  		cfg->set<call_map_t>(ID_Map, map);
 	}
@@ -222,21 +223,21 @@ void Call::put(void) {
 void Call::build_map(CFG *cfg) {
 	
 	/* Initialize list of BB to process */
-	genstruct::DLList< AutoPtr<BasicBlock> > remain;
+	genstruct::DLList<BasicBlock *> remain;
 	remain.addLast(cfg->entry());	
 	
 	// Find all basic blocks
 	while(!remain.isEmpty()) {
 		
 		// Get the current BB
-		AutoPtr<BasicBlock> bb = remain.first();
+		BasicBlock *bb = remain.first();
 		remain.removeFirst();
 		if(map->exists(bb))
 			continue;
 		map->put(bb, 0);
 		
 		// Process not-taken
-		AutoPtr<BasicBlock> target = bb->getNotTaken();
+		BasicBlock *target = bb->getNotTaken();
 		if(target && !map->exists(target))
 			remain.addLast(target);
 
@@ -267,7 +268,7 @@ void Call::process(void) {
  * @param info	CFG information.
  * @param cfg	CFG to output.
  */
-void Call::output(AutoPtr<CFGInfo> info, CFG *cfg) {
+void Call::output(CFGInfo *info, CFG *cfg) {
 	Call *call = new Call(0, info, cfg, -1);
 	call->put();
 	try {
@@ -294,7 +295,7 @@ void Call::output(AutoPtr<CFGInfo> info, CFG *cfg) {
  * @param bb		Basic block to process.
  * @param index	Basic block index.
  */
-void Call::process(AutoPtr<BasicBlock> bb, int& index) {
+void Call::process(BasicBlock *bb, int& index) {
 	
 	// Display header
 	cout << (index + base)
@@ -312,7 +313,7 @@ void Call::process(AutoPtr<BasicBlock> bb, int& index) {
 		
 		// Not taken
 		int next = -1;
-		AutoPtr<BasicBlock> target = bb->getNotTaken();
+		BasicBlock *target = bb->getNotTaken();
 		if(target) {
 			next = map->get(target, -1);
 			assert(next >= 0);
@@ -367,7 +368,7 @@ void Call::process(AutoPtr<BasicBlock> bb, int& index) {
 void Command::dump(CString name) {
 	
 	// Get the CFG information
-	AutoPtr<CFGInfo> info = fw->getCFGInfo();
+	CFGInfo *info = fw->getCFGInfo();
 	
 	// Find label address
 	address_t addr = 0;
@@ -451,6 +452,14 @@ void Command::process (String arg) {
 		dump(arg.toCString());
 		cout << '\n';
 	}
+}
+
+
+/**
+ * Release all command ressources.
+ */
+Command::~Command(void) {
+	delete fw;
 }
 
 
