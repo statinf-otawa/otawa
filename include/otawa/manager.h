@@ -13,6 +13,8 @@
 #include <otawa/platform.h>
 #include <otawa/program.h>
 #include <otawa/cfg.h>
+#include <otawa/prog/Process.h>
+#include <otawa/prog/FrameWork.h>
 using namespace elm;
 
 namespace otawa {
@@ -40,17 +42,6 @@ public:
 };
 
 
-// Process class
-class Process {
-public:
-	virtual const Collection<File *> *files(void) const = 0;
-	virtual File *createFile(void) = 0;
-	virtual File *loadFile(CString path) = 0;
-	virtual Platform *platform(void) const = 0;
-	virtual Manager *manager(void) const = 0;
-};
-
-
 // Loader class
 class Loader {
 	friend class Manager;
@@ -69,36 +60,15 @@ public:
 	static id_t ID_PlatformName;
 	static id_t ID_LoaderName;
 	static id_t ID_PlatformId;
+	static id_t ID_Argc;
+	static id_t ID_Argv;
+	static id_t ID_Envp;
 
 	// Default platform and loader
-	static CString LOADER_Heptane;	// = "heptane";
-	static CString PLATFORM_PowerPC_GLiss;	// = "powerpc-powerpc640-elf-gliss";
-};
-
-
-// FrameWork class
-class FrameWork: public Process, public PropList {
-	Process *proc;
-public:
-	FrameWork(Process *_proc);
-	~FrameWork(void);
-	inline Process *getProcess(void) const { return proc; };
-	
-	// File management
-	virtual const Collection<File *> *files(void) const
-		{ return proc->files(); };
-	virtual File *createFile(void)
-		{ return proc->createFile(); };
-	virtual File *loadFile(CString path)
-		{ return proc->loadFile(path); };
-	virtual Platform *platform(void) const 
-		{ return proc->platform(); };
-	virtual Manager *manager(void) const
-		{ return proc->manager(); };
-	
-	// CFG Management
-	void buildCFG(void);
-	CFGInfo *getCFG(void);
+	static Loader& LOADER_Gliss_PowerPC;
+	static CString LOADER_NAME_Gliss_PowerPC;
+	static CString LOADER_NAME_Heptane;
+	static CString PLATFORM_NAME_PowerPC_Gliss;
 };
 
 

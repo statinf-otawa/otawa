@@ -177,6 +177,9 @@ public:
 
 // Inst class
 class Inst: public inhstruct::DLNode, public PropList {
+	friend class Code;
+protected:
+	virtual ~Inst(void) { };
 public:
 	inline Inst *next(void) const { return (Inst *)inhstruct::DLNode::next(); };
 	inline Inst *previous(void) const { return (Inst *)inhstruct::DLNode::previous(); };

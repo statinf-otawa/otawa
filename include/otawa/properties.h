@@ -38,6 +38,7 @@ template <class T> class GenericProperty: public Property {
 protected:
 	inline GenericProperty(id_t id, T _value): Property(id), value(_value) { };
 	inline GenericProperty(CString name, T _value): Property(name), value(_value) { };
+	virtual ~GenericProperty(void) { };
 public:
 	static GenericProperty<T> *make(id_t id, const T value) {
 		return new GenericProperty(id, value);

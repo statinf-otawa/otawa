@@ -28,7 +28,6 @@ class Data;
 // ProgObject class
 class ProgObject: public PropList {
 public:
-	virtual ~ProgObject(void);
 };
 
 
@@ -47,10 +46,10 @@ public:
 
 // Code class
 class Inst;
-class Code: public ProgItem, public inhstruct::DLList {
+class Code: public ProgItem {
 public:
-	inline Inst *first(void) const { return (Inst *)inhstruct::DLList::first(); };
-	inline Inst *last(void) const { return (Inst *)inhstruct::DLList::last(); };
+	virtual Inst *first(void) const = 0;
+	virtual Inst *last(void) const = 0;
 	virtual Code *toCode(void) { return this; };
 };
 
@@ -69,8 +68,8 @@ class Segment: public ProgObject {
 protected:
 	virtual ~Segment(void) { };
 public:
-	const static int EXECUTABLE = 0x01;
-	const static int WRITABLE = 0x02;
+	const static int EXECUTABLE = 0x01;	/**< Segment is executable. */
+	const static int WRITABLE = 0x02;	/**< Segment is writable. */
 
 	virtual CString name(void) = 0;
 	virtual int flags(void) = 0;

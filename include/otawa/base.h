@@ -37,4 +37,3 @@ typedef signed long offset_t;
 }
 
 #endif	// OTAWA_BASE_H
-
