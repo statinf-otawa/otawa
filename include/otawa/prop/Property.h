@@ -81,7 +81,6 @@ public:
 		: GenericProperty<T>(name, _value) { GenericProperty<T>::getValue()->lock(); };
 };
 
-
 } // otawa
 
 #endif	// OTAWA_PROP_PROPERTY_H
