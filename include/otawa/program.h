@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <elm/string.h>
 #include <elm/inhstruct/DLList.h>
-#include <elm/datastruct/Collection.h>
+#include <elm/Collection.h>
 #include <elm/datastruct/Map.h>
 #include <otawa/base.h>
 #include <otawa/properties.h>
@@ -78,7 +78,7 @@ public:
 	virtual int flags(void) = 0;
 	virtual address_t address(void) = 0;
 	virtual size_t size(void) = 0;
-	virtual datastruct::Collection<ProgItem *>& items(void) = 0;
+	virtual elm::Collection<ProgItem *>& items(void) = 0;
 };
 
 
@@ -88,10 +88,10 @@ class File: public ProgObject {
 public:
 	static id_t ID_Label;
 	virtual CString name(void) = 0;
-	virtual const datastruct::Collection<Segment *>& segments(void) const = 0;
+	virtual const elm::Collection<Segment *>& segments(void) const = 0;
 	virtual address_t findLabel(const String& label) = 0;
 	virtual Symbol *findSymbol(String name) = 0;
-	virtual const elm::datastruct::Collection<Symbol *>& symbols(void) = 0;
+	virtual const elm::Collection<Symbol *>& symbols(void) = 0;
 };
 
 

@@ -27,7 +27,7 @@ public:
 	static ASTInfo *getInfo(Process *proc);
 	AutoPtr<FunAST> getFunction(Inst *inst);
 	inline Map<String, AutoPtr<FunAST> >& map(void) { return _map; };
-	inline Collection< AutoPtr<FunAST> >& functions(void) { return funs; };
+	inline elm::Collection< AutoPtr<FunAST> >& functions(void) { return funs; };
 };
 	
 } // otawa

@@ -8,7 +8,7 @@
 #define OTAWA_INSTRUCTION_H
 
 #include <elm/string.h>
-#include <elm/datastruct/Collection.h>
+#include <elm/Collection.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/datastruct/Vector.h>
 #include <elm/io.h>
