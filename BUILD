@@ -35,7 +35,6 @@ configuration options are:
 		(require doxygen).
 	--disable-doc: disable the automatic documentation generation.
 
-
 2. Compiling Elm Library
 
   I have not yet archived because I do not know if it must be inserted in the
@@ -74,3 +73,14 @@ Then you can build the PCC simulator:
   As a default behaviour, Otawa assumes Gliss PPC directory is called "gliss-ppc"
 and is located in the Otawa top level directory but with "--with-glissppc"
 configuration option, you may put it anywhere.
+
+4. Simple dependency resolution
+
+  A simpler way of configuring and compiling Otawa is to put dependencies in the
+OTAWA directory.
+	otawa/elm
+	otawa/gliss
+	otawa/gliss-ppc
+
+  As a default, Otawa will look for these locations for resolving its
+dependencies.
