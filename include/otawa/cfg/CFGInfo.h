@@ -7,6 +7,7 @@
 #ifndef OTAWA_CFG_CFG_INFO_H
 #define OTAWA_CFG_CFG_INFO_H
 
+#include <elm/utility.h>
 #include <elm/datastruct/Vector.h>
 #include <otawa/cfg/BasicBlock.h>
 
@@ -20,12 +21,12 @@ class FrameWork;
 class Inst;
 	
 // CFGInfo class
-class CFGInfo {
+class CFGInfo: public elm::Lock {
 	static id_t ID_Entry;
 	datastruct::Vector<Code *> _codes;
 	datastruct::Vector<CFG *> _cfgs;
-	BasicBlock *nextBB(Inst *inst);
-	BasicBlock *thisBB(Inst *inst);
+	AutoPtr<BasicBlock> nextBB(Inst *inst);
+	AutoPtr<BasicBlock> thisBB(Inst *inst);
 	void build(void);
 	void buildCFG(Code *code);
 	bool built;

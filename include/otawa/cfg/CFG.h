@@ -17,11 +17,11 @@ class Code;
 // CFG class
 class CFG: public ProgObject {
 	Code *_code;
-	BasicBlock *ent;
+	AutoPtr<BasicBlock> ent;
 public:
 	static id_t ID;
-	CFG(Code *code, BasicBlock *entry);
-	inline BasicBlock *entry(void) const { return ent; };
+	CFG(Code *code, AutoPtr<BasicBlock> entry);
+	inline AutoPtr<BasicBlock> entry(void) const { return ent; };
 	inline Code *code(void) const { return _code; };
 };
 

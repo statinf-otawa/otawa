@@ -15,7 +15,7 @@
 namespace otawa {
 
 // BaseBlock class
-class BasicBlock: public ProgObject, public Lock {
+class BasicBlock: public Lock, public ProgObject {
 public:
 	class Mark;
 private:
