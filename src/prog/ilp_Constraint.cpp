@@ -23,7 +23,7 @@ namespace otawa { namespace ilp {
  */
 
 /**
- * @fn double Constraint::coef(Var *var = 0) const;
+ * @fn double Constraint::coefficient(Var *var = 0) const;
  * Get the coefficient for the given variable.
  * @param var	Variable to get the coefficent of. Null variable allows getting
  * 				the constant part.
@@ -31,7 +31,7 @@ namespace otawa { namespace ilp {
  */
 
 /**
- * @fn ilp_constrain_t Constraint::comp(void) const;
+ * @fn Constraint::comparator_t Constraint::comparator(void) const;
  * Get the constraint comparator.
  * @return	Constraint comparator.
  */
