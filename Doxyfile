@@ -59,7 +59,10 @@ WARN_LOGFILE           =
 # configuration options related to the input files
 #---------------------------------------------------------------------------
 INPUT                  = src/prog/ \
-                         include/otawa/
+                         include/otawa/ \
+						 include/otawa/cfg \
+						 include/otawa/prog \
+						 include/otawa/ast
 FILE_PATTERNS          = 
 RECURSIVE              = NO
 EXCLUDE                = 
@@ -207,4 +210,4 @@ CGI_URL                =
 DOC_URL                = 
 DOC_ABSPATH            = 
 BIN_ABSPATH            = /usr/local/bin/
-EXT_DOC_PATHS          = 
+EXT_DOC_PATHS          =
