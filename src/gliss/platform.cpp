@@ -187,4 +187,19 @@ bool ControlInst::isReturn(void) {
 	return flags & FLAG_Return;
 }
 
+// Overloaded
+void ControlInst::dump(io::Output& out) {
+	
+	// Call usual disassembling
+	Inst::dump(out);
+	
+	// Output the branch label if any
+	scan();
+	if(_target) {
+		Option<String> label = _target->get<String>(File::ID_Label);
+		if(label)
+			out << " [" << *label << ']';
+	}
+}
+
 } }	// otawa::gliss

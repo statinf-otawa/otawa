@@ -9,8 +9,6 @@
 #define ISS_DISASM
 #include "gliss.h"
 
-#define TRACE	{ elm::io::stdout << __FILE__ << ':' << __LINE__ << '\n'; elm::io::stdout.fflush(); }
-
 namespace otawa { namespace gliss {
 
 
@@ -59,8 +57,7 @@ File::File(String _path): path(_path) {
     // Initialize the text segments
     struct text_secs *text;
     for(text = Text.secs; text; text = text->next) {
-    	CodeSegment *seg = new CodeSegment(text->name, state->M,
-    		(address_t)text->address, text->size);
+    	CodeSegment *seg = new CodeSegment(*this, text->name, state->M, (address_t)text->address, text->size);
     	segs.add(seg);
     }
 }
@@ -91,6 +88,18 @@ const elm::datastruct::Collection<Segment *>& File::segments(void) const {
 	return segs;
 }
 
+/**
+ * Find the address matching the given label.
+ * @param label	Name of the label to find.
+ * @retrun		Address of the label or null.
+ */
+address_t File::findLabel(const String& label) {
+	Option<address_t> addr = labels.get(label);
+	if(addr)
+		return *addr;
+	else
+		return 0;
+}
 
 /**
  * @class Process
@@ -222,13 +231,14 @@ otawa::Loader& loader = static_loader;
 
 /**
  * Constructor.
+ * @param _file		Container file.
  * @param name	Name of the segment.
  * @param memory	Gliss memory.
  * @param address	Address of the segment in the simulator memory.
  * @param size			Size of the segment.
  */
-CodeSegment::CodeSegment(CString name, memory_t *memory, address_t address, size_t size)
-: _name(name), code(memory, address, size), built(false) {
+CodeSegment::CodeSegment(File& _file, CString name, memory_t *memory, address_t address, size_t size)
+: file(_file), _name(name), code(memory, address, size), built(false) {
 }
 
 // Overloaded
@@ -270,7 +280,6 @@ void CodeSegment::build(void) {
 	_items.add(&code);
 	
 	// Build the instructions
-	
 	for(offset_t off = 0; off < code._size; off += 4) {
 		address_t addr = code.addr + off;
 		
@@ -303,6 +312,34 @@ void CodeSegment::build(void) {
 		
 		// Cleanup
 		iss_free(inst);
+	}
+	
+	// Read the symbols
+	Elf32_Sym *syms = Tables.sym_tbl;
+	char *names = Tables.symstr_tbl;
+	int sym_cnt = Tables.sec_header_tbl[Tables.symtbl_ndx].sh_size
+		/ Tables.sec_header_tbl[Tables.symtbl_ndx].sh_entsize;
+	for(int i = 0; i < sym_cnt; i++) {
+		address_t addr = 0;
+		
+		// Function symbol
+		if(ELF32_ST_TYPE(syms[i].st_info)== STT_FUNC
+		&& syms[i].st_shndx != SHN_UNDEF)
+			addr = (address_t)syms[i].st_value;
+		
+		// Simple label symbol
+		else if(ELF32_ST_TYPE(syms[i].st_info)== STT_NOTYPE
+		&& syms[i].st_shndx == Text.txt_index)
+			addr = (address_t)syms[i].st_value;
+
+		// Build the label if required
+		if(addr) {
+			String label(&names[syms[i].st_name]);
+			file.labels.put(label, addr);
+			Inst *inst = (Inst *)findByAddress(addr);
+			if(inst)
+				inst->set<String>(File::ID_Label, label);
+		}
 	}
 }
 
@@ -345,7 +382,7 @@ otawa::Inst *CodeSegment::findByAddress(address_t addr) {
 	 * Issue: manage the indirect table with modifications of the code.
 	 */
 	for(otawa::Inst *inst = code.first(); !inst->atEnd(); inst = inst->next())
-		if(inst->address() == addr)
+		if(!inst->isPseudo() && inst->address() == addr)
 			return inst;
 	return 0;
 }

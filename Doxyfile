@@ -58,8 +58,8 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = /home/casse/IRIT/project/src/prog/ \
-                         /home/casse/IRIT/project/include/otawa/
+INPUT                  = src/prog/ \
+                         include/otawa/
 FILE_PATTERNS          = 
 RECURSIVE              = NO
 EXCLUDE                = 
@@ -162,8 +162,8 @@ ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = NO
 EXPAND_ONLY_PREDEF     = NO
 SEARCH_INCLUDES        = YES
-INCLUDE_PATH           = /home/casse/IRIT/project/include/otawa/ \
-                         /home/casse/elf/elm/include/
+INCLUDE_PATH           = include/ \
+   			 elm/include
 INCLUDE_FILE_PATTERNS  = 
 PREDEFINED             = 
 EXPAND_AS_DEFINED      = 

@@ -1,1 +1,8 @@
+2004-03-08  casse <hugues.casse@irit.fr>
 
+* GLISS: added support for labels found in code (dissassembling and
+  property linked to instructions and BB).
+* GLISS: fixed bug in CodeSegment::findByAddress() avoiding retrieving a 
+pseudo-instruction instead of a real instruction.
+* PROG: added label table support in otawa::File and gliss::File.
+* OSHELL: full support for labels in disassembing, CFG display and retrieval.

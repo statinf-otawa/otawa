@@ -2,9 +2,10 @@
  *	$Id$
  *	Copyright (c) 2003, IRIT UPS.
  *
- *	test.cc -- test program.
+ *	properties.cc -- property management.
  */
 
+#include <elm/io.h>
 #include <otawa/properties.h>
 #include <elm/genstruct/HashTable.h>
 using namespace elm;
@@ -34,8 +35,8 @@ id_t Property::getID(CString name) {
 	
 	// Already defined
 	Option<id_t> result = ids.get(sname);
-	if(result.isOne())
-		return result.getValue();
+	if(result)
+		return *result;
 	
 	// Create it
 	id_t id = top_id++;
@@ -181,7 +182,6 @@ void PropList::clear(void) {
 	head = 0;
 }
 
-
 /**
  * @fn T PropList::get(id_t id, T def_value);
  * Get the value of a property.
@@ -190,14 +190,12 @@ void PropList::clear(void) {
  * @return					Value of the property.
  */
 
-
 /**
  * @fn Option<T> PropList::get(id_t id)
  * Get the value of a property.
  * @param id	Identifier of the property to get the value from.
  * @return			None or the value of the property.
  */
-
 
 /**
  * @fn T& PropList::use(id_t id)
@@ -214,6 +212,5 @@ void PropList::clear(void) {
  * @param id		Identifier of the property.
  * @param value	Value of the property.
  */
-
 
 };

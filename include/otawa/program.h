@@ -84,8 +84,10 @@ public:
 
 class File: public ProgObject {
 public:
+	static id_t ID_Label;
 	virtual CString name(void) = 0;
 	virtual const datastruct::Collection<Segment *>& segments(void) const = 0;
+	virtual address_t findLabel(const String& label) = 0;
 };
 
 

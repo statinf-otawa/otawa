@@ -150,5 +150,10 @@ ProgObject::~ProgObject(void) {
  * @return Collection of the segments in the file.
  */
 
+/**
+ * Property with this identifier is put on instructions or basic blocks which a symbol is known for.
+ * Its property is of type String.
+ */
+id_t File::ID_Label = Property::getID("otawa.File.Label");
 
 }; // namespace otawa

@@ -14,14 +14,29 @@
 
 namespace otawa {
 
-// BaseBlock class
+	
+// Defined classes
+class BasicBlock;
 class CFG;
+class CFGInfo;
+
+	
+// BaseBlock class
 class BasicBlock: public ProgObject, public Lock {
 public:
 	class Mark;
 private:
+	friend class CFGInfo;
+	static const unsigned long FLAG_Call = 0x01;
+	static const unsigned long FLAG_Unknown = 0x02;	
+	static const unsigned long FLAG_Return = 0x04;
 	Mark *_head;
+	unsigned long flags;
 	Locked<BasicBlock> tkn, ntkn;
+	inline void setTaken(BasicBlock *bb) { tkn = bb; };
+	inline void setNotTaken(BasicBlock *bb) { ntkn = bb; };
+	inline unsigned long getFlags(void) const { return flags; };
+	inline void setFlags(unsigned long _flags) { flags = _flags; };
 
 public:
 	static id_t ID;
@@ -38,10 +53,11 @@ public:
 	};	
 
 	// Methods
+	inline bool isCall(void) const { return (flags & FLAG_Call) != 0; };
+	inline bool isReturn(void) const { return (flags & FLAG_Return) != 0; };
+	inline bool isTargetUnknown(void) const { return (flags & FLAG_Unknown) != 0; };
 	inline BasicBlock *getTaken(void) const { return *tkn; };
 	inline BasicBlock *getNotTaken(void) const { return *ntkn; };
-	inline void setTaken(BasicBlock *bb) { tkn = bb; };
-	inline void setNotTaken(BasicBlock *bb) { ntkn = bb; };
 	inline Mark *head(void) const { return _head; };
 	inline address_t address(void) const { return _head->address(); };
 };

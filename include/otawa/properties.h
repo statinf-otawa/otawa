@@ -35,9 +35,13 @@ public:
 // GenericProperty class
 template <class T> class GenericProperty: public Property {
 	T value;
-public:
+protected:
 	inline GenericProperty(id_t id, T _value): Property(id), value(_value) { };
 	inline GenericProperty(CString name, T _value): Property(name), value(_value) { };
+public:
+	static GenericProperty<T> *make(id_t id, const T value) {
+		return new GenericProperty(id, value);
+	};
 	inline T& getValue(void) { return value; };
 };
 
@@ -79,7 +83,7 @@ template <class T> T& PropList::use(id_t id) {
 	return ((GenericProperty<T> *)prop)->getValue();
 };
 template <class T> void PropList::set(id_t id, const T value) {
-	setProp(new GenericProperty<T>(id, value));
+	setProp(GenericProperty<T>::make(id, value));
 };
 
 };

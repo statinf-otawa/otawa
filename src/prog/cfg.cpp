@@ -22,13 +22,21 @@ namespace otawa {
 
 /**
  * Build a basic block from its container code and its sequence of instructions.
- * @param head	First instruction of the basic block. The basic block
+ * @param inst	First instruction of the basic block. The basic block
  * lay from this instruction to the next basic block head or end of code.
  */
-BasicBlock::BasicBlock(Inst *head) {
+BasicBlock::BasicBlock(Inst *inst): flags(0) {
+	assert(inst && (inst->atEnd() || !inst->isPseudo()));
+	
+	// Create the mark
 	_head = new Mark(this);
-	assert(head->previous()->atBegin() || !head->previous()->isPseudo());
-	head->insertBefore(_head);
+	assert(inst->previous()->atBegin() || !inst->previous()->isPseudo());
+	inst->insertBefore(_head);
+	
+	// Look for a label
+	Option<String> label = inst->get<String>(File::ID_Label);
+	if(label)
+		set<String>(File::ID_Label, *label);
 }
 
 /**
@@ -182,60 +190,74 @@ void CFGInfo::addCode(Code *code) {
 	_codes.add(code);
 	BasicBlock *bb = new BasicBlock(code->first());
 	bb->set<bool>(ID_Entry, true);
-	genstruct::Vector<BasicBlock *> entries;
 	
 	// Find the basic blocks
 	for(Inst *inst = code->first(); !inst->atEnd(); inst = inst->next())
 		if(inst->isControl()) {
 			
-			// Found BB starting on next instruction
-			BasicBlock *bb = nextBB(inst);
-			assert(bb);
-			if(inst->isCall() || inst->isConditional())
-				bb->use<bool>(ID_Entry) = false;
-			
-			// Found BB starting on target instruction
+			// Found BB starting on target instruction			
 			Inst *target = inst->target();
 			if(target) {
 				BasicBlock *bb = thisBB(target);
 				assert(bb);
 				if(!inst->isCall())
 					bb->use<bool>(ID_Entry) = false;
-				else
-					entries.add(bb);
 			}
+
+			// Found BB starting on next instruction
+			BasicBlock *bb = nextBB(inst);
+			assert(bb);
+			if(inst->isCall() || inst->isConditional())
+				bb->use<bool>(ID_Entry) = false;
 		}
 	
 	// Build the graph
+	genstruct::Vector<BasicBlock *> entries;
 	bb = 0;
 	bool follow = true;
 	for(Inst *inst = code->first(); !inst->atEnd(); inst = inst->next()) {
 		
 		// Start of block found
 		if((pseudo = inst->toPseudo()) && pseudo->id() == BasicBlock::ID) {
+			
+			// Record not-taken edge
 			BasicBlock *next_bb = ((BasicBlock::Mark *)pseudo)->bb();
 			if(bb && follow)
 				bb->setNotTaken(next_bb);
+			
+			// Initialize new BB
 			bb = next_bb;
 			follow = true;
-			if(bb->get<bool>(ID_Entry, false))
+			if(bb->get<bool>(ID_Entry, false)) {
+				assert(!entries.contains(bb));
 				entries.add(bb);
+			}
 			bb->removeProp(ID_Entry);
 		}
 		
 		// End of block
-		else if(inst->isControl() && !inst->isCall()) {
+		else if(inst->isControl()) {
+			
+			// Record the taken edge
 			Inst *target = inst->target();
 			if(target) {
 				BasicBlock *target_bb = thisBB(target);
 				assert(target_bb);
 				bb->setTaken(target_bb);
 			}
+			
+			// Record BB flags
+			if(inst->isReturn())
+				bb->flags |= BasicBlock::FLAG_Return;
+			else if(inst->isCall())
+				bb->flags |= BasicBlock::FLAG_Call;
+			if(!target && !inst->isReturn())
+				bb->flags |= BasicBlock::FLAG_Unknown;
 			follow = inst->isCall() || inst->isConditional();
 		}
 	}
 	
-	// Build the CFG
+	// Recording the CFG
 	for(int i = 0; i < entries.length(); i++)
 		_cfgs.add(new CFG(code, entries[i]));
 }
@@ -346,7 +368,11 @@ id_t CFG::ID = Property::getID("otawa.CFG");
  * the matching CFG.
  */
 CFG::CFG(Code *code, BasicBlock *entry): ent(entry), _code(code) {
+	assert(code && entry);
 	ent->set<CFG *>(ID, this);
+	Option<String> label = entry->get<String>(File::ID_Label);
+	if(label)
+		set<String>(File::ID_Label, *label);
 }
 
 /**

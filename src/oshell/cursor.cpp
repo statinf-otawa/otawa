@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <elm/genstruct/DLList.h>
 #include <elm/genstruct/SortedBinTree.h>
+#include <elm/debug.h>
 #include <otawa/cfg.h>
 #include "oshell.h"
 
@@ -107,6 +108,9 @@ public:
 		out << "Instructions \n";
 		Inst *inst;
 		for(inst = _code->first(); !inst->atEnd(); inst = inst->next()) {
+			Option<String> label = inst->get<String>(File::ID_Label);
+			if(label)
+				out << *label << ":\n";
 			out << '\t' << inst->address() << ' ';
 			inst->dump(out);
 			if(inst->isControl())
@@ -419,7 +423,11 @@ void FrameWorkCursor::list(Output& out) {
 		out << "CFG:\n";
 		i = 0;
 		for(Iterator<CFG *> cfg = info->cfgs(); cfg; cfg++, i++) {
-			out << "\tC" << i << ':' << cfg->entry()->address() << '\n';
+			out << "\tC" << i << ':' << cfg->entry()->address();
+			Option<String> label = cfg->get<String>(File::ID_Label);
+			if(label)
+				out << " [@" << *label << ']';
+			out << '\n';
 		}
 	}
 };
@@ -427,16 +435,28 @@ void FrameWorkCursor::list(Output& out) {
 // Overloaded	
 Cursor *FrameWorkCursor::go(CString name) {
 	
-	// CFG traversal
+	// CFG traversal by address
 	if(name[0] == 'C') {
 		CFGInfo *info = fw->get<CFGInfo *>(CFGInfo::ID, 0);
 		if(!info)
 			throw GoException();
 		int num = atoi(&name + 1);
 		for(Iterator<CFG *> cfg = info->cfgs(); cfg; cfg++, num--)
-			if(!num) {
+			if(!num)
 				return new CFGCursor(this, *cfg);
-			}
+		throw GoException();
+	}
+	
+	// CFG traversal by name
+	else if(name[0] == '@') {
+		CFGInfo *info = fw->get<CFGInfo *>(CFGInfo::ID, 0);
+		if(!info)
+			throw GoException();
+		for(Iterator<CFG *> cfg = info->cfgs(); cfg; cfg++) {
+			Option<String> label = cfg->get<String>(File::ID_Label);
+			if(label && *label == name.chars() + 1)
+				return new CFGCursor(this, *cfg);
+		}
 		throw GoException();
 	}
 	
@@ -481,9 +501,11 @@ void CFGCursor::build(void) {
 			remain.addLast(target);
 
 		// Display taken
-		target = bb->getTaken();
-		if(target && !bbs.contains(target))
-			remain.addLast(target);
+		if(!bb->isCall()) {
+			target = bb->getTaken();
+			if(target && !bbs.contains(target))
+				remain.addLast(target);
+		}
 	}
 
 	// Give number to basic blocks
@@ -511,9 +533,23 @@ int CFGCursor::ListVisitor::process(BasicBlock *bb) {
 	BasicBlock *target = bb->getNotTaken();
 	if(target)
 		out << " NT(" << target->use<int>(ID_Number) << ')';
-	target = bb->getTaken();
-	if(target)
-		out << " T(" << target->use<int>(ID_Number) << ')';
+	if(bb->isReturn())
+		out << " R";
+	else {
+		target = bb->getTaken();
+		if(target) {
+			if(!bb->isCall())
+				out << " T(" << target->use<int>(ID_Number);
+			else
+				out << " C(" << target->address();
+			Option<String> label = target->get<String>(File::ID_Label);
+			if(label)
+				out << '[' << *label << ']';
+			out << ')';
+		}
+		else if(bb->isTargetUnknown())
+			out << (bb->isCall() ? " C(?)" : " T(?)");
+	}
 	out << '\n';
 
 	// Disassemble basic block
@@ -522,7 +558,14 @@ int CFGCursor::ListVisitor::process(BasicBlock *bb) {
 		if((pseudo = inst->toPseudo()) && pseudo->id() == BasicBlock::ID)
 			break;
 		else {
-			out << '\t' << inst->address() << ' ';
+			
+			// Put the label
+			Option<String> label = inst->get<String>(File::ID_Label);
+			if(label)
+				out << '\t' << *label << ":\n";
+			
+			// Disassemble the instruction
+			out << "\t\t" << inst->address() << ' ';
 			inst->dump(out);
 			out << '\n';
 		}

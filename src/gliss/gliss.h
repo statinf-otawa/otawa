@@ -7,32 +7,13 @@
 #ifndef OTAWA_GLISS_GLISS_H
 #define OTAWA_GLISS_GLISS_H
 
+#include <elm/genstruct/HashTable.h>
 #include <elm/datastruct/Vector.h>
 #include <otawa/manager.h>
 #include <otawa/program.h>
 #include <otawa/instruction.h>
 #include <emul.h>
 #include <elfread.h>
-
-// Power instruction kinds
-#define OTAWA_COMP 0
-#define OTAWA_LOAD 64
-#define OTAWA_STORE 65
-#define OTAWA_BRANCH_REL 128
-#define OTAWA_BRANCH_ABS 129
-#define OTAWA_BRANCH_LINK 130
-#define OTAWA_BRANCH_LINK_ABS 131
-#define OTAWA_BRANCH_COND_MEM 132
-#define OTAWA_BRANCH_COND_REL 133
-#define OTAWA_BRANCH_COND_ABS 134
-#define OTAWA_BRANCH_COND_LINK 135
-#define OTAWA_BRANCH_COND_LINK_ABS 136
-#define OTAWA_BRANCH_COND_CTR 137
-#define OTAWA_BRANCH_COND_CTR_LINK 138
-#define OTAWA_BRANCH_COND_LR 139
-#define OTAWA_BRANCH_COND_LR_LINK 140
-#define OTAWA_SYSCALL 196
-
 
 namespace otawa { namespace gliss {
 
@@ -42,6 +23,7 @@ class ControlInst;
 class Platform;
 class CodeSegment;
 class DataSegment;
+class File;
 
 // Inst class
 class Inst: public otawa::Inst {
@@ -52,7 +34,7 @@ protected:
 	const static unsigned long FLAG_Built = 0x01;
 	const static unsigned long FLAG_Cond = 0x02;
 	const static unsigned long FLAG_Call = 0x04;
-	const static unsigned long FLAG_Return = 0x8;
+	const static unsigned long FLAG_Return = 0x08;
 	void scan(void);
 	virtual void scanCustom(instruction_t *inst) { };
 	inline CodeSegment& segment(void) const { return seg; };
@@ -83,6 +65,7 @@ public:
 	virtual bool isBranch(void);
 	virtual bool isCall(void);
 	virtual bool isReturn(void);
+	virtual void dump(io::Output& out);
 
 	// ControlInst overload
 	virtual bool isConditional(void);
@@ -114,6 +97,7 @@ class CodeSegment: public ::otawa::Segment {
 	};
 
 	// attributes
+	File& file;
 	String _name;
 	Code code;
 	bool built;
@@ -121,7 +105,7 @@ class CodeSegment: public ::otawa::Segment {
 	void build(void);
 
 public:
-	CodeSegment(CString name, memory_t *memory, address_t address, size_t size);
+	CodeSegment(File& _file, CString name, memory_t *memory, address_t address, size_t size);
 	otawa::Inst *findByAddress(address_t addr);
 
 	// Segment overload
@@ -140,17 +124,20 @@ class DataSegment: public ::otawa::Segment {
 
 // File class
 class File: public ::otawa::File {
+	friend class CodeSegment;
 	String path;
 	elm::datastruct::Vector<Segment *> segs;
 	state_t *state;
+	genstruct::HashTable<String, address_t> labels;
 public:
 	File(String _path);
 	~File(void);
 	inline bool isOK(void) const { return !segs.isEmpty(); };
 
 	// ::otawa::File overload
-	CString name(void);
-	const elm::datastruct::Collection<Segment *>& segments(void) const;
+	virtual CString name(void);
+	virtual const elm::datastruct::Collection<Segment *>& segments(void) const;
+	virtual address_t findLabel(const String& label);
 };
 
 
