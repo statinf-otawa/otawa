@@ -130,8 +130,18 @@ void PropList::clearProps(void) {
  * @fn T PropList::get(Identifier *id, T def_value);
  * Get the value of a property.
  * @param id			Identifier of the property to get.
- * @param def_value	Default value returned if property does not exists.
- * @return					Value of the property.
+ * @param def_value		Default value returned if property does not exists.
+ * @return				Value of the property.
+ * @deprecated{ Use the version using Identifier referencers.}
+ */
+
+
+/**
+ * @fn T PropList::get(Identifier& id, T def_value);
+ * Get the value of a property.
+ * @param id			Identifier of the property to get.
+ * @param def_value		Default value returned if property does not exists.
+ * @return				Value of the property.
  */
 
 
@@ -139,7 +149,16 @@ void PropList::clearProps(void) {
  * @fn Option<T> PropList::get(Identifier *id)
  * Get the value of a property.
  * @param id	Identifier of the property to get the value from.
- * @return			None or the value of the property.
+ * @return		None or the value of the property.
+ * @deprecated{ Use the version using Identifier referencers.}
+ */
+
+
+/**
+ * @fn Option<T> PropList::get(Identifier& id)
+ * Get the value of a property.
+ * @param id	Identifier of the property to get the value from.
+ * @return		None or the value of the property.
  */
 
 
@@ -148,14 +167,33 @@ void PropList::clearProps(void) {
  * Get the reference on the value of the given property. If not found,
  * cause an assertion failure.
  * @param id	Identifier of the property to get the value from.
- * @return			Reference on the property value.
+ * @return		Reference on the property value.
+ * @deprecated{ Use the version using Identifier referencers.}
+ */
+
+
+/**
+ * @fn T& PropList::use(Identifier& id)
+ * Get the reference on the value of the given property. If not found,
+ * cause an assertion failure.
+ * @param id	Identifier of the property to get the value from.
+ * @return		Reference on the property value.
  */
 
 
 /**
  * @fn void PropList::set(Identifier *id, const T value)
  * Set the value of a property.
- * @param id		Identifier of the property.
+ * @param id	Identifier of the property.
+ * @param value	Value of the property.
+ * @deprecated{ Use the version using Identifier referencers.}
+ */
+
+
+/**
+ * @fn void PropList::set(Identifier& id, const T value)
+ * Set the value of a property.
+ * @param id	Identifier of the property.
  * @param value	Value of the property.
  */
 
@@ -177,7 +215,7 @@ Property *PropList::getDeep(Identifier *id) {
  * @param prop	Property to add.
  */
 void PropList::addProp(Property *prop) {
-	prop->next = head->next;
+	prop->next = head;
 	head = prop;
 }
 
@@ -215,6 +253,16 @@ void PropList::removeAllProp(Identifier *id) {
  * existing one.
  * @param id		Property identifier.
  * @param value		Property value.
+ * @deprecated{ Use the version using Identifier referencers.}
+ */
+
+
+/**
+ * @fn void PropList::add(Identifier& id, const T value);
+ * Add a ne wproperty to the property list without replacing a possible
+ * existing one.
+ * @param id		Property identifier.
+ * @param value		Property value.
  */
 
 
@@ -226,7 +274,28 @@ void PropList::removeAllProp(Identifier *id) {
  * manage the lock.
  * @param id		Property identifier.
  * @param value		Property value.
+ * @deprecated{ Use the version using Identifier referencers.}
  */ 
+
+
+/**
+ * @fn void PropList::addLocked(Identifier& id, const T value);
+ * Add a locked property to the property list. A locked property value inherits
+ * from Elm::Locked class and provides a lock that will release the value when
+ * there is no more lock. This kind of property provides the ability to
+ * manage the lock.
+ * @param id		Property identifier.
+ * @param value		Property value.
+ */ 
+
+
+/**
+ * @fn void PropList::addDeletable(Identifier& id, const T value);
+ * Add an annotation with a deletable value, that is, a pointer that  will be
+ * deleted when the annotation is destroyed.
+ * @param id	Annotation identifier.
+ * @param value	Annotation value.
+ */
 
 
 /**
