@@ -17,6 +17,7 @@ class Var;
 
 // Constraint class
 class Constraint: public ilp::Constraint {
+	friend class System;
 	
 	// Factor class
 	class Factor {

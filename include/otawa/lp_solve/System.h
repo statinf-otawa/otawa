@@ -30,12 +30,15 @@ public:
 
 // System class
 class System: public ilp::System {
+	friend class Constraint;
+	
 	elm::genstruct::HashTable<ilp::Var *, Var *> vars;
 	Constraint *conss;
 	Constraint *ofun;
 	int cols, rows;
 	double val;
 
+	void removeConstraint(Constraint *cons);
 public:
 	System(bool max = true);
 	~System(void);
