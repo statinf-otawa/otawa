@@ -3,7 +3,7 @@
  *	$Id$
  *	Copyright (c) 2003, IRIT UPS.
  *
- *	oshell.yy -- parser for the OShell application.
+ *	src/oshell/lexer.ll -- lexer for OSHELL utility.
  */
 
 #include <string.h>
@@ -11,6 +11,8 @@
 %}
 
 %option noyywrap
+%option prefix="oshell_"
+%option outfile="lex.yy.c"
 
 %x SWALLOW
 
@@ -29,8 +31,8 @@ WORD  [^ \t\v\n]+
 "go"		return GO;
 "help"		return HELP;
 "dump"		return DUMP;
-{WORD}	yylval.str = strdup(yytext); return WORD;
-.				BEGIN(SWALLOW);
+{WORD}		oshell_lval.str = strdup(yytext); return WORD;
+.			BEGIN(SWALLOW);
 
 <SWALLOW>\n	BEGIN(INITIAL); return ERROR;
 <SWALLOW>.		;
