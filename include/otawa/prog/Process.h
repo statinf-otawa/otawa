@@ -29,6 +29,8 @@ public:
 	virtual Manager *manager(void) = 0;
 	virtual Inst *start(void) = 0;
 	virtual Inst *findInstAt(address_t addr) = 0;
+	virtual address_t findLabel(String& label);
+	virtual Inst *findInstAt(String& label);
 };
 
 } // otawa
