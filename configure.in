@@ -15,6 +15,9 @@ AC_OUTPUT([
 	src/prog/Makefile
 	src/gliss/Makefile
 	src/oshell/Makefile
+	src/heptane/Makefile
 	include/Makefile
 	include/otawa/Makefile
+	examples/Makefile
+	examples/dumpcfg/Makefile
 ], [])
