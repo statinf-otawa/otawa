@@ -85,13 +85,20 @@ MutableCollection<BasicBlock *> *CFG::empty(void) const {
 
 
 /**
+ * @fn elm::Collection<BasicBlock *>& CFG::bbs(void);
+ * Get an iterator on basic blocks of the CFG.
+ * @return	Basic block iterator.
+ */
+
+
+/**
  * @class CFG::BBIterator
  * This iterator is used for visiting all basic blocks of the CFG.
  */
 
 
 /**
- * @fn CFG::BBIterator::BBIterator(CFG *cfg);
+ * @fn CFG::BBIterator::BBIterator(const CFG *cfg);
  * Build a basic block iterator.
  * @param cfg	Used CFG.
  */
@@ -119,7 +126,7 @@ BasicBlock *CFG::BBIterator::item(void) const {
 void CFG::BBIterator::next(void) {
 	BasicBlock *bb = bbs[pos];
 	for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
-		if(!bbs.contains(edge->target()))
+		if(edge->kind() != EDGE_Call && !bbs.contains(edge->target()))
 			bbs.add(edge->target());
 	pos++;
 }
