@@ -23,6 +23,7 @@ class Inst;
 // CFGInfo class
 class CFGInfo: public elm::Lock {
 	static id_t ID_Entry;
+	FrameWork *fw;
 	datastruct::Vector<Code *> _codes;
 	datastruct::Vector<CFG *> _cfgs;
 	AutoPtr<BasicBlock> nextBB(Inst *inst);
@@ -35,12 +36,15 @@ public:
 	CFGInfo(FrameWork *fw);
 	~CFGInfo(void);
 	void clear(void);
-	void addCode(Code *code);
+	void addCode(Code *code, File *file = 0);
+	void addFile(File *file);
 	void addSubProgram(Inst *inst);
 	BasicBlock *findBB(Inst *inst);
 	CFG *findCFG(Inst *inst);
+	CFG *findCFG(AutoPtr<BasicBlock> bb);
 	const datastruct::Collection<CFG *>& cfgs(void);
-	inline const datastruct::Collection<Code *>& codes(void) const { return _codes; };
+	inline const datastruct::Collection<Code *>& codes(void) const
+		{ return _codes; };
 };
 
 } // otawa
