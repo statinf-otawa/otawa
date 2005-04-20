@@ -1,6 +1,8 @@
 bin_PROGRAMS=dumpcfg
 dumpcfg_SOURCES= \
-	dumpcfg.cpp
+	dumpcfg.cpp \
+	SimpleDisplayer.cpp \
+	DiassemblerDisplayer.cpp
 
 CXXFLAGS=-g3
 

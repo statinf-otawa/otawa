@@ -1,0 +1,87 @@
+/*
+ *	$Id$
+ *	Copyright (c) 2003, IRIT UPS.
+ *
+ *	examples/dumpcfg/DisassemblerDisplayer.cpp -- DisassemblerDisplayer class implementation.
+ */
+
+#include <elm/io.h>
+#include "DisassemblerDisplayer.h"
+
+using namespace elm;
+using namespace otawa;
+
+/**
+ */
+void DisassemblerDisplayer::onCFGBegin(CFG *cfg) {
+	cout << "# Function " << cfg->label() << '\n';
+}
+
+
+/**
+ */
+void DisassemblerDisplayer::onCFGEnd(CFG *cfg) {
+}
+
+
+/**
+ */
+void DisassemblerDisplayer::onBBBegin(BasicBlock *bb, int index) {
+	cout << "BB " << index << ": ";
+}
+
+/**
+ */
+void DisassemblerDisplayer::onEdge(BasicBlock *source, int source_index,
+edge_kind_t kind, BasicBlock *target, int target_index) {
+	switch(kind) {
+	case EDGE_Null:
+		cout << " R";
+		break;
+	case EDGE_NotTaken:
+		cout << " NT(" << target_index << ')';
+		break;
+	case EDGE_Taken:
+		cout << " T(" << target_index << ")";
+		break;
+	case EDGE_Call:
+		cout << " C(" << target_index << ")";
+		break;
+	}
+}
+
+
+/**
+ */
+void DisassemblerDisplayer::onBBEnd(BasicBlock *bb, int index) {
+	cout << '\n';
+	PseudoInst *pseudo;
+	for(Iterator<Inst *> inst(*bb); inst; inst++) {
+			
+		// Put the label
+		Option<String> label = inst->get<String>(File::ID_Label);
+		if(label)
+			cout << '\t' << *label << ":\n";
+			
+		// Disassemble the instruction
+		cout << "\t\t" << inst->address() << ' ';
+		inst->dump(cout);
+		cout << '\n';
+	}
+}
+
+
+/**
+ * Handle an inline of a program call.
+ */
+void DisassemblerDisplayer::onInlineBegin(CFG *cfg) {
+	cout << "# Inlining " << cfg->label() << '\n';
+}
+
+
+/**
+ * Handle an end of inline.
+ */
+void DisassemblerDisplayer::onInlineEnd(CFG *cfg) {
+}
+

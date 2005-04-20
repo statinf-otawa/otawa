@@ -15,6 +15,9 @@
 #include <elm/options.h>
 #include <otawa/manager.h>
 
+#include "SimpleDisplayer.h"
+#include "DisassemblerDisplayer.h"
+
 using namespace elm;
 using namespace otawa;
 
@@ -39,12 +42,40 @@ public:
 	virtual void 	process (String arg);
 };
 
+// Displayers
+static SimpleDisplayer simple_displayer;
+static DisassemblerDisplayer disassembler_displayer;
+static Displayer *displayer = &simple_displayer;
+
 
 // Options
 static Command command;
-static option::BoolOption inline_calls(command, 'i', "inline", "Inline the function calls.", false);
-static option::BoolOption link_rec(command, 'r', "recursive", "Replace recursive calls by CFG loop links.", false);
+static option::BoolOption inline_calls(command, 'i', "inline",
+	"Inline the function calls.", false);
+static option::BoolOption link_rec(command, 'r', "recursive",
+	"Replace recursive calls by CFG loop links.", false);
+	
+class SimpleOption: public option::ActionOption {
+public:
+	inline SimpleOption(Command& command): option::ActionOption(command,
+	's', "simple", "Perform simple output.") {
+	}
+	virtual void perform(void) {
+		displayer = &simple_displayer;
+	};
+};
+static SimpleOption simple(command);
 
+class DisassembleOption: public option::ActionOption {
+public:
+	inline DisassembleOption(Command& command): option::ActionOption(command,
+	'd', "disassemble", "Perform output with disassembling the basic blocks.") {
+	};
+	virtual void perform(void) {
+		displayer = &disassembler_displayer;
+	};
+};
+static DisassembleOption disassemble(command);
 
 // BasicBlock comparator
 class BasicBlockComparator: public elm::Comparator<BasicBlock *> {
@@ -275,12 +306,12 @@ void Call::output(CFGInfo *info, CFG *cfg) {
 		while(!calls.isEmpty()) {
 			call = calls.first();
 			calls.removeFirst();
-			cout << "# " << call->_cfg->label() << '\n';
-			/*for(Call *cur = call->getBack(); cur; cur = cur->getBack())
-				cout << "<-" << cur->getCFG()->label();
-			cout << '\n';*/
+			if(call->_cfg != cfg)
+				displayer->onInlineBegin(call->_cfg);
+			//cout << "# " << call->_cfg->label() << '\n';
 			call->process();
-			//call->unlock();	!!DEBUG!!
+			if(call->_cfg != cfg)
+				displayer->onInlineEnd(call->_cfg);
 		}
 	}
 	catch(CircularityException exn) {
@@ -298,14 +329,13 @@ void Call::output(CFGInfo *info, CFG *cfg) {
 void Call::process(BasicBlock *bb, int& index) {
 	
 	// Display header
-	cout << (index + base)
-		<< ' ' << bb->address()
-		<< ' ' << (bb->address() + bb->getBlockSize() - 4);
+	int bb_index = index + base;
+	displayer->onBBBegin(bb, bb_index);
 	
 	// Is it a return ?
 	if(bb->isReturn()) {
 		if(ret != -1)
-			cout << ' ' << ret;
+			displayer->onEdge(bb, bb_index, EDGE_Null, 0, ret);
 	}
 	
 	// Display the following BBs for an inlined call
@@ -340,7 +370,7 @@ void Call::process(BasicBlock *bb, int& index) {
 		}
 				
 		// Put the target
-		cout << ' ' << call->getBase();
+		displayer->onEdge(bb, bb_index, EDGE_Call, 0, call->getBase());
 	}
 	
 	// Display following BBs
@@ -352,7 +382,7 @@ void Call::process(BasicBlock *bb, int& index) {
 			int target_num = map->get(target, -1);
 			assert(target_num >= 0);
 			target_num += base;
-			cout << ' ' << target_num;
+			displayer->onEdge(bb, bb_index, EDGE_NotTaken, 0, target_num);
 		}
 		
 		// Taken
@@ -362,13 +392,13 @@ void Call::process(BasicBlock *bb, int& index) {
 				int target_num = map->get(target, -1);
 				assert(target_num >= 0);
 				target_num += base;
-				cout << ' ' << target_num;
+				displayer->onEdge(bb, bb_index, EDGE_Taken, 0, target_num);
 			}
 		}
 	}
 	
 	// End of line
-	cout << " -1\n";
+	displayer->onBBEnd(bb, bb_index);
 }
 
 
@@ -408,7 +438,9 @@ void Command::dump(CString name) {
 	}
 	
 	// Output the CFG
+	displayer->onCFGBegin(cfg);
 	Call::output(info, cfg);
+	displayer->onCFGEnd(cfg);
 }
 
 
@@ -460,9 +492,7 @@ void Command::process (String arg) {
 	// Process function names
 	else {
 		one = true;
-		cout << '!' << arg << '\n';
 		dump(arg.toCString());
-		cout << '\n';
 	}
 }
 
