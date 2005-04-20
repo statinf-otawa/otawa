@@ -36,9 +36,10 @@ void SimpleDisplayer::onBBBegin(BasicBlock *bb, int index) {
 
 /**
  */
-void SimpleDisplayer::onEdge(BasicBlock *source, int source_index,
+void SimpleDisplayer::onEdge(CFGInfo *info, BasicBlock *source, int source_index,
 edge_kind_t kind, BasicBlock *target, int target_index) {
-	cout << ' ' << target_index;
+	if(target_index >= 0)
+		cout << ' ' << target_index;
 }
 
 

@@ -32,21 +32,48 @@ void DisassemblerDisplayer::onBBBegin(BasicBlock *bb, int index) {
 
 /**
  */
-void DisassemblerDisplayer::onEdge(BasicBlock *source, int source_index,
-edge_kind_t kind, BasicBlock *target, int target_index) {
+void DisassemblerDisplayer::onEdge(CFGInfo *info, BasicBlock *source,
+int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
 	switch(kind) {
+		
 	case EDGE_Null:
-		cout << " R";
+		if(target_index >= 0)
+			cout << " R(" << target_index << ")";
+		else
+			cout << " R";
 		break;
+		
 	case EDGE_NotTaken:
 		cout << " NT(" << target_index << ')';
 		break;
+		
 	case EDGE_Taken:
-		cout << " T(" << target_index << ")";
+		cout << " T(";
+		if(target_index >= 0)
+			cout << target_index;
+		else
+			cout << '?';
+		cout << ")";
 		break;
+		
 	case EDGE_Call:
-		cout << " C(" << target_index << ")";
+		cout << " C(";
+		if(target_index >= 0)
+			cout << target_index;
+		else if(!target)
+			cout << '?';
+		else {
+			CFG *cfg = info->findCFG(target);
+			if(!cfg)
+				cout << '?';
+			else if(cfg->label())
+				cout << cfg->label();
+			else
+				cout << cfg->address();
+		}
+		cout << ")";
 		break;
+		
 	}
 }
 

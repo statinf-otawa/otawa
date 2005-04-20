@@ -50,6 +50,8 @@ static Displayer *displayer = &simple_displayer;
 
 // Options
 static Command command;
+static option::BoolOption all_functions(command, 'a', "all",
+	"Dump all functions.", false);
 static option::BoolOption inline_calls(command, 'i', "inline",
 	"Inline the function calls.", false);
 static option::BoolOption link_rec(command, 'r', "recursive",
@@ -334,8 +336,7 @@ void Call::process(BasicBlock *bb, int& index) {
 	
 	// Is it a return ?
 	if(bb->isReturn()) {
-		if(ret != -1)
-			displayer->onEdge(bb, bb_index, EDGE_Null, 0, ret);
+		displayer->onEdge(info, bb, bb_index, EDGE_Null, 0, ret);
 	}
 	
 	// Display the following BBs for an inlined call
@@ -370,7 +371,7 @@ void Call::process(BasicBlock *bb, int& index) {
 		}
 				
 		// Put the target
-		displayer->onEdge(bb, bb_index, EDGE_Call, 0, call->getBase());
+		displayer->onEdge(info, bb, bb_index, EDGE_Call, 0, call->getBase());
 	}
 	
 	// Display following BBs
@@ -382,18 +383,21 @@ void Call::process(BasicBlock *bb, int& index) {
 			int target_num = map->get(target, -1);
 			assert(target_num >= 0);
 			target_num += base;
-			displayer->onEdge(bb, bb_index, EDGE_NotTaken, 0, target_num);
+			displayer->onEdge(info, bb, bb_index, EDGE_NotTaken, 0, target_num);
 		}
 		
 		// Taken
-		if(!bb->isCall()) {
-			target = bb->getTaken();
-			if(target) {
-				int target_num = map->get(target, -1);
-				assert(target_num >= 0);
-				target_num += base;
-				displayer->onEdge(bb, bb_index, EDGE_Taken, 0, target_num);
-			}
+		target = bb->getTaken();
+		otawa::edge_kind_t kind = bb->isCall() ? EDGE_Call : EDGE_Taken;
+		if(!target)
+			displayer->onEdge(info, bb, bb_index, kind, 0, -1);
+		else if(bb->isCall())
+			displayer->onEdge(info, bb, bb_index, kind, target, -1);
+		else {
+			int target_num = map->get(target, -1);
+			assert(target_num >= 0);
+			target_num += base;
+			displayer->onEdge(info, bb, bb_index, EDGE_Taken, 0, target_num);
 		}
 	}
 	
@@ -470,7 +474,16 @@ void Command::run(int argc, char **argv) {
 		displayHelp();
 		throw option::OptionException();
 	}
-	if(!one)
+	if(all_functions) {
+		CFGInfo *info = fw->getCFGInfo();
+		for(Iterator<CFG *> cfg(info->cfgs()); cfg; cfg++)
+			if(cfg->label()) {
+				displayer->onCFGBegin(cfg);
+				Call::output(info, cfg);
+				displayer->onCFGEnd(cfg);
+			}	
+	}
+	else if(!one)
 		process("main");
 }
 
