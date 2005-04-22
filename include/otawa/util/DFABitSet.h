@@ -17,6 +17,7 @@ class DFABitSet: public DFASet {
 	elm::BitVector vec;
 public:
 	inline DFABitSet(int size, bool set = false);
+	~DFABitSet(void);
 	//virtual ~DFABitSet(void);
 	inline void add(int index);
 	inline void remove(int index);

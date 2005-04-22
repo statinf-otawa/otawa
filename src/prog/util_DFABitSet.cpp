@@ -18,6 +18,12 @@ namespace otawa {
 
 
 /**
+ */
+DFABitSet::~DFABitSet(void) {
+}
+
+
+/**
  * @fn DFABitSet::DFABitSet(int size);
  * Build a new set.
  * @param size	Size of the set.
