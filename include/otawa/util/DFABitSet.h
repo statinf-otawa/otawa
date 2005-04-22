@@ -16,7 +16,7 @@ namespace otawa {
 class DFABitSet: public DFASet {
 	elm::BitVector vec;
 public:
-	inline DFABitSet(int size);
+	inline DFABitSet(int size, bool set = false);
 	//virtual ~DFABitSet(void);
 	inline void add(int index);
 	inline void remove(int index);
@@ -30,7 +30,9 @@ public:
 };
 
 // Inlines
-inline DFABitSet::DFABitSet(int size): vec(size) {
+inline DFABitSet::DFABitSet(int size, bool set): vec(size) {
+	if(set)
+		vec.applyNot();
 };
 
 inline void DFABitSet::add(int index) {

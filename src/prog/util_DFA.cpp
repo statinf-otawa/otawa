@@ -10,7 +10,8 @@
 
 namespace otawa {
 
-// DFA information store
+/**
+ */
 typedef struct dfa_info_t {
 	DFASet *cur;	// Current output set
 	DFASet *buf;	// Buffer set (they are exchanged)
@@ -26,7 +27,8 @@ static Identifier info_id("otawa.dfa.info");
  * Implements the Data Flow Analysis method for peforming static analysis as
  * described in "Compilers - Principles, Techniques and Tools" by
  * Aho, Sethi and Ullman.
- * @p For adapting this class for a specific static analysis, it must be
+ *xcvxcvxcv
+ * For adapting this class for a specific static analysis, it must be
  * inherited and methods @ref initial(), @ref generate() and @ref kill() must be
  * defined accordingly.
  */
@@ -65,13 +67,13 @@ void DFA::cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 		
 		// Store IN information
 		if(in_id) {
-			DFASet *in = initial();
+			info->buf->reset();
 			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
 				dfa_info_t *info = edge->source()->use<dfa_info_t *>(info_id);
 				assert(info);
-				in->add(info->cur);
+				info->buf->add(info->cur);
 			}
-			bb->add<DFASet *>(in_id, info->cur);
+			bb->add<DFASet *>(in_id, info->buf);
 		}
 	
 		// Store OUT information
@@ -80,8 +82,17 @@ void DFA::cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 	}
 	
 	// Cleanup
-	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
+	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++) {
+		dfa_info_t *info = bb->use<dfa_info_t *>(info_id);
+		assert(info);
+		if(!in_id)
+			delete info->buf;
+		if(!out_id)
+			delete info->cur;
+		delete info->gen;
+		delete info->kill;
 		bb->removeProp(&info_id);
+	}
 }
 
 
