@@ -121,7 +121,7 @@ void DFA::resolve(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 			
 			// Build new set
 			info->buf->reset();
-			for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++) {
+			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
 				dfa_info_t *in_info = edge->source()->use<dfa_info_t *>(info_id);
 				assert(in_info);
 				info->buf->add(in_info->cur);
