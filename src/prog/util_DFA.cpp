@@ -69,9 +69,9 @@ void DFA::cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 		if(in_id) {
 			info->buf->reset();
 			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
-				dfa_info_t *info = edge->source()->use<dfa_info_t *>(info_id);
-				assert(info);
-				info->buf->add(info->cur);
+				dfa_info_t *in_info = edge->source()->use<dfa_info_t *>(info_id);
+				assert(in_info);
+				info->buf->add(in_info->cur);
 			}
 			bb->add<DFASet *>(in_id, info->buf);
 		}
