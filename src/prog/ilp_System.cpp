@@ -64,8 +64,16 @@ namespace otawa { namespace ilp {
  * @return	Object function optimum.
  */
 
-} // ilp
+/**
+ * @fn Var *System::newVar(void);
+ * Build a new artifact variable, that is, a variable usable in the ILP system
+ * but that is not linked to any other item from the OTAWA program
+ * representation. Its life ends with the destruction of the ILP system.
+ * @return	Created ILP variable.
+ */
 
+
+} // ilp
 
 /*
  *  !!IMPORT!!

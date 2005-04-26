@@ -20,6 +20,7 @@ public:
 	virtual void addObjectFunction(double coef, Var *var = 0) = 0;
 	virtual double valueOf(Var *var) = 0;
 	virtual double value(void) = 0;
+	virtual Var *newVar(void) = 0;
 };
 	
 } }	// otawa::ilp

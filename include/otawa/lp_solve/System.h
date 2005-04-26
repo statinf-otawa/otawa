@@ -52,6 +52,7 @@ public:
 	virtual void addObjectFunction(double coef, ilp::Var *var = 0);
 	virtual double valueOf(ilp::Var *var);
 	virtual double value(void);
+	virtual ilp::Var *newVar(void);
 };
 
 // System::Var Inlines

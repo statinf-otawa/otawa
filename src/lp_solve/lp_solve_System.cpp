@@ -179,5 +179,13 @@ bool System::solve(void) {
 	return !fail;
 }
 
+/**
+ * !!TODO!!
+ * Variable by this way cannot be fried. Must be fixed.
+ */
+ilp::Var *System::newVar(void) {
+	return new ilp::Var();
+}
+
 } }	// otawa::lp_solve
 
