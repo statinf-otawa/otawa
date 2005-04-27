@@ -90,7 +90,7 @@ Cursor *FrameWorkCursor::go(CString name) {
 				return new CFGCursor(this, cfg);
 		}
 		else {
-			AutoPtr<CFGInfo> info = fw->get< AutoPtr<CFGInfo> >(CFGInfo::ID, 0);
+			CFGInfo *info = fw->get<CFGInfo *>(CFGInfo::ID, 0);
 			if(!info)
 				throw GoException();
 			for(Iterator<CFG *> cfg(info->cfgs()); cfg; cfg++) {
@@ -105,11 +105,13 @@ Cursor *FrameWorkCursor::go(CString name) {
 	else if(name[0] == 'F') {
 		int i = atoi(name.chars() + 1);
 		ASTInfo *ainfo = ASTInfo::getInfo(fw);
-		if(ainfo)
+		if(ainfo) {
 			for(Iterator< FunAST *> fun(ainfo->functions()); fun;
 			fun++, i--)
 				if(!i)
 					return new FunCursor(this, *fun);
+			throw GoException();
+		}
 	}
 	
 	// Fun traversal by name
@@ -121,6 +123,8 @@ Cursor *FrameWorkCursor::go(CString name) {
 				String(name.chars() + 1));
 			if(fun)
 				return new FunCursor(this, *fun);
+			else
+				throw GoException();
 		}	
 	}
 	
