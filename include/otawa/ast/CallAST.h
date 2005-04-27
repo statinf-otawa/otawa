@@ -14,15 +14,15 @@ namespace otawa {
 
 // CallAST Class
 class CallAST: public BlockAST {
-	AutoPtr<FunAST> fun;
+	FunAST *fun;
 public:
-	CallAST(Inst *callee, AutoPtr<FunAST> fun);
+	CallAST(Inst *callee, FunAST *fun);
 	CallAST(FrameWork *fw, Inst *callee, Inst *called);
-	inline AutoPtr<FunAST> function(void) const { return fun; };
+	inline FunAST *function(void) const { return fun; };
 	
 	// AST overload
 	virtual ast_kind_t kind(void) const { return AST_Call; };
-	virtual AutoPtr<CallAST> toCall(void) { return this; };
+	virtual CallAST *toCall(void) { return this; };
 };
 	
 } // otawa

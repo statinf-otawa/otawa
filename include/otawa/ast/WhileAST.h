@@ -13,16 +13,16 @@ namespace otawa {
 
 // WhileAST class
 class WhileAST: public AST {
-	AutoPtr<AST> cnd, bod;
+	AST *cnd, *bod;
 public:
-	WhileAST(AutoPtr<AST> condition, AutoPtr<AST> body);
-	inline AutoPtr<AST> condition(void) const { return cnd; };
-	inline AutoPtr<AST> body(void) const { return bod; };
+	WhileAST(AST *condition, AST *body);
+	inline AST *condition(void) const { return cnd; };
+	inline AST *body(void) const { return bod; };
 	
 	// AST overload
 	virtual Inst *first(void);
 	virtual ast_kind_t kind(void) const { return AST_While; };
-	virtual AutoPtr<WhileAST> toWhile(void) { return this; };
+	virtual WhileAST *toWhile(void) { return this; };
 };
 	
 } // otawa

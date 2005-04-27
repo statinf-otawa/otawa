@@ -20,7 +20,7 @@ class FunAST: public Lock {
 	ASTInfo *info;
 	Inst *ent;
 	String _name;
-	AutoPtr<AST> _ast;
+	AST *_ast;
 	~FunAST(void);
 public:
 	static const id_t ID;
@@ -28,8 +28,8 @@ public:
 	FunAST(ASTInfo *info, Inst *entry, String name = "");
 	inline Inst *entry(void) const { return ent; };
 	inline const String& name(void) const { return _name; };
-	inline AutoPtr<AST> ast(void) const { return _ast; };
-	void setAst(AutoPtr<AST> ast);
+	inline AST *ast(void) const { return _ast; };
+	void setAst(AST *ast);
 	inline void setName(const String& name) { _name = name; };
 };
 

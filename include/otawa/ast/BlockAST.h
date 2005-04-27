@@ -25,7 +25,9 @@ public:
 	// AST overload
 	virtual Inst *first(void) { return blk; };
 	virtual ast_kind_t kind(void) const { return AST_Block; };
-	virtual AutoPtr<BlockAST> toBlock(void) { return this; };
+	virtual BlockAST *toBlock(void) { return this; };
+	
+	
 };
 	
 } // otawa

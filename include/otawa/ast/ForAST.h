@@ -13,19 +13,19 @@ namespace otawa {
 
 // ForAST class
 class ForAST: public AST {
-	AutoPtr<AST> bod, cnd, init, inc;
+	AST *bod, *cnd, *init, *inc;
 public:
-	ForAST(AutoPtr<AST> initialization, AutoPtr<AST> condition,
-		AutoPtr<AST> incrementation, AutoPtr<AST> body);
-	inline AutoPtr<AST> initialization(void) const { return init; };
-	inline AutoPtr<AST> condition(void) const { return cnd; };
-	inline AutoPtr<AST> incrementation(void) const { return inc; };
-	inline AutoPtr<AST> body(void) const { return bod; };
+	ForAST(AST *initialization, AST *condition,
+		AST *incrementation, AST *body);
+	inline AST *initialization(void) const { return init; };
+	inline AST *condition(void) const { return cnd; };
+	inline AST *incrementation(void) const { return inc; };
+	inline AST *body(void) const { return bod; };
 	
 	// AST overload
 	virtual Inst *first(void);
 	virtual ast_kind_t kind(void) const { return AST_For; };
-	virtual AutoPtr<ForAST> toFor(void) { return this; };
+	virtual ForAST *toFor(void) { return this; };
 };
 	
 } // otawa

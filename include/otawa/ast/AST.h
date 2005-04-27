@@ -7,7 +7,6 @@
 #ifndef OTAWA_AST_AST_H
 #define OTAWA_AST_AST_H
 
-#include <elm/utility.h>
 #include <otawa/instruction.h>
 
 namespace otawa {
@@ -47,14 +46,18 @@ public:
 	
 	virtual bool isNOP(void) { return false; };
 	virtual bool isUndef(void) { return false; };
-	virtual AutoPtr<BlockAST> toBlock(void) { return 0; };
-	virtual AutoPtr<CallAST> toCall(void) { return 0; };
-	virtual AutoPtr<SeqAST> toSeq(void) { return 0; };
-	virtual AutoPtr<IfAST> toIf(void) { return 0; };
-	virtual AutoPtr<WhileAST> toWhile(void) { return 0; };
-	virtual AutoPtr<DoWhileAST> toDoWhile(void) { return 0; };
-	virtual AutoPtr<ForAST> toFor(void) { return 0; };
+	virtual BlockAST *toBlock(void) { return 0; };
+	virtual CallAST *toCall(void) { return 0; };
+	virtual SeqAST *toSeq(void) { return 0; };
+	virtual IfAST *toIf(void) { return 0; };
+	virtual WhileAST *toWhile(void) { return 0; };
+	virtual DoWhileAST *toDoWhile(void) { return 0; };
+	virtual ForAST *toFor(void) { return 0; };
+	
+	int countInstructions(void) const;
 };
+
+
 	
 }	// otawa
 
