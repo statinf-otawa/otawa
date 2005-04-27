@@ -48,7 +48,7 @@ FunAST::FunAST(FrameWork *fw, Inst *entry, String name)
 		_name = *label;
 		
 	// Record the function
-	//info->add(this);	
+	info->add(this);	
 }
 
 
@@ -70,7 +70,7 @@ FunAST::FunAST(ASTInfo *info, Inst *entry, String name)
 		_name = *label;
 		
 	// Record the function
-	//info->add(this);	
+	info->add(this);	
 }
 
 
@@ -78,7 +78,8 @@ FunAST::FunAST(ASTInfo *info, Inst *entry, String name)
  * Remove any link with the instruction representation.
  */
 FunAST::~FunAST(void) {
-	ent->removeProp(ID);
+	//ent->removeProp(ID);
+	_ast->release();
 }
 
 

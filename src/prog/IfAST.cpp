@@ -38,6 +38,15 @@ AST *else_part) : cond(condition), tpart(then_part), epart(else_part) {
 
 
 /**
+ */
+IfAST::~IfAST(void) {
+	cond->release();
+	tpart->release();
+	epart->release();
+}
+
+
+/**
  * @fn AST *IfAST::condition(void) const;
  * Get the condition of the selection.
  * @return Selection condition.

@@ -20,6 +20,7 @@ namespace otawa {
 class NOPAST: public AST {
 public:
 	inline NOPAST(void) { lock(); };
+	virtual void release(void) { };
 	virtual ast_kind_t kind(void) const { return AST_Nop; };
 	virtual bool isNOP(void) { return true; };
 	virtual Inst *first(void) { return 0; };
@@ -33,6 +34,7 @@ static NOPAST nop_inst;
 class UndefAST: public AST {
 public:
 	inline UndefAST(void) { lock(); };
+	virtual void release(void) { };
 	virtual ast_kind_t kind(void) const { return AST_Undef; };
 	virtual bool isUndef(void) { return true; };
 	virtual Inst *first(void) { return 0; };
@@ -45,6 +47,14 @@ static UndefAST undef_inst;
  * @class AST
  * This is the base class for the representation of programs as Abstract Syntax Trees.
  */
+
+
+/**
+ * Deletion of AST can only be performed using this method.
+ */
+void AST::release(void) {
+	delete this;
+}
 
 /**
  * @fn otawa::ast_kind_t AST::kind(void) const

@@ -38,7 +38,7 @@ BlockAST::BlockAST(Inst *block): blk(block) {
  */
 BlockAST::~BlockAST(void) {
 	assert(blk);
-	blk->removeProp(ID);
+	//blk->removeProp(ID);
 }
 
 /**

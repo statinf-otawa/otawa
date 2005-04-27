@@ -27,6 +27,14 @@ WhileAST::WhileAST(AST *condition, AST *body)
 
 
 /**
+ */
+WhileAST::~WhileAST(void) {
+	cnd->release();
+	bod->release();
+}
+
+
+/**
  * @fn AST *WhileAST::condition(void) const;
  * Get the condition of the iteration.
  * @return Iteration condition.

@@ -27,6 +27,14 @@ SeqAST::SeqAST(AST *child1, AST *child2)
 
 
 /**
+ */
+SeqAST::~SeqAST(void) {
+	c1->release();
+	c2->release();
+}
+
+
+/**
  * @fn AST *SeqAST::child1(void) const;
  * Get the first child AST of the sequence.
  * @return First child in sequence.

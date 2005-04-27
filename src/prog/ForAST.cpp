@@ -27,6 +27,16 @@ AST *incrementation, AST *body)
 
 
 /**
+ */
+ForAST::~ForAST(void) {
+	init->release();
+	cnd->release();
+	inc->release();
+	bod->release();
+}
+
+
+/**
  * @fn AST *ForAST::initialization(void) const;
  * Get the initialization AST.
  * @return Initialization of the loop.

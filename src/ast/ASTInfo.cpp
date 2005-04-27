@@ -28,7 +28,7 @@ const id_t ASTInfo::ID = Property::getID("otawa.ast.info");
  * @param proc	Process to link to.
  */
 ASTInfo::ASTInfo(Process *proc) {
-	proc->set<ASTInfo *>(ID, this);
+	proc->addDeletable<ASTInfo *>(*ID, this);
 }
 
 /**
@@ -102,6 +102,14 @@ ASTInfo *ASTInfo::getInfo(Process *proc) {
 	
 	// Else build it
 	return new ASTInfo(proc);
+}
+
+
+/**
+ */
+ASTInfo::~ASTInfo(void) {
+	for(int i = 0; i < funs.length(); i++)
+		delete funs[i];
 }
 
 } // otawa

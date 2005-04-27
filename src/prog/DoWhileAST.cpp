@@ -27,6 +27,14 @@ DoWhileAST::DoWhileAST(AST *body, AST *condition)
 
 
 /**
+ */
+DoWhileAST::~DoWhileAST(void) {
+	bod->release();
+	cnd->release();
+}
+
+
+/**
  * @fn AST *DoWhileAST::condition(void) const;
  * Get the condition of the loop.
  * @return Loop condition.
