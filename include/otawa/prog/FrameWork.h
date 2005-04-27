@@ -14,6 +14,8 @@
 namespace otawa {
 
 // Classes
+class AST;
+class ASTInfo;
 class CFG;
 class CFGInfo;
 class File;
@@ -47,6 +49,9 @@ public:
 	void buildCFG(void);
 	CFGInfo *getCFGInfo(void);
 	CFG *getStartCFG(void);
+	
+	// AST Management
+	ASTInfo *getASTInfo(void);
 	
 	// ILP support
 	ilp::System *newILPSystem(bool max = true);

@@ -7,6 +7,7 @@
 
 #include <otawa/manager.h>
 #include <otawa/prog/FrameWork.h>
+#include <otawa/ast/ASTInfo.h>
 
 
 // Trace
@@ -106,6 +107,15 @@ CFG *FrameWork::getStartCFG(void) {
 	
 	// Find CFG attached to the entry
 	return info->findCFG(_start);
+}
+
+
+/**
+ * Get the AST of the project. 
+ */
+ASTInfo *FrameWork::getASTInfo(void) {
+	ASTInfo *info = get<ASTInfo *>(ASTInfo::ID, 0);
+	return use<ASTInfo *>(ASTInfo::ID);
 }
 
 

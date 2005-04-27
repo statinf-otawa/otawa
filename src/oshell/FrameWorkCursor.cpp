@@ -56,7 +56,7 @@ void FrameWorkCursor::list(Output& out) {
 	if(ainfo) {
 		out << "Function AST:" << ainfo << "\n";
 		int i = 0;
-		for(Iterator< AutoPtr<FunAST> > fun(ainfo->functions()); fun; fun++) {
+		for(Iterator< FunAST *> fun(ainfo->functions()); fun; fun++) {
 			out << "\tF" << i;
 			if(fun->name())
 				out << " (&" << fun->name() << ')';
@@ -72,7 +72,7 @@ Cursor *FrameWorkCursor::go(CString name) {
 	
 	// CFG traversal by address
 	if(name[0] == 'C') {
-		AutoPtr<CFGInfo> info = fw->get< AutoPtr<CFGInfo> >(CFGInfo::ID, 0);
+		CFGInfo *info = fw->get< CFGInfo *>(CFGInfo::ID, 0);
 		if(!info)
 			throw GoException();
 		int num = atoi(&name + 1);
@@ -106,7 +106,7 @@ Cursor *FrameWorkCursor::go(CString name) {
 		int i = atoi(name.chars() + 1);
 		ASTInfo *ainfo = ASTInfo::getInfo(fw);
 		if(ainfo)
-			for(Iterator< AutoPtr<FunAST> > fun(ainfo->functions()); fun;
+			for(Iterator< FunAST *> fun(ainfo->functions()); fun;
 			fun++, i--)
 				if(!i)
 					return new FunCursor(this, *fun);
@@ -117,7 +117,7 @@ Cursor *FrameWorkCursor::go(CString name) {
 		String fname = name.chars() + 1;
 		ASTInfo *ainfo = ASTInfo::getInfo(fw);
 		if(ainfo) {
-			Option< AutoPtr<FunAST> > fun = ainfo->map().get(
+			Option< FunAST *> fun = ainfo->map().get(
 				String(name.chars() + 1));
 			if(fun)
 				return new FunCursor(this, *fun);
