@@ -14,11 +14,11 @@ namespace otawa {
 
 // FunCursor class
 class FunCursor: public Cursor {
-	AutoPtr<FunAST> fun;
-	void outputAST(Output& out, AutoPtr<AST> ast, int ind);
-	void outputSeq(Output& out, AutoPtr<AST> ast, int ind);
+	FunAST *fun;
+	void outputAST(Output& out, AST *ast, int ind);
+	void outputSeq(Output& out, AST *ast, int ind);
 public:
-	FunCursor(Cursor *back, AutoPtr<FunAST> function);
+	FunCursor(Cursor *back, FunAST *function);
 	virtual void path(Output& out);
 	virtual void info(Output& out);
 	virtual void list(Output& out);

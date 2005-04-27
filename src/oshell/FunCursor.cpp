@@ -21,7 +21,7 @@ namespace otawa {
  * @param back	Back cursor.
  * @param function	Function to handle.
  */
-FunCursor::FunCursor(Cursor *back, AutoPtr<FunAST> function)
+FunCursor::FunCursor(Cursor *back, FunAST *function)
 : Cursor(back), fun(function) {
 };
 
@@ -58,7 +58,7 @@ void FunCursor::display(Output& out) {
  * @param ast	AST to output.
  * @param ind	Current indentation.
  */
-void FunCursor::outputAST(Output& out, AutoPtr<AST> ast, int ind) {
+void FunCursor::outputAST(Output& out, AST *ast, int ind) {
 	
 	// Display indentation
 	for(int i = 0; i < ind; i++)
@@ -122,7 +122,7 @@ void FunCursor::outputAST(Output& out, AutoPtr<AST> ast, int ind) {
  * @param ast	AST to output.
  * @param ind	Current indentation.
  */
-void FunCursor::outputSeq(Output& out, AutoPtr<AST> ast, int ind) {
+void FunCursor::outputSeq(Output& out, AST *ast, int ind) {
 	
 	// Sequence AST ?
 	if(ast->kind() != AST_Seq)
