@@ -20,7 +20,7 @@ namespace otawa {
  * @param condition	Iteration condition.
  * @param body		Iteration body.
  */
-WhileAST::WhileAST(AutoPtr<AST> condition, AutoPtr<AST> body)
+WhileAST::WhileAST(AST *condition, AST *body)
 : cnd(condition), bod(body) {
 	assert(condition && body);
 }

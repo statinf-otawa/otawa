@@ -21,7 +21,7 @@ namespace otawa {
  * @param child1	First child.
  * @param child2	Second child.
  */
-SeqAST::SeqAST(AutoPtr<AST> child1, AutoPtr<AST> child2)
+SeqAST::SeqAST(AST *child1, AST *child2)
 : c1(child1), c2(child2) {
 }
 

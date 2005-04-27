@@ -20,7 +20,7 @@ namespace otawa {
  * @param body		Loop body.
  * @param condition	Loop condition.
  */
-DoWhileAST::DoWhileAST(AutoPtr<AST> body, AutoPtr<AST> condition)
+DoWhileAST::DoWhileAST(AST *body, AST *condition)
 : bod(body), cnd(condition) {
 	assert(body && condition);
 }

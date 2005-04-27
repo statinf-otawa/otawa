@@ -19,7 +19,7 @@ namespace otawa {
  * @param condition	Selection condition.
  * @param then_part	Then part.
  */
-IfAST::IfAST(AutoPtr<AST> condition, AutoPtr<AST> then_part)
+IfAST::IfAST(AST *condition, AST *then_part)
 : cond(condition), tpart(then_part), epart(&NOP) {
 	assert(condition && then_part);
 }
@@ -31,8 +31,8 @@ IfAST::IfAST(AutoPtr<AST> condition, AutoPtr<AST> then_part)
  * @param then_part	Then part.
  * @param else_part	Else part.
  */
-IfAST::IfAST(AutoPtr<AST> condition, AutoPtr<AST> then_part,
-AutoPtr<AST> else_part) : cond(condition), tpart(then_part), epart(else_part) {
+IfAST::IfAST(AST *condition, AST *then_part,
+AST *else_part) : cond(condition), tpart(then_part), epart(else_part) {
 	assert(condition && then_part && else_part);
 }
 

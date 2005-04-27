@@ -19,8 +19,8 @@ namespace otawa {
 /**
  * Build a new FOR AST.
  */
-ForAST::ForAST(AutoPtr<AST> initialization, AutoPtr<AST> condition,
-AutoPtr<AST> incrementation, AutoPtr<AST> body)
+ForAST::ForAST(AST *initialization, AST *condition,
+AST *incrementation, AST *body)
 : init(initialization), cnd(condition), inc(incrementation), bod(body) {
 	assert(initialization && condition && incrementation && body);
 }

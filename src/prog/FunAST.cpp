@@ -48,7 +48,7 @@ FunAST::FunAST(FrameWork *fw, Inst *entry, String name)
 		_name = *label;
 		
 	// Record the function
-	info->add(this);	
+	//info->add(this);	
 }
 
 
@@ -70,7 +70,7 @@ FunAST::FunAST(ASTInfo *info, Inst *entry, String name)
 		_name = *label;
 		
 	// Record the function
-	info->add(this);	
+	//info->add(this);	
 }
 
 
@@ -107,7 +107,7 @@ FunAST::~FunAST(void) {
  * Modify the AST representing the body of this function.
  * @param ast New body AST.
  */
-void FunAST::setAst(AutoPtr<AST> ast) {
+void FunAST::setAst(AST *ast) {
 	_ast = ast;
 }
 

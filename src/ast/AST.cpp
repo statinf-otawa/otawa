@@ -13,7 +13,7 @@
  */
 
 namespace otawa {
-
+	
 /**
  * NOP AST class.
  */
@@ -119,5 +119,16 @@ AST& AST::UNDEF = undef_inst;
  * Test if the AST is the undefined AST.
  * @return True if it is the undefined AST, false else.
  */
+ 
+ /**
+ * Count the number of instructions in the ast block.
+ * @return	Number of instruction in the ast block.
+ */
+int AST::countInstructions(void) const {
+	return 1;
+}
+ 
+ 
+ 
 
 } // otawa

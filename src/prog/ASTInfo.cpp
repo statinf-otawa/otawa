@@ -6,6 +6,7 @@
  */
 
 #include <otawa/ast/ASTInfo.h>
+#include <elm/debug.h>
 
 namespace otawa {
 
@@ -48,7 +49,8 @@ ASTInfo::ASTInfo(Process *proc) {
  * Add a function to the AST information.
  * @param fun Function to add.
  */
-void ASTInfo::add(AutoPtr<FunAST> fun) {
+void ASTInfo::add(FunAST *fun) {
+	TRACE;
 	
 	// Add it to the list
 	funs.add(fun);
@@ -61,9 +63,9 @@ void ASTInfo::add(AutoPtr<FunAST> fun) {
 
 
 // Cleanup thanks toproperties
-GenericProperty<ASTInfo *>::~GenericProperty(void) {
+/*GenericProperty<ASTInfo *>::~GenericProperty(void) {
 	delete value;
-}
+}*/
 
 
 /**
@@ -72,7 +74,7 @@ GenericProperty<ASTInfo *>::~GenericProperty(void) {
  * @param inst	First instruction of the function.
  * @return	Found or created AST function.
  */
-AutoPtr<FunAST> ASTInfo::getFunction(Inst *inst) {
+FunAST *ASTInfo::getFunction(Inst *inst) {
 	
 	// Look in the instruction
 	FunAST *fun = inst->get<FunAST *>(FunAST::ID, 0);
