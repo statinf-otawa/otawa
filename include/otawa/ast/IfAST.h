@@ -14,6 +14,8 @@ namespace otawa {
 // IfAST class
 class IfAST: public AST {
 	AST *cond, *tpart, *epart;
+protected:
+	virtual ~IfAST(void);
 public:
 	IfAST(AST *condition, AST *then_part);
 	IfAST(AST *condition, AST *then_part, AST *else_part);

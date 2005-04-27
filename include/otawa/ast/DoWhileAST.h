@@ -15,6 +15,8 @@ namespace otawa {
 class DoWhileAST: public AST {
 	AST *bod, *cnd;
 public:
+	virtual ~DoWhileAST(void);
+public:
 	DoWhileAST(AST *body, AST *condition);
 	inline AST *condition(void) const { return cnd; };
 	inline AST *body(void) const { return bod; };

@@ -43,6 +43,7 @@ public:
 	static AST& UNDEF;
 	virtual ast_kind_t kind(void) const = 0;
 	virtual Inst *first(void) = 0;
+	virtual void release(void);
 	
 	virtual bool isNOP(void) { return false; };
 	virtual bool isUndef(void) { return false; };

@@ -14,6 +14,8 @@ namespace otawa {
 // ForAST class
 class ForAST: public AST {
 	AST *bod, *cnd, *init, *inc;
+protected:
+	virtual ~ForAST(void);
 public:
 	ForAST(AST *initialization, AST *condition,
 		AST *incrementation, AST *body);

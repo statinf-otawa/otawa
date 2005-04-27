@@ -15,6 +15,8 @@ namespace otawa {
 class WhileAST: public AST {
 	AST *cnd, *bod;
 public:
+	virtual ~WhileAST(void);
+public:
 	WhileAST(AST *condition, AST *body);
 	inline AST *condition(void) const { return cnd; };
 	inline AST *body(void) const { return bod; };

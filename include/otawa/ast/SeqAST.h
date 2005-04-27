@@ -14,6 +14,8 @@ namespace otawa {
 // SeqAST class
 class SeqAST: public AST {
 	AST *c1, *c2;
+protected:
+	virtual ~SeqAST(void);
 public:
 	SeqAST(AST *child1, AST *child2);
 	inline AST *child1(void) const { return c1; };

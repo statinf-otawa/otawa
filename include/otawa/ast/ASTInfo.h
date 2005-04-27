@@ -27,6 +27,7 @@ class ASTInfo: public PropList {
 	void add(FunAST *fun);
 	ASTInfo(Process *proc);
 public:
+	~ASTInfo(void);
 	static const id_t ID;
 	static ASTInfo *getInfo(Process *proc);
 	FunAST *getFunction(Inst *inst);
