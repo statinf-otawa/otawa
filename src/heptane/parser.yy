@@ -8,6 +8,7 @@
 
 #include <otawa/ast.h>
 #include <elm/genstruct/Vector.h>
+#include <stdlib.h>
 using namespace otawa;
 
 // Proto
@@ -36,7 +37,7 @@ void yyerror(const char *msg) {
 %error-verbose
 
 %union {
-	const char *str;
+	char *str;
 	AST *ast;
 }
 
@@ -66,15 +67,14 @@ defs:
 def:
 	NAME '=' ast
 		{ 
-			{
-				ASTInfo *info = ASTInfo::getInfo(heptane_process);
-				FunAST *fun = info->getFunction($3->first());
-				String name($1);
-				fun->setName(name.substring(1, name.length() - 1));
-				AST *ast($3);
-				fun->setAst(ast);
-				info->map().put(name.substring(1, name.length() - 1), fun);
-			}
+			ASTInfo *info = ASTInfo::getInfo(heptane_process);
+			FunAST *fun = info->getFunction($3->first());
+			String name($1);
+			fun->setName(name.substring(1, name.length() - 1));
+			AST *ast($3);
+			fun->setAst(ast);
+			info->map().put(name.substring(1, name.length() - 1), fun);
+			free($1);
 		}
 ;
 
@@ -82,7 +82,11 @@ ast:
 	VIDE
 		{ $$ = &AST::NOP; }
 |	CODE '(' LABEL ',' opt_calls LABEL ')'
-		{ $$ = make_block($3, $6); }
+		{
+			$$ = make_block($3, $6);
+			free($3);
+			free($6);
+		}
 |	SEQ '[' asts ']'
 		{ $$ = $3; }
 |	IF '(' ast ',' ast ',' ast ')'
