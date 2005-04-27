@@ -66,12 +66,15 @@ defs:
 def:
 	NAME '=' ast
 		{ 
-			ASTInfo *info = ASTInfo::getInfo(heptane_process);
-			AutoPtr<FunAST> fun = info->getFunction($3->first());
-			String name = $1;
-			fun->setName(name.substring(1, name.length() - 1));
-			AutoPtr<AST> ast($3);
-			fun->setAst(ast);
+			{
+				ASTInfo *info = ASTInfo::getInfo(heptane_process);
+				FunAST *fun = info->getFunction($3->first());
+				String name($1);
+				fun->setName(name.substring(1, name.length() - 1));
+				AST *ast($3);
+				fun->setAst(ast);
+				info->map().put(name.substring(1, name.length() - 1), fun);
+			}
 		}
 ;
 
@@ -209,7 +212,7 @@ AST *make_block(CString entry, CString exit) {
 			
 			// Find the function
 			Inst *target = inst->target();
-			AutoPtr<FunAST> fun = info->getFunction(target);
+			FunAST *fun = info->getFunction(target);
 			
 			// Build the AST
 			AST *call = new CallAST(start, fun);
