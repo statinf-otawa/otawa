@@ -18,20 +18,24 @@ namespace otawa {
 
 /**
  * Build a new AST call calling the given function.
- * @param caller	Start of caller block.
+ * @param block	First instruction of the block.
+ * @param size	Size of the block.
  * @param _fun	Called function.
  */
-CallAST::CallAST(Inst *caller, FunAST *_fun): BlockAST(caller), fun(_fun) {
+CallAST::CallAST(Inst *block, size_t size, FunAST *_fun)
+: BlockAST(block, size), fun(_fun) {
 }
 
 
 /**
  * Build a call AST with only the first instruction of the called function.
  * @param fw		Container framework.
- * @param caller	Caller block.
+ * @param block		First instruction of the caller block.
+ * @param size		Size of the caller block.
  * @param callee	Callee instruction.
  */
-CallAST::CallAST(FrameWork *fw, Inst *caller, Inst *callee): BlockAST(caller) {
+CallAST::CallAST(FrameWork *fw, Inst *block, size_t size, Inst *callee)
+: BlockAST(block, size) {
 	
 	// Find the ASTInfo
 	ASTInfo *info = fw->get<ASTInfo *>(ASTInfo::ID, 0);
@@ -41,6 +45,7 @@ CallAST::CallAST(FrameWork *fw, Inst *caller, Inst *callee): BlockAST(caller) {
 	// Find the function
 	fun = info->getFunction(callee);
 }
+
 
 /**
  * @fn inline FunAST *CallAST::function(void) const;
