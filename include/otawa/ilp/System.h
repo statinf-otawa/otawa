@@ -7,6 +7,7 @@
 #ifndef OTAWA_ILP_SYSTEM_H
 #define OTAWA_ILP_SYSTEM_H
 
+#include <elm/io/OutStream.h>
 #include <otawa/ilp/Constraint.h>
 
 namespace otawa { namespace ilp {
@@ -21,6 +22,7 @@ public:
 	virtual double valueOf(Var *var) = 0;
 	virtual double value(void) = 0;
 	virtual Var *newVar(void) = 0;
+	virtual void dump(elm::io::OutStream& out = elm::io::stdout) = 0;
 };
 	
 } }	// otawa::ilp
