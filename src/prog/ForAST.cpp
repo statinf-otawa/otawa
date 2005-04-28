@@ -64,13 +64,24 @@ ForAST::~ForAST(void) {
   */
 
 
-// AST Overload
+/**
+ */
 Inst *ForAST::first(void) {
 	Inst *result = init->first();
 	if(!result)
 		result = cnd->first();
 	assert(result);
 	return result;
+}
+
+
+/**
+ */
+int ForAST::countInstructions(void) const {
+	return	init->countInstructions()
+		+	cnd->countInstructions()
+		+	inc->countInstructions()
+		+	bod->countInstructions();
 }
 
 } // otawa
