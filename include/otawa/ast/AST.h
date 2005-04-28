@@ -55,7 +55,7 @@ public:
 	virtual DoWhileAST *toDoWhile(void) { return 0; };
 	virtual ForAST *toFor(void) { return 0; };
 	
-	int countInstructions(void) const;
+	virtual int countInstructions(void) const;
 };
 
 
