@@ -48,12 +48,20 @@ SeqAST::~SeqAST(void) {
  */
 
 
-// AST Overload
+/**
+ */
 Inst *SeqAST::first(void) {
 	Inst *result = c1->first();
 	if(!result)
 		result = c2->first();
 	return result;
+}
+
+
+/**
+ */
+int SeqAST::countInstructions(void) const {
+	return c1->countInstructions() + c2->countInstructions();
 }
 
 } // otawa
