@@ -67,9 +67,19 @@ IfAST::~IfAST(void) {
  */
 
 
-// AST Overload
+/**
+ */
 Inst *IfAST::first(void) {
 	return cond->first();
+}
+
+
+/**
+ */
+int IfAST::countInstructions(void) const {
+	return	cond->countInstructions()
+		+	tpart->countInstructions()
+		+	epart->countInstructions();
 }
 
 } // otawa

@@ -48,9 +48,17 @@ WhileAST::~WhileAST(void) {
  */
 
 
-// AST overload
+/**
+ */
 Inst *WhileAST::first(void) {
 	return cnd->first();
+}
+
+
+/**
+ */
+int WhileAST::countInstructions(void) const {
+	return cnd->countInstructions() + bod->countInstructions();
 }
 
 }	// otawa
