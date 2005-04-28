@@ -69,6 +69,8 @@ File::File(String _path, int argc, char **argv, char **envp)
 File::~File(void) {
 	clearProps();
 	if(state) {
+		for(Iterator<otawa::Symbol *> sym(syms.items()); sym; sym++)
+			delete *sym;
 		for(Iterator<Segment *> seg(segs); seg; seg++)
 			delete (CodeSegment *)*seg;
     	iss_halt(state);
