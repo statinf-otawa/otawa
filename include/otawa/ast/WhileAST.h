@@ -25,6 +25,7 @@ public:
 	virtual Inst *first(void);
 	virtual ast_kind_t kind(void) const { return AST_While; };
 	virtual WhileAST *toWhile(void) { return this; };
+	virtual int countInstructions(void) const;
 };
 	
 } // otawa
