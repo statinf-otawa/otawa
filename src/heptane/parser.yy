@@ -202,7 +202,7 @@ AST *make_block(CString entry, CString exit) {
 	
 	// Any internal call
 	if(!calls)
-		return new BlockAST(entry_inst);
+		return new BlockAST(entry_inst, exit_addr - entry_inst->address());
 	
 	// Find AST info
 	ASTInfo *info = ASTInfo::getInfo(heptane_process);
@@ -219,7 +219,8 @@ AST *make_block(CString entry, CString exit) {
 			FunAST *fun = info->getFunction(target);
 			
 			// Build the AST
-			AST *call = new CallAST(start, fun);
+			AST *call = new CallAST(start,
+				inst->address() + inst->size() - start->address(), fun);
 			if(!ast)
 				ast = call;
 			else
@@ -238,7 +239,7 @@ AST *make_block(CString entry, CString exit) {
 	
 	// Remaining block ?
 	if(!start->atEnd() && start->address() != exit_addr)
-		ast = new SeqAST(ast, new BlockAST(start));
+		ast = new SeqAST(ast, new BlockAST(start, exit_addr - start->address()));
 	
 	// Clean-up
 	calls.clear();
