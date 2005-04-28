@@ -17,12 +17,14 @@ class FunCursor: public Cursor {
 	FunAST *fun;
 	void outputAST(Output& out, AST *ast, int ind);
 	void outputSeq(Output& out, AST *ast, int ind);
+	void countAST(Output& out, AST *ast, int ind);
 public:
 	FunCursor(Cursor *back, FunAST *function);
 	virtual void path(Output& out);
 	virtual void info(Output& out);
 	virtual void list(Output& out);
 	virtual void display(Output& out);
+	virtual void perform(Output& out, int count, CString argv[]);
 };
 	
 }	// otawa
