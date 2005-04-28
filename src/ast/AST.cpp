@@ -24,6 +24,7 @@ public:
 	virtual ast_kind_t kind(void) const { return AST_Nop; };
 	virtual bool isNOP(void) { return true; };
 	virtual Inst *first(void) { return 0; };
+	virtual int countInstructions(void) const { return 0; };
 };
 static NOPAST nop_inst;
 
@@ -38,6 +39,7 @@ public:
 	virtual ast_kind_t kind(void) const { return AST_Undef; };
 	virtual bool isUndef(void) { return true; };
 	virtual Inst *first(void) { return 0; };
+	virtual int countInstructions(void) const { return 0; };
 };
 static UndefAST undef_inst;
 
@@ -137,8 +139,5 @@ AST& AST::UNDEF = undef_inst;
 int AST::countInstructions(void) const {
 	return 1;
 }
- 
- 
- 
 
 } // otawa
