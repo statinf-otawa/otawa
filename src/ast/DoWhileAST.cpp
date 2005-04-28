@@ -48,12 +48,20 @@ DoWhileAST::~DoWhileAST(void) {
  */
 
 
-// AST overload
+/**
+ */
 Inst *DoWhileAST::first(void) {
 	Inst *result = bod->first();
 	if(!result)
 		result = cnd->first();
 	return result;
+}
+
+
+/**
+ */
+int DoWhileAST::countInstructions(void) const {
+	return bod->countInstructions() + cnd->countInstructions();
 }
 
 } // otawa
