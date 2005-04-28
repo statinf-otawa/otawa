@@ -25,11 +25,13 @@ namespace otawa {
 
 /**
  * Build a new block AST.
- * @param block Entry basic block.
+ * @param block	First instruction in the block.
+ * @param size	Size of the block.
  */
-BlockAST::BlockAST(Inst *block): blk(block) {
+BlockAST::BlockAST(Inst *block, size_t size): _block(block), _size(size) {
 	assert(block);
-	blk->set<BlockAST *>(ID, this);
+	assert(size > 0);
+	_block->set<BlockAST *>(ID, this);
 }
 
 
@@ -37,13 +39,18 @@ BlockAST::BlockAST(Inst *block): blk(block) {
  * Destroy the block AST, cleaning properties put on basic block and basic block head.
  */
 BlockAST::~BlockAST(void) {
-	assert(blk);
 	//blk->removeProp(ID);
 }
 
 /**
  * @fn Inst *BlockAST::block(void) const;
  * Get the entry basic block of the AST block.
+ */
+
+
+/**
+ * @fn size_t BlockAST::size(void) const;
+ * Get the size of the AST block.
  */
 
 
@@ -58,10 +65,17 @@ BlockAST::~BlockAST(void) {
  * The property matching the given identifier is put on the first instruction
  * of the AST. The property contains a pointer to the block AST.
  */
-const id_t BlockAST::ID = Property::getID("otawa.ast.block");
+Identifier BlockAST::ID("otawa.ast.block");
 
 
-
-
+/**
+ */
+int BlockAST::countInstructions(void) const {
+	address_t last = _block->address() + _size;
+	int count = 0;
+	for(Inst *inst = _block; inst->address() < last; inst = inst->next())
+		count++;
+	return count;
+}
 
 }	// otawa
