@@ -73,6 +73,14 @@ namespace otawa { namespace ilp {
  */
 
 
+/**
+ * @fn void System::dump(elm::io::OutStream& out);
+ * Dump the system to the given output. The dumping format depends upon the
+ * actual used ILP engine. Usually, it is compatible with other tools of
+ * the ILP engine.
+ * @param out	Used output.
+ */
+
 } // ilp
 
 /*

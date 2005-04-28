@@ -102,5 +102,21 @@ void Constraint::sub(double coef, ilp::Var *var) {
 	add(-coef, var);
 }
 
+
+/**
+ * Dump the constraint to the given output.
+ * @param out	Used output.
+ */
+void Constraint::dump(elm::io::Output& out) {
+	bool first = true;
+	for(Factor *fact = facts; fact; fact = fact->next()) {
+		if(!first) {
+			first = false;
+			out << " + ";
+		}
+		out << fact->coefficient() << " x" << fact->variable()->column();
+	}
+}
+
 } }	// otawa::lp_solve
 

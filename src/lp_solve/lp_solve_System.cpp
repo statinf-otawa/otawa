@@ -6,6 +6,7 @@
  */
 
 #include <assert.h>
+#include <elm/io.h>
 #include <otawa/lp_solve/System.h>
 #include <otawa/lp_solve/Constraint.h>
 extern "C" {
@@ -185,6 +186,29 @@ bool System::solve(void) {
  */
 ilp::Var *System::newVar(void) {
 	return new ilp::Var();
+}
+
+
+/**
+ */
+void System::dump(elm::io::OutStream& _out) {
+	static CString texts[] = { "<", "<=", "=", ">=", ">" };
+	elm::io::Output out(_out);
+	
+	// Output the objective function
+	if(ofun->comparator() >= 0)
+		out << "max: ";
+	else
+		out << "min: ";
+	ofun->dump(out);
+	out << ";\n";
+	
+	// Output the constraints
+	for(Constraint *cons = conss; cons; cons = cons->next()) {
+		cons->dump(out);
+		out << " " << texts[cons->comparator() + 2]
+			<< " " << cons->constant() << ";\n"; 
+	}	
 }
 
 } }	// otawa::lp_solve

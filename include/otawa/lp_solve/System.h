@@ -53,6 +53,7 @@ public:
 	virtual double valueOf(ilp::Var *var);
 	virtual double value(void);
 	virtual ilp::Var *newVar(void);
+	virtual void dump(elm::io::OutStream& out = elm::io::stdout);
 };
 
 // System::Var Inlines
