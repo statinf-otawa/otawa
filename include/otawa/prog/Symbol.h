@@ -23,6 +23,7 @@ typedef enum symbol_kind_t {
 class Inst;
 class Symbol {
 public:
+	virtual ~Symbol(void) { };
 	virtual symbol_kind_t kind(void) = 0;
 	virtual elm::String name(void) = 0;
 	virtual address_t address(void) = 0;
