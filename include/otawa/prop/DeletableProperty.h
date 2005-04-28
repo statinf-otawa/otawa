@@ -17,7 +17,7 @@ class DeletableProperty: public GenericProperty<T> {
 public:
 protected:
 	virtual ~DeletableProperty(void);
-	virtual Property *copy(void);
+	//virtual Property *copy(void);
 public:
 	inline DeletableProperty(Identifier *id, T _value);
 	inline DeletableProperty(Identifier& id, T _value);
@@ -31,12 +31,10 @@ DeletableProperty<T>::~DeletableProperty(void) {
 	delete GenericProperty<T>::getValue();
 }
 
-template <class T>
+/*template <class T>
 Property *DeletableProperty<T>::copy(void) {
-	return new DeletableProperty<T>(
-		GenericProperty<T>::getID(),
-		GenericProperty<T>::getValue());
-}
+	return new GenericProperty<T>::copy();
+}*/
 
 template <class T>
 inline DeletableProperty<T>::DeletableProperty(Identifier *id, T _value) 
