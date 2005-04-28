@@ -25,6 +25,7 @@ public:
 	virtual Inst *first(void);
 	virtual ast_kind_t kind(void) const { return AST_Seq; };
 	virtual SeqAST *toSeq(void) { return this; };
+	virtual int countInstructions(void) const;
 };
 	
 } // otawa

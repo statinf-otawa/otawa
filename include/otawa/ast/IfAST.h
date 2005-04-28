@@ -27,6 +27,7 @@ public:
 	virtual Inst *first(void);
 	virtual ast_kind_t kind(void) const { return AST_If; };
 	virtual IfAST *toIf(void) { return this; };
+	virtual int countInstructions(void) const;
 };
 	
 } // otawa
