@@ -7,6 +7,7 @@
 #ifndef OTAWA_LP_SOLVE_CONSTRAINT_H
 #define OTAWA_LP_SOLVE_CONSTRAINT_H
 
+#include <elm/io.h>
 #include <otawa/ilp.h>
 
 namespace otawa { namespace lp_solve {
@@ -48,6 +49,7 @@ public:
 	inline Constraint *next(void) const;
 	void fillRow(double *row);
 	void resetRow(double *row);
+	void dump(elm::io::Output& out);
 
 	// ilp::Constraint overload	
 	virtual double coefficient(ilp::Var *var = 0) const;
