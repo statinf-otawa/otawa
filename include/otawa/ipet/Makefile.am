@@ -4,7 +4,8 @@ includeotawaipet_HEADERS = \
 	TrivialBBTime.h \
 	VarAssignment.h \
 	BasicConstraintsBuilder.h \
-	WCETComputation.h
+	WCETComputation.h \
+	ConstraintLoader.h
 
 
 

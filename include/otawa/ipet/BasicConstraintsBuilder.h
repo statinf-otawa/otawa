@@ -13,21 +13,11 @@
 namespace otawa {
 	
 class BasicConstraintsBuilder: public CFGProcessor {
-	FrameWork *fw;
 public:
-	inline BasicConstraintsBuilder(FrameWork *framework);
-	
 	// CFGProcessor overload
-	virtual void processCFG(CFG *cfg);
+	virtual void processCFG(FrameWork *fw, CFG *cfg);
 };
 
-
-// Inlines
-inline BasicConstraintsBuilder::BasicConstraintsBuilder(FrameWork *framework)
-: fw(framework) {
-	assert(fw);
-}
-	
 } // otawa
 
 #endif 	// OTAWA_IPET_BASIC_CONSTRAINTS_BUILDER_H

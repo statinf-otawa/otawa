@@ -15,7 +15,7 @@ class VarAssignment: public BBProcessor {
 public:
 
 	// BBProcessor overload
-	virtual void processBB(BasicBlock *bb);
+	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
 };
 
 }	// otawa

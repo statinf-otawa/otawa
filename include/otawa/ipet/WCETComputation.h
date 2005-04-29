@@ -15,7 +15,7 @@ class WCETComputation: public CFGProcessor {
 public:
 
 	// CFGProcessor overload
-	virtual void processCFG(CFG *cfg);
+	virtual void processCFG(FrameWork *fw, CFG *cfg);
 };
 
 } // otawa

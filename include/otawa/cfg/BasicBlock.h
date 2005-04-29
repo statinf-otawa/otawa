@@ -17,6 +17,9 @@
 
 namespace otawa {
 
+// Extern classe
+class FrameWork;
+
 // BaseBlock class
 class BasicBlock: public elm::inhstruct::DLNode, public ProgObject {
 public:
@@ -93,6 +96,9 @@ public:
 	void removeOutEdge(Edge *edge) { outs.remove(edge); };
 	inline IteratorInst<Edge *> *inEdges(void) { return new EdgeIterator(ins); };
 	inline IteratorInst<Edge *> *outEdges(void) { return new EdgeIterator(outs); };
+	
+	// Basic block retrieval
+	static BasicBlock *findBBAt(FrameWork *fw, address_t addr);
 };
 
 } // otawa

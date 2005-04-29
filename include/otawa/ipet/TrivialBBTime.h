@@ -19,7 +19,7 @@ public:
 	inline int depth(void) const;
 
 	// BBProcessor overload
-	void processBB(BasicBlock *bb);
+	void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
 };
 
 
