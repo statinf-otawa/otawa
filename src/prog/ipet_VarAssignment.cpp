@@ -24,16 +24,24 @@ namespace otawa {
 /**
  * See @ref BBProcessor::processCFG().
  */
-void VarAssignment::processBB(BasicBlock *bb) {
+void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	
 	// Check BB
-	if(!bb->get<Var *>(IPET::ID_Var, 0))
-		bb->addDeletable<Var *>(IPET::ID_Var, new Var());
+	StringBuffer buf;
+	buf.print("x%lx", bb->address());
+	if(!bb->get<Var *>(IPET::ID_Var, 0)) {
+		String name = buf.toString();
+		bb->addDeletable<Var *>(IPET::ID_Var, new Var(name));
+	}
 	
 	// Check out edges
 	for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++) {
-		if(!edge->get<Var *>(IPET::ID_Var, 0))
-			edge->add<Var *>(IPET::ID_Var, new Var());
+		if(!edge->get<Var *>(IPET::ID_Var, 0)) {
+			StringBuffer buf;
+			buf.print("e_%lx_%lx", bb->address(), edge->target()->address());
+			String name = buf.toString();
+			edge->add<Var *>(IPET::ID_Var, new Var(name));
+		}
 	}
 }
 

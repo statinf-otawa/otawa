@@ -18,8 +18,9 @@ namespace otawa {
  */
 
 /**
- * @fn void CFGProcessor::processCFG(CFG *cfg);
+ * @fn void CFGProcessor::processCFG(FrameWork *fw, CFG *cfg);
  * Process the given CFG.
+ * @param fw	Container framework.
  * @param CFG	CFG to process.
  */
 
@@ -34,7 +35,7 @@ void CFGProcessor::processFrameWork(FrameWork *fw) {
 	
 	// For each CFG
 	for(Iterator<CFG *> cfg(info->cfgs()); cfg; cfg++)
-		processCFG(cfg);
+		processCFG(fw, cfg);
 }
 
 } // otawa

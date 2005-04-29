@@ -8,6 +8,7 @@
 #include <otawa/ilp.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/WCETComputation.h>
+#include <otawa/cfg/CFG.h>
 
 using namespace otawa::ilp;
 
@@ -22,7 +23,7 @@ namespace otawa {
 
 /**
  */
-void WCETComputation::processCFG(CFG *cfg) {
+void WCETComputation::processCFG(FrameWork *fw, CFG *cfg) {
 	System *system = cfg->use<System *>(IPET::ID_System);
 	int wcet = -1;
 	if(system->solve())

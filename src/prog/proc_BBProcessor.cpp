@@ -19,8 +19,10 @@ namespace otawa {
 
 
 /**
- * @fn void BBProcessor::processBB(BasicBlock *bb);
+ * @fn void BBProcessor::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
  * Perform the work of the given basic block.
+ * @param fw	Container framework.
+ * @param CFG	Parent CFG.
  * @param bb	Basic block to process.
  */
 
@@ -28,9 +30,9 @@ namespace otawa {
 /**
  * See @ref CFGProcessor::processCFG()
  */
-void BBProcessor::processCFG(CFG *cfg) {
+void BBProcessor::processCFG(FrameWork *fw, CFG *cfg) {
 	for(CFG::BBIterator bb(cfg); bb; bb++)
-		processBB(bb);
+		processBB(fw, cfg, bb);
 }
 	
 } // otawa

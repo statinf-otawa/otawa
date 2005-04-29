@@ -7,6 +7,9 @@
 
 #include <otawa/proc/Processor.h>
 
+using namespace elm;
+using namespace elm::io;
+
 namespace otawa {
 
 /**
@@ -22,5 +25,25 @@ namespace otawa {
  * Process the given framework.
  * @param fw	Framework to process.
  */
+
+
+/**
+ * This property identifier is used for setting the output stream used by
+ * the processor for writing messages (information, warning, error) to the user.
+ * The data must be of type @ref elm::io::OutStream *.
+ */
+Identifier Processor::ID_Output("proc.output");
+
+
+/**
+ * This method may be called for configuring a processor thanks to information
+ * passed in the property list.
+ * @param props	Configuration information.
+ */
+void Processor::configure(PropList& props) {
+	OutStream *out_stream = props.get<OutStream *>(ID_Output, 0);
+	if(out_stream)
+		;
+}
 
 } // otawa
