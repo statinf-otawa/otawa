@@ -424,6 +424,7 @@ INPUT                  = src/prog/ \
                          include/otawa/prop \
                          include/otawa/proc \
                          include/otawa/ilp \
+                         include/otawa/ipet \
                          include/otawa/util
 
 # If the value of the INPUT tag contains directories, you can use the 
