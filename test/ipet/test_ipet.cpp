@@ -13,6 +13,7 @@
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/ipet/BasicConstraintsBuilder.h>
 #include <otawa/ipet/WCETComputation.h>
+#include <otawa/ilp.h>
 
 using namespace otawa;
 using namespace elm;
@@ -38,24 +39,26 @@ int main(int argc, char **argv) {
 		// Compute BB times
 		cout << "Timing the BB\n";
 		TrivialBBTime tbt(5);
-		tbt.processCFG(cfg);
+		tbt.processCFG(fw, cfg);
 		
 		// Assign variables
 		cout << "Numbering the main\n";
 		VarAssignment assign;
-		assign.processCFG(cfg);
+		assign.processCFG(fw, cfg);
 		
 		// Build the system
 		cout << "Building the ILP system\n";
-		BasicConstraintsBuilder builder(fw);
-		builder.processCFG(cfg);
+		BasicConstraintsBuilder builder;
+		builder.processCFG(fw, cfg);
 		
 		// Resolve the system
 		cout << "Resolve the system\n";
 		WCETComputation wcomp;
-		wcomp.processCFG(cfg);
+		wcomp.processCFG(fw, cfg);
 		
 		// Display the result
+		ilp::System *sys = cfg->use<ilp::System *>(IPET::ID_System);
+		sys->dump();
 		cout << "SUCCESS\nWCET = " << cfg->use<int>(IPET::ID_WCET) << '\n';
 	}
 	catch(LoadException e) {
