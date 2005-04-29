@@ -1,3 +1,12 @@
 .deps
 Makefile
 Makefile.in
+ipet_lexer.cc
+ipet_parser.cc
+ipet_parser.output
+ipet_parser.tab.c
+ipet_parser.tab.cc
+ipet_parser.tab.h
+ipet_parser.tab.hh
+lex.ipet_.c
+ipet_parser.h
