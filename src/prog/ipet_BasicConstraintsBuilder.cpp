@@ -53,7 +53,7 @@ namespace otawa {
 
 /**
  */	
-void BasicConstraintsBuilder::processCFG(CFG *cfg) {
+void BasicConstraintsBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	assert(cfg);
 
 	// Look for the framework

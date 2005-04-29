@@ -36,7 +36,7 @@ namespace otawa {
 /**
  * See @ref CFGProcessor::processBB().
  */
-void TrivialBBTime::processBB(BasicBlock *bb) {
+void TrivialBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	bb->set<int>(&IPET::ID_Time, dep * bb->countInstructions());
 }
 

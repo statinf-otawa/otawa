@@ -40,11 +40,10 @@ libprog_a_SOURCES = \
 	ipet_BasicConstraintsBuilder.cpp \
 	ipet_WCETComputation.cpp \
 	util_DFA.cpp \
-	util_DFABitSet.cpp
-
-#	ipet_parser.yy \
-#	ipet_lexer.ll \
-#	ipet_ConstraintLoader.cpp \
+	util_DFABitSet.cpp \
+	ipet_parser.yy \
+	ipet_lexer.ll \
+	ipet_ConstraintLoader.cpp
 	
 INCLUDES=\
 	-I../../include \
