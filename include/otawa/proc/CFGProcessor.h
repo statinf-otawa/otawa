@@ -8,14 +8,16 @@
 #define OTAWA_PROC_CFGPROCESSOR_H
 
 #include <otawa/proc/Processor.h>
-#include <otawa/cfg/CFG.h>
 
 namespace otawa {
+	
+// Extern class
+class CFG;
 	
 // Processor class
 class CFGProcessor: public Processor {
 public:
-	virtual void processCFG(CFG *cfg) = 0;
+	virtual void processCFG(FrameWork *fw, CFG *cfg) = 0;
 
 	// Processor overload
 	virtual void processFrameWork(FrameWork *fw);

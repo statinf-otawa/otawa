@@ -14,10 +14,10 @@ namespace otawa {
 
 class BBProcessor: public CFGProcessor {
 public:
-	virtual void processBB(BasicBlock *bb) = 0;
+	virtual void processBB(FrameWork *fw, CFG *cfd, BasicBlock *bb) = 0;
 	
 	// CFGProcessor overload
-	virtual void processCFG(CFG *cfg);
+	virtual void processCFG(FrameWork *fw, CFG *cfg);
 };
 	
 } // otawa
