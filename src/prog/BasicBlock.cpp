@@ -6,6 +6,7 @@
  */
 
 #include <otawa/cfg/BasicBlock.h>
+#include <otawa/prog/FrameWork.h>
 
 namespace otawa {
 
@@ -47,7 +48,7 @@ BasicBlock::BasicBlock(Inst *inst): flags(0) {
  */
 BasicBlock *BasicBlock::getTaken(void) {
 	for(elm::Iterator<Edge *> edge(outEdges()); edge; edge++)
-		if(edge->kind() == EDGE_Taken)
+		if(edge->kind() == EDGE_Taken || edge->kind() == EDGE_Call)
 			return edge->target();
 	return 0;
 }
@@ -258,6 +259,23 @@ BasicBlock::~BasicBlock(void) {
  * @fn BasicBlock::operator IteratorInst<Inst *> *(void);
  * Same as @ref visit() but allows passing basic block in @ref Iterator class.
  */
+
+
+/**
+ * Find the basic block at the given address if it exists.
+ * @param fw	Framework to look in.
+ * @param addr	Address of basic block or null if it cannot be found.
+ */
+BasicBlock *BasicBlock::findBBAt(FrameWork *fw, address_t addr) {
+	Inst *inst = fw->findInstAt(addr);
+	PseudoInst *pseudo;
+	while(inst && !(pseudo = inst->toPseudo()) && pseudo->id() != BasicBlock::ID)
+		inst = inst->previous();
+	if(!inst)
+		return 0;
+	else
+		return ((BasicBlock::Mark *)pseudo)->bb();
+}
 
 
 /**
