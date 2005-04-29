@@ -43,6 +43,7 @@ int main(void) {
 	sys.addObjectFunction(3,&v4);
 	
 	// Solve it
+	sys.dump();
 	assert(sys.solve());
 	
 	// Display result
