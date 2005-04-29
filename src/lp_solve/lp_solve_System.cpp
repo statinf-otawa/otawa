@@ -184,8 +184,8 @@ bool System::solve(void) {
  * !!TODO!!
  * Variable by this way cannot be fried. Must be fixed.
  */
-ilp::Var *System::newVar(void) {
-	return new ilp::Var();
+ilp::Var *System::newVar(elm::String& name) {
+	return new ilp::Var(name);
 }
 
 

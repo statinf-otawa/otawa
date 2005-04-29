@@ -114,7 +114,11 @@ void Constraint::dump(elm::io::Output& out) {
 			first = false;
 		else
 			out << " + ";
-		out << (int)fact->coefficient() << " x" << fact->variable()->column();
+		out << (int)fact->coefficient() << " ";
+		if(fact->variable()->variable()->name())
+			out << fact->variable()->variable()->name();
+		else
+			out << "_" << fact->variable()->column();
 	}
 }
 

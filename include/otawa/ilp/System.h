@@ -8,6 +8,7 @@
 #define OTAWA_ILP_SYSTEM_H
 
 #include <elm/io/OutStream.h>
+#include <elm/string.h>
 #include <otawa/ilp/Constraint.h>
 
 namespace otawa { namespace ilp {
@@ -21,7 +22,9 @@ public:
 	virtual void addObjectFunction(double coef, Var *var = 0) = 0;
 	virtual double valueOf(Var *var) = 0;
 	virtual double value(void) = 0;
-	virtual Var *newVar(void) = 0;
+	Var *newVar(void) { return newVar("");  };
+	Var *newVar(const char *name) { elm::String str(name); return newVar(name); };
+	virtual Var *newVar(elm::String& name) = 0;
 	virtual void dump(elm::io::OutStream& out = elm::io::stdout) = 0;
 };
 	
