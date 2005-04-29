@@ -110,11 +110,11 @@ void Constraint::sub(double coef, ilp::Var *var) {
 void Constraint::dump(elm::io::Output& out) {
 	bool first = true;
 	for(Factor *fact = facts; fact; fact = fact->next()) {
-		if(!first) {
+		if(first)
 			first = false;
+		else
 			out << " + ";
-		}
-		out << fact->coefficient() << " x" << fact->variable()->column();
+		out << (int)fact->coefficient() << " x" << fact->variable()->column();
 	}
 }
 

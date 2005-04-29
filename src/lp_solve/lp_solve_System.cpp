@@ -207,7 +207,7 @@ void System::dump(elm::io::OutStream& _out) {
 	for(Constraint *cons = conss; cons; cons = cons->next()) {
 		cons->dump(out);
 		out << " " << texts[cons->comparator() + 2]
-			<< " " << cons->constant() << ";\n"; 
+			<< " " << (int)cons->constant() << ";\n"; 
 	}	
 }
 
