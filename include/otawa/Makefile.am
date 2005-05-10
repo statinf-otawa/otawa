@@ -9,7 +9,8 @@ SUBDIRS= \
 	proc \
 	ipet \
 	lp_solve \
-	util
+	util \
+	ets
 
 # Headers
 includeotawadir=$(includedir)/otawa
@@ -17,6 +18,7 @@ includeotawa_HEADERS = \
 	ast.h \
 	base.h  \
 	cfg.h \
+	ets.h\
 	gliss.h \
 	instruction.h \
 	manager.h \
