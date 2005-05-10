@@ -1,2 +1,4 @@
-SUBDIRS=@TESTS@
+SUBDIRS=@TESTS@ ets
+
+
 
