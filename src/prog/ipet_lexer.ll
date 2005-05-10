@@ -9,7 +9,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <ipet_parser.tab.h>
+#include "ExpNode.h"
+#include <otawa/ipet/ConstraintLoader.h>
+#include <ipet_parser.h>
 %}
 
 %option noyywrap
@@ -37,17 +39,17 @@ COM		#.*\n
 "bb"		return BB;
 "edge"		return EDGE;
 
-">="		return GE;
-"<="		return LE;
+">="		return OP_GE;
+"<="		return OP_LE;
 [<>=]		return *yytext;
 [+\-*/()]	return *yytext;
 
-{DEC}		yylval.integer = strtol(yytext, 0, 10); return INTEGER;
-{OCT}		yylval.integer = strtol(yytext + 1, 0, 8); return INTEGER;
-{HEX}		yylval.integer = strtol(yytext + 2, 0, 16); return INTEGER;
-{BIN}		yylval.integer = strtol(yytext + 2, 0, 2); return INTEGER;
-{REAL}		yylval.real = strtod(yytext, 0); return REAL;
-{ID}		yylval.id = strdup(yytext); return ID;
+{DEC}		ipet_lval.integer = strtol(yytext, 0, 10); return INTEGER;
+{OCT}		ipet_lval.integer = strtol(yytext + 1, 0, 8); return INTEGER;
+{HEX}		ipet_lval.integer = strtol(yytext + 2, 0, 16); return INTEGER;
+{BIN}		ipet_lval.integer = strtol(yytext + 2, 0, 2); return INTEGER;
+{REAL}		ipet_lval.real = strtod(yytext, 0); return REAL;
+{ID}		ipet_lval.id = strdup(yytext); return ID;
 
 .			ECHO;
 
