@@ -32,6 +32,8 @@ libprog_a_SOURCES = \
 	ilp_System.cpp \
 	proc_Processor.cpp \
 	proc_CFGProcessor.cpp \
+	proc_FunProcessor.cpp \
+	proc_ASTProcessor.cpp \
 	proc_BBProcessor.cpp \
 	ipet_IPET.cpp \
 	ipet_TrivialBBTime.cpp \
@@ -43,7 +45,11 @@ libprog_a_SOURCES = \
 	util_DFABitSet.cpp \
 	ipet_parser.yy \
 	ipet_lexer.ll \
-	ipet_ConstraintLoader.cpp
+	ipet_ConstraintLoader.cpp \
+	ets_ETS.cpp \
+	ets_WCETComputation.cpp \
+	ets_TrivialAstBlockTime.cpp \
+	ets_FlowFactReader.cpp
 	
 INCLUDES=\
 	-I../../include \
