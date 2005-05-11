@@ -5,40 +5,47 @@
  *	src/prog/BasicBlock.cpp -- implementation of BasicBlock class.
  */
 
-#include <otawa/cfg/BasicBlock.h>
+#include <otawa/cfg.h>
 #include <otawa/prog/FrameWork.h>
 
 namespace otawa {
 
+// Null basic block
+class NullBasicBlock: public BasicBlock {
+	inhstruct::DLList list;
+	Mark null_mark;
+public:
+	inline NullBasicBlock(void): null_mark(this) {
+		list.addFirst(&null_mark);		
+		_head = &null_mark;
+	};
+};
+static NullBasicBlock null_bb_inst;
+
+
+/**
+ */
+BasicBlock& BasicBlock::null_bb = null_bb_inst;
+
+
 /**
  * @class BasicBlock
- * Represent a basic block in the strictess meaning: a sequence of instructions
- * containing no branch, or branch target except for the last instruction that
- * may be a branch. Unconditionnal branches are viewed as normal branch
- * in this definition.
+ * This is the minimal definition of a basic block.
  */
 
-	
+
 /**
- * Build a basic block from its container code and its sequence of instructions.
- * @param inst	First instruction of the basic block. The basic block
- * lay from this instruction to the next basic block head or end of code.
+ * Identifier of the basic block pseudo-instruction.
  */
-BasicBlock::BasicBlock(Inst *inst): flags(0) {
-	assert(inst && (inst->atEnd() || !inst->isPseudo()));
-	
-	// Create the mark
-	_head = new Mark(this);
-	assert(inst->previous()->atBegin() || !inst->previous()->isPseudo());
-	inst->insertBefore(_head);
-	
-	// Look for a label
-	if(!inst->atEnd()) {
-		Option<String> label = inst->get<String>(File::ID_Label);
-		if(label)
-			set<String>(File::ID_Label, *label);
-	}
-}
+id_t BasicBlock::ID = Property::getID("otawa.bb");
+
+
+/**
+ * @fn Mark *BasicBlock::head(void) const;
+ * Get the mark pseudo-instruction of the basic block. Following instruction
+ * until the next mark are the content of the basic block.
+ * @return	Basic block mark.
+ */
 
 
 /**
@@ -91,20 +98,6 @@ void BasicBlock::setNotTaken(BasicBlock *bb) {
 
 
 /**
- * Identifier of the basic block pseudo-instruction.
- */
-id_t BasicBlock::ID = Property::getID("otawa.BasicBlock");
-
-
-/**
- * @fn Mark *BasicBlock::head(void) const;
- * Get the mark pseudo-instruction of the basic block. Following instruction
- * until the next mark are the content of the basic block.
- * @return	Basic block mark.
- */
-
-
-/**
  *  @fn bool BasicBlock::isCall(void) const;
  *  Test if the basuc block is ended by a call to a sub-program.
  *  @return True if the basic block is call, false else.
@@ -128,41 +121,10 @@ id_t BasicBlock::ID = Property::getID("otawa.BasicBlock");
 
 
 /**
- *	@fn address_t BasicBlock::address(void) const;
- *	Get the address of the first instruction of the basic block.
- *	@return	First instruction address.
- */
-
-
-/**
- * @class BasicBlock::Mark
- * This pseudo-instruction is used for marking the start of a basic block.
- */
-
-/**
- * @fn BasicBlock::Mark::Mark(BasicBlock *bb);
- * Constructor for the given basic block.
- * @param bb	Basic block marked by this pseudo-instruction.
- */
-
-/**
- * @fn BasicBlock::Mark::~Mark(void);
- * Destructor: remove also the reference from the basic block.
- */
-
-
-/**
- * @fn BasicBlock *BasicBlock::Mark::bb(void) const;
- * Get the basic block associated with this marker.
- * @return	Basic block.
- */
-
-
-/**
  * Compute the size of the basic block.
  * @return Size of basic block.
  */
-size_t BasicBlock::getBlockSize(void) const {
+size_t BasicBlock::size(void) const {
 	assert(_head);
 	Inst *inst;
 	PseudoInst *pseudo;
@@ -175,6 +137,14 @@ size_t BasicBlock::getBlockSize(void) const {
 	// Else this is the last block
 	return 0;
 }
+
+
+/**
+ * @fn size_t BasicBlock::getBlockSize(void) const;
+ * Compute the size of the basic block.
+ * @return Size of basic block.
+ * @deprecated See @ref BasicBlock::size().
+ */
 
 
 /**
@@ -197,13 +167,11 @@ int BasicBlock::countInstructions(void) const {
 	return cnt;
 }
 
+
 /**
- * Delete the basic block.
  */
 BasicBlock::~BasicBlock(void) {
-	if(_head)
-		delete _head;
-};
+}
 
 
 /**
@@ -269,38 +237,13 @@ BasicBlock::~BasicBlock(void) {
 BasicBlock *BasicBlock::findBBAt(FrameWork *fw, address_t addr) {
 	Inst *inst = fw->findInstAt(addr);
 	PseudoInst *pseudo;
-	while(inst && !(pseudo = inst->toPseudo()) && pseudo->id() != BasicBlock::ID)
+	while(inst && !(pseudo = inst->toPseudo())
+	&& pseudo->id() != CodeBasicBlock::ID)
 		inst = inst->previous();
 	if(!inst)
 		return 0;
 	else
-		return ((BasicBlock::Mark *)pseudo)->bb();
-}
-
-
-/**
- * @class BasicBlock::Iterator
- * Iterator for instructions in the basic block.
- */
-
-
-// IteratorInst<T> overload
-bool BasicBlock::Iterator::ended(void) const {
-	PseudoInst *pseudo;
-	return inst->atEnd()
-		|| ((pseudo = inst->toPseudo()) && pseudo->id() == ID);
-}
-
-
-// IteratorInst<T> overload			
-Inst *BasicBlock::Iterator::item(void) const {
-	return inst;
-}
-
-
-// IteratorInst<T> overload
-void BasicBlock::Iterator::next(void) {
-	inst = inst->next();
+		return ((CodeBasicBlock::Mark *)pseudo)->bb();
 }
 
 
@@ -319,5 +262,100 @@ void BasicBlock::EdgeIterator::next(void) {
 	iter.next();
 }
 
+
+/**
+ * @class BasicBlock::Mark
+ * This pseudo-instruction is used for marking the start of a basic block.
+ */
+
+/**
+ * @fn BasicBlock::Mark::Mark(BasicBlock *bb);
+ * Constructor for the given basic block.
+ * @param bb	Basic block marked by this pseudo-instruction.
+ */
+
+/**
+ * @fn BasicBlock::Mark::~Mark(void);
+ * Destructor: remove also the reference from the basic block.
+ */
+
+
+/**
+ * @fn BasicBlock *BasicBlock::Mark::bb(void) const;
+ * Get the basic block associated with this marker.
+ * @return	Basic block.
+ */
+
+
+/**
+ * @class BasicBlock::Iterator
+ * Iterator for instructions in the basic block.
+ */
+
+
+/**
+ */
+bool BasicBlock::Iterator::ended(void) const {
+	PseudoInst *pseudo;
+	return inst->atEnd()
+		|| ((pseudo = inst->toPseudo()) && pseudo->id() == ID);
+}
+
+
+/**
+ */
+Inst *CodeBasicBlock::Iterator::item(void) const {
+	return inst;
+}
+
+
+/**
+ */
+void CodeBasicBlock::Iterator::next(void) {
+	inst = inst->next();
+}
+
+
+/**
+ * @class CodeBasicBlock
+ * Represent a basic block in the strictess meaning: a sequence of instructions
+ * containing no branch, or branch target except for the last instruction that
+ * may be a branch. Unconditionnal branches are viewed as normal branch
+ * in this definition.
+ */
+
+	
+/**
+ * Build a basic block from its container code and its sequence of instructions.
+ * @param inst	First instruction of the basic block. The basic block
+ * lay from this instruction to the next basic block head or end of code.
+ */
+CodeBasicBlock::CodeBasicBlock(Inst *inst) {
+	assert(inst && (inst->atEnd() || !inst->isPseudo()));
+	
+	// Create the mark
+	_head = new Mark(this);
+	assert(inst->previous()->atBegin() || !inst->previous()->isPseudo());
+	inst->insertBefore(_head);
+	
+	// Look for a label
+	if(!inst->atEnd()) {
+		Option<String> label = inst->get<String>(File::ID_Label);
+		if(label)
+			set<String>(File::ID_Label, *label);
+	}
+	
+	// Set flags
+	flags = 0;
+}
+
+
+/**
+ * Delete the basic block.
+ */
+CodeBasicBlock::~CodeBasicBlock(void) {
+	if(_head)
+		delete _head;
+};
 
 } // otawa
