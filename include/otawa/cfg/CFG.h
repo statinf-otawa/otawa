@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <elm/Collection.h>
 #include <elm/genstruct/Vector.h>
+#include <otawa/cfg/BasicBlock.h>
 
 namespace otawa {
 
@@ -17,57 +18,81 @@ namespace otawa {
 class BasicBlock;
 class Code;
 
-	
 // CFG class
 class CFG: public ProgObject, private elm::Collection<BasicBlock *> {
+	unsigned long flags;
+	static const unsigned long FLAG_Scanned = 0x01;
 	Code *_code;
 	BasicBlock *ent;
+	VirtualBasicBlock _entry, _exit;
+	genstruct::Vector<BasicBlock *> _bbs;
 
-	virtual elm::IteratorInst<BasicBlock *> *visit(void) const;
-	virtual elm::MutableCollection<BasicBlock *> *empty(void) const;
-
+	virtual elm::IteratorInst<BasicBlock *> *visit(void);
+	virtual elm::MutableCollection<BasicBlock *> *empty(void);
+	void scan(void);
+	
 public:
 	static id_t ID;
+	static Identifier ID_Index;
 	
 	// Iterator
-	class BBIterator: public elm::IteratorInst<BasicBlock *> {
-		elm::genstruct::Vector<BasicBlock *> bbs;
+	class BBIterator: public elm::PreIterator<BBIterator, BasicBlock *> {
+		elm::genstruct::Vector<BasicBlock *>& bbs;
 		int pos;
 	public:
-		inline BBIterator(const CFG *cfg);
-		virtual bool ended(void) const;
-		virtual BasicBlock *item(void) const;
-		virtual void next(void);
+		inline BBIterator(CFG *cfg);
+		inline bool ended(void) const;
+		inline BasicBlock *item(void) const;
+		inline void next(void);
 	};
 	
 	// Methods
 	CFG(Code *code, BasicBlock *entry);
-	inline BasicBlock *entry(void) const;
 	inline Code *code(void) const;
 	String label(void);
 	address_t address(void);
 	inline elm::Collection<BasicBlock *>& bbs(void);
+	inline BasicBlock *entry(void);
+	inline BasicBlock *exit(void);
 };
 
 
-// Inlines
+// CFG inlines
 inline elm::Collection<BasicBlock *>& CFG::bbs(void) {
 	return *this;
-}
-
-inline BasicBlock *CFG::entry(void) const {
-	return ent;
 }
 
 inline Code *CFG::code(void) const {
 	return _code;
 };
 
-inline CFG::BBIterator::BBIterator(const CFG *cfg) {
-	assert(cfg);
-	bbs.add(cfg->entry());
-	pos = 0;
+inline BasicBlock *CFG::entry(void) {
+	if(!(flags & FLAG_Scanned))
+		scan();
+	return &_entry;
 }
+
+inline BasicBlock *CFG::exit(void) {
+	if(!(flags & FLAG_Scanned))
+		scan();
+	return &_exit;
+}
+
+
+// BBIterator inlines
+inline CFG::BBIterator::BBIterator(CFG *cfg): bbs(cfg->_bbs), pos(1) {
+	if(!(cfg->flags & FLAG_Scanned))
+		cfg->scan();
+};
+inline bool CFG::BBIterator::ended(void) const {
+	return pos >= bbs.length() - 1;
+};
+inline BasicBlock *CFG::BBIterator::item(void) const {
+	return bbs[pos];
+};
+inline void CFG::BBIterator::next(void) {
+	pos++;
+};
 
 } // otawa
 
