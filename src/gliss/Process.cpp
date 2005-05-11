@@ -53,7 +53,7 @@ void Process::clear(void) {
  * Get the list of loaded files.
  * @return	Loader files.
  */
-const elm::Collection<otawa::File *> *Process::files(void) const {
+elm::Collection<otawa::File *> *Process::files(void) {
 	return &_files;
 }
 
