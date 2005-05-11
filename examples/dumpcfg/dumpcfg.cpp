@@ -255,32 +255,9 @@ void Call::put(void) {
  */
 void Call::build_map(CFG *cfg) {
 	
-	/* Initialize list of BB to process */
-	genstruct::DLList<BasicBlock *> remain;
-	remain.addLast(cfg->entry());	
-	
 	// Find all basic blocks
-	while(!remain.isEmpty()) {
-		
-		// Get the current BB
-		BasicBlock *bb = remain.first();
-		remain.removeFirst();
-		if(map->exists(bb))
-			continue;
+	for(CFG::BBIterator bb(cfg); bb; bb++)
 		map->put(bb, 0);
-		
-		// Process not-taken
-		BasicBlock *target = bb->getNotTaken();
-		if(target && !map->exists(target))
-			remain.addLast(target);
-
-		// Process taken
-		if(!bb->isCall()) {
-			target = bb->getTaken();
-			if(target && !map->exists(target))
-				remain.addLast(target);
-		}
-	}
 
 	// Give number to basic blocks
 	CountVisitor count_visitor;
@@ -334,70 +311,65 @@ void Call::process(BasicBlock *bb, int& index) {
 	int bb_index = index + base;
 	displayer->onBBBegin(bb, bb_index);
 	
-	// Is it a return ?
-	if(bb->isReturn()) {
-		displayer->onEdge(info, bb, bb_index, EDGE_Null, 0, ret);
-	}
-	
-	// Display the following BBs for an inlined call
-	else if(bb->isCall() && inline_calls) {
-		
-		// Look not-taken target
-		BasicBlock *target = bb->getNotTaken();
-		assert(target);
-		int next = map->get(target, -1);
-		assert(next >= 0);
-		next += base;
-		
-		// Look taken target
-		target = bb->getTaken();
-		assert(target);
-		
-		// Check circularity
-		CFG *called_cfg = info->findCFG(target);
-		Call *call;
-		for(call = this; call; call = call->getBack())
-			if(call->_cfg == called_cfg) {
-				if(link_rec)
-					break;
-				else
-					throw CircularityException(new Call(this, info, called_cfg, next));
+	// Process edges
+	for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++) {
+		BasicBlock *target = edge->target();
+		int target_num;
+		switch(edge->kind()) {
+			
+		case Edge::NOT_TAKEN:
+		case Edge::TAKEN:
+			if(!target)
+				target_num = -1;
+			else {
+				target_num = map->get(target, -1);
+				assert(target_num >= 0);
+				target_num += base;
 			}
-
-		// Add the function call
-		if(!call) {
-			call = new Call(this, info, called_cfg, next);
-			call->put();
-		}
-				
-		// Put the target
-		displayer->onEdge(info, bb, bb_index, EDGE_Call, 0, call->getBase());
-	}
-	
-	// Display following BBs
-	else {
-
-		// Not taken
-		BasicBlock *target = bb->getNotTaken();
-		if(target) {
-			int target_num = map->get(target, -1);
-			assert(target_num >= 0);
-			target_num += base;
-			displayer->onEdge(info, bb, bb_index, EDGE_NotTaken, 0, target_num);
-		}
+			displayer->onEdge(info, bb, bb_index, edge->kind(), target, target_num);
+			break;
 		
-		// Taken
-		target = bb->getTaken();
-		otawa::edge_kind_t kind = bb->isCall() ? EDGE_Call : EDGE_Taken;
-		if(!target)
-			displayer->onEdge(info, bb, bb_index, kind, 0, -1);
-		else if(bb->isCall())
-			displayer->onEdge(info, bb, bb_index, kind, target, -1);
-		else {
-			int target_num = map->get(target, -1);
-			assert(target_num >= 0);
-			target_num += base;
-			displayer->onEdge(info, bb, bb_index, EDGE_Taken, 0, target_num);
+		case Edge::CALL:
+			target_num = -1;
+			if(inline_calls && target) {
+				
+				// Look not-taken target
+				int next = -1;
+				BasicBlock *next_target = bb->getNotTaken();
+				if(next_target) {
+					next = map->get(next_target, -1);
+					assert(next >= 0);
+					next += base;
+				}
+		
+				// Check circularity
+				CFG *called_cfg = info->findCFG(target);
+				Call *call;
+				for(call = this; call; call = call->getBack())
+					if(call->_cfg == called_cfg) {
+						if(link_rec)
+							break;
+						else
+							throw CircularityException(
+								new Call(this, info, called_cfg, next));
+					}
+
+				// Add the function call
+				if(!call) {
+					call = new Call(this, info, called_cfg, next);
+					call->put();
+					target_num = call->getBase();
+				}	
+			}
+			displayer->onEdge(info, bb, bb_index, Edge::CALL, target, target_num);
+			break;		
+		
+		case Edge::VIRTUAL:
+			displayer->onEdge(info, bb, bb_index, Edge::NONE, 0, ret);
+			break;
+		
+		default:
+			assert(0);
 		}
 	}
 	

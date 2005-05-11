@@ -51,6 +51,44 @@ namespace otawa {
  * </p>
  */
 
+
+/**
+ * Build the constraints for the given 
+ * @param system	ILP system to use.
+ * @param bb		Basic block to process.
+ */
+void BasicConstraintsBuilder::make(ilp::System *system, BasicBlock *bb) {
+	Var *bbv = bb->use<Var *>(IPET::ID_Var);
+	Constraint *cons;
+	bool used;
+		
+	// Input constraint
+	cons = system->newConstraint(Constraint::EQ);
+	cons->addLeft(1, bbv);
+	used = false;
+	for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
+		if(edge->kind() != Edge::CALL) {
+			cons->addRight(1, edge->use<Var *>(IPET::ID_Var));
+			used = true;
+		}
+	}
+	if(!used)
+		delete cons;
+		
+	// Output constraint
+	cons = system->newConstraint(Constraint::EQ);
+	cons->addLeft(1, bbv);
+	used = false;
+	for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+		if(edge->kind() != Edge::CALL) {
+			cons->addRight(1, edge->use<Var *>(IPET::ID_Var));
+			used = true;
+		}
+	if(!used)
+		delete cons;
+}
+
+
 /**
  */	
 void BasicConstraintsBuilder::processCFG(FrameWork *fw, CFG *cfg) {
@@ -70,33 +108,10 @@ void BasicConstraintsBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	cons->add(1, entry->use<Var *>(IPET::ID_Var));
 	
 	// Add constraint for each basic block
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
-		Var *bbv = bb->use<Var *>(IPET::ID_Var);
+	make(system, cfg->entry());
+	for(CFG::BBIterator bb(cfg); bb; bb++)
+		make(system, bb);
 		
-		// Input constraint
-		if(bb != entry) {
-			cons = system->newConstraint(Constraint::EQ);
-			cons->addLeft(1, bbv);
-			bool used = false;
-			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
-				cons->addRight(1, edge->use<Var *>(IPET::ID_Var));
-				used = true;
-			}
-			if(!used)
-				delete cons;
-		}
-		
-		// Output constraint
-		cons = system->newConstraint(Constraint::EQ);
-		cons->addLeft(1, bbv);
-		bool used = false;
-		for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++) {
-			cons->addRight(1, edge->use<Var *>(IPET::ID_Var));
-			used = true;
-		}
-		if(!used)
-			delete cons;
-	}
 	
 	// Set object function
 	for(CFG::BBIterator bb(cfg); bb; bb++)

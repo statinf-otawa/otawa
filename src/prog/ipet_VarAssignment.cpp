@@ -8,6 +8,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/ilp/Var.h>
+#include <otawa/cfg.h>
 
 using namespace otawa::ilp;
 
@@ -22,9 +23,10 @@ namespace otawa {
 
 
 /**
- * See @ref BBProcessor::processCFG().
+ * Perform the actual work on the given basic block.
+ * @param bb	Basic block to process.
  */
-void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
+void VarAssignment::process(BasicBlock *bb) {
 	
 	// Check BB
 	StringBuffer buf;
@@ -43,6 +45,24 @@ void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 			edge->add<Var *>(IPET::ID_Var, new Var(name));
 		}
 	}
+}
+
+
+/**
+ * See @ref CFGProcessor::processCFG().
+ */
+void VarAssignment::processCFG(FrameWork *fw, CFG *cfg) {
+	process(cfg->entry());
+	BBProcessor::processCFG(fw, cfg);
+	process(cfg->exit());
+}
+
+
+/**
+ * See @ref BBProcessor::processBB().
+ */
+void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
+	process(bb);
 }
 
 } // otawa
