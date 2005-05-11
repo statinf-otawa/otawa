@@ -474,6 +474,9 @@ address_t PseudoInst::address(void) {
 	for(Inst *inst = previous(); !inst->atBegin(); inst = inst->previous())
 		if(!inst->isPseudo())
 			return inst->address() + inst->size();
+	
+	// None found
+	return 0;
 }
 
 /**
