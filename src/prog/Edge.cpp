@@ -25,7 +25,8 @@ Edge::Edge(BasicBlock *source, BasicBlock *target, edge_kind_t kind)
 	assert(target);
 	assert(kind != EDGE_Null);
 	src->addOutEdge(this);
-	tgt->addInEdge(this);
+	if(knd != CALL)
+		tgt->addInEdge(this);
 }
 
 
@@ -34,7 +35,19 @@ Edge::Edge(BasicBlock *source, BasicBlock *target, edge_kind_t kind)
  */
 Edge::~Edge(void) {
 	src->removeOutEdge(this);
-	tgt->removeInEdge(this);
+	if(knd != CALL)
+		tgt->removeInEdge(this);
+}
+
+
+/**
+ * Transform this edge as a call edge.
+ */
+void Edge::toCall(void) {
+	if(knd != CALL) {
+		tgt->removeInEdge(this);
+		knd = CALL;
+	}
 }
 
 } // otawa
