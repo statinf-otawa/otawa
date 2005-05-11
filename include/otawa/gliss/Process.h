@@ -26,7 +26,7 @@ public:
 	void clear(void);
 
 	// elm::Process overload
-	virtual const elm::Collection<otawa::File *> *files(void) const;
+	virtual elm::Collection<otawa::File *> *files(void);
 	virtual ::otawa::File *createFile(void);
 	virtual ::otawa::File *loadFile(CString path);
 	virtual ::otawa::Platform *platform(void);

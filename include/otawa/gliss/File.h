@@ -26,15 +26,15 @@ class File: public ::otawa::File {
 public:
 	File(String _path, int argc, char **argv, char **envp);
 	~File(void);
-	inline bool isOK(void) const { return !segs.isEmpty(); };
+	inline bool isOK(void) { return !segs.isEmpty(); };
 	otawa::Inst *findByAddress(address_t addr);
 
 	// ::otawa::File overload
 	virtual CString name(void);
-	virtual const elm::Collection<Segment *>& segments(void) const;
+	virtual elm::Collection<Segment *>& segments(void);
 	virtual address_t findLabel(const String& label);
 	virtual otawa::Symbol *findSymbol(String name);
-	virtual const elm::Collection<otawa::Symbol *>& symbols(void);
+	virtual elm::Collection<otawa::Symbol *>& symbols(void);
 };
 
 } } // otawa::gliss
