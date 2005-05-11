@@ -37,7 +37,7 @@ public:
 	inline Process *process(void) const { return proc; };
 	
 	// Process overload
-	virtual const elm::Collection<File *> *files(void) const { return proc->files(); };
+	virtual elm::Collection<File *> *files(void) { return proc->files(); };
 	virtual File *createFile(void) { return proc->createFile(); };
 	virtual File *loadFile(elm::CString path) { return proc->loadFile(path); };
 	virtual Platform *platform(void) { return proc->platform(); };

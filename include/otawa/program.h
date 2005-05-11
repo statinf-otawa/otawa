@@ -88,10 +88,10 @@ class File: public ProgObject {
 public:
 	static id_t ID_Label;
 	virtual CString name(void) = 0;
-	virtual const elm::Collection<Segment *>& segments(void) const = 0;
+	virtual elm::Collection<Segment *>& segments(void) = 0;
 	virtual address_t findLabel(const String& label) = 0;
 	virtual Symbol *findSymbol(String name) = 0;
-	virtual const elm::Collection<Symbol *>& symbols(void) = 0;
+	virtual elm::Collection<Symbol *>& symbols(void) = 0;
 };
 
 
