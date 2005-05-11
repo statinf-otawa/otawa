@@ -7,31 +7,56 @@
 #ifndef OTAWA_CFG_EDGE_H
 #define OTAWA_CFG_EDGE_H
 
-namespace otawa {
+#include <assert.h>
+#include <otawa/cfg/CFG.h>
 
-// Edge kind
-typedef enum edge_kind_t {
-	EDGE_Null,
-	EDGE_Taken,
-	EDGE_NotTaken,
-	EDGE_Call
-} edge_kind_t;
+namespace otawa {
 
 // Classes
 class BasicBlock;
 
 // Edge class
 class Edge: public PropList {
-	edge_kind_t knd;
-	BasicBlock *src, *tgt;
+	friend class CFG;
 public:
-	Edge(BasicBlock *source, BasicBlock *target, edge_kind_t kind = EDGE_Taken);
+	typedef enum kind_t {
+		NONE,
+		TAKEN,
+		NOT_TAKEN,
+		CALL,
+		VIRTUAL
+	} kind_t;
+private:
+	kind_t knd;
+	BasicBlock *src, *tgt;
+	void toCall(void);
+public:
+	Edge(BasicBlock *source, BasicBlock *target, kind_t kind = TAKEN);
 	~Edge(void);
 	inline BasicBlock *source(void) const { return src; };
 	inline BasicBlock *target(void) const { return tgt; };
-	inline edge_kind_t kind(void) const { return knd; };
+	inline kind_t kind(void) const { return knd; };
+	inline CFG *calledCFG(void) const;
 };
 
+
+// Inlines
+inline CFG *Edge::calledCFG(void) const {
+	assert(knd == CALL);
+	if(!tgt)
+		return 0;
+	else
+		return tgt->get<CFG *>(CFG::ID, 0);
+}
+
+
+// Deprecated
+typedef Edge::kind_t edge_kind_t;
+#define EDGE_Null		Edge::NONE
+#define EDGE_Taken		Edge::TAKEN
+#define	EDGE_NotTaken	Edge::NOT_TAKEN
+#define	EDGE_Call		Edge::CALL
+#define EDGE_Virtual	Edge::VIRTUAL
 
 } // otawa
 
