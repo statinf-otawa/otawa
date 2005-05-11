@@ -11,8 +11,17 @@
 #include <otawa/proc/CFGProcessor.h>
 
 namespace otawa {
-	
+
+// External classes	
+class BasicBlock;
+namespace ilp {
+	class System;
+} //ilp
+
+
+// BasicConstraintsBuilder class
 class BasicConstraintsBuilder: public CFGProcessor {
+	void make(ilp::System *system, BasicBlock *bb);
 public:
 	// CFGProcessor overload
 	virtual void processCFG(FrameWork *fw, CFG *cfg);

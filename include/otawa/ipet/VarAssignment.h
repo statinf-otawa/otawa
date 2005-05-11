@@ -12,10 +12,12 @@
 namespace otawa {
 
 class VarAssignment: public BBProcessor {
+	void process(BasicBlock *bb);
 public:
 
 	// BBProcessor overload
 	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+	virtual void processCFG(FrameWork *fw, CFG *cfg);
 };
 
 }	// otawa
