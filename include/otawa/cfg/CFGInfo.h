@@ -45,7 +45,7 @@ public:
 	CFG *findCFG(Inst *inst);
 	CFG *findCFG(BasicBlock *bb);
 	CFG *findCFG(String label);
-	const elm::Collection<CFG *>& cfgs(void);
+	elm::Collection<CFG *>& cfgs(void);
 	inline const elm::Collection<Code *>& codes(void) const
 		{ return _codes; };
 };
