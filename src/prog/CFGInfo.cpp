@@ -104,7 +104,7 @@ BasicBlock *CFGInfo::nextBB(Inst *inst) {
 		
 		// Instruction found (no BB): create it
 		if(!pseudo) {
-			BasicBlock *bb = new BasicBlock(node);
+			BasicBlock *bb = new CodeBasicBlock(node);
 			assert(bb);
 			bbs.addLast(bb);
 			bb->set<bool>(ID_Entry, false);
@@ -112,13 +112,13 @@ BasicBlock *CFGInfo::nextBB(Inst *inst) {
 		}
 		
 		// Is the BB pseudo?
-		if(pseudo->id() == BasicBlock::ID) {
-			return ((BasicBlock::Mark *)pseudo)->bb();
+		if(pseudo->id() == CodeBasicBlock::ID) {
+			return ((CodeBasicBlock::Mark *)pseudo)->bb();
 		}
 	}
 	
 	// End-of-code
-	BasicBlock *bb = new BasicBlock(inst->next());
+	BasicBlock *bb = new CodeBasicBlock(inst->next());
 	bbs.addLast(bb);
 	bb->set<bool>(ID_Entry, false);
 	return bb;
@@ -134,8 +134,8 @@ BasicBlock *CFGInfo::thisBB(Inst *inst) {
 	
 	// Straight in BB?
 	PseudoInst *pseudo = inst->toPseudo();
-	if(pseudo && pseudo->id() == BasicBlock::ID)
-		return ((BasicBlock::Mark *)pseudo)->bb();
+	if(pseudo && pseudo->id() == CodeBasicBlock::ID)
+		return ((CodeBasicBlock::Mark *)pseudo)->bb();
 	
 	// Look backward
 	for(Inst *node = inst->previous(); !node->atBegin(); node = node->previous()) {
@@ -146,12 +146,12 @@ BasicBlock *CFGInfo::thisBB(Inst *inst) {
 			break;
 		
 		// Is it a BB pseudo?
-		else if(pseudo->id() == BasicBlock::ID)
-			return ((BasicBlock::Mark *)pseudo)->bb();
+		else if(pseudo->id() == CodeBasicBlock::ID)
+			return ((CodeBasicBlock::Mark *)pseudo)->bb();
 	}
 	
 	// At start, create the BB
-	BasicBlock *bb = new BasicBlock(inst);
+	BasicBlock *bb = new CodeBasicBlock(inst);
 	bbs.addLast(bb);
 	bb->set<bool>(ID_Entry, false);
 	return bb;
@@ -194,8 +194,8 @@ BasicBlock *CFGInfo::findBB(Inst *inst) {
 	// Look for the BB mark
 	PseudoInst *pseudo;
 	while(!inst->atBegin()) {
-		if((pseudo = inst->toPseudo()) && pseudo->id() == BasicBlock::ID)
-			return ((BasicBlock::Mark *)pseudo)->bb();
+		if((pseudo = inst->toPseudo()) && pseudo->id() == CodeBasicBlock::ID)
+			return ((CodeBasicBlock::Mark *)pseudo)->bb();
 		inst = inst->previous();
 	}
 	assert(0);
@@ -238,7 +238,7 @@ CFG *CFGInfo::findCFG(BasicBlock *bb) {
  * Get the collection of CFG.
  * @return CFG collection.
  */
-const elm::Collection<CFG *>& CFGInfo::cfgs(void) {
+elm::Collection<CFG *>& CFGInfo::cfgs(void) {
 	if(!built)
 		build();
 	return _cfgs;
@@ -308,10 +308,10 @@ void CFGInfo::buildCFG(Code *code) {
 	for(Inst *inst = code->first(); !inst->atEnd(); inst = inst->next()) {
 		
 		// Start of block found
-		if((pseudo = inst->toPseudo()) && pseudo->id() == BasicBlock::ID) {
+		if((pseudo = inst->toPseudo()) && pseudo->id() == CodeBasicBlock::ID) {
 			
 			// Record not-taken edge
-			BasicBlock *next_bb = ((BasicBlock::Mark *)pseudo)->bb();
+			BasicBlock *next_bb = ((CodeBasicBlock::Mark *)pseudo)->bb();
 			if(bb && follow)
 				new Edge(bb, next_bb, EDGE_NotTaken);
 			
