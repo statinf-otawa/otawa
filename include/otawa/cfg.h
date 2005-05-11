@@ -8,6 +8,7 @@
 #define OTAWA_CFG_H
 
 #include <otawa/cfg/BasicBlock.h>
+#include <otawa/cfg/Edge.h>
 #include <otawa/cfg/CFG.h>
 #include <otawa/cfg/CFGInfo.h>
 
