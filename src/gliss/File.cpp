@@ -91,7 +91,7 @@ CString File::name(void) {
  * Get the segments in the file.
  * @return Segments of the file.
  */
-const elm::Collection<Segment *>& File::segments(void) const {
+elm::Collection<Segment *>& File::segments(void) {
 	return segs;
 }
 
@@ -144,7 +144,7 @@ otawa::Symbol *File::findSymbol(String name) {
 
 
 // elm::File overload
-const elm::Collection<otawa::Symbol *>& File::symbols(void) {
+elm::Collection<otawa::Symbol *>& File::symbols(void) {
 	return syms.items();
 }
 
