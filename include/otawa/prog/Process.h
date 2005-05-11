@@ -17,12 +17,30 @@ namespace otawa {
 class File;
 class Platform;
 class Manager;
-	
+
+// Cache class
+class Cache {
+public:
+	typedef enum policy_t {
+		NONE = 0,
+		LRU = 1,
+		RANDOM = 2
+	} policy_t;
+
+	virtual int level(void) const = 0;
+	virtual int size(void) const = 0;
+	virtual int bits(void) const = 0;
+	virtual int blockSize(void) const = 0;
+	virtual int blockBits(void) const = 0;
+	virtual int lineCount(void) const = 0;
+	virtual int lineBits(void) const = 0;
+};
+
 // Process class
 class Process: public ProgObject {
 public:
 	virtual ~Process(void) { };
-	virtual const elm::Collection<File *> *files(void) const = 0;
+	virtual elm::Collection<File *> *files(void) = 0;
 	virtual File *createFile(void) = 0;
 	virtual File *loadFile(elm::CString path) = 0;
 	virtual Platform *platform(void) = 0;
