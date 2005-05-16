@@ -18,8 +18,7 @@ class BasicBlock;
 // DFASet abstract class
 class DFASet {
 public:
-	virtual ~DFASet(void) = 0;
-	virtual void reset(void) = 0;
+	virtual ~DFASet(void) { };
 	virtual bool equals(DFASet *set) = 0;
 	virtual void add(DFASet *set) = 0;
 	virtual void remove(DFASet *set) = 0;
@@ -34,6 +33,8 @@ public:
 	virtual DFASet *initial(void) = 0;
 	virtual DFASet *generate(BasicBlock *bb) = 0;
 	virtual DFASet *kill(BasicBlock *bb) = 0;
+	virtual void clear(DFASet *set) = 0;
+	virtual void merge(DFASet *acc, DFASet *set) = 0;
 };
 
 } // otawa
