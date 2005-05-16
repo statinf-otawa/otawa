@@ -44,10 +44,8 @@ Edge::~Edge(void) {
  * Transform this edge as a call edge.
  */
 void Edge::toCall(void) {
-	if(knd != CALL) {
-		tgt->removeInEdge(this);
-		knd = CALL;
-	}
+	tgt->removeInEdge(this);
+	knd = CALL;
 }
 
 } // otawa
