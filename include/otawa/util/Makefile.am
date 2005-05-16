@@ -1,3 +1,6 @@
 includeotawautildir=$(includedir)/otawa/util
 includeotawautil_HEADERS = \
-	DFA.h
+	DFA.h \
+	DFABitSet.h \
+	Dominance.h
+

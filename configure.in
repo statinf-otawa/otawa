@@ -150,6 +150,7 @@ AC_OUTPUT([
 	test/lp_solve/Makefile
 	test/ipet/Makefile
 	test/ets/Makefile
+	test/dom/Makefile
 	include/Makefile
 	include/otawa/Makefile
 	include/otawa/ast/Makefile
