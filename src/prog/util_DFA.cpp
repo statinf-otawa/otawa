@@ -8,6 +8,8 @@
 #include <otawa/util/DFA.h>
 #include <otawa/cfg.h>
 
+//#include <otawa/util/DFABitSet.h>
+
 namespace otawa {
 
 /**
@@ -27,7 +29,7 @@ static Identifier info_id("otawa.dfa.info");
  * Implements the Data Flow Analysis method for peforming static analysis as
  * described in "Compilers - Principles, Techniques and Tools" by
  * Aho, Sethi and Ullman.
- *xcvxcvxcv
+ *
  * For adapting this class for a specific static analysis, it must be
  * inherited and methods @ref initial(), @ref generate() and @ref kill() must be
  * defined accordingly.
@@ -67,11 +69,11 @@ void DFA::cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 		
 		// Store IN information
 		if(in_id) {
-			info->buf->reset();
+			clear(info->buf);
 			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
 				dfa_info_t *in_info = edge->source()->use<dfa_info_t *>(info_id);
 				assert(in_info);
-				info->buf->add(in_info->cur);
+				merge(info->buf, in_info->cur);
 			}
 			bb->add<DFASet *>(in_id, info->buf);
 		}
@@ -79,6 +81,7 @@ void DFA::cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 		// Store OUT information
 		if(out_id)
 			bb->add<DFASet *>(out_id, info->cur);
+		//elm::cout << bb->use<int>(CFG::ID_Index) << " " << *(DFABitSet *)info->cur << "\n";
 	}
 	
 	// Cleanup
@@ -120,14 +123,15 @@ void DFA::resolve(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 			assert(info);
 			
 			// Build new set
-			info->buf->reset();
+			clear(info->buf);
 			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
 				dfa_info_t *in_info = edge->source()->use<dfa_info_t *>(info_id);
 				assert(in_info);
-				info->buf->add(in_info->cur);
+				merge(info->buf, in_info->cur);
 			}
 			info->buf->remove(info->kill);
 			info->buf->add(info->gen);
+			//elm::cout << bb->use<int>(CFG::ID_Index) << " " << *(DFABitSet *)info->buf << "\n";
 			
 			// Compare and fix it
 			if(!info->cur->equals(info->buf)) {
@@ -166,6 +170,63 @@ void DFA::resolve(CFG *cfg, Identifier *in_id, Identifier *out_id) {
  * This pure virtual function must be ovveriden for getting the killer
  * set according the given basic block.
  * @return	Killer set.
+ */
+
+
+/**
+ * @fn void DFA::clear(DFASet *set);
+ * Reset the given DFA set for performing merge thereafter.
+ * @param set	Set to clear.
+ */
+
+
+/**
+ * @fn void DFA::merge(DFASet *acc, DFASet *set);
+ * This function is used for merging the OUT from predecessor nodes.
+ * The acc represents the computed IN set of the current node and
+ * the passed set is one of OUT sets of the predecessors.
+ * @param acc	Computed IN set.
+ * @param set	Predecessor OUT set.
+ */
+
+
+/**
+ * @class DFASet
+ * A set object usable by the @ref DFA class.
+ */
+
+
+/**
+ * @fn void DFASet::empty(void);
+ * Make the set empty.
+ */
+
+
+/**
+ * @fn void DFASet::fill(void);
+ * Make the set full.
+ */
+
+
+/**
+ * @fn bool DFASet::equals(DFASet *set);
+ * Test if the two sets are equal.
+ * @param set	Set to compare with the current one.
+ * @return		True if they are equal, false else.
+ */
+
+
+/**
+ * @fn void DFASet::add(DFASet *set);
+ * Add the given set to the current one.
+ * @param set	Set to add.
+ */
+
+
+/**
+ * @fn void DFASet::remove(DFASet *set);
+ * Remove the given set from the current one.
+ * @param set	Set to remove.
  */
 
 } // otawa

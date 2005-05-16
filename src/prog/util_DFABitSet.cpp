@@ -53,13 +53,6 @@ DFABitSet::~DFABitSet(void) {
 
 
 /**
- */	
-void DFABitSet::reset(void) {
-	vec.clear();
-}
-
-
-/**
  */
 bool DFABitSet::equals(DFASet *set) {
 	return vec.equals(((DFABitSet *)set)->vec);
@@ -77,6 +70,25 @@ void DFABitSet::add(DFASet *set) {
  */
 void DFABitSet::remove(DFASet *set) {
 	vec.applyReset(((DFABitSet *)set)->vec);	
+}
+
+
+/**
+ * Perform the output of a DFABitSet.
+ */
+elm::io::Output& operator<<(elm::io::Output& output, DFABitSet& bits) {
+	output << "{";
+	bool first = true;
+	for(int i = 0; i < bits.size(); i++)
+		if(bits.contains(i)) {
+			if(first)
+				first = false;
+			else
+				output << ", ";
+			output << i;
+		}
+	output << "}";
+	return output;
 }
 
 } // otawa
