@@ -257,7 +257,8 @@ void Call::build_map(CFG *cfg) {
 	
 	// Find all basic blocks
 	for(CFG::BBIterator bb(cfg); bb; bb++)
-		map->put(bb, 0);
+		if(!bb->isEntry() && !bb->isExit())
+			map->put(bb, 0);
 
 	// Give number to basic blocks
 	CountVisitor count_visitor;
@@ -365,7 +366,7 @@ void Call::process(BasicBlock *bb, int& index) {
 			break;		
 		
 		case Edge::VIRTUAL:
-			displayer->onEdge(info, bb, bb_index, Edge::NONE, 0, ret);
+			displayer->onEdge(info, bb, bb_index, Edge::VIRTUAL, 0, ret);
 			break;
 		
 		default:
