@@ -5,6 +5,7 @@
  *	gliss/CodeSegment.cpp -- gliss::CodeSegment class implementation.
  */
 
+#include <elm/debug.h>
 #include <otawa/gliss.h>
 #include <otawa/gliss/Symbol.h>
 
