@@ -108,16 +108,16 @@ void BasicConstraintsBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	cons->add(1, entry->use<Var *>(IPET::ID_Var));
 	
 	// Add constraint for each basic block
-	make(system, cfg->entry());
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		make(system, bb);
 		
 	
 	// Set object function
 	for(CFG::BBIterator bb(cfg); bb; bb++)
-		system->addObjectFunction(
-			bb->use<int>(IPET::ID_Time),
-			bb->use<Var *>(IPET::ID_Var));
+		if(!bb->isEntry() && !bb->isExit())
+			system->addObjectFunction(
+				bb->use<int>(IPET::ID_Time),
+				bb->use<Var *>(IPET::ID_Var));
 };
 
 } //otawa

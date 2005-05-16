@@ -52,9 +52,7 @@ void VarAssignment::process(BasicBlock *bb) {
  * See @ref CFGProcessor::processCFG().
  */
 void VarAssignment::processCFG(FrameWork *fw, CFG *cfg) {
-	process(cfg->entry());
 	BBProcessor::processCFG(fw, cfg);
-	process(cfg->exit());
 }
 
 
