@@ -49,7 +49,8 @@ libprog_a_SOURCES = \
 	ets_ETS.cpp \
 	ets_WCETComputation.cpp \
 	ets_TrivialAstBlockTime.cpp \
-	ets_FlowFactReader.cpp
+	ets_FlowFactReader.cpp \
+	util_Dominance.cpp
 	
 INCLUDES=\
 	-I../../include \
