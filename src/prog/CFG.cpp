@@ -120,8 +120,10 @@ MutableCollection<BasicBlock *> *CFG::empty(void) {
  * is used (call to an accessors method).
  */
 void CFG::scan(void) {
-	
-	// Add entry edge
+		
+	// All entering edges becomes calls
+	for(Iterator<Edge *> edge(ent->inEdges()); edge; edge++)
+		edge->toCall();
 	new Edge(&_entry, ent, EDGE_Virtual);
 	
 	// Explore CFG
@@ -147,17 +149,11 @@ void CFG::scan(void) {
 	}
 	
 	// Add exit edges
-	for(int i = 0; i < ends.length(); i++) {
-		new Edge(ends[i], &_exit, EDGE_Virtual);
-	}
 	_exit.add<int>(ID_Index, _bbs.length());
 	_bbs.add(&_exit);
+	for(int i = 0; i < ends.length(); i++)
+		new Edge(ends[i], &_exit, EDGE_Virtual);
 	flags |= FLAG_Scanned;
-	
-	// All entering edges becomes calls
-	for(Iterator<Edge *> edge(ent->inEdges()); edge; edge++)
-		if(!_bbs.contains(edge->source()))
-			edge->toCall();
 }
 
 
