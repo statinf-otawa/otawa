@@ -331,7 +331,8 @@ void CodeBasicBlock::Iterator::next(void) {
  * lay from this instruction to the next basic block head or end of code.
  */
 CodeBasicBlock::CodeBasicBlock(Inst *inst) {
-	assert(inst && (inst->atEnd() || !inst->isPseudo()));
+	assert(inst);
+	assert(inst->atEnd() || !inst->isPseudo());
 	
 	// Create the mark
 	_head = new Mark(this);

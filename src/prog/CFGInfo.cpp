@@ -290,6 +290,7 @@ void CFGInfo::buildCFG(Code *code) {
 			// Found BB starting on target instruction			
 			Inst *target = inst->target();
 			if(target) {
+				assert(!target->isPseudo());
 				BasicBlock *bb = thisBB(target);
 				assert(bb);
 				if(inst->isCall())
