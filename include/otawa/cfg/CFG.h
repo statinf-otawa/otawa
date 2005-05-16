@@ -54,6 +54,7 @@ public:
 	inline elm::Collection<BasicBlock *>& bbs(void);
 	inline BasicBlock *entry(void);
 	inline BasicBlock *exit(void);
+	inline int countBB(void);
 };
 
 
@@ -77,15 +78,20 @@ inline BasicBlock *CFG::exit(void) {
 		scan();
 	return &_exit;
 }
+inline int CFG::countBB(void) {
+	if(!(flags & FLAG_Scanned))
+		scan();
+	return _bbs.length();
+}	
 
 
 // BBIterator inlines
-inline CFG::BBIterator::BBIterator(CFG *cfg): bbs(cfg->_bbs), pos(1) {
+inline CFG::BBIterator::BBIterator(CFG *cfg): bbs(cfg->_bbs), pos(/*1*/0) {
 	if(!(cfg->flags & FLAG_Scanned))
 		cfg->scan();
 };
 inline bool CFG::BBIterator::ended(void) const {
-	return pos >= bbs.length() - 1;
+	return pos >= bbs.length()/* - 1*/;
 };
 inline BasicBlock *CFG::BBIterator::item(void) const {
 	return bbs[pos];
