@@ -10,6 +10,8 @@
 #include <elm/Collection.h>
 #include <otawa/cfg.h>
 #include <elm/debug.h>
+#include <otawa/util/Dominance.h>
+#include <otawa/util/DFABitSet.h>
 
 namespace otawa {
 
@@ -30,6 +32,36 @@ id_t CFG::ID = Property::getID("otawa.cfg");
  * Identifier used for storing in each basic block from the CFG its index (int).
  */
 Identifier CFG::ID_Index("otawa.cfg.index");
+
+
+/**
+ * Identifier for marking the CFG as having the dominance relation computed.
+ * Takes a boolean value that is not really used.
+ */
+Identifier CFG::ID_Dom("otawa.cfg.dom");
+
+
+/**
+ * Test if the first BB dominates the second one.
+ * @param bb1	Dominator BB.
+ * @param bb2	Dominated BB.
+ * @return		True if bb1 dominates bb2.
+ */
+bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
+	assert(bb1);
+	assert(bb2);
+	
+	// Look for reverse-dominating annotation
+	DFABitSet *set = bb2->get<DFABitSet *>(Dominance::ID_RevDom, 0);
+	if(!set) {
+		Dominance dom;
+		dom.processCFG(0, this);
+		set = bb2->use<DFABitSet *>(Dominance::ID_RevDom);
+	}
+	
+	// Test with the index
+	return set->contains(bb1->use<int>(ID_Index));
+}
 
 
 /**

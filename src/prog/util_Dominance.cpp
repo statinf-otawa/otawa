@@ -17,7 +17,14 @@ namespace otawa {
  * Identifier of annotation containing reverse-dominance information.
  * Information is of type DFABitSet *.
  */
-static Identifier ID_RevDom("otawa.util.revdom");
+Identifier Dominance::ID_RevDom("otawa.util.revdom");
+
+
+/**
+ * Identifier for marking basic blocks that are entries of loops.
+ * Its value is a boolean (usually ever to true).
+ */
+Identifier Dominance::ID_LoopHeader("otawa.util.header");
 
 
 /**
@@ -100,7 +107,9 @@ void DominanceDFA::merge(DFASet *acc, DFASet *set) {
  * @param bb2	Dominated BB.
  * @return		True if bb1 dominates bb2.
  */
-bool Dominance::dominate(BasicBlock *bb1, BasicBlock *bb2) {
+bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
+	assert(bb1);
+	assert(bb2);
 	int index = bb1->use<int>(CFG::ID_Index);
 	assert(index >= 0);
 	DFABitSet *set = bb2->use<DFABitSet *>(ID_RevDom);
@@ -122,8 +131,31 @@ bool Dominance::dominate(BasicBlock *bb1, BasicBlock *bb2) {
  * Computes the domination relation.
  */
 void Dominance::processCFG(FrameWork *fw, CFG *cfg) {
+	assert(cfg);
 	DominanceDFA dfa(cfg->countBB());
 	dfa.resolve(cfg, 0, &ID_RevDom);
+}
+
+
+/**
+ * Using a CFG where dominance relation has been computed, mark loop headers.
+ * @param cfg		CFG to process.
+ * @param headers	Collection filled with found headers.
+ */
+void Dominance::markLoopHeaders(CFG *cfg,
+elm::MutableCollection<BasicBlock *> *headers) {
+	assert(cfg);
+	for(CFG::BBIterator bb(cfg); bb; bb++) {
+		for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+			if(edge->target()
+			&& edge->kind() != Edge::CALL
+			&& dominates(edge->target(), bb)) {
+				edge->target()->set<bool>(ID_LoopHeader, true);
+				if(headers)
+					headers->add(bb);
+				break;
+			}
+	}
 }
 
 } // otawa

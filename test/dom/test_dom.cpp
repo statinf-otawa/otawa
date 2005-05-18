@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 			bool first = true;
 			cout << bb1->use<int>(CFG::ID_Index) << " dominates {";
 			for(CFG::BBIterator bb2(cfg); bb2; bb2++)
-				if(Dominance::dominate(bb1, bb2)) {
+				if(Dominance::dominates(bb1, bb2)) {
 					if(first)
 						first = false;
 					else
