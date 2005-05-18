@@ -34,6 +34,7 @@ class CFG: public ProgObject, private elm::Collection<BasicBlock *> {
 public:
 	static id_t ID;
 	static Identifier ID_Index;
+	static Identifier ID_Dom;
 	
 	// Iterator
 	class BBIterator: public elm::PreIterator<BBIterator, BasicBlock *> {
@@ -55,6 +56,7 @@ public:
 	inline BasicBlock *entry(void);
 	inline BasicBlock *exit(void);
 	inline int countBB(void);
+	bool dominates(BasicBlock *bb1, BasicBlock *bb2);
 };
 
 
