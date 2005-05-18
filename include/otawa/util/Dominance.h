@@ -7,6 +7,7 @@
 #ifndef OTAWA_UTIL_DOMINANCE_H
 #define OTAWA_UTIL_DOMINANCE_H
 
+#include <elm/Collection.h>
 #include <otawa/proc/CFGProcessor.h>
 
 namespace otawa {
@@ -17,8 +18,12 @@ class BasicBlock;
 // Dominance class
 class Dominance: public CFGProcessor {
 public:
-	static bool dominate(BasicBlock *bb1, BasicBlock *bb2);
+	static Identifier ID_RevDom;
+	static Identifier ID_LoopHeader;
+	static bool dominates(BasicBlock *bb1, BasicBlock *bb2);
 	static inline bool isDominated(BasicBlock *bb1, BasicBlock *bb2);
+	static void markLoopHeaders(CFG *cfg,
+		elm::MutableCollection<BasicBlock *> *headers = 0);
 	
 	// CFGProcessor overload
 	virtual void processCFG(FrameWork *fw, CFG *cfg);
