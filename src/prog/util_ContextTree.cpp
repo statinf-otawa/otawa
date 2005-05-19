@@ -32,6 +32,7 @@ _parent(0), next(0), _children(0), _cfg(cfg) {
 	}
 	
 	// Look children
+	_bbs.add(_bb);
 	scan(cfg->exit());
 }
 
