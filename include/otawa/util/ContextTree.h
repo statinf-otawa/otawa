@@ -46,7 +46,7 @@ public:
 	inline kind_t kind(void) const;
 	inline CFG *cfg(void) const { return _cfg; };
 	inline ContextTree *parent(void) const;
-	elm::Collection<ContextTree *>& children(void);
+	inline elm::Collection<ContextTree *>& children(void);
 	elm::Collection<BasicBlock *>& bbs(void);
 	
 	// Collection overload
@@ -81,6 +81,10 @@ inline ContextTree *ContextTree::parent(void) const {
 
 inline elm::Collection<BasicBlock *>& ContextTree::bbs(void) {
 	return _bbs;
+}
+
+inline elm::Collection<ContextTree *>& ContextTree::children(void) {
+	return *this;
 }
 
 
