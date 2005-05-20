@@ -2,9 +2,10 @@ bin_PROGRAMS=dumpcfg
 dumpcfg_SOURCES= \
 	dumpcfg.cpp \
 	SimpleDisplayer.cpp \
-	DiassemblerDisplayer.cpp
+	DisassemblerDisplayer.cpp \
+	DotDisplayer.cpp
 
-CXXFLAGS=-g3
+AM_CXXFLAGS=-g3
 
 INCLUDES= \
 	-I../../include \

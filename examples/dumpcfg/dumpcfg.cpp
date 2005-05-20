@@ -17,6 +17,7 @@
 
 #include "SimpleDisplayer.h"
 #include "DisassemblerDisplayer.h"
+#include "DotDisplayer.h"
 
 using namespace elm;
 using namespace otawa;
@@ -45,6 +46,7 @@ public:
 // Displayers
 static SimpleDisplayer simple_displayer;
 static DisassemblerDisplayer disassembler_displayer;
+static DotDisplayer dot_displayer;
 static Displayer *displayer = &simple_displayer;
 
 
@@ -56,7 +58,9 @@ static option::BoolOption inline_calls(command, 'i', "inline",
 	"Inline the function calls.", false);
 static option::BoolOption link_rec(command, 'r', "recursive",
 	"Replace recursive calls by CFG loop links.", false);
-	
+
+
+// Simple output option
 class SimpleOption: public option::ActionOption {
 public:
 	inline SimpleOption(Command& command): option::ActionOption(command,
@@ -68,6 +72,8 @@ public:
 };
 static SimpleOption simple(command);
 
+
+// Disassemble output option
 class DisassembleOption: public option::ActionOption {
 public:
 	inline DisassembleOption(Command& command): option::ActionOption(command,
@@ -78,6 +84,20 @@ public:
 	};
 };
 static DisassembleOption disassemble(command);
+
+
+// Dot output option
+class DotOption: public option::ActionOption {
+public:
+	inline DotOption(Command& command): option::ActionOption(command,
+	'D', "dot", "Perform output usable by dot utility.") {
+	};
+	virtual void perform(void) {
+		displayer = &dot_displayer;
+	};
+};
+static DotOption dot(command);
+
 
 // BasicBlock comparator
 class BasicBlockComparator: public elm::Comparator<BasicBlock *> {
