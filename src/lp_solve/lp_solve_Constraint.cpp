@@ -62,7 +62,7 @@ Constraint::comparator_t Constraint::comparator(void) const {
  */
 void Constraint::add(double coef, ilp::Var *var) {
 	if(var == 0)
-		cst += coef;
+		cst -= coef;
 	else {
 		Var *lvar = sys->getVar(var);
 		assert(lvar);
