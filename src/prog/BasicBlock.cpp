@@ -237,10 +237,11 @@ BasicBlock::~BasicBlock(void) {
 BasicBlock *BasicBlock::findBBAt(FrameWork *fw, address_t addr) {
 	Inst *inst = fw->findInstAt(addr);
 	PseudoInst *pseudo;
-	while(inst && !(pseudo = inst->toPseudo())
-	&& pseudo->id() != CodeBasicBlock::ID)
+	while(!inst->atBegin()
+	&& (!(pseudo = inst->toPseudo())
+		|| pseudo->id() != CodeBasicBlock::ID))
 		inst = inst->previous();
-	if(!inst)
+	if(inst->atBegin())
 		return 0;
 	else
 		return ((CodeBasicBlock::Mark *)pseudo)->bb();
