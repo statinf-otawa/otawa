@@ -134,7 +134,7 @@ double System::value(void) {
 // Overload
 bool System::solve(void) {
 	static short comps[] = { LE, LE, EQ, GE, GE };
-	static double corr[] = { 1, 0, 0, 0, -1 };
+	static double corr[] = { -1, 0, 0, 0, +1 };
 	
 	// Allocate and initialize the lp_solve data structure
 	lprec *lp = make_lp(0, cols);
@@ -208,7 +208,12 @@ void System::dump(elm::io::OutStream& _out) {
 		cons->dump(out);
 		out << " " << texts[cons->comparator() + 2]
 			<< " " << (int)cons->constant() << ";\n"; 
-	}	
+	}
+	
+	// Output solution
+	for(genstruct::HashTable<ilp::Var *, Var *>::KeyIterator var(vars); var; var++)
+		out << var->name() << " = " << (int)valueOf(*var) << "\n";
+	
 }
 
 } }	// otawa::lp_solve
