@@ -35,8 +35,8 @@ class ConstraintLoader: public CFGProcessor {
 	
 	FrameWork *fw;
 	ilp::System *system;
-	elm::genstruct::HashTable<address_t, BasicBlock *> *bbs;
-	elm::genstruct::HashTable<String, ilp::Var *> *vars;
+	elm::genstruct::HashTable<void *, BasicBlock *> bbs;
+	elm::genstruct::HashTable<String, ilp::Var *> vars;
 	elm::String path;
 
 	BasicBlock *getBB(address_t addr);
