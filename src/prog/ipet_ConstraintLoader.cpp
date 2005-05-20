@@ -75,14 +75,14 @@ Identifier ConstraintLoader::ID_Path("otawa.ipet.path");
  * @return		Found BB or null.
  */
 BasicBlock *ConstraintLoader::getBB(address_t addr) {
-	BasicBlock *bb = bbs->get(addr, 0);
+	BasicBlock *bb = bbs.get(addr, 0);
 	if(!bb) {
 		bb = BasicBlock::findBBAt(fw, addr);
 		if(!bb) {
 			out << "ERROR: cannot find basic block at " << addr << ".\n"; 
 			return 0;
 		}
-		bbs->put(addr, bb);
+		bbs.put(addr, bb);
 	}
 	return bb;
 }
@@ -100,7 +100,7 @@ bool ConstraintLoader::newBBVar(CString name, address_t addr) {
 		out << "ERROR: variable " << name << " of basic block at " << addr
 			<< " is not defined.\n";
 	else
-		vars->put(name, var);
+		vars.put(name, var);
 	return true;
 }
 
@@ -119,11 +119,11 @@ bool ConstraintLoader::newEdgeVar(CString name, address_t src, address_t dst) {
 		return false;
 	
 	// Find edge 
-	for(Iterator<Edge *> edge(src_bb->outEdges()); edge; edge++)
+	for(Iterator<Edge *> edge(src_bb->outEdges()); edge; edge++) {
 		if(edge->target() == dst_bb) {
 			ilp::Var *var = edge->get<ilp::Var *>(IPET::ID_Var, 0);
 			if(var) {
-				vars->put(name, var);
+				vars.put(name, var);
 				return var;
 			}
 			else
@@ -132,6 +132,7 @@ bool ConstraintLoader::newEdgeVar(CString name, address_t src, address_t dst) {
 					<< " to basic block " << dst
 					<< " is not defined.\n";
 		}
+	}
 	
 	// Not found error
 	out << "ERROR: no edge from basic block " << src
@@ -144,7 +145,7 @@ bool ConstraintLoader::newEdgeVar(CString name, address_t src, address_t dst) {
  * For internal use only.
  */
 ilp::Var *ConstraintLoader::getVar(CString name) {
-	ilp::Var *var = vars->get(name, 0);
+	ilp::Var *var = vars.get(name, 0);
 	if(!var)
 		cout << "ERROR: variable \"" << name << "\" is not defined.\n";
 	return var;
@@ -257,7 +258,15 @@ void ConstraintLoader::configure(PropList& props) {
  * <p>The read file path is taken from configuration if available, or built
  * from the binary file path with ".ipet" appended.</p>
  */
-void ConstraintLoader::processCFG(FrameWork *fw, CFG *cfg) {
+void ConstraintLoader::processCFG(FrameWork *_fw, CFG *cfg) {
+	
+	// Initialization
+	fw = _fw;
+	system = cfg->get<ilp::System *>(IPET::ID_System, 0);
+	if(!system) {
+		out << "ERROR: no ILP system available on this CFG.\n";
+		return;
+	}
 	
 	// Select the file
 	if(!path) {
