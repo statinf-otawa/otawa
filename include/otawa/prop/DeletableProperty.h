@@ -7,6 +7,7 @@
 #ifndef OTAWA_PROP_DELETABLE_PROPERTY_H
 #define OTAWA_PROP_DELETABLE_PROPERTY_H
 
+#include <elm/string.h>
 #include <otawa/prop/Property.h>
 
 namespace otawa {
