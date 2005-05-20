@@ -1,4 +1,5 @@
-SUBDIRS=@TESTS@ ets dom
+SUBDIRS=@TESTS@ ets dom ct
+
 
 
 
