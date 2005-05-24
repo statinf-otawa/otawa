@@ -51,7 +51,9 @@ libprog_a_SOURCES = \
 	ets_TrivialAstBlockTime.cpp \
 	ets_FlowFactReader.cpp \
 	util_Dominance.cpp \
-	util_ContextTree.cpp
+	util_ContextTree.cpp \
+	cfg_VirtualBasicBlock.cpp \
+	cfg_VirtualCFG.cpp
 	
 INCLUDES=\
 	-I../../include \

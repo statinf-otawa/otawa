@@ -152,7 +152,7 @@ MutableCollection<BasicBlock *> *CFG::empty(void) {
  * is used (call to an accessors method).
  */
 void CFG::scan(void) {
-		
+	
 	// All entering edges becomes calls
 	for(Iterator<Edge *> edge(ent->inEdges()); edge; edge++)
 		edge->toCall();
