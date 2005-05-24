@@ -22,12 +22,12 @@ class Code;
 class CFG: public ProgObject, private elm::Collection<BasicBlock *> {
 	Code *_code;
 	BasicBlock *ent;
-	EndBasicBlock _entry, _exit;
 
 	virtual elm::IteratorInst<BasicBlock *> *visit(void);
 	virtual elm::MutableCollection<BasicBlock *> *empty(void);
 protected:
 	unsigned long flags;
+	EndBasicBlock _entry, _exit;
 	static const unsigned long FLAG_Scanned = 0x01;
 	static const unsigned long FLAG_Virtual = 0x02;
 	static const unsigned long FLAG_Inlined = 0x04;

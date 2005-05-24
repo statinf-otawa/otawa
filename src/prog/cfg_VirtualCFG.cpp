@@ -5,24 +5,11 @@
  * src/prog/cfg_VirtualCFG.cpp -- implementation of VirtualCFG class.
  */
 
+#include <elm/io.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/VirtualCFG.h>
 #include <otawa/cfg/VirtualBasicBlock.h>
-
-// HashKey for address_t
-namespace elm {
-class AddressHashKey: public elm::HashKey<otawa::address_t> {
-public:
-	virtual unsigned long hash (otawa::address_t key)
-		{ return (unsigned long)key; };
-	virtual bool equals (otawa::address_t key1, otawa::address_t key2)
-		{ return key1 == key2; };
-};
-static AddressHashKey def;
-template <> HashKey<otawa::address_t>& HashKey<otawa::address_t>::def
-	= AddressHashKey::def;
-} // elm
 
 namespace otawa {
 
@@ -32,6 +19,22 @@ typedef struct call_t {
 	CFG *cfg;
 	BasicBlock *entry;
 } call_t;
+
+
+/**
+ * A property with this identifier is hooked at the edge performing a virtual
+ * call when inling is used. The associated value is the CFG of the called
+ * function.
+ */
+Identifier VirtualCFG::ID_CalledCFG("virtual_cfg.called_cfg");
+
+
+/**
+ * A property with this identifier is hooked to edge performing a recursive
+ * call when inlining is used. The associated value is a boolean with value
+ * true.
+ */
+Identifier VirtualCFG::ID_Recursive("virtual_cfg.recursive");
 
 
 /**
@@ -53,47 +56,50 @@ BasicBlock *exit) {
 	assert(cfg);
 	assert(entry);
 	assert(exit);
+	cout << "Virtualizing " << cfg->label() << "(" << cfg->address() << ")\n";
 	
 	// Prepare data
-	elm::genstruct::HashTable<address_t, BasicBlock *> map;
+	elm::genstruct::HashTable<void *, BasicBlock *> map;
 	call_t call = { stack, cfg, 0 };
 	
 	// Translate BB
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
 			BasicBlock *new_bb = new VirtualBasicBlock(bb);
-			map.put(bb->address(), new_bb);
+			map.put(bb, new_bb);
 			_bbs.add(new_bb);
 		}
 	
 	// Find local entry
 	for(Iterator<Edge *> edge(cfg->entry()->outEdges()); edge; edge++) {
 		assert(!call.entry);
-		call.entry = map.get(edge->target()->address(), 0);
+		call.entry = map.get(edge->target(), 0);
 		assert(call.entry);
-		new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
+		Edge *edge = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
+		edge->add<CFG *>(ID_CalledCFG, cfg);
 	}
 	
-	// Translat edges
+	// Translate edges
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
 			CFG *called = 0;
 			BasicBlock *called_exit = 0;
 			
 			// Resolve source
-			BasicBlock *src = map.get(bb->address(), 0);
+			BasicBlock *src = map.get(bb, 0);
 			assert(src);
 			
 			// Look edges
 			for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
 				if(edge->target()->isExit()) {
-					new Edge(src, exit, Edge::VIRTUAL_RETURN);
+					Edge *edge = new Edge(src, exit, Edge::VIRTUAL_RETURN);
+					edge->add<CFG *>(ID_CalledCFG, cfg);
 					called_exit = exit;
 				}
 				else if(edge->kind() == Edge::CALL && isInlined())
 					called = edge->calledCFG();
 				else if(edge->target()) {
-					BasicBlock *tgt = map.get(edge->target()->address(), 0);
+					BasicBlock *tgt = map.get(edge->target(), 0);
 					assert(tgt);
 					new Edge(src, tgt, edge->kind());
 					called_exit = tgt;
@@ -103,7 +109,9 @@ BasicBlock *exit) {
 			if(called && isInlined()) {
 				for(call_t *cur = &call; cur; cur = cur->back)
 					if(cur->cfg == called) {
-						new Edge(bb, cur->entry, Edge::VIRTUAL_CALL);
+						Edge *edge = new Edge(bb, cur->entry, Edge::VIRTUAL_CALL);
+						edge->add<CFG *>(ID_CalledCFG, cur->cfg);
+						edge->add<bool>(ID_Recursive, true);
 						called = 0;
 						break;
 					}
@@ -121,9 +129,9 @@ BasicBlock *exit) {
 void VirtualCFG::scan(void) {
 	
 	// Build the virtual CFG
-	_bbs.add(entry());
-	virtualize(0, _cfg, entry(), exit());
-	_bbs.add(exit());
+	_bbs.add(&_entry);
+	virtualize(0, _cfg, &_entry, &_exit);
+	_bbs.add(&_exit);
 	
 	// Give a number to each BB
 	for(int i = 0; i < _bbs.length(); i++)
