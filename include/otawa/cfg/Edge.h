@@ -24,7 +24,9 @@ public:
 		TAKEN,
 		NOT_TAKEN,
 		CALL,
-		VIRTUAL
+		VIRTUAL,
+		VIRTUAL_CALL,
+		VIRTUAL_RETURN
 	} kind_t;
 private:
 	kind_t knd;

@@ -20,17 +20,19 @@ class Code;
 
 // CFG class
 class CFG: public ProgObject, private elm::Collection<BasicBlock *> {
-	unsigned long flags;
-	static const unsigned long FLAG_Scanned = 0x01;
 	Code *_code;
 	BasicBlock *ent;
-	VirtualBasicBlock _entry, _exit;
-	genstruct::Vector<BasicBlock *> _bbs;
+	EndBasicBlock _entry, _exit;
 
 	virtual elm::IteratorInst<BasicBlock *> *visit(void);
 	virtual elm::MutableCollection<BasicBlock *> *empty(void);
-	void scan(void);
-	
+protected:
+	unsigned long flags;
+	static const unsigned long FLAG_Scanned = 0x01;
+	static const unsigned long FLAG_Virtual = 0x02;
+	static const unsigned long FLAG_Inlined = 0x04;
+	genstruct::Vector<BasicBlock *> _bbs;
+	virtual void scan(void);
 public:
 	static id_t ID;
 	static Identifier ID_Index;
@@ -48,6 +50,7 @@ public:
 	};
 	
 	// Methods
+	inline CFG(void);
 	CFG(Code *code, BasicBlock *entry);
 	inline Code *code(void) const;
 	String label(void);
@@ -57,6 +60,8 @@ public:
 	inline BasicBlock *exit(void);
 	inline int countBB(void);
 	bool dominates(BasicBlock *bb1, BasicBlock *bb2);
+	inline bool isVirtual(void) const;
+	inline bool isInlined(void) const;
 };
 
 
@@ -84,16 +89,23 @@ inline int CFG::countBB(void) {
 	if(!(flags & FLAG_Scanned))
 		scan();
 	return _bbs.length();
-}	
-
+}
+inline bool CFG::isVirtual(void) const {
+	return flags & FLAG_Virtual;
+}
+inline bool CFG::isInlined(void) const {
+	return flags & FLAG_Inlined;
+}
+inline CFG::CFG(void): _code(0), ent(0) {
+}
 
 // BBIterator inlines
-inline CFG::BBIterator::BBIterator(CFG *cfg): bbs(cfg->_bbs), pos(/*1*/0) {
+inline CFG::BBIterator::BBIterator(CFG *cfg): bbs(cfg->_bbs), pos(0) {
 	if(!(cfg->flags & FLAG_Scanned))
 		cfg->scan();
 };
 inline bool CFG::BBIterator::ended(void) const {
-	return pos >= bbs.length()/* - 1*/;
+	return pos >= bbs.length();
 };
 inline BasicBlock *CFG::BBIterator::item(void) const {
 	return bbs[pos];

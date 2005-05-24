@@ -33,6 +33,7 @@ protected:
 	static const unsigned long FLAG_Return = 0x04;
 	static const unsigned long FLAG_Entry = 0x08;
 	static const unsigned long FLAG_Exit = 0x10;
+	static const unsigned long FLAG_Virtual = 0x20;
 	unsigned long flags;
 	elm::genstruct::SLList<Edge *> ins, outs;
 	Mark *_head;
@@ -62,8 +63,6 @@ protected:
 	virtual ~BasicBlock(void);
 	void setTaken(BasicBlock *bb);
 	void setNotTaken(BasicBlock *bb);
-	inline unsigned long getFlags(void) const { return flags; };
-	inline void setFlags(unsigned long _flags) { flags = _flags; };
 public:
 	static id_t ID;
 
@@ -96,6 +95,8 @@ public:
 	inline address_t address(void) const { return _head->address(); };
 	int countInstructions(void) const;
 	size_t size(void) const;
+	inline bool isVirtual(void) const { return flags & FLAG_Virtual; };
+	inline unsigned long getFlags(void) const { return flags; };
 	
 	// Edge management
 	inline void addInEdge(Edge *edge) { ins.addFirst(edge); };
@@ -121,10 +122,10 @@ public:
 };
 
 
-// VirtualBasicBlock class
-class VirtualBasicBlock: public BasicBlock {
+// EndBasicBlock class
+class EndBasicBlock: public BasicBlock {
 public:
-	inline VirtualBasicBlock(unsigned long _flags = 0) {
+	inline EndBasicBlock(unsigned long _flags = 0) {
 		flags = _flags;
 		_head = null_bb.head();
 	};
