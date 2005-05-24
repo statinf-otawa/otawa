@@ -1,4 +1,4 @@
-SUBDIRS=prog @GLISSPPC_LIB@ @HEPTANE_LIB@ oshell @LP_SOLVE_LIB@
+SUBDIRS=prog @GLISSPPC_LIB@ @HEPTANE_LIB@ oshell @LP_SOLVE_LIB@ dumpcfg
 noinst_PROGRAMS=test
 
 test_SOURCES= \

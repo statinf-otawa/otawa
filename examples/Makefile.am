@@ -1,1 +1,1 @@
-SUBDIRS=dumpcfg
+SUBDIRS=
