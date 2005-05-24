@@ -142,8 +142,8 @@ AC_OUTPUT([
 	src/oshell/Makefile
 	src/heptane/Makefile
 	src/lp_solve/Makefile
+	src/dumpcfg/Makefile
 	examples/Makefile
-	examples/dumpcfg/Makefile
 	bin/Makefile
 	bin/otawa-config
 	test/Makefile
