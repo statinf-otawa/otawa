@@ -56,7 +56,7 @@ BasicBlock *exit) {
 	assert(cfg);
 	assert(entry);
 	assert(exit);
-	cout << "Virtualizing " << cfg->label() << "(" << cfg->address() << ")\n";
+	//cout << "Virtualizing " << cfg->label() << "(" << cfg->address() << ")\n";
 	
 	// Prepare data
 	elm::genstruct::HashTable<void *, BasicBlock *> map;

@@ -50,7 +50,7 @@ public:
 	};
 	
 	// Methods
-	inline CFG(void);
+	CFG(void);
 	CFG(Code *code, BasicBlock *entry);
 	inline Code *code(void) const;
 	String label(void);
@@ -95,8 +95,6 @@ inline bool CFG::isVirtual(void) const {
 }
 inline bool CFG::isInlined(void) const {
 	return flags & FLAG_Inlined;
-}
-inline CFG::CFG(void): _code(0), ent(0) {
 }
 
 // BBIterator inlines
