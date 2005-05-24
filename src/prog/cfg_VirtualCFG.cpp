@@ -10,6 +10,20 @@
 #include <otawa/cfg/VirtualCFG.h>
 #include <otawa/cfg/VirtualBasicBlock.h>
 
+// HashKey for address_t
+namespace elm {
+class AddressHashKey: public elm::HashKey<otawa::address_t> {
+public:
+	virtual unsigned long hash (otawa::address_t key)
+		{ return (unsigned long)key; };
+	virtual bool equals (otawa::address_t key1, otawa::address_t key2)
+		{ return key1 == key2; };
+};
+static AddressHashKey def;
+template <> HashKey<otawa::address_t>& HashKey<otawa::address_t>::def
+	= AddressHashKey::def;
+} // elm
+
 namespace otawa {
 
 /* Used for resolving recursive calls as loops */
