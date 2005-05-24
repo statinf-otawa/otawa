@@ -11,5 +11,7 @@
 #include <otawa/cfg/Edge.h>
 #include <otawa/cfg/CFG.h>
 #include <otawa/cfg/CFGInfo.h>
+#include <otawa/cfg/VirtualBasicBlock.h>
+#include <otawa/cfg/VirtualCFG.h>
 
 #endif	// OTAWA_CFG_H
