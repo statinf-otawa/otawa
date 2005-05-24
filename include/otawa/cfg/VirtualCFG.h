@@ -19,6 +19,8 @@ class VirtualCFG: public CFG {
 protected:
 	virtual void scan(void);
 public:
+	static Identifier ID_CalledCFG;
+	static Identifier ID_Recursive;
 	VirtualCFG(CFG *cfg, bool inlined = true);
 	inline CFG *cfg(void) const;
 };
