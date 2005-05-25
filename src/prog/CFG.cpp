@@ -87,7 +87,7 @@ _entry(BasicBlock::FLAG_Entry), _exit(BasicBlock::FLAG_Exit) {
  * Build an empty CFG.
  */
 CFG::CFG(void): _code(0), ent(0), _entry(BasicBlock::FLAG_Entry),
-_exit(BasicBlock::FLAG_Exit) {
+_exit(BasicBlock::FLAG_Exit), flags(0) {
 }
 
 
