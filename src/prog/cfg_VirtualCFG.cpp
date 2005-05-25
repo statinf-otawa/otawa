@@ -136,6 +136,9 @@ void VirtualCFG::scan(void) {
 	// Give a number to each BB
 	for(int i = 0; i < _bbs.length(); i++)
 		_bbs[i]->add<int>(ID_Index, i);
+	
+	// Set the tag
+	flags |= FLAG_Scanned;
 }
 
 
