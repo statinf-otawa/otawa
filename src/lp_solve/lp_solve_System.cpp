@@ -7,6 +7,7 @@
 
 #include <assert.h>
 #include <elm/io.h>
+#include <elm/genstruct/Vector.h>
 #include <otawa/lp_solve/System.h>
 #include <otawa/lp_solve/Constraint.h>
 extern "C" {
@@ -211,8 +212,11 @@ void System::dump(elm::io::OutStream& _out) {
 	}
 	
 	// Output solution
+	genstruct::Vector<ilp::Var *> ilp_vars;
 	for(genstruct::HashTable<ilp::Var *, Var *>::KeyIterator var(vars); var; var++)
-		out << var->name() << " = " << (int)valueOf(*var) << "\n";
+		ilp_vars.add(*var);
+	for(int i = 0; i < ilp_vars.length(); i++)
+		out << ilp_vars[i]->name() << " = " << (int)valueOf(ilp_vars[i]) << "\n";
 	
 }
 
