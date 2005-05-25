@@ -46,7 +46,8 @@ ContextTree::ContextTree(BasicBlock *bb)
 	assert(bb);
 	_bbs.add(bb);
 	for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++)
-		if(Dominance::dominates(bb, edge->source()))
+		if(Dominance::dominates(bb, edge->source())
+		&& !_bbs.contains(edge->source()))
 			scan(edge->source(), 1);
 }
 
