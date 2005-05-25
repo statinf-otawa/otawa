@@ -58,6 +58,8 @@ namespace otawa {
  * @param bb		Basic block to process.
  */
 void BasicConstraintsBuilder::make(ilp::System *system, BasicBlock *bb) {
+	/*cout << "BasicConstraintBuilder::make(" << system << ", "
+		 << bb << " (" << bb->address() << "))\n";*/
 	Var *bbv = bb->use<Var *>(IPET::ID_Var);
 	Constraint *cons;
 	bool used;
@@ -109,8 +111,7 @@ void BasicConstraintsBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	
 	// Add constraint for each basic block
 	for(CFG::BBIterator bb(cfg); bb; bb++)
-		make(system, bb);
-		
+			make(system, bb);	
 	
 	// Set object function
 	for(CFG::BBIterator bb(cfg); bb; bb++)

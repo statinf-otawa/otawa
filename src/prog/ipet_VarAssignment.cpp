@@ -27,6 +27,7 @@ namespace otawa {
  * @param bb	Basic block to process.
  */
 void VarAssignment::process(BasicBlock *bb) {
+	//cout << "VarAssignment::process(" << bb->address() << ")\n";
 	
 	// Check BB
 	StringBuffer buf;
