@@ -35,31 +35,44 @@ int main(int argc, char **argv) {
 		}
 		else
 			cout << "main found at 0x" << cfg->address() << '\n';
-			
+		
+		// Removing __eabi call if available
+		for(CFG::BBIterator bb(cfg); bb; bb++)
+			for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+				if(edge->kind() == Edge::CALL
+				&& edge->target()
+				&& edge->calledCFG()->label() == "__eabi") {
+					delete(*edge);
+					break;
+				}
+		
+		// Now, use a VCFG
+		VirtualCFG vcfg(cfg);
+		
 		// Compute BB times
 		cout << "Timing the BB\n";
 		TrivialBBTime tbt(5);
-		tbt.processCFG(fw, cfg);
+		tbt.processCFG(fw, &vcfg);
 		
 		// Assign variables
 		cout << "Numbering the main\n";
 		VarAssignment assign;
-		assign.processCFG(fw, cfg);
+		assign.processCFG(fw, &vcfg);
 		
 		// Build the system
 		cout << "Building the ILP system\n";
 		BasicConstraintsBuilder builder;
-		builder.processCFG(fw, cfg);
+		builder.processCFG(fw, &vcfg);
 		
 		// Resolve the system
 		cout << "Resolve the system\n";
 		WCETComputation wcomp;
-		wcomp.processCFG(fw, cfg);
+		wcomp.processCFG(fw, &vcfg);
 		
 		// Display the result
-		ilp::System *sys = cfg->use<ilp::System *>(IPET::ID_System);
+		ilp::System *sys = vcfg.use<ilp::System *>(IPET::ID_System);
 		sys->dump();
-		cout << "SUCCESS\nWCET = " << cfg->use<int>(IPET::ID_WCET) << '\n';
+		cout << "SUCCESS\nWCET = " << vcfg.use<int>(IPET::ID_WCET) << '\n';
 	}
 	catch(LoadException e) {
 		cerr << "ERROR: " << e.message() << '\n';
