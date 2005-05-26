@@ -18,12 +18,20 @@ namespace otawa { namespace ets {
 class FlowFactReader: public ASTProcessor  {
 	public :
 		genstruct::HashTable<String, int> *loop_table ;
+		ASTInfo *ast_info;
 		
-		FlowFactReader(genstruct::HashTable<String, int> *hash_table);
+		inline FlowFactReader(genstruct::HashTable<String, int> *hash_table, ASTInfo *info);
 		
 		// ASTProcessor overload
 		void processAST(AST *ast);
 };
+
+
+//inlines
+inline FlowFactReader::FlowFactReader(genstruct::HashTable<String, int> *hash_table, ASTInfo *info){
+	ast_info = info;
+	loop_table = hash_table;
+}
 
 } } // otawa::ets
 
