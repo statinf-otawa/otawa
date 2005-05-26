@@ -8,12 +8,9 @@
 #include <otawa/ets/TrivialAstBlockTime.h>
 #include <otawa/ets/ETS.h>
 #include <otawa/ast.h>
-#include <elm/debug.h>
 
-#define TABT_TRACE TRACE
-//#define TABT_TRACE
-#define TABT_OUT(txt) txt
-//#define TABT_OUT(txt)
+//#define TABT_OUT(txt) txt
+#define TABT_OUT(txt)
 
 
 namespace otawa { namespace ets {
@@ -27,9 +24,10 @@ namespace otawa { namespace ets {
 
 
 /**
- * @fn TrivialAstBlockTime::TrivialAstBlockTime(int depth);
+ * @fn TrivialAstBlockTime::TrivialAstBlockTime(int depth, ASTInfo *info);
  * Build the processor.
  * @param depth	Depth of the pipeline.
+ * @param info All information about the current AST.
  */
 
 
@@ -41,7 +39,8 @@ namespace otawa { namespace ets {
 
 
 /**
- * See @ref ASTProcessor::processAST().
+ * Edit the WCET of the ast blocks to ETS::ID_WCET.
+ * @param ast	AST to process.
  */
 void TrivialAstBlockTime::processAST(AST *ast) {
 	switch(ast->kind()) {
@@ -72,6 +71,14 @@ void TrivialAstBlockTime::processAST(AST *ast) {
 				processAST(ast->toFor()->incrementation());
 				processAST(ast->toFor()->body());
 				break;
+			case AST_Call:{
+				Option< FunAST *> fun_res = ast_info->map().get(ast->toCall()->function()->name());
+				if(fun_res) {
+					AST *fun_ast = (*fun_res)->ast();
+					processAST(fun_ast);
+				}
+				break;
+			}
 			default:
 				;
 	}
