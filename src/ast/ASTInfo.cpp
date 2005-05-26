@@ -6,7 +6,6 @@
  */
 
 #include <otawa/ast/ASTInfo.h>
-#include <elm/debug.h>
 
 namespace otawa {
 
@@ -50,7 +49,6 @@ ASTInfo::ASTInfo(Process *proc) {
  * @param fun Function to add.
  */
 void ASTInfo::add(FunAST *fun) {
-	TRACE;
 	
 	// Add it to the list
 	funs.add(fun);
@@ -84,6 +82,7 @@ FunAST *ASTInfo::getFunction(Inst *inst) {
 		fun = new FunAST(this, inst);
 	
 	// Return the function
+	//cout <<" name : "<< fun->name()<<'\n';
 	return fun;
 }
 
