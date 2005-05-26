@@ -30,7 +30,7 @@ namespace otawa {
  */
 BlockAST::BlockAST(Inst *block, size_t size): _block(block), _size(size) {
 	assert(block);
-	assert(size > 0);
+	assert(size >= 0);
 	_block->set<BlockAST *>(ID, this);
 }
 
