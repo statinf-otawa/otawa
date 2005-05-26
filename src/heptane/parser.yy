@@ -68,7 +68,13 @@ def:
 	NAME '=' ast
 		{ 
 			ASTInfo *info = ASTInfo::getInfo(heptane_process);
-			FunAST *fun = info->getFunction($3->first());
+			address_t addr = heptane_file->findLabel($1 + 1);
+			if(!addr)
+				throw LoadException("Cannot resolve label \"%s\".", "coucou");
+			Inst *inst = heptane_process->findInstAt(addr);
+			if(!inst)
+				throw LoadException("Cannot find instruction at \"%s\".", $1);
+			FunAST *fun = info->getFunction(inst);
 			String name($1);
 			fun->setName(name.substring(1, name.length() - 1));
 			AST *ast($3);
@@ -118,7 +124,7 @@ calls:
 
 call:
 	APPEL '{' NAME '}' ','
-		{ calls.add(String($3)); }
+		{ calls.add(String($3));}
 ;
 
 range:
@@ -157,7 +163,7 @@ args:
  * @return				Address maching the label.
  * @throw LoadException	If the label cannot be resolved.
  */
-static address_t find_label(CString raw_label) {
+static address_t find_label(String raw_label) {
 
 	// Retrieve the file
 	if(!heptane_file) {
@@ -167,11 +173,7 @@ static address_t find_label(CString raw_label) {
 	assert(heptane_file);
 	
 	// Compute entry
-	String label;
-	if(raw_label.startsWith("__halt"))
-		label = raw_label.substring(0, raw_label.length() - 1);
-	else
-		label = raw_label.substring(1, raw_label.length() - 2);
+	String label = raw_label.substring(1, raw_label.length() - 1);
 
 	// Retrieve the labels
 	address_t addr = heptane_file->findLabel(label);
@@ -192,17 +194,30 @@ AST *make_block(CString entry, CString exit) {
 	assert(heptane_process);
 	
 	// Retrieve entry instruction
-	Inst *entry_inst = heptane_process->findInstAt(find_label(entry));
+	String entry_name(&entry, entry.length() - 1);
+	Inst *entry_inst = heptane_process->findInstAt(find_label(entry_name));
 	if(!entry_inst)
 		throw LoadException("Cannot find instruction at \"%s\".", 
 			&entry);
 	
 	// Retrieve exit address
-	address_t exit_addr = find_label(exit);
+	String exit_name(&exit, exit.length() - 1);
+	address_t exit_addr = find_label(exit_name);
 	
 	// Any internal call
 	if(!calls)
 		return new BlockAST(entry_inst, exit_addr - entry_inst->address());
+			
+	// Resolve called labels
+	genstruct::Vector<Inst *> call_insts;
+	for(int i = 0; i < calls.length(); i++) {
+		Inst *inst = heptane_process->findInstAt(find_label(calls[i].toCString()));
+		if(!inst)
+			throw LoadException("Cannot find instruction at \"%s\".", 
+				&calls[i].toCString());
+		else
+			call_insts.add(inst);
+	}
 	
 	// Find AST info
 	ASTInfo *info = ASTInfo::getInfo(heptane_process);
@@ -213,11 +228,12 @@ AST *make_block(CString entry, CString exit) {
 	int cnt = 0;
 	for(inst = entry_inst; !inst->atEnd(); inst = inst->next()) {
 		if(inst->isCall()) {
-			
 			// Find the function
 			Inst *target = inst->target();
 			FunAST *fun = info->getFunction(target);
-			
+			if(target != call_insts[cnt])
+				continue;
+				
 			// Build the AST
 			AST *call = new CallAST(start,
 				inst->address() + inst->size() - start->address(), fun);
@@ -225,13 +241,15 @@ AST *make_block(CString entry, CString exit) {
 				ast = call;
 			else
 				ast = new SeqAST(ast, call);
-			
+					
 			// Clean-up
 			cnt++;
 			start = inst->next();
 			if(cnt >= calls.length())
 				break;
 		}
+		else if(inst->isReturn())
+			throw LoadException("binary unconsistent with AST (%s).", &entry);
 	}
 	if(cnt < calls.length()) {
 		throw LoadException("binary unconsistent with AST (%s).", &entry);
