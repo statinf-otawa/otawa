@@ -11,5 +11,6 @@
 #include <otawa/ets/WCETComputation.h>
 #include <otawa/ets/TrivialAstBlockTime.h>
 #include <otawa/ets/FlowFactReader.h>
+#include <otawa/ets/FunReader.h>
 
 #endif	// OTAWA_ETS_H
