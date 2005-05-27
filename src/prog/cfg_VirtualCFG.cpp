@@ -82,6 +82,7 @@ BasicBlock *exit) {
 	// Translate edges
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
+			assert(!bb->isVirtual());
 			CFG *called = 0;
 			BasicBlock *called_exit = 0;
 			
@@ -96,10 +97,17 @@ BasicBlock *exit) {
 					edge->add<CFG *>(ID_CalledCFG, cfg);
 					called_exit = exit;
 				}
-				else if(edge->kind() == Edge::CALL && isInlined())
-					called = edge->calledCFG();
+				else if(edge->kind() == Edge::CALL) {
+					if (isInlined())
+						called = edge->calledCFG();
+					else
+						new Edge(src, edge->target(), Edge::CALL);
+				}
 				else if(edge->target()) {
 					BasicBlock *tgt = map.get(edge->target(), 0);
+					/*cout << "-> " << edge->kind()
+						 << " (" << src->address()
+						 << " -> " << edge->target()->address() << ")\n";*/
 					assert(tgt);
 					new Edge(src, tgt, edge->kind());
 					called_exit = tgt;
@@ -117,7 +125,8 @@ BasicBlock *exit) {
 					}
 				if(called) {
 					assert(called_exit);
-					virtualize(&call, called, bb, called_exit);
+					//cout << "CALL " << bb->address() << " -> " << called_exit->address() << "\n";
+					virtualize(&call, called, src, called_exit);
 				}
 			}
 		}
