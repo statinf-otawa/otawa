@@ -124,7 +124,7 @@ if test $with_lp_solve != no; then
 		LP_SOLVE_LIB=lp_solve
 		LP_SOLVE_LDADD="-L$LP_SOLVE_PATH/ -llpk -lm"
 		LP_SOLVE_CFLAGS="-DLP_SOLVE_ENABLED -I$LP_SOLVE_PATH"
-		TESTS="$TESTS lp_solve ipet constraint_loader"
+		TESTS="$TESTS lp_solve ipet"
 	fi
 fi
 AC_SUBST(LP_SOLVE_DEF)
@@ -152,7 +152,6 @@ AC_OUTPUT([
 	test/ets/Makefile
 	test/dom/Makefile
 	test/ct/Makefile
-	test/constraint_loader/Makefile
 	include/Makefile
 	include/otawa/Makefile
 	include/otawa/ast/Makefile
