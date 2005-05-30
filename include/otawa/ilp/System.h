@@ -24,7 +24,7 @@ public:
 	virtual double value(void) = 0;
 	Var *newVar(void) { return newVar("");  };
 	Var *newVar(const char *name) { elm::String str(name); return newVar(str); };
-	virtual Var *newVar(elm::String& name) = 0;
+	virtual Var *newVar(elm::String name) = 0;
 	virtual void dump(elm::io::OutStream& out = elm::io::stdout) = 0;
 };
 	
