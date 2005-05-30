@@ -14,4 +14,4 @@ INCLUDES = \
 	-I../../include \
 	@ELM_CFLAGS@ \
 	@GLISSPPC_CFLAGS@
-CXXFLAGS=-g3
+AM_CXXFLAGS=-g3

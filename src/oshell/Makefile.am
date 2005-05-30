@@ -22,8 +22,8 @@ noinst_HEADERS = \
 	parser.h \
 	SegmentCursor.h
 
-YFLAGS=-d
-CXXFLAGS=-g3
+AM_YFLAGS=-d
+AM_CXXFLAGS=-g3
 INCLUDES=-I../../include @ELM_CFLAGS@
 oshell_LDADD= \
 	-L../heptane -lothept \
