@@ -10,3 +10,7 @@ ipet_parser.tab.h
 ipet_parser.tab.hh
 lex.ipet_.c
 ipet_parser.h
+util_fft_lexer.cc
+util_fft_parser.cc
+util_fft_parser.h
+util_fft_parser.output

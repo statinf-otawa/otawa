@@ -43,9 +43,6 @@ libprog_a_SOURCES = \
 	ipet_WCETComputation.cpp \
 	util_DFA.cpp \
 	util_DFABitSet.cpp \
-	ipet_parser.yy \
-	ipet_lexer.ll \
-	ipet_ConstraintLoader.cpp \
 	ets_ETS.cpp \
 	ets_WCETComputation.cpp \
 	ets_TrivialAstBlockTime.cpp \
@@ -54,15 +51,22 @@ libprog_a_SOURCES = \
 	util_Dominance.cpp \
 	util_ContextTree.cpp \
 	cfg_VirtualBasicBlock.cpp \
-	cfg_VirtualCFG.cpp
+	cfg_VirtualCFG.cpp \
+	util_FlowFactLoader.cpp \
+	util_fft_parser.yy \
+	util_fft_lexer.ll \
+	ipet_FlowFactLoader.cpp
 	
 INCLUDES=\
 	-I../../include \
 	@ELM_CFLAGS@
 	
-CXXFLAGS=\
+AM_CXXFLAGS=\
 	-g3 \
 	@LP_SOLVE_DEF@
 
-YFLAG=-dv
+AM_YFLAGS=-dv
 
+#	ipet_parser.yy 
+#	ipet_lexer.ll 
+#	ipet_ConstraintLoader.cpp
