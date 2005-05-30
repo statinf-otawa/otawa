@@ -91,4 +91,18 @@ elm::io::Output& operator<<(elm::io::Output& output, DFABitSet& bits) {
 	return output;
 }
 
+/**
+ * this function is done by TAWk
+ * it returns the number of the true bits in the vector
+ */
+ int DFABitSet::counttruebit(void){
+ 	int size = this->size();
+ 	int count = 0;	
+	for (int i=0;i < size;i++){
+		if (this->contains(i))
+			count = count +1;
+	}
+	return count;	
+ }
+
 } // otawa
