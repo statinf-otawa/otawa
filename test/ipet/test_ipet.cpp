@@ -13,6 +13,7 @@
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/ipet/BasicConstraintsBuilder.h>
 #include <otawa/ipet/WCETComputation.h>
+#include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ilp.h>
 
 using namespace otawa;
@@ -63,6 +64,11 @@ int main(int argc, char **argv) {
 		cout << "Building the ILP system\n";
 		BasicConstraintsBuilder builder;
 		builder.processCFG(fw, &vcfg);
+		
+		// Load flow facts
+		cout << "Loading flow facts\n";
+		ipet::FlowFactLoader loader;
+		loader.processCFG(fw, &vcfg);
 		
 		// Resolve the system
 		cout << "Resolve the system\n";
