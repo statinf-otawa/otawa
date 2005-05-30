@@ -11,35 +11,17 @@
 #include <elm/io/InStream.h>
 #include <elm/genstruct/HashTable.h>
 
-//#define PATH	"/home/casse/Benchs/standard/insertsort/insertsort"
-//#define PATH	"/home/casse/Benchs/standard/bs/bs"
-//#define PATH	"/home/casse/Benchs/tests/simple/simple"
-//#define PATH	"/home/casse/Benchs/standard/fft1/fft1"
-//#define PATH	"/home/casse/Benchs/standard/fibcall/fibcall"
-//#define PATH	"/home/casse/Benchs/standard/lms/lms"
-//#define PATH	"/home/casse/Benchs/standard/fft1k/fft1k"
-#define PATH	"/home/casse/Benchs/standard/qurt/qurt"
-//#define PATH	"/home/casse/Benchs/standard/minver/minver"
-//#define PATH	"/home/casse/Benchs/standard/ludcmp/ludcmp"
-//#define PATH	"/home/casse/Benchs/standard/crc/crc"
-//#define PATH	"/home/casse/Benchs/standard/fir/fir"
-//#define PATH	"/home/casse/Benchs/standard/jfdctint/jfdctint"
-//#define PATH	"/home/casse/Benchs/standard/matmul/matmul"
-//#define PATH	"/home/casse/Benchs/standard/select/select"
-
 //#define TEST_OUT(txt) txt
 #define TEST_OUT(txt)
-
 
 using namespace otawa;
 using namespace elm::io;
 using namespace otawa::ets;
 
-
 /*
  * You have to write in files to use this test:
- * 	-#FlowFactReader#: the number of iteration of each loop equated to its label (separated with 'space' or 'tabulate').
- * 	-#FunReader#: the WCET of remote functions (not in a source file) equated to its name (separated with 'space' or 'tabulate').
+ * 	-#FlowFactReader#: the number of iteration of each loop equated to its label (separated with 'space(s)' or 'tabulate(s)').
+ * 	-#FunReader#: the WCET of remote functions (not in a source file) equated to its name (separated with 'space(s)' or 'tabulate(s)').
  */
 
 void reader (String file_name,genstruct::HashTable<String, int> *hash_table);
@@ -56,7 +38,7 @@ int main(int argc, char **argv) {
 	genstruct::HashTable<String, int> *table_for_fun=new genstruct::HashTable<String, int> ;
 	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Heptane_PowerPC);
 	try { 
-		fw=manager.load(PATH, props);
+		fw=manager.load(argv[1], props);
 		
 		// Functions
 		ASTInfo *info = fw->getASTInfo();
@@ -226,27 +208,27 @@ void outputAST(AST *ast, int ind) {
 		cout << '\n';
 		break;
 	case AST_Seq:
-		cout << "SEQUENCE " << ast->toSeq()->use<int>(ETS::ID_WCET)<<'\n';
+		cout << "SEQUENCE : " << ast->toSeq()->use<int>(ETS::ID_WCET)<<'\n';
 		outputSeq(ast, ind + 1);
 		break;
 	case AST_If:
-		cout << "IF "<<ast->toIf()->use<int>(ETS::ID_WCET)<<'\n';
+		cout << "IF : "<<ast->toIf()->use<int>(ETS::ID_WCET)<<'\n';
 		outputAST(ast->toIf()->condition(), ind);
 		outputAST(ast->toIf()->thenPart(), ind);
 		outputAST(ast->toIf()->elsePart(), ind);
 		break;
 	case AST_While:
-		cout << "WHILE "<<"("<< ast->toWhile()->use<int>(ETS::ID_LOOP_COUNT)<<" iterations)"<<'\n';
+		cout << "WHILE "<<"("<< ast->toWhile()->use<int>(ETS::ID_LOOP_COUNT)<<" iterations) : "<< ast->toWhile()->use<int>(ETS::ID_WCET)<<'\n';
 		outputAST(ast->toWhile()->condition(), ind);
 		outputAST(ast->toWhile()->body(), ind);
 		break;
 	case AST_DoWhile:
-		cout << "DOWHILE "<<"("<< ast->toDoWhile()->use<int>(ETS::ID_LOOP_COUNT)<<" iterations)"<<'\n';
+		cout << "DOWHILE "<<"("<< ast->toDoWhile()->use<int>(ETS::ID_LOOP_COUNT)<<" iterations) : "<< ast->toDoWhile()->use<int>(ETS::ID_WCET)<<'\n';
 		outputAST(ast->toDoWhile()->body(), ind);
 		outputAST(ast->toDoWhile()->condition(), ind);
 		break;
 	case AST_For:
-		cout << "FOR "<<"("<< ast->toFor()->use<int>(ETS::ID_LOOP_COUNT)<<" iterations)"<<'\n';
+		cout << "FOR "<<"("<< ast->toFor()->use<int>(ETS::ID_LOOP_COUNT)<<" iterations) : "<< ast->toFor()->use<int>(ETS::ID_WCET)<<'\n';
 		outputAST(ast->toFor()->initialization(), ind);
 		outputAST(ast->toFor()->condition(), ind);
 		outputAST(ast->toFor()->incrementation(), ind);
