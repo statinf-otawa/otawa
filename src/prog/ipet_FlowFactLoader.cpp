@@ -30,6 +30,7 @@ void FlowFactLoader::onError(const char *fmt, ...) {
 	buffer.print(fmt, args);
 	cout << buffer.toString();
 	va_end(args);
+	cout << '\n';
 }
 
 
@@ -39,7 +40,7 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 	assert(cfg);
 	assert(system);
 	assert(count >= 0);
-	cout << "LOOP " << count << " times at " << addr << "\n";
+	//cout << "LOOP " << count << " times at " << addr << "\n";
 	
 	// Process basic blocks
 	for(CFG::BBIterator bb(cfg); bb; bb++)

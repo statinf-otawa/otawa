@@ -19,7 +19,7 @@ namespace ilp {
 
 namespace ipet {
 	
-// FlowFactLoader clas
+// FlowFactLoader class
 class FlowFactLoader: public CFGProcessor, private otawa::FlowFactLoader {
 	CFG *cfg;	
 	otawa::ilp::System *system;
