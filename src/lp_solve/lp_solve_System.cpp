@@ -6,6 +6,7 @@
  */
 
 #include <assert.h>
+#include <stdio.h>
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/lp_solve/System.h>
@@ -142,11 +143,12 @@ bool System::solve(void) {
 	REAL row[cols + 1];
 	for(int i = 0; i < cols; i++) {
 		row[i] = 0;
-		//set_int(lp, i, TRUE);
+		set_int(lp, i, TRUE);
 	}
 	
 	// Build the object function
 	ofun->fillRow(row);
+	row[cols] = 0;
 	set_obj_fn(lp, row);
 	ofun->resetRow(row);
 	if(ofun->comparator() >= 0)
@@ -164,28 +166,46 @@ bool System::solve(void) {
 	}
 	
 	// Launch the resolution
+	set_print_sol(lp, FALSE);
+	set_epsilon(lp, DEF_EPSILON);
+	set_epspivot(lp, DEF_EPSPIVOT);
+	set_print_duals(lp, FALSE);
+	set_debug(lp, FALSE);
+	set_floor_first(lp, TRUE);
+	set_print_at_invert(lp, FALSE);
+	set_trace(lp, FALSE);
+	set_anti_degen(lp, FALSE);
+	set_do_presolve(lp, FALSE);
+	set_improve(lp, IMPROVE_NONE);
+	set_scalemode(lp, MMSCALING);
+	set_bb_rule(lp, FIRST_SELECT);
 	int fail = ::solve(lp);
 	
 	// Record the result
-	if(!fail) {
-		val = (double)lp->best_solution[0];
+	cout << "FAIL = " << fail << "\n";
+	int result = false;
+	if(fail == OPTIMAL) {
+		//val = (double)lp->best_solution[0];
+		val = get_objective(lp);
 		for(elm::genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
 		var; var++)
 			var->setValue((double)lp->best_solution[lp->rows + var->column()]);
+		result = true;
 	}
 	
 	// Clean up
 	/*print_lp(lp);
-	print_solution(lp);*/
+	//print_solution(lp);*/
+	//write_MPS(lp, stdout);
 	delete_lp(lp);
-	return !fail;
+	return result;
 }
 
 /**
  * !!TODO!!
  * Variable by this way cannot be fried. Must be fixed.
  */
-ilp::Var *System::newVar(elm::String& name) {
+ilp::Var *System::newVar(elm::String name) {
 	return new ilp::Var(name);
 }
 
@@ -215,8 +235,12 @@ void System::dump(elm::io::OutStream& _out) {
 	genstruct::Vector<ilp::Var *> ilp_vars;
 	for(genstruct::HashTable<ilp::Var *, Var *>::KeyIterator var(vars); var; var++)
 		ilp_vars.add(*var);
-	for(int i = 0; i < ilp_vars.length(); i++)
-		out << ilp_vars[i]->name() << " = " << (int)valueOf(ilp_vars[i]) << "\n";
+	for(int i = 0; i < ilp_vars.length(); i++) {
+		out << ilp_vars[i]->name() << " = ";
+		/*printf("!%g!\n", valueOf(ilp_vars[i]));
+	}*/
+		cout << (int)valueOf(ilp_vars[i]) << "\n";
+	}
 	
 }
 
