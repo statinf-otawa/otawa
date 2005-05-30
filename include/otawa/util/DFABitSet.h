@@ -27,6 +27,8 @@ public:
 	inline void fill(void);
 	inline void mask(DFABitSet *set);
 	inline int size(void) const;
+	void dif(DFABitSet *set);
+	int counttruebit(void);
 	
 	// DFASet overload
 	virtual bool equals(DFASet *set);
@@ -64,6 +66,9 @@ inline void DFABitSet::fill(void) {
 
 inline void DFABitSet::mask(DFABitSet *set) {
 	vec.applyAnd(set->vec);
+}
+inline void DFABitSet::dif(DFABitSet *set) {
+	vec.applyReset(set->vec);	
 }
 
 inline int DFABitSet::size(void) const {
