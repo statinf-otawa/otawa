@@ -75,10 +75,16 @@ void ContextTree::scan(BasicBlock *bb, int start) {
 	// Find the body
 	for(int i =  start; i < _bbs.length(); i++) {
 		
-		// Look forward for calls
-		for(Iterator<Edge *> edge(_bbs[i]->outEdges()); edge; edge++)
+		// Look forward for calls or back loop edge
+		for(Iterator<Edge *> edge(_bbs[i]->outEdges()); edge; edge++) {
 			if(edge->kind() == Edge::CALL && edge->calledCFG())
 				addChild(new ContextTree(edge->calledCFG()));
+			else if(edge->target() && edge->target() != _bb
+			&& Dominance::dominates(edge->target(), _bbs[i])) {
+				_bbs[i] = edge->target();
+				break;
+			}
+		}
 
 		// Look backward
 		bool header = false;
@@ -86,7 +92,7 @@ void ContextTree::scan(BasicBlock *bb, int start) {
 			assert(edge->source());
 			if(edge->source() != _bb) {
 				if(Dominance::dominates(_bbs[i], edge->source()))
-						header = true;
+					header = true;
 				else if(!_bbs.contains(edge->source()))
 					_bbs.add(edge->source());
 			}

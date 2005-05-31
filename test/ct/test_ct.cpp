@@ -75,6 +75,16 @@ int main(int argc, char **argv) {
 		else
 			cout << "main found at 0x" << cfg->address() << '\n';
 		
+		// Removing __eabi call if available
+		for(CFG::BBIterator bb(cfg); bb; bb++)
+			for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+				if(edge->kind() == Edge::CALL
+				&& edge->target()
+				&& edge->calledCFG()->label() == "__eabi") {
+					delete(*edge);
+					break;
+				}
+		
 		// Build dominance
 		Dominance dom;
 		dom.processCFG(fw, cfg);
