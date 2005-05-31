@@ -54,8 +54,8 @@ static option::BoolOption all_functions(command, 'a', "all",
 	"Dump all functions.", false);
 static option::BoolOption inline_calls(command, 'i', "inline",
 	"Inline the function calls.", false);
-/*static option::BoolOption link_rec(command, 'r', "recursive",
-	"Replace recursive calls by CFG loop links.", false);*/
+option::BoolOption display_assembly(command, 'A', "assembly",
+	"Display assembly.", false);
 
 
 // Simple output option
@@ -105,7 +105,7 @@ void Command::dump(CFG *cfg) {
 	CFG *current_inline = 0;
 	
 	// Get the virtual CFG
-	VirtualCFG vcfg(cfg);
+	VirtualCFG vcfg(cfg, inline_calls);
 	
 	// Dump the CFG
 	displayer->onCFGBegin(cfg);
