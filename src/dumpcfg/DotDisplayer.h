@@ -11,7 +11,7 @@
 
 // SimpleDisplayer class
 class DotDisplayer: public Displayer {
-	void displayRef(int index);
+	void displayLabel(otawa::BasicBlock *bb, int index);
 public:
 	virtual void onCFGBegin(otawa::CFG *cfg);
 	virtual void onCFGEnd(otawa::CFG *cfg);
