@@ -6,6 +6,8 @@
  */
 %{
 #include <otawa/util/FlowFactLoader.h>
+#include <elm/io.h>
+using namespace elm;
 int util_fft_lex(void);
 void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 %}
@@ -34,12 +36,15 @@ file:
 
 commands:
 	command
-|	commands ';' command
+|	commands command
 ;
 
 command:
-	LOOP INTEGER INTEGER
-		{ loader->onLoop((otawa::address_t)$2, $3); }
+	LOOP INTEGER INTEGER ';'
+		{
+			//cout << "loop " << (void *)$2 << ", " << $3 << "\n";
+			loader->onLoop((otawa::address_t)$2, $3);
+		}
 ;
 
 %%
