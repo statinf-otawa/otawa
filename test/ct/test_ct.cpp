@@ -26,10 +26,10 @@ static void displayContextTree(ContextTree *tree, int space = 0) {
 		cout << "LOOP at " << tree->bb()->address() << " ";
 		break;
 	case ContextTree::ROOT:
-		cout << "ROOT at " << tree->cfg()->address() << " ";
+		cout << "ROOT ";
 		break;
 	case ContextTree::FUNCTION:
-		cout << "FUNCTION at "<< tree->cfg()->address() << " ";
+		cout << "FUNCTION to " << tree->cfg()->label() << " ";
 		break;
 	default:
 		assert(false);
