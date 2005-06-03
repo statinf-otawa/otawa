@@ -45,6 +45,13 @@ ContextTree::ContextTree(BasicBlock *bb)
 : _bb(bb), _kind(LOOP), _children(0), next(0), _parent(0), _cfg(0) {
 	assert(bb);
 	_bbs.add(bb);
+	
+	// Don't forget to record call in loop header
+	for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+		if(edge->kind() == Edge::CALL && edge->calledCFG())
+			addChild(new ContextTree(edge->calledCFG()));			
+	
+	// Find back edges
 	for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++)
 		if(Dominance::dominates(bb, edge->source())
 		&& !_bbs.contains(edge->source()))
@@ -56,7 +63,7 @@ ContextTree::ContextTree(BasicBlock *bb)
  * Free the entire tree.
  */
 ContextTree::~ContextTree(void) {
-	for(ContextTree *cur = _children, *next; cur; cur++) {
+	for(ContextTree *cur = _children, *next; cur; cur = next) {
 		next = cur->next;
 		delete cur;
 	}
