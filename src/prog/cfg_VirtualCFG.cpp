@@ -83,13 +83,19 @@ BasicBlock *exit) {
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
 			assert(!bb->isVirtual());
-			CFG *called = 0;
-			BasicBlock *called_exit = 0;
 			
 			// Resolve source
 			BasicBlock *src = map.get(bb, 0);
 			assert(src);
-			
+
+			// Is there a call ?			
+			CFG *called = 0;
+			BasicBlock *called_exit = 0;
+			if(isInlined())
+				for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+					if(edge->kind() == Edge::CALL)
+						called = edge->calledCFG();
+
 			// Look edges
 			for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
 				if(edge->target()->isExit()) {
@@ -98,23 +104,20 @@ BasicBlock *exit) {
 					called_exit = exit;
 				}
 				else if(edge->kind() == Edge::CALL) {
-					if (isInlined())
-						called = edge->calledCFG();
-					else
+					if(!isInlined())
 						new Edge(src, edge->target(), Edge::CALL);
 				}
 				else if(edge->target()) {
 					BasicBlock *tgt = map.get(edge->target(), 0);
-					/*cout << "-> " << edge->kind()
-						 << " (" << src->address()
-						 << " -> " << edge->target()->address() << ")\n";*/
 					assert(tgt);
-					new Edge(src, tgt, edge->kind());
-					called_exit = tgt;
+					if(called && edge->kind() == Edge::NOT_TAKEN)
+						called_exit = tgt;
+					else
+						new Edge(src, tgt, edge->kind());
 				}
 			
 			// Process the call
-			if(called && isInlined()) {
+			if(called) {
 				for(call_t *cur = &call; cur; cur = cur->back)
 					if(cur->cfg == called) {
 						Edge *edge = new Edge(bb, cur->entry, Edge::VIRTUAL_CALL);
