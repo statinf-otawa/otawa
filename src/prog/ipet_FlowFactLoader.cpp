@@ -43,8 +43,10 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 	//cout << "LOOP " << count << " times at " << addr << "\n";
 	
 	// Process basic blocks
+	bool found = false;
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(bb->address() == addr) {
+			found = true;
 			
 			// Check domination
 			if(!cfg->entry()->getProp(&Dominance::ID_RevDom)) {
@@ -53,6 +55,7 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 			}
 			
 			// Build the constraint
+			//cout << "Added to " << *bb << "\n";
 			otawa::ilp::Constraint *cons =
 				system->newConstraint(otawa::ilp::Constraint::LE);
 			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
@@ -65,6 +68,10 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 					cons->addRight(count, var);
 			}
 		}
+	
+	// Nothing found, seems too bad
+	if(!found)
+		out << "WARNING: loop " << addr << " not found.\n";
 }
 
 
