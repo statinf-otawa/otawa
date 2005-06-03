@@ -53,7 +53,7 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
  */
 void DotDisplayer::onCFGBegin(CFG *cfg) {
 	cout << "digraph " << cfg->label() << "{\n"
-		 << "node [shape=Mrecord, labeljust=l];\n";
+		 << "node [shape=Mrecord, labeljust=l, fontsize=10];\n";
 }
 
 
@@ -90,6 +90,14 @@ edge_kind_t kind, BasicBlock *target, int target_index) {
 		case Edge::CALL:
 			cout << "label=\"call\", style=dashed, ";
 			weight = 1;
+			break;
+		case Edge::VIRTUAL_CALL:
+			cout << "label=\"call\", style=dashed, ";
+			weight = 2;
+			break;
+		case Edge::VIRTUAL_RETURN:
+			cout << "label=\"return\", style=dashed, ";
+			weight = 2;
 			break;
 		case Edge::NOT_TAKEN:
 			weight = 4;
