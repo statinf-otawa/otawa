@@ -41,6 +41,12 @@ id_t BasicBlock::ID = Property::getID("otawa.bb");
 
 
 /**
+ * Identifier of the property storing integer number of basic blocks.
+ */
+Identifier& BasicBlock::ID_Index = CFG::ID_Index;
+
+
+/**
  * @fn Mark *BasicBlock::head(void) const;
  * Get the mark pseudo-instruction of the basic block. Following instruction
  * until the next mark are the content of the basic block.
@@ -248,18 +254,26 @@ BasicBlock *BasicBlock::findBBAt(FrameWork *fw, address_t addr) {
 }
 
 
+/**
+ * @fn int BasicBlock::number(void);
+ * Get the number hooked on this basic block, that is, value of ID_Index
+ * property.
+ * @return Number of the basic block or -1 if there is no number hooked.
+ */
+
+
 /*
  * Iterator for edges
  */
-bool BasicBlock::EdgeIterator::ended(void) const {
+bool BasicBlock::OldEdgeIterator::ended(void) const {
 	return iter.ended();
 }
 
-Edge *BasicBlock::EdgeIterator::item(void) const {
+Edge *BasicBlock::OldEdgeIterator::item(void) const {
 	return iter.item();
 }
 
-void BasicBlock::EdgeIterator::next(void) {
+void BasicBlock::OldEdgeIterator::next(void) {
 	iter.next();
 }
 

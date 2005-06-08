@@ -13,7 +13,6 @@
 #include <elm/Iterator.h>
 #include <otawa/program.h>
 #include <otawa/instruction.h>
-//#include <otawa/cfg/Edge.h>
 
 namespace otawa {
 
@@ -39,10 +38,10 @@ protected:
 	Mark *_head;
 
 	// EdgeIterator
-	class EdgeIterator: public IteratorInst<Edge *> {
+	class OldEdgeIterator: public IteratorInst<Edge *> {
 		elm::genstruct::SLList<Edge *>::Iterator iter;
 	public:
-		inline EdgeIterator(elm::genstruct::SLList<Edge *> &list)
+		inline OldEdgeIterator(elm::genstruct::SLList<Edge *> &list)
 		: iter(list) { };
 		virtual bool ended(void) const;
 		virtual Edge *item(void) const;
@@ -65,6 +64,7 @@ protected:
 	void setNotTaken(BasicBlock *bb);
 public:
 	static id_t ID;
+	static Identifier& ID_Index;
 
 	// Mark class
 	class Mark: public PseudoInst {
@@ -97,19 +97,21 @@ public:
 	size_t size(void) const;
 	inline bool isVirtual(void) const { return flags & FLAG_Virtual; };
 	inline unsigned long getFlags(void) const { return flags; };
+	inline int number(void) { return get<int>(ID_Index, -1); };
 	
 	// Edge management
 	inline void addInEdge(Edge *edge) { ins.addFirst(edge); };
 	void addOutEdge(Edge *edge) { outs.addFirst(edge); };
 	void removeInEdge(Edge *edge) { ins.remove(edge); };
 	void removeOutEdge(Edge *edge) { outs.remove(edge); };
-	inline IteratorInst<Edge *> *inEdges(void) { return new EdgeIterator(ins); };
-	inline IteratorInst<Edge *> *outEdges(void) { return new EdgeIterator(outs); };
+	inline IteratorInst<Edge *> *inEdges(void) { return new OldEdgeIterator(ins); };
+	inline IteratorInst<Edge *> *outEdges(void) { return new OldEdgeIterator(outs); };
 	
 	// Deprecated
 	BasicBlock *getTaken(void);
 	BasicBlock *getNotTaken(void);
 	inline size_t getBlockSize(void) const { return size(); };
+	
 };
 
 

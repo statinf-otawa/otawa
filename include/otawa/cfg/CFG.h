@@ -62,6 +62,7 @@ public:
 	bool dominates(BasicBlock *bb1, BasicBlock *bb2);
 	inline bool isVirtual(void) const;
 	inline bool isInlined(void) const;
+	void numberBB(void);
 };
 
 

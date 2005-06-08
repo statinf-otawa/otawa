@@ -198,45 +198,13 @@ void CFG::scan(void) {
 
 
 /**
- * @class CFG::BBIterator
- * This iterator is used for visiting all basic blocks of the CFG.
+ * Number the basic block of the CFG, that is, hook a property with ID_Index
+ * identifier and the integer value of the number to each basic block. The
+ * entry get the number 0 et the exit the last number.
  */
-
-
-/**
- * @fn CFG::BBIterator::BBIterator(const CFG *cfg);
- * Build a basic block iterator.
- * @param cfg	Used CFG.
- */
-
-
-/**
- * @see elm::Iterator::ended()
- */
-/*bool CFG::BBIterator::ended(void) const {
-	return pos >= bbs.length();
-}*/
-
-
-/**
- * @see elm::Iterator::item()
- */
-/*BasicBlock *CFG::BBIterator::item(void) const {
-	return bbs[pos];
-}*/
-
-
-/**
- * @see elm::Iterator::next()
- */
-/*void CFG::BBIterator::next(void) {
-	BasicBlock *bb = bbs[pos];
-	for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
-		if(edge->kind() != EDGE_Call
-		&& !edge->target()->isExit()
-		&& !bbs.contains(edge->target()))
-			bbs.add(edge->target());
-	pos++;
-}*/
+void CFG::numberBB(void) {
+	for(int i = 0; i < _bbs.length(); i++)
+		_bbs[i]->set<int>(ID_Index, i);
+}
 
 } // namespace otawa
