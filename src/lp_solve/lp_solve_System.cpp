@@ -185,12 +185,25 @@ bool System::solve(void) {
 	cout << "FAIL = " << fail << "\n";
 	int result = false;
 	if(fail == OPTIMAL) {
-		//val = (double)lp->best_solution[0];
-		val = get_objective(lp);
+		result = true;
+		
+		// Record variables values
 		for(elm::genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
 		var; var++)
 			var->setValue((double)lp->best_solution[lp->rows + var->column()]);
-		result = true;
+
+		// Get optimization result
+		//val = (double)lp->best_solution[0];
+		// lp_solve seems to be buggy, so we recompute the max
+		// val = get_objective(lp);
+		double sum = 0;
+		for(Constraint::Factor *fact = ofun->facts; fact; fact = fact->next()) {
+			if(fact->variable())
+				sum += fact->coefficient() * fact->variable()->value();
+			else
+				sum += fact->coefficient();
+		}
+		val = sum;
 	}
 	
 	// Clean up
