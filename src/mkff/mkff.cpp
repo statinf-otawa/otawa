@@ -45,13 +45,13 @@ static Command command;
  */
 void Command::scan(ContextTree *ctree, int indent) {
 	assert(ctree);
+	bool display = false;
 	
 	// Process function call
 	if(ctree->kind() != ContextTree::LOOP) {
 		if(ctree->cfg()->get<bool>(ID_Processed, false))
 			return;
 		ctree->cfg()->add<bool>(ID_Processed, true);
-		bool display = false;
 		for(Iterator<ContextTree *> child(ctree->children()); child; child++)
 			if(child->kind() == ContextTree::LOOP) {
 				display = true;
@@ -62,21 +62,19 @@ void Command::scan(ContextTree *ctree, int indent) {
 		indent = 0;
 	}
 	
-	// Process loop
-	else {
-		for(int i = 0; i < indent; i++)
-			cout << "  ";
-		cout << "loop 0x" << ctree->bb()->address() << " ?;\n"; 
-	}
-	
-	// Process loop children
+	// Display loop children
 	for(Iterator<ContextTree *> child(ctree->children()); child; child++)
-		scan(child, indent + 1);
+		if(child->kind() == ContextTree::LOOP) {
+			for(int i = 0; i < indent; i++)
+				cout << "  ";
+			cout << "loop 0x" << child->bb()->address() << " ?;\n"; 
+		}
+	if(display)
+		cout << "\n";
 	
 	// Process function children
 	for(Iterator<ContextTree *> child(ctree->children()); child; child++)
-		if(child->kind() != ContextTree::LOOP)
-			scan(child, indent + 1);
+		scan(child, indent + 1);
 }
 
 
