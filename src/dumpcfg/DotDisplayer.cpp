@@ -37,6 +37,9 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 						first = false;
 					else 
 						cout << "\\l";
+					for(PropList::GetIterator<String> label(inst, *File::ID_Label);
+					label; label++)
+						cout << *label << ":\\l";
 					cout << inst->address() << "    ";
 					inst->dump(cout);
 				}

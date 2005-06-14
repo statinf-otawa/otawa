@@ -86,8 +86,8 @@ void DisassemblerDisplayer::onBBEnd(BasicBlock *bb, int index) {
 	for(Iterator<Inst *> inst(*bb); inst; inst++) {
 			
 		// Put the label
-		Option<String> label = inst->get<String>(File::ID_Label);
-		if(label)
+		for(PropList::GetIterator<String> label(inst, *File::ID_Label);
+		label; label++)
 			cout << '\t' << *label << ":\n";
 			
 		// Disassemble the instruction
