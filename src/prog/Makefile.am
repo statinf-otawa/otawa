@@ -55,7 +55,8 @@ libprog_a_SOURCES = \
 	util_FlowFactLoader.cpp \
 	util_fft_parser.yy \
 	util_fft_lexer.ll \
-	ipet_FlowFactLoader.cpp
+	ipet_FlowFactLoader.cpp \
+	util_CFGNormalizer.cpp
 	
 INCLUDES=\
 	-I../../include \
