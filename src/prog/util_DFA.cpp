@@ -7,6 +7,7 @@
 
 #include <otawa/util/DFA.h>
 #include <otawa/cfg.h>
+#include <otawa/util/CFGNormalizer.h>
 
 //#include <otawa/util/DFABitSet.h>
 
@@ -49,6 +50,7 @@ void DFA::startup(CFG *cfg) {
 		info->gen = generate(bb);
 		info->kill = kill(bb);
 		bb->addDeletable<dfa_info_t *>(info_id, info);
+		//cout << "PREPARE " << bb->address() << "\n";
 	}
 }
 
@@ -71,9 +73,10 @@ void DFA::cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 		if(in_id) {
 			clear(info->buf);
 			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
-				dfa_info_t *in_info = edge->source()->use<dfa_info_t *>(info_id);
-				assert(in_info);
-				merge(info->buf, in_info->cur);
+				dfa_info_t *in_info = edge->source()->get<dfa_info_t *>(info_id, 0);
+				// !!TODO!! Look below.
+				if(in_info);
+					merge(info->buf, in_info->cur);
 			}
 			bb->add<DFASet *>(in_id, info->buf);
 		}
@@ -108,8 +111,14 @@ void DFA::cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id) {
  */
 void DFA::resolve(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 	assert(cfg);
+	//cout << "CFG: " << cfg->label() << "\n";
 	
 	// Prolog
+	CFGNormalizer normalizer;
+	PropList props;
+	props.add<bool>(CFGNormalizer::ID_Verbose, true);
+	normalizer.configure(props);
+	normalizer.processCFG(0, cfg);
 	bool fix_point = false;
 	startup(cfg);
 	
@@ -119,15 +128,19 @@ void DFA::resolve(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 		
 		// Look in BB
 		for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++) {
+			//cout << "\tBB " << bb->address() << "\n";
 			dfa_info_t *info = bb->use<dfa_info_t *>(info_id);
 			assert(info);
 			
 			// Build new set
 			clear(info->buf);
 			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
-				dfa_info_t *in_info = edge->source()->use<dfa_info_t *>(info_id);
-				assert(in_info);
-				merge(info->buf, in_info->cur);
+				//cout << "\tEDGE from " << edge->source()->address() << "\n";
+				dfa_info_t *in_info = edge->source()->get<dfa_info_t *>(info_id, 0);
+				// !!TODO!! Quick fix. Need to output a message and to add
+				// option in CFG computation to remove this kind of edge.
+				if(in_info)
+					merge(info->buf, in_info->cur);
 			}
 			info->buf->remove(info->kill);
 			info->buf->add(info->gen);
