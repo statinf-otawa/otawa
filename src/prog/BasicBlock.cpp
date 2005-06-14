@@ -255,27 +255,33 @@ BasicBlock *BasicBlock::findBBAt(FrameWork *fw, address_t addr) {
 
 
 /**
+ * Get an iterator on the entering edges.
+ * @return	Entering edge iterator.
+ * @deprecated	Use InIterator instead.
+ */
+IteratorInst<Edge *> *BasicBlock::inEdges(void) {
+	InIterator iter(this);
+	return new IteratorObject<InIterator, Edge *>(iter);
+}
+
+
+/**
+ * Get an iterator on the leaving edges.
+ * @return	Leaving edge iterator.
+ * @deprecated	Use OutIterator instead.
+ */
+IteratorInst<Edge *> *BasicBlock::outEdges(void) {
+	OutIterator iter(this);
+	return new IteratorObject<OutIterator, Edge *>(iter);
+}
+
+
+/**
  * @fn int BasicBlock::number(void);
  * Get the number hooked on this basic block, that is, value of ID_Index
  * property.
  * @return Number of the basic block or -1 if there is no number hooked.
  */
-
-
-/*
- * Iterator for edges
- */
-bool BasicBlock::OldEdgeIterator::ended(void) const {
-	return iter.ended();
-}
-
-Edge *BasicBlock::OldEdgeIterator::item(void) const {
-	return iter.item();
-}
-
-void BasicBlock::OldEdgeIterator::next(void) {
-	iter.next();
-}
 
 
 /**

@@ -37,15 +37,10 @@ protected:
 	elm::genstruct::SLList<Edge *> ins, outs;
 	Mark *_head;
 
-	// EdgeIterator
-	class OldEdgeIterator: public IteratorInst<Edge *> {
-		elm::genstruct::SLList<Edge *>::Iterator iter;
+	// Edge Iterator
+	class EdgeIterator: public elm::genstruct::SLList<Edge *>::Iterator  {
 	public:
-		inline OldEdgeIterator(elm::genstruct::SLList<Edge *> &list)
-		: iter(list) { };
-		virtual bool ended(void) const;
-		virtual Edge *item(void) const;
-		virtual void next(void);
+		inline EdgeIterator(elm::genstruct::SLList<Edge *>& edges);
 	};
 
 	// Iterator
@@ -104,14 +99,23 @@ public:
 	void addOutEdge(Edge *edge) { outs.addFirst(edge); };
 	void removeInEdge(Edge *edge) { ins.remove(edge); };
 	void removeOutEdge(Edge *edge) { outs.remove(edge); };
-	inline IteratorInst<Edge *> *inEdges(void) { return new OldEdgeIterator(ins); };
-	inline IteratorInst<Edge *> *outEdges(void) { return new OldEdgeIterator(outs); };
+	
+	// Edge iterators
+	class InIterator: public EdgeIterator {
+	public:
+		inline InIterator(BasicBlock *bb);
+	};
+	class OutIterator: public EdgeIterator {
+	public:
+		inline OutIterator(BasicBlock *bb);
+	};
 	
 	// Deprecated
 	BasicBlock *getTaken(void);
 	BasicBlock *getNotTaken(void);
 	inline size_t getBlockSize(void) const { return size(); };
-	
+	IteratorInst<Edge *> *inEdges(void);
+	IteratorInst<Edge *> *outEdges(void);	
 };
 
 
@@ -131,6 +135,26 @@ public:
 		flags = _flags;
 		_head = null_bb.head();
 	};
+};
+
+
+// BasicBlock::EdgeIterator inlines
+inline BasicBlock::EdgeIterator::EdgeIterator(elm::genstruct::SLList<Edge *>& edges)
+: elm::genstruct::SLList<Edge *>::Iterator(edges) {
+};
+
+
+// BasicBlock::InIterator inlines
+inline BasicBlock::InIterator::InIterator(BasicBlock *bb)
+: EdgeIterator(bb->ins) {
+	assert(bb);
+};
+
+
+// BasicBlock::OutIterator inlines
+inline BasicBlock::OutIterator::OutIterator(BasicBlock *bb)
+: EdgeIterator(bb->outs) {
+	assert(bb);
 };
 
 } // otawa
