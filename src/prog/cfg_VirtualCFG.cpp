@@ -71,7 +71,7 @@ BasicBlock *exit) {
 		}
 	
 	// Find local entry
-	for(Iterator<Edge *> edge(cfg->entry()->outEdges()); edge; edge++) {
+	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++) {
 		assert(!call.entry);
 		call.entry = map.get(edge->target(), 0);
 		assert(call.entry);
@@ -92,12 +92,12 @@ BasicBlock *exit) {
 			CFG *called = 0;
 			BasicBlock *called_exit = 0;
 			if(isInlined())
-				for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+				for(BasicBlock::OutIterator edge(bb); edge; edge++)
 					if(edge->kind() == Edge::CALL)
 						called = edge->calledCFG();
 
 			// Look edges
-			for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->target()->isExit()) {
 					Edge *edge = new Edge(src, exit, Edge::VIRTUAL_RETURN);
 					edge->add<CFG *>(ID_CalledCFG, cfg);

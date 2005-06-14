@@ -60,7 +60,7 @@ Identifier& BasicBlock::ID_Index = CFG::ID_Index;
  * @deprecated{Use @ref Edge class instead.}
  */
 BasicBlock *BasicBlock::getTaken(void) {
-	for(elm::Iterator<Edge *> edge(outEdges()); edge; edge++)
+	for(BasicBlock::OutIterator edge(this); edge; edge++)
 		if(edge->kind() == EDGE_Taken || edge->kind() == EDGE_Call)
 			return edge->target();
 	return 0;
@@ -73,7 +73,7 @@ BasicBlock *BasicBlock::getTaken(void) {
  * @deprecated{Use @ref Edge class instead.}
  */
 BasicBlock *BasicBlock::getNotTaken(void) {
-	for(elm::Iterator<Edge *> edge(outEdges()); edge; edge++)
+	for(BasicBlock::OutIterator edge(this); edge; edge++)
 		if(edge->kind() == EDGE_NotTaken)
 			return edge->target();
 	return 0;

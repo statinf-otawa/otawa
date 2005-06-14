@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
 		
 		// Removing __eabi call if available
 		for(CFG::BBIterator bb(cfg); bb; bb++)
-			for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL
 				&& edge->target()
 				&& edge->calledCFG()->label() == "__eabi") {

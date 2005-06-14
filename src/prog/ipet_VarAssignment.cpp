@@ -38,7 +38,7 @@ void VarAssignment::process(BasicBlock *bb) {
 	}
 	
 	// Check out edges
-	for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++) {
+	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 		if(!edge->get<Var *>(IPET::ID_Var, 0)) {
 			StringBuffer buf;
 			buf.print("e_%lx_%lx", bb->address(), edge->target()->address());

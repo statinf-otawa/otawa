@@ -112,7 +112,7 @@ void Command::dump(CFG *cfg) {
 	for(CFG::BBIterator bb(&vcfg); bb; bb++) {
 		
 		// Looking for start of inline
-		for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++)
+		for(BasicBlock::InIterator edge(bb); edge; edge++)
 			if(edge->kind() == Edge::VIRTUAL_CALL) {
 				if(current_inline)
 					displayer->onInlineEnd(current_inline);
@@ -125,7 +125,7 @@ void Command::dump(CFG *cfg) {
 		displayer->onBBBegin(bb, index);
 		
 		// Look out edges
-		for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++) {
+		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 			int target_index = -1;
 			if(edge->target() && edge->kind() != Edge::CALL)
 				target_index = edge->target()->use<int>(CFG::ID_Index);

@@ -72,7 +72,7 @@ void DFA::cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 		// Store IN information
 		if(in_id) {
 			clear(info->buf);
-			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
+			for(BasicBlock::InIterator edge(bb); edge; edge++) {
 				dfa_info_t *in_info = edge->source()->get<dfa_info_t *>(info_id, 0);
 				// !!TODO!! Look below.
 				if(in_info);
@@ -134,7 +134,7 @@ void DFA::resolve(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 			
 			// Build new set
 			clear(info->buf);
-			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
+			for(BasicBlock::InIterator edge(bb); edge; edge++) {
 				//cout << "\tEDGE from " << edge->source()->address() << "\n";
 				dfa_info_t *in_info = edge->source()->get<dfa_info_t *>(info_id, 0);
 				// !!TODO!! Quick fix. Need to output a message and to add

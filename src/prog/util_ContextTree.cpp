@@ -47,12 +47,12 @@ ContextTree::ContextTree(BasicBlock *bb)
 	_bbs.add(bb);
 	
 	// Don't forget to record call in loop header
-	for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+	for(BasicBlock::OutIterator edge(bb); edge; edge++)
 		if(edge->kind() == Edge::CALL && edge->calledCFG())
 			addChild(new ContextTree(edge->calledCFG()));			
 	
 	// Find back edges
-	for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++)
+	for(BasicBlock::InIterator edge(bb); edge; edge++)
 		if(Dominance::dominates(bb, edge->source())
 		&& !_bbs.contains(edge->source()))
 			scan(edge->source(), 1);
@@ -83,7 +83,7 @@ void ContextTree::scan(BasicBlock *bb, int start) {
 	for(int i =  start; i < _bbs.length(); i++) {
 		
 		// Look forward for calls or back loop edge
-		for(Iterator<Edge *> edge(_bbs[i]->outEdges()); edge; edge++) {
+		for(BasicBlock::OutIterator edge(_bbs[i]); edge; edge++) {
 			if(edge->kind() == Edge::CALL && edge->calledCFG())
 				addChild(new ContextTree(edge->calledCFG()));
 			else if(edge->target() && edge->target() != _bb
@@ -95,7 +95,7 @@ void ContextTree::scan(BasicBlock *bb, int start) {
 
 		// Look backward
 		bool header = false;
-		for(Iterator<Edge *> edge(_bbs[i]->inEdges()); edge; edge++) {
+		for(BasicBlock::InIterator edge(_bbs[i]); edge; edge++) {
 			assert(edge->source());
 			if(edge->source() != _bb) {
 				if(Dominance::dominates(_bbs[i], edge->source()))

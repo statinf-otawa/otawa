@@ -119,7 +119,7 @@ bool ConstraintLoader::newEdgeVar(CString name, address_t src, address_t dst) {
 		return false;
 	
 	// Find edge 
-	for(Iterator<Edge *> edge(src_bb->outEdges()); edge; edge++) {
+	for(BasicBlock::OutIterator edge(src_bb); edge; edge++) {
 		if(edge->target() == dst_bb) {
 			ilp::Var *var = edge->get<ilp::Var *>(IPET::ID_Var, 0);
 			if(var) {

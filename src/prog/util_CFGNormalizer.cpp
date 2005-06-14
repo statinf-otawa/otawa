@@ -74,7 +74,7 @@ void CFGNormalizer::processCFG(FrameWork *fw, CFG *cfg) {
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		bb->add<bool>(ID_InCFG, true);
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
-		for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++)
+		for(BasicBlock::InIterator edge(bb); edge; edge++)
 			if(edge->source() && !edge->source()->getProp(&ID_InCFG))
 				removes.add(edge);
 		for(elm::genstruct::Vector<Edge *>::Iterator edge(removes); edge; edge++) {

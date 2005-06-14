@@ -58,7 +58,7 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 			//cout << "Added to " << *bb << "\n";
 			otawa::ilp::Constraint *cons =
 				system->newConstraint(otawa::ilp::Constraint::LE);
-			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
+			for(BasicBlock::InIterator edge(bb); edge; edge++) {
 				assert(edge->source());
 				otawa::ilp::Var *var =
 					edge->source()->use<otawa::ilp::Var *>(IPET::ID_Var);

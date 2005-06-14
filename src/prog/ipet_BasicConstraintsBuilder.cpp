@@ -68,7 +68,7 @@ void BasicConstraintsBuilder::make(ilp::System *system, BasicBlock *bb) {
 	cons = system->newConstraint(Constraint::EQ);
 	cons->addLeft(1, bbv);
 	used = false;
-	for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
+	for(BasicBlock::InIterator edge(bb); edge; edge++) {
 		if(edge->kind() != Edge::CALL) {
 			cons->addRight(1, edge->use<Var *>(IPET::ID_Var));
 			used = true;
@@ -81,7 +81,7 @@ void BasicConstraintsBuilder::make(ilp::System *system, BasicBlock *bb) {
 	cons = system->newConstraint(Constraint::EQ);
 	cons->addLeft(1, bbv);
 	used = false;
-	for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+	for(BasicBlock::OutIterator edge(bb); edge; edge++)
 		if(edge->kind() != Edge::CALL) {
 			cons->addRight(1, edge->use<Var *>(IPET::ID_Var));
 			used = true;

@@ -146,7 +146,7 @@ void Dominance::markLoopHeaders(CFG *cfg,
 elm::MutableCollection<BasicBlock *> *headers) {
 	assert(cfg);
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
-		for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+		for(BasicBlock::OutIterator edge(bb); edge; edge++)
 			if(edge->target()
 			&& edge->kind() != Edge::CALL
 			&& dominates(edge->target(), bb)) {

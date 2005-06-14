@@ -162,7 +162,7 @@ MutableCollection<BasicBlock *> *CFG::empty(void) {
 void CFG::scan(void) {
 	
 	// All entering edges becomes calls
-	for(Iterator<Edge *> edge(ent->inEdges()); edge; edge++)
+	for(BasicBlock::InIterator edge(ent); edge; edge++)
 		edge->toCall();
 	new Edge(&_entry, ent, EDGE_Virtual);
 	
@@ -174,7 +174,7 @@ void CFG::scan(void) {
 		BasicBlock *bb = _bbs[pos];
 		if(bb->isReturn())
 			ends.add(bb);
-		for(Iterator<Edge *> edge(bb->outEdges()); edge; edge++)
+		for(BasicBlock::OutIterator edge(bb); edge; edge++)
 			if(edge->kind() != EDGE_Call) {
 				BasicBlock *target = edge->target();
 				if(target != ent && target->get<CFG *>(ID, 0)) {
