@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <elm/utility.h>
+#include <elm/Iterator.h>
 #include <otawa/prop/Property.h>
 #include <otawa/prop/DeletableProperty.h>
 
@@ -25,6 +26,19 @@ public:
 	inline PropList(const PropList& props) { addProps(props); };
 	inline PropList(void): head(0) { };
 	inline ~PropList(void) { clearProps(); };
+
+	// GetIterator
+	template <class T> class GetIterator: public PreIterator<GetIterator<T>, T>
+	{
+		Identifier& _id;
+		Property *cur;
+		inline Property *look(Property *start);
+	public:
+		inline GetIterator(PropList *list, Identifier& id);
+		inline bool ended(void) const;
+		inline T item(void) const;
+		inline void next(void);
+	};
 
 	// Property access
 	Property *getProp(Identifier *id);
@@ -170,6 +184,39 @@ inline void PropList::addLocked(Identifier& id, const T value) {
 template <class T>
 inline void PropList::addDeletable(Identifier& id, const T value) {
 	addProp(new DeletableProperty<T>(id, value));
+}
+
+
+// GetIterator inlines
+template <class T>
+inline Property *PropList::GetIterator<T>::look(Property *start) {
+	for(; start; start->getNext())
+		if(start->getID() == &_id)
+			return start;
+	return 0;
+}
+
+template <class T>
+inline PropList::GetIterator<T>::GetIterator(PropList *list, Identifier& id)
+: _id(id) {
+	assert(list);
+	cur = look(list->head);
+}
+
+template <class T>
+inline bool PropList::GetIterator<T>::ended(void) const {
+	return cur == 0;
+}
+
+template <class T>
+inline T PropList::GetIterator<T>::item(void) const {
+	assert(cur);
+	return ((GenericProperty<T> *)cur)->getValue();
+}
+
+template <class T>
+inline void PropList::GetIterator<T>::next(void) {
+	cur = look(cur->getNext());
 }
 
 };	// otawa
