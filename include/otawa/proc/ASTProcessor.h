@@ -20,10 +20,10 @@ class ASTProcessor: public FunProcessor {
 public:
 	~ASTProcessor(void);
 	
-	virtual void processAST(AST *ast)=0 ;
+	virtual void processAST(FrameWork *fw, AST *ast)=0 ;
 	
 	// FUNProcessor overload
-	virtual void processFun(FunAST *fa);
+	virtual void processFun(FrameWork *fw, FunAST *fa);
 };
 
 } // otawa
