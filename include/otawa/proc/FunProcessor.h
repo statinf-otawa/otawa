@@ -16,7 +16,7 @@ namespace otawa {
 class FunProcessor: public Processor {
 public:
 	~FunProcessor(void);
-	virtual void processFun(FunAST *fa) = 0;
+	virtual void processFun(FrameWork *fw, FunAST *fa) = 0;
 
 	// Processor overload
 	virtual void processFrameWork(FrameWork *fw);
