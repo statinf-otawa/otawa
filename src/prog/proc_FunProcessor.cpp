@@ -42,7 +42,7 @@ void FunProcessor::processFrameWork(FrameWork *fw) {
 	
 	// For each AST
 	for(Iterator<FunAST *> ast(info->functions()); ast; ast++)
-		processFun(ast);	
+		processFun(fw, ast);	
 }
 
 } // otawa
