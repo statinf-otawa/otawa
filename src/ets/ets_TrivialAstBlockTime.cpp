@@ -24,10 +24,9 @@ namespace otawa { namespace ets {
 
 
 /**
- * @fn TrivialAstBlockTime::TrivialAstBlockTime(int depth, ASTInfo *info);
+ * @fn TrivialAstBlockTime::TrivialAstBlockTime(int depth);
  * Build the processor.
  * @param depth	Depth of the pipeline.
- * @param info All information about the current AST.
  */
 
 
@@ -40,42 +39,44 @@ namespace otawa { namespace ets {
 
 /**
  * Edit the WCET of the ast blocks to ETS::ID_WCET.
+ * @param fw	Container framework.
  * @param ast	AST to process.
  */
-void TrivialAstBlockTime::processAST(AST *ast) {
+void TrivialAstBlockTime::processAST(FrameWork *fw, AST *ast) {
 	switch(ast->kind()) {
 			case AST_Block:
 				ast->toBlock()->set<int>(ETS::ID_WCET,ast->toBlock()->countInstructions());
 				TABT_OUT(cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"problem! ") << " a pour wcet : " << ast->toBlock()->use<int>(ETS::ID_WCET)<< '\n');
 				break;
 			case AST_Seq:
-				processAST(ast->toSeq()->child1());
-				processAST(ast->toSeq()->child2());
+				processAST(fw, ast->toSeq()->child1());
+				processAST(fw, ast->toSeq()->child2());
 				break;
 			case AST_If:
-				processAST(ast->toIf()->condition());
-				processAST(ast->toIf()->thenPart());
-				processAST(ast->toIf()->elsePart());
+				processAST(fw, ast->toIf()->condition());
+				processAST(fw, ast->toIf()->thenPart());
+				processAST(fw, ast->toIf()->elsePart());
 				break;
 			case AST_While:
-			 	processAST(ast->toWhile()->condition());
-				processAST(ast->toWhile()->body());
+			 	processAST(fw, ast->toWhile()->condition());
+				processAST(fw, ast->toWhile()->body());
 				break;
 			case AST_DoWhile:
-				processAST(ast->toDoWhile()->body());
-				processAST(ast->toDoWhile()->condition());
+				processAST(fw, ast->toDoWhile()->body());
+				processAST(fw, ast->toDoWhile()->condition());
 				break;
 			case AST_For:
-				processAST(ast->toFor()->initialization());
-				processAST(ast->toFor()->condition());
-				processAST(ast->toFor()->incrementation());
-				processAST(ast->toFor()->body());
+				processAST(fw, ast->toFor()->initialization());
+				processAST(fw, ast->toFor()->condition());
+				processAST(fw, ast->toFor()->incrementation());
+				processAST(fw, ast->toFor()->body());
 				break;
 			case AST_Call:{
+				ASTInfo *ast_info = fw->getASTInfo();
 				Option< FunAST *> fun_res = ast_info->map().get(ast->toCall()->function()->name());
 				if(fun_res) {
 					AST *fun_ast = (*fun_res)->ast();
-					processAST(fun_ast);
+					processAST(fw, fun_ast);
 				}
 				break;
 			}

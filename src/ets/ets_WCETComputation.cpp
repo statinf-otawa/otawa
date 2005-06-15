@@ -20,34 +20,28 @@ namespace otawa { namespace ets {
 
 /**
  * @class WCETComputation
- * This processor is used for computing the WCET of the AST.
+ * This processor is used for computing the WCET of the AST by using many annotations.
  */
  
- 
 /**
- * @fn WCETComputation::WCETComputation(ASTInfo *info);
- * Build the processor.
- * @param info All information about the current AST.
- */	
-	
- 
-/**
- * Get the WCET of ast with the recursive function: WCETComputation::computation(AST *ast).
+ * Get the WCET of ast with the recursive function: WCETComputation::computation(FrameWork *fw, AST *ast).
+ * @param fw	Container framework.
  * @param ast	AST to process.
  */	
-void WCETComputation::processAST(AST *ast) {
-	int tmp=computation(ast);
+void WCETComputation::processAST(FrameWork *fw, AST *ast) {
+	int tmp=computation(fw, ast);
 }
 
 
 /**
- * @fn int WCETComputation::computation(AST *ast);
+ * @fn int WCETComputation::computation(FrameWork *fw, AST *ast);
  * Compute the WCET of ast with the Timing Schema method by using annotations coming from other modules.
+ * @param fw	Container framework.
  * @param ast	AST to process.
  * @return	WCET of the current AST.
  * @exception	io::IOException if one number of iteration of loop or one WCET of function cannot be found.
  */
-int WCETComputation::computation(AST *ast) {
+int WCETComputation::computation(FrameWork *fw, AST *ast) {
 		int ELSE, THEN, wcet, N;
 		switch(ast->kind()) {
 			case AST_Block:
@@ -55,17 +49,17 @@ int WCETComputation::computation(AST *ast) {
 				return ast->toBlock()->use<int>(ETS::ID_WCET);
 				break;
 			case AST_Seq:
-				wcet=computation(ast->toSeq()->child1())
-						+ computation(ast->toSeq()->child2());
+				wcet=computation(fw, ast->toSeq()->child1())
+						+ computation(fw, ast->toSeq()->child2());
 				ast->toSeq()->set<int>(ETS::ID_WCET,wcet);
 				WC_OUT(cout << "|| " << ast->toSeq()->first()->get<String>(File::ID_Label,"problem! ") << " a pour wcet : " << ast->toSeq()->use<int>(ETS::ID_WCET)<< '\n');
 				return wcet;
 				break;
 			case AST_If:
-				THEN=computation(ast->toIf()->condition())
-					+ computation(ast->toIf()->thenPart());
-				ELSE=computation(ast->toIf()->condition())
-					+ computation(ast->toIf()->elsePart());
+				THEN=computation(fw, ast->toIf()->condition())
+					+ computation(fw, ast->toIf()->thenPart());
+				ELSE=computation(fw, ast->toIf()->condition())
+					+ computation(fw, ast->toIf()->elsePart());
 				if (THEN>ELSE) 
 					ast->toIf()->set<int>(ETS::ID_WCET,THEN);
 				else 
@@ -79,9 +73,9 @@ int WCETComputation::computation(AST *ast) {
 					WC_TRACE;
 					throw io::IOException(String("Il manque le nb d'itérations du noeud : "+ ast->toWhile()->condition()->first()->get<String>(File::ID_Label, "problem! ")));
 				}
-				wcet=N*(computation(ast->toWhile()->condition())
-							+ computation(ast->toWhile()->body()))
-						+ computation(ast->toWhile()->condition());
+				wcet=N*(computation(fw, ast->toWhile()->condition())
+							+ computation(fw, ast->toWhile()->body()))
+						+ computation(fw, ast->toWhile()->condition());
 				ast->toWhile()->set<int>(ETS::ID_WCET,wcet);
 				WC_OUT(cout << "|| " << ast->toWhile()->condition()->first()->get<String>(File::ID_Label,"problem! ") << " a pour wcet : " << ast->toWhile()->use<int>(ETS::ID_WCET)<< '\n');		
 				return wcet;
@@ -92,8 +86,8 @@ int WCETComputation::computation(AST *ast) {
 						WC_TRACE;
 						throw io::IOException(String("Il manque le nb d'itération du noeud : "+ ast->toDoWhile()->condition()->first()->get<String>(File::ID_Label, "problem! ")));
 				}
-				wcet=N*(computation(ast->toDoWhile()->body())
-							+ computation(ast->toDoWhile()->condition()));
+				wcet=N*(computation(fw, ast->toDoWhile()->body())
+							+ computation(fw, ast->toDoWhile()->condition()));
 				ast->toDoWhile()->set<int>(ETS::ID_WCET,wcet);	
 				WC_OUT(cout << "|| " << ast->toDoWhile()->condition()->first()->get<String>(File::ID_Label,"problem! ") << " a pour wcet : " << ast->toDoWhile()->use<int>(ETS::ID_WCET)<< '\n');		
 				return wcet;
@@ -104,11 +98,11 @@ int WCETComputation::computation(AST *ast) {
 					WC_TRACE;
 					throw io::IOException(String("Il manque le nb d'itération du noeud : "+ ast->toFor()->condition()->first()->get<String>(File::ID_Label, "problem! ")));
 				}
-				wcet=computation(ast->toFor()->initialization())
-						+ N*(computation(ast->toFor()->condition())
-							+ computation(ast->toFor()->incrementation())
-							+ computation(ast->toFor()->body()))
-						+ computation(ast->toFor()->condition());
+				wcet=computation(fw, ast->toFor()->initialization())
+						+ N*(computation(fw, ast->toFor()->condition())
+							+ computation(fw, ast->toFor()->incrementation())
+							+ computation(fw, ast->toFor()->body()))
+						+ computation(fw, ast->toFor()->condition());
 				ast->toFor()->set<int>(ETS::ID_WCET,wcet);
 				WC_OUT(cout << "|| " << ast->toFor()->condition()->first()->get<String>(File::ID_Label,"problem! ") << " a pour wcet : " << ast->toFor()->use<int>(ETS::ID_WCET)<< '\n');	
 				return wcet;
@@ -116,10 +110,11 @@ int WCETComputation::computation(AST *ast) {
 			case AST_Call:{
 				N=ast->toCall()->use<int>(ETS::ID_WCET);
 				if (N == -1){
+					ASTInfo *ast_info = fw->getASTInfo();
 					Option< FunAST *> fun_res = ast_info->map().get(ast->toCall()->function()->name());
 					if (fun_res){
 						AST *fun_ast = (*fun_res)->ast();
-						wcet=computation(fun_ast);
+						wcet=computation(fw, fun_ast);
 						ast->toCall()->set<int>(ETS::ID_WCET,wcet);
 						WC_OUT(cout << "|| " << ast->toCall()->function()->name() << " a pour wcet : " << ast->toCall()->use<int>(ETS::ID_WCET)<< '\n');	
 						return wcet;
