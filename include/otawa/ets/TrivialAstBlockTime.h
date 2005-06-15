@@ -17,19 +17,17 @@ namespace otawa { namespace ets {
 class TrivialAstBlockTime: public ASTProcessor {
 public:	
 	int dep;
-	ASTInfo *ast_info;
 	
-	inline TrivialAstBlockTime(int depth, ASTInfo *info);
+	inline TrivialAstBlockTime(int depth);
 	inline int depth(void) const;
 
 	// ASTProcessor overload
-	void processAST(AST *ba);
+	void processAST(FrameWork *fw, AST *ba);
 };
 
 
 // Inlines
-inline TrivialAstBlockTime::TrivialAstBlockTime(int depth, ASTInfo *info) {
-	ast_info=info;
+inline TrivialAstBlockTime::TrivialAstBlockTime(int depth) {
 	assert(depth > 0);
 }
 

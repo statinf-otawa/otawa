@@ -16,21 +16,12 @@ namespace otawa { namespace ets {
 // WCETComputation class
 class WCETComputation: public ASTProcessor {
 	public:
-	ASTInfo *ast_info;
-	
-	inline WCETComputation(ASTInfo *info);
-	
 	// ASTProcessor overload
-	void processAST(AST *ast);
+	void processAST(FrameWork *fw, AST *ast);
 	
-	private:
-	int computation(AST *ast);
+	protected:
+	int computation(FrameWork *fw, AST *ast);
 };
-
-//inlines
-inline WCETComputation::WCETComputation(ASTInfo *info){
-	ast_info=info;
-} 
 
 } } // otawa::ets
 
