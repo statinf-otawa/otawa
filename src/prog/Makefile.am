@@ -46,8 +46,7 @@ libprog_a_SOURCES = \
 	ets_ETS.cpp \
 	ets_WCETComputation.cpp \
 	ets_TrivialAstBlockTime.cpp \
-	ets_FlowFactReader.cpp \
-	ets_FunReader.cpp \
+	ets_FlowFactLoader.cpp \
 	util_Dominance.cpp \
 	util_ContextTree.cpp \
 	cfg_VirtualBasicBlock.cpp \
