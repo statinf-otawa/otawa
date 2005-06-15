@@ -3,5 +3,4 @@ includeotawaets_HEADERS = \
 	ETS.h \
 	TrivialAstBlockTime.h \
 	WCETComputation.h \
-	FlowFactReader.h \
-	FunReader.h
+	FlowFactLoader.h 
