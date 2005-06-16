@@ -7,6 +7,7 @@
 
 #include <elm/io.h>
 #include <elm/options.h>
+#include <elm/genstruct/Vector.h>
 #include <otawa/otawa.h>
 #include <otawa/util/ContextTree.h>
 
@@ -14,7 +15,7 @@ using namespace elm;
 using namespace otawa;
 
 // Marker for processed sub-programs
-static Identifier ID_Processed("mkff.processed");
+//static Identifier ID_Processed("mkff.processed");
 
 // Command class
 class Command: public option::Manager {
@@ -22,8 +23,10 @@ class Command: public option::Manager {
 	otawa::Manager manager;
 	FrameWork *fw;
 	CFGInfo *info;
+	genstruct::Vector<ContextTree *> funs;
 	void perform(String name);
-	void scan(ContextTree *ctree, int indent);
+	void scanFun(ContextTree *ctree);
+	void scanLoop(ContextTree *ctree, int indent);
 public:
 	Command(void);
 	~Command(void);
@@ -39,42 +42,61 @@ static Command command;
 
 
 /**
+ * Process a function context tree node.
+ * @param ctree	Function context tree node.
+ */
+void Command::scanFun(ContextTree *ctree) {
+	assert(ctree);
+	
+	// Display header
+	bool display = false;
+	for(Iterator<ContextTree *> child(ctree->children()); child; child++)
+		if(child->kind() == ContextTree::LOOP) {
+			display = true;
+			break;
+		}
+	if(display)
+		cout << "// Function " << ctree->cfg()->label() << "\n";
+
+	// Scan the content
+	scanLoop(ctree, 0);		
+	
+	// Display footer
+	if(display)
+		cout << "\n";
+}
+
+
+/**
  * Scan a context tree for displaying its loop flow facts.
  * @param ctree		Current context tree.
  * @param indent	Current indentation.
  */
-void Command::scan(ContextTree *ctree, int indent) {
+void Command::scanLoop(ContextTree *ctree, int indent) {
 	assert(ctree);
-	bool display = false;
 	
-	// Process function call
-	if(ctree->kind() != ContextTree::LOOP) {
-		if(ctree->cfg()->get<bool>(ID_Processed, false))
-			return;
-		ctree->cfg()->add<bool>(ID_Processed, true);
-		for(Iterator<ContextTree *> child(ctree->children()); child; child++)
-			if(child->kind() == ContextTree::LOOP) {
-				display = true;
-				break;
-			}
-			if(display)
-				cout << "// Function " << ctree->cfg()->label() << "\n";
-		indent = 0;
-	}
-	
-	// Display loop children
-	for(Iterator<ContextTree *> child(ctree->children()); child; child++)
+	for(Iterator<ContextTree *> child(ctree->children()); child; child++) {
+		
+		// Process loop
 		if(child->kind() == ContextTree::LOOP) {
 			for(int i = 0; i < indent; i++)
 				cout << "  ";
 			cout << "loop 0x" << child->bb()->address() << " ?;\n"; 
+			scanLoop(child, indent + 1);
 		}
-	if(display)
-		cout << "\n";
-	
-	// Process function children
-	for(Iterator<ContextTree *> child(ctree->children()); child; child++)
-		scan(child, indent + 1);
+		
+		// Process function
+		else {
+			bool found = false;
+			for(int i = 0; i < funs.length(); i++)
+				if(funs[i]->cfg() == child->cfg()) {
+					found = true;
+					break;
+				}
+			if(!found)
+				funs.add(child);
+		}
+	}
 }
 
 
@@ -96,9 +118,11 @@ void Command::perform(String name) {
 	
 	// Build the context tree
 	ContextTree ctree(cfg);
+	funs.add(&ctree);
 	
 	// Display the context tree
-	scan(&ctree, 0);
+	for(int i = 0; i < funs.length(); i++)
+		scanFun(funs[i]);
 }
 
 
