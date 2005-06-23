@@ -26,6 +26,8 @@ public:
 	Var *newVar(const char *name) { elm::String str(name); return newVar(str); };
 	virtual Var *newVar(elm::String name) = 0;
 	virtual void dump(elm::io::OutStream& out = elm::io::stdout) = 0;
+	virtual int countVars(void) = 0;
+	virtual int countConstraints(void) = 0;
 };
 	
 } }	// otawa::ilp

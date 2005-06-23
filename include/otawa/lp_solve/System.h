@@ -54,6 +54,9 @@ public:
 	virtual double value(void);
 	virtual ilp::Var *newVar(elm::String name);
 	virtual void dump(elm::io::OutStream& out = elm::io::stdout);
+	virtual int countVars(void);
+	virtual int countConstraints(void);
+	
 };
 
 // System::Var Inlines
