@@ -78,6 +78,8 @@ int main(int argc, char **argv) {
 		// Display the result
 		ilp::System *sys = vcfg.use<ilp::System *>(IPET::ID_System);
 		sys->dump();
+		cout << sys->countVars() << " variables and "
+			 << sys->countConstraints() << " constraints.\n";
 		cout << "SUCCESS\nWCET = " << vcfg.use<int>(IPET::ID_WCET) << '\n';
 	}
 	catch(LoadException e) {
