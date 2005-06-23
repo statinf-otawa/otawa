@@ -81,6 +81,20 @@ namespace otawa { namespace ilp {
  * @param out	Used output.
  */
 
+
+/**
+ * @fn int System::countVars(void);
+ * Count the number of variables in the system.
+ * @return	Variable count.
+ */
+
+
+/**
+ * @fn int System::countConstraints(void);
+ * Count the number of constraints in the system.
+ * @return	Constraint count.
+ */
+
 } // ilp
 
 /*

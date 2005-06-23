@@ -257,5 +257,19 @@ void System::dump(elm::io::OutStream& _out) {
 	
 }
 
+
+/**
+ */
+int System::countVars(void) {
+	return cols;
+}
+
+
+/**
+ */
+int System::countConstraints(void) {
+	return rows;
+}
+
 } }	// otawa::lp_solve
 
