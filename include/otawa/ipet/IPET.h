@@ -10,13 +10,18 @@
 #include <otawa/prop/Identifier.h>
 
 namespace otawa {
-	
+
+// External classes
+class BasicBlock;
+
+// IPET class
 class IPET {
 public:
 	static Identifier ID_Time;
 	static Identifier ID_Var;
 	static Identifier ID_System;
 	static Identifier ID_WCET;
+	static Identifier ID_Explicit;
 };
 		
 } // otawa
