@@ -43,4 +43,12 @@ Identifier IPET::ID_System("ipet.system");
  */
 Identifier IPET::ID_WCET("ipet.wcet");
 
+
+/**
+ * Identifier of a boolean property requiring that explicit names must be used.
+ * The generation of explicit names for variables may be time-consuming and
+ * must only be activated for debugging purposes.
+ */
+Identifier IPET::ID_Explicit("ipet.explicit");
+
 } // otawa
