@@ -85,7 +85,7 @@ void FlowFactLoader::onError(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 	StringBuffer buffer;
-	buffer.print(fmt, args);
+	buffer.formatArg(fmt, args);
 	cout << buffer.toString();
 	va_end(args);
 	cout << '\n';

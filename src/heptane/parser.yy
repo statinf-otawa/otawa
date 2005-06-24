@@ -25,7 +25,7 @@ static genstruct::Vector<String> calls;
 String heptane_message;
 void yyerror(const char *msg) {
 	StringBuffer buffer;
-	buffer.print("%s.ast:%d: %s", &heptane_file->name(), heptane_line, msg);
+	buffer.format("%s.ast:%d: %s", &heptane_file->name(), heptane_line, msg);
 	heptane_message = buffer.toString();
 }
 

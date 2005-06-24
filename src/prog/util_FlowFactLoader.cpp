@@ -23,8 +23,8 @@ void FlowFactLoader::run(FrameWork *fw) {
 	
 	Iterator<File *> file(*fw->files());
 	elm::StringBuffer buffer;
-	buffer.put(file->name());
-	buffer.put(".ff");
+	buffer.print(file->name());
+	buffer.print(".ff");
 	String path = buffer.toString();
 	
 	// Open the file

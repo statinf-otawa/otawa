@@ -64,7 +64,7 @@ Exception::~Exception(void) {
  */
 void Exception::build(CString format, va_list args) {
 	StringBuffer buffer;
-	buffer.print(&format, args);
+	buffer.formatArg(&format, args);
 	msg = buffer.toString();
 }
 
