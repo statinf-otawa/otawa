@@ -1,3 +1,4 @@
 .deps
 Makefile
 Makefile.in
+libotawa_lp_solve.a

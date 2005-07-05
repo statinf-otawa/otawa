@@ -14,3 +14,4 @@ util_fft_lexer.cc
 util_fft_parser.cc
 util_fft_parser.h
 util_fft_parser.output
+libprog.a
