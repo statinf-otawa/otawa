@@ -5,17 +5,9 @@ dumpcfg_SOURCES= \
 	DisassemblerDisplayer.cpp \
 	DotDisplayer.cpp
 
-AM_CXXFLAGS=-g3
-
-INCLUDES= \
-	-I../../include \
-	@ELM_CFLAGS@
-
 dumpcfg_LDADD= \
-	-L../prog -lprog \
-	@ELM_LDADD@ \
 	-L../gliss -lgliss \
-	@GLISSPPC_LDADD@
+	-L../prog -lprog
 
 dumpcfg_DEPENDENCIES= \
 	..//gliss/libgliss.a \

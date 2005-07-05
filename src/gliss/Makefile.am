@@ -10,8 +10,5 @@ libgliss_a_SOURCES = \
 	ControlInst.cpp \
 	Symbol.cpp
 
-INCLUDES = \
-	-I../../include \
-	@ELM_CFLAGS@ \
-	@GLISSPPC_CFLAGS@
-AM_CXXFLAGS=-g3
+AM_CXXFLAGS = \
+	@GLISS_PPC_CXXFLAGS@

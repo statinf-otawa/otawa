@@ -6,7 +6,7 @@ test_ets_SOURCES=\
 INCLUDES=\
 	-I../../include \
 	@ELM_CFLAGS@
-CXXFLAGS=-g3
+AM_CXXFLAGS=-g3
 	
 test_ets_LDADD= \
 	-L../../src/heptane -lothept \

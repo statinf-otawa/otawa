@@ -4,9 +4,4 @@ libotawa_lp_solve_a_SOURCES = \
 	lp_solve_System.cpp \
 	lp_solve_Constraint.cpp
 
-INCLUDES=\
-	-I../../include \
-	@ELM_CFLAGS@ \
-	@LP_SOLVE_CFLAGS@
-
-AM_CXXFLAGS=-g3
+AM_CXXFLAGS=@LP_SOLVE_CXXFLAGS@

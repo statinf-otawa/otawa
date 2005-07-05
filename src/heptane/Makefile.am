@@ -13,9 +13,6 @@ noinst_HEADERS = \
 	parser.h
 
 INCLUDES= \
-	-I../../include \
-	@ELM_CFLAGS@ \
 	-I../gliss \
-	@GLISSPPC_CFLAGS@
-AM_CXXFLAGS=-g3
+	@GLISS_PPC_CXXFLAGS@
 AM_YFLAG=-dv

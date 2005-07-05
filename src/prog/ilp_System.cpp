@@ -7,7 +7,8 @@
 
 #include <otawa/otawa.h>
 #include <otawa/ilp/System.h>
-#ifdef LP_SOLVE
+#include <config.h>
+#ifdef HAVE_LP_SOLVE
 #	include <otawa/lp_solve/System.h>
 #endif
 
@@ -109,7 +110,7 @@ namespace otawa { namespace ilp {
  * @return		ILP system ready to use, NULL fi there is no support for ILP.
  */
 ilp::System *FrameWork::newILPSystem(bool max) {
-#	ifdef LP_SOLVE
+#	ifdef HAVE_LP_SOLVE
 		return new lp_solve::System(max);
 #	else
 		return 0;

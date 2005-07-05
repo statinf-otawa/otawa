@@ -23,12 +23,9 @@ noinst_HEADERS = \
 	SegmentCursor.h
 
 AM_YFLAGS=-d
-AM_CXXFLAGS=-g3
-INCLUDES=-I../../include @ELM_CFLAGS@
 oshell_LDADD= \
 	-L../heptane -lothept \
-	@GLISSPPC_LDADD@ \
-	-L../prog -lprog \
-	@ELM_LDADD@
+	-L../gliss -lgliss \
+	-L../prog -lprog
 
 oshell_DEPENDENCIES=../gliss/libgliss.a ../prog/libprog.a ../heptane/libothept.a

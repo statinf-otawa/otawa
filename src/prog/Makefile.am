@@ -57,14 +57,6 @@ libprog_a_SOURCES = \
 	ipet_FlowFactLoader.cpp \
 	util_CFGNormalizer.cpp
 	
-INCLUDES=\
-	-I../../include \
-	@ELM_CFLAGS@
-	
-AM_CXXFLAGS=\
-	-g3 \
-	@LP_SOLVE_DEF@
-
 AM_YFLAGS=-dv
 
 #	ipet_parser.yy 
