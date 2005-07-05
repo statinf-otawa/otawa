@@ -33,7 +33,7 @@ typedef unsigned char byte_t;
 typedef byte_t *address_t ;
 typedef unsigned long size_t;
 typedef signed long offset_t;
-
+typedef unsigned long mask_t;
 
 }
 
