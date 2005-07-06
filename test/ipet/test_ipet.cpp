@@ -14,6 +14,7 @@
 #include <otawa/ipet/BasicConstraintsBuilder.h>
 #include <otawa/ipet/WCETComputation.h>
 #include <otawa/ipet/FlowFactLoader.h>
+#include <otawa/ipet/BasicObjectFunctionBuilder.h>
 #include <otawa/ilp.h>
 
 using namespace otawa;
@@ -64,6 +65,11 @@ int main(int argc, char **argv) {
 		cout << "Building the ILP system\n";
 		BasicConstraintsBuilder builder;
 		builder.processCFG(fw, &vcfg);
+		
+		// Build the object function to maximize
+		cout << "Building the ILP object function\n";
+		BasicObjectFunctionBuilder fun_builder;
+		fun_builder.processCFG(fw, &vcfg);
 		
 		// Load flow facts
 		cout << "Loading flow facts\n";

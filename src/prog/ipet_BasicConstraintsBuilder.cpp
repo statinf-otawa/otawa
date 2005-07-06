@@ -35,16 +35,6 @@ namespace otawa {
  *  <dt>ok</dt><dd>Count of traversal of output edge k in basic block i</dd>
  * </dl>
  * 
- * <p>Then, it set the object function as maximizing the following expression:</p>
- * <p>
- * 		t1 * n1 + t2 * n2 + ... + tm * nm
- * </p>
- * <p> where </p>
- * <dl>
- * 	<dt>tk</dt><dd>Time of execution of basic block k.</dd>
- *  <dt>nk</dt><dd>Count of execution if basic block k.</dd>
- * </dl>
- * 
  * <p>And, finally, put the constraint on the entry basic block of the CFG:</p>
  * <p>
  * 		n1 = 1
@@ -112,13 +102,6 @@ void BasicConstraintsBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	// Add constraint for each basic block
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 			make(system, bb);	
-	
-	// Set object function
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-		if(!bb->isEntry() && !bb->isExit())
-			system->addObjectFunction(
-				bb->use<int>(IPET::ID_Time),
-				bb->use<Var *>(IPET::ID_Var));
 };
 
 } //otawa

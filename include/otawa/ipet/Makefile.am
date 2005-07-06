@@ -5,7 +5,8 @@ includeotawaipet_HEADERS = \
 	VarAssignment.h \
 	BasicConstraintsBuilder.h \
 	WCETComputation.h \
-	ConstraintLoader.h
+	ConstraintLoader.h \
+	BasicObjectFunctionBuilder.h
 
 
 

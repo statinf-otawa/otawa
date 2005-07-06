@@ -56,7 +56,8 @@ libprog_a_SOURCES = \
 	util_fft_lexer.ll \
 	ipet_FlowFactLoader.cpp \
 	util_CFGNormalizer.cpp \
-	hardware_Cache.cpp
+	hardware_Cache.cpp \
+	ipet_BasicObjectFunctionBuilder.cpp
 	
 AM_YFLAGS=-dv
 
