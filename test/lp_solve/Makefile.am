@@ -1,21 +1,13 @@
-noinst_PROGRAMS=test
+noinst_PROGRAMS=test_lp_solve
 
-test_SOURCES=\
+test_lp_solve_SOURCES=\
 	test.cpp
 
-INCLUDES=\
-	-I../../include \
-	@ELM_CFLAGS@
-CXXFLAGS=-g3
-	
-test_LDADD= \
+test_lp_solve_LDADD= \
 	-L../../src/prog -lprog \
-	@ELM_LDADD@ \
 	-L../../src/lp_solve -lotawa_lp_solve \
-	@LP_SOLVE_LDADD@
+	@LP_SOLVE_LIBS@
 
-test_DEPENDENCIES= \
+test_lp_solve_DEPENDENCIES= \
 	../../src/prog/libprog.a \
 	../../src/lp_solve/libotawa_lp_solve.a
-
-	
