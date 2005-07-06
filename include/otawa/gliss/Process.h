@@ -15,6 +15,7 @@ namespace otawa { namespace gliss {
 // Process class
 class Process: public otawa::Process {
 	elm::datastruct::Vector<otawa::File *> _files;
+	const CacheConfiguration *_caches;
 protected:
 	Manager *man;
 	int argc;
@@ -33,6 +34,7 @@ public:
 	virtual ::otawa::Manager *manager(void);
 	virtual otawa::Inst *start(void);
 	virtual otawa::Inst *findInstAt(address_t addr);
+	virtual const CacheConfiguration& caches(void);
 };
 
 } } // otawa::gliss

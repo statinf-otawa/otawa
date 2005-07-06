@@ -9,6 +9,7 @@
 
 #include <elm/string.h>
 #include <elm/Collection.h>
+#include <elm/genstruct/Vector.h>
 #include <otawa/instruction.h>
 
 namespace otawa {
@@ -17,27 +18,12 @@ namespace otawa {
 class File;
 class Platform;
 class Manager;
-
-// Cache class
-class Cache {
-public:
-	typedef enum policy_t {
-		NONE = 0,
-		LRU = 1,
-		RANDOM = 2
-	} policy_t;
-
-	virtual int level(void) const = 0;
-	virtual int size(void) const = 0;
-	virtual int bits(void) const = 0;
-	virtual int blockSize(void) const = 0;
-	virtual int blockBits(void) const = 0;
-	virtual int lineCount(void) const = 0;
-	virtual int lineBits(void) const = 0;
-};
+class CacheConfiguration;
 
 // Process class
 class Process: public ProgObject {
+protected:
+	static const CacheConfiguration NO_CACHE;
 public:
 	virtual ~Process(void) { };
 	virtual elm::Collection<File *> *files(void) = 0;
@@ -49,6 +35,7 @@ public:
 	virtual Inst *findInstAt(address_t addr) = 0;
 	virtual address_t findLabel(String& label);
 	virtual Inst *findInstAt(String& label);
+	virtual const CacheConfiguration& caches(void) = 0;
 };
 
 } // otawa
