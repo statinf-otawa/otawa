@@ -10,7 +10,8 @@ SUBDIRS= \
 	ipet \
 	lp_solve \
 	util \
-	ets
+	ets \
+	hardware
 
 # Headers
 includeotawadir=$(includedir)/otawa
