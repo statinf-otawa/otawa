@@ -38,6 +38,7 @@ Process::Process(Manager *_man, PropList& props): man(_man) {
 	argc = props.get<int>(Loader::ID_Argc, 1);
 	argv = props.get<char **>(Loader::ID_Argv, default_argv);
 	envp = props.get<char **>(Loader::ID_Envp, default_envp);
+	_caches = props.get<const CacheConfiguration *>(Loader::ID_Caches, &NO_CACHE);
 }
 
 /**
@@ -135,6 +136,13 @@ otawa::Inst *Process::findInstAt(address_t addr) {
 		File *file = (File *)_files[0];
 		return file->findByAddress(addr);
 	}
+}
+
+
+/**
+ */
+const CacheConfiguration& Process::caches(void) {
+	return *_caches;
 }
 
 } } // otawa::gliss
