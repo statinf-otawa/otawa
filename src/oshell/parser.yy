@@ -38,6 +38,7 @@ void yyerror(const char *msg) {
 	display_cursor();
 }
 
+#define size_t unsigned long
 
 %}
 
@@ -170,20 +171,17 @@ dump_header:
 
 %%
 
-namespace otawa { namespace gliss {
-	extern otawa::Loader& loader;
-} } // otawa::gliss;
 
-#define LOADER	Loader::LOADER_Heptane_PowerPC
-//#define LOADER	Loader::LOADER_Gliss_PowerPC
-
+/**
+ * Entry function for oshell program.
+ */
 int main(void) {
 
 	// Build the framework
 	manager = new Manager();
 	PropList args;
 	FrameWork *fw = new FrameWork(
-		LOADER.create(manager, args));
+		Loader::LOADER_Gliss_PowerPC.create(manager, args));
 	
 	// Start the interpreter
 	cursor = Cursor::get(fw);

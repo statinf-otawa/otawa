@@ -137,18 +137,6 @@ if test "$with_gliss_ppc" != no; then
 fi
 
 
-dnl ==== heptane ====
-AC_ARG_ENABLE(heptane, [  --enable-heptane	Use the Heptane plug-in.],,with_heptane=yes)
-if test "$with_heptane" = yes; then
-	PLUGINS="$PLUGINS heptane"
-	HEPTANE_CXXFLAGS="$GLISS_PPC_CXXFLAGS"
-	HEPTANE_LIBS="$GLISS_PPC_LIBS"
-	AC_DEFINE(HAVE_HEPTANE,,[Heptane plug-in available])
-	AC_SUBST(HEPTANE_CXXFLAGS)
-	AC_SUBST(HEPTANE_LIBS)
-fi
-
-
 dnl ==== lp_solve ====
 AC_ARG_WITH(lp_solve, [  --with-lp_solve[=PATH]	Use lp_solve from the given directory.],, with_lp_solve=yes)
 if test "$with_lp_solve" != no; then
@@ -202,7 +190,6 @@ AC_OUTPUT([
 	src/prog/Makefile
 	src/gliss/Makefile
 	src/oshell/Makefile
-	src/heptane/Makefile
 	src/lp_solve/Makefile
 	src/dumpcfg/Makefile
 	src/mkff/Makefile

@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <otawa/ast.h>
+#include <otawa/ast/ASTLoader.h>
 #include "FrameWorkCursor.h"
 #include "CFGCursor.h"
 #include "FileCursor.h"
@@ -187,6 +188,11 @@ void FrameWorkCursor::perform(Output& out, int argc, CString argv[]) {
 			throw new PerformException("Too many arguments.");
 		cfg(out);			
 	}
+	else if(argv[0] == "ast") {
+		if(argc > 2)
+			throw new PerformException("Too many arguments.");
+		ast(argc == 2 ? argv[1] : "");
+	}
 	else
 		Cursor::perform(out, argc, argv);
 }
@@ -195,6 +201,21 @@ void FrameWorkCursor::perform(Output& out, int argc, CString argv[]) {
 void FrameWorkCursor::help(Output& out) {
 	out << "load <path>: load the given executable path in the current framework.\n";
 	out << "cfg: build the CFG of the program.\n";
+	out << "ast [path]: load the AST [from the given file].\n";
+}
+
+
+/**
+ * Load the AST information from the default file or the given one.
+ * @param path	Path to load information from (may be null for default file).
+ */
+void FrameWorkCursor::ast(CString path) {
+	PropList props;
+	if(path)
+		props.add<String>(ASTLoader::ID_ASTFile, path);
+	ASTLoader loader;
+	loader.configure(props);
+	loader.processFrameWork(fw);
 }
 
 } // otawa

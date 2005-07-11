@@ -114,8 +114,7 @@ CFG *FrameWork::getStartCFG(void) {
  * Get the AST of the project. 
  */
 ASTInfo *FrameWork::getASTInfo(void) {
-	ASTInfo *info = get<ASTInfo *>(ASTInfo::ID, 0);
-	return use<ASTInfo *>(ASTInfo::ID);
+	return ASTInfo::getInfo(this);
 }
 
 

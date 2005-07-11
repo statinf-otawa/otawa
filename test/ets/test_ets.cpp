@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2005, IRIT UPS.
  *
  *	test/ets/test_ets.cpp -- test for ETS feature.
  */
@@ -8,6 +8,7 @@
 #include <elm/debug.h>
 #include <otawa/ets.h>
 #include <otawa/ast.h>
+#include <otawa/ast/ASTLoader.h>
 
 //#define TEST_OUT(txt) txt
 #define TEST_OUT(txt)
@@ -23,11 +24,13 @@ int main(int argc, char **argv) {
 	Manager manager;
 	PropList props;
 	FrameWork *fw;
-	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Heptane_PowerPC);
+	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
 	try { 
 		fw=manager.load(argv[1], props);
 		
 		// Functions
+		ASTLoader loader;
+		loader.processFrameWork(fw);
 		ASTInfo *info = fw->getASTInfo();
 		
 		// Find main AST

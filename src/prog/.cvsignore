@@ -15,3 +15,7 @@ util_fft_parser.cc
 util_fft_parser.h
 util_fft_parser.output
 libprog.a
+ast_lexer.cc
+ast_parser.cc
+ast_parser.h
+ast_parser.output

@@ -24,8 +24,9 @@ noinst_HEADERS = \
 
 AM_YFLAGS=-d
 oshell_LDADD= \
-	-L../heptane -lothept \
 	-L../gliss -lgliss \
 	-L../prog -lprog
 
-oshell_DEPENDENCIES=../gliss/libgliss.a ../prog/libprog.a ../heptane/libothept.a
+oshell_DEPENDENCIES= \
+	../gliss/libgliss.a \
+	../prog/libprog.a

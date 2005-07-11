@@ -17,7 +17,8 @@ class FrameWorkCursor: public Cursor {
 public:
 	inline FrameWorkCursor(FrameWork *_fw): fw(_fw) { };
 	void load(Output& out, CString path);
-	void cfg(Output& out);	
+	void cfg(Output& out);
+	void ast(CString path);
 
 	// Cursor overload
 	virtual void path(Output& out);

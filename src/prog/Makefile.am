@@ -57,9 +57,13 @@ libprog_a_SOURCES = \
 	ipet_FlowFactLoader.cpp \
 	util_CFGNormalizer.cpp \
 	hardware_Cache.cpp \
-	ipet_BasicObjectFunctionBuilder.cpp
+	ipet_BasicObjectFunctionBuilder.cpp \
+	ast_parser.yy \
+	ast_lexer.ll \
+	ast_ASTLoader.cpp
 	
 AM_YFLAGS=-dv
+
 
 #	ipet_parser.yy 
 #	ipet_lexer.ll 
