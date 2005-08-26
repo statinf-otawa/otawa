@@ -11,5 +11,9 @@
 #include <otawa/ets/WCETComputation.h>
 #include <otawa/ets/TrivialAstBlockTime.h>
 #include <otawa/ets/FlowFactLoader.h>
+#include <otawa/ets/ACSComputation.h>
+#include <otawa/ets/CacheHitComputation.h>
+#include <otawa/ets/CacheMissComputation.h>
+#include <otawa/ets/CacheFirstMissComputation.h>
 
 #endif	// OTAWA_ETS_H
