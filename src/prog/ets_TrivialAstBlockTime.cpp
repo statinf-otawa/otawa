@@ -9,9 +9,8 @@
 #include <otawa/ets/ETS.h>
 #include <otawa/ast.h>
 
-//#define TABT_OUT(txt) txt
-#define TABT_OUT(txt)
-
+//#define TABT_OUT(txt) txt	//with debuging
+#define TABT_OUT(txt)		//without debuging
 
 namespace otawa { namespace ets {
 
@@ -22,20 +21,17 @@ namespace otawa { namespace ets {
  * pipeline depth.
  */
 
-
 /**
  * @fn TrivialAstBlockTime::TrivialAstBlockTime(int depth);
  * Build the processor.
  * @param depth	Depth of the pipeline.
  */
 
-
 /**
  * @fn int TrivialAstBlockTime::depth(void) const;
  * Get the depth of the pipeline.
  * @return	Pipeline depth.
  */
-
 
 /**
  * Edit the WCET of the ast blocks to ETS::ID_WCET.
@@ -44,9 +40,17 @@ namespace otawa { namespace ets {
  */
 void TrivialAstBlockTime::processAST(FrameWork *fw, AST *ast) {
 	switch(ast->kind()) {
+			case AST_Call:{
+				ASTInfo *ast_info = fw->getASTInfo();
+				Option< FunAST *> fun_res = ast_info->map().get(ast->toCall()->function()->name());
+				if(fun_res) {
+					AST *fun_ast = (*fun_res)->ast();
+					processAST(fw, fun_ast);
+				}
+			}
 			case AST_Block:
 				ast->toBlock()->set<int>(ETS::ID_WCET,ast->toBlock()->countInstructions());
-				TABT_OUT(cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"problem! ") << " a pour wcet : " << ast->toBlock()->use<int>(ETS::ID_WCET)<< '\n');
+				TABT_OUT(cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toBlock()->use<int>(ETS::ID_WCET)<< '\n');
 				break;
 			case AST_Seq:
 				processAST(fw, ast->toSeq()->child1());
@@ -71,19 +75,9 @@ void TrivialAstBlockTime::processAST(FrameWork *fw, AST *ast) {
 				processAST(fw, ast->toFor()->incrementation());
 				processAST(fw, ast->toFor()->body());
 				break;
-			case AST_Call:{
-				ASTInfo *ast_info = fw->getASTInfo();
-				Option< FunAST *> fun_res = ast_info->map().get(ast->toCall()->function()->name());
-				if(fun_res) {
-					AST *fun_ast = (*fun_res)->ast();
-					processAST(fw, fun_ast);
-				}
-				break;
-			}
 			default:
 				;
 	}
 }
-
 
 } } // otawa::ets

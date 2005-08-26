@@ -9,9 +9,8 @@
 #include <otawa/ast.h>
 #include <otawa/ets/FlowFactLoader.h>
 
-//#define FFL_OUT(txt) txt
-#define FFL_OUT(txt)
-
+//#define FFL_OUT(txt) txt	//with debuging
+#define FFL_OUT(txt)		//without debuging
 
 namespace otawa { namespace ets {
 	
@@ -23,7 +22,6 @@ namespace otawa { namespace ets {
 /**
  * Use fft_parser for editing flow facts:
  * 	<br>-to ETS::ID_LOOP_COUNT for loop.
- * 	<br>-to ETS::ID_WCET for remote functions.
  * <br>If the table contains the key put its value,
  * <br>else put -1.
  * @param fw	Container framework.
@@ -43,21 +41,21 @@ namespace otawa { namespace ets {
 				break;
 			case AST_While:
 				val = loop_table.get(ast->toWhile()->condition()->first()->address(),-1);
-				FFL_OUT(cout << "|| " << ast->toWhile()->condition()->first()->get<String>(File::ID_Label, "problem! ")<< " a pour nb d'iter : "<< val << '\n');
+				FFL_OUT(cout << "|| " << ast->toWhile()->condition()->first()->get<String>(File::ID_Label, "unknown ")<< " a pour nb d'iter : "<< val << '\n');
 			 	ast->toWhile()->set<int>(ETS::ID_LOOP_COUNT,val);
 			 	processAST(fw, ast->toWhile()->condition());
 			 	processAST(fw, ast->toWhile()->body());
 			 	break;
 			case AST_DoWhile:
 				val = loop_table.get(ast->toDoWhile()->condition()->first()->address(),-1);
-				FFL_OUT(cout << "|| "<< ast->toDoWhile()->condition()->first()->get<String>(File::ID_Label, "problem! ") << " a pour nb d'iter : "<< val << '\n');
+				FFL_OUT(cout << "|| "<< ast->toDoWhile()->condition()->first()->get<String>(File::ID_Label, "unknown ") << " a pour nb d'iter : "<< val << '\n');
 				ast->toDoWhile()->set<int>(ETS::ID_LOOP_COUNT,val);
 				processAST(fw, ast->toDoWhile()->condition());
 				processAST(fw, ast->toDoWhile()->body());
 				break;
 			case AST_For:
 				val = loop_table.get(ast->toFor()->condition()->first()->address(),-1);
-				FFL_OUT(cout << "|| " << ast->toFor()->condition()->first()->address()<<" ~ "<<ast->toFor()->condition()->first()->get<String>(File::ID_Label, "problem! ") << " a pour nb d'iter : "<< val << '\n');
+				FFL_OUT(cout << "|| " << ast->toFor()->condition()->first()->address()<<" ~ "<<ast->toFor()->condition()->first()->get<String>(File::ID_Label, "unknown ") << " a pour nb d'iter : "<< val << '\n');
 				ast->toFor()->set<int>(ETS::ID_LOOP_COUNT,val);
 				processAST(fw, ast->toFor()->initialization());
 				processAST(fw, ast->toFor()->condition());
