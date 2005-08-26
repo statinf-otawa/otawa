@@ -25,7 +25,6 @@ public:
 	void processAST(FrameWork *fw, AST *ba);
 };
 
-
 // Inlines
 inline TrivialAstBlockTime::TrivialAstBlockTime(int depth) {
 	assert(depth > 0);
