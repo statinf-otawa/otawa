@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2003, IRIT UPS.
  *
  *	test/ets/test_ets.cpp -- test for ETS feature.
  */
@@ -8,10 +8,16 @@
 #include <elm/debug.h>
 #include <otawa/ets.h>
 #include <otawa/ast.h>
+#include <otawa/hardware/Cache.h>
 #include <otawa/ast/ASTLoader.h>
 
-//#define TEST_OUT(txt) txt
-#define TEST_OUT(txt)
+//#define TEST_TRACE TRACE	//with 
+//#define TEST_OUT(txt) txt	//	degugging.
+#define TEST_OUT(txt)		//without 
+#define TEST_TRACE			//	debuging.
+
+#define WITHOUT_CACHE(txt) txt 	//with cache managing. 
+//#define WITHOUT_CACHE(txt)		//without cache managing.
 
 using namespace otawa;
 using namespace elm::io;
@@ -21,12 +27,27 @@ void outputAST(AST *ast, int ind);
 void outputSeq(AST *ast, int ind);
 
 int main(int argc, char **argv) {
-	Manager manager;
+	Cache::info_t info;
+	info.level = 0;       // 1er niveau de cache
+ 	info.block_bits = 3;  // 2^3 octets par bloc
+ 	info.line_bits = 2;   // 2^3 lignes
+ 	info.way_bits = 0;    // 2^0 élément par ensemble 
+ 	info.replace = Cache::NONE;
+ 	info.write = Cache::WRITE_THROUGH;
+ 	info.access_time = 0;
+ 	info.miss_penalty = 10;
+ 	info.allocate = false;
+ 	Cache *level1 = new Cache(info);
+ 	CacheConfiguration *caches = new CacheConfiguration(level1, 0);
+ 
+ 	Manager manager;
 	PropList props;
 	FrameWork *fw;
+	props.set<const CacheConfiguration *>(Loader::ID_Caches, caches);
 	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
+	
 	try { 
-		fw=manager.load(argv[1], props);
+		fw = manager.load(argv[1], props);
 		
 		// Functions
 		ASTLoader loader;
@@ -50,18 +71,42 @@ int main(int argc, char **argv) {
 		TEST_OUT(cout << ">>OK for Timing the AB\n");
 		
 		// assignment for each loop
-		TEST_OUT(cout << ">>Setting assignment for loop\n");
+		TEST_OUT(cout << ">>Setting flow fact\n");
 		ets::FlowFactLoader ffl(fw);
 		ffl.processAST(fw, ast);
-		TEST_OUT(cout << ">>OK for setting assignment for loop\n");
+		TEST_OUT(cout << ">>OK for setting flow fact\n");
 		
 		// compute wcet
-		TEST_OUT(cout << ">>Computing the AST\n");
+		TEST_OUT(cout << ">>Computing the WCET\n");
 		WCETComputation wcomp;
 		wcomp.processAST(fw, ast);
-		TEST_OUT(cout << ">>OK for Computing the AST\n");
+		TEST_OUT(cout << ">>OK for Computing the WCET\n");
 		
-		//Display the AST and each WCET
+		// simulate cache
+		WITHOUT_CACHE(TEST_OUT(cout << ">>Simulating the cache\n"));
+		WITHOUT_CACHE(ACSComputation ac(fw));
+		WITHOUT_CACHE(ac.processAST(fw, ast));
+		WITHOUT_CACHE(TEST_OUT(cout << ">>OK for Simulating the cache\n"));
+		
+		// compute first miss
+		WITHOUT_CACHE(TEST_OUT(cout << ">>Computing FIRST MISS\n"));
+		WITHOUT_CACHE(CacheFirstMissComputation cfmc);
+		WITHOUT_CACHE(cfmc.processAST(fw, ast));
+		WITHOUT_CACHE(TEST_OUT(cout << ">>OK for Computing FIRST MISS\n"));
+		
+		// compute hit
+		WITHOUT_CACHE(TEST_OUT(cout << ">>Computing HIT\n"));
+		WITHOUT_CACHE(CacheHitComputation chc);
+		WITHOUT_CACHE(chc.processAST(fw, ast));
+		WITHOUT_CACHE(TEST_OUT(cout << ">>OK for Computing HIT\n"));
+		
+		// compute miss
+		WITHOUT_CACHE(TEST_OUT(cout << ">>Computing MISS\n"));
+		WITHOUT_CACHE(CacheMissComputation cmc);
+		WITHOUT_CACHE(cmc.processAST(fw, ast));
+		WITHOUT_CACHE(TEST_OUT(cout << ">>OK for Computing MISS\n"));
+		
+		//Display the AST (WCET, HIT, MISS)
 		for(Iterator<FunAST *> fun(info->functions()); fun; fun++){
 			cout << "-> " << fun->name()<<'\n';
 			Option< FunAST *> fun_res = info->map().get(fun->name());
@@ -74,7 +119,9 @@ int main(int argc, char **argv) {
 			}
 			cout << '\n';
 		}
-		cout << ">>WCET = " << ast->use<int>(ETS::ID_WCET) << '\n';
+		cout << ">>WCET = " << ast->get<int>(ETS::ID_WCET, -6) << '\n';
+		WITHOUT_CACHE(cout << ">>HITS = " << ast->get<int>(ETS::ID_HITS, -6) << '\n');
+		WITHOUT_CACHE(cout << ">>MISSES = " << ast->get<int>(ETS::ID_MISSES, -6) << '\n');
 	}
 	catch(LoadException e) {
 		cerr << "ERROR: " << e.message() << '\n';
@@ -107,36 +154,102 @@ void outputAST(AST *ast, int ind) {
 		cout << "NOP\n";
 		break;
 	case AST_Block:
-		cout << "BLOCK : " << ast->toBlock()->use<int>(ETS::ID_WCET)<< '\n';
+		cout 	<< "BLOCK : ("
+				<< ast->toBlock()->first()->get<String>(File::ID_Label,"unknown")
+				<<") [" 
+				<< ast->toBlock()->use<int>(ETS::ID_WCET)
+	WITHOUT_CACHE(	<< ", "
+				<< ast->toBlock()->use<int>(ETS::ID_HITS)
+				<< ", "
+				<< ast->toBlock()->use<int>(ETS::ID_MISSES)
+				<< ", "
+				<< ast->toBlock()->use<int>(ETS::ID_FIRST_MISSES))
+				<<"]\n";
 		break;
 	case AST_Call:
-		cout << "CALL : " << ast->toCall()->use<int>(ETS::ID_WCET);
+		cout 	<< "CALL : [" 
+				<< ast->toCall()->use<int>(ETS::ID_WCET)
+	WITHOUT_CACHE(	<< ", "
+				<< ast->toCall()->use<int>(ETS::ID_HITS)
+				<< ", "
+				<< ast->toCall()->use<int>(ETS::ID_MISSES)
+				<< ", "
+				<< ast->toCall()->use<int>(ETS::ID_FIRST_MISSES));
 		if(ast->toCall()->function()->name())
-			cout << " (" << ast->toCall()->function()->name() << ')';
+			cout << "] (" << ast->toCall()->function()->name() << ')';
 		cout << '\n';
 		break;
 	case AST_Seq:
-		cout << "SEQUENCE : " << ast->toSeq()->use<int>(ETS::ID_WCET)<<'\n';
+		cout 	<< "SEQUENCE : [" 
+				<< ast->toSeq()->use<int>(ETS::ID_WCET)
+	WITHOUT_CACHE(	<< ", "
+				<< ast->toSeq()->use<int>(ETS::ID_HITS)
+				<< ", "
+				<< ast->toSeq()->use<int>(ETS::ID_MISSES)
+				<< ", "
+				<< ast->toSeq()->use<int>(ETS::ID_FIRST_MISSES))
+				<<"]\n";
 		outputSeq(ast, ind + 1);
 		break;
 	case AST_If:
-		cout << "IF : "<<ast->toIf()->use<int>(ETS::ID_WCET)<<'\n';
+		cout 	<< "IF : ["
+				<<ast->toIf()->use<int>(ETS::ID_WCET)
+	WITHOUT_CACHE(	<< ", "
+				<< ast->toIf()->use<int>(ETS::ID_HITS)
+				<< ", "
+				<< ast->toIf()->use<int>(ETS::ID_MISSES)
+				<< ", "
+				<< ast->toIf()->use<int>(ETS::ID_FIRST_MISSES))
+				<<"]\n";
 		outputAST(ast->toIf()->condition(), ind);
 		outputAST(ast->toIf()->thenPart(), ind);
 		outputAST(ast->toIf()->elsePart(), ind);
 		break;
 	case AST_While:
-		cout << "WHILE "<<"("<< ast->toWhile()->use<int>(ETS::ID_LOOP_COUNT)<<" iterations) : "<< ast->toWhile()->use<int>(ETS::ID_WCET)<<'\n';
+		cout 	<< "WHILE "
+				<<"("
+				<< ast->toWhile()->use<int>(ETS::ID_LOOP_COUNT)
+				<<" iterations) : ["
+				<< ast->toWhile()->use<int>(ETS::ID_WCET)
+	WITHOUT_CACHE(	<< ", "
+				<< ast->toWhile()->use<int>(ETS::ID_HITS)
+				<< ", "
+				<< ast->toWhile()->use<int>(ETS::ID_MISSES)
+				<< ", "
+				<< ast->toWhile()->use<int>(ETS::ID_FIRST_MISSES))
+				<<"]\n";
 		outputAST(ast->toWhile()->condition(), ind);
 		outputAST(ast->toWhile()->body(), ind);
 		break;
 	case AST_DoWhile:
-		cout << "DOWHILE "<<"("<< ast->toDoWhile()->use<int>(ETS::ID_LOOP_COUNT)<<" iterations) : "<< ast->toDoWhile()->use<int>(ETS::ID_WCET)<<'\n';
+		cout 	<< "DOWHILE "
+				<<"("
+				<< ast->toDoWhile()->use<int>(ETS::ID_LOOP_COUNT)
+				<<" iterations) : ["
+				<< ast->toDoWhile()->use<int>(ETS::ID_WCET)
+	WITHOUT_CACHE(	<< ", "
+				<< ast->toDoWhile()->use<int>(ETS::ID_HITS)
+				<< ", "
+				<< ast->toDoWhile()->use<int>(ETS::ID_MISSES)
+				<< ", "
+				<< ast->toDoWhile()->use<int>(ETS::ID_FIRST_MISSES))
+				<<"]\n";
 		outputAST(ast->toDoWhile()->body(), ind);
 		outputAST(ast->toDoWhile()->condition(), ind);
 		break;
 	case AST_For:
-		cout << "FOR "<<"("<< ast->toFor()->use<int>(ETS::ID_LOOP_COUNT)<<" iterations) : "<< ast->toFor()->use<int>(ETS::ID_WCET)<<'\n';
+		cout 	<< "FOR "
+				<<"("
+				<< ast->toFor()->use<int>(ETS::ID_LOOP_COUNT)
+				<<" iterations) : ["
+				<< ast->toFor()->use<int>(ETS::ID_WCET)
+	WITHOUT_CACHE(	<< ", "
+				<< ast->toFor()->use<int>(ETS::ID_HITS)
+				<< ", "
+				<< ast->toFor()->use<int>(ETS::ID_MISSES)
+				<< ", "
+				<< ast->toFor()->use<int>(ETS::ID_FIRST_MISSES))
+				<<"]\n";
 		outputAST(ast->toFor()->initialization(), ind);
 		outputAST(ast->toFor()->condition(), ind);
 		outputAST(ast->toFor()->incrementation(), ind);
