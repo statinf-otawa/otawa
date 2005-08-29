@@ -37,3 +37,6 @@ stamp-h2.in
 Otawa-0.1.tar.gz
 configure.scan
 ylwrap
+lib
+libtool
+ltmain.sh
