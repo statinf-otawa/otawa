@@ -2,3 +2,4 @@
 dumpcfg
 Makefile
 Makefile.in
+.libs
