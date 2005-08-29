@@ -79,9 +79,8 @@ Var *System::getVar(ilp::Var *var) {
  * Free all ressources.
  */
 System::~System(void) {
-	Constraint *cons = conss;
-	while(cons)
-		delete cons;
+	while(conss)
+		delete conss;
 }
 
 
