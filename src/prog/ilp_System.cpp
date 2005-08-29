@@ -7,11 +7,6 @@
 
 #include <otawa/otawa.h>
 #include <otawa/ilp/System.h>
-#include <config.h>
-#ifdef HAVE_LP_SOLVE
-#	include <otawa/lp_solve/System.h>
-#endif
-
 
 namespace otawa { namespace ilp {
 
@@ -97,24 +92,5 @@ namespace otawa { namespace ilp {
  */
 
 } // ilp
-
-/*
- *  !!IMPORT!!
- * This method should be contained in FrameWork.cpp but, for avoiding mandatory
- * linkage with ILP engine, it has been moved here.
- */
-
-/**
- * Build an ILP system with the default ILP engine.
- * @param max	True for a maximized system, false for a minimized.
- * @return		ILP system ready to use, NULL fi there is no support for ILP.
- */
-ilp::System *FrameWork::newILPSystem(bool max) {
-#	ifdef HAVE_LP_SOLVE
-		return new lp_solve::System(max);
-#	else
-		return 0;
-#	endif
-}
 
 } // otawa
