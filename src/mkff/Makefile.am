@@ -2,10 +2,8 @@ bin_PROGRAMS=mkff
 mkff_SOURCES= \
 	mkff.cpp
 
-mkff_LDADD= \
-	-L../prog -lprog \
-	-L../gliss -lgliss
+mkff_LDADD = @LOADER_PLUGIN@ @PROG_LIBS@
 
-mkff_DEPENDENCIES= \
-	../gliss/libgliss.a \
-	../prog/libprog.a
+mkff_DEPENDENCIES= @LOADER_DEP@
+
+AM_CXXFLAGS = @PROG_CXXFLAGS@
