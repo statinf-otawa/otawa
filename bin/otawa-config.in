@@ -16,9 +16,9 @@ while test "$1" != ""; do
 		libs=ok
 		option=ok
 	elif test "$1" == "glissppc"; then
-		libs_text="$libs_text @GLISSPPC_LDADD@"
+		libs_text="$libs_text @GLISSPPC_LIBS@"
 	elif test "$1" == "lp_solve"; then
-		libs_text="$libs_text @LP_SOLVE_LDADD@"
+		libs_text="$libs_text @LP_SOLVE_LIBS@"
 	elif test "$1" == "--version"; then
 		echo "@PACKAGE@ @VERSION@"
 		exit
