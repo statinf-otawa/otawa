@@ -19,3 +19,4 @@ ast_lexer.cc
 ast_parser.cc
 ast_parser.h
 ast_parser.output
+libprog.so

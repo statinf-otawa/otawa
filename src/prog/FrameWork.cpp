@@ -8,6 +8,8 @@
 #include <otawa/manager.h>
 #include <otawa/prog/FrameWork.h>
 #include <otawa/ast/ASTInfo.h>
+#include <otawa/ilp/System.h>
+#include <config.h>
 
 
 // Trace
