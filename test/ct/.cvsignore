@@ -3,3 +3,4 @@ Makefile.in
 ok.s
 test_ct
 .deps
+.libs
