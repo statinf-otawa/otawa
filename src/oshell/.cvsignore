@@ -6,3 +6,4 @@ parser.cc
 parser.h
 .deps
 parser.tab.cc
+.libs
