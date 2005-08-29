@@ -22,11 +22,11 @@ noinst_HEADERS = \
 	parser.h \
 	SegmentCursor.h
 
-AM_YFLAGS=-d
-oshell_LDADD= \
-	-L../gliss -lgliss \
-	-L../prog -lprog
+oshell_LDADD = @LOADER_PLUGIN@ @PROG_LIBS@
 
-oshell_DEPENDENCIES= \
-	../gliss/libgliss.a \
-	../prog/libprog.a
+oshell_DEPENDENCIES = @LOADER_DEP@ @PROG_DEP@
+
+AM_CXXFLAGS = @PROG_CXXFLAGS@
+
+AM_YFLAGS=-d
+
