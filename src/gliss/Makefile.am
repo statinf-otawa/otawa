@@ -10,5 +10,4 @@ libgliss_a_SOURCES = \
 	ControlInst.cpp \
 	Symbol.cpp
 
-AM_CXXFLAGS = \
-	@GLISS_PPC_CXXFLAGS@
+AM_CXXFLAGS = @BUILD_GLISS_PPC_CXXFLAGS@ @PROG_CXXFLAGS@
