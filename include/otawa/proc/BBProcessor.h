@@ -14,6 +14,10 @@ namespace otawa {
 
 class BBProcessor: public CFGProcessor {
 public:
+	BBProcessor(const PropList& props = PropList::EMPTY);
+	BBProcessor(elm::String name, elm::Version version = elm::Version::ZERO,
+		const PropList& props = PropList::EMPTY);
+
 	virtual void processBB(FrameWork *fw, CFG *cfd, BasicBlock *bb) = 0;
 	
 	// CFGProcessor overload

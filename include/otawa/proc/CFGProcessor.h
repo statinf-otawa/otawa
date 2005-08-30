@@ -17,6 +17,10 @@ class CFG;
 // Processor class
 class CFGProcessor: public Processor {
 public:
+	CFGProcessor(const PropList& props = PropList::EMPTY);
+	CFGProcessor(elm::String name, elm::Version version,
+		const PropList& props = PropList::EMPTY);
+
 	virtual void processCFG(FrameWork *fw, CFG *cfg) = 0;
 
 	// Processor overload

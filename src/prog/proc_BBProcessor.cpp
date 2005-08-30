@@ -19,6 +19,25 @@ namespace otawa {
 
 
 /**
+ * Build a new basic block processor.
+ * @param props	Configuration properties.
+ */
+BBProcessor::BBProcessor(const PropList& props): CFGProcessor(props) {
+}
+
+
+/**
+ * Buid a new named basic block processor.
+ * @param name		Processor name.
+ * @param version	Processor version.
+ * @param props		Configuration properties.
+ */
+BBProcessor::BBProcessor(elm::String name, elm::Version version,
+const PropList& props): CFGProcessor(name, version, props) {
+}
+
+
+/**
  * @fn void BBProcessor::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
  * Perform the work of the given basic block.
  * @param fw	Container framework.

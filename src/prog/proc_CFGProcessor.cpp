@@ -17,6 +17,26 @@ namespace otawa {
  * CFG of the framework and apply the processor on.
  */
 
+
+/**
+ * Build a new CFG processor.
+ * @param props		Configuration properties.
+ */
+CFGProcessor::CFGProcessor(const PropList& props): Processor(props) {
+}
+
+
+/**
+ * Build a new named processor.
+ * @param name		Processor name.
+ * @param version	Processor version.
+ * @param props		Configuration properties.
+ */
+CFGProcessor::CFGProcessor(elm::String name, elm::Version version,
+const PropList& props): Processor(name, version, props) {
+}
+
+
 /**
  * @fn void CFGProcessor::processCFG(FrameWork *fw, CFG *cfg);
  * Process the given CFG.

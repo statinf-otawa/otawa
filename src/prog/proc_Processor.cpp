@@ -21,6 +21,36 @@ namespace otawa {
 
 
 /**
+ * Build a new processor with name and version.
+ * @param name		Processor name.
+ * @param version	Processor version.
+ * @param props		Configuration properties.
+ */
+Processor::Processor(elm::String name, elm::Version version,
+const PropList& props): _name(name), _version(version) {
+	init(props);
+}
+
+
+/**
+ * Build a new processor.
+ * @param	Configuration properties.
+ */
+Processor::Processor(const PropList& props) {
+	init(props);
+}
+
+
+/**
+ */
+void Processor::init(const PropList& props) {
+	OutStream *out_stream = props.get<OutStream *>(ID_Output, 0);
+	if(out_stream)
+		out.setStream(*out_stream);
+}
+
+
+/**
  * @fn void Processor::processFrameWork(FrameWork *fw);
  * Process the given framework.
  * @param fw	Framework to process.
@@ -40,10 +70,8 @@ Identifier Processor::ID_Output("proc.output");
  * passed in the property list.
  * @param props	Configuration information.
  */
-void Processor::configure(PropList& props) {
-	OutStream *out_stream = props.get<OutStream *>(ID_Output, 0);
-	if(out_stream)
-		;
+void Processor::configure(const PropList& props) {
+	init(props);
 }
 
 } // otawa
