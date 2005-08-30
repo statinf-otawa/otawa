@@ -31,7 +31,8 @@ LoadException::LoadException(const String& message): Exception(message) {
  * @param format	Format of the message.
  * @param args		Arguments of the format.
  */
-LoadException::LoadException(const char *format, va_list args): Exception(format, args) {
+LoadException::LoadException(const char *format, VarArg& args)
+: Exception(format, args) {
 }
 
 
@@ -41,10 +42,9 @@ LoadException::LoadException(const char *format, va_list args): Exception(format
  * @param ...		Arguments of the format.
  */
 LoadException::LoadException(const char *format, ...) {
-	va_list args;
-	va_start(args, format);
-	build(format, args);
-	va_end(args);
+	VARARG_BEGIN(args, format)
+		build(format, args);
+	VARARG_END
 }
 
 
@@ -66,8 +66,8 @@ UnsupportedPlatformException::UnsupportedPlatformException(const String& message
  * @param format	Format of the message.
  * @param args		Arguments of the format.
  */
-UnsupportedPlatformException::UnsupportedPlatformException(const char *format, va_list args)
-: Exception(format, args) {
+UnsupportedPlatformException::UnsupportedPlatformException(const char *format,
+VarArg& args): Exception(format, args) {
 }
 
 
@@ -76,11 +76,11 @@ UnsupportedPlatformException::UnsupportedPlatformException(const char *format, v
  * @param format	Format of the message.
  * @param ...		Arguments of the format.
  */
-UnsupportedPlatformException::UnsupportedPlatformException(const char *format, ...) {
-	va_list args;
-	va_start(args, format);
-	build(format, args);
-	va_end(args);
+UnsupportedPlatformException::UnsupportedPlatformException(const char *format,
+...) {
+	VARARG_BEGIN(args, format)
+		build(format, args);
+	VARARG_END
 }
 
 

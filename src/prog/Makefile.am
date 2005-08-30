@@ -42,6 +42,7 @@ libprog_so_SOURCES = \
 	proc_FunProcessor.cpp \
 	proc_ASTProcessor.cpp \
 	proc_BBProcessor.cpp \
+	proc_ProcessorException.cpp \
 	ipet_IPET.cpp \
 	ipet_TrivialBBTime.cpp \
 	ipet_VarAssignment.cpp \
