@@ -27,18 +27,26 @@ ilp::System *Manager::newILPSystem(String name) {
 #	ifdef HAVE_PLUGIN
 		ilp::ILPPlugin *plugin;
 	
-		// Select an actual plugin
-		if(!name)
-			name = "lp_solve";
+		// Select the first available plugin
+		if(!name) {
+			system::Plugger::Iterator plug(ilp_plugger);
+			if(plug.ended())
+				return 0;
+			plugin = (ilp::ILPPlugin *)plug.plug();
+			//cout << "Selected plugin : " << plugin->name() << "\n";
+		}
 	
 		// Find a plugin
-		plugin = (ilp::ILPPlugin *)ilp_plugger.plug(name);
-		if(!plugin) {
-			cerr << "ERROR: " << ilp_plugger.lastErrorMessage() << "\n";
-			return 0;
+		else {
+			plugin = (ilp::ILPPlugin *)ilp_plugger.plug(name);
+			if(!plugin) {
+				cerr << "ERROR: " << ilp_plugger.lastErrorMessage() << "\n";
+				return 0;
+			}
 		}
-		else
-			return plugin->newSystem();
+
+		// Return a system
+		return plugin->newSystem();
 #	else
 #		ifdef HAVE_LP_SOLVE
 			if(!name || name == "lp_solve")
