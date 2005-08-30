@@ -37,7 +37,7 @@ namespace otawa {
  * @param props	Property list to clone.
  */
 void PropList::addProps(const PropList& props) {
-	for(Property *cur = props.head; cur; cur = cur->next) {
+	for(Property *cur = props.head; cur; cur = cur->next()) {
 		Property *copy = cur->copy();
 		setProp(copy);
 	}
@@ -49,14 +49,14 @@ void PropList::addProps(const PropList& props) {
  * @param id	Identifier of the property to find.
  * @return		Found property or null.
  */
-Property *PropList::getProp(Identifier *id) {
+Property *PropList::getProp(Identifier *id) const {
 	
 	/* Look in this list */
-	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next)
-		if(cur->id == id) {
+	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next())
+		if(cur->id() == id) {
 			if(prev) {
-				prev->next = cur->next;
-				cur->next = head;
+				prev->_next = cur->next();
+				cur->_next = head;
 				head = cur;
 			}
 			return cur;
@@ -74,18 +74,18 @@ Property *PropList::getProp(Identifier *id) {
 void PropList::setProp(Property *prop) {
 	
 	// Find the property
-	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next)
-		if(cur->id == prop->id) {
+	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next())
+		if(cur->id() == prop->id()) {
 			if(prev)
-				prev->next = cur->next;
+				prev->_next = cur->next();
 			else
-				head = cur->next;
+				head = cur->next();
 			delete cur;
 			break;
 		}
 	
 	// Link the new property
-	prop->next = head;
+	prop->_next = head;
 	head = prop;
 }
 
@@ -102,12 +102,12 @@ void PropList::setProp(Property *prop) {
  * @param id	Identifier of the property to remove.
  */
 void PropList::removeProp(Identifier *id) {
-	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next)
-		if(cur->id == id) {
+	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next())
+		if(cur->id() == id) {
 			if(prev)
-				prev->next = cur->next;
+				prev->_next = cur->next();
 			else
-				head = cur->next;
+				head = cur->next();
 			delete cur;
 			break;
 		}
@@ -119,7 +119,7 @@ void PropList::removeProp(Identifier *id) {
  */
 void PropList::clearProps(void) {
 	for(Property *cur = head, *next; cur; cur = next) {
-		next = cur->next;
+		next = cur->next();
 		delete cur;
 	}
 	head = 0;
@@ -205,7 +205,7 @@ void PropList::clearProps(void) {
  * @param id	Identifier of the looked property.
  * @return	Return the found property or null.
  */
-Property *PropList::getDeep(Identifier *id) {
+Property *PropList::getDeep(Identifier *id) const {
 	return 0;
 }
 
@@ -215,7 +215,7 @@ Property *PropList::getDeep(Identifier *id) {
  * @param prop	Property to add.
  */
 void PropList::addProp(Property *prop) {
-	prop->next = head;
+	prop->_next = head;
 	head = prop;
 }
 
@@ -227,18 +227,18 @@ void PropList::addProp(Property *prop) {
 void PropList::removeAllProp(Identifier *id) {
 	Property *prv = 0, *cur = head;
 	while(cur) {
-		if(cur->id != id) {
+		if(cur->id() != id) {
 			prv = cur;
-			cur = cur->next;
+			cur = cur->next();
 		}
 		else {
 			if(prv) {
-				prv->next = cur->next;
+				prv->_next = cur->next();
 				delete cur;
-				cur = prv->next;
+				cur = prv->next();
 			}
 			else {
-				head = cur->next;
+				head = cur->next();
 				delete cur;
 				cur = head;
 			}
@@ -296,6 +296,12 @@ void PropList::removeAllProp(Identifier *id) {
  * @param id	Annotation identifier.
  * @param value	Annotation value.
  */
+
+
+/**
+ * This is an empty proplist for convenience.
+ */
+const PropList PropList::EMPTY;
 
 
 /**

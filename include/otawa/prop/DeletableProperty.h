@@ -20,16 +20,16 @@ protected:
 	virtual ~DeletableProperty(void);
 	//virtual Property *copy(void);
 public:
-	inline DeletableProperty(Identifier *id, T _value);
-	inline DeletableProperty(Identifier& id, T _value);
-	inline DeletableProperty(elm::CString name, T _value);
+	inline DeletableProperty(Identifier *id, T value);
+	inline DeletableProperty(Identifier& id, T value);
+	inline DeletableProperty(elm::CString name, T value);
 };
 
 
 // Inlines
 template <class T>
 DeletableProperty<T>::~DeletableProperty(void) {
-	delete GenericProperty<T>::getValue();
+	delete GenericProperty<T>::value();
 }
 
 /*template <class T>
@@ -38,18 +38,18 @@ Property *DeletableProperty<T>::copy(void) {
 }*/
 
 template <class T>
-inline DeletableProperty<T>::DeletableProperty(Identifier *id, T _value) 
-: GenericProperty<T>(id, _value) {
+inline DeletableProperty<T>::DeletableProperty(Identifier *id, T value) 
+: GenericProperty<T>(id, value) {
 }
 
 template <class T>
-inline DeletableProperty<T>::DeletableProperty(Identifier& id, T _value) 
-: GenericProperty<T>(id, _value) {
+inline DeletableProperty<T>::DeletableProperty(Identifier& id, T value) 
+: GenericProperty<T>(id, value) {
 }
 
 template <class T>
-inline DeletableProperty<T>::DeletableProperty(elm::CString name, T _value)
-: GenericProperty<T>(name, _value) {
+inline DeletableProperty<T>::DeletableProperty(elm::CString name, T value)
+: GenericProperty<T>(name, value) {
 }
 
 } // otawa

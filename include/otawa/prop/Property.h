@@ -21,42 +21,40 @@ class Identifier;
 // Property description
 class Property {
 	friend class PropList;
-	friend class PropIter;
-	friend class PropFilter;
-	Property *next;
-	Identifier *id;
+	Property *_next;
+	Identifier *_id;
 protected:
 	virtual ~Property(void) { };
-	virtual Property *copy(void) { return new Property(id); };
+	virtual Property *copy(void) { return new Property(_id); };
 public:
 	static Identifier *getID(elm::CString name);
-	inline Property(Identifier *_id): id(_id) { };
-	inline Property(Identifier& _id): id(&_id) { };
-	inline Property(elm::CString name): id(getID(name)) { };
-	inline Identifier *getID(void) const { return id; };
-	inline Property *getNext(void) const { return next; };
+	inline Property(Identifier *id): _id(id) { };
+	inline Property(Identifier& id): _id(&id) { };
+	inline Property(elm::CString name): _id(getID(name)) { };
+	inline Identifier *id(void) const { return _id; };
+	inline Property *next(void) const { return _next; };
 };
 
 
 // GenericProperty class
 template <class T>
 class GenericProperty: public Property {
-	T value;
+	T _value;
 protected:
-	inline GenericProperty(Identifier *id, T _value)
-		: Property(id), value(_value) { };
-	inline GenericProperty(Identifier& id, T _value)
-		: Property(id), value(_value) { };
-	inline GenericProperty(elm::CString name, T _value)
-		: Property(name), value(_value) { };
+	inline GenericProperty(Identifier *id, T value)
+		: Property(id), _value(value) { };
+	inline GenericProperty(Identifier& id, T value)
+		: Property(id), _value(value) { };
+	inline GenericProperty(elm::CString name, T value)
+		: Property(name), _value(value) { };
 	virtual ~GenericProperty(void) { };
 	virtual Property *copy(void)
-		{ return new GenericProperty<T>(getID(), value); };
+		{ return new GenericProperty<T>(id(), value()); };
 public:
 	static GenericProperty<T> *make(Identifier *id, const T value) {
 		return new GenericProperty(id, value);
 	};
-	inline T& getValue(void) { return value; };
+	inline T& value(void) { return _value; };
 };
 
 
@@ -65,20 +63,20 @@ template <class T>
 class LockedProperty: public GenericProperty<T> {
 protected:
 	virtual ~LockedProperty(void) {
-		GenericProperty<T>::getValue()->unlock();
+		GenericProperty<T>::value()->unlock();
 	};
 	virtual Property *copy(void) {
 		return new LockedProperty<T>(
-			GenericProperty<T>::getID(),
-			GenericProperty<T>::getValue());
+			GenericProperty<T>::id(),
+			GenericProperty<T>::value());
 	};
 public:
-	inline LockedProperty(Identifier *id, T _value)
-		: GenericProperty<T>(id, _value) { GenericProperty<T>::getValue()->lock(); };
-	inline LockedProperty(Identifier& id, T _value)
-		: GenericProperty<T>(id, _value) { GenericProperty<T>::getValue()->lock(); };
-	inline LockedProperty(elm::CString name, T _value)
-		: GenericProperty<T>(name, _value) { GenericProperty<T>::getValue()->lock(); };
+	inline LockedProperty(Identifier *id, T value)
+		: GenericProperty<T>(id, value) { GenericProperty<T>::value()->lock(); };
+	inline LockedProperty(Identifier& id, T value)
+		: GenericProperty<T>(id, value) { GenericProperty<T>::value()->lock(); };
+	inline LockedProperty(elm::CString name, T value)
+		: GenericProperty<T>(name, value) { GenericProperty<T>::value()->lock(); };
 };
 
 } // otawa
