@@ -26,6 +26,13 @@ int main(int argc, char **argv) {
 	PropList props;
 	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
 	try {
+		
+		// Load program
+		if(argc < 2) {
+			cerr << "ERROR: no argument.\n"
+				 << "Syntax is : test_ipet <executable>\n";
+			exit(2);
+		}
 		FrameWork *fw = manager.load(argv[1], props);
 		
 		// Find main CFG
