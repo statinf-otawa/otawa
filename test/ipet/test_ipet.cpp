@@ -51,34 +51,44 @@ int main(int argc, char **argv) {
 		// Now, use a VCFG
 		VirtualCFG vcfg(cfg);
 		
+		// Prepare processor configuration
+		PropList props;
+		props.set(IPET::ID_Explicit, true);
+		
 		// Compute BB times
 		cout << "Timing the BB\n";
 		TrivialBBTime tbt(5);
+		tbt.configure(props);
 		tbt.processCFG(fw, &vcfg);
 		
 		// Assign variables
 		cout << "Numbering the main\n";
 		VarAssignment assign;
+		assign.configure(props);
 		assign.processCFG(fw, &vcfg);
 		
 		// Build the system
 		cout << "Building the ILP system\n";
 		BasicConstraintsBuilder builder;
+		builder.configure(props);
 		builder.processCFG(fw, &vcfg);
 		
 		// Build the object function to maximize
 		cout << "Building the ILP object function\n";
 		BasicObjectFunctionBuilder fun_builder;
+		fun_builder.configure(props);
 		fun_builder.processCFG(fw, &vcfg);
 		
 		// Load flow facts
 		cout << "Loading flow facts\n";
 		ipet::FlowFactLoader loader;
+		loader.configure(props);
 		loader.processCFG(fw, &vcfg);
 		
 		// Resolve the system
 		cout << "Resolve the system\n";
 		WCETComputation wcomp;
+		wcomp.configure(props);
 		wcomp.processCFG(fw, &vcfg);
 		
 		// Display the result
