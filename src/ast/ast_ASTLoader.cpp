@@ -53,7 +53,7 @@ void ASTLoader::configure(PropList& props) {
 void ASTLoader::onError(const char *fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
-	out.formatArg(fmt, args);
+	out.format(fmt, args);
 	va_end(args);
 }
 
