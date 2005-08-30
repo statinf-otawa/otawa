@@ -32,7 +32,7 @@ namespace ilp {
 class LoadException: public Exception {
 public:
 	LoadException(const String& message);
-	LoadException(const char *format, va_list args);
+	LoadException(const char *format, VarArg& args);
 	LoadException(const char *format, ...);
 };
 
@@ -41,7 +41,7 @@ public:
 class UnsupportedPlatformException: public Exception {
 public:
 	UnsupportedPlatformException(const String& message);
-	UnsupportedPlatformException(const char *format, va_list args);
+	UnsupportedPlatformException(const char *format, VarArg& args);
 	UnsupportedPlatformException(const char *format, ...);
 };
 
