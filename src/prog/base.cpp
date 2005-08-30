@@ -26,7 +26,7 @@ Exception::Exception(void) {
  * Build a simple exception with the given message.
  * @param message	Message of the exception.
  */
-Exception::Exception(const String& message): msg(message) {
+Exception::Exception(const String message): msg(message) {
 }
 
 /**
@@ -35,11 +35,10 @@ Exception::Exception(const String& message): msg(message) {
  * @param format	Format of the message.
  * @param ...		Data use din the format string.
  */
-Exception::Exception(const char *format, ...) {
-	va_list args;
-	va_start(args, format);
-	build(format, args);
-	va_end(args);
+Exception::Exception(elm::CString format, ...) {
+	VARARG_BEGIN(args, format)
+		build(format, args);
+	VARARG_END
 }
 
 
@@ -48,7 +47,7 @@ Exception::Exception(const char *format, ...) {
  * @param format	Format of the message.
  * @param args		Arguments used in the format.
  */
-Exception::Exception(const char *format, va_list args) {
+Exception::Exception(elm::CString format, VarArg& args) {
 	build(format, args);
 }
 
@@ -62,9 +61,9 @@ Exception::~Exception(void) {
 /**
  * Build the message using "printf" style format and arguments.
  */
-void Exception::build(CString format, va_list args) {
+void Exception::build(CString format, VarArg& args) {
 	StringBuffer buffer;
-	buffer.formatArg(&format, args);
+	buffer.format(format, args);
 	msg = buffer.toString();
 }
 
