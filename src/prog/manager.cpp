@@ -172,7 +172,7 @@ FrameWork *Manager::load(CString path, PropList& props) {
 Manager::Manager(void)
 : ilp_plugger("ilp_plugin", Version(1, 0, 0), ILP_PATHS) {
 	//loaders.add(&gliss::loader);
-	cout << "ILP_PATHS = " << ILP_PATHS << "\n";
+	//cout << "ILP_PATHS = " << ILP_PATHS << "\n";
 }
 
 }
