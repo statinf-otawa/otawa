@@ -9,6 +9,8 @@ dnl XXX_LIBS			Flags fir linking when using module XXX.
 dnl XXX_DEPS			Dependencies when using module XXX.
 dnl BUILD_XXX_CXXFLAGS	Flags for compiling module XXX.
 dnl BUILD_XXX_LIBS		Flags for linking module XXX.
+dnl EXTERN_XXX_CXXFLAGS	Flags for compiling with module XXX by external program.
+dnl EXTERN_XXX_LIBS		Flags for linking with module XXX by external program.
 dnl PLUGINS				Plugins to build.
 dnl TESTS				Tests to perform.
 dnl ILP_PLUGIN			Linking flags when using an ILP engine.
@@ -151,11 +153,15 @@ if test "$with_plugin" = yes; then
 else
 	PROG_DEP="$PWD/src/prog/libotawa.a"
 fi
+EXTERN_PROG_CXXFLAGS="-I$prefix/include"
+EXTERN_PROG_LIBS="-L$prefix/lib -lotawa"
 AC_SUBST(BUILD_PROG_CXXFLAGS)
 AC_SUBST(BUILD_PROG_LIBS)
 AC_SUBST(PROG_CXXFLAGS)
 AC_SUBST(PROG_LIBS)
 AC_SUBST(PROG_DEP)
+AC_SUBST(EXTERN_PROG_CXXFLAGS)
+AC_SUBST(EXTERN_PROG_LIBS)
 
 
 dnl ==== gliss ppc ====
@@ -194,11 +200,15 @@ if test "$with_gliss_ppc" != no; then
 else
 	AC_MSG_ERROR([no more loader])
 fi
+EXTERN_GLISS_PPC_CXXFLAGS=""
+EXTERN_GLISS_PPC_LIBS="-lotawa_ppc"
 AC_SUBST(GLISS_PPC_CXXFLAGS)
 AC_SUBST(GLISS_PPC_LIBS)
 AC_SUBST(GLISS_PPC_DEP)
 AC_SUBST(BUILD_GLISS_PPC_CXXFLAGS)
 AC_SUBST(BUILD_GLISS_PPC_LIBS)
+AC_SUBST(EXTERN_GLISS_PPC_CXXFLAGS)
+AC_SUBST(EXTERN_GLISS_PPC_LIBS)
 
 
 dnl ==== lp_solve ====
@@ -242,11 +252,15 @@ if test "$with_lp_solve" != no; then
 		AC_MSG_RESULT([no])
 	fi
 fi
+EXTERN_LP_SOLVE_CXXFLAGS=""
+EXTERN_LP_SOLVE_LIBS="-lotawa_lp_solve"
 AC_SUBST(LP_SOLVE_CXXFLAGS)
 AC_SUBST(LP_SOLVE_LIBS)
 AC_SUBST(LP_SOLVE_DEP)
 AC_SUBST(BUILD_LP_SOLVE_CXXFLAGS)
 AC_SUBST(BUILD_LP_SOLVE_LIBS)
+AC_SUBST(EXTERN_LP_SOLVE_CXXFLAGS)
+AC_SUBST(EXTERN_LP_SOLVE_LIBS)
 
 
 dnl ==== Plugins ====

@@ -4,8 +4,8 @@
 option=
 cflags=
 libs=
-cflags_text="-I@prefix@/include @ELM_CFLAGS@"
-libs_text="-L@prefix@/lib -lprog -lgliss @ELM_LDADD@"
+cflags_text="@EXTERN_PROG_CXXFLAGS@"
+libs_text="@EXTERN_PROG_LIBS@"
 
 # Decode options
 while test "$1" != ""; do
@@ -16,9 +16,11 @@ while test "$1" != ""; do
 		libs=ok
 		option=ok
 	elif test "$1" == "glissppc"; then
-		libs_text="$libs_text @GLISSPPC_LIBS@"
+		cflags_text="$cflags_text @EXTERN_GLISS_PPC_CXXFLAGS@"
+		libs_text="$libs_text @EXTERN_GLISS_PPC_LIBS@"
 	elif test "$1" == "lp_solve"; then
-		libs_text="$libs_text @LP_SOLVE_LIBS@"
+		cflags_text="$cflags_text @EXTERN_LP_SOLVE_CXXFLAGS"
+		libs_text="$libs_text @EXTERN_LP_SOLVE_LIBS@"
 	elif test "$1" == "--version"; then
 		echo "@PACKAGE@ @VERSION@"
 		exit
