@@ -36,7 +36,7 @@ dev)
 		LOADER_PATHS=$PWD/lib/otawa/loader
 		test -d $ILP_PATHS || mkdir -p $ILP_PATHS
 		test -d $LOADER_PATHS || mkdir -p $LOADER_PATHS
-		ln -s $PWD/src/prog/libprog.so lib/libprog.so
+		ln -s $PWD/src/prog/libotawa.so lib/libotawa.so
 	fi
 	;;
 debug)
@@ -141,16 +141,15 @@ AC_SUBST(ELM_LIBS)
 AC_SUBST(ELM_CXXFLAGS)
 
 
-dnl ==== prog usage ====
+dnl ==== otawa usage ====
 BUILD_PROG_CXXFLAGS="-I$PWD/include $ELM_CXXFLAGS"
 PROG_CXXFLAGS=$BUILD_PROG_CXXFLAGS
 BUILD_PROG_LIBS="-ldl $ELM_LIBS"
+PROG_LIBS="-lotawa -L$PWD/src/prog $BUILD_PROG_LIBS"
 if test "$with_plugin" = yes; then
-	PROG_LIBS="-lprog -L$PWD/src/prog $BUILD_PROG_LIBS"
 	PROG_DEP=
 else
-	PROG_LIBS="-lprog -L$PWD/src/prog $BUILD_PROG_LIBS"
-	PROG_DEP="$PWD/src/prog/libprog.a"
+	PROG_DEP="$PWD/src/prog/libotawa.a"
 fi
 AC_SUBST(BUILD_PROG_CXXFLAGS)
 AC_SUBST(BUILD_PROG_LIBS)
@@ -181,8 +180,8 @@ if test "$with_gliss_ppc" != no; then
 		}
 	], $lib_paths, $BUILD_GLISS_PPC_CXXFLAGS,)
 	if test "$check" = yes; then
-		GLISS_PPC_LIBS="-L$PWD/src/gliss -lgliss $BUILD_GLISS_PPC_LIBS"
-		GLISS_PPC_DEP="$PWD/src/gliss/libgliss.a"
+		GLISS_PPC_LIBS="-L$PWD/src/gliss -lotawa_ppc $BUILD_GLISS_PPC_LIBS"
+		GLISS_PPC_DEP="$PWD/src/gliss/libotawa_ppc.a"
 		HAVE_GLISS_PPC=yes
 		AC_DEFINE(HAVE_GLISS_PPC,,[GLISS PPC available])
 		PLUGINS="$PLUGINS gliss"

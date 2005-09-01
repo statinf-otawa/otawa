@@ -1,6 +1,6 @@
-lib_LIBRARIES=libgliss.a
+lib_LIBRARIES=libotawa_ppc.a
 
-libgliss_a_SOURCES = \
+libotawa_ppc_a_SOURCES = \
 	loader.cpp \
 	platform.cpp \
 	Process.cpp \

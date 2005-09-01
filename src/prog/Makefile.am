@@ -1,12 +1,12 @@
 if WITH_PLUGIN
 
 sodir=$(libdir)
-so_PROGRAMS=libprog.so
-libprog_so_LDFLAGS=-shared
-libprog_so_LDADD= @BUILD_PROG_LIBS@
+so_PROGRAMS=libotawa.so
+libotawa_so_LDFLAGS=-shared
+libotawa_so_LDADD= @BUILD_PROG_LIBS@
 AM_CXXFLAGS=-fPIC @BUILD_PROG_CXXFLAGS@
 
-libprog_so_SOURCES = \
+libotawa_so_SOURCES = \
 	BlockAST.cpp \
 	FunAST.cpp \
 	ASTInfo.cpp \
@@ -78,10 +78,10 @@ libprog_so_SOURCES = \
 
 else
 
-lib_LIBRARIES=libprog.a
+lib_LIBRARIES=libotawa.a
 AM_CXXFLAGS=@BUILD_PROG_CXXFLAGS@
 
-libprog_a_SOURCES = \
+libotawa_a_SOURCES = \
 	BlockAST.cpp \
 	FunAST.cpp \
 	ASTInfo.cpp \
