@@ -29,6 +29,7 @@ protected:
 	virtual void onError(const char *fmt, ...);
 	virtual void onLoop(address_t addr, int count);	
 public:
+	FlowFactLoader(const PropList& props = PropList::EMPTY);
 
 	// CFGProcessor overload
 	virtual void processCFG(FrameWork *fw, CFG *cfg);

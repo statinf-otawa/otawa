@@ -11,6 +11,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/util/Dominance.h>
 #include <otawa/ilp.h>
+#include <otawa/proc/ProcessorException.h>
 
 namespace otawa { namespace ipet {
 
@@ -21,16 +22,21 @@ namespace otawa { namespace ipet {
 
 
 /**
+ * Build a new flow fact loader.
+ * @param props		Configuration properties.
+ */
+FlowFactLoader::FlowFactLoader(const PropList& props)
+: CFGProcessor("otawa::ipet::FlowFactLoader", Version(1, 0, 0), props) {
+}
+
+
+/**
  */
 void FlowFactLoader::onError(const char *fmt, ...) {
 	assert(fmt);
-	va_list args;
-	va_start(args, fmt);
-	StringBuffer buffer;
-	buffer.format(fmt, args);
-	cout << buffer.toString();
-	va_end(args);
-	cout << '\n';
+	VARARG_BEGIN(args, fmt)
+		throw ProcessorException(*this, fmt, args);
+	VARARG_END
 }
 
 

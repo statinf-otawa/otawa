@@ -9,7 +9,9 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/ipet/IPET.h>
 
-namespace otawa {
+using namespace elm;
+
+namespace otawa { namespace ipet {
 
 /**
  * @class TrivialBBTime
@@ -20,10 +22,14 @@ namespace otawa {
 
 
 /**
- * @fn TrivialBBTime::TrivialBBTime(int depth);
  * Build the processor.
  * @param depth	Depth of the pipeline.
  */
+TrivialBBTime::TrivialBBTime(int depth, const PropList& props)
+: BBProcessor("otawa::TrivialBBTime", Version(1, 0, 0), props), dep(depth) {
+	assert(depth > 0);
+}
+
 
 
 /**
@@ -40,4 +46,4 @@ void TrivialBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	bb->set<int>(&IPET::ID_Time, dep * bb->countInstructions());
 }
 
-} // otawa
+} } // otawa::ipet

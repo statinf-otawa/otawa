@@ -15,7 +15,7 @@
 // Externals
 extern FILE *ipet_in;
 
-namespace otawa {
+namespace otawa { namespace ipet {
 
 // NormNode class
 class NormNode {
@@ -291,4 +291,4 @@ void ConstraintLoader::processCFG(FrameWork *_fw, CFG *cfg) {
 	fclose(ipet_in);
 }
 
-} // otawa
+} } // otawa::ipet

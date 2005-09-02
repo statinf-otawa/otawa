@@ -10,10 +10,11 @@
 #include <otawa/cfg.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet/BasicObjectFunctionBuilder.h>
+#include <otawa/proc/ProcessorException.h>
 
 using namespace otawa::ilp;
 
-namespace otawa {
+namespace otawa { namespace ipet {
 
 /**
  * @class BasicObjectFunctionBuilder
@@ -31,22 +32,28 @@ namespace otawa {
 
 
 /**
+ * Build a new basic object function builder.
+ * @param props		Configuration properties.
+ */
+BasicObjectFunctionBuilder::BasicObjectFunctionBuilder(const PropList& props)
+: CFGProcessor("otawa::BasicObjectFunctionBuilder", Version(1, 0, 0), props) {
+}
+
+
+/**
  */
 void BasicObjectFunctionBuilder::processCFG(FrameWork *fw, CFG *cfg) {
-
-	// Look for the framework
-	System *system = cfg->get<System *>(IPET::ID_System, 0);
-	if(!system) {
-		system = fw->newILPSystem();
-		cfg->addDeletable<System *>(IPET::ID_System, system);
-	}
+	System *system = IPET::getSystem(fw, cfg);
 
 	// Add the object function
 	for(CFG::BBIterator bb(cfg); bb; bb++)
-		if(!bb->isEntry() && !bb->isExit())
-			system->addObjectFunction(
-				bb->use<int>(IPET::ID_Time),
-				bb->use<Var *>(IPET::ID_Var));
+		if(!bb->isEntry() && !bb->isExit()) {
+			Option<int> time = bb->get<int>(IPET::ID_Time);
+			if(time < 0)
+				throw new ProcessorException(*this, "no time on BB %lx",
+					bb->address());
+			system->addObjectFunction(*time, IPET::getVar(system, bb));
+		}
 }
 
-} // otawa
+} } // otawa::ipet

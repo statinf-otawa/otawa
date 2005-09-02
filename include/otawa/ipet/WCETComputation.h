@@ -9,15 +9,17 @@
 
 #include <otawa/proc/CFGProcessor.h>
 
-namespace otawa {
-	
+namespace otawa { namespace ipet {
+
+// WCETComputation class
 class WCETComputation: public CFGProcessor {
 public:
+	WCETComputation(const PropList& props = PropList::EMPTY);
 
 	// CFGProcessor overload
 	virtual void processCFG(FrameWork *fw, CFG *cfg);
 };
 
-} // otawa
+} } // otawa::ipet
 
 #endif	// OTAWA_IPET_WCET_COMPUTATION_H

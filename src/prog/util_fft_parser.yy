@@ -51,5 +51,5 @@ command:
 
 // Error managed
 void util_fft_error(otawa::FlowFactLoader *loader, const char *msg) {
-	loader->onError("ERROR: %s", msg);
+	loader->onError(msg);
 }

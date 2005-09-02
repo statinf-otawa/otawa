@@ -28,9 +28,9 @@ void FlowFactLoader::run(FrameWork *fw) {
 	String path = buffer.toString();
 	
 	// Open the file
-	util_fft_in = fopen(&path.toCString(), "r");
+	util_fft_in = fopen(&path, "r");
 	if(!util_fft_in) {
-		onError("ERROR: cannot open the constraint file \"%s\".", &path.toCString());
+		onError("cannot open the constraint file \"%s\".", &path);
 		return;
 	}
 	

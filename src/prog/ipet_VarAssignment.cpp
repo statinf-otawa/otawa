@@ -10,9 +10,10 @@
 #include <otawa/ilp/Var.h>
 #include <otawa/cfg.h>
 
+using namespace elm;
 using namespace otawa::ilp;
 
-namespace otawa {
+namespace otawa { namespace ipet {
 
 
 /**
@@ -67,15 +68,25 @@ void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 
 /**
  * Build a new variable assignment processor.
+ * @param props		Configuration properties.
  */
-VarAssignment::VarAssignment(void): _explicit(false) {
+VarAssignment::VarAssignment(const PropList& props)
+: BBProcessor("otawa::VarAssignment", Version(1, 0, 0), props), _explicit(false) {
+	init(props);
+}
+
+
+/**
+ */
+void VarAssignment::init(const PropList& props) {
+	_explicit = props.get<bool>(IPET::ID_Explicit, _explicit);
 }
 
 
 /**
  */
 void VarAssignment::configure(PropList& props) {
-	_explicit = props.get<bool>(IPET::ID_Explicit, _explicit);
+	init(props);
 	BBProcessor::configure(props);
 }
 
@@ -137,4 +148,4 @@ String VarAssignment::makeEdgeVar(Edge *edge) {
 	return buf.toString();
 }
 
-} // otawa
+} } // otawa::ipet

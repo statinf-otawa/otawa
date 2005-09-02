@@ -25,10 +25,9 @@ namespace otawa {
 int ipet_parse(otawa::ConstraintLoader *);
 void ipet_error(otawa::ConstraintLoader *, const char *);
 
-namespace otawa {
+namespace otawa { namespace ipet {
 
 // ConstraintLoader class
-
 class ConstraintLoader: public CFGProcessor {
 	friend int ::ipet_parse(ConstraintLoader *);
 	friend void ::ipet_error(ConstraintLoader *, const char *);
@@ -53,6 +52,6 @@ public:
 	virtual void processCFG(FrameWork *fw, CFG *cfg);
 };
 	
-} // otawa
+} } // otawa::ipet
 
 #endif 	// OTAWA_IPET_CONSTRAINT_LOADER_H

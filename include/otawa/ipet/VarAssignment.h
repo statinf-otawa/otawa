@@ -9,15 +9,17 @@
 
 #include <otawa/proc/BBProcessor.h>
 
-namespace otawa {
+namespace otawa { namespace ipet {
 
+// VarAsignment class
 class VarAssignment: public BBProcessor {
 	bool _explicit;
 	void process(BasicBlock *bb);
 	String makeNodeVar(BasicBlock *bb);
 	String makeEdgeVar(Edge *edge);
+	void init(const PropList& props);
 public:
-	VarAssignment(void);
+	VarAssignment(const PropList& props = PropList::EMPTY);
 
 	// BBProcessor overload
 	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
@@ -27,7 +29,7 @@ public:
 	virtual void configure(PropList& props);
 };
 
-}	// otawa
+} } // otawa::ipet
 
 #endif	// OTAWA_IPET_VARASSIGNMENT_H
 

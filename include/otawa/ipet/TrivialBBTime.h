@@ -10,12 +10,13 @@
 #include <assert.h>
 #include <otawa/proc/BBProcessor.h>
 
-namespace otawa {
-	
+namespace otawa { namespace ipet {
+
+// TrivialBBTime class
 class TrivialBBTime: public BBProcessor {
 	int dep;
 public:
-	inline TrivialBBTime(int depth = 1);
+	TrivialBBTime(int depth = 1, const PropList& props = PropList::EMPTY);
 	inline int depth(void) const;
 
 	// BBProcessor overload
@@ -24,14 +25,10 @@ public:
 
 
 // Inlines
-inline TrivialBBTime::TrivialBBTime(int depth): dep(depth) {
-	assert(depth > 0);
-}
-
 inline int TrivialBBTime::depth(void) const {
 	return dep;
 }
 
-} // otawa
+} } // otawa::ipet
 
 #endif // OTAWA_IPET_TRIVIALBBTIME_H

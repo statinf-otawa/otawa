@@ -5,10 +5,14 @@
  *	src/prog/ipet_IPET.cpp -- IPET class implementation.
  */
 
- #include <otawa/ipet/IPET.h>
- 
-namespace otawa {
+#include <otawa/ipet/IPET.h>
+#include <otawa/ilp.h>
+#include <otawa/manager.h>
 
+namespace otawa { namespace ipet {
+
+using namespace ilp;
+ 
 /**
  * @class IPET
  * This static class is used for storing ressources (property identifiers)
@@ -51,4 +55,53 @@ Identifier IPET::ID_WCET("ipet.wcet");
  */
 Identifier IPET::ID_Explicit("ipet.explicit");
 
-} // otawa
+
+/**
+ * Get the system tied with the given CFG. If none exists, create ones.
+ * @param fw	Current framework.
+ * @param cfg	Current CFG.
+ * @preturn		CFG ILP system.
+ */
+ilp::System *IPET::getSystem(FrameWork *fw, CFG *cfg) {
+	System *system = cfg->get<System *>(IPET::ID_System, 0);
+	if(!system) {
+		system = fw->newILPSystem();
+		cfg->addDeletable<System *>(IPET::ID_System, system);
+	}
+	return system;
+}
+
+
+/**
+ * Get the variable tied to the given basic block. If none is tied, creates a
+ * new one and ties it.
+ * @param system	Current ILP system.
+ * @param bb		Looked basic block.
+ * @return			Tied variable.
+ */
+ilp::Var *IPET::getVar(ilp::System *system, BasicBlock *bb) {
+	Var *var = bb->get<Var *>(IPET::ID_Var, 0);
+	if(!var) {
+		var = system->newVar();
+		bb->add(IPET::ID_Var, var);
+	}
+	return var;
+}
+
+/**
+ * Get the variable tied to the given edge. If none is tied, creates a
+ * new one and ties it.
+ * @param system	Current ILP system.
+ * @param edge		Looked edge.
+ * @return			Tied variable.
+ */
+ilp::Var *IPET::getVar(ilp::System *system, Edge *edge) {
+	Var *var = edge->get<Var *>(IPET::ID_Var, 0);
+	if(!var) {
+		var = system->newVar();
+		edge->add(IPET::ID_Var, var);
+	}
+	return var;
+}
+
+} } // otawa::ipet

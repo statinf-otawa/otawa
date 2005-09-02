@@ -15,10 +15,12 @@
 #include <otawa/ipet/WCETComputation.h>
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ipet/BasicObjectFunctionBuilder.h>
+#include <otawa/proc/ProcessorException.h>
 #include <otawa/ilp.h>
 
-using namespace otawa;
 using namespace elm;
+using namespace otawa;
+using namespace otawa::ipet;
 
 int main(int argc, char **argv) {
 
@@ -64,38 +66,32 @@ int main(int argc, char **argv) {
 		
 		// Compute BB times
 		cout << "Timing the BB\n";
-		TrivialBBTime tbt(5);
-		tbt.configure(props);
+		TrivialBBTime tbt(5, props);
 		tbt.processCFG(fw, &vcfg);
 		
 		// Assign variables
 		cout << "Numbering the main\n";
-		VarAssignment assign;
-		assign.configure(props);
+		VarAssignment assign(props);
 		assign.processCFG(fw, &vcfg);
 		
 		// Build the system
 		cout << "Building the ILP system\n";
-		BasicConstraintsBuilder builder;
-		builder.configure(props);
+		BasicConstraintsBuilder builder(props);
 		builder.processCFG(fw, &vcfg);
 		
 		// Build the object function to maximize
 		cout << "Building the ILP object function\n";
-		BasicObjectFunctionBuilder fun_builder;
-		fun_builder.configure(props);
+		BasicObjectFunctionBuilder fun_builder(props);
 		fun_builder.processCFG(fw, &vcfg);
 		
 		// Load flow facts
 		cout << "Loading flow facts\n";
-		ipet::FlowFactLoader loader;
-		loader.configure(props);
+		ipet::FlowFactLoader loader(props);
 		loader.processCFG(fw, &vcfg);
 		
 		// Resolve the system
 		cout << "Resolve the system\n";
-		WCETComputation wcomp;
-		wcomp.configure(props);
+		WCETComputation wcomp(props);
 		wcomp.processCFG(fw, &vcfg);
 		
 		// Display the result
@@ -106,6 +102,10 @@ int main(int argc, char **argv) {
 		cout << "SUCCESS\nWCET = " << vcfg.use<int>(IPET::ID_WCET) << '\n';
 	}
 	catch(LoadException e) {
+		cerr << "ERROR: " << e.message() << '\n';
+		exit(1);
+	}
+	catch(ProcessorException e) {
 		cerr << "ERROR: " << e.message() << '\n';
 		exit(1);
 	}

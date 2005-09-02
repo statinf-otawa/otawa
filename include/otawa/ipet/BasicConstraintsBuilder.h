@@ -18,15 +18,18 @@ namespace ilp {
 	class System;
 } //ilp
 
-
+namespace ipet {
+	
 // BasicConstraintsBuilder class
 class BasicConstraintsBuilder: public CFGProcessor {
 	void make(ilp::System *system, BasicBlock *bb);
 public:
+	BasicConstraintsBuilder(const PropList& props = PropList::EMPTY);
+
 	// CFGProcessor overload
 	virtual void processCFG(FrameWork *fw, CFG *cfg);
 };
 
-} // otawa
+} } // otawa::ipet
 
 #endif 	// OTAWA_IPET_BASIC_CONSTRAINTS_BUILDER_H
