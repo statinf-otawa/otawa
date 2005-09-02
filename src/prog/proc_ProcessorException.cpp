@@ -6,6 +6,7 @@
  */
 
 #include <otawa/proc/ProcessorException.h>
+#include <elm/debug.h>
 
 using namespace elm;
 
@@ -39,7 +40,7 @@ String ProcessorException::build(const Processor& proc, elm::String message) {
 String ProcessorException::build(const Processor& proc, elm::CString format,
 elm::VarArg& args) {
 	StringBuffer buffer;
-	buffer.format(format, args.args());
+	buffer.format(format, args);
 	return build(proc, buffer.toString());	
 }
 
@@ -50,7 +51,7 @@ elm::VarArg& args) {
  * @param message	Exception message.
  */
 ProcessorException::ProcessorException(const Processor& proc,
-elm::String message) {
+elm::String& message) {
 	setMessage(build(proc, message));
 }
 

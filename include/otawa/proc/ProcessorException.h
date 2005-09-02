@@ -16,7 +16,7 @@ class ProcessorException: public otawa::Exception {
 	String build(const Processor& proc, elm::String message);
 	String build(const Processor& proc, elm::CString format, elm::VarArg& args);
 public:
-	ProcessorException(const Processor& proc, elm::String message);
+	ProcessorException(const Processor& proc, elm::String& message);
 	ProcessorException(const Processor& proc, elm::CString format, ...);
 	ProcessorException(const Processor& proc, elm::CString format,
 		elm::VarArg& args);
