@@ -47,7 +47,6 @@ public:
 	virtual const CacheConfiguration& caches(void);
 	
 	// CFG Management
-	void buildCFG(void);
 	CFGInfo *getCFGInfo(void);
 	CFG *getStartCFG(void);
 	
