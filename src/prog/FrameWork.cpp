@@ -9,6 +9,7 @@
 #include <otawa/prog/FrameWork.h>
 #include <otawa/ast/ASTInfo.h>
 #include <otawa/ilp/System.h>
+#include <otawa/cfg/CFGBuilder.h>
 #include <config.h>
 
 
@@ -57,38 +58,18 @@ FrameWork::~FrameWork(void) {
 
 
 /**
- * Build the CFG of the project.
- */
-void FrameWork::buildCFG(void) {
-	
-	// Get a CFG information descriptor
-	CFGInfo *info = get<CFGInfo *>(CFGInfo::ID, 0);
-	if(info)
-		info->clear();
-	else
-		info = new CFGInfo(this);
-	
-	// Build the new one
-	for(Iterator<File *> file(*files()); file; file++)
-		for(Iterator<Segment *> seg(file->segments()); seg; seg++)
-			for(Iterator<ProgItem *> item(seg->items()); item; item++)
-				if(seg->flags() & Segment::EXECUTABLE)
-					info->addCode((Code *)*item, *file);
-	
-	// Add the entry point
-	Inst *_start = start();
-	if(_start)
-		info->addSubProgram(_start);
-}
-
-
-/**
  * Get the CFG of the project. If it does not exists, built it.
  */
 CFGInfo *FrameWork::getCFGInfo(void) {
+	
+	// Already built ?
 	CFGInfo *info = get<CFGInfo *>(CFGInfo::ID, 0);
-	if(!info)
-		buildCFG();
+	if(info)
+		return info;
+	
+	// Build it
+	CFGBuilder builder;
+	builder.processFrameWork(this);
 	return use<CFGInfo *>(CFGInfo::ID);
 }
 
