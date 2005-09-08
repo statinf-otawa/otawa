@@ -58,7 +58,7 @@ public:
 	~Manager(void);
 	Loader *findLoader(CString name);
 	Platform *findPlatform(CString name);
-	Platform *findPlatform(const PlatformId& id);
+	Platform *findPlatform(const Platform::Identification& id);
 	FrameWork *load(CString path, PropList& props);
 	ilp::System *newILPSystem(String plugin = "");
 };

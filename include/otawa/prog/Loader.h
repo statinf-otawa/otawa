@@ -34,7 +34,6 @@ public:
 	static id_t ID_Argc;
 	static id_t ID_Argv;
 	static id_t ID_Envp;
-	static Identifier ID_Caches;
 
 	// Default platform and loader
 	static Loader& LOADER_Gliss_PowerPC;

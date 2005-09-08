@@ -44,7 +44,7 @@ public:
 	virtual Manager *manager(void) { return proc->manager(); };
 	virtual Inst *start(void) { return proc->start(); };
 	virtual Inst *findInstAt(address_t addr) { return proc->findInstAt(addr); };
-	virtual const CacheConfiguration& caches(void);
+	virtual const CacheConfiguration& cache(void);
 	
 	// CFG Management
 	CFGInfo *getCFGInfo(void);
