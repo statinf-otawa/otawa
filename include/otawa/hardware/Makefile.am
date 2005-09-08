@@ -1,4 +1,6 @@
 includeotawahardwaredir=$(includedir)/otawa/hardware
 includeotawahardware_HEADERS = \
-	Cache.h
+	Cache.h \
+	CacheConfiguration.h \
+	Platform.h
 
