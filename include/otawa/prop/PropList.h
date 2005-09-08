@@ -65,6 +65,7 @@ public:
 		inline void next(void);
 		inline bool ended(void) const;
 		inline Property *item(void) const;
+		template <class T> inline T get(void) const;
 		inline bool operator==(Identifier *id) const;
 		inline bool operator!=(Identifier *id) const;
 		inline bool operator==(Identifier& id) const;
@@ -194,6 +195,10 @@ inline bool PropList::PropIter::operator!=(Identifier& id) const {
 	return item()->id() == &id;
 }
 
+template <class T>
+inline T PropList::PropIter::get(void) const {
+	return ((GenericProperty<T> *)prop)->value();
+}
 
 // PropList::PropGetter inlines
 template <class T>
