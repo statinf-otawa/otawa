@@ -18,9 +18,11 @@ class Cache {
 public:
 	typedef enum replace_policy_t {
 		NONE = 0,
-		LRU = 1,
-		RANDOM = 2,
-		FIFO = 3
+		OTTHER = 1,
+		LRU = 2,
+		RANDOM = 3,
+		FIFO = 4,
+		PLRU = 5
 	} replace_policy_t;
 	
 	typedef enum write_policy_t {
@@ -29,12 +31,11 @@ public:
 	} write_policity_t;
 	
 	typedef struct info_t {
-		int level;
 		int access_time;
 		int miss_penalty;
 		int block_bits;
 		int line_bits;
-		int way_bits;
+		int set_bits;
 		replace_policy_t replace;
 		write_policy_t write;
 		bool allocate;
@@ -42,17 +43,19 @@ public:
 
 private:
 	info_t _info;
+	const Cache *_next;
 
 public:
-	inline Cache(const info_t& info);
+	inline Cache(const info_t& info, const Cache *next = 0);
+	inline Cache(const Cache& cache, const Cache *next = 0);
 	
 	// Simple accessors
-	inline int level(void) const;
+	inline const Cache *nextLevel(void);
 	inline size_t cacheSize(void) const;
-	inline size_t mapSize(void) const;
 	inline size_t blockSize(void) const;
-	inline int lineCount(void) const;
 	inline int wayCount(void) const;
+	inline int lineCount(void) const;
+	inline int setCount(void) const;
 	inline replace_policy_t replacementPolicy(void) const;
 	inline write_policy_t writePolicy(void) const;
 	inline bool doesWriteAllocate(void) const;
@@ -60,8 +63,8 @@ public:
 	// Low-level information
 	inline int blockBits(void) const;
 	inline int lineBits(void) const;
-	inline int wayBits(void) const;
-	inline int mapBits(void) const;	
+	inline int tagBits(void) const;	
+	inline int setBits(void) const;
 	inline mask_t blockMask(void) const; 
 	inline mask_t lineMask(void) const;
 	inline mask_t tagMask(void) const;
@@ -73,38 +76,29 @@ public:
 };
 
 
-// CacheHierarchy class
-class CacheConfiguration: private elm::genstruct::Vector <const Cache *> {
-public:
-
-	// Constructors
-	CacheConfiguration(const Cache *cache, ...);
-	CacheConfiguration(int count, const Cache **caches);
-	
-	// Accessors
-	inline int count(void) const;
-	inline const Cache *get(int i) const;
-};
-
-
 // Inlines
-inline Cache::Cache(const info_t& info): _info(info) {
+inline Cache::Cache(const info_t& info, const Cache *next)
+: _info(info), _next(next) {
 }
 
-inline int Cache::level(void) const {
-	return _info.level;
+inline Cache::Cache(const Cache& cache, const Cache *next)
+: _info(cache._info), _next(next) {
+}
+
+inline const Cache *Cache::nextLevel(void) {
+	return _next;
 }
 
 inline size_t Cache::cacheSize(void) const {
-	return 1 << (blockBits() + lineBits() + wayBits());
-}
-
-inline size_t Cache::mapSize(void) const {
-	return 1 << mapBits();
+	return 1 << (blockBits() + lineBits() + setBits());
 }
 
 inline size_t Cache::blockSize(void) const {
 	return 1 << blockBits();
+}
+
+inline int Cache::setCount(void) const {
+	return 1 << lineBits();
 }
 
 inline int Cache::lineCount(void) const {
@@ -112,7 +106,7 @@ inline int Cache::lineCount(void) const {
 }
 
 inline int Cache::wayCount(void) const {
-	return 1 << wayBits();
+	return 1 << setBits();
 }
 
 inline Cache::replace_policy_t Cache::replacementPolicy(void) const {
@@ -135,12 +129,12 @@ inline int Cache::lineBits(void) const {
 	return _info.line_bits;
 }
 
-inline int Cache::wayBits(void) const {
-	return _info.way_bits;
+inline int Cache::setBits(void) const {
+	return _info.set_bits;
 }
 
-inline int Cache::mapBits(void) const {
-	return blockBits() + lineBits();
+inline int Cache::tagBits(void) const {
+	return 32 - blockBits() + lineBits();
 }
 
 inline mask_t Cache::blockMask(void) const {
@@ -164,18 +158,9 @@ inline mask_t Cache::line(address_t addr) const {
 }
 
 inline mask_t Cache::tag(address_t addr) const {
-	return ((mask_t)addr) >> mapBits();
-}
-
-inline int CacheConfiguration::count(void) const {
-	return length();
-}
-
-inline const Cache *CacheConfiguration::get(int i) const {
-	return elm::genstruct::Vector<const Cache *>::get(i);
+	return ((mask_t)addr) >> (blockBits() + lineBits());
 }
 
 } // otawa
 
 #endif // OTAWA_HARDWARE_CACHE_H
-
