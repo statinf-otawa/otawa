@@ -51,13 +51,6 @@ namespace otawa {
 
 
 /**
- * This property identifier is used for passing a cache hierarchy configuration
- * to the loader (const CacheConfiguration *).
- */
-Identifier Loader::ID_Caches("otawa.caches");
-
-
-/**
  * Identifier of the property indicating the name (CString) of the platform to use.
  */	
 id_t Loader::ID_PlatformName = Property::getID("otawa.PlatformName");

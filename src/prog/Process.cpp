@@ -2,11 +2,11 @@
  *	$Id$
  *	Copyright (c) 2003, IRIT UPS.
  *
- *	otawa/prog/Process.cpp -- implementation for Process class.
+ *	prog/Process.cpp -- implementation for Process class.
  */
 
 #include <otawa/prog/Process.h>
-#include <otawa/hardware/Cache.h>
+#include <otawa/hardware/CacheConfiguration.h>
 
 namespace otawa {
 
@@ -20,17 +20,13 @@ namespace otawa {
 
 
 /**
- * This constant may be used for representing processors with no cache.
- */
-const CacheConfiguration Process::NO_CACHE(0);
-
-
-/**
- * @fn const elm::genstruct::Vector<const Cache *>& caches(void);
  * Get the cache hierarchy of the current processor. The cachers are ordered
  * according the index in the vector.
  * @return	Cache hierarchy.
  */
+const CacheConfiguration& Process::cache(void) {
+	return platform()->cache();
+}
 
 
 /**

@@ -28,10 +28,9 @@ void outputSeq(AST *ast, int ind);
 
 int main(int argc, char **argv) {
 	Cache::info_t info;
-	info.level = 0;       // 1er niveau de cache
  	info.block_bits = 3;  // 2^3 octets par bloc
  	info.line_bits = 2;   // 2^3 lignes
- 	info.way_bits = 0;    // 2^0 élément par ensemble 
+ 	info.set_bits = 0;    // 2^0 élément par ensemble 
  	info.replace = Cache::NONE;
  	info.write = Cache::WRITE_THROUGH;
  	info.access_time = 0;
@@ -43,7 +42,7 @@ int main(int argc, char **argv) {
  	Manager manager;
 	PropList props;
 	FrameWork *fw;
-	props.set<const CacheConfiguration *>(Loader::ID_Caches, caches);
+	props.set<const CacheConfiguration *>(Platform::ID_Cache, caches);
 	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
 	
 	try { 
