@@ -8,6 +8,7 @@
 #define OTAWA_PLATFORM_H
 
 #include <elm/string.h>
+#include <otawa/hardware/Platform.h>
 
 namespace otawa {
 using namespace elm;
@@ -68,35 +69,6 @@ public:
 	inline bool override(const Register& reg)
 		{ return (bnk->unalias(*this)).override(reg.bnk->unalias(*this)); };		
 };
-
-// Platform identifier
-class PlatformId {
-	String name;
-	String arch;
-	String abi;
-	String mach;
-	void split(void);
-public:
-	PlatformId(CString _name);
-	PlatformId(const String& _name);
-	PlatformId(CString arch, CString abi, CString os);
-	inline const String& getArch(void) const { return arch; };
-	inline const String& getABI(void) const { return abi; };
-	inline const String& getMach(void) const { return mach; };
-};
-
-
-// Platform class
-class Manager;
-class Platform {
-	friend class Manager;
-	virtual ~Platform(void) = 0;
-public:
-	virtual bool accept(const PlatformId& id) = 0;
-	inline bool accept(CString name) { return accept(PlatformId(name)); };
-	inline bool accept(const String& name) { return accept(PlatformId(name)); };
-};
-
 
 }; // namespace otawa
 

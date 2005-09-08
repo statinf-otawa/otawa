@@ -19,6 +19,7 @@
 #include <otawa/gliss/CodeSegment.h>
 #include <otawa/gliss/File.h>
 #include <otawa/gliss/Process.h>
+#include <otawa/gliss/Platform.h>
 
 namespace otawa { namespace gliss {
 
@@ -29,13 +30,6 @@ class Platform;
 class CodeSegment;
 class DataSegment;
 class File;
-
-// Platform class
-class Platform: public ::otawa::Platform {
-public:
-	static Platform platform;
-};
-
 
 // DataSegment class
 class DataSegment: public ::otawa::Segment {
