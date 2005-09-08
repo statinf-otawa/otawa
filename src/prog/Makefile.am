@@ -71,6 +71,8 @@ libotawa_so_SOURCES = \
 	ipet_FlowFactLoader.cpp \
 	util_CFGNormalizer.cpp \
 	hardware_Cache.cpp \
+	hardware_CacheConfiguration.cpp \
+	hardware_Platform.cpp \
 	ipet_BasicObjectFunctionBuilder.cpp \
 	ast_parser.yy \
 	ast_lexer.ll \
@@ -145,6 +147,8 @@ libotawa_a_SOURCES = \
 	ipet_FlowFactLoader.cpp \
 	util_CFGNormalizer.cpp \
 	hardware_Cache.cpp \
+	hardware_CacheConfiguration.cpp \
+	hardware_Platform.cpp \
 	ipet_BasicObjectFunctionBuilder.cpp \
 	ast_parser.yy \
 	ast_lexer.ll \
