@@ -6,6 +6,7 @@
  */
 
 #include <otawa/gliss.h>
+#include <otawa/hardware/CacheConfiguration.h>
 
 // Trace
 #ifndef NDEBUG
@@ -38,7 +39,7 @@ Process::Process(Manager *_man, PropList& props): man(_man) {
 	argc = props.get<int>(Loader::ID_Argc, 1);
 	argv = props.get<char **>(Loader::ID_Argv, default_argv);
 	envp = props.get<char **>(Loader::ID_Envp, default_envp);
-	_caches = props.get<const CacheConfiguration *>(Loader::ID_Caches, &NO_CACHE);
+	_platform = new Platform(props);
 }
 
 /**
@@ -93,7 +94,7 @@ elm::Collection<otawa::File *> *Process::files(void) {
  * @return GLISS platform.
  */
 ::otawa::Platform *Process::platform(void) {
-	return 0; // !!TODO!! &Platform::platform;
+	return _platform;
 };
 
 
@@ -113,6 +114,7 @@ Process::~Process(void) {
 	TRACE(this << ".Process::~Process()");
 	for(Iterator<otawa::File *> file(_files); file; file++)
 		delete (File *)*file;
+	delete _platform;
 }
 
 // otawa::Process overload
@@ -138,11 +140,5 @@ otawa::Inst *Process::findInstAt(address_t addr) {
 	}
 }
 
-
-/**
- */
-const CacheConfiguration& Process::caches(void) {
-	return *_caches;
-}
 
 } } // otawa::gliss

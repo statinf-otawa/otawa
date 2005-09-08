@@ -103,8 +103,8 @@ ASTInfo *FrameWork::getASTInfo(void) {
 
 /**
  */
-const CacheConfiguration& FrameWork::caches(void) {
-	return proc->caches();
+const CacheConfiguration& FrameWork::cache(void) {
+	return proc->cache();
 }
 
 } // otawa

@@ -49,7 +49,7 @@ void ACSComputation::processAST(FrameWork *fw, AST *ast) {
 		AC_OUT(cout <<"|| length["<<j<<"] : "<<cache_line_length<<'\n');
 		AC_OUT(cout <<"|| htable["<<j<<"] : "<<acs->htable.count()<<'\n');
 		if (cache_line_length != 0){
-			for(int i = 0; i<fw->caches().get(0)->wayCount(); i++){
+			for(int i = 0; i<fw->cache().instCache()->wayCount(); i++){
 				acs->cache_state.add(new BitVector(cache_line_length));
 			}
 			AbstractCacheState::AbstractCacheState *tmp=applyProcess(fw, ast, acs);
@@ -86,24 +86,19 @@ void ACSComputation::initialization(FrameWork *fw, AST *ast, AbstractCacheState 
 			address_t last = ast->toBlock()->block()->address() + ast->toBlock()->size();
 			int same_lblock = 0;
 			for(Inst *inst = ast->toBlock()->block(); inst->address() < last; inst = inst->next()){
-				switch (fw->caches().count()){
-					case 1 : 
-						//L1
-						int which_line = fw->caches().get(0)->line(inst->address());
-						if ((which_line == acs->cache_line)&&(!acs->htable.exists(inst->address()))){
-							if (same_lblock == 0 ){
-								AC_OUT(cout <<"|| "<< inst->address() <<" ~ "<< which_line <<" indice : "<<cache_line_length<<'\n');
-								acs->htable.put(inst->address(), cache_line_length);
-								cache_line_length++;
-							}
-							if (same_lblock < (fw->caches().get(0)->blockSize()/inst->size())-1)
-								same_lblock++;
-							else 
-								same_lblock = 0;
+				if(fw->cache().hasInstCache() && !fw->cache().isUnified()) {
+					int which_line = fw->cache().instCache()->line(inst->address());
+					if ((which_line == acs->cache_line)&&(!acs->htable.exists(inst->address()))){
+						if (same_lblock == 0 ){
+							AC_OUT(cout <<"|| "<< inst->address() <<" ~ "<< which_line <<" indice : "<<cache_line_length<<'\n');
+							acs->htable.put(inst->address(), cache_line_length);
+							cache_line_length++;
 						}
-						break;
-					default :
-						;//L2, L3 ...
+						if (same_lblock < (fw->cache().instCache()->blockSize()/inst->size())-1)
+							same_lblock++;
+						else 
+							same_lblock = 0;
+					}
 				}
 			}
 			break;
@@ -170,103 +165,97 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 			ast->toBlock()->set<AbstractCacheState *>(ETS::ID_ACS,acs);
 			address_t last = ast->toBlock()->block()->address() + ast->toBlock()->size();
 			for(Inst *inst = ast->toBlock()->block(); inst->address() < last; inst = inst->next()){
-				switch (fw->caches().count()){
-					case 1 : {
-						//L1
-						if (acs->htable.exists(inst->address())){
+				if(fw->cache().hasInstCache() && !fw->cache().isUnified()) {
+					if (acs->htable.exists(inst->address())){
 							
-							AC_OUT(cout<<"|| en entree : "<<"\n";
-							for(int j=0;j<acs->cache_state.length();j++){
-								cout<<"||--><"<<j<<">";
-								for(int i=0;i<acs->cache_state[j]->size();i++){
-									cout<<acs->cache_state[j]->bit(i)<<' ';
-								}
-								cout<<"\n";
+						AC_OUT(cout<<"|| en entree : "<<"\n";
+						for(int j=0;j<acs->cache_state.length();j++){
+							cout<<"||--><"<<j<<">";
+							for(int i=0;i<acs->cache_state[j]->size();i++){
+								cout<<acs->cache_state[j]->bit(i)<<' ';
 							}
-							cout<<'\n');
+							cout<<"\n";
+						}
+						cout<<'\n');
 							
-							//Ferdinand's algorithme (Update - Must).
-							bool stop = false;
-							genstruct::Vector<BitVector *> cache_tmp;
-							cache_tmp.add(new BitVector(acs->cache_state[0]->size()));
-							cache_tmp[0]->set(acs->htable.get(inst->address(), -1), true);
-							for(int x=0;x<acs->cache_state.length();x++){
-								if(!stop){
-									if(acs->cache_state[x]->bit(acs->htable.get(inst->address(), -1))){
-										acs->cache_state[x]->set(acs->htable.get(inst->address(), -1), false);
-										cache_tmp[x]->applyOr(*acs->cache_state[x]);
-										stop = true;
-									}
-									else{
-										if(x<acs->cache_state.length()-1){
-											cache_tmp.add(new BitVector(*acs->cache_state[x]));
-										}
-									}
+						//Ferdinand's algorithme (Update - Must).
+						bool stop = false;
+						genstruct::Vector<BitVector *> cache_tmp;
+						cache_tmp.add(new BitVector(acs->cache_state[0]->size()));
+						cache_tmp[0]->set(acs->htable.get(inst->address(), -1), true);
+						for(int x=0;x<acs->cache_state.length();x++){
+							if(!stop){
+								if(acs->cache_state[x]->bit(acs->htable.get(inst->address(), -1))){
+									acs->cache_state[x]->set(acs->htable.get(inst->address(), -1), false);
+									cache_tmp[x]->applyOr(*acs->cache_state[x]);
+									stop = true;
 								}
 								else{
-									cache_tmp.set(x, acs->cache_state[x]);
-								}
-							}
-							for(int y=0;y<acs->cache_state.length();y++){
-								acs->cache_state.set(y, new BitVector(*cache_tmp.get(y)));
-							}
-							
-							//Muller's categorisations in 1994.
-							if(stop==true){
-								if(!acs->byConflict()){
-									if(!acs->hcat.exists(inst->address())){
-										//ALWAYS_HIT.
-										acs->hcat.put(inst->address(), AbstractCacheState::ALWAYS_HIT);
-										ast->toBlock()->set<int>(ETS::ID_HITS, ast->toBlock()->use<int>(ETS::ID_HITS)+1);
-										AC_OUT(	cout << "|| hit avec "<<inst->address()<<"\n";
-												cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de hit : " << ast->toBlock()->get<int>(ETS::ID_HITS, -2)<< '\n');
+									if(x<acs->cache_state.length()-1){
+										cache_tmp.add(new BitVector(*acs->cache_state[x]));
 									}
-									else{
-										if((acs->hcat.get(inst->address(), -1) == AbstractCacheState::ALWAYS_MISS)&&(ast->toBlock()->use<int>(ETS::ID_MISSES) > 0)){
-											//FIRST_MISS.
-											ast->toBlock()->set<int>(ETS::ID_MISSES, ast->toBlock()->use<int>(ETS::ID_MISSES)-1);
-											acs->hcat.remove(inst->address());
-											acs->hcat.put(inst->address(), AbstractCacheState::FIRST_MISS);
-											ast->toBlock()->set<int>(ETS::ID_FIRST_MISSES, ast->toBlock()->use<int>(ETS::ID_FIRST_MISSES)+1);
-											AC_OUT(	cout << "|| first_miss avec "<<inst->address()<<"\n";
-													cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de first miss : " << ast->toBlock()->get<int>(ETS::ID_FIRST_MISSES, -2)<< '\n');
-										}	
-									}
-								}
-								else{
-									//CONFLICT.
-									acs->hcat.put(inst->address(), AbstractCacheState::CONFLICT);
-									ast->toBlock()->set<int>(ETS::ID_CONFLICTS, ast->toBlock()->use<int>(ETS::ID_CONFLICTS)+1);
-									AC_OUT(	cout << "|| conflict avec "<<inst->address()<<"\n");
 								}
 							}
 							else{
-								//ALWAYS_MISS
-								if(!acs->hcat.exists(inst->address())){
-									acs->hcat.put(inst->address(), AbstractCacheState::ALWAYS_MISS);
-									
-									ast->toBlock()->set<int>(ETS::ID_MISSES, ast->toBlock()->use<int>(ETS::ID_MISSES)+1);
-									AC_OUT(	cout << "|| miss avec "<<inst->address()<<"\n";
-											cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de miss : " << ast->toBlock()->get<int>(ETS::ID_MISSES, -2)<< '\n';
-											cout << "|| -rajout de :"<< inst->address()<<" a lindex : "<<acs->htable.get(inst->address(), -1)<<"\n");
-								}
+								cache_tmp.set(x, acs->cache_state[x]);
 							}
-							
-							AC_OUT(cout<<"|| en sortie : "<<"\n";
-							for(int j=0;j<acs->cache_state.length();j++){
-								cout<<"||--><"<<j<<">";
-								for(int i=0;i<acs->cache_state[j]->size();i++){
-									cout<<acs->cache_state[j]->bit(i)<<' ';
-								}
-								cout<<"\n";
-							}
-							cout<<'\n');
-							
 						}
-						break;
+						for(int y=0;y<acs->cache_state.length();y++){
+							acs->cache_state.set(y, new BitVector(*cache_tmp.get(y)));
+						}
+							
+						//Muller's categorisations in 1994.
+						if(stop==true){
+							if(!acs->byConflict()){
+								if(!acs->hcat.exists(inst->address())){
+									//ALWAYS_HIT.
+									acs->hcat.put(inst->address(), AbstractCacheState::ALWAYS_HIT);
+									ast->toBlock()->set<int>(ETS::ID_HITS, ast->toBlock()->use<int>(ETS::ID_HITS)+1);
+									AC_OUT(	cout << "|| hit avec "<<inst->address()<<"\n";
+											cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de hit : " << ast->toBlock()->get<int>(ETS::ID_HITS, -2)<< '\n');
+								}
+								else{
+									if((acs->hcat.get(inst->address(), -1) == AbstractCacheState::ALWAYS_MISS)&&(ast->toBlock()->use<int>(ETS::ID_MISSES) > 0)){
+										//FIRST_MISS.
+										ast->toBlock()->set<int>(ETS::ID_MISSES, ast->toBlock()->use<int>(ETS::ID_MISSES)-1);
+										acs->hcat.remove(inst->address());
+										acs->hcat.put(inst->address(), AbstractCacheState::FIRST_MISS);
+										ast->toBlock()->set<int>(ETS::ID_FIRST_MISSES, ast->toBlock()->use<int>(ETS::ID_FIRST_MISSES)+1);
+										AC_OUT(	cout << "|| first_miss avec "<<inst->address()<<"\n";
+												cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de first miss : " << ast->toBlock()->get<int>(ETS::ID_FIRST_MISSES, -2)<< '\n');
+									}	
+								}
+							}
+							else{
+								//CONFLICT.
+								acs->hcat.put(inst->address(), AbstractCacheState::CONFLICT);
+								ast->toBlock()->set<int>(ETS::ID_CONFLICTS, ast->toBlock()->use<int>(ETS::ID_CONFLICTS)+1);
+								AC_OUT(	cout << "|| conflict avec "<<inst->address()<<"\n");
+							}
+						}
+						else{
+							//ALWAYS_MISS
+							if(!acs->hcat.exists(inst->address())){
+								acs->hcat.put(inst->address(), AbstractCacheState::ALWAYS_MISS);
+								
+								ast->toBlock()->set<int>(ETS::ID_MISSES, ast->toBlock()->use<int>(ETS::ID_MISSES)+1);
+								AC_OUT(	cout << "|| miss avec "<<inst->address()<<"\n";
+										cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de miss : " << ast->toBlock()->get<int>(ETS::ID_MISSES, -2)<< '\n';
+										cout << "|| -rajout de :"<< inst->address()<<" a lindex : "<<acs->htable.get(inst->address(), -1)<<"\n");
+								}
+						}
+							
+						AC_OUT(cout<<"|| en sortie : "<<"\n";
+						for(int j=0;j<acs->cache_state.length();j++){
+							cout<<"||--><"<<j<<">";
+							for(int i=0;i<acs->cache_state[j]->size();i++){
+								cout<<acs->cache_state[j]->bit(i)<<' ';
+							}
+							cout<<"\n";
+						}
+						cout<<'\n');
+						
 					}
-					default :
-						;//L2, L3 ...
 				}
 			}
 			return acs;

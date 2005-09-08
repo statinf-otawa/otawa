@@ -15,21 +15,31 @@ namespace otawa {
  * @p This class contains the configuration of a level of cache of processor.
  * @p It may represents direct-mapped or associative cache (with any associatvity
  * level) using bits as block/line boundaries. Supported management policies
- * (when they apply) are only LRU, FIFO and RANDOM.
+ * (when they apply) are only LRU, FIFO, RANDOM and PLRU.
  * @p Once built, a cache object is viewed as a read-only database.
  */
 
 
 /**
- * @fn Cache::Cache(const info_t& info);
+ * @fn Cache::Cache(const info_t& info, const Cache *next);
  * Build a new cache with the given information.
+ * @param info	Information about the cache.
+ * @param next	Next level of cache (may be null).
  */
 
 
 /**
- * @fn int Cache::level(void) const;
- * Get the cache level.
- * @return Cache level.
+ * @fn Cache::Cache(const Cache& cache, const Cache *next);
+ * Build a cache by cloning an existing cache and setting it in new cache
+ * configuration.
+ * @param next	Next level of cache (null if there is no more cache).
+ */
+
+
+/**
+ * @fn Cache *Cache::nextLevel(void);
+ * Get the next level of cache.
+ * @return	Next cache level or null if there is no more cache.
  */
 
 
@@ -39,14 +49,6 @@ namespace otawa {
  * @return	Cache size in bytes.
  */
 
-
-/**
- * @fn size_t Cache::mapSize(void) const;
- * Get the size of the mapped part of the cache, that is, the size of memory
- * by the cache without associativity.
- * @return	Map size in bytes.
- */
- 
 
 /**
  * @fn size_t Cache::blockSize(void) const;
@@ -59,6 +61,13 @@ namespace otawa {
  * @fn int Cache::lineCount(void) const;
  * Get the count of lines.
  * @return	Count of lines.
+ */
+
+
+/**
+ * @fn int Cache::setCount(void) const;
+ * Get the count of sets.
+ * @return	Count of sets.
  */
 
 
@@ -105,16 +114,16 @@ namespace otawa {
 
 
 /**
- * @fn int Cache::wayBits(void) const;
+ * @fn int Cache::setBits(void) const;
  * Required bits count for a way index.
  * @return	Way index bits.
  */
 
 
 /**
- * @fn int Cache::mapBits(void) const;
- * Required bits count for a byte address in the map.
- * @return	Byte address bits in the map.
+ * @fn int Cache::tagBits(void) const;
+ * Required bits count in the tag part of the address.
+ * @return	Tag bits.
  */
 
 
@@ -160,56 +169,6 @@ namespace otawa {
  * Compute the tag from the memory address.
  * @param	addr	Memory address to compute from.
  * @return	Tag.
- */
-
-
-/**
- * @class CacheConfiguration
- * This class represents the full configuration of caches of a processor.
- */
-
-
-/**
- * Build a new cache configuration.
- * @param cache	First cache level.
- * @param ...	Other levels of cache (ended by NULL).
- */
-CacheConfiguration::CacheConfiguration(const Cache *cache, ...) {
-	va_list args;
-	va_start(args, cache);
-	while(cache) {
-		add(cache);
-		cache = va_arg(args, const Cache *);
-	}
-	va_end(args);
-}
-
-
-/**
- * Build a new cache configuration from given cache table.
- * @param count		Count of caches in the table.
- * @param caches	Cache table.
- */
-CacheConfiguration::CacheConfiguration(int count, const Cache **caches) {
-	assert((count && caches) || !count);
-	for(int i = 0; i < count; i++)
-		add(caches[i]);
-}
-
-
-/**
- * @fn int CacheConfiguration::count(void) const;
- * Get the count of levels in the cache configuration.
- * @return	Cache level count.
- */
- 
- 
-/**
- * @fn const Cache *CacheConfiguration::get(int i) const;
- * Get the cache at the given level. It is an error to pass level greater
- * than the level count.
- * @param i		Level of cache (starts at 0, level 1 cache is got by a value of 0).
- * @return		Cache at the requested level.
  */
 
 } // otawa
