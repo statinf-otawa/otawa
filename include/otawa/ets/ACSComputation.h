@@ -11,7 +11,7 @@
 #include <elm/genstruct/HashTable.h>
 #include <otawa/proc/ASTProcessor.h>
 #include <otawa/ets/AbstractCacheState.h>
-#include <otawa/hardware/Cache.h>
+#include <otawa/hardware/CacheConfiguration.h>
 
 namespace otawa { namespace ets {
 
@@ -34,14 +34,9 @@ class ACSComputation: public ASTProcessor {
 
 // Inlines
 inline ACSComputation::ACSComputation(FrameWork *fw) {
-	switch (fw->caches().count()){
-		case 1 : 
-			//L1
-			cache_size = fw->caches().get(0)->lineCount();
+	if(fw->cache().hasInstCache() && !fw->cache().isUnified()) {
+		cache_size = fw->cache().instCache()->lineCount();
 			cache_line_length = 0;
-			break;
-		default :
-			;//L2, L3 ...
 	}
 }
 
