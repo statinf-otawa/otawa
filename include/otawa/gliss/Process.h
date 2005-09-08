@@ -2,7 +2,7 @@
  *	$Id$
  *	Copyright (c) 2004, IRIT UPS.
  *
- *	src/gliss/File.h -- GLISS Process class interface.
+ *	gliss/Process.h -- gliss::Process class interface.
  */
 #ifndef OTAWA_GLISS_PROCESS_H
 #define OTAWA_GLISS_PROCESS_H
@@ -12,15 +12,18 @@
 
 namespace otawa { namespace gliss {
 
+// External classes
+class Platform;
+
 // Process class
 class Process: public otawa::Process {
 	elm::datastruct::Vector<otawa::File *> _files;
-	const CacheConfiguration *_caches;
 protected:
 	Manager *man;
 	int argc;
 	char **argv, **envp;
 	address_t start_addr;
+	Platform *_platform;
 public:
 	Process(Manager *_man, PropList& props);
 	virtual ~Process(void);
@@ -34,7 +37,6 @@ public:
 	virtual ::otawa::Manager *manager(void);
 	virtual otawa::Inst *start(void);
 	virtual otawa::Inst *findInstAt(address_t addr);
-	virtual const CacheConfiguration& caches(void);
 };
 
 } } // otawa::gliss
