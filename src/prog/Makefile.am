@@ -74,6 +74,7 @@ libotawa_so_SOURCES = \
 	hardware_CacheConfiguration.cpp \
 	hardware_Platform.cpp \
 	ipet_BasicObjectFunctionBuilder.cpp \
+	ipet_TrivialDataCacheManager.cpp \
 	ast_parser.yy \
 	ast_lexer.ll \
 	ast_ASTLoader.cpp \
@@ -150,6 +151,7 @@ libotawa_a_SOURCES = \
 	hardware_CacheConfiguration.cpp \
 	hardware_Platform.cpp \
 	ipet_BasicObjectFunctionBuilder.cpp \
+	ipet_TrivialDataCacheManager.cpp \
 	ast_parser.yy \
 	ast_lexer.ll \
 	ast_ASTLoader.cpp \

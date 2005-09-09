@@ -6,7 +6,8 @@ includeotawaipet_HEADERS = \
 	BasicConstraintsBuilder.h \
 	WCETComputation.h \
 	ConstraintLoader.h \
-	BasicObjectFunctionBuilder.h
+	BasicObjectFunctionBuilder.h \
+	TrivialDataCacheManager.h
 
 
 
