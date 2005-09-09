@@ -8,6 +8,7 @@ libotawa_ppc_a_SOURCES = \
 	CodeSegment.cpp \
 	Inst.cpp \
 	ControlInst.cpp \
-	Symbol.cpp
+	Symbol.cpp \
+	MemInst.cpp
 
 AM_CXXFLAGS = @BUILD_GLISS_PPC_CXXFLAGS@ @PROG_CXXFLAGS@

@@ -26,6 +26,8 @@ protected:
 	const static unsigned long FLAG_Cond = 0x02;
 	const static unsigned long FLAG_Call = 0x04;
 	const static unsigned long FLAG_Return = 0x08;
+	const static unsigned long FLAG_Load = 0x10;
+	const static unsigned long FLAG_Store = 0x20;
 	void scan(void);
 	virtual void scanCustom(instruction_t *inst) { };
 	inline CodeSegment& segment(void) const { return seg; };
