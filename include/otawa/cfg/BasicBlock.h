@@ -7,6 +7,7 @@
 #ifndef OTAWA_CFG_BASIC_BLOCK_H
 #define OTAWA_CFG_BASIC_BLOCK_H
 
+#include <assert.h>
 #include <elm/genstruct/SLList.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/utility.h>
@@ -38,26 +39,29 @@ protected:
 	elm::genstruct::SLList<Edge *> ins, outs;
 	Mark *_head;
 
-	// Edge Iterator
+	// EdgeIterator class
 	class EdgeIterator: public elm::genstruct::SLList<Edge *>::Iterator  {
 	public:
 		inline EdgeIterator(elm::genstruct::SLList<Edge *>& edges);
 	};
 
-	// Iterator
-	class Iterator: public IteratorInst<Inst *> {
+public:
+	// InstIterator class
+	class InstIterator: public PreIterator<InstIterator, Inst *> {
 		otawa::Inst *inst;
 	public:
-		inline Iterator(BasicBlock *bb): inst(bb->head()->next()) { };
-		virtual bool ended(void) const;
-		virtual Inst *item(void) const;
-		virtual void next(void);
+		inline InstIterator(BasicBlock *bb);
+		inline bool ended(void) const;
+		inline Inst *item(void) const;
+		inline void next(void);
 	};
-	
+
+protected:
 	static BasicBlock& null_bb;
 	virtual ~BasicBlock(void);
 	void setTaken(BasicBlock *bb);
 	void setNotTaken(BasicBlock *bb);
+
 public:
 	static id_t ID;
 	static Identifier& ID_Index;
@@ -79,7 +83,7 @@ public:
 	static BasicBlock *findBBAt(FrameWork *fw, address_t addr);
 	
 	// Generic accessors
-	inline IteratorInst<Inst *> *visit(void) { return new Iterator(this); };
+	inline IteratorInst<Inst *> *visit(void);
 	inline operator IteratorInst<Inst *> *(void) { return visit(); };
 	inline bool isCall(void) const { return (flags & FLAG_Call) != 0; };
 	inline bool isReturn(void) const { return (flags & FLAG_Return) != 0; };
@@ -139,6 +143,27 @@ public:
 };
 
 
+// BasicBlock::InstIterator inlines
+inline BasicBlock::InstIterator::InstIterator(BasicBlock *bb)
+: inst(bb->head()->next()) {
+	assert(bb);
+}
+
+inline bool BasicBlock::InstIterator::ended(void) const {
+	PseudoInst *pseudo;
+	return inst->atEnd()
+		|| ((pseudo = inst->toPseudo()) && pseudo->id() == ID);
+}
+
+inline Inst *CodeBasicBlock::InstIterator::item(void) const {
+	return inst;
+}
+
+inline void CodeBasicBlock::InstIterator::next(void) {
+	inst = inst->next();
+}
+
+
 // BasicBlock::EdgeIterator inlines
 inline BasicBlock::EdgeIterator::EdgeIterator(elm::genstruct::SLList<Edge *>& edges)
 : elm::genstruct::SLList<Edge *>::Iterator(edges) {
@@ -157,6 +182,12 @@ inline BasicBlock::OutIterator::OutIterator(BasicBlock *bb)
 : EdgeIterator(bb->outs) {
 	assert(bb);
 };
+
+// BasicBlock inlines
+inline IteratorInst<Inst *> *BasicBlock::visit(void) {
+	InstIterator iter(this);
+	return new IteratorObject<InstIterator, Inst *>(iter);
+}
 
 } // otawa
 

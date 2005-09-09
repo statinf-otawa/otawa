@@ -309,32 +309,9 @@ IteratorInst<Edge *> *BasicBlock::outEdges(void) {
 
 
 /**
- * @class BasicBlock::Iterator
+ * @class BasicBlock::InstIterator
  * Iterator for instructions in the basic block.
  */
-
-
-/**
- */
-bool BasicBlock::Iterator::ended(void) const {
-	PseudoInst *pseudo;
-	return inst->atEnd()
-		|| ((pseudo = inst->toPseudo()) && pseudo->id() == ID);
-}
-
-
-/**
- */
-Inst *CodeBasicBlock::Iterator::item(void) const {
-	return inst;
-}
-
-
-/**
- */
-void CodeBasicBlock::Iterator::next(void) {
-	inst = inst->next();
-}
 
 
 /**
