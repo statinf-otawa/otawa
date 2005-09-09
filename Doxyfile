@@ -417,16 +417,7 @@ WARN_LOGFILE           =
 # with spaces.
 
 INPUT                  = src/prog/ \
-                         include/otawa/ \
-                         include/otawa/cfg \
-                         include/otawa/prog \
-                         include/otawa/ast \
-                         include/otawa/prop \
-                         include/otawa/proc \
-                         include/otawa/ilp \
-						 include/otawa/ipet \
-                         include/otawa/util \
-                         include/otawa/ets
+                         include/otawa/
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
@@ -441,7 +432,7 @@ FILE_PATTERNS          =
 # should be searched for input files as well. Possible values are YES and NO. 
 # If left blank NO is used.
 
-RECURSIVE              = NO
+RECURSIVE              = YES
 
 # The EXCLUDE tag can be used to specify files and/or directories that should 
 # excluded from the INPUT source files. This way you can easily exclude a 
