@@ -16,6 +16,8 @@
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ipet/BasicObjectFunctionBuilder.h>
 #include <otawa/proc/ProcessorException.h>
+#include <otawa/ipet/TrivialDataCacheManager.h>
+#include <otawa/hardware/CacheConfiguration.h>
 #include <otawa/ilp.h>
 
 using namespace elm;
@@ -23,10 +25,24 @@ using namespace otawa;
 using namespace otawa::ipet;
 
 int main(int argc, char **argv) {
-
+	
+	Cache::info_t info = {
+		1,
+		10,
+		4,
+		6,
+		2,
+		Cache::LRU,
+		Cache::WRITE_THROUGH,
+		false
+	};
+	Cache data_cache(info);
+	CacheConfiguration cache_conf(0, &data_cache);
 	Manager manager;
 	PropList props;
 	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
+	props.set<CacheConfiguration *>(Platform::ID_Cache, &cache_conf);
+	
 	try {
 		
 		// Load program
@@ -68,6 +84,11 @@ int main(int argc, char **argv) {
 		cout << "Timing the BB\n";
 		TrivialBBTime tbt(5, props);
 		tbt.processCFG(fw, &vcfg);
+		
+		// Trivial data cache
+		cout << "Managing the data cache\n";
+		TrivialDataCacheManager dcache(props);
+		dcache.processCFG(fw, &vcfg);
 		
 		// Assign variables
 		cout << "Numbering the main\n";
