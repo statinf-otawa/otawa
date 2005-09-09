@@ -171,4 +171,11 @@ namespace otawa {
  * @return	Tag.
  */
 
+
+/**
+ * @fn int Cache::missPenalty(void) const;
+ * Return the time penaly of a missed access to memory.
+ * @return	Mise penalty in cycles.
+ */
+
 } // otawa

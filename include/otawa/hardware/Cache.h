@@ -8,6 +8,7 @@
 #define OTAWA_HARDWARE_CACHE_H
 
 #include <assert.h>
+#include <elm/io.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/base.h>
 
@@ -59,6 +60,7 @@ public:
 	inline replace_policy_t replacementPolicy(void) const;
 	inline write_policy_t writePolicy(void) const;
 	inline bool doesWriteAllocate(void) const;
+	inline int missPenalty(void) const;
 	
 	// Low-level information
 	inline int blockBits(void) const;
@@ -159,6 +161,10 @@ inline mask_t Cache::line(address_t addr) const {
 
 inline mask_t Cache::tag(address_t addr) const {
 	return ((mask_t)addr) >> (blockBits() + lineBits());
+}
+
+inline int Cache::missPenalty(void) const {
+	return _info.miss_penalty;
 }
 
 } // otawa
