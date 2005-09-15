@@ -142,6 +142,7 @@ libotawa_a_SOURCES = \
 	util_ContextTree.cpp \
 	cfg_VirtualBasicBlock.cpp \
 	cfg_VirtualCFG.cpp \
+	cfg_CFGBuilder.cpp \
 	util_FlowFactLoader.cpp \
 	util_fft_parser.yy \
 	util_fft_lexer.ll \
