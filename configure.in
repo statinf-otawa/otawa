@@ -153,8 +153,12 @@ if test "$with_plugin" = yes; then
 else
 	PROG_DEP="$PWD/src/prog/libotawa.a"
 fi
-EXTERN_PROG_CXXFLAGS="-I$prefix/include"
-EXTERN_PROG_LIBS="-L$prefix/lib -lotawa"
+if test "$prefix" != NONE; then
+	EXTERN_PROG_CXXFLAGS="-I$prefix/include"
+	EXTERN_PROG_LIBS="-L$prefix/lib"
+fi
+EXTERN_PROG_CXXFLAGS="$EXTERN_PROG_CXXFLAGS $ELM_CXXFLAGS"
+EXTERN_PROG_LIBS="$EXTERN_PROG_LIBS -lotawa $ELM_LIBS"
 AC_SUBST(BUILD_PROG_CXXFLAGS)
 AC_SUBST(BUILD_PROG_LIBS)
 AC_SUBST(PROG_CXXFLAGS)
@@ -201,7 +205,7 @@ else
 	AC_MSG_ERROR([no more loader])
 fi
 EXTERN_GLISS_PPC_CXXFLAGS=""
-EXTERN_GLISS_PPC_LIBS="-lotawa_ppc"
+EXTERN_GLISS_PPC_LIBS="-lotawa_ppc $BUILD_GLISS_PPC_LIBS"
 AC_SUBST(GLISS_PPC_CXXFLAGS)
 AC_SUBST(GLISS_PPC_LIBS)
 AC_SUBST(GLISS_PPC_DEP)
@@ -253,7 +257,11 @@ if test "$with_lp_solve" != no; then
 	fi
 fi
 EXTERN_LP_SOLVE_CXXFLAGS=""
-EXTERN_LP_SOLVE_LIBS="-lotawa_lp_solve"
+if test "$with_plugin" = yes; then
+	EXTERN_LP_SOLVE_LIBS=""
+else
+	EXTERN_LP_SOLVE_LIBS="-lotawa_lp_solve"
+fi
 AC_SUBST(LP_SOLVE_CXXFLAGS)
 AC_SUBST(LP_SOLVE_LIBS)
 AC_SUBST(LP_SOLVE_DEP)
@@ -315,6 +323,7 @@ AC_OUTPUT([
 	test/ets/Makefile
 	test/dom/Makefile
 	test/ct/Makefile
+	test/ilp_times/Makefile
 	include/Makefile
 	include/otawa/Makefile
 	include/otawa/ast/Makefile

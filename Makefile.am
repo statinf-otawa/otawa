@@ -2,10 +2,11 @@ SUBDIRS=src examples include bin test
 
 EXTRA_DIST=Doxyfile
 
-pkgdata_DATA=@AUTODOC@
-
-install-data-local:
-	cp -R autodoc $(pkgdatadir)
+install-data-local: @AUTODOC@
+	if test "@AUTODOC@" != ""; then \
+		test -z "$(pkgdatadir)" || mkdir -p "$(pkgdatadir)"; \
+		cp -R autodoc $(pkgdatadir); \
+	fi
 
 uninstall-local:
 	rm -rf $(pkgdatadir)
