@@ -1,10 +1,3 @@
-extern_path=`dirname $PWD`
-DEFAULT_HEADER_PATHS="/usr/include /usr/local/include"
-SITE_HEADER_PATHS="$HOME/.local/include $DEFAULT_HEADER_PATHS"
-DEFAULT_LIB_PATHS="/lib /usr/lib /usr/local/lib"
-SITE_LIB_PATHS="$HOME/.local/lib $DEFAULT_LIB_PATHS"
-
-
 define(push, [
 	old_$1=${$1}
 	$1=$2

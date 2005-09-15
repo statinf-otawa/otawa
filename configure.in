@@ -88,14 +88,28 @@ TESTS=
 AC_SUBST(PLUGINS)
 AC_SUBST(TESTS)
 extern_path=`dirname $PWD`
+DEFAULT_HEADER_PATHS="/usr/include /usr/local/include"
+SITE_HEADER_PATHS="$HOME/.local/include $DEFAULT_HEADER_PATHS"
+DEFAULT_LIB_PATHS="/lib /usr/lib /usr/local/lib"
+SITE_LIB_PATHS="$HOME/.local/lib $DEFAULT_LIB_PATHS"
+
+
 
 
 dnl ==== Site directory ====
+if test "$prefix" != NONE; then
+	SITE_HEADER_PATHS=" $prefix/include $SITE_HEADER_PATHS"
+	SITE_LIB_PATHS=" $prefix/lib $SITE_LIB_PATHS"
+fi
 AC_ARG_WITH(sitedir, [  --with-sitedir=PATHS		Add the given directories for resolving resources.],,)
 for dir in $with_sitedir; do
-	CFLAGS="$CFLAGS -I$dir/include"
-	LIBS=" -L$dir/lib $LIBS"
+	SITE_HEADER_PATHS="$SITE_HEADER_PATHS $dir/include"
+	SITE_LIB_PATHS="$SITE_LIB_PATHS $dir/lib"
 done
+
+
+dnl ==== Without extern ====
+AC_ARG_ENABLE(extern, [  -with-extern	Use external directory for retrieving libraries.],,enable_extern=yes)
 
 
 dnl ==== Auto-documentation ====
@@ -117,23 +131,28 @@ fi
 
 dnl ==== elm ====
 AC_ARG_WITH(elm, [  --with-elm=PATH	Use elm from the given directory.],,)
-if test ! "$with_elm"; then
+if test "$with_elm"; then
+	header_paths="$with_elm/include"
+	lib_paths="$with_elm/src"
+elif test "$enable_extern" = yes; then
 	header_paths="$extern_path/elm/include $SITE_HEADER_PATHS" 
 	lib_paths="$extern_path/elm/src $SITE_LIB_PATHS"
 else
-	header_paths="$with_elm/include"
-	lib_paths="$with_elm/src"
+	header_paths="$SITE_HEADER_PATHS" 
+	lib_paths="$SITE_LIB_PATHS"
+	AC_MSG_WARN([header_paths $header_paths])
+	AC_MSG_WARN([lib_paths $lib_paths])
 fi
 AC_MSG_CHECKING([for elm])
 check=yes
-check_header(ELM_CXXFLAGS, elm/string.h, $header_paths,)
+check_header(ELM_CXXFLAGS, elm/string.h, $header_paths, $CFLAGS)
 check_lib(ELM_LIBS, elm, [
 	#include <elm/string.h>
 	int main(void) {
 		elm::String str("Hello, World !\n");
 		return 0;
 	}
-], $lib_paths, $ELM_CXXFLAGS,)
+], $lib_paths, [$ELM_CXXFLAGS $CFLAGS], $LIBS)
 if test "$check" = yes; then
 	AC_MSG_RESULT([yes])
 else
