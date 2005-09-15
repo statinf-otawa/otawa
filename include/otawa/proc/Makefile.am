@@ -1,9 +1,11 @@
 includeotawaprocdir=$(includedir)/otawa/proc
 includeotawaproc_HEADERS = \
-	Processor.h \
+	ASTProcessor.h \
+	BBProcessor.h \
 	CFGProcessor.h \
 	FunProcessor.h \
-	ASTProcessor.h \
-	BBProcessor.h 
+	Processor.h \
+	ProcessorException.h
+
 	
 	
