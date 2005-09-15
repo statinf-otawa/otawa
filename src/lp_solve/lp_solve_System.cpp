@@ -181,7 +181,6 @@ bool System::solve(void) {
 	int fail = ::solve(lp);
 	
 	// Record the result
-	cout << "FAIL = " << fail << "\n";
 	int result = false;
 	if(fail == OPTIMAL) {
 		result = true;
