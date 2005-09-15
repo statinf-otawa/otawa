@@ -15,11 +15,11 @@ while test "$1" != ""; do
 	elif test "$1" == "--libs"; then
 		libs=ok
 		option=ok
-	elif test "$1" == "glissppc"; then
+	elif test "$1" == "ppc"; then
 		cflags_text="$cflags_text @EXTERN_GLISS_PPC_CXXFLAGS@"
 		libs_text="$libs_text @EXTERN_GLISS_PPC_LIBS@"
 	elif test "$1" == "lp_solve"; then
-		cflags_text="$cflags_text @EXTERN_LP_SOLVE_CXXFLAGS"
+		cflags_text="$cflags_text @EXTERN_LP_SOLVE_CXXFLAGS@"
 		libs_text="$libs_text @EXTERN_LP_SOLVE_LIBS@"
 	elif test "$1" == "--version"; then
 		echo "@PACKAGE@ @VERSION@"
@@ -34,7 +34,8 @@ done
 
 # Check options
 if test "$option" == ""; then
-	echo "SYNTAX: otawa-config [--cflags] [--libs] [lp_solve] [glissppc]"
+	echo "SYNTAX: otawa-config [--cflags] [--libs] [lp_solve] [ppc]"
+	exit
 fi
 
 # Perform display
