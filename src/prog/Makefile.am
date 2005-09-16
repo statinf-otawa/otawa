@@ -77,8 +77,7 @@ libotawa_so_SOURCES = \
 	ipet_TrivialDataCacheManager.cpp \
 	ast_parser.yy \
 	ast_lexer.ll \
-	ast_ASTLoader.cpp \
-	ilp_stub.cpp
+	ast_ASTLoader.cpp
 
 else
 
@@ -121,6 +120,7 @@ libotawa_a_SOURCES = \
 	proc_FunProcessor.cpp \
 	proc_ASTProcessor.cpp \
 	proc_BBProcessor.cpp \
+	proc_ProcessorException.cpp \
 	ipet_IPET.cpp \
 	ipet_TrivialBBTime.cpp \
 	ipet_VarAssignment.cpp \
@@ -155,8 +155,7 @@ libotawa_a_SOURCES = \
 	ipet_TrivialDataCacheManager.cpp \
 	ast_parser.yy \
 	ast_lexer.ll \
-	ast_ASTLoader.cpp \
-	ilp_stub.cpp
+	ast_ASTLoader.cpp
 
 endif
 
