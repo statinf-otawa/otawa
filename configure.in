@@ -256,15 +256,18 @@ if test "$with_lp_solve" != no; then
 	], $lib_paths, $BUILD_LP_SOLVE_CXXFLAGS,)
 	if test "$check" = yes; then
 		with_lp_solve=yes;
+		EXTERN_LP_SOLVE_CXXFLAGS=""
 		if test "$with_plugin" = yes; then
-			LP_SOLVE_LIBS="$PROG_USE"
-			LP_SOLVE_DEP=
+			LP_SOLVE_LIBS=""
+			EXTERN_LP_SOLVE_LIBS=""
+			LP_SOLVE_DEP="$PWD/src/lp_solve/lp_solve.so"
 			if test "$with_mode" = dev; then
 				test -e $ILP_PATHS/lp_solve.so || ln -s $PWD/src/lp_solve/lp_solve.so $ILP_PATHS/lp_solve.so
 			fi
 		else
-			LP_SOLVE_LIBS="-L$PWD/src/lp_solve -lotawa_lp_solve $BUILD_LP_SOLVE_LIBS $PROG_LIBS"
-			LP_SOLVE_DEP="$PWD/src/lp_solve/libotawa_lp_solve.a $PROG_DEP"
+			LP_SOLVE_LIBS="-ulp_solve_plugin -L$PWD/src/lp_solve -lotawa_lp_solve $BUILD_LP_SOLVE_LIBS"
+			EXTERN_LP_SOLVE_LIBS="-ulp_solve_plugin -lotawa_lp_solve $BUILD_LP_SOLVE_LIBS"
+			LP_SOLVE_DEP="$PWD/src/lp_solve/libotawa_lp_solve.a"
 		fi
 		AC_DEFINE(HAVE_LP_SOLVE,,[lp_solve available])
 		HAVE_LP_SOLVE=yes
@@ -274,12 +277,6 @@ if test "$with_lp_solve" != no; then
 	else
 		AC_MSG_RESULT([no])
 	fi
-fi
-EXTERN_LP_SOLVE_CXXFLAGS=""
-if test "$with_plugin" = yes; then
-	EXTERN_LP_SOLVE_LIBS=""
-else
-	EXTERN_LP_SOLVE_LIBS="-lotawa_lp_solve"
 fi
 AC_SUBST(LP_SOLVE_CXXFLAGS)
 AC_SUBST(LP_SOLVE_LIBS)

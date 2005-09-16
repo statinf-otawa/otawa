@@ -17,7 +17,8 @@ class System;
 // ILPPlugin class
 class ILPPlugin: public elm::system::Plugin {
 public:
-	ILPPlugin(elm::String name, const elm::Version& plugger_version);
+	ILPPlugin(elm::String name, const elm::Version& plugger_version,
+		elm::String hook = "");
 	virtual System *newSystem(void) = 0;
 };
 

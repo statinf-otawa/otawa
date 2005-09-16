@@ -171,8 +171,37 @@ FrameWork *Manager::load(CString path, PropList& props) {
  */
 Manager::Manager(void)
 : ilp_plugger("ilp_plugin", Version(1, 0, 0), ILP_PATHS) {
-	//loaders.add(&gliss::loader);
-	//cout << "ILP_PATHS = " << ILP_PATHS << "\n";
 }
 
+
+/**
+ * Make an ILP system from the given plugin or from a named plugin.
+ * @param name	Name of the plugin to use or an empty string for the
+ * default plugin.
+ * @return		A new ILP system ready to use or null (plugin not available).
+ */
+ilp::System *Manager::newILPSystem(String name) {
+	ilp::ILPPlugin *plugin;
+	
+	// Select the first available plugin
+	if(!name) {
+		system::Plugger::Iterator plug(ilp_plugger);
+		if(plug.ended())
+			return 0;
+		plugin = (ilp::ILPPlugin *)plug.plug();
+	}
+	
+	// Find a plugin
+	else {
+		plugin = (ilp::ILPPlugin *)ilp_plugger.plug(name);
+		if(!plugin) {
+			cerr << "ERROR: " << ilp_plugger.lastErrorMessage() << "\n";
+			return 0;
+		}
+	}
+
+	// Return a system
+	return plugin->newSystem();
 }
+
+}	// otawa

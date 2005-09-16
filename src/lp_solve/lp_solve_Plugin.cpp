@@ -26,7 +26,7 @@ public:
 /**
  * Build the plugin.
  */
-Plugin::Plugin(void): ILPPlugin("lp_solve", Version(1, 0, 0)) {
+Plugin::Plugin(void): ILPPlugin("lp_solve", Version(1, 0, 0), "ilp_plugin") {
 }
 
 
@@ -43,4 +43,6 @@ System *Plugin::newSystem(void) {
  * Define the actual plugin.
  */
 otawa::lp_solve::Plugin ilp_plugin;
+otawa::lp_solve::Plugin& lp_solve_plugin = ilp_plugin;
+
 

@@ -15,7 +15,8 @@ else
 lib_LIBRARIES = libotawa_lp_solve.a
 libotawa_lp_solve_a_SOURCES = \
 	lp_solve_System.cpp \
-	lp_solve_Constraint.cpp
+	lp_solve_Constraint.cpp \
+	lp_solve_Plugin.cpp
 AM_CXXFLAGS=@PROG_CXXFLAGS@ @BUILD_LP_SOLVE_CXXFLAGS@
 
 endif

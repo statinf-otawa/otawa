@@ -19,9 +19,10 @@ namespace otawa { namespace ilp {
  * Build the plugin.
  * @param name				Plugin name.
  * @param plugger_version	Required plugger version.
+ * @param					Allow having static plugins (@see elm::system::Plugin).
  */
-ILPPlugin::ILPPlugin(elm::String name, const elm::Version& plugger_version)
-: Plugin(name, plugger_version) {
+ILPPlugin::ILPPlugin(elm::String name, const elm::Version& plugger_version,
+elm::String hook): Plugin(name, plugger_version, hook) {
 }
 
 
