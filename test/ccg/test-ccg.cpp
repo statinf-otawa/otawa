@@ -13,29 +13,30 @@
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/hardware/Cache.h>
 #include <otawa/ipet/FlowFactLoader.h>
+#include <otawa/hardware/CacheConfiguration.h>
 
 using namespace otawa;
 using namespace elm;
+using namespace otawa::ipet;
 
 int main(int argc, char **argv) {
 	  // Construction de la hiérarchie de cache
  		Cache::info_t info;
- 		info.level = 0;       // 1er niveau de cache
  		info.block_bits = 3;  // 2^3 octets par bloc
  		info.line_bits = 3;   // 2^3 lignes
- 		info.way_bits = 0;    // 2^0 élément par ensemble (cache direct)
+ 		info.set_bits = 0;    // 2^0 élément par ensemble (cache direct)
  		info.replace = Cache::NONE;
  		info.write = Cache::WRITE_THROUGH;
  		info.access_time = 0;
  		info.miss_penalty = 10;
  		info.allocate = false;
  		Cache *level1 = new Cache(info);
- 		CacheConfiguration *caches = new CacheConfiguration(level1, 0);
+ 		CacheConfiguration *caches = new CacheConfiguration(level1);
 				
 			
 		Manager manager;
 		PropList props;
-		props.set<const CacheConfiguration *>(Loader::ID_Caches, caches);
+		props.set<const CacheConfiguration *>(Platform::ID_Cache, caches);
 		props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
 	try {
 		FrameWork *fw = manager.load(argv[1], props);
@@ -78,16 +79,18 @@ int main(int argc, char **argv) {
 		cout << "Loading external constraints\n";
 		ipet::FlowFactLoader ffl;
 		ffl.processCFG(fw, &vcfg);
+
 		// Build the CCG
 		cout << "Building the CCG Contraints\n";
 		for (int i=0; i < level1->lineCount(); i++){
-			cout << "construire le CCg pour la ligne"<<i <<"\n";	
+			//cout << "construire le CCg pour la ligne"<<i <<"\n";	
 			LBlockSet *idccg = new LBlockSet();
 			vcfg.addDeletable<LBlockSet *>(LBlockSet::ID_LBlockSet, idccg);
 			
 			// build ccg graph
 			CCGBuilder ccgbuilder(fw);
 			ccgbuilder.processCFG(fw, &vcfg );
+			
 			// Build ccg contraint
 			CCGConstraintBuilder decomp(fw);
 			decomp.processCFG(fw, &vcfg );
@@ -96,6 +99,7 @@ int main(int argc, char **argv) {
 			CCGObjectFunction ofunction(fw);
 			ofunction.processCFG(fw, &vcfg );
 		}
+		
 		// Resolve the system
 		cout << "Resolve the system\n";
 		WCETComputation wcomp;

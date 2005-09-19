@@ -13,30 +13,31 @@
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/hardware/Cache.h>
 #include <otawa/ipet/BasicObjectFunctionBuilder.h>
+#include <otawa/hardware/CacheConfiguration.h>
 
 
 using namespace otawa;
 using namespace elm;
+using namespace otawa::ipet;
 
 int main(int argc, char **argv) {
 	
 // Construction de la hiérarchie de cache
  	Cache::info_t info;
- 	info.level = 0;       // 1er niveau de cache
  	info.block_bits = 3;  // 2^3 octets par bloc
  	info.line_bits = 3;   // 2^3 lignes
- 	info.way_bits = 0;    // 2^0 élément par ensemble (cache direct)
+ 	info.set_bits = 0;    // 2^0 élément par ensemble (cache direct)
  	info.replace = Cache::NONE;
  	info.write = Cache::WRITE_THROUGH;
  	info.access_time = 0;
  	info.miss_penalty = 10;
  	info.allocate = false;
  	Cache *level1 = new Cache(info);
- 	CacheConfiguration *caches = new CacheConfiguration(level1, 0);
+ 	CacheConfiguration *caches = new CacheConfiguration(level1);
 			
 	Manager manager;
 	PropList props;
-	props.set<const CacheConfiguration *>(Loader::ID_Caches, caches);
+	props.set<const CacheConfiguration *>(Platform::ID_Cache, caches);
 	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
 	try {
 		FrameWork *fw = manager.load(argv[1], props);
