@@ -4,9 +4,9 @@
  *
  *	otawa/cache/LBlock.h -- interface of LBlock class.
  */
+#ifndef OTAWA_CACHE_LBLOCK_H
+#define OTAWA_CACHE_LBLOCK_H
 
-#ifndef _LBLOCK_H_
-#define _LBLOCK_H_
 #include <elm/genstruct/SLList.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/Iterator.h>
@@ -18,8 +18,7 @@
 #include <string>
 #include <otawa/hardware/Cache.h>
 
- using std::string;
-
+using std::string;
 
 namespace otawa {
 
@@ -46,10 +45,9 @@ class LBlock: public elm::inhstruct::DLNode, public ProgObject {
 	~LBlock(void){delete this;};
 	friend class LBlockSet;
 
-		
-
 public:
 	static LBlockSet *idlblockset; 
+	
 	//constructor
 	LBlock(LBlockSet *graphe , address_t head , BasicBlock *bb, ilp::Var *hit1, 
 		ilp::Var *miss1, ilp::Var *xi1, string tp );
@@ -68,10 +66,9 @@ public:
 	int constCMISS(void);
 	CCGNode *ccgnode(){return ccgnod;};
 	CATNode *catnode(){return catnod;};
-	
 };
 
 } // otawa
 
 
-#endif //_LBLOCK_H_
+#endif // OTAWA_CACHE_LBLOCK_H
