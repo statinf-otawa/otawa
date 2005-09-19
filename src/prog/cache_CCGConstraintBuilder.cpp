@@ -20,11 +20,12 @@
 #include <otawa/util/DFABitSet.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/cfg.h>
+#include <otawa/hardware/CacheConfiguration.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
 using namespace elm::genstruct;
-
+using namespace otawa::ipet;
 
 namespace otawa {
 
@@ -36,8 +37,7 @@ void CCGConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 	LBlockSet *ccg = cfg->use<LBlockSet *>(LBlockSet::ID_LBlockSet);
 	
 	// cache configuration
-	int cachelevel = fw->caches().count();
-	const Cache *cach = fw->caches().get(cachelevel-1);
+	const Cache *cach = fw->platform()->cache().instCache();
 	// decallage of x bits where each block containts 2^x ocets
 	int dec = cach->blockBits();
 	
@@ -59,7 +59,7 @@ void CCGConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 			cons->addRight(1, lbloc->varMISS());
 			int identif = lbloc->identificateurLBLOCK();				
 			address_t address = lbloc->addressLBLOCK();
-			cout << "Lblock  " << identif << " " ;
+			//cout << "Lblock  " << identif << " " ;
 		
 			//contraints of output (17)	
 			Constraint *cons17 = system->newConstraint(Constraint::EQ);
@@ -83,7 +83,7 @@ void CCGConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 				cons2 = system->newConstraint(Constraint::LE);
 				cons2->addLeft(1,outedge->varEDGE());
 				cons2->addRight(1, lbloc->varBB());
-				cout <<"OUT"<<outedge->target()->lblock()->identificateurLBLOCK();
+				//cout <<"OUT"<<outedge->target()->lblock()->identificateurLBLOCK();
 			}
 			
 			if(!used)
@@ -110,9 +110,9 @@ void CCGConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 					cons2->addLeft(1,inedge->varEDGE());
 					cons2->addRight(1, lbloc->varBB());
 				}
-			cout <<"IN"<< inedge->source()->lblock()->identificateurLBLOCK();
+			//cout <<"IN"<< inedge->source()->lblock()->identificateurLBLOCK();
 		}
-		cout <<"\n";
+		//cout <<"\n";
 		if(!used)
 				delete cons;
 		// building contraints (19) & (20)
@@ -140,7 +140,7 @@ void CCGConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 				
 				
 				cons2->addRight(1, lbloc->varHIT());
-				cout <<"Loop has detected with edges from S till End \n";
+				//cout <<"Loop has detected with edges from S till End \n";
 		 	}
 		 	else {
 		  // contraint 20
@@ -157,7 +157,7 @@ void CCGConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 							cons2->addRight(1,inedge->varEDGE());
 					}
 		 		}
-				cout <<"Loop has detected without edges from S till end \n";
+				//cout <<"Loop has detected without edges from S till end \n";
 		 	} 
 		 }
 		 /*
@@ -183,7 +183,7 @@ void CCGConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 						if (taglbloc == taginedge){
 						//if (cach->tag(lbloc->addressLBLOCK())== cach->tag(inedge->source()->lblock()->addressLBLOCK())){	
 							cons->addRight(1,  inedge->varEDGE());
-							cout << "non conflict detected";
+							//cout << "non conflict detected";
 						}					
 				}					
 			}

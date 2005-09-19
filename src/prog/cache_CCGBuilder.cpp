@@ -16,18 +16,19 @@
 #include <otawa/hardware/Cache.h>
 #include <otawa/cfg.h>
 #include <string>
+#include <otawa/hardware/CacheConfiguration.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
 using namespace elm::genstruct;
-
+using namespace otawa::ipet;
 
 namespace otawa {
 	
 	
-Identifier CCGBuilder::ID_In("ipet.dfain");
+Identifier CCGBuilder::ID_In("ipet.ccg.dfain");
 
-Identifier CCGBuilder::ID_Out("ipet.dfaout");
+Identifier CCGBuilder::ID_Out("ipet.ccg.dfaout");
 
 void CCGBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 	assert(cfg);
@@ -36,8 +37,7 @@ void CCGBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 	LBlockSet *idccg = cfg->use<LBlockSet *>(LBlockSet::ID_LBlockSet);
 	
 	// cache configuration
-	int cachelevel = fw->caches().count();
-	const Cache *cach = fw->caches().get(cachelevel-1);
+	const Cache *cach = fw->platform()->cache().instCache();
 	
 	// decallage of x bits where each block containts 2^x ocets
 	int dec = cach->blockBits();	
@@ -94,20 +94,20 @@ void CCGBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 	new LBlock(idccg, 0, 0, 0, 0, 0, ccg);
 	// display the lblocks which have found
 	int length = idccg->returnCOUNTER();	
-	cout <<length-2 << " "<< "lblocks has found \n";
+	//cout <<length-2 << " "<< "lblocks has found \n";
 	for (Iterator<LBlock *> lbloc(idccg->visitLBLOCK()); lbloc; lbloc++){			
 		int identif = lbloc->identificateurLBLOCK();				
 		address_t address = lbloc->addressLBLOCK();
 	
-		if (identif == 0) cout << "S" <<" "<< identif << " " <<address <<'\n';
+		/*if (identif == 0) cout << "S" <<" "<< identif << " " <<address <<'\n';
 		 else if (identif == (length - 1)) cout << "END" <<" " << identif << " "<<address <<'\n';
-			else cout << "Lblock " << identif << " " << address <<'\n';		
+			else cout << "Lblock " << identif << " " << address <<'\n';		*/
 	}
 	
-	cout<<" starting DFA \n";
+	//cout<<" starting DFA \n";
 	// DFA prossecing
 	dfa.DFA::resolve(cfg,&ID_In,&ID_Out);
-	cout << " DFA has constructed \n";
+	//cout << " DFA has constructed \n";
 
 	// Detecting the non conflict state of each lblock
 	BasicBlock *BB;
@@ -135,7 +135,7 @@ void CCGBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 	
 	// Building the ccg edges using DFA
 	dfa.addCCGEDGES(cfg ,&ID_In,&ID_Out);
-	cout << "all CCG EDGES has construted" <<"\n";	 
+	//cout << "all CCG EDGES has construted" <<"\n";	 
  }
 } //otawa
 

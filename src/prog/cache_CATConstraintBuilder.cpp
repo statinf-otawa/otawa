@@ -18,22 +18,24 @@
 #include <elm/genstruct/HashTable.h>
 #include <otawa/util/Dominance.h>
 #include <otawa/cfg.h>
+#include <otawa/hardware/CacheConfiguration.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
 using namespace elm::genstruct;
+using namespace otawa::ipet;
 
 
 namespace otawa {
 
 
-Identifier CATConstraintBuilder::ID_In("ipet.dfain");
+Identifier CATConstraintBuilder::ID_In("ipet.cat.dfain");
 
-Identifier CATConstraintBuilder::ID_Out("ipet.dfaout");
+Identifier CATConstraintBuilder::ID_Out("ipet.cat.dfaout");
 
-Identifier CATConstraintBuilder::ID_Set("ipet.lbset");
+Identifier CATConstraintBuilder::ID_Set("ipet.cat.lbset");
 
-Identifier CATConstraintBuilder::ID_Cat("ipet.categorization");
+Identifier CATConstraintBuilder::ID_Cat("ipet.cat.categorization");
 
 int CATConstraintBuilder::counter = 0;
 
@@ -44,7 +46,7 @@ void CATConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 	LBlockSet *id = cfg->use<LBlockSet *>(LBlockSet::ID_LBlockSet);
 	
 	// cache configuration
-		const Cache *cach = fw->caches().get(0);
+		const Cache *cach = fw->platform()->cache().instCache();
 	
 	// decallage x where each block containts 2^x ocets
 		int dec = cach->blockBits();

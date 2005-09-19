@@ -77,7 +77,19 @@ libotawa_so_SOURCES = \
 	ipet_TrivialDataCacheManager.cpp \
 	ast_parser.yy \
 	ast_lexer.ll \
-	ast_ASTLoader.cpp
+	ast_ASTLoader.cpp \
+	cache_CATBuilder.cpp \
+	cache_CATConstraintBuilder.cpp \
+	cache_CATDFA.cpp \
+	cache_CATNode.cpp \
+	cache_CCGBuilder.cpp \
+	cache_CCGConstraintBuilder.cpp \
+	cache_CCGDFA.cpp \
+	cache_CCGEdge.cpp \
+	cache_CCGNode.cpp \
+	cache_CCGObjectFunction.cpp \
+	cache_LBlock.cpp \
+	cache_LBlockSet.cpp
 
 else
 
@@ -155,7 +167,19 @@ libotawa_a_SOURCES = \
 	ipet_TrivialDataCacheManager.cpp \
 	ast_parser.yy \
 	ast_lexer.ll \
-	ast_ASTLoader.cpp
+	ast_ASTLoader.cpp \
+	cache_CATBuilder.cpp \
+	cache_CATConstraintBuilder.cpp \
+	cache_CATDFA.cpp \
+	cache_CATNode.cpp \
+	cache_CCGBuilder.cpp \
+	cache_CCGConstraintBuilder.cpp \
+	cache_CCGDFA.cpp \
+	cache_CCGEdge.cpp \
+	cache_CCGNode.cpp \
+	cache_CCGObjectFunction.cpp \
+	cache_LBlock.cpp \
+	cache_LBlockSet.cpp
 
 endif
 

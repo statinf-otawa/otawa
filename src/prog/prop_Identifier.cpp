@@ -45,8 +45,10 @@ Identifier::Identifier(CString name): nam(name) {
 	
 	// Already defined
 	Option<Identifier *> result = ids->get(nam);
-	if(result)
+	if(result) {
+		cerr << "FATAL ERROR: identifier \"" << nam << "\" defined multiple times.";
 		throw DuplicateIdentifierException(nam);
+	}
 	
 	// Add it
 	ids->put(name, this);

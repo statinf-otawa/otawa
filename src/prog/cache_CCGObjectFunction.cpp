@@ -8,11 +8,11 @@
 #include <elm/io.h>
 #include <otawa/cache/ccg/CCGObjectFunction.h>
 #include <otawa/cfg.h>
-
+#include <otawa/hardware/CacheConfiguration.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
-
+using namespace otawa::ipet;
 
 
 namespace otawa {
@@ -24,7 +24,7 @@ void CCGObjectFunction::processCFG(FrameWork *fw, CFG *cfg ) {
 	System *system = cfg->get<System *>(IPET::ID_System, 0);
 	assert (system);
 	LBlockSet *idg = cfg->use<LBlockSet *>(LBlockSet::ID_LBlockSet);
-	const Cache *cach = fw->caches().get(0);
+	const Cache *cach = fw->platform()->cache().instCache();
 	
 	// Building the object function which used by S. Malik 
 	for (Iterator<LBlock *> lbloc(idg->visitLBLOCK()); lbloc; lbloc++){

@@ -11,9 +11,11 @@
 #include <otawa/cache/LBlock.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/cfg.h>
+#include <otawa/hardware/CacheConfiguration.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
+using namespace otawa::ipet;
 
 namespace otawa {
 
@@ -22,13 +24,12 @@ namespace otawa {
 void CATBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 	
 	assert(cfg);
-	ilp::System *system = cfg->get<System *>(IPET::ID_System, 0);
+	ilp::System *system = cfg->get<System *>(ipet::IPET::ID_System, 0);
 	assert (system);
 	LBlockSet *id = cfg->use<LBlockSet *>(LBlockSet::ID_LBlockSet);
 	
 		
-	int cachelevel = fw->caches().count();
-	const Cache *cach = fw->caches().get(cachelevel-1);
+	const Cache *cach = fw->platform()->cache().instCache();
 	
 	
 
