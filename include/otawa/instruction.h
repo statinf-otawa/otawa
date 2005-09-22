@@ -177,7 +177,7 @@ public:
 
 // Inst class
 class Inst: public inhstruct::DLNode, public PropList {
-	friend class Code;
+	friend class CodeItem;
 protected:
 	virtual ~Inst(void) { };
 public:

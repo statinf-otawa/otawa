@@ -7,13 +7,10 @@
 #ifndef OTAWA_PROGRAM_H
 #define OTAWA_PROGRAM_H
 
-#include <assert.h>
-#include <elm/string.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/Collection.h>
 #include <elm/datastruct/Map.h>
-#include <otawa/base.h>
-#include <otawa/properties.h>
+#include <otawa/prog/CodeItem.h>
 #include <otawa/instruction.h>
 #include <otawa/prog/Symbol.h>
 
@@ -23,38 +20,8 @@ namespace otawa {
 // Defined classes
 class ProgObject;
 class ProgItem;
-class Code;
+class CodeItem;
 class Data;
-
-
-// ProgObject class
-class ProgObject: public PropList {
-public:
-};
-
-
-// ProgItem class
-class ProgItem: public ProgObject {
-protected:
-	virtual ~ProgItem(void)  { };
-public:
-	virtual CString name(void) = 0;
-	virtual address_t address(void) = 0;
-	virtual size_t size(void) = 0;
-	virtual Code *toCode(void) { return 0; };
-	virtual Data *toData(void) { return 0; };
-};
-
-
-// Code class
-class Inst;
-class Code: public ProgItem {
-public:
-	virtual Inst *first(void) const = 0;
-	virtual Inst *last(void) const = 0;
-	virtual Code *toCode(void) { return this; };
-	virtual IteratorInst<Inst *> *insts(void) = 0;
-};
 
 
 // Data class
