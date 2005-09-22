@@ -343,7 +343,7 @@ AC_OUTPUT([
 	test/ct/Makefile
 	test/ccg/Makefile
 	test/categorisation/Makefile
-	test/ilp_times/Makefile
+	examples/ilp_times/Makefile
 	include/Makefile
 	include/otawa/Makefile
 	include/otawa/ast/Makefile
