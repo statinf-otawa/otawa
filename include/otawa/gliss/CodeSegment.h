@@ -18,7 +18,7 @@ class File;
 class CodeSegment: public ::otawa::Segment {
 
 	// Code representation
-	class Code: public otawa::Code {
+	class Code: public otawa::CodeItem {
 	public:
 		inhstruct::DLList _insts;
 		memory_t *mem;

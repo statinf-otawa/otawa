@@ -68,7 +68,7 @@ Cursor *SegmentCursor::go(CString name) {
 	int num = atoi(&name);
 	for(Iterator<ProgItem *> iter(seg->items()); iter; iter++, num--)
 		if(!num) {
-			Code *code = iter->toCode();
+			CodeItem *code = iter->toCode();
 			if(!code)
 				break;
 			else
