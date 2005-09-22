@@ -82,23 +82,18 @@ int main(int argc, char **argv) {
 
 		// Build the CCG
 		cout << "Building the CCG Contraints\n";
-		for (int i=0; i < level1->lineCount(); i++){
-			//cout << "construire le CCg pour la ligne"<<i <<"\n";	
-			LBlockSet *idccg = new LBlockSet();
-			vcfg.addDeletable<LBlockSet *>(LBlockSet::ID_LBlockSet, idccg);
 			
-			// build ccg graph
-			CCGBuilder ccgbuilder(fw);
-			ccgbuilder.processCFG(fw, &vcfg );
+		// build ccg graph
+		CCGBuilder ccgbuilder(fw);
+		ccgbuilder.processCFG(fw, &vcfg );
 			
-			// Build ccg contraint
-			CCGConstraintBuilder decomp(fw);
-			decomp.processCFG(fw, &vcfg );
+		// Build ccg contraint
+		CCGConstraintBuilder decomp(fw);
+		decomp.processCFG(fw, &vcfg );
 			
-			//Build the objectfunction
-			CCGObjectFunction ofunction(fw);
-			ofunction.processCFG(fw, &vcfg );
-		}
+		//Build the objectfunction
+		CCGObjectFunction ofunction(fw);
+		ofunction.processCFG(fw, &vcfg );
 		
 		// Resolve the system
 		cout << "Resolve the system\n";

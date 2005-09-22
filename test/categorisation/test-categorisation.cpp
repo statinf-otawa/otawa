@@ -90,22 +90,22 @@ int main(int argc, char **argv) {
 		ipet::FlowFactLoader ffl;
 		ffl.processCFG(fw, &vcfg);
 		// Build the CCG
-		cout << "Building the Categories Contraints\n";
+		/*cout << "Building the Categories Contraints\n";
 		for (int i=0; i < level1->lineCount(); i++){
 			cout << "construire les lblocks pour la ligne"<<i <<"\n";	
 			LBlockSet *idccg = new LBlockSet();
-			vcfg.addDeletable<LBlockSet *>(LBlockSet::ID_LBlockSet, idccg);
+			vcfg.addDeletable<LBlockSet *>(LBlockSet::ID_LBlockSet, idccg);*/
 			//CCGDFA dfa(idccg,cfg,  3);
 			
 			// build Cat lblocks
-			CATBuilder catbuilder(fw);
+			CATBuilder catbuilder;
 			catbuilder.processCFG(fw, &vcfg );
 			
 			// Build CAT contraint
-			CATConstraintBuilder decomp(fw);
+			CATConstraintBuilder decomp;
 			decomp.processCFG(fw, &vcfg );
 					
-		}
+		///}
 		// Resolve the system
 		cout << "Resolve the system\n";
 		WCETComputation wcomp;
