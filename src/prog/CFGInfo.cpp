@@ -74,7 +74,7 @@ void CFGInfo::clear(void) {
 		for(Iterator<Segment *> seg(file->segments()); seg; seg++)
 			for(Iterator<ProgItem *> item(seg->items()); item; item++)
 				if(seg->flags() & Segment::EXECUTABLE) {
-					Code *code = (Code *)*item;
+					CodeItem *code = (CodeItem *)*item;
 						for(Inst *inst = code->first(); !inst->atEnd();) {
 							PseudoInst *pseudo = inst->toPseudo();
 							inst = inst->next();

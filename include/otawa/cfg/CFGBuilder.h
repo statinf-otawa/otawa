@@ -21,7 +21,7 @@ class CFGBuilder: public Processor {
 	BasicBlock *nextBB(Inst *inst);
 	BasicBlock *thisBB(Inst *inst);
 	void addSubProgram(Inst *inst);
-	void buildCFG(Code *code);
+	void buildCFG(CodeItem *code);
 	void addFile(File *file);
 	void buildAll(FrameWork *fw);
 public:

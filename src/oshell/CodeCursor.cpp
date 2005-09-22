@@ -22,7 +22,7 @@ namespace otawa {
  * @param back	Back cursor.
  * @param code	Code to process.
  */
-CodeCursor::CodeCursor(Cursor *back, Code *code): Cursor(back), _code(code) {
+CodeCursor::CodeCursor(Cursor *back, CodeItem *code): Cursor(back), _code(code) {
 }
 
 

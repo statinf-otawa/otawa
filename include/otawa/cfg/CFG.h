@@ -16,11 +16,11 @@ namespace otawa {
 
 // Classes
 class BasicBlock;
-class Code;
+class CodeItem;
 
 // CFG class
 class CFG: public ProgObject, private elm::Collection<BasicBlock *> {
-	Code *_code;
+	CodeItem *_code;
 	BasicBlock *ent;
 
 	virtual elm::IteratorInst<BasicBlock *> *visit(void);
@@ -51,8 +51,8 @@ public:
 	
 	// Methods
 	CFG(void);
-	CFG(Code *code, BasicBlock *entry);
-	inline Code *code(void) const;
+	CFG(CodeItem *code, BasicBlock *entry);
+	inline CodeItem *code(void) const;
 	String label(void);
 	address_t address(void);
 	inline elm::Collection<BasicBlock *>& bbs(void);
@@ -71,7 +71,7 @@ inline elm::Collection<BasicBlock *>& CFG::bbs(void) {
 	return *this;
 }
 
-inline Code *CFG::code(void) const {
+inline CodeItem *CFG::code(void) const {
 	return _code;
 };
 

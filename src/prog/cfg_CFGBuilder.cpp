@@ -121,7 +121,7 @@ void CFGBuilder::addSubProgram(Inst *inst) {
  * Build the CFG for the given code.
  * @param code	Code to build the CFG for.
  */
-void CFGBuilder::buildCFG(Code *code) {
+void CFGBuilder::buildCFG(CodeItem *code) {
 	assert(code);
 	PseudoInst *pseudo;
 	
@@ -218,7 +218,7 @@ void CFGBuilder::addFile(File *file) {
 	for(Iterator<Segment *> seg(file->segments()); seg; seg++)
 		for(Iterator<ProgItem *> item(seg->items()); item; item++)
 			if(seg->flags() & Segment::EXECUTABLE)
-				buildCFG((Code *)*item);
+				buildCFG((CodeItem *)*item);
 }
 
 

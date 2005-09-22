@@ -17,7 +17,7 @@ namespace otawa {
 // Classes
 class BasicBlock;
 class CFG;
-class Code;
+class CodeItem;
 class FrameWork;
 class Inst;
 	
