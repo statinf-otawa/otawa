@@ -17,15 +17,18 @@ using namespace otawa::ilp;
 
 namespace otawa {
 
-
+/**
+ */
 DFASet *CATDFA::initial(void){
-	int length = lines->returnCOUNTER();
-	return (new DFABitSet(length));
-	}
+	int length = lines->count();
+	return new DFABitSet(length);
+}
 
-	
+
+/**
+ */
 DFASet *CATDFA::generate(BasicBlock *bb) {
-	int length = lines->returnCOUNTER();
+	int length = lines->count();
 	DFABitSet *dfabitset = new DFABitSet(length);
 	if (bb->isEntry()){
 		dfabitset->DFABitSet::add(0);
@@ -39,10 +42,10 @@ DFASet *CATDFA::generate(BasicBlock *bb) {
 		pseudo = inst->toPseudo();			
 		if(!pseudo){
 			adlbloc = inst->address();				
-			for (Iterator<LBlock *> lbloc(lines->visitLBLOCK()); lbloc; lbloc++){
-				address_t address = lbloc->addressLBLOCK();
-				if ((adlbloc == address)&& (bb == lbloc->blockbasicLBLOCK()))
-				identif = lbloc->identificateurLBLOCK();
+			for (Iterator<LBlock *> lbloc(lines->visit()); lbloc; lbloc++){
+				address_t address = lbloc->address();
+				if ((adlbloc == address)&& (bb == lbloc->bb()))
+					identif = lbloc->id();
 				}
 		}
 		else if(pseudo->id() == bb->ID)
@@ -71,18 +74,18 @@ DFASet *CATDFA::kill(BasicBlock *bb) {
 			adlbloc = inst->address();
 			if (!testnotconflit){
 				// lblocks iteration
-				for (Iterator<LBlock *> lbloc(lines->visitLBLOCK()); lbloc; lbloc++){
-				if ((adlbloc == (lbloc->addressLBLOCK()))&&(bb == (lbloc->blockbasicLBLOCK()))){
+				for (Iterator<LBlock *> lbloc(lines->visit()); lbloc; lbloc++){
+				if ((adlbloc == (lbloc->address()))&&(bb == (lbloc->bb()))){
 					//testnotconflit = true;
-					identif1 = lbloc->identificateurLBLOCK();					
+					identif1 = lbloc->id();					
 					unsigned long tag = ((unsigned long)adlbloc) >> dec;
-					for (Iterator<LBlock *> lbloc1(lines->visitLBLOCK()); lbloc1; lbloc1++){
-						unsigned long taglblock = ((unsigned long)lbloc1->addressLBLOCK()) >> dec;
-						if (adlbloc != (lbloc1->addressLBLOCK())&&(tag == taglblock)){
-						    	identnonconf = lbloc1->identificateurLBLOCK();
+					for (Iterator<LBlock *> lbloc1(lines->visit()); lbloc1; lbloc1++){
+						unsigned long taglblock = ((unsigned long)lbloc1->address()) >> dec;
+						if (adlbloc != (lbloc1->address())&&(tag == taglblock)){
+						    	identnonconf = lbloc1->id();
 							// the state of the first lblock in BB become nonconflict
-							   LBlock *ccgnode = lines->returnLBLOCK(identif1); 
-								ccgnode->changeSTATENONCONF(true);
+							   LBlock *ccgnode = lines->lblock(identif1); 
+								ccgnode->setNonConflictState(true);
 								break;
 						}// end Sde if
 					}//end Sde for of lbloc
@@ -96,9 +99,9 @@ DFASet *CATDFA::kill(BasicBlock *bb) {
 			
 							
 			if (!visit){
-			for (Iterator<LBlock *> lbloc(lines->visitLBLOCK()); lbloc; lbloc++){
-				if (adlbloc == (lbloc->addressLBLOCK())){
-				identif2 = lbloc->identificateurLBLOCK();
+			for (Iterator<LBlock *> lbloc(lines->visit()); lbloc; lbloc++){
+				if (adlbloc == (lbloc->address())){
+				identif2 = lbloc->id();
 				break ;
 				}// end Sde if
 			}// end Sde for
@@ -109,7 +112,7 @@ DFASet *CATDFA::kill(BasicBlock *bb) {
 			break;
 	}// end for
 	// the bit vector of kill
-	int length = lines->returnCOUNTER();
+	int length = lines->count();
 	bool ens = true;
 	DFABitSet *kill;
 	if ((identif1 == 0) && (identif2 == 0)) 

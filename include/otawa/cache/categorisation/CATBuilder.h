@@ -1,29 +1,30 @@
-#ifndef _CATBUILDER_H_
-#define _CATBUILDER_H_
+/*
+ * $Id$
+ * Copyright (c) 2005 IRIT-UPS
+ * 
+ * otawa/prog/CATBuilder.h -- CATBuilder class interface.
+ */
+#ifndef OTAWA_IPET_CACHE_CATBUILDER_H
+#define OTAWA_IPET_CACHE_CATBUILDER_H
+
 #include <assert.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/prop/Identifier.h>
-#include <string>
-using std::string;
 
 namespace otawa {
 class LBlockSet;
 class CFG;
 class LBlock;
 class CATBuilder: public CFGProcessor {
-	FrameWork *fw;
 	static Identifier ID_In;
 	static Identifier ID_Out;	
+	void processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset);
 public:
-	inline CATBuilder(FrameWork *framework);
+
 	// CFGProcessor overload
 	virtual void processCFG(FrameWork *fw, CFG *cfg );
-	};
-inline CATBuilder::CATBuilder(FrameWork *framework)
- : fw(framework) {
-		assert(fw);
-}
+};
 
 }	// otawa
 
-#endif //_CATBUILDER_H_
+#endif // OTAWA_IPET_CATBUILDER_H

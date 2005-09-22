@@ -1,30 +1,40 @@
-#ifndef _CCGBUILDER_H_
-#define _CCGBUILDER_H_
+/*
+ *	$Id$
+ *	Copyright (c) 2005, IRIT UPS.
+ *
+ *	otawa/cache/ccg/CCGBuilder.h -- interface of CCGBuilder class.
+ */
+#ifndef OTAWA_CACHE_CCGBUILDER_H
+#define OTAWA_CACHE_CCGBUILDER_H
 
 #include <assert.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/prop/Identifier.h>
-#include <string>
-using std::string;
 
 namespace otawa {
+	
+// Extern classes
 class LBlockSet;
 class CFG;
-class LBlock;
+class LBlockSet;
+
+// CCGBuilder class
 class CCGBuilder: public CFGProcessor {
 	FrameWork *fw;
-	static Identifier ID_In;
-	static Identifier ID_Out;	
+	void processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset);
 public:
 	inline CCGBuilder(FrameWork *framework);
+
 	// CFGProcessor overload
 	virtual void processCFG(FrameWork *fw, CFG *cfg );
-	};
+};
+
+// Inlines
 inline CCGBuilder::CCGBuilder(FrameWork *framework)
- : fw(framework) {
-		assert(fw);
+: fw(framework) {
+	assert(fw);
 }
 
 }	// otawa
 
-#endif //_CCGBUILDER_H_
+#endif // OTAWA_CACHE_CCGBUILDER_H

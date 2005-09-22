@@ -16,28 +16,34 @@ using namespace otawa::ipet;
 
 
 namespace otawa {
-	
-class LBlockSet;
 
+/**
+ */	
 void CCGObjectFunction::processCFG(FrameWork *fw, CFG *cfg ) {
 	assert(cfg);
 	System *system = cfg->get<System *>(IPET::ID_System, 0);
 	assert (system);
-	LBlockSet *idg = cfg->use<LBlockSet *>(LBlockSet::ID_LBlockSet);
+	LBlockSet **lbsets = cfg->use<LBlockSet **>(LBlockSet::ID_LBlockSet);
 	const Cache *cach = fw->platform()->cache().instCache();
 	
-	// Building the object function which used by S. Malik 
-	for (Iterator<LBlock *> lbloc(idg->visitLBLOCK()); lbloc; lbloc++){
-		if((lbloc->identificateurLBLOCK()!=0) &&(lbloc->identificateurLBLOCK()!= (idg->returnCOUNTER()- 1))){
-			// this fuction compute  chit & cmiss with 5 cycles and return the
-			//number of inst in thr l-bloc with cache as parametre
-  			int counter = lbloc->countLBINTRUCTION(5,cach);
-  			system->addObjectFunction(lbloc->constCHIT(),lbloc->varHIT());
-  			system->addObjectFunction(lbloc->constCMISS(),lbloc->varMISS());
+	for(int i = 0; i < cach->lineCount(); i++) {
+		LBlockSet *idg = lbsets[i];
+		
+		// Building the object function which used by S. Malik 
+		for(Iterator<LBlock *> lbloc(idg->visit()); lbloc; lbloc++) {
+			if(lbloc->id() != 0 && lbloc->id() != idg->count()- 1) {
+				// this fuction compute  chit & cmiss with 5 cycles and return the
+				//number of inst in thr l-bloc with cache as parametre
+  				int counter = lbloc->countInsts(5, cach);
+  				system->addObjectFunction(lbloc->hitCount(), lbloc->hitVar());
+  				system->addObjectFunction(lbloc->missCount(),lbloc->missVar());
 					
-		}// end if (without S end end)	
+			}
 		
 		}
+		
 	}
+}
+
 }//otawa
 

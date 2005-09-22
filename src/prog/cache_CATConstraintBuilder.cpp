@@ -28,7 +28,6 @@ using namespace otawa::ipet;
 
 namespace otawa {
 
-
 Identifier CATConstraintBuilder::ID_In("ipet.cat.dfain");
 
 Identifier CATConstraintBuilder::ID_Out("ipet.cat.dfaout");
@@ -39,11 +38,14 @@ Identifier CATConstraintBuilder::ID_Cat("ipet.cat.categorization");
 
 int CATConstraintBuilder::counter = 0;
 
-void CATConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
+
+/**
+ */
+void CATConstraintBuilder::processLBlockSet(FrameWork *fw, CFG *cfg,
+LBlockSet *id ) {
 	assert(cfg);
 	ilp::System *system = cfg->get<System *>(IPET::ID_System, 0);
 	assert (system);
-	LBlockSet *id = cfg->use<LBlockSet *>(LBlockSet::ID_LBlockSet);
 	
 	// cache configuration
 		const Cache *cach = fw->platform()->cache().instCache();
@@ -67,21 +69,21 @@ void CATConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 	setCATEGORISATION(id,ct,dec);
 	cout << "the catégorizations have constructed " <<"\n";
 
-	int length = id->returnCOUNTER();	
-	for (Iterator<LBlock *> bloc(id->visitLBLOCK()); bloc; bloc++){
-		int test = bloc->identificateurLBLOCK();
+	int length = id->count();	
+	for (Iterator<LBlock *> bloc(id->visit()); bloc; bloc++){
+		int test = bloc->id();
 		if ((test != 0)&&(test != (length-1))) {	
 		Categorization_t categorie = bloc->use<Categorization_t>(ID_Cat);
 		Constraint *cons;
 		
 		if (categorie == ALWAYSHIT){
 			cons = system->newConstraint(Constraint::EQ,0);
-			cons->add(1, bloc->varMISS());
+			cons->add(1, bloc->missVar());
 		}
 		if (categorie == FIRSTHIT){
-			BasicBlock *bb = bloc->blockbasicLBLOCK();
+			BasicBlock *bb = bloc->bb();
 			cons = system->newConstraint(Constraint::EQ);
-			cons->addLeft(1, bloc->varHIT());
+			cons->addLeft(1, bloc->hitVar());
 			bool used = false;
 			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
 				if (!Dominance::dominates(bb, edge->source())){
@@ -94,28 +96,28 @@ void CATConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 		
 		
 		Constraint *cons2 = system->newConstraint(Constraint::EQ);
-		cons2->addLeft(1, bloc->varBB());
-		cons2->addRight(1, bloc->varHIT());
-		cons2->addRight(1, bloc->varMISS());		
+		cons2->addLeft(1, bloc->bbVar());
+		cons2->addRight(1, bloc->hitVar());
+		cons2->addRight(1, bloc->missVar());		
 		}
 		
 		if (categorie == FIRSTMISS){
 			cons = system->newConstraint(Constraint::EQ,1);
-			cons->add(1, bloc->varMISS());
+			cons->add(1, bloc->missVar());
 		}
 		if (categorie == ALWAYSMISS){
-			if (bloc->catnode()->INLOOP()){
-				if (bloc->catnode()->HASHEADEREVOLUTION()){
+			if (bloc->catNode()->INLOOP()){
+				if (bloc->catNode()->HASHEADEREVOLUTION()){
 					Constraint *cons32 = system->newConstraint(Constraint::LE);
-					cons32->addLeft(1, bloc->varMISS());
-					ilp::Var *x = (ilp::Var *)bloc->catnode()->HEADEREVOLUTION()->use<Var *>(IPET::ID_Var);
-					cout << bloc->catnode()->HEADEREVOLUTION();
+					cons32->addLeft(1, bloc->missVar());
+					ilp::Var *x = (ilp::Var *)bloc->catNode()->HEADEREVOLUTION()->use<Var *>(IPET::ID_Var);
+					cout << bloc->catNode()->HEADEREVOLUTION();
 					cons32->addRight(1, x);
 				//}
 				Constraint * boundingmiss = system->newConstraint(Constraint::LE);
-				boundingmiss->addLeft(1, bloc->varMISS());
-				for(Iterator<Edge *> entry(bloc->catnode()->HEADERLBLOCK()->inEdges()); entry; entry++) {
-					if (!Dominance::dominates(bloc->catnode()->HEADERLBLOCK(), entry->source())){
+				boundingmiss->addLeft(1, bloc->missVar());
+				for(Iterator<Edge *> entry(bloc->catNode()->HEADERLBLOCK()->inEdges()); entry; entry++) {
+					if (!Dominance::dominates(bloc->catNode()->HEADERLBLOCK(), entry->source())){
 							boundingmiss->addRight(1, entry->use<ilp::Var *>(IPET::ID_Var));
 							
 					}
@@ -124,32 +126,43 @@ void CATConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 				}
 				else {
 				cons = system->newConstraint(Constraint::EQ);
-				cons->addLeft(1, bloc->varMISS());
-				cons->addRight(1, bloc->varBB());
+				cons->addLeft(1, bloc->missVar());
+				cons->addRight(1, bloc->bbVar());
 								
 				}
 			}
 			else{
 				cons = system->newConstraint(Constraint::EQ);
-				cons->addLeft(1, bloc->varMISS());
-				cons->addRight(1, bloc->varBB());
+				cons->addLeft(1, bloc->missVar());
+				cons->addRight(1, bloc->bbVar());
 			}
 		}
 		/*
 		 this fuction compute  chit & cmiss with 5 cycles trivial execition
 		 and return the number of instructions in the l-block with cache as parametre
 		*/
-		int counter = bloc->countLBINTRUCTION(5,cach);
-		int latence = bloc->constCMISS() - bloc->constCHIT();
-  		system->addObjectFunction(latence,bloc->varMISS());
+		int counter = bloc->countInsts(5,cach);
+		int latence = bloc->missCount() - bloc->hitCount();
+  		system->addObjectFunction(latence,bloc->missVar());
 			}
 		}
 }
 	
 
 
+void CATConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg) {
+	assert(fw);
+	assert(cfg);
+	LBlockSet **lbsets = cfg->use<LBlockSet **>(LBlockSet::ID_LBlockSet);
+	const Cache *cache = fw->platform()->cache().instCache();
+	
+	for(int i = 0; i < cache->lineCount(); i++)
+		processLBlockSet(fw, cfg, lbsets[i]);
+}
+
+
 DFABitSet *CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , System *system ,ContextTree *root){
-		int lcount = lcache->returnCOUNTER();	
+		int lcount = lcache->count();	
 		DFABitSet *set = new DFABitSet(lcount);
 		DFABitSet *v = new DFABitSet(lcount);
 		bool inloop = false;
@@ -168,11 +181,11 @@ DFABitSet *CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , System *syst
 				 PseudoInst *pseudo = inst->toPseudo();
 				if(!pseudo){
 					address_t adlbloc = inst->address();
-					for (Iterator<LBlock *> lbloc(lcache->visitLBLOCK()); lbloc; lbloc++){
-						if ((adlbloc == (lbloc->addressLBLOCK()))&&(bb == lbloc->blockbasicLBLOCK())){
-							ident = lbloc->identificateurLBLOCK();
+					for (Iterator<LBlock *> lbloc(lcache->visit()); lbloc; lbloc++){
+						if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
+							ident = lbloc->id();
 							lbloc->add<Categorization_t >(ID_Cat,CATConstraintBuilder::INVALID);
-							lbloc->catnode()->setHEADERLBLOCK(root->bb(),inloop);
+							lbloc->catNode()->setHEADERLBLOCK(root->bb(),inloop);
 							set->DFABitSet::add(ident);
 							
 						}
@@ -191,7 +204,7 @@ DFABitSet *CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , System *syst
 }
 
 void CATConstraintBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S ,int dec){
-	int size = lineset->returnCOUNTER();	
+	int size = lineset->count();	
 	int ident;
 	DFABitSet *u = new DFABitSet(size);
 	LBlock *cachelin;
@@ -202,7 +215,7 @@ void CATConstraintBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S 
 		u = S->use<DFABitSet *>(ID_Set);
 		for (int a = 0; a < size; a++){
 			if (u->contains(a)){
-				cachelin = lineset->returnLBLOCK(a);
+				cachelin = lineset->lblock(a);
 				worst(cachelin ,S,lineset,dec);
 			}
 		}
@@ -213,10 +226,10 @@ void CATConstraintBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S 
 				 PseudoInst *pseudo = inst->toPseudo();
 				if(!pseudo){
 					address_t adlbloc = inst->address();
-					for (Iterator<LBlock *> lbloc(lineset->visitLBLOCK()); lbloc; lbloc++){
-						if ((adlbloc == (lbloc->addressLBLOCK()))&&(bk == lbloc->blockbasicLBLOCK())){
-							ident = lbloc->identificateurLBLOCK();
-							cachelin = lineset->returnLBLOCK(ident);
+					for (Iterator<LBlock *> lbloc(lineset->visit()); lbloc; lbloc++){
+						if ((adlbloc == (lbloc->address()))&&(bk == lbloc->bb())){
+							ident = lbloc->id();
+							cachelin = lineset->lblock(ident);
 							worst(cachelin ,S , lineset,dec);
 						}
 					}
@@ -229,8 +242,8 @@ void CATConstraintBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S 
 	}
 }
 void CATConstraintBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *idset, int dec){
-	int number = idset->returnCOUNTER();	
-	BasicBlock *bb = line->blockbasicLBLOCK();
+	int number = idset->count();	
+	BasicBlock *bb = line->bb();
 	LBlock *cacheline;
 	DFABitSet *in = new DFABitSet(number);
 	in = bb->use<DFABitSet *>(ID_In);
@@ -244,9 +257,9 @@ void CATConstraintBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *i
 	if (in->counttruebit() == 1){
 		for (int i=0;i < number;i++){
 		if (in->contains(i)){
-			cacheline = idset->returnLBLOCK(i);
-			tagcachline = ((unsigned long)cacheline->addressLBLOCK()) >> dec;
-			unsigned long tagline = ((unsigned long)line->addressLBLOCK()) >> dec;
+			cacheline = idset->lblock(i);
+			tagcachline = ((unsigned long)cacheline->address()) >> dec;
+			unsigned long tagline = ((unsigned long)line->address()) >> dec;
 				if (tagcachline == tagline )
 					nonconflitdetected = true;
 			}
@@ -257,13 +270,14 @@ void CATConstraintBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *i
 	
 	//test the virtual non-conflit state
 	bool nonconflict = false;
-	for (int i=0;i < number;i++){
-			if (in->contains(i)){
-			cacheline = idset->returnLBLOCK(i);
-			tagcachline = ((unsigned long)cacheline->addressLBLOCK()) >> dec;
-		    tagline = ((unsigned long)line->addressLBLOCK()) >> dec;
-			if ((cacheline->addressLBLOCK() == line->addressLBLOCK())&&(line->blockbasicLBLOCK()!=cacheline->blockbasicLBLOCK()))
-											nonconflict = true;
+	for (int i=0;i < number;i++) {
+			if (in->contains(i)) {
+				cacheline = idset->lblock(i);
+				tagcachline = ((unsigned long)cacheline->address()) >> dec;
+			    tagline = ((unsigned long)line->address()) >> dec;
+				if(cacheline->address() == line->address()
+				&& line->bb() != cacheline->bb())
+					nonconflict = true;
 			}
 	}
 	
@@ -273,19 +287,16 @@ void CATConstraintBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *i
 	if (in->counttruebit()== 2){
 		bool test = false;
 		for (int i=0;i < number;i++){
-			if (in->contains(i)){
-			cacheline = idset->returnLBLOCK(i);
-			tagcachline = ((unsigned long)cacheline->addressLBLOCK()) >> dec;
-			unsigned long tagline = ((unsigned long)line->addressLBLOCK()) >> dec;
-			//if ((tagcachline == tagline )&&(line->addressLBLOCK() != cacheline->addressLBLOCK()))
-			if ((tagcachline == tagline )&&(line->blockbasicLBLOCK() != cacheline->blockbasicLBLOCK()))
-				test = true;
-			if (tagcachline != tagline )
-							exist = true;
-			if ((test)&&(line->addressLBLOCK() == cacheline->addressLBLOCK()))
-			//if ((test)&&(line->blockbasicLBLOCK() == cacheline->blockbasicLBLOCK()))
+			if (in->contains(i)) {
+				cacheline = idset->lblock(i);
+				tagcachline = ((unsigned long)cacheline->address()) >> dec;
+				unsigned long tagline = ((unsigned long)line->address()) >> dec;
+				if(tagcachline == tagline && line->bb() != cacheline->bb())
+					test = true;
+				if(tagcachline != tagline )
+					exist = true;
+				if(test && line->address() == cacheline->address())
 					continu = true;
-			
 			}
 		}
 	}
@@ -314,11 +325,11 @@ void CATConstraintBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *i
 				}
 			}
 			//cacheline = lineset->returnLBLOCK(i);
-			tagcachline = ((unsigned long)idset->returnLBLOCK(U[0])->addressLBLOCK()) >> dec;
-		    tagline = ((unsigned long)idset->returnLBLOCK(U[1])->addressLBLOCK()) >> dec;
-			if (tagcachline == tagline )
+			tagcachline = ((unsigned long)idset->lblock(U[0])->address()) >> dec;
+		    tagline = ((unsigned long)idset->lblock(U[1])->address()) >> dec;
+			if(tagcachline == tagline)
 					dfm = true;
-			}
+		}
 		
 		DFABitSet inter = *w;
 		DFABitSet dif = *in;
@@ -329,7 +340,7 @@ void CATConstraintBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *i
 		//difference (IN - U)
 		dif.dif(w);
 		
-		int identif = line->identificateurLBLOCK();
+		int identif = line->id();
 		
 		//basic bock of the header
 		BasicBlock * blockheader = node->bb();
@@ -338,9 +349,12 @@ void CATConstraintBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *i
 			line->set<Categorization_t>(ID_Cat,CATConstraintBuilder::ALWAYSHIT);
 		}
 		else 
-			if ((lastcateg == CATConstraintBuilder::FIRSTHIT)
-			||(((line->returnSTATENONCONF())|| (nonconflict))&&(inter.counttruebit() > 0)&&(dif.counttruebit()== 1)&&(blockheader == bb)))
-				line->set<Categorization_t>(ID_Cat,CATConstraintBuilder::FIRSTHIT);
+			if(lastcateg == CATConstraintBuilder::FIRSTHIT
+			|| ((line->getNonConflictState() || nonconflict)
+				&& inter.counttruebit() > 0
+				&& dif.counttruebit()== 1
+				&& blockheader == bb))
+					line->set<Categorization_t>(ID_Cat,CATConstraintBuilder::FIRSTHIT);
 			else if ((((lastcateg == CATConstraintBuilder::FIRSTMISS) || (lastcateg == CATConstraintBuilder::INVALID))
 				&&(in->contains(identif)&&(inter.counttruebit()== 1)&&(inter.contains(identif))&& (dif.counttruebit() >= 0)&&(w->counttruebit()== 1)))
 				||((inter.counttruebit() == 2)&&(dfm)&&(inter.contains(identif))))
@@ -348,7 +362,7 @@ void CATConstraintBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *i
 				else {
 					line->set<Categorization_t>(ID_Cat,CATConstraintBuilder::ALWAYSMISS);
 					 if (lastcateg == CATConstraintBuilder::FIRSTMISS){
-					 				line->catnode()->setHEADEREVOLUTION(node->bb(),true);
+					 				line->catNode()->setHEADEREVOLUTION(node->bb(),true);
 					 }
 					 
 				}

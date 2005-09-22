@@ -7,6 +7,8 @@
 #ifndef OTAWA_CACHE_LBLOCKSET_H
 #define OTAWA_CACHE_LBLOCKSET_H
 
+#include <assert.h>
+#include <otawa/properties.h>
 #include <otawa/instruction.h>
 #include <elm/Collection.h> 
 #include <elm/genstruct/Vector.h>
@@ -21,47 +23,44 @@ namespace otawa {
 class LBlockSet {
 	friend class CCGDFA;
 	
-	static int counter;
-	int cptr ;
+	//static int counter;
+	//int cptr ;
 	int linenumber;
 	elm::genstruct::Vector<LBlock *> listelbc;
-	
+
+public:
+
 	// Iterator class
-	class Iterator: public IteratorInst<LBlock *> {
-		elm::genstruct::Vector<LBlock *> & lbs;
-		int pos;
+	class Iterator:  public elm::genstruct::Vector<LBlock *>::Iterator {
 	public:
-		inline Iterator(elm::genstruct::Vector<LBlock *> &vector);
-		virtual bool ended(void) const;
-		virtual LBlock *item(void) const;
-		virtual void next(void);
-	};	
+		inline Iterator(LBlockSet& bset);
+	};
 	
-public:	 
+	// LBlockSet identifier	
 	static Identifier ID_LBlockSet;
 	 
-	inline LBlockSet();
-	inline IteratorInst<LBlock *> *visitLBLOCK(void);
-	int addLBLOCK (LBlock *node);
-	int returnCOUNTER(void);
-	LBlock *returnLBLOCK(int i);
-	int cacheline(void);
+	// Methods
+	inline LBlockSet(int line);
+	inline IteratorInst<LBlock *> *visit(void);
+	int add (LBlock *node);
+	int count(void);
+	LBlock *lblock(int i);
+	int line(void);
 };
 
 // Inlines
-inline LBlockSet::LBlockSet() {
- 	cptr = 0;
- 	linenumber = counter;
- 	counter = counter + 1;
+inline LBlockSet::LBlockSet(int line): linenumber(line) {
+	assert(line >= 0);
 }
 	
-inline IteratorInst<LBlock *> *LBlockSet::visitLBLOCK(void) {
-	return new Iterator(listelbc); 
+inline IteratorInst<LBlock *> *LBlockSet::visit(void) {
+	Iterator iter(*this);
+	return new IteratorObject<Iterator, LBlock *>(iter); 
 }
 
-inline LBlockSet::Iterator::Iterator(elm::genstruct::Vector<LBlock *> &vector)
-: lbs(vector) {
-	pos = 0;
+// LBlockSet::Iterator inlines
+inline LBlockSet::Iterator::Iterator(LBlockSet& lbset)
+: elm::genstruct::Vector<LBlock *>::Iterator(lbset.listelbc) {
 }
 
 } //otawa

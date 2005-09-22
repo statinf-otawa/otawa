@@ -25,118 +25,114 @@ using namespace otawa::ipet;
 
 namespace otawa {
 	
-	
-Identifier CCGBuilder::ID_In("ipet.ccg.dfain");
+// DFA Properties
+static Identifier ID_In("ipet.ccg.dfain");
+static Identifier ID_Out("ipet.ccg.dfaout");
 
-Identifier CCGBuilder::ID_Out("ipet.ccg.dfaout");
-
-void CCGBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
+/**
+ */
+void CCGBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) {
+	assert(fw);
 	assert(cfg);
+	assert(lbset);
+
+	// Initialization
 	System *system = cfg->get<System *>(IPET::ID_System, 0);
 	assert (system);
-	LBlockSet *idccg = cfg->use<LBlockSet *>(LBlockSet::ID_LBlockSet);
-	
-	// cache configuration
 	const Cache *cach = fw->platform()->cache().instCache();
-	
-	// decallage of x bits where each block containts 2^x ocets
 	int dec = cach->blockBits();	
+	CCGDFA dfa(lbset, cfg, cach);
+	new LBlock(lbset, 0, 0, 0, 0, 0, "ccg");
 	
-	string ccg = "ccg";
-	CCGDFA dfa(idccg,cfg,cach);
-	// Node 's' of CCG
-	new LBlock(idccg, 0, 0, 0, 0, 0, ccg );
-	
-	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++) {
-		if ((!bb->isEntry())&&(!bb->isExit())){
+	// Build the l-blocks
+	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
+		if (!bb->isEntry() && !bb->isExit()) {
+			
 			ilp::Var *bbv = bb->use<ilp::Var *>(IPET::ID_Var);
 			Inst *inst;
 			bool find = false;
 			PseudoInst *pseudo;
-			for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
+			
+			for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {				
 				pseudo = inst->toPseudo();
 				address_t address = inst->address();
-				if (!pseudo){
-					/*
-					//decallage de "dec" bites et masquage de 3 bites
-					unsigned long tag = (((unsigned long)inst->address()) >> dec)&0X7;
-					// on cherche les lblocks de la ligne j dans une cache de 8 lignes
-					if ((tag % 8) != idccg->cacheline())find = false;
-					*/
-					if (((int)cach->line(address))!= idccg->cacheline())find = false;
-					//if ((!find)&&((tag % 8) == idccg->cacheline())){
-					if ((!find)&&(((int)cach->line(address))==idccg->cacheline())){
+
+				// Do not process pseudo or stop on BB start pseudo
+				if(pseudo) {
+					if(pseudo->id() == bb->ID)
+						break;
+				}
+				
+				// Process the instruction
+				else {
 					
-						//naming variables
+					if(cach->line(address) != lbset->line())
+						find = false;
+						
+					if(!find && cach->line(address) == lbset->line()) {
 						StringBuffer buf;
-						// buf.print("xhit%lx(%lx)", address,*bb);
 						buf << "xhit" << address << "(" << *bb << ")";
 						String namex = buf.toString();
 						ilp::Var *vhit = system->newVar(namex);
 						StringBuffer buf1;
-						//buf1.print("xmiss%lx(%lx)", address,*bb);
 						buf1 << "xmiss" << address << "(" << *bb << ")";
 						String name1 = buf1.toString();
 						ilp::Var *miss = system->newVar(name1);
-						new LBlock(idccg , address ,bb, vhit, miss, bbv, ccg);
+						new LBlock(lbset, address ,bb, vhit, miss, bbv, "ccg");
 						find = true;
 					}
 				}
-			
-		else if(pseudo->id() == bb->ID)
-			break;
 			}
 		}
-				
-	}//endBB
 	
 	// Node 'END' of the CCG	
-	new LBlock(idccg, 0, 0, 0, 0, 0, ccg);
-	// display the lblocks which have found
-	int length = idccg->returnCOUNTER();	
-	//cout <<length-2 << " "<< "lblocks has found \n";
-	for (Iterator<LBlock *> lbloc(idccg->visitLBLOCK()); lbloc; lbloc++){			
-		int identif = lbloc->identificateurLBLOCK();				
-		address_t address = lbloc->addressLBLOCK();
+	new LBlock(lbset, 0, 0, 0, 0, 0, "ccg");
+	int length = lbset->count();	
 	
-		/*if (identif == 0) cout << "S" <<" "<< identif << " " <<address <<'\n';
-		 else if (identif == (length - 1)) cout << "END" <<" " << identif << " "<<address <<'\n';
-			else cout << "Lblock " << identif << " " << address <<'\n';		*/
-	}
-	
-	//cout<<" starting DFA \n";
-	// DFA prossecing
-	dfa.DFA::resolve(cfg,&ID_In,&ID_Out);
-	//cout << " DFA has constructed \n";
+	// DFA processing
+	dfa.DFA::resolve(cfg, &ID_In, &ID_Out);
 
 	// Detecting the non conflict state of each lblock
 	BasicBlock *BB;
 	LBlock *line;
-	for (Iterator<LBlock *> lbloc(idccg->visitLBLOCK()); lbloc; lbloc++){
-		if((lbloc->identificateurLBLOCK()!=0) &&(lbloc->identificateurLBLOCK()!= (length - 1))){
-			BB = lbloc->blockbasicLBLOCK();
+	for (Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++)
+		if(lbloc->id() != 0 && lbloc->id() != length - 1) {
+			BB = lbloc->bb();
 			DFABitSet *inid = BB->use<DFABitSet *>(ID_In);
-			for (int i=0; i<inid->size();i++){
-				if (inid->contains(i)){
-					line = idccg->returnLBLOCK(i);
-				
-					unsigned long tagline = ((unsigned long)line->addressLBLOCK()) >> dec;
-					unsigned long taglbloc = ((unsigned long)lbloc->addressLBLOCK()) >> dec;
-					if ((tagline == taglbloc)&&(BB != line->blockbasicLBLOCK())){
-					//if ((cach->tag(line->addressLBLOCK())) == (cach->tag(lbloc->addressLBLOCK()))
-						//&&(BB != line->blockbasicLBLOCK())){
-							lbloc->changeSTATENONCONF(true);
-					}
-			}
+			for (int i = 0; i < inid->size(); i++)
+				if(inid->contains(i)){
+					line = lbset->lblock(i);
+					unsigned long tagline = ((unsigned long)line->address()) >> dec;
+					unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
+					if(tagline == taglbloc && BB != line->bb())
+						lbloc->setNonConflictState(true);
+				}
 		}
-		}
-	}
-	
 	
 	// Building the ccg edges using DFA
-	dfa.addCCGEDGES(cfg ,&ID_In,&ID_Out);
-	//cout << "all CCG EDGES has construted" <<"\n";	 
- }
+	dfa.addCCGEDGES(cfg ,&ID_In, &ID_Out);
+}
+
+/**
+ */
+void CCGBuilder::processCFG(FrameWork *fw, CFG *cfg) {
+	assert(fw);
+	assert(cfg);
+	
+	// Create the LBlock set array
+	const Cache *cache = fw->platform()->cache().instCache();
+	if(!cache)
+		return;
+	LBlockSet **lbsets = new LBlockSet *[cache->lineCount()];
+	for(int i = 0; i < cache->lineCount(); i++)
+		lbsets[i] = new LBlockSet(i);
+	cfg->set(LBlockSet::ID_LBlockSet, lbsets);
+		
+	// Process the l-block sets
+	for(int i = 0; i < cache->lineCount(); i++)
+		processLBlockSet(fw, cfg, lbsets[i]);
+}
+
 } //otawa
 
 

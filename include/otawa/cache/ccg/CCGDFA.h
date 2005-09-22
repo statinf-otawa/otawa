@@ -17,28 +17,36 @@
 
 
 namespace otawa {
-	
-	class BasicBlock;
-	class LBlockSet;
+
+// Extern classes	
+class BasicBlock;
+class LBlockSet;
+
+// CCGDFA Class
 class CCGDFA : public DFA {
     LBlockSet *ccggraph;
     CFG *cfglb;
     const Cache *cach;
     static int vars;
-	public:
+
+public:
+	inline CCGDFA (LBlockSet *point, CFG *cfg, const Cache *mem);
+	void addCCGEDGES(CFG *cfg ,Identifier *in_id, Identifier *out_id);
+
 	// DFA overload
-	CCGDFA (LBlockSet *point, CFG *cfg, const Cache *mem){
-		ccggraph = point;
-		cfglb = cfg;
-		cach = mem;		
-	};
 	virtual DFASet *initial(void);
 	virtual DFASet *generate(BasicBlock *bb);
 	virtual DFASet *kill(BasicBlock *bb);
-	void addCCGEDGES(CFG *cfg ,Identifier *in_id, Identifier *out_id);
 	virtual void clear(DFASet *set);
 	virtual void merge(DFASet *acc, DFASet *set);
 };
+
+// Inlines
+inline CCGDFA::CCGDFA (LBlockSet *point, CFG *cfg, const Cache *mem) {
+	ccggraph = point;
+	cfglb = cfg;
+	cach = mem;		
+}
 
 }	// otawa
 

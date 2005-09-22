@@ -7,6 +7,7 @@
 #ifndef OTAWA_CACHE_LBLOCK_H
 #define OTAWA_CACHE_LBLOCK_H
 
+#include <elm/string.h>
 #include <elm/genstruct/SLList.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/Iterator.h>
@@ -15,19 +16,17 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/ilp/Var.h>
 #include <otawa/cache/categorisation/CATNode.h>
-#include <string>
 #include <otawa/hardware/Cache.h>
-
-using std::string;
 
 namespace otawa {
 
-
+// Extern classes
 class LBlockSet;
 class CCGNode;
-// CCGNode class
 
+// LBlock class
 class LBlock: public elm::inhstruct::DLNode, public ProgObject {
+	friend class LBlockSet;
 	
 	address_t lblc;
 	int ident;
@@ -42,33 +41,40 @@ class LBlock: public elm::inhstruct::DLNode, public ProgObject {
 	CATNode *catnod; 
 	
 	// Private methods
-	~LBlock(void){delete this;};
-	friend class LBlockSet;
+	~LBlock(void) { delete this; };
 
 public:
 	static LBlockSet *idlblockset; 
 	
 	//constructor
-	LBlock(LBlockSet *graphe , address_t head , BasicBlock *bb, ilp::Var *hit1, 
-		ilp::Var *miss1, ilp::Var *xi1, string tp );
+	LBlock(LBlockSet *graphe, address_t head, BasicBlock *bb, ilp::Var *hit1, 
+		ilp::Var *miss1, ilp::Var *xi1, elm::String tp);
 	
 	// methodes
-	int identificateurLBLOCK (void);
-	address_t addressLBLOCK (void);
-	void changeSTATENONCONF(bool set);
-	bool returnSTATENONCONF(void);
-	BasicBlock *blockbasicLBLOCK (void);
-	ilp::Var *varHIT(void);
-	ilp::Var *varMISS(void);
-	ilp::Var *varBB(void);
-	int countLBINTRUCTION( int cycle , const Cache *cach);
-	int constCHIT(void);
-	int constCMISS(void);
-	CCGNode *ccgnode(){return ccgnod;};
-	CATNode *catnode(){return catnod;};
+	int id(void);
+	address_t address(void);
+	void setNonConflictState(bool set);
+	bool getNonConflictState(void);
+	BasicBlock *bb(void);
+	ilp::Var *hitVar(void);
+	ilp::Var *missVar(void);
+	ilp::Var *bbVar(void);
+	int countInsts(int cycle , const Cache *cach);
+	int hitCount(void);
+	int missCount(void);
+	inline CCGNode *ccgNode();
+	inline CATNode *catNode();
 };
 
-} // otawa
+// Inlines
+CCGNode *LBlock::ccgNode(){
+	return ccgnod;
+}
 
+CATNode *LBlock::catNode() {
+	return catnod;
+}
+
+} // otawa
 
 #endif // OTAWA_CACHE_LBLOCK_H

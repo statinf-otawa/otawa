@@ -19,23 +19,18 @@ using namespace otawa::ipet;
 
 namespace otawa {
 
-
-
-void CATBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
+/**
+ */
+void CATBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *id) {
 	
 	assert(cfg);
 	ilp::System *system = cfg->get<System *>(ipet::IPET::ID_System, 0);
-	assert (system);
-	LBlockSet *id = cfg->use<LBlockSet *>(LBlockSet::ID_LBlockSet);
-	
-		
 	const Cache *cach = fw->platform()->cache().instCache();
 	
 	
 
-	string type = "cat";
 	// Node 's' of CCG
-	new LBlock(id, 0, 0, 0, 0, 0, type);
+	new LBlock(id, 0, 0, 0, 0, 0, "cat");
 		
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++) {
 		ilp::Var *bbv = bb->use<ilp::Var *>(IPET::ID_Var);
@@ -52,9 +47,10 @@ void CATBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 				// on cheches les lblocs de la ligne j dans une cache de 8 lignes
 				if ((tag % 8) != id->cacheline())find = false;
 				*/
-				if (((int)cach->line(address))!= id->cacheline())find = false;
+				if((int)cach->line(address) != id->line())
+					find = false;
 				//if ((!find)&&((tag % 8) == id->cacheline())){
-				if ((!find)&&(((int)cach->line(address))==id->cacheline())){
+				if(!find && (int)cach->line(address) == id->line()){
 					address_t address = inst->address();
 					StringBuffer buf;
 					//buf.print("xhit%lx(%lx)",address,*bb);
@@ -66,7 +62,7 @@ void CATBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 					buf1 << "xmiss" << address << *bb; 
 					String name1 = buf1.toString();
 					ilp::Var *miss = system->newVar(name1);
-					new LBlock(id , address ,bb, vhit, miss, bbv, type);
+					new LBlock(id , address ,bb, vhit, miss, bbv, "cat");
 					find = true;
 				}
 			}
@@ -75,22 +71,40 @@ void CATBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 		}
 	}
 	//Node 'END' of the CCG
-	new LBlock(id, 0, 0, 0, 0, 0, type);
+	new LBlock(id, 0, 0, 0, 0, 0, "cat");
 
 	
 	
-	int length = id->returnCOUNTER();	
+	int length = id->count();	
 	cout << length - 2 << " "<< "lblocks has found \n";
-	for (Iterator<LBlock *> lbloc(id->visitLBLOCK()); lbloc; lbloc++){			
-		int identif = lbloc->identificateurLBLOCK();				
-		address_t address = lbloc->addressLBLOCK();
+	for (Iterator<LBlock *> lbloc(id->visit()); lbloc; lbloc++){			
+		int identif = lbloc->id();				
+		address_t address = lbloc->address();
 	
 		if (identif == 0) cout << "S" <<" "<< identif << " " <<address <<'\n';
 		 else if (identif == (length - 1)) cout << "END" <<" " << identif << " "<<address <<'\n';
 			else cout << "Lblock " << identif << " " << address <<'\n';		
 	}
 }
+
+
+/**
+ */
+void CATBuilder::processCFG(FrameWork *fw, CFG *cfg) {
+	assert(fw);
+	assert(cfg);
+	const Cache *cache = fw->platform()->cache().instCache();
+	LBlockSet **lbsets = new LBlockSet *[cache->lineCount()];
+	cfg->set(LBlockSet::ID_LBlockSet, lbsets);
+	
+	for(int i = 0; i < cache->lineCount(); i++) {
+		lbsets[i] = new LBlockSet(i);
+		processLBlockSet(fw, cfg, lbsets[i]); 
+	}
 }
+
+} // otawa
+
 
 
 

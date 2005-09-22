@@ -9,34 +9,39 @@
 
 namespace otawa {
 
+//int LBlockSet::counter = 0;
 
-int LBlockSet::counter = 0;
-
+/**
+ * This property is used for storing the list of L-Blocks. The type of its
+ * date is LBlockSet *[] with a size equal to the line count of the instruction
+ * cache.
+ */
 Identifier LBlockSet::ID_LBlockSet("ipet.LBlockSet");
 
-int LBlockSet::addLBLOCK (LBlock *node){
-		listelbc.add(node);
-		return cptr ++;		
-	}
+/**
+ */
+int LBlockSet::add(LBlock *node){
+	int id = listelbc.length();
+	listelbc.add(node);
+	return id;
+}
 
-
-int LBlockSet::returnCOUNTER(void){
+/**
+ */
+int LBlockSet::count(void){
 	return listelbc.length();
 }
-LBlock* LBlockSet::returnLBLOCK(int i){
+
+/**
+ */
+LBlock *LBlockSet::lblock(int i) {
 		return listelbc[i];
 }
-bool LBlockSet::Iterator::ended(void) const {
-	return pos >= lbs.length();
-}
-void LBlockSet::Iterator::next(void) {
-	pos ++;
-}
 
-LBlock *LBlockSet::Iterator::item(void) const {
-	return lbs[pos];
-}
-int LBlockSet::cacheline(void) {
+/**
+ */
+int LBlockSet::line(void) {
 	return linenumber;
 }
+
 } // otawa

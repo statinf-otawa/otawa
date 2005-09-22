@@ -1,5 +1,11 @@
-#ifndef _CATNODE_H_
-#define _CATNODE_H_
+/*
+ * $Id$
+ * Copyright (c) 2005 IRIT-UPS
+ * 
+ * otawa/prog/CATNode.h -- CATNode class interface.
+ */
+#ifndef OTAWA_PROG_CATNODE_H
+#define OTAWA_PROG_CATNODE_H
 
 
 #include <otawa/instruction.h>
@@ -38,4 +44,5 @@ public:
 };
 
 } // otawa
-#endif //_CATNODE_H_
+
+#endif // OTAWA_PROG_CATNODE_H

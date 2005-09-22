@@ -1,5 +1,11 @@
-#ifndef _CCGCONSTRAINTBUILDER_H_
-#define _CCGCONSTRAINTBUILDER_H_
+/*
+ *	$Id$
+ *	Copyright (c) 2005, IRIT UPS.
+ *
+ *	otawa/cache/CCGConstraintBuilder.h -- interface of CCGConstraintBuilder class.
+ */
+#ifndef OTAWA_CACHE_CCGCONSTRAINTBUILDER_H
+#define OTAWA_CACHE_CCGCONSTRAINTBUILDER_H
 
 #include <assert.h>
 #include <otawa/proc/CFGProcessor.h>
@@ -7,29 +13,34 @@
 #include <otawa/util/ContextTree.h>
 #include <otawa/hardware/Cache.h>
 
-
-
 namespace otawa {
+
+// Extern class
 class LBlockSet;
 class CFG;
 class LBlock;
 class CCGNode;
+
+// CCGConstraintBuilder class
 class CCGConstraintBuilder: public CFGProcessor {
 	FrameWork *fw;
-	
-	
+	void processLBlockSet(CFG *cfg, LBlockSet *lbset);
+	void addConstraintHeader(CFG *cfg, LBlockSet *graph, ContextTree *ct,
+		LBlock *boc);
 public:
 	inline CCGConstraintBuilder(FrameWork *framework);
+	
 	// CFGProcessor overload
 	virtual void processCFG(FrameWork *fw, CFG *cfg);
-	void addConstraintHEADER (CFG *cfg,LBlockSet *graph, ContextTree *ct, LBlock *boc);
 };
+
+// Inlines
 inline CCGConstraintBuilder::CCGConstraintBuilder(FrameWork *framework)
- : fw(framework) {
+: fw(framework) {
 		assert(fw);
 }
 
 }	// otawa
 
 
-#endif //_CCGCONSTRAINTBUILDER_H_
+#endif // OTAWA_CACHE_CCGCONSTRAINTBUILDER_H
