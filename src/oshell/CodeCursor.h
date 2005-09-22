@@ -13,9 +13,9 @@ namespace otawa {
 
 // CodeCursor class
 class CodeCursor: public Cursor {
-	Code *_code;
+	CodeItem *_code;
 public:
-	CodeCursor(Cursor *back, Code *code);
+	CodeCursor(Cursor *back, CodeItem *code);
 	
 	// Cursor overload
 	virtual void path(Output& out);
