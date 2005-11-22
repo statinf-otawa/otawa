@@ -90,11 +90,20 @@ namespace otawa {
  * @return Collection of the segments in the file.
  */
 
+
 /**
  * Property with this identifier is put on instructions or basic blocks which a symbol is known for.
  * Its property is of type String.
  */
-id_t File::ID_Label = Property::getID("otawa.File.Label");
+Identifier File::ID_Label("otawa.file.label");
+
+
+/**
+ * This property is put on instruction and gives a Symbol * pointing the
+ * instruction. An instruction may accept many properties of this type.
+ */
+Identifier File::ID_FunctionLabel("otawa.file.function_label");
+
 
 /**
  * @fn address_t File::findLabel(const String& label);
