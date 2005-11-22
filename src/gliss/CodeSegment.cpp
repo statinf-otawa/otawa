@@ -127,39 +127,25 @@ void CodeSegment::build(void) {
 		code._insts.addLast(result);
 		iss_free(inst);
 	}
-	
-	// Read the symbols
-	Elf32_Sym *syms = Tables.sym_tbl;
-	char *names = Tables.symstr_tbl;
-	int sym_cnt = Tables.sec_header_tbl[Tables.symtbl_ndx].sh_size
-		/ Tables.sec_header_tbl[Tables.symtbl_ndx].sh_entsize;
-	for(int i = 0; i < sym_cnt; i++) {
-		address_t addr = 0;
-		symbol_kind_t kind;
-		
-		// Function symbol
-		if(ELF32_ST_TYPE(syms[i].st_info)== STT_FUNC
-		&& syms[i].st_shndx != SHN_UNDEF) {
-			kind = SYMBOL_Function;
-			addr = (address_t)syms[i].st_value;
-		}
-		
-		// Simple label symbol
-		else if(ELF32_ST_TYPE(syms[i].st_info)== STT_NOTYPE
-		&& syms[i].st_shndx == Text.txt_index) {
-			kind = SYMBOL_Label;
-			addr = (address_t)syms[i].st_value;
-		}
 
-		// Build the label if required
-		if(addr) {
-			String label(&names[syms[i].st_name]);
-			Symbol *sym = new Symbol(file, label, kind, addr);
-			file.syms.put(label, sym);
+		
+	// Add symbols
+	address_t lbound = address(), ubound = lbound + size();
+	for(Iterator<otawa::Symbol *> sym(file.symbols().visit()); sym; sym++) {
+		address_t addr = sym->address();
+		if(addr >= lbound && addr < ubound) {
 			Inst *inst = (Inst *)findByAddress(addr);
-			if(inst)
-				inst->set<String>(File::ID_Label, label);
-		}
+			if(inst) {
+				Identifier *id;
+				switch(sym->kind()) {
+				case SYMBOL_Function:
+					inst->add<String>(File::ID_FunctionLabel, sym->name());
+				case SYMBOL_Label:
+					inst->add<String>( File::ID_Label, sym->name());
+					break;
+				}
+			}
+		} 
 	}
 }
 
@@ -170,8 +156,12 @@ void CodeSegment::build(void) {
  * @return			Found instruction or null if not found.
  */
 otawa::Inst *CodeSegment::findByAddress(address_t addr) {
+
+	// Already built ?
+	if(!built)
+		build();
 	
-	// In the segement ?
+	// In the segment ?
 	if(addr < code.address() || addr >= code.address() + code.size())
 		return 0;
 	

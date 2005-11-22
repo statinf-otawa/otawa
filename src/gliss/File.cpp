@@ -6,6 +6,7 @@
  */
 
 #include <otawa/gliss.h>
+#include <elm/debug.h>
 
 // Elf Header information
 extern Elf32_Ehdr Ehdr;
@@ -126,15 +127,8 @@ otawa::Inst *File::findByAddress(address_t addr) {
 
 // elm::File overload
 otawa::Symbol *File::findSymbol(String name) {
-	
-	// Need to initialize labels?
-	if(!labels_init) {
-		for(Iterator<Segment *> seg(segs); seg; seg++)
-			for(Iterator<ProgItem *> item(seg->items()); item; item++);
-		labels_init = true;
-	}
-	
-	// Look for the label
+	if(!labels_init)
+		initSyms();
 	Option<otawa::Symbol *> sym = syms.get(name);
 	if(sym)
 		return *sym;
@@ -145,7 +139,50 @@ otawa::Symbol *File::findSymbol(String name) {
 
 // elm::File overload
 elm::Collection<otawa::Symbol *>& File::symbols(void) {
+	if(!labels_init)
+		initSyms();
 	return syms.items();
+}
+
+
+/**
+ * Initialize the symbol table for this file if it is not already initialized.
+ */
+void File::initSyms(void) {
+	Elf32_Sym *syms = Tables.sym_tbl;
+	char *names = Tables.symstr_tbl;
+	int sym_cnt = Tables.sec_header_tbl[Tables.symtbl_ndx].sh_size
+		/ Tables.sec_header_tbl[Tables.symtbl_ndx].sh_entsize;
+
+	// Traverse ELF symbol table
+	for(int i = 0; i < sym_cnt; i++) {
+		address_t addr = 0;
+		symbol_kind_t kind;
+		
+		// Function symbol
+		if(ELF32_ST_TYPE(syms[i].st_info)== STT_FUNC
+		&& syms[i].st_shndx != SHN_UNDEF) {
+			kind = SYMBOL_Function;
+			addr = (address_t)syms[i].st_value;
+		}
+		
+		// Simple label symbol
+		else if(ELF32_ST_TYPE(syms[i].st_info)== STT_NOTYPE
+		&& syms[i].st_shndx == Text.txt_index) {
+			kind = SYMBOL_Label;
+			addr = (address_t)syms[i].st_value;
+		}
+
+		// Build the label if required
+		if(addr) {
+			String label(&names[syms[i].st_name]);
+			Symbol *sym = new Symbol(*this, label, kind, addr);
+			this->syms.put(label, sym);
+		}
+	}
+
+	// Mark as built
+	labels_init = true;
 }
 
 } } // otawa::gliss
