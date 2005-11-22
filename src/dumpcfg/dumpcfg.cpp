@@ -175,7 +175,7 @@ void Command::dump(CString name) {
 	CFG *cfg = info->findCFG(inst);
 	if(!cfg) {
 		cerr << "ERROR: label \"" << name
-			 << "\" does not match sub-programm entry.\n";
+			 << "\" does not match sub-program entry.\n";
 		return;
 	}
 	
