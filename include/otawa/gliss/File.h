@@ -22,6 +22,7 @@ class File: public ::otawa::File {
 	elm::datastruct::Vector<Segment *> segs;
 	state_t *state;
 	datastruct::HashTable<String, otawa::Symbol *> syms;
+	void initSyms(void);
 	bool labels_init;
 public:
 	File(String _path, int argc, char **argv, char **envp);
