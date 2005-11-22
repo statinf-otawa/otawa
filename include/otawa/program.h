@@ -53,7 +53,8 @@ public:
 
 class File: public ProgObject {
 public:
-	static id_t ID_Label;
+	static Identifier ID_Label;
+	static Identifier ID_FunctionLabel;
 	virtual CString name(void) = 0;
 	virtual elm::Collection<Segment *>& segments(void) = 0;
 	virtual address_t findLabel(const String& label) = 0;
