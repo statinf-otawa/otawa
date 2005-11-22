@@ -77,9 +77,10 @@ _entry(BasicBlock::FLAG_Entry), _exit(BasicBlock::FLAG_Exit) {
 	ent->set<CFG *>(ID, this);
 	
 	// Get label
-	Option<String> label = entry->get<String>(File::ID_Label);
+	BasicBlock::InstIterator inst(entry);
+	String label = inst->get<String>(File::ID_FunctionLabel, "");
 	if(label)
-		set<String>(File::ID_Label, *label);
+		set<String>(File::ID_Label, label);
 }
 
 
@@ -117,7 +118,7 @@ _exit(BasicBlock::FLAG_Exit), flags(0) {
  * @return	CFG label or an empty string.
  */
 String CFG::label(void) {
-	return ent->get<String>(File::ID_Label, "");
+	return get<String>(File::ID_Label, "");
 }
 
 
