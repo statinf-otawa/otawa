@@ -5,7 +5,7 @@ option=
 cflags=
 libs=
 cflags_text="@EXTERN_PROG_CXXFLAGS@"
-libs_text="@EXTERN_PROG_LIBS@"
+libs_text="@EXTERN_PROG_LIBS@ -ldl"
 
 # Decode options
 while test "$1" != ""; do
@@ -17,10 +17,10 @@ while test "$1" != ""; do
 		option=ok
 	elif test "$1" == "ppc"; then
 		cflags_text="$cflags_text @EXTERN_GLISS_PPC_CXXFLAGS@"
-		libs_text="$libs_text @EXTERN_GLISS_PPC_LIBS@"
+		libs_text="@EXTERN_GLISS_PPC_LIBS@ $libs_text "
 	elif test "$1" == "lp_solve"; then
 		cflags_text="$cflags_text @EXTERN_LP_SOLVE_CXXFLAGS@"
-		libs_text="$libs_text @EXTERN_LP_SOLVE_LIBS@"
+		libs_text="@EXTERN_LP_SOLVE_LIBS@ $libs_text "
 	elif test "$1" == "--version"; then
 		echo "@PACKAGE@ @VERSION@"
 		exit
