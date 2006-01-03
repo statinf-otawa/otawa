@@ -178,4 +178,12 @@ namespace otawa {
  * @return	Mise penalty in cycles.
  */
 
+/**
+ * @fn mask_t Cache::block(address_t addr) const;
+ * Return the bits used for identifying uniquely a block, that is, tag and
+ * line number.
+ * @param addr	Address to take block from.
+ * @reurn		Block part of the address.
+ */
+
 } // otawa
