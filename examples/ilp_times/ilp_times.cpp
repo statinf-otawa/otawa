@@ -23,13 +23,41 @@
 #include <otawa/cache/ccg/CCGConstraintBuilder.h>
 #include <otawa/cache/ccg/CCGBuilder.h>
 #include <otawa/cache/ccg/CCGObjectFunction.h>
+#include <otawa/cache/categorisation/CATConstraintBuilder.h>
+#include <otawa/cache/categorisation/CATBuilder.h>
 
 using namespace elm;
 using namespace otawa;
 using namespace otawa::ipet;
 
+// Option string
+CString ccg_option = "-ccg";
+CString cat_option = "-cat";
+
+/**
+ * Display help message and exit the program.
+ */
+void help(void) {
+	cout << "ERROR: bad arguments.\n";
+	cout << "SYNTAX: icache_comp [-ccg|-cat] program\n";
+}
+
+
+/**
+ * Program entry point.
+ * @return Error code.
+ */
 int main(int argc, char **argv) {
 	
+	// Options
+	CString file;
+	enum {
+		NONE = 0,
+		CCG,
+		CAT
+	} method = CCG;
+
+	// Cache configuration	
 	Cache::info_t inst_cache_info = {
 		1,
 		10,
@@ -53,22 +81,32 @@ int main(int argc, char **argv) {
 	Cache inst_cache(inst_cache_info);
 	Cache data_cache(data_cache_info);
 	CacheConfiguration cache_conf(&inst_cache, &data_cache);
+	
+	// Processing the arguments
+	for(int i = 1; i < argc; i++) {
+		if(argv[i][0] != '-')
+			file = argv[i];
+		else if(ccg_option == argv[i])
+			method = CCG;
+		else if(cat_option == argv[i])
+			method = CAT;
+		else
+			help();
+	}
+	if(!file)
+		help();
+
+	// Start timer
+	elm::system::StopWatch main_sw;
+	main_sw.start();
+	
+	// Load the file
 	Manager manager;
 	PropList props;
 	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
 	props.set<CacheConfiguration *>(Platform::ID_Cache, &cache_conf);
-	
 	try {
-		elm::system::StopWatch main_sw;
-		main_sw.start();
-		
-		// Load program
-		if(argc < 2) {
-			cerr << "ERROR: no argument.\n"
-				 << "Syntax is : test_ipet <executable>\n";
-			exit(2);
-		}
-		FrameWork *fw = manager.load(argv[1], props);
+		FrameWork *fw = manager.load(file, props);
 		
 		// Find main CFG
 		CFG *cfg = fw->getCFGInfo()->findCFG("main");
@@ -76,8 +114,6 @@ int main(int argc, char **argv) {
 			cerr << "ERROR: cannot find main !\n";
 			return 1;
 		}
-		/*else
-			cout << "main found at 0x" << cfg->address() << '\n';*/
 		
 		// Removing __eabi call if available
 		for(CFG::BBIterator bb(cfg); bb; bb++)
@@ -89,7 +125,7 @@ int main(int argc, char **argv) {
 					break;
 				}
 		
-		// Now, use a VCFG
+		// Now, use an inlined VCFG
 		VirtualCFG vcfg(cfg);
 		
 		// Prepare processor configuration
@@ -112,17 +148,37 @@ int main(int argc, char **argv) {
 		BasicConstraintsBuilder builder(props);
 		builder.processCFG(fw, &vcfg);
 		
-		// build ccg graph
-		CCGBuilder ccgbuilder(fw);
-		ccgbuilder.processCFG(fw, &vcfg );
+		// Process the instruction cache
+		if(method == CCG) {
 			
-		// Build ccg contraint
-		CCGConstraintBuilder decomp(fw);
-		decomp.processCFG(fw, &vcfg );
+			// build ccg graph
+			CCGBuilder ccgbuilder;
+			ccgbuilder.processCFG(fw, &vcfg );
 			
-		//Build the objectfunction
-		CCGObjectFunction ofunction(fw);
-		ofunction.processCFG(fw, &vcfg );
+			// Build ccg contraint
+			CCGConstraintBuilder decomp(fw);
+			decomp.processCFG(fw, &vcfg );
+			
+			//Build the objectfunction
+			CCGObjectFunction ofunction(fw);
+			ofunction.processCFG(fw, &vcfg );
+		}
+		else {
+			if(method == CAT) {
+				
+				// build Cat lblocks
+				CATBuilder catbuilder;
+				catbuilder.processCFG(fw, &vcfg);
+			
+				// Build CAT contraint
+				CATConstraintBuilder decomp;
+				decomp.processCFG(fw, &vcfg);
+			}
+
+			// Build the object function to maximize
+			BasicObjectFunctionBuilder fun_builder;
+			fun_builder.processCFG(fw, &vcfg);	
+		}
 		
 		// Load flow facts
 		ipet::FlowFactLoader loader(props);
@@ -134,15 +190,24 @@ int main(int argc, char **argv) {
 		WCETComputation wcomp(props);
 		wcomp.processCFG(fw, &vcfg);
 		ilp_sw.stop();
+		main_sw.stop();
+
+		// Find the code size
+		int size = 0;
+		for(Iterator<File *> ffile(*fw->files()); ffile; ffile++)
+			for(Iterator<Segment *> seg(ffile->segments()); seg; seg++)
+				if(seg->flags() & Segment::EXECUTABLE)
+					size += seg->size();
 		
 		// Get the result
-		main_sw.stop();
 		ilp::System *sys = vcfg.use<ilp::System *>(IPET::ID_System);
-		cout << argv[1] << '\t'
+		cout << file << '\t'
 			 << sys->countVars() << '\t'
 			 << sys->countConstraints() << '\t'
 			 << (int)(main_sw.delay() / 1000) << '\t'
-			 << (int)(ilp_sw.delay() / 1000) << '\n';
+			 << (int)(ilp_sw.delay() / 1000) << '\t'
+			 << vcfg.use<int>(IPET::ID_WCET) << '\t'
+			 << size << '\n';
 	}
 	catch(LoadException e) {
 		cerr << "ERROR: " << e.message() << '\n';
