@@ -7,3 +7,5 @@ hello.s
 mkast
 mkast.cmi
 mkast.cmo
+._d
+ocaml-make-6.21.1

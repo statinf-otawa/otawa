@@ -7,3 +7,6 @@ LIBDIRS = /home/casse/frontc/frontc
 LIBS = unix frontc
 
 include $(OCAMLMAKEFILE)
+
+install:
+	install -c $(RESULT)$(EXEEXT) $(DESTDIR)$(bindir)/$(RESULT)$(EXEEXT)
