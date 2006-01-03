@@ -1,6 +1,6 @@
 if WITH_ILP
-SUBDIRS = ilp_times
+SUBDIRS = ilp_times ets_timing
 # categorisation
 else
-SUBDIRS =
+SUBDIRS = ets_timing
 endif
