@@ -9,6 +9,7 @@
 #include <otawa/ast.h>
 #include <otawa/ets/WCETComputation.h>
 #include <elm/debug.h>
+#include <otawa/proc/ProcessorException.h>
 
 //#define WC_TRACE TRACE	//with 
 //#define WC_OUT(txt) txt	//	degugging.
@@ -59,7 +60,8 @@ int WCETComputation::computation(FrameWork *fw, AST *ast) {
 				}
 				else{
 					WC_TRACE;
-					throw io::IOException(String("Il manque le wcet de la fonction : "+ ast->toCall()->function()->name()));
+					throw ProcessorException(*this, "Il manque le wcet de la fonction : %s",
+						&ast->toCall()->function()->name());
 				}
 			}
 			case AST_Block:
@@ -89,7 +91,9 @@ int WCETComputation::computation(FrameWork *fw, AST *ast) {
 			 	N=ast->toWhile()->use<int>(ETS::ID_LOOP_COUNT);
 			 	if (N == -1){
 					WC_TRACE;
-					throw io::IOException(String("Il manque le nb d'itérations du noeud : "+ ast->toWhile()->condition()->first()->get<String>(File::ID_Label, "unknown ")));
+					throw ProcessorException(*this, "Il manque le nb d'itérations du noeud : %s (%p)",
+						&ast->toWhile()->condition()->first()->get<String>(File::ID_Label, "unknown "),
+						(void *)ast->toWhile()->condition()->first()->address());
 				}
 				wcet=N*(computation(fw, ast->toWhile()->condition())
 							+ computation(fw, ast->toWhile()->body()))
