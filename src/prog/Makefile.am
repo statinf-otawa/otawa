@@ -5,6 +5,7 @@ so_PROGRAMS=libotawa.so
 libotawa_so_LDFLAGS=-shared
 libotawa_so_LDADD= @BUILD_PROG_LIBS@
 AM_CXXFLAGS=-fPIC @BUILD_PROG_CXXFLAGS@
+libotawa_so_DEPENDENCIES = @LOADER_DEP@ @ILP_DEP@
 
 libotawa_so_SOURCES = \
 	BlockAST.cpp \
@@ -91,12 +92,14 @@ libotawa_so_SOURCES = \
 	cache_CATBuilder.cpp \
 	cache_CATConstraintBuilder.cpp \
 	cache_CATDFA.cpp \
-	cache_CATNode.cpp
+	cache_CATNode.cpp \
+	util_LBlockBuilder.cpp
 
 else
 
 lib_LIBRARIES=libotawa.a
 AM_CXXFLAGS=@BUILD_PROG_CXXFLAGS@
+libotawa_a_DEPENDENCIES = @LOADER_DEP@ @ILP_DEP@
 
 libotawa_a_SOURCES = \
 	BlockAST.cpp \
@@ -183,7 +186,8 @@ libotawa_a_SOURCES = \
 	cache_CATBuilder.cpp \
 	cache_CATConstraintBuilder.cpp \
 	cache_CATDFA.cpp \
-	cache_CATNode.cpp
+	cache_CATNode.cpp \
+	util_LBlockBuilder.cpp
 
 endif
 
