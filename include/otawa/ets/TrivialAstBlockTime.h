@@ -26,7 +26,7 @@ public:
 };
 
 // Inlines
-inline TrivialAstBlockTime::TrivialAstBlockTime(int depth) {
+inline TrivialAstBlockTime::TrivialAstBlockTime(int depth): dep(depth) {
 	assert(depth > 0);
 }
 
