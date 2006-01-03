@@ -1,10 +1,10 @@
-SUBDIRS=prog @PLUGINS@ oshell dumpcfg mkff
-# noinst_PROGRAMS=test
+SUBDIRS= @PLUGINS@ prog oshell dumpcfg mkff 
 
-# test_SOURCES= \
-	test.cpp
+all-local:
+	(cd mkast; make)
 
-# test_LDADD=\
-	-Lprog -lprog \
-	-Lgliss -lgliss \
-	@GLISS_PPC_LIBS@ 
+clean-local:
+	(cd mkast; make clean)
+
+install-exec-hook:
+	(cd mkast; make install)
