@@ -23,6 +23,8 @@ void Platform::configure(const PropList& props) {
 	for(PropList::PropIter prop(props); prop; prop++) {
 		if(prop == ID_Cache)
 			_cache = prop.get<const CacheConfiguration *>();
+		else if(prop == ID_PipelineDepth)
+			depth = prop.get<int>();
 	}
 }
 
@@ -33,7 +35,7 @@ void Platform::configure(const PropList& props) {
  * @param props		Properties describing the platform.
  */
 Platform::Platform(const Platform::Identification& _id, const PropList& props)
-: id(_id), _cache(&CacheConfiguration::NO_CACHE) {
+: id(_id), _cache(&CacheConfiguration::NO_CACHE), depth(5) {
 	configure(props);
 }
 
@@ -44,7 +46,7 @@ Platform::Platform(const Platform::Identification& _id, const PropList& props)
  * @param props		Description properties.
  */
 Platform::Platform(const Platform& platform, const PropList& props)
-: id(platform.identification()), _cache(&platform.cache()) {
+: id(platform.identification()), _cache(&platform.cache()), depth(5) {
 	configure(props);
 }
 
@@ -54,6 +56,13 @@ Platform::Platform(const Platform& platform, const PropList& props)
  * CacheConfiguration *" agument.
  */
 Identifier Platform::ID_Cache("Platform::Cache");
+
+
+/**
+ * Tag for setting the cache of the platform. Takes a "const
+ * CacheConfiguration *" agument.
+ */
+Identifier Platform::ID_PipelineDepth("Platform::PipelineDepth");
 
 
 /**
@@ -95,6 +104,13 @@ bool Platform::accept(const Identification& _id) {
  * @fn const CacheConfiguration& Platform::cache(void) const
  * Get the cache configuration.
  * @return Cache configuration.
+ */
+
+
+/**
+ * @fn const int Platform::pipelineDepth(void) const;
+ * Get the depth of the pipeline of the platform processor.
+ * @return Pipeline depth.
  */
 
 
