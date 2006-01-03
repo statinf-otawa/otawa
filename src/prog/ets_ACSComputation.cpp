@@ -10,8 +10,8 @@
 #include <otawa/ets/ACSComputation.h>
 #include <otawa/instruction.h>
 
-#define AC_OUT(txt) txt	//with debuging
-//#define AC_OUT(txt)	//without debuging
+//#define AC_OUT(txt) txt	//with debuging
+#define AC_OUT(txt)	//without debuging
 
 namespace otawa { namespace ets {
 
@@ -264,9 +264,9 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 		case AST_Seq: {	
 			AC_OUT(cout << ".:Seq : "<< " :.\n");
 			AbstractCacheState::AbstractCacheState *acs = new AbstractCacheState::AbstractCacheState(state);
-			cout <<"test1\n";
+			//cout <<"test1\n";
 			ast->toSeq()->set<AbstractCacheState *>(ETS::ID_ACS,acs);
-			cout <<"test2\n";
+			//cout <<"test2\n";
 			
 			//Algorithme to calculate cache state for Seq.
 			acs->assignment(applyProcess (	fw, 
