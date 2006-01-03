@@ -39,6 +39,7 @@ public:
 private:
 	Identification id;
 	const CacheConfiguration *_cache;
+	int depth;
 	void configure(const PropList& props);
 
 protected:
@@ -50,10 +51,12 @@ public:
 
 	// Static
 	static Identifier ID_Cache;
+	static Identifier ID_PipelineDepth;
 
 	// Cache information
 	inline const Identification& identification(void) const;
 	inline const CacheConfiguration& cache(void) const;
+	inline const int pipelineDepth(void) const;
 
 	// Compatibility test
 	virtual bool accept(const Identification& id);
@@ -68,6 +71,10 @@ inline const Platform::Identification& Platform::identification(void) const {
 
 inline const CacheConfiguration& Platform::cache(void) const {
 	return *_cache;
+}
+
+inline const int Platform::pipelineDepth(void) const {
+	return depth;
 }
 
 inline bool Platform::accept(elm::CString name) {
