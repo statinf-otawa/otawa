@@ -295,7 +295,7 @@ if test "$HAVE_LP_SOLVE" = yes; then
 fi
 if test "$HAVE_GLISS_PPC" = yes; then
 	LOADER_PLUGIN="$GLISS_PPC_LIBS"
-	LOADER_DEPS="$GLISS_PPC_DEP"
+	LOADER_DEP="$GLISS_PPC_DEP"
 elif test "$with_plugin" != yes; then
 	AC_MSG_ERROR([no loader is available.])
 fi
@@ -344,6 +344,7 @@ AC_OUTPUT([
 	test/ccg/Makefile
 	test/categorisation/Makefile
 	examples/ilp_times/Makefile
+	examples/ets_timing/Makefile
 	include/Makefile
 	include/otawa/Makefile
 	include/otawa/ast/Makefile
