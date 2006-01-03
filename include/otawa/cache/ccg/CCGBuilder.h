@@ -20,20 +20,24 @@ class LBlockSet;
 
 // CCGBuilder class
 class CCGBuilder: public CFGProcessor {
-	FrameWork *fw;
+	bool _explicit;
+	int vars;
 	void processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset);
+	void initialize(const PropList& props);
+
 public:
-	inline CCGBuilder(FrameWork *framework);
+	static Identifier ID_NonConflict;
+	static Identifier ID_Node;
+	static Identifier ID_HitVar;
+	static Identifier ID_MissVar;
+	static Identifier ID_BBVar;
+
+	CCGBuilder(const PropList& props = PropList::EMPTY);
 
 	// CFGProcessor overload
 	virtual void processCFG(FrameWork *fw, CFG *cfg );
+	virtual void configure(const PropList& props);
 };
-
-// Inlines
-inline CCGBuilder::CCGBuilder(FrameWork *framework)
-: fw(framework) {
-	assert(fw);
-}
 
 }	// otawa
 

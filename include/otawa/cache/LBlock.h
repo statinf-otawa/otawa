@@ -22,57 +22,43 @@ namespace otawa {
 
 // Extern classes
 class LBlockSet;
-class CCGNode;
 
 // LBlock class
 class LBlock: public elm::inhstruct::DLNode, public ProgObject {
 	friend class LBlockSet;
 	
-	address_t lblc;
+	address_t addr;
+	size_t _size;
 	int ident;
-	BasicBlock *bblblock;
-	bool nonconflit;
-	ilp::Var *miss;
-	ilp::Var *hit;
-	ilp::Var *xi;
-	int chit;
-	int cmiss;
-	CCGNode *ccgnod;
-	CATNode *catnod; 
+	BasicBlock *_bb;
 	
 	// Private methods
 	~LBlock(void) { delete this; };
 
 public:
-	static LBlockSet *idlblockset; 
 	
 	//constructor
-	LBlock(LBlockSet *graphe, address_t head, BasicBlock *bb, ilp::Var *hit1, 
-		ilp::Var *miss1, ilp::Var *xi1, elm::String tp);
+	LBlock(LBlockSet *graphe, address_t head, BasicBlock *bb, size_t size);
 	
 	// methodes
 	int id(void);
-	address_t address(void);
-	void setNonConflictState(bool set);
-	bool getNonConflictState(void);
-	BasicBlock *bb(void);
-	ilp::Var *hitVar(void);
-	ilp::Var *missVar(void);
-	ilp::Var *bbVar(void);
-	int countInsts(int cycle , const Cache *cach);
-	int hitCount(void);
-	int missCount(void);
-	inline CCGNode *ccgNode();
-	inline CATNode *catNode();
+	inline address_t address(void);
+	inline BasicBlock *bb(void);
+	int countInsts(void);
+	inline size_t size(void) const;
 };
 
 // Inlines
-CCGNode *LBlock::ccgNode(){
-	return ccgnod;
+inline size_t LBlock::size(void) const {
+	return _size;
 }
 
-CATNode *LBlock::catNode() {
-	return catnod;
+inline address_t LBlock::address(void) {
+	return addr;
+}
+
+inline BasicBlock *LBlock::bb(void) {
+	return _bb;
 }
 
 } // otawa

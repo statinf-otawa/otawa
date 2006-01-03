@@ -31,7 +31,6 @@ class CCGDFA : public DFA {
 
 public:
 	inline CCGDFA (LBlockSet *point, CFG *cfg, const Cache *mem);
-	void addCCGEDGES(CFG *cfg ,Identifier *in_id, Identifier *out_id);
 
 	// DFA overload
 	virtual DFASet *initial(void);
