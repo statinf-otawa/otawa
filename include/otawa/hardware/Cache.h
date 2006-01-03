@@ -75,6 +75,7 @@ public:
 	inline mask_t offset(address_t addr) const;
 	inline mask_t line(address_t addr) const;
 	inline mask_t tag(address_t addr) const;
+	inline mask_t block(address_t addr) const;
 };
 
 
@@ -161,6 +162,10 @@ inline mask_t Cache::line(address_t addr) const {
 
 inline mask_t Cache::tag(address_t addr) const {
 	return ((mask_t)addr) >> (blockBits() + lineBits());
+}
+
+inline mask_t Cache::block(address_t addr) const {
+	return ((mask_t )addr) >> blockBits();
 }
 
 inline int Cache::missPenalty(void) const {
