@@ -10,6 +10,7 @@
 #include <otawa/ast.h>
 #include <otawa/hardware/Cache.h>
 #include <otawa/ast/ASTLoader.h>
+#include <otawa/proc/ProcessorException.h>
 
 //#define TEST_TRACE TRACE	//with 
 //#define TEST_OUT(txt) txt	//	degugging.
@@ -128,6 +129,9 @@ int main(int argc, char **argv) {
 	catch(IOException e){
 		cout << "ERROR : " << e.message() << '\n';
 	}
+	catch(ProcessorException e){
+		cout << "ERROR : " << e.message() << '\n';
+	}
 	return 0;
 }
 
@@ -156,13 +160,13 @@ void outputAST(AST *ast, int ind) {
 		cout 	<< "BLOCK : ("
 				<< ast->toBlock()->first()->get<String>(File::ID_Label,"unknown")
 				<<") [" 
-				<< ast->toBlock()->use<int>(ETS::ID_WCET)
+				<< ast->toBlock()->get<int>(ETS::ID_WCET, 0)
 	WITHOUT_CACHE(	<< ", "
-				<< ast->toBlock()->use<int>(ETS::ID_HITS)
+				<< ast->toBlock()->get<int>(ETS::ID_HITS, 0)
 				<< ", "
-				<< ast->toBlock()->use<int>(ETS::ID_MISSES)
+				<< ast->toBlock()->get<int>(ETS::ID_MISSES, 0)
 				<< ", "
-				<< ast->toBlock()->use<int>(ETS::ID_FIRST_MISSES))
+				<< ast->toBlock()->get<int>(ETS::ID_FIRST_MISSES, 0))
 				<<"]\n";
 		break;
 	case AST_Call:

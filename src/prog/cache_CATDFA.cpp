@@ -12,6 +12,7 @@
 #include <otawa/instruction.h>
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/LBlockSet.h>
+#include <otawa/cache/categorisation/CATBuilder.h>
 
 using namespace otawa::ilp;
 
@@ -85,7 +86,8 @@ DFASet *CATDFA::kill(BasicBlock *bb) {
 						    	identnonconf = lbloc1->id();
 							// the state of the first lblock in BB become nonconflict
 							   LBlock *ccgnode = lines->lblock(identif1); 
-								ccgnode->setNonConflictState(true);
+//								ccgnode->setNonConflictState(true);
+								ccgnode->set(CATBuilder::ID_NonConflict, true);
 								break;
 						}// end Sde if
 					}//end Sde for of lbloc

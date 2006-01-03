@@ -14,6 +14,7 @@
 #include <otawa/hardware/Cache.h>
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/util/LBlockBuilder.h>
 
 using namespace otawa;
 using namespace elm;
@@ -82,9 +83,11 @@ int main(int argc, char **argv) {
 
 		// Build the CCG
 		cout << "Building the CCG Contraints\n";
+		LBlockBuilder lblock_builder;
+		lblock_builder.processCFG(fw, &vcfg);
 			
 		// build ccg graph
-		CCGBuilder ccgbuilder(fw);
+		CCGBuilder ccgbuilder;
 		ccgbuilder.processCFG(fw, &vcfg );
 			
 		// Build ccg contraint

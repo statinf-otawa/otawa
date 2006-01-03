@@ -20,6 +20,7 @@
 #include <otawa/util/ContextTree.h>
 #include <otawa/cfg.h>
 #include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/cache/ccg/CCGBuilder.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
@@ -45,7 +46,8 @@ void CCGConstraintBuilder::processLBlockSet(CFG *cfg, LBlockSet *lbset) {
 		// building constraint 18
 		if (lbloc->id() == 0){
 			Constraint *cons18 = system->newConstraint(Constraint::EQ,1);
-			for(Iterator<CCGEdge *> outedg(lbloc->ccgNode()->outEdges()); outedg; outedg++)
+			for(Iterator<CCGEdge *> outedg(lbloc->use<CCGNode *>(CCGBuilder::ID_Node)->outEdges());
+			outedg; outedg++)
 				cons18->add(1, outedg->varEDGE());
 		}
 		
@@ -56,20 +58,21 @@ void CCGConstraintBuilder::processLBlockSet(CFG *cfg, LBlockSet *lbset) {
 			
 			// Building contraints 	(13)	
 			Constraint *cons = system->newConstraint(Constraint::EQ);
-			cons->addLeft(1, lbloc->bbVar());
-			cons->addRight(1, lbloc->hitVar());
-			cons->addRight(1, lbloc->missVar());
+			cons->addLeft(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_BBVar));
+			cons->addRight(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_HitVar));
+			cons->addRight(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_MissVar));
 		
 			//contraints of output (17)	
 			Constraint *cons17 = system->newConstraint(Constraint::EQ);
-			cons17->addLeft(1, lbloc->bbVar());
+			cons17->addLeft(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_BBVar));
 			bool used = false;
 			bool findend = false;
 			bool findlooplb = false;
 			ilp::Var *xhit;
 			ilp::Var *pii;
 			Constraint *cons2;
-			for(Iterator<CCGEdge *> outedge(lbloc->ccgNode()->outEdges()); outedge ; outedge++) {
+			for(Iterator<CCGEdge *> outedge(lbloc->use<CCGNode *>(CCGBuilder::ID_Node)->outEdges());
+			outedge ; outedge++) {
 				cons17->addRight(1, outedge->varEDGE());
 				CCGNode *target = outedge->target();
 				if (target->lblock()->id() == lbset->count() - 1)
@@ -81,18 +84,19 @@ void CCGConstraintBuilder::processLBlockSet(CFG *cfg, LBlockSet *lbset) {
 				used = true;
 				cons2 = system->newConstraint(Constraint::LE);
 				cons2->addLeft(1,outedge->varEDGE());
-				cons2->addRight(1, lbloc->bbVar());
+				cons2->addRight(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_BBVar));
 			}			
 			if(!used)
 				delete cons17;
 				
 			// contraint of input(17)	
 			cons = system->newConstraint(Constraint::EQ);
-			cons->addLeft(1, lbloc->bbVar());
+			cons->addLeft(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_BBVar));
 			used = false;
 			bool finds = false;
 			ilp::Var * psi;
-			for(Iterator<CCGEdge *> inedge(lbloc->ccgNode()->inEdges()); inedge; inedge++){
+			for(Iterator<CCGEdge *> inedge(lbloc->use<CCGNode *>(CCGBuilder::ID_Node)->inEdges());
+			inedge; inedge++){
 				cons->addRight(1, inedge->varEDGE());
 				CCGNode *source = inedge->source();
 				if (source->lblock()->id() == 0){
@@ -105,7 +109,7 @@ void CCGConstraintBuilder::processLBlockSet(CFG *cfg, LBlockSet *lbset) {
 				if (lbloc->id() != inedge->source()->lblock()->id()) {
 					cons2 = system->newConstraint(Constraint::LE);
 					cons2->addLeft(1,inedge->varEDGE());
-					cons2->addRight(1, lbloc->bbVar());
+					cons2->addRight(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_BBVar));
 				}
 		}
 		if(!used)
@@ -116,10 +120,11 @@ void CCGConstraintBuilder::processLBlockSet(CFG *cfg, LBlockSet *lbset) {
 		  	if (finds && findend) {
 		 		cons = system->newConstraint(Constraint::LE);
 		 		cons2 = system->newConstraint(Constraint::LE);
-				cons->addLeft(1, lbloc->hitVar());
+				cons->addLeft(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_HitVar));
 				
 				unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-				for(Iterator<CCGEdge *> inedge(lbloc->ccgNode()->inEdges()); inedge; inedge++){
+				for(Iterator<CCGEdge *> inedge(lbloc->use<CCGNode *>(CCGBuilder::ID_Node)->inEdges());
+				inedge; inedge++){
 					unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address()) >> dec;
 					if(inedge->source()->lblock()->id() != 0
 					&& inedge->source()->lblock()->id() != lbset->count() - 1){
@@ -130,15 +135,16 @@ void CCGConstraintBuilder::processLBlockSet(CFG *cfg, LBlockSet *lbset) {
 					}
 		 		}
 				cons->addRight(1, psi);
-				cons2->addRight(1, lbloc->hitVar());
+				cons2->addRight(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_HitVar));
 		 	}
 		 	
 		 	else {
 				// contraint 20
 		 		cons2 = system->newConstraint(Constraint::EQ);
-		 		cons2->addLeft(1, lbloc->hitVar());
+		 		cons2->addLeft(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_HitVar));
 		 		unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-		 		for(Iterator<CCGEdge *> inedge(lbloc->ccgNode()->inEdges()); inedge; inedge++){
+		 		for(Iterator<CCGEdge *> inedge(lbloc->use<CCGNode *>(CCGBuilder::ID_Node)->inEdges());
+		 		inedge; inedge++){
 		 			unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address()) >> dec;
 					if(inedge->source()->lblock()->id() != 0
 					&& inedge->source()->lblock()->id() != lbset->count() - 1){
@@ -150,11 +156,13 @@ void CCGConstraintBuilder::processLBlockSet(CFG *cfg, LBlockSet *lbset) {
 		 }
 		
 		// building the (16)
-		if(lbloc->getNonConflictState() && !findlooplb){
+//		if(lbloc->getNonConflictState() && !findlooplb){
+		if(lbloc->get<bool>(CCGBuilder::ID_NonConflict, false) && !findlooplb){
 			cons = system->newConstraint(Constraint::EQ);
-			cons->addLeft(1, lbloc->hitVar());
+			cons->addLeft(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_HitVar));
 			unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-			for(Iterator<CCGEdge *> inedge(lbloc->ccgNode()->inEdges()); inedge; inedge++){
+			for(Iterator<CCGEdge *> inedge(lbloc->use<CCGNode *>(CCGBuilder::ID_Node)->inEdges());
+			inedge; inedge++){
 				unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address()) >> 3;
 				if(inedge->source()->lblock()->id() != 0
 				&& inedge->source()->lblock()->id() != lbset->count() - 1) {
@@ -201,7 +209,8 @@ ContextTree *cont, LBlock *boc) {
 				bool used = false;
 				System *system1 = cfg->get<System *>(IPET::ID_System, 0);
 				Constraint *cons32 = system1->newConstraint(Constraint::LE);
-				for(Iterator<CCGEdge *> inedge(boc->ccgNode()->inEdges()); inedge ; inedge++) {
+				for(Iterator<CCGEdge *> inedge(boc->use<CCGNode *>(CCGBuilder::ID_Node)->inEdges());
+				inedge ; inedge++) {
 					CCGNode *source = inedge->source();
 					if(source->lblock()->id() != 0
 					&& source->lblock()->id() !=  size-1) {

@@ -9,6 +9,7 @@
 #include <otawa/cache/ccg/CCGObjectFunction.h>
 #include <otawa/cfg.h>
 #include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/cache/ccg/CCGBuilder.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
@@ -32,11 +33,17 @@ void CCGObjectFunction::processCFG(FrameWork *fw, CFG *cfg ) {
 		// Building the object function which used by S. Malik 
 		for(Iterator<LBlock *> lbloc(idg->visit()); lbloc; lbloc++) {
 			if(lbloc->id() != 0 && lbloc->id() != idg->count()- 1) {
+				int hit_time = lbloc->countInsts(/*cach*/) * fw->platform()->pipelineDepth();
+				int miss_time = hit_time + cach->missPenalty();
 				// this fuction compute  chit & cmiss with 5 cycles and return the
 				//number of inst in thr l-bloc with cache as parametre
-  				int counter = lbloc->countInsts(5, cach);
-  				system->addObjectFunction(lbloc->hitCount(), lbloc->hitVar());
-  				system->addObjectFunction(lbloc->missCount(),lbloc->missVar());
+  				int counter = lbloc->countInsts(/*cach*/);
+  				system->addObjectFunction(
+  					hit_time,
+  					lbloc->use<ilp::Var *>(CCGBuilder::ID_HitVar));
+  				system->addObjectFunction(
+  					miss_time,
+  					lbloc->use<ilp::Var *>(CCGBuilder::ID_MissVar));
 					
 			}
 		

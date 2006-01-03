@@ -12,100 +12,50 @@
 
 namespace otawa {
 
-/**
- * Build a new LBlock.
- */
-LBlock::LBlock(LBlockSet *graphe, address_t head, BasicBlock *bb, ilp::Var *hit1,
-ilp::Var *miss1, ilp::Var * xi1, elm::String tp) {
-	
-	ident = graphe->LBlockSet::add(this);
-	lblc = head;
-	bblblock = bb;
-	hit = hit1;
-	miss = miss1;
-	xi = xi1;
-	nonconflit= false;
-	if (tp == "ccg")
-		ccgnod = new CCGNode(this);				
- 	if (tp == "cat")
- 		catnod = new CATNode(this);
-}
 
 /**
+ * Build a new LBlock.
+ * @param lbset		L-block set which owns this l-block.
+ * @param address	Address of the l-block.
+ * @param bb		Basic block containing this l-block.
+ * @param size		Size of the l-block.
  */
-int LBlock::countInsts(int cycle, const Cache *cach) {
+LBlock::LBlock(LBlockSet *lbset, address_t address, BasicBlock *bb, size_t size)
+: _size(size), addr(address), _bb(bb) {
+	ident = lbset->LBlockSet::add(this);
+}
+
+
+/**
+ * @fn size_t LBlock::size(void) const;
+ * Get the size of the current l-block.
+ * @return	L-block size.
+ */
+
+
+/**
+ * Count the instructions in the l-block.
+ * @return	L-block instruction count.
+ */
+int LBlock::countInsts(void) {
 	int cnt = 0;
 	
-	if (bblblock != 0){
-		
+	if(_bb != 0){
 		PseudoInst *pseudo;
-		int m = cach->blockBits();
-		unsigned long taglbloc = ((unsigned long )lblc) >> m;
-		for(Iterator<Inst *> instr(bblblock->visit()); instr; instr++) {
+		for(Iterator<Inst *> instr(_bb->visit()); instr; instr++) {
 			pseudo = instr->toPseudo();
 			if(!pseudo){
-				unsigned long taginst = ((unsigned long )instr->address()) >> m;
-				if(taginst == taglbloc)
+				if(instr->address() >= addr && instr->address() < addr + _size)
 					cnt++;
 			}
-			else if(pseudo->id() == bblblock->ID)
+			else if(pseudo->id() == _bb->ID)
 				break;	
 		}	
-		
-		chit = cnt * cycle;
-		cmiss = chit + 10;
-	}
-	
-	else{ 
-		cnt = 0;
-	 	cmiss = 0;
-	  	chit =0;
 	}
 	
 	return cnt;	
 }
 
-/**
- */
-ilp::Var *LBlock::hitVar(void){
-	return hit;
-}
-
-/**
- */
-ilp::Var *LBlock::missVar(void){
-	return miss;
-}
-
-/**
- */
-ilp::Var *LBlock::bbVar(void){
-	return xi;
-}
-
-/**
- */
-int LBlock::hitCount(void){
-		return chit;
-}
-
-/**
- */
-int LBlock::missCount(void){
-		return cmiss;	
-}
-
-/**
- */
-void LBlock::setNonConflictState(bool set){
-	nonconflit = set;
-}
-
-/**
- */
-bool LBlock::getNonConflictState(void){
-	return nonconflit;
-}
 
 /**
  */
@@ -113,16 +63,18 @@ int LBlock::id(void){
 	return ident;
 }
 
-/**
- */
-address_t LBlock::address(void){
-	return lblc;
-}
 
 /**
+ * @fn address_t LBlock::address(void)
+ * Get address of the l-block.
+ * @return	L-block address.
  */
-BasicBlock *LBlock::bb(void) {
-	return bblblock;
-}
+
+
+/**
+ * @fn BasicBlock *LBlock::bb(void);
+ * Get the BB containing the l-block.
+ * @return	Container BB.
+ */
 
 } // otawa

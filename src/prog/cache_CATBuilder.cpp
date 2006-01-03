@@ -12,6 +12,7 @@
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/cfg.h>
 #include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/util/LBlockBuilder.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
@@ -21,69 +22,75 @@ namespace otawa {
 
 /**
  */
-void CATBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *id) {
-	
+Identifier CATBuilder::ID_NonConflict("ipet.cat.nonconflict");
+
+
+/**
+ */
+Identifier CATBuilder::ID_Node("ipet.cat.node");
+
+
+/**
+ */
+Identifier CATBuilder::ID_HitVar("ipet.cat.hit_var");
+
+
+/**
+ */
+Identifier CATBuilder::ID_MissVar("ipet.cat.miss_var");
+
+
+/**
+ */
+Identifier CATBuilder::ID_BBVar("ipet.cat.bb_var");
+
+
+/**
+ */
+void CATBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) {	
+	assert(fw);
 	assert(cfg);
-	ilp::System *system = cfg->get<System *>(ipet::IPET::ID_System, 0);
-	const Cache *cach = fw->platform()->cache().instCache();
-	
-	
+	assert(lbset);
 
-	// Node 's' of CCG
-	new LBlock(id, 0, 0, 0, 0, 0, "cat");
+	// Get some information
+	System *system = IPET::getSystem(fw, cfg);
+	
+	// LBlock initialization
+	for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
+	
+		// Set a node
+		lblock->add(ID_Node, new CCGNode(lblock));
+		BasicBlock *bb = lblock->bb();
+		if(!bb)
+			continue;
+
+		// Link BB variable
+		ilp::Var *bbvar = bb->use<ilp::Var *>(ipet::IPET::ID_Var);
+		lblock->add(ID_BBVar, bbvar);
 		
-	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++) {
-		ilp::Var *bbv = bb->use<ilp::Var *>(IPET::ID_Var);
-		Inst *inst;
-		bool find = false;
-		PseudoInst *pseudo;
-		for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
-			pseudo = inst->toPseudo();
-			address_t address = inst->address();
-			if (!pseudo){
-				/*
-				//decallage de "dec" bites et masquage de 3 bites
-				unsigned long tag = (((unsigned long)inst->address()) >> dec)&0X7;
-				// on cheches les lblocs de la ligne j dans une cache de 8 lignes
-				if ((tag % 8) != id->cacheline())find = false;
-				*/
-				if((int)cach->line(address) != id->line())
-					find = false;
-				//if ((!find)&&((tag % 8) == id->cacheline())){
-				if(!find && (int)cach->line(address) == id->line()){
-					address_t address = inst->address();
-					StringBuffer buf;
-					//buf.print("xhit%lx(%lx)",address,*bb);
-					buf << "xhit" << address << *bb; 
-					String namex = buf.toString();
-					ilp::Var *vhit = system->newVar(namex);
-					StringBuffer buf1;
-					//buf1.print("xmiss%lx(%lx)", address, *bb);
-					buf1 << "xmiss" << address << *bb; 
-					String name1 = buf1.toString();
-					ilp::Var *miss = system->newVar(name1);
-					new LBlock(id , address ,bb, vhit, miss, bbv, "cat");
-					find = true;
-				}
-			}
-		else if(pseudo->id() == bb->ID)
-			break;
+		// Create x_hit variable
+		ilp::Var *vhit;
+		if(!_explicit)
+			vhit = system->newVar();
+		else {
+			StringBuffer buf;
+			buf << "xhit" << lblock->address() << "(" << bb->number() << ")";
+			String namex = buf.toString();
+			vhit = system->newVar(namex);
 		}
-	}
-	//Node 'END' of the CCG
-	new LBlock(id, 0, 0, 0, 0, 0, "cat");
-
-	
-	
-	int length = id->count();	
-	cout << length - 2 << " "<< "lblocks has found \n";
-	for (Iterator<LBlock *> lbloc(id->visit()); lbloc; lbloc++){			
-		int identif = lbloc->id();				
-		address_t address = lbloc->address();
-	
-		if (identif == 0) cout << "S" <<" "<< identif << " " <<address <<'\n';
-		 else if (identif == (length - 1)) cout << "END" <<" " << identif << " "<<address <<'\n';
-			else cout << "Lblock " << identif << " " << address <<'\n';		
+		lblock->add(ID_HitVar, vhit);
+		
+		// Create x_miss variable
+		ilp::Var *miss;
+		if(!_explicit)
+			miss = system->newVar();
+		else {
+			StringBuffer buf1;
+			buf1 << "xmiss" << lblock->address() << "(" << bb->number() << ")";
+			String name1 = buf1.toString();
+			miss = system->newVar(name1);
+		}
+		lblock->add(ID_MissVar, miss);
 	}
 }
 
@@ -93,14 +100,50 @@ void CATBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *id) {
 void CATBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	assert(fw);
 	assert(cfg);
-	const Cache *cache = fw->platform()->cache().instCache();
-	LBlockSet **lbsets = new LBlockSet *[cache->lineCount()];
-	cfg->set(LBlockSet::ID_LBlockSet, lbsets);
 	
-	for(int i = 0; i < cache->lineCount(); i++) {
-		lbsets[i] = new LBlockSet(i);
-		processLBlockSet(fw, cfg, lbsets[i]); 
+	// Check the cache
+	const Cache *cache = fw->platform()->cache().instCache();
+	if(!cache)
+		return;
+	
+	// Get the l-block sets
+	LBlockSet **lbsets = cfg->get<LBlockSet **>(LBlockSet::ID_LBlockSet, 0);
+	if(!lbsets) {
+		LBlockBuilder builder;
+		builder.processCFG(fw, cfg);
+		lbsets = cfg->use<LBlockSet **>(LBlockSet::ID_LBlockSet);
 	}
+		
+	// Process the l-block sets
+	for(int i = 0; i < cache->lineCount(); i++)
+		processLBlockSet(fw, cfg, lbsets[i]);
+}
+
+
+/**
+ * Create a new CATBuilder processor.
+ * @param props		Configuration properties.
+ */
+CATBuilder::CATBuilder(const PropList& props)
+: CFGProcessor("CATBuilder", Version(1, 0, 0), props), _explicit(false) {
+	initialize(props);
+}
+
+
+/**
+ * Initialize the processor.
+ * @param props		Configuration properties.
+ */
+void CATBuilder::initialize(const PropList& props) {
+	_explicit = props.get<bool>(IPET::ID_Explicit, false);
+}
+
+
+/**
+ */
+void CATBuilder::configure(const PropList& props) {
+	CFGProcessor::configure(props);
+	initialize(props);
 }
 
 } // otawa

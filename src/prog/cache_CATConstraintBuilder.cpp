@@ -19,6 +19,7 @@
 #include <otawa/util/Dominance.h>
 #include <otawa/cfg.h>
 #include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/cache/categorisation/CATBuilder.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
@@ -55,19 +56,19 @@ LBlockSet *id ) {
 	
 	CATDFA dfa(id,cfg, cach);
 	
-	cout<<" starting DFA \n";
+	//cout<<" starting DFA \n";
 	// DFA prossecing
 	dfa.DFA::resolve(cfg,&ID_In,&ID_Out);
-	cout << " DFA has constructed \n";
+	//cout << " DFA has constructed \n";
 
 	ContextTree *ct = new ContextTree(cfg);
-	cout << " Context Tree has constructed " <<"\n";
-	cout << "buit the l-block sets u of the loops \n";
+	//cout << " Context Tree has constructed " <<"\n";
+	//cout << "buit the l-block sets u of the loops \n";
 	DFABitSet *virtuel = buildLBLOCKSET(id,system,ct);
-	cout << "the l-block sets have constructed " <<"\n";
+	//cout << "the l-block sets have constructed " <<"\n";
 	// set the categorisation of each lblock based on C. Healy
 	setCATEGORISATION(id,ct,dec);
-	cout << "the catégorizations have constructed " <<"\n";
+	//cout << "the catégorizations have constructed " <<"\n";
 
 	int length = id->count();	
 	for (Iterator<LBlock *> bloc(id->visit()); bloc; bloc++){
@@ -78,12 +79,12 @@ LBlockSet *id ) {
 		
 		if (categorie == ALWAYSHIT){
 			cons = system->newConstraint(Constraint::EQ,0);
-			cons->add(1, bloc->missVar());
+			cons->add(1, bloc->use<ilp::Var *>(CATBuilder::ID_MissVar));
 		}
 		if (categorie == FIRSTHIT){
 			BasicBlock *bb = bloc->bb();
 			cons = system->newConstraint(Constraint::EQ);
-			cons->addLeft(1, bloc->hitVar());
+			cons->addLeft(1, bloc->use<ilp::Var *>(CATBuilder::ID_HitVar));
 			bool used = false;
 			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
 				if (!Dominance::dominates(bb, edge->source())){
@@ -96,28 +97,29 @@ LBlockSet *id ) {
 		
 		
 		Constraint *cons2 = system->newConstraint(Constraint::EQ);
-		cons2->addLeft(1, bloc->bbVar());
-		cons2->addRight(1, bloc->hitVar());
-		cons2->addRight(1, bloc->missVar());		
+		cons2->addLeft(1, bloc->use<ilp::Var *>(CATBuilder::ID_BBVar));
+		cons2->addRight(1, bloc->use<ilp::Var *>(CATBuilder::ID_HitVar));
+		cons2->addRight(1, bloc->use<ilp::Var *>(CATBuilder::ID_MissVar));		
 		}
 		
 		if (categorie == FIRSTMISS){
 			cons = system->newConstraint(Constraint::EQ,1);
-			cons->add(1, bloc->missVar());
+			cons->add(1, bloc->use<ilp::Var *>(CATBuilder::ID_MissVar));
 		}
 		if (categorie == ALWAYSMISS){
-			if (bloc->catNode()->INLOOP()){
-				if (bloc->catNode()->HASHEADEREVOLUTION()){
+			if (bloc->use<CATNode *>(CATBuilder::ID_Node)->INLOOP()){
+				if (bloc->use<CATNode *>(CATBuilder::ID_Node)->HASHEADEREVOLUTION()){
 					Constraint *cons32 = system->newConstraint(Constraint::LE);
-					cons32->addLeft(1, bloc->missVar());
-					ilp::Var *x = (ilp::Var *)bloc->catNode()->HEADEREVOLUTION()->use<Var *>(IPET::ID_Var);
-					cout << bloc->catNode()->HEADEREVOLUTION();
+					cons32->addLeft(1, bloc->use<ilp::Var *>(CATBuilder::ID_MissVar));
+					ilp::Var *x = (ilp::Var *)bloc->use<CATNode *>(CATBuilder::ID_Node)->HEADEREVOLUTION()->use<Var *>(IPET::ID_Var);
+					//cout << bloc->use<CATNode *>(CATBuilder::ID_Node)->HEADEREVOLUTION();
 					cons32->addRight(1, x);
 				//}
 				Constraint * boundingmiss = system->newConstraint(Constraint::LE);
-				boundingmiss->addLeft(1, bloc->missVar());
-				for(Iterator<Edge *> entry(bloc->catNode()->HEADERLBLOCK()->inEdges()); entry; entry++) {
-					if (!Dominance::dominates(bloc->catNode()->HEADERLBLOCK(), entry->source())){
+				boundingmiss->addLeft(1, bloc->use<ilp::Var *>(CATBuilder::ID_MissVar));
+				for(Iterator<Edge *> entry(bloc->use<CATNode *>(CATBuilder::ID_Node)->HEADERLBLOCK()->inEdges());
+				entry; entry++) {
+					if (!Dominance::dominates(bloc->use<CATNode *>(CATBuilder::ID_Node)->HEADERLBLOCK(), entry->source())){
 							boundingmiss->addRight(1, entry->use<ilp::Var *>(IPET::ID_Var));
 							
 					}
@@ -126,24 +128,25 @@ LBlockSet *id ) {
 				}
 				else {
 				cons = system->newConstraint(Constraint::EQ);
-				cons->addLeft(1, bloc->missVar());
-				cons->addRight(1, bloc->bbVar());
+				cons->addLeft(1, bloc->use<ilp::Var *>(CATBuilder::ID_MissVar));
+				cons->addRight(1, bloc->use<ilp::Var *>(CATBuilder::ID_BBVar));
 								
 				}
 			}
 			else{
 				cons = system->newConstraint(Constraint::EQ);
-				cons->addLeft(1, bloc->missVar());
-				cons->addRight(1, bloc->bbVar());
+				cons->addLeft(1, bloc->use<ilp::Var *>(CATBuilder::ID_MissVar));
+				cons->addRight(1, bloc->use<ilp::Var *>(CATBuilder::ID_BBVar));
 			}
 		}
 		/*
 		 this fuction compute  chit & cmiss with 5 cycles trivial execition
 		 and return the number of instructions in the l-block with cache as parametre
 		*/
-		int counter = bloc->countInsts(5,cach);
-		int latence = bloc->missCount() - bloc->hitCount();
-  		system->addObjectFunction(latence,bloc->missVar());
+		int counter = bloc->countInsts(/*cach*/);
+//		int latence = bloc->missCount() - bloc->hitCount();
+		int latence = cach->missPenalty();
+  		system->addObjectFunction(latence,bloc->use<ilp::Var *>(CATBuilder::ID_MissVar));
 			}
 		}
 }
@@ -185,7 +188,7 @@ DFABitSet *CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , System *syst
 						if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
 							ident = lbloc->id();
 							lbloc->add<Categorization_t >(ID_Cat,CATConstraintBuilder::INVALID);
-							lbloc->catNode()->setHEADERLBLOCK(root->bb(),inloop);
+							lbloc->use<CATNode *>(CATBuilder::ID_Node)->setHEADERLBLOCK(root->bb(),inloop);
 							set->DFABitSet::add(ident);
 							
 						}
@@ -350,7 +353,8 @@ void CATConstraintBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *i
 		}
 		else 
 			if(lastcateg == CATConstraintBuilder::FIRSTHIT
-			|| ((line->getNonConflictState() || nonconflict)
+//			|| ((line->getNonConflictState() || nonconflict)
+			|| ((line->get<bool>(CATBuilder::ID_NonConflict, false) || nonconflict)
 				&& inter.counttruebit() > 0
 				&& dif.counttruebit()== 1
 				&& blockheader == bb))
@@ -362,7 +366,7 @@ void CATConstraintBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *i
 				else {
 					line->set<Categorization_t>(ID_Cat,CATConstraintBuilder::ALWAYSMISS);
 					 if (lastcateg == CATConstraintBuilder::FIRSTMISS){
-					 				line->catNode()->setHEADEREVOLUTION(node->bb(),true);
+					 				line->use<CATNode *>(CATBuilder::ID_Node)->setHEADEREVOLUTION(node->bb(),true);
 					 }
 					 
 				}
