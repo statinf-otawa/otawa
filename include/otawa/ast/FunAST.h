@@ -27,7 +27,7 @@ public:
 	FunAST(FrameWork *fw, Inst *entry, String name = "");
 	FunAST(ASTInfo *info, Inst *entry, String name = "");
 	inline Inst *entry(void) const { return ent; };
-	inline const String& name(void) const { return _name; };
+	inline String& name(void) { return _name; };
 	inline AST *ast(void) const { return _ast; };
 	void setAst(AST *ast);
 	inline void setName(const String& name) { _name = name; };
