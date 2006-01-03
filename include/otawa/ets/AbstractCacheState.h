@@ -11,6 +11,7 @@
 #include <elm/util/BitVector.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/genstruct/Vector.h>
+#include <elm/io.h>
 
 using namespace elm;
 
@@ -45,10 +46,8 @@ class AbstractCacheState{
 inline AbstractCacheState::AbstractCacheState(AbstractCacheState *acs) {
 	for(int i=0;i<acs->cache_state.length();i++)
 		cache_state.add(new BitVector(*acs->cache_state[i]));
-	for(genstruct::HashTable<void *, int>::KeyIterator key(acs->htable); key; key++)
-		htable.put(key, acs->htable.get(key, -1));
-	for(genstruct::HashTable<void *, int>::KeyIterator k(acs->hcat); k; k++)
-		hcat.put(k, acs->hcat.get(k, -1));
+	htable.putAll(acs->htable);
+	hcat.putAll(acs->hcat);
 	cache_line = acs->cache_line;
 }
 
