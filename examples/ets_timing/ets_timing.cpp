@@ -94,6 +94,7 @@ int main(int argc, char **argv) {
 		main_sw.stop();
 		cout << argv[1] << '\t'
 			 << ast->get<int>(ETS::ID_WCET, -6) << '\t'
+			 << ast->get<int>(ETS::ID_MISSES, -1) << '\t'
 			 << (int)(main_sw.delay() / 1000) << '\n';
 	}
 	catch(LoadException e) {
