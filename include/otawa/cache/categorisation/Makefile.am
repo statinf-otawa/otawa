@@ -1,5 +1,5 @@
-includeotawacachecatdir=$(includedir)/otawa/cache/categorie
-includeotawacache_HEADERS = \
+includeotawacachecategorisaitiondir=$(includedir)/otawa/cache/categorisation
+includeotawacachecategorisaition_HEADERS = \
 	CATBuilder.h \
 	CATConstraintBuilder.h \
 	CATDFA.h \
