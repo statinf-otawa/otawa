@@ -1,5 +1,5 @@
 includeotawacacheccgdir=$(includedir)/otawa/cache/ccg
-includeotawacache_HEADERS = \
+includeotawacacheccg_HEADERS = \
 	CCGBuilder.h \
 	CCGConstraintBuilder.h \
 	CCGDFA.h \
