@@ -2,6 +2,7 @@ includeotawaastdir=$(includedir)/otawa/ast
 includeotawaast_HEADERS = \
 	AST.h \
 	ASTInfo.h \
+	ASTLoader.h \
 	BlockAST.h \
 	CallAST.h \
 	DoWhileAST.h \
