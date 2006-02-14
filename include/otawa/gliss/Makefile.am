@@ -4,6 +4,7 @@ includeotawagliss_HEADERS = \
 	ControlInst.h \
 	File.h \
 	Inst.h \
+	MemInst.h \
+	Platform.h \
 	Process.h \
-	Symbol.h \
-	MemInst.h
+	Symbol.h

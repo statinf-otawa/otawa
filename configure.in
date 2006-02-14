@@ -109,7 +109,7 @@ done
 
 
 dnl ==== Without extern ====
-AC_ARG_ENABLE(extern, [  -with-extern	Use external directory for retrieving libraries.],,enable_extern=yes)
+AC_ARG_ENABLE(extern, [  --with-extern	Use external directory for retrieving libraries.],,enable_extern=yes)
 
 
 dnl ==== Auto-documentation ====
@@ -126,6 +126,35 @@ if test $enable_doc = yes; then
 		AUTODOC=
 	fi
 	AC_SUBST(AUTODOC)
+fi
+
+
+dnl ==== OCAML ====
+AC_ARG_WITH(frontc, [  --with-mkast=yes|PATH Use fronc (from the given directory).],,)
+if test "$with_mkast"; then
+	AC_CHECK_PROG(with_ocamlc, [ocamlc], [yes])
+	if test "$with_ocamlc" != yes; then
+		AC_MSG_ERROR([frontc requires OCAML !])
+	else
+		AC_MSG_CHECKING([for frontc])
+		if "$with_frontc" = yes; then
+			for path in $extern_path $with_site_dir; do
+				if test -d "$path/frontc"; then
+					FRONTC="$path/frontc"
+					break
+				fi
+			done
+			if test -z "$FRONTC"; then
+				AC_MSG_ERROR([frontc cannot be found])
+			fi
+		else
+			if test -d "$with_frontc"; then
+				FRONTC="$with_frontc"
+			else
+				AC_MSG_ERROR([front cannot be found at $with_frontc])
+			fi
+		fi
+	fi
 fi
 
 
@@ -359,4 +388,7 @@ AC_OUTPUT([
 	include/otawa/ets/Makefile
 	include/otawa/util/Makefile
 	include/otawa/hardware/Makefile
+	include/otawa/cache/Makefile
+	include/otawa/cache/categorisation/Makefile
+	include/otawa/cache/ccg/Makefile
 ], [])
