@@ -2,6 +2,7 @@ includeotawacfgdir=$(includedir)/otawa/cfg
 includeotawacfg_HEADERS = \
 	BasicBlock.h \
 	CFG.h \
+	CFGBuilder.h \
 	CFGInfo.h \
 	Edge.h \
 	VirtualBasicBlock.h \

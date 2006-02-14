@@ -21,11 +21,11 @@ includeotawa_HEADERS = \
 	cfg.h \
 	ets.h\
 	gliss.h \
+	ilp.h \
 	instruction.h \
 	manager.h \
+	otawa.h \
 	platform.h \
 	program.h \
 	properties.h \
-	type.h \
-	ilp.h \
-	otawa.h
+	type.h
