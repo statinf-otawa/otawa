@@ -9,18 +9,27 @@
 
 #include <assert.h>
 #include <elm/string.h>
+#include <elm/io.h>
 #include <otawa/base.h>
+#include <otawa/type.h>
 
 namespace otawa {
+
+// External classes
+class Property;
 
 // Identifier class
 class Identifier {
 	elm::String nam;
 public:
-	Identifier(elm::CString name);
-	inline const elm::String& name(void) const { return nam; };
-	static Identifier *getID(elm::CString name);
 	static const Identifier *invalid;
+	static Identifier *getID(elm::CString name);
+	Identifier(elm::CString name);
+	
+	inline const elm::String& name(void) const;
+	virtual void print(elm::io::Output& output, const Property& prop);
+	inline void print(elm::io::Output& output, const Property *prop);
+	virtual const Type& type(void) const;
 };
 
 
@@ -32,8 +41,19 @@ public:
 
 
 // Compatibility
-typedef Identifier *id_t;
+typedef Identifier *id_t;	// Deprecated
 #define INVALID_ID Identifier::invalid
+
+
+// Inlines
+inline const elm::String& Identifier::name(void) const {
+	return nam;
+}
+
+inline void Identifier::print(elm::io::Output& output, const Property *prop) {
+	assert(prop);
+	return print(output, *prop);
+}
 
 } // otawa
 
