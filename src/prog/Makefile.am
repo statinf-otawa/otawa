@@ -31,6 +31,7 @@ libotawa_so_SOURCES = \
 	CFG.cpp \
 	Edge.cpp \
 	prop_Identifier.cpp \
+	prop_GenericIdentifier.cpp \
 	prop_PropList.cpp \
 	prop_Property.cpp \
 	prop_DeletableProperty.cpp \
@@ -125,6 +126,7 @@ libotawa_a_SOURCES = \
 	CFG.cpp \
 	Edge.cpp \
 	prop_Identifier.cpp \
+	prop_GenericIdentifier.cpp \
 	prop_PropList.cpp \
 	prop_Property.cpp \
 	prop_DeletableProperty.cpp \
