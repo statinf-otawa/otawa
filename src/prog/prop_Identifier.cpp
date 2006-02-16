@@ -89,4 +89,42 @@ const Identifier *Identifier::invalid = 0;
  * @return	Identifier name.
  */
 
+
+/**
+ * <p>Print the value of the given property (accordint the property matches
+ * the given identifier). It is an error to call this method with a property
+ * matching a different identifier.</p>
+ * <p>Use the print() method of a property instead.</p>
+ */
+void Identifier::print(elm::io::Output& output, const Property& prop) {
+	output << "<not printable>";
+}
+
+/**
+ * @fn void Identifier::print(elm::io::Output& output, const Property *prop);
+ * <p>Print the value of the given property (accordint the property matches
+ * the given identifier). It is an error to call this method with a property
+ * matching a different identifier.</p>
+ * <p>Use the print() method of a property instead.</p>
+ */
+
+
+/**
+ * Get the identifier of data linked with this property. It may return @ref
+ * Type::no_type ever meaning that the identifier does not support type system
+ * or that it is just a flag without associated data.
+ * @return	Type of the associated data.
+ */
+const Type& Identifier::type(void) const {
+	return Type::no_type;
+}
+
+
+// Specialisation for types
+const Type& GenericIdentifier<bool>::type(void) const { return Type::bool_type; }
+const Type& GenericIdentifier<char>::type(void) const { return Type::char_type; }
+const Type& GenericIdentifier<int>::type(void) const { return Type::int32_type; }
+const Type& GenericIdentifier<long long>::type(void) const { return Type::int64_type; }
+const Type& GenericIdentifier<char *>::type(void) const { return Type::cstring_type; }
+
 } // otawa
