@@ -139,7 +139,7 @@ void CFGBuilder::buildCFG(CodeItem *code) {
 				BasicBlock *bb = thisBB(target);
 				assert(bb);
 				if(inst->isCall())
-					bb->use<bool>(ID_Entry) = true;
+					bb->set<bool>(ID_Entry, true);
 			}
 
 			// Found BB starting on next instruction

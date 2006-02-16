@@ -38,7 +38,7 @@ public:
 	// Property value access with identifier pointer (DEPRECATED)
 	template <class T> inline T get(Identifier *id, const T def_value) const;
 	template <class T> inline elm::Option<T> get(Identifier *id) const;
-	template <class T> inline T& use(Identifier *id) const;
+	template <class T> inline T use(Identifier *id) const;
 	template <class T> inline void set(Identifier *id, const T value);
 	template <class T> inline void add(Identifier *id, const T value);
 	template <class T> inline void addLocked(Identifier *id, const T value);
@@ -46,7 +46,7 @@ public:
 	// Property value access with identifier reference
 	template <class T> inline T get(Identifier& id, const T def_value) const;
 	template <class T> inline elm::Option<T> get(Identifier& id) const;
-	template <class T> inline T& use(Identifier& id) const;
+	template <class T> inline T use(Identifier& id) const;
 	template <class T> inline void set(Identifier& id, const T value);
 	template <class T> inline void add(Identifier& id, const T value);
 	template <class T> inline void addLocked(Identifier& id, const T value);
@@ -100,11 +100,11 @@ template <class T> elm::Option<T> PropList::get(Identifier *id) const {
 	return !prop ? elm::Option<T>() : elm::Option<T>(((GenericProperty<T> *)prop)->value());
 };
 
-template <class T> T& PropList::use(Identifier *id) const {
+template <class T> T PropList::use(Identifier *id) const {
 	Property *prop = getProp(id);
 	if(!prop)
 		assert(0);
-	return ((GenericProperty<T> *)prop)->value();
+	return ((const GenericProperty<T> *)prop)->value();
 };
 
 template <class T> void PropList::set(Identifier *id, const T value) {
@@ -131,7 +131,7 @@ template <class T> elm::Option<T> PropList::get(Identifier& id) const {
 	return !prop ? elm::Option<T>() : elm::Option<T>(((GenericProperty<T> *)prop)->value());
 };
 
-template <class T> T& PropList::use(Identifier& id) const {
+template <class T> T PropList::use(Identifier& id) const {
 	Property *prop = getProp(&id);
 	if(!prop)
 		assert(0);
