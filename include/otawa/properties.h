@@ -8,6 +8,7 @@
 #define OTAWA_PROPERTIES_H
 
 #include <otawa/prop/Identifier.h>
+#include <otawa/prop/GenericIdentifier.h>
 #include <otawa/prop/Property.h>
 #include <otawa/prop/PropList.h>
 
