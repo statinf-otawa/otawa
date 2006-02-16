@@ -54,6 +54,7 @@ public:
 	static GenericProperty<T> *make(Identifier *id, const T value) {
 		return new GenericProperty(id, value);
 	};
+	inline const T& value(void) const { return _value; };
 	inline T& value(void) { return _value; };
 };
 
