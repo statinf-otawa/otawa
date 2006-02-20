@@ -15,8 +15,8 @@ namespace otawa {
 	class ASTLoader;
 	class File;
 }
-int ::ast_parse(otawa::ASTLoader *loader);
-void ::ast_error(otawa::ASTLoader *loader, const char *msg);
+int ast_parse(otawa::ASTLoader *loader);
+void ast_error(otawa::ASTLoader *loader, const char *msg);
 
 namespace otawa {
 

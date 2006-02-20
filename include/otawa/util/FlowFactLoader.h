@@ -17,7 +17,7 @@ namespace otawa  {
 	class FlowFactLoader;
 } // otawa
 int util_fft_parse(otawa::FlowFactLoader *loader);
-void ::util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
+void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 
 namespace otawa {
 
