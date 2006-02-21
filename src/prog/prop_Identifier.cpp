@@ -121,10 +121,19 @@ const Type& Identifier::type(void) const {
 
 
 // Specialisation for types
+template <>
 const Type& GenericIdentifier<bool>::type(void) const { return Type::bool_type; }
+
+template <>
 const Type& GenericIdentifier<char>::type(void) const { return Type::char_type; }
+
+template <>
 const Type& GenericIdentifier<int>::type(void) const { return Type::int32_type; }
+
+template <>
 const Type& GenericIdentifier<long long>::type(void) const { return Type::int64_type; }
+
+template <>
 const Type& GenericIdentifier<char *>::type(void) const { return Type::cstring_type; }
 
 } // otawa
