@@ -484,7 +484,7 @@ address_t PseudoInst::address(void) {
  * @param out	Output to perform the dump on.
  */
 void PseudoInst::dump(io::Output& out) {
-	out << "pseudo <" << (unsigned int)_id << '>';
+	out << "pseudo <" << (void *)_id << '>';
 }
 
 }	// otawa
