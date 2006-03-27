@@ -24,28 +24,28 @@ using namespace ilp;
  * This identifier is used for storing the time of execution in cycles (int)
  * of the program area it applies to.
  */
-Identifier IPET::ID_Time("ipet.time");
+GenericIdentifier<int> IPET::ID_Time("ipet.time");
 
 
 /**
  * This identifier is used for storing in basic blocks and edges the variables
  * (otawa::ilp::Var *) used in ILP resolution.
  */
-Identifier IPET::ID_Var("ipet.var");
+GenericIdentifier<ilp::Var *> IPET::ID_Var("ipet.var");
 
 
 /**
  * Identifier of annotations used for storing ILP system (otawa::ilp::System *)
  * in the CFG object.
  */
-Identifier IPET::ID_System("ipet.system");
+GenericIdentifier<ilp::System *> IPET::ID_System("ipet.system");
 
 
 /**
  * Identifier of annotation used for storing for storing the WCET value (int)
  * in the CFG of the computed function.
  */
-Identifier IPET::ID_WCET("ipet.wcet");
+GenericIdentifier<int> IPET::ID_WCET("ipet.wcet");
 
 
 /**
@@ -53,7 +53,7 @@ Identifier IPET::ID_WCET("ipet.wcet");
  * The generation of explicit names for variables may be time-consuming and
  * must only be activated for debugging purposes.
  */
-Identifier IPET::ID_Explicit("ipet.explicit");
+GenericIdentifier<bool> IPET::ID_Explicit("ipet.explicit");
 
 
 /**
@@ -63,7 +63,8 @@ Identifier IPET::ID_Explicit("ipet.explicit");
  * @preturn		CFG ILP system.
  */
 ilp::System *IPET::getSystem(FrameWork *fw, CFG *cfg) {
-	System *system = cfg->get<System *>(IPET::ID_System, 0);
+	//System *system = cfg->get<System *>(IPET::ID_System, 0);
+	System *system = IPET::ID_System(cfg);
 	if(!system) {
 		system = fw->newILPSystem();
 		cfg->addDeletable<System *>(IPET::ID_System, system);
