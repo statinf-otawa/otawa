@@ -4,6 +4,7 @@ includeotawautil_HEADERS = \
 	ContextTree.h \
 	DFA.h \
 	DFABitSet.h \
+	DFAEngine.h \
 	Dominance.h \
 	FlowFactLoader.h \
 	LBlockBuilder.h \
