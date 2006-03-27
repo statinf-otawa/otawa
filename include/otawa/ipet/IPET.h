@@ -7,7 +7,7 @@
 #ifndef OTAWA_IPET_IPET_H
 #define OTAWA_IPET_IPET_H
 
-#include <otawa/prop/Identifier.h>
+#include <otawa/prop/GenericIdentifier.h>
 
 namespace otawa {
 
@@ -28,11 +28,11 @@ class IPET {
 public:
 
 	// Constants
-	static Identifier ID_Time;
-	static Identifier ID_Var;
-	static Identifier ID_System;
-	static Identifier ID_WCET;
-	static Identifier ID_Explicit;
+	static GenericIdentifier<int> ID_Time;
+	static GenericIdentifier<ilp::Var *> ID_Var;
+	static GenericIdentifier<ilp::System *> ID_System;
+	static GenericIdentifier<int> ID_WCET;
+	static GenericIdentifier<bool> ID_Explicit;
 	
 	// Subprograms
 	static ilp::System *getSystem(FrameWork *fw, CFG *cfg);
