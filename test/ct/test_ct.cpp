@@ -48,7 +48,8 @@ static void displayContextTree(ContextTree *tree, int space = 0) {
 		else if(bb->isExit())
 			cout << "EXIT";
 		else
-			cout << bb->address();
+			cout << (bb->use<int>(CFG::ID_Index) - 1)
+				 << '(' << bb->address() << ')';
 	}
 	cout << "}\n";
 	
