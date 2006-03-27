@@ -20,8 +20,10 @@ class Dominance: public CFGProcessor {
 public:
 	static Identifier ID_RevDom;
 	static Identifier ID_LoopHeader;
+	static void ensure(CFG *cfg);
 	static bool dominates(BasicBlock *bb1, BasicBlock *bb2);
 	static inline bool isDominated(BasicBlock *bb1, BasicBlock *bb2);
+	static bool isLoopHeader(BasicBlock *bb);
 	static void markLoopHeaders(CFG *cfg,
 		elm::MutableCollection<BasicBlock *> *headers = 0);
 	
