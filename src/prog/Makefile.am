@@ -53,6 +53,7 @@ libotawa_so_SOURCES = \
 	ipet_WCETComputation.cpp \
 	util_DFA.cpp \
 	util_DFABitSet.cpp \
+	util_DFAEngine.cpp \
 	ets_ETS.cpp \
 	ets_WCETComputation.cpp \
 	ets_TrivialAstBlockTime.cpp \
@@ -165,6 +166,7 @@ libotawa_a_SOURCES = \
 	util_FlowFactLoader.cpp \
 	util_fft_parser.yy \
 	util_fft_lexer.ll \
+	util_DFAEngine.cpp \
 	ipet_FlowFactLoader.cpp \
 	util_CFGNormalizer.cpp \
 	hardware_Cache.cpp \
