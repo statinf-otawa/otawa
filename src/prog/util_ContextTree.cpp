@@ -7,10 +7,116 @@
 
 #include <otawa/util/ContextTree.h>
 #include <otawa/util/Dominance.h>
+#include <elm/genstruct/Vector.h>
+#include <elm/util/BitVector.h>
 #include <otawa/cfg.h>
+#include <otawa/util/DFAEngine.h>
+#include <otawa/util/DFABitSet.h>
+
+using namespace elm;
+using namespace otawa::util;
 
 namespace otawa {
+
+/**
+ * This class defines a DFA problem for detecting which loop or function call
+ * contains a BB.
+ * @par
+ * For building the context tree, we use a DFA that works on a reversed CFG
+ * using the following sets :
+ * <dl>
+ * 	<dt>LOOP</dt><dd>set of loop headers</dd>
+ * 	<dt>ENTRY</dt><dd>set of inlined function entries</dd>
+ * 	<dt>EXIT</dt><dd>set of inlined function exits</dd>
+ * </dl>
+ * @par
+ * The gen set is built is a follow :
+ * gen(n) =
+ * 		if n in LOOP, { }
+ * 		else if n in EXIT(m) { m }
+ * 		else { m / (m, n) in m in LOOP }
+ * @par
+ * And the kill set is as follow :
+ *		kill(n) = { n / n in LOOP U ENTRY }
+ * @note This implemenation does not yet support virtual CFG.
+ */
+class ContextTreeProblem {
+	CFG& _cfg;
+	genstruct::Vector<BasicBlock *> hdrs;
+public:
 	
+	ContextTreeProblem(CFG& cfg);
+	inline DFABitSet *empty(void) const { return new DFABitSet(hdrs.length()); };
+	DFABitSet *gen(BasicBlock *bb) const;
+	DFABitSet *kill(BasicBlock *bb) const;
+	inline int count(void) const { return hdrs.length(); };
+	inline BasicBlock *get(int index) const { return hdrs[index]; };
+	#ifndef NDEBUG
+		void dump(elm::io::Output& out, DFABitSet *set);
+	#endif
+};
+
+
+/* Dump the content of a bit set.
+ */
+#ifndef NDEBUG
+void ContextTreeProblem::dump(elm::io::Output& out, DFABitSet *set) {
+	bool first = true;
+	cout << "{ ";
+	for(int i = 0; i < hdrs.length(); i++)
+		if(set->contains(i)) {
+			if(first)
+				first = false;
+			else
+				cout << ", ";
+			cout << hdrs[i]->number();
+		}
+	cout << " }";
+}
+#endif
+
+/**
+ * Build a new context tree problem.
+ * @param cfg	CFG which this problem is applied to.
+ */
+ContextTreeProblem::ContextTreeProblem(CFG& cfg): _cfg(cfg) {
+	Dominance::ensure(&cfg);
+	for(Iterator<BasicBlock *> bb(cfg.bbs()); bb; bb++)
+		if(!bb->isEntry() && Dominance::isLoopHeader(bb))
+			hdrs.add(bb);
+}
+
+
+/**
+ * Compute the generation set for the given BB.
+ * @param bb	Current basic block.
+ * @return		Matching bit set.
+ */
+DFABitSet *ContextTreeProblem::gen(BasicBlock *bb) const {
+	DFABitSet *result = empty();
+	if(!Dominance::isLoopHeader(bb))
+		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+			//cout << edge->kind() << '\n';
+			if(edge->kind() != Edge::CALL
+			&& Dominance::dominates(edge->target(), bb))
+				result->add(hdrs.indexOf(edge->target()));
+		}
+	return result;
+}
+
+/**
+ * Compute the kill set for the given BB.
+ * @param bb	Current basic block.
+ * @return		Matching bit set.
+ */
+DFABitSet *ContextTreeProblem::kill(BasicBlock *bb) const {
+	DFABitSet *result = empty();
+	if(Dominance::isLoopHeader(bb))
+			result->add(hdrs.indexOf(bb));
+	return result;
+}
+
+
 /**
  * @class ContextTree
  * Representation of a context tree.
@@ -18,22 +124,97 @@ namespace otawa {
 
 
 /**
+ * Annotations with this identifier are hooked to basic blocks and gives
+ * the ower context tree (ContextTree * data).
+ */
+Identifier ContextTree::ID_ContextTree("otawa.context_tree");
+
+
+/**
  * Build a new context tree for the given CFG.
  * @param cfg	CFG to build the context tree for.
  */
 ContextTree::ContextTree(CFG *cfg): _kind(ROOT), _bb(cfg->entry()),
-_parent(0), next(0), _children(0), _cfg(cfg) {
+_parent(0), _cfg(cfg) {
 	assert(cfg);
+	//cout << "Computing " << cfg->label() << "\n";
+	
+	// Define the problem
+	ContextTreeProblem prob(*cfg);
+	if(prob.count() == 0) {
+		for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
+			addBB(bb);
+		_bbs.merge(&cfg->bbs());		
+		return;
+	}
+	//cout << "children = " << prob.count() << "\n";
+	
+	// Compute the solution
+	DFAEngine<ContextTreeProblem, DFABitSet, DFASuccessor>
+		dfa(prob, *cfg);
+	dfa.compute();
 
-	// Compute dominators and loop headers
-	if(!cfg->entry()->getProp(&Dominance::ID_RevDom)) {
-		Dominance dom;
-		dom.processCFG(0, cfg);
+	// Dump the DFA
+	/*cout << "\nDFA\n";
+	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++) {
+		cout << "BB " << bb->number() << " (" << bb->address() << ")";
+		if(Dominance::isLoopHeader(bb))
+			cout << " HEADER";
+		cout << "\n\t gen = ";
+		prob.dump(cout, dfa.genSet(bb));
+		cout << "\n\t kill = ";
+		prob.dump(cout, dfa.killSet(bb));
+		cout << "\n\t in = ";
+		prob.dump(cout, dfa.inSet(bb));
+		cout << "\n\t out = ";
+		prob.dump(cout, dfa.outSet(bb));
+		cout << '\n';
+	}*/
+	
+	// Prepare the tree analysis
+	ContextTree *trees[prob.count()];
+	BitVector *vecs[prob.count()];
+	for(int i = 0; i < prob.count(); i++) {
+		vecs[i] = &dfa.outSet(prob.get(i))->vector();
+		//cout << "Child " << i << " " << *vecs[i];
+		trees[i] = new ContextTree(prob.get(i), cfg);
+		if(vecs[i]->isEmpty()) {
+			addChild(trees[i]);
+			//cout << " root child";
+		}
+		//cout << "\n";
+		vecs[i]->set(i);
 	}
 	
-	// Look children
-	_bbs.add(_bb);
-	scan(cfg->exit());
+	// Children find their parent
+	for(int i = 0; i < prob.count(); i++) {
+		vecs[i]->clear(i);
+		//cout << "INITIAL " << i << " " << *vecs[i] << "\n";
+		for(int j = 0; j < prob.count(); j++) {
+			/*if(i != j)
+				cout << "TEST " << *vecs[i] << " == " << *vecs[j] << "\n";*/
+			if(i != j && *vecs[i] == *vecs[j]) {
+				trees[j]->addChild(trees[i]);
+				//cout << "FOUND !\n";
+				break;
+			}
+		}
+		assert(trees[i]->_parent);
+		vecs[i]->set(i);
+	}
+	
+	// BB find their parent
+	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++) {
+		BitVector& bv = dfa.outSet(bb)->vector();
+		if(bv.isEmpty())
+			addBB(bb);
+		else
+			for(int i = 0; i < prob.count(); i++)
+				if(vecs[i]->equals(bv)) {
+					trees[i]->addBB(bb);
+					break;
+			}
+	}
 }
 
 
@@ -41,21 +222,9 @@ _parent(0), next(0), _children(0), _cfg(cfg) {
  * Build the context tree of a loop.
  * @param bb	Header of the loop.
  */
-ContextTree::ContextTree(BasicBlock *bb)
-: _bb(bb), _kind(LOOP), _children(0), next(0), _parent(0), _cfg(0) {
+ContextTree::ContextTree(BasicBlock *bb, CFG *cfg)
+: _bb(bb), _kind(LOOP), _parent(0), _cfg(cfg) {
 	assert(bb);
-	_bbs.add(bb);
-	
-	// Don't forget to record call in loop header
-	for(BasicBlock::OutIterator edge(bb); edge; edge++)
-		if(edge->kind() == Edge::CALL && edge->calledCFG())
-			addChild(new ContextTree(edge->calledCFG()));			
-	
-	// Find back edges
-	for(BasicBlock::InIterator edge(bb); edge; edge++)
-		if(Dominance::dominates(bb, edge->source())
-		&& !_bbs.contains(edge->source()))
-			scan(edge->source(), 1);
 }
 
 
@@ -63,66 +232,21 @@ ContextTree::ContextTree(BasicBlock *bb)
  * Free the entire tree.
  */
 ContextTree::~ContextTree(void) {
-	for(ContextTree *cur = _children, *next; cur; cur = next) {
-		next = cur->next;
-		delete cur;
-	}
+	for(int i = 0; i < _children.length(); i++)
+		delete _children[i];
 };
 
 
 /**
- * Scan back the loop or the function from the given header for finding the
- * full body.
- * @param bb	Header of loop or function.
- * @param start	Start index in the BB vector.
+ * Add the given basic block to the context tree.
+ * @param bb	Added BB.
  */
-void ContextTree::scan(BasicBlock *bb, int start) {
+void ContextTree::addBB(BasicBlock *bb) {
 	_bbs.add(bb);
-	
-	// Find the body
-	for(int i =  start; i < _bbs.length(); i++) {
-		
-		// Look forward for calls or back loop edge
-		for(BasicBlock::OutIterator edge(_bbs[i]); edge; edge++) {
+	if(bb->isCall())
+		for(BasicBlock::OutIterator edge(bb); edge; edge++)
 			if(edge->kind() == Edge::CALL && edge->calledCFG())
 				addChild(new ContextTree(edge->calledCFG()));
-			else if(edge->target() && edge->target() != _bb
-			&& Dominance::dominates(edge->target(), _bbs[i])) {
-				_bbs[i] = edge->target();
-				break;
-			}
-		}
-
-		// Look backward
-		bool header = false;
-		for(BasicBlock::InIterator edge(_bbs[i]); edge; edge++) {
-			assert(edge->source());
-			if(edge->source() != _bb) {
-				if(Dominance::dominates(_bbs[i], edge->source()))
-					header = true;
-				else if(!_bbs.contains(edge->source()))
-					_bbs.add(edge->source());
-			}
-		}
-		
-		// Add the loop if required
-		if(header)
-			addChild(new ContextTree(_bbs[i]));
-	}
-	
-	// Remove loop headers
-	int target = 0, source = 0;
-	for(ContextTree *ctx = _children; ctx; ctx = ctx->next)
-		if(ctx->kind() == LOOP) {
-			while(_bbs[source] != ctx->bb()) {
-				assert(source < _bbs.length());
-				_bbs[target++] = _bbs[source++];
-			}
-			source++;
-		}
-	while(source < _bbs.length())
-		_bbs[target++] = _bbs[source++];
-	_bbs.setLength(target);
 }
 
 
@@ -132,13 +256,7 @@ void ContextTree::scan(BasicBlock *bb, int start) {
  */
 void ContextTree::addChild(ContextTree *child) {
 	assert(child);
-	if(!_children)
-		_children = child;
-	else {
-		ContextTree *cur = _children;
-		while(cur->next) cur = cur->next;
-		cur->next = child;
-	}
+	_children.add(child);
 	child->_parent = this;
 	if(child->kind() == ROOT)
 		child->_kind = FUNCTION;
@@ -175,19 +293,11 @@ void ContextTree::addChild(ContextTree *child) {
 
 
 /**
- */	
-IteratorInst<ContextTree *> *ContextTree::visit(void) {
-	ChildrenIterator iter(this);
-	return new IteratorObject<ChildrenIterator, ContextTree *>(iter);
-};
-
-
-/**
+ * @fn bool ContextTree::isChildOf(const ContextTree *ct);
+ * Test transitively if the current context tree is a child of the given one.
+ * @param ct	Parent context tree.
+ * @return		True if the current context tree is a child of the given one.
  */
-MutableCollection<ContextTree *> *ContextTree::empty(void) {
-	// !!TODO!!
-	assert(false);
-}
 
 
 /**
@@ -220,6 +330,20 @@ MutableCollection<ContextTree *> *ContextTree::empty(void) {
 /**
  * @fn void ContextTree::ChildrenIterator::next(void);
  * Go to the next children.
+ */
+
+
+/**
+ * @fn CFG *ContextTree::ContextTree::cfg(void) const;
+ * Get the CFG containing this context tree.
+ * @return	Container CFG.
+ */
+
+
+/**
+ * @fn elm::Collection<BasicBlock *>& ContextTree::bbs(void);
+ * Get the basic blocks in the current context tree.
+ * @return	Basic block collection.
  */
 
 } // otawa

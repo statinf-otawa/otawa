@@ -17,7 +17,7 @@ class BasicBlock;
 class CFG;
 
 // ContextTree class
-class ContextTree: public PropList, public elm::Collection<ContextTree *> {
+class ContextTree: public PropList {
 public:
 	// Kind
 	typedef enum kind_t {
@@ -31,37 +31,32 @@ private:
 	BasicBlock *_bb;
 	CFG *_cfg;
 	elm::datastruct::Vector<BasicBlock *> _bbs;
+	elm::datastruct::Vector<ContextTree *> _children;
+	
 	ContextTree *_parent;
-	ContextTree *_children;
-	ContextTree *next;
-	ContextTree(BasicBlock *bb);
-	void scan(BasicBlock *bb, int start = 0);
+	ContextTree(BasicBlock *bb, CFG *cfg);
 	void addChild(ContextTree *tree);
+	void addBB(BasicBlock *bb);
 public:
+
+	// Globals
+	static Identifier ID_ContextTree;
 
 	// Methods
 	ContextTree(CFG *cfg);
 	~ContextTree(void);
 	inline BasicBlock *bb(void) const;
 	inline kind_t kind(void) const;
-	inline CFG *cfg(void) const { return _cfg; };
+	inline CFG *cfg(void) const;
 	inline ContextTree *parent(void) const;
 	inline elm::Collection<ContextTree *>& children(void);
-	elm::Collection<BasicBlock *>& bbs(void);
+	inline elm::Collection<BasicBlock *>& bbs(void);
+	inline bool isChildOf(const ContextTree *ct);
 	
-	// Collection overload
-	virtual IteratorInst<ContextTree *> *visit(void);
-	virtual MutableCollection<ContextTree *> *empty(void);
-
 	// Iterator
-	class ChildrenIterator
-	: public PreIterator<ChildrenIterator, ContextTree *> {
-		ContextTree *cur;
+	class ChildrenIterator: public elm::Iterator<ContextTree *> {
 	public:
 		inline ChildrenIterator(ContextTree *tree);
-		inline bool ended(void) const;
-		inline ContextTree *item(void) const;
-		inline void next(void);
 	};
 };
 
@@ -84,27 +79,29 @@ inline elm::Collection<BasicBlock *>& ContextTree::bbs(void) {
 }
 
 inline elm::Collection<ContextTree *>& ContextTree::children(void) {
-	return *this;
+	return _children;
 }
 
 
+inline bool ContextTree::isChildOf(const ContextTree *ct) {
+	ContextTree *cur = this;
+	while(ct) {
+		if(cur == ct)
+			return true;
+		else
+			cur = cur->_parent;
+	}
+	return false;
+}
+
+inline CFG *ContextTree::cfg(void) const {
+	return _cfg;
+}
+
 // ContextTree::ChildrenIterator class
 inline ContextTree::ChildrenIterator::ChildrenIterator(ContextTree *tree)
-: cur(tree->_children) {
+: elm::Iterator<ContextTree *>(tree->_children.visit()) {
 	assert(tree);
-};
-
-inline bool ContextTree::ChildrenIterator::ended(void) const {
-	return !cur;
-};
-
-inline ContextTree *ContextTree::ChildrenIterator::item(void) const {
-	assert(cur);
-	return cur;
-};
-
-inline void ContextTree::ChildrenIterator::next(void) {
-	cur = cur->next;
 };
 
 }	// otawa
