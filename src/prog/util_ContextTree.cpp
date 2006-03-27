@@ -19,11 +19,37 @@ using namespace otawa::util;
 namespace otawa {
 
 /**
+ * @enum ContextTree::kind_t
+ * This enumerate represents the kind of a context tree.
+ */
+
+
+/**
+ * @var ContextTree::ROOT
+ * A function context tree root of the whole tree.
+ */
+
+
+/**
+ * @var ContextTree::FUNCTION
+ * A function context tree (due to a function call).
+ */
+
+
+/**
+ * @var ContextTree::LOOP
+ * A loop context tree.
+ */
+
+
+/**
+ * @class ContextTree
  * This class defines a DFA problem for detecting which loop or function call
  * contains a BB.
  * @par
- * For building the context tree, we use a DFA that works on a reversed CFG
- * using the following sets :
+ * For building the context tree, we consider the CFG as pair <N, E>, N the set
+ * of basic blocks and E the set of edges. We use a DFA that works on a
+ * reversed CFG using the following sets :
  * <dl>
  * 	<dt>LOOP</dt><dd>set of loop headers</dd>
  * 	<dt>ENTRY</dt><dd>set of inlined function entries</dd>
@@ -31,12 +57,12 @@ namespace otawa {
  * </dl>
  * @par
  * The gen set is built is a follow :
- * gen(n) =
- * 		if n in LOOP, { }
- * 		else if n in EXIT(m) { m }
- * 		else { m / (m, n) in m in LOOP }
+ * gen(n) =<br>
+ * 		if n in LOOP, { }<br>
+ * 		else if n in EXIT(m) { m }<br>
+ * 		else { m / (m, n) in E and m in LOOP }
  * @par
- * And the kill set is as follow :
+ * And the kill set is as follow :<br>
  *		kill(n) = { n / n in LOOP U ENTRY }
  * @note This implemenation does not yet support virtual CFG.
  */
@@ -334,7 +360,7 @@ void ContextTree::addChild(ContextTree *child) {
 
 
 /**
- * @fn CFG *ContextTree::ContextTree::cfg(void) const;
+ * @fn CFG *ContextTree::cfg(void) const;
  * Get the CFG containing this context tree.
  * @return	Container CFG.
  */
