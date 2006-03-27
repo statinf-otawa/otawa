@@ -158,4 +158,29 @@ elm::MutableCollection<BasicBlock *> *headers) {
 	}
 }
 
+
+/**
+ * Test if the given baic block is a loop header.
+ * @return True if it is a loop ehader, false else.
+ */
+bool Dominance::isLoopHeader(BasicBlock *bb) {
+	for(BasicBlock::InIterator edge(bb); edge; edge++)
+		if(edge->kind() != Edge::CALL
+		&& Dominance::dominates(bb, edge->source()))
+			return true;
+	return false;
+}
+
+
+/**
+ * Check if the dominance informance is available. Else compute it.
+ * @param cfg	CFG to look at.
+ */
+void Dominance::ensure(CFG *cfg) {
+	if(!cfg->entry()->getProp(&Dominance::ID_RevDom)) {
+		Dominance dom;
+		dom.processCFG(0, cfg);
+	}
+}
+
 } // otawa
