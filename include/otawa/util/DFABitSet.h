@@ -27,8 +27,10 @@ public:
 	inline void fill(void);
 	inline void mask(DFABitSet *set);
 	inline int size(void) const;
+	inline void reset(void);
 	void dif(DFABitSet *set);
 	int counttruebit(void);
+	inline elm::BitVector& vector(void) { return vec; };
 	
 	// DFASet overload
 	virtual bool equals(DFASet *set);
@@ -73,6 +75,10 @@ inline void DFABitSet::dif(DFABitSet *set) {
 
 inline int DFABitSet::size(void) const {
 	return vec.size();
+}
+
+inline void DFABitSet::reset(void) {
+	vec.clear();
 }
 
 }	// otawa
