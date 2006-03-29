@@ -127,6 +127,27 @@ void BasicBlock::setNotTaken(BasicBlock *bb) {
 
 
 /**
+ * @fn bool BasicBlock::isEntry(void) const;
+ * Test if the basic block is the CFG entry.
+ * @return True if the current BB is the CFG entry.
+ */
+
+
+/**
+ * @fn bool BasicBlock::isExit(void) const;
+ * Test if the basic block is the CFG exit.
+ * @return True if the current BB is the CFG exit.
+ */
+
+
+/**
+ * @fn bool BasicBlock::isEnd(void) const;
+ * Test if the basic block is the CFG end, entry or exit.
+ * @return True if the current BB is the CFG end.
+ */
+
+
+/**
  * Compute the size of the basic block.
  * @return Size of basic block.
  */

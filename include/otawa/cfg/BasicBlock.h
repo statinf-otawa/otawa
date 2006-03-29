@@ -91,6 +91,7 @@ public:
 		{ return (flags & FLAG_Unknown) != 0; };
 	inline bool isEntry(void) const { return flags & FLAG_Entry; };
 	inline bool isExit(void) const { return flags & FLAG_Exit; };
+	inline bool isEnd(void) const { return flags & (FLAG_Entry | FLAG_Exit); };
 	inline Mark *head(void) const { return _head; };
 	inline address_t address(void) const { return _head->address(); };
 	int countInstructions(void) const;
