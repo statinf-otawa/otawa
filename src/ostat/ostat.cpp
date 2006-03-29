@@ -79,6 +79,11 @@ public:
  * Print the statistics.
  * @param out	Output to use (default cout).
  */
+Statistics::Statistics(void): bb_cnt(0), inst_cnt(0), mem_cnt(0), bra_cnt(0),
+inst_max(0), mem_max(0), bra_max(0) {
+}
+
+
 void Statistics::addBB(BasicBlock *bb) {
 	
 	// do not process virtual
@@ -168,10 +173,6 @@ CFGStatistics::CFGStatistics(CFG *cfg): _cfg(cfg) {
 /**
  * Initialize the statistics.
  */
-Statistics::Statistics(void): bb_cnt(0), inst_cnt(0), mem_cnt(0), bra_cnt(0) {
-}
-
-
 /**
  * Count a new basic block.
  */
