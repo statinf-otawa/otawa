@@ -41,6 +41,8 @@ static option::BoolOption tree_option(command, 't', "tree",
 	"scan the whole calling tree.", false);
 static option::BoolOption short_option(command, 's', "short",
 	"perform short display.", false);
+static option::BoolOption overall_option(command, 'o', "overall",
+	"display only overall statistics.", false);
 
 
 // Statistics class
@@ -210,8 +212,14 @@ TreeStatistics::TreeStatistics(CFG *cfg) {
 		// Collect global statistics
 		bb_cnt += stat->bbCount();
 		inst_cnt += stat->instCount();
+		if(stat->maxInstCount() > inst_max)
+			inst_max = stat->maxInstCount();
 		mem_cnt += stat->memAccessCount();
+		if(stat->maxMemAccessCount() > mem_max)
+			mem_max = stat->maxMemAccessCount();
 		bra_cnt += stat->branchCount();
+		if(stat->maxBranchCount() > bra_max)
+			bra_max = stat->maxBranchCount();
 		
 		// Look for called CFG
 		for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
@@ -231,11 +239,12 @@ TreeStatistics::TreeStatistics(CFG *cfg) {
 void TreeStatistics::print(elm::io::Output& out) {
 	
 	// Print content
-	for(HashTable<void *, CFGStatistics *>::ItemIterator stat(stats); stat; stat++) {
-		stat->print(out);
-		if(!short_option)
-			out << "\n";
-	}
+	if(!overall_option)
+		for(HashTable<void *, CFGStatistics *>::ItemIterator stat(stats); stat; stat++) {
+			stat->print(out);
+			if(!short_option)
+				out << "\n";
+		}
 	
 	// Print total
 	if(short_option)
