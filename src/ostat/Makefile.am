@@ -1,0 +1,8 @@
+bin_PROGRAMS=ostat
+ostat_SOURCES= \
+	ostat.cpp
+
+ostat_LDADD = @LOADER_PLUGIN@ @PROG_LIBS@
+dumpcfg_DEPENDENCIES = @LOADER_DEP@ @PROG_DEP@
+
+AM_CXXFLAGS = @PROG_CXXFLAGS@

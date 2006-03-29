@@ -1,4 +1,10 @@
-SUBDIRS= @PLUGINS@ prog oshell dumpcfg mkff 
+SUBDIRS= \
+	@PLUGINS@ \
+	prog \
+	oshell \
+	dumpcfg \
+	mkff \
+	ostat
 
 #all-local:
 #	(cd mkast; make)
