@@ -68,10 +68,12 @@ public:
 	inline long long memAccessCount(void) const { return mem_cnt; };
 	inline double averageMemAccessCount(void) const { return (double)mem_cnt / bb_cnt; };
 	inline long long maxMemAccessCount(void) const { return mem_max; };
+	inline double memAccessRatio(void) const { return (double)mem_cnt * 100 / inst_cnt; }
 	
 	inline long long branchCount(void) const { return bra_cnt; };
 	inline double averageBranchCount(void) const { return (double)bra_cnt / bb_cnt; };
 	inline long long maxBranchCount(void) const { return bra_max; };
+	inline double branchRatio(void) const { return (double)bra_cnt * 100 / inst_cnt; }
 };
 
 
@@ -134,19 +136,21 @@ void Statistics::print(elm::io::Output& out) {
 	}
 	else {
 		out << "BB count = " << bbCount() << "\n";
-		out << "type = total count, average/bb, max/bb\n";
+		out << "type = total count, average/bb, max/bb, ratio\n";
 		out << "instructions = "
 			 << instCount() << ", "
 			 << averageInstCount() << ", "
-			 << maxInstCount() << "\n";
+			 << maxInstCount() << ", 100%\n";
 		out << "memory instructions = "
 			 << memAccessCount() << ", "
 			 << averageMemAccessCount() << ", "
-			 << maxMemAccessCount() << "\n";
+			 << maxMemAccessCount() << ", "
+			 << memAccessRatio() << "%\n";
 		out << "branch instructions = "
 			 << branchCount() << ", "
 			 << averageBranchCount() << ", "
-			 << maxBranchCount() << "\n";
+			 << maxBranchCount() << ", "
+			 << branchRatio() << "%\n";
 	}
 }
 
