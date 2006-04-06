@@ -21,3 +21,4 @@ ast_parser.h
 ast_parser.output
 libprog.so
 libotawa.so
+libotawa.a
