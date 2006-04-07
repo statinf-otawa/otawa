@@ -22,7 +22,9 @@ class CacheConfiguration;
 
 // Process class
 class Process: public ProgObject {
+	File *prog;
 public:
+	Process(File *program = 0);
 	virtual ~Process(void) { };
 	
 	// Accessors
@@ -33,13 +35,20 @@ public:
 	virtual Inst *findInstAt(address_t addr) = 0;
 	virtual address_t findLabel(String& label);
 	virtual Inst *findInstAt(String& label);
+	virtual elm::Collection<File *> *files(void) = 0;
+	inline File *program(void) const;
 
 	// Constructors
-	virtual elm::Collection<File *> *files(void) = 0;
 	virtual File *createFile(void) = 0;
+	File *loadProgram(elm::CString path);
 	virtual File *loadFile(elm::CString path) = 0;
 
 };
+
+// Inlines
+inline File *Process::program(void) const {
+	return prog;
+}
 
 } // otawa
 

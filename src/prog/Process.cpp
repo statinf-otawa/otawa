@@ -20,6 +20,14 @@ namespace otawa {
 
 
 /**
+ * Build a new empty process.
+ * @param program	The program file creating this process.
+ */
+Process::Process(File *program): prog(program) {
+}
+
+
+/**
  * Get the cache hierarchy of the current processor. The cachers are ordered
  * according the index in the vector.
  * @return	Cache hierarchy.
@@ -112,6 +120,25 @@ Inst *Process::findInstAt(String& label) {
 		return 0;
 	else
 		return findInstAt(addr);
+}
+
+
+/**
+ * @fn File *Process::program(void) const;
+ * Get the program file, that is, the startup executable of the process.
+ * @return	Program file.
+ */
+
+
+/**
+ * Load the program file
+ */
+File *Process::loadProgram(elm::CString path) {
+	assert(!!prog);
+	File *file = loadFile(path);
+	if(file)
+		prog = file;
+	return file;
 }
 
 } // otawa
