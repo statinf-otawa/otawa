@@ -134,7 +134,7 @@ Inst *Process::findInstAt(String& label) {
  * Load the program file
  */
 File *Process::loadProgram(elm::CString path) {
-	assert(!!prog);
+	assert(!prog);
 	File *file = loadFile(path);
 	if(file)
 		prog = file;
