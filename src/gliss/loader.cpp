@@ -35,7 +35,7 @@ CString Loader::getName(void) const {
  */
 otawa::Process *Loader::load(Manager *man, CString path, PropList& props) {
 	otawa::Process *proc = create(man, props);
-	if(!proc->loadFile(path)) {
+	if(!proc->loadProgram(path)) {
 		delete proc;
 		return 0;
 	}

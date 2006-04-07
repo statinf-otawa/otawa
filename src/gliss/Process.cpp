@@ -117,6 +117,7 @@ Process::~Process(void) {
 	delete _platform;
 }
 
+
 // otawa::Process overload
 otawa::Inst *Process::start(void) {
 	if(!start_addr)
