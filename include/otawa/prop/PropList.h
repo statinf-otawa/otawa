@@ -34,6 +34,7 @@ public:
 	inline void setProp(Identifier *id) { setProp(new Property(id)); };
 	void addProp(Property *prop);
 	void removeAllProp(Identifier *id);
+	inline bool hasProp(Identifier& id);
 	
 	// Property value access with identifier pointer (DEPRECATED)
 	template <class T> inline T get(Identifier *id, const T def_value) const;
@@ -90,6 +91,10 @@ public:
 
 
 // PropList inlines
+inline bool PropList::hasProp(Identifier& id) {
+	return getProp(&id) != 0;	
+}
+
 template <class T> T PropList::get(Identifier *id, const T def_value) const {
 	Property *prop = getProp(id);
 	return !prop ? def_value : ((GenericProperty<T> *)prop)->value();

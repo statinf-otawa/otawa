@@ -127,7 +127,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T PropList::get(Identifier *id, T def_value);
+ * @fn T PropList::get(Identifier *id, T def_value) const;
  * Get the value of a property.
  * @param id			Identifier of the property to get.
  * @param def_value		Default value returned if property does not exists.
@@ -137,7 +137,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T PropList::get(Identifier& id, T def_value);
+ * @fn T PropList::get(Identifier& id, T def_value) const;
  * Get the value of a property.
  * @param id			Identifier of the property to get.
  * @param def_value		Default value returned if property does not exists.
@@ -146,7 +146,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn Option<T> PropList::get(Identifier *id)
+ * @fn Option<T> PropList::get(Identifier *id) const;
  * Get the value of a property.
  * @param id	Identifier of the property to get the value from.
  * @return		None or the value of the property.
@@ -155,7 +155,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn Option<T> PropList::get(Identifier& id)
+ * @fn Option<T> PropList::get(Identifier& id) const;
  * Get the value of a property.
  * @param id	Identifier of the property to get the value from.
  * @return		None or the value of the property.
@@ -163,7 +163,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T& PropList::use(Identifier *id)
+ * @fn T& PropList::use(Identifier *id) const;
  * Get the reference on the value of the given property. If not found,
  * cause an assertion failure.
  * @param id	Identifier of the property to get the value from.
@@ -173,7 +173,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T& PropList::use(Identifier& id)
+ * @fn T& PropList::use(Identifier& id) const;
  * Get the reference on the value of the given property. If not found,
  * cause an assertion failure.
  * @param id	Identifier of the property to get the value from.
@@ -302,6 +302,14 @@ void PropList::removeAllProp(Identifier *id) {
  * This is an empty proplist for convenience.
  */
 const PropList PropList::EMPTY;
+
+
+/**
+ * @fn bool PropList::hasProp(Identifier& id);
+ * Test if the property list contains a property matching the given identifier.
+ * @param id	Property identifier to look for.
+ * @return		True if the list contains the matching property, false else.
+ */
 
 
 /**
