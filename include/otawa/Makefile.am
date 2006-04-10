@@ -23,6 +23,7 @@ includeotawa_HEADERS = \
 	gliss.h \
 	ilp.h \
 	instruction.h \
+	ipet.h \
 	manager.h \
 	otawa.h \
 	platform.h \

@@ -8,15 +8,8 @@
 #include <stdlib.h>
 #include <elm/io.h>
 #include <otawa/otawa.h>
-#include <otawa/ipet/IPET.h>
-#include <otawa/ipet/TrivialBBTime.h>
-#include <otawa/ipet/VarAssignment.h>
-#include <otawa/ipet/BasicConstraintsBuilder.h>
-#include <otawa/ipet/WCETComputation.h>
-#include <otawa/ipet/FlowFactLoader.h>
-#include <otawa/ipet/BasicObjectFunctionBuilder.h>
+#include <otawa/ipet.h>
 #include <otawa/proc/ProcessorException.h>
-#include <otawa/ipet/TrivialDataCacheManager.h>
 #include <otawa/hardware/CacheConfiguration.h>
 #include <otawa/ilp.h>
 

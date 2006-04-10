@@ -2,17 +2,11 @@
 #include <elm/io.h>
 #include <otawa/ilp.h>
 #include <otawa/otawa.h>
-#include <otawa/ipet/IPET.h>
-#include <otawa/ipet/TrivialBBTime.h>
-#include <otawa/ipet/VarAssignment.h>
-#include <otawa/ipet/BasicConstraintsBuilder.h>
-#include <otawa/ipet/WCETComputation.h>
+#include <otawa/ipet.h>
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/cache/LBlockSet.h>
-#include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/hardware/Cache.h>
-#include <otawa/ipet/BasicObjectFunctionBuilder.h>
 #include <otawa/hardware/CacheConfiguration.h>
 
 
