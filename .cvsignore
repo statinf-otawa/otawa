@@ -40,3 +40,4 @@ ylwrap
 lib
 libtool
 ltmain.sh
+.tm_project.cache
