@@ -8,12 +8,7 @@
 #include <stdlib.h>
 #include <elm/io.h>
 #include <otawa/otawa.h>
-#include <otawa/ipet/IPET.h>
-#include <otawa/ipet/TrivialBBTime.h>
-#include <otawa/ipet/VarAssignment.h>
-#include <otawa/ipet/BasicConstraintsBuilder.h>
-#include <otawa/ipet/WCETComputation.h>
-#include <otawa/ipet/ConstraintLoader.h>
+#include <otawa/ipet.h>
 
 using namespace otawa;
 using namespace elm;
