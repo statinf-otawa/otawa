@@ -115,11 +115,73 @@ bool Platform::accept(const Identification& _id) {
 
 
 /**
+ * Represents any architecture, platform, machine.
+ */
+const elm::String Platform::ANY("*");
+
+
+/**
+ * Represents the PowerPC architecture.
+ */
+const elm::String Platform::POWERPC("powerpc");
+
+
+/**
+ * Represents the ELF ABI.
+ */	
+const elm::String Platform::ELF("elf");
+
+
+/**
+ * Represents the EABI ABI.
+ */
+const elm::String Platform::EABI("eabi");
+
+
+/**
+ * Represents the Linux ABI.
+ */
+const elm::String Platform::LINUX("linux");
+
+
+/**
+ * Represents the Linux 2.4 ABI.
+ */
+const elm::String Platform::LINUX_2_4("linux/2.4");
+
+
+/**
+ * Represents the Linux 2.6 ABI.
+ */
+const elm::String Platform::LINUX_2_6("linux/2.5");
+
+
+/**
+ * Represents a Macintosh machine (seems to be too wide, must be refined).
+ */
+const elm::String Platform::MAC("mac");
+
+
+/**
+ * Represents a simulator machine.
+ */
+const elm::String Platform::SIM("sim");
+
+
+/**
+ * Represents any platform.
+ */
+const Platform::Identification Platform::ANY_PLATFORM(ANY);
+
+
+/**
  * @class Platform::Identification
  * <p>This class represents a platform identification that is composed by:</p>
  * @li architecture: processor family like 'x86', 'powerpc', 'arm', ...
+ * possibly followed by the exact model : i586, arm7, ...
  * @li ABI or Application Binary Interface that defines the encoding of binary
- * and system call protocol like 'elf' or 'coff'.
+ * and system call protocol like 'elf' or 'coff' followed by the version of the
+ * running system "linux2.2", "linux2.4", ...
  * @li machine that gives information about the hardware configuration of the
  * system, for example, 'pcat' or 'sim' for simulator.
  * <p>Each component may be datailed by one or many sub-components
@@ -128,66 +190,126 @@ bool Platform::accept(const Identification& _id) {
  * 'x86/i586-elf/linux/libc2.4-pcat'.</p>
  */
 
+
 /**
  * Split the platform name into its components.
  */
 void Platform::Identification::split(void) {
 	
 	// Find the architecture
-	int start = 0, pos = name.indexOf('-');
-	arch = name.substring(0, pos >= 0 ? pos : name.length());
+	int start = 0, pos = _name.indexOf('-');
+	_arch = _name.substring(0, pos >= 0 ? pos : _name.length());
 	
 	// Find the ABI
 	if(pos >= 0) {
 		start = pos + 1;
-		pos = name.indexOf('-', start);
-		_abi = name.substring(start, pos >= 0 ? pos - start : name.length() - start);
+		pos = _name.indexOf('-', start);
+		_abi = _name.substring(start, pos >= 0 ? pos - start : _name.length() - start);
 	}
+	else
+		_abi = ANY;
 	
 	// Find the machine
 	if(pos >= 0) {
 		start = pos + 1;
-		pos = name.indexOf('-', start);
-		mach = name.substring(start, pos >= 0 ? pos - start : name.length() - start);
+		pos = _name.indexOf('-', start);
+		_mach = _name.substring(start, pos >= 0 ? pos - start : _name.length() - start);
 	}
+	else
+		_mach = ANY;
 }
 
 
 /**
  * Build a platform identifier from a string.
- * @param _name	Name of the platform.
+ * @param name	Name of the platform.
  */
-Platform::Identification::Identification(const String _name): name(_name) {
+Platform::Identification::Identification(const String& name): _name(name) {
 	split();
 }
+
 
 /**
  * Build an explicit platform identifier.
- * @param _arch		Archietcture.
- * @param _abi		ABI.
- * @param _mach	Machine.
+ * @param arch		Archietcture.
+ * @param abi		ABI.
+ * @param mach		Machine.
  */
-Platform::Identification::Identification(CString _arch, CString _abi, CString _mach)
-: name(_arch + "-" + _abi + "-" + _mach) {
-	split();
+Platform::Identification::Identification(const elm::String& arch,
+const elm::String& abi, const elm::String& mach)
+: _name(arch + "-" + abi + "-" + mach), _arch(arch), _abi(abi), _mach(mach) {
 }
 
 /**
- * @fn const String& PlatformId::architecture(void) const;
+ * @fn const elm::String& Platform::Identification::architecture(void) const;
  * Get the architecture component of the platform identifier.
  * @return Architecture component.
  */
 
 /**
- * @fn const String& PlatformId::abi(void) const;
+ * @fn const elm::String& Platform::Identification::abi(void) const;
  * Get the ABI component of the platform identifier.
  * @return ABI component.
  */
 
 /**
- * @fn const String& PlatformId::machine(void) const;
+ * @fn const elm::String& Platform::Identification::machine(void) const;
  * Get the machine component of the platform identifier.
  * @return Machine component.
  */
+
+/**
+ * @fn const elm::String& Platform::Identification::name(void) const;
+ * Get the full name of the identification.
+ * @return Identification name.
+ */
+
+/**
+ * Copy the given identification in the current one.
+ * @param id	Copied identification.
+ * @return		Current identification.
+ */
+Platform::Identification& Platform::Identification::operator=(
+const Platform::Identification& id) {
+	_name = id._name;
+	_arch = id._arch;
+	_abi = id._abi;
+	_mach = id._mach;
+}
+
+
+/**
+ * Check if the current identification matches the given one.
+ * Note that the "*" "any" identity is used only by the current identification.
+ * Matching is also performed by prefix. For example, an identification "xxx"
+ * in the current identification matches a "xxx/yyy" in the given identification.
+ * @return	True if both identification matches, false else.
+ */
+bool Platform::Identification::matches(const Identification& id) {
+	
+	// Check architecture
+	if(_arch != ANY) {
+		if(!id._arch.startsWith(_arch)
+		|| (id._arch.length() != _arch.length() && id._arch[_arch.length()] != '/'))
+			return false;
+	}
+	
+	// Check ABI
+	if(_abi != ANY) {
+		if(!id._abi.startsWith(_abi)
+		|| (id._abi.length() != _abi.length() && id._abi[_abi.length()] != '/'))
+			return false;
+	}
+	
+	// Check machine
+	if(_mach != ANY) {
+		if(!id._mach.startsWith(_arch)
+		|| (id._mach.length() != _mach.length() && id._mach[_mach.length()] != '/'))
+			return false;
+	}
+	
+	// All is fine
+	return true;
+}
 
 } // otawa

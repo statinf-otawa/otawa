@@ -21,21 +21,44 @@ class Platform {
 
 public:
 
+	static const elm::String ANY;
+
+	// Architecture
+	static const elm::String POWERPC;
+	
+	// ABI
+	static const elm::String ELF;
+	static const elm::String EABI;
+	static const elm::String LINUX;
+	static const elm::String LINUX_2_4;
+	static const elm::String LINUX_2_6;
+	
+	// Platform
+	static const elm::String MAC;
+	static const elm::String SIM;
+
 	// Platform identification
 	class Identification {
-		elm::String name;
-		elm::String arch;
+		elm::String _name;
+		elm::String _arch;
 		elm::String _abi;
-		elm::String mach;
+		elm::String _mach;
 		void split(void);
 	public:
-		Identification(const elm::String _name);
-		Identification(elm::CString arch, elm::CString abi, elm::CString machine);
+		Identification(const elm::String& name);
+		Identification(const elm::String& arch, const elm::String& abi,
+			const elm::String& mach = ANY);
+		inline const elm::String& name(void) const;
 		inline const elm::String& architecture(void) const;
 		inline const elm::String& abi(void) const;
 		inline const elm::String& machine(void) const;
+		bool matches(const Identification& id);
+		Identification& operator=(const Identification& id);
 	};
 
+	// Platform
+	static const Identification ANY_PLATFORM;
+	
 private:
 	Identification id;
 	const CacheConfiguration *_cache;
@@ -87,7 +110,7 @@ inline bool Platform::accept(const elm::String& name) {
 
 // Platform::Identification inlines
 inline const elm::String& Platform::Identification::architecture(void) const {
-	return arch;
+	return _arch;
 }
 
 inline const elm::String& Platform::Identification::abi(void) const {
@@ -95,7 +118,11 @@ inline const elm::String& Platform::Identification::abi(void) const {
 }
 
 inline const elm::String& Platform::Identification::machine(void) const {
-	return mach;
+	return _mach;
+}
+
+inline const elm::String& Platform::Identification::name(void) const {
+	return _name;
 }
 
 } // otawa
