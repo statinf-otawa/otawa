@@ -7,8 +7,7 @@
 
 #include <otawa/instruction.h>
 #include <otawa/manager.h>
-#include <otawa/cfg/BasicBlock.h>
-#include <otawa/cfg/CFGInfo.h>
+#include <otawa/cfg.h>
 
 // Trace
 #ifndef NDEBUG
