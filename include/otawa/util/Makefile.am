@@ -6,6 +6,7 @@ includeotawautil_HEADERS = \
 	DFABitSet.h \
 	DFAEngine.h \
 	Dominance.h \
+	Graph.h \
 	FlowFactLoader.h \
 	LBlockBuilder.h \
 	TrivialLBlockTime.h

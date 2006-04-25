@@ -95,7 +95,10 @@ libotawa_so_SOURCES = \
 	cache_CATConstraintBuilder.cpp \
 	cache_CATDFA.cpp \
 	cache_CATNode.cpp \
-	util_LBlockBuilder.cpp
+	util_LBlockBuilder.cpp \
+	util_Graph.cpp \
+	util_Node.cpp \
+	util_Edge.cpp
 
 else
 
@@ -191,7 +194,10 @@ libotawa_a_SOURCES = \
 	cache_CATConstraintBuilder.cpp \
 	cache_CATDFA.cpp \
 	cache_CATNode.cpp \
-	util_LBlockBuilder.cpp
+	util_LBlockBuilder.cpp \
+	util_Graph.cpp \
+	util_Node.cpp \
+	util_Edge.cpp
 
 endif
 
