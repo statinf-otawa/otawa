@@ -6,7 +6,7 @@
  */
 
 #include <elm/io/io.h>
-#include <otawa/manager.h>
+//#include <otawa/manager.h>
 #define ISS_DISASM
 #include <otawa/gliss.h>
 

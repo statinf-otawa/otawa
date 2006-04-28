@@ -32,21 +32,21 @@ size_t Inst::size(void) {
 
 
 // Overloaded
-Collection<Operand *> *Inst::getOps(void) {
+/*Collection<Operand *> *Inst::getOps(void) {
 	return 0;	// !!TODO!!
-}
+}*/
 
 
 // Overloaded
-Collection<Operand *> *Inst::getReadOps(void) {
+/*Collection<Operand *> *Inst::getReadOps(void) {
 	return 0;	// !!TODO!!
-}
+}*/
 
 
 // Overloaded
-Collection<Operand *> *Inst::getWrittenOps(void) {
+/*Collection<Operand *> *Inst::getWrittenOps(void) {
 	return 0;	// !!TODO!!
-}
+}*/
 
 
 // Overloaded
