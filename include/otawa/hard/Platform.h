@@ -8,6 +8,8 @@
 #define OTAWA_HARDWARE_PLATFORM_H
 
 #include <otawa/properties.h>
+#include <otawa/hard/Register.h>
+#include <elm/datastruct/Collection.h>
 
 namespace otawa {
 
@@ -66,6 +68,8 @@ private:
 	void configure(const PropList& props);
 
 protected:
+	static const elm::genstruct::Table<hard::RegBank *> null_banks;
+	const elm::genstruct::Table<hard::RegBank *> *_banks;
 	virtual ~Platform(void) { };
 
 public:
@@ -85,6 +89,9 @@ public:
 	virtual bool accept(const Identification& id);
 	inline bool accept(elm::CString name);
 	inline bool accept(const elm::String& name);
+	
+	// Register bank access
+	inline const elm::genstruct::Table<hard::RegBank *>& banks(void) const;
 };
 
 // Inlines
@@ -107,6 +114,11 @@ inline bool Platform::accept(elm::CString name) {
 inline bool Platform::accept(const elm::String& name) {
 	return accept(Identification(name));
 }
+
+inline const elm::genstruct::Table<hard::RegBank *>& Platform::banks(void) const {
+	return *_banks;
+}
+
 
 // Platform::Identification inlines
 inline const elm::String& Platform::Identification::architecture(void) const {

@@ -11,10 +11,16 @@
 namespace otawa {
 
 /**
- * @class Platform
+ * @class Platform Platform.h "otawa/hardware/Platform.h"
  * This class records information about the architecture where the processed
  * program will run.
  */
+
+
+/**
+ * Empty register bank table.
+ */
+const elm::genstruct::Table<hard::RegBank *> Platform::null_banks(0, 0);
 
 
 /**
@@ -35,7 +41,7 @@ void Platform::configure(const PropList& props) {
  * @param props		Properties describing the platform.
  */
 Platform::Platform(const Platform::Identification& _id, const PropList& props)
-: id(_id), _cache(&CacheConfiguration::NO_CACHE), depth(5) {
+: id(_id), _cache(&CacheConfiguration::NO_CACHE), depth(5), _banks(&null_banks) {
 	configure(props);
 }
 
@@ -46,7 +52,8 @@ Platform::Platform(const Platform::Identification& _id, const PropList& props)
  * @param props		Description properties.
  */
 Platform::Platform(const Platform& platform, const PropList& props)
-: id(platform.identification()), _cache(&platform.cache()), depth(5) {
+: id(platform.identification()), _cache(&platform.cache()), depth(5),
+_banks(&null_banks) {
 	configure(props);
 }
 
