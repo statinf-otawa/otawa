@@ -51,7 +51,7 @@ public:
 	inline Cache(const Cache& cache, const Cache *next = 0);
 	
 	// Simple accessors
-	inline const Cache *nextLevel(void);
+	inline const Cache *nextLevel(void) const;
 	inline size_t cacheSize(void) const;
 	inline size_t blockSize(void) const;
 	inline int wayCount(void) const;
@@ -88,7 +88,7 @@ inline Cache::Cache(const Cache& cache, const Cache *next)
 : _info(cache._info), _next(next) {
 }
 
-inline const Cache *Cache::nextLevel(void) {
+inline const Cache *Cache::nextLevel(void) const {
 	return _next;
 }
 
