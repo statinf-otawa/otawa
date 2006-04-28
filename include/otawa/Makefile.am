@@ -11,6 +11,7 @@ SUBDIRS= \
 	lp_solve \
 	util \
 	ets \
+	hard \
 	hardware
 
 # Headers
