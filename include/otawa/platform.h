@@ -14,12 +14,12 @@ namespace otawa {
 using namespace elm;
 
 // Classes
-class Register;
+/*class Register;
 class RegBank;
-class RegSet;
+class RegSet;*/
 
 // RegBank class
-class Type;
+/*class Type;
 class RegBank {
 public:
 	virtual CString name(void) = 0;
@@ -27,10 +27,10 @@ public:
 	virtual int count(void) = 0;
 	virtual RegSet unalias(Register reg) = 0;
 	virtual Type *type(void) = 0;
-};
+};*/
 
 // RegSet class
-class RegSet {
+/*class RegSet {
 	RegBank *bnk;
 	int _base, _size;
 public:
@@ -49,10 +49,10 @@ public:
 		{ return bnk == set.bnk
 				&& ((_base < set._base && _base + _size >= set._base)
 				|| _base <= set._base + set._size); };
-};
+};*/
 
 // Register class
-class Register {
+/*class Register {
 	RegBank *bnk;
 	int num;
 public:
@@ -68,7 +68,7 @@ public:
 	inline bool operator!=(const Register& reg) { return !equals(reg); };
 	inline bool override(const Register& reg)
 		{ return (bnk->unalias(*this)).override(reg.bnk->unalias(*this)); };		
-};
+};*/
 
 }; // namespace otawa
 

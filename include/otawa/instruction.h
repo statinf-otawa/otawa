@@ -21,7 +21,7 @@ using namespace elm;
 using namespace elm::datastruct;
 
 // Declaration
-class Operand;
+/*class Operand;
 class RegOp;
 class ImmOp;
 class MemOp;
@@ -30,14 +30,14 @@ class PtrAddr;
 class AbsAddr;
 class SymAddr;
 class OffsetAddr;
-class IndexAddr;
+class IndexAddr;*/
 class Inst;
 class MemInst;
 class ControlInst;
 class PseudoInst;
 
 // Base types	
-typedef enum op_kind_t {
+/*typedef enum op_kind_t {
 	OP_Reg,
 	OP_Imm,
 	OP_Mem,
@@ -50,11 +50,11 @@ typedef enum op_kind_t {
 typedef enum op_access_t {
 	OP_Read,
 	OP_Write
-} op_access_t;
+} op_access_t;*/
 
 
 // Operand class
-class Operand {
+/*class Operand {
 public:
 	virtual ~Operand(void) { };
 	virtual op_kind_t kind(void) const = 0;
@@ -68,10 +68,10 @@ public:
 	virtual SymAddr *toSym(void) { return 0; };
 	virtual OffsetAddr *toOffset(void) { return 0; };
 	virtual IndexAddr *toIndex(void) { return 0; };
-};
+};*/
 
 // RegOp class
-class RegBank;
+/*class RegBank;
 class RegOp: public Operand {
 	Register _reg;
 	op_access_t acc;
@@ -81,10 +81,10 @@ public:
 	virtual op_kind_t kind(void) const { return OP_Reg; };
 	virtual op_access_t access(void) const { return acc; };
 	virtual RegOp *toReg(void) { return this; };
-};
+};*/
 
 // ImmOp class
-class ImmOp: public Operand {
+/*class ImmOp: public Operand {
 	long val;
 public:
 	inline ImmOp(int value): val(value) { };
@@ -92,10 +92,10 @@ public:
 	virtual op_kind_t kind(void) const { return OP_Imm; };
 	virtual op_access_t access(void) const { return OP_Read; };	
 	virtual ImmOp *toImm(void) { return this; };
-};
+};*/
 
 // MemOp class
-class MemOp: public Operand {
+/*class MemOp: public Operand {
 	Address *addr;
 	Type *_type;
 	op_access_t acc;
@@ -107,47 +107,47 @@ public:
 	virtual op_kind_t kind(void) const { return OP_Mem; };
 	virtual op_access_t access(void) const { acc; };
 	virtual MemOp *toMem(void) { return this; };
-};
+};*/
 
 // Address class
-class Address: public Operand {
+/*class Address: public Operand {
 public:
 	virtual op_access_t access(void) const { return OP_Read; };
 	virtual Address *toAddress(void) { return this; };	
-};
+};*/
 
 // RegAddr class
-class PtrAddr: public Address {
+/*class PtrAddr: public Address {
 	Register _reg;
 public:
 	inline PtrAddr(Register reg): _reg(reg) { };
 	inline Register reg(void) const { return _reg; };
 	virtual op_kind_t kind(void) const { return OP_Ptr; };
 	virtual PtrAddr *toPtr(void) { return this; };
-};
+};*/
 
 // AbsAddr class
-class AbsAddr: public Address {
+/*class AbsAddr: public Address {
 	address_t addr;
 public:
 	inline AbsAddr(address_t address): addr(address) { };
 	inline address_t address(void) const { return addr; };
 	virtual op_kind_t kind(void) const { return OP_Abs; };
 	virtual AbsAddr *toAbs(void) { return this; };	
-};
+};*/
 
 // SymAddr class
-class SymAddr: public Address {
+/*class SymAddr: public Address {
 	CString _name;
 public:
 	inline SymAddr(CString name): _name(name) { };
 	inline CString name(void) const { return _name; };
 	virtual op_kind_t kind(void) const { return OP_Sym; };
 	virtual SymAddr *toSym(void) { return this; };	
-};
+};*/
 
 // OffsetAddr class
-class OffsetAddr: public Address {
+/*class OffsetAddr: public Address {
 	Address *_base;
 	int off;
 public:
@@ -157,11 +157,11 @@ public:
 	inline int offset(void) const { return off; };
 	virtual op_kind_t kind(void) const { return OP_Offset; };
 	virtual OffsetAddr *toOffset(void) { return this; };
-};
+};*/
 
 
 // IndexAddr class
-class IndexAddr: public Address {
+/*class IndexAddr: public Address {
 	Address *_base;
 	PtrAddr *idx;
 	int sca;
@@ -173,7 +173,7 @@ public:
 	inline int scale(void) const { return sca; };
 	virtual op_kind_t kind(void) const { return OP_Index; };
 	virtual IndexAddr *toIndex(void) { return this; };	
-};
+};*/
 
 // Inst class
 class Inst: public inhstruct::DLNode, public PropList {
@@ -188,9 +188,9 @@ public:
 	virtual size_t size(void) = 0;
 	virtual void dump(io::Output& out) { };
 	
-	virtual Collection<Operand *> *getOps(void) = 0;
+	/*virtual Collection<Operand *> *getOps(void) = 0;
 	virtual Collection<Operand *> *getReadOps(void) = 0;
-	virtual Collection<Operand *> *getWrittenOps(void) = 0;
+	virtual Collection<Operand *> *getWrittenOps(void) = 0;*/
 	
 	virtual bool isIntern(void) { return false; };
 	virtual bool isMem(void) { return false; };
@@ -211,23 +211,23 @@ public:
 	
 	// For memory instructions
 	virtual Type *type(void) { return 0; };
-	virtual Address *mem(void) { return 0; };
+	//virtual Address *mem(void) { return 0; };
 };
 
 
 // PseudoInst class
 class PseudoInst: public virtual Inst {
 	id_t _id;
-	static datastruct::Vector<Operand *> null;
+	//static datastruct::Vector<Operand *> null;
 public:
 	inline PseudoInst(id_t id): _id(id) { };
 	inline id_t id(void) const { return _id; };
 	virtual address_t address(void);
 	virtual void dump(io::Output& out);
 	virtual size_t size(void) { return 0; };
-	virtual Collection<Operand *> *getOps(void) { return &null; };
+	/*virtual Collection<Operand *> *getOps(void) { return &null; };
 	virtual Collection<Operand *> *getReadOps(void) { return &null; };
-	virtual Collection<Operand *> *getWrittenOps(void) { return &null; };
+	virtual Collection<Operand *> *getWrittenOps(void) { return &null; };*/
 	virtual bool isPseudo(void) { return true; };
 	virtual PseudoInst *toPseudo(void) { return this; };
 };
