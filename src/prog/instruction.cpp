@@ -458,7 +458,7 @@ namespace otawa {
 /**
  * Internal: empty list of operands.
  */
-datastruct::Vector<Operand *> PseudoInst::null;
+//datastruct::Vector<Operand *> PseudoInst::null;
 
 /**
  * Compute the address of this pseudo-instruction.
