@@ -390,6 +390,7 @@ AC_OUTPUT([
 	include/otawa/lp_solve/Makefile
 	include/otawa/ets/Makefile
 	include/otawa/util/Makefile
+	include/otawa/hard/Makefile
 	include/otawa/hardware/Makefile
 	include/otawa/cache/Makefile
 	include/otawa/cache/categorisation/Makefile
