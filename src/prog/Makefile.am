@@ -98,7 +98,8 @@ libotawa_so_SOURCES = \
 	util_LBlockBuilder.cpp \
 	util_Graph.cpp \
 	util_Node.cpp \
-	util_Edge.cpp
+	util_Edge.cpp \
+	hard_Register.cpp
 
 else
 
@@ -197,7 +198,8 @@ libotawa_a_SOURCES = \
 	util_LBlockBuilder.cpp \
 	util_Graph.cpp \
 	util_Node.cpp \
-	util_Edge.cpp
+	util_Edge.cpp \
+	hard_Register.cpp
 
 endif
 
