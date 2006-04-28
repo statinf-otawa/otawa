@@ -37,7 +37,7 @@ namespace otawa {
 
 
 /**
- * @fn Cache *Cache::nextLevel(void);
+ * @fn Cache *Cache::nextLevel(void) const;
  * Get the next level of cache.
  * @return	Next cache level or null if there is no more cache.
  */
