@@ -9,8 +9,23 @@
 #include <elm/io/io.h>
 #define ISS_DISASM
 #include <otawa/gliss.h>
+#include <otawa/hard/Register.h>
+
+using namespace otawa::hard;
 
 namespace otawa { namespace gliss {
+
+/**
+ * Register banks.
+ */
+static RegBank GPR_bank("r", Register::INT,  32, 32, true);
+static RegBank FPR_bank("fr", Register::FLOAT, 64, 32, true);
+static RegBank *banks[] = {
+	&GPR_bank,
+	&FPR_bank
+};
+static elm::genstruct::Table<RegBank *> banks_table(banks, 2);
+
 
 /**
  * Identification of the default platform.
@@ -29,6 +44,7 @@ Platform Platform::platform;
  * @param props		Configuration properties.
  */
 Platform::Platform(const PropList& props): ::otawa::Platform(ID, props) {
+	_banks = &banks_table;
 }
 
 
@@ -39,6 +55,7 @@ Platform::Platform(const PropList& props): ::otawa::Platform(ID, props) {
  */
 Platform::Platform(const Platform& platform, const PropList& props)
 : ::otawa::Platform(platform, props) {
+	_banks = &banks_table;
 }
 
 
