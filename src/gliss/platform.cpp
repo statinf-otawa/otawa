@@ -15,16 +15,27 @@ using namespace otawa::hard;
 
 namespace otawa { namespace gliss {
 
+
 /**
  * Register banks.
  */
-static RegBank GPR_bank("r", Register::INT,  32, 32, true);
-static RegBank FPR_bank("fr", Register::FLOAT, 64, 32, true);
-static RegBank *banks[] = {
-	&GPR_bank,
-	&FPR_bank
+static const RegBank *banks[] = {
+	&Platform::GPR_bank,
+	&Platform::FPR_bank
 };
-static elm::genstruct::Table<RegBank *> banks_table(banks, 2);
+static const elm::genstruct::Table<const RegBank *> banks_table(banks, 2);
+
+
+/**
+ * GPR register bank.
+ */
+const RegBank Platform::GPR_bank("r", Register::INT,  32, 32, true);
+
+
+/**
+ * FPR register bank.
+ */
+const RegBank Platform::FPR_bank("fr", Register::FLOAT, 64, 32, true);
 
 
 /**
