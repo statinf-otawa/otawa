@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <elm/string.h>
 #include <elm/genstruct/Table.h>
+#include <elm/io.h>
 
 namespace otawa { namespace hard {
 	
@@ -41,7 +42,6 @@ public:
 	elm::String& name(void);
 	inline kind_t kind(void) const;
 };
-
 
 // RegBank class
 class RegBank {
@@ -82,6 +82,11 @@ inline RegBank *Register::bank(void) const {
 inline Register::kind_t Register::kind(void) const {
 	assert(_bank);
 	return _bank->kind();
+}
+
+inline elm::io::Output& operator<<(elm::io::Output& out, Register *reg) {
+	out << reg->name();
+	return out;
 }
 
 
