@@ -11,6 +11,7 @@
 #include <elm/Collection.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/instruction.h>
+#include <otawa/program.h>
 
 namespace otawa {
 
