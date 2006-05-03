@@ -28,20 +28,24 @@ protected:
 	const static unsigned long FLAG_Return = 0x08;
 	const static unsigned long FLAG_Load = 0x10;
 	const static unsigned long FLAG_Store = 0x20;
+	const elm::genstruct::Table<hard::Register *> *reads;
+	const elm::genstruct::Table<hard::Register *> *writes;
+	
 	void scan(void);
 	virtual void scanCustom(instruction_t *inst) { };
 	inline CodeSegment& segment(void) const { return seg; };
+	void scanRegs(void);
 public:
 	inline Inst(CodeSegment& segment, address_t address)
-		: seg(segment), addr(address), flags(0) { }; 
+		: seg(segment), addr(address), flags(0) { };
+	virtual ~Inst(void);
 
 	// Inst overload
 	virtual address_t address(void);
 	virtual size_t size(void);
 	virtual void dump(io::Output& out);
-	/*virtual elm::Collection<Operand *> *getOps(void);
-	virtual elm::Collection<Operand *> *getReadOps(void);
-	virtual elm::Collection<Operand *> *getWrittenOps(void);*/
+	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
+	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
 };
 	
 } } // otawa::gliss

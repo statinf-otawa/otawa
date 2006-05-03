@@ -19,6 +19,10 @@ public:
 	Platform(const PropList& props = PropList::EMPTY);
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
 
+	// Registers
+	static const hard::RegBank GPR_bank;
+	static const hard::RegBank FPR_bank;
+
 	// otawa::Platform overload
 	virtual bool accept(const Identification& id);
 };
