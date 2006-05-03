@@ -86,12 +86,15 @@ int main(int argc, char **argv) {
 		assert(fw);
 		
 		// Display information
+		cout << "PLATFORM INFORMATION\n";
 		Platform *pf = fw->platform();
 		cout << "Platform : " << pf->identification().name() << '\n';
+		cout << '\n';
 		
 		// Display registers
+		cout << "REGISTERS\n";
 		for(int i = 0; i < pf->banks().count(); i++) {
-			hard::RegBank *bank = pf->banks()[i];
+			const hard::RegBank *bank = pf->banks()[i];
 			cout << "Bank " << bank->name() << ", "
 				 << bank->size() << "bits, "
 				 << bank->count() << " registers, "
@@ -105,10 +108,33 @@ int main(int argc, char **argv) {
 			}
 			cout << '\n';
 		}
+		cout << '\n';
 		
 		// Display cache
+		cout << "CACHE CONFIGURATION\n";
 		const CacheConfiguration& cconf(pf->cache());
 		display_cache_level(1, cconf.instCache(), cconf.dataCache());
+		cout << '\n';
+		
+		// Display some instructions
+		cout << "READ/WRITTEN REGS TEST\n";
+		String label("main");
+		Inst *inst = fw->findInstAt(fw->findLabel(label));
+		if(!inst)
+			throw new otawa::Exception(CString("no main in this file ?"));
+		for(int i = 0; i < 10; i++, inst = inst->next()) {
+			cout << inst << '\n';
+			const elm::genstruct::Table<hard::Register *>& reads = inst->readRegs();
+			cout << "\tread registers : ";
+			for(int i = 0; i < reads.count(); i++)
+				cout << reads[i] << ' ';
+			cout << '\n';
+			const elm::genstruct::Table<hard::Register *>& writes = inst->writtenRegs();
+			cout << "\twritten registers : ";
+			for(int i = 0; i < writes.count(); i++)
+				cout << writes[i] << ' ';
+			cout << '\n';
+		}
 	}
 	catch(LoadException e) {
 		cerr << "ERROR: " << e.message() << '\n';
