@@ -8,6 +8,7 @@
 #define OTAWA_AST_AST_H
 
 #include <otawa/instruction.h>
+#include <otawa/program.h>
 
 namespace otawa {
 
@@ -34,7 +35,7 @@ typedef enum ast_kind_t {
 } ast_kind_t;
 
 // AST Class
-class AST: public Lock, public ProgObject {
+class AST: public elm::Lock, public ProgObject {
 	friend class FunAST;
 protected:
 	virtual ~AST(void) { };

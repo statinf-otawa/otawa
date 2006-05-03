@@ -22,8 +22,8 @@ class ASTInfo: public PropList {
 	friend class FunAST;
 	friend class GenericProperty<ASTInfo *>;
 	friend int ::heptane_parse(void);
-	Vector<FunAST *> funs;
-	HashTable<String, FunAST *> _map;
+	elm::datastruct::Vector<FunAST *> funs;
+	elm::datastruct::HashTable<String, FunAST *> _map;
 	void add(FunAST *fun);
 	ASTInfo(Process *proc);
 public:
@@ -31,7 +31,7 @@ public:
 	static const id_t ID;
 	static ASTInfo *getInfo(Process *proc);
 	FunAST *getFunction(Inst *inst);
-	inline Map<String, FunAST *>& map(void) { return _map; };
+	inline elm::datastruct::Map<String, FunAST *>& map(void) { return _map; };
 	inline elm::Collection< FunAST *>& functions(void) { return funs; };
 };
 	
