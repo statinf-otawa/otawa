@@ -20,7 +20,7 @@ namespace otawa {
 /**
  * Empty register bank table.
  */
-const elm::genstruct::Table<hard::RegBank *> Platform::null_banks(0, 0);
+const elm::genstruct::Table<const hard::RegBank *> Platform::null_banks(0, 0);
 
 
 /**
