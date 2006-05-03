@@ -20,6 +20,7 @@
 #include <otawa/cfg.h>
 #include <otawa/hardware/CacheConfiguration.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
+#include <otawa/hardware/Platform.h>
 
 using namespace otawa;
 using namespace otawa::ilp;

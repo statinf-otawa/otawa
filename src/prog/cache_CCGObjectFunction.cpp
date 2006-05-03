@@ -10,6 +10,7 @@
 #include <otawa/cfg.h>
 #include <otawa/hardware/CacheConfiguration.h>
 #include <otawa/cache/ccg/CCGBuilder.h>
+#include <otawa/hardware/Platform.h>
 
 using namespace otawa::ilp;
 using namespace otawa;

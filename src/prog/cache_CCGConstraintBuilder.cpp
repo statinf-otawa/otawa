@@ -20,6 +20,7 @@
 #include <otawa/util/ContextTree.h>
 #include <otawa/cfg.h>
 #include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hardware/Platform.h>
 #include <otawa/cache/ccg/CCGBuilder.h>
 
 using namespace otawa::ilp;

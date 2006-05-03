@@ -13,6 +13,7 @@
 #include <otawa/cfg.h>
 #include <otawa/hardware/CacheConfiguration.h>
 #include <otawa/util/LBlockBuilder.h>
+#include <otawa/hardware/Platform.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
