@@ -9,6 +9,7 @@
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hardware/Platform.h>
 #include <otawa/cfg.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet/IPET.h>

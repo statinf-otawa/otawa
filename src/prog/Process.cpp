@@ -7,6 +7,7 @@
 
 #include <otawa/prog/Process.h>
 #include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hardware/Platform.h>
 
 namespace otawa {
 
