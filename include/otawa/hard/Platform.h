@@ -68,8 +68,8 @@ private:
 	void configure(const PropList& props);
 
 protected:
-	static const elm::genstruct::Table<hard::RegBank *> null_banks;
-	const elm::genstruct::Table<hard::RegBank *> *_banks;
+	static const elm::genstruct::Table<const hard::RegBank *> null_banks;
+	const elm::genstruct::Table<const hard::RegBank *> *_banks;
 	virtual ~Platform(void) { };
 
 public:
@@ -91,7 +91,7 @@ public:
 	inline bool accept(const elm::String& name);
 	
 	// Register bank access
-	inline const elm::genstruct::Table<hard::RegBank *>& banks(void) const;
+	inline const elm::genstruct::Table<const hard::RegBank *>& banks(void) const;
 };
 
 // Inlines
@@ -115,7 +115,7 @@ inline bool Platform::accept(const elm::String& name) {
 	return accept(Identification(name));
 }
 
-inline const elm::genstruct::Table<hard::RegBank *>& Platform::banks(void) const {
+inline const elm::genstruct::Table<const hard::RegBank *>& Platform::banks(void) const {
 	return *_banks;
 }
 
