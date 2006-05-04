@@ -20,8 +20,13 @@ public:
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
 
 	// Registers
-	static const hard::RegBank GPR_bank;
-	static const hard::RegBank FPR_bank;
+	static hard::Register CTR_reg;
+	static hard::Register LR_reg;
+	static hard::Register XER_reg;
+	static const hard::PlainBank GPR_bank;
+	static const hard::PlainBank FPR_bank;
+	static const hard::PlainBank CR_bank;
+	static const hard::MeltedBank MISC_bank;
 
 	// otawa::Platform overload
 	virtual bool accept(const Identification& id);

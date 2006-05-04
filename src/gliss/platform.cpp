@@ -21,21 +21,54 @@ namespace otawa { namespace gliss {
  */
 static const RegBank *banks[] = {
 	&Platform::GPR_bank,
-	&Platform::FPR_bank
+	&Platform::FPR_bank,
+	&Platform::CR_bank,
+	&Platform::MISC_bank
 };
-static const elm::genstruct::Table<const RegBank *> banks_table(banks, 2);
+static const elm::genstruct::Table<const RegBank *> banks_table(banks, 4);
 
 
 /**
  * GPR register bank.
  */
-const RegBank Platform::GPR_bank("r", Register::INT,  32, 32, true);
+const PlainBank Platform::GPR_bank("GPR", Register::INT,  32, "r%d", 32);
 
 
 /**
  * FPR register bank.
  */
-const RegBank Platform::FPR_bank("fr", Register::FLOAT, 64, 32, true);
+const PlainBank Platform::FPR_bank("FPR", Register::FLOAT, 64, "fr%d", 32);
+
+
+/**
+ * CR register bank
+ */
+const PlainBank Platform::CR_bank("CR", Register::BITS, 4, "cr%d", 4);
+
+
+/**
+ * CTR register
+ */
+hard::Register Platform::CTR_reg("CTR", Register::BITS, 32);
+
+
+/**
+ * LR register
+ */
+hard::Register Platform::LR_reg("LR", Register::ADDR, 32);
+
+
+/**
+ * XER register
+ */
+hard::Register Platform::XER_reg("XER", Register::INT, 32);
+
+
+/**
+ * MISC register bank
+ */
+const hard::MeltedBank Platform::MISC_bank("MISC", &Platform::CTR_reg,
+	&Platform::LR_reg, &Platform::XER_reg, 0);
 
 
 /**
