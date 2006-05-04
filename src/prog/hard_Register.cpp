@@ -6,11 +6,48 @@
  */
 
 #include <otawa/hard/Register.h>
+#include <elm/util/Formatter.h>
+#include <elm/io/BlockInStream.h>
+#include <elm/util/VarArg.h>
 
 using namespace elm;
 
 namespace otawa { namespace hard {
+
+// RegisterFormatter
+class RegisterFormatter: private util::Formatter {
+	io::BlockInStream templ;
+	io::Output output;
+	int index;
+protected:
+	virtual int process(io::OutStream& out, char chr) {
+		output.setStream(out);
+		switch(chr) {
+		case 'd':
+			output << index;
+			return DONE;
+		case 'a':
+		case 'A':
+			output << (char)(chr + index);
+			return DONE;
+		default:
+			return REJECT;
+		}
+	}
+public:
+	RegisterFormatter(CString _template)
+	: templ(_template) {
+	}
 	
+	String make(int _index) {
+		StringBuffer buf;
+		index = _index;
+		templ.reset();
+		format(templ, buf.stream());
+		return buf.toString();
+	}
+};
+
 /**
  * @class Register
  * Objects of this class are simple machine register, more accurately
@@ -69,33 +106,15 @@ namespace otawa { namespace hard {
 
 
 /**
- * Build a new register. The name of the register is automatically built using
- * the bank name and appending the decimal register number.
- * @param number	Number of the register.
- * @param bank		Owner bank.
- */
-Register::Register(int number, RegBank *bank): _number(number), _bank(bank) {
-	assert(number >= 0);
-	if(bank) {
-		assert(number < bank->count());
-		bank->_regs[number] = this;
-	}
-}
-
-
-/**
  * Build a new register.
  * @param name		Register name.
  * @param number	Register number.
  * @param bank		Owner bank.
  */
-Register::Register(const elm::String& name, int number, RegBank *bank)
-: _number(number), _name(name), _bank(bank) {
-	assert(number >= 0);
-	if(bank) {
-		assert(number < bank->count());
-		bank->_regs[number] = this;
-	}
+Register::Register(const elm::String& name, Register::kind_t kind,
+int size): _number(-1), _kind(kind), _size(size), _name(name) {
+	assert(kind != NONE);
+	assert(size > 0);
 }
 
 
@@ -114,19 +133,10 @@ Register::Register(const elm::String& name, int number, RegBank *bank)
 
 
 /**
+ * @fn elm::String& Register::name(void) const;
  * Get the name of the register.
  * @return Register name.
  */
-elm::String& Register::name(void) {
-	if(!_name) {
-		assert(_bank);
-		StringBuffer buf;
-		buf << _bank->name();
-		buf << _number;
-		_name = buf.toString();
-	}
-	return _name;
-}
 
 
 /**
@@ -142,65 +152,16 @@ elm::String& Register::name(void) {
 
 
 /**
- * Build a register bank with a predefined list of registers.
- * @param name	Bank name (used for building automatically the register names).
- * @param kind	Kind of registers in the bank. Registers of a bank must have the
- * same kind.
- * @param size	Size in bits of the registers in the bank. Registers of a bank
- * must have the same size.
- * @param count	Count of registers in the bank.
- * @param regs	Array of size count containing the registers.
+ * Buil a new register bank.
+ * @param name		Name of the bank.
+ * @param kind		Kind of register (may be NONE for melted bank).
+ * @param size		Size in bits of the register (may be -1 for melted bank).
+ * @param count		Count of registers.
+ * @param regs		Table of registers.
  */
-RegBank::RegBank(elm::CString name, Register::kind_t kind, int size, int count,
-Register **regs): _name(name), _kind(kind), _size(size), _regs(regs, count),
-flags(0) {
-	assert(kind != Register::NONE);
-	assert(size > 0);
-	assert(count > 0);
-	
-	// Link registers
-	for(int i = 0; i < count; i++)
-		regs[i]->_bank = this;
-}
-
-
-/**
- * Build a register bank automatically (paramerter fill = true) or by
- * delaying the insertion of register (parameter fill = false).
- * @param name	Bank name (used for building automatically the register names).
- * @param kind	Kind of registers in the bank. Registers of a bank must have the
- * same kind.
- * @param size	Size in bits of the registers in the bank. Registers of a bank
- * must have the same size.
- * @param count	Count of registers in the bank.
- * @param fill	If true, the register are automatically built. Else the user
- * must defines register thereafter passing to their constructor the bank
- * reference.
- */
-RegBank::RegBank(elm::CString name, Register::kind_t kind, int size, int count,
-bool fill): _name(name), _kind(kind), _size(size),
-_regs(new Register *[count], count), flags(FLAG_FreeTable) {
-	assert(kind != Register::NONE);
-	assert(size > 0);
-	assert(count > 0);
-	
-	if(fill) {
-		flags |= FLAG_FreeRegs;
-		for(int i = 0; i < count; i++)
-			new Register(i, this);
-	}
-}
-
-
-/**
- */
-RegBank::~RegBank(void) {
-	if(flags & FLAG_FreeTable) {
-		if(flags & FLAG_FreeRegs)
-			for(int i = 0; i < _regs.count(); i++)
-				delete _regs[i];
-		delete _regs.table();
-	}
+RegBank::RegBank(CString name, Register::kind_t kind, int size, int count, 
+Register **regs)
+: _name(name), _kind(kind), _size(size), _regs(regs, count) {
 }
 
 
@@ -244,5 +205,76 @@ RegBank::~RegBank(void) {
  * @fn Register *RegBank::operator[](int index) const;
  * Short to RegBank::get().
  */
+
+
+/**
+ * @class PlainBank
+ * A plain bank is a register bank whose registers have the same size and the
+ * same type. It represents the usual integer or floating-point banks.
+ */
+
+
+/**
+ * Buila new plain bank.
+ * @param name		Name of the bank.
+ * @param kind		Kind of registers in the bank.
+ * @param size		Size in bits of registers in the bank.
+ * @param pattern	Pattern for naming registers in the bank : %d for
+ * 					decimal numbering, %a for lower-case alphabetic numbering,
+ * 					%A for upper-case alphabetic numbering.
+ * @param count		Count of registers.
+ */
+PlainBank::PlainBank(elm::CString name, Register::kind_t kind, int size,
+elm::CString pattern, int count)
+: RegBank(name, kind, size, count, new Register *[count]) {
+	RegisterFormatter format(pattern);
+	for(int i = 0; i < count; i++)
+		set(i, new Register(format.make(i), kind, size));
+}
+
+
+/**
+ */
+PlainBank::~PlainBank(void) {
+	for(int i = 0; i < _regs.count(); i++)
+		delete _regs[i];
+	delete [] (Register **)_regs.table();
+}
+
+
+/**
+ * @class MeltedBank
+ * A melted bank may contains registers with different sizes and kinds.
+ * It is useful for grouping state registers.
+ */
+
+
+/**
+ * Build a melted bank with the registers pass in the variable list arguments
+ * (ended by null).
+ * @param name	Name of the bank.
+ * @param ...	List of registers in the bank.
+ */
+MeltedBank::MeltedBank(elm::CString name, ...)
+: RegBank(name, Register::NONE, 0, 0, 0) {
+	int cnt = 0;
+	VARARG_BEGIN(args, name);
+		while(args.next<Register *>())
+			cnt++;
+	VARARG_END
+	Register **regs = new Register *[cnt];
+	_regs = genstruct::Table<Register *>(regs, cnt);
+	VARARG_BEGIN(args, name);
+		for(int i = 0; i < cnt; i++)
+			set(i, args.next<Register *>());
+	VARARG_END	
+}
+
+
+/*
+ */
+MeltedBank::~MeltedBank(void) {
+	delete [] (Register **)_regs.table();
+}
 
 } } // otawa::hard
