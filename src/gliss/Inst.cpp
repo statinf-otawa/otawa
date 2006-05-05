@@ -110,36 +110,44 @@ void Inst::scanRegs(void) {
 	instruction_t *inst;
 	iss_fetch((::address_t)(unsigned long)addr, buffer);
 	inst = iss_decode((::address_t)(unsigned long)addr, buffer);
+	//cout << "GPR_T = " << (int)GPR_T << '\n';
+	//cout << "FPR_T = " << (int)FPR_T << '\n';
 	
 	// Get read registers
 	int cnt = 0;
-	for(int i = 0; inst->instrinput[i].type != VOID_T; i++)
+	for(int i = 0; i < ISS_MAX_INTERFACE_ELTS_IN && inst->instrinput[i].type != VOID_T; i++)
 		if(inst->instrinput[i].type == GPR_T
 		|| inst->instrinput[i].type == FPR_T)
 			cnt++;
 	elm::genstruct::AllocatedTable<hard::Register *> *tab =
 		new elm::genstruct::AllocatedTable<hard::Register *>(cnt);
 	cnt = 0;
-	for(int i = 0; inst->instrinput[i].type != VOID_T; i++)
+	//cout << "READ\n";
+	for(int i = 0; i < ISS_MAX_INTERFACE_ELTS_IN && inst->instrinput[i].type != VOID_T; i++) {
+		//cout << inst->instrinput[i].type << ", " << inst->instrinput[i].val.int32 << '\n';
 		if(inst->instrinput[i].type == GPR_T)
-			tab->set(cnt++, Platform::GPR_bank[inst->instrinput[i].val.Uint5]);
+			tab->set(cnt++, Platform::GPR_bank[inst->instrinput[i].val.int32]);
 		else if(inst->instrinput[i].type == FPR_T)
-			tab->set(cnt++, Platform::FPR_bank[inst->instrinput[i].val.Uint5]);
+			tab->set(cnt++, Platform::FPR_bank[inst->instrinput[i].val.int32]);
+	}
 	reads = tab;
 
 	// Get write registers
 	cnt = 0;
-	for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
+	for(int i = 0; i < ISS_MAX_INTERFACE_ELTS_OUT && inst->instroutput[i].type != VOID_T; i++)
 		if(inst->instroutput[i].type == GPR_T
 		|| inst->instroutput[i].type == FPR_T)
 			cnt++;
 	tab = new elm::genstruct::AllocatedTable<hard::Register *>(cnt);
 	cnt = 0;
-	for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
+	//cout << "WRITE\n";
+	for(int i = 0; i < ISS_MAX_INTERFACE_ELTS_OUT && inst->instroutput[i].type != VOID_T; i++) {
+		//cout << inst->instroutput[i].type << ", " << inst->instroutput[i].val.int32 << '\n';
 		if(inst->instroutput[i].type == GPR_T)
-			tab->set(cnt++, Platform::GPR_bank[inst->instroutput[i].val.Uint5]);
+			tab->set(cnt++, Platform::GPR_bank[inst->instroutput[i].val.int32]);
 		else if(inst->instroutput[i].type == FPR_T)
-			tab->set(cnt++, Platform::FPR_bank[inst->instroutput[i].val.Uint5]);
+			tab->set(cnt++, Platform::FPR_bank[inst->instroutput[i].val.int32]);
+	}
 	writes = tab;
 	
 	// Free instruction
