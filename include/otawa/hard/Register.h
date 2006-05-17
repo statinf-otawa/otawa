@@ -146,6 +146,7 @@ inline void RegBank::set(int index, Register *reg) {
 	assert(index < _regs.count());
 	reg->_number = index;
 	_regs[index] = reg;
+	reg->_bank = this;
 }
 
 } } // otawa::hard
