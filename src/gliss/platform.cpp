@@ -43,25 +43,25 @@ const PlainBank Platform::FPR_bank("FPR", Register::FLOAT, 64, "fr%d", 32);
 /**
  * CR register bank
  */
-const PlainBank Platform::CR_bank("CR", Register::BITS, 4, "cr%d", 4);
+const PlainBank Platform::CR_bank("CR", Register::BITS, 4, "cr%d", 8);
 
 
 /**
  * CTR register
  */
-hard::Register Platform::CTR_reg("CTR", Register::BITS, 32);
+hard::Register Platform::CTR_reg("ctr", Register::BITS, 32);
 
 
 /**
  * LR register
  */
-hard::Register Platform::LR_reg("LR", Register::ADDR, 32);
+hard::Register Platform::LR_reg("lr", Register::ADDR, 32);
 
 
 /**
  * XER register
  */
-hard::Register Platform::XER_reg("XER", Register::INT, 32);
+hard::Register Platform::XER_reg("xer", Register::INT, 32);
 
 
 /**
