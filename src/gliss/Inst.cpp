@@ -11,7 +11,7 @@
 using namespace elm;
 
 #ifndef NDEBUG
-#	define SCAN_ARGS
+//#	define SCAN_ARGS
 #endif
 
 namespace otawa { namespace gliss {
