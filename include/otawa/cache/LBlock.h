@@ -16,7 +16,7 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/ilp/Var.h>
 #include <otawa/cache/categorisation/CATNode.h>
-#include <otawa/hardware/Cache.h>
+#include <otawa/hard/Cache.h>
 
 namespace otawa {
 

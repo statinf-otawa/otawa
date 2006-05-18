@@ -21,7 +21,9 @@ class CFGInfo;
 class File;
 class Inst;
 class Manager;
-class Platform;
+namespace hard {
+	class Platform;
+}
 namespace ilp {
 	class System;
 }
@@ -40,11 +42,11 @@ public:
 	virtual elm::Collection<File *> *files(void) { return proc->files(); };
 	virtual File *createFile(void) { return proc->createFile(); };
 	virtual File *loadFile(elm::CString path) { return proc->loadFile(path); };
-	virtual Platform *platform(void) { return proc->platform(); };
+	virtual hard::Platform *platform(void) { return proc->platform(); };
 	virtual Manager *manager(void) { return proc->manager(); };
 	virtual Inst *start(void) { return proc->start(); };
 	virtual Inst *findInstAt(address_t addr) { return proc->findInstAt(addr); };
-	virtual const CacheConfiguration& cache(void);
+	virtual const hard::CacheConfiguration& cache(void);
 	
 	// CFG Management
 	CFGInfo *getCFGInfo(void);

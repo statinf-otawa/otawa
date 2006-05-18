@@ -8,7 +8,7 @@
 #include <elm/debug.h>
 #include <otawa/ets.h>
 #include <otawa/ast.h>
-#include <otawa/hardware/Cache.h>
+#include <otawa/hard/Cache.h>
 #include <otawa/ast/ASTLoader.h>
 #include <otawa/proc/ProcessorException.h>
 #include <elm/system/StopWatch.h>
@@ -16,6 +16,7 @@
 using namespace otawa;
 using namespace elm::io;
 using namespace otawa::ets;
+using namespace otawa::hard;
 
 int main(int argc, char **argv) {
 	

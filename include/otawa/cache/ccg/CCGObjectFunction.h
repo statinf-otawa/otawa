@@ -6,7 +6,7 @@
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/cache/LBlockSet.h>
-#include <otawa/hardware/Cache.h>
+#include <otawa/hard/Cache.h>
 
 
 namespace otawa {

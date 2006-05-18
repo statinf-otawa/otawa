@@ -17,9 +17,12 @@ namespace otawa {
 
 // Pre-definition
 class File;
-class Platform;
 class Manager;
-class CacheConfiguration;
+
+namespace hard {
+	class Platform;
+	class CacheConfiguration;
+}
 
 // Process class
 class Process: public ProgObject {
@@ -29,9 +32,9 @@ public:
 	virtual ~Process(void) { };
 	
 	// Accessors
-	virtual Platform *platform(void) = 0;
+	virtual hard::Platform *platform(void) = 0;
 	virtual Manager *manager(void) = 0;
-	virtual const CacheConfiguration& cache(void);
+	virtual const hard::CacheConfiguration& cache(void);
 	virtual Inst *start(void) = 0;
 	virtual Inst *findInstAt(address_t addr) = 0;
 	virtual address_t findLabel(String& label);

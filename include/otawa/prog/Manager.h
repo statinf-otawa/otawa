@@ -22,7 +22,6 @@ namespace otawa {
 
 // Classes
 class File;
-class Platform;
 class Manager;
 namespace ilp {
 	class System;
@@ -50,15 +49,15 @@ public:
 class Manager {
 	friend class FrameWork;
 	datastruct::Vector<Loader *> loaders;
-	datastruct::Vector<Platform *> platforms;
+	datastruct::Vector<hard::Platform *> platforms;
 	datastruct::Vector<FrameWork *> frameworks;
 	elm::system::Plugger ilp_plugger;
 public:
 	Manager(void);
 	~Manager(void);
 	Loader *findLoader(CString name);
-	Platform *findPlatform(CString name);
-	Platform *findPlatform(const Platform::Identification& id);
+	hard::Platform *findPlatform(CString name);
+	hard::Platform *findPlatform(const hard::Platform::Identification& id);
 	FrameWork *load(CString path, PropList& props);
 	ilp::System *newILPSystem(String plugin = "");
 };
