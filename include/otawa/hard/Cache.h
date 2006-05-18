@@ -2,17 +2,17 @@
  *	$Id$
  *	Copyright (c) 2005, IRIT UPS.
  *
- *	otawa/hardware/Cache.h -- interface for Cache class.
+ *	otawa/hard/Cache.h -- interface for Cache class.
  */
-#ifndef OTAWA_HARDWARE_CACHE_H
-#define OTAWA_HARDWARE_CACHE_H
+#ifndef OTAWA_HARD_CACHE_H
+#define OTAWA_HARD_CACHE_H
 
 #include <assert.h>
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/base.h>
 
-namespace otawa {
+namespace otawa { namespace hard {
 	
 // Cache class
 class Cache {
@@ -172,6 +172,6 @@ inline int Cache::missPenalty(void) const {
 	return _info.miss_penalty;
 }
 
-} // otawa
+} } // otawa::hard
 
-#endif // OTAWA_HARDWARE_CACHE_H
+#endif // OTAWA_HARD_CACHE_H

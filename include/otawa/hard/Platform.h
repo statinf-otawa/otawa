@@ -2,10 +2,10 @@
  *	$Id$
  *	Copyright (c) 2005, IRIT UPS.
  *
- *	otawa/hardware/Platform.h -- Platform class interface.
+ *	otawa/hard/Platform.h -- Platform class interface.
  */
-#ifndef OTAWA_HARDWARE_PLATFORM_H
-#define OTAWA_HARDWARE_PLATFORM_H
+#ifndef OTAWA_HARD_PLATFORM_H
+#define OTAWA_HARD_PLATFORM_H
 
 #include <otawa/properties.h>
 #include <otawa/hard/Register.h>
@@ -13,8 +13,10 @@
 
 namespace otawa {
 
-// External classes
 class Manager;
+	
+namespace hard {
+
 class CacheConfiguration;
 
 // Platform class
@@ -137,6 +139,6 @@ inline const elm::String& Platform::Identification::name(void) const {
 	return _name;
 }
 
-} // otawa
+} } // otawa::hard
 
-#endif // OTAWA_HARDWARE_PLATFORM_H
+#endif // OTAWA_HARD_PLATFORM_H

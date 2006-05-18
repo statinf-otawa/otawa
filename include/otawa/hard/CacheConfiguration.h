@@ -2,14 +2,14 @@
  *	$Id$
  *	Copyright (c) 2005, IRIT UPS.
  *
- *	otawa/hardware/CacheConfiguration.h -- CacheConfiguration class interface.
+ *	otawa/hard/CacheConfiguration.h -- CacheConfiguration class interface.
  */
-#ifndef OTAWA_HARDWARE_CONFIGURATION_CACHE_H
-#define OTAWA_HARDWARE_CONFIGURATION_CACHE_H
+#ifndef OTAWA_HARD_CONFIGURATION_CACHE_H
+#define OTAWA_HARD_CONFIGURATION_CACHE_H
 
-#include <otawa/hardware/Cache.h>
+#include <otawa/hard/Cache.h>
 
-namespace otawa {
+namespace otawa { namespace hard {
 
 // CacheConfiguration class
 class CacheConfiguration {
@@ -55,6 +55,6 @@ inline bool CacheConfiguration::isHarvard(void) const {
 	return icache != dcache;
 }
 
-} // otawa
+} } // otawa::hard
 
-#endif	// OTAWA_HARDWARE_CONFIGURATION_CACHE_H
+#endif	// OTAWA_HARD_CONFIGURATION_CACHE_H
