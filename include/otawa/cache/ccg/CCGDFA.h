@@ -13,7 +13,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/ilp.h>
 #include <otawa/prop/Identifier.h>
-#include <otawa/hardware/Cache.h>
+#include <otawa/hard/Cache.h>
 
 
 namespace otawa {
@@ -26,11 +26,11 @@ class LBlockSet;
 class CCGDFA : public DFA {
     LBlockSet *ccggraph;
     CFG *cfglb;
-    const Cache *cach;
+    const hard::Cache *cach;
     static int vars;
 
 public:
-	inline CCGDFA (LBlockSet *point, CFG *cfg, const Cache *mem);
+	inline CCGDFA (LBlockSet *point, CFG *cfg, const hard::Cache *mem);
 
 	// DFA overload
 	virtual DFASet *initial(void);
@@ -41,7 +41,7 @@ public:
 };
 
 // Inlines
-inline CCGDFA::CCGDFA (LBlockSet *point, CFG *cfg, const Cache *mem) {
+inline CCGDFA::CCGDFA (LBlockSet *point, CFG *cfg, const hard::Cache *mem) {
 	ccggraph = point;
 	cfglb = cfg;
 	cach = mem;		

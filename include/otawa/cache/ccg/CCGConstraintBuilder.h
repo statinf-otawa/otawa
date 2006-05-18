@@ -11,7 +11,7 @@
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/util/ContextTree.h>
-#include <otawa/hardware/Cache.h>
+#include <otawa/hard/Cache.h>
 
 namespace otawa {
 

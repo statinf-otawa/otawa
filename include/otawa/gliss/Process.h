@@ -33,7 +33,7 @@ public:
 	virtual elm::Collection<otawa::File *> *files(void);
 	virtual ::otawa::File *createFile(void);
 	virtual ::otawa::File *loadFile(CString path);
-	virtual ::otawa::Platform *platform(void);
+	virtual hard::Platform *platform(void);
 	virtual ::otawa::Manager *manager(void);
 	virtual otawa::Inst *start(void);
 	virtual otawa::Inst *findInstAt(address_t addr);

@@ -12,7 +12,7 @@
 namespace otawa { namespace gliss {
 
 // Platform class
-class Platform: public ::otawa::Platform {
+class Platform: public hard::Platform {
 public:
 	static const Identification ID;
 	static Platform platform;
