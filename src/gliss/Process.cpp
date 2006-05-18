@@ -6,7 +6,7 @@
  */
 
 #include <otawa/gliss.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/CacheConfiguration.h>
 
 // Trace
 #ifndef NDEBUG
@@ -93,7 +93,7 @@ elm::Collection<otawa::File *> *Process::files(void) {
  * Get the GLISS platform.
  * @return GLISS platform.
  */
-::otawa::Platform *Process::platform(void) {
+hard::Platform *Process::platform(void) {
 	return _platform;
 };
 

@@ -10,12 +10,13 @@
 #include <otawa/otawa.h>
 #include <otawa/ipet.h>
 #include <otawa/proc/ProcessorException.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
 
 using namespace elm;
 using namespace otawa;
 using namespace otawa::ipet;
+using namespace otawa::hard;
 
 int main(int argc, char **argv) {
 	

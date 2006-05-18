@@ -6,9 +6,9 @@
  */
 
 #include <stdarg.h>
-#include <otawa/hardware/Cache.h>
+#include <otawa/hard/Cache.h>
 
-namespace otawa {
+namespace otawa { namespace hard {
 
 /**
  * @class Cache
@@ -186,4 +186,4 @@ namespace otawa {
  * @reurn		Block part of the address.
  */
 
-} // otawa
+} } // otawa::hard

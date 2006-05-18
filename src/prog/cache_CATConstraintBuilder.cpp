@@ -18,9 +18,9 @@
 #include <elm/genstruct/HashTable.h>
 #include <otawa/util/Dominance.h>
 #include <otawa/cfg.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/CacheConfiguration.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
-#include <otawa/hardware/Platform.h>
+#include <otawa/hard/Platform.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
@@ -50,7 +50,7 @@ LBlockSet *id ) {
 	assert (system);
 	
 	// cache configuration
-		const Cache *cach = fw->platform()->cache().instCache();
+		const hard::Cache *cach = fw->platform()->cache().instCache();
 	
 	// decallage x where each block containts 2^x ocets
 		int dec = cach->blockBits();
@@ -158,7 +158,7 @@ void CATConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	assert(fw);
 	assert(cfg);
 	LBlockSet **lbsets = cfg->use<LBlockSet **>(LBlockSet::ID_LBlockSet);
-	const Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = fw->platform()->cache().instCache();
 	
 	for(int i = 0; i < cache->lineCount(); i++)
 		processLBlockSet(fw, cfg, lbsets[i]);

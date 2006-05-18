@@ -8,7 +8,7 @@
 #include <elm/debug.h>
 #include <otawa/ets.h>
 #include <otawa/ast.h>
-#include <otawa/hardware/Cache.h>
+#include <otawa/hard/Cache.h>
 #include <otawa/ast/ASTLoader.h>
 #include <otawa/proc/ProcessorException.h>
 
@@ -23,6 +23,7 @@
 using namespace otawa;
 using namespace elm::io;
 using namespace otawa::ets;
+using namespace otawa::hard;
 
 void outputAST(AST *ast, int ind);
 void outputSeq(AST *ast, int ind);

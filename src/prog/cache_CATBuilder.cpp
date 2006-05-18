@@ -11,9 +11,9 @@
 #include <otawa/cache/LBlock.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/cfg.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/CacheConfiguration.h>
 #include <otawa/util/LBlockBuilder.h>
-#include <otawa/hardware/Platform.h>
+#include <otawa/hard/Platform.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
@@ -103,7 +103,7 @@ void CATBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	assert(cfg);
 	
 	// Check the cache
-	const Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = fw->platform()->cache().instCache();
 	if(!cache)
 		return;
 	

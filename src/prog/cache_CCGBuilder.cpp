@@ -13,10 +13,10 @@
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/util/DFABitSet.h>
 #include <elm/Collection.h>
-#include <otawa/hardware/Cache.h>
+#include <otawa/hard/Cache.h>
 #include <otawa/cfg.h>
-#include <otawa/hardware/CacheConfiguration.h>
-#include <otawa/hardware/Platform.h>
+#include <otawa/hard/CacheConfiguration.h>
+#include <otawa/hard/Platform.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/ipet/IPET.h>
 
@@ -66,7 +66,7 @@ void CCGBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) {
 
 	// Get some information
 	System *system = IPET::getSystem(fw, cfg);
-	const Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = fw->platform()->cache().instCache();
 
 	// Initialization
 	for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
@@ -248,7 +248,7 @@ void CCGBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	assert(cfg);
 	
 	// Check the cache
-	const Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = fw->platform()->cache().instCache();
 	if(!cache)
 		return;
 	

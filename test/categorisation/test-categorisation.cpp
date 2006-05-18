@@ -6,13 +6,14 @@
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/cache/LBlockSet.h>
-#include <otawa/hardware/Cache.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/Cache.h>
+#include <otawa/hard/CacheConfiguration.h>
 
 
 using namespace otawa;
 using namespace elm;
 using namespace otawa::ipet;
+using namespace otawa::hard;
 
 int main(int argc, char **argv) {
 	

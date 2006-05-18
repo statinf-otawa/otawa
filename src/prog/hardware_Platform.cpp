@@ -5,10 +5,10 @@
  *	prog/hardware_Platform.cpp -- Platform class implementation.
  */
 
-#include <otawa/hardware/Platform.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/Platform.h>
+#include <otawa/hard/CacheConfiguration.h>
 
-namespace otawa {
+namespace otawa { namespace hard {
 
 /**
  * @class Platform Platform.h "otawa/hardware/Platform.h"
@@ -319,4 +319,4 @@ bool Platform::Identification::matches(const Identification& id) {
 	return true;
 }
 
-} // otawa
+} } // otawa::hard

@@ -8,9 +8,9 @@
 #include <elm/io.h>
 #include <otawa/cache/ccg/CCGObjectFunction.h>
 #include <otawa/cfg.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/CacheConfiguration.h>
 #include <otawa/cache/ccg/CCGBuilder.h>
-#include <otawa/hardware/Platform.h>
+#include <otawa/hard/Platform.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
@@ -26,7 +26,7 @@ void CCGObjectFunction::processCFG(FrameWork *fw, CFG *cfg ) {
 	System *system = cfg->get<System *>(IPET::ID_System, 0);
 	assert (system);
 	LBlockSet **lbsets = cfg->use<LBlockSet **>(LBlockSet::ID_LBlockSet);
-	const Cache *cach = fw->platform()->cache().instCache();
+	const hard::Cache *cach = fw->platform()->cache().instCache();
 	
 	for(int i = 0; i < cach->lineCount(); i++) {
 		LBlockSet *idg = lbsets[i];

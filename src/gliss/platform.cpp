@@ -87,7 +87,7 @@ Platform Platform::platform;
  * Build a new gliss platform with the given configuration.
  * @param props		Configuration properties.
  */
-Platform::Platform(const PropList& props): ::otawa::Platform(ID, props) {
+Platform::Platform(const PropList& props): hard::Platform(ID, props) {
 	_banks = &banks_table;
 }
 
@@ -98,7 +98,7 @@ Platform::Platform(const PropList& props): ::otawa::Platform(ID, props) {
  * @param props		Configuration properties.
  */
 Platform::Platform(const Platform& platform, const PropList& props)
-: ::otawa::Platform(platform, props) {
+: hard::Platform(platform, props) {
 	_banks = &banks_table;
 }
 

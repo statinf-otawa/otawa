@@ -8,8 +8,8 @@
 #include <assert.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/proc/ProcessorException.h>
-#include <otawa/hardware/CacheConfiguration.h>
-#include <otawa/hardware/Platform.h>
+#include <otawa/hard/CacheConfiguration.h>
+#include <otawa/hard/Platform.h>
 #include <otawa/cfg.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet/IPET.h>
@@ -33,7 +33,7 @@ void LBlockBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) 
 	// Initialization
 	ilp::System *system = cfg->get<ilp::System *>(ipet::IPET::ID_System, 0);
 	assert (system);
-	const Cache *cach = fw->platform()->cache().instCache();
+	const hard::Cache *cach = fw->platform()->cache().instCache();
 	
 	// Create entry node
 	new LBlock(lbset, 0, 0, 0);
@@ -95,7 +95,7 @@ void LBlockBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	assert(cfg);
 	
 	// Check the cache
-	const Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = fw->platform()->cache().instCache();
 	if(!cache)
 		throw new ProcessorException(*this, "No cache in this platform.");
 	

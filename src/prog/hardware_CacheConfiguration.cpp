@@ -6,9 +6,9 @@
  */
 
 #include <assert.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/CacheConfiguration.h>
 
-namespace otawa {
+namespace otawa { namespace hard {
 	
 /**
  * @class CacheConfiguration
@@ -74,4 +74,4 @@ const CacheConfiguration CacheConfiguration::NO_CACHE;
  * @return True if the cache follows the Harvard architecture, false else.
  */
 
-} // otawa
+} } // otawa::hard

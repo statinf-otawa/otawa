@@ -19,8 +19,8 @@
 #include <otawa/util/DFABitSet.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/cfg.h>
-#include <otawa/hardware/CacheConfiguration.h>
-#include <otawa/hardware/Platform.h>
+#include <otawa/hard/CacheConfiguration.h>
+#include <otawa/hard/Platform.h>
 #include <otawa/cache/ccg/CCGBuilder.h>
 
 using namespace otawa::ilp;
@@ -38,7 +38,7 @@ void CCGConstraintBuilder::processLBlockSet(CFG *cfg, LBlockSet *lbset) {
 	// Initialization
 	System *system = cfg->get<System *>(IPET::ID_System, 0);
 	assert (system);
-	const Cache *cach = fw->platform()->cache().instCache();
+	const hard::Cache *cach = fw->platform()->cache().instCache();
 	int dec = cach->blockBits();
 	
 	// Building all the contraintes of each lblock
@@ -187,7 +187,7 @@ void CCGConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 	assert(fw);
 	assert(cfg);
 	LBlockSet **lbsets = cfg->use<LBlockSet **>(LBlockSet::ID_LBlockSet);
-	const Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = fw->platform()->cache().instCache();
 	if(!cache)
 		return;
 	for(int i = 0; i < cache->lineCount(); i++)

@@ -7,7 +7,7 @@
 
 #include <otawa/ipet/IPET.h>
 #include <otawa/cfg.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ipet/TrivialDataCacheManager.h>
 
 namespace otawa { namespace ipet {

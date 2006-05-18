@@ -6,8 +6,8 @@
  */
 
 #include <otawa/prog/Process.h>
-#include <otawa/hardware/CacheConfiguration.h>
-#include <otawa/hardware/Platform.h>
+#include <otawa/hard/CacheConfiguration.h>
+#include <otawa/hard/Platform.h>
 
 namespace otawa {
 
@@ -33,7 +33,7 @@ Process::Process(File *program): prog(program) {
  * according the index in the vector.
  * @return	Cache hierarchy.
  */
-const CacheConfiguration& Process::cache(void) {
+const hard::CacheConfiguration& Process::cache(void) {
 	return platform()->cache();
 }
 

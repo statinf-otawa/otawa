@@ -103,7 +103,7 @@ ASTInfo *FrameWork::getASTInfo(void) {
 
 /**
  */
-const CacheConfiguration& FrameWork::cache(void) {
+const hard::CacheConfiguration& FrameWork::cache(void) {
 	return proc->cache();
 }
 

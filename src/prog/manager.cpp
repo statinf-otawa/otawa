@@ -122,8 +122,8 @@ Loader *Manager::findLoader(CString name) {
  * @param name	Name of the platform to find.
  * @return				Found platform or null.
  */
-Platform *Manager::findPlatform(CString name) {
-	return findPlatform(Platform::Identification(name));
+hard::Platform *Manager::findPlatform(CString name) {
+	return findPlatform(hard::Platform::Identification(name));
 }
 
 /**
@@ -131,7 +131,7 @@ Platform *Manager::findPlatform(CString name) {
  * @param id	Identifier of the platform.
  * @result			Found platform or null.
  */
-Platform *Manager::findPlatform(const Platform::Identification& id) {
+hard::Platform *Manager::findPlatform(const hard::Platform::Identification& id) {
 	for(int i = 0; i < platforms.count(); i++)
 		if(platforms[i]->accept(id))
 			return platforms[i];

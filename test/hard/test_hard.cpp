@@ -9,11 +9,12 @@
 #include <elm/io.h>
 #include <otawa/otawa.h>
 #include <otawa/proc/ProcessorException.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
 
 using namespace elm;
 using namespace otawa;
+using namespace otawa::hard;
 
 static CString reg_kinds[] = {
 	"none",
