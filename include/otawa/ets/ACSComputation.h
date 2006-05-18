@@ -11,7 +11,7 @@
 #include <elm/genstruct/HashTable.h>
 #include <otawa/proc/ASTProcessor.h>
 #include <otawa/ets/AbstractCacheState.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/CacheConfiguration.h>
 
 namespace otawa { namespace ets {
 

@@ -17,7 +17,7 @@
 #include <otawa/ipet/BasicObjectFunctionBuilder.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/ipet/TrivialDataCacheManager.h>
-#include <otawa/hardware/CacheConfiguration.h>
+#include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
 #include <elm/system/StopWatch.h>
 #include <otawa/cache/ccg/CCGConstraintBuilder.h>
@@ -29,6 +29,7 @@
 using namespace elm;
 using namespace otawa;
 using namespace otawa::ipet;
+using namespace otawa::hard;
 
 // Option string
 CString ccg_option = "-ccg";

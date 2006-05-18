@@ -6,7 +6,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/ilp.h>
 #include <otawa/prop/Identifier.h>
-#include <otawa/hardware/Cache.h>
+#include <otawa/hard/Cache.h>
 
 
 namespace otawa {
@@ -16,11 +16,11 @@ namespace otawa {
 class CATDFA : public DFA {
     LBlockSet *lines;
     CFG *cfglb;
-    const Cache *cach;
+    const hard::Cache *cach;
     
 	public:
 	// DFA overload
-	CATDFA (LBlockSet *point, CFG *cfg, const Cache *mem){
+	CATDFA (LBlockSet *point, CFG *cfg, const hard::Cache *mem){
 		lines = point;
 		cfglb = cfg;
 		cach = mem;	
