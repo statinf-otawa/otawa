@@ -8,7 +8,7 @@
 #define OTAWA_PLATFORM_H
 
 #include <elm/string.h>
-#include <otawa/hardware/Platform.h>
+#include <otawa/hard/Platform.h>
 
 namespace otawa {
 using namespace elm;
