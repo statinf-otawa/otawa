@@ -7,6 +7,7 @@
 #ifndef OTAWA_AST_AST_H
 #define OTAWA_AST_AST_H
 
+#include <elm/util/AutoPtr.h>
 #include <otawa/instruction.h>
 #include <otawa/program.h>
 
