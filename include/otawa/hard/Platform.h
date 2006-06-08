@@ -21,8 +21,6 @@ class CacheConfiguration;
 
 // Platform class
 class Platform {
-	friend class Manager;
-
 public:
 
 	static const elm::String ANY;
@@ -70,6 +68,7 @@ private:
 	void configure(const PropList& props);
 
 protected:
+	friend class otawa::Manager;
 	static const elm::genstruct::Table<const hard::RegBank *> null_banks;
 	const elm::genstruct::Table<const hard::RegBank *> *_banks;
 	virtual ~Platform(void) { };
