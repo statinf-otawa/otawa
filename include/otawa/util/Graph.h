@@ -44,7 +44,7 @@ public:
 	// PreorderIterator class
 	class PreorderIterator: public elm::PreIterator<PreorderIterator, Node *> {
 		const Graph *_graph;
-		elm::BitVector visited;
+		elm::BitVector visited, queued;
 		elm::genstruct::VectorQueue<Node *> queue;
 	public:
 		PreorderIterator(const Graph *graph, Node *entry);
