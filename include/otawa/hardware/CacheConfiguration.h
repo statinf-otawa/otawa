@@ -10,6 +10,4 @@
 #include <otawa/hard/CacheConfiguration.h>
 #warning "Deprecated : use otawa/hard/CacheConfiguration.h instead."
 
-} // otawa
-
 #endif	// OTAWA_HARDWARE_CONFIGURATION_CACHE_H
