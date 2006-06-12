@@ -132,8 +132,10 @@ void Graph::destroy(Edge *edge) {
  * @param entry	Entry of the graph.
  */
 Graph::PreorderIterator::PreorderIterator(const Graph *graph, Node *entry)
-: _graph(graph), visited(_graph->nodes.length()) {
+: _graph(graph), visited(_graph->nodes.length())
+, queued(_graph->nodes.length()) {
 	queue.put(entry);
+	queued.set(entry->index());
 }
 
 
@@ -157,7 +159,9 @@ void Graph::PreorderIterator::next(void) {
 	Node *node = queue.get();
 	visited.set(node->index());
 	for(Node::Successor succ(node); succ; succ++)
-		if(succ != node) {
+		if(!queued.bit(succ->index())) {
+			/*cout << "Checking (" << node->index() << ", "
+				 << succ->index() << ")\n"; */
 			assert(!visited.bit(succ->index()));
 			bool check = true;
 			for(Node::Predecessor pred(succ); pred; pred++) {
@@ -165,9 +169,12 @@ void Graph::PreorderIterator::next(void) {
 				if(!check)
 					break;
 			}
-			if(check)
+			if(check) {
 				queue.put(succ);
+				queued.set(succ->index());
+			}
 		}
+	queued.clear(node->index());
 }
 
 } } // otawa::graph
