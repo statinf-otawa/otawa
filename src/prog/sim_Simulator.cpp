@@ -12,24 +12,37 @@ using namespace elm;
 namespace otawa { namespace sim {
 
 /**
+ * Name of the hook used for simulator plugger.
+ */
+const CString PLUGGER_NAME = "sim_plugin";
+
+
+/**
+ * Version of the current plugger.
+ */
+const Version PLUGGER_VERSION(1, 0, 0);
+
+
+/**
+ * If supported by the simulator, enable or disable the functional part.
+ */
+const GenericIdentifier<bool> ID_Functional("sim.functional");
+
+
+/**
+ * If supported by the simulator, enable or disable the structural part.
+ */
+const GenericIdentifier<bool> ID_Structural("sim.structural");
+
+
+
+/**
  * @class Simulator
  * This class represents a plugin to use facilities provided by a simulator.
  * Before simulation, this class allows to instantiate a simulator for the
  * current framework and the result, a @ref otawa::sim::State_t object, provides
  * services to drive the simulation.
  */
-
-
-/**
- * Name of the hook used for simulator plugger.
- */
-const CString Simulator::PLUGGER_NAME = "sim_plugin";
-
-
-/**
- * Version of the current plugger.
- */
-const Version Simulator::PLUGGER_VERSION(1, 0, 0);
 
 
 /**
@@ -49,12 +62,21 @@ const elm::CString description, const elm::CString license)
 
 
 /**
- * @fn State *Simulator::instantiate(FrameWork *fw);
+ * @fn State *Simulator::instantiate(FrameWork *fw, const PropList& props);
  * This method instantiate a new simulator using the given framework. It must
  * be implemented by actual simulator plugins.
- * @param fw	Framework to use.
- * @return		The instantiated simulator.
+ * @param fw		Framework to use.
+ * @param props		Properties for tuning the built simulator.
+ * @return			The instantiated simulator.
  * @throw otawa::sim::Exception	If there is an error.
+ */
+
+
+/**
+ * @fn bool Simulator::accept(FrameWork *fw);
+ * Test if the current simulator may execute programs in the given framework.
+ * @param fw	Framework to execute program in.
+ * @return		True if the simulator accept this framework, false else.
  */
 
 

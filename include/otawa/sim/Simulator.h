@@ -8,7 +8,7 @@
 #define OTAWA_SIM_SIMULATOR_H
 
 #include <elm/system/Plugin.h>
-#include <otawa/base.h>
+#include <otawa/properties.h>
 
 namespace otawa { namespace sim {
 	
@@ -16,15 +16,22 @@ namespace otawa { namespace sim {
 class FrameWork;
 class State;
 
+// Definitions
+extern const elm::CString PLUGGER_NAME;
+extern const elm::Version PLUGGER_VERSION;
+extern const GenericIdentifier<bool> ID_Functional;
+extern const GenericIdentifier<bool> ID_Structural;
+
+
 // Simulator class
 class Simulator: public elm::system::Plugin {
 public:
-	static const elm::CString PLUGGER_NAME;
-	static const elm::Version PLUGGER_VERSION;
 	Simulator(elm::String name, const elm::Version& version,
 		const elm::CString description = "",
 		const elm::CString license = "");
-	virtual State *instantiate(FrameWork *fw) = 0;
+	virtual State *instantiate(FrameWork *fw,
+		const PropList& props = PropList::EMPTY) = 0;
+	virtual bool accept(FrameWork *fw) = 0;
 };
 
 // Exception
