@@ -15,8 +15,8 @@ namespace otawa { namespace sim {
  * @class Simulator
  * This class represents a plugin to use facilities provided by a simulator.
  * Before simulation, this class allows to instantiate a simulator for the
- * current framework and the result, a @ref State_t object, provides services to
- * drive the simulation.
+ * current framework and the result, a @ref otawa::sim::State_t object, provides
+ * services to drive the simulation.
  */
 
 
@@ -34,11 +34,13 @@ const Version Simulator::PLUGGER_VERSION(1, 0, 0);
 
 /**
  * Build a new simulator plugin.
- * @param name		Name of the plugin.
- * @param version	Version of the plug-in.
+ * @param name			Name of the plugin.
+ * @param version		Version of the plug-in.
+ * @param description	Plugin description.
+ * @param license		License applied to the use of this plugin.
  */
 Simulator::Simulator(elm::String name, const elm::Version& version,
-const CString description, const elm::CString license)
+const elm::CString description, const elm::CString license)
 : Plugin(name, PLUGGER_VERSION, PLUGGER_NAME) {
 	_plugin_version = version;
 	_description = description;
