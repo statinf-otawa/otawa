@@ -392,6 +392,7 @@ AC_OUTPUT([
 	include/otawa/util/Makefile
 	include/otawa/hard/Makefile
 	include/otawa/hardware/Makefile
+	include/otawa/sim/Makefile
 	include/otawa/cache/Makefile
 	include/otawa/cache/categorisation/Makefile
 	include/otawa/cache/ccg/Makefile

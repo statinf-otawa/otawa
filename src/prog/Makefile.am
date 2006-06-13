@@ -99,7 +99,9 @@ libotawa_so_SOURCES = \
 	util_Graph.cpp \
 	util_Node.cpp \
 	util_Edge.cpp \
-	hard_Register.cpp
+	hard_Register.cpp \
+	sim_Simulator.cpp \
+	sim_State.cpp
 
 else
 
@@ -199,8 +201,9 @@ libotawa_a_SOURCES = \
 	util_Graph.cpp \
 	util_Node.cpp \
 	util_Edge.cpp \
-	hard_Register.cpp
-
+	hard_Register.cpp  \
+	sim_Simulator.cpp \
+	sim_State.cpp
 endif
 
 AM_YYFLAGS=-dv
