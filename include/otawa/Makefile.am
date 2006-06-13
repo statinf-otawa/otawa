@@ -12,7 +12,8 @@ SUBDIRS= \
 	util \
 	ets \
 	hard \
-	hardware
+	hardware \
+	sim
 
 # Headers
 includeotawadir=$(includedir)/otawa
