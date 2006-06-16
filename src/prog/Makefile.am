@@ -101,7 +101,8 @@ libotawa_so_SOURCES = \
 	util_Edge.cpp \
 	hard_Register.cpp \
 	sim_Simulator.cpp \
-	sim_State.cpp
+	sim_State.cpp \
+	sim_TrivialSimulator.cpp
 
 else
 
@@ -203,7 +204,8 @@ libotawa_a_SOURCES = \
 	util_Edge.cpp \
 	hard_Register.cpp  \
 	sim_Simulator.cpp \
-	sim_State.cpp
+	sim_State.cpp \
+	sim_TrivialSimulator.cpp
 endif
 
 AM_YYFLAGS=-dv
