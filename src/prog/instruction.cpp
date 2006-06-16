@@ -184,14 +184,14 @@ const elm::genstruct::Table<hard::Register *>& Inst::writtenRegs(void) {
 
 
 /**
- * @fn PseudoInst::PseudoInst(id_t id);
+ * @fn PseudoInst::PseudoInst(const Identifier *id);
  * Builder of a pseudo-instruction.
  * @param id	Identifier of the pseudo-instruction.
  */
 
 
 /**
- * @fn id_t PseudoInst::id(void) const;
+ * @fn const Identifier *PseudoInst::id(void) const;
  * Get the identifier of this pseudo-instruction.
  * @return	Pseudo-instruction identifier.
  */

@@ -64,10 +64,10 @@ public:
 
 // PseudoInst class
 class PseudoInst: public virtual Inst {
-	id_t _id;
+	const Identifier *_id;
 public:
-	inline PseudoInst(id_t id): _id(id) { };
-	inline id_t id(void) const { return _id; };
+	inline PseudoInst(const Identifier *id): _id(id) { };
+	inline const Identifier *id(void) const { return _id; };
 	virtual address_t address(void);
 	virtual void dump(io::Output& out);
 	virtual size_t size(void) { return 0; };

@@ -32,7 +32,7 @@ namespace ilp {
 class FrameWork: public Process {
 	Process *proc;
 protected:
-	virtual Property *getDeep(id_t id) { return proc->getProp(id); };
+	virtual Property *getDeep(const Identifier *id) { return proc->getProp(id); };
 public:
 	FrameWork(Process *_proc);
 	~FrameWork(void);

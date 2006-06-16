@@ -44,7 +44,6 @@ public:
 
 
 // Compatibility
-typedef Identifier *id_t;	// Deprecated
 #define INVALID_ID Identifier::invalid
 
 
