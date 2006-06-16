@@ -93,15 +93,26 @@ State::~State(void) {
 
 
 /**
- * @fn mode_t State::runUntilBranch(void);
- * Run the simulator until a branch is encountered (the branch is executed).
+ * @fn mode_t State::runUntil(Inst inst);
+ * Run the simulator until the PC reaches the given instruction (that is not
+ * executed).
+ * @param inst	Instruction to stop simulation at.
+ * @return		Processor state.
  */
 
 
 /**
- * @fn void State::flush(void);
+ * @fn mode_t State::runUntilBranch(void);
+ * Run the simulator until a branch is encountered (the branch is executed).
+ * @return		Processor state.
+ */
+
+
+/**
+ * @fn mode_t State::flush(void);
  * Run the simulator, preventing the instruction fetch, until the pipeline is
  * empty.
+ * @return		Processor state.
  */
 
 
@@ -126,8 +137,24 @@ State::~State(void) {
 
 
 /**
+ * @fn Inst *State::pcInst(void);
+ * Get the instruciton at the current PC, that is, the next instruction to
+ * execute.
+ * @return	Current PC instruction.
+ */
+
+
+/**
  * @fn void State::setPC(address_t pc);
  * Set the PC address, that is, the address of the next instruction to execute.
+ * @param pc	PC value.
+ */
+
+
+/**
+ * @fn void State::setPC(Inst *inst);
+ * Set the PC at the given instruction, that is, next instruction to execute.
+ * @param inst	Next instruction to execute.
  */
 
 } } // otawa::sim
