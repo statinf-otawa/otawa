@@ -127,9 +127,9 @@ const Type& Identifier::type(void) const {
  * @param args	Variable arguments to read identifier value from.
  * @warning		It is an error to call this method on a non-typed identifier.
  */
-/*void Identifier::scan(PropList& props, VarArg& args) const {
+void Identifier::scan(PropList& props, VarArg& args) const {
 	assert(0);
-}*/
+}
 
 
 // Specialisation for types

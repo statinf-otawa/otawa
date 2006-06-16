@@ -45,7 +45,7 @@ public:
 	// Identifier overload
 	virtual void print(elm::io::Output& output, const Property& prop);
 	virtual const Type& type(void) const;
-	//virtual void scan(PropList& props, VarArg& args) const;
+	virtual void scan(PropList& props, VarArg& args) const;
 };
 
 // Inlines
@@ -146,10 +146,10 @@ const Type& GenericIdentifier<T>::type(void) const {
 	return Type::no_type;
 }
 
-/*template <class T>
+template <class T>
 void GenericIdentifier<T>::scan(PropList& props, VarArg& args) const {
 	props.set(*this, args.next<T>());
-}*/
+}
 
 } // otawa
 

@@ -32,7 +32,7 @@ public:
 	virtual void print(elm::io::Output& output, const Property& prop);
 	inline void print(elm::io::Output& output, const Property *prop);
 	virtual const Type& type(void) const;
-	//virtual void scan(PropList& props, VarArg& args) const;
+	virtual void scan(PropList& props, VarArg& args) const;
 };
 
 
