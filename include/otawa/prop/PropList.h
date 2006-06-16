@@ -10,15 +10,20 @@
 #include <assert.h>
 #include <elm/utility.h>
 #include <elm/Iterator.h>
+#include <elm/util/VarArg.h>
 #include <otawa/prop/Property.h>
 #include <otawa/prop/DeletableProperty.h>
 
 namespace otawa {
 	
+// Constants	
+extern const Identifier END;
+
 // PropList class
 class PropList {
 	friend class PropFilter;
 	mutable Property *head;
+	void init(const Identifier *id, elm::VarArg& args);
 protected:
 	virtual Property *getDeep(const Identifier *id) const;
 public:
@@ -26,6 +31,10 @@ public:
 	inline PropList(const PropList& props) { addProps(props); };
 	inline PropList(void): head(0) { };
 	inline ~PropList(void) { clearProps(); };
+
+	// Variable argument constructors
+	PropList(const Identifier *id, ...);
+	PropList(const Identifier *id, elm::VarArg& args);
 
 	// Property access
 	Property *getProp(const Identifier *id) const;
