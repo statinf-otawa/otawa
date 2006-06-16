@@ -25,15 +25,30 @@ const Version PLUGGER_VERSION(1, 0, 0);
 
 /**
  * If supported by the simulator, enable or disable the functional part.
+ * Default to false.
  */
-const GenericIdentifier<bool> ID_Functional("sim.functional");
+GenericIdentifier<bool> IS_FUNCTIONAL("sim.is_functional");
 
 
 /**
  * If supported by the simulator, enable or disable the structural part.
+ * Default to true.
  */
-const GenericIdentifier<bool> ID_Structural("sim.structural");
+GenericIdentifier<bool> IS_STRUCTURAL("sim.is_structural");
 
+
+/**
+ * Activate or unactivate the memory management.
+ * Default to false.
+ */
+GenericIdentifier<bool> USE_MEMORY("sim.use_memory");
+
+
+/**
+ * Activate or unactivate the control management.
+ * Default to false.
+ */
+GenericIdentifier<bool> USE_CONTROL("sim.use_control");
 
 
 /**
@@ -104,7 +119,7 @@ elm::String Exception::header(const Simulator& sim, const CString message) {
  * @param sim		Current simulator.
  * @param message	Message to display.
  */
- Exception::Exception(const Simulator& sim, String message) {
+ Exception::Exception(const Simulator& sim, String& message) {
  	setMessage(header(sim, message.toCString()));
  }
  
