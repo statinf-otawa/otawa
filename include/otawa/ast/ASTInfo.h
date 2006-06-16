@@ -28,7 +28,7 @@ class ASTInfo: public PropList {
 	ASTInfo(Process *proc);
 public:
 	~ASTInfo(void);
-	static const id_t ID;
+	static GenericIdentifier<ASTInfo *> ID;
 	static ASTInfo *getInfo(Process *proc);
 	FunAST *getFunction(Inst *inst);
 	inline elm::datastruct::Map<String, FunAST *>& map(void) { return _map; };

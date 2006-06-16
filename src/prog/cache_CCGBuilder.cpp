@@ -192,7 +192,7 @@ void CCGBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) {
 						}
 					}
 				}
-				else if(pseudo->id() == bb->ID)
+				else if(pseudo->id() == &bb->ID)
 					break;		
 			}
 		}

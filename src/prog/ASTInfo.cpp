@@ -19,7 +19,7 @@ namespace otawa {
 /**
  * Identifier of the property storing the AST information on the framework object.
  */
-const id_t ASTInfo::ID = Property::getID("otawa.ast.info");
+GenericIdentifier<ASTInfo *> ASTInfo::ID("otawa.ast.info");
 
 	
 /**
@@ -27,7 +27,7 @@ const id_t ASTInfo::ID = Property::getID("otawa.ast.info");
  * @param proc	Process to link to.
  */
 ASTInfo::ASTInfo(Process *proc) {
-	proc->addDeletable<ASTInfo *>(*ID, this);
+	proc->addDeletable<ASTInfo *>(ID, this);
 }
 
 /**

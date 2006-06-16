@@ -57,7 +57,7 @@ DFASet *CCGDFA::generate(BasicBlock *bb) {
 						identif = lbloc->id();
 				}
 			}
-			else if(pseudo->id() == bb->ID)
+			else if(pseudo->id() == &bb->ID)
 				break;
 		}
 	
@@ -121,7 +121,7 @@ DFASet *CCGDFA::kill(BasicBlock *bb) {
 				
 		}
 		
-		else if(pseudo->id() == bb->ID)
+		else if(pseudo->id() == &bb->ID)
 			break;
 	}
 	

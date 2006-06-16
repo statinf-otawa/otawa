@@ -25,7 +25,7 @@ namespace otawa {
 /**
  * Identifier used for storing and retrieving the CFG on its entry BB.
  */
-id_t CFG::ID = Property::getID("otawa.cfg");
+GenericIdentifier<CFG *> CFG::ID("otawa.cfg");
 
 
 /**

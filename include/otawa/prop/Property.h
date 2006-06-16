@@ -22,16 +22,16 @@ class Identifier;
 class Property {
 	friend class PropList;
 	Property *_next;
-	Identifier *_id;
+	const Identifier *_id;
 protected:
 	virtual ~Property(void) { };
 	virtual Property *copy(void) { return new Property(_id); };
 public:
-	static Identifier *getID(elm::CString name);
-	inline Property(Identifier *id): _id(id) { };
-	inline Property(Identifier& id): _id(&id) { };
+	static const Identifier *getID(elm::CString name);
+	inline Property(const Identifier *id): _id(id) { };
+	inline Property(const Identifier& id): _id(&id) { };
 	inline Property(elm::CString name): _id(getID(name)) { };
-	inline Identifier *id(void) const { return _id; };
+	inline const Identifier *id(void) const { return _id; };
 	inline Property *next(void) const { return _next; };
 };
 
@@ -41,9 +41,9 @@ template <class T>
 class GenericProperty: public Property {
 	T _value;
 protected:
-	inline GenericProperty(Identifier *id, T value)
+	inline GenericProperty(const Identifier *id, T value)
 		: Property(id), _value(value) { };
-	inline GenericProperty(Identifier& id, T value)
+	inline GenericProperty(const Identifier& id, T value)
 		: Property(id), _value(value) { };
 	inline GenericProperty(elm::CString name, T value)
 		: Property(name), _value(value) { };
@@ -51,7 +51,7 @@ protected:
 	virtual Property *copy(void)
 		{ return new GenericProperty<T>(id(), value()); };
 public:
-	static GenericProperty<T> *make(Identifier *id, const T value) {
+	static GenericProperty<T> *make(const Identifier *id, const T value) {
 		return new GenericProperty(id, value);
 	};
 	inline const T& value(void) const { return _value; };
@@ -72,9 +72,9 @@ protected:
 			GenericProperty<T>::value());
 	};
 public:
-	inline LockedProperty(Identifier *id, T value)
+	inline LockedProperty(const Identifier *id, T value)
 		: GenericProperty<T>(id, value) { GenericProperty<T>::value()->lock(); };
-	inline LockedProperty(Identifier& id, T value)
+	inline LockedProperty(const Identifier& id, T value)
 		: GenericProperty<T>(id, value) { GenericProperty<T>::value()->lock(); };
 	inline LockedProperty(elm::CString name, T value)
 		: GenericProperty<T>(name, value) { GenericProperty<T>::value()->lock(); };

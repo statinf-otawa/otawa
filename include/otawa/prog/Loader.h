@@ -10,6 +10,7 @@
 #include <otawa/base.h>
 #include <otawa/properties.h>
 #include <otawa/prog/Process.h>
+#include <otawa/hard/Platform.h>
 
 namespace otawa {
 
@@ -26,14 +27,14 @@ public:
 	virtual Process *create(Manager *man, PropList& props) = 0;
 	
 	// Usual properties
-	static id_t ID_Platform;
-	static id_t ID_Loader;
-	static id_t ID_PlatformName;
-	static id_t ID_LoaderName;
-	static id_t ID_PlatformId;
-	static id_t ID_Argc;
-	static id_t ID_Argv;
-	static id_t ID_Envp;
+	static GenericIdentifier<hard::Platform *> ID_Platform;
+	static GenericIdentifier<Loader *> ID_Loader;
+	static GenericIdentifier<elm::CString> ID_PlatformName;
+	static GenericIdentifier<elm::CString>  ID_LoaderName;
+	static GenericIdentifier<hard::Platform::Identification *> ID_PlatformId;
+	static GenericIdentifier<int> ID_Argc;
+	static GenericIdentifier<char **> ID_Argv;
+	static GenericIdentifier<char **> ID_Envp;
 
 	// Default platform and loader
 	static Loader& LOADER_Gliss_PowerPC;

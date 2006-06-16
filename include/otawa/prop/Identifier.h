@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <elm/string.h>
 #include <elm/io.h>
+#include <elm/util/VarArg.h>
 #include <otawa/base.h>
 #include <otawa/type.h>
 
@@ -17,19 +18,21 @@ namespace otawa {
 
 // External classes
 class Property;
+class PropList;
 
 // Identifier class
 class Identifier {
 	elm::String nam;
 public:
 	static const Identifier *invalid;
-	static Identifier *getID(elm::CString name);
+	static const Identifier *getID(elm::CString name);
 	Identifier(elm::CString name);
 	
 	inline const elm::String& name(void) const;
 	virtual void print(elm::io::Output& output, const Property& prop);
 	inline void print(elm::io::Output& output, const Property *prop);
 	virtual const Type& type(void) const;
+	//virtual void scan(PropList& props, VarArg& args) const;
 };
 
 

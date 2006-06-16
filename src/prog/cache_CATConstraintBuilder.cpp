@@ -195,7 +195,7 @@ DFABitSet *CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , System *syst
 						}
 					}
 				}
-				else if(pseudo->id() == bb->ID)
+				else if(pseudo->id() == &bb->ID)
 					break;
 			}
 		}
@@ -238,7 +238,7 @@ void CATConstraintBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S 
 						}
 					}
 				}
-				else if(pseudo->id() == bk->ID)
+				else if(pseudo->id() == &bk->ID)
 					break;
 			}
 		}

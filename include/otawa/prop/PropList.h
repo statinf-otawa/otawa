@@ -20,7 +20,7 @@ class PropList {
 	friend class PropFilter;
 	mutable Property *head;
 protected:
-	virtual Property *getDeep(Identifier *id) const;
+	virtual Property *getDeep(const Identifier *id) const;
 public:
 	static const PropList EMPTY;
 	inline PropList(const PropList& props) { addProps(props); };
@@ -28,30 +28,30 @@ public:
 	inline ~PropList(void) { clearProps(); };
 
 	// Property access
-	Property *getProp(Identifier *id) const;
+	Property *getProp(const Identifier *id) const;
 	void setProp(Property *prop);
-	void removeProp(Identifier *id);
-	inline void setProp(Identifier *id) { setProp(new Property(id)); };
+	void removeProp(const Identifier *id);
+	inline void setProp(const Identifier *id) { setProp(new Property(id)); };
 	void addProp(Property *prop);
-	void removeAllProp(Identifier *id);
-	inline bool hasProp(Identifier& id);
+	void removeAllProp(const Identifier *id);
+	inline bool hasProp(const Identifier& id);
 	
 	// Property value access with identifier pointer (DEPRECATED)
-	template <class T> inline T get(Identifier *id, const T def_value) const;
-	template <class T> inline elm::Option<T> get(Identifier *id) const;
-	template <class T> inline T use(Identifier *id) const;
-	template <class T> inline void set(Identifier *id, const T value);
-	template <class T> inline void add(Identifier *id, const T value);
-	template <class T> inline void addLocked(Identifier *id, const T value);
+	template <class T> inline T get(const Identifier *id, const T def_value) const;
+	template <class T> inline elm::Option<T> get(const Identifier *id) const;
+	template <class T> inline T use(const Identifier *id) const;
+	template <class T> inline void set(const Identifier *id, const T value);
+	template <class T> inline void add(const Identifier *id, const T value);
+	template <class T> inline void addLocked(const Identifier *id, const T value);
 
 	// Property value access with identifier reference
-	template <class T> inline T get(Identifier& id, const T def_value) const;
-	template <class T> inline elm::Option<T> get(Identifier& id) const;
-	template <class T> inline T use(Identifier& id) const;
-	template <class T> inline void set(Identifier& id, const T value);
-	template <class T> inline void add(Identifier& id, const T value);
-	template <class T> inline void addLocked(Identifier& id, const T value);
-	template <class T> inline void addDeletable(Identifier& id, const T value);
+	template <class T> inline T get(const Identifier& id, const T def_value) const;
+	template <class T> inline elm::Option<T> get(const Identifier& id) const;
+	template <class T> inline T use(const Identifier& id) const;
+	template <class T> inline void set(const Identifier& id, const T value);
+	template <class T> inline void add(const Identifier& id, const T value);
+	template <class T> inline void addLocked(const Identifier& id, const T value);
+	template <class T> inline void addDeletable(const Identifier& id, const T value);
 
 	// Global management
 	void clearProps(void);
@@ -67,21 +67,21 @@ public:
 		inline bool ended(void) const;
 		inline Property *item(void) const;
 		template <class T> inline T get(void) const;
-		inline bool operator==(Identifier *id) const;
-		inline bool operator!=(Identifier *id) const;
-		inline bool operator==(Identifier& id) const;
-		inline bool operator!=(Identifier& id) const;
+		inline bool operator==(const Identifier *id) const;
+		inline bool operator!=(const Identifier *id) const;
+		inline bool operator==(const Identifier& id) const;
+		inline bool operator!=(const Identifier& id) const;
 	};
 
 	// PropGetter class
 	template <class T>
 	class PropGetter: public PreIterator<PropGetter<T>, T> {
 		PropIter iter;
-		Identifier& _id;
+		const Identifier& _id;
 		inline void look(void);
 	public:
-		inline PropGetter(const PropList *list, Identifier& id);
-		inline PropGetter(const PropList& list, Identifier& id);
+		inline PropGetter(const PropList *list, const Identifier& id);
+		inline PropGetter(const PropList& list, const Identifier& id);
 		inline bool ended(void) const;
 		inline T item(void) const;
 		inline void next(void);
@@ -91,74 +91,74 @@ public:
 
 
 // PropList inlines
-inline bool PropList::hasProp(Identifier& id) {
+inline bool PropList::hasProp(const Identifier& id) {
 	return getProp(&id) != 0;	
 }
 
-template <class T> T PropList::get(Identifier *id, const T def_value) const {
+template <class T> T PropList::get(const Identifier *id, const T def_value) const {
 	Property *prop = getProp(id);
 	return !prop ? def_value : ((GenericProperty<T> *)prop)->value();
 };
 
-template <class T> elm::Option<T> PropList::get(Identifier *id) const {
+template <class T> elm::Option<T> PropList::get(const Identifier *id) const {
 	Property *prop = getProp(id);
 	return !prop ? elm::Option<T>() : elm::Option<T>(((GenericProperty<T> *)prop)->value());
 };
 
-template <class T> T PropList::use(Identifier *id) const {
+template <class T> T PropList::use(const Identifier *id) const {
 	Property *prop = getProp(id);
 	if(!prop)
 		assert(0);
 	return ((const GenericProperty<T> *)prop)->value();
 };
 
-template <class T> void PropList::set(Identifier *id, const T value) {
+template <class T> void PropList::set(const Identifier *id, const T value) {
 	setProp(GenericProperty<T>::make(id, value));
 };
 
 template <class T>
-inline void PropList::add(Identifier *id, const T value) {
+inline void PropList::add(const Identifier *id, const T value) {
 	addProp(GenericProperty<T>::make(id, value));
 };
 
 template <class T>
-inline void PropList::addLocked(Identifier *id, const T value) {
+inline void PropList::addLocked(const Identifier *id, const T value) {
 	addProp(LockedProperty<T>::make(id, value));
 }
 
-template <class T> T PropList::get(Identifier& id, const T def_value) const {
+template <class T> T PropList::get(const Identifier& id, const T def_value) const {
 	Property *prop = getProp(&id);
 	return !prop ? def_value : ((GenericProperty<T> *)prop)->value();
 };
 
-template <class T> elm::Option<T> PropList::get(Identifier& id) const {
+template <class T> elm::Option<T> PropList::get(const Identifier& id) const {
 	Property *prop = getProp(&id);
 	return !prop ? elm::Option<T>() : elm::Option<T>(((GenericProperty<T> *)prop)->value());
 };
 
-template <class T> T PropList::use(Identifier& id) const {
+template <class T> T PropList::use(const Identifier& id) const {
 	Property *prop = getProp(&id);
 	if(!prop)
 		assert(0);
 	return ((GenericProperty<T> *)prop)->value();
 };
 
-template <class T> void PropList::set(Identifier& id, const T value) {
+template <class T> void PropList::set(const Identifier& id, const T value) {
 	setProp(GenericProperty<T>::make(&id, value));
 };
 
 template <class T>
-inline void PropList::add(Identifier& id, const T value) {
+inline void PropList::add(const Identifier& id, const T value) {
 	addProp(GenericProperty<T>::make(&id, value));
 };
 
 template <class T>
-inline void PropList::addLocked(Identifier& id, const T value) {
+inline void PropList::addLocked(const Identifier& id, const T value) {
 	addProp(LockedProperty<T>::make(&id, value));
 }
 
 template <class T>
-inline void PropList::addDeletable(Identifier& id, const T value) {
+inline void PropList::addDeletable(const Identifier& id, const T value) {
 	addProp(new DeletableProperty<T>(id, value));
 }
 
@@ -184,19 +184,19 @@ inline Property *PropList::PropIter::item(void) const {
 	return prop;
 }
 
-inline bool PropList::PropIter::operator==(Identifier *id) const {
+inline bool PropList::PropIter::operator==(const Identifier *id) const {
 	return item()->id() == id;
 }
 
-inline bool PropList::PropIter::operator!=(Identifier *id) const {
+inline bool PropList::PropIter::operator!=(const Identifier *id) const {
 	return item()->id() == id;
 }
 
-inline bool PropList::PropIter::operator==(Identifier& id) const {
+inline bool PropList::PropIter::operator==(const Identifier& id) const {
 	return item()->id() == &id;
 }
 
-inline bool PropList::PropIter::operator!=(Identifier& id) const {
+inline bool PropList::PropIter::operator!=(const Identifier& id) const {
 	return item()->id() == &id;
 }
 
@@ -214,13 +214,13 @@ inline void PropList::PropGetter<T>::look(void) {
 }
 
 template <class T>
-inline PropList::PropGetter<T>::PropGetter(const PropList *list, Identifier& id)
+inline PropList::PropGetter<T>::PropGetter(const PropList *list, const Identifier& id)
 : iter(*list), _id(id) {
 	look();
 }
 
 template <class T>
-inline PropList::PropGetter<T>::PropGetter(const PropList& list, Identifier& id)
+inline PropList::PropGetter<T>::PropGetter(const PropList& list, const Identifier& id)
 : iter(list), _id(id) {
 	look();
 }

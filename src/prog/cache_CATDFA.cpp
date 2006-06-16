@@ -49,7 +49,7 @@ DFASet *CATDFA::generate(BasicBlock *bb) {
 					identif = lbloc->id();
 				}
 		}
-		else if(pseudo->id() == bb->ID)
+		else if(pseudo->id() == &bb->ID)
 			break;
 	}// end for
 	
@@ -110,7 +110,7 @@ DFASet *CATDFA::kill(BasicBlock *bb) {
 			}//end first if 
 				
 		}// end if
-		else if(pseudo->id() == bb->ID)
+		else if(pseudo->id() == &bb->ID)
 			break;
 	}// end for
 	// the bit vector of kill

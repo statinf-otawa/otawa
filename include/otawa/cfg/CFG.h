@@ -34,7 +34,7 @@ protected:
 	genstruct::Vector<BasicBlock *> _bbs;
 	virtual void scan(void);
 public:
-	static id_t ID;
+	static GenericIdentifier<CFG *> ID;
 	static Identifier ID_Index;
 	static Identifier ID_Dom;
 	

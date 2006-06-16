@@ -61,7 +61,7 @@ BasicBlock *CFGBuilder::nextBB(Inst *inst) {
 		}
 		
 		// Is the BB pseudo?
-		if(pseudo->id() == CodeBasicBlock::ID) {
+		if(pseudo->id() == &CodeBasicBlock::ID) {
 			return ((CodeBasicBlock::Mark *)pseudo)->bb();
 		}
 	}
@@ -83,7 +83,7 @@ BasicBlock *CFGBuilder::thisBB(Inst *inst) {
 	
 	// Straight in BB?
 	PseudoInst *pseudo = inst->toPseudo();
-	if(pseudo && pseudo->id() == CodeBasicBlock::ID)
+	if(pseudo && pseudo->id() == &CodeBasicBlock::ID)
 		return ((CodeBasicBlock::Mark *)pseudo)->bb();
 	
 	// Look backward
@@ -95,7 +95,7 @@ BasicBlock *CFGBuilder::thisBB(Inst *inst) {
 			break;
 		
 		// Is it a BB pseudo?
-		else if(pseudo->id() == CodeBasicBlock::ID)
+		else if(pseudo->id() == &CodeBasicBlock::ID)
 			return ((CodeBasicBlock::Mark *)pseudo)->bb();
 	}
 	
@@ -154,7 +154,7 @@ void CFGBuilder::buildCFG(CodeItem *code) {
 	for(Inst *inst = code->first(); !inst->atEnd(); inst = inst->next()) {
 		
 		// Start of block found
-		if((pseudo = inst->toPseudo()) && pseudo->id() == CodeBasicBlock::ID) {
+		if((pseudo = inst->toPseudo()) && pseudo->id() == &CodeBasicBlock::ID) {
 			
 			// Record not-taken edge
 			BasicBlock *next_bb = ((CodeBasicBlock::Mark *)pseudo)->bb();

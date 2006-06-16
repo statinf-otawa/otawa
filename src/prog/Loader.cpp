@@ -53,42 +53,42 @@ namespace otawa {
 /**
  * Identifier of the property indicating the name (CString) of the platform to use.
  */	
-id_t Loader::ID_PlatformName = Property::getID("otawa.PlatformName");
+GenericIdentifier<CString> Loader::ID_PlatformName("otawa.PlatformName");
 
 /**
  * Identifier of the property indicating a name (CString) of the loader to use..
  */	
-id_t Loader::ID_LoaderName = Property::getID("otawa.LoaderName");
+GenericIdentifier<CString> Loader::ID_LoaderName("otawa.LoaderName");
 
 /**
  * Identifier of the property indicating a platform (Platform *) to use.
  */	
-id_t Loader::ID_Platform = Property::getID("otawa.Platform");
+GenericIdentifier<hard::Platform *> Loader::ID_Platform("otawa.Platform");
 
 /**
  * Identifier of the property indicating the loader to use.
  */	
-id_t Loader::ID_Loader = Property::getID("otawa.Loader");
+GenericIdentifier<Loader *> Loader::ID_Loader("otawa.Loader");
 
 /**
  * Identifier of the property indicating the identifier (PlatformId) of the loader to use.
  */	
-id_t Loader::ID_PlatformId = Property::getID("otawa.PlatformId");
+GenericIdentifier<hard::Platform::Identification *> Loader::ID_PlatformId("otawa.PlatformId");
 
 /**
  * Argument count as passed to the program (int).
  */	
-id_t Loader::ID_Argc = Property::getID("otawa.Argc");
+GenericIdentifier<int> Loader::ID_Argc("otawa.Argc");
 
 /**
  * Argument values as passed to the program (char **).
  */	
-id_t Loader::ID_Argv = Property::getID("otawa.Argv");
+GenericIdentifier<char **> Loader::ID_Argv("otawa.Argv");
 
 /**
  * Argument values as passed to the program (char **).
  */	
-id_t Loader::ID_Envp = Property::getID("otawa.Envp");
+GenericIdentifier<char **> Loader::ID_Envp("otawa.Envp");
 
 
 /**

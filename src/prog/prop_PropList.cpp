@@ -49,7 +49,7 @@ void PropList::addProps(const PropList& props) {
  * @param id	Identifier of the property to find.
  * @return		Found property or null.
  */
-Property *PropList::getProp(Identifier *id) const {
+Property *PropList::getProp(const Identifier *id) const {
 	
 	/* Look in this list */
 	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next())
@@ -91,7 +91,7 @@ void PropList::setProp(Property *prop) {
 
 
 /**
- * @fn void PropList::setProp(Identifier *id);
+ * @fn void PropList::setProp(const Identifier *id);
  * Set an indicator property (without value).
  * @param id	Identifier of the property.
  */
@@ -101,7 +101,7 @@ void PropList::setProp(Property *prop) {
  * Remove a property matching the given identifier.
  * @param id	Identifier of the property to remove.
  */
-void PropList::removeProp(Identifier *id) {
+void PropList::removeProp(const Identifier *id) {
 	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next())
 		if(cur->id() == id) {
 			if(prev)
@@ -127,7 +127,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T PropList::get(Identifier *id, T def_value) const;
+ * @fn T PropList::get(const Identifier *id, T def_value) const;
  * Get the value of a property.
  * @param id			Identifier of the property to get.
  * @param def_value		Default value returned if property does not exists.
@@ -137,7 +137,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T PropList::get(Identifier& id, T def_value) const;
+ * @fn T PropList::get(const Identifier& id, T def_value) const;
  * Get the value of a property.
  * @param id			Identifier of the property to get.
  * @param def_value		Default value returned if property does not exists.
@@ -146,7 +146,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn Option<T> PropList::get(Identifier *id) const;
+ * @fn Option<T> PropList::get(const Identifier *id) const;
  * Get the value of a property.
  * @param id	Identifier of the property to get the value from.
  * @return		None or the value of the property.
@@ -155,7 +155,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn Option<T> PropList::get(Identifier& id) const;
+ * @fn Option<T> PropList::get(const Identifier& id) const;
  * Get the value of a property.
  * @param id	Identifier of the property to get the value from.
  * @return		None or the value of the property.
@@ -163,7 +163,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T& PropList::use(Identifier *id) const;
+ * @fn T& PropList::use(const Identifier *id) const;
  * Get the reference on the value of the given property. If not found,
  * cause an assertion failure.
  * @param id	Identifier of the property to get the value from.
@@ -173,7 +173,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T& PropList::use(Identifier& id) const;
+ * @fn T& PropList::use(const Identifier& id) const;
  * Get the reference on the value of the given property. If not found,
  * cause an assertion failure.
  * @param id	Identifier of the property to get the value from.
@@ -182,7 +182,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn void PropList::set(Identifier *id, const T value)
+ * @fn void PropList::set(const Identifier *id, const T value)
  * Set the value of a property.
  * @param id	Identifier of the property.
  * @param value	Value of the property.
@@ -191,7 +191,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn void PropList::set(Identifier& id, const T value)
+ * @fn void PropList::set(const Identifier& id, const T value)
  * Set the value of a property.
  * @param id	Identifier of the property.
  * @param value	Value of the property.
@@ -205,7 +205,7 @@ void PropList::clearProps(void) {
  * @param id	Identifier of the looked property.
  * @return	Return the found property or null.
  */
-Property *PropList::getDeep(Identifier *id) const {
+Property *PropList::getDeep(const Identifier *id) const {
 	return 0;
 }
 
@@ -224,7 +224,7 @@ void PropList::addProp(Property *prop) {
  * Remove all the properties matching the given identifier.
  * @param id	Identifier of properties to remove.
  */
-void PropList::removeAllProp(Identifier *id) {
+void PropList::removeAllProp(const Identifier *id) {
 	Property *prv = 0, *cur = head;
 	while(cur) {
 		if(cur->id() != id) {
@@ -248,7 +248,7 @@ void PropList::removeAllProp(Identifier *id) {
 
 
 /**
- * @fn void PropList::add(Identifier *id, const T value);
+ * @fn void PropList::add(const Identifier *id, const T value);
  * Add a ne wproperty to the property list without replacing a possible
  * existing one.
  * @param id		Property identifier.
@@ -258,7 +258,7 @@ void PropList::removeAllProp(Identifier *id) {
 
 
 /**
- * @fn void PropList::add(Identifier& id, const T value);
+ * @fn void PropList::add(const Identifier& id, const T value);
  * Add a ne wproperty to the property list without replacing a possible
  * existing one.
  * @param id		Property identifier.
@@ -267,7 +267,7 @@ void PropList::removeAllProp(Identifier *id) {
 
 
 /**
- * @fn void PropList::addLocked(Identifier *id, const T value);
+ * @fn void PropList::addLocked(const Identifier *id, const T value);
  * Add a locked property to the property list. A locked property value inherits
  * from Elm::Locked class and provides a lock that will release the value when
  * there is no more lock. This kind of property provides the ability to
@@ -279,7 +279,7 @@ void PropList::removeAllProp(Identifier *id) {
 
 
 /**
- * @fn void PropList::addLocked(Identifier& id, const T value);
+ * @fn void PropList::addLocked(const Identifier& id, const T value);
  * Add a locked property to the property list. A locked property value inherits
  * from Elm::Locked class and provides a lock that will release the value when
  * there is no more lock. This kind of property provides the ability to
@@ -290,7 +290,7 @@ void PropList::removeAllProp(Identifier *id) {
 
 
 /**
- * @fn void PropList::addDeletable(Identifier& id, const T value);
+ * @fn void PropList::addDeletable(const Identifier& id, const T value);
  * Add an annotation with a deletable value, that is, a pointer that  will be
  * deleted when the annotation is destroyed.
  * @param id	Annotation identifier.
@@ -305,7 +305,7 @@ const PropList PropList::EMPTY;
 
 
 /**
- * @fn bool PropList::hasProp(Identifier& id);
+ * @fn bool PropList::hasProp(const Identifier& id);
  * Test if the property list contains a property matching the given identifier.
  * @param id	Property identifier to look for.
  * @return		True if the list contains the matching property, false else.
@@ -372,25 +372,25 @@ const PropList PropList::EMPTY;
 
 
 /**
- * @fn bool PropIter::operator==(Identifier *id) const;
+ * @fn bool PropIter::operator==(const Identifier *id) const;
  * Equality overload for testing if a property is equals to an identifier.
  */
  
 
 /**
- * @fn bool PropIter::operator!=(Identifier *id) const;
+ * @fn bool PropIter::operator!=(const Identifier *id) const;
  * Equality overload for testing if a property is equals to an identifier.
  */
 
 
 /**
- * @fn bool PropIter::operator==(Identifier& id) const;
+ * @fn bool PropIter::operator==(const Identifier& id) const;
  *  Equality overload for testing if a property is equals to an identifier.
  */
 
 
 /**
- * @fn bool PropIter::operator!=(Identifier& id) const;
+ * @fn bool PropIter::operator!=(const Identifier& id) const;
  * Equality overload for testing if a property is equals to an identifier.
  */
 
@@ -409,7 +409,7 @@ const PropList PropList::EMPTY;
 
 
 /**
- * @fn PropFilter::PropFilter(PropList& list, Identifier *_id);
+ * @fn PropFilter::PropFilter(PropList& list, const Identifier *_id);
  * Build an iterator on properties matching the given name.
  * @param list	Property list to traverse.
  * @param _id	Looked identifier.
@@ -417,7 +417,7 @@ const PropList PropList::EMPTY;
 
 
 /**
- * @fn PropFilter::PropFilter(PropList& list, Identifier& _id);
+ * @fn PropFilter::PropFilter(PropList& list, const Identifier& _id);
  * Build an iterator on properties matching the given name.
  * @param list	Property list to traverse.
  * @param _id	Looked identifier.

@@ -63,7 +63,7 @@ protected:
 	void setNotTaken(BasicBlock *bb);
 
 public:
-	static id_t ID;
+	static Identifier ID;
 	static Identifier& ID_Index;
 
 	// Mark class
@@ -74,7 +74,7 @@ public:
 		BasicBlock *_bb;
 		inline ~Mark(void) { remove(); _bb->_head = 0; };
 	public:
-		inline Mark(BasicBlock *bb): PseudoInst(ID), _bb(bb) { };
+		inline Mark(BasicBlock *bb): PseudoInst(&ID), _bb(bb) { };
 		inline BasicBlock *bb(void) const  { return _bb; };
 	};	
 
@@ -153,7 +153,7 @@ inline BasicBlock::InstIterator::InstIterator(BasicBlock *bb)
 inline bool BasicBlock::InstIterator::ended(void) const {
 	PseudoInst *pseudo;
 	return inst->atEnd()
-		|| ((pseudo = inst->toPseudo()) && pseudo->id() == ID);
+		|| ((pseudo = inst->toPseudo()) && pseudo->id() == &ID);
 }
 
 inline Inst *CodeBasicBlock::InstIterator::item(void) const {

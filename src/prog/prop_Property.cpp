@@ -26,7 +26,7 @@ namespace otawa {
  * @param name	Name of the identifier.
  * @return				Allocated identifier code.
  */
-id_t Property::getID(CString name) {
+const Identifier *Property::getID(CString name) {
 	return Identifier::getID(name);
 }
 
@@ -37,7 +37,7 @@ id_t Property::getID(CString name) {
  */
  
 /**
- * @fn Property::Property(Identifier *_id)
+ * @fn Property::Property(const Identifier *_id)
  * Build a new property with the given identifier.
  * @param _id	Identifier of the property.
  */
@@ -51,14 +51,14 @@ id_t Property::getID(CString name) {
 
 
 /**
- * @fn Property::Property(Identifier& _id);
+ * @fn Property::Property(const Identifier& _id);
  * build a property from a static identifier.
  * @param _id	Property identifier.
  */
 
 
 /**
- * @fn Identifier *Property::getID(void) const
+ * @fn const Identifier *Property::getID(void) const
  * Get the identifier code of the property.
  * @return	Identifier code.
  */
@@ -86,7 +86,7 @@ id_t Property::getID(CString name) {
 
 
 /**
- * @fn GenericProperty::GenericProperty(Identifier *id, T _value)
+ * @fn GenericProperty::GenericProperty(const Identifier *id, T _value)
  * Build a new generic property with the given value.
  * @param id		Identifier code of the property.
  * @param _value	Value of the property.
@@ -103,7 +103,7 @@ id_t Property::getID(CString name) {
 
 
 /**
- * @fn GenericProperty::GenericProperty(Identifier& id, T _value);
+ * @fn GenericProperty::GenericProperty(const Identifier& id, T _value);
  * Build a generic property with a static identifier and a value.
  * @param id		Property identifier.
  * @param _value	Property value.
@@ -118,7 +118,7 @@ id_t Property::getID(CString name) {
 
 
 /**
- * @fn GenericProperty<T> *GenericProperty::make(Identifier *id, const T value);
+ * @fn GenericProperty<T> *GenericProperty::make(const Identifier *id, const T value);
  * Build a new generic property with the given data. Defining the constructor as is, allows
  * replacing the default building behaviour by specialized ones.
  * @param id		Identifier of the property.
@@ -136,7 +136,7 @@ id_t Property::getID(CString name) {
 
 
 /**
- * @fn LockedProperty<T>::LockedProperty(Identifier *id, T _value);
+ * @fn LockedProperty<T>::LockedProperty(const Identifier *id, T _value);
  * Build a new locked property.
  * @param id		Property identifier.
  * @param _value	Lock pointer value.
@@ -144,7 +144,7 @@ id_t Property::getID(CString name) {
 
 
 /**
- * @fn LockedProperty<T>::LockedProperty(Identifier& id, T _value);
+ * @fn LockedProperty<T>::LockedProperty(const Identifier& id, T _value);
  * Build a new locked property with a static identifier.
  * @param id		Property identifier.
  * @param _value	Lock pointer value.

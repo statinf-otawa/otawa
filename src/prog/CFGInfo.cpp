@@ -77,7 +77,7 @@ void CFGInfo::clear(void) {
 						for(Inst *inst = code->first(); !inst->atEnd();) {
 							PseudoInst *pseudo = inst->toPseudo();
 							inst = inst->next();
-							if(pseudo && pseudo->id() == BasicBlock::ID)
+							if(pseudo && pseudo->id() == &BasicBlock::ID)
 								delete ((BasicBlock::Mark *)pseudo)->bb();
 						}
 				}
@@ -93,7 +93,7 @@ void CFGInfo::clear(void) {
 BasicBlock *CFGInfo::findBB(Inst *inst) {
 	PseudoInst *pseudo;
 	while(!inst->atBegin()) {
-		if((pseudo = inst->toPseudo()) && pseudo->id() == CodeBasicBlock::ID)
+		if((pseudo = inst->toPseudo()) && pseudo->id() == &CodeBasicBlock::ID)
 			return ((CodeBasicBlock::Mark *)pseudo)->bb();
 		inst = inst->previous();
 	}

@@ -23,7 +23,7 @@ class FunAST: public Lock {
 	AST *_ast;
 	~FunAST(void);
 public:
-	static const id_t ID;
+	static GenericIdentifier<FunAST *> ID;
 	FunAST(FrameWork *fw, Inst *entry, String name = "");
 	FunAST(ASTInfo *info, Inst *entry, String name = "");
 	inline Inst *entry(void) const { return ent; };

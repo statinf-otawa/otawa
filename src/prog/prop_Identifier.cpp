@@ -60,7 +60,7 @@ Identifier::Identifier(CString name): nam(name) {
  * @param name	Identifier name.
  * @return		Matching identifier.
  */
-Identifier *Identifier::getID(CString name) {
+const Identifier *Identifier::getID(CString name) {
 	String nam(name);
 	
 	// Test for existence
@@ -118,6 +118,18 @@ void Identifier::print(elm::io::Output& output, const Property& prop) {
 const Type& Identifier::type(void) const {
 	return Type::no_type;
 }
+
+
+/**
+ * Read the value of an identifier from the given variable arguments and
+ * create the matching property in the given property list.
+ * @param props	Property list to create property in.
+ * @param args	Variable arguments to read identifier value from.
+ * @warning		It is an error to call this method on a non-typed identifier.
+ */
+/*void Identifier::scan(PropList& props, VarArg& args) const {
+	assert(0);
+}*/
 
 
 // Specialisation for types

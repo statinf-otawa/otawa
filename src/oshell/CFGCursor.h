@@ -20,7 +20,7 @@ class CFGCursor: public Cursor {
 	bool built;
 	genstruct::SortedBinTree< BasicBlock *> bbs;
 	void build(void);
-	static id_t ID_Number;
+	static GenericIdentifier<int> ID_Number;
 
 	// Visitor for numbering basic blocks
 	class BasicBlockVisitor

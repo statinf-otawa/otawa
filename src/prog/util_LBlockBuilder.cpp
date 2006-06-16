@@ -54,7 +54,7 @@ void LBlockBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) 
 
 				// Do not process pseudo or stop on BB start pseudo
 				if(pseudo) {
-					if(pseudo->id() == bb->ID)
+					if(pseudo->id() == &bb->ID)
 						break;
 				}
 				

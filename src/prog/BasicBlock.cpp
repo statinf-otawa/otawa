@@ -37,7 +37,7 @@ BasicBlock& BasicBlock::null_bb = null_bb_inst;
 /**
  * Identifier of the basic block pseudo-instruction.
  */
-id_t BasicBlock::ID = Property::getID("otawa.bb");
+Identifier BasicBlock::ID("otawa.bb");
 
 
 /**
@@ -158,7 +158,7 @@ size_t BasicBlock::size(void) const {
 	
 	// Find the next BB marker
 	for(inst = _head->next(); !inst->atEnd(); inst = inst->next())
-		if((pseudo = inst->toPseudo()) && pseudo->id() == ID)
+		if((pseudo = inst->toPseudo()) && pseudo->id() == &ID)
 			return inst->address() - address();
 
 	// Else this is the last block
@@ -188,7 +188,7 @@ int BasicBlock::countInstructions(void) const {
 		pseudo = inst->toPseudo();
 		if(!pseudo)
 			cnt++;
-		else if(pseudo->id() == ID)
+		else if(pseudo->id() == &ID)
 			break;
 	}
 	return cnt;
@@ -266,7 +266,7 @@ BasicBlock *BasicBlock::findBBAt(FrameWork *fw, address_t addr) {
 	PseudoInst *pseudo;
 	while(!inst->atBegin()
 	&& (!(pseudo = inst->toPseudo())
-		|| pseudo->id() != CodeBasicBlock::ID))
+		|| pseudo->id() != &CodeBasicBlock::ID))
 		inst = inst->previous();
 	if(inst->atBegin())
 		return 0;

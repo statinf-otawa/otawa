@@ -48,7 +48,7 @@ int LBlock::countInsts(void) {
 				if(instr->address() >= addr && instr->address() < addr + _size)
 					cnt++;
 			}
-			else if(pseudo->id() == _bb->ID)
+			else if(pseudo->id() == &_bb->ID)
 				break;	
 		}	
 	}
