@@ -13,7 +13,8 @@ SUBDIRS= \
 	ets \
 	hard \
 	hardware \
-	sim
+	sim \
+	pcg
 
 # Headers
 includeotawadir=$(includedir)/otawa
@@ -31,4 +32,6 @@ includeotawa_HEADERS = \
 	platform.h \
 	program.h \
 	properties.h \
-	type.h
+	type.h \
+	pcg.h
+
