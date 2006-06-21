@@ -1,0 +1,231 @@
+#include <assert.h>
+#include <elm/Iterator.h>
+#include <otawa/cfg/Edge.h>
+#include <otawa/pcg/PCGBuilder.h>
+
+using namespace elm;
+using namespace otawa; 
+
+PCG* PCGBuilder::buildPCG(CFG *cfg)
+{
+	assert(cfg);
+	PCG *pcg=new PCG(cfg);
+	processCFG(cfg,pcg,NULL);
+	
+	//cout<<"nb outs de main: "<<(((pcg->pcgbs()).get(0))->getSons()).length()<<"\n";
+	//cout<<"nb pcgb: "<<pcg->pcgbs().length()<<"\n";	
+	cout<<"\nPCG\n";
+	
+	for(PCG::PCGIterator pcgb(pcg);pcgb;pcgb++)
+	{
+		cout<<"\n"<<pcgb->getName()<<" "<<pcgb->getAddress()<<"\n";
+		for(PCGBlock::PCGBlockOutIterator _pcgb(pcgb);_pcgb;_pcgb++)
+			cout<<"\t"<<_pcgb->getName()<<" "<<_pcgb->getAddress()<<"\n";
+	}
+	cout<<"\n";
+	cout<<"liste des fonctions appelantes de chaque fonction\n";
+	for(PCG::PCGIterator pcgb(pcg);pcgb;pcgb++)
+	{
+		cout<<"\n"<<pcgb->getName()<<" "<<pcgb->getAddress()<<"\n";
+		for(PCGBlock::PCGBlockInIterator _pcgb(pcgb);_pcgb;_pcgb++)
+			cout<<"\t"<<_pcgb->getName()<<" "<<_pcgb->getAddress()<<"\n";
+	}
+	return pcg;
+}
+void PCGBuilder::processCFG(CFG* cfg,PCG* pcg,CFG * src)
+{	//il  faut parcourir le cfg de base ainsi que le cfg des fonctions appelees. On conserve la trace du cfg appelant
+	//pour la construction du PCG
+	
+	for(Iterator<BasicBlock*> bb(cfg->bbs()); bb; bb++)
+	{	
+		if(bb->isEntry())
+			addPCGBlock(bb,cfg,pcg,src);
+		if(bb->isCall())
+		{	
+			for(otawa::BasicBlock::OutIterator edge(bb);edge;edge++)
+			{	
+				if(edge->kind()==Edge::CALL)
+					processCFG(edge->calledCFG(),pcg,cfg); 
+			}
+		}
+	}
+	
+}
+void PCGBuilder::addPCGBlock(BasicBlock *bb,CFG* cfg,PCG* pcg,CFG *src)
+{	
+	PCGBlock* pcg_bb;
+	if(mapBB.get(bb,0)==0)
+	{
+		pcg_bb=new PCGBlock(bb,cfg);
+		mapCFG.put(cfg,pcg_bb);
+		mapBB.put(bb,pcg_bb);
+		pcg->addPCGBlock(pcg_bb);
+	}
+	else
+		pcg_bb=mapBB.get(bb,0);
+	//avant d'établir de nouveaux liens entre les PCGBlocks il faut voir si ces leins existent déjà
+	if((src==NULL)&&(cfg->label()!="main"))
+	{	
+		if(!pcg_bb->getFathers().contains(mapCFG.get(cfg,0)))
+			pcg_bb->addInLink(mapCFG.get(cfg,0));
+		if(!mapCFG.get(cfg,0)->getSons().contains(pcg_bb))
+			mapCFG.get(cfg,0)->addOutLink(pcg_bb);
+	}
+	if(src!=NULL)
+	{	
+		if(!mapCFG.get(src,0)->getSons().contains(pcg_bb))
+			mapCFG.get(src,0)->addOutLink(pcg_bb);
+		if(!pcg_bb->getFathers().contains(mapCFG.get(src,0)))
+			pcg_bb->addInLink(mapCFG.get(src,0));
+	}
+}
+PCGBuilder::PCGBuilder(const PropList& props):Processor("PCGBuilder", Version(1, 0, 0), props){}
+
+void PCGBuilder::configure(const PropList& props) 
+{
+	Processor::configure(props);
+}
+
+/*void PCGBuilder::processCFG(CFG* cfg) old
+{	//cette version n'est pas bonne car le parcous du cfg n'est pas bien implementé on saute des bb utils
+	assert(cfg);
+	int count=0;
+	int countbbisEntryCFG=0;
+	PCG *pcg=new PCG(cfg);
+	//affichage des appels issu de chaque bloc call
+	//cout<<"\n\nles calls deduits du parcours du cfg sans la construction du PCG\n";
+	//afficherCFG(cfg);
+	for(Iterator<BasicBlock*> bb(cfg->bbs()); bb; bb++)
+	{	
+		//processCFGBlocks1(bb,cfg,pcg,NULL);
+		if(bb->isEntry()) 
+			processCFGBlocks(bb,cfg,pcg,NULL);
+		if(bb->isCall())
+		{
+			for(otawa::BasicBlock::OutIterator edge(bb);edge;edge++)
+			{	
+				if(edge->kind()==Edge::CALL) 
+				//on va tenir compte de ce NULL dans processCFGBlocks
+				//car edge->target() est traité précedemment s'il est appelé par main ou 
+				//par une autre fonction donc son père est connu sinon alors son père est main
+				//car il doit etre appelé de quelque part
+					processCFGBlocks(edge->target(),edge->calledCFG(),pcg,NULL);
+			}
+		}
+	}	
+	
+	cout<<"\nPCG\n";	
+	for(PCG::PCGIterator pcgb(pcg);pcgb;pcgb++)
+	{
+		cout<<"\n"<<pcgb->getName()<<" "<<pcgb->getAddress()<<"\n";
+	
+		for(PCGBlock::PCGBlockOutIterator _pcgb(pcgb);_pcgb;_pcgb++)
+			cout<<"\t"<<_pcgb->getName()<<" "<<_pcgb->getAddress()<<"\n";
+		
+	}
+	cout<<"\n";
+}
+void PCGBuilder::afficherCFG(CFG*cfg)
+{
+	for(Iterator<BasicBlock*> bb(cfg->bbs()); bb; bb++)
+	{	if(bb->isEntry()) cout<<cfg->label()<<"\n";
+		if(bb->isCall())
+		{
+			for(otawa::BasicBlock::OutIterator edge(bb);edge;edge++)
+			{	
+				if(edge->kind()==Edge::CALL) 
+				{
+					//cout<<"\t"<<edge->calledCFG()->label();
+						cout<<"\t";
+					afficherCFG(edge->calledCFG());
+				}
+			}
+		}
+	}
+}
+void PCGBuilder::processCFGBlocks(BasicBlock *bb, CFG* cfg, PCG* pcg,PCGBlock *src)with the old processCFG
+{	//cette version n'est pas bonne car on ne tient pas compte de tous les calls
+	PCGBlock *pcg_bb;
+	if(!mapCFG.get(cfg,0))
+	{	
+		pcg_bb=new PCGBlock(bb,cfg);
+		pcg->addPCGBlock(pcg_bb);
+		mapCFG.put(cfg,pcg_bb);
+		mapBB.put(bb,pcg_bb);
+		
+	}
+	else
+		pcg_bb=mapBB.get(bb,NULL);
+
+	if(src==NULL)
+	{	
+		if((cfg->label()!="main") && (pcg_bb->getFathers().length()==0))
+		{//si c'est le pcg_bb du main donc il n'a pas de père
+		//si ce n'est pas le pcg du main et il n'aps de pères c.a.d il n'a pas été traité par la récursivité 
+		//donc son père est main, ceci est du au fait qu'il est appelé par un 
+		//bb (call) qui n'est pas un fils direct de main, et le fils de main accédant à ce bb n'est pas un call
+			pcg_bb->addInLink(mapCFG.get(pcg->getCFG(),0));
+			mapCFG.get(pcg->getCFG(),0)->addOutLink(pcg_bb);
+		}
+	}
+	else
+	{
+		src->addOutLink(pcg_bb);
+		pcg_bb->addInLink(src);
+	}
+
+	for(otawa::BasicBlock::OutIterator edge(bb);edge;edge++)
+	{	cout<<"\t";
+		if(edge->kind()==Edge::CALL)		
+			processCFGBlocks(edge->target(),edge->calledCFG(),pcg,pcg_bb);
+	}	
+}*/
+
+
+/*void PCGBuilder::processCFGBlocks2(BasicBlock *bb, CFG* cfg, PCG* pcg,PCGBlock *src)
+{
+	PCGBlock *pcg_bb;
+	if(!bb->isCall() && !bb->isEntry())
+	{
+		for(otawa::BasicBlock::OutIterator edge(bb);edge;edge++)
+		{	
+			if(edge->kind()==Edge::cout<<"nb pcgb: "<<pcg->pcgbs().length()<<"\n";	CALL)		
+				processCFGBlocks(edge->target(),edge->calledCFG(),pcg,NULL);
+		}
+	}
+else{
+	if(!mapCFG.get(cfg,0))
+	{	
+		pcg_bb=new PCGBlock(bb,cfg);
+		pcg->addPCGBlock(pcg_bb);
+		mapCFG.put(cfg,pcg_bb);
+		mapBB.put(bb,pcg_bb);
+	}
+	else
+		pcg_bb=mapBB.get(bb,NULL);
+
+	if(src==NULL)
+	{	
+		if(pcg_bb->getName()!="main" && (pcg_bb->getFathers().length()==0))
+		{//si c'est le pcg_bb du main donc il n'a pas de père
+		//si ce n'est pas le pcg du main et il n'aps de pères c.a.d il n'a pas été traité par la récursivité 
+		//donc son père est main, ceci est du au fait qu'il est appelé par un 
+		//bb (call) qui n'est pas un fils direct de main, et le fils de main accédant à ce bb n'est pas un call
+			pcg_bb->addInLink(mapCFG.get(pcg->getCFG(),0));
+			mapCFG.get(pcg->getCFG(),0)->addOutLink(pcg_bb);
+		}
+	}
+	else
+	{
+		src->addOutLink(pcg_bb);
+		pcg_bb->addInLink(src);
+	}
+
+	for(otawa::BasicBlock::OutIterator edge(bb);edge;edge++)
+	{	
+		if(edge->kind()==Edge::CALL)		
+			processCFGBlocks(edge->target(),edge->calledCFG(),pcg,pcg_bb);
+	}
+}//end else
+	
+}*/	

@@ -3,7 +3,8 @@ SUBDIRS = \
 	ct \
 	ets \
 	graph \
-	hard
+	hard \
+	pcg
 
 if WITH_ILP
 SUBDIRS += \
