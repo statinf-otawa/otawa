@@ -30,6 +30,7 @@ libotawa_so_SOURCES = \
 	CFGInfo.cpp \
 	CFG.cpp \
 	Edge.cpp \
+	PCGBlock.cpp\
 	PCGBuilder.cpp\
 	prop_Identifier.cpp \
 	prop_GenericIdentifier.cpp \
@@ -134,6 +135,7 @@ libotawa_a_SOURCES = \
 	CFGInfo.cpp \
 	CFG.cpp \
 	Edge.cpp \
+	PCGBlock.cpp\
 	PCGBuilder.cpp\
 	prop_Identifier.cpp \
 	prop_GenericIdentifier.cpp \
