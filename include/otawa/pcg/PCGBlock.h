@@ -13,15 +13,15 @@ class PCGBlock
 	elm::genstruct::Vector<PCGBlock *> ins, outs;
 	CFG* cfg;
 public:
-	PCGBlock(BasicBlock *bb,CFG* cfg):bb(bb),cfg(cfg){};
-	~PCGBlock(void){};
+	inline PCGBlock(BasicBlock *bb,CFG* cfg):bb(bb),cfg(cfg){};
+	virtual inline ~PCGBlock(void){};
 	inline void addInLink(PCGBlock *pcgb) { ins.add(pcgb); };
-	void addOutLink(PCGBlock *pcgb) { outs.add(pcgb); };
-	BasicBlock* getBB(void){return bb;};
-	address_t getAddress(){return cfg->address();};
-	String getName(){return cfg->label();};
-	elm::genstruct::Vector<PCGBlock*>& getFathers(){return ins;};
-	elm::genstruct::Vector<PCGBlock*>& getSons(){return outs;};
+	inline void addOutLink(PCGBlock *pcgb) { outs.add(pcgb); };
+	inline BasicBlock* getBB(void){return bb;};
+	inline address_t getAddress(){return cfg->address();};
+	inline String getName(){return cfg->label();};
+	inline elm::genstruct::Vector<PCGBlock*>& getFathers(){return ins;};
+	inline elm::genstruct::Vector<PCGBlock*>& getSons(){return outs;};
 	
 	class PCGBlockInIterator: public elm::PreIterator<PCGBlockInIterator, PCGBlock *> {
 		elm::genstruct::Vector<PCGBlock *>& ins;
