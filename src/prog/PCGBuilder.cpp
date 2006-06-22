@@ -1,3 +1,10 @@
+/*
+ *	$Id$
+ *	Copyright (c) 2003, IRIT UPS.
+ *
+ *	src/prog/PCGBuilder.cpp -- implementation of PCGBuilder class.
+ */
+
 #include <assert.h>
 #include <elm/Iterator.h>
 #include <otawa/cfg/Edge.h>
@@ -5,7 +12,10 @@
 
 using namespace elm;
 using namespace otawa; 
-
+/*
+ * Get the main CFG, build the corresponding PCG and print it to sceen.
+ * @class PCGBlock
+ */
 PCG* PCGBuilder::buildPCG(CFG *cfg)
 {
 	assert(cfg);
@@ -32,6 +42,15 @@ PCG* PCGBuilder::buildPCG(CFG *cfg)
 	}
 	return pcg;
 }
+
+/*
+ * Gets the CFG of the called Function, the PCG to complete and the CFG of the calling function 
+ * It builds a PCGBlock for the current function and links it to the PCGBlock of the calling function,
+ * then it scans the Called Function CFG. If it finds a new function in this CFG, it will create a corresponding 
+ * PCGBlock in the  PCG and build a link between this block and the block of the current function and then 
+ * we have the recursive call of this method for every function found in this scan in order to cover every function call.
+ * @class PCGBlock
+ */
 void PCGBuilder::processCFG(CFG* cfg,PCG* pcg,CFG * src)
 {	//il  faut parcourir le cfg de base ainsi que le cfg des fonctions appelees. On conserve la trace du cfg appelant
 	//pour la construction du PCG
@@ -51,6 +70,9 @@ void PCGBuilder::processCFG(CFG* cfg,PCG* pcg,CFG * src)
 	}
 	
 }
+/*
+ * adds the PCGBlock to the PCG
+ */
 void PCGBuilder::addPCGBlock(BasicBlock *bb,CFG* cfg,PCG* pcg,CFG *src)
 {	
 	PCGBlock* pcg_bb;
@@ -79,8 +101,15 @@ void PCGBuilder::addPCGBlock(BasicBlock *bb,CFG* cfg,PCG* pcg,CFG *src)
 			pcg_bb->addInLink(mapCFG.get(src,0));
 	}
 }
+/*
+ * PCGBuilder constructer
+ * @param props	Configuration properties
+ */
 PCGBuilder::PCGBuilder(const PropList& props):Processor("PCGBuilder", Version(1, 0, 0), props){}
 
+/*
+ *
+ */
 void PCGBuilder::configure(const PropList& props) 
 {
 	Processor::configure(props);
