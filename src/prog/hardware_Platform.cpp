@@ -26,7 +26,7 @@ const elm::genstruct::Table<const hard::RegBank *> Platform::null_banks(0, 0);
 /**
  */
 void Platform::configure(const PropList& props) {
-	for(PropList::PropIter prop(props); prop; prop++) {
+	for(PropList::Iter prop(props); prop; prop++) {
 		if(prop == ID_Cache)
 			_cache = prop.get<const CacheConfiguration *>();
 		else if(prop == ID_PipelineDepth)
