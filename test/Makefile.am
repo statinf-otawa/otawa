@@ -4,7 +4,8 @@ SUBDIRS = \
 	ets \
 	graph \
 	hard \
-	pcg
+	pcg \
+	props
 
 if WITH_ILP
 SUBDIRS += \
