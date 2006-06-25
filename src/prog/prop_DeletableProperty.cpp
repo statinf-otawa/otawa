@@ -10,9 +10,10 @@
 namespace otawa {
 
 /**
- * @class DeletableProperty
+ * @class DeletableProperty otawa/properties.h
  * A deletable property is a genericproperty whose value will be deleted
  * when the property is destroyed.
+ * @param T	Type of the date stored in the property.
  */
  
 
@@ -29,7 +30,7 @@ namespace otawa {
 
 
 /**
- * @fn DeletableProperty::DeletableProperty(Identifier *id, T _value);
+ * @fn DeletableProperty::DeletableProperty(const Identifier *id, T _value);
  * Build a new deletable property.
  * @param id		Annotation identifier.
  * @param _value	Annotation value.
@@ -37,7 +38,7 @@ namespace otawa {
  
 
 /**
- * @fn DeletableProperty::DeletableProperty(Identifier& id, T _value);
+ * @fn DeletableProperty::DeletableProperty(const Identifier& id, T _value);
  * Build a new deletable property.
  * @param id		Annotation identifier.
  * @param _value	Annotation value.
