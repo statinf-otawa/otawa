@@ -20,7 +20,7 @@ const Identifier END("otawa.end");
 
 
 /**
- * @class PropList
+ * @class PropList otawa/properties.h
  * This a list of properties. This may be inherited for binding properties to
  * other classes or used as-is for passing heterogeneous properties to a function
  * call.
@@ -354,7 +354,7 @@ const PropList PropList::EMPTY;
 
 
 /**
- * @fn bool PropList::hasProp(const Identifier& id);
+ * @fn bool PropList::hasProp(const Identifier& id) const;
  * Test if the property list contains a property matching the given identifier.
  * @param id	Property identifier to look for.
  * @return		True if the list contains the matching property, false else.
@@ -363,103 +363,109 @@ const PropList PropList::EMPTY;
 
 
 /**
- * @class PropIter
+ * @class PropList::Iter otawa/properties.h
  * This iterator is used for reading all properties of a property list.
  */
 
 
 /**
- * @fn PropIter::PropIter(PropList& list);
+ * @fn PropList::Iter::Iter(const PropList& list);
  * Build a property iterator.
  * @param list	Property list to traverse.
  */
 
 
 /**
- * @fn void PropIter::next(void);
+ * @fn PropList::Iter::Iter(const PropList *list);
+ * Build a property iterator.
+ * @param list	Property list to traverse.
+ */
+
+
+/**
+ * @fn void PropList::Iter::next(void);
  * Go to the next property.
  */
 
 
 /**
- * @fn bool PropIter::ended(void) const;
+ * @fn bool PropList::Iter::ended(void) const;
  * Test if there is still a property to examine.
  * @return	True if traversal is ended.
  */
 
 
 /**
- * @fn Property *PropIter::get(void) const;
+ * @fn Property *PropList::Iter::item(void) const;
  * Get the current property.
  */
 
 
+/**
+ * @fn Property *PropList::Iter::get(void) const;
+ * Get the current property.
+ */
+
 
 /**
- * @fn PropIter::operator bool(void) const;
+ * @fn PropList::Iter::operator bool(void) const;
  * Test if the traversal may continue.
  * @return	True if there is still porperties to examine.
  */
 
 
 /**
- * @fn PropIter::operator Property *(void) const;
+ * @fn PropList::Iter::operator Property *(void) const;
  * Automatic conversion of iterator to property.
  * @return	Current property.
  */
 
 
 /**
- * @fn PropIter& PropIter::operator++(void);
+ * @fn PropList::Iter& PropList::Iter::operator++(void);
  * Shortcut to next() method call.
  */
 
 
 /**
- * @fn Property *PropIter::operator->(void) const;
+ * @fn Property *PropList::Iter::operator->(void) const;
  * Shortcut for accessing a member of the current property.
  */
 
 
 /**
- * @fn bool PropIter::operator==(const Identifier *id) const;
+ * @fn bool PropList::Iter::operator==(const Identifier *id) const;
  * Equality overload for testing if a property is equals to an identifier.
  */
  
 
 /**
- * @fn bool PropIter::operator!=(const Identifier *id) const;
+ * @fn bool PropList::Iter::operator!=(const Identifier *id) const;
  * Equality overload for testing if a property is equals to an identifier.
  */
 
 
 /**
- * @fn bool PropIter::operator==(const Identifier& id) const;
+ * @fn bool PropList::Iter::operator==(const Identifier& id) const;
  *  Equality overload for testing if a property is equals to an identifier.
  */
 
 
 /**
- * @fn bool PropIter::operator!=(const Identifier& id) const;
+ * @fn bool PropList::Iter::operator!=(const Identifier& id) const;
  * Equality overload for testing if a property is equals to an identifier.
  */
 
 
 /**
- * @class PropFilter
+ * @class PropList::Getter
  * This class is used for accessing all properties of property list with a
  * given identifier.
  */
 
 
 /**
- * @fn void PropFilter::look(void);
- * Look for the next property matching the identifier.
- */
-
-
-/**
- * @fn PropFilter::PropFilter(PropList& list, const Identifier *_id);
+ * @fn PropList::Getter::Getter(const PropList& list, const Identifier& _id);
  * Build an iterator on properties matching the given name.
  * @param list	Property list to traverse.
  * @param _id	Looked identifier.
@@ -467,7 +473,7 @@ const PropList PropList::EMPTY;
 
 
 /**
- * @fn PropFilter::PropFilter(PropList& list, const Identifier& _id);
+ * @fn PropList::Getter::Getter(const PropList *list, const Identifier& _id);
  * Build an iterator on properties matching the given name.
  * @param list	Property list to traverse.
  * @param _id	Looked identifier.
@@ -475,47 +481,46 @@ const PropList PropList::EMPTY;
 
 
 /**
- * @fn void PropFilter::next(void);
+ * @fn void PropList::Getter::next(void);
  * Go to the next property.
  */
 
 
 /**
- * @fn bool PropFilter::ended(void) const;
+ * @fn bool PropList::Getter::ended(void) const;
  * Test if there is still a property to examine.
  * @return	True if traversal is ended.
  */
 
 
 /**
- * @fn Property *PropFilter::get(void) const;
+ * @fn Property *PropList::Getter::item(void) const;
  * Get the current property.
  */
 
 
-
 /**
- * @fn PropFilter::operator bool(void) const;
+ * @fn PropList::Getter::operator bool(void) const;
  * Test if the traversal may continue.
  * @return	True if there is still porperties to examine.
  */
 
 
 /**
- * @fn PropFilter::operator Property *(void) const;
+ * @fn PropList::Getter::operator Property *(void) const;
  * Automatic conversion of iterator to property.
  * @return	Current property.
  */
 
 
 /**
- * @fn PropFilter& PropFilter::operator++(void);
+ * @fn Getter& PropList::PropFilter::operator++(void);
  * Shortcut to next() method call.
  */
 
 
 /**
- * @fn Property *PropFilter::operator->(void) const;
+ * @fn Property *PropList::Getter::operator->(void) const;
  * Shortcut for accessing a member of the current property.
  */
 
