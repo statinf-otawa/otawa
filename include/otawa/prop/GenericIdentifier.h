@@ -21,31 +21,50 @@ template <class T>
 class GenericIdentifier: public Identifier {
 	T def;
 public:
+
+	// Value class
+	class Value {
+		PropList& prop;
+		const GenericIdentifier<T>& id;
+	public:
+		inline Value(PropList& prop, const GenericIdentifier<T>& id);
+		inline operator T(void) const;
+		inline Value& operator=(const T& value);
+		inline Value& operator+=(const T& value);
+	};
+
+	// Constructors
 	inline GenericIdentifier(elm::CString name);
 	inline GenericIdentifier(elm::CString name, const T& default_value);
 	
-	inline T& value(PropList& list);
-	inline void add(PropList& list, const T& value);
-	inline void set(PropList& list, const T& value);
-	inline elm::Option<T> get(PropList& list);
-	inline T get(PropList& list, const T& def);
-	inline T use(PropList& list);
+	// PropList& Accessors
+	inline void add(PropList& list, const T& value) const;
+	inline void set(PropList& list, const T& value) const;
+	//inline elm::Option<T> get(const PropList& list) const;
+	inline const T& get(const PropList& list, const T& def) const;
+	inline const T& use(const PropList& list) const;
+	inline const T& value(const PropList& list) const;
+	inline Value value(PropList& list) const;
 	
-	inline T& value(PropList *list);
-	inline void add(PropList *list, const T& value);
-	inline void set(PropList *list, const T& value);
-	inline elm::Option<T> get(PropList *list);
-	inline T get(PropList *list, const T& def);
-	inline T use(PropList *list);
-	
+	// PropList* Accessors
+	inline void add(PropList *list, const T& value) const;
+	inline void set(PropList *list, const T& value) const;
+	//inline elm::Option<T> get(const PropList *list) const;
+	inline const T& get(const PropList *list, const T& def) const;
+	inline const T& use(const PropList *list) const;
+	inline const T& value(const PropList *list) const;
+	inline Value value(PropList *list) const;
+
 	// Operators
-	inline T& operator()(PropList& list);
-	inline T& operator()(PropList *list);
+	inline const T& operator()(const PropList& props) const;
+	inline const T& operator()(const PropList *props) const;
+	inline Value operator()(PropList& props) const;
+	inline Value operator()(PropList *props) const;
 	
 	// Identifier overload
 	virtual void print(elm::io::Output& output, const Property& prop);
 	virtual const Type& type(void) const;
-	virtual void scan(PropList& props, VarArg& args) const;
+	virtual void scan(PropList& props, VarArg& args) const;	
 };
 
 // Inlines
@@ -60,82 +79,86 @@ const T& default_value): Identifier(name), def(default_value) {
 }
 
 template <class T>
-inline T& GenericIdentifier<T>::value(PropList& list) {
-	Property *prop = list.getProp(this);
-	if(!prop) {
-		prop = GenericProperty<T>::make(this, def);
-		list.addProp(prop);
-	}
-	return ((GenericProperty<T> *)prop)->value();
+inline void GenericIdentifier<T>::add(PropList& list, const T& value) const {
+	return list.add(*this, value);
 }
 
 template <class T>
-inline void GenericIdentifier<T>::add(PropList& list, const T& value) {
-	list.add<T>(*this, value);
+inline void GenericIdentifier<T>::set(PropList& list, const T& value) const {
+	list.set(*this, value);
 }
 
-template <class T>
-inline void GenericIdentifier<T>::set(PropList& list, const T& value) {
-	list.set<T>(*this, value);
-}
-
-template <class T>
-inline elm::Option<T> GenericIdentifier<T>::get(PropList& list) {
+/*template <class T>
+inline elm::Option<T> GenericIdentifier<T>::get(const PropList& list) const {
 	return list.get<T>(*this);
+}*/
+
+template <class T>
+inline const T& GenericIdentifier<T>::get(const PropList& list, const T& def) const {
+	return list.get(*this, def);
 }
 
 template <class T>
-inline T GenericIdentifier<T>::get(PropList& list, const T& def) {
-	return list.get<T>(*this, def);
-}
-
-template <class T>
-inline T GenericIdentifier<T>::use(PropList& list) {
+inline const T& GenericIdentifier<T>::use(const PropList& list) const {
 	return list.use<T>(*this);
 }
 
 template <class T>
-inline T& GenericIdentifier<T>::value(PropList *list) {
-	assert(list);
-	return value(*list);
+inline const T& GenericIdentifier<T>::value(const PropList& list) const {
+	Property *prop = list.getProp(this);
+	if(!prop)
+		return def;
+	else
+		return ((GenericProperty<T> *)prop)->value();
 }
 
 template <class T>
-inline void GenericIdentifier<T>::add(PropList *list, const T& value) {
-	add(*this, value);
+inline class GenericIdentifier<T>::Value
+GenericIdentifier<T>::value(PropList& list) const {
+	return Value(list, *this);
+}
+	
+
+template <class T>
+inline void GenericIdentifier<T>::add(PropList *list, const T& value) const {
+	return list->add(*this, value);
 }
 
 template <class T>
-inline void GenericIdentifier<T>::set(PropList *list, const T& value) {
-	set(*this, value);
+inline void GenericIdentifier<T>::set(PropList *list, const T& value) const {
+	list->set(*this, value);
+}
+
+/*template <class T>
+inline elm::Option<T> GenericIdentifier<T>::get(const PropList *list) const {
+	return list->get<T>(*this);
+}*/
+
+template <class T>
+inline const T& GenericIdentifier<T>::get(const PropList *list, const T& def) const {
+	return list->get(*this, def);
 }
 
 template <class T>
-inline elm::Option<T> GenericIdentifier<T>::get(PropList *list) {
-	return get(*this);
+inline const T& GenericIdentifier<T>::use(const PropList *list) const {
+	return list->use<T>(*this);
 }
 
 template <class T>
-inline T GenericIdentifier<T>::get(PropList *list, const T& def) {
-	return get(*list, def);
+inline const T& GenericIdentifier<T>::value(const PropList *list) const {
+	Property *prop = list->getProp(*this);
+	if(!prop)
+		return def;
+	else
+		return ((GenericProperty<T> *)prop)->value();
 }
 
 template <class T>
-inline T GenericIdentifier<T>::use(PropList *list) {
-	return use(*this);
+inline class GenericIdentifier<T>::Value
+GenericIdentifier<T>::value(PropList *list) const {
+	return Value(list, *this);
 }
-
-template <class T>
-inline T& GenericIdentifier<T>::operator()(PropList& list) {
-	return value(list);
-}
-
-template <class T>
-inline T& GenericIdentifier<T>::operator()(PropList *list) {
-	assert(list);
-	return value(*list);
-}
-
+	
 template <class T>	
 void GenericIdentifier<T>::print(elm::io::Output& output, const Property& prop) {
 	output << ((const GenericProperty<T> &)prop).value();
@@ -149,6 +172,52 @@ const Type& GenericIdentifier<T>::type(void) const {
 template <class T>
 void GenericIdentifier<T>::scan(PropList& props, VarArg& args) const {
 	props.set(*this, args.next<T>());
+}
+
+template <class T>
+inline const T& GenericIdentifier<T>::operator()(const PropList& props) const {
+	return value(props);
+}
+
+template <class T>
+inline const T& GenericIdentifier<T>::operator()(const PropList *props) const {
+	return value(props);
+}
+
+template <class T>
+inline class GenericIdentifier<T>::Value
+GenericIdentifier<T>::operator()(PropList& props) const {
+	return value(props);
+}
+
+template <class T>
+inline class GenericIdentifier<T>::Value
+GenericIdentifier<T>::operator()(PropList *props) const {
+}
+
+// Value class
+template <class T>
+inline GenericIdentifier<T>::Value::Value(PropList& _prop,
+const GenericIdentifier<T>& _id): prop(_prop), id(_id) {
+}
+
+template <class T>
+inline GenericIdentifier<T>::Value::operator T(void) const {
+	return prop.get<T>(id, id.def);
+}
+
+template <class T>
+inline class GenericIdentifier<T>::Value&
+GenericIdentifier<T>::Value::operator=(const T& value) {
+	prop.set(id, value);
+	return *this;
+}
+
+template <class T>
+inline class GenericIdentifier<T>::Value&
+GenericIdentifier<T>::Value::operator+=(const T& value) {
+	prop.add(id, value);
+	return *this;
 }
 
 } // otawa
