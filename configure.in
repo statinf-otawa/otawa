@@ -375,6 +375,7 @@ AC_OUTPUT([
 	test/graph/Makefile
 	test/categorisation/Makefile
 	test/hard/Makefile
+	test/props/Makefile
 	test/pcg/Makefile
 	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
