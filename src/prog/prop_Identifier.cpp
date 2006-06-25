@@ -33,11 +33,19 @@ DuplicateIdentifierException::DuplicateIdentifierException(String& name)
 
 
 /**
- * @class Identifier
+ * @class Identifier otawa/properties.h
  * Represents a unique identifier used by the annotation system.
- * Identifier pointer may be compared for testing equality.
+ * Identifier pointers may be compared for testing equality.
  */
-Identifier::Identifier(CString name): nam(name) {
+
+
+/**
+ * Build a new identifier. Only one identifier may exists in the OTAWA with
+ * a given name. If there is a name clash, the framework will immediatelly be
+ * stopped.
+ * @param name	Name of the identifier.
+ */
+Identifier::Identifier(elm::CString name): nam(name) {
 	
 	// Need to allocate the ID table ?
 	if(!ids)
@@ -60,7 +68,7 @@ Identifier::Identifier(CString name): nam(name) {
  * @param name	Identifier name.
  * @return		Matching identifier.
  */
-const Identifier *Identifier::getID(CString name) {
+const Identifier *Identifier::getID(elm::CString name) {
 	String nam(name);
 	
 	// Test for existence
