@@ -80,6 +80,9 @@ AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_HEADER_STDBOOL
 AC_TYPE_SIZE_T
+AC_LIBTOOL_DLOPEN
+AC_DISABLE_SHARED
+AC_PROG_LIBTOOL
 
 
 dnl ==== Globals ====
@@ -175,7 +178,7 @@ fi
 AC_MSG_CHECKING([for elm])
 check=yes
 check_header(ELM_CXXFLAGS, elm/string.h, $header_paths, $CFLAGS)
-check_lib(ELM_LIBS, elm, [
+check_libtool(ELM_LIBS, elm, [
 	#include <elm/string.h>
 	int main(void) {
 		elm::String str("Hello, World !\n");
@@ -187,6 +190,7 @@ if test "$check" = yes; then
 else
 	AC_MSG_ERROR([no])
 fi
+ELM_LIBS="$ELM_LIBS -lltdl -dlopen force"
 AC_SUBST(ELM_LIBS)
 AC_SUBST(ELM_CXXFLAGS)
 

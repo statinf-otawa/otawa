@@ -53,3 +53,20 @@ define(check_lib, [
 	fi
 ])
 
+dnl check_libtool($1: config, $2: lib, $3: code, $4: paths, $5: cflags, $6: ldadd)
+define(check_libtool, [
+	if test "$check" != no; then
+		check=no
+		for path in $4; do
+			push(CXXFLAGS, "$5 $CXXFLAGS")
+			push(LIBS, "$path/lib$2.la $6 $LIBS")
+			AC_COMPILE_IFELSE($3, [check=yes])
+			pop(LIBS)
+			pop(CXXFLAGS)
+			if test "$check" = yes; then
+				$1="$$1 $path/lib$2.la"
+				break
+			fi
+		done
+	fi
+])
