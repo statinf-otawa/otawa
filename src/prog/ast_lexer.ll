@@ -9,9 +9,6 @@
 #include <string.h>
 #include <otawa/ast.h>
 
-using namespace elm;
-using namespace otawa;
-
 #include "ast_parser.h"
 
 %}

@@ -30,7 +30,7 @@ void ast_error(otawa::ASTLoader *loader, const char *msg);
 
 %union {
 	char *str;
-	AST *ast;
+	otawa::AST *ast;
 }
 
 %token ERROR
