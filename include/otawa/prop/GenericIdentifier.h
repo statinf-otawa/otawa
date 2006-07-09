@@ -28,6 +28,7 @@ public:
 		const GenericIdentifier<T>& id;
 	public:
 		inline Value(PropList& prop, const GenericIdentifier<T>& id);
+		inline Value(PropList *prop, const GenericIdentifier<T>& id);
 		inline operator T(void) const;
 		inline Value& operator=(const T& value);
 		inline Value& operator+=(const T& value);
@@ -193,12 +194,18 @@ GenericIdentifier<T>::operator()(PropList& props) const {
 template <class T>
 inline class GenericIdentifier<T>::Value
 GenericIdentifier<T>::operator()(PropList *props) const {
+	return value(props);
 }
 
 // Value class
 template <class T>
 inline GenericIdentifier<T>::Value::Value(PropList& _prop,
 const GenericIdentifier<T>& _id): prop(_prop), id(_id) {
+}
+
+template <class T>
+inline GenericIdentifier<T>::Value::Value(PropList *_prop,
+const GenericIdentifier<T>& _id): prop(*_prop), id(_id) {
 }
 
 template <class T>

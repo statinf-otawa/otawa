@@ -63,8 +63,8 @@ GenericIdentifier<bool> IPET::ID_Explicit("ipet.explicit");
  * @preturn		CFG ILP system.
  */
 ilp::System *IPET::getSystem(FrameWork *fw, CFG *cfg) {
-	System *system = cfg->get<System *>(IPET::ID_System, 0);
-	//System *system = IPET::ID_System(cfg);
+	//System *system = cfg->get<System *>(IPET::ID_System, 0);
+	System *system = IPET::ID_System(cfg);
 	if(!system) {
 		system = fw->newILPSystem();
 		cfg->addDeletable<System *>(IPET::ID_System, system);
