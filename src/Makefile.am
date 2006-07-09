@@ -1,6 +1,6 @@
 SUBDIRS= \
-	@PLUGINS@ \
 	prog \
+	@PLUGINS@ \
 	oshell \
 	dumpcfg \
 	mkff \

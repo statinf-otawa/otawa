@@ -1,4 +1,5 @@
 AC_INIT(src/test.cpp)
+AC_CONFIG_AUX_DIR(.config)
 AM_INIT_AUTOMAKE(Otawa, 0.1)
 AC_LANG(C++)
 
@@ -80,8 +81,8 @@ AC_FUNC_REALLOC
 AC_FUNC_STRTOD
 AC_HEADER_STDBOOL
 AC_TYPE_SIZE_T
-AC_LIBTOOL_DLOPEN
 AC_DISABLE_SHARED
+AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 
 
@@ -190,24 +191,20 @@ if test "$check" = yes; then
 else
 	AC_MSG_ERROR([no])
 fi
-ELM_LIBS="$ELM_LIBS -lltdl -dlopen force"
+ELM_LIBS="$ELM_LIBS -dlopen force"
 AC_SUBST(ELM_LIBS)
 AC_SUBST(ELM_CXXFLAGS)
 
 
 dnl ==== otawa usage ====
-BUILD_PROG_CXXFLAGS="-I$PWD/include $ELM_CXXFLAGS"
+BUILD_PROG_CXXFLAGS="-I\$(top_srcdir)/include $ELM_CXXFLAGS"
 PROG_CXXFLAGS=$BUILD_PROG_CXXFLAGS
-BUILD_PROG_LIBS="-ldl $ELM_LIBS"
-PROG_LIBS="-lotawa -L$PWD/src/prog $BUILD_PROG_LIBS"
-if test "$with_plugin" = yes; then
-	PROG_DEP=
-else
-	PROG_DEP="$PWD/src/prog/libotawa.a"
-fi
+BUILD_PROG_LIBS="$ELM_LIBS"
+PROG_LIBS="\$(top_srcdir)/src/prog/libotawa.la $BUILD_PROG_LIBS"
+PROG_DEP="\$(top_srcdir)/src/prog/libotawa.la"
 if test "$prefix" != NONE; then
-	EXTERN_PROG_CXXFLAGS="-I$prefix/include"
-	EXTERN_PROG_LIBS="-L$prefix/lib"
+	EXTERN_PROG_CXXFLAGS="-I\$prefix/include"
+	EXTERN_PROG_LIBS="\$prefix/libotawa.la"
 fi
 EXTERN_PROG_CXXFLAGS="$EXTERN_PROG_CXXFLAGS $ELM_CXXFLAGS"
 EXTERN_PROG_LIBS="$EXTERN_PROG_LIBS -lotawa $ELM_LIBS"
@@ -242,8 +239,9 @@ if test "$with_gliss_ppc" != no; then
 		}
 	], $lib_paths, $BUILD_GLISS_PPC_CXXFLAGS,)
 	if test "$check" = yes; then
-		GLISS_PPC_LIBS="-L$PWD/src/gliss -lotawa_ppc $BUILD_GLISS_PPC_LIBS"
-		GLISS_PPC_DEP="$PWD/src/gliss/libotawa_ppc.a"
+		GLISS_PPC_LIBS="\$(top_builddir)/src/gliss/ppc.la"
+		GLISS_PPC_DEP="\$(top_builddir)/src/gliss/ppc.la"
+		EXTERN_GLISS_PPC_LIBS="\$(prefix)/otawa/loader"
 		HAVE_GLISS_PPC=yes
 		AC_DEFINE(HAVE_GLISS_PPC,,[GLISS PPC available])
 		PLUGINS="$PLUGINS gliss"
@@ -293,14 +291,11 @@ if test "$with_lp_solve" != no; then
 		if test "$with_plugin" = yes; then
 			LP_SOLVE_LIBS=""
 			EXTERN_LP_SOLVE_LIBS=""
-			LP_SOLVE_DEP="$PWD/src/lp_solve/lp_solve.so"
-			if test "$with_mode" = dev; then
-				test -e $ILP_PATHS/lp_solve.so || ln -s $PWD/src/lp_solve/lp_solve.so $ILP_PATHS/lp_solve.so
-			fi
+			LP_SOLVE_DEP="\$(top_builddir)/src/lp_solve/lp_solve.la"
 		else
-			LP_SOLVE_LIBS="-ulp_solve_plugin -L$PWD/src/lp_solve -lotawa_lp_solve $BUILD_LP_SOLVE_LIBS"
-			EXTERN_LP_SOLVE_LIBS="-ulp_solve_plugin -lotawa_lp_solve $BUILD_LP_SOLVE_LIBS"
-			LP_SOLVE_DEP="$PWD/src/lp_solve/libotawa_lp_solve.a"
+			LP_SOLVE_LIBS="-ulp_solve_plugin  \$(top_builddir)/src/lp_solve/lp_solve.la"
+			EXTERN_LP_SOLVE_LIBS="-ulp_solve_plugin \$(prefix)/lib/otawa/ilp/lp_solve.la"
+			LP_SOLVE_DEP="\$(top_builddir)/src/lp_solve/libotawa_lp_solve.a"
 		fi
 		AC_DEFINE(HAVE_LP_SOLVE,,[lp_solve available])
 		HAVE_LP_SOLVE=yes
