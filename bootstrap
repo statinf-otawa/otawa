@@ -1,6 +1,7 @@
 #!/bin/sh
 
-aclocal \
+mkdir .config \
+&& aclocal \
 && autoheader \
 && libtoolize \
 && automake --gnu --add-missing \
