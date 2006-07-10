@@ -376,6 +376,7 @@ AC_OUTPUT([
 	test/hard/Makefile
 	test/props/Makefile
 	test/pcg/Makefile
+	test/exegraph/Makefile
 	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
 	include/Makefile
@@ -398,4 +399,5 @@ AC_OUTPUT([
 	include/otawa/cache/categorisation/Makefile
 	include/otawa/cache/ccg/Makefile
 	include/otawa/pcg/Makefile
+	include/otawa/exegraph/Makefile
 ], [])
