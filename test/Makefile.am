@@ -11,5 +11,6 @@ if WITH_ILP
 SUBDIRS += \
 	ipet \
 	ccg \
-	categorisation
+	categorisation \
+	exegraph
 endif
