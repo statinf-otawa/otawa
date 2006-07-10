@@ -104,5 +104,8 @@ libotawa_la_SOURCES = \
 	hard_Register.cpp \
 	sim_Simulator.cpp \
 	sim_State.cpp \
-	sim_TrivialSimulator.cpp
+	sim_TrivialSimulator.cpp \
+	Microprocessor.cpp \
+	ExecutionGraph.cpp \
+	ExeGraphBBTime.cpp
 
