@@ -36,8 +36,7 @@ protected:
 	inline CodeSegment& segment(void) const { return seg; };
 	void scanRegs(void);
 public:
-	inline Inst(CodeSegment& segment, address_t address)
-		: seg(segment), addr(address), flags(0) { };
+	Inst(CodeSegment& segment, address_t address);
 	virtual ~Inst(void);
 
 	// Inst overload

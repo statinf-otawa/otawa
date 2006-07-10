@@ -168,9 +168,19 @@ static ScanArgs scan_args;
 
 	
 /**
- * @class Inst
+ * @class Inst <otawa/gliss/Inst.h>
  * Representation of instructions in Gliss.
  */
+
+
+/**
+ * Build a new generic instruction.
+ * @param segment	Owner segment.
+ * @param address	Instruction address.
+ */
+Inst::Inst(CodeSegment& segment, address_t address)
+: seg(segment), addr(address), flags(0), reads(0), writes(0) {
+}
 
 
 /**
