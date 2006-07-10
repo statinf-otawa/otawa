@@ -14,6 +14,7 @@ SUBDIRS= \
 	hard \
 	hardware \
 	sim \
+	exegraph \
 	pcg
 
 # Headers
