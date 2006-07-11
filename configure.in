@@ -295,7 +295,7 @@ if test "$with_lp_solve" != no; then
 		else
 			LP_SOLVE_LIBS="-ulp_solve_plugin  \$(top_builddir)/src/lp_solve/lp_solve.la"
 			EXTERN_LP_SOLVE_LIBS="-ulp_solve_plugin \$(prefix)/lib/otawa/ilp/lp_solve.la"
-			LP_SOLVE_DEP="\$(top_builddir)/src/lp_solve/libotawa_lp_solve.a"
+			LP_SOLVE_DEP="\$(top_builddir)/src/lp_solve/lp_solve.la"
 		fi
 		AC_DEFINE(HAVE_LP_SOLVE,,[lp_solve available])
 		HAVE_LP_SOLVE=yes
