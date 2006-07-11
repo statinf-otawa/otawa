@@ -104,7 +104,7 @@ class ExeGraphBBTime: public BBProcessor {
 	public:
 		inline ExeGraphBBTime(const PropList& props = PropList::EMPTY, 
 								Microprocessor *processor = NULL, 
-								elm::io::Output& out_stream = NULL);
+								elm::io::Output& out_stream = elm::cout);
 	
 		void buildExecutionGraph(FrameWork *fw, 
 								ExecutionGraph& graph, 
