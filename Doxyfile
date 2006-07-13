@@ -419,7 +419,8 @@ WARN_LOGFILE           =
 INPUT                  = src/prog/ \
                          include/otawa/ \
                          src/dumpcfg/dumpcfg.cpp \
-                         src/ostat/ostat.cpp
+                         src/ostat/ostat.cpp \
+                    	 src/mkff/mkff.cpp
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 

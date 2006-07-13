@@ -14,6 +14,64 @@
 using namespace elm;
 using namespace otawa;
 
+
+/**
+ * @page mkff mkff Command
+ * 
+ * This command is used to generate a @e .ff file template to pass flow facts
+ * to OTAWA. Currently, only constant loop bounds are supported as flow facts.
+ * 
+ * @par SYNTAX
+ * @code
+ * $ mkff binary_file function1 function2 ...
+ * @endcode
+ * 
+ * mkff builds the .ff loop statements for each function calling sub-tree for
+ * the given binary file. If no function name is given, only the @e main()
+ * function is processed.
+ * 
+ * The loop statement are indented according their depth in the context tree
+ * and displayed with the current syntax:
+ * @code
+ * // Function function_name
+ * loop loop1_address ?;
+ *  loop loop1_1_address ?;
+ *    loop loop_1_1_address ?;
+ * loop loop2_address ?;
+ * @endcode
+ * The "?" question marks must be replaced by the maximum loop bound in order
+ * to get valid .ff files. A good way to achieve this task is to use the
+ * @ref dumpcfg command to get  a graphical display of the CFG.
+ * 
+ * @par Example
+ * @code
+ * $ mkff fft1
+ * // Function main
+ * loop 0x100006c0 ?;
+ * 
+ * // Function fft1
+ * loop 0x10000860 ?;
+ * loop 0x10000920 ?;
+ *  loop 0x10000994 ?;
+ *    loop 0x10000a20 ?;
+ * loop 0x10000bfc ?;
+ *  loop 0x10000d18 ?;
+ * loop 0x10000dc0 ?;
+ *
+ * // Function sin
+ * loop 0x10000428 ?;
+ * loop 0x1000045c ?;
+ * loop 0x10000540 ?;
+ * @endcode
+ * 
+ * @par Future
+ * mkff is temporary solution to the problem of passing flow fact information
+ * to the WCET computation. We hope in a closer future to provide an improved
+ * tool:
+ * @li allowing to put annotation in source files,
+ * @li allowing to have more accurate loop bound description. 
+ */
+
 // Marker for processed sub-programs
 //static Identifier ID_Processed("mkff.processed");
 
@@ -154,7 +212,7 @@ void Command::process (String arg) {
 Command::Command(void): one(false), fw(0) {
 	program = "mkff";
 	version = "0.1";
-	author = "Hugues Cassé";
+	author = "Hugues Cassï¿½";
 	copyright = "Copyright (c) 2005, IRIT-UPS France";
 	description = "Generate a flow fact file for an application.";
 	free_argument_description = "program [function names...]";
