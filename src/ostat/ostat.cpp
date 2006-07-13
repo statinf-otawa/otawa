@@ -16,6 +16,41 @@ using namespace otawa;
 using namespace elm;
 using namespace elm::genstruct;
 
+
+/**
+ * @page ostat OStat Command
+ * 
+ * OStat displays some statistics - average, maximum - about a binary file:
+ * @li basic block count,
+ * @li basic block sizes,
+ * @li memory access instructions count,
+ * @li branch instructions count.
+ * 
+ * @par SYNTAX
+ * @code
+ * $ ostat binary_file function1 function2 ...
+ * @endcode
+ * 
+ * OStat displays statistics about the given binary file for the requested
+ * functions. If no function is provided, the @e main() function is used.
+ * 
+ * Options consists of :
+ * @li -t: scan the full calling tree whose root is the processed function,
+ * @li -s: display statistics in short form (no more information labels),
+ * @li -o: display overall statistics including all processed functions.
+ * 
+ * @par Example
+ * @code
+ * $ ostat crc
+ * FUNCTION main
+ * BB count = 4
+ * type = total count, average/bb, max/bb, ratio
+ * instructions = 56, 14, 27, 100%
+ * memory instructions = 20, 5, 9, 35.7143%
+ * branch instructions = 4, 1, 1, 7.14286%
+ * @endcode
+ */
+
 // Command class
 class Statistics;
 class Command: public option::Manager {
@@ -267,7 +302,7 @@ void TreeStatistics::print(elm::io::Output& out) {
 Command::Command(void) {
 	program = "OStat";
 	version = "0.1";
-	author = "Hugues Cassé";
+	author = "Hugues Cassï¿½";
 	copyright = "Copyright (c) 2006, IRIT-UPS France";
 	description =
 		"Compute statistics on a binary file.\n"
