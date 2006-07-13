@@ -24,10 +24,11 @@ using namespace otawa;
 
 
 /**
- * @page dumpcfg dumpcfg
+ * @page dumpcfg Dumpcfg Command
  * 
  * This command is used to output the CFG of a binary program using different
- * kind of output. Its syntax follows :
+ * kind of output.
+ * @par SYNTAX
  * @code
  * > dumpcfg options binary_file functions1 function2 ...
  * @endcode
