@@ -54,7 +54,7 @@ static option::BoolOption all_functions(command, 'a', "all",
 	"Dump all functions.", false);
 static option::BoolOption inline_calls(command, 'i', "inline",
 	"Inline the function calls.", false);
-option::BoolOption display_assembly(command, 'A', "assembly",
+option::BoolOption display_assembly(command, 'd', "display assembly instructions",
 	"Display assembly.", false);
 
 
@@ -62,7 +62,7 @@ option::BoolOption display_assembly(command, 'A', "assembly",
 class SimpleOption: public option::ActionOption {
 public:
 	inline SimpleOption(Command& command): option::ActionOption(command,
-	's', "simple", "Perform simple output.") {
+	'S', "simple", "Select simple output (default).") {
 	}
 	virtual void perform(void) {
 		displayer = &simple_displayer;
@@ -75,7 +75,7 @@ static SimpleOption simple(command);
 class DisassembleOption: public option::ActionOption {
 public:
 	inline DisassembleOption(Command& command): option::ActionOption(command,
-	'd', "disassemble", "Perform output with disassembling the basic blocks.") {
+	'L', "list", "Select listing output.") {
 	};
 	virtual void perform(void) {
 		displayer = &disassembler_displayer;
@@ -88,7 +88,7 @@ static DisassembleOption disassemble(command);
 class DotOption: public option::ActionOption {
 public:
 	inline DotOption(Command& command): option::ActionOption(command,
-	'D', "dot", "Perform output usable by dot utility.") {
+	'D', "dot", "Select DOT output.") {
 	};
 	virtual void perform(void) {
 		displayer = &dot_displayer;
@@ -213,7 +213,7 @@ void Command::process (String arg) {
 Command::Command(void): one(false), fw(0) {
 	program = "DumpCFG";
 	version = "0.2";
-	author = "Hugues Cassé";
+	author = "Hugues Cassï¿½";
 	copyright = "Copyright (c) 2004, IRIT-UPS France";
 	description = "Dump to the standard output the CFG of functions."
 		"If no function name is given, the main function is dumped.";
