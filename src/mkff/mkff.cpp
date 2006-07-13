@@ -228,7 +228,7 @@ void Command::run(int argc, char **argv) {
 	parse(argc, argv);
 	if(!fw) {
 		displayHelp();
-		throw option::OptionException();
+		throw option::OptionException("no binary file to process");
 	}
 	else if(!one)
 		process("main");
@@ -254,10 +254,12 @@ int main(int argc, char **argv) {
 		command.run(argc, argv);
 		return 0;
 	}
-	catch(option::OptionException _) {
+	catch(option::OptionException& e) {
+		cerr << "ERROR: " << e.message() << io::endl;
+		command.displayHelp();
 		return 1;
 	}
-	catch(LoadException e) {
+	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
 		return 2;
 	}

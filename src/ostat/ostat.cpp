@@ -339,7 +339,7 @@ void Command::run(int argc, char **argv) {
 	// Check file presence
 	if(!file) {
 		displayHelp();
-		throw option::OptionException();
+		throw option::OptionException("no binary file given");
 	}
 	
 	// Add main if no argument
@@ -359,7 +359,8 @@ void Command::run(int argc, char **argv) {
 			cerr << "ERROR: \"" << file
 				 << "\" does not contain a function named \"" << funs[i]
 				 << "\".\n";
-			throw option::OptionException();
+			throw option::OptionException("\"%s\" does not contain a function named \"%s\"",
+				&file, &funs[i]);
 		}
 		if(tree_option)
 			stats.add(new TreeStatistics(cfg));
@@ -375,5 +376,16 @@ void Command::run(int argc, char **argv) {
 
 /* Startup */
 int main(int argc, char **argv) {
-	command.run(argc, argv);
+	try {
+		command.run(argc, argv);
+	}
+	catch(option::OptionException& e) {
+		cerr << "ERROR: " << e.message() << io::endl;
+		command.displayHelp();
+		return 1;
+	}
+	catch(elm::Exception& e) {
+		cerr << "ERROR: " << e.message() << io::endl;
+		return 2;
+	}
 }
