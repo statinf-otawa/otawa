@@ -23,6 +23,81 @@ using namespace elm;
 using namespace otawa;
 
 
+/**
+ * @page dumpcfg dumpcfg
+ * 
+ * This command is used to output the CFG of a binary program using different
+ * kind of output. Its syntax follows :
+ * @code
+ * > dumpcfg options binary_file functions1 function2 ...
+ * @endcode
+ * dumpcfg first loads the binary file then compute and display the CFG of the
+ * functions whose name is given. If there is no function, the @e main functions
+ * is dumped.
+ * 
+ * Currently, dumpcfg provides the following outputs:
+ * 
+ * @li -S (simple output): the basic blocks are displayed, one by one, with
+ * their number, their address and the -1-ended list of their successors.
+ * @code
+ * !icrc1
+ * # Inlining icrc1
+ * 0 10000368 100003a4 1 -1
+ * 1 100003a8 100003b0 3 2 -1
+ * 2 100003b4 100003b4 4 -1
+ * 3 100003b8 100003c8 6 5 -1
+ * 4 1000040c 10000418 7 -1
+ * 5 100003cc 100003e8 8 -1
+ * 6 100003ec 100003f8 8 -1
+ * 7 1000041c 10000428 9 -1
+ * 8 100003fc 10000408 1 -1
+ * @endcode
+ * 
+ * @li -L (listing output): each basic block is displayed starting by "BB",
+ * followed by its number, a colon and the list of its successors. Its
+ * successors may be T(number) for a taken edge, NT(number) for a not-taken edge
+ * and C(function) for a function call.
+ * @code
+ * # Function main
+ * # Inlining main
+ * BB 1:  C(icrc) NT(2)
+ *        main:
+ *               10000754 stwu r1,-32(r1)
+ *               10000758 mfspr r0,256
+ *               1000075c stw r31,28(r1)
+ *               10000760 stw r0,36(r1)
+ *					...
+ * BB 2:  C(icrc) NT(3)
+ *               1000079c or r0,r3,r3
+ *               100007a0 or r9,r0,r0
+ *               100007a4 sth r9,8(r31)
+ *               100007a8 addis r9,r0,4097
+ *               ...
+ *  BB 3:  T(4)
+ *               10000808 or r0,r3,r3
+ *               1000080c or r9,r0,r0
+ *               10000810 sth r9,10(r31)
+ *               10000814 addi r3,r0,0
+ *               10000818 b 1
+ * BB 4:
+ *               1000081c lwz r11,0(r1)
+ *               10000820 lwz r0,4(r11)
+ *               10000824 mtspr 256,r0
+ *               10000828 lwz r31,-4(r11)
+ *               1000082c or r1,r11,r11
+ *               10000830 bclr 20,0
+ * 
+ * @endcode
+ * 
+ * @li -D (dot output): the CFG is output as a DOT graph description.
+ * @image html dot.png
+ * 
+ * dumpcfg accepts other options like:
+ * @li -i: inline the functions calls (recursive calls are reduced to loops),
+ * @li -d: disassemble the machine code contained in each basic block,
+ * @li -a: dump all functions.
+ */
+
 // Command class
 class Command: public option::Manager {
 	bool one;
