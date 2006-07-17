@@ -14,3 +14,8 @@ SUBDIRS += \
 	categorisation \
 	exegraph
 endif
+
+if WITH_SYSTEMC
+SUBDIRS += \
+	systemc
+endif

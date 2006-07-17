@@ -316,6 +316,34 @@ AC_SUBST(EXTERN_LP_SOLVE_CXXFLAGS)
 AC_SUBST(EXTERN_LP_SOLVE_LIBS)
 
 
+dnl ==== systemc ====
+AC_ARG_WITH(systemc,
+	[  --with-systemc[=PATH]	Use SystemC [from the given directory.]],,
+	with_systemc=no)
+case $with_systemc in
+	no)
+		has_systemc=no
+		;;
+	yes)
+		AC_CHECK_LIB(systemc, sc_main,
+			[
+				has_systemc=yes
+				SYSTEMC_LIBS=-lsystemc
+			],,)
+		;;
+	*)
+		AC_MSG_CHECKING([for systemc])
+		has_systemc=yes
+		SYSTEMC_CXXFLAGS=-I$with_systemc/src
+		SYSTEMC_LIBS="-L$with_systemc/src -lsystemc"
+		AC_MSG_RESULT([found at $with_systemc])
+		;;
+esac
+AM_CONDITIONAL(WITH_SYSTEMC, [test "$has_systemc" == yes])
+AC_SUBST(SYSTEMC_CXXFLAGS)
+AC_SUBST(SYSTEMC_LIBS)
+
+
 dnl ==== Plugins ====
 if test "$HAVE_LP_SOLVE" = yes; then
 	ILP_PLUGIN="$LP_SOLVE_LIBS"
@@ -334,20 +362,20 @@ AC_SUBST(LOADER_DEP)
 
 
 dnl ==== Post-phase ====
-if test "$with_plugin" = yes -o "$ILP_PLUGIN" != ""; then
-	TESTS="$TESTS ipet"
-	AC_DEFINE(HAVE_ILP,,[ILP engine available.])
-fi
+dnl if test "$with_plugin" = yes -o "$ILP_PLUGIN" != ""; then
+dnl	TESTS="$TESTS ipet"
+dnl	AC_DEFINE(HAVE_ILP,,[ILP engine available.])
+dnl fi
 AC_DEFINE_UNQUOTED(ILP_PATHS, "$ILP_PATHS", [Paths for ILP plugins])
 AC_DEFINE_UNQUOTED(LOADER_PATHS, "$LOADER_PATHS", [Paths for loader plugins])
 AM_CONDITIONAL(WITH_PLUGIN, [test "$with_plugin" = yes])
 AM_CONDITIONAL(WITH_ILP, [test "$HAVE_ILP" = yes])
-if test "$with_plugin" = yes -a "$with_mode" = dev; then
-	AC_CONFIG_COMMANDS(
-		[plugin],
-		[echo "WARNING: do not forget to add $PWD/lib to your LD_LIBRARY_PATH environment variable."]
-	)
-fi
+dnl if test "$with_plugin" = yes -a "$with_mode" = dev; then
+dnl	AC_CONFIG_COMMANDS(
+dnl		[plugin],
+dnl		[echo "WARNING: do not forget to add $PWD/lib to your LD_LIBRARY_PATH environment variable."]
+dnl 	)
+dnl fi
 
 
 dnl ==== Output ====
@@ -361,6 +389,7 @@ AC_OUTPUT([
 	src/dumpcfg/Makefile
 	src/mkff/Makefile
 	src/ostat/Makefile
+	src/oipet/Makefile
 	examples/Makefile
 	bin/Makefile
 	bin/otawa-config
@@ -377,6 +406,7 @@ AC_OUTPUT([
 	test/props/Makefile
 	test/pcg/Makefile
 	test/exegraph/Makefile
+	test/systemc/Makefile
 	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
 	include/Makefile
