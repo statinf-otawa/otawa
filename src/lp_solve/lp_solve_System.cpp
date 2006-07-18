@@ -250,7 +250,7 @@ void System::dump(elm::io::OutStream& _out) {
 		out << ilp_vars[i]->name() << " = ";
 		/*printf("!%g!\n", valueOf(ilp_vars[i]));
 	}*/
-		cout << (int)valueOf(ilp_vars[i]) << "\n";
+		out << (int)valueOf(ilp_vars[i]) << "\n";
 	}
 	
 }
