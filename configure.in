@@ -334,8 +334,8 @@ case $with_systemc in
 	*)
 		AC_MSG_CHECKING([for systemc])
 		has_systemc=yes
-		SYSTEMC_CXXFLAGS=-I$with_systemc/src
-		SYSTEMC_LIBS="-L$with_systemc/src -lsystemc"
+		SYSTEMC_CXXFLAGS=-I$with_systemc/include
+		SYSTEMC_LIBS="-L$with_systemc/lib-linux -lsystemc"
 		AC_MSG_RESULT([found at $with_systemc])
 		;;
 esac
@@ -389,7 +389,6 @@ AC_OUTPUT([
 	src/dumpcfg/Makefile
 	src/mkff/Makefile
 	src/ostat/Makefile
-	src/oipet/Makefile
 	examples/Makefile
 	bin/Makefile
 	bin/otawa-config
