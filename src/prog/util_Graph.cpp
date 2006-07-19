@@ -113,7 +113,7 @@ void Graph::destroy(Edge *edge) {
 
 
 /**
- * @class Graph::NodeIterator::NodeIterator(const Graph& graph);
+ * @fn Graph::NodeIterator::NodeIterator(const Graph& graph);
  * Build an iterator on the given graph.
  */
 
