@@ -144,12 +144,6 @@ DFABitSet *ContextTreeProblem::kill(BasicBlock *bb) const {
 
 
 /**
- * @class ContextTree
- * Representation of a context tree.
- */
-
-
-/**
  * Annotations with this identifier are hooked to basic blocks and gives
  * the ower context tree (ContextTree * data).
  */
