@@ -26,6 +26,7 @@ class BBSequence: public ProgObject{
 	friend class Delta;
 	BBSequence(Delta *delta, BasicBlock *start);
 	BBSequence(Delta *delta, elm::genstruct::Vector<BasicBlock*> *path);
+	~BBSequence();
 	
 	int _length;
 	elm::Option<int> _delta;

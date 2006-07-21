@@ -52,6 +52,14 @@ BBSequence::BBSequence(Delta *delta, Vector<BasicBlock*> *path)
 		basicBlocks.add(path->get(i));
 }
 
+/**
+ * Destroys the BBSequence
+ */
+BBSequence::~BBSequence(){
+	if(!ending_state)
+		delete ending_state;
+}
+
 
 /**
  * Builds a vector containing this BBSequence made longer
