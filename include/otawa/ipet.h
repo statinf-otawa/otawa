@@ -14,6 +14,7 @@
 #include <otawa/ipet/TrivialBBTime.h>
 #include <otawa/ipet/TrivialDataCacheManager.h>
 #include <otawa/ipet/VarAssignment.h>
+#include <otawa/ipet/Delta.h>
 #include <otawa/ipet/WCETComputation.h>
 
 #endif /* OTAWA_IPET_H */

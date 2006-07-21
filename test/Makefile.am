@@ -12,6 +12,7 @@ SUBDIRS += \
 	ipet \
 	ccg \
 	categorisation \
+	delta \
 	exegraph
 endif
 

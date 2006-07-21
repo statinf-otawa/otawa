@@ -53,6 +53,9 @@ libotawa_la_SOURCES = \
 	Process.cpp \
 	ipet_BasicConstraintsBuilder.cpp \
 	ipet_WCETComputation.cpp \
+	ipet_BBSequence.cpp \
+	ipet_Delta.cpp \
+	ipet_TreePath.cpp \
 	util_DFA.cpp \
 	util_DFABitSet.cpp \
 	util_DFAEngine.cpp \

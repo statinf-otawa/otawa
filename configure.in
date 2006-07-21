@@ -397,6 +397,7 @@ AC_OUTPUT([
 	test/ipet/Makefile
 	test/ets/Makefile
 	test/dom/Makefile
+	test/delta/Makefile
 	test/ct/Makefile
 	test/ccg/Makefile
 	test/graph/Makefile
