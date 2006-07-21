@@ -6,6 +6,7 @@
  */
 #include <otawa/ipet/TreePath.h>
 
+namespace otawa { namespace ipet {
 
 /**
  * @author G. Cavaignac
@@ -87,7 +88,7 @@
  * @param from_index if we don't want to start searching the path with the index 0 of the Vector
  */
 
-
+} } // namespace otawa::ipet
 
 /* Example
 #include <iostream>

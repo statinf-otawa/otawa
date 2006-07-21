@@ -4,12 +4,14 @@
  *
  *	otawa/ipet/TreePath.h -- interface of trees holding sequences.
  */
-#ifndef TREEPATH_H_
-#define TREEPATH_H_
+#ifndef OTAWA_IPET_TREEPATH_H
+#define OTAWA_IPET_TREEPATH_H
 #include <elm/util/Option.h>
 #include <elm/genstruct/Vector.h>
 
 #define DEFAULT_MAX_CHILDS 8
+
+namespace otawa { namespace ipet {
 
 template <class T1, class T2>
 class TreePath
@@ -126,5 +128,6 @@ inline T1 TreePath<T1,T2>::rootLabel() const {return _label;}
 template <class T1, class T2>
 inline T2 TreePath<T1,T2>::rootData() const {return _data;}
 
+} } //namespace otawa::ipet
 
-#endif /*TREEPATH_H_*/
+#endif /*OTAWA_IPET_TREEPATH_H*/
