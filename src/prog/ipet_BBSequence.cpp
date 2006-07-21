@@ -265,7 +265,6 @@ bool BBSequence::equals(BBSequence &bbs){
  * @attention Useless method : There is only 1 BBSequence alive at one time
  */
 
- */
 
 /**
  * @fn BBSequence* BBSequence::operator() (int begin, int end)
