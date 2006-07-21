@@ -33,8 +33,8 @@ public:
 	BBSequence* getBBS(BasicBlock *start);
 	BBSequence* getBBS(elm::genstruct::Vector<BasicBlock*> *path);
 	
-	//static GenericIdentifier<int> ID_Levels;
-	//static GenericIdentifier<TreePath<BasicBlock*,BBSequence*>*> ID_Tree;
+	static GenericIdentifier<int> ID_Levels;
+	static GenericIdentifier<TreePath<BasicBlock*,BBSequence*>*> ID_Tree;
 };
 
 
