@@ -2,7 +2,7 @@
  *  $Id$
  *  Copyright (c) 2006, IRIT-UPS.
  *
- *  ipet_Delta.h -- Delta class implementation.
+ *  src/prog/ipet_Delta.h -- Delta class implementation.
  */
 
 #include <assert.h>
@@ -18,8 +18,8 @@ using namespace elm::genstruct;
 namespace otawa { namespace ipet {
 
 /**
- * @class Delta
  * @author G. Cavaignac
+ * @class Delta
  * This processor is used for computing time effects of pipeline, between basic blocks <br>
  * Properties accepted: <br>
  * <code>Delta::ID_Levels<int></code> : depth of the delta algorithm: Level n = delta for sequences with length n+1<br>

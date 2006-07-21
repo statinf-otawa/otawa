@@ -2,14 +2,14 @@
  *	$Id$
  *	Copyright (c) 2006, IRIT UPS.
  *
- *	TreePath.cpp -- implementation of tree holding sequences.
+ *	src/prog/TreePath.cpp -- implementation of tree holding sequences.
  */
 #include <otawa/ipet/TreePath.h>
 
 
 /**
- * @class TreePath
  * @author G. Cavaignac
+ * @class TreePath
  * This class is used for holding unique sequences in a tree so that it is
  * very fast to retrieve the matched sequence with a list of elements <br>
  * <code>TreePath\<T1,T2\></code> : T1 is an element of the sequence,

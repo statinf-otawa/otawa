@@ -2,7 +2,7 @@
  *	$Id$
  *	Copyright (c) 2006, IRIT UPS.
  *
- *	Delta.h -- Delta class interface.
+ *	otawa/ipet/Delta.h -- Delta class interface.
  */
  
 #ifndef OTAWA_IPET_DELTA_H
@@ -14,7 +14,6 @@
 #include <otawa/properties.h>
 #include <otawa/proc/CFGProcessor.h>
 
-#define VERBOSE
 
 namespace otawa { namespace ipet {
 	
@@ -34,8 +33,8 @@ public:
 	BBSequence* getBBS(BasicBlock *start);
 	BBSequence* getBBS(elm::genstruct::Vector<BasicBlock*> *path);
 	
-	static GenericIdentifier<int> ID_Levels;
-	static GenericIdentifier<TreePath<BasicBlock*,BBSequence*>*> ID_Tree;
+	//static GenericIdentifier<int> ID_Levels;
+	//static GenericIdentifier<TreePath<BasicBlock*,BBSequence*>*> ID_Tree;
 };
 
 

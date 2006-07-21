@@ -2,7 +2,7 @@
  *	$Id$
  *	Copyright (c) 2006, IRIT UPS.
  *
- *	TreePath.h -- interface of trees holding sequences.
+ *	otawa/ipet/TreePath.h -- interface of trees holding sequences.
  */
 #ifndef TREEPATH_H_
 #define TREEPATH_H_

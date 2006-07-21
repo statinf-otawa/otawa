@@ -2,7 +2,7 @@
  *	$Id$
  *	Copyright (c) 2006, IRIT UPS.
  *
- *	BBSequence.h -- interface of basic blocks sequence (path) class.
+ *	otawa/ipet/BBSequence.h -- interface of basic blocks sequence (path) class.
  */
  
 #ifndef OTAWA_IPET_BBSEQUENCE_H
@@ -22,7 +22,7 @@ namespace otawa{ namespace ipet {
 class BBSequence;
 class Delta;
 
-class BBSequence: public PropList{
+class BBSequence: public ProgObject{
 	friend class Delta;
 	BBSequence(Delta *delta, BasicBlock *start);
 	BBSequence(Delta *delta, elm::genstruct::Vector<BasicBlock*> *path);
@@ -51,8 +51,8 @@ public:
 	inline bool operator== (BBSequence &bbs);
 	inline bool operator!= (BBSequence &bbs);
 	
-	static int instructionsSimulated;
-	static int nbDeltasCalculated;
+	//static int instructionsSimulated;
+	//static int nbDeltasCalculated;
 };
 
 inline int BBSequence::t() {return time();}

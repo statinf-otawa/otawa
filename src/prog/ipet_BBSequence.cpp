@@ -2,7 +2,7 @@
  *	$Id$
  *	Copyright (c) 2006, IRIT UPS.
  *
- *	BBSequence.cpp -- implementation of basic blocs sequence (path) class.
+ *	src/prog/BBSequence.cpp -- implementation of basic blocs sequence (path) class.
  */
 
 #include <assert.h>
@@ -18,9 +18,9 @@ namespace otawa{ namespace ipet {
 
 
 /**
+ * This class holds a sequence of basic blocks for calculating deltas
  * @class BBSequence
  * @author G. Cavaignac
- * This class holds a sequence of basic blocks for calculating deltas
  */
 
 /**
@@ -213,9 +213,9 @@ BBSequence* BBSequence::sub(int begin, int end){
 
 /**
  * tests if two BBSequences are the same or not (same basic blocks in the path) <br>
- * Useless method : There is only 1 BBSequence alive at one time
  * @param bbs BBSequence to compare
  * @return boolean : true if both sequences are the same
+ * @attention Useless method : There is only 1 BBSequence alive at one time
  */
 bool BBSequence::equals(BBSequence &bbs){
 	if(length() != bbs.length())
@@ -226,5 +226,54 @@ bool BBSequence::equals(BBSequence &bbs){
 	return true;
 }
 
+
+/**
+ * @fn int BBSequence::t()
+ * Same as BBSequence::time()<br>
+ * Returns the number of cycles the processor must do to cover the sequence.
+ * Simulates the sequence if necessary
+ * @return number of cycles
+ */
+
+/**
+ * @fn int BBSequence::l()
+ * Same as BBSequence::length() <br>
+ * Gives the number of BBSequences that composes this path
+ * @return length of the sequence
+ */
+
+/**
+ * @fn int BBSequence::length()
+ * Gives the number of BBSequences that composes this path
+ * @return length of the sequence
+ */
+
+/**
+ * @fn bool BBSequence::operator== (BBSequence &bbs)
+ * Same as equals()
+ * tests if two BBSequences are the same or not (same basic blocks in the path) <br>
+ * @param bbs BBSequence to compare
+ * @return boolean : true if both sequences are the same
+ * @attention Useless method : There is only 1 BBSequence alive at one time
+ */
+
+/**
+ * @fn bool BBSequence::operator!= (BBSequence &bbs)
+ * tests if two BBSequences are the same or not (same basic blocks in the path) <br>
+ * @param bbs BBSequence to compare
+ * @return boolean : false if both sequences are the same
+ * @attention Useless method : There is only 1 BBSequence alive at one time
+ */
+
+ */
+
+/**
+ * @fn BBSequence* BBSequence::operator() (int begin, int end)
+ * Returns a sub-sequence. Searches in the Delta Processor attached if this sequence already exists
+ * @param begin index of the first basic block (first = 1)
+ * @param end index of the last basic block (last = length())
+ * @return sub-sequence of current sequence, from <code>begin</code> to <code>end</code> indexes
+ * @see sub()
+ */
 
 } }
