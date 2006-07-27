@@ -10,14 +10,6 @@
 #include <elm/io.h>
 #include <otawa/otawa.h>
 #include <otawa/ipet.h>
-/*#include <otawa/ipet/IPET.h>
-#include <otawa/ipet/TrivialBBTime.h>
-#include <otawa/ipet/VarAssignment.h>
-#include <otawa/ipet/BasicConstraintsBuilder.h>
-#include <otawa/ipet/WCETComputation.h>
-#include <otawa/ipet/FlowFactLoader.h>
-#include <otawa/ipet/BasicObjectFunctionBuilder.h>
-#include <otawa/ipet/TrivialDataCacheManager.h>*/
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
@@ -41,8 +33,8 @@ CString cat_option = "-cat";
  * Display help message and exit the program.
  */
 void help(void) {
-	cout << "ERROR: bad arguments.\n";
-	cout << "SYNTAX: test_delta [-ccg|-cat] program\n";
+	cerr << "ERROR: bad arguments.\n";
+	cerr << "SYNTAX: test_delta [-ccg|-cat] program\n";
 	exit(1);
 }
 
