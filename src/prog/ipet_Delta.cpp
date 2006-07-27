@@ -4,7 +4,7 @@
  *
  *  src/prog/ipet_Delta.h -- Delta class implementation.
  */
-
+#include <otawa/ipet/PathManager.h>
 #include <assert.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/ipet.h>
@@ -32,10 +32,20 @@ namespace otawa { namespace ipet {
  * @param props Configuration properties.
  */
 Delta::Delta(const PropList& props)
-: CFGProcessor("otawa::ipet::Delta", Version(0, 1, 0), props),
-  nlevels(ID_Levels(props)){
-	explicitNames = props.get<bool>(IPET::ID_Explicit,false);
-	framework = 0;
+: CFGProcessor("otawa::ipet::Delta", Version(0, 1, 0), props){
+	configure(props);
+}
+
+/**
+ * Configures the delta calculator. Properties accepted are
+ * 
+ * <code>Delta::ID_Levels<int></code> : number of delta levels
+ * 
+ * <code>IPET::ID_Explicit<bool></code> : give explicit names for the sequences
+ */
+void Delta::configure(const PropList& props){
+	nlevels = ID_Levels(props);
+	explicitNames = IPET::ID_Explicit(props);
 }
 
 /**
@@ -45,48 +55,50 @@ Delta::Delta(const PropList& props)
 void Delta::processCFG(FrameWork* fw, CFG* cfg){
 	assert(fw);
 	assert(cfg);
-	framework = fw;
+	assert(cfg->isInlined());
+	PathManager pathManager;
+	IPET::ID_Explicit(&pathManager) = explicitNames;
 	//int nbConstraintsCreated = 0;
 	//int nbObjectFunctionCreated = 0;
 	System *system = IPET::getSystem(fw,cfg);
-	Vector<BBSequence*> bbsList(4*cfg->bbs().count());
+	Vector<BBPath*> bbPathList(4*cfg->bbs().count());
 	for(CFG::BBIterator bb(cfg) ; bb ; bb++){
 		// we create all sequences with length = 1
-		bbsList.add(getBBS(bb));
+		bbPathList.add(pathManager.getBBPath(bb));
 	}
 	// from 1 to nlevels+1 <=> from 0 to nlevels
 	for(int i = 0 ; i < nlevels ; i++){
-		Vector<BBSequence*> newBBS;
-		int l = bbsList.length();
+		Vector<BBPath*> newBBPath;
+		int l = bbPathList.length();
 		for(int j=0 ; j < l ; j++){
 			// we search all length+1 sequences
-			Vector<BBSequence*> *toInsert = bbsList[j]->nexts();
+			Vector<BBPath*> *toInsert = bbPathList[j]->nexts();
 			int l2 = toInsert->length();
 			for(int k = 0 ; k < l2 ; k++)
-				newBBS.add(toInsert->get(k));
+				newBBPath.add(toInsert->get(k));
 			delete toInsert;
 		}
 
-		bbsList.clear(); // clone newBBS into bbsList
-		l = newBBS.length();
+		bbPathList.clear(); // clone newBBS into bbsList
+		l = newBBPath.length();
 		for(int j=0 ; j < l ; j++){
-			BBSequence *bbsptr = newBBS[j];
-			bbsList.add(bbsptr); // clone newBBS into bbsList
-			BBSequence &bbs = *bbsptr;
+			BBPath *bbPathPtr = newBBPath[j];
+			bbPathList.add(bbPathPtr); // clone newBBS into bbsList
+			BBPath &bbp = *bbPathPtr;
 
-			int delta = bbs.delta();
-			Var *var = bbs.getVar(system); 
+			int delta = Delta::delta(bbp, fw);
+			Var *var = bbp.getVar(system); 
 			Constraint *cons;
 
 			// constraint S[A,B,C] <= S[A,B]
 			cons = system->newConstraint(Constraint::LE);
 			cons->addLeft(1,var);
-			cons->addRight(1, bbs(1,bbs.l()-1)->getVar(system));
+			cons->addRight(1, bbp(1,bbp.l()-1)->getVar(system));
 
 			// constraint S[A,B,C] <= S[B,C]
 			cons = system->newConstraint(Constraint::LE);
 			cons->addLeft(1,var);
-			cons->addRight(1, bbs(2,bbs.l())->getVar(system));
+			cons->addRight(1, bbp(2,bbp.l())->getVar(system));
 
 			system->addObjectFunction(delta, var);
 
@@ -103,56 +115,38 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 	cout << nbObjectFunctionCreated << " object function created\n";
 	cout << nbConstraintsCreated << " constraints created\n";*/
 
-	// cleaning
-	framework = 0;
 	return;
 }
 
-
-
 /**
- * Returns the sequence of length 1 composed by only the given basic block.
- * If this sequence doesn't exist, creates it.
- * @param start basic block
- * @return BBSequence corresponding to the given basic block
+ * Calculate the delta of the given BBPath
+ * @param bbp BBPath we want to calculate the delta
  */
-BBSequence *Delta::getBBS(BasicBlock *start){
-	TreePath<BasicBlock*,BBSequence*> *tree = ID_Tree(start);
-	if(!tree){
-		BBSequence *bbs = new BBSequence(this, start); 
-		tree = new TreePath<BasicBlock*,BBSequence*>(start,bbs);
-		ID_Tree(start) = tree;
-		return bbs;
+int Delta::delta(BBPath &bbp, FrameWork *fw){
+	assert(fw);
+	elm::Option<int> delta = bbp.get<int>(ID_Delta);
+	if(!delta){
+		//nbDeltasCalculated++;
+		switch(bbp.length()){
+		case 1:
+			delta = 0;
+			break;
+		case 2:
+			delta =
+				bbp.t(fw)
+			    	- bbp(1,bbp.l()-1)->t(fw)
+			    	- bbp(2,bbp.l())->t(fw);
+			break;
+		default:
+			delta =
+				bbp.t(fw)
+			    	- bbp(1,bbp.l()-1)->t(fw)
+			    	- bbp(2,bbp.l())->t(fw)
+			    	+ bbp(2,bbp.l()-1)->t(fw);
+		}
 	}
-	return tree->rootData();
-}
-
-
-
-/**
- * Returns the sequence composed by the given path.
- * If this sequence doesn't exist, creates it.
- * @param path vector of basic blocks composing the path
- * @return BBSequence corresponding to the given path
- */
-BBSequence *Delta::getBBS(Vector<BasicBlock*> *path){
-	assert(path);
-	BasicBlock *bb = path->get(0);
-	BBSequence *bbs;
-	TreePath<BasicBlock*,BBSequence*> *tree = ID_Tree(bb);
-	if(!tree){
-		bbs = new BBSequence(this, path);
-		tree = new TreePath<BasicBlock*,BBSequence*>(*path,bbs);
-		ID_Tree(bb) = tree;
-		return bbs;
-	}
-	elm::Option<BBSequence*> option = tree->get(*path,1);
-	if(!option){
-		bbs = new BBSequence(this, path);
-		tree->add(path,bbs,1);
-		return bbs;
-	}
-	return *option;
+	ID_Delta(bbp) = *delta;
+	return *delta;
 }
 
 
@@ -162,11 +156,10 @@ BBSequence *Delta::getBBS(Vector<BasicBlock*> *path){
 GenericIdentifier<int>  Delta::ID_Levels("delta.levels",5);
 
 /**
- * This identifier is used for storing in a BasicBlock a TreePath
- * storing all BBSequence starting from this basic block
+ * This identifier is used for storing the delta value of a path
  */
-GenericIdentifier<TreePath<BasicBlock*,BBSequence*>*> Delta::ID_Tree("delta.tree",0);
+GenericIdentifier<int> Delta::ID_Delta("delta.delta");
 
 
 
-} }
+} } // otawa::ipet

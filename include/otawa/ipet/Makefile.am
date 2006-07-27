@@ -2,7 +2,8 @@ includeotawaipetdir=$(includedir)/otawa/ipet
 includeotawaipet_HEADERS = \
 	BasicConstraintsBuilder.h \
 	BasicObjectFunctionBuilder.h \
-	BBSequence.h \
+	BBPath.h \
+	PathManager.h \
 	Delta.h \
 	FlowFactLoader.h \
 	IPET.h \

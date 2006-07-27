@@ -7,37 +7,31 @@
  
 #ifndef OTAWA_IPET_DELTA_H
 #define OTAWA_IPET_DELTA_H
-
-#include <otawa/ipet/BBSequence.h>
-#include <otawa/ipet/TreePath.h>
-#include <otawa/cfg.h>
-#include <otawa/properties.h>
+#include <otawa/ipet/BBPath.h>
 #include <otawa/proc/CFGProcessor.h>
 
 
 namespace otawa { namespace ipet {
 	
-class BBSequence;
+class BBPath;
 class Delta;
 
 class Delta: public CFGProcessor {
-	friend class BBSequence;
 	int nlevels;
 	bool explicitNames;
-	FrameWork *framework;
 
 public:
 	Delta(const PropList& props = PropList::EMPTY);
+	virtual void configure(const PropList& props);
 	virtual void processCFG(FrameWork* fw, CFG* cfg);
 
-	BBSequence* getBBS(BasicBlock *start);
-	BBSequence* getBBS(elm::genstruct::Vector<BasicBlock*> *path);
-	
+	static int delta(BBPath &bbp, FrameWork *fw);
+
 	static GenericIdentifier<int> ID_Levels;
-	static GenericIdentifier<TreePath<BasicBlock*,BBSequence*>*> ID_Tree;
+	static GenericIdentifier<int> ID_Delta;
 };
 
 
-} }
+} } // otawa::ipet
 
 #endif /*OTAWA_IPET_DELTA_H*/
