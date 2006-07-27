@@ -12,9 +12,9 @@ namespace otawa { namespace ipet {
  * @author G. Cavaignac
  * @class TreePath
  * This class is used for holding unique sequences in a tree so that it is
- * very fast to retrieve the matched sequence with a list of elements <br>
- * <code>TreePath\<T1,T2\></code> : T1 is an element of the sequence,
- * and T2 is the type holding the data of the sequence <br>
+ * very fast to retrieve the matched sequence with a list of elements
+ * @param T1 element of the sequence
+ * @param T2 type holding the data of the sequence
  */
 
 /**
