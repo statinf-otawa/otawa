@@ -137,7 +137,7 @@ String VarAssignment::makeEdgeVar(Edge *edge) {
 			buf << edge->calledCFG()->address();
 	}
 	else {
-		num = edge->source()->get<int>(CFG::ID_Index, -1);
+		num = edge->target()->get<int>(CFG::ID_Index, -1);
 		if(num >= 0)
 			buf << num;
 		else
