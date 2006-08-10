@@ -1,0 +1,22 @@
+Looking for the main CFG
+main found at 0x00050418
+
+DOMINANCE
+0 dominates {0, 1, 2, 3, 4, 5, 6}
+1 dominates {1, 2, 3, 4, 5, 6}
+2 dominates {2, 3, 4, 5, 6}
+3 dominates {3, 4, 5, 6}
+4 dominates {4, 5, 6}
+5 dominates {5, 6}
+6 dominates {6}
+
+LOOP HEADERS
+- 3 (00050450)
+
+CONTEXT TREE
+ROOT {ENTRY, 0(00050418), 1(00050430), 3(00050498), 4(0005049c), EXIT}
+  LOOP at 00050450 {2(00050450)}
+  FUNCTION to jpeg_fdct_islow {ENTRY, 0(00050124), 2(00050298), 4(00050408), EXIT}
+    LOOP at 0005013c {1(0005013c)}
+    LOOP at 000502a4 {3(000502a4)}
+SUCCESS

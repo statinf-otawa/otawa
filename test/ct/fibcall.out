@@ -1,0 +1,17 @@
+Looking for the main CFG
+main found at 0x00050158
+
+DOMINANCE
+0 dominates {0, 1, 2, 3, 4}
+1 dominates {1, 2, 3, 4}
+2 dominates {2, 3, 4}
+3 dominates {3, 4}
+4 dominates {4}
+
+LOOP HEADERS
+
+CONTEXT TREE
+ROOT {ENTRY, 0(00050158), 1(00050168), 2(00050174), EXIT}
+  FUNCTION to fib {ENTRY, 0(00050124), 2(00050154), EXIT}
+    LOOP at 0005013c {1(0005013c)}
+SUCCESS
