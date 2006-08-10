@@ -8,10 +8,10 @@
 #include <otawa/util/ContextTree.h>
 #include <otawa/util/Dominance.h>
 #include <elm/genstruct/Vector.h>
-#include <elm/util/BitVector.h>
+//#include <elm/util/BitVector.h>
 #include <otawa/cfg.h>
 #include <otawa/util/DFAEngine.h>
-#include <otawa/util/DFABitSet.h>
+#include <otawa/util/BitSet.h>
 
 using namespace elm;
 using namespace otawa::util;
@@ -71,76 +71,86 @@ class ContextTreeProblem {
 	genstruct::Vector<BasicBlock *> hdrs;
 public:
 	
-	ContextTreeProblem(CFG& cfg);
-	inline DFABitSet *empty(void) const { return new DFABitSet(hdrs.length()); };
-	DFABitSet *gen(BasicBlock *bb) const;
-	DFABitSet *kill(BasicBlock *bb) const;
-	inline int count(void) const { return hdrs.length(); };
-	inline BasicBlock *get(int index) const { return hdrs[index]; };
+	ContextTreeProblem(CFG& cfg): _cfg(cfg) {
+		Dominance::ensure(&cfg);
+		for(Iterator<BasicBlock *> bb(cfg.bbs()); bb; bb++)
+			if(!bb->isEntry() && Dominance::isLoopHeader(bb))
+				hdrs.add(bb);
+	}
+	
+	inline BitSet *empty(void) const {
+		return new BitSet(hdrs.length());
+	}
+
+	BitSet *gen(BasicBlock *bb) const {
+		BitSet *result = empty();
+		if(!Dominance::isLoopHeader(bb))
+			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+				//cout << edge->kind() << '\n';
+				if(edge->kind() != Edge::CALL
+				&& Dominance::dominates(edge->target(), bb))
+					result->add(hdrs.indexOf(edge->target()));
+			}
+		return result;
+	}
+	
+	BitSet *kill(BasicBlock *bb) const {
+		BitSet *result = empty();
+		if(Dominance::isLoopHeader(bb))
+			result->add(hdrs.indexOf(bb));
+		return result;
+	}
+
+	bool equals(BitSet *set1, BitSet *set2) const {
+		return set1->equals(*set2);
+	}
+	
+	void reset(BitSet *set) const {
+		set->empty();
+	}
+	
+	void merge(BitSet *dst, BitSet *src) const {
+		*dst += *src;
+	}
+	
+	void set(BitSet *dst, BitSet *src) const {
+		*dst = *src;
+	}
+	
+	void add(BitSet *dst, BitSet *src) const {
+		*dst += *src;
+	}
+	
+	void diff(BitSet *dst, BitSet *src) {
+		*dst -= *src;
+	}
+	
+	inline int count(void) const {
+		return hdrs.length();
+	}
+	
+	inline BasicBlock *get(int index) const {
+		return hdrs[index];
+	}
+
 	#ifndef NDEBUG
-		void dump(elm::io::Output& out, DFABitSet *set);
+		/* Dump the content of a bit set.
+		 */
+		void dump(elm::io::Output& out, BitSet *set) {
+			bool first = true;
+			cout << "{ ";
+			for(int i = 0; i < hdrs.length(); i++)
+				if(set->contains(i)) {
+					if(first)
+						first = false;
+					else
+						cout << ", ";
+					cout << hdrs[i]->number();
+				}
+			cout << " }";
+		}
 	#endif
 };
-
-
-/* Dump the content of a bit set.
- */
-#ifndef NDEBUG
-void ContextTreeProblem::dump(elm::io::Output& out, DFABitSet *set) {
-	bool first = true;
-	cout << "{ ";
-	for(int i = 0; i < hdrs.length(); i++)
-		if(set->contains(i)) {
-			if(first)
-				first = false;
-			else
-				cout << ", ";
-			cout << hdrs[i]->number();
-		}
-	cout << " }";
-}
-#endif
-
-/**
- * Build a new context tree problem.
- * @param cfg	CFG which this problem is applied to.
- */
-ContextTreeProblem::ContextTreeProblem(CFG& cfg): _cfg(cfg) {
-	Dominance::ensure(&cfg);
-	for(Iterator<BasicBlock *> bb(cfg.bbs()); bb; bb++)
-		if(!bb->isEntry() && Dominance::isLoopHeader(bb))
-			hdrs.add(bb);
-}
-
-
-/**
- * Compute the generation set for the given BB.
- * @param bb	Current basic block.
- * @return		Matching bit set.
- */
-DFABitSet *ContextTreeProblem::gen(BasicBlock *bb) const {
-	DFABitSet *result = empty();
-	if(!Dominance::isLoopHeader(bb))
-		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-			//cout << edge->kind() << '\n';
-			if(edge->kind() != Edge::CALL
-			&& Dominance::dominates(edge->target(), bb))
-				result->add(hdrs.indexOf(edge->target()));
-		}
-	return result;
-}
-
-/**
- * Compute the kill set for the given BB.
- * @param bb	Current basic block.
- * @return		Matching bit set.
- */
-DFABitSet *ContextTreeProblem::kill(BasicBlock *bb) const {
-	DFABitSet *result = empty();
-	if(Dominance::isLoopHeader(bb))
-			result->add(hdrs.indexOf(bb));
-	return result;
-}
 
 
 /**
@@ -170,7 +180,7 @@ _parent(0), _cfg(cfg) {
 	//cout << "children = " << prob.count() << "\n";
 	
 	// Compute the solution
-	DFAEngine<ContextTreeProblem, DFABitSet, DFASuccessor>
+	DFAEngine<ContextTreeProblem, BitSet, DFASuccessor>
 		dfa(prob, *cfg);
 	dfa.compute();
 
@@ -193,9 +203,9 @@ _parent(0), _cfg(cfg) {
 	
 	// Prepare the tree analysis
 	ContextTree *trees[prob.count()];
-	BitVector *vecs[prob.count()];
+	BitSet *vecs[prob.count()];
 	for(int i = 0; i < prob.count(); i++) {
-		vecs[i] = &dfa.outSet(prob.get(i))->vector();
+		vecs[i] = dfa.outSet(prob.get(i));
 		//cout << "Child " << i << " " << *vecs[i];
 		trees[i] = new ContextTree(prob.get(i), cfg);
 		if(vecs[i]->isEmpty()) {
@@ -203,12 +213,12 @@ _parent(0), _cfg(cfg) {
 			//cout << " root child";
 		}
 		//cout << "\n";
-		vecs[i]->set(i);
+		vecs[i]->add(i);
 	}
 	
 	// Children find their parent
 	for(int i = 0; i < prob.count(); i++) {
-		vecs[i]->clear(i);
+		vecs[i]->remove(i);
 		//cout << "INITIAL " << i << " " << *vecs[i] << "\n";
 		for(int j = 0; j < prob.count(); j++) {
 			/*if(i != j)
@@ -220,12 +230,12 @@ _parent(0), _cfg(cfg) {
 			}
 		}
 		assert(trees[i]->_parent);
-		vecs[i]->set(i);
+		vecs[i]->add(i);
 	}
 	
 	// BB find their parent
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++) {
-		BitVector& bv = dfa.outSet(bb)->vector();
+		BitSet& bv = *dfa.outSet(bb);
 		if(bv.isEmpty())
 			addBB(bb);
 		else
