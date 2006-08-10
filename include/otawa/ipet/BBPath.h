@@ -1,7 +1,12 @@
+/*
+ *	$Id$
+ *	Copyright (c) 2006, IRIT UPS.
+ *
+ *	otawa/ipet/BBPath.h -- BBPath class interface.
+ */
 #ifndef OTAWA_BBPATH_H
 #define OTAWA_BBPATH_H
 
-#include <otawa/ipet/PathManager.h>
 #include <otawa/cfg.h>
 #include <otawa/ilp.h>
 #include <otawa/sim/State.h>
@@ -16,8 +21,8 @@ class PathManager;
 class BBPath: public ProgObject, private Collection<BasicBlock*> {
 	friend class PathManager;
 protected:
-	BBPath(PathManager *manager, BasicBlock *start);
-	BBPath(PathManager *manager, elm::genstruct::Vector<BasicBlock*> *path);
+	BBPath(BasicBlock *start);
+	BBPath(elm::genstruct::Vector<BasicBlock*> *path);
 	virtual ~BBPath();
 
 	PathManager *_manager;
@@ -30,6 +35,9 @@ protected:
 	virtual elm::MutableCollection<BasicBlock *> *empty(void);
 
 public:
+	static BBPath* getBBPath(BasicBlock *start);
+	static BBPath* getBBPath(elm::genstruct::Vector<BasicBlock*> *path);
+
 	elm::genstruct::Vector<BBPath*> *nexts() ;
 	int time(FrameWork *fw);
 	int countInstructions();
@@ -40,7 +48,7 @@ public:
 	inline BasicBlock* head();
 	inline BasicBlock* tail();
 	elm::String makeVarName();
-	ilp::Var *getVar(ilp::System *system);
+	ilp::Var *getVar(ilp::System *system, bool explicit_names = false);
 	sim::State *getEndingState(FrameWork *fw);
 	BBPath* sub(int begin, int end);
 	inline BBPath* operator() (int begin, int end);
@@ -56,6 +64,9 @@ public:
 		inline BasicBlock *item(void) const;
 		inline void next(void);
 	};
+	
+	static int instructions_simulated;
+	static GenericIdentifier<TreePath<BasicBlock*,BBPath*>*> ID_Tree;
 	
 	// Comparison
 	//bool equals (BBPath &bbpath);

@@ -1,3 +1,9 @@
+/*
+ *  $Id$
+ *  Copyright (c) 2006, IRIT-UPS.
+ *
+ *  src/prog/ipet_BBPath.h -- BBPath class implementation.
+ */
 #include <otawa/ipet/BBPath.h>
 #include <otawa/ipet.h>
 #include <otawa/sim/TrivialSimulator.h>
@@ -8,17 +14,31 @@ using namespace otawa::sim;
 
 namespace otawa { namespace ipet {
 
+/**
+ * @author G. Cavaignac
+ * @class BBPath
+ * This class represents a sequence of basic blocks, making a
+ * basic block path.
+ * BBPath are linked with others, and linked to basic blocks, and
+ * they are unique. One can't have two instances of the same path.
+ * It is possible to get a simulated time for this sequence
+ */
+
+/**
+ * This identifier is used for storing in a BasicBlock a TreePath
+ * storing all BBPath starting from this basic block
+ */
+GenericIdentifier<TreePath<BasicBlock*,BBPath*>*> BBPath::ID_Tree("pathmanager.tree",0);
+
 
 /**
  * Builds a new BBPath (length=1) from a given basic block
  * @param framework FrameWork where one can get a simulator, or IPET::ID_Explicit
  * @param start starting basic block
  */
-BBPath::BBPath(PathManager *manager, BasicBlock *start)
+BBPath::BBPath(BasicBlock *start)
 : basicBlocks(1), _length(1), ending_state(0){
-	assert(manager);
 	assert(start);
-	_manager = manager;
 	basicBlocks.add(start);
 }
 
@@ -28,14 +48,13 @@ BBPath::BBPath(PathManager *manager, BasicBlock *start)
  * @param framework FrameWork where one can get a simulator, or IPET::ID_Explicit
  * @param path vector of the basic blocks
  */
-BBPath::BBPath(PathManager *manager, Vector<BasicBlock*> *path)
+BBPath::BBPath(Vector<BasicBlock*> *path)
 : _length(path->length()), basicBlocks(_length), ending_state(0){
-	assert(manager);
 	assert(path);
-	_manager = manager;
 	int l = path->length();
-	for(int i = 0 ; i < l ; i++)
+	for(int i = 0 ; i < l ; i++){
 		basicBlocks.add(path->get(i));
+	}
 }
 
 
@@ -43,9 +62,57 @@ BBPath::BBPath(PathManager *manager, Vector<BasicBlock*> *path)
  * Destroys the BBPath
  */
 BBPath::~BBPath(){
-	if(!ending_state)
+	if(!ending_state){
 		delete ending_state;
+	}
 }
+
+
+/**
+ * Returns the path of length 1 composed by only the given basic block.
+ * If this path doesn't exist, creates it.
+ * @param start basic block
+ * @return BBPath corresponding to the given basic block
+ */
+BBPath *BBPath::getBBPath(BasicBlock *start){
+	TreePath<BasicBlock*,BBPath*> *tree = ID_Tree(start);
+	if(!tree){
+		BBPath *bbp = new BBPath(start); 
+		tree = new TreePath<BasicBlock*,BBPath*>(start,bbp);
+		ID_Tree(start) = tree;
+		return bbp;
+	}
+	return tree->rootData();
+}
+
+
+
+/**
+ * Returns the path composed by the given path.
+ * If this path doesn't exist, creates it.
+ * @param path vector of basic blocks composing the path
+ * @return BBPath corresponding to the given path
+ */
+BBPath *BBPath::getBBPath(Vector<BasicBlock*> *path_vector){
+	assert(path_vector);
+	BasicBlock *bb = path_vector->get(0);
+	BBPath *bbpath;
+	TreePath<BasicBlock*,BBPath*> *tree = ID_Tree(bb);
+	if(!tree){
+		bbpath = new BBPath(path_vector);
+		tree = new TreePath<BasicBlock*,BBPath*>(*path_vector, bbpath);
+		ID_Tree(bb) = tree;
+		return bbpath;
+	}
+	elm::Option<BBPath*> option = tree->get(*path_vector,1);
+	if(!option){
+		bbpath = new BBPath(path_vector);
+		tree->add(path_vector, bbpath, 1);
+		return bbpath;
+	}
+	return *option;
+}
+
 
 
 /**
@@ -58,14 +125,18 @@ Vector<BBPath*> *BBPath::nexts(){
 	Vector<BBPath*> *nextbbp = new Vector<BBPath*>(2);
 	BasicBlock *bb = basicBlocks.top();
 	Vector<BasicBlock*> bbp(basicBlocks.length()+1);
+	
 	int l = basicBlocks.length();
-	for(int i=0 ; i < l ; i++)
+	for(int i=0 ; i < l ; i++){
 		bbp.add(basicBlocks[i]);
+	}
+	
 	for(BasicBlock::OutIterator edge(bb) ; edge ; edge++){
 		bbp.add(edge->target());
-		nextbbp->add(_manager->getBBPath(&bbp));
+		nextbbp->add(getBBPath(&bbp));
 		bbp.pop();
 	}
+	
 	return nextbbp;
 }
 
@@ -100,8 +171,9 @@ int BBPath::time(FrameWork *fw){
 
 int BBPath::countInstructions(){
 	int count = 0;
-	for(int i = 0; i < _length; i++)
+	for(int i = 0; i < _length; i++){
 		count += basicBlocks[i]->countInstructions();
+	}
 	return count;
 }
 
@@ -116,9 +188,13 @@ int BBPath::simulate(FrameWork *fw){
 	state->flush();
 	int time = state->cycle();
 	delete state;
-	cerr << "Simulated time for " << makeVarName() << " = " << time << "\n";
+	//cerr << "Simulated time for " << makeVarName() << " = " << time << "\n";
 	return time;
 }
+
+
+int BBPath::instructions_simulated = 0;
+
 
 /**
  * This method returns the simulator state at the end of the last instruction of this sequence.
@@ -133,17 +209,21 @@ State* BBPath::getEndingState(FrameWork *fw){
 		last_framework_used = fw;
 		if(_length > 1){
 			ending_state = sub(1,l()-1)->getEndingState(fw);
-		}else{
+		}
+		else {
 			TrivialSimulator simulator;
 			ending_state = simulator.instantiate(fw);
 		}
 		BasicBlock &bb = *basicBlocks.top();
-		//instructionsSimulated += bb.countInstructions();
-		ending_state->setPC(bb.address());
-		ending_state->runUntilBranch();
+		for(Iterator<Inst*> inst(bb.visit()); inst; inst++){
+			ending_state->setPC(inst);
+			ending_state->step();
+			instructions_simulated ++;
+		}
 	}
-	if(simulator_state_is_clonable)
+	if(simulator_state_is_clonable){
 		return ending_state->clone();
+	}
 	State *tmp = ending_state;
 	ending_state = 0;
 	return tmp;
@@ -158,13 +238,16 @@ String BBPath::makeVarName(){
 	StringBuffer buf;
 	buf << "Seq_";
 	for(int i=0 ; i < length() ; i++){
-		if(i != 0)
+		if(i != 0){
 			buf << '_';
+		}
 		Var *var = basicBlocks[i]->get<Var*>(IPET::ID_Var,0);
-		if(var && !var->name().isEmpty()) 
+		if(var && !var->name().isEmpty()){ 
 			buf << var->name();
-		else
+		}
+		else {
 			buf << "xx";
+		}
 	}
 	return buf.toString();
 }
@@ -173,16 +256,19 @@ String BBPath::makeVarName(){
  * if this sequence doesn't have a var (for the ilp system) attached, creates a new one
  * @return Var corresponding to this sequence
  */
-Var* BBPath::getVar(System *system){
+Var* BBPath::getVar(System *system, bool explicit_names){
 	assert(system);
-	if(length() == 1)
+	if(length() == 1){
 		return IPET::getVar(system, basicBlocks[0]);
+	}
 	Var *var = IPET::ID_Var(this);
 	if(!var) {
-		if(_manager->explicitNames()){
+		if(explicit_names){
 			var = system->newVar(makeVarName());
-		} else
+		}
+		else {
 			var = system->newVar();
+		}
 		set(IPET::ID_Var, var);
 	}
 	return var;
@@ -199,9 +285,10 @@ BBPath* BBPath::sub(int begin, int end){
 	assert(end <= length());
 	assert(begin <= end);
 	Vector<BasicBlock*> bbs(end-begin+1);
-	for(int i = begin-1 ; i < end ; i++)
+	for(int i = begin-1 ; i < end ; i++) {
 		bbs.add(basicBlocks[i]);
-	return _manager->getBBPath(&bbs);
+	}
+	return getBBPath(&bbs);
 }
 
 /**

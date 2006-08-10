@@ -4,7 +4,6 @@
  *
  *  src/prog/ipet_Delta.h -- Delta class implementation.
  */
-#include <otawa/ipet/PathManager.h>
 #include <assert.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/ipet.h>
@@ -44,6 +43,7 @@ Delta::Delta(const PropList& props)
  * <code>IPET::ID_Explicit<bool></code> : give explicit names for the sequences
  */
 void Delta::configure(const PropList& props){
+	CFGProcessor::configure(props);
 	nlevels = ID_Levels(props);
 	explicitNames = IPET::ID_Explicit(props);
 }
@@ -56,18 +56,17 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 	assert(fw);
 	assert(cfg);
 	assert(cfg->isInlined());
-	PathManager pathManager;
-	IPET::ID_Explicit(&pathManager) = explicitNames;
 	//int nbConstraintsCreated = 0;
 	//int nbObjectFunctionCreated = 0;
 	System *system = IPET::getSystem(fw,cfg);
 	Vector<BBPath*> bbPathList(4*cfg->bbs().count());
 	for(CFG::BBIterator bb(cfg) ; bb ; bb++){
 		// we create all sequences with length = 1
-		bbPathList.add(pathManager.getBBPath(bb));
+		bbPathList.add(BBPath::getBBPath(bb));
 	}
 	// from 1 to nlevels+1 <=> from 0 to nlevels
-	for(int i = 0 ; i < nlevels ; i++){
+	//for(int i = 0 ; i < nlevels ; i++){
+	while(bbPathList.length() > 0){
 		Vector<BBPath*> newBBPath;
 		int l = bbPathList.length();
 		for(int j=0 ; j < l ; j++){
@@ -83,11 +82,13 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 		l = newBBPath.length();
 		for(int j=0 ; j < l ; j++){
 			BBPath *bbPathPtr = newBBPath[j];
-			bbPathList.add(bbPathPtr); // clone newBBS into bbsList
 			BBPath &bbp = *bbPathPtr;
 
 			int delta = Delta::delta(bbp, fw);
-			Var *var = bbp.getVar(system); 
+			if(bbp.tail()->countInstructions() < delta){
+				bbPathList.add(bbPathPtr);
+			}
+			Var *var = bbp.getVar(system, explicitNames); 
 			Constraint *cons;
 
 			// constraint S[A,B,C] <= S[A,B]

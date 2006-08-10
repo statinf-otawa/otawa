@@ -48,6 +48,7 @@ inline TreePath<T1,T2>::TreePath(const T1 label, int max_childs)
 	_label = label;
 	_data = elm::none;
 }
+
 template <class T1, class T2>
 inline TreePath<T1,T2>* TreePath<T1,T2>::searchChild(const T1 &label) const{
 	int l = _childs.length();
@@ -65,12 +66,14 @@ inline TreePath<T1,T2>::TreePath(int max_childs)
 :_childs(max_childs), _max_childs(max_childs){
 	_data = elm::none;
 }
+
 template <class T1, class T2>
 inline TreePath<T1,T2>::TreePath(const T1 label, const T2 data, int max_childs)
 :_childs(max_childs), _max_childs(max_childs){
 	_label = label;
 	_data = data;
 }
+
 template <class T1, class T2>
 inline TreePath<T1,T2>::TreePath(elm::genstruct::Vector<T1> &path, const T2 data, int max_childs)
 :_childs(max_childs), _max_childs(max_childs){
@@ -78,6 +81,7 @@ inline TreePath<T1,T2>::TreePath(elm::genstruct::Vector<T1> &path, const T2 data
 	_data = elm::none;
 	add(path,data,1);
 }
+
 template <class T1, class T2>
 inline TreePath<T1,T2>::TreePath(elm::genstruct::Vector<T1> *path, const T2 data, int max_childs)
 :_childs(max_childs), _max_childs(max_childs){
@@ -85,6 +89,7 @@ inline TreePath<T1,T2>::TreePath(elm::genstruct::Vector<T1> *path, const T2 data
 	_data = elm::none;
 	add(*path,data,1);
 }
+
 template <class T1, class T2>
 inline TreePath<T1,T2>::~TreePath(){
 	int l = _childs.length();
@@ -92,6 +97,7 @@ inline TreePath<T1,T2>::~TreePath(){
 		delete _childs[i];
 	}
 }
+
 template <class T1, class T2>
 inline void TreePath<T1,T2>::add(elm::genstruct::Vector<T1> &path, const T2 data, int from_index){
 	TreePath<T1,T2> *cur = this;
@@ -107,10 +113,12 @@ inline void TreePath<T1,T2>::add(elm::genstruct::Vector<T1> &path, const T2 data
 	}
 	cur->_data = data;
 }
+
 template <class T1, class T2>
 inline void TreePath<T1,T2>::add(elm::genstruct::Vector<T1> *path, const T2 data, int from_index){
 	add(*path, data, from_index);
 }
+
 template <class T1, class T2>
 inline elm::Option<T2> TreePath<T1,T2>::get(const elm::genstruct::Vector<T1> &path, int from_index){
 	TreePath<T1,T2> *cur = this;
@@ -122,6 +130,7 @@ inline elm::Option<T2> TreePath<T1,T2>::get(const elm::genstruct::Vector<T1> &pa
 	}
 	return cur->_data;
 }
+
 template <class T1, class T2>
 inline T1 TreePath<T1,T2>::rootLabel() const {return _label;}
 
