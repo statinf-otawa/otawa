@@ -16,38 +16,30 @@ namespace otawa { namespace util {
  * @par
  * This class implements a Data Flow Analysis based on CFG and gen and kill sets.
  * It requires three parameter classes.
+ * @param Problem	Provides the functions describing the problem : generator
+ * set, killer set, initial set and methods to handle sets.
+ * @param Set		Set to compute.
+ * @param Iter		Iterator on the predecessor of a node for computing
+ * the IN set(default). If a DFASuccessor is passed, the problem is computed
+ * in CFG reverse-order.
  * <dl>
  * 
- * <dt>Set</dt>
- * <dd>This class represents the sets of computed data. It must provides
- * methods for resetting the set, for adding a set, removing
- * a set (remove()) and for comparing by equality.
- * <pre><code>
- * class Set {
- * 		void reset(void);
- * 		void add(Set *set);
- * 		void remove(Set *set);
- * 		bool equals(Set *set);
- * };
- * </code></pre>
- * </dd>
+ * @par Problem
  * 
- * <dt>Problem</dt>
- * <dd>The problems provides an empty set and gen and kill sets.</dd>
+ * The problems must match the signature below.
  * <pre><code>
  * class Problem {
  * 		Set *empty(void);
  * 		Set *gen(BasicBlock *bb);
  * 		Set *kill(BasicBlock *bb);
+ * 		bool equals(Set *set1, Set *set2);
+ * 		void reset(Set *set);
+ * 		void merge(Set *set1, Set *set2);
+ * 		void set(Set *dset, Set *tset);
+ * 		void add(Set *dset, Set *tset);
+ * 		void diff(Set *dset, Set *tset);
  * };
- * </code></pre>
- * <dt>Iter</dt>
- * <dd>This class is an iterator on the edge of a basic block. Its default
- * value is @ref DFAPredecessor (for usual forward DFA) but it may also be
- * @ref DFASuccessor (for a CFG reverse computation). This class must be an iterator
- * on the edge of basic block passed to the constructor.</dd>
- * </code>
- * </dl>
+ * </code></pre> 
  */
 
 
