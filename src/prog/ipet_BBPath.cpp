@@ -241,7 +241,7 @@ String BBPath::makeVarName(){
 		if(i != 0){
 			buf << '_';
 		}
-		Var *var = basicBlocks[i]->get<Var*>(IPET::ID_Var,0);
+		ilp::Var *var = basicBlocks[i]->get<ilp::Var*>(IPET::ID_Var,0);
 		if(var && !var->name().isEmpty()){ 
 			buf << var->name();
 		}
@@ -256,12 +256,12 @@ String BBPath::makeVarName(){
  * if this sequence doesn't have a var (for the ilp system) attached, creates a new one
  * @return Var corresponding to this sequence
  */
-Var* BBPath::getVar(System *system, bool explicit_names){
+ilp::Var* BBPath::getVar(System *system, bool explicit_names){
 	assert(system);
 	if(length() == 1){
 		return IPET::getVar(system, basicBlocks[0]);
 	}
-	Var *var = IPET::ID_Var(this);
+	ilp::Var *var = IPET::ID_Var(this);
 	if(!var) {
 		if(explicit_names){
 			var = system->newVar(makeVarName());

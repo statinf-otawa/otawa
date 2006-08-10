@@ -88,7 +88,7 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 			if(bbp.tail()->countInstructions() < delta){
 				bbPathList.add(bbPathPtr);
 			}
-			Var *var = bbp.getVar(system, explicitNames); 
+			ilp::Var *var = bbp.getVar(system, explicitNames); 
 			Constraint *cons;
 
 			// constraint S[A,B,C] <= S[A,B]
