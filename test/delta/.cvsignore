@@ -1,3 +1,4 @@
+.deps
 Makefile
 Makefile.in
-snu-rt
+test_delta
