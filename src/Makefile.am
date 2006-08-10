@@ -4,7 +4,12 @@ SUBDIRS= \
 	oshell \
 	dumpcfg \
 	mkff \
-	ostat
+	ostat \
+	odisplay
+
+if WITH_ILP
+SUBDIRS += oipet
+endif
 
 #all-local:
 #	(cd mkast; make)
