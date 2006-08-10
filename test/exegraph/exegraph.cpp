@@ -25,8 +25,10 @@ using namespace std;
 
 int main(int argc, char **argv) {
 	
-	elm::io::OutFileStream logStream("/home/rochange/ECLIPSE/otawa/otawa/test/exegraph/log");
-	elm::io::Output logFile(logStream);
+	elm::io::OutFileStream *logStream = new elm::io::OutFileStream("log.txt");
+	if(!logStream->isReady())
+		throw IOException(logStream->lastErrorMessage());
+	elm::io::Output logFile(*logStream);
 	
 	Microprocessor processor;
 	Queue *fetchQueue = processor.addQueue("FetchQueue", 2);
@@ -105,7 +107,7 @@ int main(int argc, char **argv) {
 	pipeline_info.max_latency = 1;
 	pipeline_info.source_queue = ROB;
 	pipeline_info.destination_queue = NULL;
-	processor.addPipelineStage(pipeline_info);	
+	processor.addPipelineStage(pipeline_info);
 	processor.dump(logFile);
 	
 	Manager manager;
@@ -209,11 +211,7 @@ int main(int argc, char **argv) {
 			 << sys->countConstraints() << " constraints.\n";
 		cout << "SUCCESS\nWCET = " << vcfg.use<int>(IPET::ID_WCET) << '\n';
 	}
-	catch(LoadException e) {
-		cerr << "ERROR: " << e.message() << '\n';
-		exit(1);
-	}
-	catch(ProcessorException e) {
+	catch(elm::Exception e) {
 		cerr << "ERROR: " << e.message() << '\n';
 		exit(1);
 	}
