@@ -13,7 +13,6 @@ dnl BUILD_XXX_LIBS		Flags for linking module XXX.
 dnl EXTERN_XXX_CXXFLAGS	Flags for compiling with module XXX by external program.
 dnl EXTERN_XXX_LIBS		Flags for linking with module XXX by external program.
 dnl PLUGINS				Plugins to build.
-dnl TESTS				Tests to perform.
 dnl ILP_PLUGIN			Linking flags when using an ILP engine.
 dnl ILP_DEP				Dependencies on the ILP.
 dnl LOADER_PLUGIN		Linking flags when using a loader.
@@ -88,9 +87,7 @@ AC_PROG_LIBTOOL
 
 dnl ==== Globals ====
 PLUGINS=
-TESTS=
 AC_SUBST(PLUGINS)
-AC_SUBST(TESTS)
 extern_path=`dirname $PWD`
 DEFAULT_HEADER_PATHS="/usr/include /usr/local/include"
 SITE_HEADER_PATHS="$HOME/.local/include $DEFAULT_HEADER_PATHS"
@@ -300,7 +297,6 @@ if test "$with_lp_solve" != no; then
 		AC_DEFINE(HAVE_LP_SOLVE,,[lp_solve available])
 		HAVE_LP_SOLVE=yes
 		HAVE_ILP=yes
-		TESTS="$TESTS lp_solve categorisation ccg"
 		PLUGINS="$PLUGINS lp_solve"
 		AC_MSG_RESULT([yes])
 	else
@@ -363,7 +359,6 @@ AC_SUBST(LOADER_DEP)
 
 dnl ==== Post-phase ====
 dnl if test "$with_plugin" = yes -o "$ILP_PLUGIN" != ""; then
-dnl	TESTS="$TESTS ipet"
 dnl	AC_DEFINE(HAVE_ILP,,[ILP engine available.])
 dnl fi
 AC_DEFINE_UNQUOTED(ILP_PATHS, "$ILP_PATHS", [Paths for ILP plugins])
@@ -389,6 +384,8 @@ AC_OUTPUT([
 	src/dumpcfg/Makefile
 	src/mkff/Makefile
 	src/ostat/Makefile
+	src/oipet/Makefile
+	src/odisplay/Makefile
 	examples/Makefile
 	bin/Makefile
 	bin/otawa-config
