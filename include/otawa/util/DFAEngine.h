@@ -140,27 +140,27 @@ inline void DFAEngine<Problem, Set, Iter>::compute(void) {
 			int idx = bb->number();
 			
 			// IN = union OUT of predecessors
-			ins[idx]->reset();
+			prob.reset(ins[idx]);
 			for(Iter pred(bb); pred; pred++)
 				if(pred) {
 					BasicBlock *bb_pred = pred;
 					int pred_idx = bb_pred->number();
-					ins[idx]->add(outs[pred_idx]);
+					prob.merge(ins[idx], outs[pred_idx]);
 				}
 			
 			// OUT = IN \ KILL U GEN
-			comp->add(ins[idx]);
-			comp->remove(kills[idx]);
-			comp->add(gens[idx]);
+			prob.set(comp, ins[idx]);
+			prob.diff(comp, kills[idx]);
+			prob.add(comp, gens[idx]);
 			
 			// Any modification ?
-			if(!comp->equals(outs[idx])) {
+			if(!prob.equals(comp, outs[idx])) {
 				ex = outs[idx];
 				outs[idx] = comp;
 				comp = ex;
 				changed = true;
 			}
-			comp->empty();
+			prob.reset(comp);
 		}
 	}
 }
