@@ -47,30 +47,26 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 	assert(system);
 	assert(count >= 0);
 	//cout << "LOOP " << count << " times at " << addr << "\n";
+
+	// check domination
+	Dominance::ensure(cfg);
 	
 	// Process basic blocks
 	bool found = false;
 	for(CFG::BBIterator bb(cfg); bb; bb++)
-		if(bb->address() == addr) {
+		if(bb->address() == addr && Dominance::isLoopHeader(bb)) {
 			found = true;
-			
-			// Check domination
-			if(!cfg->entry()->getProp(&Dominance::ID_RevDom)) {
-				Dominance dom;
-				dom.processCFG(0, cfg);
-			}
 			
 			// Build the constraint
 			//cout << "Added to " << *bb << "\n";
 			otawa::ilp::Constraint *cons =
 				system->newConstraint(otawa::ilp::Constraint::LE);
+			cons->addLeft(1, bb->use<otawa::ilp::Var *>(IPET::ID_Var));
 			for(BasicBlock::InIterator edge(bb); edge; edge++) {
 				assert(edge->source());
 				otawa::ilp::Var *var =
 					edge->source()->use<otawa::ilp::Var *>(IPET::ID_Var);
-				if(Dominance::dominates(bb, edge->source()))
-					cons->addLeft(1, var);
-				else
+				if(!Dominance::dominates(bb, edge->source()))
 					cons->addRight(count, var);
 			}
 		}
