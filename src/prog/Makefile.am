@@ -1,11 +1,10 @@
 lib_LTLIBRARIES=libotawa.la
 
-AM_CXXFLAGS=-fPIC @BUILD_PROG_CXXFLAGS@
+AM_CXXFLAGS=@BUILD_PROG_CXXFLAGS@
 AM_YYFLAGS=-dv
 
 libotawa_la_LDFLAGS=
 libotawa_la_LIBADD= @BUILD_PROG_LIBS@
-#libotawa_la_DEPENDENCIES = @LOADER_DEP@ @ILP_DEP@
 
 libotawa_la_SOURCES = \
 	BlockAST.cpp \
@@ -104,6 +103,7 @@ libotawa_la_SOURCES = \
 	util_Graph.cpp \
 	util_Node.cpp \
 	util_Edge.cpp \
+	util_BitSet.cpp \
 	hard_Register.cpp \
 	sim_Simulator.cpp \
 	sim_State.cpp \
