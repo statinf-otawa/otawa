@@ -5,6 +5,7 @@
  *	src/prog/ipet_IPET.cpp -- IPET class implementation.
  */
 
+#include <elm/util/MessageException.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ilp.h>
 #include <otawa/manager.h>
@@ -63,10 +64,11 @@ GenericIdentifier<bool> IPET::ID_Explicit("ipet.explicit");
  * @preturn		CFG ILP system.
  */
 ilp::System *IPET::getSystem(FrameWork *fw, CFG *cfg) {
-	//System *system = cfg->get<System *>(IPET::ID_System, 0);
 	System *system = IPET::ID_System(cfg);
 	if(!system) {
 		system = fw->newILPSystem();
+		if(!system)
+			throw elm::MessageException("no ILP engine available");
 		cfg->addDeletable<System *>(IPET::ID_System, system);
 	}
 	return system;
