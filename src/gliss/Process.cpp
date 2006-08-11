@@ -84,6 +84,7 @@ elm::Collection<otawa::File *> *Process::files(void) {
 	else {
 		_files.add(file);
 		start_addr = (address_t)Ehdr.e_entry;
+		GLISS_STATE(this) = file->state;
 		return file;
 	}
 }

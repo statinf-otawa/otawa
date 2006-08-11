@@ -18,6 +18,7 @@ namespace otawa { namespace gliss {
 // File class
 class File: public ::otawa::File {
 	friend class CodeSegment;
+	friend class Process;
 	String path;
 	elm::datastruct::Vector<Segment *> segs;
 	state_t *state;
