@@ -9,6 +9,7 @@
 #include <otawa/ipet.h>
 #include <otawa/ipet/Delta.h>
 #include <otawa/ilp.h>
+#include <otawa/sim/State.h>
 
 
 using namespace otawa::ilp;
@@ -44,7 +45,7 @@ Delta::Delta(const PropList& props)
  */
 void Delta::configure(const PropList& props){
 	CFGProcessor::configure(props);
-	nlevels = ID_Levels(props);
+	levels = props.get<int>(ID_Levels);
 	explicitNames = IPET::ID_Explicit(props);
 }
 
@@ -64,9 +65,18 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 		// we create all sequences with length = 1
 		bbPathList.add(BBPath::getBBPath(bb));
 	}
+	
+	// stats
+	int sum_length = 0;
+	int count = 0;
+	max_length = 0;
+	
+	
 	// from 1 to nlevels+1 <=> from 0 to nlevels
-	//for(int i = 0 ; i < nlevels ; i++){
-	while(bbPathList.length() > 0){
+	for(int i = 0 ;
+		(levels && i < levels) || (bbPathList.length() > 0 && !levels)  ;
+		i++){
+	//while(bbPathList.length() > 0){
 		Vector<BBPath*> newBBPath;
 		int l = bbPathList.length();
 		for(int j=0 ; j < l ; j++){
@@ -78,15 +88,40 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 			delete toInsert;
 		}
 
-		bbPathList.clear(); // clone newBBS into bbsList
+		bbPathList.clear();
 		l = newBBPath.length();
 		for(int j=0 ; j < l ; j++){
 			BBPath *bbPathPtr = newBBPath[j];
 			BBPath &bbp = *bbPathPtr;
 
 			int delta = Delta::delta(bbp, fw);
-			if(bbp.tail()->countInstructions() < delta){
+			if(bbp.tail()->countInstructions() < ID_Flush_Time(bbp)){
 				bbPathList.add(bbPathPtr);
+			}
+			if(delta){
+				// stats
+				sum_length += bbp.length();
+				count++;
+				if(bbp.length() > max_length)
+					max_length = bbp.length();
+				
+				ilp::Var *var = bbp.getVar(system, explicitNames); 
+				Constraint *cons;
+	
+				// constraint S[A,B,C] <= S[A,B]
+				cons = system->newConstraint(Constraint::LE);
+				cons->addLeft(1,var);
+				cons->addRight(1, bbp(1,bbp.l()-1)->getVar(system));
+	
+				// constraint S[A,B,C] <= S[B,C]
+				cons = system->newConstraint(Constraint::LE);
+				cons->addLeft(1,var);
+				cons->addRight(1, bbp(2,bbp.l())->getVar(system));
+	
+				system->addObjectFunction(delta, var);
+	
+				//nbConstraintsCreated += 2;
+				//nbObjectFunctionCreated++;
 			}
 			ilp::Var *var = bbp.getVar(system, explicitNames); 
 			Constraint *cons;
@@ -106,6 +141,10 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 			//nbConstraintsCreated += 2;
 			//nbObjectFunctionCreated++;
 		}
+		if(count == 0)
+			mean_length = 0;
+		else
+			mean_length = (double)sum_length / (double)count;
 	}
 
 	// dumping system on standard output
@@ -125,25 +164,30 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
  */
 int Delta::delta(BBPath &bbp, FrameWork *fw){
 	assert(fw);
+	
+	if(bbp.length() <= 1)
+		return 0;
+	
 	elm::Option<int> delta = bbp.get<int>(ID_Delta);
 	if(!delta){
 		//nbDeltasCalculated++;
-		switch(bbp.length()){
-		case 1:
-			delta = 0;
-			break;
-		case 2:
+		int f, o, t;
+		sim::State *state = bbp.getEndingState(fw);
+		f = state->cycle();
+		state->flush();
+		t = state->cycle();
+		o = t - f;
+		ID_Flush_Time(bbp) = o;
+		if(bbp.length() == 2){
 			delta =
-				bbp.t(fw)
-			    	- bbp(1,bbp.l()-1)->t(fw)
-			    	- bbp(2,bbp.l())->t(fw);
-			break;
-		default:
+				t - bbp(1,bbp.l()-1)->t(fw)
+			      - bbp(2,bbp.l())->t(fw);
+		}
+		else{
 			delta =
-				bbp.t(fw)
-			    	- bbp(1,bbp.l()-1)->t(fw)
-			    	- bbp(2,bbp.l())->t(fw)
-			    	+ bbp(2,bbp.l()-1)->t(fw);
+				t - bbp(1,bbp.l()-1)->t(fw)
+			      - bbp(2,bbp.l())->t(fw)
+			      + bbp(2,bbp.l()-1)->t(fw);
 		}
 	}
 	ID_Delta(bbp) = *delta;
@@ -152,15 +196,20 @@ int Delta::delta(BBPath &bbp, FrameWork *fw){
 
 
 /**
- * This identifier is used for storing the depth of the Delta algorith
+ * This identifier is used for forcing the depth of the Delta algorith.
+ * If this identifier is not set, the depth will be adjusted automatically
  */
-GenericIdentifier<int>  Delta::ID_Levels("delta.levels",5);
+GenericIdentifier<int>  Delta::ID_Levels("delta.levels");
 
 /**
  * This identifier is used for storing the delta value of a path
  */
 GenericIdentifier<int> Delta::ID_Delta("delta.delta");
-
-
+/**
+ * This identifier is used for storing the time for the first
+ * instruction to fetch after all instructions from the
+ * beginning of the sequence have been fetched
+ */
+GenericIdentifier<int> Delta::ID_Flush_Time("delta.flush_time");
 
 } } // otawa::ipet

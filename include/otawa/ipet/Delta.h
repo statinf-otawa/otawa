@@ -17,10 +17,12 @@ class BBPath;
 class Delta;
 
 class Delta: public CFGProcessor {
-	int nlevels;
+	elm::Option<int> levels;
 	bool explicitNames;
 
 public:
+	int max_length;
+	double mean_length;
 	Delta(const PropList& props = PropList::EMPTY);
 	virtual void configure(const PropList& props);
 	virtual void processCFG(FrameWork* fw, CFG* cfg);
@@ -29,6 +31,7 @@ public:
 
 	static GenericIdentifier<int> ID_Levels;
 	static GenericIdentifier<int> ID_Delta;
+	static GenericIdentifier<int> ID_Flush_Time;
 };
 
 
