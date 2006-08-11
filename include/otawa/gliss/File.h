@@ -15,6 +15,8 @@
 
 namespace otawa { namespace gliss {
 
+class Process;
+
 // File class
 class File: public ::otawa::File {
 	friend class CodeSegment;
