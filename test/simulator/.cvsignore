@@ -1,0 +1,6 @@
+.deps
+.libs
+log
+Makefile
+Makefile.in
+simulator
