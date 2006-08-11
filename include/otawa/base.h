@@ -8,6 +8,7 @@
 #define OTAWA_BASE_H
 
 #include <stdarg.h>
+#include <elm/io.h>
 #include <elm/utility.h>
 #include <elm/string.h>
 #include <elm/util/VarArg.h>
@@ -17,7 +18,7 @@ using namespace elm;
 
 // Base types
 typedef unsigned char byte_t;
-typedef byte_t *address_t ;
+typedef unsigned long address_t ;
 typedef unsigned long size_t;
 typedef signed long offset_t;
 typedef unsigned long mask_t;
@@ -40,6 +41,11 @@ public:
 // Inlines
 inline void Exception::setMessage(elm::String message) {
 	msg = message;
+}
+
+// Format
+inline io::IntFormat address_format(address_t addr) {
+	return elm::io::right(elm::io::width(8, elm::io::pad('0', elm::io::hex(addr))));
 }
 
 } // otawa
