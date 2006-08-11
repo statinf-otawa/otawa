@@ -12,6 +12,7 @@
 #include <elm/genstruct/HashTable.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/io.h>
+#include <otawa/base.h>
 
 using namespace elm;
 
@@ -21,7 +22,7 @@ namespace otawa { namespace ets {
 class AbstractCacheState{
 	public :
 		genstruct::Vector<BitVector *> cache_state;//<bitVector *>
-		genstruct::HashTable<void *, int> htable;//<l-block, its index in BitVector>
+		genstruct::HashTable<address_t, int> htable;//<l-block, its index in BitVector>
 		int cache_line;
 		typedef enum categorisation_t {
 			ALWAYS_MISS = 0,
@@ -30,7 +31,7 @@ class AbstractCacheState{
 			CONFLICT = 3
 		} categorisation_t;
 		categorisation_t categorisation;
-		genstruct::HashTable<void *, int> hcat;//<l-block, its categorisation>
+		genstruct::HashTable<address_t, int> hcat;//<l-block, its categorisation>
 		
 		inline AbstractCacheState(AbstractCacheState *acs);
 		inline AbstractCacheState(int which_line);
