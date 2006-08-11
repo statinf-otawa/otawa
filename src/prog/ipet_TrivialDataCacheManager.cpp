@@ -63,7 +63,7 @@ BasicBlock *bb) {
 	
 	// Count the memory accesses
 	int count = 0;
-	for(BasicBlock::InstIterator inst(bb); inst; inst++)
+	for(Iterator<Inst*> inst(bb->visit()); inst; inst++)
 		if(inst->isMem())
 			count++;
 	
