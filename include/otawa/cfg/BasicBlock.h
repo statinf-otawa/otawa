@@ -83,7 +83,7 @@ public:
 	static BasicBlock *findBBAt(FrameWork *fw, address_t addr);
 	
 	// Generic accessors
-	inline IteratorInst<Inst *> *visit(void);
+	virtual inline IteratorInst<Inst *> *visit(void);
 	inline operator IteratorInst<Inst *> *(void) { return visit(); };
 	inline bool isCall(void) const { return (flags & FLAG_Call) != 0; };
 	inline bool isReturn(void) const { return (flags & FLAG_Return) != 0; };
@@ -94,7 +94,7 @@ public:
 	inline bool isEnd(void) const { return flags & (FLAG_Entry | FLAG_Exit); };
 	inline Mark *head(void) const { return _head; };
 	inline address_t address(void) const { return _head->address(); };
-	int countInstructions(void) const;
+	virtual int countInstructions(void) const;
 	size_t size(void) const;
 	inline bool isVirtual(void) const { return flags & FLAG_Virtual; };
 	inline unsigned long getFlags(void) const { return flags; };
