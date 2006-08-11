@@ -42,7 +42,7 @@ public:
 	virtual address_t getPC(void) = 0;
 	virtual Inst *pcInst(void) = 0;
 	virtual void setPC(address_t pc) = 0;
-	virtual void setPC(Inst *inst) = 0;
+	//virtual void setPC(Inst *inst) = 0;
 };
 
 } } // otawa::sim

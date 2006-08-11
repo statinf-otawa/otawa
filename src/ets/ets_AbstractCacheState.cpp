@@ -86,15 +86,15 @@ void AbstractCacheState::join(AbstractCacheState *state1, AbstractCacheState *st
 		cache_state[j]->clear();
 		
 	//Adding of state1->hcat and state2->hcat in this.
-	for(genstruct::HashTable<void *, int>::KeyIterator key(state1->hcat); key; key++)
+	for(genstruct::HashTable<address_t, int>::KeyIterator key(state1->hcat); key; key++)
 		if(!hcat.exists(key))
 			hcat.put(key, state1->hcat.get(key, -1));
-	for(genstruct::HashTable<void *, int>::KeyIterator yek(state2->hcat); yek; yek++)
+	for(genstruct::HashTable<address_t, int>::KeyIterator yek(state2->hcat); yek; yek++)
 		if(!hcat.exists(yek))
 			hcat.put(yek, state1->hcat.get(yek, -1));
 		
 	//Ferdinand's Algorithme (Intersection(Join) - Must).
-	for(genstruct::HashTable<void *, int>::KeyIterator k(htable); k; k++){
+	for(genstruct::HashTable<address_t, int>::KeyIterator k(htable); k; k++){
 		a=-1;
 		b=-1;
 		for(int i=0;i<state1->cache_state.length();i++){
@@ -122,11 +122,11 @@ void AbstractCacheState::assignment(AbstractCacheState *other){
 		cache_state[i]->clear();
 		cache_state[i]->applyOr(*other->cache_state[i]);
 	}
-	for(genstruct::HashTable<void *, int>::KeyIterator key(other->htable); key; key++){
+	for(genstruct::HashTable<address_t, int>::KeyIterator key(other->htable); key; key++){
 		if(!htable.exists(key))
 			htable.put(key, other->htable.get(key, -1));
 	}
-	for(genstruct::HashTable<void *, int>::KeyIterator k(other->hcat); k; k++){
+	for(genstruct::HashTable<address_t, int>::KeyIterator k(other->hcat); k; k++){
 		if(!hcat.exists(k))
 			hcat.put(k, other->hcat.get(k, -1));
 	}

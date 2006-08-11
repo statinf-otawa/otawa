@@ -23,7 +23,7 @@ static void displayContextTree(ContextTree *tree, int space = 0) {
 	// Display tree
 	switch(tree->kind()){
 	case ContextTree::LOOP:
-		cout << "LOOP at " << tree->bb()->address() << " ";
+		cout << "LOOP at " << address_format(tree->bb()->address()) << " ";
 		break;
 	case ContextTree::ROOT:
 		cout << "ROOT ";
@@ -49,7 +49,7 @@ static void displayContextTree(ContextTree *tree, int space = 0) {
 			cout << "EXIT";
 		else
 			cout << (bb->use<int>(CFG::ID_Index) - 1)
-				 << '(' << bb->address() << ')';
+				 << '(' << address_format(bb->address()) << ')';
 	}
 	cout << "}\n";
 	
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 		else
-			cout << "main found at 0x" << cfg->address() << '\n';
+			cout << "main found at 0x" << address_format(cfg->address()) << '\n';
 		
 		// Removing __eabi call if available
 		for(CFG::BBIterator bb(cfg); bb; bb++)
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 		for(CFG::BBIterator bb(cfg); bb; bb++)
 			if(bb->get<bool>(Dominance::ID_LoopHeader, false))
 				cout << "- " << bb->use<int>(CFG::ID_Index)
-					 << " (" << bb->address() << ")\n";
+					 << " (" << address_format(bb->address()) << ")\n";
 				
 		
 		// Build the context

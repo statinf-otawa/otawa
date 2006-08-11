@@ -17,7 +17,7 @@ namespace otawa { namespace ets {
 // FlowFactLoader class	
 class FlowFactLoader: public ASTProcessor, private otawa::FlowFactLoader {
 	public :
-		genstruct::HashTable<void *, int> loop_table;
+		genstruct::HashTable<address_t, int> loop_table;
 		
 		inline FlowFactLoader(FrameWork *fw);
 		
