@@ -17,6 +17,11 @@ namespace otawa {
  * The processor class is implemented by all code processor. At this level,
  * the argument can only be the full framework. Look at sub-classes for more
  * accurate processors.
+ * 
+ * The processor configuration accepts the following properties:
+ * @ref PROC_OUTPUT, @ref PROC_VERBOSE, @ref PROC_STATS, @ref PROC_TIMED.
+ * 
+ * This processor may generate the following statistics: @ref PROC_RUNTIME.
  */
 
 
@@ -44,9 +49,26 @@ Processor::Processor(const PropList& props) {
 /**
  */
 void Processor::init(const PropList& props) {
-	OutStream *out_stream = props.get<OutStream *>(ID_Output, 0);
+	
+	// Process output
+	OutStream *out_stream = PROC_OUTPUT(props);
 	if(out_stream)
 		out.setStream(*out_stream);
+		
+	// Process statistics
+	stats = PROC_STATS(props);
+	if(stats) { 
+		if(PROC_TIMED(props))
+			flags |= TIMED;
+		else
+			flags &= ~TIMED;
+	}
+	
+	// Process verbosity
+	if(PROC_VERBOSE(props))
+		flags |= VERBOSE;
+	else
+		flags &= ~VERBOSE;
 }
 
 
@@ -58,14 +80,6 @@ void Processor::init(const PropList& props) {
 
 
 /**
- * This property identifier is used for setting the output stream used by
- * the processor for writing messages (information, warning, error) to the user.
- * The data must be of type @ref elm::io::OutStream *.
- */
-Identifier Processor::ID_Output("proc.output");
-
-
-/**
  * This method may be called for configuring a processor thanks to information
  * passed in the property list.
  * @param props	Configuration information.
@@ -73,5 +87,84 @@ Identifier Processor::ID_Output("proc.output");
 void Processor::configure(const PropList& props) {
 	init(props);
 }
+
+
+/**
+ * Execute the code processor on the given framework.
+ * @param fw	Framework to work on.
+ */
+void Processor::process(FrameWork *fw) {
+	if(isVerbose())
+		out << "Starting " << name() << io::endl;
+	system::StopWatch swatch;
+	if(isTimed())
+		swatch.start();
+	processFrameWork(fw);
+	if(isTimed()) {
+		swatch.stop();
+		PROC_RUNTIME(*stats) = swatch.delay();
+	if(isVerbose())
+		out << "Ending " << name() << io::endl;
+	}
+}
+
+
+/**
+ * @fn bool Processor::isVerbose(void) const;
+ * Test if the verbose mode is activated.
+ * @return	True if the verbose is activated, false else.
+ */
+
+
+/**
+ * @fn bool Processor::isTimed(void) const;
+ * Test if the timed mode is activated (recording of timings in the statistics).
+ * @return	True if timed mode is activated, false else.
+ * @note	If statistics are not activated, this method returns ever false.
+ */
+
+
+/**
+ * @fn bool Processor::recordsStats(void) const;
+ * Test if the statictics mode is activated.
+ * @return	True if the statistics mode is activated, false else.
+ */
+
+
+/**
+ * This property identifier is used for setting the output stream used by
+ * the processor for writing messages (information, warning, error) to the user.
+ */
+GenericIdentifier<elm::io::OutStream *> PROC_OUTPUT("otawa.proc.output", 0);
+
+
+/**
+ * This property identifiers is used to pass a property list to the processor
+ * that will be used to store statistics about the performed work. Implicitly,
+ * passing such a property activates the statistics recording facilities.
+ */
+GenericIdentifier<PropList *> PROC_STATS("otawa.proc.stats", 0);
+
+
+/**
+ * If the value of the associated property is true (default to false), time
+ * statistics will also be collected with other processor statistics. Passing
+ * such a property without @ref PROC_STATS has no effects.
+ */
+GenericIdentifier<bool> PROC_TIMED("otawa.proc.timed", false);
+
+
+/**
+ * This property identifier is used to store in the statistics of a processor
+ * the overall run time of the processor work.
+ */
+GenericIdentifier<elm::system::time_t> PROC_RUNTIME("otawa.proc.runtime", 0);
+
+
+/**
+ * This property activates the verbose mode of the processor: information about
+ * the processor work will be displayed.
+ */
+GenericIdentifier<bool> PROC_VERBOSE("otawa.proc.verbose", false);
 
 } // otawa

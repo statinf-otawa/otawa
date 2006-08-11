@@ -117,6 +117,10 @@ BoolOption dump_graph(command, 'g', "dump-graph",
 	"dump DOT graph of the processed function", false);
 
 
+// Other options
+BoolOption verbose(command, 'v', "verbose", "verbose mode", false);
+
+
 /**
  * Build the command manager.
  */
@@ -159,6 +163,10 @@ void Command::compute(String fun) {
 	PropList props;
 	if(dump_constraints || dump_graph)
 		props.set(IPET::ID_Explicit, true);
+	if(verbose) {
+		PROC_VERBOSE(props) = true;
+		cerr << "verbose !\n";
+	}
 	
 	// Compute BB times
 	TrivialBBTime tbt(5, props);
