@@ -403,6 +403,7 @@ AC_OUTPUT([
 	test/props/Makefile
 	test/pcg/Makefile
 	test/exegraph/Makefile
+	test/simulator/Makefile
 	test/systemc/Makefile
 	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
