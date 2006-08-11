@@ -32,7 +32,7 @@ namespace otawa { namespace ipet {
  * @param props Configuration properties.
  */
 Delta::Delta(const PropList& props)
-: CFGProcessor("otawa::ipet::Delta", Version(0, 1, 0), props){
+: CFGProcessor("otawa::ipet::Delta", Version(0, 2, 0), props){
 	configure(props);
 }
 
