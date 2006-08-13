@@ -44,8 +44,11 @@ inline void Exception::setMessage(elm::String message) {
 }
 
 // Format
-inline io::IntFormat address_format(address_t addr) {
-	return elm::io::right(elm::io::width(8, elm::io::pad('0', elm::io::hex(addr))));
+namespace fmt {
+	inline elm::io::IntFormat address(address_t addr) {
+		return elm::io::right(elm::io::width(8, elm::io::pad('0',
+			elm::io::hex(addr))));
+	}
 }
 
 } // otawa
