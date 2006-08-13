@@ -69,7 +69,7 @@ int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
 			else if(cfg->label())
 				cout << cfg->label();
 			else
-				cout << cfg->address();
+				cout << fmt::address(cfg->address());
 		}
 		cout << ")";
 		break;
@@ -91,7 +91,7 @@ void DisassemblerDisplayer::onBBEnd(BasicBlock *bb, int index) {
 			cout << '\t' << *label << ":\n";
 			
 		// Disassemble the instruction
-		cout << "\t\t" << inst->address() << ' ';
+		cout << "\t\t" << fmt::address(inst->address()) << ' ';
 		inst->dump(cout);
 		cout << '\n';
 	}

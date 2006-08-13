@@ -28,7 +28,7 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 		else {
 			if(display_assembly)
 				cout << "{";
-			cout << index << " (" << bb->address() << ")";
+			cout << index << " (" << fmt::address(bb->address()) << ")";
 			if(display_assembly) {
 				cout << " | ";
 				bool first = true;
@@ -40,7 +40,7 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 					for(PropList::Getter<String> label(inst, File::ID_Label);
 					label; label++)
 						cout << *label << ":\\l";
-					cout << inst->address() << "    ";
+					cout << fmt::address(inst->address()) << "    ";
 					inst->dump(cout);
 				}
 				cout << "\\l }";
