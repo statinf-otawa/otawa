@@ -30,8 +30,8 @@ void SimpleDisplayer::onCFGEnd(CFG *cfg) {
 void SimpleDisplayer::onBBBegin(BasicBlock *bb, int index) {
 	if(!bb->isEntry() && !bb->isExit())
 		cout << index - 1
-			 << ' ' << bb->address()
-			 << ' ' << (bb->address() + bb->getBlockSize() - 4);
+			 << ' ' << fmt::address(bb->address())
+			 << ' ' << fmt::address(bb->address() + bb->getBlockSize() - 4);
 }
 
 
