@@ -7,6 +7,7 @@
 #include <elm/io.h>
 #include <elm/genstruct/VectorQueue.h>
 #include <emul.h>
+#include <iss_include.h>
 
 
 #define MAX_STAGES 20
@@ -22,16 +23,22 @@ class SimulatedInstruction {
 	private:
 		otawa::Inst * instruction;
 		code_t binary_code;
+		instruction_t * emulated_inst;
 	public:
-		inline SimulatedInstruction(otawa::Inst* inst, code_t code);
+		inline SimulatedInstruction(otawa::Inst* inst, code_t code, instruction_t* emul_inst);
 		inline otawa::Inst * inst();
+		inline instruction_t * emulatedInst();
 };
 
-inline SimulatedInstruction::SimulatedInstruction(otawa::Inst* inst, code_t code) :
-	instruction(inst), binary_code(code) {
+inline SimulatedInstruction::SimulatedInstruction(otawa::Inst* inst, code_t code, instruction_t* emul_inst) :
+	instruction(inst), binary_code(code), emulated_inst(emul_inst) {
 	}
 inline otawa::Inst * SimulatedInstruction::inst() {
 	return instruction;
+}
+
+inline instruction_t * SimulatedInstruction::emulatedInst() {
+	return emulated_inst;
 }
 
 
@@ -115,6 +122,7 @@ SC_MODULE(FetchStage) {
 	sc_out<int>number_of_leaving_instructions;
 		
 	otawa::ARMState *sim_state;
+	state_t * emulated_state;
 	otawa::address_t pc;
 	int width;
 	int number_of_fetched_instructions;
@@ -147,6 +155,10 @@ SC_MODULE(FetchStage) {
 	
 	inline void setPC(otawa::address_t new_pc) {
 		pc = new_pc;
+	}
+	
+	inline bool isEmpty() {
+		return fetch_queue->isEmpty();
 	}
 	
 	SC_CTOR(FetchStage) {
@@ -225,6 +237,33 @@ SC_MODULE(ExecuteStage) {
 	int width;
 	otawa::ARMState *sim_state;
 	
+	class PendingInstruction;
+	class PendingInstruction {
+		SimulatedInstruction * inst;
+		int cycles_to_complete;
+		PendingInstruction * next;
+		public: 
+			PendingInstruction(SimulatedInstruction* instruction, int cycles):
+				inst(instruction), cycles_to_complete(cycles) {
+			}
+			PendingInstruction * getNext() {
+				return next;
+			}	
+			void setNext(PendingInstruction * next_instruction) {
+				next = next_instruction;
+			}
+	
+			bool terminated() {
+				cycles_to_complete --;
+				return (cycles_to_complete == 0 );
+			}
+			SimulatedInstruction * instruction() {
+				return inst;
+			}
+	};
+	
+	
+	PendingInstruction * pending_instruction_list;
 	
 	void execute(); 
 	
@@ -242,6 +281,7 @@ SC_MODULE(ExecuteStage) {
 	
 	inline void init(otawa::ARMState *state) {
 		sim_state = state;
+		pending_instruction_list = NULL;
 	}
 	
 	SC_CTOR(ExecuteStage) {
@@ -282,6 +322,11 @@ SC_MODULE(ARMProcessor)
   void init() {
   	fetch_stage->init(sim_state);
   }
+  
+  bool isEmpty() {
+  	return fetch_stage->isEmpty();
+	}
+	
   ARMProcessor(sc_module_name name);
   ~ARMProcessor()
     {
