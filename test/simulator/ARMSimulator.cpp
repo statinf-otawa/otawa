@@ -70,8 +70,8 @@ Inst* DriverUntilAddr::nextInstruction(bool branch_is_taken) {
 
 void DriverUntilAddr::terminateInstruction(Inst *inst) {
 	assert(inst);
-	if (inst->address() == end_addr)
-		sim_mode = sim::HALTED;
+//	if (inst->address() == end_addr)
+//		sim_mode = sim::HALTED;
 }
 
 sim::mode_t DriverUntilAddr::simMode() {
@@ -94,8 +94,8 @@ Inst* DriverUntilEnd::nextInstruction(bool branch_is_taken) {
 
 void DriverUntilEnd::terminateInstruction(Inst *inst) {
 	assert(inst);
-	if (inst->next() == NULL)
-		sim_mode = sim::HALTED;
+//	if (inst->next() == NULL)
+//		sim_mode = sim::HALTED;
 }
 
 sim::mode_t DriverUntilEnd::simMode() {

@@ -88,7 +88,7 @@ public:
 	
 	 sim::mode_t run(void) {
 	 	driver = new DriverUntilEnd(next);
-		while(driver->simMode() == sim::NORMAL)
+		while(/*driver->simMode() == sim::NORMAL*/ !processor->isEmpty())
 			// mode = step(); ------------------------- pas besoin de retourner un mode ?
 			step();
 		delete driver;
@@ -97,7 +97,7 @@ public:
 	
 	 sim::mode_t runUntil(address_t addr) {
 	 	driver = new DriverUntilAddr(next,addr);
-		while(driver->simMode() == sim::NORMAL)
+		while(/*driver->simMode() == sim::NORMAL*/ !processor->isEmpty())
 			// mode = step(); ------------------------- pas besoin de retourner un mode ?
 			step();
 		delete driver;
