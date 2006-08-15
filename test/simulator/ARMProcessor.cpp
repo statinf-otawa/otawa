@@ -64,6 +64,7 @@ void FetchStage::fetch() {
 	int nb_fetched;
 	int nb_sent;
 	code_t code;
+	instruction_t *emulated_inst;
 	
 	elm::cout << "number_of_leaving_instructions=" << number_of_leaving_instructions.read() << "\n";
 	elm::cout << "fetch queue size=" << fetch_queue->size() << "\n";
@@ -73,13 +74,19 @@ void FetchStage::fetch() {
 	while ( (nb_fetched < width)
 			&&
 			(fetch_queue->size() != fetch_queue->capacity())) {
-		if (next_inst->isConditional())
-			next_inst = sim_state->driver->nextInstruction(true /* branch is taken */);
+		if (next_inst->isConditional()) {
+			if (NIA(emulated_state) == CIA(emulated_state) + sizeof(code_t))
+				next_inst = sim_state->driver->nextInstruction(false /* branch is not taken */);
+			else
+				next_inst = sim_state->driver->nextInstruction(true /* branch is taken */);
+		}
 		else
 			next_inst = sim_state->driver->nextInstruction();
 		if (next_inst != NULL) {
-			iss_fetch((address_t) (next_inst->address()),&code);
-			inst = new SimulatedInstruction(next_inst,code);
+			iss_fetch((::address_t)(unsigned long)next_inst->address(), &code);
+			emulated_inst = iss_decode((::address_t)(unsigned long)next_inst->address(), &code);
+			iss_complete(emulated_inst,emulated_state);
+			inst = new SimulatedInstruction(next_inst,code, emulated_inst);
 			elm::cout << "fetching at " << next_inst->address() << "\n";
 			fetch_queue->put(inst);
 			nb_fetched++;
@@ -102,11 +109,34 @@ void ExecuteStage::execute() {
 	for (int i=0 ; i<number_of_decoded_instructions.read() ; i++) {
 		inst = (SimulatedInstruction *)decoded_instruction[i].read() ;
 		elm::cout << "Executing instruction at pc=" << inst->inst()->address() << "\n";
-		sim_state->driver->terminateInstruction(inst->inst());
-		delete inst;
-		
+		if (inst->inst()->isMem()) {
+			PendingInstruction* new_pending = new PendingInstruction(inst,10);
+			new_pending->setNext(pending_instruction_list);
+			pending_instruction_list = new_pending;
+		}
+		else {
+			sim_state->driver->terminateInstruction(inst->inst());
+			iss_free(inst->emulatedInst());
+			delete inst;
+		}
 	}
 	
+	PendingInstruction * ptr = pending_instruction_list;
+	PendingInstruction * prev = NULL;
+	while (ptr != NULL) {
+		if (ptr->terminated()) {
+			if (prev) {
+				prev->setNext(ptr->getNext());
+			}
+			else
+				pending_instruction_list = ptr->getNext();
+			sim_state->driver->terminateInstruction(ptr->instruction()->inst());
+			iss_free(inst->emulatedInst());
+			delete inst;
+			prev = ptr;
+			ptr = ptr->getNext();
+		}
+	}
 	// recompute control signals
 	control_request.write(!control_request.read());
 	elm::cout << "execute() ends\n";
