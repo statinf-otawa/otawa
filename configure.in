@@ -96,6 +96,49 @@ SITE_LIB_PATHS="$HOME/.local/lib $DEFAULT_LIB_PATHS"
 HAVE_ILP=no
 
 
+dnl ==== check_module ====
+dnl		$1: module
+dnl		$2: variable name
+dnl		$3: local include
+dnl		$4: local library
+dnl		$5: library name
+dnl		$6: library symbol
+dnl
+define(check_module, [
+	AC_ARG_WITH($1, [  --with-$1[=PATH]	Use $1 [from the given directory.]],, with_$1=maybe)
+	case $with_$1 in
+	no)
+		has_$1=no
+		;;
+	yes|maybe)
+		AC_MSG_CHECKING([for local $1])
+		if test "$with_$1" = "maybe" -a -d ../$1; then
+			has_$1=yes
+			$2_CXXFLAGS='-I$(top_srcdir)/../$1/$3'
+			$2_LIBS='-L$(top_srcdir)/../$1/$4 -l$5'
+			AC_MSG_RESULT([found at ../$1])
+		else
+			AC_MSG_RESULT([not found at ../$1])
+			AC_CHECK_LIB($5, $6,
+				[
+					has_$1=yes
+					$2_LIBS=-l$5
+				],,)
+		fi
+		;;
+	*)
+		AC_MSG_CHECKING([for $1])
+		has_$1=yes
+		$2_CXXFLAGS=-I$with_$1/include
+		$2_LIBS="-L$with_$1 -l$5"
+		AC_MSG_RESULT([found at $with_$1])
+		;;
+	esac
+	AM_CONDITIONAL(WITH_SYSTEMC, [test "$has_systemc" == yes])
+	AC_SUBST(SYSTEMC_CXXFLAGS)
+	AC_SUBST(SYSTEMC_LIBS)
+])
+
 
 dnl ==== Site directory ====
 if test "$prefix" != NONE; then
@@ -313,31 +356,7 @@ AC_SUBST(EXTERN_LP_SOLVE_LIBS)
 
 
 dnl ==== systemc ====
-AC_ARG_WITH(systemc,
-	[  --with-systemc[=PATH]	Use SystemC [from the given directory.]],,
-	with_systemc=no)
-case $with_systemc in
-	no)
-		has_systemc=no
-		;;
-	yes)
-		AC_CHECK_LIB(systemc, sc_main,
-			[
-				has_systemc=yes
-				SYSTEMC_LIBS=-lsystemc
-			],,)
-		;;
-	*)
-		AC_MSG_CHECKING([for systemc])
-		has_systemc=yes
-		SYSTEMC_CXXFLAGS=-I$with_systemc/include
-		SYSTEMC_LIBS="-L$with_systemc/lib-linux -lsystemc"
-		AC_MSG_RESULT([found at $with_systemc])
-		;;
-esac
-AM_CONDITIONAL(WITH_SYSTEMC, [test "$has_systemc" == yes])
-AC_SUBST(SYSTEMC_CXXFLAGS)
-AC_SUBST(SYSTEMC_LIBS)
+check_module(systemc, SYSTEMC, src, objdir/src, systemc)
 
 
 dnl ==== Plugins ====
