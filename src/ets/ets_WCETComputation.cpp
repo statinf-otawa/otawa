@@ -91,7 +91,7 @@ int WCETComputation::computation(FrameWork *fw, AST *ast) {
 			 	N=ast->toWhile()->use<int>(ETS::ID_LOOP_COUNT);
 			 	if (N == -1){
 					WC_TRACE;
-					throw ProcessorException(*this, "Il manque le nb d'itérations du noeud : %s (%p)",
+					throw ProcessorException(*this, "Il manque le nb d'itï¿½rations du noeud : %s (%p)",
 						&ast->toWhile()->condition()->first()->get<String>(File::ID_Label, "unknown "),
 						(void *)ast->toWhile()->condition()->first()->address());
 				}
@@ -106,7 +106,7 @@ int WCETComputation::computation(FrameWork *fw, AST *ast) {
 				N=ast->toDoWhile()->use<int>(ETS::ID_LOOP_COUNT);
 				if (N == -1){
 						WC_TRACE;
-						throw io::IOException(String("Il manque le nb d'itération du noeud : "+ ast->toDoWhile()->condition()->first()->get<String>(File::ID_Label, "unknown ")));
+						throw io::IOException("no iteration count for loop %s", &ast->toDoWhile()->condition()->first()->get<String>(File::ID_Label, "unknown "));
 				}
 				wcet=N*(computation(fw, ast->toDoWhile()->body())
 							+ computation(fw, ast->toDoWhile()->condition()));
@@ -118,7 +118,7 @@ int WCETComputation::computation(FrameWork *fw, AST *ast) {
 				N=ast->toFor()->use<int>(ETS::ID_LOOP_COUNT);
 				if (N == -1){
 					WC_TRACE;
-					throw io::IOException(String("Il manque le nb d'itération du noeud : "+ ast->toFor()->condition()->first()->get<String>(File::ID_Label, "unknown ")));
+					throw io::IOException("no iteration count for loop %s", &ast->toFor()->condition()->first()->get<String>(File::ID_Label, "unknown "));
 				}
 				wcet=computation(fw, ast->toFor()->initialization())
 						+ N*(computation(fw, ast->toFor()->condition())

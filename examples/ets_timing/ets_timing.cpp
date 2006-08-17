@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 	Cache::info_t info;
  	info.block_bits = 3;  // 2^3 octets par bloc
  	info.line_bits = 2;   // 2^3 lignes
- 	info.set_bits = 0;    // 2^0 élément par ensemble 
+ 	info.set_bits = 0;    // 2^0 ï¿½lï¿½ment par ensemble 
  	info.replace = Cache::NONE;
  	info.write = Cache::WRITE_THROUGH;
  	info.access_time = 0;
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 		Option< FunAST *> result = info->map().get("main");
 		if(!result) {
 			TRACE;
-			throw IOException(String("Cannot find main !"));
+			throw IOException("Cannot find main !");
 		}
 		AST *ast = (*result)->ast();
 		ast->set<int>(ETS::ID_WCET,-1);
