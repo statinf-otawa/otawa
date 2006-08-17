@@ -42,3 +42,4 @@ libtool
 ltmain.sh
 .tm_project.cache
 .config
+.settings
