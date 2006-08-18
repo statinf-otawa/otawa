@@ -13,6 +13,7 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
+#include <otawa/sim/BasicBlockDriver.h>
 #include <ARMSimulator.h>
 
 using namespace elm;
@@ -99,8 +100,10 @@ int main(int argc, char **argv) {
 			if (bb->countInstructions() != 0) {
 				logFile << "block b" << bb->number() << ":";
 				int start_cycle = simulator_state->cycle();
-				simulator_state->setPC(bb->address());
-				simulator_state->runUntil(bb->address() + 4*bb->size());
+				//simulator_state->setPC(bb->address());
+				//simulator_state->runUntil(bb->address() + 4*bb->size());
+				sim::BasicBlockDriver driver(bb);
+				simulator_state->run(driver);
 				int finish_cycle = simulator_state->cycle();
 				logFile << finish_cycle - start_cycle << " cycles\n";
 			}
