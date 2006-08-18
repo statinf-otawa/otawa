@@ -16,7 +16,7 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
 
 
 /**
- * @class Inst
+ * @class Inst <otawa/program.h>
  * This class represents assembly instruction of a piece of code.
  * As they must represents a large set of machine language that may contain
  * unusual instruction, it provides a very generic way to access information
