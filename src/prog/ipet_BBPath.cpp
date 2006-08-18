@@ -215,9 +215,10 @@ State* BBPath::getEndingState(FrameWork *fw){
 			ending_state = simulator.instantiate(fw);
 		}
 		BasicBlock &bb = *basicBlocks.top();
+		// !!TODO!!
 		for(Iterator<Inst*> inst(bb.visit()); inst; inst++){
-			ending_state->setPC(inst);
-			ending_state->step();
+			/*ending_state->setPC(inst);
+			ending_state->step();*/
 			instructions_simulated ++;
 		}
 	}
