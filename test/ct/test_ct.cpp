@@ -63,18 +63,21 @@ int main(int argc, char **argv) {
 	Manager manager;
 	PropList props;
 	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
+	String fun = "main";
+	if(argc > 2)
+		fun = argv[2];
 	try {
 		FrameWork *fw = manager.load(argv[1], props);
 		
-		// Find main CFG
-		cout << "Looking for the main CFG\n";
-		CFG *cfg = fw->getCFGInfo()->findCFG("main");
+		// Find searched CFG
+		cout << "Looking for CFG " << fun << '\n';
+		CFG *cfg = fw->getCFGInfo()->findCFG(fun);
 		if(cfg == 0) {
-			cerr << "ERROR: cannot find main !\n";
+			cerr << "ERROR: cannot find " << fun << " !\n";
 			return 1;
 		}
 		else
-			cout << "main found at 0x" << fmt::address(cfg->address()) << '\n';
+			cout << fun << " found at 0x" << fmt::address(cfg->address()) << '\n';
 		
 		// Removing __eabi call if available
 		for(CFG::BBIterator bb(cfg); bb; bb++)
