@@ -74,14 +74,15 @@ void FetchStage::fetch() {
 	while ( (nb_fetched < width)
 			&&
 			(fetch_queue->size() != fetch_queue->capacity())) {
-		if (next_inst->isConditional()) {
+		if (next_inst->isBranch() && next_inst->isConditional()) {
 			if (NIA(emulated_state) == CIA(emulated_state) + sizeof(code_t))
-				next_inst = sim_state->driver->nextInstruction(false /* branch is not taken */);
+				next_inst = next_inst->next(); 
 			else
-				next_inst = sim_state->driver->nextInstruction(true /* branch is taken */);
+				next_inst = next_inst->target();
 		}
 		else
-			next_inst = sim_state->driver->nextInstruction();
+			next_inst = next_inst->next();
+		next_inst = sim_state->driver->nextInstruction(*sim_state, next_inst);
 		if (next_inst != NULL) {
 			iss_fetch((::address_t)(unsigned long)next_inst->address(), &code);
 			emulated_inst = iss_decode((::address_t)(unsigned long)next_inst->address(), &code);
@@ -115,7 +116,7 @@ void ExecuteStage::execute() {
 			pending_instruction_list = new_pending;
 		}
 		else {
-			sim_state->driver->terminateInstruction(inst->inst());
+			sim_state->driver->terminateInstruction(*sim_state, inst->inst());
 			iss_free(inst->emulatedInst());
 			delete inst;
 		}
@@ -130,7 +131,8 @@ void ExecuteStage::execute() {
 			}
 			else
 				pending_instruction_list = ptr->getNext();
-			sim_state->driver->terminateInstruction(ptr->instruction()->inst());
+			sim_state->driver->terminateInstruction(*sim_state, 
+				ptr->instruction()->inst());
 			iss_free(inst->emulatedInst());
 			delete inst;
 			prev = ptr;

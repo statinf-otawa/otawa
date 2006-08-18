@@ -47,7 +47,7 @@ void ARMState::init() {
 	processor->build(this);
 }
 
-Driver::~Driver() {
+/*Driver::~Driver() {
 }
 
 Inst* DriverUntilAddr::nextInstruction() {
@@ -100,19 +100,19 @@ void DriverUntilEnd::terminateInstruction(Inst *inst) {
 
 sim::mode_t DriverUntilEnd::simMode() {
 	return sim_mode;
-}
+}*/
 
 
-sim::mode_t ARMState::step(void) {
+void ARMState::step(void) {
 	elm::cout << "Cycle " << _cycle << "\n";
 	processor->step();
 	_cycle ++;
-	return sim_mode;
+	//return sim_mode;
 }
 
-void ARMState::setPC(address_t pc) {
+/*void ARMState::setPC(address_t pc) {
 	processor->setPC(pc);
-}
+}*/
 
 
 
