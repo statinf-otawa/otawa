@@ -17,18 +17,21 @@ namespace otawa { namespace sim {
  * A trivial simulator state.
  */
 class TrivialState: public State {
+	// !!TODO!!
 	FrameWork *fw;
 	int time;
 	int _cycle;
-	Inst *next;
+	Inst *pc;
+	bool running;
 public:
 	TrivialState(FrameWork *framework, int _time):
 	fw(framework), time(_time), _cycle(0) {
-		next = fw->start();
+		pc = fw->start();
 	}
 	
 	TrivialState(const TrivialState& state):
-	fw(state.fw), time(state.time), _cycle(state._cycle), next(state.next) {
+	fw(state.fw), time(state.time), _cycle(state._cycle), pc(state.pc),
+	running(false) {
 	}
 	
 	// State overload
@@ -36,46 +39,16 @@ public:
 		return new TrivialState(*this);	
 	}
 	
-	virtual mode_t step(void) {
-		if(!next)
-			return ERROR;
-		_cycle += time;
-		next = next->next();
-		return NORMAL;
-	}
-	
-	virtual mode_t run(void) {
-		mode_t mode = NORMAL;
-		while(mode == NORMAL)
-			mode = step();
-		return mode;
-	}
-	
-	virtual mode_t runUntil(address_t addr) {
-		mode_t mode = NORMAL;
-		while(mode == NORMAL && next->address() != addr)
-			mode = step();
-		return mode;
-	}
-
-	virtual mode_t runUntil(Inst *inst) {
-		assert(inst);
-		return runUntil(inst->address());
-	}
-
-	virtual mode_t runUntilBranch(void) {
-		mode_t mode = NORMAL;
-		bool stop = false;
-		while(mode == NORMAL && !stop) {
-			if(next)
-				stop = next->isBranch();
-			mode = step();
+	virtual void run(Driver& driver) {
+		running = true;
+		pc = driver.firstInstruction(*this);
+		while(running) {
+			_cycle += time;
+			pc = driver.nextInstruction(*this, pc ? pc->next() : pc);
 		}
-		return mode;
 	}
 	
-	virtual mode_t flush(void) {
-		return NORMAL;
+	virtual void flush(void) {
 	}
 	
 	virtual int cycle(void) {
@@ -86,24 +59,9 @@ public:
 		_cycle = 0;
 	}
 	
-	virtual address_t getPC(void) {
-		assert(next);
-		return next->address();
-	}
-
-	virtual Inst *pcInst(void) {
-		return next;
-	}
-
-	virtual void setPC(address_t pc) {
-		next = fw->findInstAt(pc);
-	}
-	
-	virtual void setPC(Inst *inst) {
-		assert(inst);
-		next = inst;
-	}
-	
+	virtual void stop(void) {
+		running = false;
+	}	
 };
 
 
