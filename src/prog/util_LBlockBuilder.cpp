@@ -31,8 +31,6 @@ void LBlockBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) 
 	assert(lbset);
 
 	// Initialization
-	ilp::System *system = cfg->get<ilp::System *>(ipet::IPET::ID_System, 0);
-	assert (system);
 	const hard::Cache *cach = fw->platform()->cache().instCache();
 	
 	// Create entry node
