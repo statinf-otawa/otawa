@@ -11,6 +11,9 @@
 using namespace elm;
 using namespace otawa;
 
+GenericIdentifier<int> MY_ID("my_id", 666);
+GenericIdentifier<CString> MY_STRING("my_string", "ok");
+
 int main(void) {
 	
 	CHECK_BEGIN("otawa.props")
@@ -59,6 +62,14 @@ int main(void) {
 	for(PropList::Getter<int> prop(cprops, ID2); prop; prop++)
 		cnt++;
 	CHECK(cnt == 0);
+	
+	// Property output
+	{
+		PropList props;
+		MY_ID(props) = 111;
+		MY_STRING(props) = "ko";
+		cout << props;
+	}
 	
 	CHECK_END
 	
