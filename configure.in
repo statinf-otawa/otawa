@@ -96,15 +96,16 @@ SITE_LIB_PATHS="$HOME/.local/lib $DEFAULT_LIB_PATHS"
 HAVE_ILP=no
 
 
-dnl ==== check_module ====
-dnl		$1: module
-dnl		$2: variable name
-dnl		$3: local include
-dnl		$4: local library
-dnl		$5: library name
-dnl		$6: library symbol
-dnl
-define(check_module, [
+# ==== check_module ====
+#		$1: module
+#		$2: variable name
+#		$3: local include
+#		$4: local library
+#		$5: library name
+#		$6: library symbol
+#
+AC_DEFUN([check_module], [
+	AC_REQUIRE([AC_CHECK_LIB])
 	AC_ARG_WITH($1, [  --with-$1[=PATH]	Use $1 [from the given directory.]],, with_$1=maybe)
 	case $with_$1 in
 	no)
