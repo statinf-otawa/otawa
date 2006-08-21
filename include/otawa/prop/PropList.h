@@ -64,6 +64,7 @@ public:
 	// Global management
 	void clearProps(void);
 	void addProps(const PropList& props);
+	void print(elm::io::Output& out) const;
 
 	// Iter class
 	class Iter: public PreIterator<Iter, Property *> {
@@ -168,6 +169,16 @@ inline void PropList::addLocked(const Identifier& id, const T value) {
 template <class T>
 inline void PropList::addDeletable(const Identifier& id, const T value) {
 	addProp(new DeletableProperty<T>(id, value));
+}
+
+inline elm::io::Output& operator<<(elm::io::Output& out, const PropList& props) {
+	props.print(out);
+	return out;
+}
+
+inline elm::io::Output& operator<<(elm::io::Output& out, const PropList *props) {
+	props->print(out);
+	return out;
 }
 
 

@@ -361,6 +361,15 @@ const PropList PropList::EMPTY;
  */
 
 
+/**
+ * Display the current property list.
+ * @param out	Output to use.
+ */
+void PropList::print(elm::io::Output& out) const {
+	for(Iter prop(this); prop; prop++)
+		out << *prop;
+}
+
 
 /**
  * @class PropList::Iter otawa/properties.h

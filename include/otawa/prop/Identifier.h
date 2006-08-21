@@ -29,8 +29,8 @@ public:
 	Identifier(elm::CString name);
 	
 	inline const elm::String& name(void) const;
-	virtual void print(elm::io::Output& output, const Property& prop);
-	inline void print(elm::io::Output& output, const Property *prop);
+	virtual void print(elm::io::Output& output, const Property& prop) const;
+	inline void print(elm::io::Output& output, const Property *prop) const;
 	virtual const Type& type(void) const;
 	virtual void scan(PropList& props, VarArg& args) const;
 };
@@ -52,7 +52,7 @@ inline const elm::String& Identifier::name(void) const {
 	return nam;
 }
 
-inline void Identifier::print(elm::io::Output& output, const Property *prop) {
+inline void Identifier::print(elm::io::Output& output, const Property *prop) const {
 	assert(prop);
 	return print(output, *prop);
 }

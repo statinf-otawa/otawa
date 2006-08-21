@@ -104,12 +104,12 @@ const Identifier *Identifier::invalid = 0;
  * matching a different identifier.</p>
  * <p>Use the print() method of a property instead.</p>
  */
-void Identifier::print(elm::io::Output& output, const Property& prop) {
+void Identifier::print(elm::io::Output& output, const Property& prop) const {
 	output << "<not printable>";
 }
 
 /**
- * @fn void Identifier::print(elm::io::Output& output, const Property *prop);
+ * @fn void Identifier::print(elm::io::Output& output, const Property *prop) const;
  * <p>Print the value of the given property (accordint the property matches
  * the given identifier). It is an error to call this method with a property
  * matching a different identifier.</p>

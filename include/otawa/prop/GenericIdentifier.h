@@ -63,7 +63,7 @@ public:
 	inline Value operator()(PropList *props) const;
 	
 	// Identifier overload
-	virtual void print(elm::io::Output& output, const Property& prop);
+	virtual void print(elm::io::Output& output, const Property& prop) const;
 	virtual const Type& type(void) const;
 	virtual void scan(PropList& props, VarArg& args) const;	
 };
@@ -161,7 +161,7 @@ GenericIdentifier<T>::value(PropList *list) const {
 }
 	
 template <class T>	
-void GenericIdentifier<T>::print(elm::io::Output& output, const Property& prop) {
+void GenericIdentifier<T>::print(elm::io::Output& output, const Property& prop) const {
 	output << ((const GenericProperty<T> &)prop).value();
 }
 

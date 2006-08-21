@@ -202,6 +202,17 @@ const Identifier *Property::getID(elm::CString name) {
 
 
 /**
+ * Print the given property, that is, the identifier and its value if any.
+ * @param out	Output to use.
+ */
+void Property::print(elm::io::Output& out) const {
+	out << _id->name() << " = ";
+	_id->print(out, this);
+	out << elm::io::endl;
+}
+
+
+/**
  * @fn Property *Property::copy(void);
  * This method is called when a property is copied. It may be specialized
  * by Property class children.

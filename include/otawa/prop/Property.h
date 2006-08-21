@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <elm/string.h>
 #include <elm/utility.h>
+#include <elm/io.h>
 #include <otawa/prop/Identifier.h>
 
 namespace otawa {
@@ -33,6 +34,7 @@ public:
 	inline Property(elm::CString name): _id(getID(name)) { };
 	inline const Identifier *id(void) const { return _id; };
 	inline Property *next(void) const { return _next; };
+	virtual void print(elm::io::Output& out) const;
 };
 
 
@@ -79,6 +81,13 @@ public:
 	inline LockedProperty(elm::CString name, T value)
 		: GenericProperty<T>(name, value) { GenericProperty<T>::value()->lock(); };
 };
+
+
+// Property Inlines
+inline elm::io::Output& operator<<(elm::io::Output& out, const Property *prop) {
+	prop->print(out);
+	return out;
+}
 
 } // otawa
 
