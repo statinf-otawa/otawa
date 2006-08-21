@@ -28,7 +28,7 @@ namespace otawa { namespace ipet {
  * This identifier is used for storing in a BasicBlock a TreePath
  * storing all BBPath starting from this basic block
  */
-GenericIdentifier<TreePath<BasicBlock*,BBPath*>*> BBPath::ID_Tree("pathmanager.tree",0);
+GenericIdentifier<TreePath<BasicBlock*,BBPath*>*> BBPath::TREE("bbpath.tree",0);
 
 
 /**
@@ -75,11 +75,11 @@ BBPath::~BBPath(){
  * @return BBPath corresponding to the given basic block
  */
 BBPath *BBPath::getBBPath(BasicBlock *start){
-	TreePath<BasicBlock*,BBPath*> *tree = ID_Tree(start);
+	TreePath<BasicBlock*,BBPath*> *tree = TREE(start);
 	if(!tree){
 		BBPath *bbp = new BBPath(start); 
 		tree = new TreePath<BasicBlock*,BBPath*>(start,bbp);
-		ID_Tree(start) = tree;
+		TREE(start) = tree;
 		return bbp;
 	}
 	return tree->rootData();
@@ -97,11 +97,11 @@ BBPath *BBPath::getBBPath(Vector<BasicBlock*> *path_vector){
 	assert(path_vector);
 	BasicBlock *bb = path_vector->get(0);
 	BBPath *bbpath;
-	TreePath<BasicBlock*,BBPath*> *tree = ID_Tree(bb);
+	TreePath<BasicBlock*,BBPath*> *tree = TREE(bb);
 	if(!tree){
 		bbpath = new BBPath(path_vector);
 		tree = new TreePath<BasicBlock*,BBPath*>(*path_vector, bbpath);
-		ID_Tree(bb) = tree;
+		TREE(bb) = tree;
 		return bbpath;
 	}
 	elm::Option<BBPath*> option = tree->get(*path_vector,1);

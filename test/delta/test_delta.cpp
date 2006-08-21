@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
 		delta_sw.start();
 		//props.set<int>(Delta::ID_Levels,deltaLevels);
 		if(deltaLevels)
-			Delta::ID_Levels(props) = *deltaLevels;
+			Delta::LEVELS(props) = *deltaLevels;
 		Delta delta(props);
 		delta.processCFG(fw, &vcfg);
 		delta_sw.stop();

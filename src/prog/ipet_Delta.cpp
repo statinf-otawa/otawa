@@ -45,7 +45,7 @@ Delta::Delta(const PropList& props)
  */
 void Delta::configure(const PropList& props){
 	CFGProcessor::configure(props);
-	levels = props.get<int>(ID_Levels);
+	levels = props.get<int>(LEVELS);
 	explicitNames = EXPLICIT(props);
 }
 
@@ -95,7 +95,7 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 			BBPath &bbp = *bbPathPtr;
 
 			int delta = Delta::delta(bbp, fw);
-			if(bbp.tail()->countInstructions() < ID_Flush_Time(bbp)){
+			if(bbp.tail()->countInstructions() < FLUSH_TIME(bbp)){
 				bbPathList.add(bbPathPtr);
 			}
 			if(delta){
@@ -168,7 +168,7 @@ int Delta::delta(BBPath &bbp, FrameWork *fw){
 	if(bbp.length() <= 1)
 		return 0;
 	
-	elm::Option<int> delta = bbp.get<int>(ID_Delta);
+	elm::Option<int> delta = bbp.get<int>(DELTA);
 	if(!delta){
 		//nbDeltasCalculated++;
 		int f, o, t;
@@ -177,7 +177,7 @@ int Delta::delta(BBPath &bbp, FrameWork *fw){
 		state->flush();
 		t = state->cycle();
 		o = t - f;
-		ID_Flush_Time(bbp) = o;
+		FLUSH_TIME(bbp) = o;
 		if(bbp.length() == 2){
 			delta =
 				t - bbp(1,bbp.l()-1)->t(fw)
@@ -190,7 +190,7 @@ int Delta::delta(BBPath &bbp, FrameWork *fw){
 			      + bbp(2,bbp.l()-1)->t(fw);
 		}
 	}
-	ID_Delta(bbp) = *delta;
+	DELTA(bbp) = *delta;
 	return *delta;
 }
 
@@ -199,17 +199,17 @@ int Delta::delta(BBPath &bbp, FrameWork *fw){
  * This identifier is used for forcing the depth of the Delta algorith.
  * If this identifier is not set, the depth will be adjusted automatically
  */
-GenericIdentifier<int>  Delta::ID_Levels("delta.levels");
+GenericIdentifier<int>  Delta::LEVELS("delta.levels");
 
 /**
  * This identifier is used for storing the delta value of a path
  */
-GenericIdentifier<int> Delta::ID_Delta("delta.delta");
+GenericIdentifier<int> Delta::DELTA("delta.delta");
 /**
  * This identifier is used for storing the time for the first
  * instruction to fetch after all instructions from the
  * beginning of the sequence have been fetched
  */
-GenericIdentifier<int> Delta::ID_Flush_Time("delta.flush_time");
+GenericIdentifier<int> Delta::FLUSH_TIME("delta.flush_time");
 
 } } // otawa::ipet

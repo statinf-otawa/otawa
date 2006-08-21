@@ -29,9 +29,9 @@ public:
 
 	static int delta(BBPath &bbp, FrameWork *fw);
 
-	static GenericIdentifier<int> ID_Levels;
-	static GenericIdentifier<int> ID_Delta;
-	static GenericIdentifier<int> ID_Flush_Time;
+	static GenericIdentifier<int> LEVELS;
+	static GenericIdentifier<int> DELTA;
+	static GenericIdentifier<int> FLUSH_TIME;
 };
 
 
