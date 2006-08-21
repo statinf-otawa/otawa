@@ -31,20 +31,20 @@ void VarAssignment::process(BasicBlock *bb) {
 	//cout << "VarAssignment::process(" << bb->address() << ")\n";
 	
 	// Check BB
-	if(!bb->get<Var *>(IPET::ID_Var, 0)) {
+	if(!bb->get<Var *>(VAR, 0)) {
 		String name = "";
 		if(_explicit)
 			name = makeNodeVar(bb);
-		bb->addDeletable<Var *>(IPET::ID_Var, new Var(name));
+		bb->addDeletable<Var *>(VAR, new Var(name));
 	}
 	
 	// Check out edges
 	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-		if(!edge->get<Var *>(IPET::ID_Var, 0)) {
+		if(!edge->get<Var *>(VAR, 0)) {
 			String name = "";
 			if(_explicit)
 				name = makeEdgeVar(edge);
-			edge->add<Var *>(IPET::ID_Var, new Var(name));
+			edge->add<Var *>(VAR, new Var(name));
 		}
 	}
 }
@@ -79,7 +79,7 @@ VarAssignment::VarAssignment(const PropList& props)
 /**
  */
 void VarAssignment::init(const PropList& props) {
-	_explicit = props.get<bool>(IPET::ID_Explicit, _explicit);
+	_explicit = props.get<bool>(EXPLICIT, _explicit);
 }
 
 

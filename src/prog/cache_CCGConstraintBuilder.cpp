@@ -36,7 +36,7 @@ void CCGConstraintBuilder::processLBlockSet(CFG *cfg, LBlockSet *lbset) {
 	assert(cfg);
 	
 	// Initialization
-	System *system = cfg->get<System *>(IPET::ID_System, 0);
+	System *system = cfg->get<System *>(SYSTEM, 0);
 	assert (system);
 	const hard::Cache *cach = fw->platform()->cache().instCache();
 	int dec = cach->blockBits();
@@ -208,7 +208,7 @@ ContextTree *cont, LBlock *boc) {
 			if (b == bs){
 				BasicBlock *header = cont->bb();
 				bool used = false;
-				System *system1 = cfg->get<System *>(IPET::ID_System, 0);
+				System *system1 = cfg->get<System *>(SYSTEM, 0);
 				Constraint *cons32 = system1->newConstraint(Constraint::LE);
 				for(Iterator<CCGEdge *> inedge(boc->use<CCGNode *>(CCGBuilder::ID_Node)->inEdges());
 				inedge ; inedge++) {
@@ -230,7 +230,7 @@ ContextTree *cont, LBlock *boc) {
 					for(Iterator<Edge *> inedg(header->inEdges()); inedg ; inedg++) {
 						BasicBlock *preheader = inedg->source();
 						if(!Dominance::dominates(header, inedg->source()))
-						cons32->addRight(1, preheader->use<ilp::Var *>(IPET::ID_Var));
+						cons32->addRight(1, preheader->use<ilp::Var *>(VAR));
 					}
 				}
 				else

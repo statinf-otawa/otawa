@@ -107,11 +107,11 @@ int main(int argc, char **argv) {
 		wcomp.processCFG(fw, &vcfg);
 		
 		// Display the result
-		ilp::System *sys = vcfg.use<ilp::System *>(IPET::ID_System);
-		vcfg.use<ilp::System *>(IPET::ID_System)->dump();
+		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
+		vcfg.use<ilp::System *>(SYSTEM)->dump();
 		cout << sys->countVars() << " variables and "
 			 << sys->countConstraints() << " constraints.\n";
-		cout << "SUCCESS\nWCET = " << vcfg.use<int>(IPET::ID_WCET) << '\n';
+		cout << "SUCCESS\nWCET = " << vcfg.use<int>(WCET) << '\n';
 	}
 	catch(LoadException e) {
 		cerr << "ERROR: " << e.message() << '\n';

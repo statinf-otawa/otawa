@@ -61,11 +61,11 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 			//cout << "Added to " << *bb << "\n";
 			otawa::ilp::Constraint *cons =
 				system->newConstraint(otawa::ilp::Constraint::LE);
-			cons->addLeft(1, bb->use<otawa::ilp::Var *>(IPET::ID_Var));
+			cons->addLeft(1, bb->use<otawa::ilp::Var *>(VAR));
 			for(BasicBlock::InIterator edge(bb); edge; edge++) {
 				assert(edge->source());
 				otawa::ilp::Var *var =
-					edge->source()->use<otawa::ilp::Var *>(IPET::ID_Var);
+					edge->source()->use<otawa::ilp::Var *>(VAR);
 				if(!Dominance::dominates(bb, edge->source()))
 					cons->addRight(count, var);
 			}
@@ -85,13 +85,13 @@ void FlowFactLoader::processCFG(FrameWork *fw, CFG *_cfg) {
 	
 	// Initialization
 	cfg = _cfg;
-	system = cfg->get<ilp::System *>(IPET::ID_System, 0);
+	system = cfg->get<ilp::System *>(SYSTEM, 0);
 	dom_done = false;
 	
 	// Get an ILP system
 	if(!system) {
 		system = fw->newILPSystem(true);
-		cfg->set<ilp::System *>(IPET::ID_System, system);
+		cfg->set<ilp::System *>(SYSTEM, system);
 		out << "INFO: ILP system created.\n";
 	}
 	

@@ -23,7 +23,7 @@ namespace otawa {
  */	
 void CCGObjectFunction::processCFG(FrameWork *fw, CFG *cfg ) {
 	assert(cfg);
-	System *system = cfg->get<System *>(IPET::ID_System, 0);
+	System *system = cfg->get<System *>(SYSTEM, 0);
 	assert (system);
 	LBlockSet **lbsets = cfg->use<LBlockSet **>(LBlockSet::ID_LBlockSet);
 	const hard::Cache *cach = fw->platform()->cache().instCache();

@@ -46,7 +46,7 @@ Delta::Delta(const PropList& props)
 void Delta::configure(const PropList& props){
 	CFGProcessor::configure(props);
 	levels = props.get<int>(ID_Levels);
-	explicitNames = IPET::ID_Explicit(props);
+	explicitNames = EXPLICIT(props);
 }
 
 /**
@@ -59,7 +59,7 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 	assert(cfg->isInlined());
 	//int nbConstraintsCreated = 0;
 	//int nbObjectFunctionCreated = 0;
-	System *system = IPET::getSystem(fw,cfg);
+	System *system = getSystem(fw,cfg);
 	Vector<BBPath*> bbPathList(4*cfg->bbs().count());
 	for(CFG::BBIterator bb(cfg) ; bb ; bb++){
 		// we create all sequences with length = 1

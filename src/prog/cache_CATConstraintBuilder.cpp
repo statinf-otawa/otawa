@@ -46,7 +46,7 @@ int CATConstraintBuilder::counter = 0;
 void CATConstraintBuilder::processLBlockSet(FrameWork *fw, CFG *cfg,
 LBlockSet *id ) {
 	assert(cfg);
-	ilp::System *system = cfg->get<System *>(IPET::ID_System, 0);
+	ilp::System *system = cfg->get<System *>(SYSTEM, 0);
 	assert (system);
 	
 	// cache configuration
@@ -89,7 +89,7 @@ LBlockSet *id ) {
 			bool used = false;
 			for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
 				if (!Dominance::dominates(bb, edge->source())){
-					cons->addRight(1, edge->use<ilp::Var *>(IPET::ID_Var));
+					cons->addRight(1, edge->use<ilp::Var *>(VAR));
 					used = true;
 				}
 			}
@@ -112,7 +112,7 @@ LBlockSet *id ) {
 				if (bloc->use<CATNode *>(CATBuilder::ID_Node)->HASHEADEREVOLUTION()){
 					Constraint *cons32 = system->newConstraint(Constraint::LE);
 					cons32->addLeft(1, bloc->use<ilp::Var *>(CATBuilder::ID_MissVar));
-					ilp::Var *x = (ilp::Var *)bloc->use<CATNode *>(CATBuilder::ID_Node)->HEADEREVOLUTION()->use<Var *>(IPET::ID_Var);
+					ilp::Var *x = (ilp::Var *)bloc->use<CATNode *>(CATBuilder::ID_Node)->HEADEREVOLUTION()->use<Var *>(VAR);
 					//cout << bloc->use<CATNode *>(CATBuilder::ID_Node)->HEADEREVOLUTION();
 					cons32->addRight(1, x);
 				//}
@@ -121,7 +121,7 @@ LBlockSet *id ) {
 				for(Iterator<Edge *> entry(bloc->use<CATNode *>(CATBuilder::ID_Node)->HEADERLBLOCK()->inEdges());
 				entry; entry++) {
 					if (!Dominance::dominates(bloc->use<CATNode *>(CATBuilder::ID_Node)->HEADERLBLOCK(), entry->source())){
-							boundingmiss->addRight(1, entry->use<ilp::Var *>(IPET::ID_Var));
+							boundingmiss->addRight(1, entry->use<ilp::Var *>(VAR));
 							
 					}
 					

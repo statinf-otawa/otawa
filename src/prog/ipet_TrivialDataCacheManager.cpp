@@ -68,9 +68,9 @@ BasicBlock *bb) {
 			count++;
 	
 	// Store new BB time
-	int bb_time = bb->get<int>(IPET::ID_Time, 0);
+	int bb_time = bb->get<int>(TIME, 0);
 	bb_time += count * time;
-	bb->set(IPET::ID_Time, bb_time);
+	bb->set(TIME, bb_time);
 }
 
 } } // otawa::ipet

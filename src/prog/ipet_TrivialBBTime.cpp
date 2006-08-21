@@ -43,7 +43,7 @@ TrivialBBTime::TrivialBBTime(int depth, const PropList& props)
  * See @ref CFGProcessor::processBB().
  */
 void TrivialBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
-	bb->set<int>(&IPET::ID_Time, dep * bb->countInstructions());
+	TIME(bb) = dep * bb->countInstructions();
 }
 
 } } // otawa::ipet

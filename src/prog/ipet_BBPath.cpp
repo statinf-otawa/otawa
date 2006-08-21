@@ -160,10 +160,10 @@ MutableCollection<BasicBlock *> *BBPath::empty(void){
  * @return number of cycles
  */
 int BBPath::time(FrameWork *fw){
-	int time = get<int>(IPET::ID_Time,-1);
+	int time = get<int>(TIME,-1);
 	if(time < 0){
 		time = simulate(fw);
-		IPET::ID_Time(this) = time;
+		TIME(this) = time;
 	}
 	return time;
 }
@@ -242,7 +242,7 @@ String BBPath::makeVarName(){
 		if(i != 0){
 			buf << '_';
 		}
-		ilp::Var *var = basicBlocks[i]->get<ilp::Var*>(IPET::ID_Var,0);
+		ilp::Var *var = basicBlocks[i]->get<ilp::Var*>(VAR,0);
 		if(var && !var->name().isEmpty()){ 
 			buf << var->name();
 		}
@@ -260,9 +260,9 @@ String BBPath::makeVarName(){
 ilp::Var* BBPath::getVar(System *system, bool explicit_names){
 	assert(system);
 	if(length() == 1){
-		return IPET::getVar(system, basicBlocks[0]);
+		return getVar(system, basicBlocks[0]);
 	}
-	ilp::Var *var = IPET::ID_Var(this);
+	ilp::Var *var = VAR(this);
 	if(!var) {
 		if(explicit_names){
 			var = system->newVar(makeVarName());
@@ -270,7 +270,7 @@ ilp::Var* BBPath::getVar(System *system, bool explicit_names){
 		else {
 			var = system->newVar();
 		}
-		set(IPET::ID_Var, var);
+		set(VAR, var);
 	}
 	return var;
 }

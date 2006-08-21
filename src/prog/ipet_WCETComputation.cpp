@@ -34,13 +34,13 @@ WCETComputation::WCETComputation(const PropList& props)
 /**
  */
 void WCETComputation::processCFG(FrameWork *fw, CFG *cfg) {
-	System *system = cfg->use<System *>(IPET::ID_System);
+	System *system = cfg->use<System *>(SYSTEM);
 	if(!system)
 		throw ProcessorException(*this, "no ILP system defined in this CFG");
 	int wcet = -1;
 	if(system->solve())
 		wcet = (int)system->value();
-	cfg->set<int>(IPET::ID_WCET, wcet);
+	cfg->set<int>(WCET, wcet);
 }
 
 } } // otawa::ipet

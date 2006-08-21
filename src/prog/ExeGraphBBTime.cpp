@@ -235,7 +235,7 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	}
 	
 	dumpFile << "\nWCC of block " << bb->number() << " is " << maxExecTime << "\n";
-	bb->set<int>(&ipet::IPET::ID_Time, maxExecTime);
+	bb->set<int>(TIME, maxExecTime);
 
 }
 

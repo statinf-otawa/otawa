@@ -23,23 +23,19 @@ class Var;
 
 namespace ipet {
 
-// IPET class
-class IPET {
-public:
-
-	// Constants
-	static GenericIdentifier<int> ID_Time;
-	static GenericIdentifier<ilp::Var *> ID_Var;
-	static GenericIdentifier<ilp::System *> ID_System;
-	static GenericIdentifier<int> ID_WCET;
-	static GenericIdentifier<bool> ID_Explicit;
+// Properties
+extern GenericIdentifier<int> TIME;
+extern GenericIdentifier<ilp::Var *> VAR;
+extern GenericIdentifier<ilp::System *> SYSTEM;
+extern GenericIdentifier<int> WCET;
+extern GenericIdentifier<bool> EXPLICIT;
+extern GenericIdentifier<bool> RECURSIVE;
 	
-	// Subprograms
-	static ilp::System *getSystem(FrameWork *fw, CFG *cfg);
-	static ilp::Var *getVar(ilp::System *system, BasicBlock *bb);
-	static ilp::Var *getVar(ilp::System *system, Edge *edge);
-};
-		
+// Subprograms
+ilp::System *getSystem(FrameWork *fw, CFG *cfg);
+ilp::Var *getVar(ilp::System *system, BasicBlock *bb);
+ilp::Var *getVar(ilp::System *system, Edge *edge);
+
 } }	// otawa::ipet
 
 #endif	// OTAWA_IPET_IPET_H

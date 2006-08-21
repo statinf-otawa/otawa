@@ -65,7 +65,7 @@ void CCGBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) {
 	assert(lbset);
 
 	// Get some information
-	System *system = IPET::getSystem(fw, cfg);
+	System *system = getSystem(fw, cfg);
 	const hard::Cache *cache = fw->platform()->cache().instCache();
 
 	// Initialization
@@ -78,7 +78,7 @@ void CCGBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) {
 			continue;
 		
 		// Link BB variable
-		ilp::Var *bbvar = bb->use<ilp::Var *>(ipet::IPET::ID_Var);
+		ilp::Var *bbvar = bb->use<ilp::Var *>(VAR);
 		lblock->add(ID_BBVar, bbvar);
 		
 		// Create x_hit variable
@@ -271,7 +271,7 @@ void CCGBuilder::processCFG(FrameWork *fw, CFG *cfg) {
  * @param props	Configuration properties.
  */
 void CCGBuilder::initialize(const PropList& props) {
-	_explicit = props.get<bool>(IPET::ID_Explicit, false);
+	_explicit = props.get<bool>(EXPLICIT, false);
 }
 
 

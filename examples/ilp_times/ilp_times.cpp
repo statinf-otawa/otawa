@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
 		
 		// Prepare processor configuration
 		PropList props;
-		props.set(IPET::ID_Explicit, true);
+		props.set(EXPLICIT, true);
 		
 		// Compute BB times
 		TrivialBBTime tbt(5, props);
@@ -201,13 +201,13 @@ int main(int argc, char **argv) {
 					size += seg->size();
 		
 		// Get the result
-		ilp::System *sys = vcfg.use<ilp::System *>(IPET::ID_System);
+		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
 		cout << file << '\t'
 			 << sys->countVars() << '\t'
 			 << sys->countConstraints() << '\t'
 			 << (int)(main_sw.delay() / 1000) << '\t'
 			 << (int)(ilp_sw.delay() / 1000) << '\t'
-			 << vcfg.use<int>(IPET::ID_WCET) << '\t'
+			 << vcfg.use<int>(WCET) << '\t'
 			 << size << '\n';
 	}
 	catch(LoadException e) {

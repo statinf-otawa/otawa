@@ -50,7 +50,7 @@ namespace otawa { namespace ipet {
 void BasicConstraintsBuilder::make(ilp::System *system, BasicBlock *bb) {
 	/*cout << "BasicConstraintBuilder::make(" << system << ", "
 		 << bb << " (" << bb->address() << "))\n";*/
-	Var *bbv = IPET::getVar(system, bb);
+	Var *bbv = getVar(system, bb);
 	Constraint *cons;
 	bool used;
 		
@@ -60,7 +60,7 @@ void BasicConstraintsBuilder::make(ilp::System *system, BasicBlock *bb) {
 	used = false;
 	for(BasicBlock::InIterator edge(bb); edge; edge++) {
 		if(edge->kind() != Edge::CALL) {
-			cons->addRight(1, IPET::getVar(system, edge));
+			cons->addRight(1, getVar(system, edge));
 			used = true;
 		}
 	}
@@ -73,7 +73,7 @@ void BasicConstraintsBuilder::make(ilp::System *system, BasicBlock *bb) {
 	used = false;
 	for(BasicBlock::OutIterator edge(bb); edge; edge++)
 		if(edge->kind() != Edge::CALL) {
-			cons->addRight(1, IPET::getVar(system, edge));
+			cons->addRight(1, getVar(system, edge));
 			used = true;
 		}
 	if(!used)
@@ -85,13 +85,13 @@ void BasicConstraintsBuilder::make(ilp::System *system, BasicBlock *bb) {
  */	
 void BasicConstraintsBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	assert(cfg);
-	System *system = IPET::getSystem(fw, cfg);
+	System *system = getSystem(fw, cfg);
 
 	// Set constraint on start BB
 	BasicBlock *entry = cfg->entry();
 	assert(entry);
 	Constraint *cons = system->newConstraint(Constraint::EQ, 1);
-	cons->add(1, IPET::getVar(system, entry));
+	cons->add(1, getVar(system, entry));
 	
 	// Add constraint for each basic block
 	for(CFG::BBIterator bb(cfg); bb; bb++)

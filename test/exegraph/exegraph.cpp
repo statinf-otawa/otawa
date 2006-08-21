@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
 		
 		// Prepare processor configuration
 		PropList props;
-		props.set(IPET::ID_Explicit, true);
+		props.set(EXPLICIT, true);
 		
 		// Compute BB times
 		//cout << "Timing the BB\n";
@@ -205,11 +205,11 @@ int main(int argc, char **argv) {
 		wcomp.processCFG(fw, &vcfg);
 		
 		// Display the result
-		ilp::System *sys = vcfg.use<ilp::System *>(IPET::ID_System);
+		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
 		sys->dump();
 		cout << sys->countVars() << " variables and "
 			 << sys->countConstraints() << " constraints.\n";
-		cout << "SUCCESS\nWCET = " << vcfg.use<int>(IPET::ID_WCET) << '\n';
+		cout << "SUCCESS\nWCET = " << vcfg.use<int>(WCET) << '\n';
 	}
 	catch(elm::Exception e) {
 		cerr << "ERROR: " << e.message() << '\n';

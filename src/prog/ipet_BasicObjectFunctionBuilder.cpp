@@ -43,16 +43,16 @@ BasicObjectFunctionBuilder::BasicObjectFunctionBuilder(const PropList& props)
 /**
  */
 void BasicObjectFunctionBuilder::processCFG(FrameWork *fw, CFG *cfg) {
-	System *system = IPET::getSystem(fw, cfg);
+	System *system = getSystem(fw, cfg);
 
 	// Add the object function
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
-			Option<int> time = bb->get<int>(IPET::ID_Time);
+			Option<int> time = bb->get<int>(TIME);
 			if(time < 0)
 				throw new ProcessorException(*this, "no time on BB %lx",
 					bb->address());
-			system->addObjectFunction(*time, IPET::getVar(system, bb));
+			system->addObjectFunction(*time, getVar(system, bb));
 		}
 }
 

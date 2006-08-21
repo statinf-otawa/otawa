@@ -162,7 +162,7 @@ void Command::compute(String fun) {
 	// Prepare processor configuration
 	PropList props;
 	if(dump_constraints || dump_graph)
-		props.set(IPET::ID_Explicit, true);
+		props.set(EXPLICIT, true);
 	if(verbose) {
 		PROC_VERBOSE(props) = true;
 		cerr << "verbose !\n";
@@ -231,9 +231,9 @@ void Command::compute(String fun) {
 	wcomp.processCFG(fw, &vcfg);
 
 	// Get the result
-	ilp::System *sys = vcfg.use<ilp::System *>(IPET::ID_System);
+	ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
 	cout << "WCET [" << file << ":" << fun << "] = "
-		 << vcfg.use<int>(IPET::ID_WCET) << io::endl;
+		 << vcfg.use<int>(WCET) << io::endl;
 	
 	// Dump the ILP system
 	if(dump_constraints) {
