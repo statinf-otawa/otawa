@@ -18,7 +18,7 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 	for (elm::genstruct::SLList<PipelineStageConfiguration *>::Iterator stage_conf(*(conf->pipelineStagesList())) ; 
 			stage_conf ; stage_conf++) {
 		switch(stage_conf->type()) {
-			case FETCH:			
+			case FETCH:	{		
 				assert(stage_conf->outputQueue());
 				found = false;
 				for (elm::genstruct::SLList<InstructionQueue *>::Iterator iq(instruction_queues) ; iq ; iq++) {
@@ -47,9 +47,9 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				nb->write(output_queue->configuration()->numberOfWritePorts());
 				fetch_stage->in_number_of_accepted_instructions(*nb);
 				output_queue->out_number_of_accepted_ins(*nb);
-				break;
+			} break;
 				
-			case LAZYIQIQ:
+			case LAZYIQIQ: {
 				assert(stage_conf->inputQueue());
 				found = false;
 				for (elm::genstruct::SLList<InstructionQueue *>::Iterator iq(instruction_queues) ; iq ; iq++) {
@@ -101,9 +101,9 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				nb->write(output_queue->configuration()->numberOfWritePorts());
 				lazy_stage->in_number_of_accepted_outs(*nb);
 				output_queue->out_number_of_accepted_ins(*nb);
-				break;
+			} break;
 				
-			case EXECUTE_IN_ORDER:
+			case EXECUTE_IN_ORDER: {
 				assert(stage_conf->inputQueue());
 				found = false;
 				for (elm::genstruct::SLList<InstructionQueue *>::Iterator iq(instruction_queues) ; iq ; iq++) {
@@ -133,7 +133,7 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				nb->write(0);
 				execute_stage->out_number_of_accepted_ins(*nb);
 				input_queue->in_number_of_accepted_outs(*nb);
-				break;
+			} break;
 				
 			default:
 				break;
