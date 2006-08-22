@@ -38,14 +38,14 @@ int main(int argc, char **argv) {
 		// Display dominance information
 		for(CFG::BBIterator bb1(cfg); bb1; bb1++) {
 			bool first = true;
-			cout << bb1->use<int>(CFG::ID_Index) << " dominates {";
+			cout << bb1->number() << " dominates {";
 			for(CFG::BBIterator bb2(cfg); bb2; bb2++)
 				if(Dominance::dominates(bb1, bb2)) {
 					if(first)
 						first = false;
 					else
 						cout << ", ";
-					cout << bb2->use<int>(CFG::ID_Index);
+					cout << bb2->number();
 				}
 			cout << "}\n";
 		}

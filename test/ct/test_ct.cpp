@@ -48,7 +48,7 @@ static void displayContextTree(ContextTree *tree, int space = 0) {
 		else if(bb->isExit())
 			cout << "EXIT";
 		else
-			cout << (bb->use<int>(CFG::ID_Index) - 1)
+			cout << (bb->number() - 1)
 				 << '(' << fmt::address(bb->address()) << ')';
 	}
 	cout << "}\n";
@@ -97,14 +97,14 @@ int main(int argc, char **argv) {
 		cout << "\nDOMINANCE\n";
 		for(CFG::BBIterator bb1(cfg); bb1; bb1++) {
 			bool first = true;
-			cout << bb1->use<int>(CFG::ID_Index) << " dominates {";
+			cout << bb1->number() << " dominates {";
 			for(CFG::BBIterator bb2(cfg); bb2; bb2++)
 				if(Dominance::dominates(bb1, bb2)) {
 					if(first)
 						first = false;
 					else
 						cout << ", ";
-					cout << bb2->use<int>(CFG::ID_Index);
+					cout << bb2->number();
 				}
 			cout << "}\n";
 		}
@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
 		cout << "\nLOOP HEADERS\n";
 		for(CFG::BBIterator bb(cfg); bb; bb++)
 			if(bb->get<bool>(Dominance::ID_LoopHeader, false))
-				cout << "- " << bb->use<int>(CFG::ID_Index)
+				cout << "- " << bb->number()
 					 << " (" << fmt::address(bb->address()) << ")\n";
 				
 		
