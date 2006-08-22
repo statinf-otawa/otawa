@@ -84,6 +84,7 @@ void GenericState::step(void) {
 	elm::cout << "Cycle " << _cycle << "\n";
 	processor->step();
 	_cycle ++;
+	running = ! processor->isEmpty();
 }
 
 

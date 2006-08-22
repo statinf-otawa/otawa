@@ -114,7 +114,6 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 					}
 				}
 				assert(found);
-				
 				ExecuteInOrderStageIQ * execute_stage = 
 					new ExecuteInOrderStageIQ((sc_module_name) (stage_conf->name()), iports, sim_state);	
 				execute_stage->in_clock(clock);
@@ -145,9 +144,12 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 
 bool GenericProcessor::isEmpty() {
 	bool empty = true;
+	elm::cout << "Is processor empty ??\n";
 	for (elm::genstruct::SLList<InstructionQueue *>::Iterator iq(instruction_queues) ; iq ; iq++) {
 		empty = empty && iq->isEmpty();
+		elm::cout  << "\t" << iq->name() << ":" << iq->isEmpty() << "\n";
 	}
+	elm::cout << "\tconclusion: " << empty << "\n";
 	return empty;
 }
 
