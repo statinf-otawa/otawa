@@ -33,6 +33,7 @@ void InstructionQueueConfiguration::setNumberOfReadPorts(int n) {
 
 InstructionQueue::InstructionQueue(sc_module_name name, InstructionQueueConfiguration * configuration) {
 	conf = configuration;
+	is_full = false;
 	cap = 1<<conf->capacity();
 	assert(cap>0);
 	in_ports = conf->numberOfWritePorts();
@@ -57,16 +58,18 @@ void InstructionQueue::flush() {
 }
 
 inline void InstructionQueue::put(SimulatedInstruction *inst) {
+	assert (is_full == false);
 	int new_tail = (tail+1) & (cap-1);
-	assert (new_tail != head);
 	buffer[tail] = inst;
 	tail = new_tail;
+	is_full = (tail == head);
 }
 
 inline SimulatedInstruction* InstructionQueue::get() {
-	assert(head!=tail);
+	assert((head!=tail) || is_full);
 	int res=head;
 	head = (head+1) & (cap-1);
+	is_full = false;
 	return buffer[head];
 }
 		
@@ -76,7 +79,10 @@ inline SimulatedInstruction* InstructionQueue::read(int index){
 
 inline int InstructionQueue::size() {
 	if (head == tail)
-		return 0;
+		if (is_full == false)
+			return 0;
+		else
+			return cap;
 	if (head < tail)
 		return (tail - head);
 	return ( (cap - head) + tail ) ;
@@ -95,39 +101,44 @@ void InstructionQueue::action() {
 	elm::cout << "\tin_number_of_accepted_outs=" << in_number_of_accepted_outs.read() << "\n";
 	for (int i=0 ; i<out_number_of_outs.read() ; i++)
 		get();
-	elm::cout << "\tin_number_of_ins=" << in_number_of_ins.read() << "\n";
+	elm::cout << "\tin_number_of_ins=" << in_number_of_ins.read() << " (cap=" << cap << ", size=" << size() << ")\n";
 	for (int i=0 ; i<in_number_of_ins.read() ; i++) {
-		assert(size() < cap);
+		assert(!is_full);
 		put(in_instruction[i].read());
 	}
 	deliverOutputs();
-	int accepted = cap - size() + out_number_of_outs.read();
+	int accepted = cap - size() + number_of_outs;
 	if (accepted > in_ports)
 		accepted = in_ports;
 	out_number_of_accepted_ins.write(accepted);	
-	elm::cout << "\tout_number_of_accepted_ins=" << accepted << "\n";
+	elm::cout << "\tout_number_of_accepted_ins=" << accepted << " (cap=" << cap << ", size=" << size() << ")\n";
 }
 	
 void InstructionQueue::deliverOutputs() {
-	int outs = size();
-	if (outs > out_ports)
-		outs = out_ports;
-	for (int i=0 ; i<outs ; i++)
+	number_of_outs = in_number_of_accepted_outs.read();
+	elm::cout << "\tcomputing number of outs: \n";
+	elm::cout << "\t\tin_number_of_accepted_outs.read()=" << in_number_of_accepted_outs.read() << "\n";
+	elm::cout << "\t\tsize()=" << size() << "\n";
+	if (number_of_outs > size())
+		number_of_outs = size();
+	elm::cout << "\t\tnumber_of_outs=" << number_of_outs << "\n";
+	for (int i=0 ; i<number_of_outs ; i++)
 		out_instruction[i].write(read(i));
-	out_number_of_outs.write(outs);
-	
+	out_number_of_outs.write(number_of_outs);
+	elm::cout << "\tout_number_of_outs=" << number_of_outs << "\n";
 }
 
 void InstructionBuffer::deliverOutputs() {
-	int outs = size();
-	if (outs > out_ports)
-		outs = out_ports;
+	number_of_outs = in_number_of_accepted_outs.read();
+	if (number_of_outs > size())
+		number_of_outs = size();
 	int i = 0;
-	while ((i<outs) && (read(i)->state() == TERMINATED)) {
+	while ((i<number_of_outs) && (read(i)->state() == TERMINATED)) {
 		out_instruction[i].write(read(i));
 		i++;
  	}
-	out_number_of_outs.write(i);
-	elm::cout << "\tout_number_of_outs=" << i << "\n";
+ 	number_of_outs = i;
+	out_number_of_outs.write(number_of_outs);
+	elm::cout << "\tout_number_of_outs=" << number_of_outs << "\n";
 	
 }
