@@ -39,9 +39,11 @@ class InstructionQueue : public sc_module {
 		// variables
 		int head;
 		int tail;
+		bool is_full;
 		int cap;
 		int in_ports, out_ports;
 		SimulatedInstruction** buffer;
+		int number_of_outs;
 		
 		// private methods
 		inline SimulatedInstruction* get();
