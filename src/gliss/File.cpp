@@ -157,19 +157,19 @@ void File::initSyms(void) {
 	// Traverse ELF symbol table
 	for(int i = 0; i < sym_cnt; i++) {
 		address_t addr = 0;
-		symbol_kind_t kind;
+		Symbol::kind_t kind;
 		
 		// Function symbol
 		if(ELF32_ST_TYPE(syms[i].st_info)== STT_FUNC
 		&& syms[i].st_shndx != SHN_UNDEF) {
-			kind = SYMBOL_Function;
+			kind = Symbol::FUNCTION;
 			addr = (address_t)syms[i].st_value;
 		}
 		
 		// Simple label symbol
 		else if(ELF32_ST_TYPE(syms[i].st_info)== STT_NOTYPE
 		&& syms[i].st_shndx == Text.txt_index) {
-			kind = SYMBOL_Label;
+			kind = Symbol::LABEL;
 			addr = (address_t)syms[i].st_value;
 		}
 

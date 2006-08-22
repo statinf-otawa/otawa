@@ -138,9 +138,9 @@ void CodeSegment::build(void) {
 			if(inst) {
 				Identifier *id;
 				switch(sym->kind()) {
-				case SYMBOL_Function:
+				case Symbol::FUNCTION:
 					inst->add<String>(File::ID_FunctionLabel, sym->name());
-				case SYMBOL_Label:
+				case Symbol::LABEL:
 					inst->add<String>( File::ID_Label, sym->name());
 					break;
 				}

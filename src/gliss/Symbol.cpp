@@ -24,12 +24,12 @@ namespace otawa { namespace gliss {
  * @param kind
  * @param address
  */
-Symbol::Symbol(File& file, String name, symbol_kind_t kind, address_t address)
+Symbol::Symbol(File& file, String name, kind_t kind, address_t address)
 : _file(file), _name(name), _kind(kind), addr(address) {
 }
 
 // otawa::Symbol overload
-symbol_kind_t Symbol::kind(void) {
+Symbol::kind_t Symbol::kind(void) {
 	return _kind;
 }
 
@@ -46,9 +46,9 @@ address_t Symbol::address(void) {
 // otawa::Symbol overload
 size_t Symbol::size(void) {
 	switch(_kind) {
-	case SYMBOL_Function:
+	case FUNCTION:
 		return 4;
-	case SYMBOL_Label:
+	case LABEL:
 		return 4;
 	default:
 		assert(0);
