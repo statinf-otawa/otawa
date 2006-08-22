@@ -6,6 +6,7 @@
  */
 
 #include <otawa/prop/GenericIdentifier.h>
+#include <otawa/prop/PropList.h>
 
 namespace otawa {
 
@@ -184,27 +185,68 @@ namespace otawa {
  */
 
 
-// Specific printers
-/*template <>
-void GenericIdentifier<CString>::_print(elm::io::Output& out, const Property& prop) const {
+// GenericIdentifier<T>::print Specializations
+static void escape(elm::io::Output& out, char chr, char quote) {
+	if(chr >= ' ') {
+		if(chr == quote)
+			out << '\\' << quote;
+		else
+			out << chr;
+	}
+	else
+		switch(chr) {
+		case '\n': out << "\\n"; break;
+		case '\t': out << "\\t"; break;
+		case '\r': out << "\\r"; break;
+		default: out << "\\x" << io::hex((unsigned char)chr); break;
+	}
+}
+
+
+template <>
+void GenericIdentifier<char>::print(elm::io::Output& out, const Property& prop) const {
+	out << '\'';
+	escape(out, ((const GenericProperty<char> &)prop).value(), '\'');
+	out << '\'';
+}
+
+
+template <>
+void GenericIdentifier<CString>::print(elm::io::Output& out, const Property& prop) const {
 	out << '"';
 	CString str = ((const GenericProperty<CString> &)prop).value();
-	for(int i = 0; str[i]; i++) {
-		if(str[i] >= ' ') {
-			if(str[i] == '"')
-				out << '\\' << '"';
-			else
-				out << str[i];
-		}
-		else
-			switch(str[i]) {
-			case '\n': out << "\\n"; break;
-			case '\t': out << "\\t"; break;
-			case '\r': out << "\\r"; break;
-			default: out << "\\x" << io::hex(str[i]); break;
-			}
-	}
+	for(int i = 0; str[i]; i++)
+		escape(out, str[i], '"'); 
 	out << '"';
-}*/
+}
+
+
+template <>
+void GenericIdentifier<elm::String>::print(elm::io::Output& out, const Property& prop) const {
+	out << '"';
+	const String& str = ((const GenericProperty<String> &)prop).value();
+	for(int i = 0; i < str.length(); i++)
+		escape(out, str[i], '"'); 
+	out << '"';
+}
+
+
+template <>
+void GenericIdentifier<PropList *>::print(elm::io::Output& out, const Property& prop) const {
+	out << "proplist(" << &prop << ")";
+}
+
+
+// GenericIdentifier<T>::scan Specializations
+template <>
+void GenericIdentifier<CString>::scan(PropList& props, VarArg& args) const {
+	props.set(*this, args.next<char *>());
+}
+
+
+template <>
+void GenericIdentifier<String>::scan(PropList& props, VarArg& args) const {
+	props.set(*this, args.next<char *>());
+}
 
 }	// otawa

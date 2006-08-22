@@ -197,6 +197,25 @@ GenericIdentifier<T>::operator()(PropList *props) const {
 	return value(props);
 }
 
+
+// GenericIdentifier<T>::print Specializations
+template <>
+void GenericIdentifier<char>::print(elm::io::Output& out, const Property& prop) const;
+template <>
+void GenericIdentifier<elm::CString>::print(elm::io::Output& out, const Property& prop) const;
+template <>
+void GenericIdentifier<elm::String>::print(elm::io::Output& out, const Property& prop) const;
+template <>
+void GenericIdentifier<PropList *>::print(elm::io::Output& out, const Property& prop) const;
+
+
+// GenericIdentifier<T>::scan Specializations
+template <>
+void GenericIdentifier<CString>::scan(PropList& props, VarArg& args) const;
+template <>
+void GenericIdentifier<String>::scan(PropList& props, VarArg& args) const;
+
+
 // Value class
 template <class T>
 inline GenericIdentifier<T>::Value::Value(PropList& _prop,
