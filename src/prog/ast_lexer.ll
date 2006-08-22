@@ -48,7 +48,7 @@ SEP		[,;(){}=\[\]]
 "DoWhile"	return DOWHILE;
 "For"		return FOR;
 
-{NAME}:		ast_lval.str = strdup(yytext); return LABEL;
+{NAME}:		ast_lval.str = strdup(yytext); return _LABEL;
 {NAME}		ast_lval.str = strdup(yytext); return NAME;
 
 .			return ERROR;
