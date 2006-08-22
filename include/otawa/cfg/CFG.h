@@ -17,6 +17,11 @@ namespace otawa {
 // Classes
 class BasicBlock;
 class CodeItem;
+class CFG;
+
+// Properties
+extern GenericIdentifier<CFG *> ENTRY;
+extern GenericIdentifier<int> INDEX;
 
 // CFG class
 class CFG: public ProgObject, private elm::Collection<BasicBlock *> {
@@ -34,8 +39,6 @@ protected:
 	genstruct::Vector<BasicBlock *> _bbs;
 	virtual void scan(void);
 public:
-	static GenericIdentifier<CFG *> ID;
-	static Identifier ID_Index;
 	static Identifier ID_Dom;
 	
 	// Iterator
@@ -112,6 +115,10 @@ inline BasicBlock *CFG::BBIterator::item(void) const {
 inline void CFG::BBIterator::next(void) {
 	pos++;
 };
+
+// Property display
+template <>
+void GenericIdentifier<CFG *>::print(elm::io::Output& out, const Property& prop) const;
 
 } // otawa
 

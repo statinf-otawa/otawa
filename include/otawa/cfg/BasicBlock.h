@@ -20,6 +20,8 @@ namespace otawa {
 // Extern class
 class FrameWork;
 class Edge;
+class CFG;
+extern GenericIdentifier<int> INDEX;
 
 // BasicBlock class
 class BasicBlock: public elm::inhstruct::DLNode, public ProgObject {
@@ -64,7 +66,7 @@ protected:
 
 public:
 	static Identifier ID;
-	static Identifier& ID_Index;
+	//static Identifier& ID_Index;
 
 	// Mark class
 	class Mark: public PseudoInst {
@@ -98,7 +100,7 @@ public:
 	size_t size(void) const;
 	inline bool isVirtual(void) const { return flags & FLAG_Virtual; };
 	inline unsigned long getFlags(void) const { return flags; };
-	inline int number(void) { return get<int>(ID_Index, -1); };
+	inline int number(void) { return INDEX(this); };
 	
 	// Edge management
 	inline void addInEdge(Edge *edge) { ins.addFirst(edge); };
