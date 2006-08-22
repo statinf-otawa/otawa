@@ -208,7 +208,7 @@ void CFGBuilder::addFile(File *file) {
 	
 	// Scan file symbols
 	for(Iterator<Symbol *> sym(file->symbols()); sym; sym++)
-		if(sym->kind() == SYMBOL_Function) {
+		if(sym->kind() == Symbol::FUNCTION) {
 			Inst *inst = sym->findInst();
 			if(inst)
 				addSubProgram(inst);

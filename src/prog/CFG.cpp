@@ -16,22 +16,22 @@
 namespace otawa {
 
 /**
+ * Identifier used for storing and retrieving the CFG on its entry BB.
+ */
+GenericIdentifier<CFG *> ENTRY("otawa.cfg_entry", 0);
+
+
+/**
+ * Identifier used for storing in each basic block from the CFG its index.
+ */
+GenericIdentifier<int> INDEX("otawa.index", -1);
+
+
+/**
  * @class CFG
  * Control Flow Graph representation. Its entry basic block is given and
  * the graph is built using following taken and not-taken properties of the block.
  */
-
-
-/**
- * Identifier used for storing and retrieving the CFG on its entry BB.
- */
-GenericIdentifier<CFG *> CFG::ID("otawa.cfg");
-
-
-/**
- * Identifier used for storing in each basic block from the CFG its index (int).
- */
-Identifier CFG::ID_Index("otawa.cfg.index");
 
 
 /**
@@ -60,7 +60,7 @@ bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 	}
 	
 	// Test with the index
-	return set->contains(bb1->use<int>(ID_Index));
+	return set->contains(INDEX(bb1));
 }
 
 
@@ -74,7 +74,7 @@ _entry(BasicBlock::FLAG_Entry), _exit(BasicBlock::FLAG_Exit) {
 	assert(code && entry);
 	
 	// Mark entry
-	ent->set<CFG *>(ID, this);
+	ENTRY(ent) = this;
 	
 	// Get label
 	BasicBlock::InstIterator inst(entry);
@@ -170,7 +170,7 @@ void CFG::scan(void) {
 	// Explore CFG
 	genstruct::Vector<BasicBlock *> ends;
 	_bbs.add(&_entry);
-	_entry.add<int>(ID_Index, 0);
+	INDEX(_entry) = 0;
 	for(int pos = 0; pos < _bbs.length(); pos++) {
 		BasicBlock *bb = _bbs[pos];
 		if(bb->isReturn())
@@ -178,19 +178,19 @@ void CFG::scan(void) {
 		for(BasicBlock::OutIterator edge(bb); edge; edge++)
 			if(edge->kind() != EDGE_Call) {
 				BasicBlock *target = edge->target();
-				if(target != ent && target->get<CFG *>(ID, 0)) {
+				if(target != ent && ENTRY(target)) {
 					ends.add(bb);
 					edge->toCall();
 				}
 				else if(!_bbs.contains(target)) {
-					target->add<int>(ID_Index, _bbs.length());
+					INDEX(target) = _bbs.length();
 					_bbs.add(target);
 				}
 			}
 	}
 	
 	// Add exit edges
-	_exit.add<int>(ID_Index, _bbs.length());
+	INDEX(_exit) = _bbs.length();
 	_bbs.add(&_exit);
 	for(int i = 0; i < ends.length(); i++)
 		new Edge(ends[i], &_exit, EDGE_Virtual);
@@ -205,7 +205,14 @@ void CFG::scan(void) {
  */
 void CFG::numberBB(void) {
 	for(int i = 0; i < _bbs.length(); i++)
-		_bbs[i]->set<int>(ID_Index, i);
+		INDEX(_bbs[i]) = i;
+}
+
+
+// GenericIdentifier<CFG *>::print Specialization
+template <>
+void GenericIdentifier<CFG *>::print(elm::io::Output& out, const Property& prop) const {
+	out << "cfg(" << get(prop)->label() << ")";
 }
 
 } // namespace otawa

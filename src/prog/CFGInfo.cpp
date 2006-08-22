@@ -129,7 +129,7 @@ CFG *CFGInfo::findCFG(Inst *inst) {
  * @return	Found CFG or this BB is not a CFG start.
  */
 CFG *CFGInfo::findCFG(BasicBlock *bb) {
-	return bb->get<CFG *>(CFG::ID, 0);
+	return ENTRY(bb);
 }
 
 

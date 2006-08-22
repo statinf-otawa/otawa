@@ -41,12 +41,6 @@ Identifier BasicBlock::ID("otawa.bb");
 
 
 /**
- * Identifier of the property storing integer number of basic blocks.
- */
-Identifier& BasicBlock::ID_Index = CFG::ID_Index;
-
-
-/**
  * @fn Mark *BasicBlock::head(void) const;
  * Get the mark pseudo-instruction of the basic block. Following instruction
  * until the next mark are the content of the basic block.

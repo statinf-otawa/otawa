@@ -100,7 +100,7 @@ String VarAssignment::makeNodeVar(BasicBlock *bb) {
 	assert(bb);
 	StringBuffer buf;
 	buf << "x";
-	int num = bb->get<int>(CFG::ID_Index, -1);
+	int num = bb->number();
 	if(num >= 0)
 		buf << num;
 	else
@@ -120,7 +120,7 @@ String VarAssignment::makeEdgeVar(Edge *edge) {
 	buf << "e";
 	
 	// Write source
-	int num = edge->source()->get<int>(CFG::ID_Index, -1);
+	int num = edge->source()->number();
 	if(num >= 0)
 		buf << num;
 	else
@@ -137,7 +137,7 @@ String VarAssignment::makeEdgeVar(Edge *edge) {
 			buf << edge->calledCFG()->address();
 	}
 	else {
-		num = edge->target()->get<int>(CFG::ID_Index, -1);
+		num = edge->target()->number();
 		if(num >= 0)
 			buf << num;
 		else
