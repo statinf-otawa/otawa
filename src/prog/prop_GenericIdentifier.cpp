@@ -182,5 +182,29 @@ namespace otawa {
  * @return		Value of the property matching the current identifier in
  * the list.
  */
-	
+
+
+// Specific printers
+/*template <>
+void GenericIdentifier<CString>::_print(elm::io::Output& out, const Property& prop) const {
+	out << '"';
+	CString str = ((const GenericProperty<CString> &)prop).value();
+	for(int i = 0; str[i]; i++) {
+		if(str[i] >= ' ') {
+			if(str[i] == '"')
+				out << '\\' << '"';
+			else
+				out << str[i];
+		}
+		else
+			switch(str[i]) {
+			case '\n': out << "\\n"; break;
+			case '\t': out << "\\t"; break;
+			case '\r': out << "\\r"; break;
+			default: out << "\\x" << io::hex(str[i]); break;
+			}
+	}
+	out << '"';
+}*/
+
 }	// otawa

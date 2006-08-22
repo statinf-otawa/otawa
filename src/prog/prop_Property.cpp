@@ -208,7 +208,6 @@ const Identifier *Property::getID(elm::CString name) {
 void Property::print(elm::io::Output& out) const {
 	out << _id->name() << " = ";
 	_id->print(out, this);
-	out << elm::io::endl;
 }
 
 

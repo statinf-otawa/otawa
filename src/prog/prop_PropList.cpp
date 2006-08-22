@@ -367,7 +367,7 @@ const PropList PropList::EMPTY;
  */
 void PropList::print(elm::io::Output& out) const {
 	for(Iter prop(this); prop; prop++)
-		out << *prop;
+		out << *prop << io::endl;
 }
 
 
