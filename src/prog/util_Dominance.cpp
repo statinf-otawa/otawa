@@ -65,7 +65,7 @@ DFASet *DominanceDFA::initial(void) {
  */
 DFASet *DominanceDFA::generate(BasicBlock *bb) {
 	DFABitSet *result = new DFABitSet(_size);
-	result->add(bb->use<int>(CFG::ID_Index));
+	result->add(bb->number());
 	return result;
 }
 
@@ -94,6 +94,32 @@ void DominanceDFA::merge(DFASet *acc, DFASet *set) {
 }
 
 
+/*class DominanceProblem {
+	CFG *cfg;
+	int size;
+public:
+	DominanceProblem(CFG *_cfg): cfg(_cfg), size(_cfg.count() {
+	}
+	
+	DFABitSet *empty(void) {
+		return new DFABitSet(size, true)
+	}
+	
+	DFABitSet *gen(BasicBlock *bb) {
+		DFABitSet *result = new DFABitSet(_size);
+		result->add(bb->use<int>(CFG::ID_Index));
+		return result;
+	}
+	
+	DFABitSet *kill(BasicBlock *bb) {
+		if(bb->isEntry())
+			return new DFABitSet(_size, true);
+		else
+			return new DFABitSet(_size);
+	}
+};*/
+
+
 /**
  * @class Dominance
  * This CFG processor computes and hook to the CFG the dominance relation
@@ -110,7 +136,7 @@ void DominanceDFA::merge(DFASet *acc, DFASet *set) {
 bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 	assert(bb1);
 	assert(bb2);
-	int index = bb1->use<int>(CFG::ID_Index);
+	int index = bb1->number();
 	assert(index >= 0);
 	DFABitSet *set = bb2->use<DFABitSet *>(ID_RevDom);
 	assert(set);
