@@ -95,6 +95,7 @@ libotawa_la_SOURCES = \
 	cache_LBlockSet.cpp \
 	prog_ProgItem.cpp \
 	prog_CodeItem.cpp \
+	prog_Symbol.cpp \
 	cache_CATBuilder.cpp \
 	cache_CATConstraintBuilder.cpp \
 	cache_CATDFA.cpp \
