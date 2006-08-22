@@ -34,6 +34,8 @@ public:
 	inline Property(elm::CString name): _id(getID(name)) { };
 	inline const Identifier *id(void) const { return _id; };
 	inline Property *next(void) const { return _next; };
+	template <class T> inline const T& get(void) const;
+	template <class T> inline void set(const T& value);
 	virtual void print(elm::io::Output& out) const;
 };
 
@@ -84,6 +86,16 @@ public:
 
 
 // Property Inlines
+template <class T>
+inline const T& Property::get(void) const {
+	return ((const GenericProperty<T> *)this)->value();
+}
+
+template <class T>
+inline void Property::set(const T& value) {
+	((GenericProperty<T> *)this)->value() = value;
+}
+
 inline elm::io::Output& operator<<(elm::io::Output& out, const Property *prop) {
 	prop->print(out);
 	return out;
