@@ -34,17 +34,18 @@ int sc_main(int argc, char *argv[]) {
 
 int main(int argc, char **argv) {
 	
-	elm::io::OutFileStream logStream("/home/rochange/ECLIPSE/otawa/otawa/test/generic_simulator/log");
+	try {
+		
+	elm::io::OutFileStream logStream("log.txt");
+	if(!logStream.isReady())
+		throw IOException("cannot open log file !");
 	elm::io::Output logFile(logStream);
 	
 	
 	
 	Manager manager;
-	PropList props;
-	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
-	
-	
-	try {
+	PropList loader_props;
+	loader_props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
 		
 		// Load program
 		if(argc < 2) {
@@ -52,7 +53,7 @@ int main(int argc, char **argv) {
 				 << "Syntax is : exegraph <executable>\n";
 			exit(2);
 		}
-		FrameWork *fw = manager.load(argv[1], props);
+		FrameWork *fw = manager.load(argv[1], loader_props);
 		
 		
 		// Find main CFG
@@ -80,7 +81,7 @@ int main(int argc, char **argv) {
 		
 		// Prepare processor configuration
 		PropList props;
-		props.set(IPET::ID_Explicit, true);
+		props.set(EXPLICIT, true);
 		
 		GenericSimulator simulator;
 		GenericState *simulator_state = (GenericState *) simulator.instantiate(fw,props);
@@ -120,12 +121,8 @@ int main(int argc, char **argv) {
 //		tbt.processCFG(fw, &vcfg);
 		
 	}
-	catch(LoadException e) {
-//		elm::cerr << "ERROR: " << e.message() << '\n';
-		exit(1);
-	}
-	catch(ProcessorException e) {
-//		elm::cerr << "ERROR: " << e.message() << '\n';
+	catch(elm::Exception& e) {
+		elm::cerr << "ERROR: " << e.message() << '\n';
 		exit(1);
 	}
 	return 0;
