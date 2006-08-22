@@ -48,7 +48,7 @@ inline CFG *Edge::calledCFG(void) const {
 	if(!tgt)
 		return 0;
 	else
-		return tgt->get<CFG *>(CFG::ID, 0);
+		return ENTRY(tgt);
 }
 
 
