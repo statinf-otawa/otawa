@@ -206,7 +206,7 @@ static void escape(elm::io::Output& out, char chr, char quote) {
 template <>
 void GenericIdentifier<char>::print(elm::io::Output& out, const Property& prop) const {
 	out << '\'';
-	escape(out, ((const GenericProperty<char> &)prop).value(), '\'');
+	escape(out, get(prop), '\'');
 	out << '\'';
 }
 
@@ -214,7 +214,7 @@ void GenericIdentifier<char>::print(elm::io::Output& out, const Property& prop) 
 template <>
 void GenericIdentifier<CString>::print(elm::io::Output& out, const Property& prop) const {
 	out << '"';
-	CString str = ((const GenericProperty<CString> &)prop).value();
+	CString str = get(prop);
 	for(int i = 0; str[i]; i++)
 		escape(out, str[i], '"'); 
 	out << '"';
@@ -224,7 +224,7 @@ void GenericIdentifier<CString>::print(elm::io::Output& out, const Property& pro
 template <>
 void GenericIdentifier<elm::String>::print(elm::io::Output& out, const Property& prop) const {
 	out << '"';
-	const String& str = ((const GenericProperty<String> &)prop).value();
+	const String& str = get(prop);
 	for(int i = 0; i < str.length(); i++)
 		escape(out, str[i], '"'); 
 	out << '"';
