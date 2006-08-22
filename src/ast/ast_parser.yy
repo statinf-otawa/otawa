@@ -34,7 +34,7 @@ void ast_error(otawa::ASTLoader *loader, const char *msg);
 }
 
 %token ERROR
-%token <str> LABEL
+%token <str> _LABEL
 %token <str> NAME
 %token SEQ IF WHILE DOWHILE FOR CODE APPEL VIDE
 %token NUMBER UN_OP BIN_OP BI_OP
@@ -79,7 +79,7 @@ def:
 ast:
 	VIDE
 		{ $$ = &AST::NOP; }
-|	CODE '(' LABEL ',' opt_calls LABEL ')'
+|	CODE '(' _LABEL ',' opt_calls _LABEL ')'
 		{
 			$$ = loader->makeBlock($3, $6);
 			free($3);
