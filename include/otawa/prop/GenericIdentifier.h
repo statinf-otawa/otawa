@@ -20,6 +20,7 @@ class PropList;
 template <class T>
 class GenericIdentifier: public Identifier {
 	T def;
+	inline const T& get(const Property& prop) const;
 public:
 
 	// Value class
@@ -69,6 +70,11 @@ public:
 };
 
 // Inlines
+template <class T>
+inline const T& GenericIdentifier<T>::get(const Property& prop) const {
+	return ((const GenericProperty<T> &)prop).value();
+}
+
 template <class T>
 inline GenericIdentifier<T>::GenericIdentifier(elm::CString name)
 : Identifier(name) {
@@ -162,7 +168,7 @@ GenericIdentifier<T>::value(PropList *list) const {
 	
 template <class T>	
 void GenericIdentifier<T>::print(elm::io::Output& output, const Property& prop) const {
-	output << ((const GenericProperty<T> &)prop).value();
+	output << get(prop);
 }
 
 template <class T>
