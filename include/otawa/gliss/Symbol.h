@@ -16,13 +16,13 @@ namespace otawa { namespace gliss {
 class Symbol: public otawa::Symbol {
 	File& _file;
 	String _name;
-	symbol_kind_t _kind;
+	kind_t _kind;
 	address_t addr;	
 public:
-	Symbol(File& file, String name, symbol_kind_t kind, address_t address);	
+	Symbol(File& file, String name, kind_t kind, address_t address);	
 
 	// otawa::Symbol overload
-	virtual symbol_kind_t kind(void);
+	virtual kind_t kind(void);
 	virtual String name(void);
 	virtual address_t address(void);
 	virtual size_t size(void);
