@@ -260,7 +260,7 @@ String BBPath::makeVarName(){
 ilp::Var* BBPath::getVar(System *system, bool explicit_names){
 	assert(system);
 	if(length() == 1){
-		return getVar(system, basicBlocks[0]);
+		return ::otawa::ipet::getVar(system, basicBlocks[0]);
 	}
 	ilp::Var *var = VAR(this);
 	if(!var) {
