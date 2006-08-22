@@ -74,7 +74,7 @@ inline DFAEngine<Problem, Set, Iter>::DFAEngine(Problem& problem, CFG& cfg)
 	gens = new Set *[cnt];
 	kills = new Set *[cnt];
 	for(elm::Iterator<BasicBlock *> bb(_cfg.bbs()); bb; bb++) {
-		int idx = bb->use<int>(BasicBlock::ID_Index);
+		int idx = INDEX(bb);
 		ins[idx] = prob.empty();
 		outs[idx] = prob.empty();
 		gens[idx] = prob.gen(bb);
@@ -104,28 +104,28 @@ inline DFAEngine<Problem, Set, Iter>::~DFAEngine(void) {
 // DFAEngine::inSet() inline
 template <class Problem, class Set, class Iter>
 inline Set *DFAEngine<Problem, Set, Iter>::inSet(BasicBlock *bb) {
-	return ins[bb->use<int>(BasicBlock::ID_Index)];
+	return ins[INDEX(bb)];
 }
 
 
 // DFAEngine::outSet() inline
 template <class Problem, class Set, class Iter>
 inline Set *DFAEngine<Problem, Set, Iter>::outSet(BasicBlock *bb) {
-	return outs[bb->use<int>(BasicBlock::ID_Index)];
+	return outs[INDEX(bb)];
 }
 
 
 // DFAEngine::genSet() inline
 template <class Problem, class Set, class Iter>
 inline Set *DFAEngine<Problem, Set, Iter>::genSet(BasicBlock *bb) {
-	return gens[bb->use<int>(BasicBlock::ID_Index)];
+	return gens[INDEX(bb)];
 }
 
 
 // DFAEngine::killSet() inline
 template <class Problem, class Set, class Iter>
 inline Set *DFAEngine<Problem, Set, Iter>::killSet(BasicBlock *bb) {
-	return kills[bb->use<int>(BasicBlock::ID_Index)];
+	return kills[INDEX(bb)];
 }
 
 
