@@ -14,7 +14,10 @@ namespace otawa { namespace display {
 // Driver class
 class Driver {
 public:
-	Graph *newGraph(const PropList& props) const = 0;
+	virtual Graph *newGraph(
+		const PropList& defaultGraphStyle = PropList::EMPTY,
+		const PropList& defaultNodeStyle = PropList::EMPTY,
+		const PropList& defaultEdgeStyle = PropList::EMPTY) const = 0;
 };
 
 } } // otawa::display
