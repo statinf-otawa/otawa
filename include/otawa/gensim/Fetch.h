@@ -1,9 +1,9 @@
 #ifndef _FETCH_H_
 #define _FETCH_H_
 
-#include <PipelineStage.h>
-#include <InstructionQueue.h>	
-#include <SimulatedInstruction.h>
+#include <otawa/gensim/PipelineStage.h>
+#include <otawa/gensim/InstructionQueue.h>	
+#include <otawa/gensim/SimulatedInstruction.h>
 #include <emul.h>
 #include <iss_include.h>
 #include <otawa/otawa.h>

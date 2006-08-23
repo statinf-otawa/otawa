@@ -3,8 +3,8 @@
 
 #include <systemc.h>
 #include <elm/genstruct/SLList.h>
-#include <InstructionQueue.h>
-#include <SimulatedInstruction.h>
+#include <otawa/gensim/InstructionQueue.h>
+#include <otawa/gensim/SimulatedInstruction.h>
 #include <elm/string/String.h>
 
 typedef enum {	FETCH, 

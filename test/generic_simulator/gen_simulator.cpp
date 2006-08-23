@@ -13,7 +13,7 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
-#include <GenericSimulator.h>
+#include <otawa/gensim/GenericSimulator.h>
 #include <otawa/sim/BasicBlockDriver.h>
 
 

@@ -1,4 +1,4 @@
-#include <GenericProcessor.h>
+#include <otawa/gensim/GenericProcessor.h>
 
 GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration * conf, otawa::GenericState * sim_state) {
 	int iports,oports;

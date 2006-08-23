@@ -3,9 +3,9 @@
 
 #include <elm/genstruct/SLList.h>
 #include <systemc.h>
-#include <PipelineStage.h>
-#include <Fetch.h>
-#include <Execute.h>
+#include <otawa/gensim/PipelineStage.h>
+#include <otawa/gensim/Fetch.h>
+#include <otawa/gensim/Execute.h>
 
 namespace otawa {
 	class GenericState;

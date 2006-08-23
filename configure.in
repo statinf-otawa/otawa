@@ -360,6 +360,21 @@ dnl ==== systemc ====
 check_module(systemc, SYSTEMC, src, objdir/src, systemc)
 
 
+# ==== ogensim ====
+if test "$has_systemc" = yes -a "$HAVE_GLISS_PPC" = yes; then
+	OGENSIM_CXXFLAGS="$SYSTEMC_CXXFLAGS $BUILD_GLISS_PPC_CXXFLAGS"
+	OGENSIM_LIBS="\$(top_srcdir)/src/ogensim/libogensim.la"
+	OGENSIM_DEP="$OGENSIM_LIBS"
+	EXTERN_OGENSIM_CXXFLAGS="$SYSTEMC_CXXFLAGS $BUILD_GLISS_PPC_CXXFLAGS"
+	EXTERN_OGENSIM_LIBS="\$(prefix)/lib/libogensim.la"
+	AC_SUBST(OGENSIM_CXXFLAGS)
+	AC_SUBST(OGENSIM_LIBS)
+	AC_SUBST(OGENSIM_DEP)
+	AC_SUBST(EXTERN_OGENSIM_CXXFLAGS)
+	AC_SUBST(EXTERN_OGENSIM_LIBS)
+fi
+
+
 dnl ==== Plugins ====
 if test "$HAVE_LP_SOLVE" = yes; then
 	ILP_PLUGIN="$LP_SOLVE_LIBS"
@@ -406,6 +421,7 @@ AC_OUTPUT([
 	src/ostat/Makefile
 	src/oipet/Makefile
 	src/odisplay/Makefile
+	src/ogensim/Makefile
 	examples/Makefile
 	bin/Makefile
 	bin/otawa-config
@@ -449,4 +465,5 @@ AC_OUTPUT([
 	include/otawa/cache/ccg/Makefile
 	include/otawa/pcg/Makefile
 	include/otawa/exegraph/Makefile
+	include/otawa/gensim/Makefile
 ], [])

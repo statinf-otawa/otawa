@@ -2,7 +2,7 @@
 #define _EXECUTE_H_
 
 #include <systemc.h>
-#include <SimulatedInstruction.h>
+#include <otawa/gensim/SimulatedInstruction.h>
 
 namespace otawa {
 	class GenericState;

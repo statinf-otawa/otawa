@@ -11,6 +11,10 @@ if WITH_ILP
 SUBDIRS += oipet
 endif
 
+if WITH_SYSTEMC
+SUBDIRS += ogensim
+endif
+
 #all-local:
 #	(cd mkast; make)
 

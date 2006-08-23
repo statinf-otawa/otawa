@@ -1,4 +1,4 @@
-#include <InstructionQueue.h>
+#include <otawa/gensim/InstructionQueue.h>
 
 InstructionQueueConfiguration::InstructionQueueConfiguration(CString name, int capacity) :
 	queue_name(name), cap(capacity), number_of_write_ports(0), number_of_read_ports(0) {

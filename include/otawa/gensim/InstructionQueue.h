@@ -1,7 +1,7 @@
 #ifndef _INSTRUCTIONQUEUE_H_
 #define _INSTRUCTIONQUEUE_H_
 
-#include <SimulatedInstruction.h>
+#include <otawa/gensim/SimulatedInstruction.h>
 #include <systemc.h>
 #include <elm/string/CString.h>
 

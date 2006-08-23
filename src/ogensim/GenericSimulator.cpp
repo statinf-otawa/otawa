@@ -5,8 +5,8 @@
  *	GenericSimulator.cpp -- GenericSimulator class implementation.
  */
 
-#include <GenericProcessor.h>
-#include <GenericSimulator.h>
+#include <otawa/gensim/GenericProcessor.h>
+#include <otawa/gensim/GenericSimulator.h>
 #include <otawa/program.h>
 #include <otawa/otawa.h>
 

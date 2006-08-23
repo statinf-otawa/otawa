@@ -8,7 +8,7 @@
  *	otawa/sim/TrivialSimulator.h -- TrivialSimulator class interface.
  */
 
-#include <GenericProcessor.h>
+#include <otawa/gensim/GenericProcessor.h>
 #include <otawa/sim/Simulator.h>
 #include <otawa/sim/State.h>
 #include <otawa/otawa.h>

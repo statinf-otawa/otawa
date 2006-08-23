@@ -17,6 +17,10 @@ SUBDIRS= \
 	exegraph \
 	pcg
 
+if WITH_SYSTEMC
+SUBDIRS += gensim
+endif
+
 # Headers
 includeotawadir=$(includedir)/otawa
 includeotawa_HEADERS = \

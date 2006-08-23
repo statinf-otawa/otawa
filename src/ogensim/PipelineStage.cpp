@@ -1,4 +1,4 @@
-#include <PipelineStage.h>
+#include <otawa/gensim/PipelineStage.h>
 
 PipelineStageConfiguration::PipelineStageConfiguration(CString name, pipeline_stage_t type,
 	InstructionQueueConfiguration * inqueue, InstructionQueueConfiguration * outqueue,

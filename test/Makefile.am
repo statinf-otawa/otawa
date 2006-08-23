@@ -18,5 +18,6 @@ endif
 
 if WITH_SYSTEMC
 SUBDIRS += \
-	systemc
+	systemc \
+	generic_simulator
 endif

@@ -1,5 +1,5 @@
-#include <Execute.h>
-#include <GenericSimulator.h>
+#include <otawa/gensim/Execute.h>
+#include <otawa/gensim/GenericSimulator.h>
 
 ExecuteInOrderStageIQ::ExecuteInOrderStageIQ(sc_module_name name, int width, otawa::GenericState * gen_state) {
 	stage_width = width;
