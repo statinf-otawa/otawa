@@ -360,6 +360,13 @@ dnl ==== systemc ====
 check_module(systemc, SYSTEMC, src, objdir/src, systemc)
 
 
+dnl ==== ODisplay ====
+ODISPLAY_LIBS="\$(top_srcdir)/src/odisplay/libodisplay.la $PROG_LIBS"
+ODISPLAY_DEP="\$(top_srcdir)/src/odisplay/libodisplay.la"
+AC_SUBST(ODISPLAY_LIBS)
+AC_SUBST(ODISPLAY_DEP)
+
+
 # ==== ogensim ====
 if test "$has_systemc" = yes -a "$HAVE_GLISS_PPC" = yes; then
 	OGENSIM_CXXFLAGS="$SYSTEMC_CXXFLAGS $BUILD_GLISS_PPC_CXXFLAGS"
@@ -430,6 +437,7 @@ AC_OUTPUT([
 	test/ipet/Makefile
 	test/ets/Makefile
 	test/dom/Makefile
+	test/display/Makefile
 	test/delta/Makefile
 	test/ct/Makefile
 	test/ccg/Makefile

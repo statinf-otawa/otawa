@@ -417,6 +417,7 @@ WARN_LOGFILE           =
 # with spaces.
 
 INPUT                  = src/prog/ \
+                         src/odisplay/ \
                          include/otawa/ \
                          src/dumpcfg/dumpcfg.cpp \
                          src/ostat/ostat.cpp \
