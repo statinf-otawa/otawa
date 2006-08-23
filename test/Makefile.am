@@ -1,5 +1,6 @@
 SUBDIRS = \
 	dom \
+	display \
 	ct \
 	ets \
 	graph \

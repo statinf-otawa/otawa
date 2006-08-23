@@ -16,27 +16,28 @@ extern Driver& graphviz_driver;
 
 
 // Layout property
-extern GenericIdentifier<int> GRAPHVIZ_LAYOUT;
 typedef enum graphviz_layout_t {
 	LAYOUT_DOT,
 	LAYOUT_RADIAL,
-	LAYOUT_CIRCULAR
+	LAYOUT_CIRCULAR,
+	LAYOUT_UNDIRECTED_NEATO,
+	LAYOUT_UNDIRECTED_FDP
 } graphviz_layout_t;
+extern GenericIdentifier<int> GRAPHVIZ_LAYOUT;
 
 
 // Output property
-extern GenericIdentifier<int> GRAPHVIZ_OUTPUT;
 typedef enum graphviz_output_t {
 	OUTPUT_TEXT,
 	OUTPUT_PS,
 	OUTPUT_PNG,
-	OUTPUT_SVG,
-	OUTPUT_PDF
+	OUTPUT_SVG
 } graphviz_output_t;
+extern GenericIdentifier<int> GRAPHVIZ_OUTPUT;
 
 
 // File property
-extern GenericIdentifier<String&> GRAPHVIZ_FILE;
+extern GenericIdentifier<elm::CString> GRAPHVIZ_FILE;
 
 } } // otawa::display
 
