@@ -3,3 +3,6 @@ Makefile.in
 .deps
 libgliss.a
 libotawa_ppc.a
+.libs
+*.lo
+*.la
