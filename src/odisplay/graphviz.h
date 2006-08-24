@@ -10,7 +10,7 @@
 #include <otawa/display/Graph.h>
 #include <otawa/display/graphviz.h>
 #include <elm/genstruct/FragTable.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/genstruct/HashTable.h>
 
 namespace otawa { namespace display {
 
@@ -29,10 +29,10 @@ class GraphVizItem{
 protected:
 	/** Properties of the attached object */
 	PropList _props;
-	/** List of properties to print */
-	elm::genstruct::Vector<const Identifier*> _include;
-	/** List of properties to hide */
-	elm::genstruct::Vector<const Identifier*> _exclude;
+	/** List of properties to print. If the key exists, include the property */
+	elm::genstruct::HashTable<const Identifier*, int> _include;
+	/** List of properties to hide. If the key exists, exclude the property */
+	elm::genstruct::HashTable<const Identifier*, int> _exclude;
 	/** true if the default is to include all properties */
 	bool _defaultInclude;
 	

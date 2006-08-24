@@ -6,6 +6,7 @@ libodisplay_la_LDFLAGS=
 libodisplay_la_LIBADD= @PROG_LIBS@
 
 libodisplay_la_SOURCES = \
+	utility.cpp \
 	display_Graph.cpp \
 	CFGDrawer.cpp \
 	graphviz.h \

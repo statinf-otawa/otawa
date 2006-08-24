@@ -25,6 +25,7 @@ GraphVizItem::GraphVizItem():_defaultInclude(true){}
 
 
 
+
 /**
  * Makes a string containing the values of all properties in _props
  * separated by newlines
@@ -34,7 +35,7 @@ String GraphVizItem::getPropertiesString(){
 	StringBuffer buf;
 	for(PropList::Iter prop(_props); !prop.ended(); prop.next()){
 		const Identifier *id = prop->id();
-		if(_defaultInclude && !_exclude.contains(id) || _include.contains(id)){
+		if(_defaultInclude && !_exclude.exists(id) || _include.exists(id)){
 			if(buf.length() != 0){
 				buf << '\n';
 			}
@@ -75,11 +76,11 @@ bool GraphVizItem::printAttribute(elm::io::Output &out, const PropList::Iter& pr
 			_defaultInclude = false;
 	}
 	else if(prop == INCLUDE){
-		_include.add(prop.get<Identifier*>());
+		_include.put(prop.get<Identifier*>(),0);
 		return false;
 	}
 	else if(prop == EXCLUDE){
-		_exclude.add(prop.get<Identifier*>());
+		_exclude.put(prop.get<Identifier*>(),0);
 		return false;
 	}
 	else if(prop == COLOR){
