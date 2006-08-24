@@ -22,3 +22,6 @@ ast_parser.output
 libprog.so
 libotawa.so
 libotawa.a
+*.lo
+libotawa.la
+.libs
