@@ -366,8 +366,10 @@ const PropList PropList::EMPTY;
  * @param out	Output to use.
  */
 void PropList::print(elm::io::Output& out) const {
+	out << "{ " << io::endl;
 	for(Iter prop(this); prop; prop++)
 		out << *prop << io::endl;
+	out << " }";
 }
 
 
