@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <otawa/otawa.h>
 #include <otawa/prog/Loader.h>
+#include <otawa/util/Dominance.h>
 #include <elm/io.h>
 #include <otawa/display/CFGDrawer.h>
 
@@ -36,10 +37,13 @@ int main(int argc, char **argv){
 			exit(3);
 		}
 		
-		//cfg = new VirtualCFG(cfg);
+		cfg = new VirtualCFG(cfg);
+		Dominance::ensure(cfg);
+		Dominance::markLoopHeaders(cfg);
 
 		props.clearProps();
-		display::EXCLUDE(props) = &VirtualCFG::ID_CalledCFG;
+		display::EXCLUDE(props) += &VirtualCFG::ID_CalledCFG;
+		display::EXCLUDE(props) += &Dominance::ID_RevDom;
 		display::CFGDrawer drawer(cfg, props);
 		// DEFAULT(drawer.all()) = INCLUDE;
 		// DEFAULT(drawer.graph()) = EXCELUDE;
