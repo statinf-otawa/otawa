@@ -82,13 +82,13 @@ PropList::PropList(const Identifier *id, elm::VarArg& args): head(0) {
 
 
 /**
- * Add all properties from the given property list.
+ * Add all properties from the given property list, in a reverse order.
  * @param props	Property list to clone.
  */
 void PropList::addProps(const PropList& props) {
 	for(Property *cur = props.head; cur; cur = cur->next()) {
 		Property *copy = cur->copy();
-		setProp(copy);
+		addProp(copy);
 	}
 }
 
