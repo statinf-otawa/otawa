@@ -2,6 +2,7 @@
 SUBDIRS= \
 	ast \
 	cfg \
+	display \
 	gliss \
 	prog \
 	prop \
