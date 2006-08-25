@@ -1,7 +1,8 @@
 #include <otawa/gensim/InstructionQueue.h>
 
-InstructionQueueConfiguration::InstructionQueueConfiguration(CString name, int capacity) :
-	queue_name(name), cap(capacity), number_of_write_ports(0), number_of_read_ports(0) {
+InstructionQueueConfiguration::InstructionQueueConfiguration(CString name, int capacity, simulated_instruction_state_t condition) :
+	queue_name(name), cap(capacity), number_of_write_ports(0), number_of_read_ports(0), 
+	leaving_condition(condition) {
 
 }
 int InstructionQueueConfiguration::capacity() {
@@ -30,6 +31,11 @@ void InstructionQueueConfiguration::setNumberOfReadPorts(int n) {
 	number_of_read_ports = n;
 }
 
+simulated_instruction_state_t InstructionQueueConfiguration::leavingCondition() {
+	return leaving_condition;
+}
+
+
 
 InstructionQueue::InstructionQueue(sc_module_name name, InstructionQueueConfiguration * configuration) {
 	conf = configuration;
@@ -45,7 +51,6 @@ InstructionQueue::InstructionQueue(sc_module_name name, InstructionQueueConfigur
 	buffer = new SimulatedInstruction*[cap]; 
 	SC_METHOD(action);
 	sensitive_neg << in_clock;
-	
 }
 
 InstructionQueue::~InstructionQueue() {
@@ -70,7 +75,7 @@ inline SimulatedInstruction* InstructionQueue::get() {
 	int res=head;
 	head = (head+1) & (cap-1);
 	is_full = false;
-	return buffer[head];
+	return buffer[res];
 }
 		
 inline SimulatedInstruction* InstructionQueue::read(int index){
@@ -93,52 +98,42 @@ InstructionQueueConfiguration * InstructionQueue::configuration() {
 }
 
 bool InstructionQueue::isEmpty() {
-	return (head == tail);
+	return ((head == tail) && !is_full);
 }
 	
 void InstructionQueue::action() {
 	elm::cout << this->name() << "->action():\n";
+	// remove instructions that were accepted by the consumer pipeline stage at the last rising edge
 	elm::cout << "\tin_number_of_accepted_outs=" << in_number_of_accepted_outs.read() << "\n";
-	for (int i=0 ; i<out_number_of_outs.read() ; i++)
-		get();
-	elm::cout << "\tin_number_of_ins=" << in_number_of_ins.read() << " (cap=" << cap << ", size=" << size() << ")\n";
-	for (int i=0 ; i<in_number_of_ins.read() ; i++) {
-		assert(!is_full);
-		put(in_instruction[i].read());
+	int outs = 0;
+	while ( !isEmpty() && (outs < in_number_of_accepted_outs.read()) ) {
+		SimulatedInstruction * inst = get();
+		elm::cout << "\textracting " << inst->inst()->address() << "\n";
+		outs++;
 	}
-	deliverOutputs();
-	int accepted = cap - size() + number_of_outs;
-	if (accepted > in_ports)
-		accepted = in_ports;
-	out_number_of_accepted_ins.write(accepted);	
-	elm::cout << "\tout_number_of_accepted_ins=" << accepted << " (cap=" << cap << ", size=" << size() << ")\n";
-}
+	// insert instructions that were submitted by the producer pipeline stage at the last rising edge
+	elm::cout << "\tin_number_of_ins=" << in_number_of_ins.read() << "\n";
+	int ins = 0;
+	while (!is_full &&  (ins<in_number_of_ins.read())) {
+		put(in_instruction[ins++].read()); 
+	}
+	out_number_of_accepted_ins.write(ins);
+	elm::cout << "\tout_number_of_accepted_ins=" << ins << "\n";
+	// submit instructions to the next stage (for the next rising edge)
+	elm::cout << "\tcontains: ";
+	for (int i=0 ; i<size() ; i++)
+		elm::cout << read(i)->inst()->address() << "(" << read(i)->state() << ") - ";
+	elm::cout << "\n";
+	outs = 0;
+	while ( (outs < size()) && (outs < out_ports) && (read(outs)->state() >= conf->leavingCondition())) {
+		out_instruction[outs] = read(outs);	
+		outs++;
+	}
+	if ((outs < size()) && (outs < out_ports) )
+		elm::cout << "\tcannot send inst " << read(outs)->inst()->address() << " because its state is " << read(outs)->state() << "\n";
+	out_number_of_outs.write(outs);
+	elm::cout << "\tout_number_of_outs=" << outs << "\n";
 	
-void InstructionQueue::deliverOutputs() {
-	number_of_outs = in_number_of_accepted_outs.read();
-	elm::cout << "\tcomputing number of outs: \n";
-	elm::cout << "\t\tin_number_of_accepted_outs.read()=" << in_number_of_accepted_outs.read() << "\n";
-	elm::cout << "\t\tsize()=" << size() << "\n";
-	if (number_of_outs > size())
-		number_of_outs = size();
-	elm::cout << "\t\tnumber_of_outs=" << number_of_outs << "\n";
-	for (int i=0 ; i<number_of_outs ; i++)
-		out_instruction[i].write(read(i));
-	out_number_of_outs.write(number_of_outs);
-	elm::cout << "\tout_number_of_outs=" << number_of_outs << "\n";
 }
 
-void InstructionBuffer::deliverOutputs() {
-	number_of_outs = in_number_of_accepted_outs.read();
-	if (number_of_outs > size())
-		number_of_outs = size();
-	int i = 0;
-	while ((i<number_of_outs) && (read(i)->state() == TERMINATED)) {
-		out_instruction[i].write(read(i));
-		i++;
- 	}
- 	number_of_outs = i;
-	out_number_of_outs.write(number_of_outs);
-	elm::cout << "\tout_number_of_outs=" << number_of_outs << "\n";
 	
-}

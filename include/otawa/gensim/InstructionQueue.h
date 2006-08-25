@@ -10,13 +10,15 @@ class InstructionQueueConfiguration {
 	int number_of_write_ports;
 	int number_of_read_ports;
 	CString queue_name;
+	simulated_instruction_state_t leaving_condition;
 	public :
-		InstructionQueueConfiguration(CString queue_name, int capacity);
+		InstructionQueueConfiguration(CString queue_name, int capacity, simulated_instruction_state_t condition);
 		int capacity();
 		int numberOfWritePorts();
 		int numberOfReadPorts();
 		void setNumberOfWritePorts(int n);
 		void setNumberOfReadPorts(int n);
+		simulated_instruction_state_t leavingCondition();
 		CString name();
 };
 
@@ -43,7 +45,6 @@ class InstructionQueue : public sc_module {
 		int cap;
 		int in_ports, out_ports;
 		SimulatedInstruction** buffer;
-		int number_of_outs;
 		
 		// private methods
 		inline SimulatedInstruction* get();
@@ -52,7 +53,6 @@ class InstructionQueue : public sc_module {
 		
 		SC_HAS_PROCESS(InstructionQueue);
 		void action();
-		inline void deliverOutputs();
 	
 	public:
 		InstructionQueue(sc_module_name name, InstructionQueueConfiguration * configuration);
@@ -65,12 +65,5 @@ class InstructionQueue : public sc_module {
 		
 };
 
-class InstructionBuffer : public InstructionQueue {
-	private:
-		inline void deliverOutputs();
-	public:
-		InstructionBuffer(sc_module_name name, InstructionQueueConfiguration * configuration) :
-			InstructionQueue(name, configuration) {};
-};
 
 #endif //_INSTRUCTIONQUEUE_H_

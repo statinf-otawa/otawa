@@ -1,11 +1,27 @@
 #include <otawa/gensim/GenericProcessor.h>
 
-GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration * conf, otawa::GenericState * sim_state) {
+
+
+
+GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration * conf, 
+									otawa::GenericState * sim_state, otawa::hard::Platform *pf) {
 	int iports,oports;
 	InstructionQueue * input_queue;
 	InstructionQueue * output_queue;
 	bool found;
 	sc_signal<int> * nb;
+	
+	// Init rename tables
+	rename_tables = new elm::genstruct::AllocatedTable<rename_table_t>(pf->banks().count());
+	int reg_bank_count = pf->banks().count();
+	for(int i = 0; i <reg_bank_count ; i++) {
+		(*rename_tables)[i].reg_bank = (otawa::hard::RegBank *) pf->banks()[i];
+		(*rename_tables)[i].table = 
+			new elm::genstruct::AllocatedTable<SimulatedInstruction *>((*rename_tables)[i].reg_bank->count());
+		for (int j=0 ; j<(*rename_tables)[i].reg_bank->count() ; j++)
+			(*rename_tables)[i].table->set(j,NULL);
+	}
+	
 	
 	
 	for (elm::genstruct::SLList<InstructionQueueConfiguration *>::Iterator queue_conf(*(conf->instructionQueuesList())) ; 
@@ -30,7 +46,10 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				}
 				assert(found);
 				
-				FetchStage * fetch_stage = new FetchStage((sc_module_name) (stage_conf->name()), oports, sim_state);	
+				FetchStage * fetch_stage = new FetchStage((sc_module_name) (stage_conf->name()), 
+															oports, sim_state, rename_tables, &active_instructions);	
+				pipeline_stages.addLast(fetch_stage);
+				
 				fetch_stage->in_clock(clock);
 			
 				
@@ -44,7 +63,7 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				fetch_stage->out_number_of_fetched_instructions(*nb);
 				output_queue->in_number_of_ins(*nb);
 				nb = new sc_signal<int>;
-				nb->write(output_queue->configuration()->numberOfWritePorts());
+				nb->write(0);
 				fetch_stage->in_number_of_accepted_instructions(*nb);
 				output_queue->out_number_of_accepted_ins(*nb);
 			} break;
@@ -72,6 +91,8 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				assert(found);
 				
 				LazyStageIQIQ * lazy_stage = new LazyStageIQIQ((sc_module_name) (stage_conf->name()), stage_conf->width());
+				pipeline_stages.addLast(lazy_stage);
+				
 				lazy_stage->in_clock(clock);
 				
 				for (int i=0 ; i<iports ; i++) {
@@ -98,11 +119,11 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				lazy_stage->out_number_of_outs(*nb);
 				output_queue->in_number_of_ins(*nb);
 				nb = new sc_signal<int>;
-				nb->write(output_queue->configuration()->numberOfWritePorts());
+				nb->write(0);
 				lazy_stage->in_number_of_accepted_outs(*nb);
 				output_queue->out_number_of_accepted_ins(*nb);
 			} break;
-				
+			
 			case EXECUTE_IN_ORDER: {
 				assert(stage_conf->inputQueue());
 				found = false;
@@ -115,7 +136,9 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				}
 				assert(found);
 				ExecuteInOrderStageIQ * execute_stage = 
-					new ExecuteInOrderStageIQ((sc_module_name) (stage_conf->name()), iports, sim_state);	
+					new ExecuteInOrderStageIQ((sc_module_name) (stage_conf->name()), iports, sim_state, 
+											rename_tables);	
+				pipeline_stages.addLast(execute_stage);
 				execute_stage->in_clock(clock);
 			
 				
@@ -143,14 +166,7 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 }
 
 bool GenericProcessor::isEmpty() {
-	bool empty = true;
-	elm::cout << "Is processor empty ??\n";
-	for (elm::genstruct::SLList<InstructionQueue *>::Iterator iq(instruction_queues) ; iq ; iq++) {
-		empty = empty && iq->isEmpty();
-		elm::cout  << "\t" << iq->name() << ":" << iq->isEmpty() << "\n";
-	}
-	elm::cout << "\tconclusion: " << empty << "\n";
-	return empty;
+	return (active_instructions.count() == 0);
 }
 
 void GenericProcessor::step() {
@@ -162,4 +178,10 @@ void GenericProcessor::step() {
 	sc_start(0.5);
 }
 
-
+void GenericProcessor::Flush() {
+	for(int i = 0; i <rename_tables->count() ; i++) {
+		for (int j=0 ; j<(*rename_tables)[i].reg_bank->count() ; j++)
+			(*rename_tables)[i].table->set(j,NULL);
+	}
+	
+}

@@ -12,7 +12,11 @@ namespace otawa {
 	class GenericState;
 }
 
-class FetchStage : public sc_module {
+#define NB_INT_REGS 32
+#define NB_FP_REGS 32
+	// FIXME: should be learned from gliss
+
+class FetchStage : public PipelineStage {
 	public:
 		// signals
 		sc_in<bool> in_clock;
@@ -25,13 +29,18 @@ class FetchStage : public sc_module {
 		otawa::GenericState *sim_state;
 		state_t * emulated_state;
 		int out_ports;
+		elm::genstruct::SLList<SimulatedInstruction *> fetched_instructions;
+		elm::genstruct::SLList<SimulatedInstruction *> * active_instructions;
 		
 		// variables
 		otawa::Inst* next_inst;
+		elm::genstruct::AllocatedTable<rename_table_t> * rename_tables;
 		
 	public:
 
-		FetchStage(sc_module_name name, int number_of_out_ports, otawa::GenericState * gen_state);
+		FetchStage(sc_module_name name, int number_of_out_ports, otawa::GenericState * gen_state,
+					elm::genstruct::AllocatedTable<rename_table_t> * rename_tables,
+					elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions);
 
 		SC_HAS_PROCESS(FetchStage);	
 		void fetch();

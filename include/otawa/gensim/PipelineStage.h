@@ -37,7 +37,16 @@ class PipelineStageConfiguration {
 		int outWidth();
 };
 
-class LazyStageIQIQ : public sc_module {
+class PipelineStage : public sc_module {
+	public:
+		PipelineStage(sc_module_name name) {};
+		bool isEmpty() {
+			return true; 	// by default, pipeline stages do not retain instructions
+		}
+};
+
+
+class LazyStageIQIQ : public PipelineStage {
 	public:
 		// signals
 		sc_in<bool> in_clock;
@@ -51,14 +60,19 @@ class LazyStageIQIQ : public sc_module {
 	private:
 		// variables
 		int stage_width;
+		elm::genstruct::SLList<SimulatedInstruction *> leaving_instructions;
 		
 	public:
 		LazyStageIQIQ(sc_module_name name, int width);
+		inline int stageWidth();
 		
 		SC_HAS_PROCESS(LazyStageIQIQ);
 		void action();
 };
 
+inline int LazyStageIQIQ::stageWidth() {
+	return stage_width;
+}
 
 
 #endif //_PIPELINESTAGE_H_

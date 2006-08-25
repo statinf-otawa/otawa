@@ -49,11 +49,11 @@ void GenericState::init() {
 	int cache_line_size = 8;
 	
 	InstructionQueueConfiguration *fetch_queue = 
-		new InstructionQueueConfiguration("FetchQueue", 4/*size = 2^4*/);
+		new InstructionQueueConfiguration("FetchQueue", 4/*size = 2^4*/, NONE);
 	conf.addInstructionQueue(fetch_queue);
 	
 	InstructionQueueConfiguration *issue_queue = 
-		new InstructionQueueConfiguration("IssueQueue", 2/*size = 2^2*/);
+		new InstructionQueueConfiguration("IssueQueue", 2/*size = 2^2*/, READY);
 	conf.addInstructionQueue(issue_queue);
 	
 	
@@ -74,7 +74,7 @@ void GenericState::init() {
 	conf.addPipelineStage(execute_stage);
 	
 	
-	processor = new GenericProcessor("GenericProcessor",&conf, this);
+	processor = new GenericProcessor("GenericProcessor",&conf, this, fw->platform());
 
 }
 

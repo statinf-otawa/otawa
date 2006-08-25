@@ -42,7 +42,8 @@ int PipelineStageConfiguration::width() {
 	return stage_width;
 }
 
-LazyStageIQIQ::LazyStageIQIQ(sc_module_name name, int width) {
+LazyStageIQIQ::LazyStageIQIQ(sc_module_name name, int width) 
+	: PipelineStage(name) {
 	stage_width = width;
 	in_instruction = new sc_in<SimulatedInstruction *>[width];
 	out_instruction = new sc_out<SimulatedInstruction *>[width];
@@ -53,16 +54,24 @@ LazyStageIQIQ::LazyStageIQIQ(sc_module_name name, int width) {
 
 void LazyStageIQIQ::action() {
 	elm::cout << "LazyStage->action(): \n";
-	elm::cout << "\tin_number_of_ins=" << in_number_of_ins.read() << "\n";
-	for (int i=0 ; i<in_number_of_ins.read() ; i++) {
-		out_instruction[i].write(in_instruction[i].read());
+	elm::cout << "\tin_number_of_accepted_outs=" << in_number_of_accepted_outs.read() << "\n";
+	for (int i =0 ; i<in_number_of_accepted_outs.read() ; i++) {
+		leaving_instructions.removeFirst();
 	}
-	out_number_of_outs.write(in_number_of_ins.read());
-	
-	int accepted = in_number_of_accepted_outs.read();
-	if (accepted > stage_width)
-		accepted = stage_width;
-	elm::cout << "\tout_number_of_accepted_ins=" << accepted << "\n";
-	out_number_of_accepted_ins.write(accepted);
+	int accepted_ins = stage_width - leaving_instructions.count();
+	out_number_of_accepted_ins.write(accepted_ins);
+	elm::cout << "\tout_number_of_accepted_ins=" << accepted_ins << "\n";	
+	elm::cout << "\tin_number_of_ins=" << in_number_of_ins.read() << "\n";
+	for (int i=0 ; (i<in_number_of_ins.read()) && (i<accepted_ins) ; i++) {
+		elm::cout << "\thandling at " << in_instruction[i].read()->inst()->address() << "\n";
+		leaving_instructions.addLast(in_instruction[i].read());
+	}	
+	int outs = 0;
+	for (elm::genstruct::SLList<SimulatedInstruction *>::Iterator inst(leaving_instructions) ; inst ; inst++) {
+		if (outs <= stage_width) // FIXME
+			out_instruction[outs++].write(inst);
+	}
+	out_number_of_outs.write(outs);
+	elm::cout << "\tout_number_of_outs=" << outs << "\n";
 }
 

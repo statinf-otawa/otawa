@@ -1,10 +1,15 @@
 #include <otawa/gensim/Fetch.h>
 #include <otawa/gensim/GenericSimulator.h>
 
-FetchStage::FetchStage(sc_module_name name, int number_of_out_ports, otawa::GenericState * gen_state) {
+FetchStage::FetchStage(sc_module_name name, int number_of_out_ports, otawa::GenericState * gen_state,
+	elm::genstruct::AllocatedTable<rename_table_t> * _rename_tables,
+	elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions) 
+	: PipelineStage(name) {
 	out_fetched_instruction = new sc_out<SimulatedInstruction *>[number_of_out_ports];
 	out_ports = number_of_out_ports;
 	sim_state = gen_state;
+	rename_tables = _rename_tables;
+	active_instructions = _active_instructions;
 	SC_METHOD(fetch);
 	sensitive_pos << in_clock;
 }
@@ -18,17 +23,20 @@ void FetchStage::fetch() {
 	
 	elm::cout << "Fetchstage->fetch():\n";
 	elm::cout << "\tin_number_of_accepted_instructions=" << in_number_of_accepted_instructions.read() << "\n";
-	
-	nb_fetched = 0;
+	for (int i=0 ; i<in_number_of_accepted_instructions.read() ; i++)
+		fetched_instructions.removeFirst();
+	nb_fetched = fetched_instructions.count();
 	do  {
 		next_inst = sim_state->driver->nextInstruction(*sim_state, next_inst);
 		if (next_inst != NULL) {
-			elm::cout << "fetching at " << next_inst->address() << "\n";
+			elm::cout << "\tfetching at " << next_inst->address() << "\n";
 //			iss_fetch((::address_t)(unsigned long)next_inst->address(), &code);
 //			emulated_inst = iss_decode((::address_t)(unsigned long)next_inst->address(), &code);
 //			iss_complete(emulated_inst,emulated_state);
-			inst = new SimulatedInstruction(next_inst,code, emulated_inst);
-			out_fetched_instruction[nb_fetched] = inst;
+			inst = new SimulatedInstruction(next_inst,code, emulated_inst, active_instructions);
+			inst->renameOperands(rename_tables);
+			//out_fetched_instruction[nb_fetched] = inst;
+			fetched_instructions.addLast(inst);
 			nb_fetched++;
 //			if (next_inst->isConditional()) {
 //				if (NIA(emulated_state) == CIA(emulated_state) + sizeof(code_t))
@@ -41,9 +49,15 @@ void FetchStage::fetch() {
 		}
 		
 	}
-	while  ( (nb_fetched < in_number_of_accepted_instructions.read())
+	while  ( (nb_fetched < out_ports)
 			&&
 			(next_inst != NULL) );
-	out_number_of_fetched_instructions.write(nb_fetched);
+	int outs = 0;
+	for (elm::genstruct::SLList<SimulatedInstruction *>::Iterator inst(fetched_instructions) ; inst ; inst++) {
+		if (outs<=out_ports) {// FIXME 
+			out_fetched_instruction[outs++] = inst;
+		}
+	}
+	out_number_of_fetched_instructions.write(outs);
 	elm::cout << "\tout_number_of_fetched_instructions=" << nb_fetched << "\n";
 }

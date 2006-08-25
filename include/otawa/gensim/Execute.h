@@ -3,13 +3,14 @@
 
 #include <systemc.h>
 #include <otawa/gensim/SimulatedInstruction.h>
+#include <otawa/gensim/PipelineStage.h>
 
 namespace otawa {
 	class GenericState;
 }
 
 
-class ExecuteInOrderStageIQ : public sc_module {
+class ExecuteInOrderStageIQ : public PipelineStage {
 	public:
 		// signals
 		sc_in<bool> in_clock;
@@ -21,9 +22,12 @@ class ExecuteInOrderStageIQ : public sc_module {
 		// variables
 		int stage_width;
 		otawa::GenericState * sim_state;
+		elm::genstruct::AllocatedTable<rename_table_t> * rename_tables;
 		
 	public:
-		ExecuteInOrderStageIQ(sc_module_name name, int width, otawa::GenericState * gen_state);
+		ExecuteInOrderStageIQ(sc_module_name name, int width, otawa::GenericState * gen_state,
+								elm::genstruct::AllocatedTable<rename_table_t> * _rename_tables);
+		bool isEmpty();
 		
 		SC_HAS_PROCESS(ExecuteInOrderStageIQ);
 		void action();

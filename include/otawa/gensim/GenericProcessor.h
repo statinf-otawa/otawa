@@ -6,11 +6,11 @@
 #include <otawa/gensim/PipelineStage.h>
 #include <otawa/gensim/Fetch.h>
 #include <otawa/gensim/Execute.h>
+#include <otawa/gensim/SimulatedInstruction.h>
 
 namespace otawa {
 	class GenericState;
 }
-
 
 
 class ProcessorConfiguration {
@@ -39,12 +39,15 @@ SC_MODULE(GenericProcessor)
 	
 	// variables
 	elm::genstruct::SLList<InstructionQueue *> instruction_queues;
-	
+	elm::genstruct::SLList<PipelineStage *> pipeline_stages;
+	elm::genstruct::AllocatedTable<rename_table_t> * rename_tables;
+	elm::genstruct::SLList<SimulatedInstruction *> active_instructions;
 	public:
-	bool isEmpty(); 
-	void step(); 
+		bool isEmpty(); 
+		void step(); 
+		void Flush();
 	
-  	GenericProcessor(sc_module_name name, ProcessorConfiguration * conf, otawa::GenericState * sim_state); 
+  	GenericProcessor(sc_module_name name, ProcessorConfiguration * conf, otawa::GenericState * sim_state, otawa::hard::Platform *pf); 
   	~GenericProcessor() {
    	}
 };
