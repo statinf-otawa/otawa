@@ -3,8 +3,8 @@
 
 
 #ifndef NDEBUG
-#define TRACE(x) x
-//#define TRACE(x)
+//#define TRACE(x) x
+#define TRACE(x)
 #endif //NDEBUG
 
 #endif //_DEBUG_H_
