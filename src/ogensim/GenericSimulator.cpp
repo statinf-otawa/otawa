@@ -9,6 +9,7 @@
 #include <otawa/gensim/GenericSimulator.h>
 #include <otawa/program.h>
 #include <otawa/otawa.h>
+#include <otawa/gensim/debug.h>
 
 namespace otawa { namespace sim {
 
@@ -52,26 +53,34 @@ void GenericState::init() {
 		new InstructionQueueConfiguration("FetchQueue", 4/*size = 2^4*/, NONE);
 	conf.addInstructionQueue(fetch_queue);
 	
-	InstructionQueueConfiguration *issue_queue = 
-		new InstructionQueueConfiguration("IssueQueue", 2/*size = 2^2*/, READY);
-	conf.addInstructionQueue(issue_queue);
+//	InstructionQueueConfiguration *issue_queue = 
+//		new InstructionQueueConfiguration("IssueQueue", 2/*size = 2^2*/, READY);
+//	conf.addInstructionQueue(issue_queue);
+
+	InstructionQueueConfiguration * rob = 
+		new InstructionQueueConfiguration("ROB", 5/*size = 2^5*/, EXECUTED);
+	conf.addInstructionQueue(rob);
 	
-	
-//	InstructionQueueConfiguration *rob = 
-//		new InstructionQueueConfiguration("ROB", 6 /*size = 64*/);
-//	conf.addInstructionQueue(rob);
 	
 	PipelineStageConfiguration * fetch_stage = 
 		new PipelineStageConfiguration("FetchStage", FETCH, NULL, fetch_queue, cache_line_size);
 	conf.addPipelineStage(fetch_stage);
 	
 	PipelineStageConfiguration * decode_stage = 
-		new PipelineStageConfiguration("DecodeStage", LAZYIQIQ, fetch_queue, issue_queue, degree);
+		new PipelineStageConfiguration("DecodeStage", LAZYIQIQ, fetch_queue, rob, degree);
 	conf.addPipelineStage(decode_stage);
 	
+//	PipelineStageConfiguration * execute_stage = 
+//		new PipelineStageConfiguration("ExecuteStage", EXECUTE_IN_ORDER, issue_queue, NULL, degree);
+//	conf.addPipelineStage(execute_stage);
+
 	PipelineStageConfiguration * execute_stage = 
-		new PipelineStageConfiguration("ExecuteStage", EXECUTE_IN_ORDER, issue_queue, NULL, degree);
+		new PipelineStageConfiguration("ExecuteStage", EXECUTE_OUT_OF_ORDER, rob, degree);
 	conf.addPipelineStage(execute_stage);
+
+	PipelineStageConfiguration * commit_stage = 
+		new PipelineStageConfiguration("CommitStage", COMMIT, rob, NULL, degree);
+	conf.addPipelineStage(commit_stage);
 	
 	
 	processor = new GenericProcessor("GenericProcessor",&conf, this, fw->platform());
@@ -81,7 +90,7 @@ void GenericState::init() {
 
 
 void GenericState::step(void) {
-	elm::cout << "Cycle " << _cycle << "\n";
+	TRACE(elm::cout << "Cycle " << _cycle << "\n";)
 	processor->step();
 	_cycle ++;
 	running = ! processor->isEmpty();

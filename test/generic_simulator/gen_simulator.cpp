@@ -15,6 +15,7 @@
 #include <otawa/ilp.h>
 #include <otawa/gensim/GenericSimulator.h>
 #include <otawa/sim/BasicBlockDriver.h>
+#include <otawa/gensim/debug.h>
 
 
 using namespace elm;
@@ -96,17 +97,16 @@ int main(int argc, char **argv) {
 		
 		// Compute BB times with execution graphs
 		logFile << "\n----------------------------------------------\n";
-		logFile << "Timing the BB with execution graphs\n";
+		logFile << "Timing the BB with generic simulator\n";
 		logFile << "----------------------------------------------\n";
-		logFile << "CFG: \n";
+		
 		for(CFG::BBIterator bb(&vcfg); bb; bb++) {
 			if (bb->countInstructions() != 0) {
-				elm::cout << "**** GOING TO MEASURE BLOCK " << bb->number() << "(at " << bb->address() << ")\n\t";
-				for (BasicBlock::InstIterator inst(bb) ; inst ; inst++) {
-					elm::cout << inst->address() << ", ";
-				}
-				elm::cout << "\n\tuntil: " << bb->address() << " + (" << bb->size() << "-4)" << " = " << bb->address() + (bb->size()-4);
-				elm::cout << "\n\n";
+				TRACE(elm::cout << "**** GOING TO MEASURE BLOCK " << bb->number() << "(at " << bb->address() << ")\n\t";
+					for (BasicBlock::InstIterator inst(bb) ; inst ; inst++) {
+						elm::cout << inst->address() << ", ";
+					}
+					elm::cout << "\n\n";)
 				
 				int start_cycle = simulator_state->cycle();
 				sim::BasicBlockDriver driver(bb);

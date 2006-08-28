@@ -4,10 +4,10 @@
 #include <otawa/otawa.h>
 #include <otawa/hard/Register.h>
 #include <elm/genstruct/Table.h>
-
 #include <emul.h>
+#include <otawa/gensim/debug.h>
 
-typedef enum {NONE, WAITING, READY, EXECUTED, TERMINATED} simulated_instruction_state_t; // ordered set
+typedef enum {NONE, WAITING, READY, EXECUTED} simulated_instruction_state_t; // ordered set
 
 class SimulatedInstruction;
 
@@ -39,6 +39,8 @@ class SimulatedInstruction {
 		inline elm::genstruct::SLList<SimulatedInstruction *> * sourceInstructions();
 		inline void renameOperands(elm::genstruct::AllocatedTable<rename_table_t> * rename_tables);
 		inline void notifyResult(elm::genstruct::AllocatedTable<rename_table_t> * rename_tables);
+		inline void dump(elm::io::Output& out_stream);
+		inline void dumpState(elm::io::Output& out_stream);
 		
 };
 
@@ -92,7 +94,6 @@ inline void SimulatedInstruction::renameOperands(elm::genstruct::AllocatedTable<
 					this->removeSourceInstruction(producing_inst); // FIXME
 					this->addSourceInstruction(producing_inst);
 					this->setState(WAITING);
-					elm::cout << "\n";
 				}				
 			}
 		}
@@ -111,18 +112,12 @@ inline void SimulatedInstruction::renameOperands(elm::genstruct::AllocatedTable<
 
 inline void SimulatedInstruction::notifyResult(elm::genstruct::AllocatedTable<rename_table_t> * rename_tables) {
 	for (elm::genstruct::SLList<SimulatedInstruction *>::Iterator inst(*active_instructions) ; inst ; inst++) {
-		inst->sourceInstructions()->remove(this);
-		elm::cout << "\tnotifying inst " << inst->inst()->address() << "\n";
-		if (inst->sourceInstructions()->isEmpty()) {
-			inst->setState(READY);
-			elm::cout << "\t\tinst " << inst->inst()->address() << " is ready now \n";
-		}
-		else {
-			elm::cout << "\t\tinst " << inst->inst()->address() << "waits for";
-			for (elm::genstruct::SLList<SimulatedInstruction *>::Iterator i(*(inst->sourceInstructions())) ; i ; i++) {
-				elm::cout << i->inst()->address() << " - ";
+		if (inst->state() == WAITING) {
+			inst->sourceInstructions()->remove(this);
+			if (inst->sourceInstructions()->isEmpty()) {
+				inst->setState(READY);
+				TRACE(elm::cout << "\t\tinst " << inst->inst()->address() << " is ready now \n");
 			}
-			elm::cout << " \n";
 		}
 	}
 	this->setState(EXECUTED);
@@ -139,6 +134,36 @@ inline void SimulatedInstruction::notifyResult(elm::genstruct::AllocatedTable<re
 	
 }
 
+inline void SimulatedInstruction::dump(elm::io::Output& out_stream) {
+	out_stream << inst()->address() << ": " ;
+	inst()->dump(out_stream);
+	out_stream << " - ";
+	dumpState(out_stream);
+	if (instruction_state == WAITING) {
+		out_stream << " - waits for ";
+		for (elm::genstruct::SLList<SimulatedInstruction *>::Iterator inst(source_instructions) ; inst ; inst++) {
+			out_stream << inst->inst()->address() << ", ";
+		}
+	}
+	out_stream << "\n";
+}
+
+inline void SimulatedInstruction::dumpState(elm::io::Output& out_stream) {
+	switch(instruction_state) {
+		case NONE:
+			out_stream << "NONE";
+			break;
+		case WAITING:
+			out_stream << "WAITING";
+			break;
+		case READY:
+			out_stream << "READY";
+			break;
+		case EXECUTED:
+			out_stream << "EXECUTED";
+			break;
+	}
+}
 
 
 #endif //_SIMULATEDINSTRUCTION_H_

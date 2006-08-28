@@ -20,6 +20,7 @@ class InstructionQueueConfiguration {
 		void setNumberOfReadPorts(int n);
 		simulated_instruction_state_t leavingCondition();
 		CString name();
+		void dump(elm::io::Output& out_stream);
 };
 
 class InstructionQueue : public sc_module {
@@ -49,7 +50,6 @@ class InstructionQueue : public sc_module {
 		// private methods
 		inline SimulatedInstruction* get();
 		inline void put(SimulatedInstruction *inst);
-		inline int size();
 		
 		SC_HAS_PROCESS(InstructionQueue);
 		void action();
@@ -61,7 +61,7 @@ class InstructionQueue : public sc_module {
 		inline SimulatedInstruction* read(int index);
 		InstructionQueueConfiguration * configuration();
 		bool isEmpty();
-		
+		inline int size();
 		
 };
 

@@ -1,4 +1,5 @@
 #include <otawa/gensim/InstructionQueue.h>
+#include <otawa/gensim/debug.h>
 
 InstructionQueueConfiguration::InstructionQueueConfiguration(CString name, int capacity, simulated_instruction_state_t condition) :
 	queue_name(name), cap(capacity), number_of_write_ports(0), number_of_read_ports(0), 
@@ -35,7 +36,28 @@ simulated_instruction_state_t InstructionQueueConfiguration::leavingCondition() 
 	return leaving_condition;
 }
 
-
+void InstructionQueueConfiguration::dump(elm::io::Output& out_stream) {
+	out_stream << queue_name << ": ";
+	out_stream << "capacity=" << cap << " - iports=" << number_of_write_ports;
+	out_stream << " - oports=" << number_of_read_ports << " instructions leave when ";
+	switch(leaving_condition) {
+		case WAITING:
+			out_stream << "WAITING\n";
+			break;
+		case READY:
+			out_stream << "READY\n";
+			break;
+		case EXECUTED:
+			out_stream << "EXECUTED\n";
+			break;
+		case NONE:
+			out_stream << "NONE\n";
+			break;
+		default:
+			out_stream << "ERROR\n";
+			break;			
+	}
+}
 
 InstructionQueue::InstructionQueue(sc_module_name name, InstructionQueueConfiguration * configuration) {
 	conf = configuration;
@@ -102,37 +124,39 @@ bool InstructionQueue::isEmpty() {
 }
 	
 void InstructionQueue::action() {
-	elm::cout << this->name() << "->action():\n";
+	TRACE(elm::cout << this->name() << "->action():\n";)
 	// remove instructions that were accepted by the consumer pipeline stage at the last rising edge
-	elm::cout << "\tin_number_of_accepted_outs=" << in_number_of_accepted_outs.read() << "\n";
+	TRACE(elm::cout << "\tin_number_of_accepted_outs=" << in_number_of_accepted_outs.read() << "\n";)
 	int outs = 0;
 	while ( !isEmpty() && (outs < in_number_of_accepted_outs.read()) ) {
 		SimulatedInstruction * inst = get();
-		elm::cout << "\textracting " << inst->inst()->address() << "\n";
+		TRACE(elm::cout << "\textracting " << inst->inst()->address() << "\n";)
 		outs++;
 	}
 	// insert instructions that were submitted by the producer pipeline stage at the last rising edge
-	elm::cout << "\tin_number_of_ins=" << in_number_of_ins.read() << "\n";
+	TRACE(elm::cout << "\tin_number_of_ins=" << in_number_of_ins.read() << "\n";)
 	int ins = 0;
 	while (!is_full &&  (ins<in_number_of_ins.read())) {
 		put(in_instruction[ins++].read()); 
 	}
 	out_number_of_accepted_ins.write(ins);
-	elm::cout << "\tout_number_of_accepted_ins=" << ins << "\n";
+	TRACE(elm::cout << "\tout_number_of_accepted_ins=" << ins << "\n";)
 	// submit instructions to the next stage (for the next rising edge)
-	elm::cout << "\tcontains: ";
-	for (int i=0 ; i<size() ; i++)
-		elm::cout << read(i)->inst()->address() << "(" << read(i)->state() << ") - ";
-	elm::cout << "\n";
+	TRACE(elm::cout << "\tcontains: \n";
+		for (int i=0 ; i<size() ; i++) {
+			elm::cout << "\t\t";
+			read(i)->dump(elm::cout);
+		}
+		elm::cout << "\n";)
 	outs = 0;
 	while ( (outs < size()) && (outs < out_ports) && (read(outs)->state() >= conf->leavingCondition())) {
 		out_instruction[outs] = read(outs);	
 		outs++;
 	}
-	if ((outs < size()) && (outs < out_ports) )
-		elm::cout << "\tcannot send inst " << read(outs)->inst()->address() << " because its state is " << read(outs)->state() << "\n";
+//	if ((outs < size()) && (outs < out_ports) )
+//		elm::cout << "\tcannot send inst " << read(outs)->inst()->address() << " because its state is " << read(outs)->state() << "\n";
 	out_number_of_outs.write(outs);
-	elm::cout << "\tout_number_of_outs=" << outs << "\n";
+	TRACE(elm::cout << "\tout_number_of_outs=" << outs << "\n";)
 	
 }
 

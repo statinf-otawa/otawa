@@ -10,7 +10,6 @@
 typedef enum {	FETCH, 
 				EXECUTE_IN_ORDER, 
 				EXECUTE_OUT_OF_ORDER, 
-				WRITEBACK, 
 				COMMIT, 
 				LAZYIQIQ} pipeline_stage_t;
 
@@ -18,6 +17,7 @@ class PipelineStageConfiguration {
 	pipeline_stage_t stage_type;
 	InstructionQueueConfiguration * input_queue;
 	InstructionQueueConfiguration * output_queue;
+	InstructionQueueConfiguration * instruction_buffer;
 	CString stage_name;
 	int stage_width, in_stage_width, out_stage_width;
 	public:
@@ -27,14 +27,19 @@ class PipelineStageConfiguration {
 		PipelineStageConfiguration(CString name, pipeline_stage_t type,
 			InstructionQueueConfiguration * inqueue, InstructionQueueConfiguration * outqueue,
 			int width);
+		PipelineStageConfiguration(CString name, pipeline_stage_t type,
+			InstructionQueueConfiguration * buffer, int width);
+		
 		
 		pipeline_stage_t type();
 		CString name();
 		InstructionQueueConfiguration * inputQueue();
 		InstructionQueueConfiguration * outputQueue();
+		InstructionQueueConfiguration * instructionBuffer();
 		int width();
 		int inWidth();
 		int outWidth();
+		void dump(elm::io::Output& out_stream);
 };
 
 class PipelineStage : public sc_module {

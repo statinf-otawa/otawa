@@ -1,6 +1,19 @@
 #include <otawa/gensim/GenericProcessor.h>
+#include <otawa/gensim/debug.h>
 
-
+void ProcessorConfiguration::dump(elm::io::Output& out_stream) {
+	out_stream << "---- Processor configuration ----\n";
+	out_stream << " Instruction queues:\n";
+	for (elm::genstruct::SLList<InstructionQueueConfiguration *>::Iterator iqc(instruction_queues) ; iqc ; iqc++) {
+		iqc->dump(out_stream);
+	}
+	out_stream << " Pipeline stages:\n";
+	for (elm::genstruct::SLList<PipelineStageConfiguration *>::Iterator psc(pipeline_stages) ; psc ; psc++) {
+		psc->dump(out_stream);
+	}
+	out_stream << "---- end of configuration ----\n";
+	
+}
 
 
 GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration * conf, 
@@ -156,13 +169,62 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				execute_stage->out_number_of_accepted_ins(*nb);
 				input_queue->in_number_of_accepted_outs(*nb);
 			} break;
+			
+			case EXECUTE_OUT_OF_ORDER: {
+				found = false;
+				InstructionQueue * rob;
+				for (elm::genstruct::SLList<InstructionQueue *>::Iterator iq(instruction_queues) ; iq ; iq++) {
+					if (iq->configuration() == stage_conf->instructionBuffer()) {
+						rob = iq;
+						found = true;
+					}
+				}
+				assert(found);
+				ExecuteOOOStage * execute_stage = 
+					new ExecuteOOOStage((sc_module_name) (stage_conf->name()), (stage_conf->width()), rob, rename_tables);	
+				pipeline_stages.addLast(execute_stage);
+				execute_stage->in_clock(clock);
+			} break;
+		
+			case COMMIT: {
+				assert(stage_conf->inputQueue());
+				found = false;
+				for (elm::genstruct::SLList<InstructionQueue *>::Iterator iq(instruction_queues) ; iq ; iq++) {
+					if (iq->configuration() == stage_conf->inputQueue()) {
+						iports = iq->configuration()->numberOfReadPorts();
+						input_queue = iq;
+						found = true;
+					}
+				}
+				assert(found);
+				CommitStage * commit_stage = 
+					new CommitStage((sc_module_name) (stage_conf->name()), iports, sim_state);	
+				pipeline_stages.addLast(commit_stage);
+				commit_stage->in_clock(clock);
+			
+				
+				for (int i=0 ; i<iports ; i++) {
+					sc_signal<SimulatedInstruction *> * instruction = new sc_signal<SimulatedInstruction *>;
+					commit_stage->in_instruction[i](*instruction);
+					input_queue->out_instruction[i](*instruction);
+				}
+				nb = new sc_signal<int>;
+				nb->write(0);
+				commit_stage->in_number_of_ins(*nb);
+				input_queue->out_number_of_outs(*nb);
+				nb = new sc_signal<int>;
+				nb->write(0);
+				commit_stage->out_number_of_accepted_ins(*nb);
+				input_queue->in_number_of_accepted_outs(*nb);
+			} break;
+			
 				
 			default:
 				break;
 		}
 	}
 	clock.write(0);
-	
+	TRACE(dump(elm::cout);)
 }
 
 bool GenericProcessor::isEmpty() {
@@ -170,10 +232,10 @@ bool GenericProcessor::isEmpty() {
 }
 
 void GenericProcessor::step() {
-	elm::cout << "----- GenericProcessor->Step() : rising edge \n";
+	TRACE(elm::cout << "----- GenericProcessor->Step() : rising edge \n";)
 	clock.write(1);
 	sc_start(0.5);
-	elm::cout << "----- GenericProcessor->Step() : falling edge \n";
+	TRACE(elm::cout << "----- GenericProcessor->Step() : falling edge \n";)
 	clock.write(0);
 	sc_start(0.5);
 }

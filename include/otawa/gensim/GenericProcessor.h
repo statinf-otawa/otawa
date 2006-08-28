@@ -29,7 +29,7 @@ class ProcessorConfiguration {
 		elm::genstruct::SLList<PipelineStageConfiguration *> * pipelineStagesList() {
 			return &pipeline_stages;
 		}
-		
+		void dump(elm::io::Output& out_stream);
 };
 
 SC_MODULE(GenericProcessor)
