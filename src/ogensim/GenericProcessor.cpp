@@ -224,7 +224,7 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 		}
 	}
 	clock.write(0);
-	TRACE(dump(elm::cout);)
+//	TRACE(dump(elm::cout);)
 }
 
 bool GenericProcessor::isEmpty() {
