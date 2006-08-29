@@ -23,7 +23,6 @@ class State;
 class Driver {
 public :
 	virtual ~Driver(void); 
-	virtual Inst *firstInstruction(State& state) = 0;
 	virtual Inst *nextInstruction(State& state, Inst *inst) = 0;
 	virtual void terminateInstruction(State& state, Inst *inst) = 0;
 };
