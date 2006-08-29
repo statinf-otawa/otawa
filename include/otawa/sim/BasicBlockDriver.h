@@ -24,7 +24,6 @@ public:
 	inline BasicBlockDriver(BasicBlock *bb);
 	
 	// Driver overload
-	virtual Inst *firstInstruction(State& state);
 	virtual Inst *nextInstruction(State& state, Inst *inst);
 	virtual void terminateInstruction(State& state, Inst *inst);
 };
