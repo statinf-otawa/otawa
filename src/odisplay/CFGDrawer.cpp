@@ -26,8 +26,9 @@ namespace otawa { namespace display {
  * @param cfg CFG to print
  * @param graph configured Graph in which one wish to create the nodes and the edges
  */
-CFGDrawer::CFGDrawer(CFG *cfg, Graph *graph): _graph(graph){
-	make(cfg);
+CFGDrawer::CFGDrawer(CFG *cfg, Graph *graph): _graph(graph), _made(false){
+	//make(cfg);
+	_cfg = cfg;
 }
 
 
@@ -38,7 +39,7 @@ CFGDrawer::CFGDrawer(CFG *cfg, Graph *graph): _graph(graph){
  * (the Graph itself, Nodes, and Edges)
  * @param driver Driver to use to create the graph. The default is graphviz_driver
  */
-CFGDrawer::CFGDrawer(CFG *cfg, const PropList& props, Driver& driver){
+CFGDrawer::CFGDrawer(CFG *cfg, const PropList& props, Driver& driver): _made(false){
 	PropList general, nodes, edges;
 	general.addProps(props);
 	nodes.addProps(props);
@@ -47,7 +48,8 @@ CFGDrawer::CFGDrawer(CFG *cfg, const PropList& props, Driver& driver){
 	
 	_graph = driver.newGraph(general, nodes, edges);
 	_graph->setProps(*cfg);
-	make(cfg);
+	//make(cfg);
+	_cfg = cfg;
 }
 
 
@@ -56,17 +58,20 @@ CFGDrawer::CFGDrawer(CFG *cfg, const PropList& props, Driver& driver){
  * from the given CFG
  * @param cfg source CFG
  */
-void CFGDrawer::make(CFG *cfg){
-	assert(cfg);
+void CFGDrawer::make(){
+	if(_made){
+		return;
+	}
+	assert(_cfg);
 	assert(_graph);
 	// Construct the Graph
 	HashTable<void*, Node*> map;
-	for(CFG::BBIterator bb(cfg); bb; bb++){
+	for(CFG::BBIterator bb(_cfg); bb; bb++){
 		Node *node = _graph->newNode();
 		map.put(*bb, node);
 		onNode(*bb, node);
 	}
-	for(CFG::BBIterator bb(cfg); bb; bb++){
+	for(CFG::BBIterator bb(_cfg); bb; bb++){
 		Node *node = map.get(*bb);
 		for(BasicBlock::OutIterator edge(bb); edge; edge++){
 			if(edge->kind() != otawa::Edge::CALL){
@@ -76,6 +81,8 @@ void CFGDrawer::make(CFG *cfg){
 			}
 		}
 	}
+	onEnd(_graph);
+	_made = true;
 }
 
 
@@ -83,6 +90,7 @@ void CFGDrawer::make(CFG *cfg){
  * This function only displays the graph made.
  */
 void CFGDrawer::display(void){
+	make();
 	_graph->display();
 }
 
@@ -175,6 +183,16 @@ void CFGDrawer::onEdge(otawa::Edge *cfg_edge, otawa::display::Edge *display_edge
 			break;
 	}
 	display_edge->setProps(*cfg_edge);
+}
+
+
+
+/**
+ * This function is called when the CFG have been drawn.
+ * One can add nodes, edges, or properties to the graph.
+ * @param graph graph being drawn
+ */
+void CFGDrawer::onEnd(otawa::display::Graph *graph){
 }
 
 

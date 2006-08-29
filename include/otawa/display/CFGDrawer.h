@@ -14,12 +14,15 @@
 namespace otawa { namespace display {
 
 class CFGDrawer {
-	virtual void make(CFG *cfg);
 protected:
+	CFG *_cfg;
 	Graph *_graph;
+	bool _made;
 	virtual void onInit(PropList& graph, PropList& nodes, PropList& edges);
 	virtual void onNode(otawa::BasicBlock *bb, otawa::display::Node *node);
 	virtual void onEdge(otawa::Edge *cfg_edge, otawa::display::Edge *display_edge);
+	virtual void onEnd(otawa::display::Graph *graph);
+	virtual void make();
 	
 public:
 	CFGDrawer(CFG *cfg, Graph *graph);
