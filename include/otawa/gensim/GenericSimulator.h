@@ -50,7 +50,6 @@ public:
 	}
 		
 	virtual void run(sim::Driver& driver) {
-		next = driver.firstInstruction(*this);
 		this->driver = &driver;
 		running = true;
 		while(running)
