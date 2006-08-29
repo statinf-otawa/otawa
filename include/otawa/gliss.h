@@ -13,7 +13,7 @@
 #include <otawa/manager.h>
 #include <otawa/program.h>
 #include <otawa/instruction.h>
-#include <elfread.h>
+//#include <elfread.h>
 #include <otawa/gliss/Inst.h>
 #include <otawa/gliss/ControlInst.h>
 #include <otawa/gliss/CodeSegment.h>
