@@ -1,4 +1,5 @@
 AC_INIT(src/test.cpp)
+AC_PREREQ(2.5)
 AC_CONFIG_AUX_DIR(.config)
 AM_INIT_AUTOMAKE(Otawa, 0.1)
 AC_LANG(C++)
@@ -107,6 +108,7 @@ HAVE_ILP=no
 AC_DEFUN([check_module], [
 	AC_REQUIRE([AC_CHECK_LIB])
 	AC_ARG_WITH($1, [  --with-$1[=PATH]	Use $1 [from the given directory.]],, with_$1=maybe)
+	lib=$5
 	case $with_$1 in
 	no)
 		has_$1=no
@@ -131,14 +133,110 @@ AC_DEFUN([check_module], [
 		AC_MSG_CHECKING([for $1])
 		has_$1=yes
 		$2_CXXFLAGS=-I$with_$1/include
-		$2_LIBS="-L$with_$1 -l$5"
+		$2_LIBS="-L$with_$1/lib -l$5"
 		AC_MSG_RESULT([found at $with_$1])
 		;;
 	esac
-	AM_CONDITIONAL(WITH_SYSTEMC, [test "$has_systemc" == yes])
-	AC_SUBST(SYSTEMC_CXXFLAGS)
-	AC_SUBST(SYSTEMC_LIBS)
+	AM_CONDITIONAL(WITH_$2, [test "$has_$1" == yes])
+	AC_SUBST($2_CXXFLAGS)
+	AC_SUBST($2_LIBS)
 ])
+
+
+# ==== OTAWA_CHECK_LTLIB ====
+#	$1	LT library
+#	$2	Symbol
+#	$3	Action if found
+#	$4	Action if not found
+#	$5	Other libraries
+AC_DEFUN([OTAWA_CHECK_LTLIB],[
+	AC_REQUIRE([AC_PROG_LIBTOOL])
+	AC_MSG_CHECKING([if $2 is in $1])
+	AC_LANG_PUSH([C])
+	OLD_CC="$CC"
+	CC="libtool --mode=link $CC"
+	OLD_LIBS="$LIBS"
+	LIBS="$1 $LIBS"
+	AC_LINK_IFELSE(
+		AC_LANG_PROGRAM(
+			[void $2(void);],
+			[$2()]),
+		[result=yes], [result=no])
+	CC="$OLD_CC";
+	LIBS="$OLD_LIBS"
+	AC_LANG_POP
+	AC_MSG_RESULT([$result])
+	AS_IF([test "$result" = yes], [$3], [$4])
+])
+
+
+# ==== OTAWA_CHECK_LALIB ====
+#		$1: module
+#		$2: headers
+#		$3: library name
+#		$4: library symbol
+#		$5: environment that may contain
+#			local_ipath: local include path,
+#			local_lpath: local library path,
+#			cxxflags: other compilation flags,
+#			libs: other linkage libraries
+#
+AC_DEFUN([OTAWA_CHECK_LALIB], [
+	AC_ARG_WITH($1, [  --with-$1[=PATH]	Use $1 [from the given directory.]],, with_$1=maybe)
+	AC_REQUIRE([AC_CHECK_LIB])
+	AC_REQUIRE([AC_CHECK_HEADERS])
+	m4_define([_name], m4_translit($1, [a-z], [A-Z]))
+	if test "$with_$1" != no; then
+	
+		# Setup environment
+		$5
+
+		# Compute XXX_CXXFLAGS and XXX_LIBS
+		if test "$with_$1" = maybe -o "$with_$1" = yes; then
+			lib="lib$3.a"
+			_name[_CXXFLAGS]=
+			_name[_LIBS]="lib$3.la"
+			if test -d "../$1" -a -f "../$1/$local_lpath/lib$3.la"; then
+				cxxflags="-I../$1/$local_ipath $cxxflags"
+				lib="../$1/$local_lpath/lib$3.la"
+				_name[_CXXFLAGS]="-I\$(top_srcdir)/../$1/$local_ipath"
+				_name[_LIBS]="\$(top_srcdir)/../$1/$local_lpath/lib$3.la"
+			fi
+		else
+			cxxflags="-I$with_$1/include $cxxflags"
+			lib="$with_$1/lib/lib$3.la"
+			_name[_CXXFLAGS]="-I$with_$1/include"
+			_name[_LIBS]="$with_$1/lib/lib$3.la"
+		fi
+		
+		# Check for the library and headers
+		has_$1=no
+		SAVE_CPPFLAGS="$CPPFLAGS"
+		CPPFLAGS="$CPPFLAGS $cxxflags"
+		AC_CHECK_HEADERS($2,
+			OTAWA_CHECK_LTLIB($lib, [$4],
+			[has_$1=yes],
+			[AS_IF(test "$with_$1" = yes, AC_MSG_ERROR([$1 not found]),)]
+			, $libadd))
+		CPPFLAGS="$SAVE_CPPFLAGS"
+
+		# Cleanup environment		
+		local_ipath=
+		local_lpath=
+		cxxflags=
+		libs=
+
+	fi
+
+	# Record result
+	AM_CONDITIONAL([WITH_]_name, [test "$has_$1" == yes])
+	AC_SUBST(_name[_CXXFLAGS])
+	AC_SUBST(_name[_LIBS])		
+])
+
+
+dnl ==== gel ====
+OTAWA_CHECK_LALIB(gel, gel.h, gel_ppc, gel_open, [local_ipath=src; local_lpath=src])
 
 
 dnl ==== Site directory ====
@@ -271,7 +369,6 @@ if test "$with_gliss_ppc" != no; then
 	AC_MSG_CHECKING([for gliss ppc])
 	check=yes
 	check_header(BUILD_GLISS_PPC_CXXFLAGS, iss_include.h, $header_paths,)
-	check_header(BUILD_GLISS_PPC_CXXFLAGS, elfread.h, $header_paths,$BUILD_GLISS_PPC_CXXFLAGS)
 	check_lib(BUILD_GLISS_PPC_LIBS, emul, [
 		#include <iss_include.h>
 		int main(void) {
@@ -357,7 +454,7 @@ AC_SUBST(EXTERN_LP_SOLVE_LIBS)
 
 
 dnl ==== systemc ====
-check_module(systemc, SYSTEMC, src, objdir/src, systemc)
+check_module(systemc, SYSTEMC, src, objdir/src, systemc, sc_start)
 
 
 dnl ==== ODisplay ====
