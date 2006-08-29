@@ -29,36 +29,53 @@ protected:
 	static const elm::genstruct::Table<hard::Register *> no_regs;
 	virtual ~Inst(void) { };
 public:
-	inline Inst *next(void) const { return (Inst *)inhstruct::DLNode::next(); };
-	inline Inst *previous(void) const { return (Inst *)inhstruct::DLNode::previous(); };
 
+	// Kind management
+	static const unsigned long IS_COND		= 0x0001;
+	static const unsigned long IS_CONTROL	= 0x0002;
+	static const unsigned long IS_CALL		= 0x0004;
+	static const unsigned long IS_RETURN	= 0x0008;
+	static const unsigned long IS_MEM		= 0x0010;
+	static const unsigned long IS_LOAD		= 0x0020;
+	static const unsigned long IS_STORE		= 0x0040;
+	static const unsigned long IS_INT		= 0x0080;
+	static const unsigned long IS_FLOAT		= 0x0100;
+	static const unsigned long IS_ALU		= 0x0200;
+	static const unsigned long IS_MUL		= 0x0400;
+	static const unsigned long IS_DIV		= 0x0800;
+	static const unsigned long IS_SHIFT		= 0x1000;
+	static const unsigned long IS_TRAP		= 0x2000;
+	static const unsigned long IS_INTERN	= 0x4000;
+	typedef unsigned long kind_t;
+
+	// Accessors
+	inline Inst *next(void) const;
+	inline Inst *previous(void) const;
 	virtual address_t address(void) = 0;
 	virtual size_t size(void) = 0;
-	virtual void dump(io::Output& out) { };
+	virtual void dump(io::Output& out);
 	
-	virtual bool isIntern(void) { return false; };
-	virtual bool isMem(void) { return false; };
-	virtual bool isControl(void) { return false; };
-	virtual bool isLoad(void) { return false; };
-	virtual bool isStore(void) { return false; };
-	virtual bool isBranch(void) { return false; };
-	virtual bool isCall(void) { return false; };
-	virtual bool isReturn(void) { return false; };
-	virtual bool isPseudo(void) { return false; };
+	// Kind access
+	virtual kind_t kind(void) = 0;
+	inline bool isIntern(void);
+	inline bool isMem(void);
+	inline bool isControl(void);
+	inline bool isLoad(void);
+	inline bool isStore(void);
+	inline bool isBranch(void);
+	inline bool isCall(void);
+	inline bool isReturn(void);
+	inline bool isConditional(void);
+	virtual bool isPseudo(void);
 	
 	// Low-level register access
 	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
 	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
 	
-	// Pseudo access
-	virtual PseudoInst *toPseudo(void) { return 0; };
-	
-	// For control instruction
-	virtual bool isConditional(void) { return false; };
-	virtual Inst *target(void) { return 0; };
-	
-	// For memory instructions
-	virtual Type *type(void) { return 0; };
+	// Specialized information
+	virtual PseudoInst *toPseudo(void);
+	virtual Inst *target(void);
+	virtual Type *type(void);
 };
 
 
@@ -73,10 +90,56 @@ public:
 	virtual size_t size(void) { return 0; };
 	virtual bool isPseudo(void) { return true; };
 	virtual PseudoInst *toPseudo(void) { return this; };
+	virtual kind_t kind(void) { return 0; };
 };
 
 
-// Inlines
+// Inst Inlines
+inline Inst *Inst::next(void) const {
+	return (Inst *)inhstruct::DLNode::next();
+}
+
+inline Inst *Inst::previous(void) const {
+	return (Inst *)inhstruct::DLNode::previous();
+}
+
+inline bool Inst::isIntern(void) {
+	return kind() & IS_INTERN;
+}
+
+inline bool Inst::isMem(void) {
+	return kind() & IS_MEM;
+}
+
+inline bool Inst::isControl(void) {
+	return kind() & IS_CONTROL;
+}
+
+inline bool Inst::isLoad(void) {
+	return kind() & IS_LOAD;
+}
+
+inline bool Inst::isStore(void) {
+	return kind() & IS_STORE;
+}
+
+inline bool Inst::isBranch(void) {
+	kind_t k = kind();
+	return (k & IS_CONTROL) && !(k & (IS_RETURN | IS_CALL | IS_TRAP));
+}
+ 
+inline bool Inst::isCall(void) {
+	return kind() & IS_CALL;
+}
+
+inline bool Inst::isReturn(void) {
+	return kind() & IS_RETURN;
+}
+
+inline bool Inst::isConditional(void) {
+	return kind() & IS_COND;
+}
+
 inline elm::io::Output& operator<<(elm::io::Output& out, Inst *inst) {
 	inst->dump(out);
 	return out;

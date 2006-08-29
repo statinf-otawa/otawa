@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-06, IRIT UPS.
  *
  *	instryction.cpp -- instruction classes implementation.
  */
@@ -24,6 +24,100 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
  * be derived in more accurate and specialized representation like MemInst or
  * ControlInst.
  */
+
+
+/**
+ * @var Inst::IS_COND
+ * Mask of a conditional instruction of an instruction kind. Note that
+ * conditional property is not bound to branch but may also be found in
+ * guarded instructions.
+ */
+
+/**
+ * @var Inst::IS_CONTROL
+ * Mask of a control instruction.
+ */
+
+/**
+ * @var Inst::IS_CALL
+ * Mask of a call instruction.
+ */
+
+/**
+ * @var Inst::IS_RETURN
+ * Mask of a return instruction.
+ */
+
+/**
+ * @var Inst::IS_MEM
+ * Mask of an instruction accessing the memory.
+ */
+
+/**
+ * @var Inst::IS_LOAD
+ * Mask of an instruction performing a memory load.
+ */
+
+/**
+ * @var Instr::IS_STORE
+ * Mask of an instruction performing a memory store.
+ */
+
+/**
+ * @var Inst::IS_INT
+ * Mask of an instruction processing integer.
+ * @note Conversion instruction must have both masks IS_INT and IS_FLOAT.
+ */
+
+/**
+ * @var Inst::IS_FLOAT
+ * Mask of an instruction processing floats.
+ * @note Conversion instruction must have both masks IS_INT and IS_FLOAT.
+ */
+
+/**
+ * @var Inst::IS_ALU
+ * Mask of an instruction performing a computation.
+ * @note Memory accesses with a computed address must have this bit set.
+ */
+
+/**
+ * @var Inst::IS_MUL
+ * Mask of a multiplication instruction.
+ */
+
+/**
+ * @var Inst::IS_DIV
+ * Mask of a division instruction.
+ */
+
+/**
+ * @var Instr::IS_SHIFT
+ * Mask of an instruction performing a shift (this includes logicial shifts,
+ * arithmetic shifts and rotations).
+ */
+
+/**
+ * @var Instr::IS_TRAP
+ * Mask of a trap instruction. It may be a programmed interruption, a system
+ * call, a debugging break or any control instruction whose control target
+ * is computed by the system.
+ */
+
+/**
+ * @var Instr::IS_INTERN
+ * Mask of an instruction performing setup internal to the processor.
+ */
+
+/**
+ * @type Instr::kind_t;
+ * The kind of an instruction is a bit array where each bit represents an
+ * instruction property. The following masks gives access to the property bits:
+ * IS_COND, IS_CONTROL, IS_CALL, IS_RETURN,
+ * IS_MEM, IS_LOAD, IS_STORE, IS_INT, IS_FLOAT, IS_ALU, IS_MUL, IS_DIV, IS_SHIFT,
+ * IS_TRAP, IS_INTERN.
+ */
+
 
 /**
  * @fn address_t Inst::address(void);
@@ -98,17 +192,21 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
 
 
 /**
- * @fn  bool Inst::isPseudo(void);
  * Test if the instruction is a pseudo-instruction.
  * @return True if it is a pseudo-instruction.
  */
+bool Inst::isPseudo(void) {
+	return false;
+}
 
 
 /**
- * @fn PseudoInst *Inst::toPseudo(void);
  * Get the representation of this pseudo-instruction.
  * @return Pseudo-instruction representation or null.
  */
+PseudoInst *Inst::toPseudo(void) {
+	return 0;
+}
 
 
 /**
@@ -126,18 +224,23 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
 
 
 /**
- * @fn void Inst::dump(io::Output& out);
  * Output a displayable representation of the instruction.
  * The implementation of this method is not mandatory.
  * @param out	Output channel to use.
  */
+void Inst::dump(io::Output& out) {
+}
 
 
 /**
  * @fn Type *Inst::type(void);
+ * @deprecated
  * Get the type of the accessed object.
  * @return Accessed data type.
  */
+Type *Inst::type(void) {
+	return 0;
+}
 
 
 /**
@@ -148,11 +251,13 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
 
 
 /**
- * @fn Address *Inst::target(void);
  * Get the target of the branch.
  * @return Target address of the branch.
  */
- 
+Inst *Inst::target(void) {
+	return 0;
+}
+
 
 /**
  * Get the registers read by the instruction.
@@ -170,6 +275,14 @@ const elm::genstruct::Table<hard::Register *>& Inst::readRegs(void) {
 const elm::genstruct::Table<hard::Register *>& Inst::writtenRegs(void) {
 	return no_regs;
 }
+
+
+/**
+ * @fn kind_t Inst::kind(void);
+ * Get the kind of the current instruction. In fact, the kind is composed as
+ * bit array representing an instruction property.
+ * @return The kind of the instruction.
+ */ 
 
  
 /**
