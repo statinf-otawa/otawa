@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-06, IRIT UPS.
  *
  *	Inst.h -- GLISS Inst class interface.
  */
@@ -22,12 +22,7 @@ class Inst: public otawa::Inst {
 	address_t addr;
 protected:
 	unsigned long flags;
-	const static unsigned long FLAG_Built = 0x01;
-	const static unsigned long FLAG_Cond = 0x02;
-	const static unsigned long FLAG_Call = 0x04;
-	const static unsigned long FLAG_Return = 0x08;
-	const static unsigned long FLAG_Load = 0x10;
-	const static unsigned long FLAG_Store = 0x20;
+	const static unsigned long BUILT = 0x10000000;
 	const elm::genstruct::Table<hard::Register *> *reads;
 	const elm::genstruct::Table<hard::Register *> *writes;
 	
@@ -43,6 +38,7 @@ public:
 	virtual address_t address(void);
 	virtual size_t size(void);
 	virtual void dump(io::Output& out);
+	virtual kind_t kind(void);
 	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
 	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
 };

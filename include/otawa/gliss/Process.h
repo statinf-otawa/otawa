@@ -21,6 +21,8 @@ class Process: public otawa::Process {
 protected:
 	Manager *man;
 	int argc;
+	char *default_argv[2];
+	char *default_envp[1];
 	char **argv, **envp;
 	address_t start_addr;
 	Platform *_platform;

@@ -23,7 +23,7 @@ class File: public ::otawa::File {
 	friend class Process;
 	String path;
 	elm::datastruct::Vector<Segment *> segs;
-	state_t *state;
+	state_t *_state;
 	datastruct::HashTable<String, otawa::Symbol *> syms;
 	void initSyms(void);
 	bool labels_init;
@@ -32,6 +32,7 @@ public:
 	~File(void);
 	inline bool isOK(void) { return !segs.isEmpty(); };
 	otawa::Inst *findByAddress(address_t addr);
+	inline state_t *state(void) const;
 
 	// ::otawa::File overload
 	virtual CString name(void);
@@ -40,6 +41,11 @@ public:
 	virtual otawa::Symbol *findSymbol(String name);
 	virtual elm::Collection<otawa::Symbol *>& symbols(void);
 };
+
+// File Inlines
+inline state_t *File::state(void) const {
+	return _state;
+}
 
 } } // otawa::gliss
 

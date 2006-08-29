@@ -13,14 +13,14 @@ namespace otawa { namespace gliss {
 	
 // MemInst class
 class MemInst: public Inst {
-	virtual void scanCustom(instruction_t *inst);
+	//virtual void scanCustom(instruction_t *inst);
 public:
 	inline MemInst(CodeSegment& segment, address_t address); 
 
 	// Inst overload	
-	virtual bool isMem(void);
+	/*virtual bool isMem(void);
 	virtual bool isLoad(void);
-	virtual bool isStore(void);
+	virtual bool isStore(void);*/
 };
 
 // Inlines

@@ -36,7 +36,7 @@ class CodeSegment: public ::otawa::Segment {
 	};
 
 	// attributes
-	File& file;
+	File& _file;
 	String _name;
 	Code code;
 	bool built;
@@ -44,8 +44,9 @@ class CodeSegment: public ::otawa::Segment {
 	void build(void);
 
 public:
-	CodeSegment(File& _file, CString name, memory_t *memory, address_t address, size_t size);
+	CodeSegment(File& file, CString name, memory_t *memory, address_t address, size_t size);
 	otawa::Inst *findByAddress(address_t addr);
+	inline File& file(void) const;
 
 	// Segment overload
 	virtual CString name(void);
@@ -54,7 +55,12 @@ public:
 	virtual size_t size(void);
 	virtual elm::Collection<ProgItem *>& items(void);
 };
-	
+
+// CodeSegment Inline
+inline File& CodeSegment::file(void) const {
+	return _file;
+}
+
 } } // otawa::gliss
 
 #endif // OTAWA_GLISS_CODESEGMENT_H

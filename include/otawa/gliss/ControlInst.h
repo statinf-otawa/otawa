@@ -20,14 +20,14 @@ public:
 		: Inst(segment, address), _target(0) { }; 
 
 	// Inst overload	
-	virtual bool isControl(void);
+	/*virtual bool isControl(void);
 	virtual bool isBranch(void);
 	virtual bool isCall(void);
-	virtual bool isReturn(void);
+	virtual bool isReturn(void);*/
 	virtual void dump(io::Output& out);
 
 	// ControlInst overload
-	virtual bool isConditional(void);
+	//virtual bool isConditional(void);
 	virtual otawa::Inst *target(void);
 };
 
