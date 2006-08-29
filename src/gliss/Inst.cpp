@@ -316,7 +316,8 @@ void Inst::scanRegs(void) {
 	// Count read registers
 	int cnt = 0;
 	for(int i = 0; inst->instrinput[i].type != VOID_T; i++)
-		if(scan_args.isSupported(inst->instrinput + i))
+		if(scan_args.isSupported(inst->instrinput + i)
+		&& (!no_reg || cnt != 0|| !inst->instrinput[i].val.uint8))
 			cnt++;
 	switch(inst->ident) {
 	case ID_CRAND_CRB_CRB_CRB: case ID_CROR_CRB_CRB_CRB:
