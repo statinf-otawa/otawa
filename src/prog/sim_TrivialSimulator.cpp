@@ -41,10 +41,10 @@ public:
 	
 	virtual void run(Driver& driver) {
 		running = true;
-		pc = driver.firstInstruction(*this);
 		while(running) {
-			_cycle += time;
 			pc = driver.nextInstruction(*this, pc ? pc->next() : pc);
+			_cycle += time;
+			running = pc;
 		}
 	}
 	
