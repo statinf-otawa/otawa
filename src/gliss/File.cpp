@@ -7,13 +7,13 @@
 
 #include <otawa/gliss.h>
 #include <elm/debug.h>
+#include <gel.h>
+#include <gel_elf.h>
 
-// Elf Header information
-extern Elf32_Ehdr Ehdr;
+extern "C" gel_file_t *loader_file(memory_t* memory);
 
 namespace otawa { namespace gliss {
 
-	
 /**
  * @class File
  * File implementation for GLISS PowerPC.
@@ -28,22 +28,23 @@ File::File(String _path, int argc, char **argv, char **envp)
 : path(_path), labels_init(false) {
 	
 	// System configuration
-    void *system_list[5+1];
+    void *system_list[3];
     int page_size = 4096;
-    system_list[0] = &argc;
-    system_list[1] = argv;
-    system_list[2] = envp;
-    system_list[3] = &page_size; 
-    system_list[4] = NULL; 
-    system_list[5] = NULL;
+    system_list[0] = &page_size;
+    system_list[1] = NULL; 
+    system_list[2] = NULL;
 
     // Loader configuration
-    void *loader_list[1+1];
-    loader_list[0]=(void *)path.chars();
-    loader_list[1]=NULL;
+    void *loader_list[5];
+    argv[0] = (char *)&_path.toCString();
+    loader_list[0] = argv;
+    loader_list[1] = envp;
+    loader_list[2] = NULL;
+    loader_list[3] = (void *)"";
+    loader_list[4] = NULL;
     
     // Memory configuration
-    void *mem_list[2+1];
+    void *mem_list[3];
     int mem_size = 0;
     int mem_bits = 0;
     mem_list[0]=&mem_size;
@@ -51,15 +52,24 @@ File::File(String _path, int argc, char **argv, char **envp)
     mem_list[2]=NULL;
 
     // Initialize emulator
-    state = iss_init(mem_list, loader_list, system_list, NULL, NULL);
-    if(!state)
+    _state = iss_init(mem_list, loader_list, system_list, NULL, NULL);
+    if(!_state)
     	return;
     
     // Initialize the text segments
-    struct text_secs *text;
-    for(text = Text.secs; text; text = text->next) {
-    	CodeSegment *seg = new CodeSegment(*this, text->name, state->M, (address_t)text->address, text->size);
-    	segs.add(seg);
+    gel_file_t *file = loader_file(_state->M);
+    assert(file); 
+    gel_file_info_t infos;
+	gel_file_infos(file, &infos);
+    for(int i = 0; i < infos.sectnum; i++) {
+    	gel_sect_info_t infos;
+    	gel_sect_t *sect = gel_getsectbyidx(file, i);
+    	assert(sect);
+    	gel_sect_infos(sect, &infos);
+    	if(infos.flags & SHF_EXECINSTR) {
+    		CodeSegment *seg = new CodeSegment(*this, infos.name, _state->M, infos.vaddr, infos.size);
+    		segs.add(seg);
+    	}
     }
 }
 
@@ -69,12 +79,12 @@ File::File(String _path, int argc, char **argv, char **envp)
  */
 File::~File(void) {
 	clearProps();
-	if(state) {
+	if(_state) {
 		for(Iterator<otawa::Symbol *> sym(syms.items()); sym; sym++)
 			delete *sym;
 		for(Iterator<Segment *> seg(segs); seg; seg++)
 			delete (CodeSegment *)*seg;
-    	iss_halt(state);
+    	iss_halt(_state);
 	}
 }
 
@@ -149,37 +159,40 @@ elm::Collection<otawa::Symbol *>& File::symbols(void) {
  * Initialize the symbol table for this file if it is not already initialized.
  */
 void File::initSyms(void) {
-	Elf32_Sym *syms = Tables.sym_tbl;
-	char *names = Tables.symstr_tbl;
-	int sym_cnt = Tables.sec_header_tbl[Tables.symtbl_ndx].sh_size
-		/ Tables.sec_header_tbl[Tables.symtbl_ndx].sh_entsize;
-
+    gel_file_t *file = loader_file(_state->M);
+    assert(file); 
+	
 	// Traverse ELF symbol table
-	for(int i = 0; i < sym_cnt; i++) {
+	gel_enum_t *iter = gel_enum_file_symbol(file);
+	gel_enum_initpos(iter);
+	for(char *name = (char *)gel_enum_next(iter); name;
+	name = (char *)gel_enum_next(iter)) {
+		assert(name);
 		address_t addr = 0;
 		Symbol::kind_t kind;
-		
-		// Function symbol
-		if(ELF32_ST_TYPE(syms[i].st_info)== STT_FUNC
-		&& syms[i].st_shndx != SHN_UNDEF) {
+		gel_sym_t *sym = gel_find_file_symbol(file, name);
+		assert(sym);
+		gel_sym_info_t infos;
+		gel_sym_infos(sym, &infos);
+		switch(ELF32_ST_TYPE(infos.info)) {
+		case STT_FUNC:
 			kind = Symbol::FUNCTION;
-			addr = (address_t)syms[i].st_value;
+			addr = (address_t)infos.vaddr;
+			break;
+		case STT_NOTYPE:
+			kind = Symbol::LABEL;
+			addr = (address_t)infos.vaddr;
+			break;
 		}
 		
-		// Simple label symbol
-		else if(ELF32_ST_TYPE(syms[i].st_info)== STT_NOTYPE
-		&& syms[i].st_shndx == Text.txt_index) {
-			kind = Symbol::LABEL;
-			addr = (address_t)syms[i].st_value;
-		}
-
 		// Build the label if required
 		if(addr) {
-			String label(&names[syms[i].st_name]);
+			String label(infos.name);
 			Symbol *sym = new Symbol(*this, label, kind, addr);
 			this->syms.put(label, sym);
 		}
 	}
+	gel_enum_free(iter);
 
 	// Mark as built
 	labels_init = true;

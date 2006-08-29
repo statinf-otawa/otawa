@@ -18,7 +18,7 @@ namespace otawa { namespace gliss {
 
 /**
  */
-void MemInst::scanCustom(instruction_t *inst) {
+/*void MemInst::scanCustom(instruction_t *inst) {
 	address_t target_addr = 0;
 	switch(inst->ident) {
 
@@ -50,7 +50,7 @@ void MemInst::scanCustom(instruction_t *inst) {
 	default:
 		assert(0);
 	}
-}
+}*/
 
 
 /**
@@ -63,24 +63,24 @@ void MemInst::scanCustom(instruction_t *inst) {
 
 /**
  */
-bool MemInst::isMem(void) {
+/*bool MemInst::isMem(void) {
 	return true;
-}
+}*/
 
 
 /**
  */
-bool MemInst::isLoad(void) {
+/*bool MemInst::isLoad(void) {
 	scan();
 	return flags & FLAG_Load;
-}
+}*/
 
 
 /**
  */
-bool MemInst::isStore(void) {
+/*bool MemInst::isStore(void) {
 	scan();
 	return flags & FLAG_Store;
-}
+}*/
 
 } } // otawa::gliss

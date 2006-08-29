@@ -22,10 +22,10 @@ namespace otawa { namespace gliss {
  */
 
 // Overloaded	
-bool ControlInst::isConditional(void) {
+/*bool ControlInst::isConditional(void) {
 	scan();
 	return flags & FLAG_Cond;
-}
+}*/
 
 // Overloaded
 otawa::Inst *ControlInst::target(void) {
@@ -40,50 +40,49 @@ void ControlInst::scanCustom(instruction_t *inst) {
 	address_t target_addr = 0;
 	switch(inst->ident) {
 	case ID_BL_:
-		flags |= FLAG_Call;
+		flags |= IS_CALL;
 	case ID_B_:
 		assert(inst->instrinput[0].type == PARAM_INT24_T);
 		target_addr = address() + (inst->instrinput[0].val.Int24 << 2);
 		break;
 	case ID_BLA_:
-		flags |= FLAG_Call;
+		flags |= IS_CALL;
 	case ID_BA_:
 		assert(inst->instrinput[0].type == PARAM_INT24_T);
 		target_addr = (address_t)(inst->instrinput[0].val.Int24 << 2);
 		break;
 	case ID_BCL_:
-		flags |= FLAG_Call;
+		flags |= IS_CALL;
 	case ID_BC_:
-		flags |= FLAG_Cond;
+		flags |= IS_COND;
 		assert(inst->instrinput[2].type == PARAM_INT14_T);
 		target_addr = address() + (inst->instrinput[2].val.Int14 << 2);
 		break;
 	case ID_BCLA_:
-		flags |= FLAG_Call;
+		flags |= IS_CALL;
 	case ID_BCA_:
-		flags |= FLAG_Cond;
+		flags |= IS_COND;
 		assert(inst->instrinput[2].type == PARAM_INT14_T);
 		target_addr = (address_t)(inst->instrinput[2].val.Int14 << 2);
 		break;
 	case ID_SC:
-		flags |= FLAG_Call;
 		break;
 	case ID_BCLR_:
 		assert(inst->instrinput[0].type == PARAM_UINT5_T);
 		assert(inst->instrinput[1].type == PARAM_UINT5_T);
 		if(inst->instrinput[0].val.Uint5 == 20
 		&& inst->instrinput[1].val.Uint5 == 0) {
-			flags |= FLAG_Return;
+			flags |= IS_RETURN;
 			break;
 		}
 	case ID_BCLRL_:
-		flags |= (FLAG_Return | FLAG_Cond);
+		flags |= (IS_RETURN | IS_COND);
 		break;
 	case ID_BCCTRL_:
-		flags |= FLAG_Call;
+		flags |= IS_CALL;
 	case ID_BCCTR_:
 	cond:
-		flags |= FLAG_Cond;
+		flags |= IS_COND;
 		break;
 	}
 	
@@ -93,27 +92,27 @@ void ControlInst::scanCustom(instruction_t *inst) {
 }
 
 // Overloaded
-bool ControlInst::isControl(void) {
+/*bool ControlInst::isControl(void) {
 	return true;
-}
+}*/
 
 // Overloaded
-bool ControlInst::isBranch(void) {
+/*bool ControlInst::isBranch(void) {
 	scan();
 	return !(flags & (FLAG_Call | FLAG_Return));
-}
+}*/
 
 // Overloaded
-bool ControlInst::isCall(void) {
+/*bool ControlInst::isCall(void) {
 	scan();
 	return flags & FLAG_Call;
-}
+}*/
 
 // Overloaded
-bool ControlInst::isReturn(void) {
+/*bool ControlInst::isReturn(void) {
 	scan();
 	return flags & FLAG_Return;
-}
+}*/
 
 // Overloaded
 void ControlInst::dump(io::Output& out) {
@@ -128,6 +127,7 @@ void ControlInst::dump(io::Output& out) {
 		if(label)
 			out << " [" << *label << ']';
 	}
+	out << io::hex(flags);
 }
 
 } } // otawa::gliss

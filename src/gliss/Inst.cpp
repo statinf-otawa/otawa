@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-06, IRIT UPS.
  *
  *	gliss/Instruction.cpp -- gliss::Instruction class implementation.
  */
@@ -15,6 +15,37 @@ using namespace elm;
 #endif
 
 namespace otawa { namespace gliss {
+
+// Kind Table
+static unsigned long kinds[] = {
+	Inst::IS_ALU | Inst::IS_INT,					// ARITH = "0"
+	Inst::IS_ALU | Inst::IS_INT,					// MULDIV = "1"		!!TODO!!
+	Inst::IS_ALU | Inst::IS_INT,					// INTCMP = "2"
+	Inst::IS_ALU | Inst::IS_INT,					// LOGIC = "3"
+	Inst::IS_ALU | Inst::IS_SHIFT | Inst::IS_INT,	// SHIFTROT = "4"
+	Inst::IS_MEM | Inst::IS_STORE | Inst::IS_INT,	// STORE = "5"
+	Inst::IS_MEM | Inst:: IS_LOAD | Inst::IS_INT,	// LOAD = "6"
+	Inst::IS_INTERN,								// MEMSYNC = "7"
+	Inst::IS_CONTROL,								// BRANCH = "8"
+	Inst::IS_INTERN,								// CRLI = "9"
+	Inst::IS_TRAP,									// SYSTEM = "10"
+	Inst::IS_TRAP,									// TRAP = "11"
+	Inst::IS_INTERN,								// EXT = "12"
+	Inst::IS_INTERN,								// CONTROL = "13"
+	Inst::IS_INTERN,								// CACHE = "14"
+	Inst::IS_INTERN,								// SEG = "15"
+	Inst::IS_INTERN,								// TLB = "16"
+	Inst::IS_ALU | Inst::IS_FLOAT,					// FPARITH = "17"
+	Inst::IS_ALU | Inst::IS_MUL | Inst::IS_FLOAT,	// FPMUL = "18"
+	Inst::IS_ALU | Inst::IS_DIV | Inst::IS_DIV,		// FPDIV = "19"
+	Inst::IS_ALU | Inst::IS_FLOAT,					// FPMADD = "20"
+	Inst::IS_ALU | Inst::IS_FLOAT | Inst::IS_INT,	// FPRC = "21"
+	Inst::IS_MEM | Inst::IS_LOAD | Inst::IS_FLOAT,	// FPLOAD = "22"
+	Inst::IS_MEM | Inst::IS_STORE | Inst::IS_FLOAT,	// FPSTORE = "23"
+	Inst::IS_INTERN | Inst::IS_FLOAT,				// FPSCRI = "24"
+	Inst::IS_ALU | Inst::IS_FLOAT,					// FPCMP = "25"
+	Inst::IS_ALU | Inst::IS_FLOAT					// FPMOV = "26"
+};
 
 
 // Register scanning table
@@ -207,16 +238,11 @@ size_t Inst::size(void) {
 
 // Overloaded
 void Inst::dump(io::Output& out) {
-	
-	// Display the hex value
-	
-	
-	// Disassemble the statement
 	code_t buffer[20];
 	char out_buffer[200];
 	instruction_t *inst;
-	iss_fetch((::address_t)(unsigned long)addr, buffer);
-	inst = iss_decode((::address_t)(unsigned long)addr, buffer);
+	iss_fetch((::address_t)addr, buffer);
+	inst = iss_decode(seg.file().state(), (::address_t)addr, buffer);
 	iss_disasm(out_buffer, inst);
 	out << out_buffer;
 	iss_free(inst);
@@ -229,22 +255,26 @@ void Inst::dump(io::Output& out) {
 void Inst::scan(void) {
 
 	// Already computed?
-	if(flags & FLAG_Built)
+	if(flags & BUILT)
 		return;
 	
 	// Get the instruction
 	code_t buffer[20];
 	instruction_t *inst;
 	iss_fetch((::address_t)(unsigned long)address(), buffer);
-	inst = iss_decode((::address_t)(unsigned long)address(), buffer);
+	inst = iss_decode(seg.file().state(), (::address_t)address(), buffer);
 	assert(inst);
+	
+	// Intialize the category
+	assert(iss_table[inst->ident].category <= 26);
+	flags = kinds[iss_table[inst->ident].category];
 	
 	// Call customization
 	scanCustom(inst);
 	
 	// Cleanup
 	iss_free(inst);
-	flags |= FLAG_Built;
+	flags |= BUILT;
 }
 
 
@@ -273,8 +303,16 @@ void Inst::scanRegs(void) {
 	code_t buffer[20];
 	instruction_t *inst;
 	iss_fetch((::address_t)(unsigned long)addr, buffer);
-	inst = iss_decode((::address_t)(unsigned long)addr, buffer);
-	
+	inst = iss_decode(seg.file().state(), (::address_t)addr, buffer);
+
+	// Select r0 linked to immediate 0
+	/* !!TODO!! This implementation of zero-cabled register R0 is quite crude
+	 * and surely non-portable (be careful to future changes in GLISS)
+	 * It should be fixed in a way or in another. Difficult di publish the
+	 * PPC loader in this conditions...
+	 */
+	bool no_reg = iss_table[inst->ident].user0;	
+
 	// Count read registers
 	int cnt = 0;
 	for(int i = 0; inst->instrinput[i].type != VOID_T; i++)
@@ -299,7 +337,7 @@ void Inst::scanRegs(void) {
 	cnt = 0;
 	for(int i = 0; inst->instrinput[i].type != VOID_T; i++) {
 		hard::Register *reg = scan_args.reg(inst->instrinput + i);
-		if(reg)
+		if(reg && (!no_reg || cnt != 0 || !inst->instrinput[i].val.uint8))
 			tab->set(cnt++, reg);
 	}
 	switch(inst->ident) {
@@ -355,6 +393,14 @@ void Inst::scanRegs(void) {
 	
 	// Free instruction
 	iss_free(inst);
+}
+
+
+/**
+ */
+Inst::kind_t Inst::kind(void) {
+	scan();
+	return flags & ~BUILT;
 }
 
 } } // otawa::gliss

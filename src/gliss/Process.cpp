@@ -7,6 +7,7 @@
 
 #include <otawa/gliss.h>
 #include <otawa/hard/CacheConfiguration.h>
+#include <gel.h>
 
 // Trace
 #ifndef NDEBUG
@@ -18,8 +19,7 @@
 #endif
 #endif
 
-// Elf Header information
-extern Elf32_Ehdr Ehdr;
+extern "C" gel_file_t *loader_file(memory_t* memory);
 
 namespace otawa { namespace gliss {
 
@@ -34,8 +34,9 @@ namespace otawa { namespace gliss {
  */
 Process::Process(Manager *_man, PropList& props): man(_man) {
 	TRACE(this << ".Process::Process(" << _man << ", " << &props << ')');
-	static char *default_argv[] = { "", 0 };
-	static char *default_envp[] = { 0 };
+	default_argv[0] = "";
+	default_argv[1] = 0;
+	default_envp[0] = 0;
 	argc = props.get<int>(Loader::ID_Argc, 1);
 	argv = props.get<char **>(Loader::ID_Argv, default_argv);
 	envp = props.get<char **>(Loader::ID_Envp, default_envp);
@@ -83,8 +84,10 @@ elm::Collection<otawa::File *> *Process::files(void) {
 	}
 	else {
 		_files.add(file);
-		start_addr = (address_t)Ehdr.e_entry;
-		GLISS_STATE(this) = file->state;
+		gel_file_info_t infos;
+		gel_file_infos(loader_file(file->state()->M), &infos);
+		start_addr = (address_t)infos.entry;
+		GLISS_STATE(this) = file->state();
 		return file;
 	}
 }
