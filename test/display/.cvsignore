@@ -3,3 +3,4 @@
 Makefile.in
 Makefile
 test_display
+*.ps
