@@ -68,6 +68,7 @@ int main(void) {
 		PropList props;
 		MY_ID(props) = 111;
 		MY_STRING(props) = "ko\ncoucoué";
+		MY_STRING(props) += "ohe !";
 		cout << props;
 	}
 	
