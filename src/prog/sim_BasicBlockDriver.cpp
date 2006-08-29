@@ -26,13 +26,6 @@ namespace otawa { namespace sim {
 
 /**
  */
-Inst *BasicBlockDriver::firstInstruction(State& state) {
-	return BasicBlockDriver::nextInstruction(state, 0);
-}
-
-
-/**
- */
 Inst *BasicBlockDriver::nextInstruction(State& state, Inst *_inst) {
 	if(inst.ended()) {
 		state.stop();
