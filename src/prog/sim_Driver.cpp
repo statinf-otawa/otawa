@@ -24,15 +24,6 @@ Driver::~Driver(void) {
 
 
 /**
- * @fn Inst *Driver::firstInstruction(State& state);
- * Get the first instruction to be simulated. This method is only called once
- * at the start of a simulation.
- * @param state	Current simulator state.
- * @return		First instruction to simulate.
- */
-
-
-/**
  * @fn Inst *Driver::nextInstruction(State& state, Inst *inst);
  * This method is called each time the simulator needs the next instruction to
  * execute.
