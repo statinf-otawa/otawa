@@ -6,9 +6,6 @@ test_delta_SOURCES=\
 	DeltaCFGDrawer.cpp \
 	DeltaCFGDrawer.h \
 	BBPath.cpp \
-	Delta.cpp \
-	BBPathDriver.h \
-	sim_BBPathDriver.cpp \
 	test_delta.cpp
         
 

@@ -32,7 +32,7 @@ namespace otawa { namespace ipet {
  * @param props Configuration properties.
  */
 Delta::Delta(const PropList& props)
-: CFGProcessor("otawa::ipet::Delta", Version(0, 2, 0), props){
+: CFGProcessor("otawa::ipet::Delta", Version(0, 3, 0), props){
 	configure(props);
 }
 
@@ -57,13 +57,14 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 	assert(fw);
 	assert(cfg);
 	assert(cfg->isInlined());
-	//int nbConstraintsCreated = 0;
-	//int nbObjectFunctionCreated = 0;
+	
 	System *system = getSystem(fw,cfg);
-	Vector<BBPath*> bbPathList(4*cfg->bbs().count());
+	Vector<BBPath*> bbPathVector(4*cfg->bbs().count());
 	for(CFG::BBIterator bb(cfg) ; bb ; bb++){
 		// we create all sequences with length = 1
-		bbPathList.add(BBPath::getBBPath(bb));
+		if(!bb->isEntry() && !bb->isExit()){
+			bbPathVector.add(BBPath::getBBPath(bb));
+		}
 	}
 	
 	// stats
@@ -74,87 +75,76 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 	
 	// from 1 to nlevels+1 <=> from 0 to nlevels
 	for(int i = 0 ;
-		(levels && i < levels) || (bbPathList.length() > 0 && !levels)  ;
-		i++){
-	//while(bbPathList.length() > 0){
-		Vector<BBPath*> newBBPath;
-		int l = bbPathList.length();
-		for(int j=0 ; j < l ; j++){
-			// we search all length+1 sequences
-			Vector<BBPath*> *toInsert = bbPathList[j]->nexts();
+		(levels && i < levels) || (bbPathVector.length() > 0 && !levels)  ;
+		i++)
+	{
+		Vector<BBPath*> bbPathToProcess; // BBPaths that have to be processed
+		
+		// one search all length+1 sequences from sequences in bbPathVector
+		// and one put all these in bbPathToProcess
+		for(int j=0 ; j < bbPathVector.length() ; j++){
+			Vector<BBPath*> *toInsert = bbPathVector[j]->nexts();
 			int l2 = toInsert->length();
 			for(int k = 0 ; k < l2 ; k++)
-				newBBPath.add(toInsert->get(k));
+				bbPathToProcess.add(toInsert->get(k));
 			delete toInsert;
 		}
 
-		bbPathList.clear();
-		l = newBBPath.length();
-		for(int j=0 ; j < l ; j++){
-			BBPath *bbPathPtr = newBBPath[j];
-			BBPath &bbp = *bbPathPtr;
+		// BBPaths processing
+		bbPathVector.clear();
+		for(int j=0 ; j < bbPathToProcess.length() ; j++){
+			BBPath *bbPathPtr = bbPathToProcess[j];
+			BBPath &bbPath = *bbPathPtr;
+			int l = bbPath.length();
 
-			int delta = Delta::delta(bbp, fw);
-			if(bbp.tail()->countInstructions() < FLUSH_TIME(bbp)){
-				bbPathList.add(bbPathPtr);
+			int delta = Delta::delta(bbPath, fw);
+			if(true/*bbPath.tail()->countInstructions() < FLUSH_TIME(bbPath)*/){
+				bbPathVector.add(bbPathPtr);
 			}
-			if(delta){
-				// stats
-				sum_length += bbp.length();
-				count++;
-				if(bbp.length() > max_length)
-					max_length = bbp.length();
-				
-				ilp::Var *var = bbp.getVar(system, explicitNames); 
-				Constraint *cons;
-	
-				// constraint S[A,B,C] <= S[A,B]
-				cons = system->newConstraint(Constraint::LE);
-				cons->addLeft(1,var);
-				cons->addRight(1, bbp(1,bbp.l()-1)->getVar(system));
-	
-				// constraint S[A,B,C] <= S[B,C]
-				cons = system->newConstraint(Constraint::LE);
-				cons->addLeft(1,var);
-				cons->addRight(1, bbp(2,bbp.l())->getVar(system));
-	
-				system->addObjectFunction(delta, var);
-	
-				//nbConstraintsCreated += 2;
-				//nbObjectFunctionCreated++;
-			}
-			ilp::Var *var = bbp.getVar(system, explicitNames); 
+			
+			// stats
+			sum_length += l;
+			count++;
+			if(l > max_length)
+				max_length = l;
+			
+			ilp::Var *var = bbPath.getVar(system, explicitNames); 
 			Constraint *cons;
 
 			// constraint S[A,B,C] <= S[A,B]
 			cons = system->newConstraint(Constraint::LE);
-			cons->addLeft(1,var);
-			cons->addRight(1, bbp(1,bbp.l()-1)->getVar(system));
+			cons->addLeft(1, var);
+			cons->addRight(1, bbPath(1, l-1)->getVar(system, explicitNames));
 
 			// constraint S[A,B,C] <= S[B,C]
 			cons = system->newConstraint(Constraint::LE);
+			cons->addLeft(1, var);
+			cons->addRight(1, bbPath(2, l)->getVar(system, explicitNames));
+			
+			// constraint S[A,B,C] >= S[A,B] - Sum(S[B,x], x != C)
+			BasicBlock *bb_B;
+			cons = system->newConstraint(Constraint::GE);
 			cons->addLeft(1,var);
-			cons->addRight(1, bbp(2,bbp.l())->getVar(system));
+			cons->addRight(1, bbPath(1, l-1)->getVar(system, explicitNames));
+			bb_B = bbPath(l-1, l-1)->head();
+			Vector<BBPath*> &nexts = * BBPath::getBBPath(bb_B)->nexts();
+			for(int i = 0; i < nexts.length(); i++){
+				if(nexts[i]->tail() != bbPath.tail()){
+					BBPath& otherbbp = *nexts[i];
+					ilp::Var *otherbbp_var = otherbbp.getVar(system, explicitNames);
+					cons->addRight(-1, otherbbp_var);
+				}
+			}
 
 			system->addObjectFunction(delta, var);
-
-			//nbConstraintsCreated += 2;
-			//nbObjectFunctionCreated++;
 		}
+		
+		// stats
 		if(count == 0)
 			mean_length = 0;
 		else
 			mean_length = (double)sum_length / (double)count;
 	}
-
-	// dumping system on standard output
-	// system->dump();
-
-	/*cout << BBSequence::instructionsSimulated << " instructions simulated\n";
-	cout << BBSequence::nbDeltasCalculated << " deltas calculated\n";
-	cout << nbObjectFunctionCreated << " object function created\n";
-	cout << nbConstraintsCreated << " constraints created\n";*/
-
 	return;
 }
 
@@ -171,23 +161,25 @@ int Delta::delta(BBPath &bbp, FrameWork *fw){
 	elm::Option<int> delta = bbp.get<int>(DELTA);
 	if(!delta){
 		//nbDeltasCalculated++;
-		int f, o, t;
-		sim::State *state = 0;//bbp.getEndingState(fw); !!TODO!!
+		int t = bbp.time(fw);
+		int l = bbp.length();
+		/*int f, o;
+		sim::State *state = bbp.getEndingState(fw);
 		f = state->cycle();
 		state->flush();
 		t = state->cycle();
 		o = t - f;
-		FLUSH_TIME(bbp) = o;
+		FLUSH_TIME(bbp) = o;*/
 		if(bbp.length() == 2){
 			delta =
-				t - bbp(1,bbp.l()-1)->t(fw)
-			      - bbp(2,bbp.l())->t(fw);
+				t - bbp(1,l-1)->t(fw)
+			      - bbp(2,l)->t(fw);
 		}
 		else{
 			delta =
-				t - bbp(1,bbp.l()-1)->t(fw)
-			      - bbp(2,bbp.l())->t(fw)
-			      + bbp(2,bbp.l()-1)->t(fw);
+				t - bbp(1,l-1)->t(fw)
+			      - bbp(2,l)->t(fw)
+			      + bbp(2,l-1)->t(fw);
 		}
 	}
 	DELTA(bbp) = *delta;
@@ -204,7 +196,7 @@ GenericIdentifier<int>  Delta::LEVELS("delta.levels");
 /**
  * This identifier is used for storing the delta value of a path
  */
-GenericIdentifier<int> Delta::DELTA("delta.delta");
+GenericIdentifier<int> Delta::DELTA("ipet.delta");
 /**
  * This identifier is used for storing the time for the first
  * instruction to fetch after all instructions from the

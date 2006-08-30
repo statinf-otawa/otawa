@@ -111,6 +111,7 @@ libotawa_la_SOURCES = \
 	sim_TrivialSimulator.cpp \
 	sim_Driver.cpp \
 	sim_BasicBlockDriver.cpp \
+	sim_BBPathDriver.cpp \
 	Microprocessor.cpp \
 	ExecutionGraph.cpp \
 	ExeGraphBBTime.cpp
