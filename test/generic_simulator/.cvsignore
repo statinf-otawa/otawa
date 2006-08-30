@@ -3,3 +3,4 @@ Makefile
 simulator
 .deps
 .libs
+log.txt
