@@ -25,7 +25,6 @@ protected:
 	BBPath(elm::genstruct::Vector<BasicBlock*> *path);
 	virtual ~BBPath();
 
-	PathManager *_manager;
 	int _length;
 	elm::genstruct::Vector<BasicBlock*> basicBlocks;
 	sim::State *ending_state;
@@ -33,6 +32,9 @@ protected:
 	
 	virtual elm::IteratorInst<BasicBlock*> *visit(void);
 	virtual elm::MutableCollection<BasicBlock *> *empty(void);
+	
+	int simulate(FrameWork *fw);
+	sim::State *getEndingState(FrameWork *fw);
 
 public:
 	static BBPath* getBBPath(BasicBlock *start);
@@ -42,14 +44,12 @@ public:
 	int time(FrameWork *fw);
 	int countInstructions();
 	inline int t(FrameWork *fw);
-	int simulate(FrameWork *fw);
 	inline int length();
 	inline int l();
 	inline BasicBlock* head();
 	inline BasicBlock* tail();
 	elm::String makeVarName();
 	ilp::Var *getVar(ilp::System *system, bool explicit_names = false);
-	sim::State *getEndingState(FrameWork *fw);
 	BBPath* sub(int begin, int end);
 	inline BBPath* operator() (int begin, int end);
 	inline Collection<BasicBlock*>& bbs();
