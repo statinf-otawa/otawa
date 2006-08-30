@@ -13,12 +13,12 @@ SUBDIRS += \
 	ipet \
 	ccg \
 	categorisation \
-	delta \
 	exegraph
 endif
 
 if WITH_SYSTEMC
 SUBDIRS += \
+	delta \
 	systemc \
 	generic_simulator
 endif
