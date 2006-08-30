@@ -54,7 +54,7 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 	// Process basic blocks
 	bool found = false;
 	for(CFG::BBIterator bb(cfg); bb; bb++)
-		if(bb->address() == addr && Dominance::isLoopHeader(bb)) {
+		if(bb->address() == addr /*&& Dominance::isLoopHeader(bb)*/) {
 			found = true;
 			
 			// Build the constraint
