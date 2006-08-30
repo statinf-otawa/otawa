@@ -19,17 +19,22 @@
 #include <otawa/cache/ccg/CCGObjectFunction.h>
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
+#include "BBTimeSimulator.h"
+#include "DeltaCFGDrawer.h"
+
 
 using namespace elm;
 using namespace otawa;
 using namespace otawa::ipet;
 using namespace otawa::hard;
 
+
 // Option string
 CString ccg_option = "-ccg";
 CString cat_option = "-cat";
 CString dump_option = "-dump";
 CString infos_option = "-infos";
+CString print_option = "-print";
 
 /**
  * Display help message and exit the program.
@@ -37,10 +42,12 @@ CString infos_option = "-infos";
 void help(void) {
 	cerr << "ERROR: bad arguments.\n";
 	cerr << "SYNTAX: test_delta [-ccg|-cat] [-dump] program\n";
-	cerr << "    -dump dumps to the standard output the ILP system\n";
-	cerr << "    -D#   forces the depth of the delta algorithm\n";
-	cerr << "    -ccg  uses ccg method\n";
-	cerr << "    -cat  uses categorisation methos\n";
+	cerr << "    -dump  dumps to the standard output the ILP system\n";
+	cerr << "    -infos prints some informations\n";
+	cerr << "    -print prints the CFG to cfg.ps\n";
+	cerr << "    -D#    forces the depth of the delta algorithm\n";
+	cerr << "    -ccg   uses ccg method\n";
+	cerr << "    -cat   uses categorisation methos\n";
 	cerr << "  If neither -ccg nor -cat is specified, the program does NOT perform\n";
 	cerr << "  the Instruction Cache Processor\n";
 	exit(1);
@@ -51,7 +58,6 @@ void help(void) {
  * @return Error code.
  */
 int main(int argc, char **argv) {
-	
 	// Options
 	CString file;
 	enum {
@@ -63,6 +69,7 @@ int main(int argc, char **argv) {
 	elm::Option<int> deltaLevels;
 	bool dump = false;
 	bool infos = false;
+	bool print = false;
 
 	// Cache configuration	
 	Cache::info_t inst_cache_info = {
@@ -101,6 +108,8 @@ int main(int argc, char **argv) {
 			dump = true;
 		else if(infos_option == argv[i])
 			infos = true;
+		else if(print_option == argv[i])
+			print = true;
 		else if(argv[i][0] == '-' && argv[i][1] == 'D'){
 			int d;
 			sscanf(&argv[i][2],"%d",&d);
@@ -149,8 +158,8 @@ int main(int argc, char **argv) {
 		props.set(EXPLICIT, true);
 		
 		// Compute BB times
-		TrivialBBTime tbt(5, props);
-		tbt.processCFG(fw, &vcfg);
+		BBTimeSimulator bbts(props);
+		bbts.processCFG(fw, &vcfg);
 		
 		// Trivial data cache
 		TrivialDataCacheManager dcache(props);
@@ -236,6 +245,15 @@ int main(int argc, char **argv) {
 		
 		// Get the result
 		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
+		
+		if(print){
+			PropList display_props;
+			display::GRAPHVIZ_FILE(display_props) = "cfg.ps";
+			display::EXCLUDE(display_props) += &VirtualCFG::ID_CalledCFG;
+			display::DeltaCFGDrawer drawer(&vcfg, display_props);
+			drawer.display();
+		}
+		
 		if(dump)
 			sys->dump();
 		cout << file << '\t'
@@ -247,11 +265,11 @@ int main(int argc, char **argv) {
 			 << size << '\n';
 	}
 	catch(LoadException e) {
-		cerr << "ERROR: " << e.message() << '\n';
+		elm::cerr << "ERROR: " << e.message() << '\n';
 		exit(1);
 	}
 	catch(ProcessorException e) {
-		cerr << "ERROR: " << e.message() << '\n';
+		elm::cerr << "ERROR: " << e.message() << '\n';
 		exit(1);
 	}
 	return 0;
