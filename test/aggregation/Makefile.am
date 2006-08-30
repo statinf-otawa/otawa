@@ -2,7 +2,6 @@ noinst_PROGRAMS=test_aggregation
 
 test_aggregation_SOURCES=\
 		../delta/BBPath.cpp \
-		../delta/sim_BBPathDriver.cpp \
 		BBTimeSilumator.h \
 		BBTimeSimulator.cpp \
 		LoopHeader.h \
