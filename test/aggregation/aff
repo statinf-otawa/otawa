@@ -1,0 +1,3 @@
+./test_aggregation -dot $* | head --lines=-1 | dot -Tps -o graph.ps
+gv graph.ps
+rm -f graph.ps
