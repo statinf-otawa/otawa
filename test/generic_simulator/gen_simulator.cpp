@@ -26,12 +26,6 @@ using namespace std;
 using namespace sc_core;
 using namespace sc_dt;
 
-// void sc_main
-int sc_main(int argc, char *argv[]) {
-	return 0;
-}
-
-
 
 int main(int argc, char **argv) {
 	
@@ -85,10 +79,7 @@ int main(int argc, char **argv) {
 		props.set(EXPLICIT, true);
 		
 		GenericSimulator simulator;
-		GenericState *simulator_state = (GenericState *) simulator.instantiate(fw,props);
-		simulator_state->init();
-		sc_core::sc_elab_and_sim(argc, argv);
-		
+		sim::State *simulator_state = simulator.instantiate(fw,props);
 		
 		// Compute BB times
 		//elm::cout << "Timing the BB\n";

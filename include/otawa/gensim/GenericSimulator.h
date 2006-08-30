@@ -21,10 +21,9 @@ extern GenericIdentifier<int> INSTRUCTION_TIME;
 
 
 class GenericState: public sim::State {
+	friend class GenericSimulator;
 	FrameWork *fw;
-	int time;
 	int _cycle;
-	Inst* next;
 	GenericProcessor* processor;	
 	bool running;
 	void step(void);
@@ -33,13 +32,12 @@ class GenericState: public sim::State {
 public:
 	sim::Driver *driver;
 
-	GenericState(FrameWork *framework, int _time):
-	fw(framework), time(_time), _cycle(0), driver(NULL) {
-		next = fw->start();
+	GenericState(FrameWork *framework):
+	fw(framework), _cycle(0), driver(NULL) {
 	}
 	
 	GenericState(const GenericState& state):
-	fw(state.fw), time(state.time), _cycle(state._cycle), next(state.next), driver(NULL) {
+	fw(state.fw), _cycle(state._cycle), driver(NULL) {
 	}
 	
 	void init();
@@ -71,6 +69,23 @@ public:
 		_cycle = 0;
 	}
 	
+	/*
+	// operators new and delete overload
+	static void * operator new(unsigned int size){
+		static initialized = false;
+		static used = false;
+		static GenericState* generic_state;
+		if(!initialized){
+			generic_state = malloc(size);
+			generic_state->init();
+			initialized = true;
+		}
+		assert(used);
+		used = true;
+		return malloc(size);
+	}*/
+	static void operator delete(void * ptr){
+	}
 };
 
 // GenericSimulator class

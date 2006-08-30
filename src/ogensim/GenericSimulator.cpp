@@ -11,6 +11,16 @@
 #include <otawa/otawa.h>
 #include <otawa/gensim/debug.h>
 
+int sc_main(int argc, char *argv[]) {
+	int err = dup(2);
+	close(2);
+	sc_core::sc_elab_and_sim(argc, argv);
+	dup2(err,2);
+	close(err);
+	return 0;
+}
+
+
 namespace otawa { namespace sim {
 
 
@@ -40,7 +50,15 @@ GenericSimulator::GenericSimulator(void)
 /**
  */	
 GenericState *GenericSimulator::instantiate(FrameWork *fw, const PropList& props) {
-	return new GenericState(fw, 5);
+	static GenericState* state;
+	static bool initialized = false;
+	if(!initialized){
+		state = new GenericState(fw);
+		state->init();
+		initialized = true;
+	}
+	assert(fw == state->fw); 
+	return state;
 }
 
 void GenericState::init() {
