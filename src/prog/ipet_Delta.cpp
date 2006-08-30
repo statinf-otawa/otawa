@@ -172,7 +172,7 @@ int Delta::delta(BBPath &bbp, FrameWork *fw){
 	if(!delta){
 		//nbDeltasCalculated++;
 		int f, o, t;
-		sim::State *state = bbp.getEndingState(fw);
+		sim::State *state = 0;//bbp.getEndingState(fw); !!TODO!!
 		f = state->cycle();
 		state->flush();
 		t = state->cycle();
