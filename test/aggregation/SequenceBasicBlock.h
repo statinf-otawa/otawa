@@ -1,5 +1,11 @@
-#ifndef OTAWA_IPET_SEQUENCEBASICBLOCK_H
-#define OTAWA_IPET_SEQUENCEBASICBLOCK_H
+/*
+ *	$Id$
+ *	Copyright (c) 2006, IRIT UPS.
+ *
+ *	SequenceBasicBlock.h -- SequenceBasicBlock class interface.
+ */
+#ifndef IPET_SEQUENCEBASICBLOCK_H
+#define IPET_SEQUENCEBASICBLOCK_H
 
 #include <otawa/cfg.h>
 #include <otawa/ipet/BBPath.h>
@@ -14,11 +20,8 @@ protected:
 public:
 	SequenceBasicBlock(elm::genstruct::Vector<BasicBlock*> *src);
 	SequenceBasicBlock(elm::Collection<BasicBlock*> *src);
-	//address_t address() {return path[0]->address();}
 	virtual int countInstructions(void) const;
 	virtual inline IteratorInst<Inst*> *visit();
-	//size_t size();
-	//size_t getBlockSize();
 	BBPath* getBBPath(void);
 	
 	// Instruction Iterator
@@ -26,7 +29,6 @@ public:
 		IteratorInst<Inst*> *cur_iterator;
 		elm::genstruct::Vector<BasicBlock*> &path;
 		int next_bb;
-		//Inst *inst;
 	public:
 		inline InstIterator(SequenceBasicBlock *sbb);
 		inline ~InstIterator();
@@ -48,7 +50,6 @@ inline SequenceBasicBlock::InstIterator::InstIterator(SequenceBasicBlock *sbb)
 }
 
 inline SequenceBasicBlock::InstIterator::~InstIterator(){
-	//delete cur_iterator;
 }
 
 inline bool SequenceBasicBlock::InstIterator::ended(void) const {
@@ -60,16 +61,14 @@ inline Inst *SequenceBasicBlock::InstIterator::item(void) const {
 }
 
 inline void SequenceBasicBlock::InstIterator::next(void) {
-//	if(!cur_iterator->ended()){
 	cur_iterator->next();
 	if(cur_iterator->ended() && next_bb < path.length()){
 		delete cur_iterator;
 		cur_iterator = path[next_bb++]->visit();
 	}
-//	}
 }
 
 
 } } // otawa::ipet
 
-#endif /*OTAWA_IPET_SEQUENCEBASICBLOCK_H*/
+#endif /*IPET_SEQUENCEBASICBLOCK_H*/
