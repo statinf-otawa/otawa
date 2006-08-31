@@ -249,7 +249,14 @@ int main(int argc, char **argv) {
 		if(print){
 			PropList display_props;
 			display::GRAPHVIZ_FILE(display_props) = "cfg.ps";
+			
+			display::INCLUDE(display_props) += &TIME;
+			display::INCLUDE(display_props) += &Delta::DELTA;
+			
 			display::EXCLUDE(display_props) += &VirtualCFG::ID_CalledCFG;
+			
+			display::DEFAULT(display_props) = &display::EXCLUDE;
+			
 			display::DeltaCFGDrawer drawer(&vcfg, display_props);
 			drawer.display();
 		}
