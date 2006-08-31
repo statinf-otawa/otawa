@@ -1,5 +1,4 @@
-
-#include "AggregationGraph.h"
+#include "EnhacedAggregationGraph.h"
 #include "BBTimeSimulator.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -161,16 +160,16 @@ int main(int argc, char **argv){
 		//PropList props;
 		props.set(EXPLICIT, true);
 		if(max_length)
-			AggregationGraph::ID_Max_Length(props) = *max_length;
+			Agg_Max_Length(props) = *max_length;
 		if(max_insts)
-			AggregationGraph::ID_Max_Insts(props) = *max_insts;
+			Agg_Max_Insts(props) = *max_insts;
 		if(max_joins)
-			AggregationGraph::ID_Max_Joins(props) = *max_joins;
+			Agg_Max_Joins(props) = *max_joins;
 		if(max_splits)
-			AggregationGraph::ID_Max_Splits(props) = *max_splits;
+			Agg_Max_Splits(props) = *max_splits;
 		
 		// Now, create an aggregation graph
-		AggregationGraph aggregationGraph(&vcfg, props);
+		EnhacedAggregationGraph aggregationGraph(&vcfg, props);
 		
 		// print dot informations if -dot option were passed
 		if(dot)
