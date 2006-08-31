@@ -23,18 +23,18 @@ class BBPath: public ProgObject, private Collection<BasicBlock*> {
 protected:
 	BBPath(BasicBlock *start);
 	BBPath(elm::genstruct::Vector<BasicBlock*> *path);
-	virtual ~BBPath();
+	//virtual ~BBPath();
 
 	int _length;
 	elm::genstruct::Vector<BasicBlock*> basicBlocks;
-	sim::State *ending_state;
+	//sim::State *ending_state;
 	FrameWork *last_framework_used; // Last framework used for simulation
 	
 	virtual elm::IteratorInst<BasicBlock*> *visit(void);
 	virtual elm::MutableCollection<BasicBlock *> *empty(void);
 	
 	int simulate(FrameWork *fw);
-	sim::State *getEndingState(FrameWork *fw);
+	//sim::State *getEndingState(FrameWork *fw);
 
 public:
 	static BBPath* getBBPath(BasicBlock *start);

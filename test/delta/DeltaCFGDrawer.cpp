@@ -1,3 +1,9 @@
+/*
+ *	$Id$
+ *	Copyright (c) 2006, IRIT UPS.
+ *
+ *	DeltaCFGDrawer.cpp -- DeltaCFGDrawer class implementation.
+ */
 #include "DeltaCFGDrawer.h"
 #include <otawa/ipet/Delta.h>
 #include <elm/genstruct/Vector.h>
@@ -9,7 +15,6 @@ namespace otawa { namespace display {
 
 DeltaCFGDrawer::DeltaCFGDrawer(CFG *cfg, PropList& props)
 : CFGDrawer(cfg, props){
-	//make(cfg);
 }
 
 

@@ -3,6 +3,7 @@ includeotawaipet_HEADERS = \
 	BasicConstraintsBuilder.h \
 	BasicObjectFunctionBuilder.h \
 	BBPath.h \
+	BBTimeSimulator.h \
 	Delta.h \
 	FlowFactLoader.h \
 	IPET.h \

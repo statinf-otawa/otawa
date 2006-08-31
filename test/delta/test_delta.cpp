@@ -19,7 +19,7 @@
 #include <otawa/cache/ccg/CCGObjectFunction.h>
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
-#include "BBTimeSimulator.h"
+#include <otawa/ipet/BBTimeSimulator.h>
 #include "DeltaCFGDrawer.h"
 
 

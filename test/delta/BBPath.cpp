@@ -5,7 +5,6 @@
  *  src/prog/ipet_BBPath.h -- BBPath class implementation.
  */
 
-#include <systemc.h>
 #include <otawa/ipet/BBPath.h>
 #include <otawa/ipet.h>
 #include <otawa/gensim/GenericSimulator.h>
@@ -16,8 +15,6 @@
 using namespace elm::genstruct;
 using namespace otawa::ilp;
 using namespace otawa::sim;
-using namespace sc_core;
-using namespace sc_dt;
 
 
 namespace otawa { namespace ipet {
@@ -45,7 +42,7 @@ GenericIdentifier<TreePath<BasicBlock*,BBPath*>*> BBPath::TREE("bbpath.tree",0);
  * @param start starting basic block
  */
 BBPath::BBPath(BasicBlock *start)
-: basicBlocks(1), _length(1), ending_state(0){
+: basicBlocks(1), _length(1)/*, ending_state(0)*/{
 	assert(start);
 	basicBlocks.add(start);
 }
@@ -57,7 +54,7 @@ BBPath::BBPath(BasicBlock *start)
  * @param path vector of the basic blocks
  */
 BBPath::BBPath(Vector<BasicBlock*> *path)
-: _length(path->length()), basicBlocks(_length), ending_state(0){
+: _length(path->length()), basicBlocks(_length)/*, ending_state(0)*/{
 	assert(path);
 	int l = path->length();
 	for(int i = 0 ; i < l ; i++){
@@ -66,14 +63,14 @@ BBPath::BBPath(Vector<BasicBlock*> *path)
 }
 
 
-/**
+/*
  * Destroys the BBPath
- */
+ *
 BBPath::~BBPath(){
 	if(!ending_state){
 		delete ending_state;
 	}
-}
+}*/
 
 
 /**
@@ -212,41 +209,41 @@ int BBPath::simulate(FrameWork *fw){
 int BBPath::instructions_simulated = 0;
 
 
-/**
+/*
  * This method returns the simulator state at the end of the last instruction of this sequence.
  * If the simulator supports state cloning, it returns a copy of the state.
  * Otherwise, the sequence is simulated another time.
  * This state must be deleted after using it.
  * @return simulator state at the end of the sequence
- */
+ *
 State* BBPath::getEndingState(FrameWork *fw){
 	assert(false);
 	return 0;
-	/*bool simulator_state_is_clonable = true;
-	if(!ending_state || fw != last_framework_used){
-		last_framework_used = fw;
-		if(_length > 1){
-			ending_state = sub(1,l()-1)->getEndingState(fw);
-		}
-		else {
-			GenericSimulator simulator;
-			ending_state = simulator.instantiate(fw);
-		}
-		BasicBlock &bb = *basicBlocks.top();
-		// !!TODO!!
-		for(Iterator<Inst*> inst(bb.visit()); inst; inst++){
-			//ending_state->setPC(inst);
-			//ending_state->step();
-			instructions_simulated ++;
-		}
-	}
-	if(simulator_state_is_clonable){
-		return ending_state->clone();
-	}
-	State *tmp = ending_state;
-	ending_state = 0;
-	return tmp;*/
-}
+//	bool simulator_state_is_clonable = true;
+//	if(!ending_state || fw != last_framework_used){
+//		last_framework_used = fw;
+//		if(_length > 1){
+//			ending_state = sub(1,l()-1)->getEndingState(fw);
+//		}
+//		else {
+//			GenericSimulator simulator;
+//			ending_state = simulator.instantiate(fw);
+//		}
+//		BasicBlock &bb = *basicBlocks.top();
+//		// !!TODO!!
+//		for(Iterator<Inst*> inst(bb.visit()); inst; inst++){
+//			//ending_state->setPC(inst);
+//			//ending_state->step();
+//			instructions_simulated ++;
+//		}
+//	}
+//	if(simulator_state_is_clonable){
+//		return ending_state->clone();
+//	}
+//	State *tmp = ending_state;
+//	ending_state = 0;
+//	return tmp;
+}*/
 
 /**
  * Creates a human-readable name (or representation) for this sequence <br>
