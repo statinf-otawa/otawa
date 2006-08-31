@@ -68,24 +68,6 @@ public:
 	virtual void reset(void) {
 		_cycle = 0;
 	}
-	
-	/*
-	// operators new and delete overload
-	static void * operator new(unsigned int size){
-		static initialized = false;
-		static used = false;
-		static GenericState* generic_state;
-		if(!initialized){
-			generic_state = malloc(size);
-			generic_state->init();
-			initialized = true;
-		}
-		assert(used);
-		used = true;
-		return malloc(size);
-	}*/
-	static void operator delete(void * ptr){
-	}
 };
 
 // GenericSimulator class
