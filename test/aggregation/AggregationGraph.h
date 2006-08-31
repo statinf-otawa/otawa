@@ -1,3 +1,9 @@
+/*
+ *	$Id$
+ *	Copyright (c) 2006, IRIT UPS.
+ *
+ *	AggregationGraph.h -- AggregationGraph class interface.
+ */
 #ifndef OTAWA_IPET_AGGREGATIONGRAPH_H
 #define OTAWA_IPET_AGGREGATIONGRAPH_H
 
@@ -13,19 +19,16 @@ protected:
 	CFG *cfg;
 	elm::genstruct::Vector<BBPath*> elts;
 	elm::genstruct::Vector<elm::Pair<BBPath*, BBPath*>*> edges;
-	elm::Option<int> max_length;
-	elm::Option<int> max_insts;
-	elm::Option<int> max_joins;
-	elm::Option<int> max_splits;
 	int length_of_longer_path;
 	double mean_length;
+	bool _made;
 	
 	void link(BBPath *src, BBPath *dst);
-	virtual void configure(PropList &props);
+	void configure(PropList &props);
 	virtual void makeGraph();
 	virtual void scan();
-	virtual bool boundary(BBPath *cur_bbpath, BBPath *next_bbpath);
-	virtual bool header(BBPath *cur_bbpath, BBPath *next_bbpath);
+	virtual bool isBoundary(BBPath *cur_bbpath, BBPath *next_bbpath);
+	virtual bool isHeader(BBPath *cur_bbpath, BBPath *next_bbpath);
 	static String pathName(BBPath *path);
 	static String bbName(BasicBlock *bb);
 
@@ -34,13 +37,6 @@ public:
 	virtual void toDot(elm::io::Output &out);
 	virtual void printStats(elm::io::Output &out);
 	virtual void printEquivalents(elm::io::Output &out);
-	
-	static GenericIdentifier<int> ID_Max_Length;
-	static GenericIdentifier<int> ID_Max_Insts;
-	static GenericIdentifier<int> ID_Max_Joins;
-	static GenericIdentifier<int> ID_Cur_Joins;
-	static GenericIdentifier<int> ID_Max_Splits;
-	static GenericIdentifier<int> ID_Cur_Splits;
 };
 
 } } // otawa::ipet

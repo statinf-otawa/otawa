@@ -1,3 +1,9 @@
+/*
+ *	$Id$
+ *	Copyright (c) 2006, IRIT UPS.
+ *
+ *	BBTimeSimulator.h -- BBTimeSimulator class interface.
+ */
 #ifndef IPET_BBTIMESIMULATOR_H
 #define IPET_BBTIMESIMULATOR_H
 
