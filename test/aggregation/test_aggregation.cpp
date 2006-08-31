@@ -31,7 +31,7 @@ CString infos_option = "-infos";
 void help(void) {
 	cerr << "ERROR: bad arguments.\n";
 	cerr << "SYNTAX: test_aggregation program [options]\n";
-	cerr << "options are:";
+	cerr << "options are:\n";
 	cerr << "  -L#    splits the paths with length > #\n";
 	cerr << "  -I#    splits the paths with a total number of instructions > #\n";
 	cerr << "  -S#    splits the paths when # path splits have been encountered\n";
