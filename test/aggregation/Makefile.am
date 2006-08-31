@@ -4,10 +4,12 @@ test_aggregation_SOURCES=\
 	../delta/BBPath.cpp \
 	BBTimeSilumator.h \
 	BBTimeSimulator.cpp \
-	LoopHeader.h \
-	LoopHeader.cpp \
+	Header.h \
+	Header.cpp \
 	AggregationGraph.h \
 	AggregationGraph.cpp \
+	EnhacedAggregationGraph.h \
+	EnhacedAggregationGraph.cpp \
 	SequenceBasicBlock.h \
 	SequenceBasicBlock.cpp \
 	test_aggregation.cpp
