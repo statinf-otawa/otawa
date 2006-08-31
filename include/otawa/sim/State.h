@@ -19,8 +19,9 @@ namespace sim {
 
 // State class
 class State {
-public:
+protected:
 	virtual ~State(void);
+public:
 	virtual State *clone(void) = 0;
 	virtual void run(Driver& driver) = 0;
 	virtual void stop(void) = 0;
