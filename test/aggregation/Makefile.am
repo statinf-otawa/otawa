@@ -1,16 +1,16 @@
 noinst_PROGRAMS=test_aggregation
 
 test_aggregation_SOURCES=\
-		../delta/BBPath.cpp \
-		BBTimeSilumator.h \
-		BBTimeSimulator.cpp \
-		LoopHeader.h \
-		LoopHeader.cpp \
-		AggregationGraph.h \
-		AggregationGraph.cpp \
-		SequenceBasicBlock.h \
-		SequenceBasicBlock.cpp \
-        test_aggregation.cpp
+	../delta/BBPath.cpp \
+	BBTimeSilumator.h \
+	BBTimeSimulator.cpp \
+	LoopHeader.h \
+	LoopHeader.cpp \
+	AggregationGraph.h \
+	AggregationGraph.cpp \
+	SequenceBasicBlock.h \
+	SequenceBasicBlock.cpp \
+	test_aggregation.cpp
         
 
 test_aggregation_LDADD = @LOADER_PLUGIN@  @ILP_PLUGIN@ @OGENSIM_LIBS@ @PROG_LIBS@
