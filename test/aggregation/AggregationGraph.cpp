@@ -1,5 +1,11 @@
+/*
+ *	$Id$
+ *	Copyright (c) 2006, IRIT UPS.
+ *
+ *	AggregationGraph.cpp -- AggregationGraph class implementation.
+ */
 #include "AggregationGraph.h"
-#include "LoopHeader.h"
+#include "Header.h"
 #include "SequenceBasicBlock.h"
 #include <assert.h>
 #include <otawa/util/Dominance.h>
@@ -32,26 +38,27 @@ namespace otawa { namespace ipet {
  * See the GenericIdentifiers for the properties
  */
 AggregationGraph::AggregationGraph(CFG *_cfg, PropList &props)
-: cfg(_cfg){
+: cfg(_cfg), _made(false){
 	assert(cfg);
 	assert(cfg->isInlined());
-
-	flags |= FLAG_Inlined;
-	
 	configure(props);
-	Dominance::ensure(cfg);
-	//IPET::ID_Explicit(this) = true;
-	
-	makeGraph();
 }
 
 
 /**
- * Main algorithm to initialize the AggregationGraph
+ * Main algorithm. Initialize the AggregationGraph, if it hasn't been
+ * initialized yet.
  */
 void AggregationGraph::makeGraph(){
+	if(_made){
+		return;
+	}
+	
+	// ensure that cfg has loop headers marked
+	Dominance::ensure(cfg);
+	
 	Vector<Pair<BBPath*, BBPath*>*> sequences;
-	HashTable<void*, LoopHeader*> headers; // <BasicBlock*, LoopHeader*>
+	HashTable<void*, Header*> headers; // <BasicBlock*, Header*>
 	BasicBlock *nextBB;
 	BBPath *entry_path;
 	BBPath *exit_path;
@@ -60,7 +67,7 @@ void AggregationGraph::makeGraph(){
 	BBPath *cur_path;
 	BBPath *next_path;
 	BBPath *father;
-	LoopHeader *hdr;
+	Header *hdr;
 	Pair<BBPath*, BBPath*> *pair;
 	
 	// Initialize graph with Entry and Exit
@@ -73,7 +80,7 @@ void AggregationGraph::makeGraph(){
 		nextBB = edge->target();
 
 	// Create the header just after the Entry
-	hdr = new LoopHeader(nextBB);
+	hdr = new Header(nextBB);
 	headers.put(nextBB, hdr);
 	hdr_path = BBPath::getBBPath(hdr);
 	
@@ -99,18 +106,13 @@ void AggregationGraph::makeGraph(){
 		
 		Vector<BBPath*> *next_paths = cur_path->nexts();
 		int l = next_paths->length();
+		
 		// iterate for each out edge
 		for(int i = 0; i < l; i++){
 			next_path = next_paths->get(i);
 			nextBB = next_path->tail();
 			
-			// Inherit the annotation ID_Cur_Joins and ID_Cur_Splits from the cur_path
-			int cur_joins = ID_Cur_Joins(cur_path);
-			ID_Cur_Joins(next_path) = cur_joins;
-			int cur_splits = ID_Cur_Splits(cur_path);
-			ID_Cur_Splits(next_path) = cur_splits;
-			
-			if(header(cur_path, next_path)){
+			if(isHeader(cur_path, next_path)){
 				// N' = N' U cur_path
 				if(!elts.contains(cur_path))
 					elts.add(cur_path);
@@ -120,7 +122,7 @@ void AggregationGraph::makeGraph(){
 				
 				hdr = headers.get(nextBB, 0);
 				if(!hdr){
-					hdr = new LoopHeader(nextBB);
+					hdr = new Header(nextBB);
 					headers.put(nextBB, hdr);
 					hdr_path = BBPath::getBBPath(hdr);
 					
@@ -135,8 +137,8 @@ void AggregationGraph::makeGraph(){
 				// E' = E' U (cur_path, hdr)
 				hdr_path = BBPath::getBBPath(hdr);
 				link(cur_path, hdr_path);
-			}
-			else if(boundary(cur_path, next_path)){
+			} // end if isHeader
+			else if(isBoundary(cur_path, next_path)){
 				// N' = N' U cur_path
 				if(!elts.contains(cur_path)){
 					elts.add(cur_path);
@@ -153,67 +155,33 @@ void AggregationGraph::makeGraph(){
 					pair = new Pair<BBPath*, BBPath*>(cur_path, nextBB_path);
 					sequences.add(pair);
 				}
-			}
+			} // end if isBoundary
 			else {
 				pair = new Pair<BBPath*, BBPath*>(father, next_path);
 				sequences.add(pair);
-			} // end if
+			} // end else
 		} // end for
 	} // end while
 	elts.add(exit_path);
+	_made = true;
 }
 
 
 /**
- * configure the AggregationGraph. See the GenericIdentifiers for
- * more informations
+ * configure the AggregationGraph
  */
 void AggregationGraph::configure(PropList &props){
-	max_length = props.get<int>(ID_Max_Length);
-	max_insts = props.get<int>(ID_Max_Insts);
-	max_joins = props.get<int>(ID_Max_Joins);
-	max_splits = props.get<int>(ID_Max_Splits);
 }
 
 
 /**
  * This function analyses if the first path need to be cutted, or if the
  * the algorithm can use the second path.
- * A path need to be cutted if it has reached one of the limits given by
- * the properties of the AggregationGraph.
- * See the GenericIdentifiers for more informations
  * @return true if there is a boundary between the two given paths
  */
-bool AggregationGraph::boundary(BBPath *cur_bbpath, BBPath *next_bbpath) {
+bool AggregationGraph::isBoundary(BBPath *cur_bbpath, BBPath *next_bbpath) {
 	BasicBlock *next_bb = next_bbpath->tail();
 	bool bound = next_bb->isExit();
-	if(max_length){
-		bound = bound || next_bbpath->length() > *max_length;
-	}
-	if(max_insts){
-		bound = bound || next_bbpath->countInstructions() > *max_insts;
-	}
-	if(max_splits){
-		BasicBlock *cur_bb = cur_bbpath->tail();
-		int count_out = 0;
-		for(BasicBlock::OutIterator edge(cur_bb); edge; edge++)
-			count_out++;
-		int cur_splits = ID_Cur_Splits(next_bbpath);
-		if(count_out > 1)
-			cur_splits++;
-		ID_Cur_Splits(next_bbpath) = cur_splits;
-		bound = bound || (cur_splits >= *max_splits);
-	}
-	if(max_joins){
-		int count_in = 0;
-		for(BasicBlock::InIterator edge(next_bb); edge; edge++)
-			count_in++;
-		int cur_joins = ID_Cur_Joins(next_bbpath);
-		if(count_in > 1)
-			cur_joins++;
-		ID_Cur_Joins(next_bbpath) = cur_joins;
-		bound = bound || (cur_joins >= *max_joins);
-	}
 	return bound;
 }
 
@@ -221,15 +189,15 @@ bool AggregationGraph::boundary(BBPath *cur_bbpath, BBPath *next_bbpath) {
 /**
  * @return true if we need to put a header between the two given paths
  */
-bool AggregationGraph::header(BBPath *cur_bbpath, BBPath *next_bbpath){
+bool AggregationGraph::isHeader(BBPath *cur_bbpath, BBPath *next_bbpath){
 	BasicBlock *bb = next_bbpath->tail();
 	bool header = Dominance::isLoopHeader(bb);
-	// ? -> header = header || ID_Has_Header(bb);
+	// ?idea? -> header = header || ID_Has_Header(bb);
 	return header;
 }
 
 /**
- * Link the two paths: Put an edge between them
+ * Link the two paths: Put an edge between them and stores the edge
  */
 void AggregationGraph::link(BBPath *src, BBPath *dst){
 	int l = edges.length();
@@ -249,6 +217,8 @@ void AggregationGraph::link(BBPath *src, BBPath *dst){
  * Creates the list of basic blocks. Initialize the CFG
  */
 void AggregationGraph::scan(){
+	makeGraph();
+	
 	HashTable<void*, BasicBlock*> basic_blocks; // <BBPath*, SequenceBasicBlock*>
 	BBPath *entry_path;
 	BBPath *exit_path;
@@ -256,7 +226,7 @@ void AggregationGraph::scan(){
 	int nb_paths;
 	int sum_length;
 	
-	// Initialise statistics
+	// stats. Initialise statistics
 	length_of_longer_path = 0;
 	sum_length = 0;
 	nb_paths = 0;
@@ -273,7 +243,7 @@ void AggregationGraph::scan(){
 		
 		path = elts[i];
 		
-		// test longer path
+		// stats
 		int path_length = path->length(); 
 		if(path_length > length_of_longer_path)
 			length_of_longer_path = path_length;
@@ -287,8 +257,9 @@ void AggregationGraph::scan(){
 		else {
 			bb = new SequenceBasicBlock(&path->bbs());
 			
+			// stats
 			// If it is only a loop header, don't calc mean length
-			if(!dynamic_cast<LoopHeader*>(path->head())){
+			if(!dynamic_cast<Header*>(path->head())){
 				sum_length += path_length;
 				nb_paths++;
 			}
@@ -297,6 +268,7 @@ void AggregationGraph::scan(){
 		_bbs.add(bb);
 	}
 	
+	// stats
 	mean_length = (double)sum_length / nb_paths;
 	
 	// Add Edges
@@ -353,7 +325,7 @@ String AggregationGraph::pathName(BBPath *path){
 
 /**
  * Creates an explicit name for the fiven BasicBlock
- * that can be an Entry, Exit, LoopHeader, SequenceBasicBlock,
+ * that can be an Entry, Exit, Header, SequenceBasicBlock,
  * or a simple BasicBlock.
  */
 String AggregationGraph::bbName(BasicBlock *bb){
@@ -361,10 +333,10 @@ String AggregationGraph::bbName(BasicBlock *bb){
 		return "Entry";
 	if(bb->isExit())
 		return "Exit";
-	LoopHeader *hdr = dynamic_cast<LoopHeader*>(bb); 
+	Header *hdr = dynamic_cast<Header*>(bb); 
 	if(hdr){
 		StringBuffer buf;
-		//buf << "Loop_header_of_";
+		//buf << "Header_of_";
 		buf << '*';
 		buf << hdr->child()->number(); 
 		return buf.toString();
@@ -387,6 +359,7 @@ String AggregationGraph::bbName(BasicBlock *bb){
  * of the ILP system, and the path drawn in the Dot graph
  */
 void AggregationGraph::printEquivalents(elm::io::Output &out){
+	makeGraph();
 	for(int i = 0; i < _bbs.length(); i++){
 		out << 'x' << _bbs[i]->number() << " = " << bbName(_bbs[i]) << '\n';
 	}
@@ -399,6 +372,7 @@ void AggregationGraph::printEquivalents(elm::io::Output &out){
  * Dumps some stats to the given output
  */
 void AggregationGraph::printStats(elm::io::Output &out){
+	makeGraph();
 	out << elts.length()
 		<< " nodes and "
 		<< edges.length()
@@ -432,6 +406,7 @@ void AggregationGraph::printStats(elm::io::Output &out){
  * Dumps the dot data to the given output, in order to create a dot graph
  */
 void AggregationGraph::toDot(io::Output &out){
+	makeGraph();
 	out << "digraph " << cfg->label() << "{\n";
 	int l = edges.length();
 	for(int i = 0; i < l; i++){
@@ -444,35 +419,5 @@ void AggregationGraph::toDot(io::Output &out){
 	out << "}\n";
 	return; 
 }
-
-
-
-
-
-/**
- * Limit for the numbere of basic blocks
- */
-GenericIdentifier<int> AggregationGraph::ID_Max_Length("aggregationgraph.maxlength");
-/**
- * Limit for the maximum number of instructions by bloc
- */
-GenericIdentifier<int> AggregationGraph::ID_Max_Insts("aggregationgraph.maxinsts");
-/**
- * Maximum joins of paths. number of joins needed to cut. 0 cut at every basic block
- */
-GenericIdentifier<int> AggregationGraph::ID_Max_Joins("aggregationgraph.maxjoins");
-/**
- * Maximum path splitting
- */
-GenericIdentifier<int> AggregationGraph::ID_Max_Splits("aggregationgraph.maxsplits");
-/**
- * Current number of joins for the current path
- */
-GenericIdentifier<int> AggregationGraph::ID_Cur_Joins("aggregationgraph.curjoins",0);
-/**
- * Current number of splits for the current path
- */
-GenericIdentifier<int> AggregationGraph::ID_Cur_Splits("aggregationgraph.cursplits",0);
-
 
 } } // otawa::ipet
