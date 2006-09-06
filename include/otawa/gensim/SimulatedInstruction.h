@@ -7,7 +7,12 @@
 #include <emul.h>
 #include <otawa/gensim/debug.h>
 
-typedef enum {NONE, WAITING, READY, EXECUTED} simulated_instruction_state_t; // ordered set
+typedef enum {NONE, WAITING, READY, EXECUTING, EXECUTED, NOTIFIED} simulated_instruction_state_t; // ordered set
+
+typedef enum {COND_BRANCH, UNCOND_BRANCH, TRAP, CALL, RETURN, LOAD, STORE, IALU, FALU, MUL, DIV, OTHER} instruction_type_t;
+#define INST_TYPE_NUMBER 12
+	// FIXME : should be read from framework
+
 
 class SimulatedInstruction;
 
@@ -24,6 +29,8 @@ class SimulatedInstruction {
 		instruction_t * emulated_inst;
 		simulated_instruction_state_t instruction_state;
 		elm::genstruct::SLList<SimulatedInstruction *> source_instructions;
+		int time_to_finish_execution;
+		instruction_type_t _type;
 		
 		inline void addSourceInstruction(SimulatedInstruction * source_inst);
 		inline void removeSourceInstruction(SimulatedInstruction * source_inst);
@@ -39,15 +46,46 @@ class SimulatedInstruction {
 		inline elm::genstruct::SLList<SimulatedInstruction *> * sourceInstructions();
 		inline void renameOperands(elm::genstruct::AllocatedTable<rename_table_t> * rename_tables);
 		inline void notifyResult(elm::genstruct::AllocatedTable<rename_table_t> * rename_tables);
+		inline int timeToFinish();
+		inline void setTimeToFinish(int time);
+		inline int decrementTimeToFinish();
 		inline void dump(elm::io::Output& out_stream);
 		inline void dumpState(elm::io::Output& out_stream);
+		inline void dumpType(elm::io::Output& out_stream);
+		instruction_type_t type();
 		
 };
 
 inline SimulatedInstruction::SimulatedInstruction(otawa::Inst* inst, code_t code, instruction_t* emul_inst,
 												elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions) :
-	instruction(inst), binary_code(code), emulated_inst(emul_inst), instruction_state(READY), active_instructions(_active_instructions) {
-		active_instructions->addLast(this);
+		instruction(inst), binary_code(code), emulated_inst(emul_inst), instruction_state(READY), 
+		active_instructions(_active_instructions) {
+	active_instructions->addLast(this);
+	if (inst->kind() & otawa::Inst::IS_CONTROL) {
+		if (inst->kind() & otawa::Inst::IS_CALL)
+			_type = CALL;
+		else if (inst->kind() & otawa::Inst::IS_RETURN)
+			_type = RETURN;
+		else if (inst->kind() & otawa::Inst::IS_TRAP)
+			_type = TRAP;
+		else if (inst->kind() & otawa::Inst::IS_COND)
+			_type = COND_BRANCH;
+		else
+			_type = UNCOND_BRANCH;
+	}
+	else if (inst->kind() & otawa::Inst::IS_LOAD)
+		_type = LOAD;
+	else if (inst->kind() & otawa::Inst::IS_STORE)
+		_type = STORE;
+	else if (inst->kind() & otawa::Inst::IS_MUL)
+		_type = MUL;
+	else if (inst->kind() & otawa::Inst::IS_DIV)
+		_type = DIV;
+	else if (inst->kind() & otawa::Inst::IS_INT)
+		_type = IALU;
+	else if (inst->kind() & otawa::Inst::IS_FLOAT)
+		_type = FALU;
+	else _type = OTHER;
 }
 
 inline SimulatedInstruction::~SimulatedInstruction() {
@@ -69,6 +107,11 @@ inline void SimulatedInstruction::setState(simulated_instruction_state_t new_sta
 inline simulated_instruction_state_t SimulatedInstruction::state() {
 	return instruction_state;
 }
+
+inline instruction_type_t SimulatedInstruction::type() {
+	return _type;
+}
+
 
 inline void SimulatedInstruction::addSourceInstruction(SimulatedInstruction * source_inst) {
 	source_instructions.addLast(source_inst);
@@ -134,10 +177,27 @@ inline void SimulatedInstruction::notifyResult(elm::genstruct::AllocatedTable<re
 	
 }
 
+inline int SimulatedInstruction::timeToFinish() {
+	return time_to_finish_execution;
+}
+
+inline void SimulatedInstruction::setTimeToFinish(int time) {
+	time_to_finish_execution = time;
+}
+
+inline int SimulatedInstruction::decrementTimeToFinish() {
+	time_to_finish_execution--;
+	assert(time_to_finish_execution >= 0);
+	return time_to_finish_execution;
+}
+
+
 inline void SimulatedInstruction::dump(elm::io::Output& out_stream) {
 	out_stream << inst()->address() << ": " ;
 	inst()->dump(out_stream);
-	out_stream << " - ";
+	out_stream << " [";
+	dumpType(out_stream);
+	out_stream << "] - ";
 	dumpState(out_stream);
 	if (instruction_state == WAITING) {
 		out_stream << " - waits for ";
@@ -159,8 +219,55 @@ inline void SimulatedInstruction::dumpState(elm::io::Output& out_stream) {
 		case READY:
 			out_stream << "READY";
 			break;
+		case EXECUTING:
+			out_stream << "EXECUTING";
+			break;
 		case EXECUTED:
 			out_stream << "EXECUTED";
+			break;
+		case NOTIFIED:
+			out_stream << "NOTIFIED";
+			break;
+	}
+}
+
+inline void SimulatedInstruction::dumpType(elm::io::Output& out_stream) {
+	switch(_type) {
+		case COND_BRANCH:
+			out_stream << "COND_BRANCH";
+			break;
+		case UNCOND_BRANCH:
+			out_stream << "UNCOND_BRANCH";
+			break;
+		case TRAP:
+			out_stream << "TRAP";
+			break;
+		case CALL:
+			out_stream << "CALL";
+			break;
+		case RETURN:
+			out_stream << "RETURN";
+			break;
+		case LOAD:
+			out_stream << "LOAD";
+			break;
+		case STORE:
+			out_stream << "STORE";
+			break;
+		case IALU:
+			out_stream << "IALU";
+			break;
+		case FALU:
+			out_stream << "FALU";
+			break;
+		case MUL:
+			out_stream << "MUL";
+			break;
+		case DIV:
+			out_stream << "DIV";
+			break;
+		case OTHER:
+			out_stream << "OTHER";
 			break;
 	}
 }

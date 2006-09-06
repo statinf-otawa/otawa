@@ -16,6 +16,7 @@ namespace otawa {
 class ProcessorConfiguration {
 	elm::genstruct::SLList<PipelineStageConfiguration *> pipeline_stages;
 	elm::genstruct::SLList<InstructionQueueConfiguration *> instruction_queues;
+	elm::genstruct::SLList<FunctionalUnitConfiguration *> functional_units;
 	public:
 		void addPipelineStage(PipelineStageConfiguration * new_stage) {
 			pipeline_stages.addLast(new_stage);
@@ -23,12 +24,19 @@ class ProcessorConfiguration {
 		void addInstructionQueue(InstructionQueueConfiguration * new_queue) {
 			instruction_queues.addLast(new_queue);
 		}
+		void addFunctionalUnit(FunctionalUnitConfiguration * new_fu) {
+			functional_units.addLast(new_fu);
+		}
 		elm::genstruct::SLList<InstructionQueueConfiguration *> * instructionQueuesList() {
 			return &instruction_queues;
 		}
 		elm::genstruct::SLList<PipelineStageConfiguration *> * pipelineStagesList() {
 			return &pipeline_stages;
 		}
+		elm::genstruct::SLList<FunctionalUnitConfiguration *> * functionalUnitsList() {
+			return &functional_units;
+		}
+		
 		void dump(elm::io::Output& out_stream);
 };
 

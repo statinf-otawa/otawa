@@ -150,7 +150,7 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				assert(found);
 				ExecuteInOrderStageIQ * execute_stage = 
 					new ExecuteInOrderStageIQ((sc_module_name) (stage_conf->name()), iports, sim_state, 
-											rename_tables);	
+											rename_tables, conf->functionalUnitsList());	
 				pipeline_stages.addLast(execute_stage);
 				execute_stage->in_clock(clock);
 			
@@ -181,7 +181,8 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				}
 				assert(found);
 				ExecuteOOOStage * execute_stage = 
-					new ExecuteOOOStage((sc_module_name) (stage_conf->name()), (stage_conf->width()), rob, rename_tables);	
+					new ExecuteOOOStage((sc_module_name) (stage_conf->name()), (stage_conf->width()), rob, 
+										rename_tables, conf->functionalUnitsList());	
 				pipeline_stages.addLast(execute_stage);
 				execute_stage->in_clock(clock);
 			} break;

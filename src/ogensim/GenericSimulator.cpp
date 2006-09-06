@@ -67,39 +67,85 @@ void GenericState::init() {
 	int degree = 4;
 	int cache_line_size = 8;
 	
+	// config. 3 stages, in-order execution
+	
 	InstructionQueueConfiguration *fetch_queue = 
 		new InstructionQueueConfiguration("FetchQueue", 4/*size = 2^4*/, NONE);
 	conf.addInstructionQueue(fetch_queue);
 	
-//	InstructionQueueConfiguration *issue_queue = 
-//		new InstructionQueueConfiguration("IssueQueue", 2/*size = 2^2*/, READY);
-//	conf.addInstructionQueue(issue_queue);
+	InstructionQueueConfiguration *issue_queue = 
+		new InstructionQueueConfiguration("IssueQueue", 2/*size = 2^2*/, READY);
+	conf.addInstructionQueue(issue_queue);
 
-	InstructionQueueConfiguration * rob = 
-		new InstructionQueueConfiguration("ROB", 5/*size = 2^5*/, EXECUTED);
-	conf.addInstructionQueue(rob);
-	
-	
 	PipelineStageConfiguration * fetch_stage = 
 		new PipelineStageConfiguration("FetchStage", FETCH, NULL, fetch_queue, cache_line_size);
 	conf.addPipelineStage(fetch_stage);
 	
 	PipelineStageConfiguration * decode_stage = 
-		new PipelineStageConfiguration("DecodeStage", LAZYIQIQ, fetch_queue, rob, degree);
+		new PipelineStageConfiguration("DecodeStage", LAZYIQIQ, fetch_queue, issue_queue, degree);
 	conf.addPipelineStage(decode_stage);
 	
-//	PipelineStageConfiguration * execute_stage = 
-//		new PipelineStageConfiguration("ExecuteStage", EXECUTE_IN_ORDER, issue_queue, NULL, degree);
-//	conf.addPipelineStage(execute_stage);
-
 	PipelineStageConfiguration * execute_stage = 
-		new PipelineStageConfiguration("ExecuteStage", EXECUTE_OUT_OF_ORDER, rob, degree);
+		new PipelineStageConfiguration("ExecuteStage", EXECUTE_IN_ORDER, issue_queue, NULL, degree);
 	conf.addPipelineStage(execute_stage);
 
-	PipelineStageConfiguration * commit_stage = 
-		new PipelineStageConfiguration("CommitStage", COMMIT, rob, NULL, degree);
-	conf.addPipelineStage(commit_stage);
+	// config. 	5 stages, ooo execution
 	
+//	InstructionQueueConfiguration *fetch_queue = 
+//		new InstructionQueueConfiguration("FetchQueue", 4/*size = 2^4*/, NONE);
+//	conf.addInstructionQueue(fetch_queue);
+//	
+//	InstructionQueueConfiguration * rob = 
+//		new InstructionQueueConfiguration("ROB", 5/*size = 2^5*/, EXECUTED);
+//	conf.addInstructionQueue(rob);
+//		
+//	PipelineStageConfiguration * fetch_stage = 
+//		new PipelineStageConfiguration("FetchStage", FETCH, NULL, fetch_queue, cache_line_size);
+//	conf.addPipelineStage(fetch_stage);
+//	
+//	PipelineStageConfiguration * decode_stage = 
+//		new PipelineStageConfiguration("DecodeStage", LAZYIQIQ, fetch_queue, rob, degree);
+//	conf.addPipelineStage(decode_stage);
+//	
+//	PipelineStageConfiguration * execute_stage = 
+//		new PipelineStageConfiguration("ExecuteStage", EXECUTE_OUT_OF_ORDER, rob, degree);
+//	conf.addPipelineStage(execute_stage);
+//
+//	PipelineStageConfiguration * commit_stage = 
+//		new PipelineStageConfiguration("CommitStage", COMMIT, rob, NULL, degree);
+//	conf.addPipelineStage(commit_stage);
+	
+	
+	FunctionalUnitConfiguration * functional_unit =
+		new FunctionalUnitConfiguration(true, 5, 1);
+	functional_unit->addInstructionType(LOAD);
+	functional_unit->addInstructionType(STORE);
+	conf.addFunctionalUnit(functional_unit);
+	
+	functional_unit =
+		new FunctionalUnitConfiguration(false, 1, 2);
+	functional_unit->addInstructionType(COND_BRANCH);
+	functional_unit->addInstructionType(UNCOND_BRANCH);
+	functional_unit->addInstructionType(CALL);
+	functional_unit->addInstructionType(RETURN);
+	functional_unit->addInstructionType(TRAP);
+	functional_unit->addInstructionType(IALU);	
+	functional_unit->addInstructionType(OTHER);	
+	conf.addFunctionalUnit(functional_unit);
+	
+	functional_unit =
+		new FunctionalUnitConfiguration(true, 3, 1);
+	functional_unit->addInstructionType(FALU);
+
+	functional_unit =
+		new FunctionalUnitConfiguration(true, 6, 1);
+	functional_unit->addInstructionType(MUL);
+	conf.addFunctionalUnit(functional_unit);
+
+	functional_unit =
+		new FunctionalUnitConfiguration(false, 15, 1);
+	functional_unit->addInstructionType(DIV);
+	conf.addFunctionalUnit(functional_unit);
 	
 	processor = new GenericProcessor("GenericProcessor",&conf, this, fw->platform());
 
