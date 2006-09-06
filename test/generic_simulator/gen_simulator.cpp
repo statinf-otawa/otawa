@@ -93,7 +93,9 @@ int main(int argc, char **argv) {
 		
 		for(CFG::BBIterator bb(&vcfg); bb; bb++) {
 			if (bb->countInstructions() != 0) {
-				TRACE(elm::cout << "**** GOING TO MEASURE BLOCK " << bb->number() << "(at " << bb->address() << ")\n\t";
+				TRACE(elm::cout << "\n****************************************************\n";
+					elm::cout << "**** GOING TO MEASURE BLOCK " << bb->number() << "(at " << bb->address() << ")\n\t";
+					elm::cout << "\n****************************************************\n";
 					for (BasicBlock::InstIterator inst(bb) ; inst ; inst++) {
 						elm::cout << inst->address() << ", ";
 					}
