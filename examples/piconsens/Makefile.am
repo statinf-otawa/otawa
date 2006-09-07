@@ -1,0 +1,10 @@
+noinst_PROGRAMS=piconsens
+
+piconsens_SOURCES=\
+	piconsens.cpp
+
+piconsens_LDADD = @LOADER_PLUGIN@ @ILP_PLUGIN@  @PROG_LIBS@
+
+piconsens_DEPENDENCIES = @LOADER_DEP@ @ILP_DEP@ @PROG_DEP@
+
+AM_CXXFLAGS = @PROG_CXXFLAGS@ @OGENSIM_CXXFLAGS@
