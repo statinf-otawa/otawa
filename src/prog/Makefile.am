@@ -1,10 +1,10 @@
 lib_LTLIBRARIES=libotawa.la
 
-AM_CXXFLAGS=@BUILD_PROG_CXXFLAGS@
+AM_CXXFLAGS=@BUILD_PROG_CXXFLAGS@ @OGENSIM_CXXFLAGS@
 AM_YYFLAGS=-dv
 
 libotawa_la_LDFLAGS=
-libotawa_la_LIBADD= @BUILD_PROG_LIBS@
+libotawa_la_LIBADD= @BUILD_PROG_LIBS@ @OGENSIM_LIBS@
 
 libotawa_la_SOURCES = \
 	BlockAST.cpp \
@@ -112,5 +112,8 @@ libotawa_la_SOURCES = \
 	sim_BBPathDriver.cpp \
 	Microprocessor.cpp \
 	ExecutionGraph.cpp \
-	ExeGraphBBTime.cpp
+	ExeGraphBBTime.cpp \
+	BBTimeSimulator.cpp \
+	ipet_Delta.cpp \
+	BBPath.cpp
 
