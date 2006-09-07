@@ -20,6 +20,7 @@
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/ipet/BBTimeSimulator.h>
+#include <otawa/gensim/GenericSimulator.h>
 #include "DeltaCFGDrawer.h"
 
 
@@ -126,10 +127,13 @@ int main(int argc, char **argv) {
 	main_sw.start();
 	
 	// Load the file
+	GenericSimulator sim;
 	Manager manager;
 	PropList props;
 	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
 	props.set<CacheConfiguration *>(Platform::ID_Cache, &cache_conf);
+	Loader::SIMULATOR(props) = &sim;
+	cout << "config = " << props << io::endl;
 	try {
 		FrameWork *fw = manager.load(file, props);
 		
@@ -139,6 +143,9 @@ int main(int argc, char **argv) {
 			cerr << "ERROR: cannot find main !\n";
 			return 1;
 		}
+		
+		cout << "fw = " << fw << io::endl;
+		cout << "process = " << fw->process() << io::endl;
 		
 		// Removing __eabi call if available
 		for(CFG::BBIterator bb(cfg); bb; bb++)

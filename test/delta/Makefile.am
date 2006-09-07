@@ -1,11 +1,8 @@
 noinst_PROGRAMS=test_delta
 
 test_delta_SOURCES=\
-	BBTimeSimulator.cpp \
 	DeltaCFGDrawer.cpp \
 	DeltaCFGDrawer.h \
-	ipet_Delta.cpp \
-	BBPath.cpp \
 	test_delta.cpp
         
 
