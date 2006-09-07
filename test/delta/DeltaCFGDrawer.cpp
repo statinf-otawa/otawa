@@ -13,7 +13,7 @@ using namespace elm::genstruct;
 
 namespace otawa { namespace display {
 
-DeltaCFGDrawer::DeltaCFGDrawer(CFG *cfg, PropList& props)
+DeltaCFGDrawer::DeltaCFGDrawer(CFG *cfg, const PropList& props)
 : CFGDrawer(cfg, props){
 }
 

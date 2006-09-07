@@ -16,7 +16,7 @@ protected:
 	virtual void onEdge(otawa::Edge *cfg_edge, otawa::display::Edge *display_edge);
 	virtual void onEnd(otawa::display::Graph *graph);
 public:
-	DeltaCFGDrawer(CFG *cfg, PropList& props = PropList::EMPTY);
+	DeltaCFGDrawer(CFG *cfg, const PropList& props = PropList::EMPTY);
 };
 
 } }
