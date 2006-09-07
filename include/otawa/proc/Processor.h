@@ -11,6 +11,7 @@
 #include <elm/util/Version.h>
 #include <elm/system/StopWatch.h>
 #include <otawa/prog/FrameWork.h>
+#include <otawa/proc/ProcessorException.h>
 
 namespace otawa {
 

@@ -7,9 +7,11 @@
 #ifndef OTAWA_PROC_PROCESSOR_EXCEPTION_H
 #define OTAWA_PROC_PROCESSOR_EXCEPTION_H
 
-#include <otawa/proc/Processor.h>
+#include <otawa/base.h>
 
 namespace otawa {
+
+class Processor;
 
 // ProcessorException class
 class ProcessorException: public otawa::Exception {
