@@ -14,6 +14,13 @@
 #include <elm/genstruct/DLList.h>
 #include <otawa/otawa.h>
 
+#ifdef NDEBUG
+#	define CHECK(c)
+#else
+#	define CHECK(c)	c
+//#	define CHECK(c)
+#endif
+
 using namespace otawa;
 using namespace otawa::hard;
 using namespace elm;
@@ -85,8 +92,11 @@ void ExecutionGraph::prologueLatestTimes(ExecutionNode *node, elm::io::Output& o
 	}
 	
 	// empty times list
-	while (!times.isEmpty())
+	while (!times.isEmpty()) {
+		TimeDLNode *node = (TimeDLNode *) times.last();
 		times.removeLast();
+		delete node;
+	}
 		
 	node->setMaxFinishTime(node->maxStartTime() + node->maxLatency() );
 		
@@ -145,8 +155,11 @@ void ExecutionGraph::bodyLatestTimes(ExecutionNode *node, elm::io::Output& out_s
 		else
 			node->setMaxStartTime(max);
 	}
-	while (!times.isEmpty())
+	while (!times.isEmpty()) {
+		TimeDLNode *node = (TimeDLNode *) times.last();
 		times.removeLast();
+		delete node;
+	}
 	
 	count = 0;
 	for(ExecutionNode::ContenderIterator cont(node); cont; cont ++) {
@@ -188,8 +201,11 @@ void ExecutionGraph::bodyLatestTimes(ExecutionNode *node, elm::io::Output& out_s
 	}
 	
 	// empty times list
-	while (!times.isEmpty())
+	while (!times.isEmpty()) {
+		TimeDLNode *node = (TimeDLNode *) times.last();
 		times.removeLast();
+		delete node;
+	}
 		
 	node->setMaxFinishTime(node->maxStartTime() + node->maxLatency() );
 		
@@ -781,6 +797,9 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 		stage_node_list = (GraphNodesListInList *) stage_node_list->next();
 	}	
 	
+	// Free rename tables
+	for(int i = 0; i <reg_bank_count ; i++)
+		delete rename_tables[i].table;
 }
 
 // ---------- analyze
@@ -802,5 +821,13 @@ int ExecutionGraph::analyze(elm::io::Output& out_stream) {
 }
 
 
+/**
+ */
+ExecutionGraph::~ExecutionGraph(void) {
+
+	// Free pairs
+	for(elm::genstruct::DLList<NodePair *>::Iterator pair(pairs); pair; pair++)
+		delete pair;
+}
 
 } // namespace otawa
