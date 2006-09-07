@@ -105,11 +105,11 @@ void GenericState::init() {
 	conf.addInstructionQueue(fetch_queue);
 	
 	InstructionQueueConfiguration * rob = 
-		new InstructionQueueConfiguration("ROB", degree + 4, EXECUTED);
+		new InstructionQueueConfiguration("ROB", degree + 3, EXECUTED);
 	conf.addInstructionQueue(rob);
 		
 	PipelineStageConfiguration * fetch_stage = 
-		new PipelineStageConfiguration("FetchStage", FETCH, NULL, fetch_queue, cache_line_size);
+		new PipelineStageConfiguration("FetchStage", FETCH, NULL, fetch_queue, 1 << (degree + 1));
 	conf.addPipelineStage(fetch_stage);
 	
 	PipelineStageConfiguration * decode_stage = 
