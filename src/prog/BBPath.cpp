@@ -7,7 +7,7 @@
 
 #include <otawa/ipet/BBPath.h>
 #include <otawa/ipet.h>
-#include <otawa/gensim/GenericSimulator.h>
+#include <otawa/sim.h>
 #include <otawa/sim/BBPathDriver.h>
 #include <elm/io.h>
 
@@ -195,8 +195,8 @@ int BBPath::countInstructions(){
  */
 int BBPath::simulate(FrameWork *fw){
 	int cycle;
-	GenericSimulator simulator;
-	State *state = simulator.instantiate(fw);
+	Simulator *simulator = fw->process()->simulator();
+	State *state = simulator->instantiate(fw);
 	BBPathDriver driver(*this);
 	state->reset();
 	state->run(driver);
