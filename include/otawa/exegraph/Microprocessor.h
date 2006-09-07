@@ -24,7 +24,9 @@ typedef enum instruction_category_t {
 	IALU = 1,
 	FALU = 2,
 	MEMORY = 3,
-	CONTROL = 4,	
+	CONTROL = 4,
+	MUL = 5,
+	DIV = 6,
 	INST_CATEGORY_NUMBER   // must be the last value
 } instruction_category_t;	
 
