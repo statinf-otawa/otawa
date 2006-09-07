@@ -8,6 +8,7 @@
 #include <otawa/prog/Process.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
+#include <otawa/prog/Loader.h>
 
 namespace otawa {
 
@@ -22,9 +23,11 @@ namespace otawa {
 
 /**
  * Build a new empty process.
+ * @param props		Configuration properties to create this process.
  * @param program	The program file creating this process.
  */
-Process::Process(File *program): prog(program) {
+Process::Process(const PropList& props, File *program): prog(program) {
+	addProps(props);
 }
 
 
@@ -140,6 +143,15 @@ File *Process::loadProgram(elm::CString path) {
 	if(file)
 		prog = file;
 	return file;
+}
+
+
+/**
+ * Find the simulator used for the current process.
+ * @return	A simulator for the current process or null if none is found.
+ */
+sim::Simulator *Process::simulator(void) const {
+	return Loader::SIMULATOR(*this);
 }
 
 } // otawa

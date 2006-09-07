@@ -90,6 +90,12 @@ GenericIdentifier<char **> Loader::ID_Argv("otawa.Argv");
  */	
 GenericIdentifier<char **> Loader::ID_Envp("otawa.Envp");
 
+/**
+ * This property defines the used the used simulator when a simulator is
+ * needed to perform simulation.
+ */
+GenericIdentifier<sim::Simulator *> Loader::SIMULATOR("otawa.simulator");
+
 
 /**
  * Name of the "Heptane" loader.
