@@ -454,7 +454,7 @@ AC_SUBST(EXTERN_LP_SOLVE_LIBS)
 
 
 dnl ==== systemc ====
-check_module(systemc, SYSTEMC, src, objdir/src, systemc, sc_start)
+check_module(systemc, SYSTEMC, src, objdir/src, systemc)
 
 
 dnl ==== ODisplay ====
@@ -549,6 +549,7 @@ AC_OUTPUT([
 	test/systemc/Makefile
 	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
+	examples/piconsens/Makefile
 	include/Makefile
 	include/otawa/Makefile
 	include/otawa/ast/Makefile
