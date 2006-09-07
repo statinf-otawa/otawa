@@ -32,7 +32,7 @@ namespace otawa { namespace gliss {
  * Process constructor.
  * @param _man	Caller manager.
  */
-Process::Process(Manager *_man, PropList& props): man(_man) {
+Process::Process(Manager *_man, PropList& props): otawa::Process(props), man(_man) {
 	TRACE(this << ".Process::Process(" << _man << ", " << &props << ')');
 	default_argv[0] = "";
 	default_argv[1] = 0;

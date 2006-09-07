@@ -24,11 +24,16 @@ namespace hard {
 	class CacheConfiguration;
 }
 
+namespace sim {
+	class Simulator;
+}
+
+
 // Process class
 class Process: public ProgObject {
 	File *prog;
 public:
-	Process(File *program = 0);
+	Process(const PropList& props = EMPTY, File *program = 0);
 	virtual ~Process(void) { };
 	
 	// Accessors
@@ -41,6 +46,7 @@ public:
 	virtual Inst *findInstAt(String& label);
 	virtual elm::Collection<File *> *files(void) = 0;
 	inline File *program(void) const;
+	virtual sim::Simulator *simulator(void) const;
 
 	// Constructors
 	virtual File *createFile(void) = 0;
