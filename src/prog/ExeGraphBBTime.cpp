@@ -184,9 +184,9 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 			}
 			
 			// set dump file
-			elm::StringBuffer file_name;
+			/*elm::StringBuffer file_name;
 			elm::String string_file_name, string_timed_file_name, extension, number, extension2;
-			string_file_name = "/home/rochange/ECLIPSE/otawa/otawa/test/exegraph/graphs/";
+			string_file_name = "./";
 			string_timed_file_name = string_file_name;
 			extension = ".dot";
 			extension2 = "_times.dot";
@@ -201,7 +201,7 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 			string_file_name = string_file_name.concat(number);
 			string_file_name = string_file_name.concat(extension);
 			elm::io::OutFileStream dotStream(string_file_name.toCString());
-			elm::io::Output dotFile(dotStream);	
+			elm::io::Output dotFile(dotStream);*/	
 			
 			// build the execution graph
 			dumpFile << "\nBuilding execution graph for:\n\tprologue: ";
@@ -213,7 +213,7 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 			execution_graph.build(fw, microprocessor, prologue, body, epilogue);
 			execution_graph.dumpLight(dumpFile);
 			// dump the execution graph in dot format
-			execution_graph.dotDump(dotFile,false);
+			//execution_graph.dotDump(dotFile,false);
 			
 			// shade prologue nodes that have a direct path to IF(I1)
 			execution_graph.shadeNodes(dumpFile);
@@ -221,12 +221,12 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 			bbExecTime = execution_graph.analyze(dumpFile);
 			
 			dumpFile << "Cost of block " << bb->number() << " is " << bbExecTime << "\n";
-			string_timed_file_name = string_timed_file_name.concat(number);
+			/*string_timed_file_name = string_timed_file_name.concat(number);
 			string_timed_file_name = string_timed_file_name.concat(extension2);
 			elm::io::OutFileStream timedDotStream(string_timed_file_name.toCString());
-			elm::io::Output timedDotFile(timedDotStream);	
+			elm::io::Output timedDotFile(timedDotStream);*/	
 			// dump the execution graph *with times* in dot format
-			execution_graph.dotDump(timedDotFile,true);		
+			//execution_graph.dotDump(timedDotFile,true);		
 			
 		}
 		// is the cost of the block for that prologue/epilogue pair the WCC of the block ?
