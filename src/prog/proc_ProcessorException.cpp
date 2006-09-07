@@ -5,7 +5,7 @@
  *	src/prog/proc_ProcessorException.cpp -- ProcessorException class implementation.
  */
 
-#include <otawa/proc/ProcessorException.h>
+#include <otawa/proc/Processor.h>
 #include <elm/debug.h>
 
 using namespace elm;
