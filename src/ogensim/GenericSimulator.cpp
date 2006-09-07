@@ -7,6 +7,7 @@
 
 #include <otawa/gensim/GenericProcessor.h>
 #include <otawa/gensim/GenericSimulator.h>
+#include <otawa/gensim/GenericState.h>
 #include <otawa/program.h>
 #include <otawa/otawa.h>
 #include <otawa/gensim/debug.h>
@@ -21,7 +22,12 @@ int sc_main(int argc, char *argv[]) {
 }
 
 
-namespace otawa { namespace sim {
+
+namespace otawa {
+
+GenericIdentifier<int> DEGREE("gensim.degree", 1);
+	
+namespace sim {
 
 
 
@@ -49,7 +55,7 @@ GenericSimulator::GenericSimulator(void)
 
 /**
  */	
-GenericState *GenericSimulator::instantiate(FrameWork *fw, const PropList& props) {
+State *GenericSimulator::instantiate(FrameWork *fw, const PropList& props) {
 	static GenericState* state;
 	static bool initialized = false;
 	if(!initialized){
@@ -64,17 +70,18 @@ GenericState *GenericSimulator::instantiate(FrameWork *fw, const PropList& props
 void GenericState::init() {
 	ProcessorConfiguration conf;
 	
-	int degree = 4;
+	int degree = DEGREE(fw->process());
 	int cache_line_size = 8;
-	
+
 	// config. 3 stages, in-order execution
 	
+	#if 0
 	InstructionQueueConfiguration *fetch_queue = 
-		new InstructionQueueConfiguration("FetchQueue", 4/*size = 2^4*/, NONE);
+		new InstructionQueueConfiguration("FetchQueue", degree + 1, NONE);
 	conf.addInstructionQueue(fetch_queue);
 	
 	InstructionQueueConfiguration *issue_queue = 
-		new InstructionQueueConfiguration("IssueQueue", 2/*size = 2^2*/, READY);
+		new InstructionQueueConfiguration("IssueQueue", degree + 1, READY);
 	conf.addInstructionQueue(issue_queue);
 
 	PipelineStageConfiguration * fetch_stage = 
@@ -88,33 +95,35 @@ void GenericState::init() {
 	PipelineStageConfiguration * execute_stage = 
 		new PipelineStageConfiguration("ExecuteStage", EXECUTE_IN_ORDER, issue_queue, NULL, degree);
 	conf.addPipelineStage(execute_stage);
+	#endif
 
 	// config. 	5 stages, ooo execution
 	
-//	InstructionQueueConfiguration *fetch_queue = 
-//		new InstructionQueueConfiguration("FetchQueue", 4/*size = 2^4*/, NONE);
-//	conf.addInstructionQueue(fetch_queue);
-//	
-//	InstructionQueueConfiguration * rob = 
-//		new InstructionQueueConfiguration("ROB", 5/*size = 2^5*/, EXECUTED);
-//	conf.addInstructionQueue(rob);
-//		
-//	PipelineStageConfiguration * fetch_stage = 
-//		new PipelineStageConfiguration("FetchStage", FETCH, NULL, fetch_queue, cache_line_size);
-//	conf.addPipelineStage(fetch_stage);
-//	
-//	PipelineStageConfiguration * decode_stage = 
-//		new PipelineStageConfiguration("DecodeStage", LAZYIQIQ, fetch_queue, rob, degree);
-//	conf.addPipelineStage(decode_stage);
-//	
-//	PipelineStageConfiguration * execute_stage = 
-//		new PipelineStageConfiguration("ExecuteStage", EXECUTE_OUT_OF_ORDER, rob, degree);
-//	conf.addPipelineStage(execute_stage);
-//
-//	PipelineStageConfiguration * commit_stage = 
-//		new PipelineStageConfiguration("CommitStage", COMMIT, rob, NULL, degree);
-//	conf.addPipelineStage(commit_stage);
+	#if 1
+	InstructionQueueConfiguration *fetch_queue = 
+		new InstructionQueueConfiguration("FetchQueue", degree + 1, NONE);
+	conf.addInstructionQueue(fetch_queue);
 	
+	InstructionQueueConfiguration * rob = 
+		new InstructionQueueConfiguration("ROB", degree + 4, EXECUTED);
+	conf.addInstructionQueue(rob);
+		
+	PipelineStageConfiguration * fetch_stage = 
+		new PipelineStageConfiguration("FetchStage", FETCH, NULL, fetch_queue, cache_line_size);
+	conf.addPipelineStage(fetch_stage);
+	
+	PipelineStageConfiguration * decode_stage = 
+		new PipelineStageConfiguration("DecodeStage", LAZYIQIQ, fetch_queue, rob, 1 << degree);
+	conf.addPipelineStage(decode_stage);
+	
+	PipelineStageConfiguration * execute_stage = 
+		new PipelineStageConfiguration("ExecuteStage", EXECUTE_OUT_OF_ORDER, rob, 1 << degree);
+	conf.addPipelineStage(execute_stage);
+
+	PipelineStageConfiguration * commit_stage = 
+		new PipelineStageConfiguration("CommitStage", COMMIT, rob, NULL, 1 << degree);
+	conf.addPipelineStage(commit_stage);
+	#endif
 	
 	FunctionalUnitConfiguration * functional_unit =
 		new FunctionalUnitConfiguration(true, 5, 1);
