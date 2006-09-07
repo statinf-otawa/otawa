@@ -160,6 +160,7 @@ class ExecutionGraph:  public graph::Graph  {
 		
 	public:
 		inline ExecutionGraph(void);
+		~ExecutionGraph(void);
 		inline void setEntryNode(ExecutionNode *node);
 		inline void dump(elm::io::Output& out_stream);
 		inline void dumpLight(elm::io::Output& out_stream);
