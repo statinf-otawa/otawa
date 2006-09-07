@@ -1,5 +1,5 @@
 #include <otawa/gensim/Execute.h>
-#include <otawa/gensim/GenericSimulator.h>
+#include <otawa/gensim/GenericState.h>
 #include <otawa/gensim/debug.h>
 
 FunctionalUnitConfiguration::FunctionalUnitConfiguration(bool is_pipelined, int latency, int width)

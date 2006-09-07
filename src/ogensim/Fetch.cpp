@@ -1,5 +1,5 @@
 #include <otawa/gensim/Fetch.h>
-#include <otawa/gensim/GenericSimulator.h>
+#include <otawa/gensim/GenericState.h>
 #include <otawa/gensim/debug.h>
 
 FetchStage::FetchStage(sc_module_name name, int number_of_out_ports, otawa::GenericState * gen_state,
