@@ -14,6 +14,10 @@
 
 namespace otawa {
 
+namespace sim {
+	class Simulator;
+}
+
 // Loader class
 class Loader {
 	friend class Manager;
@@ -35,6 +39,7 @@ public:
 	static GenericIdentifier<int> ID_Argc;
 	static GenericIdentifier<char **> ID_Argv;
 	static GenericIdentifier<char **> ID_Envp;
+	static GenericIdentifier<sim::Simulator *> SIMULATOR;
 
 	// Default platform and loader
 	static Loader& LOADER_Gliss_PowerPC;
