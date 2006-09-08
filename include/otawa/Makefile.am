@@ -30,6 +30,7 @@ includeotawa_HEADERS = \
 	cfg.h \
 	ets.h\
 	gliss.h \
+	hard.h \
 	ilp.h \
 	instruction.h \
 	ipet.h \
