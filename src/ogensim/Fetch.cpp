@@ -55,7 +55,7 @@ void FetchStage::fetch() {
 			(next_inst != NULL) );
 	int outs = 0;
 	for (elm::genstruct::SLList<SimulatedInstruction *>::Iterator inst(fetched_instructions) ; inst ; inst++) {
-		if (outs<=out_ports) {// FIXME 
+		if (outs<out_ports) {// FIXME 
 			out_fetched_instruction[outs++] = inst;
 		}
 	}
