@@ -178,7 +178,12 @@ void ExecuteOOOStage::action() {
 			memory_ordering = true;
 		if (inst->state() == READY) {
 			FunctionalUnit * fu = (*fu_bindings)[inst->type()];
-			assert(fu);
+			#ifndef NDEBUG
+				if(!fu) {
+					elm::cerr << "No function unit for " << inst->type() << " instruction type.\n";
+					assert(false);
+				}
+			#endif
 			TRACE(elm::cout << "\tready instruction: " << inst->inst()->address();
 				elm::cout << " [FU pipelined=" << fu->isPipelined() << " - width=" << fu->width();
 				elm::cout << " - new=" << fu->newInstructions() << " - pending=" << fu->pendingInstructions() << "]\n";)	
