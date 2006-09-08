@@ -12,6 +12,10 @@ using namespace elm;
 
 #ifndef NDEBUG
 //#	define SCAN_ARGS
+//#	define TRACE(c) c
+#	define TRACE(c)
+#else
+#	define TRACE(c)
 #endif
 
 namespace otawa { namespace gliss {
@@ -175,7 +179,14 @@ public:
 	#endif
 	
 	bool isSupported(ii_t *param) {
-		return ids[param->type].type != NO_SUPPORT;
+		switch(ids[param->type].type) {
+		case NO_SUPPORT:
+			return false;
+		case TO_CR:
+			return param->val.uint8 != 255;
+		default:
+			return true;
+		}
 	}		
 	
 	hard::Register *reg(ii_t *param) {
@@ -314,16 +325,25 @@ void Inst::scanRegs(void) {
 	bool no_reg = iss_table[inst->ident].user0;	
 
 	// Count read registers
-	int cnt = 0;
-	for(int i = 0; inst->instrinput[i].type != VOID_T; i++)
+	TRACE(dump(cout); cout << io::endl);
+	int cnt = 0, i, j;
+	for(i = 0; inst->instrinput[i].type != VOID_T; i++)
 		if(scan_args.isSupported(inst->instrinput + i)
-		&& (!no_reg || cnt != 0|| !inst->instrinput[i].val.uint8))
+		&& (!no_reg || cnt != 0 || inst->instrinput[i].val.uint8)) {
+			TRACE(cout << "count " << i << io::endl);
 			cnt++;
+		}
 	switch(inst->ident) {
 	case ID_CRAND_CRB_CRB_CRB: case ID_CROR_CRB_CRB_CRB:
 	case ID_CRXOR_CRB_CRB_CRB: case ID_CRNAND_CRB_CRB_CRB:
 	case ID_CRNOR_CRB_CRB_CRB: case ID_CREQV_CRB_CRB_CRB:
 	case ID_CRANDC_CRB_CRB_CRB: case ID_CRORC_CRB_CRB_CRB:
+		TRACE(cout << "count " << i << io::endl);
+		cnt++;			
+	case ID_BCLR_: case ID_BCLRL_: case ID_BCCTR_: case ID_BCCTRL_:
+	case ID_BCLA_: case ID_BCL_: case ID_BCA_: case ID_BC_:	
+	case ID_MCRF_CRF_CRF:
+		TRACE(cout << "count " << i << io::endl);
 		cnt++;		
 	}
 	elm::genstruct::AllocatedTable<hard::Register *> *tab =
@@ -335,33 +355,55 @@ void Inst::scanRegs(void) {
 		scan_args.decodeParams(cout, inst->instrinput);
 		cout << '\n';
 	#endif
-	cnt = 0;
-	for(int i = 0; inst->instrinput[i].type != VOID_T; i++) {
+	for(i = 0, j = 0; inst->instrinput[i].type != VOID_T; i++) {
 		hard::Register *reg = scan_args.reg(inst->instrinput + i);
-		if(reg && (!no_reg || cnt != 0 || !inst->instrinput[i].val.uint8))
-			tab->set(cnt++, reg);
+		if(reg && (!no_reg || cnt != 0 || inst->instrinput[i].val.uint8)) {
+			TRACE(cout << "set " << i << io::endl);
+			tab->set(j++, reg);
+		}
 	}
 	switch(inst->ident) {
 	case ID_BCLR_: case ID_BCLRL_: case ID_BCCTR_: case ID_BCCTRL_:
 	case ID_BCLA_: case ID_BCL_: case ID_BCA_: case ID_BC_:
-		tab->set(cnt++, Platform::CR_bank[(31 - inst->instrinput[0].val.uint8) / 4]);
+		TRACE(cout << "set " << i << io::endl);
+		tab->set(j++, Platform::CR_bank[(31 - inst->instrinput[0].val.uint8) / 4]);
 		break;
 	case ID_CRAND_CRB_CRB_CRB: case ID_CROR_CRB_CRB_CRB:
 	case ID_CRXOR_CRB_CRB_CRB: case ID_CRNAND_CRB_CRB_CRB:
 	case ID_CRNOR_CRB_CRB_CRB: case ID_CREQV_CRB_CRB_CRB:
 	case ID_CRANDC_CRB_CRB_CRB: case ID_CRORC_CRB_CRB_CRB:
-		tab->set(cnt++, Platform::CR_bank[7 - inst->instrinput[2].val.uint8]);
+		TRACE(cout << "set " << i << io::endl);
+		tab->set(j++, Platform::CR_bank[(31 - inst->instrinput[2].val.uint8) / 4]);
+		assert(tab->get(j - 1));
 	case ID_MCRF_CRF_CRF:
-		tab->set(cnt++, Platform::CR_bank[7 - inst->instrinput[1].val.uint8]);
+		TRACE(cout << "set " << i << io::endl);
+		tab->set(j++, Platform::CR_bank[(31 - inst->instrinput[1].val.uint8) / 4]);
+		assert(tab->get(j - 1));
 		break;
 	}
 	reads = tab;
+	assert(j == cnt);
 
 	// Count the write registers
 	cnt = 0;
-	for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
-		if(scan_args.isSupported(inst->instroutput + i))
+	for(i = 0; inst->instroutput[i].type != VOID_T; i++)
+		if(scan_args.isSupported(inst->instroutput + i)) {
+			TRACE(cout << "count " << i << io::endl);
 			cnt++;
+		}
+	switch(inst->ident) {
+	case ID_CMPI_R_: case ID_CMP_R_R: case ID_CMPLI_R_: case ID_CMPL_R_R:
+	case ID_FCMPU_CRF_FR_FR: case ID_FCMPO_CRF_FR_FR:
+	case ID_MCRXR_CRF: case ID_MCRFS_CRF_CRF:
+	case ID_CRAND_CRB_CRB_CRB: case ID_CROR_CRB_CRB_CRB:
+	case ID_CRXOR_CRB_CRB_CRB: case ID_CRNAND_CRB_CRB_CRB:
+	case ID_CRNOR_CRB_CRB_CRB: case ID_CREQV_CRB_CRB_CRB:
+	case ID_CRANDC_CRB_CRB_CRB: case ID_CRORC_CRB_CRB_CRB:
+	case ID_MCRF_CRF_CRF:
+		TRACE(cout << "count " << i << io::endl);
+		cnt++;
+		break;		
+	}
 	tab = new elm::genstruct::AllocatedTable<hard::Register *>(cnt);
 
 	// Get write registers
@@ -370,27 +412,33 @@ void Inst::scanRegs(void) {
 		scan_args.decodeParams(cout, inst->instroutput);
 		cout << '\n';
 	#endif
-	cnt = 0;
-	for(int i = 0; inst->instroutput[i].type != VOID_T; i++) {
+	for(i = 0, j = 0; inst->instroutput[i].type != VOID_T; i++) {
 		hard::Register *reg = scan_args.reg(inst->instroutput + i);
-		if(reg)
-			tab->set(cnt++, reg);
+		if(reg) {
+			TRACE(cout << "set " << i << io::endl);
+			tab->set(j++, reg);
+		}
 	}
 	switch(inst->ident) {
 	case ID_CMPI_R_: case ID_CMP_R_R: case ID_CMPLI_R_: case ID_CMPL_R_R:
 	case ID_FCMPU_CRF_FR_FR: case ID_FCMPO_CRF_FR_FR:
 	case ID_MCRXR_CRF: case ID_MCRFS_CRF_CRF:
-		tab->set(cnt++, Platform::CR_bank[7 - inst->instrinput[0].val.uint8]);
+		TRACE(cout << "set " << i << io::endl);
+		tab->set(j++, Platform::CR_bank[(31 - inst->instrinput[0].val.uint8) / 4]);
+		assert(tab->get(j - 1));
 		break;		
 	case ID_CRAND_CRB_CRB_CRB: case ID_CROR_CRB_CRB_CRB:
 	case ID_CRXOR_CRB_CRB_CRB: case ID_CRNAND_CRB_CRB_CRB:
 	case ID_CRNOR_CRB_CRB_CRB: case ID_CREQV_CRB_CRB_CRB:
 	case ID_CRANDC_CRB_CRB_CRB: case ID_CRORC_CRB_CRB_CRB:
 	case ID_MCRF_CRF_CRF:
-		tab->set(cnt++, Platform::CR_bank[7 - inst->instrinput[0].val.uint8]);
+		TRACE(cout << "set " << i << io::endl);
+		tab->set(j++, Platform::CR_bank[(31 - inst->instrinput[0].val.uint8) / 4]);
+		assert(tab->get(j - 1));
 		break;
 	}
 	writes = tab;
+	assert(j == cnt);
 	
 	// Free instruction
 	iss_free(inst);
