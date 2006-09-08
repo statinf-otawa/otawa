@@ -145,6 +145,7 @@ void GenericState::init() {
 	functional_unit =
 		new FunctionalUnitConfiguration(true, 3, 1);
 	functional_unit->addInstructionType(FALU);
+	conf.addFunctionalUnit(functional_unit);
 
 	functional_unit =
 		new FunctionalUnitConfiguration(true, 6, 1);
