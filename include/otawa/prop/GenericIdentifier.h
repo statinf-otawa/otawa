@@ -33,6 +33,7 @@ public:
 		inline operator T(void) const;
 		inline Value& operator=(const T& value);
 		inline Value& operator+=(const T& value);
+		inline T operator->(void) const; 
 	};
 
 	// Constructors
@@ -251,6 +252,11 @@ GenericIdentifier<T>::Value::operator+=(const T& value) {
 	prop.add(id, value);
 	return *this;
 }
+
+template <class T>
+inline T GenericIdentifier<T>::Value::operator->(void) const {
+	return prop.get<T>(id, id.def);
+} 
 
 } // otawa
 
