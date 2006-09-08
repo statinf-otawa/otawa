@@ -62,6 +62,8 @@ void InstructionQueueConfiguration::dump(elm::io::Output& out_stream) {
 InstructionQueue::InstructionQueue(sc_module_name name, InstructionQueueConfiguration * configuration) {
 	conf = configuration;
 	is_full = false;
+	head = 0;
+	tail = 0;
 	cap = 1<<conf->capacity();
 	assert(cap>0);
 	in_ports = conf->numberOfWritePorts();
