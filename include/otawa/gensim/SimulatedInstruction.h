@@ -127,6 +127,7 @@ inline elm::genstruct::SLList<SimulatedInstruction *> * SimulatedInstruction::so
 }
 
 inline void SimulatedInstruction::renameOperands(elm::genstruct::AllocatedTable<rename_table_t> * rename_tables) {
+	//elm::cout << inst() << io::endl;
 	const elm::genstruct::Table<otawa::hard::Register *> &reads = 
 			this->inst()->readRegs();
 	for(int i = 0; i < reads.count(); i++) {
