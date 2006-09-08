@@ -139,7 +139,7 @@ void Command::scanLoop(ContextTree *ctree, int indent) {
 		if(child->kind() == ContextTree::LOOP) {
 			for(int i = 0; i < indent; i++)
 				cout << "  ";
-			cout << "loop 0x" << child->bb()->address() << " ?;\n"; 
+			cout << "loop 0x" << fmt::address(child->bb()->address()) << " ?;\n"; 
 			scanLoop(child, indent + 1);
 		}
 		
