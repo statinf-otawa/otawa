@@ -99,14 +99,6 @@ GenericIdentifier<bool> EXPLICIT("ipet.explicit", false);
 
 
 /**
- * Property used in the configuration of an IPET processor, it cause the
- * processor to work in a recursive way (extends its analysis to the called
- * sub-program CFGS). Default to false.
- */
-GenericIdentifier<bool> RECURSIVE("ipet.recursive", false);
-
-
-/**
  * Get the system tied with the given CFG. If none exists, create ones.
  * @param fw	Current framework.
  * @param cfg	Current CFG.

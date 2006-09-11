@@ -32,7 +32,7 @@ namespace otawa {
  * @param props		Configuration properties.
  */
 Processor::Processor(elm::String name, elm::Version version,
-const PropList& props): _name(name), _version(version) {
+const PropList& props): _name(name), _version(version), flags(0) {
 	init(props);
 }
 
@@ -41,7 +41,7 @@ const PropList& props): _name(name), _version(version) {
  * Build a new processor.
  * @param	Configuration properties.
  */
-Processor::Processor(const PropList& props) {
+Processor::Processor(const PropList& props): flags(0) {
 	init(props);
 }
 
@@ -95,17 +95,21 @@ void Processor::configure(const PropList& props) {
  */
 void Processor::process(FrameWork *fw) {
 	if(isVerbose())
-		out << "Starting " << name() << io::endl;
+		out << "Starting " << name() << " (" << version() << ')' << io::endl;
 	system::StopWatch swatch;
 	if(isTimed())
 		swatch.start();
 	processFrameWork(fw);
+	if(isVerbose())
+		out << "Ending " << name();
 	if(isTimed()) {
 		swatch.stop();
 		PROC_RUNTIME(*stats) = swatch.delay();
-	if(isVerbose())
-		out << "Ending " << name() << io::endl;
+		if(isVerbose())
+			out << " (" << (swatch.delay() / 1000) << "ms)" << io::endl;
 	}
+	if(isVerbose())
+		out << io::endl;
 }
 
 
@@ -166,5 +170,11 @@ GenericIdentifier<elm::system::time_t> PROC_RUNTIME("otawa.proc.runtime", 0);
  * the processor work will be displayed.
  */
 GenericIdentifier<bool> PROC_VERBOSE("otawa.proc.verbose", false);
+
+
+/**
+ * This property selects the task entry point currently processed.
+ */
+GenericIdentifier<elm::CString> PROC_ENTRY("otawa.proc.entry", "main");
 
 } // otawa
