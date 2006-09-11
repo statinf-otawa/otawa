@@ -824,10 +824,389 @@ int ExecutionGraph::analyze(elm::io::Output& out_stream) {
 /**
  */
 ExecutionGraph::~ExecutionGraph(void) {
+	delete pairs;
+}
 
-	// Free pairs
-	for(elm::genstruct::DLList<NodePair *>::Iterator pair(pairs); pair; pair++)
-		delete pair;
+
+// ---------- dumpPart()
+void ExecutionNode::dumpPart(elm::io::Output& out_stream) {
+	switch(code_part) {
+		case BEFORE_PROLOGUE:
+			out_stream << "[BEFORE_PROLOGUE]";
+			break;
+		case PROLOGUE:
+			out_stream << "[PROLOGUE]";
+			break;
+		case BODY:
+			out_stream << "[BODY]";
+			break;
+		case EPILOGUE:
+			out_stream << "[EPILOGUE]";
+			break;
+	}
+			
+}
+
+
+// ---------- dumpTime()
+
+void ExecutionNode::dumpTime(int time, elm::io::Output& out_stream) {
+	switch(time) {
+		case -INFINITE_TIME:
+			out_stream << "-INF";
+			break;
+		case INFINITE_TIME:
+			out_stream << "+INF";
+			break;
+		default:
+			if (time < -INFINITE_TIME+10)	// ----------------------------- to be fixed
+				out_stream << "-INF";
+			else
+				if (time > INFINITE_TIME-10)
+					out_stream << "-INF";
+				else
+					out_stream << time;
+			break;
+	}
+}
+
+
+// ---------- dump()
+
+void ExecutionNode::dump(elm::io::Output& out_stream) {
+	out_stream << "\t" << pipeline_stage->shortName();
+	out_stream << "(I" << inst_index <<")";
+	if (needs_operands)
+		out_stream << "\n\t   needs operands";
+	if (produces_operands)
+		out_stream << "\n\t   produces operands";		
+	if (this->hasPred()) {
+		out_stream << "\n\t   predecessors: ";
+		for (graph::Node::Predecessor pred(this) ; pred ; pred++) {
+			out_stream << ((ExecutionNode *) *pred)->pipelineStage()->shortName();
+			out_stream << "(I" << ((ExecutionNode *) *pred)->instIndex() <<")";
+			((ExecutionEdge *) pred.edge())->dump(out_stream);
+		}
+	}
+	if (this->hasSucc()) {
+		out_stream << "\n\t   successors: ";
+		for (graph::Node::Successor next(this) ; next ; next++) {
+			out_stream << ((ExecutionNode *) *next)->pipelineStage()->shortName();
+			out_stream << "(I" << ((ExecutionNode *) *next)->instIndex() <<")";
+			((ExecutionEdge *)next.edge())->dump(out_stream);
+		}
+	}
+	out_stream << "\n\t   contenders: ";
+	for(ContenderIterator cont(this); cont; cont ++) {
+		cont->dumpLight(out_stream);
+	}
+	out_stream << "\n\t   times: r.min="; this->dumpTime(ready_time.min, out_stream);
+	out_stream << "/r.max="; this->dumpTime(ready_time.max, out_stream);
+	out_stream << " - s.min="; this->dumpTime(start_time.min, out_stream);
+	out_stream << "/s.max="; this->dumpTime(start_time.max, out_stream);
+	out_stream << " - f.min="; this->dumpTime(finish_time.min, out_stream);
+	out_stream << "/f.max="; this->dumpTime(finish_time.max, out_stream);  
+}
+
+
+// ---------- dumpLight()
+
+void ExecutionNode::dumpLight(elm::io::Output& out_stream) {
+	out_stream << pipeline_stage->shortName();
+	out_stream << "(I" << inst_index <<")";
+}
+
+// ---------- dumpLightTimed()
+
+void ExecutionNode::dumpLightTimed(elm::io::Output& out_stream) {
+	out_stream << "\t" << pipeline_stage->shortName();
+	out_stream << "(I" << inst_index <<")";
+	out_stream << "["; dumpTime(ready_time.min, out_stream);
+	out_stream << "/"; dumpTime(ready_time.max, out_stream);out_stream << "]";
+	out_stream << "["; dumpTime(start_time.min, out_stream);
+	out_stream << "/"; dumpTime(start_time.max, out_stream);out_stream << "]";
+	out_stream << "["; dumpTime(finish_time.min, out_stream);
+	out_stream << "/"; dumpTime(finish_time.max, out_stream);out_stream << "]";
+}
+
+
+// ---------- dump()
+
+void ExecutionEdge::dump(elm::io::Output& out_stream) {
+	switch(edge_type) {
+		case SOLID:
+			out_stream << "[SOLID] - ";
+			break;
+		case SLASHED:
+			out_stream << "[SLASHED] - ";
+			break;
+		default:
+			out_stream << " - ";
+			break;
+	}
+}
+
+// ---------- constructor
+
+ExecutionGraph::ExecutionGraph()
+: entry_node(NULL) {
+	for (int i=0 ; i<ExecutionNode::CODE_PARTS_NUMBER ; i++) {
+		first_node[i] = NULL;
+		last_node[i] = NULL;
+	}
+}
+
+// ---------- initSeparated()
+
+void ExecutionGraph::initSeparated() {
+	pair_cnt = 0;
+	for(NodeIterator u(this); u; u++)
+		((ExecutionNode *)*u)->pair_index = pair_cnt++;
+	pairs = new BitVector(pair_cnt * pair_cnt);
+}
+
+
+// ---------- unchangedSeparated()
+
+bool ExecutionGraph::unchangedSeparated(elm::io::Output& out_stream) {
+	bool unchanged = true;
+	
+	for(NodeIterator first(this); first; first++)
+		for(NodeIterator second(this); second; second++) {
+			ExecutionNode *fnode = (ExecutionNode *)*first;
+			ExecutionNode *snode = (ExecutionNode *)*second;
+			int index = fnode->pair_index * pair_cnt + snode->pair_index;
+			bool sep = separated(fnode, snode, out_stream);
+			if(pairs->bit(index) != sep) {
+				unchanged = false;
+				pairs->set(index, sep);
+			}
+		}
+	
+	return unchanged;
+}
+
+
+// ---------- dumpLight()
+
+void ExecutionGraph::dumpLight(elm::io::Output& out_stream) {
+	out_stream << "\tDumping the execution graph ...\n";
+	out_stream << "\t\tEntry node: ";
+	this->entry_node->dumpLight(out_stream);
+	out_stream << " \n";
+	for (int i=0 ; i<ExecutionNode::CODE_PARTS_NUMBER ; i++) {
+		if (first_node[i] != NULL) {
+			out_stream << "\t\t";
+			first_node[i]->dumpPart(out_stream);
+			out_stream << ": first_node=";
+			first_node[i]->dumpLight(out_stream);
+			out_stream << ", last_node=";
+			last_node[i]->dumpLight(out_stream);
+			out_stream << "\n";
+		}
+	}
+}
+
+
+// ---------- dump()
+
+void ExecutionGraph::dump(elm::io::Output& out_stream) {
+	out_stream << "\tDumping the execution graph ...\n";
+	out_stream << "\t\tEntry node: ";
+	this->entry_node->dumpLight(out_stream);
+	out_stream << " \n";
+	for (int i=0 ; i<ExecutionNode::CODE_PARTS_NUMBER ; i++) {
+		if (first_node[i] != NULL) {
+			out_stream << "\t\t";
+			first_node[i]->dumpPart(out_stream);
+			out_stream << ": first_node=";
+			first_node[i]->dumpLight(out_stream);
+			out_stream << ", last_node=";
+			last_node[i]->dumpLight(out_stream);
+			out_stream << "\n";
+		}
+	}
+	for(NodeIterator node(this); node; node++){
+		((ExecutionNode *) *node)->dump(out_stream);
+		out_stream << "\n";
+	}
+	out_stream << "\n";
+	if (this->entry_node != NULL) {
+		out_stream << "\nTopological order:\n";
+		for(PreorderIterator node(this, this->entry_node); node; node++) {
+			out_stream << ((ExecutionNode *) *node)->pipelineStage()->shortName();
+			out_stream << "(I" << ((ExecutionNode *) *node)->instIndex() <<") - ";
+		}
+	}
+}
+
+
+// ---------- dotDump()
+
+void ExecutionGraph::dotDump(elm::io::Output& dotFile, bool dump_times) {
+	GraphNodesListInList *stage_node_list, *inst_node_list;
+	GraphNodeInList *node_in_list;
+	
+	dotFile << "digraph G {\n";
+	inst_node_list = (GraphNodesListInList *) instructions_nodes_lists.first();
+	while (!inst_node_list->atEnd()) {
+		// dump nodes
+		node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
+		dotFile << "{ rank = same ; ";
+		while (!node_in_list->atEnd()) {
+			dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
+			dotFile << "I" << node_in_list->executionNode()->instIndex() << "\" ; ";
+			node_in_list = (GraphNodeInList *) node_in_list->next();
+		}
+		dotFile << "}\n";
+		// again to specify labels
+		node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
+		while (!node_in_list->atEnd()) { 
+			if (dump_times) {
+				dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
+				dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"";
+				dotFile << " [shape=record, ";
+				if (node_in_list->executionNode()->isShaded())
+					dotFile << "color=red, ";
+				if (node_in_list->executionNode()->part() == ExecutionNode::BODY)
+					dotFile << "color=blue, ";
+				dotFile << "label=\"" << node_in_list->executionNode()->pipelineStage()->shortName();
+				dotFile << "(I" << node_in_list->executionNode()->instIndex() << ") ";
+				dotFile << "| { {";
+				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->minReadyTime(),dotFile);
+				dotFile  << "|";
+				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->maxReadyTime(),dotFile);
+				dotFile << "} | {";
+				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->minStartTime(),dotFile);
+				dotFile << "|";
+				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->maxStartTime(),dotFile);
+				dotFile << "} | {";
+				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->minFinishTime(),dotFile);
+				dotFile << "|";
+				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->maxFinishTime(),dotFile);
+				dotFile << "} }";		
+				dotFile << "\"] ; \n";
+			}
+			else {
+				if (node_in_list->executionNode()->isShaded()) {
+					dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
+					dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"";
+					dotFile << " [color=red] ; \n";
+					
+				}
+				
+			}
+			node_in_list = (GraphNodeInList *) node_in_list->next();
+		}
+		dotFile << "\n";
+		
+		inst_node_list = (GraphNodesListInList *) inst_node_list->next();
+	}
+	int group_number = 0;
+	inst_node_list = (GraphNodesListInList *) instructions_nodes_lists.first();
+	while (!inst_node_list->atEnd()) {
+		// dump edges
+		node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
+		while (!node_in_list->atEnd()) {
+				for (graph::Node::Successor next(node_in_list->executionNode()) ; next ; next++) {
+					if ( (inst_node_list !=  (GraphNodesListInList *) instructions_nodes_lists.first())
+						||
+						(!node_in_list->executionNode()->producesOperands()) 
+						|| (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex()) ) {
+						dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
+						dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"";
+						dotFile << " -> ";
+						dotFile << "\"" << ((ExecutionNode *) *next)->pipelineStage()->shortName();
+						dotFile << "I" << ((ExecutionNode *) *next)->instIndex() << "\"";
+						switch( ((ExecutionEdge *) next.edge())->type()) {
+							case ExecutionEdge::SOLID:
+								if (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex())
+									dotFile << "[minlen=4]";
+								dotFile << " ;\n";
+								break;
+							case ExecutionEdge::SLASHED:
+								dotFile << " [style=dotted";
+								if (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex())
+									dotFile << ", minlen=4";
+								dotFile << "] ;\n";
+								break;	
+							default:
+								break;
+						}	
+						if ((node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex())
+								|| ((node_in_list->executionNode()->stageIndex() == ((ExecutionNode *) *next)->stageIndex())
+									&& (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex()-1)) ) {
+							dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
+							dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"  [group=" << group_number << "] ;\n";
+							dotFile << "\"" << ((ExecutionNode *) *next)->pipelineStage()->shortName();
+							dotFile << "I" << ((ExecutionNode *) *next)->instIndex() << "\" [group=" << group_number << "] ;\n";
+							group_number++;
+						}
+					}
+				// dump contenders
+	//			for(ExecutionNode::ContenderIterator cont(node_in_list->executionNode()); cont; cont ++) {
+	//				if (cont->instIndex() > node_in_list->executionNode()->instIndex()) {
+	//					dotFile << node_in_list->executionNode()->pipelineStage()->shortName();
+	//					dotFile << "I" << node_in_list->executionNode()->instIndex();
+	//					dotFile << " -> ";
+	//					dotFile << cont->pipelineStage()->shortName();
+	//					dotFile << "I" << cont->instIndex();
+	//					dotFile << " [style=dashed, dir=none] ; \n";
+	//				}
+	//			}
+				}		
+			node_in_list = (GraphNodeInList *) node_in_list->next();
+		}
+		dotFile << "\n";
+		inst_node_list = (GraphNodesListInList *) inst_node_list->next();
+	}
+	
+	dotFile << "}\n";
+}
+
+
+// ---------- dump()
+
+inline void Path::dump(elm::io::Output& out_stream) {
+	for(NodeIterator node(this); node; node++) {
+		((ExecutionNode *) *node)->dumpLight(out_stream);
+		out_stream << "-";
+	}
+}
+
+
+// ---------- dump()
+
+inline void PathList::dump(elm::io::Output& out_stream) {
+	for(PathIterator path(this); path; path++) {
+		((Path *) *path)->dump(out_stream);
+		out_stream << "\n";
+	}
+}
+
+
+// ---------- dump()
+
+inline void GraphNodesListInList::dump(elm::io::Output& out_stream) {
+	if (pipeline_stage != NULL) {
+		out_stream << "list of nodes for stage " << pipeline_stage->name() << "(";
+		out_stream << pipeline_stage->shortName() << "): ";
+	}
+	else {
+		if (instruction != NULL) {
+			out_stream << "list of nodes for instruction ";
+			instruction->dump(out_stream);
+		}
+		else
+			out_stream << "list of nodes for ??? :";
+	}
+	GraphNodeInList *node = (GraphNodeInList *) node_list.first();
+	if (node != NULL) {
+		while (!node->atEnd()) {
+			node->dump(out_stream);
+			node = (GraphNodeInList *) node->next();
+		}
+	}
 }
 
 } // namespace otawa

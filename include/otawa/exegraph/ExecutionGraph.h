@@ -15,6 +15,7 @@
 #include <otawa/instruction.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/genstruct/DLList.h>
+#include <elm/util/BitVector.h>
 
 
 namespace otawa { 
@@ -42,7 +43,9 @@ class ExecutionNode: public graph::Node {
 			BODY = 2,
 			EPILOGUE = 3,
 			CODE_PARTS_NUMBER  // should be the last value
-		} code_part_t;	
+		} code_part_t;
+		
+		int pair_index;
 	private:
 		PipelineStage * pipeline_stage;
 		Inst * inst;
@@ -87,13 +90,13 @@ class ExecutionNode: public graph::Node {
 		inline void setMaxLatency(int lat) ;
 		inline void setNeedsOperands(bool val);
 		inline void setProducesOperands(bool val);
-		inline void dump(elm::io::Output& out_stream);
-		inline void dumpLight(elm::io::Output& out_stream);
-		inline void dumpLightTimed(elm::io::Output& out_stream);
-		inline void dumpTime(int time, elm::io::Output& out_stream);
+		void dump(elm::io::Output& out_stream);
+		void dumpLight(elm::io::Output& out_stream);
+		void dumpLightTimed(elm::io::Output& out_stream);
+		void dumpTime(int time, elm::io::Output& out_stream);
 		inline void addContender(ExecutionNode *cont);
 		inline code_part_t part(void) const;
-		inline void dumpPart(elm::io::Output& out_stream);
+		void dumpPart(elm::io::Output& out_stream);
 		inline void shade(void);
 		inline bool isShaded(void);
 		class ContenderIterator: public elm::genstruct::Vector<ExecutionNode *>::Iterator {
@@ -123,7 +126,7 @@ class ExecutionEdge: public graph::Edge {
 	public:
 		inline ExecutionEdge(ExecutionNode *source, ExecutionNode *target, edge_type_t type);
 		inline edge_type_t type(void) const;
-		inline void dump(elm::io::Output& out_stream);
+		void dump(elm::io::Output& out_stream);
 };
 
 // -----------------------------------------------------------
@@ -149,23 +152,23 @@ class ExecutionGraph:  public graph::Graph  {
 			elm::genstruct::AllocatedTable<ExecutionNode *> *table;
 		} rename_table_t;
 		
-		
+		int pair_cnt;
 	private:
 		ExecutionNode * entry_node;
 		elm::inhstruct::DLList stages_nodes_lists;
 		elm::inhstruct::DLList instructions_nodes_lists;
-		elm::genstruct::DLList<NodePair *> pairs;
+		elm::BitVector *pairs;
 		ExecutionNode * first_node[ExecutionNode::CODE_PARTS_NUMBER];
 		ExecutionNode * last_node[ExecutionNode::CODE_PARTS_NUMBER];
 		
 	public:
-		inline ExecutionGraph(void);
+		ExecutionGraph(void);
 		~ExecutionGraph(void);
 		inline void setEntryNode(ExecutionNode *node);
-		inline void dump(elm::io::Output& out_stream);
-		inline void dumpLight(elm::io::Output& out_stream);
+		void dump(elm::io::Output& out_stream);
+		void dumpLight(elm::io::Output& out_stream);
 		inline ExecutionNode * entryNode(void);
-		inline void dotDump(elm::io::Output& dotFile, bool dump_times);
+		void dotDump(elm::io::Output& dotFile, bool dump_times);
 		inline elm::inhstruct::DLList * stagesNodesLists(void);
 		inline elm::inhstruct::DLList * instructionsNodesLists(void);
 		inline void initSeparated(void);
@@ -200,7 +203,7 @@ class GraphNodeInList: public elm::inhstruct::DLNode {
 	public:
 		inline GraphNodeInList(ExecutionNode* node);
 		inline ExecutionNode * executionNode(void);
-		inline void dump(elm::io::Output& out_stream);
+		void dump(elm::io::Output& out_stream);
 };
 
 // -----------------------------------------------------------
@@ -223,7 +226,7 @@ class GraphNodesListInList : public elm::inhstruct::DLNode {
 		inline elm::inhstruct::DLList * list(void);
 		inline PipelineStage * stage(void);
 		inline Inst * inst(void);
-		inline void dump(elm::io::Output& out_stream);
+		void dump(elm::io::Output& out_stream);
 		inline int instIndex(void) const;
 		inline int stageIndex(void) const;
 		ExecutionNode::code_part_t part(void) const;
@@ -239,7 +242,7 @@ class Path {
 		elm::genstruct::DLList<ExecutionNode *> node_list;
 	public:
 		inline void addNodeFirst(ExecutionNode *node);
-		inline void dump(elm::io::Output& out_stream);
+		void dump(elm::io::Output& out_stream);
 		
 		class NodeIterator : public elm::genstruct::DLList<ExecutionNode *>::Iterator {
 			public:
@@ -257,7 +260,7 @@ class PathList {
 		elm::genstruct::DLList<Path *> path_list;
 	public:
 		inline void addPath(Path *path);
-		inline void dump(elm::io::Output& out_stream);
+		void dump(elm::io::Output& out_stream);
 		
 		class PathIterator : public elm::genstruct::DLList<Path *>::Iterator {
 			public:
@@ -474,26 +477,6 @@ inline bool ExecutionNode::isShaded(void) {
 	return shaded;
 }
 
-// ---------- dumpPart()
-
-inline void ExecutionNode::dumpPart(elm::io::Output& out_stream) {
-	switch(code_part) {
-		case BEFORE_PROLOGUE:
-			out_stream << "[BEFORE_PROLOGUE]";
-			break;
-		case PROLOGUE:
-			out_stream << "[PROLOGUE]";
-			break;
-		case BODY:
-			out_stream << "[BODY]";
-			break;
-		case EPILOGUE:
-			out_stream << "[EPILOGUE]";
-			break;
-	}
-			
-}
-
 // ---------- part()
 
 inline ExecutionNode::code_part_t ExecutionNode::part(void) const {
@@ -505,86 +488,6 @@ inline ExecutionNode::code_part_t ExecutionNode::part(void) const {
 inline ExecutionNode::ContenderIterator::ContenderIterator(const ExecutionNode *node):
 elm::genstruct::Vector<ExecutionNode *>::Iterator(node->contenders) {
 }
-
-// ---------- dumpTime()
-
-inline void ExecutionNode::dumpTime(int time, elm::io::Output& out_stream) {
-	switch(time) {
-		case -INFINITE_TIME:
-			out_stream << "-INF";
-			break;
-		case INFINITE_TIME:
-			out_stream << "+INF";
-			break;
-		default:
-			if (time < -INFINITE_TIME+10)	// ----------------------------- to be fixed
-				out_stream << "-INF";
-			else
-				if (time > INFINITE_TIME-10)
-					out_stream << "-INF";
-				else
-					out_stream << time;
-			break;
-	}
-}
-
-// ---------- dump()
-
-inline void ExecutionNode::dump(elm::io::Output& out_stream) {
-	out_stream << "\t" << pipeline_stage->shortName();
-	out_stream << "(I" << inst_index <<")";
-	if (needs_operands)
-		out_stream << "\n\t   needs operands";
-	if (produces_operands)
-		out_stream << "\n\t   produces operands";		
-	if (this->hasPred()) {
-		out_stream << "\n\t   predecessors: ";
-		for (graph::Node::Predecessor pred(this) ; pred ; pred++) {
-			out_stream << ((ExecutionNode *) *pred)->pipelineStage()->shortName();
-			out_stream << "(I" << ((ExecutionNode *) *pred)->instIndex() <<")";
-			((ExecutionEdge *) pred.edge())->dump(out_stream);
-		}
-	}
-	if (this->hasSucc()) {
-		out_stream << "\n\t   successors: ";
-		for (graph::Node::Successor next(this) ; next ; next++) {
-			out_stream << ((ExecutionNode *) *next)->pipelineStage()->shortName();
-			out_stream << "(I" << ((ExecutionNode *) *next)->instIndex() <<")";
-			((ExecutionEdge *)next.edge())->dump(out_stream);
-		}
-	}
-	out_stream << "\n\t   contenders: ";
-	for(ContenderIterator cont(this); cont; cont ++) {
-		cont->dumpLight(out_stream);
-	}
-	out_stream << "\n\t   times: r.min="; this->dumpTime(ready_time.min, out_stream);
-	out_stream << "/r.max="; this->dumpTime(ready_time.max, out_stream);
-	out_stream << " - s.min="; this->dumpTime(start_time.min, out_stream);
-	out_stream << "/s.max="; this->dumpTime(start_time.max, out_stream);
-	out_stream << " - f.min="; this->dumpTime(finish_time.min, out_stream);
-	out_stream << "/f.max="; this->dumpTime(finish_time.max, out_stream);  
-}
-
-// ---------- dumpLight()
-
-inline void ExecutionNode::dumpLight(elm::io::Output& out_stream) {
-	out_stream << pipeline_stage->shortName();
-	out_stream << "(I" << inst_index <<")";
-}
-
-// ---------- dumpLightTimed()
-
-inline void ExecutionNode::dumpLightTimed(elm::io::Output& out_stream) {
-	out_stream << "\t" << pipeline_stage->shortName();
-	out_stream << "(I" << inst_index <<")";
-	out_stream << "["; dumpTime(ready_time.min, out_stream);
-	out_stream << "/"; dumpTime(ready_time.max, out_stream);out_stream << "]";
-	out_stream << "["; dumpTime(start_time.min, out_stream);
-	out_stream << "/"; dumpTime(start_time.max, out_stream);out_stream << "]";
-	out_stream << "["; dumpTime(finish_time.min, out_stream);
-	out_stream << "/"; dumpTime(finish_time.max, out_stream);out_stream << "]";
-}
-
 
 // -----------------------------------------------------------
 // ExecutionEdge functions
@@ -600,22 +503,6 @@ inline ExecutionEdge::ExecutionEdge(ExecutionNode *source, ExecutionNode *target
 
 inline ExecutionEdge::edge_type_t ExecutionEdge::type(void) const {
 	return edge_type;
-}
-
-// ---------- dump()
-
-inline void ExecutionEdge::dump(elm::io::Output& out_stream) {
-	switch(edge_type) {
-		case SOLID:
-			out_stream << "[SOLID] - ";
-			break;
-		case SLASHED:
-			out_stream << "[SLASHED] - ";
-			break;
-		default:
-			out_stream << " - ";
-			break;
-	}
 }
 
 
@@ -656,30 +543,6 @@ inline void ExecutionGraph::NodePair::setSeparated(bool sep) {
 // -----------------------------------------------------------
 // ExecutionGraph functions
 // -----------------------------------------------------------
-
-// ---------- constructor
-
-inline ExecutionGraph::ExecutionGraph()
-: entry_node(NULL) {
-	for (int i=0 ; i<ExecutionNode::CODE_PARTS_NUMBER ; i++) {
-		first_node[i] = NULL;
-		last_node[i] = NULL;
-	}
-}
-
-// ---------- initSeparated()
-
-inline void ExecutionGraph::initSeparated() {
-	int index = 0;
-	NodePair *pair;
-	for(NodeIterator u(this); u; u++){
-		for(NodeIterator v(this); v; v++){
-			pair = new NodePair((ExecutionNode *)*u, (ExecutionNode *)*v, false);
-			pairs.addLast(pair);
-			index++;
-		}
-	}	
-}
 
 // ---------- entryNode()
 
@@ -738,199 +601,6 @@ inline bool ExecutionGraph::separated(ExecutionNode *u, ExecutionNode *v, elm::i
 	return false;
 }
 
-// ---------- unchangedSeparated()
-
-inline bool ExecutionGraph::unchangedSeparated(elm::io::Output& out_stream) {
-	int index = 0;
-	bool unchanged = true;
-	
-	for (elm::genstruct::DLList<NodePair *>::Iterator pair(this->pairs) ; pair ; pair++) {
-			if ( ((NodePair *) *pair)->isSeparated() != separated(((NodePair *) *pair)->firstNode(), ((NodePair *) *pair)->secondNode(), out_stream)) {			
-				unchanged = false;
-				((NodePair *) *pair)->setSeparated( separated(((NodePair *) *pair)->firstNode(), ((NodePair *) *pair)->secondNode(), out_stream) );
-			}
-			index++;
-		}
-	return unchanged;
-}
-
-
-// ---------- dumpLight()
-
-inline void ExecutionGraph::dumpLight(elm::io::Output& out_stream) {
-	out_stream << "\tDumping the execution graph ...\n";
-	out_stream << "\t\tEntry node: ";
-	this->entry_node->dumpLight(out_stream);
-	out_stream << " \n";
-	for (int i=0 ; i<ExecutionNode::CODE_PARTS_NUMBER ; i++) {
-		if (first_node[i] != NULL) {
-			out_stream << "\t\t";
-			first_node[i]->dumpPart(out_stream);
-			out_stream << ": first_node=";
-			first_node[i]->dumpLight(out_stream);
-			out_stream << ", last_node=";
-			last_node[i]->dumpLight(out_stream);
-			out_stream << "\n";
-		}
-	}
-}
-
-// ---------- dump()
-
-inline void ExecutionGraph::dump(elm::io::Output& out_stream) {
-	out_stream << "\tDumping the execution graph ...\n";
-	out_stream << "\t\tEntry node: ";
-	this->entry_node->dumpLight(out_stream);
-	out_stream << " \n";
-	for (int i=0 ; i<ExecutionNode::CODE_PARTS_NUMBER ; i++) {
-		if (first_node[i] != NULL) {
-			out_stream << "\t\t";
-			first_node[i]->dumpPart(out_stream);
-			out_stream << ": first_node=";
-			first_node[i]->dumpLight(out_stream);
-			out_stream << ", last_node=";
-			last_node[i]->dumpLight(out_stream);
-			out_stream << "\n";
-		}
-	}
-	for(NodeIterator node(this); node; node++){
-		((ExecutionNode *) *node)->dump(out_stream);
-		out_stream << "\n";
-	}
-	out_stream << "\n";
-	if (this->entry_node != NULL) {
-		out_stream << "\nTopological order:\n";
-		for(PreorderIterator node(this, this->entry_node); node; node++) {
-			out_stream << ((ExecutionNode *) *node)->pipelineStage()->shortName();
-			out_stream << "(I" << ((ExecutionNode *) *node)->instIndex() <<") - ";
-		}
-	}
-}
-
-// ---------- dotDump()
-
-inline void ExecutionGraph::dotDump(elm::io::Output& dotFile, bool dump_times) {
-	GraphNodesListInList *stage_node_list, *inst_node_list;
-	GraphNodeInList *node_in_list;
-	
-	dotFile << "digraph G {\n";
-	inst_node_list = (GraphNodesListInList *) instructions_nodes_lists.first();
-	while (!inst_node_list->atEnd()) {
-		// dump nodes
-		node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
-		dotFile << "{ rank = same ; ";
-		while (!node_in_list->atEnd()) {
-			dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-			dotFile << "I" << node_in_list->executionNode()->instIndex() << "\" ; ";
-			node_in_list = (GraphNodeInList *) node_in_list->next();
-		}
-		dotFile << "}\n";
-		// again to specify labels
-		node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
-		while (!node_in_list->atEnd()) { 
-			if (dump_times) {
-				dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-				dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"";
-				dotFile << " [shape=record, ";
-				if (node_in_list->executionNode()->isShaded())
-					dotFile << "color=red, ";
-				if (node_in_list->executionNode()->part() == ExecutionNode::BODY)
-					dotFile << "color=blue, ";
-				dotFile << "label=\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-				dotFile << "(I" << node_in_list->executionNode()->instIndex() << ") ";
-				dotFile << "| { {";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->minReadyTime(),dotFile);
-				dotFile  << "|";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->maxReadyTime(),dotFile);
-				dotFile << "} | {";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->minStartTime(),dotFile);
-				dotFile << "|";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->maxStartTime(),dotFile);
-				dotFile << "} | {";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->minFinishTime(),dotFile);
-				dotFile << "|";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->maxFinishTime(),dotFile);
-				dotFile << "} }";		
-				dotFile << "\"] ; \n";
-			}
-			else {
-				if (node_in_list->executionNode()->isShaded()) {
-					dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-					dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"";
-					dotFile << " [color=red] ; \n";
-					
-				}
-				
-			}
-			node_in_list = (GraphNodeInList *) node_in_list->next();
-		}
-		dotFile << "\n";
-		
-		inst_node_list = (GraphNodesListInList *) inst_node_list->next();
-	}
-	int group_number = 0;
-	inst_node_list = (GraphNodesListInList *) instructions_nodes_lists.first();
-	while (!inst_node_list->atEnd()) {
-		// dump edges
-		node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
-		while (!node_in_list->atEnd()) {
-				for (graph::Node::Successor next(node_in_list->executionNode()) ; next ; next++) {
-					if ( (inst_node_list !=  (GraphNodesListInList *) instructions_nodes_lists.first())
-						||
-						(!node_in_list->executionNode()->producesOperands()) 
-						|| (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex()) ) {
-						dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-						dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"";
-						dotFile << " -> ";
-						dotFile << "\"" << ((ExecutionNode *) *next)->pipelineStage()->shortName();
-						dotFile << "I" << ((ExecutionNode *) *next)->instIndex() << "\"";
-						switch( ((ExecutionEdge *) next.edge())->type()) {
-							case ExecutionEdge::SOLID:
-								if (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex())
-									dotFile << "[minlen=4]";
-								dotFile << " ;\n";
-								break;
-							case ExecutionEdge::SLASHED:
-								dotFile << " [style=dotted";
-								if (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex())
-									dotFile << ", minlen=4";
-								dotFile << "] ;\n";
-								break;	
-							default:
-								break;
-						}	
-						if ((node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex())
-								|| ((node_in_list->executionNode()->stageIndex() == ((ExecutionNode *) *next)->stageIndex())
-									&& (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex()-1)) ) {
-							dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-							dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"  [group=" << group_number << "] ;\n";
-							dotFile << "\"" << ((ExecutionNode *) *next)->pipelineStage()->shortName();
-							dotFile << "I" << ((ExecutionNode *) *next)->instIndex() << "\" [group=" << group_number << "] ;\n";
-							group_number++;
-						}
-					}
-				// dump contenders
-	//			for(ExecutionNode::ContenderIterator cont(node_in_list->executionNode()); cont; cont ++) {
-	//				if (cont->instIndex() > node_in_list->executionNode()->instIndex()) {
-	//					dotFile << node_in_list->executionNode()->pipelineStage()->shortName();
-	//					dotFile << "I" << node_in_list->executionNode()->instIndex();
-	//					dotFile << " -> ";
-	//					dotFile << cont->pipelineStage()->shortName();
-	//					dotFile << "I" << cont->instIndex();
-	//					dotFile << " [style=dashed, dir=none] ; \n";
-	//				}
-	//			}
-				}		
-			node_in_list = (GraphNodeInList *) node_in_list->next();
-		}
-		dotFile << "\n";
-		inst_node_list = (GraphNodesListInList *) inst_node_list->next();
-	}
-	
-	dotFile << "}\n";
-}
-
-
 // -----------------------------------------------------------
 // Path functions
 // -----------------------------------------------------------
@@ -945,15 +615,6 @@ inline void Path::addNodeFirst(ExecutionNode *node) {
 
 inline Path::NodeIterator::NodeIterator(Path *path) 
 : elm::genstruct::DLList<ExecutionNode *>::Iterator(path->node_list) {
-}
-
-// ---------- dump()
-
-inline void Path::dump(elm::io::Output& out_stream) {
-	for(NodeIterator node(this); node; node++) {
-		((ExecutionNode *) *node)->dumpLight(out_stream);
-		out_stream << "-";
-	}
 }
 
 
@@ -971,15 +632,6 @@ inline void PathList::addPath(Path *path) {
 
 inline PathList::PathIterator::PathIterator(PathList *list) 
 : elm::genstruct::DLList<Path *>::Iterator(list->path_list) {
-}
-
-// ---------- dump()
-
-inline void PathList::dump(elm::io::Output& out_stream) {
-	for(PathIterator path(this); path; path++) {
-		((Path *) *path)->dump(out_stream);
-		out_stream << "\n";
-	}
 }
 
 // -----------------------------------------------------------
@@ -1054,33 +706,6 @@ inline int GraphNodesListInList::stageIndex(void) const {
 inline ExecutionNode::code_part_t GraphNodesListInList::part(void) const {
 	return code_part;
 }
-
-
-// ---------- dump()
-
-inline void GraphNodesListInList::dump(elm::io::Output& out_stream) {
-	if (pipeline_stage != NULL) {
-		out_stream << "list of nodes for stage " << pipeline_stage->name() << "(";
-		out_stream << pipeline_stage->shortName() << "): ";
-	}
-	else {
-		if (instruction != NULL) {
-			out_stream << "list of nodes for instruction ";
-			instruction->dump(out_stream);
-		}
-		else
-			out_stream << "list of nodes for ??? :";
-	}
-	GraphNodeInList *node = (GraphNodeInList *) node_list.first();
-	if (node != NULL) {
-		while (!node->atEnd()) {
-			node->dump(out_stream);
-			node = (GraphNodeInList *) node->next();
-		}
-	}
-}
-
-
 
 } // otawa
 
