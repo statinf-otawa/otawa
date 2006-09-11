@@ -13,6 +13,8 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
 
+//#define WITH_VIRTUAL
+
 using namespace elm;
 using namespace otawa;
 using namespace otawa::ipet;
@@ -67,62 +69,50 @@ int main(int argc, char **argv) {
 					break;
 				}
 		
-		// Now, use a VCFG
-		VirtualCFG vcfg(cfg);
-		
 		// Prepare processor configuration
 		PropList props;
-		props.set(EXPLICIT, true);
+		EXPLICIT(props) = true;
+		PROC_VERBOSE(props) = true;
+		RECURSIVE(props) = true;
 		
 		// Compute BB times
-		cout << "Timing the BB\n";
 		TrivialBBTime tbt(5, props);
-		tbt.processCFG(fw, &vcfg);
+		tbt.process(fw);
 		
 		// Trivial data cache
-		cout << "Managing the data cache\n";
 		TrivialDataCacheManager dcache(props);
-		dcache.processCFG(fw, &vcfg);
+		dcache.process(fw);
 		
 		// Assign variables
-		cout << "Numbering the main\n";
 		VarAssignment assign(props);
-		assign.processCFG(fw, &vcfg);
+		assign.process(fw);
 		
 		// Build the system
-		cout << "Building the ILP system\n";
 		BasicConstraintsBuilder builder(props);
-		builder.processCFG(fw, &vcfg);
+		builder.process(fw);
 		
 		// Build the object function to maximize
-		cout << "Building the ILP object function\n";
 		BasicObjectFunctionBuilder fun_builder(props);
-		fun_builder.processCFG(fw, &vcfg);
+		fun_builder.process(fw);
 		
 		// Load flow facts
-		cout << "Loading flow facts\n";
 		ipet::FlowFactLoader loader(props);
-		loader.processCFG(fw, &vcfg);
+		loader.process(fw);
 		
 		// Resolve the system
-		cout << "Resolve the system\n";
 		WCETComputation wcomp(props);
-		wcomp.processCFG(fw, &vcfg);
+		wcomp.process(fw);
 		
 		// Display the result
-		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
+		cfg = ENTRY_CFG(fw);
+		ilp::System *sys = SYSTEM(cfg);
 		sys->dump();
 		cout << sys->countVars() << " variables and "
 			 << sys->countConstraints() << " constraints.\n";
-		cout << "SUCCESS\nWCET = " << vcfg.use<int>(WCET) << '\n';
+		cout << "SUCCESS\nWCET = " << WCET(cfg) << '\n';
 	}
-	catch(LoadException e) {
+	catch(elm::Exception e) {
 		cerr << "ERROR: " << e.message() << '\n';
-		exit(1);
-	}
-	catch(ProcessorException e) {
-		cerr << "ERROR: " << e.message() << '\n';
-		exit(1);
 	}
 	return 0;
 }

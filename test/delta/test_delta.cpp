@@ -159,6 +159,7 @@ int main(int argc, char **argv) {
 		
 		// Now, use an inlined VCFG
 		VirtualCFG vcfg(cfg);
+		ENTRY_CFG(fw) = &vcfg;
 		
 		// Prepare processor configuration
 		PropList props;
@@ -166,56 +167,56 @@ int main(int argc, char **argv) {
 		
 		// Compute BB times
 		BBTimeSimulator bbts(props);
-		bbts.processCFG(fw, &vcfg);
+		bbts.process(fw);
 		
 		// Trivial data cache
 		TrivialDataCacheManager dcache(props);
-		dcache.processCFG(fw, &vcfg);
+		dcache.process(fw);
 		
 		// Assign variables
 		VarAssignment assign(props);
-		assign.processCFG(fw, &vcfg);
+		assign.process(fw);
 		
 		// Build the system
 		BasicConstraintsBuilder builder(props);
-		builder.processCFG(fw, &vcfg);
+		builder.process(fw);
 		
 		// Process the instruction cache
 		if(method == CCG) {
 			
 			// build ccg graph
 			CCGBuilder ccgbuilder;
-			ccgbuilder.processCFG(fw, &vcfg );
+			ccgbuilder.process(fw);
 			
 			// Build ccg contraint
 			CCGConstraintBuilder decomp(fw);
-			decomp.processCFG(fw, &vcfg );
+			decomp.process(fw);
 			
 			//Build the objectfunction
 			CCGObjectFunction ofunction(fw);
-			ofunction.processCFG(fw, &vcfg );
+			ofunction.process(fw);
 		}
 		else {
 			if(method == CAT) {
 				
 				// build Cat lblocks
 				CATBuilder catbuilder;
-				catbuilder.processCFG(fw, &vcfg);
+				catbuilder.process(fw);
 			
 				// Build CAT contraint
 				CATConstraintBuilder decomp;
-				decomp.processCFG(fw, &vcfg);
+				decomp.process(fw);
 			}
 			
 			// Build the object function to maximize
 			BasicObjectFunctionBuilder fun_builder;
-			fun_builder.processCFG(fw, &vcfg);	
+			fun_builder.process(fw);	
 
 		}
 
 		// Load flow facts
 		ipet::FlowFactLoader loader(props);
-		loader.processCFG(fw, &vcfg);
+		loader.process(fw);
 		
 		// Calculate deltas
 		//cout << "Computing deltas... ";
@@ -225,7 +226,7 @@ int main(int argc, char **argv) {
 		if(deltaLevels)
 			Delta::LEVELS(props) = *deltaLevels;
 		Delta delta(props);
-		delta.processCFG(fw, &vcfg);
+		delta.process(fw);
 		delta_sw.stop();
 		//cout << "OK in " << delta_sw.delay()/1000 << " ms\n";
 		if(infos){
@@ -239,7 +240,7 @@ int main(int argc, char **argv) {
 		elm::system::StopWatch ilp_sw;
 		ilp_sw.start();
 		WCETComputation wcomp(props);
-		wcomp.processCFG(fw, &vcfg);
+		wcomp.process(fw);
 		ilp_sw.stop();
 		main_sw.stop();
 

@@ -27,42 +27,25 @@ namespace otawa { namespace ipet {
  * Perform the actual work on the given basic block.
  * @param bb	Basic block to process.
  */
-void VarAssignment::process(BasicBlock *bb) {
-	//cout << "VarAssignment::process(" << bb->address() << ")\n";
+void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	
 	// Check BB
-	if(!bb->get<Var *>(VAR, 0)) {
+	if(!VAR(bb)) {
 		String name = "";
 		if(_explicit)
 			name = makeNodeVar(bb);
-		bb->addDeletable<Var *>(VAR, new Var(name));
+		VAR(bb) = new Var(name);
 	}
 	
 	// Check out edges
 	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-		if(!edge->get<Var *>(VAR, 0)) {
+		if(!VAR(edge)) {
 			String name = "";
 			if(_explicit)
 				name = makeEdgeVar(edge);
-			edge->add<Var *>(VAR, new Var(name));
+			VAR(edge) = new Var(name);
 		}
 	}
-}
-
-
-/**
- * See @ref CFGProcessor::processCFG().
- */
-void VarAssignment::processCFG(FrameWork *fw, CFG *cfg) {
-	BBProcessor::processCFG(fw, cfg);
-}
-
-
-/**
- * See @ref BBProcessor::processBB().
- */
-void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
-	process(bb);
 }
 
 
@@ -79,7 +62,8 @@ VarAssignment::VarAssignment(const PropList& props)
 /**
  */
 void VarAssignment::init(const PropList& props) {
-	_explicit = props.get<bool>(EXPLICIT, _explicit);
+	_explicit = EXPLICIT(props);
+	_recursive = RECURSIVE(props);
 }
 
 

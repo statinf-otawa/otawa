@@ -93,6 +93,7 @@ void Command::compute(String fun) {
 		return;
 	}
 	VirtualCFG vcfg(cfg);
+	ENTRY_CFG(fw) = &vcfg;
 		
 	// Prepare processor configuration
 	PropList props;
@@ -113,39 +114,39 @@ void Command::compute(String fun) {
 			throw io::IOException(logStream.lastErrorMessage());
 		io::Output logFile(logStream);
 		ExeGraphBBTime tbt(props, &processor, logFile);
-		tbt.processCFG(fw, &vcfg);
+		tbt.process(fw);
 	}
 	else {
 		BBTimeSimulator bbts(props);
-		bbts.processCFG(fw, &vcfg);
+		bbts.process(fw);
 	}
 	
 	// Assign variables
 	VarAssignment assign(props);
-	assign.processCFG(fw, &vcfg);
+	assign.process(fw);
 		
 	// Build the system
 	BasicConstraintsBuilder builder(props);
-	builder.processCFG(fw, &vcfg);
+	builder.process(fw);
 		
 	// Load flow facts
 	ipet::FlowFactLoader loader(props);
-	loader.processCFG(fw, &vcfg);
+	loader.process(fw);
 
 	// Build the object function to maximize
 	BasicObjectFunctionBuilder fun_builder;
-	fun_builder.processCFG(fw, &vcfg);	
+	fun_builder.process(fw);	
 
 	// Use delta approach
 	if(delta) {
 		Delta::LEVELS(props) = delta;
 		Delta delta(props);
-		delta.processCFG(fw, &vcfg);
+		delta.process(fw);
 	}
 	
 	// Resolve the system
 	WCETComputation wcomp(props);
-	wcomp.processCFG(fw, &vcfg);
+	wcomp.process(fw);
 
 	// Get the result
 	ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);

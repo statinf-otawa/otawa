@@ -60,44 +60,45 @@ int main(int argc, char **argv) {
 		
 		// Now, use a VCFG
 		VirtualCFG vcfg(cfg);
+		ENTRY_CFG(fw) = &vcfg;
 		
 				
 		// assigne variable to CFG
 		cout << "Numbering the main\n";
 		VarAssignment assign;
-		assign.processCFG(fw, &vcfg);
+		assign.process(fw);
 		
 		// Build the system
 		cout << "Building the ILP system\n";
 		BasicConstraintsBuilder builder;
-		builder.processCFG(fw, &vcfg);
+		builder.process(fw);
 		
 		// Get external constraints
 		cout << "Loading external constraints\n";
 		ipet::FlowFactLoader ffl;
-		ffl.processCFG(fw, &vcfg);
+		ffl.process(fw);
 
 		// Build the CCG
 		cout << "Building the CCG Contraints\n";
 		LBlockBuilder lblock_builder;
-		lblock_builder.processCFG(fw, &vcfg);
+		lblock_builder.process(fw);
 			
 		// build ccg graph
 		CCGBuilder ccgbuilder;
-		ccgbuilder.processCFG(fw, &vcfg );
+		ccgbuilder.process(fw);
 			
 		// Build ccg contraint
 		CCGConstraintBuilder decomp(fw);
-		decomp.processCFG(fw, &vcfg );
+		decomp.process(fw);
 			
 		//Build the objectfunction
 		CCGObjectFunction ofunction(fw);
-		ofunction.processCFG(fw, &vcfg );
+		ofunction.process(fw);
 		
 		// Resolve the system
 		cout << "Resolve the system\n";
 		WCETComputation wcomp;
-		wcomp.processCFG(fw, &vcfg);
+		wcomp.process(fw);
 		
 		// Display the result
 		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);

@@ -146,6 +146,7 @@ int main(int argc, char **argv) {
 		
 		// Now, use a VCFG
 		VirtualCFG vcfg(cfg);
+		ENTRY_CFG(fw) = &vcfg;
 		
 		// Prepare processor configuration
 		PropList props;
@@ -176,33 +177,33 @@ int main(int argc, char **argv) {
 //		}
 		
 		ExeGraphBBTime tbt(props, &processor, logFile);
-		tbt.processCFG(fw, &vcfg);
+		tbt.process(fw);
 		
 		
 		// Assign variables
 		cout << "Numbering the main\n";
 		VarAssignment assign(props);
-		assign.processCFG(fw, &vcfg);
+		assign.process(fw);
 		
 		// Build the system
 		cout << "Building the ILP system\n";
 		BasicConstraintsBuilder builder(props);
-		builder.processCFG(fw, &vcfg);
+		builder.process(fw);
 		
 		// Build the object function to maximize
 		cout << "Building the ILP object function\n";
 		BasicObjectFunctionBuilder fun_builder(props);
-		fun_builder.processCFG(fw, &vcfg);
+		fun_builder.process(fw);
 		
 		// Load flow facts
 		cout << "Loading flow facts\n";
 		ipet::FlowFactLoader loader(props);
-		loader.processCFG(fw, &vcfg);
+		loader.process(fw);
 		
 		// Resolve the system
 		cout << "Resolve the system\n";
 		WCETComputation wcomp(props);
-		wcomp.processCFG(fw, &vcfg);
+		wcomp.process(fw);
 		
 		// Display the result
 		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);

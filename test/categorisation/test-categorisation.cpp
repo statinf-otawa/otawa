@@ -59,31 +59,32 @@ int main(int argc, char **argv) {
 		
 		// Now, use a VCFG
 		VirtualCFG vcfg(cfg);
+		ENTRY_CFG(fw) = &vcfg;
 		
 		// Compute BB times
 		cout << "Timing the BB\n";
 		TrivialBBTime tbt(5);
-		tbt.processCFG(fw, &vcfg);
+		tbt.process(fw);
 				
 		// assigne variable to CFG
 		cout << "Numbering the main\n";
 		VarAssignment assign;
-		assign.processCFG(fw, &vcfg);
+		assign.process(fw);
 		
 		// Build the system
 		cout << "Building the ILP system\n";
 		BasicConstraintsBuilder builder;
-		builder.processCFG(fw, &vcfg);
+		builder.process(fw);
 		
 		// Build the object function to maximize
 		cout << "Building the ILP object function\n";
 		BasicObjectFunctionBuilder fun_builder;
-		fun_builder.processCFG(fw, &vcfg);
+		fun_builder.process(fw);
 		
 		// Get external constraints
 		cout << "Loading external constraints\n";
 		ipet::FlowFactLoader ffl;
-		ffl.processCFG(fw, &vcfg);
+		ffl.process(fw);
 		// Build the CCG
 		/*cout << "Building the Categories Contraints\n";
 		for (int i=0; i < level1->lineCount(); i++){
@@ -94,17 +95,17 @@ int main(int argc, char **argv) {
 			
 			// build Cat lblocks
 			CATBuilder catbuilder;
-			catbuilder.processCFG(fw, &vcfg );
+			catbuilder.process(fw);
 			
 			// Build CAT contraint
 			CATConstraintBuilder decomp;
-			decomp.processCFG(fw, &vcfg );
+			decomp.process(fw);
 					
 		///}
 		// Resolve the system
 		cout << "Resolve the system\n";
 		WCETComputation wcomp;
-		wcomp.processCFG(fw, &vcfg);
+		wcomp.process(fw);
 		
 		// Display the result
 		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
