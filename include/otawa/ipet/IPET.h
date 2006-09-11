@@ -29,7 +29,6 @@ extern GenericIdentifier<ilp::Var *> VAR;
 extern GenericIdentifier<ilp::System *> SYSTEM;
 extern GenericIdentifier<int> WCET;
 extern GenericIdentifier<bool> EXPLICIT;
-extern GenericIdentifier<bool> RECURSIVE;
 	
 // Subprograms
 ilp::System *getSystem(FrameWork *fw, CFG *cfg);
