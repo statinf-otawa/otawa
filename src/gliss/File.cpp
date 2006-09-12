@@ -26,6 +26,7 @@ namespace otawa { namespace gliss {
  */
 File::File(String _path, int argc, char **argv, char **envp)
 : path(_path), labels_init(false) {
+	static char *ld_library_path[] = { 0 };
 	
 	// System configuration
     void *system_list[3];
@@ -40,7 +41,7 @@ File::File(String _path, int argc, char **argv, char **envp)
     loader_list[0] = argv;
     loader_list[1] = envp;
     loader_list[2] = NULL;
-    loader_list[3] = (void *)"";
+    loader_list[3] = (void *)ld_library_path;
     loader_list[4] = NULL;
     
     // Memory configuration
