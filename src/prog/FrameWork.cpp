@@ -117,4 +117,11 @@ ilp::System *FrameWork::newILPSystem(bool max) {
 	return manager()->newILPSystem();
 }
 
+
+/**
+ * This property, passed to the load configuration, gives the name of the
+ * entry function of the current task.
+ */
+GenericIdentifier<CString> TASK_ENTRY("otawa.task_entry", "main");
+
 } // otawa

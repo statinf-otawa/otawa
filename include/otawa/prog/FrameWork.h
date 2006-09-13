@@ -59,6 +59,9 @@ public:
 	ilp::System *newILPSystem(bool max = true);
 };
 
+// Configuration Properties
+extern GenericIdentifier<CString> TASK_ENTRY;
+
 };	// otawa
 
 #endif	// OTAWA_PROG_FRAMEWORK_H
