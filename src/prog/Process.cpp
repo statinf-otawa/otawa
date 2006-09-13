@@ -9,6 +9,7 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/prog/Loader.h>
+#include <otawa/prog/FrameWork.h>
 
 namespace otawa {
 
@@ -151,7 +152,7 @@ File *Process::loadProgram(elm::CString path) {
  * @return	A simulator for the current process or null if none is found.
  */
 sim::Simulator *Process::simulator(void) const {
-	return Loader::SIMULATOR(*this);
+	return SIMULATOR(*this);
 }
 
 } // otawa

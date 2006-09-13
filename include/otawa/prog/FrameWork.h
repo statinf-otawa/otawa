@@ -20,12 +20,16 @@ class CFG;
 class CFGInfo;
 class File;
 class Inst;
+class Loader;
 class Manager;
 namespace hard {
 	class Platform;
 }
 namespace ilp {
 	class System;
+}
+namespace sim {
+	class Simulator;
 }
 
 // FrameWork class
@@ -61,6 +65,18 @@ public:
 
 // Configuration Properties
 extern GenericIdentifier<CString> TASK_ENTRY;
+extern GenericIdentifier<hard::Platform *> PLATFORM;
+extern GenericIdentifier<Loader *> LOADER;
+extern GenericIdentifier<elm::CString> PLATFORM_NAME;
+extern  GenericIdentifier<elm::CString>  LOADER_NAME;
+//extern GenericIdentifier<hard::Platform::Identification *> PLATFORM_IDENTIFIER;
+extern GenericIdentifier<int> ARGC;
+extern GenericIdentifier<char **> ARGV;
+extern GenericIdentifier<char **> ENVP;
+extern GenericIdentifier<sim::Simulator *> SIMULATOR;
+extern GenericIdentifier<hard::CacheConfiguration *> CACHE_CONFIG;
+extern GenericIdentifier<int> PIPELINE_DEPTH;
+
 
 };	// otawa
 

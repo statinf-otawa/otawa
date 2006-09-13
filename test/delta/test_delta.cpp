@@ -130,9 +130,9 @@ int main(int argc, char **argv) {
 	GenericSimulator sim;
 	Manager manager;
 	PropList props;
-	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
-	props.set<CacheConfiguration *>(Platform::ID_Cache, &cache_conf);
-	Loader::SIMULATOR(props) = &sim;
+	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+	CACHE_CONFIG(props) = &cache_conf;
+	SIMULATOR(props) = &sim;
 	cout << "config = " << props << io::endl;
 	try {
 		FrameWork *fw = manager.load(file, props);

@@ -77,10 +77,6 @@ public:
 	Platform(const Identification& id, const PropList& props = PropList::EMPTY);
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
 
-	// Static
-	static Identifier ID_Cache;
-	static Identifier ID_PipelineDepth;
-
 	// Cache information
 	inline const Identification& identification(void) const;
 	inline const CacheConfiguration& cache(void) const;

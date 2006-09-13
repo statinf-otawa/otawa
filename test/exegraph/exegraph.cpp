@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 	
 	Manager manager;
 	PropList props;
-	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
+	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	
 	try {
 		

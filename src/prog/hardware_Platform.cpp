@@ -7,6 +7,7 @@
 
 #include <otawa/hard/Platform.h>
 #include <otawa/hard/CacheConfiguration.h>
+#include <otawa/prog/FrameWork.h>
 
 namespace otawa { namespace hard {
 
@@ -27,9 +28,9 @@ const elm::genstruct::Table<const hard::RegBank *> Platform::null_banks(0, 0);
  */
 void Platform::configure(const PropList& props) {
 	for(PropList::Iter prop(props); prop; prop++) {
-		if(prop == ID_Cache)
+		if(prop == CACHE_CONFIG)
 			_cache = prop.get<const CacheConfiguration *>();
-		else if(prop == ID_PipelineDepth)
+		else if(prop == PIPELINE_DEPTH)
 			depth = prop.get<int>();
 	}
 }
@@ -56,20 +57,6 @@ Platform::Platform(const Platform& platform, const PropList& props)
 _banks(&null_banks) {
 	configure(props);
 }
-
-
-/**
- * Tag for setting the cache of the platform. Takes a "const
- * CacheConfiguration *" agument.
- */
-Identifier Platform::ID_Cache("Platform::Cache");
-
-
-/**
- * Tag for setting the cache of the platform. Takes a "const
- * CacheConfiguration *" agument.
- */
-Identifier Platform::ID_PipelineDepth("Platform::PipelineDepth");
 
 
 /**

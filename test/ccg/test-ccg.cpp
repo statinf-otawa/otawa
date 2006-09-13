@@ -33,8 +33,8 @@ int main(int argc, char **argv) {
 			
 		Manager manager;
 		PropList props;
-		props.set<const CacheConfiguration *>(Platform::ID_Cache, caches);
-		props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
+		CACHE_CONFIG(props) = caches;
+		LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	try {
 		FrameWork *fw = manager.load(argv[1], props);
 		

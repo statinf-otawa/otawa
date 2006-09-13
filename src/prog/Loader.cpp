@@ -51,53 +51,6 @@ namespace otawa {
 
 
 /**
- * Identifier of the property indicating the name (CString) of the platform to use.
- */	
-GenericIdentifier<CString> Loader::ID_PlatformName("otawa.PlatformName");
-
-/**
- * Identifier of the property indicating a name (CString) of the loader to use..
- */	
-GenericIdentifier<CString> Loader::ID_LoaderName("otawa.LoaderName");
-
-/**
- * Identifier of the property indicating a platform (Platform *) to use.
- */	
-GenericIdentifier<hard::Platform *> Loader::ID_Platform("otawa.Platform");
-
-/**
- * Identifier of the property indicating the loader to use.
- */	
-GenericIdentifier<Loader *> Loader::ID_Loader("otawa.Loader");
-
-/**
- * Identifier of the property indicating the identifier (PlatformId) of the loader to use.
- */	
-GenericIdentifier<hard::Platform::Identification *> Loader::ID_PlatformId("otawa.PlatformId");
-
-/**
- * Argument count as passed to the program (int).
- */	
-GenericIdentifier<int> Loader::ID_Argc("otawa.Argc");
-
-/**
- * Argument values as passed to the program (char **).
- */	
-GenericIdentifier<char **> Loader::ID_Argv("otawa.Argv");
-
-/**
- * Argument values as passed to the program (char **).
- */	
-GenericIdentifier<char **> Loader::ID_Envp("otawa.Envp");
-
-/**
- * This property defines the used the used simulator when a simulator is
- * needed to perform simulation.
- */
-GenericIdentifier<sim::Simulator *> Loader::SIMULATOR("otawa.simulator");
-
-
-/**
  * Name of the "Heptane" loader.
  */
 CString Loader::LOADER_NAME_Heptane = "heptane";

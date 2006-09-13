@@ -37,9 +37,15 @@ Process::Process(Manager *_man, PropList& props): otawa::Process(props), man(_ma
 	default_argv[0] = "";
 	default_argv[1] = 0;
 	default_envp[0] = 0;
-	argc = props.get<int>(Loader::ID_Argc, 1);
-	argv = props.get<char **>(Loader::ID_Argv, default_argv);
-	envp = props.get<char **>(Loader::ID_Envp, default_envp);
+	argc = ARGC(props);
+	if(argc < 0)
+		argc = 1;
+	argv = ARGV(props);
+	if(!argv)
+		argv = default_argv;
+	envp = ENVP(props);
+	if(!envp)
+		envp = default_envp;
 	_platform = new Platform(props);
 }
 

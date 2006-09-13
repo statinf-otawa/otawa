@@ -104,8 +104,8 @@ int main(int argc, char **argv) {
 	// Load the file
 	Manager manager;
 	PropList props;
-	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
-	props.set<CacheConfiguration *>(Platform::ID_Cache, &cache_conf);
+	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+	CACHE_CONFIG(props) = &cache_conf;
 	try {
 		FrameWork *fw = manager.load(file, props);
 		

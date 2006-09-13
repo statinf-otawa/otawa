@@ -141,16 +141,18 @@ hard::Platform *Manager::findPlatform(const hard::Platform::Identification& id) 
 /**
  * Load a file with the given path and the given properties.
  * @param path		Path of the file to load.
- * @param props	Properties describing the load process. It must contains
- * a loder property like ID_Loader or ID_LoaderName.
+ * @param props		Properties describing the load process. It may contains the
+ * properties : @ref TASK_ENTRY, @ref PLATFORM, @ref LOADER, @ref PLATFORM_NAME,
+ * @ref LOADER_NAME, @ref ARGC, @ref ARGV, @ref ENVP, @ref SIMULATOR,
+ * @ref CACHE_CONFIG, @ref PIPELINE_DEPTH.
  * @return The loaded framework or 0.
  */
 FrameWork *Manager::load(CString path, PropList& props) {
 	
 	// Get the loader
-	Loader *loader = props.get<Loader *>(Loader::ID_Loader, 0);
+	Loader *loader = LOADER(props);
 	if(!loader) {
-		CString name = props.get<CString>(Loader::ID_LoaderName, "");
+		CString name = LOADER_NAME(props);
 		if(!name)
 			return 0;
 		loader = findLoader(name);

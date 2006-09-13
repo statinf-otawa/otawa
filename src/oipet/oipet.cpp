@@ -258,7 +258,7 @@ void Command::run(void) {
 	
 	// Load the file
 	PropList props;
-	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
+	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	fw = manager.load(&file, props);
 	
 	// Removing __eabi call if available (should move in a file configuration)
