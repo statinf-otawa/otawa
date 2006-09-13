@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
 	PropList props;
 	props.set<Loader *>(Loader::ID_Loader, &Loader::LOADER_Gliss_PowerPC);
 	props.set<CacheConfiguration *>(Platform::ID_Cache, &cache_conf);
+	RECURSIVE(props) = true;
 	
 	try {
 		
@@ -73,7 +74,6 @@ int main(int argc, char **argv) {
 		PropList props;
 		EXPLICIT(props) = true;
 		PROC_VERBOSE(props) = true;
-		RECURSIVE(props) = true;
 		
 		// Compute BB times
 		TrivialBBTime tbt(5, props);
