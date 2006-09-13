@@ -115,5 +115,6 @@ libotawa_la_SOURCES = \
 	ExeGraphBBTime.cpp \
 	BBTimeSimulator.cpp \
 	ipet_Delta.cpp \
-	BBPath.cpp
+	BBPath.cpp \
+	cfg_CFGCollector.cpp
 
