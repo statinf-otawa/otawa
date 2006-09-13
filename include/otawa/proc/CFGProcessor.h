@@ -22,7 +22,6 @@ class CFGProcessor: public Processor {
 	CFG *last;
 	void init(const PropList& props);
 protected:
-	void add(BasicBlock *bb, CFG *cfg);
 	virtual void processFrameWork(FrameWork *fw);
 	virtual void processCFG(FrameWork *fw, CFG *cfg) = 0;
 public:
@@ -34,6 +33,7 @@ public:
 
 // Configuration Properties
 extern GenericIdentifier<CFG *> ENTRY_CFG;
+extern GenericIdentifier<bool> RECURSIVE;
 
 // Statistics Properties
 extern GenericIdentifier<int> PROCESSED_CFG;

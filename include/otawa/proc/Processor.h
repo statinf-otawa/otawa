@@ -42,18 +42,15 @@ public:
 	void process(FrameWork *fw);
 };
 
-
 // Configuration Properties
 extern GenericIdentifier<elm::io::OutStream *> PROC_OUTPUT;
 extern GenericIdentifier<PropList *> PROC_STATS;
 extern GenericIdentifier<bool> PROC_TIMED;
 extern GenericIdentifier<bool> PROC_VERBOSE;
-extern GenericIdentifier<elm::CString> PROC_ENTRY;
-
+extern GenericIdentifier<bool> RECURSIVE;
 
 // Statistics Properties
 extern GenericIdentifier<elm::system::time_t> PROC_RUNTIME;
-
 
 // Inlines
 inline elm::String Processor::name(void) const {

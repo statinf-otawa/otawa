@@ -8,11 +8,13 @@
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/cfg/CFGInfo.h>
 #include <otawa/otawa.h>
+#include <otawa/cfg/CFGCollector.h>
 
 namespace otawa {
 
 // CFG Queue Marker
 static GenericIdentifier<CFG *> QUEUE_NODE("otawa.ipet.queue_node");
+
 
 /**
  * @class CFGProcessor
@@ -45,49 +47,30 @@ const PropList& props): Processor(name, version, props), last(0) {
 
 
 /**
- * @fn void CFGProcessor::processCFG(FrameWork *fw, CFG *cfg);
- * Process the given CFG.
- * @param fw	Container framework.
- * @param CFG	CFG to process.
- */
-
-
-/**
  */
 void CFGProcessor::processFrameWork(FrameWork *fw) {
 
-	// Set first queue node
-	CFG *first = ENTRY_CFG(fw);
-	if(!first) {
-		CFGInfo *info = fw->getCFGInfo();
-		first = info->findCFG(name);
-		if(!first)
-			throw ProcessorException(*this, "cannot find task entry point \"%d.\"", &name);
-		ENTRY_CFG(fw) = first;
+	// Get the CFG collection
+	CFGCollection *cfgs = INVOLVED_CFGS(fw);
+	if(!cfgs) {
+		CFGCollector collector;
+		collector.process(fw);
+		cfgs = INVOLVED_CFGS(fw);
 	}
-	QUEUE_NODE(first) = 0;
-	last = first;
-	
-	// Traverse the CFGs
+	assert(cfgs);
+
+	// Visit CFG
 	int count = 0;
-	CFG *cfg = first;
-	while(cfg) {
+	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++) {
 		if(isVerbose())
 			out << "\tprocess CFG " << cfg->label() << io::endl;
 		processCFG(fw, cfg);
 		count++;
-		cfg = QUEUE_NODE(cfg);
 	}
-
-	// Cleanup queue nodes
+	
+	// Record stats
 	if(recordsStats())
-		PROCESSED_CFG(stats) = count;
-	cfg = first;
-	while(cfg) {
-		CFG *next = QUEUE_NODE(cfg);
-		cfg->removeProp(&QUEUE_NODE);
-		cfg = next;
-	}
+		PROCESSED_CFG(stats) = count;	
 }
 
 
@@ -111,25 +94,6 @@ GenericIdentifier<int> PROCESSED_CFG("otawa.proc.processed_cfg", 0);
  * @param props	Configuration properties.
  */
 void CFGProcessor::init(const PropList& props) {
-	name = PROC_ENTRY(props);
-}
-
-
-/**
- * Add a CFG to the current analysis. The added are processed in turn until
- * no more CFG is added.
- * @param bb	Basic block containing the call.
- * @param cfg	Called CFG.
- */
-void CFGProcessor::add(BasicBlock *bb, CFG *cfg) {
-	assert(last);
-	if(!cfg)
-		throw ProcessorException(*this,
-			"unresolved function call at %08x", bb->address());
-	if(!cfg->hasProp(QUEUE_NODE)) {
-		QUEUE_NODE(last) = cfg;
-		last = cfg;
-	}
 }
 
 
@@ -140,5 +104,13 @@ void CFGProcessor::add(BasicBlock *bb, CFG *cfg) {
 void CFGProcessor::configure(const PropList& props) {
 	init(props);
 }
+
+/**
+ * Activate the recucursive feature of BBProcessors : each time a basic block
+ * contains a function call, the CFG of this function is recorded to be
+ * processed later after the current CFG. Note that each function is only
+ * processed once !
+ */
+GenericIdentifier<bool> RECURSIVE("otawa.recursive", false);
 
 } // otawa
