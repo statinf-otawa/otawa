@@ -14,12 +14,20 @@
 #include <elm/genstruct/DLList.h>
 #include <otawa/otawa.h>
 
-#ifdef NDEBUG
+//#define DO_CHECK
+#if defined(NDEBUG) || !defined(DO_CHECK)
 #	define CHECK(c)
 #else
 #	define CHECK(c)	c
-//#	define CHECK(c)
 #endif
+
+//#define DO_LOG
+#if defined(NDEBUG) || !defined(DO_LOG)
+#	define LOG(c)
+#else
+#	define LOG(c) c
+#endif
+
 
 using namespace otawa;
 using namespace otawa::hard;
@@ -816,7 +824,7 @@ int ExecutionGraph::analyze(elm::io::Output& out_stream) {
 		earliestTimes(out_stream);
 		step++;
 	} while ((step < 10) && (!unchangedSeparated(out_stream)));
-	out_stream << "Max finish time of last body node: " << lastNode(ExecutionNode::BODY)->maxFinishTime() << "\n";
+	LOG(out_stream << "Max finish time of last body node: " << lastNode(ExecutionNode::BODY)->maxFinishTime() << "\n");
 	return (lastNode(ExecutionNode::BODY)->maxFinishTime() - minDelta(out_stream));
 }
 
@@ -962,6 +970,7 @@ void ExecutionGraph::initSeparated() {
 	pair_cnt = 0;
 	for(NodeIterator u(this); u; u++)
 		((ExecutionNode *)*u)->pair_index = pair_cnt++;
+	pair_cnt = 2048;
 	pairs = new BitVector(pair_cnt * pair_cnt);
 }
 
@@ -970,19 +979,52 @@ void ExecutionGraph::initSeparated() {
 
 bool ExecutionGraph::unchangedSeparated(elm::io::Output& out_stream) {
 	bool unchanged = true;
+	/*int sep_cnt = 0, node_cnt = 0;
+	static int change_cnt = 0;
+	static double sep_ratio_sum = 0, node_ratio_sum = 0;*/
 	
-	for(NodeIterator first(this); first; first++)
-		for(NodeIterator second(this); second; second++) {
-			ExecutionNode *fnode = (ExecutionNode *)*first;
-			ExecutionNode *snode = (ExecutionNode *)*second;
-			int index = fnode->pair_index * pair_cnt + snode->pair_index;
-			bool sep = separated(fnode, snode, out_stream);
-			if(pairs->bit(index) != sep) {
-				unchanged = false;
-				pairs->set(index, sep);
+	
+	for(NodeIterator node(this); node; node++)
+		if(((ExecutionNode *)*node)->changed) {
+			((ExecutionNode *)*node)->changed = false;
+			//node_cnt++;
+		
+			// Horizontal
+			for(NodeIterator first(this); *first != *node; first++) {
+				ExecutionNode *fnode = (ExecutionNode *)*first;
+				ExecutionNode *snode = (ExecutionNode *)*node;
+				int index = (fnode->pair_index << 11) + /** pair_cnt*/ + snode->pair_index;
+				bool sep = separated(fnode, snode, out_stream);
+				if(pairs->bit(index) != sep) {
+					unchanged = false;
+					pairs->set(index, sep);
+					//sep_cnt++;
+				}
+			}
+			
+			// Vertical
+			for(NodeIterator second(this); *second != *node; second++) {
+				ExecutionNode *fnode = (ExecutionNode *)*node;
+				ExecutionNode *snode = (ExecutionNode *)*second;
+				int index = (fnode->pair_index << 11) + /** pair_cnt*/ + snode->pair_index;
+				bool sep = separated(fnode, snode, out_stream);
+				if(pairs->bit(index) != sep) {
+					unchanged = false;
+					pairs->set(index, sep);
+					//sep_cnt++;
+				}
 			}
 		}
 	
+
+	/*double sep_ratio = (double)sep_cnt / (pair_cnt * pair_cnt / 2);
+	double node_ratio = (double)node_cnt / pair_cnt;
+	sep_ratio_sum += sep_ratio;
+	node_ratio_sum += node_ratio;
+	change_cnt++;	
+	cout << "changed "
+		 <<  "SEP = " << (sep_ratio * 100) << " (" << (sep_ratio_sum / change_cnt * 100) << ") "
+		 <<  "NODE = " << (node_ratio * 100) << " (" << (node_ratio_sum / change_cnt * 100) << ")\n";*/
 	return unchanged;
 }
 
