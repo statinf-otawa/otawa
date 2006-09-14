@@ -46,6 +46,7 @@ class ExecutionNode: public graph::Node {
 		} code_part_t;
 		
 		int pair_index;
+		bool changed;
 	private:
 		PipelineStage * pipeline_stage;
 		Inst * inst;
@@ -171,8 +172,8 @@ class ExecutionGraph:  public graph::Graph  {
 		void dotDump(elm::io::Output& dotFile, bool dump_times);
 		inline elm::inhstruct::DLList * stagesNodesLists(void);
 		inline elm::inhstruct::DLList * instructionsNodesLists(void);
-		inline void initSeparated(void);
-		inline bool unchangedSeparated(elm::io::Output& out_stream);
+		void initSeparated(void);
+		bool unchangedSeparated(elm::io::Output& out_stream);
 		inline bool separated(ExecutionNode *u, ExecutionNode *v, elm::io::Output& out_stream);
 		void latestTimes(elm::io::Output& out_stream);
 		void prologueLatestTimes(ExecutionNode *node, elm::io::Output& out_stream);
@@ -303,7 +304,7 @@ inline ExecutionNode::ExecutionNode(ExecutionGraph * graph,
 									int index, 
 									code_part_t part)
 : execution_graph(graph), pipeline_stage(stage), inst(instruction), inst_index(index), needs_operands(false),
-produces_operands(false), shaded(false), code_part(part), Node((otawa::graph::Graph *)graph) {
+produces_operands(false), shaded(false), code_part(part), Node((otawa::graph::Graph *)graph), changed(false) {
 	ready_time.min = -INFINITE_TIME; // needed ?
 	start_time.min = 0;
 	finish_time.min = stage->minLatency();
@@ -348,7 +349,10 @@ inline int ExecutionNode::minReadyTime(void) {
 // ---------- setMinReadyTime
 
 inline void ExecutionNode::setMinReadyTime(int time)  {
-	ready_time.min = time;
+	if(time != ready_time.min) {
+		ready_time.min = time;
+		changed = true;
+	}
 }
 
 // ---------- maxReadyTime
@@ -360,7 +364,7 @@ inline int ExecutionNode::maxReadyTime(void) {
 // ---------- setMaxreadyTime
 
 inline void ExecutionNode::setMaxReadyTime(int time)  {
-	ready_time.max = time;
+		ready_time.max = time;
 }
 
 // ---------- minstartTime
@@ -408,7 +412,10 @@ inline int ExecutionNode::maxFinishTime(void) {
 // ---------- setMaxFinishTime
 
 inline void ExecutionNode::setMaxFinishTime(int time)  {
-	finish_time.max = time;
+	if(time != finish_time.max) {
+		finish_time.max = time;
+		changed = true;
+	}
 }
 
 // ---------- minLatency
