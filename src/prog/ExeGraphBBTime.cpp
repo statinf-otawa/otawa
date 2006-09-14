@@ -216,7 +216,7 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 			//execution_graph.dotDump(dotFile,false);
 			
 			// shade prologue nodes that have a direct path to IF(I1)
-			execution_graph.shadeNodes(dumpFile);
+			//execution_graph.shadeNodes(dumpFile);
 			// compute ready/start.finish earliest and latest times
 			bbExecTime = execution_graph.analyze(dumpFile);
 			
@@ -237,6 +237,11 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	dumpFile << "\nWCC of block " << bb->number() << " is " << maxExecTime << "\n";
 	bb->set<int>(TIME, maxExecTime);
 
+	// Free block sequences
+	for(elm::genstruct::DLList<BlockSequence *>::Iterator bs(prologue_list); bs; bs++)
+		delete bs;
+	for(elm::genstruct::DLList<BlockSequence *>::Iterator bs(epilogue_list); bs; bs++)
+		delete bs;
 }
 
 
