@@ -14,13 +14,11 @@
 
 
 // Trace
-#ifndef NDEBUG
 //#define FRAMEWORK_TRACE
-#ifdef FRAMEWORK_TRACE
-#	define TRACE(str) cerr << __FILE__ << ':' << __LINE__ << ": " << str << '\n';
-#else
+#if defined(NDEBUG) || !defined(FRAMEWORK_TRACE)
 #	define TRACE(str)
-#endif
+#else
+#	define TRACE(str) cerr << __FILE__ << ':' << __LINE__ << ": " << str << '\n';
 #endif
 
 namespace otawa {

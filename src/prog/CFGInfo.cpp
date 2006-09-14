@@ -10,17 +10,15 @@
 #include <otawa/cfg.h>
 
 // Trace
-#ifndef NDEBUG
 //#	define TRACE_CFG_INFO
-#	ifdef TRACE_CFG_INFO
+#if defined(NDEBUG) || !defined(TRACE_CFG_INFO)
+#	define TRACE(str)
+#else
 #		define TRACE(str) \
 			{ \
 				cerr << __FILE__ << ':' << __LINE__ << ": " << str << '\n'; \
 				cerr.flush(); \
 			}
-#	else
-#		define TRACE(str)
-#	endif
 #endif
 
 namespace otawa {
