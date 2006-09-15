@@ -176,7 +176,9 @@ int main(int argc, char **argv) {
 //			logFile << "\n";
 //		}
 		
-		ExeGraphBBTime tbt(props, &processor, logFile);
+		ExeGraphBBTime::PROCESSOR(props) = &processor;
+		ExeGraphBBTime::LOG_OUTPUT(props) = &logFile;
+		ExeGraphBBTime tbt(props);
 		tbt.process(fw);
 		
 		
