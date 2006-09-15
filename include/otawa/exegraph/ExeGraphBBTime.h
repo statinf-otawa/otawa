@@ -102,9 +102,7 @@ class ExeGraphBBTime: public BBProcessor {
 		
 		
 	public:
-		inline ExeGraphBBTime(const PropList& props = PropList::EMPTY, 
-								Microprocessor *processor = NULL, 
-								elm::io::Output& out_stream = elm::cout);
+		ExeGraphBBTime(const PropList& props = PropList::EMPTY);
 	
 		void buildExecutionGraph(FrameWork *fw, 
 								ExecutionGraph& graph, 
@@ -120,14 +118,11 @@ class ExeGraphBBTime: public BBProcessor {
 		int analyzeExecutionGraph(ExecutionGraph& graph);
 		// BBProcessor overload
 		void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+
+	// Configuration Properties
+	static GenericIdentifier<Microprocessor *> PROCESSOR;
+	static GenericIdentifier<elm::io::Output *>  LOG_OUTPUT;
 };
-
-inline ExeGraphBBTime::ExeGraphBBTime(const PropList& props, 
-									Microprocessor *processor, 
-									elm::io::Output& out_stream) 
-: BBProcessor(props), microprocessor(processor), dumpFile(out_stream) {
-}
-
 
 } //otawa
 
