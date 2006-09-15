@@ -2,7 +2,7 @@
  *	$Id$
  *	Copyright (c) 2005, IRIT UPS.
  *
- *	src/prog/ipet_TrivialBBTime.cpp -- TrivialBBTime class implementation.
+ *	src/prog/ipet_TrivialBBTime.cpp --TrivialBBTime class implementation.
  */
 
 #include <stdlib.h>
@@ -23,7 +23,54 @@ using namespace elm::genstruct;
 using namespace otawa::graph;
 using namespace otawa::ipet;
 
+//#define DO_LOG
+#if defined(NDEBUG) || !defined(DO_LOG)
+#	define LOG(c)
+#else
+#	define LOG(c) c
+#	define OUT	dumpFile
+#endif
+
 namespace otawa { 
+
+/**
+ * @class ExeGraphBBTime
+ * This basic block processor computes the basic block execution time using
+ * the execution graph method described in the following papers:
+ * @li X. Li, A. Roychoudhury, A., T. Mitra, "Modeling Out-of-Order Processors
+ * for Software Timing Analysis", Proceedings of the 25th IEEE International
+ * Real-Time Systems Symposium (RTSS'04), 2004.
+ * @li
+ */
+
+
+/**
+ * This property is used to pass the microprocessor description to the
+ * code processor. As default, it is extracted from the system description.
+ */
+GenericIdentifier<Microprocessor *> ExeGraphBBTime::PROCESSOR("otawa.ExeGraphBBTime.proc.", NULL);
+
+
+/**
+ * This property gives an output stream used to output log messages about
+ * the execution of the algorithm.
+ */
+GenericIdentifier<elm::io::Output *>  ExeGraphBBTime::LOG_OUTPUT("otawa.ExeGraphBBTime.log", &cerr);
+
+
+/**
+ * Build the ExeGraphBBTime processor.
+ * @param props	Configuration properties possibly including @ref PROC and
+ * @ref LOG.
+ */ 
+ExeGraphBBTime::ExeGraphBBTime(const PropList& props) 
+:	BBProcessor(props),
+	microprocessor(PROCESSOR(props)),
+	dumpFile(*LOG_OUTPUT(props))
+{
+	assert(microprocessor);
+}
+
 
 // ---------------------------------------------------
 // buildPrologueList
@@ -107,8 +154,8 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	int offset;
 	BasicBlock *pred, *succ;
 	
-	dumpFile << "================================================================\n";
-	dumpFile << "Processing block b" << bb->number() << ":\n";	
+	LOG(dumpFile << "================================================================\n");
+	LOG(dumpFile << "Processing block b" << bb->number() << ":\n");	
 	
 	if (bb->countInstructions() == 0)
 		return;
@@ -204,14 +251,14 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 			elm::io::Output dotFile(dotStream);*/	
 			
 			// build the execution graph
-			dumpFile << "\nBuilding execution graph for:\n\tprologue: ";
-			seq1->dump(dumpFile);
-			dumpFile << "\n\tbody: b" << bb->number()<< "\n\tepilogue: ";
-			seq2->dump(dumpFile);
-			dumpFile << "\n";
+			LOG(dumpFile << "\nBuilding execution graph for:\n\tprologue: ");
+			LOG(seq1->dump(dumpFile));
+			LOG(dumpFile << "\n\tbody: b" << bb->number()<< "\n\tepilogue: ");
+			LOG(seq2->dump(dumpFile));
+			LOG(dumpFile << "\n");
 			ExecutionGraph execution_graph;
 			execution_graph.build(fw, microprocessor, prologue, body, epilogue);
-			execution_graph.dumpLight(dumpFile);
+			LOG(execution_graph.dumpLight(dumpFile));
 			// dump the execution graph in dot format
 			//execution_graph.dotDump(dotFile,false);
 			
@@ -220,7 +267,7 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 			// compute ready/start.finish earliest and latest times
 			bbExecTime = execution_graph.analyze(dumpFile);
 			
-			dumpFile << "Cost of block " << bb->number() << " is " << bbExecTime << "\n";
+			LOG(dumpFile << "Cost of block " << bb->number() << " is " << bbExecTime << "\n");
 			/*string_timed_file_name = string_timed_file_name.concat(number);
 			string_timed_file_name = string_timed_file_name.concat(extension2);
 			elm::io::OutFileStream timedDotStream(string_timed_file_name.toCString());
@@ -234,7 +281,7 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 			maxExecTime = bbExecTime;
 	}
 	
-	dumpFile << "\nWCC of block " << bb->number() << " is " << maxExecTime << "\n";
+	LOG(dumpFile << "\nWCC of block " << bb->number() << " is " << maxExecTime << "\n");
 	bb->set<int>(TIME, maxExecTime);
 
 	// Free block sequences
