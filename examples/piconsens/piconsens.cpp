@@ -108,12 +108,8 @@ void Command::compute(String fun) {
 	if(exegraph && !delta) {
 		Microprocessor processor;
 		initExeGraph(&processor);
-		//io::OutFileStream *logStream = new elm::io::OutFileStream("log.txt");
-		io::OutFileStream logStream("log.txt");
-		if(!logStream.isReady())
-			throw io::IOException(logStream.lastErrorMessage());
-		io::Output logFile(logStream);
-		ExeGraphBBTime tbt(props, &processor, logFile);
+		ExeGraphBBTime::PROCESSOR(props) = &processor;
+		ExeGraphBBTime tbt(props);
 		tbt.process(fw);
 	}
 	else {
@@ -150,7 +146,7 @@ void Command::compute(String fun) {
 
 	// Get the result
 	ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
-	cout << "WCET [" << file << ":" << fun << "] = "
+	cout /*<< "WCET [" << file << ":" << fun << "] = "*/
 		 << vcfg.use<int>(WCET) << io::endl;	
 
 	// Dump the ILP system
