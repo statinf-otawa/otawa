@@ -75,7 +75,7 @@ function log_command {
 		echo $* '|| exit 1' >> $build_script
 	else
 		say "$*"
-		$* >> $basedir/$log 2>&1 || failed
+		echo "$*" | bash >> $basedir/$log 2>&1 || failed
 		success
 	fi
 }
@@ -252,7 +252,7 @@ function mod_ppc {
 	NAME=ppc
 	DOWNLOAD=home
 	BUILD=make
-	MAKE_FLAGS="OPT=-DISS_DISASM GEP_OPTS=\"-a user0 int8 -a category int8\""
+	MAKE_FLAGS='OPT=-DISS_DISASM GEP_OPTS="-a user0 int8 -a category int8"'
 	REQUIRES="gliss gel"
 	DISTCLEAN=make
 }
