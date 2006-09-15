@@ -1,8 +1,8 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2006, IRIT UPS.
  *
- *	ExecutionGraph.cpp -- control flow graph classes implementation.
+ *	ExecutionGraph.cpp -- ExecutionGraph classes implementation.
  */
 
 #include <assert.h>
@@ -35,7 +35,11 @@ using namespace elm;
 using namespace elm::genstruct;
 
 namespace otawa {
-	
+
+
+
+
+
 
 // ---------- prologueLatestTimes
 
@@ -370,11 +374,12 @@ void ExecutionGraph::shadePreds(ExecutionNode *node, elm::io::Output& out_stream
 			time = ((ExecutionNode *) node)->maxFinishTime() - ((ExecutionNode *) node)->minLatency();
 			
 			if ( ((ExecutionEdge *)pred.edge())->type() == ExecutionEdge::SOLID) {
-				if ( time < ((ExecutionNode *) *pred)->maxFinishTime() )
+				if ( time < ((ExecutionNode *) *pred)->maxFinishTime() ) {
 					((ExecutionNode *) *pred)->setMaxFinishTime(time);
-				((ExecutionNode *) *pred)->setMaxStartTime(((ExecutionNode *) *pred)->maxFinishTime() - ((ExecutionNode *) *pred)->minLatency());
-				((ExecutionNode *) *pred)->setMaxReadyTime(((ExecutionNode *) *pred)->maxStartTime());
-				shadePreds(((ExecutionNode *) *pred),out_stream);
+					((ExecutionNode *) *pred)->setMaxStartTime(((ExecutionNode *) *pred)->maxFinishTime() - ((ExecutionNode *) *pred)->minLatency());
+					((ExecutionNode *) *pred)->setMaxReadyTime(((ExecutionNode *) *pred)->maxStartTime());
+					shadePreds(((ExecutionNode *) *pred),out_stream);
+				}
 			}
 			else {
 				if (node->maxStartTime() < ((ExecutionNode *) *pred)->maxStartTime() ) {
@@ -817,9 +822,15 @@ int ExecutionGraph::analyze(elm::io::Output& out_stream) {
 	GraphNodeInList *node_in_list;
 	int step;
 
+	//cout << "Shade\n";
+	/*io::OutFileStream file("test.dot");
+	io::Output file_out(file);
+	dotDump(file_out, false);*/
 	shadeNodes(out_stream);
 	initSeparated();
+	//cout << "IP loop\n";
 	do {
+		//cout << "Next Step\n";
 		latestTimes(out_stream);		
 		earliestTimes(out_stream);
 		step++;
@@ -970,7 +981,6 @@ void ExecutionGraph::initSeparated() {
 	pair_cnt = 0;
 	for(NodeIterator u(this); u; u++)
 		((ExecutionNode *)*u)->pair_index = pair_cnt++;
-	pair_cnt = 2048;
 	pairs = new BitVector(pair_cnt * pair_cnt);
 }
 
@@ -993,7 +1003,7 @@ bool ExecutionGraph::unchangedSeparated(elm::io::Output& out_stream) {
 			for(NodeIterator first(this); *first != *node; first++) {
 				ExecutionNode *fnode = (ExecutionNode *)*first;
 				ExecutionNode *snode = (ExecutionNode *)*node;
-				int index = (fnode->pair_index << 11) + /** pair_cnt*/ + snode->pair_index;
+				int index = (fnode->pair_index * pair_cnt) + snode->pair_index;
 				bool sep = separated(fnode, snode, out_stream);
 				if(pairs->bit(index) != sep) {
 					unchanged = false;
@@ -1003,10 +1013,11 @@ bool ExecutionGraph::unchangedSeparated(elm::io::Output& out_stream) {
 			}
 			
 			// Vertical
-			for(NodeIterator second(this); *second != *node; second++) {
+			NodeIterator second(node);
+			for(second++; second; second++) {
 				ExecutionNode *fnode = (ExecutionNode *)*node;
 				ExecutionNode *snode = (ExecutionNode *)*second;
-				int index = (fnode->pair_index << 11) + /** pair_cnt*/ + snode->pair_index;
+				int index = fnode->pair_index * pair_cnt + snode->pair_index;
 				bool sep = separated(fnode, snode, out_stream);
 				if(pairs->bit(index) != sep) {
 					unchanged = false;
