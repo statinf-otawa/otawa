@@ -1,10 +1,11 @@
+AM_CXXFLAGS = @OTAWA_CXXFLAGS@ @LP_SOLVE_CXXFLAGS@
+
 ilpdir=$(libdir)/otawa/ilp
 ilp_LTLIBRARIES = lp_solve.la
 
-AM_CXXFLAGS = @PROG_CXXFLAGS@ @BUILD_LP_SOLVE_CXXFLAGS@
-
 lp_solve_la_LDFLAGS = -module
-lp_solve_la_LIBADD = @PROG_LIBS@ @BUILD_LP_SOLVE_LIBS@
+lp_solve_la_LIBADD = @OTAWA_LIBS@ @LP_SOLVE_LIBS@
+lp_solve_la_DEPENDENCIES = @OTAWA_DEPS@
 
 lp_solve_la_SOURCES = \
 	lp_solve_System.cpp \
