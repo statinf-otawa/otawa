@@ -39,7 +39,15 @@ public:
 	// Mutators
 	inline void add(elm::genstruct::Vector<T1> &path, const T2 data, int from_index = 0);
 	inline void add(elm::genstruct::Vector<T1> *path, const T2 data, int from_index = 0);
+	
+	// Iterator
+	class Iterator: public elm::genstruct::Vector<TreePath<T1, T2> *>::Iterator {
+	public:
+		inline Iterator(const TreePath<T1, T2> *tree);
+		inline Iterator(const TreePath<T1, T2>::Iterator& iter);
+	};
 };
+
 
 // TreePath private methods
 template <class T1, class T2>
@@ -136,6 +144,19 @@ inline T1 TreePath<T1,T2>::rootLabel() const {return _label;}
 
 template <class T1, class T2>
 inline T2 TreePath<T1,T2>::rootData() const {return _data;}
+
+
+// TreePath<T1, T2>::Iterator Inlines
+template <class T1, class T2>
+inline TreePath<T1, T2>::Iterator::Iterator(const TreePath<T1, T2> *tree)
+: elm::genstruct::Vector<TreePath<T1, T2> *>::Iterator(tree->childs) {
+	assert(tree);
+}
+
+template <class T1, class T2>
+inline TreePath<T1,T2>::Iterator::Iterator(const TreePath<T1, T2>::Iterator& iter)
+: elm::genstruct::Vector<TreePath<T1, T2> *>::Iterator(iter) {
+}
 
 } } //namespace otawa::ipet
 
