@@ -278,7 +278,7 @@ function mod_otawa {
 }
 
 
-########### Usefule functions ########
+########### Useful functions ########
 
 function check_program {
 	program=${1%-*}
@@ -364,6 +364,7 @@ for arg in $*; do
 		;;
 	-h|--help)
 		help
+		exit
 		;;
 	-*|--*)
 		help
