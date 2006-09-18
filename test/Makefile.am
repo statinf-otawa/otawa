@@ -8,7 +8,7 @@ SUBDIRS = \
 	pcg \
 	props
 
-if WITH_ILP
+if HAS_ILP
 SUBDIRS += \
 	ipet \
 	ccg \
@@ -16,7 +16,7 @@ SUBDIRS += \
 	exegraph
 endif
 
-if WITH_SYSTEMC
+if HAS_SYSTEMC
 SUBDIRS += \
 	delta \
 	systemc \
