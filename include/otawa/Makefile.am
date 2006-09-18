@@ -3,13 +3,11 @@ SUBDIRS= \
 	ast \
 	cfg \
 	display \
-	gliss \
 	prog \
 	prop \
 	ilp \
 	proc \
 	ipet \
-	lp_solve \
 	util \
 	ets \
 	hard \
@@ -18,9 +16,18 @@ SUBDIRS= \
 	exegraph \
 	pcg
 
-if WITH_SYSTEMC
+if HAS_SYSTEMC
 SUBDIRS += gensim
 endif
+
+if HAS_GLISS_PPC
+SUBDIRS += gliss
+endif
+
+if HAS_LP_SOLVE
+SUBDIRS += lp_solve
+endif
+
 
 # Headers
 includeotawadir=$(includedir)/otawa
