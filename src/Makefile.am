@@ -1,19 +1,30 @@
 SUBDIRS= \
 	prog \
-	@PLUGINS@ \
+	odisplay
+
+if HAS_GLISS_PPC
+SUBDIRS += gliss
+endif
+
+SUBDIRS += \
 	oshell \
 	dumpcfg \
 	mkff \
-	ostat \
-	odisplay
+	ostat
 
-if WITH_ILP
+if HAS_SYSTEMC
+SUBDIRS += ogensim
+endif
+
+if HAS_LP_SOLVE
+SUBDIRS += lp_solve
+endif
+
+if HAS_ILP
 SUBDIRS += oipet
 endif
 
-if WITH_SYSTEMC
-SUBDIRS += ogensim
-endif
+
 
 #all-local:
 #	(cd mkast; make)
