@@ -1,10 +1,10 @@
 lib_LTLIBRARIES=libotawa.la
 
-AM_CXXFLAGS=@BUILD_PROG_CXXFLAGS@
+AM_CXXFLAGS=@OTAWA_CXXFLAGS@
 AM_YYFLAGS=-dv
 
 libotawa_la_LDFLAGS=
-libotawa_la_LIBADD= @BUILD_PROG_LIBS@
+libotawa_la_LIBADD=
 
 libotawa_la_SOURCES = \
 	BlockAST.cpp \
