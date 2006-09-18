@@ -1,10 +1,9 @@
+AM_CXXFLAGS = @OTAWA_CXXFLAGS@
+
 noinst_PROGRAMS=test_graph
+
+test_graph_LDADD = @OTAWA_LIBS@
+test_graph_DEPENDENCIES = @OTAWA_DEPS@
 
 test_graph_SOURCES=\
 	test_graph.cpp 
-	
-test_graph_LDADD = @PROG_LIBS@
-
-test_graph_DEPENDENCIES = @PROG_DEP@
-
-AM_CXXFLAGS = @PROG_CXXFLAGS@
