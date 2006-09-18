@@ -19,8 +19,8 @@ void FetchStage::fetch() {
 	
 	SimulatedInstruction* inst;
 	int nb_fetched;
-	code_t code;
-	instruction_t *emulated_inst;
+	/*code_t code;
+	instruction_t *emulated_inst;*/
 	
 	TRACE(elm::cout << "Fetchstage->fetch():\n";)
 	TRACE(elm::cout << "\tin_number_of_accepted_instructions=" << in_number_of_accepted_instructions.read() << "\n";)
@@ -34,7 +34,7 @@ void FetchStage::fetch() {
 //			iss_fetch((::address_t)(unsigned long)next_inst->address(), &code);
 //			emulated_inst = iss_decode((::address_t)(unsigned long)next_inst->address(), &code);
 //			iss_complete(emulated_inst,emulated_state);
-			inst = new SimulatedInstruction(next_inst,code, emulated_inst, active_instructions);
+			inst = new SimulatedInstruction(next_inst,/*code, emulated_inst,*/ active_instructions);
 			inst->renameOperands(rename_tables);
 			//out_fetched_instruction[nb_fetched] = inst;
 			fetched_instructions.addLast(inst);

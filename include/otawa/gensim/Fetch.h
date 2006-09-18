@@ -4,8 +4,8 @@
 #include <otawa/gensim/PipelineStage.h>
 #include <otawa/gensim/InstructionQueue.h>	
 #include <otawa/gensim/SimulatedInstruction.h>
-#include <emul.h>
-#include <iss_include.h>
+//#include <emul.h>
+//#include <iss_include.h>
 #include <otawa/otawa.h>
 
 namespace otawa {
@@ -27,7 +27,7 @@ class FetchStage : public PipelineStage {
 	private:	
 		// parameters
 		otawa::GenericState *sim_state;
-		state_t * emulated_state;
+		//state_t * emulated_state;
 		int out_ports;
 		elm::genstruct::SLList<SimulatedInstruction *> fetched_instructions;
 		elm::genstruct::SLList<SimulatedInstruction *> * active_instructions;

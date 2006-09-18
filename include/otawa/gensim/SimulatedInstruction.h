@@ -4,7 +4,7 @@
 #include <otawa/otawa.h>
 #include <otawa/hard/Register.h>
 #include <elm/genstruct/Table.h>
-#include <emul.h>
+//#include <emul.h>
 #include <otawa/gensim/debug.h>
 
 typedef enum {NONE, WAITING, READY, EXECUTING, EXECUTED, NOTIFIED} simulated_instruction_state_t; // ordered set
@@ -25,8 +25,8 @@ class SimulatedInstruction {
 	private:
 		elm::genstruct::SLList<SimulatedInstruction *> * active_instructions;
 		otawa::Inst * instruction;
-		code_t binary_code;
-		instruction_t * emulated_inst;
+		/*code_t binary_code;
+		instruction_t * emulated_inst;*/
 		simulated_instruction_state_t instruction_state;
 		elm::genstruct::SLList<SimulatedInstruction *> source_instructions;
 		int time_to_finish_execution;
@@ -36,11 +36,11 @@ class SimulatedInstruction {
 		inline void removeSourceInstruction(SimulatedInstruction * source_inst);
 		
 	public:
-		inline SimulatedInstruction(otawa::Inst* inst, code_t code, instruction_t* emul_inst,
+		inline SimulatedInstruction(otawa::Inst* inst, /*code_t code, instruction_t* emul_inst,*/
 									elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions);
 		inline ~SimulatedInstruction();
 		inline otawa::Inst * inst();
-		inline instruction_t * emulatedInst();
+		//inline instruction_t * emulatedInst();
 		inline void setState(simulated_instruction_state_t new_state);
 		inline simulated_instruction_state_t state();
 		inline elm::genstruct::SLList<SimulatedInstruction *> * sourceInstructions();
@@ -56,9 +56,9 @@ class SimulatedInstruction {
 		
 };
 
-inline SimulatedInstruction::SimulatedInstruction(otawa::Inst* inst, code_t code, instruction_t* emul_inst,
+inline SimulatedInstruction::SimulatedInstruction(otawa::Inst* inst, /*code_t code, instruction_t* emul_inst,*/
 												elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions) :
-		instruction(inst), binary_code(code), emulated_inst(emul_inst), instruction_state(READY), 
+		instruction(inst), /*binary_code(code), emulated_inst(emul_inst),*/ instruction_state(READY), 
 		active_instructions(_active_instructions) {
 	active_instructions->addLast(this);
 	if (inst->kind() & otawa::Inst::IS_CONTROL) {
@@ -96,9 +96,9 @@ inline otawa::Inst * SimulatedInstruction::inst() {
 	return instruction;
 }
 
-inline instruction_t * SimulatedInstruction::emulatedInst() {
+/*inline instruction_t * SimulatedInstruction::emulatedInst() {
 	return emulated_inst;
-}
+}*/
 
 inline void SimulatedInstruction::setState(simulated_instruction_state_t new_state) {
 	instruction_state = new_state;
