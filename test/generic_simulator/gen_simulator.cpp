@@ -5,7 +5,7 @@
  *	test/ipet/exegraph.cpp -- test for Execution Graph modeling feature.
  */
 
-#include <systemc>
+//#include <systemc>
 #include <stdlib.h>
 #include <elm/io.h>
 #include <otawa/otawa.h>
@@ -23,8 +23,8 @@ using namespace elm::io;
 using namespace otawa;
 using namespace otawa::ipet;
 using namespace std;
-using namespace sc_core;
-using namespace sc_dt;
+/*using namespace sc_core;
+using namespace sc_dt;*/
 
 
 int main(int argc, char **argv) {
