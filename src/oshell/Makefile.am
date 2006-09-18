@@ -1,4 +1,13 @@
+AM_CXXFLAGS = @OTAWA_CXXFLAGS@
+
+AM_YFLAGS=-d
+
 bin_PROGRAMS=oshell
+
+oshell_LDADD = @LOADER_LIBS@ @OTAWA_LIBS@
+
+oshell_DEPENDENCIES = @LOADER_DEPS@ @OTAWA_DEPS@
+
 oshell_SOURCES= \
 	parser.yy \
 	lexer.ll \
@@ -21,12 +30,3 @@ noinst_HEADERS = \
 	oshell.h \
 	parser.h \
 	SegmentCursor.h
-
-oshell_LDADD = @LOADER_PLUGIN@ @PROG_LIBS@
-
-oshell_DEPENDENCIES = @LOADER_DEP@ @PROG_DEP@
-
-AM_CXXFLAGS = @PROG_CXXFLAGS@
-
-AM_YFLAGS=-d
-
