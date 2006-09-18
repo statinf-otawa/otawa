@@ -1,0 +1,228 @@
+AC_PREREQ(2.5)
+AC_INIT(src/prog/base.cpp)
+AC_CONFIG_AUX_DIR(.config)
+AM_INIT_AUTOMAKE(Otawa, 0.4)
+AC_LANG(C++)
+
+# ==== Plugin activation ====
+AC_ARG_WITH(plugin,
+	[  --with-plugin[={yes,no}]	Activate plugin usage.],
+	[HAS_PLUGIN=yes],
+	[HAS_PLUGIN=no])
+AM_CONDITIONAL(HAS_PLUGIN, test "$HAS_PLUGIN" = "yes")
+
+
+# ==== Building mode ====
+AC_ARG_WITH(mode,
+	[  --with-mode={dev,debug,normal,final}	Activate the given build mode.],,with_mode=dev)
+case $with_mode in
+dev)
+	CXXFLAGS="$CXXFLAGS -g3"
+	;;
+debug)
+	CXXFLAGS="$CXXFLAGS -g3"
+	;;
+normal)
+	;;
+final)
+	CPPFLAGS="$CPPFLAGS -DNDEBUG"
+	CXXFLAGS="$CXXFLAGS -O3"
+	;;
+*)
+	AC_MSG_ERROR([unknown mode $with_mode])
+	;;
+esac
+
+
+# ==== Standard tests ====
+AM_CONFIG_HEADER(config.h)
+AC_PROG_CC
+AC_PROG_CXX
+AC_PROG_YACC
+AM_PROG_LEX
+AC_STDC_HEADERS
+AC_PATH_PROG(BASH_PATH, bash)
+AC_CHECK_FUNCS([strdup])
+AC_CHECK_FUNCS([strtol])
+AC_C_CONST
+AC_C_INLINE
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
+AC_HEADER_STDBOOL
+AC_TYPE_SIZE_T
+AS_IF(test "$HAS_PLUGIN" != "yes", [ AC_DISABLE_SHARED ])
+AC_LIBTOOL_DLOPEN
+AC_PROG_LIBTOOL
+
+
+# ===== GEL check =====
+OTAWA_USE_LIB(GEL,
+	OTAWA_REQUIRE_LIB(GEL, [GEL library required !],
+		OTAWA_CHECK_LTLIB(GEL, gel.h, libgel.la, $PWD/../gel/src, $PWD/../gel/src,
+		OTAWA_CHECK_LTLIB(GEL, gel.h, libgel.la, ${prefix}, ,
+		OTAWA_CHECK_LTLIB(GEL, gel.h, libgel.la)))))
+OTAWA_USE_LIB(GEL_PPC,
+		OTAWA_CHECK_LTLIB(GEL_PPC, , libgel_ppc.la, $PWD/../gel/src, $PWD/../gel/src,
+		OTAWA_CHECK_LTLIB(GEL_PPC, , libgel_ppc.la, ${prefix}, ,
+		OTAWA_CHECK_LTLIB(GEL_PPC, , libgel_ppc.la))))
+
+
+# ===== ELM check =====
+OTAWA_USE_LIB(ELM,
+	OTAWA_REQUIRE_LIB(ELM, [ELM library required !],
+		OTAWA_CHECK_LTLIB(ELM, elm/string.h, libelm.la, $PWD/../elm/src, $PWD/../elm/include,
+		OTAWA_CHECK_LTLIB(ELM, elm/string.h, libelm.la, ${prefix}, ,
+		OTAWA_CHECK_LTLIB(ELM, elm/string.h, libelm.la)))))
+
+
+# ===== GLISS_PPC check ======
+OTAWA_USE_LIB(GLISS_PPC,
+	OTAWA_CHECK_LIB(GLISS_PPC, emul.h, emul, $PWD/../ppc/lib, $PWD/../ppc/include))
+
+
+# ===== LP_SOLVE check =====
+OTAWA_USE_LIB(LP_SOLVE,
+	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lpk, $PWD/../lp_solve, $PWD/../lp_solve,
+	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lpk)))
+
+
+# ===== SYSTEMC check =====
+OTAWA_USE_LIB(SYSTEMC,
+	OTAWA_CHECK_LIB(SYSTEMC, systemc.h, systemc, $PWD/../systemc/objdir/src, $PWD/../systemc/src,
+	OTAWA_CHECK_LIB(SYSTEMC, systemc.h, systemc, /usr/lib-linux, /usr/include))) 
+
+
+# ===== dot check =====
+AC_PATH_PROG(HAS_DOT, dot, no)
+AM_CONDITIONAL(HAS_DOT, test "$HAS_DOT" != no)
+
+
+# ===== ocaml check =====
+AC_PATH_PROG(HAS_OCAMLC, ocamlc, no)
+AM_CONDITIONAL(HAS_OCAMLC, test "$HAS_OCAMLC" != no)
+AC_PATH_PROG(HAS_OCAMLOPT, ocamlopt, no)
+AM_CONDITIONAL(HAS_OCAMLOPT, test "$HAS_OCAMLOPT" != no)
+
+
+# ===== Useful Definitions =====
+OTAWA_CXXFLAGS="-I\$(top_srcdir)/include $ELM_CXXFLAGS"
+OTAWA_DEPS="\$(top_builddir)/src/prog/libotawa.la $ELM_LIBS"
+OTAWA_LIBS="$OTAWA_DEPS -dlopen force"
+ODISPLAY_LIBS="\$(top_builddir)/src/odisplay/libodisplay.la"
+ODISPLAY_DEPS="$ODISPLAY_LIBS"
+OGENSIM_LIBS="\$(top_builddir)/src/ogensim/libogensim.la"
+OGENSIM_DEPS="$OGENSIM_LIBS"
+ILP_PATHS=$libdir/otawa/ilp
+LOADER_PATHS=$libdir/otawa/loader
+AC_SUBST(OTAWA_CXXFLAGS)
+AC_SUBST(OTAWA_LIBS)
+AC_SUBST(OTAWA_DEPS)
+AC_SUBST(ODISPLAY_LIBS)
+AC_SUBST(ODISPLAY_DEPS)
+AC_SUBST(OGENSIM_LIBS)
+AC_SUBST(OGENSIM_DEPS)
+AC_DEFINE_UNQUOTED(ILP_PATHS, "$ILP_PATHS", [Paths for ILP plugins])
+AC_DEFINE_UNQUOTED(LOADER_PATHS, "$LOADER_PATHS", [Paths for loader plugins])
+
+
+# ===== Default ILP =====
+AS_IF(test "$HAS_LP_SOLVE" = "yes", [
+		HAS_ILP="yes"
+		ILP_DEPS="\$(top_builddir)/src/lp_solve/lp_solve.la"
+		ILP_LIBS="-ulp_solve_plugin $ILP_DEPS"
+	], [
+		HAS_ILP="no"
+		ILP_LIBS=""
+		ILP_DEPS=""
+	])
+AS_IF(test "$HAS_PLUGIN" = "yes", [
+	ILP_LIBS=""
+	ILP_DEPS=""
+])
+AM_CONDITIONAL(HAS_ILP, test "$HAS_ILP" = "yes")
+AC_SUBST(ILP_LIBS)
+AC_SUBST(ILP_DEPS)
+
+
+# ===== Default Loader =====
+AS_IF(test "$HAS_GLISS_PPC" = yes, [
+		HAS_LOADER="yes"
+		LOADER_DEPS="\$(top_builddir)/src/gliss/ppc.la"
+		LOADER_LIBS="-uppc_plugin $LOADER_DEPS"
+	],
+	AS_IF(test "$HAS_PLUGIN" = "yes", [
+			HAS_LOADER="no"
+			LOADER_LIBS=""
+			LOADER_DEPS=""
+		], [ AC_MSG_FAILURE([no loader selected !]) ]))
+AS_IF(test "$HAS_PLUGIN" = "yes", [
+	LOADER_DEPS=""
+	LOADER_LIBS=""
+])
+AM_CONDITIONAL(HAS_LOADER, test "$HAS_LOADER" = "yes")
+AC_SUBST(LOADER_LIBS)
+AC_SUBST(LOADER_DEPS)
+
+
+# ==== Output ====
+AC_OUTPUT([
+	Makefile
+	src/Makefile
+	src/prog/Makefile
+	src/gliss/Makefile
+	src/oshell/Makefile
+	src/lp_solve/Makefile
+	src/dumpcfg/Makefile
+	src/mkff/Makefile
+	src/ostat/Makefile
+	src/oipet/Makefile
+	src/odisplay/Makefile
+	src/ogensim/Makefile
+	examples/Makefile
+	bin/Makefile
+	bin/otawa-config
+	test/Makefile
+	test/lp_solve/Makefile
+	test/ipet/Makefile
+	test/ets/Makefile
+	test/dom/Makefile
+	test/display/Makefile
+	test/delta/Makefile
+	test/ct/Makefile
+	test/ccg/Makefile
+	test/graph/Makefile
+	test/categorisation/Makefile
+	test/hard/Makefile
+	test/props/Makefile
+	test/pcg/Makefile
+	test/exegraph/Makefile
+	test/simulator/Makefile
+	test/generic_simulator/Makefile
+	test/systemc/Makefile
+	examples/ilp_times/Makefile
+	examples/ets_timing/Makefile
+	examples/piconsens/Makefile
+	include/Makefile
+	include/otawa/Makefile
+	include/otawa/ast/Makefile
+	include/otawa/cfg/Makefile
+	include/otawa/display/Makefile
+	include/otawa/gliss/Makefile
+	include/otawa/prog/Makefile
+	include/otawa/prop/Makefile
+	include/otawa/ilp/Makefile
+	include/otawa/proc/Makefile
+	include/otawa/ipet/Makefile
+	include/otawa/lp_solve/Makefile
+	include/otawa/ets/Makefile
+	include/otawa/util/Makefile
+	include/otawa/hard/Makefile
+	include/otawa/hardware/Makefile
+	include/otawa/sim/Makefile
+	include/otawa/cache/Makefile
+	include/otawa/cache/categorisation/Makefile
+	include/otawa/cache/ccg/Makefile
+	include/otawa/pcg/Makefile
+	include/otawa/exegraph/Makefile
+	include/otawa/gensim/Makefile
+], [])
