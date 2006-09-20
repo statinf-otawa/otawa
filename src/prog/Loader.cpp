@@ -7,6 +7,8 @@
 
 #include <otawa/prog/Loader.h>
 
+#define STRINGIZE(x) #x
+
 namespace otawa {
 
 /**
@@ -15,6 +17,24 @@ namespace otawa {
  * a process. Many kind of loader may exists from the simple binary
  * loader to the complex program builder.
  */
+
+
+/**
+ * Build a loader plugin with the given description.
+ * @param name				Name of the loader.
+ * @param version			Version of the loader.
+ * @param plugger_version	Version of the plugger (must be OTAWA_LOADER_VERSION).
+ * @param aliases			Name aliases.
+ */
+Loader::Loader(
+	CString name,
+	Version version,
+	Version plugger_version,
+	const Plugin::aliases_t& aliases)
+: Plugin(name, plugger_version, STRINGIZE(OTAWA_LOADER_HOOK), aliases) {
+	_plugin_version = version;
+}
+
 
 /**
  * @fn Loader::~Loader(void)

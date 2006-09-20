@@ -7,6 +7,7 @@
 #ifndef OTAWA_PROG_LOADER_H
 #define OTAWA_PROG_LOADER_H
 
+#include <elm/system/Plugin.h>
 #include <otawa/base.h>
 #include <otawa/properties.h>
 #include <otawa/prog/Process.h>
@@ -18,12 +19,21 @@ namespace sim {
 	class Simulator;
 }
 
+
+// Useful defines
+#define OTAWA_LOADER_VERSION	Version(1, 0, 0)
+#define OTAWA_LOADER_HOOK		loader_plugin
+
+
 // Loader class
-class Loader {
+class Loader: public elm::system::Plugin {
 	friend class Manager;
 protected:
 	virtual ~Loader(void) { };
 public:
+	Loader(CString name, Version version, Version plugger_version,
+		const elm::genstruct::Table<CString>& aliases
+		= elm::genstruct::Table<CString>::EMPTY);
 
 	// Method
 	virtual CString getName(void) const = 0;
