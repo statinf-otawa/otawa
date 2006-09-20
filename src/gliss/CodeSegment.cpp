@@ -82,26 +82,30 @@ void CodeSegment::build(void) {
 	
 		// Look for its kind
 		Inst *result;
-		assert(iss_table[inst->ident].category <= 26);
-		switch(iss_table[inst->ident].category) {
-		case 5: 	// STORE
-		case 6:		// LOAD
-		case 22:	// FPLOAD
-		case 23:	// FPSTORE
-			result = new MemInst(*this, addr);
-			break;
-		case 8:		// BRANCH
-		case 10:	// SYSTEM
-		case 11:	// TRAP
-			if(inst->ident == ID_BL_ && inst->instrinput[0].val.Int24 == 1)
-				result = new Inst(*this, addr);
-			else
-				result = new ControlInst(*this, addr);
-			break;
-			
-		default:
+		if(inst->ident == ID_Instrunknown)
 			result = new Inst(*this, addr);
-			break;
+		else {
+			assert(iss_table[inst->ident].category <= 26);
+			switch(iss_table[inst->ident].category) {
+			case 5: 	// STORE
+			case 6:		// LOAD
+			case 22:	// FPLOAD
+			case 23:	// FPSTORE
+				result = new MemInst(*this, addr);
+				break;
+			case 8:		// BRANCH
+			case 10:	// SYSTEM
+			case 11:	// TRAP
+				if(inst->ident == ID_BL_ && inst->instrinput[0].val.Int24 == 1)
+					result = new Inst(*this, addr);
+				else
+					result = new ControlInst(*this, addr);
+				break;
+			
+			default:
+				result = new Inst(*this, addr);
+				break;
+			}
 		}
 				
 		// Cleanup

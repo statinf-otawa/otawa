@@ -277,8 +277,12 @@ void Inst::scan(void) {
 	assert(inst);
 	
 	// Intialize the category
-	assert(iss_table[inst->ident].category <= 26);
-	flags = kinds[iss_table[inst->ident].category];
+	if(inst->ident == ID_Instrunknown)
+		flags = 0;
+	else {
+		assert(iss_table[inst->ident].category <= 26);
+		flags = kinds[iss_table[inst->ident].category];
+	}
 	
 	// Call customization
 	scanCustom(inst);
@@ -315,6 +319,11 @@ void Inst::scanRegs(void) {
 	instruction_t *inst;
 	iss_fetch((::address_t)(unsigned long)addr, buffer);
 	inst = iss_decode(seg.file().state(), (::address_t)addr, buffer);
+	if(inst->ident == ID_Instrunknown) {
+		reads = new elm::genstruct::AllocatedTable<hard::Register *>(0);
+		writes = new elm::genstruct::AllocatedTable<hard::Register *>(0);
+		return;
+	}
 
 	// Select r0 linked to immediate 0
 	/* !!TODO!! This implementation of zero-cabled register R0 is quite crude
