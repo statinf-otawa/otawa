@@ -10,6 +10,9 @@
 #include <otawa/manager.h>
 #include <otawa/cfg.h>
 #include <otawa/ilp/ILPPlugin.h>
+#include <gel.h>
+
+#define STRINGIZE(x)	#x
 
 namespace otawa {
 
@@ -96,8 +99,6 @@ UnsupportedPlatformException::UnsupportedPlatformException(const char *format,
 Manager::~Manager(void) {
 	for(int i = 0; i < frameworks.count(); i++)
 		delete frameworks[i];
-	for(int i = 0; i < loaders.count(); i++)
-		delete loaders[i];
 	for(int i = 0; i < platforms.count(); i++)
 		delete platforms[i];
 }
@@ -111,10 +112,7 @@ Manager::~Manager(void) {
  * library.
  */
 Loader *Manager::findLoader(CString name) {
-	for(int i = 0; i < loaders.count(); i++)
-		if(loaders[i]->getName() == name)
-			return loaders[i];
-	return 0;
+	return (Loader *)loader_plugger.plug(name);
 }
 
 /**
@@ -148,31 +146,44 @@ hard::Platform *Manager::findPlatform(const hard::Platform::Identification& id) 
  * @return The loaded framework or 0.
  */
 FrameWork *Manager::load(CString path, PropList& props) {
+	Process *proc = 0;
 	
-	// Get the loader
+	// Simple identified loader
 	Loader *loader = LOADER(props);
 	if(!loader) {
 		CString name = LOADER_NAME(props);
-		if(!name)
-			return 0;
-		loader = findLoader(name);
-		if(!loader)
-			return 0;
+		if(name)
+			loader = findLoader(name);
 	}
 	
-	// Attempt to load the file
-	Process *proc = loader->load(this, path, props);
-	if(!proc)
-		return 0;
+	// Try with gel
+	if(!loader) {
+		gel_file_t *file = gel_open((char *)&path, 0, 0);
+		if(!file)
+			throw LoadException(gel_strerror());
+		gel_file_info_t infos;
+		gel_file_infos(file, &infos);
+		StringBuffer buf;
+		buf << "elf_" << infos.machine;
+		gel_close(file);
+		String name = buf.toString();
+		loader = findLoader(name.toCString());
+	}
+	
+	// Return result
+	if(!loader)
+		throw LoadException("no loader for \"%s\".", &path);
 	else
-		return new FrameWork(proc);
+		return new FrameWork(loader->load(this, path, props));
 }
 
 /**
  * Manager builder. Install the PPC GLISS loader.
  */
-Manager::Manager(void)
-: ilp_plugger("ilp_plugin", Version(1, 0, 0), ILP_PATHS) {
+Manager::Manager(void):
+	ilp_plugger("ilp_plugin", Version(1, 0, 0), ILP_PATHS),
+	loader_plugger(STRINGIZE(OTAWA_LOADER_HOOK), OTAWA_LOADER_VERSION, LOADER_PATHS)
+{
 }
 
 
@@ -195,7 +206,7 @@ ilp::System *Manager::newILPSystem(String name) {
 	
 	// Find a plugin
 	else {
-		plugin = (ilp::ILPPlugin *)ilp_plugger.plug(name);
+		plugin = (ilp::ILPPlugin *)ilp_plugger.plug(name.toCString());
 		if(!plugin) {
 			cerr << "ERROR: " << ilp_plugger.lastErrorMessage() << "\n";
 			return 0;
