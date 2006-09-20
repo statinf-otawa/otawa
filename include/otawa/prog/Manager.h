@@ -48,10 +48,10 @@ public:
 // Manager class
 class Manager {
 	friend class FrameWork;
-	datastruct::Vector<Loader *> loaders;
 	datastruct::Vector<hard::Platform *> platforms;
 	datastruct::Vector<FrameWork *> frameworks;
 	elm::system::Plugger ilp_plugger;
+	elm::system::Plugger loader_plugger;
 public:
 	Manager(void);
 	~Manager(void);

@@ -22,7 +22,7 @@ namespace otawa { namespace ilp {
  * @param					Allow having static plugins (@see elm::system::Plugin).
  */
 ILPPlugin::ILPPlugin(elm::String name, const elm::Version& plugger_version,
-elm::String hook): Plugin(name, plugger_version, hook) {
+elm::String hook): Plugin(name.toCString(), plugger_version, hook.toCString()) {
 }
 
 
