@@ -107,6 +107,7 @@ AM_CONDITIONAL(HAS_OCAMLOPT, test "$HAS_OCAMLOPT" != no)
 # ===== Useful Definitions =====
 OTAWA_CXXFLAGS="-I\$(top_srcdir)/include $ELM_CXXFLAGS"
 OTAWA_DEPS="\$(top_builddir)/src/prog/libotawa.la $ELM_LIBS"
+AS_IF(test "$HAS_PLUGIN" != yes, [ OTAWA_DEPS="$OTAWA_DEPS $GEL_LIBS" ])
 OTAWA_LIBS="$OTAWA_DEPS -dlopen force"
 ODISPLAY_LIBS="\$(top_builddir)/src/odisplay/libodisplay.la"
 ODISPLAY_DEPS="$ODISPLAY_LIBS"
