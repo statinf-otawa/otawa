@@ -69,7 +69,7 @@ GenericIdentifier<bool> USE_CONTROL("sim.use_control");
  */
 Simulator::Simulator(elm::String name, const elm::Version& version,
 const elm::CString description, const elm::CString license)
-: Plugin(name, PLUGGER_VERSION, PLUGGER_NAME) {
+: Plugin(name.toCString(), PLUGGER_VERSION, PLUGGER_NAME) {
 	_plugin_version = version;
 	_description = description;
 	_licence = license;
