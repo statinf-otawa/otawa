@@ -18,6 +18,24 @@ namespace otawa { namespace gliss {
  * Implementation of the Otawa Loader class for GLISS PowerPC.
  */
 
+
+/**
+ * Alias table.
+ */
+static CString table[] = {
+	"elf_20"
+};
+static elm::genstruct::Table<CString> ppc_aliases(table, 1);
+ 
+
+/**
+ * Build a new loader.
+ */
+Loader::Loader(void)
+: otawa::Loader("ppc", Version(1, 0, 0), OTAWA_LOADER_VERSION, ppc_aliases) {
+}
+
+
 /**
  * Get the name of the loader.
  * @return Loader name.
@@ -55,15 +73,17 @@ otawa::Process *Loader::create(Manager *man, PropList& props) {
 }
 
 
-// PPC GLISS Loader entry point
-static Loader static_loader;
-otawa::Loader& otawa::Loader::LOADER_Gliss_PowerPC = otawa::gliss::static_loader;
-
-
-
 /**
  * @internal Identifier giving access to the GLISS state of the loaded program.
  */
 GenericIdentifier<state_t *> GLISS_STATE("ppc.gliss_state", 0);
 
 } }	// otawa::gliss
+
+
+// PPC GLISS Loader entry point
+otawa::gliss::Loader ppc_plugin;
+otawa::Loader& otawa::Loader::LOADER_Gliss_PowerPC = ppc_plugin;
+elm::system::Plugin& OTAWA_LOADER_HOOK = ppc_plugin;
+
+

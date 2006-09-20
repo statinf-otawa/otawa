@@ -39,6 +39,7 @@ class DataSegment: public ::otawa::Segment {
 // otawa::gliss::Loader class
 class Loader: public otawa::Loader {
 public:
+	Loader(void);
 
 	// otawa::Loader overload
 	virtual CString getName(void) const;
