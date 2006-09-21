@@ -2,7 +2,7 @@
  * $Id$
  * Copyright (c) 2005 IRIT-UPS
  * 
- * otawa/util/graph.h -- Node and Edge classes interfaces.
+ * otawa/util/Graph.h -- Graph, Node, Edge classes interfaces.
  */
 #ifndef OTAWA_UTIL_GRAPH_H
 #define OTAWA_UTIL_GRAPH_H
@@ -39,6 +39,7 @@ public:
 	class NodeIterator: public elm::genstruct::Vector<Node *>::Iterator {
 	public:
 		inline NodeIterator(const Graph *graph);
+		inline NodeIterator(const NodeIterator& iter);
 	};
 	
 	// PreorderIterator class
@@ -124,6 +125,10 @@ public:
 // Graph::NodeIterator class
 inline Graph::NodeIterator::NodeIterator(const Graph *graph):
 elm::genstruct::Vector<Node *>::Iterator(graph->nodes) {
+}
+
+inline Graph::NodeIterator::NodeIterator(const NodeIterator& iter)
+: elm::genstruct::Vector<Node *>::Iterator(iter) {
 }
 
 
