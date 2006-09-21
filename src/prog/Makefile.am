@@ -1,6 +1,6 @@
 lib_LTLIBRARIES=libotawa.la
 
-AM_CXXFLAGS=@OTAWA_CXXFLAGS@
+AM_CXXFLAGS=@OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@
 AM_YYFLAGS=-dv
 
 libotawa_la_LDFLAGS=
@@ -102,6 +102,7 @@ libotawa_la_SOURCES = \
 	util_Graph.cpp \
 	util_Node.cpp \
 	util_Edge.cpp \
+	util_GenGraph.cpp \
 	util_BitSet.cpp \
 	hard_Register.cpp \
 	sim_Simulator.cpp \
