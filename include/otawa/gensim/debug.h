@@ -2,9 +2,10 @@
 #define _DEBUG_H_
 
 
-#ifndef NDEBUG
-//#define TRACE(x) x
-#define TRACE(x)
-#endif //NDEBUG
+#ifdef NDEBUG || !defined(GENSIM_TRACE)
+#	define TRACE(x)
+#else
+#	define TRACE(x) x
+#endif
 
 #endif //_DEBUG_H_
