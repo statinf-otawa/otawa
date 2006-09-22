@@ -12,18 +12,6 @@ using namespace elm;
 namespace otawa { namespace sim {
 
 /**
- * Name of the hook used for simulator plugger.
- */
-const CString PLUGGER_NAME = "sim_plugin";
-
-
-/**
- * Version of the current plugger.
- */
-const Version PLUGGER_VERSION(1, 0, 0);
-
-
-/**
  * If supported by the simulator, enable or disable the functional part.
  * Default to false.
  */
@@ -67,9 +55,9 @@ GenericIdentifier<bool> USE_CONTROL("sim.use_control");
  * @param description	Plugin description.
  * @param license		License applied to the use of this plugin.
  */
-Simulator::Simulator(elm::String name, const elm::Version& version,
+Simulator::Simulator(elm::CString name, const elm::Version& version,
 const elm::CString description, const elm::CString license)
-: Plugin(name.toCString(), PLUGGER_VERSION, PLUGGER_NAME) {
+: Plugin(name, OTAWA_SIMULATOR_VERSION, OTAWA_SIMULATOR_NAME) {
 	_plugin_version = version;
 	_description = description;
 	_licence = license;
