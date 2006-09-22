@@ -10,14 +10,13 @@
 #include <gel.h>
 
 // Trace
-#ifndef NDEBUG
 //#define GLISS_PROCESS_TRACE
-#ifdef GLISS_PROCESS_TRACE
-#	define TRACE(str) cerr << __FILE__ << ':' << __LINE__ << ": " << str << '\n';
-#else
+#if defined(NDEBUG) || !defined(GLISS_PROCESS_TRACE)
 #	define TRACE(str)
+#else
+#	define TRACE(str) cerr << __FILE__ << ':' << __LINE__ << ": " << str << '\n';
 #endif
-#endif
+
 
 extern "C" gel_file_t *loader_file(memory_t* memory);
 
