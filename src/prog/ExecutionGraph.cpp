@@ -51,25 +51,25 @@ void ExecutionGraph::prologueLatestTimes(ExecutionNode *node, elm::io::Output& o
 	bool first;
 	
 	first = true;
-	for (graph::Node::Predecessor pred(node) ; pred ; pred++) {
+	for (ExecutionGraph::Predecessor pred(node) ; pred ; pred++) {
 		if (first) {
-			max = ((ExecutionNode *) *pred)->maxFinishTime();
+			max = pred->maxFinishTime();
 			first = false;
 		}
 		else {
-			if (((ExecutionNode *) *pred)->maxFinishTime() > max)
-				max = ((ExecutionNode *) *pred)->maxFinishTime();
+			if (pred->maxFinishTime() > max)
+				max = pred->maxFinishTime();
 		}
 	}
 	node->setMaxReadyTime(max);
-	node->setMaxStartTime(node->maxReadyTime()+node->maxLatency()-1);
+	node->setMaxStartTime(node->maxReadyTime() + node->maxLatency()-1);
 	
 	count = 0;
 	for(ExecutionNode::ContenderIterator cont(node); cont; cont ++) {
-		if ( ((ExecutionNode *)*cont)->instIndex() < node->instIndex() ) { // early contender
-			if ( !separated((ExecutionNode *)*cont, node, out_stream) ) {
+		if ( cont->instIndex() < node->instIndex() ) { // early contender
+			if ( !separated(cont, node, out_stream) ) {
 				count++;
-				TimeDLNode *new_time = new TimeDLNode((( ExecutionNode *)*cont)->maxFinishTime());
+				TimeDLNode *new_time = new TimeDLNode(cont->maxFinishTime());
 				if (times.isEmpty())
 					times.addLast(new_time);
 				else {
@@ -113,12 +113,12 @@ void ExecutionGraph::prologueLatestTimes(ExecutionNode *node, elm::io::Output& o
 	node->setMaxFinishTime(node->maxStartTime() + node->maxLatency() );
 		
 	// update successors
-	for (graph::Node::Successor next(node) ; next ; next++) {
-		if (node->maxFinishTime() > ((ExecutionNode *)*next)->maxReadyTime())
-			if (((ExecutionEdge *)(next.edge()))->type() == ExecutionEdge::SOLID)
-				((ExecutionNode *)*next)->setMaxReadyTime(node->maxFinishTime());
+	for (Successor next(node) ; next ; next++) {
+		if (node->maxFinishTime() > next->maxReadyTime())
+			if (next.edge()->type() == ExecutionEdge::SOLID)
+				next->setMaxReadyTime(node->maxFinishTime());
 			else // SLASHED
-				((ExecutionNode *)*next)->setMaxReadyTime(node->maxStartTime());
+				next->setMaxReadyTime(node->maxStartTime());
 	}
 }
 
@@ -133,13 +133,13 @@ void ExecutionGraph::bodyLatestTimes(ExecutionNode *node, elm::io::Output& out_s
 	node->setMaxStartTime(node->maxReadyTime());
 	count = 0;		
 	for(ExecutionNode::ContenderIterator cont(node); cont; cont ++) {
-		if ( ((ExecutionNode *)*cont)->instIndex() > node->instIndex() ) {
+		if ( cont->instIndex() > node->instIndex() ) {
 			// cont is a *late* contender
-			if ( !separated((ExecutionNode *)*cont, node, out_stream)
+			if ( !separated(cont, node, out_stream)
 					&&
-					( (( ExecutionNode *)*cont)->minStartTime() < node->maxReadyTime()) ) {
+					( cont->minStartTime() < node->maxReadyTime()) ) {
 				count++;
-				TimeDLNode *new_time = new TimeDLNode((( ExecutionNode *)*cont)->maxFinishTime());
+				TimeDLNode *new_time = new TimeDLNode(cont->maxFinishTime());
 				if (times.isEmpty())
 					times.addLast(new_time);
 				else {
@@ -175,10 +175,10 @@ void ExecutionGraph::bodyLatestTimes(ExecutionNode *node, elm::io::Output& out_s
 	
 	count = 0;
 	for(ExecutionNode::ContenderIterator cont(node); cont; cont ++) {
-		if ( ((ExecutionNode *)*cont)->instIndex() < node->instIndex() ) {
-			if ( !separated((ExecutionNode *)*cont, node, out_stream) ) {
+		if ( cont->instIndex() < node->instIndex() ) {
+			if ( !separated(cont, node, out_stream) ) {
 				count++;
-				TimeDLNode *new_time = new TimeDLNode((( ExecutionNode *)*cont)->maxFinishTime());
+				TimeDLNode *new_time = new TimeDLNode(cont->maxFinishTime());
 				if (times.isEmpty())
 					times.addLast(new_time);
 				else {
@@ -222,12 +222,12 @@ void ExecutionGraph::bodyLatestTimes(ExecutionNode *node, elm::io::Output& out_s
 	node->setMaxFinishTime(node->maxStartTime() + node->maxLatency() );
 		
 	// update successors
-	for (graph::Node::Successor next(node) ; next ; next++) {
-		if (node->maxFinishTime() > ((ExecutionNode *)*next)->maxReadyTime())
-			if (((ExecutionEdge *)(next.edge()))->type() == ExecutionEdge::SOLID)
-				((ExecutionNode *)*next)->setMaxReadyTime(node->maxFinishTime());
+	for (Successor next(node) ; next ; next++) {
+		if (node->maxFinishTime() > next->maxReadyTime())
+			if (next.edge()->type() == ExecutionEdge::SOLID)
+				next->setMaxReadyTime(node->maxFinishTime());
 			else // SLASHED
-				((ExecutionNode *)*next)->setMaxReadyTime(node->maxStartTime());
+				next->setMaxReadyTime(node->maxStartTime());
 	}
 }
 
@@ -244,20 +244,20 @@ void ExecutionGraph::latestTimes(elm::io::Output& out_stream) {
 	
 	entry_node->setMaxReadyTime(0);
 	for(PreorderIterator node(this, this->entry_node); node; node++) {
-		if ( (((ExecutionNode *) *node)->part() == ExecutionNode::PROLOGUE) 
-			|| (((ExecutionNode *) *node)->part() == ExecutionNode::BEFORE_PROLOGUE) ) {
-			if(! ((ExecutionNode *)*node)->isShaded() ) {
-				prologueLatestTimes(((ExecutionNode *) *node), out_stream);
+		if ( (node->part() == ExecutionNode::PROLOGUE) 
+			|| (node->part() == ExecutionNode::BEFORE_PROLOGUE) ) {
+			if(! node->isShaded() ) {
+				prologueLatestTimes(node, out_stream);
 			}
 		
 		}
-		if (((ExecutionNode *) *node)->part() == ExecutionNode::BODY) {
-			bodyLatestTimes(((ExecutionNode *) *node), out_stream);
+		if (node->part() == ExecutionNode::BODY) {
+			bodyLatestTimes(node, out_stream);
 		}
 		
-		if (((ExecutionNode *) *node)->part() == ExecutionNode::EPILOGUE) {
+		if (node->part() == ExecutionNode::EPILOGUE) {
 			// epilogueLatestTimes(((ExecutionNode *) *node), out_stream);
-			bodyLatestTimes(((ExecutionNode *) *node), out_stream);
+			bodyLatestTimes(node, out_stream);
 		}
 		
 	}
@@ -271,28 +271,40 @@ void ExecutionGraph::earliestTimes(elm::io::Output& out_stream) {
 	TimeDLNode *ptr;
 	elm::inhstruct::DLList times;
 	
+	/**
+	 * HINT : to improve the efficiency, just use an array with the PARv greater
+	 * earliest_finish(u). 
+	 */
+	
+	// earliest_ready(IF1) = 0
 	entry_node->setMinReadyTime(0);
 	
-	// for each node in topologically sorted order
+	// foreach v in topologic_order do
 	for(PreorderIterator node(this, this->entry_node); node; node++) {
-		if (((ExecutionNode *)*node)->part() <= ExecutionNode::PROLOGUE) {
-			((ExecutionNode *)*node)->setMinReadyTime(-INFINITE_TIME);
-			((ExecutionNode *)*node)->setMinStartTime(-INFINITE_TIME);
-			((ExecutionNode *)*node)->setMinFinishTime(-INFINITE_TIME);
+		if (node->part() <= ExecutionNode::PROLOGUE) {
+			node->setMinReadyTime(-INFINITE_TIME);
+			node->setMinStartTime(-INFINITE_TIME);
+			node->setMinFinishTime(-INFINITE_TIME);
 		}
 		else {
-			((ExecutionNode *)*node)->setMinStartTime(((ExecutionNode *)*node)->minReadyTime());
-			count = 0;		
-			for(ExecutionNode::ContenderIterator cont((ExecutionNode *)*node); cont; cont ++) {
-				if ( ((ExecutionNode *)*cont)->instIndex() > ((ExecutionNode *)*node)->instIndex() ) {
+			
+			// earliest_start(v) = earliest_ready(v)
+			node->setMinStartTime(node->minReadyTime());
+			count = 0;
+			
+			/* Slate = {u / u in late_contenders(v)
+			 * 			&&  ! separated(u, v)
+			 * 			&&  latest_start(u) < earliest_ready(v)
+			 * 			&&  earliest_ready(v) < earliest_finish(u) }
+			 */
+			for(ExecutionNode::ContenderIterator cont(node); cont; cont ++)
+				if ( cont->instIndex() > node->instIndex() ) {
 					// cont is a *late* contender
-					if ( !separated((ExecutionNode *)*cont, (ExecutionNode *)*node, out_stream)
-							&&
-							( (( ExecutionNode *)*cont)->maxStartTime() < ((ExecutionNode *)*node)->minReadyTime()) 
-							&&
-							( (( ExecutionNode *)*node)->minReadyTime() < ((ExecutionNode *)*cont)->minFinishTime())) {
+					if(!separated(cont, node, out_stream)
+					&& (cont->maxStartTime() < node->minReadyTime()) 
+					&& (node->minReadyTime() < cont->minFinishTime())) {
 						count++;
-						TimeDLNode *new_time = new TimeDLNode((( ExecutionNode *)*cont)->minFinishTime());
+						TimeDLNode *new_time = new TimeDLNode(cont->minFinishTime());
 						if (times.isEmpty())
 							times.addLast(new_time);
 						else {
@@ -306,18 +318,20 @@ void ExecutionGraph::earliestTimes(elm::io::Output& out_stream) {
 						}
 					}
 				}
-			}
 	
-			for(ExecutionNode::ContenderIterator cont((ExecutionNode *)*node); cont; cont ++) {
-				if ( ((ExecutionNode *)*cont)->instIndex() < ((ExecutionNode *)*node)->instIndex() ) {
+			/* Searly = {u / u in early_contenders(u) 
+			 * 			&&	 ! separated(u, v)
+			 * 			&&	 latest_start(u) <= earliest_ready(v)
+			 * 			&&	 earliest_ready(v) < arliest_finish(u) }
+			 */
+			for(ExecutionNode::ContenderIterator cont(node); cont; cont ++) {
+				if(cont->instIndex() < node->instIndex()) {
 					// cont is an *early* contender
-					if  ( !separated((ExecutionNode *)*cont, (ExecutionNode *)*node, out_stream) 
-							&&
-							((( ExecutionNode *)*cont)->maxStartTime() <= ((ExecutionNode *)*node)->minReadyTime()) 
-							&&
-							( (( ExecutionNode *)*node)->minReadyTime() < ((ExecutionNode *)*cont)->minFinishTime())) {
+					if (!separated(cont, node, out_stream) 
+					&& (cont->maxStartTime() <= node->minReadyTime()) 
+					&& (node->minReadyTime() < cont->minFinishTime())) {
 						count++;
-						TimeDLNode *new_time = new TimeDLNode((( ExecutionNode *)*cont)->maxFinishTime());
+						TimeDLNode *new_time = new TimeDLNode(cont->maxFinishTime());
 						if (times.isEmpty())
 							times.addLast(new_time);
 						else {
@@ -332,32 +346,37 @@ void ExecutionGraph::earliestTimes(elm::io::Output& out_stream) {
 					}
 				}
 			}
-			if (count >= ((ExecutionNode *)*node)->pipelineStage()->width()) {
+			
+			// S = Slate union Searly
+			// if |S| > par(v) then
+			if (count >= node->pipelineStage()->width()) {
 				count = 1;
 				ptr = (TimeDLNode *) times.first();
-				while ( (!ptr->atEnd()) && (count <((ExecutionNode *)*node)->pipelineStage()->width())) {
+				while ( (!ptr->atEnd()) && (count < node->pipelineStage()->width())) {
 					ptr = (TimeDLNode *) ptr->next();
 					count++;
 				}
 				max = ptr->getValue();
-				if (max > ((ExecutionNode *)*node)->minStartTime() )
-					((ExecutionNode *)*node)->setMinStartTime(max);
+				if (max > node->minStartTime() )
+					node->setMinStartTime(max);
 			}
 			
 			// empty times list
 			while (!times.isEmpty())
 				times.removeLast();
+			
+			// earliest_finish(v) = earliest_start(v) + min_lat(v)
+			node->setMinFinishTime(node->minStartTime() + node->minLatency() );
 				
-			((ExecutionNode *)*node)->setMinFinishTime(((ExecutionNode *)*node)->minStartTime() 
-							+ (( ExecutionNode *)*node)->minLatency() );
-				
-			// update successors
-			for (graph::Node::Successor next(node) ; next ; next++) {
-				if (((ExecutionNode *)*node)->minFinishTime() > ((ExecutionNode *)*next)->minReadyTime())
-					if (((ExecutionEdge *)(next.edge()))->type() == ExecutionEdge::SOLID)
-						((ExecutionNode *)*next)->setMinReadyTime(((ExecutionNode *)*node)->minFinishTime());
+			/* foreach k in immediate_successor(i)
+			 * 	earliest_ready(k) = max(earliest_ready(k), earliest_finish(i))
+			 */
+			for(Successor next(node) ; next ; next++) {
+				if(node->minFinishTime() > next->minReadyTime())
+					if(next.edge()->type() == ExecutionEdge::SOLID)
+						next->setMinReadyTime(node->minFinishTime());
 					else // SLASHED
-						((ExecutionNode *)*next)->setMinReadyTime(((ExecutionNode *)*node)->minStartTime());
+						next->setMinReadyTime(node->minStartTime());
 			}
 		}		
 	}
@@ -369,24 +388,24 @@ void ExecutionGraph::shadePreds(ExecutionNode *node, elm::io::Output& out_stream
 	int time;
 	
 	if (node->hasPred()) {
-		for (graph::Node::Predecessor pred(node) ; pred ; pred++) {
-			((ExecutionNode *) *pred)->shade();
-			time = ((ExecutionNode *) node)->maxFinishTime() - ((ExecutionNode *) node)->minLatency();
+		for (Predecessor pred(node) ; pred ; pred++) {
+			pred->shade();
+			time = node->maxFinishTime() - node->minLatency();
 			
-			if ( ((ExecutionEdge *)pred.edge())->type() == ExecutionEdge::SOLID) {
-				if ( time < ((ExecutionNode *) *pred)->maxFinishTime() ) {
-					((ExecutionNode *) *pred)->setMaxFinishTime(time);
-					((ExecutionNode *) *pred)->setMaxStartTime(((ExecutionNode *) *pred)->maxFinishTime() - ((ExecutionNode *) *pred)->minLatency());
-					((ExecutionNode *) *pred)->setMaxReadyTime(((ExecutionNode *) *pred)->maxStartTime());
-					shadePreds(((ExecutionNode *) *pred),out_stream);
+			if ( pred.edge()->type() == ExecutionEdge::SOLID) {
+				if ( time < pred->maxFinishTime() ) {
+					pred->setMaxFinishTime(time);
+					pred->setMaxStartTime(pred->maxFinishTime() - pred->minLatency());
+					pred->setMaxReadyTime(pred->maxStartTime());
+					shadePreds(pred, out_stream);
 				}
 			}
 			else {
-				if (node->maxStartTime() < ((ExecutionNode *) *pred)->maxStartTime() ) {
-					((ExecutionNode *) *pred)->setMaxStartTime(node->maxStartTime());
+				if (node->maxStartTime() < pred->maxStartTime() ) {
+					pred->setMaxStartTime(node->maxStartTime());
 				}
-				((ExecutionNode *) *pred)->setMaxFinishTime( ((ExecutionNode *) *pred)->maxStartTime() + ((ExecutionNode *) *pred)->minLatency());
-				((ExecutionNode *) *pred)->setMaxReadyTime(((ExecutionNode *) *pred)->maxStartTime());
+				pred->setMaxFinishTime(pred->maxStartTime() + pred->minLatency());
+				pred->setMaxReadyTime(pred->maxStartTime());
 			}
 		}
 	}
@@ -422,16 +441,16 @@ void ExecutionGraph::shadeNodes(elm::io::Output& out_stream) {
 
 PathList * findPaths(ExecutionNode * source, ExecutionNode * target, elm::io::Output& out_stream) {
 	PathList *list = new PathList();
-	for (graph::Node::Successor succ(source) ; succ ; succ++) {
-		if ( ((ExecutionNode *) *succ) == target) {
+	for (ExecutionGraph::Successor succ(source) ; succ ; succ++) {
+		if(succ == target) {
 			Path *new_path = new Path();
-			new_path->addNodeFirst((ExecutionNode *) *succ);
+			new_path->addNodeFirst(succ);
 			list->addPath(new_path);
 		}
-		if ( ((ExecutionNode *) *succ)->instIndex() <= target->instIndex() ) {
-			PathList *new_list = findPaths(((ExecutionNode *) *succ), target, out_stream);
+		if(succ->instIndex() <= target->instIndex()) {
+			PathList *new_list = findPaths(succ, target, out_stream);
 			for (PathList::PathIterator suffix_path(new_list) ; suffix_path ; suffix_path++) {
-				((Path *) *suffix_path)->addNodeFirst(source);
+				suffix_path->addNodeFirst(source);
 				list->addPath(suffix_path);
 			}
 		}
@@ -445,13 +464,13 @@ int ExecutionGraph::minDelta(elm::io::Output& out_stream) {
 	if (!first_node[ExecutionNode::BODY]->hasPred())
 		return(0);
 	int min_all = INFINITE_TIME;
-	for (graph::Node::Predecessor pred(first_node[ExecutionNode::BODY]) ; pred ; pred++) {
-		PathList *path_list = findPaths( ((ExecutionNode *) *pred), last_node[ExecutionNode::PROLOGUE], out_stream);
+	for (Predecessor pred(first_node[ExecutionNode::BODY]) ; pred ; pred++) {
+		PathList *path_list = findPaths(pred, last_node[ExecutionNode::PROLOGUE], out_stream);
 		int max = 0;
 		for(PathList::PathIterator path(path_list); path; path++) {
 			int length = 0;
-			for (Path::NodeIterator node((Path *)*path); node; node++) {
-				length += ((ExecutionNode *)*node)->minLatency();
+			for (Path::NodeIterator node(path); node; node++) {
+				length += node->minLatency();
 			}
 			if (length > max)
 				max = length;
@@ -683,7 +702,7 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 							if (producing_node != NULL) {
 								// check whether there is already an edge between the two nodes
 								bool exists = false;
-								for (graph::Node::Predecessor pred(node_in_list->executionNode()) ; pred ; pred++) {
+								for (Predecessor pred(node_in_list->executionNode()) ; pred ; pred++) {
 									if (pred == producing_node) {
 										exists = true;
 										break;
@@ -901,18 +920,18 @@ void ExecutionNode::dump(elm::io::Output& out_stream) {
 		out_stream << "\n\t   produces operands";		
 	if (this->hasPred()) {
 		out_stream << "\n\t   predecessors: ";
-		for (graph::Node::Predecessor pred(this) ; pred ; pred++) {
-			out_stream << ((ExecutionNode *) *pred)->pipelineStage()->shortName();
-			out_stream << "(I" << ((ExecutionNode *) *pred)->instIndex() <<")";
-			((ExecutionEdge *) pred.edge())->dump(out_stream);
+		for (ExecutionGraph::Predecessor pred(this) ; pred ; pred++) {
+			out_stream << pred->pipelineStage()->shortName();
+			out_stream << "(I" << pred->instIndex() <<")";
+			pred.edge()->dump(out_stream);
 		}
 	}
 	if (this->hasSucc()) {
 		out_stream << "\n\t   successors: ";
-		for (graph::Node::Successor next(this) ; next ; next++) {
-			out_stream << ((ExecutionNode *) *next)->pipelineStage()->shortName();
-			out_stream << "(I" << ((ExecutionNode *) *next)->instIndex() <<")";
-			((ExecutionEdge *)next.edge())->dump(out_stream);
+		for (ExecutionGraph::Successor next(this) ; next ; next++) {
+			out_stream << next->pipelineStage()->shortName();
+			out_stream << "(I" << next->instIndex() <<")";
+			next.edge()->dump(out_stream);
 		}
 	}
 	out_stream << "\n\t   contenders: ";
@@ -980,7 +999,7 @@ ExecutionGraph::ExecutionGraph()
 void ExecutionGraph::initSeparated() {
 	pair_cnt = 0;
 	for(NodeIterator u(this); u; u++)
-		((ExecutionNode *)*u)->pair_index = pair_cnt++;
+		u->pair_index = pair_cnt++;
 	pairs = new BitVector(pair_cnt * pair_cnt);
 }
 
@@ -995,16 +1014,14 @@ bool ExecutionGraph::unchangedSeparated(elm::io::Output& out_stream) {
 	
 	
 	for(NodeIterator node(this); node; node++)
-		if(((ExecutionNode *)*node)->changed) {
-			((ExecutionNode *)*node)->changed = false;
+		if(node->changed) {
+			node->changed = false;
 			//node_cnt++;
 		
 			// Horizontal
 			for(NodeIterator first(this); *first != *node; first++) {
-				ExecutionNode *fnode = (ExecutionNode *)*first;
-				ExecutionNode *snode = (ExecutionNode *)*node;
-				int index = (fnode->pair_index * pair_cnt) + snode->pair_index;
-				bool sep = separated(fnode, snode, out_stream);
+				int index = (first->pair_index * pair_cnt) + node->pair_index;
+				bool sep = separated(first, node, out_stream);
 				if(pairs->bit(index) != sep) {
 					unchanged = false;
 					pairs->set(index, sep);
@@ -1015,10 +1032,8 @@ bool ExecutionGraph::unchangedSeparated(elm::io::Output& out_stream) {
 			// Vertical
 			NodeIterator second(node);
 			for(second++; second; second++) {
-				ExecutionNode *fnode = (ExecutionNode *)*node;
-				ExecutionNode *snode = (ExecutionNode *)*second;
-				int index = fnode->pair_index * pair_cnt + snode->pair_index;
-				bool sep = separated(fnode, snode, out_stream);
+				int index = node->pair_index * pair_cnt + second->pair_index;
+				bool sep = separated(node, second, out_stream);
 				if(pairs->bit(index) != sep) {
 					unchanged = false;
 					pairs->set(index, sep);
@@ -1080,15 +1095,15 @@ void ExecutionGraph::dump(elm::io::Output& out_stream) {
 		}
 	}
 	for(NodeIterator node(this); node; node++){
-		((ExecutionNode *) *node)->dump(out_stream);
+		node->dump(out_stream);
 		out_stream << "\n";
 	}
 	out_stream << "\n";
 	if (this->entry_node != NULL) {
 		out_stream << "\nTopological order:\n";
 		for(PreorderIterator node(this, this->entry_node); node; node++) {
-			out_stream << ((ExecutionNode *) *node)->pipelineStage()->shortName();
-			out_stream << "(I" << ((ExecutionNode *) *node)->instIndex() <<") - ";
+			out_stream << node->pipelineStage()->shortName();
+			out_stream << "(I" << node->instIndex() <<") - ";
 		}
 	}
 }
@@ -1161,7 +1176,7 @@ void ExecutionGraph::dotDump(elm::io::Output& dotFile, bool dump_times) {
 		// dump edges
 		node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
 		while (!node_in_list->atEnd()) {
-				for (graph::Node::Successor next(node_in_list->executionNode()) ; next ; next++) {
+				for (Successor next(node_in_list->executionNode()) ; next ; next++) {
 					if ( (inst_node_list !=  (GraphNodesListInList *) instructions_nodes_lists.first())
 						||
 						(!node_in_list->executionNode()->producesOperands()) 
@@ -1222,7 +1237,7 @@ void ExecutionGraph::dotDump(elm::io::Output& dotFile, bool dump_times) {
 
 inline void Path::dump(elm::io::Output& out_stream) {
 	for(NodeIterator node(this); node; node++) {
-		((ExecutionNode *) *node)->dumpLight(out_stream);
+		node->dumpLight(out_stream);
 		out_stream << "-";
 	}
 }
@@ -1232,7 +1247,7 @@ inline void Path::dump(elm::io::Output& out_stream) {
 
 inline void PathList::dump(elm::io::Output& out_stream) {
 	for(PathIterator path(this); path; path++) {
-		((Path *) *path)->dump(out_stream);
+		path->dump(out_stream);
 		out_stream << "\n";
 	}
 }

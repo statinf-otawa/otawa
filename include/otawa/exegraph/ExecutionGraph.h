@@ -10,7 +10,7 @@
 #include <assert.h>
 #include <elm/Collection.h>
 #include <elm/genstruct/Vector.h>
-#include <otawa/util/Graph.h>
+#include <otawa/util/GenGraph.h>
 #include <otawa/exegraph/Microprocessor.h>
 #include <otawa/instruction.h>
 #include <elm/inhstruct/DLList.h>
@@ -29,7 +29,7 @@ class ExecutionEdge;
 // ExecutionNode class definition
 // -----------------------------------------------------------
 
-class ExecutionNode: public graph::Node {
+class ExecutionNode: public GenGraph<ExecutionNode, ExecutionEdge>::Node {
 	friend class ExecutionGraph;
 	public:
 		typedef struct time_interval_t {
@@ -112,7 +112,7 @@ class ExecutionNode: public graph::Node {
 // ExecutionEdge class definition
 // -----------------------------------------------------------
 
-class ExecutionEdge: public graph::Edge {
+class ExecutionEdge: public GenGraph<ExecutionNode, ExecutionEdge>::Edge {
 	
 	public:
 		typedef enum edge_type_t {	
@@ -134,7 +134,7 @@ class ExecutionEdge: public graph::Edge {
 // ExecutionGraph class definition
 // -----------------------------------------------------------
 
-class ExecutionGraph:  public graph::Graph  {
+class ExecutionGraph:  public GenGraph<ExecutionNode, ExecutionEdge>  {
 	public:
 		class NodePair {
 			private:
