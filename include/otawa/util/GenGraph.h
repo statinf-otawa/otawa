@@ -24,6 +24,7 @@ public:
 
 	// GenNode class
 	class Node: private graph::Node {
+		friend class GenGraph<N, E>;
 	protected:
 		inline Node(graph::Graph *graph = 0);
 		virtual ~Node(void);
@@ -40,6 +41,7 @@ public:
 
 	// GenEdge class
 	class Edge: private graph::Edge {
+		friend class GenGraph<N, E>;
 	protected:
 		virtual ~Edge(void);
 	public:
@@ -55,47 +57,53 @@ public:
 	inline void destroy(Edge *edge);
 
 	// Successor class
-	class Successor: public elm::PreIterator<Successor, Node *> {
+	class Successor: public elm::PreIterator<Successor, N *> {
 		graph::Node::Successor succ;
 	public:
-		inline Successor(const Node *node);
+		inline Successor(const N *node);
 		inline bool ended(void) const;
 		inline void next(void);
-		inline Node *item(void) const;
-		inline Edge *edge(void) const;
+		inline N *item(void) const;
+		inline E *edge(void) const;
 	};
 	
 	// Predecessor class
-	class Predecessor: public elm::PreIterator<Predecessor, Node *> {
+	class Predecessor: public elm::PreIterator<Predecessor, N *> {
 		graph::Node::Predecessor pred;
 	public:
-		inline Predecessor(const Node *node);
+		inline Predecessor(const N *node);
 		inline bool ended(void) const;
 		inline void next(void);
-		inline Node *item(void) const;
-		inline Edge *edge(void) const;
+		inline N *item(void) const;
+		inline E *edge(void) const;
 	};
 
 	// NodeIterator class
-	class NodeIterator: public elm::PreIterator<NodeIterator, Node *> {
+	class NodeIterator: public elm::PreIterator<NodeIterator, N *> {
 		graph::Graph::NodeIterator iter;
 	public:
 		inline NodeIterator(const GenGraph<N, E> *graph);
 		inline NodeIterator(const GenGraph<N, E>::NodeIterator *graph);
 		inline bool ended(void) const;
-		inline Node *item(void) const;
+		inline N *item(void) const;
 		inline void next(void); 
 	};
 
 	// PreorderIterator class
-	class PreorderIterator: public elm::PreIterator<PreorderIterator, Node *> {
+	class PreorderIterator: public elm::PreIterator<PreorderIterator, N *> {
 		graph::Graph::PreorderIterator iter;
 	public:
-		inline PreorderIterator(const graph::Graph *graph, Node *entry);
+		inline PreorderIterator(const GenGraph<N, E> *graph, N *entry);
 		inline bool ended(void) const;
-		inline Node *item(void) const;
+		inline N *item(void) const;
 		inline void next(void);
 	};
+
+private:
+	inline static const graph::Node *_(const Node *node) { return node; }; 
+	inline static const graph::Edge *_(const Edge *edge) { return edge; }; 
+	inline static graph::Node *_(Node *node) { return node; }; 
+	inline static graph::Edge *_(Edge *edge) { return edge; }; 
 };
 
 
@@ -179,7 +187,7 @@ GenGraph<N, E>::Edge::~Edge(void) {
 
 template <class N, class E>
 inline GenGraph<N, E>::Edge::Edge(Node *source, Node *target)
-: graph::Edge(source, target) {
+: graph::Edge(_(source), _(target)) {
 }
 
 template <class N, class E>
@@ -195,8 +203,8 @@ inline typename GenGraph<N, E>::Node *GenGraph<N, E>::Edge::target(void) const {
 
 // GenGraph<N, E>::Successor
 template <class N, class E>
-inline GenGraph<N, E>::Successor::Successor(const GenGraph<N, E>::Node *node)
-: succ(node) {
+inline GenGraph<N, E>::Successor::Successor(const N *node)
+: succ(_(node)) {
 }
 
 template <class N, class E>
@@ -210,20 +218,20 @@ inline void GenGraph<N, E>::Successor::next(void) {
 }
 
 template <class N, class E>
-inline typename GenGraph<N, E>::Node *GenGraph<N, E>::Successor::item(void) const {
-	return (typename GenGraph<N, E>::Node *)succ.item();
+inline N *GenGraph<N, E>::Successor::item(void) const {
+	return (N *)succ.item();
 }
 
 template <class N, class E>
-inline typename GenGraph<N, E>::Edge *GenGraph<N, E>::Successor::edge(void) const {
-	return (typename GenGraph<N, E>::Node *)succ.edge();
+inline E *GenGraph<N, E>::Successor::edge(void) const {
+	return (E *)succ.edge();
 }	
 
 
 // GenGraph<N, E>::Predecessor
 template <class N, class E>
-inline GenGraph<N, E>::Predecessor::Predecessor(const Node *node)
-: pred(node) {
+inline GenGraph<N, E>::Predecessor::Predecessor(const N *node)
+: pred(_(node)) {
 }
 
 template <class N, class E>
@@ -237,13 +245,13 @@ inline void GenGraph<N, E>::Predecessor::next(void) {
 }
 
 template <class N, class E>
-inline typename GenGraph<N, E>::Node *GenGraph<N, E>::Predecessor::item(void) const {
-	return (Node *)pred.item();
+inline N *GenGraph<N, E>::Predecessor::item(void) const {
+	return (N *)pred.item();
 }
 
 template <class N, class E>
-inline typename GenGraph<N, E>::Edge *GenGraph<N, E>::Predecessor::edge(void) const {
-	return (Edge *)pred.edge();
+inline E *GenGraph<N, E>::Predecessor::edge(void) const {
+	return (E *)pred.edge();
 }
 
 
@@ -264,8 +272,8 @@ inline bool GenGraph<N, E>::NodeIterator::ended(void) const {
 }
 
 template <class N, class E>
-inline typename GenGraph<N, E>::Node *GenGraph<N, E>::NodeIterator::item(void) const {
-	return (Node *)iter.item();
+inline N *GenGraph<N, E>::NodeIterator::item(void) const {
+	return (N *)iter.item();
 }
 
 template <class N, class E>
@@ -277,9 +285,9 @@ inline void GenGraph<N, E>::NodeIterator::next(void) {
 // GenGraph<N, E>::PreorderIterator Inlines
 template <class N, class E>
 inline GenGraph<N, E>::PreorderIterator::PreorderIterator(
-	const graph::Graph *graph,
-	Node *entry)
-: iter(graph, entry) {
+	const GenGraph<N, E> *graph,
+	N *entry)
+: iter(graph, _(entry)) {
 }
 
 template <class N, class E>
@@ -288,8 +296,8 @@ inline bool GenGraph<N, E>::PreorderIterator::ended(void) const {
 }
 
 template <class N, class E>
-inline typename GenGraph<N, E>::Node *GenGraph<N, E>::PreorderIterator::item(void) const {
-	return (Node *)iter.item();
+inline N *GenGraph<N, E>::PreorderIterator::item(void) const {
+	return (N *)iter.item();
 }
 
 template <class N, class E>
