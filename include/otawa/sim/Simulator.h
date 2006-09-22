@@ -20,8 +20,9 @@ namespace sim {
 class State;
 
 // Definitions
-extern const elm::CString PLUGGER_NAME;
-extern const elm::Version PLUGGER_VERSION;
+#define OTAWA_SIMULATOR_HOOK 	sim_plugin
+#define OTAWA_SIMULATOR_NAME	"sim_plugin"
+#define OTAWA_SIMULATOR_VERSION Version(1, 0, 0)
 
 
 // Simulator configuration
@@ -34,7 +35,7 @@ extern GenericIdentifier<bool> USE_CONTROL;
 // Simulator class
 class Simulator: public elm::system::Plugin {
 public:
-	Simulator(elm::String name, const elm::Version& version,
+	Simulator(elm::CString name, const elm::Version& version,
 		const elm::CString description = "",
 		const elm::CString license = "");
 	virtual State *instantiate(FrameWork *fw,

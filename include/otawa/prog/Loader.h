@@ -23,6 +23,7 @@ namespace sim {
 // Useful defines
 #define OTAWA_LOADER_VERSION	Version(1, 0, 0)
 #define OTAWA_LOADER_HOOK		loader_plugin
+#define OTAWA_LOADER_NAME		"loader_plugin"
 
 
 // Loader class
