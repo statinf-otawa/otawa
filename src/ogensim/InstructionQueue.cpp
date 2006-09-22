@@ -86,7 +86,7 @@ void InstructionQueue::flush() {
 	tail = 0;
 }
 
-inline void InstructionQueue::put(SimulatedInstruction *inst) {
+void InstructionQueue::put(SimulatedInstruction *inst) {
 	assert (is_full == false);
 	int new_tail = (tail+1) & (cap-1);
 	buffer[tail] = inst;
@@ -94,7 +94,7 @@ inline void InstructionQueue::put(SimulatedInstruction *inst) {
 	is_full = (tail == head);
 }
 
-inline SimulatedInstruction* InstructionQueue::get() {
+SimulatedInstruction* InstructionQueue::get() {
 	assert((head!=tail) || is_full);
 	int res=head;
 	head = (head+1) & (cap-1);
@@ -102,11 +102,11 @@ inline SimulatedInstruction* InstructionQueue::get() {
 	return buffer[res];
 }
 		
-inline SimulatedInstruction* InstructionQueue::read(int index){
+SimulatedInstruction* InstructionQueue::read(int index){
 	return buffer[ (head + index) & (cap - 1) ];
 }
 
-inline int InstructionQueue::size() {
+int InstructionQueue::size() {
 	if (head == tail)
 		if (is_full == false)
 			return 0;

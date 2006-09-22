@@ -48,8 +48,8 @@ class InstructionQueue : public sc_module {
 		SimulatedInstruction** buffer;
 		
 		// private methods
-		inline SimulatedInstruction* get();
-		inline void put(SimulatedInstruction *inst);
+		SimulatedInstruction* get();
+		void put(SimulatedInstruction *inst);
 		
 		SC_HAS_PROCESS(InstructionQueue);
 		void action();
@@ -58,10 +58,10 @@ class InstructionQueue : public sc_module {
 		InstructionQueue(sc_module_name name, InstructionQueueConfiguration * configuration);
 		~InstructionQueue(); 
 		void flush();
-		inline SimulatedInstruction* read(int index);
+		SimulatedInstruction* read(int index);
 		InstructionQueueConfiguration * configuration();
 		bool isEmpty();
-		inline int size();
+		int size();
 		
 };
 
