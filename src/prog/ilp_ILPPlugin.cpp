@@ -21,8 +21,12 @@ namespace otawa { namespace ilp {
  * @param plugger_version	Required plugger version.
  * @param					Allow having static plugins (@see elm::system::Plugin).
  */
-ILPPlugin::ILPPlugin(elm::String name, const elm::Version& plugger_version,
-elm::String hook): Plugin(name.toCString(), plugger_version, hook.toCString()) {
+ILPPlugin::ILPPlugin(
+		elm::CString name,
+		const elm::Version& version,
+		const elm::Version& plugger_version)
+: Plugin(name, plugger_version, OTAWA_ILP_NAME) {
+		_plugin_version = version;
 }
 
 
