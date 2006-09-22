@@ -14,11 +14,18 @@ namespace otawa { namespace ilp {
 // External class
 class System;
 
+// Definitions
+#define OTAWA_ILP_HOOK		ilp_plugin
+#define OTAWA_ILP_NAME		"ilp_plugin"
+#define OTAWA_ILP_VERSION	Version(1, 0, 0)
+
 // ILPPlugin class
 class ILPPlugin: public elm::system::Plugin {
 public:
-	ILPPlugin(elm::String name, const elm::Version& plugger_version,
-		elm::String hook = "");
+	ILPPlugin(
+		elm::CString name,
+		const elm::Version& version,
+		const elm::Version& plugger_version);
 	virtual System *newSystem(void) = 0;
 };
 
