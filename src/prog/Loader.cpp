@@ -7,8 +7,6 @@
 
 #include <otawa/prog/Loader.h>
 
-#define STRINGIZE(x) #x
-
 namespace otawa {
 
 /**
@@ -31,7 +29,7 @@ Loader::Loader(
 	Version version,
 	Version plugger_version,
 	const Plugin::aliases_t& aliases)
-: Plugin(name, plugger_version, STRINGIZE(OTAWA_LOADER_HOOK), aliases) {
+: Plugin(name, plugger_version, OTAWA_LOADER_NAME, aliases) {
 	_plugin_version = version;
 }
 
