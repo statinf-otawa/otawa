@@ -175,7 +175,7 @@ void ExecuteOOOStage::action() {
 	int i;
 	for (i=0 ; ( (i<rob->size()) && (executed<stage_width) && !memory_ordering) ; i++) {
 		SimulatedInstruction * inst = rob->read(i);
-		if (inst->inst()->isMem()) {
+		if (inst->inst()->isMem() && (inst->state() < EXECUTED)) {
 			if (memory_pending) {
 				memory_ordering = true;
 				continue;
