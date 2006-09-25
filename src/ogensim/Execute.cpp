@@ -171,11 +171,18 @@ ExecuteOOOStage::ExecuteOOOStage(sc_module_name name, int width,
 void ExecuteOOOStage::action() {
 	int executed = 0;
 	TRACE(elm::cout << "ExecuteStage->action()\n";)
-	bool memory_ordering = false;
-	for (int i=0 ; ( (i<rob->size()) && (executed<stage_width) && !memory_ordering) ; i++) {
+	bool memory_pending = false, memory_ordering = false;
+	int i;
+	for (i=0 ; ( (i<rob->size()) && (executed<stage_width) && !memory_ordering) ; i++) {
 		SimulatedInstruction * inst = rob->read(i);
-		if (inst->inst()->isMem())
-			memory_ordering = true;
+		if (inst->inst()->isMem()) {
+			if (memory_pending) {
+				memory_ordering = true;
+				continue;
+			}
+			else
+				memory_pending = true;
+		}
 		if (inst->state() == READY) {
 			FunctionalUnit * fu = (*fu_bindings)[inst->type()];
 			#ifndef NDEBUG
@@ -202,6 +209,14 @@ void ExecuteOOOStage::action() {
 			}
 		}
 	}
+	TRACE(elm::cout << "\tend because:";
+			if (i==rob->size())
+				elm::cout << "i==robsize - ";
+			if (executed >= stage_width)
+				elm::cout << "executed=" << executed << " - ";
+			if (memory_ordering)
+				elm::cout << "memory ordering";
+			elm::cout << "\n";)
 	for (int i=0 ; i<rob->size() ; i++) {
 		SimulatedInstruction * inst = rob->read(i);
 		if ( inst->state() == EXECUTING) {
