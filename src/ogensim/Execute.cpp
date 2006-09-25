@@ -173,15 +173,15 @@ void ExecuteOOOStage::action() {
 	TRACE(elm::cout << "ExecuteStage->action()\n";)
 	bool memory_pending = false, memory_ordering = false;
 	int i;
-	for (i=0 ; ( (i<rob->size()) && (executed<stage_width) && !memory_ordering) ; i++) {
+	for (i=0 ; ( (i<rob->size()) /*&& (executed<stage_width)*/ && !memory_ordering) ; i++) {
 		SimulatedInstruction * inst = rob->read(i);
 		if (inst->inst()->isMem() && (inst->state() < EXECUTED)) {
-			if (memory_pending) {
-				memory_ordering = true;
-				continue;
-			}
-			else
-				memory_pending = true;
+//			if (memory_pending) {
+//				memory_ordering = true;
+//				continue;
+//			}
+//			else
+//				memory_pending = true;
 		}
 		if (inst->state() == READY) {
 			FunctionalUnit * fu = (*fu_bindings)[inst->type()];
