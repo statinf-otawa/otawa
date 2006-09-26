@@ -156,7 +156,8 @@ namespace otawa {
  * @return				Allocated identifier code.
  */
 const Identifier *Property::getID(elm::CString name) {
-	return Identifier::getID(name);
+	String _(name);
+	return ROOT_NS.get(name);
 }
 
 
@@ -206,7 +207,7 @@ const Identifier *Property::getID(elm::CString name) {
  * @param out	Output to use.
  */
 void Property::print(elm::io::Output& out) const {
-	out << _id->name() << " = ";
+	out << _id << " = ";
 	_id->print(out, this);
 }
 

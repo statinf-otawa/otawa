@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-06, IRIT UPS.
  *
  *	otawa/prop/Identifier.h -- interface to Identifier class.
  */
@@ -19,16 +19,33 @@ namespace otawa {
 // External classes
 class Property;
 class PropList;
+class NameSpace;
+
+// External Data
+extern NameSpace ROOT_NS;
+extern NameSpace OTAWA_NS;
 
 // Identifier class
 class Identifier {
+	friend class Manager;
 	elm::String nam;
-public:
-	static const Identifier *invalid;
-	static const Identifier *getID(elm::CString name);
-	Identifier(elm::CString name);
-	
-	inline const elm::String& name(void) const;
+	NameSpace& _parent;
+	Identifier *next;
+
+	static bool initialized;
+	static Identifier *init_list;
+	static void init(void);
+	void link(void);
+
+public:	
+	Identifier(void);
+	Identifier(elm::String name, NameSpace& parent = ROOT_NS);
+
+	inline NameSpace const & parent(void) const { return _parent; };
+	virtual NameSpace *toNameSpace(void);
+	inline const elm::String name(void) const;
+
+	virtual void print(elm::io::Output& out);
 	virtual void print(elm::io::Output& output, const Property& prop) const;
 	inline void print(elm::io::Output& output, const Property *prop) const;
 	virtual const Type& type(void) const;
@@ -43,12 +60,20 @@ public:
 };
 
 
-// Compatibility
-#define INVALID_ID Identifier::invalid
+// Output
+inline elm::io::Output& operator<<(elm::io::Output& out, Identifier& id) {
+	id.print(out);
+	return out;
+}
+
+inline elm::io::Output& operator<<(elm::io::Output& out, Identifier *id) {
+	assert(id);
+	return out << *id;
+}
 
 
 // Inlines
-inline const elm::String& Identifier::name(void) const {
+inline const elm::String Identifier::name(void) const {
 	return nam;
 }
 
@@ -56,6 +81,7 @@ inline void Identifier::print(elm::io::Output& output, const Property *prop) con
 	assert(prop);
 	return print(output, *prop);
 }
+
 
 } // otawa
 

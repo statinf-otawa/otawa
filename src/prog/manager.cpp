@@ -12,8 +12,6 @@
 #include <otawa/ilp/ILPPlugin.h>
 #include <gel.h>
 
-#define STRINGIZE(x)	#x
-
 namespace otawa {
 
 
@@ -182,8 +180,9 @@ FrameWork *Manager::load(CString path, PropList& props) {
  */
 Manager::Manager(void):
 	ilp_plugger("ilp_plugin", Version(1, 0, 0), ILP_PATHS),
-	loader_plugger(STRINGIZE(OTAWA_LOADER_HOOK), OTAWA_LOADER_VERSION, LOADER_PATHS)
+	loader_plugger(OTAWA_LOADER_NAME, OTAWA_LOADER_VERSION, LOADER_PATHS)
 {
+	Identifier::init();
 }
 
 

@@ -31,11 +31,6 @@ libotawa_la_SOURCES = \
 	Edge.cpp \
 	PCGBlock.cpp\
 	PCGBuilder.cpp\
-	prop_Identifier.cpp \
-	prop_GenericIdentifier.cpp \
-	prop_PropList.cpp \
-	prop_Property.cpp \
-	prop_DeletableProperty.cpp \
 	ilp_Var.cpp \
 	ilp_Constraint.cpp \
 	ilp_System.cpp \
@@ -117,5 +112,11 @@ libotawa_la_SOURCES = \
 	BBTimeSimulator.cpp \
 	ipet_Delta.cpp \
 	BBPath.cpp \
-	cfg_CFGCollector.cpp
-
+	cfg_CFGCollector.cpp \
+	prop_NameSpace.cpp \
+	prop_Identifier.cpp \
+	prop_GenericIdentifier.cpp \
+	prop_PropList.cpp \
+	prop_Property.cpp \
+	prop_DeletableProperty.cpp
+	

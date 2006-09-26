@@ -8,12 +8,24 @@
 #include <elm/io.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/properties.h>
+#include <otawa/prop/NameSpace.h>
+
 using namespace elm;
 
 namespace otawa {
 
-// Property names store
-static genstruct::HashTable<String, Identifier *> *ids = 0;
+
+/*
+ * NOTE : init_list, initialized, init and link are workaround the C++
+ * global constructor order FIASCO. Modify it only if you know what you do.
+ * 
+ * At construction time, the has table are not filled because the parent
+ * namespace is possibly not initialized. The identifier records them in 
+ * single link list (statically initialized to NULL... no construction).
+ * Then, the init() function is called and the identifiers recorded in the
+ * list ends their construction by recording themselves to their parent
+ * namespaces.
+ */
 
 
 /**
@@ -40,55 +52,81 @@ DuplicateIdentifierException::DuplicateIdentifierException(String& name)
 
 
 /**
+ * For internal use only.
+ */
+Identifier *Identifier::init_list = 0;
+bool Identifier::initialized = false;
+
+
+/**
+ * For internal use only.
+ */
+void Identifier::init(void) {
+	if(!initialized) {
+		for(Identifier *id = init_list; id; id = id->next)
+			id->link();
+		initialized = true;
+	}
+}
+
+
+/**
+ * For internal use only.
+ */
+void Identifier::link(void) {
+	if(_parent.get(nam)) {
+		cerr << "FATAL ERROR: identifier \"" << nam << "\" defined multiple times.";
+		String _(nam);
+		throw DuplicateIdentifierException(_);
+	}
+	_parent.add(this);
+}
+
+
+/**
+ * Build an aninymouns identifier.
+ */
+Identifier::Identifier(void)
+:	nam(""),
+	_parent(ROOT_NS)
+{
+}
+
+
+/**
  * Build a new identifier. Only one identifier may exists in the OTAWA with
  * a given name. If there is a name clash, the framework will immediatelly be
  * stopped.
- * @param name	Name of the identifier.
+ * @param name		Name of the identifier.
+ * @param parent	Parent namespace.
  */
-Identifier::Identifier(elm::CString name): nam(name) {
-	
-	// Need to allocate the ID table ?
-	if(!ids)
-		ids = new genstruct::HashTable<String, Identifier *>();
-	
-	// Already defined
-	Option<Identifier *> result = ids->get(nam);
-	if(result) {
-		cerr << "FATAL ERROR: identifier \"" << nam << "\" defined multiple times.";
-		throw DuplicateIdentifierException(nam);
+Identifier::Identifier(elm::String name, NameSpace& parent)
+:	nam(name),
+ 	_parent(parent)
+{
+	if(initialized)
+		link();
+	else {
+		next = init_list;
+		init_list = this;
 	}
-	
-	// Add it
-	ids->put(name, this);
 }
 
 
 /**
- * Get the identifier matching the given name.
- * @param name	Identifier name.
- * @return		Matching identifier.
+ * @fn NameSpace const & Identifier::parent(void) const;
+ * Get the parent namespace.
+ * @return Parent namespace.
  */
-const Identifier *Identifier::getID(elm::CString name) {
-	String nam(name);
-	
-	// Test for existence
-	if(ids) {
-		Option<Identifier *> res = ids->get(nam);
-		if(res)
-			return *res;
-		else
-		ids = new genstruct::HashTable<String, Identifier *>();		
-	}
-	
-	// Else create it
-	return new Identifier(name);
-}
 
 
 /**
- * Value for the undefined identifier.
+ * If this identifier is a namespace, return it.
+ * @return	Matching namespace or null.
  */
-const Identifier *Identifier::invalid = 0;
+NameSpace *Identifier::toNameSpace(void) {
+	return 0;
+}
 
 
 /**
@@ -137,6 +175,15 @@ const Type& Identifier::type(void) const {
  */
 void Identifier::scan(PropList& props, VarArg& args) const {
 	assert(0);
+}
+
+
+/**
+ * Print the identifier.
+ * @param out	Output stream.
+ */
+void Identifier::print(elm::io::Output& out) {
+	out << nam;
 }
 
 
