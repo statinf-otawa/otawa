@@ -2,6 +2,8 @@
 #include <otawa/gensim/GenericState.h>
 #include <otawa/gensim/debug.h>
 
+namespace otawa { namespace gensim {
+
 FunctionalUnitConfiguration::FunctionalUnitConfiguration(bool is_pipelined, int latency, int width)
 	: _is_pipelined(is_pipelined), _latency(latency), _width(width) {
 	if (is_pipelined)
@@ -46,7 +48,7 @@ int FunctionalUnit::width() {
 
 
 
-ExecuteInOrderStageIQ::ExecuteInOrderStageIQ(sc_module_name name, int width, otawa::GenericState * gen_state,
+ExecuteInOrderStageIQ::ExecuteInOrderStageIQ(sc_module_name name, int width, GenericState * gen_state,
 										elm::genstruct::AllocatedTable<rename_table_t> * _rename_tables,
 										elm::genstruct::SLList<FunctionalUnitConfiguration *> * _functional_units) 
 		: PipelineStage(name) {
@@ -234,7 +236,7 @@ void ExecuteOOOStage::action() {
 	
 }
 
-CommitStage::CommitStage(sc_module_name name, int _width, otawa::GenericState * gen_state) 
+CommitStage::CommitStage(sc_module_name name, int _width, GenericState * gen_state) 
 		: PipelineStage(name) {
 	width = _width;
 	sim_state = gen_state;
@@ -260,3 +262,4 @@ void CommitStage::action() {
 	out_number_of_accepted_ins.write(in_number_of_ins.read());	
 }
 
+} } // otawa::gensim
