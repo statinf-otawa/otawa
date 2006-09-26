@@ -26,6 +26,7 @@ using namespace otawa;
 using namespace otawa::ipet;
 using namespace otawa::hard;
 using namespace elm::option;
+using namespace otawa::gensim;
 
 
 // Command

@@ -2,10 +2,10 @@
  *	$Id$
  *	Copyright (c) 2006, IRIT-UPS <casse@irit.fr>.
  *
- *	otawa/sim/TrivialSimulator.h -- TrivialSimulator class interface.
+ *	otawa/gensim/GenericState.h -- GenericState class interface.
  */
-#ifndef _GenericSTATE_H_
-#define _GenericSTATE_H_
+#ifndef OTAWA_GENSIM_GENERIC_STATE_H
+#define OTAWA_GENSIM_GENERIC_STATE_H
 
 #include <otawa/gensim/GenericProcessor.h>
 #include <otawa/sim/Simulator.h>
@@ -13,7 +13,7 @@
 #include <otawa/otawa.h>
 
 
-namespace otawa { 
+namespace otawa { namespace gensim {
 
 // Configuration
 extern GenericIdentifier<int> INSTRUCTION_TIME;
@@ -69,7 +69,7 @@ public:
 	}
 };
 
-} // otawa
+} } // otawa::gensim
 
 
-#endif //_GenericSTATE_H_
+#endif // OTAWA_GENSIM_GENERIC_STATE_H

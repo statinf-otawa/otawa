@@ -1,18 +1,17 @@
-#ifndef _GenericSIMULATOR_H_
-#define _GenericSIMULATOR_H_
-
 /*
- *	$Id$
- *	Copyright (c) 2006, IRIT-UPS <casse@irit.fr>.
+ * $Id$
+ * Copyright (c) 2006, IRIT-UPS
  *
- *	otawa/sim/TrivialSimulator.h -- TrivialSimulator class interface.
+ * otawa/gensim/GenericSimulator.h -- GenericSimulator class interface
  */
+#ifndef OTAWA_GENSIM_GENERIC_SIMULATOR_H
+#define OTAWA_GENSIM_GENERIC_SIMULATOR_H
 
 #include <otawa/sim/Simulator.h>
 #include <otawa/sim/State.h>
 #include <otawa/otawa.h>
 
-namespace otawa { 
+namespace otawa { namespace gensim {
 
 // GenericSimulator class
 class GenericSimulator: public sim::Simulator {
@@ -26,6 +25,6 @@ public:
 
 extern GenericIdentifier<int> DEGREE;
 
-} // otawa
+} } // otawa::gensim
 
-#endif //_GenericSIMULATOR_H_
+#endif // OTAWA_GENSIM_GENERIC_SIMULATOR_H

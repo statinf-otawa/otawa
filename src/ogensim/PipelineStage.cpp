@@ -1,6 +1,8 @@
 #include <otawa/gensim/PipelineStage.h>
 #include <otawa/gensim/debug.h>
 
+namespace otawa { namespace gensim {
+
 PipelineStageConfiguration::PipelineStageConfiguration(CString name, pipeline_stage_t type,
 	InstructionQueueConfiguration * inqueue, InstructionQueueConfiguration * outqueue,
 	int in_width, int out_width) :
@@ -118,4 +120,6 @@ void LazyStageIQIQ::action() {
 	out_number_of_outs.write(outs);
 	TRACE(elm::cout << "\tout_number_of_outs=" << outs << "\n";)
 }
+
+} } // otawa::gensim
 

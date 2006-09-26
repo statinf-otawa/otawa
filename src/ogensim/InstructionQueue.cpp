@@ -1,6 +1,8 @@
 #include <otawa/gensim/InstructionQueue.h>
 #include <otawa/gensim/debug.h>
 
+namespace otawa { namespace gensim {
+
 InstructionQueueConfiguration::InstructionQueueConfiguration(CString name, int capacity, simulated_instruction_state_t condition) :
 	queue_name(name), cap(capacity), number_of_write_ports(0), number_of_read_ports(0), 
 	leaving_condition(condition) {
@@ -162,4 +164,4 @@ void InstructionQueue::action() {
 	
 }
 
-	
+} } // otawa::gensim

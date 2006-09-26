@@ -1,11 +1,18 @@
-#ifndef _SIMULATEDINSTRUCTION_H_
-#define _SIMULATEDINSTRUCTION_H_
+/*
+ *	$Id$
+ *	Copyright (c) 2006, IRIT-UPS <casse@irit.fr>.
+ *
+ *	otawa/gensim/SimulatedInstruction.h -- SimulatedInstruction class interface.
+ */
+#ifndef OTAWA_GENSIM_SIMULATED_INSTRUCTION_H
+#define OTAWA_GENSIM_SIMULATED_INSTRUCTION_H
 
 #include <otawa/otawa.h>
 #include <otawa/hard/Register.h>
 #include <elm/genstruct/Table.h>
-//#include <emul.h>
 #include <otawa/gensim/debug.h>
+
+namespace otawa { namespace gensim {
 
 typedef enum {NONE, WAITING, READY, EXECUTING, EXECUTED, NOTIFIED} simulated_instruction_state_t; // ordered set
 
@@ -273,5 +280,6 @@ inline void SimulatedInstruction::dumpType(elm::io::Output& out_stream) {
 	}
 }
 
+} } // otawa::gensim
 
-#endif //_SIMULATEDINSTRUCTION_H_
+#endif // OTAWA_GENSIM_SIMULATED_INSTRUCTION_H

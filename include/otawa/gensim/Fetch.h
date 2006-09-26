@@ -1,5 +1,11 @@
-#ifndef _FETCH_H_
-#define _FETCH_H_
+/*
+ * $Id$
+ * Copyright (c) 2006, IRIT-UPS
+ *
+ * otawa/gensim/Fetch.h -- FetchStage class interface
+ */
+#ifndef OTAWA_GENSIM_FETCH_H
+#define OTAWA_GENSIM_FETCH_H
 
 #include <otawa/gensim/PipelineStage.h>
 #include <otawa/gensim/InstructionQueue.h>	
@@ -8,9 +14,10 @@
 //#include <iss_include.h>
 #include <otawa/otawa.h>
 
-namespace otawa {
-	class GenericState;
-}
+namespace otawa { namespace gensim {
+
+// External class
+class GenericState;
 
 #define NB_INT_REGS 32
 #define NB_FP_REGS 32
@@ -26,7 +33,7 @@ class FetchStage : public PipelineStage {
 	
 	private:	
 		// parameters
-		otawa::GenericState *sim_state;
+		GenericState *sim_state;
 		//state_t * emulated_state;
 		int out_ports;
 		elm::genstruct::SLList<SimulatedInstruction *> fetched_instructions;
@@ -38,7 +45,7 @@ class FetchStage : public PipelineStage {
 		
 	public:
 
-		FetchStage(sc_module_name name, int number_of_out_ports, otawa::GenericState * gen_state,
+		FetchStage(sc_module_name name, int number_of_out_ports, GenericState * gen_state,
 					elm::genstruct::AllocatedTable<rename_table_t> * rename_tables,
 					elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions);
 
@@ -47,4 +54,6 @@ class FetchStage : public PipelineStage {
 
 };
 
-#endif //_FETCH_H_
+} } // otawa::gensim
+
+#endif // OTAWA_GENSIM_FETCH_H
