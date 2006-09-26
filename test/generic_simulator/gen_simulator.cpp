@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 		PropList props;
 		props.set(EXPLICIT, true);
 		
-		GenericSimulator simulator;
+		gensim::GenericSimulator simulator;
 		sim::State *simulator_state = simulator.instantiate(fw,props);
 		
 		// Compute BB times

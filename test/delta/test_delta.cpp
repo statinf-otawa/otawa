@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
 	main_sw.start();
 	
 	// Load the file
-	GenericSimulator sim;
+	gensim::GenericSimulator sim;
 	Manager manager;
 	PropList props;
 	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
