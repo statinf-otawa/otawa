@@ -33,6 +33,7 @@ namespace otawa { namespace gliss {
  */
 Process::Process(Manager *_man, PropList& props): otawa::Process(props), man(_man) {
 	TRACE(this << ".Process::Process(" << _man << ", " << &props << ')');
+	no_sys = NO_SYSTEM(props);
 	default_argv[0] = "";
 	default_argv[1] = 0;
 	default_envp[0] = 0;
@@ -82,7 +83,7 @@ elm::Collection<otawa::File *> *Process::files(void) {
  */
 ::otawa::File *Process::loadFile(CString path) {
 	clear();
-	File *file = new otawa::gliss::File(path, argc, argv, envp);
+	File *file = new otawa::gliss::File(path, argc, argv, envp, no_sys);
 	if(!file->isOK()) {
 		delete file;
 		return 0;

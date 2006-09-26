@@ -22,9 +22,13 @@ namespace otawa { namespace gliss {
 	
 /**
  * Build a GLISS PowerPC file by loading the given path.
- * @param _path	Path of the file to load.
+ * @param _path		Path of the file to load.
+ * @param argc		Program call argc value.
+ * @param argv		Program call argv value.
+ * @param envp		Program call envp value.
+ * @param no_sys	Do not initialize the system support.
  */
-File::File(String _path, int argc, char **argv, char **envp)
+File::File(String _path, int argc, char **argv, char **envp, bool no_sys)
 : path(_path), labels_init(false) {
 	static char *ld_library_path[] = { 0 };
 	
@@ -53,7 +57,7 @@ File::File(String _path, int argc, char **argv, char **envp)
     mem_list[2]=NULL;
 
     // Initialize emulator
-    _state = iss_init(mem_list, loader_list, system_list, NULL, NULL);
+    _state = iss_init(mem_list, loader_list, (no_sys ? NULL : system_list), NULL, NULL);
     if(!_state)
     	return;
     

@@ -76,6 +76,7 @@ extern GenericIdentifier<char **> ENVP;
 extern GenericIdentifier<sim::Simulator *> SIMULATOR;
 extern GenericIdentifier<hard::CacheConfiguration *> CACHE_CONFIG;
 extern GenericIdentifier<int> PIPELINE_DEPTH;
+extern GenericIdentifier<bool> NO_SYSTEM;
 
 
 };	// otawa

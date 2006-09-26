@@ -191,4 +191,11 @@ GenericIdentifier<hard::CacheConfiguration *> CACHE_CONFIG("otawa.cache_config",
  */
 GenericIdentifier<int> PIPELINE_DEPTH("otawa.pipeline_depth", -1);
 
+
+/**
+ * This property shows that the system does not need to by simulated when
+ * the binary image is built.
+ */
+GenericIdentifier<bool> NO_SYSTEM("otawa.no_system", false);
+
 } // otawa
