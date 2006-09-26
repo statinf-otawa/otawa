@@ -26,6 +26,7 @@ protected:
 	char **argv, **envp;
 	address_t start_addr;
 	Platform *_platform;
+	bool no_sys;
 public:
 	Process(Manager *_man, PropList& props);
 	virtual ~Process(void);

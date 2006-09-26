@@ -28,7 +28,7 @@ class File: public ::otawa::File {
 	void initSyms(void);
 	bool labels_init;
 public:
-	File(String _path, int argc, char **argv, char **envp);
+	File(String _path, int argc, char **argv, char **envp, bool no_sys = false);
 	~File(void);
 	inline bool isOK(void) { return !segs.isEmpty(); };
 	otawa::Inst *findByAddress(address_t addr);
