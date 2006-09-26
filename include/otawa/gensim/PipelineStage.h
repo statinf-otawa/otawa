@@ -1,11 +1,19 @@
-#ifndef _PIPELINESTAGE_H_
-#define _PIPELINESTAGE_H_
+/*
+ *	$Id$
+ *	Copyright (c) 2006, IRIT-UPS <casse@irit.fr>.
+ *
+ *	otawa/gensim/PipelineStage.h -- PipelineStage class interface.
+ */
+#ifndef OTAWA_GENSIM_PIPELINE_STAGE_H
+#define OTAWA_GENSIM_PIPELINE_STAGE_H
 
 #include <systemc.h>
 #include <elm/genstruct/SLList.h>
 #include <otawa/gensim/InstructionQueue.h>
 #include <otawa/gensim/SimulatedInstruction.h>
 #include <elm/string/String.h>
+
+namespace otawa { namespace gensim {
 
 typedef enum {	FETCH, 
 				EXECUTE_IN_ORDER, 
@@ -79,7 +87,8 @@ inline int LazyStageIQIQ::stageWidth() {
 	return stage_width;
 }
 
+} } // otawa::gensim
 
-#endif //_PIPELINESTAGE_H_
+#endif // OTAWA_GENSIM_PIPELINE_STAGE_H
 
 
