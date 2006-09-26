@@ -1,9 +1,17 @@
-#ifndef _INSTRUCTIONQUEUE_H_
-#define _INSTRUCTIONQUEUE_H_
+/*
+ *	$Id$
+ *	Copyright (c) 2006, IRIT-UPS <casse@irit.fr>.
+ *
+ *	otawa/gensim/InstructionQueue.h -- InstructionQueue class interface.
+ */
+#ifndef OTAWA_GENSIM_INSTRUCTION_QUEUE_H
+#define OTAWA_GENSIM_INSTRUCTION_QUEUE_H
 
 #include <otawa/gensim/SimulatedInstruction.h>
 #include <systemc.h>
 #include <elm/string/CString.h>
+
+namespace otawa { namespace gensim {
 
 class InstructionQueueConfiguration {
 	int cap;
@@ -65,5 +73,6 @@ class InstructionQueue : public sc_module {
 		
 };
 
+} } // otawa::gensim
 
-#endif //_INSTRUCTIONQUEUE_H_
+#endif // OTAWA_GENSIM_INSTRUCTION_QUEUE_H
