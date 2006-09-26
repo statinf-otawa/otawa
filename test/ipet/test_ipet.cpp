@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
 	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	CACHE_CONFIG(props) = &cache_conf;
 	RECURSIVE(props) = true;
+	NO_SYSTEM(props) = true;
 	
 	try {
 		
@@ -111,7 +112,7 @@ int main(int argc, char **argv) {
 			 << sys->countConstraints() << " constraints.\n";
 		cout << "SUCCESS\nWCET = " << WCET(cfg) << '\n';
 	}
-	catch(elm::Exception e) {
+	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
 	}
 	return 0;
