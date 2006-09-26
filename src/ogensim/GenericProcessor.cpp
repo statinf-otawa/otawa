@@ -1,6 +1,8 @@
 #include <otawa/gensim/GenericProcessor.h>
 #include <otawa/gensim/debug.h>
 
+namespace otawa { namespace gensim {
+
 void ProcessorConfiguration::dump(elm::io::Output& out_stream) {
 	out_stream << "---- Processor configuration ----\n";
 	out_stream << " Instruction queues:\n";
@@ -17,7 +19,7 @@ void ProcessorConfiguration::dump(elm::io::Output& out_stream) {
 
 
 GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration * conf, 
-									otawa::GenericState * sim_state, otawa::hard::Platform *pf) {
+									GenericState * sim_state, otawa::hard::Platform *pf) {
 	int iports,oports;
 	InstructionQueue * input_queue;
 	InstructionQueue * output_queue;
@@ -248,3 +250,5 @@ void GenericProcessor::Flush() {
 	}
 	
 }
+
+} } // otawa::gensim

@@ -23,13 +23,11 @@ int sc_main(int argc, char *argv[]) {
 
 
 
-namespace otawa {
+namespace otawa { namespace gensim {
+
 
 GenericIdentifier<int> DEGREE("gensim.degree", 1);
 	
-namespace sim {
-
-
 
 
 /**
@@ -55,7 +53,7 @@ GenericSimulator::GenericSimulator(void)
 
 /**
  */	
-State *GenericSimulator::instantiate(FrameWork *fw, const PropList& props) {
+sim::State *GenericSimulator::instantiate(FrameWork *fw, const PropList& props) {
 	static GenericState* state;
 	static bool initialized = false;
 	if(!initialized){
@@ -171,5 +169,5 @@ void GenericState::step(void) {
 }
 
 
-} } // otawa::sim
+} } // otawa::gensim
 

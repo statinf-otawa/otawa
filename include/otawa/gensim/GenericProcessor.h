@@ -1,5 +1,11 @@
-#ifndef _GENERICPROCESSOR_H_
-#define _GENERICPROCESSOR_H_
+/*
+ * $Id$
+ * Copyright (c) 2006, IRIT-UPS
+ *
+ * otawa/gensim/GenericProcessor.h -- GenericProcessor class interface
+ */
+#ifndef OTAWA_GENSIM_GENERIC_PROCESSOR_H
+#define OTAWA_GENSIM_GENERIC_PROCESSOR_H
 
 #include <elm/genstruct/SLList.h>
 #include <systemc.h>
@@ -8,10 +14,10 @@
 #include <otawa/gensim/Execute.h>
 #include <otawa/gensim/SimulatedInstruction.h>
 
-namespace otawa {
-	class GenericState;
-}
+namespace otawa { namespace gensim {
 
+// External class
+class GenericState;
 
 class ProcessorConfiguration {
 	elm::genstruct::SLList<PipelineStageConfiguration *> pipeline_stages;
@@ -55,10 +61,16 @@ SC_MODULE(GenericProcessor)
 		void step(); 
 		void Flush();
 	
-  	GenericProcessor(sc_module_name name, ProcessorConfiguration * conf, otawa::GenericState * sim_state, otawa::hard::Platform *pf); 
+  	GenericProcessor(
+  		sc_module_name name,
+  		ProcessorConfiguration * conf,
+  		GenericState * sim_state,
+  		otawa::hard::Platform *pf); 
   	~GenericProcessor() {
    	}
 };
 
-#endif //_GENERICPROCESSOR_H_
+} } // otawa::gensim
+
+#endif // OTAWA_GENSIM_GENERIC_PROCESSOR_H
 

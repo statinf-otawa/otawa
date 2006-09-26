@@ -1,14 +1,20 @@
-#ifndef _EXECUTE_H_
-#define _EXECUTE_H_
+/*
+ * $Id$
+ * Copyright (c) 2006, IRIT-UPS
+ *
+ * otawa/gensim/Execute.h -- ExecuteXXX classes interface
+ */
+#ifndef OTAWA_GENSIM_EXECUTE_H
+#define OTAWA_GENSIM_EXECUTE_H
 
 #include <systemc.h>
 #include <otawa/gensim/SimulatedInstruction.h>
 #include <otawa/gensim/PipelineStage.h>
 
-namespace otawa {
-	class GenericState;
-}
+namespace otawa { namespace gensim {
 
+// External Classes
+class GenericState;
 
 class FunctionalUnitConfiguration {
 	bool _is_pipelined;
@@ -81,7 +87,7 @@ class ExecuteInOrderStageIQ : public PipelineStage {
 	private:
 		// variables
 		int stage_width;
-		otawa::GenericState * sim_state;
+		GenericState * sim_state;
 		elm::genstruct::AllocatedTable<rename_table_t> * rename_tables;
 		elm::genstruct::AllocatedTable<FunctionalUnit *> * functional_units;
 		elm::genstruct::AllocatedTable<FunctionalUnit *> * fu_bindings;
@@ -90,7 +96,7 @@ class ExecuteInOrderStageIQ : public PipelineStage {
 		
 		
 	public:
-		ExecuteInOrderStageIQ(sc_module_name name, int width, otawa::GenericState * gen_state,
+		ExecuteInOrderStageIQ(sc_module_name name, int width, GenericState * gen_state,
 								elm::genstruct::AllocatedTable<rename_table_t> * _rename_tables,
 								elm::genstruct::SLList<FunctionalUnitConfiguration *> * _functional_units);
 		
@@ -132,16 +138,16 @@ class CommitStage : public PipelineStage {
 	private:
 		// variables
 		int width;
-		otawa::GenericState * sim_state;
+		GenericState * sim_state;
 		
 	
 	public:
-		CommitStage(sc_module_name name, int _width, otawa::GenericState * gen_state);
+		CommitStage(sc_module_name name, int _width, GenericState * gen_state);
 		
 		SC_HAS_PROCESS(CommitStage);
 		void action();
 };
 
+} } // otawa::gensim
 
-
-#endif //_EXECUTE_H_
+#endif // OTAWA_GENSIM_EXECUTE_H
