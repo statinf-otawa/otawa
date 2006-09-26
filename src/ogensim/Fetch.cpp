@@ -2,7 +2,9 @@
 #include <otawa/gensim/GenericState.h>
 #include <otawa/gensim/debug.h>
 
-FetchStage::FetchStage(sc_module_name name, int number_of_out_ports, otawa::GenericState * gen_state,
+namespace otawa { namespace gensim {
+
+FetchStage::FetchStage(sc_module_name name, int number_of_out_ports, GenericState * gen_state,
 	elm::genstruct::AllocatedTable<rename_table_t> * _rename_tables,
 	elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions) 
 	: PipelineStage(name) {
@@ -62,3 +64,5 @@ void FetchStage::fetch() {
 	out_number_of_fetched_instructions.write(outs);
 	TRACE(elm::cout << "\tout_number_of_fetched_instructions=" << nb_fetched << "\n";)
 }
+
+} } // otawa::gensim
