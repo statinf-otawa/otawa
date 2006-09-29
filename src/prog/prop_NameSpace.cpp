@@ -20,7 +20,7 @@ NameSpace ROOT_NS("");
 /**
  * OTAWA namespace.
  */
-NameSpace ROOT_OTAWA("otawa");
+NameSpace OTAWA_NS("otawa");
 
 
 /**
