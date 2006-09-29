@@ -37,8 +37,8 @@ public:
 	};
 
 	// Constructors
-	inline GenericIdentifier(elm::CString name);
-	inline GenericIdentifier(elm::CString name, const T& default_value);
+	inline GenericIdentifier(elm::CString name, NameSpace& ns = ROOT_NS);
+	inline GenericIdentifier(elm::CString name, const T& default_value, NameSpace& = ROOT_NS);
 	
 	// PropList& Accessors
 	inline void add(PropList& list, const T& value) const;
@@ -77,13 +77,16 @@ inline const T& GenericIdentifier<T>::get(const Property& prop) const {
 }
 
 template <class T>
-inline GenericIdentifier<T>::GenericIdentifier(elm::CString name)
-: Identifier(name) {
+inline GenericIdentifier<T>::GenericIdentifier(elm::CString name, NameSpace& ns)
+: Identifier(name, ns) {
 }
 
 template <class T>
-inline GenericIdentifier<T>::GenericIdentifier(elm::CString name,
-const T& default_value): Identifier(name), def(default_value) {
+inline GenericIdentifier<T>::GenericIdentifier(
+	elm::CString name,
+	const T& default_value,
+	NameSpace& ns)
+: Identifier(name, ns), def(default_value) {
 }
 
 template <class T>
