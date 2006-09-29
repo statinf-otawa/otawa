@@ -268,6 +268,7 @@ void Inst::scan(void) {
 	// Already computed?
 	if(flags & BUILT)
 		return;
+	flags |= BUILT;
 	
 	// Get the instruction
 	code_t buffer[20];
@@ -289,7 +290,9 @@ void Inst::scan(void) {
 	
 	// Cleanup
 	iss_free(inst);
-	flags |= BUILT;
+	/*cout << io::hex(address()) << " ";
+	dump(cout);
+	cout << "=>" << io::hex(flags) << io::endl;*/	
 }
 
 
@@ -451,6 +454,10 @@ void Inst::scanRegs(void) {
 	
 	// Free instruction
 	iss_free(inst);
+}
+
+void Inst::scanCustom(instruction_t *inst) {
+	flags &= ~(IS_CONTROL | IS_CALL | IS_RETURN);
 }
 
 

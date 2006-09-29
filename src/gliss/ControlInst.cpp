@@ -6,6 +6,7 @@
  */
 
 #include <otawa/gliss.h>
+#include <elm/io.h>
 
 namespace otawa { namespace gliss {
 
@@ -127,7 +128,6 @@ void ControlInst::dump(io::Output& out) {
 		if(label)
 			out << " [" << *label << ']';
 	}
-	out << io::hex(flags);
 }
 
 } } // otawa::gliss

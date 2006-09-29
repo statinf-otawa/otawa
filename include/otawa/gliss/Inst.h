@@ -27,7 +27,7 @@ protected:
 	const elm::genstruct::Table<hard::Register *> *writes;
 	
 	void scan(void);
-	virtual void scanCustom(instruction_t *inst) { };
+	virtual void scanCustom(instruction_t *inst);
 	inline CodeSegment& segment(void) const { return seg; };
 	void scanRegs(void);
 public:
