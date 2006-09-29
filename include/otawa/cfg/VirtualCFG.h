@@ -19,11 +19,14 @@ class VirtualCFG: public CFG {
 protected:
 	virtual void scan(void);
 public:
-	static Identifier ID_CalledCFG;
-	static Identifier ID_Recursive;
 	VirtualCFG(CFG *cfg, bool inlined = true);
 	inline CFG *cfg(void) const;
 };
+
+// Identifiers
+extern GenericIdentifier<CFG *> CALLED_CFG;
+extern GenericIdentifier<bool> RECURSIVE_LOOP;
+
 
 // Inlines
 inline CFG *VirtualCFG::cfg(void) const {

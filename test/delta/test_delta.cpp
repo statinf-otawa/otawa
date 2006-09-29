@@ -261,7 +261,7 @@ int main(int argc, char **argv) {
 			display::INCLUDE(display_props) += &TIME;
 			display::INCLUDE(display_props) += &Delta::DELTA;
 			
-			display::EXCLUDE(display_props) += &VirtualCFG::ID_CalledCFG;
+			display::EXCLUDE(display_props) += &CALLED_CFG;
 			
 			display::DEFAULT(display_props) = &display::EXCLUDE;
 			

@@ -192,7 +192,7 @@ void Command::dump(CFG *cfg) {
 			if(edge->kind() == Edge::VIRTUAL_CALL) {
 				if(current_inline)
 					displayer->onInlineEnd(current_inline);
-				current_inline = edge->get<CFG *>(VirtualCFG::ID_CalledCFG, 0);
+				current_inline = CALLED_CFG(edge);
 				displayer->onInlineBegin(current_inline);
 			}
 		

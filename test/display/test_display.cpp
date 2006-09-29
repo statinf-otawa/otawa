@@ -42,7 +42,7 @@ int main(int argc, char **argv){
 		Dominance::markLoopHeaders(cfg);
 
 		props.clearProps();
-		display::EXCLUDE(props) += &VirtualCFG::ID_CalledCFG;
+		display::EXCLUDE(props) += &CALLED_CFG;
 		display::EXCLUDE(props) += &Dominance::ID_RevDom;
 		display::CFGDrawer drawer(cfg, props);
 		// DEFAULT(drawer.all()) = INCLUDE;

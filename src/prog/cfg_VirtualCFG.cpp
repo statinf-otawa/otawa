@@ -26,15 +26,14 @@ typedef struct call_t {
  * call when inling is used. The associated value is the CFG of the called
  * function.
  */
-Identifier VirtualCFG::ID_CalledCFG("virtual_cfg.called_cfg");
+GenericIdentifier<CFG *> CALLED_CFG("called_cfg", 0, OTAWA_NS);
 
 
 /**
  * A property with this identifier is hooked to edge performing a recursive
- * call when inlining is used. The associated value is a boolean with value
- * true.
+ * call when inlining is used.
  */
-Identifier VirtualCFG::ID_Recursive("virtual_cfg.recursive");
+GenericIdentifier<bool> RECURSIVE_LOOP("recursive_loop", false, OTAWA_NS);
 
 
 /**
@@ -76,7 +75,7 @@ BasicBlock *exit) {
 		call.entry = map.get(edge->target(), 0);
 		assert(call.entry);
 		Edge *edge = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
-		edge->add<CFG *>(ID_CalledCFG, cfg);
+		CALLED_CFG(edge) = cfg;
 	}
 	
 	// Translate edges
@@ -98,22 +97,24 @@ BasicBlock *exit) {
 
 			// Look edges
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
-				if(edge->target()->isExit()) {
-					Edge *edge = new Edge(src, exit, Edge::VIRTUAL_RETURN);
-					edge->add<CFG *>(ID_CalledCFG, cfg);
-					called_exit = exit;
-				}
-				else if(edge->kind() == Edge::CALL) {
+				if(edge->kind() == Edge::CALL) {
 					if(!isInlined())
 						new Edge(src, edge->target(), Edge::CALL);
 				}
-				else if(edge->target()) {
-					BasicBlock *tgt = map.get(edge->target(), 0);
-					assert(tgt);
-					if(called && edge->kind() == Edge::NOT_TAKEN)
-						called_exit = tgt;
-					else
-						new Edge(src, tgt, edge->kind());
+				else if(edge->target()) { 
+					if(edge->target()->isExit()) {
+						Edge *edge = new Edge(src, exit, Edge::VIRTUAL_RETURN);
+						CALLED_CFG(edge) = cfg;
+						called_exit = exit;
+					}
+					else {
+						BasicBlock *tgt = map.get(edge->target(), 0);
+						assert(tgt);
+						if(called && edge->kind() == Edge::NOT_TAKEN)
+							called_exit = tgt;
+						else
+							new Edge(src, tgt, edge->kind());
+					}
 				}
 			
 			// Process the call
@@ -121,8 +122,8 @@ BasicBlock *exit) {
 				for(call_t *cur = &call; cur; cur = cur->back)
 					if(cur->cfg == called) {
 						Edge *edge = new Edge(bb, cur->entry, Edge::VIRTUAL_CALL);
-						edge->add<CFG *>(ID_CalledCFG, cur->cfg);
-						edge->add<bool>(ID_Recursive, true);
+						CALLED_CFG(edge) = cur->cfg;
+						RECURSIVE_LOOP(edge) = true;
 						called = 0;
 						break;
 					}
