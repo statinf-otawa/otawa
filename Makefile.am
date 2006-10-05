@@ -1,4 +1,4 @@
-SUBDIRS=src examples include bin test
+SUBDIRS=src examples include bin test data
 
 EXTRA_DIST=Doxyfile
 

@@ -228,4 +228,6 @@ AC_OUTPUT([
 	include/otawa/pcg/Makefile
 	include/otawa/exegraph/Makefile
 	include/otawa/gensim/Makefile
+	data/Makefile
+	data/procs/Makefile
 ], [])
