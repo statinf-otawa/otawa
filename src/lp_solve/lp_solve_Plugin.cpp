@@ -43,6 +43,5 @@ System *Plugin::newSystem(void) {
 /**
  * Define the actual plugin.
  */
-otawa::lp_solve::Plugin lp_solve_plugin;
-otawa::lp_solve::Plugin& OTAWA_ILP_HOOK = lp_solve_plugin;
-
+otawa::lp_solve::Plugin OTAWA_ILP_HOOK;
+otawa::lp_solve::Plugin& lp_solve_plugin = OTAWA_ILP_HOOK;
