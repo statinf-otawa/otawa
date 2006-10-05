@@ -1,5 +1,7 @@
 includeotawagensimdir=$(includedir)/otawa/gensim
 includeotawagensim_HEADERS = \
+	debug.h \
+	GenericState.h \
 	Execute.h \
 	Fetch.h \
 	GenericProcessor.h \
