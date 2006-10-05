@@ -17,3 +17,7 @@ ppc_la_SOURCES = \
 	ControlInst.cpp \
 	Symbol.cpp \
 	MemInst.cpp
+
+install-data-hook:
+	rm -f $(libdir)/otawa/loader/elf_20.la
+	$(LN_S) ppc.la $(libdir)/otawa/loader/elf_20.la
