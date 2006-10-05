@@ -12,6 +12,8 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
+#include <otawa/ipet/BBTimeSimulator.h>
+#include <otawa/gensim/GenericSimulator.h>
 
 //#define WITH_VIRTUAL
 
@@ -40,6 +42,8 @@ int main(int argc, char **argv) {
 	CACHE_CONFIG(props) = &cache_conf;
 	RECURSIVE(props) = true;
 	NO_SYSTEM(props) = true;
+	PROCESSOR_PATH(props) = "../../data/procs/op1.xml";
+	SIMULATOR(props) = &gensim_simulator;
 	
 	try {
 		
@@ -77,8 +81,10 @@ int main(int argc, char **argv) {
 		PROC_VERBOSE(props) = true;
 		
 		// Compute BB times
-		TrivialBBTime tbt(5, props);
-		tbt.process(fw);
+		/*TrivialBBTime tbt(5, props);
+		tbt.process(fw);*/
+		BBTimeSimulator bbts(props);
+		bbts.process(fw);
 		
 		// Trivial data cache
 		TrivialDataCacheManager dcache(props);
