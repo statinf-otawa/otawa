@@ -14,6 +14,7 @@ namespace otawa {
 // FrameWorkCursor class
 class FrameWorkCursor: public Cursor {
 	FrameWork *fw;
+	Manager manager;
 public:
 	inline FrameWorkCursor(FrameWork *_fw): fw(_fw) { };
 	void load(Output& out, CString path);

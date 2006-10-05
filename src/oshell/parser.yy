@@ -18,7 +18,6 @@ using namespace otawa;
 int yylex(void);
 
 // Globals
-Manager *manager;
 AutoPtr<Cursor> cursor;
 int argc = 0;
 CString argv[16];
@@ -177,19 +176,12 @@ dump_header:
  */
 int main(void) {
 
-	// Build the framework
-	manager = new Manager();
-	PropList args;
-	FrameWork *fw = new FrameWork(
-		Loader::LOADER_Gliss_PowerPC.create(manager, args));
-	
 	// Start the interpreter
-	cursor = Cursor::get(fw);
+	cursor = Cursor::get(NULL);
 	display_cursor();
 	while (yyparse());
 	
 	// Clean up
 	cursor = 0;
-	delete manager;
 	return 0;
 }
