@@ -11,6 +11,7 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
+#include <otawa/hard/Processor.h>
 
 using namespace elm;
 using namespace otawa;
@@ -74,6 +75,7 @@ int main(int argc, char **argv) {
 	PropList props;
 	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	CACHE_CONFIG(props) = &cache_conf;
+	PROCESSOR_PATH(props) = "../../data/procs/op2.xml";
 	
 	try {
 		
@@ -137,12 +139,62 @@ int main(int argc, char **argv) {
 				cout << writes[i] << ' ';
 			cout << '\n';
 		}
+		cout << io::endl;
+		
+		
+		// Processor load test
+		cout << "Processor load test\n";
+		//pf->loadProcessor("proc.xml");
+		const hard::Processor *proc = pf->processor();
+		if(!proc)
+			cout << "NO PROCESSOR !\n";
+		else {
+			cout << "arch = " << proc->getArch() << io::endl;
+			cout << "model = " << proc->getModel() << io::endl;
+			cout << "builder = " << proc->getBuilder() << io::endl;
+			cout <<"stages =\n";
+			const elm::genstruct::Table<hard::Stage *>& stages = proc->getStages();
+			for(int i = 0; i< stages.count(); i++) {
+				cout << '\t'
+					 << stages[i]->getName() << " "
+					 << stages[i]->getType() << " "
+				     << stages[i]->getWidth() << " "
+				     << stages[i]->getLatency() << io::endl;
+				const elm::genstruct::Table<hard::FunctionalUnit *>& fus = stages[i]->getFUs();
+				if(fus) {
+					cout << "\tfus=\n";
+					for(int i = 0; i < fus.count(); i++)
+						cout << "\t\t" << fus[i]->getName() << ' '
+							 << fus[i]->getWidth() << ' '
+							 << fus[i]->getLatency() << ' '
+							 << fus[i]->isPipelined() << io::endl;
+				}
+				const elm::genstruct::Table<hard::Dispatch *>& dispatch = stages[i]->getDispatch();
+				if(dispatch) {
+					cout << "\tdispatch=\n";
+					for(int i = 0; i < dispatch.count(); i++)
+						cout << "\t\t" << dispatch[i]->getType() << ' '
+							 << dispatch[i]->getFU()->getName() << io::endl;
+				}
+			}
+			cout << "queues =\n";
+			const elm::genstruct::Table<hard::Queue *>& queues = proc->getQueues();
+			for(int i = 0; i< queues.count(); i++) {
+				cout << '\t'
+					 << queues[i]->getName() << " "
+				     << queues[i]->getSize() << " "
+				     << queues[i]->getInput()->getName() << " "
+				     << queues[i]->getOutput()->getName() << io::endl;
+				const elm::genstruct::Table<hard::Stage *>& intern = queues[i]->getIntern();
+				if(intern) {
+					cout << "\tintern=\n";
+					for(int i = 0; i < intern.count(); i++)
+						cout << "\t\t" << intern[i]->getName() << io::endl;
+				}
+			}
+		}
 	}
-	catch(LoadException e) {
-		cerr << "ERROR: " << e.message() << '\n';
-		exit(1);
-	}
-	catch(ProcessorException e) {
+	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
 		exit(1);
 	}
