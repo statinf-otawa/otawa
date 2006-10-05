@@ -7,6 +7,7 @@
 #ifndef OTAWA_HARD_PLATFORM_H
 #define OTAWA_HARD_PLATFORM_H
 
+#include <elm/system/Path.h>
 #include <otawa/properties.h>
 #include <otawa/hard/Register.h>
 #include <elm/datastruct/Collection.h>
@@ -16,8 +17,10 @@ namespace otawa {
 class Manager;
 	
 namespace hard {
-
+	
+// Extern Classes
 class CacheConfiguration;
+class Processor;
 
 // Platform class
 class Platform {
@@ -62,16 +65,21 @@ public:
 	static const Identification ANY_PLATFORM;
 	
 private:
+	static const unsigned long HAS_PROCESSOR = 0x00000001;
+	static const unsigned long HAS_CACHE = 0x00000002;
+	unsigned long flags;
 	Identification id;
 	const CacheConfiguration *_cache;
+	Processor *_processor;
 	int depth;
+
 	void configure(const PropList& props);
 
 protected:
 	friend class otawa::Manager;
 	static const elm::genstruct::Table<const hard::RegBank *> null_banks;
 	const elm::genstruct::Table<const hard::RegBank *> *_banks;
-	virtual ~Platform(void) { };
+	virtual ~Platform(void);
 
 public:
 	Platform(const Identification& id, const PropList& props = PropList::EMPTY);
@@ -89,6 +97,11 @@ public:
 	
 	// Register bank access
 	inline const elm::genstruct::Table<const hard::RegBank *>& banks(void) const;
+	
+	// Configuration Loader
+	void loadProcessor(const elm::system::Path& path);
+	void loadProcessor(elm::xom::Element *element);
+	inline const Processor *processor(void) const { return _processor; };
 };
 
 // Inlines

@@ -70,6 +70,7 @@ libotawa_la_SOURCES = \
 	util_fft_lexer.ll \
 	ipet_FlowFactLoader.cpp \
 	util_CFGNormalizer.cpp \
+	hard_Processor.cpp \
 	hardware_Cache.cpp \
 	hardware_CacheConfiguration.cpp \
 	hardware_Platform.cpp \

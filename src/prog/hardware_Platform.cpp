@@ -8,6 +8,9 @@
 #include <otawa/hard/Platform.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/prog/FrameWork.h>
+#include <otawa/hard/Processor.h>
+#include <elm/serial/XOMUnserializer.h>
+#include <otawa/prog/Manager.h>
 
 namespace otawa { namespace hard {
 
@@ -27,11 +30,34 @@ const elm::genstruct::Table<const hard::RegBank *> Platform::null_banks(0, 0);
 /**
  */
 void Platform::configure(const PropList& props) {
-	for(PropList::Iter prop(props); prop; prop++) {
-		if(prop == CACHE_CONFIG)
-			_cache = prop.get<const CacheConfiguration *>();
-		else if(prop == PIPELINE_DEPTH)
-			depth = prop.get<int>();
+	
+	// Configure cache
+	CacheConfiguration *cache = CACHE_CONFIG(props);
+	if(cache) {
+		_cache = cache;
+		flags &= ~HAS_CACHE;
+	}
+	
+	// Configure pipeline depth
+	int new_depth = PIPELINE_DEPTH(props);
+	if(new_depth > 0)
+		depth = new_depth;
+	
+	// Configure processor 
+	Processor *new_processor = PROCESSOR(props);
+	if(new_processor) {
+		_processor = new_processor;
+		flags &= ~HAS_PROCESSOR;
+	}
+	else {
+		xom::Element *element = PROCESSOR_ELEMENT(props);
+		if(element) 
+			loadProcessor(element);
+		else {
+			elm::system::Path path = PROCESSOR_PATH(props);
+			if(path)
+				loadProcessor(path);
+		}
 	}
 }
 
@@ -42,7 +68,13 @@ void Platform::configure(const PropList& props) {
  * @param props		Properties describing the platform.
  */
 Platform::Platform(const Platform::Identification& _id, const PropList& props)
-: id(_id), _cache(&CacheConfiguration::NO_CACHE), depth(5), _banks(&null_banks) {
+:	flags(0),
+	id(_id),
+	_cache(&CacheConfiguration::NO_CACHE),
+	_processor(0),
+	depth(5),
+	_banks(&null_banks)
+{
 	configure(props);
 }
 
@@ -53,9 +85,24 @@ Platform::Platform(const Platform::Identification& _id, const PropList& props)
  * @param props		Description properties.
  */
 Platform::Platform(const Platform& platform, const PropList& props)
-: id(platform.identification()), _cache(&platform.cache()), depth(5),
-_banks(&null_banks) {
+:	flags(0),
+	id(platform.identification()),
+	_cache(&platform.cache()),
+	_processor(0),
+	depth(5),
+	_banks(&null_banks)
+{
 	configure(props);
+}
+
+
+/**
+ */
+Platform::~Platform(void) {
+	if(flags & HAS_PROCESSOR)
+		delete _processor;
+	if(flags & HAS_CACHE)
+		delete _cache;
 }
 
 
@@ -305,5 +352,55 @@ bool Platform::Identification::matches(const Identification& id) {
 	// All is fine
 	return true;
 }
+
+
+/**
+ * Load the processor configuration.
+ * @param path	Path to the file.
+ * @throws	elm::io::IOException	If a configuration file cannot be loaded.
+ */
+void Platform::loadProcessor(const elm::system::Path& path) {
+	if(flags & HAS_PROCESSOR)
+		delete _processor;
+	try {
+		elm::serial::XOMUnserializer unser(&path);
+		_processor = new Processor();
+		flags |= HAS_PROCESSOR;
+		unser >> *_processor;
+		unser.close();
+	}
+	catch(elm::io::IOException& e) {
+		throw LoadException(&e.message());
+	}
+}
+
+
+/**
+ * Load the processor configuration from the given element.
+ * @param element			Element to use.
+ * @throws	LoadException	If the XML element is mal-formed.
+ */
+void Platform::loadProcessor(elm::xom::Element *element) {
+	assert(element);
+	if(flags & HAS_PROCESSOR)
+		delete _processor;
+	try {
+		elm::serial::XOMUnserializer unser(element);
+		_processor = new Processor();
+		flags |= HAS_PROCESSOR;
+		unser >> *_processor;
+		unser.close();
+	}
+	catch(elm::Exception& e) {
+		throw LoadException(&e.message());
+	}
+}
+
+
+/**
+ * @fn Processor *Platform::processor(void);
+ * Get the current processor (possibly derivated from the current configuration).
+ * @return	Current processor.
+ */
 
 } } // otawa::hard
