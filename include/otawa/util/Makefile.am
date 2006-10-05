@@ -7,6 +7,8 @@ includeotawautil_HEADERS = \
 	DFAEngine.h \
 	Dominance.h \
 	Graph.h \
+	BitSet.h \
+	GenGraph.h \
 	FlowFactLoader.h \
 	LBlockBuilder.h \
 	TrivialLBlockTime.h
