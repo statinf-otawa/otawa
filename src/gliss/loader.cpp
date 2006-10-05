@@ -82,8 +82,6 @@ GenericIdentifier<state_t *> GLISS_STATE("ppc.gliss_state", 0);
 
 
 // PPC GLISS Loader entry point
-otawa::gliss::Loader ppc_plugin;
-otawa::Loader& otawa::Loader::LOADER_Gliss_PowerPC = ppc_plugin;
-elm::system::Plugin& OTAWA_LOADER_HOOK = ppc_plugin;
-
-
+otawa::gliss::Loader OTAWA_LOADER_HOOK;
+otawa::gliss::Loader& ppc_plugin = OTAWA_LOADER_HOOK;
+otawa::Loader& otawa::Loader::LOADER_Gliss_PowerPC = OTAWA_LOADER_HOOK;
