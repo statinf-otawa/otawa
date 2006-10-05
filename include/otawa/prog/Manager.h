@@ -19,8 +19,6 @@
 #include <otawa/prog/FrameWork.h>
 #include <otawa/prog/Loader.h>
 
-using namespace elm;	// !!TODO!! Remove it !!!!
-
 namespace otawa {
 
 // Classes
