@@ -8,8 +8,13 @@
 #define OTAWA_PROG_FRAMEWORK_H
 
 #include <elm/Collection.h>
+#include <elm/system/Path.h>
 #include <otawa/properties.h>
 #include <otawa/prog/Process.h>
+
+namespace elm { namespace xom {
+	class Element;
+} } // elm::xom
 
 namespace otawa {
 
@@ -24,6 +29,7 @@ class Loader;
 class Manager;
 namespace hard {
 	class Platform;
+	class Processor;
 }
 namespace ilp {
 	class System;
@@ -62,22 +68,6 @@ public:
 	// ILP support
 	ilp::System *newILPSystem(bool max = true);
 };
-
-// Configuration Properties
-extern GenericIdentifier<CString> TASK_ENTRY;
-extern GenericIdentifier<hard::Platform *> PLATFORM;
-extern GenericIdentifier<Loader *> LOADER;
-extern GenericIdentifier<elm::CString> PLATFORM_NAME;
-extern  GenericIdentifier<elm::CString>  LOADER_NAME;
-//extern GenericIdentifier<hard::Platform::Identification *> PLATFORM_IDENTIFIER;
-extern GenericIdentifier<int> ARGC;
-extern GenericIdentifier<char **> ARGV;
-extern GenericIdentifier<char **> ENVP;
-extern GenericIdentifier<sim::Simulator *> SIMULATOR;
-extern GenericIdentifier<hard::CacheConfiguration *> CACHE_CONFIG;
-extern GenericIdentifier<int> PIPELINE_DEPTH;
-extern GenericIdentifier<bool> NO_SYSTEM;
-
 
 };	// otawa
 

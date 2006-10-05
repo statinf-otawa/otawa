@@ -8,10 +8,15 @@
 #define OTAWA_PROGRAM_PROCESS_H
 
 #include <elm/string.h>
+#include <elm/system/Path.h>
 #include <elm/Collection.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/instruction.h>
 #include <otawa/program.h>
+
+namespace elm { namespace xom {
+	class Element;
+} } // elm::xom
 
 namespace otawa {
 
@@ -45,8 +50,10 @@ public:
 	virtual address_t findLabel(String& label);
 	virtual Inst *findInstAt(String& label);
 	virtual elm::Collection<File *> *files(void) = 0;
+	virtual sim::Simulator *simulator(void);
 	inline File *program(void) const;
-	virtual sim::Simulator *simulator(void) const;
+	elm::xom::Element *config(void);
+	void loadConfig(const elm::system::Path& path);
 
 	// Constructors
 	virtual File *createFile(void) = 0;

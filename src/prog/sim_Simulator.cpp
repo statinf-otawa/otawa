@@ -50,17 +50,15 @@ GenericIdentifier<bool> USE_CONTROL("sim.use_control");
 
 /**
  * Build a new simulator plugin.
- * @param name			Name of the plugin.
- * @param version		Version of the plug-in.
- * @param description	Plugin description.
- * @param license		License applied to the use of this plugin.
+ * @param name				Name of the plugin.
+ * @param version			Version of the plug-in.
+ * @param plugger_version	Plugger required version.
  */
-Simulator::Simulator(elm::CString name, const elm::Version& version,
-const elm::CString description, const elm::CString license)
-: Plugin(name, OTAWA_SIMULATOR_VERSION, OTAWA_SIMULATOR_NAME) {
+Simulator::Simulator(elm::CString name,
+		const elm::Version& version,
+		const elm::Version& plugger_version)
+: Plugin(name, plugger_version, OTAWA_SIMULATOR_NAME) {
 	_plugin_version = version;
-	_description = description;
-	_licence = license;
 }
 
 

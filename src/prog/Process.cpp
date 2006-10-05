@@ -5,11 +5,16 @@
  *	prog/Process.cpp -- implementation for Process class.
  */
 
+#include <elm/xom.h>
 #include <otawa/prog/Process.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/prog/Loader.h>
 #include <otawa/prog/FrameWork.h>
+#include <otawa/prog/Manager.h>
+#include <otawa/gensim/GenericSimulator.h>
+
+using namespace elm;
 
 namespace otawa {
 
@@ -151,8 +156,57 @@ File *Process::loadProgram(elm::CString path) {
  * Find the simulator used for the current process.
  * @return	A simulator for the current process or null if none is found.
  */
-sim::Simulator *Process::simulator(void) const {
-	return SIMULATOR(*this);
+sim::Simulator *Process::simulator(void) {
+	
+	// Look just in configuration
+	sim::Simulator *sim = SIMULATOR(this);
+	if(sim)
+		return sim;
+	
+	// Look for a name
+	CString name = SIMULATOR_NAME(this);
+	if(!name)
+		return 0;
+	sim = manager()->findSimulator(name);
+	if(!sim)
+		throw LoadException("cannot get the simulator \"%s\".", &name);
+	return sim;
+}
+
+
+/**
+ * Load the given configuration in the process.
+ * @param path				Path to the XML configuration file.
+ * @throw LoadException		If the file cannot be found or if it does not match
+ * the OTAWA XML type.
+ */
+void Process::loadConfig(const elm::system::Path& path) {
+	xom::Builder builder;
+	xom::Document *doc = builder.build(&path);
+	if(!doc)
+		throw LoadException("cannot load \"%s\".", &path);
+	xom::Element *conf = doc->getRootElement();
+	if(conf->getLocalName() != "otawa"
+	|| conf->getNamespaceURI() != "")
+		throw LoadException("bad file type in \"%s\".", &path);
+	CONFIG_ELEMENT(this) = conf;
+}
+
+
+/**
+ * Get the current configuration, if any, as an XML XOM element.
+ * @return	Configuration XML element or null.
+ */
+xom::Element *Process::config(void) {
+	xom::Element *conf = CONFIG_ELEMENT(this);
+	if(!conf) {
+		elm::system::Path path = CONFIG_PATH(this);
+		if(path) {
+			loadConfig(path);
+			conf = CONFIG_ELEMENT(this);
+		}
+	}
+	return conf;
 }
 
 } // otawa

@@ -8,6 +8,7 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg.h>
 #include <otawa/proc/CFGProcessor.h>
+#include <otawa/prog/Manager.h>
 
 namespace otawa {
 

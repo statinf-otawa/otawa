@@ -85,8 +85,7 @@ GenericIdentifier<int> INSTRUCTION_TIME("sim.instruction_time");
  * Build a trivial simulator.
  */
 TrivialSimulator::TrivialSimulator(void)
-: Simulator("trivial_simulator", Version(1, 0, 0),
-	"A simplistic trivial simulator for any architecture.") {
+: Simulator("trivial_simulator", Version(1, 0, 0), OTAWA_SIMULATOR_VERSION) {
 }
 
 

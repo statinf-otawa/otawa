@@ -35,9 +35,9 @@ extern GenericIdentifier<bool> USE_CONTROL;
 // Simulator class
 class Simulator: public elm::system::Plugin {
 public:
-	Simulator(elm::CString name, const elm::Version& version,
-		const elm::CString description = "",
-		const elm::CString license = "");
+	Simulator(elm::CString name,
+		const elm::Version& version,
+		const elm::Version& plugger_version);
 	virtual State *instantiate(FrameWork *fw,
 		const PropList& props = PropList::EMPTY) = 0;
 };
