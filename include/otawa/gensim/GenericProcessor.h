@@ -19,6 +19,8 @@ namespace otawa { namespace gensim {
 // External class
 class GenericState;
 
+
+// ProcessirConfiguration class
 class ProcessorConfiguration {
 	elm::genstruct::SLList<PipelineStageConfiguration *> pipeline_stages;
 	elm::genstruct::SLList<InstructionQueueConfiguration *> instruction_queues;

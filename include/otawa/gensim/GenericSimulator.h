@@ -27,4 +27,8 @@ extern GenericIdentifier<int> DEGREE;
 
 } } // otawa::gensim
 
+// Plugin access
+extern otawa::sim::Simulator& gensim_simulator;
+extern otawa::gensim::GenericSimulator OTAWA_SIMULATOR_HOOK;
+
 #endif // OTAWA_GENSIM_GENERIC_SIMULATOR_H

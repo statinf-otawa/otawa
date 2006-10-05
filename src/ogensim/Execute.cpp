@@ -22,11 +22,11 @@ int FunctionalUnitConfiguration::width() {
 	return _width;
 }
 
-void FunctionalUnitConfiguration::addInstructionType(instruction_type_t type) {
+void FunctionalUnitConfiguration::addInstructionType(Inst::kind_t type) {
 	instruction_types.addLast(type);
 }
 
-elm::genstruct::SLList<instruction_type_t> * FunctionalUnitConfiguration::instructionTypes() {
+elm::genstruct::SLList<Inst::kind_t> * FunctionalUnitConfiguration::instructionTypes() {
 	return &instruction_types;
 }
 
@@ -59,18 +59,19 @@ ExecuteInOrderStageIQ::ExecuteInOrderStageIQ(sc_module_name name, int width, Gen
 	int fu_number = _functional_units->count();
 	functional_units = new elm::genstruct::AllocatedTable<FunctionalUnit *>(fu_number);
 	int inst_type_number = INST_TYPE_NUMBER /*FIXME*/;
-	fu_bindings = new elm::genstruct::AllocatedTable<FunctionalUnit *>(inst_type_number);
+	/*fu_bindings = new elm::genstruct::AllocatedTable<FunctionalUnit *>(inst_type_number);
 	for (int index=0 ; index<inst_type_number ; index++) {
 		(*fu_bindings)[index] = NULL;
-	}
+	}*/
 	number_of_functional_units = 0;
 	for (elm::genstruct::SLList<FunctionalUnitConfiguration *>::Iterator fu_conf(*_functional_units) ; fu_conf ; fu_conf++) {
 		FunctionalUnit * fu = new FunctionalUnit(fu_conf->isPipelined(), fu_conf->latency(), fu_conf->width());
 		(*functional_units)[number_of_functional_units++] = fu;
 		
-		for (elm::genstruct::SLList<instruction_type_t>::Iterator type(*(fu_conf->instructionTypes())) ; type ; type++) {
-			assert((*fu_bindings)[*type] == NULL); // error: instruction type handled by two different functional units
-			(*fu_bindings)[*type] = fu;
+		for (elm::genstruct::SLList<Inst::kind_t>::Iterator type(*(fu_conf->instructionTypes())) ; type ; type++) {
+			/*assert((*fu_bindings)[*type] == NULL); // error: instruction type handled by two different functional units
+			(*fu_bindings)[*type] = fu;*/
+			fu_bindings.add(Pair<unsigned long, FunctionalUnit *>(*type, fu));
 		}
 	}
 	
@@ -88,7 +89,8 @@ void ExecuteInOrderStageIQ::action() {
 		inst = in_instruction[issued].read() ;
 		assert(inst->state() == READY);
 		instruction_type_t type;
-		FunctionalUnit * fu = (*fu_bindings)[inst->type()];
+		//FunctionalUnit * fu = (*fu_bindings)[inst->type()];
+		FunctionalUnit * fu = findFU(inst->type());
 		assert(fu);
 		TRACE(elm::cout << "\tready instruction: " << inst->inst()->address();
 			elm::cout << " [FU pipelined=" << fu->isPipelined() << " - width=" << fu->width();
@@ -122,7 +124,8 @@ void ExecuteInOrderStageIQ::action() {
 		inst = terminated_instructions.first();
 		inst->notifyResult(rename_tables);
 		sim_state->driver->terminateInstruction(*sim_state, inst->inst());
-		FunctionalUnit * fu = (*fu_bindings)[inst->type()];
+		//FunctionalUnit * fu = (*fu_bindings)[inst->type()];
+		FunctionalUnit * fu = findFU(inst->type());
 		fu->subInstruction();
 		executing_instructions.remove(inst);
 		terminated_instructions.removeFirst();
@@ -152,18 +155,19 @@ ExecuteOOOStage::ExecuteOOOStage(sc_module_name name, int width,
 	int fu_number = _functional_units->count();
 	functional_units = new elm::genstruct::AllocatedTable<FunctionalUnit *>(fu_number);
 	int inst_type_number = INST_TYPE_NUMBER /*FIXME*/;
-	fu_bindings = new elm::genstruct::AllocatedTable<FunctionalUnit *>(inst_type_number);
+	/*fu_bindings = new elm::genstruct::AllocatedTable<FunctionalUnit *>(inst_type_number);
 	for (int index=0 ; index<inst_type_number ; index++) {
 		(*fu_bindings)[index] = NULL;
-	}
+	}*/
 	number_of_functional_units = 0;
 	for (elm::genstruct::SLList<FunctionalUnitConfiguration *>::Iterator fu_conf(*_functional_units) ; fu_conf ; fu_conf++) {
 		FunctionalUnit * fu = new FunctionalUnit(fu_conf->isPipelined(), fu_conf->latency(), fu_conf->width());
 		(*functional_units)[number_of_functional_units++] = fu;
 		
-		for (elm::genstruct::SLList<instruction_type_t>::Iterator type(*(fu_conf->instructionTypes())) ; type ; type++) {
-			assert((*fu_bindings)[*type] == NULL); // error: instruction type handled by two different functional units
-			(*fu_bindings)[*type] = fu;
+		for (elm::genstruct::SLList<Inst::kind_t>::Iterator type(*(fu_conf->instructionTypes())) ; type ; type++) {
+			/*assert((*fu_bindings)[*type] == NULL); // error: instruction type handled by two different functional units
+			(*fu_bindings)[*type] = fu;*/
+			fu_bindings.add(Pair<unsigned long, FunctionalUnit *>(*type, fu));
 		}
 	}
 	SC_METHOD(action);
@@ -186,10 +190,12 @@ void ExecuteOOOStage::action() {
 //				memory_pending = true;
 		}
 		if (inst->state() == READY) {
-			FunctionalUnit * fu = (*fu_bindings)[inst->type()];
+			FunctionalUnit * fu = findFU(inst->type());
 			#ifndef NDEBUG
 				if(!fu) {
-					elm::cerr << "No function unit for " << inst->type() << " instruction type.\n";
+					elm::cerr << "No function unit for " << io::hex(inst->type()) << " instruction type.\n";
+					inst->inst()->dump(elm::cerr);
+					elm::cerr << io::endl;
 					assert(false);
 				}
 			#endif
@@ -225,7 +231,7 @@ void ExecuteOOOStage::action() {
 			if (inst->decrementTimeToFinish() == 0) {
 				inst->notifyResult(rename_tables);
 				TRACE(elm::cout << "\tterminating execution at " << inst->inst()->address() << "\n";)
-				(*fu_bindings)[inst->type()]->subInstruction();
+				findFU(inst->type())->subInstruction();
 			}
 		}
 	}

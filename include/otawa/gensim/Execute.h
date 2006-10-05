@@ -10,25 +10,29 @@
 #include <systemc.h>
 #include <otawa/gensim/SimulatedInstruction.h>
 #include <otawa/gensim/PipelineStage.h>
+#include <elm/util/Pair.h>
+#include <elm/genstruct/Vector.h>
 
 namespace otawa { namespace gensim {
 
 // External Classes
 class GenericState;
+class FunctionalUnit;
+
 
 class FunctionalUnitConfiguration {
 	bool _is_pipelined;
 	int _latency;
 	int _width;
-	elm::genstruct::SLList<instruction_type_t> instruction_types;
+	elm::genstruct::SLList<Inst::kind_t> instruction_types;
 	
 	public:
 		FunctionalUnitConfiguration(bool is_pipelined, int latency, int width);
 		bool isPipelined();
 		int latency();
 		int width();
-		void addInstructionType(instruction_type_t type);
-		elm::genstruct::SLList<instruction_type_t> * instructionTypes();
+		void addInstructionType(Inst::kind_t type);
+		elm::genstruct::SLList<Inst::kind_t> * instructionTypes();
 };
 
 class FunctionalUnit {
@@ -90,10 +94,17 @@ class ExecuteInOrderStageIQ : public PipelineStage {
 		GenericState * sim_state;
 		elm::genstruct::AllocatedTable<rename_table_t> * rename_tables;
 		elm::genstruct::AllocatedTable<FunctionalUnit *> * functional_units;
-		elm::genstruct::AllocatedTable<FunctionalUnit *> * fu_bindings;
+		//elm::genstruct::AllocatedTable<elm::Pair<unsigned long, FunctionalUnit *> > * fu_bindings;
+		elm::genstruct::Vector<elm::Pair<unsigned long, FunctionalUnit *> > fu_bindings;
 		int number_of_functional_units;
 		elm::genstruct::SLList<SimulatedInstruction *> executing_instructions;
-		
+		inline FunctionalUnit *findFU(unsigned long type) {
+			for(int i = 0; i < fu_bindings.length(); i++) {
+				unsigned long mask = fu_bindings[i].fst;
+				if((mask & type) == mask)
+					return fu_bindings[i].snd;
+			}
+		}
 		
 	public:
 		ExecuteInOrderStageIQ(sc_module_name name, int width, GenericState * gen_state,
@@ -115,8 +126,16 @@ class ExecuteOOOStage : public PipelineStage {
 		elm::genstruct::AllocatedTable<rename_table_t> * rename_tables;
 		InstructionQueue * rob;
 		elm::genstruct::AllocatedTable<FunctionalUnit *> * functional_units;
-		elm::genstruct::AllocatedTable<FunctionalUnit *> * fu_bindings;
+		//elm::genstruct::AllocatedTable<FunctionalUnit *> * fu_bindings;
+		elm::genstruct::Vector<elm::Pair<unsigned long, FunctionalUnit *> > fu_bindings;
 		int number_of_functional_units;
+		inline FunctionalUnit *findFU(unsigned long type) {
+			for(int i = 0; i < fu_bindings.length(); i++) {
+				unsigned long mask = fu_bindings[i].fst;
+				if((mask & type) == mask)
+					return fu_bindings[i].snd;
+			}
+		}
 		
 	public:
 		ExecuteOOOStage(sc_module_name name, int width, InstructionQueue * _rob,
