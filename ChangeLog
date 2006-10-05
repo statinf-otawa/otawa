@@ -1,3 +1,9 @@
+2006-10-03 ballabriga <ballabri@irit.fr>
+* build.sh: implemented --prefix and --with-so build options
+* Autoconf: Implemented AS_AC_EXPAND macro in acinclude.m4. This macro is
+            needed in configure.ac to expand correctly LOADER_PATHS and
+            ILP_PATHS.
+
 2004-09-06 casse <hugues.casse@irit.fr>
 * Auto{conf|make} build system improving for more flexiblity (selection of
 optional module -- currently gliss or heptane, path for external dependencies
