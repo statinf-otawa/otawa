@@ -1,6 +1,7 @@
 includeotawaipetdir=$(includedir)/otawa/ipet
 includeotawaipet_HEADERS = \
 	BasicConstraintsBuilder.h \
+	ConstraintLoader.h \
 	BasicObjectFunctionBuilder.h \
 	BBPath.h \
 	BBTimeSimulator.h \
