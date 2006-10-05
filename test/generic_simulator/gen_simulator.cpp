@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 	
 	Manager manager;
 	PropList loader_props;
-	LOADER(loader_props) = &Loader::LOADER_Gliss_PowerPC;
+//	LOADER(loader_props) = &Loader::LOADER_Gliss_PowerPC;
 		
 		// Load program
 		if(argc < 2) {
