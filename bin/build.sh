@@ -22,7 +22,7 @@ done=
 checked=
 build_script=test.sh
 making_script=
-
+plugin_param=
 
 # functions
 function display {
@@ -169,6 +169,7 @@ function build_autotool {
 		if [ "$with_so" == yes ]; then
 			args="$args --enable-shared"
 		fi
+		args="$args $AUTOCONF_FLAGS"
 		log_command ./configure  $args
 	fi
 	log_command make all $MAKE_FLAGS
@@ -218,6 +219,8 @@ function mod_elm {
 	INSTALL=autotool
 	CLEAN=autotool
 	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
+	MAKE_FLAGS="-j"
+	AUTOCONF_FLAGS=""
 }
 
 function mod_gel {
@@ -228,7 +231,9 @@ function mod_gel {
 	BUILD=autotool
 	INSTALL=autotool
 	DISTCLEAN=autotool
+	MAKE_FLAGS="-j"
 	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
+	AUTOCONF_FLAGS=""
 }
 
 function mod_frontc {
@@ -275,6 +280,8 @@ function mod_otawa {
 	INSTALL=make
 	REQUIRES="elm"
 	DISTCLEAN=autotool
+	MAKE_FLAGS="-j"
+	AUTOCONF_FLAGS="$plugin_param"
 }
 
 
@@ -357,6 +364,7 @@ for arg in $*; do
 		;;
 	--with-so)
 		with_so=yes
+		plugin_param="--with-plugin=yes"
 		;;
 	--proxy=*)
 		export http_proxy=${arg#--proxy=}
@@ -449,6 +457,7 @@ function process {
 	# Perform the download
 	if [ -n "$DOWNLOAD" ]; then
 		if [ ! -d $1 ]; then
+			echo "Download parce que $1 n'existe pas"
 			download_$DOWNLOAD
 		else
 			if [ $action = update ]; then
@@ -510,6 +519,7 @@ function process {
 		prefix="$old_prefix"
 		;;
 	esac
+
 }
 
 
