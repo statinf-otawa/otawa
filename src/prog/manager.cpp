@@ -159,14 +159,16 @@ FrameWork *Manager::load(const elm::system::Path&  path, PropList& props) {
 	// Try with gel
 	if(!loader) {
 		gel_file_t *file = gel_open((char *)&path, 0, 0);
-		if(!file)
+		if(!file) {
 			throw LoadException(gel_strerror());
+                }
 		gel_file_info_t infos;
 		gel_file_infos(file, &infos);
 		StringBuffer buf;
 		buf << "elf_" << infos.machine;
 		gel_close(file);
 		String name = buf.toString();
+		cout << "Try to load " << name << " from " << LOADER_PATHS << io::endl;
 		loader = findLoader(name.toCString());
 	}
 	
@@ -209,13 +211,13 @@ ilp::System *Manager::newILPSystem(String name) {
 	// Find a plugin
 	else {
 		plugin = (ilp::ILPPlugin *)ilp_plugger.plug(name.toCString());
-		if(!plugin) {
-			cerr << "ERROR: " << ilp_plugger.lastErrorMessage() << "\n";
-			return 0;
-		}
 	}
 
 	// Return a system
+	if(!plugin) {
+		cerr << "ERROR: " << ilp_plugger.lastErrorMessage() << "\n";
+		return 0;
+	}
 	return plugin->newSystem();
 }
 
