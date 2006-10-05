@@ -1,4 +1,4 @@
-AC_PREREQ(2.5)
+AC_PREREQ(2.52)
 AC_INIT(src/prog/base.cpp)
 AC_CONFIG_AUX_DIR(.config)
 AM_INIT_AUTOMAKE(Otawa, 0.4)
@@ -6,9 +6,8 @@ AC_LANG(C++)
 
 # ==== Plugin activation ====
 AC_ARG_WITH(plugin,
-	[  --with-plugin[={yes,no}]	Activate plugin usage.],
-	[HAS_PLUGIN=yes],
-	[HAS_PLUGIN=no])
+	[  --with-plugin={yes,no}	Activate plugin usage.],,[with_plugin=no])
+AS_IF(test "$with_plugin" = "yes", [ HAS_PLUGIN=yes ], [ HAS_PLUGIN=no ])
 AM_CONDITIONAL(HAS_PLUGIN, test "$HAS_PLUGIN" = "yes")
 
 
@@ -36,6 +35,7 @@ esac
 
 # ==== Standard tests ====
 AM_CONFIG_HEADER(config.h)
+AC_PROG_LN_S
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_YACC
@@ -50,7 +50,7 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_HEADER_STDBOOL
 AC_TYPE_SIZE_T
-AS_IF(test "$HAS_PLUGIN" != "yes", [ AC_DISABLE_SHARED ])
+AS_IF(test "$HAS_PLUGIN" = "yes", [ AC_ENABLE_SHARED ], [ AC_DISABLE_SHARED ])
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 
@@ -107,8 +107,8 @@ AM_CONDITIONAL(HAS_OCAMLOPT, test "$HAS_OCAMLOPT" != no)
 # ===== Useful Definitions =====
 OTAWA_CXXFLAGS="-I\$(top_srcdir)/include $ELM_CXXFLAGS"
 OTAWA_DEPS="\$(top_builddir)/src/prog/libotawa.la $ELM_LIBS"
-AS_IF(test "$HAS_PLUGIN" != yes, [ OTAWA_DEPS="$OTAWA_DEPS $GEL_LIBS" ])
-OTAWA_LIBS="$OTAWA_DEPS -dlopen force"
+AS_IF(test "$HAS_PLUGIN" != yes, [ OTAWA_DEPS="$OTAWA_DEPS" ])
+OTAWA_LIBS="$OTAWA_DEPS -dlopen force $GEL_LIBS"
 ODISPLAY_LIBS="\$(top_builddir)/src/odisplay/libodisplay.la"
 ODISPLAY_DEPS="$ODISPLAY_LIBS"
 OGENSIM_LIBS="\$(top_builddir)/src/ogensim/libogensim.la"
@@ -123,7 +123,11 @@ AC_SUBST(ODISPLAY_LIBS)
 AC_SUBST(ODISPLAY_DEPS)
 AC_SUBST(OGENSIM_LIBS)
 AC_SUBST(OGENSIM_DEPS)
+AUTODOC=$pkgdir/autodoc
+AC_SUBST(AUTODOC)
+AS_AC_EXPAND(ILP_PATHS, "$ILP_PATHS")
 AC_DEFINE_UNQUOTED(ILP_PATHS, "$ILP_PATHS", [Paths for ILP plugins])
+AS_AC_EXPAND(LOADER_PATHS,"$LOADER_PATHS")
 AC_DEFINE_UNQUOTED(LOADER_PATHS, "$LOADER_PATHS", [Paths for loader plugins])
 AC_DEFINE_UNQUOTED(SIMULATOR_PATHS, "$SIMULATOR_PATHS", [Paths for simulator plugins])
 
@@ -165,6 +169,7 @@ AS_IF(test "$HAS_PLUGIN" = "yes", [
 AM_CONDITIONAL(HAS_LOADER, test "$HAS_LOADER" = "yes")
 AC_SUBST(LOADER_LIBS)
 AC_SUBST(LOADER_DEPS)
+echo "LOADER_LIBS=$LOADER_LIBS"
 
 
 # ==== Output ====
