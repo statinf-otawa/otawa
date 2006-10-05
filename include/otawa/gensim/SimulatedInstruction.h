@@ -16,9 +16,23 @@ namespace otawa { namespace gensim {
 
 typedef enum {NONE, WAITING, READY, EXECUTING, EXECUTED, NOTIFIED} simulated_instruction_state_t; // ordered set
 
-typedef enum {COND_BRANCH, UNCOND_BRANCH, TRAP, CALL, RETURN, LOAD, STORE, IALU, FALU, MUL, DIV, OTHER} instruction_type_t;
+typedef enum {
+	COND_BRANCH,
+	UNCOND_BRANCH,
+	TRAP,
+	CALL,
+	RETURN,
+	LOAD,
+	STORE,
+	IALU,
+	FALU,
+	MUL,
+	DIV,
+	OTHER
+} instruction_type_t;
 #define INST_TYPE_NUMBER 12
 	// FIXME : should be read from framework
+instruction_type_t convertInstType(Inst::kind_t kind);
 
 
 class SimulatedInstruction;
@@ -37,7 +51,7 @@ class SimulatedInstruction {
 		simulated_instruction_state_t instruction_state;
 		elm::genstruct::SLList<SimulatedInstruction *> source_instructions;
 		int time_to_finish_execution;
-		instruction_type_t _type;
+		Inst::kind_t _type;
 		
 		inline void addSourceInstruction(SimulatedInstruction * source_inst);
 		inline void removeSourceInstruction(SimulatedInstruction * source_inst);
@@ -59,40 +73,19 @@ class SimulatedInstruction {
 		inline void dump(elm::io::Output& out_stream);
 		inline void dumpState(elm::io::Output& out_stream);
 		inline void dumpType(elm::io::Output& out_stream);
-		instruction_type_t type();
+		Inst::kind_t type();
 		
 };
 
-inline SimulatedInstruction::SimulatedInstruction(otawa::Inst* inst, /*code_t code, instruction_t* emul_inst,*/
-												elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions) :
-		instruction(inst), /*binary_code(code), emulated_inst(emul_inst),*/ instruction_state(READY), 
-		active_instructions(_active_instructions) {
+inline SimulatedInstruction::SimulatedInstruction(
+	otawa::Inst* inst,
+	elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions
+):	instruction(inst),
+	instruction_state(READY), 
+	active_instructions(_active_instructions)
+{
 	active_instructions->addLast(this);
-	if (inst->kind() & otawa::Inst::IS_CONTROL) {
-		if (inst->kind() & otawa::Inst::IS_CALL)
-			_type = CALL;
-		else if (inst->kind() & otawa::Inst::IS_RETURN)
-			_type = RETURN;
-		else if (inst->kind() & otawa::Inst::IS_TRAP)
-			_type = TRAP;
-		else if (inst->kind() & otawa::Inst::IS_COND)
-			_type = COND_BRANCH;
-		else
-			_type = UNCOND_BRANCH;
-	}
-	else if (inst->kind() & otawa::Inst::IS_LOAD)
-		_type = LOAD;
-	else if (inst->kind() & otawa::Inst::IS_STORE)
-		_type = STORE;
-	else if (inst->kind() & otawa::Inst::IS_MUL)
-		_type = MUL;
-	else if (inst->kind() & otawa::Inst::IS_DIV)
-		_type = DIV;
-	else if (inst->kind() & otawa::Inst::IS_INT)
-		_type = IALU;
-	else if (inst->kind() & otawa::Inst::IS_FLOAT)
-		_type = FALU;
-	else _type = OTHER;
+	_type = inst->kind();	
 }
 
 inline SimulatedInstruction::~SimulatedInstruction() {
@@ -115,7 +108,7 @@ inline simulated_instruction_state_t SimulatedInstruction::state() {
 	return instruction_state;
 }
 
-inline instruction_type_t SimulatedInstruction::type() {
+inline Inst::kind_t SimulatedInstruction::type() {
 	return _type;
 }
 

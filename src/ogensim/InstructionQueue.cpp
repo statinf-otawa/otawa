@@ -3,10 +3,17 @@
 
 namespace otawa { namespace gensim {
 
-InstructionQueueConfiguration::InstructionQueueConfiguration(CString name, int capacity, simulated_instruction_state_t condition) :
-	queue_name(name), cap(capacity), number_of_write_ports(0), number_of_read_ports(0), 
-	leaving_condition(condition) {
-
+InstructionQueueConfiguration::InstructionQueueConfiguration(
+	CString name,
+	int capacity,
+	simulated_instruction_state_t condition
+)
+:	queue_name(name),
+	cap(capacity),
+	number_of_write_ports(0),
+	number_of_read_ports(0), 
+	leaving_condition(condition)
+{
 }
 int InstructionQueueConfiguration::capacity() {
 	return cap;

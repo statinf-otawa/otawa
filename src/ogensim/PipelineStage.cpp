@@ -3,32 +3,105 @@
 
 namespace otawa { namespace gensim {
 
-PipelineStageConfiguration::PipelineStageConfiguration(CString name, pipeline_stage_t type,
-	InstructionQueueConfiguration * inqueue, InstructionQueueConfiguration * outqueue,
-	int in_width, int out_width) :
-	stage_name(name), stage_type(type), input_queue(inqueue), output_queue(outqueue),
-	in_stage_width(in_width), out_stage_width(out_width) {
-		assert(inqueue);
-		inqueue->setNumberOfReadPorts(in_width);
-		assert(outqueue);
-		outqueue->setNumberOfWritePorts(out_width);
+/**
+ * Build a pipeline stage configuration for stages between two queues with
+ * different input/output widths.
+ * @param name	Stage name.
+ * @param type	Stage type.
+ * @param inqueue	Input queue.
+ * @param outqueue	Output queue.
+ * @param in_width	Input width.
+ * @param out_width	Output width.
+ */
+PipelineStageConfiguration::PipelineStageConfiguration(
+	CString name,
+	pipeline_stage_t type,
+	InstructionQueueConfiguration * inqueue,
+	InstructionQueueConfiguration * outqueue,
+	int in_width, 
+	int out_width
+)
+:	stage_type(type),
+	input_queue(inqueue == outqueue ? 0 : inqueue),
+	output_queue(inqueue == outqueue ? 0 : outqueue),
+	instruction_buffer(inqueue == outqueue ? inqueue : 0),
+	stage_name(name),
+	stage_width(out_width == 0 ? in_width : 0),
+	in_stage_width(out_width == 0 ? 0 : in_width),
+	out_stage_width(out_width == 0 ? 0 : in_width)
+{
+		assert(inqueue || outqueue || instruction_buffer);
+		assert(stage_width != 0 || in_stage_width || out_stage_width);
+		assert(in_stage_width == 0 || inqueue);
+		assert(out_stage_width == 0 || outqueue);
+		//elm::cout << "stage " << name;
+		if(input_queue) {
+			//elm::cout << " << " << input_queue->name();
+			input_queue->setNumberOfReadPorts(in_width);
+		}
+		if(output_queue) {
+			//elm::cout << " >> " << output_queue->name();
+			output_queue->setNumberOfWritePorts(out_width ? out_width : stage_width);
+		}
+		//elm::cout << io::endl;
 }
 
-PipelineStageConfiguration::PipelineStageConfiguration(CString name, pipeline_stage_t type,
-	InstructionQueueConfiguration * inqueue, InstructionQueueConfiguration * outqueue,
-	int width) :
-	stage_name(name), stage_type(type), input_queue(inqueue), output_queue(outqueue), stage_width(width) {
-		if (inqueue)
-			inqueue->setNumberOfReadPorts(width);
-		if (outqueue)
-			outqueue->setNumberOfWritePorts(width);
-}
 
-PipelineStageConfiguration::PipelineStageConfiguration(CString name, pipeline_stage_t type,
-			InstructionQueueConfiguration * buffer, int width) :
-	stage_name(name), stage_type(type), instruction_buffer(buffer), stage_width(width) {
+/**
+ * Build a pipeline stage configuration for stages between two queues.
+ * @param name		Stage name.
+ * @param type		Stage type.
+ * @param inqueue	Input queue (may be null).
+ * @param outqueue	Outut queue (may be null).
+ * @param width		Number of ports with queues.
+ */
+/*PipelineStageConfiguration::PipelineStageConfiguration(
+	CString name,
+	pipeline_stage_t type,
+	InstructionQueueConfiguration *inqueue,
+	InstructionQueueConfiguration * outqueue,
+	int width
+)
+:	stage_type(type),
+	input_queue(inqueue),
+	output_queue(outqueue),
+	instruction_buffer(0),
+	stage_name(name),
+	stage_width(width),
+	in_stage_width(0),
+	out_stage_width(0)
+{
+	if (inqueue)
+		inqueue->setNumberOfReadPorts(width);
+	if (outqueue)
+		outqueue->setNumberOfWritePorts(width);
+}*/
+
+
+/**
+ * Build a stage configuration for a stage working inside a queue.
+ * @param name		Stage name.
+ * @param type		stage type.
+ * @param buffer	Used instruction queue.
+ * @param width		Number of ports with the queue.
+ */
+/*PipelineStageConfiguration::PipelineStageConfiguration(
+	CString name,
+	pipeline_stage_t type,
+	InstructionQueueConfiguration * buffer,
+	int width
+)
+:	stage_type(type),
+	input_queue(0),
+	output_queue(0),
+	instruction_buffer(buffer),
+	stage_name(name),
+	stage_width(width),
+	in_stage_width(0),
+	out_stage_width(0)
+{
 	assert(buffer);
-}
+}*/
 
 
 
