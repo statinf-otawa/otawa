@@ -93,7 +93,7 @@ int WCETComputation::computation(FrameWork *fw, AST *ast) {
 					WC_TRACE;
 					throw ProcessorException(*this, "Il manque le nb d'it�rations du noeud : %s (%p)",
 						&ast->toWhile()->condition()->first()->get<String>(File::ID_Label, "unknown "),
-						(void *)ast->toWhile()->condition()->first()->address());
+						(void *)(int)ast->toWhile()->condition()->first()->address());
 				}
 				wcet=N*(computation(fw, ast->toWhile()->condition())
 							+ computation(fw, ast->toWhile()->body()))

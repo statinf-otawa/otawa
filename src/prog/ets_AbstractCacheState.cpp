@@ -10,6 +10,22 @@
 //#define ACS_OUT(txt) txt	//with debuging.
 #define ACS_OUT(txt)	//without debuging.
 
+namespace elm {
+using namespace otawa;
+	
+class AddressHashKey: public HashKey<address_t> {
+	virtual unsigned long hash(address_t v) {
+		return (unsigned long)v;
+	};
+	virtual bool equals(address_t key1, address_t key2) {
+		return key1 == key2;
+	};
+};
+static AddressHashKey address_hkey_obj;
+template <> HashKey<address_t>& HashKey<address_t>::def = address_hkey_obj;
+
+} // elm
+
 namespace otawa { namespace ets {
 
 /**

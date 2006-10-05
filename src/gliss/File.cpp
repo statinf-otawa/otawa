@@ -119,7 +119,7 @@ elm::Collection<Segment *>& File::segments(void) {
  */
 address_t File::findLabel(const String& label) {
 	otawa::Symbol *sym = findSymbol(label);
-	return sym ? sym->address() : 0;
+	return sym ? sym->address() : address_t(0);
 }
 
 
