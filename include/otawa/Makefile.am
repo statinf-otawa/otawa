@@ -9,6 +9,7 @@ SUBDIRS= \
 	proc \
 	ipet \
 	util \
+	cache \
 	ets \
 	hard \
 	hardware \
@@ -32,6 +33,7 @@ endif
 # Headers
 includeotawadir=$(includedir)/otawa
 includeotawa_HEADERS = \
+	sim.h \
 	ast.h \
 	base.h  \
 	cfg.h \
