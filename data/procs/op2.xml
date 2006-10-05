@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<processor class="otawa::hard::Processor">
+	<arch>ppc</arch>
+	<model>ppc750</model>
+	<builder>motorola</builder>
+	
+	<stages>
+		<stage id="FI">
+			<name>FI</name>
+			<width>2</width>
+			<type>FETCH</type>
+		</stage>
+		<stage id="DI">
+			<name>DI</name>
+			<width>2</width>
+			<type>LAZY</type>
+		</stage>
+		
+		<stage id="EX">
+			<name>EX</name>
+			<type>EXEC</type>
+			<width>4</width>
+			<ordered>false</ordered>
+			
+			<fus>
+				<fu id="MEM">
+					<name>MEM</name>
+					<latency>5</latency>
+					<pipelined>true</pipelined>
+				</fu>
+				<fu id="ALU">
+					<name>ALU</name>
+					<width>2</width>
+				</fu>
+				<fu id="FALU">
+					<name>FALU</name>
+					<latency>3</latency>
+					<pipelined>true</pipelined>
+				</fu>
+				<fu id="MUL">
+					<name>MUL</name>
+					<latency>6</latency>
+					<pipelined>true</pipelined>
+				</fu>
+				<fu id="DIV">
+					<name>DIV</name>
+					<latency>15</latency>
+				</fu>
+			</fus>
+			
+			<dispatch>
+				<inst>
+					<type>IS_LOAD</type>
+					<fu ref="MEM"/>
+				</inst>
+				<inst>
+					<type>IS_STORE</type>
+					<fu ref="MEM"/>
+				</inst>
+				<inst>
+					<type>IS_FLOAT</type>
+					<fu ref="FALU"/>
+				</inst>
+				<inst>
+					<type>IS_MUL</type>
+					<fu ref="MUL"/>
+				</inst>
+				<inst>
+					<type>IS_DIV</type>
+					<fu ref="DIV"/>
+				</inst>
+				<inst>
+					<type>IS_INT</type>
+					<fu ref="ALU"/>
+				</inst>
+				<inst>
+					<type>IS_CONTROL</type>
+					<fu ref="ALU"/>
+				</inst>
+				<inst>
+					<type>IS_INTERN</type>
+					<fu ref="ALU"/>
+				</inst>
+			</dispatch>
+
+		</stage>
+		
+		<stage id="CM">
+			<name>CM</name>
+			<type>COMMIT</type>
+			<width>2</width>
+		</stage>
+	</stages>
+	
+	<queues>
+		<queue>
+			<name>FETCH_QUEUE</name>
+			<size>3</size>
+			<input ref="FI"/>
+			<output ref="DI"/>
+		</queue>
+		<queue>
+			<name>ROB_QUEUE</name>
+			<size>4</size>
+			<input ref="DI"/>
+			<output ref="CM"/>
+			<intern>
+				<stage ref="EX"/>
+			</intern>
+		</queue>
+	</queues>
+	
+</processor>
