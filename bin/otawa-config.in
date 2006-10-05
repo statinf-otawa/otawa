@@ -4,6 +4,7 @@
 option=
 cflags=
 libs=
+data=
 cflags_text="-I@prefix@/include"
 libs_text="@prefix@/lib/libotawa.la"
 
@@ -17,6 +18,9 @@ while test "$1" != ""; do
 	--libs)
 		libs=ok
 		option=ok
+		;;
+	--data)
+		data=ok
 		;;
 	gensim)
 		libs_text="@prefix@/lib/libogensim.la $libs_text"
@@ -59,4 +63,7 @@ if test "$cflags" == "ok"; then
 fi
 if test "$libs" == "ok"; then
 	echo $libs_text
+fi
+if test "$data" == "ok"; then
+	echo @prefix@/share/Otawa
 fi
