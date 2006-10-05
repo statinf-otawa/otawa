@@ -13,7 +13,10 @@
 #include "FileCursor.h"
 #include "FunCursor.h"
 
+
+
 namespace otawa {
+
 
 // Cursor overload
 void FrameWorkCursor::path(Output& out) {
@@ -155,10 +158,11 @@ AutoPtr<Cursor> FrameWorkCursor::back(void) {
  * @param path	Path of the file to load.
  */
 void FrameWorkCursor::load(Output& out, CString path) {
+	PropList props;
 	try {
-		File *file = fw->loadFile(path);
+		fw = manager.load(path, props);
 		out << "SUCCESS.\n";
-	} catch(Exception& e) {
+	} catch(elm::Exception& e) {
 		out << "ERROR: " << e.message() << "\n";
 	}
 }

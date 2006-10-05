@@ -193,7 +193,7 @@ void Command::process (String arg) {
 	// First free argument is binary path
 	if(!fw) {
 		PropList props;
-		LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+//		LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 		fw = manager.load(arg.toCString(), props);
 		info = fw->getCFGInfo();
 	}

@@ -173,7 +173,7 @@ void Command::run(void) {
 	// Load the file
 	GenericSimulator sim;
 	PropList props;
-	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+//	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	SIMULATOR(props) = &sim;
 	DEGREE(props) = degree;
 	fw = manager.load(&file, props);
