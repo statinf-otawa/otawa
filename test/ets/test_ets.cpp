@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 	PropList props;
 	FrameWork *fw;
 	CACHE_CONFIG(props) = caches;
-	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+//	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	
 	try { 
 		fw = manager.load(argv[1], props);
