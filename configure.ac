@@ -115,6 +115,7 @@ OGENSIM_LIBS="\$(top_builddir)/src/ogensim/libogensim.la"
 OGENSIM_DEPS="$OGENSIM_LIBS"
 ILP_PATHS=$libdir/otawa/ilp
 LOADER_PATHS=$libdir/otawa/loader
+SIMULATOR_PATHS=$libdir/otawa/sim
 AC_SUBST(OTAWA_CXXFLAGS)
 AC_SUBST(OTAWA_LIBS)
 AC_SUBST(OTAWA_DEPS)
@@ -124,6 +125,7 @@ AC_SUBST(OGENSIM_LIBS)
 AC_SUBST(OGENSIM_DEPS)
 AC_DEFINE_UNQUOTED(ILP_PATHS, "$ILP_PATHS", [Paths for ILP plugins])
 AC_DEFINE_UNQUOTED(LOADER_PATHS, "$LOADER_PATHS", [Paths for loader plugins])
+AC_DEFINE_UNQUOTED(SIMULATOR_PATHS, "$SIMULATOR_PATHS", [Paths for simulator plugins])
 
 
 # ===== Default ILP =====
