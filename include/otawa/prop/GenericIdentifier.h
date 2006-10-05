@@ -221,9 +221,9 @@ void GenericIdentifier<PropList *>::print(elm::io::Output& out, const Property& 
 
 // GenericIdentifier<T>::scan Specializations
 template <>
-void GenericIdentifier<CString>::scan(PropList& props, VarArg& args) const;
+void GenericIdentifier<elm::CString>::scan(PropList& props, VarArg& args) const;
 template <>
-void GenericIdentifier<String>::scan(PropList& props, VarArg& args) const;
+void GenericIdentifier<elm::String>::scan(PropList& props, VarArg& args) const;
 
 
 // Value class
