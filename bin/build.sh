@@ -17,6 +17,7 @@ dev=
 action=make
 cvs_user=anonymous
 dist_flags=
+systemc_location=
 with_so=
 done=
 checked=
@@ -219,7 +220,7 @@ function mod_elm {
 	INSTALL=autotool
 	CLEAN=autotool
 	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
-	MAKE_FLAGS="-j"
+	MAKE_FLAGS=""
 	AUTOCONF_FLAGS=""
 }
 
@@ -326,6 +327,7 @@ function help {
 	echo "	--release=NUMBER: release of the distribution."
 	echo "	--proxy=ADDRESS:PORT: configure a proxy use."
 	echo "	--update: update the current installation."
+	echo "  --with-systemc: SystemC location."
 	echo "MODULES: elm gliss ppc lp_solve frontc otawa"
 }
 
@@ -355,6 +357,9 @@ for arg in $*; do
 		action=dist
 		release=${arg#--release}
 		dist_flags="$dist_flags RELEASE=$release"
+		;;
+	--with-systemc=*)
+		systemc_location=${arg#--with-systemc=}
 		;;
 	--install)
 		action=install
@@ -400,6 +405,11 @@ fi
 # Make the build basedirectory
 mkdir -p $basedir
 cd $basedir
+if [ ! -z $systemc_location ]; then
+	rm -f systemc
+	ln -s $systemc_location systemc
+fi
+
 basedir=`pwd`
 
 # Preparation
