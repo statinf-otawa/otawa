@@ -6,5 +6,6 @@ includeotawaprog_HEADERS = \
 	Manager.h \
 	Process.h \
 	ProgItem.h \
+	Instruction.h \
 	Symbol.h
 
