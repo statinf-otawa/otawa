@@ -348,7 +348,7 @@ void Command::run(int argc, char **argv) {
 	
 	// Load the file
 	PropList props;
-	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+//	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	fw = manager.load(file.toCString(), props);
 	info = fw->getCFGInfo();
 

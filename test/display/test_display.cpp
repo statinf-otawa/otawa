@@ -27,7 +27,7 @@ int main(int argc, char **argv){
 	Manager manager;
 	try{
 		PropList props;
-		LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+//		LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 		FrameWork *fw = manager.load(file, props);
 		
 		// Find main

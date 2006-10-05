@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
 	gensim::GenericSimulator sim;
 	Manager manager;
 	PropList props;
-	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+//	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	CACHE_CONFIG(props) = &cache_conf;
 	SIMULATOR(props) = &sim;
 	cout << "config = " << props << io::endl;
