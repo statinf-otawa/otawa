@@ -4,7 +4,7 @@ AM_CXXFLAGS=@OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@
 AM_YYFLAGS=-dv
 
 libotawa_la_LDFLAGS=
-libotawa_la_LIBADD=
+libotawa_la_LIBADD=@GEL_LIBS@ @ELM_LIBS@
 
 libotawa_la_SOURCES = \
 	BlockAST.cpp \
