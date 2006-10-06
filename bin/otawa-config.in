@@ -21,6 +21,7 @@ while test "$1" != ""; do
 		;;
 	--data)
 		data=ok
+		option=ok
 		;;
 	gensim)
 		libs_text="@prefix@/lib/libogensim.la $libs_text"
@@ -48,7 +49,10 @@ done
 
 # Check options
 if test "$option" == ""; then
-	echo "SYNTAX: otawa-config [--cflags] [--libs] modules..."
+	echo "SYNTAX: otawa-config [--cflags] [--libs] [--data] modules..."
+	echo "	--cflags: display required compilation flags."
+	echo "	--libs: display required libs."
+	echo "	--data: display path to package data."
 	echo "Modules may be:"
 	echo "	gensim: use of the generic simulator."
 	echo "	display: use of the graph displayer."
