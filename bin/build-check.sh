@@ -55,7 +55,7 @@ fi
 for bench in $list; do
 	if [ "$rebuild" = yes -o ! -f $bench.out ]; then
 		echo "$cmd $benchdir/$bench/$bench > $bench.out"
-		./test_ct $benchdir/$bench/$bench > $bench.out || exit 2
+		$cmd $benchdir/$bench/$bench > $bench.out || exit 2
 	fi
 done
 echo "SUCCESS: all is done !"
