@@ -10,7 +10,6 @@ SUBDIRS = \
 
 if HAS_ILP
 SUBDIRS += \
-	ipet \
 	ccg \
 	categorisation \
 	exegraph
@@ -21,4 +20,10 @@ SUBDIRS += \
 	delta \
 	systemc \
 	generic_simulator
+endif
+
+if HAS_ILP
+if HAS_SYSTEMC
+SUBDIRS += ipet  
+endif
 endif
