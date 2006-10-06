@@ -104,11 +104,13 @@ Identifier::Identifier(elm::String name, NameSpace& parent)
 :	nam(name),
  	_parent(parent)
 {
-	if(initialized)
-		link();
-	else {
-		next = init_list;
-		init_list = this;
+	if(name) {
+		if(initialized)
+			link();
+		else {
+			next = init_list;
+			init_list = this;
+		}
 	}
 }
 
