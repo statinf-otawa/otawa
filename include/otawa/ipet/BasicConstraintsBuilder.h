@@ -8,7 +8,7 @@
 #define OTAWA_IPET_BASIC_CONSTRAINTS_BUILDER_H
 
 #include <assert.h>
-#include <otawa/proc/CFGProcessor.h>
+#include <otawa/proc/BBProcessor.h>
 
 namespace otawa {
 
@@ -21,13 +21,13 @@ namespace ilp {
 namespace ipet {
 	
 // BasicConstraintsBuilder class
-class BasicConstraintsBuilder: public CFGProcessor {
-	void make(ilp::System *system, BasicBlock *bb);
+class BasicConstraintsBuilder: public BBProcessor {
 public:
 	BasicConstraintsBuilder(const PropList& props = PropList::EMPTY);
 
 	// CFGProcessor overload
-	virtual void processCFG(FrameWork *fw, CFG *cfg);
+	virtual void processFrameWork(FrameWork *fw);
+	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
 };
 
 } } // otawa::ipet

@@ -26,7 +26,7 @@ namespace otawa { namespace ipet {
  * @param props		Configuration properties.
  */
 FlowFactLoader::FlowFactLoader(const PropList& props)
-: CFGProcessor("otawa::ipet::FlowFactLoader", Version(1, 0, 0), props) {
+: Processor("otawa::ipet::FlowFactLoader", Version(1, 0, 0), props) {
 }
 
 
@@ -43,59 +43,50 @@ void FlowFactLoader::onError(const char *fmt, ...) {
 /**
  */
 void FlowFactLoader::onLoop(address_t addr, int count) {
-	assert(cfg);
 	assert(system);
 	assert(count >= 0);
 	//cout << "LOOP " << count << " times at " << addr << "\n";
 
-	// check domination
-	Dominance::ensure(cfg);
-	
 	// Process basic blocks
 	bool found = false;
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-		if(bb->address() == addr /*&& Dominance::isLoopHeader(bb)*/) {
-			found = true;
+	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++) {
+
+		// check domination
+		Dominance::ensure(cfg);
+	
+		// Look BB in the CFG
+		for(CFG::BBIterator bb(cfg); bb; bb++)
+			if(bb->address() == addr /*&& Dominance::isLoopHeader(bb)*/) {
 			
-			// Build the constraint
-			//cout << "Added to " << *bb << "\n";
-			otawa::ilp::Constraint *cons =
-				system->newConstraint(otawa::ilp::Constraint::LE);
-			cons->addLeft(1, bb->use<otawa::ilp::Var *>(VAR));
-			for(BasicBlock::InIterator edge(bb); edge; edge++) {
-				assert(edge->source());
-				otawa::ilp::Var *var =
-					edge->source()->use<otawa::ilp::Var *>(VAR);
-				if(!Dominance::dominates(bb, edge->source()))
-					cons->addRight(count, var);
+				// Build the constraint
+				//cout << "Added to " << *bb << "\n";
+				otawa::ilp::Constraint *cons =
+					system->newConstraint(otawa::ilp::Constraint::LE);
+				cons->addLeft(1, bb->use<otawa::ilp::Var *>(VAR));
+				for(BasicBlock::InIterator edge(bb); edge; edge++) {
+					assert(edge->source());
+					otawa::ilp::Var *var =
+						edge->source()->use<otawa::ilp::Var *>(VAR);
+					if(!Dominance::dominates(bb, edge->source()))
+						cons->addRight(count, var);
+				}
+				return;
 			}
-		}
+	}
 	
 	// Nothing found, seems too bad
-	if(!found)
-		out << "WARNING: loop " << addr << " not found.\n";
+	out << "WARNING: loop " << addr << " not found.\n";
 }
 
 
 /**
  */
-void FlowFactLoader::processCFG(FrameWork *fw, CFG *_cfg) {
+void FlowFactLoader::processFrameWork(FrameWork *fw) {
 	assert(fw);
-	assert(_cfg);
-	
-	// Initialization
-	cfg = _cfg;
-	system = cfg->get<ilp::System *>(SYSTEM, 0);
+	cfgs = INVOLVED_CFGS(fw);
+	assert(cfgs);
+	system = getSystem(fw, ENTRY_CFG(fw));
 	dom_done = false;
-	
-	// Get an ILP system
-	if(!system) {
-		system = fw->newILPSystem(true);
-		cfg->set<ilp::System *>(SYSTEM, system);
-		out << "INFO: ILP system created.\n";
-	}
-	
-	// Launch load
 	run(fw);
 }
 	

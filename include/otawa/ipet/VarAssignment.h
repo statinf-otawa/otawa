@@ -14,12 +14,13 @@ namespace otawa { namespace ipet {
 // VarAsignment class
 class VarAssignment: public BBProcessor {
 	bool _explicit, _recursive;
-	String makeNodeVar(BasicBlock *bb);
-	String makeEdgeVar(Edge *edge);
+	String makeNodeVar(BasicBlock *bb, CFG *cfg);
+	String makeEdgeVar(Edge *edge, CFG *cfg);
 	void init(const PropList& props);
 
 protected:
 	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+	virtual void processFrameWork(FrameWork *fw);
 
 public:
 	VarAssignment(const PropList& props = PropList::EMPTY);

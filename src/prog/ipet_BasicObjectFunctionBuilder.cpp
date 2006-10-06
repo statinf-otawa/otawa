@@ -36,24 +36,25 @@ namespace otawa { namespace ipet {
  * @param props		Configuration properties.
  */
 BasicObjectFunctionBuilder::BasicObjectFunctionBuilder(const PropList& props)
-: CFGProcessor("otawa::BasicObjectFunctionBuilder", Version(1, 0, 0), props) {
+: BBProcessor("otawa::BasicObjectFunctionBuilder", Version(1, 0, 0), props) {
 }
 
 
 /**
  */
-void BasicObjectFunctionBuilder::processCFG(FrameWork *fw, CFG *cfg) {
-	System *system = getSystem(fw, cfg);
-
-	// Add the object function
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-		if(!bb->isEntry() && !bb->isExit()) {
-			Option<int> time = bb->get<int>(TIME);
-			if(time < 0)
-				throw new ProcessorException(*this, "no time on BB %lx",
-					bb->address());
-			system->addObjectFunction(*time, getVar(system, bb));
-		}
+void BasicObjectFunctionBuilder::processBB(
+	FrameWork *fw,
+	CFG *cfg,
+	BasicBlock *bb)
+{
+	if(!bb->isEntry() && !bb->isExit()) {
+		System *system = getSystem(fw, ENTRY_CFG(fw));
+		int time = TIME(bb);
+		if(time < 0)
+			throw new ProcessorException(*this, "no time on BB %lx",
+				(int)bb->address());
+		system->addObjectFunction(time, getVar(system, bb));
+	}
 }
 
 } } // otawa::ipet

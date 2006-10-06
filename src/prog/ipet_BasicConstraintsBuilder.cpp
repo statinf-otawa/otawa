@@ -15,6 +15,12 @@ using namespace otawa::ilp;
 namespace otawa { namespace ipet {
 
 /**
+ * Used to record the constraint of a called CFG.
+ */
+GenericIdentifier<Constraint *> CALLING_CONSTRAINT("", 0);
+
+
+/**
  * @class BaseConstraintsBuilder
  * <p>This code processor create or re-use the ILP system in the framework and
  * add to it basic IPET system constraints as described in the article below:</p>
@@ -43,59 +49,78 @@ namespace otawa { namespace ipet {
 
 
 /**
- * Build the constraints for the given 
- * @param system	ILP system to use.
- * @param bb		Basic block to process.
  */
-void BasicConstraintsBuilder::make(ilp::System *system, BasicBlock *bb) {
-	/*cout << "BasicConstraintBuilder::make(" << system << ", "
-		 << bb << " (" << bb->address() << "))\n";*/
-	Var *bbv = getVar(system, bb);
+void BasicConstraintsBuilder::processBB (FrameWork *fw, CFG *cfg, BasicBlock *bb)
+{
+	assert(fw);
+	assert(cfg);
+	assert(bb);
+
+	// Prepare data
 	Constraint *cons;
 	bool used;
+	CFG *called = 0;
+	System *system = getSystem(fw, ENTRY_CFG(fw));
+	assert(system);
+	Var *bbv = getVar(system, bb);
 		
 	// Input constraint
 	cons = system->newConstraint(Constraint::EQ);
 	cons->addLeft(1, bbv);
 	used = false;
-	for(BasicBlock::InIterator edge(bb); edge; edge++) {
+	for(BasicBlock::InIterator edge(bb); edge; edge++)
 		if(edge->kind() != Edge::CALL) {
 			cons->addRight(1, getVar(system, edge));
 			used = true;
 		}
-	}
 	if(!used)
 		delete cons;
-		
+	
 	// Output constraint
 	cons = system->newConstraint(Constraint::EQ);
 	cons->addLeft(1, bbv);
 	used = false;
-	for(BasicBlock::OutIterator edge(bb); edge; edge++)
+	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 		if(edge->kind() != Edge::CALL) {
 			cons->addRight(1, getVar(system, edge));
 			used = true;
 		}
+		else
+			called = edge->calledCFG();
+	}
 	if(!used)
 		delete cons;
+
+	// Process the call
+	if(called) {
+		cons = CALLING_CONSTRAINT(called);
+		if(!cons) {
+			cons = system->newConstraint(Constraint::EQ);
+			assert(cons);
+			cons->addLeft(1, getVar(system, called->entry()));
+			CALLING_CONSTRAINT(called) = cons;
+		}
+		cons->addRight(1, bbv);
+	}	
 }
 
 
 /**
  */	
-void BasicConstraintsBuilder::processCFG(FrameWork *fw, CFG *cfg) {
+void BasicConstraintsBuilder::processFrameWork(FrameWork *fw) {
+	assert(fw);
+	
+	// Call the orignal processing
+	BBProcessor::processFrameWork(fw);
+	
+	// Just record the constraint "entry = 1"
+	CFG *cfg = ENTRY_CFG(fw);
 	assert(cfg);
 	System *system = getSystem(fw, cfg);
-
-	// Set constraint on start BB
 	BasicBlock *entry = cfg->entry();
 	assert(entry);
 	Constraint *cons = system->newConstraint(Constraint::EQ, 1);
-	cons->add(1, getVar(system, entry));
-	
-	// Add constraint for each basic block
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-			make(system, bb);	
+	cons->addLeft(1, getVar(system, entry));
 };
 
 
@@ -104,7 +129,7 @@ void BasicConstraintsBuilder::processCFG(FrameWork *fw, CFG *cfg) {
  * @param props	Configuration properties.
  */
 BasicConstraintsBuilder::BasicConstraintsBuilder(const PropList& props)
-: CFGProcessor("otawa::BasicConstraintsBuilder", Version(1, 0, 0), props) {
+: BBProcessor("otawa::BasicConstraintsBuilder", Version(1, 0, 0), props) {
 }
 
 } } //otawa::ipet

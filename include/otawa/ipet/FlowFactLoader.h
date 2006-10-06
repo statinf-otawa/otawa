@@ -9,6 +9,7 @@
 
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/util/FlowFactLoader.h>
+#include <otawa/cfg/CFGCollector.h>
 
 namespace otawa { 
 
@@ -20,8 +21,8 @@ namespace ilp {
 namespace ipet {
 	
 // FlowFactLoader class
-class FlowFactLoader: public CFGProcessor, private otawa::FlowFactLoader {
-	CFG *cfg;	
+class FlowFactLoader: public Processor, private otawa::FlowFactLoader {
+	CFGCollection *cfgs;	
 	otawa::ilp::System *system;
 	bool dom_done;
 protected:
@@ -32,7 +33,7 @@ public:
 	FlowFactLoader(const PropList& props = PropList::EMPTY);
 
 	// CFGProcessor overload
-	virtual void processCFG(FrameWork *fw, CFG *cfg);
+	virtual void processFrameWork(FrameWork *fw);
 };
 
 

@@ -27,20 +27,21 @@ namespace otawa { namespace ipet {
  * @param props		Configuration properties.
  */
 WCETComputation::WCETComputation(const PropList& props)
-: CFGProcessor("otawa::WCETComputation", Version(1, 0, 0), props) {
+: Processor("otawa::WCETComputation", Version(1, 0, 0), props) {
 }
 
 
 /**
  */
-void WCETComputation::processCFG(FrameWork *fw, CFG *cfg) {
-	System *system = cfg->use<System *>(SYSTEM);
+void WCETComputation::processFrameWork(FrameWork *fw) {
+	CFG *cfg = ENTRY_CFG(fw);
+	System *system = SYSTEM(cfg);
 	if(!system)
 		throw ProcessorException(*this, "no ILP system defined in this CFG");
 	int wcet = -1;
 	if(system->solve())
 		wcet = (int)system->value();
-	cfg->set<int>(WCET, wcet);
+	WCET(cfg) = wcet;
 }
 
 } } // otawa::ipet

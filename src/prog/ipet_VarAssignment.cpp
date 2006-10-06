@@ -24,6 +24,14 @@ namespace otawa { namespace ipet {
 
 
 /**
+ */
+void VarAssignment::processFrameWork(FrameWork *fw) {
+	_recursive = RECURSIVE(fw);
+	BBProcessor::processFrameWork(fw);
+}
+
+
+/**
  * Perform the actual work on the given basic block.
  * @param bb	Basic block to process.
  */
@@ -33,7 +41,7 @@ void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	if(!VAR(bb)) {
 		String name = "";
 		if(_explicit)
-			name = makeNodeVar(bb);
+			name = makeNodeVar(bb, cfg);
 		VAR(bb) = new Var(name);
 	}
 	
@@ -42,7 +50,7 @@ void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 		if(!VAR(edge)) {
 			String name = "";
 			if(_explicit)
-				name = makeEdgeVar(edge);
+				name = makeEdgeVar(edge, cfg);
 			VAR(edge) = new Var(name);
 		}
 	}
@@ -63,7 +71,6 @@ VarAssignment::VarAssignment(const PropList& props)
  */
 void VarAssignment::init(const PropList& props) {
 	_explicit = EXPLICIT(props);
-	_recursive = RECURSIVE(props);
 }
 
 
@@ -78,15 +85,19 @@ void VarAssignment::configure(PropList& props) {
 /**
  * Build a node variable name.
  * @param bb	Basic block to build the variable name for.
+ * @param cfg	Owner CFG.
  * @return		Basic block variable name.
  */
-String VarAssignment::makeNodeVar(BasicBlock *bb) {
+String VarAssignment::makeNodeVar(BasicBlock *bb, CFG *cfg) {
 	assert(bb);
 	StringBuffer buf;
 	buf << "x";
 	int num = bb->number();
-	if(num >= 0)
+	if(num >= 0) {
 		buf << num;
+		if(_recursive)
+			buf << "_" << cfg->label();
+	}
 	else
 		buf << bb->address();
 	return buf.toString();
@@ -96,9 +107,10 @@ String VarAssignment::makeNodeVar(BasicBlock *bb) {
 /**
  * Build an edge variable name.
  * @param edge	Basic block to build the variable name for.
+ * @param cfg	Owner CFG.
  * @return		Basic block variable name.
  */
-String VarAssignment::makeEdgeVar(Edge *edge) {
+String VarAssignment::makeEdgeVar(Edge *edge, CFG *cfg) {
 	assert(edge);
 	StringBuffer buf;
 	buf << "e";
@@ -113,12 +125,12 @@ String VarAssignment::makeEdgeVar(Edge *edge) {
 	
 	// Write target
 	if(edge->kind() == Edge::CALL) {
+		if(_recursive)
+			buf << "_" << cfg->label() << "___";
 		if(!edge->calledCFG())
 			buf << "unknown";
-		else if(edge->calledCFG()->label())
-			buf << edge->calledCFG()->label();
 		else
-			buf << edge->calledCFG()->address();
+			buf << edge->calledCFG()->label();
 	}
 	else {
 		num = edge->target()->number();
@@ -126,6 +138,8 @@ String VarAssignment::makeEdgeVar(Edge *edge) {
 			buf << num;
 		else
 			buf << edge->target()->address();
+		if(_recursive)
+			buf << "_" << cfg->label();
 	}
 	
 	// Return result

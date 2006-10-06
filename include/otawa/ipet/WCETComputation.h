@@ -12,12 +12,12 @@
 namespace otawa { namespace ipet {
 
 // WCETComputation class
-class WCETComputation: public CFGProcessor {
+class WCETComputation: public Processor {
 public:
 	WCETComputation(const PropList& props = PropList::EMPTY);
 
 	// CFGProcessor overload
-	virtual void processCFG(FrameWork *fw, CFG *cfg);
+	virtual void processFrameWork(FrameWork *fw);
 };
 
 } } // otawa::ipet

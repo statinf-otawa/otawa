@@ -8,18 +8,18 @@
 #define OTAWA_IPET_BASICOBJECTFUNCTIONBUILDER_H
 
 #include <assert.h>
-#include <otawa/proc/CFGProcessor.h>
+#include <otawa/proc/BBProcessor.h>
 
 namespace otawa { namespace ipet {
 
 
 // BasicObjectFunctionBuilder class
-class BasicObjectFunctionBuilder: public CFGProcessor {
+class BasicObjectFunctionBuilder: public BBProcessor {
 public:
 	BasicObjectFunctionBuilder(const PropList& props = PropList::EMPTY);
 
-	// CFGProcessor overload
-	virtual void processCFG(FrameWork *fw, CFG *cfg);
+	// BBProcessor overload
+	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
 };
 
 } } // otawa::ipet
