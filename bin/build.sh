@@ -220,7 +220,7 @@ function mod_elm {
 	INSTALL=autotool
 	CLEAN=autotool
 	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
-	MAKE_FLAGS=""
+	MAKE_FLAGS="-j"
 	AUTOCONF_FLAGS=""
 }
 
@@ -327,7 +327,7 @@ function help {
 	echo "	--release=NUMBER: release of the distribution."
 	echo "	--proxy=ADDRESS:PORT: configure a proxy use."
 	echo "	--update: update the current installation."
-	echo "  --with-systemc: SystemC location."
+	echo "	--with-systemc: SystemC location."
 	echo "MODULES: elm gliss ppc lp_solve frontc otawa"
 }
 
