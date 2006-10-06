@@ -12,15 +12,23 @@
 
 namespace otawa {
 
-// CFG Queue Marker
-static GenericIdentifier<CFG *> QUEUE_NODE("otawa.ipet.queue_node");
-
-
 /**
  * @class CFGProcessor
  * This is a specialization of the processor class dedicated to CFG
  * processing. The @ref Processor::processFrameWork() method just take each
  * CFG of the framework and apply the processor on.
+ * 
+ * It accepts in configuration the following properties:
+ * @li @ref ENTRY_CFG: the entry CFG of the task to work with,
+ * @li @ref RECURSIVE: to go down recursively in the task CFG.
+ * 
+ * If statistics are required, it provides:
+ * @li @ref PROCESSED_CFG: records the count of processed CFG.
+ *
+ * Finally, it puts on the framework the following properties:
+ * @li @ref INVOLVED_CFGS: collection of CFG used by the current task.
+ *
+ * @note This processor automatically call @ref CFGCollector.
  */
 
 
