@@ -1,4 +1,4 @@
-includeotawadisplaydir=$(includedir)/otawa/cfg
+includeotawadisplaydir=$(includedir)/otawa/display
 includeotawadisplay_HEADERS = \
 	CFGDrawer.h \
 	Driver.h \
