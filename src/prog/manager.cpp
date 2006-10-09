@@ -168,7 +168,7 @@ FrameWork *Manager::load(const elm::system::Path&  path, PropList& props) {
 		buf << "elf_" << infos.machine;
 		gel_close(file);
 		String name = buf.toString();
-		cout << "Try to load " << name << " from " << LOADER_PATHS << io::endl;
+/*		cout << "Try to load " << name << " from " << LOADER_PATHS << io::endl; */
 		loader = findLoader(name.toCString());
 	}
 	
