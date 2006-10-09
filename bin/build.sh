@@ -6,6 +6,10 @@ if [ "$root" == "" ]; then
 	root=`dirname $0`
 fi
 
+if [ "$testlist" == "" ]; then
+  testlist="ct delta";
+fi
+
 # Initial configuration
 tool=OBuild
 version=0.4
@@ -24,6 +28,7 @@ checked=
 build_script=test.sh
 making_script=
 plugin_param=
+testdir=deployed_tests
 
 # functions
 function display {
@@ -328,6 +333,8 @@ function help {
 	echo "	--proxy=ADDRESS:PORT: configure a proxy use."
 	echo "	--update: update the current installation."
 	echo "	--with-systemc: SystemC location."
+	echo "	--check: download, make, install, and test."
+	echo "	--checkonly: test only."
 	echo "MODULES: elm gliss ppc lp_solve frontc otawa"
 }
 
@@ -349,6 +356,12 @@ for arg in $*; do
 		;;
 	--download)
 		action=download
+		;;
+	--check)
+		action=check
+		;;
+	--checkonly)
+		action=checkonly
 		;;
 	--dist)
 		action=dist
@@ -483,7 +496,7 @@ function process {
 	
 	# Requires setup and build ?
 	case "$action" in
-	update|make|install|dev)
+	update|make|install|dev|check)
 		if [ -n "$SETUP" ]; then
 			cd $1
 			setup_$SETUP
@@ -499,7 +512,7 @@ function process {
 	
 	# Perform install
 	case "$action" in
-	install)
+	install|check)
 		if [ -n "$INSTALL" ]; then
 			cd $1
 			install_$INSTALL
@@ -507,6 +520,7 @@ function process {
 		fi
 		;;
 	esac
+	
 	
 	# Perform distribution
 	case "$action" in
@@ -532,6 +546,43 @@ function process {
 
 }
 
+function do_tst {
+
+	say "Processing test: $1"
+	if [ ! -d $basedir/$testdir/$1 ]; then
+		mkdir -p $basedir/$testdir/$1
+	fi
+	cp $basedir/otawa/test/$1/*.cpp $basedir/otawa/test/$1/*.h $basedir/$testdir/$1/ 2>/dev/null
+	objects="`ls $basedir/otawa/test/$1/*.cpp |while read A ; do basename $A |sed 's/\.cpp$/.o/g' ; done `"
+	objects="`echo $objects`"
+	cat <<EOF > $basedir/$testdir/$1/Makefile
+CXXFLAGS=\$(shell otawa-config --cflags gensim display ppc lp_solve) -DDATA_DIR="\"\$(shell otawa-config --data gensim display ppc lp_solve)\""
+LDLIBS=\$(shell otawa-config --libs gensim display ppc lp_solve)
+LDFLAGS=-dlopen force
+CXX=libtool --mode=compile --tag=CXX g++
+CC=libtool --mode=link --tag=CXX g++
+all: test_$1
+test_$1: $objects
+clean:
+	rm -rf *.o test_$1 *~ core *.lo .libs
+EOF
+	success
+	
+	say "Building test: $1"
+	
+	(
+		cd $basedir/$testdir/$1
+		PATH=$PATH:$prefix/bin/ make 
+	) || error "Test build failed."
+	success
+	
+	say "Checking for: $1"
+	cd $basedir/otawa/test/$1/
+	../../bin/check.sh --benchdir $basedir/snu-rt/ $basedir/$testdir/$1/test_$1 || error "Test failed."
+	success
+	
+}
+
 
 # Process modules
 if [ "$action" == dist ]; then
@@ -548,7 +599,21 @@ for mod in $modules; do
 	process $mod
 done
 
+
+# Perform test
+case "$action" in
+checkonly|check)
+	echo "Doing tests..."
+	if [ ! -d $basedir/snu-rt ]; then
+		echo "Downloading the benchs"
+		WGET_ADDRESS="http://www.irit.fr/recherches/ARCHI/MARCH/frontc/" WGET_PACKAGE="snu-rt.tgz" mod="snu-rt" download_wget
+	fi
+	for tst in $testlist; do
+		do_tst $tst
+	done
+esac
+
+
 if [ "$action" == dist ]; then
 	echo "Not implemented yet."
 fi
-
