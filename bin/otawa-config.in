@@ -23,16 +23,22 @@ while test "$1" != ""; do
 		data=ok
 		option=ok
 		;;
-	gensim)
+	gensim|+gensim)
 		libs_text="@prefix@/lib/libogensim.la $libs_text"
 		;;
-	display)
+	display|+display)
 		libs_text="@prefix@/lib/libodisplay.la $libs_text"
 		;;
 	ppc)
-		libs_text="-uppc_plugin @prefix@/lib/otawa/loader/ppc.la $libs_text"
+		@HAS_PLUGIN_FALSE@ libs_text="-uppc_plugin @prefix@/lib/otawa/loader/ppc.la $libs_text"
 		;;
 	lp_solve)
+		@HAS_PLUGIN_FALSE@ libs_text="-ulp_solve_plugin @prefix@/lib/otawa/ilp/lp_solve.la $libs_text"
+		;;
+	+ppc)
+		libs_text="-uppc_plugin @prefix@/lib/otawa/loader/ppc.la $libs_text"
+		;;
+	+lp_solve)
 		libs_text="-ulp_solve_plugin @prefix@/lib/otawa/ilp/lp_solve.la $libs_text"
 		;;
 	--version)
@@ -49,10 +55,11 @@ done
 
 # Check options
 if test "$option" == ""; then
-	echo "SYNTAX: otawa-config [--cflags] [--libs] [--data] modules..."
+	echo "SYNTAX: otawa-config [--cflags] [--libs] [--data] [+]modules..."
 	echo "	--cflags: display required compilation flags."
 	echo "	--libs: display required libs."
 	echo "	--data: display path to package data."
+	echo "  +module: Link module statically, even if we have plugins."
 	echo "Modules may be:"
 	echo "	gensim: use of the generic simulator."
 	echo "	display: use of the graph displayer."
