@@ -6,7 +6,6 @@
  */
 #ifndef OTAWA_UTIL_GEN_GRAPH_H
 #define OTAWA_UTIL_GEN_GRAPH_H
-
 #include <elm/Iterator.h>
 #include <otawa/util/Graph.h>
 
@@ -46,8 +45,8 @@ public:
 		virtual ~Edge(void);
 	public:
 		inline Edge(Node *source, Node *target);
-		inline Node *source(void) const;
-		inline Node *target(void) const;
+		inline N *source(void) const;
+		inline N *target(void) const;
 	};
 
 	// Methods
@@ -191,13 +190,13 @@ inline GenGraph<N, E>::Edge::Edge(Node *source, Node *target)
 }
 
 template <class N, class E>
-inline typename GenGraph<N, E>::Node *GenGraph<N, E>::Edge::source(void) const {
-	return (typename GenGraph<N, E>::Node *)graph::Edge::source();
+inline N *GenGraph<N, E>::Edge::source(void) const {
+	return (N *)graph::Edge::source();
 }
 
 template <class N, class E>
-inline typename GenGraph<N, E>::Node *GenGraph<N, E>::Edge::target(void) const {
-	return (typename GenGraph<N, E>::Node *)graph::Edge::target();
+inline N *GenGraph<N, E>::Edge::target(void) const {
+	return (N *)graph::Edge::target();
 }
 
 
