@@ -21,7 +21,7 @@
 #	define CHECK(c)	c
 #endif
 
-//#define DO_LOG
+#define DO_LOG
 #if defined(NDEBUG) || !defined(DO_LOG)
 #	define LOG(c)
 #else
@@ -36,8 +36,11 @@ using namespace elm::genstruct;
 
 namespace otawa {
 
+GenericIdentifier<bool> START("otawa.exegraph.start", false);
 
+//START(inst) = true;
 
+//if(START(inst))
 
 
 
@@ -244,18 +247,18 @@ void ExecutionGraph::latestTimes(elm::io::Output& out_stream) {
 	
 	entry_node->setMaxReadyTime(0);
 	for(PreorderIterator node(this, this->entry_node); node; node++) {
-		if ( (node->part() == ExecutionNode::PROLOGUE) 
-			|| (node->part() == ExecutionNode::BEFORE_PROLOGUE) ) {
+		if ( (node->part() == PROLOGUE) 
+			|| (node->part() == BEFORE_PROLOGUE) ) {
 			if(! node->isShaded() ) {
 				prologueLatestTimes(node, out_stream);
 			}
 		
 		}
-		if (node->part() == ExecutionNode::BODY) {
+		if (node->part() == BODY) {
 			bodyLatestTimes(node, out_stream);
 		}
 		
-		if (node->part() == ExecutionNode::EPILOGUE) {
+		if (node->part() == EPILOGUE) {
 			// epilogueLatestTimes(((ExecutionNode *) *node), out_stream);
 			bodyLatestTimes(node, out_stream);
 		}
@@ -281,7 +284,7 @@ void ExecutionGraph::earliestTimes(elm::io::Output& out_stream) {
 	
 	// foreach v in topologic_order do
 	for(PreorderIterator node(this, this->entry_node); node; node++) {
-		if (node->part() <= ExecutionNode::PROLOGUE) {
+		if (node->part() <= PROLOGUE) {
 			node->setMinReadyTime(-INFINITE_TIME);
 			node->setMinStartTime(-INFINITE_TIME);
 			node->setMinFinishTime(-INFINITE_TIME);
@@ -412,21 +415,12 @@ void ExecutionGraph::shadePreds(ExecutionNode *node, elm::io::Output& out_stream
 	
 }
 
+
 // ---------- shadeNodes
 
 void ExecutionGraph::shadeNodes(elm::io::Output& out_stream) {
 		
-	ExecutionNode *first_body_node;
-	GraphNodesListInList * inst_node_list = (GraphNodesListInList *) this->instructionsNodesLists()->first();
-	bool found = false;
-	while (!found && !inst_node_list->atEnd()) {
-		first_body_node = ((GraphNodeInList *) inst_node_list->list()->first())->executionNode();
-		if (first_body_node->part() == ExecutionNode::BODY) {
-			found = true;		
-		}
-		else
-			inst_node_list = (GraphNodesListInList *) inst_node_list->next();
-	}
+	ExecutionNode *first_body_node = first_node[BODY];
 	first_body_node->setMinReadyTime(0);
 	first_body_node->setMinStartTime(0);	
 	first_body_node->setMinFinishTime(first_body_node->minLatency());
@@ -461,11 +455,11 @@ PathList * findPaths(ExecutionNode * source, ExecutionNode * target, elm::io::Ou
 // ---------- minDelta
 
 int ExecutionGraph::minDelta(elm::io::Output& out_stream) {
-	if (!first_node[ExecutionNode::BODY]->hasPred())
+	if (!first_node[BODY]->hasPred())
 		return(0);
 	int min_all = INFINITE_TIME;
-	for (Predecessor pred(first_node[ExecutionNode::BODY]) ; pred ; pred++) {
-		PathList *path_list = findPaths(pred, last_node[ExecutionNode::PROLOGUE], out_stream);
+	for (Predecessor pred(first_node[BODY]) ; pred ; pred++) {
+		PathList *path_list = findPaths(pred, last_node[PROLOGUE], out_stream);
 		int max = 0;
 		for(PathList::PathIterator path(path_list); path; path++) {
 			int length = 0;
@@ -478,34 +472,18 @@ int ExecutionGraph::minDelta(elm::io::Output& out_stream) {
 		if (max < min_all)
 			min_all = max;
 	}
-	return(min_all + last_node[ExecutionNode::PROLOGUE]->pipelineStage()->minLatency());
+	return(min_all + last_node[PROLOGUE]->pipelineStage()->minLatency());
 }
+
+
 
 // ---------- build
 
 void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor, 
-					elm::genstruct::DLList<Inst *> &prologue, 
-					elm::genstruct::DLList<Inst *> &body, 
-					elm::genstruct::DLList<Inst *> &epilogue) {
-
-	BasicBlock *bb ;
-	bool first_node, first_fu_node;
-	ExecutionNode *node, *previous_node, *first_stage_node, *last_stage_node, *producing_node;
-	ExecutionEdge *edge;
-	int inst_index, first_inst_index, stage_index;
-	int counter;
-	GraphNodesListInList *node_list_in_list, *stage_node_list, *inst_node_list,  *fu_node_list;
-	GraphNodeInList *node_in_list, *previous_node_in_list, *previous_cycle_node_in_list, *other_node_in_list;
-	bool found;
-	PipelineStage::FunctionalUnit *fu;
-	instruction_category_t category = IALU; //------------------------to be fixed
-	Queue *queue;
-	Platform *pf = fw->platform();
-	PipelineStage *stage;
-	Inst *inst;
-	ExecutionNode *unknown_inst;
-	
+					elm::genstruct::DLList<ExecutionGraphInstruction *> &sequence) {
+	this->_sequence = &sequence;
 	// Init rename tables
+	Platform *pf = fw->platform();
 	AllocatedTable<rename_table_t> rename_tables(pf->banks().count());
 	int reg_bank_count = pf->banks().count();
 	for(int i = 0; i <reg_bank_count ; i++) {
@@ -515,194 +493,132 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 			rename_tables[i].table->set(j,NULL);
 	}
 
-	// compute the index of the first instruction (the one before the prologue)
-	// The index of the first body instruction is 1.
-	first_inst_index = 1;
-	for (elm::genstruct::DLList<Inst *>::Iterator ins(prologue) ; ins ; ins++) {
-		first_inst_index--;
+	// clear node queues for instructions and for pipeline stages
+	for (Microprocessor::PipelineIterator stage(microprocessor) ; stage ; stage++) {
+		stage->deleteNodes();
+		if (stage->usesFunctionalUnits()) {
+			for (int i=0 ; i<INST_CATEGORY_NUMBER ; i++) {
+				PipelineStage::FunctionalUnit * fu = stage->functionalUnit(i);
+				for (PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu) ; fu_stage ; fu_stage++) {
+					fu_stage->deleteNodes();
+				}
+			}
+		}
 	}
-	if (!prologue.isEmpty())
-		first_inst_index--;
+	for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++) {
+		inst->deleteNodes();
+	}
 	
-	// create lists of nodes: one list for each pipeline stage
-	GraphNodesListInList *last_stage_list = NULL;
-	for (Microprocessor::PipelineIterator st(microprocessor) ; st ; st++) {
-		node_list_in_list = new GraphNodesListInList(st);
-		stagesNodesLists()->addLast(node_list_in_list);
-		last_stage_list = node_list_in_list;
-	}	
-	
-	// create lists of nodes: one list for each instruction
-	inst_index = first_inst_index;  	
-	if (!prologue.isEmpty()){
-		node_list_in_list = new GraphNodesListInList(NULL, inst_index++, ExecutionNode::BEFORE_PROLOGUE);
-		instructionsNodesLists()->addLast(node_list_in_list);
-	}
-	for(elm::genstruct::DLList<Inst *>::Iterator ins(prologue); ins; ins++) {
-		node_list_in_list = new GraphNodesListInList(ins, inst_index++, ExecutionNode::PROLOGUE);
-		instructionsNodesLists()->addLast(node_list_in_list);
-	}
-	for(elm::genstruct::DLList<Inst *>::Iterator ins(body); ins; ins++) {
-		node_list_in_list = new GraphNodesListInList(ins, inst_index++, ExecutionNode::BODY);
-		instructionsNodesLists()->addLast(node_list_in_list);
-	}
-	for(elm::genstruct::DLList<Inst *>::Iterator ins(epilogue); ins; ins++) {
-		node_list_in_list = new GraphNodesListInList(ins, inst_index++, ExecutionNode::EPILOGUE);
-		instructionsNodesLists()->addLast(node_list_in_list);
-	}
-		
-
 	// build nodes
 	// consider every pipeline stage
-	stage_node_list = (GraphNodesListInList *) stagesNodesLists()->first();
-	while (! stage_node_list->atEnd()) {
-		stage = stage_node_list->stage();
+	code_part_t current_code_part = BEFORE_PROLOGUE;
+	for (Microprocessor::PipelineIterator stage(microprocessor) ; stage ; stage++) {
 		// consider every instruction
-		inst_index = first_inst_index;  	
-		inst_node_list = (GraphNodesListInList *) instructionsNodesLists()->first();
-		// the instruction before the prologue (if any) is unknown => it deserves a specific treatment
-		if (inst_node_list->part() == ExecutionNode::BEFORE_PROLOGUE) {
-			node = new ExecutionNode(this, (PipelineStage *)stage,
-									(Inst *)inst, inst_index, inst_node_list->part());
-			if (stage->usesFunctionalUnits()) {
-				// the category of this instruction is unknown 
-				//      => assume execution with minimum/maximum latency among all functional units
-				int min_latency = INFINITE_TIME, max_latency = 0;
-				for (int cat=1 ; cat<INST_CATEGORY_NUMBER ; cat++) {
-					fu = stage->functionalUnit(cat);
-					assert(fu);
-					int min_lat = 0, max_lat = 0;
-					for(PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu); fu_stage; fu_stage++) {
-						min_lat += ((PipelineStage *) *fu_stage)->minLatency();
-						max_lat += ((PipelineStage *) *fu_stage)->maxLatency();
+		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++)  {
+			// the instruction before the prologue (if any) is unknown => it deserves a specific treatment
+			if (inst->codePart() == BEFORE_PROLOGUE) {
+				ExecutionNode * node = new ExecutionNode(this, (PipelineStage *)stage,
+									inst->inst(), inst->index(), inst->codePart());
+				if (stage->usesFunctionalUnits()) {
+					// the category of this instruction is unknown 
+					//      => assume execution with minimum/maximum latency among all functional units
+					int min_latency = INFINITE_TIME, max_latency = 0;
+					for (int cat=1 ; cat<INST_CATEGORY_NUMBER ; cat++) {
+						PipelineStage::FunctionalUnit *fu = stage->functionalUnit(cat);
+						assert(fu);
+						int min_lat = 0, max_lat = 0;
+						for(PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu); fu_stage; fu_stage++) {
+							min_lat += ((PipelineStage *) *fu_stage)->minLatency();
+							max_lat += ((PipelineStage *) *fu_stage)->maxLatency();
+						}
+						if (min_lat < min_latency)
+							min_latency = min_lat;
+						if (max_lat < max_latency)
+							max_latency = max_lat;
 					}
-					if (min_lat < min_latency)
-						min_latency = min_lat;
-					if (max_lat < max_latency)
-						max_latency = max_lat;
+					node->setMinLatency(min_latency);
+					node->setMaxLatency(max_latency);
 				}
-				node->setMinLatency(min_latency);
-				node->setMaxLatency(max_latency);
-			}
-			node_in_list = new GraphNodeInList(node);
-			stage_node_list->list()->addLast(node_in_list);	
-			node_in_list = new GraphNodeInList(node);
-			inst_node_list->list()->addLast(node_in_list);
+				inst->addNode(node);
+				stage->addNode(node);
 			
-			if (microprocessor->operandProducingStage() == stage) {
-				// this instruction is considered as producing every register
-				node->setProducesOperands(true);
-				for (int b=0 ; b<reg_bank_count ; b++) {
-					for (int r=0 ; r < rename_tables[b].reg_bank ->count() ; r++) {
-						rename_tables[b].table->set(r,node);
-					}		
+				if (microprocessor->operandProducingStage() == stage) {
+					// this instruction is considered as producing every register
+					//node->setProducesOperands(true);
+					for (int b=0 ; b<reg_bank_count ; b++) {
+						for (int r=0 ; r < rename_tables[b].reg_bank ->count() ; r++) {
+							rename_tables[b].table->set(r,node);
+						}		
+					}
 				}
-			}		
-			inst_node_list = (GraphNodesListInList *) inst_node_list->next();
-			inst_index++;
-		}
-		// consider the other instructions (from the prologue)
-		while ( ! inst_node_list->atEnd() ) {
-			inst = inst_node_list->inst();
-			if (!stage->usesFunctionalUnits()) {
-				node = new ExecutionNode(this, (PipelineStage *)stage, (Inst *)inst, 
-										inst_index, inst_node_list->part());					
-				node_in_list = new GraphNodeInList(node);
-				stage_node_list->list()->addLast(node_in_list);	
-				node_in_list = new GraphNodeInList(node);
-				inst_node_list->list()->addLast(node_in_list);
-				first_stage_node = node;
-				last_stage_node = node;
+				setFirstNode(BEFORE_PROLOGUE,inst->firstNode());
+				setLastNode(current_code_part, inst->lastNode());
 			}
 			else {
-				fu = stage->functionalUnit(instCategory(inst));
-				first_fu_node = true;
-				for(PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu); fu_stage; fu_stage++) {
-					node = new ExecutionNode(this, (PipelineStage *)fu_stage,
-											(Inst *)inst,inst_index, inst_node_list->part());
-					if (first_fu_node) {
-						node_in_list = new GraphNodeInList(node);
-						stage_node_list->list()->addLast(node_in_list);	
-						first_fu_node = false;
-						first_stage_node = node;
-					}
-					node_in_list = new GraphNodeInList(node);
-					inst_node_list->list()->addLast(node_in_list);
-					last_stage_node = node;
+				if (!stage->usesFunctionalUnits()) {
+					ExecutionNode * node = new ExecutionNode(this, (PipelineStage *)stage, inst->inst(), 
+										inst->index(), inst->codePart());
+					inst->addNode(node);
+					stage->addNode(node);	
+					if (microprocessor->operandReadingStage() == stage) {
+						node->setNeedsOperands(true);
+					}				
+					if (microprocessor->operandProducingStage() == stage) {
+						node->setProducesOperands(true);
+					}			
 				}
-			}
-			
-			if (microprocessor->operandReadingStage() == stage) {
-				first_stage_node->setNeedsOperands(true);
-			}				
-			if (microprocessor->operandProducingStage() == stage) {
-				last_stage_node->setProducesOperands(true);
-			}
-			
-			inst_node_list = (GraphNodesListInList *) inst_node_list->next();
-			inst_index++;
-		}	
-		stage_node_list = (GraphNodesListInList *)stage_node_list->next();
-	}
-
-		
-	// search for the entry node (first inst, first stage) for each code part
-	stage_node_list = (GraphNodesListInList *) stagesNodesLists()->first();
-	assert(stage_node_list);
-	previous_node_in_list = NULL;
-	node_in_list = (GraphNodeInList *) stage_node_list->list()->first();
-	setEntryNode(node_in_list->executionNode());
-	while (!node_in_list->atEnd()) {
-		if ((previous_node_in_list == NULL)
-				|| (node_in_list->executionNode()->part() != previous_node_in_list->executionNode()->part())) {
-			setFirstNode(node_in_list->executionNode()->part(), node_in_list->executionNode());
+				else {
+					PipelineStage::FunctionalUnit *fu = stage->functionalUnit(instCategory(inst->inst()));
+					bool first_fu_node = true;
+					ExecutionNode * node;
+					for(PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu); fu_stage; fu_stage++) {
+						node = new ExecutionNode(this, (PipelineStage *)fu_stage,
+											inst->inst(), inst->index(), inst->codePart());
+						inst->addNode(node);
+						fu_stage->addNode(node);
+						if (first_fu_node) {
+							stage->addNode(node);
+							if (microprocessor->operandReadingStage() == stage) {
+								node->setNeedsOperands(true);
+							}	
+							first_fu_node = false;
+						}
+					}
+					if (microprocessor->operandProducingStage() == stage) {
+						node->setProducesOperands(true);
+					}
+				}
+				if (inst->codePart() != current_code_part) {
+					current_code_part = inst->codePart();
+					setFirstNode(current_code_part,inst->firstNode());	 
+				}
+				setLastNode(current_code_part, inst->lastNode());
+			}	
 		}
-		previous_node_in_list = node_in_list;
-		node_in_list = (GraphNodeInList *)node_in_list->next();
 	}
-		
-	// search for the last node (last inst, last stage) for each code part
-	stage_node_list = (GraphNodesListInList *) stagesNodesLists()->last();
-	assert(stage_node_list);
-	previous_node_in_list = NULL;
-	node_in_list = (GraphNodeInList *) stage_node_list->list()->first();
-	while (!node_in_list->atEnd()) {
-		if ((previous_node_in_list != NULL)
-				&& (node_in_list->executionNode()->part() != previous_node_in_list->executionNode()->part())) {
-			setLastNode(previous_node_in_list->executionNode()->part(), 
-							previous_node_in_list->executionNode());
-		}
-		previous_node_in_list = node_in_list;
-		node_in_list = (GraphNodeInList *)node_in_list->next();
-	}
-	setLastNode(previous_node_in_list->executionNode()->part(), previous_node_in_list->executionNode());
 	
+	setEntryNode(sequence.first()->firstNode());
 	
 	// build edges for pipeline order and data dependencies
-	inst_node_list = (GraphNodesListInList *) instructionsNodesLists()->first();
-	while (!inst_node_list->atEnd()) {
-		node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
-		previous_node_in_list = NULL;
-		while (!node_in_list->atEnd()) {
-			if (previous_node_in_list != NULL) {
+	for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++)  {
+		ExecutionNode * previous = NULL;
+		for (ExecutionGraphInstruction::ExecutionNodeIterator node(*inst) ; node ; node++) {
+			if (previous != NULL) {
 				// edge between consecutive pipeline stages
-				edge = new ExecutionEdge(previous_node_in_list->executionNode(), 
-										node_in_list->executionNode(), 
-										ExecutionEdge::SOLID);
+				ExecutionEdge *edge = new ExecutionEdge(previous, node, ExecutionEdge::SOLID);
 			}
-			if ((node_in_list->executionNode()->needsOperands()) 
-				&& (node_in_list->executionNode()->instIndex() != first_inst_index) ) {
+			previous = node;
+			if (node->needsOperands()) {
 				// check for data dependencies
-				const elm::genstruct::Table<hard::Register *>& reads = 
-						node_in_list->executionNode()->instruction()->readRegs();
+				const elm::genstruct::Table<hard::Register *>& reads = node->instruction()->readRegs();
 				for(int i = 0; i < reads.count(); i++) {
 					for (int b=0 ; b<reg_bank_count ; b++) {
 						if (rename_tables[b].reg_bank == reads[i]->bank()) {
-							producing_node = rename_tables[b].table->get(reads[i]->number());
+							ExecutionNode *producing_node = rename_tables[b].table->get(reads[i]->number());
 							if (producing_node != NULL) {
 								// check whether there is already an edge between the two nodes
 								bool exists = false;
-								for (Predecessor pred(node_in_list->executionNode()) ; pred ; pred++) {
+								for (Predecessor pred(node) ; pred ; pred++) {
 									if (pred == producing_node) {
 										exists = true;
 										break;
@@ -710,8 +626,7 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 								}
 								if (!exists)
 									// add an edge for data dependency
-									edge = new ExecutionEdge(producing_node, node_in_list->executionNode(), 
-															ExecutionEdge::SOLID);
+									ExecutionEdge *edge = new ExecutionEdge(producing_node, node, ExecutionEdge::SOLID);
 							}
 						}
 					}
@@ -719,114 +634,101 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 			}
 			
 			// note that this instruction produces some registers
-			if  ((node_in_list->executionNode()->producesOperands()) 
-				&& (node_in_list->executionNode()->instIndex() != first_inst_index) ) {
+			if  (node->producesOperands()) {
 				const elm::genstruct::Table<hard::Register *>& writes = 
-					node_in_list->executionNode()->instruction()->writtenRegs();
+					node->instruction()->writtenRegs();
 				for(int i = 0; i < writes.count(); i++) {
 					for (int b=0 ; b<reg_bank_count ; b++) {
 						if (rename_tables[b].reg_bank == writes[i]->bank()) {
-							rename_tables[b].table->set(writes[i]->number(),node_in_list->executionNode());
+							rename_tables[b].table->set(writes[i]->number(),node);
 						}
 					}
 				}
 			}
-			
-			previous_node_in_list = node_in_list;
-			node_in_list = (GraphNodeInList *)node_in_list->next();			
 		}
-		inst_node_list = (GraphNodesListInList *) inst_node_list->next();
 	}
 	
 	
 	// build edges for program order
-	stage_node_list = (GraphNodesListInList *) stagesNodesLists()->first();
-	while (!stage_node_list->atEnd()) {
-		// build edges for in order execution		
-		if (stage_node_list->stage()->orderPolicy() == PipelineStage::IN_ORDER) {
-			node_in_list = (GraphNodeInList *) stage_node_list->list()->first();
-			previous_node_in_list = NULL;
-			while (!node_in_list->atEnd()) {
-				if (previous_node_in_list != NULL) {				  
-					if (stage_node_list->stage()->width() == 1) {
+	for (Microprocessor::PipelineIterator stage(microprocessor) ; stage ; stage++) {
+		if (stage->orderPolicy() == PipelineStage::IN_ORDER) {
+			ExecutionNode * previous = NULL;
+			if (stage->width() == 1) {
+				// scalar stage
+				for (PipelineStage::ExecutionNodeIterator node(stage) ; node ; node++) {
+					if (previous != NULL) {				  
 						// scalar stage => draw a solid edge
-						edge = new ExecutionEdge(previous_node_in_list->executionNode(), 
-												node_in_list->executionNode(), ExecutionEdge::SOLID);
+						ExecutionEdge * edge = new ExecutionEdge(previous, node, ExecutionEdge::SOLID);
 					}
-					else {	
-						// superscalar => draw a slashed edge between adjacent instructions
-						edge = new ExecutionEdge(previous_node_in_list->executionNode(), 
-												node_in_list->executionNode(), ExecutionEdge::SLASHED);
-						// draw a solid edge to model the stage width 
-						// (search for the node that should start one cycle earlier)
-						counter = 1;
-						previous_cycle_node_in_list = previous_node_in_list;
-						while ((counter < stage_node_list->stage()->width()) 
-								&& (!previous_cycle_node_in_list->atBegin())) {
-							previous_cycle_node_in_list = (GraphNodeInList *) previous_cycle_node_in_list->previous();
-							counter++;
-						}
-						if (!previous_cycle_node_in_list->atBegin()) {
-							edge = new ExecutionEdge(previous_cycle_node_in_list->executionNode(), 
-													node_in_list->executionNode(), ExecutionEdge::SOLID);	
-						}
-					}
+					previous = node;
 				}
-				previous_node_in_list = node_in_list;
-				node_in_list = (GraphNodeInList *)node_in_list->next();
+			}
+			else {
+				elm::genstruct::DLList<ExecutionNode *> previous_nodes;
+				for (PipelineStage::ExecutionNodeIterator node(stage) ; node ; node++) {			
+					// superscalar => draw a slashed edge between adjacent instructions
+					ExecutionEdge *edge = new ExecutionEdge(previous, node, ExecutionEdge::SLASHED);
+					// draw a solid edge to model the stage width 
+					if (previous_nodes.count() == stage->width()) {
+						ExecutionEdge *edge = new ExecutionEdge(previous_nodes.first(), node, ExecutionEdge::SOLID);
+						previous_nodes.removeFirst();	
+					}
+					previous_nodes.addLast(node);
+				}
 			}
 		}
 		
 		// build edges for queues with limited capacity
-		if (stage_node_list->stage()->sourceQueue() != NULL) {	
-			queue = stage_node_list->stage()->sourceQueue();
-			node_in_list = (GraphNodeInList *) stage_node_list->list()->first();
-			while (!node_in_list->atEnd()) {
+		if (stage->sourceQueue() != NULL) {	
+			Queue *queue = stage->sourceQueue();
+			PipelineStage * prod_stage;
+			for (Microprocessor::PipelineIterator st(microprocessor) ; st ; st++) {
+				if (st->destinationQueue() == queue) {
+					prod_stage = st;
+					break;
+				}
+			}
+			for (PipelineStage::ExecutionNodeIterator node(stage) ; node ; node++) {
 				// compute the index of the instruction that cannot be admitted
 				// into the queue until the current instruction leaves it
-				inst_index = node_in_list->executionNode()->instIndex();
-				inst_index += stage_node_list->stage()->sourceQueue()->size();
-				inst_node_list = (GraphNodesListInList *) instructionsNodesLists()->first();
-				while ((!inst_node_list->atEnd()) && (inst_node_list->instIndex() != inst_index) ) {
-					inst_node_list = (GraphNodesListInList *) inst_node_list->next();
-				}
-				if (!inst_node_list->atEnd()) {
-					other_node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
-					// find the node when the instruction enters the queue
-					while ( (!other_node_in_list->atEnd())
-							&& (other_node_in_list->executionNode()->pipelineStage()->destinationQueue() != queue ) ) {
-						other_node_in_list = (GraphNodeInList *) other_node_in_list->next();
-					}
-					if (!other_node_in_list->atEnd()) {
-						// draw an edge between the node that leaves the queue and the node that enters it
-						edge = new ExecutionEdge(node_in_list->executionNode(), other_node_in_list->executionNode(), ExecutionEdge::SOLID);
+				int index = node->instIndex() + stage->sourceQueue()->size();
+				for (PipelineStage::ExecutionNodeIterator waiting_node(prod_stage) ; waiting_node ; waiting_node++) {
+					if (waiting_node->instIndex() == index) {
+						ExecutionEdge *edge = new ExecutionEdge(node, waiting_node, ExecutionEdge::SOLID);
+						break;
 					}
 				}
-				node_in_list = (GraphNodeInList *)node_in_list->next();
 			}
 		}
-		stage_node_list = (GraphNodesListInList *) stage_node_list->next();
 	}
 		
 	// search for contending nodes (i.e. pairs of nodes that use the same pipeline stage)
-	stage_node_list = (GraphNodesListInList *) stagesNodesLists()->first();
-	while (!stage_node_list->atEnd()) {
-		if (stage_node_list->stage()->orderPolicy() == PipelineStage::OUT_OF_ORDER) {
-			node_in_list = (GraphNodeInList *) stage_node_list->list()->first();
-			while (!node_in_list->atEnd()) {
-				other_node_in_list = (GraphNodeInList *) node_in_list->next();
-				while (!other_node_in_list->atEnd()) {
-					if (node_in_list->executionNode()->pipelineStage() == 
-							other_node_in_list->executionNode()->pipelineStage()){
-						node_in_list->executionNode()->addContender(other_node_in_list->executionNode());
-						other_node_in_list->executionNode()->addContender(node_in_list->executionNode());
+	for (Microprocessor::PipelineIterator stage(microprocessor) ; stage ; stage++) {
+		if (stage->orderPolicy() == PipelineStage::OUT_OF_ORDER) {
+			if (!stage->usesFunctionalUnits()) {
+				for (PipelineStage::ExecutionNodeIterator node1(stage) ; node1 ; node1++) {
+					for (PipelineStage::ExecutionNodeIterator node2(stage) ; node2 ; node2++) {
+						if ((ExecutionNode *)node1 != (ExecutionNode *)node2) {
+							node1->addContender(node2);
+							node2->addContender(node1);
+						}
 					}
-					other_node_in_list = (GraphNodeInList *) other_node_in_list->next();
 				}
-				node_in_list = (GraphNodeInList *) node_in_list->next();
+			}
+			else {
+				for (int i=0 ; i<INST_CATEGORY_NUMBER ; i++) {
+					PipelineStage *fu_stage = stage->functionalUnit(i)->firstStage();
+					for (PipelineStage::ExecutionNodeIterator node1(fu_stage) ; node1 ; node1++) {
+						for (PipelineStage::ExecutionNodeIterator node2(fu_stage) ; node2 ; node2++) {
+							if ((ExecutionNode *)node1 != (ExecutionNode *)node2) {
+								node1->addContender(node2);
+								//node2->addContender(node1);
+							}
+						}
+					}
+				}
 			}
 		}
-		stage_node_list = (GraphNodesListInList *) stage_node_list->next();
 	}	
 	
 	// Free rename tables
@@ -837,8 +739,8 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 // ---------- analyze
 
 int ExecutionGraph::analyze(elm::io::Output& out_stream) {
-	GraphNodesListInList *inst_node_list;
-	GraphNodeInList *node_in_list;
+//	GraphNodesListInList *inst_node_list;
+//	GraphNodeInList *node_in_list;
 	int step;
 
 	//cout << "Shade\n";
@@ -854,9 +756,10 @@ int ExecutionGraph::analyze(elm::io::Output& out_stream) {
 		earliestTimes(out_stream);
 		step++;
 	} while ((step < 10) && (!unchangedSeparated(out_stream)));
-	LOG(out_stream << "Max finish time of last body node: " << lastNode(ExecutionNode::BODY)->maxFinishTime() << "\n");
-	return (lastNode(ExecutionNode::BODY)->maxFinishTime() - minDelta(out_stream));
+	LOG(out_stream << "Max finish time of last body node: " << lastNode(BODY)->maxFinishTime() << "\n");
+	return (lastNode(BODY)->maxFinishTime() - minDelta(out_stream));
 }
+
 
 
 /**
@@ -988,7 +891,7 @@ void ExecutionEdge::dump(elm::io::Output& out_stream) {
 
 ExecutionGraph::ExecutionGraph()
 : entry_node(NULL) {
-	for (int i=0 ; i<ExecutionNode::CODE_PARTS_NUMBER ; i++) {
+	for (int i=0 ; i<CODE_PARTS_NUMBER ; i++) {
 		first_node[i] = NULL;
 		last_node[i] = NULL;
 	}
@@ -1058,55 +961,56 @@ bool ExecutionGraph::unchangedSeparated(elm::io::Output& out_stream) {
 // ---------- dumpLight()
 
 void ExecutionGraph::dumpLight(elm::io::Output& out_stream) {
-	out_stream << "\tDumping the execution graph ...\n";
-	out_stream << "\t\tEntry node: ";
-	this->entry_node->dumpLight(out_stream);
-	out_stream << " \n";
-	for (int i=0 ; i<ExecutionNode::CODE_PARTS_NUMBER ; i++) {
-		if (first_node[i] != NULL) {
-			out_stream << "\t\t";
-			first_node[i]->dumpPart(out_stream);
-			out_stream << ": first_node=";
-			first_node[i]->dumpLight(out_stream);
-			out_stream << ", last_node=";
-			last_node[i]->dumpLight(out_stream);
-			out_stream << "\n";
-		}
-	}
+//	out_stream << "\tDumping the execution graph ...\n";
+//	out_stream << "\t\tEntry node: ";
+//	this->entry_node->dumpLight(out_stream);
+//	out_stream << " \n";
+//	for (int i=0 ; i<CODE_PARTS_NUMBER ; i++) {
+//		if (first_node[i] != NULL) {
+//			out_stream << "\t\t";
+//			first_node[i]->dumpPart(out_stream);
+//			out_stream << ": first_node=";
+//			first_node[i]->dumpLight(out_stream);
+//			out_stream << ", last_node=";
+//			last_node[i]->dumpLight(out_stream);
+//			out_stream << "\n";
+//		}
+//	}
 }
 
 
 // ---------- dump()
 
 void ExecutionGraph::dump(elm::io::Output& out_stream) {
-	out_stream << "\tDumping the execution graph ...\n";
-	out_stream << "\t\tEntry node: ";
-	this->entry_node->dumpLight(out_stream);
-	out_stream << " \n";
-	for (int i=0 ; i<ExecutionNode::CODE_PARTS_NUMBER ; i++) {
-		if (first_node[i] != NULL) {
-			out_stream << "\t\t";
-			first_node[i]->dumpPart(out_stream);
-			out_stream << ": first_node=";
-			first_node[i]->dumpLight(out_stream);
-			out_stream << ", last_node=";
-			last_node[i]->dumpLight(out_stream);
-			out_stream << "\n";
-		}
-	}
-	for(NodeIterator node(this); node; node++){
-		node->dump(out_stream);
-		out_stream << "\n";
-	}
-	out_stream << "\n";
-	if (this->entry_node != NULL) {
-		out_stream << "\nTopological order:\n";
-		for(PreorderIterator node(this, this->entry_node); node; node++) {
-			out_stream << node->pipelineStage()->shortName();
-			out_stream << "(I" << node->instIndex() <<") - ";
-		}
-	}
+//	out_stream << "\tDumping the execution graph ...\n";
+//	out_stream << "\t\tEntry node: ";
+//	this->entry_node->dumpLight(out_stream);
+//	out_stream << " \n";
+//	for (int i=0 ; i<CODE_PARTS_NUMBER ; i++) {
+//		if (first_node[i] != NULL) {
+//			out_stream << "\t\t";
+//			first_node[i]->dumpPart(out_stream);
+//			out_stream << ": first_node=";
+//			first_node[i]->dumpLight(out_stream);
+//			out_stream << ", last_node=";
+//			last_node[i]->dumpLight(out_stream);
+//			out_stream << "\n";
+//		}
+//	}
+//	for(NodeIterator node(this); node; node++){
+//		node->dump(out_stream);
+//		out_stream << "\n";
+//	}
+//	out_stream << "\n";
+//	if (this->entry_node != NULL) {
+//		out_stream << "\nTopological order:\n";
+//		for(PreorderIterator node(this, this->entry_node); node; node++) {
+//			out_stream << node->pipelineStage()->shortName();
+//			out_stream << "(I" << node->instIndex() <<") - ";
+//		}
+//	}
 }
+
 
 
 // ---------- dotDump()
@@ -1116,117 +1020,107 @@ void ExecutionGraph::dotDump(elm::io::Output& dotFile, bool dump_times) {
 	GraphNodeInList *node_in_list;
 	
 	dotFile << "digraph G {\n";
-	inst_node_list = (GraphNodesListInList *) instructions_nodes_lists.first();
-	while (!inst_node_list->atEnd()) {
+	for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(*_sequence) ; inst ; inst++) {
 		// dump nodes
-		node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
 		dotFile << "{ rank = same ; ";
-		while (!node_in_list->atEnd()) {
-			dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-			dotFile << "I" << node_in_list->executionNode()->instIndex() << "\" ; ";
-			node_in_list = (GraphNodeInList *) node_in_list->next();
+		for (ExecutionGraphInstruction::ExecutionNodeIterator node(inst) ; node ; node++) {
+			dotFile << "\"" << node->pipelineStage()->shortName();
+			dotFile << "I" << node->instIndex() << "\" ; ";
 		}
 		dotFile << "}\n";
 		// again to specify labels
-		node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
-		while (!node_in_list->atEnd()) { 
+		for (ExecutionGraphInstruction::ExecutionNodeIterator node(inst) ; node ; node++) {
 			if (dump_times) {
-				dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-				dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"";
+				dotFile << "\"" << node->pipelineStage()->shortName();
+				dotFile << "I" << node->instIndex() << "\"";
 				dotFile << " [shape=record, ";
-				if (node_in_list->executionNode()->isShaded())
+				if (node->isShaded())
 					dotFile << "color=red, ";
-				if (node_in_list->executionNode()->part() == ExecutionNode::BODY)
+				if (node->part() == BODY)
 					dotFile << "color=blue, ";
-				dotFile << "label=\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-				dotFile << "(I" << node_in_list->executionNode()->instIndex() << ") ";
+				dotFile << "label=\"" << node->pipelineStage()->shortName();
+				dotFile << "(I" << node->instIndex() << ") ";
 				dotFile << "| { {";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->minReadyTime(),dotFile);
+				node->dumpTime(node->minReadyTime(),dotFile);
 				dotFile  << "|";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->maxReadyTime(),dotFile);
+				node->dumpTime(node->maxReadyTime(),dotFile);
 				dotFile << "} | {";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->minStartTime(),dotFile);
+				node->dumpTime(node->minStartTime(),dotFile);
 				dotFile << "|";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->maxStartTime(),dotFile);
+				node->dumpTime(node->maxStartTime(),dotFile);
 				dotFile << "} | {";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->minFinishTime(),dotFile);
+				node->dumpTime(node->minFinishTime(),dotFile);
 				dotFile << "|";
-				node_in_list->executionNode()->dumpTime(node_in_list->executionNode()->maxFinishTime(),dotFile);
+				node->dumpTime(node->maxFinishTime(),dotFile);
 				dotFile << "} }";		
 				dotFile << "\"] ; \n";
 			}
 			else {
-				if (node_in_list->executionNode()->isShaded()) {
-					dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-					dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"";
-					dotFile << " [color=red] ; \n";
-					
+				if (node->isShaded()) {
+					dotFile << "\"" << node->pipelineStage()->shortName();
+					dotFile << "I" << node->instIndex() << "\"";
+					dotFile << " [color=red] ; \n";	
 				}
 				
 			}
-			node_in_list = (GraphNodeInList *) node_in_list->next();
 		}
 		dotFile << "\n";
-		
-		inst_node_list = (GraphNodesListInList *) inst_node_list->next();
 	}
+	
+						
 	int group_number = 0;
-	inst_node_list = (GraphNodesListInList *) instructions_nodes_lists.first();
-	while (!inst_node_list->atEnd()) {
+	for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(*_sequence) ; inst ; inst++) {	
 		// dump edges
-		node_in_list = (GraphNodeInList *) inst_node_list->list()->first();
-		while (!node_in_list->atEnd()) {
-				for (Successor next(node_in_list->executionNode()) ; next ; next++) {
-					if ( (inst_node_list !=  (GraphNodesListInList *) instructions_nodes_lists.first())
+		for (ExecutionGraphInstruction::ExecutionNodeIterator node(inst) ; node ; node++) {
+			for (Successor next(node) ; next ; next++) {
+				if ( node != inst->firstNode()
 						||
-						(!node_in_list->executionNode()->producesOperands()) 
-						|| (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex()) ) {
-						dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-						dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"";
-						dotFile << " -> ";
+						(!node->producesOperands()) 
+						|| (node->instIndex() == ((ExecutionNode *) *next)->instIndex()) ) {				
+					dotFile << "\"" << node->pipelineStage()->shortName();
+					dotFile << "I" << node->instIndex() << "\"";
+					dotFile << " -> ";
+					dotFile << "\"" << ((ExecutionNode *) *next)->pipelineStage()->shortName();
+					dotFile << "I" << ((ExecutionNode *) *next)->instIndex() << "\"";
+					switch( ((ExecutionEdge *) next.edge())->type()) {
+						case ExecutionEdge::SOLID:
+							if (node->instIndex() == ((ExecutionNode *) *next)->instIndex())
+								dotFile << "[minlen=4]";
+							dotFile << " ;\n";
+							break;
+						case ExecutionEdge::SLASHED:
+							dotFile << " [style=dotted";
+							if (node->instIndex() == ((ExecutionNode *) *next)->instIndex())
+								dotFile << ", minlen=4";
+							dotFile << "] ;\n";
+							break;	
+						default:
+							break;
+					}	
+					if ((node->instIndex() == ((ExecutionNode *) *next)->instIndex())
+							|| ((node->stageIndex() == ((ExecutionNode *) *next)->stageIndex())
+								&& (node->instIndex() == ((ExecutionNode *) *next)->instIndex()-1)) ) {
+						dotFile << "\"" << node->pipelineStage()->shortName();
+						dotFile << "I" << node->instIndex() << "\"  [group=" << group_number << "] ;\n";
 						dotFile << "\"" << ((ExecutionNode *) *next)->pipelineStage()->shortName();
-						dotFile << "I" << ((ExecutionNode *) *next)->instIndex() << "\"";
-						switch( ((ExecutionEdge *) next.edge())->type()) {
-							case ExecutionEdge::SOLID:
-								if (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex())
-									dotFile << "[minlen=4]";
-								dotFile << " ;\n";
-								break;
-							case ExecutionEdge::SLASHED:
-								dotFile << " [style=dotted";
-								if (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex())
-									dotFile << ", minlen=4";
-								dotFile << "] ;\n";
-								break;	
-							default:
-								break;
-						}	
-						if ((node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex())
-								|| ((node_in_list->executionNode()->stageIndex() == ((ExecutionNode *) *next)->stageIndex())
-									&& (node_in_list->executionNode()->instIndex() == ((ExecutionNode *) *next)->instIndex()-1)) ) {
-							dotFile << "\"" << node_in_list->executionNode()->pipelineStage()->shortName();
-							dotFile << "I" << node_in_list->executionNode()->instIndex() << "\"  [group=" << group_number << "] ;\n";
-							dotFile << "\"" << ((ExecutionNode *) *next)->pipelineStage()->shortName();
-							dotFile << "I" << ((ExecutionNode *) *next)->instIndex() << "\" [group=" << group_number << "] ;\n";
-							group_number++;
-						}
+						dotFile << "I" << ((ExecutionNode *) *next)->instIndex() << "\" [group=" << group_number << "] ;\n";
+						group_number++;
 					}
+				}
 				// dump contenders
-	//			for(ExecutionNode::ContenderIterator cont(node_in_list->executionNode()); cont; cont ++) {
-	//				if (cont->instIndex() > node_in_list->executionNode()->instIndex()) {
-	//					dotFile << node_in_list->executionNode()->pipelineStage()->shortName();
-	//					dotFile << "I" << node_in_list->executionNode()->instIndex();
+	//			for(ExecutionNode::ContenderIterator cont(node); cont; cont ++) {
+	//				if (cont->instIndex() > node->instIndex()) {
+	//					dotFile << node->pipelineStage()->shortName();
+	//					dotFile << "I" << node->instIndex();
 	//					dotFile << " -> ";
 	//					dotFile << cont->pipelineStage()->shortName();
 	//					dotFile << "I" << cont->instIndex();
 	//					dotFile << " [style=dashed, dir=none] ; \n";
 	//				}
 	//			}
-				}		
-			node_in_list = (GraphNodeInList *) node_in_list->next();
+			}
 		}
 		dotFile << "\n";
-		inst_node_list = (GraphNodesListInList *) inst_node_list->next();
 	}
 	
 	dotFile << "}\n";
@@ -1256,25 +1150,25 @@ inline void PathList::dump(elm::io::Output& out_stream) {
 // ---------- dump()
 
 inline void GraphNodesListInList::dump(elm::io::Output& out_stream) {
-	if (pipeline_stage != NULL) {
-		out_stream << "list of nodes for stage " << pipeline_stage->name() << "(";
-		out_stream << pipeline_stage->shortName() << "): ";
-	}
-	else {
-		if (instruction != NULL) {
-			out_stream << "list of nodes for instruction ";
-			instruction->dump(out_stream);
-		}
-		else
-			out_stream << "list of nodes for ??? :";
-	}
-	GraphNodeInList *node = (GraphNodeInList *) node_list.first();
-	if (node != NULL) {
-		while (!node->atEnd()) {
-			node->dump(out_stream);
-			node = (GraphNodeInList *) node->next();
-		}
-	}
+//	if (pipeline_stage != NULL) {
+//		out_stream << "list of nodes for stage " << pipeline_stage->name() << "(";
+//		out_stream << pipeline_stage->shortName() << "): ";
+//	}
+//	else {
+//		if (instruction != NULL) {
+//			out_stream << "list of nodes for instruction ";
+//			instruction->dump(out_stream);
+//		}
+//		else
+//			out_stream << "list of nodes for ??? :";
+//	}
+//	GraphNodeInList *node = (GraphNodeInList *) node_list.first();
+//	if (node != NULL) {
+//		while (!node->atEnd()) {
+//			node->dump(out_stream);
+//			node = (GraphNodeInList *) node->next();
+//		}
+//	}
 }
 
 } // namespace otawa

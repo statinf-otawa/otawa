@@ -23,7 +23,7 @@ using namespace elm::genstruct;
 using namespace otawa::graph;
 using namespace otawa::ipet;
 
-//#define DO_LOG
+#define DO_LOG
 #if defined(NDEBUG) || !defined(DO_LOG)
 #	define LOG(c)
 #else
@@ -72,90 +72,212 @@ ExeGraphBBTime::ExeGraphBBTime(const PropList& props)
 }
 
 
+
+
 // ---------------------------------------------------
 // buildPrologueList
 // ---------------------------------------------------
 
-void ExeGraphBBTime::buildPrologueList(BlockSequence *sequence, 
-									int capacity, 
-									elm::genstruct::DLList<BlockSequence *>& prologue_list) {
-	BasicBlock *pred;
-	int offset;
-	BasicBlock *bb = sequence->first();
-	
+void ExeGraphBBTime::buildPrologueList(
+	BasicBlock * bb,
+	elm::genstruct::DLList<ExecutionGraphInstruction *> * prologue, 
+	int capacity, 
+	elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *> * prologue_list) {
 	// prologues are recursively built by considering preceeding nodes
 	for(BasicBlock::InIterator edge(bb); edge; edge++) {
-		pred = edge->source();
+		BasicBlock * pred = edge->source();
+		elm::genstruct::DLList<ExecutionGraphInstruction *> * new_prologue =
+			new elm::genstruct::DLList<ExecutionGraphInstruction *> ;
+		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(*prologue) ; inst ; inst++) {
+			ExecutionGraphInstruction * eg_inst =
+				new ExecutionGraphInstruction(inst->inst(), inst->basicBlock(), inst->codePart(), inst->index());
+			new_prologue->addLast(eg_inst);
+		}
 		if (pred->countInstructions() == 0) {
-			// current sequence is terminated (not more instructions to add)
-			// (end of recursive building)
-			BlockSequence *new_sequence = new BlockSequence(sequence);
-			prologue_list.addLast(new_sequence);
-			continue;
+			if (!new_prologue->isEmpty()) {
+				// current sequence is terminated (not more instructions to add)
+				// (end of recursive building)		 	 	
+				prologue_list->addLast(new_prologue);
+			}
 		}	
-		// build new sequence from pred
-		offset = pred->countInstructions() - (capacity - sequence->instCount());
-		if (offset < 0)
-			offset = 0;
-		BlockSequence *new_sequence = new BlockSequence(sequence);
-		new_sequence->addBlockFirst(pred,offset);
-		if (new_sequence->instCount() != capacity)
-			buildPrologueList(new_sequence, capacity, prologue_list);
 		else {
-			prologue_list.addLast(new_sequence);
+		  // build new sequence from pred
+		  elm::genstruct::DLList<Inst *> inst_list;
+		  for(BasicBlock::InstIterator inst(pred); inst; inst++) {
+		    inst_list.addLast(inst);
+		  }
+		  int index = 0;
+		  if (!new_prologue->isEmpty())
+		    index = new_prologue->first()->index() - 1;
+		  while ( (new_prologue->count() < capacity) && (!inst_list.isEmpty()) ) {
+		    ExecutionGraphInstruction * eg_inst = 
+				new ExecutionGraphInstruction(inst_list.last(), pred, PROLOGUE, index--);	
+		    new_prologue->addFirst(eg_inst);
+		    inst_list.removeLast();
+		  }
+		  if (new_prologue->count() < capacity)
+		    buildPrologueList(pred, new_prologue, capacity, prologue_list);
+		  else {
+		    prologue_list->addLast(new_prologue);
+		    
+		  }
 		}
 	}
-	delete sequence;
-	
+	delete prologue;
 }
 
-// ---------------------------------------------------
-// buildEpilogueList
-// ---------------------------------------------------
 
-void ExeGraphBBTime::buildEpilogueList(BlockSequence *sequence, 
-									int capacity, 
-									elm::genstruct::DLList<BlockSequence *>& epilogue_list) {
-	BasicBlock *succ;
-	int offset;
-	BasicBlock *bb = sequence->last();
-	
-	
+
+void ExeGraphBBTime::buildEpilogueList(
+	BasicBlock * bb,
+	elm::genstruct::DLList<ExecutionGraphInstruction *> * epilogue, 
+	int capacity, 
+	elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *> * epilogue_list) {
+	// epilogues are recursively built by considering succeeding nodes
+//	LOG(dumpFile << "\tentering buildPrologueList with bb = b" << bb->number() << "\n";)
 	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-		succ = edge->target();
+		BasicBlock * succ = edge->target();
+//		LOG(dumpFile << "\tpred = b" << pred->number() << "\n";)
+		elm::genstruct::DLList<ExecutionGraphInstruction *> * new_epilogue =
+			new elm::genstruct::DLList<ExecutionGraphInstruction *> ;
+		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(*epilogue) ; inst ; inst++) {
+			ExecutionGraphInstruction * eg_inst =
+				new ExecutionGraphInstruction(inst->inst(), inst->basicBlock(), inst->codePart(), inst->index());
+			new_epilogue->addLast(eg_inst);
+		}
 		if (succ->countInstructions() == 0) {
-			BlockSequence *new_sequence = new BlockSequence(sequence);
-			epilogue_list.addLast(new_sequence);
-			continue;
+			if (!new_epilogue->isEmpty()) {
+				// current sequence is terminated (not more instructions to add)
+				// (end of recursive building)
+				epilogue_list->addLast(new_epilogue);
+			}
 		}	
-		offset = succ->countInstructions() - (capacity - sequence->instCount());
-		if (offset < 0)
-			offset = 0;
-		BlockSequence *new_sequence = new BlockSequence(sequence);
-		new_sequence->addBlockLast(succ,offset);
-		if (new_sequence->instCount() != capacity)
-			buildEpilogueList(new_sequence, capacity, epilogue_list);
 		else {
-			epilogue_list.addLast(new_sequence);
+		  // build new sequence from succ
+		  elm::genstruct::DLList<Inst *> inst_list;
+		  for(BasicBlock::InstIterator inst(succ); inst; inst++) {
+		    inst_list.addLast(inst);
+		  }
+		  int index;
+		  if (!new_epilogue->isEmpty())
+		    index = new_epilogue->last()->index() + 1;
+		   else
+		   	index = bb->countInstructions();
+		  while ( (new_epilogue->count() < capacity) && (!inst_list.isEmpty()) ) {
+		    ExecutionGraphInstruction * eg_inst = 
+				new ExecutionGraphInstruction(inst_list.first(), succ, EPILOGUE, index++);	
+		    new_epilogue->addLast(eg_inst);
+		    inst_list.removeFirst();
+		  }
+		  if (new_epilogue->count() < capacity)
+		    buildEpilogueList(succ, new_epilogue, capacity, epilogue_list);
+		  else {
+		    epilogue_list->addLast(new_epilogue);
+		    
+		  }
 		}
 	}
-	delete sequence;
-	
+	delete epilogue;
 }
 
+
+
+// ---------------------------------------------------
+// processSequence
+// ---------------------------------------------------
+
+int ExeGraphBBTime::processSequence( FrameWork *fw,
+	elm::genstruct::DLList<ExecutionGraphInstruction *> * prologue,
+	elm::genstruct::DLList<ExecutionGraphInstruction *> * body,
+	elm::genstruct::DLList<ExecutionGraphInstruction *> * epilogue,
+	int capacity ) {
+		
+	elm::genstruct::DLList<ExecutionGraphInstruction *> sequence;
+	
+	sequence.clear();
+	if (prologue && (prologue->count() < capacity)) {
+		int index = 0;
+		if (!prologue->isEmpty())
+			index = prologue->first()->index() - 1;
+		ExecutionGraphInstruction * eg_inst = 
+			new ExecutionGraphInstruction(NULL, NULL, BEFORE_PROLOGUE, index);
+		sequence.addLast(eg_inst);
+	}
+	
+	if (prologue) {
+		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(*prologue) ; inst ; inst++) {
+			sequence.addLast(inst);
+		}
+	}
+	for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(*body); inst ; inst++) {
+		sequence.addLast(inst);
+	}
+	if (epilogue) {
+		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(*epilogue) ; inst ; inst++) {
+			sequence.addLast(inst);
+		}
+	}
+
+	// set dump file
+	elm::StringBuffer file_name;
+	elm::String string_file_name, string_timed_file_name, extension, number, extension2;
+	string_file_name = "./";
+	string_timed_file_name = string_file_name;
+	extension = ".dot";
+	extension2 = "_times.dot";
+	{
+		code_part_t part = BEFORE_PROLOGUE;
+		int bbnum = -1;
+		file_name << body->first()->basicBlock()->number() << "+";
+		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++) {
+			if (inst->codePart() != part) 
+				file_name << "---";
+			part = inst->codePart();
+			if (inst->basicBlock()) {
+				if (inst->basicBlock()->number() != bbnum)
+					file_name << inst->basicBlock()->number() << "-";
+				bbnum = inst->basicBlock()->number();
+			}
+		}
+	}
+	number = file_name.toString();
+	string_file_name = string_file_name.concat(number);
+	string_file_name = string_file_name.concat(extension);
+	elm::io::OutFileStream dotStream(string_file_name.toCString());
+	elm::io::Output dotFile(dotStream);	
+			
+	ExecutionGraph execution_graph;
+	execution_graph.build(fw, microprocessor, sequence);
+	LOG(execution_graph.dumpLight(dumpFile));
+	int bbExecTime = execution_graph.analyze(dumpFile);
+	
+	LOG(dumpFile << "Cost of block " << body->first()->basicBlock()->number() << " is " << bbExecTime << "\n");
+	string_timed_file_name = string_timed_file_name.concat(number);
+	string_timed_file_name = string_timed_file_name.concat(extension2);
+	elm::io::OutFileStream timedDotStream(string_timed_file_name.toCString());
+	elm::io::Output timedDotFile(timedDotStream);
+	// dump the execution graph *with times* in dot format
+	execution_graph.dotDump(timedDotFile,true);		
+	
+	return bbExecTime;
+}
 
 // ---------------------------------------------------
 // processBB
 // ---------------------------------------------------
 
 void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
-	elm::genstruct::DLList<Inst *> prologue, body, epilogue;
-	elm::genstruct::DLList<BlockSequence *> prologue_list, epilogue_list;
-	int offset;
-	BasicBlock *pred, *succ;
+	elm::genstruct::DLList<ExecutionGraphInstruction *> prologue, body, epilogue, sequence;
+	elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *> prologue_list, epilogue_list;
 	
 	LOG(dumpFile << "================================================================\n");
-	LOG(dumpFile << "Processing block b" << bb->number() << ":\n");	
+	LOG(dumpFile << "Processing block b" << bb->number() << ":\n\n");
+	LOG(for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+			dumpFile << inst->address() <<": ";
+			inst->dump(dumpFile);
+			dumpFile << "\n";	
+		}
+	)	
 	
 	if (bb->countInstructions() == 0)
 		return;
@@ -165,130 +287,182 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	for(Microprocessor::QueueIterator queue(microprocessor); queue; queue++){
 		capacity += queue->size();
 	}
-	// build the list of possible prologues
-	for(BasicBlock::InIterator edge(bb); edge; edge++) {
-		pred = edge->source();
-		if (pred->countInstructions() == 0)
-			continue;
-		offset = bb->countInstructions() - capacity;
-		if (offset < 0)
-			offset = 0;	
-		BlockSequence *new_sequence = new BlockSequence();
-		new_sequence->addBlockFirst(pred,offset);
-		if (new_sequence->instCount() < capacity)
-			buildPrologueList(new_sequence, capacity, prologue_list);
-		else {
-			prologue_list.addLast(new_sequence);
-		}
-	}
-	// build the list of possible epilogues
-	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-		succ = edge->target();
-		if (succ->countInstructions() == 0)
-			continue;
-		offset = bb->countInstructions() - capacity;
-		if (offset < 0)
-			offset = 0;	
-		BlockSequence *new_sequence = new BlockSequence();
-		new_sequence->addBlockLast(succ,offset);
-		if (new_sequence->instCount() < capacity)
-			buildEpilogueList(new_sequence, capacity, epilogue_list);
-		else {
-			epilogue_list.addLast(new_sequence);
-		}
+	LOG(dumpFile << "Processor capacity = " << capacity << "\n";) 
 
+	// build the list of possible prologues
+	elm::genstruct::DLList<ExecutionGraphInstruction *> * new_prologue = 
+		new elm::genstruct::DLList<ExecutionGraphInstruction *>;
+	buildPrologueList(bb, new_prologue, capacity, &prologue_list);
+	// dump prologue list
+		LOG(	dumpFile << "Dumping the list of prologues:\n";
+	    	int p =0;
+	    	int index;
+			if (!prologue_list.isEmpty()) {
+				for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator prologue(prologue_list) ; prologue ; prologue++) {
+			  		assert(!prologue->isEmpty());
+					dumpFile << "\tprologue " << p++ << ":\t";
+					int bbnum = -1;
+					int cnt = 0;
+					for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**prologue) ; inst ; inst++) {
+						if (inst->basicBlock()->number() != bbnum) {
+							if (bbnum != -1)
+								dumpFile << index << ") - ";
+							bbnum = inst->basicBlock()->number();
+							dumpFile << "b" << bbnum ;
+							dumpFile << " (i" << inst->index() << " to i";
+							cnt = 0;
+						}
+						cnt++;
+						index = inst->index();
+					}
+					if (!prologue->isEmpty())
+						dumpFile << prologue->last()->index() << ") - ";
+					dumpFile << "\n";
+				}
+			}
+	)
+	
+		
+	// build the list of body instructions	
+	{
+		int index = 1;
+		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+			ExecutionGraphInstruction *eg_inst =
+				new ExecutionGraphInstruction(inst, bb, BODY, index++);
+			body.addLast(eg_inst);
+		}
 	}
 	
-	// build the list of body instructions	
-	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
-		body.addLast(inst);
-	}
+	
+		// build the list of possible epilogues
+	elm::genstruct::DLList<ExecutionGraphInstruction *> * new_epilogue = 
+		new elm::genstruct::DLList<ExecutionGraphInstruction *>;
+		buildEpilogueList(bb, new_epilogue, capacity, &epilogue_list);
+	// dump prologue list
+		LOG(	dumpFile << "Dumping the list of epilogues:\n";
+	    	{int p =0;
+	    	int index;
+			if (!epilogue_list.isEmpty()) {
+				for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
+			  		assert(!epilogue->isEmpty());
+					dumpFile << "\tepilogue " << p++ << ":\t";
+					int bbnum = -1;
+					int cnt = 0;
+					for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**epilogue) ; inst ; inst++) {
+						if (inst->basicBlock()->number() != bbnum) {
+							if (bbnum != -1)
+								dumpFile << index << ") - ";
+							bbnum = inst->basicBlock()->number();
+							dumpFile << "b" << bbnum ;
+							dumpFile << " (i" << inst->index() << " to i";
+							cnt = 0;
+						}
+						cnt++;
+						index = inst->index();
+					}
+					if (!epilogue->isEmpty())
+						dumpFile << epilogue->last()->index() << ") - ";
+					dumpFile << "\n";
+				}
+			}}
+	)
+	
+	
 	
 	int maxExecTime = 0;
 	int bbExecTime;
 	
-	// consider every possible prologue
-	for (elm::genstruct::DLList<BlockSequence *>::Iterator seq1(prologue_list) ; seq1 ; seq1++) {
-		// build the list of prologue instructions
-		while (!prologue.isEmpty())
-			prologue.removeFirst();
-		for (elm::genstruct::DLList<BasicBlock *>::Iterator block(*(seq1->blockList())) ; block ; block++) {
-			for(BasicBlock::InstIterator inst(block); inst; inst++) {
-				prologue.addLast(inst);
-			}	
+	// consider every possible prologue/epilogue pair
+	if (prologue_list.isEmpty()){
+		if (epilogue_list.isEmpty()) {
+			LOG(dumpFile << "\nProcessing sequence: ";
+				dumpFile << "[] [b" << bb->number() << "] []\n;";
+			)				
+			bbExecTime = processSequence(fw, NULL, &body, NULL, capacity);
+			if (bbExecTime > maxExecTime)
+				maxExecTime = bbExecTime;	
+		}
+		else {			
+			for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
+				LOG(dumpFile << "\nProcessing sequence: ";
+					dumpFile << "[] [b" << bb->number() << "] [";				
+					int bbnum = -1;
+					for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**epilogue) ; inst ; inst++) {
+						if (inst->basicBlock()->number() != bbnum) {
+							if (bbnum != -1)
+								dumpFile << "-";
+							bbnum = inst->basicBlock()->number();
+							dumpFile << "b" << bbnum ;
+						}
+					}
+					dumpFile << "]\n";
+				)
+				bbExecTime = processSequence(fw, NULL, &body, epilogue, capacity);
+				if (bbExecTime > maxExecTime)
+					maxExecTime = bbExecTime;	
+			}
+		}
+	}
+	else {
+		if (epilogue_list.isEmpty()) {
+			for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator prologue(prologue_list) ; prologue ; prologue++) {
+				LOG(dumpFile << "\nProcessing sequence: ";
+					dumpFile << "[";
+					int bbnum = -1;
+					for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**prologue) ; inst ; inst++) {
+						if (inst->basicBlock()->number() != bbnum) {
+							if (bbnum != -1)
+								dumpFile << "-";
+							bbnum = inst->basicBlock()->number();
+							dumpFile << "b" << bbnum ;
+						}
+					}
+					dumpFile << "] [b" << bb->number() << "] []\n";				
+				)
+				bbExecTime = processSequence(fw, prologue, &body, NULL, capacity);bbExecTime = processSequence(fw, prologue, &body, NULL, capacity);
+				if (bbExecTime > maxExecTime)
+					maxExecTime = bbExecTime;	
+			}
+		}
+		else {
+			for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator prologue(prologue_list) ; prologue ; prologue++) {
+				for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
+					LOG(dumpFile << "\nProcessing sequence: ";
+						dumpFile << "[";
+						int bbnum = -1;
+						for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**prologue) ; inst ; inst++) {
+							if (inst->basicBlock()->number() != bbnum) {
+								if (bbnum != -1)
+									dumpFile << "-";
+								bbnum = inst->basicBlock()->number();
+								dumpFile << "b" << bbnum ;
+							}
+						}
+						dumpFile << "] [b" << bb->number() << "] [";				
+						bbnum = -1;
+						for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**epilogue) ; inst ; inst++) {
+							if (inst->basicBlock()->number() != bbnum) {
+								if (bbnum != -1)
+									dumpFile << "-";
+								bbnum = inst->basicBlock()->number();
+								dumpFile << "b" << bbnum ;
+							}
+						}
+						dumpFile << "]\n";
+					)
+					bbExecTime = processSequence(fw, prologue, &body, epilogue, capacity);
+					if (bbExecTime > maxExecTime)
+						maxExecTime = bbExecTime;	
+				}
+			}
 		}
 		
-		// consider every possible epilogue
-		for (elm::genstruct::DLList<BlockSequence *>::Iterator seq2(epilogue_list) ; seq2 ; seq2++) {
-			// build the list of epilogue instructions
-			while (!epilogue.isEmpty()) {
-				epilogue.removeFirst();
-			}
-			for (elm::genstruct::DLList<BasicBlock *>::Iterator block(*(seq2->blockList())) ; block ; block++) {
-				for(BasicBlock::InstIterator inst(block); inst; inst++) {
-					epilogue.addLast(inst);
-				}	
-			}
-			
-			// set dump file
-			/*elm::StringBuffer file_name;
-			elm::String string_file_name, string_timed_file_name, extension, number, extension2;
-			string_file_name = "./";
-			string_timed_file_name = string_file_name;
-			extension = ".dot";
-			extension2 = "_times.dot";
-			for (elm::genstruct::DLList<BasicBlock *>::Iterator block(*(seq1->blockList())) ; block ; block++) {
-				file_name << block->number() << "-";
-			}
-			file_name << "--" << bb->number() << "---";
-			for (elm::genstruct::DLList<BasicBlock *>::Iterator block(*(seq2->blockList())) ; block ; block++) {
-				file_name << block->number() << "-";
-			}
-			number = file_name.toString();
-			string_file_name = string_file_name.concat(number);
-			string_file_name = string_file_name.concat(extension);
-			elm::io::OutFileStream dotStream(string_file_name.toCString());
-			elm::io::Output dotFile(dotStream);*/	
-			
-			// build the execution graph
-			LOG(dumpFile << "\nBuilding execution graph for:\n\tprologue: ");
-			LOG(seq1->dump(dumpFile));
-			LOG(dumpFile << "\n\tbody: b" << bb->number()<< "\n\tepilogue: ");
-			LOG(seq2->dump(dumpFile));
-			LOG(dumpFile << "\n");
-			ExecutionGraph execution_graph;
-			execution_graph.build(fw, microprocessor, prologue, body, epilogue);
-			LOG(execution_graph.dumpLight(dumpFile));
-			// dump the execution graph in dot format
-			//execution_graph.dotDump(dotFile,false);
-			
-			// shade prologue nodes that have a direct path to IF(I1)
-			//execution_graph.shadeNodes(dumpFile);
-			// compute ready/start.finish earliest and latest times
-			bbExecTime = execution_graph.analyze(dumpFile);
-			
-			LOG(dumpFile << "Cost of block " << bb->number() << " is " << bbExecTime << "\n");
-			/*string_timed_file_name = string_timed_file_name.concat(number);
-			string_timed_file_name = string_timed_file_name.concat(extension2);
-			elm::io::OutFileStream timedDotStream(string_timed_file_name.toCString());
-			elm::io::Output timedDotFile(timedDotStream);*/	
-			// dump the execution graph *with times* in dot format
-			//execution_graph.dotDump(timedDotFile,true);		
-			
-		}
-		// is the cost of the block for that prologue/epilogue pair the WCC of the block ?
-		if (bbExecTime > maxExecTime)
-			maxExecTime = bbExecTime;
 	}
+	
+	// is the cost of the block for that prologue/epilogue pair the WCC of the block ?
 	
 	LOG(dumpFile << "\nWCC of block " << bb->number() << " is " << maxExecTime << "\n");
 	bb->set<int>(TIME, maxExecTime);
-
-	// Free block sequences
-	for(elm::genstruct::DLList<BlockSequence *>::Iterator bs(prologue_list); bs; bs++)
-		delete bs;
-	for(elm::genstruct::DLList<BlockSequence *>::Iterator bs(epilogue_list); bs; bs++)
-		delete bs;
 }
 
 
