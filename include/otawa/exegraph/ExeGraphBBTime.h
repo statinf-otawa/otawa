@@ -23,7 +23,7 @@ namespace otawa {
 class BlockSequence {
 	private:
 		elm::genstruct::DLList<BasicBlock *> block_list;
-		int offset; // start point of the sequence (in the first block)
+		int _offset; // start point of the sequence (in the first block)
 		int inst_count;
 	public:
 		inline BlockSequence();
@@ -36,6 +36,7 @@ class BlockSequence {
 		inline int instCount(void);
 		inline elm::genstruct::DLList<BasicBlock *> * blockList(void);
 		inline void dump(elm::io::Output& out_stream);
+		inline int offset();
 };
 
 inline BlockSequence::BlockSequence() 
@@ -51,13 +52,13 @@ inline BlockSequence::BlockSequence(BlockSequence *seq) {
 
 inline void BlockSequence::addBlockFirst(BasicBlock *bb, int off) {
 	block_list.addFirst(bb);
-	offset = off;
+	_offset = off;
 	inst_count = inst_count +  bb->countInstructions() - off;
 }
 
 inline void BlockSequence::addBlockLast(BasicBlock *bb, int off) {
 	block_list.addLast(bb);
-	offset = off;
+	_offset = off;
 	inst_count = inst_count +  bb->countInstructions() - off;
 }
 
@@ -86,7 +87,11 @@ inline void BlockSequence::dump(elm::io::Output& out_stream) {
 		out_stream << "b" << bb->number();
 		out_stream << " - ";
 	}
-	out_stream << " [offset=" << offset << "] [inst_count=" << inst_count << "]";
+	out_stream << " [offset=" << _offset << "] [inst_count=" << inst_count << "]";
+}
+
+inline int BlockSequence::offset() {
+	return _offset;
 }
 
 
@@ -109,15 +114,22 @@ class ExeGraphBBTime: public BBProcessor {
 								elm::genstruct::DLList<Inst *> &prologue, 
 								elm::genstruct::DLList<Inst *> &body, 
 								elm::genstruct::DLList<Inst *> &epilogue);
-		void buildPrologueList(BlockSequence *sequence, 
+		void buildPrologueList(	BasicBlock * bb,
+								elm::genstruct::DLList<ExecutionGraphInstruction *> * prologue, 
 								int capacity, 
-								elm::genstruct::DLList<BlockSequence *>& prologue_list);
-		void buildEpilogueList(BlockSequence *sequence, 
+								elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *> * prologue_list);
+		void buildEpilogueList(BasicBlock * bb,
+								elm::genstruct::DLList<ExecutionGraphInstruction *> * epilogue, 
 								int capacity, 
-								elm::genstruct::DLList<BlockSequence *>& epilogue_list);
+								elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>* epilogue_list);
 		int analyzeExecutionGraph(ExecutionGraph& graph);
 		// BBProcessor overload
 		void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+		int ExeGraphBBTime::processSequence( FrameWork *fw,
+			elm::genstruct::DLList<ExecutionGraphInstruction *> * prologue,
+			elm::genstruct::DLList<ExecutionGraphInstruction *> * body,
+			elm::genstruct::DLList<ExecutionGraphInstruction *> * epilogue,
+			int capacity ) ;
 
 	// Configuration Properties
 	static GenericIdentifier<Microprocessor *> PROCESSOR;

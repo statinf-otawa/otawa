@@ -22,8 +22,81 @@ namespace otawa {
 	
 #define INFINITE_TIME 0x0FFFFFF
 
+extern GenericIdentifier<bool> START;
+
 class ExecutionGraph;
 class ExecutionEdge;
+class ExecutionNode;
+
+typedef enum code_part_t {
+	BEFORE_PROLOGUE = 0,
+	PROLOGUE = 1,
+	BODY = 2,
+	EPILOGUE = 3,
+	CODE_PARTS_NUMBER  // should be the last value
+} code_part_t;
+
+
+class ExecutionGraphInstruction {
+	Inst * _inst;
+	BasicBlock *_bb;
+	int _index;
+	code_part_t _part;
+	elm::genstruct::DLList<ExecutionNode *> _nodes;
+	public:
+		inline ExecutionGraphInstruction(Inst * inst, BasicBlock *bb, code_part_t part, int index);
+		inline Inst * inst();
+		inline code_part_t codePart();
+		inline int index();
+		inline void addNode(ExecutionNode * node);
+		inline void deleteNodes();
+		inline ExecutionNode * firstNode();
+		inline ExecutionNode * lastNode();
+		inline BasicBlock * basicBlock();
+		class ExecutionNodeIterator: public elm::genstruct::DLList<ExecutionNode *>::Iterator {
+			public:
+				inline ExecutionNodeIterator(const ExecutionGraphInstruction *inst);
+			};
+		
+};
+
+inline ExecutionGraphInstruction::ExecutionGraphInstruction(Inst * inst, BasicBlock *bb, code_part_t part, int index)
+	: _inst(inst), _bb(bb), _part(part), _index(index) {
+}
+
+inline Inst * ExecutionGraphInstruction::inst() {
+	return _inst;
+}
+inline code_part_t ExecutionGraphInstruction::codePart() {
+	return _part;
+}
+inline int ExecutionGraphInstruction::index() {
+	return _index;
+}
+inline void ExecutionGraphInstruction::addNode(ExecutionNode * node) {
+	_nodes.addLast(node);
+}
+
+inline ExecutionNode * ExecutionGraphInstruction::firstNode() {
+	return _nodes.first();
+}
+
+inline ExecutionNode * ExecutionGraphInstruction::lastNode() {
+	return _nodes.last();
+}
+
+inline BasicBlock * ExecutionGraphInstruction::basicBlock() {
+	return _bb;
+}
+
+inline void ExecutionGraphInstruction::deleteNodes() {
+	_nodes.clear();
+}
+
+inline ExecutionGraphInstruction::ExecutionNodeIterator::ExecutionNodeIterator(const ExecutionGraphInstruction *inst):
+	elm::genstruct::DLList<ExecutionNode *>::Iterator(inst->_nodes) {
+}
+
 
 // -----------------------------------------------------------
 // ExecutionNode class definition
@@ -37,13 +110,6 @@ class ExecutionNode: public GenGraph<ExecutionNode, ExecutionEdge>::Node {
 			int max;
 		} time_interval_t;
 		
-		typedef enum code_part_t {
-			BEFORE_PROLOGUE = 0,
-			PROLOGUE = 1,
-			BODY = 2,
-			EPILOGUE = 3,
-			CODE_PARTS_NUMBER  // should be the last value
-		} code_part_t;
 		
 		int pair_index;
 		bool changed;
@@ -159,8 +225,9 @@ class ExecutionGraph:  public GenGraph<ExecutionNode, ExecutionEdge>  {
 		elm::inhstruct::DLList stages_nodes_lists;
 		elm::inhstruct::DLList instructions_nodes_lists;
 		elm::BitVector *pairs;
-		ExecutionNode * first_node[ExecutionNode::CODE_PARTS_NUMBER];
-		ExecutionNode * last_node[ExecutionNode::CODE_PARTS_NUMBER];
+		ExecutionNode * first_node[CODE_PARTS_NUMBER];
+		ExecutionNode * last_node[CODE_PARTS_NUMBER];
+		elm::genstruct::DLList<ExecutionGraphInstruction *> * _sequence;
 		
 	public:
 		ExecutionGraph(void);
@@ -183,14 +250,12 @@ class ExecutionGraph:  public GenGraph<ExecutionNode, ExecutionEdge>  {
 		int minDelta(elm::io::Output& out_stream);
 		void shadeNodes(elm::io::Output& out_stream) ;
 		void shadePreds(ExecutionNode *node,  elm::io::Output& out_stream) ;
-		inline void setFirstNode(ExecutionNode::code_part_t part, ExecutionNode *node);
-		inline void setLastNode(ExecutionNode::code_part_t part, ExecutionNode *node);
-		inline ExecutionNode * firstNode(ExecutionNode::code_part_t part);
-		inline ExecutionNode * lastNode(ExecutionNode::code_part_t part);
+		inline void setFirstNode(code_part_t part, ExecutionNode *node);
+		inline void setLastNode(code_part_t part, ExecutionNode *node);
+		inline ExecutionNode * firstNode(code_part_t part);
+		inline ExecutionNode * lastNode(code_part_t part);
 		void build(FrameWork *fw, Microprocessor* microprocessor, 
-					elm::genstruct::DLList<Inst *> &prologue, 
-					elm::genstruct::DLList<Inst *> &body, 
-					elm::genstruct::DLList<Inst *> &epilogue);
+					elm::genstruct::DLList<ExecutionGraphInstruction *> &sequence);
 		int analyze(elm::io::Output& out_stream);
 };
 
@@ -219,18 +284,18 @@ class GraphNodesListInList : public elm::inhstruct::DLNode {
 		Inst * instruction;
 		int inst_index;
 		int stage_index;
-		ExecutionNode::code_part_t code_part;
+		code_part_t code_part;
 		
 	public:
 		inline GraphNodesListInList(PipelineStage* stage);
-		inline GraphNodesListInList(Inst* inst, int index, ExecutionNode::code_part_t part);
+		inline GraphNodesListInList(Inst* inst, int index, code_part_t part);
 		inline elm::inhstruct::DLList * list(void);
 		inline PipelineStage * stage(void);
 		inline Inst * inst(void);
 		void dump(elm::io::Output& out_stream);
 		inline int instIndex(void) const;
 		inline int stageIndex(void) const;
-		ExecutionNode::code_part_t part(void) const;
+		code_part_t part(void) const;
 		
 };
 
@@ -486,7 +551,7 @@ inline bool ExecutionNode::isShaded(void) {
 
 // ---------- part()
 
-inline ExecutionNode::code_part_t ExecutionNode::part(void) const {
+inline code_part_t ExecutionNode::part(void) const {
 	return code_part;
 }
 
@@ -565,24 +630,24 @@ inline void ExecutionGraph::setEntryNode(ExecutionNode *node) {
 
 // ---------- firstNode()
 
-inline ExecutionNode * ExecutionGraph::firstNode(ExecutionNode::code_part_t part) {
+inline ExecutionNode * ExecutionGraph::firstNode(code_part_t part) {
 	return first_node[part];
 }
 // ---------- setFirstNode()
 
-inline void ExecutionGraph::setFirstNode(ExecutionNode::code_part_t part, ExecutionNode *node) {
+inline void ExecutionGraph::setFirstNode(code_part_t part, ExecutionNode *node) {
 	first_node[part] = node;
 }
 
 // ---------- lastNode()
 
-inline ExecutionNode * ExecutionGraph::lastNode(ExecutionNode::code_part_t part) {
+inline ExecutionNode * ExecutionGraph::lastNode(code_part_t part) {
 	return last_node[part];
 }
 
 // ---------- setLastNode()
 
-inline void ExecutionGraph::setLastNode(ExecutionNode::code_part_t part, ExecutionNode *node) {
+inline void ExecutionGraph::setLastNode(code_part_t part, ExecutionNode *node) {
 	last_node[part] = node;
 }
 
@@ -674,7 +739,7 @@ inline GraphNodesListInList::GraphNodesListInList(PipelineStage* stage)
 : pipeline_stage(stage), instruction(NULL), stage_index(stage->index()) {
 }
 
-inline GraphNodesListInList::GraphNodesListInList(Inst* inst, int index, ExecutionNode::code_part_t part)
+inline GraphNodesListInList::GraphNodesListInList(Inst* inst, int index, code_part_t part)
 : instruction(inst), pipeline_stage(NULL), inst_index(index), code_part(part) {
 }
 		
@@ -710,7 +775,7 @@ inline int GraphNodesListInList::stageIndex(void) const {
 
 // ---------- part()
 
-inline ExecutionNode::code_part_t GraphNodesListInList::part(void) const {
+inline code_part_t GraphNodesListInList::part(void) const {
 	return code_part;
 }
 

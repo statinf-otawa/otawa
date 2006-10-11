@@ -10,6 +10,7 @@
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/string/String.h>
+#include <elm/genstruct/DLList.h>
 #include <stdio.h>
 #include <otawa/otawa.h>
 
@@ -18,15 +19,16 @@ namespace otawa {
 class PipelineStage;
 class FunctionalUnit;
 class Microprocessor;
+class ExecutionNode;
 
 
 typedef enum instruction_category_t {	
-	IALU = 1,
-	FALU = 2,
-	MEMORY = 3,
-	CONTROL = 4,
-	MUL = 5,
-	DIV = 6,
+	IALU = 0,
+	FALU = 1,
+	MEMORY = 2,
+	CONTROL = 3,
+	MUL = 4,
+	DIV = 5,
 	INST_CATEGORY_NUMBER   // must be the last value
 } instruction_category_t;	
 
@@ -130,6 +132,7 @@ public:
 			int min_latency; // overrides pipeline stage latency
 			int max_latency;
 			int width;	
+			order_policy_t order_policy;
 		} fu_info_t;
 		
 		private:
@@ -145,6 +148,7 @@ public:
 			inline int minLatency(void) const;
 			inline int maxLatency(void) const;
 			inline int width(void) const;
+			inline PipelineStage * firstStage();
 			
 			class PipelineIterator: public elm::genstruct::Vector<PipelineStage *>::Iterator {
 				public:
@@ -160,6 +164,7 @@ private:
 	FunctionalUnit * functional_unit[INST_CATEGORY_NUMBER];
 	int stage_index;
 	Microprocessor *processor;
+	elm::genstruct::DLList<ExecutionNode *> _nodes;
 		
 public:
 	inline PipelineStage(const pipeline_info_t& info, Microprocessor* proc);
@@ -179,6 +184,14 @@ public:
 	inline void bindFunctionalUnit(FunctionalUnit * fu, instruction_category_t category);
 	inline bool usesFunctionalUnits(void) const;
 	inline FunctionalUnit * functionalUnit(int category);
+	inline void addNode(ExecutionNode * node);
+	inline void deleteNodes();
+	inline int numberOfNodes();
+	class ExecutionNodeIterator: public elm::genstruct::DLList<ExecutionNode *>::Iterator {
+	public:
+		inline ExecutionNodeIterator(const PipelineStage *stage);
+	};
+	
 };
 
 
@@ -224,6 +237,23 @@ inline PipelineStage::PipelineStage(const pipeline_info_t& info, Microprocessor*
 		functional_unit[i] = NULL;
 	stage_index = proc->getPipelineStageIndex();
 	
+}
+
+inline void PipelineStage::addNode(ExecutionNode * node) {
+	_nodes.addLast(node);
+}
+
+inline void PipelineStage::deleteNodes() {
+	_nodes.clear();
+}
+
+inline int PipelineStage::numberOfNodes() {
+	return _nodes.count();
+}
+
+
+inline PipelineStage::ExecutionNodeIterator::ExecutionNodeIterator(const PipelineStage *stage):
+	elm::genstruct::DLList<ExecutionNode *>::Iterator(stage->_nodes) {
 }
 
 inline PipelineStage::order_policy_t PipelineStage::orderPolicy(void) const {
@@ -327,7 +357,8 @@ inline PipelineStage::FunctionalUnit::FunctionalUnit(fu_info_t& fu_info, Pipelin
 	elm::StringBuffer *number;
 	elm::String number_string;
 	
-	pipeline_info.order_policy = user_stage->orderPolicy();
+	//pipeline_info.order_policy = user_stage->orderPolicy();
+	pipeline_info.order_policy = fu_info.order_policy;
 	pipeline_info.stage_width = fu_info.width;
 	pipeline_info.stage_name = fu_info.name;
 	pipeline_info.stage_short_name = fu_info.short_name;
@@ -356,6 +387,7 @@ inline PipelineStage::FunctionalUnit::FunctionalUnit(fu_info_t& fu_info, Pipelin
 				pipeline_info.destination_queue = user_stage->information.destination_queue;
 				pipeline_info.max_latency = fu_info.max_latency - fu_info.min_latency + 1;	
 			}
+			pipeline_info.order_policy = fu_info.order_policy;
 			stage = new PipelineStage(pipeline_info, processor);
 			this->pipeline.add(stage);	
 		}
@@ -370,6 +402,9 @@ inline elm::String PipelineStage::FunctionalUnit::shortName(void) const {
 	return information.short_name;
 }
 
+inline PipelineStage * PipelineStage::FunctionalUnit::firstStage() {
+	return pipeline.get(0);
+}
 
 inline bool PipelineStage::FunctionalUnit::isPipelined(void) const {
 	return information.is_pipelined;
