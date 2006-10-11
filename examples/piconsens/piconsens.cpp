@@ -104,6 +104,8 @@ void Command::compute(String fun) {
 	}
 	if(dump_constraints)
 		props.set(EXPLICIT, true);
+		
+	//
 	
 	// Compute BB time
 	if(exegraph && !delta) {
@@ -247,19 +249,21 @@ void Command::initExeGraph(Microprocessor *processor) {
 		true,
 		5,
 		5,
-		1
+		1,
+		PipelineStage::IN_ORDER
 	};
 	PipelineStage::FunctionalUnit *memunit = execute_stage->addFunctionalUnit(mem_info);
 	execute_stage->bindFunctionalUnit(memunit, MEMORY);
 
 	// ALU FU
 	PipelineStage::FunctionalUnit::fu_info_t alu_info = {
-		"ALU",
-		"ALU",
+		"IALU",
+		"IALU",
 		false,
 		1,
 		1,
-		2
+		2,
+		PipelineStage::OUT_OF_ORDER
 	};
 	PipelineStage::FunctionalUnit *alu = execute_stage->addFunctionalUnit(alu_info);
 	execute_stage->bindFunctionalUnit(alu, IALU);
@@ -272,7 +276,8 @@ void Command::initExeGraph(Microprocessor *processor) {
 		true,
 		3,
 		3,
-		1
+		1,
+		PipelineStage::OUT_OF_ORDER
 	};
 	PipelineStage::FunctionalUnit *falu = execute_stage->addFunctionalUnit(falu_info);
 	execute_stage->bindFunctionalUnit(falu, FALU);
@@ -284,7 +289,8 @@ void Command::initExeGraph(Microprocessor *processor) {
 		true,
 		6,
 		6,
-		1
+		1,
+		PipelineStage::OUT_OF_ORDER
 	};
 	PipelineStage::FunctionalUnit *mul = execute_stage->addFunctionalUnit(mul_info);
 	execute_stage->bindFunctionalUnit(mul, MUL);
@@ -296,7 +302,8 @@ void Command::initExeGraph(Microprocessor *processor) {
 		false,
 		15,
 		15,
-		1
+		1,
+		PipelineStage::OUT_OF_ORDER
 	};
 	PipelineStage::FunctionalUnit *div = execute_stage->addFunctionalUnit(div_info);
 	execute_stage->bindFunctionalUnit(div, DIV);
