@@ -28,6 +28,9 @@
 #	define LOG(c) c
 #endif
 
+#define dumpFile elm::cout
+
+
 
 using namespace otawa;
 using namespace otawa::hard;
@@ -606,6 +609,7 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 			if (previous != NULL) {
 				// edge between consecutive pipeline stages
 				ExecutionEdge *edge = new ExecutionEdge(previous, node, ExecutionEdge::SOLID);
+//				LOG( dumpFile << "\tEdge between consecutive pipeline stages: " << edge->name() << ")\n";)
 			}
 			previous = node;
 			if (node->needsOperands()) {
@@ -624,9 +628,11 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 										break;
 									}
 								}
-								if (!exists)
+								if (!exists) {
 									// add an edge for data dependency
 									ExecutionEdge *edge = new ExecutionEdge(producing_node, node, ExecutionEdge::SOLID);
+//									LOG( dumpFile << "\tEdge for data dependancy: " << edge->name()<< ")\n";)	
+								}
 							}
 						}
 					}
@@ -659,6 +665,7 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 					if (previous != NULL) {				  
 						// scalar stage => draw a solid edge
 						ExecutionEdge * edge = new ExecutionEdge(previous, node, ExecutionEdge::SOLID);
+//						LOG(dumpFile << "\tEdge for program order (scalar): " << edge->name() << "\n";)
 					}
 					previous = node;
 				}
@@ -668,9 +675,12 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 				for (PipelineStage::ExecutionNodeIterator node(stage) ; node ; node++) {			
 					// superscalar => draw a slashed edge between adjacent instructions
 					ExecutionEdge *edge = new ExecutionEdge(previous, node, ExecutionEdge::SLASHED);
+//					LOG(dumpFile << "\tSlashed edge between successive instructions (superscalar stage): " << edge->name() << ")\n";)
+					
 					// draw a solid edge to model the stage width 
 					if (previous_nodes.count() == stage->width()) {
 						ExecutionEdge *edge = new ExecutionEdge(previous_nodes.first(), node, ExecutionEdge::SOLID);
+//						LOG(dumpFile << "\tEdge between successive instructions (superscalar stage): " << edge->name() << ")\n";)
 						previous_nodes.removeFirst();	
 					}
 					previous_nodes.addLast(node);
@@ -695,6 +705,7 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 				for (PipelineStage::ExecutionNodeIterator waiting_node(prod_stage) ; waiting_node ; waiting_node++) {
 					if (waiting_node->instIndex() == index) {
 						ExecutionEdge *edge = new ExecutionEdge(node, waiting_node, ExecutionEdge::SOLID);
+//						LOG( dumpFile << "\tEdge for queue capacity: " << edge->name()<< ")\n";)
 						break;
 					}
 				}
@@ -710,7 +721,10 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 					for (PipelineStage::ExecutionNodeIterator node2(stage) ; node2 ; node2++) {
 						if ((ExecutionNode *)node1 != (ExecutionNode *)node2) {
 							node1->addContender(node2);
-							node2->addContender(node1);
+//							LOG( 	dumpFile << "\t" << node1->name();
+//									dumpFile << " contends with " << node2->name() << "\n";
+//								)	
+							//node2->addContender(node1);
 						}
 					}
 				}
@@ -722,6 +736,9 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 						for (PipelineStage::ExecutionNodeIterator node2(fu_stage) ; node2 ; node2++) {
 							if ((ExecutionNode *)node1 != (ExecutionNode *)node2) {
 								node1->addContender(node2);
+//								LOG( 	dumpFile << "\t" << node1->name();
+//									dumpFile << " contends with " << node2->name() << "\n";
+//								)	
 								//node2->addContender(node1);
 							}
 						}

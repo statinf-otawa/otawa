@@ -127,6 +127,7 @@ class ExecutionNode: public GenGraph<ExecutionNode, ExecutionEdge>::Node {
 		code_part_t code_part;
 		bool shaded;
 		elm::genstruct::Vector<ExecutionNode *> contenders;
+		elm::String _name;
 	public:
 		inline ExecutionNode(ExecutionGraph * graph, 
 							PipelineStage *stage, 
@@ -166,6 +167,7 @@ class ExecutionNode: public GenGraph<ExecutionNode, ExecutionEdge>::Node {
 		void dumpPart(elm::io::Output& out_stream);
 		inline void shade(void);
 		inline bool isShaded(void);
+		inline elm::String name();
 		class ContenderIterator: public elm::genstruct::Vector<ExecutionNode *>::Iterator {
 			public:
 				inline ContenderIterator(const ExecutionNode *node);
@@ -194,6 +196,7 @@ class ExecutionEdge: public GenGraph<ExecutionNode, ExecutionEdge>::Edge {
 		inline ExecutionEdge(ExecutionNode *source, ExecutionNode *target, edge_type_t type);
 		inline edge_type_t type(void) const;
 		void dump(elm::io::Output& out_stream);
+		inline String name();
 };
 
 // -----------------------------------------------------------
@@ -378,6 +381,9 @@ produces_operands(false), shaded(false), code_part(part), Node((otawa::graph::Gr
 	finish_time.max = INFINITE_TIME;
 	latency.min = stage->minLatency();
 	latency.max = stage->maxLatency();	
+	StringBuffer _buffer;
+	_buffer << stage->shortName() << "(I" << index << ")";
+	_name = _buffer.toString();
 }
 
 // ---------- pipelineStage()
@@ -555,6 +561,12 @@ inline code_part_t ExecutionNode::part(void) const {
 	return code_part;
 }
 
+// ---------- name()
+
+inline String ExecutionNode::name(void)  {
+	return _name;
+}
+
 // ---------- ContenderIterator
 
 inline ExecutionNode::ContenderIterator::ContenderIterator(const ExecutionNode *node):
@@ -575,6 +587,14 @@ inline ExecutionEdge::ExecutionEdge(ExecutionNode *source, ExecutionNode *target
 
 inline ExecutionEdge::edge_type_t ExecutionEdge::type(void) const {
 	return edge_type;
+}
+
+// ---------- name()
+
+inline String ExecutionEdge::name(void) {
+	StringBuffer buffer;
+	buffer << source()->name() << "->" << target()->name();
+	return buffer.toString();
 }
 
 
