@@ -11,7 +11,7 @@
 #include <elm/serial/interface.h>
 #include <elm/serial/SerialTable.h>
 #include <otawa/prog/Instruction.h>
-#include <elm/util/StrongType.h>
+#include <elm/util/strong_type.h>
 
 namespace otawa { namespace hard {
 
@@ -34,7 +34,7 @@ public:
 class Dispatch {
 	SERIALIZABLE
 public:
-	typedef StrongType<Inst::kind_t> type_t;
+	STRONG_TYPE(type_t, Inst::kind_t);
 private:
 	type_t type;
 	FunctionalUnit *fu;
@@ -74,6 +74,8 @@ public:
 	inline const elm::serial::SerialTable<Dispatch *>&
 		getDispatch(void) const { return dispatch; };
 	inline bool isOrdered(void) const { return ordered; };
+	template <class T> inline T select(Inst *inst, const T table[]) const; 
+	template <class T> inline T select(Inst::kind_t kind, const T table[]) const; 
 };
 
 // Queue class
@@ -107,6 +109,22 @@ public:
 	inline const elm::genstruct::Table<Stage *>& getStages(void) const { return stages; };
 	inline const elm::genstruct::Table<Queue *>& getQueues(void) const { return queues; };
 };
+
+
+// Stage inlines
+template <class T>
+inline T Stage::select(Inst *inst, const T table[]) const {
+	return select<T>(inst->kind(), table);
+}
+
+template <class T>
+inline T Stage::select(Inst::kind_t kind, const T table[]) const {
+	for(int i = 0; i < dispatch.count(); i++) {
+		Inst::kind_t mask = dispatch[i]->getType();
+		if((mask & kind) == mask)
+			return table[i];
+	}
+}
 
 } } // otawa::hard
 

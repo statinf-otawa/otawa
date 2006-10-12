@@ -12,14 +12,14 @@
 #include <elm/utility.h>
 #include <elm/string.h>
 #include <elm/util/VarArg.h>
-#include <elm/util/StrongType.h>
+#include <elm/util/strong_type.h>
 
 namespace otawa {
 using namespace elm;
 
 // Base types
 typedef unsigned char byte_t;
-typedef elm::StrongType<unsigned long> address_t ;
+STRONG_TYPE(address_t, unsigned long);
 typedef unsigned long size_t;
 typedef signed long offset_t;
 typedef unsigned long mask_t;
