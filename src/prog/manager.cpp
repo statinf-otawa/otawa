@@ -135,19 +135,27 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * @return The loaded framework or 0.
  */
 FrameWork *Manager::load(const elm::system::Path&  path, PropList& props) {
+	
+	// Just load binary ?
+	if(path.extension() != "xml")
+		return loadBin(path, props);
+	
+	// Load the XML file
+	loadXML(path, props);
+	return load(CONFIG_ELEMENT(props), props);
+}
+
+
+/**
+ * Load a binary file.
+ * @param path	Path to the binary file.
+ * @param props	Configuration properties.
+ * @return		Built framework.
+ * @throws	LoadException	Error during load.
+ */
+FrameWork *Manager::loadBin(const elm::system::Path& path, PropList& props) {
 	Process *proc = 0;
-	
-	// Is it a configuration XML file ?
-	if(path.extension() == "xml") {
-		/*xom::Builder builder;
-		xom::Document *doc = builder.build(path);
-		if(!doc)
-			throw LoadException("cannot load \"%s\".", &path);
-		xom::Element *elem = doc->getRootElement();
-		if(elem->getLocalName() != "otawa")*/
-		assert(0);
-	}
-	
+
 	// Simple identified loader
 	Loader *loader = LOADER(props);
 	if(!loader) {
@@ -172,12 +180,79 @@ FrameWork *Manager::load(const elm::system::Path&  path, PropList& props) {
 		loader = findLoader(name.toCString());
 	}
 	
-	// Return result
+	// No loader -> error
 	if(!loader)
 		throw LoadException("no loader for \"%s\".", &path);
-	else
-		return new FrameWork(loader->load(this, &path, props));
+
+	// Try to load the binary
+	return new FrameWork(loader->load(this, &path, props));
 }
+
+
+/**
+ * Load an XML configuration file.
+ * @param path	Path of the XML file.
+ * @param props	Property to install the configuration in.
+ * @throws	LoadException	Error during load.
+ */ 
+void Manager::loadXML(const elm::system::Path& path, PropList& props) {
+	
+	// Load the file
+	xom::Builder builder;
+	xom::Document *doc = builder.build(&path);
+	if(!doc)
+		throw LoadException("cannot load \"%s\".", &path);
+	xom::Element *elem = doc->getRootElement();
+	
+	// Check the file
+	if(elem->getLocalName() != "otawa"
+	|| elem->getNamespaceURI() != OTAWA_NS)
+		throw LoadException("not a valid OTAWA XML.");
+	CONFIG_ELEMENT(props) = elem;
+}
+
+
+/**
+ * Load the framework from an XML configuration.
+ * @param elem	Top element of the configuration.
+ * @param props	Configuration properties.
+ * @return		Built framework.
+ * @throws	LoadException	Error during load.
+ */
+FrameWork *Manager::load(xom::Element *elem, PropList& props) {
+	assert(elem);
+	xom::Element *bin = elem->getFirstChildElement("binary");
+	if(!bin)
+		throw LoadException("no binary available.");
+	elm::system::Path bin_path = (CString)bin->getAttributeValue("ref");
+	if(!bin_path)
+		throw LoadException("no binary available.");
+	return loadBin(bin_path, props);
+} 
+
+
+/**
+ * Load a computation configuration from the given properties.
+ * @param props		Configuration properties.
+ * @return			Load framework.
+ * @throws	LoadException	Error during load.
+ */
+FrameWork *Manager::load(PropList& props) {
+	
+	// Look for an XML element
+	xom::Element *elem = CONFIG_ELEMENT(props);
+	if(elem)
+		return load(elem, props);
+	
+	// Look for a file name
+	elm::system::Path path = CONFIG_PATH(props);
+	if(path)
+		return load(path, props);
+	
+	// Nothing to do
+	throw LoadException("nothing to do.");
+}
+
 
 /**
  * Manager builder. Install the PPC GLISS loader.
@@ -220,6 +295,7 @@ ilp::System *Manager::newILPSystem(String name) {
 	}
 	return plugin->newSystem();
 }
+
 
 /**
  * This property, passed to the load configuration, gives the name of the
