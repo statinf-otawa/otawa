@@ -21,6 +21,8 @@
 
 namespace otawa {
 
+using namespace elm;
+
 // Classes
 class File;
 class Manager;
@@ -46,6 +48,8 @@ class Manager {
 	elm::system::Plugger ilp_plugger;
 	elm::system::Plugger loader_plugger;
 	elm::system::Plugger sim_plugger;
+	FrameWork *loadBin(const elm::system::Path& path, PropList& props);
+	void loadXML(const elm::system::Path& path, PropList& props);
 public:
 	static const CString OTAWA_NS;
 	static const CString OTAWA_NAME;
@@ -56,6 +60,8 @@ public:
 	Loader *findLoader(elm::CString name);
 	sim::Simulator *findSimulator(elm::CString name);
 	FrameWork *load(const elm::system::Path& path, PropList& props);
+	FrameWork *load(PropList& props);
+	FrameWork *load(xom::Element *elem, PropList& props); 
 	ilp::System *newILPSystem(String plugin = "");
 	
 };
