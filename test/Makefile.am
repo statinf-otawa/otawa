@@ -11,14 +11,12 @@ SUBDIRS = \
 if HAS_ILP
 SUBDIRS += \
 	ccg \
-	categorisation \
-	exegraph
+	categorisation
 endif
 
 if HAS_SYSTEMC
 SUBDIRS += \
 	delta \
-	systemc \
 	generic_simulator
 endif
 
