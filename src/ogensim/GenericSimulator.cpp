@@ -159,7 +159,8 @@ void GenericState::init() {
 	/**
 	 * !!TODO!! Replace by an exception throw
 	 */
-	assert(oproc);
+	 if(!oproc)
+	 	throw LoadException("no processor description available.");
 	
 	// Build the queues
 	elm::genstruct::Vector<InstructionQueueConfiguration *> queues;
