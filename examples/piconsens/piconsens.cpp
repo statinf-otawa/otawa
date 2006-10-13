@@ -36,7 +36,7 @@ class Command: public elm::option::Manager {
 	otawa::Manager manager;
 	FrameWork *fw;
 	
-	void initExeGraph(Microprocessor *processor);
+	//void initExeGraph(Microprocessor *processor);
 public:
 	Command(void);
 	void compute(String fun);
@@ -55,6 +55,7 @@ BoolOption verbose(command, 'v', "verbose", "verbose mode", false);
 BoolOption exegraph(command, 'E', "exegraph", "use exegraph method", false);
 IntOption delta(command, 'D', "delta", "use delta method with given sequence length", "length", 0);
 IntOption degree(command, 'd', "degree", "superscalar degree power (real degree = 2^power)", "degree", 1);
+StringOption proc(command, 'p', "processor", "used processor", "processor", "deg1.xml");
  
 
 /**
@@ -109,9 +110,9 @@ void Command::compute(String fun) {
 	
 	// Compute BB time
 	if(exegraph && !delta) {
-		Microprocessor processor;
-		initExeGraph(&processor);
-		ExeGraphBBTime::PROCESSOR(props) = &processor;
+		//Microprocessor processor;
+		//initExeGraph(&processor);
+		//ExeGraphBBTime::PROCESSOR(props) = &processor;
 		ExeGraphBBTime tbt(props);
 		tbt.process(fw);
 	}
@@ -150,7 +151,7 @@ void Command::compute(String fun) {
 	// Get the result
 	ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
 	cout /*<< "WCET [" << file << ":" << fun << "] = "*/
-		 << vcfg.use<int>(WCET) << io::endl;	
+		 << vcfg.use<int>(WCET);  //<< io::endl;	
 
 	// Dump the ILP system
 	if(dump_constraints) {
@@ -178,6 +179,7 @@ void Command::run(void) {
 //	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	SIMULATOR(props) = &sim;
 	DEGREE(props) = degree;
+	PROCESSOR_PATH(props) = proc.value();
 	fw = manager.load(&file, props);
 	
 	// Removing __eabi call if available (should move in a file configuration)
@@ -205,7 +207,7 @@ void Command::run(void) {
  * Initialize the given microprocessor.
  * @param processor	Processor to initialize.
  */
-void Command::initExeGraph(Microprocessor *processor) {
+/*void Command::initExeGraph(Microprocessor *processor) {
 	Queue *fetchQueue = processor->addQueue("FetchQueue", 1 << (degree + 1));
 	Queue *ROB = processor->addQueue("ROB", 1 << (degree + 3));
 	PipelineStage::pipeline_info_t pipeline_info;
@@ -319,7 +321,7 @@ void Command::initExeGraph(Microprocessor *processor) {
 	pipeline_info.source_queue = ROB;
 	pipeline_info.destination_queue = NULL;
 	processor->addPipelineStage(pipeline_info);
-}
+}*/
 
 
 /**
