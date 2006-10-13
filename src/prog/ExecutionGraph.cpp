@@ -482,8 +482,11 @@ int ExecutionGraph::minDelta(elm::io::Output& out_stream) {
 
 // ---------- build
 
-void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor, 
-					elm::genstruct::DLList<ExecutionGraphInstruction *> &sequence) {
+void ExecutionGraph::build(
+	FrameWork *fw,
+	Microprocessor* microprocessor, 
+	elm::genstruct::DLList<ExecutionGraphInstruction *> &sequence
+) {
 	this->_sequence = &sequence;
 	// Init rename tables
 	Platform *pf = fw->platform();
@@ -500,12 +503,19 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 	for (Microprocessor::PipelineIterator stage(microprocessor) ; stage ; stage++) {
 		stage->deleteNodes();
 		if (stage->usesFunctionalUnits()) {
-			for (int i=0 ; i<INST_CATEGORY_NUMBER ; i++) {
+			// !!ICI!!
+			
+			/*for (int i=0 ; i<INST_CATEGORY_NUMBER ; i++) {
 				PipelineStage::FunctionalUnit * fu = stage->functionalUnit(i);
 				for (PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu) ; fu_stage ; fu_stage++) {
 					fu_stage->deleteNodes();
 				}
-			}
+			}*/
+			
+			for(genstruct::Vector<PipelineStage::FunctionalUnit *>::Iterator
+			fu(stage->getFUs()); fu; fu++)
+				for (PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu); fu_stage; fu_stage++)
+					fu_stage->deleteNodes();
 		}
 	}
 	for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++) {
@@ -517,6 +527,7 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 	code_part_t current_code_part = BEFORE_PROLOGUE;
 	for (Microprocessor::PipelineIterator stage(microprocessor) ; stage ; stage++) {
 		// consider every instruction
+		// !!ICI!!
 		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++)  {
 			// the instruction before the prologue (if any) is unknown => it deserves a specific treatment
 			if (inst->codePart() == BEFORE_PROLOGUE) {
@@ -526,9 +537,13 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 					// the category of this instruction is unknown 
 					//      => assume execution with minimum/maximum latency among all functional units
 					int min_latency = INFINITE_TIME, max_latency = 0;
-					for (int cat=1 ; cat<INST_CATEGORY_NUMBER ; cat++) {
+					
+					// !!ICI!!
+					/*for (int cat=1 ; cat<INST_CATEGORY_NUMBER ; cat++) {
 						PipelineStage::FunctionalUnit *fu = stage->functionalUnit(cat);
-						assert(fu);
+						assert(fu);*/
+					for(genstruct::Vector<PipelineStage::FunctionalUnit *>::Iterator
+					fu(stage->getFUs()); fu; fu++) {
 						int min_lat = 0, max_lat = 0;
 						for(PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu); fu_stage; fu_stage++) {
 							min_lat += ((PipelineStage *) *fu_stage)->minLatency();
@@ -571,7 +586,9 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 					}			
 				}
 				else {
-					PipelineStage::FunctionalUnit *fu = stage->functionalUnit(instCategory(inst->inst()));
+					// !!ICI!!
+					PipelineStage::FunctionalUnit *fu = stage->findFU(inst->inst()->kind()); 
+						// stage->functionalUnit(instCategory(inst->inst()));
 					bool first_fu_node = true;
 					ExecutionNode * node;
 					for(PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu); fu_stage; fu_stage++) {
@@ -603,6 +620,7 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 	setEntryNode(sequence.first()->firstNode());
 	
 	// build edges for pipeline order and data dependencies
+	// !!ICI!!
 	for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++)  {
 		ExecutionNode * previous = NULL;
 		for (ExecutionGraphInstruction::ExecutionNodeIterator node(*inst) ; node ; node++) {
@@ -658,7 +676,7 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 	// build edges for program order
 	for (Microprocessor::PipelineIterator stage(microprocessor) ; stage ; stage++) {
 		if (stage->orderPolicy() == PipelineStage::IN_ORDER) {
-			ExecutionNode * previous = NULL;
+			ExecutionNode * previous = NULL;	// !!WARNING!!
 			if (stage->width() == 1) {
 				// scalar stage
 				for (PipelineStage::ExecutionNodeIterator node(stage) ; node ; node++) {
@@ -674,7 +692,8 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 				elm::genstruct::DLList<ExecutionNode *> previous_nodes;
 				for (PipelineStage::ExecutionNodeIterator node(stage) ; node ; node++) {			
 					// superscalar => draw a slashed edge between adjacent instructions
-					ExecutionEdge *edge = new ExecutionEdge(previous, node, ExecutionEdge::SLASHED);
+					if(previous)
+						ExecutionEdge *edge = new ExecutionEdge(previous, node, ExecutionEdge::SLASHED);
 //					LOG(dumpFile << "\tSlashed edge between successive instructions (superscalar stage): " << edge->name() << ")\n";)
 					
 					// draw a solid edge to model the stage width 
@@ -730,8 +749,12 @@ void ExecutionGraph::build(FrameWork *fw, Microprocessor* microprocessor,
 				}
 			}
 			else {
-				for (int i=0 ; i<INST_CATEGORY_NUMBER ; i++) {
-					PipelineStage *fu_stage = stage->functionalUnit(i)->firstStage();
+				/*for (int i=0 ; i<INST_CATEGORY_NUMBER ; i++) {
+					PipelineStage *fu_stage = stage->functionalUnit(i)->firstStage();*/
+				for(genstruct::Vector<PipelineStage::FunctionalUnit *>::Iterator
+				fu(stage->getFUs()); fu; fu++) {
+					PipelineStage *fu_stage = fu->firstStage();
+					
 					for (PipelineStage::ExecutionNodeIterator node1(fu_stage) ; node1 ; node1++) {
 						for (PipelineStage::ExecutionNodeIterator node2(fu_stage) ; node2 ; node2++) {
 							if ((ExecutionNode *)node1 != (ExecutionNode *)node2) {

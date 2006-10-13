@@ -43,6 +43,8 @@ void FlowFactLoader::onError(const char *fmt, ...) {
 /**
  */
 void FlowFactLoader::onLoop(address_t addr, int count) {
+	// !!TODO!! Should be replaced by more efficient solution
+	// using maybe an has table for storing loop header / loop count.
 	assert(system);
 	assert(count >= 0);
 	//cout << "LOOP " << count << " times at " << addr << "\n";
@@ -70,12 +72,13 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 					if(!Dominance::dominates(bb, edge->source()))
 						cons->addRight(count, var);
 				}
-				return;
+				found = true;
 			}
 	}
 	
 	// Nothing found, seems too bad
-	out << "WARNING: loop " << addr << " not found.\n";
+	if(!found)
+		out << "WARNING: loop " << addr << " not found.\n";
 }
 
 

@@ -15,6 +15,7 @@
 #include <elm/genstruct/DLList.h>
 #include <otawa/hard/Register.h>
 #include <otawa/exegraph/ExeGraphBBTime.h>
+#include <otawa/hard/Processor.h>
 
 using namespace otawa;
 using namespace otawa::hard;
@@ -68,10 +69,40 @@ ExeGraphBBTime::ExeGraphBBTime(const PropList& props)
 	microprocessor(PROCESSOR(props)),
 	dumpFile(*LOG_OUTPUT(props))
 {
-	assert(microprocessor);
 }
 
 
+/**
+ */
+void ExeGraphBBTime::processFrameWork(FrameWork *fw) {
+	bool built = false, reset = false;
+	
+	// If required, find the microprocessor
+	if(!microprocessor) {
+		microprocessor = PROCESSOR(fw);
+		if(microprocessor) 
+			reset = true;
+		else {
+			const hard::Processor *proc = fw->platform()->processor();
+			if(!proc)
+				throw ProcessorException(*this, "no processor to work with");
+			else {
+				reset = true;
+				built = true;
+				microprocessor = new Microprocessor(proc);
+			}
+		}
+	}
+	
+	// Perform the actual process
+	BBProcessor::processFrameWork(fw);
+	
+	// Cleanup if required
+	if(built)
+		delete microprocessor;
+	if(reset)
+		microprocessor = 0;
+}
 
 
 // ---------------------------------------------------
@@ -219,45 +250,49 @@ int ExeGraphBBTime::processSequence( FrameWork *fw,
 	}
 
 	// set dump file
-	elm::StringBuffer file_name;
-	elm::String string_file_name, string_timed_file_name, extension, number, extension2;
-	string_file_name = "./";
-	string_timed_file_name = string_file_name;
-	extension = ".dot";
-	extension2 = "_times.dot";
-	{
-		code_part_t part = BEFORE_PROLOGUE;
-		int bbnum = -1;
-		file_name << body->first()->basicBlock()->number() << "+";
-		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++) {
-			if (inst->codePart() != part) 
-				file_name << "---";
-			part = inst->codePart();
-			if (inst->basicBlock()) {
-				if (inst->basicBlock()->number() != bbnum)
-					file_name << inst->basicBlock()->number() << "-";
-				bbnum = inst->basicBlock()->number();
+	#ifdef DO_LOG
+		elm::StringBuffer file_name;
+		elm::String string_file_name, string_timed_file_name, extension, number, extension2;
+		string_file_name = "./";
+		string_timed_file_name = string_file_name;
+		extension = ".dot";
+		extension2 = "_times.dot";
+		{
+			code_part_t part = BEFORE_PROLOGUE;
+			int bbnum = -1;
+			file_name << body->first()->basicBlock()->number() << "+";
+			for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++) {
+				if (inst->codePart() != part) 
+					file_name << "---";
+				part = inst->codePart();
+				if (inst->basicBlock()) {
+					if (inst->basicBlock()->number() != bbnum)
+						file_name << inst->basicBlock()->number() << "-";
+					bbnum = inst->basicBlock()->number();
+				}
 			}
 		}
-	}
-	number = file_name.toString();
-	string_file_name = string_file_name.concat(number);
-	string_file_name = string_file_name.concat(extension);
-	elm::io::OutFileStream dotStream(string_file_name.toCString());
-	elm::io::Output dotFile(dotStream);	
+		number = file_name.toString();
+		string_file_name = string_file_name.concat(number);
+		string_file_name = string_file_name.concat(extension);
+		elm::io::OutFileStream dotStream(string_file_name.toCString());
+		elm::io::Output dotFile(dotStream);
+	#endif // DO_LOG	
 			
 	ExecutionGraph execution_graph;
 	execution_graph.build(fw, microprocessor, sequence);
 	LOG(execution_graph.dumpLight(dumpFile));
 	int bbExecTime = execution_graph.analyze(dumpFile);
 	
-	LOG(dumpFile << "Cost of block " << body->first()->basicBlock()->number() << " is " << bbExecTime << "\n");
-	string_timed_file_name = string_timed_file_name.concat(number);
-	string_timed_file_name = string_timed_file_name.concat(extension2);
-	elm::io::OutFileStream timedDotStream(string_timed_file_name.toCString());
-	elm::io::Output timedDotFile(timedDotStream);
-	// dump the execution graph *with times* in dot format
-	execution_graph.dotDump(timedDotFile,true);		
+	#ifdef DO_LOG
+		dumpFile << "Cost of block " << body->first()->basicBlock()->number() << " is " << bbExecTime << "\n";
+		string_timed_file_name = string_timed_file_name.concat(number);
+		string_timed_file_name = string_timed_file_name.concat(extension2);
+		elm::io::OutFileStream timedDotStream(string_timed_file_name.toCString());
+		elm::io::Output timedDotFile(timedDotStream);
+		// dump the execution graph *with times* in dot format
+		LOG(execution_graph.dotDump(timedDotFile,true));		
+	#endif // DO_LOG
 	
 	return bbExecTime;
 }
