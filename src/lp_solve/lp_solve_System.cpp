@@ -17,20 +17,19 @@ extern "C" {
 
 using namespace elm;
 
-namespace otawa { namespace lp_solve {
-
 // HashKey for ilp::Var *
-class VarHashKey: public HashKey<ilp::Var *> {
-	virtual unsigned long hash(ilp::Var *v) {
-		return (unsigned long)v;
+namespace elm {
+	template <>
+	class HashKey<otawa::ilp::Var *> {
+	public:
+		static unsigned long hash(otawa::ilp::Var *v)
+			{ return (unsigned long)v; }
+		static bool equals(otawa::ilp::Var *key1, otawa::ilp::Var *key2)
+			{ return key1 == key2; }
 	};
-	virtual bool equals(ilp::Var *key1, ilp::Var *key2) {
-		return key1 == key2;
-	};
-};
-static VarHashKey var_hkey_obj;
-template <> HashKey<ilp::Var *>& HashKey<ilp::Var *>::def = otawa::lp_solve::var_hkey_obj;
+} // elm
 
+namespace otawa { namespace lp_solve {
 
 /**
  * @class System
