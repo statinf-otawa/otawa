@@ -21,7 +21,7 @@
 #	define CHECK(c)	c
 #endif
 
-#define DO_LOG
+//#define DO_LOG
 #if defined(NDEBUG) || !defined(DO_LOG)
 #	define LOG(c)
 #else
@@ -482,12 +482,20 @@ int ExecutionGraph::minDelta(elm::io::Output& out_stream) {
 
 // ---------- build
 
+
+/**
+ * Build the graph for the given sequence.
+ * @param fw				Used framework.
+ * @param microprocessor	Current microprocessor.
+ * @param sequence			Selected sequence.
+ */
 void ExecutionGraph::build(
 	FrameWork *fw,
 	Microprocessor* microprocessor, 
 	elm::genstruct::DLList<ExecutionGraphInstruction *> &sequence
 ) {
 	this->_sequence = &sequence;
+
 	// Init rename tables
 	Platform *pf = fw->platform();
 	AllocatedTable<rename_table_t> rename_tables(pf->banks().count());
@@ -503,49 +511,43 @@ void ExecutionGraph::build(
 	for (Microprocessor::PipelineIterator stage(microprocessor) ; stage ; stage++) {
 		stage->deleteNodes();
 		if (stage->usesFunctionalUnits()) {
-			// !!ICI!!
-			
-			/*for (int i=0 ; i<INST_CATEGORY_NUMBER ; i++) {
-				PipelineStage::FunctionalUnit * fu = stage->functionalUnit(i);
-				for (PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu) ; fu_stage ; fu_stage++) {
-					fu_stage->deleteNodes();
-				}
-			}*/
-			
 			for(genstruct::Vector<PipelineStage::FunctionalUnit *>::Iterator
 			fu(stage->getFUs()); fu; fu++)
 				for (PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu); fu_stage; fu_stage++)
 					fu_stage->deleteNodes();
 		}
 	}
-	for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++) {
+	for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++)
 		inst->deleteNodes();
-	}
 	
 	// build nodes
 	// consider every pipeline stage
 	code_part_t current_code_part = BEFORE_PROLOGUE;
 	for (Microprocessor::PipelineIterator stage(microprocessor) ; stage ; stage++) {
+		
 		// consider every instruction
-		// !!ICI!!
-		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++)  {
-			// the instruction before the prologue (if any) is unknown => it deserves a specific treatment
+		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ;
+		inst ; inst++)  {
+			
+			// the instruction before the prologue (if any) is unknown
+			// => it deserves a specific treatment
 			if (inst->codePart() == BEFORE_PROLOGUE) {
-				ExecutionNode * node = new ExecutionNode(this, (PipelineStage *)stage,
-									inst->inst(), inst->index(), inst->codePart());
+				
+				ExecutionNode * node = new ExecutionNode(this,
+					(PipelineStage *)stage,
+					inst->inst(),
+					inst->index(),
+					inst->codePart());
 				if (stage->usesFunctionalUnits()) {
+					
 					// the category of this instruction is unknown 
 					//      => assume execution with minimum/maximum latency among all functional units
 					int min_latency = INFINITE_TIME, max_latency = 0;
-					
-					// !!ICI!!
-					/*for (int cat=1 ; cat<INST_CATEGORY_NUMBER ; cat++) {
-						PipelineStage::FunctionalUnit *fu = stage->functionalUnit(cat);
-						assert(fu);*/
 					for(genstruct::Vector<PipelineStage::FunctionalUnit *>::Iterator
 					fu(stage->getFUs()); fu; fu++) {
 						int min_lat = 0, max_lat = 0;
-						for(PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu); fu_stage; fu_stage++) {
+						for(PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu);
+						fu_stage; fu_stage++) {
 							min_lat += ((PipelineStage *) *fu_stage)->minLatency();
 							max_lat += ((PipelineStage *) *fu_stage)->maxLatency();
 						}
@@ -572,6 +574,8 @@ void ExecutionGraph::build(
 				setFirstNode(BEFORE_PROLOGUE,inst->firstNode());
 				setLastNode(current_code_part, inst->lastNode());
 			}
+			
+			// Out of the proglog
 			else {
 				if (!stage->usesFunctionalUnits()) {
 					ExecutionNode * node = new ExecutionNode(this, (PipelineStage *)stage, inst->inst(), 
@@ -586,9 +590,7 @@ void ExecutionGraph::build(
 					}			
 				}
 				else {
-					// !!ICI!!
 					PipelineStage::FunctionalUnit *fu = stage->findFU(inst->inst()->kind()); 
-						// stage->functionalUnit(instCategory(inst->inst()));
 					bool first_fu_node = true;
 					ExecutionNode * node;
 					for(PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu); fu_stage; fu_stage++) {
@@ -620,7 +622,6 @@ void ExecutionGraph::build(
 	setEntryNode(sequence.first()->firstNode());
 	
 	// build edges for pipeline order and data dependencies
-	// !!ICI!!
 	for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ; inst ; inst++)  {
 		ExecutionNode * previous = NULL;
 		for (ExecutionGraphInstruction::ExecutionNodeIterator node(*inst) ; node ; node++) {
@@ -703,6 +704,7 @@ void ExecutionGraph::build(
 						previous_nodes.removeFirst();	
 					}
 					previous_nodes.addLast(node);
+					previous = node;
 				}
 			}
 		}
