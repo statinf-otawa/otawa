@@ -11,6 +11,7 @@
 #include <otawa/ilp/System.h>
 #include <otawa/cfg/CFGBuilder.h>
 #include <config.h>
+#include <elm/xom.h>
 
 
 // Trace
@@ -113,6 +114,42 @@ const hard::CacheConfiguration& FrameWork::cache(void) {
  */
 ilp::System *FrameWork::newILPSystem(bool max) {
 	return manager()->newILPSystem();
+}
+
+
+/**
+ * Load the given configuration in the process.
+ * @param path				Path to the XML configuration file.
+ * @throw LoadException		If the file cannot be found or if it does not match
+ * the OTAWA XML type.
+ */
+void FrameWork::loadConfig(const elm::system::Path& path) {
+	xom::Builder builder;
+	xom::Document *doc = builder.build(&path);
+	if(!doc)
+		throw LoadException("cannot load \"%s\".", &path);
+	xom::Element *conf = doc->getRootElement();
+	if(conf->getLocalName() != "otawa"
+	|| conf->getNamespaceURI() != "")
+		throw LoadException("bad file type in \"%s\".", &path);
+	CONFIG_ELEMENT(this) = conf;
+}
+
+
+/**
+ * Get the current configuration, if any, as an XML XOM element.
+ * @return	Configuration XML element or null.
+ */
+xom::Element *FrameWork::config(void) {
+	xom::Element *conf = CONFIG_ELEMENT(this);
+	if(!conf) {
+		elm::system::Path path = CONFIG_PATH(this);
+		if(path) {
+			loadConfig(path);
+			conf = CONFIG_ELEMENT(this);
+		}
+	}
+	return conf;
 }
 
 } // otawa

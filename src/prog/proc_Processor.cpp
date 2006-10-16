@@ -94,6 +94,11 @@ void Processor::configure(const PropList& props) {
  * @param fw	Framework to work on.
  */
 void Processor::process(FrameWork *fw) {
+	
+	// Look for an XML configuration
+	
+	
+	// Process the framework
 	if(isVerbose())
 		out << "Starting " << name() << " (" << version() << ')' << io::endl;
 	system::StopWatch swatch;

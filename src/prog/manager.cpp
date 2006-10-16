@@ -13,6 +13,7 @@
 #include <gel.h>
 #include <elm/xom.h>
 #include <otawa/sim/Simulator.h>
+#include <otawa/proc/Processor.h>
 
 using namespace elm;
 
@@ -208,6 +209,10 @@ void Manager::loadXML(const elm::system::Path& path, PropList& props) {
 	if(elem->getLocalName() != "otawa"
 	|| elem->getNamespaceURI() != OTAWA_NS)
 		throw LoadException("not a valid OTAWA XML.");
+	
+	// Record the configuration
+	if(PROC_VERBOSE(props))
+		cout << "MANAGER: load configuration from \"" << path << "\".\n";
 	CONFIG_ELEMENT(props) = elem;
 }
 

@@ -67,6 +67,10 @@ public:
 	
 	// ILP support
 	ilp::System *newILPSystem(bool max = true);
+
+	// Configuration services
+	elm::xom::Element *config(void);
+	void loadConfig(const elm::system::Path& path);
 };
 
 };	// otawa

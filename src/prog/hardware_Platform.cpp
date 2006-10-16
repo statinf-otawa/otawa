@@ -11,6 +11,7 @@
 #include <otawa/hard/Processor.h>
 #include <elm/serial/XOMUnserializer.h>
 #include <otawa/prog/Manager.h>
+#include <elm/xom.h>
 
 namespace otawa { namespace hard {
 
@@ -57,6 +58,15 @@ void Platform::configure(const PropList& props) {
 			elm::system::Path path = PROCESSOR_PATH(props);
 			if(path)
 				loadProcessor(path);
+			else {
+				element = CONFIG_ELEMENT(props);
+				if(element) {
+					xom::Element *proc_elem = element->getFirstChildElement(
+						Manager::PROCESSOR_NAME, Manager::OTAWA_NS);
+					if(proc_elem)
+						loadProcessor(proc_elem);
+				}
+			}
 		}
 	}
 }

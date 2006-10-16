@@ -52,8 +52,6 @@ public:
 	virtual elm::Collection<File *> *files(void) = 0;
 	virtual sim::Simulator *simulator(void);
 	inline File *program(void) const;
-	elm::xom::Element *config(void);
-	void loadConfig(const elm::system::Path& path);
 
 	// Constructors
 	virtual File *createFile(void) = 0;
