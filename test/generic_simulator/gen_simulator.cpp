@@ -14,8 +14,10 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
 #include <otawa/gensim/GenericSimulator.h>
-#include <otawa/sim/BasicBlockDriver.h>
+#include <FullSimulationDriver.h>
 #include <otawa/gensim/debug.h>
+#include <otawa/gliss.h>
+#include <otawa/sim/BasicBlockDriver.h>
 
 
 using namespace elm;
@@ -91,6 +93,11 @@ int main(int argc, char **argv) {
 		logFile << "Timing the BB with generic simulator\n";
 		logFile << "----------------------------------------------\n";
 		
+//				int start_cycle = simulator_state->cycle();
+//				sim::FullSimulationDriver driver(fw->start(), otawa::gliss::GLISS_STATE(fw));
+//				simulator_state->run(driver);
+//				int finish_cycle = simulator_state->cycle();
+//				logFile << "cycle number: " << finish_cycle - start_cycle << "\n";
 		for(CFG::BBIterator bb(&vcfg); bb; bb++) {
 			if (bb->countInstructions() != 0) {
 				TRACE(elm::cout << "\n****************************************************\n";
@@ -102,9 +109,10 @@ int main(int argc, char **argv) {
 					elm::cout << "\n\n";)
 				
 				int start_cycle = simulator_state->cycle();
-				sim::BasicBlockDriver driver(bb);
+				otawa::sim::BasicBlockDriver driver(bb);
 				simulator_state->run(driver);
 				int finish_cycle = simulator_state->cycle();
+				logFile << "cycle number: " << finish_cycle - start_cycle << "\n";
 				logFile << "block b" << bb->number() << ":";
 				logFile << finish_cycle - start_cycle << " cycles\n";
 			}
