@@ -15,6 +15,76 @@
 #include <elm/genstruct/DLList.h>
 
 namespace otawa { 
+	
+class PrefixCost {
+	private:
+		elm::genstruct::DLList<int> _costs;
+		elm::genstruct::DLList<BasicBlock *> _reverse_prefix;
+	public:
+		inline PrefixCost(elm::genstruct::DLList<BasicBlock *> * prefix);
+		inline ~PrefixCost();
+		inline void addCost(int cost);
+		inline elm::genstruct::DLList<BasicBlock *> * reversePrefix();
+		inline bool isPrefix(elm::genstruct::DLList<BasicBlock *> * prefix);
+		class CostIterator: public elm::genstruct::DLList<int>::Iterator {
+				public:
+					inline CostIterator(const PrefixCost *prefix_cost);
+			};
+		
+};
+ 
+inline PrefixCost::PrefixCost(elm::genstruct::DLList<BasicBlock *> * prefix) {
+	if (prefix) {
+		for (elm::genstruct::DLList<BasicBlock *>::Iterator bb(*prefix) ; bb ; bb++) {
+			_reverse_prefix.addLast(bb);
+		}
+	}
+}
+
+inline PrefixCost::~PrefixCost() {
+	_costs.clear();
+	_reverse_prefix.clear();
+}
+
+inline void PrefixCost::addCost(int cost) {
+	_costs.addLast(cost);
+}
+
+
+inline elm::genstruct::DLList<BasicBlock *> * PrefixCost::reversePrefix() {
+	return &_reverse_prefix;
+}
+
+inline bool PrefixCost::isPrefix(elm::genstruct::DLList<BasicBlock *> * prefix) {
+	if (prefix->isEmpty()) {
+		if (_reverse_prefix.isEmpty())
+			return true;
+		else
+			return false;
+	}
+	else {
+		if (_reverse_prefix.isEmpty())
+			return false;
+	}
+	
+	elm::genstruct::DLList<BasicBlock *>::Iterator bb1(*prefix), bb2(_reverse_prefix);
+	bb1.first();
+	bb2.first();
+	while (!bb1.ended() && !bb2.ended()) {
+		if (bb1.item() != bb2.item()) 
+			return false;
+		bb1.next();
+		bb2.next();
+	}
+	if (bb1.ended() != bb2.ended())
+		return false;
+	return true;
+}
+
+inline PrefixCost::CostIterator::CostIterator(const PrefixCost *prefix_cost):
+	elm::genstruct::DLList<int>::Iterator(prefix_cost->_costs) {
+}
+
 
 // --------------------------------------------------------------------
 // Block sequence class
