@@ -24,7 +24,7 @@ using namespace elm::genstruct;
 using namespace otawa::graph;
 using namespace otawa::ipet;
 
-//#define DO_LOG
+#define DO_LOG
 #if defined(NDEBUG) || !defined(DO_LOG)
 #	define LOG(c)
 #else
@@ -226,7 +226,7 @@ int ExeGraphBBTime::processSequence( FrameWork *fw,
 	elm::genstruct::DLList<ExecutionGraphInstruction *> sequence;
 	
 	sequence.clear();
-	if (prologue /*&& (prologue->count() < capacity)*/) {
+	if (prologue) {
 		int index = 0;
 		if (!prologue->isEmpty())
 			index = prologue->first()->index() - 1;
@@ -304,8 +304,8 @@ int ExeGraphBBTime::processSequence( FrameWork *fw,
 void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	elm::genstruct::DLList<ExecutionGraphInstruction *> prologue, body, epilogue, sequence;
 	elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *> prologue_list, epilogue_list;
-	elm::genstruct::DLList<int> bb_times;
-	
+	elm::genstruct::DLList<PrefixCost *> costs;
+
 	LOG(dumpFile << "================================================================\n");
 	LOG(dumpFile << "Processing block b" << bb->number() << ":\n\n");
 	LOG(for(BasicBlock::InstIterator inst(bb); inst; inst++) {
@@ -322,6 +322,7 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	int capacity = 0;
 	for(Microprocessor::QueueIterator queue(microprocessor); queue; queue++){
 		capacity += queue->size();
+		
 	}
 	LOG(dumpFile << "Processor capacity = " << capacity << "\n";) 
 
@@ -403,6 +404,12 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 			}}
 	)
 	
+	elm::StringBuffer file_name_buffer;
+	file_name_buffer << "b" << bb->number() << ".stats";
+	elm::String file_name;
+	file_name = file_name_buffer.toString();
+	elm::io::OutFileStream statsStream(file_name.toCString());
+	elm::io::Output statsFile(statsStream);	
 	
 	
 	int maxExecTime = 0;
@@ -417,9 +424,21 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 					dumpFile << "i" << inst->index() << ", ";
 				}
 				dumpFile << "\n";
-			)				
+			)			
 			bbExecTime = processSequence(fw, NULL, &body, NULL, capacity);
-			bb_times.addLast(bbExecTime);
+			PrefixCost * prefix_cost;	
+			elm::genstruct::DLList<BasicBlock *> prologue_blocks;
+			bool found = false;
+			for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost && !found ; existing_cost++) {
+				found = existing_cost->isPrefix(&prologue_blocks);
+				if (found)
+					existing_cost->addCost(bbExecTime);
+			}
+			if (!found) {
+				prefix_cost = new PrefixCost(&prologue_blocks);
+				prefix_cost->addCost(bbExecTime);
+				costs.addLast(prefix_cost);	
+			}
 			if (bbExecTime > maxExecTime)
 				maxExecTime = bbExecTime;	
 		}
@@ -450,7 +469,20 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 					
 				)
 				bbExecTime = processSequence(fw, NULL, &body, epilogue, capacity);
-				bb_times.addLast(bbExecTime);
+				PrefixCost * prefix_cost;
+				elm::genstruct::DLList<BasicBlock *> prologue_blocks;
+				
+				bool found = false;
+				for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost && !found; existing_cost++) {
+					found = existing_cost->isPrefix(&prologue_blocks);
+					if (found)
+						existing_cost->addCost(bbExecTime);
+				}
+				if (!found) {
+					prefix_cost = new PrefixCost(&prologue_blocks);
+					prefix_cost->addCost(bbExecTime);
+					costs.addLast(prefix_cost);		
+				}
 				if (bbExecTime > maxExecTime)
 					maxExecTime = bbExecTime;	
 			}
@@ -482,8 +514,41 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 					dumpFile << ")\n";
 								
 				)
-				bbExecTime = processSequence(fw, prologue, &body, NULL, capacity);bbExecTime = processSequence(fw, prologue, &body, NULL, capacity);
-				bb_times.addLast(bbExecTime);
+				bbExecTime = processSequence(fw, prologue, &body, NULL, capacity);
+				bbnum = -1;
+				elm::genstruct::DLList<BasicBlock *> prologue_blocks;
+				
+				PrefixCost * prefix_cost, *existing_cost;
+				bool found = false;
+				for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost && !found; existing_cost++) {
+					found = existing_cost->isPrefix(&prologue_blocks);
+					if (found)
+						existing_cost->addCost(bbExecTime);
+				}
+				if (!found) {
+					prefix_cost = new PrefixCost(&prologue_blocks);
+					prefix_cost->addCost(bbExecTime);
+					costs.addLast(prefix_cost);	
+				}
+				elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**prologue);
+				for (inst.last() ; !inst.begining() ; inst.previous()) {
+					if (inst->basicBlock()->number() != bbnum) {					
+						bbnum = inst->basicBlock()->number();
+						prologue_blocks.addLast(inst->basicBlock());
+						bool found = false;
+						for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost && !found; existing_cost++) {
+							found = existing_cost->isPrefix(&prologue_blocks);
+							if (found)
+								existing_cost->addCost(bbExecTime);
+						}
+						if (!found) {							
+							prefix_cost = new PrefixCost(&prologue_blocks);
+							prefix_cost->addCost(bbExecTime);
+							costs.addLast(prefix_cost);	
+						}	
+					}
+				}			
+//				bb_times.addLast(bbExecTime);
 				if (bbExecTime > maxExecTime)
 					maxExecTime = bbExecTime;	
 			}
@@ -528,7 +593,46 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 						dumpFile << ")\n";
 					)
 					bbExecTime = processSequence(fw, prologue, &body, epilogue, capacity);
-					bb_times.addLast(bbExecTime);
+					bbnum = -1;
+					elm::genstruct::DLList<BasicBlock *> prologue_blocks;
+					
+					PrefixCost * prefix_cost, *existing_cost;
+					bool found = false;
+					for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost  && !found; existing_cost++) {
+						found = existing_cost->isPrefix(&prologue_blocks);
+						if (found)
+							existing_cost->addCost(bbExecTime);
+					}
+					if (!found) {
+						prefix_cost = new PrefixCost(&prologue_blocks);
+						prefix_cost->addCost(bbExecTime);
+						costs.addLast(prefix_cost);		
+					}
+					elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**prologue);
+					for (inst.last() ; !inst.begining() ; inst.previous()) {
+						if (inst->basicBlock()->number() != bbnum) {
+							bbnum = inst->basicBlock()->number();
+							prologue_blocks.addLast(inst->basicBlock());
+							LOG(dumpFile << "prologue_blocks=";
+								for (elm::genstruct::DLList<BasicBlock *>::Iterator bb(prologue_blocks) ; bb ; bb++) {
+									dumpFile << "b" << bb->number() << "-";
+								}
+								dumpFile << "\n";
+							)
+							bool found = false;
+							for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost  && !found; existing_cost++) {
+								found = existing_cost->isPrefix(&prologue_blocks);
+								if (found)
+									existing_cost->addCost(bbExecTime);
+							}
+							if (!found) {
+								prefix_cost = new PrefixCost(&prologue_blocks);
+								prefix_cost->addCost(bbExecTime);
+								costs.addLast(prefix_cost);	
+							}	
+						}
+					}	
+					LOG(dumpFile << "\n";)		
 					if (bbExecTime > maxExecTime)
 						maxExecTime = bbExecTime;	
 				}
@@ -537,14 +641,24 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 		
 	}
 	
+	for (elm::genstruct::DLList<PrefixCost *>::Iterator cost(costs) ; cost ; cost++) {
+		statsFile << "Costs for prefix ";
+		if (cost->reversePrefix()->isEmpty())
+			statsFile << "NULL";
+		else
+			for (elm::genstruct::DLList<BasicBlock *>::Iterator bb(*(cost->reversePrefix())) ; bb ; bb++) {
+				statsFile << "b" << bb->number() << "-";
+			}
+		statsFile << "\n\t";
+		for (PrefixCost::CostIterator c(cost) ; c ; c++) {
+			statsFile << (int) c << ", ";
+		}
+		statsFile << "\n\n";
+	}
+	costs.clear();
 	// is the cost of the block for that prologue/epilogue pair the WCC of the block ?
 	
 	LOG(	dumpFile << "WCC of block " << bb->number() << " is " << maxExecTime << "\n";
-			dumpFile << "Times observed for b" << bb->number() << ": ";
-			for (elm::genstruct::DLList<int>::Iterator val(bb_times) ; val ; val++) {
-				dumpFile << *val << ", ";
-			}
-			dumpFile << "\n";
 		)
 	bb->set<int>(TIME, maxExecTime);
 }
