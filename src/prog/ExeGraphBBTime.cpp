@@ -530,8 +530,9 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 					prefix_cost->addCost(bbExecTime);
 					costs.addLast(prefix_cost);	
 				}
-				elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**prologue);
-				for (inst.last() ; !inst.begining() ; inst.previous()) {
+				for(DLList<ExecutionGraphInstruction *>::Iterator
+				inst((*prologue)->fromLast()); inst; inst--) {
+				//for (inst.last() ; !inst.begining() ; inst.previous()) {
 					if (inst->basicBlock()->number() != bbnum) {					
 						bbnum = inst->basicBlock()->number();
 						prologue_blocks.addLast(inst->basicBlock());
@@ -608,8 +609,8 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 						prefix_cost->addCost(bbExecTime);
 						costs.addLast(prefix_cost);		
 					}
-					elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**prologue);
-					for (inst.last() ; !inst.begining() ; inst.previous()) {
+					for(DLList<ExecutionGraphInstruction *>::Iterator
+					inst(prologue->fromLast()); inst; inst--) {
 						if (inst->basicBlock()->number() != bbnum) {
 							bbnum = inst->basicBlock()->number();
 							prologue_blocks.addLast(inst->basicBlock());
