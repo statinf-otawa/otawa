@@ -21,7 +21,7 @@
 #	define CHECK(c)	c
 #endif
 
-//#define DO_LOG
+#define DO_LOG
 #if defined(NDEBUG) || !defined(DO_LOG)
 #	define LOG(c)
 #else
@@ -49,14 +49,17 @@ GenericIdentifier<bool> START("otawa.exegraph.start", false);
 
 // ---------- prologueLatestTimes
 
-void ExecutionGraph::prologueLatestTimes(ExecutionNode *node, elm::io::Output& out_stream) {
+void ExecutionGraph::prologueLatestTimes(ExecutionNode *node) {
 	
-	int max, count, no_contention_time, tmp;
-	TimeDLNode *ptr;
-	elm::inhstruct::DLList times;
-	bool first;
+	int parv;
+	parv = node->pipelineStage()->width();
+	elm::genstruct::AllocatedTable<int> times(parv);
 	
-	first = true;
+	/* v.ready.latest = MAX{u|u->v}(u.finish.latest);
+	 * v.ready.latest = MAX(v.ready.latest, CM(I-p).ready.latest);
+	 */
+	bool first = true;
+	int max;
 	for (ExecutionGraph::Predecessor pred(node) ; pred ; pred++) {
 		if (first) {
 			max = pred->maxFinishTime();
@@ -67,203 +70,335 @@ void ExecutionGraph::prologueLatestTimes(ExecutionNode *node, elm::io::Output& o
 				max = pred->maxFinishTime();
 		}
 	}
+	if (lastNode(BEFORE_PROLOGUE)
+		&&
+		(lastNode(BEFORE_PROLOGUE)->maxReadyTime() > max))
+		max = lastNode(BEFORE_PROLOGUE)->maxReadyTime();
 	node->setMaxReadyTime(max);
+	
+	/* v.start.latest = v.ready.latest + max_lat(v); */
+	
 	node->setMaxStartTime(node->maxReadyTime() + node->maxLatency()-1);
 	
-	count = 0;
+	/* Searly = early_cont(v);
+	 * if (|Searly| >= parv) then
+	 *     tmp = MAX{u| u in Searly}(u.finish.latest);
+	 *     tmp = MIN(tmp, v.start.latest + |Searly|/parv x max_lat(v));
+	 *     v.start.latest = MAX(tmp, v.start.latest);
+	 * endif
+	 * v.finish.latest = v.start.latest + max_lat(v);
+	 */
+	 
+	int count = 0, index = 0;
+	int min, pos;
 	for(ExecutionNode::ContenderIterator cont(node); cont; cont ++) {
-		if ( cont->instIndex() < node->instIndex() ) { // early contender
-			if ( !separated(cont, node, out_stream) ) {
-				count++;
-				TimeDLNode *new_time = new TimeDLNode(cont->maxFinishTime());
-				if (times.isEmpty())
-					times.addLast(new_time);
-				else {
-					ptr = (TimeDLNode *) times.first();
-					while ( (!ptr->atEnd()) && (ptr->getValue() > new_time->getValue()) )
-						ptr = (TimeDLNode *) ptr->next();
-					if (ptr->atEnd())
-						times.addLast(new_time); // no lower value found
-					else
-						ptr->insertBefore(new_time);
+		if ( cont->instIndex() < node->instIndex() ) {
+			// cont is an *early* contender
+			count++;
+			if (index < parv) {
+				// less than parv values have been registered
+				times[index++] = cont->maxFinishTime();
+			}
+			else {
+				// if cont->maxFinishTime() > min_value, replace min_value
+				min = times[0];
+				pos = 0;
+				for (int i=1 ; i<index ; i++) {
+					if (times[i] < min) {
+						min = times[i];
+						pos = i;
+					}
 				}
+				if (cont->maxFinishTime() > min)
+					times[pos] = cont->maxFinishTime();
 			}
 		}
 	}
-	if (count >= node->pipelineStage()->width()) {
-		no_contention_time = node->maxStartTime()
-					 + node->maxLatency() 
-					 	* (count / node->pipelineStage()->width());
-		count = 1;
-		ptr = (TimeDLNode *) times.first();
-		while ( (!ptr->atEnd()) && (count <node->pipelineStage()->width())) {
-			ptr = (TimeDLNode *) ptr->next();
-			count++;
+	
+	if (count >= parv) {
+		int worst_case_delay = node->maxStartTime() + node->maxLatency() * count / parv;
+		int max_delay = times.get(0);
+		int tmp;
+		for (int i=1 ; i<index ; i++) {
+			if (times[i] < max_delay) {
+				max_delay = times[i];
+			}
 		}
-		max = ptr->getValue();
-		if (max > no_contention_time ) 
-			tmp = no_contention_time;
+		if (max_delay > worst_case_delay ) 
+			tmp = worst_case_delay;
 		else
-			tmp = max;
-		if (tmp > node->maxStartTime() )
+			tmp = max_delay;
+		if (tmp > node->maxStartTime())
 			node->setMaxStartTime(tmp);
 	}
-	
-	// empty times list
-	while (!times.isEmpty()) {
-		TimeDLNode *node = (TimeDLNode *) times.last();
-		times.removeLast();
-		delete node;
-	}
 		
-	node->setMaxFinishTime(node->maxStartTime() + node->maxLatency() );
-		
-	// update successors
-	for (Successor next(node) ; next ; next++) {
-		if (node->maxFinishTime() > next->maxReadyTime())
-			if (next.edge()->type() == ExecutionEdge::SOLID)
-				next->setMaxReadyTime(node->maxFinishTime());
-			else // SLASHED
-				next->setMaxReadyTime(node->maxStartTime());
-	}
 }
 
 // ---------- bodyLatestTimes
 
-void ExecutionGraph::bodyLatestTimes(ExecutionNode *node, elm::io::Output& out_stream) {
+void ExecutionGraph::bodyLatestTimes(ExecutionNode *node) {
 	
-	int max, count, no_contention_time, tmp;
-	TimeDLNode *ptr;
-	elm::inhstruct::DLList times;
+	int parv;
+	parv = node->pipelineStage()->width();
+	elm::genstruct::AllocatedTable<int> times(parv) ;
 	
+	/* node.start.latest = node.ready.latest */
 	node->setMaxStartTime(node->maxReadyTime());
-	count = 0;		
+	
+	/* Slate = {u / u in late_contenders(v)
+	 * 				&& !separated(u,v)
+	 * 				&& u.start.earliest < v.ready.latest };
+	 * max_delay = the n-teenth maximum value of maxFinishTime() in Slate;
+	 * worst_case_delay = v.ready.latest + max_lat(v) - 1;
+	 * if (|Slate| >= parv) then
+	 * 		v.start.latest = MIN(max_delay, worst_case_delay);
+	 */
+	int index = 0, count = 0;
+	int min, pos;	
 	for(ExecutionNode::ContenderIterator cont(node); cont; cont ++) {
 		if ( cont->instIndex() > node->instIndex() ) {
 			// cont is a *late* contender
-			if ( !separated(cont, node, out_stream)
+			if ( !separated(cont, node)
 					&&
 					( cont->minStartTime() < node->maxReadyTime()) ) {
 				count++;
-				TimeDLNode *new_time = new TimeDLNode(cont->maxFinishTime());
-				if (times.isEmpty())
-					times.addLast(new_time);
+				if (index < parv) {
+					// less than parv values have been registered
+					times[index++] = cont->maxFinishTime();
+				}
 				else {
-					ptr = (TimeDLNode *) times.first();
-					while ( (!ptr->atEnd()) && (ptr->getValue() > new_time->getValue()) )
-						ptr = (TimeDLNode *) ptr->next();
-					if (ptr->atEnd())
-						times.addLast(new_time); // no lower value found
-					else
-						ptr->insertBefore(new_time);
+					// if cont->maxFinishTime() > min_value, replace min_value
+					min = times[0];
+					pos = 0;
+					for (int i=1 ; i<index ; i++) {
+						if (times[i] < min) {
+							min = times[i];
+							pos = i;
+						}
+					}
+					if (cont->maxFinishTime() > min)
+						times[pos] = cont->maxFinishTime();
 				}
 			}
 		}
 	}
-	if (count >= node->pipelineStage()->width()) {
-		no_contention_time = node->maxReadyTime() + node->maxLatency() - 1;
-		ptr = (TimeDLNode *) times.first();
-		while ( (!ptr->atEnd()) && (count < node->pipelineStage()->width())) {
-			ptr = (TimeDLNode *) ptr->next();
-			count++;
+	
+	if (count >= parv) {
+		int worst_case_delay = node->maxReadyTime() + node->maxLatency() - 1;
+		int max_delay = times[0];
+		for (int i=1 ; i<index ; i++) {
+			if (times[i] < max_delay) {
+				max_delay = times[i];
+			}
 		}
-		max = ptr->getValue();
-		if (max > no_contention_time ) 
-			node->setMaxStartTime(no_contention_time);
+		if (max_delay > worst_case_delay ) 
+			node->setMaxStartTime(worst_case_delay);
 		else
-			node->setMaxStartTime(max);
-	}
-	while (!times.isEmpty()) {
-		TimeDLNode *node = (TimeDLNode *) times.last();
-		times.removeLast();
-		delete node;
+			node->setMaxStartTime(max_delay);
 	}
 	
+	
+	/* Searly = {u / u in late_contenders(v)
+	 * 				&& !separated(u,v) };
+	 * max_delay = the n-teenth maximum value of maxFinishTime() in Slate;
+	 * worst_case_delay = v.start.latest + |Searly|/parv x max_lat(v);
+	 * if (|Searly| >= parv) then
+	 * 		tmp = MIN(max_delay, worst_case_delay);
+	 * 		v.start.latest = MAX(tmp, v.start.latest);
+	 */
+	
+	index = 0;
 	count = 0;
 	for(ExecutionNode::ContenderIterator cont(node); cont; cont ++) {
 		if ( cont->instIndex() < node->instIndex() ) {
-			if ( !separated(cont, node, out_stream) ) {
+			// cont is an *early* contender
+			if ( !separated(cont, node) ) {
 				count++;
-				TimeDLNode *new_time = new TimeDLNode(cont->maxFinishTime());
-				if (times.isEmpty())
-					times.addLast(new_time);
+				if (index < parv)
+					// less than parv values have been registered
+					times[index++] = cont->maxFinishTime();
 				else {
-					ptr = (TimeDLNode *) times.first();
-					while ( (!ptr->atEnd()) && (ptr->getValue() > new_time->getValue()) )
-						ptr = (TimeDLNode *) ptr->next();
-					if (ptr->atEnd())
-						times.addLast(new_time); // no lower value found
-					else
-						ptr->insertBefore(new_time);
+					// if cont->maxFinishTime() > min_value, replace min_value
+					min = times[0];
+					pos = 0;
+					for (int i=1 ; i<index ; i++) {
+						if (times[i] < min) {
+							min = times[i];
+							pos = i;
+						}
+					}
+					if (cont->maxFinishTime() > min)
+						times[pos] = cont->maxFinishTime();
 				}
 			}
 		}
 	}
-	if (count >= node->pipelineStage()->width()) {
-		no_contention_time = node->maxStartTime()
-					 + node->maxLatency() 
-					 	* (count / node->pipelineStage()->width());
-		count = 1;
-		ptr = (TimeDLNode *) times.first();
-		while ( (!ptr->atEnd()) && (count <node->pipelineStage()->width())) {
-			ptr = (TimeDLNode *) ptr->next();
-			count++;
+	
+	if (count >= parv) {
+		int worst_case_delay = node->maxStartTime() + node->maxLatency() * (count / parv);
+		int max_delay = times[0];
+		for (int i=1 ; i<index ; i++) {
+			if (times[i] < max_delay) {
+				max_delay = times[i];
+			}
 		}
-		max = ptr->getValue();
-		if (max > no_contention_time ) 
-			tmp = no_contention_time;
+		int tmp;
+		if (max_delay > worst_case_delay ) 
+			tmp = worst_case_delay;
 		else
-			tmp = max;
-		if (tmp > node->maxStartTime() )
+			tmp = max_delay;
+		if (tmp > node->maxStartTime())
 			node->setMaxStartTime(tmp);
 	}
 	
-	// empty times list
-	while (!times.isEmpty()) {
-		TimeDLNode *node = (TimeDLNode *) times.last();
-		times.removeLast();
-		delete node;
-	}
+	/* v.finish.latest = v.start.latest + max_lat(v); */
 		
 	node->setMaxFinishTime(node->maxStartTime() + node->maxLatency() );
 		
-	// update successors
+	/* foreach immediate successor w of v do
+	 * 		if slashed edge
+	 * 			w.ready.latest = MAX(w.ready.latest, v.start.latest);
+	 * 		if solid edge
+	 * 			w.ready.latest = MAX(w.ready.latest, v.finish.latest
+	 */
 	for (Successor next(node) ; next ; next++) {
-		if (node->maxFinishTime() > next->maxReadyTime())
-			if (next.edge()->type() == ExecutionEdge::SOLID)
-				next->setMaxReadyTime(node->maxFinishTime());
-			else // SLASHED
+		if (next.edge()->type() == ExecutionEdge::SLASHED) {
+			if (node->maxStartTime() > next->maxReadyTime())	
 				next->setMaxReadyTime(node->maxStartTime());
+		}
+		else {// SOLID 
+			if (node->maxFinishTime() > next->maxReadyTime())
+				next->setMaxReadyTime(node->maxFinishTime());
+		}
 	}
 }
 
 // ---------- epilogueLatestTimes
 
-void ExecutionGraph::epilogueLatestTimes(ExecutionNode *node, elm::io::Output& out_stream) {
+void ExecutionGraph::epilogueLatestTimes(ExecutionNode *node) {
 	//to be fixed
 }
 
+// ---------- bodyEarliestTimes
+
+void ExecutionGraph::bodyEarliestTimes(ExecutionNode *node) {
+	
+	int parv;
+	parv = node->pipelineStage()->width();
+	elm::genstruct::AllocatedTable<int> * times ;
+	times = new elm::genstruct::AllocatedTable<int>(parv);
+	
+	/* node.start.earliest = node.ready.earliest */
+	node->setMinStartTime(node->minReadyTime());
+	
+	/* Slate = {u / u in late_contenders(v)
+	 * 				&& !separated(u,v)
+	 * 				&& u.start.latest < v.ready.earliest
+	 * 				&& v.ready.earliest < u.finish.earliest };
+	 * Searly = {u / u in early_contenders(v)
+	 * 				&& !separated(u,v)
+	 * 				&& u.start.latest <= v.ready.earliest
+	 * 				&& v.ready.earliest < u.finish.earliest };
+	 * S = Searly UNION Slate;
+	 * max_delay = the n-teenth maximum value of minFinishTime() in S;
+	 * if (|Slate| >= parv) then
+	 * 		v.start.earliest = MAX(max_delay, v.ready.latest);
+	 */
+	int index = 0, count = 0;
+	int min, pos;	
+	for(ExecutionNode::ContenderIterator cont(node); cont; cont ++) {
+		if (  ( (cont->instIndex() > node->instIndex())
+				&&
+				!separated(cont, node)
+				&&
+				(cont->maxStartTime() < node->minReadyTime())
+				&&
+				(node->minReadyTime() < cont->minFinishTime()) )
+			||
+			  ( (cont->instIndex() < node->instIndex())
+			  	&&
+			  	!separated(cont, node)
+			  	&&
+			  	(cont->maxStartTime() <= node->minReadyTime())
+			  	&&
+			  	node->minReadyTime() < cont->minFinishTime() ) ) {
+			  		
+			count++;
+			if (index < parv)
+				// less than parv values have been registered
+				times[index++] = cont->maxFinishTime();
+			else {
+				// if cont->maxFinishTime() > min_value, replace min_value
+				min = times[0];
+				pos = 0;
+				for (int i=1 ; i<index ; i++) {
+					if (times[i] < min) {
+						min = times[i];
+						pos = i;
+					}
+				}
+				if (cont->maxFinishTime() > min)
+					times->set(pos, cont->maxFinishTime());
+			}
+		}
+	}
+
+	if (count >= parv) {
+		int max_delay = times[0];
+		for (int i=1 ; i<index ; i++) {
+			if (times[i] < max_delay) {
+				max_delay = times[i];
+			}
+		}
+		if (max_delay > node->minReadyTime() ) 
+			node->setMinStartTime(max_delay);
+		else
+			node->setMinStartTime(node->minReadyTime());
+	}
+	
+	
+	/* v.finish.earliest = v.start.earliest + min_lat(v); */
+		
+	node->setMinFinishTime(node->minStartTime() + node->minLatency() );
+		
+	/* foreach immediate successor w of v do
+	 * 		if slashed edge
+	 * 			w.ready.latest = MAX(w.ready.latest, v.start.latest);
+	 * 		if solid edge
+	 * 			w.ready.latest = MAX(w.ready.latest, v.finish.latest
+	 */
+	for (Successor next(node) ; next ; next++) {
+		if (next.edge()->type() == ExecutionEdge::SLASHED) {
+			if (node->minStartTime() > next->minReadyTime())	
+				next->setMinReadyTime(node->minStartTime());
+		}
+		else {// SOLID 
+			if (node->minFinishTime() < next->minReadyTime())
+				next->setMinReadyTime(node->minFinishTime());
+		}
+	}
+}
 
 // ---------- latestTimes
 
-void ExecutionGraph::latestTimes(elm::io::Output& out_stream) {
+void ExecutionGraph::latestTimes() {
 	
-	entry_node->setMaxReadyTime(0);
+	firstNode(BODY)->setMaxReadyTime(0);
 	for(PreorderIterator node(this, this->entry_node); node; node++) {
 		if ( (node->part() == PROLOGUE) 
 			|| (node->part() == BEFORE_PROLOGUE) ) {
 			if(! node->isShaded() ) {
-				prologueLatestTimes(node, out_stream);
+				prologueLatestTimes(node);
 			}
 		
 		}
 		if (node->part() == BODY) {
-			bodyLatestTimes(node, out_stream);
+			bodyLatestTimes(node);
 		}
 		
 		if (node->part() == EPILOGUE) {
-			// epilogueLatestTimes(((ExecutionNode *) *node), out_stream);
-			bodyLatestTimes(node, out_stream);
+			// epilogueLatestTimes(((ExecutionNode *) *node));
+			bodyLatestTimes(node);
 		}
 		
 	}
@@ -271,126 +406,26 @@ void ExecutionGraph::latestTimes(elm::io::Output& out_stream) {
 
 // ---------- earliestTimes
 
-void ExecutionGraph::earliestTimes(elm::io::Output& out_stream) {
+void ExecutionGraph::earliestTimes() {
 	
-	int max, count, no_contention_time, tmp;
-	TimeDLNode *ptr;
-	elm::inhstruct::DLList times;
-	
-	/**
-	 * HINT : to improve the efficiency, just use an array with the PARv greater
-	 * earliest_finish(u). 
-	 */
-	
-	// earliest_ready(IF1) = 0
-	entry_node->setMinReadyTime(0);
-	
-	// foreach v in topologic_order do
+	firstNode(BODY)->setMinReadyTime(0);
 	for(PreorderIterator node(this, this->entry_node); node; node++) {
-		if (node->part() <= PROLOGUE) {
+		if ( node->part() <= PROLOGUE) {
 			node->setMinReadyTime(-INFINITE_TIME);
 			node->setMinStartTime(-INFINITE_TIME);
 			node->setMinFinishTime(-INFINITE_TIME);
 		}
 		else {
-			
-			// earliest_start(v) = earliest_ready(v)
-			node->setMinStartTime(node->minReadyTime());
-			count = 0;
-			
-			/* Slate = {u / u in late_contenders(v)
-			 * 			&&  ! separated(u, v)
-			 * 			&&  latest_start(u) < earliest_ready(v)
-			 * 			&&  earliest_ready(v) < earliest_finish(u) }
-			 */
-			for(ExecutionNode::ContenderIterator cont(node); cont; cont ++)
-				if ( cont->instIndex() > node->instIndex() ) {
-					// cont is a *late* contender
-					if(!separated(cont, node, out_stream)
-					&& (cont->maxStartTime() < node->minReadyTime()) 
-					&& (node->minReadyTime() < cont->minFinishTime())) {
-						count++;
-						TimeDLNode *new_time = new TimeDLNode(cont->minFinishTime());
-						if (times.isEmpty())
-							times.addLast(new_time);
-						else {
-							ptr = (TimeDLNode *) times.first();
-							while ( (!ptr->atEnd()) && (ptr->getValue() > new_time->getValue()) )
-								ptr = (TimeDLNode *) ptr->next();
-							if (ptr->atEnd())
-								times.addLast(new_time); // no lower value found
-							else
-								ptr->insertBefore(new_time);
-						}
-					}
-				}
-	
-			/* Searly = {u / u in early_contenders(u) 
-			 * 			&&	 ! separated(u, v)
-			 * 			&&	 latest_start(u) <= earliest_ready(v)
-			 * 			&&	 earliest_ready(v) < arliest_finish(u) }
-			 */
-			for(ExecutionNode::ContenderIterator cont(node); cont; cont ++) {
-				if(cont->instIndex() < node->instIndex()) {
-					// cont is an *early* contender
-					if (!separated(cont, node, out_stream) 
-					&& (cont->maxStartTime() <= node->minReadyTime()) 
-					&& (node->minReadyTime() < cont->minFinishTime())) {
-						count++;
-						TimeDLNode *new_time = new TimeDLNode(cont->maxFinishTime());
-						if (times.isEmpty())
-							times.addLast(new_time);
-						else {
-							ptr = (TimeDLNode *) times.first();
-							while ( (!ptr->atEnd()) && (ptr->getValue() > new_time->getValue()) )
-								ptr = (TimeDLNode *) ptr->next();
-							if (ptr->atEnd())
-								times.addLast(new_time); // no lower value found
-							else
-								ptr->insertBefore(new_time);
-						}
-					}
-				}
-			}
-			
-			// S = Slate union Searly
-			// if |S| > par(v) then
-			if (count >= node->pipelineStage()->width()) {
-				count = 1;
-				ptr = (TimeDLNode *) times.first();
-				while ( (!ptr->atEnd()) && (count < node->pipelineStage()->width())) {
-					ptr = (TimeDLNode *) ptr->next();
-					count++;
-				}
-				max = ptr->getValue();
-				if (max > node->minStartTime() )
-					node->setMinStartTime(max);
-			}
-			
-			// empty times list
-			while (!times.isEmpty())
-				times.removeLast();
-			
-			// earliest_finish(v) = earliest_start(v) + min_lat(v)
-			node->setMinFinishTime(node->minStartTime() + node->minLatency() );
-				
-			/* foreach k in immediate_successor(i)
-			 * 	earliest_ready(k) = max(earliest_ready(k), earliest_finish(i))
-			 */
-			for(Successor next(node) ; next ; next++) {
-				if(node->minFinishTime() > next->minReadyTime())
-					if(next.edge()->type() == ExecutionEdge::SOLID)
-						next->setMinReadyTime(node->minFinishTime());
-					else // SLASHED
-						next->setMinReadyTime(node->minStartTime());
-			}
-		}		
+			bodyEarliestTimes(node);
+		}
 	}
 }
 
+
+
 // ---------- shadePreds
 
-void ExecutionGraph::shadePreds(ExecutionNode *node, elm::io::Output& out_stream) {
+void ExecutionGraph::shadePreds(ExecutionNode *node) {
 	int time;
 	
 	if (node->hasPred()) {
@@ -403,7 +438,7 @@ void ExecutionGraph::shadePreds(ExecutionNode *node, elm::io::Output& out_stream
 					pred->setMaxFinishTime(time);
 					pred->setMaxStartTime(pred->maxFinishTime() - pred->minLatency());
 					pred->setMaxReadyTime(pred->maxStartTime());
-					shadePreds(pred, out_stream);
+					shadePreds(pred);
 				}
 			}
 			else {
@@ -421,7 +456,7 @@ void ExecutionGraph::shadePreds(ExecutionNode *node, elm::io::Output& out_stream
 
 // ---------- shadeNodes
 
-void ExecutionGraph::shadeNodes(elm::io::Output& out_stream) {
+void ExecutionGraph::shadeNodes() {
 		
 	ExecutionNode *first_body_node = first_node[BODY];
 	first_body_node->setMinReadyTime(0);
@@ -430,13 +465,13 @@ void ExecutionGraph::shadeNodes(elm::io::Output& out_stream) {
 	first_body_node->setMaxReadyTime(0);
 	first_body_node->setMaxStartTime(0);	
 	first_body_node->setMaxFinishTime(first_body_node->maxLatency());
-	shadePreds(first_body_node, out_stream);
+	shadePreds(first_body_node);
 	
 }
 
 // ---------- findPaths
 
-PathList * findPaths(ExecutionNode * source, ExecutionNode * target, elm::io::Output& out_stream) {
+PathList * findPaths(ExecutionNode * source, ExecutionNode * target) {
 	PathList *list = new PathList();
 	for (ExecutionGraph::Successor succ(source) ; succ ; succ++) {
 		if(succ == target) {
@@ -445,7 +480,7 @@ PathList * findPaths(ExecutionNode * source, ExecutionNode * target, elm::io::Ou
 			list->addPath(new_path);
 		}
 		if(succ->instIndex() <= target->instIndex()) {
-			PathList *new_list = findPaths(succ, target, out_stream);
+			PathList *new_list = findPaths(succ, target);
 			for (PathList::PathIterator suffix_path(new_list) ; suffix_path ; suffix_path++) {
 				suffix_path->addNodeFirst(source);
 				list->addPath(suffix_path);
@@ -457,12 +492,12 @@ PathList * findPaths(ExecutionNode * source, ExecutionNode * target, elm::io::Ou
 
 // ---------- minDelta
 
-int ExecutionGraph::minDelta(elm::io::Output& out_stream) {
+int ExecutionGraph::minDelta() {
 	if (!first_node[BODY]->hasPred())
 		return(0);
 	int min_all = INFINITE_TIME;
 	for (Predecessor pred(first_node[BODY]) ; pred ; pred++) {
-		PathList *path_list = findPaths(pred, last_node[PROLOGUE], out_stream);
+		PathList *path_list = findPaths(pred, last_node[PROLOGUE]);
 		int max = 0;
 		for(PathList::PathIterator path(path_list); path; path++) {
 			int length = 0;
@@ -562,20 +597,10 @@ void ExecutionGraph::build(
 				inst->addNode(node);
 				stage->addNode(node);
 			
-				if (microprocessor->operandProducingStage() == stage) {
-					// this instruction is considered as producing every register
-					//node->setProducesOperands(true);
-					for (int b=0 ; b<reg_bank_count ; b++) {
-						for (int r=0 ; r < rename_tables[b].reg_bank ->count() ; r++) {
-							rename_tables[b].table->set(r,node);
-						}		
-					}
-				}
 				setFirstNode(BEFORE_PROLOGUE,inst->firstNode());
 				setLastNode(current_code_part, inst->lastNode());
 			}
 			
-			// Out of the proglog
 			else {
 				if (!stage->usesFunctionalUnits()) {
 					ExecutionNode * node = new ExecutionNode(this, (PipelineStage *)stage, inst->inst(), 
@@ -616,6 +641,17 @@ void ExecutionGraph::build(
 				}
 				setLastNode(current_code_part, inst->lastNode());
 			}	
+		}
+	}
+	
+	ExecutionNode *node = lastNode(BEFORE_PROLOGUE);
+	if (node) {
+		// the instruction before the prologue is assumed to produce every register
+		// this instruction is guaranted to be executed when its last node is finished
+		for (int b=0 ; b<reg_bank_count ; b++) {
+			for (int r=0 ; r < rename_tables[b].reg_bank ->count() ; r++) {
+				rename_tables[b].table->set(r,node);
+			}		
 		}
 	}
 	
@@ -780,26 +816,18 @@ void ExecutionGraph::build(
 
 // ---------- analyze
 
-int ExecutionGraph::analyze(elm::io::Output& out_stream) {
-//	GraphNodesListInList *inst_node_list;
-//	GraphNodeInList *node_in_list;
-	int step;
+int ExecutionGraph::analyze() {
+	int step = 0;
 
-	//cout << "Shade\n";
-	/*io::OutFileStream file("test.dot");
-	io::Output file_out(file);
-	dotDump(file_out, false);*/
-	shadeNodes(out_stream);
+	shadeNodes();
 	initSeparated();
-	//cout << "IP loop\n";
 	do {
-		//cout << "Next Step\n";
-		latestTimes(out_stream);		
-		earliestTimes(out_stream);
+		latestTimes();		
+		earliestTimes();
 		step++;
-	} while ((step < 10) && (!unchangedSeparated(out_stream)));
-	LOG(out_stream << "Max finish time of last body node: " << lastNode(BODY)->maxFinishTime() << "\n");
-	return (lastNode(BODY)->maxFinishTime() - minDelta(out_stream));
+	} while ((step < 10) && (!unchangedSeparated()));
+//	LOG(elm::cout << "Max finish time of last body node: " << lastNode(BODY)->maxFinishTime() << "\n");
+	return (lastNode(BODY)->maxFinishTime() - minDelta());
 }
 
 
@@ -951,7 +979,7 @@ void ExecutionGraph::initSeparated() {
 
 // ---------- unchangedSeparated()
 
-bool ExecutionGraph::unchangedSeparated(elm::io::Output& out_stream) {
+bool ExecutionGraph::unchangedSeparated() {
 	bool unchanged = true;
 	/*int sep_cnt = 0, node_cnt = 0;
 	static int change_cnt = 0;
@@ -966,7 +994,7 @@ bool ExecutionGraph::unchangedSeparated(elm::io::Output& out_stream) {
 			// Horizontal
 			for(NodeIterator first(this); *first != *node; first++) {
 				int index = (first->pair_index * pair_cnt) + node->pair_index;
-				bool sep = separated(first, node, out_stream);
+				bool sep = separated(first, node);
 				if(pairs->bit(index) != sep) {
 					unchanged = false;
 					pairs->set(index, sep);
@@ -978,7 +1006,7 @@ bool ExecutionGraph::unchangedSeparated(elm::io::Output& out_stream) {
 			NodeIterator second(node);
 			for(second++; second; second++) {
 				int index = node->pair_index * pair_cnt + second->pair_index;
-				bool sep = separated(node, second, out_stream);
+				bool sep = separated(node, second);
 				if(pairs->bit(index) != sep) {
 					unchanged = false;
 					pairs->set(index, sep);
