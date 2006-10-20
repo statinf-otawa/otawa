@@ -253,7 +253,7 @@ int ExeGraphBBTime::processSequence( FrameWork *fw,
 	#ifdef DO_LOG
 		elm::StringBuffer file_name;
 		elm::String string_file_name, string_timed_file_name, extension, number, extension2;
-		string_file_name = "./";
+		string_file_name = "./graphs/";
 		string_timed_file_name = string_file_name;
 		extension = ".dot";
 		extension2 = "_times.dot";
@@ -282,7 +282,7 @@ int ExeGraphBBTime::processSequence( FrameWork *fw,
 	ExecutionGraph execution_graph;
 	execution_graph.build(fw, microprocessor, sequence);
 	LOG(execution_graph.dumpLight(dumpFile));
-	int bbExecTime = execution_graph.analyze(dumpFile);
+	int bbExecTime = execution_graph.analyze();
 	
 	#ifdef DO_LOG
 		dumpFile << "Cost of block " << body->first()->basicBlock()->number() << " is " << bbExecTime << "\n";
