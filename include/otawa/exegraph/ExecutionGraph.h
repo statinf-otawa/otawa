@@ -243,23 +243,26 @@ class ExecutionGraph:  public GenGraph<ExecutionNode, ExecutionEdge>  {
 		inline elm::inhstruct::DLList * stagesNodesLists(void);
 		inline elm::inhstruct::DLList * instructionsNodesLists(void);
 		void initSeparated(void);
-		bool unchangedSeparated(elm::io::Output& out_stream);
-		inline bool separated(ExecutionNode *u, ExecutionNode *v, elm::io::Output& out_stream);
-		void latestTimes(elm::io::Output& out_stream);
-		void prologueLatestTimes(ExecutionNode *node, elm::io::Output& out_stream);
-		void bodyLatestTimes(ExecutionNode *node, elm::io::Output& out_stream);
-		void epilogueLatestTimes(ExecutionNode *node, elm::io::Output& out_stream);
-		void earliestTimes(elm::io::Output& out_stream) ;
-		int minDelta(elm::io::Output& out_stream);
-		void shadeNodes(elm::io::Output& out_stream) ;
-		void shadePreds(ExecutionNode *node,  elm::io::Output& out_stream) ;
+		bool unchangedSeparated();
+		inline bool separated(ExecutionNode *u, ExecutionNode *v);
+		void latestTimes();
+		void prologueLatestTimes(ExecutionNode *node);
+		void bodyLatestTimes(ExecutionNode *node);
+		void epilogueLatestTimes(ExecutionNode *node);
+//		void prologueEarliestTimes(ExecutionNode *node, elm::io::Output& out_stream);
+		void bodyEarliestTimes(ExecutionNode *node);
+//		void epilogueEarliestTimes(ExecutionNode *node, elm::io::Output& out_stream);
+		void earliestTimes() ;
+		int minDelta();
+		void shadeNodes() ;
+		void shadePreds(ExecutionNode *node) ;
 		inline void setFirstNode(code_part_t part, ExecutionNode *node);
 		inline void setLastNode(code_part_t part, ExecutionNode *node);
 		inline ExecutionNode * firstNode(code_part_t part);
 		inline ExecutionNode * lastNode(code_part_t part);
 		void build(FrameWork *fw, Microprocessor* microprocessor, 
 					elm::genstruct::DLList<ExecutionGraphInstruction *> &sequence);
-		int analyze(elm::io::Output& out_stream);
+		int analyze();
 };
 
 // -----------------------------------------------------------
@@ -685,7 +688,7 @@ inline elm::inhstruct::DLList* ExecutionGraph::instructionsNodesLists(void) {
 
 // ---------- separated()
 
-inline bool ExecutionGraph::separated(ExecutionNode *u, ExecutionNode *v, elm::io::Output& out_stream) {
+inline bool ExecutionGraph::separated(ExecutionNode *u, ExecutionNode *v) {
 	if (v->minReadyTime() >= u->maxFinishTime())
 		return true;
 	if (u->minReadyTime() >= v->maxFinishTime())
