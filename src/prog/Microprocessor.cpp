@@ -36,7 +36,11 @@ instruction_category_t instCategory(Inst *inst) {
 /**
  * Build an empty microprocessor.
  */
-Microprocessor::Microprocessor(void): pipeline_stage_index(0) {
+Microprocessor::Microprocessor(void)
+:	pipeline_stage_index(0),
+	operand_reading_stage(0),
+	operand_producing_stage(0)
+{
 }
 
 
@@ -46,7 +50,10 @@ Microprocessor::Microprocessor(void): pipeline_stage_index(0) {
  * @param proc	OTAWA abstract processor definition.
  */
 Microprocessor::Microprocessor(const hard::Processor *proc)
-: pipeline_stage_index(0) {
+:	pipeline_stage_index(0), 
+	operand_reading_stage(0),
+	operand_producing_stage(0)
+{
 	assert(proc);
 	
 	// Create queues
@@ -108,7 +115,8 @@ Microprocessor::Microprocessor(const hard::Processor *proc)
 		
 		// Add functional units if required
 		if(is_exec) {
-			
+			setOperandReadingStage(stage);
+			setOperandProducingStage(stage);
 			// Build the FU
 			const Table<hard::FunctionalUnit *>& fus = ostages[i]->getFUs();
 			for(int j = 0; j < fus.count(); j++) {
