@@ -72,13 +72,14 @@ void ExecutionGraph::prologueLatestTimes(ExecutionNode *node) {
 	}
 	if (lastNode(BEFORE_PROLOGUE)
 		&&
-		(lastNode(BEFORE_PROLOGUE)->maxReadyTime() > max))
+	    (lastNode(BEFORE_PROLOGUE)->maxReadyTime() > max)){
 		max = lastNode(BEFORE_PROLOGUE)->maxReadyTime();
+	}
 	node->setMaxReadyTime(max);
 	
-	/* v.start.latest = v.ready.latest + max_lat(v); */
+	/* v.start.latest = v.ready.latest + max_lat(v) - 1; */
 	
-	node->setMaxStartTime(node->maxReadyTime() + node->maxLatency()-1);
+	node->setMaxStartTime(node->maxReadyTime() + node->maxLatency() - 1);
 	
 	/* Searly = early_cont(v);
 	 * if (|Searly| >= parv) then
@@ -131,6 +132,7 @@ void ExecutionGraph::prologueLatestTimes(ExecutionNode *node) {
 		if (tmp > node->maxStartTime())
 			node->setMaxStartTime(tmp);
 	}
+	node->setMaxFinishTime(node->maxStartTime() + node->maxLatency());
 		
 }
 
@@ -290,7 +292,7 @@ void ExecutionGraph::bodyEarliestTimes(ExecutionNode *node) {
 	
 	/* node.start.earliest = node.ready.earliest */
 	node->setMinStartTime(node->minReadyTime());
-	
+
 	/* Slate = {u / u in late_contenders(v)
 	 * 				&& !separated(u,v)
 	 * 				&& u.start.latest < v.ready.earliest
@@ -367,14 +369,20 @@ void ExecutionGraph::bodyEarliestTimes(ExecutionNode *node) {
 	 * 		if solid edge
 	 * 			w.ready.latest = MAX(w.ready.latest, v.finish.latest
 	 */
+
 	for (Successor next(node) ; next ; next++) {
+
 		if (next.edge()->type() == ExecutionEdge::SLASHED) {
-			if (node->minStartTime() > next->minReadyTime())	
-				next->setMinReadyTime(node->minStartTime());
+		  if (node->minStartTime() > next->minReadyTime()){
+		    	next->setMinReadyTime(node->minStartTime());
+
+		  }
 		}
 		else {// SOLID 
-			if (node->minFinishTime() < next->minReadyTime())
+		  if (node->minFinishTime() > next->minReadyTime()){
 				next->setMinReadyTime(node->minFinishTime());
+
+		  }
 		}
 	}
 }
@@ -418,6 +426,7 @@ void ExecutionGraph::earliestTimes() {
 		else {
 			bodyEarliestTimes(node);
 		}
+
 	}
 }
 
@@ -815,7 +824,6 @@ void ExecutionGraph::build(
 }
 
 // ---------- analyze
-
 int ExecutionGraph::analyze() {
 	int step = 0;
 
