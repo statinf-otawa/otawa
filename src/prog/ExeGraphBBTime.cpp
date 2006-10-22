@@ -226,10 +226,9 @@ int ExeGraphBBTime::processSequence( FrameWork *fw,
 	elm::genstruct::DLList<ExecutionGraphInstruction *> sequence;
 	
 	sequence.clear();
-	if (prologue) {
+	if (prologue && (prologue->count() == capacity)) {
 		int index = 0;
-		if (!prologue->isEmpty())
-			index = prologue->first()->index() - 1;
+		index = prologue->first()->index() - 1;
 		ExecutionGraphInstruction * eg_inst = 
 			new ExecutionGraphInstruction(NULL, NULL, BEFORE_PROLOGUE, index);
 		sequence.addLast(eg_inst);
