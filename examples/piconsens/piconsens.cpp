@@ -28,6 +28,7 @@ using namespace otawa::hard;
 using namespace elm::option;
 using namespace otawa::gensim;
 
+GenericIdentifier<int> DELTA_MAX("delta_max", 0, OTAWA_NS);
 
 // Command
 class Command: public elm::option::Manager {
@@ -37,6 +38,7 @@ class Command: public elm::option::Manager {
 	FrameWork *fw;
 	PropList stats;
 	
+	void computeDeltaMax(TreePath< BasicBlock *, BBPath * > *tree, int parent_time);
 public:
 	Command(void);
 	void compute(String fun);
@@ -57,6 +59,7 @@ IntOption delta(command, 'D', "delta", "use delta method with given sequence len
 IntOption degree(command, 'd', "degree", "superscalar degree power (real degree = 2^power)", "degree", 1);
 StringOption proc(command, 'p', "processor", "used processor", "processor", "deg1.xml");
 BoolOption do_stats(command, 's', "stats", "display statistics", false);
+BoolOption do_time(command, 't', "time", "display basic block times", false);
  
 
 /**
@@ -146,20 +149,38 @@ void Command::compute(String fun) {
 	WCETComputation wcomp(props);
 	wcomp.process(fw);
 
-	// Get the result
+	// Get the results
 	ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
-	if(!do_stats) 
+	if(!do_stats && !do_time) 
 		cout << WCET(vcfg);
+	
+	// Get statistics
+	else if(!do_time) {
+		if(exegraph) {
+			const Vector<ExeGraphBBTime::stat_t>& prefs = *EXEGRAPH_PREFIX_STATS(stats);
+			for(int i = 0; i < prefs.length(); i++)
+				cout << i << '\t'
+					/*<< prefs[i].total_span_sum << '\t'
+				 	<< prefs[i].total_vals_sum << '\t'
+				 	<< prefs[i].bb_cnt << '\t'*/
+					 << ((double)prefs[i].total_span_sum / prefs[i].bb_cnt) << '\t'
+					 << ((double)prefs[i].total_vals_sum / prefs[i].bb_cnt) << io::endl;
+		}
+	}
+	
+	// Get the times
 	else {
-		const Vector<ExeGraphBBTime::stat_t>& prefs = *EXEGRAPH_PREFIX_STATS(stats);
-		for(int i = 0; i < prefs.length(); i++)
-			cout << i << '\t'
-				/*<< prefs[i].total_span_sum << '\t'
-				 << prefs[i].total_vals_sum << '\t'
-				 << prefs[i].bb_cnt << '\t'*/
-				 << ((double)prefs[i].total_span_sum / prefs[i].bb_cnt) << '\t'
-				 << ((double)prefs[i].total_vals_sum / prefs[i].bb_cnt) << io::endl;
-	}	
+		if(exegraph)
+			for(CFG::BBIterator bb(&vcfg); bb; bb++)
+				cout << bb->number() << '\t' << ipet::TIME(bb) << io::endl;
+		else {
+			for(CFG::BBIterator bb(&vcfg); bb; bb++)
+				if(BBPath::TREE(bb)) 
+					computeDeltaMax(BBPath::TREE(bb), 0);
+			for(CFG::BBIterator bb(&vcfg); bb; bb++)
+				cout << bb->number() << '\t' << DELTA_MAX(bb) << io::endl;			
+		}
+	}
 
 	// Dump the ILP system
 	if(dump_constraints) {
@@ -207,6 +228,27 @@ void Command::run(void) {
 	else
 		for(int i = 0; i < funs.length(); i++)
 			compute(funs[i]);
+}
+
+
+/**
+ * Compute the delta max for the given tree.
+ * @param tree			Tree to explore.
+ * @param parent_time	Execution time of the parent tree.
+ */
+void Command::computeDeltaMax(
+	TreePath< BasicBlock *, BBPath * > *tree,
+	int parent_time)
+{
+	// Compute max
+	int path_time = tree->rootData()->time(fw); 
+	int time = path_time - parent_time;
+	if(time > DELTA_MAX(tree->rootLabel()))
+		DELTA_MAX(tree->rootLabel()) = time;
+	
+	// Traverse children
+	for(TreePath< BasicBlock *, BBPath * >::Iterator child(tree); child; child++)
+		computeDeltaMax(child, path_time);
 }
 
 
