@@ -21,7 +21,7 @@
 #	define CHECK(c)	c
 #endif
 
-#define DO_LOG
+//#define DO_LOG
 #if defined(NDEBUG) || !defined(DO_LOG)
 #	define LOG(c)
 #else
@@ -519,6 +519,7 @@ int ExecutionGraph::minDelta() {
 			min_all = max;
 	}
 	return(min_all + last_node[PROLOGUE]->pipelineStage()->minLatency());
+	
 }
 
 

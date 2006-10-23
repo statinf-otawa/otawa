@@ -14,7 +14,9 @@
 #include <elm/inhstruct/DLList.h>
 #include <elm/genstruct/DLList.h>
 
-namespace otawa { 
+namespace otawa {
+	
+using namespace elm::genstruct; 
 	
 class PrefixCost {
 	private:
@@ -175,7 +177,6 @@ class ExeGraphBBTime: public BBProcessor {
 		elm::io::Output& dumpFile;
 		Microprocessor *microprocessor;
 		
-		
 	public:
 		ExeGraphBBTime(const PropList& props = PropList::EMPTY);
 	
@@ -206,7 +207,47 @@ class ExeGraphBBTime: public BBProcessor {
 	// Configuration Properties
 	static GenericIdentifier<Microprocessor *> PROCESSOR;
 	static GenericIdentifier<elm::io::Output *>  LOG_OUTPUT;
+	
+	// statistics
+	typedef struct stat_t {
+		int total_span_sum;
+		int total_vals_sum;
+		int bb_cnt;
+		int bb_span_sum;
+		int bb_vals_sum;
+		int seq_cnt;
+		inline stat_t(void): total_span_sum(0), total_vals_sum(0),
+		bb_cnt(0),bb_span_sum(0), bb_vals_sum(0), seq_cnt(0) { };
+	} stat_t;
+
+private:
+
+		typedef struct node_stat_t {
+			struct node_stat_t *children, *sibling;
+			int min, max;
+			BasicBlock *bb;
+			Vector<int> vals;
+			inline node_stat_t(BasicBlock *_bb, int cost): bb(_bb), children(0),
+				sibling(0), min(cost), max(cost) { }
+		} node_stat_t;
+
+		Vector<stat_t>& exe_stats;
+		node_stat_t stat_root;
+
+		void initPrefixStats(BasicBlock *bb);		
+		void recordPrefixStats(
+			DLList<ExecutionGraphInstruction *> *insts,
+			int cost);
+		node_stat_t *recordPrefixNode(
+			node_stat_t *parent,
+			BasicBlock *bb,
+			int cost);
+		void recordPrefixNodeStats(node_stat_t *node, int cost);
+		void collectPrefixStats(int depth = 0, node_stat_t *node = 0);
 };
+
+// Statistics output
+extern GenericIdentifier<Vector <ExeGraphBBTime::stat_t> *> EXEGRAPH_PREFIX_STATS;
 
 } //otawa
 

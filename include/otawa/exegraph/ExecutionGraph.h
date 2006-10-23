@@ -231,6 +231,7 @@ class ExecutionGraph:  public GenGraph<ExecutionNode, ExecutionEdge>  {
 		ExecutionNode * first_node[CODE_PARTS_NUMBER];
 		ExecutionNode * last_node[CODE_PARTS_NUMBER];
 		elm::genstruct::DLList<ExecutionGraphInstruction *> * _sequence;
+		int min_delta;
 		
 	public:
 		ExecutionGraph(void);

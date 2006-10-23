@@ -35,8 +35,8 @@ class Command: public elm::option::Manager {
 	genstruct::Vector<String> funs;
 	otawa::Manager manager;
 	FrameWork *fw;
+	PropList stats;
 	
-	//void initExeGraph(Microprocessor *processor);
 public:
 	Command(void);
 	void compute(String fun);
@@ -56,6 +56,7 @@ BoolOption exegraph(command, 'E', "exegraph", "use exegraph method", false);
 IntOption delta(command, 'D', "delta", "use delta method with given sequence length", "length", 0);
 IntOption degree(command, 'd', "degree", "superscalar degree power (real degree = 2^power)", "degree", 1);
 StringOption proc(command, 'p', "processor", "used processor", "processor", "deg1.xml");
+BoolOption do_stats(command, 's', "stats", "display statistics", false);
  
 
 /**
@@ -105,14 +106,11 @@ void Command::compute(String fun) {
 	}
 	if(dump_constraints)
 		props.set(EXPLICIT, true);
-		
-	//
+	if(do_stats)
+		PROC_STATS(props) = &stats;
 	
 	// Compute BB time
 	if(exegraph && !delta) {
-		//Microprocessor processor;
-		//initExeGraph(&processor);
-		//ExeGraphBBTime::PROCESSOR(props) = &processor;
 		ExeGraphBBTime tbt(props);
 		tbt.process(fw);
 	}
@@ -150,8 +148,18 @@ void Command::compute(String fun) {
 
 	// Get the result
 	ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
-	cout /*<< "WCET [" << file << ":" << fun << "] = "*/
-		 << vcfg.use<int>(WCET);  //<< io::endl;	
+	if(!do_stats) 
+		cout << WCET(vcfg);
+	else {
+		const Vector<ExeGraphBBTime::stat_t>& prefs = *EXEGRAPH_PREFIX_STATS(stats);
+		for(int i = 0; i < prefs.length(); i++)
+			cout << i << '\t'
+				/*<< prefs[i].total_span_sum << '\t'
+				 << prefs[i].total_vals_sum << '\t'
+				 << prefs[i].bb_cnt << '\t'*/
+				 << ((double)prefs[i].total_span_sum / prefs[i].bb_cnt) << '\t'
+				 << ((double)prefs[i].total_vals_sum / prefs[i].bb_cnt) << io::endl;
+	}	
 
 	// Dump the ILP system
 	if(dump_constraints) {
@@ -176,7 +184,6 @@ void Command::run(void) {
 	// Load the file
 	GenericSimulator sim;
 	PropList props;
-//	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	SIMULATOR(props) = &sim;
 	DEGREE(props) = degree;
 	PROCESSOR_PATH(props) = proc.value();
@@ -201,127 +208,6 @@ void Command::run(void) {
 		for(int i = 0; i < funs.length(); i++)
 			compute(funs[i]);
 }
-
-
-/**
- * Initialize the given microprocessor.
- * @param processor	Processor to initialize.
- */
-/*void Command::initExeGraph(Microprocessor *processor) {
-	Queue *fetchQueue = processor->addQueue("FetchQueue", 1 << (degree + 1));
-	Queue *ROB = processor->addQueue("ROB", 1 << (degree + 3));
-	PipelineStage::pipeline_info_t pipeline_info;
-	pipeline_info.stage_name = "FetchStage";
-	pipeline_info.stage_short_name = "IF";
-	pipeline_info.stage_category = PipelineStage::FETCH;
-	pipeline_info.order_policy = PipelineStage::IN_ORDER;
-	pipeline_info.stage_width = 1 << degree;
-	pipeline_info.min_latency = 1;
-	pipeline_info.max_latency = 1;
-	pipeline_info.source_queue = NULL;
-	pipeline_info.destination_queue = fetchQueue;
-	processor->addPipelineStage(pipeline_info);
-	pipeline_info.stage_name = "DecodeStage";
-	pipeline_info.stage_short_name = "ID";
-	pipeline_info.stage_category = PipelineStage::DECODE;
-	pipeline_info.order_policy = PipelineStage::IN_ORDER;
-	pipeline_info.stage_width = 1 << degree;
-	pipeline_info.min_latency = 1;
-	pipeline_info.max_latency = 1;
-	pipeline_info.source_queue = fetchQueue;
-	pipeline_info.destination_queue = ROB;
-	processor->addPipelineStage(pipeline_info);
-	pipeline_info.stage_name = "ExecutionStage";
-	pipeline_info.stage_short_name = "EX";
-	pipeline_info.stage_category = PipelineStage::EXECUTE;
-	pipeline_info.order_policy = PipelineStage::OUT_OF_ORDER;
-	pipeline_info.stage_width = 1 << degree;
-	pipeline_info.min_latency = 1;
-	pipeline_info.max_latency = 1;
-	pipeline_info.source_queue = NULL;
-	pipeline_info.destination_queue = NULL;
-	PipelineStage *execute_stage = processor->addPipelineStage(pipeline_info);
-	processor->setOperandReadingStage(execute_stage);
-	processor->setOperandProducingStage(execute_stage);
-
-	// Memory FU
-	PipelineStage::FunctionalUnit::fu_info_t mem_info = {
-		"MemUnit",
-		"MEM",
-		true,
-		5,
-		5,
-		1,
-		PipelineStage::IN_ORDER
-	};
-	PipelineStage::FunctionalUnit *memunit = execute_stage->addFunctionalUnit(mem_info);
-	execute_stage->bindFunctionalUnit(memunit, MEMORY);
-
-	// ALU FU
-	PipelineStage::FunctionalUnit::fu_info_t alu_info = {
-		"IALU",
-		"IALU",
-		false,
-		1,
-		1,
-		2,
-		PipelineStage::OUT_OF_ORDER
-	};
-	PipelineStage::FunctionalUnit *alu = execute_stage->addFunctionalUnit(alu_info);
-	execute_stage->bindFunctionalUnit(alu, IALU);
-	execute_stage->bindFunctionalUnit(alu,CONTROL);
-
-	// FALU FU
-	PipelineStage::FunctionalUnit::fu_info_t falu_info = {
-		"FALU",
-		"FALU",
-		true,
-		3,
-		3,
-		1,
-		PipelineStage::OUT_OF_ORDER
-	};
-	PipelineStage::FunctionalUnit *falu = execute_stage->addFunctionalUnit(falu_info);
-	execute_stage->bindFunctionalUnit(falu, FALU);
-	
-	// MUL FU
-	PipelineStage::FunctionalUnit::fu_info_t mul_info = {
-		"MUL",
-		"MUL",
-		true,
-		6,
-		6,
-		1,
-		PipelineStage::OUT_OF_ORDER
-	};
-	PipelineStage::FunctionalUnit *mul = execute_stage->addFunctionalUnit(mul_info);
-	execute_stage->bindFunctionalUnit(mul, MUL);
-
-	// DIV FU
-	PipelineStage::FunctionalUnit::fu_info_t div_info = {
-		"DIV",
-		"DIV",
-		false,
-		15,
-		15,
-		1,
-		PipelineStage::OUT_OF_ORDER
-	};
-	PipelineStage::FunctionalUnit *div = execute_stage->addFunctionalUnit(div_info);
-	execute_stage->bindFunctionalUnit(div, DIV);
-
-	// Commit stage
-	pipeline_info.stage_name = "CommitStage";
-	pipeline_info.stage_short_name = "CM";
-	pipeline_info.stage_category = PipelineStage::COMMIT;
-	pipeline_info.order_policy = PipelineStage::IN_ORDER;
-	pipeline_info.stage_width = 1 << degree;
-	pipeline_info.min_latency = 1;
-	pipeline_info.max_latency = 1;
-	pipeline_info.source_queue = ROB;
-	pipeline_info.destination_queue = NULL;
-	processor->addPipelineStage(pipeline_info);
-}*/
 
 
 /**
