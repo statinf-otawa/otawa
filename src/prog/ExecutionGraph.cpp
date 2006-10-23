@@ -287,8 +287,7 @@ void ExecutionGraph::bodyEarliestTimes(ExecutionNode *node) {
 	
 	int parv;
 	parv = node->pipelineStage()->width();
-	elm::genstruct::AllocatedTable<int> * times ;
-	times = new elm::genstruct::AllocatedTable<int>(parv);
+	elm::genstruct::AllocatedTable<int> times(parv) ;
 	
 	/* node.start.earliest = node.ready.earliest */
 	node->setMinStartTime(node->minReadyTime());
@@ -340,7 +339,7 @@ void ExecutionGraph::bodyEarliestTimes(ExecutionNode *node) {
 					}
 				}
 				if (cont->maxFinishTime() > min)
-					times->set(pos, cont->maxFinishTime());
+					times[pos] = cont->maxFinishTime();
 			}
 		}
 	}
