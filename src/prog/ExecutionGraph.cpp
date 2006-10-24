@@ -504,14 +504,16 @@ PathList * findPaths(ExecutionNode * source, ExecutionNode * target) {
 	for (ExecutionGraph::Successor succ(source) ; succ ; succ++) {
 		if(succ == target) {
 			Path *new_path = new Path();
-			new_path->addNodeFirst(succ);
+//			new_path->addNodeFirst(source);
 			list->addPath(new_path);
 		}
-		if(succ->instIndex() <= target->instIndex()) {
-			PathList *new_list = findPaths(succ, target);
-			for (PathList::PathIterator suffix_path(new_list) ; suffix_path ; suffix_path++) {
-				suffix_path->addNodeFirst(source);
-				list->addPath(suffix_path);
+		else {
+			if(succ->instIndex() <= target->instIndex()) {
+				PathList *new_list = findPaths(succ, target);
+				for (PathList::PathIterator suffix_path(new_list) ; suffix_path ; suffix_path++) {
+					suffix_path->addNodeFirst(succ);
+					list->addPath(suffix_path);
+				}
 			}
 		}
 	}
@@ -525,19 +527,27 @@ int ExecutionGraph::minDelta() {
 		return(0);
 	int min_all = INFINITE_TIME;
 	for (Predecessor pred(first_node[BODY]) ; pred ; pred++) {
+		elm::cout << "[minDelta] pred = " << pred->name() << "\n";
+		elm::cout << "[minDelta] last_node[PROLOGUE] = " << last_node[PROLOGUE]->name() << "\n";
 		PathList *path_list = findPaths(pred, last_node[PROLOGUE]);
 		int max = 0;
 		for(PathList::PathIterator path(path_list); path; path++) {
 			int length = 0;
+			elm::cout << "\tNew path to CM(I0): ";
 			for (Path::NodeIterator node(path); node; node++) {
 				length += node->minLatency();
+				elm::cout << node->name() << "-";
 			}
+			elm::cout << " (length=" << length << ")\n";
 			if (length > max)
 				max = length;
 		}
+		if (pred.edge()->type() == ExecutionEdge::SLASHED)
+			max += pred->pipelineStage()->minLatency();
 		if (max < min_all)
 			min_all = max;
 	}
+	elm::cout << "[minDelta] min_all = " << min_all << "\n";
 	return(min_all + last_node[PROLOGUE]->pipelineStage()->minLatency());
 	
 }
