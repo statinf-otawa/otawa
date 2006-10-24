@@ -149,7 +149,7 @@ inline T2 TreePath<T1,T2>::rootData() const {return _data;}
 // TreePath<T1, T2>::Iterator Inlines
 template <class T1, class T2>
 inline TreePath<T1, T2>::Iterator::Iterator(const TreePath<T1, T2> *tree)
-: elm::genstruct::Vector<TreePath<T1, T2> *>::Iterator(tree->childs) {
+: elm::genstruct::Vector<TreePath<T1, T2> *>::Iterator(tree->_childs) {
 	assert(tree);
 }
 
