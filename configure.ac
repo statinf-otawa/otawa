@@ -207,7 +207,6 @@ AC_OUTPUT([
 	test/exegraph/Makefile
 	test/simulator/Makefile
 	test/generic_simulator/Makefile
-	test/systemc/Makefile
 	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
 	examples/piconsens/Makefile
