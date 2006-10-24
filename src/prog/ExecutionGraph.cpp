@@ -58,28 +58,44 @@ void ExecutionGraph::prologueLatestTimes(ExecutionNode *node) {
 	/* v.ready.latest = MAX{u|u->v}(u.finish.latest);
 	 * v.ready.latest = MAX(v.ready.latest, CM(I-p).ready.latest);
 	 */
+	 
 	bool first = true;
 	int max;
-	for (ExecutionGraph::Predecessor pred(node) ; pred ; pred++) {
+	LOG(elm::cout << "[prologueLatestTimes] processing " << node->name() << "\n";)
+	for (Predecessor pred(node) ; pred ; pred++) {
+		LOG(elm::cout << "\t[prologueLatestTimes] pred.finish.latest=" << pred->maxFinishTime() << "\n";)
 		if (first) {
-			max = pred->maxFinishTime();
+			if (pred.edge()->type() == ExecutionEdge::SOLID)
+				max = pred->maxFinishTime();
+			else // SLASHED
+				max = pred->maxStartTime();
 			first = false;
 		}
 		else {
-			if (pred->maxFinishTime() > max)
-				max = pred->maxFinishTime();
+			if (pred.edge()->type() == ExecutionEdge::SOLID) {
+				if (pred->maxFinishTime() > max)
+					max = pred->maxFinishTime();
+			}
+			else {
+				if (pred->maxStartTime() > max)
+					max = pred->maxStartTime();	
+			}
 		}
 	}
 	if (lastNode(BEFORE_PROLOGUE)
 		&&
 	    (lastNode(BEFORE_PROLOGUE)->maxReadyTime() > max)){
 		max = lastNode(BEFORE_PROLOGUE)->maxReadyTime();
+		LOG(elm::cout << "\t[prologueLatestTimes] CM(I-p).finish.latest=" << lastNode(BEFORE_PROLOGUE)->maxFinishTime() << "\n";)
 	}
 	node->setMaxReadyTime(max);
+	LOG(elm::cout << "\t[prologueLatestTimes] " << node->name() << ".ready.latest=" << max << "\n";)
 	
 	/* v.start.latest = v.ready.latest + max_lat(v) - 1; */
 	
 	node->setMaxStartTime(node->maxReadyTime() + node->maxLatency() - 1);
+	LOG(elm::cout << "\t\t[prologueLatestTimes] " << node->name() << ".max_lat = " << node->maxLatency() << "\n";)
+	LOG(elm::cout << "\t[prologueLatestTimes] " << node->name() << ".start.latest=" << node->maxStartTime() << "\n";)
 	
 	/* Searly = early_cont(v);
 	 * if (|Searly| >= parv) then
@@ -132,8 +148,9 @@ void ExecutionGraph::prologueLatestTimes(ExecutionNode *node) {
 		if (tmp > node->maxStartTime())
 			node->setMaxStartTime(tmp);
 	}
+	LOG(elm::cout << "\t[prologueLatestTimes] " << node->name() << ".start.latest=" << node->maxStartTime() << " after contentions\n";)
 	node->setMaxFinishTime(node->maxStartTime() + node->maxLatency());
-	
+	LOG(elm::cout << "\t[prologueLatestTimes] " << node->name() << ".finish.latest=" << node->maxFinishTime() << "\n";)
 	/* foreach immediate successor w of v do
 	 * 		if slashed edge
 	 * 			w.ready.latest = MAX(w.ready.latest, v.start.latest);
@@ -410,6 +427,7 @@ void ExecutionGraph::latestTimes() {
 	
 	firstNode(BODY)->setMaxReadyTime(0);
 	for(PreorderIterator node(this, this->entry_node); node; node++) {
+//		LOG(elm::cout << "[latestTimes] processing " << node->name() << "\n";)
 		if ( (node->part() == PROLOGUE) 
 			|| (node->part() == BEFORE_PROLOGUE) ) {
 			if(! node->isShaded() ) {
@@ -455,29 +473,34 @@ void ExecutionGraph::shadePreds(ExecutionNode *node) {
 	int time;
 	
 	if (node->hasPred()) {
+		LOG(elm::cout << "[ShadePreds] processing " << node->name() << "\n";)
 		for (Predecessor pred(node) ; pred ; pred++) {
-			if (pred.edge()->type() == ExecutionEdge::SOLID) {
+//			if (pred.edge()->type() == ExecutionEdge::SOLID) {
 				pred->shade();
+				LOG(elm::cout << "\t[ShadePreds] shading pred " << pred->name() << "\n";)
 				time = node->maxFinishTime() - node->minLatency();
 				
-//				if ( pred.edge()->type() == ExecutionEdge::SOLID) {
-				if ( time < pred->maxFinishTime() ) {
-					pred->setMaxFinishTime(time);
-					pred->setMaxStartTime(pred->maxFinishTime() - pred->minLatency());
-					pred->setMaxReadyTime(pred->maxStartTime());
-					shadePreds(pred);
+				if ( pred.edge()->type() == ExecutionEdge::SOLID) {
+					if ( time < pred->maxFinishTime() ) {
+						pred->setMaxFinishTime(time);
+						LOG(elm::cout << "\t[ShadePreds] " << pred->name() << ".finish.latest set to " << pred->maxFinishTime() << "\n";)
+						pred->setMaxStartTime(pred->maxFinishTime() - pred->minLatency());
+						pred->setMaxReadyTime(pred->maxStartTime());
+					}
 				}
-//				}
-//				else {
-//					if (node->maxStartTime() < pred->maxStartTime() ) {
-//						pred->setMaxStartTime(node->maxStartTime());
-//					}
-//					pred->setMaxFinishTime(pred->maxStartTime() + pred->minLatency());
-//					pred->setMaxReadyTime(pred->maxStartTime());
-//				}
+				else {
+					if (node->maxStartTime() < pred->maxStartTime() ) {
+						pred->setMaxStartTime(node->maxStartTime());
+						pred->setMaxFinishTime(pred->maxStartTime() + pred->maxLatency());
+						pred->setMaxReadyTime(pred->maxStartTime());
+						LOG(elm::cout << "\t[ShadePreds] " << pred->name() << ".finish.latest set to " << pred->maxFinishTime() << "\n";)
+						
+					}
+				}
+				shadePreds(pred);				
 			}
 		}
-	}
+//	}
 	
 }
 
@@ -527,18 +550,13 @@ int ExecutionGraph::minDelta() {
 		return(0);
 	int min_all = INFINITE_TIME;
 	for (Predecessor pred(first_node[BODY]) ; pred ; pred++) {
-		elm::cout << "[minDelta] pred = " << pred->name() << "\n";
-		elm::cout << "[minDelta] last_node[PROLOGUE] = " << last_node[PROLOGUE]->name() << "\n";
 		PathList *path_list = findPaths(pred, last_node[PROLOGUE]);
 		int max = 0;
 		for(PathList::PathIterator path(path_list); path; path++) {
 			int length = 0;
-			elm::cout << "\tNew path to CM(I0): ";
 			for (Path::NodeIterator node(path); node; node++) {
 				length += node->minLatency();
-				elm::cout << node->name() << "-";
 			}
-			elm::cout << " (length=" << length << ")\n";
 			if (length > max)
 				max = length;
 		}
@@ -547,7 +565,6 @@ int ExecutionGraph::minDelta() {
 		if (max < min_all)
 			min_all = max;
 	}
-	elm::cout << "[minDelta] min_all = " << min_all << "\n";
 	return(min_all + last_node[PROLOGUE]->pipelineStage()->minLatency());
 	
 }
@@ -596,8 +613,8 @@ void ExecutionGraph::build(
 	
 	// build nodes
 	// consider every pipeline stage
-	code_part_t current_code_part = BEFORE_PROLOGUE;
 	for (Microprocessor::PipelineIterator stage(microprocessor) ; stage ; stage++) {
+		code_part_t current_code_part = BEFORE_PROLOGUE;
 		
 		// consider every instruction
 		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(sequence) ;
@@ -612,32 +629,35 @@ void ExecutionGraph::build(
 					inst->inst(),
 					inst->index(),
 					inst->codePart());
-				if (stage->usesFunctionalUnits()) {
-					
-					// the category of this instruction is unknown 
-					//      => assume execution with minimum/maximum latency among all functional units
-					int min_latency = INFINITE_TIME, max_latency = 0;
-					for(genstruct::Vector<PipelineStage::FunctionalUnit *>::Iterator
-					fu(stage->getFUs()); fu; fu++) {
-						int min_lat = 0, max_lat = 0;
-						for(PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu);
-						fu_stage; fu_stage++) {
-							min_lat += ((PipelineStage *) *fu_stage)->minLatency();
-							max_lat += ((PipelineStage *) *fu_stage)->maxLatency();
-						}
-						if (min_lat < min_latency)
-							min_latency = min_lat;
-						if (max_lat < max_latency)
-							max_latency = max_lat;
-					}
-					node->setMinLatency(min_latency);
-					node->setMaxLatency(max_latency);
-				}
+//				if (stage->usesFunctionalUnits()) {
+//					
+//					// the category of this instruction is unknown 
+//					//      => assume execution with minimum/maximum latency among all functional units
+//					int min_latency = INFINITE_TIME, max_latency = 0;
+//					for(genstruct::Vector<PipelineStage::FunctionalUnit *>::Iterator fu(stage->getFUs()); fu; fu++) {
+//						int min_lat = 0;
+//						int max_lat = 0;
+//						for(PipelineStage::FunctionalUnit::PipelineIterator fu_stage(fu);
+//						fu_stage; fu_stage++) {
+//							min_lat += ((PipelineStage *) *fu_stage)->minLatency();
+//							max_lat += ((PipelineStage *) *fu_stage)->maxLatency();
+//						}
+//						if (min_lat < min_latency)
+//							min_latency = min_lat;
+//						if (max_lat > max_latency)
+//							max_latency = max_lat;
+//					}
+//					node->setMinLatency(min_latency);
+//					node->setMaxLatency(max_latency);
+//				}
+				node->setMinLatency(0);
+				node->setMaxLatency(0);
+
 				inst->addNode(node);
 				stage->addNode(node);
 			
 				setFirstNode(BEFORE_PROLOGUE,inst->firstNode());
-				setLastNode(current_code_part, inst->lastNode());
+				setLastNode(BEFORE_PROLOGUE, inst->lastNode());
 			}
 			
 			else {
@@ -685,6 +705,7 @@ void ExecutionGraph::build(
 	
 	ExecutionNode *node = lastNode(BEFORE_PROLOGUE);
 	if (node) {
+		LOG(elm::cout << "lastNode(BEFORE_PROLOGUE) = " << node->name() << "\n";)
 		// the instruction before the prologue is assumed to produce every register
 		// this instruction is guaranted to be executed when its last node is finished
 		for (int b=0 ; b<reg_bank_count ; b++) {
