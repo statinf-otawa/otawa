@@ -21,7 +21,7 @@
 #	define CHECK(c)	c
 #endif
 
-//#define DO_LOG
+#define DO_LOG
 #if defined(NDEBUG) || !defined(DO_LOG)
 #	define LOG(c)
 #else
@@ -134,7 +134,7 @@ void ExecutionGraph::prologueLatestTimes(ExecutionNode *node) {
 	}
 	node->setMaxFinishTime(node->maxStartTime() + node->maxLatency());
 	
-		/* foreach immediate successor w of v do
+	/* foreach immediate successor w of v do
 	 * 		if slashed edge
 	 * 			w.ready.latest = MAX(w.ready.latest, v.start.latest);
 	 * 		if solid edge
@@ -456,23 +456,25 @@ void ExecutionGraph::shadePreds(ExecutionNode *node) {
 	
 	if (node->hasPred()) {
 		for (Predecessor pred(node) ; pred ; pred++) {
-			pred->shade();
-			time = node->maxFinishTime() - node->minLatency();
-			
-			if ( pred.edge()->type() == ExecutionEdge::SOLID) {
+			if (pred.edge()->type() == ExecutionEdge::SOLID) {
+				pred->shade();
+				time = node->maxFinishTime() - node->minLatency();
+				
+//				if ( pred.edge()->type() == ExecutionEdge::SOLID) {
 				if ( time < pred->maxFinishTime() ) {
 					pred->setMaxFinishTime(time);
 					pred->setMaxStartTime(pred->maxFinishTime() - pred->minLatency());
 					pred->setMaxReadyTime(pred->maxStartTime());
 					shadePreds(pred);
 				}
-			}
-			else {
-				if (node->maxStartTime() < pred->maxStartTime() ) {
-					pred->setMaxStartTime(node->maxStartTime());
-				}
-				pred->setMaxFinishTime(pred->maxStartTime() + pred->minLatency());
-				pred->setMaxReadyTime(pred->maxStartTime());
+//				}
+//				else {
+//					if (node->maxStartTime() < pred->maxStartTime() ) {
+//						pred->setMaxStartTime(node->maxStartTime());
+//					}
+//					pred->setMaxFinishTime(pred->maxStartTime() + pred->minLatency());
+//					pred->setMaxReadyTime(pred->maxStartTime());
+//				}
 			}
 		}
 	}
@@ -788,7 +790,7 @@ void ExecutionGraph::build(
 				int index = node->instIndex() + stage->sourceQueue()->size();
 				for (PipelineStage::ExecutionNodeIterator waiting_node(prod_stage) ; waiting_node ; waiting_node++) {
 					if (waiting_node->instIndex() == index) {
-						ExecutionEdge *edge = new ExecutionEdge(node, waiting_node, ExecutionEdge::SOLID);
+						ExecutionEdge *edge = new ExecutionEdge(node, waiting_node, ExecutionEdge::SLASHED);
 //						LOG( dumpFile << "\tEdge for queue capacity: " << edge->name()<< ")\n";)
 						break;
 					}
