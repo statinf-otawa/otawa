@@ -133,6 +133,24 @@ void ExecutionGraph::prologueLatestTimes(ExecutionNode *node) {
 			node->setMaxStartTime(tmp);
 	}
 	node->setMaxFinishTime(node->maxStartTime() + node->maxLatency());
+	
+		/* foreach immediate successor w of v do
+	 * 		if slashed edge
+	 * 			w.ready.latest = MAX(w.ready.latest, v.start.latest);
+	 * 		if solid edge
+	 * 			w.ready.latest = MAX(w.ready.latest, v.finish.latest
+	 */
+	for (Successor next(node) ; next ; next++) {
+		if (next.edge()->type() == ExecutionEdge::SLASHED) {
+			if (node->maxStartTime() > next->maxReadyTime())	
+				next->setMaxReadyTime(node->maxStartTime());
+		}
+		else {// SOLID 
+			if (node->maxFinishTime() > next->maxReadyTime())
+				next->setMaxReadyTime(node->maxFinishTime());
+		}
+	}
+	
 		
 }
 
@@ -345,7 +363,7 @@ void ExecutionGraph::bodyEarliestTimes(ExecutionNode *node) {
 	}
 
 	if (count >= parv) {
-		int max_delay = times[0];
+		int max_delay = times[0];	
 		for (int i=1 ; i<index ; i++) {
 			if (times[i] < max_delay) {
 				max_delay = times[i];
