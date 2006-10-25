@@ -8,6 +8,7 @@
 //#include <systemc>
 #include <stdlib.h>
 #include <elm/io.h>
+#include <elm/system/Path.h>
 #include <otawa/otawa.h>
 #include <otawa/ipet.h>
 #include <otawa/proc/ProcessorException.h>
@@ -47,9 +48,13 @@ int main(int argc, char **argv) {
 		// Load program
 		if(argc < 2) {
 			elm::cerr << "ERROR: no argument.\n"
-				 << "Syntax is : exegraph <executable>\n";
+				 << "Syntax is : " << argv[0] << " <executable>\n";
 			exit(2);
 		}
+		
+		//TODO: move parameter on command line
+		elm::system::Path xml_processor_file("/home/barre/otawa/otawa/examples/piconsens/deg4.xml");
+		PROCESSOR_PATH(loader_props) = xml_processor_file;
 		FrameWork *fw = manager.load(argv[1], loader_props);
 		
 		
@@ -117,6 +122,8 @@ int main(int argc, char **argv) {
 				logFile << finish_cycle - start_cycle << " cycles\n";
 			}
 		}
+		
+		elm::cout << "fin for OK, " << simulator_state->cycle() << endl;
 		
 //		ExeGraphBBTime tbt(props, &processor, logFile);
 //		tbt.processCFG(fw, &vcfg);
