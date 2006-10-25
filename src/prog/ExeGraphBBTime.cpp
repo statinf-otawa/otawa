@@ -75,6 +75,7 @@ ExeGraphBBTime::ExeGraphBBTime(const PropList& props)
 :	BBProcessor(props),
 	microprocessor(PROCESSOR(props)),
 	dumpFile(*LOG_OUTPUT(props)),
+	delta(EXEGRAPH_DELTA(props)),
 	stat_root(0, 0),
 	exe_stats(*(new Vector<stat_t>()))
 {
@@ -390,10 +391,11 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	}
 	
 	
-		// build the list of possible epilogues
+	// build the list of possible epilogues
 	elm::genstruct::DLList<ExecutionGraphInstruction *> * new_epilogue = 
 		new elm::genstruct::DLList<ExecutionGraphInstruction *>;
-		buildEpilogueList(bb, new_epilogue, capacity, &epilogue_list);
+	buildEpilogueList(bb, new_epilogue, capacity, &epilogue_list);
+
 	// dump epilogue list
 		LOG(	dumpFile << "Dumping the list of epilogues:\n";
 	    	{int p =0;
@@ -447,6 +449,7 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 				dumpFile << "\n";
 			)			
 			bbExecTime = processSequence(fw, NULL, &body, NULL, capacity);
+			
 			#ifdef ACCURATE_STATS
 				PrefixCost * prefix_cost;
 				elm::genstruct::DLList<BasicBlock *> prologue_blocks;
@@ -542,6 +545,8 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 								
 				)
 				bbExecTime = processSequence(fw, prologue, &body, NULL, capacity);
+				if(delta)
+					recordDelta(prologue, bbExecTime, bb);
 				
 				#ifdef ACCURATE_STATS
 					bbnum = -1;
@@ -625,7 +630,9 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 						dumpFile << ")\n";
 					)
 					bbExecTime = processSequence(fw, prologue, &body, epilogue, capacity);
-					
+					if(delta)
+						recordDelta(prologue, bbExecTime, bb);
+				
 					#ifdef ACCURATE_STATS
 						bbnum = -1;
 						elm::genstruct::DLList<BasicBlock *> prologue_blocks;
@@ -702,7 +709,11 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	
 	// Stop recording stats
 	if(this->recordsStats())
-		collectPrefixStats();		
+		collectPrefixStats();
+	
+	// Fix the delta
+	for(BasicBlock::InIterator edge(bb); edge; edge++)
+		TIME_DELTA(edge) = TIME_DELTA(edge) - maxExecTime;			
 }
 
 
@@ -843,10 +854,44 @@ void ExeGraphBBTime::collectPrefixStats(int depth, node_stat_t *node) {
 
 
 /**
+ * Record the time delta on the input edges of the current block.
+ * @param insts	Prologue.
+ * @param cost	Cost of the block with the current prologue.
+ * @param bb	Current basic block.
+ */
+void ExeGraphBBTime::recordDelta(
+	DLList<ExecutionGraphInstruction *> *insts,
+	int cost,
+	BasicBlock *bb)
+{
+	assert(insts);
+	assert(!insts->isEmpty());
+	assert(bb);
+	Inst *inst = insts->last()->inst();
+	for(BasicBlock::InIterator edge(bb); edge; edge++) {
+		BasicBlock *target = edge->target();
+		if(target
+		&& target->address() <= inst->address()
+		&& inst->address() <= target->address() + target->size()
+		&& TIME_DELTA(target) < cost)
+			TIME_DELTA(target) = cost;
+	}
+}
+
+
+/**
  * If the statistics are activated, this property is returned in statistics
  * property list to store @ref ExeGraphBBTime statistics.
  */
 GenericIdentifier<Vector <ExeGraphBBTime::stat_t> *>
 	EXEGRAPH_PREFIX_STATS("exegraph_prefix_stats", 0, OTAWA_NS);
+
+
+/**
+ * If set to the true, ExeGraph will also put @ref TIME_DELTA properties on
+ * edges. Using the @ref TimeDetaObjectFunctionModifier, it allow to improve
+ * the accuracy of the computed WCET.
+ */
+GenericIdentifier<bool> EXEGRAPH_DELTA("exegraph_delta", false, OTAWA_NS);
 
 }  // otawa

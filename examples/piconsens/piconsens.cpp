@@ -19,6 +19,7 @@
 #include <otawa/gensim/GenericSimulator.h>
 #include <otawa/exegraph/ExeGraphBBTime.h>
 #include <otawa/exegraph/Microprocessor.h>
+#include <otawa/ipet/TimeDeltaObjectFunctionModifier.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -60,6 +61,7 @@ IntOption degree(command, 'd', "degree", "superscalar degree power (real degree 
 StringOption proc(command, 'p', "processor", "used processor", "processor", "deg1.xml");
 BoolOption do_stats(command, 's', "stats", "display statistics", false);
 BoolOption do_time(command, 't', "time", "display basic block times", false);
+BoolOption do_context(command, 'c', "context", "use context to improve accuracy of ExeGraph", false);
  
 
 /**
@@ -143,6 +145,13 @@ void Command::compute(String fun) {
 		Delta::LEVELS(props) = delta;
 		Delta delta(props);
 		delta.process(fw);
+	}
+	
+	// Time delta modifier
+	if(exegraph && !delta && do_context) {
+		EXEGRAPH_DELTA(props) = true;
+		TimeDeltaObjectFunctionModifier tdom(props);
+		tdom.process(fw);
 	}
 	
 	// Resolve the system

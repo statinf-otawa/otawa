@@ -176,6 +176,7 @@ class ExeGraphBBTime: public BBProcessor {
 		PropList *properties;
 		elm::io::Output& dumpFile;
 		Microprocessor *microprocessor;
+		bool delta;
 		
 	public:
 		ExeGraphBBTime(const PropList& props = PropList::EMPTY);
@@ -221,6 +222,10 @@ class ExeGraphBBTime: public BBProcessor {
 	} stat_t;
 
 private:
+		void recordDelta(
+			DLList<ExecutionGraphInstruction *> *insts,
+			int cost,
+			BasicBlock *bb);
 
 		typedef struct node_stat_t {
 			struct node_stat_t *children, *sibling;
@@ -245,6 +250,9 @@ private:
 		void recordPrefixNodeStats(node_stat_t *node, int cost);
 		void collectPrefixStats(int depth = 0, node_stat_t *node = 0);
 };
+
+// Configuration
+extern GenericIdentifier<bool> EXEGRAPH_DELTA;
 
 // Statistics output
 extern GenericIdentifier<Vector <ExeGraphBBTime::stat_t> *> EXEGRAPH_PREFIX_STATS;

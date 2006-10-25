@@ -25,6 +25,7 @@ namespace ipet {
 
 // Properties
 extern GenericIdentifier<int> TIME;
+extern GenericIdentifier<int> TIME_DELTA;
 extern GenericIdentifier<ilp::Var *> VAR;
 extern GenericIdentifier<ilp::System *> SYSTEM;
 extern GenericIdentifier<int> WCET;
