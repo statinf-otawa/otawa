@@ -843,9 +843,9 @@ void ExeGraphBBTime::collectPrefixStats(int depth, node_stat_t *node) {
 			if(exe_stats[i].seq_cnt) {
 				exe_stats[i].bb_cnt++;
 				exe_stats[i].total_span_sum +=
-					exe_stats[i].bb_span_sum / exe_stats[i].seq_cnt;
+					(double)exe_stats[i].bb_span_sum / exe_stats[i].seq_cnt;
 				exe_stats[i].total_vals_sum +=
-					exe_stats[i].bb_vals_sum / exe_stats[i].seq_cnt;
+					(double)exe_stats[i].bb_vals_sum / exe_stats[i].seq_cnt;
 				exe_stats[i].seq_cnt = 0;
 				exe_stats[i].bb_span_sum = 0;
 				exe_stats[i].bb_vals_sum = 0;

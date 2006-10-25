@@ -211,8 +211,8 @@ class ExeGraphBBTime: public BBProcessor {
 	
 	// statistics
 	typedef struct stat_t {
-		int total_span_sum;
-		int total_vals_sum;
+		double total_span_sum;
+		double total_vals_sum;
 		int bb_cnt;
 		int bb_span_sum;
 		int bb_vals_sum;
