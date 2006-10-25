@@ -41,13 +41,18 @@ libotawa_la_SOURCES = \
 	proc_ASTProcessor.cpp \
 	proc_BBProcessor.cpp \
 	proc_ProcessorException.cpp \
-	ipet_IPET.cpp \
-	ipet_TrivialBBTime.cpp \
-	ipet_VarAssignment.cpp \
 	Process.cpp \
 	ipet_BasicConstraintsBuilder.cpp \
-	ipet_WCETComputation.cpp \
+	ipet_BasicObjectFunctionBuilder.cpp \
+	ipet_Delta.cpp \
+	ipet_FlowFactLoader.cpp \
+	ipet_IPET.cpp \
+	ipet_TimeDeltaObjectFunctionModifier.cpp \
 	ipet_TreePath.cpp \
+	ipet_TrivialBBTime.cpp \
+	ipet_TrivialDataCacheManager.cpp \
+	ipet_VarAssignment.cpp \
+	ipet_WCETComputation.cpp \
 	util_DFA.cpp \
 	util_DFABitSet.cpp \
 	util_DFAEngine.cpp \
@@ -68,14 +73,11 @@ libotawa_la_SOURCES = \
 	util_FlowFactLoader.cpp \
 	util_fft_parser.yy \
 	util_fft_lexer.ll \
-	ipet_FlowFactLoader.cpp \
 	util_CFGNormalizer.cpp \
 	hard_Processor.cpp \
 	hardware_Cache.cpp \
 	hardware_CacheConfiguration.cpp \
 	hardware_Platform.cpp \
-	ipet_BasicObjectFunctionBuilder.cpp \
-	ipet_TrivialDataCacheManager.cpp \
 	ast_parser.yy \
 	ast_lexer.ll \
 	ast_ASTLoader.cpp \
@@ -111,7 +113,6 @@ libotawa_la_SOURCES = \
 	ExecutionGraph.cpp \
 	ExeGraphBBTime.cpp \
 	BBTimeSimulator.cpp \
-	ipet_Delta.cpp \
 	BBPath.cpp \
 	cfg_CFGCollector.cpp \
 	prop_NameSpace.cpp \

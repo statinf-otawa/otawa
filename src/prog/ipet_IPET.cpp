@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2005-06, IRIT UPS.
  *
  *	src/prog/ipet_IPET.cpp -- IPET class implementation.
  */
@@ -96,6 +96,15 @@ GenericIdentifier<int> WCET("ipet.wcet", -1);
  * must only be activated for debugging purposes.
  */
 GenericIdentifier<bool> EXPLICIT("ipet.explicit", false);
+
+
+/**
+ * This property is used to store time delta on edges. This time may be used
+ * to improve accuracy of the IPET system with a time modifier based on
+ * edges (use the @ref TimeDeltaObjectFunctionModifier to add time deltas
+ * to the object function).
+ */
+extern GenericIdentifier<int> TIME_DELTA("ipet.time_delta", 0);
 
 
 /**

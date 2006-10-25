@@ -8,6 +8,7 @@ includeotawaipet_HEADERS = \
 	Delta.h \
 	FlowFactLoader.h \
 	IPET.h \
+	TimeDeltaObjectFunctionModifier.h \
 	TreePath.h \
 	TrivialBBTime.h \
 	TrivialDataCacheManager.h \
