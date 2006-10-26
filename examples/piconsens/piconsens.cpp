@@ -251,9 +251,11 @@ void Command::computeDeltaMax(
 {
 	// Compute max
 	int path_time = tree->rootData()->time(fw); 
-	int time = path_time - parent_time;
-	if(time > DELTA_MAX(tree->rootLabel()))
-		DELTA_MAX(tree->rootLabel()) = time;
+	if(!parent_time) {
+		int time = path_time - parent_time;
+		if(time > DELTA_MAX(tree->rootLabel()))
+			DELTA_MAX(tree->rootLabel()) = time;
+	}
 	
 	// Traverse children
 	for(TreePath< BasicBlock *, BBPath * >::Iterator child(tree); child; child++)
