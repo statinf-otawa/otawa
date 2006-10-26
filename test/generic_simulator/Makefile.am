@@ -6,4 +6,5 @@ simulator_LDADD = @LOADER_LIBS@ @OGENSIM_LIBS@ @OTAWA_LIBS@
 simulator_DEPENDENCIES = @LOADER_DEPS@ @OGENSIM_DEPS@ @OTAWA_DEPS@
 
 simulator_SOURCES=\
-	gen_simulator.cpp
+	gen_simulator.cpp \
+	FullSimulationDriver.cpp
