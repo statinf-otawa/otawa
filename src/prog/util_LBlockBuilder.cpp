@@ -12,6 +12,7 @@
 #include <otawa/hard/Platform.h>
 #include <otawa/cfg.h>
 #include <otawa/ilp.h>
+#include <otawa/proc/ProcessorException.h>
 #include <otawa/ipet/IPET.h>
 
 namespace otawa {
@@ -31,7 +32,10 @@ void LBlockBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) 
 	assert(lbset);
 
 	// Initialization
-	const hard::Cache *cach = fw->platform()->cache().instCache();
+	const hard::CacheConfiguration& conf = fw->platform()->cache();
+	if(!conf.instCache())
+		throw ProcessorException(*this, "no instruction cache !");
+	const hard::Cache *cach = conf.instCache();
 	
 	// Create entry node
 	new LBlock(lbset, 0, 0, 0);
