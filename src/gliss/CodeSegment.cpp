@@ -10,10 +10,12 @@
 #include <otawa/gliss/Symbol.h>
 #include <otawa/gliss/MemInst.h>
 
+#define MAP_BITS	6
+#define MAP_MASK	((1 << MAP_BITS) - 1)
+
 using namespace elm;
 
 namespace otawa { namespace gliss {
-
 
 /**
  * @class CodeSegment
@@ -28,9 +30,29 @@ namespace otawa { namespace gliss {
  * @param address	Address of the segment in the simulator memory.
  * @param size			Size of the segment.
  */
-CodeSegment::CodeSegment(File& file, CString name, memory_t *memory, address_t address, size_t size)
-: _file(file), _name(name), code(memory, address, size), built(false) {
+CodeSegment::CodeSegment(
+	File& file,
+	CString name,
+	memory_t *memory,
+	address_t address,
+	size_t size)
+:
+	_file(file),
+	_name(name),
+	code(memory, address, size),
+	built(false),
+	map(0)
+{
 }
+
+
+/**
+ */
+CodeSegment::~CodeSegment(void) {
+	if(map)
+		delete [] map;
+}
+
 
 // Overloaded
 CString CodeSegment::name(void) {
@@ -149,13 +171,19 @@ otawa::Inst *CodeSegment::findByAddress(address_t addr) {
 	if(addr < code.address() || addr >= code.address() + code.size())
 		return 0;
 	
+	// If required, build the map
+	if(!map)
+		buildMap();
+	
 	// Look in the instruction
-	/* !!TODO!! May be improved using an indirect table.
-	 * Issue: manage the indirect table with modifications of the code.
-	 */
-	for(otawa::Inst *inst = code.first(); !inst->atEnd(); inst = inst->next())
-		if(!inst->isPseudo() && inst->address() == addr)
+	//int cnt = 0;
+	for(otawa::Inst *inst = map[index(addr)];
+	!inst->atEnd(); inst = inst->next() /*, cnt++*/)
+		if(!inst->isPseudo() && inst->address() == addr) {
+			//cout << "==> " << cnt << io::endl;
 			return inst;
+		}
+	//cout << "==> NOT FOUND " << cnt << io::endl;		
 	return 0;
 }
 
@@ -239,5 +267,36 @@ IteratorInst<otawa::Inst *> *CodeSegment::Code::insts(void) {
 	return new InstIter(_insts);
 }
 
+
+/**
+ * Compute the index of the address in the map.
+ * @param addr	Address of the required instruction.
+ * @return		Index in the map.
+ */
+inline int CodeSegment::index(address_t addr) {
+	return (addr - code.address()) >> MAP_BITS;
+}
+
+
+
+
+/**
+ * Build the map of instructions to improve access time.
+ */
+void CodeSegment::buildMap(void) {
+	
+	// Already done, let's go
+	if(map)
+		return;
+	
+	// Allocate the map
+	map = new otawa::Inst *[(code.size() >> MAP_BITS) + 1];
+	assert(map);
+	
+	// Fill the map
+	for(otawa::Inst *inst = code.first(); !inst->atEnd(); inst = inst->next())
+		if(!inst->isPseudo() && !((inst->address() - code.address()) & MAP_MASK))
+			map[index(inst->address())] = inst;
+}
 
 } } // otawa::gliss

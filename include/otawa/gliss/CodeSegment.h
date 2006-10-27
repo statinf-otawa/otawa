@@ -11,6 +11,8 @@
 
 namespace otawa { namespace gliss {
 
+using namespace elm::genstruct;
+
 // Predefined classes
 class File;
 	
@@ -41,10 +43,14 @@ class CodeSegment: public ::otawa::Segment {
 	Code code;
 	bool built;
 	datastruct::Vector<ProgItem *> _items;
+	otawa::Inst **map;
 	void build(void);
+	void buildMap(void);
+	inline int index(address_t addr);
 
 public:
 	CodeSegment(File& file, CString name, memory_t *memory, address_t address, size_t size);
+	virtual ~CodeSegment(void);
 	otawa::Inst *findByAddress(address_t addr);
 	inline File& file(void) const;
 
