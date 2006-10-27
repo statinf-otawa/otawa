@@ -15,6 +15,10 @@
 #include <elm/system/StopWatch.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
+#include <otawa/ipet/BBTimeSimulator.h>
+#include <otawa/exegraph/ExeGraphBBTime.h>
+#include <otawa/gensim/GenericSimulator.h>
+#include <otawa/util/LBlockBuilder.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -66,6 +70,8 @@ class Command: public elm::option::Manager {
 	genstruct::Vector<String> funs;
 	otawa::Manager manager;
 	FrameWork *fw;
+	gensim::GenericSimulator sim;
+	CacheConfiguration *caches;
 public:
 	Command(void);
 	void compute(String fun);
@@ -98,16 +104,20 @@ EnumOption<int> icache_option(command, 'i', "icache",
 typedef enum bbtime_t {
 	bbtime_sim,
 	bbtime_delta,
-	bbtime_exegraph
+	bbtime_exegraph,
+	bbtime_trivial
 } bbtime_t;
 EnumOption<int>::value_t bbtime_values[] = {
-	{ "method", bbtime_sim },
+	{ "method", bbtime_trivial },
 	{ "sim", bbtime_sim },
 	{ "delta", bbtime_delta },
-	{ "exegraph", bbtime_exegraph }
+	{ "exegraph", bbtime_exegraph },
+	{ "trivial", bbtime_trivial }
 };
 EnumOption<int> bbtime_option(command, 't', "bbtiming",
 	"basic block timing method", bbtime_values);
+StringOption proc(command, 'p', "processor", "used processor", "processor", "");
+IntOption delta(command, 'D', "delta", "use delta method with given sequence length", "length", 4);
 
 
 // Dump options
@@ -170,8 +180,30 @@ void Command::compute(String fun) {
 	}
 	
 	// Compute BB times
-	TrivialBBTime tbt(5, props);
-	tbt.process(fw);
+	switch(bbtime_option) {
+
+	case bbtime_sim:
+	case bbtime_delta: {
+			BBTimeSimulator bbts(props);
+			bbts.process(fw);
+		}
+		break;
+		
+	case bbtime_exegraph: {
+			ExeGraphBBTime tbt(props);
+			tbt.process(fw);
+		}
+		break;
+		
+	case bbtime_trivial: {
+			TrivialBBTime tbt(5, props);
+			tbt.process(fw);
+		}
+		break;
+
+	default:
+		assert(0);
+	};
 		
 	// Trivial data cache
 	TrivialDataCacheManager dcache(props);
@@ -189,6 +221,10 @@ void Command::compute(String fun) {
 	switch(icache_option) {
 	case icache_ccg:
 		{	
+			// build LBlock
+			LBlockBuilder lbb(props);
+			lbb.process(fw);
+			
 			// build ccg graph
 			CCGBuilder ccgbuilder;
 			ccgbuilder.process(fw);
@@ -223,6 +259,13 @@ void Command::compute(String fun) {
 		break;
 	}
 
+	// Delta processing
+	if(bbtime_option == bbtime_delta) {
+		Delta::LEVELS(props) = delta;
+		Delta delta(props);
+		delta.process(fw);
+	}
+
 	// Load flow facts
 	ipet::FlowFactLoader loader(props);
 	loader.process(fw);
@@ -255,10 +298,27 @@ void Command::run(void) {
 	// Any file
 	if(!file)
 		throw OptionException("binary file path required !");
+
+	// Build the cache
+ 	Cache::info_t info;
+ 	info.block_bits = 3;  // 2^3 octets par bloc
+ 	info.line_bits = 3;   // 2^3 lignes
+ 	info.set_bits = 0;    // 2^0 élément par ensemble (cache direct)
+ 	info.replace = Cache::NONE;
+ 	info.write = Cache::WRITE_THROUGH;
+ 	info.access_time = 0;
+ 	info.miss_penalty = 10;
+ 	info.allocate = false;
+ 	Cache *level1 = new Cache(info);
+ 	caches = new CacheConfiguration(level1);
 	
 	// Load the file
 	PropList props;
- //	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+	if(proc) {
+		PROCESSOR_PATH(props) = proc.value();
+		SIMULATOR(props) = &sim;
+	}
+	CACHE_CONFIG(props) = caches;
 	fw = manager.load(&file, props);
 	
 	// Removing __eabi call if available (should move in a file configuration)
