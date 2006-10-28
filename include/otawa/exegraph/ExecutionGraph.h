@@ -126,10 +126,18 @@ class ExecutionNode: public GenGraph<ExecutionNode, ExecutionEdge>::Node {
 		bool produces_operands;
 		code_part_t code_part;
 		bool shaded;
+		bool _has_path_to_CMI0;
+		int _max_time_to_CMI0;
+		int _min_time_to_IFI1;
 		elm::genstruct::Vector<ExecutionNode *> contenders;
 		elm::String _name;
 	public:
 		inline ExecutionNode(ExecutionGraph * graph, 
+							PipelineStage *stage, 
+							Inst *instruction, 
+							int index, 
+							code_part_t part);
+		inline void init (ExecutionGraph * graph, 
 							PipelineStage *stage, 
 							Inst *instruction, 
 							int index, 
@@ -158,6 +166,12 @@ class ExecutionNode: public GenGraph<ExecutionNode, ExecutionEdge>::Node {
 		inline void setMaxLatency(int lat) ;
 		inline void setNeedsOperands(bool val);
 		inline void setProducesOperands(bool val);
+		inline bool hasPathToCMI0();
+		inline void setHasPathToCMI0();
+		inline int maxTimeToCMI0();
+		inline void setMaxTimeToCMI0(int time);
+		inline int minTimeToIFI1();
+		inline void setMinTimeToIFI1(int time);
 		void dump(elm::io::Output& out_stream);
 		void dumpLight(elm::io::Output& out_stream);
 		void dumpLightTimed(elm::io::Output& out_stream);
@@ -175,6 +189,30 @@ class ExecutionNode: public GenGraph<ExecutionNode, ExecutionEdge>::Node {
 };
 
 
+ inline bool ExecutionNode::hasPathToCMI0() {
+   return _has_path_to_CMI0;
+ }
+
+ inline void ExecutionNode::setHasPathToCMI0() {
+   _has_path_to_CMI0 = true;
+ }
+
+ inline int ExecutionNode::maxTimeToCMI0(){
+   return _max_time_to_CMI0;
+ }
+
+ inline void ExecutionNode::setMaxTimeToCMI0(int time) {
+   _max_time_to_CMI0 = time;
+ }
+ 
+ inline int ExecutionNode::minTimeToIFI1(){
+   return _min_time_to_IFI1;
+ }
+
+ inline void ExecutionNode::setMinTimeToIFI1(int time) {
+   _min_time_to_IFI1 = time;
+ }
+ 
 
 // -----------------------------------------------------------
 // ExecutionEdge class definition
@@ -194,6 +232,7 @@ class ExecutionEdge: public GenGraph<ExecutionNode, ExecutionEdge>::Edge {
 	
 	public:
 		inline ExecutionEdge(ExecutionNode *source, ExecutionNode *target, edge_type_t type);
+//		inline void init(ExecutionNode *source, ExecutionNode *target, edge_type_t type);
 		inline edge_type_t type(void) const;
 		void dump(elm::io::Output& out_stream);
 		inline String name();
@@ -232,10 +271,14 @@ class ExecutionGraph:  public GenGraph<ExecutionNode, ExecutionEdge>  {
 		ExecutionNode * last_node[CODE_PARTS_NUMBER];
 		elm::genstruct::DLList<ExecutionGraphInstruction *> * _sequence;
 		int min_delta;
+		int _capacity;
+		bool _times_changed;
+		elm::genstruct::DLList<ExecutionNode *> early_nodes_to_IFI1;
 		
 	public:
-		ExecutionGraph(void);
+		ExecutionGraph(int capacity);
 		~ExecutionGraph(void);
+		inline void setTimesChanged();
 		inline void setEntryNode(ExecutionNode *node);
 		void dump(elm::io::Output& out_stream);
 		void dumpLight(elm::io::Output& out_stream);
@@ -247,15 +290,18 @@ class ExecutionGraph:  public GenGraph<ExecutionNode, ExecutionEdge>  {
 		bool unchangedSeparated();
 		inline bool separated(ExecutionNode *u, ExecutionNode *v);
 		void latestTimes();
-		void prologueLatestTimes(ExecutionNode *node);
+//		void prologueLatestTimes(ExecutionNode *node);
 		void bodyLatestTimes(ExecutionNode *node);
-		void epilogueLatestTimes(ExecutionNode *node);
-//		void prologueEarliestTimes(ExecutionNode *node, elm::io::Output& out_stream);
+//		void epilogueLatestTimes(ExecutionNode *node);
+//		void prologueEarliestTimes(ExecutionNode *node);
+		void prologueMinTimeToCMI0(ExecutionNode *node);
 		void bodyEarliestTimes(ExecutionNode *node);
 //		void epilogueEarliestTimes(ExecutionNode *node, elm::io::Output& out_stream);
 		void earliestTimes() ;
 		int minDelta();
+		void findMinPathsToIFI1(ExecutionNode * node, int length);
 		void shadeNodes() ;
+		void findPaths(ExecutionNode * node);
 		void shadePreds(ExecutionNode *node) ;
 		inline void setFirstNode(code_part_t part, ExecutionNode *node);
 		inline void setLastNode(code_part_t part, ExecutionNode *node);
@@ -265,6 +311,11 @@ class ExecutionGraph:  public GenGraph<ExecutionNode, ExecutionEdge>  {
 					elm::genstruct::DLList<ExecutionGraphInstruction *> &sequence);
 		int analyze();
 };
+
+inline void ExecutionGraph::setTimesChanged() {
+	_times_changed = true;
+}
+
 
 // -----------------------------------------------------------
 // GraphNodeInList class definition
@@ -314,6 +365,7 @@ class Path {
 	private:
 		elm::genstruct::DLList<ExecutionNode *> node_list;
 	public:
+		inline void clear();
 		inline void addNodeFirst(ExecutionNode *node);
 		void dump(elm::io::Output& out_stream);
 		
@@ -324,6 +376,14 @@ class Path {
 		
 };
 
+ inline void Path::clear() {
+     while (!node_list.isEmpty()) {
+         node_list.removeFirst();
+   }
+ }
+
+
+
 // -----------------------------------------------------------
 // PathList class definition
 // -----------------------------------------------------------
@@ -332,6 +392,7 @@ class PathList {
 	private:
 		elm::genstruct::DLList<Path *> path_list;
 	public:
+		inline void clear();
 		inline void addPath(Path *path);
 		void dump(elm::io::Output& out_stream);
 		
@@ -341,6 +402,16 @@ class PathList {
 		};
 		
 };
+
+ inline void PathList::clear() {
+   Path * path;
+   while (!path_list.isEmpty()) {
+     path = path_list.first();
+     path_list.removeFirst();
+     path->clear();    
+   }
+ }
+
 
 // -----------------------------------------------------------
 // TimeDLNode class definition
@@ -376,10 +447,57 @@ inline ExecutionNode::ExecutionNode(ExecutionGraph * graph,
 									int index, 
 									code_part_t part)
 : execution_graph(graph), pipeline_stage(stage), inst(instruction), inst_index(index), needs_operands(false),
-produces_operands(false), shaded(false), code_part(part), Node((otawa::graph::Graph *)graph), changed(false) {
-	ready_time.min = -INFINITE_TIME; // needed ?
-	start_time.min = 0;
-	finish_time.min = stage->minLatency();
+produces_operands(false), shaded(false), code_part(part), Node((otawa::graph::Graph *)graph), changed(false), 
+_has_path_to_CMI0(false), _max_time_to_CMI0(0), _min_time_to_IFI1(0) {
+	if (code_part >= BODY) {
+		ready_time.min = 0; // needed ?
+		start_time.min = 0;
+		finish_time.min = stage->minLatency();
+	}
+	else {
+		ready_time.min = -INFINITE_TIME; // needed ?
+		start_time.min = -INFINITE_TIME;
+		finish_time.min = -INFINITE_TIME;
+	}
+	ready_time.max = 0 ; 
+	start_time.max = INFINITE_TIME;
+	finish_time.max = INFINITE_TIME;
+	latency.min = stage->minLatency();
+	latency.max = stage->maxLatency();	
+	StringBuffer _buffer;
+	_buffer << stage->shortName() << "(I" << index << ")";
+	_name = _buffer.toString();
+}
+
+// ---------- init
+
+inline void ExecutionNode::init(ExecutionGraph * graph, 
+									PipelineStage *stage, 
+									Inst *instruction, 
+									int index, 
+									code_part_t part) {
+	execution_graph = graph;
+	pipeline_stage = stage;
+ 	inst = instruction; 
+ 	inst_index = index;
+ 	needs_operands = false;
+	produces_operands = false;
+	shaded = false; 
+	code_part = part;
+	changed = false; 
+	_has_path_to_CMI0 = false;
+	_max_time_to_CMI0 = 0;
+	_min_time_to_IFI1 = 0;
+	if (code_part >= BODY) {
+		ready_time.min = 0; // needed ?
+		start_time.min = 0;
+		finish_time.min = stage->minLatency();
+	}
+	else {
+		ready_time.min = -INFINITE_TIME; // needed ?
+		start_time.min = -INFINITE_TIME;
+		finish_time.min = -INFINITE_TIME;
+	}
 	ready_time.max = 0 ; 
 	start_time.max = INFINITE_TIME;
 	finish_time.max = INFINITE_TIME;
@@ -427,6 +545,7 @@ inline void ExecutionNode::setMinReadyTime(int time)  {
 	if(time != ready_time.min) {
 		ready_time.min = time;
 		changed = true;
+		execution_graph->setTimesChanged();
 	}
 }
 
@@ -439,7 +558,10 @@ inline int ExecutionNode::maxReadyTime(void) {
 // ---------- setMaxreadyTime
 
 inline void ExecutionNode::setMaxReadyTime(int time)  {
+	if (time != ready_time.max) {
 		ready_time.max = time;
+		execution_graph->setTimesChanged();
+	}
 }
 
 // ---------- minstartTime
@@ -451,7 +573,10 @@ inline int ExecutionNode::minStartTime(void) {
 // ---------- setMinStartTime
 
 inline void ExecutionNode::setMinStartTime(int time)  {
-	start_time.min = time;
+	if (time != start_time.min) {
+		start_time.min = time;
+		execution_graph->setTimesChanged();
+	}		
 }
 
 // ---------- maxStartTime
@@ -463,7 +588,10 @@ inline int ExecutionNode::maxStartTime(void) {
 // ---------- setMaxStartTime
 
 inline void ExecutionNode::setMaxStartTime(int time)  {
-	start_time.max = time;
+	if (time != start_time.max) {
+		start_time.max = time;
+		execution_graph->setTimesChanged();
+	}
 }
 
 // ---------- minFinishTime
@@ -475,7 +603,10 @@ inline int ExecutionNode::minFinishTime(void) {
 // ---------- setMinFinishTime
 
 inline void ExecutionNode::setMinFinishTime(int time)  {
-	finish_time.min = time;
+	if (time != finish_time.min) {
+		finish_time.min = time;
+		execution_graph->setTimesChanged();
+	}
 }
 
 // ---------- maxFinishTime
@@ -490,6 +621,7 @@ inline void ExecutionNode::setMaxFinishTime(int time)  {
 	if(time != finish_time.max) {
 		finish_time.max = time;
 		changed = true;
+		execution_graph->setTimesChanged();
 	}
 }
 
@@ -586,6 +718,12 @@ elm::genstruct::Vector<ExecutionNode *>::Iterator(node->contenders) {
 inline ExecutionEdge::ExecutionEdge(ExecutionNode *source, ExecutionNode *target, edge_type_t type)
 : Edge(source,target), edge_type(type) {
 }
+
+// ---------- init
+
+//inline void ExecutionEdge::init(ExecutionNode *source, ExecutionNode *target, edge_type_t type) {
+//: Edge(source,target), edge_type(type) {
+//}
 
 // ---------- type()
 
