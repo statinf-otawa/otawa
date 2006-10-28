@@ -40,6 +40,20 @@ class Command: public elm::option::Manager {
 	PropList stats;
 	
 	void computeDeltaMax(TreePath< BasicBlock *, BBPath * > *tree, int parent_time);
+	void computeMinTime(TreePath< BasicBlock *, BBPath * > *tree, int parent_time);
+	void buildTrees(FrameWork* fw, CFG* cfg);
+
+	typedef struct context_t {
+		BasicBlock *bb;
+		struct context_t *prev;
+		inline context_t(BasicBlock *_bb, context_t *_prev)
+		: bb(_bb), prev(_prev) { }
+	} context_t;
+	void addSuffixConstraints(
+		TreePath< BasicBlock *, BBPath * > *tree,
+		int parent_time,
+		context_t *pctx);
+
 public:
 	Command(void);
 	void compute(String fun);
@@ -52,16 +66,18 @@ Command command;
 
 
 // Options
-BoolOption dump_constraints(command, 'c', "dump-cons",
+BoolOption dump_constraints(command, 'u', "dump-cons",
 	"dump lp_solve constraints", false);
 BoolOption verbose(command, 'v', "verbose", "verbose mode", false);
 BoolOption exegraph(command, 'E', "exegraph", "use exegraph method", false);
 IntOption delta(command, 'D', "delta", "use delta method with given sequence length", "length", 0);
+BoolOption suffix(command, 'S', "suffix", "use suffix method with given sequence length", false);
 IntOption degree(command, 'd', "degree", "superscalar degree power (real degree = 2^power)", "degree", 1);
 StringOption proc(command, 'p', "processor", "used processor", "processor", "deg1.xml");
 BoolOption do_stats(command, 's', "stats", "display statistics", false);
 BoolOption do_time(command, 't', "time", "display basic block times", false);
 BoolOption do_context(command, 'c', "context", "use context to improve accuracy of ExeGraph", false);
+BoolOption deep_context(command, 'C', "deep-context", "use deep context to improve accuracy of ExeGraph", false);
  
 
 /**
@@ -113,21 +129,33 @@ void Command::compute(String fun) {
 		props.set(EXPLICIT, true);
 	if(do_stats)
 		PROC_STATS(props) = &stats;
+	if(deep_context)
+		EXEGRAPH_CONTEXT(props) = true;
+	if(do_context)
+		EXEGRAPH_DELTA(props) = true;
 	
+	// Assign variables
+	VarAssignment assign(props);
+	assign.process(fw);
+		
 	// Compute BB time
-	if(exegraph && !delta) {
+	if(exegraph) {
 		ExeGraphBBTime tbt(props);
 		tbt.process(fw);
 	}
 	else {
 		BBTimeSimulator bbts(props);
 		bbts.process(fw);
-	}
-	
-	// Assign variables
-	VarAssignment assign(props);
-	assign.process(fw);
 		
+		// Compute min times
+		if(suffix) {
+			buildTrees(fw, cfg);
+			for(CFG::BBIterator bb(&vcfg); bb; bb++)
+				if(BBPath::TREE(bb)) 
+					computeMinTime(BBPath::TREE(bb), 0);
+		}
+	}
+
 	// Build the system
 	BasicConstraintsBuilder builder(props);
 	builder.process(fw);
@@ -147,9 +175,17 @@ void Command::compute(String fun) {
 		delta.process(fw);
 	}
 	
+	// Add constraints for suffix approach
+	if(suffix) {
+		for(CFG::BBIterator bb(&vcfg); bb; bb++) {
+			context_t ctx(bb, 0);
+			if(BBPath::TREE(bb)) 
+				addSuffixConstraints(BBPath::TREE(bb), 0, &ctx);
+		}
+	}
+	
 	// Time delta modifier
 	if(exegraph && !delta && do_context) {
-		EXEGRAPH_DELTA(props) = true;
 		TimeDeltaObjectFunctionModifier tdom(props);
 		tdom.process(fw);
 	}
@@ -251,7 +287,7 @@ void Command::computeDeltaMax(
 {
 	// Compute max
 	int path_time = tree->rootData()->time(fw); 
-	if(!parent_time) {
+	if(parent_time) {
 		int time = path_time - parent_time;
 		if(time > DELTA_MAX(tree->rootLabel()))
 			DELTA_MAX(tree->rootLabel()) = time;
@@ -260,6 +296,126 @@ void Command::computeDeltaMax(
 	// Traverse children
 	for(TreePath< BasicBlock *, BBPath * >::Iterator child(tree); child; child++)
 		computeDeltaMax(child, path_time);
+}
+
+
+/**
+ * Compute the delta min for the given tree.
+ * @param tree			Tree to explore.
+ * @param parent_time	Execution time of the parent tree.
+ */
+void Command::computeMinTime(
+	TreePath< BasicBlock *, BBPath * > *tree,
+	int parent_time)
+{
+	// Traverse children
+	int path_time = tree->rootData()->time(fw); 
+	bool one = false;
+	for(TreePath< BasicBlock *, BBPath * >::Iterator child(tree); child; child++) {
+		computeMinTime(child, path_time);
+		one = true;
+	}
+
+	// Compute max
+	if(!one) {
+		int time = path_time - parent_time;
+		if(time < TIME(tree->rootLabel()))
+			TIME(tree->rootLabel()) = time;
+	}
+}
+
+
+/**
+ * Build the trees.
+ */
+void Command::buildTrees(FrameWork* fw, CFG* cfg) {
+	assert(fw);
+	assert(cfg);
+	int levels = 4;
+	
+	Vector<BBPath*> bbPathVector(4*cfg->bbs().count());
+	for(CFG::BBIterator bb(cfg) ; bb ; bb++){
+		if(!bb->isEntry() && !bb->isExit()){
+			bbPathVector.add(BBPath::getBBPath(bb));
+		}
+	}
+	
+	// from 1 to nlevels+1 <=> from 0 to nlevels
+	for(int i = 0 ;
+		(levels && i < levels) || (bbPathVector.length() > 0 && !levels)  ;
+		i++)
+	{
+		Vector<BBPath*> bbPathToProcess; // BBPaths that have to be processed
+		
+		// one search all length+1 sequences from sequences in bbPathVector
+		// and one put all these in bbPathToProcess
+		for(int j=0 ; j < bbPathVector.length() ; j++){
+			Vector<BBPath*> *toInsert = bbPathVector[j]->nexts();
+			int l2 = toInsert->length();
+			for(int k = 0 ; k < l2 ; k++)
+				bbPathToProcess.add(toInsert->get(k));
+			delete toInsert;
+		}
+
+		// BBPaths processing
+		bbPathVector.clear();
+		for(int j=0 ; j < bbPathToProcess.length() ; j++){
+			BBPath *bbPathPtr = bbPathToProcess[j];
+			BBPath &bbPath = *bbPathPtr;
+			int l = bbPath.length();
+
+			bbPathVector.add(bbPathPtr);	
+		}
+	}	
+}
+
+/**
+ * Add constraints for the suffix.
+ */
+void Command::addSuffixConstraints(
+	TreePath< BasicBlock *, BBPath * > *tree,
+	int parent_time,
+	context_t *pctx)
+{
+	// traverse children
+	context_t ctx(tree->rootLabel(), pctx);
+	bool one = false;
+	int path_time = tree->rootData()->time(fw);
+	for(TreePath< BasicBlock *, BBPath * >::Iterator child(tree); child; child++) {
+		addSuffixConstraints(child, path_time, &ctx);
+		one = true;
+	}
+	
+	// leaf -> add constraint
+	if(!one) {
+		int time = path_time - parent_time;
+		if(time > TIME(tree->rootLabel())) {
+			
+			// add extra object function factor
+			int delta = time - TIME(tree->rootLabel());
+			ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
+			ilp::Var *var = system->newVar();
+			system->addObjectFunction(delta, var);
+			 
+			// Add edge constraints 
+			for(context_t *cur = pctx, *prev = &ctx; cur; prev = cur, cur = cur->prev) {
+		 	
+		 		// find edge
+		 		Edge *edge = 0;
+		 		for(BasicBlock::OutIterator iter(prev->bb); iter; iter++)
+		 			if(iter->target() == cur->bb) {
+		 				edge = iter;
+		 				break;
+		 			}
+		 		assert(edge);
+		 	
+		 		// add constraint
+		 		ilp::Constraint *cons = system->newConstraint(ilp::Constraint::LE);
+		 		cons->addLeft(1, var);
+		 		cons->addRight(1, getVar(system, edge));
+		 	}
+		}
+	}
 }
 
 
