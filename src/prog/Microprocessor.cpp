@@ -77,6 +77,7 @@ Microprocessor::Microprocessor(const hard::Processor *proc)
 		
 		// Initialization according type of the stage
 		bool is_exec = false;
+		int exec_stage_index = 0;
 		switch(ostages[i]->getType()) {
 		case hard::Stage::FETCH:
 			info.order_policy = PipelineStage::IN_ORDER;
@@ -88,6 +89,7 @@ Microprocessor::Microprocessor(const hard::Processor *proc)
 			break;
  		case hard::Stage::EXEC:
  			is_exec = true;
+ 			exec_stage_index = i;
 			info.order_policy = ostages[i]->isOrdered()
 				? PipelineStage::IN_ORDER : PipelineStage::OUT_OF_ORDER;
 			info.stage_category = PipelineStage::EXECUTE;
@@ -126,7 +128,8 @@ Microprocessor::Microprocessor(const hard::Processor *proc)
 				info.is_pipelined = fus[j]->isPipelined();
 				info.max_latency = fus[j]->getLatency();
 				info.min_latency = fus[j]->getLatency();
-				info.order_policy = PipelineStage::IN_ORDER;
+				info.order_policy = ostages[exec_stage_index]->isOrdered() 
+					? PipelineStage::IN_ORDER : PipelineStage::OUT_OF_ORDER;
 				info.width = fus[j]->getWidth();
 				stage->addFunctionalUnit(info);
 			}
