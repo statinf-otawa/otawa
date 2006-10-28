@@ -242,6 +242,7 @@ public:
 	inline void setOperandProducingStage(PipelineStage * stage);
 	inline PipelineStage * operandReadingStage(void);
 	inline PipelineStage *operandProducingStage(void);
+	inline bool isLastStage(PipelineStage *stage);
 	
 	class PipelineIterator: public elm::genstruct::Vector<PipelineStage *>::Iterator {
 	public:
@@ -408,14 +409,16 @@ inline PipelineStage::FunctionalUnit::FunctionalUnit(fu_info_t& fu_info, Pipelin
 			delete number;
 			pipeline_info.min_latency = 1;
 			pipeline_info.max_latency = 1;
+			pipeline_info.order_policy = PipelineStage::IN_ORDER;
+			
 			if (i==1) {
 				pipeline_info.source_queue = user_stage->information.source_queue;
+				pipeline_info.order_policy = fu_info.order_policy;
 			}
 			if (i==fu_info.min_latency) {
 				pipeline_info.destination_queue = user_stage->information.destination_queue;
 				pipeline_info.max_latency = fu_info.max_latency - fu_info.min_latency + 1;	
 			}
-			pipeline_info.order_policy = fu_info.order_policy;
 			stage = new PipelineStage(pipeline_info, processor);
 			this->pipeline.add(stage);	
 		}
@@ -498,6 +501,11 @@ inline PipelineStage * Microprocessor::operandReadingStage(void) {
 inline PipelineStage * Microprocessor::operandProducingStage(void) {
 	return operand_producing_stage;
 }
+
+inline bool Microprocessor::isLastStage(PipelineStage *stage) {
+	return (pipeline.get(pipeline.length()-1) == stage);
+}
+
 
 } // otawa
 
