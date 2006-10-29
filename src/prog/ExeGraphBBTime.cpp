@@ -16,6 +16,8 @@
 #include <otawa/hard/Register.h>
 #include <otawa/exegraph/ExeGraphBBTime.h>
 #include <otawa/hard/Processor.h>
+#include <otawa/ipet/IPET.h>
+#include <otawa/ilp.h>
 
 using namespace otawa;
 using namespace otawa::hard;
@@ -76,8 +78,10 @@ ExeGraphBBTime::ExeGraphBBTime(const PropList& props)
 	microprocessor(PROCESSOR(props)),
 	dumpFile(*LOG_OUTPUT(props)),
 	delta(EXEGRAPH_DELTA(props)),
+	do_context(EXEGRAPH_CONTEXT(props)),
 	stat_root(0, 0),
-	exe_stats(*(new Vector<stat_t>()))
+	exe_stats(*(new Vector<stat_t>())),
+	fw(0)
 {
 }
 
@@ -86,6 +90,7 @@ ExeGraphBBTime::ExeGraphBBTime(const PropList& props)
  */
 void ExeGraphBBTime::processFrameWork(FrameWork *fw) {
 	bool built = false, reset = false;
+	this->fw = fw;
 	
 	// If required, find the microprocessor
 	if(!microprocessor) {
@@ -296,7 +301,7 @@ int ExeGraphBBTime::processSequence( FrameWork *fw,
 	execution_graph.build(fw, microprocessor, sequence);
 	LOG(execution_graph.dumpLight(dumpFile));
 	int bbExecTime = execution_graph.analyze();
-	if(this->recordsStats())
+	if(this->recordsStats() || do_context)
 		recordPrefixStats(prologue, bbExecTime);
 	
 	#ifdef DO_LOG
@@ -334,7 +339,7 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 		return;
 	
 	// Start recording stats
-	if(recordsStats())
+	if(recordsStats() || do_context)
 		initPrefixStats(bb);
 
 	// compute prologue/epilogue size
@@ -435,7 +440,11 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	#endif	
 	
 	
-	int maxExecTime = 0;
+	int maxExecTime;
+	if(!do_context || prologue_list.isEmpty())
+		maxExecTime = 0;
+	else
+		maxExecTime = INFINITE_TIME;
 	int bbExecTime;
 	
 	// consider every possible prologue/epilogue pair
@@ -466,7 +475,7 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 				}
 			#endif
 			if (bbExecTime > maxExecTime)
-				maxExecTime = bbExecTime;	
+				maxExecTime = bbExecTime;
 		}
 		else {			
 			for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
@@ -514,7 +523,7 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 				#endif
 				
 				if (bbExecTime > maxExecTime)
-					maxExecTime = bbExecTime;	
+					maxExecTime = bbExecTime;
 			}
 		}
 	}
@@ -586,8 +595,14 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 				#endif
 				
 //				bb_times.addLast(bbExecTime);
-				if (bbExecTime > maxExecTime)
-					maxExecTime = bbExecTime;	
+				if(!do_context) {
+					if (bbExecTime > maxExecTime)
+						maxExecTime = bbExecTime;
+				}
+				else {
+					if (bbExecTime < maxExecTime)
+						maxExecTime = bbExecTime;
+				}	
 			}
 		}
 		else {
@@ -676,8 +691,14 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 					#endif
 					
 					LOG(dumpFile << "\n";)		
-					if (bbExecTime > maxExecTime)
-						maxExecTime = bbExecTime;	
+					if(!do_context) {
+						if (bbExecTime > maxExecTime)
+							maxExecTime = bbExecTime;
+					}	
+					else {
+						if (bbExecTime < maxExecTime)
+							maxExecTime = bbExecTime;
+					}	
 				}
 			}
 		}
@@ -708,7 +729,9 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	bb->set<int>(TIME, maxExecTime);
 	
 	// Stop recording stats
-	if(this->recordsStats())
+	if(do_context)
+		buildContext(maxExecTime);
+	if(this->recordsStats() || do_context)
 		collectPrefixStats();
 	
 	// Fix the delta
@@ -868,14 +891,18 @@ void ExeGraphBBTime::recordDelta(
 	assert(!insts->isEmpty());
 	assert(bb);
 	Inst *inst = insts->last()->inst();
+	bool found = false;
 	for(BasicBlock::InIterator edge(bb); edge; edge++) {
 		BasicBlock *target = edge->target();
 		if(target
 		&& target->address() <= inst->address()
 		&& inst->address() <= target->address() + target->size()
-		&& TIME_DELTA(target) < cost)
+		&& TIME_DELTA(target) < cost) {
 			TIME_DELTA(target) = cost;
+			found = true;
+		}
 	}
+	assert(found);
 }
 
 
@@ -893,5 +920,67 @@ GenericIdentifier<Vector <ExeGraphBBTime::stat_t> *>
  * the accuracy of the computed WCET.
  */
 GenericIdentifier<bool> EXEGRAPH_DELTA("exegraph_delta", false, OTAWA_NS);
+
+
+/**
+ * Set to true in the configuration @ref ExeGraphBBTime configure, this
+ * processor will generate extra contraints and objects functions factor
+ * taking in account the difference of execution time according prologues
+ * of evaluated blocks.
+ */
+GenericIdentifier<bool> EXEGRAPH_CONTEXT("exegraph_context", false, OTAWA_NS);
+
+
+/**
+ * Compute extra context to handle context.
+ * @param cost	Cost of the BB.
+ * @param stat	Statistics node.
+ * @param ctx	Context previous node.
+ */
+void ExeGraphBBTime::buildContext(
+	int cost,
+	node_stat_t *stat,
+	context_t *ctx)
+{
+	// Build current context
+	if(!stat) {
+		stat = &stat_root;
+		cost = stat->min;
+	}
+	context_t cctx(stat->bb, ctx);
+	
+	// Go into children
+	if(stat->children)
+		for(node_stat_t *cur = stat->children; cur; cur = cur->sibling)
+			buildContext(cost, cur, &cctx);
+	
+	// Need to add extra constraint or object function factor ?
+	else if(stat->min > cost) {
+		
+		// Add object function extra
+		int delta = stat->min - cost;
+		ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
+		ilp::Var *var = system->newVar();
+		system->addObjectFunction(delta, var);
+		
+		// Add edge constraints 
+		for(context_t *cur = ctx, *prev = &cctx; cur; prev = cur, cur = cur->prev) {
+		 	
+		 	// find edge
+		 	Edge *edge = 0;
+		 	for(BasicBlock::OutIterator iter(prev->bb); iter; iter++)
+		 		if(iter->target() == cur->bb) {
+		 			edge = iter;
+		 			break;
+		 		}
+		 	assert(edge);
+		 	
+		 	// add constraint
+		 	ilp::Constraint *cons = system->newConstraint(ilp::Constraint::LE);
+		 	cons->addLeft(1, var);
+		 	cons->addRight(1, getVar(system, edge));
+		 }
+	}
+} 
 
 }  // otawa

@@ -173,10 +173,11 @@ inline int BlockSequence::offset() {
 
 class ExeGraphBBTime: public BBProcessor {
 	private:
+		FrameWork *fw;
 		PropList *properties;
 		elm::io::Output& dumpFile;
 		Microprocessor *microprocessor;
-		bool delta;
+		bool delta, do_context;
 		
 	public:
 		ExeGraphBBTime(const PropList& props = PropList::EMPTY);
@@ -232,8 +233,8 @@ private:
 			int min, max;
 			BasicBlock *bb;
 			Vector<int> vals;
-			inline node_stat_t(BasicBlock *_bb, int cost): bb(_bb), children(0),
-				sibling(0), min(cost), max(cost) { }
+			inline node_stat_t(BasicBlock *_bb, int cost)
+			: bb(_bb), children(0), sibling(0), min(cost), max(cost) { }
 		} node_stat_t;
 
 		Vector<stat_t>& exe_stats;
@@ -249,10 +250,19 @@ private:
 			int cost);
 		void recordPrefixNodeStats(node_stat_t *node, int cost);
 		void collectPrefixStats(int depth = 0, node_stat_t *node = 0);
+		
+		typedef struct context_t {
+			BasicBlock *bb;
+			struct context_t *prev;
+			inline context_t(BasicBlock *_bb, context_t *_prev)
+			: bb(_bb), prev(_prev) { }
+		} context_t;
+		void buildContext(int cost, node_stat_t *stat = 0, context_t *ctx = 0); 
 };
 
 // Configuration
 extern GenericIdentifier<bool> EXEGRAPH_DELTA;
+extern GenericIdentifier<bool> EXEGRAPH_CONTEXT;
 
 // Statistics output
 extern GenericIdentifier<Vector <ExeGraphBBTime::stat_t> *> EXEGRAPH_PREFIX_STATS;
