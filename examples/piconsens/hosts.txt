@@ -1,0 +1,9 @@
+ariane,0
+ariane,1
+phedre,0
+phedre,1
+electre,0
+electre,1
+triton,0
+athena,0
+athena,1
