@@ -25,7 +25,7 @@
 			<fus>
 				<fu id="MEM">
 					<name>MEM</name>
-					<latency>5</latency>
+					<latency>2</latency>
 					<pipelined>true</pipelined>
 				</fu>
 				<fu id="ALU">
