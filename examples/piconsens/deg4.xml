@@ -25,7 +25,7 @@
 			<fus>
 				<fu id="MEM">
 					<name>MEM</name>
-					<latency>5</latency>
+					<latency>2</latency>
 					<pipelined>true</pipelined>
 				</fu>
 				<fu id="ALU">
@@ -101,7 +101,7 @@
 		</queue>
 		<queue>
 			<name>ROB_QUEUE</name>
-			<size>4</size>
+			<size>5</size>
 			<input ref="DI"/>
 			<output ref="CM"/>
 			<intern>

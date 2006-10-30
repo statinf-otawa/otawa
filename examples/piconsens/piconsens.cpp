@@ -31,6 +31,18 @@ using namespace otawa::gensim;
 
 GenericIdentifier<int> DELTA_MAX("delta_max", 0, OTAWA_NS);
 
+typedef struct node_stat_t {
+	struct node_stat_t *children, *sibling;
+	int min, max;
+	BasicBlock *bb;
+	Vector<int> vals;
+	inline node_stat_t(BasicBlock *_bb, int cost)
+		: bb(_bb), children(0), sibling(0), min(cost), max(cost) { }
+} node_stat_t;
+
+GenericIdentifier<node_stat_t *> STAT("piconsens_stat", 0, OTAWA_NS);
+
+
 // Command
 class Command: public elm::option::Manager {
 	String file;
@@ -40,19 +52,44 @@ class Command: public elm::option::Manager {
 	PropList stats;
 	
 	void computeDeltaMax(TreePath< BasicBlock *, BBPath * > *tree, int parent_time);
-	void computeMinTime(TreePath< BasicBlock *, BBPath * > *tree, int parent_time);
 	void buildTrees(FrameWork* fw, CFG* cfg);
 
+	// Suffix methods
 	typedef struct context_t {
 		BasicBlock *bb;
 		struct context_t *prev;
 		inline context_t(BasicBlock *_bb, context_t *_prev)
 		: bb(_bb), prev(_prev) { }
 	} context_t;
+	void computeMinTime(
+		TreePath< BasicBlock *, BBPath * > *tree,
+		int parent_time,
+		context_t *pctx);
 	void addSuffixConstraints(
 		TreePath< BasicBlock *, BBPath * > *tree,
 		int parent_time,
 		context_t *pctx);
+
+	// Statistics
+	typedef struct stat_t {
+		double total_span_sum;
+		double total_vals_sum;
+		int total_max_span;
+		int total_max_vals;
+		int bb_cnt;
+		int bb_span_sum;
+		int bb_vals_sum;
+		int seq_cnt;
+		inline stat_t(void): total_span_sum(0), total_vals_sum(0),
+		bb_cnt(0),bb_span_sum(0), bb_vals_sum(0), seq_cnt(0),
+		total_max_span(0), total_max_vals(0) { };
+	} stat_t;
+	Vector<stat_t> exe_stats;
+	void recordSuffixStats(
+		context_t *ctx,
+		node_stat_t *node,
+		int cost);
+	void collectSuffixStats(node_stat_t *node, int depth = 0);
 
 public:
 	Command(void);
@@ -71,7 +108,7 @@ BoolOption dump_constraints(command, 'u', "dump-cons",
 BoolOption verbose(command, 'v', "verbose", "verbose mode", false);
 BoolOption exegraph(command, 'E', "exegraph", "use exegraph method", false);
 IntOption delta(command, 'D', "delta", "use delta method with given sequence length", "length", 0);
-BoolOption suffix(command, 'S', "suffix", "use suffix method with given sequence length", false);
+IntOption suffix(command, 'S', "suffix", "use suffix method with given sequence length", "suffix length", 0);
 IntOption degree(command, 'd', "degree", "superscalar degree power (real degree = 2^power)", "degree", 1);
 StringOption proc(command, 'p', "processor", "used processor", "processor", "deg1.xml");
 BoolOption do_stats(command, 's', "stats", "display statistics", false);
@@ -149,10 +186,10 @@ void Command::compute(String fun) {
 		
 		// Compute min times
 		if(suffix) {
-			buildTrees(fw, cfg);
+			buildTrees(fw, &vcfg);
 			for(CFG::BBIterator bb(&vcfg); bb; bb++)
 				if(BBPath::TREE(bb)) 
-					computeMinTime(BBPath::TREE(bb), 0);
+					computeMinTime(BBPath::TREE(bb), 0, 0);
 		}
 	}
 
@@ -178,9 +215,9 @@ void Command::compute(String fun) {
 	// Add constraints for suffix approach
 	if(suffix) {
 		for(CFG::BBIterator bb(&vcfg); bb; bb++) {
-			context_t ctx(bb, 0);
+			//context_t ctx(bb, 0);
 			if(BBPath::TREE(bb)) 
-				addSuffixConstraints(BBPath::TREE(bb), 0, &ctx);
+				addSuffixConstraints(BBPath::TREE(bb), 0, 0 /*&ctx*/);
 		}
 	}
 	
@@ -210,6 +247,16 @@ void Command::compute(String fun) {
 				 	<< prefs[i].bb_cnt << '\t'*/
 					 << ((double)prefs[i].total_span_sum / prefs[i].bb_cnt) << '\t'
 					 << ((double)prefs[i].total_vals_sum / prefs[i].bb_cnt) << io::endl;
+		}
+		else if(suffix) {
+			for(CFG::BBIterator bb(&vcfg); bb; bb++)
+				collectSuffixStats(STAT(bb));
+			for(int i = 0; i < exe_stats.length(); i++)
+				cout << i << '\t'
+					 << ((double)exe_stats[i].total_span_sum / exe_stats[i].bb_cnt) << '\t'
+					 << exe_stats[i].total_max_span << '\t'
+					 << ((double)exe_stats[i].total_span_sum / exe_stats[i].bb_cnt) << '\t'
+					 << exe_stats[i].total_max_vals << io::endl;
 		}
 	}
 	
@@ -306,13 +353,16 @@ void Command::computeDeltaMax(
  */
 void Command::computeMinTime(
 	TreePath< BasicBlock *, BBPath * > *tree,
-	int parent_time)
+	int parent_time,
+	context_t *pctx)
 {
+	context_t ctx(tree->rootLabel(), pctx);
+	
 	// Traverse children
 	int path_time = tree->rootData()->time(fw); 
 	bool one = false;
 	for(TreePath< BasicBlock *, BBPath * >::Iterator child(tree); child; child++) {
-		computeMinTime(child, path_time);
+		computeMinTime(child, path_time, &ctx);
 		one = true;
 	}
 
@@ -321,6 +371,15 @@ void Command::computeMinTime(
 		int time = path_time - parent_time;
 		if(time < TIME(tree->rootLabel()))
 			TIME(tree->rootLabel()) = time;
+		if(do_stats) {
+			node_stat_t *node = STAT(tree->rootLabel());
+			if(!node) {
+				node = new node_stat_t(tree->rootLabel(), time);
+				STAT(tree->rootLabel()) = node;
+			}
+			recordSuffixStats(&ctx, node, time);
+			cout << "COST = " << time << io::endl;
+		}	
 	}
 }
 
@@ -331,7 +390,7 @@ void Command::computeMinTime(
 void Command::buildTrees(FrameWork* fw, CFG* cfg) {
 	assert(fw);
 	assert(cfg);
-	int levels = 4;
+	int levels = suffix;
 	
 	Vector<BBPath*> bbPathVector(4*cfg->bbs().count());
 	for(CFG::BBIterator bb(cfg) ; bb ; bb++){
@@ -402,11 +461,14 @@ void Command::addSuffixConstraints(
 		 	
 		 		// find edge
 		 		Edge *edge = 0;
-		 		for(BasicBlock::OutIterator iter(prev->bb); iter; iter++)
-		 			if(iter->target() == cur->bb) {
+		 		/*cout << "Looking for " << cur->bb->number()
+		 			 << " to " << prev->bb->number() << io::endl;*/
+		 		for(BasicBlock::OutIterator iter(cur->bb); iter; iter++) {
+		 			if(iter->target() == prev->bb) {
 		 				edge = iter;
 		 				break;
 		 			}
+		 		}
 		 		assert(edge);
 		 	
 		 		// add constraint
@@ -416,6 +478,92 @@ void Command::addSuffixConstraints(
 		 	}
 		}
 	}
+}
+
+
+/**
+ */
+void Command::recordSuffixStats(
+	context_t *ctx,
+	node_stat_t *node,
+	int cost)
+{
+	cout << ctx->bb->number() << " - ";
+		
+	// Record stats
+	if(cost < node->min)
+		node->min = cost;
+	if(cost > node->max)
+		node->max = cost;
+	bool found = false;
+	for(int i = 0; i < node->vals.length(); i++)
+		if(cost == node->vals[i]) {
+			found = true;
+			break;
+		}
+	if(!found)
+		node->vals.add(cost);	
+	
+	// Traverse backward
+	if(ctx->prev) {
+		
+		// Find the matching child
+		node_stat_t *child;
+		for(child = node->children; child; child = child->sibling)
+			if(child->bb == ctx->prev->bb)
+				break;
+		if(!child) {
+			child = new node_stat_t(ctx->prev->bb, cost);
+			child->sibling = node->children;
+			node->children = child;
+		}
+		
+		// Record this node
+		recordSuffixStats(ctx->prev, child, cost);
+	}
+	
+}
+
+
+/**
+ * Call to end the statistics of the current basic block.
+ */
+void Command::collectSuffixStats(node_stat_t *node, int depth) {
+	assert(depth >= 0);
+
+	// Do nothing if no node
+	//cout << "!! " << depth << io::endl;
+	if(!node)
+		return;
+	
+	// Record local information
+	while(depth >= exe_stats.length())
+		exe_stats.add();
+	exe_stats[depth].seq_cnt++;
+	int span = node->max - node->min;
+	int vals = node->vals.length();
+	exe_stats[depth].bb_span_sum += span;
+	exe_stats[depth].bb_vals_sum += vals;
+	for(node_stat_t *child = node->children; child; child = child->sibling)
+		collectSuffixStats(child, depth + 1);
+	if(span > exe_stats[depth].total_max_span)
+		exe_stats[depth].total_max_span = span; 
+	if(vals > exe_stats[depth].total_max_vals)
+		exe_stats[depth].total_max_vals = vals; 
+	
+	// Totalize
+	if(depth == 0)
+		for(int i = 0; i < exe_stats.length(); i++)
+			if(exe_stats[i].seq_cnt) {
+				exe_stats[i].bb_cnt++;
+				exe_stats[i].total_span_sum +=
+					(double)exe_stats[i].bb_span_sum / exe_stats[i].seq_cnt;
+				exe_stats[i].total_vals_sum +=
+					(double)exe_stats[i].bb_vals_sum / exe_stats[i].seq_cnt;
+				exe_stats[i].seq_cnt = 0;
+				exe_stats[i].bb_span_sum = 0;
+				exe_stats[i].bb_vals_sum = 0;
+			}
 }
 
 
