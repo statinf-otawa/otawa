@@ -45,7 +45,7 @@ public:
 	virtual NameSpace *toNameSpace(void);
 	inline const elm::String name(void) const;
 
-	virtual void print(elm::io::Output& out);
+	virtual void print(elm::io::Output& out) const;
 	virtual void print(elm::io::Output& output, const Property& prop) const;
 	inline void print(elm::io::Output& output, const Property *prop) const;
 	virtual const Type& type(void) const;
@@ -61,12 +61,12 @@ public:
 
 
 // Output
-inline elm::io::Output& operator<<(elm::io::Output& out, Identifier& id) {
+inline elm::io::Output& operator<<(elm::io::Output& out, const Identifier& id) {
 	id.print(out);
 	return out;
 }
 
-inline elm::io::Output& operator<<(elm::io::Output& out, Identifier *id) {
+inline elm::io::Output& operator<<(elm::io::Output& out, const Identifier *id) {
 	assert(id);
 	return out << *id;
 }
