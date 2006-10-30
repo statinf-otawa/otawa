@@ -255,7 +255,7 @@ void Command::compute(String fun) {
 				cout << i << '\t'
 					 << ((double)exe_stats[i].total_span_sum / exe_stats[i].bb_cnt) << '\t'
 					 << exe_stats[i].total_max_span << '\t'
-					 << ((double)exe_stats[i].total_span_sum / exe_stats[i].bb_cnt) << '\t'
+					 << ((double)exe_stats[i].total_vals_sum / exe_stats[i].bb_cnt) << '\t'
 					 << exe_stats[i].total_max_vals << io::endl;
 		}
 	}
@@ -378,7 +378,7 @@ void Command::computeMinTime(
 				STAT(tree->rootLabel()) = node;
 			}
 			recordSuffixStats(&ctx, node, time);
-			cout << "COST = " << time << io::endl;
+			//cout << "COST = " << time << io::endl;
 		}	
 	}
 }
@@ -488,7 +488,7 @@ void Command::recordSuffixStats(
 	node_stat_t *node,
 	int cost)
 {
-	cout << ctx->bb->number() << " - ";
+	//cout << ctx->bb->number() << " - ";
 		
 	// Record stats
 	if(cost < node->min)
