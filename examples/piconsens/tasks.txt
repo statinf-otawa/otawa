@@ -1,126 +1,42 @@
-1S bs	:./piconsens ~/Benchs/snu-rt/bs/bs; echo
-1D bs	:./piconsens -D 4 ~/Benchs/snu-rt/bs/bs; echo
-1E bs	:./piconsens -E ~/Benchs/snu-rt/bs/bs; echo
-2S bs	:./piconsens -p deg2.xml ~/Benchs/snu-rt/bs/bs; echo
-2D bs	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/bs/bs; echo
-2E bs	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/bs/bs; echo
-3S bs	:./piconsens -p deg4.xml ~/Benchs/snu-rt/bs/bs; echo
-3D bs	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/bs/bs; echo
-3E bs	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/bs/bs; echo
-1S fft1	:./piconsens ~/Benchs/snu-rt/fft1/fft1; echo
-1D fft1	:./piconsens -D 4 ~/Benchs/snu-rt/fft1/fft1; echo
-1E fft1	:./piconsens -E ~/Benchs/snu-rt/fft1/fft1; echo
-2S fft1	:./piconsens -p deg2.xml ~/Benchs/snu-rt/fft1/fft1; echo
-2D fft1	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/fft1/fft1; echo
-2E fft1	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/fft1/fft1; echo
-3S fft1	:./piconsens -p deg4.xml ~/Benchs/snu-rt/fft1/fft1; echo
-3D fft1	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/fft1/fft1; echo
-3E fft1	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/fft1/fft1; echo
-1S fibcall	:./piconsens ~/Benchs/snu-rt/fibcall/fibcall; echo
-1D fibcall	:./piconsens -D 4 ~/Benchs/snu-rt/fibcall/fibcall; echo
-1E fibcall	:./piconsens -E ~/Benchs/snu-rt/fibcall/fibcall; echo
-2S fibcall	:./piconsens -p deg2.xml ~/Benchs/snu-rt/fibcall/fibcall; echo
-2D fibcall	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/fibcall/fibcall; echo
-2E fibcall	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/fibcall/fibcall; echo
-3S fibcall	:./piconsens -p deg4.xml ~/Benchs/snu-rt/fibcall/fibcall; echo
-3D fibcall	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/fibcall/fibcall; echo
-3E fibcall	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/fibcall/fibcall; echo
-1S jfdctint	:./piconsens ~/Benchs/snu-rt/jfdctint/jfdctint; echo
-1D jfdctint	:./piconsens -D 4 ~/Benchs/snu-rt/jfdctint/jfdctint; echo
-1E jfdctint	:./piconsens -E ~/Benchs/snu-rt/jfdctint/jfdctint; echo
-2S jfdctint	:./piconsens -p deg2.xml ~/Benchs/snu-rt/jfdctint/jfdctint; echo
-2D jfdctint	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/jfdctint/jfdctint; echo
-2E jfdctint	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/jfdctint/jfdctint; echo
-3S jfdctint	:./piconsens -p deg4.xml ~/Benchs/snu-rt/jfdctint/jfdctint; echo
-3D jfdctint	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/jfdctint/jfdctint; echo
-3E jfdctint	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/jfdctint/jfdctint; echo
-1S ludcmp	:./piconsens ~/Benchs/snu-rt/ludcmp/ludcmp; echo
-1D ludcmp	:./piconsens -D 4 ~/Benchs/snu-rt/ludcmp/ludcmp; echo
-1E ludcmp	:./piconsens -E ~/Benchs/snu-rt/ludcmp/ludcmp; echo
-2S ludcmp	:./piconsens -p deg2.xml ~/Benchs/snu-rt/ludcmp/ludcmp; echo
-2D ludcmp	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/ludcmp/ludcmp; echo
-2E ludcmp	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/ludcmp/ludcmp; echo
-3S ludcmp	:./piconsens -p deg4.xml ~/Benchs/snu-rt/ludcmp/ludcmp; echo
-3D ludcmp	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/ludcmp/ludcmp; echo
-3E ludcmp	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/ludcmp/ludcmp; echo
-1S matmul	:./piconsens ~/Benchs/snu-rt/matmul/matmul; echo
-1D matmul	:./piconsens -D 4 ~/Benchs/snu-rt/matmul/matmul; echo
-1E matmul	:./piconsens -E ~/Benchs/snu-rt/matmul/matmul; echo
-2S matmul	:./piconsens -p deg2.xml ~/Benchs/snu-rt/matmul/matmul; echo
-2D matmul	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/matmul/matmul; echo
-2E matmul	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/matmul/matmul; echo
-3S matmul	:./piconsens -p deg4.xml ~/Benchs/snu-rt/matmul/matmul; echo
-3D matmul	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/matmul/matmul; echo
-3E matmul	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/matmul/matmul; echo
-1S qurt	:./piconsens ~/Benchs/snu-rt/qurt/qurt; echo
-1D qurt	:./piconsens -D 4 ~/Benchs/snu-rt/qurt/qurt; echo
-1E qurt	:./piconsens -E ~/Benchs/snu-rt/qurt/qurt; echo
-2S qurt	:./piconsens -p deg2.xml ~/Benchs/snu-rt/qurt/qurt; echo
-2D qurt	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/qurt/qurt; echo
-2E qurt	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/qurt/qurt; echo
-3S qurt	:./piconsens -p deg4.xml ~/Benchs/snu-rt/qurt/qurt; echo
-3D qurt	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/qurt/qurt; echo
-3E qurt	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/qurt/qurt; echo
-1S crc	:./piconsens ~/Benchs/snu-rt/crc/crc; echo
-1D crc	:./piconsens -D 4 ~/Benchs/snu-rt/crc/crc; echo
-1E crc	:./piconsens -E ~/Benchs/snu-rt/crc/crc; echo
-2S crc	:./piconsens -p deg2.xml ~/Benchs/snu-rt/crc/crc; echo
-2D crc	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/crc/crc; echo
-2E crc	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/crc/crc; echo
-3S crc	:./piconsens -p deg4.xml ~/Benchs/snu-rt/crc/crc; echo
-3D crc	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/crc/crc; echo
-3E crc	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/crc/crc; echo
-1S fft1k	:./piconsens ~/Benchs/snu-rt/fft1k/fft1k; echo
-1D fft1k	:./piconsens -D 4 ~/Benchs/snu-rt/fft1k/fft1k; echo
-1E fft1k	:./piconsens -E ~/Benchs/snu-rt/fft1k/fft1k; echo
-2S fft1k	:./piconsens -p deg2.xml ~/Benchs/snu-rt/fft1k/fft1k; echo
-2D fft1k	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/fft1k/fft1k; echo
-2E fft1k	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/fft1k/fft1k; echo
-3S fft1k	:./piconsens -p deg4.xml ~/Benchs/snu-rt/fft1k/fft1k; echo
-3D fft1k	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/fft1k/fft1k; echo
-3E fft1k	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/fft1k/fft1k; echo
-1S fir	:./piconsens ~/Benchs/snu-rt/fir/fir; echo
-1D fir	:./piconsens -D 4 ~/Benchs/snu-rt/fir/fir; echo
-1E fir	:./piconsens -E ~/Benchs/snu-rt/fir/fir; echo
-2S fir	:./piconsens -p deg2.xml ~/Benchs/snu-rt/fir/fir; echo
-2D fir	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/fir/fir; echo
-2E fir	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/fir/fir; echo
-3S fir	:./piconsens -p deg4.xml ~/Benchs/snu-rt/fir/fir; echo
-3D fir	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/fir/fir; echo
-3E fir	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/fir/fir; echo
-1S insertsort	:./piconsens ~/Benchs/snu-rt/insertsort/insertsort; echo
-1D insertsort	:./piconsens -D 4 ~/Benchs/snu-rt/insertsort/insertsort; echo
-1E insertsort	:./piconsens -E ~/Benchs/snu-rt/insertsort/insertsort; echo
-2S insertsort	:./piconsens -p deg2.xml ~/Benchs/snu-rt/insertsort/insertsort; echo
-2D insertsort	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/insertsort/insertsort; echo
-2E insertsort	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/insertsort/insertsort; echo
-3S insertsort	:./piconsens -p deg4.xml ~/Benchs/snu-rt/insertsort/insertsort; echo
-3D insertsort	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/insertsort/insertsort; echo
-3E insertsort	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/insertsort/insertsort; echo
-1S lms	:./piconsens ~/Benchs/snu-rt/lms/lms; echo
-1D lms	:./piconsens -D 4 ~/Benchs/snu-rt/lms/lms; echo
-1E lms	:./piconsens -E ~/Benchs/snu-rt/lms/lms; echo
-2S lms	:./piconsens -p deg2.xml ~/Benchs/snu-rt/lms/lms; echo
-2D lms	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/lms/lms; echo
-2E lms	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/lms/lms; echo
-3S lms	:./piconsens -p deg4.xml ~/Benchs/snu-rt/lms/lms; echo
-3D lms	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/lms/lms; echo
-3E lms	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/lms/lms; echo
-1S minver	:./piconsens ~/Benchs/snu-rt/minver/minver; echo
-1D minver	:./piconsens -D 4 ~/Benchs/snu-rt/minver/minver; echo
-1E minver	:./piconsens -E ~/Benchs/snu-rt/minver/minver; echo
-2S minver	:./piconsens -p deg2.xml ~/Benchs/snu-rt/minver/minver; echo
-2D minver	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/minver/minver; echo
-2E minver	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/minver/minver; echo
-3S minver	:./piconsens -p deg4.xml ~/Benchs/snu-rt/minver/minver; echo
-3D minver	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/minver/minver; echo
-3E minver	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/minver/minver; echo
-1S select	:./piconsens ~/Benchs/snu-rt/select/select; echo
-1D select	:./piconsens -D 4 ~/Benchs/snu-rt/select/select; echo
-1E select	:./piconsens -E ~/Benchs/snu-rt/select/select; echo
-2S select	:./piconsens -p deg2.xml ~/Benchs/snu-rt/select/select; echo
-2D select	:./piconsens -D 4 -p deg2.xml ~/Benchs/snu-rt/select/select; echo
-2E select	:./piconsens -E -p deg2.xml ~/Benchs/snu-rt/select/select; echo
-3S select	:./piconsens -p deg4.xml ~/Benchs/snu-rt/select/select; echo
-3D select	:./piconsens -D 4 -p deg4.xml ~/Benchs/snu-rt/select/select; echo
-3E select	:./piconsens -E -p deg4.xml ~/Benchs/snu-rt/select/select; echo
+1 bs: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/bs/bs; echo
+2 bs: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/bs/bs; echo
+3 bs: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/bs/bs; echo
+1 fft1: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/fft1/fft1; echo
+2 fft1: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/fft1/fft1; echo
+3 fft1: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/fft1/fft1; echo
+1 fibcall: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/fibcall/fibcall; echo
+2 fibcall: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/fibcall/fibcall; echo
+3 fibcall: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/fibcall/fibcall; echo
+1 jfdctint: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/jfdctint/jfdctint; echo
+2 jfdctint: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/jfdctint/jfdctint; echo
+3 jfdctint: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/jfdctint/jfdctint; echo
+1 ludcmp: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/ludcmp/ludcmp; echo
+2 ludcmp: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/ludcmp/ludcmp; echo
+3 ludcmp: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/ludcmp/ludcmp; echo
+1 matmul: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/matmul/matmul; echo
+2 matmul: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/matmul/matmul; echo
+3 matmul: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/matmul/matmul; echo
+1 qurt: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/qurt/qurt; echo
+2 qurt: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/qurt/qurt; echo
+3 qurt: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/qurt/qurt; echo
+1 crc: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/crc/crc; echo
+2 crc: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/crc/crc; echo
+3 crc: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/crc/crc; echo
+1 fft1k: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/fft1k/fft1k; echo
+2 fft1k: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/fft1k/fft1k; echo
+3 fft1k: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/fft1k/fft1k; echo
+1 fir: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/fir/fir; echo
+2 fir: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/fir/fir; echo
+3 fir: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/fir/fir; echo
+1 insertsort: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/insertsort/insertsort; echo
+2 insertsort: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/insertsort/insertsort; echo
+3 insertsort: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/insertsort/insertsort; echo
+1 lms: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/lms/lms; echo
+2 lms: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/lms/lms; echo
+3 lms: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/lms/lms; echo
+1 minver: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/minver/minver; echo
+2 minver: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/minver/minver; echo
+3 minver: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/minver/minver; echo
+1 select: echo; ./piconsens -S 8 -s -p deg1.xml ~/Benchs/snu-rt/select/select; echo
+2 select: echo; ./piconsens -S 8 -s -p deg2.xml ~/Benchs/snu-rt/select/select; echo
+3 select: echo; ./piconsens -S 8 -s -p deg4.xml ~/Benchs/snu-rt/select/select; echo
