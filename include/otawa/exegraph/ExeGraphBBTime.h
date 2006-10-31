@@ -178,6 +178,8 @@ class ExeGraphBBTime: public BBProcessor {
 		elm::io::Output& dumpFile;
 		Microprocessor *microprocessor;
 		bool delta, do_context;
+		elm::genstruct::DLList<PrefixCost *> costs;
+		
 		
 	public:
 		ExeGraphBBTime(const PropList& props = PropList::EMPTY);
@@ -194,7 +196,14 @@ class ExeGraphBBTime: public BBProcessor {
 		void buildEpilogueList(BasicBlock * bb,
 								elm::genstruct::DLList<ExecutionGraphInstruction *> * epilogue, 
 								int capacity, 
-								elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>* epilogue_list);
+								elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>* epilogue_list,
+								int start_index);
+		void ExeGraphBBTime::buildPrefixList(
+								BasicBlock * bb,
+								elm::genstruct::DLList<ExecutionGraphInstruction *> * prefix, 
+								int max_size, 
+								int current_size,
+								elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *> * prefix_list);
 		int analyzeExecutionGraph(ExecutionGraph& graph);
 
 		// BBProcessor overload
@@ -202,6 +211,7 @@ class ExeGraphBBTime: public BBProcessor {
 		void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
 		int ExeGraphBBTime::processSequence( FrameWork *fw,
 			elm::genstruct::DLList<ExecutionGraphInstruction *> * prologue,
+			elm::genstruct::DLList<ExecutionGraphInstruction *> * prefix,
 			elm::genstruct::DLList<ExecutionGraphInstruction *> * body,
 			elm::genstruct::DLList<ExecutionGraphInstruction *> * epilogue,
 			int capacity ) ;

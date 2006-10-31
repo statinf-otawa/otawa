@@ -31,8 +31,9 @@ class ExecutionNode;
 typedef enum code_part_t {
 	BEFORE_PROLOGUE = 0,
 	PROLOGUE = 1,
-	BODY = 2,
-	EPILOGUE = 3,
+	PREFIX = 2,
+	BODY = 3,
+	EPILOGUE = 4,
 	CODE_PARTS_NUMBER  // should be the last value
 } code_part_t;
 
@@ -48,6 +49,7 @@ class ExecutionGraphInstruction {
 		inline Inst * inst();
 		inline code_part_t codePart();
 		inline int index();
+		inline void setIndex(int index);
 		inline void addNode(ExecutionNode * node);
 		inline void deleteNodes();
 		inline ExecutionNode * firstNode();
@@ -64,6 +66,9 @@ inline ExecutionGraphInstruction::ExecutionGraphInstruction(Inst * inst, BasicBl
 	: _inst(inst), _bb(bb), _part(part), _index(index) {
 }
 
+inline void ExecutionGraphInstruction::setIndex(int index) {
+	_index = index;
+}
 inline Inst * ExecutionGraphInstruction::inst() {
 	return _inst;
 }
@@ -488,7 +493,7 @@ inline void ExecutionNode::init(ExecutionGraph * graph,
 	_has_path_to_CMI0 = false;
 	_max_time_to_CMI0 = 0;
 	_min_time_to_IFI1 = 0;
-	if (code_part >= BODY) {
+	if (code_part >= PREFIX) {
 		ready_time.min = 0; // needed ?
 		start_time.min = 0;
 		finish_time.min = stage->minLatency();
