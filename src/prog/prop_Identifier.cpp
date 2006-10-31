@@ -184,7 +184,7 @@ void Identifier::scan(PropList& props, VarArg& args) const {
  * Print the identifier.
  * @param out	Output stream.
  */
-void Identifier::print(elm::io::Output& out) {
+void Identifier::print(elm::io::Output& out) const {
 	out << nam;
 }
 
