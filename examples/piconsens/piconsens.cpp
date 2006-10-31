@@ -41,6 +41,7 @@ typedef struct node_stat_t {
 } node_stat_t;
 
 GenericIdentifier<node_stat_t *> STAT("piconsens_stat", 0, OTAWA_NS);
+GenericIdentifier<bool> MARK("piconsens_mark", false, OTAWA_NS);
 
 
 // Command
@@ -50,6 +51,8 @@ class Command: public elm::option::Manager {
 	otawa::Manager manager;
 	FrameWork *fw;
 	PropList stats;
+	ilp::Constraint *node_cons;
+	bool cons_used;
 	
 	void computeDeltaMax(TreePath< BasicBlock *, BBPath * > *tree, int parent_time);
 	void computeMax(TreePath< BasicBlock *, BBPath * > *tree, int parent_time);
@@ -227,13 +230,26 @@ void Command::compute(String fun) {
 	if(suffix && !do_max) {
 		if(bound) 
 			for(CFG::BBIterator bb(&vcfg); bb; bb++) {
-				if(STAT(bb))
+				if(STAT(bb)) {
+					ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
+					node_cons = system->newConstraint(ilp::Constraint::EQ);
+					node_cons->addRight(1, ipet::getVar(system, bb));
+					cons_used = false;
 					buildBoundConstraint(0, STAT(bb), 0, TIME(bb));
+					if(!cons_used)
+						delete node_cons;
+					else
+						for(BasicBlock::InIterator edge(bb); edge; edge++)
+							if(!MARK(edge))
+								node_cons->addLeft(1, getVar(system, edge));
+				}
 			}
 		else 
 			for(CFG::BBIterator bb(&vcfg); bb; bb++) {
-				if(BBPath::TREE(bb)) 
+				if(BBPath::TREE(bb)) {
+					
 					addSuffixConstraints(BBPath::TREE(bb), 0, 0 /*&ctx*/);
+				}
 			}
 	}
 	
@@ -610,11 +626,19 @@ int level, int min) {
 		for(node_stat_t *child = node->children; child; child = child->sibling)
 			buildBoundConstraint(&ctx, child, level + 1, min);
 	}
-	else if(min < node->max) {
+	else /* if(min < node->max) */ {
+		
+		// Build var name
+		StringBuffer buf;
+		buf << "ctx_" << node->bb->number();
+		for(context_t *cur = pctx; cur; cur = cur->prev)
+			buf << "_" << cur->bb->number();
 		
 		// add extra object function factor
 		ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
-		ilp::Var *var = system->newVar();
+		ilp::Var *var = system->newVar(buf.toString());
+		node_cons->addLeft(1, var);
+		cons_used = true;
 		system->addObjectFunction(node->max - min, var);
 			 
 		// Add edge constraints 
@@ -629,6 +653,8 @@ int level, int min) {
 		 		}
 		 	}
 		 	assert(edge);
+		 	if(!cur->prev)
+		 		MARK(edge) = true;
 		 	
 		 	// add constraint
 		 	ilp::Constraint *cons = system->newConstraint(ilp::Constraint::LE);
