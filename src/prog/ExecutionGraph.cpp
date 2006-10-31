@@ -1161,8 +1161,11 @@ void ExecutionGraph::shadePreds(ExecutionNode *node) {
 // ---------- shadeNodes
 
 void ExecutionGraph::shadeNodes() {
-		
-	ExecutionNode *first_body_node = first_node[BODY];
+	ExecutionNode *first_body_node;
+	if (firstNode(PREFIX))
+	 	first_body_node = first_node[PREFIX];
+	else
+		first_body_node = first_node[BODY];
 	first_body_node->setMinReadyTime(0);
 	first_body_node->setMinStartTime(0);	
 	first_body_node->setMinFinishTime(first_body_node->minLatency());
@@ -1180,8 +1183,10 @@ void ExecutionGraph::latestTimes() {
 	ExecutionNode * last_prologue_node = lastNode(PROLOGUE);
 	if (last_prologue_node)
 		shadeNodes();
-	
-	firstNode(BODY)->setMaxReadyTime(0);
+	if (firstNode(PREFIX))
+		firstNode(PREFIX)->setMaxReadyTime(0);
+	else
+		firstNode(BODY)->setMaxReadyTime(0);
 	for(PreorderIterator node(this, this->entry_node); node; node++) {
 //		LOG(elm::cout << "[latestTimes] processing " << node->name() << "\n";)
 //		if ( (node->part() == PROLOGUE) 
@@ -1206,10 +1211,12 @@ void ExecutionGraph::latestTimes() {
 // ---------- earliestTimes
 
 void ExecutionGraph::earliestTimes() {
-	
-	firstNode(BODY)->setMinReadyTime(0);
+	if (firstNode(PREFIX))
+		firstNode(PREFIX)->setMinReadyTime(0);
+	else
+		firstNode(BODY)->setMinReadyTime(0);
 	for(PreorderIterator node(this, this->entry_node); node; node++) {
-		if (node->part() >= BODY)
+		if (node->part() >= PREFIX)
 			bodyEarliestTimes(node);
 	}
 }
@@ -1243,21 +1250,21 @@ int ExecutionGraph::analyze() {
 //	}
 		
 //	LOG(elm::cout << "Max finish time of last body node: " << lastNode(BODY)->maxFinishTime() << "\n");
-	if (lastNode(PROLOGUE)) {
-		lastNode(PROLOGUE)->setMinFinishTime(lastNode(PROLOGUE)->minLatency());
-		findPaths(lastNode(PROLOGUE));
+//	if (lastNode(PROLOGUE)) {
+//		lastNode(PROLOGUE)->setMinFinishTime(lastNode(PROLOGUE)->minLatency());
+//		findPaths(lastNode(PROLOGUE));
 //		for(PreorderIterator node(this, this->entry_node); node; node++) {
 //			if (node->part() == PROLOGUE)
 //				prologueMinTimeToCMI0(node);
 //		}
-		int delta = INFINITE_TIME;
-		for (Predecessor pred(firstNode(BODY)) ; pred ; pred++) {
-			if (pred->maxTimeToCMI0() < delta) {
-				delta = pred->maxTimeToCMI0();
-				LOG(elm::cout << "[analyze] " << pred->name() << " has the minimum distance to CMI0 (" << delta << "\n";)
-			}
-		}
-		delta += lastNode(PROLOGUE)->minLatency();
+//		int delta = INFINITE_TIME;
+//		for (Predecessor pred(firstNode(PREFIX)) ; pred ; pred++) {
+//			if (pred->maxTimeToCMI0() < delta) {
+//				delta = pred->maxTimeToCMI0();
+//				LOG(elm::cout << "[analyze] " << pred->name() << " has the minimum distance to CMI0 (" << delta << "\n";)
+//			}
+//		}
+//		delta += lastNode(PROLOGUE)->minLatency();
 //		LOG(elm::cout << "\n[analyze] CM(In).finish.latest=" << lastNode(BODY)->maxFinishTime();
 //			elm::cout << " / CM(I0).finish.latest=" << lastNode(PROLOGUE)->maxFinishTime() << "\n";)
 //		lastNode(PROLOGUE)->setMaxTimeToCMI0(0);
@@ -1271,11 +1278,29 @@ int ExecutionGraph::analyze() {
 //	  		if (delay > lastNode(PROLOGUE)->minFinishTime())
 //	  			lastNode(PROLOGUE)->setMinFinishTime(delay);
 //	  	}
-//	  	return (lastNode(BODY)->maxFinishTime() -  lastNode(PROLOGUE)->minFinishTime());
-	  	return (lastNode(BODY)->maxFinishTime() -  delta);
-	}
-	else
-		return lastNode(BODY)->maxFinishTime();
+		if (lastNode(PREFIX))
+	  		return (lastNode(BODY)->maxFinishTime() -  lastNode(PREFIX)->minFinishTime());
+	  	else {
+	  		if (lastNode(PROLOGUE)) {
+	  			lastNode(PROLOGUE)->setMinFinishTime(lastNode(PROLOGUE)->minLatency());
+				findPaths(lastNode(PROLOGUE));
+				int delta = INFINITE_TIME;
+				for (Predecessor pred(firstNode(BODY)) ; pred ; pred++) {
+					if (pred->maxTimeToCMI0() < delta) {
+						delta = pred->maxTimeToCMI0();
+						LOG(elm::cout << "[analyze] " << pred->name() << " has the minimum distance to CMI0 (" << delta << "\n";)
+					}
+				}
+				delta += lastNode(PROLOGUE)->minLatency();
+				return(lastNode(BODY)->maxFinishTime() -  delta);
+	  		}
+	  		else
+	  			return lastNode(BODY)->maxFinishTime();
+	  	}
+//	  	return (lastNode(BODY)->maxFinishTime() -  delta);
+//	}
+//	else
+//		return lastNode(BODY)->maxFinishTime();
 }
 
 
@@ -1295,6 +1320,9 @@ void ExecutionNode::dumpPart(elm::io::Output& out_stream) {
 			break;
 		case PROLOGUE:
 			out_stream << "[PROLOGUE]";
+			break;
+		case PREFIX:
+			out_stream << "[PREFIX]";
 			break;
 		case BODY:
 			out_stream << "[BODY]";
@@ -1556,6 +1584,9 @@ void ExecutionGraph::dotDump(elm::io::Output& dotFile, bool dump_times) {
 					dotFile << "color=red, ";
 				if (node->part() == BODY)
 					dotFile << "color=blue, ";
+				if (node->part() == PREFIX)
+					dotFile << "color=green, ";
+				
 				dotFile << "label=\"" << node->pipelineStage()->shortName();
 				dotFile << "(I" << node->instIndex() << ") ";
 				dotFile << "| { {";
