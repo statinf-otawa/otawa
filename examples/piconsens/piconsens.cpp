@@ -52,6 +52,7 @@ class Command: public elm::option::Manager {
 	PropList stats;
 	
 	void computeDeltaMax(TreePath< BasicBlock *, BBPath * > *tree, int parent_time);
+	void computeMax(TreePath< BasicBlock *, BBPath * > *tree, int parent_time);
 	void buildTrees(FrameWork* fw, CFG* cfg);
 
 	// Suffix methods
@@ -69,6 +70,7 @@ class Command: public elm::option::Manager {
 		TreePath< BasicBlock *, BBPath * > *tree,
 		int parent_time,
 		context_t *pctx);
+	void buildBoundConstraint(context_t *ctx, node_stat_t *node, int level, int min);
 
 	// Statistics
 	typedef struct stat_t {
@@ -108,14 +110,16 @@ BoolOption dump_constraints(command, 'u', "dump-cons",
 BoolOption verbose(command, 'v', "verbose", "verbose mode", false);
 BoolOption exegraph(command, 'E', "exegraph", "use exegraph method", false);
 IntOption delta(command, 'D', "delta", "use delta method with given sequence length", "length", 0);
-IntOption suffix(command, 'S', "suffix", "use suffix method with given sequence length", "suffix length", 0);
+IntOption suffix(command, 'S', "suffix", "use suffix method with given sequence length", "bound length", 0);
+IntOption bound(command, 'b', "bound", "bound the suffix method to given length", "suffix length", 0);
 IntOption degree(command, 'd', "degree", "superscalar degree power (real degree = 2^power)", "degree", 1);
 StringOption proc(command, 'p', "processor", "used processor", "processor", "deg1.xml");
 BoolOption do_stats(command, 's', "stats", "display statistics", false);
 BoolOption do_time(command, 't', "time", "display basic block times", false);
 BoolOption do_context(command, 'c', "context", "use context to improve accuracy of ExeGraph", false);
 BoolOption deep_context(command, 'C', "deep-context", "use deep context to improve accuracy of ExeGraph", false);
- 
+BoolOption do_max(command, 'm', "max-context", "use max context in suffixes", false);
+
 
 /**
  * Build the command manager.
@@ -188,8 +192,15 @@ void Command::compute(String fun) {
 		if(suffix) {
 			buildTrees(fw, &vcfg);
 			for(CFG::BBIterator bb(&vcfg); bb; bb++)
-				if(BBPath::TREE(bb)) 
+				if(BBPath::TREE(bb))
 					computeMinTime(BBPath::TREE(bb), 0, 0);
+			for(CFG::BBIterator bb(&vcfg); bb; bb++)
+				if(STAT(bb)) {
+					if(do_max)
+						TIME(bb) = STAT(bb)->max;
+					else
+						TIME(bb) = STAT(bb)->min;
+				}
 		}
 	}
 
@@ -213,12 +224,17 @@ void Command::compute(String fun) {
 	}
 	
 	// Add constraints for suffix approach
-	if(suffix) {
-		for(CFG::BBIterator bb(&vcfg); bb; bb++) {
-			//context_t ctx(bb, 0);
-			if(BBPath::TREE(bb)) 
-				addSuffixConstraints(BBPath::TREE(bb), 0, 0 /*&ctx*/);
-		}
+	if(suffix && !do_max) {
+		if(bound) 
+			for(CFG::BBIterator bb(&vcfg); bb; bb++) {
+				if(STAT(bb))
+					buildBoundConstraint(0, STAT(bb), 0, TIME(bb));
+			}
+		else 
+			for(CFG::BBIterator bb(&vcfg); bb; bb++) {
+				if(BBPath::TREE(bb)) 
+					addSuffixConstraints(BBPath::TREE(bb), 0, 0 /*&ctx*/);
+			}
 	}
 	
 	// Time delta modifier
@@ -265,13 +281,9 @@ void Command::compute(String fun) {
 		if(exegraph)
 			for(CFG::BBIterator bb(&vcfg); bb; bb++)
 				cout << bb->number() << '\t' << ipet::TIME(bb) << io::endl;
-		else {
-			for(CFG::BBIterator bb(&vcfg); bb; bb++)
-				if(BBPath::TREE(bb)) 
-					computeDeltaMax(BBPath::TREE(bb), 0);
+		else
 			for(CFG::BBIterator bb(&vcfg); bb; bb++)
 				cout << bb->number() << '\t' << DELTA_MAX(bb) << io::endl;			
-		}
 	}
 
 	// Dump the ILP system
@@ -347,6 +359,29 @@ void Command::computeDeltaMax(
 
 
 /**
+ * Compute the delta max for the given tree.
+ * @param tree			Tree to explore.
+ * @param parent_time	Execution time of the parent tree.
+ */
+void Command::computeMax(
+	TreePath< BasicBlock *, BBPath * > *tree,
+	int parent_time)
+{
+	// Compute max
+	int path_time = tree->rootData()->time(fw); 
+	if(parent_time) {
+		int time = path_time - parent_time;
+		if(time > TIME(tree->rootLabel()))
+			TIME(tree->rootLabel()) = time;
+	}
+
+	// Traverse children
+	for(TreePath< BasicBlock *, BBPath * >::Iterator child(tree); child; child++)
+		computeDeltaMax(child, path_time);
+}
+
+
+/**
  * Compute the delta min for the given tree.
  * @param tree			Tree to explore.
  * @param parent_time	Execution time of the parent tree.
@@ -369,17 +404,15 @@ void Command::computeMinTime(
 	// Compute max
 	if(!one) {
 		int time = path_time - parent_time;
-		if(time < TIME(tree->rootLabel()))
-			TIME(tree->rootLabel()) = time;
-		if(do_stats) {
-			node_stat_t *node = STAT(tree->rootLabel());
-			if(!node) {
-				node = new node_stat_t(tree->rootLabel(), time);
-				STAT(tree->rootLabel()) = node;
-			}
-			recordSuffixStats(&ctx, node, time);
-			//cout << "COST = " << time << io::endl;
-		}	
+		/*if(time < TIME(tree->rootLabel()))
+			TIME(tree->rootLabel()) = time;*/
+		node_stat_t *node = STAT(tree->rootLabel());
+		if(!node) {
+			node = new node_stat_t(tree->rootLabel(), time);
+			STAT(tree->rootLabel()) = node;
+		}
+		recordSuffixStats(&ctx, node, time);
+		//cout << "COST = " << time << io::endl;
 	}
 }
 
@@ -564,6 +597,45 @@ void Command::collectSuffixStats(node_stat_t *node, int depth) {
 				exe_stats[i].bb_span_sum = 0;
 				exe_stats[i].bb_vals_sum = 0;
 			}
+}
+
+
+void Command::buildBoundConstraint(context_t *pctx, node_stat_t *node,
+int level, int min) {
+	//cout << "level = " << level << ", bound = " << bound << ", min = " << min << io::endl;
+	
+	context_t ctx(node->bb, pctx); 
+	if(level < bound) {
+		assert(node->children);
+		for(node_stat_t *child = node->children; child; child = child->sibling)
+			buildBoundConstraint(&ctx, child, level + 1, min);
+	}
+	else if(min < node->max) {
+		
+		// add extra object function factor
+		ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
+		ilp::Var *var = system->newVar();
+		system->addObjectFunction(node->max - min, var);
+			 
+		// Add edge constraints 
+		for(context_t *cur = pctx, *prev = &ctx; cur; prev = cur, cur = cur->prev) {
+		 	
+		 	// find edge
+		 	Edge *edge = 0;
+		 	for(BasicBlock::OutIterator iter(prev->bb); iter; iter++) {
+		 		if(iter->target() == cur->bb) {
+		 			edge = iter;
+		 			break;
+		 		}
+		 	}
+		 	assert(edge);
+		 	
+		 	// add constraint
+		 	ilp::Constraint *cons = system->newConstraint(ilp::Constraint::LE);
+		 	cons->addLeft(1, var);
+		 	cons->addRight(1, getVar(system, edge));
+		}
+	}
 }
 
 
