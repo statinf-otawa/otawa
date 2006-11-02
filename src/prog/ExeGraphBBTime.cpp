@@ -299,7 +299,6 @@ void ExeGraphBBTime::buildPrefixList(
 
 int ExeGraphBBTime::processSequence( FrameWork *fw,
 	elm::genstruct::DLList<ExecutionGraphInstruction *> * prologue,
-	elm::genstruct::DLList<ExecutionGraphInstruction *> * prefix,
 	elm::genstruct::DLList<ExecutionGraphInstruction *> * body,
 	elm::genstruct::DLList<ExecutionGraphInstruction *> * epilogue,
 	int capacity ) {
@@ -320,13 +319,6 @@ int ExeGraphBBTime::processSequence( FrameWork *fw,
 	LOG(dumpFile << "[prologue] ";)
 	if (prologue) {
 		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(*prologue) ; inst ; inst++) {
-			sequence.addLast(inst);
-			LOG(dumpFile << "i" << inst->index() << "(b" << inst->basicBlock()->number() << ") ";)
-		}
-	}	
-	LOG(dumpFile << " [PREFIX] ";)	
-	if (prefix) {
-		for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(*prefix) ; inst ; inst++) {
 			sequence.addLast(inst);
 			LOG(dumpFile << "i" << inst->index() << "(b" << inst->basicBlock()->number() << ") ";)
 		}
@@ -408,43 +400,7 @@ int ExeGraphBBTime::processSequence( FrameWork *fw,
 		prefix_cost->addCost(bbExecTime);
 		costs.addLast(prefix_cost);		
 	}
-	if (prefix) {
-		prologue_blocks.addLast(prefix->first()->basicBlock()->number();
-		bool found = false;
-		for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost  && !found; existing_cost++) {
-			found = existing_cost->isPrefix(&prologue_blocks);
-			if (found)
-				existing_cost->addCost(bbExecTime);
-		}
-		if (!found) {
-			prefix_cost = new PrefixCost(&prologue_blocks);
-			prefix_cost->addCost(bbExecTime);
-			costs.addLast(prefix_cost);	
-		}	
-		for(DLList<ExecutionGraphInstruction *>::Iterator inst(prologue->fromLast()); inst; inst--) {
-			if (inst->basicBlock()->number() != bbnum) {
-				bbnum = inst->basicBlock()->number();
-				prologue_blocks.addLast(inst->basicBlock());
-				LOG(dumpFile << "prologue_blocks=";
-					for (elm::genstruct::DLList<BasicBlock *>::Iterator bb(prologue_blocks) ; bb ; bb++) {
-						dumpFile << "b" << bb->number() << "-";
-					}
-					dumpFile << "\n";
-				)
-				bool found = false;
-				for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost  && !found; existing_cost++) {
-					found = existing_cost->isPrefix(&prologue_blocks);
-					if (found)
-						existing_cost->addCost(bbExecTime);
-				}
-				if (!found) {
-					prefix_cost = new PrefixCost(&prologue_blocks);
-					prefix_cost->addCost(bbExecTime);
-					costs.addLast(prefix_cost);	
-				}	
-			}
-		}
-	}
+
 	
 #endif
 	
@@ -493,392 +449,66 @@ void ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 		elm::io::OutFileStream statsStream(file_name.toCString());
 		elm::io::Output statsFile(statsStream);
 	#endif	
-	
-	elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *> prefix_list;
-	elm::genstruct::DLList<ExecutionGraphInstruction *> * new_prefix = 
-			new elm::genstruct::DLList<ExecutionGraphInstruction *>;
-	buildPrefixList(bb, new_prefix, 2, 0, &prefix_list);
-	
-	//dump prefix list
-//		#ifdef DO_LOG
-//			dumpFile << "Dumping the list of prefixes:\n";
-//	    	int p =0;
-//	    	int index;
-//			if (!prefix_list.isEmpty()) {
-//				for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator prefix(prefix_list) ; prefix ; prefix++) {
-//			  		assert(!prefix->isEmpty());
-//					dumpFile << "\tprefix " << p++ << ":\t";
-//					int bbnum = -1;
-//					int cnt = 0;
-//					for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**prefix) ; inst ; inst++) {
-//						if (inst->basicBlock()->number() != bbnum) {
-//							if (bbnum != -1)
-//								dumpFile << index << ") - ";
-//							bbnum = inst->basicBlock()->number();
-//							dumpFile << "b" << bbnum ;
-//							dumpFile << " (i" << inst->index() << " to i";
-//							cnt = 0;
-//						}
-//						cnt++;
-//						index = inst->index();
-//					}
-//					if (!prefix->isEmpty())
-//						dumpFile << prefix->last()->index() << ") - ";
-//					dumpFile << "\n";
-//				}
-//			}
-//		#endif	
-	
+		
+			
+	elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *> prologue_list, epilogue_list;
+	// build the list of body instructions	
+	int index = 1;
+	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+		ExecutionGraphInstruction *eg_inst =
+			new ExecutionGraphInstruction(inst, bb, BODY, index++);
+		body.addLast(eg_inst);
+	}
+		
+	// build the list of possible prologues
+	elm::genstruct::DLList<ExecutionGraphInstruction *> * new_prologue = 
+		new elm::genstruct::DLList<ExecutionGraphInstruction *>;
+	buildPrologueList(bb, new_prologue, capacity, &prologue_list);
+		
+	// build the list of possible epilogues
+	elm::genstruct::DLList<ExecutionGraphInstruction *> * new_epilogue = 
+		new elm::genstruct::DLList<ExecutionGraphInstruction *>;
+	buildEpilogueList(bb, new_epilogue, capacity, &epilogue_list, body.count() + 1);
 	
 	int maxExecTime;
-//	------------------------FIXME ------------------------------------
-//	if(!do_context || prologue_list.isEmpty())
-//		maxExecTime = 0;
-//	else
-//	maxExecTime = INFINITE_TIME;
-	maxExecTime = 0;
+	if(!do_context || prologue_list.isEmpty())
+		maxExecTime = 0;
+	else
+		maxExecTime = INFINITE_TIME;
 	int bbExecTime;
 			
-		
-//	int pred_count;
-//	for(BasicBlock::InIterator edge(bb); edge; edge++) {
-//		BasicBlock * pred = edge->source();
-//		pred_count++;
-	if (!prefix_list.isEmpty()) {
-		for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator prefix(prefix_list) ; prefix ; prefix++) {
-		
-			elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *> prologue_list, epilogue_list;
-			
-			// build the list of possible prologues
-			elm::genstruct::DLList<ExecutionGraphInstruction *> * new_prologue = 
-				new elm::genstruct::DLList<ExecutionGraphInstruction *>;
-			buildPrologueList(prefix->first()->basicBlock(), new_prologue, capacity, &prologue_list);
 	
-			// dump prologue list
-	//		#ifdef DO_LOG
-	//			dumpFile << "Dumping the list of prologues:\n";
-	//	    	int p =0;
-	//	    	int index;
-	//			if (!prologue_list.isEmpty()) {
-	//				for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator prologue(prologue_list) ; prologue ; prologue++) {
-	//			  		assert(!prologue->isEmpty());
-	//					dumpFile << "\tprologue " << p++ << ":\t";
-	//					int bbnum = -1;
-	//					int cnt = 0;
-	//					for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**prologue) ; inst ; inst++) {
-	//						if (inst->basicBlock()->number() != bbnum) {
-	//							if (bbnum != -1)
-	//								dumpFile << index << ") - ";
-	//							bbnum = inst->basicBlock()->number();
-	//							dumpFile << "b" << bbnum ;
-	//							dumpFile << " (i" << inst->index() << " to i";
-	//							cnt = 0;
-	//						}
-	//						cnt++;
-	//						index = inst->index();
-	//					}
-	//					if (!prologue->isEmpty())
-	//						dumpFile << prologue->last()->index() << ") - ";
-	//					dumpFile << "\n";
-	//				}
-	//			}
-	//		#endif	
-			
-			
-			{
-				// build the list of prefix instructions	
-//				prefix.clear();
-//				int index = 1;
-//				for(BasicBlock::InstIterator inst(pred); inst; inst++) {
-//					ExecutionGraphInstruction *eg_inst =
-//						new ExecutionGraphInstruction(inst, pred, PREFIX, index++);
-//					prefix.addLast(eg_inst);
-//				}
-				int index = prefix->count() + 1;
-				// build the list of body instructions	
-				body.clear();
-				for(BasicBlock::InstIterator inst(bb); inst; inst++) {
-					ExecutionGraphInstruction *eg_inst =
-						new ExecutionGraphInstruction(inst, bb, BODY, index++);
-					body.addLast(eg_inst);
-				}
-			}
 				
-			// build the list of possible epilogues
-			elm::genstruct::DLList<ExecutionGraphInstruction *> * new_epilogue = 
-				new elm::genstruct::DLList<ExecutionGraphInstruction *>;
-			buildEpilogueList(bb, new_epilogue, capacity, &epilogue_list, 
-							prefix->count() + body.count() + 1);
-		
-			// dump epilogue list
-	//			LOG(	dumpFile << "Dumping the list of epilogues:\n";
-	//		    	{int p =0;
-	//		    	int index;
-	//				if (!epilogue_list.isEmpty()) {
-	//					for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
-	//				  		assert(!epilogue->isEmpty());
-	//						dumpFile << "\tepilogue " << p++ << ":\t";
-	//						int bbnum = -1;
-	//						int cnt = 0;
-	//						for (elm::genstruct::DLList<ExecutionGraphInstruction *>::Iterator inst(**epilogue) ; inst ; inst++) {
-	//							if (inst->basicBlock()->number() != bbnum) {
-	//								if (bbnum != -1)
-	//									dumpFile << index << ") - ";
-	//								bbnum = inst->basicBlock()->number();
-	//								dumpFile << "b" << bbnum ;
-	//								dumpFile << " (i" << inst->index() << " to i";
-	//								cnt = 0;
-	//							}
-	//							cnt++;
-	//							index = inst->index();
-	//						}
-	//						if (!epilogue->isEmpty())
-	//							dumpFile << epilogue->last()->index() << ") - ";
-	//						dumpFile << "\n";
-	//					}
-	//				}}
-	//		)
-				
-						
-			// consider every possible prologue/epilogue pair
-			if (prologue_list.isEmpty()){
-				if (epilogue_list.isEmpty()) {
-					bbExecTime = processSequence(fw, NULL, prefix, &body, NULL, capacity);
-					
-	//				#ifdef ACCURATE_STATS
-	//					PrefixCost * prefix_cost;
-	//					elm::genstruct::DLList<BasicBlock *> prologue_blocks;
-	//					prologue_blocks.addFirst(pred);
-	//					bool found = false;
-	//					for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost && !found ; existing_cost++) {
-	//						found = existing_cost->isPrefix(&prologue_blocks);
-	//						if (found)
-	//							existing_cost->addCost(bbExecTime);
-	//					}
-	//					if (!found) {
-	//						prefix_cost = new PrefixCost(&prologue_blocks);
-	//						prefix_cost->addCost(bbExecTime);
-	//						costs.addLast(prefix_cost);	
-	//					}
-	//				#endif
-					if (bbExecTime > maxExecTime)
-						maxExecTime = bbExecTime;
-				}
-				else {			
-					for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
-						bbExecTime = processSequence(fw, NULL, prefix, &body, epilogue, capacity);
-						
-	//					#ifdef ACCURATE_STATS
-	//						PrefixCost * prefix_cost;
-	//						elm::genstruct::DLList<BasicBlock *> prologue_blocks;
-	//						
-	//						bool found = false;
-	//						for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost && !found; existing_cost++) {
-	//							found = existing_cost->isPrefix(&prologue_blocks);
-	//							if (found)
-	//								existing_cost->addCost(bbExecTime);
-	//						}
-	//						if (!found) {
-	//							prefix_cost = new PrefixCost(&prologue_blocks);
-	//							prefix_cost->addCost(bbExecTime);
-	//							costs.addLast(prefix_cost);		
-	//						}
-	//					#endif
-						
-						if (bbExecTime > maxExecTime)
-							maxExecTime = bbExecTime;
-					}
-				}
-			}
-			else {
-				if (epilogue_list.isEmpty()) {
-					for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator prologue(prologue_list) ; prologue ; prologue++) {
-						bbExecTime = processSequence(fw, prologue, prefix, &body, NULL, capacity);
-						if(delta)
-							recordDelta(prologue, bbExecTime, bb);
-						
-	//					#ifdef ACCURATE_STATS
-	//						bbnum = -1;
-	//						elm::genstruct::DLList<BasicBlock *> prologue_blocks;
-	//						
-	//						PrefixCost * prefix_cost, *existing_cost;
-	//						bool found = false;
-	//						for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost && !found; existing_cost++) {
-	//							found = existing_cost->isPrefix(&prologue_blocks);
-	//							if (found)
-	//								existing_cost->addCost(bbExecTime);
-	//						}
-	//						if (!found) {
-	//							prefix_cost = new PrefixCost(&prologue_blocks);
-	//							prefix_cost->addCost(bbExecTime);
-	//							costs.addLast(prefix_cost);	
-	//						}
-	//						for(DLList<ExecutionGraphInstruction *>::Iterator
-	//						inst((*prologue)->fromLast()); inst; inst--) {
-	//						//for (inst.last() ; !inst.begining() ; inst.previous()) {
-	//							if (inst->basicBlock()->number() != bbnum) {					
-	//								bbnum = inst->basicBlock()->number();
-	//								prologue_blocks.addLast(inst->basicBlock());
-	//								bool found = false;
-	//								for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost && !found; existing_cost++) {
-	//									found = existing_cost->isPrefix(&prologue_blocks);
-	//									if (found)
-	//										existing_cost->addCost(bbExecTime);
-	//								}
-	//								if (!found) {							
-	//									prefix_cost = new PrefixCost(&prologue_blocks);
-	//									prefix_cost->addCost(bbExecTime);
-	//									costs.addLast(prefix_cost);	
-	//								}	
-	//							}
-	//						}
-	//					#endif
-						
-						if(!do_context) {
-							if (bbExecTime > maxExecTime)
-								maxExecTime = bbExecTime;
-						}
-						else {
-							if (bbExecTime < maxExecTime)
-								maxExecTime = bbExecTime;
-						}	
-					}
-				}
-				else {
-					for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator prologue(prologue_list) ; prologue ; prologue++) {
-						for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
-							bbExecTime = processSequence(fw, prologue, prefix, &body, epilogue, capacity);
-							if(delta)
-								recordDelta(prologue, bbExecTime, bb);
-						
-	//						#ifdef ACCURATE_STATS
-	//							bbnum = -1;
-	//							elm::genstruct::DLList<BasicBlock *> prologue_blocks;
-	//							
-	//							PrefixCost * prefix_cost, *existing_cost;
-	//							bool found = false;
-	//							for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost  && !found; existing_cost++) {
-	//								found = existing_cost->isPrefix(&prologue_blocks);
-	//								if (found)
-	//									existing_cost->addCost(bbExecTime);
-	//							}
-	//							if (!found) {
-	//								prefix_cost = new PrefixCost(&prologue_blocks);
-	//								prefix_cost->addCost(bbExecTime);
-	//								costs.addLast(prefix_cost);		
-	//							}
-	//							for(DLList<ExecutionGraphInstruction *>::Iterator
-	//							inst(prologue->fromLast()); inst; inst--) {
-	//								if (inst->basicBlock()->number() != bbnum) {
-	//									bbnum = inst->basicBlock()->number();
-	//									prologue_blocks.addLast(inst->basicBlock());
-	//									LOG(dumpFile << "prologue_blocks=";
-	//										for (elm::genstruct::DLList<BasicBlock *>::Iterator bb(prologue_blocks) ; bb ; bb++) {
-	//											dumpFile << "b" << bb->number() << "-";
-	//										}
-	//										dumpFile << "\n";
-	//									)
-	//									bool found = false;
-	//									for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost  && !found; existing_cost++) {
-	//										found = existing_cost->isPrefix(&prologue_blocks);
-	//										if (found)
-	//											existing_cost->addCost(bbExecTime);
-	//									}
-	//									if (!found) {
-	//										prefix_cost = new PrefixCost(&prologue_blocks);
-	//										prefix_cost->addCost(bbExecTime);
-	//										costs.addLast(prefix_cost);	
-	//									}	
-	//								}
-	//							}
-	//						#endif
-							
-							LOG(dumpFile << "\n";)		
-							if(!do_context) {
-								if (bbExecTime > maxExecTime)
-									maxExecTime = bbExecTime;
-							}	
-							else {
-								if (bbExecTime < maxExecTime)
-									maxExecTime = bbExecTime;
-							}	
-						}
-					}
-				}
-				
+	if (prologue_list.isEmpty()) {
+		if (epilogue_list.isEmpty()) {
+			bbExecTime = processSequence(fw, NULL, &body, NULL, capacity);
+			if (bbExecTime > maxExecTime)
+				maxExecTime = bbExecTime;
+		}
+		else {
+			for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
+				bbExecTime = processSequence(fw, NULL, &body, epilogue, capacity);
+				if (bbExecTime > maxExecTime)
+					maxExecTime = bbExecTime;	
 			}
 		}
 	}
-	else { // no prefixes
-//	if (pred_count == 0) {  // block has no predecessor
-		elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *> prologue_list, epilogue_list;
-		// build the list of body instructions	
-		int index = 1;
-		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
-			ExecutionGraphInstruction *eg_inst =
-				new ExecutionGraphInstruction(inst, bb, BODY, index++);
-			body.addLast(eg_inst);
-		}
-			
-		// build the list of possible prologues
-		elm::genstruct::DLList<ExecutionGraphInstruction *> * new_prologue = 
-			new elm::genstruct::DLList<ExecutionGraphInstruction *>;
-		buildPrologueList(bb, new_prologue, capacity, &prologue_list);
-			
-		// build the list of possible epilogues
-		elm::genstruct::DLList<ExecutionGraphInstruction *> * new_epilogue = 
-			new elm::genstruct::DLList<ExecutionGraphInstruction *>;
-		buildEpilogueList(bb, new_epilogue, capacity, &epilogue_list, body.count() + 1);
-					
-		if (prologue_list.isEmpty()) {
+	else {
+		for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator prologue(prologue_list) ; prologue ; prologue++) {
 			if (epilogue_list.isEmpty()) {
-				bbExecTime = processSequence(fw, NULL, NULL, &body, NULL, capacity);
+				bbExecTime = processSequence(fw, prologue, &body, NULL, capacity);
 				if (bbExecTime > maxExecTime)
-					maxExecTime = bbExecTime;
+					maxExecTime = bbExecTime;	
 			}
 			else {
 				for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
-					bbExecTime = processSequence(fw, NULL, NULL, &body, epilogue, capacity);
+					bbExecTime = processSequence(fw, prologue, &body, epilogue, capacity);
 					if (bbExecTime > maxExecTime)
-						maxExecTime = bbExecTime;	
+						maxExecTime = bbExecTime;		
 				}
-			}
-		}
-		else {
-			for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator prologue(prologue_list) ; prologue ; prologue++) {
-				if (epilogue_list.isEmpty()) {
-					bbExecTime = processSequence(fw, prologue, NULL, &body, NULL, capacity);
-					if (bbExecTime > maxExecTime)
-						maxExecTime = bbExecTime;	
-				}
-				else {
-					for (elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>::Iterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
-						bbExecTime = processSequence(fw, prologue, NULL, &body, epilogue, capacity);
-						if (bbExecTime > maxExecTime)
-							maxExecTime = bbExecTime;		
-					}
-				}	
-			}		
-		}
-					
-//			#ifdef ACCURATE_STATS
-//				PrefixCost * prefix_cost;
-//				elm::genstruct::DLList<BasicBlock *> prologue_blocks;
-//				prologue_blocks.addFirst(pred);
-//				bool found = false;
-//				for (elm::genstruct::DLList<PrefixCost *>::Iterator existing_cost(costs) ; existing_cost && !found ; existing_cost++) {
-//					found = existing_cost->isPrefix(&prologue_blocks);
-//					if (found)
-//						existing_cost->addCost(bbExecTime);
-//				}
-//				if (!found) {
-//					prefix_cost = new PrefixCost(&prologue_blocks);
-//					prefix_cost->addCost(bbExecTime);
-//					costs.addLast(prefix_cost);	
-//				}
-//			#endif
-	}
-		
+			}	
+		}		
+	}	
 	
 	#ifdef ACCURATE_STATS
 		for (elm::genstruct::DLList<PrefixCost *>::Iterator cost(costs) ; cost ; cost++) {

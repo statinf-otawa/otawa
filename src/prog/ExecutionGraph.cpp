@@ -1241,7 +1241,7 @@ int ExecutionGraph::analyze() {
 		latestTimes();		
 		earliestTimes();
 		step++;
-	} while ((step < 10) && (!_times_changed));
+	} while ((step < 10) && (_times_changed));
 //	} while ((step < 10) && (!unchangedSeparated()));
 //		if (lastNode(PROLOGUE) 
 //			&& 

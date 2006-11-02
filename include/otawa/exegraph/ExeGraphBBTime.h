@@ -211,7 +211,6 @@ class ExeGraphBBTime: public BBProcessor {
 		void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
 		int ExeGraphBBTime::processSequence( FrameWork *fw,
 			elm::genstruct::DLList<ExecutionGraphInstruction *> * prologue,
-			elm::genstruct::DLList<ExecutionGraphInstruction *> * prefix,
 			elm::genstruct::DLList<ExecutionGraphInstruction *> * body,
 			elm::genstruct::DLList<ExecutionGraphInstruction *> * epilogue,
 			int capacity ) ;
