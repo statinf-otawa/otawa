@@ -7,6 +7,7 @@
 
 //#include <systemc>
 #include <stdlib.h>
+//#include <iss_types.h>
 #include <elm/io.h>
 #include <elm/system/Path.h>
 #include <otawa/otawa.h>
@@ -68,6 +69,19 @@ int main(int argc, char **argv) {
 		else
 			elm::cout << "main found at 0x" << cfg->address() << '\n';
 		
+		// Find _start ?
+		elm::cout << "Looking for the _start CFG\n";
+		CFG *cfg1 = fw->getCFGInfo()->findCFG("_start");
+		if(cfg1 == 0) {
+			elm::cerr << "ERROR: cannot find _start !\n";
+			return 1;
+		}
+		else
+			elm::cout << "_start found at 0x" << cfg1->address() << '\n';
+
+		::address_t addr_main = cfg->address();
+		::address_t addr_start = cfg1->address();
+		
 		// Removing __eabi call if available
 		for(CFG::BBIterator bb(cfg); bb; bb++)
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
@@ -86,7 +100,7 @@ int main(int argc, char **argv) {
 		props.set(EXPLICIT, true);
 		
 		gensim::GenericSimulator simulator;
-		sim::State *simulator_state = simulator.instantiate(fw,props);
+		sim::State *simulator_state = simulator.instantiate(fw, props);
 		
 		// Compute BB times
 		//elm::cout << "Timing the BB\n";
@@ -98,33 +112,35 @@ int main(int argc, char **argv) {
 		logFile << "Timing the BB with generic simulator\n";
 		logFile << "----------------------------------------------\n";
 		
-//				int start_cycle = simulator_state->cycle();
-//				sim::FullSimulationDriver driver(fw->start(), otawa::gliss::GLISS_STATE(fw));
-//				simulator_state->run(driver);
-//				int finish_cycle = simulator_state->cycle();
-//				logFile << "cycle number: " << finish_cycle - start_cycle << "\n";
-		for(CFG::BBIterator bb(&vcfg); bb; bb++) {
-			if (bb->countInstructions() != 0) {
-				TRACE(elm::cout << "\n****************************************************\n";
-					elm::cout << "**** GOING TO MEASURE BLOCK " << bb->number() << "(at " << bb->address() << ")\n\t";
-					elm::cout << "\n****************************************************\n";
-					for (BasicBlock::InstIterator inst(bb) ; inst ; inst++) {
-						elm::cout << inst->address() << ", ";
-					}
-					elm::cout << "\n\n";)
-				
 				int start_cycle = simulator_state->cycle();
-				otawa::sim::BasicBlockDriver driver(bb);
+				sim::FullSimulationDriver driver(fw, fw->findInstAt(addr_start), otawa::gliss::GLISS_STATE(fw));
 				simulator_state->run(driver);
 				int finish_cycle = simulator_state->cycle();
 				logFile << "cycle number: " << finish_cycle - start_cycle << "\n";
-				logFile << "block b" << bb->number() << ":";
-				logFile << finish_cycle - start_cycle << " cycles\n";
-			}
-		}
-		
-		elm::cout << "fin for OK, " << simulator_state->cycle() << endl;
-		
+//		for(CFG::BBIterator bb(&vcfg); bb; bb++) {
+//			if (bb->countInstructions() != 0) {
+//				/*TRACE(*/elm::cout << "\n****************************************************\n";
+//					elm::cout << "**** GOING TO MEASURE BLOCK " << bb->number() << "(at " << bb->address() << ")\n\t";
+//					elm::cout << "\n****************************************************\n";
+//					for (BasicBlock::InstIterator inst(bb) ; inst ; inst++) {
+//						elm::cout << "(" << inst->address() << ") " << *inst; //<< ", next : " << inst->target() << "\n";
+//						if (inst->next()->isPseudo() && inst->target() != 0)
+//							elm::cout << ", target : " << inst->target()->address() << "\n";
+//						else
+//							elm::cout << ", next : " << inst->next()->address() << "\n";
+//					}
+//					elm::cout << "\n\n";/*)*/
+//				
+//				int start_cycle = simulator_state->cycle();
+//				otawa::sim::BasicBlockDriver driver(bb);
+//				simulator_state->run(driver);
+//				int finish_cycle = simulator_state->cycle();
+//				logFile << "cycle number: " << finish_cycle - start_cycle << "\n";
+//				logFile << "block b" << bb->number() << ":";
+//				logFile << finish_cycle - start_cycle << " cycles\n";
+//			}
+//		}
+				
 //		ExeGraphBBTime tbt(props, &processor, logFile);
 //		tbt.processCFG(fw, &vcfg);
 		
