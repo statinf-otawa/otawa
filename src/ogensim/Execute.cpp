@@ -159,15 +159,18 @@ ExecuteOOOStage::ExecuteOOOStage(sc_module_name name, int width,
 	for (int index=0 ; index<inst_type_number ; index++) {
 		(*fu_bindings)[index] = NULL;
 	}*/
+	TRACE(elm::cout << "ExecuteOOOStage->ExecuteOOOStage(...)\n";)
 	number_of_functional_units = 0;
 	for (elm::genstruct::SLList<FunctionalUnitConfiguration *>::Iterator fu_conf(*_functional_units) ; fu_conf ; fu_conf++) {
 		FunctionalUnit * fu = new FunctionalUnit(fu_conf->isPipelined(), fu_conf->latency(), fu_conf->width());
 		(*functional_units)[number_of_functional_units++] = fu;
+		TRACE(elm::cout << "\tFU created, addr = " <<fu<< "\n";)
 		
 		for (elm::genstruct::SLList<Inst::kind_t>::Iterator type(*(fu_conf->instructionTypes())) ; type ; type++) {
 			/*assert((*fu_bindings)[*type] == NULL); // error: instruction type handled by two different functional units
 			(*fu_bindings)[*type] = fu;*/
 			fu_bindings.add(Pair<unsigned long, FunctionalUnit *>(*type, fu));
+			TRACE(elm::cout << "\t\tnew type " << *type << " added\n";)
 		}
 	}
 	SC_METHOD(action);
@@ -176,7 +179,7 @@ ExecuteOOOStage::ExecuteOOOStage(sc_module_name name, int width,
 
 void ExecuteOOOStage::action() {
 	int executed = 0;
-	TRACE(elm::cout << "ExecuteStage->action()\n";)
+	TRACE(elm::cout << "ExecuteOOOStage->action()\n";)
 	bool memory_pending = false, memory_ordering = false;
 	int i;
 	for (i=0 ; ( (i<rob->size()) /*&& (executed<stage_width)*/ && !memory_ordering) ; i++) {
@@ -200,7 +203,7 @@ void ExecuteOOOStage::action() {
 				}
 			#endif
 			TRACE(elm::cout << "\tready instruction: " << inst->inst()->address();
-				elm::cout << " [FU pipelined=" << fu->isPipelined() << " - width=" << fu->width();
+				elm::cout << " [FU addr=" << fu << " - inst-type=" << inst->type() << " - pipelined=" << fu->isPipelined() << " - width=" << fu->width();
 				elm::cout << " - new=" << fu->newInstructions() << " - pending=" << fu->pendingInstructions() << "]\n";)	
 			if (  ( fu->isPipelined()
 					&& 
