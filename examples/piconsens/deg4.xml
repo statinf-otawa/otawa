@@ -81,6 +81,11 @@
 					<type>IS_INTERN</type>
 					<fu ref="ALU"/>
 				</inst>
+				<!-- to assign sc to a FU -->
+				<inst>
+					<type>IS_TRAP</type>
+					<fu ref="ALU"/>
+				</inst>
 			</dispatch>
 
 		</stage>
