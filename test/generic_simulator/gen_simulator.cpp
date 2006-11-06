@@ -5,9 +5,7 @@
  *	test/ipet/exegraph.cpp -- test for Execution Graph modeling feature.
  */
 
-//#include <systemc>
-#include <stdlib.h>
-//#include <iss_types.h>
+#include <cstdlib>
 #include <elm/io.h>
 #include <elm/system/Path.h>
 #include <otawa/otawa.h>
@@ -27,23 +25,21 @@ using namespace elm::io;
 using namespace otawa;
 using namespace otawa::ipet;
 using namespace std;
-/*using namespace sc_core;
-using namespace sc_dt;*/
 
 
 int main(int argc, char **argv) {
 	
 	try {
 		
-	elm::io::OutFileStream logStream("log.txt");
-	if(!logStream.isReady())
-		throw IOException("cannot open log file !");
-	elm::io::Output logFile(logStream);
+		elm::io::OutFileStream logStream("log.txt");
+		if(!logStream.isReady())
+			throw IOException("cannot open log file !");
+		elm::io::Output logFile(logStream);
 	
 	
 	
-	Manager manager;
-	PropList loader_props;
+		Manager manager;
+		PropList loader_props;
 //	LOADER(loader_props) = &Loader::LOADER_Gliss_PowerPC;
 		
 		// Load program
@@ -53,34 +49,23 @@ int main(int argc, char **argv) {
 			exit(2);
 		}
 		
-		//TODO: move parameter on command line
-		elm::system::Path xml_processor_file("/home/barre/otawa/otawa/examples/piconsens/deg4.xml");
+		//TODO: move this parameter on command line
+		elm::system::Path xml_processor_file("../../examples/piconsens/deg4.xml");
 		PROCESSOR_PATH(loader_props) = xml_processor_file;
 		FrameWork *fw = manager.load(argv[1], loader_props);
 		
 		
-		// Find main CFG
-		elm::cout << "Looking for the main CFG\n";
-		CFG *cfg = fw->getCFGInfo()->findCFG("main");
-		if(cfg == 0) {
-			elm::cerr << "ERROR: cannot find main !\n";
-			return 1;
-		}
-		else
-			elm::cout << "main found at 0x" << cfg->address() << '\n';
-		
-		// Find _start ?
+		// Find _start CFG
 		elm::cout << "Looking for the _start CFG\n";
-		CFG *cfg1 = fw->getCFGInfo()->findCFG("_start");
-		if(cfg1 == 0) {
+		CFG *cfg = fw->getCFGInfo()->findCFG("_start");
+		if(cfg == 0) {
 			elm::cerr << "ERROR: cannot find _start !\n";
 			return 1;
 		}
 		else
-			elm::cout << "_start found at 0x" << cfg1->address() << '\n';
+			elm::cout << "_start found at 0x" << cfg->address() << '\n';
 
-		::address_t addr_main = cfg->address();
-		::address_t addr_start = cfg1->address();
+		::address_t addr_start = cfg->address();
 		
 		// Removing __eabi call if available
 		for(CFG::BBIterator bb(cfg); bb; bb++)
@@ -92,57 +77,22 @@ int main(int argc, char **argv) {
 					break;
 				}
 		
-		// Now, use a VCFG
-		VirtualCFG vcfg(cfg);
-		
 		// Prepare processor configuration
 		PropList props;
 		props.set(EXPLICIT, true);
 		
+		// instantiate generic simulator
 		gensim::GenericSimulator simulator;
 		sim::State *simulator_state = simulator.instantiate(fw, props);
-		
-		// Compute BB times
-		//elm::cout << "Timing the BB\n";
-		//TrivialBBTime tbt(5, props);
-		//tbt.processCFG(fw, &vcfg);
-		
-		// Compute BB times with execution graphs
-		logFile << "\n----------------------------------------------\n";
-		logFile << "Timing the BB with generic simulator\n";
-		logFile << "----------------------------------------------\n";
-		
-				int start_cycle = simulator_state->cycle();
-				sim::FullSimulationDriver driver(fw, fw->findInstAt(addr_start), otawa::gliss::GLISS_STATE(fw));
-				simulator_state->run(driver);
-				int finish_cycle = simulator_state->cycle();
-				logFile << "cycle number: " << finish_cycle - start_cycle << "\n";
-//		for(CFG::BBIterator bb(&vcfg); bb; bb++) {
-//			if (bb->countInstructions() != 0) {
-//				/*TRACE(*/elm::cout << "\n****************************************************\n";
-//					elm::cout << "**** GOING TO MEASURE BLOCK " << bb->number() << "(at " << bb->address() << ")\n\t";
-//					elm::cout << "\n****************************************************\n";
-//					for (BasicBlock::InstIterator inst(bb) ; inst ; inst++) {
-//						elm::cout << "(" << inst->address() << ") " << *inst; //<< ", next : " << inst->target() << "\n";
-//						if (inst->next()->isPseudo() && inst->target() != 0)
-//							elm::cout << ", target : " << inst->target()->address() << "\n";
-//						else
-//							elm::cout << ", next : " << inst->next()->address() << "\n";
-//					}
-//					elm::cout << "\n\n";/*)*/
-//				
-//				int start_cycle = simulator_state->cycle();
-//				otawa::sim::BasicBlockDriver driver(bb);
-//				simulator_state->run(driver);
-//				int finish_cycle = simulator_state->cycle();
-//				logFile << "cycle number: " << finish_cycle - start_cycle << "\n";
-//				logFile << "block b" << bb->number() << ":";
-//				logFile << finish_cycle - start_cycle << " cycles\n";
-//			}
-//		}
-				
-//		ExeGraphBBTime tbt(props, &processor, logFile);
-//		tbt.processCFG(fw, &vcfg);
+
+		int start_cycle = simulator_state->cycle();
+		// create the driver which will go through all the program to simulate
+		sim::FullSimulationDriver driver(fw, fw->findInstAt(addr_start), otawa::gliss::GLISS_STATE(fw));
+		// start and run the simulation until its end
+		simulator_state->run(driver);
+		int finish_cycle = simulator_state->cycle();
+		logFile << "cycle number: " << finish_cycle - start_cycle << "\n";
+
 		
 	}
 	catch(elm::Exception& e) {
