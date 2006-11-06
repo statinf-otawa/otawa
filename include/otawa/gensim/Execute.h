@@ -104,6 +104,8 @@ class ExecuteInOrderStageIQ : public PipelineStage {
 				if((mask & type) == mask)
 					return fu_bindings[i].snd;
 			}
+			// no FU found
+			return 0;
 		}
 		
 	public:
@@ -130,11 +132,17 @@ class ExecuteOOOStage : public PipelineStage {
 		elm::genstruct::Vector<elm::Pair<unsigned long, FunctionalUnit *> > fu_bindings;
 		int number_of_functional_units;
 		inline FunctionalUnit *findFU(unsigned long type) {
+		TRACE(elm::cout << "ExOOO::findFU type = " << type << ", nb FU = " << fu_bindings.length() << "\n";)
 			for(int i = 0; i < fu_bindings.length(); i++) {
 				unsigned long mask = fu_bindings[i].fst;
-				if((mask & type) == mask)
+				TRACE(elm::cout << "\ti = " << i << ", type = " << mask << "\n";)
+				if((mask & type) == mask){
+					TRACE(elm::cout << "\tfu found at addr = "<<fu_bindings[i].snd << "\n";)
 					return fu_bindings[i].snd;
+					}
 			}
+			// no FU found
+			return 0;
 		}
 		
 	public:
