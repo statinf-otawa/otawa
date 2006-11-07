@@ -6,8 +6,8 @@
  */
 
 #include <otawa/util/Dominance.h>
-#include <otawa/util/DFA.h>
-#include <otawa/util/DFABitSet.h>
+#include <otawa/util/DFAEngine.h>
+#include <otawa/util/BitSet.h>
 #include <otawa/cfg.h>
 
 namespace otawa {
@@ -15,7 +15,7 @@ namespace otawa {
 
 /**
  * Identifier of annotation containing reverse-dominance information.
- * Information is of type DFABitSet *.
+ * Information is of type BitSet *.
  */
 Identifier Dominance::ID_RevDom("otawa.util.revdom");
 
@@ -28,96 +28,59 @@ Identifier Dominance::ID_LoopHeader("otawa.util.header");
 
 
 /**
- * DFA used for comuting the reverse domination relation. For each basic block,
- * the set of dominators is computed and hooked to the basic block. Then,
- * a simple bit test is used for testing the relation.
+ * This is the Problem used to instanciate DFAEngine for computing the 
+ * reverse domination relation. For each basic block, the set of dominators 
+ * is computed and hooked to the basic block. Then, a simple bit test is 
+ * used for testing the relation.
  */
-class DominanceDFA: public DFA {
-	int _size;
-public:
-	DominanceDFA(int size);
-	
-	// DFA overload
-	virtual DFASet *initial(void);
-	virtual DFASet *generate(BasicBlock *bb);
-	virtual DFASet *kill(BasicBlock *bb);
-	virtual void clear(DFASet *set);
-	virtual void merge(DFASet *acc, DFASet *set);
-};
 
-
-/**
- * Build a new DFA for dominance relation computation.
- * @param size	Count of BB in the CFG.
- */
-DominanceDFA::DominanceDFA(int size): _size(size) {
-}
-
-
-/**
- */
-DFASet *DominanceDFA::initial(void) {
-	return new DFABitSet(_size, true);
-}
-
-
-/**
- */
-DFASet *DominanceDFA::generate(BasicBlock *bb) {
-	DFABitSet *result = new DFABitSet(_size);
-	result->add(bb->number());
-	return result;
-}
-
-
-/**
- */
-DFASet *DominanceDFA::kill(BasicBlock *bb) {
-	if(bb->isEntry())
-		return new DFABitSet(_size, true);
-	else
-		return new DFABitSet(_size);
-}
-
-
-/**
- */
-void DominanceDFA::clear(DFASet *set) {
-	((DFABitSet *)set)->fill();
-}
-
-
-/**
- */
-void DominanceDFA::merge(DFASet *acc, DFASet *set) {
-	((DFABitSet *)acc)->mask((DFABitSet *)set);
-}
-
-
-/*class DominanceProblem {
+class DominanceProblem {
 	CFG *cfg;
 	int size;
 public:
-	DominanceProblem(CFG *_cfg): cfg(_cfg), size(_cfg.count() {
+	DominanceProblem(CFG *_cfg) {
+		cfg = _cfg;
+		size = _cfg->countBB();
 	}
 	
-	DFABitSet *empty(void) {
-		return new DFABitSet(size, true)
-	}
-	
-	DFABitSet *gen(BasicBlock *bb) {
-		DFABitSet *result = new DFABitSet(_size);
-		result->add(bb->use<int>(CFG::ID_Index));
+	BitSet *empty(void) {
+		BitSet *result = new BitSet(size);
+		result->fill();
 		return result;
 	}
 	
-	DFABitSet *kill(BasicBlock *bb) {
-		if(bb->isEntry())
-			return new DFABitSet(_size, true);
-		else
-			return new DFABitSet(_size);
+	BitSet *gen(BasicBlock *bb) {
+		BitSet *result = new BitSet(size);
+		result->add(bb->number());
+		return result;
 	}
-};*/
+	
+	BitSet *kill(BasicBlock *bb) {
+		BitSet *result = new BitSet(size);
+		if(bb->isEntry())
+			result->fill();
+		return(result);
+	}
+	bool equals(BitSet *set1, BitSet *set2) {
+		return(set1->equals(*set2));
+	}
+	void reset(BitSet *set) {
+		set->fill();
+	}
+	void merge(BitSet *set1, BitSet *set2) {
+		set1->mask(*set2);
+	}
+	void set(BitSet *dset, BitSet *tset) {
+		*dset = *tset;
+	}
+	void add(BitSet *dset, BitSet *tset) {
+		dset->add(*tset);
+	}
+	void diff(BitSet *dset, BitSet *tset) {
+		dset->remove(*tset);
+	}
+};
+
 
 
 /**
@@ -138,7 +101,7 @@ bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 	assert(bb2);
 	int index = bb1->number();
 	assert(index >= 0);
-	DFABitSet *set = bb2->use<DFABitSet *>(ID_RevDom);
+	BitSet *set = bb2->use<BitSet *>(ID_RevDom);
 	assert(set);
 	return set->contains(index);
 }
@@ -158,8 +121,14 @@ bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
  */
 void Dominance::processCFG(FrameWork *fw, CFG *cfg) {
 	assert(cfg);
-	DominanceDFA dfa(cfg->countBB());
-	dfa.resolve(cfg, 0, &ID_RevDom);
+	DominanceProblem dp(cfg);
+	util::DFAEngine<DominanceProblem,BitSet> engine(dp,*cfg);
+	engine.compute();
+	for (CFG::BBIterator blocks(cfg); blocks; blocks++) {
+	  BitSet *b = engine.outSet(blocks.item());
+	  b = new BitSet(*b);
+	  blocks->addDeletable<BitSet *>(ID_RevDom,b);
+	}
 }
 
 
