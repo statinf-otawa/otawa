@@ -1,0 +1,52 @@
+#!/bin/bash
+
+project=
+add=no
+user=anonymous
+
+# display help
+function display_help {
+	echo "SYNTAX: otawa-new <project name>"
+	echo "OPTIONS:"
+	echo "	-a|--add	Add the created project to the sandbox on CVS."
+	echo "	-u|--user	Check out from CVS with the current user."
+	exit 1
+}
+
+
+# Scan arguments
+for arg in $*; do
+	case "$arg" in
+	-a|--add)
+		add=yes
+		;;
+	-u|--user)
+		user="$USER"
+		;;
+	-*|--*)
+		echo "ERROR: unknown option \"$arg\""
+		display_help
+		;;
+	*)
+		if test -z "$project"; then
+			project="$arg"
+		else
+			display_help
+		fi
+		;;
+	esac
+done
+if test "$project" = ""; then
+	display_help
+fi
+
+
+# Perform the processing
+cvs -d ":pserver:$user@cvs.irit.fr:/usr/local/CVS_IRIT/CVS_OTAWA" co sandbox/template
+cd sandbox
+rm -rf template/CVS
+mv template $project
+if test "$add" = yes; then
+	cvs add $project
+fi
+
