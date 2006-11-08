@@ -112,7 +112,8 @@ EnumOption<int>::value_t bbtime_values[] = {
 	{ "sim", bbtime_sim },
 	{ "delta", bbtime_delta },
 	{ "exegraph", bbtime_exegraph },
-	{ "trivial", bbtime_trivial }
+	{ "trivial", bbtime_trivial },
+	{ "" }
 };
 EnumOption<int> bbtime_option(command, 't', "bbtiming",
 	"basic block timing method", bbtime_values);
