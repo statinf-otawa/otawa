@@ -39,6 +39,7 @@ namespace otawa {
 CFGProcessor::CFGProcessor(const PropList& props)
 : Processor(props), last(0) {
 	init(props);
+	require(COLLECTED_CFG_FEATURE);
 }
 
 
@@ -51,6 +52,7 @@ CFGProcessor::CFGProcessor(const PropList& props)
 CFGProcessor::CFGProcessor(elm::String name, elm::Version version,
 const PropList& props): Processor(name, version, props), last(0) {
 	init(props);
+	require(COLLECTED_CFG_FEATURE);
 }
 
 
@@ -60,11 +62,6 @@ void CFGProcessor::processFrameWork(FrameWork *fw) {
 
 	// Get the CFG collection
 	CFGCollection *cfgs = INVOLVED_CFGS(fw);
-	if(!cfgs) {
-		CFGCollector collector;
-		collector.process(fw);
-		cfgs = INVOLVED_CFGS(fw);
-	}
 	assert(cfgs);
 
 	// Visit CFG
@@ -110,6 +107,7 @@ void CFGProcessor::init(const PropList& props) {
  * @param props	Configuration properties.
  */
 void CFGProcessor::configure(const PropList& props) {
+	Processor::configure(props);
 	init(props);
 }
 
@@ -119,6 +117,6 @@ void CFGProcessor::configure(const PropList& props) {
  * processed later after the current CFG. Note that each function is only
  * processed once !
  */
-GenericIdentifier<bool> RECURSIVE("otawa.recursive", false);
+GenericIdentifier<bool> RECURSIVE("recursive", true, OTAWA_NS);
 
 } // otawa

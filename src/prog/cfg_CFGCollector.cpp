@@ -106,8 +106,9 @@ void CFGCollector::processFrameWork (FrameWork *fw) {
  * Build the CFG collector.
  * @param props	Configuration properties.
  */
-CFGCollector::CFGCollector(const PropList& props)
-: Processor("CFGCollector", Version(1, 0, 0), props) {
+CFGCollector::CFGCollector(void)
+: Processor("CFGCollector", Version(1, 0, 0)) {
+	provide(COLLECTED_CFG_FEATURE);
 }
 
 
@@ -115,6 +116,13 @@ CFGCollector::CFGCollector(const PropList& props)
  * This property is used to link the current computation involved CFG
  * on the framework.
  */
-GenericIdentifier<CFGCollection *> INVOLVED_CFGS("otawa.involved_cfgs", 0);
-	
+GenericIdentifier<CFGCollection *> INVOLVED_CFGS("involved_cfgs", 0, OTAWA_NS);
+
+
+/**
+ * This feature asserts that all CFG involved in the current computation has
+ * been collected and accessible thanks to @ref INVOLVED_CFG property.
+ */
+Feature<CFGCollector> COLLECTED_CFG_FEATURE("otawa.collected_cfg");
+
 } // otawa

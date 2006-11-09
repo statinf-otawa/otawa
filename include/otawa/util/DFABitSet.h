@@ -33,11 +33,35 @@ public:
 	inline elm::BitVector& vector(void) { return vec; };
 	
 	// DFASet overload
+	inline void merge(DFABitSet *set);
 	virtual bool equals(DFASet *set);
 	virtual void add(DFASet *set);
 	virtual void remove(DFASet *set);
 };
 
+
+// DFAInvBitSet class
+class DFAInvBitSet {
+	elm::BitVector vec;
+public:
+	inline DFAInvBitSet(int size);
+	inline const elm::BitVector& vector(void) const;
+	
+	inline bool contains(int index) const;
+	inline void add(int index);
+	inline void remove(int index);
+	
+	inline bool equals(const DFAInvBitSet *set) const;
+	inline bool contains(const DFAInvBitSet *set) const;
+	inline bool isEmpty(void) const;
+	inline bool isFull(void) const;
+	
+	inline void add(const DFAInvBitSet *set);
+	inline void remove(const DFAInvBitSet *set);
+};
+
+
+// IO
 elm::io::Output& operator<<(elm::io::Output& output, DFABitSet& bits);
 
 
@@ -79,6 +103,10 @@ inline int DFABitSet::size(void) const {
 
 inline void DFABitSet::reset(void) {
 	vec.clear();
+}
+
+inline void DFABitSet::merge(DFABitSet *set) {
+	vec.applyOr(set->vector());
 }
 
 }	// otawa

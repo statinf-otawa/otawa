@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 
 	Manager manager;
 	PropList props;
-	//LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+	NO_SYSTEM(props) = true;
 	String fun = "main";
 	if(argc > 2)
 		fun = argv[2];
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 		}
 		else
 			cout << fun << " found at 0x" << fmt::address(cfg->address()) << '\n';
-		
+
 		// Removing __eabi call if available
 		for(CFG::BBIterator bb(cfg); bb; bb++)
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
@@ -88,10 +88,15 @@ int main(int argc, char **argv) {
 					delete(*edge);
 					break;
 				}
-		
-		// Build dominance
-		Dominance dom;
-		dom.processCFG(fw, cfg);
+
+		// Build the context
+		PropList conf;
+		//PROC_VERBOSE(conf) = true;
+		RECURSIVE(conf) = true;
+		TASK_ENTRY(fw) = fun.toCString();
+		ContextTreeBuilder builder;
+		builder.process(fw, conf);
+		ContextTree *ct = CONTEXT_TREE(fw);
 		
 		// Display dominance information
 		cout << "\nDOMINANCE\n";
@@ -110,7 +115,6 @@ int main(int argc, char **argv) {
 		}
 		
 		// Display headers
-		Dominance::markLoopHeaders(cfg);
 		cout << "\nLOOP HEADERS\n";
 		for(CFG::BBIterator bb(cfg); bb; bb++)
 			if(bb->get<bool>(Dominance::ID_LoopHeader, false))
@@ -118,8 +122,7 @@ int main(int argc, char **argv) {
 					 << " (" << fmt::address(bb->address()) << ")\n";
 				
 		
-		// Build the context
-		ContextTree *ct = new ContextTree(cfg);
+		// Display context tree
 		cout << "\nCONTEXT TREE\n";
 		displayContextTree(ct);
 		

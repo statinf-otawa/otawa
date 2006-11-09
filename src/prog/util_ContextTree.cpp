@@ -72,7 +72,7 @@ class ContextTreeProblem {
 public:
 	
 	ContextTreeProblem(CFG& cfg): _cfg(cfg) {
-		Dominance::ensure(&cfg);
+		//Dominance::ensure(&cfg);
 		for(Iterator<BasicBlock *> bb(cfg.bbs()); bb; bb++)
 			if(!bb->isEntry() && Dominance::isLoopHeader(bb))
 				hdrs.add(bb);
@@ -375,5 +375,40 @@ void ContextTree::addChild(ContextTree *child) {
  * Get the basic blocks in the current context tree.
  * @return	Basic block collection.
  */
+
+
+/**
+ * A processor used to build the context trees.
+ */
+
+
+/**
+ */
+ContextTreeBuilder::ContextTreeBuilder(void)
+: Processor("otawa::context_tree_builder", Version(1, 0, 0)) {
+	require(DOMINANCE_FEATURE);
+	provide(CONTEXT_TREE_FEATURE);
+}
+
+
+/**
+ */
+void ContextTreeBuilder::processFrameWork(FrameWork *fw) {
+	CONTEXT_TREE(fw) = new ContextTree(ENTRY_CFG(fw));
+}
+
+
+/**
+ * This feature asserts that a context tree of the task is available in
+ * the framework (use @ref CONTEXT_TREE identifier to get it). 
+ */
+Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE("otawa::context_tree");
+
+
+/**
+ * This property identifier provides a context tree hooked to a framework.
+ * A null pointer is retrieved if the context tree is not computed.
+ */
+GenericIdentifier<ContextTree *> CONTEXT_TREE("otawa::context_tree", 0, OTAWA_NS);
 
 } // otawa

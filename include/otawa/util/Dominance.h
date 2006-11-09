@@ -9,6 +9,7 @@
 
 #include <elm/Collection.h>
 #include <otawa/proc/CFGProcessor.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa {
 
@@ -26,10 +27,16 @@ public:
 	static bool isLoopHeader(BasicBlock *bb);
 	static void markLoopHeaders(CFG *cfg,
 		elm::MutableCollection<BasicBlock *> *headers = 0);
+
+	// Constructor
+	Dominance(void);
 	
 	// CFGProcessor overload
 	virtual void processCFG(FrameWork *fw, CFG *cfg);
 };
+
+// Features
+extern Feature<Dominance> DOMINANCE_FEATURE;
 
 } // otawa
 

@@ -10,6 +10,8 @@
 #include <assert.h>
 #include <elm/datastruct/Vector.h>
 #include <otawa/properties.h>
+#include <otawa/proc/Processor.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa {
 
@@ -59,6 +61,20 @@ public:
 		inline ChildrenIterator(ContextTree *tree);
 	};
 };
+
+
+// ContextTreeBuilder class
+class ContextTreeBuilder: public Processor {
+public:
+	ContextTreeBuilder(void);
+	virtual void processFrameWork(FrameWork *fw);
+};
+
+// Features
+extern Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE;
+
+// Identifiers
+extern GenericIdentifier<ContextTree *> CONTEXT_TREE;
 
 
 // ContextTree inlines

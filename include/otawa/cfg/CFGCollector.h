@@ -9,6 +9,7 @@
 
 #include <elm/genstruct/FragTable.h>
 #include <otawa/proc/Processor.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa {
 
@@ -36,10 +37,13 @@ class CFGCollector: public Processor {
 protected:
 	void processFrameWork(FrameWork *fw);
 public:
-	CFGCollector(const PropList& props = PropList::EMPTY);
+	CFGCollector(void);
 };
 
-// Framework Property
+// Features
+extern Feature<CFGCollector> COLLECTED_CFG_FEATURE;
+
+// Properties
 extern GenericIdentifier<CFGCollection *> INVOLVED_CFGS;
 
 

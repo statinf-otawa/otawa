@@ -129,6 +129,7 @@ void Dominance::processCFG(FrameWork *fw, CFG *cfg) {
 	  b = new BitSet(*b);
 	  blocks->addDeletable<BitSet *>(ID_RevDom,b);
 	}
+	markLoopHeaders(cfg);
 }
 
 
@@ -177,5 +178,19 @@ void Dominance::ensure(CFG *cfg) {
 		dom.processCFG(0, cfg);
 	}
 }
+
+
+/**
+ */
+Dominance::Dominance(void): CFGProcessor("otawa::dominance", Version(1, 1, 0)) {
+	provide(DOMINANCE_FEATURE);
+}
+
+
+/**
+ * This feature ensures that information about domination between nodes
+ * of a CFG is vailable.
+ */
+Feature<Dominance> DOMINANCE_FEATURE("dominance");
 
 } // otawa
