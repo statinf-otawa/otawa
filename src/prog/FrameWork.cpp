@@ -152,4 +152,34 @@ xom::Element *FrameWork::config(void) {
 	return conf;
 }
 
+
+/**
+ * Record in the framework that a feature is provided.
+ * @param feature	Provided feature.
+ */
+void FrameWork::provide(const AbstractFeature& feature) {
+	if(!isProvided(feature))
+		features.add(&feature);
+}
+
+
+/**
+ * Test if a feature is provided.
+ * @param feature	Feature to test.
+ * @return			True if it is provided, false else.
+ */
+bool FrameWork::isProvided(const AbstractFeature& feature) {
+	return features.contains(&feature);
+}
+
+
+/**
+ * Remove a feature. It is usually called by processor whose actions remove
+ * some properties from the framework.
+ * @param feature	Feature to remove.
+ */
+void FrameWork::remove(const AbstractFeature& feature) {
+	features.remove(&feature);
+}
+
 } // otawa

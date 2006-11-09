@@ -18,7 +18,11 @@ namespace elm { namespace xom {
 
 namespace otawa {
 
+using namespace elm;
+using namespace elm::genstruct;
+
 // Classes
+class AbstractFeature;
 class AST;
 class ASTInfo;
 class CFG;
@@ -41,6 +45,8 @@ namespace sim {
 // FrameWork class
 class FrameWork: public Process {
 	Process *proc;
+	Vector<const AbstractFeature *> features;
+	
 protected:
 	virtual Property *getDeep(const Identifier *id) { return proc->getProp(id); };
 public:
@@ -71,6 +77,11 @@ public:
 	// Configuration services
 	elm::xom::Element *config(void);
 	void loadConfig(const elm::system::Path& path);
+	
+	// Feature management
+	void provide(const AbstractFeature& feature);
+	bool isProvided(const AbstractFeature& feature);
+	void remove(const AbstractFeature& feature);
 };
 
 };	// otawa

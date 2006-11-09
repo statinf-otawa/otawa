@@ -6,6 +6,7 @@
  */
 
 #include <otawa/proc/Processor.h>
+#include <otawa/proc/Feature.h>
 
 using namespace elm;
 using namespace elm::io;
@@ -30,10 +31,20 @@ namespace otawa {
  * @param name		Processor name.
  * @param version	Processor version.
  * @param props		Configuration properties.
+ * @deprecated		Configuration must be passed at the process() call.
  */
 Processor::Processor(elm::String name, elm::Version version,
 const PropList& props): _name(name), _version(version), flags(0) {
 	init(props);
+}
+
+/**
+ * Build a new processor with name and version.
+ * @param name		Processor name.
+ * @param version	Processor version.
+ */
+Processor::Processor(String name, Version version)
+: _name(name), _version(version), flags(0) {
 }
 
 
@@ -92,19 +103,29 @@ void Processor::configure(const PropList& props) {
 /**
  * Execute the code processor on the given framework.
  * @param fw	Framework to work on.
+ * @param props	Configuration properties.
  */
-void Processor::process(FrameWork *fw) {
+void Processor::process(FrameWork *fw, const PropList& props) {
 	
-	// Look for an XML configuration
-	
-	
-	// Process the framework
+	// Check required feature
+	for(int i = 0; i < required.length(); i++)
+		if(!fw->isProvided(*required[i]))
+			required[i]->process(fw, props);
+
+	// Perform configuration
+	configure(props);
+
+	// Pre-processing actions
 	if(isVerbose())
 		out << "Starting " << name() << " (" << version() << ')' << io::endl;
 	system::StopWatch swatch;
 	if(isTimed())
 		swatch.start();
+	
+	// Launch the work
 	processFrameWork(fw);
+	
+	// Post-processing actions
 	if(isVerbose())
 		out << "Ending " << name();
 	if(isTimed()) {
@@ -115,6 +136,10 @@ void Processor::process(FrameWork *fw) {
 	}
 	if(isVerbose())
 		out << io::endl;
+	
+	// Add provided features
+	for(int i = 0; i < provided.length(); i++)
+		fw->provide(*provided[i]);
 }
 
 
@@ -181,5 +206,25 @@ GenericIdentifier<bool> PROC_VERBOSE("otawa.proc.verbose", false);
  * This property selects the task entry point currently processed.
  */
 GenericIdentifier<elm::CString> PROC_ENTRY("otawa.proc.entry", "main");
+
+
+/**
+ * Usually called from a processor constructor, this method records a 
+ * required feature for the work of the current processor.
+ * @param feature	Required feature.
+ */
+void Processor::require(const AbstractFeature& feature) {
+	required.add(&feature);
+}
+
+
+/**
+ * Usually called from a processor constructor, this method records a feature
+ * provided by the work of the current processor.
+ * @param feature	Provided feature.
+ */
+void Processor::provide(const AbstractFeature& feature) {
+	provided.add(&feature);
+}
 
 } // otawa

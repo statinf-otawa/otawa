@@ -15,11 +15,18 @@
 
 namespace otawa {
 
+using namespace elm;
+using namespace elm::genstruct;
+class AbstractFeature;
+
 // Processor class
 class Processor {
 	elm::String _name;
 	elm::Version _version;
 	void init(const PropList& props);
+	Vector<const AbstractFeature *> required;
+	Vector<const AbstractFeature *> provided;
+
 protected:
 	static const unsigned long TIMED = 0x01;
 	static const unsigned long VERBOSE = 0x02;
@@ -30,16 +37,18 @@ protected:
 	inline bool isTimed(void) const;
 	inline bool recordsStats(void) const;
 	virtual void processFrameWork(FrameWork *fw) = 0;
+	void require(const AbstractFeature& feature);
+	void provide(const AbstractFeature& feature);
 
 public:	
 	Processor(const PropList& props = PropList::EMPTY);
-	Processor(elm::String name, elm::Version version = elm::Version::ZERO,
-		const PropList& props = PropList::EMPTY);
+	Processor(elm::String name, elm::Version version, const PropList& props);
+	Processor(String name, Version version);
 	inline elm::String name(void) const;
 	inline elm::Version version(void) const;
 
 	virtual void configure(const PropList& props);
-	void process(FrameWork *fw);
+	void process(FrameWork *fw, const PropList& props = PropList::EMPTY);
 };
 
 // Configuration Properties
