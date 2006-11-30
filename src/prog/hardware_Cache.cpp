@@ -8,6 +8,8 @@
 #include <stdarg.h>
 #include <otawa/hard/Cache.h>
 
+using namespace elm;
+
 namespace otawa { namespace hard {
 
 /**
@@ -186,4 +188,23 @@ namespace otawa { namespace hard {
  * @reurn		Block part of the address.
  */
 
+
 } } // otawa::hard
+
+// Serialization support
+SERIALIZE(otawa::hard::Cache);
+
+ENUM_BEGIN(otawa::hard::Cache::replace_policy_t)
+	VALUE(otawa::hard::Cache::NONE),
+	VALUE(otawa::hard::Cache::OTHER),
+	VALUE(otawa::hard::Cache::LRU),
+	VALUE(otawa::hard::Cache::RANDOM),
+	VALUE(otawa::hard::Cache::FIFO),
+	VALUE(otawa::hard::Cache::PLRU)
+ENUM_END
+
+
+ENUM_BEGIN(otawa::hard::Cache::write_policy_t)
+	VALUE(otawa::hard::Cache::WRITE_THROUGH),
+	VALUE(otawa::hard::Cache::WRITE_BACK)
+ENUM_END

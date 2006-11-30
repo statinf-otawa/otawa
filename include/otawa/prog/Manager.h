@@ -54,6 +54,7 @@ public:
 	static const CString OTAWA_NS;
 	static const CString OTAWA_NAME;
 	static const CString PROCESSOR_NAME;
+	static const CString CACHE_CONFIG_NAME;
 
 	Manager(void);
 	~Manager(void);
@@ -78,11 +79,13 @@ extern GenericIdentifier<char **> ARGV;
 extern GenericIdentifier<char **> ENVP;
 extern GenericIdentifier<sim::Simulator *> SIMULATOR;
 extern GenericIdentifier<elm::CString> SIMULATOR_NAME;
-extern GenericIdentifier<hard::CacheConfiguration *> CACHE_CONFIG;
 extern GenericIdentifier<int> PIPELINE_DEPTH;
 extern GenericIdentifier<bool> NO_SYSTEM;
 extern GenericIdentifier<elm::system::Path> CONFIG_PATH;
 extern GenericIdentifier<elm::xom::Element *> CONFIG_ELEMENT;
+extern GenericIdentifier<elm::system::Path> CACHE_CONFIG_PATH;
+extern GenericIdentifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT;
+extern GenericIdentifier<hard::CacheConfiguration *> CACHE_CONFIG;
 extern GenericIdentifier<elm::system::Path> PROCESSOR_PATH;
 extern GenericIdentifier<elm::xom::Element *> PROCESSOR_ELEMENT;
 extern GenericIdentifier<hard::Processor *> PROCESSOR;
