@@ -7,6 +7,7 @@
 
 #include <assert.h>
 #include <otawa/hard/CacheConfiguration.h>
+#include <elm/serial2/XOMUnserializer.h>
 
 namespace otawa { namespace hard {
 	
@@ -74,4 +75,44 @@ const CacheConfiguration CacheConfiguration::NO_CACHE;
  * @return True if the cache follows the Harvard architecture, false else.
  */
 
+
+/**
+ * Load a cache configuration from the given element.
+ * @param element	Element to load from.
+ * @return			Built cache configuration.
+ */
+CacheConfiguration *CacheConfiguration::load(elm::xom::Element *element) {
+	elm::serial2::XOMUnserializer unserializer(element);
+	CacheConfiguration *conf = new CacheConfiguration();
+	try {
+		unserializer >> *conf;
+		return conf;
+	}
+	catch(elm::Exception& exn) {
+		delete conf;
+		throw exn;
+	}
+}
+
+
+/**
+ * Load a cache configuration from an XML file.
+ * @param path	Path to the file.
+ * @return		Built cache configuration.
+ */
+CacheConfiguration *CacheConfiguration::load(const elm::system::Path& path) {
+	elm::serial2::XOMUnserializer unserializer(&path);
+	CacheConfiguration *conf = new CacheConfiguration();
+	try {
+		unserializer >> *conf;
+		return conf;
+	}
+	catch(elm::Exception& exn) {
+		delete conf;
+		throw exn;
+	}
+}
+
 } } // otawa::hard
+
+SERIALIZE(otawa::hard::CacheConfiguration)
