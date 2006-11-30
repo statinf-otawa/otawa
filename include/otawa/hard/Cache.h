@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <elm/io.h>
+#include <elm/serial2/macros.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/base.h>
 
@@ -19,7 +20,7 @@ class Cache {
 public:
 	typedef enum replace_policy_t {
 		NONE = 0,
-		OTTHER = 1,
+		OTHER = 1,
 		LRU = 2,
 		RANDOM = 3,
 		FIFO = 4,
@@ -43,10 +44,21 @@ public:
 	} info_t;
 
 private:
+	SERIALIZABLE(Cache,
+		field("access_time", _info.access_time, 1) &
+		field("miss_penalty", _info.miss_penalty, 10) &
+		field("block_bits", _info.block_bits, 4) &
+		field("line_bits", _info.line_bits, 12) &
+		field("set_bits", _info.set_bits, 0) &
+		field("allocate", _info.allocate, false) &
+		field("next", _next, (const Cache *)0) &
+		field("replace", _info.replace, LRU) &
+		field("write", _info.write, WRITE_THROUGH));
 	info_t _info;
 	const Cache *_next;
 
 public:
+	inline Cache(void);
 	inline Cache(const info_t& info, const Cache *next = 0);
 	inline Cache(const Cache& cache, const Cache *next = 0);
 	
@@ -80,6 +92,9 @@ public:
 
 
 // Inlines
+inline Cache::Cache(void) {
+}
+
 inline Cache::Cache(const info_t& info, const Cache *next)
 : _info(info), _next(next) {
 }
@@ -173,5 +188,8 @@ inline int Cache::missPenalty(void) const {
 }
 
 } } // otawa::hard
+
+ENUM(otawa::hard::Cache::replace_policy_t);
+ENUM(otawa::hard::Cache::write_policity_t);
 
 #endif // OTAWA_HARD_CACHE_H
