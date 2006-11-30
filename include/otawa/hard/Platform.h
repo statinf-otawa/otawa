@@ -89,6 +89,8 @@ public:
 	inline const Identification& identification(void) const;
 	inline const CacheConfiguration& cache(void) const;
 	inline const int pipelineDepth(void) const;
+	void loadCacheConfig(const elm::system::Path& path);
+	void loadCacheConfig(elm::xom::Element *element);
 
 	// Compatibility test
 	virtual bool accept(const Identification& id);
