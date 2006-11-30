@@ -8,11 +8,17 @@
 #define OTAWA_HARD_CONFIGURATION_CACHE_H
 
 #include <otawa/hard/Cache.h>
+#include <elm/system/Path.h>
+
+namespace elm { namespace xom {
+	class Element;
+} } // elm::xom
 
 namespace otawa { namespace hard {
 
 // CacheConfiguration class
 class CacheConfiguration {
+	SERIALIZABLE(CacheConfiguration, FIELD(icache) & FIELD(dcache));
 	const Cache *icache, *dcache;
 public:
 	static const CacheConfiguration NO_CACHE;
@@ -24,6 +30,8 @@ public:
 	inline bool hasDataCache(void) const;
 	inline bool isUnified(void) const;
 	inline bool isHarvard(void) const;
+	static CacheConfiguration *load(elm::xom::Element *element);
+	static CacheConfiguration *load(const elm::system::Path& path);
 };
 
 // Inlines
