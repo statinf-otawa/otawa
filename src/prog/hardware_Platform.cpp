@@ -38,6 +38,25 @@ void Platform::configure(const PropList& props) {
 		_cache = cache;
 		flags &= ~HAS_CACHE;
 	}
+	else {
+		xom::Element *element = CACHE_CONFIG_ELEMENT(props);
+		if(element) 
+			loadCacheConfig(element);
+		else {
+			elm::system::Path path = CACHE_CONFIG_PATH(props);
+			if(path)
+				loadCacheConfig(path);
+			else {
+				element = CONFIG_ELEMENT(props);
+				if(element) {
+					xom::Element *cache_elem = element->getFirstChildElement(
+						Manager::CACHE_CONFIG_NAME, Manager::OTAWA_NS);
+					if(cache_elem)
+						loadCacheConfig(cache_elem);
+				}
+			}
+		}
+	}
 	
 	// Configure pipeline depth
 	int new_depth = PIPELINE_DEPTH(props);
@@ -412,5 +431,43 @@ void Platform::loadProcessor(elm::xom::Element *element) {
  * Get the current processor (possibly derivated from the current configuration).
  * @return	Current processor.
  */
+
+
+/**
+ * Load a cache configuration from the given path.
+ * @param path			Path to the cache configuration.
+ * @throws LoadException	Throws if there is an error.
+ */
+void Platform::loadCacheConfig(const elm::system::Path& path) {
+	try {
+		CacheConfiguration *new_cache = CacheConfiguration::load(path);
+		if(flags & HAS_CACHE)
+			delete _cache;
+		flags |= HAS_CACHE;
+		_cache = new_cache;
+	}
+	catch(elm::Exception& e) {
+		throw LoadException(&e.message());
+	}
+}
+
+
+/**
+ * Load a cache configuration from an XML element.
+ * @param element	Element to read from.
+ * @throws LoadException	Thrown if there is an error.
+ */
+void Platform::loadCacheConfig(elm::xom::Element *element) {
+	try {
+		CacheConfiguration *new_cache = CacheConfiguration::load(element);
+		if(flags & HAS_CACHE)
+			delete _cache;
+		flags |= HAS_CACHE;
+		_cache = new_cache;
+	}
+	catch(elm::Exception& e) {
+		throw LoadException(&e.message());
+	}
+}
 
 } } // otawa::hard

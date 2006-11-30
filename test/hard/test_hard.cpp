@@ -29,6 +29,13 @@ static void display_cache(const Cache *cache) {
 	cout << "\tsize = " << cache->cacheSize() << '\n';
 	cout << "\tblock size = " << cache->blockSize() << '\n';
 	cout << "\tassociativity = " << cache->wayCount() << '\n';
+	cout << "\treplace policy = "
+		 << elm::serial2::Enum<Cache::replace_policy_t>::type.nameOf(cache->replacementPolicy())
+		 << io::endl;
+	cout << "\twrite policy = "
+		 << elm::serial2::Enum<Cache::write_policy_t>::type.nameOf(cache->writePolicy())
+		 << io::endl;
+	cout << "\tmiss penalty = " << cache->missPenalty() << io::endl;
 }
 
 static void display_cache_level(int level, const Cache *icache,
@@ -59,23 +66,10 @@ const Cache *dcache) {
 
 int main(int argc, char **argv) {
 	
-	Cache::info_t info = {
-		1,
-		10,
-		4,
-		6,
-		2,
-		Cache::LRU,
-		Cache::WRITE_THROUGH,
-		false
-	};
-	Cache data_cache(info);
-	CacheConfiguration cache_conf(0, &data_cache);
 	Manager manager;
 	PropList props;
-//	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
-	CACHE_CONFIG(props) = &cache_conf;
 	PROCESSOR_PATH(props) = "../../data/procs/op2.xml";
+	CACHE_CONFIG_PATH(props) = "../../data/caches/inst-64x16x1.xml";
 	
 	try {
 		

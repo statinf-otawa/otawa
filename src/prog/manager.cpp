@@ -40,6 +40,12 @@ const CString Manager::PROCESSOR_NAME = "processor";
 
 
 /**
+ * Name of the XML element containing the cache configuration.
+ */
+const CString Manager::CACHE_CONFIG_NAME = "cache-config";
+
+
+/**
  * @class LoadException
  * Exception thrown when a loader encounters an error during load.
  */
@@ -425,5 +431,17 @@ GenericIdentifier<elm::xom::Element *>
  * Gives the processor to use in the current computation.
  */
 GenericIdentifier<hard::Processor *> PROCESSOR("processor", 0, OTAWA_NS);
+
+
+/**
+ * Gives the path of file containing the cache configuration.
+ */
+GenericIdentifier<elm::system::Path> CACHE_CONFIG_PATH("cache_config_path", "", OTAWA_NS);
+
+
+/**
+ * Gives an XML element containing the cache configuration.
+ */
+GenericIdentifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("cache_config_element", 0, OTAWA_NS);
 
 }	// otawa
