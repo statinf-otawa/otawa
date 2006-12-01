@@ -5,54 +5,49 @@
  *	otawa/hard_Processor.cpp -- processor description interface.
  */
 
-#include <elm/serial/implement.h>
 #include <otawa/hard/Processor.h>
-#include <elm/serial/Unserializer.h>
 
-SERIALIZE_ENUM(otawa::hard::Stage::type_t,
-	ENUM_VALUE(otawa::hard::Stage::FETCH),
-	ENUM_VALUE(otawa::hard::Stage::LAZY),
-	ENUM_VALUE(otawa::hard::Stage::EXEC),
-	ENUM_VALUE(otawa::hard::Stage::COMMIT));
+ENUM_BEGIN(otawa::hard::Stage::type_t)
+	VALUE(otawa::hard::Stage::FETCH),
+	VALUE(otawa::hard::Stage::LAZY),
+	VALUE(otawa::hard::Stage::EXEC),
+	VALUE(otawa::hard::Stage::COMMIT)
+ENUM_END
 
-//SERIALIZE_ENUM(otawa::Inst::kind_t,
+SERIALIZE(otawa::hard::FunctionalUnit);
+SERIALIZE(otawa::hard::Dispatch);
+SERIALIZE(otawa::hard::Stage);
+SERIALIZE(otawa::hard::Queue);
+SERIALIZE(otawa::hard::Processor);
 
-SERIALIZE(otawa::hard::FunctionalUnit,
-	FIELD(name);
-	FIELD(width);
-	FIELD(latency);
-	FIELD(pipelined));
+namespace elm { namespace serial2 {
 
-namespace elm { namespace serial {
-
-template <> void Unserializer::read<otawa::hard::Dispatch::type_t>(
-	otawa::hard::Dispatch::type_t& type
-) {
+void __unserialize(Unserializer& s, otawa::hard::Dispatch::type_t& v) {
 	
 	// List  of identifiers
-	static elm::Pair<elm::CString, int> values[] = {
-		ENUM_VALUE(otawa::Inst::IS_COND),
-		ENUM_VALUE(otawa::Inst::IS_CONTROL),
-		ENUM_VALUE(otawa::Inst::IS_CALL),
-		ENUM_VALUE(otawa::Inst::IS_RETURN),
-		ENUM_VALUE(otawa::Inst::IS_MEM),
-		ENUM_VALUE(otawa::Inst::IS_LOAD),
-		ENUM_VALUE(otawa::Inst::IS_STORE),
-		ENUM_VALUE(otawa::Inst::IS_INT),
-		ENUM_VALUE(otawa::Inst::IS_FLOAT),
-		ENUM_VALUE(otawa::Inst::IS_ALU),
-		ENUM_VALUE(otawa::Inst::IS_MUL),
-		ENUM_VALUE(otawa::Inst::IS_DIV),
-		ENUM_VALUE(otawa::Inst::IS_SHIFT),
-		ENUM_VALUE(otawa::Inst::IS_TRAP),
-		ENUM_VALUE(otawa::Inst::IS_INTERN),
-		elm::Pair<elm::CString, int>("", 0)
+	static elm::value_t values[] = {
+		VALUE(otawa::Inst::IS_COND),
+		VALUE(otawa::Inst::IS_CONTROL),
+		VALUE(otawa::Inst::IS_CALL),
+		VALUE(otawa::Inst::IS_RETURN),
+		VALUE(otawa::Inst::IS_MEM),
+		VALUE(otawa::Inst::IS_LOAD),
+		VALUE(otawa::Inst::IS_STORE),
+		VALUE(otawa::Inst::IS_INT),
+		VALUE(otawa::Inst::IS_FLOAT),
+		VALUE(otawa::Inst::IS_ALU),
+		VALUE(otawa::Inst::IS_MUL),
+		VALUE(otawa::Inst::IS_DIV),
+		VALUE(otawa::Inst::IS_SHIFT),
+		VALUE(otawa::Inst::IS_TRAP),
+		VALUE(otawa::Inst::IS_INTERN),
+		value("", 0)
 	};
 	
 	// Build the type
-	type = 0;
+	v = 0;
 	String text;
-	read(text);
+	__unserialize(s, text);
 	while(text) {
 		
 		// Get the component
@@ -69,12 +64,12 @@ template <> void Unserializer::read<otawa::hard::Dispatch::type_t>(
 		
 		// Find the constant
 		bool done = false;
-		for(int i = 0; values[i].fst; i++) {
-			CString cst = values[i].fst;
+		for(int i = 0; values[i].name(); i++) {
+			CString cst = values[i].name();
 			if(item == cst ||
 			(cst.endsWith(item) && cst[cst.length() - item.length() - 1] == ':')) {
 				done = true; 
-				type |= values[i].snd;
+				v |= values[i].value();
 				break;
 			}
 		}
@@ -83,31 +78,8 @@ template <> void Unserializer::read<otawa::hard::Dispatch::type_t>(
 	}
 }
 
-} } // elm::serial
+void __serialize(Serializer& s, otawa::hard::Dispatch::type_t v) {
+	assert(0);
+}
 
-SERIALIZE(otawa::hard::Dispatch,
-	FIELD(fu);
-	FIELD(type));
-
-SERIALIZE(otawa::hard::Stage,
-	FIELD(name);
-	FIELD(type);
-	FIELD(width);
-	FIELD(latency);
-	FIELD(fus);
-	FIELD(dispatch);
-	FIELD(ordered));
-
-SERIALIZE(otawa::hard::Queue,
-	FIELD(name);
-	FIELD(size);
-	FIELD(input);
-	FIELD(output);
-	FIELD(intern));
-	
-SERIALIZE(otawa::hard::Processor,
-	FIELD(arch);
-	FIELD(model);
-	FIELD(builder);
-	FIELD(stages);
-	FIELD(queues));
+} } // elm::serial2

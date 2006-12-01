@@ -9,7 +9,7 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/prog/FrameWork.h>
 #include <otawa/hard/Processor.h>
-#include <elm/serial/XOMUnserializer.h>
+#include <elm/serial2/XOMUnserializer.h>
 #include <otawa/prog/Manager.h>
 #include <elm/xom.h>
 
@@ -392,11 +392,11 @@ void Platform::loadProcessor(const elm::system::Path& path) {
 	if(flags & HAS_PROCESSOR)
 		delete _processor;
 	try {
-		elm::serial::XOMUnserializer unser(&path);
+		elm::serial2::XOMUnserializer unser(&path);
 		_processor = new Processor();
 		flags |= HAS_PROCESSOR;
 		unser >> *_processor;
-		unser.close();
+		unser.flush();
 	}
 	catch(elm::io::IOException& e) {
 		throw LoadException(&e.message());
@@ -414,11 +414,11 @@ void Platform::loadProcessor(elm::xom::Element *element) {
 	if(flags & HAS_PROCESSOR)
 		delete _processor;
 	try {
-		elm::serial::XOMUnserializer unser(element);
+		elm::serial2::XOMUnserializer unser(element);
 		_processor = new Processor();
 		flags |= HAS_PROCESSOR;
 		unser >> *_processor;
-		unser.close();
+		unser.flush();
 	}
 	catch(elm::Exception& e) {
 		throw LoadException(&e.message());

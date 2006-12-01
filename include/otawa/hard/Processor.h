@@ -8,16 +8,20 @@
 #define OTAWA_HARD_PROCESSOR_H
 
 #include <elm/string.h>
-#include <elm/serial/interface.h>
-#include <elm/serial/SerialTable.h>
+#include <elm/serial2/macros.h>
+#include <elm/serial2/collections.h>
+#include <elm/genstruct/Table.h>
 #include <otawa/prog/Instruction.h>
 #include <elm/util/strong_type.h>
 
 namespace otawa { namespace hard {
 
+using namespace elm::genstruct;
+
 // FunctionalUnit class
 class FunctionalUnit {
-	SERIALIZABLE
+	SERIALIZABLE(otawa::hard::FunctionalUnit,
+		FIELD(name) & FIELD(latency) & FIELD(width) & FIELD(pipelined));
 	elm::String name;
 	int latency;
 	int width;
@@ -32,9 +36,9 @@ public:
 
 // Dispatch class
 class Dispatch {
-	SERIALIZABLE
+	SERIALIZABLE(otawa::hard::Dispatch, FIELD(type) & FIELD(fu));
 public:
-	STRONG_TYPE(type_t, Inst::kind_t);
+	STRONG_TYPE(type_t, Inst::kind_t); 
 private:
 	type_t type;
 	FunctionalUnit *fu;
@@ -46,7 +50,8 @@ public:
 
 // Stage class
 class Stage {
-	SERIALIZABLE
+	SERIALIZABLE(otawa::hard::Stage, FIELD(type) & FIELD(name) & FIELD(width)
+		& FIELD(latency) & FIELD(fus) & FIELD(dispatch) & FIELD(ordered));
 public:
 	typedef enum type_t {
 		NONE = 0,
@@ -60,8 +65,8 @@ private:
 	elm::String name;
 	int width;
 	int latency;
-	elm::serial::SerialTable<FunctionalUnit *> fus;
-	elm::serial::SerialTable<Dispatch *> dispatch;
+	AllocatedTable<FunctionalUnit *> fus;
+	AllocatedTable<Dispatch *> dispatch;
 	bool ordered;
 public:
 	inline Stage(type_t _type = NONE): type(_type), width(1), latency(1), ordered(false) { };
@@ -69,45 +74,46 @@ public:
 	inline elm::String getName(void) const { return name; };
 	inline int getWidth(void) const { return width; };
 	inline int getLatency(void) const { return latency; };
-	inline const elm::serial::SerialTable<FunctionalUnit *>&
-		getFUs(void) const { return fus; };
-	inline const elm::serial::SerialTable<Dispatch *>&
-		getDispatch(void) const { return dispatch; };
-	inline bool isOrdered(void) const { return ordered; };
+	inline const Table<FunctionalUnit *>& getFUs(void) const { return fus; }
+	inline const Table<Dispatch *>& getDispatch(void) const { return dispatch; }
+	inline bool isOrdered(void) const { return ordered; }
 	template <class T> inline T select(Inst *inst, const T table[]) const; 
 	template <class T> inline T select(Inst::kind_t kind, const T table[]) const; 
 };
 
 // Queue class
 class Queue {
-	SERIALIZABLE
+	SERIALIZABLE(otawa::hard::Queue, FIELD(name) & FIELD(size) & FIELD(input)
+		& FIELD(output) & FIELD(intern));
 	elm::String name;
 	int size;
 	Stage *input, *output;
-	elm::serial::SerialTable<Stage *> intern;
+	AllocatedTable<Stage *> intern;
 public:
-	inline Queue(void): size(0), input(0), output(0) { };
-	inline elm::String getName(void) const { return name; };
-	inline int getSize(void) const { return size; };
-	inline Stage *getInput(void) const { return input; };
-	inline Stage *getOutput(void) const { return output; };	
-	inline const elm::serial::SerialTable<Stage *>& getIntern(void) const { return intern; };
+	inline Queue(void): size(0), input(0), output(0) { }
+	inline elm::String getName(void) const { return name; }
+	inline int getSize(void) const { return size; }
+	inline Stage *getInput(void) const { return input; }
+	inline Stage *getOutput(void) const { return output; }
+	inline const AllocatedTable<Stage *>& getIntern(void) const
+		{ return intern; }
 };
 
 // Processor class
 class Processor {
-	SERIALIZABLE
+	SERIALIZABLE(otawa::hard::Processor, FIELD(arch) & FIELD(model)
+		& FIELD(builder) & FIELD(stages) & FIELD(queues));
 	elm::String arch;
 	elm::String model;
 	elm::String builder;
-	elm::serial::SerialTable<Stage *> stages;
-	elm::serial::SerialTable<Queue *> queues;
+	AllocatedTable<Stage *> stages;
+	AllocatedTable<Queue *> queues;
 public:
 	inline elm::String getArch(void) const { return arch; };
 	inline elm::String getModel(void) const { return model; };
 	inline elm::String getBuilder(void) const { return builder; };
-	inline const elm::genstruct::Table<Stage *>& getStages(void) const { return stages; };
-	inline const elm::genstruct::Table<Queue *>& getQueues(void) const { return queues; };
+	inline const Table<Stage *>& getStages(void) const { return stages; };
+	inline const Table<Queue *>& getQueues(void) const { return queues; };
 };
 
 
@@ -128,6 +134,10 @@ inline T Stage::select(Inst::kind_t kind, const T table[]) const {
 
 } } // otawa::hard
 
-SERIALIZABLE_ENUM(otawa::hard::Stage::type_t);
+ENUM(otawa::hard::Stage::type_t);
+namespace elm { namespace serial2 {
+	void __unserialize(Unserializer& s, otawa::hard::Dispatch::type_t& v);
+	void __serialize(Serializer& s, otawa::hard::Dispatch::type_t v);
+} } 
 
 #endif // OTAWA_HARD_PROCESSOR_H
