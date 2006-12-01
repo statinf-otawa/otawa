@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 	
 	Manager manager;
 	PropList props;
-	PROCESSOR_PATH(props) = "../../data/procs/op2.xml";
+	PROCESSOR_PATH(props) = "../../data/procs/op1.xml";
 	CACHE_CONFIG_PATH(props) = "../../data/caches/inst-64x16x1.xml";
 	
 	try {
@@ -153,7 +153,8 @@ int main(int argc, char **argv) {
 					 << stages[i]->getName() << " "
 					 << stages[i]->getType() << " "
 				     << stages[i]->getWidth() << " "
-				     << stages[i]->getLatency() << io::endl;
+				     << stages[i]->getLatency() << " "
+				     << io::pointer(stages[i]) << io::endl;
 				const elm::genstruct::Table<hard::FunctionalUnit *>& fus = stages[i]->getFUs();
 				if(fus) {
 					cout << "\tfus=\n";
@@ -177,13 +178,16 @@ int main(int argc, char **argv) {
 				cout << '\t'
 					 << queues[i]->getName() << " "
 				     << queues[i]->getSize() << " "
-				     << queues[i]->getInput()->getName() << " "
-				     << queues[i]->getOutput()->getName() << io::endl;
+				     << queues[i]->getInput()->getName() << " ("
+				     << io::pointer(queues[i]->getInput()) << ") "
+				     << queues[i]->getOutput()->getName() << " ("
+				     << io::pointer(queues[i]->getOutput()) << ")" << io::endl;
 				const elm::genstruct::Table<hard::Stage *>& intern = queues[i]->getIntern();
 				if(intern) {
 					cout << "\tintern=\n";
 					for(int i = 0; i < intern.count(); i++)
-						cout << "\t\t" << intern[i]->getName() << io::endl;
+						cout << "\t\t" << intern[i]->getName()
+							 << " (" << io::pointer(intern[i]) << ')' << io::endl;
 				}
 			}
 		}
