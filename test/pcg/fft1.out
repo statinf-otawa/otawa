@@ -1,0 +1,44 @@
+
+PCG
+
+main 000502f4
+	cos 000502c4
+	fft1 000503d8
+
+cos 000502c4
+	sin 00050154
+
+sin 00050154
+	fabs 00050124
+
+fabs 00050124
+
+fft1 000503d8
+	log 00050144
+	fabs 00050124
+	cos 000502c4
+	sin 00050154
+
+log 00050144
+
+liste des fonctions appelantes de chaque fonction
+
+main 000502f4
+
+cos 000502c4
+	main 000502f4
+	fft1 000503d8
+
+sin 00050154
+	cos 000502c4
+	fft1 000503d8
+
+fabs 00050124
+	sin 00050154
+	fft1 000503d8
+
+fft1 000503d8
+	main 000502f4
+
+log 00050144
+	fft1 000503d8

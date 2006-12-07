@@ -1,0 +1,40 @@
+
+PCG
+
+main 00050314
+	init_w 000504a4
+	fft_c 0005036c
+
+init_w 000504a4
+	cos 000502e0
+	sin 00050144
+
+cos 000502e0
+	sin 00050144
+
+sin 00050144
+	fabs 00050124
+
+fabs 00050124
+
+fft_c 0005036c
+
+liste des fonctions appelantes de chaque fonction
+
+main 00050314
+
+init_w 000504a4
+	main 00050314
+
+cos 000502e0
+	init_w 000504a4
+
+sin 00050144
+	cos 000502e0
+	init_w 000504a4
+
+fabs 00050124
+	sin 00050144
+
+fft_c 0005036c
+	main 00050314

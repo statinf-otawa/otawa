@@ -78,19 +78,33 @@ int main(int argc, char **argv)
 				}
 		
 		// Now, use the CFG to build the PCG
+		PCGBuilder PCGBD;
+		PCGBD.process(fw, props);
 		
-		PCGBuilder PCGBD(props);
-		PCG* pcg=PCGBD.buildPCG(cfg);
-		
+		// Display the PCH
+		PCG *pcg = PCG::ID(fw);
+		assert(pcg);
+		cout << "\nPCG\n";
+		for(PCG::PCGIterator pcgb(pcg);pcgb;pcgb++) {
+		cout << "\n" << pcgb->getName() << " " << pcgb->getAddress() << "\n";
+			for(PCGBlock::PCGBlockOutIterator _pcgb(pcgb);_pcgb;_pcgb++)
+				cout << "\t" << _pcgb->getName() << " "
+					 << _pcgb->getAddress() << "\n";
+		}
+		cout << "\n";
+		cout << "liste des fonctions appelantes de chaque fonction\n";
+		for(PCG::PCGIterator pcgb(pcg); pcgb; pcgb++) {
+			cout << "\n" << pcgb->getName() << " "
+				 << pcgb->getAddress() << "\n";
+			for(PCGBlock::PCGBlockInIterator _pcgb(pcgb); _pcgb; _pcgb++)
+				cout << "\t" << _pcgb->getName() << " "
+					 << _pcgb->getAddress() << "\n";
+		}
 		
 	}
-	catch(LoadException e) {
+	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
-		exit(1);
-	}
-	catch(ProcessorException e) {
-		cerr << "ERROR: " << e.message() << '\n';
-		exit(1);
+		return 1;
 	}
 	return 0;
 }
