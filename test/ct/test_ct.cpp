@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
 		PropList conf;
 		//PROC_VERBOSE(conf) = true;
 		RECURSIVE(conf) = true;
-		TASK_ENTRY(fw) = fun.toCString();
+		TASK_ENTRY(conf) = fun.toCString();
 		ContextTreeBuilder builder;
 		builder.process(fw, conf);
 		ContextTree *ct = CONTEXT_TREE(fw);
@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
 		// Display headers
 		cout << "\nLOOP HEADERS\n";
 		for(CFG::BBIterator bb(cfg); bb; bb++)
-			if(bb->get<bool>(Dominance::ID_LoopHeader, false))
+			if(LOOP_HEADER(bb))
 				cout << "- " << bb->number()
 					 << " (" << fmt::address(bb->address()) << ")\n";
 				
