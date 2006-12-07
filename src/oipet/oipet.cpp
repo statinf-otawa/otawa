@@ -94,7 +94,8 @@ EnumOption<int>::value_t icache_values[] = {
 	{ "method", icache_def },
 	{ "none", icache_none },
 	{ "ccg", icache_ccg },
-	{ "cat", icache_cat }
+	{ "cat", icache_cat },
+	{ "" }
 };
 EnumOption<int> icache_option(command, 'i', "icache",
 	"instruction management method", icache_values);
@@ -185,8 +186,8 @@ void Command::compute(String fun) {
 
 	case bbtime_sim:
 	case bbtime_delta: {
-			BBTimeSimulator bbts(props);
-			bbts.process(fw);
+			BBTimeSimulator bbts;
+			bbts.process(fw, props);
 		}
 		break;
 		
@@ -197,8 +198,8 @@ void Command::compute(String fun) {
 		break;
 		
 	case bbtime_trivial: {
-			TrivialBBTime tbt(5, props);
-			tbt.process(fw);
+			TrivialBBTime tbt(5);
+			tbt.process(fw, props);
 		}
 		break;
 
@@ -207,36 +208,36 @@ void Command::compute(String fun) {
 	};
 		
 	// Trivial data cache
-	TrivialDataCacheManager dcache(props);
-	dcache.process(fw);
+	TrivialDataCacheManager dcache;
+	dcache.process(fw, props);
 		
 	// Assign variables
-	VarAssignment assign(props);
-	assign.process(fw);
+	VarAssignment assign;
+	assign.process(fw, props);
 		
 	// Build the system
-	BasicConstraintsBuilder builder(props);
-	builder.process(fw);
+	BasicConstraintsBuilder builder;
+	builder.process(fw, props);
 		
 	// Process the instruction cache
 	switch(icache_option) {
 	case icache_ccg:
 		{	
 			// build LBlock
-			LBlockBuilder lbb(props);
-			lbb.process(fw);
+			LBlockBuilder lbb;
+			lbb.process(fw, props);
 			
 			// build ccg graph
 			CCGBuilder ccgbuilder;
-			ccgbuilder.process(fw);
+			ccgbuilder.process(fw, props);
 			
 			// Build ccg contraint
 			CCGConstraintBuilder decomp(fw);
-			decomp.process(fw);
+			decomp.process(fw, props);
 			
 			//Build the objectfunction
 			CCGObjectFunction ofunction(fw);
-			ofunction.process(fw);
+			ofunction.process(fw, props);
 		}
 		break;
 		
@@ -244,18 +245,18 @@ void Command::compute(String fun) {
 		{
 			// build Cat lblocks
 			CATBuilder catbuilder;
-			catbuilder.process(fw);
+			catbuilder.process(fw, props);
 			
 			// Build CAT contraint
 			CATConstraintBuilder decomp;
-			decomp.process(fw);
+			decomp.process(fw, props);
 		}
 	
 	case icache_none:
 		{
 			// Build the object function to maximize
 			BasicObjectFunctionBuilder fun_builder;
-			fun_builder.process(fw);	
+			fun_builder.process(fw, props);	
 		}
 		break;
 	}
@@ -263,17 +264,17 @@ void Command::compute(String fun) {
 	// Delta processing
 	if(bbtime_option == bbtime_delta) {
 		Delta::LEVELS(props) = delta;
-		Delta delta(props);
-		delta.process(fw);
+		Delta delta;
+		delta.process(fw, props);
 	}
 
 	// Load flow facts
-	ipet::FlowFactLoader loader(props);
-	loader.process(fw);
+	ipet::FlowFactLoader loader;
+	loader.process(fw, props);
 		
 	// Resolve the system
-	WCETComputation wcomp(props);
-	wcomp.process(fw);
+	WCETComputation wcomp;
+	wcomp.process(fw, props);
 
 	// Get the result
 	ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
