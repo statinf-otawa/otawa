@@ -8,8 +8,11 @@
 #define OTAWA_ILP_VAR_H
 
 #include <elm/string.h>
+#include <elm/io.h>
 
 namespace otawa { namespace ilp {
+
+using namespace elm::io;
 
 // Var class
 class Var {
@@ -34,8 +37,13 @@ inline Var::Var(elm::String& name): _name(name) {
 inline elm::String& Var::name(void) {
 	return _name;
 }
-	
+
+// Output
+inline Output& operator<<(Output& out, Var *var) {
+	out << var->name();
+	return out;
+}
+
 } } // otawa::ilp
 
 #endif	// OTAWA_ILP_VAR_H
-
