@@ -7,11 +7,16 @@
 #ifndef OTAWA_PROP_GENERIC_IDENTIFIER_H
 #define OTAWA_PROP_GENERIC_IDENTIFIER_H
 
+#include <elm/rtti.h>
+#include <elm/meta.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/prop/Property.h>
 #include <otawa/prop/PropList.h>
 
 namespace otawa {
+
+using namespace elm;
+using namespace elm::io;
 
 // External class
 class PropList;
@@ -21,6 +26,17 @@ template <class T>
 class GenericIdentifier: public Identifier {
 	T def;
 	inline const T& get(const Property& prop) const;
+
+	typedef struct {
+		static inline void scan(const GenericIdentifier<T>& id, PropList& props,
+			VarArg& args);
+	} __scalar;
+
+	typedef struct {
+		static inline void scan(const GenericIdentifier<T>& id, PropList& props,
+			VarArg& args);
+	} __class;
+
 public:
 
 	// Value class
@@ -169,7 +185,7 @@ inline class GenericIdentifier<T>::Value
 GenericIdentifier<T>::value(PropList *list) const {
 	return Value(list, *this);
 }
-	
+
 template <class T>	
 void GenericIdentifier<T>::print(elm::io::Output& output, const Property& prop) const {
 	output << get(prop);
@@ -178,11 +194,6 @@ void GenericIdentifier<T>::print(elm::io::Output& output, const Property& prop) 
 template <class T>
 const Type& GenericIdentifier<T>::type(void) const {
 	return Type::no_type;
-}
-
-template <class T>
-void GenericIdentifier<T>::scan(PropList& props, VarArg& args) const {
-	props.set(*this, args.next<T>());
 }
 
 template <class T>
@@ -260,6 +271,26 @@ template <class T>
 inline T GenericIdentifier<T>::Value::operator->(void) const {
 	return prop.get<T>(id, id.def);
 } 
+
+
+// VarArg management
+template <class T>
+inline void GenericIdentifier<T>::__scalar::scan(const GenericIdentifier<T>& id,
+PropList& props, VarArg& args) {
+	props.set(id, args.next<T>());
+}
+
+template <class T>
+inline void GenericIdentifier<T>::__class::scan(const GenericIdentifier<T>& id,
+PropList& props, VarArg& args) {
+	T *ptr = args.next<T *>();
+	props.set(id, *ptr);
+}
+
+template <class T>
+void GenericIdentifier<T>::scan(PropList& props, VarArg& args) const {
+	_if<type_info<T>::is_scalar, __scalar, __class>::_::scan(*this, props, args);
+}
 
 } // otawa
 
