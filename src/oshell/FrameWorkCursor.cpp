@@ -42,7 +42,7 @@ void FrameWorkCursor::list(Output& out) {
 	out << '\n';
 	
 	// Display CFG if any
-	CFGInfo *info = fw->get<CFGInfo *>(CFGInfo::ID, 0);
+	CFGInfo *info = CFGInfo::ID(fw);
 	if(info) {
 		out << "CFG:\n";
 		i = 0;
