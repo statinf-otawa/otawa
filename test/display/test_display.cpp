@@ -4,10 +4,14 @@
 #include <otawa/util/Dominance.h>
 #include <elm/io.h>
 #include <otawa/display/CFGDrawer.h>
-
+#include <otawa/cfg/CFGCollector.h>
+#include <otawa/ipet.h>
+#include <otawa/ipet/BBTimeSimulator.h>
+#include <otawa/gensim/GenericSimulator.h>
 
 using namespace elm;
 using namespace otawa;
+using namespace otawa::ipet;
 
 
 void usage_error(){
@@ -28,6 +32,9 @@ int main(int argc, char **argv){
 	try{
 		PropList props;
 //		LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+		PROCESSOR_PATH(props) = "../../data/procs/op1.xml";
+		SIMULATOR(props) = &gensim_simulator;
+		ipet::EXPLICIT(props) = true;
 		FrameWork *fw = manager.load(file, props);
 		
 		// Find main
@@ -36,20 +43,33 @@ int main(int argc, char **argv){
 			cerr << "ERROR: cannot find main !\n";
 			exit(3);
 		}
+		// Removing __eabi call if available
+        for(CFG::BBIterator bb(cfg); bb; bb++)
+                        for(BasicBlock::OutIterator edge(bb); edge; edge++)
+                                if(edge->kind() == Edge::CALL
+                                && edge->target()
+                                && edge->calledCFG()->label() == "__eabi") {
+                                        delete(*edge);
+                                        break;
+                                }		CFG *vcfg = new VirtualCFG(cfg);
+		ENTRY_CFG(props) = vcfg;
 		
-		cfg = new VirtualCFG(cfg);
-		Dominance::ensure(cfg);
-		Dominance::markLoopHeaders(cfg);
-
+		Dominance dom;
+		dom.process(fw, props);
+		VarAssignment vars(props);
+		vars.process(fw, props);
+		BBTimeSimulator bbts;
+        bbts.process(fw, props);
+		
 		props.clearProps();
-		display::EXCLUDE(props) += &CALLED_CFG;
-		display::EXCLUDE(props) += &Dominance::ID_RevDom;
-		display::CFGDrawer drawer(cfg, props);
+		/*display::EXCLUDE(props) += &CALLED_CFG;
+		display::EXCLUDE(props) += &REVERSE_DOM;*/
+		display::CFGDrawer drawer(vcfg, props);
 		// DEFAULT(drawer.all()) = INCLUDE;
 		// DEFAULT(drawer.graph()) = EXCELUDE;
 		drawer.display();
 	}
-	catch(LoadException e){
+	catch(elm::Exception& e){
 		cerr << "ERROR: " << e.message() << '\n';
 		exit(2);
 	}
