@@ -8,3 +8,4 @@ test_pcg_DEPENDENCIES = @LOADER_DEPS@ @OTAWA_DEPS@
 test_pcg_SOURCES=\
 	test_pcg.cpp 
 
+TESTS = test.sh
