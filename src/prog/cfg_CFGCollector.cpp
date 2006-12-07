@@ -7,6 +7,7 @@
 
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg.h>
+#include <otawa/cfg/CFGBuilder.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/prog/Manager.h>
 
@@ -62,8 +63,16 @@ namespace otawa {
 /**
  * @class CFGCollector
  * This processor is used to collect all CFG implied in a computation.
- * It uses the @ref ENTTY_CFG or @ref TASK_ENTRY properties to find
+ * It uses the @ref ENTRY_CFG or @ref TASK_ENTRY properties to find
  * the base CFG and explore in depth the CFG along subprograms calls.
+ * 
+ * @par Configuration
+ * @li @ref ENTRY_CFG : CFG of the entry of the current task,
+ * @li @ref TASK_ENTRY : name if the entry function of the current task,
+ * @li @ref RECURSIVE : collect CFG recursively.
+ * 
+ * @par Provided Features
+ * @ref COLLECTED_CFG_FEATURE
  */
 
 
@@ -73,15 +82,14 @@ void CFGCollector::processFrameWork (FrameWork *fw) {
 	static GenericIdentifier<bool> MARK("otawa.cfg_collector.mark", false);
 	
 	// Set first queue node
-	CFG *entry = ENTRY_CFG(fw);
-	if(!entry) {
+	if(!entry && name) {
 		CFGInfo *info = fw->getCFGInfo();
 		CString name = TASK_ENTRY(fw);
 		entry = info->findCFG(name);
-		if(!entry)
-			throw ProcessorException(*this, "cannot find task entry point \"%d.\"", &name);
-		ENTRY_CFG(fw) = entry;
 	}
+	if(!entry)
+		throw ProcessorException(*this, "cannot find task entry point \"%d.\"", &name);
+	ENTRY_CFG(fw) = entry;
 	
 	// Build the involved collection
 	CFGCollection *cfgs = new CFGCollection();
@@ -89,7 +97,7 @@ void CFGCollector::processFrameWork (FrameWork *fw) {
 	INVOLVED_CFGS(fw) = cfgs;
 	
 	// Build it recursively
-	if(RECURSIVE(fw))
+	if(rec)
 		for(int i = 0; i < cfgs->count(); i++)
 			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++)
 				for(BasicBlock::OutIterator edge(bb); edge; edge++)
@@ -107,21 +115,40 @@ void CFGCollector::processFrameWork (FrameWork *fw) {
  * @param props	Configuration properties.
  */
 CFGCollector::CFGCollector(void)
-: Processor("CFGCollector", Version(1, 0, 0)) {
+: Processor("CFGCollector", Version(1, 0, 0)), entry(0), rec(false) {
+	require(CFG_INFO_FEATURE);
 	provide(COLLECTED_CFG_FEATURE);
+}
+
+
+/**
+ */
+void CFGCollector::configure(const PropList& props) {
+	Processor::configure(props);
+	entry = ENTRY_CFG(props);
+	if(!entry)
+		name = TASK_ENTRY(props);
+	rec = RECURSIVE(props);
 }
 
 
 /**
  * This property is used to link the current computation involved CFG
  * on the framework.
+ * 
+ * @par Hooks
+ * FrameWork
  */
 GenericIdentifier<CFGCollection *> INVOLVED_CFGS("involved_cfgs", 0, OTAWA_NS);
 
 
 /**
  * This feature asserts that all CFG involved in the current computation has
- * been collected and accessible thanks to @ref INVOLVED_CFG property.
+ * been collected and accessible thanks to @ref INVOLVED_CFGS property
+ * 
+ * @par Properties
+ * @ref ENTRY_CFG (FrameWork).
+ * @ref INVOLVED_CFGS (FrameWork).
  */
 Feature<CFGCollector> COLLECTED_CFG_FEATURE("otawa.collected_cfg");
 

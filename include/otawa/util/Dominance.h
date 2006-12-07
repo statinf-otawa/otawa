@@ -15,12 +15,11 @@ namespace otawa {
 
 // External
 class BasicBlock;
+class BitSet;
 
 // Dominance class
 class Dominance: public CFGProcessor {
 public:
-	static Identifier ID_RevDom;
-	static Identifier ID_LoopHeader;
 	static void ensure(CFG *cfg);
 	static bool dominates(BasicBlock *bb1, BasicBlock *bb2);
 	static inline bool isDominated(BasicBlock *bb1, BasicBlock *bb2);
@@ -37,6 +36,11 @@ public:
 
 // Features
 extern Feature<Dominance> DOMINANCE_FEATURE;
+extern Feature<Dominance> LOOP_HEADERS_FEATURE;
+
+// Properties
+extern GenericIdentifier<BitSet *> REVERSE_DOM;
+extern GenericIdentifier<bool> LOOP_HEADER;
 
 } // otawa
 

@@ -62,14 +62,14 @@ FrameWork::~FrameWork(void) {
 CFGInfo *FrameWork::getCFGInfo(void) {
 	
 	// Already built ?
-	CFGInfo *info = get<CFGInfo *>(CFGInfo::ID, 0);
+	CFGInfo *info = CFGInfo::ID(this);
 	if(info)
 		return info;
 	
 	// Build it
 	CFGBuilder builder;
-	builder.processFrameWork(this);
-	return use<CFGInfo *>(CFGInfo::ID);
+	builder.process(this);
+	return CFGInfo::ID(this);
 }
 
 

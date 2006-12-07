@@ -15,16 +15,20 @@ namespace otawa {
 
 /**
  * Identifier of annotation containing reverse-dominance information.
- * Information is of type BitSet *.
+ * 
+ * @par Hooks
+ * @li @ref BasicBlock
  */
-Identifier Dominance::ID_RevDom("otawa.util.revdom");
+GenericIdentifier<BitSet *> REVERSE_DOM("reverse_dom", 0, OTAWA_NS);
 
 
 /**
  * Identifier for marking basic blocks that are entries of loops.
- * Its value is a boolean (usually ever to true).
+ * 
+ * @par Hooks
+ * @li @ref BasicBlock
  */
-Identifier Dominance::ID_LoopHeader("otawa.util.header");
+GenericIdentifier<bool> LOOP_HEADER("loop_header", false, OTAWA_NS);
 
 
 /**
@@ -101,7 +105,7 @@ bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 	assert(bb2);
 	int index = bb1->number();
 	assert(index >= 0);
-	BitSet *set = bb2->use<BitSet *>(ID_RevDom);
+	BitSet *set = REVERSE_DOM(bb2);
 	assert(set);
 	return set->contains(index);
 }
@@ -122,12 +126,12 @@ bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 void Dominance::processCFG(FrameWork *fw, CFG *cfg) {
 	assert(cfg);
 	DominanceProblem dp(cfg);
-	util::DFAEngine<DominanceProblem,BitSet> engine(dp,*cfg);
+	util::DFAEngine<DominanceProblem, BitSet> engine(dp, *cfg);
 	engine.compute();
 	for (CFG::BBIterator blocks(cfg); blocks; blocks++) {
 	  BitSet *b = engine.outSet(blocks.item());
 	  b = new BitSet(*b);
-	  blocks->addDeletable<BitSet *>(ID_RevDom,b);
+	  blocks->addDeletable<BitSet *>(REVERSE_DOM, b);
 	}
 	markLoopHeaders(cfg);
 }
@@ -146,7 +150,7 @@ elm::MutableCollection<BasicBlock *> *headers) {
 			if(edge->target()
 			&& edge->kind() != Edge::CALL
 			&& dominates(edge->target(), bb)) {
-				edge->target()->set<bool>(ID_LoopHeader, true);
+				LOOP_HEADER(edge->target()) = true;
 				if(headers)
 					headers->add(bb);
 				break;
@@ -173,7 +177,7 @@ bool Dominance::isLoopHeader(BasicBlock *bb) {
  * @param cfg	CFG to look at.
  */
 void Dominance::ensure(CFG *cfg) {
-	if(!cfg->entry()->getProp(&Dominance::ID_RevDom)) {
+	if(!REVERSE_DOM(cfg->entry())) {
 		Dominance dom;
 		dom.processCFG(0, cfg);
 	}
@@ -181,16 +185,36 @@ void Dominance::ensure(CFG *cfg) {
 
 
 /**
+ * The dominance processors computes dominance relation and the loop headers
+ * on the current CFG.
+ * 
+ * @Provided Features
+ * @li @ref DOMINANCE_FEATURE
+ * @li @ref LOOP_HEADERS_FEATURE
  */
 Dominance::Dominance(void): CFGProcessor("otawa::dominance", Version(1, 1, 0)) {
 	provide(DOMINANCE_FEATURE);
+	provide(LOOP_HEADERS_FEATURE);
 }
 
 
 /**
  * This feature ensures that information about domination between nodes
  * of a CFG is vailable.
+ * 
+ * @par Properties
+ * @li @ref REVERSE_DOM (BasicBlock)
  */
 Feature<Dominance> DOMINANCE_FEATURE("dominance");
+
+
+/**
+ * This feature ensures that all loop header are marked with a @ref LOOP_HEADER
+ * property.
+ * 
+ * @Properties
+ * @li @ref LOOP_HEADER (BasicBlock).
+ */
+Feature<Dominance> LOOP_HEADERS_FEATURE("loop_headers");
 
 } // otawa

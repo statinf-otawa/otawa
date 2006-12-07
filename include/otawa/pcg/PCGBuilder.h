@@ -1,10 +1,11 @@
 #ifndef OTAWA_TEST_PCG_PCGBUILDER_H
 #define OTAWA_TEST_PCG_PCGBUILDER_H
 
-#include <otawa/proc/Processor.h>
+#include <otawa/proc/CFGProcessor.h>
 #include <otawa/cfg/CFGInfo.h>
 #include <otawa/cfg.h>
 #include <elm/genstruct/HashTable.h>
+#include <otawa/proc/Feature.h>
 
 #include "PCG.h"
 
@@ -15,14 +16,21 @@ class PCGBuilder: public Processor
 	elm::genstruct::HashTable <void *, PCGBlock *> mapCFG;
 	elm::genstruct::HashTable <void *, PCGBlock *> mapBB;
 
-public:	
 	void processCFGBlocks(BasicBlock *bb,CFG* cfg,PCG* pcg,PCGBlock *src);
-	PCGBuilder(const PropList& props = PropList::EMPTY);
-	virtual void processCFG(CFG* cfg, PCG *pcg,CFG*src);
-	virtual void configure(const PropList& props);
-	virtual void processFrameWork(FrameWork *fw){};
 	PCG* buildPCG(CFG*cfg);
 	void addPCGBlock(BasicBlock*bb,CFG*cfg,PCG*pcg,CFG*src);
+
+protected:
+	virtual void processFrameWork(FrameWork *fw);
+	virtual void processCFG(CFG* cfg, PCG *pcg, CFG*src);
+
+public:	
+	PCGBuilder(void);
 };
-}
+
+// Features
+extern Feature<PCGBuilder> PCG_FEATURE;
+
+} // otawa
+
 #endif //OTAWA_TEST_PCG_PCGBUILDER_H

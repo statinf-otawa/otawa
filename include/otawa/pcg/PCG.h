@@ -8,6 +8,8 @@
 
 #include "PCGBlock.h"
 namespace otawa {
+	
+using namespace elm::io;
 
 class PCG
 {
@@ -34,6 +36,15 @@ public :
 	int nbPCGBlocks(void){return _pcgbs.length();};
 	elm::genstruct::Vector<PCGBlock *>& pcgbs(void) {return _pcgbs;};
 	CFG* getCFG(void) {return cfg;};
+	
+	// Hook identifier
+	static GenericIdentifier<PCG *> ID;
 };
+
+inline Output& operator<<(Output& out, const PCG& pcg) {
+	out << "<not printable>";
+	return out;
+}
+
 }
 #endif

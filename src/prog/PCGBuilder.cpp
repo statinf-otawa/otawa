@@ -7,11 +7,23 @@
 
 #include <assert.h>
 #include <elm/Iterator.h>
+#include <otawa/manager.h>
 #include <otawa/cfg/Edge.h>
 #include <otawa/pcg/PCGBuilder.h>
+#include <otawa/cfg/CFGCollector.h>
 
 using namespace elm;
-using namespace otawa; 
+using namespace otawa;
+
+//#define DO_TRACE
+#if defined(NDEBUG) && !defined(DO_TRACE)
+#	define TRACE(c)
+#else
+#	define TRACE(c) cout << c
+#endif
+
+namespace otawa {
+ 
 /*
  * Get the main CFG, build the corresponding PCG and print it to sceen.
  * @class PCGBlock
@@ -24,22 +36,22 @@ PCG* PCGBuilder::buildPCG(CFG *cfg)
 	
 	//cout<<"nb outs de main: "<<(((pcg->pcgbs()).get(0))->getSons()).length()<<"\n";
 	//cout<<"nb pcgb: "<<pcg->pcgbs().length()<<"\n";	
-	cout<<"\nPCG\n";
+	/*TRACE("\nPCG\n");
 	
 	for(PCG::PCGIterator pcgb(pcg);pcgb;pcgb++)
 	{
-		cout<<"\n"<<pcgb->getName()<<" "<<pcgb->getAddress()<<"\n";
+		TRACE("\n"<<pcgb->getName()<<" "<<pcgb->getAddress()<<"\n");
 		for(PCGBlock::PCGBlockOutIterator _pcgb(pcgb);_pcgb;_pcgb++)
-			cout<<"\t"<<_pcgb->getName()<<" "<<_pcgb->getAddress()<<"\n";
+			TRACE("\t"<<_pcgb->getName()<<" "<<_pcgb->getAddress()<<"\n");
 	}
-	cout<<"\n";
-	cout<<"liste des fonctions appelantes de chaque fonction\n";
+	TRACE("\n");
+	TRACE("liste des fonctions appelantes de chaque fonction\n");
 	for(PCG::PCGIterator pcgb(pcg);pcgb;pcgb++)
 	{
-		cout<<"\n"<<pcgb->getName()<<" "<<pcgb->getAddress()<<"\n";
+		TRACE("\n"<<pcgb->getName()<<" "<<pcgb->getAddress()<<"\n");
 		for(PCGBlock::PCGBlockInIterator _pcgb(pcgb);_pcgb;_pcgb++)
-			cout<<"\t"<<_pcgb->getName()<<" "<<_pcgb->getAddress()<<"\n";
-	}
+			TRACE("\t"<<_pcgb->getName()<<" "<<_pcgb->getAddress()<<"\n");
+	}*/
 	return pcg;
 }
 
@@ -103,17 +115,47 @@ void PCGBuilder::addPCGBlock(BasicBlock *bb,CFG* cfg,PCG* pcg,CFG *src)
 }
 /*
  * PCGBuilder constructer
- * @param props	Configuration properties
+ * 
+ * @par Required Features
+ * @li @ref COLLECTED_CFG_FEATURE
+ * 
+ * @para Provided Features
+ * @li @ref PCG_FEATURE
  */
-PCGBuilder::PCGBuilder(const PropList& props):Processor("PCGBuilder", Version(1, 0, 0), props){}
-
-/*
- *
- */
-void PCGBuilder::configure(const PropList& props) 
-{
-	Processor::configure(props);
+PCGBuilder::PCGBuilder(void):Processor("PCGBuilder", Version(1, 0, 0)){
+	require(COLLECTED_CFG_FEATURE);
+	provide(PCG_FEATURE);
 }
+
+
+/**
+ */
+void PCGBuilder::processFrameWork(FrameWork *fw) {
+	CFG *cfg = ENTRY_CFG(fw);
+	assert(cfg);
+	PCG::ID(fw) = buildPCG(cfg);
+}
+
+
+/**
+ * This feature ensure that a PCG is provided.
+ * 
+ * @par Properties
+ * @li @ref PCG::ID (FrameWork)
+ */
+Feature<PCGBuilder> PCG_FEATURE("otawa::pcg");
+
+
+/**
+ * This properties is used to hook the PCG of the current task to the FrameWork.
+ * 
+ * @par Hooks
+ * @li @ref FrameWork
+ */
+GenericIdentifier<PCG *> PCG::ID("pcg", 0, OTAWA_NS);
+
+
+} // otawa
 
 /*void PCGBuilder::processCFG(CFG* cfg) old
 {	//cette version n'est pas bonne car le parcous du cfg n'est pas bien implementé on saute des bb utils

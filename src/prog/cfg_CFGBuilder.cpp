@@ -21,15 +21,18 @@ Identifier CFGBuilder::ID_Entry("otawa::ID_Entry");
  * This processor is used for building the CFG from the binary program
  * representation. Found CFG are linked the framework to the framework thanks
  * a CFGInfo object stored in a property.
+ * 
+ * @Provided Features
+ * @li @ref CFG_INFO_FEATURE
  */
 
 
 /**
  * CFG builder constructor.
- * @param props		Configuration properties.
  */
-CFGBuilder::CFGBuilder(const PropList& props)
-: Processor("otawa::CFGBuilder", Version(1, 0, 0), props) {
+CFGBuilder::CFGBuilder(void)
+: Processor("otawa::CFGBuilder", Version(1, 0, 0)) {
+	provide(CFG_INFO_FEATURE);
 }
 
 
@@ -245,5 +248,15 @@ void CFGBuilder::buildAll(FrameWork *fw) {
 	// Build the CFGInfo
 	fw->addDeletable(CFGInfo::ID, new CFGInfo(fw, _cfgs));
 }
+
+
+/**
+ * Feature asserting that the CFG has been scanned in the program. The result
+ * is put the @ref CFGInfo::ID.
+ * 
+ * @Properties
+ * @li @ref CFGInfo::ID (FrameWork)
+ */
+Feature<CFGBuilder> CFG_INFO_FEATURE("otawa::cfg_info");
 
 } // otawa

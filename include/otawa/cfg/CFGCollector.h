@@ -34,10 +34,14 @@ public:
 
 // CFGCollector Class
 class CFGCollector: public Processor {
+	CString name;
+	CFG *entry;
+	bool rec;
 protected:
 	void processFrameWork(FrameWork *fw);
 public:
 	CFGCollector(void);
+	virtual void configure(const PropList& props);
 };
 
 // Features

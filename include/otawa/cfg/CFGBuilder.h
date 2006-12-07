@@ -8,6 +8,7 @@
 #ifndef OTAWA_CFG_CFG_BUILDER_H
 #define OTAWA_CFG_CFG_BUILDER_H
 
+#include <otawa/proc/Feature.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/cfg/CFGInfo.h>
 
@@ -25,11 +26,14 @@ class CFGBuilder: public Processor {
 	void addFile(File *file);
 	void buildAll(FrameWork *fw);
 public:
-	CFGBuilder(const PropList& props = PropList::EMPTY);
+	CFGBuilder(void);
 	
 	// Processor overload
 	virtual void processFrameWork(FrameWork *fw);
 };
+
+// Features
+extern Feature<CFGBuilder> CFG_INFO_FEATURE;
 
 } // otawa
 

@@ -379,6 +379,12 @@ void ContextTree::addChild(ContextTree *child) {
 
 /**
  * A processor used to build the context trees.
+ * 
+ * @par Required Features
+ * @li @ref DOMINANCE_FEATURE
+ * 
+ * @par Provided Features
+ * @li @ref CONTEXT_TREE_FEATURE
  */
 
 
@@ -387,6 +393,7 @@ void ContextTree::addChild(ContextTree *child) {
 ContextTreeBuilder::ContextTreeBuilder(void)
 : Processor("otawa::context_tree_builder", Version(1, 0, 0)) {
 	require(DOMINANCE_FEATURE);
+	require(LOOP_HEADERS_FEATURE);
 	provide(CONTEXT_TREE_FEATURE);
 }
 
@@ -400,7 +407,10 @@ void ContextTreeBuilder::processFrameWork(FrameWork *fw) {
 
 /**
  * This feature asserts that a context tree of the task is available in
- * the framework (use @ref CONTEXT_TREE identifier to get it). 
+ * the framework.
+ * 
+ * @par Properties
+ * @li @ref CONTEXT_TREE (@ref FrameWork). 
  */
 Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE("otawa::context_tree");
 
@@ -408,6 +418,9 @@ Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE("otawa::context_tree");
 /**
  * This property identifier provides a context tree hooked to a framework.
  * A null pointer is retrieved if the context tree is not computed.
+ * 
+ * @par Hooks
+ * @li @ref FrameWork
  */
 GenericIdentifier<ContextTree *> CONTEXT_TREE("otawa::context_tree", 0, OTAWA_NS);
 

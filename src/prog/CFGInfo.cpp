@@ -31,8 +31,11 @@ namespace otawa {
 
 /**
  * Identifier for retrieving CFG information from the workspace properties.
+ * 
+ * @par Hooks
+ * @li @ref FrameWork
  */
-Identifier CFGInfo::ID("otawa.CFGInfo");
+GenericIdentifier<CFGInfo *> CFGInfo::ID("cfg_info_id", 0, OTAWA_NS);
 
 
 /**
