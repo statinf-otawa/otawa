@@ -9,6 +9,7 @@
 
 #include <assert.h>
 #include <otawa/proc/BBProcessor.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa {
 
@@ -23,12 +24,15 @@ namespace ipet {
 // BasicConstraintsBuilder class
 class BasicConstraintsBuilder: public BBProcessor {
 public:
-	BasicConstraintsBuilder(const PropList& props = PropList::EMPTY);
+	BasicConstraintsBuilder(void);
 
 	// CFGProcessor overload
 	virtual void processFrameWork(FrameWork *fw);
 	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
 };
+
+// Features
+extern Feature <BasicConstraintsBuilder> CONTROL_CONSTRAINTS_FEATURE;
 
 } } // otawa::ipet
 

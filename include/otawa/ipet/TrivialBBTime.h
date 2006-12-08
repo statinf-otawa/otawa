@@ -9,25 +9,27 @@
 
 #include <assert.h>
 #include <otawa/proc/BBProcessor.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa { namespace ipet {
 
 // TrivialBBTime class
 class TrivialBBTime: public BBProcessor {
-	int dep;
-public:
-	TrivialBBTime(int depth = 1, const PropList& props = PropList::EMPTY);
-	inline int depth(void) const;
+	unsigned dep;
 
-	// BBProcessor overload
+protected:
 	void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+
+public:
+	TrivialBBTime(void);
+	virtual void configure(const PropList& props);
 };
 
+// Configuration Properties
+extern GenericIdentifier<unsigned> PIPELINE_DEPTH;
 
-// Inlines
-inline int TrivialBBTime::depth(void) const {
-	return dep;
-}
+// Features
+extern Feature<TrivialBBTime> BB_TIME_FEATURE;
 
 } } // otawa::ipet
 

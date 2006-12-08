@@ -8,17 +8,20 @@
 #define OTAWA_IPET_WCET_COMPUTATION_H
 
 #include <otawa/proc/CFGProcessor.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa { namespace ipet {
 
 // WCETComputation class
 class WCETComputation: public Processor {
-public:
-	WCETComputation(const PropList& props = PropList::EMPTY);
-
-	// CFGProcessor overload
+protected:
 	virtual void processFrameWork(FrameWork *fw);
+public:
+	WCETComputation(void);
 };
+
+// Features
+extern Feature<WCETComputation> WCET_FEATURE;
 
 } } // otawa::ipet
 

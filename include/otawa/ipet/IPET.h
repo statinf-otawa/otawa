@@ -23,6 +23,9 @@ class Var;
 
 namespace ipet {
 
+// Namespaces
+extern NameSpace NS;
+
 // Properties
 extern GenericIdentifier<int> TIME;
 extern GenericIdentifier<int> TIME_DELTA;
