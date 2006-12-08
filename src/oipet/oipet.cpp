@@ -198,7 +198,8 @@ void Command::compute(String fun) {
 		break;
 		
 	case bbtime_trivial: {
-			TrivialBBTime tbt(5);
+			TrivialBBTime tbt;
+			ipet::PIPELINE_DEPTH(props) = 5;
 			tbt.process(fw, props);
 		}
 		break;

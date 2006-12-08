@@ -63,8 +63,9 @@ int main(int argc, char **argv) {
 		
 		// Compute BB times
 		cout << "Timing the BB\n";
-		TrivialBBTime tbt(5);
-		tbt.process(fw);
+		TrivialBBTime tbt;
+		ipet::PIPELINE_DEPTH(props) = 5;
+		tbt.process(fw, props);
 				
 		// assigne variable to CFG
 		cout << "Numbering the main\n";

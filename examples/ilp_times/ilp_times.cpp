@@ -135,20 +135,21 @@ int main(int argc, char **argv) {
 		props.set(EXPLICIT, true);
 		
 		// Compute BB times
-		TrivialBBTime tbt(5, props);
-		tbt.process(fw);
+		TrivialBBTime tbt;
+		ipet::PIPELINE_DEPTH(props) = 5;
+		tbt.process(fw, props);
 		
 		// Trivial data cache
 		TrivialDataCacheManager dcache(props);
 		dcache.process(fw);
 		
 		// Assign variables
-		VarAssignment assign(props);
-		assign.process(fw);
+		VarAssignment assign;
+		assign.process(fw, props);
 		
 		// Build the system
-		BasicConstraintsBuilder builder(props);
-		builder.process(fw);
+		BasicConstraintsBuilder builder;
+		builder.process(fw, props);
 		
 		// Process the instruction cache
 		if(method == CCG) {
@@ -183,14 +184,14 @@ int main(int argc, char **argv) {
 		}
 		
 		// Load flow facts
-		ipet::FlowFactLoader loader(props);
-		loader.process(fw);
+		ipet::FlowFactLoader loader;
+		loader.process(fw, props);
 		
 		// Resolve the system
 		elm::system::StopWatch ilp_sw;
 		ilp_sw.start();
-		WCETComputation wcomp(props);
-		wcomp.process(fw);
+		WCETComputation wcomp;
+		wcomp.process(fw, props);
 		ilp_sw.stop();
 		main_sw.stop();
 

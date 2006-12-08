@@ -179,8 +179,8 @@ void Command::compute(String fun) {
 		EXEGRAPH_DELTA(props) = true;
 	
 	// Assign variables
-	VarAssignment assign(props);
-	assign.process(fw);
+	VarAssignment assign;
+	assign.process(fw, props);
 		
 	// Compute BB time
 	if(exegraph) {
@@ -208,12 +208,12 @@ void Command::compute(String fun) {
 	}
 
 	// Build the system
-	BasicConstraintsBuilder builder(props);
-	builder.process(fw);
+	BasicConstraintsBuilder builder;
+	builder.process(fw, props);
 		
 	// Load flow facts
-	ipet::FlowFactLoader loader(props);
-	loader.process(fw);
+	ipet::FlowFactLoader loader;
+	loader.process(fw, props);
 
 	// Build the object function to maximize
 	BasicObjectFunctionBuilder fun_builder;
@@ -260,8 +260,8 @@ void Command::compute(String fun) {
 	}
 	
 	// Resolve the system
-	WCETComputation wcomp(props);
-	wcomp.process(fw);
+	WCETComputation wcomp;
+	wcomp.process(fw, props);
 
 	// Get the results
 	ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);

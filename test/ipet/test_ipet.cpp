@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-06, IRIT UPS.
  *
  *	test/ipet/test_ipet.cpp -- test for IPET feature.
  */
@@ -38,7 +38,6 @@ int main(int argc, char **argv) {
 	CacheConfiguration cache_conf(0, &data_cache);
 	Manager manager;
 	PropList props;
-	//LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	CACHE_CONFIG(props) = &cache_conf;
 	RECURSIVE(props) = true;
 	NO_SYSTEM(props) = true;
@@ -81,34 +80,18 @@ int main(int argc, char **argv) {
 		PROC_VERBOSE(props) = true;
 		
 		// Compute BB times
-		/*TrivialBBTime tbt(5, props);
-		tbt.process(fw);*/
-		BBTimeSimulator bbts(props);
-		bbts.process(fw);
+		TrivialBBTime tbt;
+		tbt.process(fw, props);
+		/*BBTimeSimulator bbts(props);
+		bbts.process(fw);*/
 		
 		// Trivial data cache
 		TrivialDataCacheManager dcache(props);
 		dcache.process(fw);
 		
-		// Assign variables
-		VarAssignment assign(props);
-		assign.process(fw);
-		
-		// Build the system
-		BasicConstraintsBuilder builder(props);
-		builder.process(fw);
-		
-		// Build the object function to maximize
-		BasicObjectFunctionBuilder fun_builder(props);
-		fun_builder.process(fw);
-		
-		// Load flow facts
-		ipet::FlowFactLoader loader(props);
-		loader.process(fw);
-		
 		// Resolve the system
-		WCETComputation wcomp(props);
-		wcomp.process(fw);
+		WCETComputation wcomp;
+		wcomp.process(fw, props);
 		
 		// Display the result
 		cfg = ENTRY_CFG(fw);

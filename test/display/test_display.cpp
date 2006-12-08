@@ -56,7 +56,7 @@ int main(int argc, char **argv){
 		
 		Dominance dom;
 		dom.process(fw, props);
-		VarAssignment vars(props);
+		VarAssignment vars;
 		vars.process(fw, props);
 		BBTimeSimulator bbts;
         bbts.process(fw, props);
