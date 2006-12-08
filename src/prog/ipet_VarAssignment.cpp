@@ -1,8 +1,8 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2005-06, IRIT UPS.
  *
- *	src/ipet_VarAssignment.cpp -- VarAssignment class implementation.
+ *	VarAssignment class implementation.
  */
 
 #include <otawa/ipet/IPET.h>
@@ -19,16 +19,16 @@ namespace otawa { namespace ipet {
 /**
  * @class VarAssignment
  * This processor ensures that each basic block and each edge of the CFG
- * has a variable associated with a @ref IPET::ID_Var annotation.
+ * has a variable associated with a @ref ipet::VAR annotation.
+ * 
+ * @par Configuration
+ * @li @ref ipet::EXPLICIT : use explicit name (takes more to compute but
+ * provides more meaningful variable names).
+ * @li @ref RECURSIVE : add function names to the explicit variable names.
+ * 
+ * @par Provided Features
+ * @li @ref ASSIGNED_VARS_FEATURE
  */
-
-
-/**
- */
-void VarAssignment::processFrameWork(FrameWork *fw) {
-	_recursive = RECURSIVE(fw);
-	BBProcessor::processFrameWork(fw);
-}
 
 
 /**
@@ -59,26 +59,23 @@ void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 
 /**
  * Build a new variable assignment processor.
- * @param props		Configuration properties.
  */
-VarAssignment::VarAssignment(const PropList& props)
-: BBProcessor("otawa::VarAssignment", Version(1, 0, 0), props), _explicit(false) {
-	init(props);
+VarAssignment::VarAssignment(void)
+: 	BBProcessor("otawa::VarAssignment", Version(1, 0, 0)),
+	_explicit(false),
+	_recursive(false)
+{
+	provide(ASSIGNED_VARS_FEATURE);		
 }
 
 
 /**
  */
-void VarAssignment::init(const PropList& props) {
-	_explicit = EXPLICIT(props);
-}
-
-
-/**
- */
-void VarAssignment::configure(PropList& props) {
-	init(props);
+void VarAssignment::configure(const PropList& props) {
 	BBProcessor::configure(props);
+	_explicit = EXPLICIT(props);
+	_recursive = RECURSIVE(props);
+	//cout << "_explicit = " << _explicit << io::endl;
 }
 
 
@@ -145,5 +142,15 @@ String VarAssignment::makeEdgeVar(Edge *edge, CFG *cfg) {
 	// Return result
 	return buf.toString();
 }
+
+
+/**
+ * This feature asserts that each block and each edge has a variable
+ * name asserted.
+ * 
+ * @par Properties
+ * @li @ref ipet::VAR
+ */
+Feature<VarAssignment> ASSIGNED_VARS_FEATURE("otawa::ipet::assigned_vars");
 
 } } // otawa::ipet

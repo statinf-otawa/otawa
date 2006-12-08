@@ -12,6 +12,8 @@
 #include <otawa/util/Dominance.h>
 #include <otawa/ilp.h>
 #include <otawa/proc/ProcessorException.h>
+#include <otawa/cfg/CFGCollector.h>
+#include <otawa/util/Dominance.h>
 
 namespace otawa { namespace ipet {
 
@@ -24,9 +26,20 @@ namespace otawa { namespace ipet {
 /**
  * Build a new flow fact loader.
  * @param props		Configuration properties.
+ * 
+ * @par Required Features
+ * @li @ref ipet::COLLECTED_CFG_FEATURE
+ * 
+ * @par Provided Features
+ * @li @ref ipet::FLOW_FACTS_FEATURE
+ * @li @ref ipet::FLOW_FACTS_CONSTRAINTS_FEATURE
  */
-FlowFactLoader::FlowFactLoader(const PropList& props)
-: Processor("otawa::ipet::FlowFactLoader", Version(1, 0, 0), props) {
+FlowFactLoader::FlowFactLoader(void)
+: Processor("otawa::ipet::FlowFactLoader", Version(1, 0, 0)) {
+	require(COLLECTED_CFG_FEATURE);
+	require(LOOP_HEADERS_FEATURE);
+	provide(FLOW_FACTS_FEATURE);
+	provide(FLOW_FACTS_CONSTRAINTS_FEATURE);
 }
 
 
@@ -53,9 +66,6 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 	bool found = false;
 	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++) {
 
-		// check domination
-		Dominance::ensure(cfg);
-	
 		// Look BB in the CFG
 		for(CFG::BBIterator bb(cfg); bb; bb++)
 			if(bb->address() == addr /*&& Dominance::isLoopHeader(bb)*/) {
@@ -89,8 +99,25 @@ void FlowFactLoader::processFrameWork(FrameWork *fw) {
 	cfgs = INVOLVED_CFGS(fw);
 	assert(cfgs);
 	system = getSystem(fw, ENTRY_CFG(fw));
-	dom_done = false;
 	run(fw);
 }
-	
+
+
+/**
+ * This feature ensures that flow facts information (at less the loop bounds)
+ * has been put on the CFG of the current task.
+ * 
+ * @par Properties
+ * @li !!TODO!!
+ */
+Feature<FlowFactLoader> FLOW_FACTS_FEATURE("otawa::ipet::flow_facts");
+
+
+/**
+ * This feature asserts that constraints tied to the flow fact information
+ * has been added to the ILP system.
+ */
+Feature<FlowFactLoader>
+	FLOW_FACTS_CONSTRAINTS_FEATURE("otawa::ipet::flow_facts_constraints");
+
 } } // otawa::ipet

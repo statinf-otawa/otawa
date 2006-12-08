@@ -18,32 +18,54 @@ namespace otawa { namespace ipet {
  * This processor is used for computing execution of basic blocks in a trivial
  * way, that is, the multiplication of basic block instruction count by the
  * pipeline depth.
+ * 
+ * @par Configuration Properties
+ * @li @ref ipet::PIPELINE_DEPTH - used to compute execution time of the basic
+ * block.
+ * 
+ * @par Provided Features
+ * @li @ref ipet::BB_TIME_FEATURE
  */
 
 
 /**
  * Build the processor.
- * @param depth	Depth of the pipeline.
  */
-TrivialBBTime::TrivialBBTime(int depth, const PropList& props)
-: BBProcessor("otawa::TrivialBBTime", Version(1, 0, 0), props), dep(depth) {
-	assert(depth > 0);
+TrivialBBTime::TrivialBBTime(void)
+: BBProcessor("otawa::TrivialBBTime", Version(1, 0, 0)), dep(5) {
+	provide(BB_TIME_FEATURE);
 }
 
 
-
 /**
- * @fn int TrivialBBTime::depth(void) const;
- * Get the depth of the pipeline.
- * @return	Pipeline depth.
  */
+void TrivialBBTime::configure(const PropList& props) {
+	BBProcessor::configure(props);
+	dep = PIPELINE_DEPTH(props);
+}
 
 
 /**
- * See @ref CFGProcessor::processBB().
  */
 void TrivialBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
 	TIME(bb) = dep * bb->countInstructions();
 }
+
+
+/**
+ * This property is used to configure the @ref TrivialBBTime processor
+ * with the depth of the used pipeline.
+ * 
+ * @par Hooks
+ * @li Configuration of @ref ipet::TrivialBBTime.
+ */
+GenericIdentifier<unsigned> PIPELINE_DEPTH("pipeline_depth", 5, ipet::NS);
+
+
+/**
+ * This feature ensures that the execution time of each basic block has been
+ * computed.
+ */
+Feature<TrivialBBTime> BB_TIME_FEATURE("otawa::bb_time");
 
 } } // otawa::ipet

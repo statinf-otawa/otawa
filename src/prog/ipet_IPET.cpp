@@ -157,4 +157,10 @@ ilp::Var *getVar(ilp::System *system, Edge *edge) {
 	return var;
 }
 
+
+/**
+ * IPET namespace.
+ */
+NameSpace NS("ipet", OTAWA_NS);
+
 } } // otawa::ipet

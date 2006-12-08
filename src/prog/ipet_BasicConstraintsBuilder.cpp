@@ -9,6 +9,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/BasicConstraintsBuilder.h>
 #include <otawa/cfg.h>
+#include <otawa/ipet/VarAssignment.h>
 
 using namespace otawa::ilp;
 
@@ -126,10 +127,19 @@ void BasicConstraintsBuilder::processFrameWork(FrameWork *fw) {
 
 /**
  * Build basic constraint builder processor.
- * @param props	Configuration properties.
  */
-BasicConstraintsBuilder::BasicConstraintsBuilder(const PropList& props)
-: BBProcessor("otawa::BasicConstraintsBuilder", Version(1, 0, 0), props) {
+BasicConstraintsBuilder::BasicConstraintsBuilder(void)
+: BBProcessor("otawa::BasicConstraintsBuilder", Version(1, 0, 0)) {
+	provide(CONTROL_CONSTRAINTS_FEATURE);
+	require(ASSIGNED_VARS_FEATURE);
 }
+
+
+/**
+ * This feature ensures that control constraints has been added to the
+ * current ILP system.
+ */
+Feature <BasicConstraintsBuilder>
+	CONTROL_CONSTRAINTS_FEATURE("otawa::control_constraints");
 
 } } //otawa::ipet
