@@ -170,8 +170,8 @@ int main(int argc, char **argv) {
 		bbts.process(fw);
 		
 		// Trivial data cache
-		TrivialDataCacheManager dcache(props);
-		dcache.process(fw);
+		TrivialDataCacheManager dcache;
+		dcache.process(fw, props);
 		
 		// Assign variables
 		VarAssignment assign;

@@ -9,6 +9,8 @@
 #include <otawa/cfg.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ipet/TrivialDataCacheManager.h>
+#include <otawa/cfg/CFGCollector.h>
+#include <otawa/ipet/TrivialBBTime.h>
 
 namespace otawa { namespace ipet {
 
@@ -21,8 +23,10 @@ namespace otawa { namespace ipet {
 
 void TrivialDataCacheManager::configure(FrameWork *framework) {
 	fw = framework;
-	if(!fw->cache().hasDataCache())
+	if(!fw->cache().hasDataCache()) {
 		time = 0;
+		out << "WARNING: there is no data cache here !\n";
+	}
 	else
 		time = fw->cache().dataCache()->missPenalty();
 }
@@ -32,16 +36,11 @@ void TrivialDataCacheManager::configure(FrameWork *framework) {
  * Build the trivial data cache manager.
  * @param props		Configuration properties.
  */
-TrivialDataCacheManager::TrivialDataCacheManager(const PropList& props)
-: BBProcessor("ipet::TrivialDataManager", Version(1, 0, 0), props) {
-}
-
-
-/**
- */
-void TrivialDataCacheManager::processCFG(FrameWork *framework, CFG *cfg) {
-	configure(framework);
-	BBProcessor::processCFG(framework, cfg);
+TrivialDataCacheManager::TrivialDataCacheManager(void)
+: BBProcessor("ipet::TrivialDataManager", Version(1, 0, 0)), fw(0) {
+	provide(DATA_CACHE_TIME_FEATURE);
+	require(COLLECTED_CFG_FEATURE);
+	require(BB_TIME_FEATURE);
 }
 
 
@@ -49,14 +48,16 @@ void TrivialDataCacheManager::processCFG(FrameWork *framework, CFG *cfg) {
  */	
 void TrivialDataCacheManager::processBB(FrameWork *framework, CFG *cfg,
 BasicBlock *bb) {
-	assert(fw);
+	assert(framework);
 	assert(cfg);
 	assert(bb);
 	
 	// Check configuration
 	if(framework != fw)
 		configure(framework);
-	
+	if(!time)
+		return;
+
 	// Do not process entry and exit
 	if(bb->isEntry() || bb->isExit())
 		return;
@@ -68,9 +69,18 @@ BasicBlock *bb) {
 			count++;
 	
 	// Store new BB time
-	int bb_time = bb->get<int>(TIME, 0);
-	bb_time += count * time;
-	bb->set(TIME, bb_time);
+	TIME(bb) = TIME(bb) + count * time;
 }
+
+
+/**
+ * This feature ensures that the first-level data cache has been taken in
+ * account in the basic block timing.
+ * 
+ * @par Properties
+ * @li @ref ipet::TIME
+ */
+Feature<TrivialDataCacheManager>
+	DATA_CACHE_TIME_FEATURE("otawa::ipet::data_cache_time");
 
 } } // otawa::ipet

@@ -74,22 +74,16 @@ int main(int argc, char **argv) {
 					break;
 				}
 		
-		// Prepare processor configuration
+		// WCET computation
 		PropList props;
 		EXPLICIT(props) = true;
 		PROC_VERBOSE(props) = true;
-		
-		// Compute BB times
-		TrivialBBTime tbt;
+		/*TrivialBBTime tbt;
 		tbt.process(fw, props);
-		/*BBTimeSimulator bbts(props);
+		BBTimeSimulator bbts(props);
 		bbts.process(fw);*/
-		
-		// Trivial data cache
-		TrivialDataCacheManager dcache(props);
-		dcache.process(fw);
-		
-		// Resolve the system
+		TrivialDataCacheManager dcache;
+		dcache.process(fw, props);
 		WCETComputation wcomp;
 		wcomp.process(fw, props);
 		
