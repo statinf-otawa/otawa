@@ -173,6 +173,13 @@ AC_SUBST(LOADER_DEPS)
 echo "LOADER_LIBS=$LOADER_LIBS"
 
 
+# ===== for otawa-config =====
+AS_IF( test "$HAS_PLUGIN" = "yes",
+	[ HAS_SO="0" ],
+	[ HAS_SO="1" ])
+AC_SUBST(HAS_SO)
+
+
 # ==== Output ====
 AC_OUTPUT([
 	Makefile
