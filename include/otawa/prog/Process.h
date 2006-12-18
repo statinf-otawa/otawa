@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-06, IRIT UPS.
  *
  *	otawa/prog/Process.h -- interface for Process class.
  */
@@ -9,7 +9,6 @@
 
 #include <elm/string.h>
 #include <elm/system/Path.h>
-#include <elm/Collection.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/instruction.h>
 #include <otawa/program.h>
@@ -19,6 +18,8 @@ namespace elm { namespace xom {
 } } // elm::xom
 
 namespace otawa {
+
+using namespace elm::genstruct;
 
 // Pre-definition
 class File;
@@ -36,10 +37,15 @@ namespace sim {
 
 // Process class
 class Process: public ProgObject {
+	Vector<File *> files;
 	File *prog;
+
+protected:
+	void addFile(File *file);
+
 public:
 	Process(const PropList& props = EMPTY, File *program = 0);
-	virtual ~Process(void) { };
+	virtual ~Process(void);
 	
 	// Accessors
 	virtual hard::Platform *platform(void) = 0;
@@ -49,14 +55,21 @@ public:
 	virtual Inst *findInstAt(address_t addr) = 0;
 	virtual address_t findLabel(String& label);
 	virtual Inst *findInstAt(String& label);
-	virtual elm::Collection<File *> *files(void) = 0;
 	virtual sim::Simulator *simulator(void);
 	inline File *program(void) const;
 
 	// Constructors
-	virtual File *createFile(void) = 0;
 	File *loadProgram(elm::CString path);
 	virtual File *loadFile(elm::CString path) = 0;
+	
+	// FileIterator 
+	class FileIter: public Vector<File *>::Iterator {
+	public:
+		inline FileIter(const Process *process)
+			: Vector<File *>::Iterator(process->files) { }
+		inline FileIter(const FileIter& iter)  
+			: Vector<File *>::Iterator(iter) { }
+	};
 
 };
 

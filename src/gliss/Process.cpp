@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-06, IRIT UPS.
  *
  *	gliss/Process.cpp -- gliss::Process class implementation.
  */
@@ -50,46 +50,19 @@ Process::Process(Manager *_man, PropList& props): otawa::Process(props), man(_ma
 }
 
 /**
- * Clear the loaded file.
- */
-void Process::clear(void) {
-	for(int i = 0; i < _files.count(); i++)
-		delete _files[i];
-	_files.clear();
-}
-
-/**
- * Get the list of loaded files.
- * @return	Loader files.
- */
-elm::Collection<otawa::File *> *Process::files(void) {
-	return &_files;
-}
-
-
-/**
- * Not implemented. Ever fails.
- * @return Created file or null.
- */
-::otawa::File *Process::createFile(void) {
-	return 0;
-}
-
-
-/**
  * Load the given file.
  * @return Loaded file.
  * @note GLISS loader can only load one file. Load a new file delete the old one.
  */
 ::otawa::File *Process::loadFile(CString path) {
-	clear();
+	//clear();
 	File *file = new otawa::gliss::File(path, argc, argv, envp, no_sys);
 	if(!file->isOK()) {
 		delete file;
 		return 0;
 	}
 	else {
-		_files.add(file);
+		addFile(file);
 		gel_file_info_t infos;
 		gel_file_infos(loader_file(file->state()->M), &infos);
 		start_addr = (address_t)infos.entry;
@@ -122,8 +95,6 @@ Manager *Process::manager(void) {
  */
 Process::~Process(void) {
 	TRACE(this << ".Process::~Process()");
-	for(Iterator<otawa::File *> file(_files); file; file++)
-		delete (File *)*file;
 	delete _platform;
 }
 
@@ -132,10 +103,10 @@ Process::~Process(void) {
 otawa::Inst *Process::start(void) {
 	if(!start_addr)
 		return 0;
-	else  if(!_files.count())
+	else  if(!program())
 		return 0;
 	else {
-		File *file = (File *)_files[0];
+		File *file = (File *)program();
 		return file->findByAddress(start_addr);
 	}
 }
@@ -143,10 +114,10 @@ otawa::Inst *Process::start(void) {
 
 // otawa::Process overload
 otawa::Inst *Process::findInstAt(address_t addr) {
-	if(!_files.count())
+	if(!program())
 		return 0;
 	else {
-		File *file = (File *)_files[0];
+		File *file = (File *)program();
 		return file->findByAddress(addr);
 	}
 }

@@ -25,11 +25,11 @@ class ASTInfo: public PropList {
 	elm::datastruct::Vector<FunAST *> funs;
 	elm::datastruct::HashTable<String, FunAST *> _map;
 	void add(FunAST *fun);
-	ASTInfo(Process *proc);
+	ASTInfo(FrameWork *fw);
 public:
 	~ASTInfo(void);
 	static GenericIdentifier<ASTInfo *> ID;
-	static ASTInfo *getInfo(Process *proc);
+	static ASTInfo *getInfo(FrameWork *fw);
 	FunAST *getFunction(Inst *inst);
 	inline elm::datastruct::Map<String, FunAST *>& map(void) { return _map; };
 	inline elm::Collection< FunAST *>& functions(void) { return funs; };

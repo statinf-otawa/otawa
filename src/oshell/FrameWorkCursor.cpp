@@ -35,7 +35,7 @@ void FrameWorkCursor::list(Output& out) {
 	// Display files
 	out << "Files: \n";
 	int i = 0;
-	for(Iterator<File *> iter(*fw->files()); iter; iter++, i++)
+	for(Process::FileIter iter(fw->process()); iter; iter++, i++)
 		out << '\t' << i << ": " << iter->name() << '\n';
 	if(!i)
 		out << "<none>\n";
@@ -135,7 +135,7 @@ Cursor *FrameWorkCursor::go(CString name) {
 	// Segment traversal
 	else {
 		int num = atoi(&name);
-		for(Iterator<File *> iter(*fw->files()); iter; iter++, num--)
+		for(Process::FileIter iter(fw->process()); iter; iter++, num--)
 			if(!num) {
 				return new FileCursor(this, *iter);
 			}

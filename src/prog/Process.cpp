@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-06, IRIT UPS.
  *
  *	prog/Process.cpp -- implementation for Process class.
  */
@@ -32,8 +32,10 @@ namespace otawa {
  * @param props		Configuration properties to create this process.
  * @param program	The program file creating this process.
  */
-Process::Process(const PropList& props, File *program): prog(program) {
+Process::Process(const PropList& props, File *program): prog(0) {
 	addProps(props);
+	if(prog)
+		addFile(prog);
 }
 
 
@@ -109,7 +111,7 @@ const hard::CacheConfiguration& Process::cache(void) {
  */
 address_t Process::findLabel(String& label) {
 	address_t result = 0;
-	for(Iterator<File *> file(files()->visit()); file; file++) {
+	for(FileIter file(this); file; file++) {
 		result = file->findLabel(label);
 		if(result)
 			break;
@@ -171,6 +173,29 @@ sim::Simulator *Process::simulator(void) {
 	if(!sim)
 		throw LoadException("cannot get the simulator \"%s\".", &name);
 	return sim;
+}
+
+
+/**
+ * Add the given file to the list of files. The first added file is considered
+ * as the program file.
+ * @param file	Added file.
+ * @note		After this call, the process is the owner of the file
+ * 				and will released it at deletion time.
+ */
+void Process::addFile(File *file) {
+	assert(file);
+	if(!files)
+		prog = file;
+	files.add(file);
+}
+
+
+/**
+ */
+Process::~Process(void) {
+	for(FileIter file(this); file; file++)
+		delete file;
 }
 
 } // otawa

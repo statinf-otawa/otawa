@@ -66,8 +66,8 @@ void ASTLoader::processFrameWork(FrameWork *_fw) {
 	
 	// Get a valid path
 	if(!path) {
-		Iterator<File *> file(*fw->files());
-		assert(!file.ended());
+		file = fw->process()->program();
+		assert(file);
 		elm::StringBuffer buffer;
 		buffer << file->name() << ".ast";
 		path = buffer.toString();
@@ -181,10 +181,8 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 address_t ASTLoader::findLabel(elm::String raw_label) {
 
 	// Retrieve the file
-	if(!file) {
-		Iterator<File *> proc_files(*fw->files());
-		file = *proc_files;
-	}
+	if(!file)
+		file = fw->process()->program();
 	assert(file);
 	
 	// Compute entry

@@ -242,7 +242,7 @@ void CFGBuilder::buildAll(FrameWork *fw) {
 		addSubProgram(start);
 	
 	// Compute CFG for each code piece
-	for(Iterator<File *> file(*fw->files()); file; file++)
+	for(Process::FileIter file(fw->process()); file; file++)
 		addFile(file);
 	
 	// Build the CFGInfo

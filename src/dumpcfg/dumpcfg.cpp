@@ -232,7 +232,7 @@ void Command::dump(CString name) {
 	
 	// Find label address
 	address_t addr = 0;
-	for(Iterator<File *> file(*fw->files()); file; file++) {
+	for(Process::FileIter file(fw->process()); file; file++) {
 		addr = file->findLabel(name);
 		if(addr)
 			break;

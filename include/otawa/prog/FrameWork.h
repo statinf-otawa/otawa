@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-06, IRIT UPS.
  *
  *	otawa/prog/FrameWork.h -- interface for FrameWork class.
  */
@@ -43,7 +43,7 @@ namespace sim {
 }
 
 // FrameWork class
-class FrameWork: public Process {
+class FrameWork: public PropList {
 	Process *proc;
 	Vector<const AbstractFeature *> features;
 	
@@ -55,9 +55,6 @@ public:
 	inline Process *process(void) const { return proc; };
 	
 	// Process overload
-	virtual elm::Collection<File *> *files(void) { return proc->files(); };
-	virtual File *createFile(void) { return proc->createFile(); };
-	virtual File *loadFile(elm::CString path) { return proc->loadFile(path); };
 	virtual hard::Platform *platform(void) { return proc->platform(); };
 	virtual Manager *manager(void) { return proc->manager(); };
 	virtual Inst *start(void) { return proc->start(); };

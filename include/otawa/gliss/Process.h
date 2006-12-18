@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2004, IRIT UPS.
+ *	Copyright (c) 2004-06, IRIT UPS.
  *
  *	gliss/Process.h -- gliss::Process class interface.
  */
@@ -17,7 +17,7 @@ class Platform;
 
 // Process class
 class Process: public otawa::Process {
-	elm::datastruct::Vector<otawa::File *> _files;
+	//elm::datastruct::Vector<otawa::File *> _files;
 protected:
 	Manager *man;
 	int argc;
@@ -30,11 +30,6 @@ protected:
 public:
 	Process(Manager *_man, PropList& props);
 	virtual ~Process(void);
-	void clear(void);
-
-	// elm::Process overload
-	virtual elm::Collection<otawa::File *> *files(void);
-	virtual ::otawa::File *createFile(void);
 	virtual ::otawa::File *loadFile(CString path);
 	virtual hard::Platform *platform(void);
 	virtual ::otawa::Manager *manager(void);

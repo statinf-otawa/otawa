@@ -70,7 +70,8 @@ void CFGInfo::clear(void) {
 	_cfgs.clear();
 	
 	// Release basic block
-	for(Iterator<File *> file(*fw->files()); file; file++)
+	for(Process::FileIter file(fw->process()); file; file++)
+	//for(Iterator<File *> file(*fw->files()); file; file++)
 		for(Iterator<Segment *> seg(file->segments()); seg; seg++)
 			for(Iterator<ProgItem *> item(seg->items()); item; item++)
 				if(seg->flags() & Segment::EXECUTABLE) {
@@ -149,7 +150,7 @@ elm::Collection<CFG *>& CFGInfo::cfgs(void) {
  * @return			Matching CFG or null.
  */
 CFG *CFGInfo::findCFG(String label) {
-	Inst *inst = fw->Process::findInstAt(label);
+	Inst *inst = fw->process()->findInstAt(label);
 	if(!inst)
 		return 0;
 	else

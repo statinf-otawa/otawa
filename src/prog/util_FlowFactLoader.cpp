@@ -21,7 +21,7 @@ namespace otawa {
  */
 void FlowFactLoader::run(FrameWork *fw) {
 	
-	Iterator<File *> file(*fw->files());
+	File *file = fw->process()->program();
 	elm::StringBuffer buffer;
 	buffer.print(file->name());
 	buffer.print(".ff");

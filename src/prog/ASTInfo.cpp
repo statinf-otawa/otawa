@@ -24,10 +24,10 @@ GenericIdentifier<ASTInfo *> ASTInfo::ID("otawa.ast.info");
 	
 /**
  * Build an new AST info linked to the given framework.
- * @param proc	Process to link to.
+ * @param fw	Framework to link to.
  */
-ASTInfo::ASTInfo(Process *proc) {
-	proc->addDeletable<ASTInfo *>(ID, this);
+ASTInfo::ASTInfo(FrameWork *fw) {
+	fw->addDeletable<ASTInfo *>(ID, this);
 }
 
 /**
@@ -89,18 +89,18 @@ FunAST *ASTInfo::getFunction(Inst *inst) {
 
 /**
  * Find or create the AST information attached to the given process.
- * @param proc	Process to look in.
+ * @param fw	Framework to look in.
  * @return		AST information of the process.
  */
-ASTInfo *ASTInfo::getInfo(Process *proc) {
+ASTInfo *ASTInfo::getInfo(FrameWork *fw) {
 	
 	// Look in the process
-	elm::Option<ASTInfo *> result = proc->get<ASTInfo *>(ID);
+	elm::Option<ASTInfo *> result = fw->get<ASTInfo *>(ID);
 	if(result)
 		return *result;
 	
 	// Else build it
-	return new ASTInfo(proc);
+	return new ASTInfo(fw);
 }
 
 
