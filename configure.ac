@@ -221,6 +221,7 @@ AC_OUTPUT([
 	include/otawa/Makefile
 	include/otawa/ast/Makefile
 	include/otawa/cfg/Makefile
+	include/otawa/dfa/Makefile
 	include/otawa/display/Makefile
 	include/otawa/gliss/Makefile
 	include/otawa/prog/Makefile

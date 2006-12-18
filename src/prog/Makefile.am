@@ -57,6 +57,8 @@ libotawa_la_SOURCES = \
 	util_DFA.cpp \
 	util_DFABitSet.cpp \
 	util_DFAEngine.cpp \
+	dfa_XCFGVisitor.cpp \
+	dfa_XIterativeDFA.cpp \
 	ets_ETS.cpp \
 	ets_WCETComputation.cpp \
 	ets_TrivialAstBlockTime.cpp \

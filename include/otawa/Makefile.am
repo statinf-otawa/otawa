@@ -2,6 +2,7 @@
 SUBDIRS= \
 	ast \
 	cfg \
+	dfa \
 	display \
 	prog \
 	prop \
