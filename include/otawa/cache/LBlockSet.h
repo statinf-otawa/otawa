@@ -36,9 +36,6 @@ public:
 		inline Iterator(LBlockSet& bset);
 	};
 	
-	// LBlockSet identifier	
-	static Identifier ID_LBlockSet;
-	 
 	// Methods
 	inline LBlockSet(int line);
 	inline IteratorInst<LBlock *> *visit(void);
@@ -47,6 +44,11 @@ public:
 	LBlock *lblock(int i);
 	int line(void);
 };
+
+
+// Properties
+extern GenericIdentifier<LBlockSet **> LBLOCKS;
+	 
 
 // Inlines
 inline LBlockSet::LBlockSet(int line): linenumber(line) {

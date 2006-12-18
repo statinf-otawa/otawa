@@ -16,7 +16,7 @@ namespace otawa {
  * date is LBlockSet *[] with a size equal to the line count of the instruction
  * cache.
  */
-Identifier LBlockSet::ID_LBlockSet("ipet.LBlockSet");
+GenericIdentifier<LBlockSet **> LBLOCKS("lblocks", 0, OTAWA_NS);
 
 /**
  */

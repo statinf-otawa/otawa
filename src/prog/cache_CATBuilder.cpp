@@ -108,11 +108,11 @@ void CATBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 		return;
 	
 	// Get the l-block sets
-	LBlockSet **lbsets = cfg->get<LBlockSet **>(LBlockSet::ID_LBlockSet, 0);
+	LBlockSet **lbsets = LBLOCKS(fw);
 	if(!lbsets) {
 		LBlockBuilder builder;
-		builder.processCFG(fw, cfg);
-		lbsets = cfg->use<LBlockSet **>(LBlockSet::ID_LBlockSet);
+		builder.process(fw);
+		lbsets = LBLOCKS(fw);
 	}
 		
 	// Process the l-block sets

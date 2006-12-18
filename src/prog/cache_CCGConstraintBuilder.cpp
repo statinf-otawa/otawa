@@ -186,7 +186,7 @@ void CCGConstraintBuilder::processLBlockSet(CFG *cfg, LBlockSet *lbset) {
 void CCGConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg ) {
 	assert(fw);
 	assert(cfg);
-	LBlockSet **lbsets = cfg->use<LBlockSet **>(LBlockSet::ID_LBlockSet);
+	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = fw->platform()->cache().instCache();
 	if(!cache)
 		return;

@@ -157,7 +157,7 @@ LBlockSet *id ) {
 void CATConstraintBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 	assert(fw);
 	assert(cfg);
-	LBlockSet **lbsets = cfg->use<LBlockSet **>(LBlockSet::ID_LBlockSet);
+	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = fw->platform()->cache().instCache();
 	
 	for(int i = 0; i < cache->lineCount(); i++)
