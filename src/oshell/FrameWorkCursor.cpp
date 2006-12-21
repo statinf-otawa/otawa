@@ -48,9 +48,9 @@ void FrameWorkCursor::list(Output& out) {
 		i = 0;
 		for(Iterator<CFG *> cfg(info->cfgs()); cfg; cfg++, i++) {
 			out << "\tC" << i << ':' << cfg->entry()->address();
-			Option<String> label = cfg->get<String>(File::ID_Label);
+			String label = LABEL(cfg);
 			if(label)
-				out << " [@" << *label << ']';
+				out << " [@" << label << ']';
 			out << '\n';
 		}
 	}
@@ -98,8 +98,8 @@ Cursor *FrameWorkCursor::go(CString name) {
 			if(!info)
 				throw GoException();
 			for(Iterator<CFG *> cfg(info->cfgs()); cfg; cfg++) {
-				Option<String> label = cfg->get<String>(File::ID_Label);
-				if(label && *label == name.chars() + 1)
+				String label = LABEL(cfg);
+				if(label && label == name.chars() + 1)
 					return new CFGCursor(this, *cfg);
 			}
 		}

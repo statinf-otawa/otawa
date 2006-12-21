@@ -47,9 +47,9 @@ void CodeCursor::list(Output& out) {
 	out << "Instructions \n";
 	Inst *inst;
 	for(inst = _code->first(); !inst->atEnd(); inst = inst->next()) {
-		Option<String> label = inst->get<String>(File::ID_Label);
+		String label = LABEL(inst);
 		if(label)
-			out << *label << ":\n";
+			out << label << ":\n";
 		out << '\t' << inst->address() << ' ';
 		inst->dump(out);
 		if(inst->isControl())

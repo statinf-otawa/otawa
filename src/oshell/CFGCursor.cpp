@@ -28,7 +28,7 @@ CFGCursor::CFGCursor(Cursor *back, CFG *_cfg)
 // Cursor overload
 void CFGCursor::path(Output& out) {
 	back()->path(out);
-	String name = cfg->entry()->get<String>(File::ID_Label, "");
+	String name = LABEL(cfg);
 	if(name)
 		out << '/' << name;
 	else
@@ -117,9 +117,9 @@ int CFGCursor::ListVisitor::process(BasicBlock *bb) {
 				out << " T(" << target->use<int>(ID_Number);
 			else
 				out << " C(" << target->address();
-			Option<String> label = target->get<String>(File::ID_Label);
+			String label = LABEL(target);
 			if(label)
-				out << '[' << *label << ']';
+				out << '[' << label << ']';
 			out << ')';
 		}
 		else if(bb->isTargetUnknown())
@@ -132,9 +132,9 @@ int CFGCursor::ListVisitor::process(BasicBlock *bb) {
 	for(Iterator<Inst *> inst(*bb); inst; inst++) {
 			
 		// Put the label
-		Option<String> label = inst->get<String>(File::ID_Label);
+		String label = LABEL(inst);
 		if(label)
-			out << '\t' << *label << ":\n";
+			out << '\t' << label << ":\n";
 			
 		// Disassemble the instruction
 		out << "\t\t" << inst->address() << ' ';
