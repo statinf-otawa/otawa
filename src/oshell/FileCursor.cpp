@@ -43,7 +43,7 @@ void FileCursor::info(Output& out) {
 void FileCursor::list(Output& out) {
 	out << "Segments: \n";
 	int i = 0;
-	for(Iterator<Segment *> iter(_file->segments()); iter; iter++, i++) {
+	for(File::SegIter iter(_file); iter; iter++, i++) {
 		out << '\t' << i << ':' << iter->name()
 			 << " [" << iter->address()
 			 << ':' << (int)iter->size() << ']';
@@ -61,7 +61,7 @@ void FileCursor::list(Output& out) {
 // Cursor overload
 Cursor *FileCursor::go(CString name) {
 	int num = atoi(&name);
-	for(Iterator<Segment *> iter(_file->segments()); iter; iter++, num--)
+	for(File::SegIter iter(_file); iter; iter++, num--)
 		if(!num)
 			return new SegmentCursor(this, *iter);
 	return back()->go(name);
