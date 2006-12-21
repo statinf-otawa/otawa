@@ -129,8 +129,8 @@ void CFGDrawer::onNode(otawa::BasicBlock *bb, otawa::display::Node *node){
 	for(Iterator<Inst*> inst(bb->visit()); inst; inst++){
 		if(body.length() > 0)
 			body << '\n';
-		if(inst->hasProp(File::ID_Label)){
-			String label = inst->use<String>(File::ID_Label);
+		if(inst->hasProp(LABEL)){
+			String label = LABEL(inst);
 			body << label << ":\n";
 		}
 		body << "0x" << fmt::address(inst->address()) << ":  ";
