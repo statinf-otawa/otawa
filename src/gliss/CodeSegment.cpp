@@ -137,7 +137,7 @@ void CodeSegment::build(void) {
 		
 	// Add symbols
 	address_t lbound = address(), ubound = lbound + size();
-	for(Iterator<otawa::Symbol *> sym(_file.symbols().visit()); sym; sym++) {
+	for(File::SymIter sym(&_file); sym; sym++) {
 		address_t addr = sym->address();
 		if(addr >= lbound && addr < ubound) {
 			Inst *inst = (Inst *)findByAddress(addr);
@@ -145,9 +145,9 @@ void CodeSegment::build(void) {
 				Identifier *id;
 				switch(sym->kind()) {
 				case Symbol::FUNCTION:
-					inst->add<String>(File::ID_FunctionLabel, sym->name());
+					FUNCTION_LABEL(inst) += sym->name();
 				case Symbol::LABEL:
-					inst->add<String>( File::ID_Label, sym->name());
+					LABEL(inst) += sym->name();
 					break;
 				}
 			}

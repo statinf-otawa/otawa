@@ -124,9 +124,9 @@ void ControlInst::dump(io::Output& out) {
 	// Output the branch label if any
 	scan();
 	if(_target) {
-		Option<String> label = _target->get<String>(File::ID_Label);
+		String label = LABEL(_target);
 		if(label)
-			out << " [" << *label << ']';
+			out << " [" << label << ']';
 	}
 }
 

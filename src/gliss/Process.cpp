@@ -55,20 +55,13 @@ Process::Process(Manager *_man, PropList& props): otawa::Process(props), man(_ma
  * @note GLISS loader can only load one file. Load a new file delete the old one.
  */
 ::otawa::File *Process::loadFile(CString path) {
-	//clear();
 	File *file = new otawa::gliss::File(path, argc, argv, envp, no_sys);
-	if(!file->isOK()) {
-		delete file;
-		return 0;
-	}
-	else {
-		addFile(file);
-		gel_file_info_t infos;
-		gel_file_infos(loader_file(file->state()->M), &infos);
-		start_addr = (address_t)infos.entry;
-		GLISS_STATE(this) = file->state();
-		return file;
-	}
+	addFile(file);
+	gel_file_info_t infos;
+	gel_file_infos(loader_file(file->state()->M), &infos);
+	start_addr = (address_t)infos.entry;
+	GLISS_STATE(this) = file->state();
+	return file;
 }
 
 

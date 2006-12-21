@@ -29,7 +29,7 @@ namespace otawa { namespace gliss {
  * @param no_sys	Do not initialize the system support.
  */
 File::File(String _path, int argc, char **argv, char **envp, bool no_sys)
-: path(_path), labels_init(false) {
+: otawa::File(_path), labels_init(false) {
 	static char *ld_library_path[] = { 0 };
 	
 	// System configuration
@@ -59,7 +59,7 @@ File::File(String _path, int argc, char **argv, char **envp, bool no_sys)
     // Initialize emulator
     _state = iss_init(mem_list, loader_list, (no_sys ? NULL : system_list), NULL, NULL);
     if(!_state)
-    	return;
+    	throw LoadException("cannot load \"%s\"", &_path);
     
     // Initialize the text segments
     gel_file_t *file = loader_file(_state->M);
@@ -73,9 +73,10 @@ File::File(String _path, int argc, char **argv, char **envp, bool no_sys)
     	gel_sect_infos(sect, &infos);
     	if(infos.flags & SHF_EXECINSTR) {
     		CodeSegment *seg = new CodeSegment(*this, infos.name, _state->M, infos.vaddr, infos.size);
-    		segs.add(seg);
+    		addSegment(seg);
     	}
     }
+    initSyms();
 }
 
 
@@ -85,78 +86,12 @@ File::File(String _path, int argc, char **argv, char **envp, bool no_sys)
 File::~File(void) {
 	clearProps();
 	if(_state) {
-		for(Iterator<otawa::Symbol *> sym(syms.items()); sym; sym++)
+		for(SymIter sym(this); sym; sym++)
 			delete *sym;
-		for(Iterator<Segment *> seg(segs); seg; seg++)
+		for(SegIter seg(this); seg; seg++)
 			delete (CodeSegment *)*seg;
     	iss_halt(_state);
 	}
-}
-
-
-/**
- * Get the name of the file, that is, its path.
- * @return Name of the file.
- */
-CString File::name(void) {
-	return path.toCString();
-}
-
-
-/**
- * Get the segments in the file.
- * @return Segments of the file.
- */
-elm::Collection<Segment *>& File::segments(void) {
-	return segs;
-}
-
-
-/**
- * Find the address matching the given label.
- * @param label	Name of the label to find.
- * @retrun		Address of the label or null.
- */
-address_t File::findLabel(const String& label) {
-	otawa::Symbol *sym = findSymbol(label);
-	return sym ? sym->address() : address_t(0);
-}
-
-
-/**
- * Find an instruction by its address.
- * @param addr	Address of the instruction to find.
- * @return		Return the found instruction or null.
- */
-otawa::Inst *File::findByAddress(address_t addr) {
-	for(Iterator<otawa::Segment *> seg(segments()); seg; seg++)
-		if(seg->flags() & Segment::EXECUTABLE) {
-			CodeSegment *cseg = (CodeSegment *)*seg;
-			otawa::Inst *result = cseg->findByAddress(addr);
-			if(result)
-				return result;
-		}
-	return 0;
-}
-
-
-// elm::File overload
-otawa::Symbol *File::findSymbol(String name) {
-	if(!labels_init)
-		initSyms();
-	Option<otawa::Symbol *> sym = syms.get(name);
-	if(sym)
-		return *sym;
-	else
-		return 0;
-}
-
-
-// elm::File overload
-elm::Collection<otawa::Symbol *>& File::symbols(void) {
-	if(!labels_init)
-		initSyms();
-	return syms.items();
 }
 
 
@@ -194,13 +129,29 @@ void File::initSyms(void) {
 		if(addr) {
 			String label(infos.name);
 			Symbol *sym = new Symbol(*this, label, kind, addr);
-			this->syms.put(label, sym);
+			addSymbol(sym);
 		}
 	}
 	gel_enum_free(iter);
 
 	// Mark as built
 	labels_init = true;
+}
+
+/**
+ * Find an instruction by its address.
+ * @param addr	Address of the instruction to find.
+ * @return		Return the found instruction or null.
+ */
+otawa::Inst *File::findByAddress(address_t addr) {
+	for(SegIter seg(this); seg; seg++)
+		if(seg->flags() & Segment::EXECUTABLE) {
+			CodeSegment *cseg = (CodeSegment *)*seg;
+			otawa::Inst *result = cseg->findByAddress(addr);
+			if(result)
+				return result;
+		}
+	return 0;
 }
 
 } } // otawa::gliss
