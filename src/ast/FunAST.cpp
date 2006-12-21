@@ -43,9 +43,9 @@ FunAST::FunAST(FrameWork *fw, Inst *entry, String name)
 		info = new ASTInfo(fw);
 	
 	// If no name, look for a name
-	Option<String> label = ent->get<String>(File::ID_Label);
+	String label = LABEL(ent);
 	if(label)
-		_name = *label;
+		_name = label;
 		
 	// Record the function
 	info->add(this);	
@@ -65,9 +65,9 @@ FunAST::FunAST(ASTInfo *info, Inst *entry, String name)
 	ent->set<FunAST *>(ID, this);
 	
 	// If no name, look for a name
-	Option<String> label = ent->get<String>(File::ID_Label);
+	String label = LABEL(ent);
 	if(label)
-		_name = *label;
+		_name = label;
 		
 	// Record the function
 	info->add(this);	

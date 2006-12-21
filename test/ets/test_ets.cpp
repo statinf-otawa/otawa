@@ -159,7 +159,7 @@ void outputAST(AST *ast, int ind) {
 		break;
 	case AST_Block:
 		cout 	<< "BLOCK : ("
-				<< ast->toBlock()->first()->get<String>(File::ID_Label,"unknown")
+				<< LABEL(ast->toBlock()->first())
 				<<") [" 
 				<< ast->toBlock()->get<int>(ETS::ID_WCET, 0)
 	WITHOUT_CACHE(	<< ", "

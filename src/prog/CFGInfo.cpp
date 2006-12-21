@@ -72,7 +72,7 @@ void CFGInfo::clear(void) {
 	// Release basic block
 	for(Process::FileIter file(fw->process()); file; file++)
 	//for(Iterator<File *> file(*fw->files()); file; file++)
-		for(Iterator<Segment *> seg(file->segments()); seg; seg++)
+		for(File::SegIter seg(file); seg; seg++)
 			for(Iterator<ProgItem *> item(seg->items()); item; item++)
 				if(seg->flags() & Segment::EXECUTABLE) {
 					CodeItem *code = (CodeItem *)*item;

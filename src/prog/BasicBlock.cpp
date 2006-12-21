@@ -354,9 +354,9 @@ CodeBasicBlock::CodeBasicBlock(Inst *inst) {
 	
 	// Look for a label
 	if(!inst->atEnd()) {
-		Option<String> label = inst->get<String>(File::ID_Label);
+		String label = LABEL(inst);
 		if(label)
-			set<String>(File::ID_Label, *label);
+			LABEL(this) = label;
 	}
 	
 	// Set flags

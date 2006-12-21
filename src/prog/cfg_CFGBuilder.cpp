@@ -210,7 +210,7 @@ void CFGBuilder::addFile(File *file) {
 	assert(file);
 	
 	// Scan file symbols
-	for(Iterator<Symbol *> sym(file->symbols()); sym; sym++)
+	for(File::SymIter sym(file); sym; sym++)
 		if(sym->kind() == Symbol::FUNCTION) {
 			Inst *inst = sym->findInst();
 			if(inst)
@@ -218,7 +218,7 @@ void CFGBuilder::addFile(File *file) {
 	}
 	
 	// Scan file segments
-	for(Iterator<Segment *> seg(file->segments()); seg; seg++)
+	for(File::SegIter seg(file); seg; seg++)
 		for(Iterator<ProgItem *> item(seg->items()); item; item++)
 			if(seg->flags() & Segment::EXECUTABLE)
 				buildCFG((CodeItem *)*item);
