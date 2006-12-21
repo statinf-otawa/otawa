@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
 		// Find the code size
 		int size = 0;
 		for(Process::FileIter ffile(fw->process()); ffile; ffile++)
-			for(Iterator<Segment *> seg(ffile->segments()); seg; seg++)
+			for(File::SegIter seg(ffile); seg; seg++)
 				if(seg->flags() & Segment::EXECUTABLE)
 					size += seg->size();
 		
