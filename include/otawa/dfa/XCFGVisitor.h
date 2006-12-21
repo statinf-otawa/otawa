@@ -108,8 +108,8 @@ XCFGVisitor<D>::~XCFGVisitor(void) {
 		cfg->removeProp(&INDEX);
 	
 	// Free memory
-	delete offs;
-	delete preds;
+	delete [] offs;
+	delete [] preds;
 } 
 
 
