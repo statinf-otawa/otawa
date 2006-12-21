@@ -22,24 +22,15 @@ class File: public ::otawa::File {
 	friend class CodeSegment;
 	friend class Process;
 	String path;
-	elm::datastruct::Vector<Segment *> segs;
 	state_t *_state;
-	datastruct::HashTable<String, otawa::Symbol *> syms;
 	void initSyms(void);
 	bool labels_init;
 public:
 	File(String _path, int argc, char **argv, char **envp, bool no_sys = false);
 	~File(void);
-	inline bool isOK(void) { return !segs.isEmpty(); };
-	otawa::Inst *findByAddress(address_t addr);
+	inline bool isOK(void) { return !_state; };
 	inline state_t *state(void) const;
-
-	// ::otawa::File overload
-	virtual CString name(void);
-	virtual elm::Collection<Segment *>& segments(void);
-	virtual address_t findLabel(const String& label);
-	virtual otawa::Symbol *findSymbol(String name);
-	virtual elm::Collection<otawa::Symbol *>& symbols(void);
+	otawa::Inst *findByAddress(address_t addr);
 };
 
 // File Inlines
