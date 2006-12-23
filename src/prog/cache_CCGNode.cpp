@@ -13,22 +13,6 @@ namespace otawa {
 
 CCGNode::CCGNode(LBlock *node){
 		lbl = node;
- }
- 
-
-/*
- * Iterator for CCG edges
- */
-bool CCGNode::CCGEdgeIterator::ended(void) const {
-	return iter.ended();	
-}
-
-CCGEdge *CCGNode::CCGEdgeIterator::item(void) const {
-	return iter.item();
-}
-
-void CCGNode::CCGEdgeIterator::next(void) {
-	iter.next();
-}
+ } 
 
 } // otawa
