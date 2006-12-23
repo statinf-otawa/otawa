@@ -21,37 +21,15 @@ namespace otawa {
 class LBlock;
 // CCGNode class
 
-class CCGNode: public elm::inhstruct::DLNode, public ProgObject {
+class CCGNode: public GenGraph<CCGNode,CCGEdge>::Node {
 
 	//address_t lblc;
 	LBlock *lbl;
-	elm::genstruct::SLList<CCGEdge *> ins, outs;
-	
-
-	// CCGEdgeIterator
-	class CCGEdgeIterator: public IteratorInst<CCGEdge *> {
-		elm::genstruct::SLList<CCGEdge *>::Iterator iter;
-		public:
-		inline CCGEdgeIterator(elm::genstruct::SLList<CCGEdge *> &list)
-		: iter(list) { };
-		virtual bool ended(void) const;
-		virtual CCGEdge *item(void) const;
-		virtual void next(void);
-	};
-	
 
 public:
 	
 	//constructor
 	CCGNode(LBlock *node);
-	
-	// CCGEdge management
-	inline void addInEdge(CCGEdge *edge) { ins.addFirst(edge); };
-	void addOutEdge(CCGEdge *edge) { outs.addFirst(edge); };
-	void removeInEdge(CCGEdge *edge) { ins.remove(edge); };
-	void removeOutEdge(CCGEdge *edge) { outs.remove(edge); };
-	inline IteratorInst<CCGEdge *> *inEdges(void) { return new CCGEdgeIterator(ins); };
-	inline IteratorInst<CCGEdge *> *outEdges(void) { return new CCGEdgeIterator(outs);};
 	
 	// methodes
 	LBlock *lblock(){return lbl;};
