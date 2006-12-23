@@ -16,7 +16,7 @@ template <class V>
 class XIterativeDFA {
 	V& visit;
 	int size;
-	typename V::domain_t **outs, **gens, **kills, *new_out, **ins;
+	typename V::domain_t **outs, **gens, **preserves, *new_out, **ins;
 public:
 	inline XIterativeDFA(V& visitor);
 	inline ~XIterativeDFA(void);
@@ -28,8 +28,8 @@ public:
 		{ return outs[visit.index(key)]; }
 	inline typename V::domain_t *gen(const typename V::key_t& key)
 		{ return gens[visit.index(key)]; }
-	inline typename V::domain_t *kill(const typename V::key_t& key)
-		{ return kills[visit.index(key)]; }
+	inline typename V::domain_t *preserve(const typename V::key_t& key)
+		{ return preserves[visit.index(key)]; }
 };
 
 
@@ -41,12 +41,12 @@ inline XIterativeDFA<V>::XIterativeDFA(V& visitor)
 	ins = new typename V::domain_t *[size];
 	outs = new typename V::domain_t *[size];
 	gens = new typename V::domain_t *[size];
-	kills = new typename V::domain_t *[size];
+	preserves = new typename V::domain_t *[size];
 	for(int i = 0; i < size; i++) {
 		ins[i] = visit.empty();
 		outs[i] = visit.empty();
 		gens[i] = visit.gen(i);
-		kills[i] = visit.kill(i);
+		preserves[i] = visit.preserve(i);
 	}
 }
 
@@ -56,12 +56,12 @@ inline XIterativeDFA<V>::~XIterativeDFA(void) {
 		visit.free(ins[i]);
 		visit.free(outs[i]);
 		visit.free(gens[i]);
-		visit.free(kills[i]);
+		visit.free(preserves[i]);
 	}
 	delete [] ins;
 	delete [] outs;
 	delete [] gens;
-	delete [] kills;
+	delete [] preserves;
 }
 
 template <class V>
@@ -78,20 +78,20 @@ inline void XIterativeDFA<V>::process(void) {
 	while(!fixpoint) {
 		fixpoint = true;
 		for(int i = 0; i < size; i++) {
+			new_out->reset();
 			visit.visitPreds(*this, i);
 			tmp = new_out;
 			new_out = ins[i];
 			ins[i] = tmp;
 			new_out->reset();
 			new_out->join(ins[i]);
-			new_out->meet(kills[i]);
+			new_out->meet(preserves[i]);
 			new_out->join(gens[i]);
 			if(!new_out->equals(outs[i])) {
 				fixpoint = false;
 				tmp = new_out;
 				new_out = outs[i];
 				outs[i] = tmp;
-				new_out->reset();
 			}
 		}
 	}
