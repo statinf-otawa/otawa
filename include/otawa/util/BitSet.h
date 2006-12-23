@@ -35,6 +35,7 @@ public:
 	inline void add(const BitSet& set);
 	inline void remove(const BitSet& set);
 	inline void mask(const BitSet& set);
+	inline int count(void) const;
 
 	inline BitSet doComp(void) const;	
 	inline BitSet doUnion(const BitSet& set) const;
@@ -87,6 +88,9 @@ inline bool BitSet::isFull(void) const {
 	return vec.countBits() == vec.size();
 }
 
+inline int BitSet::count(void) const {
+	return vec.countBits();
+}
 inline void BitSet::fill(void) {
 	vec.set();
 }
