@@ -45,8 +45,8 @@ public:
 	inline void free(domain_t *d) { dom.free(d); }
  	inline domain_t *gen(int node)
 		{ return dom.gen(cfgs[nodes[node].cfg], nodes[node].bb); }
- 	inline domain_t *kill(int node)
-		{ return dom.kill(cfgs[nodes[node].cfg], nodes[node].bb); }
+ 	inline domain_t *preserve(int node)
+		{ return dom.preserve(cfgs[nodes[node].cfg], nodes[node].bb); }
 
 	typedef Pair<CFG *, BasicBlock *> key_t;
 	inline int index(const key_t& key)
