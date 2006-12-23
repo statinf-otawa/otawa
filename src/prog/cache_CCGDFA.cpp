@@ -6,7 +6,6 @@
  */
 
 #include <assert.h>
-#include <otawa/util/DFABitSet.h>
 #include <otawa/cache/ccg/CCGDFA.h>
 #include <otawa/cfg.h>
 #include <otawa/instruction.h>
@@ -21,27 +20,20 @@ using namespace otawa::ipet;
 
 namespace otawa {
 
+
 /**
  */
-DFASet *CCGDFA::initial(void){
+int CCGProblem::vars = 0;
+
+
+/**
+ */
+CCGDomain *CCGProblem::gen(CFG *cfg, BasicBlock *bb) {
 	int length = ccggraph->count();
-	return new DFABitSet(length);
-}
-
-
-/**
- */
-int CCGDFA::vars = 0;
-
-
-/**
- */
-DFASet *CCGDFA::generate(BasicBlock *bb) {
-	int length = ccggraph->count();
-	DFABitSet *dfabitset = new DFABitSet(length);
-	if(bb->isEntry()){
-		dfabitset->DFABitSet::add(0);
-		return dfabitset;
+	CCGDomain *bitset = empty();
+	if(bb->isEntry() && (cfg == ENTRY_CFG(fw))) {
+		bitset->add(0);
+		return bitset;
 	}
 	else {	
 		address_t adlbloc;
@@ -62,15 +54,15 @@ DFASet *CCGDFA::generate(BasicBlock *bb) {
 		}
 	
 		if(identif != 0)
-		 	dfabitset->DFABitSet::add(identif);
-		return dfabitset;
+		 	bitset->add(identif);
+		return bitset;
 	}
 
 }
 
 /**
  */
-DFASet *CCGDFA::kill(BasicBlock *bb) {
+CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
 	Inst *inst;
 	bool testnotconflit = false;
 	bool visit = false;
@@ -127,29 +119,15 @@ DFASet *CCGDFA::kill(BasicBlock *bb) {
 	
 	// the bit vector of kill
 	int length = ccggraph->count();
-	bool ens = true;
-	DFABitSet *kill;
-	if(identif1 == 0) 
-		kill = new DFABitSet(length);
-	else
-		kill = new DFABitSet(length, ens);
-	return kill ;
+	CCGDomain *kill;
+	kill = empty();
+	if(identif1 == 0)  {
+		kill->fill();
+	}
+	return kill;
 }
 
-/**
- */
-void CCGDFA::clear(DFASet *set){
-	DFABitSet *reset;
-	reset = (DFABitSet *)set;
-	reset->empty();
-}
 
-/**
- */
-void CCGDFA::merge(DFASet *acc, DFASet *set) {
-	DFABitSet *bitacc = (DFABitSet *)acc;
-	bitacc->add(set);
-}
 
 }// otawa
 

@@ -2,38 +2,38 @@
  *	$Id$
  *	Copyright (c) 2005, IRIT UPS.
  *
- *	otawa/include/otawa/cache/categorisation/CATDFA.h -- CATDFA class implementation.
+ *	otawa/include/otawa/util/DFA.h -- DFA class implementation.
  */
 
 #include <assert.h>
-#include <otawa/util/DFABitSet.h>
 #include <otawa/cache/categorisation/CATDFA.h>
 #include <otawa/cfg.h>
 #include <otawa/instruction.h>
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/LBlockSet.h>
+#include <elm/genstruct/HashTable.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
 
 using namespace otawa::ilp;
+using namespace elm::genstruct;
+using namespace otawa::ipet;
 
 namespace otawa {
 
+
 /**
  */
-DFASet *CATDFA::initial(void){
-	int length = lines->count();
-	return new DFABitSet(length);
-}
+int CATProblem::vars = 0;
 
 
 /**
  */
-DFASet *CATDFA::generate(BasicBlock *bb) {
+CATDomain *CATProblem::gen(CFG *cfg, BasicBlock *bb) {
 	int length = lines->count();
-	DFABitSet *dfabitset = new DFABitSet(length);
+	CATDomain *bitset = new CATDomain(length);
 	if (bb->isEntry()){
-		dfabitset->DFABitSet::add(0);
-		return dfabitset;
+		bitset->add(0);
+		return bitset;
 	}
 	else {	
 		address_t adlbloc;
@@ -53,13 +53,15 @@ DFASet *CATDFA::generate(BasicBlock *bb) {
 			break;
 	}// end for
 	
-	 if (identif != 0)dfabitset->DFABitSet::add(identif);
-	return dfabitset;
+	 if (identif != 0)bitset->add(identif);
+	return bitset;
 	}
 
 }
 
-DFASet *CATDFA::kill(BasicBlock *bb) {
+/**
+ */
+CATDomain *CATProblem::preserve(CFG *cfg, BasicBlock *bb) {
 		Inst *inst;
 		bool testnotconflit = false;
 		bool visit = false;
@@ -115,29 +117,19 @@ DFASet *CATDFA::kill(BasicBlock *bb) {
 	}// end for
 	// the bit vector of kill
 	int length = lines->count();
-	bool ens = true;
-	DFABitSet *kill;
-	if ((identif1 == 0) && (identif2 == 0)) 
-	kill = new DFABitSet(length );
-	else if ((identif1 != 0)&&(identif2 == 0)&&(identnonconf != 0)){
-		kill = new DFABitSet(length , ens);
-		kill->DFABitSet::remove(identnonconf);
-	}
-	else kill = new DFABitSet(length,ens);
+	
+	CATDomain *kill;
+	kill = new CATDomain(length);
+	
+	if (!((identif1 == 0) && (identif2 == 0))) {
+	        kill->fill();
+	        if ((identif1 != 0)&&(identif2 == 0)&&(identnonconf != 0))
+		        kill->remove(identnonconf);
+        }
+   kill->complement();
    return kill ;
 }
-void CATDFA::clear(DFASet *set){
-	DFABitSet *reset;
-	reset = (DFABitSet *)set;
-	reset->empty();
-}
-void CATDFA::merge(DFASet *acc, DFASet *set){
-	DFABitSet *bitacc = (DFABitSet *)acc;
-	bitacc->add(set);
-}
-
-}
 
 
 
-
+}// otawa

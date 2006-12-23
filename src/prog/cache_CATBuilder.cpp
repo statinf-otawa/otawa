@@ -48,13 +48,12 @@ Identifier CATBuilder::ID_BBVar("ipet.cat.bb_var");
 
 /**
  */
-void CATBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) {	
+void CATBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {	
 	assert(fw);
-	assert(cfg);
 	assert(lbset);
 
 	// Get some information
-	System *system = getSystem(fw, cfg);
+	System *system = getSystem(fw, ENTRY_CFG(fw));
 	
 	// LBlock initialization
 	for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
@@ -98,9 +97,8 @@ void CATBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) {
 
 /**
  */
-void CATBuilder::processCFG(FrameWork *fw, CFG *cfg) {
+void CATBuilder::processFrameWork(FrameWork *fw) {
 	assert(fw);
-	assert(cfg);
 	
 	// Check the cache
 	const hard::Cache *cache = fw->platform()->cache().instCache();
@@ -117,7 +115,7 @@ void CATBuilder::processCFG(FrameWork *fw, CFG *cfg) {
 		
 	// Process the l-block sets
 	for(int i = 0; i < cache->lineCount(); i++)
-		processLBlockSet(fw, cfg, lbsets[i]);
+		processLBlockSet(fw, lbsets[i]);
 }
 
 
@@ -126,7 +124,7 @@ void CATBuilder::processCFG(FrameWork *fw, CFG *cfg) {
  * @param props		Configuration properties.
  */
 CATBuilder::CATBuilder(const PropList& props)
-: CFGProcessor("CATBuilder", Version(1, 0, 0), props), _explicit(false) {
+: Processor("CATBuilder", Version(1, 0, 0), props), _explicit(false) {
 	initialize(props);
 }
 
@@ -143,7 +141,7 @@ void CATBuilder::initialize(const PropList& props) {
 /**
  */
 void CATBuilder::configure(const PropList& props) {
-	CFGProcessor::configure(props);
+	Processor::configure(props);
 	initialize(props);
 }
 

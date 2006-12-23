@@ -20,12 +20,9 @@ namespace otawa {
 /**
  * Build a new CCG edge.
  */
-CCGEdge::CCGEdge(CCGNode *source, CCGNode *target, ilp::Var *p1)
-: src(source), tgt(target){
-	assert(source);
-	assert(target);
-	src->addOutEdge(this);
-	tgt->addInEdge(this);
+CCGEdge::CCGEdge(CCGNode *source, CCGNode *target, ilp::Var *p1) 
+  : GenGraph<CCGNode,CCGEdge>::Edge(source,target)
+{
 	p = p1;
 }
 
@@ -38,8 +35,6 @@ ilp::Var *CCGEdge::varEDGE(void){
  * Delete an edge.
  */
 CCGEdge::~CCGEdge(void) {
-	src->removeOutEdge(this);
-	tgt->removeInEdge(this);
 }
 
 } // otawa
