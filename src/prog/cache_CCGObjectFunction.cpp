@@ -21,9 +21,10 @@ namespace otawa {
 
 /**
  */	
-void CCGObjectFunction::processCFG(FrameWork *fw, CFG *cfg ) {
-	assert(cfg);
-	System *system = cfg->get<System *>(SYSTEM, 0);
+
+void CCGObjectFunction::processFrameWork(FrameWork *fw) {
+	CFG* entry_cfg = ENTRY_CFG(fw);
+	System *system = entry_cfg->get<System *>(SYSTEM, 0);
 	assert (system);
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cach = fw->platform()->cache().instCache();
@@ -32,6 +33,16 @@ void CCGObjectFunction::processCFG(FrameWork *fw, CFG *cfg ) {
 		LBlockSet *idg = lbsets[i];
 		
 		// Building the object function which used by S. Malik 
+		/* 
+		 * OLD VERSION (CCGObjectFunction Builder)
+		 * For each Lblock (i,j) we create two terms:
+		 *  hittime_ij*xhit_ij + misstime_ij*xmiss_ij
+		 * (that is equivalent to: hittime_ij*(x_i) + penalty_ij*xmiss_ij)
+		 *
+		 * NEW VERISON (CCGObjectFunction Modifier)
+		 * t_i*x_i + [sum penalty_ij*xmiss_ij]  (added parts between [])
+		 * 
+		 */
 		for(Iterator<LBlock *> lbloc(idg->visit()); lbloc; lbloc++) {
 			if(lbloc->id() != 0 && lbloc->id() != idg->count()- 1) {
 				int hit_time = lbloc->countInsts(/*cach*/) * fw->platform()->pipelineDepth();
@@ -40,11 +51,13 @@ void CCGObjectFunction::processCFG(FrameWork *fw, CFG *cfg ) {
 				//number of inst in thr l-bloc with cache as parametre
   				int counter = lbloc->countInsts(/*cach*/);
   				system->addObjectFunction(
-  					hit_time,
-  					lbloc->use<ilp::Var *>(CCGBuilder::ID_HitVar));
+  					cach->missPenalty(),
+  					lbloc->use<ilp::Var *>(CCGBuilder::ID_MissVar));
+  					/*
   				system->addObjectFunction(
   					miss_time,
   					lbloc->use<ilp::Var *>(CCGBuilder::ID_MissVar));
+  					*/
 					
 			}
 		
@@ -52,6 +65,7 @@ void CCGObjectFunction::processCFG(FrameWork *fw, CFG *cfg ) {
 		
 	}
 }
+
 
 }//otawa
 
