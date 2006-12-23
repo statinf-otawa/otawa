@@ -19,11 +19,11 @@ class CFG;
 class LBlock;
 
 /* CATBuilder class */
-class CATBuilder: public CFGProcessor {
+class CATBuilder: public Processor {
 	static Identifier ID_In;
 	static Identifier ID_Out;	
 	bool _explicit;
-	void processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset);
+	void processLBlockSet(FrameWork *fw, LBlockSet *lbset);
 	void initialize(const PropList& props);
 public:
 	static Identifier ID_NonConflict;
@@ -35,7 +35,7 @@ public:
 	CATBuilder(const PropList& props = PropList::EMPTY);
 
 	// CFGProcessor overload
-	virtual void processCFG(FrameWork *fw, CFG *cfg );
+	virtual void processFrameWork(FrameWork *fw );
 	virtual void configure(const PropList& props);
 };
 

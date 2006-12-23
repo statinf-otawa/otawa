@@ -8,6 +8,7 @@
 #define OTAWA_TEST_TESTCCG_CCGEDGE_H
 
 #include <otawa/ilp/Var.h>
+#include <otawa/util/GenGraph.h>
 
 namespace otawa {
 
@@ -16,14 +17,11 @@ class CCGNode;
 class Var;
 
 // Edge class
-class CCGEdge: public PropList {
-	CCGNode *src, *tgt;
+class CCGEdge: public GenGraph<CCGNode,CCGEdge>::Edge {
 	ilp::Var *p;
 public:
 	CCGEdge(CCGNode *source, CCGNode *target, ilp::Var *p1);
 	~CCGEdge(void);
-	inline CCGNode *source(void) const { return src; };
-	inline CCGNode *target(void) const { return tgt; };
 	ilp::Var *varEDGE(void);
 };
 

@@ -22,16 +22,16 @@ class LBlock;
 class CCGNode;
 
 // CCGConstraintBuilder class
-class CCGConstraintBuilder: public CFGProcessor {
+class CCGConstraintBuilder: public Processor {
 	FrameWork *fw;
-	void processLBlockSet(CFG *cfg, LBlockSet *lbset);
+	void processLBlockSet(FrameWork *fw, LBlockSet *lbset);
 	void addConstraintHeader(CFG *cfg, LBlockSet *graph, ContextTree *ct,
 		LBlock *boc);
 public:
 	inline CCGConstraintBuilder(FrameWork *framework);
 	
 	// CFGProcessor overload
-	virtual void processCFG(FrameWork *fw, CFG *cfg);
+	virtual void processFrameWork(FrameWork *fw);
 };
 
 // Inlines

@@ -13,20 +13,20 @@
 #include <otawa/prop/Identifier.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/ilp/System.h>
-#include <otawa/util/DFABitSet.h>
+#include <otawa/util/BitSet.h>
 
 namespace otawa {
 	
 class LBlockSet;
 class LBlock;
 class CATNode;
-class CATConstraintBuilder: public CFGProcessor {
+class CATConstraintBuilder: public Processor {
 	static Identifier ID_In;
 	static Identifier ID_Out;
 	static Identifier ID_Set;
 	static Identifier ID_Cat;
 	
-	void processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset);
+	void processLBlockSet(FrameWork *fw, LBlockSet *lbset);
 	
 	
 public:
@@ -41,8 +41,8 @@ public:
 	} Categorization_t;
 	
 	// CFGProcessor overload
-	virtual void processCFG(FrameWork *fw, CFG *cfg );
-	DFABitSet *buildLBLOCKSET(LBlockSet *lcache, ilp::System *system,ContextTree *root);
+	virtual void processFrameWork(FrameWork *fw);
+	BitSet *buildLBLOCKSET(LBlockSet *lcache, ilp::System *system,ContextTree *root);
 	void setCATEGORISATION(LBlockSet *lineset , ContextTree *S , int dec);
 	void worst(LBlock *line , ContextTree *S , LBlockSet *cacheline , int dec); 
 };

@@ -1,8 +1,7 @@
 #ifndef _CATDFA_H_
 #define _CATDFA_H_
 
-#include <elm/util/BitVector.h>
-#include <otawa/util/DFA.h>
+#include <otawa/util/BitSet.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ilp.h>
 #include <otawa/prop/Identifier.h>
@@ -13,23 +12,60 @@ namespace otawa {
 	
 	class BasicBlock;
 	class LBlockSet;
-class CATDFA : public DFA {
+
+
+
+class CATDomain: public BitSet {
+
+public:
+	inline CATDomain(int size) : BitSet(size) {
+	}
+	void reset(void) {
+		empty();
+	}
+	void join(CATDomain *d) {
+		add(*d);
+	}
+	void meet(CATDomain *d) {
+		mask(*d);
+	}
+	bool equals(CATDomain *d) {
+		return(BitSet::equals(*d));
+	}
+};
+
+
+class CATProblem {
     LBlockSet *lines;
-    CFG *cfglb;
     const hard::Cache *cach;
+    FrameWork *fw;
+    int size;
+    static int vars;
     
-	public:
-	// DFA overload
-	CATDFA (LBlockSet *point, CFG *cfg, const hard::Cache *mem){
+        public:
+
+	typedef CATDomain domain_t;
+
+	CATDomain *empty(void) {
+		CATDomain *tmp = new CATDomain(size);
+		tmp->reset();
+		return(tmp);
+	}
+	
+	CATDomain *gen(CFG *cfg, BasicBlock *bb);
+	CATDomain *preserve(CFG *cfg, BasicBlock *bb);
+
+	void free(CATDomain *d) {
+		delete d;
+	}
+    
+	CATProblem (LBlockSet *point, int _size, const hard::Cache *mem, FrameWork *_fw){
 		lines = point;
-		cfglb = cfg;
+		size = _size;
 		cach = mem;	
+		fw = _fw;
 	};
-	virtual DFASet *initial(void);
-	virtual DFASet *generate(BasicBlock *bb);
-	virtual DFASet *kill(BasicBlock *bb);
-	virtual void clear(DFASet *set);
-	virtual void merge(DFASet *acc, DFASet *set);
+	
 };
 
 }	// otawa

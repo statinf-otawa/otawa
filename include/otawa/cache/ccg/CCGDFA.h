@@ -7,13 +7,14 @@
 #ifndef OTAWA_TEST_CCG_CCGDFA_H
 #define OTAWA_TEST_CCG_CCGDFA_H
 
-#include <elm/util/BitVector.h>
-#include <otawa/util/DFA.h>
+#include <otawa/util/DFAEngine.h>
+#include <otawa/util/BitSet.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ilp.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/hard/Cache.h>
+#include <otawa/cfg.h>
 
 
 namespace otawa {
@@ -22,29 +23,59 @@ namespace otawa {
 class BasicBlock;
 class LBlockSet;
 
-// CCGDFA Class
-class CCGDFA : public DFA {
-    LBlockSet *ccggraph;
-    CFG *cfglb;
-    const hard::Cache *cach;
-    static int vars;
+class CCGDomain: public BitSet {
 
 public:
-	inline CCGDFA (LBlockSet *point, CFG *cfg, const hard::Cache *mem);
-
-	// DFA overload
-	virtual DFASet *initial(void);
-	virtual DFASet *generate(BasicBlock *bb);
-	virtual DFASet *kill(BasicBlock *bb);
-	virtual void clear(DFASet *set);
-	virtual void merge(DFASet *acc, DFASet *set);
+	inline CCGDomain(int size) : BitSet(size) {
+	}
+	void reset(void) {
+		empty();
+	}
+	void join(CCGDomain *d) {
+		add(*d);
+	}
+	void meet(CCGDomain *d) {
+		mask(*d);
+	}
+	bool equals(CCGDomain *d) {
+		return(BitSet::equals(*d));
+	}
 };
 
+// CCGProblem Class
+class CCGProblem {
+    LBlockSet *ccggraph;
+    const hard::Cache *cach;
+    static int vars;
+    int size;
+    FrameWork *fw;
+
+public:
+
+	typedef CCGDomain domain_t;
+	inline CCGProblem (LBlockSet *_ccggraph, int _size , const hard::Cache *_cach, FrameWork *_fw);
+
+	CCGDomain *empty(void) {
+		CCGDomain *tmp = new CCGDomain(size);
+		tmp->reset();
+		return(tmp);
+	}
+	
+	CCGDomain *gen(CFG *cfg, BasicBlock *bb);
+	CCGDomain *preserve(CFG *cfg, BasicBlock *bb);
+
+	void free(CCGDomain *d) {
+		delete d;
+	}
+};
+
+
 // Inlines
-inline CCGDFA::CCGDFA (LBlockSet *point, CFG *cfg, const hard::Cache *mem) {
-	ccggraph = point;
-	cfglb = cfg;
-	cach = mem;		
+inline CCGProblem::CCGProblem (LBlockSet *_ccggraph, int _size, const hard::Cache *_cach, FrameWork *_fw) {
+	ccggraph = _ccggraph;
+	cach = _cach;
+	size = _size;
+	fw = _fw;
 }
 
 }	// otawa

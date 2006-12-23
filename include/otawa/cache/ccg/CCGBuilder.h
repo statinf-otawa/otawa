@@ -19,10 +19,10 @@ class CFG;
 class LBlockSet;
 
 // CCGBuilder class
-class CCGBuilder: public CFGProcessor {
+class CCGBuilder: public Processor {
 	bool _explicit;
 	int vars;
-	void processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset);
+	void processLBlockSet(FrameWork *fw, LBlockSet *lbset);
 	void initialize(const PropList& props);
 
 public:
@@ -35,7 +35,7 @@ public:
 	CCGBuilder(const PropList& props = PropList::EMPTY);
 
 	// CFGProcessor overload
-	virtual void processCFG(FrameWork *fw, CFG *cfg );
+	virtual void processFrameWork(FrameWork *fw);
 	virtual void configure(const PropList& props);
 };
 
