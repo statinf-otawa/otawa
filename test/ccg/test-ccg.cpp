@@ -59,54 +59,57 @@ int main(int argc, char **argv) {
 				}
 		
 		// Now, use a VCFG
-		VirtualCFG vcfg(cfg);
-		ENTRY_CFG(fw) = &vcfg;
+
+		VirtualCFG vcfg(cfg); 
+		cfg = &vcfg;
+
+		
+		
+		PROC_VERBOSE(props) = true;
+		ENTRY_CFG(props) = cfg;
+		EXPLICIT(props) = true;
 		
 				
 		// assigne variable to CFG
 		cout << "Numbering the main\n";
 		VarAssignment assign;
-		assign.process(fw);
+		assign.process(fw,props);
 		
 		// Build the system
 		cout << "Building the ILP system\n";
 		BasicConstraintsBuilder builder;
-		builder.process(fw);
+		builder.process(fw,props);
 		
 		// Get external constraints
 		cout << "Loading external constraints\n";
 		ipet::FlowFactLoader ffl;
-		ffl.process(fw);
+		ffl.process(fw,props);
 
 		// Build the CCG
 		cout << "Building the CCG Contraints\n";
 		LBlockBuilder lblock_builder;
-		lblock_builder.process(fw);
+		lblock_builder.process(fw,props);
 			
 		// build ccg graph
 		CCGBuilder ccgbuilder;
-		ccgbuilder.process(fw);
+		ccgbuilder.process(fw,props);
 			
-		// Build ccg contraint
 		CCGConstraintBuilder decomp(fw);
-		decomp.process(fw);
+		decomp.process(fw,props);
 			
-		//Build the objectfunction
 		CCGObjectFunction ofunction(fw);
-		ofunction.process(fw);
+		ofunction.process(fw,props);
 		
 		// Resolve the system
 		cout << "Resolve the system\n";
 		WCETComputation wcomp;
-		wcomp.process(fw);
-		
+		wcomp.process(fw,props);
 		// Display the result
-		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
-		vcfg.use<ilp::System *>(SYSTEM)->dump();
+		ilp::System *sys = cfg->use<ilp::System *>(SYSTEM);
+		cfg->use<ilp::System *>(SYSTEM)->dump();
 		cout << sys->countVars() << " variables and "
 			 << sys->countConstraints() << " constraints.\n";
-		cout << "SUCCESS\nWCET = " << vcfg.use<int>(WCET) << '\n';
-		cout << "dernier version";
+		cout << "SUCCESS\nWCET = " << cfg->use<int>(WCET) << '\n';
 	}
 	catch(LoadException e) {
 		cerr << "ERROR: " << e.message() << '\n';

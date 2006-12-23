@@ -58,8 +58,17 @@ int main(int argc, char **argv) {
 				}
 		
 		// Now, use a VCFG
-		VirtualCFG vcfg(cfg);
-		ENTRY_CFG(fw) = &vcfg;
+		
+		 
+		
+		 VirtualCFG vcfg(cfg);
+		 cfg = &vcfg;
+
+		
+		
+		ENTRY_CFG(props) = cfg;
+		PROC_VERBOSE(props) = false;
+		EXPLICIT(props) = false;
 		
 		// Compute BB times
 		cout << "Timing the BB\n";
@@ -70,50 +79,50 @@ int main(int argc, char **argv) {
 		// assigne variable to CFG
 		cout << "Numbering the main\n";
 		VarAssignment assign;
-		assign.process(fw);
+		assign.process(fw, props);
 		
 		// Build the system
 		cout << "Building the ILP system\n";
 		BasicConstraintsBuilder builder;
-		builder.process(fw);
+		builder.process(fw , props);
 		
 		// Build the object function to maximize
 		cout << "Building the ILP object function\n";
 		BasicObjectFunctionBuilder fun_builder;
-		fun_builder.process(fw);
+		fun_builder.process(fw, props);
 		
 		// Get external constraints
 		cout << "Loading external constraints\n";
 		ipet::FlowFactLoader ffl;
-		ffl.process(fw);
+		ffl.process(fw, props);
 		// Build the CCG
 		/*cout << "Building the Categories Contraints\n";
 		for (int i=0; i < level1->lineCount(); i++){
 			cout << "construire les lblocks pour la ligne"<<i <<"\n";	
 			LBlockSet *idccg = new LBlockSet();
-			vcfg.addDeletable<LBlockSet *>(LBlockSet::ID_LBlockSet, idccg);*/
+			cfg->addDeletable<LBlockSet *>(LBlockSet::ID_LBlockSet, idccg);*/
 			//CCGDFA dfa(idccg,cfg,  3);
 			
 			// build Cat lblocks
 			CATBuilder catbuilder;
-			catbuilder.process(fw);
+			catbuilder.process(fw, props);
 			
 			// Build CAT contraint
 			CATConstraintBuilder decomp;
-			decomp.process(fw);
+			decomp.process(fw, props);
 					
 		///}
 		// Resolve the system
 		cout << "Resolve the system\n";
 		WCETComputation wcomp;
-		wcomp.process(fw);
+		wcomp.process(fw, props);
 		
 		// Display the result
-		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
-		vcfg.use<ilp::System *>(SYSTEM)->dump();
+		ilp::System *sys = cfg->use<ilp::System *>(SYSTEM);
+		cfg->use<ilp::System *>(SYSTEM)->dump();
 		cout << sys->countVars() << " variables and "
 			 << sys->countConstraints() << " constraints.\n";
-		cout << "SUCCESS\nWCET = " << vcfg.use<int>(WCET) << '\n';
+		cout << "SUCCESS\nWCET = " << cfg->use<int>(WCET) << '\n';
 	}
 	catch(LoadException e) {
 		cerr << "ERROR: " << e.message() << '\n';
