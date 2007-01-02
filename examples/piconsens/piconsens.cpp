@@ -188,8 +188,8 @@ void Command::compute(String fun) {
 		tbt.process(fw);
 	}
 	else {
-		BBTimeSimulator bbts(props);
-		bbts.process(fw);
+		BBTimeSimulator bbts;
+		bbts.process(fw, props);
 		
 		// Compute min times
 		if(suffix) {

@@ -166,8 +166,8 @@ int main(int argc, char **argv) {
 		props.set(EXPLICIT, true);
 		
 		// Compute BB times
-		BBTimeSimulator bbts(props);
-		bbts.process(fw);
+		BBTimeSimulator bbts;
+		bbts.process(fw, props);
 		
 		// Trivial data cache
 		TrivialDataCacheManager dcache;
