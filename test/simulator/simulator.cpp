@@ -79,8 +79,8 @@ int main(int argc, char **argv) {
 		VirtualCFG vcfg(cfg);
 		
 		// Prepare processor configuration
-		PropList props;
-		props.set(IPET::ID_Explicit, true);
+		/*PropList props;
+		props.set(IPET::ID_Explicit, true);*/
 		
 		ARMSimulator simulator;
 		ARMState *simulator_state = (ARMState *) simulator.instantiate(fw,props);
