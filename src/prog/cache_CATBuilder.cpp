@@ -1,19 +1,22 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2005-06, IRIT UPS.
  *
- *	src/prog/cache_CATBuilder.cpp -- CATBuilder class implementation.
+ *	CATBuilder class implementation.
  */
-#include <stdio.h>
+//#include <stdio.h>
 #include <elm/io.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
-#include <otawa/instruction.h>
+//#include <otawa/instruction.h>
 #include <otawa/cache/LBlock.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/cfg.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/hard/Platform.h>
+#include <otawa/util/ContextTree.h>
+#include <otawa/dfa/XCFGVisitor.h>
+#include <otawa/cache/categorisation/CATDFA.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
@@ -23,27 +26,45 @@ namespace otawa {
 
 /**
  */
-Identifier CATBuilder::ID_NonConflict("ipet.cat.nonconflict");
+GenericIdentifier<bool> CATBuilder::NON_CONFLICT("cat.non_conflict", false, OTAWA_NS);
 
 
 /**
+ * Private property.
  */
-Identifier CATBuilder::ID_Node("ipet.cat.node");
+static GenericIdentifier<BitSet *> IN("cat.in", 0, OTAWA_NS);
 
 
 /**
+ * Private property.
  */
-Identifier CATBuilder::ID_HitVar("ipet.cat.hit_var");
+static GenericIdentifier<BitSet *> SET("cat.set", 0, OTAWA_NS);
 
 
 /**
+ * This property stores the instruction cache access category of L-Blocks.
+ * This value may be :
+ * @li ALWAYS_HIT : accesses to this l-block produces always a cache hit, 
+ * @li ALWAYS_MISS : accesses to this l-block produces always a cache miss,
+ * @li FIRST_HIT : accesses to this l-block produces an cache hit at the first
+ * 					iteration of the containing loop and cache misses in the
+ * 					next iterations, 
+ * @li FIRST_MISS : accesses to this l-block produces a cache miss at the first
+ * 					iteration of the containing loop and cache hits in the next
+ * 					iterations, 
+ * 
+ * @par Hooks
+ * @li @ref LBlock
  */
-Identifier CATBuilder::ID_MissVar("ipet.cat.miss_var");
+GenericIdentifier<category_t> CATEGORY("category", INVALID_CATEGORY, OTAWA_NS);
 
 
 /**
+ * This property is set for L-Block categories that has been lowered, that is,
+ * they was classified as first-miss but lowered to always-miss due to effect
+ * of a surrounding loop (whose header basic block is stored).
  */
-Identifier CATBuilder::ID_BBVar("ipet.cat.bb_var");
+GenericIdentifier<BasicBlock *> LOWERED_CATEGORY("lowered_category", 0, OTAWA_NS);
 
 
 /**
@@ -52,46 +73,30 @@ void CATBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {
 	assert(fw);
 	assert(lbset);
 
-	// Get some information
-	System *system = getSystem(fw, ENTRY_CFG(fw));
+	// Compute Abstract Cache States
+	const hard::Cache *cach = fw->platform()->cache().instCache();
+	CATProblem prob(lbset, lbset->count(), cach, fw);
+	CFGCollection *coll = INVOLVED_CFGS(fw);
+	dfa::XCFGVisitor<CATProblem> visitor(*coll, prob);
+	dfa::XIterativeDFA<dfa::XCFGVisitor<CATProblem> > engine(visitor);
+	engine.process();
 	
-	// LBlock initialization
-	for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
-	
-		// Set a node
-		lblock->add(ID_Node, new CCGNode(lblock));
-		BasicBlock *bb = lblock->bb();
-		if(!bb)
-			continue;
-
-		// Link BB variable
-		ilp::Var *bbvar = bb->use<ilp::Var *>(VAR);
-		lblock->add(ID_BBVar, bbvar);
-		
-		// Create x_hit variable
-		ilp::Var *vhit;
-		if(!_explicit)
-			vhit = system->newVar();
-		else {
-			StringBuffer buf;
-			buf << "xhit" << lblock->address() << "(" << bb->number() << ")";
-			String namex = buf.toString();
-			vhit = system->newVar(namex);
+	// Assign ACS to BB
+	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
+		for (CFG::BBIterator block(*cfg); block; block++) {
+			dfa::XCFGVisitor<CATProblem>::key_t pair(*cfg, *block);
+			BitSet *bitset = engine.in(pair);
+			block->addDeletable<BitSet *>(IN, new BitSet(*bitset));
 		}
-		lblock->add(ID_HitVar, vhit);
-		
-		// Create x_miss variable
-		ilp::Var *miss;
-		if(!_explicit)
-			miss = system->newVar();
-		else {
-			StringBuffer buf1;
-			buf1 << "xmiss" << lblock->address() << "(" << bb->number() << ")";
-			String name1 = buf1.toString();
-			miss = system->newVar(name1);
-		}
-		lblock->add(ID_MissVar, miss);
 	}
+	
+	// Build categories
+	ContextTree *ct = CONTEXT_TREE(fw);
+	assert(ct); 
+	/*for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++)
+		CATBuilder::NODE(lblock) += new CATNode(lblock);*/
+	BitSet *virtuel = buildLBLOCKSET(lbset, ct);
+	setCATEGORISATION(lbset, ct, cach->blockBits());
 }
 
 
@@ -121,29 +126,298 @@ void CATBuilder::processFrameWork(FrameWork *fw) {
 
 /**
  * Create a new CATBuilder processor.
- * @param props		Configuration properties.
+ * 
+ * @par Provided Feature
+ * @li @ref ICACHE_CATEGORY_FEATURE
+ *
+ * @par Required Features
+ * @li @ref CONTEXT_TREE_FEATURE
+ * @li @ref COLLECTED_LBLOCKS_FEATURE
  */
-CATBuilder::CATBuilder(const PropList& props)
-: Processor("CATBuilder", Version(1, 0, 0), props), _explicit(false) {
-	initialize(props);
+CATBuilder::CATBuilder(void)
+: Processor("CATBuilder", Version(1, 0, 0)) {
+	require(CONTEXT_TREE_FEATURE);
+	require(COLLECTED_LBLOCKS_FEATURE);
+	provide(ICACHE_CATEGORY_FEATURE);
+}
+
+
+/*
+ * This function categorize the l-blocks in the ContextTree S (and its children)
+ *
+ * @param lineset The l-block list
+ * @param S The root context tree
+ * @param dec In an address, the number of bits representing the offset in a cache block.
+ */
+void CATBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S ,int dec){
+	int size = lineset->count();	
+	int ident;
+	BitSet *u = new BitSet(size);
+	LBlock *cachelin;
+	
+	/*
+	 * Categorize first all the l-blocks in the children ContextTree
+	 */
+	for(Iterator<ContextTree *> fils(S->children()); fils; fils++){
+		setCATEGORISATION(lineset,fils,dec);		
+	}
+	
+	/* Now categorize the l-blocks in this ContextTree */
+	if(S->kind() == ContextTree::LOOP){
+		/* 
+		 * Call worst() on each l-block of the loop.
+		 */
+		u = SET(S);
+		for (int a = 0; a < size; a++){
+			if (u->contains(a)){
+				cachelin = lineset->lblock(a);
+				worst(cachelin ,S,lineset,dec);
+			}
+		}
+	}
+	else {
+		/* 
+		 * Call worst() on each l-block of this ContextTree.
+		 */
+		for(Iterator<BasicBlock *> bk(S->bbs()); bk; bk++){
+			for(Iterator<Inst *> inst(bk->visit()); inst; inst++) {
+				 PseudoInst *pseudo = inst->toPseudo();
+				if(!pseudo){
+					address_t adlbloc = inst->address();
+					for (Iterator<LBlock *> lbloc(lineset->visit()); lbloc; lbloc++){
+						if ((adlbloc == (lbloc->address()))&&(bk == lbloc->bb())){
+							ident = lbloc->id();
+							cachelin = lineset->lblock(ident);
+							worst(cachelin ,S , lineset,dec);
+						}
+					}
+				}
+				else if(pseudo->id() == &bk->ID)
+					break;
+			}
+		}
+		
+	}
+}
+
+/*
+ * ??? This function really categorizes the lblock "line"... ???
+ * Annotates the "line" with ALWAYSMISS/ALWAYSHIT/FIRSTMISS/FIRSTHIT
+ * In the case of FIRSTMISS, also annotate with the loop-header of the most inner loop.
+ */
+void CATBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *idset, int dec){
+	int number = idset->count();	
+	BasicBlock *bb = line->bb();
+	LBlock *cacheline;
+	BitSet *in = new BitSet(number);
+	
+	
+	in = IN(bb);
+
+	int count = 0;
+	bool nonconflitdetected = false;
+	bool continu = false;
+	unsigned long tagcachline,tagline;
+
+	//test if it's the lbloc which find in the same memory block
+	
+	/*
+	 * If the IN(line) = {LB} and cacheblock(line)==cacheblock(LB), then
+	 * nonconflict (Always Hit)
+	 */
+	if (in->count() == 1){
+		for (int i=0;i < number;i++){
+		if (in->contains(i)){
+			cacheline = idset->lblock(i);
+			tagcachline = ((unsigned long)cacheline->address()) >> dec;
+			unsigned long tagline = ((unsigned long)line->address()) >> dec;
+				if (tagcachline == tagline )
+					nonconflitdetected = true;
+			}
+		}
+	}
+	
+	
+	
+	//test the virtual non-conflit state
+	bool nonconflict = false;
+	for (int i=0;i < number;i++) {
+			if (in->contains(i)) {
+				cacheline = idset->lblock(i);
+				tagcachline = ((unsigned long)cacheline->address()) >> dec;
+			    tagline = ((unsigned long)line->address()) >> dec;
+				if(cacheline->address() == line->address()
+				&& line->bb() != cacheline->bb())
+					nonconflict = true;
+			}
+	}
+	
+	
+	bool exist = false;
+	// test if the first lblock in the header is Always miss
+	if (in->count() == 2){
+		bool test = false;
+		for (int i=0;i < number;i++){
+			if (in->contains(i)) {
+				cacheline = idset->lblock(i);
+				tagcachline = ((unsigned long)cacheline->address()) >> dec;
+				unsigned long tagline = ((unsigned long)line->address()) >> dec;
+				if(tagcachline == tagline && line->bb() != cacheline->bb())
+					test = true;
+				if(tagcachline != tagline )
+					exist = true;
+				if(test && line->address() == cacheline->address())
+					continu = true;
+			}
+		}
+	}
+	
+	//the last categorisation of the l-block
+	category_t lastcateg = CATEGORY(line);
+	if(node->kind()!=ContextTree::LOOP){
+		//if ((line->returnSTATENONCONF())&&( nonconflitdetected)){
+		if ( nonconflitdetected || continu){	
+			CATEGORY(line) = ALWAYS_HIT;
+		}			
+		else
+			CATEGORY(line) = ALWAYS_MISS;	
+	}
+	bool dfm = false;
+	if(node->kind()== ContextTree::LOOP){
+		BitSet *w = new BitSet(number);
+		w = SET(node);
+		if (w->count()== 2){
+			int U[2];
+			int m = 0;
+			for (BitSet::Iterator iter(*w); iter; iter++) {
+				U[m] = *iter;
+				m = m + 1;
+			}
+			//cacheline = lineset->returnLBLOCK(i);
+			tagcachline = ((unsigned long)idset->lblock(U[0])->address()) >> dec;
+		    tagline = ((unsigned long)idset->lblock(U[1])->address()) >> dec;
+			if(tagcachline == tagline)
+					dfm = true;
+		}
+		
+		BitSet inter = *w;
+		BitSet dif = *in;
+	
+		// intersection
+		inter.mask(*in);
+	
+		//difference (IN - U)
+		dif.remove(*w);
+		
+		int identif = line->id();
+		
+		//basic bock of the header
+		BasicBlock * blockheader = node->bb();
+		//if ((line->returnSTATENONCONF())&&(nonconflitdetected || continu)){
+		if ((nonconflitdetected )|| (continu && !exist)){
+			CATEGORY(line) = ALWAYS_HIT;
+		}
+		else 
+			if(lastcateg == FIRST_HIT
+//			|| ((line->getNonConflictState() || nonconflict)
+			|| ((CATBuilder::NON_CONFLICT(line) || nonconflict)
+				&& inter.count() > 0
+				&& dif.count()== 1
+				&& blockheader == bb))
+					CATEGORY(line) = FIRST_HIT;
+			else if ((((lastcateg == FIRST_MISS) || (lastcateg == INVALID_CATEGORY))
+				&&(in->contains(identif)&&(inter.count()== 1)&&(inter.contains(identif))&& (dif.count() >= 0)&&(w->count()== 1)))
+				||((inter.count() == 2)&&(dfm)&&(inter.contains(identif))))
+					CATEGORY(line) = FIRST_MISS;
+				else {
+					CATEGORY(line) = ALWAYS_MISS;
+					 if (lastcateg == FIRST_MISS){
+					 	LOWERED_CATEGORY(line) = node->bb();
+					 	//CATBuilder::NODE(line)->setHEADEREVOLUTION(node->bb(),true);
+					 }
+					 
+				}
+		}
+		
 }
 
 
 /**
- * Initialize the processor.
- * @param props		Configuration properties.
+ * Annotate all the loop headers with the set of the l-blocks contained in the loop.
+ * Sets the categorisation to "INVALID" for all l-blocks processed by this function.
+ * Annotate all processed l-blocks with the the header of the most inner loop.
+ * (or with the root of the CT. if there isn't any loop containing the l-block)
+ *
+ * @param lcache The lblock set.
+ * @param root The root ContextTree
+ * @return The set of all lblocks contained in the "root" ContextTree and its children (that is, the set of all processed l-blocks)
+ * 
  */
-void CATBuilder::initialize(const PropList& props) {
-	_explicit = props.get<bool>(EXPLICIT, false);
+BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
+		int lcount = lcache->count();	
+		BitSet *set = new BitSet(lcount);
+		BitSet *v = new BitSet(lcount);
+		bool inloop = false;
+		
+		if (root->kind()== ContextTree::LOOP )
+				inloop = true;
+		int ident;
+	
+		/*
+		 * Call recursively buildLBLOCKSET for each ContextTree children
+		 * Merge result with current set
+		 */
+		for(Iterator<ContextTree *> son(root->children()); son; son++){
+			 v = buildLBLOCKSET(lcache, son);
+			 set->add(*v);
+		}
+		
+		/*
+		 * For each lblock that is part of any non-(entry|exit) BB of the current ContextTree:
+		 *   - Set the lblock's categorization to INVALID
+		 *   - Add this lblock to the current set.
+		 */
+		for(Iterator<BasicBlock *> bb(root->bbs()); bb; bb++){
+			if ((!bb->isEntry())&&(!bb->isExit())){ /* XXX */
+			for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
+				 PseudoInst *pseudo = inst->toPseudo();
+				if(!pseudo){
+					address_t adlbloc = inst->address();
+					for (Iterator<LBlock *> lbloc(lcache->visit()); lbloc; lbloc++){
+						if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
+							ident = lbloc->id();
+							CATEGORY(lbloc) += INVALID_CATEGORY;
+							//CATBuilder::NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);
+							set->BitSet::add(ident);
+							
+						}
+					}
+				}
+				else if(pseudo->id() == &bb->ID)
+					break;
+			}
+		}
+		}
+
+	/* 
+	 * For loops, annotate the loop-header with the set of all l-blocks in the loop
+	 */
+	if(root->kind()== ContextTree::LOOP){
+		SET(root) += set; 
+	}
+	return set;
 }
 
 
 /**
+ * This feature asserts that a category is assigned at each l-block involved
+ * in the current task.
+ * 
+ * @par Properties
+ * @li @ref CATEGORY (@ref LBlock).
+ * @li @ref LOWERED_CATEGORY (@ref LBlock)
  */
-void CATBuilder::configure(const PropList& props) {
-	Processor::configure(props);
-	initialize(props);
-}
+Feature<CATBuilder> ICACHE_CATEGORY_FEATURE("otawa::icache_category");
 
 } // otawa
 
