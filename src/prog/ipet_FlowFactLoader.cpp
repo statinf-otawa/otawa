@@ -14,6 +14,7 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/util/Dominance.h>
+#include <otawa/ipet/VarAssignment.h>
 
 namespace otawa { namespace ipet {
 
@@ -38,6 +39,7 @@ FlowFactLoader::FlowFactLoader(void)
 : Processor("otawa::ipet::FlowFactLoader", Version(1, 0, 0)) {
 	require(COLLECTED_CFG_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
+	require(ASSIGNED_VARS_FEATURE);
 	provide(FLOW_FACTS_FEATURE);
 	provide(FLOW_FACTS_CONSTRAINTS_FEATURE);
 }
