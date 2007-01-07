@@ -278,9 +278,10 @@ void Command::compute(String fun) {
 	wcomp.process(fw, props);
 
 	// Get the result
-	ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
+	ilp::System *sys = SYSTEM(fw); 
+	//vcfg.use<ilp::System *>(SYSTEM);
 	cout << "WCET [" << file << ":" << fun << "] = "
-		 << vcfg.use<int>(WCET) << io::endl;
+		 << WCET(fw) << io::endl;
 	
 	// Dump the ILP system
 	if(dump_constraints) {
