@@ -389,6 +389,14 @@ void ContextTree::addChild(ContextTree *child) {
 
 
 /**
+ * Build the context tree of the current task.
+ * 
+ * @par Provided Features
+ * @li @ref CONTEXT_TREE_FEATURE
+ * 
+ * @par Required Features
+ * @li @ref DOMINANCE_FEATURE
+ * @li @ref LOOP_HEADERS_FEATURE
  */
 ContextTreeBuilder::ContextTreeBuilder(void)
 : Processor("otawa::context_tree_builder", Version(1, 0, 0)) {
