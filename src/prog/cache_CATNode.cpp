@@ -12,27 +12,27 @@ namespace otawa {
 
 CATNode::CATNode(LBlock *lblock ){
 		lbl = lblock;
-		hasheaderevolution = false;						
+//		hasheaderevolution = false;						
  }
 
 void CATNode::setHEADERLBLOCK(BasicBlock *hlb, bool loop){
 	headerlblock = hlb;
 	inloop = loop;
 }
-void CATNode::setHEADEREVOLUTION(BasicBlock *hev,bool evolution){
+/*void CATNode::setHEADEREVOLUTION(BasicBlock *hev,bool evolution){
 	headerevolution = hev;
 	hasheaderevolution = evolution;
-}
+}*/
 BasicBlock *CATNode::HEADERLBLOCK(void){
 	return headerlblock;
 }
-BasicBlock *CATNode::HEADEREVOLUTION(void){
+/*BasicBlock *CATNode::HEADEREVOLUTION(void){
 	return headerevolution;
-}
+}*/
 bool CATNode::INLOOP (void){
 	return inloop;	
 }
-bool CATNode::HASHEADEREVOLUTION(void){
+/*bool CATNode::HASHEADEREVOLUTION(void){
 	return hasheaderevolution;
-}		
+}*/		
 } // otawa
