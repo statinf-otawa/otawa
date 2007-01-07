@@ -21,9 +21,9 @@ class LBlock;
 class CATNode: public elm::inhstruct::DLNode, public ProgObject {
 	
 	BasicBlock *headerlblock;
-	BasicBlock *headerevolution;
+	//BasicBlock *headerevolution;
 	bool inloop;
-	bool hasheaderevolution;
+	//bool hasheaderevolution;
 	LBlock *lbl;	
 	
 	
@@ -35,11 +35,11 @@ public:
 	// methodes
 	
 	void setHEADERLBLOCK(BasicBlock *hlb,bool loop);
-	void setHEADEREVOLUTION(BasicBlock *hev, bool evolution);
+	//void setHEADEREVOLUTION(BasicBlock *hev, bool evolution);
 	BasicBlock *HEADERLBLOCK(void);
-	BasicBlock *HEADEREVOLUTION(void);
+	//BasicBlock *HEADEREVOLUTION(void);
 	bool INLOOP (void);
-	bool HASHEADEREVOLUTION(void);
+	//bool HASHEADEREVOLUTION(void);
 	LBlock *lblock(){return lbl;};
 };
 

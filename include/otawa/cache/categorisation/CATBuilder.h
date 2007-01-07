@@ -1,43 +1,59 @@
 /*
  * $Id$
- * Copyright (c) 2005 IRIT-UPS
+ * Copyright (c) 2005-06 IRIT-UPS
  * 
- * otawa/prog/CATBuilder.h -- CATBuilder class interface.
+ * CATBuilder class interface.
  */
 #ifndef OTAWA_IPET_CACHE_CATBUILDER_H
 #define OTAWA_IPET_CACHE_CATBUILDER_H
 
 #include <assert.h>
 #include <otawa/proc/CFGProcessor.h>
-#include <otawa/prop/Identifier.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa {
 	
-/* Extern class */
-class LBlockSet;
+// Extern class
+class BitSet;
+//class CATNode;
 class CFG;
+class ContextTree;
 class LBlock;
+class LBlockSet;
 
-/* CATBuilder class */
+
+// Categorisation
+typedef enum category_t {
+	INVALID_CATEGORY = 0,
+	ALWAYS_HIT = 1,
+	FIRST_HIT = 2,
+	FIRST_MISS = 3,
+	ALWAYS_MISS = 4
+} category_t;
+	
+
+// CATBuilder class
 class CATBuilder: public Processor {
-	static Identifier ID_In;
-	static Identifier ID_Out;	
-	bool _explicit;
+	BitSet *buildLBLOCKSET(LBlockSet *lcache, ContextTree *root);
 	void processLBlockSet(FrameWork *fw, LBlockSet *lbset);
-	void initialize(const PropList& props);
+	void setCATEGORISATION(LBlockSet *lineset, ContextTree *S, int dec);
+	void worst(LBlock *line, ContextTree *S, LBlockSet *cacheline, int dec); 
+	
 public:
-	static Identifier ID_NonConflict;
-	static Identifier ID_Node;
-	static Identifier ID_HitVar;
-	static Identifier ID_MissVar;
-	static Identifier ID_BBVar;
 
-	CATBuilder(const PropList& props = PropList::EMPTY);
+	static GenericIdentifier<bool> NON_CONFLICT;
+	CATBuilder(void);
 
 	// CFGProcessor overload
 	virtual void processFrameWork(FrameWork *fw );
-	virtual void configure(const PropList& props);
 };
+
+// Features
+extern Feature<CATBuilder> ICACHE_CATEGORY_FEATURE;
+
+// Properties
+extern GenericIdentifier<category_t> CATEGORY;
+extern GenericIdentifier<BasicBlock *> LOWERED_CATEGORY;
 
 }	// otawa
 

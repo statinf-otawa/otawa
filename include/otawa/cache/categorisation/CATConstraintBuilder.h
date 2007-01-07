@@ -1,53 +1,43 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2005-06, IRIT UPS.
  *
- *	otawa/prog/CATConstraintsBuilder.h -- CATConstraintsBuilder class interface.
+ *	CATConstraintsBuilder class interface
  */
 #ifndef OTAWA_CACHE_CATCONSTRAINTBUILDER_H
 #define OTAWA_CACHE_CATCONSTRAINTBUILDER_H
 
 
 #include <assert.h>
-#include <otawa/proc/CFGProcessor.h>
-#include <otawa/prop/Identifier.h>
-#include <otawa/util/ContextTree.h>
-#include <otawa/ilp/System.h>
-#include <otawa/util/BitSet.h>
+#include <otawa/proc/Processor.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa {
-	
+
+// Extern classes
+class ContextTree;
 class LBlockSet;
-class LBlock;
-class CATNode;
+
+namespace ipet {
+	
+// CATConstraintBuilder class
 class CATConstraintBuilder: public Processor {
-	static Identifier ID_In;
-	static Identifier ID_Out;
-	static Identifier ID_Set;
-	static Identifier ID_Cat;
-	
+	bool _explicit;
 	void processLBlockSet(FrameWork *fw, LBlockSet *lbset);
-	
-	
+	void buildLBLOCKSET(LBlockSet *lcache, ContextTree *root);
+
 public:
-	static int counter;
-	// categorization
-	typedef enum Categorization_t {
-		INVALID = 0,
-		ALWAYSHIT = 1,
-		FIRSTHIT = 2,
-		FIRSTMISS = 3,
-		ALWAYSMISS = 4
-	} Categorization_t;
-	
+	CATConstraintBuilder(void);
+		
 	// CFGProcessor overload
 	virtual void processFrameWork(FrameWork *fw);
-	BitSet *buildLBLOCKSET(LBlockSet *lcache, ilp::System *system,ContextTree *root);
-	void setCATEGORISATION(LBlockSet *lineset , ContextTree *S , int dec);
-	void worst(LBlock *line , ContextTree *S , LBlockSet *cacheline , int dec); 
+	virtual void configure(const PropList& props);
 };
 
-}	// otawa
+// Features
+extern Feature<CATConstraintBuilder> ICACHE_SUPPORT_FEATURE; 
+
+} }	// otawa::ipet
 
 
 #endif //OTAWA_TEST_CATCONSTRAINTBUILDER_H_
