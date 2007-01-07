@@ -89,7 +89,7 @@ CATDomain *CATProblem::preserve(CFG *cfg, BasicBlock *bb) {
 							// the state of the first lblock in BB become nonconflict
 							   LBlock *ccgnode = lines->lblock(identif1); 
 //								ccgnode->setNonConflictState(true);
-								ccgnode->set(CATBuilder::ID_NonConflict, true);
+								CATBuilder::NON_CONFLICT(ccgnode) = true;
 								break;
 						}// end Sde if
 					}//end Sde for of lbloc
