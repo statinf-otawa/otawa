@@ -165,7 +165,7 @@ bool System::solve(void) {
 	
 	// Launch the resolution
 	set_print_sol(lp, FALSE);
-	set_epsilon(lp, DEF_EPSILON);
+	/*set_epsilon(lp, DEF_EPSILON);
 	set_epspivot(lp, DEF_EPSPIVOT);
 	set_print_duals(lp, FALSE);
 	set_debug(lp, FALSE);
@@ -176,7 +176,7 @@ bool System::solve(void) {
 	set_do_presolve(lp, FALSE);
 	set_improve(lp, IMPROVE_NONE);
 	set_scalemode(lp, MMSCALING);
-	set_bb_rule(lp, FIRST_SELECT);
+	set_bb_rule(lp, FIRST_SELECT);*/
 	int fail = ::solve(lp);
 	
 	// Record the result
@@ -190,22 +190,22 @@ bool System::solve(void) {
 			var->setValue((double)lp->best_solution[lp->rows + var->column()]);
 
 		// Get optimization result
-		//val = (double)lp->best_solution[0];
+		val = (double)lp->best_solution[0];
 		// lp_solve seems to be buggy, so we recompute the max
-		// val = get_objective(lp);
-		double sum = 0;
+		//val = get_objective(lp);
+		/*double sum = 0;
 		for(Constraint::Factor *fact = ofun->facts; fact; fact = fact->next()) {
 			if(fact->variable())
 				sum += fact->coefficient() * fact->variable()->value();
 			else
 				sum += fact->coefficient();
 		}
-		val = sum;
+		val = sum;*/
 	}
 	
 	// Clean up
-	/*print_lp(lp);
-	//print_solution(lp);*/
+	/*print_lp(lp);*/
+	//print_solution(lp);
 	//write_MPS(lp, stdout);
 	delete_lp(lp);
 	return result;
