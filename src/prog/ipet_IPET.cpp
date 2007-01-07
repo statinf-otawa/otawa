@@ -114,12 +114,12 @@ extern GenericIdentifier<int> TIME_DELTA("ipet.time_delta", 0);
  * @preturn		CFG ILP system.
  */
 ilp::System *getSystem(FrameWork *fw, CFG *cfg) {
-	System *system = SYSTEM(cfg);
+	System *system = SYSTEM(fw);
 	if(!system) {
 		system = fw->newILPSystem();
 		if(!system)
 			throw elm::MessageException("no ILP engine available");
-		cfg->addDeletable<System *>(SYSTEM, system);
+		fw->addDeletable<System *>(SYSTEM, system);
 	}
 	return system;
 }

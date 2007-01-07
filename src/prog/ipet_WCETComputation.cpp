@@ -49,13 +49,13 @@ WCETComputation::WCETComputation(void)
  */
 void WCETComputation::processFrameWork(FrameWork *fw) {
 	CFG *cfg = ENTRY_CFG(fw);
-	System *system = SYSTEM(cfg);
+	System *system = SYSTEM(fw);
 	if(!system)
 		throw ProcessorException(*this, "no ILP system defined in this CFG");
 	int wcet = -1;
 	if(system->solve())
 		wcet = (int)system->value();
-	WCET(cfg) = wcet;
+	WCET(fw) = wcet;
 }
 
 
