@@ -6,8 +6,6 @@
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/cache/LBlockSet.h>
-#include <otawa/hard/Cache.h>
-#include <otawa/hard/CacheConfiguration.h>
 
 
 using namespace otawa;
@@ -17,35 +15,18 @@ using namespace otawa::hard;
 
 int main(int argc, char **argv) {
 	
-// Construction de la hiérarchie de cache
- 	Cache::info_t info;
- 	info.block_bits = 3;  // 2^3 octets par bloc
- 	info.line_bits = 3;   // 2^3 lignes
- 	info.set_bits = 0;    // 2^0 élément par ensemble (cache direct)
- 	info.replace = Cache::NONE;
- 	info.write = Cache::WRITE_THROUGH;
- 	info.access_time = 0;
- 	info.miss_penalty = 10;
- 	info.allocate = false;
- 	Cache *level1 = new Cache(info);
- 	CacheConfiguration *caches = new CacheConfiguration(level1);
-			
 	Manager manager;
 	PropList props;
-	CACHE_CONFIG(props) = caches;
-//	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+	CACHE_CONFIG_PATH(props) = "icache.xml";
 	try {
 		FrameWork *fw = manager.load(argv[1], props);
 		
 		// Find main CFG
-		cout << "Looking for the main CFG\n";
 		CFG *cfg = fw->getCFGInfo()->findCFG("main");
 		if(cfg == 0) {
 			cerr << "ERROR: cannot find main !\n";
 			return 1;
 		}
-		else
-			cout << "main found at 0x" << cfg->address() << '\n';
 		
 		// Removing __eabi call if available
 		for(CFG::BBIterator bb(cfg); bb; bb++)
@@ -57,72 +38,28 @@ int main(int argc, char **argv) {
 					break;
 				}
 		
-		// Now, use a VCFG
-		
-		 
-		
-		 VirtualCFG vcfg(cfg);
-		 cfg = &vcfg;
-
-		
-		
-		ENTRY_CFG(props) = cfg;
-		PROC_VERBOSE(props) = false;
-		EXPLICIT(props) = false;
-		
-		// Compute BB times
-		cout << "Timing the BB\n";
-		TrivialBBTime tbt;
-		ipet::PIPELINE_DEPTH(props) = 5;
-		tbt.process(fw, props);
-				
-		// assigne variable to CFG
-		cout << "Numbering the main\n";
-		VarAssignment assign;
-		assign.process(fw, props);
-		
-		// Build the system
-		cout << "Building the ILP system\n";
-		BasicConstraintsBuilder builder;
-		builder.process(fw , props);
-		
-		// Build the object function to maximize
-		cout << "Building the ILP object function\n";
-		BasicObjectFunctionBuilder fun_builder;
-		fun_builder.process(fw, props);
+		// Processors configuration
+		//PROC_VERBOSE(props) = true;
+		//EXPLICIT(props) = true;
 		
 		// Get external constraints
-		cout << "Loading external constraints\n";
 		ipet::FlowFactLoader ffl;
 		ffl.process(fw, props);
-		// Build the CCG
-		/*cout << "Building the Categories Contraints\n";
-		for (int i=0; i < level1->lineCount(); i++){
-			cout << "construire les lblocks pour la ligne"<<i <<"\n";	
-			LBlockSet *idccg = new LBlockSet();
-			cfg->addDeletable<LBlockSet *>(LBlockSet::ID_LBlockSet, idccg);*/
-			//CCGDFA dfa(idccg,cfg,  3);
 			
-			// build Cat lblocks
-			CATBuilder catbuilder;
-			catbuilder.process(fw, props);
-			
-			// Build CAT contraint
-			CATConstraintBuilder decomp;
-			decomp.process(fw, props);
+		// Build CAT contraint
+		CATConstraintBuilder decomp;
+		decomp.process(fw, props);
 					
-		///}
 		// Resolve the system
-		cout << "Resolve the system\n";
 		WCETComputation wcomp;
 		wcomp.process(fw, props);
 		
 		// Display the result
-		ilp::System *sys = cfg->use<ilp::System *>(SYSTEM);
-		cfg->use<ilp::System *>(SYSTEM)->dump();
+		ilp::System *sys = SYSTEM(fw);
+		/*sys->dump();
 		cout << sys->countVars() << " variables and "
-			 << sys->countConstraints() << " constraints.\n";
-		cout << "SUCCESS\nWCET = " << cfg->use<int>(WCET) << '\n';
+			 << sys->countConstraints() << " constraints.\n";*/
+		cout << "WCET = " << WCET(fw) << '\n';
 	}
 	catch(LoadException e) {
 		cerr << "ERROR: " << e.message() << '\n';
