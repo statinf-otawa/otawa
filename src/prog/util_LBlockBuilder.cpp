@@ -49,7 +49,7 @@ void LBlockBuilder::processFrameWork(FrameWork *fw) {
 	// Check the cache
 	cache = fw->platform()->cache().instCache();
 	if(!cache)
-		throw new ProcessorException(*this, "No cache in this platform.");
+		throw ProcessorException(*this, "No cache in this platform.");
 	
 	// Build the l-block sets
 	lbsets = new LBlockSet *[cache->lineCount()];
