@@ -198,7 +198,7 @@ class ExeGraphBBTime: public BBProcessor {
 								int capacity, 
 								elm::genstruct::DLList<elm::genstruct::DLList<ExecutionGraphInstruction *> *>* epilogue_list,
 								int start_index);
-		void ExeGraphBBTime::buildPrefixList(
+		void buildPrefixList(
 								BasicBlock * bb,
 								elm::genstruct::DLList<ExecutionGraphInstruction *> * prefix, 
 								int max_size, 
@@ -209,7 +209,7 @@ class ExeGraphBBTime: public BBProcessor {
 		// BBProcessor overload
 		void processFrameWork(FrameWork *fw);
 		void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
-		int ExeGraphBBTime::processSequence( FrameWork *fw,
+		int processSequence( FrameWork *fw,
 			elm::genstruct::DLList<ExecutionGraphInstruction *> * prologue,
 			elm::genstruct::DLList<ExecutionGraphInstruction *> * body,
 			elm::genstruct::DLList<ExecutionGraphInstruction *> * epilogue,
