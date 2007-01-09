@@ -42,6 +42,22 @@ using namespace elm::option;
  * Mueller, Whalley, Harmon, Bounding pipeline and instruction cache performance,
  * IEEE Trans. Computers, 1999.
  * 
+ * And the algorithm to handle the pipeline:
+ * 
+ * @li trivial : consider a scalar processor without pipeline with 5 cycle
+ * per instruction,
+ * 
+ * @li sim : use a simulator to time the program blocks,
+ * 
+ * @li delta : use the simulator and the delta approach to take in account
+ * the inter-block effects as in J. Engblom, A. Ermedahl, M. Sjoedin, 
+ * J. Gustafsson, H. Hansson, "Worst-case execution-time analysis for embedded
+ * real-time systems", Journal of Software Tools for Technology Transfer, 2001,
+ * 
+ * @li exegraph : use the execution graph to time blocks as in X. Li,
+ * A. Roychoudhury, T. Mitra, "Modeling Out-of-Order Processors for Software
+ * Timing Analysis", RTSS'04.
+ * 
  * @par Syntax
  * 
  * @code
@@ -50,18 +66,35 @@ using namespace elm::option;
  * This command compute the WCET of the given function using OTAWA IPET facilities.
  * If no function is given, the main() function is used.
  * 
- * @par options
+ * @par Cache Management Options
  * 
  * -i method, --icache=method: selects how the instruction must be managed.
- * The methods includes:
- * @li none: ignore instruction cache or the hardware does not have an
- * instruction cache.
- * @li ccg: use CCG algorithm (default),
- * @li cat: use CAT algorithm.
+ * The method may be one of none, ccg or cat.
  * 
- * -, --dump-constraints: for each function, generate a file named
+ * -c path, --cache=path : load the cache description from the file whose
+ * path is given.
+ * 
+ * @par Pipeline Management Options
+ * 
+ * -t method, --bbtiming=method: selects the method to time the blocks. The
+ * method may be one of trivial, sim, delta or exegraph.
+ * 
+ * -p path, --processor=path: load the processor description from the file
+ * whose path is given.
+ * 
+ * -D depth, --delta=depth: select the depth of the delta algorithm, that is,
+ * how many blocks are used to compute inter-blocks effects (default to 4).
+ * Bigger is the depth, better is the accuracy but longer is the computing time.
+ * 
+ * @par Dump Options
+ * 
+ * -C, --dump-constraints: for each function, generate a file named
  * function_name.lp containing the generated ILP system. The generated file
  * use the lp_solve syntax and may feed the lp_solve command.
+ *
+ * -G, --dump-graph: for each function, generate a file named
+ * function_name.dot containing the graph of the processed functions in DOT
+ * file format.
  */
 
 // Options
@@ -99,6 +132,7 @@ EnumOption<int>::value_t icache_values[] = {
 };
 EnumOption<int> icache_option(command, 'i', "icache",
 	"instruction management method", icache_values);
+StringOption cache(command, 'c', "cache", "used cache", "path", "");
 
 
 // Basic-block Timing options
@@ -118,14 +152,14 @@ EnumOption<int>::value_t bbtime_values[] = {
 };
 EnumOption<int> bbtime_option(command, 't', "bbtiming",
 	"basic block timing method", bbtime_values);
-StringOption proc(command, 'p', "processor", "used processor", "processor", "");
+StringOption proc(command, 'p', "processor", "used processor", "path", "");
 IntOption delta(command, 'D', "delta", "use delta method with given sequence length", "length", 4);
 
 
 // Dump options
-BoolOption dump_constraints(command, 'c', "dump-constraints",
+BoolOption dump_constraints(command, 'C', "dump-constraints",
 	"dump lp_solve constraints", false);
-BoolOption dump_graph(command, 'g', "dump-graph",
+BoolOption dump_graph(command, 'G', "dump-graph",
 	"dump DOT graph of the processed function", false);
 
 
@@ -322,7 +356,8 @@ void Command::run(void) {
 		PROCESSOR_PATH(props) = proc.value();
 		SIMULATOR(props) = &sim;
 	}
-	CACHE_CONFIG(props) = caches;
+	if(cache)
+		CACHE_CONFIG_PATH(props) = elm::system::Path(cache);
 	fw = manager.load(&file, props);
 	
 	// Removing __eabi call if available (should move in a file configuration)
