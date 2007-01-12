@@ -7,3 +7,5 @@ test_ccg_DEPENDENCIES= @LOADER_DEPS@ @ILP_DEPS@ @OTAWA_DEPS@
 
 test_ccg_SOURCES=\
 	test-ccg.cpp
+
+TESTS = test.sh
