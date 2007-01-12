@@ -34,9 +34,6 @@ public:
 	virtual void configure(const PropList& props);
 };
 
-// Features
-extern Feature<CATConstraintBuilder> ICACHE_SUPPORT_FEATURE; 
-
 } }	// otawa::ipet
 
 
