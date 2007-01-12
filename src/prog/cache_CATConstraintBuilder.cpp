@@ -25,6 +25,7 @@
 #include <otawa/dfa/XIterativeDFA.h>
 #include <otawa/dfa/XCFGVisitor.h>
 #include <otawa/util/LBlockBuilder.h>
+#include <otawa/ipet/TrivialInstCacheManager.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
@@ -55,7 +56,10 @@ GenericIdentifier<CATNode *> NODE("ipet.cat.node", 0, OTAWA_NS);
 
 
 /**
- * Build a builder of constraints based on instruction cache access categories.
+ * @class CATConstraintBuilder
+ * This processor uses categories assigned to L-block of the instruction cache
+ * to add contraints and to modify maximized function to support the instruction
+ * cache.
  * 
  * @par Provided Features
  * @li @ref ICACHE_SUPPORT_FEATURE
@@ -65,6 +69,10 @@ GenericIdentifier<CATNode *> NODE("ipet.cat.node", 0, OTAWA_NS);
  * @li @ref ICACHE_CATEGORY_FEATURE
  * @li @ref COLLECTED_LBLOCKS_FEATURE
  */
+
+/**
+ * Build a builder of constraints based on instruction cache access categories.
+ */
 CATConstraintBuilder::CATConstraintBuilder(void)
 :	Processor("otawa.ipet.CATConstraintBuilder", Version(1, 0, 0)), 
 	_explicit(false)
@@ -72,7 +80,7 @@ CATConstraintBuilder::CATConstraintBuilder(void)
 	require(CONTEXT_TREE_FEATURE);
 	require(COLLECTED_LBLOCKS_FEATURE);
 	require(ICACHE_CATEGORY_FEATURE);
-	provide(ICACHE_SUPPORT_FEATURE);
+	provide(INST_CACHE_SUPPORT_FEATURE);
 }
 
 
@@ -303,13 +311,6 @@ void CATConstraintBuilder::configure(const PropList& props) {
 	Processor::configure(props);
 	_explicit = EXPLICIT(props);
 }
-
-
-/**
- * This feature ensures that the ILP system has been augmented with constraints
- * modelling the instruction cache behaviour.
- */
-Feature<CATConstraintBuilder> ICACHE_SUPPORT_FEATURE("ipet.icache_support");
 
 } } // otawa::ipet
 
