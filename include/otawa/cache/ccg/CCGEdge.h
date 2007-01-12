@@ -17,12 +17,10 @@ class CCGNode;
 class Var;
 
 // Edge class
-class CCGEdge: public GenGraph<CCGNode,CCGEdge>::Edge {
-	ilp::Var *p;
+class CCGEdge: public GenGraph<CCGNode,CCGEdge>::Edge, public PropList {
 public:
-	CCGEdge(CCGNode *source, CCGNode *target, ilp::Var *p1);
+	CCGEdge(CCGNode *source, CCGNode *target);
 	~CCGEdge(void);
-	ilp::Var *varEDGE(void);
 };
 
 
