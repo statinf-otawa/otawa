@@ -34,7 +34,7 @@ namespace otawa {
  * @deprecated		Configuration must be passed at the process() call.
  */
 Processor::Processor(elm::String name, elm::Version version,
-const PropList& props): _name(name), _version(version), flags(0) {
+const PropList& props): _name(name), _version(version), flags(0), stats(0) {
 	init(props);
 }
 
@@ -44,7 +44,7 @@ const PropList& props): _name(name), _version(version), flags(0) {
  * @param version	Processor version.
  */
 Processor::Processor(String name, Version version)
-: _name(name), _version(version), flags(0) {
+: _name(name), _version(version), flags(0), stats(0) {
 }
 
 
@@ -52,7 +52,7 @@ Processor::Processor(String name, Version version)
  * Build a new processor.
  * @param	Configuration properties.
  */
-Processor::Processor(const PropList& props): flags(0) {
+Processor::Processor(const PropList& props): flags(0), stats(0) {
 	init(props);
 }
 
@@ -166,6 +166,47 @@ void Processor::process(FrameWork *fw, const PropList& props) {
 
 
 /**
+ * This method is called before an anlysis to let the processor do some
+ * initialization.
+ * @param fw	Processed framework.
+ */
+void Processor::setup(FrameWork *fw) {
+}
+
+
+/**
+ * This method is called after the end of the processor analysis to let it
+ * do some clean up.
+ */
+void Processor::cleanup(FrameWork *fw) {
+}
+
+
+/**
+ * Display a warning.
+ * @param format	Format string a-la printf.
+ * @param args		Format string arguments.
+ */
+void Processor::warn(CString format, VarArg args) {
+	out << "WARNING:" << name() << ' ' << version() << ':';
+	out.format(format, args);
+	out << io::endl;
+}
+
+
+/**
+ * Display a warning.
+ * @param format	Format string a-la printf.
+ * @param ...		Format string arguments.
+ */
+void Processor::warn(CString format, ...) {
+	VARARG_BEGIN(args, format)
+		warn(format, args);
+	VARARG_END
+}
+
+
+/**
  * This property identifier is used for setting the output stream used by
  * the processor for writing messages (information, warning, error) to the user.
  */
@@ -225,6 +266,42 @@ void Processor::require(const AbstractFeature& feature) {
  */
 void Processor::provide(const AbstractFeature& feature) {
 	provided.add(&feature);
+}
+
+
+/**
+ * @class NullProcessor
+ * A simple processor that does nothing.
+ */
+
+
+/**
+ */
+NullProcessor::NullProcessor(void):
+	Processor("otawa::NullProcessor", Version(1, 0, 0))
+{
+}
+
+
+/**
+ * @class NoProcessor class
+ * A processor whise execution cause an exception throw. Useful for features
+ * without default definition.
+ */
+
+
+/**
+ */
+void NoProcessor::processFrameWork(FrameWork *fw) {
+	throw ProcessorException(*this, "this processor should not have been called");
+}
+
+
+/**
+ */
+NoProcessor::NoProcessor(void):
+	Processor("otawa::NoProcessor", Version(1, 0, 0))
+{
 }
 
 } // otawa
