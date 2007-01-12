@@ -13,6 +13,8 @@
 #include <otawa/cache/LBlockSet.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/cache/ccg/CCGBuilder.h>
+#include <otawa/util/ContextTree.h>
+#include <otawa/proc/CFGProcessor.h>
 
 using namespace otawa::ilp;
 using namespace elm::genstruct;
