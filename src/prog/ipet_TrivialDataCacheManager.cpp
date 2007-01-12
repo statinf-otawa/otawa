@@ -37,8 +37,8 @@ void TrivialDataCacheManager::configure(FrameWork *framework) {
  * @param props		Configuration properties.
  */
 TrivialDataCacheManager::TrivialDataCacheManager(void)
-: BBProcessor("ipet::TrivialDataManager", Version(1, 0, 0)), fw(0) {
-	provide(DATA_CACHE_TIME_FEATURE);
+: BBProcessor("ipet::TrivialDataCacheManager", Version(1, 0, 0)), fw(0) {
+	provide(DATA_CACHE_SUPPORT_FEATURE);
 	require(COLLECTED_CFG_FEATURE);
 	require(BB_TIME_FEATURE);
 }
@@ -81,6 +81,6 @@ BasicBlock *bb) {
  * @li @ref ipet::TIME
  */
 Feature<TrivialDataCacheManager>
-	DATA_CACHE_TIME_FEATURE("otawa::ipet::data_cache_time");
+	DATA_CACHE_SUPPORT_FEATURE("otawa::ipet::data_cache_support");
 
 } } // otawa::ipet
