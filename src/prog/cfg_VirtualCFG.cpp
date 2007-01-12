@@ -147,8 +147,10 @@ void VirtualCFG::scan(void) {
 	_bbs.add(&_exit);
 	
 	// Give a number to each BB
-	for(int i = 0; i < _bbs.length(); i++)
+	for(int i = 0; i < _bbs.length(); i++) {
 		INDEX(_bbs[i]) = i;
+		_bbs[i]->_cfg = this;
+	}
 	
 	// Set the tag
 	flags |= FLAG_Scanned;

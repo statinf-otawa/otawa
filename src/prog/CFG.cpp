@@ -170,9 +170,11 @@ void CFG::scan(void) {
 	// Explore CFG
 	genstruct::Vector<BasicBlock *> ends;
 	_bbs.add(&_entry);
+	_entry._cfg = this;
 	INDEX(_entry) = 0;
 	for(int pos = 0; pos < _bbs.length(); pos++) {
 		BasicBlock *bb = _bbs[pos];
+		bb->_cfg = this;
 		if(bb->isReturn())
 			ends.add(bb);
 		for(BasicBlock::OutIterator edge(bb); edge; edge++)
@@ -191,6 +193,7 @@ void CFG::scan(void) {
 	
 	// Add exit edges
 	INDEX(_exit) = _bbs.length();
+	_exit._cfg = this;
 	_bbs.add(&_exit);
 	for(int i = 0; i < ends.length(); i++)
 		new Edge(ends[i], &_exit, EDGE_Virtual);
