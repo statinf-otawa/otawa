@@ -27,7 +27,7 @@ public:
 };
 
 // Features
-extern Feature<TrivialDataCacheManager> DATA_CACHE_TIME_FEATURE;
+extern Feature<TrivialDataCacheManager> DATA_CACHE_SUPPORT_FEATURE;
 
 } } // otawa::ipet
 
