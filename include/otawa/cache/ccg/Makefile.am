@@ -4,5 +4,4 @@ includeotawacacheccg_HEADERS = \
 	CCGConstraintBuilder.h \
 	CCGDFA.h \
 	CCGEdge.h \
-	CCGNode.h \
-	CCGObjectFunction.h
+	CCGNode.h
