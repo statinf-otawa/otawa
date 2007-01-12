@@ -12,9 +12,9 @@ includeotawaipet_HEADERS = \
 	TreePath.h \
 	TrivialBBTime.h \
 	TrivialDataCacheManager.h \
+	TrivialInstCacheManager.h \
 	VarAssignment.h \
 	WCETComputation.h
-	
 
 
 
