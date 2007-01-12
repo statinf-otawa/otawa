@@ -28,6 +28,7 @@ class BasicBlock: public elm::inhstruct::DLNode, public ProgObject {
 	friend class CFGBuilder;
 	friend class CFGInfo;
 	friend class CFG;
+	friend class VirtualCFG;
 public:
 	class Mark;
 protected:
@@ -40,6 +41,7 @@ protected:
 	unsigned long flags;
 	elm::genstruct::SLList<Edge *> ins, outs;
 	Mark *_head;
+	CFG *_cfg;
 
 	// EdgeIterator class
 	class EdgeIterator: public elm::genstruct::SLList<Edge *>::Iterator  {
@@ -81,7 +83,7 @@ public:
 	};	
 
 	// Constructors
-	inline BasicBlock(void): _head(0), flags(0) { };
+	inline BasicBlock(void): _head(0), flags(0), _cfg(0) { };
 	static BasicBlock *findBBAt(FrameWork *fw, address_t addr);
 	
 	// Generic accessors
@@ -101,6 +103,7 @@ public:
 	inline bool isVirtual(void) const { return flags & FLAG_Virtual; };
 	inline unsigned long getFlags(void) const { return flags; };
 	inline int number(void) { return INDEX(this); };
+	inline CFG *cfg(void) { return _cfg; }
 	
 	// Edge management
 	inline void addInEdge(Edge *edge) { ins.addFirst(edge); };
