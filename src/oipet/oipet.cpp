@@ -267,12 +267,8 @@ void Command::compute(String fun) {
 			ccgbuilder.process(fw, props);
 			
 			// Build ccg contraint
-			CCGConstraintBuilder decomp(fw);
+			CCGConstraintBuilder decomp;
 			decomp.process(fw, props);
-			
-			//Build the objectfunction
-			CCGObjectFunction ofunction(fw);
-			ofunction.process(fw, props);
 		}
 		break;
 		
