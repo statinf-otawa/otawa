@@ -194,6 +194,7 @@ void Command::process (String arg) {
 	if(!fw) {
 		PropList props;
 //		LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
+		NO_SYSTEM(props) = true;
 		fw = manager.load(arg.toCString(), props);
 		info = fw->getCFGInfo();
 	}
