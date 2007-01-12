@@ -103,6 +103,7 @@ public:
 bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 	assert(bb1);
 	assert(bb2);
+	assert(bb1->cfg() == bb2->cfg());
 	int index = bb1->number();
 	assert(index >= 0);
 	BitSet *set = REVERSE_DOM(bb2);
