@@ -44,3 +44,7 @@ ltmain.sh
 .config
 .settings
 .libs
+.anjuta
+.tm_project2.cache
+TODO.tasks
+OTAWA.anjuta
