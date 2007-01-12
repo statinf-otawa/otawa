@@ -16,7 +16,6 @@
 #include <elm/system/StopWatch.h>
 #include <otawa/cache/ccg/CCGConstraintBuilder.h>
 #include <otawa/cache/ccg/CCGBuilder.h>
-#include <otawa/cache/ccg/CCGObjectFunction.h>
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/ipet/BBTimeSimulator.h>
@@ -189,12 +188,8 @@ int main(int argc, char **argv) {
 			ccgbuilder.process(fw);
 			
 			// Build ccg contraint
-			CCGConstraintBuilder decomp(fw);
+			CCGConstraintBuilder decomp;
 			decomp.process(fw);
-			
-			//Build the objectfunction
-			CCGObjectFunction ofunction(fw);
-			ofunction.process(fw);
 		}
 		else {
 			if(method == CAT) {
