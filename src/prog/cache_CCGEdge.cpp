@@ -20,16 +20,10 @@ namespace otawa {
 /**
  * Build a new CCG edge.
  */
-CCGEdge::CCGEdge(CCGNode *source, CCGNode *target, ilp::Var *p1) 
-  : GenGraph<CCGNode,CCGEdge>::Edge(source,target)
+CCGEdge::CCGEdge(CCGNode *source, CCGNode *target) :
+	GenGraph<CCGNode,CCGEdge>::Edge(source,target)
 {
-	p = p1;
 }
-
-ilp::Var *CCGEdge::varEDGE(void){
-	return p;	
-}
-
 
 /**
  * Delete an edge.
