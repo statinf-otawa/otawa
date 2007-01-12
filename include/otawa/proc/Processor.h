@@ -2,7 +2,7 @@
  *	$Id$
  *	Copyright (c) 2005-06, IRIT UPS.
  *
- *	otawa/proc/Processor.h -- Processor class interface.
+ *	Processor class interface.
  */
 #ifndef OTAWA_PROC_PROCESSOR_H
 #define OTAWA_PROC_PROCESSOR_H
@@ -33,23 +33,53 @@ protected:
 	unsigned long flags;
 	elm::io::Output out;
 	PropList *stats;
+	
+	// Facility methods
 	inline bool isVerbose(void) const;
 	inline bool isTimed(void) const;
 	inline bool recordsStats(void) const;
-	virtual void processFrameWork(FrameWork *fw) = 0;
 	void require(const AbstractFeature& feature);
 	void provide(const AbstractFeature& feature);
+	void warn(CString format, VarArg args);
+	void warn(CString format, ...);
 
-public:	
+	// Overwritable methods
+	virtual void processFrameWork(FrameWork *fw) = 0;
+	virtual void setup(FrameWork *fw);
+	virtual void cleanup(FrameWork *fw);
+
+public:
+
+	// Constructors
 	Processor(const PropList& props = PropList::EMPTY);
 	Processor(elm::String name, elm::Version version, const PropList& props);
 	Processor(String name, Version version);
+	
+	// Accessors
 	inline elm::String name(void) const;
 	inline elm::Version version(void) const;
 
+	// Mutators
 	virtual void configure(const PropList& props);
 	void process(FrameWork *fw, const PropList& props = PropList::EMPTY);
 };
+
+
+// NullProcessor class
+class NullProcessor: public Processor {
+public:
+	NullProcessor(void);
+};
+
+
+// NoProcessor class
+class NoProcessor: public Processor {
+protected:
+	virtual void processFrameWork(FrameWork *fw);
+public:
+	NoProcessor(void);
+}; 
+
 
 // Configuration Properties
 extern GenericIdentifier<elm::io::OutStream *> PROC_OUTPUT;
