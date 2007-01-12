@@ -52,6 +52,7 @@ libotawa_la_SOURCES = \
 	ipet_TreePath.cpp \
 	ipet_TrivialBBTime.cpp \
 	ipet_TrivialDataCacheManager.cpp \
+	ipet_TrivialInstCacheManager.cpp \
 	ipet_VarAssignment.cpp \
 	ipet_WCETComputation.cpp \
 	util_DFA.cpp \
@@ -89,7 +90,6 @@ libotawa_la_SOURCES = \
 	cache_CCGDFA.cpp \
 	cache_CCGEdge.cpp \
 	cache_CCGNode.cpp \
-	cache_CCGObjectFunction.cpp \
 	cache_LBlock.cpp \
 	cache_LBlockSet.cpp \
 	prog_CodeItem.cpp \
