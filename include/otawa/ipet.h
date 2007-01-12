@@ -18,7 +18,6 @@
 #include <otawa/ipet/WCETComputation.h>
 #include <otawa/cache/ccg/CCGConstraintBuilder.h>
 #include <otawa/cache/ccg/CCGBuilder.h>
-#include <otawa/cache/ccg/CCGObjectFunction.h>
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
 
