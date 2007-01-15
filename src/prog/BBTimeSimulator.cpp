@@ -23,7 +23,7 @@ namespace otawa { namespace ipet {
  */
 BBTimeSimulator::BBTimeSimulator(void)
 : BBProcessor("otawa::BBTimeSimulator", Version(0, 1, 0)) {
-	require(BB_TIME_FEATURE);
+	provide(BB_TIME_FEATURE);
 }
 
 /**
