@@ -9,3 +9,5 @@ test_delta_SOURCES=\
 	DeltaCFGDrawer.cpp \
 	DeltaCFGDrawer.h \
 	test_delta.cpp
+
+TESTS = test.sh
