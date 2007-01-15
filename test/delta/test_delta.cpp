@@ -71,31 +71,6 @@ int main(int argc, char **argv) {
 	bool infos = false;
 	bool print = false;
 
-	// Cache configuration	
-	Cache::info_t inst_cache_info = {
-		1,
-		10,
-		4,
-		6,
-		0,
-		Cache::LRU,
-		Cache::WRITE_THROUGH,
-		false
-	};
-	Cache::info_t data_cache_info = {
-		1,
-		10,
-		4,
-		6,
-		2,
-		Cache::LRU,
-		Cache::WRITE_THROUGH,
-		false
-	};
-	Cache inst_cache(inst_cache_info);
-	Cache data_cache(data_cache_info);
-	CacheConfiguration cache_conf(&inst_cache, &data_cache);
-	
 	// Processing the arguments
 	for(int i = 1; i < argc; i++) {
 		if(argv[i][0] != '-')
@@ -129,10 +104,12 @@ int main(int argc, char **argv) {
 	gensim::GenericSimulator sim;
 	Manager manager;
 	PropList props;
-//	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
-	CACHE_CONFIG(props) = &cache_conf;
-	SIMULATOR(props) = &sim;
-	cout << "config = " << props << io::endl;
+	PROCESSOR_PATH(props) = "../../data/procs/op1.xml";
+	SIMULATOR(props) = &gensim_simulator;
+	CACHE_CONFIG_PATH(props) = "../ccg/icache.xml";	
+	PropList stats;
+	
+	//cout << "config = " << props << io::endl;
 	try {
 		FrameWork *fw = manager.load(file, props);
 		
@@ -143,8 +120,8 @@ int main(int argc, char **argv) {
 			return 1;
 		}
 		
-		cout << "fw = " << fw << io::endl;
-		cout << "process = " << fw->process() << io::endl;
+		//cout << "fw = " << fw << io::endl;
+		//cout << "process = " << fw->process() << io::endl;
 		
 		// Removing __eabi call if available
 		for(CFG::BBIterator bb(cfg); bb; bb++)
@@ -156,80 +133,60 @@ int main(int argc, char **argv) {
 					break;
 				}
 		
-		// Now, use an inlined VCFG
-		VirtualCFG vcfg(cfg);
-		ENTRY_CFG(fw) = &vcfg;
-		
 		// Prepare processor configuration
 		PropList props;
-		props.set(EXPLICIT, true);
+		//EXPLICIT(props) = true;
+		//PROC_VERBOSE(props) = true;
+		//VirtualCFG vcfg(cfg);
+		//ENTRY_CFG(props) = &vcfg;
 		
-		// Compute BB times
-		BBTimeSimulator bbts;
-		bbts.process(fw, props);
+		// Calculate deltas
+		//cout << "Computing deltas... ";
+		elm::system::StopWatch delta_sw;
+		delta_sw.start();
+		if(deltaLevels)
+			Delta::LEVELS(props) = *deltaLevels;
+		Delta delta;
+		PROC_STATS(props) = &stats;
+		delta.process(fw, props);
+		delta_sw.stop();
+		//cout << "OK in " << delta_sw.delay()/1000 << " ms\n";
+		/*if(infos){
+			cout << "CFG have " << vcfg.bbs().count() << " nodes\n";
+			cout << BBPath::instructions_simulated << " instructions have been simulated\n";
+			cout << "The longer path have " << Delta::MAX_LENGTH(stats) << " basic blocks\n";
+			cout << "The average length of paths is " << Delta::MEAN_LENGTH(stats) << '\n';
+		}*/
 		
 		// Trivial data cache
 		TrivialDataCacheManager dcache;
 		dcache.process(fw, props);
-		
-		// Assign variables
-		VarAssignment assign;
-		assign.process(fw, props);
-		
-		// Build the system
-		BasicConstraintsBuilder builder;
-		builder.process(fw, props);
 		
 		// Process the instruction cache
 		if(method == CCG) {
 			
 			// build ccg graph
 			CCGBuilder ccgbuilder;
-			ccgbuilder.process(fw);
+			ccgbuilder.process(fw, props);
 			
 			// Build ccg contraint
 			CCGConstraintBuilder decomp;
-			decomp.process(fw);
+			decomp.process(fw, props);
 		}
-		else {
-			if(method == CAT) {
+		else if(method == CAT) {
 				
-				// build Cat lblocks
-				CATBuilder catbuilder;
-				catbuilder.process(fw);
+			// build Cat lblocks
+			CATBuilder catbuilder;
+			catbuilder.process(fw, props);
 			
-				// Build CAT contraint
-				CATConstraintBuilder decomp;
-				decomp.process(fw);
-			}
-			
-			// Build the object function to maximize
-			BasicObjectFunctionBuilder fun_builder;
-			fun_builder.process(fw);	
-
+			// Build CAT contraint
+			CATConstraintBuilder decomp;
+			decomp.process(fw, props);
 		}
 
 		// Load flow facts
 		ipet::FlowFactLoader loader;
 		loader.process(fw, props);
-		
-		// Calculate deltas
-		//cout << "Computing deltas... ";
-		elm::system::StopWatch delta_sw;
-		delta_sw.start();
-		//props.set<int>(Delta::ID_Levels,deltaLevels);
-		if(deltaLevels)
-			Delta::LEVELS(props) = *deltaLevels;
-		Delta delta(props);
-		delta.process(fw);
-		delta_sw.stop();
-		//cout << "OK in " << delta_sw.delay()/1000 << " ms\n";
-		if(infos){
-			cout << "CFG have " << vcfg.bbs().count() << " nodes\n";
-			cout << BBPath::instructions_simulated << " instructions have been simulated\n";
-			cout << "The longer path have " << delta.max_length << " basic blocks\n";
-			cout << "The average length of paths is " << delta.mean_length << '\n';
-		}
 		
 		// Resolve the system
 		elm::system::StopWatch ilp_sw;
@@ -247,9 +204,9 @@ int main(int argc, char **argv) {
 					size += seg->size();
 		
 		// Get the result
-		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
+		ilp::System *sys = SYSTEM(fw);
 		
-		if(print){
+		/*if(print){
 			PropList display_props;
 			display::GRAPHVIZ_FILE(display_props) = "cfg.ps";
 			
@@ -262,23 +219,17 @@ int main(int argc, char **argv) {
 			
 			display::DeltaCFGDrawer drawer(&vcfg, display_props);
 			drawer.display();
-		}
+		}*/
 		
 		if(dump)
 			sys->dump();
-		cout << file << '\t'
-			 << sys->countVars() << '\t'
-			 << sys->countConstraints() << '\t'
-			 << (int)(main_sw.delay() / 1000) << '\t'
-			 << (int)(ilp_sw.delay() / 1000) << '\t'
-			 << vcfg.use<int>(WCET) << '\t'
-			 << size << '\n';
+		cout << "WCET[" << file << "] = " << WCET(fw) << io::endl;
 	}
-	catch(LoadException e) {
+	catch(LoadException& e) {
 		elm::cerr << "ERROR: " << e.message() << '\n';
 		exit(1);
 	}
-	catch(ProcessorException e) {
+	catch(elm::Exception& e) {
 		elm::cerr << "ERROR: " << e.message() << '\n';
 		exit(1);
 	}
