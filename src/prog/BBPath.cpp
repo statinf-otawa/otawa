@@ -29,12 +29,6 @@ namespace otawa { namespace ipet {
  * It is possible to get a simulated time for this sequence
  */
 
-/**
- * This identifier is used for storing in a BasicBlock a TreePath
- * storing all BBPath starting from this basic block
- */
-GenericIdentifier<TreePath<BasicBlock*,BBPath*>*> BBPath::TREE("bbpath.tree",0);
-
 
 /**
  * Builds a new BBPath (length=1) from a given basic block
@@ -80,11 +74,11 @@ BBPath::~BBPath(){
  * @return BBPath corresponding to the given basic block
  */
 BBPath *BBPath::getBBPath(BasicBlock *start){
-	TreePath<BasicBlock*,BBPath*> *tree = TREE(start);
+	TreePath<BasicBlock*,BBPath*> *tree = Delta::TREE(start);
 	if(!tree){
 		BBPath *bbp = new BBPath(start); 
 		tree = new TreePath<BasicBlock*,BBPath*>(start,bbp);
-		TREE(start) = tree;
+		Delta::TREE(start) = tree;
 		return bbp;
 	}
 	return tree->rootData();
@@ -102,11 +96,11 @@ BBPath *BBPath::getBBPath(Vector<BasicBlock*> *path_vector){
 	assert(path_vector);
 	BasicBlock *bb = path_vector->get(0);
 	BBPath *bbpath;
-	TreePath<BasicBlock*,BBPath*> *tree = TREE(bb);
+	TreePath<BasicBlock*,BBPath*> *tree = Delta::TREE(bb);
 	if(!tree){
 		bbpath = new BBPath(path_vector);
 		tree = new TreePath<BasicBlock*,BBPath*>(*path_vector, bbpath);
-		TREE(bb) = tree;
+		Delta::TREE(bb) = tree;
 		return bbpath;
 	}
 	elm::Option<BBPath*> option = tree->get(*path_vector,1);
@@ -138,13 +132,12 @@ Vector<BBPath*> *BBPath::nexts(){
 	}
 	
 	// add next basic block to each BBPath
-	for(BasicBlock::OutIterator edge(bb) ; edge ; edge++){
+	for(BasicBlock::OutIterator edge(bb) ; edge ; edge++)
+		if(edge->target() && !edge->target()->isExit()) {
 		BasicBlock *nextbb = edge->target();
-		//if(!nextbb->isExit()){
-			bbp.add(nextbb);
-			nextbbp->add(getBBPath(&bbp));
-			bbp.pop();
-		//}
+		bbp.add(nextbb);
+		nextbbp->add(getBBPath(&bbp));
+		bbp.pop();
 	}
 	
 	return nextbbp;

@@ -8,6 +8,7 @@
 #define OTAWA_IPET_IPET_H
 
 #include <otawa/prop/GenericIdentifier.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa {
 
@@ -38,6 +39,9 @@ extern GenericIdentifier<bool> EXPLICIT;
 ilp::System *getSystem(FrameWork *fw, CFG *cfg);
 ilp::Var *getVar(ilp::System *system, BasicBlock *bb);
 ilp::Var *getVar(ilp::System *system, Edge *edge);
+
+// Feratures
+extern Feature<NoProcessor> INTERBLOCK_SUPPORT_FEATURE;
 
 } }	// otawa::ipet
 

@@ -8,32 +8,52 @@
 #ifndef OTAWA_IPET_DELTA_H
 #define OTAWA_IPET_DELTA_H
 #include <otawa/ipet/BBPath.h>
+#include <otawa/ipet/TreePath.h>
 #include <otawa/proc/CFGProcessor.h>
+#include <otawa/proc/Feature.h>
 
 
-namespace otawa { namespace ipet {
+namespace otawa {
+
+namespace ilp {
+	class System;
+}
+	
+namespace ipet {
 	
 class BBPath;
 class Delta;
 
 class Delta: public CFGProcessor {
-	elm::Option<int> levels;
+	int levels;
+	int completion;
 	bool explicitNames;
-
-public:
 	int max_length;
-	double mean_length;
-	Delta(const PropList& props = PropList::EMPTY);
-	virtual void configure(const PropList& props);
+	int length_sum;
+	int length_cnt;
+	static int delta(BBPath &bbp, FrameWork *fw);
+	void processBBPath(FrameWork *fw, ilp::System *system, BBPath *bbpath);
+
+protected:
+	virtual void setup(FrameWork *fw);
+	virtual void cleanup(FrameWork *fw);
 	virtual void processCFG(FrameWork* fw, CFG* cfg);
 
-	static int delta(BBPath &bbp, FrameWork *fw);
+public:
+	Delta(void);
+	
+	virtual void configure(const PropList& props);
 
 	static GenericIdentifier<int> LEVELS;
 	static GenericIdentifier<int> DELTA;
-	static GenericIdentifier<int> FLUSH_TIME;
+	static GenericIdentifier<TreePath<BasicBlock*,BBPath*>*> TREE;
+	static GenericIdentifier<int> SEQ_COMPLETION;
+	static GenericIdentifier<double> MAX_LENGTH;
+	static GenericIdentifier<double> MEAN_LENGTH;
 };
 
+// Features
+extern Feature<Delta> DELTA_SEQUENCES_FEATURE;
 
 } } // otawa::ipet
 

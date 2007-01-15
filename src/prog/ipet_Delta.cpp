@@ -6,11 +6,12 @@
  */
 #include <assert.h>
 #include <elm/genstruct/Vector.h>
+#include <elm/util/Option.h>
 #include <otawa/ipet.h>
 #include <otawa/ipet/Delta.h>
 #include <otawa/ilp.h>
 #include <otawa/sim/State.h>
-
+#include <elm/genstruct/VectorQueue.h>
 
 using namespace otawa::ilp;
 using namespace elm::genstruct;
@@ -20,21 +21,30 @@ namespace otawa { namespace ipet {
 /**
  * @author G. Cavaignac
  * @class Delta
- * This processor is used for computing time effects of pipeline, between basic blocks <br>
- * Properties accepted: <br>
- * <code>Delta::ID_Levels<int></code> : depth of the delta algorithm: Level n = delta for sequences with length n+1<br>
- * <code>IPET::ID_Explicit<bool></code> : build explicit names for sequences for ilp variables.
- * Making explicit names is time consuming. It should be activated for debugging purpose only.
+ * This processor is used for computing time effects of pipeline, between basic
+ * blocks.
+ * 
+ * @par Configuration Properties accepted:
+ * @li @ref Delta::LEVELS: depth of the delta algorithm: Level n = delta for
+ * sequences with length n.
+ * @li @ref Delta::SEQ_COMPLETION: number of instructions after the basic
+ * block of a sequence to stop the sequence.
+ * 
+ * @par Provided Feature
+ * @li @ref INTERBLOCK_SUPPORT_FEATURE
+ * @li @ref BB_TIME_FEATURE
  */
 
 /**
  * Build a new delta calculator.
  * @param props Configuration properties.
  */
-Delta::Delta(const PropList& props)
-: CFGProcessor("otawa::ipet::Delta", Version(0, 3, 0), props){
-	configure(props);
+Delta::Delta(void)
+: CFGProcessor("otawa::ipet::Delta", Version(1, 0, 0)){
+	provide(BB_TIME_FEATURE);
+	provide(INTERBLOCK_SUPPORT_FEATURE);
 }
+
 
 /**
  * Configures the delta calculator. Properties accepted are
@@ -45,9 +55,90 @@ Delta::Delta(const PropList& props)
  */
 void Delta::configure(const PropList& props){
 	CFGProcessor::configure(props);
-	levels = props.get<int>(LEVELS);
+	levels = LEVELS(props);
+	completion = SEQ_COMPLETION(props);
 	explicitNames = EXPLICIT(props);
 }
+
+
+/**
+ */
+void Delta::setup(FrameWork *fw) {
+	max_length = 0;
+	length_sum = 0;
+	length_cnt = 0;
+}
+
+
+/**
+ */
+void Delta::cleanup(FrameWork *fw) {
+	if(stats) {
+		MAX_LENGTH(stats) = max_length;
+		if(!length_cnt)
+			MEAN_LENGTH(stats) = 0;
+		else
+			MEAN_LENGTH(stats) = (double)length_sum / length_cnt;
+	}
+}
+
+
+/**
+ * Build the constraints for the given BB path.
+ * @param system	ILP system to work on.
+ * @param bbpath	BB path to build constraints for.
+ */
+void Delta::processBBPath(FrameWork *fw, System *system, BBPath *bbpath) {
+		BBPath &bbPath = *bbpath;
+		int l = bbPath.length();
+
+		// Record statistics
+		length_sum += l;
+		length_cnt++;
+		if(l > max_length)
+			max_length = l;
+		
+		// Compute delta
+		if(bbpath->length() == 1) {
+			int time = bbpath->time(fw);
+			TIME(bbpath->head()) = time;
+			return;
+		}
+		int delta = Delta::delta(bbPath, fw);
+
+		// Build its variable
+		ilp::Var *var = bbPath.getVar(system, explicitNames); 
+		Constraint *cons;
+
+		// constraint S[A,B,C] <= S[A,B]
+		cons = system->newConstraint(Constraint::LE);
+		cons->addLeft(1, var);
+		cons->addRight(1, bbPath(1, l-1)->getVar(system, explicitNames));
+
+		// constraint S[A,B,C] <= S[B,C]
+		cons = system->newConstraint(Constraint::LE);
+		cons->addLeft(1, var);
+		cons->addRight(1, bbPath(2, l)->getVar(system, explicitNames));
+		
+		// constraint S[A,B,C] >= S[A,B] - Sum(S[B,x], x != C)
+		BasicBlock *bb_B;
+		cons = system->newConstraint(Constraint::GE);
+		cons->addLeft(1,var);
+		cons->addRight(1, bbPath(1, l-1)->getVar(system, explicitNames));
+		bb_B = bbPath(l-1, l-1)->head();
+		Vector<BBPath*> &nexts = * BBPath::getBBPath(bb_B)->nexts();
+		for(int i = 0; i < nexts.length(); i++){
+			if(nexts[i]->tail() != bbPath.tail()){
+				BBPath& otherbbp = *nexts[i];
+				ilp::Var *otherbbp_var = otherbbp.getVar(system, explicitNames);
+				cons->addRight(-1, otherbbp_var);
+			}
+		}
+
+		// Add the object function delta
+		system->addObjectFunction(delta, var);
+}
+
 
 /**
  * Process the given CFG
@@ -56,97 +147,55 @@ void Delta::configure(const PropList& props){
 void Delta::processCFG(FrameWork* fw, CFG* cfg){
 	assert(fw);
 	assert(cfg);
-	assert(cfg->isInlined());
-	
 	System *system = getSystem(fw,cfg);
-	Vector<BBPath*> bbPathVector(4*cfg->bbs().count());
-	for(CFG::BBIterator bb(cfg) ; bb ; bb++){
-		// we create all sequences with length = 1
+	//Vector<BBPath*> bbPathVector(4*cfg->bbs().count());
+	VectorQueue<BBPath*> to_process(4*cfg->bbs().count());
+
+	// We create all sequences with length = 1
+	for(CFG::BBIterator bb(cfg); bb; bb++){
 		if(!bb->isEntry() && !bb->isExit()){
-			bbPathVector.add(BBPath::getBBPath(bb));
+			to_process.put(BBPath::getBBPath(bb));
 		}
 	}
 	
-	// stats
-	int sum_length = 0;
-	int count = 0;
-	max_length = 0;
-	
-	
-	// from 1 to nlevels+1 <=> from 0 to nlevels
-	for(int i = 0 ;
-		(levels && i < levels) || (bbPathVector.length() > 0 && !levels)  ;
-		i++)
-	{
-		Vector<BBPath*> bbPathToProcess; // BBPaths that have to be processed
+	// While there is something to process
+	while(!to_process.isEmpty()) {
+		BBPath *bbpath = to_process.get();
+		/*cout << "processing [";
+		for(BBPath::BBIterator bb(bbpath); bb; bb++)
+			cout << bb->address() << ", ";
+		cout << "]\n";*/
+		
+		// Generates constraints
+		processBBPath(fw, system, bbpath);
 		
 		// one search all length+1 sequences from sequences in bbPathVector
 		// and one put all these in bbPathToProcess
-		for(int j=0 ; j < bbPathVector.length() ; j++){
-			Vector<BBPath*> *toInsert = bbPathVector[j]->nexts();
-			int l2 = toInsert->length();
-			for(int k = 0 ; k < l2 ; k++)
-				bbPathToProcess.add(toInsert->get(k));
-			delete toInsert;
-		}
-
-		// BBPaths processing
-		bbPathVector.clear();
-		for(int j=0 ; j < bbPathToProcess.length() ; j++){
-			BBPath *bbPathPtr = bbPathToProcess[j];
-			BBPath &bbPath = *bbPathPtr;
-			int l = bbPath.length();
-
-			int delta = Delta::delta(bbPath, fw);
-			if(true/*bbPath.tail()->countInstructions() < FLUSH_TIME(bbPath)*/){
-				bbPathVector.add(bbPathPtr);
+		/*if(truebbPath.tail()->countInstructions() < FLUSH_TIME(bbPath)){
+			bbPathVector.add(bbPathPtr);
+		}*/
+		if(!bbpath->tail()->isCall()) {
+			bool cont = false;
+			if(levels)
+				cont = bbpath->length() < levels;
+			else {
+				int local_compl = completion;
+				if(!local_compl)
+					local_compl = bbpath->head()->countInstructions() + 1;
+				cont = bbpath->countInstructions() <
+					bbpath->head()->countInstructions() + local_compl;
 			}
-			
-			// stats
-			sum_length += l;
-			count++;
-			if(l > max_length)
-				max_length = l;
-			
-			ilp::Var *var = bbPath.getVar(system, explicitNames); 
-			Constraint *cons;
-
-			// constraint S[A,B,C] <= S[A,B]
-			cons = system->newConstraint(Constraint::LE);
-			cons->addLeft(1, var);
-			cons->addRight(1, bbPath(1, l-1)->getVar(system, explicitNames));
-
-			// constraint S[A,B,C] <= S[B,C]
-			cons = system->newConstraint(Constraint::LE);
-			cons->addLeft(1, var);
-			cons->addRight(1, bbPath(2, l)->getVar(system, explicitNames));
-			
-			// constraint S[A,B,C] >= S[A,B] - Sum(S[B,x], x != C)
-			BasicBlock *bb_B;
-			cons = system->newConstraint(Constraint::GE);
-			cons->addLeft(1,var);
-			cons->addRight(1, bbPath(1, l-1)->getVar(system, explicitNames));
-			bb_B = bbPath(l-1, l-1)->head();
-			Vector<BBPath*> &nexts = * BBPath::getBBPath(bb_B)->nexts();
-			for(int i = 0; i < nexts.length(); i++){
-				if(nexts[i]->tail() != bbPath.tail()){
-					BBPath& otherbbp = *nexts[i];
-					ilp::Var *otherbbp_var = otherbbp.getVar(system, explicitNames);
-					cons->addRight(-1, otherbbp_var);
-				}
+			if(cont) {
+				Vector<BBPath*> *toInsert = bbpath->nexts();
+				int l2 = toInsert->length();
+				for(int k = 0 ; k < l2 ; k++)
+					to_process.put(toInsert->get(k));
+				delete toInsert;
 			}
-
-			system->addObjectFunction(delta, var);
-		}
-		
-		// stats
-		if(count == 0)
-			mean_length = 0;
-		else
-			mean_length = (double)sum_length / (double)count;
+		}	 
 	}
-	return;
 }
+
 
 /**
  * Calculate the delta of the given BBPath
@@ -191,17 +240,50 @@ int Delta::delta(BBPath &bbp, FrameWork *fw){
  * This identifier is used for forcing the depth of the Delta algorith.
  * If this identifier is not set, the depth will be adjusted automatically
  */
-GenericIdentifier<int>  Delta::LEVELS("delta.levels");
+GenericIdentifier<int>  Delta::LEVELS("Delta::levels", 0, ipet::NS);
 
 /**
  * This identifier is used for storing the delta value of a path
  */
-GenericIdentifier<int> Delta::DELTA("ipet.delta");
+GenericIdentifier<int> Delta::DELTA("Delta::delta", 0, ipet::NS);
+
 /**
  * This identifier is used for storing the time for the first
  * instruction to fetch after all instructions from the
- * beginning of the sequence have been fetched
+ * beginning of the sequence have been fetched.
  */
-GenericIdentifier<int> Delta::FLUSH_TIME("delta.flush_time");
+GenericIdentifier<int> Delta::SEQ_COMPLETION("Delta::seq_completion", 0, ipet::NS);
+
+
+/**
+ * Property used to return statistics about the @ref Delta processor about
+ * the maximal sequence length in instructions.
+ */
+GenericIdentifier<double> Delta::MAX_LENGTH("Delta::max_length", 0, ipet::NS);
+
+
+/**
+ * Property used to return statistics about the @ref Delta processor about
+ * the mean sequence length in instructions.
+ */
+GenericIdentifier<double> Delta::MEAN_LENGTH("Delta::min_length", 0, ipet::NS);
+
+
+/**
+ * This identifier is used for storing in a BasicBlock a TreePath
+ * storing all BBPath starting from this basic block
+ */
+GenericIdentifier<TreePath<BasicBlock*,BBPath*>*>
+	Delta::TREE("Delta::tree", 0, ipet::NS);
+
+
+/**
+ * Feature ensure that sequences have been built to achieve the Delta
+ * interblock effect support.
+ * 
+ * @par Properties
+ * @li @ref Delta::DELTA (@ref BBPATH).
+ */
+Feature<Delta> DELTA_SEQUENCES_FEATURE("delta_sequences");
 
 } } // otawa::ipet

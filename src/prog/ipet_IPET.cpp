@@ -159,6 +159,18 @@ ilp::Var *getVar(ilp::System *system, Edge *edge) {
 
 
 /**
+ * This feature ensures that effects of the inter-block have been modelized
+ * in the current ILP system. Currently, there is no default processor to get
+ * it cause the heterogeneity of solutions to this problem.
+ * 
+ * @par Implementing Processors
+ * @ref @li Delta
+ */
+Feature<NoProcessor>
+	INTERBLOCK_SUPPORT_FEATURE("otawa::ipet::interblock_support");
+
+
+/**
  * IPET namespace.
  */
 NameSpace NS("ipet", OTAWA_NS);

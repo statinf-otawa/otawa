@@ -66,7 +66,7 @@ public:
 	};
 	
 	static int instructions_simulated;
-	static GenericIdentifier<TreePath<BasicBlock*,BBPath*>*> TREE;
+	//static GenericIdentifier<TreePath<BasicBlock*,BBPath*>*> TREE;
 	
 	// Comparison
 	//bool equals (BBPath &bbpath);

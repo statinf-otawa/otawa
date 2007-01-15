@@ -222,8 +222,8 @@ void Command::compute(String fun) {
 	// Use delta approach
 	if(delta) {
 		Delta::LEVELS(props) = delta;
-		Delta delta(props);
-		delta.process(fw);
+		Delta delta;
+		delta.process(fw, props);
 	}
 	
 	// Add constraints for suffix approach
