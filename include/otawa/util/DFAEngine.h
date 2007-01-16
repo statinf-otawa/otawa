@@ -138,6 +138,7 @@ inline void DFAEngine<Problem, Set, Iter>::compute(void) {
 		changed = false;
 		for(elm::Iterator<BasicBlock *> bb(_cfg.bbs()); bb; bb++) {
 			int idx = bb->number();
+			assert(idx >= 0);
 			
 			// IN = union OUT of predecessors
 			prob.reset(ins[idx]);
@@ -145,6 +146,7 @@ inline void DFAEngine<Problem, Set, Iter>::compute(void) {
 				if(pred) {
 					BasicBlock *bb_pred = pred;
 					int pred_idx = bb_pred->number();
+					assert(pred_idx >= 0);
 					prob.merge(ins[idx], outs[pred_idx]);
 				}
 			
