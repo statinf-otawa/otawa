@@ -1,13 +1,14 @@
 /*
  * $Id$
- * Copyright (c) 2005, IRIT-UPS <casse@irit.fr>
+ * Copyright (c) 2005-07, IRIT-UPS <casse@irit.fr>
  *
- * src/mkff/mkff.cpp -- entry point of mkff utility.
+ * mkff utility entry point
  */
 
 #include <elm/io.h>
 #include <elm/options.h>
 #include <elm/genstruct/Vector.h>
+#include <otawa/cfg.h>
 #include <otawa/otawa.h>
 #include <otawa/util/ContextTree.h>
 
@@ -175,8 +176,11 @@ void Command::perform(String name) {
 	}
 	
 	// Build the context tree
-	ContextTree ctree(cfg);
-	funs.add(&ctree);
+	PropList props;
+	ENTRY_CFG(props) = cfg;
+	ContextTreeBuilder builder;
+	builder.process(fw, props);
+	funs.add(CONTEXT_TREE(fw));
 	
 	// Display the context tree
 	for(int i = 0; i < funs.length(); i++)
@@ -212,9 +216,9 @@ void Command::process (String arg) {
  */
 Command::Command(void): one(false), fw(0) {
 	program = "mkff";
-	version = "0.1";
-	author = "Hugues Cass�";
-	copyright = "Copyright (c) 2005, IRIT-UPS France";
+	version = "1.0";
+	author = "Hugues Cassé";
+	copyright = "Copyright (c) 2005-07, IRIT-UPS France";
 	description = "Generate a flow fact file for an application.";
 	free_argument_description = "program [function names...]";
 }
