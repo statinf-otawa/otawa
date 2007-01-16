@@ -165,19 +165,23 @@ void Command::scanLoop(ContextTree *ctree, int indent) {
  */
 void Command::perform(String name) {
 	assert(name);
-	
+
+	// Configuration	
+	PropList props;
+	PROC_VERBOSE(props) = true;
+	TASK_ENTRY(props) = &name;
+
 	// Find the function
-	CFGInfo *info = fw->getCFGInfo();
+	/*CFGInfo *info = fw->getCFGInfo(props);
 	CFG *cfg = info->findCFG(name);
 	if(!cfg) {
 		cerr << "ERROR: label \"" << name
 			 << "\" does not match sub-programm entry.\n";
 		return;
 	}
+	ENTRY_CFG(props) = cfg;*/
 	
 	// Build the context tree
-	PropList props;
-	ENTRY_CFG(props) = cfg;
 	ContextTreeBuilder builder;
 	builder.process(fw, props);
 	funs.add(CONTEXT_TREE(fw));
