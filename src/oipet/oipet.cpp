@@ -204,10 +204,10 @@ void Command::compute(String fun) {
 		return;
 	}
 	VirtualCFG vcfg(cfg);
-	ENTRY_CFG(fw) = &vcfg;
 		
 	// Prepare processor configuration
 	PropList props;
+	ENTRY_CFG(props) = &vcfg;
 	if(dump_constraints || dump_graph)
 		props.set(EXPLICIT, true);
 	if(verbose) {
@@ -348,6 +348,7 @@ void Command::run(void) {
 	
 	// Load the file
 	PropList props;
+	NO_SYSTEM(props) = true;
 	if(proc) {
 		PROCESSOR_PATH(props) = proc.value();
 		SIMULATOR(props) = &sim;
