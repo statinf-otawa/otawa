@@ -7,6 +7,7 @@
 
 #include <assert.h>
 #include <otawa/proc/BBProcessor.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa { namespace ipet {
 
@@ -14,11 +15,14 @@ namespace otawa { namespace ipet {
 // TimeDeltaObjectFunctionModifier class
 class TimeDeltaObjectFunctionModifier: public BBProcessor {
 public:
-	TimeDeltaObjectFunctionModifier(const PropList& props = PropList::EMPTY);
+	TimeDeltaObjectFunctionModifier(void);
 
 	// BBProcessor overload
 	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
 };
+
+// Features
+extern Feature<TimeDeltaObjectFunctionModifier> EDGE_TIME_FEATURE;
 
 } } // otawa::ipet
 

@@ -195,8 +195,8 @@ void Command::compute(String fun) {
 		if(suffix) {
 			buildTrees(fw, &vcfg);
 			for(CFG::BBIterator bb(&vcfg); bb; bb++)
-				if(BBPath::TREE(bb))
-					computeMinTime(BBPath::TREE(bb), 0, 0);
+				if(Delta::TREE(bb))
+					computeMinTime(Delta::TREE(bb), 0, 0);
 			for(CFG::BBIterator bb(&vcfg); bb; bb++)
 				if(STAT(bb)) {
 					if(do_max)
@@ -246,17 +246,17 @@ void Command::compute(String fun) {
 			}
 		else 
 			for(CFG::BBIterator bb(&vcfg); bb; bb++) {
-				if(BBPath::TREE(bb)) {
+				if(Delta::TREE(bb)) {
 					
-					addSuffixConstraints(BBPath::TREE(bb), 0, 0 /*&ctx*/);
+					addSuffixConstraints(Delta::TREE(bb), 0, 0 /*&ctx*/);
 				}
 			}
 	}
 	
 	// Time delta modifier
 	if(exegraph && !delta && do_context) {
-		TimeDeltaObjectFunctionModifier tdom(props);
-		tdom.process(fw);
+		TimeDeltaObjectFunctionModifier tdom;
+		tdom.process(fw, props);
 	}
 	
 	// Resolve the system

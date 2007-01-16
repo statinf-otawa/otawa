@@ -26,6 +26,8 @@ namespace otawa { namespace ipet {
  *  <dt>ei,j</dt><dd>Count of execution of edge (i, j).</dd>
  * </dl>
  * 
+ * @par Provided Feature
+ * @ref @li EDGE_TIME_FEATURE
  */
 
 
@@ -33,13 +35,10 @@ namespace otawa { namespace ipet {
  * Build a new basic object function builder.
  * @param props		Configuration properties.
  */
-TimeDeltaObjectFunctionModifier::TimeDeltaObjectFunctionModifier(
-	const PropList& props)
-: 	BBProcessor(
-		"otawa::TimeDeltaObjectFunctionModifier",
-		Version(1, 0, 0),
-		props)
+TimeDeltaObjectFunctionModifier::TimeDeltaObjectFunctionModifier(void):
+	BBProcessor("otawa::ipet::TimeDeltaObjectFunctionModifier", Version(1, 0, 0))
 {
+	provide(EDGE_TIME_FEATURE);
 }
 
 
@@ -59,5 +58,11 @@ void TimeDeltaObjectFunctionModifier::processBB(
 		}
 	}
 }
+
+/**
+ * This feature ensurers that the @ref TIME_DELTA property linked to the CFG edges are
+ * used in the maximized object function of the IPET ILP system.
+ */
+Feature<TimeDeltaObjectFunctionModifier> EDGE_TIME_FEATURE("otawa::ipet::edge_time");
 
 } } // otawa::ipet
