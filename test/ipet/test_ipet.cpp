@@ -5,7 +5,6 @@
  *	test/ipet/test_ipet.cpp -- test for IPET feature.
  */
 
-#include <stdlib.h>
 #include <elm/io.h>
 #include <otawa/otawa.h>
 #include <otawa/ipet.h>
@@ -50,7 +49,7 @@ int main(int argc, char **argv) {
 		if(argc < 2) {
 			cerr << "ERROR: no argument.\n"
 				 << "Syntax is : test_ipet <executable>\n";
-			exit(2);
+			return 2;
 		}
 		FrameWork *fw = manager.load(argv[1], props);
 		
@@ -82,18 +81,18 @@ int main(int argc, char **argv) {
 		tbt.process(fw, props);
 		BBTimeSimulator bbts(props);
 		bbts.process(fw);*/
-		TrivialDataCacheManager dcache;
-		dcache.process(fw, props);
+		/*TrivialDataCacheManager dcache;
+		dcache.process(fw, props);*/
 		WCETComputation wcomp;
 		wcomp.process(fw, props);
 		
 		// Display the result
 		cfg = ENTRY_CFG(fw);
-		ilp::System *sys = SYSTEM(cfg);
+		ilp::System *sys = SYSTEM(fw);
 		sys->dump();
 		cout << sys->countVars() << " variables and "
 			 << sys->countConstraints() << " constraints.\n";
-		cout << "SUCCESS\nWCET = " << WCET(cfg) << '\n';
+		cout << "SUCCESS\nWCET = " << WCET(fw) << '\n';
 	}
 	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
