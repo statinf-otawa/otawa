@@ -19,11 +19,14 @@ void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 %parse-param {otawa::FlowFactLoader *loader}
 
 %union {
-	int _int;
+	long _int;
+	elm::String *_str;
 }
 
 %token <_int> INTEGER
+%token <_str> STRING;
 %token LOOP
+%token CHECKSUM
 %token BAD_TOKEN
 
 
@@ -44,6 +47,12 @@ command:
 		{
 			//cout << "loop " << (void *)$2 << ", " << $3 << "\n";
 			loader->onLoop((otawa::address_t)$2, $3);
+		}
+|	CHECKSUM STRING INTEGER ';'
+		{
+			//cout << "checksum = " << io::hex($2) << io::endl;
+			loader->onCheckSum(*$2, $3);
+			delete $2;
 		}
 ;
 
