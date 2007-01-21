@@ -144,6 +144,12 @@ void CFGBuilder::buildCFG(CodeItem *code) {
 				if(inst->isCall())
 					bb->set<bool>(ID_Entry, true);
 			}
+			else if(!inst->isReturn()) {
+				warn("unresolved indirect control at 0x%x", *inst->address());
+				cout << '\t' << inst->address() << '\t';
+				inst->dump(out);
+				cout << io::endl;
+			}
 
 			// Found BB starting on next instruction
 			BasicBlock *bb = nextBB(inst);
