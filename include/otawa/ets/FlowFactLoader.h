@@ -27,6 +27,7 @@ class FlowFactLoader: public ASTProcessor, private otawa::FlowFactLoader {
 	protected:
 		// FlowFactLoader overload
 		virtual void onError(const char *fmt, ...);
+		virtual void onWarning(const char *fmt, ...);
 		virtual void onLoop(address_t addr, int count);
 };
 

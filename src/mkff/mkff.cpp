@@ -11,6 +11,9 @@
 #include <otawa/cfg.h>
 #include <otawa/otawa.h>
 #include <otawa/util/ContextTree.h>
+#include <elm/checksum/Fletcher.h>
+#include <elm/io/InFileStream.h>
+#include <elm/system/Path.h>
 
 using namespace elm;
 using namespace otawa;
@@ -28,7 +31,7 @@ using namespace otawa;
  * @endcode
  * 
  * mkff builds the .ff loop statements for each function calling sub-tree for
- * the given binary file. If no function name is given, only the @e main()
+ * the given binary file. If no function name is given, only the main()
  * function is processed.
  * 
  * The loop statement are indented according their depth in the context tree
@@ -168,24 +171,25 @@ void Command::perform(String name) {
 
 	// Configuration	
 	PropList props;
-	PROC_VERBOSE(props) = true;
+	//PROC_VERBOSE(props) = true;
 	TASK_ENTRY(props) = &name;
 
-	// Find the function
-	/*CFGInfo *info = fw->getCFGInfo(props);
-	CFG *cfg = info->findCFG(name);
-	if(!cfg) {
-		cerr << "ERROR: label \"" << name
-			 << "\" does not match sub-programm entry.\n";
-		return;
-	}
-	ENTRY_CFG(props) = cfg;*/
-	
 	// Build the context tree
 	ContextTreeBuilder builder;
 	builder.process(fw, props);
 	funs.add(CONTEXT_TREE(fw));
 	
+	// Build the checksums of the binary files
+	for(Process::FileIter file(fw->process()); file; file++) {
+		checksum::Fletcher sum;
+		io::InFileStream stream(file->name());
+		sum.put(stream);
+		system::Path path = file->name();
+		cout << "checksum \"" << path.namePart()
+			 << "\" 0x" << io::hex(sum.sum()) << ";\n";
+	}
+	cout << io::endl;
+
 	// Display the context tree
 	for(int i = 0; i < funs.length(); i++)
 		scanFun(funs[i]);
@@ -201,7 +205,6 @@ void Command::process (String arg) {
 	// First free argument is binary path
 	if(!fw) {
 		PropList props;
-//		LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 		NO_SYSTEM(props) = true;
 		fw = manager.load(arg.toCString(), props);
 		info = fw->getCFGInfo();

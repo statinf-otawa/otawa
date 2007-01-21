@@ -88,7 +88,23 @@ void FlowFactLoader::onError(const char *fmt, ...) {
 	va_end(args);
 	cout << '\n';
 }
-	
+
+/**
+ */
+void FlowFactLoader::onWarning(const char *fmt, ...) {
+	/*assert(fmt);
+	va_list args;
+	va_start(args, fmt);
+	StringBuffer buffer;
+	buffer.format(fmt, args);
+	cout << buffer.toString();
+	va_end(args);*/
+	//cout << '\n';
+	VARARG_BEGIN(args, fmt)
+		warn(fmt, args);
+	VARARG_END	
+}
+
 /**
  * Build loop_table.
  * @param addr	Address of loop condition.

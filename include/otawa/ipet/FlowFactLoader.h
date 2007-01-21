@@ -27,9 +27,11 @@ namespace ipet {
 class FlowFactLoader: public Processor, private otawa::FlowFactLoader {
 	CFGCollection *cfgs;	
 	otawa::ilp::System *system;
+	system::Path path;
 protected:
 	// FlowFactLoader overload
 	virtual void onError(const char *fmt, ...);
+	virtual void onWarning(const char *fmt, ...);
 	virtual void onLoop(address_t addr, int count);	
 
 	// CFGProcessor overload
@@ -37,6 +39,7 @@ protected:
 
 public:
 	FlowFactLoader(void);
+	virtual void configure(const PropList& props = PropList::EMPTY);
 };
 
 // Features
