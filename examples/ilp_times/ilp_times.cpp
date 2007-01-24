@@ -5,7 +5,6 @@
  *	test/ipet/test_ipet.cpp -- test for IPET feature.
  */
 
-#include <stdlib.h>
 #include <elm/io.h>
 #include <otawa/otawa.h>
 #include <otawa/ipet/IPET.h>
@@ -207,13 +206,9 @@ int main(int argc, char **argv) {
 			 << vcfg.use<int>(WCET) << '\t'
 			 << size << '\n';
 	}
-	catch(LoadException e) {
+	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
-		exit(1);
-	}
-	catch(ProcessorException e) {
-		cerr << "ERROR: " << e.message() << '\n';
-		exit(1);
+		return 1;
 	}
 	return 0;
 }
