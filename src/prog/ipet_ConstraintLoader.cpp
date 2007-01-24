@@ -56,18 +56,39 @@ class NormalizationException {
 
 
 /**
+ * This property identifier is used for passing specific file to load to
+ * the @ref ConstraintLoader (argument of type @ref elm::String).
+ */
+GenericIdentifier<Path> ConstraintLoader::PATH("path", "", ipet::NS);
+
+
+/**
  * @class ConstraintLoader
  * This code processor allows loading IPET constraint from an external file.
- * !!TODO!!
- * File format documentation here !
+ * The external file must follows the format @ref ExtCons.
+ * 
+ * @par Configuration Properties
+ * @li @ref ConstraintLoader::PATH - path to the file containing the constraints.
+ * 
+ * @par Required Feature
+ * @li @ref CFG_INFO_FEATURE
  */
 
 
 /**
- * This property identifier is used for passing specific file to load to
- * the @ref ConstraintLoader (argument of type @ref elm::String).
+ * @page ExtCons ExtCons : External Constraint Format
  */
-Identifier ConstraintLoader::ID_Path("otawa.ipet.path");
+
+
+/**
+ * Constructor.
+ */
+ConstraintLoader::ConstraintLoader(void):
+	CFGProcessor("otawa::ipet::ConstraintLoader", Version(1, 0, 0))
+{
+	require(CFG_INFO_FEATURE);
+}
+
 
 /**
  * Find the BB matching the given address.
@@ -247,8 +268,8 @@ NormNode *ConstraintLoader::normalize(ExpNode *node, double mult) {
 
 /**
  */
-void ConstraintLoader::configure(PropList& props) {
-	path = props.get<String>(ID_Path, "");
+void ConstraintLoader::configure(const PropList& props) {
+	path = PATH(props);
 	CFGProcessor::configure(props);
 }
 
@@ -262,11 +283,8 @@ void ConstraintLoader::processCFG(FrameWork *_fw, CFG *cfg) {
 	
 	// Initialization
 	fw = _fw;
-	system = cfg->get<ilp::System *>(IPET::ID_System, 0);
-	if(!system) {
-		out << "ERROR: no ILP system available on this CFG.\n";
-		return;
-	}
+	system = ipet::getSystem(_fw, cfg);
+	assert(system);
 	
 	// Select the file
 	if(!path) {
@@ -280,7 +298,7 @@ void ConstraintLoader::processCFG(FrameWork *_fw, CFG *cfg) {
 	// Open the file
 	ipet_in = fopen(&path.toCString(), "r");
 	if(!ipet_in) {
-		out << "ERROR: cannot open the constraint file \"" << path << "\".\n";
+		warn("ERROR: cannot open the constraint file \"%s\".", &path);
 		return;
 	}
 	
