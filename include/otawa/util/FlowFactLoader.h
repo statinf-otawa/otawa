@@ -24,7 +24,7 @@ void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 namespace otawa {
 
 using namespace elm;
-using namespace elm::system;
+using namespace elm;
 
 // Extern class
 class File;
@@ -43,11 +43,11 @@ protected:
 	virtual void onWarning(const char *fmt, ...) = 0;
 	virtual void onLoop(address_t addr, int count) = 0;
 public:
-	void run(FrameWork *fw, Path path = "");
+	void run(FrameWork *fw, elm::system::Path path = "");
 };
 
 // Properties
-extern GenericIdentifier<Path> FLOW_FACTS_PATH;
+extern GenericIdentifier<elm::system::Path> FLOW_FACTS_PATH;
 
 } // otawa
 

@@ -16,6 +16,8 @@ extern FILE *util_fft_in;
 
 namespace otawa {
 
+using namespace elm::system;
+
 /**
  * @page f4 F4 : Flow Facts File Format
  * 
