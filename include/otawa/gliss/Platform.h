@@ -1,8 +1,8 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2005-07, IRIT UPS.
  *
- *	gliss/Platform.h -- gliss::Platform class interface.
+ *	otawa;;gliss::Platform class interface.
  */
 #ifndef OTAWA_GLISS_PLATFORM_H
 #define OTAWA_GLISS_PLATFORM_H
@@ -15,7 +15,6 @@ namespace otawa { namespace gliss {
 class Platform: public hard::Platform {
 public:
 	static const Identification ID;
-	static Platform platform;
 	Platform(const PropList& props = PropList::EMPTY);
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
 

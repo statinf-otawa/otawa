@@ -1,8 +1,8 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-07, IRIT UPS.
  *
- *	gliss/platform.cpp -- implementation of the GLISS platform.
+ *	otawa::gliss::Platform class implementation
  */
 
 #include <elm/debug.h>
@@ -75,12 +75,6 @@ const hard::MeltedBank Platform::MISC_bank("MISC", &Platform::CTR_reg,
  * Identification of the default platform.
  */
 const Platform::Identification Platform::ID("powerpc-elf-");
-
-
-/**
- * Default platform description.
- */
-Platform Platform::platform;
 
 
 /**
