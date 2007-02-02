@@ -129,7 +129,7 @@ void BasicConstraintsBuilder::processFrameWork(FrameWork *fw) {
  * Build basic constraint builder processor.
  */
 BasicConstraintsBuilder::BasicConstraintsBuilder(void)
-: BBProcessor("otawa::BasicConstraintsBuilder", Version(1, 0, 0)) {
+: BBProcessor("otawa::ipet::BasicConstraintsBuilder", Version(1, 0, 0)) {
 	provide(CONTROL_CONSTRAINTS_FEATURE);
 	require(ASSIGNED_VARS_FEATURE);
 }

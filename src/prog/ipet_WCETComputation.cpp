@@ -24,7 +24,7 @@ namespace otawa { namespace ipet {
  * CFG.
  * 
  * @par Required Features
- * @li @ref ipet::FLOW_CONSTRAINTS_FEATURE
+ * @li @ref ipet::CONTROL_CONSTRAINTS_FEATURE
  * @li @ref ipet::OBJECT_FUNCTION_FEATURE
  * @li @ref ipet::FLOW_FACTS_CONSTRAINTS_FEATURE
  * 
@@ -37,7 +37,7 @@ namespace otawa { namespace ipet {
  * Build a new WCET computer.
  */
 WCETComputation::WCETComputation(void)
-: Processor("otawa::WCETComputation", Version(1, 0, 0)) {
+: Processor("otawa::ipet::WCETComputation", Version(1, 0, 0)) {
 	require(CONTROL_CONSTRAINTS_FEATURE);
 	require(OBJECT_FUNCTION_FEATURE);
 	require(FLOW_FACTS_CONSTRAINTS_FEATURE);

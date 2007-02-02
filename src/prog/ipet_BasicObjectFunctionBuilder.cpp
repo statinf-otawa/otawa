@@ -43,7 +43,7 @@ namespace otawa { namespace ipet {
  * Build a new basic object function builder.
  */
 BasicObjectFunctionBuilder::BasicObjectFunctionBuilder(void)
-: BBProcessor("otawa::BasicObjectFunctionBuilder", Version(1, 0, 0)) {
+: BBProcessor("otawa::ipet::BasicObjectFunctionBuilder", Version(1, 0, 0)) {
 	require(ASSIGNED_VARS_FEATURE);
 	require(BB_TIME_FEATURE);
 	provide(OBJECT_FUNCTION_FEATURE);
