@@ -66,6 +66,12 @@ using namespace elm::option;
  * This command compute the WCET of the given function using OTAWA IPET facilities.
  * If no function is given, the main() function is used.
  * 
+ * @par Generic Options
+ * 
+ * -I, --inline: consider a program where each function call is inlined
+ * (default to true). Remark that this option may improve the WCET accuracy
+ * but, in turn, may result in an enlarged computation time.
+ * 
  * @par Cache Management Options
  * 
  * -i method, --icache=method: selects how the instruction must be managed.
@@ -165,6 +171,7 @@ BoolOption dump_graph(command, 'G', "dump-graph",
 
 // Other options
 BoolOption verbose(command, 'v', "verbose", "verbose mode", false);
+BoolOption inlining(command, 'I', "inline", "inline function calls", true);
 
 
 /**
@@ -203,16 +210,25 @@ void Command::compute(String fun) {
 			 << fun << "\".\n";
 		return;
 	}
-	VirtualCFG vcfg(cfg);
-		
+	//VirtualCFG vcfg(cfg);
+	
+	if(!inlining && icache_option != icache_ccg) {
+		inlining.set(true);
+		cerr << "WARNING: using CCG without inlining may induce, in some cases, "
+			    "an invalid WCET: inlining is activated.\n";
+	}
+	
 	// Prepare processor configuration
 	PropList props;
-	ENTRY_CFG(props) = &vcfg;
+	if(!inlining)
+		ENTRY_CFG(props) = cfg;
+	else
+		ENTRY_CFG(props) = new VirtualCFG(cfg);
 	if(dump_constraints || dump_graph)
 		props.set(EXPLICIT, true);
 	if(verbose) {
 		PROC_VERBOSE(props) = true;
-		cerr << "verbose !\n";
+		//cerr << "verbose !\n";
 	}
 	
 	// Compute BB times
@@ -257,7 +273,7 @@ void Command::compute(String fun) {
 	// Process the instruction cache
 	switch(icache_option) {
 	case icache_ccg:
-		{	
+		{
 			// build LBlock
 			LBlockBuilder lbb;
 			lbb.process(fw, props);
