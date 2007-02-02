@@ -136,7 +136,7 @@ inline void DFAEngine<Problem, Set, Iter>::compute(void) {
 	Set *comp = prob.empty(), *ex;
 	while(changed) {
 		changed = false;
-		for(elm::Iterator<BasicBlock *> bb(_cfg.bbs()); bb; bb++) {
+		for(CFG::BBIterator bb(&_cfg); bb; bb++) {
 			int idx = bb->number();
 			assert(idx >= 0);
 			
