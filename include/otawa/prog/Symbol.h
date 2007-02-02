@@ -23,6 +23,7 @@ public:
 		FUNCTION,
 		LABEL
 	} kind_t;
+	static GenericIdentifier<Symbol *> ID;
 
 	virtual ~Symbol(void);
 	virtual kind_t kind(void) = 0;

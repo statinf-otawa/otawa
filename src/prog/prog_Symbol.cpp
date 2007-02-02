@@ -90,4 +90,13 @@ void GenericIdentifier<Symbol *>::print(elm::io::Output& out, const Property& pr
 	out << "symbol(" << get(prop)->name() << ")";
 }
 
+
+/**
+ * This property is used to attach a symbol to an instruction.
+ * 
+ * @par Hooks
+ * @li @ref Inst
+ */
+GenericIdentifier<Symbol *> Symbol::ID("Symbol::ID", 0, OTAWA_NS);
+
 } // otawa

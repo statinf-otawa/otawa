@@ -142,7 +142,8 @@ void CodeSegment::build(void) {
 		if(addr >= lbound && addr < ubound) {
 			Inst *inst = (Inst *)findByAddress(addr);
 			if(inst) {
-				Identifier *id;
+				//Identifier *id;
+				Symbol::ID(inst) = sym;
 				switch(sym->kind()) {
 				case Symbol::FUNCTION:
 					FUNCTION_LABEL(inst) += sym->name();
