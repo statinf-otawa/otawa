@@ -11,17 +11,19 @@
 #include <otawa/prop/Identifier.h>
 
 namespace otawa { namespace ets {
-	
-class ETS {
-public:
-	static Identifier ID_LOOP_COUNT;
-	static Identifier ID_WCET;
-	static Identifier ID_ACS;
-	static Identifier ID_HITS;
-	static Identifier ID_MISSES;
-	static Identifier ID_FIRST_MISSES;
-	static Identifier ID_CONFLICTS;
-};
+
+// Classes
+class AbstractCacheState;
+
+// Identifiers
+extern NameSpace NS;
+extern Identifier<int> LOOP_COUNT;
+extern Identifier<int> WCET;
+extern Identifier<AbstractCacheState *> ACS;
+extern Identifier<int> HITS;
+extern Identifier<int> MISSES;
+extern Identifier<int> FIRST_MISSES;
+extern Identifier<int> CONFLICTS;
 		
 } } // otawa::ets
 
