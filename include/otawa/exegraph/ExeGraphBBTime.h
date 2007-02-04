@@ -216,8 +216,8 @@ class ExeGraphBBTime: public BBProcessor {
 			int capacity ) ;
 
 	// Configuration Properties
-	static GenericIdentifier<Microprocessor *> PROCESSOR;
-	static GenericIdentifier<elm::io::Output *>  LOG_OUTPUT;
+	static Identifier<Microprocessor *> PROCESSOR;
+	static Identifier<elm::io::Output *>  LOG_OUTPUT;
 	
 	// statistics
 	typedef struct stat_t {
@@ -270,11 +270,11 @@ private:
 };
 
 // Configuration
-extern GenericIdentifier<bool> EXEGRAPH_DELTA;
-extern GenericIdentifier<bool> EXEGRAPH_CONTEXT;
+extern Identifier<bool> EXEGRAPH_DELTA;
+extern Identifier<bool> EXEGRAPH_CONTEXT;
 
 // Statistics output
-extern GenericIdentifier<Vector <ExeGraphBBTime::stat_t> *> EXEGRAPH_PREFIX_STATS;
+extern Identifier<Vector <ExeGraphBBTime::stat_t> *> EXEGRAPH_PREFIX_STATS;
 
 } //otawa
 
