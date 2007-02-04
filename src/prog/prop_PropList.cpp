@@ -1,8 +1,8 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-07, IRIT UPS.
  *
- *	prog/prop_PropList.cpp -- implementation of PropList class.
+ *	PropList class implementation
  */
 
 #include <elm/io.h>
@@ -16,7 +16,7 @@ namespace otawa {
  * This identifier is used for marking the end of property list definition
  * in variable arguments "...".
  */
-const Identifier END("otawa.end");
+const AbstractIdentifier END("end", otawa::NS);
 
 
 /**
@@ -34,10 +34,10 @@ const Identifier END("otawa.end");
  * @param id	First identifier.
  * @param args	Variable arguments.
  */
-void PropList::init(const Identifier *id, elm::VarArg& args) {
+void PropList::init(const AbstractIdentifier *id, elm::VarArg& args) {
 	while(id != &END) {
 		id->scan(*this, args);
-		id = args.next<const Identifier *>();
+		id = args.next<const AbstractIdentifier *>();
 	}
 }
 
@@ -49,7 +49,7 @@ void PropList::init(const Identifier *id, elm::VarArg& args) {
  * @param id	First identifier.
  * @param ...	Remaining of the sequence.
  */
-PropList::PropList(const Identifier *id, ...): head(0) {
+PropList::PropList(const AbstractIdentifier *id, ...): head(0) {
 	VARARG_BEGIN(args, id)
 		init(id, args);
 	VARARG_END
@@ -63,7 +63,7 @@ PropList::PropList(const Identifier *id, ...): head(0) {
  * @param id	First identifier.
  * @param args	Remaining of the sequence.
  */
-PropList::PropList(const Identifier *id, elm::VarArg& args): head(0) {
+PropList::PropList(const AbstractIdentifier *id, elm::VarArg& args): head(0) {
 	init(id, args);
 }
 
@@ -98,7 +98,7 @@ void PropList::addProps(const PropList& props) {
  * @param id	Identifier of the property to find.
  * @return		Found property or null.
  */
-Property *PropList::getProp(const Identifier *id) const {
+Property *PropList::getProp(const AbstractIdentifier *id) const {
 	
 	/* Look in this list */
 	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next())
@@ -150,7 +150,7 @@ void PropList::setProp(Property *prop) {
  * Remove a property matching the given identifier.
  * @param id	Identifier of the property to remove.
  */
-void PropList::removeProp(const Identifier *id) {
+void PropList::removeProp(const AbstractIdentifier *id) {
 	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next())
 		if(cur->id() == id) {
 			if(prev)
@@ -176,7 +176,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T PropList::get(const Identifier *id, T def_value) const;
+ * @fn T PropList::get(const AbstractIdentifier *id, T def_value) const;
  * Get the value of a property.
  * @param id			Identifier of the property to get.
  * @param def_value		Default value returned if property does not exists.
@@ -186,7 +186,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T PropList::get(const Identifier& id, T def_value) const;
+ * @fn T PropList::get(const AbstractIdentifier& id, T def_value) const;
  * Get the value of a property.
  * @param id			Identifier of the property to get.
  * @param def_value		Default value returned if property does not exists.
@@ -195,7 +195,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn Option<T> PropList::get(const Identifier *id) const;
+ * @fn Option<T> PropList::get(const AbstractIdentifier *id) const;
  * Get the value of a property.
  * @param id	Identifier of the property to get the value from.
  * @return		None or the value of the property.
@@ -204,7 +204,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn Option<T> PropList::get(const Identifier& id) const;
+ * @fn Option<T> PropList::get(const AbstractIdentifier& id) const;
  * Get the value of a property.
  * @param id	Identifier of the property to get the value from.
  * @return		None or the value of the property.
@@ -212,7 +212,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T& PropList::use(const Identifier *id) const;
+ * @fn T& PropList::use(const AbstractIdentifier *id) const;
  * Get the reference on the value of the given property. If not found,
  * cause an assertion failure.
  * @param id	Identifier of the property to get the value from.
@@ -222,7 +222,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn T& PropList::use(const Identifier& id) const;
+ * @fn T& PropList::use(const AbstractIdentifier& id) const;
  * Get the reference on the value of the given property. If not found,
  * cause an assertion failure.
  * @param id	Identifier of the property to get the value from.
@@ -231,7 +231,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn void PropList::set(const Identifier *id, const T value)
+ * @fn void PropList::set(const AbstractIdentifier *id, const T value)
  * Set the value of a property.
  * @param id	Identifier of the property.
  * @param value	Value of the property.
@@ -240,7 +240,7 @@ void PropList::clearProps(void) {
 
 
 /**
- * @fn void PropList::set(const Identifier& id, const T value)
+ * @fn void PropList::set(const AbstractIdentifier& id, const T value)
  * Set the value of a property.
  * @param id	Identifier of the property.
  * @param value	Value of the property.
@@ -254,7 +254,7 @@ void PropList::clearProps(void) {
  * @param id	Identifier of the looked property.
  * @return	Return the found property or null.
  */
-Property *PropList::getDeep(const Identifier *id) const {
+Property *PropList::getDeep(const AbstractIdentifier *id) const {
 	return 0;
 }
 
@@ -273,7 +273,7 @@ void PropList::addProp(Property *prop) {
  * Remove all the properties matching the given identifier.
  * @param id	Identifier of properties to remove.
  */
-void PropList::removeAllProp(const Identifier *id) {
+void PropList::removeAllProp(const AbstractIdentifier *id) {
 	Property *prv = 0, *cur = head;
 	while(cur) {
 		if(cur->id() != id) {
@@ -297,7 +297,7 @@ void PropList::removeAllProp(const Identifier *id) {
 
 
 /**
- * @fn void PropList::add(const Identifier *id, const T value);
+ * @fn void PropList::add(const AbstractIdentifier *id, const T value);
  * Add a ne wproperty to the property list without replacing a possible
  * existing one.
  * @param id		Property identifier.
@@ -307,7 +307,7 @@ void PropList::removeAllProp(const Identifier *id) {
 
 
 /**
- * @fn void PropList::add(const Identifier& id, const T value);
+ * @fn void PropList::add(const AbstractIdentifier& id, const T value);
  * Add a ne wproperty to the property list without replacing a possible
  * existing one.
  * @param id		Property identifier.
@@ -316,7 +316,7 @@ void PropList::removeAllProp(const Identifier *id) {
 
 
 /**
- * @fn void PropList::addLocked(const Identifier *id, const T value);
+ * @fn void PropList::addLocked(const AbstractIdentifier *id, const T value);
  * Add a locked property to the property list. A locked property value inherits
  * from Elm::Locked class and provides a lock that will release the value when
  * there is no more lock. This kind of property provides the ability to
@@ -328,7 +328,7 @@ void PropList::removeAllProp(const Identifier *id) {
 
 
 /**
- * @fn void PropList::addLocked(const Identifier& id, const T value);
+ * @fn void PropList::addLocked(const AbstractIdentifier& id, const T value);
  * Add a locked property to the property list. A locked property value inherits
  * from Elm::Locked class and provides a lock that will release the value when
  * there is no more lock. This kind of property provides the ability to
@@ -339,7 +339,7 @@ void PropList::removeAllProp(const Identifier *id) {
 
 
 /**
- * @fn void PropList::addDeletable(const Identifier& id, const T value);
+ * @fn void PropList::addDeletable(const AbstractIdentifier& id, const T value);
  * Add an annotation with a deletable value, that is, a pointer that  will be
  * deleted when the annotation is destroyed.
  * @param id	Annotation identifier.
@@ -354,7 +354,7 @@ const PropList PropList::EMPTY;
 
 
 /**
- * @fn bool PropList::hasProp(const Identifier& id) const;
+ * @fn bool PropList::hasProp(const AbstractIdentifier& id) const;
  * Test if the property list contains a property matching the given identifier.
  * @param id	Property identifier to look for.
  * @return		True if the list contains the matching property, false else.
@@ -445,25 +445,25 @@ void PropList::print(elm::io::Output& out) const {
 
 
 /**
- * @fn bool PropList::Iter::operator==(const Identifier *id) const;
+ * @fn bool PropList::Iter::operator==(const AbstractIdentifier *id) const;
  * Equality overload for testing if a property is equals to an identifier.
  */
  
 
 /**
- * @fn bool PropList::Iter::operator!=(const Identifier *id) const;
+ * @fn bool PropList::Iter::operator!=(const AbstractIdentifier *id) const;
  * Equality overload for testing if a property is equals to an identifier.
  */
 
 
 /**
- * @fn bool PropList::Iter::operator==(const Identifier& id) const;
+ * @fn bool PropList::Iter::operator==(const AbstractIdentifier& id) const;
  *  Equality overload for testing if a property is equals to an identifier.
  */
 
 
 /**
- * @fn bool PropList::Iter::operator!=(const Identifier& id) const;
+ * @fn bool PropList::Iter::operator!=(const AbstractIdentifier& id) const;
  * Equality overload for testing if a property is equals to an identifier.
  */
 
@@ -476,7 +476,7 @@ void PropList::print(elm::io::Output& out) const {
 
 
 /**
- * @fn PropList::Getter::Getter(const PropList& list, const Identifier& _id);
+ * @fn PropList::Getter::Getter(const PropList& list, const AbstractIdentifier& _id);
  * Build an iterator on properties matching the given name.
  * @param list	Property list to traverse.
  * @param _id	Looked identifier.
@@ -484,7 +484,7 @@ void PropList::print(elm::io::Output& out) const {
 
 
 /**
- * @fn PropList::Getter::Getter(const PropList *list, const Identifier& _id);
+ * @fn PropList::Getter::Getter(const PropList *list, const AbstractIdentifier& _id);
  * Build an iterator on properties matching the given name.
  * @param list	Property list to traverse.
  * @param _id	Looked identifier.
