@@ -8,19 +8,19 @@
 #include <assert.h>
 #include <otawa/prop/NameSpace.h>
 
-namespace otawa {
-
-
 /**
  * The parent of all namespaces.
  */
-NameSpace ROOT_NS("");
+otawa::NameSpace NS("");
+
+
+namespace otawa {
 
 
 /**
  * OTAWA namespace.
  */
-NameSpace OTAWA_NS("otawa");
+NameSpace NS("otawa");
 
 
 /**
@@ -36,11 +36,11 @@ NameSpace OTAWA_NS("otawa");
  * @param name	Identifier name.
  * @return		Null if not found else the identifier.
  */
-Identifier *NameSpace::get(elm::String name) {
+AbstractIdentifier *NameSpace::get(elm::String name) {
 	NameSpace *ns = this;
 	int dot = name.indexOf('.');
 	while(dot >= 0) {
-		Identifier *id = ns->names.get(name.substring(0, dot), 0);
+		AbstractIdentifier *id = ns->names.get(name.substring(0, dot), 0);
 		if(!id)
 			return 0;
 		ns = id->toNameSpace();
@@ -57,7 +57,7 @@ Identifier *NameSpace::get(elm::String name) {
  * Add the given identifier to the namespace.
  * @param id	Identifier to add.
  */
-void NameSpace::add(Identifier *id) {
+void NameSpace::add(AbstractIdentifier *id) {
 	names.add(id->name(), id);
 }
 
@@ -68,7 +68,7 @@ void NameSpace::add(Identifier *id) {
  * @param parent	Parent namespace.
  */
 NameSpace::NameSpace(elm::CString name, NameSpace& parent)
-:	Identifier(name),
+:	AbstractIdentifier(name),
 	_parent(parent)	
 {
 }
@@ -87,7 +87,7 @@ NameSpace::NameSpace(elm::CString name, NameSpace& parent)
  */
 elm::String NameSpace::uri(void) {
 	if(!_uri) {
-		if(this == &ROOT_NS)
+		if(this == &::NS)
 			_uri = "http://www.irit.fr/recherches/ARCHI/MARCH";
 		else
 			_uri = _parent.uri() + "/" + name();
