@@ -44,12 +44,12 @@ public:
 	
 	virtual void configure(const PropList& props);
 
-	static GenericIdentifier<int> LEVELS;
-	static GenericIdentifier<int> DELTA;
-	static GenericIdentifier<TreePath<BasicBlock*,BBPath*>*> TREE;
-	static GenericIdentifier<int> SEQ_COMPLETION;
-	static GenericIdentifier<double> MAX_LENGTH;
-	static GenericIdentifier<double> MEAN_LENGTH;
+	static Identifier<int> LEVELS;
+	static Identifier<int> DELTA;
+	static Identifier<TreePath<BasicBlock*,BBPath*>*> TREE;
+	static Identifier<int> SEQ_COMPLETION;
+	static Identifier<double> MAX_LENGTH;
+	static Identifier<double> MEAN_LENGTH;
 };
 
 // Features

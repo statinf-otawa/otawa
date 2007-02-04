@@ -26,7 +26,7 @@ public:
 };
 
 // Configuration Properties
-extern GenericIdentifier<unsigned> PIPELINE_DEPTH;
+extern Identifier<unsigned> PIPELINE_DEPTH;
 
 // Features
 extern Feature<TrivialBBTime> BB_TIME_FEATURE;
