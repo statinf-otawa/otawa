@@ -79,7 +79,7 @@ namespace otawa {
 /**
  */
 void CFGCollector::processFrameWork (FrameWork *fw) {
-	static GenericIdentifier<bool> MARK("otawa.cfg_collector.mark", false);
+	static Identifier<bool> MARK("otawa.cfg_collector.mark", false);
 	
 	// Set first queue node
 	if(!entry && name) {
@@ -139,7 +139,7 @@ void CFGCollector::configure(const PropList& props) {
  * @par Hooks
  * FrameWork
  */
-GenericIdentifier<CFGCollection *> INVOLVED_CFGS("involved_cfgs", 0, OTAWA_NS);
+Identifier<CFGCollection *> INVOLVED_CFGS("involved_cfgs", 0, otawa::NS);
 
 
 /**

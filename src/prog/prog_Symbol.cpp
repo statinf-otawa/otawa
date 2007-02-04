@@ -86,7 +86,7 @@ Symbol::~Symbol(void) {
 
 // GenericIdentifier<Symbol_t *>::print Specialization
 template <>
-void GenericIdentifier<Symbol *>::print(elm::io::Output& out, const Property& prop) const {
+void Identifier<Symbol *>::print(elm::io::Output& out, const Property& prop) const {
 	out << "symbol(" << get(prop)->name() << ")";
 }
 
@@ -97,6 +97,6 @@ void GenericIdentifier<Symbol *>::print(elm::io::Output& out, const Property& pr
  * @par Hooks
  * @li @ref Inst
  */
-GenericIdentifier<Symbol *> Symbol::ID("Symbol::ID", 0, OTAWA_NS);
+Identifier<Symbol *> Symbol::ID("Symbol::ID", 0, otawa::NS);
 
 } // otawa

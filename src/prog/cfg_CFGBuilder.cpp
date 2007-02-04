@@ -12,7 +12,7 @@ namespace otawa {
 
 /**
  */
-Identifier CFGBuilder::ID_Entry("otawa::ID_Entry");
+Identifier<bool> IS_ENTRY("is_entry", false, otawa::NS);
 
 	
 
@@ -59,7 +59,7 @@ BasicBlock *CFGBuilder::nextBB(Inst *inst) {
 		if(!pseudo) {
 			BasicBlock *bb = new CodeBasicBlock(node);
 			assert(bb);
-			bb->set<bool>(ID_Entry, false);
+			IS_ENTRY(bb) = false;
 			return bb;
 		}
 		
@@ -71,7 +71,7 @@ BasicBlock *CFGBuilder::nextBB(Inst *inst) {
 	
 	// End-of-code
 	BasicBlock *bb = new CodeBasicBlock(inst->next());
-	bb->set<bool>(ID_Entry, false);
+	IS_ENTRY(bb) = false;
 	return bb;
 }
 
@@ -104,7 +104,7 @@ BasicBlock *CFGBuilder::thisBB(Inst *inst) {
 	
 	// At start, create the BB
 	BasicBlock *bb = new CodeBasicBlock(inst);
-	bb->set<bool>(ID_Entry, false);
+	IS_ENTRY(bb) = false;
 	return bb;
 }
 
@@ -116,7 +116,7 @@ BasicBlock *CFGBuilder::thisBB(Inst *inst) {
 void CFGBuilder::addSubProgram(Inst *inst) {
 	assert(inst);
 	BasicBlock *bb = thisBB(inst);
-	bb->set<bool>(ID_Entry, true);
+	IS_ENTRY(bb) = true;
 }
 
 
@@ -142,7 +142,7 @@ void CFGBuilder::buildCFG(CodeItem *code) {
 				BasicBlock *bb = thisBB(target);
 				assert(bb);
 				if(inst->isCall())
-					bb->set<bool>(ID_Entry, true);
+					IS_ENTRY(bb) = true;
 			}
 			else if(!inst->isReturn()) {
 				Symbol * sym = code->closerSymbol(inst);
@@ -177,11 +177,11 @@ void CFGBuilder::buildCFG(CodeItem *code) {
 			// Initialize new BB
 			bb = next_bb;
 			follow = true;
-			if(bb->get<bool>(ID_Entry, false)) {
+			if(IS_ENTRY(bb)) {
 				assert(!entries.contains(bb));
 				entries.add(bb);
 			}
-			bb->removeProp(&ID_Entry);
+			bb->removeProp(&IS_ENTRY);
 		}
 		
 		// End of block

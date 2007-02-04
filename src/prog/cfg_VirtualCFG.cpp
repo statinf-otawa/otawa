@@ -26,14 +26,14 @@ typedef struct call_t {
  * call when inling is used. The associated value is the CFG of the called
  * function.
  */
-GenericIdentifier<CFG *> CALLED_CFG("called_cfg", 0, OTAWA_NS);
+Identifier<CFG *> CALLED_CFG("called_cfg", 0, otawa::NS);
 
 
 /**
  * A property with this identifier is hooked to edge performing a recursive
  * call when inlining is used.
  */
-GenericIdentifier<bool> RECURSIVE_LOOP("recursive_loop", false, OTAWA_NS);
+Identifier<bool> RECURSIVE_LOOP("recursive_loop", false, otawa::NS);
 
 
 /**

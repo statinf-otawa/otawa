@@ -84,14 +84,14 @@ void CFGProcessor::processFrameWork(FrameWork *fw) {
  * is used by the CFG processor to record in the framework the entry CFG
  * of the currently processed task.
  */
-GenericIdentifier<CFG *> ENTRY_CFG("otawa.proc.entry_cfg", 0);
+Identifier<CFG *> ENTRY_CFG("otawa.proc.entry_cfg", 0);
 
 
 /**
  * This property is used to store statistics about the count of processed
  * CFG.
  */
-GenericIdentifier<int> PROCESSED_CFG("otawa.proc.processed_cfg", 0);
+Identifier<int> PROCESSED_CFG("otawa.proc.processed_cfg", 0);
 
 
 /**
@@ -117,6 +117,6 @@ void CFGProcessor::configure(const PropList& props) {
  * processed later after the current CFG. Note that each function is only
  * processed once !
  */
-GenericIdentifier<bool> RECURSIVE("recursive", true, OTAWA_NS);
+Identifier<bool> RECURSIVE("recursive", true, otawa::NS);
 
 } // otawa

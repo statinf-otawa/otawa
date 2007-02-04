@@ -15,28 +15,28 @@ namespace otawa { namespace sim {
  * If supported by the simulator, enable or disable the functional part.
  * Default to false.
  */
-GenericIdentifier<bool> IS_FUNCTIONAL("sim.is_functional");
+Identifier<bool> IS_FUNCTIONAL("sim.is_functional");
 
 
 /**
  * If supported by the simulator, enable or disable the structural part.
  * Default to true.
  */
-GenericIdentifier<bool> IS_STRUCTURAL("sim.is_structural");
+Identifier<bool> IS_STRUCTURAL("sim.is_structural");
 
 
 /**
  * Activate or unactivate the memory management.
  * Default to false.
  */
-GenericIdentifier<bool> USE_MEMORY("sim.use_memory");
+Identifier<bool> USE_MEMORY("sim.use_memory");
 
 
 /**
  * Activate or unactivate the control management.
  * Default to false.
  */
-GenericIdentifier<bool> USE_CONTROL("sim.use_control");
+Identifier<bool> USE_CONTROL("sim.use_control");
 
 
 /**
