@@ -48,7 +48,8 @@ class FrameWork: public PropList {
 	Vector<const AbstractFeature *> features;
 	
 protected:
-	virtual Property *getDeep(const Identifier *id) { return proc->getProp(id); };
+	virtual Property *getDeep(const AbstractIdentifier *id)
+		{ return proc->getProp(id); };
 public:
 	FrameWork(Process *_proc);
 	~FrameWork(void);

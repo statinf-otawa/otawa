@@ -23,7 +23,7 @@ public:
 		FUNCTION,
 		LABEL
 	} kind_t;
-	static GenericIdentifier<Symbol *> ID;
+	static Identifier<Symbol *> ID;
 
 	virtual ~Symbol(void);
 	virtual kind_t kind(void) = 0;
@@ -35,7 +35,7 @@ public:
 
 // GenericIdentifier<Symbol_t *>::print Specialization
 template <>
-void GenericIdentifier<Symbol *>::print(elm::io::Output& output, const Property& prop) const;
+void Identifier<Symbol *>::print(elm::io::Output& output, const Property& prop) const;
 
 } // otawa
 

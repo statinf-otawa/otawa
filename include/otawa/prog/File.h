@@ -62,8 +62,8 @@ public:
 };
 
 // Properties
-extern GenericIdentifier<String> LABEL;
-extern GenericIdentifier<String> FUNCTION_LABEL;
+extern Identifier<String> LABEL;
+extern Identifier<String> FUNCTION_LABEL;
 
 }	// otawa
 

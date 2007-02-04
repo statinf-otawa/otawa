@@ -68,27 +68,27 @@ public:
 };
 
 // Configuration Properties
-extern GenericIdentifier<CString> TASK_ENTRY;
-extern GenericIdentifier<hard::Platform *> PLATFORM;
-extern GenericIdentifier<Loader *> LOADER;
-extern GenericIdentifier<elm::CString> PLATFORM_NAME;
-extern  GenericIdentifier<elm::CString>  LOADER_NAME;
+extern Identifier<CString> TASK_ENTRY;
+extern Identifier<hard::Platform *> PLATFORM;
+extern Identifier<Loader *> LOADER;
+extern Identifier<elm::CString> PLATFORM_NAME;
+extern Identifier<elm::CString>  LOADER_NAME;
 //extern GenericIdentifier<hard::Platform::Identification *> PLATFORM_IDENTIFIER;
-extern GenericIdentifier<int> ARGC;
-extern GenericIdentifier<char **> ARGV;
-extern GenericIdentifier<char **> ENVP;
-extern GenericIdentifier<sim::Simulator *> SIMULATOR;
-extern GenericIdentifier<elm::CString> SIMULATOR_NAME;
-extern GenericIdentifier<int> PIPELINE_DEPTH;
-extern GenericIdentifier<bool> NO_SYSTEM;
-extern GenericIdentifier<elm::system::Path> CONFIG_PATH;
-extern GenericIdentifier<elm::xom::Element *> CONFIG_ELEMENT;
-extern GenericIdentifier<elm::system::Path> CACHE_CONFIG_PATH;
-extern GenericIdentifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT;
-extern GenericIdentifier<hard::CacheConfiguration *> CACHE_CONFIG;
-extern GenericIdentifier<elm::system::Path> PROCESSOR_PATH;
-extern GenericIdentifier<elm::xom::Element *> PROCESSOR_ELEMENT;
-extern GenericIdentifier<hard::Processor *> PROCESSOR;
+extern Identifier<int> ARGC;
+extern Identifier<char **> ARGV;
+extern Identifier<char **> ENVP;
+extern Identifier<sim::Simulator *> SIMULATOR;
+extern Identifier<elm::CString> SIMULATOR_NAME;
+extern Identifier<int> PIPELINE_DEPTH;
+extern Identifier<bool> NO_SYSTEM;
+extern Identifier<elm::system::Path> CONFIG_PATH;
+extern Identifier<elm::xom::Element *> CONFIG_ELEMENT;
+extern Identifier<elm::system::Path> CACHE_CONFIG_PATH;
+extern Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT;
+extern Identifier<hard::CacheConfiguration *> CACHE_CONFIG;
+extern Identifier<elm::system::Path> PROCESSOR_PATH;
+extern Identifier<elm::xom::Element *> PROCESSOR_ELEMENT;
+extern Identifier<hard::Processor *> PROCESSOR;
 
 } // otawa
 

@@ -81,10 +81,10 @@ public:
 
 // PseudoInst class
 class PseudoInst: public virtual Inst {
-	const Identifier *_id;
+	const AbstractIdentifier *_id;
 public:
-	inline PseudoInst(const Identifier *id): _id(id) { };
-	inline const Identifier *id(void) const { return _id; };
+	inline PseudoInst(const AbstractIdentifier *id): _id(id) { };
+	inline const AbstractIdentifier *id(void) const { return _id; };
 	virtual address_t address(void);
 	virtual void dump(io::Output& out);
 	virtual size_t size(void) { return 0; };
