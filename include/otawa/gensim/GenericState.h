@@ -16,7 +16,7 @@
 namespace otawa { namespace gensim {
 
 // Configuration
-extern GenericIdentifier<int> INSTRUCTION_TIME;
+extern Identifier<int> INSTRUCTION_TIME;
 
 
 class GenericState: public sim::State {

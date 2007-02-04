@@ -23,7 +23,7 @@ public:
 		const PropList& props = PropList::EMPTY);
 };
 
-extern GenericIdentifier<int> DEGREE;
+extern Identifier<int> DEGREE;
 
 } } // otawa::gensim
 
