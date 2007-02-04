@@ -76,7 +76,7 @@ otawa::Process *Loader::create(Manager *man, PropList& props) {
 /**
  * @internal Identifier giving access to the GLISS state of the loaded program.
  */
-GenericIdentifier<state_t *> GLISS_STATE("ppc.gliss_state", 0);
+Identifier<state_t *> GLISS_STATE("ppc.gliss_state", 0);
 
 } }	// otawa::gliss
 

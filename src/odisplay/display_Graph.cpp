@@ -12,74 +12,74 @@ namespace otawa { namespace display {
 /**
  * Tells that the properties with the given identifier have to be printed
  */
-GenericIdentifier<Identifier*> INCLUDE("display.include");
+Identifier<AbstractIdentifier*> INCLUDE("display.include");
 /**
  * Tells that the properties with the given identifier mustn't be printed
  */
-GenericIdentifier<Identifier*> EXCLUDE("display.exclude");
+Identifier<AbstractIdentifier*> EXCLUDE("display.exclude");
 /**
  * The value of the property must be either INCLUDE or EXCLUDE.
  * Gives a default behaviour to the properties that doesn't appear in
  * any of the INCLUDE / EXCLUDE lists.
  */
-GenericIdentifier<Identifier*> DEFAULT("display.default");
+Identifier<AbstractIdentifier*> DEFAULT("display.default");
 /**
  * Identifier of the background color
  */
-GenericIdentifier<elm::CString> BACKGROUND("display.background");
+Identifier<elm::CString> BACKGROUND("display.background");
 /**
  * Identifier of the drawing color (boxes, edges)
  */
-GenericIdentifier<elm::CString> COLOR("display.color");
+Identifier<elm::CString> COLOR("display.color");
 /**
  * Identifier of the drawing style.
  * Must be one of @ref style_t
  */
-GenericIdentifier<int> STYLE("display.style");
+Identifier<int> STYLE("display.style");
 /**
  * Identifier of the text color. It is the same Identifier as TEXT_COLOR
  */
-GenericIdentifier<elm::CString> FONT_COLOR("display.text_color");
+Identifier<elm::CString> FONT_COLOR("display.text_color");
 /**
  * Identifier of the text color. It is the same Identifier as FONT_COLOR
  */
-GenericIdentifier<elm::CString> &TEXT_COLOR = FONT_COLOR;
+Identifier<elm::CString> &TEXT_COLOR = FONT_COLOR;
 /**
  * Identifier of the text size. It is the same Identifier as TEXT_SIZE
  */
-GenericIdentifier<int>  FONT_SIZE("display.text_size");
+Identifier<int>  FONT_SIZE("display.text_size");
 /**
  * Identifier of the text size. It is the same Identifier as FONT_SIZE
  */
-GenericIdentifier<int>& TEXT_SIZE = FONT_SIZE;
+Identifier<int>& TEXT_SIZE = FONT_SIZE;
 /**
  * Identifier of the font name
  */
-GenericIdentifier<elm::CString> FONT("display.font_name");
+Identifier<elm::CString> FONT("display.font_name");
 /**
  * Identifier of the url of the link the object is pointing to
  */
-GenericIdentifier<elm::CString> HREF("display.href");
+Identifier<elm::CString> HREF("display.href");
 /**
  * Identifier of the title of a node
  */
-GenericIdentifier<elm::String> TITLE("display.title");
+Identifier<elm::String> TITLE("display.title");
 /**
  * Identifier of the body of a node
  */
-GenericIdentifier<elm::String> BODY("display.body");
+Identifier<elm::String> BODY("display.body");
 /**
  * Identifier of a shape of a node. Must be one of @ref shape_t
  */
-GenericIdentifier<int> SHAPE("display.shape");
+Identifier<int> SHAPE("display.shape");
 /**
  * Identifier of a label of an edge
  */
-GenericIdentifier<elm::String> LABEL("display.label");
+Identifier<elm::String> LABEL("display.label");
 /**
  * Identifier of a weight of an edge
  */
-GenericIdentifier<int> WEIGHT("display.weight");
+Identifier<int> WEIGHT("display.weight");
 
 
 

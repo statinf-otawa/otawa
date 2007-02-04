@@ -9,6 +9,8 @@
 
 #include <otawa/properties.h>
 
+#warning "Use of the DFA class is deprecared. Use DFAEngine instead."
+
 namespace otawa {
 
 // Extern class
@@ -27,9 +29,13 @@ public:
 // DFA class
 class DFA {
 	void startup(CFG *cfg);
-	void cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id);
+	void cleanup(CFG *cfg,
+		AbstractIdentifier *in_id,
+		AbstractIdentifier *out_id);
 public:
-	void resolve(CFG *cfg, Identifier *in_id = 0, Identifier *out_id = 0);
+	void resolve(CFG *cfg,
+		AbstractIdentifier *in_id = 0,
+		AbstractIdentifier *out_id = 0);
 	virtual DFASet *initial(void) = 0;
 	virtual DFASet *generate(BasicBlock *bb) = 0;
 	virtual DFASet *kill(BasicBlock *bb) = 0;

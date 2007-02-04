@@ -26,10 +26,10 @@ class State;
 
 
 // Simulator configuration
-extern GenericIdentifier<bool> IS_FUNCTIONAL;
-extern GenericIdentifier<bool> IS_STRUCTURAL;
-extern GenericIdentifier<bool> USE_MEMORY;
-extern GenericIdentifier<bool> USE_CONTROL;
+extern Identifier<bool> IS_FUNCTIONAL;
+extern Identifier<bool> IS_STRUCTURAL;
+extern Identifier<bool> USE_MEMORY;
+extern Identifier<bool> USE_CONTROL;
 
 
 // Simulator class

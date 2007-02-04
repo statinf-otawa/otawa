@@ -12,7 +12,7 @@
 namespace otawa { namespace sim {
 
 // Configuration
-extern GenericIdentifier<int> INSTRUCTION_TIME;
+extern Identifier<int> INSTRUCTION_TIME;
 
 
 // TrivialSimulator class

@@ -9,7 +9,7 @@
 
 #include <assert.h>
 #include <otawa/cfg.h>
-#include <otawa/util/DFABitSet.h>
+//#include <otawa/util/DFABitSet.h>
 
 namespace otawa { namespace util {
 

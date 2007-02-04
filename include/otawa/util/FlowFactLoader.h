@@ -12,7 +12,7 @@
 #include <elm/io.h>
 #include <elm/system/Path.h>
 #include <otawa/base.h>
-#include <otawa/prop/GenericIdentifier.h>
+#include <otawa/prop/Identifier.h>
 
 // Externals
 namespace otawa  {
@@ -47,7 +47,7 @@ public:
 };
 
 // Properties
-extern GenericIdentifier<elm::system::Path> FLOW_FACTS_PATH;
+extern Identifier<elm::system::Path> FLOW_FACTS_PATH;
 
 } // otawa
 

@@ -42,7 +42,7 @@ private:
 public:
 
 	// Globals
-	static Identifier ID_ContextTree;
+	//static GenericIdentifier<ContextTree *> ID;
 
 	// Methods
 	ContextTree(CFG *cfg);
@@ -74,7 +74,7 @@ public:
 extern Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE;
 
 // Identifiers
-extern GenericIdentifier<ContextTree *> CONTEXT_TREE;
+extern Identifier<ContextTree *> CONTEXT_TREE;
 
 
 // ContextTree inlines
