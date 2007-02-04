@@ -38,7 +38,7 @@ public :
 	CFG* getCFG(void) {return cfg;};
 	
 	// Hook identifier
-	static GenericIdentifier<PCG *> ID;
+	static Identifier<PCG *> ID;
 };
 
 inline Output& operator<<(Output& out, const PCG& pcg) {
