@@ -34,7 +34,7 @@ GraphVizItem::GraphVizItem():_defaultInclude(true){}
 String GraphVizItem::getPropertiesString(){
 	StringBuffer buf;
 	for(PropList::Iter prop(_props); !prop.ended(); prop.next()){
-		const Identifier *id = prop->id();
+		const AbstractIdentifier *id = prop->id();
 		if(_defaultInclude && !_exclude.exists(id) || _include.exists(id)){
 			if(buf.length() != 0){
 				buf << '\n';
@@ -68,7 +68,7 @@ void GraphVizItem::printOthersAttributes(elm::io::Output& out){
  */
 bool GraphVizItem::printAttribute(elm::io::Output &out, const PropList::Iter& prop){
 	if(prop == DEFAULT){
-		Identifier *id = prop.get<Identifier*>();
+		AbstractIdentifier *id = prop.get<AbstractIdentifier*>();
 		assert(id == &INCLUDE || id == &EXCLUDE);
 		if(id == &INCLUDE)
 			_defaultInclude = true;
@@ -76,11 +76,11 @@ bool GraphVizItem::printAttribute(elm::io::Output &out, const PropList::Iter& pr
 			_defaultInclude = false;
 	}
 	else if(prop == INCLUDE){
-		_include.put(prop.get<Identifier*>(),0);
+		_include.put(prop.get<AbstractIdentifier*>(),0);
 		return false;
 	}
 	else if(prop == EXCLUDE){
-		_exclude.put(prop.get<Identifier*>(),0);
+		_exclude.put(prop.get<AbstractIdentifier*>(),0);
 		return false;
 	}
 	else if(prop == COLOR){

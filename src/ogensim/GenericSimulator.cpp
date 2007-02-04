@@ -29,13 +29,13 @@ int sc_main(int argc, char *argv[]) {
 namespace otawa { namespace gensim {
 
 
-GenericIdentifier<int> DEGREE("gensim.degree", 1);
+Identifier<int> DEGREE("gensim.degree", 1);
 	
 
 /**
  * Instruction execution time. Default to 5.
  */
-GenericIdentifier<int> INSTRUCTION_TIME("sim.instruction_time");
+Identifier<int> INSTRUCTION_TIME("sim.instruction_time");
 
 
 /**
