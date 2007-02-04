@@ -22,7 +22,7 @@ namespace otawa {
  * A property with this identifier is put on each instruction, start of an AST function.
  * Its value is of type "AST *".
  */
-GenericIdentifier<FunAST *> FunAST::ID("otawa.ast.fun");
+Identifier<FunAST *> FunAST::ID("ast::FunAST::id", 0, otawa::NS);
 
 	
 /**

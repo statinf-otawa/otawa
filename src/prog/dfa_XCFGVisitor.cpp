@@ -46,7 +46,7 @@ namespace otawa { namespace dfa {
 /**
  * Identifier used for internal use.
  */
-GenericIdentifier<int> INDEX("xcfg_visitor", -1);
+Identifier<int> INDEX("xcfg_visitor", -1);
 
 
 } } // otawa::dfa

@@ -38,13 +38,13 @@ ASTLoader::ASTLoader(void): file(0), fw(0) {
  * This identifier may be passed for specifying the path a file for loading
  * the AST.
  */
-Identifier ASTLoader::ID_ASTFile("otawa.ast.path");
+Identifier<String> ASTLoader::PATH("path", "", otawa::NS);
 
 
 /**
  */
 void ASTLoader::configure(PropList& props) {
-	path = props.get<String>(ID_ASTFile, "");
+	path = PATH(props);
 }
 
 

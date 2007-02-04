@@ -24,7 +24,7 @@ using namespace otawa::ipet;
 namespace otawa {
 
 // DFA Properties
-static GenericIdentifier<BitSet *> IN("ipet.ccg.dfain", 0, OTAWA_NS);
+static Identifier<BitSet *> IN("ipet.ccg.dfain", 0, otawa::NS);
 
 
 /**
@@ -58,7 +58,7 @@ CCGBuilder::CCGBuilder(void):
  * @par Hooks
  * @li @ref FrameWork
  */
-GenericIdentifier<CCGCollection *> CCG::GRAPHS("ccg::graphs", 0, OTAWA_NS);
+Identifier<CCGCollection *> CCG::GRAPHS("ccg::graphs", 0, otawa::NS);
 
 
 /**
@@ -67,12 +67,12 @@ GenericIdentifier<CCGCollection *> CCG::GRAPHS("ccg::graphs", 0, OTAWA_NS);
  * @par Hooks
  * @li @ref LBlock
  */
-GenericIdentifier<CCGNode *> CCG::NODE("ccg::node", 0, OTAWA_NS);
+Identifier<CCGNode *> CCG::NODE("ccg::node", 0, otawa::NS);
 
 
 /**
  */
-GenericIdentifier<bool> CCGBuilder::NON_CONFLICT("ccg::non_conflict", false, OTAWA_NS);
+Identifier<bool> CCGBuilder::NON_CONFLICT("ccg::non_conflict", false, otawa::NS);
 
 
 /**

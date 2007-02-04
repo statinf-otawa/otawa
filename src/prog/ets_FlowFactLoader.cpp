@@ -42,21 +42,21 @@ namespace otawa { namespace ets {
 			case AST_While:
 				val = loop_table.get(ast->toWhile()->condition()->first()->address(),-1);
 				FFL_OUT(cout << "|| " << ast->toWhile()->condition()->first()->get<String>(File::ID_Label, "unknown ")<< " a pour nb d'iter : "<< val << '\n');
-			 	ast->toWhile()->set<int>(ETS::ID_LOOP_COUNT,val);
+			 	LOOP_COUNT(ast->toWhile()) = val;
 			 	processAST(fw, ast->toWhile()->condition());
 			 	processAST(fw, ast->toWhile()->body());
 			 	break;
 			case AST_DoWhile:
 				val = loop_table.get(ast->toDoWhile()->condition()->first()->address(),-1);
 				FFL_OUT(cout << "|| "<< ast->toDoWhile()->condition()->first()->get<String>(File::ID_Label, "unknown ") << " a pour nb d'iter : "<< val << '\n');
-				ast->toDoWhile()->set<int>(ETS::ID_LOOP_COUNT,val);
+				LOOP_COUNT(ast->toDoWhile()) = val;
 				processAST(fw, ast->toDoWhile()->condition());
 				processAST(fw, ast->toDoWhile()->body());
 				break;
 			case AST_For:
 				val = loop_table.get(ast->toFor()->condition()->first()->address(),-1);
 				FFL_OUT(cout << "|| " << ast->toFor()->condition()->first()->address()<<" ~ "<<ast->toFor()->condition()->first()->get<String>(File::ID_Label, "unknown ") << " a pour nb d'iter : "<< val << '\n');
-				ast->toFor()->set<int>(ETS::ID_LOOP_COUNT,val);
+				LOOP_COUNT(ast->toFor()) = val;
 				processAST(fw, ast->toFor()->initialization());
 				processAST(fw, ast->toFor()->condition());
 				processAST(fw, ast->toFor()->body());

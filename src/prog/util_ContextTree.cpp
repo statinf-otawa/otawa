@@ -157,7 +157,8 @@ public:
  * Annotations with this identifier are hooked to basic blocks and gives
  * the ower context tree (ContextTree * data).
  */
-Identifier ContextTree::ID_ContextTree("otawa.context_tree");
+/*GenericIdentifier<ContextTree *>
+	ContextTree::ID("ContextTree::id", 0, OTAWA_NS);*/
 
 
 /**
@@ -430,6 +431,6 @@ Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE("otawa::context_tree");
  * @par Hooks
  * @li @ref FrameWork
  */
-GenericIdentifier<ContextTree *> CONTEXT_TREE("otawa::context_tree", 0, OTAWA_NS);
+Identifier<ContextTree *> CONTEXT_TREE("otawa::context_tree", 0, otawa::NS);
 
 } // otawa

@@ -10,7 +10,7 @@
 #include <elm/Collection.h>
 #include <otawa/exegraph/ExecutionGraph.h>
 #include <elm/debug.h>
-#include <otawa/util/DFABitSet.h>
+//#include <otawa/util/DFABitSet.h>
 #include <elm/genstruct/DLList.h>
 #include <otawa/otawa.h>
 
@@ -39,7 +39,7 @@ using namespace elm::genstruct;
 
 namespace otawa {
 
-GenericIdentifier<bool> START("otawa.exegraph.start", false);
+Identifier<bool> START("otawa.exegraph.start", false);
 
 //START(inst) = true;
 

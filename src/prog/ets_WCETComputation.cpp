@@ -54,7 +54,7 @@ int WCETComputation::computation(FrameWork *fw, AST *ast) {
 				if (fun_res){
 					AST *fun_ast = (*fun_res)->ast();
 					wcet=computation(fw, fun_ast);
-					ast->toCall()->set<int>(ETS::ID_WCET,wcet);
+					WCET(ast->toCall()) = wcet;
 					WC_OUT(cout << "|| " << ast->toCall()->function()->name() << " a pour wcet : " << ast->toCall()->use<int>(ETS::ID_WCET)<< '\n');	
 					return wcet;
 				}
@@ -66,12 +66,12 @@ int WCETComputation::computation(FrameWork *fw, AST *ast) {
 			}
 			case AST_Block:
 				WC_OUT(cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toBlock()->use<int>(ETS::ID_WCET)<< '\n');
-				return ast->toBlock()->use<int>(ETS::ID_WCET);
+				return WCET(ast->toBlock());
 				break;
 			case AST_Seq:
 				wcet=computation(fw, ast->toSeq()->child1())
 						+ computation(fw, ast->toSeq()->child2());
-				ast->toSeq()->set<int>(ETS::ID_WCET,wcet);
+				WCET(ast->toSeq()) = wcet;
 				WC_OUT(cout << "|| " << ast->toSeq()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toSeq()->use<int>(ETS::ID_WCET)<< '\n');
 				return wcet;
 				break;
@@ -81,14 +81,14 @@ int WCETComputation::computation(FrameWork *fw, AST *ast) {
 				ELSE=computation(fw, ast->toIf()->condition())
 					+ computation(fw, ast->toIf()->elsePart());
 				if (THEN>ELSE) 
-					ast->toIf()->set<int>(ETS::ID_WCET,THEN);
+					WCET(ast->toIf()) = THEN;
 				else 
-					ast->toIf()->set<int>(ETS::ID_WCET,ELSE);
+					WCET(ast->toIf()) = ELSE;
 				WC_OUT(cout << "|| " << ast->toIf()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toIf()->use<int>(ETS::ID_WCET)<< '\n');
-				return ast->toIf()->use<int>(ETS::ID_WCET);
+				return WCET(ast->toIf());
 				break;
 			case AST_While:
-			 	N=ast->toWhile()->use<int>(ETS::ID_LOOP_COUNT);
+			 	N=LOOP_COUNT(ast->toWhile());
 			 	if (N == -1){
 					WC_TRACE;
 					throw ProcessorException(*this, "Il manque le nb d'it�rations du noeud : %s (%p)",
@@ -98,24 +98,24 @@ int WCETComputation::computation(FrameWork *fw, AST *ast) {
 				wcet=N*(computation(fw, ast->toWhile()->condition())
 							+ computation(fw, ast->toWhile()->body()))
 						+ computation(fw, ast->toWhile()->condition());
-				ast->toWhile()->set<int>(ETS::ID_WCET,wcet);
+				WCET(ast->toWhile()) = wcet;
 				WC_OUT(cout << "|| " << ast->toWhile()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toWhile()->use<int>(ETS::ID_WCET)<< '\n');		
 				return wcet;
 				break;
 			case AST_DoWhile:
-				N=ast->toDoWhile()->use<int>(ETS::ID_LOOP_COUNT);
+				N=LOOP_COUNT(ast->toDoWhile());
 				if (N == -1){
 						WC_TRACE;
 						throw io::IOException("no iteration count for loop %s", &LABEL(ast->toDoWhile()->condition()->first()) /* "unknown "*/);
 				}
 				wcet=N*(computation(fw, ast->toDoWhile()->body())
 							+ computation(fw, ast->toDoWhile()->condition()));
-				ast->toDoWhile()->set<int>(ETS::ID_WCET,wcet);	
+				WCET(ast->toDoWhile()) = wcet;	
 				WC_OUT(cout << "|| " << ast->toDoWhile()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toDoWhile()->use<int>(ETS::ID_WCET)<< '\n');		
 				return wcet;
 				break;
 			case AST_For:
-				N=ast->toFor()->use<int>(ETS::ID_LOOP_COUNT);
+				N=LOOP_COUNT(ast->toFor());
 				if (N == -1){
 					WC_TRACE;
 					throw io::IOException("no iteration count for loop %s", &LABEL(ast->toFor()->condition()->first()) /* "unknown " */);
@@ -125,7 +125,7 @@ int WCETComputation::computation(FrameWork *fw, AST *ast) {
 							+ computation(fw, ast->toFor()->incrementation())
 							+ computation(fw, ast->toFor()->body()))
 						+ computation(fw, ast->toFor()->condition());
-				ast->toFor()->set<int>(ETS::ID_WCET,wcet);
+				WCET(ast->toFor()) = wcet;
 				WC_OUT(cout << "|| " << ast->toFor()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toFor()->use<int>(ETS::ID_WCET)<< '\n');	
 				return wcet;
 				break;

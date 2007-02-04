@@ -19,7 +19,7 @@ namespace otawa {
  * @par Hooks
  * @li @ref BasicBlock
  */
-GenericIdentifier<BitSet *> REVERSE_DOM("reverse_dom", 0, OTAWA_NS);
+Identifier<BitSet *> REVERSE_DOM("reverse_dom", 0, otawa::NS);
 
 
 /**
@@ -28,7 +28,7 @@ GenericIdentifier<BitSet *> REVERSE_DOM("reverse_dom", 0, OTAWA_NS);
  * @par Hooks
  * @li @ref BasicBlock
  */
-GenericIdentifier<bool> LOOP_HEADER("loop_header", false, OTAWA_NS);
+Identifier<bool> LOOP_HEADER("loop_header", false, otawa::NS);
 
 
 /**
