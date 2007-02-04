@@ -6,6 +6,7 @@
  */
 
  #include <otawa/ets/ETS.h>
+ #include <otawa/prop/NameSpace.h>
  
 namespace otawa { namespace ets {
 
@@ -15,41 +16,52 @@ namespace otawa { namespace ets {
  * used by ETS processors.
  */
 
+
+/**
+ * Namespace for ETS property identifiers.
+ */
+NameSpace NS("ets", otawa::NS);
+
 /**
  * This identifier (int) is used for storing the number of iteration for each loop
  * of the program.
  */
-Identifier ETS::ID_LOOP_COUNT("ets.loopCount");
+Identifier<int> LOOP_COUNT("loop_count", -1, NS);
 
 /**
  * Identifier of annotation (int) used for storing the WCET value
  * in the ETS of the computed function.
  */
-Identifier ETS::ID_WCET("ets.wcet");
+Identifier<int> WCET("wcet", -1, NS);
 
 /**
- * This identifier (AbstractCacheState *) is used for storing the abstract cache line for each node.
+ * This identifier (AbstractCacheState *) is used for storing the abstract cache
+ * line for each node.
  */
-Identifier ETS::ID_ACS("ets.acs");
+Identifier<AbstractCacheState *> ACS("acs", 0, NS);
 
 /**
- * This identifier (int) is used for storing the number of hit accesses for each node.
+ * This identifier (int) is used for storing the number of hit accesses for each
+ * node.
  */
-Identifier ETS::ID_HITS("ets.hits");
+Identifier<int> HITS("hits", -1, NS);
 
 /**
- * This identifier (int) is used for storing the number of miss accesses for each node.
+ * This identifier (int) is used for storing the number of miss accesses for each
+ * node.
  */
-Identifier ETS::ID_MISSES("ets.misses");
+Identifier<int> MISSES("misses", 0, NS);
 
 /**
- * This identifier (int) is used for storing the number of first miss accesses for each node.
+ * This identifier (int) is used for storing the number of first miss accesses
+ * for each node.
  */
-Identifier ETS::ID_FIRST_MISSES("ets.firstMisses");
+Identifier<int> FIRST_MISSES("first_misses", 0, NS);
 
 /**
- * This identifier (int) is used for storing the number of conflict accesses for each node.
+ * This identifier (int) is used for storing the number of conflict accesses for
+ * each node.
  */
-Identifier ETS::ID_CONFLICTS("ets.conflicts");
+Identifier<int> CONFLICTS("conflicts", 0, NS);
 
 } }// otawa::ets

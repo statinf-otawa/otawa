@@ -66,11 +66,11 @@ void ACSComputation::processAST(FrameWork *fw, AST *ast) {
  * @param acs	AbstractCacheState of preceding nodes.
  */
 void ACSComputation::initialization(FrameWork *fw, AST *ast, AbstractCacheState *acs) {
-	if (ast->get<int>(ETS::ID_HITS, -1) == -1){
-		ast->set<int>(ETS::ID_HITS,0);
-		ast->set<int>(ETS::ID_MISSES,0);
-		ast->set<int>(ETS::ID_FIRST_MISSES,0);
-		ast->set<int>(ETS::ID_CONFLICTS,0);
+	if (HITS(ast) == -1){
+		HITS(ast) = 0;
+		MISSES(ast) = 0;
+		FIRST_MISSES(ast) = 0;
+		CONFLICTS(ast) = 0;
 	}
 	
 	switch (ast->kind()){
@@ -149,7 +149,7 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 			if (fun_res){
 				AST *fun_ast = (*fun_res)->ast();
 				AbstractCacheState::AbstractCacheState *acs = new AbstractCacheState::AbstractCacheState(state);
-				ast->toCall()->set<AbstractCacheState *>(ETS::ID_ACS,acs);
+				ACS(ast->toCall()) = acs;
 				
 				//Algorithme to calculate cache state for Call.
 				acs->assignment(applyProcess (fw, fun_ast, state));
@@ -162,7 +162,7 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 		case AST_Block: {
 			AC_OUT(cout << ".:Block : "<< ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ")<<" :.\n");
 			AbstractCacheState::AbstractCacheState *acs = new AbstractCacheState::AbstractCacheState(state);
-			ast->toBlock()->set<AbstractCacheState *>(ETS::ID_ACS,acs);
+			ACS(ast->toBlock()) = acs;
 			address_t last = ast->toBlock()->block()->address() + ast->toBlock()->size();
 			for(Inst *inst = ast->toBlock()->block(); inst->address() < last; inst = inst->next()){
 				if(fw->cache().hasInstCache() && !fw->cache().isUnified()) {
@@ -210,17 +210,17 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 								if(!acs->hcat.exists(inst->address())){
 									//ALWAYS_HIT.
 									acs->hcat.put(inst->address(), AbstractCacheState::ALWAYS_HIT);
-									ast->toBlock()->set<int>(ETS::ID_HITS, ast->toBlock()->use<int>(ETS::ID_HITS)+1);
+									HITS(ast->toBlock()) = HITS(ast->toBlock()) +1;
 									AC_OUT(	cout << "|| hit avec "<<inst->address()<<"\n";
 											cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de hit : " << ast->toBlock()->get<int>(ETS::ID_HITS, -2)<< '\n');
 								}
 								else{
-									if((acs->hcat.get(inst->address(), -1) == AbstractCacheState::ALWAYS_MISS)&&(ast->toBlock()->use<int>(ETS::ID_MISSES) > 0)){
+									if((acs->hcat.get(inst->address(), -1) == AbstractCacheState::ALWAYS_MISS)&&(MISSES(ast->toBlock()) > 0)){
 										//FIRST_MISS.
-										ast->toBlock()->set<int>(ETS::ID_MISSES, ast->toBlock()->use<int>(ETS::ID_MISSES)-1);
+										MISSES(ast->toBlock()) = MISSES(ast->toBlock()) - 1;
 										acs->hcat.remove(inst->address());
 										acs->hcat.put(inst->address(), AbstractCacheState::FIRST_MISS);
-										ast->toBlock()->set<int>(ETS::ID_FIRST_MISSES, ast->toBlock()->use<int>(ETS::ID_FIRST_MISSES)+1);
+										FIRST_MISSES(ast->toBlock()) = FIRST_MISSES(ast->toBlock()) + 1;
 										AC_OUT(	cout << "|| first_miss avec "<<inst->address()<<"\n";
 												cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de first miss : " << ast->toBlock()->get<int>(ETS::ID_FIRST_MISSES, -2)<< '\n');
 									}	
@@ -229,7 +229,7 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 							else{
 								//CONFLICT.
 								acs->hcat.put(inst->address(), AbstractCacheState::CONFLICT);
-								ast->toBlock()->set<int>(ETS::ID_CONFLICTS, ast->toBlock()->use<int>(ETS::ID_CONFLICTS)+1);
+								CONFLICTS(ast->toBlock()) = CONFLICTS(ast->toBlock()) + 1;
 								AC_OUT(	cout << "|| conflict avec "<<inst->address()<<"\n");
 							}
 						}
@@ -238,7 +238,7 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 							if(!acs->hcat.exists(inst->address())){
 								acs->hcat.put(inst->address(), AbstractCacheState::ALWAYS_MISS);
 								
-								ast->toBlock()->set<int>(ETS::ID_MISSES, ast->toBlock()->use<int>(ETS::ID_MISSES)+1);
+								MISSES(ast->toBlock()) = MISSES(ast->toBlock()) + 1;
 								AC_OUT(	cout << "|| miss avec "<<inst->address()<<"\n";
 										cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de miss : " << ast->toBlock()->get<int>(ETS::ID_MISSES, -2)<< '\n';
 										cout << "|| -rajout de :"<< inst->address()<<" a lindex : "<<acs->htable.get(inst->address(), -1)<<"\n");
@@ -265,7 +265,7 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 			AC_OUT(cout << ".:Seq : "<< " :.\n");
 			AbstractCacheState::AbstractCacheState *acs = new AbstractCacheState::AbstractCacheState(state);
 			//cout <<"test1\n";
-			ast->toSeq()->set<AbstractCacheState *>(ETS::ID_ACS,acs);
+			ACS(ast->toSeq()) = acs;
 			//cout <<"test2\n";
 			
 			//Algorithme to calculate cache state for Seq.
@@ -281,7 +281,7 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 		case AST_If: {
 			AC_OUT(cout << ".:If : "<< " :.\n");
 			AbstractCacheState::AbstractCacheState *acs = new AbstractCacheState::AbstractCacheState(state);
-			ast->toIf()->set<AbstractCacheState *>(ETS::ID_ACS,acs);
+			ACS(ast->toIf()) = acs;
 			
 			//Algorithme to calculate cache state for If.
 			AbstractCacheState::AbstractCacheState *tmp = new AbstractCacheState::AbstractCacheState(applyProcess (fw, ast->toIf()->condition(), state));
@@ -302,11 +302,11 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 		}
 		case AST_While:	{
 			AC_OUT(cout << ".:While : "<< " :.\n");
-			int N = ast->toWhile()->use<int>(ETS::ID_LOOP_COUNT); 
+			int N = LOOP_COUNT(ast->toWhile()); 
 			int i = 0;
 			bool is_start = true;
 			AbstractCacheState::AbstractCacheState *acs = new AbstractCacheState::AbstractCacheState(state);
-			ast->toWhile()->set<AbstractCacheState *>(ETS::ID_ACS,acs);
+			ACS(ast->toWhile()) = acs;
 			
 			//Algorithme to calculate cache state for While.
 			acs->assignment(applyProcess (fw, ast->toWhile()->condition(), state));
@@ -325,11 +325,11 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 		}
 		case AST_For:	{	
 			AC_OUT(cout << ".:For : "<< " :.\n");
-			int N = ast->toFor()->use<int>(ETS::ID_LOOP_COUNT); 
+			int N = LOOP_COUNT(ast->toFor()); 
 			int i = 0;
 			bool is_start = true;
 			AbstractCacheState::AbstractCacheState *acs = new AbstractCacheState::AbstractCacheState(state);
-			ast->toFor()->set<AbstractCacheState *>(ETS::ID_ACS,acs);
+			ACS(ast->toFor()) = acs;
 			
 			//Algorithme to calculate cache state for For.
 			acs->assignment(applyProcess (	fw, 
@@ -353,10 +353,10 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 		case AST_DoWhile:	{
 			AC_OUT(cout << ".:DoWhile : "<< " :.\n");
 			bool is_start = true;
-			int N = ast->toDoWhile()->use<int>(ETS::ID_LOOP_COUNT); 
+			int N = LOOP_COUNT(ast->toDoWhile()); 
 			int i = 0;
 			AbstractCacheState::AbstractCacheState *acs = new AbstractCacheState::AbstractCacheState(state);
-			ast->toDoWhile()->set<AbstractCacheState *>(ETS::ID_ACS,acs);
+			ACS(ast->toDoWhile()) = acs;
 			
 			//Algorithme to calculate cache state for DoWhile.
 			acs->assignment(applyProcess (fw, ast->toDoWhile()->body(), state));

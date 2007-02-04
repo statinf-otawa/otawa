@@ -23,7 +23,7 @@ typedef struct dfa_info_t {
 } dfa_info_t;
 
 // Storage identifier
-static Identifier info_id("otawa.dfa.info");
+static Identifier<dfa_info_t *> info_id("util::info_id", 0, otawa::NS);
 
 /**
  * @class DFA
@@ -61,12 +61,16 @@ void DFA::startup(CFG *cfg) {
  * @param in_id		Identifier for storing IN (null if not used).
  * @param out_id	Identifier for storing OUT (null if not used).
  */
-void DFA::cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id) {
+void DFA::cleanup(
+	CFG *cfg,
+	AbstractIdentifier *in_id,
+	AbstractIdentifier *out_id)
+{
 	assert(cfg);
 	
 	// Store information
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++) {
-		dfa_info_t *info = bb->use<dfa_info_t *>(info_id);
+		dfa_info_t *info = info_id(bb);
 		assert(info);
 		
 		// Store IN information
@@ -89,7 +93,7 @@ void DFA::cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 	
 	// Cleanup
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++) {
-		dfa_info_t *info = bb->use<dfa_info_t *>(info_id);
+		dfa_info_t *info = info_id(bb);
 		assert(info);
 		if(!in_id)
 			delete info->buf;
@@ -109,14 +113,18 @@ void DFA::cleanup(CFG *cfg, Identifier *in_id, Identifier *out_id) {
  * @param in_id		Identifier for storing IN (null if not used).
  * @param out_id	Identifier for storing OUT (null if not used).
  */
-void DFA::resolve(CFG *cfg, Identifier *in_id, Identifier *out_id) {
+void DFA::resolve(
+	CFG *cfg,
+	AbstractIdentifier *in_id,
+	AbstractIdentifier *out_id)
+{
 	assert(cfg);
 	//cout << "CFG: " << cfg->label() << "\n";
 	
 	// Prolog
 	CFGNormalizer normalizer;
 	PropList props;
-	props.add<bool>(CFGNormalizer::ID_Verbose, true);
+	CFGNormalizer::VERBOSE(props) = true; 
 	normalizer.configure(props);
 	normalizer.processCFG(0, cfg);
 	bool fix_point = false;
@@ -129,7 +137,7 @@ void DFA::resolve(CFG *cfg, Identifier *in_id, Identifier *out_id) {
 		// Look in BB
 		for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++) {
 			//cout << "\tBB " << bb->address() << "\n";
-			dfa_info_t *info = bb->use<dfa_info_t *>(info_id);
+			dfa_info_t *info = info_id(bb);
 			assert(info);
 			
 			// Build new set

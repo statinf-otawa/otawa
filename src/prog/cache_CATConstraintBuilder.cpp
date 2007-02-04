@@ -37,22 +37,22 @@ namespace otawa { namespace ipet {
 
 /**
  */
-GenericIdentifier<ilp::Var *> HIT_VAR("ipet.cat.hit_var", 0, OTAWA_NS);
+Identifier<ilp::Var *> HIT_VAR("ipet.cat.hit_var", 0, otawa::NS);
 
 
 /**
  */
-GenericIdentifier<ilp::Var *> MISS_VAR("ipet.cat.miss_var");
+Identifier<ilp::Var *> MISS_VAR("ipet.cat.miss_var");
 
 
 /**
  */
-GenericIdentifier<ilp::Var *> BB_VAR("ipet.cat.bb_var");
+Identifier<ilp::Var *> BB_VAR("ipet.cat.bb_var");
 
 
 /**
  */
-GenericIdentifier<CATNode *> NODE("ipet.cat.node", 0, OTAWA_NS);
+Identifier<CATNode *> NODE("ipet.cat.node", 0, otawa::NS);
 
 
 /**

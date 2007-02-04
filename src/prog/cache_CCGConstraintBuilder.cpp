@@ -16,7 +16,7 @@
 #include <elm/Collection.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/util/Dominance.h>
-#include <otawa/util/DFABitSet.h>
+//#include <otawa/util/DFABitSet.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/cfg.h>
 #include <otawa/hard/CacheConfiguration.h>
@@ -36,9 +36,9 @@ namespace otawa {
 namespace ipet {
 
 /* Properties */
-static GenericIdentifier<ilp::Var *> BB_VAR("ccg.bb_var", 0, OTAWA_NS);
-static GenericIdentifier<ilp::Var *> HIT_VAR("ccg.hit_var", 0, OTAWA_NS);
-static GenericIdentifier<ilp::Var *> MISS_VAR("ccg.miss_var", 0, OTAWA_NS);
+static Identifier<ilp::Var *> BB_VAR("ccg.bb_var", 0, otawa::NS);
+static Identifier<ilp::Var *> HIT_VAR("ccg.hit_var", 0, otawa::NS);
+static Identifier<ilp::Var *> MISS_VAR("ccg.miss_var", 0, otawa::NS);
 
 
 /**

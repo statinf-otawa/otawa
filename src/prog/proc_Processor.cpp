@@ -210,7 +210,7 @@ void Processor::warn(CString format, ...) {
  * This property identifier is used for setting the output stream used by
  * the processor for writing messages (information, warning, error) to the user.
  */
-GenericIdentifier<elm::io::OutStream *> PROC_OUTPUT("otawa.proc.output", 0);
+Identifier<elm::io::OutStream *> PROC_OUTPUT("otawa.proc.output", 0);
 
 
 /**
@@ -218,7 +218,7 @@ GenericIdentifier<elm::io::OutStream *> PROC_OUTPUT("otawa.proc.output", 0);
  * that will be used to store statistics about the performed work. Implicitly,
  * passing such a property activates the statistics recording facilities.
  */
-GenericIdentifier<PropList *> PROC_STATS("otawa.proc.stats", 0);
+Identifier<PropList *> PROC_STATS("otawa.proc.stats", 0);
 
 
 /**
@@ -226,27 +226,27 @@ GenericIdentifier<PropList *> PROC_STATS("otawa.proc.stats", 0);
  * statistics will also be collected with other processor statistics. Passing
  * such a property without @ref PROC_STATS has no effects.
  */
-GenericIdentifier<bool> PROC_TIMED("otawa.proc.timed", false);
+Identifier<bool> PROC_TIMED("otawa.proc.timed", false);
 
 
 /**
  * This property identifier is used to store in the statistics of a processor
  * the overall run time of the processor work.
  */
-GenericIdentifier<elm::system::time_t> PROC_RUNTIME("otawa.proc.runtime", 0);
+Identifier<elm::system::time_t> PROC_RUNTIME("otawa.proc.runtime", 0);
 
 
 /**
  * This property activates the verbose mode of the processor: information about
  * the processor work will be displayed.
  */
-GenericIdentifier<bool> PROC_VERBOSE("otawa.proc.verbose", false);
+Identifier<bool> PROC_VERBOSE("otawa.proc.verbose", false);
 
 
 /**
  * This property selects the task entry point currently processed.
  */
-GenericIdentifier<elm::CString> PROC_ENTRY("otawa.proc.entry", "main");
+Identifier<elm::CString> PROC_ENTRY("otawa.proc.entry", "main");
 
 
 /**
