@@ -28,7 +28,7 @@ class ASTInfo: public PropList {
 	ASTInfo(FrameWork *fw);
 public:
 	~ASTInfo(void);
-	static GenericIdentifier<ASTInfo *> ID;
+	static Identifier<ASTInfo *> ID;
 	static ASTInfo *getInfo(FrameWork *fw);
 	FunAST *getFunction(Inst *inst);
 	inline elm::datastruct::Map<String, FunAST *>& map(void) { return _map; };
