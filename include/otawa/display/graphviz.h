@@ -23,7 +23,7 @@ typedef enum graphviz_layout_t {
 	LAYOUT_UNDIRECTED_NEATO,
 	LAYOUT_UNDIRECTED_FDP
 } graphviz_layout_t;
-extern GenericIdentifier<int> GRAPHVIZ_LAYOUT;
+extern Identifier<int> GRAPHVIZ_LAYOUT;
 
 
 // Output property
@@ -33,11 +33,11 @@ typedef enum graphviz_output_t {
 	OUTPUT_PNG,
 	OUTPUT_SVG
 } graphviz_output_t;
-extern GenericIdentifier<int> GRAPHVIZ_OUTPUT;
+extern Identifier<int> GRAPHVIZ_OUTPUT;
 
 
 // File property
-extern GenericIdentifier<elm::CString> GRAPHVIZ_FILE;
+extern Identifier<elm::CString> GRAPHVIZ_FILE;
 
 } } // otawa::display
 

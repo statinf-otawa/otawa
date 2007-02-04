@@ -12,19 +12,19 @@
 namespace otawa { namespace display {
 
 // Filters
-extern GenericIdentifier<Identifier*> INCLUDE;
-extern GenericIdentifier<Identifier*> EXCLUDE;
+extern Identifier<AbstractIdentifier*> INCLUDE;
+extern Identifier<AbstractIdentifier*> EXCLUDE;
 
 // either INCLUDE or EXCLUDE
-extern GenericIdentifier<Identifier*> DEFAULT;
+extern Identifier<AbstractIdentifier*> DEFAULT;
 
 // Item class
 class Item: public PropList {
 public:
 	virtual void setProps(const PropList& props) = 0;
 };
-extern GenericIdentifier<elm::CString> BACKGROUND;
-extern GenericIdentifier<elm::CString> COLOR;
+extern Identifier<elm::CString> BACKGROUND;
+extern Identifier<elm::CString> COLOR;
 
 // draw_style_t enum
 typedef enum style_t {
@@ -35,21 +35,21 @@ typedef enum style_t {
 	STYLE_DOTTED,
 	STYLE_BOLD
 } style_t;
-extern GenericIdentifier<int> STYLE;
-extern GenericIdentifier<elm::CString>  FONT_COLOR;
-extern GenericIdentifier<elm::CString>& TEXT_COLOR;
-extern GenericIdentifier<int>  FONT_SIZE;
-extern GenericIdentifier<int>& TEXT_SIZE;
-extern GenericIdentifier<elm::CString> FONT;
-extern GenericIdentifier<elm::CString> HREF;
+extern Identifier<int> STYLE;
+extern Identifier<elm::CString>  FONT_COLOR;
+extern Identifier<elm::CString>& TEXT_COLOR;
+extern Identifier<int>  FONT_SIZE;
+extern Identifier<int>& TEXT_SIZE;
+extern Identifier<elm::CString> FONT;
+extern Identifier<elm::CString> HREF;
 
 
 
 // Node class
 class Node: public Item {
 };
-extern GenericIdentifier<elm::String> TITLE;
-extern GenericIdentifier<elm::String> BODY;
+extern Identifier<elm::String> TITLE;
+extern Identifier<elm::String> BODY;
 
 // form_t enum
 typedef enum shape_t {
@@ -67,15 +67,15 @@ typedef enum shape_t {
 	SHAPE_OCTAGON,
 	SHAPE_DIAMOND
 } shape_t;
-extern GenericIdentifier<int> SHAPE;
+extern Identifier<int> SHAPE;
 
 
 // Edge class
 class Edge: public Item {
 public:
 };
-extern GenericIdentifier<int> WEIGHT;
-extern GenericIdentifier<elm::String> LABEL;
+extern Identifier<int> WEIGHT;
+extern Identifier<elm::String> LABEL;
 
 // Graph class
 class Graph: public Item {
