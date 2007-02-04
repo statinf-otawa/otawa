@@ -9,21 +9,21 @@
 
 #include <elm/string.h>
 #include <elm/genstruct/HashTable.h>
-#include <otawa/prop/Identifier.h>
+#include <otawa/prop/AbstractIdentifier.h>
 
 namespace otawa {
 
 // NameSpace class
-class NameSpace: public Identifier {
-	friend class Identifier;
+class NameSpace: public AbstractIdentifier {
+	friend class AbstractIdentifier;
 	NameSpace& _parent;
-	elm::genstruct::HashTable<String, Identifier *> names;
+	elm::genstruct::HashTable<String, AbstractIdentifier *> names;
 	elm::String _uri;
-	void add(Identifier *id);
+	void add(AbstractIdentifier *id);
 
 public:
-	NameSpace(elm::CString prefix, NameSpace& parent = ROOT_NS);
-	Identifier *get(elm::String name);
+	NameSpace(elm::CString prefix, NameSpace& parent = ::NS);
+	AbstractIdentifier *get(elm::String name);
 	elm::String uri(void);
 	
 	// Identifier overload
