@@ -155,9 +155,9 @@ namespace otawa {
  * @param name	Name of the identifier.
  * @return				Allocated identifier code.
  */
-const Identifier *Property::getID(elm::CString name) {
+const AbstractIdentifier *Property::getID(elm::CString name) {
 	String _(name);
-	return ROOT_NS.get(name);
+	return ::NS.get(name);
 }
 
 
@@ -168,14 +168,14 @@ const Identifier *Property::getID(elm::CString name) {
 
 
 /**
- * @fn Property::Property(const Identifier *_id)
+ * @fn Property::Property(const AbstractIdentifier *_id)
  * Build a new property with the given identifier.
  * @param _id	Identifier of the property.
  */
 
 
 /**
- * @fn Property::Property(const Identifier& _id);
+ * @fn Property::Property(const AbstractIdentifier& _id);
  * build a property from a static identifier.
  * @param _id	Property identifier.
  */
@@ -228,7 +228,7 @@ void Property::print(elm::io::Output& out) const {
 
 
 /**
- * @fn GenericProperty::GenericProperty(const Identifier *id, T _value)
+ * @fn GenericProperty::GenericProperty(const AbstractIdentifier *id, T _value)
  * Build a new generic property with the given value.
  * @param id		Identifier code of the property.
  * @param _value	Value of the property.
@@ -245,7 +245,7 @@ void Property::print(elm::io::Output& out) const {
 
 
 /**
- * @fn GenericProperty::GenericProperty(const Identifier& id, T _value);
+ * @fn GenericProperty::GenericProperty(const AbstractIdentifier& id, T _value);
  * Build a generic property with a static identifier and a value.
  * @param id		Property identifier.
  * @param _value	Property value.
@@ -267,7 +267,7 @@ void Property::print(elm::io::Output& out) const {
 
 
 /**
- * @fn GenericProperty<T> *GenericProperty::make(const Identifier *id, const T value);
+ * @fn GenericProperty<T> *GenericProperty::make(const AbstractIdentifier *id, const T value);
  * Build a new generic property with the given data. Defining the constructor as is, allows
  * replacing the default building behaviour by specialized ones.
  * @param id		Identifier of the property.
@@ -286,7 +286,7 @@ void Property::print(elm::io::Output& out) const {
 
 
 /**
- * @fn LockedProperty<T>::LockedProperty(const Identifier *id, T _value);
+ * @fn LockedProperty<T>::LockedProperty(const AbstractIdentifier *id, T _value);
  * Build a new locked property.
  * @param id		Property identifier.
  * @param _value	Lock pointer value.
@@ -294,7 +294,7 @@ void Property::print(elm::io::Output& out) const {
 
 
 /**
- * @fn LockedProperty<T>::LockedProperty(const Identifier& id, T _value);
+ * @fn LockedProperty<T>::LockedProperty(const AbstractIdentifier& id, T _value);
  * Build a new locked property with a static identifier.
  * @param id		Property identifier.
  * @param _value	Lock pointer value.
