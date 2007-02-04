@@ -19,7 +19,7 @@ class BlockAST: public AST {
 protected:
 	virtual ~BlockAST(void);
 public:
-	static Identifier ID;
+	static Identifier<AST *> ID;
 	BlockAST(Inst *block, size_t size);
 	inline Inst *block(void) const { return _block; };
 	inline size_t size(void) const { return _size; };
