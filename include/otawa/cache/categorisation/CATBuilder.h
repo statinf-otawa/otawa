@@ -41,7 +41,7 @@ class CATBuilder: public Processor {
 	
 public:
 
-	static GenericIdentifier<bool> NON_CONFLICT;
+	static Identifier<bool> NON_CONFLICT;
 	CATBuilder(void);
 
 	// CFGProcessor overload
@@ -52,8 +52,8 @@ public:
 extern Feature<CATBuilder> ICACHE_CATEGORY_FEATURE;
 
 // Properties
-extern GenericIdentifier<category_t> CATEGORY;
-extern GenericIdentifier<BasicBlock *> LOWERED_CATEGORY;
+extern Identifier<category_t> CATEGORY;
+extern Identifier<BasicBlock *> LOWERED_CATEGORY;
 
 }	// otawa
 

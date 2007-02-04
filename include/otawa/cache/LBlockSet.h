@@ -47,7 +47,7 @@ public:
 
 
 // Properties
-extern GenericIdentifier<LBlockSet **> LBLOCKS;
+extern Identifier<LBlockSet **> LBLOCKS;
 	 
 
 // Inlines
