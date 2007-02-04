@@ -22,7 +22,7 @@ namespace otawa {
 	
 #define INFINITE_TIME 0x0FFFFFF
 
-extern GenericIdentifier<bool> START;
+extern Identifier<bool> START;
 
 class ExecutionGraph;
 class ExecutionEdge;
