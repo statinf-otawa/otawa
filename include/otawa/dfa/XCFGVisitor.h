@@ -19,7 +19,7 @@ namespace otawa { namespace dfa {
 using namespace elm;
 using namespace elm::genstruct;
 
-extern GenericIdentifier<int> INDEX;
+extern Identifier<int> INDEX;
 
 // XCFGVisitor class
 template <class P>
