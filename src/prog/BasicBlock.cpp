@@ -37,7 +37,7 @@ BasicBlock& BasicBlock::null_bb = null_bb_inst;
 /**
  * Identifier of the basic block pseudo-instruction.
  */
-Identifier BasicBlock::ID("otawa.bb");
+Identifier<BasicBlock *> BasicBlock::ID("bb", 0, otawa::NS);
 
 
 /**

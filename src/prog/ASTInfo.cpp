@@ -19,7 +19,7 @@ namespace otawa {
 /**
  * Identifier of the property storing the AST information on the framework object.
  */
-GenericIdentifier<ASTInfo *> ASTInfo::ID("otawa.ast.info");
+Identifier<ASTInfo *> ASTInfo::ID("ast::ASTInfo::id", 0 , otawa::NS);
 
 	
 /**

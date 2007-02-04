@@ -47,53 +47,54 @@ int CacheMissComputation::computation(FrameWork *fw, AST *ast){
 			if (fun_res){
 				AST *fun_ast = (*fun_res)->ast();
 				misses = computation(fw, fun_ast);
-				ast->toCall()->set<int>(ETS::ID_MISSES, misses);
+				MISSES(ast->toCall()) = misses;
 				CHC_OUT(cout << "|| " << ast->toCall()->function()->name() << " a pour nb de miss : " << ast->toCall()->use<int>(ETS::ID_MISSES)<< '\n');	
-				return ast->toCall()->use<int>(ETS::ID_MISSES);
+				return MISSES(ast->toCall());
 			}
 			break;
 		}
 		case AST_Block: 
 			CHC_OUT(cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de miss : " << ast->toBlock()->use<int>(ETS::ID_MISSES)<< '\n');
-			return (ast->toBlock()->use<int>(ETS::ID_MISSES) + ast->toBlock()->use<int>(ETS::ID_CONFLICTS));
+			return MISSES(ast->toBlock()) + CONFLICTS(ast->toBlock());
 			break;
 		case AST_Seq: {	
 			misses = 	computation(fw, ast->toSeq()->child1()) 
 						+ computation(fw, ast->toSeq()->child2());
-			ast->toSeq()->set<int>(ETS::ID_MISSES, misses);
+			MISSES(ast->toSeq()) = misses;
 			CHC_OUT(cout << "|| " << ast->toSeq()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de miss : " << ast->toSeq()->use<int>(ETS::ID_MISSES)<< '\n');
-			return ast->toSeq()->use<int>(ETS::ID_MISSES);
+			return MISSES(ast->toSeq());
 			break;
 		}
 		case AST_If: {
 		 	misses = computation(fw, ast->toIf()->elsePart());
 			int misses1 = computation(fw, ast->toIf()->thenPart());
 			if(misses < misses1)
-				ast->toIf()->set<int>(ETS::ID_MISSES, misses1 + computation(fw, ast->toIf()->condition()));
+				MISSES(ast->toIf()) = misses1 + computation(fw, ast->toIf()->condition());
 			else
-				ast->toIf()->set<int>(ETS::ID_MISSES, misses + computation(fw, ast->toIf()->condition()));
+				MISSES(ast->toIf()) = misses + computation(fw, ast->toIf()->condition());
 			CHC_OUT(cout << "|| " << ast->toIf()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de miss : " << ast->toIf()->use<int>(ETS::ID_MISSES)<< '\n');
-			return ast->toIf()->use<int>(ETS::ID_MISSES);
+			return MISSES(ast->toIf());
 			break;
 		}
 		case AST_While:	{
-			int N = ast->toWhile()->use<int>(ETS::ID_LOOP_COUNT);
+			int N = LOOP_COUNT(ast->toWhile());
 			
 			misses = 	computation(fw, ast->toWhile()->condition())
 						+ N
 						*( 	computation(fw, ast->toWhile()->condition())
 							+ computation(fw, ast->toWhile()->body()));
 							
-			int misses_coming_from_first_misses = ast->toWhile()->condition()->use<int>(ETS::ID_FIRST_MISSES)
-												+ ast->toWhile()->body()->use<int>(ETS::ID_FIRST_MISSES);	
+			int misses_coming_from_first_misses =
+				FIRST_MISSES(ast->toWhile()->condition())
+				+ FIRST_MISSES(ast->toWhile()->body());	
 			
-			ast->toWhile()->set<int>(ETS::ID_MISSES, misses + misses_coming_from_first_misses);
+			MISSES(ast->toWhile()) = misses + misses_coming_from_first_misses;
 			CHC_OUT(cout << "|| " << ast->toWhile()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de miss : " << ast->toWhile()->use<int>(ETS::ID_MISSES)<< '\n');
-			return ast->toWhile()->use<int>(ETS::ID_MISSES);
+			return MISSES(ast->toWhile());
 			break;
 		}
 		case AST_For:	{	
-			int N = ast->toFor()->use<int>(ETS::ID_LOOP_COUNT);
+			int N = LOOP_COUNT(ast->toFor());
 			
 			misses = 	computation(fw, ast->toFor()->condition())
 						+ computation(fw, ast->toFor()->initialization())
@@ -102,29 +103,31 @@ int CacheMissComputation::computation(FrameWork *fw, AST *ast){
 							+ computation(fw, ast->toFor()->body())
 							+ computation(fw, ast->toFor()->incrementation()));
 			
-			int misses_coming_from_first_misses = ast->toFor()->condition()->use<int>(ETS::ID_FIRST_MISSES)
-												+ ast->toFor()->body()->use<int>(ETS::ID_FIRST_MISSES) 
-												+ ast->toFor()->incrementation()->use<int>(ETS::ID_FIRST_MISSES);
+			int misses_coming_from_first_misses =
+				FIRST_MISSES(ast->toFor()->condition())
+				+ FIRST_MISSES(ast->toFor()->body()) 
+				+ FIRST_MISSES(ast->toFor()->incrementation());
 					
-			ast->toFor()->set<int>(ETS::ID_MISSES, misses + misses_coming_from_first_misses);
+			MISSES(ast->toFor()) = misses + misses_coming_from_first_misses;
 			CHC_OUT(cout << "|| " << ast->toFor()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de miss : " << ast->toFor()->use<int>(ETS::ID_MISSES)<< '\n');
-			return ast->toFor()->use<int>(ETS::ID_MISSES);
+			return MISSES(ast->toFor());
 			break;
 		}
 		case AST_DoWhile:	{
-			int N = ast->toDoWhile()->use<int>(ETS::ID_LOOP_COUNT);
+			int N = LOOP_COUNT(ast->toDoWhile());
 			
 			misses = 	computation(fw, ast->toDoWhile()->body())
 						+ N
 						*( 	computation(fw, ast->toDoWhile()->condition())
 							+ computation(fw, ast->toDoWhile()->body()));
 							
-			int misses_coming_from_first_misses = ast->toDoWhile()->body()->use<int>(ETS::ID_FIRST_MISSES)
-												+ ast->toDoWhile()->condition()->use<int>(ETS::ID_FIRST_MISSES);
+			int misses_coming_from_first_misses =
+				FIRST_MISSES(ast->toDoWhile()->body())
+				+ FIRST_MISSES(ast->toDoWhile()->condition());
 			
-			ast->toDoWhile()->set<int>(ETS::ID_MISSES, misses + misses_coming_from_first_misses);
+			MISSES(ast->toDoWhile()) = misses + misses_coming_from_first_misses;
 			CHC_OUT(cout << "|| " << ast->toDoWhile()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de miss : " << ast->toDoWhile()->use<int>(ETS::ID_MISSES)<< '\n');
-			return ast->toDoWhile()->use<int>(ETS::ID_MISSES);
+			return MISSES(ast->toDoWhile());
 			break;
 		}
 		default :

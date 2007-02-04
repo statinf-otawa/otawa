@@ -58,14 +58,16 @@ namespace otawa {
  * This property is used to pass the microprocessor description to the
  * code processor. As default, it is extracted from the system description.
  */
-GenericIdentifier<Microprocessor *> ExeGraphBBTime::PROCESSOR("otawa.ExeGraphBBTime.proc.", NULL);
+Identifier<Microprocessor *>
+	ExeGraphBBTime::PROCESSOR("otawa.ExeGraphBBTime.proc.", NULL);
 
 
 /**
  * This property gives an output stream used to output log messages about
  * the execution of the algorithm.
  */
-GenericIdentifier<elm::io::Output *>  ExeGraphBBTime::LOG_OUTPUT("otawa.ExeGraphBBTime.log", &cerr);
+Identifier<elm::io::Output *>
+	ExeGraphBBTime::LOG_OUTPUT("otawa.ExeGraphBBTime.log", &cerr);
 
 
 /**
@@ -715,8 +717,8 @@ void ExeGraphBBTime::recordDelta(
  * If the statistics are activated, this property is returned in statistics
  * property list to store @ref ExeGraphBBTime statistics.
  */
-GenericIdentifier<Vector <ExeGraphBBTime::stat_t> *>
-	EXEGRAPH_PREFIX_STATS("exegraph_prefix_stats", 0, OTAWA_NS);
+Identifier<Vector <ExeGraphBBTime::stat_t> *>
+	EXEGRAPH_PREFIX_STATS("exegraph_prefix_stats", 0, otawa::NS);
 
 
 /**
@@ -724,7 +726,7 @@ GenericIdentifier<Vector <ExeGraphBBTime::stat_t> *>
  * edges. Using the @ref TimeDetaObjectFunctionModifier, it allow to improve
  * the accuracy of the computed WCET.
  */
-GenericIdentifier<bool> EXEGRAPH_DELTA("exegraph_delta", false, OTAWA_NS);
+Identifier<bool> EXEGRAPH_DELTA("exegraph_delta", false, otawa::NS);
 
 
 /**
@@ -733,7 +735,7 @@ GenericIdentifier<bool> EXEGRAPH_DELTA("exegraph_delta", false, OTAWA_NS);
  * taking in account the difference of execution time according prologues
  * of evaluated blocks.
  */
-GenericIdentifier<bool> EXEGRAPH_CONTEXT("exegraph_context", false, OTAWA_NS);
+Identifier<bool> EXEGRAPH_CONTEXT("exegraph_context", false, otawa::NS);
 
 
 /**

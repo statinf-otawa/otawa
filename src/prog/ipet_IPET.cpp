@@ -66,28 +66,28 @@ using namespace ilp;
  * This identifier is used for storing the time of execution in cycles (int)
  * of the program area it applies to.
  */
-GenericIdentifier<int> TIME("ipet.time", -1);
+Identifier<int> TIME("ipet.time", -1);
 
 
 /**
  * This identifier is used for storing in basic blocks and edges the variables
  * (otawa::ilp::Var *) used in ILP resolution.
  */
-GenericIdentifier<ilp::Var *> VAR("ipet.var", 0);
+Identifier<ilp::Var *> VAR("ipet.var", 0);
 
 
 /**
  * Identifier of annotations used for storing ILP system (otawa::ilp::System *)
  * in the CFG object.
  */
-GenericIdentifier<ilp::System *> SYSTEM("ipet.system", 0);
+Identifier<ilp::System *> SYSTEM("ipet.system", 0);
 
 
 /**
  * Identifier of annotation used for storing for storing the WCET value (int)
  * in the CFG of the computed function.
  */
-GenericIdentifier<int> WCET("ipet.wcet", -1);
+Identifier<int> WCET("ipet.wcet", -1);
 
 
 /**
@@ -95,7 +95,7 @@ GenericIdentifier<int> WCET("ipet.wcet", -1);
  * The generation of explicit names for variables may be time-consuming and
  * must only be activated for debugging purposes.
  */
-GenericIdentifier<bool> EXPLICIT("ipet.explicit", false);
+Identifier<bool> EXPLICIT("ipet.explicit", false);
 
 
 /**
@@ -104,7 +104,7 @@ GenericIdentifier<bool> EXPLICIT("ipet.explicit", false);
  * edges (use the @ref TimeDeltaObjectFunctionModifier to add time deltas
  * to the object function).
  */
-extern GenericIdentifier<int> TIME_DELTA("ipet.time_delta", 0);
+Identifier<int> TIME_DELTA("ipet.time_delta", 0);
 
 
 /**
@@ -173,6 +173,6 @@ Feature<NoProcessor>
 /**
  * IPET namespace.
  */
-NameSpace NS("ipet", OTAWA_NS);
+NameSpace NS("ipet", otawa::NS);
 
 } } // otawa::ipet

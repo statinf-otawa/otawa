@@ -54,16 +54,16 @@ DuplicateIdentifierException::DuplicateIdentifierException(String& name)
 /**
  * For internal use only.
  */
-Identifier *Identifier::init_list = 0;
-bool Identifier::initialized = false;
+AbstractIdentifier *AbstractIdentifier::init_list = 0;
+bool AbstractIdentifier::initialized = false;
 
 
 /**
  * For internal use only.
  */
-void Identifier::init(void) {
+void AbstractIdentifier::init(void) {
 	if(!initialized) {
-		for(Identifier *id = init_list; id; id = id->next)
+		for(AbstractIdentifier *id = init_list; id; id = id->next)
 			id->link();
 		initialized = true;
 	}
@@ -73,7 +73,7 @@ void Identifier::init(void) {
 /**
  * For internal use only.
  */
-void Identifier::link(void) {
+void AbstractIdentifier::link(void) {
 	if(_parent.get(nam)) {
 		cerr << "FATAL ERROR: identifier \"" << nam << "\" defined multiple times.";
 		String _(nam);
@@ -86,9 +86,9 @@ void Identifier::link(void) {
 /**
  * Build an aninymouns identifier.
  */
-Identifier::Identifier(void)
+AbstractIdentifier::AbstractIdentifier(void)
 :	nam(""),
-	_parent(ROOT_NS)
+	_parent(::NS)
 {
 }
 
@@ -100,7 +100,7 @@ Identifier::Identifier(void)
  * @param name		Name of the identifier.
  * @param parent	Parent namespace.
  */
-Identifier::Identifier(elm::String name, NameSpace& parent)
+AbstractIdentifier::AbstractIdentifier(elm::String name, NameSpace& parent)
 :	nam(name),
  	_parent(parent)
 {
@@ -126,13 +126,13 @@ Identifier::Identifier(elm::String name, NameSpace& parent)
  * If this identifier is a namespace, return it.
  * @return	Matching namespace or null.
  */
-NameSpace *Identifier::toNameSpace(void) {
+NameSpace *AbstractIdentifier::toNameSpace(void) {
 	return 0;
 }
 
 
 /**
- * @fn const elm::String& Identifier::name(void) const;
+ * @fn const elm::String& AbstractIdentifier::name(void) const;
  * Get the string name of the identifier.
  * @return	Identifier name.
  */
@@ -144,12 +144,15 @@ NameSpace *Identifier::toNameSpace(void) {
  * matching a different identifier.</p>
  * <p>Use the print() method of a property instead.</p>
  */
-void Identifier::print(elm::io::Output& output, const Property& prop) const {
+void AbstractIdentifier::print(
+	elm::io::Output& output,
+	const Property& prop) const
+{
 	output << "<not printable>";
 }
 
 /**
- * @fn void Identifier::print(elm::io::Output& output, const Property *prop) const;
+ * @fn void AbstractIdentifier::print(elm::io::Output& output, const Property *prop) const;
  * <p>Print the value of the given property (accordint the property matches
  * the given identifier). It is an error to call this method with a property
  * matching a different identifier.</p>
@@ -163,7 +166,7 @@ void Identifier::print(elm::io::Output& output, const Property& prop) const {
  * or that it is just a flag without associated data.
  * @return	Type of the associated data.
  */
-const Type& Identifier::type(void) const {
+const Type& AbstractIdentifier::type(void) const {
 	return Type::no_type;
 }
 
@@ -175,7 +178,7 @@ const Type& Identifier::type(void) const {
  * @param args	Variable arguments to read identifier value from.
  * @warning		It is an error to call this method on a non-typed identifier.
  */
-void Identifier::scan(PropList& props, VarArg& args) const {
+void AbstractIdentifier::scan(PropList& props, VarArg& args) const {
 	assert(0);
 }
 
@@ -184,25 +187,25 @@ void Identifier::scan(PropList& props, VarArg& args) const {
  * Print the identifier.
  * @param out	Output stream.
  */
-void Identifier::print(elm::io::Output& out) const {
+void AbstractIdentifier::print(elm::io::Output& out) const {
 	out << nam;
 }
 
 
 // Specialisation for types
 template <>
-const Type& GenericIdentifier<bool>::type(void) const { return Type::bool_type; }
+const Type& Identifier<bool>::type(void) const { return Type::bool_type; }
 
 template <>
-const Type& GenericIdentifier<char>::type(void) const { return Type::char_type; }
+const Type& Identifier<char>::type(void) const { return Type::char_type; }
 
 template <>
-const Type& GenericIdentifier<int>::type(void) const { return Type::int32_type; }
+const Type& Identifier<int>::type(void) const { return Type::int32_type; }
 
 template <>
-const Type& GenericIdentifier<long long>::type(void) const { return Type::int64_type; }
+const Type& Identifier<long long>::type(void) const { return Type::int64_type; }
 
 template <>
-const Type& GenericIdentifier<char *>::type(void) const { return Type::cstring_type; }
+const Type& Identifier<char *>::type(void) const { return Type::cstring_type; }
 
 } // otawa

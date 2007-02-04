@@ -240,40 +240,40 @@ int Delta::delta(BBPath &bbp, FrameWork *fw){
  * This identifier is used for forcing the depth of the Delta algorith.
  * If this identifier is not set, the depth will be adjusted automatically
  */
-GenericIdentifier<int>  Delta::LEVELS("Delta::levels", 0, ipet::NS);
+Identifier<int>  Delta::LEVELS("Delta::levels", 0, ipet::NS);
 
 /**
  * This identifier is used for storing the delta value of a path
  */
-GenericIdentifier<int> Delta::DELTA("Delta::delta", 0, ipet::NS);
+Identifier<int> Delta::DELTA("Delta::delta", 0, ipet::NS);
 
 /**
  * This identifier is used for storing the time for the first
  * instruction to fetch after all instructions from the
  * beginning of the sequence have been fetched.
  */
-GenericIdentifier<int> Delta::SEQ_COMPLETION("Delta::seq_completion", 0, ipet::NS);
+Identifier<int> Delta::SEQ_COMPLETION("Delta::seq_completion", 0, ipet::NS);
 
 
 /**
  * Property used to return statistics about the @ref Delta processor about
  * the maximal sequence length in instructions.
  */
-GenericIdentifier<double> Delta::MAX_LENGTH("Delta::max_length", 0, ipet::NS);
+Identifier<double> Delta::MAX_LENGTH("Delta::max_length", 0, ipet::NS);
 
 
 /**
  * Property used to return statistics about the @ref Delta processor about
  * the mean sequence length in instructions.
  */
-GenericIdentifier<double> Delta::MEAN_LENGTH("Delta::min_length", 0, ipet::NS);
+Identifier<double> Delta::MEAN_LENGTH("Delta::min_length", 0, ipet::NS);
 
 
 /**
  * This identifier is used for storing in a BasicBlock a TreePath
  * storing all BBPath starting from this basic block
  */
-GenericIdentifier<TreePath<BasicBlock*,BBPath*>*>
+Identifier<TreePath<BasicBlock*,BBPath*>*>
 	Delta::TREE("Delta::tree", 0, ipet::NS);
 
 

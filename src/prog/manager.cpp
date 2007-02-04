@@ -273,7 +273,7 @@ Manager::Manager(void):
 	loader_plugger(OTAWA_LOADER_NAME, OTAWA_LOADER_VERSION, LOADER_PATHS),
 	sim_plugger(OTAWA_SIMULATOR_NAME, OTAWA_SIMULATOR_VERSION, SIMULATOR_PATHS)
 {
-	Identifier::init();
+	AbstractIdentifier::init();
 }
 
 
@@ -312,136 +312,136 @@ ilp::System *Manager::newILPSystem(String name) {
  * This property, passed to the load configuration, gives the name of the
  * entry function of the current task.
  */
-GenericIdentifier<CString> TASK_ENTRY("task_entry", "main", OTAWA_NS);
+Identifier<CString> TASK_ENTRY("task_entry", "main", otawa::NS);
 
 
 /**
  * Identifier of the property indicating the name (CString) of the platform to use.
  */	
-GenericIdentifier<CString> PLATFORM_NAME("platform_name", "", OTAWA_NS);
+Identifier<CString> PLATFORM_NAME("platform_name", "", otawa::NS);
 
 
 /**
  * Identifier of the property indicating a name (CString) of the loader to use..
  */	
-GenericIdentifier<CString> LOADER_NAME("laoder_name", "", OTAWA_NS);
+Identifier<CString> LOADER_NAME("laoder_name", "", otawa::NS);
 
 
 /**
  * Identifier of the property indicating a platform (Platform *) to use.
  */	
-GenericIdentifier<hard::Platform *> PLATFORM("platform", 0, OTAWA_NS);
+Identifier<hard::Platform *> PLATFORM("platform", 0, otawa::NS);
 
 
 /**
  * Identifier of the property indicating the loader to use.
  */	
-GenericIdentifier<Loader *> LOADER("loader", 0, OTAWA_NS);
+Identifier<Loader *> LOADER("loader", 0, otawa::NS);
 
 
 /**
  * Identifier of the property indicating the identifier (PlatformId) of the loader to use.
  */	
-GenericIdentifier<hard::Platform::Identification *>
-	PLATFORM_IDENTFIER("platform_identifier", 0, OTAWA_NS);
+Identifier<hard::Platform::Identification *>
+	PLATFORM_IDENTFIER("platform_identifier", 0, otawa::NS);
 
 
 /**
  * Argument count as passed to the program (int).
  */	
-GenericIdentifier<int> ARGC("argc", -1, OTAWA_NS);
+Identifier<int> ARGC("argc", -1, otawa::NS);
 
 
 /**
  * Argument values as passed to the program (char **).
  */	
-GenericIdentifier<char **> ARGV("argv", 0, OTAWA_NS);
+Identifier<char **> ARGV("argv", 0, otawa::NS);
 
 
 /**
  * Argument values as passed to the program (char **).
  */	
-GenericIdentifier<char **> ENVP("envp", 0, OTAWA_NS);
+Identifier<char **> ENVP("envp", 0, otawa::NS);
 
 
 /**
  * This property defines the used the used simulator when a simulator is
  * needed to perform simulation.
  */
-GenericIdentifier<sim::Simulator *> SIMULATOR("simulator", 0, OTAWA_NS);
+Identifier<sim::Simulator *> SIMULATOR("simulator", 0, otawa::NS);
 
 
 /**
  * Name of the simulator to use.
  */
-GenericIdentifier<elm::CString> SIMULATOR_NAME("simulator_name", "", OTAWA_NS);
+Identifier<elm::CString> SIMULATOR_NAME("simulator_name", "", otawa::NS);
 
 
 /**
  * This property is used to pass the cache configuration directly to the
  * platform.
  */
-GenericIdentifier<hard::CacheConfiguration *>
-	CACHE_CONFIG("cache_config", 0, OTAWA_NS);
+Identifier<hard::CacheConfiguration *>
+	CACHE_CONFIG("cache_config", 0, otawa::NS);
 
 
 /**
  * This property is a hint to have an estimation of the pipeline depth.
  * It is better to look to the processor configuration in the patform.
  */
-GenericIdentifier<int> PIPELINE_DEPTH("pipeline_depth", -1, OTAWA_NS);
+Identifier<int> PIPELINE_DEPTH("pipeline_depth", -1, otawa::NS);
 
 
 /**
  * This property shows that the system does not need to by simulated when
  * the binary image is built.
  */
-GenericIdentifier<bool> NO_SYSTEM("no_system", false, OTAWA_NS);
+Identifier<bool> NO_SYSTEM("no_system", false, otawa::NS);
 
 
 /**
  * Path to the XML configuration file used in this computation.
  */
-GenericIdentifier<elm::system::Path>
-	CONFIG_PATH("config_path", "", OTAWA_NS);
+Identifier<elm::system::Path>
+	CONFIG_PATH("config_path", "", otawa::NS);
 
 
 /**
  * XML element containing the configuration of the current computation.
  */
-GenericIdentifier<elm::xom::Element *>
-	CONFIG_ELEMENT("config_element", 0, OTAWA_NS);
+Identifier<elm::xom::Element *>
+	CONFIG_ELEMENT("config_element", 0, otawa::NS);
 
 
 /**
  * Path to the XML configuration file of the processor.
  */
-GenericIdentifier<elm::system::Path>
-	PROCESSOR_PATH("processor_path", "", OTAWA_NS);
+Identifier<elm::system::Path>
+	PROCESSOR_PATH("processor_path", "", otawa::NS);
 
 
 /**
  * XML element containing the configuration of the processor.
  */
-GenericIdentifier<elm::xom::Element *>
-	PROCESSOR_ELEMENT("processor_element", 0, OTAWA_NS);
+Identifier<elm::xom::Element *>
+	PROCESSOR_ELEMENT("processor_element", 0, otawa::NS);
 
 
 /**
  * Gives the processor to use in the current computation.
  */
-GenericIdentifier<hard::Processor *> PROCESSOR("processor", 0, OTAWA_NS);
+Identifier<hard::Processor *> PROCESSOR("processor", 0, otawa::NS);
 
 
 /**
  * Gives the path of file containing the cache configuration.
  */
-GenericIdentifier<elm::system::Path> CACHE_CONFIG_PATH("cache_config_path", "", OTAWA_NS);
+Identifier<elm::system::Path> CACHE_CONFIG_PATH("cache_config_path", "", otawa::NS);
 
 
 /**
  * Gives an XML element containing the cache configuration.
  */
-GenericIdentifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("cache_config_element", 0, OTAWA_NS);
+Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("cache_config_element", 0, otawa::NS);
 
 }	// otawa

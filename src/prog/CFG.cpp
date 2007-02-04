@@ -18,13 +18,13 @@ namespace otawa {
 /**
  * Identifier used for storing and retrieving the CFG on its entry BB.
  */
-GenericIdentifier<CFG *> ENTRY("otawa.cfg_entry", 0);
+Identifier<CFG *> ENTRY("otawa.cfg_entry", 0);
 
 
 /**
  * Identifier used for storing in each basic block from the CFG its index.
  */
-GenericIdentifier<int> INDEX("otawa.index", -1);
+Identifier<int> INDEX("otawa.index", -1);
 
 
 /**
@@ -38,7 +38,7 @@ GenericIdentifier<int> INDEX("otawa.index", -1);
  * Identifier for marking the CFG as having the dominance relation computed.
  * Takes a boolean value that is not really used.
  */
-Identifier CFG::ID_Dom("otawa.cfg.dom");
+//Identifier CFG::ID_Dom("otawa.cfg.dom");
 
 
 /**
@@ -214,7 +214,7 @@ void CFG::numberBB(void) {
 
 // GenericIdentifier<CFG *>::print Specialization
 template <>
-void GenericIdentifier<CFG *>::print(elm::io::Output& out, const Property& prop) const {
+void Identifier<CFG *>::print(elm::io::Output& out, const Property& prop) const {
 	out << "cfg(" << get(prop)->label() << ")";
 }
 

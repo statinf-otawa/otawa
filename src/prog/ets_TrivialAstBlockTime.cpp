@@ -49,7 +49,7 @@ void TrivialAstBlockTime::processAST(FrameWork *fw, AST *ast) {
 				}
 			}
 			case AST_Block:
-				ast->toBlock()->set<int>(ETS::ID_WCET,ast->toBlock()->countInstructions() * dep);
+				WCET(ast->toBlock()) = ast->toBlock()->countInstructions() * dep;
 				TABT_OUT(cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toBlock()->use<int>(ETS::ID_WCET)<< '\n');
 				break;
 			case AST_Seq:
