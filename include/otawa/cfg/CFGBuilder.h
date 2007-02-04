@@ -16,7 +16,6 @@ namespace otawa {
 
 // CFGBuilder class
 class CFGBuilder: public Processor {
-	static Identifier ID_Entry;
 	datastruct::Vector<CFG *> _cfgs;
 	
 	BasicBlock *nextBB(Inst *inst);

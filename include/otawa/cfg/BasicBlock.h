@@ -8,6 +8,7 @@
 #define OTAWA_CFG_BASIC_BLOCK_H
 
 #include <assert.h>
+#include <otawa/prop/Identifier.h>
 #include <elm/genstruct/SLList.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/utility.h>
@@ -21,7 +22,7 @@ namespace otawa {
 class FrameWork;
 class Edge;
 class CFG;
-extern GenericIdentifier<int> INDEX;
+extern Identifier<int> INDEX;
 
 // BasicBlock class
 class BasicBlock: public elm::inhstruct::DLNode, public ProgObject {
@@ -67,8 +68,7 @@ protected:
 	void setNotTaken(BasicBlock *bb);
 
 public:
-	static Identifier ID;
-	//static Identifier& ID_Index;
+	static Identifier<BasicBlock *> ID;
 
 	// Mark class
 	class Mark: public PseudoInst {

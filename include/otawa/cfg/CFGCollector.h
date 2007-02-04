@@ -48,7 +48,7 @@ public:
 extern Feature<CFGCollector> COLLECTED_CFG_FEATURE;
 
 // Properties
-extern GenericIdentifier<CFGCollection *> INVOLVED_CFGS;
+extern Identifier<CFGCollection *> INVOLVED_CFGS;
 
 
 // CFGCollection Inlines

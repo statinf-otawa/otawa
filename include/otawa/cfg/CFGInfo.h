@@ -27,7 +27,7 @@ class CFGInfo: public elm::Lock {
 	FrameWork *fw;
 	datastruct::Vector<CFG *> _cfgs;
 public:
-	static GenericIdentifier<CFGInfo *> ID;
+	static Identifier<CFGInfo *> ID;
 	CFGInfo(FrameWork *fw, elm::Collection<CFG *>& cfgs);
 	virtual ~CFGInfo(void);
 	void clear(void);

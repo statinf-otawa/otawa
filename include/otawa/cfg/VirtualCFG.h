@@ -24,8 +24,8 @@ public:
 };
 
 // Identifiers
-extern GenericIdentifier<CFG *> CALLED_CFG;
-extern GenericIdentifier<bool> RECURSIVE_LOOP;
+extern Identifier<CFG *> CALLED_CFG;
+extern Identifier<bool> RECURSIVE_LOOP;
 
 
 // Inlines

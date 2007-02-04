@@ -30,8 +30,8 @@ class CCG: public GenGraph<CCGNode, CCGEdge> {
 public:
 	
 	// Properties
-	static GenericIdentifier<CCGNode *> NODE;
-	static GenericIdentifier<CCGCollection *> GRAPHS;
+	static Identifier<CCGNode *> NODE;
+	static Identifier<CCGCollection *> GRAPHS;
 };
 
 
@@ -54,7 +54,7 @@ public:
 class CCGBuilder: public Processor {
 	void processLBlockSet(FrameWork *fw, LBlockSet *lbset);
 public:
-	static GenericIdentifier<bool> NON_CONFLICT;
+	static Identifier<bool> NON_CONFLICT;
 	CCGBuilder(void);
 
 	// CFGProcessor overload

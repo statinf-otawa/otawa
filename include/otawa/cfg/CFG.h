@@ -20,8 +20,8 @@ class CodeItem;
 class CFG;
 
 // Properties
-extern GenericIdentifier<CFG *> ENTRY;
-extern GenericIdentifier<int> INDEX;
+extern Identifier<CFG *> ENTRY;
+extern Identifier<int> INDEX;
 
 // CFG class
 class CFG: public ProgObject, private elm::Collection<BasicBlock *> {
@@ -39,7 +39,7 @@ protected:
 	genstruct::Vector<BasicBlock *> _bbs;
 	virtual void scan(void);
 public:
-	static Identifier ID_Dom;
+	//static Identifier ID_Dom;
 	
 	// Iterator
 	class BBIterator: public elm::PreIterator<BBIterator, BasicBlock *> {
@@ -118,7 +118,7 @@ inline void CFG::BBIterator::next(void) {
 
 // Property display
 template <>
-void GenericIdentifier<CFG *>::print(elm::io::Output& out, const Property& prop) const;
+void Identifier<CFG *>::print(elm::io::Output& out, const Property& prop) const;
 
 } // otawa
 
