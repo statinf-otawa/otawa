@@ -18,10 +18,10 @@ class CFGNormalizer: public CFGProcessor {
 public:
 	
 	// Identifiers
-	static Identifier ID_Force;
-	static Identifier ID_Verbose;
-	static Identifier ID_Done;
-	
+	static Identifier<bool> FORCE;
+	static Identifier<bool> VERBOSE;
+	static Identifier<bool> DONE;
+
 	// Constructors
 	CFGNormalizer(void);
 	

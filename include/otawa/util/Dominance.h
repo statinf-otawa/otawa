@@ -39,8 +39,8 @@ extern Feature<Dominance> DOMINANCE_FEATURE;
 extern Feature<Dominance> LOOP_HEADERS_FEATURE;
 
 // Properties
-extern GenericIdentifier<BitSet *> REVERSE_DOM;
-extern GenericIdentifier<bool> LOOP_HEADER;
+extern Identifier<BitSet *> REVERSE_DOM;
+extern Identifier<bool> LOOP_HEADER;
 
 } // otawa
 
