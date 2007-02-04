@@ -82,14 +82,14 @@ public:
 
 
 // Configuration Properties
-extern GenericIdentifier<elm::io::OutStream *> PROC_OUTPUT;
-extern GenericIdentifier<PropList *> PROC_STATS;
-extern GenericIdentifier<bool> PROC_TIMED;
-extern GenericIdentifier<bool> PROC_VERBOSE;
-extern GenericIdentifier<bool> RECURSIVE;
+extern Identifier<elm::io::OutStream *> PROC_OUTPUT;
+extern Identifier<PropList *> PROC_STATS;
+extern Identifier<bool> PROC_TIMED;
+extern Identifier<bool> PROC_VERBOSE;
+extern Identifier<bool> RECURSIVE;
 
 // Statistics Properties
-extern GenericIdentifier<elm::system::time_t> PROC_RUNTIME;
+extern Identifier<elm::system::time_t> PROC_RUNTIME;
 
 // Inlines
 inline elm::String Processor::name(void) const {

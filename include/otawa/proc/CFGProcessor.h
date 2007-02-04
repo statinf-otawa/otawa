@@ -32,11 +32,11 @@ public:
 };
 
 // Configuration Properties
-extern GenericIdentifier<CFG *> ENTRY_CFG;
-extern GenericIdentifier<bool> RECURSIVE;
+extern Identifier<CFG *> ENTRY_CFG;
+extern Identifier<bool> RECURSIVE;
 
 // Statistics Properties
-extern GenericIdentifier<int> PROCESSED_CFG;
+extern Identifier<int> PROCESSED_CFG;
 
 } // otawa
 

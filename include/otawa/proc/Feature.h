@@ -9,7 +9,7 @@
 
 #include <elm/string.h>
 #include <otawa/prop/PropList.h>
-#include <otawa/prop/GenericIdentifier.h>
+#include <otawa/prop/Identifier.h>
 #include <otawa/proc/Processor.h>
 
 namespace otawa {
@@ -18,7 +18,7 @@ using namespace elm;
 class FrameWork;
 	
 // AbstractFeature class
-class AbstractFeature: public GenericIdentifier<Processor *> {
+class AbstractFeature: public Identifier<Processor *> {
 public:
 	static NameSpace NS;
 	AbstractFeature(CString name = "");
