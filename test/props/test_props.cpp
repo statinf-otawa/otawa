@@ -11,15 +11,15 @@
 using namespace elm;
 using namespace otawa;
 
-GenericIdentifier<int> MY_ID("my_id", 666);
-GenericIdentifier<CString> MY_STRING("my_string", "ok");
+Identifier<int> MY_ID("my_id", 666);
+Identifier<CString> MY_STRING("my_string", "ok");
 
 int main(void) {
 	
 	CHECK_BEGIN("otawa.props")
 	PropList props;
 	const PropList& cprops = props;
-	GenericIdentifier<int> ID1("id1", 0), ID2("id2", 0);
+	Identifier<int> ID1("id1", 0), ID2("id2", 0);
 	
 	// Empty test
 	CHECK(!props.hasProp(ID1));

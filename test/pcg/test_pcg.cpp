@@ -44,8 +44,7 @@ int main(int argc, char **argv)
 	Manager manager;
 	PropList props;
 	CACHE_CONFIG(props) = caches;
-//	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
-
+	NO_SYSTEM(props) = true;
 	
 	try {
 		

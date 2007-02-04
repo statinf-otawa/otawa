@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
 			throw IOException("Cannot find main !");
 		}
 		AST *ast = (*result)->ast();
-		ast->set<int>(ETS::ID_WCET,-1);
+		ets::WCET(ast) = -1;
 		
 		// Compute each AB times
 		TEST_OUT(cout << ">>Timing the AB\n");
@@ -120,9 +120,9 @@ int main(int argc, char **argv) {
 			}
 			cout << '\n';
 		}
-		cout << ">>WCET = " << ast->get<int>(ETS::ID_WCET, -6) << '\n';
-		WITHOUT_CACHE(cout << ">>HITS = " << ast->get<int>(ETS::ID_HITS, -6) << '\n');
-		WITHOUT_CACHE(cout << ">>MISSES = " << ast->get<int>(ETS::ID_MISSES, -6) << '\n');
+		cout << ">>WCET = " << ets::WCET(ast) << '\n';
+		WITHOUT_CACHE(cout << ">>HITS = " << ets::HITS(ast) << '\n');
+		WITHOUT_CACHE(cout << ">>MISSES = " << ets::MISSES(ast) << '\n');
 	}
 	catch(LoadException e) {
 		cerr << "ERROR: " << e.message() << '\n';
@@ -161,49 +161,49 @@ void outputAST(AST *ast, int ind) {
 		cout 	<< "BLOCK : ("
 				<< LABEL(ast->toBlock()->first())
 				<<") [" 
-				<< ast->toBlock()->get<int>(ETS::ID_WCET, 0)
+				<< ets::WCET(ast->toBlock())
 	WITHOUT_CACHE(	<< ", "
-				<< ast->toBlock()->get<int>(ETS::ID_HITS, 0)
+				<< ets::HITS(ast->toBlock())
 				<< ", "
-				<< ast->toBlock()->get<int>(ETS::ID_MISSES, 0)
+				<< ets::MISSES(ast->toBlock())
 				<< ", "
-				<< ast->toBlock()->get<int>(ETS::ID_FIRST_MISSES, 0))
+				<< ets::FIRST_MISSES(ast->toBlock()))
 				<<"]\n";
 		break;
 	case AST_Call:
 		cout 	<< "CALL : [" 
-				<< ast->toCall()->use<int>(ETS::ID_WCET)
+				<< ets::WCET(ast->toCall())
 	WITHOUT_CACHE(	<< ", "
-				<< ast->toCall()->use<int>(ETS::ID_HITS)
+				<< ets::HITS(ast->toCall())
 				<< ", "
-				<< ast->toCall()->use<int>(ETS::ID_MISSES)
+				<< ets::MISSES(ast->toCall())
 				<< ", "
-				<< ast->toCall()->use<int>(ETS::ID_FIRST_MISSES));
+				<< ets::FIRST_MISSES(ast->toCall()));
 		if(ast->toCall()->function()->name())
 			cout << "] (" << ast->toCall()->function()->name() << ')';
 		cout << '\n';
 		break;
 	case AST_Seq:
 		cout 	<< "SEQUENCE : [" 
-				<< ast->toSeq()->use<int>(ETS::ID_WCET)
+				<< ets::WCET(ast->toSeq())
 	WITHOUT_CACHE(	<< ", "
-				<< ast->toSeq()->use<int>(ETS::ID_HITS)
+				<< ets::HITS(ast->toSeq())
 				<< ", "
-				<< ast->toSeq()->use<int>(ETS::ID_MISSES)
+				<< ets::MISSES(ast->toSeq())
 				<< ", "
-				<< ast->toSeq()->use<int>(ETS::ID_FIRST_MISSES))
+				<< ets::FIRST_MISSES(ast->toSeq()))
 				<<"]\n";
 		outputSeq(ast, ind + 1);
 		break;
 	case AST_If:
 		cout 	<< "IF : ["
-				<<ast->toIf()->use<int>(ETS::ID_WCET)
+				<< ets::WCET(ast->toIf())
 	WITHOUT_CACHE(	<< ", "
-				<< ast->toIf()->use<int>(ETS::ID_HITS)
+				<< ets::HITS(ast->toIf())
 				<< ", "
-				<< ast->toIf()->use<int>(ETS::ID_MISSES)
+				<< ets::HITS(ast->toIf())
 				<< ", "
-				<< ast->toIf()->use<int>(ETS::ID_FIRST_MISSES))
+				<< ets::FIRST_MISSES(ast->toIf()))
 				<<"]\n";
 		outputAST(ast->toIf()->condition(), ind);
 		outputAST(ast->toIf()->thenPart(), ind);
@@ -212,15 +212,15 @@ void outputAST(AST *ast, int ind) {
 	case AST_While:
 		cout 	<< "WHILE "
 				<<"("
-				<< ast->toWhile()->use<int>(ETS::ID_LOOP_COUNT)
+				<< ets::LOOP_COUNT(ast->toWhile())
 				<<" iterations) : ["
-				<< ast->toWhile()->use<int>(ETS::ID_WCET)
+				<< ets::WCET(ast->toWhile())
 	WITHOUT_CACHE(	<< ", "
-				<< ast->toWhile()->use<int>(ETS::ID_HITS)
+				<< ets::HITS(ast->toWhile())
 				<< ", "
-				<< ast->toWhile()->use<int>(ETS::ID_MISSES)
+				<< ets::MISSES(ast->toWhile())
 				<< ", "
-				<< ast->toWhile()->use<int>(ETS::ID_FIRST_MISSES))
+				<< ets::FIRST_MISSES(ast->toWhile()))
 				<<"]\n";
 		outputAST(ast->toWhile()->condition(), ind);
 		outputAST(ast->toWhile()->body(), ind);
@@ -228,15 +228,15 @@ void outputAST(AST *ast, int ind) {
 	case AST_DoWhile:
 		cout 	<< "DOWHILE "
 				<<"("
-				<< ast->toDoWhile()->use<int>(ETS::ID_LOOP_COUNT)
+				<< ets::LOOP_COUNT(ast->toDoWhile())
 				<<" iterations) : ["
-				<< ast->toDoWhile()->use<int>(ETS::ID_WCET)
+				<< ets::WCET(ast->toDoWhile())
 	WITHOUT_CACHE(	<< ", "
-				<< ast->toDoWhile()->use<int>(ETS::ID_HITS)
+				<< ets::HITS(ast->toDoWhile())
 				<< ", "
-				<< ast->toDoWhile()->use<int>(ETS::ID_MISSES)
+				<< ets::MISSES(ast->toDoWhile())
 				<< ", "
-				<< ast->toDoWhile()->use<int>(ETS::ID_FIRST_MISSES))
+				<< ets::FIRST_MISSES(ast->toDoWhile()))
 				<<"]\n";
 		outputAST(ast->toDoWhile()->body(), ind);
 		outputAST(ast->toDoWhile()->condition(), ind);
@@ -244,15 +244,15 @@ void outputAST(AST *ast, int ind) {
 	case AST_For:
 		cout 	<< "FOR "
 				<<"("
-				<< ast->toFor()->use<int>(ETS::ID_LOOP_COUNT)
+				<< ets::LOOP_COUNT(ast->toFor())
 				<<" iterations) : ["
-				<< ast->toFor()->use<int>(ETS::ID_WCET)
+				<< ets::WCET(ast->toFor())
 	WITHOUT_CACHE(	<< ", "
-				<< ast->toFor()->use<int>(ETS::ID_HITS)
+				<< ets::HITS(ast->toFor())
 				<< ", "
-				<< ast->toFor()->use<int>(ETS::ID_MISSES)
+				<< ets::MISSES(ast->toFor())
 				<< ", "
-				<< ast->toFor()->use<int>(ETS::ID_FIRST_MISSES))
+				<< ets::FIRST_MISSES(ast->toFor()))
 				<<"]\n";
 		outputAST(ast->toFor()->initialization(), ind);
 		outputAST(ast->toFor()->condition(), ind);
