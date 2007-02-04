@@ -20,8 +20,8 @@ protected:
 	virtual ~DeletableProperty(void);
 	//virtual Property *copy(void);
 public:
-	inline DeletableProperty(const Identifier *id, T value);
-	inline DeletableProperty(const Identifier& id, T value);
+	inline DeletableProperty(const AbstractIdentifier *id, T value);
+	inline DeletableProperty(const AbstractIdentifier& id, T value);
 	inline DeletableProperty(elm::CString name, T value);
 };
 
@@ -38,12 +38,12 @@ Property *DeletableProperty<T>::copy(void) {
 }*/
 
 template <class T>
-inline DeletableProperty<T>::DeletableProperty(const Identifier *id, T value) 
+inline DeletableProperty<T>::DeletableProperty(const AbstractIdentifier *id, T value) 
 : GenericProperty<T>(id, value) {
 }
 
 template <class T>
-inline DeletableProperty<T>::DeletableProperty(const Identifier& id, T value) 
+inline DeletableProperty<T>::DeletableProperty(const AbstractIdentifier& id, T value) 
 : GenericProperty<T>(id, value) {
 }
 
