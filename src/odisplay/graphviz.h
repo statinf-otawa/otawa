@@ -30,9 +30,9 @@ protected:
 	/** Properties of the attached object */
 	PropList _props;
 	/** List of properties to print. If the key exists, include the property */
-	elm::genstruct::HashTable<const Identifier*, int> _include;
+	elm::genstruct::HashTable<const AbstractIdentifier*, int> _include;
 	/** List of properties to hide. If the key exists, exclude the property */
-	elm::genstruct::HashTable<const Identifier*, int> _exclude;
+	elm::genstruct::HashTable<const AbstractIdentifier*, int> _exclude;
 	/** true if the default is to include all properties */
 	bool _defaultInclude;
 	
