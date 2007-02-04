@@ -88,7 +88,7 @@ void CFGCursor::build(void) {
 /**
  * Used for storing numbers in basic blocks.
  */
-GenericIdentifier<int> CFGCursor::ID_Number("otawa.oshell.number");
+Identifier<int> CFGCursor::ID_Number("otawa.oshell.number");
 
 
 /**

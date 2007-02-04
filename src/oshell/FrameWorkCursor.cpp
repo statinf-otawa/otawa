@@ -216,7 +216,7 @@ void FrameWorkCursor::help(Output& out) {
 void FrameWorkCursor::ast(CString path) {
 	PropList props;
 	if(path)
-		props.add<String>(ASTLoader::ID_ASTFile, path);
+		ASTLoader::PATH(props) = path;
 	ASTLoader loader;
 	loader.configure(props);
 	loader.processFrameWork(fw);
