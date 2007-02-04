@@ -29,7 +29,7 @@ using namespace otawa::hard;
 using namespace elm::option;
 using namespace otawa::gensim;
 
-GenericIdentifier<int> DELTA_MAX("delta_max", 0, OTAWA_NS);
+Identifier<int> DELTA_MAX("delta_max", 0, otawa::NS);
 
 typedef struct node_stat_t {
 	struct node_stat_t *children, *sibling;
@@ -40,8 +40,8 @@ typedef struct node_stat_t {
 		: bb(_bb), children(0), sibling(0), min(cost), max(cost) { }
 } node_stat_t;
 
-GenericIdentifier<node_stat_t *> STAT("piconsens_stat", 0, OTAWA_NS);
-GenericIdentifier<bool> MARK("piconsens_mark", false, OTAWA_NS);
+Identifier<node_stat_t *> STAT("piconsens_stat", 0, otawa::NS);
+Identifier<bool> MARK("piconsens_mark", false, otawa::NS);
 
 
 // Command

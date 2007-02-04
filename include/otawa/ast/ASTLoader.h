@@ -34,7 +34,7 @@ class ASTLoader: public Processor {
 	AST *makeBlock(elm::CString entry, elm::CString exit);
 	address_t findLabel(elm::String raw_label);
 public:
-	static Identifier ID_ASTFile;
+	static Identifier<String> PATH;
 	
 	// Constructors
 	ASTLoader(void);

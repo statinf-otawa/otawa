@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
 			throw IOException("Cannot find main !");
 		}
 		AST *ast = (*result)->ast();
-		ast->set<int>(ETS::ID_WCET,-1);
+		ets::WCET(ast) = -1;
 		
 		// Compute each BB times
 		TrivialAstBlockTime tabt(5);
@@ -94,8 +94,8 @@ int main(int argc, char **argv) {
 		// Output result
 		main_sw.stop();
 		cout << argv[1] << '\t'
-			 << ast->get<int>(ETS::ID_WCET, -6) << '\t'
-			 << ast->get<int>(ETS::ID_MISSES, -1) << '\t'
+			 << ets::WCET(ast) << '\t'
+			 << ets::MISSES(ast) << '\t'
 			 << (int)(main_sw.delay() / 1000) << '\n';
 	}
 	catch(LoadException e) {

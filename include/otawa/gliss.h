@@ -53,7 +53,7 @@ extern otawa::Loader& loader;
 
 
 // Special property
-extern GenericIdentifier<state_t *> GLISS_STATE;
+extern Identifier<state_t *> GLISS_STATE;
 
 } }	// otawa::gliss
 
