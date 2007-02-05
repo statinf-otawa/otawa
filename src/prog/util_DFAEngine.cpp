@@ -1,16 +1,39 @@
 /*
  * $Id$
- * Copyright (c) 2006 IRIT-UPS
+ * Copyright (c) 2006-07 IRIT-UPS
  *
- * include/otawa/util/DFAEngine.h -- DFAEngine class interface.
+ * DFAEngine and IterativeDFA classes interface
  */
 
 #include <otawa/util/DFAEngine.h>
 
-namespace otawa { namespace util {
+namespace otawa {
+
+namespace util {
 
 /**
  * @class DFAEngine
+ * See @ref dfa::IterativeDFA
+ */
+
+/**
+ * @class DFAPredecessor
+ * See @ref dfa::Predecessor.
+ */
+
+
+/**
+ * @class DFASuccessor
+ * See @ref dfa::Successor.
+ */
+
+
+} // dfa
+	
+namespace dfa {
+
+/**
+ * @class IterativeDFA
  * This class is a replacement for the old class @ref otawa::DFA.
  * It provides more flexibility and more performances
  * @par
@@ -44,7 +67,7 @@ namespace otawa { namespace util {
 
 
 /**
- * @fn DFAEngine::DFAEngine(Problem& problem, CFG& cfg);
+ * @fn IterativeDFA::IterativeDFA(Problem& problem, CFG& cfg);
  * Build a DFA engine with the given problem and CFG.
  * @param problem	Problem to resolve.
  * @param cfg		CFG to resolve problem on.
@@ -52,14 +75,14 @@ namespace otawa { namespace util {
 
 
 /**
- * @fn void DFAEngine::compute(void);
+ * @fn void IterativeDFA::compute(void);
  * Compute the solution. According the size of the CFG and of the set, this call
  * may take a large bunch of time.
  */
 
 
 /**
- * @fn Set *DFAEngine::inSet(BasicBlock *bb);
+ * @fn Set *IterativeDFA::inSet(BasicBlock *bb);
  * Get the IN set of the given basic block.
  * @param bb	Used basic block.
  * @return		Matching IN set.
@@ -67,7 +90,7 @@ namespace otawa { namespace util {
 
 
 /**
- * @fn Set *DFAEngine::outSet(BasicBlock *bb);
+ * @fn Set *IterativeDFA::outSet(BasicBlock *bb);
  * Get the OUT set of the given basic block.
  * @param bb	Used basic block.
  * @return		Matching OUT set.
@@ -75,7 +98,7 @@ namespace otawa { namespace util {
 
 
 /**
- * @fn Set *DFAEngine::genSet(BasicBlock *bb);
+ * @fn Set *IterativeDFA::genSet(BasicBlock *bb);
  * Get the GEN set of the given basic block.
  * @param bb	Used basic block.
  * @return		Matching GEN set.
@@ -83,7 +106,7 @@ namespace otawa { namespace util {
 
 
 /**
- * @fn Set *DFAEngine::killSet(BasicBlock *bb); 
+ * @fn Set *IterativeDFA::killSet(BasicBlock *bb); 
  * Get the KILL set of the given basic block.
  * @param bb	Used basic block.
  * @return		Matching KILL set.
@@ -91,16 +114,16 @@ namespace otawa { namespace util {
 
 
 /**
- * @class DFAPredecessor
+ * @class Predecessor
  * This class is an iterator on the input edges of a basic block. It is used
  * the @ref DFAEngine class for forward DFA computation.
  */
 
 
 /**
- * @class DFASuccessor
+ * @class Successor
  * This class is an iterator on the output edges of a basic block, ignoring call
  * edges. It is used the @ref DFAEngine class for backward DFA computation.
  */
 
-} } // otawa::util
+} } // dfa::util

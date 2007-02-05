@@ -8,13 +8,11 @@
 #include <otawa/util/ContextTree.h>
 #include <otawa/util/Dominance.h>
 #include <elm/genstruct/Vector.h>
-//#include <elm/util/BitVector.h>
 #include <otawa/cfg.h>
-#include <otawa/util/DFAEngine.h>
+#include <otawa/dfa/IterativeDFA.h>
 #include <otawa/util/BitSet.h>
 
 using namespace elm;
-using namespace otawa::util;
 
 namespace otawa {
 
@@ -181,7 +179,7 @@ _parent(0), _cfg(cfg) {
 	//cout << "children = " << prob.count() << "\n";
 	
 	// Compute the solution
-	DFAEngine<ContextTreeProblem, BitSet, DFASuccessor>
+	dfa::IterativeDFA<ContextTreeProblem, BitSet, dfa::Successor>
 		dfa(prob, *cfg);
 	dfa.compute();
 

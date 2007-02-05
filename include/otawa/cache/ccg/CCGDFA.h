@@ -7,7 +7,6 @@
 #ifndef OTAWA_TEST_CCG_CCGDFA_H
 #define OTAWA_TEST_CCG_CCGDFA_H
 
-#include <otawa/util/DFAEngine.h>
 #include <otawa/util/BitSet.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/ipet/IPET.h>

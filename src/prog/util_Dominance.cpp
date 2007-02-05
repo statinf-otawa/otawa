@@ -6,7 +6,7 @@
  */
 
 #include <otawa/util/Dominance.h>
-#include <otawa/util/DFAEngine.h>
+#include <otawa/dfa/IterativeDFA.h>
 #include <otawa/util/BitSet.h>
 #include <otawa/cfg.h>
 
@@ -127,7 +127,7 @@ bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 void Dominance::processCFG(FrameWork *fw, CFG *cfg) {
 	assert(cfg);
 	DominanceProblem dp(cfg);
-	util::DFAEngine<DominanceProblem, BitSet> engine(dp, *cfg);
+	dfa::IterativeDFA<DominanceProblem, BitSet> engine(dp, *cfg);
 	engine.compute();
 	for (CFG::BBIterator blocks(cfg); blocks; blocks++) {
 	  BitSet *b = engine.outSet(blocks.item());
