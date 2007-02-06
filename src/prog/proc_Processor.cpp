@@ -62,24 +62,24 @@ Processor::Processor(const PropList& props): flags(0), stats(0) {
 void Processor::init(const PropList& props) {
 	
 	// Process output
-	OutStream *out_stream = PROC_OUTPUT(props);
+	OutStream *out_stream = OUTPUT(props);
 	if(out_stream)
 		out.setStream(*out_stream);
 		
 	// Process statistics
-	stats = PROC_STATS(props);
+	stats = STATS(props);
 	if(stats) { 
-		if(PROC_TIMED(props))
-			flags |= TIMED;
+		if(TIMED(props))
+			flags |= IS_TIMED;
 		else
-			flags &= ~TIMED;
+			flags &= ~IS_TIMED;
 	}
 	
 	// Process verbosity
-	if(PROC_VERBOSE(props))
-		flags |= VERBOSE;
+	if(VERBOSE(props))
+		flags |= IS_VERBOSE;
 	else
-		flags &= ~VERBOSE;
+		flags &= ~IS_VERBOSE;
 }
 
 
@@ -130,7 +130,7 @@ void Processor::process(FrameWork *fw, const PropList& props) {
 		out << "Ending " << name();
 	if(isTimed()) {
 		swatch.stop();
-		PROC_RUNTIME(*stats) = swatch.delay();
+		RUNTIME(*stats) = swatch.delay();
 		if(isVerbose())
 			out << " (" << (swatch.delay() / 1000) << "ms)" << io::endl;
 	}
@@ -210,7 +210,7 @@ void Processor::warn(CString format, ...) {
  * This property identifier is used for setting the output stream used by
  * the processor for writing messages (information, warning, error) to the user.
  */
-Identifier<elm::io::OutStream *> PROC_OUTPUT("otawa.proc.output", 0);
+Identifier<elm::io::OutStream *> Processor::OUTPUT("Processor::output", 0, otawa::NS);
 
 
 /**
@@ -218,7 +218,7 @@ Identifier<elm::io::OutStream *> PROC_OUTPUT("otawa.proc.output", 0);
  * that will be used to store statistics about the performed work. Implicitly,
  * passing such a property activates the statistics recording facilities.
  */
-Identifier<PropList *> PROC_STATS("otawa.proc.stats", 0);
+Identifier<PropList *> Processor::STATS("Processor::stats", 0, otawa::NS);
 
 
 /**
@@ -226,27 +226,27 @@ Identifier<PropList *> PROC_STATS("otawa.proc.stats", 0);
  * statistics will also be collected with other processor statistics. Passing
  * such a property without @ref PROC_STATS has no effects.
  */
-Identifier<bool> PROC_TIMED("otawa.proc.timed", false);
+Identifier<bool> Processor::TIMED("Processor::timed", false, otawa::NS);
 
 
 /**
  * This property identifier is used to store in the statistics of a processor
  * the overall run time of the processor work.
  */
-Identifier<elm::system::time_t> PROC_RUNTIME("otawa.proc.runtime", 0);
+Identifier<elm::system::time_t> Processor::RUNTIME("Processor::runtime", 0, otawa::NS);
 
 
 /**
  * This property activates the verbose mode of the processor: information about
  * the processor work will be displayed.
  */
-Identifier<bool> PROC_VERBOSE("otawa.proc.verbose", false);
+Identifier<bool> Processor::VERBOSE("Processor::verbose", false, otawa::NS);
 
 
 /**
  * This property selects the task entry point currently processed.
  */
-Identifier<elm::CString> PROC_ENTRY("otawa.proc.entry", "main");
+//Identifier<elm::CString> Processor::ENTRY("Processor::entry", "main", otawa::NS);
 
 
 /**

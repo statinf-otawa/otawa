@@ -217,7 +217,7 @@ void Manager::loadXML(const elm::system::Path& path, PropList& props) {
 		throw LoadException("not a valid OTAWA XML.");
 	
 	// Record the configuration
-	if(PROC_VERBOSE(props))
+	if(Processor::VERBOSE(props))
 		cout << "MANAGER: load configuration from \"" << path << "\".\n";
 	CONFIG_ELEMENT(props) = elem;
 }
