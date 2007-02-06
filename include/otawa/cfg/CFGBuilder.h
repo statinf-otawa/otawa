@@ -17,6 +17,7 @@ namespace otawa {
 // CFGBuilder class
 class CFGBuilder: public Processor {
 	datastruct::Vector<CFG *> _cfgs;
+	bool verbose;
 	
 	BasicBlock *nextBB(Inst *inst);
 	BasicBlock *thisBB(Inst *inst);
@@ -29,6 +30,7 @@ public:
 	
 	// Processor overload
 	virtual void processFrameWork(FrameWork *fw);
+	virtual void configure(const PropList& props = PropList::EMPTY);
 };
 
 // Features
