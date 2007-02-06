@@ -128,7 +128,7 @@ void CFGCollector::configure(const PropList& props) {
 	entry = ENTRY_CFG(props);
 	if(!entry)
 		name = TASK_ENTRY(props);
-	rec = RECURSIVE(props);
+	rec = otawa::RECURSIVE(props);
 }
 
 

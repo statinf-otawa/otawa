@@ -227,7 +227,7 @@ void Command::compute(String fun) {
 	if(dump_constraints || dump_graph)
 		props.set(EXPLICIT, true);
 	if(verbose) {
-		PROC_VERBOSE(props) = true;
+		otawa::Processor::VERBOSE(props) = true;
 		//cerr << "verbose !\n";
 	}
 	
