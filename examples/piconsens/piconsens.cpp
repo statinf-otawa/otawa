@@ -166,13 +166,13 @@ void Command::compute(String fun) {
 	// Prepare processor configuration
 	PropList props;
 	if(verbose) {
-		PROC_VERBOSE(props) = true;
+		otawa::Processor::VERBOSE(props) = true;
 		cerr << "verbose !\n";
 	}
 	if(dump_constraints)
 		props.set(EXPLICIT, true);
 	if(do_stats)
-		PROC_STATS(props) = &stats;
+		otawa::Processor::STATS(props) = &stats;
 	if(deep_context)
 		EXEGRAPH_CONTEXT(props) = true;
 	if(do_context)

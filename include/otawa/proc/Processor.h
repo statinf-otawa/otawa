@@ -28,8 +28,8 @@ class Processor {
 	Vector<const AbstractFeature *> provided;
 
 protected:
-	static const unsigned long TIMED = 0x01;
-	static const unsigned long VERBOSE = 0x02;
+	static const unsigned long IS_TIMED = 0x01;
+	static const unsigned long IS_VERBOSE = 0x02;
 	unsigned long flags;
 	elm::io::Output out;
 	PropList *stats;
@@ -62,6 +62,16 @@ public:
 	// Mutators
 	virtual void configure(const PropList& props);
 	void process(FrameWork *fw, const PropList& props = PropList::EMPTY);
+
+	// Configuration Properties
+	static Identifier<elm::io::OutStream *> OUTPUT;
+	static Identifier<PropList *> STATS;
+	static Identifier<bool> TIMED;
+	static Identifier<bool> VERBOSE;
+	static Identifier<bool> RECURSIVE;
+
+	// Statistics Properties
+	static Identifier<elm::system::time_t> RUNTIME;
 };
 
 
@@ -81,16 +91,6 @@ public:
 }; 
 
 
-// Configuration Properties
-extern Identifier<elm::io::OutStream *> PROC_OUTPUT;
-extern Identifier<PropList *> PROC_STATS;
-extern Identifier<bool> PROC_TIMED;
-extern Identifier<bool> PROC_VERBOSE;
-extern Identifier<bool> RECURSIVE;
-
-// Statistics Properties
-extern Identifier<elm::system::time_t> PROC_RUNTIME;
-
 // Inlines
 inline elm::String Processor::name(void) const {
 	return _name;
@@ -101,11 +101,11 @@ inline elm::Version Processor::version(void) const {
 }
 
 inline bool Processor::isVerbose(void) const {
-	return flags & VERBOSE;
+	return flags & IS_VERBOSE;
 }
 
 inline bool Processor::isTimed(void) const {
-	return stats && (flags & TIMED);
+	return stats && (flags & IS_TIMED);
 }
 
 inline bool Processor::recordsStats(void) const {
