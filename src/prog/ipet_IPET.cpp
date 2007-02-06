@@ -118,6 +118,20 @@ Identifier<int> LOOP_COUNT("loop_count", -1, ipet::NS);
 
 
 /**
+ * This property is put on basic blocks and edge to record the execution count
+ * of these object on the WCET path.
+ * 
+ * @par Feature
+ * @li @ref ipet::WCET_COUNT_RECORDED_FEATURE
+ * 
+ * @par Hooks
+ * @li @ref otawa::BasicBlock
+ * @li @ref otawa::Edge
+ */
+Identifier<int> COUNT("count", -1, ipet::NS);
+
+
+/**
  * Get the system tied with the given CFG. If none exists, create ones.
  * @param fw	Current framework.
  * @param cfg	Current CFG.

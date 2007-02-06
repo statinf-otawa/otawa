@@ -55,6 +55,7 @@ libotawa_la_SOURCES = \
 	ipet_TrivialInstCacheManager.cpp \
 	ipet_VarAssignment.cpp \
 	ipet_WCETComputation.cpp \
+	ipet_WCETCountRecorder.cpp \
 	util_DFA.cpp \
 	util_DFABitSet.cpp \
 	util_DFAEngine.cpp \

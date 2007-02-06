@@ -201,6 +201,8 @@ int main(int argc, char **argv) {
 		wcomp.process(fw, props);
 		ilp_sw.stop();
 		main_sw.stop();
+		WCETCountRecorder recorder;
+		recorder.process(fw, props);
 
 		// Find the code size
 		int size = 0;
@@ -219,6 +221,7 @@ int main(int argc, char **argv) {
 			display::INCLUDE(display_props) += &TIME;
 			display::INCLUDE(display_props) += &Delta::DELTA;
 			display::INCLUDE(display_props) += &ipet::LOOP_COUNT;
+			display::INCLUDE(display_props) += &ipet::COUNT;
 			
 			display::EXCLUDE(display_props) += &CALLED_CFG;
 			
