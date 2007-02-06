@@ -74,7 +74,7 @@ VarAssignment::VarAssignment(void)
 void VarAssignment::configure(const PropList& props) {
 	BBProcessor::configure(props);
 	_explicit = EXPLICIT(props);
-	_recursive = RECURSIVE(props);
+	_recursive = otawa::RECURSIVE(props);
 	//cout << "_explicit = " << _explicit << io::endl;
 }
 
