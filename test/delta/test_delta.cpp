@@ -35,6 +35,7 @@ CString cat_option = "-cat";
 CString dump_option = "-dump";
 CString infos_option = "-infos";
 CString print_option = "-print";
+CString verbose_option = "-v";
 
 /**
  * Display help message and exit the program.
@@ -48,6 +49,7 @@ void help(void) {
 	cerr << "    -D#    forces the depth of the delta algorithm\n";
 	cerr << "    -ccg   uses ccg method\n";
 	cerr << "    -cat   uses categorisation methos\n";
+	cerr << "    -v     verbose display\n";
 	cerr << "  If neither -ccg nor -cat is specified, the program does NOT perform\n";
 	cerr << "  the Instruction Cache Processor\n";
 	exit(1);
@@ -70,6 +72,7 @@ int main(int argc, char **argv) {
 	bool dump = false;
 	bool infos = false;
 	bool print = false;
+	bool verbose = false;
 
 	// Processing the arguments
 	for(int i = 1; i < argc; i++) {
@@ -85,6 +88,8 @@ int main(int argc, char **argv) {
 			infos = true;
 		else if(print_option == argv[i])
 			print = true;
+		else if(verbose_option == argv[i])
+			verbose = true;
 		else if(argv[i][0] == '-' && argv[i][1] == 'D'){
 			int d;
 			sscanf(&argv[i][2],"%d",&d);
@@ -134,11 +139,12 @@ int main(int argc, char **argv) {
 				}
 		
 		// Prepare processor configuration
-		PropList props;
+		//PropList props;
 		//EXPLICIT(props) = true;
-		//PROC_VERBOSE(props) = true;
-		//VirtualCFG vcfg(cfg);
-		//ENTRY_CFG(props) = &vcfg;
+		if(verbose)
+			otawa::Processor::VERBOSE(props) = true;
+		VirtualCFG vcfg(cfg);
+		ENTRY_CFG(props) = &vcfg;
 		
 		// Calculate deltas
 		//cout << "Computing deltas... ";
@@ -147,7 +153,7 @@ int main(int argc, char **argv) {
 		if(deltaLevels)
 			Delta::LEVELS(props) = *deltaLevels;
 		Delta delta;
-		PROC_STATS(props) = &stats;
+		otawa::Processor::STATS(props) = &stats;
 		delta.process(fw, props);
 		delta_sw.stop();
 		//cout << "OK in " << delta_sw.delay()/1000 << " ms\n";
@@ -206,12 +212,13 @@ int main(int argc, char **argv) {
 		// Get the result
 		ilp::System *sys = SYSTEM(fw);
 		
-		/*if(print){
+		if(print){
 			PropList display_props;
 			display::GRAPHVIZ_FILE(display_props) = "cfg.ps";
 			
 			display::INCLUDE(display_props) += &TIME;
 			display::INCLUDE(display_props) += &Delta::DELTA;
+			display::INCLUDE(display_props) += &ipet::LOOP_COUNT;
 			
 			display::EXCLUDE(display_props) += &CALLED_CFG;
 			
@@ -219,7 +226,7 @@ int main(int argc, char **argv) {
 			
 			display::DeltaCFGDrawer drawer(&vcfg, display_props);
 			drawer.display();
-		}*/
+		}
 		
 		if(dump)
 			sys->dump();
