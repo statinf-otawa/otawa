@@ -30,6 +30,10 @@ namespace otawa { namespace ipet {
  * @li @ref Delta::SEQ_COMPLETION: number of instructions after the basic
  * block of a sequence to stop the sequence.
  * 
+ * @par Required Feature
+ * @li @ref CFG_INFO_FEATURE
+ * @li @ref ASSIGNED_VARS_FEATURE
+ * 
  * @par Provided Feature
  * @li @ref INTERBLOCK_SUPPORT_FEATURE
  * @li @ref BB_TIME_FEATURE
@@ -40,7 +44,8 @@ namespace otawa { namespace ipet {
  * @param props Configuration properties.
  */
 Delta::Delta(void)
-: CFGProcessor("otawa::ipet::Delta", Version(1, 0, 0)){
+: CFGProcessor("otawa::ipet::Delta", Version(1, 0, 0)) {
+	require(ASSIGNED_VARS_FEATURE);
 	provide(BB_TIME_FEATURE);
 	provide(INTERBLOCK_SUPPORT_FEATURE);
 }
@@ -149,7 +154,7 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
 	assert(cfg);
 	System *system = getSystem(fw,cfg);
 	//Vector<BBPath*> bbPathVector(4*cfg->bbs().count());
-	VectorQueue<BBPath*> to_process(4*cfg->bbs().count());
+	VectorQueue<BBPath*> to_process(7 /*4*cfg->bbs().count()*/);
 
 	// We create all sequences with length = 1
 	for(CFG::BBIterator bb(cfg); bb; bb++){
