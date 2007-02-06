@@ -159,7 +159,9 @@ bool System::solve(void) {
 		cons->fillRow(row);
 		Constraint::comparator_t comp = cons->comparator();
 		double cst = cons->constant();
-		add_constraint(lp, row, comps[comp + 2], cst + corr[comp + 2]);
+		add_constraint(lp, row,
+			comps[comp - Constraint::LT],
+			cst + corr[comp - Constraint::LT]);
 		cons->resetRow(row);
 	}
 	
