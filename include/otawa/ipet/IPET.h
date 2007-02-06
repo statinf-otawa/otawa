@@ -35,6 +35,7 @@ extern Identifier<ilp::System *> SYSTEM;
 extern Identifier<int> WCET;
 extern Identifier<bool> EXPLICIT;
 extern Identifier<int> LOOP_COUNT;
+extern Identifier<int> COUNT;
 	
 // Subprograms
 ilp::System *getSystem(FrameWork *fw, CFG *cfg);

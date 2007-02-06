@@ -14,6 +14,7 @@ namespace otawa { namespace ipet {
 
 // WCETComputation class
 class WCETComputation: public Processor {
+	ilp::System *system;
 protected:
 	virtual void processFrameWork(FrameWork *fw);
 public:

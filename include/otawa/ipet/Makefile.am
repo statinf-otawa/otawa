@@ -14,7 +14,5 @@ includeotawaipet_HEADERS = \
 	TrivialDataCacheManager.h \
 	TrivialInstCacheManager.h \
 	VarAssignment.h \
-	WCETComputation.h
-
-
-
+	WCETComputation.h \
+	WCETCountRecorder.h
