@@ -123,7 +123,9 @@ void Processor::process(FrameWork *fw, const PropList& props) {
 		swatch.start();
 	
 	// Launch the work
+	setup(fw);
 	processFrameWork(fw);
+	cleanup(fw);
 	
 	// Post-processing actions
 	if(isVerbose())
