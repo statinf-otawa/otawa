@@ -66,28 +66,28 @@ using namespace ilp;
  * This identifier is used for storing the time of execution in cycles (int)
  * of the program area it applies to.
  */
-Identifier<int> TIME("ipet.time", -1);
+Identifier<int> TIME("time", -1, ipet::NS);
 
 
 /**
  * This identifier is used for storing in basic blocks and edges the variables
  * (otawa::ilp::Var *) used in ILP resolution.
  */
-Identifier<ilp::Var *> VAR("ipet.var", 0);
+Identifier<ilp::Var *> VAR("var", 0, ipet::NS);
 
 
 /**
  * Identifier of annotations used for storing ILP system (otawa::ilp::System *)
  * in the CFG object.
  */
-Identifier<ilp::System *> SYSTEM("ipet.system", 0);
+Identifier<ilp::System *> SYSTEM("system", 0, ipet::NS);
 
 
 /**
  * Identifier of annotation used for storing for storing the WCET value (int)
  * in the CFG of the computed function.
  */
-Identifier<int> WCET("ipet.wcet", -1);
+Identifier<int> WCET("wcet", -1, ipet::NS);
 
 
 /**
@@ -95,7 +95,7 @@ Identifier<int> WCET("ipet.wcet", -1);
  * The generation of explicit names for variables may be time-consuming and
  * must only be activated for debugging purposes.
  */
-Identifier<bool> EXPLICIT("ipet.explicit", false);
+Identifier<bool> EXPLICIT("explicit", false, ipet::NS);
 
 
 /**
@@ -104,7 +104,17 @@ Identifier<bool> EXPLICIT("ipet.explicit", false);
  * edges (use the @ref TimeDeltaObjectFunctionModifier to add time deltas
  * to the object function).
  */
-Identifier<int> TIME_DELTA("ipet.time_delta", 0);
+Identifier<int> TIME_DELTA("time_delta", 0, ipet::NS);
+
+
+/**
+ * This is the easier way to represent the maximum iteration count of a loop
+ * as a simple integer. This property is put on the header block of the loop.
+ * 
+ * @par Hooks
+ * @li @ref otawa::BasicBlock (header of loops)
+ */
+Identifier<int> LOOP_COUNT("loop_count", -1, ipet::NS);
 
 
 /**
