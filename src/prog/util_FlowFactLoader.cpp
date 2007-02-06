@@ -54,7 +54,7 @@ using namespace elm::system;
 /**
  * Build a flow fact loader for the given executable file.
  */
-FlowFactLoader::FlowFactLoader(void): checksummed(false) {
+FlowFactLoader::FlowFactLoader(void): checksummed(false), _verbose(false) {
 }
 
 
@@ -62,9 +62,13 @@ FlowFactLoader::FlowFactLoader(void): checksummed(false) {
  * Launch the analysis of the associated flow fact file associated with the
  * current file.
  * @param fw	Current framework.
+ * @param path	Path to the F4 file (default built by appending ".ff" to the
+ * 				executable file path).
+ * @param verbose	Activate verbose mode.
  */
-void FlowFactLoader::run(FrameWork *fw, Path path) {
+void FlowFactLoader::run(FrameWork *fw, Path path, bool verbose) {
 	_fw = fw;
+	_verbose = verbose;
 	
 	// Build the F4 file path
 	if(!path) {
@@ -89,7 +93,7 @@ void FlowFactLoader::run(FrameWork *fw, Path path) {
 	fclose(util_fft_in);
 	
 	// Display warning if there is no checksum
-	if(!checksummed)
+	if(!checksummed && verbose)
 		onWarning("no checksum: flow facts and executable file may no match !");
 }
 
