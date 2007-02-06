@@ -1,8 +1,8 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2005-07, IRIT UPS.
  *
- *	prog/cfg_CFGBuilder.cpp -- CFGBuilder class implementation.
+ *	CFGBuilder class implementation
  */
 
 #include <otawa/cfg/CFGBuilder.h>
@@ -31,7 +31,7 @@ Identifier<bool> IS_ENTRY("is_entry", false, otawa::NS);
  * CFG builder constructor.
  */
 CFGBuilder::CFGBuilder(void)
-: Processor("otawa::CFGBuilder", Version(1, 0, 0)) {
+: Processor("otawa::CFGBuilder", Version(1, 0, 0)), verbose(false) {
 	provide(CFG_INFO_FEATURE);
 }
 
@@ -144,7 +144,7 @@ void CFGBuilder::buildCFG(CodeItem *code) {
 				if(inst->isCall())
 					IS_ENTRY(bb) = true;
 			}
-			else if(!inst->isReturn()) {
+			else if(!inst->isReturn() && verbose) {
 				Symbol * sym = code->closerSymbol(inst);
 				warn("unresolved indirect control at 0x%x (%s + 0x%x",
 					*inst->address(),
@@ -257,6 +257,14 @@ void CFGBuilder::buildAll(FrameWork *fw) {
 	
 	// Build the CFGInfo
 	fw->addDeletable(CFGInfo::ID, new CFGInfo(fw, _cfgs));
+}
+
+
+/**
+ */
+void CFGBuilder::configure(const PropList& props) {
+	verbose = VERBOSE(props);
+	Processor::configure(props);
 }
 
 

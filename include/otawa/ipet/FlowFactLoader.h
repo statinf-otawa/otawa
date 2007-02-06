@@ -29,6 +29,7 @@ class FlowFactLoader: public Processor, private otawa::FlowFactLoader {
 	CFGCollection *cfgs;	
 	otawa::ilp::System *system;
 	elm::system::Path path;
+	bool verbose;
 protected:
 	// FlowFactLoader overload
 	virtual void onError(const char *fmt, ...);

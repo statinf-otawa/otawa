@@ -35,6 +35,7 @@ class FlowFactLoader {
 	friend int ::util_fft_parse(FlowFactLoader *loader);
 	friend void ::util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 	FrameWork *_fw;
+	bool _verbose;
 	bool checksummed;
 	void onCheckSum(const String& name, unsigned long sum);
 protected:
@@ -43,7 +44,7 @@ protected:
 	virtual void onWarning(const char *fmt, ...) = 0;
 	virtual void onLoop(address_t addr, int count) = 0;
 public:
-	void run(FrameWork *fw, elm::system::Path path = "");
+	void run(FrameWork *fw, elm::system::Path path = "", bool verbose = false);
 };
 
 // Properties
