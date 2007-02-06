@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 		// WCET computation
 		PropList props;
 		EXPLICIT(props) = true;
-		PROC_VERBOSE(props) = true;
+		otawa::Processor::VERBOSE(props) = true;
 		/*TrivialBBTime tbt;
 		tbt.process(fw, props);
 		BBTimeSimulator bbts(props);
