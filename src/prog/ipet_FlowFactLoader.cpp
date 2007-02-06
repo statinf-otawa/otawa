@@ -21,12 +21,6 @@ namespace otawa { namespace ipet {
 /**
  * @class FlowFactLoader
  * This processor allows using extern flow facts in an IPET system.
- */
-
-
-/**
- * Build a new flow fact loader.
- * @param props		Configuration properties.
  * 
  * @par Configuration
  * @li @ref FLOW_FACTS_PATH
@@ -38,9 +32,15 @@ namespace otawa { namespace ipet {
  * @li @ref ipet::FLOW_FACTS_FEATURE
  * @li @ref ipet::FLOW_FACTS_CONSTRAINTS_FEATURE
  */
+
+
+/**
+ * Build a new flow fact loader.
+ */
 FlowFactLoader::FlowFactLoader(void)
 :	Processor("otawa::ipet::FlowFactLoader", Version(1, 1, 0)),
-	path("")
+	path(""),
+	verbose(false)
 {
 	require(COLLECTED_CFG_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
@@ -88,15 +88,17 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 			if(bb->address() == addr /*&& Dominance::isLoopHeader(bb)*/) {
 			
 				// Build the constraint
-				//cout << "Added to " << *bb << "\n";
+				// sum{(i,h) / h dom i} eih <= count * sum{(i, h) / not h dom x} xeih 
+				LOOP_COUNT(bb) = count;
 				otawa::ilp::Constraint *cons =
 					system->newConstraint(otawa::ilp::Constraint::LE);
-				cons->addLeft(1, bb->use<otawa::ilp::Var *>(VAR));
 				for(BasicBlock::InIterator edge(bb); edge; edge++) {
 					assert(edge->source());
-					otawa::ilp::Var *var =
-						edge->source()->use<otawa::ilp::Var *>(VAR);
-					if(!Dominance::dominates(bb, edge->source()))
+					otawa::ilp::Var *var = VAR(edge);
+						//edge->source()->use<otawa::ilp::Var *>(VAR);
+					if(Dominance::dominates(bb, edge->source()))
+						cons->addLeft(1, var);
+					else
 						cons->addRight(count, var);
 				}
 				found = true;
@@ -116,7 +118,7 @@ void FlowFactLoader::processFrameWork(FrameWork *fw) {
 	cfgs = INVOLVED_CFGS(fw);
 	assert(cfgs);
 	system = getSystem(fw, ENTRY_CFG(fw));
-	run(fw, path);
+	run(fw, path, verbose);
 }
 
 
@@ -125,6 +127,7 @@ void FlowFactLoader::processFrameWork(FrameWork *fw) {
 void FlowFactLoader::configure(const PropList& props) {
 	Processor::configure(props);
 	path = FLOW_FACTS_PATH(props);
+	verbose = VERBOSE(props);
 }
 
 
@@ -133,7 +136,7 @@ void FlowFactLoader::configure(const PropList& props) {
  * has been put on the CFG of the current task.
  * 
  * @par Properties
- * @li !!TODO!!
+ * @li @ref ipet::LOOP_COUNT
  */
 Feature<FlowFactLoader> FLOW_FACTS_FEATURE("otawa::ipet::flow_facts");
 
