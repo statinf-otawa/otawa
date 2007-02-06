@@ -20,5 +20,6 @@
 #include <otawa/cache/ccg/CCGBuilder.h>
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
+#include <otawa/ipet/WCETCountRecorder.h>
 
 #endif /* OTAWA_IPET_H */
