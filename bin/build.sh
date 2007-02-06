@@ -29,6 +29,7 @@ build_script=test.sh
 making_script=
 plugin_param=
 testdir=deployed_tests
+tags=
 
 # functions
 function display {
@@ -86,6 +87,20 @@ function log_command {
 	fi
 }
 
+# get_tag module default_version
+#	set VERSION variable
+function get_tag {
+	for tag in `echo $tags | tr "," "\n"`; do
+		program=${tag%%:*}
+		version=${tag#*:}
+		if [ "$program" == "$1" ]; then
+			VERSION="$version"
+			return
+		fi
+	done
+	VERSION="$2"
+}
+
 
 ############# Downloads #################
 
@@ -94,6 +109,7 @@ function download_home {
 		CVS_MOD=$NAME
 	fi
 	FLAGS=
+	get_tag $NAME $VERSION
 	if [ -n "$VERSION" ]; then
 		FLAGS="$FLAGS -r $VERSION"
 	fi
@@ -335,6 +351,7 @@ function help {
 	echo "	--with-systemc: SystemC location."
 	echo "	--check: download, make, install, and test."
 	echo "	--checkonly: test only."
+	echo "  --tag=module:version: use the given CVS version for the module."
 	echo "MODULES: elm gliss ppc lp_solve frontc otawa"
 }
 
@@ -387,6 +404,9 @@ for arg in $*; do
 	--proxy=*)
 		export http_proxy=${arg#--proxy=}
 		export ftp_proxy=${arg#--proxy=}
+		;;
+	--tag=*)
+		tags="$tags,${arg#--tag=}"
 		;;
 	-h|--help)
 		help
