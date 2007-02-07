@@ -1,13 +1,14 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2005-07, IRIT UPS.
  *
- *	otawa/util/CFGNormalizer.h -- CFGNormalizer class interface.
+ *	CFGNormalizer class interface
  */
 #ifndef OTAWA_UTIL_CFG_NORMALIZER_H
 #define OTAWA_UTIL_CFG_NORMALIZER_H
 
 #include <otawa/proc/CFGProcessor.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa {
 	
@@ -15,22 +16,23 @@ namespace otawa {
 class CFGNormalizer: public CFGProcessor {
 	bool force;
 	bool verbose;
+
+protected:
+	virtual void processCFG(FrameWork *fw, CFG *cfg);
+
 public:
 	
-	// Identifiers
+	// Configuration
 	static Identifier<bool> FORCE;
 	static Identifier<bool> VERBOSE;
-	static Identifier<bool> DONE;
 
-	// Constructors
+	// Methods
 	CFGNormalizer(void);
-	
-	// CFGProcessor overload
-	virtual void processCFG(FrameWork *fw, CFG *cfg);
-	
-	// Processor overload
-	virtual void configure(PropList& props);	
+	virtual void configure(const PropList& props = PropList::EMPTY);	
 };
+
+// Feature
+extern Feature<CFGNormalizer> NORMALIZED_CFGS_FEATURE;
 
 } // otawa
 

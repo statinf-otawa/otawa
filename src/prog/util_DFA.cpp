@@ -7,7 +7,6 @@
 
 #include <otawa/util/DFA.h>
 #include <otawa/cfg.h>
-#include <otawa/util/CFGNormalizer.h>
 
 //#include <otawa/util/DFABitSet.h>
 
@@ -122,11 +121,6 @@ void DFA::resolve(
 	//cout << "CFG: " << cfg->label() << "\n";
 	
 	// Prolog
-	CFGNormalizer normalizer;
-	PropList props;
-	CFGNormalizer::VERBOSE(props) = true; 
-	normalizer.configure(props);
-	normalizer.processCFG(0, cfg);
 	bool fix_point = false;
 	startup(cfg);
 	

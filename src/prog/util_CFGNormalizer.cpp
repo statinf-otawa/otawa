@@ -1,27 +1,33 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2005-07, IRIT UPS.
  *
- *	src/prog/CFGNormalizer.cpp -- CFGNormalizer class implementation.
+ *	CFGNormalizer class implementation
  */
 
 #include <assert.h>
 #include <otawa/util/CFGNormalizer.h>
 #include <otawa/cfg.h>
 #include <elm/genstruct/Vector.h>
+#include <otawa/cfg/CFGCollector.h>
 
 namespace otawa {
 
 /**
  * @class CFGNormalizer
- * This processor transform the CFG to making it normalized, that is, it performs
- * the following transformation:
- * <ul>
- * <li>the entering edges in entry from other CFG are cut,</li>
- * <li>the leaving edges from exit to other CFG are cut,</li>
- * <li>the entering edge from dead code are removed (GCC with middle-function
- * return instruction).</li>
- * </ul>
+ * This processor check and transform the CFG to make it normalized, that is,
+ * it performs the following checks and transformation:
+ * 
+ * @li the entering edges in entry from other CFG are cut,
+ * @li the leaving edges from exit to other CFG are cut,
+ * @li the entering edge from dead code cause an error or are removed
+ * (@ref CFGNormalizer::FORCE option set).
+ * 
+ * @par Provided Feature
+ * @li @ref NORMALIZED_CFGS_FEATURE
+ * 
+ * @par Required Feature
+ * @li @ref COLLECTED_CFG_FEATURE
  */
 
 
@@ -35,13 +41,6 @@ Identifier<bool>
 
 
 /**
- * Put on the CFG after the normalization has been performed.
- */
-Identifier<bool>
-	CFGNormalizer::DONE("CFGNormalizer::done", false, otawa::NS);
-
-
-/**
  * Configuration identifier for activating (boolean) or not the verbose node.
  * In verbose mode, each edge removal displays information about the action.
  */
@@ -50,13 +49,15 @@ Identifier<bool>
 
 
 // Internal use
-static Identifier<bool> IN_CFG("in_cfg", false, otawa::NS);
+static Identifier<bool> IN_CFG("CFGNormalizer::in_cfg", false, otawa::NS);
 
 
 /**
  * Build a new CFG normalizer.
  */
 CFGNormalizer::CFGNormalizer(void): force(false), verbose(false) {
+	provide(NORMALIZED_CFGS_FEATURE);
+	require(COLLECTED_CFG_FEATURE);
 }
 
 
@@ -64,44 +65,66 @@ CFGNormalizer::CFGNormalizer(void): force(false), verbose(false) {
  */
 void CFGNormalizer::processCFG(FrameWork *fw, CFG *cfg) {
 	
-	// Check if work need to be done
-	if(!force && DONE(cfg))
-		return;
-	
-	// Check entry
-	
-	// Check exit
-	
-	// Check dead code entering edges
+	// Put marks
 	elm::genstruct::Vector<Edge *> removes;
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		IN_CFG(bb) = true;
+	
+	// Examine BB	
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
+
+		// Look for an unresolved indirect branch
+		if(bb->isTargetUnknown()) {
+			bool solved = false;
+			for(BasicBlock::OutIterator edge(bb); edge; edge++)
+				if(edge->kind() != Edge::NOT_TAKEN) {
+					solved = true;
+					break;
+				}
+			if(!solved)
+				throw ProcessorException(*this,
+					"unresolved indirect branch at %lx", *bb->address());
+		}
+
+		// Record all entering edges
 		for(BasicBlock::InIterator edge(bb); edge; edge++)
 			if(edge->source() && !IN_CFG(edge->source()))
 				removes.add(edge);
+		
+		// Remove entering edges
 		for(elm::genstruct::Vector<Edge *>::Iterator edge(removes); edge; edge++) {
-			if(verbose)
-				out << "WARNING: edge from " << edge->source()->address()
-					<< " to " << edge->target()->address() << " removed.\n";
-			delete edge;
+			if(!force)
+				throw ProcessorException(*this, "Edge from dead code %lx to living code %lx.",
+					*edge->source()->address(), *edge->target()->address());
+			else {
+				if(verbose)
+					warn("Edge from dead code %lx to living code %lx removed",
+						*edge->source()->address(), *edge->target()->address());
+				delete edge;
+			}
 		}
 		removes.clear();
 	}
+	
+	// Remove marks
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		bb->removeProp(&IN_CFG);
-	
-	// Mark as done
-	DONE(cfg) = true;
 }
 
 
 /**
  */
-void CFGNormalizer::configure(PropList& props) {
+void CFGNormalizer::configure(const PropList& props) {
 	CFGProcessor::configure(props);
 	force = FORCE(props);
 	verbose = VERBOSE(props);
 }
+
+
+/**
+ * This feature ensures that the CFG are in a normalized form: fully resolved
+ * branches, no entering or exiting edges to or from external CFGs.
+ */
+Feature<CFGNormalizer> NORMALIZED_CFGS_FEATURE("otawa::normalized_cfgs");
 
 } // otawa
