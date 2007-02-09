@@ -43,8 +43,8 @@ public:
 
 	// otawa::Loader overload
 	virtual CString getName(void) const;
-	virtual otawa::Process *load(Manager *_man, CString path, PropList& props);
-	virtual otawa::Process *create(Manager *_man, PropList& props);
+	virtual otawa::Process *load(Manager *_man, CString path, const PropList& props);
+	virtual otawa::Process *create(Manager *_man, const PropList& props);
 };
 
 

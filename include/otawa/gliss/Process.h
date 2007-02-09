@@ -28,7 +28,7 @@ protected:
 	Platform *_platform;
 	bool no_sys;
 public:
-	Process(Manager *_man, PropList& props);
+	Process(Manager *_man, const PropList& props);
 	virtual ~Process(void);
 	virtual ::otawa::File *loadFile(CString path);
 	virtual hard::Platform *platform(void);

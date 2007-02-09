@@ -51,7 +51,7 @@ CString Loader::getName(void) const {
  * @param props	Properties.
  * @return	Created process or null if there is an error.
  */
-otawa::Process *Loader::load(Manager *man, CString path, PropList& props) {
+otawa::Process *Loader::load(Manager *man, CString path, const PropList& props) {
 	otawa::Process *proc = create(man, props);
 	if(!proc->loadProgram(path)) {
 		delete proc;
@@ -68,7 +68,7 @@ otawa::Process *Loader::load(Manager *man, CString path, PropList& props) {
  * @param props	Properties.
  * @return		Created process.
  */
-otawa::Process *Loader::create(Manager *man, PropList& props) {
+otawa::Process *Loader::create(Manager *man, const PropList& props) {
 	return new Process(man, props);
 }
 

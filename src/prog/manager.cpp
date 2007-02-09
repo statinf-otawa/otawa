@@ -141,7 +141,7 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * @ref CACHE_CONFIG, @ref PIPELINE_DEPTH.
  * @return The loaded framework or 0.
  */
-FrameWork *Manager::load(const elm::system::Path&  path, PropList& props) {
+FrameWork *Manager::load(const elm::system::Path&  path, const PropList& props) {
 	
 	// Just load binary ?
 	if(path.extension() != "xml")
@@ -160,7 +160,10 @@ FrameWork *Manager::load(const elm::system::Path&  path, PropList& props) {
  * @return		Built framework.
  * @throws	LoadException	Error during load.
  */
-FrameWork *Manager::loadBin(const elm::system::Path& path, PropList& props) {
+FrameWork *Manager::loadBin(
+	const elm::system::Path& path,
+	const PropList& props)
+{
 	Process *proc = 0;
 
 	// Simple identified loader
@@ -202,7 +205,10 @@ FrameWork *Manager::loadBin(const elm::system::Path& path, PropList& props) {
  * @param props	Property to install the configuration in.
  * @throws	LoadException	Error during load.
  */ 
-void Manager::loadXML(const elm::system::Path& path, PropList& props) {
+FrameWork *Manager::loadXML(
+	const elm::system::Path& path,
+	const PropList& props)
+{
 	
 	// Load the file
 	xom::Builder builder;
@@ -219,7 +225,10 @@ void Manager::loadXML(const elm::system::Path& path, PropList& props) {
 	// Record the configuration
 	if(Processor::VERBOSE(props))
 		cout << "MANAGER: load configuration from \"" << path << "\".\n";
-	CONFIG_ELEMENT(props) = elem;
+	PropList new_config;
+	new_config.addProps(props);
+	CONFIG_ELEMENT(new_config) = elem;
+	return loadBin(path, new_config);
 }
 
 
@@ -230,7 +239,7 @@ void Manager::loadXML(const elm::system::Path& path, PropList& props) {
  * @return		Built framework.
  * @throws	LoadException	Error during load.
  */
-FrameWork *Manager::load(xom::Element *elem, PropList& props) {
+FrameWork *Manager::load(xom::Element *elem, const PropList& props) {
 	assert(elem);
 	xom::Element *bin = elem->getFirstChildElement("binary");
 	if(!bin)
@@ -248,7 +257,7 @@ FrameWork *Manager::load(xom::Element *elem, PropList& props) {
  * @return			Load framework.
  * @throws	LoadException	Error during load.
  */
-FrameWork *Manager::load(PropList& props) {
+FrameWork *Manager::load(const PropList& props) {
 	
 	// Look for an XML element
 	xom::Element *elem = CONFIG_ELEMENT(props);

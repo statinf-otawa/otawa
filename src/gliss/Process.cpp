@@ -31,7 +31,10 @@ namespace otawa { namespace gliss {
  * Process constructor.
  * @param _man	Caller manager.
  */
-Process::Process(Manager *_man, PropList& props): otawa::Process(props), man(_man) {
+Process::Process(Manager *_man, const PropList& props)
+:	otawa::Process(props),
+	man(_man)
+{
 	TRACE(this << ".Process::Process(" << _man << ", " << &props << ')');
 	no_sys = NO_SYSTEM(props);
 	default_argv[0] = "";
