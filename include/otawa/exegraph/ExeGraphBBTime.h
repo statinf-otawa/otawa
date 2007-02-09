@@ -175,14 +175,14 @@ class ExeGraphBBTime: public BBProcessor {
 	private:
 		FrameWork *fw;
 		PropList *properties;
-		elm::io::Output& dumpFile;
+		elm::io::Output dumpFile;
 		Microprocessor *microprocessor;
 		bool delta, do_context;
 		elm::genstruct::DLList<PrefixCost *> costs;
-		
-		
+		bool built;
+	
 	public:
-		ExeGraphBBTime(const PropList& props = PropList::EMPTY);
+		ExeGraphBBTime(void);
 	
 		void buildExecutionGraph(FrameWork *fw, 
 								ExecutionGraph& graph, 
@@ -207,8 +207,6 @@ class ExeGraphBBTime: public BBProcessor {
 		int analyzeExecutionGraph(ExecutionGraph& graph);
 
 		// BBProcessor overload
-		void processFrameWork(FrameWork *fw);
-		void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
 		int processSequence( FrameWork *fw,
 			elm::genstruct::DLList<ExecutionGraphInstruction *> * prologue,
 			elm::genstruct::DLList<ExecutionGraphInstruction *> * body,
@@ -218,7 +216,9 @@ class ExeGraphBBTime: public BBProcessor {
 	// Configuration Properties
 	static Identifier<Microprocessor *> PROCESSOR;
 	static Identifier<elm::io::Output *>  LOG_OUTPUT;
-	
+	static Identifier<bool> DELTA;
+	static Identifier<bool> CONTEXT;
+
 	// statistics
 	typedef struct stat_t {
 		double total_span_sum;
@@ -230,7 +230,14 @@ class ExeGraphBBTime: public BBProcessor {
 		inline stat_t(void): total_span_sum(0), total_vals_sum(0),
 		bb_cnt(0),bb_span_sum(0), bb_vals_sum(0), seq_cnt(0) { };
 	} stat_t;
+	static Identifier<Vector <stat_t> *> PREFIX_STATS;
 
+protected:
+	virtual void configure(const PropList& props = PropList::EMPTY);
+	virtual void setup(FrameWork *fw);
+	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+	virtual void cleanup(FrameWork *fw);
+		
 private:
 		void recordDelta(
 			DLList<ExecutionGraphInstruction *> *insts,
@@ -268,13 +275,6 @@ private:
 		} context_t;
 		void buildContext(int cost, node_stat_t *stat = 0, context_t *ctx = 0); 
 };
-
-// Configuration
-extern Identifier<bool> EXEGRAPH_DELTA;
-extern Identifier<bool> EXEGRAPH_CONTEXT;
-
-// Statistics output
-extern Identifier<Vector <ExeGraphBBTime::stat_t> *> EXEGRAPH_PREFIX_STATS;
 
 } //otawa
 
