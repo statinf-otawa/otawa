@@ -18,6 +18,8 @@
 #include <otawa/hard/Processor.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ilp.h>
+#include <otawa/util/CFGNormalizer.h>
+#include <otawa/ipet/TrivialBBTime.h>
 
 using namespace otawa;
 using namespace otawa::hard;
@@ -50,8 +52,36 @@ namespace otawa {
  * @li X. Li, A. Roychoudhury, A., T. Mitra, "Modeling Out-of-Order Processors
  * for Software Timing Analysis", Proceedings of the 25th IEEE International
  * Real-Time Systems Symposium (RTSS'04), 2004.
- * @li
+ *
+ * @par Provided Features
+ * @li @ref ipet::BB_TIME_FEATURE
+ * 
+ * @par Required Features
+ * @li @ref NORMALIZED_CFGS_FEATURE
+ * 
+ * @par Configuration Properties
+ * @li @ref ExeGraphBBTime::PROCESSOR -- gives the processor to use.
+ * @li @ref ExeGraphBBTime::LOG_OUTPUT -- select the output stream for log information.
+ * @li @ref ExeGraphBBTime::CONTEXT --perform statistics about the context of
+ * the basic block timing.
  */
+
+
+/**
+ * Build the ExeGraphBBTime processor.
+ */ 
+ExeGraphBBTime::ExeGraphBBTime(void) 
+:	BBProcessor("otawa::ExeGraphBBTime", Version(1, 0, 0)),
+	microprocessor(0),
+	delta(false),
+	do_context(false),
+	stat_root(0, 0),
+	exe_stats(*(new Vector<stat_t>())),
+	fw(0)
+{
+	provide(ipet::BB_TIME_FEATURE);
+	require(NORMALIZED_CFGS_FEATURE);
+}
 
 
 /**
@@ -59,7 +89,7 @@ namespace otawa {
  * code processor. As default, it is extracted from the system description.
  */
 Identifier<Microprocessor *>
-	ExeGraphBBTime::PROCESSOR("otawa.ExeGraphBBTime.proc.", NULL);
+	ExeGraphBBTime::PROCESSOR("ExeGraphBBTime::proc.", NULL, otawa::NS);
 
 
 /**
@@ -67,62 +97,55 @@ Identifier<Microprocessor *>
  * the execution of the algorithm.
  */
 Identifier<elm::io::Output *>
-	ExeGraphBBTime::LOG_OUTPUT("otawa.ExeGraphBBTime.log", &cerr);
-
-
-/**
- * Build the ExeGraphBBTime processor.
- * @param props	Configuration properties possibly including @ref PROC and
- * @ref LOG.
- */ 
-ExeGraphBBTime::ExeGraphBBTime(const PropList& props) 
-:	BBProcessor(props),
-	microprocessor(PROCESSOR(props)),
-	dumpFile(*LOG_OUTPUT(props)),
-	delta(EXEGRAPH_DELTA(props)),
-	do_context(EXEGRAPH_CONTEXT(props)),
-	stat_root(0, 0),
-	exe_stats(*(new Vector<stat_t>())),
-	fw(0)
-{
-}
+	ExeGraphBBTime::LOG_OUTPUT("ExeGraphBBTime::log", &cerr, otawa::NS);
 
 
 /**
  */
-void ExeGraphBBTime::processFrameWork(FrameWork *fw) {
-	bool built = false, reset = false;
+void ExeGraphBBTime::setup(FrameWork *fw) {
+	assert(fw);
 	this->fw = fw;
-	
-	// If required, find the microprocessor
 	if(!microprocessor) {
 		microprocessor = PROCESSOR(fw);
-		if(microprocessor) 
-			reset = true;
-		else {
+		if(!microprocessor) { 
 			const hard::Processor *proc = fw->platform()->processor();
 			if(!proc)
 				throw ProcessorException(*this, "no processor to work with");
 			else {
-				reset = true;
 				built = true;
 				microprocessor = new Microprocessor(proc);
 			}
 		}
 	}
-	
-	// Perform the actual process
-	BBProcessor::processFrameWork(fw);
+}
+
+
+/**
+ */
+void ExeGraphBBTime::cleanup(FrameWork *fw) {
+	assert(fw);
 	
 	// Record stats if required
 	if(recordsStats())
-		EXEGRAPH_PREFIX_STATS(stats) = &exe_stats;
+		PREFIX_STATS(stats) = &exe_stats;
 
 	// Cleanup if required
-	if(built)
+	if(built) {
 		delete microprocessor;
-	if(reset)
-		microprocessor = 0;
+		built = false;
+	}
+	microprocessor = 0;
+	this->fw = 0;
+}
+
+
+/**
+ */
+void ExeGraphBBTime::configure(const PropList& props) {
+	microprocessor = PROCESSOR(props);
+	dumpFile.setStream(LOG_OUTPUT(props)->stream());
+	delta = DELTA(props);
+	do_context = CONTEXT(props);
 }
 
 
@@ -718,7 +741,7 @@ void ExeGraphBBTime::recordDelta(
  * property list to store @ref ExeGraphBBTime statistics.
  */
 Identifier<Vector <ExeGraphBBTime::stat_t> *>
-	EXEGRAPH_PREFIX_STATS("exegraph_prefix_stats", 0, otawa::NS);
+	ExeGraphBBTime::PREFIX_STATS("ExeGraphBBTime::prefix_stats", 0, otawa::NS);
 
 
 /**
@@ -726,7 +749,7 @@ Identifier<Vector <ExeGraphBBTime::stat_t> *>
  * edges. Using the @ref TimeDetaObjectFunctionModifier, it allow to improve
  * the accuracy of the computed WCET.
  */
-Identifier<bool> EXEGRAPH_DELTA("exegraph_delta", false, otawa::NS);
+Identifier<bool> ExeGraphBBTime::DELTA("ExeGraphBBTime::delta", false, otawa::NS);
 
 
 /**
@@ -735,7 +758,7 @@ Identifier<bool> EXEGRAPH_DELTA("exegraph_delta", false, otawa::NS);
  * taking in account the difference of execution time according prologues
  * of evaluated blocks.
  */
-Identifier<bool> EXEGRAPH_CONTEXT("exegraph_context", false, otawa::NS);
+Identifier<bool> ExeGraphBBTime::CONTEXT("ExeGraphBBTime::context", false, otawa::NS);
 
 
 /**

@@ -242,8 +242,8 @@ void Command::compute(String fun) {
 		break;
 		
 	case bbtime_exegraph: {
-			ExeGraphBBTime tbt(props);
-			tbt.process(fw);
+			ExeGraphBBTime tbt;
+			tbt.process(fw, props);
 		}
 		break;
 		
