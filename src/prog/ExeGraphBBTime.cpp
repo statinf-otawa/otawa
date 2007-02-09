@@ -28,7 +28,7 @@ using namespace elm::genstruct;
 using namespace otawa::graph;
 using namespace otawa::ipet;
 
-#define DO_LOG
+//#define DO_LOG
 #if defined(NDEBUG) || !defined(DO_LOG)
 #	define LOG(c)
 #else
@@ -142,6 +142,7 @@ void ExeGraphBBTime::cleanup(FrameWork *fw) {
 /**
  */
 void ExeGraphBBTime::configure(const PropList& props) {
+	BBProcessor::configure(props);
 	microprocessor = PROCESSOR(props);
 	dumpFile.setStream(LOG_OUTPUT(props)->stream());
 	delta = DELTA(props);

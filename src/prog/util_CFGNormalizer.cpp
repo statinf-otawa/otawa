@@ -55,7 +55,11 @@ static Identifier<bool> IN_CFG("CFGNormalizer::in_cfg", false, otawa::NS);
 /**
  * Build a new CFG normalizer.
  */
-CFGNormalizer::CFGNormalizer(void): force(false), verbose(false) {
+CFGNormalizer::CFGNormalizer(void):
+	CFGProcessor("otawa::CFGNormalizer", Version(1, 0, 0)),
+	force(false),
+	verbose(false)
+{
 	provide(NORMALIZED_CFGS_FEATURE);
 	require(COLLECTED_CFG_FEATURE);
 }
