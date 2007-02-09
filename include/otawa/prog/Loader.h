@@ -38,8 +38,8 @@ public:
 
 	// Method
 	virtual CString getName(void) const = 0;
-	virtual Process *load(Manager *man, CString path, PropList& props) = 0;
-	virtual Process *create(Manager *man, PropList& props) = 0;
+	virtual Process *load(Manager *man, CString path, const PropList& props) = 0;
+	virtual Process *create(Manager *man, const PropList& props) = 0;
 	
 	// Default platform and loader
 	static Loader& LOADER_Gliss_PowerPC;
