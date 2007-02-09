@@ -174,9 +174,9 @@ void Command::compute(String fun) {
 	if(do_stats)
 		otawa::Processor::STATS(props) = &stats;
 	if(deep_context)
-		EXEGRAPH_CONTEXT(props) = true;
+		ExeGraphBBTime::CONTEXT(props) = true;
 	if(do_context)
-		EXEGRAPH_DELTA(props) = true;
+		ExeGraphBBTime::DELTA(props) = true;
 	
 	// Assign variables
 	VarAssignment assign;
@@ -184,8 +184,8 @@ void Command::compute(String fun) {
 		
 	// Compute BB time
 	if(exegraph) {
-		ExeGraphBBTime tbt(props);
-		tbt.process(fw);
+		ExeGraphBBTime tbt;
+		tbt.process(fw, props);
 	}
 	else {
 		BBTimeSimulator bbts;
@@ -271,7 +271,7 @@ void Command::compute(String fun) {
 	// Get statistics
 	else if(!do_time) {
 		if(exegraph) {
-			const Vector<ExeGraphBBTime::stat_t>& prefs = *EXEGRAPH_PREFIX_STATS(stats);
+			const Vector<ExeGraphBBTime::stat_t>& prefs = *ExeGraphBBTime::PREFIX_STATS(stats);
 			for(int i = 0; i < prefs.length(); i++)
 				cout << i << '\t'
 					/*<< prefs[i].total_span_sum << '\t'
