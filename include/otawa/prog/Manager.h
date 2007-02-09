@@ -48,8 +48,8 @@ class Manager {
 	elm::system::Plugger ilp_plugger;
 	elm::system::Plugger loader_plugger;
 	elm::system::Plugger sim_plugger;
-	FrameWork *loadBin(const elm::system::Path& path, PropList& props);
-	void loadXML(const elm::system::Path& path, PropList& props);
+	FrameWork *loadBin(const elm::system::Path& path, const PropList& props);
+	FrameWork *loadXML(const elm::system::Path& path, const PropList& props);
 public:
 	static const CString OTAWA_NS;
 	static const CString OTAWA_NAME;
@@ -60,9 +60,11 @@ public:
 	~Manager(void);
 	Loader *findLoader(elm::CString name);
 	sim::Simulator *findSimulator(elm::CString name);
-	FrameWork *load(const elm::system::Path& path, PropList& props);
-	FrameWork *load(PropList& props);
-	FrameWork *load(xom::Element *elem, PropList& props); 
+	FrameWork *load(const elm::system::Path& path,
+		const PropList& props = PropList::EMPTY);
+	FrameWork *load(const PropList& props = PropList::EMPTY);
+	FrameWork *load(xom::Element *elem,
+		const PropList& props = PropList::EMPTY); 
 	ilp::System *newILPSystem(String plugin = "");
 	
 };
