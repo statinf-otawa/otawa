@@ -53,8 +53,8 @@ void SegmentCursor::info(Output& out) {
 void SegmentCursor::list(Output& out) {
 	out << "Items: \n";
 	int i = 0;
-	for(Iterator<ProgItem *> iter(seg->items()); iter; iter++, i++) {
-		out << '\t' << i << ':' << iter->name() << '(';
+	for(Segment::ItemIter iter(seg); iter; iter++, i++) {
+		out << '\t' << i << ": (";
 		out << (iter->toCode() ? "code" : "data");
 		out << ") [" << iter->address() << ':' << (int)iter->size() << "]\n";
 	}
@@ -66,7 +66,7 @@ void SegmentCursor::list(Output& out) {
 // Cursor overload
 Cursor *SegmentCursor::go(CString name) {
 	int num = atoi(&name);
-	for(Iterator<ProgItem *> iter(seg->items()); iter; iter++, num--)
+	for(Segment::ItemIter iter(seg); iter; iter++, num--)
 		if(!num) {
 			CodeItem *code = iter->toCode();
 			if(!code)

@@ -24,7 +24,7 @@ namespace otawa {
 class LBlockSet;
 
 // LBlock class
-class LBlock: public elm::inhstruct::DLNode, public ProgObject {
+class LBlock: public elm::inhstruct::DLNode, public PropList {
 	friend class LBlockSet;
 	
 	address_t addr;
