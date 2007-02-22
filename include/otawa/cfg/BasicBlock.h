@@ -25,7 +25,7 @@ class CFG;
 extern Identifier<int> INDEX;
 
 // BasicBlock class
-class BasicBlock: public elm::inhstruct::DLNode, public ProgObject {
+class BasicBlock: public elm::inhstruct::DLNode, public PropList {
 	friend class CFGBuilder;
 	friend class CFGInfo;
 	friend class CFG;

@@ -18,7 +18,7 @@ libotawa_la_SOURCES = \
 	ForAST.cpp \
 	AST.cpp \
 	base.cpp \
-	program.cpp \
+	prog_DataItem.cpp \
 	manager.cpp \
 	platform.cpp \
 	instruction.cpp \
@@ -94,8 +94,9 @@ libotawa_la_SOURCES = \
 	cache_LBlock.cpp \
 	cache_LBlockSet.cpp \
 	prog_CodeItem.cpp \
-	prog_ProgItem.cpp \
 	prog_File.cpp \
+	prog_ProgItem.cpp \
+	prog_Segment.cpp \
 	prog_Symbol.cpp \
 	cache_CATBuilder.cpp \
 	cache_CATConstraintBuilder.cpp \

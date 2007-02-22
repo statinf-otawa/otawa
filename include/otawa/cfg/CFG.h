@@ -24,7 +24,7 @@ extern Identifier<CFG *> ENTRY;
 extern Identifier<int> INDEX;
 
 // CFG class
-class CFG: public ProgObject, private elm::Collection<BasicBlock *> {
+class CFG: public PropList, private elm::Collection<BasicBlock *> {
 	CodeItem *_code;
 	BasicBlock *ent;
 

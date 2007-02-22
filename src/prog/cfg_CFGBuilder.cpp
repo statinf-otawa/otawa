@@ -229,7 +229,7 @@ void CFGBuilder::addFile(File *file) {
 	
 	// Scan file segments
 	for(File::SegIter seg(file); seg; seg++)
-		for(Iterator<ProgItem *> item(seg->items()); item; item++)
+		for(Segment::ItemIter item(seg); item; item++)
 			if(seg->flags() & Segment::EXECUTABLE)
 				buildCFG((CodeItem *)*item);
 }

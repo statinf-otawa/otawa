@@ -18,7 +18,7 @@ namespace otawa { namespace ipet {
 
 class PathManager;
 
-class BBPath: public ProgObject, private Collection<BasicBlock*> {
+class BBPath: public PropList, private Collection<BasicBlock*> {
 	friend class PathManager;
 protected:
 	BBPath(BasicBlock *start);

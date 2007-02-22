@@ -28,7 +28,7 @@ class CodeItem;
 class Data;
 
 // File class
-class File: public ProgObject {
+class File: public PropList {
 	String _name;
 	Vector<Segment *> segs;
 	typedef HashTable<String, Symbol *> syms_t;

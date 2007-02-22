@@ -1,8 +1,8 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2005-07, IRIT UPS.
  *
- *	prog/prog_CodeItem.cpp -- CodeItem class implementation.
+ *	CodeItem class implementation.
  */
 
 #include <otawa/prog/CodeItem.h>
@@ -10,6 +10,13 @@
 #include <otawa/prog/Instruction.h>
 
 namespace otawa {
+
+// Configuration of the instruction map
+#define MAP_BITS	6
+#define MAP_MASK	((1 << MAP_BITS) - 1)
+#define MAP_SIZE(s)	(((s) + MAP_MASK - 1) >> MAP_BITS)
+#define MAP_INDEX(a) (((a) - address()) >> MAP_BITS)
+
 	
 /**
  * @class CodeItem
@@ -18,22 +25,18 @@ namespace otawa {
  * methods.
  */
 
+
 /**
  * @fn Inst *CodeItem::first(void) const;
  * Get the first instruction in the code.
  * @return First instruction.
  */
 
+
 /**
  * @fn Inst *CodeItem::last(void) const;
  * Get the last instruction in the code.
  * @return Last instruction.
- */
-
-/**
- * @fn IteratorInst<Inst *> *CodeItem::insts(void);
- * Get an iterator on the instructions contained in the code item.
- * @return	Code item instruction iterator.
  */
 
 
@@ -52,6 +55,66 @@ Symbol *CodeItem::closerSymbol(Inst *inst) {
 		inst = inst->previous();
 	}
 	return 0;
+}
+
+
+/**
+ * Build a code item.
+ * @param name			Name of the code item.
+ * @param _address		Base address of the memory block.
+ * @param size			Size of the memory block.
+ * @param instructions	List of instructions.
+ */
+CodeItem::CodeItem(
+	address_t _address,
+	size_t size,
+	inhstruct::DLList& instructions)
+:	ProgItem(code, _address, size),
+	map(new Inst *[MAP_SIZE(size)]),
+	insts(instructions)
+{
+	for(int i = 0; i < MAP_SIZE(size); i++)
+		map[i] = 0;
+	assert(!insts.isEmpty());
+	for(Inst *inst = first(); !inst->atEnd(); inst = inst->next()) {
+		int index = MAP_INDEX((inst->address()));
+		if(!map[index])
+			map[index] = inst;
+	}
+}
+
+
+/**
+ * Find an instructions using to its address.
+ * @param addr	Address of the instruction to find.
+ * @return		Found instruction or null if not found.
+ */
+otawa::Inst *CodeItem::findByAddress(address_t addr) {
+
+	// In the segment ?
+	if(addr < address() || addr >= address() + size())
+		return 0;
+	
+	// Look in the instruction
+	Inst *inst = map[MAP_INDEX(addr)];
+	if(inst)
+		while(!inst->atEnd() && inst->address() <= addr) {
+			if(!inst->isPseudo() && inst->address() == addr)
+				return inst;
+			inst = inst->next();
+		}
+	return 0;
+}
+
+
+/**
+ */
+CodeItem::~CodeItem(void) {
+	while(!insts.isEmpty()) {
+		Inst *inst = (Inst *)insts.first();
+		inst->remove();
+		delete inst;
+	}
 }
 
 } // otawa

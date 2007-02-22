@@ -20,6 +20,35 @@ namespace otawa {
  * Base class of the components of a program file segment.
  */
 
+
+/**
+ * Build a blank progam item.
+ * @param address	Program item address.
+ * @param size		Program item size.
+ */
+ProgItem::ProgItem(address_t address, size_t size)
+:	_kind(blank),
+	_address(address),
+	_size(size)
+{
+	assert(size);
+}
+
+
+/**
+ * Build a program item.
+ * @param kind		Kind of program item.
+ * @param address	Program item address.
+ * @param size		Program item size.
+ */
+ProgItem::ProgItem(kind_t kind, address_t address, size_t size)
+:	_kind(kind),
+	_address(address),
+	_size(size)
+{
+	assert(size);
+}
+
 /**
  * @fn ProgItem::~ProgItem(void);
  * Protected destructor for avoiding implementation unexpected deletion.
@@ -28,14 +57,7 @@ ProgItem::~ProgItem(void) {
 }
  
 /**
- * @fn CString ProgItem::name(void);
- * Get the name of the program item if some is defined. It may be the name
- * of a function for a piece of code or the name of a data.
- * @return Name ofthis item or an empty string else.
- */
-
-/**
- * @fn address_t ProgItem::address(void);
+ * @fn address_t ProgItem::address(void) const;
  * Get the address of the item if some has been assigned.
  * @return Address of the item or address 0 if none is assigned.
  * @note In workstation systems, it is commonly accepted that the address
@@ -44,27 +66,27 @@ ProgItem::~ProgItem(void) {
  */
  
  /**
-  * @fn size_t ProgItem::size(void);
+  * @fn size_t ProgItem::size(void) const;
   * Get the size of the item in bytes.
   * @return	Size of the item.
   */
 
 /**
- *	@fn Code *ProgItem::toCode(void);
+ * @fn CodeItem *ProgItem::toCode(void);
  *	Get the code program item if it is, null else.
  *	@return Code program item or null.
  */
-CodeItem *ProgItem::toCode(void) {
-	return 0;
-}
 
 /**
- *	@fn Data *ProgItem::toData(void);
+ * @fn DataItem *ProgItem::toData(void);
  *	Get the data program item if it is, null else.
  *	@return Data program item or null.
  */
-Data *ProgItem::toData(void) {
-	return 0;
-}
+
+/**
+ * @fn bool ProgItem::isBlank(void);
+ * Test if the code item is blank.
+ * @return True if it is blank, false else.
+ */
 
 } // otawa
