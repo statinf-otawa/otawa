@@ -36,7 +36,7 @@ typedef enum ast_kind_t {
 } ast_kind_t;
 
 // AST Class
-class AST: public elm::Lock, public ProgObject {
+class AST: public elm::Lock, public PropList {
 	friend class FunAST;
 protected:
 	virtual ~AST(void) { };
