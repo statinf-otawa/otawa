@@ -29,14 +29,13 @@ CodeCursor::CodeCursor(Cursor *back, CodeItem *code): Cursor(back), _code(code) 
 // Cursor overload
 void CodeCursor::path(Output& out) {
 	back()->path(out);
-	out << '/' << _code->name();
+	out << '/' << _code->address();
 }
 
 
 // Cursor overload
 void CodeCursor::info(Output& out) {
 	out << "[Code]\n";
-	out << "name=" << _code->name() << '\n';
 	out << "address=" << _code->address() << '\n';
 	out << "size=" << (int)_code->size() << '\n';
 }
