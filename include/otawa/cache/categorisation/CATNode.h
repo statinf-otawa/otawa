@@ -18,7 +18,7 @@ class LBlockSet;
 class LBlock;
 
 // CCGNode class
-class CATNode: public elm::inhstruct::DLNode, public ProgObject {
+class CATNode: public elm::inhstruct::DLNode, public PropList {
 	
 	BasicBlock *headerlblock;
 	//BasicBlock *headerevolution;
