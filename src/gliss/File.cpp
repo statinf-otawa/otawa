@@ -60,6 +60,9 @@ File::File(String _path, int argc, char **argv, char **envp, bool no_sys)
     _state = iss_init(mem_list, loader_list, (no_sys ? NULL : system_list), NULL, NULL);
     if(!_state)
     	throw LoadException("cannot load \"%s\"", &_path);
+
+	// Record symbols
+    initSyms();
     
     // Initialize the text segments
     gel_file_t *file = loader_file(_state->M);
@@ -76,7 +79,6 @@ File::File(String _path, int argc, char **argv, char **envp, bool no_sys)
     		addSegment(seg);
     	}
     }
-    initSyms();
 }
 
 

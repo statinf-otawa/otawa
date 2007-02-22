@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-07, IRIT UPS.
  *
  *	gliss/CodeSegment.cpp -- gliss::CodeSegment class implementation.
  */
@@ -9,9 +9,6 @@
 #include <otawa/gliss.h>
 #include <otawa/gliss/Symbol.h>
 #include <otawa/gliss/MemInst.h>
-
-#define MAP_BITS	6
-#define MAP_MASK	((1 << MAP_BITS) - 1)
 
 using namespace elm;
 
@@ -37,64 +34,28 @@ CodeSegment::CodeSegment(
 	address_t address,
 	size_t size)
 :
+	Segment(name, address, size, Segment::EXECUTABLE),
 	_file(file),
-	_name(name),
-	code(memory, address, size),
-	built(false),
-	map(0)
+	mem(memory)
 {
+	inhstruct::DLList insts;
+	buildInsts(insts);
+	putItem(new CodeItem(address, size, insts));
+	buildLabs();
 }
 
-
-/**
- */
-CodeSegment::~CodeSegment(void) {
-	if(map)
-		delete [] map;
-}
-
-
-// Overloaded
-CString CodeSegment::name(void) {
-	return _name.toCString();
-}
-
-// Overloaded
-address_t CodeSegment::address(void) {
-	return code.addr;
-}
-
-// Overloaded
-size_t CodeSegment::size(void) {
-	return code._size;
-}
-
-// Overloaded
-Collection<ProgItem *>& CodeSegment::items(void) {
-	if(!built)
-		build();
-	return _items;
-}
-
-// Overloaded
-int CodeSegment::flags(void) {
-	return EXECUTABLE;
-}
 
 /**
  * Build the code and the instructions in the current segment.
+ * @param insts	Instruction list to fill.
  */
-void CodeSegment::build(void) {
+void CodeSegment::buildInsts(inhstruct::DLList& insts) {
 	code_t buffer[20];
 	instruction_t *inst;
 	
-	// Link the code
-	built = true;
-	_items.add(&code);
-	
 	// Build the instructions
-	for(offset_t off = 0; off < code._size; off += 4) {
-		address_t addr = code.addr + off;
+	for(offset_t off = 0; off < size(); off += 4) {
+		address_t addr = address() + off;
 		
 		// Get the instruction
 		inst = 0;
@@ -131,10 +92,18 @@ void CodeSegment::build(void) {
 		}
 				
 		// Cleanup
-		code._insts.addLast(result);
+		insts.addLast(result);
 		iss_free(inst);
 	}
-		
+}
+
+
+/**
+ * Build the labels.
+ * 
+ */
+void CodeSegment::buildLabs(void) {
+
 	// Add symbols
 	address_t lbound = address(), ubound = lbound + size();
 	for(File::SymIter sym(&_file); sym; sym++) {
@@ -142,6 +111,7 @@ void CodeSegment::build(void) {
 		if(addr >= lbound && addr < ubound) {
 			Inst *inst = (Inst *)findByAddress(addr);
 			if(inst) {
+				//cerr << "==> " << sym->address() << " = " << inst->address() << io::endl; 
 				//Identifier *id;
 				Symbol::ID(inst) = sym;
 				switch(sym->kind()) {
@@ -152,152 +122,11 @@ void CodeSegment::build(void) {
 					break;
 				}
 			}
+			/*else
+				cerr << "WARNING: no matching instruction for label "
+					 << sym->name() << io::endl;*/
 		} 
 	}
-}
-
-
-/**
- * Find an instructions thanks to its address.
- * @param addr	Address of the instruction to find.
- * @return			Found instruction or null if not found.
- */
-otawa::Inst *CodeSegment::findByAddress(address_t addr) {
-
-	// Already built ?
-	if(!built)
-		build();
-	
-	// In the segment ?
-	if(addr < code.address() || addr >= code.address() + code.size())
-		return 0;
-	
-	// If required, build the map
-	if(!map)
-		buildMap();
-	
-	// Look in the instruction
-	//int cnt = 0;
-	for(otawa::Inst *inst = map[index(addr)];
-	!inst->atEnd(); inst = inst->next() /*, cnt++*/)
-		if(!inst->isPseudo() && inst->address() == addr) {
-			//cout << "==> " << cnt << io::endl;
-			return inst;
-		}
-	//cout << "==> NOT FOUND " << cnt << io::endl;		
-	return 0;
-}
-
-
-/**
- * @class CodeSegment::Code
- * As, in this loader, there is no function identification, the entire segment is viewed as a monolithic piece of code
- * and only one code representation is required and embeded in the segment object.
- */
-
-// Overloaded
-CString CodeSegment::Code::name(void) {
-	return "";
-}
-
-// Overloaded
-address_t CodeSegment::Code::address(void) {
-	return addr;
-}
-
-// Overloaded
-size_t CodeSegment::Code::size(void) {
-	return _size;
-}
-
-
-/**
- * Get first instruction of this code item.
- * @return First instruction.
- */
-Inst *CodeSegment::Code::first(void) const {
-	return (Inst *)_insts.first();
-}
-
-
-/**
- * Get the last instruction of this code item.
- * @return Last instruction.
- */
-Inst *CodeSegment::Code::last(void) const {
-	return (Inst *)_insts.last();
-}
-
-
-/**
- * Build a new code item.
- * @param memory	GLISS memory structure.
- * @param address	Segment address.
- * @param size	Segment size.
- */
-CodeSegment::Code::Code(memory_t *memory, address_t address, size_t size)
-: mem(memory), addr(address), _size(size) {
-}
-
-
-/**
- * Free all instructions.
- */
-CodeSegment::Code::~Code(void) {
-	while(!_insts.isEmpty()) {
-		Inst *inst = (Inst *)_insts.first();
-		_insts.removeFirst();
-		delete inst;
-	}
-}
-
-// Internal class
-class InstIter: public IteratorInst<otawa::Inst *> {
-	inhstruct::DLList& list;
-	Inst *cur;
-public:
-	inline InstIter(inhstruct::DLList& _list): list(_list),
-		cur((Inst *)_list.first()) { };
-	virtual bool ended(void) const { return cur->atEnd(); };
-	virtual Inst *item(void) const { return cur; };
-	virtual void next(void) { cur = (Inst *)cur->next(); };
-};
-
-// Code overload
-IteratorInst<otawa::Inst *> *CodeSegment::Code::insts(void) {
-	return new InstIter(_insts);
-}
-
-
-/**
- * Compute the index of the address in the map.
- * @param addr	Address of the required instruction.
- * @return		Index in the map.
- */
-inline int CodeSegment::index(address_t addr) {
-	return (addr - code.address()) >> MAP_BITS;
-}
-
-
-
-
-/**
- * Build the map of instructions to improve access time.
- */
-void CodeSegment::buildMap(void) {
-	
-	// Already done, let's go
-	if(map)
-		return;
-	
-	// Allocate the map
-	map = new otawa::Inst *[(code.size() >> MAP_BITS) + 1];
-	assert(map);
-	
-	// Fill the map
-	for(otawa::Inst *inst = code.first(); !inst->atEnd(); inst = inst->next())
-		if(!inst->isPseudo() && !((inst->address() - code.address()) & MAP_MASK))
-			map[index(inst->address())] = inst;
 }
 
 } } // otawa::gliss
