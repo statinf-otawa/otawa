@@ -36,7 +36,7 @@ namespace sim {
 
 
 // Process class
-class Process: public ProgObject {
+class Process: public PropList {
 	Vector<File *> files;
 	File *prog;
 
