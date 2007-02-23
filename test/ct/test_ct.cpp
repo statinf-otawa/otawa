@@ -60,14 +60,14 @@ static void displayContextTree(ContextTree *tree, int space = 0) {
 
 int main(int argc, char **argv) {
 
-	Manager manager;
+	//Manager manager;
 	PropList props;
 	NO_SYSTEM(props) = true;
 	String fun = "main";
 	if(argc > 2)
 		fun = argv[2];
 	try {
-		FrameWork *fw = manager.load(argv[1], props);
+		FrameWork *fw = MANAGER.load(argv[1], props);
 		
 		// Find searched CFG
 		cout << "Looking for CFG " << fun << '\n';

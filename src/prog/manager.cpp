@@ -453,4 +453,10 @@ Identifier<elm::system::Path> CACHE_CONFIG_PATH("cache_config_path", "", otawa::
  */
 Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("cache_config_element", 0, otawa::NS);
 
+
+/**
+ * Default manager. Avoid to declare one in the main.
+ */
+Manager MANAGER;  
+
 }	// otawa
