@@ -10,4 +10,10 @@
 #include <otawa/manager.h>
 #include <otawa/prog/FrameWork.h>
 
+namespace otawa {
+	
+extern Manager MANAGER;  
+	
+} // otawa
+
 #endif	// OTAWA_OTAWA_H
