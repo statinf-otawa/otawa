@@ -7,7 +7,7 @@
 
 #include <otawa/sim/State.h>
 #include <FullSimulationDriver.h>
-#include <otawa/prog/Instruction.h>
+#include <otawa/prog/Inst.h>
 #include <otawa/gensim/debug.h>
 
 using namespace otawa;
