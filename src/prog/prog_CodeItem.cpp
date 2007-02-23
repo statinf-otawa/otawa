@@ -7,7 +7,7 @@
 
 #include <otawa/prog/CodeItem.h>
 #include <otawa/prog/Symbol.h>
-#include <otawa/prog/Instruction.h>
+#include <otawa/prog/Inst.h>
 
 namespace otawa {
 
