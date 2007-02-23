@@ -3,6 +3,7 @@ includeotawaprog_HEADERS = \
 	CodeItem.h \
 	File.h \
 	FrameWork.h \
+	Inst.h \
 	Instruction.h \
 	Loader.h \
 	Manager.h \
