@@ -39,6 +39,7 @@ public:
 	Property *getProp(const AbstractIdentifier *id) const;
 	void setProp(Property *prop);
 	void removeProp(const AbstractIdentifier *id);
+	inline void removeProp(const AbstractIdentifier& id) { removeProp(&id); }
 	inline void setProp(const AbstractIdentifier *id) { setProp(new Property(id)); };
 	void addProp(Property *prop);
 	void removeAllProp(const AbstractIdentifier *id);
