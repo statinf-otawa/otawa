@@ -1,8 +1,8 @@
 /*
  *	$Id$
- *	Copyright (c) 2006, IRIT UPS.
+ *	Copyright (c) 2006-07, IRIT UPS.
  *
- *	instruction.h -- instruction classes.
+ *	Deprecated link to <otawa/prog/Inst.h>
  */
 
-#include <otawa/prog/Instruction.h>
+#include <otawa/prog/Inst.h>
