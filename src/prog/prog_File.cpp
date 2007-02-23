@@ -121,6 +121,19 @@ Symbol *File::findSymbol(String name) {
  * @param iter	Iterator to copy.
  */
 
+
+/**
+ * Find an instruction by its address.
+ * @param address	Instruction address.
+ * @return			Found instruction or null.
+ */
+Inst *File::findByAddress(address_t address) {
+	for(SegIter seg(this); seg; seg++) {
+		Inst *inst = seg->findByAddress(address);
+		if(inst)
+			return inst;
+	}
+	return 0;
+}
+
 } // otawa
-
-

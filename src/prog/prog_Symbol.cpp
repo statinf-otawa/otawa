@@ -1,11 +1,12 @@
 /*
  *	$Id$
- *	Copyright (c) 2003-06, IRIT UPS.
+ *	Copyright (c) 2003-07, IRIT UPS.
  *
- *	prog/prog_Symbol.h -- Symbol class implementation.
+ *	Symbol class implementation
  */
 
 #include <otawa/prog/Symbol.h>
+#include <otawa/prog/File.h>
 
 namespace otawa {
 
@@ -44,8 +45,25 @@ namespace otawa {
 
 
 /**
+ * Build a symbol.
+ * @param file		Owner file.
+ * @param name		Symbol name.
+ * @param kind		Symbol kind.
+ * @param address	Address in the memory space.
+ * @param size		Object size (null for code).
  */
-Symbol::~Symbol(void) {
+Symbol::Symbol(
+	File& file,
+	String name,
+	kind_t kind,
+	address_t address,
+	size_t size)
+:	_file(file),
+	_name(name),
+	_kind(kind),
+	_address(address),
+	_size(size)
+{
 }
 
 
@@ -78,10 +96,18 @@ Symbol::~Symbol(void) {
 
 
 /**
- * @fn Inst *Symbol::findInst(void);
- * If the symbol points to code memory, return the matching instruction.
- * @return	Pointed instruction.
+ * @fn File& Symbol::file(void);
+ * Get the owner file of the given symbol.
+ * @return	Owern file.
  */
+
+/**
+ * If the symbol points to code memory, return the matching instruction.
+ * @return	Pointed instruction if any, null else.
+ */
+Inst *Symbol::findInst(void) const {
+	return _file.findByAddress(_address);
+}
 
 
 // GenericIdentifier<Symbol_t *>::print Specialization
