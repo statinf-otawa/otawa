@@ -10,7 +10,7 @@
 #include <elm/Iterator.h>
 #include <elm/inhstruct/DLList.h>
 #include <otawa/prog/ProgItem.h>
-#include <otawa/prog/Instruction.h>
+#include <otawa/prog/Inst.h>
 
 namespace otawa {
 
