@@ -9,7 +9,6 @@
 
 #include <elm/datastruct/HashTable.h>
 #include <otawa/manager.h>
-#include <otawa/gliss/Symbol.h>
 #define ISS_DISASM
 #include <iss_include.h>
 

@@ -15,7 +15,6 @@ ppc_la_SOURCES = \
 	CodeSegment.cpp \
 	Inst.cpp \
 	ControlInst.cpp \
-	Symbol.cpp \
 	MemInst.cpp
 
 install-data-hook:

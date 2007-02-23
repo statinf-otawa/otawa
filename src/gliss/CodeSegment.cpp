@@ -7,7 +7,6 @@
 
 #include <elm/debug.h>
 #include <otawa/gliss.h>
-#include <otawa/gliss/Symbol.h>
 #include <otawa/gliss/MemInst.h>
 
 using namespace elm;

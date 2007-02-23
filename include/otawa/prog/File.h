@@ -41,6 +41,7 @@ protected:
 
 public:
 	inline CString name(void) { return _name.toCString(); }
+	Inst *findByAddress(address_t address);
 	
 	// Segment management
 	class SegIter: public Vector<Segment *>::Iterator {
