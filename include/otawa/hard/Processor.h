@@ -11,7 +11,7 @@
 #include <elm/serial2/macros.h>
 #include <elm/serial2/collections.h>
 #include <elm/genstruct/Table.h>
-#include <otawa/prog/Instruction.h>
+#include <otawa/prog/Inst.h>
 #include <elm/util/strong_type.h>
 
 namespace otawa { namespace hard {
