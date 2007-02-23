@@ -1,8 +1,8 @@
 /*
  *	$Id$
- *	Copyright (c) 2003-06, IRIT UPS.
+ *	Copyright (c) 2003-07, IRIT UPS.
  *
- *	otawa/prog/Symbol.h -- Symbol class interface.
+ *	Symbol class interface
  */
 #ifndef OTAWA_PROG_SYMBOL_H
 #define OTAWA_PROG_SYMBOL_H
@@ -12,25 +12,36 @@
 
 namespace otawa {
 
-// Symbol kind
+// External classes
+class File;
+class Inst;
 	
 // Symbol class
-class Inst;
 class Symbol {
 public:
+
 	typedef enum kind_t {
 		NONE,
 		FUNCTION,
 		LABEL
 	} kind_t;
+	
 	static Identifier<Symbol *> ID;
 
-	virtual ~Symbol(void);
-	virtual kind_t kind(void) = 0;
-	virtual elm::String name(void) = 0;
-	virtual address_t address(void) = 0;
-	virtual size_t size(void) = 0;
-	virtual Inst *findInst(void) = 0;
+	Symbol(File& file, String name, kind_t kind, address_t address, size_t size = 0);
+	inline File& file(void) const { return _file; }
+	inline kind_t kind(void) const { return _kind; }
+	inline const String& name(void) const { return _name; }
+	inline address_t address(void) const { return _address; }
+	inline size_t size(void) const { return _size; }
+	Inst *findInst(void) const;
+
+private:
+	File& _file;
+	String _name;
+	kind_t _kind;
+	address_t _address;	
+	size_t _size;
 };
 
 // GenericIdentifier<Symbol_t *>::print Specialization
