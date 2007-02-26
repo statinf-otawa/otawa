@@ -19,30 +19,18 @@ class State;
 // CacheDriver class
 class CacheDriver {
 public :
-	typedef enum_t {
+	typedef enum {
 		MISS = 0,
 		HIT = 1
 	} result_t;
 	
-	typedef enum_t {
+	typedef enum {
 		READ,
 		WRITE
 	} action_t;
 	
 	virtual ~CacheDriver(void); 
-	virtual result_t // AlwaysHitDriver class
-class AlwaysHitDriver: public CacheDriver {
-public:
-	virtual result_t access(address_t address, size_t size, action_t action);
-};
-
-// AlwaysMissDriver class
-class AlwaysMissDriver: public CacheDriver {
-public:
-	virtual result_t access(address_t address, size_t size, action_t action);
-};
-
-	access(address_t address, size_t size, action_t action) = 0;
+	virtual result_t access(address_t address, size_t size, action_t action) = 0;
 	
 	static CacheDriver& ALWAYS_HIT;
 	static CacheDriver& ALWAYS_MISS;

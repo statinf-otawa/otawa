@@ -109,6 +109,7 @@ libotawa_la_SOURCES = \
 	util_GenGraph.cpp \
 	util_BitSet.cpp \
 	hard_Register.cpp \
+	sim_CacheDriver.cpp \
 	sim_Simulator.cpp \
 	sim_State.cpp \
 	sim_TrivialSimulator.cpp \
