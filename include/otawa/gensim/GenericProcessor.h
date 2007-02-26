@@ -13,6 +13,7 @@
 #include <otawa/gensim/Fetch.h>
 #include <otawa/gensim/Execute.h>
 #include <otawa/gensim/SimulatedInstruction.h>
+#include <otawa/gensim/Cache.h>
 
 namespace otawa { namespace gensim {
 

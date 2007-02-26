@@ -30,6 +30,12 @@ class FetchStage : public PipelineStage {
 		sc_out<SimulatedInstruction *> * out_fetched_instruction;
 		sc_out<int> out_number_of_fetched_instructions;
 		sc_in<int>in_number_of_accepted_instructions;
+		// interface to the instructiono cache
+		sc_out<address_t> out_address;
+		sc_out<int> out_requested_bytes;
+		sc_in<bool> in_hit;
+		sc_in<int> in_delivered_bytes;
+		
 	
 	private:	
 		// parameters

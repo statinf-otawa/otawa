@@ -8,4 +8,5 @@ includeotawagensim_HEADERS = \
 	GenericSimulator.h \
 	InstructionQueue.h \
 	PipelineStage.h \
-	SimulatedInstruction.h 
+	SimulatedInstruction.h \
+	Cache.h
