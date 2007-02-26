@@ -6,6 +6,7 @@ libogensim_la_LDFLAGS=
 libogensim_la_LIBADD= @OTAWA_LIBS@ @SYSTEMC_LIBS@
 
 libogensim_la_SOURCES = \
+	Cache.cpp \
 	Execute.cpp \
 	Fetch.cpp \
 	GenericProcessor.cpp \
