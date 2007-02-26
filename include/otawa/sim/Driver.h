@@ -25,6 +25,11 @@ public :
 	virtual ~Driver(void); 
 	virtual Inst *nextInstruction(State& state, Inst *inst) = 0;
 	virtual void terminateInstruction(State& state, Inst *inst) = 0;
+	virtual void redirect(State &state, Inst * branch, bool direction) {
+	};
+	virtual bool PredictBranch(State &state, Inst * branch, bool pred) {
+		return true;  // branch correctly predicted
+	};
 };
 
 } } // otawa::sim
