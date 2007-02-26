@@ -81,6 +81,22 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				nb->write(0);
 				fetch_stage->in_number_of_accepted_instructions(*nb);
 				output_queue->out_number_of_accepted_ins(*nb);
+				Cache * icache = new Cache("instruction cache");
+				icache->in_clock(clock);
+				sc_signal<address_t> * addr = new sc_signal<address_t>;
+				fetch_stage->out_address(*addr);
+				icache->in_address(*addr);
+				sc_signal<int> * req_bytes  = new sc_signal<int>;
+				fetch_stage->out_requested_bytes(*req_bytes);
+				icache->in_requested_bytes(*req_bytes);
+				req_bytes->write(0);
+				sc_signal<bool> *hit = new sc_signal<bool>;
+				fetch_stage->in_hit(*hit);
+				icache->out_hit(*hit);
+				sc_signal<int> * deliv_bytes  = new sc_signal<int>;
+				fetch_stage->in_delivered_bytes(*deliv_bytes);
+				icache->out_delivered_bytes(*deliv_bytes);
+				deliv_bytes->write(0);
 			} break;
 				
 			case LAZYIQIQ: {
