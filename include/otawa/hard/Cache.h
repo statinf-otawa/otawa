@@ -69,6 +69,8 @@ public:
 	inline int wayCount(void) const;
 	inline int lineCount(void) const;
 	inline int setCount(void) const;
+	inline int blockCount(void) const
+		{ return 1 << (_info.line_bits + _info.set_bits); }
 	inline replace_policy_t replacementPolicy(void) const;
 	inline write_policy_t writePolicy(void) const;
 	inline bool doesWriteAllocate(void) const;
