@@ -31,11 +31,6 @@ class CodeSegment;
 class DataSegment;
 class File;
 
-// DataSegment class
-class DataSegment: public ::otawa::Segment {
-};
-
-
 // otawa::gliss::Loader class
 class Loader: public otawa::Loader {
 public:
