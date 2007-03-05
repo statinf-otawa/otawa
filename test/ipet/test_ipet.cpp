@@ -81,14 +81,16 @@ int main(int argc, char **argv) {
 		tbt.process(fw, props);
 		BBTimeSimulator bbts(props);
 		bbts.process(fw);*/
-		/*TrivialDataCacheManager dcache;
-		dcache.process(fw, props);*/
+		
+		TrivialDataCacheManager dcache;
+		dcache.process(fw, props);
+		
 		WCETComputation wcomp;
 		wcomp.process(fw, props);
 		
 		// Display the result
 		cfg = ENTRY_CFG(fw);
-		ilp::System *sys = SYSTEM(fw);
+		ilp::System *sys = getSystem(fw, cfg);
 		sys->dump();
 		cout << sys->countVars() << " variables and "
 			 << sys->countConstraints() << " constraints.\n";
