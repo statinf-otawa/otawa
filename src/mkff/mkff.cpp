@@ -184,7 +184,7 @@ void Command::perform(String name) {
 		checksum::Fletcher sum;
 		io::InFileStream stream(file->name());
 		sum.put(stream);
-		system::Path path = file->name();
+		elm::system::Path path = file->name();
 		cout << "checksum \"" << path.namePart()
 			 << "\" 0x" << io::hex(sum.sum()) << ";\n";
 	}
