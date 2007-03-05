@@ -22,6 +22,14 @@ typedef struct call_t {
 
 
 /**
+ * This property tells the VirtualCFG to not inline a call to a function.
+ *
+ * @par Hooks
+ * @li @ref CFG
+ */
+GenericIdentifier<bool> DONT_INLINE("otawa.dont_inline", false, OTAWA_NS);
+
+/**
  * A property with this identifier is hooked at the edge performing a virtual
  * call when inling is used. The associated value is the CFG of the called
  * function.
@@ -92,13 +100,16 @@ BasicBlock *exit) {
 			BasicBlock *called_exit = 0;
 			if(isInlined())
 				for(BasicBlock::OutIterator edge(bb); edge; edge++)
-					if(edge->kind() == Edge::CALL)
+					if(edge->kind() == Edge::CALL) {
 						called = edge->calledCFG();
+						if (DONT_INLINE(called))
+						        called = NULL;
+                                        }
 
 			// Look edges
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL) {
-					if(!isInlined())
+					if(!isInlined() || DONT_INLINE(edge->calledCFG()))
 						new Edge(src, edge->target(), Edge::CALL);
 				}
 				else if(edge->target()) { 
