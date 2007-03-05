@@ -24,7 +24,7 @@ namespace otawa {
 
 void CCGObjectFunction::processFrameWork(FrameWork *fw) {
 	CFG* entry_cfg = ENTRY_CFG(fw);
-	System *system = entry_cfg->get<System *>(SYSTEM, 0);
+	System *system = getSystem(fw, entry_cfg);
 	assert (system);
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cach = fw->platform()->cache().instCache();
