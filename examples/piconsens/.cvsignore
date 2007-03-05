@@ -4,3 +4,4 @@ Makefile.in
 Makefile
 log.txt
 piconsens
+.libs
