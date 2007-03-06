@@ -48,3 +48,4 @@ ltmain.sh
 .tm_project2.cache
 TODO.tasks
 OTAWA.anjuta
+*.lineno
