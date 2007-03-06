@@ -27,7 +27,7 @@ typedef struct call_t {
  * @par Hooks
  * @li @ref CFG
  */
-GenericIdentifier<bool> DONT_INLINE("otawa.dont_inline", false, OTAWA_NS);
+Identifier<bool> DONT_INLINE("otawa.dont_inline", false, otawa::NS);
 
 /**
  * A property with this identifier is hooked at the edge performing a virtual
