@@ -64,6 +64,7 @@ public:
 
 
 // ContextTreeBuilder class
+
 class ContextTreeBuilder: public Processor {
 public:
 	ContextTreeBuilder(void);
@@ -75,6 +76,8 @@ extern Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE;
 
 // Identifiers
 extern Identifier<ContextTree *> CONTEXT_TREE;
+extern Identifier<ContextTree *> OWNER_CONTEXT_TREE;
+
 
 
 // ContextTree inlines
