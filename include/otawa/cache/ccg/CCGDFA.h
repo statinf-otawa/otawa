@@ -7,7 +7,7 @@
 #ifndef OTAWA_TEST_CCG_CCGDFA_H
 #define OTAWA_TEST_CCG_CCGDFA_H
 
-#include <otawa/util/BitSet.h>
+#include <otawa/dfa/BitSet.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ilp.h>
@@ -22,10 +22,10 @@ namespace otawa {
 class BasicBlock;
 class LBlockSet;
 
-class CCGDomain: public BitSet {
+class CCGDomain: public dfa::BitSet {
 
 public:
-	inline CCGDomain(int size) : BitSet(size) {
+	inline CCGDomain(int size) : dfa::BitSet(size) {
 	}
 	void reset(void) {
 		empty();
@@ -37,7 +37,7 @@ public:
 		mask(*d);
 	}
 	bool equals(CCGDomain *d) {
-		return(BitSet::equals(*d));
+		return(dfa::BitSet::equals(*d));
 	}
 };
 
