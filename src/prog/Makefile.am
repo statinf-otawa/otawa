@@ -80,7 +80,6 @@ libotawa_la_SOURCES = \
 	util_fft_parser.yy \
 	util_fft_lexer.ll \
 	util_CFGNormalizer.cpp \
-#	util_HalfAbsInt.cpp \
 	hard_Processor.cpp \
 	hardware_Cache.cpp \
 	hardware_CacheConfiguration.cpp \

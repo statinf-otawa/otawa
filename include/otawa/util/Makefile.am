@@ -11,6 +11,5 @@ includeotawautil_HEADERS = \
 	GenGraph.h \
 	FlowFactLoader.h \
 	LBlockBuilder.h \
-#	HalfAbsInt.h \
 	LoopInfoBuilder.h \
 	TrivialLBlockTime.h
