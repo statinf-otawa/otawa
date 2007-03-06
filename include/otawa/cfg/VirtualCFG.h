@@ -26,7 +26,7 @@ public:
 // Identifiers
 extern Identifier<CFG *> CALLED_CFG;
 extern Identifier<bool> RECURSIVE_LOOP;
-
+extern Identifier<bool> DONT_INLINE;
 
 // Inlines
 inline CFG *VirtualCFG::cfg(void) const {
