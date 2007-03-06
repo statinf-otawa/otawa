@@ -126,6 +126,8 @@ static Displayer *displayer = &simple_displayer;
 
 // Options
 static Command command;
+static option::BoolOption remove_eabi(command, 'r', "remove",
+	"Remove __eabi function call, if available.", false);
 static option::BoolOption all_functions(command, 'a', "all",
 	"Dump all functions.", false);
 static option::BoolOption inline_calls(command, 'i', "inline",
@@ -180,6 +182,19 @@ static DotOption dot(command);
 void Command::dump(CFG *cfg) {
 	CFG *current_inline = 0;
 	
+	   // Removing __eabi call if available
+	   if (remove_eabi)
+       		for(CFG::BBIterator bb(cfg); bb; bb++)
+            	for(BasicBlock::OutIterator edge(bb); edge; edge++)
+                	if(edge->kind() == Edge::CALL
+                            && edge->target()
+                            && edge->calledCFG()->label() == "__eabi") 
+                    {
+                    	delete(*edge);
+                    	break;
+                    }
+
+
 	// Get the virtual CFG
 	VirtualCFG vcfg(cfg, inline_calls);
 	
@@ -272,7 +287,6 @@ void Command::process (String arg) {
 		PropList props;
 //		LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 		NO_SYSTEM(props) = true;
-		
 		fw = manager.load(arg.toCString(), props);
 		info = fw->getCFGInfo();
 	}
