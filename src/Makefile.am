@@ -6,6 +6,10 @@ if HAS_GLISS_PPC
 SUBDIRS += gliss
 endif
 
+if HAS_GLISS_ARM
+SUBDIRS += arm
+endif
+
 SUBDIRS += \
 	oshell \
 	dumpcfg \
