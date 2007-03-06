@@ -11,6 +11,10 @@ AS_IF(test "$with_plugin" = "yes", [ HAS_PLUGIN=yes ], [ HAS_PLUGIN=no ])
 AM_CONDITIONAL(HAS_PLUGIN, test "$HAS_PLUGIN" = "yes")
 
 
+# === Loader Selection ====
+AC_ARG_WITH(loader, [  --with-loader={ppc,arm}	Use the given loader],,[with_loader=no])
+
+
 # ==== Building mode ====
 AC_ARG_WITH(mode,
 	[  --with-mode={dev,debug,normal,final}	Activate the given build mode.],,with_mode=dev)
@@ -78,6 +82,11 @@ OTAWA_USE_LIB(ELM,
 # ===== GLISS_PPC check ======
 OTAWA_USE_LIB(GLISS_PPC,
 	OTAWA_CHECK_LIB(GLISS_PPC, emul.h, emul, $PWD/../ppc/lib, $PWD/../ppc/include))
+
+
+# ===== GLISS_ARM check ======
+OTAWA_USE_LIB(GLISS_ARM,
+	OTAWA_CHECK_LIB(GLISS_ARM, emul.h, emul, $PWD/../arm/lib, $PWD/../arm/include))
 
 
 # ===== LP_SOLVE check =====
@@ -152,25 +161,51 @@ AC_SUBST(ILP_LIBS)
 AC_SUBST(ILP_DEPS)
 
 
-# ===== Default Loader =====
-AS_IF(test "$HAS_GLISS_PPC" = yes, [
-		HAS_LOADER="yes"
-		LOADER_DEPS="\$(top_builddir)/src/gliss/ppc.la"
-		LOADER_LIBS="-uppc_plugin $LOADER_DEPS"
-	],
-	AS_IF(test "$HAS_PLUGIN" = "yes", [
-			HAS_LOADER="no"
-			LOADER_LIBS=""
-			LOADER_DEPS=""
-		], [ AC_MSG_FAILURE([no loader selected !]) ]))
+# ===== Select Loader =====
 AS_IF(test "$HAS_PLUGIN" = "yes", [
-	LOADER_DEPS=""
+	HAS_LOADER="no"
 	LOADER_LIBS=""
+	LOADER_DEPS=""
+],
+[
+	AC_MSG_CHECKING([for a loader])
+	AS_IF(test "$with_loader" = "no", [
+		AS_IF(test "$HAS_GLISS_PPC" = "yes", [
+			HAS_LOADER="yes"
+			LOADER_DEPS="\$(top_builddir)/src/gliss/ppc.la"
+			LOADER_LIBS="-uppc_plugin $LOADER_DEPS"
+		],
+		AS_IF(test "$HAS_GLISS_ARM" = "yes", [
+			HAS_LOADER="yes"
+			LOADER_DEPS="\$(top_builddir)/src/arm/arm.la"
+			LOADER_LIBS="-uarm_plugin $LOADER_DEPS"
+		],
+		[
+			AC_MSG_FAILURE([no loader selected !])
+		]))
+	],
+	[
+		AS_IF(test "$with_loader" = "ppc",
+		[
+			HAS_LOADER="yes"
+			LOADER_DEPS="\$(top_builddir)/src/gliss/ppc.la"
+			LOADER_LIBS="-uppc_plugin $LOADER_DEPS"
+		],
+		AS_IF(test "$with_loader" = "arm",
+		[
+			HAS_LOADER="yes"
+			LOADER_DEPS="\$(top_builddir)/src/arm/arm.la"
+			LOADER_LIBS="-uarm_plugin $LOADER_DEPS"
+		],
+		[
+			AC_MSG_FAILURE([$with_loader loader not available !])
+		]))
+	])
+	AS_IF(test "$HAS_LOADER" = "yes", AC_MSG_RESULT([$LOADER_LIBS]))
 ])
 AM_CONDITIONAL(HAS_LOADER, test "$HAS_LOADER" = "yes")
 AC_SUBST(LOADER_LIBS)
 AC_SUBST(LOADER_DEPS)
-echo "LOADER_LIBS=$LOADER_LIBS"
 
 
 # ===== for otawa-config =====
@@ -194,6 +229,7 @@ AC_OUTPUT([
 	src/oipet/Makefile
 	src/odisplay/Makefile
 	src/ogensim/Makefile
+	src/arm/Makefile
 	examples/Makefile
 	bin/Makefile
 	bin/otawa-config
