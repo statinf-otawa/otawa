@@ -32,6 +32,7 @@ public:
 	inline bool includes(const BitSet& set) const;
 	inline bool includesStrictly(const BitSet& set) const;
 	inline void complement(void);
+	inline int size(void) const;
 	inline void add(const BitSet& set);
 	inline void remove(const BitSet& set);
 	inline void mask(const BitSet& set);
@@ -70,6 +71,22 @@ public:
 	};
 };
 
+inline elm::io::Output& operator<<(elm::io::Output& output, const BitSet& bits) {
+        output << "{";
+        bool first = true;
+        for(int i = 0; i < bits.size(); i++)
+                if(bits.contains(i)) {
+                        if(first)
+                                first = false;
+                        else
+                                output << ", ";
+                        output << i;
+                }
+        output << "}";
+        return output;
+
+}
+
 // BitSet inlines
 inline BitSet::BitSet(const elm::BitVector& ivec): vec(ivec) {
 }
@@ -87,6 +104,11 @@ inline bool BitSet::isEmpty(void) const {
 inline bool BitSet::isFull(void) const {
 	return vec.countBits() == vec.size();
 }
+
+inline int BitSet::size(void) const {
+	return vec.size();
+}
+
 
 inline int BitSet::count(void) const {
 	return vec.countBits();
