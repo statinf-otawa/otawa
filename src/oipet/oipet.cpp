@@ -68,9 +68,9 @@ using namespace elm::option;
  * 
  * @par Generic Options
  * 
- * -I, --inline: consider a program where each function call is inlined
- * (default to true). Remark that this option may improve the WCET accuracy
- * but, in turn, may result in an enlarged computation time.
+ * -I, --do-not-inline: cause to not inline functions for the WCET computation.
+ * Consider that this option may save computation time but, conversely,
+ * may reduce the WCET accuracy.
  * 
  * @par Cache Management Options
  * 
@@ -171,7 +171,7 @@ BoolOption dump_graph(command, 'G', "dump-graph",
 
 // Other options
 BoolOption verbose(command, 'v', "verbose", "verbose mode", false);
-BoolOption inlining(command, 'I', "inline", "inline function calls", true);
+BoolOption not_inlining(command, 'I', "do-not-inline", "do not inline function calls", false);
 
 
 /**
@@ -212,18 +212,21 @@ void Command::compute(String fun) {
 	}
 	//VirtualCFG vcfg(cfg);
 	
-	if(!inlining && icache_option != icache_ccg) {
-		inlining.set(true);
+	if(not_inlining && icache_option == icache_ccg) {
+		not_inlining.set(false);
 		cerr << "WARNING: using CCG without inlining may induce, in some cases, "
 			    "an invalid WCET: inlining is activated.\n";
 	}
 	
 	// Prepare processor configuration
 	PropList props;
-	if(!inlining)
+	if(not_inlining)
 		ENTRY_CFG(props) = cfg;
-	else
+	else {
+		if(verbose)
+			cout << "NOTICE: OIPET: inlining the task !\n";
 		ENTRY_CFG(props) = new VirtualCFG(cfg);
+	}
 	if(dump_constraints || dump_graph)
 		props.set(EXPLICIT, true);
 	if(verbose) {
