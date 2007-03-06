@@ -9,7 +9,7 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/dfa/XIterativeDFA.h>
 #include <otawa/dfa/XCFGVisitor.h>
-#include <otawa/util/BitSet.h>
+#include <otawa/dfa/BitSet.h>
 #include <otawa/util/GenGraph.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/hard/CacheConfiguration.h>
@@ -24,7 +24,7 @@ using namespace otawa::ipet;
 namespace otawa {
 
 // DFA Properties
-static Identifier<BitSet *> IN("ipet.ccg.dfain", 0, otawa::NS);
+static Identifier<dfa::BitSet *> IN("ipet.ccg.dfain", 0, otawa::NS);
 
 
 /**
@@ -109,8 +109,8 @@ void CCGBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
 		for (CFG::BBIterator block(*cfg); block; block++) {
 			dfa::XCFGVisitor<CCGProblem>::key_t pair(*cfg, *block);
-			BitSet *bitset = engine.in(pair);
-			block->addDeletable<BitSet *>(IN, new BitSet(*bitset));
+			dfa::BitSet *bitset = engine.in(pair);
+			block->addDeletable<dfa::BitSet *>(IN, new dfa::BitSet(*bitset));
 		}
 	}
 	
@@ -121,8 +121,8 @@ void CCGBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {
 	for(Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++)
 		if(lbloc->id() != 0 && lbloc->id() != length - 1) {
 			BB = lbloc->bb();
-			BitSet *inid = IN(BB);
-			for(BitSet::Iterator bit(*inid); bit; bit++)
+			dfa::BitSet *inid = IN(BB);
+			for(dfa::BitSet::Iterator bit(*inid); bit; bit++)
 				line = lbset->lblock(*bit);
 				if(cache->block(line->address()) == cache->block(lbloc->address())
 					&& BB != line->bb())
@@ -140,7 +140,7 @@ void CCGBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
 		for (CFG::BBIterator bb(*cfg); bb; bb++) {
 			if ((cfg != ENTRY_CFG(fw)) || (!bb->isEntry() && !bb->isExit())) {
-				BitSet *info = IN(bb);
+				dfa::BitSet *info = IN(bb);
 				assert(info);
 				bool test = false;
 				bool visit;
@@ -182,7 +182,7 @@ void CCGBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {
 	// build edge to LBlock end
 	BasicBlock *exit = ENTRY_CFG(fw)->exit();
 	LBlock *end = lbset->lblock(length-1);
-	BitSet *info = IN(exit);
+	dfa::BitSet *info = IN(exit);
 	for (int i = 0; i< length; i++)
 		if (info->contains(i)) {
 			LBlock *ccgnode1 = lbset->lblock(i);
