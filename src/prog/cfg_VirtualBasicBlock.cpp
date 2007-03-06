@@ -22,6 +22,7 @@ VirtualBasicBlock::VirtualBasicBlock(BasicBlock *bb): _bb(bb) {
 	// Initialization
 	flags = _bb->getFlags() | FLAG_Virtual;
 	_head = _bb->head();
+	addProps(*bb);
 };
 	
 } // otawa
