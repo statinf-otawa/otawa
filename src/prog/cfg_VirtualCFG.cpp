@@ -178,6 +178,7 @@ VirtualCFG::VirtualCFG(CFG *cfg, bool inlined): _cfg(cfg) {
 	flags |= FLAG_Virtual;
 	if(inlined)
 		flags |= FLAG_Inlined;
+	addProps(*cfg);
 }
 
 
