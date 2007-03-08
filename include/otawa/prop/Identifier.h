@@ -51,7 +51,7 @@ public:
 		inline Value& operator+=(const T& value);
 		inline T operator->(void) const; 
 	};
-
+	
 	// Constructors
 	inline Identifier(elm::CString name, NameSpace& ns = ::NS);
 	inline Identifier(elm::CString name, const T& default_value, NameSpace& = ::NS);
@@ -84,7 +84,17 @@ public:
 	virtual void print(elm::io::Output& output, const Property& prop) const;
 	virtual const Type& type(void) const;
 	virtual void scan(PropList& props, VarArg& args) const;	
+
+	// Getter class
+	class Getter: public PropList::Getter<T> {
+	public:
+		inline Getter(const PropList *list, Identifier<T>& id):
+			PropList::Getter<T>(list, id) { }
+		inline Getter(const PropList& list, Identifier<T>& id):
+			PropList::Getter<T>(list, id) { }
+	};
 };
+
 
 // Inlines
 template <class T>
