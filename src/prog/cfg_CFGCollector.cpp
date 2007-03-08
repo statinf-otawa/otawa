@@ -5,6 +5,7 @@
  *	prog/cfg_CollectCFG.h -- implementation of CFGCollector class.
  */
 
+#include <elm/assert.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/CFGBuilder.h>
@@ -13,9 +14,24 @@
 
 namespace otawa {
 
+static Identifier<bool> MARK("otawa.cfg_collector.mark", false);
+
 /**
  * @class CFGCollection <otawa/cfg.h>
  * Contains a collection of CFGs (used with @ref INVOLVED_CFGS property).
+ *
+ * @par Configuration
+ * @li @ref ENTRY_CFG: CFG of the entry of the current task,
+ * @li @ref TASK_ENTRY: name if the entry function of the current task,
+ * @li @ref RECURSIVE: collect CFG recursively.
+ * @li @ref CFGCollector::ADDED_CFG: CFG to add to the collection.
+ * @li @ref CFGCollecyor::ADDED_FUNCTION: function name to add to the collection.
+ * 
+ * @par Provided Features
+ * @ref COLLECTED_CFG_FEATURE
+ * 
+ * @par Required Features
+ * @li @ref CFG_INFO_FEATURE
  */
 
 
@@ -65,21 +81,40 @@ namespace otawa {
  * This processor is used to collect all CFG implied in a computation.
  * It uses the @ref ENTRY_CFG or @ref TASK_ENTRY properties to find
  * the base CFG and explore in depth the CFG along subprograms calls.
- * 
- * @par Configuration
- * @li @ref ENTRY_CFG : CFG of the entry of the current task,
- * @li @ref TASK_ENTRY : name if the entry function of the current task,
- * @li @ref RECURSIVE : collect CFG recursively.
- * 
- * @par Provided Features
- * @ref COLLECTED_CFG_FEATURE
  */
+
+
+/**
+ * Collect the given CFG.
+ * @param cfgs	Current collection.
+ * @param cfg	CFG to collect.
+ */
+void CFGCollector::collect(CFGCollection *cfgs, CFG *cfg) {
+	ASSERT(cfgs);
+	ASSERT(cfg);
+	
+	// Test if it has not been already collected
+	if(MARK(cfg))
+		return;
+	cfgs->cfgs.add(entry);
+	
+	// Look recursively
+	if(rec)
+		for(int i = 0; i < cfgs->count(); i++)
+			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++)
+				for(BasicBlock::OutIterator edge(bb); edge; edge++)
+					if(edge->kind() == Edge::CALL
+					&& edge->calledCFG()
+					&& !MARK(edge->calledCFG())) {
+						cfgs->cfgs.add(edge->calledCFG());
+						MARK(edge->calledCFG()) = true;
+					} 
+}
 
 
 /**
  */
 void CFGCollector::processFrameWork (FrameWork *fw) {
-	static Identifier<bool> MARK("otawa.cfg_collector.mark", false);
 	
 	// Set first queue node
 	if(!entry && name) {
@@ -93,20 +128,22 @@ void CFGCollector::processFrameWork (FrameWork *fw) {
 	
 	// Build the involved collection
 	CFGCollection *cfgs = new CFGCollection();
-	cfgs->cfgs.add(entry);
 	INVOLVED_CFGS(fw) = cfgs;
+	collect(cfgs, entry);
 	
-	// Build it recursively
-	if(rec)
-		for(int i = 0; i < cfgs->count(); i++)
-			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++)
-				for(BasicBlock::OutIterator edge(bb); edge; edge++)
-					if(edge->kind() == Edge::CALL
-					&& edge->calledCFG()
-					&& !MARK(edge->calledCFG())) {
-						cfgs->cfgs.add(edge->calledCFG());
-						MARK(edge->calledCFG()) = true;
-					} 
+	// Added functions
+	for(int i = 0; i < added_funs.length(); i++) {
+		CFGInfo *info = fw->getCFGInfo();
+		CFG *cfg = info->findCFG(added_funs[i]);
+		if(cfg)
+			collect(cfgs, added_cfgs[i]);
+		else
+			warn("cannot find a function called \"%s\".", &added_funs[i]);
+	}
+	
+	// Added CFG
+	for(int i = 0; i < added_cfgs.length(); i++)
+		collect(cfgs, added_cfgs[i]);
 }
 
 
@@ -125,10 +162,20 @@ CFGCollector::CFGCollector(void)
  */
 void CFGCollector::configure(const PropList& props) {
 	Processor::configure(props);
+	
+	// Misc configuration
 	entry = ENTRY_CFG(props);
 	if(!entry)
 		name = TASK_ENTRY(props);
 	rec = otawa::RECURSIVE(props);
+
+	// Collect added CFGs
+	added_cfgs.clear();
+	for(Identifier<CFG *>::Getter cfg(props, ADDED_CFG); cfg; cfg++)
+		added_cfgs.add(cfg);
+	added_funs.clear();
+	for(Identifier<CString>::Getter fun(props, ADDED_FUNCTION); fun; fun++)
+		added_funs.add(fun);
 }
 
 
@@ -150,6 +197,20 @@ Identifier<CFGCollection *> INVOLVED_CFGS("involved_cfgs", 0, otawa::NS);
  * @ref ENTRY_CFG (FrameWork).
  * @ref INVOLVED_CFGS (FrameWork).
  */
-Feature<CFGCollector> COLLECTED_CFG_FEATURE("otawa.collected_cfg");
+Feature<CFGCollector> COLLECTED_CFG_FEATURE("otawa::collected_cfg");
+
+
+/**
+ * This configuration property allows to add unlinked CFG to the used CFG
+ * collection.
+ */
+Identifier<CFG *> CFGCollector::ADDED_CFG("CFGCollector::ADDED_CFG", 0, otawa::NS);
+
+
+/**
+ * This configuration property allows to add unlinked functions to the used CFG
+ * collection.
+ */
+Identifier<CString> CFGCollector::ADDED_FUNCTION("CFGCollector::ADDED_FUNCTION", 0, otawa::NS);
 
 } // otawa

@@ -8,6 +8,7 @@
 #define OTAWA_CFG_CFG_COLLECTOR_H
 
 #include <elm/genstruct/FragTable.h>
+#include <elm/genstruct/Vector.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Feature.h>
 
@@ -34,14 +35,23 @@ public:
 
 // CFGCollector Class
 class CFGCollector: public Processor {
-	CString name;
-	CFG *entry;
-	bool rec;
-protected:
-	void processFrameWork(FrameWork *fw);
+	elm::genstruct::Vector<CFG *> added_cfgs;
+	elm::genstruct::Vector<CString> added_funs;
 public:
 	CFGCollector(void);
 	virtual void configure(const PropList& props);
+
+	// Configuration
+	static Identifier<CFG *> ADDED_CFG;
+	static Identifier<CString> ADDED_FUNCTION;
+
+protected:
+	void processFrameWork(FrameWork *fw);
+private:
+	CString name;
+	CFG *entry;
+	bool rec;
+	void collect(CFGCollection *cfgs, CFG *cfg);
 };
 
 // Features
