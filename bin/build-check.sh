@@ -101,8 +101,9 @@ fi
 for bench in $list; do
 	file="$prefix$bench$suffix.out"
 	if [ "$rebuild" = yes -o ! -f "$file" ]; then
-		echo "$cmd $benchdir/$bench/$bench > $file"
-		$cmd $benchdir/$bench/$bench > $file || exit 2
+		md5sum $benchdir/$bench/$bench > $file || exit 3
+		echo "$cmd $benchdir/$bench/$bench >> $file"
+		$cmd $benchdir/$bench/$bench >> $file || exit 2
 	fi
 done
 echo "SUCCESS: all is done !"

@@ -63,7 +63,8 @@ for bench in $list; do
 		fi
 		
 		# Perform the check
-		if $cmd $benchdir/$bench/$bench $args > tmp.out; then
+		md5sum $benchdir/$bench/$bench $args > tmp.out 
+		if $cmd $benchdir/$bench/$bench $args >> tmp.out; then
 			if diff tmp.out $bench.out; then
 				echo "checked"
 			else
