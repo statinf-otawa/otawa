@@ -62,11 +62,11 @@ AC_PROG_LIBTOOL
 # ===== GEL check =====
 OTAWA_USE_LIB(GEL,
 	OTAWA_REQUIRE_LIB(GEL, [GEL library required !],
-		OTAWA_CHECK_LTLIB(GEL, gel.h, libgel.la, $PWD/../gel/src, $PWD/../gel/src,
-		OTAWA_CHECK_LTLIB(GEL, gel.h, libgel.la, ${prefix}, ,
-		OTAWA_CHECK_LTLIB(GEL, gel.h, libgel.la)))))
+		OTAWA_CHECK_LTLIB(GEL, gel/gel.h, libgel.la, $PWD/../gel/src, $PWD/../gel/include,
+		OTAWA_CHECK_LTLIB(GEL, gel/gel.h, libgel.la, ${prefix}, ,
+		OTAWA_CHECK_LTLIB(GEL, gel/gel.h, libgel.la)))))
 OTAWA_USE_LIB(GEL_PPC,
-		OTAWA_CHECK_LTLIB(GEL_PPC, , libgel_ppc.la, $PWD/../gel/src, $PWD/../gel/src,
+		OTAWA_CHECK_LTLIB(GEL_PPC, , libgel_ppc.la, $PWD/../gel/src, $PWD/../gel/include,
 		OTAWA_CHECK_LTLIB(GEL_PPC, , libgel_ppc.la, ${prefix}, ,
 		OTAWA_CHECK_LTLIB(GEL_PPC, , libgel_ppc.la))))
 

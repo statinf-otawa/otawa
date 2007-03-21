@@ -7,8 +7,8 @@
 
 #include <otawa/gliss.h>
 #include <elm/debug.h>
-#include <gel.h>
-#include <gel_elf.h>
+#include <gel/gel.h>
+#include <gel/gel_elf.h>
 
 extern "C" gel_file_t *loader_file(memory_t* memory);
 

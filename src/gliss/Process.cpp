@@ -7,7 +7,7 @@
 
 #include <otawa/gliss.h>
 #include <otawa/hard/CacheConfiguration.h>
-#include <gel.h>
+#include <gel/gel.h>
 
 // Trace
 //#define GLISS_PROCESS_TRACE

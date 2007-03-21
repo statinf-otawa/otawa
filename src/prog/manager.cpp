@@ -10,7 +10,7 @@
 #include <otawa/manager.h>
 #include <otawa/cfg.h>
 #include <otawa/ilp/ILPPlugin.h>
-#include <gel.h>
+#include <gel/gel.h>
 #include <elm/xom.h>
 #include <otawa/sim/Simulator.h>
 #include <otawa/proc/Processor.h>
