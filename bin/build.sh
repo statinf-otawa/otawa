@@ -12,7 +12,7 @@ fi
 
 # Initial configuration
 tool=OBuild
-version=0.4
+version=0.5
 basedir=otawa
 verbose=yes
 log=build.log
@@ -200,6 +200,8 @@ function build_autotool {
 
 function build_make {
 	echo "make all $MAKE_FLAGS"
+	echo "#!/bin/bash" > build.sh
+	echo "make all $MAKE_FLAGS" >> build.sh
 	log_command make all "$MAKE_FLAGS"
 }
 
