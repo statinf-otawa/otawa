@@ -21,6 +21,7 @@ using namespace elm::io;
 // External class
 class PropList;
 
+
 // GenericIdentifier class
 template <class T>
 class Identifier: public AbstractIdentifier {
@@ -46,33 +47,58 @@ public:
 	public:
 		inline Value(PropList& prop, const Identifier<T>& id);
 		inline Value(PropList *prop, const Identifier<T>& id);
-		inline operator T(void) const;
+
+		inline Value& add(const T& value);
+		inline void remove(void);
+		inline bool exists(void) const;
+		inline T& ref(void) const;
+
+		inline operator const T&(void) const;
 		inline Value& operator=(const T& value);
-		inline Value& operator+=(const T& value);
-		inline T operator->(void) const; 
+		inline T operator->(void) const;
+		inline T& operator*(void) const { return ref(); }
+		
+		inline Value& operator+=(const T& v) const { ref() +=  v; return *this; } 
+		inline Value& operator-=(const T& v) const { ref() -=  v; return *this; } 
+		inline Value& operator*=(const T& v) const { ref() *=  v; return *this; } 
+		inline Value& operator/=(const T& v) const { ref() /=  v; return *this; } 
+		inline Value& operator%=(const T& v) const { ref() %=  v; return *this; } 
+		inline Value& operator&=(const T& v) const { ref() &=  v; return *this; } 
+		inline Value& operator|=(const T& v) const { ref() |=  v; return *this; } 
+		inline Value& operator^=(const T& v) const { ref() ^=  v; return *this; } 
+		inline Value& operator<<=(const T& v) const { ref() <<=  v; return *this; } 
+		inline Value& operator>>=(const T& v) const { ref() >>=  v; return *this; } 
+		inline Value& operator++(void) const { ref()++; } 
+		inline Value& operator--(void) const { ref()--; } 
+		inline Value& operator++(int) const { ref()++; } 
+		inline Value& operator--(int) const { ref()--; } 
 	};
 	
 	// Constructors
 	inline Identifier(elm::CString name, NameSpace& ns = ::NS);
 	inline Identifier(elm::CString name, const T& default_value, NameSpace& = ::NS);
-	
+		
 	// PropList& Accessors
 	inline void add(PropList& list, const T& value) const;
 	inline void set(PropList& list, const T& value) const;
-	//inline elm::Option<T> get(const PropList& list) const;
+	inline elm::Option<T> get(const PropList& list) const;
 	inline const T& get(const PropList& list, const T& def) const;
 	inline const T& use(const PropList& list) const;
 	inline const T& value(const PropList& list) const;
 	inline Value value(PropList& list) const;
+	inline void remove(PropList& list) const { list.removeProp(this); }
+	inline bool exists(PropList& list) const { return list.getProp(this); } 
 	
 	// PropList* Accessors
 	inline void add(PropList *list, const T& value) const;
 	inline void set(PropList *list, const T& value) const;
-	//inline elm::Option<T> get(const PropList *list) const;
+	inline elm::Option<T> get(const PropList *list) const;
 	inline const T& get(const PropList *list, const T& def) const;
 	inline const T& use(const PropList *list) const;
 	inline const T& value(const PropList *list) const;
 	inline Value value(PropList *list) const;
+	inline void remove(PropList *list) const { list->removeProp(this); }
+	inline bool exists(PropList *list) const { return list->getProp(this); } 
 
 	// Operators
 	inline const T& operator()(const PropList& props) const;
@@ -125,10 +151,10 @@ inline void Identifier<T>::set(PropList& list, const T& value) const {
 	list.set(*this, value);
 }
 
-/*template <class T>
-inline elm::Option<T> GenericIdentifier<T>::get(const PropList& list) const {
+template <class T>
+inline elm::Option<T> Identifier<T>::get(const PropList& list) const {
 	return list.get<T>(*this);
-}*/
+}
 
 template <class T>
 inline const T& Identifier<T>::get(const PropList& list, const T& def) const {
@@ -166,10 +192,10 @@ inline void Identifier<T>::set(PropList *list, const T& value) const {
 	list->set(*this, value);
 }
 
-/*template <class T>
-inline elm::Option<T> GenericIdentifier<T>::get(const PropList *list) const {
+template <class T>
+inline elm::Option<T> Identifier<T>::get(const PropList *list) const {
 	return list->get<T>(*this);
-}*/
+}
 
 template <class T>
 inline const T& Identifier<T>::get(const PropList *list, const T& def) const {
@@ -254,12 +280,38 @@ const Identifier<T>& _id): prop(_prop), id(_id) {
 }
 
 template <class T>
-inline Identifier<T>::Value::Value(PropList *_prop,
-const Identifier<T>& _id): prop(*_prop), id(_id) {
+inline Identifier<T>::Value::Value(PropList *_prop, const Identifier<T>& _id)
+: prop(*_prop), id(_id) {
 }
 
 template <class T>
-inline Identifier<T>::Value::operator T(void) const {
+inline class Identifier<T>::Value& Identifier<T>::Value::add(const T& value) {
+	prop.add(id, value);
+	return *this;
+}
+
+template <class T>
+inline void Identifier<T>::Value::remove(void) {
+	prop.removeProp(id);
+}
+
+template <class T>
+inline bool Identifier<T>::Value::exists(void) const {
+	return prop.hasProp(id);	
+}
+
+template <class T>
+inline T& Identifier<T>::Value::ref(void) const {
+	GenericProperty<T> *_prop = (GenericProperty<T> *)prop.getProp(&id);
+	if(!_prop) {
+		_prop = GenericProperty<T>::make(&id, id.def); 
+		prop.addProp(_prop);
+	}
+	return _prop->value();
+} 
+ 
+template <class T>
+inline Identifier<T>::Value::operator const T&(void) const {
 	return prop.get<T>(id, id.def);
 }
 
@@ -271,16 +323,9 @@ Identifier<T>::Value::operator=(const T& value) {
 }
 
 template <class T>
-inline class Identifier<T>::Value&
-Identifier<T>::Value::operator+=(const T& value) {
-	prop.add(id, value);
-	return *this;
-}
-
-template <class T>
 inline T Identifier<T>::Value::operator->(void) const {
 	return prop.get<T>(id, id.def);
-} 
+}
 
 
 // VarArg management
