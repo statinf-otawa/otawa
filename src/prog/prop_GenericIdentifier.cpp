@@ -249,4 +249,34 @@ void Identifier<String>::scan(PropList& props, VarArg& args) const {
 	props.set(*this, args.next<char *>());
 }
 
+
+/**
+ * @fn void Identifier::remove(PropList& list) const;
+ * Remove the property with the current identifier from the given list.
+ * @param list	List to remove from.
+ */
+
+
+/**
+ * @fn bool Identifier::exists(PropList& list) const; 
+ * Test if the given list contains a property with the current identifier.
+ * @param list	List to look in.
+ * @return		True if there is a property with current identifier, false else.
+ */
+
+
+/**
+ * @fn void Identifier::remove(PropList *list) const;
+ * Remove the property with the current identifier from the given list.
+ * @param list	List to remove from.
+ */
+
+
+/**
+ * @fn bool Identifier::exists(PropList *list) const; 
+ * Test if the given list contains a property with the current identifier.
+ * @param list	List to look in.
+ * @return		True if there is a property with current identifier, false else.
+ */
+
 }	// otawa
