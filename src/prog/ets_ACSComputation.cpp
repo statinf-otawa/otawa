@@ -85,7 +85,7 @@ void ACSComputation::initialization(FrameWork *fw, AST *ast, AbstractCacheState 
 		case AST_Block: {
 			address_t last = ast->toBlock()->block()->address() + ast->toBlock()->size();
 			int same_lblock = 0;
-			for(Inst *inst = ast->toBlock()->block(); inst->address() < last; inst = inst->next()){
+			for(Inst *inst = ast->toBlock()->block(); inst->address() < last; inst = inst->nextInst()){
 				if(fw->cache().hasInstCache() && !fw->cache().isUnified()) {
 					int which_line = fw->cache().instCache()->line(inst->address());
 					if ((which_line == acs->cache_line)&&(!acs->htable.exists(inst->address()))){
@@ -164,7 +164,7 @@ AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, Abstr
 			AbstractCacheState::AbstractCacheState *acs = new AbstractCacheState::AbstractCacheState(state);
 			ACS(ast->toBlock()) = acs;
 			address_t last = ast->toBlock()->block()->address() + ast->toBlock()->size();
-			for(Inst *inst = ast->toBlock()->block(); inst->address() < last; inst = inst->next()){
+			for(Inst *inst = ast->toBlock()->block(); inst->address() < last; inst = inst->nextInst()){
 				if(fw->cache().hasInstCache() && !fw->cache().isUnified()) {
 					if (acs->htable.exists(inst->address())){
 							

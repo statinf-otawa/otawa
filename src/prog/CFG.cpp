@@ -68,10 +68,10 @@ bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
  * Constructor. Add a property to the basic block for quick retrieval of
  * the matching CFG.
  */
-CFG::CFG(CodeItem *code, BasicBlock *entry)
-: ent(entry), _code(code), flags(0),
+CFG::CFG(Segment *seg, BasicBlock *entry)
+: ent(entry), _seg(seg), flags(0),
 _entry(BasicBlock::FLAG_Entry), _exit(BasicBlock::FLAG_Exit) {
-	assert(code && entry);
+	assert(seg && entry);
 	
 	// Mark entry
 	ENTRY(ent) = this;
@@ -87,7 +87,7 @@ _entry(BasicBlock::FLAG_Entry), _exit(BasicBlock::FLAG_Exit) {
 /**
  * Build an empty CFG.
  */
-CFG::CFG(void): _code(0), ent(0), _entry(BasicBlock::FLAG_Entry),
+CFG::CFG(void): _seg(0), ent(0), _entry(BasicBlock::FLAG_Entry),
 _exit(BasicBlock::FLAG_Exit), flags(0) {
 }
 

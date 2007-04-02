@@ -236,13 +236,13 @@ Inst::~Inst(void) {
 
 
 // Overloaded
-address_t Inst::address(void) {
+address_t Inst::address(void) const {
 	return addr;
 }
 
 
 // Overloaded
-size_t Inst::size(void) {
+size_t Inst::size(void) const {
 	return 4;
 }
 
@@ -466,6 +466,13 @@ void Inst::scanCustom(instruction_t *inst) {
 Inst::kind_t Inst::kind(void) {
 	scan();
 	return flags & ~BUILT;
+}
+
+
+/**
+ */
+otawa::Inst *Inst::toInst(void) {
+	return this;
 }
 
 } } // otawa::gliss

@@ -129,7 +129,7 @@ Symbol *File::findSymbol(String name) {
  */
 Inst *File::findByAddress(address_t address) {
 	for(SegIter seg(this); seg; seg++) {
-		Inst *inst = seg->findByAddress(address);
+		Inst *inst = seg->findInstAt(address);
 		if(inst)
 			return inst;
 	}

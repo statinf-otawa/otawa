@@ -15,7 +15,7 @@ class NullBasicBlock: public BasicBlock {
 	inhstruct::DLList list;
 	Mark null_mark;
 public:
-	inline NullBasicBlock(void): null_mark(this) {
+	inline NullBasicBlock(void): null_mark(this, 0) {
 		list.addFirst(&null_mark);		
 		_head = &null_mark;
 	};
@@ -151,7 +151,7 @@ size_t BasicBlock::size(void) const {
 	PseudoInst *pseudo;
 	
 	// Find the next BB marker
-	for(inst = _head->next(); !inst->atEnd(); inst = inst->next())
+	for(inst = _head->nextInst(); inst; inst = inst->nextInst())
 		if((pseudo = inst->toPseudo()) && pseudo->id() == &ID)
 			return inst->address() - address();
 
@@ -178,7 +178,7 @@ int BasicBlock::countInstructions(void) const {
 	int cnt = 0;
 	PseudoInst *pseudo;
 
-	for(inst = _head->next(); !inst->atEnd(); inst = inst->next()) {
+	for(inst = _head->nextInst(); inst; inst = inst->nextInst()) {
 		pseudo = inst->toPseudo();
 		if(!pseudo)
 			cnt++;
@@ -258,11 +258,11 @@ BasicBlock::~BasicBlock(void) {
 BasicBlock *BasicBlock::findBBAt(FrameWork *fw, address_t addr) {
 	Inst *inst = fw->findInstAt(addr);
 	PseudoInst *pseudo;
-	while(!inst->atBegin()
+	while(inst
 	&& (!(pseudo = inst->toPseudo())
 		|| pseudo->id() != &CodeBasicBlock::ID))
-		inst = inst->previous();
-	if(inst->atBegin())
+		inst = inst->prevInst();
+	if(!inst)
 		return 0;
 	else
 		return ((CodeBasicBlock::Mark *)pseudo)->bb();
@@ -345,15 +345,14 @@ IteratorInst<Edge *> *BasicBlock::outEdges(void) {
  */
 CodeBasicBlock::CodeBasicBlock(Inst *inst) {
 	assert(inst);
-	assert(inst->atEnd() || !inst->isPseudo());
+	assert(inst->nextInst() || !inst->isPseudo());
 	
 	// Create the mark
-	_head = new Mark(this);
-	assert(inst->previous()->atBegin() || !inst->previous()->isPseudo());
-	inst->insertBefore(_head);
+	assert(!inst->prevInst() || !inst->prevInst()->isPseudo());
+	_head = new Mark(this, inst);
 	
 	// Look for a label
-	if(!inst->atEnd()) {
+	if(inst->nextInst()) {
 		String label = LABEL(inst);
 		if(label)
 			LABEL(this) = label;

@@ -37,18 +37,15 @@ CodeSegment::CodeSegment(
 	_file(file),
 	mem(memory)
 {
-	inhstruct::DLList insts;
-	buildInsts(insts);
-	putItem(new CodeItem(address, size, insts));
+	buildInsts();
 	buildLabs();
 }
 
 
 /**
  * Build the code and the instructions in the current segment.
- * @param insts	Instruction list to fill.
  */
-void CodeSegment::buildInsts(inhstruct::DLList& insts) {
+void CodeSegment::buildInsts(void) {
 	code_t buffer[20];
 	instruction_t *inst;
 	
@@ -91,7 +88,7 @@ void CodeSegment::buildInsts(inhstruct::DLList& insts) {
 		}
 				
 		// Cleanup
-		insts.addLast(result);
+		insert(result);
 		iss_free(inst);
 	}
 }
@@ -106,9 +103,10 @@ void CodeSegment::buildLabs(void) {
 	// Add symbols
 	address_t lbound = address(), ubound = lbound + size();
 	for(File::SymIter sym(&_file); sym; sym++) {
+		//cerr << "Symbol " << sym->name() << io::endl;
 		address_t addr = sym->address();
 		if(addr >= lbound && addr < ubound) {
-			Inst *inst = (Inst *)findByAddress(addr);
+			Inst *inst = (Inst *)findInstAt(addr);
 			if(inst) {
 				//cerr << "==> " << sym->address() << " = " << inst->address() << io::endl; 
 				//Identifier *id;
@@ -121,9 +119,9 @@ void CodeSegment::buildLabs(void) {
 					break;
 				}
 			}
-			/*else
+			else
 				cerr << "WARNING: no matching instruction for label "
-					 << sym->name() << io::endl;*/
+					 << sym->name() << io::endl;
 		} 
 	}
 }

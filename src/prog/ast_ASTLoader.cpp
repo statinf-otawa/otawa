@@ -133,7 +133,7 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 	AST *ast = 0;
 	Inst *start = entry_inst, *inst;
 	int cnt = 0;
-	for(inst = entry_inst; !inst->atEnd(); inst = inst->next()) {
+	for(inst = entry_inst; inst; inst = inst->nextInst()) {
 		if(inst->isCall()) {
 			
 			// Find the function
@@ -152,7 +152,7 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 					
 			// Clean-up
 			cnt++;
-			start = inst->next();
+			start = inst->nextInst();
 			if(cnt >= calls.length())
 				break;
 		}
@@ -164,7 +164,7 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 	}
 	
 	// Remaining block ?
-	if(!start->atEnd() && start->address() != exit_addr)
+	if(!start->prevInst() && start->address() != exit_addr)
 		ast = new SeqAST(ast, new BlockAST(start, exit_addr - start->address()));
 	
 	// Clean-up

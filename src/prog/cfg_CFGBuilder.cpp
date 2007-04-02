@@ -52,7 +52,7 @@ void CFGBuilder::processFrameWork(FrameWork *fw) {
  */
 BasicBlock *CFGBuilder::nextBB(Inst *inst) {
 	assert(inst);
-	for(Inst *node = inst->next(); !node->atEnd(); node = node->next()) {
+	for(Inst *node = inst->nextInst(); node; node = node->nextInst()) {
 		PseudoInst *pseudo = node->toPseudo();
 		
 		// Instruction found (no BB): create it
@@ -70,9 +70,10 @@ BasicBlock *CFGBuilder::nextBB(Inst *inst) {
 	}
 	
 	// End-of-code
-	BasicBlock *bb = new CodeBasicBlock(inst->next());
+	/*BasicBlock *bb = new CodeBasicBlock(inst->nextInst());
 	IS_ENTRY(bb) = false;
-	return bb;
+	return bb;*/
+	return 0;
 }
 
 
@@ -90,7 +91,7 @@ BasicBlock *CFGBuilder::thisBB(Inst *inst) {
 		return ((CodeBasicBlock::Mark *)pseudo)->bb();
 	
 	// Look backward
-	for(Inst *node = inst->previous(); !node->atBegin(); node = node->previous()) {
+	for(Inst *node = inst->prevInst(); node; node = node->prevInst()) {
 		pseudo = node->toPseudo();
 		
 		// No pseudo, require to create the BB
@@ -124,16 +125,23 @@ void CFGBuilder::addSubProgram(Inst *inst) {
  * Build the CFG for the given code.
  * @param code	Code to build the CFG for.
  */
-void CFGBuilder::buildCFG(CodeItem *code) {
-	assert(code);
+void CFGBuilder::buildCFG(Segment *seg) {
+	assert(seg);
 	PseudoInst *pseudo;
 	
 	// Add the initial basic block
-	BasicBlock *bb = thisBB(code->first());
+	Segment::ItemIter item(seg);
+	while(item && !item->toInst())
+		item++;
+	if(!item)
+		return;
+	BasicBlock *bb = thisBB(item->toInst());
 	
 	// Find the basic blocks
-	for(Inst *inst = code->first(); !inst->atEnd(); inst = inst->next())
-		if(inst->isControl()) {
+	for(; item; item++) {
+		//cerr << "Processing " << item->address() << io::endl;
+		Inst *inst = item->toInst();
+		if(inst && inst->isControl()) {
 			
 			// Found BB starting on target instruction			
 			Inst *target = inst->target();
@@ -145,7 +153,7 @@ void CFGBuilder::buildCFG(CodeItem *code) {
 					IS_ENTRY(bb) = true;
 			}
 			else if(!inst->isReturn() && verbose) {
-				Symbol * sym = code->closerSymbol(inst);
+				Symbol * sym = 0; //code->closerSymbol(inst);
 				warn("unresolved indirect control at 0x%x (%s + 0x%x",
 					*inst->address(),
 					(sym ? &sym->name()  : ""),
@@ -157,58 +165,62 @@ void CFGBuilder::buildCFG(CodeItem *code) {
 
 			// Found BB starting on next instruction
 			BasicBlock *bb = nextBB(inst);
-			assert(bb);
+			//assert(bb);
 		}
+	}
 	
 	// Build the graph
 	genstruct::Vector<BasicBlock *> entries;
 	bb = 0;
 	bool follow = true;
-	for(Inst *inst = code->first(); !inst->atEnd(); inst = inst->next()) {
-		
-		// Start of block found
-		if((pseudo = inst->toPseudo()) && pseudo->id() == &CodeBasicBlock::ID) {
+	for(Segment::ItemIter item(seg); item; item++) {
+		Inst *inst = item->toInst();
+		if(inst) {
 			
-			// Record not-taken edge
-			BasicBlock *next_bb = ((CodeBasicBlock::Mark *)pseudo)->bb();
-			if(bb && follow)
-				new Edge(bb, next_bb, EDGE_NotTaken);
+			// Start of block found
+			if((pseudo = inst->toPseudo()) && pseudo->id() == &CodeBasicBlock::ID) {
 			
-			// Initialize new BB
-			bb = next_bb;
-			follow = true;
-			if(IS_ENTRY(bb)) {
-				assert(!entries.contains(bb));
-				entries.add(bb);
+				// Record not-taken edge
+				BasicBlock *next_bb = ((CodeBasicBlock::Mark *)pseudo)->bb();
+				if(bb && follow)
+					new Edge(bb, next_bb, EDGE_NotTaken);
+			
+				// Initialize new BB
+				bb = next_bb;
+				follow = true;
+				if(IS_ENTRY(bb)) {
+					assert(!entries.contains(bb));
+					entries.add(bb);
+				}
+				bb->removeProp(&IS_ENTRY);
 			}
-			bb->removeProp(&IS_ENTRY);
-		}
 		
-		// End of block
-		else if(inst->isControl()) {
+			// End of block
+			else if(inst->isControl()) {
 			
-			// Record the taken edge
-			Inst *target = inst->target();
-			if(target) {
-				BasicBlock *target_bb = thisBB(target);
-				assert(target_bb);
-				new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
+				// Record the taken edge
+				Inst *target = inst->target();
+				if(target) {
+					BasicBlock *target_bb = thisBB(target);
+					assert(target_bb);
+					new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
+				}
+			
+				// Record BB flags
+				if(inst->isReturn())
+					bb->flags |= BasicBlock::FLAG_Return;
+				else if(inst->isCall())
+					bb->flags |= BasicBlock::FLAG_Call;
+				if(!target && !inst->isReturn())
+					bb->flags |= BasicBlock::FLAG_Unknown;
+				follow = inst->isCall() || inst->isConditional();
 			}
-			
-			// Record BB flags
-			if(inst->isReturn())
-				bb->flags |= BasicBlock::FLAG_Return;
-			else if(inst->isCall())
-				bb->flags |= BasicBlock::FLAG_Call;
-			if(!target && !inst->isReturn())
-				bb->flags |= BasicBlock::FLAG_Unknown;
-			follow = inst->isCall() || inst->isConditional();
 		}
 	}
 	
 	// Recording the CFG
 	for(int i = 0; i < entries.length(); i++)
-		_cfgs.add(new CFG(code, entries[i]));
+		_cfgs.add(new CFG(seg, entries[i]));
 }
 
 
@@ -229,9 +241,8 @@ void CFGBuilder::addFile(File *file) {
 	
 	// Scan file segments
 	for(File::SegIter seg(file); seg; seg++)
-		for(Segment::ItemIter item(seg); item; item++)
-			if(seg->flags() & Segment::EXECUTABLE)
-				buildCFG((CodeItem *)*item);
+		if(seg->isExecutable())
+			buildCFG(seg);
 }
 
 

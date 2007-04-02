@@ -71,17 +71,13 @@ void CFGInfo::clear(void) {
 	
 	// Release basic block
 	for(Process::FileIter file(fw->process()); file; file++)
-	//for(Iterator<File *> file(*fw->files()); file; file++)
 		for(File::SegIter seg(file); seg; seg++)
-			for(Segment::ItemIter item(seg); item; item++)
-				if(seg->flags() & Segment::EXECUTABLE) {
-					CodeItem *code = (CodeItem *)*item;
-						for(Inst *inst = code->first(); !inst->atEnd();) {
-							PseudoInst *pseudo = inst->toPseudo();
-							inst = inst->next();
-							if(pseudo && pseudo->id() == &BasicBlock::ID)
-								delete ((BasicBlock::Mark *)pseudo)->bb();
-						}
+			if(seg->isExecutable())
+				for(Segment::ItemIter item(seg); item; item++) {
+					Inst *inst = item->toInst();
+					PseudoInst *pseudo = inst->toPseudo();
+					if(pseudo && pseudo->id() == &BasicBlock::ID)
+						delete ((BasicBlock::Mark *)pseudo)->bb();
 				}
 }
 
@@ -94,10 +90,10 @@ void CFGInfo::clear(void) {
  */
 BasicBlock *CFGInfo::findBB(Inst *inst) {
 	PseudoInst *pseudo;
-	while(!inst->atBegin()) {
+	while(inst) {
 		if((pseudo = inst->toPseudo()) && pseudo->id() == &CodeBasicBlock::ID)
 			return ((CodeBasicBlock::Mark *)pseudo)->bb();
-		inst = inst->previous();
+		inst = inst->prevInst();
 	}
 	assert(0);
 }

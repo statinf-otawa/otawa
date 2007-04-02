@@ -73,7 +73,7 @@ Identifier<AST *> BlockAST::ID("otawa.ast.block", 0, NS);
 int BlockAST::countInstructions(void) const {
 	address_t last = _block->address() + _size;
 	int count = 0;
-	for(Inst *inst = _block; inst->address() < last; inst = inst->next())
+	for(Inst *inst = _block; inst->address() < last; inst = inst->nextInst())
 		count++;
 	return count;
 }

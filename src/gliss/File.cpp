@@ -149,7 +149,7 @@ otawa::Inst *File::findByAddress(address_t addr) {
 	for(SegIter seg(this); seg; seg++)
 		if(seg->flags() & Segment::EXECUTABLE) {
 			CodeSegment *cseg = (CodeSegment *)*seg;
-			otawa::Inst *result = cseg->findByAddress(addr);
+			otawa::Inst *result = cseg->findInstAt(addr);
 			if(result)
 				return result;
 		}

@@ -32,8 +32,7 @@ namespace otawa { namespace gliss {
  * @param _man	Caller manager.
  */
 Process::Process(Manager *_man, const PropList& props)
-:	otawa::Process(props),
-	man(_man)
+:	otawa::Process(_man, props)
 {
 	TRACE(this << ".Process::Process(" << _man << ", " << &props << ')');
 	no_sys = NO_SYSTEM(props);
@@ -75,15 +74,6 @@ Process::Process(Manager *_man, const PropList& props)
 hard::Platform *Process::platform(void) {
 	return _platform;
 };
-
-
-/**
- * Get the current manager.
- * @return Manager.
- */
-Manager *Process::manager(void) {
-	return man;
-}
 
 
 /**
