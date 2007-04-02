@@ -8,9 +8,9 @@
 #define OTAWA_INST_H
 
 #include <elm/string.h>
-#include <elm/inhstruct/DLList.h>
 #include <elm/io.h>
 #include <elm/genstruct/Table.h>
+#include <otawa/prog/ProgItem.h>
 #include <otawa/properties.h>
 
 namespace otawa {
@@ -23,7 +23,7 @@ namespace hard {
 } // hard
 
 // Inst class
-class Inst: public elm::inhstruct::DLNode, public PropList {
+class Inst: public ProgItem {
 	friend class CodeItem;
 protected:
 	static const elm::genstruct::Table<hard::Register *> no_regs;
@@ -49,10 +49,8 @@ public:
 	typedef unsigned long kind_t;
 
 	// Accessors
-	inline Inst *next(void) const;
-	inline Inst *previous(void) const;
-	virtual address_t address(void) = 0;
-	virtual size_t size(void) = 0;
+	inline Inst *nextInst(void) const;
+	inline Inst *prevInst(void) const;
 	virtual void dump(io::Output& out);
 	
 	// Kind access
@@ -76,6 +74,9 @@ public:
 	virtual PseudoInst *toPseudo(void);
 	virtual Inst *target(void);
 	virtual Type *type(void);
+
+	// ProgItem overload
+	virtual Inst *toInst(void);
 };
 
 
@@ -85,9 +86,9 @@ class PseudoInst: public virtual Inst {
 public:
 	inline PseudoInst(const AbstractIdentifier *id): _id(id) { };
 	inline const AbstractIdentifier *id(void) const { return _id; };
-	virtual address_t address(void);
+	virtual address_t address(void) const;
+	virtual size_t size(void) const { return 0; };
 	virtual void dump(io::Output& out);
-	virtual size_t size(void) { return 0; };
 	virtual bool isPseudo(void) { return true; };
 	virtual PseudoInst *toPseudo(void) { return this; };
 	virtual kind_t kind(void) { return 0; };
@@ -95,12 +96,20 @@ public:
 
 
 // Inst Inlines
-inline Inst *Inst::next(void) const {
-	return (Inst *)inhstruct::DLNode::next();
+inline Inst *Inst::nextInst(void) const {
+	ProgItem *item = next();
+	if(!item)
+		return 0;
+	else
+		return item->toInst();
 }
 
-inline Inst *Inst::previous(void) const {
-	return (Inst *)inhstruct::DLNode::previous();
+inline Inst *Inst::prevInst(void) const {
+	ProgItem *item = previous();
+	if(!item)
+		return 0;
+	else
+		return item->toInst();
 }
 
 inline bool Inst::isIntern(void) {
