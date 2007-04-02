@@ -113,9 +113,9 @@ void CodeSegment::buildLabs(void) {
 				Symbol::ID(inst) = sym;
 				switch(sym->kind()) {
 				case Symbol::FUNCTION:
-					FUNCTION_LABEL(inst) += sym->name();
+					FUNCTION_LABEL(inst).add(sym->name());
 				case Symbol::LABEL:
-					LABEL(inst) += sym->name();
+					LABEL(inst).add(sym->name());
 					break;
 				}
 			}

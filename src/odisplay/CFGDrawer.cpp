@@ -106,7 +106,7 @@ void CFGDrawer::onInit(PropList& graph, PropList& nodes, PropList& edges){
 	SHAPE(nodes) = SHAPE_MRECORD;
 	FONT_SIZE(nodes) = 12;
 	FONT_SIZE(edges) = 12;
-	EXCLUDE(nodes) += &INDEX;
+	EXCLUDE(nodes).add(&INDEX);
 }
 
 

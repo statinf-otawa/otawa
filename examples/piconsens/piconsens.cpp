@@ -271,7 +271,8 @@ void Command::compute(String fun) {
 	// Get statistics
 	else if(!do_time) {
 		if(exegraph) {
-			const Vector<ExeGraphBBTime::stat_t>& prefs = *ExeGraphBBTime::PREFIX_STATS(stats);
+			const Vector<ExeGraphBBTime::stat_t>& prefs =
+				**ExeGraphBBTime::PREFIX_STATS(stats);
 			for(int i = 0; i < prefs.length(); i++)
 				cout << i << '\t'
 					/*<< prefs[i].total_span_sum << '\t'
