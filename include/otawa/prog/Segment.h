@@ -25,6 +25,9 @@ public:
 	const static int EXECUTABLE = 0x01;	/**< Segment is executable. */
 	const static int WRITABLE = 0x02;	/**< Segment is writable. */
 
+	// Constructor
+	Segment(CString name, address_t address, size_t size, unsigned long flags);
+
 	// Accessors
 	inline CString name(void) const { return _name; }
 	inline unsigned long flags(void) const { return _flags; }
@@ -33,26 +36,24 @@ public:
 	inline address_t address(void) const { return _address; }
 	inline size_t size(void) const { return _size; }
 	inline address_t topAddress(void) const { return _address + _size; }
-	Inst *findByAddress(address_t addr);
-	ProgItem *findItemByAddress(address_t addr);
-	
-	// Item iterator
+	ProgItem *findItemAt(address_t addr);
+	Inst *findInstAt(address_t addr);
+
+	// ItemIter class	
 	class ItemIter: public PreIterator<ItemIter, ProgItem *> {
 		ProgItem *cur;
 	public:
-		inline ItemIter(const Segment *seg):
-			cur((ProgItem *)seg->items.first()) { }
+		inline ItemIter(Segment *seg): cur((ProgItem *)seg->items.first()) { }
 		inline ItemIter(const ItemIter& iter): cur(iter.cur) { }
 		inline ProgItem *item(void) const { return cur; }
-		inline bool ended(void) const { return cur->atEnd(); }
-		inline void next(void) { cur = (ProgItem *)cur->next(); }
+		inline bool ended(void) const { return cur == 0; }
+		inline void next(void) { cur = cur->next(); }
 	};
 
-protected:	
-	Segment(CString name, address_t address, size_t size, unsigned long flags);
-	void splitItem(ProgItem *old_item, inhstruct::DLList& new_items);
-	void putItem(ProgItem *new_item, ProgItem *old_item = 0);
+protected:
+	virtual Inst *decode(address_t address);
 	virtual ~Segment(void);
+	void insert(ProgItem *item);
 
 private:
 	unsigned long _flags;
@@ -60,6 +61,7 @@ private:
 	address_t _address;
 	size_t _size;
 	inhstruct::DLList items;
+	ProgItem **map;
 };
 
 };	// namespace otawa

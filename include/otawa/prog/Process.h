@@ -39,17 +39,18 @@ namespace sim {
 class Process: public PropList {
 	Vector<File *> files;
 	File *prog;
+	Manager *man;
 
 protected:
 	void addFile(File *file);
 
 public:
-	Process(const PropList& props = EMPTY, File *program = 0);
+	Process(Manager *manager, const PropList& props = EMPTY, File *program = 0);
 	virtual ~Process(void);
 	
 	// Accessors
 	virtual hard::Platform *platform(void) = 0;
-	virtual Manager *manager(void) = 0;
+	inline Manager *manager(void) { return man; }
 	virtual const hard::CacheConfiguration& cache(void);
 	virtual Inst *start(void) = 0;
 	virtual Inst *findInstAt(address_t addr) = 0;

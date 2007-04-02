@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2006, IRIT UPS.
+ *	Copyright (c) 2006-07, IRIT UPS.
  *
  *	File class interface
  */
@@ -10,7 +10,6 @@
 #include <elm/inhstruct/DLList.h>
 #include <elm/Collection.h>
 #include <elm/datastruct/Map.h>
-#include <otawa/prog/CodeItem.h>
 #include <otawa/instruction.h>
 #include <otawa/prog/Symbol.h>
 #include <otawa/prog/Segment.h>
@@ -24,8 +23,6 @@ using namespace elm::genstruct;
 
 // Defined classes
 class ProgItem;
-class CodeItem;
-class Data;
 
 // File class
 class File: public PropList {
@@ -34,16 +31,14 @@ class File: public PropList {
 	typedef HashTable<String, Symbol *> syms_t;
 	syms_t syms;
 	
-protected:
-	inline File(String name): _name(name) { }
-	inline void addSegment(Segment *seg) { segs.add(seg); }
-	inline void addSymbol(Symbol *sym) { syms.put(sym->name(), sym); }
 
 public:
+	inline File(String name): _name(name) { }
 	inline CString name(void) { return _name.toCString(); }
 	Inst *findByAddress(address_t address);
 	
 	// Segment management
+	inline void addSegment(Segment *seg) { segs.add(seg); }
 	class SegIter: public Vector<Segment *>::Iterator {
 	public:
 		inline SegIter(const File *file)
@@ -53,6 +48,7 @@ public:
 	};
 	
 	// Symbol management
+	inline void addSymbol(Symbol *sym) { syms.put(sym->name(), sym); }
 	address_t findLabel(const String& label);
 	Symbol *findSymbol(String name);
 	class SymIter: public syms_t::ItemIterator {

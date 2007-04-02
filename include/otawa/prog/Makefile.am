@@ -1,6 +1,5 @@
 includeotawaprogdir=$(includedir)/otawa/prog
 includeotawaprog_HEADERS = \
-	CodeItem.h \
 	File.h \
 	FrameWork.h \
 	Inst.h \
