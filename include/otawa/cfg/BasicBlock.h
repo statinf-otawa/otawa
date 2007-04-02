@@ -78,7 +78,8 @@ public:
 		BasicBlock *_bb;
 		inline ~Mark(void) { remove(); _bb->_head = 0; };
 	public:
-		inline Mark(BasicBlock *bb): PseudoInst(&ID), _bb(bb) { };
+		inline Mark(BasicBlock *bb, Inst *inst): PseudoInst(&ID), _bb(bb)
+			{ if(inst) insertPseudo(inst); }
 		inline BasicBlock *bb(void) const  { return _bb; };
 	};	
 
@@ -151,14 +152,13 @@ public:
 
 // BasicBlock::InstIterator inlines
 inline BasicBlock::InstIterator::InstIterator(BasicBlock *bb)
-: inst(bb->head()->next()) {
+: inst((Inst *)bb->head()->next()) {
 	assert(bb);
 }
 
 inline bool BasicBlock::InstIterator::ended(void) const {
 	PseudoInst *pseudo;
-	return inst->atEnd()
-		|| ((pseudo = inst->toPseudo()) && pseudo->id() == &ID);
+	return !inst || ((pseudo = inst->toPseudo()) && pseudo->id() == &ID);
 }
 
 inline Inst *CodeBasicBlock::InstIterator::item(void) const {
@@ -166,7 +166,7 @@ inline Inst *CodeBasicBlock::InstIterator::item(void) const {
 }
 
 inline void CodeBasicBlock::InstIterator::next(void) {
-	inst = inst->next();
+	inst = inst->nextInst();
 }
 
 

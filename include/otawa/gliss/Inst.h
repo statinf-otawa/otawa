@@ -35,8 +35,9 @@ public:
 	virtual ~Inst(void);
 
 	// Inst overload
-	virtual address_t address(void);
-	virtual size_t size(void);
+	virtual otawa::Inst *toInst(void);
+	virtual address_t address(void) const;
+	virtual size_t size(void) const;
 	virtual void dump(io::Output& out);
 	virtual kind_t kind(void);
 	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);

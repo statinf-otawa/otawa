@@ -18,14 +18,16 @@ class File;
 	
 // CodeSegment class
 class CodeSegment: public ::otawa::Segment {
-	File& _file;
-	void buildInsts(inhstruct::DLList& insts);
-	void buildLabs(void);
-	memory_t *mem;
 
 public:
 	CodeSegment(File& file, CString name, memory_t *memory, address_t address, size_t size);
 	inline File& file(void) const { return _file; }
+
+private:
+	File& _file;
+	void buildInsts(void);
+	void buildLabs(void);
+	memory_t *mem;
 };
 
 } } // otawa::gliss

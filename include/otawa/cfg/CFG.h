@@ -25,7 +25,7 @@ extern Identifier<int> INDEX;
 
 // CFG class
 class CFG: public PropList, private elm::Collection<BasicBlock *> {
-	CodeItem *_code;
+	Segment *_seg;
 	BasicBlock *ent;
 
 	virtual elm::IteratorInst<BasicBlock *> *visit(void);
@@ -54,8 +54,8 @@ public:
 	
 	// Methods
 	CFG(void);
-	CFG(CodeItem *code, BasicBlock *entry);
-	inline CodeItem *code(void) const;
+	CFG(Segment *seg, BasicBlock *entry);
+	inline Segment *segment(void) const;
 	String label(void);
 	address_t address(void);
 	inline elm::Collection<BasicBlock *>& bbs(void);
@@ -74,8 +74,8 @@ inline elm::Collection<BasicBlock *>& CFG::bbs(void) {
 	return *this;
 }
 
-inline CodeItem *CFG::code(void) const {
-	return _code;
+inline Segment *CFG::segment(void) const {
+	return _seg;
 };
 
 inline BasicBlock *CFG::entry(void) {
