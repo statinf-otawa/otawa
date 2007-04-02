@@ -1,11 +1,18 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-07, IRIT UPS.
  *
  *	otawa::Segment class implementation
  */
 
+#include <elm/assert.h>
 #include <otawa/program.h>
+
+// Configuration of the instruction map
+#define MAP_BITS	6
+#define MAP_MASK	((1 << MAP_BITS) - 1)
+#define MAP_SIZE(s)	(((s) + MAP_MASK - 1) >> MAP_BITS)
+#define MAP_INDEX(a) (((a) - address()) >> MAP_BITS)
 
 namespace otawa {
 
@@ -35,10 +42,12 @@ Segment::Segment(
 :	_name(name),
 	_address(address),
 	_size(size),
-	_flags(flags)
+	_flags(flags),
+	map(new ProgItem *[MAP_SIZE(size)])
 {
-	assert(size);
-	items.addFirst(new ProgItem(address, size));
+	ASSERTP(size, "zero size segment");
+	for(int i = 0; i < MAP_SIZE(size); i++)
+		map[i] = 0; 
 }
 
 
@@ -97,100 +106,96 @@ Segment::~Segment(void) {
  * @param addr	Address to find an instruction for.
  * @return		Found instruction or null.
  */
-Inst *Segment::findByAddress(address_t addr) {
-	for(ItemIter item(this); item; item++) {
-		CodeItem *code = item->toCode();
-		if(code) {
-			Inst *inst = code->findByAddress(addr);
-			if(inst)
-				return inst;
-		}
+Inst *Segment::findInstAt(address_t addr) {
+	ProgItem *item = findItemAt(addr);
+	if(!item) {
+		Inst *inst = decode(addr);
+		if(inst)
+			insert(inst);
+		return inst;
 	}
+	else {
+		Inst *inst = item->toInst();
+		while(inst && inst->isPseudo())
+			inst = inst->nextInst();
+		return inst;
+	}
+}
+
+
+/**
+ * Find an item by its address.
+ * @param addr	Address to find an instruction for.
+ * @return		Found item or null.
+ */
+ProgItem *Segment::findItemAt(address_t addr) {
+
+	// In the segment ?
+	if(addr < address() || addr >= address() + size())
+		return 0;
+	
+	// Look in the instruction
+	ProgItem *item = map[MAP_INDEX(addr)];
+	if(item)
+		while(item && item->address() <= addr) {
+			if(item->address() == addr)
+				return item;
+			item = item->next();
+		}
 	return 0;
 }
 
+
 /**
- * Replace the current item by the given list of sub-items.
- * @param old_item	Item to split.
- * @param new_items	List of items to replace.
- * @warning Current item and list must occupy the same memory range.
+ * Decode the instruction at the given address. This method must overriden
+ * by the ISA plugins to provide the actual decoding of the instruction.
+ * This method returns null as the default.
+ * @param address	Address of the instruction to decode.
+ * @return			Decoded instruction or null if the address is invalid.
  */
-void Segment::splitItem(ProgItem *old_item, inhstruct::DLList& new_items) {
-	assert(!new_items.isEmpty());
-	assert(((ProgItem *)new_items.first())->address() == old_item->address());
-	assert(((ProgItem *)new_items.first())->address()
-		+ ((ProgItem *)new_items.last())->size()
-		== old_item->address() + old_item->size());
-	
-	// Add all replacers
-	ProgItem *item = (ProgItem *)new_items.first();
-	while(item->atEnd()) {
-		ProgItem *next = (ProgItem *)item->next();
-		item->remove();
-		old_item->insertBefore(item);
-		item = next;
-	}
-	
-	// Remove itself
-	old_item->remove();
-	delete old_item; 
+Inst *Segment::decode(address_t address) {
+	return 0;
 }
 
 
 /**
- * Find an item containing the given address.
- * @param addr	Address of the item to find.
- * @return		Matching item or null.
- */ 
-ProgItem *Segment::findItemByAddress(address_t addr) {
-	for(ItemIter item(this); item; item++)
-		if(addr >= item->address() && addr < item->topAddress())
-			return item;
-	return 0; 
-}
-
-
-/**
- * Put an item in the segment. This function may be used to replace a blank
- * item by an identified one. This function fails if the item makes a conflict
- * with existing items.
- * @param new_item	Item to put.
- * @param old_item	Item to put in.
+ * Insert the item in the list.
+ * @param item	Item to insert.
  */
-void Segment::putItem(ProgItem *new_item, ProgItem *old_item) {
-	assert(new_item);
+void Segment::insert(ProgItem *item) {
+	ASSERTP(item->address() >= address() && item->address() < topAddress(),
+		"attempt to insert an item with out-of-bound address");
+	//cout << "Inserting item at " << item->address() << io::endl;
+	int index = MAP_INDEX(item->address());
 	
-	// Find old item if required
-	if(!old_item) {
-		old_item = findItemByAddress(new_item->address());
-		assert(old_item);
-	}
-	assert(old_item->isBlank());
-
-	// Blank before
-	if(old_item->address() <  new_item->address()) {
-		size_t rem_size = old_item->size();
-		old_item->_size = new_item->address() - old_item->address();
-		old_item->insertAfter(new_item);
-		rem_size -= old_item->size() + new_item->size();
-		if(rem_size > 0)
-			new_item->insertAfter(new ProgItem(new_item->topAddress(), rem_size));
-	}
-	
-	// Blank after only
-	else if(old_item->size() < new_item->size()) {
-		old_item->_size = old_item->size() - new_item->size();
-		old_item->_address = old_item->address() + new_item->size();
-		old_item->insertBefore(new_item); 
+	// Empty map entry
+	if(!map[index]) {
+		map[index] = item;
+		if(items.isEmpty()) {
+			items.addFirst(item);
+			return;
+		}
+		else {
+			do
+				index--;
+			while(index >= 0 && !map[index]);
+			if(index < 0) {
+				items.addFirst(item);
+				return;
+			}
+		}
 	}
 	
-	// Simple replacement
+	// Find the position
+	ProgItem *cur = map[index];
+	while(cur && cur->address() < item->address())
+		cur = cur->next();
+	if(!cur)
+		items.addLast(item);
 	else {
-		assert(old_item->size() == new_item->size());
-		old_item->insertAfter(new_item);
-		old_item->remove();
-		delete old_item;
-	}
+		assert(item->topAddress() <= cur->address());
+		cur->insertBefore(item);
+	} 
 }
 
 }; // namespace otawa

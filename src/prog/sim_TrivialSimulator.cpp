@@ -42,7 +42,7 @@ public:
 	virtual void run(Driver& driver) {
 		running = true;
 		while(running) {
-			pc = driver.nextInstruction(*this, pc ? pc->next() : pc);
+			pc = driver.nextInstruction(*this, pc ? pc->nextInst() : pc);
 			_cycle += time;
 			running = pc;
 		}

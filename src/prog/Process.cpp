@@ -29,10 +29,12 @@ namespace otawa {
 
 /**
  * Build a new empty process.
+ * @param manager	Current manager.
  * @param props		Configuration properties to create this process.
  * @param program	The program file creating this process.
  */
-Process::Process(const PropList& props, File *program): prog(0) {
+Process::Process(Manager *manager, const PropList& props, File *program)
+: prog(0), man(manager) {
 	addProps(props);
 	if(prog)
 		addFile(prog);
