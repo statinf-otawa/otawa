@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 
 		// Build the context
 		PropList conf;
-		//PROC_VERBOSE(conf) = true;
+		//Processor::VERBOSE(conf) = true;
 		RECURSIVE(conf) = true;
 		TASK_ENTRY(conf) = fun.toCString();
 		ContextTreeBuilder builder;
