@@ -46,7 +46,7 @@ public:
 	inline bool hasProp(const AbstractIdentifier& id) const;
 	
 	// Property value access with identifier pointer (DEPRECATED)
-	template <class T> inline T get(const AbstractIdentifier *id, const T def_value) const;
+	template <class T> inline const T& get(const AbstractIdentifier *id, const T& def_value) const;
 	template <class T> inline elm::Option<T> get(const AbstractIdentifier *id) const;
 	template <class T> inline T use(const AbstractIdentifier *id) const;
 	template <class T> inline void set(const AbstractIdentifier *id, const T value);
@@ -54,7 +54,7 @@ public:
 	template <class T> inline void addLocked(const AbstractIdentifier *id, const T value);
 
 	// Property value access with identifier reference
-	template <class T> inline T get(const AbstractIdentifier& id, const T def_value) const;
+	template <class T> inline const T& get(const AbstractIdentifier& id, const T& def_value) const;
 	template <class T> inline elm::Option<T> get(const AbstractIdentifier& id) const;
 	template <class T> inline T use(const AbstractIdentifier& id) const;
 	template <class T> inline void set(const AbstractIdentifier& id, const T value);
@@ -105,7 +105,7 @@ inline bool PropList::hasProp(const AbstractIdentifier& id) const {
 	return getProp(&id) != 0;	
 }
 
-template <class T> T PropList::get(const AbstractIdentifier *id, const T def_value) const {
+template <class T> const T& PropList::get(const AbstractIdentifier *id, const T& def_value) const {
 	Property *prop = getProp(id);
 	return !prop ? def_value : ((GenericProperty<T> *)prop)->value();
 };
@@ -136,9 +136,15 @@ inline void PropList::addLocked(const AbstractIdentifier *id, const T value) {
 	addProp(LockedProperty<T>::make(id, value));
 }
 
-template <class T> T PropList::get(const AbstractIdentifier& id, const T def_value) const {
+template <class T> const T& PropList::get(
+	const AbstractIdentifier& id,
+	const T& def_value
+) const {
 	Property *prop = getProp(&id);
-	return !prop ? def_value : ((GenericProperty<T> *)prop)->value();
+	if(!prop)
+		return def_value;
+	else
+		return ((GenericProperty<T> *)prop)->value();
 };
 
 template <class T> elm::Option<T> PropList::get(const AbstractIdentifier& id) const {
