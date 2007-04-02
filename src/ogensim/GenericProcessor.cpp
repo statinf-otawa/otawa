@@ -81,7 +81,7 @@ GenericProcessor::GenericProcessor(sc_module_name name, ProcessorConfiguration *
 				nb->write(0);
 				fetch_stage->in_number_of_accepted_instructions(*nb);
 				output_queue->out_number_of_accepted_ins(*nb);
-				Cache * icache = new Cache("instruction cache");
+				Cache * icache = new Cache("instructionCache");
 				icache->in_clock(clock);
 				sc_signal<address_t> * addr = new sc_signal<address_t>;
 				fetch_stage->out_address(*addr);
