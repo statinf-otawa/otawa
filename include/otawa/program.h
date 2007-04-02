@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003-06, IRIT UPS.
+ *	Copyright (c) 2003-07, IRIT UPS.
  *
  *	program module interface
  */
@@ -10,7 +10,6 @@
 #include <elm/inhstruct/DLList.h>
 #include <elm/Collection.h>
 #include <elm/datastruct/Map.h>
-#include <otawa/prog/CodeItem.h>
 #include <otawa/instruction.h>
 #include <otawa/prog/Symbol.h>
 #include <otawa/prog/Segment.h>
