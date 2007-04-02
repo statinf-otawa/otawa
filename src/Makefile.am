@@ -11,7 +11,6 @@ SUBDIRS += arm
 endif
 
 SUBDIRS += \
-	oshell \
 	dumpcfg \
 	mkff \
 	ostat
