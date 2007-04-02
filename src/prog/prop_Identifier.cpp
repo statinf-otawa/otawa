@@ -45,7 +45,7 @@ DuplicateIdentifierException::DuplicateIdentifierException(String& name)
 
 
 /**
- * @class Identifier otawa/properties.h
+ * @class AbstractIdentifier
  * Represents a unique identifier used by the annotation system.
  * Identifier pointers may be compared for testing equality.
  */
