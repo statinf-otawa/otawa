@@ -98,7 +98,7 @@ void CATConstraintBuilder::processLBlockSet(FrameWork *fw, LBlockSet *id ) {
 	ContextTree *ct = CONTEXT_TREE(fw);
 	assert(ct); 
 	for(LBlockSet::Iterator lblock(*id); lblock; lblock++)
-		NODE(lblock) += new CATNode(lblock);
+		NODE(lblock).add(new CATNode(lblock));
 	buildLBLOCKSET(id, ct);
 	
 	// Set variables
@@ -109,7 +109,7 @@ void CATConstraintBuilder::processLBlockSet(FrameWork *fw, LBlockSet *id ) {
 
 		// Link BB variable
 		ilp::Var *bbvar = bb->use<ilp::Var *>(VAR);
-		BB_VAR(lblock) += bbvar;
+		BB_VAR(lblock).add(bbvar);
 		
 		// Create x_hit variable
 		ilp::Var *vhit;
@@ -121,7 +121,7 @@ void CATConstraintBuilder::processLBlockSet(FrameWork *fw, LBlockSet *id ) {
 			String namex = buf.toString();
 			vhit = system->newVar(namex);
 		}
-		HIT_VAR(lblock) += vhit;
+		HIT_VAR(lblock).add(vhit);
 		
 		// Create x_miss variable
 		ilp::Var *miss;
@@ -133,7 +133,7 @@ void CATConstraintBuilder::processLBlockSet(FrameWork *fw, LBlockSet *id ) {
 			String name1 = buf1.toString();
 			miss = system->newVar(name1);
 		}
-		MISS_VAR(lblock) += miss;
+		MISS_VAR(lblock).add(miss);
 	}
 	
 	int length = id->count();	

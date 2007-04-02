@@ -386,7 +386,7 @@ BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
 					for (Iterator<LBlock *> lbloc(lcache->visit()); lbloc; lbloc++){
 						if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
 							ident = lbloc->id();
-							CATEGORY(lbloc) += INVALID_CATEGORY;
+							CATEGORY(lbloc).add(INVALID_CATEGORY);
 							//CATBuilder::NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);
 							set->BitSet::add(ident);
 							
@@ -403,7 +403,7 @@ BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
 	 * For loops, annotate the loop-header with the set of all l-blocks in the loop
 	 */
 	if(root->kind()== ContextTree::LOOP){
-		SET(root) += set; 
+		SET(root).add(set); 
 	}
 	return set;
 }
