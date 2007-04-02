@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
 		//fw->findLabel(label));
 		if(!inst)
 			throw new otawa::Exception(CString("no main in this file ?"));
-		for(int i = 0; i < 10; i++, inst = inst->next()) {
+		for(int i = 0; i < 10; i++, inst = inst->nextInst()) {
 			cout << '\n' << inst << '\n';
 			const elm::genstruct::Table<hard::Register *>& reads = inst->readRegs();
 			cout << "\tread registers : ";

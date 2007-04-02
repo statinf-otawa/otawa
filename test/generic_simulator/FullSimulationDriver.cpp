@@ -67,14 +67,14 @@ Inst * FullSimulationDriver::nextInstruction(State& state, Inst *_inst)
 					inst = fw->findInstAt((address_t)((unsigned long)(NIA(&emulator_state))));
 			}
 			else
-				inst = inst->next(); // see if next() could return 0
+				inst = inst->nextInst(); // see if next() could return 0
 		}
 		
 		// pseudo instruction are put before the beginning of basic blocks
 		// we mustn't simulate such instructions, the next real instr.
 		// is inst->next()
 		while (inst->isPseudo())
-			inst = inst->next();
+			inst = inst->nextInst();
 
 		return inst;
 	}
@@ -102,7 +102,7 @@ void FullSimulationDriver::redirect(State &state, Inst * branch, bool direction)
 	if (direction == true)
 		inst = branch->target();
 	else
-		inst = branch->next();
+		inst = branch->nextInst();
 	wrong_path = false;
 }
 
