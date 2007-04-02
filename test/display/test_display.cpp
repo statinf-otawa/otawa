@@ -62,8 +62,8 @@ int main(int argc, char **argv){
         bbts.process(fw, props);
 		
 		props.clearProps();
-		/*display::EXCLUDE(props) += &CALLED_CFG;
-		display::EXCLUDE(props) += &REVERSE_DOM;*/
+		/*display::EXCLUDE(props).add(&CALLED_CFG);
+		display::EXCLUDE(props).add(&REVERSE_DOM);*/
 		display::CFGDrawer drawer(vcfg, props);
 		// DEFAULT(drawer.all()) = INCLUDE;
 		// DEFAULT(drawer.graph()) = EXCELUDE;

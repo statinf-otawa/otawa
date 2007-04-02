@@ -218,12 +218,12 @@ int main(int argc, char **argv) {
 			PropList display_props;
 			display::GRAPHVIZ_FILE(display_props) = "cfg.ps";
 			
-			display::INCLUDE(display_props) += &TIME;
-			display::INCLUDE(display_props) += &Delta::DELTA;
-			display::INCLUDE(display_props) += &ipet::LOOP_COUNT;
-			display::INCLUDE(display_props) += &ipet::COUNT;
+			display::INCLUDE(display_props).add(&TIME);
+			display::INCLUDE(display_props).add(&Delta::DELTA);
+			display::INCLUDE(display_props).add(&ipet::LOOP_COUNT);
+			display::INCLUDE(display_props).add(&ipet::COUNT);
 			
-			display::EXCLUDE(display_props) += &CALLED_CFG;
+			display::EXCLUDE(display_props).add(&CALLED_CFG);
 			
 			display::DEFAULT(display_props) = &display::EXCLUDE;
 			
