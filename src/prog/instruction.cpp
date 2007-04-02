@@ -313,15 +313,15 @@ const elm::genstruct::Table<hard::Register *>& Inst::writtenRegs(void) {
 /**
  * Compute the address of this pseudo-instruction.
  */
-address_t PseudoInst::address(void) {
+address_t PseudoInst::address(void) const {
 
 	// Look forward
-	for(Inst *inst = next(); !inst->atEnd(); inst = inst->next())
+	for(Inst *inst = nextInst(); inst; inst = inst->nextInst())
 		if(!inst->isPseudo())
 			return inst->address();
 	
 	// Look backward
-	for(Inst *inst = previous(); !inst->atBegin(); inst = inst->previous())
+	for(Inst *inst = prevInst(); inst; inst = inst->prevInst())
 		if(!inst->isPseudo())
 			return inst->address() + inst->size();
 	
@@ -336,6 +336,13 @@ address_t PseudoInst::address(void) {
  */
 void PseudoInst::dump(io::Output& out) {
 	out << "pseudo <" << (void *)_id << '>';
+}
+
+
+/**
+ */
+Inst *Inst::toInst(void) {
+	return this;
 }
 
 }	// otawa
