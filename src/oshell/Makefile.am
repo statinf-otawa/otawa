@@ -17,7 +17,6 @@ oshell_SOURCES= \
 	CFGCursor.cpp \
 	FileCursor.cpp \
 	SegmentCursor.cpp \
-	CodeCursor.cpp \
 	InstCursor.cpp
 
 noinst_HEADERS = \

@@ -55,7 +55,7 @@ void SegmentCursor::list(Output& out) {
 	int i = 0;
 	for(Segment::ItemIter iter(seg); iter; iter++, i++) {
 		out << '\t' << i << ": (";
-		out << (iter->toCode() ? "code" : "data");
+		out << (iter->toInst() ? "code" : "data");
 		out << ") [" << iter->address() << ':' << (int)iter->size() << "]\n";
 	}
 	if(!i)
@@ -68,7 +68,7 @@ Cursor *SegmentCursor::go(CString name) {
 	int num = atoi(&name);
 	for(Segment::ItemIter iter(seg); iter; iter++, num--)
 		if(!num) {
-			CodeItem *code = iter->toCode();
+			Inst *code = iter->toCode();
 			if(!code)
 				break;
 			else
