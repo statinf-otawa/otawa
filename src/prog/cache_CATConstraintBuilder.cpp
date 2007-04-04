@@ -80,6 +80,7 @@ CATConstraintBuilder::CATConstraintBuilder(void)
 	require(CONTEXT_TREE_FEATURE);
 	require(COLLECTED_LBLOCKS_FEATURE);
 	require(ICACHE_CATEGORY_FEATURE);
+	require(ASSIGNED_VARS_FEATURE);
 	provide(INST_CACHE_SUPPORT_FEATURE);
 }
 
@@ -313,7 +314,6 @@ void CATConstraintBuilder::configure(const PropList& props) {
 }
 
 } } // otawa::ipet
-
 
 
 
