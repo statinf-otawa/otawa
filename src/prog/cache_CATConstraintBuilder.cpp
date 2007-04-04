@@ -13,6 +13,7 @@
 #include <otawa/cache/categorisation/CATDFA.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/ilp.h>
+#include <otawa/ipet.h>
 #include <otawa/ipet/IPET.h>
 #include <elm/Collection.h>
 #include <otawa/util/ContextTree.h>
