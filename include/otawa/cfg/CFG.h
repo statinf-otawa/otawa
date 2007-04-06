@@ -57,6 +57,7 @@ public:
 	CFG(Segment *seg, BasicBlock *entry);
 	inline Segment *segment(void) const;
 	String label(void);
+	inline int number(void);
 	address_t address(void);
 	inline elm::Collection<BasicBlock *>& bbs(void);
 	inline BasicBlock *entry(void);
@@ -94,6 +95,11 @@ inline int CFG::countBB(void) {
 		scan();
 	return _bbs.length();
 }
+
+inline int CFG::number(void) {
+	return(INDEX(this));
+}
+
 inline bool CFG::isVirtual(void) const {
 	return flags & FLAG_Virtual;
 }
