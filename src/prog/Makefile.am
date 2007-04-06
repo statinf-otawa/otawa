@@ -104,6 +104,7 @@ libotawa_la_SOURCES = \
 	util_LBlockBuilder.cpp \
 	util_Graph.cpp \
 	util_Node.cpp \
+	util_HalfAbsInt.cpp \
 	util_Edge.cpp \
 	util_GenGraph.cpp \
 	util_BitSet.cpp \
