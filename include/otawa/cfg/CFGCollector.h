@@ -51,7 +51,6 @@ private:
 	CString name;
 	CFG *entry;
 	bool rec;
-	void collect(CFGCollection *cfgs, CFG *cfg);
 };
 
 // Features

@@ -23,6 +23,11 @@ Identifier<CFG *> ENTRY("otawa.cfg_entry", 0);
 
 /**
  * Identifier used for storing in each basic block from the CFG its index.
+ * Also used for storing each CFG's index. 
+ *
+ * @par Hooks
+ * @li @ref BasicBlock
+ * @li @ref CFG
  */
 Identifier<int> INDEX("otawa.index", -1);
 

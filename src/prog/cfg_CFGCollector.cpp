@@ -85,36 +85,10 @@ static Identifier<bool> MARK("otawa.cfg_collector.mark", false);
 
 
 /**
- * Collect the given CFG.
- * @param cfgs	Current collection.
- * @param cfg	CFG to collect.
- */
-void CFGCollector::collect(CFGCollection *cfgs, CFG *cfg) {
-	ASSERT(cfgs);
-	ASSERT(cfg);
-	
-	// Test if it has not been already collected
-	if(MARK(cfg))
-		return;
-	cfgs->cfgs.add(entry);
-	
-	// Look recursively
-	if(rec)
-		for(int i = 0; i < cfgs->count(); i++)
-			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++)
-				for(BasicBlock::OutIterator edge(bb); edge; edge++)
-					if(edge->kind() == Edge::CALL
-					&& edge->calledCFG()
-					&& !MARK(edge->calledCFG())) {
-						cfgs->cfgs.add(edge->calledCFG());
-						MARK(edge->calledCFG()) = true;
-					} 
-}
-
-
-/**
  */
 void CFGCollector::processFrameWork (FrameWork *fw) {
+
+        int index = 0;
 	
 	// Set first queue node
 	if(!entry && name) {
@@ -128,22 +102,41 @@ void CFGCollector::processFrameWork (FrameWork *fw) {
 	
 	// Build the involved collection
 	CFGCollection *cfgs = new CFGCollection();
-	INVOLVED_CFGS(fw) = cfgs;
-	collect(cfgs, entry);
+	INDEX(entry) = index;
+	index++;
+	
+	// Entry CFG
+	cfgs->cfgs.add(entry);
 	
 	// Added functions
 	for(int i = 0; i < added_funs.length(); i++) {
 		CFGInfo *info = fw->getCFGInfo();
 		CFG *cfg = info->findCFG(added_funs[i]);
 		if(cfg)
-			collect(cfgs, added_cfgs[i]);
+			cfgs->cfgs.add(cfg);
 		else
 			warn("cannot find a function called \"%s\".", &added_funs[i]);
 	}
 	
 	// Added CFG
 	for(int i = 0; i < added_cfgs.length(); i++)
-		collect(cfgs, added_cfgs[i]);
+		cfgs->cfgs.add(added_cfgs[i]);
+
+	INVOLVED_CFGS(fw) = cfgs;
+	
+	// Build it recursively
+	if(rec)
+		for(int i = 0; i < cfgs->count(); i++)
+			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++)
+				for(BasicBlock::OutIterator edge(bb); edge; edge++)
+					if(edge->kind() == Edge::CALL
+					&& edge->calledCFG()
+					&& !MARK(edge->calledCFG())) {
+					        INDEX(edge->calledCFG()) = index;
+					        index++;
+						cfgs->cfgs.add(edge->calledCFG());
+						MARK(edge->calledCFG()) = true;
+					} 
 }
 
 
