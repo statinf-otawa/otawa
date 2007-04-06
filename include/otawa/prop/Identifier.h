@@ -56,7 +56,7 @@ public:
 		inline operator const T&(void) const;
 		inline Value& operator=(const T& value);
 		inline T operator->(void) const;
-		inline T& operator*(void) const { return ref(); }
+		inline T& operator&(void) const { return ref(); }
 		
 		inline Value& operator+=(const T& v) const { ref() +=  v; return *this; } 
 		inline Value& operator-=(const T& v) const { ref() -=  v; return *this; } 
