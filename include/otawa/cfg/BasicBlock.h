@@ -195,6 +195,11 @@ inline IteratorInst<Inst *> *BasicBlock::visit(void) {
 	return new IteratorObject<InstIterator, Inst *>(iter);
 }
 
+// Output
+inline Output& operator<<(Output& out, BasicBlock *bb) {
+	out << "bb(" << bb->number() << ")";
+}
+
 } // otawa
 
 #endif // OTAWA_CFG_BASIC_BLOCK_H
