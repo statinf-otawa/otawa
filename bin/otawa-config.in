@@ -5,6 +5,7 @@ option=
 cflags=
 libs=
 data=
+doc=
 cflags_text="-I@prefix@/include"
 libs_text="@prefix@/lib/libotawa.la"
 
@@ -22,6 +23,9 @@ while test "$1" != ""; do
 	--data)
 		data=ok
 		option=ok
+		;;
+	--doc)
+		doc=ok
 		;;
 	--has-so)
 		exit @HAS_SO@
@@ -62,6 +66,7 @@ if test "$option" == ""; then
 	echo "	--cflags: display required compilation flags."
 	echo "	--libs: display required libs."
 	echo "	--data: display path to package data."
+	echo "  --doc: display path to the auto-documentation."
 	echo "	--has-so: exit 0 if OTAWA is s shared object, false else."
 	echo "  +module: Link module statically, even if we have plugins."
 	echo "Modules may be:"
@@ -81,4 +86,7 @@ if test "$libs" == "ok"; then
 fi
 if test "$data" == "ok"; then
 	echo @prefix@/share/Otawa
+fi
+if test "$doc" == "ok"; then
+	echo @prefix@/share/Otawa/autodoc/index.html
 fi
