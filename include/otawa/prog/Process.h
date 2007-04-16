@@ -53,7 +53,7 @@ public:
 	inline Manager *manager(void) { return man; }
 	virtual const hard::CacheConfiguration& cache(void);
 	virtual Inst *start(void) = 0;
-	virtual Inst *findInstAt(address_t addr) = 0;
+	virtual Inst *findInstAt(address_t addr);
 	virtual address_t findLabel(String& label);
 	virtual Inst *findInstAt(String& label);
 	virtual sim::Simulator *simulator(void);
