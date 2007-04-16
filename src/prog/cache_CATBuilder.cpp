@@ -97,6 +97,11 @@ void CATBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {
 		CATBuilder::NODE(lblock) += new CATNode(lblock);*/
 	BitSet *virtuel = buildLBLOCKSET(lbset, ct);
 	setCATEGORISATION(lbset, ct, cach->blockBits());
+	
+	// Clean up
+	for (CFGCollection::Iterator cfg(coll); cfg; cfg++)
+		for (CFG::BBIterator block(*cfg); block; block++)
+			IN(block).remove();
 }
 
 
@@ -403,7 +408,7 @@ BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
 	 * For loops, annotate the loop-header with the set of all l-blocks in the loop
 	 */
 	if(root->kind()== ContextTree::LOOP){
-		SET(root).add(set); 
+		SET(root) = set; 
 	}
 	return set;
 }
