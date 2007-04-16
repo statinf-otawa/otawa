@@ -19,6 +19,8 @@
 #include <otawa/exegraph/ExeGraphBBTime.h>
 #include <otawa/gensim/GenericSimulator.h>
 #include <otawa/util/LBlockBuilder.h>
+#include <otawa/display/CFGDrawer.h>
+#include <otawa/cfg/CFGCollector.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -98,8 +100,8 @@ using namespace elm::option;
  * function_name.lp containing the generated ILP system. The generated file
  * use the lp_solve syntax and may feed the lp_solve command.
  *
- * -G, --dump-graph: for each function, generate a file named
- * function_name.dot containing the graph of the processed functions in DOT
+ * -G, --dump-graph: for each function involved in the task, generate a file named
+ * function_name.ps containing the graph of the processed functions in DOT
  * file format.
  */
 
@@ -339,6 +341,30 @@ void Command::compute(String fun) {
 		if(!stream.isReady())
 			throw MessageException("cannot create file \"%s\".", &out_file);
 		sys->dump(stream);
+	}
+	
+	// Dump the CFG
+	if(dump_graph) {
+		
+		// Record results
+		WCETCountRecorder recorder;
+		recorder.process(fw, props);
+		
+		// Generates output
+		if(verbose)
+			cout << "Starting otawa::ipet::CFGDrawer\n";
+		for(CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+			if(verbose)
+				cout << "\tprocess CFG " << cfg->label() << io::endl;
+			StringBuffer buf;
+			buf << cfg->label() << ".ps";
+			String filename = buf.toString();
+			display::GRAPHVIZ_FILE(props) = filename.toCString();
+			display::CFGDrawer drawer(cfg, props);
+			drawer.display();
+		if(verbose)
+			cout << "Starting otawa::ipet::CFGDrawer\n";
+		}
 	}
 }
 
