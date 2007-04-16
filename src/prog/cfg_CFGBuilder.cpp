@@ -129,6 +129,9 @@ void CFGBuilder::buildCFG(Segment *seg) {
 	assert(seg);
 	PseudoInst *pseudo;
 	
+	/*for(Segment::ItemIter item(seg); item; item++)
+		cerr << "ITEM " << item->address() << io::endl;*/
+	
 	// Add the initial basic block
 	Segment::ItemIter item(seg);
 	while(item && !item->toInst())
