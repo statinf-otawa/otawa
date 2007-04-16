@@ -56,7 +56,7 @@ void CodeSegment::buildInsts(void) {
 		// Get the instruction
 		inst = 0;
 		iss_fetch((::address_t)addr, buffer);
-		inst = iss_decode(_file.state(), (::address_t)addr, buffer);
+		inst = iss_decode(_file.state(), (::address_t)addr, buffer, 0);
 		assert(inst);
 	
 		// Look for its kind

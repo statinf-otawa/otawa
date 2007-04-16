@@ -89,7 +89,7 @@ void ControlInst::scanCustom(instruction_t *inst) {
 	
 	// Compute the target if address available
 	if(target_addr)
-		_target = (Inst *)segment().findInstAt(target_addr);
+		_target = (Inst *)segment().file().findByAddress(target_addr);
 }
 
 // Overloaded

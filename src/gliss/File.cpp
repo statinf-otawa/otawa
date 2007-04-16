@@ -147,7 +147,8 @@ void File::initSyms(void) {
  */
 otawa::Inst *File::findByAddress(address_t addr) {
 	for(SegIter seg(this); seg; seg++)
-		if(seg->flags() & Segment::EXECUTABLE) {
+		if(seg->flags() & Segment::EXECUTABLE
+		&& addr >= seg->address() && addr < seg->topAddress()) {
 			CodeSegment *cseg = (CodeSegment *)*seg;
 			otawa::Inst *result = cseg->findInstAt(addr);
 			if(result)
