@@ -128,11 +128,12 @@ Symbol *File::findSymbol(String name) {
  * @return			Found instruction or null.
  */
 Inst *File::findByAddress(address_t address) {
-	for(SegIter seg(this); seg; seg++) {
-		Inst *inst = seg->findInstAt(address);
-		if(inst)
-			return inst;
-	}
+	for(SegIter seg(this); seg; seg++)
+		if(seg->address() <= address && address < seg->topAddress()) {
+			Inst *inst = seg->findInstAt(address);
+			if(inst)
+				return inst;
+		}
 	return 0;
 }
 

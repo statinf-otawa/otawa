@@ -129,12 +129,7 @@ Inst *Segment::findInstAt(address_t addr) {
  * @return		Found item or null.
  */
 ProgItem *Segment::findItemAt(address_t addr) {
-
-	// In the segment ?
-	if(addr < address() || addr >= address() + size())
-		return 0;
-	
-	// Look in the instruction
+	ASSERTP(address() <= addr && addr < topAddress(), "item out of this segment");
 	ProgItem *item = map[MAP_INDEX(addr)];
 	if(item)
 		while(item && item->address() <= addr) {
