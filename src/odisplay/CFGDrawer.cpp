@@ -64,6 +64,7 @@ void CFGDrawer::make(){
 	}
 	assert(_cfg);
 	assert(_graph);
+	
 	// Construct the Graph
 	HashTable<void*, Node*> map;
 	for(CFG::BBIterator bb(_cfg); bb; bb++){
