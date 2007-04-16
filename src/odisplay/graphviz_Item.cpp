@@ -121,7 +121,8 @@ String GraphVizItem::attributes(const PropList& style){
 	buf << ']';
 	if(buf.length() <= 2)
 		return ""; // No attributes
-	return quoteNewlines(buf.toString());
+	String str = quoteNewlines(buf.toString());
+	return str;
 }
 
 
