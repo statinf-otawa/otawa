@@ -54,7 +54,7 @@ Inst * FullSimulationDriver::nextInstruction(State& state, Inst *_inst)
 		{
 			code_t code;
 			iss_fetch((::address_t)(unsigned long)inst->address(), &code);
-			instruction_t *emulated_inst = iss_decode(&emulator_state, (::address_t)(unsigned long)inst->address(), &code);
+			instruction_t *emulated_inst = iss_decode(&emulator_state, (::address_t)(unsigned long)inst->address(), &code, 0);
 			iss_complete(emulated_inst, &emulator_state);
 			iss_free(emulated_inst);
 			if (NIA(&emulator_state) != CIA(&emulator_state) + sizeof(code_t))
