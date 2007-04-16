@@ -123,6 +123,11 @@ inline ContextTree::ChildrenIterator::ChildrenIterator(ContextTree *tree)
 	assert(tree);
 };
 
+// Output
+inline Output& operator<<(Output& out, ContextTree *ct) {
+	out << "context_tree(" << (void *)ct << ")";
+} 
+
 }	// otawa
 
 #endif	// OTAWA_CONTEXT_TREE_H
