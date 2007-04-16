@@ -1,6 +1,7 @@
 SUBDIRS= \
 	prog \
-	odisplay
+	odisplay \
+	oloader
 
 if HAS_GLISS_PPC
 SUBDIRS += gliss
