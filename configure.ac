@@ -216,7 +216,7 @@ AC_SUBST(HAS_SO)
 
 
 # ==== Output ====
-AC_OUTPUT([
+AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 	src/prog/Makefile
@@ -229,10 +229,10 @@ AC_OUTPUT([
 	src/oipet/Makefile
 	src/odisplay/Makefile
 	src/ogensim/Makefile
+	src/oloader/Makefile
 	src/arm/Makefile
 	examples/Makefile
 	bin/Makefile
-	bin/otawa-config
 	test/Makefile
 	test/lp_solve/Makefile
 	test/ipet/Makefile
@@ -279,4 +279,12 @@ AC_OUTPUT([
 	include/otawa/gensim/Makefile
 	data/Makefile
 	data/procs/Makefile
-], [])
+])
+AC_CONFIG_FILES([bin/otawa-config], [], [
+	echo "setting +x to bin/otawa-config"
+	chmod +x bin/otawa-config
+])
+AC_OUTPUT()
+
+
+
