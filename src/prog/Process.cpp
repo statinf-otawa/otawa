@@ -114,6 +114,7 @@ const hard::CacheConfiguration& Process::cache(void) {
 address_t Process::findLabel(String& label) {
 	address_t result = 0;
 	for(FileIter file(this); file; file++) {
+		//cerr << "Looking at " << file->name() << io::endl;
 		result = file->findLabel(label);
 		if(result)
 			break;
@@ -198,6 +199,21 @@ void Process::addFile(File *file) {
 Process::~Process(void) {
 	for(FileIter file(this); file; file++)
 		delete file;
+}
+
+
+/**
+ * Find the instruction at the given address.
+ * @param addr	Address to look at.
+ * @return		Instruction at the given address or null if it cannot be found.
+ */
+Inst *Process::findInstAt(address_t addr) {
+	for(FileIter file(this); file; file++) {
+		Inst *result = file->findByAddress(addr);
+		if(result)
+			return result;
+	}
+	return 0;
 }
 
 } // otawa
