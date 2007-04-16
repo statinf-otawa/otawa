@@ -1,13 +1,13 @@
 loaderdir=$(libdir)/otawa/loader
 loader_LTLIBRARIES=arm.la
 
-AM_CXXFLAGS = @ARM_PPC_CXXFLAGS@ @ARM_CXXFLAGS@
+AM_CXXFLAGS = @GLISS_ARM_CXXFLAGS@ @OTAWA_CXXFLAGS@
 
 arm_la_LDFLAGS = -module
 
-arm_la_LIBADD = @ARM_PPC_LIBS@ @OTAWA_LIBS@
+arm_la_LIBADD = @GLISS_ARM_LIBS@ @OTAWA_LIBS@ ../oloader/liboloader.la
 
-arm_la_SOURCES =
+arm_la_SOURCES = arm.cpp
 
 
 install-data-hook:
