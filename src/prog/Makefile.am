@@ -1,6 +1,6 @@
 lib_LTLIBRARIES=libotawa.la
 
-AM_CXXFLAGS=@OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@
+AM_CXXFLAGS=@OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@ -DAUTODOC="\"@AUTODOC@\""
 AM_YYFLAGS=-dv
 
 libotawa_la_LDFLAGS=
@@ -41,6 +41,7 @@ libotawa_la_SOURCES = \
 	proc_ASTProcessor.cpp \
 	proc_BBProcessor.cpp \
 	proc_ProcessorException.cpp \
+	proc_Registry.cpp \
 	Process.cpp \
 	ipet_BasicConstraintsBuilder.cpp \
 	ipet_BasicObjectFunctionBuilder.cpp \

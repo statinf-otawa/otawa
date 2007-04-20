@@ -7,11 +7,19 @@
 
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Feature.h>
+#include <otawa/proc/Registry.h>
 
 using namespace elm;
 using namespace elm::io;
 
 namespace otawa {
+
+// Registration
+static Configuration output_conf(Processor::OUTPUT, AUTODOC "/classotawa_1_1Processor.html");
+static Configuration verbose_conf(Processor::VERBOSE, AUTODOC "/classotawa_1_1Processor.html");
+static Configuration stats_conf(Processor::STATS, AUTODOC "/classotawa_1_1Processor.html");
+static Configuration timed_conf(Processor::TIMED, AUTODOC "/classotawa_1_1Processor.html");
+
 
 /**
  * @class Processor
@@ -19,10 +27,15 @@ namespace otawa {
  * the argument can only be the full framework. Look at sub-classes for more
  * accurate processors.
  * 
- * The processor configuration accepts the following properties:
- * @ref PROC_OUTPUT, @ref PROC_VERBOSE, @ref PROC_STATS, @ref PROC_TIMED.
+ * @p Configuration
+ * @li @ref Processor::OUTPUT,
+ * @li @ref Processor::VERBOSE,
+ * @li @ref Processor::STATS,
+ * @li @ref Processor::TIMED.
  * 
- * This processor may generate the following statistics: @ref PROC_RUNTIME.
+ * @p Statistics
+ * The statistics are recorded in the property list passed by @ref Processor::STATS. 
+ * @li @ref Processor::RUNTIME.
  */
 
 
@@ -36,6 +49,10 @@ namespace otawa {
 Processor::Processor(elm::String name, elm::Version version,
 const PropList& props): _name(name), _version(version), flags(0), stats(0) {
 	init(props);
+	config(output_conf);
+	config(verbose_conf);
+	config(stats_conf);
+	config(timed_conf);
 }
 
 /**
@@ -45,12 +62,17 @@ const PropList& props): _name(name), _version(version), flags(0), stats(0) {
  */
 Processor::Processor(String name, Version version)
 : _name(name), _version(version), flags(0), stats(0) {
+	config(output_conf);
+	config(verbose_conf);
+	config(stats_conf);
+	config(timed_conf);
 }
 
 
 /**
  * Build a new processor.
- * @param	Configuration properties.
+ * @param			Configuration properties.
+ * @deprecated		Configuration must be passed at the process() call.
  */
 Processor::Processor(const PropList& props): flags(0), stats(0) {
 	init(props);
@@ -209,10 +231,18 @@ void Processor::warn(CString format, ...) {
 
 
 /**
+ * @fn void Processor::config(Configuration& config);
+ * Add the given configuration identifier to the list of configuration of this
+ * processor.
+ * @param config	Configuration identifier to add.
+ */
+
+
+/**
  * This property identifier is used for setting the output stream used by
  * the processor for writing messages (information, warning, error) to the user.
  */
-Identifier<elm::io::OutStream *> Processor::OUTPUT("Processor::output", 0, otawa::NS);
+Identifier<elm::io::OutStream *> Processor::OUTPUT("otawa::Processor::output", 0, otawa::NS);
 
 
 /**
@@ -220,7 +250,7 @@ Identifier<elm::io::OutStream *> Processor::OUTPUT("Processor::output", 0, otawa
  * that will be used to store statistics about the performed work. Implicitly,
  * passing such a property activates the statistics recording facilities.
  */
-Identifier<PropList *> Processor::STATS("Processor::stats", 0, otawa::NS);
+Identifier<PropList *> Processor::STATS("otawa::Processor::stats", 0, otawa::NS);
 
 
 /**
@@ -228,27 +258,21 @@ Identifier<PropList *> Processor::STATS("Processor::stats", 0, otawa::NS);
  * statistics will also be collected with other processor statistics. Passing
  * such a property without @ref PROC_STATS has no effects.
  */
-Identifier<bool> Processor::TIMED("Processor::timed", false, otawa::NS);
+Identifier<bool> Processor::TIMED("otawa::Processor::timed", false, otawa::NS);
 
 
 /**
  * This property identifier is used to store in the statistics of a processor
  * the overall run time of the processor work.
  */
-Identifier<elm::system::time_t> Processor::RUNTIME("Processor::runtime", 0, otawa::NS);
+Identifier<elm::system::time_t> Processor::RUNTIME("otawa::Processor::runtime", 0, otawa::NS);
 
 
 /**
  * This property activates the verbose mode of the processor: information about
  * the processor work will be displayed.
  */
-Identifier<bool> Processor::VERBOSE("Processor::verbose", false, otawa::NS);
-
-
-/**
- * This property selects the task entry point currently processed.
- */
-//Identifier<elm::CString> Processor::ENTRY("Processor::entry", "main", otawa::NS);
+Identifier<bool> Processor::VERBOSE("otawa::Processor::verbose", false, otawa::NS);
 
 
 /**
