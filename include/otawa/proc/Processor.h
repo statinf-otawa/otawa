@@ -18,14 +18,18 @@ namespace otawa {
 using namespace elm;
 using namespace elm::genstruct;
 class AbstractFeature;
+class Registration;
+class Configuration;
 
 // Processor class
 class Processor {
+	friend class Registration;
 	elm::String _name;
 	elm::Version _version;
 	void init(const PropList& props);
 	Vector<const AbstractFeature *> required;
 	Vector<const AbstractFeature *> provided;
+	Vector<Configuration *> configs; 
 
 protected:
 	static const unsigned long IS_TIMED = 0x01;
@@ -40,6 +44,7 @@ protected:
 	inline bool recordsStats(void) const;
 	void require(const AbstractFeature& feature);
 	void provide(const AbstractFeature& feature);
+	inline void config(Configuration& config) { configs.add(&config); }
 	void warn(CString format, VarArg args);
 	void warn(CString format, ...);
 
