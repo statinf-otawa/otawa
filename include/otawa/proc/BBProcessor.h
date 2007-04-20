@@ -18,9 +18,8 @@ protected:
 	virtual void processBB(FrameWork *fw, CFG *cfd, BasicBlock *bb) = 0;
 	
 public:
-	BBProcessor(const PropList& props = PropList::EMPTY);
-	BBProcessor(elm::String name, elm::Version version = elm::Version::ZERO,
-		const PropList& props = PropList::EMPTY);
+	BBProcessor(void);
+	BBProcessor(elm::String name, elm::Version version = elm::Version::ZERO);
 };
 
 } // otawa
