@@ -13,8 +13,10 @@
 #include <otawa/ilp.h>
 #include <otawa/ipet/BBTimeSimulator.h>
 #include <otawa/gensim/GenericSimulator.h>
+#include <otawa/proc/Registry.h>
 
 //#define WITH_VIRTUAL
+//#define REGISTRY
 
 using namespace elm;
 using namespace otawa;
@@ -95,6 +97,17 @@ int main(int argc, char **argv) {
 		cout << sys->countVars() << " variables and "
 			 << sys->countConstraints() << " constraints.\n";
 		cout << "SUCCESS\nWCET = " << WCET(fw) << '\n';
+		
+		// Display registrations
+		#ifdef REGISTRY
+			cout << "\nREGISTRATIONS\n";
+			for(Registry::Iter reg; reg; reg++) {
+				cout << reg->name() << " " << reg->version()
+					 << " (" << reg->help() << ")" << io::endl;
+				for(Registration::ConfigIter conf(reg); conf; conf++)
+					cout << "\t" << conf->id().name() << " (" << conf->help() << ")\n"; 
+			}
+		#endif
 	}
 	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
