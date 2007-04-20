@@ -9,11 +9,17 @@
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/ilp/Var.h>
 #include <otawa/cfg.h>
+#include <otawa/proc/Registry.h>
 
 using namespace elm;
 using namespace otawa::ilp;
 
 namespace otawa { namespace ipet {
+
+// Registration
+static VarAssignment proc;
+static Registration reg(proc, AUTODOC "/classotawa_1_1ets_1_1VarAssignment.html");
+static Configuration explicit_conf(EXPLICIT, AUTODOC "/namespaceotawa_1_1ipet.html");
 
 
 /**
@@ -61,11 +67,12 @@ void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
  * Build a new variable assignment processor.
  */
 VarAssignment::VarAssignment(void)
-: 	BBProcessor("otawa::VarAssignment", Version(1, 0, 0)),
+: 	BBProcessor("otawa::ipet::VarAssignment", Version(1, 0, 0)),
 	_explicit(false),
 	_recursive(false)
 {
-	provide(ASSIGNED_VARS_FEATURE);		
+	provide(ASSIGNED_VARS_FEATURE);
+	config(	explicit_conf);
 }
 
 

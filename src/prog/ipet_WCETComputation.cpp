@@ -13,10 +13,16 @@
 #include <otawa/ipet/BasicConstraintsBuilder.h>
 #include <otawa/ipet/BasicObjectFunctionBuilder.h>
 #include <otawa/ipet/FlowFactLoader.h>
+#include <otawa/proc/Registry.h>
 
 using namespace otawa::ilp;
 
 namespace otawa { namespace ipet {
+
+// Registration
+static WCETComputation proc;
+static Registration reg(proc, AUTODOC "/classotawa_1_1ets_1_1WCETComputation.html");
+
 
 /**
  * @class WCETComputation
