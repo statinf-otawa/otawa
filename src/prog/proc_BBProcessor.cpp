@@ -20,9 +20,8 @@ namespace otawa {
 
 /**
  * Build a new basic block processor.
- * @param props	Configuration properties.
  */
-BBProcessor::BBProcessor(const PropList& props): CFGProcessor(props) {
+BBProcessor::BBProcessor(void) {
 }
 
 
@@ -30,10 +29,9 @@ BBProcessor::BBProcessor(const PropList& props): CFGProcessor(props) {
  * Buid a new named basic block processor.
  * @param name		Processor name.
  * @param version	Processor version.
- * @param props		Configuration properties.
  */
-BBProcessor::BBProcessor(elm::String name, elm::Version version,
-const PropList& props): CFGProcessor(name, version, props) {
+BBProcessor::BBProcessor(elm::String name, elm::Version version)
+: CFGProcessor(name, version) {
 }
 
 

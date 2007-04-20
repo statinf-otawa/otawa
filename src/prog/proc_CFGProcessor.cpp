@@ -34,11 +34,9 @@ namespace otawa {
 
 /**
  * Build a new CFG processor.
- * @param props		Configuration properties.
  */
-CFGProcessor::CFGProcessor(const PropList& props)
-: Processor(props), last(0) {
-	init(props);
+CFGProcessor::CFGProcessor(void)
+: last(0) {
 	require(COLLECTED_CFG_FEATURE);
 }
 
@@ -47,11 +45,9 @@ CFGProcessor::CFGProcessor(const PropList& props)
  * Build a new named processor.
  * @param name		Processor name.
  * @param version	Processor version.
- * @param props		Configuration properties.
  */
-CFGProcessor::CFGProcessor(elm::String name, elm::Version version,
-const PropList& props): Processor(name, version, props), last(0) {
-	init(props);
+CFGProcessor::CFGProcessor(elm::String name, elm::Version version)
+: Processor(name, version), last(0) {
 	require(COLLECTED_CFG_FEATURE);
 }
 
