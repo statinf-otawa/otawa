@@ -115,7 +115,6 @@ Registration::Registration(Processor& processor, CString help)
  * Internal.
  */
 void Registration::initialize(void) {
-	cout << "initialized !\n";
 	Registry::_.procs.put(name(), this);
 }
 
