@@ -55,10 +55,10 @@ public:
 	class ConfigIter: public genstruct::Vector<Configuration *>::Iterator {
 	public:
 		inline ConfigIter(const Registration& reg):
-			genstruct::Vector<Configuration *>::Iterator(reg._processor.configs)
+			genstruct::Vector<Configuration *>::Iterator(reg.configs())
 			{ }
 		inline ConfigIter(const Registration *reg):
-			genstruct::Vector<Configuration *>::Iterator(reg->_processor.configs)
+			genstruct::Vector<Configuration *>::Iterator(reg->configs())
 			{ }
 	};
 
@@ -66,6 +66,7 @@ public:
 	void initialize(void);
 
 private:
+	inline const Vector<Configuration *>& configs(void) const { return _processor.configs; }
 	Processor& _processor;
 	CString _help;
 };
