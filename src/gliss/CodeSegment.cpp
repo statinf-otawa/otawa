@@ -5,6 +5,7 @@
  *	gliss/CodeSegment.cpp -- gliss::CodeSegment class implementation.
  */
 
+#include <elm/assert.h>
 #include <elm/debug.h>
 #include <otawa/gliss.h>
 #include <otawa/gliss/MemInst.h>
@@ -64,7 +65,7 @@ void CodeSegment::buildInsts(void) {
 		if(inst->ident == ID_Instrunknown)
 			result = new Inst(*this, addr);
 		else {
-			assert(iss_table[inst->ident].category <= 26);
+			ASSERT(iss_table[inst->ident].category <= 26);
 			switch(iss_table[inst->ident].category) {
 			case 5: 	// STORE
 			case 6:		// LOAD
