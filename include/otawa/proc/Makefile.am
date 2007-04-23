@@ -6,7 +6,9 @@ includeotawaproc_HEADERS = \
 	Feature.h \
 	FunProcessor.h \
 	Processor.h \
-	ProcessorException.h
+	ProcessorException.h \
+	Registry.h
+
 
 	
 	
