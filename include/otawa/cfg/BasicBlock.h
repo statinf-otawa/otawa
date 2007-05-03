@@ -19,7 +19,7 @@
 namespace otawa {
 
 // Extern class
-class FrameWork;
+class WorkSpace;
 class Edge;
 class CFG;
 extern Identifier<int> INDEX;
@@ -85,7 +85,7 @@ public:
 
 	// Constructors
 	inline BasicBlock(void): _head(0), flags(0), _cfg(0) { };
-	static BasicBlock *findBBAt(FrameWork *fw, address_t addr);
+	static BasicBlock *findBBAt(WorkSpace *fw, address_t addr);
 	
 	// Generic accessors
 	virtual inline IteratorInst<Inst *> *visit(void);
