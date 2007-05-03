@@ -27,8 +27,8 @@ public:
 	BasicConstraintsBuilder(void);
 
 	// CFGProcessor overload
-	virtual void processFrameWork(FrameWork *fw);
-	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+	virtual void processWorkSpace(WorkSpace *fw);
+	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 };
 
 // Features
