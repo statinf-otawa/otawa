@@ -19,7 +19,7 @@ class VarAssignment: public BBProcessor {
 	String makeEdgeVar(Edge *edge, CFG *cfg);
 
 protected:
-	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 
 public:
 	VarAssignment(void);
