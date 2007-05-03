@@ -53,7 +53,7 @@ BasicObjectFunctionBuilder::BasicObjectFunctionBuilder(void)
 /**
  */
 void BasicObjectFunctionBuilder::processBB(
-	FrameWork *fw,
+	WorkSpace *fw,
 	CFG *cfg,
 	BasicBlock *bb)
 {
