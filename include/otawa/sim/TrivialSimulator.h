@@ -21,7 +21,7 @@ public:
 	TrivialSimulator(void);
 	
 	// Simulator overload
-	virtual State *instantiate(FrameWork *fw,
+	virtual State *instantiate(WorkSpace *fw,
 		const PropList& props = PropList::EMPTY);
 };
 
