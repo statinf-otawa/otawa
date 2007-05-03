@@ -40,9 +40,9 @@ Identifier<CFGInfo *> CFGInfo::ID("cfg_info_id", 0, otawa::NS);
 
 /**
  * Build a new CFGInfo.
- * @param fw	Framework that the CFG information applies to.
+ * @param fw	Workspace that the CFG information applies to.
  */
-CFGInfo::CFGInfo(FrameWork *_fw, elm::Collection <CFG *>& cfgs)
+CFGInfo::CFGInfo(WorkSpace *_fw, elm::Collection <CFG *>& cfgs)
 : fw(_fw) {
 	TRACE(this << ".CFGInfo::CFGInfo(" << _fw << ")");
 	_cfgs.addAll(&cfgs);
