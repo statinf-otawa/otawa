@@ -21,7 +21,7 @@ namespace otawa { namespace ipet {
  * each memory access instruction in the basic block.
  */
 
-void TrivialDataCacheManager::configure(FrameWork *framework) {
+void TrivialDataCacheManager::configure(WorkSpace *framework) {
 	fw = framework;
 	if(!fw->cache().hasDataCache()) {
 		time = 0;
@@ -46,7 +46,7 @@ TrivialDataCacheManager::TrivialDataCacheManager(void)
 
 /**
  */	
-void TrivialDataCacheManager::processBB(FrameWork *framework, CFG *cfg,
+void TrivialDataCacheManager::processBB(WorkSpace *framework, CFG *cfg,
 BasicBlock *bb) {
 	assert(framework);
 	assert(cfg);
