@@ -29,14 +29,14 @@ namespace ipet {
 // CCGConstraintBuilder class
 class CCGConstraintBuilder: public Processor {
 	bool _explicit;
-	void processLBlockSet(FrameWork *fw, LBlockSet *lbset);
+	void processLBlockSet(WorkSpace *fw, LBlockSet *lbset);
 	void addConstraintHeader(ilp::System *system, LBlockSet *graph, ContextTree *ct,
 		LBlock *boc);
 public:
 	CCGConstraintBuilder(void);
 	
 	// CFGProcessor overload
-	virtual void processFrameWork(FrameWork *fw);
+	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void configure(const PropList& props = PropList::EMPTY);
 };
 
