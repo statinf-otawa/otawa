@@ -1,13 +1,13 @@
 /*
  * $Id$
- * Copyright (c) 2005, IRIT-UPS <casse@irit.fr>
+ * Copyright (c) 2005-07, IRIT-UPS <casse@irit.fr>
  * 
- * src/prog/util_FlowFactLoader.cpp -- FlowFactLoader class implementation.
+ * otawa::util::FlowFactLoader.cpp class implementation
  */
 
 #include <stdio.h>
 #include <otawa/util/FlowFactLoader.h>
-#include <otawa/prog/FrameWork.h>
+#include <otawa/prog/WorkSpace.h>
 #include <elm/checksum/Fletcher.h>
 #include <elm/io/InFileStream.h>
 
@@ -66,7 +66,7 @@ FlowFactLoader::FlowFactLoader(void): checksummed(false), _verbose(false) {
  * 				executable file path).
  * @param verbose	Activate verbose mode.
  */
-void FlowFactLoader::run(FrameWork *fw, Path path, bool verbose) {
+void FlowFactLoader::run(WorkSpace *fw, Path path, bool verbose) {
 	_fw = fw;
 	_verbose = verbose;
 	

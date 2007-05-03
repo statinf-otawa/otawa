@@ -27,11 +27,11 @@ Identifier<FunAST *> FunAST::ID("ast::FunAST::id", 0, otawa::NS);
 	
 /**
  * Build a new function AST.
- * @param fw		Famework containing the function.
+ * @param fw		workspace containing the function.
  * @param entry	First instruction of the function.
  * @param name	Function name.
  */
-FunAST::FunAST(FrameWork *fw, Inst *entry, String name)
+FunAST::FunAST(WorkSpace *fw, Inst *entry, String name)
 : ent(entry), _name(name), _ast(&AST::UNDEF) {
 	
 	// Mark the entry
