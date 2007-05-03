@@ -47,7 +47,7 @@ BBProcessor::BBProcessor(elm::String name, elm::Version version)
 /**
  * See @ref CFGProcessor::processCFG()
  */
-void BBProcessor::processCFG(FrameWork *fw, CFG *cfg) {
+void BBProcessor::processCFG(WorkSpace *fw, CFG *cfg) {
 	for(CFG::BBIterator bb(cfg); bb; bb++) {		
 		if(isVerbose())
 			out << "\t\tprocess BB " << bb->number()
