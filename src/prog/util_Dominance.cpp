@@ -124,7 +124,7 @@ bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 /**
  * Computes the domination relation.
  */
-void Dominance::processCFG(FrameWork *fw, CFG *cfg) {
+void Dominance::processCFG(WorkSpace *fw, CFG *cfg) {
 	assert(cfg);
 	DominanceProblem dp(cfg);
 	dfa::IterativeDFA<DominanceProblem, BitSet> engine(dp, *cfg);

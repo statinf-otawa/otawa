@@ -83,7 +83,7 @@ void CCGConstraintBuilder::configure(const PropList& props) {
 
 /**
  */
-void CCGConstraintBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {
+void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	
 	// Initialization
 	CFG *entry_cfg = ENTRY_CFG(fw);
@@ -323,7 +323,7 @@ void CCGConstraintBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {
 
 /**
  */
-void CCGConstraintBuilder::processFrameWork(FrameWork *fw) {
+void CCGConstraintBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = fw->platform()->cache().instCache();

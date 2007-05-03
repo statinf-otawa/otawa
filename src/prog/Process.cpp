@@ -10,7 +10,7 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/prog/Loader.h>
-#include <otawa/prog/FrameWork.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/prog/Manager.h>
 #include <otawa/gensim/GenericSimulator.h>
 

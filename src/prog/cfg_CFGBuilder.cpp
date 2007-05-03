@@ -38,7 +38,7 @@ CFGBuilder::CFGBuilder(void)
 
 /**
  */	
-void CFGBuilder::processFrameWork(FrameWork *fw) {
+void CFGBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 	buildAll(fw);
 }
@@ -253,7 +253,7 @@ void CFGBuilder::addFile(File *file) {
  * Build the CFG of the program.
  * @param fw	Current framework.
  */
-void CFGBuilder::buildAll(FrameWork *fw) {
+void CFGBuilder::buildAll(WorkSpace *fw) {
 	assert(fw);
 	_cfgs.clear();
 	
