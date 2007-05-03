@@ -68,7 +68,7 @@ public:
 class ContextTreeBuilder: public Processor {
 public:
 	ContextTreeBuilder(void);
-	virtual void processFrameWork(FrameWork *fw);
+	virtual void processWorkSpace(WorkSpace *fw);
 };
 
 // Features
