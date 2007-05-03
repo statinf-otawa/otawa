@@ -16,9 +16,9 @@ namespace otawa { namespace ipet {
 class WCETCountRecorder: public BBProcessor {
 	ilp::System *system;
 protected:
-	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
-	virtual void setup(FrameWork *fw);
-	virtual void cleanup(FrameWork *fw);
+	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+	virtual void setup(WorkSpace *fw);
+	virtual void cleanup(WorkSpace *fw);
 public:
 	WCETCountRecorder(void);
 };
