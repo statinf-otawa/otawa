@@ -88,7 +88,7 @@ CATConstraintBuilder::CATConstraintBuilder(void)
 
 /**
  */
-void CATConstraintBuilder::processLBlockSet(FrameWork *fw, LBlockSet *id ) {
+void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 
 	ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
 	assert (system);
@@ -245,7 +245,7 @@ void CATConstraintBuilder::processLBlockSet(FrameWork *fw, LBlockSet *id ) {
 	
 
 
-void CATConstraintBuilder::processFrameWork(FrameWork *fw) {
+void CATConstraintBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = fw->platform()->cache().instCache();

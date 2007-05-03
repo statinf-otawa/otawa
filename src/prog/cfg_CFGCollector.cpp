@@ -86,7 +86,7 @@ static Identifier<bool> MARK("otawa.cfg_collector.mark", false);
 
 /**
  */
-void CFGCollector::processFrameWork (FrameWork *fw) {
+void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
         int index = 0;
 	

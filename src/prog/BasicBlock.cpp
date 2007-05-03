@@ -6,7 +6,7 @@
  */
 
 #include <otawa/cfg.h>
-#include <otawa/prog/FrameWork.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 
@@ -255,7 +255,7 @@ BasicBlock::~BasicBlock(void) {
  * @param fw	Framework to look in.
  * @param addr	Address of basic block or null if it cannot be found.
  */
-BasicBlock *BasicBlock::findBBAt(FrameWork *fw, address_t addr) {
+BasicBlock *BasicBlock::findBBAt(WorkSpace *fw, address_t addr) {
 	Inst *inst = fw->findInstAt(addr);
 	PseudoInst *pseudo;
 	while(inst

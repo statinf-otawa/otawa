@@ -47,7 +47,7 @@ void TrivialBBTime::configure(const PropList& props) {
 
 /**
  */
-void TrivialBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
+void TrivialBBTime::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 	TIME(bb) = dep * bb->countInstructions();
 }
 
