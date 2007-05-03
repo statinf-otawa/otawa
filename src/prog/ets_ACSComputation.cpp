@@ -41,7 +41,7 @@ namespace otawa { namespace ets {
  * @param fw	Container framework.
  * @param ast	AST to process.
  */	
-void ACSComputation::processAST(FrameWork *fw, AST *ast) {
+void ACSComputation::processAST(WorkSpace *fw, AST *ast) {
 	for(int j=0;j<cache_size;j++){
 		AbstractCacheState::AbstractCacheState *acs= new AbstractCacheState::AbstractCacheState(j);
 		AC_OUT(cout <<"||||||- "<<j<<" -||||||\n");
@@ -65,7 +65,7 @@ void ACSComputation::processAST(FrameWork *fw, AST *ast) {
  * @param ast	AST to process.
  * @param acs	AbstractCacheState of preceding nodes.
  */
-void ACSComputation::initialization(FrameWork *fw, AST *ast, AbstractCacheState *acs) {
+void ACSComputation::initialization(WorkSpace *fw, AST *ast, AbstractCacheState *acs) {
 	if (HITS(ast) == -1){
 		HITS(ast) = 0;
 		MISSES(ast) = 0;
@@ -140,7 +140,7 @@ void ACSComputation::initialization(FrameWork *fw, AST *ast, AbstractCacheState 
  * @return AbstractCacheState of the current AST.
  * @remarks I use in this method the C. Ferdinand's algorithme (Update - Must) to load one l-block in the ACS. 
  */
-AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, AbstractCacheState *state){
+AbstractCacheState * ACSComputation::applyProcess(WorkSpace *fw, AST *ast, AbstractCacheState *state){
 	switch (ast->kind()){
 		case AST_Call:{	
 			AC_OUT(cout << ".:Call : "<< " :.\n");
