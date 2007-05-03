@@ -38,7 +38,7 @@ namespace otawa { namespace ets {
  * @param fw	Container framework.
  * @param ast	AST to process.
  */
-void TrivialAstBlockTime::processAST(FrameWork *fw, AST *ast) {
+void TrivialAstBlockTime::processAST(WorkSpace *fw, AST *ast) {
 	switch(ast->kind()) {
 			case AST_Call:{
 				ASTInfo *ast_info = fw->getASTInfo();
