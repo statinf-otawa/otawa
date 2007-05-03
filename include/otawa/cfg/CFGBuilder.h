@@ -24,12 +24,12 @@ class CFGBuilder: public Processor {
 	void addSubProgram(Inst *inst);
 	void buildCFG(Segment *seg);
 	void addFile(File *file);
-	void buildAll(FrameWork *fw);
+	void buildAll(WorkSpace *fw);
 public:
 	CFGBuilder(void);
 	
 	// Processor overload
-	virtual void processFrameWork(FrameWork *fw);
+	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void configure(const PropList& props = PropList::EMPTY);
 };
 

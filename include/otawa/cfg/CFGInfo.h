@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-07, IRIT UPS.
  *
  *	otawa/cfg/CFGInfo.h -- interface of CFGInfo class.
  */
@@ -19,16 +19,16 @@ namespace otawa {
 class BasicBlock;
 class CFG;
 class CodeItem;
-class FrameWork;
+class WorkSpace;
 class Inst;
 	
 // CFGInfo class
 class CFGInfo: public elm::Lock {
-	FrameWork *fw;
+	WorkSpace *fw;
 	datastruct::Vector<CFG *> _cfgs;
 public:
 	static Identifier<CFGInfo *> ID;
-	CFGInfo(FrameWork *fw, elm::Collection<CFG *>& cfgs);
+	CFGInfo(WorkSpace *fw, elm::Collection<CFG *>& cfgs);
 	virtual ~CFGInfo(void);
 	void clear(void);
 	BasicBlock *findBB(Inst *inst);

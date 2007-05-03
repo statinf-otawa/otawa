@@ -46,7 +46,7 @@ public:
 	static Identifier<CString> ADDED_FUNCTION;
 
 protected:
-	void processFrameWork(FrameWork *fw);
+	void processWorkSpace(WorkSpace *fw);
 private:
 	CString name;
 	CFG *entry;

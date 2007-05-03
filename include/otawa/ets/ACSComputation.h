@@ -21,19 +21,19 @@ class ACSComputation: public ASTProcessor {
 		int cache_line_length;
 		int cache_size;
 		
-		inline ACSComputation(FrameWork *fw);
+		inline ACSComputation(WorkSpace *fw);
 		inline ~ACSComputation(void);
 		
 		// ASTProcessor overload
-		void processAST(FrameWork *fw, AST *ast);
+		void processAST(WorkSpace *fw, AST *ast);
 		
 	protected :	
-		AbstractCacheState *applyProcess(FrameWork *fw, AST *ast, AbstractCacheState *acs);
-		void initialization(FrameWork *fw, AST *ast, AbstractCacheState *acs);
+		AbstractCacheState *applyProcess(WorkSpace *fw, AST *ast, AbstractCacheState *acs);
+		void initialization(WorkSpace *fw, AST *ast, AbstractCacheState *acs);
 };
 
 // Inlines
-inline ACSComputation::ACSComputation(FrameWork *fw) {
+inline ACSComputation::ACSComputation(WorkSpace *fw) {
 	if(fw->cache().hasInstCache() && !fw->cache().isUnified()) {
 		cache_size = fw->cache().instCache()->lineCount();
 			cache_line_length = 0;
