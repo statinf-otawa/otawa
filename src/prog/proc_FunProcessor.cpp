@@ -35,7 +35,7 @@ FunProcessor::~FunProcessor(void) {
 /**
  * Override @ref Processor::processFrameWork().
  */
-void FunProcessor::processFrameWork(FrameWork *fw) {
+void FunProcessor::processWorkSpace(WorkSpace *fw) {
 
 	// Get AST information
 	ASTInfo *info = fw->getASTInfo();
