@@ -21,11 +21,11 @@ namespace hard {
 class LBlockBuilder: public CFGProcessor {
 	LBlockSet **lbsets;
 	const hard::Cache *cache;
-	void processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset);
+	void processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset);
 
 protected:
-	virtual void processFrameWork(FrameWork *fw);
-	virtual void processCFG(FrameWork *fw, CFG *cfg);
+	virtual void processWorkSpace(WorkSpace *fw);
+	virtual void processCFG(WorkSpace *fw, CFG *cfg);
 
 public:
 	LBlockBuilder(void);
