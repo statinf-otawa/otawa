@@ -45,7 +45,7 @@ TimeDeltaObjectFunctionModifier::TimeDeltaObjectFunctionModifier(void):
 /**
  */
 void TimeDeltaObjectFunctionModifier::processBB(
-	FrameWork *fw,
+	WorkSpace *fw,
 	CFG *cfg,
 	BasicBlock *bb)
 {
