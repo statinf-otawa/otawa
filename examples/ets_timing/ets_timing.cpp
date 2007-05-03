@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
  	// Configuration
  	Manager manager;
 	PropList props;
-	FrameWork *fw;
+	WorkSpace *fw;
 	CACHE_CONFIG(props) = caches;
 //	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 		
 		// Loading the AST
 		ASTLoader loader;
-		loader.processFrameWork(fw);
+		loader.processWorkSpace(fw);
 		ASTInfo *info = fw->getASTInfo();
 		
 		// Find main AST
