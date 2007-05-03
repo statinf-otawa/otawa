@@ -26,7 +26,7 @@ namespace otawa { namespace ets {
  * @param fw	Container framework.
  * @param ast	AST to process.
  */	
-void CacheMissComputation::processAST(FrameWork *fw, AST *ast) {
+void CacheMissComputation::processAST(WorkSpace *fw, AST *ast) {
 	int tmp = computation(fw, ast);
 }
 
@@ -38,7 +38,7 @@ void CacheMissComputation::processAST(FrameWork *fw, AST *ast) {
  * @param ast	AST to process.
  * @return Miss of the current AST.
  */
-int CacheMissComputation::computation(FrameWork *fw, AST *ast){
+int CacheMissComputation::computation(WorkSpace *fw, AST *ast){
 	int misses;
 	switch (ast->kind()){
 		case AST_Call:{	
