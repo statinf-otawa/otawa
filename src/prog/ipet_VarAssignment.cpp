@@ -41,7 +41,7 @@ static Configuration explicit_conf(EXPLICIT, AUTODOC "/namespaceotawa_1_1ipet.ht
  * Perform the actual work on the given basic block.
  * @param bb	Basic block to process.
  */
-void VarAssignment::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
+void VarAssignment::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 	
 	// Check BB
 	if(!VAR(bb)) {
