@@ -53,7 +53,7 @@ WCETComputation::WCETComputation(void)
 
 /**
  */
-void WCETComputation::processFrameWork(FrameWork *fw) {
+void WCETComputation::processWorkSpace(WorkSpace *fw) {
 	CFG *cfg = ENTRY_CFG(fw);
 	System *system = SYSTEM(fw);
 	if(!system)
