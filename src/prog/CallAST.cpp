@@ -29,12 +29,12 @@ CallAST::CallAST(Inst *block, size_t size, FunAST *_fun)
 
 /**
  * Build a call AST with only the first instruction of the called function.
- * @param fw		Container framework.
+ * @param fw		Container workspace.
  * @param block		First instruction of the caller block.
  * @param size		Size of the caller block.
  * @param callee	Callee instruction.
  */
-CallAST::CallAST(FrameWork *fw, Inst *block, size_t size, Inst *callee)
+CallAST::CallAST(WorkSpace *fw, Inst *block, size_t size, Inst *callee)
 : BlockAST(block, size) {
 	
 	// Find the ASTInfo
