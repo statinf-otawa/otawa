@@ -47,12 +47,12 @@ class CCGProblem {
     const hard::Cache *cach;
     static int vars;
     int size;
-    FrameWork *fw;
+    WorkSpace *fw;
 
 public:
 
 	typedef CCGDomain domain_t;
-	inline CCGProblem (LBlockSet *_ccggraph, int _size , const hard::Cache *_cach, FrameWork *_fw);
+	inline CCGProblem (LBlockSet *_ccggraph, int _size , const hard::Cache *_cach, WorkSpace *_fw);
 
 	CCGDomain *empty(void) {
 		CCGDomain *tmp = new CCGDomain(size);
@@ -70,7 +70,7 @@ public:
 
 
 // Inlines
-inline CCGProblem::CCGProblem (LBlockSet *_ccggraph, int _size, const hard::Cache *_cach, FrameWork *_fw) {
+inline CCGProblem::CCGProblem (LBlockSet *_ccggraph, int _size, const hard::Cache *_cach, WorkSpace *_fw) {
 	ccggraph = _ccggraph;
 	cach = _cach;
 	size = _size;

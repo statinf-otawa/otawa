@@ -52,13 +52,13 @@ public:
 
 // CCGBuilder class
 class CCGBuilder: public Processor {
-	void processLBlockSet(FrameWork *fw, LBlockSet *lbset);
+	void processLBlockSet(WorkSpace *fw, LBlockSet *lbset);
 public:
 	static Identifier<bool> NON_CONFLICT;
 	CCGBuilder(void);
 
 	// CFGProcessor overload
-	virtual void processFrameWork(FrameWork *fw);
+	virtual void processWorkSpace(WorkSpace *fw);
 };
 
 // Features
