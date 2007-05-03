@@ -33,7 +33,7 @@ ASTProcessor::~ASTProcessor(void) {
 
 /**
  */
-void ASTProcessor::processFun(FrameWork *fw, FunAST *fa) {
+void ASTProcessor::processFun(WorkSpace *fw, FunAST *fa) {
 	processAST(fw, fa->ast());
 }
 
