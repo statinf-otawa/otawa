@@ -29,7 +29,7 @@ namespace otawa { namespace ets {
  * @param fw	Container framework.
  * @param ast	AST to process.
  */	
-void WCETComputation::processAST(FrameWork *fw, AST *ast) {
+void WCETComputation::processAST(WorkSpace *fw, AST *ast) {
 	assert(ast);
 	int tmp=computation(fw, ast);
 }
@@ -39,12 +39,12 @@ void WCETComputation::processAST(FrameWork *fw, AST *ast) {
  * @fn int WCETComputation::computation(FrameWork *fw, AST *ast);
  * Compute the WCET for each AST node by using annotations coming from other modules. 
  * Furthermore put annotations (WCET) of each AST node.
- * @param fw	Container framework.
+ * @param fw	Container workspace.
  * @param ast	AST to process.
  * @return	WCET of the current AST.
  * @exception	io::IOException if one number of iteration of loop or one WCET of function cannot be found.
  */
-int WCETComputation::computation(FrameWork *fw, AST *ast) {
+int WCETComputation::computation(WorkSpace *fw, AST *ast) {
 		assert(ast);
 		int ELSE, THEN, wcet, N;
 		switch(ast->kind()) {

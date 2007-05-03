@@ -77,7 +77,7 @@ Identifier<bool> CCGBuilder::NON_CONFLICT("ccg::non_conflict", false, otawa::NS)
 
 /**
  */
-void CCGBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {
+void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	assert(fw);
 	assert(lbset);
 	const hard::Cache *cache = fw->platform()->cache().instCache();
@@ -202,7 +202,7 @@ void CCGBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {
 			
 /**
  */
-void CCGBuilder::processFrameWork(FrameWork *fw) {
+void CCGBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 	
 	// Check the cache
