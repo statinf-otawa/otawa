@@ -28,12 +28,12 @@ protected:
 	int _length;
 	elm::genstruct::Vector<BasicBlock*> basicBlocks;
 	//sim::State *ending_state;
-	FrameWork *last_framework_used; // Last framework used for simulation
+	WorkSpace *last_framework_used; // Last framework used for simulation
 	
 	virtual elm::IteratorInst<BasicBlock*> *visit(void);
 	virtual elm::MutableCollection<BasicBlock *> *empty(void);
 	
-	int simulate(FrameWork *fw);
+	int simulate(WorkSpace *fw);
 	//sim::State *getEndingState(FrameWork *fw);
 
 public:
@@ -41,9 +41,9 @@ public:
 	static BBPath* getBBPath(elm::genstruct::Vector<BasicBlock*> *path);
 
 	elm::genstruct::Vector<BBPath*> *nexts() ;
-	int time(FrameWork *fw);
+	int time(WorkSpace *fw);
 	int countInstructions();
-	inline int t(FrameWork *fw);
+	inline int t(WorkSpace *fw);
 	inline int length();
 	inline int l();
 	inline BasicBlock* head();
@@ -74,7 +74,7 @@ public:
 };
 
 // BBPath inlines
-inline int BBPath::t(FrameWork *fw) {return time(fw);}
+inline int BBPath::t(WorkSpace *fw) {return time(fw);}
 inline int BBPath::l() {return length();}
 inline int BBPath::length() {return _length;}
 inline BBPath* BBPath::operator() (int begin, int end){return sub(begin, end);}
