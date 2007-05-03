@@ -54,7 +54,7 @@ CFGProcessor::CFGProcessor(elm::String name, elm::Version version)
 
 /**
  */
-void CFGProcessor::processFrameWork(FrameWork *fw) {
+void CFGProcessor::processWorkSpace(WorkSpace *fw) {
 
 	// Get the CFG collection
 	CFGCollection *cfgs = INVOLVED_CFGS(fw);

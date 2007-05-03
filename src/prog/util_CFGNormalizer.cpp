@@ -67,7 +67,7 @@ CFGNormalizer::CFGNormalizer(void):
 
 /**
  */
-void CFGNormalizer::processCFG(FrameWork *fw, CFG *cfg) {
+void CFGNormalizer::processCFG(WorkSpace *fw, CFG *cfg) {
 	
 	// Put marks
 	elm::genstruct::Vector<Edge *> removes;
