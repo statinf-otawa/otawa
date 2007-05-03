@@ -41,7 +41,7 @@ TrivialInstCacheManager::TrivialInstCacheManager(void):
 
 /**
  */
-void TrivialInstCacheManager::setup(FrameWork *fw) {
+void TrivialInstCacheManager::setup(WorkSpace *fw) {
 	const hard::CacheConfiguration& conf = fw->platform()->cache();
 	cache = conf.instCache();
 	if(!cache)
@@ -51,14 +51,14 @@ void TrivialInstCacheManager::setup(FrameWork *fw) {
 
 /**
  */
-void TrivialInstCacheManager::cleanup(FrameWork *fw) {
+void TrivialInstCacheManager::cleanup(WorkSpace *fw) {
 	cache = 0;
 }
 
 
 /**
  */
-void TrivialInstCacheManager::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb)
+void TrivialInstCacheManager::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb)
 {
 	if(cache) {
 		int misses = 0;
