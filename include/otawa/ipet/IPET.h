@@ -13,7 +13,7 @@
 namespace otawa {
 
 // External classes
-class FrameWork;
+class WorkSpace;
 class CFG;
 class BasicBlock;
 class Edge;
@@ -38,7 +38,7 @@ extern Identifier<int> LOOP_COUNT;
 extern Identifier<int> COUNT;
 	
 // Subprograms
-ilp::System *getSystem(FrameWork *fw, CFG *cfg);
+ilp::System *getSystem(WorkSpace *fw, CFG *cfg);
 ilp::Var *getVar(ilp::System *system, BasicBlock *bb);
 ilp::Var *getVar(ilp::System *system, Edge *edge);
 
