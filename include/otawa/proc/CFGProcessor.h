@@ -22,8 +22,8 @@ class CFGProcessor: public Processor {
 	CFG *last;
 	void init(const PropList& props);
 protected:
-	virtual void processFrameWork(FrameWork *fw);
-	virtual void processCFG(FrameWork *fw, CFG *cfg) = 0;
+	virtual void processWorkSpace(WorkSpace *fw);
+	virtual void processCFG(WorkSpace *fw, CFG *cfg) = 0;
 public:
 	CFGProcessor(void);
 	CFGProcessor(elm::String name, elm::Version version);
