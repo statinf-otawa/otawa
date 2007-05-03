@@ -38,7 +38,7 @@ public:
 class CATProblem {
     LBlockSet *lines;
     const hard::Cache *cach;
-    FrameWork *fw;
+    WorkSpace *fw;
     int size;
     static int vars;
     
@@ -59,7 +59,7 @@ class CATProblem {
 		delete d;
 	}
     
-	CATProblem (LBlockSet *point, int _size, const hard::Cache *mem, FrameWork *_fw){
+	CATProblem (LBlockSet *point, int _size, const hard::Cache *mem, WorkSpace *_fw){
 		lines = point;
 		size = _size;
 		cach = mem;	
