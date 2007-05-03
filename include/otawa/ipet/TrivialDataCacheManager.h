@@ -15,12 +15,12 @@ namespace otawa { namespace ipet {
 
 // TrivialBBTime class
 class TrivialDataCacheManager: public BBProcessor {
-	FrameWork *fw;
+	WorkSpace *fw;
 	int time;
-	void configure(FrameWork *fw);
+	void configure(WorkSpace *fw);
 
 protected:
-	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 
 public:
 	TrivialDataCacheManager(void);
