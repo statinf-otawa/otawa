@@ -139,9 +139,9 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * properties : @ref TASK_ENTRY, @ref PLATFORM, @ref LOADER, @ref PLATFORM_NAME,
  * @ref LOADER_NAME, @ref ARGC, @ref ARGV, @ref ENVP, @ref SIMULATOR,
  * @ref CACHE_CONFIG, @ref PIPELINE_DEPTH.
- * @return The loaded framework or 0.
+ * @return The loaded workspace or 0.
  */
-FrameWork *Manager::load(const elm::system::Path&  path, const PropList& props) {
+WorkSpace *Manager::load(const elm::system::Path&  path, const PropList& props) {
 	
 	// Just load binary ?
 	if(path.extension() != "xml")
@@ -160,7 +160,7 @@ FrameWork *Manager::load(const elm::system::Path&  path, const PropList& props) 
  * @return		Built framework.
  * @throws	LoadException	Error during load.
  */
-FrameWork *Manager::loadBin(
+WorkSpace *Manager::loadBin(
 	const elm::system::Path& path,
 	const PropList& props)
 {
@@ -195,7 +195,7 @@ FrameWork *Manager::loadBin(
 		throw LoadException("no loader for \"%s\".", &path);
 
 	// Try to load the binary
-	return new FrameWork(loader->load(this, &path, props));
+	return new WorkSpace(loader->load(this, &path, props));
 }
 
 
@@ -203,9 +203,10 @@ FrameWork *Manager::loadBin(
  * Load an XML configuration file.
  * @param path	Path of the XML file.
  * @param props	Property to install the configuration in.
+ * @return		Loaded workspace.
  * @throws	LoadException	Error during load.
  */ 
-FrameWork *Manager::loadXML(
+WorkSpace *Manager::loadXML(
 	const elm::system::Path& path,
 	const PropList& props)
 {
@@ -236,10 +237,10 @@ FrameWork *Manager::loadXML(
  * Load the framework from an XML configuration.
  * @param elem	Top element of the configuration.
  * @param props	Configuration properties.
- * @return		Built framework.
+ * @return		Built workspace.
  * @throws	LoadException	Error during load.
  */
-FrameWork *Manager::load(xom::Element *elem, const PropList& props) {
+WorkSpace *Manager::load(xom::Element *elem, const PropList& props) {
 	assert(elem);
 	xom::Element *bin = elem->getFirstChildElement("binary");
 	if(!bin)
@@ -254,10 +255,10 @@ FrameWork *Manager::load(xom::Element *elem, const PropList& props) {
 /**
  * Load a computation configuration from the given properties.
  * @param props		Configuration properties.
- * @return			Load framework.
+ * @return			Load workspace.
  * @throws	LoadException	Error during load.
  */
-FrameWork *Manager::load(const PropList& props) {
+WorkSpace *Manager::load(const PropList& props) {
 	
 	// Look for an XML element
 	xom::Element *elem = CONFIG_ELEMENT(props);

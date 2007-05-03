@@ -51,7 +51,7 @@ Identifier<Constraint *> CALLING_CONSTRAINT("", 0);
 
 /**
  */
-void BasicConstraintsBuilder::processBB (FrameWork *fw, CFG *cfg, BasicBlock *bb)
+void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb)
 {
 	assert(fw);
 	assert(cfg);
@@ -108,11 +108,11 @@ void BasicConstraintsBuilder::processBB (FrameWork *fw, CFG *cfg, BasicBlock *bb
 
 /**
  */	
-void BasicConstraintsBuilder::processFrameWork(FrameWork *fw) {
+void BasicConstraintsBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 	
 	// Call the orignal processing
-	BBProcessor::processFrameWork(fw);
+	BBProcessor::processWorkSpace(fw);
 	
 	// Just record the constraint "entry = 1"
 	CFG *cfg = ENTRY_CFG(fw);
