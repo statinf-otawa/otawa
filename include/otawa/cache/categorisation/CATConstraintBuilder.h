@@ -23,14 +23,14 @@ namespace ipet {
 // CATConstraintBuilder class
 class CATConstraintBuilder: public Processor {
 	bool _explicit;
-	void processLBlockSet(FrameWork *fw, LBlockSet *lbset);
+	void processLBlockSet(WorkSpace *fw, LBlockSet *lbset);
 	void buildLBLOCKSET(LBlockSet *lcache, ContextTree *root);
 
 public:
 	CATConstraintBuilder(void);
 		
 	// CFGProcessor overload
-	virtual void processFrameWork(FrameWork *fw);
+	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void configure(const PropList& props);
 };
 
