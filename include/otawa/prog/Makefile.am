@@ -9,5 +9,6 @@ includeotawaprog_HEADERS = \
 	Process.h \
 	ProgItem.h \
 	Segment.h \
-	Symbol.h
+	Symbol.h \
+	WorkSpace.h
 

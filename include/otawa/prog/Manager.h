@@ -16,7 +16,7 @@
 #include <otawa/platform.h>
 #include <otawa/program.h>
 #include <otawa/cfg.h>
-#include <otawa/prog/FrameWork.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/prog/Loader.h>
 
 namespace otawa {
@@ -42,14 +42,14 @@ public:
 
 // Manager class
 class Manager {
-	friend class FrameWork;
+	friend class WorkSpace;
 	datastruct::Vector<hard::Platform *> platforms;
-	datastruct::Vector<FrameWork *> frameworks;
+	datastruct::Vector<WorkSpace *> frameworks;
 	elm::system::Plugger ilp_plugger;
 	elm::system::Plugger loader_plugger;
 	elm::system::Plugger sim_plugger;
-	FrameWork *loadBin(const elm::system::Path& path, const PropList& props);
-	FrameWork *loadXML(const elm::system::Path& path, const PropList& props);
+	WorkSpace *loadBin(const elm::system::Path& path, const PropList& props);
+	WorkSpace *loadXML(const elm::system::Path& path, const PropList& props);
 public:
 	static const CString OTAWA_NS;
 	static const CString OTAWA_NAME;
@@ -60,10 +60,10 @@ public:
 	~Manager(void);
 	Loader *findLoader(elm::CString name);
 	sim::Simulator *findSimulator(elm::CString name);
-	FrameWork *load(const elm::system::Path& path,
+	WorkSpace *load(const elm::system::Path& path,
 		const PropList& props = PropList::EMPTY);
-	FrameWork *load(const PropList& props = PropList::EMPTY);
-	FrameWork *load(xom::Element *elem,
+	WorkSpace *load(const PropList& props = PropList::EMPTY);
+	WorkSpace *load(xom::Element *elem,
 		const PropList& props = PropList::EMPTY); 
 	ilp::System *newILPSystem(String plugin = "");
 	

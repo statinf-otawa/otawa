@@ -14,7 +14,7 @@
 namespace otawa {
 	
 // External class
-class FrameWork;
+class WorkSpace;
 
 namespace sim {
 class State;
@@ -38,7 +38,7 @@ public:
 	Simulator(elm::CString name,
 		const elm::Version& version,
 		const elm::Version& plugger_version);
-	virtual State *instantiate(FrameWork *fw,
+	virtual State *instantiate(WorkSpace *fw,
 		const PropList& props = PropList::EMPTY) = 0;
 };
 
