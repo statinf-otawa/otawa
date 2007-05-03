@@ -21,7 +21,7 @@ class PCGBuilder: public Processor
 	void addPCGBlock(BasicBlock*bb,CFG*cfg,PCG*pcg,CFG*src);
 
 protected:
-	virtual void processFrameWork(FrameWork *fw);
+	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void processCFG(CFG* cfg, PCG *pcg, CFG*src);
 
 public:	
