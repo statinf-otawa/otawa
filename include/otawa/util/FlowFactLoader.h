@@ -28,13 +28,13 @@ using namespace elm;
 
 // Extern class
 class File;
-class FrameWork;
+class WorkSpace;
 
 // FlowFactLoader abstract class
 class FlowFactLoader {
 	friend int ::util_fft_parse(FlowFactLoader *loader);
 	friend void ::util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
-	FrameWork *_fw;
+	WorkSpace *_fw;
 	bool _verbose;
 	bool checksummed;
 	void onCheckSum(const String& name, unsigned long sum);
@@ -44,7 +44,7 @@ protected:
 	virtual void onWarning(const char *fmt, ...) = 0;
 	virtual void onLoop(address_t addr, int count) = 0;
 public:
-	void run(FrameWork *fw, elm::system::Path path = "", bool verbose = false);
+	void run(WorkSpace *fw, elm::system::Path path = "", bool verbose = false);
 };
 
 // Properties
