@@ -69,7 +69,7 @@ Identifier<BasicBlock *> LOWERED_CATEGORY("lowered_category", 0, otawa::NS);
 
 /**
  */
-void CATBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {	
+void CATBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {	
 	assert(fw);
 	assert(lbset);
 
@@ -107,7 +107,7 @@ void CATBuilder::processLBlockSet(FrameWork *fw, LBlockSet *lbset) {
 
 /**
  */
-void CATBuilder::processFrameWork(FrameWork *fw) {
+void CATBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 	
 	// Check the cache

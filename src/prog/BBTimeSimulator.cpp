@@ -28,7 +28,7 @@ BBTimeSimulator::BBTimeSimulator(void)
 
 /**
  */
-void BBTimeSimulator::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb){
+void BBTimeSimulator::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb){
 	Simulator *simulator = fw->process()->simulator();
 	if(!simulator)
 		throw ProcessorException(*this, "no simulator available");

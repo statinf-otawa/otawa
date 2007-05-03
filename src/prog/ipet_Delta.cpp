@@ -68,7 +68,7 @@ void Delta::configure(const PropList& props){
 
 /**
  */
-void Delta::setup(FrameWork *fw) {
+void Delta::setup(WorkSpace *fw) {
 	max_length = 0;
 	length_sum = 0;
 	length_cnt = 0;
@@ -77,7 +77,7 @@ void Delta::setup(FrameWork *fw) {
 
 /**
  */
-void Delta::cleanup(FrameWork *fw) {
+void Delta::cleanup(WorkSpace *fw) {
 	if(stats) {
 		MAX_LENGTH(stats) = max_length;
 		if(!length_cnt)
@@ -93,7 +93,7 @@ void Delta::cleanup(FrameWork *fw) {
  * @param system	ILP system to work on.
  * @param bbpath	BB path to build constraints for.
  */
-void Delta::processBBPath(FrameWork *fw, System *system, BBPath *bbpath) {
+void Delta::processBBPath(WorkSpace *fw, System *system, BBPath *bbpath) {
 		BBPath &bbPath = *bbpath;
 		int l = bbPath.length();
 
@@ -149,7 +149,7 @@ void Delta::processBBPath(FrameWork *fw, System *system, BBPath *bbpath) {
  * Process the given CFG
  * @see CFGProcessor::processCFG()
  */
-void Delta::processCFG(FrameWork* fw, CFG* cfg){
+void Delta::processCFG(WorkSpace* fw, CFG* cfg){
 	assert(fw);
 	assert(cfg);
 	System *system = getSystem(fw,cfg);
@@ -206,7 +206,7 @@ void Delta::processCFG(FrameWork* fw, CFG* cfg){
  * Calculate the delta of the given BBPath
  * @param bbp BBPath we want to calculate the delta
  */
-int Delta::delta(BBPath &bbp, FrameWork *fw){
+int Delta::delta(BBPath &bbp, WorkSpace *fw){
 	assert(fw);
 	
 	if(bbp.length() <= 1)

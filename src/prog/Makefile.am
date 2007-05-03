@@ -23,7 +23,6 @@ libotawa_la_SOURCES = \
 	instruction.cpp \
 	type.cpp \
 	Loader.cpp \
-	FrameWork.cpp \
 	BasicBlock.cpp \
 	CFGInfo.cpp \
 	CFG.cpp \
@@ -98,6 +97,7 @@ libotawa_la_SOURCES = \
 	prog_ProgItem.cpp \
 	prog_Segment.cpp \
 	prog_Symbol.cpp \
+	prog_WorkSpace.cpp \
 	cache_CATBuilder.cpp \
 	cache_CATConstraintBuilder.cpp \
 	cache_CATDFA.cpp \
