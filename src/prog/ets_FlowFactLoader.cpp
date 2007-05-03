@@ -27,7 +27,7 @@ namespace otawa { namespace ets {
  * @param fw	Container framework.
  * @param ast	AST to process.
  */		
-	void FlowFactLoader::processAST(FrameWork *fw, AST *ast){
+	void FlowFactLoader::processAST(WorkSpace *fw, AST *ast){
 		int val;
 		switch(ast->kind()) {
 			case AST_Seq:

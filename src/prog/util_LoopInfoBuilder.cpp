@@ -223,7 +223,7 @@ LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", V
  }
  
  
-void LoopInfoBuilder::processCFG(otawa::FrameWork* fw, otawa::CFG* cfg) {
+void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
         int i;
     	LoopInfoProblem prob(*cfg);
 

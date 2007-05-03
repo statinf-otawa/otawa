@@ -130,7 +130,7 @@ PCGBuilder::PCGBuilder(void):Processor("PCGBuilder", Version(1, 0, 0)){
 
 /**
  */
-void PCGBuilder::processFrameWork(FrameWork *fw) {
+void PCGBuilder::processWorkSpace(WorkSpace *fw) {
 	CFG *cfg = ENTRY_CFG(fw);
 	assert(cfg);
 	PCG::ID(fw) = buildPCG(cfg);

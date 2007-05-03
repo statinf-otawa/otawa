@@ -113,7 +113,7 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 
 /**
  */
-void FlowFactLoader::processFrameWork(FrameWork *fw) {
+void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 	cfgs = INVOLVED_CFGS(fw);
 	assert(cfgs);

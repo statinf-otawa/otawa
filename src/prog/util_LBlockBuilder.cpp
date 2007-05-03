@@ -43,7 +43,7 @@ LBlockBuilder::LBlockBuilder(void)
 
 /**
  */
-void LBlockBuilder::processFrameWork(FrameWork *fw) {
+void LBlockBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 	
 	// Check the cache
@@ -60,7 +60,7 @@ void LBlockBuilder::processFrameWork(FrameWork *fw) {
 	}
 
 	// Let's go
-	CFGProcessor::processFrameWork(fw);
+	CFGProcessor::processWorkSpace(fw);
 	
 	// Add end blocks
 	for(int i = 0; i < cache->lineCount(); i++)
@@ -70,7 +70,7 @@ void LBlockBuilder::processFrameWork(FrameWork *fw) {
 
 /**
  */
-void LBlockBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) {
+void LBlockBuilder::processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset) {
 	assert(fw);
 	assert(cfg);
 	assert(lbset);
@@ -120,7 +120,7 @@ void LBlockBuilder::processLBlockSet(FrameWork *fw, CFG *cfg, LBlockSet *lbset) 
 
 /**
  */	
-void LBlockBuilder::processCFG(FrameWork *fw, CFG *cfg) {
+void LBlockBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 	assert(fw);
 	assert(cfg);
 	for(int i = 0; i < cache->lineCount(); i++)

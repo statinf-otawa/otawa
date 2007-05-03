@@ -133,11 +133,11 @@ Identifier<int> COUNT("count", -1, ipet::NS);
 
 /**
  * Get the system tied with the given CFG. If none exists, create ones.
- * @param fw	Current framework.
+ * @param fw	Current workspace.
  * @param cfg	Current CFG.
  * @preturn		CFG ILP system.
  */
-ilp::System *getSystem(FrameWork *fw, CFG *cfg) {
+ilp::System *getSystem(WorkSpace *fw, CFG *cfg) {
 	System *system = SYSTEM(fw);
 	if(!system) {
 		system = fw->newILPSystem();

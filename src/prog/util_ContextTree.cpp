@@ -253,7 +253,7 @@ ContextTreeBuilder::ContextTreeBuilder(void)
 
 /**
  */
-void ContextTreeBuilder::processFrameWork(FrameWork *fw) {
+void ContextTreeBuilder::processWorkSpace(WorkSpace *fw) {
 	CONTEXT_TREE(fw) = new ContextTree(ENTRY_CFG(fw));
 }
 
