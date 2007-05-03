@@ -40,7 +40,7 @@ WCETCountRecorder::WCETCountRecorder(void)
 
 /**
  */
-void WCETCountRecorder::setup(FrameWork *fw) {
+void WCETCountRecorder::setup(WorkSpace *fw) {
 	assert(fw);
 	assert(!system);
 	system = SYSTEM(fw);
@@ -50,7 +50,7 @@ void WCETCountRecorder::setup(FrameWork *fw) {
 
 /**
  */
-void WCETCountRecorder::cleanup(FrameWork *fw) {
+void WCETCountRecorder::cleanup(WorkSpace *fw) {
 	assert(fw);
 	assert(system);
 	system = 0;
@@ -59,7 +59,7 @@ void WCETCountRecorder::cleanup(FrameWork *fw) {
 
 /**
  */
-void WCETCountRecorder::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
+void WCETCountRecorder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 	assert(fw);
 	assert(cfg);
 	assert(bb);
