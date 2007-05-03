@@ -31,13 +31,13 @@ class Delta: public CFGProcessor {
 	int max_length;
 	int length_sum;
 	int length_cnt;
-	static int delta(BBPath &bbp, FrameWork *fw);
-	void processBBPath(FrameWork *fw, ilp::System *system, BBPath *bbpath);
+	static int delta(BBPath &bbp, WorkSpace *fw);
+	void processBBPath(WorkSpace *fw, ilp::System *system, BBPath *bbpath);
 
 protected:
-	virtual void setup(FrameWork *fw);
-	virtual void cleanup(FrameWork *fw);
-	virtual void processCFG(FrameWork* fw, CFG* cfg);
+	virtual void setup(WorkSpace *fw);
+	virtual void cleanup(WorkSpace *fw);
+	virtual void processCFG(WorkSpace* fw, CFG* cfg);
 
 public:
 	Delta(void);
