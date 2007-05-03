@@ -18,7 +18,7 @@ class TrivialBBTime: public BBProcessor {
 	unsigned dep;
 
 protected:
-	void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+	void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 
 public:
 	TrivialBBTime(void);

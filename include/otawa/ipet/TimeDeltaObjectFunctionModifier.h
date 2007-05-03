@@ -18,7 +18,7 @@ public:
 	TimeDeltaObjectFunctionModifier(void);
 
 	// BBProcessor overload
-	virtual void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 };
 
 // Features
