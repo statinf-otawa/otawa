@@ -37,7 +37,7 @@ protected:
 	virtual void onLoop(address_t addr, int count);	
 
 	// CFGProcessor overload
-	virtual void processFrameWork(FrameWork *fw);
+	virtual void processWorkSpace(WorkSpace *fw);
 
 public:
 	FlowFactLoader(void);

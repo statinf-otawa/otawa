@@ -16,7 +16,7 @@ namespace otawa { namespace ipet {
 class BBTimeSimulator : public BBProcessor {
 public:
 	BBTimeSimulator(void);
-	void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
+	void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 };
 
 } }
