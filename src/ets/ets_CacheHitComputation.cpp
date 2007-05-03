@@ -26,7 +26,7 @@ namespace otawa { namespace ets {
  * @param fw	Container framework.
  * @param ast	AST to process.
  */	
-void CacheHitComputation::processAST(FrameWork *fw, AST *ast) {
+void CacheHitComputation::processAST(WorkSpace *fw, AST *ast) {
 	int tmp = computation(fw, ast);
 }
 
@@ -38,7 +38,7 @@ void CacheHitComputation::processAST(FrameWork *fw, AST *ast) {
  * @param ast	AST to process.
  * @return Hits of the current AST.
  */
-int CacheHitComputation::computation(FrameWork *fw, AST *ast){
+int CacheHitComputation::computation(WorkSpace *fw, AST *ast){
 	int hits;
 	switch (ast->kind()){
 		case AST_Block: 
