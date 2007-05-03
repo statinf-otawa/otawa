@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2005-06, IRIT UPS.
+ *	Copyright (c) 2005-07, IRIT UPS.
  *
  *	Processor class interface.
  */
@@ -10,7 +10,7 @@
 #include <elm/io.h>
 #include <elm/util/Version.h>
 #include <elm/system/StopWatch.h>
-#include <otawa/prog/FrameWork.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/proc/ProcessorException.h>
 
 namespace otawa {
@@ -29,7 +29,7 @@ class Processor {
 	void init(const PropList& props);
 	Vector<const AbstractFeature *> required;
 	Vector<const AbstractFeature *> provided;
-	Vector<Configuration *> configs; 
+	Vector<Configuration *> configs;
 
 protected:
 	static const unsigned long IS_TIMED = 0x01;
@@ -49,9 +49,12 @@ protected:
 	void warn(CString format, ...);
 
 	// Overwritable methods
-	virtual void processFrameWork(FrameWork *fw) = 0;
-	virtual void setup(FrameWork *fw);
-	virtual void cleanup(FrameWork *fw);
+	virtual void processWorkSpace(WorkSpace *fw);
+	virtual void setup(WorkSpace *fw);
+	virtual void cleanup(WorkSpace *fw);
+
+	// Deprecared
+	virtual void processFrameWork(WorkSpace *fw);
 
 public:
 
@@ -66,7 +69,7 @@ public:
 
 	// Mutators
 	virtual void configure(const PropList& props);
-	void process(FrameWork *fw, const PropList& props = PropList::EMPTY);
+	void process(WorkSpace *fw, const PropList& props = PropList::EMPTY);
 
 	// Configuration Properties
 	static Identifier<elm::io::OutStream *> OUTPUT;
@@ -90,7 +93,7 @@ public:
 // NoProcessor class
 class NoProcessor: public Processor {
 protected:
-	virtual void processFrameWork(FrameWork *fw);
+	virtual void processWorkSpace(WorkSpace *fw);
 public:
 	NoProcessor(void);
 }; 
