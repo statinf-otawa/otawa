@@ -19,10 +19,10 @@ class FlowFactLoader: public ASTProcessor, private otawa::FlowFactLoader {
 	public :
 		genstruct::HashTable<address_t, int> loop_table;
 		
-		inline FlowFactLoader(FrameWork *fw);
+		inline FlowFactLoader(WorkSpace *fw);
 		
 		// ASTProcessor overload
-		void processAST(FrameWork *fw, AST *ast);
+		void processAST(WorkSpace *fw, AST *ast);
 		
 	protected:
 		// FlowFactLoader overload
@@ -32,7 +32,7 @@ class FlowFactLoader: public ASTProcessor, private otawa::FlowFactLoader {
 };
 
 //inlines
-inline FlowFactLoader::FlowFactLoader(FrameWork *fw) {
+inline FlowFactLoader::FlowFactLoader(WorkSpace *fw) {
 	run(fw);
 }
 
