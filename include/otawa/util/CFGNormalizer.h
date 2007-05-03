@@ -18,7 +18,7 @@ class CFGNormalizer: public CFGProcessor {
 	bool verbose;
 
 protected:
-	virtual void processCFG(FrameWork *fw, CFG *cfg);
+	virtual void processCFG(WorkSpace *fw, CFG *cfg);
 
 public:
 	
