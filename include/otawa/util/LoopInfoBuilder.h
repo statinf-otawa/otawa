@@ -32,7 +32,7 @@ extern Identifier<elm::genstruct::Vector<Edge*> *> EXIT_LIST;
 class LoopInfoBuilder: public CFGProcessor {
 public:
         LoopInfoBuilder(void);
-        virtual void processCFG(otawa::FrameWork*, otawa::CFG*);
+        virtual void processCFG(otawa::WorkSpace*, otawa::CFG*);
         
 private:
 		/**
