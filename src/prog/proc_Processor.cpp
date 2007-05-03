@@ -105,11 +105,33 @@ void Processor::init(const PropList& props) {
 }
 
 
+// Only for the deprecatio warning
+static bool deprecated;
+
 /**
- * @fn void Processor::processFrameWork(FrameWork *fw);
+ * Process the given workspace.
+ * @param fw	Workspace to process.
+ * @deprecated	Use @ref processWorkSpace() instead.
+ */
+void Processor::processFrameWork(WorkSpace *fw) {
+	deprecated = false;
+}
+
+
+/**
  * Process the given framework.
  * @param fw	Framework to process.
+ * @deprecated	Use @ref processWorkSpace() instead.
  */
+void Processor::processWorkSpace(WorkSpace *fw) {
+	
+	// Only to keep compatility (03/05/07)
+	deprecated = true;
+	processFrameWork(fw);
+	if(deprecated)
+		out << "WARNING: the use of processFrameWork() is deprecated."
+			<< "Use processWorkSpace() instead.";
+}
 
 
 /**
@@ -124,10 +146,10 @@ void Processor::configure(const PropList& props) {
 
 /**
  * Execute the code processor on the given framework.
- * @param fw	Framework to work on.
+ * @param fw	Workspace to work on.
  * @param props	Configuration properties.
  */
-void Processor::process(FrameWork *fw, const PropList& props) {
+void Processor::process(WorkSpace *fw, const PropList& props) {
 	
 	// Check required feature
 	for(int i = 0; i < required.length(); i++)
@@ -146,7 +168,7 @@ void Processor::process(FrameWork *fw, const PropList& props) {
 	
 	// Launch the work
 	setup(fw);
-	processFrameWork(fw);
+	processWorkSpace(fw);
 	cleanup(fw);
 	
 	// Post-processing actions
@@ -192,17 +214,18 @@ void Processor::process(FrameWork *fw, const PropList& props) {
 /**
  * This method is called before an anlysis to let the processor do some
  * initialization.
- * @param fw	Processed framework.
+ * @param fw	Processed workspace.
  */
-void Processor::setup(FrameWork *fw) {
+void Processor::setup(WorkSpace *fw) {
 }
 
 
 /**
  * This method is called after the end of the processor analysis to let it
  * do some clean up.
+ * @param fw	Workspace to work on.
  */
-void Processor::cleanup(FrameWork *fw) {
+void Processor::cleanup(WorkSpace *fw) {
 }
 
 
@@ -318,7 +341,7 @@ NullProcessor::NullProcessor(void):
 
 /**
  */
-void NoProcessor::processFrameWork(FrameWork *fw) {
+void NoProcessor::processWorkSpace(WorkSpace *fw) {
 	throw ProcessorException(*this, "this processor should not have been called");
 }
 

@@ -60,7 +60,7 @@ void ASTLoader::onError(const char *fmt, ...) {
 
 /**
  */
-void ASTLoader::processFrameWork(FrameWork *_fw) {
+void ASTLoader::processWorkSpace(WorkSpace *_fw) {
 	assert(_fw);
 	fw = _fw;
 	
