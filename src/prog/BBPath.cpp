@@ -162,7 +162,7 @@ MutableCollection<BasicBlock *> *BBPath::empty(void){
  * Simulates the sequence if necessary
  * @return number of cycles
  */
-int BBPath::time(FrameWork *fw){
+int BBPath::time(WorkSpace *fw){
 	int time = get<int>(TIME,-1);
 	if(time < 0){
 		time = simulate(fw);
@@ -186,7 +186,7 @@ int BBPath::countInstructions(){
  * sub-sequences in order to simulate less instructions. <br>
  * @return number of cycles to cover the sequence
  */
-int BBPath::simulate(FrameWork *fw){
+int BBPath::simulate(WorkSpace *fw){
 	int cycle;
 	Simulator *simulator = fw->process()->simulator();
 	State *state = simulator->instantiate(fw);
