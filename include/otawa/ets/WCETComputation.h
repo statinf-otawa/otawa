@@ -17,10 +17,10 @@ namespace otawa { namespace ets {
 class WCETComputation: public ASTProcessor {
 	public:
 	// ASTProcessor overload
-	void processAST(FrameWork *fw, AST *ast);
+	void processAST(WorkSpace *fw, AST *ast);
 	
 	protected:
-	int computation(FrameWork *fw, AST *ast);
+	int computation(WorkSpace *fw, AST *ast);
 };
 
 } } // otawa::ets

@@ -22,7 +22,7 @@ public:
 	inline int depth(void) const;
 
 	// ASTProcessor overload
-	void processAST(FrameWork *fw, AST *ba);
+	void processAST(WorkSpace *fw, AST *ba);
 };
 
 // Inlines
