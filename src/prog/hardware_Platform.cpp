@@ -7,7 +7,7 @@
 
 #include <otawa/hard/Platform.h>
 #include <otawa/hard/CacheConfiguration.h>
-#include <otawa/prog/FrameWork.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/hard/Processor.h>
 #include <elm/serial2/XOMUnserializer.h>
 #include <otawa/prog/Manager.h>
