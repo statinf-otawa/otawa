@@ -17,7 +17,7 @@ class CallAST: public BlockAST {
 	FunAST *fun;
 public:
 	CallAST(Inst *block, size_t size, FunAST *fun);
-	CallAST(FrameWork *fw, Inst *block, size_t size, Inst *called);
+	CallAST(WorkSpace *fw, Inst *block, size_t size, Inst *called);
 	inline FunAST *function(void) const { return fun; };
 	
 	// AST overload

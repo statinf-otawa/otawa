@@ -27,7 +27,7 @@ class ASTLoader: public Processor {
 	
 	elm::String path;
 	elm::genstruct::Vector<String> calls;
-	FrameWork *fw;
+	WorkSpace *fw;
 	File *file;
 	
 	void onError(const char *fmt, ...);
@@ -41,7 +41,7 @@ public:
 	
 	// Processor overload
 	virtual void configure(PropList& props);
-	virtual void processFrameWork(FrameWork *fw);
+	virtual void processWorkSpace(WorkSpace *fw);
 };
 
 } // otawa
