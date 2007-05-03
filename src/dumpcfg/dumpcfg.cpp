@@ -103,7 +103,7 @@ using namespace otawa;
 class Command: public option::Manager {
 	bool one;
 	otawa::Manager manager;
-	FrameWork *fw;
+	WorkSpace *fw;
 	CFGInfo *info;
 	void dump(CFG *cfg);
 	void dump(CString name);
