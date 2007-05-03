@@ -31,7 +31,7 @@ public:
 	Dominance(void);
 	
 	// CFGProcessor overload
-	virtual void processCFG(FrameWork *fw, CFG *cfg);
+	virtual void processCFG(WorkSpace *fw, CFG *cfg);
 };
 
 // Features
