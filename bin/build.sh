@@ -12,7 +12,7 @@ fi
 
 # Initial configuration
 tool=OBuild
-version=0.5
+version=0.6
 basedir=otawa
 verbose=yes
 log=build.log
@@ -275,6 +275,7 @@ function mod_gliss {
 	DOWNLOAD=home
 	BUILD=make
 	DISTCLEAN=make
+	VERSION=BEFORE_1_2
 }
 
 function mod_ppc {
