@@ -40,7 +40,7 @@ function display {
 
 function error {
 	echo -e "ERROR:$*"
-	exit
+	exit 2
 }
 
 function say {
@@ -70,7 +70,7 @@ function failed {
 	else
 		tail $basedir/$log
 	fi
-	exit
+	exit 1
 }
 
 function log {
