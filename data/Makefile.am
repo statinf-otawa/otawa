@@ -1,1 +1,3 @@
-SUBDIRS = procs
+SUBDIRS = \
+	procs \
+	caches
