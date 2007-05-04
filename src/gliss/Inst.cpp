@@ -11,7 +11,7 @@
 using namespace elm;
 
 #ifndef NDEBUG
-#	define SCAN_ARGS
+//#	define SCAN_ARGS
 //#	define TRACE(c) c
 #	define TRACE(c)
 #else
@@ -253,7 +253,7 @@ void Inst::dump(io::Output& out) {
 	char out_buffer[200];
 	instruction_t *inst;
 	iss_fetch((::address_t)addr, buffer);
-	inst = iss_decode(seg.file().state(), (::address_t)addr, buffer, 0);
+	inst = iss_decode(seg.file().state(), (::address_t)addr, buffer /*, 0*/);
 	iss_disasm(out_buffer, inst);
 	out << out_buffer;
 	iss_free(inst);
@@ -274,7 +274,7 @@ void Inst::scan(void) {
 	code_t buffer[20];
 	instruction_t *inst;
 	iss_fetch((::address_t)(unsigned long)address(), buffer);
-	inst = iss_decode(seg.file().state(), (::address_t)address(), buffer, 0);
+	inst = iss_decode(seg.file().state(), (::address_t)address(), buffer /*, 0*/);
 	assert(inst);
 	
 	// Intialize the category
@@ -321,7 +321,7 @@ void Inst::scanRegs(void) {
 	code_t buffer[20];
 	instruction_t *inst;
 	iss_fetch((::address_t)(unsigned long)addr, buffer);
-	inst = iss_decode(seg.file().state(), (::address_t)addr, buffer, 0);
+	inst = iss_decode(seg.file().state(), (::address_t)addr, buffer /*, 0*/);
 	if(inst->ident == ID_Instrunknown) {
 		reads = new elm::genstruct::AllocatedTable<hard::Register *>(0);
 		writes = new elm::genstruct::AllocatedTable<hard::Register *>(0);
