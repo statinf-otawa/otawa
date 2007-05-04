@@ -284,6 +284,7 @@ AC_CONFIG_FILES([
 	include/otawa/gensim/Makefile
 	data/Makefile
 	data/procs/Makefile
+	data/caches/Makefile
 ])
 AC_CONFIG_FILES([bin/otawa-config], [], [
 	echo "setting +x to bin/otawa-config"
