@@ -8,6 +8,7 @@
 #ifndef OTAWA_CFG_CFG_BUILDER_H
 #define OTAWA_CFG_CFG_BUILDER_H
 
+#include <elm/genstruct/Vector.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/cfg/CFGInfo.h>
@@ -16,7 +17,7 @@ namespace otawa {
 
 // CFGBuilder class
 class CFGBuilder: public Processor {
-	datastruct::Vector<CFG *> _cfgs;
+	genstruct::Vector<CFG *> _cfgs;
 	bool verbose;
 	
 	BasicBlock *nextBB(Inst *inst);
