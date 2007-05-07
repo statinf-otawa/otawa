@@ -8,6 +8,7 @@
 #include <otawa/instruction.h>
 #include <otawa/manager.h>
 #include <otawa/cfg.h>
+#include <elm/assert.h>
 
 // Trace
 //#	define TRACE_CFG_INFO
@@ -42,10 +43,10 @@ Identifier<CFGInfo *> CFGInfo::ID("cfg_info_id", 0, otawa::NS);
  * Build a new CFGInfo.
  * @param fw	Workspace that the CFG information applies to.
  */
-CFGInfo::CFGInfo(WorkSpace *_fw, elm::Collection <CFG *>& cfgs)
+CFGInfo::CFGInfo(WorkSpace *_fw)
 : fw(_fw) {
 	TRACE(this << ".CFGInfo::CFGInfo(" << _fw << ")");
-	_cfgs.addAll(&cfgs);
+	fw->addDeletable(ID, this);
 }
 
 
@@ -65,7 +66,7 @@ void CFGInfo::clear(void) {
 	PseudoInst *pseudo;
 	
 	// Remove CFGs
-	for(int i = 0; i < _cfgs.count(); i++)
+	for(int i = 0; i < _cfgs.length(); i++)
 		delete _cfgs[i];
 	_cfgs.clear();
 	
@@ -135,9 +136,9 @@ CFG *CFGInfo::findCFG(BasicBlock *bb) {
  * Get the collection of CFG.
  * @return CFG collection.
  */
-elm::Collection<CFG *>& CFGInfo::cfgs(void) {
+/*elm::Collection<CFG *>& CFGInfo::cfgs(void) {
 	return _cfgs;
-}
+}*/
 
 
 /**
@@ -151,6 +152,16 @@ CFG *CFGInfo::findCFG(String label) {
 		return 0;
 	else
 		return findCFG(inst);
+}
+
+
+/**
+ * Add a CFG to the CFG information structure.
+ * @param cfg	Added CFG.
+ */
+void CFGInfo::add(CFG *cfg) {
+	ASSERTP(cfg, "null cfg given");
+	_cfgs.add(cfg);
 }
 
 } // otawa
