@@ -270,7 +270,9 @@ void CFGBuilder::buildAll(WorkSpace *fw) {
 		addFile(file);
 	
 	// Build the CFGInfo
-	fw->addDeletable(CFGInfo::ID, new CFGInfo(fw, _cfgs));
+	CFGInfo *info = new CFGInfo(fw);
+	for(genstruct::Vector<CFG *>::Iterator cfg(_cfgs); cfg; cfg++)
+		info->add(cfg);
 }
 
 
