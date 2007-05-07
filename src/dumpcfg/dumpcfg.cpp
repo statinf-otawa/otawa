@@ -325,7 +325,7 @@ void Command::run(int argc, char **argv) {
 	}
 	if(all_functions) {
 		CFGInfo *info = fw->getCFGInfo();
-		for(Iterator<CFG *> cfg(info->cfgs()); cfg; cfg++)
+		for(CFGInfo::Iter cfg(info); cfg; cfg++)
 			if(cfg->label())
 				dump(cfg);
 	}
