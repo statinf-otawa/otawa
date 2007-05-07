@@ -9,11 +9,13 @@
 
 #include <elm/utility.h>
 #include <elm/util/AutoPtr.h>
-#include <elm/datastruct/Vector.h>
+#include <elm/genstruct/Vector.h>
 #include <elm/inhstruct/DLList.h>
 #include <otawa/cfg/BasicBlock.h>
 
 namespace otawa {
+
+using namespace elm;
 
 // Classes
 class BasicBlock;
@@ -25,17 +27,32 @@ class Inst;
 // CFGInfo class
 class CFGInfo: public elm::Lock {
 	WorkSpace *fw;
-	datastruct::Vector<CFG *> _cfgs;
+	genstruct::Vector<CFG *> _cfgs;
 public:
 	static Identifier<CFGInfo *> ID;
-	CFGInfo(WorkSpace *fw, elm::Collection<CFG *>& cfgs);
+	
+	// Constructors
+	CFGInfo(WorkSpace *fw);
 	virtual ~CFGInfo(void);
-	void clear(void);
+	
+	// Accessors
 	BasicBlock *findBB(Inst *inst);
 	CFG *findCFG(Inst *inst);
 	CFG *findCFG(BasicBlock *bb);
 	CFG *findCFG(String label);
-	elm::Collection<CFG *>& cfgs(void);
+	
+	// Modifiers
+	void add(CFG *cfg);
+	void clear(void);
+	
+	// Iter class
+	class Iter: public genstruct::Vector<CFG *>::Iterator {
+	public:
+		inline Iter(CFGInfo *info)
+			: genstruct::Vector<CFG *>::Iterator(info->_cfgs) { }
+		inline Iter(const Iter& iter)
+			: genstruct::Vector<CFG *>::Iterator(iter) { }
+	};
 };
 
 } // otawa
