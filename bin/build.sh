@@ -30,6 +30,7 @@ making_script=
 plugin_param=
 testdir=deployed_tests
 tags=
+debug=
 
 # functions
 function display {
@@ -191,6 +192,9 @@ function build_autotool {
 		if [ "$with_so" == yes ]; then
 			args="$args --enable-shared"
 		fi
+		if [ "$debug" == yes ]; then
+			args="$args $AUTOCONF_DEBUG"
+		fi
 		args="$args $AUTOCONF_FLAGS"
 		log_command ./configure  $args
 	fi
@@ -245,6 +249,7 @@ function mod_elm {
 	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
 	MAKE_FLAGS="-j"
 	AUTOCONF_FLAGS=""
+	AUTOCONF_DEBUG="--with-mode=dev"
 }
 
 function mod_gel {
@@ -307,6 +312,7 @@ function mod_otawa {
 	DISTCLEAN=autotool
 	MAKE_FLAGS="-j"
 	AUTOCONF_FLAGS="$plugin_param"
+	AUTOCONF_DEBUG="--with-mode=debug"
 }
 
 
@@ -355,6 +361,7 @@ function help {
 	echo "	--check: download, make, install, and test."
 	echo "	--checkonly: test only."
 	echo "  --tag=module:version: use the given CVS version for the module."
+	echo "  --debug: use debug options to build the modules."
 	echo "MODULES: elm gliss ppc lp_solve frontc otawa"
 }
 
@@ -410,6 +417,9 @@ for arg in $*; do
 		;;
 	--tag=*)
 		tags="$tags,${arg#--tag=}"
+		;;
+	--debug|-d)
+		debug=yes
 		;;
 	-h|--help)
 		help
