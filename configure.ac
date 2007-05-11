@@ -177,7 +177,7 @@ AS_IF(test "$HAS_PLUGIN" = "yes", [
 	AS_IF(test "$with_loader" = "no", [
 		AS_IF(test "$HAS_GLISS_PPC" = "yes", [
 			HAS_LOADER="yes"
-			LOADER_DEPS="\$(top_builddir)/src/gliss/ppc.la"
+			LOADER_DEPS="\$(top_builddir)/src/ppc/ppc.la"
 			LOADER_LIBS="-uppc_plugin $LOADER_DEPS"
 		],
 		AS_IF(test "$HAS_GLISS_ARM" = "yes", [
@@ -193,7 +193,7 @@ AS_IF(test "$HAS_PLUGIN" = "yes", [
 		AS_IF(test "$with_loader" = "ppc",
 		[
 			HAS_LOADER="yes"
-			LOADER_DEPS="\$(top_builddir)/src/gliss/ppc.la"
+			LOADER_DEPS="\$(top_builddir)/src/ppc/ppc.la"
 			LOADER_LIBS="-uppc_plugin $LOADER_DEPS"
 		],
 		AS_IF(test "$with_loader" = "arm",
@@ -236,6 +236,7 @@ AC_CONFIG_FILES([
 	src/ogensim/Makefile
 	src/oloader/Makefile
 	src/arm/Makefile
+	src/ppc/Makefile
 	examples/Makefile
 	bin/Makefile
 	test/Makefile
@@ -261,27 +262,30 @@ AC_CONFIG_FILES([
 	include/Makefile
 	include/otawa/Makefile
 	include/otawa/ast/Makefile
-	include/otawa/cfg/Makefile
-	include/otawa/dfa/Makefile
-	include/otawa/display/Makefile
-	include/otawa/gliss/Makefile
-	include/otawa/prog/Makefile
-	include/otawa/prop/Makefile
-	include/otawa/ilp/Makefile
-	include/otawa/proc/Makefile
-	include/otawa/ipet/Makefile
-	include/otawa/lp_solve/Makefile
-	include/otawa/ets/Makefile
-	include/otawa/util/Makefile
-	include/otawa/hard/Makefile
-	include/otawa/hardware/Makefile
-	include/otawa/sim/Makefile
 	include/otawa/cache/Makefile
 	include/otawa/cache/categorisation/Makefile
 	include/otawa/cache/ccg/Makefile
-	include/otawa/pcg/Makefile
+	include/otawa/cfg/Makefile
+	include/otawa/dfa/Makefile
+	include/otawa/display/Makefile
+	include/otawa/ets/Makefile
 	include/otawa/exegraph/Makefile
 	include/otawa/gensim/Makefile
+	include/otawa/gliss/Makefile
+	include/otawa/hard/Makefile
+	include/otawa/hardware/Makefile
+	include/otawa/ilp/Makefile
+	include/otawa/ipet/Makefile
+	include/otawa/loader/Makefile
+	include/otawa/loader/new_gliss/Makefile
+	include/otawa/loader/old_gliss/Makefile
+	include/otawa/lp_solve/Makefile
+	include/otawa/pcg/Makefile
+	include/otawa/proc/Makefile
+	include/otawa/prog/Makefile
+	include/otawa/prop/Makefile
+	include/otawa/sim/Makefile
+	include/otawa/util/Makefile
 	data/Makefile
 	data/procs/Makefile
 	data/caches/Makefile

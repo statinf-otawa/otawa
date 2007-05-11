@@ -11,6 +11,7 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
+#include <otawa/prog/TextDecoder.h>
 #include <otawa/hard/Processor.h>
 
 using namespace elm;
@@ -114,6 +115,7 @@ int main(int argc, char **argv) {
 		cout << '\n';
 		
 		// Display some instructions
+		fw->require(DECODED_TEXT);
 		cout << "READ/WRITTEN REGS TEST\n";
 		String label("main");
 		Inst *inst = fw->findInstAt((address_t)0x50140);
