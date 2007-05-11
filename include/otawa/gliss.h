@@ -1,55 +1,12 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2003-07, IRIT UPS.
  *
- *	gliss.h -- GLISS classes interface.
+ *	interface to GLISS simulation
  */
 #ifndef OTAWA_GLISS_GLISS_H
 #define OTAWA_GLISS_GLISS_H
 
-#include <elm/io.h>
-#include <elm/datastruct/HashTable.h>
-#include <elm/datastruct/Vector.h>
-#include <otawa/manager.h>
-#include <otawa/program.h>
-#include <otawa/instruction.h>
-//#include <elfread.h>
-#include <otawa/gliss/Inst.h>
-#include <otawa/gliss/ControlInst.h>
-#include <otawa/gliss/CodeSegment.h>
-#include <otawa/gliss/File.h>
-#include <otawa/gliss/Process.h>
-#include <otawa/gliss/Platform.h>
-
-namespace otawa { namespace gliss {
-
-// Classes
-class Inst;
-class ControlInst;
-class Platform;
-class CodeSegment;
-class DataSegment;
-class File;
-
-// otawa::gliss::Loader class
-class Loader: public otawa::Loader {
-public:
-	Loader(void);
-
-	// otawa::Loader overload
-	virtual CString getName(void) const;
-	virtual otawa::Process *load(Manager *_man, CString path, const PropList& props);
-	virtual otawa::Process *create(Manager *_man, const PropList& props);
-};
-
-
-// Loader entry point
-extern otawa::Loader& loader;
-
-
-// Special property
-extern Identifier<state_t *> GLISS_STATE;
-
-} }	// otawa::gliss
+#include <otawa/loader/gliss.h>
 
 #endif	// OTAWA_GLISS_GLISS_H
