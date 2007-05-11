@@ -33,7 +33,7 @@ protected:
 	elm::genstruct::AllocatedTable<hard::Register *> in_regs;
 	elm::genstruct::AllocatedTable<hard::Register *> out_regs;
 	
-	void decodeRegs(void);
+	virtual void decodeRegs(void);
 
 private:
 	address_t addr;
