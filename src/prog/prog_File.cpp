@@ -123,17 +123,38 @@ Symbol *File::findSymbol(String name) {
 
 
 /**
+ * Inst *File::findByAddress(address_t address);
+ * Find an instruction by its address.
+ * @param address	Instruction address.
+ * @return			Found instruction or null.
+ * @deprecated	Use @ref findInstAt() instead.
+ */
+
+
+/**
  * Find an instruction by its address.
  * @param address	Instruction address.
  * @return			Found instruction or null.
  */
-Inst *File::findByAddress(address_t address) {
+Inst *File::findInstAt(address_t address) {
 	for(SegIter seg(this); seg; seg++)
 		if(seg->address() <= address && address < seg->topAddress()) {
 			Inst *inst = seg->findInstAt(address);
 			if(inst)
 				return inst;
 		}
+	return 0;
+}
+
+/**
+ * Find a program item by its address.
+ * @param address	Program item address.
+ * @return			Found program item or null.
+ */
+ProgItem *File::findItemAt(address_t address) {
+	for(SegIter seg(this); seg; seg++)
+		if(seg->address() <= address && address < seg->topAddress())
+			return seg->findItemAt(address);
 	return 0;
 }
 
