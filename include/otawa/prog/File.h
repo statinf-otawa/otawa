@@ -35,7 +35,8 @@ class File: public PropList {
 public:
 	inline File(String name): _name(name) { }
 	inline CString name(void) { return _name.toCString(); }
-	Inst *findByAddress(address_t address);
+	Inst *findInstAt(address_t address);
+	ProgItem *findItemAt(address_t address);
 	
 	// Segment management
 	inline void addSegment(Segment *seg) { segs.add(seg); }
@@ -56,6 +57,9 @@ public:
 		inline SymIter(const File *file): syms_t::ItemIterator(file->syms) { }
 		inline SymIter(const SymIter& iter): syms_t::ItemIterator(iter) { }
 	};
+
+	// Deprecated
+	inline Inst *findByAddress(address_t address) { return findInstAt(address); }
 };
 
 // Properties
