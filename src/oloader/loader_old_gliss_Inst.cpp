@@ -60,7 +60,7 @@ Inst::kind_t Inst::kind(void) {
 /**
  */
 const elm::genstruct::Table<hard::Register *>& Inst::readRegs(void) {
-	if(!(_kind & ~REGS_DONE)) {
+	if(!(_kind & REGS_DONE)) {
 		_kind |= REGS_DONE;
 		decodeRegs();
 	}
@@ -71,7 +71,7 @@ const elm::genstruct::Table<hard::Register *>& Inst::readRegs(void) {
 /**
  */
 const elm::genstruct::Table<hard::Register *>& Inst::writtenRegs(void) {
-	if(!(_kind & ~REGS_DONE)) {
+	if(!(_kind & REGS_DONE)) {
 		_kind |= REGS_DONE;
 		decodeRegs();
 	}

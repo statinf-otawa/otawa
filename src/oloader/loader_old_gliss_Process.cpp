@@ -11,14 +11,15 @@
 #include "old_gliss.h"
 #include "elf.h"
 #include "elfread.h"
+#include <otawa/loader/gliss.h>
 
 #define TRACE(m) cout << m << io::endl
 
 extern "C" Elf32_Ehdr Ehdr;
 
-namespace otawa { namespace gliss {
+/*namespace otawa { namespace gliss {
 	extern otawa::Identifier<state_t *> GLISS_STATE;
-} } // otawa::gliss
+} } // otawa::gliss*/
 
 namespace otawa { namespace loader { namespace old_gliss {
 
@@ -205,7 +206,7 @@ File *Process::loadFile(elm::CString path) {
 
 	// Last initializations
 	_start = findInstAt((address_t)Ehdr.e_entry);
-	//otawa::gliss::GLISS_STATE(this) = _state;
+	otawa::gliss::GLISS_STATE(this) = _state;
 	addFile(file);
 	return file;
 }
