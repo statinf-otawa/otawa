@@ -153,8 +153,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	
 	// Check required feature
 	for(int i = 0; i < required.length(); i++)
-		if(!fw->isProvided(*required[i]))
-			required[i]->process(fw, props);
+		fw->require(*required[i]);
 
 	// Perform configuration
 	configure(props);

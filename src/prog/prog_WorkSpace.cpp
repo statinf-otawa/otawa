@@ -182,4 +182,15 @@ void WorkSpace::remove(const AbstractFeature& feature) {
 	features.remove(&feature);
 }
 
+
+/**
+ * Ensure that a feature is provided.
+ * @param feature	Required feature.
+ * @param props		Configuration properties (optional).
+ */
+void WorkSpace::require(const AbstractFeature& feature, const PropList& props) {
+	if(!isProvided(feature))
+		feature.process(this, props);
+}
+
 } // otawa

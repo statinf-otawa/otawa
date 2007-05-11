@@ -77,6 +77,7 @@ public:
 	void loadConfig(const elm::system::Path& path);
 	
 	// Feature management
+	void require(const AbstractFeature& feature, const PropList& props = PropList::EMPTY);
 	void provide(const AbstractFeature& feature);
 	bool isProvided(const AbstractFeature& feature);
 	void remove(const AbstractFeature& feature);
