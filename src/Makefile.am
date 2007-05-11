@@ -4,7 +4,7 @@ SUBDIRS= \
 	oloader
 
 if HAS_GLISS_PPC
-SUBDIRS += gliss
+SUBDIRS += ppc
 endif
 
 if HAS_GLISS_ARM
