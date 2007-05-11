@@ -80,14 +80,19 @@ int main(int argc, char **argv) {
 			cout << fun << " found at 0x" << fmt::address(cfg->address()) << '\n';
 
 		// Removing __eabi call if available
+		bool found = false;
 		for(CFG::BBIterator bb(cfg); bb; bb++)
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL
 				&& edge->target()
 				&& edge->calledCFG()->label() == "__eabi") {
 					delete(*edge);
+					//cerr << "__eabi call deleted !\n";
+					found = true;
 					break;
 				}
+		if(!found)
+			cerr << "__eabi call not found !\n";
 
 		// Build the context
 		PropList conf;
