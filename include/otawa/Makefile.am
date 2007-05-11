@@ -1,29 +1,27 @@
 # Sub-directories
 SUBDIRS= \
 	ast \
+	cache \
 	cfg \
 	dfa \
 	display \
-	prog \
-	prop \
-	ilp \
-	proc \
-	ipet \
-	util \
-	cache \
 	ets \
+	exegraph \
 	hard \
 	hardware \
+	ilp \
+	ipet \
+	loader \
+	pcg \
+	proc \
+	prog \
+	prop \
 	sim \
-	exegraph \
-	pcg
+	util
+
 
 if HAS_SYSTEMC
 SUBDIRS += gensim
-endif
-
-if HAS_GLISS_PPC
-SUBDIRS += gliss
 endif
 
 if HAS_LP_SOLVE
