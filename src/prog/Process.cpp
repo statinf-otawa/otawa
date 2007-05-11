@@ -13,6 +13,7 @@
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/prog/Manager.h>
 #include <otawa/gensim/GenericSimulator.h>
+#include <otawa/prog/FixedTextDecoder.h>
 
 using namespace elm;
 
@@ -214,6 +215,23 @@ Inst *Process::findInstAt(address_t addr) {
 			return result;
 	}
 	return 0;
+}
+
+
+/**
+ * @fn int Process::instSize(void) const;
+ * Get the instruction size.
+ * @return	Instruction size or 0 for variable instruction size.
+ */
+
+
+/**
+ * Get a decoder usuful to decode instructions. Must be overriden to give
+ * variable length instruction decoder.
+ * @return	Instruction decoder.
+ */
+Processor& Process::decoder(void) {
+	return FixedTextDecoder::_;
 }
 
 } // otawa

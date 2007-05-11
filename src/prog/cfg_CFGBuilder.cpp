@@ -7,6 +7,7 @@
 
 #include <otawa/cfg/CFGBuilder.h>
 #include <otawa/cfg.h>
+#include <otawa/prog/TextDecoder.h>
 
 namespace otawa {
 
@@ -22,8 +23,11 @@ Identifier<bool> IS_ENTRY("is_entry", false, otawa::NS);
  * representation. Found CFG are linked the framework to the framework thanks
  * a CFGInfo object stored in a property.
  * 
- * @Provided Features
+ * @par Provided Features
  * @li @ref CFG_INFO_FEATURE
+ * 
+ * @par Required Features
+ * @li @ref DECODED_TEXT
  */
 
 
@@ -33,6 +37,7 @@ Identifier<bool> IS_ENTRY("is_entry", false, otawa::NS);
 CFGBuilder::CFGBuilder(void)
 : Processor("otawa::CFGBuilder", Version(1, 0, 0)), verbose(false) {
 	provide(CFG_INFO_FEATURE);
+	require(DECODED_TEXT);
 }
 
 

@@ -24,6 +24,7 @@ using namespace elm::genstruct;
 // Pre-definition
 class File;
 class Manager;
+class Processor;
 
 namespace hard {
 	class Platform;
@@ -58,6 +59,8 @@ public:
 	virtual Inst *findInstAt(String& label);
 	virtual sim::Simulator *simulator(void);
 	inline File *program(void) const;
+	virtual int instSize(void) const = 0;
+	virtual Processor& decoder(void);
 
 	// Constructors
 	File *loadProgram(elm::CString path);
@@ -78,6 +81,9 @@ public:
 inline File *Process::program(void) const {
 	return prog;
 }
+
+// Features
+//extern Feature<NoProcessor> DECODED_TEXT;
 
 } // otawa
 

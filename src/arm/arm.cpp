@@ -21,6 +21,7 @@ class Process: public otawa::loader::old_gliss::Process {
 public:
 	Process(Manager *manager, hard::Platform *pf,
 		const PropList& props = PropList::EMPTY);
+	virtual int instSize(void) const { return 4; }
 
 protected:
 	virtual otawa::Inst *decode(address_t addr);

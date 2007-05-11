@@ -1,6 +1,7 @@
 includeotawaprogdir=$(includedir)/otawa/prog
 includeotawaprog_HEADERS = \
 	File.h \
+	FixedTextDecoder.h \
 	FrameWork.h \
 	Inst.h \
 	Instruction.h \
@@ -10,5 +11,6 @@ includeotawaprog_HEADERS = \
 	ProgItem.h \
 	Segment.h \
 	Symbol.h \
+	TextDecoder.h \
 	WorkSpace.h
 
