@@ -251,10 +251,10 @@ otawa::Inst *Process::decode(address_t addr) {
 		case 10:	// SYSTEM
 		case 11:	// TRAP
 			//cerr << "A BRANCH !!!\n";
-			if(inst->ident == ID_BL_ && inst->instrinput[0].val.Int24 == 1) {
+			/*if(inst->ident == ID_BL_ && inst->instrinput[0].val.Int24 == 1) {
 				result = new Inst(*this, kind, addr);
 				break;
-			}
+			}*/
 			switch(inst->ident) {
 			case ID_BL_:
 			case ID_BLA_:
