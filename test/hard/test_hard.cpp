@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
 		if(!inst)
 			throw new otawa::Exception(CString("no main in this file ?"));
 		for(int i = 0; i < 10; i++, inst = inst->nextInst()) {
-			cout << '\n' << inst << '\n';
+			cout << '\n' << inst << " (" << io::hex(inst->kind()) << ")\n";
 			const elm::genstruct::Table<hard::Register *>& reads = inst->readRegs();
 			cout << "\tread registers : ";
 			for(int i = 0; i < reads.count(); i++)
