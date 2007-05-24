@@ -76,6 +76,7 @@ public:
 	static const BaseType float128_type;
 	static const BaseType addr32_type;
 	static const BaseType cstring_type;
+	static const BaseType string_type;
 	
 	// Constructors
 	static const BaseType& getBaseType(base_t type);
@@ -115,6 +116,30 @@ public:
 	virtual const BaseType *toBase(void) const { return this; };
 	virtual void print(elm::io::Output& output) const;
 };
+
+// typeof function
+template <class T> struct __type { static inline const Type& _(void) { return Type::no_type; } };
+
+template <> struct __type<void> { static inline const Type& _(void) { return Type::void_type; } };
+template <> struct __type<bool> { static inline const Type& _(void) { return Type::bool_type; } };
+template <> struct __type<char> { static inline const Type& _(void) { return Type::char_type; } };
+template <> struct __type<signed char> { static inline const Type& _(void) { return Type::int8_type; } };
+template <> struct __type<unsigned char> { static inline const Type& _(void) { return Type::uint8_type; } };
+template <> struct __type<short> { static inline const Type& _(void) { return Type::int16_type; } };
+template <> struct __type<unsigned short> { static inline const Type& _(void) { return Type::uint16_type; } };
+template <> struct __type<int> { static inline const Type& _(void) { return Type::int32_type; } };
+template <> struct __type<unsigned int> { static inline const Type& _(void) { return Type::uint32_type; } };
+template <> struct __type<long> { static inline const Type& _(void) { return Type::int32_type; } };
+template <> struct __type<unsigned long> { static inline const Type& _(void) { return Type::uint32_type; } };
+template <> struct __type<long long> { static inline const Type& _(void) { return Type::int64_type; } };
+template <> struct __type<unsigned long long> { static inline const Type& _(void) { return Type::uint64_type; } };
+template <> struct __type<float> { static inline const Type& _(void) { return Type::float32_type; } };
+template <> struct __type<double> { static inline const Type& _(void) { return Type::float64_type; } };
+template <> struct __type<long double> { static inline const Type& _(void) { return Type::float128_type; } };
+template <> struct __type<elm::CString> { static inline const Type& _(void) { return Type::cstring_type; } };
+template <> struct __type<elm::String> { static inline const Type& _(void) { return Type::string_type; } };
+
+template <class T> inline const Type& type(void) { return __type<T>::_(); }
 
 } // namespace otawa
 
