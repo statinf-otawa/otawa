@@ -9,6 +9,7 @@
 
 #include <elm/rtti.h>
 #include <elm/meta.h>
+#include <otawa/type.h>
 #include <otawa/prop/AbstractIdentifier.h>
 #include <otawa/prop/Property.h>
 #include <otawa/prop/PropList.h>
@@ -229,7 +230,7 @@ void Identifier<T>::print(elm::io::Output& output, const Property& prop) const {
 
 template <class T>
 const Type& Identifier<T>::type(void) const {
-	return Type::no_type;
+	return otawa::type<T>();
 }
 
 template <class T>
