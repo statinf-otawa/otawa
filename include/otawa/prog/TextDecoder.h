@@ -17,9 +17,12 @@ class TextDecoder: public Processor {
 public:
 	static TextDecoder _;
 	TextDecoder(void);
+	static Identifier<bool> FOLLOW_PATHS;
+	virtual void configure(const PropList& props);
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
+	bool follow_paths;
 };
 
 // Features
