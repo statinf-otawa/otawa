@@ -25,6 +25,7 @@ using namespace elm::genstruct;
 class File;
 class Manager;
 class Processor;
+class TextDecoder;
 
 namespace hard {
 	class Platform;
@@ -60,7 +61,7 @@ public:
 	virtual sim::Simulator *simulator(void);
 	inline File *program(void) const;
 	virtual int instSize(void) const = 0;
-	virtual Processor& decoder(void);
+	virtual Processor *decoder(void);
 
 	// Constructors
 	File *loadProgram(elm::CString path);
