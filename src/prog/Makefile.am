@@ -99,6 +99,7 @@ libotawa_la_SOURCES = \
 	prog_Segment.cpp \
 	prog_Symbol.cpp \
 	prog_TextDecoder.cpp \
+	prog_VarTextDecoder.cpp \
 	prog_WorkSpace.cpp \
 	cache_CATBuilder.cpp \
 	cache_CATConstraintBuilder.cpp \

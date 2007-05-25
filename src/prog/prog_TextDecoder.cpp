@@ -7,9 +7,23 @@
 
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/prog/FixedTextDecoder.h>
+#include <otawa/prog/VarTextDecoder.h>
 #include <otawa/proc/Registry.h>
 
 namespace otawa {
+
+/**
+ * Static access to the text decoder.
+ */
+TextDecoder TextDecoder::_;
+
+
+// Registration
+static Configuration follow_paths_config(TextDecoder::FOLLOW_PATHS,
+	AUTODOC "/classotawa_1_1ets_1_1TextDecoder.html");
+static Registration reg(TextDecoder::_,
+	AUTODOC "/classotawa_1_1ets_1_1TextDecoder.html");
+
 
 /**
  * This feature ensures that text segment of the process has been decoded
@@ -26,6 +40,9 @@ Feature<TextDecoder> DECODED_TEXT("otawa::DECODED_TEXT");
  * A default text decoder: try to find the most adapted text decoder. If the
  * instruction set has fixed size, use the @ref FixedTextDecoder(). Else call
  * the process provided text decoder.
+ * 
+ * @par Configuration
+ * @li @ref FOLLOW_PATHS
  */
 
 
@@ -33,8 +50,11 @@ Feature<TextDecoder> DECODED_TEXT("otawa::DECODED_TEXT");
  * Constructor.
  */
 TextDecoder::TextDecoder(void)
-: Processor("otawa::TextDecoder", Version(1, 0, 0)) {
-	provide(DECODED_TEXT); 
+:	Processor("otawa::TextDecoder", Version(1, 0, 0)),
+	follow_paths(false)
+{
+	provide(DECODED_TEXT);
+	config(follow_paths_config);
 }
 
 
@@ -43,13 +63,14 @@ TextDecoder::TextDecoder(void)
 void TextDecoder::processWorkSpace(WorkSpace *fw) {
 	
 	// Decode the text
-	int size = fw->process()->instSize();
-	if(size)
-		FixedTextDecoder::_.process(fw);
-	else {
-		Processor& proc = fw->process()->decoder();
-		proc.process(fw);
+	Processor *decoder = fw->process()->decoder();
+	if(!decoder) {
+		if(follow_paths)
+			decoder = &VarTextDecoder::_;
+		else
+			decoder = &FixedTextDecoder::_;
 	}
+	decoder->process(fw);
 	
 	// Put the labels
 	for(Process::FileIter file(fw->process()); file; file++)
@@ -72,13 +93,21 @@ void TextDecoder::processWorkSpace(WorkSpace *fw) {
 
 
 /**
- * Static access to the text decoder.
  */
-TextDecoder TextDecoder::_;
+void TextDecoder::configure(const PropList& props) {
+	Processor::configure(props);
+	follow_paths = FOLLOW_PATHS(props);
+}
 
 
-// Registration
-static Registration reg(TextDecoder::_,
-	AUTODOC "/classotawa_1_1ets_1_1TextDecoder.html");
+/**
+ * This identifier is used to configure the @ref TextDecoder. It informs it
+ * to decode text by following executions paths. It produces better results
+ * only for fixed-size instruction architecture (like RISC) but causes an
+ * increase in the computation time. This configuration property has no
+ * effect on variable-size instruction set architectures (CISC).
+ */
+Identifier<bool> TextDecoder::FOLLOW_PATHS("follow_paths", false, NS);
+
 
 } // otawa

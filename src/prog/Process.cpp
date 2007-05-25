@@ -226,12 +226,12 @@ Inst *Process::findInstAt(address_t addr) {
 
 
 /**
- * Get a decoder usuful to decode instructions. Must be overriden to give
- * variable length instruction decoder.
- * @return	Instruction decoder.
+ * Get a decoder usuful to decode instructions. May be overriden to give
+ * instruction set architecture dependent decoders.
+ * @return	Instruction decoder or null if none is defined.
  */
-Processor& Process::decoder(void) {
-	return FixedTextDecoder::_;
+Processor *Process::decoder(void) {
+	return 0;
 }
 
 } // otawa
