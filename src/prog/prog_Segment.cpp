@@ -13,6 +13,7 @@
 #define MAP_MASK	((1 << MAP_BITS) - 1)
 #define MAP_SIZE(s)	(((s) + MAP_MASK - 1) >> MAP_BITS)
 #define MAP_INDEX(a) (((a) - address()) >> MAP_BITS)
+#define MAP_BASE(i)	 address_t(address() + ((i) << MAP_BITS))
 
 namespace otawa {
 
@@ -110,6 +111,7 @@ Inst *Segment::findInstAt(address_t addr) {
 	ProgItem *item = findItemAt(addr);
 	if(!item) {
 		Inst *inst = decode(addr);
+		//cerr << "findInstAt(" << addr << ") = " << inst << io::endl;
 		if(inst)
 			insert(inst);
 		return inst;
@@ -129,14 +131,20 @@ Inst *Segment::findInstAt(address_t addr) {
  * @return		Found item or null.
  */
 ProgItem *Segment::findItemAt(address_t addr) {
+	//cerr << "findItemAt(" << addr << ")\n";
 	ASSERTP(address() <= addr && addr < topAddress(), "item out of this segment");
-	ProgItem *item = map[MAP_INDEX(addr)];
-	if(item)
+	int index = MAP_INDEX(addr);
+	ProgItem *item = map[index];
+	if(item) {
+		/*cerr << "index = " << index  << "(" << MAP_BASE(index) << ")->"
+			 << (item ? item->address() : address_t(0)) << io::endl;*/
 		while(item && item->address() <= addr) {
+			//cerr << "> " << item->address() << "\n";
 			if(item->address() == addr)
 				return item;
 			item = item->next();
 		}
+	}
 	return 0;
 }
 
@@ -162,9 +170,12 @@ void Segment::insert(ProgItem *item) {
 		"attempt to insert an item with out-of-bound address");
 	//cout << "Inserting item at " << item->address() << io::endl;
 	int index = MAP_INDEX(item->address());
+	//cerr << "insert(" << item->address() << ")\n";
+	//cerr << "index = " << index << "(" << MAP_BASE(index) << ")" << io::endl;
 	
 	// Empty map entry
-	if(!map[index]) {
+	ProgItem *cur = map[index];
+	if(!cur) {
 		map[index] = item;
 		if(items.isEmpty()) {
 			items.addFirst(item);
@@ -175,22 +186,39 @@ void Segment::insert(ProgItem *item) {
 				index--;
 			while(index >= 0 && !map[index]);
 			if(index < 0) {
+				ASSERT(((ProgItem *)items.first())->address() > item->address());
 				items.addFirst(item);
 				return;
 			}
 		}
+		cur = map[index];
+		ASSERT(cur);
+	}
+	else if(item->address() < cur->address())
+		map[index] = item;
+		
+	// Find the position
+	while(cur && cur->address() < item->address()) {
+		ASSERT(cur->address() != item->address());
+		cur = cur->next();
+	}
+	if(!cur) {
+		ASSERT(((ProgItem *)items.last())->address() < item->address());
+		items.addLast(item);
+	}
+	else {
+		//cerr << "=>" << item->topAddress() << " < " << cur->address() << io::endl;
+		ASSERT(item->topAddress() <= cur->address());
+		cur->insertBefore(item);
 	}
 	
-	// Find the position
-	ProgItem *cur = map[index];
-	while(cur && cur->address() < item->address())
-		cur = cur->next();
-	if(!cur)
-		items.addLast(item);
-	else {
-		assert(item->topAddress() <= cur->address());
-		cur->insertBefore(item);
-	} 
+	// !!DEBUG!!
+	/*address_t prev;
+	for(ItemIter item(this); item; item++) {
+		//cerr << "> " << item->address() << io::endl;
+		ASSERT(item->address() > prev);
+		prev = item->address();
+	}*/
 }
 
 }; // namespace otawa
