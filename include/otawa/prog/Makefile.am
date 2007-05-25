@@ -12,5 +12,6 @@ includeotawaprog_HEADERS = \
 	Segment.h \
 	Symbol.h \
 	TextDecoder.h \
+	VarTextDecoder.h \
 	WorkSpace.h
 
