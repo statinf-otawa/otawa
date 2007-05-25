@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
 		// Display the result
 		cout << "SUCCESS\n";
 	}
-	catch(LoadException e) {
+	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
 		exit(1);
 	}
