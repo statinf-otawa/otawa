@@ -10,7 +10,7 @@
 #include <gel/gel.h>
 #include "old_gliss.h"
 
-#define TRACE(m) cerr << m;
+#define TRACE(m) //cerr << m;
 
 namespace otawa { namespace loader { namespace new_gliss {
 

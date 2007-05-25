@@ -84,6 +84,10 @@ public:
 	Process(Manager *manager, hard::Platform *pf,
 		const PropList& props = PropList::EMPTY);
 	virtual int instSize(void) const { return 4; }
+	void decodeRegs(
+		Inst *inst,
+		elm::genstruct::AllocatedTable<hard::Register *> *in,
+		elm::genstruct::AllocatedTable<hard::Register *> *out);
 
 protected:
 	virtual otawa::Inst *decode(address_t addr);
@@ -102,7 +106,9 @@ public:
 	virtual size_t size(void) const { return 4; }
 
 protected:
-	virtual void decodeRegs(void);
+	virtual void decodeRegs(void) {
+		((Process&)process()).decodeRegs(this, &in_regs, &out_regs);
+	}
 };
 
 
@@ -117,6 +123,9 @@ public:
 	
 protected:
 	virtual address_t decodeTargetAddress(void);
+	virtual void decodeRegs(void) {
+		((Process&)process()).decodeRegs(this, &in_regs, &out_regs);
+	}
 };
 
 
@@ -504,13 +513,17 @@ static ScanArgs scan_args;
 	
 /**
  */
-void Inst::decodeRegs(void) {
+void Process::decodeRegs(
+	otawa::Inst *oinst,
+	elm::genstruct::AllocatedTable<hard::Register *> *in,
+	elm::genstruct::AllocatedTable<hard::Register *> *out
+) {
 
 	// Decode instruction
 	code_t buffer[20];
 	instruction_t *inst;
-	iss_fetch((::address_t)(unsigned long)address(), buffer);
-	inst = iss_decode((state_t *)process().state(), (::address_t)address(), buffer /*, 0*/);
+	iss_fetch((::address_t)(unsigned long)oinst->address(), buffer);
+	inst = iss_decode((state_t *)state(), (::address_t)oinst->address(), buffer /*, 0*/);
 	if(inst->ident == ID_Instrunknown) {
 		/* in_regs = new elm::genstruct::AllocatedTable<hard::Register *>(0);
 		out_regs = new elm::genstruct::AllocatedTable<hard::Register *>(0); */
@@ -547,8 +560,8 @@ void Inst::decodeRegs(void) {
 		RTRACE(cout << "count " << i << io::endl);
 		cnt++;		
 	}
-	in_regs.allocate(cnt);
-	elm::genstruct::AllocatedTable<hard::Register *> *tab = &in_regs;
+	in->allocate(cnt);
+	elm::genstruct::AllocatedTable<hard::Register *> *tab = in;
 
 	// Get read registers
 	#ifdef SCAN_ARGS
@@ -603,8 +616,8 @@ void Inst::decodeRegs(void) {
 		cnt++;
 		break;		
 	}
-	out_regs.allocate(cnt);
-	tab = &out_regs;
+	out->allocate(cnt);
+	tab = out;
 
 	// Get write registers
 	#ifdef SCAN_ARGS
