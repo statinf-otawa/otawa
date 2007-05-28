@@ -36,8 +36,7 @@ namespace sim {
 // LoadException class
 class LoadException: public MessageException {
 public:
-	LoadException(elm::CString format, VarArg& args);
-	LoadException(elm::CString format, ...);
+	LoadException(const elm::String& message);
 };
 
 // Manager class
