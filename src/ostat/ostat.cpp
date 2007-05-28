@@ -359,8 +359,8 @@ void Command::run(int argc, char **argv) {
 			cerr << "ERROR: \"" << file
 				 << "\" does not contain a function named \"" << funs[i]
 				 << "\".\n";
-			throw option::OptionException("\"%s\" does not contain a function named \"%s\"",
-				&file, &funs[i]);
+			throw option::OptionException(_ << "\"" << file
+				<< "\" does not contain a function named \"" << funs[i] << "\"");
 		}
 		if(tree_option)
 			stats.add(new TreeStatistics(cfg));
