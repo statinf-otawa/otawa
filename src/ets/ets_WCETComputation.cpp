@@ -106,7 +106,8 @@ int WCETComputation::computation(WorkSpace *fw, AST *ast) {
 				N=LOOP_COUNT(ast->toDoWhile());
 				if (N == -1){
 						WC_TRACE;
-						throw io::IOException("no iteration count for loop %s", &LABEL(ast->toDoWhile()->condition()->first()) /* "unknown "*/);
+						throw io::IOException(_ << "no iteration count for loop"
+							<< LABEL(ast->toDoWhile()->condition()->first()) /* "unknown "*/);
 				}
 				wcet=N*(computation(fw, ast->toDoWhile()->body())
 							+ computation(fw, ast->toDoWhile()->condition()));
@@ -118,7 +119,8 @@ int WCETComputation::computation(WorkSpace *fw, AST *ast) {
 				N=LOOP_COUNT(ast->toFor());
 				if (N == -1){
 					WC_TRACE;
-					throw io::IOException("no iteration count for loop %s", &LABEL(ast->toFor()->condition()->first()) /* "unknown " */);
+					throw io::IOException(_ << "no iteration count for loop "
+						<< LABEL(ast->toFor()->condition()->first()) /* "unknown " */);
 				}
 				wcet=computation(fw, ast->toFor()->initialization())
 						+ N*(computation(fw, ast->toFor()->condition())

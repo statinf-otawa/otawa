@@ -53,23 +53,10 @@ const CString Manager::CACHE_CONFIG_NAME = "cache-config";
 
 /**
  * Build a load exception with a formatted message.
- * @param format	Format of the message.
- * @param args		Arguments of the format.
+ * @param message	Message.
  */
-LoadException::LoadException(CString format, VarArg& args)
-: MessageException(format, args) {
-}
-
-
-/**
- * Build a load exception with a formatted message.
- * @param format	Format of the message.
- * @param ...		Arguments of the format.
- */
-LoadException::LoadException(CString format, ...) {
-	VARARG_BEGIN(args, format)
-		buildMessage(format, args);
-	VARARG_END
+LoadException::LoadException(const String& message)
+: MessageException(message) {
 }
 
 
@@ -192,7 +179,7 @@ WorkSpace *Manager::loadBin(
 	
 	// No loader -> error
 	if(!loader)
-		throw LoadException("no loader for \"%s\".", &path);
+		throw LoadException(_ << "no loader for \"" << path << "\".");
 
 	// Try to load the binary
 	return new WorkSpace(loader->load(this, &path, props));
@@ -215,7 +202,7 @@ WorkSpace *Manager::loadXML(
 	xom::Builder builder;
 	xom::Document *doc = builder.build(&path);
 	if(!doc)
-		throw LoadException("cannot load \"%s\".", &path);
+		throw LoadException(_ << "cannot load \"" << path << "\".");
 	xom::Element *elem = doc->getRootElement();
 	
 	// Check the file

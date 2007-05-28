@@ -127,11 +127,11 @@ void WorkSpace::loadConfig(const elm::system::Path& path) {
 	xom::Builder builder;
 	xom::Document *doc = builder.build(&path);
 	if(!doc)
-		throw LoadException("cannot load \"%s\".", &path);
+		throw LoadException(_ << "cannot load \"" << path << "\".");
 	xom::Element *conf = doc->getRootElement();
 	if(conf->getLocalName() != "otawa"
 	|| conf->getNamespaceURI() != "")
-		throw LoadException("bad file type in \"%s\".", &path);
+		throw LoadException(_ << "bad file type in \"" << path << "\".");
 	CONFIG_ELEMENT(this) = conf;
 }
 
