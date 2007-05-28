@@ -54,6 +54,7 @@ public:
 		FLOAT128,
 		ADDR32,
 		CSTRING,
+		STRING_,
 		BASE_TOP
 	} base_t;
 
