@@ -106,7 +106,7 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 	String entry_name(&entry, entry.length() - 1);
 	Inst *entry_inst = fw->findInstAt(findLabel(entry_name));
 	if(!entry_inst)
-		throw LoadException("Cannot find instruction at \"%s\".",  &entry);
+		throw LoadException(_ << "Cannot find instruction at \"" << entry << "\".");
 	
 	// Retrieve exit address
 	String exit_name(&exit, exit.length() - 1);
@@ -121,7 +121,7 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 	for(int i = 0; i < calls.length(); i++) {
 		Inst *inst = fw->findInstAt(findLabel(calls[i].toCString()));
 		if(!inst)
-			throw LoadException("Cannot find instruction at \"%s\".",  &calls[i]);
+			throw LoadException(_ << "Cannot find instruction at \"" << calls[i] << "\".");
 		else
 			call_insts.add(inst);
 	}
@@ -157,10 +157,10 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 				break;
 		}
 		else if(inst->isReturn())
-			throw LoadException("binary unconsistent with AST (%s).", &entry);
+			throw LoadException(_ << "binary unconsistent with AST (" << entry << ".");
 	}
 	if(cnt < calls.length()) {
-		throw LoadException("binary unconsistent with AST (%s).", &entry);
+		throw LoadException(_ << "binary unconsistent with AST (" << entry << ").");
 	}
 	
 	// Remaining block ?
@@ -191,7 +191,7 @@ address_t ASTLoader::findLabel(elm::String raw_label) {
 	// Retrieve the labels
 	address_t addr = file->findLabel(label);
 	if(!addr)
-		throw LoadException("Cannot resolve label \"%s\".", &label);
+		throw LoadException(_ << "Cannot resolve label \"" << label << "\".");
 	return addr;
 }
 
