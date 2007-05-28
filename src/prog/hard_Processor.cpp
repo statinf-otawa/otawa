@@ -74,7 +74,7 @@ void __unserialize(Unserializer& s, otawa::hard::Dispatch::type_t& v) {
 			}
 		}
 		if(!done)
-			throw io::IOException("unknown symbol \"%s\".", &item);
+			throw io::IOException(_ << "unknown symbol \"" << item << "\".");
 	}
 }
 
