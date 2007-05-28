@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
 			}
 			else {
 				TRACE;
-				throw IOException("\n Cannot find %s !", &fun->name());
+				throw IOException(_ << "\n Cannot find " << fun->name() << " !");
 			}
 			cout << '\n';
 		}

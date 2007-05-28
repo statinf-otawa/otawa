@@ -175,7 +175,7 @@ sim::Simulator *Process::simulator(void) {
 		return 0;
 	sim = manager()->findSimulator(name);
 	if(!sim)
-		throw LoadException("cannot get the simulator \"%s\".", &name);
+		throw LoadException(_ << "cannot get the simulator \"" << name << "\".");
 	return sim;
 }
 
