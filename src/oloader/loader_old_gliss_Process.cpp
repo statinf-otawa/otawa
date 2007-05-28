@@ -161,7 +161,7 @@ File *Process::loadFile(elm::CString path) {
     // Initialize emulator
     state_t *state = iss_init(mem_list, loader_list, system_list, NULL, NULL);
     if(!state)
-    	throw LoadException("cannot load \"%s\".", &path);
+    	throw LoadException(_ << "cannot load \"" << path << "\".");
     _state = state;
     File *file = new otawa::File(path);
     

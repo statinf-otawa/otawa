@@ -339,7 +339,8 @@ void Command::compute(String fun) {
 		String out_file = fun + ".lp";
 		io::OutFileStream stream(&out_file);
 		if(!stream.isReady())
-			throw MessageException("cannot create file \"%s\".", &out_file);
+			throw MessageException(_ << "cannot create file \"" << out_file
+				<< "\".");
 		sys->dump(stream);
 	}
 	
