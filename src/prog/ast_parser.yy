@@ -62,10 +62,10 @@ def:
 			ASTInfo *info = loader->fw->getASTInfo();
 			address_t addr = loader->file->findLabel($1 + 1);
 			if(!addr)
-				throw LoadException("Cannot resolve label \"%s\".", $1);
+				throw LoadException(_ << "Cannot resolve label \"" << $1 << "\".");
 			Inst *inst = loader->fw->findInstAt(addr);
 			if(!inst)
-				throw LoadException("Cannot find instruction at \"%s\".", $1);
+				throw LoadException(_ << "Cannot find instruction at \"" << $1 << "\".");
 			FunAST *fun = info->getFunction(inst);
 			String name($1);
 			fun->setName(name.substring(1, name.length() - 1));
