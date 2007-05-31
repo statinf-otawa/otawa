@@ -27,7 +27,7 @@ using namespace otawa::ipet;
 using namespace std;
 
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv, char **envp) {
 	
 	try {
 		
@@ -40,7 +40,13 @@ int main(int argc, char **argv) {
 	
 		Manager manager;
 		PropList loader_props;
-//	LOADER(loader_props) = &Loader::LOADER_Gliss_PowerPC;
+		char **new_argv = new char *[argc];
+		for(int i = 1; i < argc; i++)
+			new_argv[i - 1] = argv[i];
+		new_argv[argc - 1] = 0;
+		ARGC(loader_props) = argc - 1;
+		ARGV(loader_props) = new_argv;
+		ENVP(loader_props) = envp;
 		
 		// Load program
 		if(argc < 2) {
