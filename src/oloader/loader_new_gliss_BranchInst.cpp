@@ -48,7 +48,7 @@ otawa::Inst *BranchInst::target(void) {
 		address_t target_addr = decodeTargetAddress();
 		if(target_addr) {
 			_target = process().findInstAt(target_addr);
-			ASSERT(_target);
+			// !!TODO!! should perform a log output if _target is null !
 			//cerr << "... " << _target->address() << io::endl;
 		}
 	}
