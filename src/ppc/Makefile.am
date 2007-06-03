@@ -12,5 +12,5 @@ ppc_la_SOURCES = ppc.cpp
 
 install-data-hook:
 	rm -f $(libdir)/otawa/loader/elf_20.la
-	$(LN_S) arm.la $(libdir)/otawa/loader/elf_20.la
+	$(LN_S) ppc.la $(libdir)/otawa/loader/elf_20.la
 
