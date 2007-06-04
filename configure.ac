@@ -89,6 +89,11 @@ OTAWA_USE_LIB(GLISS_ARM,
 	OTAWA_CHECK_LIB(GLISS_ARM, emul.h, emul, $PWD/../arm/lib, $PWD/../arm/include))
 
 
+# ===== GLISS_S12X check ======
+OTAWA_USE_LIB(GLISS_S12X,
+	OTAWA_CHECK_LIB(GLISS_S12X, emul.h, emul, $PWD/../hcs12/lib, $PWD/../hcs12/include))
+
+
 # ===== LP_SOLVE check =====
 OTAWA_USE_LIB(LP_SOLVE,
 	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lpk, $PWD/../lp_solve, $PWD/../lp_solve,
@@ -185,9 +190,14 @@ AS_IF(test "$HAS_PLUGIN" = "yes", [
 			LOADER_DEPS="\$(top_builddir)/src/arm/arm.la"
 			LOADER_LIBS="-uarm_plugin $LOADER_DEPS"
 		],
+		AS_IF(test "$HAS_GLISS_S12X" = "yes", [
+			HAS_LOADER="yes"
+			LOADER_DEPS="\$(top_builddir)/src/s12x/s12x.la"
+			LOADER_LIBS="-us12x_plugin $LOADER_DEPS"
+		],
 		[
 			AC_MSG_FAILURE([no loader selected !])
-		]))
+		])))
 	],
 	[
 		AS_IF(test "$with_loader" = "ppc",
@@ -202,9 +212,15 @@ AS_IF(test "$HAS_PLUGIN" = "yes", [
 			LOADER_DEPS="\$(top_builddir)/src/arm/arm.la"
 			LOADER_LIBS="-uarm_plugin $LOADER_DEPS"
 		],
+		AS_IF(test "$with_loader" = "s12x",
+		[
+			HAS_LOADER="yes"
+			LOADER_DEPS="\$(top_builddir)/src/s12x/s12x.la"
+			LOADER_LIBS="-us12x_plugin $LOADER_DEPS"
+		],
 		[
 			AC_MSG_FAILURE([$with_loader loader not available !])
-		]))
+		])))
 	])
 	AS_IF(test "$HAS_LOADER" = "yes", AC_MSG_RESULT([$LOADER_LIBS]))
 ])
@@ -236,6 +252,7 @@ AC_CONFIG_FILES([
 	src/oloader/Makefile
 	src/arm/Makefile
 	src/ppc/Makefile
+	src/s12x/Makefile
 	examples/Makefile
 	bin/Makefile
 	test/Makefile
