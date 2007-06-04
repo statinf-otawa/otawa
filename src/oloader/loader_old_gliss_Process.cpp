@@ -205,9 +205,9 @@ File *Process::loadFile(elm::CString path) {
 	}
 
 	// Last initializations
+	addFile(file);
 	_start = findInstAt((address_t)Ehdr.e_entry);
 	otawa::gliss::GLISS_STATE(this) = _state;
-	addFile(file);
 	return file;
 }
 
