@@ -13,11 +13,20 @@
 #include <gel/gel.h>
 #include <elm/xom.h>
 #include <otawa/sim/Simulator.h>
-#include <otawa/proc/Processor.h>
 
 using namespace elm;
 
 namespace otawa {
+
+// Private
+#define LOADER_SUBDIR	"/.otawa/laoder"
+static String buildLoaderPaths(void) {
+	StringBuffer buf;
+	buf << "." LOADER_SUBDIR ":"
+		<< elm::system::Path::home() << LOADER_SUBDIR ":"
+		<< LOADER_PATHS;
+	return buf.toString();
+}
 
 
 /**
@@ -122,11 +131,32 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
 /**
  * Load a file with the given path and the given properties.
  * @param path		Path of the file to load.
- * @param props		Properties describing the load process. It may contains the
- * properties : @ref TASK_ENTRY, @ref PLATFORM, @ref LOADER, @ref PLATFORM_NAME,
- * @ref LOADER_NAME, @ref ARGC, @ref ARGV, @ref ENVP, @ref SIMULATOR,
- * @ref CACHE_CONFIG, @ref PIPELINE_DEPTH.
+ * @param props		Configuration properties.
  * @return The loaded workspace or 0.
+ * 
+ * The configuration properties may be :
+ * @li @ref TASK_ENTRY,
+ * @li @ref PLATFORM,
+ * @li @ref LOADER,
+ * @li @ref PLATFORM_NAME,
+ * @li @ref LOADER_NAME,
+ * @li @ref ARGC,
+ * @li @ref ARGV,
+ * @li @ref ENVP,
+ * @li @ref SIMULATOR,
+ * @li @ref CACHE_CONFIG,
+ * @li @ref PIPELINE_DEPTH.
+ * 
+ * @par
+ * 
+ * This call try to link a plugin matching the Instruction Set Architecture
+ * of the loaded binary file. This plugin is looked in the following directories:
+ * @li $HOME/.otawa/loader
+ * @li $PWD/.otawa/loader
+ * @li <installation directory>/lib/otawa/loader
+ * 
+ * The two first cases let the user to provide their own plugin for, as an
+ * example, to develop a new loader plugin.
  */
 WorkSpace *Manager::load(const elm::system::Path&  path, const PropList& props) {
 	
@@ -267,7 +297,7 @@ WorkSpace *Manager::load(const PropList& props) {
  */
 Manager::Manager(void):
 	ilp_plugger("ilp_plugin", Version(1, 0, 0), ILP_PATHS),
-	loader_plugger(OTAWA_LOADER_NAME, OTAWA_LOADER_VERSION, LOADER_PATHS),
+	loader_plugger(OTAWA_LOADER_NAME, OTAWA_LOADER_VERSION, buildLoaderPaths()),
 	sim_plugger(OTAWA_SIMULATOR_NAME, OTAWA_SIMULATOR_VERSION, SIMULATOR_PATHS)
 {
 	AbstractIdentifier::init();
