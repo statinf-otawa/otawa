@@ -225,7 +225,6 @@ AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 	src/prog/Makefile
-	src/gliss/Makefile
 	src/oshell/Makefile
 	src/lp_solve/Makefile
 	src/dumpcfg/Makefile
@@ -271,7 +270,6 @@ AC_CONFIG_FILES([
 	include/otawa/ets/Makefile
 	include/otawa/exegraph/Makefile
 	include/otawa/gensim/Makefile
-	include/otawa/gliss/Makefile
 	include/otawa/hard/Makefile
 	include/otawa/hardware/Makefile
 	include/otawa/ilp/Makefile
