@@ -26,7 +26,7 @@ extern "C" gel_file_t *loader_file(memory_t* memory);
 // Kind Table
 static unsigned long kinds[] = {
 	otawa::Inst::IS_ALU | otawa::Inst::IS_INT,					// ARITH = "0"
-	otawa::Inst::IS_ALU | otawa::Inst::IS_INT,					// MULDIV = "1"		!!TODO!!
+	otawa::Inst::IS_ALU | otawa::Inst::IS_INT,					// MULDIV = "1"
 	otawa::Inst::IS_ALU | otawa::Inst::IS_INT,					// INTCMP = "2"
 	otawa::Inst::IS_ALU | otawa::Inst::IS_INT,					// LOGIC = "3"
 	otawa::Inst::IS_ALU | otawa::Inst::IS_SHIFT | otawa::Inst::IS_INT,	// SHIFTROT = "4"
@@ -44,7 +44,7 @@ static unsigned long kinds[] = {
 	otawa::Inst::IS_INTERN,								// TLB = "16"
 	otawa::Inst::IS_ALU | otawa::Inst::IS_FLOAT,					// FPARITH = "17"
 	otawa::Inst::IS_ALU | otawa::Inst::IS_MUL | otawa::Inst::IS_FLOAT,	// FPMUL = "18"
-	otawa::Inst::IS_ALU | otawa::Inst::IS_DIV | otawa::Inst::IS_DIV,		// FPDIV = "19"
+	otawa::Inst::IS_ALU | otawa::Inst::IS_DIV | otawa::Inst::IS_FLOAT,	// FPDIV = "19"
 	otawa::Inst::IS_ALU | otawa::Inst::IS_FLOAT,					// FPMADD = "20"
 	otawa::Inst::IS_ALU | otawa::Inst::IS_FLOAT | otawa::Inst::IS_INT,	// FPRC = "21"
 	otawa::Inst::IS_MEM | otawa::Inst::IS_LOAD | otawa::Inst::IS_FLOAT,	// FPLOAD = "22"
@@ -256,6 +256,20 @@ otawa::Inst *Process::decode(address_t addr) {
 
 		// Build the instruction
 		switch(iss_table[inst->ident].category) {
+		case 1:		// MULDIV
+			switch(inst->ident) {
+			case ID_DIVWU_R_R_R: case ID_DIVWU_D_R_R_R: case ID_DIVWUO_R_R_R:
+			case ID_DIVWUO_D_R_R_R: case ID_DIVW_R_R_R: case ID_DIVW_D_R_R_R:
+			case ID_DIVWO_R_R_R: case ID_DIVWO_D_R_R_R:
+				kind |= Inst::IS_DIV;
+				break;
+			case ID_MULHWU_R_R_R: case ID_MULHWU_D_R_R_R: case ID_MULHW_R_R_R:
+			case ID_MULHW_D_R_R_R: case ID_MULLI_R_R_: case ID_MULLW_R_R_R:
+			case ID_MULLW_D_R_R_R: case ID_MULLWO_R_R_R: case ID_MULLWO_D_R_R_R:
+				kind |= Inst::IS_MUL;
+				break;
+			}
+			break;
 		case 8:		// BRANCH
 		case 10:	// SYSTEM
 		case 11:	// TRAP
