@@ -269,6 +269,7 @@ otawa::Inst *Process::decode(address_t addr) {
 				kind |= Inst::IS_MUL;
 				break;
 			}
+			result = new Inst(*this, kind, addr);
 			break;
 		case 8:		// BRANCH
 		case 10:	// SYSTEM
