@@ -47,9 +47,9 @@ VarTextDecoder::VarTextDecoder(void)
 void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 	
 	// Look the _start
-	address_t addr = ws->start()->address();
-	if(addr)
-		processEntry(ws, addr);
+	Inst *start = ws->start();
+	if(start)
+		processEntry(ws, start->address());
 	
 	// Look the function symbols
 	for(Process::FileIter file(ws->process()); file; file++)
