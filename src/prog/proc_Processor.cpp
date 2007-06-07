@@ -182,9 +182,25 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	if(isVerbose())
 		out << io::endl;
 	
+	// Remove invalidated features
+	for (int i = 0; i < invalidated.length(); i++) {
+		fw->invalidate(*invalidated[i]); // recursively invalidate all children
+	}
+	
 	// Add provided features
-	for(int i = 0; i < provided.length(); i++)
+	for(int i = 0; i < provided.length(); i++) {
 		fw->provide(*provided[i]);
+		
+		if ((provided[i]->dependency->graph == NULL) || (provided[i]->dependency->graph->isDeleted()))
+			provided[i]->dependency->graph = new genstruct::DAGNode<const AbstractFeature*>(provided[i]);
+		for (int j = 0; j < required.length(); j++) {
+			if (fw->isProvided(*required[j])) {
+				required[j]->dependency->graph->addChild(provided[i]->dependency->graph);
+				provided[i]->dependency->incUseCount();
+			}
+		}
+	
+	}
 }
 
 
@@ -309,12 +325,22 @@ void Processor::require(const AbstractFeature& feature) {
 
 /**
  * Usually called from a processor constructor, this method records a feature
+ * invalidated by the work of the current processor.
+ * @param feature	Invalidated feature.
+ */
+void Processor::invalidate(const AbstractFeature& feature) {
+	invalidated.add(&feature);
+}
+
+/**
+ * Usually called from a processor constructor, this method records a feature
  * provided by the work of the current processor.
  * @param feature	Provided feature.
  */
 void Processor::provide(const AbstractFeature& feature) {
 	provided.add(&feature);
 }
+
 
 
 /**
