@@ -53,6 +53,13 @@ Identifier<bool> RECURSIVE_LOOP("recursive_loop", false, otawa::NS);
 
 
 /**
+ * Adds a basic block
+ */
+void VirtualCFG::addBB(BasicBlock *bb) {
+        _bbs.add(bb);
+}
+ 
+/**
  * Build the virtual CFG.
  * @param stack		Stack to previous calls.
  * @param cfg		CFG to develop.
@@ -104,7 +111,7 @@ BasicBlock *exit) {
 						called = edge->calledCFG();
 						if (DONT_INLINE(called))
 						        called = NULL;
-                                        }
+                        }
 
 			// Look edges
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
@@ -181,6 +188,17 @@ VirtualCFG::VirtualCFG(CFG *cfg, bool inlined): _cfg(cfg) {
 	addProps(*cfg);
 }
 
+
+/**
+ * Build a new empty VirtualCFG
+ */
+VirtualCFG::VirtualCFG() {
+  _bbs.add(&_entry);
+  _bbs.add(&_exit);
+  flags |= FLAG_Scanned;
+  flags |= FLAG_Virtual;
+}
+ 
 
 /**
  * @fn CFG *VirtualCFG::cfg(void) const;

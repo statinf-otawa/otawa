@@ -20,7 +20,9 @@ protected:
 	virtual void scan(void);
 public:
 	VirtualCFG(CFG *cfg, bool inlined = true);
+	VirtualCFG();
 	inline CFG *cfg(void) const;
+	void addBB(BasicBlock *bb);
 };
 
 // Identifiers
