@@ -29,6 +29,7 @@ class Processor {
 	void init(const PropList& props);
 	Vector<const AbstractFeature *> required;
 	Vector<const AbstractFeature *> provided;
+	Vector<const AbstractFeature *> invalidated;
 	Vector<Configuration *> configs;
 
 protected:
@@ -44,6 +45,7 @@ protected:
 	inline bool recordsStats(void) const;
 	void require(const AbstractFeature& feature);
 	void provide(const AbstractFeature& feature);
+	void invalidate(const AbstractFeature& feature);
 	inline void config(Configuration& config) { configs.add(&config); }
 	void warn(CString format, VarArg args);
 	void warn(CString format, ...);
