@@ -20,6 +20,7 @@ class CFG;
 // CFGCollection Class
 class CFGCollection {
 	friend class CFGCollector;
+	friend class LoopUnroller;
 	elm::genstruct::FragTable<CFG *> cfgs;
 public:
 	inline int count(void) const;
