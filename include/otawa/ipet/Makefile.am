@@ -7,6 +7,7 @@ includeotawaipet_HEADERS = \
 	BBTimeSimulator.h \
 	Delta.h \
 	FlowFactLoader.h \
+	FlowFactConstraintBuilder.h \
 	IPET.h \
 	TimeDeltaObjectFunctionModifier.h \
 	TreePath.h \
