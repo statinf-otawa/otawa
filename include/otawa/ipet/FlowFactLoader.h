@@ -46,7 +46,6 @@ public:
 
 // Features
 extern Feature<FlowFactLoader> FLOW_FACTS_FEATURE;
-extern Feature<FlowFactLoader> FLOW_FACTS_CONSTRAINTS_FEATURE;
 
 } } // otawa::ipet
 
