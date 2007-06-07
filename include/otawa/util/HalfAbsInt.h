@@ -7,6 +7,7 @@
 #ifndef OTAWA_UTIL_HALFABSINT_H
 #define OTAWA_UTIL_HALFABSINT_H
 
+
 #include <assert.h>
 #include <elm/genstruct/Table.h>
 #include <elm/genstruct/VectorQueue.h>
@@ -17,8 +18,6 @@
 #include <otawa/otawa.h>
 #include <otawa/util/Dominance.h>
 #include <otawa/util/LoopInfoBuilder.h>
-
-
 
 namespace otawa { namespace util {
 
@@ -36,9 +35,18 @@ class HalfAbsInt {
 	elm::genstruct::VectorQueue<BasicBlock*> *workList;	
 	elm::genstruct::Vector<Edge*> *callStack;
 	elm::genstruct::Vector<CFG*> *cfgStack;
+	BasicBlock *current;
+	typename FixPoint::Domain in,out;
+	Edge *call_edge; /* call_edge == current node's call-edge to another CFG */
+	bool call_node; /* call_node == true: we need to process this call. call_node == false: already processed (call return) */
+	bool fixpoint;
+	
 	Identifier<typename FixPoint::FixPointState*> FIXPOINT_STATE;	
 	inline bool isEdgeDone(Edge *edge);	
-	inline void tryAddToWorkList(BasicBlock *bb);
+	inline bool tryAddToWorkList(BasicBlock *bb);
+	Edge *detectCalls(bool &call_node, BasicBlock *bb);
+	void inputProcessing();
+	void outputProcessing();
 	
   public:
   	inline typename FixPoint::FixPointState *getFixPointState(BasicBlock *bb);
@@ -54,7 +62,7 @@ class HalfAbsInt {
 
 template <class FixPoint>
 inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, FrameWork& _fw)
- : entry_cfg(*ENTRY_CFG(_fw)), cur_cfg(ENTRY_CFG(_fw)), fw(_fw), fp(_fp), FIXPOINT_STATE("", NULL, otawa::NS) {
+ : entry_cfg(*ENTRY_CFG(_fw)), cur_cfg(ENTRY_CFG(_fw)), in(_fp.bottom()), out(_fp.bottom()), fw(_fw), fp(_fp), FIXPOINT_STATE("", NULL, otawa::NS) {
 		workList = new elm::genstruct::VectorQueue<BasicBlock*>();
 		callStack = new elm::genstruct::Vector<Edge*>();
 		cfgStack = new elm::genstruct::Vector<CFG*>();
@@ -74,88 +82,40 @@ inline typename FixPoint::FixPointState *HalfAbsInt<FixPoint>::getFixPointState(
 	return(FIXPOINT_STATE(bb));
 }
 
-
-
 template <class FixPoint>
-int HalfAbsInt<FixPoint>::solve(void) {        
-        BasicBlock *current;
-        bool fixpoint, call_node;
-        int iterations = 0;
-        Edge *call_edge;
-        typename FixPoint::Domain in(fp.bottom());
-        typename FixPoint::Domain out(fp.bottom());
-        
-        
-        /*
-         * First initialize the worklist with the Entry BasicBlock
-         */
-    
-        workList->reset();
-        callStack->clear();
-        workList->put(entry_cfg.entry());
-#ifdef DEBUG
-		cout << "==== Beginning of the HalfAbsInt solve() ====\n";
-#endif        
-        while (!workList->isEmpty()) {
-
-        	iterations++;
-			fixpoint = false;
-			call_node = false;
-			call_edge = NULL;
-      		current = workList->get();      		
-        	for (BasicBlock::OutIterator outedge(current); outedge; outedge++) {
-        		if (outedge->kind() == Edge::CALL) {
-        			call_edge = *outedge;
-        			if (!fp.getMark(call_edge)) {
-        				call_node = true;
-        			}
-        		}
-        	}
-        
-#ifdef DEBUG
-        	cout << "\n=== HalfAbsInt Iteration ==\n";
-        	cout << "Processing BB: " << current->number() << " \n";
-#endif
-        	
-        	if (current->isEntry()) {
-        		if (fp.getMark(current)) {
-        			fp.assign(in, *fp.getMark(current));
-        			fp.unmarkEdge(current);
-#ifdef DEBUG
-        			cout << "Just after function call.\n";
-#endif
-        		} else {	        		
-	        		fp.assign(in, fp.entry());
-        		}
-			} else if (call_edge && !call_node) {
-				/* Call return. */
-#ifdef DEBUG
-				cout << "Just after function return.\n";
-#endif
-				fp.assign(in, *fp.getMark(call_edge));
-				fp.unmarkEdge(call_edge);
-        	} else if (Dominance::isLoopHeader(current)) {
-        		/*
-        		 * The current block is a loop header: launch fixPoint() to determine IN value, and
-        		 * to know if the fixpoint is reached.
-        		 * If this is the first time we do this loop, initialize the FixPointState.
-        		 */
-        		if (FIRST_ITER(current))
-        			FIXPOINT_STATE(current) = fp.newState();
-        		
-            	fp.fixPoint(current, fixpoint, in, FIRST_ITER(current));
+void HalfAbsInt<FixPoint>::inputProcessing() {
+	
+	fp.assign(in, fp.bottom());
+	
+	if (current->isEntry()) {
+		if (fp.getMark(current)) {
+			/* Function-call entry case */
+			fp.assign(in, *fp.getMark(current));
+			fp.unmarkEdge(current);
+		}  else { 
+			/* Main entry case */
+			fp.assign(in, fp.entry());
+		}
+	} else if (call_edge && !call_node) {
+		/* Call return case */
+		fp.assign(in, *fp.getMark(call_edge));
+		fp.unmarkEdge(call_edge);
+	} else if (Dominance::isLoopHeader(current)) {
+		/* Loop header case: launch fixPoint() */
+		if (FIRST_ITER(current))
+        		FIXPOINT_STATE(current) = fp.newState();
+            	fp.fixPoint(current, fixpoint, in, FIRST_ITER(current));            	
 #ifdef DEBUG
             	cout << "Loop header " << current->number() << ", fixpoint reached = " << fixpoint << "\n";
 #endif            	
-            	/* This is not the first iteration for this loop anymore. */
             	if (FIRST_ITER(current)) {
+            		assert(!fixpoint);
             		FIRST_ITER(current) = false;
-            		assert(!fixpoint); /* The fixpoint can never be reached during the first iteration of the loop. */
             	}
             	 
             	FIXED(current) = fixpoint;
             	
-            	/* The values of the loop-header's back-edges are not needed anymore, so we unmark them */
+            	/* In any case, the values of the back-edges are not needed anymore */
             	for (BasicBlock::InIterator inedge(current); inedge; inedge++) {
             		if (inedge->kind() == Edge::CALL)
             			continue;
@@ -168,12 +128,13 @@ int HalfAbsInt<FixPoint>::solve(void) {
             	}
             	
             	if (fixpoint) {
-            		/* If fixpoint reached, we will not do another iteration, so the
-            		 * values of the entry edges are not needed anymore. We also delete the unneeded FixPointState.
-            		 */
+            		/* Cleanups associated with end of the processing of a loop */
             		fp.fixPointReached(current);
             		delete FIXPOINT_STATE(current);
             		FIXPOINT_STATE(current) = NULL;
+            		FIRST_ITER(current) = true;            	        		
+
+            		/* The values of the entry edges are not needed anymore */
                 	for (BasicBlock::InIterator inedge(current); inedge; inedge++) {
                 		if (inedge->kind() == Edge::CALL)
             				continue;
@@ -185,65 +146,60 @@ int HalfAbsInt<FixPoint>::solve(void) {
                 		}
                 	}
                 	
-                	/* 
-                	 * Reset FIRST_ITER to true, in case we need to re-do this loop later.
-                	 */
-            		FIRST_ITER(current) = true;            	        		
             	}               	
-            } else {
-				/* The current BasicBlock is a standard non-loop-header block: simple case.
-				 * Build IN set from the predecessors, then 
-				 * Un-mark all the in-edges since the values are not needed. 
-				 */ 
-				fp.assign(in,fp.bottom());
-				for (BasicBlock::InIterator inedge(current); inedge; inedge++) {
-					if (inedge->kind() == Edge::CALL)
-            			continue;
-					typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
-					assert(edgeState != NULL);
-					fp.lub(in, *edgeState);										
-                    fp.unmarkEdge(*inedge);
+	} else {
+		/* Case of the simple basic block: IN = union of the OUTs of the predecessors. */
+		/* Un-mark all the in-edges since the values are not needed.  */
+		fp.assign(in,fp.bottom());
+		for (BasicBlock::InIterator inedge(current); inedge; inedge++) {
+			if (inedge->kind() == Edge::CALL)
+				continue;
+			typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
+			assert(edgeState != NULL);
+			fp.lub(in, *edgeState);										
+			fp.unmarkEdge(*inedge);
 #ifdef DEBUG                    
-                    cout << "Unmarking in-edge: " << inedge->source()->number() << "->" << inedge->target()->number() << "\n";
+                   	cout << "Unmarking in-edge: " << inedge->source()->number() << "->" << inedge->target()->number() << "\n";
 #endif                     
-				}   					
-            } 
-            
-            /*
-             * The current BasicBlock is processed. Because of this, we can
-             * add blocks to the WorkList. 
-             */
-            
-            if (Dominance::isLoopHeader(current) && fixpoint) {
-            	/*
-            	 * if we just processed a LoopHeader and we just found the fixpoint for the associated loop,
-            	 * we can try to add the successors of the loop-exit-edges to the worklist. The loop exit edges
-            	 * are already marked.
-            	 */
+		}   					
+	} 
+}
+
+template <class FixPoint>
+void HalfAbsInt<FixPoint>::outputProcessing() {
+	if (Dominance::isLoopHeader(current) && fixpoint) {
+		/* Fixpoint reached: activate the associated loop-exit-edges. */
             	elm::genstruct::Vector<Edge*> *vec;
             	vec = EXIT_LIST(current);
       
+		genstruct::Vector<BasicBlock*> alreadyAdded;
             	for (elm::genstruct::Vector<Edge*>::Iterator iter(*EXIT_LIST(current)); iter; iter++) {
 #ifdef DEBUG            		
             		cout << "Activating edge: " << iter->source()->number() << "->" << iter->target()->number() << "\n";
-#endif            		
-            		tryAddToWorkList(iter->target());
+#endif            	
+			if (!alreadyAdded.contains(iter->target())) {	
+            			if (tryAddToWorkList(iter->target()))
+            				alreadyAdded.add(iter->target());
+			}
+
+            		fp.leaveContext(*fp.getMark(*iter), current);
+
             	}            		
+	} else {            	
+            	/* Simple BasicBlock: try to add its sucessors to the worklist */
             	 
-            } else {            	
-            	/*
-            	 * If we just processed a simple BasicBlock, we can try to add its successors to the worklist.
-            	 */
-            	 
+            	/* if call_edge && !call_node, then we're at a call return, we don't call update(), because we already
+            	 * did it during the call processing */
             	if (call_node || !call_edge)
 	            	fp.update(out, in, current);
+
 #ifdef DEBUG            	
             	cout << "Updating for basicblock: " << current->number() << "\n"; 
 #endif            	
-            	/* Call the Listener here ... */ 
             	fp.blockInterpreted(current, in, out, cur_cfg);
             	
             	if (current->isExit() && (callStack->length() > 0)) {
+            		/* Exit from function: pop callstack, mark edge with return state for the caller */
             		int last_pos = callStack->length() - 1;
             		Edge *edge = callStack->pop();
             		cur_cfg = cfgStack->pop();
@@ -255,11 +211,8 @@ int HalfAbsInt<FixPoint>::solve(void) {
             	}
 
             	if (call_node) {
-            		/*
-            		 * Unprocessed function call:
-            		 * Put current node in stack, add function's entry to worklist
-            		 */
-					BasicBlock *func_entry = call_edge->calledCFG()->entry();
+            		/* Going into sub-function: push callstack, mark function entry with call state for the callee */
+			BasicBlock *func_entry = call_edge->calledCFG()->entry();
             		callStack->push(call_edge);
             		cfgStack->push(cur_cfg);
             		cur_cfg = call_edge->calledCFG();
@@ -268,8 +221,8 @@ int HalfAbsInt<FixPoint>::solve(void) {
 #endif
             		workList->put(func_entry);
             		fp.markEdge(func_entry, out);
-				} else {
-        	    	/* Mark out-edges, and try to add successors to worklist */
+		} else {
+        	    	/* Standard case: use out-state to mark out-edges, and try to add successors to worklist */
 	            	for (BasicBlock::OutIterator outedge(current); outedge; outedge++) {
 	            		if (outedge->kind() == Edge::CALL) 
 	            			continue;
@@ -280,8 +233,52 @@ int HalfAbsInt<FixPoint>::solve(void) {
 	            		tryAddToWorkList(outedge->target());
 	            	}
             	}
-            }
-            	}
+	}
+}
+
+
+template <class FixPoint>
+Edge *HalfAbsInt<FixPoint>::detectCalls(bool &call_node, BasicBlock *bb) {
+	Edge *call_edge = NULL;
+
+	call_node = false;
+       	for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
+        	if (outedge->kind() == Edge::CALL) {
+        		call_edge = *outedge;
+        		if (!fp.getMark(call_edge)) {
+        			call_node = true;
+        		}
+        	}
+	}
+        return(call_edge);
+}
+
+
+template <class FixPoint>
+int HalfAbsInt<FixPoint>::solve(void) {        
+	int iterations = 0;
+    
+        /* workList / callStack initialization */
+        workList->reset();
+        callStack->clear();
+        workList->put(entry_cfg.entry());
+#ifdef DEBUG
+		cout << "==== Beginning of the HalfAbsInt solve() ====\n";
+#endif        
+        /* HalfAbsInt main loop */
+        while (!workList->isEmpty()) {
+        
+        	iterations++;
+		fixpoint = false;
+      		current = workList->get();      		
+      		call_edge = detectCalls(call_node, current);
+#ifdef DEBUG
+        	cout << "\n=== HalfAbsInt Iteration ==\n";
+        	cout << "Processing BB: " << current->number() << " \n";
+#endif
+		inputProcessing();
+		outputProcessing();        	
+	}
 #ifdef DEBUG        
         cout << "==== HalfAbsInt solve() completed ====\n";
 #endif
@@ -326,12 +323,13 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(BasicBlock
                 }
   
         }
+        fp.enterContext(result, bb);
         return(result);
 }
 
 
 template <class FixPoint>
-inline void HalfAbsInt<FixPoint>::tryAddToWorkList(BasicBlock *bb) {
+inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(BasicBlock *bb) {
 	bool add = true;
 	for (BasicBlock::InIterator inedge(bb); inedge; inedge++) {
 		if (inedge->kind() == Edge::CALL)
@@ -342,7 +340,6 @@ inline void HalfAbsInt<FixPoint>::tryAddToWorkList(BasicBlock *bb) {
 	}
 	if (add) {
 		if (Dominance::isLoopHeader(bb)) {			
-			/* It is no longer the first time that this Loop Header is added to the WorkList. */
 #ifdef DEBUG
 			if (FIRST_ITER(bb) == true) {
 				cout << "Ignoring back-edges for loop header " << bb->number() << " because it's the first iteration.\n";			
@@ -354,6 +351,7 @@ inline void HalfAbsInt<FixPoint>::tryAddToWorkList(BasicBlock *bb) {
 #endif
 		workList->put(bb);
 	}
+	return(add);
 }
 
 
