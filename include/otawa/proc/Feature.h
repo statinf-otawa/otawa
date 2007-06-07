@@ -8,6 +8,7 @@
 #define OTAWA_PROC_FEATURE_H
 
 #include <elm/string.h>
+#include <elm/genstruct/DAGNode.h>
 #include <otawa/prop/PropList.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Processor.h>
@@ -16,12 +17,19 @@ namespace otawa {
 	
 using namespace elm;
 class WorkSpace;
+
+
+class FeatureDependency;
 	
 // AbstractFeature class
 class AbstractFeature: public Identifier<Processor *> {
+	int refcount;
 public:
 	static NameSpace NS;
 	AbstractFeature(CString name = "");
+	FeatureDependency *dependency;	
+	inline void incUseCount();
+	inline void decUseCount();
 	virtual void process(WorkSpace *fw,
 		const PropList& props = PropList::EMPTY) const = 0;
 	virtual void check(WorkSpace *fw) const = 0;
@@ -31,6 +39,8 @@ public:
 typedef struct default_checker_t {
 	static inline void check(WorkSpace *fw) { }
 } default_checker_t;
+
+
 
 // Feature class
 template <class T, class C = default_checker_t>
@@ -62,6 +72,37 @@ template <class T, class C>
 void Feature<T, C>::check(WorkSpace *fw) const {
 	C::check(fw);
 }
+
+// FeatureDependency class
+class FeatureDependency {
+	int refcount;
+	
+public:
+	genstruct::DAGNode<const AbstractFeature*> *graph;
+	
+	inline FeatureDependency();
+	inline void incUseCount();
+	inline void decUseCount();
+	
+};
+
+inline FeatureDependency::FeatureDependency() : graph(NULL) {
+}
+
+inline void FeatureDependency::incUseCount()  {
+	refcount++;
+}
+
+inline void FeatureDependency::decUseCount()  {
+	refcount--;
+	if (refcount == 0) {
+		delete graph;
+		graph = NULL;
+	}
+}
+
+
+
 
 } // otawa
 
