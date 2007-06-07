@@ -162,6 +162,23 @@ void WorkSpace::provide(const AbstractFeature& feature) {
 		features.add(&feature);
 }
 
+/**
+ * Invalidate a feature (removing its dependancies) 
+ * @param feature	Provided feature.
+ */
+void WorkSpace::invalidate(const AbstractFeature& feature) {
+	if (isProvided(feature)) {
+		for (genstruct::DAGNode<const AbstractFeature *>::Iterator dep(*feature.dependency->graph); dep; dep++) {
+			DAGNode<const AbstractFeature *> *node = *dep;
+			invalidate(*node->useValue());
+			feature.dependency->graph->delChild(node);
+			node->useValue()->dependency->decUseCount();
+		}
+		remove(feature);
+	}
+}
+
+
 
 /**
  * Test if a feature is provided.
