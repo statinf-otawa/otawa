@@ -27,10 +27,10 @@ namespace otawa { namespace ipet {
  * 
  * @par Required Features
  * @li @ref ipet::COLLECTED_CFG_FEATURE
+ * @li @ref ipet::LOOP_HEADERS_FEATURE
  * 
  * @par Provided Features
  * @li @ref ipet::FLOW_FACTS_FEATURE
- * @li @ref ipet::FLOW_FACTS_CONSTRAINTS_FEATURE
  */
 
 
@@ -44,9 +44,7 @@ FlowFactLoader::FlowFactLoader(void)
 {
 	require(COLLECTED_CFG_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
-	require(ASSIGNED_VARS_FEATURE);
 	provide(FLOW_FACTS_FEATURE);
-	provide(FLOW_FACTS_CONSTRAINTS_FEATURE);
 }
 
 
@@ -85,22 +83,10 @@ void FlowFactLoader::onLoop(address_t addr, int count) {
 
 		// Look BB in the CFG
 		for(CFG::BBIterator bb(cfg); bb; bb++)
-			if(bb->address() == addr /*&& Dominance::isLoopHeader(bb)*/) {
+			if(bb->address() == addr && Dominance::isLoopHeader(bb)) {
 			
-				// Build the constraint
-				// sum{(i,h) / h dom i} eih <= count * sum{(i, h) / not h dom x} xeih 
 				LOOP_COUNT(bb) = count;
-				otawa::ilp::Constraint *cons =
-					system->newConstraint(otawa::ilp::Constraint::LE);
-				for(BasicBlock::InIterator edge(bb); edge; edge++) {
-					assert(edge->source());
-					otawa::ilp::Var *var = VAR(edge);
-						//edge->source()->use<otawa::ilp::Var *>(VAR);
-					if(Dominance::dominates(bb, edge->source()))
-						cons->addLeft(1, var);
-					else
-						cons->addRight(count, var);
-				}
+
 				found = true;
 			}
 	}
@@ -140,12 +126,5 @@ void FlowFactLoader::configure(const PropList& props) {
  */
 Feature<FlowFactLoader> FLOW_FACTS_FEATURE("otawa::ipet::flow_facts");
 
-
-/**
- * This feature asserts that constraints tied to the flow fact information
- * has been added to the ILP system.
- */
-Feature<FlowFactLoader>
-	FLOW_FACTS_CONSTRAINTS_FEATURE("otawa::ipet::flow_facts_constraints");
 
 } } // otawa::ipet
