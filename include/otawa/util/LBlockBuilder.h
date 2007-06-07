@@ -10,6 +10,7 @@
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/proc/Feature.h>
+#include <elm/genstruct/Vector.h> 
 
 namespace otawa {
 
@@ -21,7 +22,8 @@ namespace hard {
 class LBlockBuilder: public CFGProcessor {
 	LBlockSet **lbsets;
 	const hard::Cache *cache;
-	void processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset);
+	HashTable<int,int> *cacheBlocks;
+	void processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset, const hard::Cache *cach, int *tableindex);
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
