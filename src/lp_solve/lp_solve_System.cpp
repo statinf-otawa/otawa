@@ -193,16 +193,18 @@ bool System::solve(void) {
 
 		// Get optimization result
 		val = (double)lp->best_solution[0];
+		
 		// lp_solve seems to be buggy, so we recompute the max
 		//val = get_objective(lp);
-		/*double sum = 0;
+		
+		double sum = 0;
 		for(Constraint::Factor *fact = ofun->facts; fact; fact = fact->next()) {
 			if(fact->variable())
 				sum += fact->coefficient() * fact->variable()->value();
 			else
 				sum += fact->coefficient();
 		}
-		val = sum;*/
+		val = sum;
 	}
 	
 	// Clean up
