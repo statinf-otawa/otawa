@@ -153,13 +153,14 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	
 	// Check required feature
 	for(int i = 0; i < required.length(); i++)
-		fw->require(*required[i]);
+		fw->require(*required[i], props);
 
 	// Perform configuration
 	configure(props);
 
 	// Pre-processing actions
-	if(isVerbose())
+
+	if(isVerbose()) 
 		out << "Starting " << name() << " (" << version() << ')' << io::endl;
 	system::StopWatch swatch;
 	if(isTimed())
@@ -176,10 +177,10 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	if(isTimed()) {
 		swatch.stop();
 		RUNTIME(*stats) = swatch.delay();
-		if(isVerbose())
+		if(isVerbose()) 
 			out << " (" << (swatch.delay() / 1000) << "ms)" << io::endl;
 	}
-	if(isVerbose())
+	if(isVerbose()) 
 		out << io::endl;
 	
 	// Remove invalidated features
