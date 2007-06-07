@@ -81,6 +81,7 @@ public:
 	void provide(const AbstractFeature& feature);
 	bool isProvided(const AbstractFeature& feature);
 	void remove(const AbstractFeature& feature);
+	void invalidate(const AbstractFeature& feature);
 };
 
 };	// otawa

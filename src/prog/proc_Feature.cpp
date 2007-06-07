@@ -27,7 +27,7 @@ NameSpace AbstractFeature::NS("features", otawa::NS);
  * @param name Name of the feature (only for information).
  */
 AbstractFeature::AbstractFeature(CString name)
-: Identifier<Processor *>(name, 0, NS) {
+: Identifier<Processor *>(name, 0, NS), dependency(new FeatureDependency()) {
 }
 
 
