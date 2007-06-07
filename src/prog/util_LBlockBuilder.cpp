@@ -15,6 +15,9 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/cfg/CFGCollector.h>
+#include <elm/genstruct/Vector.h> 
+#include <elm/genstruct/HashTable.h>
+#include <elm/genstruct/Table.h>
 
 namespace otawa {
 
@@ -56,31 +59,33 @@ void LBlockBuilder::processWorkSpace(WorkSpace *fw) {
 	LBLOCKS(fw) = lbsets;
 	for(int i = 0; i < cache->lineCount(); i++) {
 		lbsets[i] = new LBlockSet(i);
-		new LBlock(lbsets[i], 0, 0, 0);
+		new LBlock(lbsets[i], 0, 0, 0, -1);
 	}
 
+
+	
+	
 	// Let's go
 	CFGProcessor::processWorkSpace(fw);
 	
+
+	
 	// Add end blocks
 	for(int i = 0; i < cache->lineCount(); i++)
-		new LBlock(lbsets[i], 0, 0, 0);
+		new LBlock(lbsets[i], 0, 0, 0, -1);
 }
 
 
 /**
  */
-void LBlockBuilder::processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset) {
+void LBlockBuilder::processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset, const hard::Cache *cach, int *tableindex) {
+	int line = lbset->line();
+	int index;
+	
 	assert(fw);
 	assert(cfg);
 	assert(lbset);
-
-	// Initialization
-	const hard::CacheConfiguration& conf = fw->platform()->cache();
-	if(!conf.instCache())
-		throw ProcessorException(*this, "no instruction cache !");
-	const hard::Cache *cach = conf.instCache();
-	
+	cacheBlocks = new HashTable<int, int>();
 	// Build the l-blocks
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
 	
@@ -109,22 +114,67 @@ void LBlockBuilder::processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset) 
 						
 					if(!find && cach->line(address) == lbset->line()) {
 						address_t next_address = (address_t)((mask_t)(address + cach->blockSize()) & ~(cach->blockSize() - 1));
-						new LBlock(lbset, address, bb, next_address - address);
+						int cbid;
+						int block = cach->block(address);
+						int existing_block_id = cacheBlocks->get(block, -1);
+						if (existing_block_id != -1) {
+						        cbid = existing_block_id;
+                        } else {
+                        	cbid = lbset->newCacheBlockID();
+                        	cacheBlocks->put(block, cbid);
+                        }
+                        index = tableindex[bb->number()];
+                        tableindex[bb->number()] ++;
+                        
+                        genstruct::AllocatedTable<LBlock*> *lblocks = BB_LBLOCKS(bb);
+						lblocks->set(index, new LBlock(lbset, address, bb, next_address - address, cbid)); 											
 						find = true;
 					}
 				}
 			}
 		}
+		delete cacheBlocks;
 }
 
 
 /**
  */	
 void LBlockBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
+        int *tableindex;
 	assert(fw);
 	assert(cfg);
+
+	// Initialization
+	const hard::CacheConfiguration& conf = fw->platform()->cache();
+	if(!conf.instCache())
+		throw ProcessorException(*this, "no instruction cache !");
+	const hard::Cache *cach = conf.instCache();
+	
+	for (CFG::BBIterator bb(cfg); bb; bb++) {
+		 /* Compute the number of lblocks in this basic block */
+		 if (bb->size() != 0) {
+		        
+		 /* The BasicBlock spans at least (bbsize-1)/blocksize cache block boundaries (add +1 for the number of l-blocks) */
+		int num_lblocks = ((bb->size() - 1) >> cache->blockBits()) + 1;
+
+		/* The remainder of the last computation may also span another cache block boundary. */
+		if (((bb->address() + (num_lblocks << cache->blockBits())) & ~(cache->blockSize()-1)) < bb->address() + bb->size()) {
+			num_lblocks++;
+		}
+     
+			BB_LBLOCKS(bb) = new genstruct::AllocatedTable<LBlock*>(num_lblocks);
+		} else {
+		    BB_LBLOCKS(bb) = NULL;
+		}	        
+    }
+        
+    tableindex = new int[cfg->countBB()];
+    for (int i = 0; i < cfg->countBB(); i++)
+    	tableindex[i] = 0;
+    
 	for(int i = 0; i < cache->lineCount(); i++)
-		processLBlockSet(fw, cfg, lbsets[i]); 
+		processLBlockSet(fw, cfg, lbsets[i], cach, tableindex);
+	delete [] tableindex;	
 }
 
 
@@ -134,7 +184,9 @@ void LBlockBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
  * 
  * @par Properties
  * @li @ref LBLOCKS
+ * @li @ref BB_LBLOCKS
  */
 Feature<LBlockBuilder> COLLECTED_LBLOCKS_FEATURE("otawa::lblocks");
+
 
 } // otawa
