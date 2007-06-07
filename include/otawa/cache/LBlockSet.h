@@ -12,10 +12,12 @@
 #include <otawa/instruction.h>
 #include <elm/Collection.h> 
 #include <elm/genstruct/Vector.h>
+#include <elm/genstruct/Table.h>
 #include <otawa/cache/LBlock.h>
 #include <elm/Iterator.h>
 #include <otawa/cache/ccg/CCGDFA.h>
 
+using namespace elm;
 
 namespace otawa {
 
@@ -27,6 +29,7 @@ class LBlockSet {
 	//int cptr ;
 	int linenumber;
 	elm::genstruct::Vector<LBlock *> listelbc;
+	int _cacheBlockCount;
 
 public:
 
@@ -41,6 +44,8 @@ public:
 	inline IteratorInst<LBlock *> *visit(void);
 	int add (LBlock *node);
 	int count(void);
+	int cacheBlockCount(void);
+	int newCacheBlockID(void);
 	LBlock *lblock(int i);
 	int line(void);
 };
@@ -48,10 +53,10 @@ public:
 
 // Properties
 extern Identifier<LBlockSet **> LBLOCKS;
-	 
+extern Identifier<genstruct::AllocatedTable<LBlock* >* > BB_LBLOCKS;	 
 
 // Inlines
-inline LBlockSet::LBlockSet(int line): linenumber(line) {
+inline LBlockSet::LBlockSet(int line): linenumber(line), _cacheBlockCount(0) {
 	assert(line >= 0);
 }
 	

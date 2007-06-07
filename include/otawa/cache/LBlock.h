@@ -9,6 +9,7 @@
 
 #include <elm/string.h>
 #include <elm/genstruct/SLList.h>
+#include <elm/genstruct/HashTable.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/Iterator.h>
 #include <otawa/instruction.h>
@@ -30,6 +31,7 @@ class LBlock: public elm::inhstruct::DLNode, public PropList {
 	address_t addr;
 	size_t _size;
 	int ident;
+	int _cacheblock;
 	BasicBlock *_bb;
 	
 	// Private methods
@@ -38,10 +40,11 @@ class LBlock: public elm::inhstruct::DLNode, public PropList {
 public:
 	
 	//constructor
-	LBlock(LBlockSet *graphe, address_t head, BasicBlock *bb, size_t size);
+	LBlock(LBlockSet *graphe, address_t head, BasicBlock *bb, size_t size, int _cacheblock);
 	
 	// methodes
 	int id(void);
+	int cacheblock(void);
 	inline address_t address(void);
 	inline BasicBlock *bb(void);
 	int countInsts(void);
