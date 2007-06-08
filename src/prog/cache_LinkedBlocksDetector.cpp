@@ -82,16 +82,13 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 			}
 		}
 		
-		cout << "[LBD] Linked blocks detected for line: " << i << "\n";
 		for (int j = 0; j < count; j++) {
 			if (blockList[j] != NULL) {
-				cout << "[LBD] Cache block " << j << "\n";
 						
 				Vector<LBlock*> equiv;
 				BasicBlock *old_header = NULL;
 				equiv.clear();
 				for (LinkedBlockList::Iterator iter(*blockList[j]); iter; iter++) {	
-					cout << "[LBD] lblock " << iter->id() << " ( " << iter->bb()->number() << ") w/ header " << CATEGORY_HEADER(*iter)->number() <<  "\n";				
 					/* We want to build another "equiv" set from scratch whenever the firstmiss-header changes */ 
 					BasicBlock *header = CATEGORY_HEADER(*iter);
 					if ((old_header) && (old_header != header)) {
@@ -117,13 +114,10 @@ void LinkedBlocksDetector::recordBlocks(Vector<LBlock*> *equiv) {
 	if (equiv->length() == 1)
 		return;		
 	genstruct::Vector<LBlock*> *copy = new genstruct::Vector<LBlock*>(*equiv);
-	cout << "[LBD] Equiv. LBlocks: ";
 	for (genstruct::Vector<LBlock*>::Iterator lblock(*equiv); lblock; lblock++) {
-		cout << lblock->id() << "(" << lblock->bb()->number() << ") ";
 		assert(CATEGORY(lblock) == FIRST_MISS);
 		LINKED_BLOCKS(lblock) = copy;   		
 	}
-	cout << "\n";
 }
 
 Identifier<genstruct::Vector<LBlock*> *> LINKED_BLOCKS("otawa.cache.linked_blocks", NULL);
