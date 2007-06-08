@@ -74,12 +74,18 @@ libotawa_la_SOURCES = \
 	util_Dominance.cpp \
 	util_ContextTree.cpp \
 	cfg_VirtualBasicBlock.cpp \
+	cfg_LoopUnroller.cpp \
+	cfg_Virtualizer.cpp \
 	cfg_VirtualCFG.cpp \
 	cfg_CFGBuilder.cpp \
 	util_FlowFactLoader.cpp \
 	util_fft_parser.yy \
 	util_fft_lexer.ll \
 	util_CFGNormalizer.cpp \
+	util_DefaultFixPoint.cpp \
+	util_DefaultListener.cpp \
+	util_FirstUnrollingFixPoint.cpp \
+	util_UnrollingListener.cpp \
 	hard_Processor.cpp \
 	hardware_Cache.cpp \
 	hardware_CacheConfiguration.cpp \
@@ -92,7 +98,15 @@ libotawa_la_SOURCES = \
 	cache_CCGDFA.cpp \
 	cache_CCGEdge.cpp \
 	cache_CCGNode.cpp \
+	cache_ACSBuilder.cpp \
+	cache_CAT2Builder.cpp \
+	cache_CAT2ConstraintBuilder.cpp \
+	cache_MUSTProblem.cpp \
+	cache_PERSProblem.cpp \
+	cache_MUSTPERS.cpp \
+	cache_LinkedBlocksDetector.cpp \
 	cache_LBlock.cpp \
+	cache_FirstLastBuilder.cpp \
 	cache_LBlockSet.cpp \
 	prog_File.cpp \
 	prog_FixedTextDecoder.cpp \
