@@ -190,16 +190,16 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	
 	// Add provided features
 	for(int i = 0; i < provided.length(); i++) {
-		fw->provide(*provided[i]);
 		
 		if ((provided[i]->dependency->graph == NULL) || (provided[i]->dependency->graph->isDeleted()))
 			provided[i]->dependency->graph = new genstruct::DAGNode<const AbstractFeature*>(provided[i]);
 		for (int j = 0; j < required.length(); j++) {
-			if (fw->isProvided(*required[j])) {
+			if (fw->isProvided(*required[j]) && !fw->isProvided(*provided[i])) {
 				required[j]->dependency->graph->addChild(provided[i]->dependency->graph);
 				provided[i]->dependency->incUseCount();
 			}
 		}
+		fw->provide(*provided[i]);
 	
 	}
 }
