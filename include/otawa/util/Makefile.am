@@ -13,4 +13,8 @@ includeotawautil_HEADERS = \
 	FlowFactLoader.h \
 	LBlockBuilder.h \
 	LoopInfoBuilder.h \
+	DefaultFixPoint.h \
+	DefaultListener.h \
+	FirstUnrollingFixPoint.h \
+	UnrollingListener.h \
 	TrivialLBlockTime.h
