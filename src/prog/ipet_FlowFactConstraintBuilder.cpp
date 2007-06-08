@@ -58,7 +58,6 @@ void FlowFactConstraintBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 	
 	for (CFG::BBIterator bb(cfg); bb; bb++) {
 		if (Dominance::isLoopHeader(bb) && (LOOP_COUNT(bb) != -1)) {
-/*			cout << "AJOUTE LOOP COUNT INFO: " << bb->number() << " count " << LOOP_COUNT(bb) << "\n"; */
 			// sum{(i,h) / h dom i} eih <= count * sum{(i, h) / not h dom x} xeih
 			otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);
 			for(BasicBlock::InIterator edge(bb); edge; edge++) {
