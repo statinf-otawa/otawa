@@ -280,6 +280,7 @@ AC_CONFIG_FILES([
 	include/otawa/ast/Makefile
 	include/otawa/cache/Makefile
 	include/otawa/cache/categorisation/Makefile
+	include/otawa/cache/cat2/Makefile
 	include/otawa/cache/ccg/Makefile
 	include/otawa/cfg/Makefile
 	include/otawa/dfa/Makefile
