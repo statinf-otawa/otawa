@@ -5,7 +5,9 @@ includeotawacfg_HEADERS = \
 	CFGBuilder.h \
 	CFGCollector.h \
 	CFGInfo.h \
+	Virtualizer.h \
 	Edge.h \
 	VirtualBasicBlock.h \
+	LoopUnroller.h \
 	VirtualCFG.h
 
