@@ -1,0 +1,228 @@
+#ifndef UTIL_FIRSTUNROLLINGFIXPOINT_H_
+#define UTIL_FIRSTUNROLLINGFIXPOINT_H_
+
+
+#include <otawa/util/HalfAbsInt.h>
+
+
+
+namespace otawa {
+
+template <class Listener>
+class FirstUnrollingFixPoint {
+	
+	// Types
+	public:
+	typedef typename Listener::Problem Problem;
+	typedef typename Problem::Domain Domain;
+		
+	private:	
+	
+
+	 
+	// Fields
+	Identifier<Domain*> STATE;	
+	Problem& prob;
+	Listener  &list;
+	util::HalfAbsInt<FirstUnrollingFixPoint> *ai;
+	
+	public:
+	// FixPointState class
+	class FixPointState {
+		public:
+		Domain headerState;
+		Domain firstIterState;
+		int numIter;
+		inline FixPointState(const Domain &bottom): headerState(bottom), firstIterState(bottom) {
+			numIter = 0;
+		}
+	};
+	
+	inline FixPointState *newState(void) {
+		return(new FixPointState(bottom()));
+	}
+
+	
+	inline FirstUnrollingFixPoint(Listener & _list)
+	:prob(_list.getProb()),ai(NULL), STATE("", NULL), list(_list)
+	{
+	}	
+	// Destructor
+	inline ~FirstUnrollingFixPoint() {
+	}
+	
+	// Accessors
+	inline int getIter(BasicBlock *bb) const;
+	
+	// Mutators 
+	inline void init(util::HalfAbsInt<FirstUnrollingFixPoint> *_ai);
+	
+	// FixPoint function
+	void fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const;
+	
+	// Edge marking functions
+	inline void markEdge(PropList *e, const Domain &s);
+	inline void unmarkEdge(PropList *e);
+	inline Domain *getMark(PropList *e);
+	
+	// Problem wrapper functions
+	inline const Domain& bottom(void) const;
+	inline const Domain& entry(void) const;
+	inline void lub(Domain &a, const Domain &b) const;
+	inline void assign(Domain &a, const Domain &b) const;
+	inline bool equals(const Domain &a, const Domain &b) const;
+	inline void update(Domain &out, const Domain &in, BasicBlock* bb);
+	inline void blockInterpreted(BasicBlock* bb, const Domain& in, const Domain& out, CFG *cur_cfg) const;
+	inline void fixPointReached(BasicBlock* bb) const;
+	inline void enterContext(Domain &dom, BasicBlock* bb) const;
+	inline void leaveContext(Domain &dom, BasicBlock* bb) const;
+	
+};
+	
+template < class Listener >	
+inline void FirstUnrollingFixPoint<Listener >::init(util::HalfAbsInt<FirstUnrollingFixPoint> *_ai) {
+		ai = _ai;
+}
+
+template < class Listener >	
+inline int FirstUnrollingFixPoint<Listener>::getIter(BasicBlock *bb) const {
+		return(ai->getFixPointState(bb)->numIter);
+}
+	
+template < class Listener >	
+void FirstUnrollingFixPoint<Listener >::fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const {
+		
+		FixPointState *fpstate = ai->getFixPointState(bb);
+		Domain newHeaderState(bottom());
+		fixpoint = false;
+		
+				
+		/*
+ 		* The fixPoint() method actions depends on the current iteration.
+ 		*/
+		switch(fpstate->numIter) {
+			case 0:
+				/* We never did any iteration, we begin the first:
+				 * Use for IN the union of entry edges. Fixpoint is always false.
+				 */
+				assign(newHeaderState, ai->entryEdgeUnion(bb));
+				break;
+			case 1:
+				/* We finished the first iteration, we begin the 2nd:
+				 * Use for IN the union of back edges. Fixpoint may be reached at this point
+				 * but even if it is, we still want to do another iteration anyway.
+				 */
+				assign(newHeaderState, ai->backEdgeUnion(bb));
+				assign(fpstate->firstIterState, newHeaderState);
+				
+				break;				
+			default:
+				/* We finished the 2..n^th iteration:
+				 * Use for IN the union of back edges + the union of entry edges 
+				 * of the first iteration.
+				 * Test for fixpoint.
+				 */
+				
+				assign(newHeaderState, ai->backEdgeUnion(bb));
+				prob.lub(newHeaderState, fpstate->firstIterState);
+				
+				if (prob.equals(newHeaderState, fpstate->headerState))
+					fixpoint = true;
+				
+				break;
+		}
+		fpstate->numIter ++;
+		
+		/* Store the new loop header state in the FixPointState */
+		assign(fpstate->headerState, newHeaderState);
+		
+		/* Pass the new loop header state to the caller (HalfAbsInt) */
+		assign(in, newHeaderState);
+	}
+	
+template < class Listener >	
+inline void FirstUnrollingFixPoint<Listener>::markEdge(PropList *e, const Domain &s) {
+	
+		/*
+		 * Because this FixPoint unrolls the first iteration of each loop, 
+		 * the loop-exit-edges will be marked at least 2 times 
+		 * (one time for 1st iteration, and one time for others iterations),
+		 * so when we mark the edges for the 2nd time we need to merge (lub)
+		 * with the existing value from the 1st iteration, instead of overwriting it.
+		 */
+		if (STATE(e) == NULL)
+			STATE(e) = new Domain(bottom());
+			
+		prob.lub(*STATE(e), s);
+	}
+	
+template < class Listener >	
+inline void FirstUnrollingFixPoint<Listener >::unmarkEdge(PropList *e) {
+		delete STATE(e);
+		STATE(e) = NULL;
+}
+
+template < class Listener >		
+inline typename FirstUnrollingFixPoint<Listener>::Domain *FirstUnrollingFixPoint<Listener >::getMark(PropList *e) {
+		return(STATE(e));
+}
+	
+	
+	/*
+	 * Wrappers for the Problem methods and types
+	 */
+	 
+template < class Listener >	
+inline const typename FirstUnrollingFixPoint<Listener>::Domain& FirstUnrollingFixPoint<Listener >::bottom(void) const {
+		return(prob.bottom());
+}
+
+template < class Listener >		
+inline const typename FirstUnrollingFixPoint<Listener>::Domain& FirstUnrollingFixPoint<Listener >::entry(void) const {
+		return(prob.entry());
+}
+
+template < class Listener >	
+inline void FirstUnrollingFixPoint<Listener >::lub(typename Problem::Domain &a, const typename Problem::Domain &b) const {
+		prob.lub(a,b);
+}
+
+template < class Listener >		
+inline void FirstUnrollingFixPoint<Listener >::assign(typename Problem::Domain &a, const typename Problem::Domain &b) const {
+		prob.assign(a,b);
+}
+
+template < class Listener >		
+inline bool FirstUnrollingFixPoint<Listener >::equals(const typename Problem::Domain &a, const typename Problem::Domain &b) const {
+		return (prob.equals(a,b));
+}
+
+template < class Listener >	
+inline void FirstUnrollingFixPoint<Listener>::update(Domain &out, const typename Problem::Domain &in, BasicBlock* bb)  {
+		prob.update(out,in,bb);
+}
+	
+template < class Listener >	
+inline void FirstUnrollingFixPoint<Listener>::blockInterpreted(BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg) const {
+		list.blockInterpreted(this, bb, in, out, cur_cfg);
+}
+
+template < class Listener >	
+inline void FirstUnrollingFixPoint<Listener >::fixPointReached(BasicBlock* bb) const {
+		list.fixPointReached(this, bb);
+}
+	
+template < class Listener >	
+inline void FirstUnrollingFixPoint<Listener >::enterContext(Domain &dom, BasicBlock* bb) const {
+		prob.enterContext(dom, bb);
+}
+	
+template < class Listener >	
+inline void FirstUnrollingFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb) const {
+		prob.leaveContext(dom, bb);
+}
+	
+	
+}
+
+#endif /*UTIL_FIRSTUNROLLINGFIXPOINT_H_*/
