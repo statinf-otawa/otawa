@@ -57,8 +57,18 @@ Identifier<bool> RECURSIVE_LOOP("recursive_loop", false, otawa::NS);
  */
 void VirtualCFG::addBB(BasicBlock *bb) {
         _bbs.add(bb);
+        bb->_cfg = this;
 }
  
+
+/**
+ * Give a number to each basic block of the virtual CFG
+ */
+void VirtualCFG::numberBBs(void) {
+        for(int i = 0; i < _bbs.length(); i++)
+                INDEX(_bbs[i]) = i;
+}
+
 /**
  * Build the virtual CFG.
  * @param stack		Stack to previous calls.
@@ -195,6 +205,8 @@ VirtualCFG::VirtualCFG(CFG *cfg, bool inlined): _cfg(cfg) {
 VirtualCFG::VirtualCFG() {
   _bbs.add(&_entry);
   _bbs.add(&_exit);
+  _entry._cfg = this;
+  _exit._cfg = this;
   flags |= FLAG_Scanned;
   flags |= FLAG_Virtual;
 }
