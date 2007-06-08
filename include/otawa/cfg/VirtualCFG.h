@@ -23,6 +23,7 @@ public:
 	VirtualCFG();
 	inline CFG *cfg(void) const;
 	void addBB(BasicBlock *bb);
+	void numberBBs(void);
 };
 
 // Identifiers
