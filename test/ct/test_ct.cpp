@@ -62,7 +62,8 @@ int main(int argc, char **argv) {
 
 	//Manager manager;
 	PropList props;
-	NO_SYSTEM(props) = true;
+	//NO_SYSTEM(props) = true;
+	//Processor::VERBOSE(props) = true;
 	String fun = "main";
 	if(argc > 2)
 		fun = argv[2];
