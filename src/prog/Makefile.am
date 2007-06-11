@@ -56,10 +56,7 @@ libotawa_la_SOURCES = \
 	ipet_VarAssignment.cpp \
 	ipet_WCETComputation.cpp \
 	ipet_WCETCountRecorder.cpp \
-	util_DFA.cpp \
 	util_LoopInfoBuilder.cpp \
-	util_DFABitSet.cpp \
-	util_DFAEngine.cpp \
 	dfa_XCFGVisitor.cpp \
 	dfa_XIterativeDFA.cpp \
 	ets_ETS.cpp \
@@ -126,7 +123,6 @@ libotawa_la_SOURCES = \
 	util_HalfAbsInt.cpp \
 	util_Edge.cpp \
 	util_GenGraph.cpp \
-	util_BitSet.cpp \
 	hard_Register.cpp \
 	sim_AbstractCacheDriver.cpp \
 	sim_CacheDriver.cpp \
