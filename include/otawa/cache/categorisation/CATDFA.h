@@ -1,7 +1,7 @@
 #ifndef _CATDFA_H_
 #define _CATDFA_H_
 
-#include <otawa/util/BitSet.h>
+#include <otawa/dfa/BitSet.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ilp.h>
 #include <otawa/prop/Identifier.h>
@@ -15,10 +15,10 @@ namespace otawa {
 
 
 
-class CATDomain: public BitSet {
+class CATDomain: public dfa::BitSet {
 
 public:
-	inline CATDomain(int size) : BitSet(size) {
+	inline CATDomain(int size) : dfa::BitSet(size) {
 	}
 	void reset(void) {
 		empty();
