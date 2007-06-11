@@ -204,6 +204,12 @@ WorkSpace *Manager::loadBin(
 		gel_close(file);
 		String name = buf.toString();
 /*		cout << "Try to load " << name << " from " << LOADER_PATHS << io::endl; */
+		if(Processor::VERBOSE(props)) {
+			cerr << "INFO: looking for loader \"" << name << "\"\n";
+			cerr << "INFO: available loaders\n";
+			for(elm::system::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
+				cerr << "INFO:\t- " << *plugin << io::endl;
+		}
 		loader = findLoader(name.toCString());
 	}
 	
