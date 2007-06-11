@@ -3,6 +3,7 @@
  * @class FirstUnrollingFixPoint
  *
  * FixPoint class for HalfAbsInt
+ * Like the DefaultFixPoint, but: 
  * Makes the distinction between the first iteration and the other iterations of any loop.
  * getIter() method enables the Problem to know which iteration it is.
  */
