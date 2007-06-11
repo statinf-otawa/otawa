@@ -14,8 +14,9 @@
 namespace otawa {
 	
 // Extern class
-class BitSet;
-//class CATNode;
+namespace dfa {
+	class BitSet;
+}
 class CFG;
 class ContextTree;
 class LBlock;
@@ -34,7 +35,7 @@ typedef enum category_t {
 
 // CATBuilder class
 class CATBuilder: public Processor {
-	BitSet *buildLBLOCKSET(LBlockSet *lcache, ContextTree *root);
+	dfa::BitSet *buildLBLOCKSET(LBlockSet *lcache, ContextTree *root);
 	void processLBlockSet(WorkSpace *fw, LBlockSet *lbset);
 	void setCATEGORISATION(LBlockSet *lineset, ContextTree *S, int dec);
 	void worst(LBlock *line, ContextTree *S, LBlockSet *cacheline, int dec); 
