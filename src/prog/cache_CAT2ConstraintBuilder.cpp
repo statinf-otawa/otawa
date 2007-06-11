@@ -94,58 +94,60 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 	                
 	                // Add the constraint depending on the lblock category
 	                switch(CATEGORY(lblock)) {
-	                	case ALWAYS_HIT:
-	                		// Add constraint: xmiss = 0
-	                		Constraint *cons2 = system->newConstraint(Constraint::EQ,0);
-	                		cons2->addLeft(1, MISS_VAR(lblock));
+	                	case ALWAYS_HIT: {
+		                		// Add constraint: xmiss = 0
+		                		Constraint *cons2 = system->newConstraint(Constraint::EQ,0);
+	    	            		cons2->addLeft(1, MISS_VAR(lblock));
+							}
 	                		break;
 						case FIRST_HIT:
-	                	case ALWAYS_MISS:
-	                		// Add constraint: xmiss = x
-	                		Constraint *cons3 = system->newConstraint(Constraint::EQ);
-	                		cons3->addLeft(1, MISS_VAR(lblock));
-	                		cons3->addRight(1, VAR(lblock->bb()));
+	                	case ALWAYS_MISS: {
+		                		// Add constraint: xmiss = x
+		                		Constraint *cons3 = system->newConstraint(Constraint::EQ);
+	    	            		cons3->addLeft(1, MISS_VAR(lblock));
+	        	        		cons3->addRight(1, VAR(lblock->bb()));
+							}
 	                		break;
-						case FIRST_MISS:
-							BasicBlock *header = CATEGORY_HEADER(lblock);
-							assert(header != NULL);
+						case FIRST_MISS: {
+								BasicBlock *header = CATEGORY_HEADER(lblock);
+								assert(header != NULL);
 							
-							if (LINKED_BLOCKS(lblock) != NULL) {
-								/* linked l-blocks first-miss */
-								genstruct::Vector<LBlock *> &linked = *LINKED_BLOCKS(lblock);								
-								/* We add constraints only once per group */
-								if (linked[linked.length() - 1] == *lblock) {
+								if (LINKED_BLOCKS(lblock) != NULL) {
+									/* linked l-blocks first-miss */
+									genstruct::Vector<LBlock *> &linked = *LINKED_BLOCKS(lblock);								
+									/* We add constraints only once per group */
+									if (linked[linked.length() - 1] == *lblock) {
 							
-									/* Add constraint: (sum of lblock l in list) xmiss_l <= sum of entry-edges of the loop */
-									Constraint *cons6 = system->newConstraint(Constraint::LE);
-									for (genstruct::Vector<LBlock *>::Iterator iter(linked); iter; iter++) {
-										cons6->addLeft(1, MISS_VAR(iter));
+										/* Add constraint: (sum of lblock l in list) xmiss_l <= sum of entry-edges of the loop */
+										Constraint *cons6 = system->newConstraint(Constraint::LE);
+										for (genstruct::Vector<LBlock *>::Iterator iter(linked); iter; iter++) {
+											cons6->addLeft(1, MISS_VAR(iter));
+										}
+										for (BasicBlock::InIterator inedge(header); inedge; inedge++) {
+							 				if (!Dominance::dominates(header, inedge->source())) {
+							 					/* found an entry-edge */
+							 					cons6->addRight(1, VAR(*inedge));
+						 					}
+						 				}
 									}
-									for (BasicBlock::InIterator inedge(header); inedge; inedge++) {
-						 				if (!Dominance::dominates(header, inedge->source())) {
-						 					/* found an entry-edge */
-						 					cons6->addRight(1, VAR(*inedge));
+										
+								} else {
+									/* standard first-miss */
+									/* Add constraint: xmiss <= sum of entry-edges of the loop */
+							 		Constraint *cons5a = system->newConstraint(Constraint::LE);
+							 		cons5a->addLeft(1, MISS_VAR(lblock));	
+							 		for (BasicBlock::InIterator inedge(header); inedge; inedge++) {
+							 			if (!Dominance::dominates(header, inedge->source())) {
+							 				/* found an entry-edge */
+							 				cons5a->addRight(1, VAR(*inedge));
 						 				}
 						 			}
-								}
-									
-							} else {
-								/* standard first-miss */
-								/* Add constraint: xmiss <= sum of entry-edges of the loop */
-						 		Constraint *cons5a = system->newConstraint(Constraint::LE);
-						 		cons5a->addLeft(1, MISS_VAR(lblock));	
-						 		for (BasicBlock::InIterator inedge(header); inedge; inedge++) {
-						 			if (!Dominance::dominates(header, inedge->source())) {
-						 				/* found an entry-edge */
-						 				cons5a->addRight(1, VAR(*inedge));
-						 			}
-						 		}
-							}						
-							// Add constraint: xmiss <= x
-							Constraint *cons1 = system->newConstraint(Constraint::LE);
-							cons1->addRight(1, VAR(lblock->bb()));
-							cons1->addLeft(1, MISS_VAR(lblock));			
-												
+								}						
+								// Add constraint: xmiss <= x
+								Constraint *cons1 = system->newConstraint(Constraint::LE);
+								cons1->addRight(1, VAR(lblock->bb()));
+								cons1->addLeft(1, MISS_VAR(lblock));			
+							}							
 							break;
 							
 	                	default:
