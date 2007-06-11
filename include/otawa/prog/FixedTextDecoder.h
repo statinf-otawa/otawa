@@ -22,7 +22,7 @@ protected:
 	virtual void setup(WorkSpace *fw);
 
 private:
-	int size;
+	size_t size;
 };
 
 } // otawa
