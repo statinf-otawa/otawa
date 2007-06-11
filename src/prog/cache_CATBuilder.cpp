@@ -21,6 +21,7 @@
 using namespace otawa;
 using namespace otawa::ilp;
 using namespace otawa::ipet;
+using namespace otawa::dfa;
 
 namespace otawa {
 

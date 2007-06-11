@@ -7,8 +7,10 @@
 
 #include <otawa/util/Dominance.h>
 #include <otawa/dfa/IterativeDFA.h>
-#include <otawa/util/BitSet.h>
+#include <otawa/dfa/BitSet.h>
 #include <otawa/cfg.h>
+
+using namespace otawa::dfa;
 
 namespace otawa {
 

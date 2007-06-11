@@ -11,7 +11,7 @@
 #include <otawa/cfg.h>
 #include <elm/debug.h>
 #include <otawa/util/Dominance.h>
-#include <otawa/util/BitSet.h>
+#include <otawa/dfa/BitSet.h>
 
 namespace otawa {
 
@@ -57,7 +57,7 @@ bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 	assert(bb2);
 	
 	// Look for reverse-dominating annotation
-	BitSet *set = REVERSE_DOM(bb2);
+	dfa::BitSet *set = REVERSE_DOM(bb2);
 	if(!set) {
 		Dominance dom;
 		dom.processCFG(0, this);
