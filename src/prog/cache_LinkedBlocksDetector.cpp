@@ -27,6 +27,7 @@ namespace otawa {
 /**
  * @class LinkedBlocksDetector
  *
+ * This processor computes the list of l-blocks which are FIRST_MISS and occupies the same cache block.
  *
  * @par Configuration
  * none

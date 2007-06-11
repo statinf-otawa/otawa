@@ -28,10 +28,10 @@ Identifier<bool> VIRTUAL_INLINING("otawa::virtual_inlining", true, otawa::NS);
 /**
  * @class Virtualizer
  *
- * This processor unrolls the first iteration of each loop
+ * This processor inlines the function calls. 
  *
  * @par Configuration
- * none
+ * @li@ref DONT_UNROLL : The CFG with DONT_UNROLL(cfg) == true are not inlined
  *
  * @par Required features
  * @li @ref FLOW_FACTS_FEATURE

@@ -26,7 +26,8 @@ using namespace otawa::ipet;
 /**
  * @class MUSTProblem
  * 
- * Problem for computing the CATegorization of l-blocks.
+ * Problem for computing the MUST and PERS ACS together.
+ * This implements Ferdinand's Persistence analysis.
  */
 
 namespace otawa {

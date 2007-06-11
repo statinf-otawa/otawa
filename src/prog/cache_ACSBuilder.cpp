@@ -80,7 +80,8 @@ Identifier<fmlevel_t> FIRSTMISS_LEVEL("otawa.cache.cat2.fm_level", FML_MULTI, ot
  * This processor produces the Abstract Cache States (ACS), for the May and Persistence problems.
  *
  * @par Configuration
- * none
+ * @li @ref FIRSTMISS_LEVEL identifier determines the First Miss method (FML_OUTER, FML_INNER, FML_MULTI, FML_NONE). FML_MULTI is the default.
+ * @li @ref PSEUDO_UNROLLIG identifier determines if we do the Pseudo-Unrolling while doing the abstract interpretation.
  *
  * @par Required features
  * @li @ref DOMINANCE_FEATURE

@@ -26,7 +26,9 @@ using namespace otawa::ipet;
 /**
  * @class MUSTProblem
  * 
- * Problem for computing the CATegorization of l-blocks.
+ * Problem for computing the cache MUST ACS.
+ * This implements Ferdinand's Must analysis.
+ * 
  */
 
 namespace otawa {
@@ -48,51 +50,6 @@ const MUSTProblem::Domain& MUSTProblem::entry(void) const {
 		return ent;
 }
 		
-/**
- * @fn MUSTProblem::isFirst
- * 
- * Returns true if lblock is the first lblock of any BasicBlock, for the current line.
- *
- * @return boolean result
- */
-
-	
-#ifdef BLAHBLAH
-
-void MUSTProblem::blockInterpreted(const FirstUnrollingFixPoint<MUSTProblem>* fp, BasicBlock* bb, const Domain& in, const Domain& out, CFG *cur_cfg) const {
-		int bbnumber = bb->number() ;
-		int cfgnumber = cur_cfg->number();
-	
-		lub(*results[cfgnumber][bbnumber], in);
-		if (unrolling) {
-			BasicBlock *header = NULL;
-			bool loopStart = true;
-			int i = 0;
-			/*
-		 	* Detects the header of the loop containing bb, if any
-		 	*/
-			if (Dominance::isLoopHeader(bb)) {
-				header = bb;
-			} else if (ENCLOSING_LOOP_HEADER(bb) != NULL)
-				header = ENCLOSING_LOOP_HEADER(bb);
-			while (header != NULL) {
-				if (fp->getIter(header) != 1)
-					loopStart = false;
-				header = ENCLOSING_LOOP_HEADER(header);
-				if (loopStart)
-					lub(*unrolledResults[cfgnumber][bbnumber]->firstIter.get(i), in);
-				else
-					lub(*unrolledResults[cfgnumber][bbnumber]->otherIter.get(i), in);
-				i++;
-			}	
-		}		
-#ifdef DEBUG
-		cout << "[TRACE] line " << line << " Block " << bbnumber << ": IN=" << in << " OUT=" << out << "\n";
-#endif		
-}
-
-#endif	
-	
 void MUSTProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
 	assign(out, in);
 	LBlock *lblock = LAST_LBLOCK(bb)[line];

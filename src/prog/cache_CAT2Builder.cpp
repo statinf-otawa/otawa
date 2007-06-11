@@ -37,7 +37,7 @@ Identifier<BasicBlock*> CATEGORY_HEADER("otawa.cache.cat2.level", 0, otawa::NS);
 /**
  * @class CAT2Builder
  *
- * This processor produces categorization (version 2) information for each l-block
+ * This processor produces categorization information for each l-block
  *
  * @par Configuration
  * none

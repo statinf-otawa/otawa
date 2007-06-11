@@ -26,7 +26,8 @@ namespace otawa {
 /**
  * @class PERSProblem
  * 
- * Problem for computing the CATegorization of l-blocks.
+ * Problem for computing the PERS ACS of L-blocks. 
+ * This implements Ferdinand's Persistence analysis.
  */
 
 
