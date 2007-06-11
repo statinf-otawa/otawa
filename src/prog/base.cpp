@@ -75,4 +75,10 @@ void Exception::build(CString format, VarArg& args) {
  * @return	Exception message.
  */
 
+
+/**
+ * @class Address
+ */
+Address Address::null;
+
 }
