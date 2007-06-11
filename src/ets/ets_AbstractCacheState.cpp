@@ -10,7 +10,7 @@
 //#define ACS_OUT(txt) txt	//with debuging.
 #define ACS_OUT(txt)	//without debuging.
 
-namespace elm {
+/*namespace elm {
 using namespace otawa;
 
 template <>
@@ -22,7 +22,7 @@ public:
 		{ return key1 == key2; }
 };
 
-} // elm
+} // elm*/
 
 namespace otawa { namespace ets {
 
