@@ -152,9 +152,11 @@ Inst *File::findInstAt(address_t address) {
  * @return			Found program item or null.
  */
 ProgItem *File::findItemAt(address_t address) {
-	for(SegIter seg(this); seg; seg++)
-		if(seg->address() <= address && address < seg->topAddress())
-			return seg->findItemAt(address);
+	for(SegIter seg(this); seg; seg++) {
+		ProgItem *item = seg->findItemAt(address);
+		if(item)
+			return item;
+	}
 	return 0;
 }
 

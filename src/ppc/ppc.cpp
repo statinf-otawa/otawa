@@ -19,7 +19,7 @@ using namespace otawa::hard;
 
 extern "C" gel_file_t *loader_file(memory_t* memory);
 
-#define TRACE(m) //cout << m << io::endl
+#define TRACE(m) //cerr << m << io::endl
 #define RTRACE(m)	//m
 //#define SCAN_ARGS
 
@@ -238,15 +238,16 @@ otawa::Inst *Process::decode(address_t addr) {
 	// Decode the instruction
 	code_t buffer[20];
 	instruction_t *inst;
-	//cerr << "ADDR " << addr << io::endl;
-	iss_fetch((::address_t)addr, buffer);
-	inst = iss_decode((state_t *)state(), (::address_t)addr, buffer);
+	TRACE("ADDR " << addr);
+	iss_fetch(addr.address(), buffer);
+	inst = iss_decode((state_t *)state(), addr.address(), buffer);
 
 	// Build the instruction
 	otawa::Inst *result;	
 	if(inst->ident == ID_Instrunknown) {
 		result = new Inst(*this, 0, addr);
-		//cerr << "UNKNOWN !!!\n" << result << io::endl;
+		TRACE("UNKNOWN !!!\n" << result);
+		return result;
 	}
 	else {
 		
@@ -328,8 +329,8 @@ address_t BranchInst::decodeTargetAddress(void) {
 	code_t buffer[20];
 	char out_buffer[200];
 	instruction_t *inst;
-	iss_fetch((::address_t)address(), buffer);
-	inst = iss_decode((state_t *)process().state(), (::address_t)address(), buffer);
+	iss_fetch(address().address(), buffer);
+	inst = iss_decode((state_t *)process().state(), address().address(), buffer);
 
 	// Explore the instruction
 	address_t target_addr = 0;
@@ -537,8 +538,8 @@ void Process::decodeRegs(
 	// Decode instruction
 	code_t buffer[20];
 	instruction_t *inst;
-	iss_fetch((::address_t)(unsigned long)oinst->address(), buffer);
-	inst = iss_decode((state_t *)state(), (::address_t)oinst->address(), buffer /*, 0*/);
+	iss_fetch(oinst->address().address(), buffer);
+	inst = iss_decode((state_t *)state(), oinst->address().address(), buffer /*, 0*/);
 	if(inst->ident == ID_Instrunknown) {
 		/* in_regs = new elm::genstruct::AllocatedTable<hard::Register *>(0);
 		out_regs = new elm::genstruct::AllocatedTable<hard::Register *>(0); */
