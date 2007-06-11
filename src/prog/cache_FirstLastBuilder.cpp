@@ -85,7 +85,7 @@ FirstLastBuilder::FirstLastBuilder(void) : CFGProcessor("otawa::FirstLastBuilder
 
 void FirstLastBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 	int i;
-	int *max_addr, *min_addr;
+	address_t *max_addr, *min_addr;
 	LBlock **min_lblock, **max_lblock;
 
 		
@@ -95,8 +95,8 @@ void FirstLastBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 	for (CFG::BBIterator bb(cfg); bb; bb++)
 			LAST_LBLOCK(bb) = new LBlock*[cache->lineCount()];
 	
-	max_addr = new int[cache->lineCount()];
-	min_addr = new int[cache->lineCount()];
+	max_addr = new address_t[cache->lineCount()];
+	min_addr = new address_t[cache->lineCount()];
 	max_lblock = new LBlock*[cache->lineCount()];
 	min_lblock = new LBlock*[cache->lineCount()];
 	
@@ -127,7 +127,7 @@ void FirstLastBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 			}
 		}
 		for (int line = 0; line < cache->lineCount(); line++) {
-			/* XXX TODO: pas cohérent */
+			/* XXX TODO: pas cohï¿½rent */
 			LAST_LBLOCK(bb)[line] = max_lblock[line];
 			if (min_lblock[line] != NULL)
 				LBLOCK_ISFIRST(min_lblock[line]) = true;
