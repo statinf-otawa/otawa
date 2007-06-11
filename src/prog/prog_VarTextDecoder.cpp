@@ -13,6 +13,8 @@
 
 #define QUEUE_SIZE	512
 
+#define TRACE(m)	//cerr << m << io::endl;
+
 namespace otawa {
 
 // Simple marker
@@ -84,7 +86,7 @@ Inst *VarTextDecoder::getInst(WorkSpace *ws, address_t address) {
 void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 	ASSERT(ws);
 	ASSERT(address);
-	//cerr << "processEntry("  << address << ")\n";
+	TRACE("processEntry("  << address << ")");
 	
 	// Initialize the queue
 	VectorQueue<address_t> todo(QUEUE_SIZE);
@@ -95,7 +97,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 		
 		// Get the next instruction
 		address_t addr = todo.get();
-		//cerr << "Starting from " << addr << io::endl;
+		TRACE("Starting from " << addr);
 		Inst *inst = getInst(ws,  addr);
 		if(MARKER(inst))
 			continue;
@@ -103,14 +105,14 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 			
 		// Follow the instruction until a branch
 		while(!inst->isControl()) {
-			/*cerr << "process(" << inst->address() << ") : "
-				 << io::hex(inst->kind()) << io::endl;*/
+			TRACE("process(" << inst->address() << ") : "
+				 << io::hex(inst->kind()));
 			address_t next = inst->address() + inst->size();
 			inst = getInst(ws, next);
 			if(MARKER(inst))
 				goto cont;	
 		}
-		//cerr << "end found\n";
+		TRACE("end found");
 		
 		// Record target and next
 		if(inst->isConditional() || inst->isCall())
@@ -118,7 +120,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 		if(!inst->isReturn()) {
 			Inst *target = inst->target();
 			if(target) {
-				//cerr << "todo.put(" << target->address() << ")\n";
+				TRACE("todo.put(" << target->address() << ")");
 				todo.put(target->address());
 			}
 			else if(isVerbose())
