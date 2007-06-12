@@ -47,8 +47,7 @@ protected:
 	void provide(const AbstractFeature& feature);
 	void invalidate(const AbstractFeature& feature);
 	inline void config(Configuration& config) { configs.add(&config); }
-	void warn(CString format, VarArg args);
-	void warn(CString format, ...);
+	void warn(const String& message);
 
 	// Overwritable methods
 	virtual void processWorkSpace(WorkSpace *fw);
