@@ -39,7 +39,7 @@ using namespace elm::genstruct;
 
 namespace otawa {
 
-Identifier<bool> START("otawa.exegraph.start", false);
+Identifier<bool> START("otawa::start", false);
 
 //START(inst) = true;
 
