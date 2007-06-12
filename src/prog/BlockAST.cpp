@@ -65,7 +65,7 @@ BlockAST::~BlockAST(void) {
  * The property matching the given identifier is put on the first instruction
  * of the AST. The property contains a pointer to the block AST.
  */
-Identifier<AST *> BlockAST::ID("otawa.ast.block", 0, NS);
+Identifier<AST *> BlockAST::ID("otawa::BlockAST::id", 0);
 
 
 /**

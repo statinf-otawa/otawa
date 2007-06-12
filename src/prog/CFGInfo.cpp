@@ -36,7 +36,7 @@ namespace otawa {
  * @par Hooks
  * @li @ref FrameWork
  */
-Identifier<CFGInfo *> CFGInfo::ID("cfg_info_id", 0, otawa::NS);
+Identifier<CFGInfo *> CFGInfo::ID("otawa::CFGInfo::id", 0, otawa::NS);
 
 
 /**
