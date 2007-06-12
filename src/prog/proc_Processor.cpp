@@ -267,7 +267,7 @@ void Processor::warn(const String& message) {
  * This property identifier is used for setting the output stream used by
  * the processor for writing messages (information, warning, error) to the user.
  */
-Identifier<elm::io::OutStream *> Processor::OUTPUT("otawa::Processor::output", 0, otawa::NS);
+Identifier<elm::io::OutStream *> Processor::OUTPUT("otawa::Processor::output", 0);
 
 
 /**
@@ -275,7 +275,7 @@ Identifier<elm::io::OutStream *> Processor::OUTPUT("otawa::Processor::output", 0
  * that will be used to store statistics about the performed work. Implicitly,
  * passing such a property activates the statistics recording facilities.
  */
-Identifier<PropList *> Processor::STATS("otawa::Processor::stats", 0, otawa::NS);
+Identifier<PropList *> Processor::STATS("otawa::Processor::stats", 0);
 
 
 /**
@@ -283,21 +283,21 @@ Identifier<PropList *> Processor::STATS("otawa::Processor::stats", 0, otawa::NS)
  * statistics will also be collected with other processor statistics. Passing
  * such a property without @ref PROC_STATS has no effects.
  */
-Identifier<bool> Processor::TIMED("otawa::Processor::timed", false, otawa::NS);
+Identifier<bool> Processor::TIMED("otawa::Processor::timed", false);
 
 
 /**
  * This property identifier is used to store in the statistics of a processor
  * the overall run time of the processor work.
  */
-Identifier<elm::system::time_t> Processor::RUNTIME("otawa::Processor::runtime", 0, otawa::NS);
+Identifier<elm::system::time_t> Processor::RUNTIME("otawa::Processor::runtime", 0);
 
 
 /**
  * This property activates the verbose mode of the processor: information about
  * the processor work will be displayed.
  */
-Identifier<bool> Processor::VERBOSE("otawa::Processor::verbose", false, otawa::NS);
+Identifier<bool> Processor::VERBOSE("otawa::Processor::verbose", false);
 
 
 /**

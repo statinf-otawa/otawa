@@ -264,14 +264,14 @@ Identifier<int> Delta::SEQ_COMPLETION("Delta::seq_completion", 0, ipet::NS);
  * Property used to return statistics about the @ref Delta processor about
  * the maximal sequence length in instructions.
  */
-Identifier<double> Delta::MAX_LENGTH("Delta::max_length", 0, ipet::NS);
+Identifier<double> Delta::MAX_LENGTH("otawa::ipet::Delta::max_length", 0, ipet::NS);
 
 
 /**
  * Property used to return statistics about the @ref Delta processor about
  * the mean sequence length in instructions.
  */
-Identifier<double> Delta::MEAN_LENGTH("Delta::min_length", 0, ipet::NS);
+Identifier<double> Delta::MEAN_LENGTH("otawa::ipet::Delta::min_length", 0, ipet::NS);
 
 
 /**
@@ -279,7 +279,7 @@ Identifier<double> Delta::MEAN_LENGTH("Delta::min_length", 0, ipet::NS);
  * storing all BBPath starting from this basic block
  */
 Identifier<TreePath<BasicBlock*,BBPath*>*>
-	Delta::TREE("Delta::tree", 0, ipet::NS);
+	Delta::TREE("otawa::ipet::Delta::tree", 0, ipet::NS);
 
 
 /**

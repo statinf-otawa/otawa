@@ -48,14 +48,14 @@ namespace otawa {
 /**
  * Property with this identifier is put on instructions or basic blocks which a symbol is known for.
  */
-Identifier<String> LABEL("label", "", otawa::NS);
+Identifier<String> LABEL("otawa::label", "");
 
 
 /**
  * This property is put on instruction. An instruction may accept many
  * properties of this type.
  */
-Identifier<String> FUNCTION_LABEL("function_label", "", otawa::NS);
+Identifier<String> FUNCTION_LABEL("otawa::function_label", "");
 
 
 /**
