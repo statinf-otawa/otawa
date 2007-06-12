@@ -156,6 +156,6 @@ void FlowFactLoader::onCheckSum(const String& name, unsigned long sum) {
  * This property may be used in the configuration of a code processor
  * to pass the path of an F4 file containing flow facts.
  */
-Identifier<Path> FLOW_FACTS_PATH("flow_facts_path", "", otawa::NS);
+Identifier<Path> FLOW_FACTS_PATH("otawa::flow_facts_path", "");
 
 } // otawa
