@@ -59,7 +59,7 @@ void TrivialBBTime::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
  * @par Hooks
  * @li Configuration of @ref ipet::TrivialBBTime.
  */
-Identifier<unsigned> PIPELINE_DEPTH("pipeline_depth", 5, ipet::NS);
+Identifier<unsigned> PIPELINE_DEPTH("otawa::ipet::pipeline_depth", 5);
 
 
 /**
