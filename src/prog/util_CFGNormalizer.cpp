@@ -37,7 +37,7 @@ namespace otawa {
  * same CFG).
  */
 Identifier<bool>
-	CFGNormalizer::FORCE("CFGNormalizer::force", false, otawa::NS);
+	CFGNormalizer::FORCE("otawa::CFGNormalizer::force", false);
 
 
 /**
@@ -45,11 +45,11 @@ Identifier<bool>
  * In verbose mode, each edge removal displays information about the action.
  */
 Identifier<bool>
-	CFGNormalizer::VERBOSE("CFGNormalizer::verbose", false, otawa::NS);
+	CFGNormalizer::VERBOSE("otawa::CFGNormalizer::verbose", false);
 
 
 // Internal use
-static Identifier<bool> IN_CFG("CFGNormalizer::in_cfg", false, otawa::NS);
+static Identifier<bool> IN_CFG("otawa::CFGNormalizer::in_cfg", false);
 
 
 /**

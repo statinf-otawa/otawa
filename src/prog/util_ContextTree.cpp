@@ -276,7 +276,7 @@ Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE("otawa::context_tree");
  * @par Hooks
  * @li @ref FrameWork
  */
-Identifier<ContextTree *> CONTEXT_TREE("otawa::context_tree", 0, otawa::NS);
+Identifier<ContextTree *> CONTEXT_TREE("otawa::context_tree", 0);
 
 
 /**
@@ -285,6 +285,6 @@ Identifier<ContextTree *> CONTEXT_TREE("otawa::context_tree", 0, otawa::NS);
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<ContextTree *> OWNER_CONTEXT_TREE("otawa::owner_context_tree", 0, otawa::NS);
+Identifier<ContextTree *> OWNER_CONTEXT_TREE("otawa::owner_context_tree", 0);
 
 } // otawa
