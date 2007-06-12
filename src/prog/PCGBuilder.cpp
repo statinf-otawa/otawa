@@ -152,7 +152,7 @@ Feature<PCGBuilder> PCG_FEATURE("otawa::pcg");
  * @par Hooks
  * @li @ref FrameWork
  */
-Identifier<PCG *> PCG::ID("pcg", 0, otawa::NS);
+Identifier<PCG *> PCG::ID("otawa::PCG::id", 0);
 
 
 } // otawa
