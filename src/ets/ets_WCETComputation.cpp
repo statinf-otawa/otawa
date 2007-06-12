@@ -60,8 +60,9 @@ int WCETComputation::computation(WorkSpace *fw, AST *ast) {
 				}
 				else{
 					WC_TRACE;
-					throw ProcessorException(*this, "Il manque le wcet de la fonction : %s",
-						&ast->toCall()->function()->name());
+					throw ProcessorException(*this, _
+						<< "no wcet for the function : "
+						<< ast->toCall()->function()->name());
 				}
 			}
 			case AST_Block:
@@ -91,9 +92,11 @@ int WCETComputation::computation(WorkSpace *fw, AST *ast) {
 			 	N=LOOP_COUNT(ast->toWhile());
 			 	if (N == -1){
 					WC_TRACE;
-					throw ProcessorException(*this, "Il manque le nb d'it�rations du noeud : %s (%p)",
-						&LABEL(ast->toWhile()->condition()->first()) /*  "unknown ") */,
-						(void *)(int)ast->toWhile()->condition()->first()->address());
+					throw ProcessorException(*this, _ << "no loop bound at : "
+						<< LABEL(ast->toWhile()->condition()->first())
+						<< " ("
+						<< (void *)(int)ast->toWhile()->condition()->first()->address()
+						<< ")");
 				}
 				wcet=N*(computation(fw, ast->toWhile()->condition())
 							+ computation(fw, ast->toWhile()->body()))
