@@ -121,6 +121,6 @@ void LinkedBlocksDetector::recordBlocks(Vector<LBlock*> *equiv) {
 	}
 }
 
-Identifier<genstruct::Vector<LBlock*> *> LINKED_BLOCKS("otawa.cache.linked_blocks", NULL);
+Identifier<genstruct::Vector<LBlock*> *> LINKED_BLOCKS("otawa::linked_blocks", NULL);
 
 }

@@ -36,9 +36,9 @@ namespace otawa {
 namespace ipet {
 
 /* Properties */
-static Identifier<ilp::Var *> BB_VAR("ccg.bb_var", 0, otawa::NS);
-static Identifier<ilp::Var *> HIT_VAR("ccg.hit_var", 0, otawa::NS);
-static Identifier<ilp::Var *> MISS_VAR("ccg.miss_var", 0, otawa::NS);
+static Identifier<ilp::Var *> BB_VAR("otawa::bb_var", 0);
+static Identifier<ilp::Var *> HIT_VAR("otawa::hit_var", 0);
+static Identifier<ilp::Var *> MISS_VAR("otawa::miss_var", 0);
 
 
 /**
