@@ -22,7 +22,7 @@ typedef struct call_t {
 } call_t;
 
 Feature<Virtualizer> VIRTUALIZED_CFG_FEATURE("otawa::virtualized_cfg_feature");
-Identifier<bool> VIRTUAL_INLINING("otawa::virtual_inlining", true, otawa::NS);
+Identifier<bool> VIRTUAL_INLINING("otawa::virtual_inlining", true);
 
 
 /**
