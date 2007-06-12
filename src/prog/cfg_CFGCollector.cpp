@@ -97,7 +97,8 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 		entry = info->findCFG(name);
 	}
 	if(!entry)
-		throw ProcessorException(*this, "cannot find task entry point \"%d.\"", &name);
+		throw ProcessorException(*this, _
+			<< "cannot find task entry point \"" << name << "\"");
 	ENTRY_CFG(fw) = entry;
 	
 	// Build the involved collection
