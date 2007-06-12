@@ -31,7 +31,7 @@ namespace otawa {
  * @par Hooks
  * @li @ref LBlocks
  */
-Identifier<BasicBlock*> CATEGORY_HEADER("otawa.cache.cat2.level", 0, otawa::NS);
+Identifier<BasicBlock*> CATEGORY_HEADER("otawa::category_header", 0);
 
 
 /**
