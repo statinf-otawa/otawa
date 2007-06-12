@@ -17,10 +17,6 @@
 
 extern "C" Elf32_Ehdr Ehdr;
 
-/*namespace otawa { namespace gliss {
-	extern otawa::Identifier<state_t *> GLISS_STATE;
-} } // otawa::gliss*/
-
 namespace otawa { namespace loader { namespace old_gliss {
 
 
