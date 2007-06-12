@@ -38,7 +38,7 @@ ASTLoader::ASTLoader(void): file(0), fw(0) {
  * This identifier may be passed for specifying the path a file for loading
  * the AST.
  */
-Identifier<String> ASTLoader::PATH("path", "", otawa::NS);
+Identifier<String> ASTLoader::PATH("otawa::path", "");
 
 
 /**
