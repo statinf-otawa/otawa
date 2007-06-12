@@ -92,16 +92,10 @@ void FlowFactLoader::onError(const char *fmt, ...) {
 /**
  */
 void FlowFactLoader::onWarning(const char *fmt, ...) {
-	/*assert(fmt);
-	va_list args;
-	va_start(args, fmt);
-	StringBuffer buffer;
-	buffer.format(fmt, args);
-	cout << buffer.toString();
-	va_end(args);*/
-	//cout << '\n';
 	VARARG_BEGIN(args, fmt)
-		warn(fmt, args);
+		StringBuffer buffer;
+		buffer.format(fmt, args);
+		warn(buffer.toString());
 	VARARG_END	
 }
 
