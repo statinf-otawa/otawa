@@ -68,7 +68,7 @@ public:
 /**
  * Instruction execution time. Default to 5.
  */
-Identifier<int> INSTRUCTION_TIME("sim.instruction_time");
+Identifier<int> INSTRUCTION_TIME("otawa::sim::instruction_time");
 
 
 /**
