@@ -27,19 +27,19 @@ namespace otawa {
 
 /**
  */
-Identifier<bool> CATBuilder::NON_CONFLICT("cat.non_conflict", false, otawa::NS);
+Identifier<bool> CATBuilder::NON_CONFLICT("otawa::CATBuilder::non_conflict", false);
 
 
 /**
  * Private property.
  */
-static Identifier<BitSet *> IN("cat.in", 0, otawa::NS);
+static Identifier<BitSet *> IN("otawa::in", 0);
 
 
 /**
  * Private property.
  */
-static Identifier<BitSet *> SET("cat.set", 0, otawa::NS);
+static Identifier<BitSet *> SET("otawa::set", 0);
 
 
 /**
@@ -57,7 +57,7 @@ static Identifier<BitSet *> SET("cat.set", 0, otawa::NS);
  * @par Hooks
  * @li @ref LBlock
  */
-Identifier<category_t> CATEGORY("category", INVALID_CATEGORY, otawa::NS);
+Identifier<category_t> CATEGORY("otawa::category", INVALID_CATEGORY);
 
 
 /**
@@ -65,7 +65,7 @@ Identifier<category_t> CATEGORY("category", INVALID_CATEGORY, otawa::NS);
  * they was classified as first-miss but lowered to always-miss due to effect
  * of a surrounding loop (whose header basic block is stored).
  */
-Identifier<BasicBlock *> LOWERED_CATEGORY("lowered_category", 0, otawa::NS);
+Identifier<BasicBlock *> LOWERED_CATEGORY("otawa::lowered_category", 0);
 
 
 /**
