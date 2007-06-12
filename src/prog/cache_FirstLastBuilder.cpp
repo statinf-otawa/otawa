@@ -43,7 +43,7 @@ Feature<FirstLastBuilder> ICACHE_FIRSTLAST_FEATURE("otawa.cache.firstlast_featur
  * @par Hooks
  * @li @ref BasicBlock 
  */
-Identifier<LBlock**> LAST_LBLOCK("otawa.cache.last_lblock", NULL, otawa::NS);
+Identifier<LBlock**> LAST_LBLOCK("otawa::last_lblock", NULL);
  
  /**
  * This property tells if the lblock is the first of its BasicBlock (for its cache line)
@@ -52,7 +52,7 @@ Identifier<LBlock**> LAST_LBLOCK("otawa.cache.last_lblock", NULL, otawa::NS);
  * @par Hooks
  * @li @ref LBlock 
  */
-Identifier<bool> LBLOCK_ISFIRST("otawa.cache.lblock_isfirst", false, otawa::NS);
+Identifier<bool> LBLOCK_ISFIRST("otawa::lblock_isfirst", false);
  
 /**
  * @class ACSBuilder
