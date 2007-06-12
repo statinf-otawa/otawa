@@ -79,19 +79,19 @@ void EnhacedAggregationGraph::configure(PropList& props){
 /**
  * Limit for the number of basic blocks
  */
-GenericIdentifier<int> Agg_Max_Length("aggregationgraph.maxlength");
+GenericIdentifier<int> Agg_Max_Length("otawa::ipet::agg_max_length");
 /**
  * Limit for the maximum number of instructions by block
  */
-GenericIdentifier<int> Agg_Max_Insts("aggregationgraph.maxinsts");
+GenericIdentifier<int> Agg_Max_Insts("otawa::ipet::agg_max_insts");
 /**
  * Maximum joins of paths. number of joins needed to cut. 0 cut at every basic block
  */
-GenericIdentifier<int> Agg_Max_Joins("aggregationgraph.maxjoins");
+GenericIdentifier<int> Agg_Max_Joins("otawa::ipet::agg_max_joins");
 /**
  * Maximum path splitting
  */
-GenericIdentifier<int> Agg_Max_Splits("aggregationgraph.maxsplits");
+GenericIdentifier<int> Agg_Max_Splits("otawa::ipet::agg_max_splits");
 
 
 
@@ -99,11 +99,11 @@ GenericIdentifier<int> Agg_Max_Splits("aggregationgraph.maxsplits");
 /**
  * Current number of joins for the current path
  */
-GenericIdentifier<int> Agg_Cur_Joins("aggregationgraph.curjoins",0);
+GenericIdentifier<int> Agg_Cur_Joins("otawa::ipet::agg_cur_joins",0);
 /**
  * Current number of splits for the current path
  */
-GenericIdentifier<int> Agg_Cur_Splits("aggregationgraph.cursplits",0);
+GenericIdentifier<int> Agg_Cur_Splits("otawa::ipet::agg_cur_splits",0);
 
 
 
