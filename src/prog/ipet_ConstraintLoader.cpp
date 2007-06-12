@@ -59,7 +59,7 @@ class NormalizationException {
  * This property identifier is used for passing specific file to load to
  * the @ref ConstraintLoader (argument of type @ref elm::String).
  */
-GenericIdentifier<Path> ConstraintLoader::PATH("path", "", ipet::NS);
+GenericIdentifier<Path> ConstraintLoader::PATH("otawa::ipet::ConstraintLoader::path", "");
 
 
 /**
