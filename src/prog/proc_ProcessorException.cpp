@@ -17,10 +17,15 @@ namespace otawa {
  * This class is used for returning exceptions from the processors.
  */
 
-
 /**
+ * Build a processor exception with a simple message.
+ * @param proc		Processor throwing the exception.
+ * @param message	Exception message.
  */
-String ProcessorException::build(const Processor& proc, elm::String message) {
+ProcessorException::ProcessorException(
+	const Processor& proc,
+	const elm::String& message
+) {
 	StringBuffer buffer;
 	if(!proc.name())
 		buffer << "no name";
@@ -31,54 +36,7 @@ String ProcessorException::build(const Processor& proc, elm::String message) {
 	}
 	buffer << ": ";
 	buffer << message;
-	return buffer.toString();
-}
-
-
-/**
- */
-String ProcessorException::build(const Processor& proc, elm::CString format,
-elm::VarArg& args) {
-	StringBuffer buffer;
-	buffer.format(format, args);
-	return build(proc, buffer.toString());	
-}
-
-
-/**
- * Build a processor exception with a simple message.
- * @param proc		Processor throwing the exception.
- * @param message	Exception message.
- */
-ProcessorException::ProcessorException(const Processor& proc,
-elm::String& message) {
-	setMessage(build(proc, message));
-}
-
-
-/**
- * Build a processor exception with a-la C formatted message.
- * @param proc		Processor throwing the exception.
- * @param format	Format string.
- * @param ...		Variable arguments.
- */
-ProcessorException::ProcessorException(const Processor& proc,
-elm::CString format, ...) {
-	VARARG_BEGIN(args, format)
-		setMessage(build(proc, format, args));
-	VARARG_END
-}
-
-
-/**
- * Build a processor exception with a-la C formatted message.
- * @param proc		Processor throwing the exception.
- * @param format	Format string.
- * @param args		Variable arguments.
- */
-ProcessorException::ProcessorException(const Processor& proc,
-elm::CString format, elm::VarArg& args) {
-	setMessage(build(proc, format, args));
+	setMessage(buffer.toString());
 }
 
 } // otawa

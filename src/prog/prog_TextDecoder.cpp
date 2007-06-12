@@ -63,13 +63,13 @@ TextDecoder::TextDecoder(void)
 void TextDecoder::processWorkSpace(WorkSpace *fw) {
 	
 	// Decode the text
-	Processor *decoder = fw->process()->decoder();
+	Processor *decoder; /* = fw->process()->decoder();
 	if(!decoder) {
-		if(follow_paths)
+		if(follow_paths)*/
 			decoder = &VarTextDecoder::_;
-		else
+		/*else
 			decoder = &FixedTextDecoder::_;
-	}
+	}*/
 	decoder->process(fw);
 	
 	// Put the labels
