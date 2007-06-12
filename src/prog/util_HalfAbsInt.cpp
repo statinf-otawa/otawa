@@ -88,7 +88,7 @@ namespace otawa { namespace util {
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<bool> FIXED("otawa.halfabsint.fixed", false, otawa::NS);
+Identifier<bool> FIXED("otawa::util::fixed", false);
 
 /**
  * This property is attached for the loop header, and is true if
@@ -99,7 +99,7 @@ Identifier<bool> FIXED("otawa.halfabsint.fixed", false, otawa::NS);
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<bool> FIRST_ITER("otawa.halfabsint.first_iter", true, otawa::NS);
+Identifier<bool> FIRST_ITER("otawa::util::first_iter", true);
 
 
 /**
