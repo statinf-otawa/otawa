@@ -53,7 +53,9 @@ FlowFactLoader::FlowFactLoader(void)
 void FlowFactLoader::onError(const char *fmt, ...) {
 	assert(fmt);
 	VARARG_BEGIN(args, fmt)
-		throw ProcessorException(*this, fmt, args);
+		StringBuffer buffer;
+		buffer.format(fmt, args);
+		throw ProcessorException(*this, buffer.toString());
 	VARARG_END
 }
 

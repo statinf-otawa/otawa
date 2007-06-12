@@ -11,6 +11,8 @@
 #include <otawa/proc/Registry.h>
 #include <elm/genstruct/VectorQueue.h>
 
+using namespace elm;
+
 #define QUEUE_SIZE	512
 
 #define TRACE(m)	//cerr << m << io::endl;
@@ -68,11 +70,11 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
  * @return						Instruction matching the given address.
  * @throws ProcessorException	If the instruction cannot be found.
  */
-Inst *VarTextDecoder::getInst(WorkSpace *ws, address_t address) {
+Inst *VarTextDecoder::getInst(WorkSpace *ws, otawa::address_t address) {
 	Inst *inst = ws->findInstAt(address);
 	if(!inst)
-		throw ProcessorException(*this,
-			"unconsistant binary: no code segment at %p", (int)address);
+		throw ProcessorException(*this, elm::_
+			<< "unconsistant binary: no code segment at " << address);
 	return inst;
 }
 

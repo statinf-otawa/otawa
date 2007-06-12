@@ -86,8 +86,8 @@ void CFGNormalizer::processCFG(WorkSpace *fw, CFG *cfg) {
 					break;
 				}
 			if(!solved)
-				throw ProcessorException(*this,
-					"unresolved indirect branch at %lx", *bb->address());
+				throw ProcessorException(*this, _
+					<< "unresolved indirect branch at " << bb->address());
 		}
 
 		// Record all entering edges
@@ -98,8 +98,9 @@ void CFGNormalizer::processCFG(WorkSpace *fw, CFG *cfg) {
 		// Remove entering edges
 		for(elm::genstruct::Vector<Edge *>::Iterator edge(removes); edge; edge++) {
 			if(!force)
-				throw ProcessorException(*this, "Edge from dead code %lx to living code %lx.",
-					*edge->source()->address(), *edge->target()->address());
+				throw ProcessorException(*this, _ << "edge from dead code "
+					<< edge->source()->address() << " to living code "
+					<< edge->target()->address());
 			else {
 				if(verbose)
 					warn("Edge from dead code %lx to living code %lx removed",
