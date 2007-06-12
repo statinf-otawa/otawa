@@ -123,6 +123,6 @@ void Identifier<Symbol *>::print(elm::io::Output& out, const Property& prop) con
  * @par Hooks
  * @li @ref Inst
  */
-Identifier<Symbol *> Symbol::ID("Symbol::ID", 0, otawa::NS);
+Identifier<Symbol *> Symbol::ID("otawa::Symbol::id", 0);
 
 } // otawa

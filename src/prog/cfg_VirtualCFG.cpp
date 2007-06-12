@@ -27,21 +27,21 @@ typedef struct call_t {
  * @par Hooks
  * @li @ref CFG
  */
-Identifier<bool> DONT_INLINE("otawa.dont_inline", false, otawa::NS);
+Identifier<bool> DONT_INLINE("otawa::dont_inline", false);
 
 /**
  * A property with this identifier is hooked at the edge performing a virtual
  * call when inling is used. The associated value is the CFG of the called
  * function.
  */
-Identifier<CFG *> CALLED_CFG("called_cfg", 0, otawa::NS);
+Identifier<CFG *> CALLED_CFG("otawa::called_cfg", 0);
 
 
 /**
  * A property with this identifier is hooked to edge performing a recursive
  * call when inlining is used.
  */
-Identifier<bool> RECURSIVE_LOOP("recursive_loop", false, otawa::NS);
+Identifier<bool> RECURSIVE_LOOP("otawa::recursive_loop", false);
 
 
 /**
