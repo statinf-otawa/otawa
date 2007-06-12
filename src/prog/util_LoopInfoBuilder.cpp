@@ -62,7 +62,7 @@ Feature<LoopInfoBuilder> LOOP_INFO_FEATURE("otawa::loop_info");
  * @par Hooks
  * @li @ref BasicBlock 
  */
-Identifier<BasicBlock*> ENCLOSING_LOOP_HEADER("otawa.loopinfobuilder.enclosing_loop_header", 0, otawa::NS);
+Identifier<BasicBlock*> ENCLOSING_LOOP_HEADER("otawa::enclosing_loop_header", 0);
 
 /**
  * Is defined for an Edge if this Edge is the exit-edge of any loop.
@@ -72,7 +72,7 @@ Identifier<BasicBlock*> ENCLOSING_LOOP_HEADER("otawa.loopinfobuilder.enclosing_l
  * @par Hooks
  * @li @ref Edge
  */
-Identifier<BasicBlock*> LOOP_EXIT_EDGE("otawa.loopinfobuilder.loop_exit", 0, otawa::NS); 
+Identifier<BasicBlock*> LOOP_EXIT_EDGE("otawa::loop_exit", 0); 
 /**
  * Defined for any BasicBlock that is a loop header.
  * Contain a list of the exit edges associated with the loop
@@ -81,7 +81,7 @@ Identifier<BasicBlock*> LOOP_EXIT_EDGE("otawa.loopinfobuilder.loop_exit", 0, ota
  * @par Hooks
  * @li @ref BasicBlock 
  */
-Identifier<elm::genstruct::Vector<Edge*>*> EXIT_LIST("otawa.halfabsint.exit_list", 0, otawa::NS);
+Identifier<elm::genstruct::Vector<Edge*>*> EXIT_LIST("otawa::exit_list", 0);
 
  
 /**
