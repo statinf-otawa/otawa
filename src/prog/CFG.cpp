@@ -18,7 +18,7 @@ namespace otawa {
 /**
  * Identifier used for storing and retrieving the CFG on its entry BB.
  */
-Identifier<CFG *> ENTRY("otawa.cfg_entry", 0);
+Identifier<CFG *> ENTRY("otawa::entry", 0);
 
 
 /**
@@ -29,7 +29,7 @@ Identifier<CFG *> ENTRY("otawa.cfg_entry", 0);
  * @li @ref BasicBlock
  * @li @ref CFG
  */
-Identifier<int> INDEX("otawa.index", -1);
+Identifier<int> INDEX("otawa::index", -1);
 
 
 /**
@@ -37,13 +37,6 @@ Identifier<int> INDEX("otawa.index", -1);
  * Control Flow Graph representation. Its entry basic block is given and
  * the graph is built using following taken and not-taken properties of the block.
  */
-
-
-/**
- * Identifier for marking the CFG as having the dominance relation computed.
- * Takes a boolean value that is not really used.
- */
-//Identifier CFG::ID_Dom("otawa.cfg.dom");
 
 
 /**
