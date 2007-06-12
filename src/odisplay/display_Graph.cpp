@@ -12,34 +12,34 @@ namespace otawa { namespace display {
 /**
  * Tells that the properties with the given identifier have to be printed
  */
-Identifier<AbstractIdentifier*> INCLUDE("display.include");
+Identifier<AbstractIdentifier*> INCLUDE("otawa::display::include");
 /**
  * Tells that the properties with the given identifier mustn't be printed
  */
-Identifier<AbstractIdentifier*> EXCLUDE("display.exclude");
+Identifier<AbstractIdentifier*> EXCLUDE("otawa::display::exclude");
 /**
  * The value of the property must be either INCLUDE or EXCLUDE.
  * Gives a default behaviour to the properties that doesn't appear in
  * any of the INCLUDE / EXCLUDE lists.
  */
-Identifier<AbstractIdentifier*> DEFAULT("display.default");
+Identifier<AbstractIdentifier*> DEFAULT("otawa::display::default");
 /**
  * Identifier of the background color
  */
-Identifier<elm::CString> BACKGROUND("display.background");
+Identifier<elm::CString> BACKGROUND("otawa::display::background");
 /**
  * Identifier of the drawing color (boxes, edges)
  */
-Identifier<elm::CString> COLOR("display.color");
+Identifier<elm::CString> COLOR("otawa::display::color");
 /**
  * Identifier of the drawing style.
  * Must be one of @ref style_t
  */
-Identifier<int> STYLE("display.style");
+Identifier<int> STYLE("otawa::display::style");
 /**
  * Identifier of the text color. It is the same Identifier as TEXT_COLOR
  */
-Identifier<elm::CString> FONT_COLOR("display.text_color");
+Identifier<elm::CString> FONT_COLOR("otawa::display::text_color");
 /**
  * Identifier of the text color. It is the same Identifier as FONT_COLOR
  */
@@ -47,7 +47,7 @@ Identifier<elm::CString> &TEXT_COLOR = FONT_COLOR;
 /**
  * Identifier of the text size. It is the same Identifier as TEXT_SIZE
  */
-Identifier<int>  FONT_SIZE("display.text_size");
+Identifier<int>  FONT_SIZE("otawa::display::text_size");
 /**
  * Identifier of the text size. It is the same Identifier as FONT_SIZE
  */
@@ -55,31 +55,31 @@ Identifier<int>& TEXT_SIZE = FONT_SIZE;
 /**
  * Identifier of the font name
  */
-Identifier<elm::CString> FONT("display.font_name");
+Identifier<elm::CString> FONT("otawa::display::font_name");
 /**
  * Identifier of the url of the link the object is pointing to
  */
-Identifier<elm::CString> HREF("display.href");
+Identifier<elm::CString> HREF("otawa::display::href");
 /**
  * Identifier of the title of a node
  */
-Identifier<elm::String> TITLE("display.title");
+Identifier<elm::String> TITLE("otawa::display::title");
 /**
  * Identifier of the body of a node
  */
-Identifier<elm::String> BODY("display.body");
+Identifier<elm::String> BODY("otawa::display::body");
 /**
  * Identifier of a shape of a node. Must be one of @ref shape_t
  */
-Identifier<int> SHAPE("display.shape");
+Identifier<int> SHAPE("otawa::display::shape");
 /**
  * Identifier of a label of an edge
  */
-Identifier<elm::String> LABEL("display.label");
+Identifier<elm::String> LABEL("otawa::display::label");
 /**
  * Identifier of a weight of an edge
  */
-Identifier<int> WEIGHT("display.weight");
+Identifier<int> WEIGHT("otawa::display::weight");
 
 
 
