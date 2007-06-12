@@ -162,10 +162,10 @@ void CFGBuilder::buildCFG(Segment *seg) {
 			}
 			else if(!inst->isReturn() && verbose) {
 				Symbol * sym = 0; //code->closerSymbol(inst);
-				warn("unresolved indirect control at 0x%x (%s + 0x%x",
-					inst->address().address(),
-					(sym ? &sym->name()  : ""),
-					sym ? (inst->address() - sym->address()) : 0);
+				warn( _ << "unresolved indirect control at 0x"
+					<< inst->address().address() << " ("
+					<< (sym ? &sym->name()  : "") << " + 0x"
+					<< (sym ? (inst->address() - sym->address()) : 0) << ")");
 				cout << '\t' << inst->address() << '\t';
 				inst->dump(out);
 				cout << io::endl;

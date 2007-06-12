@@ -116,7 +116,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 		if(cfg)
 			cfgs->cfgs.add(cfg);
 		else
-			warn("cannot find a function called \"%s\".", &added_funs[i]);
+			warn(_ << "cannot find a function called \"" << added_funs[i] << "\".");
 	}
 	
 	// Added CFG
