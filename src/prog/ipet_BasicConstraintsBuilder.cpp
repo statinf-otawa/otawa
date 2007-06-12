@@ -18,7 +18,7 @@ namespace otawa { namespace ipet {
 /**
  * Used to record the constraint of a called CFG.
  */
-Identifier<Constraint *> CALLING_CONSTRAINT("", 0);
+Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::calling_constraint", 0);
 
 
 /**

@@ -108,27 +108,6 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
 
 
 /**
- * Find a platform matching the given name.
- * @param name	Name of the platform to find.
- * @return				Found platform or null.
- */
-/*hard::Platform *Manager::findPlatform(CString name) {
-	return findPlatform(hard::Platform::Identification(name));
-}*/
-
-/**
- * Find a platform matching the given platform identifier.
- * @param id	Identifier of the platform.
- * @result			Found platform or null.
- */
-/*hard::Platform *Manager::findPlatform(const hard::Platform::Identification& id) {
-	for(int i = 0; i < platforms.count(); i++)
-		if(platforms[i]->accept(id))
-			return platforms[i];
-	return 0;
-}*/
-
-/**
  * Load a file with the given path and the given properties.
  * @param path		Path of the file to load.
  * @param props		Configuration properties.
@@ -345,69 +324,69 @@ ilp::System *Manager::newILPSystem(String name) {
  * This property, passed to the load configuration, gives the name of the
  * entry function of the current task.
  */
-Identifier<CString> TASK_ENTRY("task_entry", "main", otawa::NS);
+Identifier<CString> TASK_ENTRY("otawa::task_entry", "main");
 
 
 /**
  * Identifier of the property indicating the name (CString) of the platform to use.
  */	
-Identifier<CString> PLATFORM_NAME("platform_name", "", otawa::NS);
+Identifier<CString> PLATFORM_NAME("otawa::platform_name", "");
 
 
 /**
  * Identifier of the property indicating a name (CString) of the loader to use..
  */	
-Identifier<CString> LOADER_NAME("laoder_name", "", otawa::NS);
+Identifier<CString> LOADER_NAME("otawa::loader_name", "");
 
 
 /**
  * Identifier of the property indicating a platform (Platform *) to use.
  */	
-Identifier<hard::Platform *> PLATFORM("platform", 0, otawa::NS);
+Identifier<hard::Platform *> PLATFORM("otawa::platform", 0);
 
 
 /**
  * Identifier of the property indicating the loader to use.
  */	
-Identifier<Loader *> LOADER("loader", 0, otawa::NS);
+Identifier<Loader *> LOADER("otawa::loader", 0);
 
 
 /**
  * Identifier of the property indicating the identifier (PlatformId) of the loader to use.
  */	
 Identifier<hard::Platform::Identification *>
-	PLATFORM_IDENTFIER("platform_identifier", 0, otawa::NS);
+	PLATFORM_IDENTFIER("otawa::platform_identifier", 0);
 
 
 /**
  * Argument count as passed to the program (int).
  */	
-Identifier<int> ARGC("argc", -1, otawa::NS);
+Identifier<int> ARGC("otawa::argc", -1);
 
 
 /**
  * Argument values as passed to the program (char **).
  */	
-Identifier<char **> ARGV("argv", 0, otawa::NS);
+Identifier<char **> ARGV("otawa::argv", 0);
 
 
 /**
  * Argument values as passed to the program (char **).
  */	
-Identifier<char **> ENVP("envp", 0, otawa::NS);
+Identifier<char **> ENVP("otawa::envp", 0);
 
 
 /**
  * This property defines the used the used simulator when a simulator is
  * needed to perform simulation.
  */
-Identifier<sim::Simulator *> SIMULATOR("simulator", 0, otawa::NS);
+Identifier<sim::Simulator *> SIMULATOR("otawa::simulator", 0);
 
 
 /**
  * Name of the simulator to use.
  */
-Identifier<elm::CString> SIMULATOR_NAME("simulator_name", "", otawa::NS);
+Identifier<elm::CString> SIMULATOR_NAME("otawa::simulator_name", "");
 
 
 /**
@@ -415,67 +394,67 @@ Identifier<elm::CString> SIMULATOR_NAME("simulator_name", "", otawa::NS);
  * platform.
  */
 Identifier<hard::CacheConfiguration *>
-	CACHE_CONFIG("cache_config", 0, otawa::NS);
+	CACHE_CONFIG("otawa::cache_config", 0);
 
 
 /**
  * This property is a hint to have an estimation of the pipeline depth.
  * It is better to look to the processor configuration in the patform.
  */
-Identifier<int> PIPELINE_DEPTH("pipeline_depth", -1, otawa::NS);
+Identifier<int> PIPELINE_DEPTH("otawa::pipeline_depth", -1);
 
 
 /**
  * This property shows that the system does not need to by simulated when
  * the binary image is built.
  */
-Identifier<bool> NO_SYSTEM("no_system", false, otawa::NS);
+Identifier<bool> NO_SYSTEM("otawa::no_system", false);
 
 
 /**
  * Path to the XML configuration file used in this computation.
  */
 Identifier<elm::system::Path>
-	CONFIG_PATH("config_path", "", otawa::NS);
+	CONFIG_PATH("otawa::config_path", "");
 
 
 /**
  * XML element containing the configuration of the current computation.
  */
 Identifier<elm::xom::Element *>
-	CONFIG_ELEMENT("config_element", 0, otawa::NS);
+	CONFIG_ELEMENT("otawa::config_element", 0);
 
 
 /**
  * Path to the XML configuration file of the processor.
  */
 Identifier<elm::system::Path>
-	PROCESSOR_PATH("processor_path", "", otawa::NS);
+	PROCESSOR_PATH("otawa::processor_path", "");
 
 
 /**
  * XML element containing the configuration of the processor.
  */
 Identifier<elm::xom::Element *>
-	PROCESSOR_ELEMENT("processor_element", 0, otawa::NS);
+	PROCESSOR_ELEMENT("otawa::processor_element", 0);
 
 
 /**
  * Gives the processor to use in the current computation.
  */
-Identifier<hard::Processor *> PROCESSOR("processor", 0, otawa::NS);
+Identifier<hard::Processor *> PROCESSOR("otawa::processor", 0);
 
 
 /**
  * Gives the path of file containing the cache configuration.
  */
-Identifier<elm::system::Path> CACHE_CONFIG_PATH("cache_config_path", "", otawa::NS);
+Identifier<elm::system::Path> CACHE_CONFIG_PATH("otawa::cache_config_path", "");
 
 
 /**
  * Gives an XML element containing the cache configuration.
  */
-Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("cache_config_element", 0, otawa::NS);
+Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("otawa::cache_config_element", 0);
 
 
 /**
