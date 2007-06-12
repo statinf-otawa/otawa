@@ -119,14 +119,16 @@ namespace fmt {
 			elm::io::hex((int)addr.address()))));
 	}
 }
-inline elm::io::Output& operator<<(elm::io::Output& out, const Address& addr) {
-	if(addr.page())
-		out << addr.page() << ':';
-	out << fmt::address(addr);
-	return out;
-}
 
 } // otawa
+
+// Address display
+inline elm::io::Output& operator<<(elm::io::Output& out, const otawa::Address& addr) {
+	if(addr.page())
+		out << addr.page() << ':';
+	out << otawa::fmt::address(addr);
+	return out;
+}
 
 // Useful ELM predefinitions
 namespace elm {
