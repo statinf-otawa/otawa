@@ -13,7 +13,7 @@ namespace otawa {
 
 /**
  */
-Identifier<bool> IS_ENTRY("is_entry", false, otawa::NS);
+Identifier<bool> IS_ENTRY("otawa::is_entry", false);
 
 	
 
