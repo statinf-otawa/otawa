@@ -26,42 +26,42 @@ NameSpace NS("ets", otawa::NS);
  * This identifier (int) is used for storing the number of iteration for each loop
  * of the program.
  */
-Identifier<int> LOOP_COUNT("loop_count", -1, NS);
+Identifier<int> LOOP_COUNT("otawa::ets::loop_count", -1, NS);
 
 /**
  * Identifier of annotation (int) used for storing the WCET value
  * in the ETS of the computed function.
  */
-Identifier<int> WCET("wcet", -1, NS);
+Identifier<int> WCET("otawa::ets::wcet", -1, NS);
 
 /**
  * This identifier (AbstractCacheState *) is used for storing the abstract cache
  * line for each node.
  */
-Identifier<AbstractCacheState *> ACS("acs", 0, NS);
+Identifier<AbstractCacheState *> ACS("otawa::ets::acs", 0, NS);
 
 /**
  * This identifier (int) is used for storing the number of hit accesses for each
  * node.
  */
-Identifier<int> HITS("hits", -1, NS);
+Identifier<int> HITS("otawa::ets::hits", -1, NS);
 
 /**
  * This identifier (int) is used for storing the number of miss accesses for each
  * node.
  */
-Identifier<int> MISSES("misses", 0, NS);
+Identifier<int> MISSES("otawa::ets::misses", 0, NS);
 
 /**
  * This identifier (int) is used for storing the number of first miss accesses
  * for each node.
  */
-Identifier<int> FIRST_MISSES("first_misses", 0, NS);
+Identifier<int> FIRST_MISSES("otawa::ets::first_misses", 0, NS);
 
 /**
  * This identifier (int) is used for storing the number of conflict accesses for
  * each node.
  */
-Identifier<int> CONFLICTS("conflicts", 0, NS);
+Identifier<int> CONFLICTS("otawa::ets::conflicts", 0, NS);
 
 } }// otawa::ets
