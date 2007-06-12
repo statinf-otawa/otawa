@@ -107,7 +107,7 @@ void TextDecoder::configure(const PropList& props) {
  * increase in the computation time. This configuration property has no
  * effect on variable-size instruction set architectures (CISC).
  */
-Identifier<bool> TextDecoder::FOLLOW_PATHS("follow_paths", false, NS);
+Identifier<bool> TextDecoder::FOLLOW_PATHS("otawa::TextDecoer::follow_paths", false);
 
 
 } // otawa

@@ -47,7 +47,7 @@ Feature<ACSBuilder> ICACHE_ACS_FEATURE("otawa.cache.acsfeature");
  * @par Hooks
  * @li @ref BasicBlock 
  */
- Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST("otawa.cache.acs_must", NULL, otawa::NS);
+ Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST("otawa::cache_acs_must", NULL);
  
 /**
  * This property represents the "persistence" Abstract Cache State of a basic block.
@@ -56,7 +56,7 @@ Feature<ACSBuilder> ICACHE_ACS_FEATURE("otawa.cache.acsfeature");
  * @par Hooks
  * @li @ref BasicBlock 
  */
-Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS("otawa.cache.acs_pers", NULL, otawa::NS);
+Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS("otawa::cache_acs_pers", NULL);
 
 /**
  * This property represents the "persistence" Abstract Cache State of a basic block.
@@ -65,13 +65,13 @@ Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS("otawa.cach
  * @par Hooks
  * @li @ref BasicBlock 
  */
-Identifier<bool> PSEUDO_UNROLLING("otawa.cache.pseudo_unrolling", true, otawa::NS);
+Identifier<bool> PSEUDO_UNROLLING("otawa::pseudo_unrolling", true);
 
 
 /**
  * Specify the loop-level-precision of the First Miss computation (inner, outer, multi-level)
  */
-Identifier<fmlevel_t> FIRSTMISS_LEVEL("otawa.cache.cat2.fm_level", FML_MULTI, otawa::NS);
+Identifier<fmlevel_t> FIRSTMISS_LEVEL("otawa::firstmiss_level", FML_MULTI);
 
 
 /**
