@@ -65,7 +65,9 @@ void FlowFactLoader::onError(const char *fmt, ...) {
 void FlowFactLoader::onWarning(const char *fmt, ...) {
 	assert(fmt);
 	VARARG_BEGIN(args, fmt)
-	warn(fmt, args);
+	StringBuffer buffer;
+	buffer.format(fmt, args);
+	warn(buffer.toString());
 	VARARG_END
 }
 
