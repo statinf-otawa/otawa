@@ -247,25 +247,11 @@ void Processor::cleanup(WorkSpace *fw) {
 
 /**
  * Display a warning.
- * @param format	Format string a-la printf.
- * @param args		Format string arguments.
+ * @param message	Message to display.
  */
-void Processor::warn(CString format, VarArg args) {
-	out << "WARNING:" << name() << ' ' << version() << ':';
-	out.format(format, args);
-	out << io::endl;
-}
-
-
-/**
- * Display a warning.
- * @param format	Format string a-la printf.
- * @param ...		Format string arguments.
- */
-void Processor::warn(CString format, ...) {
-	VARARG_BEGIN(args, format)
-		warn(format, args);
-	VARARG_END
+void Processor::warn(const String& message) {
+	out << "WARNING:" << name() << ' ' << version()
+		<< ':' << message << io::endl;
 }
 
 

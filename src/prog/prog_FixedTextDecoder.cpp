@@ -44,8 +44,8 @@ void FixedTextDecoder::processWorkSpace(WorkSpace *fw) {
 				if(isVerbose())
 					out << "\t\tProcessing segment " << seg->name() << io::endl;
 				if(seg->size() % size != 0)
-					warn("segment %s from file %s does not seems to be well aligned",
-						&seg->name(), &file->name());
+					warn(elm::_ << "segment " << seg->name() << " from file "
+						<< file->name() << " does not seems to be well aligned");
 				for(address_t addr = seg->address();
 				addr < seg->topAddress();
 				addr += size)

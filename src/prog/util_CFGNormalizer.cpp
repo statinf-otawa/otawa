@@ -103,8 +103,9 @@ void CFGNormalizer::processCFG(WorkSpace *fw, CFG *cfg) {
 					<< edge->target()->address());
 			else {
 				if(verbose)
-					warn("Edge from dead code %lx to living code %lx removed",
-						*edge->source()->address(), *edge->target()->address());
+					warn(_ << "edge from dead code " << edge->source()->address()
+						<< " to living code " << edge->target()->address()
+						<< " removed");
 				delete edge;
 			}
 		}
