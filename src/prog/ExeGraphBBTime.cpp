@@ -89,7 +89,7 @@ ExeGraphBBTime::ExeGraphBBTime(void)
  * code processor. As default, it is extracted from the system description.
  */
 Identifier<Microprocessor *>
-	ExeGraphBBTime::PROCESSOR("ExeGraphBBTime::proc.", NULL, otawa::NS);
+	ExeGraphBBTime::PROCESSOR("otawa::ExeGraphBBTime::proc.", NULL);
 
 
 /**
@@ -97,7 +97,7 @@ Identifier<Microprocessor *>
  * the execution of the algorithm.
  */
 Identifier<elm::io::Output *>
-	ExeGraphBBTime::LOG_OUTPUT("ExeGraphBBTime::log", &cerr, otawa::NS);
+	ExeGraphBBTime::LOG_OUTPUT("otawa::ExeGraphBBTime::log", &cerr);
 
 
 /**
@@ -759,7 +759,7 @@ Identifier<bool> ExeGraphBBTime::DELTA("ExeGraphBBTime::delta", false, otawa::NS
  * taking in account the difference of execution time according prologues
  * of evaluated blocks.
  */
-Identifier<bool> ExeGraphBBTime::CONTEXT("ExeGraphBBTime::context", false, otawa::NS);
+Identifier<bool> ExeGraphBBTime::CONTEXT("otawa::ExeGraphBBTime::context", false);
 
 
 /**
