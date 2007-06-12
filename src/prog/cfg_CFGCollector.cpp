@@ -14,7 +14,7 @@
 
 namespace otawa {
 
-static Identifier<bool> MARK("otawa.cfg_collector.mark", false);
+static Identifier<bool> MARK("", false);
 
 /**
  * @class CFGCollection <otawa/cfg.h>
@@ -180,7 +180,7 @@ void CFGCollector::configure(const PropList& props) {
  * @par Hooks
  * FrameWork
  */
-Identifier<CFGCollection *> INVOLVED_CFGS("involved_cfgs", 0, otawa::NS);
+Identifier<CFGCollection *> INVOLVED_CFGS("otawa::involved_cfgs", 0);
 
 
 /**
@@ -198,13 +198,13 @@ Feature<CFGCollector> COLLECTED_CFG_FEATURE("otawa::collected_cfg");
  * This configuration property allows to add unlinked CFG to the used CFG
  * collection.
  */
-Identifier<CFG *> CFGCollector::ADDED_CFG("CFGCollector::ADDED_CFG", 0, otawa::NS);
+Identifier<CFG *> CFGCollector::ADDED_CFG("otawa::CFGCollector::ADDED_CFG", 0);
 
 
 /**
  * This configuration property allows to add unlinked functions to the used CFG
  * collection.
  */
-Identifier<CString> CFGCollector::ADDED_FUNCTION("CFGCollector::ADDED_FUNCTION", 0, otawa::NS);
+Identifier<CString> CFGCollector::ADDED_FUNCTION("otawa::CFGCollector::ADDED_FUNCTION", 0);
 
 } // otawa
