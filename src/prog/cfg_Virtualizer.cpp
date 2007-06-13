@@ -31,7 +31,7 @@ Identifier<bool> VIRTUAL_INLINING("otawa::virtual_inlining", true);
  * This processor inlines the function calls. 
  *
  * @par Configuration
- * @li@ref DONT_UNROLL : The CFG with DONT_UNROLL(cfg) == true are not inlined
+ * @li @ref DONT_INLINE : The CFG with DONT_INLINEcfg) == true are not inlined
  *
  * @par Required features
  * @li @ref FLOW_FACTS_FEATURE
@@ -57,7 +57,6 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 
 	CFGCollection *coll = INVOLVED_CFGS(fw);	
 	VirtualCFG *vcfg = new VirtualCFG();
-	
         if(!entry) {
                 CFGInfo *info = fw->getCFGInfo();
                 CString name = TASK_ENTRY(fw);
@@ -66,6 +65,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
         if(!entry)
                 throw ProcessorException(*this, "cannot find task entry point.");
 
+	vcfg->addProps(*entry);
 	
 	virtual_inlining = VIRTUAL_INLINING(fw);
 	virtualize(0, entry, vcfg, vcfg->entry(), vcfg->exit());
@@ -131,20 +131,38 @@ BasicBlock *exit) {
 
 			// Is there a call ?			
 			CFG *called = 0;
+			
 			BasicBlock *called_exit = 0;
 			if(isInlined())
 				for(BasicBlock::OutIterator edge(bb); edge; edge++)
 					if(edge->kind() == Edge::CALL) {
-						called = edge->calledCFG();
-						if (DONT_INLINE(called))
-						        called = NULL;
-                        }
-
+						if (DONT_INLINE(edge->calledCFG()))  {
+							if ((cfgMap.get(edge->calledCFG(), 0) == 0)) {
+								VirtualCFG *vcalled = new VirtualCFG();
+								cfgMap.put(edge->calledCFG(), vcalled);
+								cout << "Virtualizing: " << edge->calledCFG()->label() << "\n";
+								vcalled->addProps(*edge->calledCFG());
+								ENTRY(vcalled->entry()) = vcalled;
+								virtualize(&call, edge->calledCFG(), vcalled, vcalled->entry(), vcalled->exit());
+								vcalled->numberBB();
+							}  
+						} else {
+							called = edge->calledCFG();
+						}
+					}
+						
 			// Look edges
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL) {
-					if(!isInlined() || DONT_INLINE(edge->calledCFG()))
+					if(!isInlined()) {
 						new Edge(src, edge->target(), Edge::CALL);
+					}
+					if (isInlined() && DONT_INLINE(edge->calledCFG())) {
+						VirtualCFG *vcalled = cfgMap.get(edge->calledCFG(), 0);
+						ASSERT(vcalled != 0);
+						cout << "Calling virtualized CFG : " << vcalled->label() << " from vBB" << src->address() << "\n";
+						new Edge(src, vcalled->entry(), Edge::CALL);
+					}
 				}
 				else if(edge->target()) { 
 					if(edge->target()->isExit()) {
@@ -176,6 +194,7 @@ BasicBlock *exit) {
 					assert(called_exit);
 					//cout << "CALL " << bb->address() << " -> " << called_exit->address() << "\n";
 					virtualize(&call, called, vcfg, src, called_exit);
+
 				}
 			}
 		}
