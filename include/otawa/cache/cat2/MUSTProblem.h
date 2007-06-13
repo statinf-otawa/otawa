@@ -121,6 +121,11 @@ class MUSTProblem {
 				output << "]";
 				
 			}
+			
+			inline int getAge(int id) const {
+				ASSERT(id < size);
+				return(age[id]);
+			}
 		
 			/*
 			 * For each cache block belonging to the set: 
