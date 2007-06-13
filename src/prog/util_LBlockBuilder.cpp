@@ -87,6 +87,7 @@ void LBlockBuilder::processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset, 
 	assert(lbset);
 	cacheBlocks = new HashTable<int, int>();
 	// Build the l-blocks
+	cout << "Processing line: " << line << "\n";
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
 	
 		if (!bb->isEntry() && !bb->isExit()) {
@@ -111,9 +112,8 @@ void LBlockBuilder::processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset, 
 					
 					if(cach->line(address) != lbset->line())
 						find = false;
-						
 					if(!find && cach->line(address) == lbset->line()) {
-						address_t next_address = (address_t)((mask_t)(address + cach->blockSize()) & ~(cach->blockSize() - 1));
+						address_t next_address = (address_t)((mask_t)(address.address() + cach->blockSize()) & ~(cach->blockSize() - 1));
 						int cbid;
 						int block = cach->block(address);
 						int existing_block_id = cacheBlocks->get(block, -1);
@@ -151,21 +151,28 @@ void LBlockBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 	const hard::Cache *cach = conf.instCache();
 	
 	for (CFG::BBIterator bb(cfg); bb; bb++) {
-		 /* Compute the number of lblocks in this basic block */
-		 if (bb->size() != 0) {
+		/* Compute the number of lblocks in this basic block */
+		if (bb->size() != 0) {
 		        
-		 /* The BasicBlock spans at least (bbsize-1)/blocksize cache block boundaries (add +1 for the number of l-blocks) */
-		int num_lblocks = ((bb->size() - 1) >> cache->blockBits()) + 1;
+		   /* The BasicBlock spans at least (bbsize-1)/blocksize cache block boundaries (add +1 for the number of l-blocks) */
+/*		   cout << "addr: " << bb->address() << "\n"; */
+/*		   cout << "taille: " << bb->size() - 1 << "\n"; */
+		   int num_lblocks = ((bb->size() - 1) >> cache->blockBits()) + 1;
+/*		   cout << "Original num: " << num_lblocks << "\n"; */
 
-		/* The remainder of the last computation may also span another cache block boundary. */
-		if (((bb->address() + (num_lblocks << cache->blockBits())) & ~(cache->blockSize()-1)) < bb->address() + bb->size()) {
-			num_lblocks++;
-		}
+		   /* The remainder of the last computation may also span another cache block boundary. */
+		   int temp1 = (bb->address().address() + (num_lblocks << cache->blockBits())) & ~(cache->blockSize() - 1);
+/*		   cout << "Fin arrondi au cacheblock sup': " << io::hex(temp1) << "\n"; */
+		   int temp2 = bb->address().address() + bb->size();
+/*		   cout << "Fin du bloc: " << io::hex(temp2) << "\n"; */
+		   if (temp1 < temp2) {
+                     num_lblocks++;
+                   }
      
-			BB_LBLOCKS(bb) = new genstruct::AllocatedTable<LBlock*>(num_lblocks);
-		} else {
-		    BB_LBLOCKS(bb) = NULL;
-		}	        
+                   BB_LBLOCKS(bb) = new genstruct::AllocatedTable<LBlock*>(num_lblocks);
+                } else {
+                   BB_LBLOCKS(bb) = NULL;
+                }	        
     }
         
     tableindex = new int[cfg->countBB()];
