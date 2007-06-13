@@ -111,8 +111,9 @@ void FirstLastBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 		}			
 		if (BB_LBLOCKS(bb) != NULL) { 
 			const genstruct::AllocatedTable<LBlock*> &lblocks = *BB_LBLOCKS(bb);
-		
+			cout << "For BB: " << bb->number() << " there are " << lblocks.count() << " l blocks\n";
 			for (i = 0; i < lblocks.count(); i++) { 
+				ASSERT(lblocks[i] != NULL);
 				int line = cache->line(lblocks[i]->address());
 				
 				
