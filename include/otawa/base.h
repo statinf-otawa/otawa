@@ -92,6 +92,24 @@ private:
 typedef Address address_t;
 
 
+// Format
+namespace fmt {
+	inline elm::io::IntFormat address(address_t addr) {
+		return elm::io::right(elm::io::width(8, elm::io::pad('0',
+			elm::io::hex((int)addr.address()))));
+	}
+}
+
+
+// Address display
+inline elm::io::Output& operator<<(elm::io::Output& out, Address addr) {
+	if(addr.page())
+		out << addr.page() << ':';
+	out << fmt::address(addr);
+	return out;
+}
+
+
 // Exception class
 class Exception: public elm::Exception {
 	String msg;
@@ -112,23 +130,7 @@ inline void Exception::setMessage(elm::String message) {
 	msg = message;
 }
 
-// Format
-namespace fmt {
-	inline elm::io::IntFormat address(address_t addr) {
-		return elm::io::right(elm::io::width(8, elm::io::pad('0',
-			elm::io::hex((int)addr.address()))));
-	}
-}
-
 } // otawa
-
-// Address display
-inline elm::io::Output& operator<<(elm::io::Output& out, const otawa::Address& addr) {
-	if(addr.page())
-		out << addr.page() << ':';
-	out << otawa::fmt::address(addr);
-	return out;
-}
 
 // Useful ELM predefinitions
 namespace elm {
