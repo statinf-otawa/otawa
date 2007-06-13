@@ -41,6 +41,7 @@ class CFGCollector: public Processor {
 public:
 	CFGCollector(void);
 	virtual void configure(const PropList& props);
+	virtual void cleanup(WorkSpace *ws);
 
 	// Configuration
 	static Identifier<CFG *> ADDED_CFG;
