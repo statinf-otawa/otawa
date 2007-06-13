@@ -33,7 +33,7 @@ Identifier<bool> CATBuilder::NON_CONFLICT("otawa::CATBuilder::non_conflict", fal
 /**
  * Private property.
  */
-static Identifier<BitSet *> IN("otawa::in", 0);
+static Identifier<BitSet *> IN("", 0);
 
 
 /**

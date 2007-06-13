@@ -24,7 +24,7 @@ using namespace otawa::ipet;
 namespace otawa {
 
 // DFA Properties
-static Identifier<dfa::BitSet *> IN("otawa::in", 0);
+static Identifier<dfa::BitSet *> IN("", 0);
 
 
 /**

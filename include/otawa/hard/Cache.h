@@ -170,19 +170,19 @@ inline mask_t Cache::tagMask(void) const {
 }
 	
 inline mask_t Cache::offset(address_t addr) const {
-	return ((mask_t)addr) & blockMask();
+	return ((mask_t)addr.address()) & blockMask();
 }
 
 inline mask_t Cache::line(address_t addr) const {
-	return (((mask_t)addr) & lineMask()) >> blockBits();
+	return (((mask_t)addr.address()) & lineMask()) >> blockBits();
 }
 
 inline mask_t Cache::tag(address_t addr) const {
-	return ((mask_t)addr) >> (blockBits() + lineBits());
+	return ((mask_t)addr.address()) >> (blockBits() + lineBits());
 }
 
 inline mask_t Cache::block(address_t addr) const {
-	return ((mask_t )addr) >> blockBits();
+	return ((mask_t )addr.address()) >> blockBits();
 }
 
 inline int Cache::missPenalty(void) const {
