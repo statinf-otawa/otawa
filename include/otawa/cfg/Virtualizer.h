@@ -21,6 +21,7 @@ class Virtualizer: public Processor {
 	bool isInlined();
 	bool virtual_inlining;
 	CFG *entry;
+	elm::genstruct::HashTable<void *, VirtualCFG *> cfgMap;
 };
 
 extern Feature<Virtualizer> VIRTUALIZED_CFG_FEATURE;
