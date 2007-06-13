@@ -25,7 +25,7 @@ static Identifier<bool> MARK("", false);
  * @li @ref TASK_ENTRY: name if the entry function of the current task,
  * @li @ref RECURSIVE: collect CFG recursively.
  * @li @ref CFGCollector::ADDED_CFG: CFG to add to the collection.
- * @li @ref CFGCollecyor::ADDED_FUNCTION: function name to add to the collection.
+ * @li @ref CFGCollector::ADDED_FUNCTION: function name to add to the collection.
  * 
  * @par Provided Features
  * @ref COLLECTED_CFG_FEATURE
@@ -129,15 +129,16 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 	if(rec)
 		for(int i = 0; i < cfgs->count(); i++)
 			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++)
-				for(BasicBlock::OutIterator edge(bb); edge; edge++)
+				for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 					if(edge->kind() == Edge::CALL
 					&& edge->calledCFG()
 					&& !MARK(edge->calledCFG())) {
 					        INDEX(edge->calledCFG()) = index;
 					        index++;
-						cfgs->cfgs.add(edge->calledCFG());
-						MARK(edge->calledCFG()) = true;
+							cfgs->cfgs.add(edge->calledCFG());
+							MARK(edge->calledCFG()) = true;
 					} 
+				}
 }
 
 
@@ -149,6 +150,12 @@ CFGCollector::CFGCollector(void)
 : Processor("CFGCollector", Version(1, 0, 0)), entry(0), rec(false) {
 	require(CFG_INFO_FEATURE);
 	provide(COLLECTED_CFG_FEATURE);
+}
+
+void CFGCollector::cleanup(WorkSpace *ws) {
+	CFGCollection *coll = INVOLVED_CFGS(ws);	
+	for (CFGCollection::Iterator iter(*coll); iter; iter++)
+		MARK(iter) = false;
 }
 
 
