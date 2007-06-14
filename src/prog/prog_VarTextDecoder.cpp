@@ -88,7 +88,7 @@ Inst *VarTextDecoder::getInst(WorkSpace *ws, otawa::address_t address) {
 void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 	ASSERT(ws);
 	ASSERT(address);
-	TRACE("processEntry("  << address << ")");
+	TRACE("otawa::VarTextDecoder::processEntry("  << address << ")");
 	
 	// Initialize the queue
 	VectorQueue<address_t> todo(QUEUE_SIZE);
@@ -99,30 +99,34 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 		
 		// Get the next instruction
 		address_t addr = todo.get();
-		TRACE("Starting from " << addr);
+		TRACE("otawa::VarTextDecoder::processEntry: starting from " << addr);
 		Inst *inst = getInst(ws,  addr);
-		if(MARKER(inst))
+		if(MARKER(inst)) {
+			TRACE("otawa::VarTextDecoder::processEntry: already done !");
 			continue;
+		}
 		MARKER(inst) = true;
 			
 		// Follow the instruction until a branch
 		while(!inst->isControl()) {
-			TRACE("process(" << inst->address() << ") : "
-				 << io::hex(inst->kind()));
-			address_t next = inst->address() + inst->size();
+			TRACE("otawa::VarTextDecoder::processEntry: process "
+				<< inst->address() << " : " << io::hex(inst->kind()));
+			address_t next = inst->topAddress();
 			inst = getInst(ws, next);
 			if(MARKER(inst))
 				goto cont;	
 		}
-		TRACE("end found");
+		TRACE("otawa::VarTextDecoder::processEntry: end found");
 		
 		// Record target and next
-		if(inst->isConditional() || inst->isCall())
+		if(inst->isConditional() || inst->isCall()) {
+			TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
 			todo.put(inst->topAddress());
+		}
 		if(!inst->isReturn()) {
 			Inst *target = inst->target();
 			if(target) {
-				TRACE("todo.put(" << target->address() << ")");
+				TRACE("otawa::VarTextDecoder::processEntry: put(" << target->address() << ")");
 				todo.put(target->address());
 			}
 			else if(isVerbose())
