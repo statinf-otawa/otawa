@@ -18,11 +18,11 @@ namespace otawa { namespace dfa {
  * 
  * The problem concept must implements the following concept:
  * @code
- * 	typedef domain_t;			// domain type
- *  domain_t *empty(void);		// return an empty domain
- * 	domain_t *gen(int node);	// return the GEN value
- *	domain_t *kill(int node);	// return the KILL value
- *	void free(domain_t *d);		// free the given domain
+ * 	typedef domain_t;							// domain type
+ *  domain_t *empty(void);						// return an empty domain
+ * 	domain_t *gen(CFG *cfg, BasicBlock *bb);	// return the GEN value
+ *	domain_t *kill(CFG *cfg, BasicBlock *bb);	// return the KILL value
+ *	void free(domain_t *d);						// free the given domain
  * @endcode
  * 
  * The domain_t type must implements the following concept:
