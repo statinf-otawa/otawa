@@ -60,7 +60,7 @@ void FixedTextDecoder::processWorkSpace(WorkSpace *fw) {
 void FixedTextDecoder::setup(WorkSpace *fw) {
 	size = fw->process()->instSize();
 	if(!size)
-		throw new ProcessorException(*this, "cannot process: not a fixed size ISA");
+		throw ProcessorException(*this, "cannot process: not a fixed size ISA");
 }
 
 
