@@ -37,6 +37,9 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 						first = false;
 					else 
 						cout << "\\l";
+					for(PropList::Getter<String> label(inst, FUNCTION_LABEL);
+					label; label++)
+						cout << *label << ":\\l";
 					for(PropList::Getter<String> label(inst, LABEL);
 					label; label++)
 						cout << *label << ":\\l";
