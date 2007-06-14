@@ -42,8 +42,8 @@ void Inst::dump(io::Output& out) {
 	code_t buffer[20];
 	char out_buffer[200];
 	instruction_t *inst;
-	iss_fetch((::address_t)addr, buffer);
-	inst = iss_decode(process().state(), (::address_t)addr, buffer);
+	iss_fetch(addr.address(), buffer);
+	inst = iss_decode(process().state(), addr.address(), buffer);
 	iss_disasm(out_buffer, inst);
 	out << out_buffer;
 	iss_free(inst);
