@@ -13,7 +13,7 @@
 #include "elfread.h"
 #include <otawa/loader/gliss.h>
 
-#define TRACE(m) cout << m << io::endl
+#define TRACE(m) //cout << m << io::endl
 
 extern "C" Elf32_Ehdr Ehdr;
 
