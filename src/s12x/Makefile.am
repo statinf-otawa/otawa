@@ -11,6 +11,6 @@ s12x_la_SOURCES = s12x.cpp
 
 
 install-data-hook:
-	rm -f $(libdir)/otawa/loader/elf_70.la
-	$(LN_S) s12x.la $(libdir)/otawa/loader/elf_70.la
+	rm -f $(libdir)/otawa/loader/elf_53.la
+	$(LN_S) s12x.la $(libdir)/otawa/loader/elf_53.la
 

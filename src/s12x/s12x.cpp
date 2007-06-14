@@ -10,9 +10,11 @@
 #include <otawa/loader/old_gliss/BranchInst.h>
 #include <otawa/prog/Loader.h>
 #include <otawa/hard.h>
+#include <otawa/base.h>
+#define ISS_DISASM
 #include "emul.h"
 
-#define TRACE(m) cout << m << io::endl
+#define TRACE(m) //cout << m << io::endl
 #define SIZE (inst->size / 8)
 
 namespace otawa { namespace s12x {
@@ -120,7 +122,7 @@ class BranchInst: public otawa::loader::old_gliss::BranchInst {
 public:
 
 	inline BranchInst(Process& process, kind_t kind, address_t addr)
-		: otawa::loader::old_gliss::BranchInst(process, kind, addr) { }
+		: otawa::loader::old_gliss::BranchInst(process, kind, addr), _size(0) { }
 		
 	virtual size_t size(void) const {
 		if(!_size)
@@ -204,34 +206,36 @@ Process::Process(
  * @param addr	Address of the instruction.
  * @return		Instructrion size in bytes.
  */
-int Process::computeSize(address_t addr) {
+int Process::computeSize(Address addr) {
 
 	// Decode the instruction
 	code_t buffer[20];
 	char out_buffer[200];
 	instruction_t *inst;
-	iss_fetch((::address_t)addr, buffer);
-	inst = iss_decode((state_t *)state(), (::address_t)addr, buffer);
+	iss_fetch(addr.address(), buffer);
+	inst = iss_decode((state_t *)state(), addr.address(), buffer);
 
 	// Build the OTAWA instruction
 	TRACE("Process::computeSize(" << addr << ") = " << inst->size);
-	return inst->size / 8;
+	return SIZE;
 }
 
 
 /**
  */
 otawa::Inst *Process::decode(address_t addr) {
-	TRACE("decode(" << addr << ")");
 
 	// Decode the instruction
 	code_t buffer[20];
 	char out_buffer[200];
 	instruction_t *inst;
-	iss_fetch((::address_t)addr, buffer);
-	inst = iss_decode((state_t *)state(), (::address_t)addr, buffer);
+	iss_fetch((::address_t)addr.address(), buffer);
+	inst = iss_decode((state_t *)state(), (::address_t)addr.address(), buffer);
+	TRACE("otawa::s12x::Process::decode(" << addr << ") = " << inst->ident << ", " << inst->size);
 
 	// Build the OTAWA instruction
+	if(inst->ident == ID_Instrunknown)
+		throw Exception(_ << "unknown instruction at " << addr);
 	Inst::kind_t kind = iss_table[inst->ident].otawa_kind;
 	if(kind & Inst::IS_CONTROL)
 		return new BranchInst(*this, kind, addr);
@@ -248,10 +252,11 @@ address_t BranchInst::decodeTargetAddress(void) {
 	code_t buffer[20];
 	char out_buffer[200];
 	instruction_t *inst;
-	iss_fetch(address(), buffer);
-	inst = iss_decode((state_t *)process().state(), address(), buffer);
+	iss_fetch(address().address(), buffer);
+	inst = iss_decode((state_t *)process().state(), address().address(), buffer);
 
 	// Scan instruction
+	address_t result;
 	switch(inst->ident) {
 	
 	/* short branches (PC + 2 + s8)
@@ -261,7 +266,8 @@ address_t BranchInst::decodeTargetAddress(void) {
 	case ID_BMI_: case ID_BEQ_: case ID_BCS_: case ID_BCC_: case ID_BLS_:
     case ID_BHI_: case ID_BLT_: case ID_BLE_: case ID_BGT_: case ID_BGE_:
     	ASSERT(inst->instrinput[0].type == PARAM_INT8_T);
-    	return normalize(address() + SIZE + inst->instrinput[0].val.int8);
+    	result = normalize(address() + SIZE + inst->instrinput[0].val.int8);
+    	break;
 
 	/* long branches (PC + (s8)
 	 * 		LB{RA, RN}
@@ -271,7 +277,8 @@ address_t BranchInst::decodeTargetAddress(void) {
 	case ID_LBCC_: case ID_LBLS_: case ID_LBHI_: case ID_LBLT_:
 	case ID_LBLE_: case ID_LBGT_: case ID_LBGE_:
     	ASSERT(inst->instrinput[0].type == PARAM_INT16_T);
-    	return normalize(address() + SIZE + inst->instrinput[0].val.int16);
+    	result = normalize(address() + SIZE + inst->instrinput[0].val.int16);
+    	break;
 
 	/* conditional branch on bit test
 	 * 		BR{CLR|SET} */
@@ -283,7 +290,9 @@ address_t BranchInst::decodeTargetAddress(void) {
 	case ID_BRSET_X__0: case ID_BRSET_Y__0: case ID_BRSET_SP__0: case ID_BRSET_PC__0:
 	case ID_BRSET_X__1: case ID_BRSET_Y__1: case ID_BRSET_SP__1: case ID_BRSET_PC__1:	
 		ASSERT(inst->instrinput[2].type == PARAM_INT8_T);
-		return normalize(address() + SIZE + inst->instrinput[2].val.int8);
+		result = normalize(address() + SIZE + inst->instrinput[2].val.int8);
+		break;
+
 	case ID_BRCLR_X_: case ID_BRCLR_Y_: case ID_BRCLR_SP_: case ID_BRCLR_PC_: 
 	case ID_BRCLR_D_X_: case ID_BRCLR_D_Y_: case ID_BRCLR_D_SP_: case ID_BRCLR_D_PC_:
 	case ID_BRCLR_B_X_: case ID_BRCLR_B_Y_: case ID_BRCLR_B_SP_: case ID_BRCLR_B_PC_:
@@ -292,7 +301,8 @@ address_t BranchInst::decodeTargetAddress(void) {
 	case ID_BRSET_B_X_: case ID_BRSET_B_Y_: case ID_BRSET_B_SP_: case ID_BRSET_B_PC_:
 	case ID_BRSET_A_X_: case ID_BRSET_A_Y_: case ID_BRSET_A_SP_: case ID_BRSET_A_PC_:
 		ASSERT(inst->instrinput[1].type == PARAM_INT8_T);
-		return normalize(address() + SIZE + inst->instrinput[1].val.int8);
+		result = normalize(address() + SIZE + inst->instrinput[1].val.int8);
+		break;
  
 	 /* loop (PC + 3 + s8)
 	  * 		{DB|IB|TB}{EQ|NE} */
@@ -309,7 +319,9 @@ address_t BranchInst::decodeTargetAddress(void) {
 	case ID_IBEQ_A_: case ID_IBEQ_B_: case ID_IBEQ_D_: case ID_IBEQ_X_:
 	case ID_IBEQ_Y_: case ID_IBEQ_SP_:
     	ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
-    	return normalize(address() + size_t(SIZE - inst->instrinput[0].val.uint8));
+    	result = normalize(address() + size_t(SIZE - inst->instrinput[0].val.uint8));
+    	break;
+    	
 	case ID_DBEQ_A__0: case ID_DBEQ_B__0: case ID_DBEQ_D__0: case ID_DBEQ_X__0:
 	case ID_DBEQ_Y__0: case ID_DBEQ_SP__0:
 	case ID_DBNE_A__0: case ID_DBNE_B__0: case ID_DBNE_D__0: case ID_DBNE_X__0:
@@ -323,7 +335,8 @@ address_t BranchInst::decodeTargetAddress(void) {
 	case ID_IBEQ_A__0: case ID_IBEQ_B__0: case ID_IBEQ_D__0: case ID_IBEQ_X__0:
 	case ID_IBEQ_Y__0: case ID_IBEQ_SP__0:
     	ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
-    	return normalize(address() + SIZE + inst->instrinput[0].val.uint8);
+    	result = normalize(address() + SIZE + inst->instrinput[0].val.uint8);
+    	break;
 	
 	/* case ID_DBNE_A__1: case ID_DBNE_B__1: case ID_DBNE_D__1: case ID_DBNE_X__1:
 	case ID_DBNE_Y__1: case ID_DBNE_SP__1: */
@@ -333,23 +346,29 @@ address_t BranchInst::decodeTargetAddress(void) {
 	 * 		RTS */
 	case ID_BSR_:
 		ASSERT(inst->instrinput[0].type == PARAM_INT8_T);
-		return normalize(address() + SIZE + inst->instrinput[0].val.int8);
+		result = normalize(address() + SIZE + inst->instrinput[0].val.int8);
+		break;
 	case ID_JSR_:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
-		return fix(address(), inst->instrinput[0].val.uint8);
+		result = fix(address(), inst->instrinput[0].val.uint8);
+		break;
 	case ID_JSR__0:
-		ASSERT(inst->instrinput[0].type == PARAM_INT16_T);
-		return fix(address(), inst->instrinput[0].val.uint16);
+		ASSERT(inst->instrinput[0].type == PARAM_UINT16_T);
+		result = fix(address(), inst->instrinput[0].val.uint16);
+		break;
     case ID_JSR_PC:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
-		return normalize(address() + inst->instrinput[0].val.uint8);
+		result = normalize(address() + inst->instrinput[0].val.uint8);
+		break;
     case ID_JSR_PC_0: 
 	case ID_JSR_PC_2:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
-		return normalize(address() - int(inst->instrinput[0].val.uint8));
+		result = normalize(address() - int(inst->instrinput[0].val.uint8));
+		break;
 	case ID_JSR_PC_1:
 		ASSERT(inst->instrinput[0].type == PARAM_INT16_T);
-		return normalize(address() + inst->instrinput[0].val.int16);
+		result = normalize(address() + inst->instrinput[0].val.int16);
+		break;
 	case ID_JSR_SP: case ID_JSR_Y: case ID_JSR_X: case ID_JSR_SP_0:
     case ID_JSR_Y_0: case ID_JSR_X_0: case ID_JSR_X_1: case ID_JSR_Y_1:
     case ID_JSR_SP_1: case ID_JSR_X_2: case ID_JSR_Y_2: case ID_JSR_SP_2:
@@ -363,9 +382,11 @@ address_t BranchInst::decodeTargetAddress(void) {
     case ID_JSR_A_X: case ID_JSR_B_PC: case ID_JSR_B_SP: case ID_JSR_B_Y:
     case ID_JSR_B_X: case ID_JSR_D_PC: case ID_JSR_D_SP: case ID_JSR_D_Y:
     case ID_JSR_D_X:
-		return 0;
+		result = 0;
+		break;
 	case ID_RTS:
-		return 0;	
+		result = 0;
+		break;	
 		
 	/* far calls
 	 *		CALL (expanded memory)
@@ -374,21 +395,24 @@ address_t BranchInst::decodeTargetAddress(void) {
 	case ID_CALL_:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT16_T);
 		ASSERT(inst->instrinput[1].type == PARAM_UINT8_T);
-		return toLinear(
+		result = toLinear(
 			inst->instrinput[0].val.uint16,
 			inst->instrinput[1].val.uint8);
+		break;
 	case ID_CALL_PC_:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
 		ASSERT(inst->instrinput[1].type == PARAM_UINT8_T);
-		return toLinear(
+		result = toLinear(
 			address() + inst->instrinput[0].val.uint8,
 			inst->instrinput[1].val.uint8);
+		break;
     case ID_CALL_PC__1:
 		ASSERT(inst->instrinput[0].type == PARAM_INT16_T);
 		ASSERT(inst->instrinput[1].type == PARAM_UINT8_T);
-		return toLinear(
+		result = toLinear(
 			address() + inst->instrinput[0].val.int16,
 			inst->instrinput[1].val.uint8);
+		break;
     case ID_CALL_PC__2: case ID_CALL_PC__3:
     case ID_CALL_D_X_: case ID_CALL_D_Y_: case ID_CALL_D_SP_:  case ID_CALL_D_PC_:
     case ID_CALL_B_X_: case ID_CALL_B_Y_: case ID_CALL_B_SP_: case ID_CALL_B_PC_:
@@ -403,22 +427,27 @@ address_t BranchInst::decodeTargetAddress(void) {
     case ID_CALL_X__5: case ID_CALL_X__6: case ID_CALL_Y__6: case ID_CALL_SP__6:
     case ID_CALL_X__7: case ID_CALL_Y__7: case ID_CALL_SP__7:
 	case ID_RTC:
-		return 0;
+		result = 0;
+		break;
 
 	/* jump
 	 * 		JMP (u16) */
 	case ID_JMP_:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT16_T);
-		return fix(address(), inst->instrinput[0].val.uint16);
+		result = fix(address(), inst->instrinput[0].val.uint16);
+		break;
 	case ID_JMP_PC:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
-		return normalize(address() + inst->instrinput[0].val.uint8);
+		result = normalize(address() + inst->instrinput[0].val.uint8);
+		break;
 	case ID_JMP_PC_0:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
-			return normalize(address() - int(inst->instrinput[0].val.uint8));
+		result = normalize(address() - int(inst->instrinput[0].val.uint8));
+		break;
 	case ID_JMP_PC_1:
 		ASSERT(inst->instrinput[0].type == PARAM_INT16_T);
-		return normalize(address() + inst->instrinput[0].val.int16);
+		result = normalize(address() + inst->instrinput[0].val.int16);
+		break;
 	case ID_JMP_PC_2: case ID_JMP_PC_3:
 	case ID_JMP_SP: case ID_JMP_Y: case ID_JMP_X: case ID_JMP_SP_0:
     case ID_JMP_Y_0: case ID_JMP_X_0: case ID_JMP_X_1: case ID_JMP_Y_1:
@@ -432,7 +461,8 @@ address_t BranchInst::decodeTargetAddress(void) {
 	case ID_JMP_A_SP: case ID_JMP_A_Y: case ID_JMP_A_X: case ID_JMP_B_PC:
     case ID_JMP_B_SP: case ID_JMP_B_Y: case ID_JMP_B_X: case ID_JMP_D_PC:
     case ID_JMP_D_SP: case ID_JMP_D_Y: case ID_JMP_D_X:
-		return 0;
+		result = 0;
+		break;
 
 	/* exception and system call
 	 * 		RTI
@@ -440,11 +470,17 @@ address_t BranchInst::decodeTargetAddress(void) {
 	 * 		TRAP (not defined ?) */
 	case ID_RTI:
 	case ID_SWI:
-		return 0;	
+		result = 0;
+		break;	
 
 	default:
 		ASSERT(false);
 	}
+	
+	// Result
+	TRACE("otawa::s12x::BranchInst::decodeTargetAddress(" << address()
+		<< ") = " << result);
+	return result;
 }
 
 
@@ -462,7 +498,7 @@ public:
 
 // Alias table
 static CString table[] = {
-	"elf_70"
+	"elf_53"
 };
 static elm::genstruct::Table<CString> s12x_aliases(table, 1);
  
