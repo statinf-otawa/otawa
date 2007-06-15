@@ -20,6 +20,44 @@ using namespace elm;
 namespace otawa {
 
 /**
+ * @class class SimState
+ * This abstract must be used to encapsulate the state of processor functional
+ * simulator.
+ */
+
+
+/**
+ * Build the simulator state.
+ * @param process	Owner processor (to check consistency).
+ */
+SimState::SimState(Process *process): proc(process) {
+	ASSERTP(proc, "no process given");
+}
+
+
+/**
+ */
+SimState::~SimState(void) {
+}
+
+
+/**
+ * @fn Process *process(void) const;
+ * Get the owner process.
+ * @return	Owner process.
+ */
+
+
+/**
+ * @fn Inst *Simstate::execute(Inst *inst);
+ * Simulate an instruction in the current process state.
+ * @param inst	Instruction to simulate.
+ * @return		Next instruction to execute.
+ * @note This function must overload by the actual implement of simulation states.
+ */
+
+
+/**
  * @class Process
  * A process is the realization of a program on a platform. It represents the
  * program and its implementation on the platform. A process may be formed
@@ -231,6 +269,15 @@ Inst *Process::findInstAt(address_t addr) {
  * @return	Instruction decoder or null if none is defined.
  */
 Processor *Process::decoder(void) {
+	return 0;
+}
+
+/**
+ * Get a fresh startup state of the process for functional simulation.
+ * @return	Startup state, possibly null if the process does not support
+ * 			functional simulation/
+ */
+SimState *Process::newState(void) {
 	return 0;
 }
 

@@ -13,7 +13,8 @@
 #include <otawa/hard/Register.h>
 #include <gel/gel.h>
 #define ISS_DISASM
-#include "emul.h"
+#include <emul.h>
+#include <iss_include.h>
 
 using namespace otawa::hard;
 
@@ -77,6 +78,43 @@ public:
 	virtual bool accept(const Identification& id);
 };
 
+// SimState class
+class SimState: public otawa::SimState {
+public:
+	SimState(Process *process, state_t *state)
+		: otawa::SimState(process) {
+		ASSERT(process);
+		ASSERT(state);
+		_state = new state_t;
+		*_state = *state;
+	}
+	virtual ~SimState(void) {
+		delete [] (char *)_state;
+	}
+	inline state_t *state(void) const { return _state; }
+	virtual Inst *execute(Inst *oinst) {
+		ASSERTP(oinst, "null instruction pointer");
+		Address addr = oinst->address();
+		code_t buffer[20];
+		instruction_t *inst;
+		iss_fetch(addr.address(), buffer);
+		inst = iss_decode(_state, addr.address(), buffer);
+		iss_complete(inst, _state);
+		iss_free(inst);
+		if(NIA(_state) == oinst->topAddress()) {
+			Inst *next = oinst->nextInst();
+			while(next->isPseudo())
+				next = next->nextInst();
+			return next;
+		} 
+		else
+			return process()->findInstAt(NIA(_state)); 
+	}
+private:
+	state_t *_state;
+};
+
+
 // Process class
 class Process: public otawa::loader::new_gliss::Process {
 
@@ -93,6 +131,9 @@ protected:
 	virtual otawa::Inst *decode(address_t addr);
 	virtual void *gelFile(void) {
 		return loader_file(((state_t *)state())->M);
+	}
+	virtual otawa::SimState *newState(void) {
+		return new SimState(this, (state_t *)state());
 	}
 };
 

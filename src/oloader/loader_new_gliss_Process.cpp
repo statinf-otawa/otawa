@@ -17,7 +17,6 @@
 
 namespace otawa { namespace loader { namespace new_gliss {
 
-
 // Segment class
 class Process;
 class Segment: public otawa::Segment {

@@ -1,8 +1,8 @@
 /*
  *	$Id$
- *	Copyright (c) 2003-06, IRIT UPS.
+ *	Copyright (c) 2003-07, IRIT UPS.
  *
- *	otawa/prog/Process.h -- interface for Process class.
+ *	Process class interface
  */
 #ifndef OTAWA_PROGRAM_PROCESS_H
 #define OTAWA_PROGRAM_PROCESS_H
@@ -25,8 +25,8 @@ using namespace elm::genstruct;
 class File;
 class Manager;
 class Processor;
+class Process;
 class TextDecoder;
-
 namespace hard {
 	class Platform;
 	class CacheConfiguration;
@@ -36,6 +36,18 @@ namespace sim {
 	class Simulator;
 }
 
+
+// SimState class
+class SimState {
+public:
+	SimState(Process *process);
+	virtual ~SimState(void);
+	inline Process *process(void) const { return proc; }
+	virtual Inst *execute(Inst *inst) = 0;
+
+private:
+	Process *proc;
+};
 
 // Process class
 class Process: public PropList {
@@ -58,10 +70,13 @@ public:
 	virtual Inst *findInstAt(address_t addr);
 	virtual address_t findLabel(String& label);
 	virtual Inst *findInstAt(String& label);
-	virtual sim::Simulator *simulator(void);
 	inline File *program(void) const;
 	virtual int instSize(void) const = 0;
 	virtual Processor *decoder(void);
+
+	// Simulation management
+	virtual SimState *newState(void);
+	virtual sim::Simulator *simulator(void);
 
 	// Constructors
 	File *loadProgram(elm::CString path);
@@ -82,9 +97,6 @@ public:
 inline File *Process::program(void) const {
 	return prog;
 }
-
-// Features
-//extern Feature<NoProcessor> DECODED_TEXT;
 
 } // otawa
 
