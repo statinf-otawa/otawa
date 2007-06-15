@@ -6,9 +6,10 @@
  */
 
 #include <otawa/sim/State.h>
-#include <FullSimulationDriver.h>
 #include <otawa/prog/Inst.h>
-#include <otawa/gensim/debug.h>
+#include "FullSimulationDriver.h"
+
+#define TRACE(msg)	//cerr << msg << io::endl;
 
 using namespace otawa;
 
@@ -43,39 +44,15 @@ Inst * FullSimulationDriver::nextInstruction(State& state, Inst *_inst)
 	
 	if (inst == end_of_simulation)
 	{
-		TRACE(elm::cout << "last instruction fetched, cycle " << state.cycle() << "\n";)
+		TRACE("last instruction fetched, cycle " << state.cycle())
 		return 0;
 		// no more instructions will be fetched so the simulator will
 		// normally stop when all intructions complete and the processor gets empty
 	}
 	else {
-		Inst *result = inst;
+		TRACE("EXEC " << inst->address() << ":" << inst);
 		if (! wrong_path)
-		{
-			code_t code;
-			iss_fetch((::address_t)(unsigned long)inst->address(), &code);
-			instruction_t *emulated_inst = iss_decode(&emulator_state, (::address_t)(unsigned long)inst->address(), &code /*, 0*/);
-			iss_complete(emulated_inst, &emulator_state);
-			iss_free(emulated_inst);
-			if (NIA(&emulator_state) != CIA(&emulator_state) + sizeof(code_t))
-			{
-				if (inst->target())
-					inst = inst->target();
-				else
-					// target instr. is not set for dynamic branch such as returns and equivalent
-					// so we must find it ourself
-					inst = fw->findInstAt((address_t)((unsigned long)(NIA(&emulator_state))));
-			}
-			else
-				inst = inst->nextInst(); // see if next() could return 0
-		}
-		
-		// pseudo instruction are put before the beginning of basic blocks
-		// we mustn't simulate such instructions, the next real instr.
-		// is inst->next()
-		while (inst->isPseudo())
-			inst = inst->nextInst();
-
+			inst = emulator_state->execute(inst);
 		return inst;
 	}
 }
