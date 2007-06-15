@@ -65,10 +65,18 @@ void TextDecoder::processWorkSpace(WorkSpace *fw) {
 	// Decode the text
 	Processor *decoder = fw->process()->decoder();
 	if(!decoder) {
-		if(!fw->process()->instSize() || follow_paths)
+		if(isVerbose())
+			out << "INFO: no default decoder\n";
+		if(!fw->process()->instSize() || follow_paths) {
+			if(isVerbose())
+				out << "INFO: using VarTextDecoder\n";
 			decoder = &VarTextDecoder::_;
-		else
+		}
+		else {
+			if(isVerbose())
+				out << "INFO: using FixedTextDecoder\n";
 			decoder = &FixedTextDecoder::_;
+		}
 	}
 	decoder->process(fw);
 	
