@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2006, IRIT-UPS <casse@irit.fr>.
+ *	Copyright (c) 2006-07, IRIT-UPS <casse@irit.fr>.
  *
  *	FullSimulationDriver.h -- FullSimulationDriver class interface.
  */
@@ -9,26 +9,20 @@
 
 #include <otawa/sim/Driver.h>
 #include <otawa/otawa.h>
-//#include <otawa/cfg/BasicBlock.h>
-#include <emul.h>
-#include <iss_include.h>
 
 namespace otawa {
 
-// Extern class
-//class BasicBlock;
-	
 namespace sim {
 
 // FullSimulationDriver class
 class FullSimulationDriver: public Driver {
 	otawa::Inst * inst;
-	state_t emulator_state;
 	bool wrong_path;
 	FrameWork *fw;
 	otawa::Inst *end_of_simulation;
+	SimState *emulator_state;
 public:
-	inline FullSimulationDriver(FrameWork *_fw, Inst * start, state_t * init_state);
+	inline FullSimulationDriver(FrameWork *_fw, Inst * start);
 	
 	// Driver overload
 	virtual Inst *nextInstruction(State& state, Inst *inst);
@@ -38,17 +32,16 @@ public:
 };
 
 // FullSimulationDriver inlines
-inline FullSimulationDriver::FullSimulationDriver(FrameWork *_fw, Inst * start, state_t * init_state) {
+inline FullSimulationDriver::FullSimulationDriver(FrameWork *_fw, Inst * start) {
 	fw = _fw;
 	inst = start;
 	assert(inst);
-	// set end of simulation 2 instr. after _start
-	//end_of_simulation = fw->findInstAt(inst->address() + 2*sizeof(code_t));
 	String lab("_exit");
-	end_of_simulation = fw->process()->findInstAt(lab); //inst->address() + 2*sizeof(code_t));
+	end_of_simulation = fw->process()->findInstAt(lab);
 	assert(end_of_simulation);
 	wrong_path = false;
-	memcpy(&emulator_state, init_state, sizeof(state_t));
+	emulator_state = fw->process()->newState();
+	ASSERT(emulator_state);
 }
 
 } } // otawa::sim
