@@ -46,12 +46,13 @@ class HalfAbsInt {
 	inline bool isEdgeDone(Edge *edge);	
 	inline bool tryAddToWorkList(BasicBlock *bb);
 	Edge *detectCalls(bool &call_node, BasicBlock *bb);
-	void inputProcessing();
+	void inputProcessing(typename FixPoint::Domain &entdom);
 	void outputProcessing();
 	
   public:
   	inline typename FixPoint::FixPointState *getFixPointState(BasicBlock *bb);
-	int solve(otawa::CFG *main_cfg = NULL);
+	int solve(otawa::CFG *main_cfg = NULL, 
+		typename FixPoint::Domain *entdom = NULL);
 	inline HalfAbsInt(FixPoint& _fp, FrameWork& _fw);
 	inline ~HalfAbsInt(void);
 	inline typename FixPoint::Domain backEdgeUnion(BasicBlock *bb);
@@ -84,7 +85,7 @@ inline typename FixPoint::FixPointState *HalfAbsInt<FixPoint>::getFixPointState(
 }
 
 template <class FixPoint>
-void HalfAbsInt<FixPoint>::inputProcessing() {
+void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	
 	fp.assign(in, fp.bottom());
 	
@@ -95,7 +96,7 @@ void HalfAbsInt<FixPoint>::inputProcessing() {
 			fp.unmarkEdge(current);
 		}  else { 
 			/* Main entry case */
-			fp.assign(in, fp.entry());
+			fp.assign(in, entdom);
 		}
 	} else if (call_edge && !call_node) {
 		/* Call return case */
@@ -213,7 +214,7 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
 
             	if (call_node) {
             		/* Going into sub-function: push callstack, mark function entry with call state for the callee */
-			BasicBlock *func_entry = call_edge->calledCFG()->entry();
+					BasicBlock *func_entry = call_edge->calledCFG()->entry();
             		callStack->push(call_edge);
             		cfgStack->push(cur_cfg);
             		cur_cfg = call_edge->calledCFG();
@@ -256,7 +257,8 @@ Edge *HalfAbsInt<FixPoint>::detectCalls(bool &call_node, BasicBlock *bb) {
 
 
 template <class FixPoint>
-int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg) {        
+int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, 
+	typename FixPoint::Domain *entdom) {        
 	int iterations = 0;
     
         /* workList / callStack initialization */
@@ -279,7 +281,12 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg) {
         	cout << "\n=== HalfAbsInt Iteration ==\n";
         	cout << "Processing BB: " << current->number() << " \n";
 #endif
-		inputProcessing();
+		if (entdom != NULL) {
+			inputProcessing(*entdom);
+		} else {
+			typename FixPoint::Domain default_entry(fp.entry());
+			inputProcessing(default_entry);
+		}
 		outputProcessing();        	
 	}
 #ifdef DEBUG        
