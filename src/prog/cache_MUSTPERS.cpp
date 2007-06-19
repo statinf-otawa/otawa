@@ -59,27 +59,6 @@ void MUSTPERS::update(Domain& out, const Domain& in, BasicBlock* bb) {
         if (lblock != NULL)
         	out.inject(lblock->cacheblock());
 
-
- /*               
-        for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
-        	if (outedge->kind() == Edge::CALL) { 
-            	PartialCacheResult *result = PARTIAL_CACHE_RESULT(outedge->calledCFG());
-                if (result != NULL) {
-
-                	if (CALL_STATE(outedge->calledCFG()) != NULL) {
-						mustProb.assign(CALL_STATE(outedge->calledCFG())->must, out.must);
-						persProb.assign(CALL_STATE(outedge->calledCFG())->pers, out.pers);
-					}
-                                
-			
-                    out.remove(*result->damage[line]);
-                    out.add(*result->must[line]);
-			                                 
-                }
-        	}
-        } 
-*/                                     
-
 }
 	
 elm::io::Output& operator<<(elm::io::Output& output, const MUSTPERS::Domain& dom) {	
