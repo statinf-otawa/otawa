@@ -101,7 +101,7 @@ class MUSTPERS {
 	public:
 	
 	// Constructors
-	MUSTPERS(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A, bool _unrolling = false);
+	MUSTPERS(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A);
 
 	// Problem methods
 	const Domain& bottom(void) const;
