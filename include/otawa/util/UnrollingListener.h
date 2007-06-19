@@ -3,7 +3,6 @@
 
 #include <otawa/util/FirstUnrollingFixPoint.h>
 
-#define DEBUG 1
 namespace otawa {
 
 template <class P>
