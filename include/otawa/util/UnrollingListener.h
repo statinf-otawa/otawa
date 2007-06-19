@@ -3,6 +3,7 @@
 
 #include <otawa/util/FirstUnrollingFixPoint.h>
 
+#define DEBUG 1
 namespace otawa {
 
 template <class P>
@@ -66,7 +67,8 @@ void UnrollingListener<Problem>::blockInterpreted(const FirstUnrollingFixPoint<U
 		
 		
 #ifdef DEBUG
-		cout << "[TRACE] Block " << bbnumber << ": IN=" << in << " OUT=" << out << "\n";
+		cout << "[TRACE] CFG " << cur_cfg->label() << " BB " << bbnumber << ": IN=" << in << " OUT=" << out << "\n";
+		cout << "[TRACE] result: " << *results[cfgnumber][bbnumber] << "\n";
 #endif		
 }
 
