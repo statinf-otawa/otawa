@@ -101,6 +101,13 @@ Identifier<bool> FIXED("otawa::util::fixed", false);
  */
 Identifier<bool> FIRST_ITER("otawa::util::first_iter", true);
 
+/**
+ * This property, when set to TRUE on a CFG other than the entry CFG, prevents 
+ * HalfAbsInt from following call edges to this CFG.
+ * It virtually removes all function calls to this CFG.
+ */
+Identifier<bool> HAI_DONT_ENTER("otawa::hai_dont_enter", false);
+ 
 
 /**
  * @fn typename FixPoint::FixPointState *HalfAbsInt::getFixPointState(BasicBlock *bb);
