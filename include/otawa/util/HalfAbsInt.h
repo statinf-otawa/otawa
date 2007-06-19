@@ -23,6 +23,7 @@ namespace otawa { namespace util {
 
 extern Identifier<bool> FIXED;
 extern Identifier<bool> FIRST_ITER;
+extern Identifier<bool> HAI_DONT_ENTER;
 
 template <class FixPoint>
 class HalfAbsInt {
@@ -50,7 +51,7 @@ class HalfAbsInt {
 	
   public:
   	inline typename FixPoint::FixPointState *getFixPointState(BasicBlock *bb);
-	int solve(void);
+	int solve(otawa::CFG *main_cfg = NULL);
 	inline HalfAbsInt(FixPoint& _fp, FrameWork& _fw);
 	inline ~HalfAbsInt(void);
 	inline typename FixPoint::Domain backEdgeUnion(BasicBlock *bb);
@@ -243,7 +244,7 @@ Edge *HalfAbsInt<FixPoint>::detectCalls(bool &call_node, BasicBlock *bb) {
 
 	call_node = false;
        	for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
-        	if (outedge->kind() == Edge::CALL) {
+        	if ((outedge->kind() == Edge::CALL) && (!HAI_DONT_ENTER(outedge->calledCFG()))) {
         		call_edge = *outedge;
         		if (!fp.getMark(call_edge)) {
         			call_node = true;
@@ -255,13 +256,15 @@ Edge *HalfAbsInt<FixPoint>::detectCalls(bool &call_node, BasicBlock *bb) {
 
 
 template <class FixPoint>
-int HalfAbsInt<FixPoint>::solve(void) {        
+int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg) {        
 	int iterations = 0;
     
         /* workList / callStack initialization */
         workList->reset();
         callStack->clear();
-        workList->put(entry_cfg.entry());
+        if (main_cfg != NULL) 
+        	cur_cfg = main_cfg;
+        workList->put((main_cfg != NULL) ? main_cfg->entry() : entry_cfg.entry());
 #ifdef DEBUG
 		cout << "==== Beginning of the HalfAbsInt solve() ====\n";
 #endif        
