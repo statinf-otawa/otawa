@@ -1,4 +1,12 @@
 Makefile
 Makefile.in
+gliss.lo
+liboloader.la
+loader_new_gliss_BranchInst.lo
+loader_new_gliss_Inst.lo
+loader_new_gliss_Process.lo
+loader_old_gliss_BranchInst.lo
+loader_old_gliss_Inst.lo
+loader_old_gliss_Process.lo
 .deps
 .libs

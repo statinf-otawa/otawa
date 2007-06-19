@@ -2,3 +2,5 @@
 Makefile
 Makefile.in
 .libs
+ppc.la
+ppc.lo
