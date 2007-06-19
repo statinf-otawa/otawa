@@ -132,13 +132,13 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 		/* do only the MUST */
 		MUSTProblem mustProb(lbset->cacheBlockCount(), lbset, fw, cache, cache->wayCount());
 		
+		
 		if (unrolling) {			
 			UnrollingListener<MUSTProblem> mustList(fw, mustProb);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > mustFp(mustList);
 			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > > mustHai(mustFp, *fw);
-			if (must_entry)
-				mustProb.setEntry(*must_entry);
-			mustHai.solve();
+			mustHai.solve(NULL, must_entry);
+		
 			
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 				for (CFG::BBIterator bb(cfg); bb; bb++)
@@ -148,9 +148,8 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			DefaultListener<MUSTProblem> mustList(fw, mustProb);
 			DefaultFixPoint<DefaultListener<MUSTProblem> > mustFp(mustList);
 			util::HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTProblem> > > mustHai(mustFp, *fw);
-			if (must_entry)
-				mustProb.setEntry(*must_entry);
-			mustHai.solve();
+			mustHai.solve(NULL, must_entry);
+				
 			
 			/* Store the resulting ACS into the properties */
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
