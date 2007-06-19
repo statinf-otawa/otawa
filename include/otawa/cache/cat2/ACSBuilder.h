@@ -18,7 +18,6 @@ typedef enum fmlevel_t {
 } fmlevel_t;
 	
 extern Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST;
-extern Identifier<genstruct::Vector<MUSTProblem::UnrolledResult*>* > CACHE_UNROLLED_MUST;
 extern Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS;
 extern Identifier<fmlevel_t> FIRSTMISS_LEVEL;
 extern Identifier<bool> PSEUDO_UNROLLING;
