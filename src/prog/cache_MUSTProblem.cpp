@@ -34,8 +34,8 @@ using namespace otawa::ipet;
 namespace otawa {
 
 	
-MUSTProblem::MUSTProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A, bool _unrolling) 
-	: callstate(_size, _A), unrolling(_unrolling), line(lbset->line()), cache(_cache), bot(_size, _A), ent(_size, _A), lbset(_lbset),  fw(_fw) {
+MUSTProblem::MUSTProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A) 
+	: callstate(_size, _A),  line(lbset->line()), cache(_cache), bot(_size, _A), ent(_size, _A), lbset(_lbset),  fw(_fw) {
 
 		ent.empty();	
 }
@@ -48,10 +48,6 @@ const MUSTProblem::Domain& MUSTProblem::bottom(void) const {
 }
 const MUSTProblem::Domain& MUSTProblem::entry(void) const {
 		return ent;
-}
-
-void MUSTProblem::setEntry(const MUSTProblem::Domain &entry) {
-	assign(ent, entry);
 }
 
 void MUSTProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {

@@ -34,8 +34,8 @@ using namespace otawa::ipet;
 namespace otawa {
 
 	
-MAYProblem::MAYProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A, bool _unrolling) 
-	: callstate(_size, _A), unrolling(_unrolling), line(lbset->line()), cache(_cache), bot(_size, _A), ent(_size, _A), lbset(_lbset),  fw(_fw) {
+MAYProblem::MAYProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A) 
+	: callstate(_size, _A), line(lbset->line()), cache(_cache), bot(_size, _A), ent(_size, _A), lbset(_lbset),  fw(_fw) {
 
 
 		ent.empty();
@@ -52,10 +52,7 @@ const MAYProblem::Domain& MAYProblem::entry(void) const {
 		return ent;
 }
 	
-void MAYProblem::setEntry(const MAYProblem::Domain &entry) {
-	assign(ent, entry);
-}
-	
+
 void MAYProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
 	assign(out, in);
 	LBlock *lblock = LAST_LBLOCK(bb)[line];
