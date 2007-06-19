@@ -87,7 +87,6 @@ void LBlockBuilder::processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset, 
 	assert(lbset);
 	cacheBlocks = new HashTable<int, int>();
 	// Build the l-blocks
-	cout << "Processing line: " << line << "\n";
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
 	
 		if (!bb->isEntry() && !bb->isExit()) {
