@@ -159,54 +159,6 @@ class MUSTProblem {
 			 */  
 			int *age;
 	};
-	class UnrolledResult {
-			
-		public:	
-		/*
-		 * For each loop containing the BasicBlock, firstIter has a corresponding element. 
-		 * This element is the LUB of the IN sets of the BasicBlock, for each first iteration of the 
-		 * corresponding loop.
-		 */
-		Vector <Domain*> firstIter;
-		/*
-		 * For each loop containing the BasicBlock, firstIter has a corresponding element. 
-		 * This element is the LUB of the IN sets of the BasicBlock, for each other (not first) 
-		 * iteration of the corresponding loop.
-		 */
-		Vector <Domain*> otherIter;
-		
-		inline UnrolledResult(const Domain& bottom, int numLoops) {
-			int i;
-			for (i = 0; i < numLoops; i++) {
-				firstIter.add(new Domain(bottom));
-				otherIter.add(new Domain(bottom));
-			}
-		}
-		
-		inline UnrolledResult(const UnrolledResult &source) {
-			int i;
-			for (i = 0; i < source.firstIter.length(); i++) {
-				firstIter.add(new Domain(*source.firstIter[i]));
-				otherIter.add(new Domain(*source.otherIter[i]));			
-			}		
-		}
-		
-		inline UnrolledResult& operator=(const UnrolledResult &source) {
-			int i;
-			for (i = 0; i < source.firstIter.length(); i++) {
-				*firstIter[i] = *source.firstIter[i];
-				*otherIter[i] = *source.otherIter[i];
-			}	
-			return(*this);			
-		}
-		
-		inline ~UnrolledResult() {
-			for (Vector<Domain*>::Iterator iter(firstIter); iter; iter++)
-				delete (*iter);
-			for (Vector<Domain*>::Iterator iter(otherIter); iter; iter++)
-				delete (*iter);
-		}
-	};	
 	
 	private:
 	
@@ -217,7 +169,6 @@ class MUSTProblem {
 	const hard::Cache *cache;
 	Domain bot;
 	Domain ent;
-	bool unrolling;
 	
 	public:
 	Domain callstate;
@@ -225,7 +176,7 @@ class MUSTProblem {
 	// Public fields
 	
 	// Constructors
-	MUSTProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A, bool _unrolling = false);
+	MUSTProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A);
 	
 	// Destructors
 	~MUSTProblem();
@@ -235,7 +186,6 @@ class MUSTProblem {
 	const Domain& entry(void) const;
 		
 		
-	void setEntry(const Domain &entry);
 	
 	inline void lub(Domain &a, const Domain &b) const {
 		a.lub(b);
