@@ -13,7 +13,7 @@
 #include <otawa/hard/Platform.h>
 
 
-#include <otawa/cache/cat2/MUSTProblem.h>
+#include <otawa/cache/cat2/MAYProblem.h>
 #include <otawa/cache/FirstLastBuilder.h>
 
 
@@ -24,44 +24,46 @@ using namespace otawa::ipet;
 
 
 /**
- * @class MUSTProblem
+ * @class MAYProblem
  * 
- * Problem for computing the cache MUST ACS.
- * This implements Ferdinand's Must analysis.
+ * Problem for computing the cache MAY ACS.
+ * This implements Ferdinand's MAY analysis.
  * 
  */
 
 namespace otawa {
 
 	
-MUSTProblem::MUSTProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A, bool _unrolling) 
+MAYProblem::MAYProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A, bool _unrolling) 
 	: callstate(_size, _A), unrolling(_unrolling), line(lbset->line()), cache(_cache), bot(_size, _A), ent(_size, _A), lbset(_lbset),  fw(_fw) {
 
-		ent.empty();	
-}
-	
-MUSTProblem::~MUSTProblem() {
+
+		ent.empty();
 	
 }
-const MUSTProblem::Domain& MUSTProblem::bottom(void) const {
+	
+MAYProblem::~MAYProblem() {
+	
+}
+const MAYProblem::Domain& MAYProblem::bottom(void) const {
 		return bot;
 }
-const MUSTProblem::Domain& MUSTProblem::entry(void) const {
+const MAYProblem::Domain& MAYProblem::entry(void) const {
 		return ent;
 }
-
-void MUSTProblem::setEntry(const MUSTProblem::Domain &entry) {
+	
+void MAYProblem::setEntry(const MAYProblem::Domain &entry) {
 	assign(ent, entry);
 }
-
-void MUSTProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
+	
+void MAYProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
 	assign(out, in);
 	LBlock *lblock = LAST_LBLOCK(bb)[line];
     if (lblock != NULL)
     	out.inject(lblock->cacheblock());		
 }
 	
-elm::io::Output& operator<<(elm::io::Output& output, const MUSTProblem::Domain& dom) {
+elm::io::Output& operator<<(elm::io::Output& output, const MAYProblem::Domain& dom) {
 	dom.print(output);
 	return output;
 }

@@ -40,7 +40,14 @@ class PERSProblem {
 					age[i] = src.age[i];
 				
 			}
-			 
+			
+			inline void refresh(int id, int newage) {
+				ASSERT((id >= 0) && (id < size));
+				
+				if ((newage != -1) && ((age[id] > newage) || (age[id] == -1)))
+					age[id] = newage;
+			}
+			
 			inline void lub(const Item &dom) {
 				assert((A == dom.A) && (size == dom.size));
 
@@ -91,6 +98,19 @@ class PERSProblem {
 			
 			inline bool isPersistent(const int id) {
 				return(contains(id) && !isWiped(id));			
+			}
+			inline int getAge(const int id) const {
+				ASSERT((id >= 0) && (id < A));
+				return age[id];
+			}
+			
+			inline void addDamage(const int id, int damage) {
+				ASSERT((id >= 0) && (id < size));
+				if (age[id] == -1)
+					return;
+				age[id] += damage;
+				if (age[id] > A)
+					age[id] = A;
 			}
 			
 			inline void print(elm::io::Output &output) const {
@@ -188,9 +208,30 @@ class PERSProblem {
 				
 			}
 			
+			inline int getAge(const int id, const int index) const {
+				return(data[index]->getAge(id));
+			}
+			
 			inline bool isPersistent(const int id, const int index) {
 				return(data[index]->isPersistent(id));
 		
+			}
+			inline void addDamage(const int id, const int index, int damage) {
+				data[index]->addDamage(id, damage);
+			}
+			
+			inline void addDamage(const int id, int damage) {
+				for (int n = 0; n < data.length(); n++)
+					data[n]->addDamage(id, damage);
+			}
+			
+			inline void refresh(const int id, const int index, int newage) {
+				data[index]->refresh(id, newage);
+			}
+			
+			inline void refresh(const int id, int newage) {
+				for (int n = 0; n < data.length(); n++)
+					data[n]->refresh(id, newage);
 			}
 			
 			inline void print(elm::io::Output &output) const {
@@ -203,7 +244,6 @@ class PERSProblem {
 					first = false;
 				}
 				output << ")";
-
 			}
 			
 			inline void enterContext() {
@@ -217,6 +257,10 @@ class PERSProblem {
 			}
 			inline int length() {
 				return data.length();
+			}
+			
+			inline Item& getItem(const int idx) const {
+				return(*data.get(idx));
 			}
 			
 					

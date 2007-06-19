@@ -1,5 +1,5 @@
-#ifndef CACHE_MUSTPROBLEM_H_
-#define CACHE_MUSTPROBLEM_H_
+#ifndef CACHE_MAYPROBLEM_H_
+#define CACHE_MAYPROBLEM_H_
 
 #include <otawa/dfa/BitSet.h>
 
@@ -8,7 +8,7 @@
 namespace otawa {
 
 
-class MUSTProblem {
+class MAYProblem {
 	
 	// Types
 	public:
@@ -29,7 +29,7 @@ class MUSTProblem {
 			{
 				age = new int [size];
 				for (int i = 0; i < size; i++)
-					age[i] = 0;
+					age[i] = -1;
 			}
 			
 			inline ~Domain() {
@@ -64,7 +64,7 @@ class MUSTProblem {
 				assert((A == dom.A) && (size == dom.size));
 
 				for (int i = 0; i < size; i++) {
-					if (((age[i] < dom.age[i]) && (age[i] != -1))|| (dom.age[i] == -1))
+					if (((age[i] > dom.age[i]) && (dom.age[i] != -1)) || (age[i] != -1)) 
 						age[i] = dom.age[i];
 				}
 			}
@@ -105,7 +105,7 @@ class MUSTProblem {
 			inline void inject(const int id) {
 				if (contains(id)) {
 					for (int i = 0; i < size; i++) {
-						if ((age[i] < age[id]) && (age[i] != -1))
+						if ((age[i] <= age[id]) && (age[i] != -1))
 							age[i]++;						
 					}
 					age[id] = 0;
@@ -145,12 +145,12 @@ class MUSTProblem {
 				return(age[id]);
 			}
 			
+			
 			inline int setAge(const int id, const int _age) {
 				ASSERT(id < size);
 				ASSERT((_age < A) || (_age == -1));
 				age[id] = _age;
 			}
-			
 		
 			/*
 			 * For each cache block belonging to the set: 
@@ -225,18 +225,17 @@ class MUSTProblem {
 	// Public fields
 	
 	// Constructors
-	MUSTProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A, bool _unrolling = false);
+	MAYProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A, bool _unrolling = false);
 	
 	// Destructors
-	~MUSTProblem();
+	~MAYProblem();
 	
 	// Problem methods
 	const Domain& bottom(void) const;
 	const Domain& entry(void) const;
-		
-		
-	void setEntry(const Domain &entry);
 	
+	void setEntry(const Domain &entry);
+		
 	inline void lub(Domain &a, const Domain &b) const {
 		a.lub(b);
 	}
@@ -259,8 +258,8 @@ class MUSTProblem {
 
 };
 
-elm::io::Output& operator<<(elm::io::Output& output, const MUSTProblem::Domain& dom);
+elm::io::Output& operator<<(elm::io::Output& output, const MAYProblem::Domain& dom);
 
 }
 
-#endif /*CACHE_MUSTPROBLEM_H_*/
+#endif /*CACHE_MAYPROBLEM_H_*/

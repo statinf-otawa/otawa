@@ -22,6 +22,7 @@ extern Identifier<genstruct::Vector<MUSTProblem::UnrolledResult*>* > CACHE_UNROL
 extern Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS;
 extern Identifier<fmlevel_t> FIRSTMISS_LEVEL;
 extern Identifier<bool> PSEUDO_UNROLLING;
+extern Identifier<MUSTProblem::Domain*> CACHE_ACS_MUST_ENTRY;
 
 class ACSBuilder : public otawa::Processor {
 
@@ -29,6 +30,7 @@ class ACSBuilder : public otawa::Processor {
 	fmlevel_t level;
 	
 	bool unrolling;
+	MUSTProblem::Domain *must_entry;
 	
 	public:
 	ACSBuilder(void);

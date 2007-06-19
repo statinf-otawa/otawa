@@ -48,6 +48,16 @@ Feature<ACSBuilder> ICACHE_ACS_FEATURE("otawa.cache.acsfeature");
  * @li @ref BasicBlock 
  */
  Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST("otawa::cache_acs_must", NULL);
+
+/**
+ * This property allows us to set an entry must ACS. 
+ *
+ * @par Hooks
+ * @li @ref PropList 
+ */
+ Identifier<MUSTProblem::Domain*> CACHE_ACS_MUST_ENTRY("otawa::cache_acs_must_entry", NULL);
+ 
+ 
  
 /**
  * This property represents the "persistence" Abstract Cache State of a basic block.
@@ -126,6 +136,8 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			UnrollingListener<MUSTProblem> mustList(fw, mustProb);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > mustFp(mustList);
 			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > > mustHai(mustFp, *fw);
+			if (must_entry)
+				mustProb.setEntry(*must_entry);
 			mustHai.solve();
 			
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
@@ -136,6 +148,8 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			DefaultListener<MUSTProblem> mustList(fw, mustProb);
 			DefaultFixPoint<DefaultListener<MUSTProblem> > mustFp(mustList);
 			util::HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTProblem> > > mustHai(mustFp, *fw);
+			if (must_entry)
+				mustProb.setEntry(*must_entry);
 			mustHai.solve();
 			
 			/* Store the resulting ACS into the properties */
@@ -186,6 +200,7 @@ void ACSBuilder::configure(const PropList &props) {
 	Processor::configure(props);
 	level = FIRSTMISS_LEVEL(props);
 	unrolling = PSEUDO_UNROLLING(props);
+	must_entry = CACHE_ACS_MUST_ENTRY(props);
 }
 
 void ACSBuilder::processWorkSpace(WorkSpace *fw) {
