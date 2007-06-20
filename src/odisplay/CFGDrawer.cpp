@@ -80,6 +80,12 @@ void CFGDrawer::make(){
 				display_edge = _graph->newEdge(node,map.get(edge->target()));
 				onEdge(*edge, display_edge);
 			}
+			else {
+				Node *cfg_node = _graph->newNode();
+				onCall(edge->calledCFG(), cfg_node);
+				display::Edge *display_edge = _graph->newEdge(node, cfg_node);
+				onEdge(edge, display_edge);
+			}
 		}
 	}
 	onEnd(_graph);
@@ -197,6 +203,12 @@ void CFGDrawer::onEnd(otawa::display::Graph *graph){
 }
 
 
+/**
+ * This function is called to display a node representing a called CFG.
+ */
+void CFGDrawer::onCall(CFG *cfg, display::Node *node) {
+	TITLE(node) = cfg->label();
+}
 
 } }
 
