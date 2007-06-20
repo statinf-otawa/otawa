@@ -25,18 +25,10 @@ namespace otawa {
 ProcessorException::ProcessorException(
 	const Processor& proc,
 	const elm::String& message
+): Exception(_
+	<< proc.name() << " (" << proc.version() << "):"
+	<< message
 ) {
-	StringBuffer buffer;
-	if(!proc.name())
-		buffer << "no name";
-	else {
-		buffer << proc.name();
-		if(proc.version())
-			buffer << '(' << proc.version() << ')';
-	}
-	buffer << ": ";
-	buffer << message;
-	setMessage(buffer.toString());
 }
 
 } // otawa
