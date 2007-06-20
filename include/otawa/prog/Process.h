@@ -23,18 +23,18 @@ using namespace elm::genstruct;
 
 // Pre-definition
 class File;
-class Manager;
-class Processor;
-class Process;
-class TextDecoder;
 namespace hard {
 	class Platform;
 	class CacheConfiguration;
 }
-
+class Loader;
+class Manager;
+class Processor;
+class Process;
 namespace sim {
 	class Simulator;
 }
+class TextDecoder;
 
 
 // SimState class
@@ -73,6 +73,7 @@ public:
 	inline File *program(void) const;
 	virtual int instSize(void) const = 0;
 	virtual Processor *decoder(void);
+	virtual Loader *loader(void) const;
 
 	// Simulation management
 	virtual SimState *newState(void);

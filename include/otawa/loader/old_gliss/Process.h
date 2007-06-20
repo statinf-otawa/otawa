@@ -18,7 +18,10 @@ class Segment;
 // Process class
 class Process: public otawa::Process {
 public:
-	Process(Manager *manager, hard::Platform *platform,
+	Process(
+		Manager *manager,
+		Loader *loader,
+		hard::Platform *platform,
 		const PropList& props = PropList::EMPTY);
 	inline void *state(void) const { return _state; }
 
@@ -26,6 +29,7 @@ public:
 	virtual hard::Platform *platform(void);
 	virtual Inst *start(void);
 	virtual File *loadFile(elm::CString path);
+	virtual Loader *loader(void) const;
 
 protected:
 	friend class Segment;
@@ -37,6 +41,7 @@ public:
 	void *_state;
 	int argc;
 	char **argv, **envp;
+	Loader *_loader;
 };
 
 } } } // otawa::loader::old_gliss
