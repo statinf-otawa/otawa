@@ -4,4 +4,5 @@ SUBDIRS=\
 
 includeotawaloaderdir=$(includedir)/otawa/loader
 includeotawaloader_HEADERS = \
-	gliss.h
+	gliss.h \
+	s12x.h
