@@ -46,9 +46,7 @@ public:
 class Exception: otawa::Exception {
 	elm::String header(const Simulator& sim, const elm::CString message);
 public:
- 	Exception(const Simulator& sim, elm::String& message);
- 	Exception(const Simulator& sim, elm::CString format, elm::VarArg &args);
- 	Exception(const Simulator& sim, elm::CString format,...);
+ 	Exception(const Simulator& sim, const string& message);
 };
 
 } } // otawa::sim
