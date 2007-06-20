@@ -126,7 +126,7 @@ File *Process::loadFile(elm::CString path) {
 
 	// Check if there is not an already opened file !
 	if(program())
-		throw Exception("loader cannot open multiple files !", 0);
+		throw Exception("loader cannot open multiple files !");
 
 	
 	// System configuration

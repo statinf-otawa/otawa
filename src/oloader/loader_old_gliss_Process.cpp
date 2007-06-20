@@ -62,17 +62,20 @@ private:
  /**
   * Build a process for the old GLISS system.
   * @param manager	Current manager.
+  * @param loader	Current loader.
   * @param platform	Current platform.
   * @param props	Building properties.
   */ 
  Process::Process(
  	Manager *manager,
+ 	Loader *loader,
  	hard::Platform *platform,
 	const PropList& props)
 :	otawa::Process(manager, props),
 	_start(0),
 	_platform(platform), 
-	_state(0)
+	_state(0),
+	_loader(loader)
 {
 	ASSERTP(manager, "manager required");
 	ASSERTP(platform, "platform required");
@@ -129,7 +132,7 @@ File *Process::loadFile(elm::CString path) {
 
 	// Check if there is not an already opened file !
 	if(program())
-		throw Exception("loader cannot open multiple files !", 0);
+		throw Exception("loader cannot open multiple files !");
 
 	// System configuration
     void *system_list[5+1];
@@ -205,6 +208,13 @@ File *Process::loadFile(elm::CString path) {
 	_start = findInstAt((address_t)Ehdr.e_entry);
 	otawa::gliss::GLISS_STATE(this) = _state;
 	return file;
+}
+
+
+/**
+ */
+Loader *Process::loader(void) const {
+	return _loader;
 }
 
 
