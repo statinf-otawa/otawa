@@ -40,7 +40,7 @@ namespace otawa {
  * @param name	Name of identifier causing the exception.
  */
 DuplicateIdentifierException::DuplicateIdentifierException(String& name)
-: Exception("Identifier \"%s\" is already declared.", &name.toCString()) {
+: Exception(_ << "identifier \"" << name << "\" is already declared") {
 };
 
 
