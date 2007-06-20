@@ -201,6 +201,7 @@ File *Process::loadProgram(elm::CString path) {
  * @return	A simulator for the current process or null if none is found.
  */
 sim::Simulator *Process::simulator(void) {
+	//cerr << "otawa::Process::simulator()\n";
 	
 	// Look just in configuration
 	sim::Simulator *sim = SIMULATOR(this);
@@ -278,6 +279,15 @@ Processor *Process::decoder(void) {
  * 			functional simulation/
  */
 SimState *Process::newState(void) {
+	return 0;
+}
+
+
+/**
+ * Get the loader that has created this process. The result may be null.
+ * @return	Loader that created this process.
+ */
+Loader *Process::loader(void) const {
 	return 0;
 }
 
