@@ -105,36 +105,9 @@ elm::String Exception::header(const Simulator& sim, const CString message) {
  * @param sim		Current simulator.
  * @param message	Message to display.
  */
- Exception::Exception(const Simulator& sim, String& message) {
- 	setMessage(header(sim, message.toCString()));
+ Exception::Exception(const Simulator& sim, const String& message)
+ : otawa::Exception(header(sim, message.toCString())) {
  }
- 
- 
-/**
- * Build an exception with a formatted message.
- * @param sim		Current simulator.
- * @param format	Message format (C-like escapes).
- * @param args		Message arguments.
- */
-Exception::Exception(const Simulator& sim, elm::CString format,
-elm::VarArg &args) {
-	String formatp = header(sim, format);
-	build(formatp.toCString(), args);
-}
-
-
-/**
- * Build an exception with a formatted message.
- * @param sim		Current simulator.
- * @param format	Message format (C-like escapes).
- * @param ...		Message arguments.
- */
-Exception::Exception(const Simulator& sim, elm::CString format, ...) {
-	VARARG_BEGIN(args, format)
-	String formatp = header(sim, format);
-	build(formatp.toCString(), args);	
-	VARARG_END
-}
-
+  
 } } // otawa::sim
 
