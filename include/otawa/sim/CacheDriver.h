@@ -4,8 +4,8 @@
  *
  *	CacheDriver class interface.
  */
-#ifndef OTAWA_SIM_DRIVER_H
-#define OTAWA_SIM_DRIVER_H
+#ifndef OTAWA_SIM_CACHE_DRIVER_H
+#define OTAWA_SIM_CACHE_DRIVER_H
 
 #include <otawa/base.h>
 
@@ -38,4 +38,4 @@ public :
 
 } } // otawa::sim
 
-#endif	// OTAWA_SIM_DRIVER_H
+#endif	// OTAWA_SIM_CACHE_DRIVER_H
