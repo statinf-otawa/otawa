@@ -111,24 +111,11 @@ inline elm::io::Output& operator<<(elm::io::Output& out, Address addr) {
 
 
 // Exception class
-class Exception: public elm::Exception {
-	String msg;
-protected:
-	void build(elm::CString format, VarArg& args);
-	inline void setMessage(elm::String message);
+class Exception: public elm::MessageException {
 public:
 	Exception(void);
-	Exception(const String message);
-	Exception(elm::CString format, elm::VarArg& args);
-	Exception(elm::CString format, ...);
-	virtual ~Exception(void);
-	virtual String message(void) { return msg; };
+	Exception(const String& message);
 };
-
-// Inlines
-inline void Exception::setMessage(elm::String message) {
-	msg = message;
-}
 
 } // otawa
 
