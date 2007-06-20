@@ -53,20 +53,6 @@ protected:
 
 
 /**
- * Build the process.
- * @param manager	Current manager.
- * @param pf		Running platform.
- * @param props		Configuration properties.
- */
-Process::Process(
-	Manager *manager,
-	hard::Platform *pf,
-	const PropList& props
-): otawa::loader::old_gliss::Process(manager, pf, props) {
-}
-
-
-/**
  */
 otawa::Inst *Process::decode(address_t addr) {
 	TRACE("decode(" << addr << ")");
@@ -295,3 +281,20 @@ otawa::Process *Loader::create(Manager *man, const PropList& props) {
 // ARM GLISS Loader entry point
 otawa::arm::Loader OTAWA_LOADER_HOOK;
 otawa::arm::Loader& arm_plugin = OTAWA_LOADER_HOOK;
+
+namespace otawa { namespace arm {
+	
+/**
+ * Build the process.
+ * @param manager	Current manager.
+ * @param pf		Running platform.
+ * @param props		Configuration properties.
+ */
+Process::Process(
+	Manager *manager,
+	hard::Platform *pf,
+	const PropList& props
+): otawa::loader::old_gliss::Process(manager, &arm_plugin, pf, props) {
+}
+
+} } // otawa::arm
