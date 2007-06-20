@@ -19,54 +19,15 @@ namespace otawa {
 /**
  * Build an empty exception.
  */
-Exception::Exception(void) {
+Exception::Exception(void): MessageException("") {
 }
 
 /**
  * Build a simple exception with the given message.
  * @param message	Message of the exception.
  */
-Exception::Exception(const String message): msg(message) {
+Exception::Exception(const string& message): MessageException(message) {
 }
-
-/**
- * Build an exception by building a message using format and arguments
- * as the "printf" function.
- * @param format	Format of the message.
- * @param ...		Data use din the format string.
- */
-Exception::Exception(elm::CString format, ...) {
-	VARARG_BEGIN(args, format)
-		build(format, args);
-	VARARG_END
-}
-
-
-/**
- * Build an exception with "vprintf" style message building.
- * @param format	Format of the message.
- * @param args		Arguments used in the format.
- */
-Exception::Exception(elm::CString format, VarArg& args) {
-	build(format, args);
-}
-
-/**
- * Virtual destructor.
- */
-Exception::~Exception(void) {
-}
-
-
-/**
- * Build the message using "printf" style format and arguments.
- */
-void Exception::build(CString format, VarArg& args) {
-	StringBuffer buffer;
-	buffer.format(format, args);
-	msg = buffer.toString();
-}
-
 
 
 /**
