@@ -21,6 +21,7 @@ protected:
 	virtual void onInit(PropList& graph, PropList& nodes, PropList& edges);
 	virtual void onNode(otawa::BasicBlock *bb, otawa::display::Node *node);
 	virtual void onEdge(otawa::Edge *cfg_edge, otawa::display::Edge *display_edge);
+	virtual void onCall(CFG *cfg, display::Node *node);
 	virtual void onEnd(otawa::display::Graph *graph);
 	virtual void make();
 	
