@@ -22,22 +22,36 @@ namespace otawa { namespace ipet {
  * @li @ref otawa::ipet::BB_TIME_FEATURE
  */
 BBTimeSimulator::BBTimeSimulator(void)
-: BBProcessor("otawa::BBTimeSimulator", Version(0, 1, 0)) {
+: BBProcessor("otawa::BBTimeSimulator", Version(1, 0, 0)) {
 	provide(BB_TIME_FEATURE);
 }
 
 /**
  */
 void BBTimeSimulator::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb){
-	Simulator *simulator = fw->process()->simulator();
-	if(!simulator)
-		throw ProcessorException(*this, "no simulator available");
-	sim::State *state = simulator->instantiate(fw);
 	BasicBlockDriver driver(bb);
 	state->reset();
 	state->run(driver);
 	TIME(bb) = state->cycle();
 	//elm::cout << "BB " << INDEX(bb) << ": " << state->cycle() << io::endl;
+}
+
+
+/**
+ */
+void BBTimeSimulator::setup(WorkSpace *ws) {
+	Simulator *simulator = ws->process()->simulator();
+	if(!simulator)
+		throw ProcessorException(*this, "no simulator available");
+	state = simulator->instantiate(ws);
+}
+
+
+/**
+ */
+void BBTimeSimulator::cleanup(WorkSpace *ws) {
+	// delete state; !!TODO!!
+	state = 0;
 }
 
 } }
