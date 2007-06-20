@@ -3,16 +3,31 @@
  *	Copyright (c) 2007, IRIT UPS <casse@irit.fr>
  *
  *	Star12X plugin implementation
+ *	This file is part of OTAWA
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ * 
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with Foobar; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <elm/assert.h>
-#include <otawa/loader/old_gliss/Process.h>
 #include <otawa/loader/old_gliss/BranchInst.h>
-#include <otawa/prog/Loader.h>
 #include <otawa/hard.h>
 #include <otawa/base.h>
 #define ISS_DISASM
-#include "emul.h"
+#include <emul.h>
+#include <iss_include.h>
+#include "s12x.h"
 
 #define TRACE(m) //cout << m << io::endl
 #define SIZE (inst->size / 8)
@@ -23,6 +38,25 @@ static const unsigned long PPAGE_LOW = 0x8000;
 static const unsigned long PPAGE_SIZE = 0x4000;
 static const unsigned long PPAGE_UP = PPAGE_LOW + PPAGE_SIZE;
 static const unsigned long ADDRESS_TOP = 0x10000;
+
+
+/**
+ * @page s12x Star12X Support
+ * 
+ * The Star12X (from FreeScale) is only a 16-bit processor with a very comlex
+ * CISC instruction set. To be simulated by OTAWA, some instructions need
+ * more information about their execution time. This kind of information is
+ * given with two dedicated properties:
+ * 
+ * @li @ref otawa::s12x::COUNT,
+ * @li @ref otawa::s12x::WAIT.
+ * 
+ * Although this instruction set architecture may be simulated with the usual
+ * OGenSim simulator, the actual architecture of the Star12X is not pipelined
+ * and the CISC instructions have complex time execution that may not be
+ * modelized by OGenSim. To get consistent times, the S12X plugin embeds
+ * a Star12X simulator obtainable by the Process::simulator() method.
+ */
 
 /**
  * This function converts a opr16a + PPAGE value into a unique linear 4Mb address
@@ -77,26 +111,49 @@ public:
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
 
 	// Registers
-	static hard::Register A;
-	static hard::Register B;
-	static hard::Register IX;
-	static hard::Register IY;
-	static hard::Register SP;
-	static hard::Register CCR;
+	static hard::Register regA;
+	static hard::Register regB;
+	static hard::Register regIX;
+	static hard::Register regIY;
+	static hard::Register regSP;
+	static hard::Register regCCR;
 	static const hard::MeltedBank REGS;
 };
 
-// Process class
-class Process: public otawa::loader::old_gliss::Process {
-
+// SimState class
+class SimState: public otawa::SimState {
 public:
-	Process(Manager *manager, hard::Platform *pf,
-		const PropList& props = PropList::EMPTY);
-	virtual int instSize(void) const { return 0; }
-	int computeSize(address_t addr);
-
-protected:
-	virtual otawa::Inst *decode(address_t addr);
+	SimState(Process *process, state_t *state)
+		: otawa::SimState(process) {
+		ASSERT(process);
+		ASSERT(state);
+		_state = new state_t;
+		*_state = *state;
+	}
+	virtual ~SimState(void) {
+		delete [] (char *)_state;
+	}
+	inline state_t *state(void) const { return _state; }
+	virtual Inst *execute(Inst *oinst) {
+		ASSERTP(oinst, "null instruction pointer");
+		Address addr = oinst->address();
+		code_t buffer[20];
+		instruction_t *inst;
+		iss_fetch(addr.address(), buffer);
+		inst = iss_decode(_state, addr.address(), buffer);
+		iss_complete(inst, _state);
+		iss_free(inst);
+		if(NPC(_state) == oinst->topAddress()) {
+			Inst *next = oinst->nextInst();
+			while(next->isPseudo())
+				next = next->nextInst();
+			return next;
+		} 
+		else
+			return process()->findInstAt(NPC(_state)); 
+	}
+private:
+	state_t *_state;
 };
 
 // Inst class
@@ -110,6 +167,9 @@ public:
 		if(!_size)
 			_size = ((Process &)process()).computeSize(address());
 		return _size;
+	}
+	
+	virtual Loader *loader(void) const {
 	}
 
 private:
@@ -141,19 +201,19 @@ private:
 /**
  * Register banks.
  */
-hard::Register Platform::A("A", hard::Register::INT, 8);
-hard::Register Platform::B("B", hard::Register::INT, 8);
-hard::Register Platform::IX("IX", hard::Register::ADDR, 16);
-hard::Register Platform::IY("IY", hard::Register::ADDR, 16);
-hard::Register Platform::SP("SP", hard::Register::ADDR, 16);
-hard::Register Platform::CCR("CCR", hard::Register::BITS, 16);
+hard::Register Platform::regA("A", hard::Register::INT, 8);
+hard::Register Platform::regB("B", hard::Register::INT, 8);
+hard::Register Platform::regIX("IX", hard::Register::ADDR, 16);
+hard::Register Platform::regIY("IY", hard::Register::ADDR, 16);
+hard::Register Platform::regSP("SP", hard::Register::ADDR, 16);
+hard::Register Platform::regCCR("CCR", hard::Register::BITS, 16);
 const hard::MeltedBank Platform::REGS("REGS",
-	&Platform::A,
-	&Platform::B,
-	&Platform::IX,
-	&Platform::IY,
-	&Platform::SP,
-	&Platform::CCR,
+	&Platform::regA,
+	&Platform::regB,
+	&Platform::regIX,
+	&Platform::regIY,
+	&Platform::regSP,
+	&Platform::regCCR,
 	0);
 static const hard::RegBank *banks[] = {
 	&Platform::REGS,
@@ -195,9 +255,10 @@ Platform::Platform(const Platform& platform, const PropList& props)
  */
 Process::Process(
 	Manager *manager,
+	otawa::Loader *loader,
 	hard::Platform *pf,
 	const PropList& props
-): otawa::loader::old_gliss::Process(manager, pf, props) {
+): otawa::loader::old_gliss::Process(manager, loader, pf, props) {
 }
 
 
@@ -241,6 +302,14 @@ otawa::Inst *Process::decode(address_t addr) {
 		return new BranchInst(*this, kind, addr);
 	else
 		return new Inst(*this, kind, addr);	
+}
+
+
+/**
+ */
+sim::Simulator *Process::simulator(void) {
+	//cerr << "otawa::s12x::Process::simulator() = " << &otawa::s12x::simulator << io::endl;
+	return &otawa::s12x::simulator;
 }
 
 
@@ -484,18 +553,6 @@ address_t BranchInst::decodeTargetAddress(void) {
 }
 
 
-// otawa::gliss::Loader class
-class Loader: public otawa::Loader {
-public:
-	Loader(void);
-
-	// otawa::Loader overload
-	virtual CString getName(void) const;
-	virtual otawa::Process *load(Manager *_man, CString path, const PropList& props);
-	virtual otawa::Process *create(Manager *_man, const PropList& props);
-};
-
-
 // Alias table
 static CString table[] = {
 	"elf_53"
@@ -544,8 +601,24 @@ otawa::Process *Loader::load(Manager *man, CString path, const PropList& props) 
  * @return		Created process.
  */
 otawa::Process *Loader::create(Manager *man, const PropList& props) {
-	return new Process(man, new Platform(props), props);
+	return new Process(man, this, new Platform(props), props);
 }
+
+/**
+ * This property must be put on Star12X fuzzy instructions of the Star12X to
+ * allow time computation. Its value represents the maximal iteration count
+ * of this instructions.
+ * 
+ * This instructions are :  MEM, REV, REVW, WAV, WAVR.
+ */
+Identifier<int> COUNT("otawa::s12x::count");
+
+
+/**
+ * This property must be put on Star12X instructions with unbound waiting
+ * time. The argument represents the maximum wait time in cycles.
+ */
+Identifier<int> WAIT("otawa::s12x::wait");
 
 } }	// otawa::s12x
 
