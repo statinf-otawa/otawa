@@ -126,14 +126,14 @@ public:
 		Inst *inst,
 		elm::genstruct::AllocatedTable<hard::Register *> *in,
 		elm::genstruct::AllocatedTable<hard::Register *> *out);
+	virtual otawa::SimState *newState(void) {
+		return new SimState(this, (state_t *)state());
+	}
 
 protected:
 	virtual otawa::Inst *decode(address_t addr);
 	virtual void *gelFile(void) {
 		return loader_file(((state_t *)state())->M);
-	}
-	virtual otawa::SimState *newState(void) {
-		return new SimState(this, (state_t *)state());
 	}
 };
 
