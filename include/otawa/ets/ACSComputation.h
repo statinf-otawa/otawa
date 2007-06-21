@@ -35,7 +35,7 @@ class ACSComputation: public ASTProcessor {
 // Inlines
 inline ACSComputation::ACSComputation(WorkSpace *fw) {
 	if(fw->cache().hasInstCache() && !fw->cache().isUnified()) {
-		cache_size = fw->cache().instCache()->lineCount();
+		cache_size = fw->cache().instCache()->rowCount();
 			cache_line_length = 0;
 	}
 }
