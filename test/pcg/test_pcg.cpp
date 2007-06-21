@@ -31,8 +31,8 @@ int main(int argc, char **argv)
 	// Construction de la hiérarchie de cache
  	Cache::info_t info;
  	info.block_bits = 3;  // 2^3 octets par bloc
- 	info.line_bits = 3;   // 2^3 lignes
- 	info.set_bits = 0;    // 2^0 élément par ensemble (cache direct)
+ 	info.row_bits = 3;   // 2^3 lignes
+ 	info.way_bits = 0;    // 2^0 élément par ensemble (cache direct)
  	info.replace = Cache::NONE;
  	info.write = Cache::WRITE_THROUGH;
  	info.access_time = 0;
