@@ -13,7 +13,7 @@ class PERSProblem {
 	public:
 	class Item {
 			int A, size;
-						
+			
 			public:			
 			inline Item(const int _size, const int _A)
 			: A (_A), size(_size)
@@ -100,7 +100,7 @@ class PERSProblem {
 				return(contains(id) && !isWiped(id));			
 			}
 			inline int getAge(const int id) const {
-				ASSERT((id >= 0) && (id < A));
+				ASSERT((id >= 0) && (id < size));
 				return age[id];
 			}
 			
@@ -174,6 +174,7 @@ class PERSProblem {
 					return;
 				}
 				
+				ASSERT(dom.data.length() == data.length());
 				/* otherwise, LUB all the items */
 				for (int i = 0; i < dom.data.length(); i++)
 					data[i]->lub(*dom.data[i]);
@@ -250,10 +251,12 @@ class PERSProblem {
 				Item item(size, A);
 				item.empty();
 				data.push(new Item(item));
+				
 			}
 			
 			inline void leaveContext() {
-				data.pop();
+				Item *ptr = data.pop();
+				delete ptr;
 			}
 			inline int length() {
 				return data.length();
@@ -308,15 +311,17 @@ class PERSProblem {
 	}
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
 	
-	inline void enterContext(Domain& dom, BasicBlock *header) {
+	inline void enterContext(Domain& dom, BasicBlock *header, util::hai_context_t ctx) {
 #ifndef PERFTEST
-		dom.enterContext(); 
+		if (ctx == util::CTX_LOOP)
+			dom.enterContext(); 
 #endif
 	}
 
-	inline void leaveContext(Domain& dom, BasicBlock *header) {
+	inline void leaveContext(Domain& dom, BasicBlock *header, util::hai_context_t ctx) {
 #ifndef PERFTEST
-		dom.leaveContext();		
+		if (ctx == util::CTX_LOOP)
+			dom.leaveContext();
 #endif		
 	}	
 };
