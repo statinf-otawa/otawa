@@ -31,8 +31,8 @@ void outputSeq(AST *ast, int ind);
 int main(int argc, char **argv) {
 	Cache::info_t info;
  	info.block_bits = 3;  // 2^3 octets par bloc
- 	info.line_bits = 2;   // 2^3 lignes
- 	info.set_bits = 0;    // 2^0 �l�ment par ensemble 
+ 	info.row_bits = 2;   // 2^3 lignes
+ 	info.way_bits = 0;    // 2^0 �l�ment par ensemble 
  	info.replace = Cache::NONE;
  	info.write = Cache::WRITE_THROUGH;
  	info.access_time = 0;
