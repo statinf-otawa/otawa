@@ -85,7 +85,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	// Create the CCG
 	CCGCollection *ccgs = CCG::GRAPHS(fw);
 	if(!ccgs) {
-		ccgs = new CCGCollection(cache->lineCount());
+		ccgs = new CCGCollection(cache->rowCount());
 		fw->addDeletable(CCG::GRAPHS, ccgs);
 	}
 	CCG *ccg = new CCG;
@@ -213,7 +213,7 @@ void CCGBuilder::processWorkSpace(WorkSpace *fw) {
 	// Process the l-block sets
 	LBlockSet **lbsets = LBLOCKS(fw);
 	assert(lbsets);
-	for(int i = 0; i < cache->lineCount(); i++)
+	for(int i = 0; i < cache->rowCount(); i++)
 		processLBlockSet(fw, lbsets[i]);
 }
 

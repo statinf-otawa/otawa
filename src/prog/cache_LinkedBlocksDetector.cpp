@@ -65,7 +65,7 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 	LBlockSet **lbsets = LBLOCKS(fw);
 	
 	
-	for (int i = 0 ; i < cache->lineCount(); i++) {
+	for (int i = 0 ; i < cache->rowCount(); i++) {
 		genstruct::Vector<LinkedBlockList*> blockList;
 		int count = lbsets[i]->cacheBlockCount();
 		for (int j = 0; j < count; j++)

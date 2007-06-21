@@ -55,9 +55,9 @@ void LBlockBuilder::processWorkSpace(WorkSpace *fw) {
 		throw ProcessorException(*this, "No cache in this platform.");
 	
 	// Build the l-block sets
-	lbsets = new LBlockSet *[cache->lineCount()];
+	lbsets = new LBlockSet *[cache->rowCount()];
 	LBLOCKS(fw) = lbsets;
-	for(int i = 0; i < cache->lineCount(); i++) {
+	for(int i = 0; i < cache->rowCount(); i++) {
 		lbsets[i] = new LBlockSet(i);
 		new LBlock(lbsets[i], 0, 0, 0, -1);
 	}
@@ -71,7 +71,7 @@ void LBlockBuilder::processWorkSpace(WorkSpace *fw) {
 
 	
 	// Add end blocks
-	for(int i = 0; i < cache->lineCount(); i++)
+	for(int i = 0; i < cache->rowCount(); i++)
 		new LBlock(lbsets[i], 0, 0, 0, -1);
 }
 
@@ -178,7 +178,7 @@ void LBlockBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
     for (int i = 0; i < cfg->countBB(); i++)
     	tableindex[i] = 0;
     
-	for(int i = 0; i < cache->lineCount(); i++)
+	for(int i = 0; i < cache->rowCount(); i++)
 		processLBlockSet(fw, cfg, lbsets[i], cach, tableindex);
 	delete [] tableindex;	
 }

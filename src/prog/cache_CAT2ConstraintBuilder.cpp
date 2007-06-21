@@ -75,7 +75,7 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 	
 	
 	/* Modify the Object Function */
-	for (int i = 0 ; i < cache->lineCount(); i++) {
+	for (int i = 0 ; i < cache->rowCount(); i++) {
 		for (LBlockSet::Iterator lblock(*lbsets[i]); lblock; lblock++) {
 			if ((lblock->id() == 0) || (lblock->id() == (lbsets[i]->count() - 1)))
 				continue; /* Skip first / last l-blocks */

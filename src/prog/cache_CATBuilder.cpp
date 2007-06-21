@@ -125,7 +125,7 @@ void CATBuilder::processWorkSpace(WorkSpace *fw) {
 	}
 		
 	// Process the l-block sets
-	for(int i = 0; i < cache->lineCount(); i++)
+	for(int i = 0; i < cache->rowCount(); i++)
 		processLBlockSet(fw, lbsets[i]);
 }
 
