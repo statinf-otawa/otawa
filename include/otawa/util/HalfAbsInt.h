@@ -21,6 +21,12 @@
 
 namespace otawa { namespace util {
 
+typedef enum hai_context_t {   
+	CTX_LOOP = 0,
+	CTX_FUNC = 1
+} hai_context_t;
+
+
 extern Identifier<bool> FIXED;
 extern Identifier<bool> FIRST_ITER;
 extern Identifier<bool> HAI_DONT_ENTER;
@@ -171,70 +177,72 @@ template <class FixPoint>
 void HalfAbsInt<FixPoint>::outputProcessing() {
 	if (Dominance::isLoopHeader(current) && fixpoint) {
 		/* Fixpoint reached: activate the associated loop-exit-edges. */
-            	elm::genstruct::Vector<Edge*> *vec;
-            	vec = EXIT_LIST(current);
+        elm::genstruct::Vector<Edge*> *vec;
+        vec = EXIT_LIST(current);
       
 		genstruct::Vector<BasicBlock*> alreadyAdded;
-            	for (elm::genstruct::Vector<Edge*>::Iterator iter(*EXIT_LIST(current)); iter; iter++) {
+        for (elm::genstruct::Vector<Edge*>::Iterator iter(*EXIT_LIST(current)); iter; iter++) {
 #ifdef DEBUG            		
-            		cout << "Activating edge: " << iter->source()->number() << "->" << iter->target()->number() << "\n";
+           	cout << "Activating edge: " << iter->source()->number() << "->" << iter->target()->number() << "\n";
 #endif            	
 			if (!alreadyAdded.contains(iter->target())) {	
-            			if (tryAddToWorkList(iter->target()))
-            				alreadyAdded.add(iter->target());
+           			if (tryAddToWorkList(iter->target()))
+           				alreadyAdded.add(iter->target());
 			}
 
-            		fp.leaveContext(*fp.getMark(*iter), current);
+           	fp.leaveContext(*fp.getMark(*iter), current, CTX_LOOP);
 
-            	}            		
+        }           		
 	} else {            	
-            	/* Simple BasicBlock: try to add its sucessors to the worklist */
-            	 
-            	/* if call_edge && !call_node, then we're at a call return, we don't call update(), because we already
-            	 * did it during the call processing */
-            	if (call_node || !call_edge)
-	            	fp.update(out, in, current);
+        /* Simple BasicBlock: try to add its sucessors to the worklist */
+        	 
+        /* if call_edge && !call_node, then we're at a call return, we don't call update(), because we already
+         * did it during the call processing */
+        if (call_node || !call_edge)
+           	fp.update(out, in, current);
 
 #ifdef DEBUG            	
-            	cout << "Updating for basicblock: " << current->number() << "\n"; 
+        cout << "Updating for basicblock: " << current->number() << "\n"; 
 #endif            	
-            	fp.blockInterpreted(current, in, out, cur_cfg);
+        fp.blockInterpreted(current, in, out, cur_cfg, callStack);
             	
-            	if (current->isExit() && (callStack->length() > 0)) {
-            		/* Exit from function: pop callstack, mark edge with return state for the caller */
-            		int last_pos = callStack->length() - 1;
-            		Edge *edge = callStack->pop();
-            		cur_cfg = cfgStack->pop();
+        if (current->isExit() && (callStack->length() > 0)) {
+          	/* Exit from function: pop callstack, mark edge with return state for the caller */
+           	int last_pos = callStack->length() - 1;
+           	Edge *edge = callStack->pop();
+           	cur_cfg = cfgStack->pop();
 #ifdef DEBUG
-            		cout << "Returning to CFG: " << cur_cfg->label() << "\n";
+           	cout << "Returning to CFG: " << cur_cfg->label() << "\n";
 #endif
-            		fp.markEdge(edge, out);
-            		workList->put(edge->source());
-            	}
+			fp.leaveContext(out, cur_cfg->entry(), CTX_FUNC);
+           	fp.markEdge(edge, out);
+           	workList->put(edge->source());
+        }
 
-            	if (call_node) {
-            		/* Going into sub-function: push callstack, mark function entry with call state for the callee */
-					BasicBlock *func_entry = call_edge->calledCFG()->entry();
-            		callStack->push(call_edge);
-            		cfgStack->push(cur_cfg);
-            		cur_cfg = call_edge->calledCFG();
+        if (call_node) {
+    		/* Going into sub-function: push callstack, mark function entry with call state for the callee */
+			BasicBlock *func_entry = call_edge->calledCFG()->entry();
+            callStack->push(call_edge);
+            cfgStack->push(cur_cfg);
+            cur_cfg = call_edge->calledCFG();
 #ifdef DEBUG            		
-            		cout << "Going to CFG: " << cur_cfg->label() << "\n";
+            cout << "Going to CFG: " << cur_cfg->label() << "\n";
 #endif
-            		workList->put(func_entry);
-            		fp.markEdge(func_entry, out);
+            workList->put(func_entry);
+            fp.enterContext(out, cur_cfg->entry(), CTX_FUNC);
+            fp.markEdge(func_entry, out);
 		} else {
-        	    	/* Standard case: use out-state to mark out-edges, and try to add successors to worklist */
-	            	for (BasicBlock::OutIterator outedge(current); outedge; outedge++) {
-	            		if (outedge->kind() == Edge::CALL) 
-	            			continue;
-	            		fp.markEdge(*outedge, out);
+        	/* Standard case: use out-state to mark out-edges, and try to add successors to worklist */
+	        for (BasicBlock::OutIterator outedge(current); outedge; outedge++) {
+	            if (outedge->kind() == Edge::CALL) 
+	            	continue;
+	            fp.markEdge(*outedge, out);
 #ifdef DEBUG           		
-	            		cout << "Marking edge: " << outedge->source()->number() << "->" << outedge->target()->number() << "\n";
+	            cout << "Marking edge: " << outedge->source()->number() << "->" << outedge->target()->number() << "\n";
 #endif            		
-	            		tryAddToWorkList(outedge->target());
-	            	}
-            	}
+	            tryAddToWorkList(outedge->target());
+	        }
+        }
 	}
 }
 
@@ -333,7 +341,7 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(BasicBlock
                 }
   
         }
-        fp.enterContext(result, bb);
+        fp.enterContext(result, bb, CTX_LOOP);
         return(result);
 }
 

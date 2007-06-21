@@ -36,7 +36,7 @@ class DefaultListener {
 		delete [] results;			
 	}
 
-	void blockInterpreted(const DefaultFixPoint< DefaultListener >  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg) const;
+	void blockInterpreted(const DefaultFixPoint< DefaultListener >  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
 	
 	void fixPointReached(const DefaultFixPoint<DefaultListener > *fp, BasicBlock*bb );
 	
@@ -57,7 +57,7 @@ class DefaultListener {
 };
 
 template <class Problem >
-void DefaultListener<Problem>::blockInterpreted(const DefaultFixPoint<DefaultListener>  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg) const {
+void DefaultListener<Problem>::blockInterpreted(const DefaultFixPoint<DefaultListener>  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
 
 		int bbnumber = bb->number() ;
 		int cfgnumber = cur_cfg->number();

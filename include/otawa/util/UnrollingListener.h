@@ -2,6 +2,7 @@
 #define UTIL_UNROLLINGLISTENER_H_
 
 #include <otawa/util/FirstUnrollingFixPoint.h>
+#include <elm/genstruct/Vector.h>
 
 namespace otawa {
 
@@ -36,7 +37,7 @@ class UnrollingListener {
 		delete [] results;			
 	}
 
-	void blockInterpreted(const FirstUnrollingFixPoint< UnrollingListener >  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg) const;
+	void blockInterpreted(const FirstUnrollingFixPoint< UnrollingListener >  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
 	
 	void fixPointReached(const FirstUnrollingFixPoint<UnrollingListener > *fp, BasicBlock*bb );
 	
@@ -57,7 +58,7 @@ class UnrollingListener {
 };
 
 template <class Problem >
-void UnrollingListener<Problem>::blockInterpreted(const FirstUnrollingFixPoint<UnrollingListener>  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg) const {
+void UnrollingListener<Problem>::blockInterpreted(const FirstUnrollingFixPoint<UnrollingListener>  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
 
 		int bbnumber = bb->number() ;
 		int cfgnumber = cur_cfg->number();

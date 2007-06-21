@@ -68,10 +68,10 @@ class DefaultFixPoint {
 	inline void assign(Domain &a, const Domain &b) const;
 	inline bool equals(const Domain &a, const Domain &b) const;
 	inline void update(Domain &out, const Domain &in, BasicBlock* bb);
-	inline void blockInterpreted(BasicBlock* bb, const Domain& in, const Domain& out, CFG *cur_cfg) const;
+	inline void blockInterpreted(BasicBlock* bb, const Domain& in, const Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
 	inline void fixPointReached(BasicBlock* bb) const;
-	inline void enterContext(Domain &dom, BasicBlock* bb) const;
-	inline void leaveContext(Domain &dom, BasicBlock* bb) const;
+	inline void enterContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const;
+	inline void leaveContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const;
 	
 };
 	
@@ -166,8 +166,8 @@ inline void DefaultFixPoint<Listener>::update(Domain &out, const typename Proble
 }
 	
 template < class Listener >	
-inline void DefaultFixPoint<Listener>::blockInterpreted(BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg) const {
-		list.blockInterpreted(this, bb, in, out, cur_cfg);
+inline void DefaultFixPoint<Listener>::blockInterpreted(BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
+		list.blockInterpreted(this, bb, in, out, cur_cfg, callStack);
 }
 
 template < class Listener >	
@@ -176,13 +176,13 @@ inline void DefaultFixPoint<Listener >::fixPointReached(BasicBlock* bb) const {
 }
 	
 template < class Listener >	
-inline void DefaultFixPoint<Listener >::enterContext(Domain &dom, BasicBlock* bb) const {
-		prob.enterContext(dom, bb);
+inline void DefaultFixPoint<Listener >::enterContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const {
+		prob.enterContext(dom, bb, ctx);
 }
 	
 template < class Listener >	
-inline void DefaultFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb) const {
-		prob.leaveContext(dom, bb);
+inline void DefaultFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const {
+		prob.leaveContext(dom, bb, ctx);
 }
 	
 	
