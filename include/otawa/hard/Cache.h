@@ -36,11 +36,14 @@ public:
 		int access_time;
 		int miss_penalty;
 		int block_bits;
-		int line_bits;
-		int set_bits;
+		int row_bits;
+		int way_bits;
 		replace_policy_t replace;
 		write_policy_t write;
 		bool allocate;
+		int write_buffer_size;
+		int read_port_size;
+		int write_port_size;
 	} info_t;
 
 private:
@@ -48,39 +51,43 @@ private:
 		field("access_time", _info.access_time, 1) &
 		field("miss_penalty", _info.miss_penalty, 10) &
 		field("block_bits", _info.block_bits, 4) &
-		field("line_bits", _info.line_bits, 12) &
-		field("set_bits", _info.set_bits, 0) &
+		field("row_bits", _info.row_bits, 12) &
+		field("way_bits", _info.way_bits, 0) &
 		field("allocate", _info.allocate, false) &
 		field("next", _next, (const Cache *)0) &
 		field("replace", _info.replace, LRU) &
+		field("write_buffer_size", _info.write_buffer_size, 0) &
+		field("read_port_size", _info.read_port_size, 1) &
+		field("write_port_size", _info.write_port_size, 1) &
 		field("write", _info.write, WRITE_THROUGH));
 	info_t _info;
 	const Cache *_next;
 
 public:
 	inline Cache(void);
-	inline Cache(const info_t& info, const Cache *next = 0);
 	inline Cache(const Cache& cache, const Cache *next = 0);
 	
 	// Simple accessors
 	inline const Cache *nextLevel(void) const;
 	inline size_t cacheSize(void) const;
 	inline size_t blockSize(void) const;
-	inline int wayCount(void) const;
-	inline int lineCount(void) const;
-	inline int setCount(void) const;
+	inline int wayCount(void) const { return 1 << wayBits(); }
+	inline int rowCount(void) const { return 1 << rowBits(); }
 	inline int blockCount(void) const
-		{ return 1 << (_info.line_bits + _info.set_bits); }
+		{ return 1 << (_info.row_bits + _info.way_bits); }
 	inline replace_policy_t replacementPolicy(void) const;
 	inline write_policy_t writePolicy(void) const;
 	inline bool doesWriteAllocate(void) const;
 	inline int missPenalty(void) const;
+	inline int writeBufferSize(void) const { return _info.write_buffer_size; }
+	inline int readPortSize(void) const { return _info.read_port_size; }
+	inline int writePortSize(void) const { return _info.write_port_size; }
 	
 	// Low-level information
 	inline int blockBits(void) const;
-	inline int lineBits(void) const;
+	inline int rowBits(void) const;
 	inline int tagBits(void) const;	
-	inline int setBits(void) const;
+	inline int wayBits(void) const;
 	inline mask_t blockMask(void) const; 
 	inline mask_t lineMask(void) const;
 	inline mask_t tagMask(void) const;
@@ -90,6 +97,22 @@ public:
 	inline mask_t line(address_t addr) const;
 	inline mask_t tag(address_t addr) const;
 	inline mask_t block(address_t addr) const;
+	
+	// Modifiers
+	void setAccessTime(int access_time);
+	void setMissPenalty(int miss_penalty);
+	void setBlockBits(int block_bits);
+	void setRowBits(int set_bits);
+	void setWayBits(int way_bits);
+	void setReplacePolicy(replace_policy_t replace);
+	void setWritePolicy(write_policy_t write);
+	void setAllocate(bool allocate);
+	void setWriteBufferSize(int write_buffer_size);
+	void setReadPortSize(int read_port_size);
+	void setWritePortSize(int write_port_size);
+	
+	// Deprecated
+	inline Cache(const info_t& info, const Cache *next = 0);
 };
 
 
@@ -110,23 +133,11 @@ inline const Cache *Cache::nextLevel(void) const {
 }
 
 inline size_t Cache::cacheSize(void) const {
-	return 1 << (blockBits() + lineBits() + setBits());
+	return 1 << (blockBits() + rowBits() + wayBits());
 }
 
 inline size_t Cache::blockSize(void) const {
 	return 1 << blockBits();
-}
-
-inline int Cache::setCount(void) const {
-	return 1 << lineBits();
-}
-
-inline int Cache::lineCount(void) const {
-	return 1 << lineBits();
-}
-
-inline int Cache::wayCount(void) const {
-	return 1 << setBits();
 }
 
 inline Cache::replace_policy_t Cache::replacementPolicy(void) const {
@@ -145,16 +156,16 @@ inline int Cache::blockBits(void) const {
 	return _info.block_bits;
 }
 
-inline int Cache::lineBits(void) const {
-	return _info.line_bits;
+inline int Cache::rowBits(void) const {
+	return _info.way_bits;
 }
 
-inline int Cache::setBits(void) const {
-	return _info.set_bits;
+inline int Cache::wayBits(void) const {
+	return _info.way_bits;
 }
 
 inline int Cache::tagBits(void) const {
-	return 32 - blockBits() + lineBits();
+	return 32 - blockBits() + rowBits();
 }
 
 inline mask_t Cache::blockMask(void) const {
@@ -162,7 +173,7 @@ inline mask_t Cache::blockMask(void) const {
 }
 
 inline mask_t Cache::lineMask(void) const {
-	return (lineCount() - 1) << blockBits();
+	return (rowCount() - 1) << blockBits();
 }
 
 inline mask_t Cache::tagMask(void) const {
@@ -178,7 +189,7 @@ inline mask_t Cache::line(address_t addr) const {
 }
 
 inline mask_t Cache::tag(address_t addr) const {
-	return ((mask_t)addr.address()) >> (blockBits() + lineBits());
+	return ((mask_t)addr.address()) >> (blockBits() + rowBits());
 }
 
 inline mask_t Cache::block(address_t addr) const {

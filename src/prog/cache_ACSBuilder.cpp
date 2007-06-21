@@ -218,7 +218,7 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = fw->platform()->cache().instCache();
 				
-	for (int i = 0; i < cache->lineCount(); i++) {
+	for (int i = 0; i < cache->rowCount(); i++) {
 		processLBlockSet(fw, lbsets[i], cache);	
 	}	
 }
