@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <elm/io.h>
+#include <elm/genstruct/Vector.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/ilp.h>
@@ -20,6 +21,7 @@
 using namespace otawa;
 using namespace otawa::ilp;
 using namespace otawa::ipet;
+using namespace elm;
 
 namespace otawa {
 	
@@ -39,9 +41,9 @@ PERSProblem::PERSProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, con
 		ent.empty();
 #ifdef PERFTEST
 		bot.enterContext();
+		ent.enterContext();
 #endif
 
-		ent.enterContext();
 }
 	
 PERSProblem::~PERSProblem() {
