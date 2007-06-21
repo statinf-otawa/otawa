@@ -3,6 +3,11 @@ SUBDIRS= \
 	odisplay \
 	oloader
 
+# ILP Plugins
+if HAS_LP_SOLVE
+SUBDIRS += lp_solve
+endif
+
 # Loader selection
 if HAS_GLISS_PPC
 SUBDIRS += ppc
@@ -28,14 +33,12 @@ if HAS_SYSTEMC
 SUBDIRS += ogensim
 endif
 
-# ILP Plugins
-if HAS_LP_SOLVE
-SUBDIRS += lp_solve
-endif
 
 # Dependent tools
 if HAS_ILP
+if HAS_SYSTEMC
 SUBDIRS += oipet
+endif
 endif
 
 
