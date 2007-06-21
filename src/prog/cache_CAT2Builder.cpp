@@ -92,13 +92,11 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 			  	int bound;
 			  	bool perfect_firstmiss = true;										
 				PERSProblem::Domain *pers = CACHE_ACS_PERS(lblock->bb())->get(line);
-				bound = 1;
+				bound = 0;
 				
-				if ((pers->length() > 2) && (firstmiss_level == FML_INNER))
+				if ((pers->length() > 1) && (firstmiss_level == FML_INNER))
 					bound = pers->length() - 1;
 				CATEGORY_HEADER(lblock) = NULL;		
-				
-	
 			  	for (int k = pers->length() - 1 ; k >= bound; k--) {
 					if (pers->isPersistent(lblock->cacheblock(), k)) {
 						CATEGORY(lblock) = FIRST_MISS;
