@@ -90,7 +90,7 @@ CacheDriver::result_t AbstractCacheDriver::access(
 	action_t action)
 {
 	int line = _cache->line(address);
-	tag_t *tags = lines + (line << _cache->setBits());
+	tag_t *tags = lines + (line << _cache->rowBits());
 	tag_t tag = _cache->tag(address);
 	for(int i = 0; i < 	_cache->wayCount(); i++)
 		if(tags[i] == tag) {
@@ -190,8 +190,8 @@ void FIFOCacheDriver::replace(tag_t tag, int num, tag_t *line) {
  * @param cache	Used cache.
  */
 FIFOCacheDriver::FIFOCacheDriver(hard::Cache *cache)
-: AbstractCacheDriver(cache), counters(new int[cache->setCount()]) {
-	for(int i = 0; i < cache->setCount(); i++)
+: AbstractCacheDriver(cache), counters(new int[cache->rowCount()]) {
+	for(int i = 0; i < cache->rowCount(); i++)
 		counters[i] = 0;
 }
 
