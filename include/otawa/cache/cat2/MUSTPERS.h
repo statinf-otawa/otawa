@@ -2,7 +2,7 @@
 #define CACHE_MUSTPERS_H_
 
 #include <otawa/dfa/BitSet.h>
-
+#include <otawa/util/HalfAbsInt.h>
 
 
 namespace otawa {
@@ -119,15 +119,15 @@ class MUSTPERS {
 	
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
 	
-	inline void enterContext(Domain &dom, BasicBlock *header) {
-		persProb.enterContext(dom.pers, header);
-		mustProb.enterContext(dom.must, header);
+	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+		persProb.enterContext(dom.pers, header, ctx);
+		mustProb.enterContext(dom.must, header, ctx);
 		
 	}
 
-	inline void leaveContext(Domain &dom, BasicBlock *header) {
-		persProb.leaveContext(dom.pers, header);
-		mustProb.leaveContext(dom.must, header);
+	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+		persProb.leaveContext(dom.pers, header, ctx);
+		mustProb.leaveContext(dom.must, header, ctx);
 
 	}		
 

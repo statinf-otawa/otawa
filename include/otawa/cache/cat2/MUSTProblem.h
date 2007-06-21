@@ -2,7 +2,7 @@
 #define CACHE_MUSTPROBLEM_H_
 
 #include <otawa/dfa/BitSet.h>
-
+#include <otawa/util/HalfAbsInt.h>
 
 
 namespace otawa {
@@ -199,11 +199,11 @@ class MUSTProblem {
 	
 
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
-	inline void enterContext(Domain &dom, BasicBlock *header) {
+	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
 
 	}
 
-	inline void leaveContext(Domain &dom, BasicBlock *header) {
+	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
 
 	}		
 
