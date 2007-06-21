@@ -2,7 +2,7 @@
 <cache-config>
 	<icache>
 		<block_bits>4</block_bits>
-		<set_bits>0</set_bits>
-		<line_bits>12</line_bits>
+		<way_bits>0</way_bits>
+		<row_bits>12</row_bits>
 	</icache>
 </cache-config>
