@@ -112,7 +112,6 @@ class Command: public elm::option::Manager {
 	otawa::Manager manager;
 	FrameWork *fw;
 	gensim::GenericSimulator sim;
-	CacheConfiguration *caches;
 public:
 	Command(void);
 	void compute(String fun);
@@ -379,19 +378,6 @@ void Command::run(void) {
 	if(!file)
 		throw OptionException("binary file path required !");
 
-	// Build the cache
- 	Cache::info_t info;
- 	info.block_bits = 3;  // 2^3 octets par bloc
- 	info.line_bits = 3;   // 2^3 lignes
- 	info.set_bits = 0;    // 2^0 élément par ensemble (cache direct)
- 	info.replace = Cache::NONE;
- 	info.write = Cache::WRITE_THROUGH;
- 	info.access_time = 0;
- 	info.miss_penalty = 10;
- 	info.allocate = false;
- 	Cache *level1 = new Cache(info);
- 	caches = new CacheConfiguration(level1);
-	
 	// Load the file
 	PropList props;
 	NO_SYSTEM(props) = true;
