@@ -16,7 +16,6 @@ Makefile.in
 missing
 mkinstalldirs
 stamp-h
-COPYING
 INSTALL
 elm
 gliss
