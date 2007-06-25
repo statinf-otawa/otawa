@@ -44,7 +44,6 @@ function mod_gliss {
 	VERSION=MASCOTTE_0_1
 	BUILD=make
 	DISTCLEAN=make
-	VERSION=BEFORE_1_2
 }
 
 function mod_ppc {
@@ -73,15 +72,15 @@ function mod_otawa {
 	SETUP=bootstrap
 	BUILD=autotool
 	INSTALL=make
-	REQUIRES="elm"
+	REQUIRES="elm hcs12"
 	DISTCLEAN=autotool
 	MAKE_FLAGS="-j"
 	AUTOCONF_FLAGS="$plugin_param"
 	AUTOCONF_DEBUG="--with-mode=debug"
 }
 
-function mod_s12x {
-	NAME=s12x
+function mod_hcs12 {
+	NAME=hcs12
 	DOWNLOAD=home
 	VERSION=MASCOTTE_0_1
 	BUILD=make
@@ -89,4 +88,3 @@ function mod_s12x {
 	REQUIRES="gliss"
 	DISTCLEAN=make
 }
-
