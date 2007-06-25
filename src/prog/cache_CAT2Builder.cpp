@@ -97,19 +97,11 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 				if ((pers->length() > 1) && (firstmiss_level == FML_INNER))
 					bound = pers->length() - 1;
 				CATEGORY_HEADER(lblock) = NULL;		
-			  	for (int k = pers->length() - 1 ; k >= bound; k--) {
+			  	for (int k = pers->length() - 1 ; (k >= bound) && (header != NULL); k--) {
 					if (pers->isPersistent(lblock->cacheblock(), k)) {
 						CATEGORY(lblock) = FIRST_MISS;
 						CATEGORY_HEADER(lblock) = header;
 					} else perfect_firstmiss = false;
-					/*
-				 	* It is impossible that header is NULL because
-				 	* the length of the pers's data vector must match exactly the level
-				 	* of nesting of the loops containing the current l-block.
-				 	*/
-				 	if (header == NULL)
-				 		break;
-					assert(header != NULL);
 					header = ENCLOSING_LOOP_HEADER(header);
 				}
 			
