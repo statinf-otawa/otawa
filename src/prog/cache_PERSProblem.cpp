@@ -37,7 +37,7 @@ namespace otawa {
 PERSProblem::PERSProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A) 
 	: callstate(_size, _A), line(lbset->line()), cache(_cache), bot(_size, _A), ent(_size, _A), lbset(_lbset), fw(_fw)
 	{
-		bot.empty();
+		bot.setToBottom();
 		ent.empty();
 #ifdef PERFTEST
 		bot.enterContext();
