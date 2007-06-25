@@ -198,13 +198,14 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
         	 
         /* if call_edge && !call_node, then we're at a call return, we don't call update(), because we already
          * did it during the call processing */
-        if (call_node || !call_edge)
+        if (call_node || !call_edge) {
            	fp.update(out, in, current);
 
 #ifdef DEBUG            	
-        cout << "Updating for basicblock: " << current->number() << "\n"; 
+        	cout << "Updating for basicblock: " << current->number() << "\n"; 
 #endif            	
-        fp.blockInterpreted(current, in, out, cur_cfg, callStack);
+        	fp.blockInterpreted(current, in, out, cur_cfg, callStack);
+        }
             	
         if (current->isExit() && (callStack->length() > 0)) {
           	/* Exit from function: pop callstack, mark edge with return state for the caller */
