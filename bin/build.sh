@@ -6,6 +6,8 @@ if [ "$root" == "" ]; then
 	root=`dirname $0`
 fi
 
+
+# Managing the test list
 if [ "$testlist" == "" ]; then
   testlist="ct delta";
 fi
@@ -236,86 +238,6 @@ function distclean_clean {
 }
 
 
-########### Module macros ##########
-
-function mod_elm {
-	NAME=elm
-	DOWNLOAD=home
-	SETUP=bootstrap
-	LIBTOOLIZE_FLAGS=--ltdl
-	BUILD=autotool
-	INSTALL=autotool
-	CLEAN=autotool
-	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
-	MAKE_FLAGS="-j"
-	AUTOCONF_FLAGS=""
-	AUTOCONF_DEBUG="--with-mode=dev"
-}
-
-function mod_gel {
-	NAME=gel
-	DOWNLOAD=home
-	SETUP=bootstrap
-	LIBTOOLIZE_FLAGS=--ltdl
-	BUILD=autotool
-	INSTALL=autotool
-	DISTCLEAN=autotool
-	MAKE_FLAGS="-j"
-	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
-	AUTOCONF_FLAGS=""
-}
-
-function mod_frontc {
-	NAME=frontc
-	DOWNLOAD=wget
-	WGET_ADDRESS=http://www.irit.fr/recherches/ARCHI/MARCH/frontc/
-	WGET_PACKAGE=Frontc-3.2.tgz
-	BUILD=make
-	INSTALL=make
-	DISTCLEAN=make
-}
-
-function mod_gliss {
-	NAME=gliss
-	DOWNLOAD=home
-	BUILD=make
-	DISTCLEAN=make
-	VERSION=BEFORE_1_2
-}
-
-function mod_ppc {
-	NAME=ppc
-	DOWNLOAD=home
-	BUILD=make
-	MAKE_FLAGS='OPT=-DISS_DISASM GEP_OPTS="-a user0 int8 -a category int8"'
-	REQUIRES="gliss gel"
-	DISTCLEAN=make
-}
-
-function mod_lp_solve {
-	NAME=lp_solve
-	DOWNLOAD=wget
-	WGET_ADDRESS=ftp://ftp.es.ele.tue.nl/pub/lp_solve/old_versions_which_you_probably_dont_want/
-	WGET_PACKAGE=lp_solve_4.0.tar.gz
-	BUILD=make
-	MAKE_FLAGS=Makefile.linux
-	DISTCLEAN=clean
-}
-
-function mod_otawa {
-	NAME=otawa
-	DOWNLOAD=home
-	SETUP=bootstrap
-	BUILD=autotool
-	INSTALL=make
-	REQUIRES="elm"
-	DISTCLEAN=autotool
-	MAKE_FLAGS="-j"
-	AUTOCONF_FLAGS="$plugin_param"
-	AUTOCONF_DEBUG="--with-mode=debug"
-}
-
-
 ########### Useful functions ########
 
 function check_program {
@@ -341,6 +263,7 @@ function check_program {
 
 
 ########### Scan arguments ###########
+echo "Build by $tool $version (" `date` ")\n" > $log
 
 function help {
 	echo "$tool $version"
@@ -362,7 +285,8 @@ function help {
 	echo "	--checkonly: test only."
 	echo "  --tag=module:version: use the given CVS version for the module."
 	echo "  --debug: use debug options to build the modules."
-	echo "MODULES: elm gliss ppc lp_solve frontc otawa"
+	echo "  --config=PATH: path to the configuration file to use."
+	echo "  --list: list available configurations."
 }
 
 modules=
@@ -401,6 +325,9 @@ for arg in $*; do
 	--with-systemc=*)
 		systemc_location=${arg#--with-systemc=}
 		;;
+	--config=*)
+		config=${arg#--config=}
+		;;
 	--install)
 		action=install
 		;;
@@ -421,6 +348,15 @@ for arg in $*; do
 	--debug|-d)
 		debug=yes
 		;;
+	--list)
+		echo "Available configurations:"
+		for f in *.otawa $root/*.otawa; do
+			if [ -f "$f" ]; then
+				echo "	$f"
+			fi
+		done
+		exit 0
+		;;
 	-h|--help)
 		help
 		exit
@@ -434,9 +370,39 @@ for arg in $*; do
 		;;
 	esac
 done
-if [ -z "$modules" ]; then
-	modules="gliss gel ppc lp_solve frontc elm otawa"
+
+
+# Configuration
+###configuration###
+
+
+# Select configuration
+if [ "$config" != "no" ]; then
+	if [ "$config" == "" ]; then
+		if test -f "default.otawa"; then
+			config="./default.otawa"
+		elif test -f "$root/dists/default.otawa"; then
+			config="$root/dists/default.otawa"
+		else
+			error "no default configuration available: select one with --config"
+		fi
+	else
+		if test ! -f $config; then
+			error "cannot use the configuration file $config."
+		fi
+	fi
+	if [ "$verbose" == yes ]; then
+	display "INFO: configuration = $config"
+	fi
+	. $config
 fi
+
+
+# Other preparation
+if [ -z "$modules" ]; then
+	modules="$default_modules"
+fi
+display "INFO: modules = $modules"
 if [ $action = update ]; then
 	updates="$modules"
 fi
@@ -455,18 +421,7 @@ if [ ! -z $systemc_location ]; then
 	rm -f systemc
 	ln -s $systemc_location systemc
 fi
-
 basedir=`pwd`
-
-# Preparation
-echo "Build by $tool $version (" `date` ")\n" > $log
-if test -n "$config"; then
-	if test -f $config; then
-		. $config
-	else
-		error "cannot use the configuration file $config."
-	fi
-fi
 
 
 ########### Process a module ###########
@@ -513,7 +468,9 @@ function process {
 	# Perform the download
 	if [ -n "$DOWNLOAD" ]; then
 		if [ ! -d $1 ]; then
-			echo "Download parce que $1 n'existe pas"
+			if [ "$verbose" == "yes" ]; then
+				echo "INFO: $1 does not exist: download it !"
+			fi
 			download_$DOWNLOAD
 		else
 			if [ $action = update ]; then
