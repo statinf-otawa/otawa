@@ -57,6 +57,8 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 
 	CFGCollection *coll = INVOLVED_CFGS(fw);	
 	VirtualCFG *vcfg = new VirtualCFG();
+        if (!entry)
+        	entry = ENTRY_CFG(fw);
         if(!entry) {
                 CFGInfo *info = fw->getCFGInfo();
                 CString name = TASK_ENTRY(fw);
