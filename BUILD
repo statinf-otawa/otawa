@@ -3,91 +3,80 @@ BUILD NOTES
 
   This file describes how to build Otawa from a developer point of view.
 The unique mandatory dependency concerns Elm library that may be check-out from
-the Otawa CVS repository (look at section 2 for compiling elm):
+the OTAWA CVS repository (look at section 2 for compiling elm):
 	$ cvs co elm
 
   Optional dependencies includes third-party programs that may be downloaded
 from developers websites (sections 3 and 4). For making compilation easier,
-you may create in Otawa directory a directory called "extern" and unarchive and
-compile third-party dependencies in it. In this way, you do not need to pass
-special arguments to configure for finding dependencies:
-	$ cd otawa
-	$ mkdir extern
+you may create their directories and unarchive them at the same level than
+OTAWA. In this way, you do not need to pass special arguments to configure
+for finding dependencies. Usually, the easier way to proceed is to create
+a top directory and to unarchive or check-out all modules in this directory.
 
   The first section, that follows, shows how to compile Otawa for developing
-purpose.
+purpose. Please, note also that OTAWA may be build using a script disctributed
+on the official site: http://www.irit.fr/recherches/ARCHI/MARCH/OTAWA.
 
 1. Compiling Otawa
 
   Go in otawa and prepare the configuration:
+    $ cvs -d :pserver:anonymous@cvs.irit.fr:/usr/local/CVS_IRIT/CVS_OTAWA co otawa
   	$ cd otawa
-	$ autoheader
-	$ aclocal
-	$ autoconf
-	$ automake --add-missing
+  	$ ./bootstrap
 	$ ./configure <options>
-	$ make
+	$ make install
 
-  Type "configure --help" for the list of configuration option. Otawa specific
+  Type "configure --help" for the list of configuration option. OTAWA specific
 configuration options are:
 
-	--with-elm: assume the Elm directory is at "otawa/elm".
-	--with-elm=PATH: use the Elm library in the given PATH.
-
-	--with-glissppc: use the Gliss PPC module (default) and look for the
-		GlissPPC package in "otawa/gliss-ppc".
-	--with-glissppc=PATH: allow specifiying the path to the Gliss PPC package.
-	--without-glissppc: do not use the Gliss PPC module.
-	
-	--with-lp_solve=yes: use lp_solve assumed to be in extern sub-directory.
-	--with-lp_solve=PATH: use lp_solve at the given path.
-	
-	--enable-heptane: use the Heptane AST loader (default, require glissppc).
-	--disable-heptane: do not use the Heptane AST loader.
-	
-	--enable-doc: enable the automatic documentation generation
-		(require doxygen).
-	--disable-doc: disable the automatic documentation generation.
+  --with-plugin: enable the plug-in of OTAWA (instead, the plugin linkage is
+  	static),
+  --with-loader={ppc,s12x}: for a static linkage of plugin, select the 
+    supported ISA (default to ppc),
+  --with-mode={dev,debug,normal,final}: select the compilation mode
+	dev: for OTAWA developper only,
+	debug: compile with debug options,
+	normal: normal (assertion stays activated),
+	final: for production mode only (inactive assertions cause a little
+	  performance improvement),
+  --prefix=PATH: select the installation directory (default to /usr/local).
 
 2. Compiling Elm Library
 
   Elm may be got from OTAWA CVS repository:
-  	$ cvs co elm
+    $ cvs -d :pserver:anonymous@cvs.irit.fr:/usr/local/CVS_IRIT/CVS_OTAWA co elm
   Then you may compile with the following commands:
   	$ cd elm
-	$ autoheader
-	$ aclocal
-	$ autoconf
-	$ automake --add-missing
+  	$ ./bootstrap
 	$ ./configure <options>
-	$ make
+	$ make install
+
+Options includes:
+  --with-mode={dev,normal,final}: select the compilation mode,
+    dev: for ELM developpers,
+    normal: normal use of ELM (assertion activated),
+    final: for production work (assertions unactivated).
+  --prefix=PATH: select the installation directory (default to /usr/local).
 
   	
-3. Compiling Gliss PPC Package
+3. Compiling Gliss or S12X PPC Package
 
-  You can get the Gliss archive and the PowerPC Gliss implementation at the
-address http://www.irit.fr/recherches/ARCHI/MARCH/.
-	$ wget http://www.irit.fr/recherches/ARCHI/MARCH/GEP/gliss.tgz
-	$ wget http://www.irit.fr/recherches/ARCHI/MARCH/GEP/ppc.tgz
+  You can get the Gliss archive and either the PowerPC Gliss implementation, or
+the S12X implementation from CVS. In the following, the commands dedicared to
+an ISA are prefixed with [ppc] or [s12x].
 
-  Uncompress these archives:
-  	$ tar xvfz gliss.tgz
-  	$ tar xvfz ppc.tgz
+  To check-out the archive type:
+       $ cvs -d :pserver:anonymous@cvs.irit.fr:/usr/local/CVS_IRIT/CVS_OTAWA co glis
+[ppc]  $ cvs -d :pserver:anonymous@cvs.irit.fr:/usr/local/CVS_IRIT/CVS_OTAWA co ppc
+[s12x] $ cvs -d :pserver:anonymous@cvs.irit.fr:/usr/local/CVS_IRIT/CVS_OTAWA co hcs12
 
-  Add the option line to the Makefile of ppc directory:
-  		OPT=-DEMUL_DISASM
-Or if you use the version 1.6:
-		OPT=-DISS_DISASM
-  
-  And compile them:
-  	$ cd gliss
-  	$ make all
-  	$ cd ..
-  	$ cd ppc
-  	$ make all
- 
- And rename the "ppc" directory to "gliss-ppc":
- 	$ mv ppc gliss-ppc
+  Compile them:
+       $ cd gliss
+       $ make all
+[ppc]  $ cd ../ppc
+       $ make make all OPT=-DISS_DISASM GEP_OPTS="-a user0 int8 -a category int8"
+[s12x] $ cd ../hcs12
+       $ make all OPT=-DISS_DISASM GEP_OPTS="-a otawa_kind uint32 -a time string -a time_select uint8 -a time_select2 uint8"
 
 
 4. lp_solve Package

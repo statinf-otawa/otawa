@@ -1,18 +1,21 @@
-Otawa 0.1 (2.18.04)
+OTAWA 0.5, code named "WOOTy" (07.06.25)
 
-First version.
-Most of interface class are provided but neither loader, nor architecture is
-actually available. GLISS should be used for providing PPC support.
+  OTAWA (Open Tool for Adaptive WCET Analysis) is a framework of C++ classes
+dedicated to static analyses of programs in machine code and to the computation
+f WCET (Worst Case Execution Time).
 
-NOTE
-Otawa 0.1 has been developed with GCC 3.3.1 but it should work with any GCC.
-It requires also the ELM library, V0.1. Just unzip it and compile it in the base
-directory of Otawa or add it in default include and library files.
+  OTAWA is freely available (under the LGPL licence) and is developed by the
+TRACES (http://www.irit.fr/recherches/ARCHI/MARCH/) team at IRIT labs
+(http://www.irit.fr), université Paul Sabatier, France.
 
-TO DO
-- Use GLISS for reading PPC architecture.
-- Use GLISS library as the PPC ELF loader.
-- Incorporating the Heptane compilation chain in the PPC ELF loader.
-- Add AST classes.
-- Add Heptane AST information for building the AST.
+  OTAWA provides state-of-art WCET analyses like IPET (Implicit Path Enumeration
+Technique) and a lot of facilities to work on binary programs (control flow
+graphs, loop detection and so on).
 
+  OTAWA supports successfully many architecture as PowerPC or M68HC.
+More ISA (Instruction Set Architecture) are currently under development like
+ARM or TriCore.
+
+  The official website of OTAWA may be found at the URL below:
+    http://www.irit.fr/recherches/ARCHI/MARCH/OTAWA
+  You may contact us at <casse@irit.fr>

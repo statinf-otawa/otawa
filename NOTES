@@ -1,15 +1,6 @@
-GLISS NOTES
+NOTES
 
-1. Many "is_host_little" definitions.
-  GLISS generated source and original sources defines the function "is_host_little"
-many. While it compiles with C compiler without any problem, C++ compiler
-does not accepts this. Yet, these three version seems to have the same behaviour.
-  A quick correction makes some version function "static" in the files 
-  	- "src/iss_mem.c",
-  	- "src/emul_mem.c".
-
-2. "src/iss_mem.c/delete_mem()" not implemented.
-
-3. "src/emul.c/iss_disasm()" never compiled
-Bad constant name, should be "EMUL_DISASM".
-Compile "gliss-ppc" with option "-DEMUL_DISASM" and "-DISS_DISASM".
+ * ARM and Star12X plugin are not fully tested. Use them at your own risks.
+ * SystemC  is not automatically downloaded and installed because a user login
+   is required.
+ * OTAWA is based on the GLISS tool that does not yet support 64-bits OS.
