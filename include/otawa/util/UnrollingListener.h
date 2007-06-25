@@ -64,8 +64,8 @@ void UnrollingListener<Problem>::blockInterpreted(const FirstUnrollingFixPoint<U
 		int cfgnumber = cur_cfg->number();
 	
 		prob.lub(*results[cfgnumber][bbnumber], in);
-		
-		
+
+
 #ifdef DEBUG
 		cout << "[TRACE] CFG " << cur_cfg->label() << " BB " << bbnumber << ": IN=" << in << " OUT=" << out << "\n";
 		cout << "[TRACE] result: " << *results[cfgnumber][bbnumber] << "\n";
