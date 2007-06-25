@@ -23,7 +23,6 @@ class FeatureDependency;
 	
 // AbstractFeature class
 class AbstractFeature: public Identifier<Processor *> {
-	int refcount;
 public:
 	static NameSpace NS;
 	AbstractFeature(CString name = "");
@@ -86,7 +85,7 @@ public:
 	
 };
 
-inline FeatureDependency::FeatureDependency() : graph(NULL) {
+inline FeatureDependency::FeatureDependency() : graph(NULL), refcount(0) {
 }
 
 inline void FeatureDependency::incUseCount()  {
