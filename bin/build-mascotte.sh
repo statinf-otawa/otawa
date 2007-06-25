@@ -282,7 +282,6 @@ function mod_gliss {
 	VERSION=MASCOTTE_0_1
 	BUILD=make
 	DISTCLEAN=make
-	VERSION=BEFORE_1_2
 }
 
 function mod_ppc {
@@ -311,15 +310,15 @@ function mod_otawa {
 	SETUP=bootstrap
 	BUILD=autotool
 	INSTALL=make
-	REQUIRES="elm"
+	REQUIRES="elm hcs12"
 	DISTCLEAN=autotool
 	MAKE_FLAGS="-j"
 	AUTOCONF_FLAGS="$plugin_param"
 	AUTOCONF_DEBUG="--with-mode=debug"
 }
 
-function mod_s12x {
-	NAME=s12x
+function mod_hcs12 {
+	NAME=hcs12
 	DOWNLOAD=home
 	VERSION=MASCOTTE_0_1
 	BUILD=make
@@ -374,7 +373,7 @@ function help {
 	echo "	--checkonly: test only."
 	echo "  --tag=module:version: use the given CVS version for the module."
 	echo "  --debug: use debug options to build the modules."
-	echo "MODULES: elm gliss ppc lp_solve frontc otawa s12x"
+	echo "MODULES: elm gliss ppc lp_solve frontc otawa hcs12"
 }
 
 modules=
@@ -447,7 +446,7 @@ for arg in $*; do
 	esac
 done
 if [ -z "$modules" ]; then
-	modules="gliss gel lp_solve frontc elm otawa s12x"
+	modules="gliss gel lp_solve frontc elm otawa hcs12"
 fi
 if [ $action = update ]; then
 	updates="$modules"
