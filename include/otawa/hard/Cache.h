@@ -157,7 +157,7 @@ inline int Cache::blockBits(void) const {
 }
 
 inline int Cache::rowBits(void) const {
-	return _info.way_bits;
+	return _info.row_bits;
 }
 
 inline int Cache::wayBits(void) const {
