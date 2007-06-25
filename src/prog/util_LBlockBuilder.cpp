@@ -154,16 +154,19 @@ void LBlockBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 		if (bb->size() != 0) {
 		        
 		   /* The BasicBlock spans at least (bbsize-1)/blocksize cache block boundaries (add +1 for the number of l-blocks) */
-/*		   cout << "addr: " << bb->address() << "\n"; */
-/*		   cout << "taille: " << bb->size() - 1 << "\n"; */
+/*
+		   cout << "BB number: " << bb->number() << "\n";
+		   cout << "addr: " << bb->address() << "\n"; 
+		   cout << "taille: " << bb->size() - 1 << "\n"; 
+                */
 		   int num_lblocks = ((bb->size() - 1) >> cache->blockBits()) + 1;
-/*		   cout << "Original num: " << num_lblocks << "\n"; */
+/*		   cout << "Original num: " << num_lblocks << "\n";  */
 
 		   /* The remainder of the last computation may also span another cache block boundary. */
 		   int temp1 = (bb->address().address() + (num_lblocks << cache->blockBits())) & ~(cache->blockSize() - 1);
-/*		   cout << "Fin arrondi au cacheblock sup': " << io::hex(temp1) << "\n"; */
+/*		   cout << "Fin arrondi au cacheblock sup': " << io::hex(temp1) << "\n";  */
 		   int temp2 = bb->address().address() + bb->size();
-/*		   cout << "Fin du bloc: " << io::hex(temp2) << "\n"; */
+/*		   cout << "Fin du bloc: " << io::hex(temp2) << "\n";  */
 		   if (temp1 < temp2) {
                      num_lblocks++;
                    }
