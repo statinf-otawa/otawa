@@ -1,0 +1,82 @@
+# Default module configuration
+default_modules="elm ppc lp_solve otawa"
+all_modules="$default_modules gel frontc gliss"
+
+function mod_elm {
+	NAME=elm
+	DOWNLOAD=home
+	SETUP=bootstrap
+	LIBTOOLIZE_FLAGS=--ltdl
+	BUILD=autotool
+	INSTALL=autotool
+	CLEAN=autotool
+	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
+	MAKE_FLAGS="-j"
+	AUTOCONF_FLAGS=""
+	AUTOCONF_DEBUG="--with-mode=dev"
+}
+
+function mod_gel {
+	NAME=gel
+	DOWNLOAD=home
+	SETUP=bootstrap
+	LIBTOOLIZE_FLAGS=--ltdl
+	BUILD=autotool
+	INSTALL=autotool
+	DISTCLEAN=autotool
+	MAKE_FLAGS="-j"
+	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
+	AUTOCONF_FLAGS=""
+}
+
+function mod_frontc {
+	NAME=frontc
+	DOWNLOAD=wget
+	WGET_ADDRESS=http://www.irit.fr/recherches/ARCHI/MARCH/frontc/
+	WGET_PACKAGE=Frontc-3.2.tgz
+	BUILD=make
+	INSTALL=make
+	DISTCLEAN=make
+}
+
+function mod_gliss {
+	NAME=gliss
+	DOWNLOAD=home
+	BUILD=make
+	DISTCLEAN=make
+	VERSION=BEFORE_1_2
+}
+
+function mod_ppc {
+	NAME=ppc
+	DOWNLOAD=home
+	BUILD=make
+	MAKE_FLAGS='OPT=-DISS_DISASM GEP_OPTS="-a user0 int8 -a category int8"'
+	REQUIRES="gliss gel"
+	DISTCLEAN=make
+}
+
+function mod_lp_solve {
+	NAME=lp_solve
+	DOWNLOAD=wget
+	WGET_ADDRESS=ftp://ftp.es.ele.tue.nl/pub/lp_solve/old_versions_which_you_probably_dont_want/
+	WGET_PACKAGE=lp_solve_4.0.tar.gz
+	BUILD=make
+	MAKE_FLAGS=Makefile.linux
+	DISTCLEAN=clean
+}
+
+function mod_otawa {
+	NAME=otawa
+	DOWNLOAD=home
+	SETUP=bootstrap
+	BUILD=autotool
+	INSTALL=make
+	REQUIRES="elm"
+	DISTCLEAN=autotool
+	MAKE_FLAGS="-j"
+	AUTOCONF_FLAGS="$plugin_param"
+	AUTOCONF_DEBUG="--with-mode=debug"
+}
+
+
