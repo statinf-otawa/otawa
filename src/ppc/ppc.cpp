@@ -343,7 +343,10 @@ otawa::Inst *Process::decode(address_t addr) {
 					break;
 				}
 			case ID_BCLRL_:
-				kind |= (Inst::IS_RETURN | Inst::IS_COND);
+				kind |= Inst::IS_CALL;	// !!WARNING!! sometimes a return !
+				if(inst->instrinput[0].val.uint8 != 20
+				|| inst->instrinput[1].val.uint8 != 0)
+					kind |= Inst::IS_COND;
 				break;
 			}
 			result = new BranchInst(*this, kind, addr);
