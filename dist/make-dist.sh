@@ -16,6 +16,7 @@ out="build-$dist.sh"
 line=`grep -n "###configuration###" build.sh | cut -f 1 -d ":"`
 head -$line build.sh > $out
 cat $path >> $out
+echo "config=no" >> $out
 size=`wc -l < build.sh`
 tail=`expr $size - $line - 2`
 tail -$tail build.sh >> $out
