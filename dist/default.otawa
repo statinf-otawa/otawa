@@ -1,6 +1,6 @@
 # Default module configuration
 default_modules="elm ppc lp_solve otawa"
-all_modules="$default_modules gel frontc gliss"
+all_modules="$default_modules gel frontc gliss hcs12"
 
 function mod_elm {
 	NAME=elm
