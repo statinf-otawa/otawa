@@ -1,4 +1,6 @@
 # OTAWA configuration for MASCOTTE project
+default_modules="elm hcs12 lp_solve otawa"
+all_modules="$default_modules gel frontc gliss ppc"
 
 function mod_elm {
 	NAME=elm
@@ -75,7 +77,7 @@ function mod_otawa {
 	REQUIRES="elm hcs12"
 	DISTCLEAN=autotool
 	MAKE_FLAGS="-j"
-	AUTOCONF_FLAGS="$plugin_param"
+	AUTOCONF_FLAGS="$plugin_param  --with-loader=s12x"
 	AUTOCONF_DEBUG="--with-mode=debug"
 }
 
