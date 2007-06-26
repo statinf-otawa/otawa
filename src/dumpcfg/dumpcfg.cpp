@@ -358,7 +358,7 @@ int main(int argc, char **argv) {
 		command.displayHelp();
 		return 1;
 	}
-	catch(elm::Exception e) {
+	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
 		return 2;
 	}
