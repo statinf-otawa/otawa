@@ -33,6 +33,9 @@ plugin_param=
 testdir=deployed_tests
 tags=
 debug=
+default_modules="elm ppc lp_solve otawa"
+all_modules="$default_modules gel frontc gliss hcs12"
+
 
 # functions
 function display {
