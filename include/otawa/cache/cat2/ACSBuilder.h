@@ -29,6 +29,7 @@
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/cache/cat2/MUSTProblem.h>
 #include <otawa/cache/cat2/PERSProblem.h>
+#include <elm/genstruct/Vector.h>
 
 namespace otawa {
 	
@@ -46,7 +47,7 @@ extern Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST;
 extern Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS;
 extern Identifier<fmlevel_t> FIRSTMISS_LEVEL;
 extern Identifier<bool> PSEUDO_UNROLLING;
-extern Identifier<MUSTProblem::Domain*> CACHE_ACS_MUST_ENTRY;
+extern Identifier<genstruct::Vector<MUSTProblem::Domain*>*> CACHE_ACS_MUST_ENTRY;
 
 class ACSBuilder : public otawa::Processor {
 
@@ -54,7 +55,7 @@ class ACSBuilder : public otawa::Processor {
 	fmlevel_t level;
 	
 	bool unrolling;
-	MUSTProblem::Domain *must_entry;
+	genstruct::Vector<MUSTProblem::Domain *> *must_entry;
 	
 	public:
 	ACSBuilder(void);
