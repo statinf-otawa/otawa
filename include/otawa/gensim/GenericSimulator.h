@@ -19,7 +19,7 @@ public:
 	GenericSimulator(void);
 	
 	// Simulator overload
-	sim::State *instantiate(FrameWork *fw,
+	sim::State *instantiate(WorkSpace *fw,
 		const PropList& props = PropList::EMPTY);
 };
 

@@ -21,7 +21,7 @@ extern Identifier<int> INSTRUCTION_TIME;
 
 class GenericState: public sim::State {
 	friend class GenericSimulator;
-	FrameWork *fw;
+	WorkSpace *fw;
 	int _cycle;
 	GenericProcessor* processor;	
 	bool running;
@@ -31,7 +31,7 @@ class GenericState: public sim::State {
 public:
 	sim::Driver *driver;
 
-	GenericState(FrameWork *framework):
+	GenericState(WorkSpace *framework):
 	fw(framework), _cycle(0), driver(NULL) {
 	}
 	
