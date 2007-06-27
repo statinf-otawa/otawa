@@ -17,7 +17,7 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/ipet/BBTimeSimulator.h>
 #include <otawa/gensim/GenericSimulator.h>
-#include <otawa/exegraph/ExeGraphBBTime.h>
+#include <otawa/exegraph/LiExeGraphBBTime.h>
 #include <otawa/exegraph/Microprocessor.h>
 #include <otawa/ipet/TimeDeltaObjectFunctionModifier.h>
 
@@ -49,14 +49,14 @@ class Command: public elm::option::Manager {
 	String file;
 	genstruct::Vector<String> funs;
 	otawa::Manager manager;
-	FrameWork *fw;
+	WorkSpace *fw;
 	PropList stats;
 	ilp::Constraint *node_cons;
 	bool cons_used;
 	
 	void computeDeltaMax(TreePath< BasicBlock *, BBPath * > *tree, int parent_time);
 	void computeMax(TreePath< BasicBlock *, BBPath * > *tree, int parent_time);
-	void buildTrees(FrameWork* fw, CFG* cfg);
+	void buildTrees(WorkSpace* fw, CFG* cfg);
 
 	// Suffix methods
 	typedef struct context_t {
@@ -173,10 +173,10 @@ void Command::compute(String fun) {
 		props.set(EXPLICIT, true);
 	if(do_stats)
 		otawa::Processor::STATS(props) = &stats;
-	if(deep_context)
-		ExeGraphBBTime::CONTEXT(props) = true;
+	/*if(deep_context)
+		LiExeGraphBBTime::CONTEXT(props) = true;
 	if(do_context)
-		ExeGraphBBTime::DELTA(props) = true;
+		LiExeGraphBBTime::DELTA(props) = true;*/
 	
 	// Assign variables
 	VarAssignment assign;
@@ -184,7 +184,7 @@ void Command::compute(String fun) {
 		
 	// Compute BB time
 	if(exegraph) {
-		ExeGraphBBTime tbt;
+		LiExeGraphBBTime tbt;
 		tbt.process(fw, props);
 	}
 	else {
@@ -270,18 +270,18 @@ void Command::compute(String fun) {
 	
 	// Get statistics
 	else if(!do_time) {
-		if(exegraph) {
+		/*if(exegraph) {
 			const Vector<ExeGraphBBTime::stat_t>& prefs =
 				*ExeGraphBBTime::PREFIX_STATS(stats);
 			for(int i = 0; i < prefs.length(); i++)
 				cout << i << '\t'
-					/*<< prefs[i].total_span_sum << '\t'
+					<< prefs[i].total_span_sum << '\t'
 				 	<< prefs[i].total_vals_sum << '\t'
-				 	<< prefs[i].bb_cnt << '\t'*/
+				 	<< prefs[i].bb_cnt << '\t'
 					 << ((double)prefs[i].total_span_sum / prefs[i].bb_cnt) << '\t'
 					 << ((double)prefs[i].total_vals_sum / prefs[i].bb_cnt) << io::endl;
 		}
-		else if(suffix) {
+		else*/ if(!exegraph && suffix) {
 			for(CFG::BBIterator bb(&vcfg); bb; bb++)
 				collectSuffixStats(STAT(bb));
 			for(int i = 0; i < exe_stats.length(); i++)
@@ -437,7 +437,7 @@ void Command::computeMinTime(
 /**
  * Build the trees.
  */
-void Command::buildTrees(FrameWork* fw, CFG* cfg) {
+void Command::buildTrees(WorkSpace* fw, CFG* cfg) {
 	assert(fw);
 	assert(cfg);
 	int levels = suffix;
