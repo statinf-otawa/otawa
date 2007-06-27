@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
 	
 	//cout << "config = " << props << io::endl;
 	try {
-		FrameWork *fw = manager.load(file, props);
+		WorkSpace *fw = manager.load(file, props);
 		
 		// Find main CFG
 		CFG *cfg = fw->getCFGInfo()->findCFG("main");

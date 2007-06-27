@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 	PropList props;
 	CACHE_CONFIG_PATH(props) = "icache.xml";
 	try {
-		FrameWork *fw = manager.load(argv[1], props);
+		WorkSpace *fw = manager.load(argv[1], props);
 		
 		// Find main CFG
 		CFG *cfg = fw->getCFGInfo()->findCFG("main");
