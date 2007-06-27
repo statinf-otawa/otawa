@@ -83,7 +83,7 @@ using namespace otawa;
 class Command: public option::Manager {
 	bool one;
 	otawa::Manager manager;
-	FrameWork *fw;
+	WorkSpace *fw;
 	CFGInfo *info;
 	genstruct::Vector<ContextTree *> funs;
 	void perform(String name);
@@ -171,7 +171,7 @@ void Command::perform(String name) {
 
 	// Configuration	
 	PropList props;
-	//PROC_VERBOSE(props) = true;
+	//Processor::VERBOSE(props) = true;
 	TASK_ENTRY(props) = &name;
 
 	// Build the context tree
