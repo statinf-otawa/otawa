@@ -1,8 +1,36 @@
+/*
+ *	$Id$
+ *	This file describes the Persistence cache problem.
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2007, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
+ */
+
 #ifndef CACHE_PERSPROBLEM_H_
 #define CACHE_PERSPROBLEM_H_
 
-#include <otawa/dfa/BitSet.h>
-
+#include <elm/io.h>
+#include <elm/assert.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/cache/LBlockSet.h>
+#include <otawa/hard/Cache.h>
+#include <otawa/cfg/BasicBlock.h>
+#include <otawa/util/HalfAbsInt.h>
 
 
 namespace otawa {
@@ -35,7 +63,7 @@ class PERSProblem {
 			} 
 			
 			inline Item& operator=(const Item &src) {
-				assert((A == src.A) && (size == src.size));
+				ASSERT((A == src.A) && (size == src.size));
 				for (int i = 0; i < size ; i++)
 					age[i] = src.age[i];
 				
@@ -49,7 +77,7 @@ class PERSProblem {
 			}
 			
 			inline void lub(const Item &dom) {
-				assert((A == dom.A) && (size == dom.size));
+				ASSERT((A == dom.A) && (size == dom.size));
 
 				for (int i = 0; i < size; i++) {					
 					if (((age[i] < dom.age[i]) && (dom.age[i] != -1)) || (age[i] == -1))
@@ -58,7 +86,7 @@ class PERSProblem {
 			}
 			
 			inline bool equals(const Item &dom) const {
-				assert((A == dom.A) && (size == dom.size));
+				ASSERT((A == dom.A) && (size == dom.size));
 				for (int i = 0; i < size; i++)
 					if (age[i] != dom.age[i])
 						return false;
@@ -72,7 +100,7 @@ class PERSProblem {
 			}
 			
 			inline bool contains(const int id) {
-				assert((id < size) && (id >= 0));
+				ASSERT((id < size) && (id >= 0));
 				return(age[id] != -1);				
 			}
 			
