@@ -54,7 +54,7 @@ GenericSimulator::GenericSimulator(void)
 
 /**
  */	
-sim::State *GenericSimulator::instantiate(FrameWork *fw, const PropList& props) {
+sim::State *GenericSimulator::instantiate(WorkSpace *fw, const PropList& props) {
 	static GenericState* state;
 	static bool initialized = false;
 	if(!initialized){
