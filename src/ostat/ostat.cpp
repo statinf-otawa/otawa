@@ -56,7 +56,7 @@ class Statistics;
 class Command: public option::Manager {
 	String file;
 	otawa::Manager manager;
-	FrameWork *fw;
+	WorkSpace *fw;
 	CFGInfo *info;
 	genstruct::Vector<String> funs;
 	genstruct::Vector<Statistics *> stats;
