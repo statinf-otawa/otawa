@@ -49,14 +49,14 @@ template <class G>
 class ExeGraphBBTime: public BBProcessor {
 	protected:
 		typedef typename G::Node ExeNode;
-		FrameWork *fw;
+		WorkSpace *fw;
 		PropList *properties;
 		Microprocessor<ExeNode> *microprocessor;
 	public:
 		ExeGraphBBTime(const PropList& props = PropList::EMPTY);
 		// BBProcessor overload
-		void processWorkSpace(FrameWork *fw);
-		void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {}
+		void processWorkSpace(WorkSpace *fw);
+		void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {}
 		// Configuration Properties
 		static Identifier<Microprocessor<ExeNode> *> PROCESSOR;
 		static Identifier<elm::io::Output *>  LOG_OUTPUT;
@@ -77,7 +77,7 @@ ExeGraphBBTime<G>::ExeGraphBBTime(const PropList& props)
 }
 
 template <class G>
-void ExeGraphBBTime<G>::processWorkSpace(FrameWork *fw) {
+void ExeGraphBBTime<G>::processWorkSpace(WorkSpace *fw) {
 	bool built = false, reset = false;
 	this->fw = fw;
 	

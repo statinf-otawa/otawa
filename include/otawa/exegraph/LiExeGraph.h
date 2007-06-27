@@ -60,7 +60,7 @@ class LiExeGraph : public ExeGraph<LiExeNode> {
 		bool separated(LiExeNode *u, LiExeNode *v);		
 		inline elm::String timeName(int time);
 	public:
-		inline LiExeGraph(FrameWork *fw,  Microprocessor<LiExeNode> * microprocessor, ExeSequence<LiExeNode> *sequence)	
+		inline LiExeGraph(WorkSpace *fw,  Microprocessor<LiExeNode> * microprocessor, ExeSequence<LiExeNode> *sequence)	
 			: ExeGraph<LiExeNode>::ExeGraph() {
 			build(fw, microprocessor, sequence);
 		}
