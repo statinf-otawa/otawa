@@ -1,9 +1,36 @@
+/*
+ *	$Id$
+ *	This describes the "MAY" cache problem.
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2007, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
+ */
+
 #ifndef CACHE_MAYPROBLEM_H_
 #define CACHE_MAYPROBLEM_H_
 
-#include <otawa/dfa/BitSet.h>
-
-
+#include <elm/io.h>
+#include <elm/assert.h>
+#include <otawa/proc/WorkSpace.h>
+#include <otawa/cache/LBlockSet.h>
+#include <otawa/hard/Cache.h>
+#include <otawa/cfg/BasicBlock.h>
+#include <util/HalfAbsInt.h>
 
 namespace otawa {
 
@@ -44,7 +71,7 @@ class MAYProblem {
 			} 
 		
 			inline Domain& operator=(const Domain &src) {
-				assert((A == src.A) && (size == src.size));
+				ASSERT((A == src.A) && (size == src.size));
 				for (int i = 0; i < size ; i++)
 					age[i] = src.age[i];
 				return(*this);
@@ -52,7 +79,7 @@ class MAYProblem {
 			}
 			 
 			inline void glb(const Domain &dom) {
-				assert((A == dom.A) && (size == dom.size));
+				ASSERT((A == dom.A) && (size == dom.size));
 				
 				for (int i = 0; i < size; i++) {
 					if (((age[i] > dom.age[i]) && (dom.age[i] != -1)) || (age[i] == -1))
@@ -61,7 +88,7 @@ class MAYProblem {
 			}
 			
 			inline void lub(const Domain &dom) {
-				assert((A == dom.A) && (size == dom.size));
+				ASSERT((A == dom.A) && (size == dom.size));
 
 				for (int i = 0; i < size; i++) {
 					if (((age[i] > dom.age[i]) && (dom.age[i] != -1)) || (age[i] != -1)) 
@@ -83,7 +110,7 @@ class MAYProblem {
 			}
 			
 			inline bool equals(const Domain &dom) const {
-				assert((A == dom.A) && (size == dom.size));
+				ASSERT((A == dom.A) && (size == dom.size));
 				for (int i = 0; i < size; i++)
 					if (age[i] != dom.age[i])
 						return false;
@@ -97,7 +124,7 @@ class MAYProblem {
 			}
 			
 			inline bool contains(const int id) {
-				assert((id < size) && (id >= 0));
+				ASSERT((id < size) && (id >= 0));
 				return(age[id] != -1);				
 			}
 			
@@ -198,11 +225,11 @@ class MAYProblem {
 	
 
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
-	inline void enterContext(Domain &dom, BasicBlock *header, hai_context_t ctx) {
+	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
 
 	}
 
-	inline void leaveContext(Domain &dom, BasicBlock *header, hai_context_t ctx) {
+	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
 
 	}		
 
