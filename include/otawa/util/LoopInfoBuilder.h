@@ -7,17 +7,17 @@
 #ifndef OTAWA_LOOP_INFO_BUILDER_H
 #define OTAWA_LOOP_INFO_BUILDER_H
 
-#include <assert.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/genstruct/SortedSLList.h>
 #include <otawa/util/Dominance.h>
-#include <otawa/properties.h>
-#include <otawa/cfg.h>
-#include <otawa/proc/Processor.h>
+#include <otawa/prop/Identifier.h>
+#include <otawa/cfg/CFG.h>
+#include <otawa/cfg/BasicBlock.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/proc/CFGProcessor.h>
+#include <otawa/dfa/BitSet.h>
 
 namespace otawa {
 
