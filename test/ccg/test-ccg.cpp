@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 	NO_SYSTEM(props) = true;
 
 	try {
-		FrameWork *fw = manager.load(argv[1], props);
+		WorkSpace *fw = manager.load(argv[1], props);
 		
 		// Find main CFG
 		CFG *cfg = fw->getCFGInfo()->findCFG("main");
