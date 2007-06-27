@@ -55,8 +55,8 @@ class LiExeGraphBBTime: public ExeGraphBBTime<LiExeGraph> {
 				       				int capacity, 
 				       				elm::genstruct::DLList<ExeSequence<ExeNode> *>* epilogue_list,
 				       				int start_index);
-		void processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
-		int processSequence( FrameWork *fw,
+		void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+		int processSequence(WorkSpace *fw,
 									ExeSequence<ExeNode> * prologue,
 									ExeSequence<ExeNode> * body,
 									ExeSequence<ExeNode> * epilogue,
