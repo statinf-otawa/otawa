@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 				 << "Syntax is : test_ipet <executable>\n";
 			exit(2);
 		}
-		FrameWork *fw = manager.load(argv[1], props);
+		WorkSpace *fw = manager.load(argv[1], props);
 		assert(fw);
 		
 		// Display information
