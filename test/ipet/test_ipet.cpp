@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
 				 << "Syntax is : test_ipet <executable>\n";
 			return 2;
 		}
-		FrameWork *fw = manager.load(argv[1], props);
+		WorkSpace *fw = manager.load(argv[1], props);
 		
 		// Find main CFG
 		cout << "Looking for the main CFG\n";
