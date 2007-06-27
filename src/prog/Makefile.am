@@ -132,9 +132,6 @@ libotawa_la_SOURCES = \
 	sim_Driver.cpp \
 	sim_BasicBlockDriver.cpp \
 	sim_BBPathDriver.cpp \
-	Microprocessor.cpp \
-	ExecutionGraph.cpp \
-	ExeGraphBBTime.cpp \
 	BBTimeSimulator.cpp \
 	BBPath.cpp \
 	cfg_CFGCollector.cpp \
@@ -143,5 +140,15 @@ libotawa_la_SOURCES = \
 	prop_GenericIdentifier.cpp \
 	prop_PropList.cpp \
 	prop_Property.cpp \
-	prop_DeletableProperty.cpp
+	prop_DeletableProperty.cpp \
+	exegraph_ExeGraphBBTime.cpp \
+	exegraph_ExeGraph.cpp \
+	exegraph_LiExeGraphBBTime.cpp \
+	exegraph_LiExeGraph.cpp \
+	exegraph_Microprocessor.cpp
+
 	
+
+#	Microprocessor.cpp
+#	ExecutionGraph.cpp
+#	ExeGraphBBTime.cpp
