@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 	PropList props;
 //	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	try {
-		FrameWork *fw = manager.load(argv[1], props);
+		WorkSpace *fw = manager.load(argv[1], props);
 		
 		// Find main CFG
 		cout << "Looking for the main CFG\n";
