@@ -18,13 +18,13 @@ namespace otawa { namespace sim {
  */
 class TrivialState: public State {
 	// !!TODO!!
-	FrameWork *fw;
+	WorkSpace *fw;
 	int time;
 	int _cycle;
 	Inst *pc;
 	bool running;
 public:
-	TrivialState(FrameWork *framework, int _time):
+	TrivialState(WorkSpace *framework, int _time):
 	fw(framework), time(_time), _cycle(0) {
 		pc = fw->start();
 	}
@@ -91,7 +91,7 @@ TrivialSimulator::TrivialSimulator(void)
 
 /**
  */	
-State *TrivialSimulator::instantiate(FrameWork *fw, const PropList& props) {
+State *TrivialSimulator::instantiate(WorkSpace *fw, const PropList& props) {
 	if(props.get<bool>(IS_FUNCTIONAL, false))
 		throw Exception(*this, "IS_FUNCTIONAL property not supported");
 	if(props.get<bool>(USE_MEMORY, false))

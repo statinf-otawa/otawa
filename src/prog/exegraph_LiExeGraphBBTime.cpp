@@ -139,7 +139,7 @@ void LiExeGraphBBTime::buildEpilogueList(
 		
 }
 
-int LiExeGraphBBTime::processSequence( FrameWork *fw,
+int LiExeGraphBBTime::processSequence( WorkSpace *fw,
 				ExeSequence<ExeNode> * prologue,
 				ExeSequence<ExeNode> * body,
 				ExeSequence<ExeNode> * epilogue,
@@ -215,7 +215,7 @@ int LiExeGraphBBTime::processSequence( FrameWork *fw,
 	return bbExecTime;
 }
 
-void LiExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb) {
+void LiExeGraphBBTime::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 	ExeSequence<ExeNode> prologue, prefix, body, epilogue, sequence;
 
 	LOG(OUT << "================================================================\n");
