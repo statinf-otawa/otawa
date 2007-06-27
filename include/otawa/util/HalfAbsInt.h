@@ -1,23 +1,42 @@
 /*
- * $Id$
- * Copyright (c) 2005 IRIT-UPS
+ *	$Id$
+ *	"Half" abstract interpretation class interface.
  *
- * include/otawa/util/HalfAbsint.h -- "Half" abstract interpretation class interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2007, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
  */
+
 #ifndef OTAWA_UTIL_HALFABSINT_H
 #define OTAWA_UTIL_HALFABSINT_H
 
 
-#include <assert.h>
-#include <elm/genstruct/Table.h>
+#include <elm/assert.h>
 #include <elm/genstruct/VectorQueue.h>
 #include <elm/genstruct/Vector.h>
-#include <otawa/cfg.h>
+#include <otawa/cfg/CFG.h>
+#include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/Edge.h>
-#include <otawa/dfa/BitSet.h>
-#include <otawa/otawa.h>
 #include <otawa/util/Dominance.h>
 #include <otawa/util/LoopInfoBuilder.h>
+#include <otawa/prop/Identifier.h>
+#include <otawa/prog/WorkSpace.h>
+
+
 
 namespace otawa { namespace util {
 
@@ -36,7 +55,7 @@ class HalfAbsInt {
 	
   private:
 	FixPoint& fp;
-	FrameWork &fw;
+	WorkSpace &fw;
 	CFG& entry_cfg;	
 	CFG *cur_cfg;
 	elm::genstruct::VectorQueue<BasicBlock*> *workList;	
@@ -59,7 +78,7 @@ class HalfAbsInt {
   	inline typename FixPoint::FixPointState *getFixPointState(BasicBlock *bb);
 	int solve(otawa::CFG *main_cfg = NULL, 
 		typename FixPoint::Domain *entdom = NULL);
-	inline HalfAbsInt(FixPoint& _fp, FrameWork& _fw);
+	inline HalfAbsInt(FixPoint& _fp, WorkSpace& _fw);
 	inline ~HalfAbsInt(void);
 	inline typename FixPoint::Domain backEdgeUnion(BasicBlock *bb);
 	inline typename FixPoint::Domain entryEdgeUnion(BasicBlock *bb);
@@ -69,7 +88,7 @@ class HalfAbsInt {
 
 
 template <class FixPoint>
-inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, FrameWork& _fw)
+inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, WorkSpace& _fw)
  : entry_cfg(*ENTRY_CFG(_fw)), cur_cfg(ENTRY_CFG(_fw)), in(_fp.bottom()), out(_fp.bottom()), fw(_fw), fp(_fp), FIXPOINT_STATE("", NULL, otawa::NS) {
 		workList = new elm::genstruct::VectorQueue<BasicBlock*>();
 		callStack = new elm::genstruct::Vector<Edge*>();
@@ -117,7 +136,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
             	cout << "Loop header " << current->number() << ", fixpoint reached = " << fixpoint << "\n";
 #endif            	
             	if (FIRST_ITER(current)) {
-            		assert(!fixpoint);
+            		ASSERT(!fixpoint);
             		FIRST_ITER(current) = false;
             	}
             	 
@@ -163,7 +182,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			if (inedge->kind() == Edge::CALL)
 				continue;
 			typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
-			assert(edgeState != NULL);
+			ASSERT(edgeState != NULL);
 			fp.lub(in, *edgeState);										
 			fp.unmarkEdge(*inedge);
 #ifdef DEBUG                    
@@ -318,7 +337,7 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::backEdgeUnion(BasicBlock 
             			continue;
                 if (Dominance::dominates(bb, inedge->source())) {
                         typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
-                        assert(edgeState);                        
+                        ASSERT(edgeState);                        
                         fp.lub(result, *edgeState);
                 }
   
@@ -337,7 +356,7 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(BasicBlock
             			continue;
                 if (!Dominance::dominates(bb, inedge->source())) {
                         typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
-                        assert(edgeState);
+                        ASSERT(edgeState);
                         fp.lub(result, *edgeState);
                 }
   
