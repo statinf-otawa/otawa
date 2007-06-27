@@ -18,11 +18,11 @@ namespace sim {
 class FullSimulationDriver: public Driver {
 	otawa::Inst * inst;
 	bool wrong_path;
-	FrameWork *fw;
+	WorkSpace *fw;
 	otawa::Inst *end_of_simulation;
 	SimState *emulator_state;
 public:
-	inline FullSimulationDriver(FrameWork *_fw, Inst * start);
+	inline FullSimulationDriver(WorkSpace *_fw, Inst * start);
 	
 	// Driver overload
 	virtual Inst *nextInstruction(State& state, Inst *inst);
@@ -32,7 +32,7 @@ public:
 };
 
 // FullSimulationDriver inlines
-inline FullSimulationDriver::FullSimulationDriver(FrameWork *_fw, Inst * start) {
+inline FullSimulationDriver::FullSimulationDriver(WorkSpace *_fw, Inst * start) {
 	fw = _fw;
 	inst = start;
 	assert(inst);
