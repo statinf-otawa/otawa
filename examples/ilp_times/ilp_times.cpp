@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
 //	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	CACHE_CONFIG(props) = &cache_conf;
 	try {
-		FrameWork *fw = manager.load(file, props);
+		WorkSpace *fw = manager.load(file, props);
 		
 		// Find main CFG
 		CFG *cfg = fw->getCFGInfo()->findCFG("main");
