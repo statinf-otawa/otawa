@@ -55,7 +55,7 @@ Feature<ACSBuilder> ICACHE_ACS_FEATURE("otawa.cache.acsfeature");
  * @par Hooks
  * @li @ref PropList 
  */
- Identifier<MUSTProblem::Domain*> CACHE_ACS_MUST_ENTRY("otawa::cache_acs_must_entry", NULL);
+ Identifier<Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST_ENTRY("otawa::cache_acs_must_entry", NULL);
  
  
  
@@ -137,7 +137,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			UnrollingListener<MUSTProblem> mustList(fw, mustProb);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > mustFp(mustList);
 			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > > mustHai(mustFp, *fw);
-			mustHai.solve(NULL, must_entry);
+			mustHai.solve(NULL, must_entry ? must_entry->get(line) : NULL);
 		
 			
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
@@ -148,7 +148,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			DefaultListener<MUSTProblem> mustList(fw, mustProb);
 			DefaultFixPoint<DefaultListener<MUSTProblem> > mustFp(mustList);
 			util::HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTProblem> > > mustHai(mustFp, *fw);
-			mustHai.solve(NULL, must_entry);
+			mustHai.solve(NULL, must_entry ? must_entry->get(line) : NULL);
 				
 			
 			/* Store the resulting ACS into the properties */
