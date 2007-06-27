@@ -8,7 +8,7 @@
 #define OTAWA_OTAWA_H
 
 #include <otawa/manager.h>
-#include <otawa/prog/FrameWork.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 	
