@@ -35,7 +35,7 @@ int main(int argc, char **argv){
 		PROCESSOR_PATH(props) = "../../data/procs/op1.xml";
 		SIMULATOR(props) = &gensim_simulator;
 		ipet::EXPLICIT(props) = true;
-		FrameWork *fw = manager.load(file, props);
+		WorkSpace *fw = manager.load(file, props);
 		
 		// Find main
 		CFG *cfg = fw->getCFGInfo()->findCFG("main");
