@@ -16,7 +16,7 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ipet/BBTimeSimulator.h>
-#include <otawa/exegraph/ExeGraphBBTime.h>
+#include <otawa/exegraph/LiExeGraphBBTime.h>
 #include <otawa/gensim/GenericSimulator.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/display/CFGDrawer.h>
@@ -110,7 +110,7 @@ class Command: public elm::option::Manager {
 	String file;
 	genstruct::Vector<String> funs;
 	otawa::Manager manager;
-	FrameWork *fw;
+	WorkSpace *fw;
 	gensim::GenericSimulator sim;
 public:
 	Command(void);
@@ -246,7 +246,7 @@ void Command::compute(String fun) {
 		break;
 		
 	case bbtime_exegraph: {
-			ExeGraphBBTime tbt;
+			LiExeGraphBBTime tbt;
 			tbt.process(fw, props);
 		}
 		break;
