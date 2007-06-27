@@ -1,5 +1,7 @@
 includeotawaexegraphdir=$(includedir)/otawa/exegraph
 includeotawaexegraph_HEADERS = \
-	ExecutionGraph.h \
 	ExeGraphBBTime.h \
+	ExeGraph.h \
+	LiExeGraphBBTime.h \
+	LiExeGraph.h \
 	Microprocessor.h
