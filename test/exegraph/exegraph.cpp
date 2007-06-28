@@ -1,222 +1,203 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2006, IRIT UPS.
  *
- *	test/ipet/exegraph.cpp -- test for Execution Graph modeling feature.
+ *	src/oipet/piconsens.cpp -- pipeline context-sensitivity experimentation.
  */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <elm/io.h>
+#include <elm/io/OutFileStream.h>
+#include <elm/options.h>
 #include <otawa/otawa.h>
 #include <otawa/ipet.h>
-#include <otawa/proc/ProcessorException.h>
-#include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ilp.h>
-#include <otawa/exegraph/ExeGraphBBTime.h>
+#include <elm/system/StopWatch.h>
+#include <otawa/proc/ProcessorException.h>
+#include <otawa/ipet/BBTimeSimulator.h>
+#include <otawa/gensim/GenericSimulator.h>
+#include <otawa/exegraph/LiExeGraphBBTime.h>
 #include <otawa/exegraph/Microprocessor.h>
-
+#include <otawa/ipet/TimeDeltaObjectFunctionModifier.h>
 
 using namespace elm;
-using namespace elm::io;
+using namespace elm::option;
 using namespace otawa;
 using namespace otawa::ipet;
-using namespace std;
+using namespace otawa::hard;
+using namespace elm::option;
+using namespace otawa::gensim;
+
+// Command
+class Command: public elm::option::Manager {
+	String file;
+	genstruct::Vector<String> funs;
+	otawa::Manager manager;
+	WorkSpace *fw;
+	PropList stats;
 
 
-int main(int argc, char **argv) {
+public:
+	Command(void);
+	void compute(String fun);
+	void run(void);
 	
-	elm::io::OutFileStream *logStream = new elm::io::OutFileStream("log.txt");
-	if(!logStream->isReady())
-		throw IOException(logStream->lastErrorMessage());
-	elm::io::Output logFile(*logStream);
+	// Manager overload
+	virtual void process (String arg);
+};
+Command command;
+
+
+// Options
+BoolOption dump_constraints(command, 'u', "dump-cons", "dump lp_solve constraints", false);
+BoolOption verbose(command, 'v', "verbose", "verbose mode", false);
+StringOption proc(command, 'p', "processor", "used processor", "processor", "deg1.xml");
+BoolOption do_time(command, 't', "time", "display basic block times", false);
+IntOption depth(command, 'D', "depth", "prologue depth", "depth", 0);
+
+
+/**
+ * Build the command manager.
+ */
+Command::Command(void) {
+	program = "genexegraph";
+	version = "1.0.0";
+	author = "H. Cassé";
+	copyright = "Copyright (c) 2006, IRIT-UPS";
+	description = "test of generic exegraph";
+	free_argument_description = "binary_file function1 function2 ...";
+}
+
+
+/**
+ * Process the free arguments.
+ */
+void Command::process (String arg) {
+	if(!file)
+		file = arg;
+	else
+		funs.add(arg);
+}
+
+
+/**
+ * Compute the WCET for the given function.
+ */
+void Command::compute(String fun) {
 	
-	Microprocessor processor;
-	Queue *fetchQueue = processor.addQueue("FetchQueue", 2);
-	Queue *ROB = processor.addQueue("ROB",2);
-	PipelineStage::pipeline_info_t pipeline_info;
-	pipeline_info.stage_name = "FetchStage";
-	pipeline_info.stage_short_name = "IF";
-	pipeline_info.stage_category = PipelineStage::FETCH;
-	pipeline_info.order_policy = PipelineStage::IN_ORDER;
-	pipeline_info.stage_width = 2;
-	pipeline_info.min_latency = 1;
-	pipeline_info.max_latency = 1;
-	pipeline_info.source_queue = NULL;
-	pipeline_info.destination_queue = fetchQueue;
-	processor.addPipelineStage(pipeline_info);
-	pipeline_info.stage_name = "DecodeStage";
-	pipeline_info.stage_short_name = "ID";
-	pipeline_info.stage_category = PipelineStage::DECODE;
-	pipeline_info.order_policy = PipelineStage::IN_ORDER;
-	pipeline_info.stage_width = 2;
-	pipeline_info.min_latency = 1;
-	pipeline_info.max_latency = 1;
-	pipeline_info.source_queue = fetchQueue;
-	pipeline_info.destination_queue = ROB;
-	processor.addPipelineStage(pipeline_info);
-	pipeline_info.stage_name = "ExecutionStage";
-	pipeline_info.stage_short_name = "EX";
-	pipeline_info.stage_category = PipelineStage::EXECUTE;
-	pipeline_info.order_policy = PipelineStage::OUT_OF_ORDER;
-	pipeline_info.stage_width = 2;
-	pipeline_info.min_latency = 1;
-	pipeline_info.max_latency = 1;
-	pipeline_info.source_queue = NULL;
-	pipeline_info.destination_queue = NULL;
-	PipelineStage *execute_stage = processor.addPipelineStage(pipeline_info);
-	processor.setOperandReadingStage(execute_stage);
-	processor.setOperandProducingStage(execute_stage);
-	PipelineStage::FunctionalUnit::fu_info_t fu_info = {
-		"ALU",
-		"ALU",
-		false,
-		1,
-		1,
-		2 };
-	PipelineStage::FunctionalUnit *alu = execute_stage->addFunctionalUnit(fu_info);
-//	execute_stage->bindFunctionalUnit(alu,PipelineStage::IALU);
-//	execute_stage->bindFunctionalUnit(alu,PipelineStage::FALU);
-	execute_stage->bindFunctionalUnit(alu,IALU);
-	execute_stage->bindFunctionalUnit(alu,FALU);
-	execute_stage->bindFunctionalUnit(alu,CONTROL);
-	fu_info.name = "MemUnit";
-	fu_info.short_name = "MEM";
-	fu_info.is_pipelined = true;
-	fu_info.min_latency = 2;
-	fu_info.max_latency = 10;
-	fu_info.width = 1;
-	PipelineStage::FunctionalUnit *memunit = execute_stage->addFunctionalUnit(fu_info);
-//	execute_stage->bindFunctionalUnit(memunit,PipelineStage::MEMORY);
-	execute_stage->bindFunctionalUnit(memunit,MEMORY);
-	pipeline_info.stage_name = "WriteBackStage";
-	pipeline_info.stage_short_name = "WB";
-	pipeline_info.stage_category = PipelineStage::WRITE;
-	pipeline_info.order_policy = PipelineStage::OUT_OF_ORDER;
-	pipeline_info.stage_width = 2;
-	pipeline_info.min_latency = 1;
-	pipeline_info.max_latency = 1;
-	pipeline_info.source_queue = NULL;
-	pipeline_info.destination_queue = NULL;
-	processor.addPipelineStage(pipeline_info);
-	pipeline_info.stage_name = "CommitStage";
-	pipeline_info.stage_short_name = "CM";
-	pipeline_info.stage_category = PipelineStage::COMMIT;
-	pipeline_info.order_policy = PipelineStage::IN_ORDER;
-	pipeline_info.stage_width = 2;
-	pipeline_info.min_latency = 1;
-	pipeline_info.max_latency = 1;
-	pipeline_info.source_queue = ROB;
-	pipeline_info.destination_queue = NULL;
-	processor.addPipelineStage(pipeline_info);
-	processor.dump(logFile);
-	
-	Manager manager;
+	// Get the VCFG
+	CFG *cfg = fw->getCFGInfo()->findCFG(fun);
+	if(!cfg) {
+		cerr << "ERROR: binary file does not contain the function \""
+			 << fun << "\".\n";
+		return;
+	}
+	VirtualCFG vcfg(cfg);
+	//ENTRY_CFG(fw) = &vcfg;
+		
+	// Prepare processor configuration
 	PropList props;
+	ENTRY_CFG(props) = &vcfg;
+	if(verbose) {
+	  //	PROC_VERBOSE(props) = true;
+		cerr << "verbose !\n";
+	}
+	if(dump_constraints)
+		props.set(EXPLICIT, true);
 	
-	try {
+	// Assign variables
+	VarAssignment assign;
+	assign.process(fw, props);
 		
-		// Load program
-		if(argc < 2) {
-			cerr << "ERROR: no argument.\n"
-				 << "Syntax is : exegraph <executable>\n";
-			exit(2);
-		}
-		FrameWork *fw = manager.load(argv[1], props);
+	// Compute BB time
+       	LiExeGraphBBTime tbt(props);
+	tbt.process(fw);
 		
-		// Find main CFG
-		cout << "Looking for the main CFG\n";
-		CFG *cfg = fw->getCFGInfo()->findCFG("main");
-		if(cfg == 0) {
-			cerr << "ERROR: cannot find main !\n";
-			return 1;
-		}
-		else
-			cout << "main found at 0x" << cfg->address() << '\n';
+	// Build the system
+	BasicConstraintsBuilder builder;
+	builder.process(fw, props);
 		
-		// Removing __eabi call if available
+	// Load flow facts
+	ipet::FlowFactLoader loader;
+	loader.process(fw, props);
+
+	// Build the object function to maximize
+	BasicObjectFunctionBuilder fun_builder;
+	fun_builder.process(fw, props);	
+  
+	// Resolve the system
+	WCETComputation wcomp;
+	wcomp.process(fw, props);
+  
+	// Get the results
+	ilp::System *sys = SYSTEM(fw);
+	cout << "WCET = " << WCET(fw) << "\n";
+	// Dump the ILP system
+	if(dump_constraints) {
+	  String out_file = fun + ".lp";
+		io::OutFileStream stream(&out_file);
+//		if(!stream.isReady())
+//			throw MessageException("cannot create file \"%s\".", &out_file);
+		sys->dump(stream);
+	}
+}
+
+
+/**
+ * Launch the work.
+ */
+void Command::run(void) {
+	
+	// Any file
+//	if(!file)
+//		throw OptionException("binary file path required !");
+	
+	// Load the file
+	//GenericSimulator sim;
+	PropList props;
+	//SIMULATOR(props) = &sim;
+	PROCESSOR_PATH(props) = proc.value();
+	fw = manager.load(&file, props);
+	
+	// Removing __eabi call if available (should move in a file configuration)
+	CFG *cfg = fw->getCFGInfo()->findCFG("main");
+	if(cfg != 0)
 		for(CFG::BBIterator bb(cfg); bb; bb++)
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
-				if(edge->kind() == otawa::Edge::CALL
+				if(edge->kind() == Edge::CALL
 				&& edge->target()
 				&& edge->calledCFG()->label() == "__eabi") {
 					delete(*edge);
 					break;
 				}
-		
-		// Now, use a VCFG
-		VirtualCFG vcfg(cfg);
-		ENTRY_CFG(fw) = &vcfg;
-		
-		// Prepare processor configuration
-		PropList props;
-		props.set(EXPLICIT, true);
-		
-		// Compute BB times
-		//cout << "Timing the BB\n";
-		//TrivialBBTime tbt(5, props);
-		//tbt.processCFG(fw, &vcfg);
-		
-		// Compute BB times with execution graphs
-		cout << "Timing the BB with execution graphs\n";
-		logFile << "\n----------------------------------------------\n";
-		logFile << "Timing the BB with execution graphs\n";
-		logFile << "----------------------------------------------\n";
-//		logFile << "CFG: \n";
-//		for(CFG::BBIterator bb(cfg); bb; bb++) {
-//			logFile << "block b" << bb->number() << "\n";
-//			logFile << "\tpredecessors: ";
-//			for(BasicBlock::InIterator edgein(bb); edgein; edgein++) {
-//				logFile << "b" << edgein->source()->number() << ", ";
-//			}
-//			logFile << "\n\tsuccessors: ";
-//			for(BasicBlock::OutIterator edgeout(bb); edgeout; edgeout++) {
-//				logFile << "b" << edgeout->target()->number() << ", ";
-//			}
-//			logFile << "\n";
-//		}
-		
-		ExeGraphBBTime::PROCESSOR(props) = &processor;
-		ExeGraphBBTime::LOG_OUTPUT(props) = &logFile;
-		ExeGraphBBTime tbt(props);
-		tbt.process(fw);
-		
-		
-		// Assign variables
-		cout << "Numbering the main\n";
-		VarAssignment assign(props);
-		assign.process(fw);
-		
-		// Build the system
-		cout << "Building the ILP system\n";
-		BasicConstraintsBuilder builder(props);
-		builder.process(fw);
-		
-		// Build the object function to maximize
-		cout << "Building the ILP object function\n";
-		BasicObjectFunctionBuilder fun_builder(props);
-		fun_builder.process(fw);
-		
-		// Load flow facts
-		cout << "Loading flow facts\n";
-		ipet::FlowFactLoader loader(props);
-		loader.process(fw);
-		
-		// Resolve the system
-		cout << "Resolve the system\n";
-		WCETComputation wcomp(props);
-		wcomp.process(fw);
-		
-		// Display the result
-		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
-		sys->dump();
-		cout << sys->countVars() << " variables and "
-			 << sys->countConstraints() << " constraints.\n";
-		cout << "SUCCESS\nWCET = " << vcfg.use<int>(WCET) << '\n';
-	}
-	catch(elm::Exception e) {
-		cerr << "ERROR: " << e.message() << '\n';
-		exit(1);
-	}
-	return 0;
+	
+	// Now process the functions
+	if(!funs)
+		compute("main");
+	else
+		for(int i = 0; i < funs.length(); i++)
+			compute(funs[i]);
 }
 
+
+/**
+ * Program entry point.
+ */
+int main(int argc, char **argv) {
+	try {
+		command.parse(argc, argv);
+		command.run();
+		return 0;
+	}
+	catch(OptionException& e) {
+		cerr << "ERROR: " << e.message() << io::endl;
+		command.displayHelp();
+		return 1;
+	}
+	catch(elm::Exception& e) {
+		cerr << "ERROR: " << e.message() << io::endl;
+		cerr << strerror(errno) << io::endl;
+		return 2;
+	}
+}
