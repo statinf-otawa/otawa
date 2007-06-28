@@ -1,6 +1,5 @@
 SUBDIRS = \
 	dom \
-	display \
 	ct \
 	ets \
 	graph \
@@ -22,6 +21,7 @@ endif
 
 if HAS_ILP
 if HAS_SYSTEMC
-SUBDIRS += ipet  
+SUBDIRS += ipet \
+	display
 endif
 endif
