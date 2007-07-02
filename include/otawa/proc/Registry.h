@@ -8,6 +8,7 @@
 #define OTAWA_PROC_PROC_REGISTER_H
 
 #include <elm/genstruct/HashTable.h>
+#include <elm/genstruct/SLList.h>
 #include <elm/util/Initializer.h>
 #include <otawa/proc/Processor.h>
 
@@ -43,12 +44,14 @@ private:
 // Registration class
 class Registration {
 	friend class ProcessorConfig;
+	
 
 public:
 	Registration(Processor& processor, CString help = "");
-	inline String name(void) const { return _processor.name(); }
-	inline Version version(void) const { return _processor.version(); }
-	inline Processor *processor(void) const { return &_processor; }
+	Registration(CString name, Version version, ...); 
+	inline String name(void) const { return _processor->name(); }
+	inline Version version(void) const { return _processor->version(); }
+	inline Processor *processor(void) const { return _processor; }
 	inline CString help(void) const { return _help; }
 
 	// ConfigIter class
@@ -62,13 +65,24 @@ public:
 			{ }
 	};
 
+	// Configuration properties
+	static Identifier<Registration *> BASE;
+	static Identifier<Configuration *> CONFIG;
+	static Identifier<AbstractFeature *> REQUIRE;
+	static Identifier<AbstractFeature *> PROVIDE;
+	static Identifier<AbstractFeature *> HELP;
+
 	// Private use only
 	void initialize(void);
 
 private:
-	inline const Vector<Configuration *>& configs(void) const { return _processor.configs; }
-	Processor& _processor;
+	inline const Vector<Configuration *>& configs(void) const
+		{ return _processor->configs; }
+	Processor *_processor;
 	CString _help;
+	SLList<Configuration *> config;
+	SLList<AbstractFeature *> required;
+	SLList<AbstractFeature *> provided; 
 };
 
 
