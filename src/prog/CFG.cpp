@@ -189,6 +189,18 @@ void CFG::scan(void) {
 			}
 	}
 	
+	// Check for enetring dead code
+	Vector<Edge *> cut;
+	for(int i = 0; i < _bbs.length(); i++) {
+		BasicBlock *bb = _bbs[i];
+		for(BasicBlock::InIterator edge(bb); edge; edge++)
+			if(!_bbs.contains(edge->source()))
+				cut.add(edge);
+		for(int j = 0; j < cut.length(); j++)
+			bb->removeInEdge(cut[j]);
+		cut.clear();
+	}
+	
 	// Add exit edges
 	INDEX(_exit) = _bbs.length();
 	_exit._cfg = this;
