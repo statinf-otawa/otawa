@@ -141,13 +141,12 @@ inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 			
 			// IN = union OUT of predecessors
 			prob.reset(ins[idx]);
-			for(Iter pred(bb); pred; pred++)
-				if(pred) {
-					BasicBlock *bb_pred = pred;
-					int pred_idx = bb_pred->number();
-					assert(pred_idx >= 0);
-					prob.merge(ins[idx], outs[pred_idx]);
-				}
+			for(Iter pred(bb); pred; pred++) {
+				BasicBlock *bb_pred = pred;
+				int pred_idx = bb_pred->number();
+				assert(pred_idx >= 0);
+				prob.merge(ins[idx], outs[pred_idx]);
+			}
 			
 			// OUT = IN \ KILL U GEN
 			prob.set(comp, ins[idx]);
