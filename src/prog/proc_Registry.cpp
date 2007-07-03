@@ -78,7 +78,7 @@ Registry::Registry(void): Initializer<Registration>(false) {
  * @param help		URL to an help document.
  */
 Registration::Registration(Processor& processor, CString help)
-: _processor(processor), _help(help) {
+: _processor(&processor), _help(help) {
 	Registry::_.record(this);
 }
 
