@@ -97,6 +97,7 @@ public:
 		Address addr = oinst->address();
 		code_t buffer[20];
 		instruction_t *inst;
+		NIA(_state) = addr.address();
 		iss_fetch(addr.address(), buffer);
 		inst = iss_decode(_state, addr.address(), buffer);
 		iss_complete(inst, _state);
@@ -107,8 +108,11 @@ public:
 				next = next->nextInst();
 			return next;
 		} 
-		else
-			return process()->findInstAt(NIA(_state)); 
+		else {
+			Inst *next = process()->findInstAt(NIA(_state));
+			ASSERTP(next, "cannot find instruction at " << (void *)NIA(_state) << " from " << oinst->address());
+			return next; 
+		}
 	}
 private:
 	state_t *_state;
