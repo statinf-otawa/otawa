@@ -225,7 +225,7 @@ class ExeGraph  {
 			{_entry_node = node;}
 		inline N * entryNode(void)
 			{return _entry_node;}
-		void build(WorkSpace *fw,  Microprocessor<N> * microprocessor, ExeSequence<N> *sequence);
+		virtual void build(WorkSpace *fw,  Microprocessor<N> * microprocessor, ExeSequence<N> *sequence);
 		inline elm::String partName(code_part_t part)
 			{return _part_name[part].toString();}
 		inline void setFirstNode(code_part_t part, N *node)
