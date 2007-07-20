@@ -82,6 +82,7 @@ extern Identifier<sim::Simulator *> SIMULATOR;
 extern Identifier<elm::CString> SIMULATOR_NAME;
 extern Identifier<int> PIPELINE_DEPTH;
 extern Identifier<bool> NO_SYSTEM;
+extern Identifier<bool> NO_STACK;
 extern Identifier<elm::system::Path> CONFIG_PATH;
 extern Identifier<elm::xom::Element *> CONFIG_ELEMENT;
 extern Identifier<elm::system::Path> CACHE_CONFIG_PATH;
