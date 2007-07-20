@@ -57,9 +57,11 @@ Segment::Segment(
  */
 Segment::~Segment(void) {
 	while(!items.isEmpty()) {
-		delete items.first();
+		ProgItem *item = (ProgItem *)items.first();
 		items.removeFirst();
+		delete item;
 	}
+	delete [] map;
 }
 
 
