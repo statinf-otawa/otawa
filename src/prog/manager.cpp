@@ -412,6 +412,12 @@ Identifier<bool> NO_SYSTEM("otawa::no_system", false);
 
 
 /**
+ * This property shows that no stack need to be allocated.
+ */
+Identifier<bool> NO_STACK("otawa::no_stack", false);
+
+
+/**
  * Path to the XML configuration file used in this computation.
  */
 Identifier<elm::system::Path>
