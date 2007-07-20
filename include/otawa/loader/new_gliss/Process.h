@@ -38,6 +38,7 @@ public:
 	void *_state;
 	int argc;
 	char **argv, **envp;
+	bool no_stack;
 };
 
 } } } // otawa::loader::new_gliss
