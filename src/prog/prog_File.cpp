@@ -160,4 +160,18 @@ ProgItem *File::findItemAt(address_t address) {
 	return 0;
 }
 
+
+/**
+ */
+File::~File(void) {
+	
+	// Free segments
+	for(SegIter seg(this); seg; seg++)
+		delete seg;
+	
+	// Free symbols
+	for(SymIter sym(this); sym; sym++)
+		delete sym;
+}
+
 } // otawa
