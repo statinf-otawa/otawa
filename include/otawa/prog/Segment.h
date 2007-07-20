@@ -52,6 +52,7 @@ public:
 	};
 
 protected:
+	friend class File;
 	virtual Inst *decode(address_t address);
 	virtual ~Segment(void);
 	void insert(ProgItem *item);
