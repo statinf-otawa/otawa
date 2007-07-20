@@ -60,6 +60,10 @@ public:
 
 	// Deprecated
 	inline Inst *findByAddress(address_t address) { return findInstAt(address); }
+
+protected:
+	friend class Process;
+	~File(void);
 };
 
 // Properties
