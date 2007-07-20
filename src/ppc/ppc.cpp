@@ -12,6 +12,7 @@
 #include <otawa/platform.h>
 #include <otawa/hard/Register.h>
 #include <gel/gel.h>
+#include <otawa/proc/Processor.h>
 #define ISS_DISASM
 #include <emul.h>
 #include <iss_include.h>
@@ -171,6 +172,7 @@ protected:
 	virtual void decodeRegs(void) {
 		((Process&)process()).decodeRegs(this, &in_regs, &out_regs);
 	}
+	Option<Address> checkFarCall(address_t call);
 };
 
 
@@ -273,6 +275,10 @@ Process::Process(
 	hard::Platform *pf,
 	const PropList& props
 ): otawa::loader::new_gliss::Process(manager, pf, props) {
+	/*if(Processor::VERBOSE(props)) {
+		cerr << "PPC: sizeof(Inst) = " << sizeof(Inst) << io::endl;
+		cerr << "PPC: sizeof(BranchInst) = " << sizeof(BranchInst) << io::endl;
+	}*/
 }
 
 
@@ -292,6 +298,7 @@ otawa::Inst *Process::decode(address_t addr) {
 	if(inst->ident == ID_Instrunknown) {
 		result = new Inst(*this, 0, addr);
 		TRACE("UNKNOWN !!!\n" << result);
+		iss_free(inst);
 		return result;
 	}
 	else {
@@ -332,8 +339,13 @@ otawa::Inst *Process::decode(address_t addr) {
 				break;
 			case ID_BCL_:
 			case ID_BCLA_:
-			case ID_BCCTRL_:
 				kind |= Inst::IS_CALL | Inst::IS_COND;
+				break;
+			case ID_BCCTRL_:
+				kind |= Inst::IS_CALL;
+				if(!(inst->instrinput[0].val.Uint5 == 20
+				&& inst->instrinput[1].val.Uint5 == 0))
+					kind |= Inst::IS_COND;
 				break;
 			case ID_BC_:
 			case ID_BCA_:
@@ -404,6 +416,16 @@ address_t BranchInst::decodeTargetAddress(void) {
 		assert(inst->instrinput[2].type == PARAM_INT14_T);
 		target_addr = (address_t)(inst->instrinput[2].val.Int14 << 2);
 		break;
+	case ID_BCCTRL_:
+	case ID_BCCTR_: {
+			iss_free(inst);
+			Option<Address> addr = checkFarCall(address());
+			if(addr.isOne()) {
+				target_addr = *addr;
+				//cerr << "Match at " << address() << " to " << target_addr << io::endl;
+			}
+		}
+		return target_addr;
 	}
 	
 	// Return result
@@ -591,6 +613,7 @@ void Process::decodeRegs(
 	if(inst->ident == ID_Instrunknown) {
 		/* in_regs = new elm::genstruct::AllocatedTable<hard::Register *>(0);
 		out_regs = new elm::genstruct::AllocatedTable<hard::Register *>(0); */
+		iss_free(inst);
 		return;
 	}
 
@@ -781,6 +804,56 @@ otawa::Process *Loader::load(Manager *man, CString path, const PropList& props) 
  */
 otawa::Process *Loader::create(Manager *man, const PropList& props) {
 	return new Process(man, new Platform(props), props);
+}
+
+
+/**
+ * Check for far-call pattern.
+ * @param call	Address of the far call.
+ * @return		If the pattern matches, the called address.
+ */
+Option<Address> BranchInst::checkFarCall(address_t call) {
+	
+	// call:	bcctrl 20,0
+	// call-4:	mtspr 288,ri
+	code_t buffer[20];
+	instruction_t *inst;
+	iss_fetch(call.address() - 4, buffer);
+	inst = iss_decode((state_t *)process().state(), call.address() - 4, buffer);
+	if(inst->ident != ID_MTSPR_R
+	|| inst->instrinput[1].val.uint16 != 288) {
+		iss_free(inst);
+		return none;
+	}
+	int i = inst->instrinput[0].val.uint8;
+	iss_free(inst);
+	
+	// call-8:	addi ri,ri,low
+	iss_fetch(call.address() - 8, buffer);
+	inst = iss_decode((state_t *)process().state(), call.address() - 8, buffer);
+	if(inst->ident != ID_ADDI_R_R_
+	|| inst->instrinput[0].val.uint8 != i
+	|| inst->instrinput[1].val.uint8 != i) {
+		iss_free(inst);
+		return none;
+	}
+	unsigned long low = inst->instrinput[2].val.int16;
+	iss_free(inst);
+
+	// call-12:	addis ri,r0,up
+	iss_fetch(call.address() - 12, buffer);
+	inst = iss_decode((state_t *)process().state(), call.address() - 12, buffer);
+	if(inst->ident != ID_ADDIS_R_R_
+	|| inst->instrinput[0].val.uint8 != i
+	|| inst->instrinput[1].val.uint8 != 0) {
+		iss_free(inst);
+		return none;
+	}
+	signed long up = inst->instrinput[2].val.int16;
+	iss_free(inst);
+	
+	// Called address: (up << 16) + low
+	return Address((up << 16) + low);
 }
 
 } }	// otawa::ppc
