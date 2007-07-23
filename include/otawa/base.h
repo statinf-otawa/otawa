@@ -31,63 +31,66 @@ typedef unsigned long mask_t;
 class Address: public AutoPartialComparator<Address> {
 public:
 	typedef unsigned long page_t;
-	typedef unsigned long address_t;
+	typedef unsigned long offset_t;
 	static Address null;
 
 	// Constructors
-	inline Address(void): pg(0), addr(0) { }
-	inline Address(address_t address): pg(0), addr(address) { }
-	inline Address(page_t page, address_t address)
-		: pg(page), addr(address) { }
+	inline Address(void): pg(0), off(0) { }
+	inline Address(offset_t offset): pg(0), off(offset) { }
+	inline Address(page_t page, offset_t offset)
+		: pg(page), off(offset) { }
 	inline Address(const Address& address)
-		: pg(address.pg), addr(address.addr) { }
+		: pg(address.pg), off(address.off) { }
 
 	// Accessors
 	inline page_t page(void) const { return pg; }
-	inline address_t address(void) const { return addr; }
-	inline address_t operator*(void) const { return address(); }
-	inline bool isNull(void) const { return !pg && !addr; }
-	inline operator bool(void) const { return !isNull(); }
+	inline offset_t offset(void) const { return off; }
+	inline offset_t operator*(void) const { return offset(); }
+	inline bool isNull(void) const { return this == &null; }
+	inline operator offset_t(void) const { return offset(); }
 
 	// Assignment
 	inline Address& operator=(const Address& address)
-		{ pg = address.pg; addr = address.addr; return *this; }
-	inline Address& operator=(address_t address)
-		{ pg = 0; addr = address; return *this; }
+		{ pg = address.pg; off = address.off; return *this; }
+	inline Address& operator=(offset_t offset)
+		{ pg = 0; off = offset; return *this; }
 	inline Address& operator+=(int offset)
-		{ addr += offset; return *this; }
+		{ off += offset; return *this; }
 	inline Address& operator+=(size_t offset)
-		{ addr += offset; return *this; }
+		{ off += offset; return *this; }
 	inline Address& operator-=(int offset)
-		{ addr -= offset; return *this; }
+		{ off -= offset; return *this; }
 	inline Address& operator-=(size_t offset)
-		{ addr -= offset; return *this; }
+		{ off -= offset; return *this; }
 
 	// Operations
 	inline Address operator+(int offset) const
-		{ return Address(pg, addr + offset); }
+		{ return Address(pg, off + offset); }
 	inline Address operator+(size_t offset) const
-		{ return Address(pg, addr + offset); }
+		{ return Address(pg, off + offset); }
 	inline Address operator-(int offset) const
-		{ return Address(pg, addr + offset); }
+		{ return Address(pg, off + offset); }
 	inline Address operator-(size_t offset) const
-		{ return Address(pg, addr + offset); }
-	inline address_t operator-(const Address& address) const {
+		{ return Address(pg, off + offset); }
+	inline offset_t operator-(const Address& address) const {
 		ASSERT(pg == address.pg);
-		return addr - address.addr;
+		return off - address.off;
 	}
 
 	// Comparisons
 	inline bool equals(const Address& address)
-		{ return pg == address.pg && addr == address.addr; }
+		{ return pg == address.pg && off == address.off; }
 	inline int compare(const Address& address) {
 		ASSERT(pg == address.pg);
-		return addr - address.addr;
+		return off - address.off;
 	}
+
+	// Deprecated
+	inline offset_t address(void) const { return off; }
 	
 private:
 	unsigned long pg;
-	offset_t addr;
+	offset_t off;
 };
 typedef Address address_t;
 
@@ -96,7 +99,7 @@ typedef Address address_t;
 namespace fmt {
 	inline elm::io::IntFormat address(address_t addr) {
 		return elm::io::right(elm::io::width(8, elm::io::pad('0',
-			elm::io::hex((int)addr.address()))));
+			elm::io::hex((int)addr.offset()))));
 	}
 }
 
@@ -105,7 +108,7 @@ namespace fmt {
 inline elm::io::Output& operator<<(elm::io::Output& out, Address addr) {
 	if(addr.page())
 		out << addr.page() << ':';
-	out << fmt::address(addr);
+	out << fmt::address(addr.offset());
 	return out;
 }
 
@@ -129,7 +132,7 @@ namespace elm {
 	class HashKey<otawa::Address> {
 	public:
 		static inline unsigned long hash (const otawa::Address &key)
-			{ return key.page() + key.address(); }
+			{ return key.page() + key.offset(); }
 		static inline bool equals (const otawa::Address &key1, const otawa::Address &key2)
 			{ return key1 == key2; }
 	};
