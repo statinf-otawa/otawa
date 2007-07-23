@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
 	//Manager manager;
 	PropList props;
 	//NO_SYSTEM(props) = true;
-	Processor::VERBOSE(props) = true;
+	//Processor::VERBOSE(props) = true;
 	String fun = "main";
 	if(argc > 2)
 		fun = argv[2];
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 
 		// Build the context
 		PropList conf;
-		Processor::VERBOSE(conf) = true;
+		//Processor::VERBOSE(conf) = true;
 		RECURSIVE(conf) = true;
 		TASK_ENTRY(conf) = fun.toCString();
 		ContextTreeBuilder builder;
