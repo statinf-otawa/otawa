@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Platform class implementation
  *
- *	prog/hardware_Platform.cpp -- Platform class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/hard/Platform.h>
@@ -102,7 +117,8 @@ Platform::Platform(const Platform::Identification& _id, const PropList& props)
 	_cache(&CacheConfiguration::NO_CACHE),
 	_processor(0),
 	depth(5),
-	_banks(&null_banks)
+	_banks(&null_banks),
+	rcnt(0)
 {
 	configure(props);
 }
@@ -119,7 +135,8 @@ Platform::Platform(const Platform& platform, const PropList& props)
 	_cache(&platform.cache()),
 	_processor(0),
 	depth(5),
-	_banks(&null_banks)
+	_banks(&null_banks),
+	rcnt(0)
 {
 	configure(props);
 }
@@ -469,5 +486,27 @@ void Platform::loadCacheConfig(elm::xom::Element *element) {
 		throw LoadException(&e.message());
 	}
 }
+
+
+/**
+ * Set the list of banks for an actual platform.
+ * @param banks	Table of register banks.
+ * @notice	This method is only accessible from derivated class implementing
+ *			an actual platform.
+ */
+void Platform::setBanks(const banks_t& banks) {
+	_banks = &banks;
+	rcnt = 0;
+	for(int i = 0; i < banks[i]->count(); i++)
+		for(int j = 0; j < banks[i]->count(); j++)
+			banks[i]->get(j)->pfnum = rcnt++;
+}
+
+
+/**
+ * @fn int Platform::regCount(void) const;
+ * Get the count of registers in the current platform.
+ * @return	Count of registers.
+ */
 
 } } // otawa::hard

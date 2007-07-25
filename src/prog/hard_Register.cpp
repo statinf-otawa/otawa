@@ -1,10 +1,24 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Register class implementation
  *
- *	otawa/hardware/Register.h -- Register classes interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 #include <otawa/hard/Register.h>
 #include <elm/util/Formatter.h>
 #include <elm/io/BlockInStream.h>
@@ -276,5 +290,14 @@ MeltedBank::MeltedBank(elm::CString name, ...)
 MeltedBank::~MeltedBank(void) {
 	delete [] (Register **)_regs.table();
 }
+
+/**
+ * @fn int Register::platformNumber(void) const;
+ * Gives a number which is unique for this
+ * platform. Each register, in a platform, is associated with a unique
+ * number ranging from 0 to Platform::regCount()-1. This number may be used as
+ * index to table or to bit vectors matching the overall registers.
+ * @return	Platform number of the register.
+ */ 
 
 } } // otawa::hard
