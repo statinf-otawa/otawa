@@ -69,7 +69,16 @@ int main(void) {
 		MY_ID(props) = 111;
 		MY_STRING(props) = "ko\ncoucoué";
 		MY_STRING(props).add("ohe !");
-		cout << props;
+		cout << props << io::endl;
+	}
+	
+	// Assignment property to property
+	{
+		PropList props;
+		ID1(props) = 666;
+		ID2(props) = ID1(props);
+		CHECK(ID1(props) == ID2(props));
+		cout << "prop-to-prop: " << ID1(props) << " = " << ID2(props) << io::endl;
 	}
 	
 	CHECK_END

@@ -53,9 +53,12 @@ public:
 		inline void remove(void);
 		inline bool exists(void) const;
 		inline T& ref(void) const;
+		inline const T& get(void) const;
 
 		inline operator const T&(void) const;
 		inline Value& operator=(const T& value);
+		inline Value& operator=(const Value& value)
+			{ prop.set(id, value.get()); return *this; }
 		inline T operator->(void) const;
 		inline T& operator&(void) const { return ref(); }
 		
@@ -309,6 +312,15 @@ inline T& Identifier<T>::Value::ref(void) const {
 		prop.addProp(_prop);
 	}
 	return _prop->value();
+} 
+
+template <class T>
+inline const T& Identifier<T>::Value::get(void) const {
+	GenericProperty<T> *_prop = (GenericProperty<T> *)prop.getProp(&id);
+	if(!_prop)
+		return id.def;
+	else
+		return _prop->value();
 } 
  
 template <class T>
