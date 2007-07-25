@@ -191,6 +191,5 @@ namespace otawa {
  * @return			True if they override.
  */
 
-
 };	// namespace otawa
 
