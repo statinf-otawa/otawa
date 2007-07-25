@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Platform class implementation
  *
- *	otawa/hard/Platform.h -- Platform class interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_HARD_PLATFORM_H
 #define OTAWA_HARD_PLATFORM_H
@@ -25,6 +40,7 @@ class Processor;
 // Platform class
 class Platform {
 public:
+	typedef elm::genstruct::Table<const hard::RegBank *> banks_t;
 
 	static const elm::String ANY;
 
@@ -63,25 +79,8 @@ public:
 
 	// Platform
 	static const Identification ANY_PLATFORM;
-	
-private:
-	static const unsigned long HAS_PROCESSOR = 0x00000001;
-	static const unsigned long HAS_CACHE = 0x00000002;
-	unsigned long flags;
-	Identification id;
-	const CacheConfiguration *_cache;
-	Processor *_processor;
-	int depth;
 
-	void configure(const PropList& props);
-
-protected:
-	friend class otawa::Manager;
-	static const elm::genstruct::Table<const hard::RegBank *> null_banks;
-	const elm::genstruct::Table<const hard::RegBank *> *_banks;
-	virtual ~Platform(void);
-
-public:
+	// Constructors	
 	Platform(const Identification& id, const PropList& props = PropList::EMPTY);
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
 
@@ -98,12 +97,32 @@ public:
 	inline bool accept(const elm::String& name);
 	
 	// Register bank access
-	inline const elm::genstruct::Table<const hard::RegBank *>& banks(void) const;
+	inline const banks_t& banks(void) const;
+	inline int regCount(void) const { return rcnt; }
 	
 	// Configuration Loader
 	void loadProcessor(const elm::system::Path& path);
 	void loadProcessor(elm::xom::Element *element);
 	inline const Processor *processor(void) const { return _processor; };
+
+protected:
+	friend class otawa::Manager;
+	static const banks_t null_banks;
+	virtual ~Platform(void);
+	void setBanks(const banks_t& banks);
+
+private:
+	static const unsigned long HAS_PROCESSOR = 0x00000001;
+	static const unsigned long HAS_CACHE = 0x00000002;
+	unsigned long flags;
+	Identification id;
+	const CacheConfiguration *_cache;
+	Processor *_processor;
+	int depth;
+	int rcnt;
+	const banks_t *_banks;
+
+	void configure(const PropList& props);
 };
 
 // Inlines
