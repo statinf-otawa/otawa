@@ -7,7 +7,9 @@
 
 #include <assert.h>
 #include <elm/io.h>
-#include <otawa/lp_solve/System.h>
+#include <otawa/ilp.h>
+#include <otawa/ilp/ILPPlugin.h>
+#include <math.h>
 
 using namespace elm;
 using namespace otawa;
@@ -22,36 +24,38 @@ void check(char *msg, int req, int fnd) {
 			
 }
 
+extern otawa::ilp::ILPPlugin& lp_solve5_plugin;
+
 int main(void) {
 	Var v1, v2, v3, v4;
-	lp_solve::System sys(false);
+	System *sys = lp_solve5_plugin.newSystem();
 	
 	// Build the system
-	Constraint *cons = sys.newConstraint(ilp::Constraint::LE, 4);
+	Constraint *cons = sys->newConstraint(ilp::Constraint::LE, 4);
 	cons->add(3, &v1);
 	cons->add(2, &v2);
 	cons->add(2, &v3);
 	cons->add(1, &v4);
-	cons = sys.newConstraint(ilp::Constraint::GE, 3);
+	cons = sys->newConstraint(ilp::Constraint::GE, 3);
 	cons->add(0, &v1);
 	cons->add(4, &v2);
 	cons->add(3, &v3);
 	cons->add(1, &v4);
-	sys.addObjectFunction(2,&v1);
-	sys.addObjectFunction(3,&v2);
-	sys.addObjectFunction(-2,&v3);
-	sys.addObjectFunction(3,&v4);
+	sys->addObjectFunction(2,&v1);
+	sys->addObjectFunction(3,&v2);
+	sys->addObjectFunction(-2,&v3);
+	sys->addObjectFunction(3,&v4);
 	
 	// Solve it
-	sys.dump();
-	assert(sys.solve());
+	sys->dump();
+	ASSERT(sys->solve());
 	
 	// Display result
-	check("Result", -4, (int)sys.value());
-	check("v1", 0, (int)sys.valueOf(&v1));
-	check("v2", 0, (int)sys.valueOf(&v2));
-	check("v3", 2, (int)sys.valueOf(&v3));
-	check("v4", 0, (int)sys.valueOf(&v4));
+	check("Result", 12, lround(sys->value()));
+	check("v1", 0, lround(sys->valueOf(&v1)));
+	check("v2", 0, lround(sys->valueOf(&v2)));
+	check("v3", 0, lround(sys->valueOf(&v3)));
+	check("v4", 4, lround(sys->valueOf(&v4)));
 	
 	return 0;
 }
