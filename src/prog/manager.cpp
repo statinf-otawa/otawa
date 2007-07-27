@@ -36,8 +36,8 @@ namespace otawa {
 // Private
 static String buildPaths(cstring kind, string paths) {
 	StringBuffer buf;
-	buf << "./otawa/" << kind << ":"
-		<< elm::system::Path::home() << "/otawa/" << kind << ":"
+	buf << "./.otawa/" << kind << ":"
+		<< elm::system::Path::home() << "/.otawa/" << kind << ":"
 		<< paths;
 	return buf.toString();
 }
