@@ -7,6 +7,9 @@ SUBDIRS= \
 if HAS_LP_SOLVE
 SUBDIRS += lp_solve
 endif
+if HAS_LP_SOLVE5
+SUBDIRS += lp_solve5
+endif
 
 # Loader selection
 if HAS_GLISS_PPC
