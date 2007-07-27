@@ -309,7 +309,7 @@ Manager::Manager(void):
 	ilp_plugger("ilp_plugin", Version(1, 0, 0),
 		buildPaths("ilp", ILP_PATHS)),
 	loader_plugger(OTAWA_LOADER_NAME, OTAWA_LOADER_VERSION,
-		buildPaths("laoder", LOADER_PATHS)),
+		buildPaths("loader", LOADER_PATHS)),
 	sim_plugger(OTAWA_SIMULATOR_NAME, OTAWA_SIMULATOR_VERSION, SIMULATOR_PATHS)
 {
 	AbstractIdentifier::init();
