@@ -15,6 +15,10 @@ AM_CONDITIONAL(HAS_PLUGIN, test "$HAS_PLUGIN" = "yes")
 AC_ARG_WITH(loader, [  --with-loader={ppc,arm}	Use the given loader],,[with_loader=no])
 
 
+# === ILP Selection ===
+AC_ARG_WITH(ilp, [ --with-ilp={lp_solve,lp_solve5}	Use the given ILP solver],,[with_ilp=no])
+
+
 # ==== Building mode ====
 AC_ARG_WITH(mode,
 	[  --with-mode={dev,debug,normal,final}	Activate the given build mode.],,with_mode=dev)
@@ -98,6 +102,15 @@ OTAWA_USE_LIB(GLISS_S12X,
 OTAWA_USE_LIB(LP_SOLVE,
 	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lpk, $PWD/../lp_solve, $PWD/../lp_solve,
 	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lpk)))
+AS_IF(test "$with_ilp" = "lp_solve" -a "$HAS_LP_SOLVE" = "no",
+	[AC_MSG_FAILURE([lp_solve required !])])
+
+
+# ===== LP_SOLVE5 check =====
+OTAWA_USE_LIB(LP_SOLVE5,
+	OTAWA_CHECK_LIB(LP_SOLVE5, lpsolve/lp_lib.h, lpsolve55  -lcolamd))
+AS_IF(test "$with_ilp" = "lp_solve5" -a "$HAS_LP_SOLVE5" = "no",
+	[AC_MSG_FAILURE([lp_solve5 required !])])
 
 
 # ===== SYSTEMC check =====
@@ -153,18 +166,46 @@ AC_SUBST(AUTODOC)
 
 
 # ===== Default ILP =====
-AS_IF(test "$HAS_LP_SOLVE" = "yes", [
-		HAS_ILP="yes"
-		ILP_DEPS="\$(top_builddir)/src/lp_solve/lp_solve.la"
-		ILP_LIBS="-ulp_solve_plugin $ILP_DEPS"
-	], [
-		HAS_ILP="no"
-		ILP_LIBS=""
-		ILP_DEPS=""
-	])
 AS_IF(test "$HAS_PLUGIN" = "yes", [
+	HAS_ILP="no"
 	ILP_LIBS=""
 	ILP_DEPS=""
+],
+[
+	AC_MSG_CHECKING([for an ILP solver])
+	AS_IF(test "$with_ilp" = "no", [
+		AS_IF(test "$HAS_LP_SOLVE" = "yes", [
+			HAS_ILP="yes"
+			ILP_DEPS="\$(top_builddir)/src/lp_solve/lp_solve.la"
+			ILP_LIBS="-ulp_solve_plugin $ILP_DEPS"
+		],
+		AS_IF(test "$HAS_LP_SOLVE5" = "yes", [
+			HAS_ILP="yes"
+			ILP_DEPS="\$(top_builddir)/src/lp_solve5/lp_solve5.la"
+			ILP_LIBS="-ulp_solve5_plugin $ILP_DEPS"
+		],
+		[
+			AC_MSG_FAILURE([no ilp selected !])
+		]))
+	],
+	[
+		AS_IF(test "$with_ilp" = "lp_solve",
+		[
+			HAS_ILP="yes"
+			ILP_DEPS="\$(top_builddir)/src/lp_solve/lp_solve.la"
+			ILP_LIBS="-ulp_solve_plugin $ILP_DEPS"
+		],
+		AS_IF(test "$with_ilp" = "lp_solve5",
+		[
+			HAS_ILP="yes"
+			ILP_DEPS="\$(top_builddir)/src/lp_solve5/lp_solve5.la"
+			ILP_LIBS="-ulp_solve5_plugin $ILP_DEPS"
+		],
+		[
+			AC_MSG_FAILURE([$with_ilp ILP solver not available !])
+		]))
+	])
+	AS_IF(test "$HAS_ILP" = "yes", AC_MSG_RESULT([$ILP_LIBS]))
 ])
 AM_CONDITIONAL(HAS_ILP, test "$HAS_ILP" = "yes")
 AC_SUBST(ILP_LIBS)
@@ -243,6 +284,7 @@ AC_CONFIG_FILES([
 	src/prog/Makefile
 	src/oshell/Makefile
 	src/lp_solve/Makefile
+	src/lp_solve5/Makefile
 	src/dumpcfg/Makefile
 	src/mkff/Makefile
 	src/ostat/Makefile
