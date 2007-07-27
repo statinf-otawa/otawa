@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Manager class implementation
  *
- *	manager.cc -- manager classes implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <config.h>
@@ -19,12 +34,11 @@ using namespace elm;
 namespace otawa {
 
 // Private
-#define LOADER_SUBDIR	"/.otawa/laoder"
-static String buildLoaderPaths(void) {
+static String buildPaths(cstring kind, string paths) {
 	StringBuffer buf;
-	buf << "." LOADER_SUBDIR ":"
-		<< elm::system::Path::home() << LOADER_SUBDIR ":"
-		<< LOADER_PATHS;
+	buf << "./otawa/" << kind << ":"
+		<< elm::system::Path::home() << "/otawa/" << kind << ":"
+		<< paths;
 	return buf.toString();
 }
 
@@ -111,20 +125,31 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * Load a file with the given path and the given properties.
  * @param path		Path of the file to load.
  * @param props		Configuration properties.
- * @return The loaded workspace or 0.
+ * @return 			The loaded workspace or null.
  * 
  * The configuration properties may be :
- * @li @ref TASK_ENTRY,
- * @li @ref PLATFORM,
- * @li @ref LOADER,
- * @li @ref PLATFORM_NAME,
- * @li @ref LOADER_NAME,
  * @li @ref ARGC,
  * @li @ref ARGV,
- * @li @ref ENVP,
- * @li @ref SIMULATOR,
  * @li @ref CACHE_CONFIG,
- * @li @ref PIPELINE_DEPTH.
+ * @li @ref CACHE_CONFIG_ELEMENT,
+ * @li @ref CACHE_CONFIG_PATH,
+ * @li @ref CONFIG_ELEMENT (experimental),
+ * @li @ref CONFIG_PATH (experimental),
+ * @li @ref ENVP,
+ * @li @ref ILP_PLUGIN_NAME,
+ * @li @ref LOADER,
+ * @li @ref LOADER_NAME,
+ * @li @ref NO_STACK,
+ * @li @ref NO_SYSTEM,
+ * @li @ref PIPELINE_DEPTH,
+ * @li @ref PLATFORM,
+ * @li @ref PLATFORM_NAME,
+ * @li @ref PROCESSOR,
+ * @li @ref PROCESSOR_ELEMENT,
+ * @li @ref PROCESSOR_PATH,
+ * @li @ref SIMULATOR,
+ * @li @ref SIMULATOR_NAME,
+ * @li @ref TASK_ENTRY.
  * 
  * @par
  * 
@@ -281,8 +306,10 @@ WorkSpace *Manager::load(const PropList& props) {
  * Manager builder. Install the PPC GLISS loader.
  */
 Manager::Manager(void):
-	ilp_plugger("ilp_plugin", Version(1, 0, 0), ILP_PATHS),
-	loader_plugger(OTAWA_LOADER_NAME, OTAWA_LOADER_VERSION, buildLoaderPaths()),
+	ilp_plugger("ilp_plugin", Version(1, 0, 0),
+		buildPaths("ilp", ILP_PATHS)),
+	loader_plugger(OTAWA_LOADER_NAME, OTAWA_LOADER_VERSION,
+		buildPaths("laoder", LOADER_PATHS)),
 	sim_plugger(OTAWA_SIMULATOR_NAME, OTAWA_SIMULATOR_VERSION, SIMULATOR_PATHS)
 {
 	AbstractIdentifier::init();
@@ -461,6 +488,12 @@ Identifier<elm::system::Path> CACHE_CONFIG_PATH("otawa::cache_config_path", "");
  * Gives an XML element containing the cache configuration.
  */
 Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("otawa::cache_config_element", 0);
+
+
+/**
+ * Select the ILP solver plugin to use.
+ */
+Identifier<cstring> ILP_PLUGIN_NAME("otawa::ilp_plugin_name", "");
 
 
 /**
