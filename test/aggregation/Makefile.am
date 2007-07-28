@@ -1,6 +1,6 @@
 AM_CXXFLAGS = @OGENSIM_CXXFLAGS@ @OTAWA_CXXFLAGS@
 
-noinst_PROGRAMS=test_aggregation
+check_PROGRAMS=test_aggregation
 
 test_aggregation_LDADD = @LOADER_LIBS@ @ILP_LIBS@ @OGENSIM_LIBS@ @OTAWA_LIBS@
 test_aggregation_DEPENDENCIES = @LOADER_DEPS@ @ILP_DEPS@ @OGENSIM_DEPS@ @OTAWA_DEP@
