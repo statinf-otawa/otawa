@@ -100,17 +100,14 @@ OTAWA_USE_LIB(GLISS_S12X,
 
 # ===== LP_SOLVE check =====
 OTAWA_USE_LIB(LP_SOLVE,
-	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lpk, $PWD/../lp_solve, $PWD/../lp_solve,
-	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lpk)))
-AS_IF(test "$with_ilp" = "lp_solve" -a "$HAS_LP_SOLVE" = "no",
-	[AC_MSG_FAILURE([lp_solve required !])])
+	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lp_solve, $PWD/../lp_solve, $PWD/../lp_solve,
+	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lp_solve)))
 
 
 # ===== LP_SOLVE5 check =====
 OTAWA_USE_LIB(LP_SOLVE5,
-	OTAWA_CHECK_LIB(LP_SOLVE5, lpsolve/lp_lib.h, lpsolve55  -lcolamd))
-AS_IF(test "$with_ilp" = "lp_solve5" -a "$HAS_LP_SOLVE5" = "no",
-	[AC_MSG_FAILURE([lp_solve5 required !])])
+	OTAWA_CHECK_LIB(LP_SOLVE, lp_lib.h, lpsolve55, $PWD/../lp_solve5/lpsolve55, $PWD/../lp_solve5,
+	OTAWA_CHECK_LIB(LP_SOLVE5, lpsolve/lp_lib.h, lpsolve55  -lcolamd)))
 
 
 # ===== SYSTEMC check =====
