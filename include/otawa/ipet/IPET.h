@@ -9,6 +9,7 @@
 
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Feature.h>
+#include <otawa/ipet/ILPSystemGetter.h>
 
 namespace otawa {
 
@@ -31,14 +32,13 @@ extern NameSpace NS;
 extern Identifier<int> TIME;
 extern Identifier<int> TIME_DELTA;
 extern Identifier<ilp::Var *> VAR;
-extern Identifier<ilp::System *> SYSTEM;
+//extern Identifier<ilp::System *> SYSTEM;
 extern Identifier<int> WCET;
 extern Identifier<bool> EXPLICIT;
 extern Identifier<int> LOOP_COUNT;
 extern Identifier<int> COUNT;
 	
 // Subprograms
-ilp::System *getSystem(WorkSpace *fw, CFG *cfg);
 ilp::Var *getVar(ilp::System *system, BasicBlock *bb);
 ilp::Var *getVar(ilp::System *system, Edge *edge);
 
