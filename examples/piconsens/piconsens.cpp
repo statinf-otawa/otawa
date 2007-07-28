@@ -231,7 +231,7 @@ void Command::compute(String fun) {
 		if(bound) 
 			for(CFG::BBIterator bb(&vcfg); bb; bb++) {
 				if(STAT(bb)) {
-					ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
+					ilp::System *system = SYSTEM(fw);
 					node_cons = system->newConstraint(ilp::Constraint::EQ);
 					node_cons->addRight(1, ipet::getVar(system, bb));
 					cons_used = false;
@@ -502,7 +502,7 @@ void Command::addSuffixConstraints(
 			
 			// add extra object function factor
 			int delta = time - TIME(tree->rootLabel());
-			ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
+			ilp::System *system = SYSTEM(fw);
 			ilp::Var *var = system->newVar();
 			system->addObjectFunction(delta, var);
 			 
@@ -636,7 +636,7 @@ int level, int min) {
 			buf << "_" << cur->bb->number();
 		
 		// add extra object function factor
-		ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
+		ilp::System *system = SYSTEM(fw);
 		ilp::Var *var = system->newVar(buf.toString());
 		node_cons->addLeft(1, var);
 		cons_used = true;
