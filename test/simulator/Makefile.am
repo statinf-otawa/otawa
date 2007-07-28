@@ -1,4 +1,4 @@
-noinst_PROGRAMS=simulator
+check_PROGRAMS=simulator
 
 simulator_SOURCES=\
 	simulator.cpp \

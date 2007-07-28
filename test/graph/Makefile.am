@@ -1,6 +1,6 @@
 AM_CXXFLAGS = @OTAWA_CXXFLAGS@
 
-noinst_PROGRAMS=test_graph
+check_PROGRAMS=test_graph
 
 test_graph_LDADD = @OTAWA_LIBS@
 test_graph_DEPENDENCIES = @OTAWA_DEPS@
