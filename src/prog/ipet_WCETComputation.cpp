@@ -14,6 +14,7 @@
 #include <otawa/ipet/BasicObjectFunctionBuilder.h>
 #include <otawa/ipet/FlowFactConstraintBuilder.h>
 #include <otawa/proc/Registry.h>
+#include <otawa/ipet/ILPSystemGetter.h>
 
 using namespace otawa::ilp;
 
