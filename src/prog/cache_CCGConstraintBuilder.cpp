@@ -56,6 +56,7 @@ static Identifier<ilp::Var *> MISS_VAR("otawa::miss_var", 0);
  * @li @ref COLLECTED_LBLOCKS_FEATURE
  * @li @ref ASSIGNED_VARS_FEATURE
  * @li @ref CONTEXT_TREE_FEATURE
+ * @li @ref ILP_SYSTEM_FEATURE
  */
 
 /**
@@ -69,6 +70,7 @@ CCGConstraintBuilder::CCGConstraintBuilder(void):
 	require(ASSIGNED_VARS_FEATURE);
 	require(COLLECTED_LBLOCKS_FEATURE);
 	require(CONTEXT_TREE_FEATURE);
+	require(ILP_SYSTEM_FEATURE);
 	provide(INST_CACHE_SUPPORT_FEATURE);
 }
 
@@ -87,7 +89,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	
 	// Initialization
 	CFG *entry_cfg = ENTRY_CFG(fw);
-	System *system = getSystem(fw, ENTRY_CFG(fw));
+	System *system = SYSTEM(fw);
 	assert (system);
 	const hard::Cache *cach = fw->platform()->cache().instCache();
 	int dec = cach->blockBits();

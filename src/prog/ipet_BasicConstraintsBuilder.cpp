@@ -10,6 +10,7 @@
 #include <otawa/ipet/BasicConstraintsBuilder.h>
 #include <otawa/cfg.h>
 #include <otawa/ipet/VarAssignment.h>
+#include <otawa/ipet/ILPSystemGetter.h>
 
 using namespace otawa::ilp;
 
@@ -46,6 +47,13 @@ Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::calling_constraint", 0
  * <p>
  * 		n1 = 1
  * </p>
+ *
+ * @par Provided Features
+ * @li @ref ipet::CONTROL_CONSTRAINTS_FEATURE
+ * 
+ * @par Required Features
+ * @li @ref ipet::ASSIGNED_VARS_FEATURE
+ * @li @ref ipet::ILP_SYSTEM_FEATURE
  */
 
 
@@ -61,7 +69,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 	Constraint *cons;
 	bool used;
 	CFG *called = 0;
-	System *system = getSystem(fw, ENTRY_CFG(fw));
+	System *system = SYSTEM(fw);
 	assert(system);
 	Var *bbv = getVar(system, bb);
 		
@@ -117,7 +125,7 @@ void BasicConstraintsBuilder::processWorkSpace(WorkSpace *fw) {
 	// Just record the constraint "entry = 1"
 	CFG *cfg = ENTRY_CFG(fw);
 	assert(cfg);
-	System *system = getSystem(fw, cfg);
+	System *system = SYSTEM(fw);
 	BasicBlock *entry = cfg->entry();
 	assert(entry);
 	Constraint *cons = system->newConstraint(Constraint::EQ, 1);
@@ -132,6 +140,7 @@ BasicConstraintsBuilder::BasicConstraintsBuilder(void)
 : BBProcessor("otawa::ipet::BasicConstraintsBuilder", Version(1, 0, 0)) {
 	provide(CONTROL_CONSTRAINTS_FEATURE);
 	require(ASSIGNED_VARS_FEATURE);
+	require(ILP_SYSTEM_FEATURE);
 }
 
 

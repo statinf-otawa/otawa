@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2005-06, IRIT UPS.
+ *	Copyright (c) 2005-07, IRIT UPS.
  *
  *	CATConstraintsBuilder class implementation
  */
@@ -69,6 +69,7 @@ Identifier<CATNode *> NODE("otawa::ipet::node", 0, otawa::NS);
  * @li @ref CONTEXT_TREE_FEATURE
  * @li @ref ICACHE_CATEGORY_FEATURE
  * @li @ref COLLECTED_LBLOCKS_FEATURE
+ * @li @ref ILP_SYSTEM_FEATURE
  */
 
 /**
@@ -82,6 +83,7 @@ CATConstraintBuilder::CATConstraintBuilder(void)
 	require(COLLECTED_LBLOCKS_FEATURE);
 	require(ICACHE_CATEGORY_FEATURE);
 	require(ASSIGNED_VARS_FEATURE);
+	require(ILP_SYSTEM_FEATURE);
 	provide(INST_CACHE_SUPPORT_FEATURE);
 }
 
@@ -90,7 +92,7 @@ CATConstraintBuilder::CATConstraintBuilder(void)
  */
 void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 
-	ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
+	ilp::System *system = SYSTEM(fw);
 	assert (system);
 	
 	// cache configuration

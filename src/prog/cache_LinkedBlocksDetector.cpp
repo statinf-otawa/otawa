@@ -1,3 +1,24 @@
+/*
+ *	$Id$
+ *	LinkedBlocksDetector class interface
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 
 #include <stdio.h>
 #include <elm/io.h>
@@ -37,6 +58,7 @@ namespace otawa {
  * @li @ref COLLECTED_LBLOCKS_FEATURE
  * @li @ref LOOP_INFO_FEATURE
  * @li @ref ICACHE_CATEGORY_FEATURE
+ * @li @ref ILP_SYSTEM_FEATURE
  *
  * @par Provided features
  * 
@@ -51,6 +73,7 @@ LinkedBlocksDetector::LinkedBlocksDetector(void) : Processor("otawa::LinkedBlock
 	require(ICACHE_CATEGORY_FEATURE);
 	require(LOOP_INFO_FEATURE);
 	require(COLLECTED_LBLOCKS_FEATURE);
+	require(ILP_SYSTEM_FEATURE);
 }
 
 void LinkedBlocksDetector::configure(const PropList& props) {
@@ -60,7 +83,7 @@ void LinkedBlocksDetector::configure(const PropList& props) {
                 
 void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 	const hard::Cache *cache = fw->platform()->cache().instCache();
-	ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
+	ilp::System *system = SYSTEM(fw);
 	int penalty = cache->missPenalty();
 	LBlockSet **lbsets = LBLOCKS(fw);
 	

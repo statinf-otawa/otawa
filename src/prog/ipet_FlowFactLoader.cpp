@@ -26,6 +26,7 @@ namespace otawa { namespace ipet {
  * @li @ref FLOW_FACTS_PATH
  * 
  * @par Required Features
+ * @li @ref ipet::ILP_SYSTEM_FEATURE
  * @li @ref ipet::COLLECTED_CFG_FEATURE
  * @li @ref ipet::LOOP_HEADERS_FEATURE
  * 
@@ -42,6 +43,7 @@ FlowFactLoader::FlowFactLoader(void)
 	path(""),
 	verbose(false)
 {
+	require(ILP_SYSTEM_FEATURE);
 	require(COLLECTED_CFG_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
 	provide(FLOW_FACTS_FEATURE);
@@ -107,7 +109,7 @@ void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 	cfgs = INVOLVED_CFGS(fw);
 	assert(cfgs);
-	system = getSystem(fw, ENTRY_CFG(fw));
+	system = SYSTEM(fw);
 	run(fw, path, verbose);
 }
 
