@@ -79,10 +79,7 @@ int main(int argc, char **argv) {
 		PropList props;
 		EXPLICIT(props) = true;
 		otawa::Processor::VERBOSE(props) = true;
-		/*TrivialBBTime tbt;
-		tbt.process(fw, props);
-		BBTimeSimulator bbts(props);
-		bbts.process(fw);*/
+		ipet::ILP_PLUGIN_NAME(props) = "lp_solve5";		
 		
 		TrivialDataCacheManager dcache;
 		dcache.process(fw, props);
@@ -92,7 +89,7 @@ int main(int argc, char **argv) {
 		
 		// Display the result
 		cfg = ENTRY_CFG(fw);
-		ilp::System *sys = getSystem(fw, cfg);
+		ilp::System *sys = SYSTEM(fw);
 		sys->dump();
 		cout << sys->countVars() << " variables and "
 			 << sys->countConstraints() << " constraints.\n";
