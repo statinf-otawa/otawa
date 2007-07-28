@@ -47,6 +47,7 @@ libotawa_la_SOURCES = \
 	ipet_Delta.cpp \
 	ipet_FlowFactLoader.cpp \
 	ipet_FlowFactConstraintBuilder.cpp \
+	ipet_ILPSystemGetter.cpp \
 	ipet_IPET.cpp \
 	ipet_TimeDeltaObjectFunctionModifier.cpp \
 	ipet_TreePath.cpp \
