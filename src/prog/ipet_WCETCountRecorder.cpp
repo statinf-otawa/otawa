@@ -11,6 +11,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/ilp.h>
 #include <otawa/cfg/Edge.h>
+#include <otawa/ipet/ILPSystemGetter.h>
 
 namespace otawa { namespace ipet {
 
