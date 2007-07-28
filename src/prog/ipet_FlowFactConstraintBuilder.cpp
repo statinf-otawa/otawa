@@ -1,6 +1,6 @@
 /*
  * $Id$
- * Copyright (c) 2005, IRIT-UPS <casse@irit.fr>
+ * Copyright (c) 2005-07, IRIT-UPS <casse@irit.fr>
  *
  * src/prog/ipet_IPETFlowFactConstraintBuilder.h -- IPETFlowFactConstraintBuilder class implementation.
  */
@@ -28,8 +28,10 @@ namespace otawa { namespace ipet {
  * @li @ref FLOW_FACTS_PATH
  * 
  * @par Required Features
+ * @li @ref ipet::ILP_SYSTEM_FEATURE
  * @li @ref ipet::COLLECTED_CFG_FEATURE
  * @li @ref ipet::FLOW_FACTS_FEATURE
+ * @li @ref LOOP_HEADERS_FEATURE
  * 
  * @par Provided Features
  * @li @ref ipet::FLOW_FACTS_CONSTRAINTS_FEATURE
@@ -54,7 +56,7 @@ FlowFactConstraintBuilder::FlowFactConstraintBuilder(void)
  */
 void FlowFactConstraintBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 
-	ilp::System *system = getSystem(fw, ENTRY_CFG(fw));
+	ilp::System *system = SYSTEM(fw);
 	
 	for (CFG::BBIterator bb(cfg); bb; bb++) {
 		if (Dominance::isLoopHeader(bb) && (LOOP_COUNT(bb) != -1)) {

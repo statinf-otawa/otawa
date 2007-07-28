@@ -136,7 +136,6 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * @li @ref CONFIG_ELEMENT (experimental),
  * @li @ref CONFIG_PATH (experimental),
  * @li @ref ENVP,
- * @li @ref ILP_PLUGIN_NAME,
  * @li @ref LOADER,
  * @li @ref LOADER_NAME,
  * @li @ref NO_STACK,
@@ -488,12 +487,6 @@ Identifier<elm::system::Path> CACHE_CONFIG_PATH("otawa::cache_config_path", "");
  * Gives an XML element containing the cache configuration.
  */
 Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("otawa::cache_config_element", 0);
-
-
-/**
- * Select the ILP solver plugin to use.
- */
-Identifier<cstring> ILP_PLUGIN_NAME("otawa::ilp_plugin_name", "");
 
 
 /**
