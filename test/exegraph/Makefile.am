@@ -1,6 +1,6 @@
 AM_CXXFLAGS = @OTAWA_CXXFLAGS@
 
-noinst_PROGRAMS=exegraph
+check_PROGRAMS=exegraph
 
 exegraph_LDADD = @LOADER_LIBS@  @ILP_LIBS@ @OTAWA_LIBS@ 
 exegraph_DEPENDENCIES = @LOADER_DEPS@ @ILP_DEPS@ @OTAWA_DEPS@

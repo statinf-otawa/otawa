@@ -1,6 +1,6 @@
 AM_CXXFLAGS = @OTAWA_CXXFLAGS@
 
-noinst_PROGRAMS=test_dom
+check_PROGRAMS=test_dom
 
 test_dom_LDADD = @LOADER_LIBS@ @OTAWA_LIBS@
 test_dom_DEPENDENCIES = @LOADER_DEPS@ @OTAWA_DEPS@

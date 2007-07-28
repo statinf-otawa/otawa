@@ -1,6 +1,6 @@
 AM_CXXFLAGS = @OTAWA_CXXFLAGS@
 
-noinst_PROGRAMS=test_categorisation
+check_PROGRAMS=test_categorisation
 
 test_categorisation_LDADD= @LOADER_LIBS@ @ILP_LIBS@ @OTAWA_LIBS@
 test_categorisation_DEPENDENCIES= @LOADER_DEPS@ @ILP_DEPS@ @OTAWA_DEPS@
