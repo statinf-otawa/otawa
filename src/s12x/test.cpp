@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 		
 		// Display the result
 		CFG *cfg = ENTRY_CFG(ws);
-		ilp::System *sys = getSystem(ws, cfg);
+		ilp::System *sys = SYSTEM(ws);
 		cout << "SUCCESS\nWCET = " << WCET(ws) << '\n';
 		
 		// Record and display result
