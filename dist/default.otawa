@@ -1,5 +1,5 @@
 # Default module configuration
-default_modules="elm ppc lp_solve otawa"
+default_modules="elm ppc lp_solve otawa lp_solve5"
 all_modules="$default_modules gel frontc gliss hcs12"
 
 function mod_elm {
@@ -32,8 +32,8 @@ function mod_gel {
 function mod_frontc {
 	NAME=frontc
 	DOWNLOAD=wget
-	WGET_ADDRESS=http://www.irit.fr/recherches/ARCHI/MARCH/frontc/
-	WGET_PACKAGE=Frontc-3.2.tgz
+	WGET_ADDRESS="http://www.irit.fr/recherches/ARCHI/MARCH/frontc/"
+	WGET_PACKAGE="Frontc-3.2.tgz"
 	BUILD=make
 	INSTALL=make
 	DISTCLEAN=make
@@ -66,6 +66,34 @@ function mod_lp_solve {
 	DISTCLEAN=clean
 }
 
+function patch_lp_solve5 {
+	patch -p0 <<EOF
+diff -Naur lp_solve_5.5.old/lpsolve55/ccc lp_solve_5.5/lpsolve55/ccc
+--- lp_solve_5.5/lpsolve55/ccc       2007-07-27 10:34:13.000000000 +0200
++++ lp_solve_5.5.new/lpsolve55/ccc  2005-06-11 21:27:18.000000000 +0200
+@@ -7,7 +7,7 @@
+ then def='-dy -K PIC -DNOLONGLONG'
+      dl=-lc
+ else dl=-ldl
+-     so=y
++#     so=y
+ fi
+ 
+ opts='-O3'
+EOF
+}
+
+function mod_lp_solve5 {
+	NAME=lp_solve5
+	DOWNLOAD=wget
+	WGET_ADDRESS=http://switch.dl.sourceforge.net/sourceforge/lpsolve/
+	WGET_PACKAGE=lp_solve_5.5.0.10_source.tar.gz
+	WGET_DIR=lp_solve_5.5
+	PATCH=fun
+	BUILD=cmd
+	BUILD_CMD="(cd lpsolve55; sh ccc)"
+}
+
 function mod_otawa {
 	NAME=otawa
 	DOWNLOAD=home
@@ -78,5 +106,3 @@ function mod_otawa {
 	AUTOCONF_FLAGS="$plugin_param"
 	AUTOCONF_DEBUG="--with-mode=debug"
 }
-
-

@@ -126,6 +126,11 @@ function download_cvs {
 	log_command cvs -d $CVS_ROOT co $CVS_MOD
 }
 
+# Download using wget
+#	WGET_ADDRESS: address to download from,
+#	WGET_PACKAGE: package to download,
+#	WGET_DIR: directory name after unpacking.
+#
 function download_wget {
 	log_command wget $WGET_ADDRESS/$WGET_PACKAGE
 	package=${WGET_PACKAGE%.tgz}
@@ -139,8 +144,11 @@ function download_wget {
 			error "Unsupported archive"
 		fi
 	fi
-	if test "$mod" != "$package"; then
-		log_command ln -s $package $mod
+	if [ "$WGET_DIR" = "" ]; then
+		WGET_DIR="$package"
+	fi
+	if test "$mod" != "$WGET_DIR"; then
+		log_command ln -s $WGET_DIR $mod
 	fi
 	rm -rf $WGET_PACKAGE
 }
@@ -158,6 +166,16 @@ function update_cvs {
 
 function update_wget {
 	_x=
+}
+
+
+###### patch_XXX ######
+# NAME: module name
+
+function patch_fun {
+	say "patching "
+	patch_$NAME >> $basedir/$log 2>&1 || failed
+	success
 }
 
 
@@ -190,6 +208,7 @@ function setup_bootstrap {
 
 
 ########## build_XXX ############
+# PWD = module directory
 
 function build_autotool {
 	if [ ! -e Makefile ]; then
@@ -212,6 +231,13 @@ function build_make {
 	echo "#!/bin/bash" > build.sh
 	echo "make all $MAKE_FLAGS" >> build.sh
 	log_command make all "$MAKE_FLAGS"
+}
+
+
+# Launch the command
+# BUILD_CMD: command to launch
+function build_cmd {
+	log_command $BUILD_CMD
 }
 
 
@@ -475,6 +501,9 @@ function process {
 				echo "INFO: $1 does not exist: download it !"
 			fi
 			download_$DOWNLOAD
+			if [ "$PATCH" != "" ]; then
+				patch_$PATCH
+			fi
 		else
 			if [ $action = update ]; then
 				cd $1
