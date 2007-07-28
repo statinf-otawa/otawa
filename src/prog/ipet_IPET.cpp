@@ -9,6 +9,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/ilp.h>
 #include <otawa/manager.h>
+#include <otawa/ipet/ILPSystemGetter.h>
 
 namespace otawa { namespace ipet {
 
@@ -80,7 +81,7 @@ Identifier<ilp::Var *> VAR("otawa::ipet::var", 0);
  * Identifier of annotations used for storing ILP system (otawa::ilp::System *)
  * in the CFG object.
  */
-Identifier<ilp::System *> SYSTEM("otawa::ipet::system", 0);
+//Identifier<ilp::System *> SYSTEM("otawa::ipet::system", 0);
 
 
 /**
@@ -138,14 +139,15 @@ Identifier<int> COUNT("otawa::ipet::count", -1);
  * @preturn		CFG ILP system.
  */
 ilp::System *getSystem(WorkSpace *fw, CFG *cfg) {
-	System *system = SYSTEM(fw);
+	return SYSTEM(fw);
+	/*System *system = SYSTEM(fw);
 	if(!system) {
 		system = fw->newILPSystem();
 		if(!system)
 			throw elm::MessageException("no ILP engine available");
 		fw->addDeletable<System *>(SYSTEM, system);
 	}
-	return system;
+	return system;*/
 }
 
 

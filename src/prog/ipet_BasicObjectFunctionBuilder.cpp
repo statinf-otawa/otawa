@@ -13,6 +13,7 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/ipet/TrivialBBTime.h>
+#include <otawa/ipet/ILPSystemGetter.h>
 
 using namespace otawa::ilp;
 
@@ -31,6 +32,7 @@ namespace otawa { namespace ipet {
  * </dl>
  * 
  * @par Required Features
+ * @li @ref ipet::ILP_SYSTEM_FEATURE
  * @li @ref ipet::ASSIGNED_VARS_FEATURE
  * @li @ref ipet::BB_TIME_FEATURE
  * 
@@ -46,6 +48,7 @@ BasicObjectFunctionBuilder::BasicObjectFunctionBuilder(void)
 : BBProcessor("otawa::ipet::BasicObjectFunctionBuilder", Version(1, 0, 0)) {
 	require(ASSIGNED_VARS_FEATURE);
 	require(BB_TIME_FEATURE);
+	require(ILP_SYSTEM_FEATURE);
 	provide(OBJECT_FUNCTION_FEATURE);
 }
 
@@ -58,7 +61,7 @@ void BasicObjectFunctionBuilder::processBB(
 	BasicBlock *bb)
 {
 	if(!bb->isEntry() && !bb->isExit()) {
-		System *system = getSystem(fw, ENTRY_CFG(fw));
+		System *system = SYSTEM(fw);
 		int time = TIME(bb);
 		if(time < 0)
 			throw ProcessorException(*this, _ << "no time on BB " << bb->address()

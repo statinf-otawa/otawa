@@ -31,6 +31,7 @@ namespace otawa { namespace ipet {
  * block of a sequence to stop the sequence.
  * 
  * @par Required Feature
+ * @li @ref ILP_SYSTEM_FEATURE
  * @li @ref CFG_INFO_FEATURE
  * @li @ref ASSIGNED_VARS_FEATURE
  * 
@@ -46,6 +47,7 @@ namespace otawa { namespace ipet {
 Delta::Delta(void)
 : CFGProcessor("otawa::ipet::Delta", Version(1, 0, 0)) {
 	require(ASSIGNED_VARS_FEATURE);
+	require(ILP_SYSTEM_FEATURE);
 	provide(BB_TIME_FEATURE);
 	provide(INTERBLOCK_SUPPORT_FEATURE);
 }
@@ -152,7 +154,7 @@ void Delta::processBBPath(WorkSpace *fw, System *system, BBPath *bbpath) {
 void Delta::processCFG(WorkSpace* fw, CFG* cfg){
 	assert(fw);
 	assert(cfg);
-	System *system = getSystem(fw,cfg);
+	System *system = SYSTEM(fw);
 	//Vector<BBPath*> bbPathVector(4*cfg->bbs().count());
 	VectorQueue<BBPath*> to_process(7 /*4*cfg->bbs().count()*/);
 

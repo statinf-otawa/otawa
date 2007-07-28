@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2006, IRIT UPS.
+ *	Copyright (c) 2006-07, IRIT UPS.
  */
 
 
@@ -28,6 +28,9 @@ namespace otawa { namespace ipet {
  * 
  * @par Provided Feature
  * @ref @li EDGE_TIME_FEATURE
+ * 
+ * @par Required Feature
+ * @ref @li ILP_SYSTEM_FEATURE
  */
 
 
@@ -39,6 +42,7 @@ TimeDeltaObjectFunctionModifier::TimeDeltaObjectFunctionModifier(void):
 	BBProcessor("otawa::ipet::TimeDeltaObjectFunctionModifier", Version(1, 0, 0))
 {
 	provide(EDGE_TIME_FEATURE);
+	require(ILP_SYSTEM_FEATURE);
 }
 
 
@@ -50,7 +54,7 @@ void TimeDeltaObjectFunctionModifier::processBB(
 	BasicBlock *bb)
 {
 	if(!bb->isEntry() && !bb->isExit()) {
-		System *system = getSystem(fw, ENTRY_CFG(fw));
+		System *system = SYSTEM(fw);
 		for(BasicBlock::InIterator edge(bb); edge; edge++) {
 			int time = TIME_DELTA(edge);
 			if(time)
