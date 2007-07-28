@@ -70,37 +70,39 @@ using namespace elm::option;
  * 
  * @par Generic Options
  * 
- * -I, --do-not-inline: cause to not inline functions for the WCET computation.
+ * @li -I, --do-not-inline -- cause to not inline functions for the WCET computation.
  * Consider that this option may save computation time but, conversely,
  * may reduce the WCET accuracy.
+ * @li --ilp @i solver -- select the ILP solver to use (currently lp_solver (V4) or
+ * lp_solve5.
  * 
  * @par Cache Management Options
  * 
- * -i method, --icache=method: selects how the instruction must be managed.
+ * @li -i method, --icache=method -- selects how the instruction must be managed.
  * The method may be one of none, ccg or cat.
  * 
- * -c path, --cache=path : load the cache description from the file whose
+ * @li -c path, --cache=path -- load the cache description from the file whose
  * path is given.
  * 
  * @par Pipeline Management Options
  * 
- * -t method, --bbtiming=method: selects the method to time the blocks. The
+ * @li -t method, --bbtiming=method -- selects the method to time the blocks. The
  * method may be one of trivial, sim, delta or exegraph.
  * 
- * -p path, --processor=path: load the processor description from the file
+ * @li -p path, --processor=path -- load the processor description from the file
  * whose path is given.
  * 
- * -D depth, --delta=depth: select the depth of the delta algorithm, that is,
+ * @li -D depth, --delta=depth -- select the depth of the delta algorithm, that is,
  * how many blocks are used to compute inter-blocks effects (default to 4).
  * Bigger is the depth, better is the accuracy but longer is the computing time.
  * 
  * @par Dump Options
  * 
- * -C, --dump-constraints: for each function, generate a file named
+ * @li -C, --dump-constraints -- for each function, generate a file named
  * function_name.lp containing the generated ILP system. The generated file
  * use the lp_solve syntax and may feed the lp_solve command.
  *
- * -G, --dump-graph: for each function involved in the task, generate a file named
+ * @li -G, --dump-graph -- for each function involved in the task, generate a file named
  * function_name.ps containing the graph of the processed functions in DOT
  * file format.
  */
@@ -173,6 +175,7 @@ BoolOption dump_graph(command, 'G', "dump-graph",
 // Other options
 BoolOption verbose(command, 'v', "verbose", "verbose mode", false);
 BoolOption not_inlining(command, 'I', "do-not-inline", "do not inline function calls", false);
+static StringOption ilp_plugin(command, "ilp", "select the ILP solver", "solver name");
 
 
 /**
@@ -234,6 +237,8 @@ void Command::compute(String fun) {
 		otawa::Processor::VERBOSE(props) = true;
 		//cerr << "verbose !\n";
 	}
+	if(ilp_plugin)
+		ipet::ILP_PLUGIN_NAME(props) = ilp_plugin.value().toCString();
 	
 	// Compute BB times
 	switch(bbtime_option) {
