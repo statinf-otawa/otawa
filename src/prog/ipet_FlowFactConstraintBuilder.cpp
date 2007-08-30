@@ -59,17 +59,21 @@ void FlowFactConstraintBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 	ilp::System *system = SYSTEM(fw);
 	
 	for (CFG::BBIterator bb(cfg); bb; bb++) {
-		if (Dominance::isLoopHeader(bb) && (LOOP_COUNT(bb) != -1)) {
-			// sum{(i,h) / h dom i} eih <= count * sum{(i, h) / not h dom x} xeih
-			otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);
-			for(BasicBlock::InIterator edge(bb); edge; edge++) {
-				assert(edge->source());
-				otawa::ilp::Var *var = VAR(edge);
+		if (Dominance::isLoopHeader(bb)) {
+			 if(LOOP_COUNT(bb) == -1)
+			 	warn(_ << "no loop count for header at " << bb->address());
+			else {
+				// sum{(i,h) / h dom i} eih <= count * sum{(i, h) / not h dom x} xeih
+				otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);
+				for(BasicBlock::InIterator edge(bb); edge; edge++) {
+					assert(edge->source());
+					otawa::ilp::Var *var = VAR(edge);
 					//edge->source()->use<otawa::ilp::Var *>(VAR);
-				if(Dominance::dominates(bb, edge->source()))
-					cons->addLeft(1, var);
-				else
-					cons->addRight(LOOP_COUNT(bb), var);
+					if(Dominance::dominates(bb, edge->source()))
+						cons->addLeft(1, var);
+					else
+						cons->addRight(LOOP_COUNT(bb), var);
+				}
 			}
 		}
 	}
