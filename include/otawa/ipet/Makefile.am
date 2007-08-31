@@ -8,6 +8,7 @@ includeotawaipet_HEADERS = \
 	Delta.h \
 	FlowFactLoader.h \
 	FlowFactConstraintBuilder.h \
+	ILPSystemGetter.h \
 	IPET.h \
 	TimeDeltaObjectFunctionModifier.h \
 	TreePath.h \

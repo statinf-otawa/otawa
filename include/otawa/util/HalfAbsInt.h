@@ -58,7 +58,7 @@ class HalfAbsInt {
 	WorkSpace &fw;
 	CFG& entry_cfg;	
 	CFG *cur_cfg;
-	elm::genstruct::VectorQueue<BasicBlock*> *workList;	
+	elm::genstruct::Vector<BasicBlock*> *workList;	
 	elm::genstruct::Vector<Edge*> *callStack;
 	elm::genstruct::Vector<CFG*> *cfgStack;
 	BasicBlock *current;
@@ -90,7 +90,7 @@ class HalfAbsInt {
 template <class FixPoint>
 inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, WorkSpace& _fw)
  : entry_cfg(*ENTRY_CFG(_fw)), cur_cfg(ENTRY_CFG(_fw)), in(_fp.bottom()), out(_fp.bottom()), fw(_fw), fp(_fp), FIXPOINT_STATE("", NULL, otawa::NS) {
-		workList = new elm::genstruct::VectorQueue<BasicBlock*>();
+		workList = new elm::genstruct::Vector<BasicBlock*>();
 		callStack = new elm::genstruct::Vector<Edge*>();
 		cfgStack = new elm::genstruct::Vector<CFG*>();
         fp.init(this);
@@ -236,7 +236,7 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
 #endif
 			fp.leaveContext(out, cur_cfg->entry(), CTX_FUNC);
            	fp.markEdge(edge, out);
-           	workList->put(edge->source());
+           	workList->push(edge->source());
         }
 
         if (call_node) {
@@ -248,7 +248,7 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
 #ifdef DEBUG            		
             cout << "Going to CFG: " << cur_cfg->label() << "\n";
 #endif
-            workList->put(func_entry);
+            workList->push(func_entry);
             fp.enterContext(out, cur_cfg->entry(), CTX_FUNC);
             fp.markEdge(func_entry, out);
 		} else {
@@ -290,11 +290,11 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg,
 	int iterations = 0;
     
         /* workList / callStack initialization */
-        workList->reset();
+        workList->clear();
         callStack->clear();
         if (main_cfg != NULL) 
         	cur_cfg = main_cfg;
-        workList->put((main_cfg != NULL) ? main_cfg->entry() : entry_cfg.entry());
+        workList->push((main_cfg != NULL) ? main_cfg->entry() : entry_cfg.entry());
 #ifdef DEBUG
 		cout << "==== Beginning of the HalfAbsInt solve() ====\n";
 #endif        
@@ -303,7 +303,7 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg,
         
         	iterations++;
 		fixpoint = false;
-      		current = workList->get();      		
+      		current = workList->pop();      		
       		call_edge = detectCalls(call_node, current);
 #ifdef DEBUG
         	cout << "\n=== HalfAbsInt Iteration ==\n";
@@ -387,7 +387,7 @@ inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(BasicBlock *bb) {
 #ifdef DEBUG
 		cout << "Adding to worklist BB: " << bb->number() << "\n";;
 #endif
-		workList->put(bb);
+		workList->push(bb);
 	}
 	return(add);
 }
