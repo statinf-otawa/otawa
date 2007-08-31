@@ -100,13 +100,13 @@ OTAWA_USE_LIB(GLISS_S12X,
 
 # ===== LP_SOLVE check =====
 OTAWA_USE_LIB(LP_SOLVE,
-	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lp_solve, $PWD/../lp_solve, $PWD/../lp_solve,
-	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lp_solve)))
+	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lpk, $PWD/../lp_solve, $PWD/../lp_solve,
+	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lpk)))
 
 
 # ===== LP_SOLVE5 check =====
 OTAWA_USE_LIB(LP_SOLVE5,
-	OTAWA_CHECK_LIB(LP_SOLVE, lp_lib.h, lpsolve55, $PWD/../lp_solve5/lpsolve55, $PWD/../lp_solve5,
+	OTAWA_CHECK_LIB(LP_SOLVE5, lp_lib.h, lpsolve55, $PWD/../lp_solve5/lpsolve55, $PWD/../lp_solve5,
 	OTAWA_CHECK_LIB(LP_SOLVE5, lpsolve/lp_lib.h, lpsolve55  -lcolamd)))
 
 
