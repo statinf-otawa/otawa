@@ -138,13 +138,14 @@ File *Process::loadFile(elm::CString path) {
 
     // Loader configuration
 	static char *ld_library_path[] = { 0 };
-    void *loader_list[5];
+    void *loader_list[6];
     argv[0] = (char *)&path;
     loader_list[0] = argv;
     loader_list[1] = envp;
     loader_list[2] = NULL;
     loader_list[3] = (void *)ld_library_path;
     loader_list[4] = NULL;
+    loader_list[5] = NULL;
     //cout << (void *)envp << " = " << loader_list[1] << io::endl;
     
     // Memory configuration
