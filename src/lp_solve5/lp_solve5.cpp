@@ -26,7 +26,7 @@
 #include <elm/genstruct/HashTable.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/ilp/ILPPlugin.h>
-#include <lpsolve/lp_lib.h>
+#include <lp_lib.h>
 #include <math.h>
 
 using namespace elm;
