@@ -91,10 +91,13 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
         int index = 0;
 	
 	// Set first queue node
-	if(!entry && name) {
-		CFGInfo *info = fw->getCFGInfo();
-		CString name = TASK_ENTRY(fw);
-		entry = info->findCFG(name);
+	if(!entry) {
+		if(!name)
+			name = TASK_ENTRY(fw);
+		if(name) {
+			CFGInfo *info = fw->getCFGInfo();
+			entry = info->findCFG(name);
+		}
 	}
 	if(!entry)
 		throw ProcessorException(*this, _
