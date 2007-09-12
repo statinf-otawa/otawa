@@ -23,6 +23,7 @@ typedef struct call_t {
 
 Feature<Virtualizer> VIRTUALIZED_CFG_FEATURE("otawa::virtualized_cfg_feature");
 Identifier<bool> VIRTUAL_INLINING("otawa::virtual_inlining", true);
+Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::virtual_return_block", NULL);
 
 
 /**
@@ -47,10 +48,9 @@ Identifier<bool> VIRTUAL_INLINING("otawa::virtual_inlining", true);
  */
 
 Virtualizer::Virtualizer(void) : Processor("otawa::Virtualizer", Version(1, 0, 0)) {
-	require(ipet::FLOW_FACTS_FEATURE);
+	require(COLLECTED_CFG_FEATURE);
 	invalidate(COLLECTED_CFG_FEATURE);
 	provide(VIRTUALIZED_CFG_FEATURE);
-	provide(ipet::FLOW_FACTS_FEATURE);
 }
 
 void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
@@ -68,9 +68,13 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
                 throw ProcessorException(*this, "cannot find task entry point.");
 
 	vcfg->addProps(*entry);
+	vcfg->entry()->addProps(*entry->entry());
+	vcfg->exit()->addProps(*entry->exit());
 	
 	virtual_inlining = VIRTUAL_INLINING(fw);
+	vcfg->addBB(vcfg->entry());
 	virtualize(0, entry, vcfg, vcfg->entry(), vcfg->exit());
+	vcfg->addBB(vcfg->exit());
 	vcfg->numberBBs();
 
 	ENTRY_CFG(fw) = vcfg;
@@ -145,7 +149,11 @@ BasicBlock *exit) {
 								cout << "Virtualizing: " << edge->calledCFG()->label() << "\n";
 								vcalled->addProps(*edge->calledCFG());
 								ENTRY(vcalled->entry()) = vcalled;
+								vcalled->entry()->addProps(*edge->calledCFG()->entry());
+								vcalled->exit()->addProps(*edge->calledCFG()->exit());
+								vcalled->addBB(vcalled->entry());
 								virtualize(&call, edge->calledCFG(), vcalled, vcalled->entry(), vcalled->exit());
+								vcalled->addBB(vcalled->exit());
 								vcalled->numberBB();
 							}  
 						} else {
@@ -195,6 +203,7 @@ BasicBlock *exit) {
 				if(called) {
 					assert(called_exit);
 					//cout << "CALL " << bb->address() << " -> " << called_exit->address() << "\n";
+					VIRTUAL_RETURN_BLOCK(src) = called_exit;
 					virtualize(&call, called, vcfg, src, called_exit);
 
 				}
