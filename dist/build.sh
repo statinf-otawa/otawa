@@ -35,6 +35,7 @@ tags=
 debug=
 default_modules="elm ppc lp_solve otawa"
 all_modules="$default_modules gel frontc gliss hcs12"
+jobs="5"
 
 
 # functions
@@ -304,6 +305,7 @@ function help {
 	echo "	--install: download, make and install modules."
 	echo "	--dist: download and generate a distribution."
 	echo "	-h|--help: display this message."
+	echo "  --jobs=N: number of jobs to create to parallel compilation (default 10)"
 	echo "	--prefix=PATH: target path of the build."
 	echo "	--build=PATH: directory to build in."
 	echo "	--release=NUMBER: release of the distribution."
@@ -356,6 +358,9 @@ for arg in $*; do
 		;;
 	--config=*)
 		config=${arg#--config=}
+		;;
+	--jobs=*)
+		jobs=${arg#--jobs=}
 		;;
 	--install)
 		action=install
