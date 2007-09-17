@@ -119,7 +119,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 		TRACE("otawa::VarTextDecoder::processEntry: end found");
 		
 		// Record target and next
-		if(inst->isConditional() || inst->isCall()) {
+		if(inst->isConditional()) {
 			TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
 			todo.put(inst->topAddress());
 		}
@@ -132,6 +132,10 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 			else if(isVerbose())
 				out << "WARNING: no target for branch at " << inst->address()
 					<< io::endl;
+			if(inst->isCall() && (!target || !Symbol::NO_RETURN(target))) {
+				TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
+				todo.put(inst->topAddress());
+			}
 		}
 		
 		cont: ;

@@ -229,7 +229,7 @@ const Platform::Identification Platform::ID("s12x-elf-*");
  * @param props		Configuration properties.
  */
 Platform::Platform(const PropList& props): hard::Platform(ID, props) {
-	_banks = &banks_table;
+	setBanks(banks_table);
 }
 
 
@@ -240,7 +240,7 @@ Platform::Platform(const PropList& props): hard::Platform(ID, props) {
  */
 Platform::Platform(const Platform& platform, const PropList& props)
 : hard::Platform(platform, props) {
-	_banks = &banks_table;
+	setBanks(banks_table);
 }
 
 
