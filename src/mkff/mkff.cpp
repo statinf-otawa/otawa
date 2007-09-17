@@ -171,10 +171,11 @@ void Command::perform(String name) {
 
 	// Configuration	
 	PropList props;
-	//Processor::VERBOSE(props) = true;
+	Processor::VERBOSE(props) = true;
 	TASK_ENTRY(props) = &name;
 
 	// Build the context tree
+	cerr << "===>\n";
 	ContextTreeBuilder builder;
 	builder.process(fw, props);
 	funs.add(CONTEXT_TREE(fw));
