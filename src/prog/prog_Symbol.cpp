@@ -62,7 +62,8 @@ Symbol::Symbol(
 	_name(name),
 	_kind(kind),
 	_address(address),
-	_size(size)
+	_size(size),
+	no_return(false)
 {
 }
 
@@ -124,5 +125,35 @@ void Identifier<Symbol *>::print(elm::io::Output& out, const Property& prop) con
  * @li @ref Inst
  */
 Identifier<Symbol *> Symbol::ID("otawa::Symbol::id", 0);
+
+
+/**
+ * @fn bool Symbol::doesNotReturn(void) const;
+ * Test if it is a no returning function.
+ * @return	True if the function never returns, false else.
+ */
+
+
+/**
+ * Set the no-return property to this symbol.
+ */ 
+void Symbol::setNoReturn(void) {
+	ASSERTP(_kind == FUNCTION, "may only be called on function symbol");
+	ASSERTP(!no_return, "already set");
+	
+	// Find the instruction 
+	Inst *inst = _file.findInstAt(_address);
+	ASSERTP(inst, "bad function label \"" << _name << "\" !");
+	
+	// Set the property
+	NO_RETURN(inst) = true;
+}
+
+
+/**
+ * This property is put on the first instruction of never-returning
+ * functions.
+ */
+Identifier<bool> Symbol::NO_RETURN("otawa::Symbol::no_return", false);
 
 } // otawa
