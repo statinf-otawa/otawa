@@ -30,6 +30,7 @@ class BasicBlock: public elm::inhstruct::DLNode, public PropList {
 	friend class CFGInfo;
 	friend class CFG;
 	friend class VirtualCFG;
+	friend class Edge;
 public:
 	class Mark;
 protected:

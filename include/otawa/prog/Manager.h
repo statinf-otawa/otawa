@@ -106,6 +106,7 @@ extern Identifier<hard::CacheConfiguration *> CACHE_CONFIG;
 extern Identifier<elm::system::Path> PROCESSOR_PATH;
 extern Identifier<elm::xom::Element *> PROCESSOR_ELEMENT;
 extern Identifier<hard::Processor *> PROCESSOR;
+extern Identifier<string> NO_RETURN_FUNCTION;
 
 } // otawa
 
