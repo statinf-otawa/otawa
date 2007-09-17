@@ -68,7 +68,7 @@ static address_t toLinear(int opr16a, int ppage) {
 	if(opr16a < PPAGE_LOW || opr16a >= PPAGE_UP)
 		return opr16a;
 	else
-		return ADDRESS_TOP + (opr16a - PPAGE_LOW) * ppage;
+		return (ppage << 16) | opr16a;
 }
 
 
@@ -80,10 +80,9 @@ static address_t toLinear(int opr16a, int ppage) {
  * @return		Normalized address.
  */
 static address_t normalize(address_t addr) {
-	if(addr.address() >= ADDRESS_TOP)
-		return addr.address() & (ADDRESS_TOP - 1); 
-	else if(addr.address() < PPAGE_LOW || addr.address() >= PPAGE_UP)
-		return address_t(0, addr);
+	int a = addr.address() & (ADDRESS_TOP - 1);
+	if(a < PPAGE_LOW || a >= PPAGE_UP)
+		return a;
 	else
 		return addr;
 }
@@ -96,10 +95,8 @@ static address_t normalize(address_t addr) {
  * @return		Fixed address.
  */ 
 static address_t fix(address_t inst, size_t addr) {
-	if(addr >= PPAGE_LOW && addr < PPAGE_UP)
-		return address_t(inst.page(), addr);
-	else
-		return addr;
+	ASSERT(addr < ADDRESS_TOP);
+	return normalize(address_t(0, (inst.address() &  ~(ADDRESS_TOP - 1)) | addr));
 }
  
 
@@ -232,7 +229,7 @@ const Platform::Identification Platform::ID("s12x-elf-*");
  * @param props		Configuration properties.
  */
 Platform::Platform(const PropList& props): hard::Platform(ID, props) {
-	setBanks(banks_table);
+	_banks = &banks_table;
 }
 
 
@@ -243,7 +240,7 @@ Platform::Platform(const PropList& props): hard::Platform(ID, props) {
  */
 Platform::Platform(const Platform& platform, const PropList& props)
 : hard::Platform(platform, props) {
-	setBanks(banks_table);
+	_banks = &banks_table;
 }
 
 
@@ -338,7 +335,7 @@ address_t BranchInst::decodeTargetAddress(void) {
     	result = normalize(address() + SIZE + inst->instrinput[0].val.int8);
     	break;
 
-	/* long branches (PC + (s8)
+	/* long branches (PC + (s16)
 	 * 		LB{RA, RN}
 	 * 		LB{CC|CS|EQ|MI|NE|PL|VC|VS|HI|HS|LO|LS|GE|GT|LE|LT} */
 	case ID_LBRA_: case ID_LBVS_: case ID_LBVC_: case ID_LBPL_:
@@ -351,24 +348,37 @@ address_t BranchInst::decodeTargetAddress(void) {
 
 	/* conditional branch on bit test
 	 * 		BR{CLR|SET} */
-	case ID_BRCLR_: case ID_BRCLR__0:
-	case ID_BRCLR_X__0: case ID_BRCLR_Y__0: case ID_BRCLR_SP__0: case ID_BRCLR_PC__0: 
-	case ID_BRCLR_X__1: case ID_BRCLR_Y__1: case ID_BRCLR_SP__1: case ID_BRCLR_PC__1: 
-	case ID_BRSET_: case ID_BRSET__0:
-	case ID_BRSET_X_: case ID_BRSET_Y_: case ID_BRSET_SP_: case ID_BRSET_PC_:
-	case ID_BRSET_X__0: case ID_BRSET_Y__0: case ID_BRSET_SP__0: case ID_BRSET_PC__0:
-	case ID_BRSET_X__1: case ID_BRSET_Y__1: case ID_BRSET_SP__1: case ID_BRSET_PC__1:	
-		ASSERT(inst->instrinput[2].type == PARAM_INT8_T);
+    case ID_BRCLR_: case ID_BRCLR__0:
+    case ID_BRCLR_PC_: case ID_BRCLR_SP_: case ID_BRCLR_Y_:
+	case ID_BRCLR_SP__0: case ID_BRCLR_Y__0: case ID_BRCLR_X_: case ID_BRCLR_PC__0: case ID_BRCLR_X__0:
+	case ID_BRCLR_SP__1: case ID_BRCLR_Y__1: case ID_BRCLR_X__1: case ID_BRCLR_PC__1:
+	case ID_BRCLR_SP__2: case ID_BRCLR_Y__2: case ID_BRCLR_X__2: case ID_BRCLR_PC__2:
+	case ID_BRCLR_SP__3: case ID_BRCLR_Y__3: case ID_BRCLR_X__3: case ID_BRCLR_PC__3:
+	case ID_BRCLR_SP__4: case ID_BRCLR_Y__4: case ID_BRCLR_X__4:
+	case ID_BRCLR_SP__5: case ID_BRCLR_Y__5: case ID_BRCLR_X__5:
+	case ID_BRCLR_SP__6: case ID_BRCLR_Y__6: case ID_BRCLR_X__6:
+	case ID_BRCLR_SP__7: case ID_BRCLR_Y__7: case ID_BRCLR_X__7: 
+    case ID_BRSET_: case ID_BRSET__0:
+    case ID_BRSET_PC_: case ID_BRSET_SP_: case ID_BRSET_Y_:
+	case ID_BRSET_SP__0: case ID_BRSET_Y__0: case ID_BRSET_X_: case ID_BRSET_PC__0: case ID_BRSET_X__0:
+	case ID_BRSET_SP__1: case ID_BRSET_Y__1: case ID_BRSET_X__1: case ID_BRSET_PC__1:
+	case ID_BRSET_SP__2: case ID_BRSET_Y__2: case ID_BRSET_X__2: case ID_BRSET_PC__2:
+	case ID_BRSET_SP__3: case ID_BRSET_Y__3: case ID_BRSET_X__3: case ID_BRSET_PC__3:
+	case ID_BRSET_SP__4: case ID_BRSET_Y__4: case ID_BRSET_X__4:
+	case ID_BRSET_SP__5: case ID_BRSET_Y__5: case ID_BRSET_X__5:
+	case ID_BRSET_SP__6: case ID_BRSET_Y__6: case ID_BRSET_X__6:
+	case ID_BRSET_SP__7: case ID_BRSET_Y__7: case ID_BRSET_X__7: 
+ 		ASSERT(inst->instrinput[2].type == PARAM_INT8_T);
 		result = normalize(address() + SIZE + inst->instrinput[2].val.int8);
 		break;
-
-	case ID_BRCLR_X_: case ID_BRCLR_Y_: case ID_BRCLR_SP_: case ID_BRCLR_PC_: 
-	case ID_BRCLR_D_X_: case ID_BRCLR_D_Y_: case ID_BRCLR_D_SP_: case ID_BRCLR_D_PC_:
-	case ID_BRCLR_B_X_: case ID_BRCLR_B_Y_: case ID_BRCLR_B_SP_: case ID_BRCLR_B_PC_:
-	case ID_BRCLR_A_X_: case ID_BRCLR_A_Y_: case ID_BRCLR_A_SP_: case ID_BRCLR_A_PC_:
-	case ID_BRSET_D_X_: case ID_BRSET_D_Y_: case ID_BRSET_D_SP_: case ID_BRSET_D_PC_:
-	case ID_BRSET_B_X_: case ID_BRSET_B_Y_: case ID_BRSET_B_SP_: case ID_BRSET_B_PC_:
-	case ID_BRSET_A_X_: case ID_BRSET_A_Y_: case ID_BRSET_A_SP_: case ID_BRSET_A_PC_:
+	case ID_BRCLR_D_X_: case ID_BRCLR_D_Y_: case ID_BRCLR_D_SP_:
+	case ID_BRCLR_D_PC_: case ID_BRCLR_B_X_: case ID_BRCLR_B_Y_:
+	case ID_BRCLR_B_SP_: case ID_BRCLR_B_PC_: case ID_BRCLR_A_X_:
+	case ID_BRCLR_A_Y_: case ID_BRCLR_A_SP_: case ID_BRCLR_A_PC_:
+	case ID_BRSET_D_X_: case ID_BRSET_D_Y_: case ID_BRSET_D_SP_:
+	case ID_BRSET_D_PC_: case ID_BRSET_B_X_: case ID_BRSET_B_Y_:
+	case ID_BRSET_B_SP_: case ID_BRSET_B_PC_: case ID_BRSET_A_X_:
+	case ID_BRSET_A_Y_: case ID_BRSET_A_SP_: case ID_BRSET_A_PC_:
 		ASSERT(inst->instrinput[1].type == PARAM_INT8_T);
 		result = normalize(address() + SIZE + inst->instrinput[1].val.int8);
 		break;
@@ -419,11 +429,11 @@ address_t BranchInst::decodeTargetAddress(void) {
 		break;
 	case ID_JSR_:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
-		result = fix(address(), inst->instrinput[0].val.uint8);
+		result = fix(address().address(), inst->instrinput[0].val.uint8);
 		break;
 	case ID_JSR__0:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT16_T);
-		result = fix(address(), inst->instrinput[0].val.uint16);
+		result = fix(address().address(), inst->instrinput[0].val.uint16);
 		break;
     case ID_JSR_PC:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
@@ -589,8 +599,16 @@ otawa::Process *Loader::load(Manager *man, CString path, const PropList& props) 
 		delete proc;
 		return 0;
 	}
-	else
+	else {
+	
+		// Mark main as no returning
+		Symbol *sym = proc->findSymbol("main");
+		if(sym && sym->kind() == Symbol::FUNCTION)
+			sym->setNoReturn();
+	
+		// Return process
 		return proc;
+	}
 }
 
 
