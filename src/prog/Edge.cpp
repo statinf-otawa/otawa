@@ -100,6 +100,7 @@ Edge::~Edge(void) {
 void Edge::toCall(void) {
 	tgt->removeInEdge(this);
 	knd = CALL;
+	src->flags |= BasicBlock::FLAG_Call;
 }
 
 } // otawa
