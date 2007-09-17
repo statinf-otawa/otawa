@@ -27,10 +27,43 @@
 
 #ifndef NDEBUG
 #	define ASSERTT(cnd, msg)	if(!(cnd)) onTimeError(time, _ << msg, inst)
-#	define TRACE(msg)	cerr << msg << io::endl
+#	define TRACE(msg)	//cerr << msg << io::endl
 #else
 #	define ASSERTT(cnd, msg)
 #	define TRACE(msg)
+#endif
+
+//#define STATS
+
+#ifdef STATS
+class MemStats {
+public:
+
+	MemStats(void): count(0), resolved(0), file("mem.txt"), out(file) {
+	}
+	
+	~MemStats(void) {
+		elm::cerr << "[MEM] COUNT = " << count << elm::io::endl;
+		elm::cerr << "[MEM] RESOLVED = " << resolved << elm::io::endl;
+		file.close();
+	}
+	
+	void add(void) {
+		resolved++;
+		count++;
+	}
+	
+	void unresolve(otawa::Inst *inst) {
+		out << inst << elm::io::endl;
+		resolved--;
+	}
+	
+private:
+	int count, resolved;
+	elm::io::OutFileStream file;
+	elm::io::Output out;
+};
+static MemStats stats;
 #endif
 
 namespace otawa { namespace s12x {
@@ -58,10 +91,11 @@ private:
 	void interpretFull(Inst *inst);
 	int interpret(CString expr, Inst *inst, instruction_t *_inst, bool x18);
 	int access8(Inst *inst, instruction_t *_inst);
-	int access16(Inst *inst, instruction_t *_inst);
-	int access16_aligned(Inst *inst, instruction_t *_inst);
+	int access16(Inst *inst, instruction_t *_inst, bool write);
+	int access16_aligned(Inst *inst, instruction_t *_inst, bool write);
 	int access16_code(Inst *inst, instruction_t *_inst);
 	void onTimeError(cstring time, const string& msg, Inst *inst);
+	Address getAccessAddress(Inst *inst, instruction_t *_inst, bool write);
 	WorkSpace *_ws;
 	state_t *_state;
 	int _cycle;
@@ -280,13 +314,15 @@ int State::interpret(CString time, Inst *inst, instruction_t *_inst, bool x18) {
 			res += access16_code(inst, _inst);
 			break;		
 		case 'V':
-			res += access16_aligned(inst, _inst);
+			res += access16_aligned(inst, _inst, false);
 			break;
 
 		// 16-bits free
-		case 'I': case 'R': case 'U': case 'T':
+		case 'I': case 'R': case 'U': case 'T': 
+			res += access16(inst, _inst, false);
+			break;		
 		case 'S': case 'W':
-			res += access16(inst, _inst);
+			res += access16(inst, _inst, true);
 			break;
 		
 		// Special
@@ -347,11 +383,15 @@ int State::access8(Inst *inst, instruction_t *_inst) {
  * @param _inst	GLISS instruction.
  * @return		Time of the access.
  */
-int State::access16(Inst *inst, instruction_t *_inst) {
+int State::access16(Inst *inst, instruction_t *_inst, bool write) {
 	// !!TODO!! Customize with memory description.
 	// !!TODO!! Worst case : external unaligned.
 	// Must be detailed with alignement and type of memory.
-	return 2;
+	Address addr = getAccessAddress(inst, _inst, write);
+	if(addr.isNull() || addr.address() & 0x1)
+		return 2;
+	else
+		return 1;
 }
 
 
@@ -361,7 +401,7 @@ int State::access16(Inst *inst, instruction_t *_inst) {
  * @param _inst	GLISS instruction.
  * @return		Time of the access.
  */
-int State::access16_aligned(Inst *inst, instruction_t *_inst) {
+int State::access16_aligned(Inst *inst, instruction_t *_inst, bool write) {
 	// !!TODO!! Customize with memory description.
 	// !!TODO!!Must be detailed with alignement and type of memory.
 	return 1;
@@ -390,6 +430,99 @@ int State::access16_code(Inst *inst, instruction_t *_inst) {
 void State::onTimeError(cstring time, const string& msg, Inst *inst) {
 	ASSERTP(false, "time expression error: " << msg << " for \"" << time
 		<< "\" at " << inst->address() << ":" << inst);
+}
+
+
+/**
+ * Get the accessed address of the given instruction.
+ * @param inst	OTAWA instruction.
+ * @param _inst	GLISS matching instruction.
+ * @param write	Type of access: false = read, true = write.
+ * @return		Accessed address or null address if cannot be determined.
+ */
+Address State::getAccessAddress(Inst *inst, instruction_t *_inst, bool write) {
+	#ifdef STATS
+		stats.add();
+	#endif
+	switch(_inst->ident) {
+		
+	/* opr16a: Absolute address 16-bits */
+	case ID_ADCA_: case ID_ADCB_: case ID_ADDA_: case ID_ADDB_:
+	case ID_ADDD_: case ID_ADDX_: case ID_ADDY_:
+	case ID_ADED_: case ID_ADEX_: case ID_ADEY_:
+	case ID_ANDA_: case ID_ANDB_: case ID_ANDX_: case ID_ANDY_:
+	case ID_ASL_: case ID_ASLW_: case ID_ASR_: case ID_ASRW_:
+	case ID_BCLR__0: case ID_BITA__1: case ID_BITB__1:
+	case ID_BITX_: case ID_BITY_:
+	case ID_BRCLR_: case ID_BRSET_:
+	case ID_BSET__0: case ID_BTAS__0:
+	case ID_CLR_: case ID_CLRW_:
+	case ID_CMPA_: case ID_CMPB_:
+	case ID_COM_: case ID_COMW_:
+	case ID_CPD_:
+	case ID_CPED_: case ID_CPES_: case ID_CPEX_: case ID_CPEY_:
+	case ID_CPS_: case ID_CPX_: case ID_CPY_:
+	case ID_DEC_: /* case ID_DECW_:*/
+	case ID_EMACS_:
+	case ID_EORA__0: case ID_EORB__0: case ID_EORX__0: case ID_EORY__0:
+	case ID_INC_: case ID_INCW_:
+	case ID_LDAA_: case ID_LDAB_:
+	case ID_LDD_: case ID_LDS_: case ID_LDX_: case ID_LDY_:
+	/*case ID_LSL_: case ID_LSLW_:*/
+	case ID_LSR_: case ID_LSRW_:
+	case ID_NEG_: case ID_NEGW_:
+	case ID_ORAA__1: case ID_ORAB__1: case ID_ORX__1: case ID_ORY__1:
+	case ID_ROL_: case ID_ROLW_: case ID_ROR_: case ID_RORW_:
+	case ID_SBCA_: case ID_SBCB_:
+	case ID_SBED_: case ID_SBEX_: case ID_SBEY_:
+	case ID_STAA_: case ID_STAB_: case ID_STD_:
+	case ID_STS_: case ID_STX_: case ID_STY_:
+	case ID_SUBA_: case ID_SUBB_:
+	case ID_SUBD_: case ID_SUBX_: case ID_SUBY_:
+	case ID_TST_: case ID_TSTW_:
+		return _inst->instrinput[0].val.uint16;
+
+	/* opr8a: absolute address 8-bits */
+	case ID_ADCA__0: case ID_ADCB__0: case ID_ADDA__0: case ID_ADDB__0:
+	case ID_ADDD__0: case ID_ADDX__0: case ID_ADDY__0:
+	case ID_ADED__0: case ID_ADEX__0: case ID_ADEY__0:
+	case ID_ANDA__0: case ID_ANDB__0: case ID_ANDX__0: case ID_ANDY__0:
+	case ID_BCLR_: case ID_BITA__0: case ID_BITB__0:
+	case ID_BITX__0: case ID_BITY__0:
+	case ID_BRCLR__0: case ID_BRSET__0:
+	case ID_BSET_: case ID_BTAS_:
+	case ID_CMPA__0: case ID_CMPB__0:
+	case ID_CPD__0:
+	case ID_CPED__0: case ID_CPES__0: case ID_CPEX__0: case ID_CPEY__0:
+	case ID_CPS__0: case ID_CPX__0: case ID_CPY__0:
+	case ID_EORA__1: case ID_EORB__1: case ID_EORX__1: case ID_EORY__1:
+	case ID_LDAA__0: case ID_LDAB__0:
+	case ID_LDD__0: case ID_LDS__0: case ID_LDX__0: case ID_LDY__0:
+	case ID_ORAA__0: case ID_ORAB__0: case ID_ORX__0: case ID_ORY__0:
+	case ID_SBCA__0: case ID_SBCB__0:
+	case ID_SBED__0: case ID_SBEX__0: case ID_SBEY__0:
+	case ID_STAA__0: case ID_STAB__0: case ID_STD__0:
+	case ID_STS__0: case ID_STX__0: case ID_STY__0:
+	case ID_SUBA__0: case ID_SUBB__0:
+	case ID_SUBD__0: case ID_SUBX__0: case ID_SUBY__0:
+		return _inst->instrinput[0].val.uint8;
+	
+	/* mov family */
+	case ID_MOVB_: case ID_MOVW_:
+		return 	_inst->instrinput[1].val.uint16;
+	case ID_MOVB__0:  case ID_MOVW__0:
+		if(!write)
+			return _inst->instrinput[0].val.uint16;
+		else
+			return _inst->instrinput[1].val.uint16;
+	
+	/* default */
+	default:
+		#ifdef STATS
+			stats.unresolve(inst);
+		#endif
+		return Address::null;
+	}
 }
 
 } } // otawa::s12x
