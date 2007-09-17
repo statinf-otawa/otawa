@@ -23,7 +23,7 @@ install-data-hook:
 # Test program configuration
 test_s12x_LDADD = @LOADER_LIBS@ @ILP_LIBS@ @OTAWA_LIBS@ @ODISPLAY_LIBS@ 
 
-test_s12x_DEPENDENCIES = @LOADER_DEPS@ @ILP_DEPS@ @OTAWA_DEPS@ @ODISPLAY_DEPS@ 
+test_s12x_DEPENDENCIES = s12x.la @ILP_DEPS@ @OTAWA_DEPS@ @ODISPLAY_DEPS@ 
 
 test_s12x_SOURCES = test.cpp
 
