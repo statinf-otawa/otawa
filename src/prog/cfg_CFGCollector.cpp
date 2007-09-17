@@ -91,18 +91,20 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
         int index = 0;
 	
 	// Set first queue node
-	if(!entry) {
-		if(!name)
-			name = TASK_ENTRY(fw);
-		if(name) {
+	CFG *ws_entry = ENTRY_CFG(fw);
+    if(ws_entry)
+          entry = ws_entry;
+	else {
+		if(!entry && name) {
 			CFGInfo *info = fw->getCFGInfo();
-			entry = info->findCFG(name);
+		CString name = TASK_ENTRY(fw);
+		entry = info->findCFG(name);
 		}
+		if(!entry)
+			throw ProcessorException(*this, _
+				<< "cannot find task entry point \"" << name << "\"");
+		ENTRY_CFG(fw) = entry;
 	}
-	if(!entry)
-		throw ProcessorException(*this, _
-			<< "cannot find task entry point \"" << name << "\"");
-	ENTRY_CFG(fw) = entry;
 	
 	// Build the involved collection
 	CFGCollection *cfgs = new CFGCollection();
