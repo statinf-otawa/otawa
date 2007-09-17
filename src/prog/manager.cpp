@@ -490,6 +490,14 @@ Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("otawa::cache_config_elemen
 
 
 /**
+ * this property may be used to pass information about the non-returning
+ * behaviour of some functions. The parameter is the name of the function.
+ * It is often used with the _exit function.
+ */
+Identifier<string> NO_RETURN_FUNCTION("otawa::no_return_function", "");
+
+
+/**
  * Default manager. Avoid to declare one in the main.
  */
 Manager MANAGER;  

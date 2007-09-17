@@ -194,9 +194,10 @@ BasicBlock *exit) {
 			if(called) {
 				for(call_t *cur = &call; cur; cur = cur->back)
 					if(cur->cfg == called) {
-						Edge *edge = new Edge(bb, cur->entry, Edge::VIRTUAL_CALL);
+						Edge *edge = new Edge(map.get(bb), cur->entry, Edge::VIRTUAL_CALL);
 						CALLED_CFG(edge) = cur->cfg;
 						RECURSIVE_LOOP(edge) = true;
+						VIRTUAL_RETURN_BLOCK(src) = called_exit;
 						called = 0;
 						break;
 					}
