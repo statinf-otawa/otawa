@@ -27,6 +27,7 @@ public:
 	} kind_t;
 	
 	static Identifier<Symbol *> ID;
+	static Identifier<bool> NO_RETURN;
 
 	Symbol(File& file, String name, kind_t kind, address_t address, size_t size = 0);
 	inline File& file(void) const { return _file; }
@@ -35,6 +36,8 @@ public:
 	inline address_t address(void) const { return _address; }
 	inline size_t size(void) const { return _size; }
 	Inst *findInst(void) const;
+	inline bool doesNotReturn(void) const { return no_return; } 
+	void setNoReturn(void);
 
 private:
 	File& _file;
@@ -42,6 +45,7 @@ private:
 	kind_t _kind;
 	address_t _address;	
 	size_t _size;
+	bool no_return;
 };
 
 // GenericIdentifier<Symbol_t *>::print Specialization
