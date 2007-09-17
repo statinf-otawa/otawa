@@ -291,4 +291,20 @@ Loader *Process::loader(void) const {
 	return 0;
 }
 
+
+/**
+ * Find the symbol matching the given name.
+ * @param name	Symbol name to look for.
+ * @return		Found symbol or null.
+ */
+Symbol *Process::findSymbol(const String& name) {
+	Symbol *result = 0;
+	for(FileIter file(this); file; file++) {
+		result = file->findSymbol(name);
+		if(result)
+			break;
+	}
+	return result;
+}
+ 	
 } // otawa
