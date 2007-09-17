@@ -176,7 +176,11 @@ void CFG::scan(void) {
 		if(bb->isReturn())
 			ends.add(bb);
 		for(BasicBlock::OutIterator edge(bb); edge; edge++)
-			if(edge->kind() != EDGE_Call) {
+			if(edge->kind() == EDGE_Call) {
+				if(!bb->isCall())
+					ends.add(bb);
+			}
+			else {
 				BasicBlock *target = edge->target();
 				if(target != ent && ENTRY(target)) {
 					ends.add(bb);

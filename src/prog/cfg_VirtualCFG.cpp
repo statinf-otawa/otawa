@@ -138,7 +138,7 @@ BasicBlock *exit) {
 					else {
 						BasicBlock *tgt = map.get(edge->target(), 0);
 						assert(tgt);
-						if(called && edge->kind() == Edge::NOT_TAKEN)
+						if(called /*&& edge->kind() == Edge::NOT_TAKEN*/)
 							called_exit = tgt;
 						else
 							new Edge(src, tgt, edge->kind());
@@ -203,7 +203,8 @@ VirtualCFG::VirtualCFG(CFG *cfg, bool inlined): _cfg(cfg) {
  * Build a new empty VirtualCFG
  */
 VirtualCFG::VirtualCFG() {
-
+  _bbs.add(&_entry);
+  _bbs.add(&_exit);
   _entry._cfg = this;
   _exit._cfg = this;
   flags |= FLAG_Scanned;
