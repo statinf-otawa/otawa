@@ -10,6 +10,7 @@
 #include <otawa/ipet.h>
 #include <otawa/ipet/BBTimeSimulator.h>
 #include <otawa/display/CFGDrawer.h>
+#include <otawa/cfg/Virtualizer.h>
 
 using namespace elm;
 using namespace otawa;
@@ -33,21 +34,24 @@ int main(int argc, char **argv) {
 		WorkSpace *ws = MANAGER.load(argv[1], props);
 		
 		// WCET computation
+		Virtualizer virt;
+		virt.process(ws, props);
 		BBTimeSimulator bbts;
 		bbts.process(ws, props);		
 		WCETComputation wcomp;
 		wcomp.process(ws, props);
 		
-		// Display the result
-		CFG *cfg = ENTRY_CFG(ws);
-		ilp::System *sys = SYSTEM(ws);
-		cout << "SUCCESS\nWCET = " << WCET(ws) << '\n';
-		
 		// Record and display result
+		CFG *cfg = ENTRY_CFG(ws);
 		WCETCountRecorder recorder;
 		recorder.process(ws, props);
 		display::CFGDrawer drawer(cfg, props);
 		drawer.display();				
+
+		// Display the result
+		ilp::System *sys = SYSTEM(ws);
+		cout << "SUCCESS\nWCET = " << WCET(ws) << '\n';
+		
 	}
 	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
