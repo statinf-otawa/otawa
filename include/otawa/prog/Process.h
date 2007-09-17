@@ -34,6 +34,7 @@ class Process;
 namespace sim {
 	class Simulator;
 }
+class Symbol;
 class TextDecoder;
 
 
@@ -74,6 +75,7 @@ public:
 	virtual int instSize(void) const = 0;
 	virtual Processor *decoder(void);
 	virtual Loader *loader(void) const;
+	Symbol *findSymbol(const string& name); 	
 
 	// Simulation management
 	virtual SimState *newState(void);
