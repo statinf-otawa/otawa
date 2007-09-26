@@ -1,7 +1,7 @@
 AC_PREREQ(2.52)
 AC_INIT(src/prog/base.cpp)
 AC_CONFIG_AUX_DIR(.config)
-AM_INIT_AUTOMAKE(Otawa, 0.4)
+AM_INIT_AUTOMAKE(Otawa, 0.5)
 AC_LANG(C++)
 
 # ==== Plugin activation ====
@@ -61,6 +61,14 @@ AC_TYPE_SIZE_T
 AS_IF(test "$HAS_PLUGIN" = "yes", [ AC_ENABLE_SHARED ], [ AC_DISABLE_SHARED ])
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
+
+# ==== Endianness ====
+AC_C_BIGENDIAN(
+	[IS_BIG="1"],
+	[IS_BIG="0"],
+	[AC_MSG_ERROR([unsupported endianness])])
+AS_AC_EXPAND(IS_BIG, "$IS_BIG")
+AC_DEFINE_UNQUOTED(IS_BIG, [$IS_BIG], [Big endian ?])
 
 
 # ===== GEL check =====
