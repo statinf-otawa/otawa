@@ -9,6 +9,7 @@
 
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/Feature.h>
+#include <otawa/ilp.h>
 
 namespace otawa { namespace ipet {
 
