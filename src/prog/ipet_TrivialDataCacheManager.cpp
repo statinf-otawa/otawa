@@ -11,6 +11,7 @@
 #include <otawa/ipet/TrivialDataCacheManager.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/ipet/TrivialBBTime.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa { namespace ipet {
 
