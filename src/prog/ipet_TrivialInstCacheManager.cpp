@@ -12,6 +12,7 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/ipet.h>
+#include <otawa/prog/WorkSpace.h>
 
 
 namespace otawa { namespace ipet {
