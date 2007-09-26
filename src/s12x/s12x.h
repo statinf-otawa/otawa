@@ -42,9 +42,12 @@ public:
 	virtual int instSize(void) const { return 0; }
 	int computeSize(address_t addr);
 	virtual sim::Simulator *simulator(void);
+	long stackChange(Inst *inst);
+	unsigned long stackAccess(Inst *inst);
 
 protected:
 	virtual otawa::Inst *decode(address_t addr);
+	virtual void *memory(void);
 };
 
 // otawa::gliss::Loader class
