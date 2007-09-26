@@ -48,3 +48,4 @@ ltmain.sh
 TODO.tasks
 OTAWA.anjuta
 *.lineno
+.cproject
