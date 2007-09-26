@@ -19,11 +19,8 @@
 #ifndef _ELFREAD_H
 #define _ELFREAD_H 1
 
+#include <inttypes.h>
 #include "elf.h"
-
-typedef unsigned short uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned long uint32_t;
 
 typedef struct tables {
 	int32_t sechdr_tbl_size;
