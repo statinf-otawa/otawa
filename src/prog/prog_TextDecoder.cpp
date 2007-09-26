@@ -9,6 +9,7 @@
 #include <otawa/prog/FixedTextDecoder.h>
 #include <otawa/prog/VarTextDecoder.h>
 #include <otawa/proc/Registry.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 

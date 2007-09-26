@@ -10,6 +10,7 @@
 #include <otawa/prog/VarTextDecoder.h>
 #include <otawa/proc/Registry.h>
 #include <elm/genstruct/VectorQueue.h>
+#include <otawa/prog/WorkSpace.h>
 
 using namespace elm;
 
