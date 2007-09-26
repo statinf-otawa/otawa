@@ -75,6 +75,13 @@ public:
 	virtual Inst *target(void);
 	virtual Type *type(void);
 
+	// Stack information
+	static const unsigned long READ = 0x01;
+	static const unsigned long WRITE = 0x02;
+	static const long UNKNOW_CHANGE = 0x80000000;
+	virtual long stackChange(void);
+	virtual unsigned long stackAccess(void);
+
 	// ProgItem overload
 	virtual Inst *toInst(void);
 };
