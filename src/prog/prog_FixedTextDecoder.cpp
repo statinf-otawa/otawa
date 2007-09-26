@@ -10,6 +10,7 @@
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/proc/Registry.h>
 #include <otawa/proc/Feature.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 

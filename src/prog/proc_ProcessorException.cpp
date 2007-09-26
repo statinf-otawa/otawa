@@ -6,6 +6,7 @@
  */
 
 #include <otawa/proc/Processor.h>
+#include <otawa/proc/ProcessorException.h>
 #include <elm/debug.h>
 
 using namespace elm;
