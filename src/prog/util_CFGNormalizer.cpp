@@ -10,6 +10,7 @@
 #include <otawa/cfg.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/cfg/CFGCollector.h>
+#include <otawa/proc/ProcessorException.h>
 
 namespace otawa {
 
