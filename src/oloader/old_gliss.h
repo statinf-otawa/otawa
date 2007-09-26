@@ -8,6 +8,7 @@
 #define _GLISS_H
 
 #include <stdio.h>
+#include <inttypes.h>
 
 #if defined(__cplusplus)
     extern  "C" {
@@ -45,6 +46,27 @@ void iss_disasm(char *,instruction_t *);
 /* for intern/extern functions */
 void iss_error(char *msg,...); /* formated error message, printf-like */
 
+typedef void memory_t;
+
+extern uint8_t iss_mem_read8_little(memory_t *, address_t);
+extern void iss_mem_write8_little(memory_t *, address_t, uint8_t);
+extern uint16_t iss_mem_read16_little(memory_t *, address_t);
+extern void iss_mem_write16_little(memory_t *, address_t, uint16_t);
+extern uint32_t iss_mem_read32_little(memory_t *, address_t);
+extern void iss_mem_write32_little(memory_t *, address_t, uint32_t);
+extern uint64_t iss_mem_read64_little(memory_t *, address_t);
+extern void iss_mem_write64_little(memory_t *, address_t, uint64_t);
+extern uint8_t iss_mem_read8_big(memory_t *, address_t);
+extern void iss_mem_write8_big(memory_t *, address_t, uint8_t);
+extern uint16_t iss_mem_read16_big(memory_t *, address_t);
+extern void iss_mem_write16_big(memory_t *, address_t, uint16_t);
+extern uint32_t iss_mem_read32_big(memory_t *, address_t);
+extern void iss_mem_write32_big(memory_t *, address_t, uint32_t);
+extern uint64_t iss_mem_read64_big(memory_t *, address_t);
+extern void iss_mem_write64_big(memory_t *, address_t, uint64_t);
+extern void iss_mem_set_buf(memory_t *, address_t, uint8_t, int);
+extern void iss_mem_read_buf(memory_t *, address_t, void *, int);
+extern void iss_mem_write_buf(memory_t *, address_t, void *, int);
 
 #if defined(__cplusplus)
     }
