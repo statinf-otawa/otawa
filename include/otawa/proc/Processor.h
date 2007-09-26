@@ -10,7 +10,9 @@
 #include <elm/io.h>
 #include <elm/util/Version.h>
 #include <elm/system/StopWatch.h>
-#include <otawa/prog/WorkSpace.h>
+#include <elm/genstruct/Vector.h>
+//#include <otawa/prog/WorkSpace.h>
+#include <otawa/properties.h>
 #include <otawa/proc/ProcessorException.h>
 
 namespace otawa {
@@ -20,6 +22,7 @@ using namespace elm::genstruct;
 class AbstractFeature;
 class Registration;
 class Configuration;
+class WorkSpace;
 
 // Processor class
 class Processor {
