@@ -12,6 +12,7 @@
 #include "elf.h"
 #include "elfread.h"
 #include <otawa/loader/gliss.h>
+#include "config.h"
 
 #define TRACE(m) //cout << m << io::endl
 
@@ -91,6 +92,7 @@ private:
 	envp = ENVP(props);
 	if(!envp)
 		envp = default_envp;
+	provide(MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -207,6 +209,8 @@ File *Process::loadFile(elm::CString path) {
 	addFile(file);
 	_start = findInstAt((address_t)Ehdr.e_entry);
 	otawa::gliss::GLISS_STATE(this) = _state;
+	_memory = memory();
+	ASSERTP(_memory, "memory information mandatory"); 
 	return file;
 }
 
@@ -216,6 +220,44 @@ File *Process::loadFile(elm::CString path) {
 Loader *Process::loader(void) const {
 	return _loader;
 }
+
+
+// Memory read
+#if IS_BIG == 1
+#	define GET(t) iss_mem_read##t##_big((memory_t *)_memory, at.address())
+#else
+#	define READ_MEM(t) iss_mem_read##t##_little(_memory, at.address())
+#endif
+#define GET(t, s) \
+	void Process::get(Address at, t& val) { val = READ_MEM(s); }
+GET(signed char, 8);
+GET(unsigned char, 8);
+GET(signed short, 16);
+GET(unsigned short, 16);
+GET(signed long, 32);
+GET(unsigned long, 32);
+GET(signed long long, 64);
+GET(unsigned long long, 64);
+GET(Address, 32);
+
+
+/**
+ */
+void Process::get(Address at, string& str) {
+	Address base = at;
+	while(!READ_MEM(8))
+		at = at + 1;
+	int len = at - base;
+	char buf[len];
+	get(base, buf, len);
+	str = String(buf, len);
+}
+
+
+/**
+ */
+void Process::get(Address at, char *buf, int size)
+	{ iss_mem_read_buf(_memory, at.address(), buf, size); }
 
 
 /**
