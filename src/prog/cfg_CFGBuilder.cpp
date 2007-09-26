@@ -8,6 +8,9 @@
 #include <otawa/cfg/CFGBuilder.h>
 #include <otawa/cfg.h>
 #include <otawa/prog/TextDecoder.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/loader/new_gliss/BranchInst.h>
+
 
 namespace otawa {
 

@@ -12,6 +12,7 @@
 #include <otawa/util/LoopInfoBuilder.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <elm/util/Pair.h>
+#include <otawa/prog/WorkSpace.h>
 
 #include <otawa/cfg/LoopUnroller.h>
 
