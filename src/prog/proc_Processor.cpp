@@ -8,6 +8,7 @@
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/proc/Registry.h>
+#include <otawa/prog/WorkSpace.h>
 
 using namespace elm;
 using namespace elm::io;
