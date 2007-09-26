@@ -10,6 +10,8 @@
 #include <otawa/sim.h>
 #include <otawa/sim/BBPathDriver.h>
 #include <elm/io.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/proc/ProcessorException.h>
 
 
 using namespace elm::genstruct;

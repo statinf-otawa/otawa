@@ -9,6 +9,8 @@
 #include <otawa/sim.h>
 #include <otawa/sim/BasicBlockDriver.h>
 #include <otawa/ipet/TrivialBBTime.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/proc/ProcessorException.h>
 
 using namespace otawa::sim;
 
