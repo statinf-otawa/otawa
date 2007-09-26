@@ -41,6 +41,7 @@ WorkSpace::WorkSpace(Process *_proc): proc(_proc) {
 	addProps(*_proc);
 	Manager *man = _proc->manager();
 	man->frameworks.add(this);
+	proc->link(this);
 }
 
 
@@ -52,6 +53,7 @@ WorkSpace::~WorkSpace(void) {
 	clearProps();
 	Manager *man = proc->manager();
 	man->frameworks.remove(this);
+	proc->unlink(this);
 	delete proc;
 }
 

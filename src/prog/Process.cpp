@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2003-06, IRIT UPS.
+ *	Process class implementation
  *
- *	prog/Process.cpp -- implementation for Process class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-7, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <elm/xom.h>
@@ -293,6 +308,43 @@ Loader *Process::loader(void) const {
 
 
 /**
+ * This method is called each a workspace using the current process is
+ * created. It may be used to perform some workspace initialization like
+ * feature providing.
+ */
+void Process::link(WorkSpace *ws) {
+	ASSERT(ws);
+	for(int i = 0; i < provided.length(); i++)
+		ws->provide(*provided[i]);
+}
+
+
+/**
+ * This method is called each a workspace using the current process is
+ * deleted.
+ */
+void Process::unlink(WorkSpace *ws) {
+	ASSERT(ws);
+}
+
+
+/**
+ * This method let provide feature from the loader / processors.
+ */
+void Process::provide(AbstractFeature& feature) {
+	provided.add(&feature);
+}
+
+
+/**
+ * This feature ensure that stack information are available, that is, that
+ * Inst::stackSet() and Inst::stackUse() methods returns meaningful results.
+ * This feature is usually provided by the program loader.
+ */
+Feature<NoProcessor> STACK_USAGE_FEATURE("otawa::stack_usage");
+
+
+/**
  * Find the symbol matching the given name.
  * @param name	Symbol name to look for.
  * @return		Found symbol or null.
@@ -306,5 +358,296 @@ Symbol *Process::findSymbol(const String& name) {
 	}
 	return result;
 }
- 	
+ 
+
+/**
+ * Get a signed byte value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, signed char& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get an unsigned byte value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, unsigned char& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get a signed half-word value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, signed short& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get a unsigned half-word value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, unsigned short& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get a signed word value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, signed long& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get a unsigned word value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, unsigned long& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get a signed long word value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, signed long long& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get a unsigned long word value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, unsigned long long& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get an address value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, Address& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get a float value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, float& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get a double value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, double& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get a long double value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, long double& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get a string value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, String& val) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ * Get a byte block value from the process.
+ * @param at	Address of the value to get.
+ * @param val	Got value.
+ * @throws UnsupportedFeatureException if this method is called but the loader
+ * 		does not provide this feature.
+ * @throws OutOfMemStaticException if the given address does not point
+ * 		to a static segment of the executable file. 
+ * @warning	To use this method, you must assert that the
+ * 		@ref MEMORY_ACCESS_FEATURE is provided.
+ */
+void Process::get(Address at, char *buf, int size) {
+	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+}
+
+
+/**
+ */
+elm::io::Output& operator<<(elm::io::Output& out, Process *proc) {
+	out << "process(" << (void *)proc << ")";
+	File *file = proc->program();
+	if(file)
+		out << "[progam=\"" << file->name() << "\"]";
+}
+
+
+/**
+ * @class ProcessException
+ * An exception generated from a process.
+ */
+
+
+/**
+ * @class UnsupportedFeatureException
+ * This class is used to throw an exception when a process does not support
+ * an invoked feature.
+ */
+
+
+/**
+ */
+String UnsupportedFeatureException::message(void) {
+	return _ << "process " << process()
+			<< " does not support \"" << f.name() << "\"";
+}
+
+
+/**
+ * @class OutOfSegmentException
+ * This exception is thrown when a memory access is performed on process
+ * with an address that does not point in a segment of the executable file. 
+ */ 
+
+
+
+
+/**
+ */
+String OutOfSegmentException::message(void) {
+	return _ << "process " << process()
+			<< " does not have defined segment at " << addr;
+}
+
+
+/**
+ * This feature is usually asserted by processes that provides access to the
+ * memory segment of the program.
+ * @par Provided Methods
+ * @li @ref Process::get() family of methods. 
+ */
+Feature<NoProcessor> MEMORY_ACCESS_FEATURE("memory_access_feature");
+
+/**
+ * This feature is usually asserted by processes that provides access to the
+ * memory segment of the program with float values.
+ * @par Provided Methods
+ * @li @ref Process::get(Address, float&), 
+ * @li @ref Process::get(Address, double&), 
+ * @li @ref Process::get(Address, long double&), 
+ */
+Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE("float_memory_access_feature");
+
 } // otawa
