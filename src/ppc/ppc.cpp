@@ -140,6 +140,7 @@ protected:
 	virtual void *gelFile(void) {
 		return loader_file(((state_t *)state())->M);
 	}
+	virtual void *memory(void) { return ((state_t *)state())->M; }
 };
 
 // Inst class

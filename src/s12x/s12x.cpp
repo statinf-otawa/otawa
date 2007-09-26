@@ -169,6 +169,12 @@ public:
 	virtual Loader *loader(void) const {
 	}
 
+	virtual long stackChange(void)
+		{ return ((Process&)process()).stackChange(this); }
+
+	virtual unsigned long stackAccess(void) 
+		{ return ((Process&)process()).stackAccess(this); }
+
 private:
 	mutable int _size;
 };
@@ -186,6 +192,9 @@ public:
 			_size = ((Process &)process()).computeSize(address());
 		return _size;
 	}
+
+	virtual unsigned long stackAccess(void) 
+		{ return ((Process&)process()).stackAccess(this); }
 
 protected:
 	virtual address_t decodeTargetAddress(void);
@@ -256,6 +265,7 @@ Process::Process(
 	hard::Platform *pf,
 	const PropList& props
 ): otawa::loader::old_gliss::Process(manager, loader, pf, props) {
+	provide(STACK_USAGE_FEATURE);
 }
 
 
@@ -560,6 +570,67 @@ address_t BranchInst::decodeTargetAddress(void) {
 	TRACE("otawa::s12x::BranchInst::decodeTargetAddress(" << address()
 		<< ") = " << result);
 	return result;
+}
+
+
+/**
+ * Compute the stack change value for the given instruction.
+ * @param inst	Instruction to compute for.
+ * @return		Change value.
+ */
+long Process::stackChange(otawa::Inst *inst) {
+	long change = 0;
+	
+	// Get instruction
+	code_t buffer[20];
+	char out_buffer[200];
+	instruction_t *_inst;
+	iss_fetch(inst->address().address(), buffer);
+	_inst = iss_decode((state_t *)state(), inst->address().address(), buffer);
+
+	// Scan the instruction
+	switch(_inst->ident) {
+	case ID_BSR_:
+		return -2;
+	case ID_CALL_:
+	case ID_CALL_D_X_: case ID_CALL_D_Y_: case ID_CALL_D_SP_: case ID_CALL_D_PC_:
+	case ID_CALL_B_X_: case ID_CALL_B_Y_: case ID_CALL_B_SP_: case ID_CALL_B_PC_:
+	case ID_CALL_A_X_: case ID_CALL_A_Y_: case ID_CALL_A_SP_: case ID_CALL_A_PC_:
+	case ID_CALL_M_X_: case ID_CALL_M_Y_: case ID_CALL_M_SP_: case ID_CALL_M_PC_:
+	case ID_CALL_M_D_X_: case ID_CALL_M_D_Y_: case ID_CALL_M_D_SP_: case ID_CALL_M_D_PC_:
+	case ID_CALL_PC_: case ID_CALL_SP_: case ID_CALL_Y_: case ID_CALL_X_:
+	case ID_CALL_PC__0: case ID_CALL_SP__0: case ID_CALL_Y__0: case ID_CALL_X__0:
+	case ID_CALL_X__1: case ID_CALL_Y__1: case ID_CALL_SP__1: case ID_CALL_PC__1:
+	case ID_CALL_X__2: case ID_CALL_Y__2: case ID_CALL_SP__2: case ID_CALL_PC__2:
+	case ID_CALL_X__3: case ID_CALL_Y__3: case ID_CALL_SP__3:
+	case ID_CALL_X__4: case ID_CALL_Y__4: case ID_CALL_SP__4:
+	case ID_CALL_X__5: case ID_CALL_Y__5: case ID_CALL_SP__5:
+	case ID_CALL_X__6: case ID_CALL_Y__6: case ID_CALL_SP__6:
+	case ID_CALL_X__7: case ID_CALL_Y__7: case ID_CALL_SP__7:
+		return -3;
+	}
+
+	// Cleanup
+	iss_free(_inst);
+	return change;
+}
+
+
+/**
+ * Compute the stack access mask for the given instruction.
+ * @param inst	Instruction to compute for.
+ * @return		Stack access mask.
+ */
+unsigned long Process::stackAccess(otawa::Inst *inst) {
+	unsigned long access = 0;
+	return access;
+}
+
+
+/**
+ */
+void *Process::memory(void) {
+	return ((state_t *)state())->M;
 }
 
 
