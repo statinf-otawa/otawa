@@ -15,6 +15,7 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/util/LBlockBuilder.h>
+#include <otawa/prog/WorkSpace.h>
 
 using namespace otawa::ilp;
 using namespace otawa;

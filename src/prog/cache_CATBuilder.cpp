@@ -17,6 +17,8 @@
 #include <otawa/util/ContextTree.h>
 #include <otawa/dfa/XCFGVisitor.h>
 #include <otawa/cache/categorisation/CATDFA.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/proc/ProcessorException.h>
 
 using namespace otawa;
 using namespace otawa::ilp;

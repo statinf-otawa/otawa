@@ -15,6 +15,8 @@
 #include <otawa/cache/ccg/CCGBuilder.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/proc/CFGProcessor.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/proc/ProcessorException.h>
 
 using namespace otawa::ilp;
 using namespace elm::genstruct;
