@@ -25,6 +25,7 @@ public:
 
 protected:
 	virtual otawa::Inst *decode(address_t addr);
+	virtual void *memory(void) { return ((state_t *)state())->M; }
 };
 
 // Inst class
