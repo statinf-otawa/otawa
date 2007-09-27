@@ -13,6 +13,7 @@
 #include <otawa/cfg.h>
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/dfa/BitSet.h>
+#include <otawa/prog/WorkSpace.h>
 
 using namespace elm;
 
