@@ -124,6 +124,7 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 							}
 	                		break;
 						case FIRST_HIT:
+				case NOT_CLASSIFIED:
 	                	case ALWAYS_MISS: {
 		                		// Add constraint: xmiss = x
 		                		Constraint *cons3 = system->newConstraint(Constraint::EQ);

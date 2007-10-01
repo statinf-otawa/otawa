@@ -13,9 +13,11 @@
 #include <otawa/hard/Platform.h>
 
 #include <otawa/cache/cat2/ACSBuilder.h>
+#include <otawa/cache/cat2/ACSMayBuilder.h>
 #include <otawa/cache/FirstLastBuilder.h>
 #include <otawa/cache/cat2/CAT2Builder.h>
 #include <otawa/cache/cat2/MUSTProblem.h>
+#include <otawa/cache/cat2/MAYProblem.h>
 using namespace otawa;
 using namespace otawa::ilp;
 using namespace otawa::ipet;
@@ -79,11 +81,20 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 			
 		if (LBLOCK_ISFIRST(lblock)) {
 			MUSTProblem::Domain *must = CACHE_ACS_MUST(lblock->bb())->get(line);
+			MAYProblem::Domain *may = NULL;
+			if (CACHE_ACS_MAY(lblock->bb()) != NULL)
+				may = CACHE_ACS_MAY(lblock->bb())->get(line);
 			BasicBlock *header;
-			CATEGORY(lblock) = ALWAYS_MISS;
+			if (may) {
+				CATEGORY(lblock) = NOT_CLASSIFIED;
+			} else {
+				CATEGORY(lblock) = ALWAYS_MISS;
+			}
 			
 			if (must->contains(lblock->cacheblock())) {
 				CATEGORY(lblock) = ALWAYS_HIT;
+			} else if (may && !may->contains(lblock->cacheblock())) {
+				CATEGORY(lblock) = ALWAYS_MISS;
 			} else if (firstmiss_level != FML_NONE) {
 				if (Dominance::isLoopHeader(lblock->bb()))
 					header = lblock->bb();

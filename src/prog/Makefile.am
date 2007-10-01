@@ -37,6 +37,7 @@ libotawa_la_SOURCES = \
 	proc_CFGProcessor.cpp \
 	proc_Feature.cpp \
 	proc_FunProcessor.cpp \
+	proc_LBlockProcessor.cpp \
 	proc_ASTProcessor.cpp \
 	proc_BBProcessor.cpp \
 	proc_ProcessorException.cpp \
@@ -97,9 +98,12 @@ libotawa_la_SOURCES = \
 	cache_CCGEdge.cpp \
 	cache_CCGNode.cpp \
 	cache_ACSBuilder.cpp \
+	cache_ACSMayBuilder.cpp \
 	cache_CAT2Builder.cpp \
+	cache_CAT2NCBuilder.cpp \
 	cache_CAT2ConstraintBuilder.cpp \
 	cache_MUSTProblem.cpp \
+	cache_MAYProblem.cpp \
 	cache_PERSProblem.cpp \
 	cache_MUSTPERS.cpp \
 	cache_LinkedBlocksDetector.cpp \

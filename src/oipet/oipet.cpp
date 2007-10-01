@@ -79,10 +79,16 @@ using namespace elm::option;
  * @par Cache Management Options
  * 
  * @li -i method, --icache=method -- selects how the instruction must be managed.
- * The method may be one of none, ccg or cat.
+ * The method may be one of none, ccg, cat, or cat2.
  * 
  * @li -c path, --cache=path -- load the cache description from the file whose
  * path is given.
+ *
+ * @li -p, --pseudounrolling -- enable Pseudo-Unrolling (cat2 only)
+ *
+ * @li -l, --linkedblocks -- enable LinkedBlocksDetector (cat2 only)
+ *
+ * @li -P type, --pers=type -- select persistence type for cat2 (multi, outer, or inner)
  * 
  * @par Pipeline Management Options
  * 
@@ -130,18 +136,32 @@ typedef enum icache_t {
 	icache_def = 0,
 	icache_none,
 	icache_ccg,
-	icache_cat
+	icache_cat,
+	icache_cat2
 } icache_t;
 EnumOption<int>::value_t icache_values[] = {
 	{ "method", icache_def },
 	{ "none", icache_none },
 	{ "ccg", icache_ccg },
 	{ "cat", icache_cat },
+	{ "cat2", icache_cat2 },
 	{ "" }
 };
+
+
+EnumOption<int>::value_t pers_values[] = {
+	{ "type",  FML_MULTI},
+	{ "multi", FML_MULTI},
+	{ "outer", FML_OUTER},
+	{ "inner", FML_INNER},
+	{ "" }
+};
+
+
 EnumOption<int> icache_option(command, 'i', "icache",
 	"instruction management method", icache_values);
 StringOption cache(command, 'c', "cache", "used cache", "path", "");
+EnumOption<int> pers_option(command, 'P', "pers", "persistence type for cat2 (multi, inner, or outer)", pers_values);
 
 
 // Basic-block Timing options
@@ -174,6 +194,8 @@ BoolOption dump_graph(command, 'G', "dump-graph",
 
 // Other options
 BoolOption verbose(command, 'v', "verbose", "verbose mode", false);
+BoolOption linkedblocks(command, 'l', "linkedblocks", "enable LinkedBlocksDetector (cat2 only)", false);
+BoolOption pseudounrolling(command, 'u', "pseudounrolling", "enable Pseudo-Unrolling (cat2 only)", false);
 BoolOption not_inlining(command, 'I', "do-not-inline", "do not inline function calls", false);
 static StringOption ilp_plugin(command, "ilp", "select the ILP solver", "solver name");
 
@@ -305,6 +327,25 @@ void Command::compute(String fun) {
 			
 			// Build CAT contraint
 			CATConstraintBuilder decomp;
+			decomp.process(fw, props);
+		}
+	
+	case icache_cat2:
+		{
+			// build Cat lblocks
+			FIRSTMISS_LEVEL(props) = (fmlevel_t) (int) pers_option;
+			PSEUDO_UNROLLING(props) = pseudounrolling;			
+			CAT2NCBuilder cat2builder;
+			cat2builder.process(fw, props);
+
+			if (linkedblocks) {
+				// Linked Blocks
+	                        LinkedBlocksDetector lbd;
+	                        lbd.process(fw, props);
+			}
+			
+			// Build CAT contraint
+			CAT2ConstraintBuilder decomp;
 			decomp.process(fw, props);
 		}
 	

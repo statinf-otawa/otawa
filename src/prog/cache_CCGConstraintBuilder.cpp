@@ -159,18 +159,18 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	for (Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++) {
 		
 		
-	/* P(x,y) == eccg_x_y */	
-	/* 
-	 * (entry node) Rule 18:
-	 * sum P(entry,*) = 1
-	 */
-	if (lbloc->id() == 0) {
-		// !!CONS!!
-		Constraint *cons18 = system->newConstraint(Constraint::EQ,1);
-		for(CCG::Successor outedg(CCG::NODE(lbloc)); outedg; outedg++)
-			cons18->add(1, VAR(outedg.edge()));
-	}
-		
+		/* P(x,y) == eccg_x_y */	
+		/* 
+		 * (entry node) Rule 18:
+		 * sum P(entry,*) = 1
+		 */
+		if (lbloc->id() == 0) {
+			// !!CONS!!
+			Constraint *cons18 = system->newConstraint(Constraint::EQ,1);
+			for(CCG::Successor outedg(CCG::NODE(lbloc)); outedg; outedg++)
+				cons18->add(1, VAR(outedg.edge()));
+		}
+			
 		// Non-entry, non-exit node
 		if(lbloc->id() != 0 && lbloc->id() != lbset->count() - 1) {
 			int identif = lbloc->id();				
@@ -194,7 +194,6 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			bool findend = false;
 			bool findlooplb = false;
 			ilp::Var *xhit;
-			ilp::Var *pii;
 			Constraint *cons2;
 			// !!CONS!!
 			Constraint *cons17 = system->newConstraint(Constraint::EQ);
@@ -206,10 +205,8 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				CCGNode *target = outedg;
 				if (target->lblock()->id() == lbset->count() - 1)
 					findend = true;
-				if (target->lblock()->id() == lbloc->id()) {
-					findlooplb = true;
-					pii = VAR(outedg.edge());
-				}
+
+		
 				used = true;
 				// p(ij, uv)  <= xi
 				/*cons2 = system->newConstraint(Constraint::LE);
@@ -235,6 +232,8 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 					 finds = true;
 					 psi = VAR(inedge.edge());
 				}
+				if (source->lblock()->cacheblock() == lbloc->cacheblock()) 
+					findlooplb = true;
 				used = true;
 				
 				// building contraint (30)
@@ -252,6 +251,9 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		// cache_block(uv) = cach_block(ij)
 		// (19) p(ij, ij) + p(uv, ij) <= xihit <= p(ij, ij) + p(uv, ij) + p(entry, ij) if p(entry, ij) and p(ij, exit)
 		// (20) p(ij, ij) + p(uv, ij) = xihit else
+		 cout << "pre-examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " findlooplb = " << findlooplb << "\n";
+	
+		
 		if (findlooplb) {
 		  	if (finds && findend) {
 		  	        // constraint 19
@@ -274,18 +276,18 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				cons->addRight(1, psi);
 				cons2->addRight(1, HIT_VAR(lbloc));
 		 	}
-		 	
 		 	else {
 				// contraint 20
 		 		cons2 = system->newConstraint(Constraint::EQ);
 		 		cons2->addLeft(1, HIT_VAR(lbloc));
-		 		unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
+	//	 		unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
 		 		for(GenGraph<CCGNode,CCGEdge>::Predecessor inedge(CCG::NODE(lbloc));
 		 		inedge; inedge++) {
-		 			unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
+		 			cout << "examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " avec predecesseur : " << inedge->lblock()->id() << "\n";
+//		 			unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
 					if(inedge->lblock()->id() != 0
 					&& inedge->lblock()->id() != lbset->count() - 1){
-						if (taglbloc == taginedge)
+						if (inedge->lblock()->cacheblock() == lbloc->cacheblock())
 							cons2->addRight(1, VAR(inedge.edge()));
 					}
 		 		}
