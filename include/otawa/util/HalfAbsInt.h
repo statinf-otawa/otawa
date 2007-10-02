@@ -21,6 +21,7 @@
  *	02110-1301  USA
  */
 
+
 #ifndef OTAWA_UTIL_HALFABSINT_H
 #define OTAWA_UTIL_HALFABSINT_H
 
@@ -49,6 +50,7 @@ typedef enum hai_context_t {
 extern Identifier<bool> FIXED;
 extern Identifier<bool> FIRST_ITER;
 extern Identifier<bool> HAI_DONT_ENTER;
+extern Identifier<BasicBlock*> HAI_BYPASS_EDGE;
 
 template <class FixPoint>
 class HalfAbsInt {
@@ -66,6 +68,7 @@ class HalfAbsInt {
 	Edge *call_edge; /* call_edge == current node's call-edge to another CFG */
 	bool call_node; /* call_node == true: we need to process this call. call_node == false: already processed (call return) */
 	bool fixpoint;
+	bool mainEntry;
 	
 	Identifier<typename FixPoint::FixPointState*> FIXPOINT_STATE;	
 	inline bool isEdgeDone(Edge *edge);	
@@ -77,7 +80,7 @@ class HalfAbsInt {
   public:
   	inline typename FixPoint::FixPointState *getFixPointState(BasicBlock *bb);
 	int solve(otawa::CFG *main_cfg = NULL, 
-		typename FixPoint::Domain *entdom = NULL);
+		typename FixPoint::Domain *entdom = NULL, BasicBlock *start_bb = NULL);
 	inline HalfAbsInt(FixPoint& _fp, WorkSpace& _fw);
 	inline ~HalfAbsInt(void);
 	inline typename FixPoint::Domain backEdgeUnion(BasicBlock *bb);
@@ -113,16 +116,18 @@ template <class FixPoint>
 void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	
 	fp.assign(in, fp.bottom());
-	
-	if (current->isEntry()) {
-		if (fp.getMark(current)) {
-			/* Function-call entry case */
-			fp.assign(in, *fp.getMark(current));
-			fp.unmarkEdge(current);
-		}  else { 
-			/* Main entry case */
-			fp.assign(in, entdom);
-		}
+	if (mainEntry) {
+		/* Main entry case */
+		fp.assign(in, entdom);		
+		mainEntry = false;
+	} else if (current->isEntry()) {		
+		/* Function-call entry case */
+		fp.assign(in, *fp.getMark(current));
+		fp.unmarkEdge(current);
+	} else if (fp.getMark(current) && !current->isEntry()) {
+		/* Edge bypass case */
+		fp.assign(in, *fp.getMark(current));
+		fp.unmarkEdge(current);
 	} else if (call_edge && !call_node) {
 		/* Call return case */
 		fp.assign(in, *fp.getMark(call_edge));
@@ -253,14 +258,24 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
             fp.markEdge(func_entry, out);
 		} else {
         	/* Standard case: use out-state to mark out-edges, and try to add successors to worklist */
-	        for (BasicBlock::OutIterator outedge(current); outedge; outedge++) {
-	            if (outedge->kind() == Edge::CALL) 
-	            	continue;
-	            fp.markEdge(*outedge, out);
-#ifdef DEBUG           		
-	            cout << "Marking edge: " << outedge->source()->number() << "->" << outedge->target()->number() << "\n";
-#endif            		
-	            tryAddToWorkList(outedge->target());
+	        if (HAI_BYPASS_EDGE(current)) {
+	        	fp.markEdge(HAI_BYPASS_EDGE(current), out);
+	        	workList->push(HAI_BYPASS_EDGE(current));
+	        	ASSERT(!HAI_BYPASS_EDGE(current)->isEntry());
+	        } else {
+		        for (BasicBlock::OutIterator outedge(current); outedge; outedge++) {
+		            if (outedge->kind() == Edge::CALL) 
+		            	continue;
+		            	
+			    if (HAI_DONT_ENTER(outedge->target()))
+			    	continue;
+	
+		            fp.markEdge(*outedge, out);
+	#ifdef DEBUG           		
+		            cout << "Marking edge: " << outedge->source()->number() << "->" << outedge->target()->number() << "\n";
+	#endif            		
+		            tryAddToWorkList(outedge->target());
+		        }
 	        }
         }
 	}
@@ -286,15 +301,20 @@ Edge *HalfAbsInt<FixPoint>::detectCalls(bool &call_node, BasicBlock *bb) {
 
 template <class FixPoint>
 int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, 
-	typename FixPoint::Domain *entdom) {        
+	typename FixPoint::Domain *entdom, BasicBlock *start_bb) {        
 	int iterations = 0;
     
         /* workList / callStack initialization */
         workList->clear();
         callStack->clear();
+        mainEntry = true;
         if (main_cfg != NULL) 
         	cur_cfg = main_cfg;
-        workList->push((main_cfg != NULL) ? main_cfg->entry() : entry_cfg.entry());
+	if (start_bb != NULL) {
+		workList->push(start_bb);
+	} else {
+	        workList->push((main_cfg != NULL) ? main_cfg->entry() : entry_cfg.entry());
+	}
 #ifdef DEBUG
 		cout << "==== Beginning of the HalfAbsInt solve() ====\n";
 #endif        

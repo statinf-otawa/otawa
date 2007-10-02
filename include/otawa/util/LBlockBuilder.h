@@ -28,6 +28,8 @@ class LBlockBuilder: public CFGProcessor {
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void processCFG(WorkSpace *fw, CFG *cfg);
+	virtual void cleanup(WorkSpace *fw);
+	virtual void setup(WorkSpace *fw);
 
 public:
 	LBlockBuilder(void);
