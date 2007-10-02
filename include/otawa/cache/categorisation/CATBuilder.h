@@ -29,7 +29,8 @@ typedef enum category_t {
 	ALWAYS_HIT = 1,
 	FIRST_HIT = 2,
 	FIRST_MISS = 3,
-	ALWAYS_MISS = 4
+	ALWAYS_MISS = 4,
+	NOT_CLASSIFIED = 5
 } category_t;
 	
 
