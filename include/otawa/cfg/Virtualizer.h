@@ -55,7 +55,7 @@ class Virtualizer: public Processor {
 
 extern Feature<Virtualizer> VIRTUALIZED_CFG_FEATURE;
 extern Identifier<bool> VIRTUAL_INLINING;
-
+extern Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK;
 }
 
 
