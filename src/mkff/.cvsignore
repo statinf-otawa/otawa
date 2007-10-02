@@ -3,3 +3,4 @@ Makefile.in
 mkff
 .deps
 .libs
+core
