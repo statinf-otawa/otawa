@@ -102,11 +102,27 @@ Identifier<bool> FIXED("otawa::util::fixed", false);
 Identifier<bool> FIRST_ITER("otawa::util::first_iter", true);
 
 /**
- * This property, when set to TRUE on a CFG other than the entry CFG, prevents 
- * HalfAbsInt from following call edges to this CFG.
- * It virtually removes all function calls to this CFG.
+ * This property, when set to TRUE on a BasicBlock or a CFG, 
+ * prevents HalfAbsInt from following edges to this BasicBlock
+ * or CFG.
+ * NOTE: It is deprecated to use this property to prevent HalfAbsint
+ * from entering a sub-CFG. Use HAI_BYPASS_EDGE instead. 
  */
-Identifier<bool> HAI_DONT_ENTER("otawa::hai_dont_enter", false);
+Identifier<bool> HAI_DONT_ENTER("otawa::util::hai_dont_enter", false);
+
+
+/**
+ * This property tells HalfAbsInt to go directly from the basic block
+ * which has this property, to the basic block contained in the property. 
+ * It virtually adds an edge from bb to HAI_BYPASS_EDGE(bb), and virtually
+ * removes all other out-edges from bb, and other in-edges from HAI_BYPASS_EDGE(bb)
+ *
+ * Warnings:
+ * - The two basic blocks of the bypass edge must be in the same CFG.
+ * - It can't exist a path in the CFG going to the target-basicblock of the bypass
+ *   edge without passing first through the source-basicblock of the bypass edge.
+ */
+Identifier<BasicBlock*> HAI_BYPASS_EDGE("otawa::util::hai_bypass_edge", false);
  
 
 /**

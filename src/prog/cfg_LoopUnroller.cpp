@@ -12,10 +12,9 @@
 #include <otawa/util/LoopInfoBuilder.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <elm/util/Pair.h>
-#include <otawa/prog/WorkSpace.h>
 
 #include <otawa/cfg/LoopUnroller.h>
-
+#include <otawa/cfg/Virtualizer.h>
 using namespace otawa;
 using namespace elm;
 
@@ -74,6 +73,8 @@ void LoopUnroller::processWorkSpace(otawa::WorkSpace *fw) {
 		VirtualCFG *vcfg = new VirtualCFG();
 		coll->cfgs.add(vcfg);
 		INDEX(vcfg) = cfgidx;
+		vcfg->addBB(vcfg->entry());
+		
 	}
 	
 	
@@ -81,17 +82,23 @@ void LoopUnroller::processWorkSpace(otawa::WorkSpace *fw) {
 	for (CFGCollection::Iterator vcfg(*coll), cfg(*orig_coll); vcfg; vcfg++, cfg++) {
 		ASSERT(INDEX(vcfg) == INDEX(cfg));
 		LABEL(vcfg) = cfg->label();
-		INDEX(vcfg->entry()) = 0;
-		INDEX(vcfg->exit()) = 1;
-		idx = 2;
+		INDEX(vcfg->entry()) = 0;	
+		
+		
+		idx = 1;
 //		if (isVerbose()) {
 			cout << "Processing CFG: " << cfg->label() << "\n";
 		//}
 		
-		/* !!gruik!! Ca serait bien d'avoir une classe VCFGCollection */
-		unroll((otawa::CFG*) cfg, NULL, static_cast<otawa::VirtualCFG*>((otawa::CFG*)vcfg));
+		/* !!GRUIK!! Ca serait bien d'avoir une classe VCFGCollection */
+		VirtualCFG *casted_vcfg = static_cast<otawa::VirtualCFG*>((otawa::CFG*)vcfg);
+		
+		unroll((otawa::CFG*) cfg, NULL, casted_vcfg);
 		if (ENTRY_CFG(fw) == cfg) 
-			ENTRY_CFG(fw) = vcfg;			
+			ENTRY_CFG(fw) = vcfg;	
+		
+		casted_vcfg->addBB(vcfg->exit());		
+		INDEX(vcfg->exit()) = idx;		
 	}
 	INVOLVED_CFGS(fw) = coll;
 }
@@ -101,6 +108,7 @@ void LoopUnroller::processWorkSpace(otawa::WorkSpace *fw) {
 void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg) {	
 	VectorQueue<BasicBlock*> workList;
 	VectorQueue<BasicBlock*> loopList;
+	VectorQueue<BasicBlock*> virtualCallList;
 	genstruct::Vector<BasicBlock*> doneList;
 	typedef genstruct::Vector<Pair<VirtualBasicBlock*, Edge::kind_t> > BackEdgePairVector;
 	BackEdgePairVector backEdges;
@@ -148,13 +156,16 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 					/* Duplicate the current basic block */
 				
 					new_bb = new VirtualBasicBlock(current);
-					new_bb->addProps(*current);
 					new_bb->removeAllProp(&ENCLOSING_LOOP_HEADER);
 					new_bb->removeAllProp(&EXIT_LIST);
 					new_bb->removeAllProp(&REVERSE_DOM);
 					new_bb->removeAllProp(&LOOP_EXIT_EDGE);
 					new_bb->removeAllProp(&LOOP_HEADER);
 					new_bb->removeAllProp(&ENTRY); 
+					
+					/* Remember the call block so we can correct its destination when we have processed it */
+					if (VIRTUAL_RETURN_BLOCK(new_bb))
+						virtualCallList.put(new_bb);
 					
 					if (ipet::LOOP_COUNT(new_bb) != -1) {
 						if (i == 0) {
@@ -200,6 +211,13 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 				} 
 				
 			}					
+		}
+		
+		while (!virtualCallList.isEmpty()) {
+			BasicBlock *vcall = virtualCallList.get();
+			BasicBlock *vreturn = map.get(VIRTUAL_RETURN_BLOCK(vcall), NULL);
+			ASSERT(vreturn != NULL);
+			VIRTUAL_RETURN_BLOCK(vcall) = vreturn;
 		}
 
 
