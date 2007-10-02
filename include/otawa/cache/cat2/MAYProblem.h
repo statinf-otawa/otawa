@@ -24,13 +24,13 @@
 #ifndef CACHE_MAYPROBLEM_H_
 #define CACHE_MAYPROBLEM_H_
 
-#include <elm/io.h>
+#include <otawa/util/HalfAbsInt.h>
 #include <elm/assert.h>
-#include <otawa/proc/WorkSpace.h>
+#include <elm/io.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/cfg/BasicBlock.h>
-#include <util/HalfAbsInt.h>
 
 namespace otawa {
 
@@ -79,19 +79,15 @@ class MAYProblem {
 			}
 			 
 			inline void glb(const Domain &dom) {
-				ASSERT((A == dom.A) && (size == dom.size));
-				
-				for (int i = 0; i < size; i++) {
-					if (((age[i] > dom.age[i]) && (dom.age[i] != -1)) || (age[i] == -1))
-						age[i] = dom.age[i];
-				}
+				/* not implemented */
+				ASSERT(false);
 			}
 			
 			inline void lub(const Domain &dom) {
 				ASSERT((A == dom.A) && (size == dom.size));
 
 				for (int i = 0; i < size; i++) {
-					if (((age[i] > dom.age[i]) && (dom.age[i] != -1)) || (age[i] != -1)) 
+					if (((age[i] > dom.age[i]) && (dom.age[i] != -1)) || (age[i] == -1)) 
 						age[i] = dom.age[i];
 				}
 			}
