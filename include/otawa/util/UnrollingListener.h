@@ -30,19 +30,23 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/Edge.h>
 #include <otawa/prop/PropList.h>
+#include <otawa/prop/Identifier.h>
 #include <elm/genstruct/Vector.h>
 
 namespace otawa {
+
 
 template <class P>
 class UnrollingListener {
 
   public:
 	typedef P Problem;
-
+	 
+	Identifier<typename Problem::Domain*> BB_OUT_STATE;
+	
 	typename Problem::Domain ***results;
 	
-	UnrollingListener(WorkSpace *_fw, Problem& _prob) : fw(_fw), prob(_prob) {
+	UnrollingListener(WorkSpace *_fw, Problem& _prob) : fw(_fw), prob(_prob), BB_OUT_STATE("", NULL) {
 		CFGCollection *col = INVOLVED_CFGS(fw);
 		results = new typename Problem::Domain**[col->count()];
 		
@@ -93,7 +97,9 @@ void UnrollingListener<Problem>::blockInterpreted(const FirstUnrollingFixPoint<U
 	
 		prob.lub(*results[cfgnumber][bbnumber], in);
 
-
+		if (BB_OUT_STATE(bb) != NULL)
+			prob.lub(*BB_OUT_STATE(bb), out);
+			
 #ifdef DEBUG
 		cout << "[TRACE] CFG " << cur_cfg->label() << " BB " << bbnumber << ": IN=" << in << " OUT=" << out << "\n";
 		cout << "[TRACE] result: " << *results[cfgnumber][bbnumber] << "\n";
