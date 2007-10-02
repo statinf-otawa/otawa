@@ -34,15 +34,22 @@
 
 namespace otawa {
 
+
+
 template <class P>
 class DefaultListener {
 
   public:
+  
+
+  	
 	typedef P Problem;
+	
+	Identifier<typename Problem::Domain*> BB_OUT_STATE; 
 
 	typename Problem::Domain ***results;
 	
-	DefaultListener(WorkSpace *_fw, Problem& _prob) : fw(_fw), prob(_prob) {
+	DefaultListener(WorkSpace *_fw, Problem& _prob) : fw(_fw), prob(_prob), BB_OUT_STATE("", NULL) {
 		CFGCollection *col = INVOLVED_CFGS(fw);
 		results = new typename Problem::Domain**[col->count()];
 		
@@ -92,6 +99,9 @@ void DefaultListener<Problem>::blockInterpreted(const DefaultFixPoint<DefaultLis
 		int cfgnumber = cur_cfg->number();
 	
 		prob.lub(*results[cfgnumber][bbnumber], in);
+		
+		if (BB_OUT_STATE(bb) != NULL)
+			prob.lub(*BB_OUT_STATE(bb), out);
 #ifdef DEBUG
 		cout << "[TRACE] Block " << bbnumber << ": IN=" << in << " OUT=" << out << "\n";
 #endif		
