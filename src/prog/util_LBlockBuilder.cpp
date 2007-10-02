@@ -75,6 +75,14 @@ void LBlockBuilder::processWorkSpace(WorkSpace *fw) {
 		new LBlock(lbsets[i], 0, 0, 0, -1);
 }
 
+void LBlockBuilder::setup(WorkSpace *fw) {
+	cacheBlocks = new HashTable<int, int>();
+}
+
+void LBlockBuilder::cleanup(WorkSpace *fw) {
+	delete cacheBlocks;
+}
+
 
 /**
  */
@@ -85,7 +93,7 @@ void LBlockBuilder::processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset, 
 	assert(fw);
 	assert(cfg);
 	assert(lbset);
-	cacheBlocks = new HashTable<int, int>();
+	
 	// Build the l-blocks
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
 	
@@ -132,7 +140,7 @@ void LBlockBuilder::processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset, 
 				}
 			}
 		}
-		delete cacheBlocks;
+		
 }
 
 
