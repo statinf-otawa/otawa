@@ -1,11 +1,27 @@
 /*
- *	$Id$
- *	Copyright (c) 2003-06, IRIT UPS.
+ *	$Id $
+ *	Inst class implementation
  *
- *	instryction.cpp -- instruction classes implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/instruction.h>
+#include <otawa/prog/Process.h>
 
 namespace otawa {
 
@@ -262,18 +278,22 @@ Inst *Inst::target(void) {
 /**
  * Get the registers read by the instruction.
  * @return	Read register table.
+ * @warning	This method is only implemented when the owner loader
+ * asserts the @ref REGISTER_USAGE_FEATURE.
  */
 const elm::genstruct::Table<hard::Register *>& Inst::readRegs(void) {
-	return no_regs;
+	throw UnsupportedFeatureException(0, REGISTER_USAGE_FEATURE);
 }
 
 
 /**
  * Get the registers written by the instruction.
  * @return	Read register table.
+ * @warning	This method is only implemented when the owner loader
+ * asserts the @ref REGISTER_USAGE_FEATURE.
  */
 const elm::genstruct::Table<hard::Register *>& Inst::writtenRegs(void) {
-	return no_regs;
+	throw UnsupportedFeatureException(0, REGISTER_USAGE_FEATURE);
 }
 
 
