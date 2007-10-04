@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2005-07, IRIT UPS.
+ *	Processor class interface
  *
- *	Processor class interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-7, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_PROC_PROCESSOR_H
 #define OTAWA_PROC_PROCESSOR_H
@@ -101,6 +116,27 @@ protected:
 public:
 	NoProcessor(void);
 }; 
+
+
+// NoProcessorException class
+class NoProcessorException: public Exception {
+};
+
+
+// UnavailableFeatureException class
+class UnavailableFeatureException: public ProcessorException {
+public:
+	
+ 	inline UnavailableFeatureException(
+ 		const Processor *processor,
+ 		const AbstractFeature& feature
+ 	): ProcessorException(*processor, ""), f(feature) { }
+ 		
+ 	inline const AbstractFeature& feature(void) const { return f; }
+ 	virtual String 	message(void); 
+private:
+	const AbstractFeature& f;
+};
 
 
 // Inlines
