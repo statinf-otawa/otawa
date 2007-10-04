@@ -19,7 +19,6 @@ class BasicBlock;
 // Processor class
 class LBlockProcessor: public Processor {
 	elm::CString name;
-	CFG *last;
 	void init(const PropList& props);
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
