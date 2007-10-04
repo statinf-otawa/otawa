@@ -29,6 +29,8 @@
 #include <otawa/prog/Manager.h>
 #include <otawa/gensim/GenericSimulator.h>
 #include <otawa/prog/FixedTextDecoder.h>
+#include <elm/genstruct/DAGNode.h>
+#include <otawa/proc/Feature.h>
 
 using namespace elm;
 
@@ -314,8 +316,13 @@ Loader *Process::loader(void) const {
  */
 void Process::link(WorkSpace *ws) {
 	ASSERT(ws);
-	for(int i = 0; i < provided.length(); i++)
+	for(int i = 0; i < provided.length(); i++) {
+		if ((provided[i]->dependency->graph == NULL)
+		|| (provided[i]->dependency->graph->isDeleted()))
+			provided[i]->dependency->graph =
+				new genstruct::DAGNode<const AbstractFeature *>(provided[i]);
 		ws->provide(*provided[i]);
+	}
 }
 
 
@@ -640,6 +647,7 @@ String OutOfSegmentException::message(void) {
  */
 Feature<NoProcessor> MEMORY_ACCESS_FEATURE("memory_access_feature");
 
+
 /**
  * This feature is usually asserted by processes that provides access to the
  * memory segment of the program with float values.
@@ -649,5 +657,15 @@ Feature<NoProcessor> MEMORY_ACCESS_FEATURE("memory_access_feature");
  * @li @ref Process::get(Address, long double&), 
  */
 Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE("float_memory_access_feature");
+
+
+/**
+ * This feature is usually asserted by processes that provides access to the
+ * register usage information.
+ * @par Provided Methods
+ * @li @ref	Inst::readRegs(void);
+ * @li @ref writtenRegs(void);
+ */
+Feature<NoProcessor> REGISTER_USAGE_FEATURE("register_usage_feature");
 
 } // otawa
