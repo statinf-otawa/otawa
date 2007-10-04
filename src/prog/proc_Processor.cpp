@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Processor class interface
  *
- *	src/prog/proc_Processor.cpp -- Processor class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-7, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/proc/Processor.h>
@@ -153,8 +168,14 @@ void Processor::configure(const PropList& props) {
 void Processor::process(WorkSpace *fw, const PropList& props) {
 	
 	// Check required feature
-	for(int i = 0; i < required.length(); i++)
-		fw->require(*required[i], props);
+	for(int i = 0; i < required.length(); i++) {
+		try {
+			fw->require(*required[i], props);				
+		}
+		catch(NoProcessorException& e) {
+			throw UnavailableFeatureException(this, *required[i]);
+		}
+	}
 
 	// Perform configuration
 	configure(props);
@@ -355,7 +376,7 @@ NullProcessor::NullProcessor(void):
 /**
  */
 void NoProcessor::processWorkSpace(WorkSpace *fw) {
-	throw ProcessorException(*this, "this processor should not have been called");
+	throw NoProcessorException();
 }
 
 
@@ -364,6 +385,34 @@ void NoProcessor::processWorkSpace(WorkSpace *fw) {
 NoProcessor::NoProcessor(void):
 	Processor("otawa::NoProcessor", Version(1, 0, 0))
 {
+}
+
+
+/**
+ * @class UnavailableFeatureException
+ * This exception is thrown when an feature can not be computed.
+ */
+
+
+/**
+ * @fn UnavailableFeatureException::UnavailableFeatureException(const Processor *processor, const AbstractFeature& feature);
+ * @param processor	Processor causing the exception.
+ * @param feature	Feature causing the exception.
+ */
+
+
+/**
+ * @fn const AbstractFeature& UnavailableFeatureException::feature(void) const;
+ * Get the feature causing the exception.
+ * @return	Involved feature.
+ */
+
+
+/**
+ */
+String UnavailableFeatureException::message(void) {
+	return _ << ProcessorException::message()
+			 << " requires the feature \"" << f.name() << "\".";
 }
 
 } // otawa
