@@ -22,8 +22,7 @@ namespace otawa {
 /**
  * Build a new LBlock processor.
  */
-LBlockProcessor::LBlockProcessor(void)
-: last(0) {
+LBlockProcessor::LBlockProcessor(void) {
 	require(COLLECTED_LBLOCKS_FEATURE);
 }
 
@@ -34,7 +33,7 @@ LBlockProcessor::LBlockProcessor(void)
  * @param version	Processor version.
  */
 LBlockProcessor::LBlockProcessor(elm::String name, elm::Version version)
-: Processor(name, version), last(0) {
+: Processor(name, version) {
 	require(COLLECTED_LBLOCKS_FEATURE);
 }
 
