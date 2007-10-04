@@ -152,14 +152,21 @@ private:
 // UnsupportedFeatureException class
 class UnsupportedFeatureException: public ProcessException {
 public:
+	
  	inline UnsupportedFeatureException(
- 		Process *proc,const AbstractFeature& feature)
- 		: ProcessException(proc), f(feature) { }
- 	inline const AbstractFeature& feature(void) const { return f; }
+ 		Process *proc,
+ 		const AbstractFeature& feature
+ 	): ProcessException(proc), f(feature) { }
+ 		
+ 	 inline UnsupportedFeatureException(const AbstractFeature& feature)
+ 	 : ProcessException(0), f(feature) { }
+ 	 		
+ 	 inline const AbstractFeature& feature(void) const { return f; }
  	virtual String 	message(void); 
 private:
 	const AbstractFeature& f;
 };
+
 
 // OutOfSegmentException class
 class OutOfSegmentException: public ProcessException { 
@@ -176,6 +183,7 @@ private:
 extern Feature<NoProcessor> MEMORY_ACCESS_FEATURE;
 extern Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE;
 extern Feature<NoProcessor> STACK_USAGE_FEATURE;
+extern Feature<NoProcessor> REGISTER_USAGE_FEATURE;
 
 } // otawa
 
