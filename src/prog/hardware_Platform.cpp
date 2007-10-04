@@ -497,7 +497,7 @@ void Platform::loadCacheConfig(elm::xom::Element *element) {
 void Platform::setBanks(const banks_t& banks) {
 	_banks = &banks;
 	rcnt = 0;
-	for(int i = 0; i < banks[i]->count(); i++)
+	for(int i = 0; i < banks.count(); i++)
 		for(int j = 0; j < banks[i]->count(); j++)
 			banks[i]->get(j)->pfnum = rcnt++;
 }
