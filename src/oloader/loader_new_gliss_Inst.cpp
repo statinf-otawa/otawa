@@ -95,7 +95,7 @@ address_t Inst::address(void) const {
  * in_regs and out_regs.
  */
 void Inst::decodeRegs(void)  {
-	TRACE("no register decoding for " << address() << io::endl);
+	throw UnsupportedFeatureException(&process(), REGISTER_USAGE_FEATURE);
 }
 
 } } } // otawa::loader
