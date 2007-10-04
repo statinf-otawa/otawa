@@ -22,7 +22,7 @@ class LBlockProcessor: public Processor {
 	void init(const PropList& props);
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void processLBlock(WorkSpace *fw, LBlock *cfg) = 0;
+	virtual void processLBlock(WorkSpace *fw, LBlock *lblock) = 0;
 public:
 	LBlockProcessor(void);
 	LBlockProcessor(elm::String name, elm::Version version);
