@@ -22,10 +22,14 @@ namespace otawa { namespace ipet {
  * 
  * @par Provided Features
  * @li @ref otawa::ipet::BB_TIME_FEATURE
+ * 
+ * @par Required Feature
+ * @li @ref otawa::REGISTER_USAGE_FEATURE
  */
 BBTimeSimulator::BBTimeSimulator(void)
 : BBProcessor("otawa::BBTimeSimulator", Version(1, 0, 0)) {
 	provide(BB_TIME_FEATURE);
+	require(REGISTER_USAGE_FEATURE);
 }
 
 /**
