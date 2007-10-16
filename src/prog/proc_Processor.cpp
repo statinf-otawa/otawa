@@ -32,6 +32,7 @@ namespace otawa {
 
 // Registration
 static Configuration output_conf(Processor::OUTPUT, AUTODOC "/classotawa_1_1Processor.html");
+static Configuration log_conf(Processor::LOG, AUTODOC "/classotawa_1_1Processor.html");
 static Configuration verbose_conf(Processor::VERBOSE, AUTODOC "/classotawa_1_1Processor.html");
 static Configuration stats_conf(Processor::STATS, AUTODOC "/classotawa_1_1Processor.html");
 static Configuration timed_conf(Processor::TIMED, AUTODOC "/classotawa_1_1Processor.html");
@@ -45,6 +46,7 @@ static Configuration timed_conf(Processor::TIMED, AUTODOC "/classotawa_1_1Proces
  * 
  * @p Configuration
  * @li @ref Processor::OUTPUT,
+ * @li @ref Processor::LOG,
  * @li @ref Processor::VERBOSE,
  * @li @ref Processor::STATS,
  * @li @ref Processor::TIMED.
@@ -66,6 +68,7 @@ Processor::Processor(elm::String name, elm::Version version,
 const PropList& props): _name(name), _version(version), flags(0), stats(0) {
 	init(props);
 	config(output_conf);
+	config(log_conf);
 	config(verbose_conf);
 	config(stats_conf);
 	config(timed_conf);
@@ -79,6 +82,7 @@ const PropList& props): _name(name), _version(version), flags(0), stats(0) {
 Processor::Processor(String name, Version version)
 : _name(name), _version(version), flags(0), stats(0) {
 	config(output_conf);
+	config(log_conf);
 	config(verbose_conf);
 	config(stats_conf);
 	config(timed_conf);
@@ -100,9 +104,8 @@ Processor::Processor(const PropList& props): flags(0), stats(0) {
 void Processor::init(const PropList& props) {
 	
 	// Process output
-	OutStream *out_stream = OUTPUT(props);
-	if(out_stream)
-		out.setStream(*out_stream);
+	out.setStream(*OUTPUT(props));
+	log.setStream(*LOG(props));
 		
 	// Process statistics
 	stats = STATS(props);
@@ -145,8 +148,8 @@ void Processor::processWorkSpace(WorkSpace *fw) {
 	deprecated = true;
 	processFrameWork(fw);
 	if(deprecated)
-		out << "WARNING: the use of processFrameWork() is deprecated."
-			<< "Use processWorkSpace() instead.";
+		warn(_ << "WARNING: the use of processFrameWork() is deprecated."
+			<< "Use processWorkSpace() instead.");
 }
 
 
@@ -183,7 +186,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	// Pre-processing actions
 
 	if(isVerbose()) 
-		out << "Starting " << name() << " (" << version() << ')' << io::endl;
+		log << "Starting " << name() << " (" << version() << ')' << io::endl;
 	system::StopWatch swatch;
 	if(isTimed())
 		swatch.start();
@@ -195,15 +198,15 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	
 	// Post-processing actions
 	if(isVerbose())
-		out << "Ending " << name();
+		log << "Ending " << name();
 	if(isTimed()) {
 		swatch.stop();
 		RUNTIME(*stats) = swatch.delay();
 		if(isVerbose()) 
-			out << " (" << (swatch.delay() / 1000) << "ms)" << io::endl;
+			log << " (" << (swatch.delay() / 1000) << "ms)" << io::endl;
 	}
 	if(isVerbose()) 
-		out << io::endl;
+		log << io::endl;
 	
 	// Remove invalidated features
 	for (int i = 0; i < invalidated.length(); i++) {
@@ -272,7 +275,7 @@ void Processor::cleanup(WorkSpace *fw) {
  * @param message	Message to display.
  */
 void Processor::warn(const String& message) {
-	out << "WARNING:" << name() << ' ' << version()
+	log << "WARNING:" << name() << ' ' << version()
 		<< ':' << message << io::endl;
 }
 
@@ -287,9 +290,18 @@ void Processor::warn(const String& message) {
 
 /**
  * This property identifier is used for setting the output stream used by
- * the processor for writing messages (information, warning, error) to the user.
+ * the processor to write results.
  */
-Identifier<elm::io::OutStream *> Processor::OUTPUT("otawa::Processor::output", 0);
+Identifier<elm::io::OutStream *>
+	Processor::OUTPUT("otawa::Processor::output", &io::stdout);
+
+
+/**
+ * This property identifier is used for setting the log stream used by
+ * the processor to write messages (information, warning, error).
+ */
+Identifier<elm::io::OutStream *>
+	Processor::LOG("otawa::Processor::output", &io::stderr);
 
 
 /**
