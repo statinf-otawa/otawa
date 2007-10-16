@@ -64,7 +64,7 @@ void CFGProcessor::processWorkSpace(WorkSpace *fw) {
 	int count = 0;
 	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++) {
 		if(isVerbose())
-			out << "\tprocess CFG " << cfg->label() << io::endl;
+			log << "\tprocess CFG " << cfg->label() << io::endl;
 		processCFG(fw, cfg);
 		count++;
 	}

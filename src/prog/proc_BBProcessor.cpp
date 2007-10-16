@@ -50,7 +50,7 @@ BBProcessor::BBProcessor(elm::String name, elm::Version version)
 void BBProcessor::processCFG(WorkSpace *fw, CFG *cfg) {
 	for(CFG::BBIterator bb(cfg); bb; bb++) {		
 		if(isVerbose())
-			out << "\t\tprocess BB " << bb->number()
+			log << "\t\tprocess BB " << bb->number()
 				<< " (" << fmt::address(bb->address()) << ")\n"; 
 		processBB(fw, cfg, bb);
 	}
