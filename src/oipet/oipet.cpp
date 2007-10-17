@@ -1,8 +1,23 @@
 /*
- *	$Id$
- *	Copyright (c) 2006, IRIT UPS.
+ *	$Id $
+ *	oipet command
  *
- *	src/oipet/oipet.cpp -- oipet command.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <stdlib.h>
@@ -36,13 +51,18 @@ using namespace elm::option;
  * oipet allows to use WCET IPET computation facilities of OTAWA. Currently,
  * you may only choose the algorithm for instruction cache support:
  * 
- * @li ccg for Cache Conflict Graph from  Li, Malik, Wolfe, Efficient
- * microarchitecture modelling and path analysis for real-time software,
+ * @li ccg for Cache Conflict Graph from  Li, Malik, Wolfe, "Efficient
+ * microarchitecture modelling and path analysis for real-time software",
  * Proceedings of the 16th IEEE Real-Time Systems Symposium, 1995.
  * 
  * @li cat for categorization approach (an adaptation to IPET of Healy, Arnold, 
- * Mueller, Whalley, Harmon, Bounding pipeline and instruction cache performance,
- * IEEE Trans. Computers, 1999.
+ * Mueller, Whalley, Harmon, "Bounding pipeline and instruction cache performance,"
+ * IEEE Trans. Computers, 1999).
+ * 
+ * @li cat2 for categorization by abstraction interpretation (Ferdinand,
+ * Martin, Wilhelm, "Applying Compiler Techniques to Cache Behavior Prediction.",
+ * ACM SIGPLAN Workshop on Language, Compiler and Tool Support for Real-Time
+ * Systems, 1997) improved in OTAWA.
  * 
  * And the algorithm to handle the pipeline:
  * 
@@ -88,7 +108,8 @@ using namespace elm::option;
  *
  * @li -l, --linkedblocks -- enable LinkedBlocksDetector (cat2 only)
  *
- * @li -P type, --pers=type -- select persistence type for cat2 (multi, outer, or inner)
+ * @li -P type, --pers=type -- select persistence type for cat2: multi, outer,
+ * or inner (default to multilevel).
  * 
  * @par Pipeline Management Options
  * 
@@ -205,9 +226,9 @@ static StringOption ilp_plugin(command, "ilp", "select the ILP solver", "solver 
  */
 Command::Command(void) {
 	program = "oipet";
-	version = "1.0.0";
+	version = "1.1.0";
 	author = "H. Cassé";
-	copyright = "Copyright (c) 2006, IRIT-UPS";
+	copyright = "Copyright (c) 2006-07, IRIT-UPS";
 	description = "Compute the WCET of some tasks of a binary using IPET techniques.";
 	free_argument_description = "binary_file function1 function2 ...";
 }
@@ -408,8 +429,8 @@ void Command::compute(String fun) {
 			display::GRAPHVIZ_FILE(props) = filename.toCString();
 			display::CFGDrawer drawer(cfg, props);
 			drawer.display();
-		if(verbose)
-			cout << "Starting otawa::ipet::CFGDrawer\n";
+			if(verbose)
+				cout << "Starting otawa::ipet::CFGDrawer\n";
 		}
 	}
 }
