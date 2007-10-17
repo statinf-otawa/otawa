@@ -90,13 +90,16 @@ CacheDriver::result_t AbstractCacheDriver::access(
 	action_t action)
 {
 	int line = _cache->line(address);
-	tag_t *tags = lines + (line << _cache->rowBits());
+
+	tag_t *tags = lines + line;
 	tag_t tag = _cache->tag(address);
+
 	for(int i = 0; i < 	_cache->wayCount(); i++)
 		if(tags[i] == tag) {
 			touch(i, line, tags);
 			return HIT;
 		}
+	replace(tag, _cache->wayCount(), tags);
 	return MISS;
 }
 
