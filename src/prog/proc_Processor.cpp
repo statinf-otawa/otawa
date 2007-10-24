@@ -301,7 +301,7 @@ Identifier<elm::io::OutStream *>
  * the processor to write messages (information, warning, error).
  */
 Identifier<elm::io::OutStream *>
-	Processor::LOG("otawa::Processor::output", &io::stderr);
+	Processor::LOG("otawa::Processor::log", &io::stderr);
 
 
 /**
