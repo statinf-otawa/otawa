@@ -426,7 +426,7 @@ void Command::compute(String fun) {
 			StringBuffer buf;
 			buf << cfg->label() << ".ps";
 			String filename = buf.toString();
-			display::GRAPHVIZ_FILE(props) = filename.toCString();
+			display::OUTPUT_PATH(props) = filename.toCString();
 			display::CFGDrawer drawer(cfg, props);
 			drawer.display();
 			if(verbose)

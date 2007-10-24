@@ -1,11 +1,28 @@
 /*
  *	$Id$
- *	Copyright (c) 2006, IRIT UPS.
+ *	Driver class implementation
  *
- *	src/odisplay/display_Graph.cpp -- display::Graph class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/display/Graph.h>
+#include <otawa/display/Driver.h>
+#include <otawa/display/graphviz.h>
 
 namespace otawa { namespace display {
 
@@ -14,10 +31,12 @@ namespace otawa { namespace display {
  */
 Identifier<AbstractIdentifier*> INCLUDE("otawa::display::include");
 
+
 /**
  * Tells that the properties with the given identifier mustn't be printed
  */
 Identifier<AbstractIdentifier*> EXCLUDE("otawa::display::exclude");
+
 
 /**
  * The value of the property must be either INCLUDE or EXCLUDE.
@@ -26,15 +45,18 @@ Identifier<AbstractIdentifier*> EXCLUDE("otawa::display::exclude");
  */
 Identifier<AbstractIdentifier*> DEFAULT("otawa::display::default");
 
+
 /**
  * Identifier of the background color
  */
 Identifier<elm::CString> BACKGROUND("otawa::display::background");
 
+
 /**
  * Identifier of the drawing color (boxes, edges)
  */
 Identifier<elm::CString> COLOR("otawa::display::color");
+
 
 /**
  * Identifier of the drawing style.
@@ -42,71 +64,113 @@ Identifier<elm::CString> COLOR("otawa::display::color");
  */
 Identifier<int> STYLE("otawa::display::style");
 
+
 /**
  * Identifier of the text color. It is the same Identifier as TEXT_COLOR
  */
 Identifier<elm::CString> FONT_COLOR("otawa::display::text_color");
 
+
 /**
  * Identifier of the text color. It is the same Identifier as FONT_COLOR
  */
 Identifier<elm::CString> &TEXT_COLOR = FONT_COLOR;
+
+
 /**
  * Identifier of the text size. It is the same Identifier as TEXT_SIZE
  */
 Identifier<int>  FONT_SIZE("otawa::display::text_size");
+
+
 /**
  * Identifier of the text size. It is the same Identifier as FONT_SIZE
  */
 Identifier<int>& TEXT_SIZE = FONT_SIZE;
+
+
 /**
  * Identifier of the font name
  */
 Identifier<elm::CString> FONT("otawa::display::font_name");
+
+
 /**
  * Identifier of the url of the link the object is pointing to
  */
 Identifier<elm::CString> HREF("otawa::display::href");
+
+
 /**
  * Identifier of the title of a node
  */
 Identifier<elm::String> TITLE("otawa::display::title");
+
+
 /**
  * Identifier of the body of a node
  */
 Identifier<elm::String> BODY("otawa::display::body");
+
+
 /**
  * Identifier of a shape of a node. Must be one of @ref shape_t
  */
 Identifier<int> SHAPE("otawa::display::shape");
+
+
 /**
  * Identifier of a label of an edge
  */
 Identifier<elm::String> LABEL("otawa::display::label");
+
+
 /**
  * Identifier of a weight of an edge
  */
 Identifier<int> WEIGHT("otawa::display::weight");
 
 
+/**
+ * @class Item
+ * This class is the base of @ref Graph, @ref Node and @ref Edge. It contains
+ * facilities to display the graph.
+ * @see @ref odisplay
+ */
+
 
 /**
  * @fn Item::setProps(const PropList& props)
- * Set the object properties that have to be printed
+ * Set the object properties that have to be printed.
+ * @param props	Set the properties to print.
  */
 
 
+/**
+ * @class Graph
+ * A graph provides facilities to display a graph. newNode() and newEdge()
+ * methods  builds the graph that is displayed when the display() method is
+ * called.
+ * @see @ref odisplay
+ */
+
 
 /**
- * @fn Graph::newNode(const PropList& style = PropList::EMPTY, const PropList& props = PropList::EMPTY)
+ * @fn Graph::newNode(const PropList& style, const PropList& props)
  * This function creates a new node in the graph
+ * @param style	Style of the node.
+ * @param props	Properties to display.
  */
 
 
 
 /**
- * @fn Graph::newEdge(Node *source, Node *target, const PropList& style = PropList::EMPTY, const PropList& props = PropList::EMPTY)
+ * @fn Graph::newEdge(Node *source, Node *target, const PropList& style, const PropList& props)
  * This function creates a new edge between the two given nodes, in the graph
+ * @param source	Source node of the edge.
+ * @param target	Target node of the edge.
+ * @param style		Style of the node.
+ * @param props		Properties to display.
  */
 
 
@@ -116,6 +180,14 @@ Identifier<int> WEIGHT("otawa::display::weight");
  * This functions displays the graph
  */
 
+
+/**
+ * @class Driver
+ * A driver provides facilities to display a graph. The newGraph() method
+ * build a graph that may be populated according the needs of the graph to
+ * display.
+ * @see @ref odisplay
+ */
 
 
 /**
@@ -131,7 +203,42 @@ Identifier<int> WEIGHT("otawa::display::weight");
  */
 
 
+/**
+ * Find a driver by its name.
+ * @param name	Name of the driver to look for.
+ * @return		Driver matching the name or the default driver if an empty
+ * 				string is passed.
+ */
+Driver *Driver::find(string name) {
+	if(!name || name == "graphviz")
+		return &graphviz_driver;
+	else
+		return 0;
+}
 
+
+/**
+ * Find a driver by its output kind.
+ * @param kind	Kind of the output to produce.
+ * @return		Found driver.
+ */
+Driver *find(kind_t kind) {
+	return &graphviz_driver;
+}
+
+
+/**
+ * Passed to the graph style of the Driver::newGraph() method, selects the
+ * kind of output.
+ */
+Identifier<kind_t> OUTPUT_KIND("otawa::display::output_kind", OUTPUT_ANY);
+
+
+/**
+ * Passed to the graph style of the Driver::newGraph() method, selects the
+ * file to output to when the driver display in a file.
+ */
+Identifier<string> OUTPUT_PATH("otawa::display::output_path", "");
 
 
 /**
@@ -174,7 +281,7 @@ Identifier<int> WEIGHT("otawa::display::weight");
  * @li @ref FONT_SIZE, TEXT_SIZE - text size,
  * @li @ref FONT - text font
  * 
- * Finally, we have properties that describes the content of the object:
+ * We have properties that describes the content of the object:
  * @li @ref HREF - hypertext reference,
  * @li @ref TITLE - title of the element,
  * @li @ref BODY - body of the element,
@@ -182,13 +289,15 @@ Identifier<int> WEIGHT("otawa::display::weight");
  * @li @ref LABEL - label for an edge,
  * @li @ref WEIGHT - weight for an edge.
  * 
+ * Finally, some properties select the kind of output:
+ * @li @ref OUTPUT_KIND
+ * @li @ref OUTPUT_PATH
+ * 
  * @par GraphViz Driver
  * ODisplay is delivered with a driver for the GraphViz package using the DOT
  * textual format. This is the default driver and it accepts some specialized
  * properties:
  * @li @ref GRAPHVIZ_LAYOUT - layout of the displayed graph,
- * @li @ref GRAPHVIZ_OUTPUT - kind of output,
- * @li @ref GRAPHVIZ_FILE - file to output to.
  */
 
 } }

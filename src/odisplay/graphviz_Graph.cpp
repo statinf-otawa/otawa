@@ -5,6 +5,7 @@
  *	src/odisplay/graphviz_Graph.cpp -- GraphVizGraph class implementation.
  */
 #include "graphviz.h"
+#include <otawa/display/Driver.h>
 #include <elm/io/UnixOutStream.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -133,7 +134,7 @@ void GraphVizGraph::printGraphData(Output& out){
 void GraphVizGraph::display(void){
 	CString command;
 	CString param_type;
-	CString file = GRAPHVIZ_FILE(this);;
+	String file = display::OUTPUT_PATH(this);;
 	switch(GRAPHVIZ_LAYOUT(this)){
 		case LAYOUT_DOT:
 			command = "dot";
@@ -153,8 +154,8 @@ void GraphVizGraph::display(void){
 		default:
 			assert(false);
 	}
-	switch(GRAPHVIZ_OUTPUT(this)){
-		case OUTPUT_TEXT:
+	switch(OUTPUT_KIND(this)){
+		case OUTPUT_DOT:
 			param_type = "-Tdot";
 			break;
 		case OUTPUT_PS:
@@ -162,6 +163,12 @@ void GraphVizGraph::display(void){
 			break;
 		case OUTPUT_PNG:
 			param_type = "-Tpng";
+			break;
+		case OUTPUT_GIF:
+			param_type = "-Tgif";
+			break;
+		case OUTPUT_JPG:
+			param_type = "-Tjpg";
 			break;
 		case OUTPUT_SVG:
 			param_type = "-Tsvg";
