@@ -1,9 +1,9 @@
 /*
  *	$Id$
- *	graphviz class interface
+ *	Plugin class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2006-07, IRIT UPS.
+ *	Copyright (c) 2007, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -19,41 +19,30 @@
  *	along with OTAWA; if not, write to the Free Software 
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_DISPLAY_GRAPHVIZ_H
-#define OTAWA_DISPLAY_GRAPHVIZ_H
+#ifndef OTAWA_DISPLAY_DRIVER_PLUGIN_H_
+#define OTAWA_DISPLAY_DRIVER_PLUGIN_H_
 
+#include <elm/system/Plugin.h>
 #include <otawa/display/Driver.h>
 
 namespace otawa { namespace display {
-	
-// GraphViz driver
-extern Driver& graphviz_driver;
 
+using namespace elm;
 
-// Layout property
-typedef enum graphviz_layout_t {
-	LAYOUT_DOT,
-	LAYOUT_RADIAL,
-	LAYOUT_CIRCULAR,
-	LAYOUT_UNDIRECTED_NEATO,
-	LAYOUT_UNDIRECTED_FDP
-} graphviz_layout_t;
-extern Identifier<int> GRAPHVIZ_LAYOUT;
+// Definitions
+#define OTAWA_DISPLAY_HOOK		display_plugin
+#define OTAWA_DISPLAY_NAME		"display_plugin"
+#define OTAWA_DISPLAY_VERSION	Version(1, 0, 0)
 
-
-// Output property
-/*typedef enum graphviz_output_t {
-	OUTPUT_TEXT,
-	OUTPUT_PS,
-	OUTPUT_PNG,
-	OUTPUT_SVG
-} graphviz_output_t;
-extern Identifier<int> GRAPHVIZ_OUTPUT;*/
-
-
-// File property
-//extern Identifier<elm::CString> GRAPHVIZ_FILE;
+// Plugin class
+class Plugin: public elm::system::Plugin, public Driver {
+public:
+	Plugin(
+		elm::CString name,
+		const elm::Version& version,
+		const elm::Version& plugger_version);
+};
 
 } } // otawa::display
 
-#endif // OTAWA_DISPLAY_GRAPHVIZ_H
+#endif /* OTAWA_DISPLAY_DRIVER_PLUGIN_H_ */
