@@ -6,15 +6,16 @@ libodisplay_la_LDFLAGS=
 libodisplay_la_LIBADD= @OTAWA_LIBS@
 
 libodisplay_la_SOURCES = \
-	utility.cpp \
-	display_Graph.cpp \
 	CFGDrawer.cpp \
-	graphviz.h \
+	display_Graph.cpp \
 	display_graphviz.cpp \
+	display_Plugin.cpp \
+	graphviz.h \
 	graphviz_Edge.cpp \
 	graphviz_Graph.cpp \
 	graphviz_GraphElement.cpp \
 	graphviz_Item.cpp \
 	graphviz_Node.cpp \
-	graphviz_quote.cpp
+	graphviz_quote.cpp \
+	utility.cpp
 
