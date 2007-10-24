@@ -159,6 +159,7 @@ void GraphVizGraph::display(void){
 			param_type = "-Tdot";
 			break;
 		case OUTPUT_PS:
+		case OUTPUT_ANY:
 			param_type = "-Tps";
 			break;
 		case OUTPUT_PNG:
