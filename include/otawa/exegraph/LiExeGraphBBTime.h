@@ -28,13 +28,13 @@
 
 
 
-#define DO_LOG
+/*#define DO_LOG
 #if defined(NDEBUG) || !defined(DO_LOG)
 #	define LOG(c)
 #else
 #	define LOG(c) c
 #	define OUT	elm::cerr
-#endif
+#endif*/
 
 
 namespace otawa {
