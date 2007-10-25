@@ -11,6 +11,7 @@
 #include <otawa/proc/Registry.h>
 #include <elm/genstruct/VectorQueue.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/util/FlowFactLoader.h>
 
 using namespace elm;
 
@@ -115,7 +116,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 			address_t next = inst->topAddress();
 			inst = getInst(ws, next);
 			if(MARKER(inst))
-				goto cont;	
+				continue;	
 		}
 		TRACE("otawa::VarTextDecoder::processEntry: end found");
 		
@@ -124,22 +125,22 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 			TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
 			todo.put(inst->topAddress());
 		}
-		if(!inst->isReturn()) {
+		if(!inst->isReturn() && !IS_RETURN(inst)) {
 			Inst *target = inst->target();
 			if(target) {
 				TRACE("otawa::VarTextDecoder::processEntry: put(" << target->address() << ")");
 				todo.put(target->address());
 			}
-			else if(isVerbose())
-				out << "WARNING: no target for branch at " << inst->address()
-					<< io::endl;
-			if(inst->isCall() && (!target || !Symbol::NO_RETURN(target))) {
+			else {
+				if(isVerbose())
+					out << "WARNING: no target for branch at " << inst->address()
+						<< io::endl;
+			}
+			if(inst->isCall() && (!target || !NO_RETURN(target))) {
 				TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
 				todo.put(inst->topAddress());
-			}
+			}				
 		}
-		
-		cont: ;
 	}
 }
 
