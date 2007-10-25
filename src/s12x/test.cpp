@@ -11,6 +11,8 @@
 #include <otawa/ipet/BBTimeSimulator.h>
 #include <otawa/display/CFGDrawer.h>
 #include <otawa/cfg/Virtualizer.h>
+#include <otawa/util/Dominance.h>
+#include <otawa/dfa/BitSet.h>
 
 using namespace elm;
 using namespace otawa;
@@ -20,8 +22,10 @@ int main(int argc, char **argv) {
 	
 	// Configuration
 	PropList props;
-	EXPLICIT(props) = true;
+	//EXPLICIT(props) = true;
 	otawa::Processor::VERBOSE(props) = true;
+	if(argc > 2)
+		TASK_ENTRY(props) = argv[2];
 	
 	try {
 		
@@ -34,19 +38,35 @@ int main(int argc, char **argv) {
 		WorkSpace *ws = MANAGER.load(argv[1], props);
 		
 		// WCET computation
-		Virtualizer virt;
-		virt.process(ws, props);
+		/*Virtualizer virt;
+		virt.process(ws, props);*/
+
+		// !!DEBUG!!
+		/*Dominance dom;
+		dom.process(ws, props);
+		for(CFG::BBIterator bb(ENTRY_CFG(ws)); bb; bb++) {
+			cerr << "CHECK " << bb->number() << " " << REVERSE_DOM(bb)->size() << io::endl;
+			for(BasicBlock::InIterator edge(bb); edge; edge++)
+	 			if(bb != edge->source()
+	 			&& Dominance::dominates(bb, edge->source())
+	 			&& Dominance::dominates(edge->source(), bb)) {
+	 				cerr << *REVERSE_DOM(bb) << io::endl;
+	 				cerr << *REVERSE_DOM(edge->source()) << io::endl;
+	 				ASSERT(false);
+	 			}
+		}*/
+
 		BBTimeSimulator bbts;
 		bbts.process(ws, props);		
 		WCETComputation wcomp;
 		wcomp.process(ws, props);
 		
 		// Record and display result
-		CFG *cfg = ENTRY_CFG(ws);
+		/*CFG *cfg = ENTRY_CFG(ws);
 		WCETCountRecorder recorder;
 		recorder.process(ws, props);
 		display::CFGDrawer drawer(cfg, props);
-		drawer.display();				
+		drawer.display();*/			
 
 		// Display the result
 		ilp::System *sys = SYSTEM(ws);
