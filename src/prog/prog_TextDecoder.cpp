@@ -10,6 +10,7 @@
 #include <otawa/prog/VarTextDecoder.h>
 #include <otawa/proc/Registry.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/util/FlowFactLoader.h>
 
 namespace otawa {
 
@@ -44,6 +45,12 @@ Feature<TextDecoder> DECODED_TEXT("otawa::DECODED_TEXT");
  * 
  * @par Configuration
  * @li @ref FOLLOW_PATHS
+ * 
+ * @par Required Features
+ * @li @ref otawa::FLOW_FACTS_FEATURE
+ * 
+ * @par Provided Features
+ * @li @ref DECODED_TEXT
  */
 
 
@@ -56,6 +63,7 @@ TextDecoder::TextDecoder(void)
 {
 	provide(DECODED_TEXT);
 	config(follow_paths_config);
+	require(FLOW_FACTS_FEATURE);
 }
 
 
