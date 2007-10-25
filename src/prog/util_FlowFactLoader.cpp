@@ -1,8 +1,23 @@
 /*
- * $Id$
- * Copyright (c) 2005-07, IRIT-UPS <casse@irit.fr>
+ *	$Id$
+ *	FlowFactLoader class implementation
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-07, IRIT UPS.
  * 
- * otawa::util::FlowFactLoader.cpp class implementation
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <stdio.h>
@@ -24,20 +39,34 @@ using namespace elm::system;
  * This file format is used to store flow facts information, currently, the
  * loop bounds. The usual non-mandatory extension of F4 files is "ff".
  * 
- * F4 is a simple text format. It may contain comments, starting from a
- * '#' character to the end of line. Spaces and line format are not
- * meaningful for other commands.
+ * F4 is a simple text format. It may contain comments a-la C++, that is, one
+ * line comments prefixed by "//" or enclosed comments between "/*" and "* /"."
+ * Spaces and line format are not meaningful for other commands.
  * 
  * Other commands includes :
  * 
- * @li "loop address count ;"
+ * @li "loop ADDRESS COUNT ;"
  * Declare that the loop whose header start at the
  * given address has the given maximal bound,
 
- * @li "checksum value ;"
+ * @li "checksum VALUE ;"
  * This command is used to check the consistency
  * between the flow fact file and the matching executable file (it is the
  * Fletcher checksum of the executable file).
+ * 
+ * @li "return ADDRESS ;"
+ * Mark a complex control instruction as equivallent to sub-program return.
+ * 
+ * @par To Come
+ * @li "branch ADDRESS to ADDRESS ;"
+ * @li "loop ADDRESS max COUNT min COUNT ;"
+ * @li "multibranch ADDRESS to ADDRESS, ADDRESS, ... ;"
+ * @li "recursive ADDRESS max COUNT min COUNT ;" 
+ * @li "ignore ADDRESS ;"
+ * @li "ignore call ADDRESS ;"
+ * @li "ignore call NAME ;"
+ * @li "entry ADDRESS ;"
+ * @li "entry NAME ;"
  */
 
 /**
@@ -54,37 +83,34 @@ using namespace elm::system;
 /**
  * Build a flow fact loader for the given executable file.
  */
-FlowFactLoader::FlowFactLoader(void): checksummed(false), _verbose(false) {
+FlowFactLoader::FlowFactLoader(void):
+	Processor("otawa::util::FlowFactLoader", Version(1, 0, 0)),
+	checksummed(false) {
 }
 
 
 /**
- * Launch the analysis of the associated flow fact file associated with the
- * current file.
- * @param fw	Current framework.
- * @param path	Path to the F4 file (default built by appending ".ff" to the
- * 				executable file path).
- * @param verbose	Activate verbose mode.
  */
-void FlowFactLoader::run(WorkSpace *fw, Path path, bool verbose) {
+void FlowFactLoader::configure (const PropList &props) {
+	Processor::configure(props);
+	path = FLOW_FACTS_PATH(props);
+}
+
+
+/**
+ */
+void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 	_fw = fw;
-	_verbose = verbose;
 	
 	// Build the F4 file path
-	if(!path) {
-		File *file = fw->process()->program();
-		elm::StringBuffer buffer;
-		buffer.print(file->name());
-		buffer.print(".ff");
-		path = buffer.toString();
-	}
+	if(!path)
+		path = _ << fw->process()->program()->name() << ".ff";
 
 	// Open the file
 	util_fft_in = fopen(&path, "r");
-	if(!util_fft_in) {
-		onError("cannot open the constraint file \"%s\".", &path);
-		return;
-	}
+	if(!util_fft_in)
+		throw ProcessorException(*this,
+			_ << "cannot open the constraint file \"" << path << "\".");
 	
 	// Perform the parsing
 	util_fft_parse(this);
@@ -93,33 +119,48 @@ void FlowFactLoader::run(WorkSpace *fw, Path path, bool verbose) {
 	fclose(util_fft_in);
 	
 	// Display warning if there is no checksum
-	if(!checksummed && verbose)
-		onWarning("no checksum: flow facts and executable file may no match !");
+	if(!checksummed && isVerbose())
+		warn("no checksum: flow facts and executable file may no match !");
 }
 
 
 /**
- * @fn void FlowFactLoader::onError(const char *fmt, ...)
  * This method is called when an error is encountered.
- * @param fmt	Message format a-la printf.
+ * @param message	Message format a-la printf.
  * @param ...	Argument for the string format.
  */
+void FlowFactLoader::onError(const char *fmt, ...) {
+	VARARG_BEGIN(args, fmt)
+		StringBuffer buf;
+		buf.format(fmt, args);
+		throw ProcessorException(*this, buf.toString());
+	VARARG_END
+}
 
 
 /**
- * @fn void FlowFactLoader::onWarning(const char *fmt, ...)
  * This method is called when a warning need to be displayed.
  * @param fmt	Message format a-la printf.
  * @param ...	Argument for the string format.
  */
+void FlowFactLoader::onWarning(const char *fmt, ...) {
+	VARARG_BEGIN(args, fmt)
+		StringBuffer buf;
+		buf.format(fmt, args);
+		warn(buf.toString());
+	VARARG_END	
+}
 
 
 /**
- * @fn void FlowFactLoader::onLoop(address_t addr, int count)
  * This method is called when a loop is found.
  * @param addr	Address of the header of the loop.
  * @param count	Bound on the loop iterations.
  */
+void FlowFactLoader::onLoop(address_t addr, int count) {
+	Inst *inst = _fw->process()->findInstAt(addr);
+	MAX_ITERATION(inst) = count;
+}
  
  
  /**
@@ -152,10 +193,89 @@ void FlowFactLoader::onCheckSum(const String& name, unsigned long sum) {
 	onError("bad checksum: file not found: \"%s\".", &name);	
 }
 
+
+/**
+ * This method is called each a "return" statement is found.
+ * @param addr	Address of the statement to mark as return.
+ */
+void FlowFactLoader::onReturn(address_t addr) {
+	Inst *inst = _fw->process()->findInstAt(addr);
+	IS_RETURN(inst) = true;
+}
+
+
+/**
+ * This method is called each time a "noreturn ADDRESS" statement is found.
+ * @param addr	Address of the entry of the function.
+ */
+void FlowFactLoader::onNoReturn(address_t addr) {
+	Inst *inst = _fw->process()->findInstAt(addr);
+	NO_RETURN(inst) = true;
+}
+
+
+/**
+ * This method is called each time a "noreturn NAME" statement is found.
+ * @param name	Name of the function.
+ */
+void FlowFactLoader::onNoReturn(String name) {
+	Inst *inst = _fw->process()->findInstAt(name);
+	if(!inst)
+		throw ProcessorException(*this,
+			_ << " label \"" << name << "\" does not exist.");
+	else
+		NO_RETURN(inst) = true;
+}
+
+
 /**
  * This property may be used in the configuration of a code processor
  * to pass the path of an F4 file containing flow facts.
  */
 Identifier<Path> FLOW_FACTS_PATH("otawa::flow_facts_path", "");
+
+
+/**
+ * This feature ensures that the flow facts has been loaded.
+ * Currrently, only the @ref otawa::util::FlowFactLoader provides this kind
+ * of information from F4 files.
+ * 
+ * @par Hooked Properties
+ * @li @ref IS_RETURN
+ * @li @ref NO_RETURN
+ * @li @ref MAX_ITERATION
+ */
+Feature<FlowFactLoader> FLOW_FACTS_FEATURE;
+
+
+/**
+ * Put on a control flow instruction, this shows that this instruction
+ * is equivalent to a function return. It may be useful with assembly providing
+ * very complex ways to express a function return.
+ * 
+ * @par Hooks
+ * @li @ref Inst (@ref otawa::util::FlowFactLoader)
+ */
+Identifier<bool> IS_RETURN("otawa::is_return", false);
+
+
+/**
+ * This annotation is put on the first instruction of functions that does not
+ * never return. It is usually put on the C library "_exit" function.
+ * 
+ * @par Hooks
+ * @li @ref Inst (@ref otawa::util::FlowFactLoader)
+ */
+Identifier<bool> NO_RETURN("otawa::no_return", false);
+
+
+/**
+ * Put on the first instruction of a loop, it gives the maximum number of
+ * iteration of this loop.
+ * 
+ * @par Hooks
+ * @li @ref Inst (@ref otawa::util::FlowFactLoader)
+ */
+Identifier<int> MAX_ITERATION("otawa::max_iteration", -1);
 
 } // otawa
