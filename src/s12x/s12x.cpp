@@ -673,9 +673,10 @@ otawa::Process *Loader::load(Manager *man, CString path, const PropList& props) 
 	else {
 	
 		// Mark main as no returning
-		Symbol *sym = proc->findSymbol("main");
+		// CodeWarrior specific -- no more needed
+		/* Symbol *sym = proc->findSymbol("main");
 		if(sym && sym->kind() == Symbol::FUNCTION)
-			sym->setNoReturn();
+			sym->setNoReturn();*/
 	
 		// Return process
 		return proc;
