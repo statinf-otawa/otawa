@@ -7,6 +7,7 @@
 
 #include <otawa/prog/Symbol.h>
 #include <otawa/prog/File.h>
+#include <otawa/util/FlowFactLoader.h>
 
 namespace otawa {
 
@@ -148,12 +149,5 @@ void Symbol::setNoReturn(void) {
 	// Set the property
 	NO_RETURN(inst) = true;
 }
-
-
-/**
- * This property is put on the first instruction of never-returning
- * functions.
- */
-Identifier<bool> Symbol::NO_RETURN("otawa::Symbol::no_return", false);
 
 } // otawa
