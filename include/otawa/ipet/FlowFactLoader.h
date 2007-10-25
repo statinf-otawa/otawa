@@ -7,10 +7,7 @@
 #ifndef OTAWA_IPET_IPET_FLOW_FACT_LOADER_H
 #define OTAWA_IPET_IPET_FLOW_FACT_LOADER_H
 
-#include <elm/system/Path.h>
-#include <otawa/proc/CFGProcessor.h>
-#include <otawa/util/FlowFactLoader.h>
-#include <otawa/cfg/CFGCollector.h>
+#include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/Feature.h>
 
 namespace otawa { 
@@ -25,23 +22,12 @@ namespace ilp {
 namespace ipet {
 	
 // FlowFactLoader class
-class FlowFactLoader: public Processor, private otawa::FlowFactLoader {
-	CFGCollection *cfgs;	
-	otawa::ilp::System *system;
-	elm::system::Path path;
-	bool verbose;
-protected:
-	// FlowFactLoader overload
-	virtual void onError(const char *fmt, ...);
-	virtual void onWarning(const char *fmt, ...);
-	virtual void onLoop(address_t addr, int count);	
-
-	// CFGProcessor overload
-	virtual void processWorkSpace(WorkSpace *fw);
-
+class FlowFactLoader: public BBProcessor {
 public:
 	FlowFactLoader(void);
-	virtual void configure(const PropList& props = PropList::EMPTY);
+
+protected:
+	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 };
 
 // Features
