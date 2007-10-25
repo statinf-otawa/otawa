@@ -13,10 +13,10 @@ if [ ! -f $path ]; then
 fi
 
 # Let's go
-line=`grep -n "###configuration###" build.sh | cut -f 1 -d ":"`
-head -$line build.sh
+line=`grep -n "###configuration###" $root/build.sh | cut -f 1 -d ":"`
+head -$line $root/build.sh
 cat $path
 echo "config=no"
 size=`wc -l < $root/build.sh`
 tail=`expr $size - $line - 2`
-tail -$tail build.sh
+tail -$tail $root/build.sh

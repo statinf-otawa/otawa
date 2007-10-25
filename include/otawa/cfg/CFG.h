@@ -1,15 +1,30 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	CFG class interface
  *
- *	otawa/cfg/CFG.h -- interface of CFG class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_CFG_CFG_H
 #define OTAWA_CFG_CFG_H
 
 #include <assert.h>
 #include <elm/Collection.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/genstruct/FragTable.h>
 #include <otawa/cfg/BasicBlock.h>
 
 namespace otawa {
@@ -30,26 +45,28 @@ class CFG: public PropList, private elm::Collection<BasicBlock *> {
 
 	virtual elm::IteratorInst<BasicBlock *> *visit(void);
 	virtual elm::MutableCollection<BasicBlock *> *empty(void);
+	typedef genstruct::FragTable<BasicBlock *> bbs_t;
 protected:
 	unsigned long flags;
 	EndBasicBlock _entry, _exit;
 	static const unsigned long FLAG_Scanned = 0x01;
 	static const unsigned long FLAG_Virtual = 0x02;
 	static const unsigned long FLAG_Inlined = 0x04;
-	genstruct::Vector<BasicBlock *> _bbs;
+	bbs_t _bbs;
 	virtual void scan(void);
+	inline const bbs_t& __bbs(void) {
+		if(!(flags & FLAG_Scanned))
+			scan();
+		return _bbs;
+	}
 public:
 	//static Identifier ID_Dom;
 	
 	// Iterator
-	class BBIterator: public elm::PreIterator<BBIterator, BasicBlock *> {
-		elm::genstruct::Vector<BasicBlock *>& bbs;
-		int pos;
+	class BBIterator: public bbs_t::Iterator {
 	public:
-		inline BBIterator(CFG *cfg);
-		inline bool ended(void) const;
-		inline BasicBlock *item(void) const;
-		inline void next(void);
+		inline BBIterator(CFG *cfg): bbs_t::Iterator(cfg->__bbs()) { }
+		inline BBIterator(const BBIterator& iter): bbs_t::Iterator(iter) { }
 	};
 	
 	// Methods
@@ -106,21 +123,6 @@ inline bool CFG::isVirtual(void) const {
 inline bool CFG::isInlined(void) const {
 	return flags & FLAG_Inlined;
 }
-
-// BBIterator inlines
-inline CFG::BBIterator::BBIterator(CFG *cfg): bbs(cfg->_bbs), pos(0) {
-	if(!(cfg->flags & FLAG_Scanned))
-		cfg->scan();
-};
-inline bool CFG::BBIterator::ended(void) const {
-	return pos >= bbs.length();
-};
-inline BasicBlock *CFG::BBIterator::item(void) const {
-	return bbs[pos];
-};
-inline void CFG::BBIterator::next(void) {
-	pos++;
-};
 
 // Property display
 template <>

@@ -14,9 +14,9 @@ fi
 
 # Initial configuration
 tool=OBuild
-version=0.6
+version=0.7
 basedir=otawa
-verbose=yes
+verbose=no
 log=build.log
 config=
 dev=
@@ -38,52 +38,68 @@ all_modules="$default_modules gel frontc gliss hcs12"
 jobs="5"
 
 
-# functions
-function display {
-	if test "$verbose" = yes; then
-		echo -e $*
-	fi
-}
+###### Output functions ######
 
-function error {
-	echo -e "ERROR:$*"
-	exit 2
-}
-
-function say {
-	if test "$verbose" = yes; then
-		echo -n $* "..."
-	fi
-	say="$*"
-}
-
-function success {
-	if test "$verbose" = yes; then
-		echo "[DONE]"
-	fi
-	log "$say... [DONE]"
-}
-
-function failed {
-	if test "$verbose" = yes; then
-		echo "[FAILED]"
-		if [ -n "$*" ]; then
-			echo "$*"
-		fi
-	fi
-	log "$say... [FAILED]"
-	if [ -n "$*" ]; then
-		log "$*"
-	else
-		tail $basedir/$log
-	fi
-	exit 1
-}
-
+# Output message to the log
 function log {
 	echo -e "$*\n" >> $basedir/$log
 }
 
+# Display if verbose mode is enabled.
+function display {
+	if test "$verbose" = yes; then
+		echo -e $*
+		log $*
+	fi
+}
+
+# Display an error
+function error {
+	echo -e "ERROR:$*"
+	log "ERROR: $*"
+	exit 2
+}
+
+# Give some information (ever displayed and output to the log)
+function info {
+	echo -e "$*"
+	log "$*"
+}
+
+
+# Start a say ... success/failed message
+function say {
+	say="$* ..."
+	echo -n "$say"
+}
+
+
+# Sucess after a say
+function success {
+	echo " [DONE]"
+	log "$say [DONE]"
+}
+
+
+# Failed after a say
+function failed {
+	echo " [FAILED]"
+	if [ -n "$*" ]; then
+		echo "$*"
+	fi
+	log "$say [FAILED]"
+	if [ -n "$*" ]; then
+		log "$*"
+	else
+		echo "====== ERROR ======"
+		tail $basedir/$log
+		echo "==================="
+	fi
+	exit 1
+}
+
+
+# Perform a command and log its output
 function log_command {
 	if [ "$making_script" == yes ]; then
 		echo $* '|| exit 1' >> $build_script
@@ -93,6 +109,7 @@ function log_command {
 		success
 	fi
 }
+
 
 # get_tag module default_version
 #	set VERSION variable
@@ -228,7 +245,7 @@ function build_autotool {
 
 
 function build_make {
-	echo "make all $MAKE_FLAGS"
+	#echo "make all $MAKE_FLAGS"
 	echo "#!/bin/bash" > build.sh
 	echo "make all $MAKE_FLAGS" >> build.sh
 	log_command make all "$MAKE_FLAGS"
@@ -268,6 +285,17 @@ function distclean_clean {
 }
 
 
+###### done_XXX ######
+# doit=yes|no -- need the build to be done
+
+function done_exists {
+	#echo "PWD=$PWD"
+	#echo "test -e \"$DONE_FILE\" || doit=\"no\""
+	test -e "$DONE_FILE" && doit="no"
+	#echo "doit=$doit"
+}
+
+
 ########### Useful functions ########
 
 function check_program {
@@ -276,7 +304,7 @@ function check_program {
 	expr "$checked" : "$program" > /dev/null && return
 
 	#echo "$program -> $version"
-	say "Checking $program for version $version..."
+	say "Checking $program for version $version"
 	which $program > /dev/null || failed "not found";
 	cversion=`$program --version | head -1 | cut -f 4 -d " "`
 	major=${version%%.*}
@@ -293,7 +321,6 @@ function check_program {
 
 
 ########### Scan arguments ###########
-echo "Build by $tool $version (" `date` ")\n" > $log
 
 function help {
 	echo "$tool $version"
@@ -456,6 +483,8 @@ if [ ! -z $systemc_location ]; then
 	ln -s $systemc_location systemc
 fi
 basedir=`pwd`
+log "Build by $tool $version (" `date` ")\n" > $basedir/$log
+
 
 
 ########### Process a module ###########
@@ -489,9 +518,12 @@ function process {
 	CHECK=
 	VERSION=
 	DISTCLEAN=
+	DONE=
+	DONE_FILe=
 	mod_$1
-	echo
-	echo "*** Module $1 [$done] $action ***"
+	info
+	info "*** Module $1 ***"
+	display "done = $done"
 	done="$done $1"
 
 	# Perform checking
@@ -502,9 +534,7 @@ function process {
 	# Perform the download
 	if [ -n "$DOWNLOAD" ]; then
 		if [ ! -d $1 ]; then
-			if [ "$verbose" == "yes" ]; then
-				echo "INFO: $1 does not exist: download it !"
-			fi
+			display "INFO: $1 does not exist: download it !"
 			download_$DOWNLOAD
 			if [ "$PATCH" != "" ]; then
 				patch_$PATCH
@@ -520,6 +550,19 @@ function process {
 			fi
 		fi
 	fi
+	
+	# Already done ?
+	if [ -n "$DONE" ]; then
+		doit=yes
+		pushd $1
+		done_$DONE
+		popd
+		if [ "$doit" = "no" ]; then
+			info "Already done !"
+			return
+		fi
+	fi
+	
 	
 	# Requires setup and build ?
 	case "$action" in

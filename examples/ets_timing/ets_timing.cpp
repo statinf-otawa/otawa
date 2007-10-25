@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 		tabt.processAST(fw, ast);
 		
 		// assignment for each loop
-		ets::FlowFactLoader ffl(fw);
+		ets::FlowFactLoader ffl;
 		ffl.processAST(fw, ast);
 		
 		// compute wcet
