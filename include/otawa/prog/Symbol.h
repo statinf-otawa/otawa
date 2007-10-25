@@ -27,7 +27,6 @@ public:
 	} kind_t;
 	
 	static Identifier<Symbol *> ID;
-	static Identifier<bool> NO_RETURN;
 
 	Symbol(File& file, String name, kind_t kind, address_t address, size_t size = 0);
 	inline File& file(void) const { return _file; }
