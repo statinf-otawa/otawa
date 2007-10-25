@@ -36,16 +36,13 @@ private:
 	elm::datastruct::Vector<ContextTree *> _children;
 	
 	ContextTree *_parent;
-	ContextTree(BasicBlock *bb, CFG *cfg);
+	ContextTree(BasicBlock *bb, CFG *cfg, ContextTree *parent);
 	void addChild(ContextTree *tree);
 	void addBB(BasicBlock *bb);
 public:
 
-	// Globals
-	//static GenericIdentifier<ContextTree *> ID;
-
 	// Methods
-	ContextTree(CFG *cfg);
+	ContextTree(CFG *cfg, ContextTree *parent = 0);
 	~ContextTree(void);
 	inline BasicBlock *bb(void) const;
 	inline kind_t kind(void) const;
@@ -54,6 +51,7 @@ public:
 	inline elm::Collection<ContextTree *>& children(void);
 	inline elm::Collection<BasicBlock *>& bbs(void);
 	inline bool isChildOf(const ContextTree *ct);
+	ContextTree *enclosingFunction(void);
 	
 	// Iterator
 	class ChildrenIterator: public elm::Iterator<ContextTree *> {
