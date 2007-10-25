@@ -76,6 +76,8 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 	virtualize(0, entry, vcfg, vcfg->entry(), vcfg->exit());
 	vcfg->addBB(vcfg->exit());
 	vcfg->numberBBs();
+	if(isVerbose())
+		out << "INFO: " << vcfg->countBB() << " basic blocks." << io::endl;
 
 	ENTRY_CFG(fw) = vcfg;
 	if (coll != NULL)
@@ -103,7 +105,6 @@ BasicBlock *exit) {
 	assert(cfg);
 	assert(entry);
 	assert(exit);
-	//cout << "Virtualizing " << cfg->label() << "(" << cfg->address() << ")\n";
 	
 	// Prepare data
 	elm::genstruct::HashTable<void *, BasicBlock *> map;
@@ -119,12 +120,13 @@ BasicBlock *exit) {
 	
 	// Find local entry
 	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++) {
-		assert(!call.entry);
+		ASSERT(!call.entry);
 		call.entry = map.get(edge->target(), 0);
-		assert(call.entry);
+		ASSERT(call.entry);
 		Edge *edge = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
 		CALLED_CFG(edge) = cfg;
 	}
+	
 	
 	// Translate edges
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
@@ -183,7 +185,7 @@ BasicBlock *exit) {
 					else {
 						BasicBlock *tgt = map.get(edge->target(), 0);
 						assert(tgt);
-						if(called && edge->kind() == Edge::NOT_TAKEN)
+						if(called)
 							called_exit = tgt;
 						else
 							new Edge(src, tgt, edge->kind());
@@ -199,10 +201,19 @@ BasicBlock *exit) {
 						RECURSIVE_LOOP(edge) = true;
 						VIRTUAL_RETURN_BLOCK(src) = called_exit;
 						called = 0;
+						if(isVerbose())
+							out << "INFO: recursivity found at " << bb->address()
+								<< " to " << called->label() << io::endl;
 						break;
 					}
 				if(called) {
-					assert(called_exit);
+					/*if(!called_exit)
+						for(BasicBlock::OutIterator edge(bb); edge; edge++) 							
+							cerr << "EDGE " << edge->kind()
+								 << " from " << edge->source()->address()
+								 << " to " << edge->target()->address()
+								 << " entry = " << ENTRY(edge->target()) << io::endl;*/
+					ASSERT(called_exit);
 					//cout << "CALL " << bb->address() << " -> " << called_exit->address() << "\n";
 					VIRTUAL_RETURN_BLOCK(src) = called_exit;
 					virtualize(&call, called, vcfg, src, called_exit);
