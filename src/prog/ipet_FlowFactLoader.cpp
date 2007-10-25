@@ -7,14 +7,11 @@
 
 #include <otawa/cfg.h>
 #include <elm/io.h>
-#include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ipet/IPET.h>
+#include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/util/Dominance.h>
-#include <otawa/ilp.h>
 #include <otawa/proc/ProcessorException.h>
-#include <otawa/cfg/CFGCollector.h>
-#include <otawa/util/Dominance.h>
-#include <otawa/ipet/VarAssignment.h>
+#include <otawa/util/FlowFactLoader.h>
 
 namespace otawa { namespace ipet {
 
@@ -26,9 +23,8 @@ namespace otawa { namespace ipet {
  * @li @ref FLOW_FACTS_PATH
  * 
  * @par Required Features
- * @li @ref ipet::ILP_SYSTEM_FEATURE
- * @li @ref ipet::COLLECTED_CFG_FEATURE
  * @li @ref ipet::LOOP_HEADERS_FEATURE
+ * @li @ref otawa::FLOW_fACTS_FEATURE
  * 
  * @par Provided Features
  * @li @ref ipet::FLOW_FACTS_FEATURE
@@ -39,87 +35,28 @@ namespace otawa { namespace ipet {
  * Build a new flow fact loader.
  */
 FlowFactLoader::FlowFactLoader(void)
-:	Processor("otawa::ipet::FlowFactLoader", Version(1, 1, 0)),
-	path(""),
-	verbose(false)
-{
-	require(ILP_SYSTEM_FEATURE);
-	require(COLLECTED_CFG_FEATURE);
+:	BBProcessor("otawa::ipet::FlowFactLoader", Version(1, 1, 0)) {
 	require(LOOP_HEADERS_FEATURE);
-	provide(FLOW_FACTS_FEATURE);
+	require(otawa::FLOW_FACTS_FEATURE);
+	provide(otawa::ipet::FLOW_FACTS_FEATURE);
 }
 
 
 /**
  */
-void FlowFactLoader::onError(const char *fmt, ...) {
-	assert(fmt);
-	VARARG_BEGIN(args, fmt)
-		StringBuffer buffer;
-		buffer.format(fmt, args);
-		throw ProcessorException(*this, buffer.toString());
-	VARARG_END
-}
-
-
-/**
- */
-void FlowFactLoader::onWarning(const char *fmt, ...) {
-	assert(fmt);
-	VARARG_BEGIN(args, fmt)
-	StringBuffer buffer;
-	buffer.format(fmt, args);
-	warn(buffer.toString());
-	VARARG_END
-}
-
-
-/**
- */
-void FlowFactLoader::onLoop(address_t addr, int count) {
-	// !!TODO!! Should be replaced by more efficient solution
-	// using maybe an has table for storing loop header / loop count.
-	assert(system);
-	assert(count >= 0);
-	//cout << "LOOP " << count << " times at " << addr << "\n";
-
-	// Process basic blocks
-	bool found = false;
-	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++) {
-
-		// Look BB in the CFG
-		for(CFG::BBIterator bb(cfg); bb; bb++)
-			if(bb->address() == addr && Dominance::isLoopHeader(bb)) {
-			
-				LOOP_COUNT(bb) = count;
-
-				found = true;
-			}
+void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+	ASSERT(ws);
+	ASSERT(cfg);
+	ASSERT(bb);
+	if(!bb->isEnd() && Dominance::isLoopHeader(bb)) {
+		BasicBlock::InstIterator iter(bb);
+		ASSERT(iter);
+		int count = MAX_ITERATION(iter);
+		if(count < 0)
+			warn(_ << "no limit for the loop at " << bb->address() << ".");
+		else
+			LOOP_COUNT(bb) = count;
 	}
-	
-	// Nothing found, seems too bad
-	if(!found)
-		out << "WARNING: loop " << addr << " not found.\n";
-}
-
-
-/**
- */
-void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
-	assert(fw);
-	cfgs = INVOLVED_CFGS(fw);
-	assert(cfgs);
-	system = SYSTEM(fw);
-	run(fw, path, verbose);
-}
-
-
-/**
- */
-void FlowFactLoader::configure(const PropList& props) {
-	Processor::configure(props);
-	path = FLOW_FACTS_PATH(props);
-	verbose = VERBOSE(props);
 }
 
 
