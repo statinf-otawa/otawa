@@ -162,7 +162,7 @@ void CFG::scan(void) {
 	
 	// All entering edges becomes calls
 	for(BasicBlock::InIterator edge(ent); edge; edge++)
-		edge->toCall();
+		edge->toCall();		// !!BUG!!
 	new Edge(&_entry, ent, EDGE_Virtual);
 	
 	// Explore CFG
@@ -175,9 +175,15 @@ void CFG::scan(void) {
 		bb->_cfg = this;
 		if(bb->isReturn())
 			ends.add(bb);
-		for(BasicBlock::OutIterator edge(bb); edge; edge++)
+		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 			if(edge->kind() == EDGE_Call) {
-				if(!bb->isCall())
+				bool not_taken = false;
+				for(BasicBlock::OutIterator edge(bb); edge; edge++)
+					if(edge->kind() != Edge::CALL) {
+						not_taken = true;
+						break;
+					}
+				if(!not_taken)
 					ends.add(bb);
 			}
 			else {
@@ -191,9 +197,10 @@ void CFG::scan(void) {
 					_bbs.add(target);
 				}
 			}
+		}
 	}
 	
-	// Check for enetring dead code
+	// Check for entering dead code
 	Vector<Edge *> cut;
 	for(int i = 0; i < _bbs.length(); i++) {
 		BasicBlock *bb = _bbs[i];
@@ -209,8 +216,9 @@ void CFG::scan(void) {
 	INDEX(_exit) = _bbs.length();
 	_exit._cfg = this;
 	_bbs.add(&_exit);
-	for(int i = 0; i < ends.length(); i++)
+	for(int i = 0; i < ends.length(); i++) {
 		new Edge(ends[i], &_exit, EDGE_Virtual);
+	}
 	flags |= FLAG_Scanned;
 }
 
