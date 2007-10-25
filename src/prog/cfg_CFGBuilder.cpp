@@ -10,9 +10,15 @@
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/loader/new_gliss/BranchInst.h>
-
+#include <otawa/util/FlowFactLoader.h>
 
 namespace otawa {
+
+// Useful
+inline bool isReturn(Inst *inst) {
+	return inst->isReturn() || IS_RETURN(inst);
+}
+
 
 /**
  */
@@ -163,7 +169,7 @@ void CFGBuilder::buildCFG(Segment *seg) {
 				if(inst->isCall())
 					IS_ENTRY(bb) = true;
 			}
-			else if(!inst->isReturn() && verbose) {
+			else if(!isReturn(inst) && verbose) {
 				Symbol * sym = 0; //code->closerSymbol(inst);
 				warn( _ << "unresolved indirect control at 0x"
 					<< inst->address() << " ("
@@ -218,11 +224,11 @@ void CFGBuilder::buildCFG(Segment *seg) {
 				}
 			
 				// Record BB flags
-				if(inst->isReturn())
+				if(isReturn(inst))
 					bb->flags |= BasicBlock::FLAG_Return;
 				else if(inst->isCall())
 					bb->flags |= BasicBlock::FLAG_Call;
-				if(!target && !inst->isReturn())
+				if(!target && !isReturn(inst))
 					bb->flags |= BasicBlock::FLAG_Unknown;
 				follow = inst->isCall() || inst->isConditional();
 			}

@@ -9,7 +9,6 @@
 #include <otawa/util/Dominance.h>
 #include <otawa/util/LoopInfoBuilder.h>
 #include <elm/genstruct/Vector.h>
-//#include <elm/util/BitVector.h>
 #include <otawa/cfg.h>
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/dfa/BitSet.h>
@@ -46,12 +45,17 @@ namespace otawa {
 
 /**
  * Build a new context tree for the given CFG.
- * @param cfg	CFG to build the context tree for.
+ * @param cfg		CFG to build the context tree for.
+ * @param parent	Parent context tree.
  */
-ContextTree::ContextTree(CFG *cfg): _kind(ROOT), _bb(cfg->entry()),
-_parent(0), _cfg(cfg) {
+ContextTree::ContextTree(CFG *cfg, ContextTree *parent):
+	_kind(ROOT),
+	_bb(cfg->entry()),
+	_parent(parent),
+	_cfg(cfg)
+{
 	assert(cfg);
-	//cout << "Computing " << cfg->label() << "\n";
+	//cerr << "Computing " << cfg->label() << "\n";
 	
 	
 	/*
@@ -59,7 +63,7 @@ _parent(0), _cfg(cfg) {
 	 */
 	for (CFG::BBIterator bb(cfg); bb; bb++)
 		if (Dominance::isLoopHeader(bb)) {
-			OWNER_CONTEXT_TREE(bb) = new ContextTree(bb, cfg);
+			OWNER_CONTEXT_TREE(bb) = new ContextTree(bb, cfg, this);
 			OWNER_CONTEXT_TREE(bb)->addBB(bb);
 		}
 	
@@ -95,11 +99,18 @@ _parent(0), _cfg(cfg) {
 
 /**
  * Build the context tree of a loop.
- * @param bb	Header of the loop.
+ * @param bb		Header of the loop.
+ * @param cfg		Owner CFG.
+ * @param parent	Parent context tree.
  */
-ContextTree::ContextTree(BasicBlock *bb, CFG *cfg)
-: _bb(bb), _kind(LOOP), _parent(0), _cfg(cfg) {
+ContextTree::ContextTree(BasicBlock *bb, CFG *cfg, ContextTree *parent):
+	_bb(bb),
+	_kind(LOOP),
+	_parent(parent),
+	_cfg(cfg)
+{
 	assert(bb);
+	assert(parent);
 }
 
 
@@ -117,11 +128,25 @@ ContextTree::~ContextTree(void) {
  * @param bb	Added BB.
  */
 void ContextTree::addBB(BasicBlock *bb) {
+	
+	// Add the BB
 	_bbs.add(bb);
+	
+	// Process call
 	if(bb->isCall())
 		for(BasicBlock::OutIterator edge(bb); edge; edge++)
-			if(edge->kind() == Edge::CALL && edge->calledCFG()) 
-				addChild(new ContextTree(edge->calledCFG()));
+			if(edge->kind() == Edge::CALL && edge->calledCFG()) {
+				
+				// Detect recursivity
+				for(ContextTree *cur = this; cur; cur = cur->parent())
+					if(cur->kind() != LOOP && edge->calledCFG() == cur->cfg()) {
+						//_children.add(cur);
+						return;
+					}
+				
+				// Add the child 
+				addChild(new ContextTree(edge->calledCFG(), enclosingFunction()));
+			}
 			
 }
 
@@ -133,10 +158,12 @@ void ContextTree::addBB(BasicBlock *bb) {
 void ContextTree::addChild(ContextTree *child) {
 	assert(child);
 	_children.add(child);
-	child->_parent = this;
+	//child->_parent = this;
 
-	if(child->kind() == ROOT)
+	if(child->kind() == ROOT) {
+	  //cerr << "!!!" <<_cfg->label() << " calls " << child->cfg()->label() << io::endl;
 		child->_kind = FUNCTION;
+        }
 }
 
 
@@ -175,6 +202,19 @@ void ContextTree::addChild(ContextTree *child) {
  * @param ct	Parent context tree.
  * @return		True if the current context tree is a child of the given one.
  */
+
+
+/**
+ * Find the enclosing function containing this context tree. Called on a function
+ * or root context tree returns the current context tree itself.
+ * @return	Enclosing function context tree.
+ */
+ContextTree *ContextTree::enclosingFunction(void) {
+	ContextTree *cur;
+	for(cur = this; cur->kind() == LOOP; cur = cur->parent())
+		assert(cur);
+	return cur;
+}
 
 
 /**
