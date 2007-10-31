@@ -35,7 +35,7 @@ namespace otawa {
  * Build a new wokspace with the given process.
  * @param _proc	Process to use.
  */
-WorkSpace::WorkSpace(Process *_proc): proc(_proc) {
+WorkSpace::WorkSpace(Process *_proc): proc(_proc), featMap() {
 	TRACE(this << ".WorkSpace::WorkSpace(" << _proc << ')');
 	assert(_proc);
 	addProps(*_proc);
@@ -154,14 +154,72 @@ xom::Element *WorkSpace::config(void) {
 	return conf;
 }
 
+/**
+ * Get the dependency graph node associated with the feature and workspace
+ * @param feature	Provided feature.
+ */
+FeatureDependency* WorkSpace::getGraph(const AbstractFeature* feature) {
+	FeatureDependency *result = featMap.get(feature, NULL);
+	ASSERT(result != NULL);
+	return(result);
+}
+
+/**
+ * Create a new dependency graph node associated with the feature and workspace
+ * Replace a old deleted graph, if necessary.
+ * @param feature	Provided feature.
+ */
+ void WorkSpace::newGraph(const AbstractFeature* feature) {
+ 	FeatureDependency *old = featMap.get(feature, NULL);
+ 	if (old) {
+ 		ASSERT(old->graph->isDeleted());
+ 		featMap.remove(feature);
+ 	}
+ 	featMap.put(feature, new FeatureDependency(feature));
+}
+
+/**
+ * Delete the dependency graph node associated with the feature and workspace
+ * It merely remove the item from the hashtable, it has to be freed by the user.
+ * @param feature	Provided feature.
+ */
+ void WorkSpace::delGraph(const AbstractFeature* feature) {
+ 	FeatureDependency *old = featMap.get(feature, NULL);
+ 	ASSERT(old);
+ 	ASSERT(old->graph->isDeleted());
+ 	ASSERT(!old->isInUse());
+ 	delete old;
+ 	featMap.remove(feature);
+}
+
+/**
+ * Tests if the feature has a dependency graph associated with it, in the context of the present workspace
+ * @param feature	Provided feature.
+ */
+bool WorkSpace::hasGraph(const AbstractFeature* feature) {
+	return (featMap.exists(feature));
+}
 
 /**
  * Record in the workspace that a feature is provided.
+ * Also update the feature dependency graph
  * @param feature	Provided feature.
  */
-void WorkSpace::provide(const AbstractFeature& feature) {
-	if(!isProvided(feature))
+void WorkSpace::provide(const AbstractFeature& feature, const Vector<const AbstractFeature*> *required) {
+	if(!isProvided(feature)) {			
+		if (!hasGraph(&feature) || getGraph(&feature)->graph->isDeleted()) 
+			newGraph(&feature);
+		
+		if (required != NULL) {
+			for (int j = 0; j < required->length(); j++) {
+				if (isProvided(*required->get(j))) {
+					getGraph(required->get(j))->graph->addChild(getGraph(&feature)->graph);
+					getGraph(&feature)->incUseCount();
+				}
+			}
+		}
 		features.add(&feature);
+	}
 }
 
 /**
@@ -170,11 +228,13 @@ void WorkSpace::provide(const AbstractFeature& feature) {
  */
 void WorkSpace::invalidate(const AbstractFeature& feature) {
 	if (isProvided(feature)) {
-		for (genstruct::DAGNode<const AbstractFeature *>::Iterator dep(*feature.dependency->graph); dep; dep++) {
+		for (genstruct::DAGNode<const AbstractFeature *>::Iterator dep(*getGraph(&feature)->graph); dep; dep++) {
 			DAGNode<const AbstractFeature *> *node = *dep;
 			invalidate(*node->useValue());
-			feature.dependency->graph->delChild(node);
-			node->useValue()->dependency->decUseCount();
+			getGraph(&feature)->graph->delChild(node);
+			getGraph(node->useValue())->decUseCount();
+			if (!getGraph(node->useValue())->isInUse())
+				delGraph(node->useValue());
 		}
 		remove(feature);
 	}
@@ -208,8 +268,9 @@ void WorkSpace::remove(const AbstractFeature& feature) {
  * @param props		Configuration properties (optional).
  */
 void WorkSpace::require(const AbstractFeature& feature, const PropList& props) {
-	if(!isProvided(feature))
+	if(!isProvided(feature)) {
 		feature.process(this, props);
+	}
 }
 
 } // otawa
