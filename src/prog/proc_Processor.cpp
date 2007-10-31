@@ -65,10 +65,10 @@ static Configuration timed_conf(Processor::TIMED, AUTODOC "/classotawa_1_1Proces
  * @deprecated		Configuration must be passed at the process() call.
  */
 Processor::Processor(elm::String name, elm::Version version,
-const PropList& props): _name(name), _version(version), flags(0), stats(0) {
+const PropList& props): _name(name), _version(version), flags(0), stats(0){
 	init(props);
 	config(output_conf);
-	config(log_conf);
+	config(log_conf);	
 	config(verbose_conf);
 	config(stats_conf);
 	config(timed_conf);
@@ -82,7 +82,6 @@ const PropList& props): _name(name), _version(version), flags(0), stats(0) {
 Processor::Processor(String name, Version version)
 : _name(name), _version(version), flags(0), stats(0) {
 	config(output_conf);
-	config(log_conf);
 	config(verbose_conf);
 	config(stats_conf);
 	config(timed_conf);
@@ -186,7 +185,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	// Pre-processing actions
 
 	if(isVerbose()) 
-		log << "Starting " << name() << " (" << version() << ')' << io::endl;
+	log << "Starting " << name() << " (" << version() << ')' << io::endl;
 	system::StopWatch swatch;
 	if(isTimed())
 		swatch.start();
@@ -214,19 +213,8 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	}
 	
 	// Add provided features
-	for(int i = 0; i < provided.length(); i++) {
-		
-		if ((provided[i]->dependency->graph == NULL) || (provided[i]->dependency->graph->isDeleted()))
-			provided[i]->dependency->graph = new genstruct::DAGNode<const AbstractFeature*>(provided[i]);
-		for (int j = 0; j < required.length(); j++) {
-			if (fw->isProvided(*required[j]) && !fw->isProvided(*provided[i])) {
-				required[j]->dependency->graph->addChild(provided[i]->dependency->graph);
-				provided[i]->dependency->incUseCount();
-			}
-		}
-		fw->provide(*provided[i]);
-	
-	}
+	for(int i = 0; i < provided.length(); i++)
+		fw->provide(*provided[i], &required);
 }
 
 
