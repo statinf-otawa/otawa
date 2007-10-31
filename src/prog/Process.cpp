@@ -316,13 +316,8 @@ Loader *Process::loader(void) const {
  */
 void Process::link(WorkSpace *ws) {
 	ASSERT(ws);
-	for(int i = 0; i < provided.length(); i++) {
-		if ((provided[i]->dependency->graph == NULL)
-		|| (provided[i]->dependency->graph->isDeleted()))
-			provided[i]->dependency->graph =
-				new genstruct::DAGNode<const AbstractFeature *>(provided[i]);
+	for(int i = 0; i < provided.length(); i++)
 		ws->provide(*provided[i]);
-	}
 }
 
 
