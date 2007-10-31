@@ -6,8 +6,64 @@ cflags=
 libs=
 data=
 doc=
+ilp=
+loader=
+list_modules=
 cflags_text="-I@prefix@/include"
 libs_text="@prefix@/lib/libotawa.la"
+
+
+# Configurations
+#	KIND: kind of module (one of lib, ilp, loader)
+#	DOC: module documentation
+#	LIB: special link options
+#	LIB_STATIC: special option for static link
+
+function config_display {
+	KIND="lib"
+	DOC="graph displayer"
+}
+
+function config_gensim {
+	KIND="lib"
+	DOC="generic temporal simulator"
+}
+
+function config_lp_solve {
+	KIND="ilp"
+	DOC="lp_solve 4.x ILP solver"
+}
+
+function config_lp_solve5 {
+	KIND="ilp"
+	DOC="lp_solve 5.x ILP solver"
+}
+
+function config_ppc {
+	KIND="loader"
+	DOC="PowerPC architecture loader"
+}
+
+function config_s12x {
+	KIND="loader"
+	DOC="Star12X architecture loader"
+}
+
+function config_arm {
+	KIND="loader"
+	DOC="ARM architecture loader"
+}
+
+
+# Compute the module list
+modules="display"
+@HAS_SYSTEMC_TRUE@		modules="$modules gensim"
+@HAS_LP_SOLVE_TRUE@		modules="$modules lp_solve"
+@HAS_LP_SOLVE5_TRUE@	modules="$modules lp_solve5"
+@HAS_GLISS_PPC_TRUE@	modules="$modules ppc"
+@HAS_GLISS_S12X_TRUE@	modules="$modules s12x"
+@HAS_GLISS_ARM_TRUE@	modules="$modules arm"
+
 
 # Decode options
 while test "$1" != ""; do
@@ -30,31 +86,75 @@ while test "$1" != ""; do
 	--has-so)
 		exit @HAS_SO@
 		;;
-	gensim|+gensim)
-		libs_text="@prefix@/lib/libogensim.la $libs_text"
-		;;
-	display|+display)
-		libs_text="@prefix@/lib/libodisplay.la $libs_text"
-		;;
-	ppc)
-		@HAS_PLUGIN_FALSE@ libs_text="-uppc_plugin @prefix@/lib/otawa/loader/ppc.la $libs_text"
-		;;
-	lp_solve)
-		@HAS_PLUGIN_FALSE@ libs_text="-ulp_solve_plugin @prefix@/lib/otawa/ilp/lp_solve.la $libs_text"
-		;;
-	+ppc)
-		libs_text="-uppc_plugin @prefix@/lib/otawa/loader/ppc.la $libs_text"
-		;;
-	+lp_solve)
-		libs_text="-ulp_solve_plugin @prefix@/lib/otawa/ilp/lp_solve.la $libs_text"
-		;;
 	--version)
 		echo "@PACKAGE@ @VERSION@"
 		exit 1
 		;;
-	*)
+	--help)
+		;;
+	--ilp)
+		option=ok
+		ilp=ok
+		;;
+	--loader)
+		option=ok
+		loader=ok
+		;;
+	--modules)
+		option=ok
+		list_modules=ok
+		;;
+	-*)
 		echo "ERROR: unknown option '$1'."
 		exit 1
+		;;
+	+*)
+		mod="${1#+}"
+		if [ `expr match "$modules" ".*$mod.*"` == 0 ]; then
+			echo "ERROR: unknown module $mod"
+			exit 1
+		fi
+		KIND=""
+		LIB_STATIC=""
+		config_$mod
+		if [ -z "$LIB_STATIC" ]; then
+			case "$KIND" in
+			ilp)
+				LIB_STATIC="-u${mod}_plugin @prefix@/lib/otawa/ilp/$mod.la"
+				;;
+			loader)
+				LIB_STATIC="-u${mod}_plugin @prefix@/lib/otawa/loader/$mod.la"
+				;;
+			lib)
+				LIB_STATIC="@prefix@/lib/libo$mod.la"
+				;;
+			esac
+		fi
+		libs_text="$LIB_STATIC $libs_text"
+		;;
+	*)
+		mod="$1"
+		if [ `expr match "$modules" ".*$mod.*"` == 0 ]; then
+			echo "ERROR: unknown module $mod"
+			exit 1
+		fi
+		KIND=""
+		LIB=""
+		config_$mod
+		if [ -z "$LIB" ]; then
+			case "$KIND" in
+			ilp)
+				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin @prefix@/lib/otawa/ilp/$mod.la"
+				;;
+			loader)
+				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin @prefix@/lib/otawa/loader/$mod.la"
+				;;
+			lib)
+				LIB="@prefix@/lib/libo$mod.la"
+				;;
+			esac
+		fi
+		libs_text="$LIB $libs_text"
 		;;
 	esac
 	shift
@@ -64,16 +164,20 @@ done
 if test "$option" == ""; then
 	echo "SYNTAX: otawa-config [--cflags] [--libs] [--data] [+]modules..."
 	echo "	--cflags: display required compilation flags."
-	echo "	--libs: display required libs."
 	echo "	--data: display path to package data."
-	echo "  --doc: display path to the auto-documentation."
-	echo "	--has-so: exit 0 if OTAWA is s shared object, false else."
-	echo "  +module: Link module statically, even if we have plugins."
+	echo "	--doc: display path to the auto-documentation."
+	echo "	--has-so: exit 0 if OTAWA is a shared object, false else."
+	echo "	--ilp: list ILP solver plugins available."
+	echo "	--libs: display required libs."
+	echo "	--loader: list loader plugins available."
+	echo "	--modules: list available modules."
+	echo "	+module: Link module statically, even if we have plugins."
 	echo "Modules may be:"
-	echo "	gensim: use of the generic simulator."
-	echo "	display: use of the graph displayer."
-	echo "	ppc: static link with PowerPC loader."
-	echo "	lp_solve: static link with lp_solve ILP solver."
+	for mod in $modules; do
+		DOC=""
+		config_$mod
+		echo "	$mod -- $DOC"
+	done
 	exit
 fi
 
@@ -89,4 +193,48 @@ if test "$data" == "ok"; then
 fi
 if test "$doc" == "ok"; then
 	echo @prefix@/share/Otawa/autodoc/index.html
+fi
+
+# --ilp
+if [ "$ilp" == "ok" ]; then
+	one="no"
+	paths="@ILP_PATHS@ $HOME/.otawa/ilp $PWD/.otawa/ilp"
+	for path in $paths; do
+		if [ -d "$path" ]; then
+			for plugin in $path/ilp/*.so; do
+				echo "${plugin%*.so} ($path)"
+				one="yes"
+			done
+		fi
+	done
+	if [ "$one" == "no" ]; then
+		echo "no plugin found in [$paths]"
+	fi
+fi
+
+# --loader
+if [ "$loader" == "ok" ]; then
+	one="no"
+	paths="@LOADER_PATHS@ $HOME/.otawa/loader $PWD/.otawa/loader"
+	for path in $paths; do
+		if [ -d "$path" ]; then
+			for plugin in $path/*.so; do
+				echo "${plugin%*.so} ($path)"
+				one="yes"
+			done
+		fi
+	done
+	if [ "$one" == "no" ]; then
+		echo "no plugin found in [$paths]"
+	fi
+fi
+
+# --modules
+if [ "$list_modules" == "ok" ]; then
+	for module in $modules; do
+		DOC=""
+		config_$module
+		echo "[$module]"
+		echo "	$DOC"
+	done
 fi
