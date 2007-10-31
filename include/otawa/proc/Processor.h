@@ -58,6 +58,7 @@ protected:
 	static const unsigned long IS_VERBOSE = 0x02;
 	unsigned long flags;
 	elm::io::Output out;
+	elm::io::Output log;
 	PropList *stats;
 	
 	// Facility methods
@@ -95,6 +96,7 @@ public:
 
 	// Configuration Properties
 	static Identifier<elm::io::OutStream *> OUTPUT;
+	static Identifier<elm::io::OutStream *> LOG;
 	static Identifier<PropList *> STATS;
 	static Identifier<bool> TIMED;
 	static Identifier<bool> VERBOSE;
