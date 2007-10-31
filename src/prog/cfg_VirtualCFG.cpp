@@ -202,9 +202,11 @@ VirtualCFG::VirtualCFG(CFG *cfg, bool inlined): _cfg(cfg) {
 /**
  * Build a new empty VirtualCFG
  */
-VirtualCFG::VirtualCFG() {
-  /*_bbs.add(&_entry);
-  _bbs.add(&_exit);*/
+VirtualCFG::VirtualCFG(bool addEntryExit) {
+  if (addEntryExit) {
+    _bbs.add(&_entry);
+    _bbs.add(&_exit);
+  }
   _entry._cfg = this;
   _exit._cfg = this;
   flags |= FLAG_Scanned;
