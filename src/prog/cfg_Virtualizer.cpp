@@ -48,15 +48,17 @@ Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::virtual_return_block", NULL
  */
 
 Virtualizer::Virtualizer(void) : Processor("otawa::Virtualizer", Version(1, 0, 0)) {
+	require(ipet::FLOW_FACTS_FEATURE);
 	require(COLLECTED_CFG_FEATURE);
 	invalidate(COLLECTED_CFG_FEATURE);
 	provide(VIRTUALIZED_CFG_FEATURE);
+	provide(ipet::FLOW_FACTS_FEATURE);
 }
 
 void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 
 	CFGCollection *coll = INVOLVED_CFGS(fw);	
-	VirtualCFG *vcfg = new VirtualCFG();
+	VirtualCFG *vcfg = new VirtualCFG(false);
         if (!entry)
         	entry = ENTRY_CFG(fw);
         if(!entry) {
@@ -78,7 +80,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 	vcfg->numberBBs();
 	if(isVerbose())
 		out << "INFO: " << vcfg->countBB() << " basic blocks." << io::endl;
-
+		
 	ENTRY_CFG(fw) = vcfg;
 	if (coll != NULL)
 		delete coll;
@@ -105,6 +107,7 @@ BasicBlock *exit) {
 	assert(cfg);
 	assert(entry);
 	assert(exit);
+	//cout << "Virtualizing " << cfg->label() << "(" << cfg->address() << ")\n";
 	
 	// Prepare data
 	elm::genstruct::HashTable<void *, BasicBlock *> map;
@@ -127,7 +130,6 @@ BasicBlock *exit) {
 		CALLED_CFG(edge) = cfg;
 	}
 	
-	
 	// Translate edges
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
@@ -146,9 +148,8 @@ BasicBlock *exit) {
 					if(edge->kind() == Edge::CALL) {
 						if (DONT_INLINE(edge->calledCFG()))  {
 							if ((cfgMap.get(edge->calledCFG(), 0) == 0)) {
-								VirtualCFG *vcalled = new VirtualCFG();
+								VirtualCFG *vcalled = new VirtualCFG(false);
 								cfgMap.put(edge->calledCFG(), vcalled);
-								cout << "Virtualizing: " << edge->calledCFG()->label() << "\n";
 								vcalled->addProps(*edge->calledCFG());
 								ENTRY(vcalled->entry()) = vcalled;
 								vcalled->entry()->addProps(*edge->calledCFG()->entry());
@@ -172,7 +173,6 @@ BasicBlock *exit) {
 					if (isInlined() && DONT_INLINE(edge->calledCFG())) {
 						VirtualCFG *vcalled = cfgMap.get(edge->calledCFG(), 0);
 						ASSERT(vcalled != 0);
-						cout << "Calling virtualized CFG : " << vcalled->label() << " from vBB" << src->address() << "\n";
 						new Edge(src, vcalled->entry(), Edge::CALL);
 					}
 				}
@@ -207,14 +207,7 @@ BasicBlock *exit) {
 						break;
 					}
 				if(called) {
-					/*if(!called_exit)
-						for(BasicBlock::OutIterator edge(bb); edge; edge++) 							
-							cerr << "EDGE " << edge->kind()
-								 << " from " << edge->source()->address()
-								 << " to " << edge->target()->address()
-								 << " entry = " << ENTRY(edge->target()) << io::endl;*/
 					ASSERT(called_exit);
-					//cout << "CALL " << bb->address() << " -> " << called_exit->address() << "\n";
 					VIRTUAL_RETURN_BLOCK(src) = called_exit;
 					virtualize(&call, called, vcfg, src, called_exit);
 
