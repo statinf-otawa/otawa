@@ -48,6 +48,8 @@ class CAT2Builder: public CFGProcessor{
 	virtual void configure(const PropList &props);	
 };
 
+extern Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE;
+
 
 }
 

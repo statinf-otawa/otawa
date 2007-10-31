@@ -53,7 +53,7 @@ Identifier<BasicBlock*> CATEGORY_HEADER("otawa::category_header", 0);
  * @li @ref ICACHE_FIRSTLAST_FEATURE
  *
  * @par Provided features
- * @li @ref ICACHE_CATEGORY_FEATURE
+ * @li @ref ICACHE_CATEGORY2_FEATURE
  * 
  * @par Statistics
  * none
@@ -66,7 +66,7 @@ CAT2Builder::CAT2Builder(void) : CFGProcessor("otawa::CAT2Builder", Version(1, 0
 	require(COLLECTED_LBLOCKS_FEATURE);
 	require(ICACHE_ACS_FEATURE);
 	require(ICACHE_FIRSTLAST_FEATURE);
-	provide(ICACHE_CATEGORY_FEATURE);
+	provide(ICACHE_CATEGORY2_FEATURE);
 }
 
 void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard::Cache *cache) {
@@ -144,5 +144,7 @@ void CAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
 		processLBlockSet(cfg, lbsets[i], cache );
 	}	
 }
+
+  Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE("otawa::icache_category2");
 
 }
