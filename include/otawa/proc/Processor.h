@@ -26,6 +26,7 @@
 #include <elm/util/Version.h>
 #include <elm/system/StopWatch.h>
 #include <elm/genstruct/Vector.h>
+#include <elm/genstruct/HashTable.h>
 //#include <otawa/prog/WorkSpace.h>
 #include <otawa/properties.h>
 #include <otawa/proc/ProcessorException.h>
@@ -38,6 +39,7 @@ class AbstractFeature;
 class Registration;
 class Configuration;
 class WorkSpace;
+class FeatureDependency;
 
 // Processor class
 class Processor {
@@ -50,12 +52,12 @@ class Processor {
 	Vector<const AbstractFeature *> invalidated;
 	Vector<Configuration *> configs;
 
+
 protected:
 	static const unsigned long IS_TIMED = 0x01;
 	static const unsigned long IS_VERBOSE = 0x02;
 	unsigned long flags;
 	elm::io::Output out;
-	elm::io::Output log;
 	PropList *stats;
 	
 	// Facility methods
@@ -93,7 +95,6 @@ public:
 
 	// Configuration Properties
 	static Identifier<elm::io::OutStream *> OUTPUT;
-	static Identifier<elm::io::OutStream *> LOG;
 	static Identifier<PropList *> STATS;
 	static Identifier<bool> TIMED;
 	static Identifier<bool> VERBOSE;
