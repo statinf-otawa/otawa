@@ -20,7 +20,7 @@ protected:
 	virtual void scan(void);
 public:
 	VirtualCFG(CFG *cfg, bool inlined = true);
-	VirtualCFG();
+	VirtualCFG(bool addEntryExit = true);
 	inline CFG *cfg(void) const;
 	void addBB(BasicBlock *bb);
 	void numberBBs(void);
