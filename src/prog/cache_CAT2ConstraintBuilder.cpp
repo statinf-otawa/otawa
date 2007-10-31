@@ -60,7 +60,7 @@ Identifier<ilp::Var *> MISS_VAR("otawa::miss_var", 0, otawa::NS);
  * @li @ref ASSIGNED_VARS_FEATURE
  * @li @ref COLLECTED_LBLOCKS_FEATURE
  * @li @ref LOOP_INFO_FEATURE
- * @li @ref ICACHE_CATEGORY_FEATURE
+ * @li @ref ICACHE_CATEGORY2_FEATURE
  * @li @ref ILP_SYSTEM_FEATURE
  *
  * @par Provided features
@@ -74,7 +74,7 @@ Identifier<ilp::Var *> MISS_VAR("otawa::miss_var", 0, otawa::NS);
 
 CAT2ConstraintBuilder::CAT2ConstraintBuilder(void) : Processor("otawa::CAT2ConstraintBuilder", Version(1, 0, 0)), _explicit(false) {
 	require(ASSIGNED_VARS_FEATURE);
-	require(ICACHE_CATEGORY_FEATURE);
+	require(ICACHE_CATEGORY2_FEATURE);
 	require(LOOP_INFO_FEATURE);
 	require(COLLECTED_LBLOCKS_FEATURE);
 	require(ILP_SYSTEM_FEATURE);
