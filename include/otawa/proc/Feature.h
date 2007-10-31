@@ -26,7 +26,6 @@ class AbstractFeature: public Identifier<Processor *> {
 public:
 	static NameSpace NS;
 	AbstractFeature(CString name = "");
-	FeatureDependency *dependency;	
 	inline void incUseCount();
 	inline void decUseCount();
 	virtual void process(WorkSpace *fw,
@@ -79,25 +78,30 @@ class FeatureDependency {
 public:
 	genstruct::DAGNode<const AbstractFeature*> *graph;
 	
-	inline FeatureDependency();
+	inline FeatureDependency(const AbstractFeature *feature);
+	inline ~FeatureDependency();
 	inline void incUseCount();
 	inline void decUseCount();
+	inline bool isInUse();
 	
 };
 
-inline FeatureDependency::FeatureDependency() : graph(NULL), refcount(0) {
+inline FeatureDependency::FeatureDependency(const AbstractFeature *feature) : graph(new genstruct::DAGNode<const AbstractFeature*>(feature)), refcount(0) {
 }
 
+inline FeatureDependency::~FeatureDependency() {
+	delete graph;
+}
 inline void FeatureDependency::incUseCount()  {
 	refcount++;
 }
 
+inline bool FeatureDependency::isInUse() {
+	return (refcount > 0);
+}
+
 inline void FeatureDependency::decUseCount()  {
 	refcount--;
-	if (refcount == 0) {
-		delete graph;
-		graph = NULL;
-	}
 }
 
 
