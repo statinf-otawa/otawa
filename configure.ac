@@ -172,7 +172,7 @@ AC_SUBST(AUTODOC)
 
 # ===== Default ILP =====
 AS_IF(test "$HAS_PLUGIN" = "yes", [
-	HAS_ILP="no"
+	HAS_ILP="yes"
 	ILP_LIBS=""
 	ILP_DEPS=""
 ],
