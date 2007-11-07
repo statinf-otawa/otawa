@@ -7,8 +7,14 @@ AC_LANG(C++)
 # ==== Plugin activation ====
 AC_ARG_WITH(plugin,
 	[  --with-plugin={yes,no}	Activate plugin usage.],,[with_plugin=no])
-AS_IF(test "$with_plugin" = "yes", [ HAS_PLUGIN=yes ], [ HAS_PLUGIN=no ])
+AS_IF(test "$with_plugin" = "yes",
+	[
+		AC_DEFINE(HAS_PLUGIN, [], [plugins available])
+		HAS_PLUGIN=yes
+	],
+	[ HAS_PLUGIN=no ])
 AM_CONDITIONAL(HAS_PLUGIN, test "$HAS_PLUGIN" = "yes")
+
 
 
 # === Loader Selection ====
@@ -118,6 +124,19 @@ OTAWA_USE_LIB(LP_SOLVE5,
 	OTAWA_CHECK_LIB(LP_SOLVE5, lpsolve/lp_lib.h, lpsolve55  -lcolamd)))
 
 
+# ===== ILP check =====
+HAS_ILP="no"
+ILP_DEPS=""
+ILP_LIBS=""
+ILP_DEFAULT=""
+OTAWA_ILP(LP_SOLVE5, lp_solve5)
+OTAWA_ILP(LP_SOLVE, lp_solve)
+AM_CONDITIONAL(HAS_ILP, test "$HAS_ILP" = "yes")
+AC_SUBST(ILP_LIBS)
+AC_SUBST(ILP_DEPS)
+AC_SUBST(ILP_DEFAULT)
+
+
 # ===== SYSTEMC check =====
 OTAWA_USE_LIB(SYSTEMC,
 	OTAWA_CHECK_LIB(SYSTEMC, systemc.h, systemc, $PWD/../systemc/objdir/src, $PWD/../systemc/src,
@@ -168,53 +187,6 @@ AC_DEFINE_UNQUOTED(SIMULATOR_PATHS, "$SIMULATOR_PATHS", [Paths for simulator plu
 # ====== AUTODOC configuration ======
 AUTODOC='$(pkgdatadir)/autodoc'
 AC_SUBST(AUTODOC)
-
-
-# ===== Default ILP =====
-AS_IF(test "$HAS_PLUGIN" = "yes", [
-	HAS_ILP="yes"
-	ILP_LIBS=""
-	ILP_DEPS=""
-],
-[
-	AC_MSG_CHECKING([for an ILP solver])
-	AS_IF(test "$with_ilp" = "no", [
-		AS_IF(test "$HAS_LP_SOLVE" = "yes", [
-			HAS_ILP="yes"
-			ILP_DEPS="\$(top_builddir)/src/lp_solve/lp_solve.la"
-			ILP_LIBS="-ulp_solve_plugin $ILP_DEPS"
-		],
-		AS_IF(test "$HAS_LP_SOLVE5" = "yes", [
-			HAS_ILP="yes"
-			ILP_DEPS="\$(top_builddir)/src/lp_solve5/lp_solve5.la"
-			ILP_LIBS="-ulp_solve5_plugin $ILP_DEPS"
-		],
-		[
-			AC_MSG_FAILURE([no ilp selected !])
-		]))
-	],
-	[
-		AS_IF(test "$with_ilp" = "lp_solve",
-		[
-			HAS_ILP="yes"
-			ILP_DEPS="\$(top_builddir)/src/lp_solve/lp_solve.la"
-			ILP_LIBS="-ulp_solve_plugin $ILP_DEPS"
-		],
-		AS_IF(test "$with_ilp" = "lp_solve5",
-		[
-			HAS_ILP="yes"
-			ILP_DEPS="\$(top_builddir)/src/lp_solve5/lp_solve5.la"
-			ILP_LIBS="-ulp_solve5_plugin $ILP_DEPS"
-		],
-		[
-			AC_MSG_FAILURE([$with_ilp ILP solver not available !])
-		]))
-	])
-	AS_IF(test "$HAS_ILP" = "yes", AC_MSG_RESULT([$ILP_LIBS]))
-])
-AM_CONDITIONAL(HAS_ILP, test "$HAS_ILP" = "yes")
-AC_SUBST(ILP_LIBS)
-AC_SUBST(ILP_DEPS)
 
 
 # ===== Select Loader =====
