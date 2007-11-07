@@ -326,10 +326,16 @@ ilp::System *Manager::newILPSystem(String name) {
 	
 	// Select the first available plugin
 	if(!name) {
-		elm::system::Plugger::Iterator plug(ilp_plugger);
-		if(plug.ended())
-			return 0;
-		plugin = (ilp::ILPPlugin *)plug.plug();
+#		ifdef HAS_PLUGIN
+		plugin = (ilp::ILPPlugin *)ilp_plugger.plug("default");
+		if(!plugin)
+#		endif
+		{
+			elm::system::Plugger::Iterator plug(ilp_plugger);
+			if(plug.ended())
+				return 0;
+			plugin = (ilp::ILPPlugin *)plug.plug();
+		}
 	}
 	
 	// Find a plugin
