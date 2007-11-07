@@ -155,3 +155,25 @@ AC_DEFUN([OTAWA_CHECK_LIB], [
 	])
 ])
 
+
+# OTAWA_ILP(var, module)
+#	Set the environment to use the given plugin.
+AC_DEFUN([OTAWA_ILP], [
+	AS_IF(test "$HAS_$1" != "yes",
+		AS_IF(test "$with_ilp" = "$2", AC_MSG_FAILURE([$2 not available])),
+		[
+			HAS_ILP="yes" 
+			AS_IF(test "$HAS_PLUGIN" = "yes",
+				AS_IF(test "$ILP_DEFAULT" = "", [ ILP_DEFAULT="$2"]),
+				AS_IF(test "$with_plugin" = "$2" -o "$ILP_LIBS" = "",
+					[
+						ILP_DEPS="\$(top_builddir)/src/$2/$2.la"
+						ILP_LIBS="-u$2_plugin $ILP_DEPS"
+					]
+				)
+			)
+		]
+	)
+])
+
+
