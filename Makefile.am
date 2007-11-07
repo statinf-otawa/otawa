@@ -11,10 +11,13 @@ uninstall-local:
 
 autodoc:
 	doxygen
- 	
+
+# Default ILP plugin
+ILP_PATH=$(libdir)/otawa/ilp
 ilp_default:
 if HAS_PLUGIN
 if HAS_ILP
-	ln -s $(libdir)/otawa/ilp/@ILP_DEFAULT@.la $(libdir)/otawa/ilp/default.la
+	test -e $(ILP_PATH)/default.la && rm -f $(ILP_PATH)/default.la
+	ln -s $(ILP_PATH)/@ILP_DEFAULT@.la $(ILP_PATH)/default.la
 endif
 endif
