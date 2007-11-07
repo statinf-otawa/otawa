@@ -1,11 +1,26 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2005-07, IRIT UPS <casse@irit.fr>
  *
- *	prog/util_LBlockBuilder.cpp -- interface of LBlockBuilder class.
+ *	LBlockBuilder class implementation
+ *	This file is part of OTAWA
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ * 
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with Foobar; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
@@ -38,7 +53,7 @@ namespace otawa {
  * Build a new l-block builder.
  */
 LBlockBuilder::LBlockBuilder(void)
-: CFGProcessor("otawa::util::LBlockBuilder", Version(1, 0, 0)) {
+: BBProcessor("otawa::util::LBlockBuilder", Version(1, 1, 0)) {
 	require(COLLECTED_CFG_FEATURE);
 	provide(COLLECTED_LBLOCKS_FEATURE);
 }
@@ -46,13 +61,16 @@ LBlockBuilder::LBlockBuilder(void)
 
 /**
  */
-void LBlockBuilder::processWorkSpace(WorkSpace *fw) {
-	assert(fw);
-	
+void LBlockBuilder::setup(WorkSpace *fw) {
+	ASSERT(fw);
+
 	// Check the cache
 	cache = fw->platform()->cache().instCache();
 	if(!cache)
 		throw ProcessorException(*this, "No cache in this platform.");
+
+	// Build hash	
+	cacheBlocks = new HashTable<int, int>();
 	
 	// Build the l-block sets
 	lbsets = new LBlockSet *[cache->rowCount()];
@@ -61,137 +79,94 @@ void LBlockBuilder::processWorkSpace(WorkSpace *fw) {
 		lbsets[i] = new LBlockSet(i);
 		new LBlock(lbsets[i], 0, 0, 0, -1);
 	}
-
-
-	
-	
-	// Let's go
-	CFGProcessor::processWorkSpace(fw);
-	
-
-	
-	// Add end blocks
-	for(int i = 0; i < cache->rowCount(); i++)
-		new LBlock(lbsets[i], 0, 0, 0, -1);
-}
-
-void LBlockBuilder::setup(WorkSpace *fw) {
-	cacheBlocks = new HashTable<int, int>();
-}
-
-void LBlockBuilder::cleanup(WorkSpace *fw) {
-	delete cacheBlocks;
 }
 
 
 /**
  */
-void LBlockBuilder::processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset, const hard::Cache *cach, int *tableindex) {
-	int line = lbset->line();
-	int index;
+void LBlockBuilder::cleanup(WorkSpace *fw) {
+	ASSERT(fw);
 	
-	assert(fw);
-	assert(cfg);
-	assert(lbset);
+	// Add end blocks
+	for(int i = 0; i < cache->rowCount(); i++)
+		new LBlock(lbsets[i], 0, 0, 0, -1);
 	
-	// Build the l-blocks
-	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
-	
-		if (!bb->isEntry() && !bb->isExit()) {
-			
-			// ilp::Var *bbv = bb->use<ilp::Var *>(ipet::IPET::ID_Var);
-			Inst *inst;
-			bool find = false;
-			PseudoInst *pseudo;
-			
-			for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {				
-				pseudo = inst->toPseudo();
-				address_t address = inst->address();
-
-				// Do not process pseudo or stop on BB start pseudo
-				if(pseudo) {
-					if(pseudo->id() == &bb->ID)
-						break;
-				}
-				
-				// Process the instruction
-				else {
-					
-					if(cach->line(address) != lbset->line())
-						find = false;
-					if(!find && cach->line(address) == lbset->line()) {
-						address_t next_address = (address_t)((mask_t)(address.address() + cach->blockSize()) & ~(cach->blockSize() - 1));
-						int cbid;
-						int block = cach->block(address);
-						int existing_block_id = cacheBlocks->get(block, -1);
-						if (existing_block_id != -1) {
-						        cbid = existing_block_id;
-                        } else {
-                        	cbid = lbset->newCacheBlockID();
-                        	cacheBlocks->put(block, cbid);
-                        }
-                        index = tableindex[bb->number()];
-                        tableindex[bb->number()] ++;
-                        
-                        genstruct::AllocatedTable<LBlock*> *lblocks = BB_LBLOCKS(bb);
-						lblocks->set(index, new LBlock(lbset, address, bb, next_address - address, cbid)); 											
-						find = true;
-					}
-				}
-			}
-		}
-		
+	// Remove hash
+	delete cacheBlocks;
 }
 
 
 /**
- */	
-void LBlockBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
-        int *tableindex;
-	assert(fw);
-	assert(cfg);
-
-	// Initialization
-	const hard::CacheConfiguration& conf = fw->platform()->cache();
-	if(!conf.instCache())
-		throw ProcessorException(*this, "no instruction cache !");
-	const hard::Cache *cach = conf.instCache();
+ * Add an lblock to the lblock lists.
+ * @param bb		Basic block containing the l-block.
+ * @param inst		First instruction of the l-block.
+ * @param index		Index in the BB lblock table.
+ * @paramlblocks	BB lblock table.
+ */
+void LBlockBuilder::addLBlock(
+	BasicBlock *bb,
+	Inst *inst,
+	int& index,
+	genstruct::AllocatedTable<LBlock*> *lblocks
+) {
 	
-	for (CFG::BBIterator bb(cfg); bb; bb++) {
-		/* Compute the number of lblocks in this basic block */
-		if (bb->size() != 0) {
-		        
-		   /* The BasicBlock spans at least (bbsize-1)/blocksize cache block boundaries (add +1 for the number of l-blocks) */
-/*
-		   cout << "BB number: " << bb->number() << "\n";
-		   cout << "addr: " << bb->address() << "\n"; 
-		   cout << "taille: " << bb->size() - 1 << "\n"; 
-                */
-		   int num_lblocks = ((bb->size() - 1) >> cache->blockBits()) + 1;
-/*		   cout << "Original num: " << num_lblocks << "\n";  */
-
-		   /* The remainder of the last computation may also span another cache block boundary. */
-		   int temp1 = (bb->address().address() + (num_lblocks << cache->blockBits())) & ~(cache->blockSize() - 1);
-/*		   cout << "Fin arrondi au cacheblock sup': " << io::hex(temp1) << "\n";  */
-		   int temp2 = bb->address().address() + bb->size();
-/*		   cout << "Fin du bloc: " << io::hex(temp2) << "\n";  */
-		   if (temp1 < temp2) {
-                     num_lblocks++;
-                   }
-     
-                   BB_LBLOCKS(bb) = new genstruct::AllocatedTable<LBlock*>(num_lblocks);
-                } else {
-                   BB_LBLOCKS(bb) = NULL;
-                }	        
+	// compute the cache block ID
+	LBlockSet *lbset = lbsets[cache->line(inst->address())]; 
+	int block = cache->block(inst->address());
+	int cbid = cacheBlocks->get(block, -1);
+	if(cbid == -1) {
+    	cbid = lbset->newCacheBlockID();
+    	cacheBlocks->put(block, cbid);
     }
-        
-    tableindex = new int[cfg->countBB()];
-    for (int i = 0; i < cfg->countBB(); i++)
-    	tableindex[i] = 0;
-    
-	for(int i = 0; i < cache->rowCount(); i++)
-		processLBlockSet(fw, cfg, lbsets[i], cach, tableindex);
-	delete [] tableindex;	
+	
+	// Compute the size
+	Address top = (inst->address() + cache->blockMask()) & ~cache->blockMask();
+	if(top > bb->address() + bb->size())
+		top = bb->address() + bb->size();
+	
+	// Build the lblock
+	LBlock *lblock = new LBlock(
+			lbset,
+			inst->address(),
+			bb,
+			top - inst->address(),
+			cbid
+		);
+	lblocks->set(index, lblock); 											
+	index++;
+}
+
+
+/**
+ */
+void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
+	ASSERT(fw);
+	ASSERT(cfg);
+	ASSERT(bb);
+	
+	// Do not process entry and exit
+	if (bb->isEnd())
+		return;
+		
+	// Allocate the BB lblock table
+	int num_lblocks =
+		((bb->address() + bb->size() + cache->blockMask()) >> cache->blockBits())
+		- (bb->address() >> cache->blockBits());
+	genstruct::AllocatedTable<LBlock*> *lblocks =
+		new genstruct::AllocatedTable<LBlock*>(num_lblocks);
+	BB_LBLOCKS(bb) = lblocks;
+		
+	// Traverse instruction
+	int index = 0;
+	int block = -1;
+	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+		int new_block = cache->block(inst->address());
+		if(!inst->isPseudo() && new_block != block) {
+			addLBlock(bb, inst, index, lblocks);
+			block = new_block;
+		}
+	}
+	ASSERT(index == num_lblocks);
 }
 
 
