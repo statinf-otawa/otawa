@@ -41,8 +41,8 @@ extern Identifier<int> LOOP_COUNT;
 extern Identifier<int> COUNT;
 	
 // Subprograms
-ilp::Var *getVar(ilp::System *system, BasicBlock *bb);
-ilp::Var *getVar(ilp::System *system, Edge *edge);
+/*ilp::Var *getVar(ilp::System *system, BasicBlock *bb);
+ilp::Var *getVar(ilp::System *system, Edge *edge);*/
 
 // Feratures
 extern Feature<NoProcessor> INTERBLOCK_SUPPORT_FEATURE;
