@@ -70,12 +70,17 @@ namespace otawa { namespace ilp {
 
 
 /**
- * @fn void System::dump(elm::io::OutStream& out);
  * Dump the system to the given output. The dumping format depends upon the
  * actual used ILP engine. Usually, it is compatible with other tools of
  * the ILP engine.
  * @param out	Used output.
+ * @deprecated Use dumpSystem() and dumpSolution() instead.
  */
+void System::dump(elm::io::OutStream& out) {
+	io::Output output(out);
+	dumpSystem(output);
+	dumpSolution(output);
+}
 
 
 /**
@@ -89,6 +94,29 @@ namespace otawa { namespace ilp {
  * @fn int System::countConstraints(void);
  * Count the number of constraints in the system.
  * @return	Constraint count.
+ */
+
+
+/**
+ * @fn void System::exportLP(io::Output& out);
+ * Export the system to the given output using the LP format (lp_solve).
+ * @param out	Stream to export to (default to cout).
+ */
+
+
+/**
+ * Dump the system in text format (as a default, call exportLP).
+ * @param out	Stream to dump to (default to cout).
+ */
+void System::dumpSystem(io::Output& out) {
+	exportLP(out);
+}
+
+
+/**
+ * @fn void System::dumpSolution(io::Output& out);
+ * Dump the solution textually to the given output.
+ * @param out	Stream to output to (default to cout).
  */
 
 } // ilp
