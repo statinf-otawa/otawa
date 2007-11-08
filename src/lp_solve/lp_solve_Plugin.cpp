@@ -27,7 +27,7 @@ public:
  * Build the plugin.
  */
 Plugin::Plugin(void)
-: ILPPlugin("lp_solve", Version(1, 0, 0), OTAWA_ILP_VERSION) {
+: ILPPlugin("lp_solve", Version(1, 1, 0), OTAWA_ILP_VERSION) {
 }
 
 
