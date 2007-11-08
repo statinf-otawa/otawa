@@ -58,7 +58,7 @@ void TimeDeltaObjectFunctionModifier::processBB(
 		for(BasicBlock::InIterator edge(bb); edge; edge++) {
 			int time = TIME_DELTA(edge);
 			if(time)
-				system->addObjectFunction(time, getVar(system, edge));
+				system->addObjectFunction(time, VAR(edge));
 		}
 	}
 }

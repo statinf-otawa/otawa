@@ -140,47 +140,6 @@ Identifier<int> COUNT("otawa::ipet::count", -1);
  */
 ilp::System *getSystem(WorkSpace *fw, CFG *cfg) {
 	return SYSTEM(fw);
-	/*System *system = SYSTEM(fw);
-	if(!system) {
-		system = fw->newILPSystem();
-		if(!system)
-			throw elm::MessageException("no ILP engine available");
-		fw->addDeletable<System *>(SYSTEM, system);
-	}
-	return system;*/
-}
-
-
-/**
- * Get the variable tied to the given basic block. If none is tied, creates a
- * new one and ties it.
- * @param system	Current ILP system.
- * @param bb		Looked basic block.
- * @return			Tied variable.
- */
-ilp::Var *getVar(ilp::System *system, BasicBlock *bb) {
-	Var *var = bb->get<Var *>(VAR, 0);
-	if(!var) {
-		var = system->newVar();
-		bb->add(VAR, var);
-	}
-	return var;
-}
-
-/**
- * Get the variable tied to the given edge. If none is tied, creates a
- * new one and ties it.
- * @param system	Current ILP system.
- * @param edge		Looked edge.
- * @return			Tied variable.
- */
-ilp::Var *getVar(ilp::System *system, Edge *edge) {
-	Var *var = edge->get<Var *>(VAR, 0);
-	if(!var) {
-		var = system->newVar();
-		edge->add(VAR, var);
-	}
-	return var;
 }
 
 
