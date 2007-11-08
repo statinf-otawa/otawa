@@ -106,12 +106,12 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 	                // Create x_miss variable
 	                ilp::Var *miss;
 	                if(!_explicit)
-	                        miss = system->newVar();
+	                        miss = new ilp::Var();
 	                else {
 	                        StringBuffer buf1;
 	                        buf1 << "xmiss_" << lblock->address() << "," << i << "," << lblock->id() << ","<< lblock->bb()->number();
 	                        String name1 = buf1.toString();
-	                        miss = system->newVar(name1);
+	                        miss = new ilp::Var(name1);
 	                }
 	                MISS_VAR(lblock) = miss;
 	                

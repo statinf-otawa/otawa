@@ -71,7 +71,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 	CFG *called = 0;
 	System *system = SYSTEM(fw);
 	assert(system);
-	Var *bbv = getVar(system, bb);
+	Var *bbv = VAR( bb);
 		
 	// Input constraint
 	cons = system->newConstraint(Constraint::EQ);
@@ -79,7 +79,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 	used = false;
 	for(BasicBlock::InIterator edge(bb); edge; edge++)
 		if(edge->kind() != Edge::CALL) {
-			cons->addRight(1, getVar(system, edge));
+			cons->addRight(1, VAR(edge));
 			used = true;
 		}
 	if(!used)
@@ -91,7 +91,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 	used = false;
 	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 		if(edge->kind() != Edge::CALL) {
-			cons->addRight(1, getVar(system, edge));
+			cons->addRight(1, VAR(edge));
 			used = true;
 		}
 		else
@@ -106,7 +106,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 		if(!cons) {
 			cons = system->newConstraint(Constraint::EQ);
 			assert(cons);
-			cons->addLeft(1, getVar(system, called->entry()));
+			cons->addLeft(1, VAR(called->entry()));
 			CALLING_CONSTRAINT(called) = cons;
 		}
 		cons->addRight(1, bbv);
@@ -129,7 +129,7 @@ void BasicConstraintsBuilder::processWorkSpace(WorkSpace *fw) {
 	BasicBlock *entry = cfg->entry();
 	assert(entry);
 	Constraint *cons = system->newConstraint(Constraint::EQ, 1);
-	cons->addLeft(1, getVar(system, entry));
+	cons->addLeft(1, VAR(entry));
 };
 
 

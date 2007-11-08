@@ -118,24 +118,24 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 		// Create x_hit variable
 		ilp::Var *vhit;
 		if(!_explicit)
-			vhit = system->newVar();
+			vhit = new ilp::Var;
 		else {
 			StringBuffer buf;
 			buf << "xhit_" << lblock->address();
 			String namex = buf.toString();
-			vhit = system->newVar(namex);
+			vhit = new ilp::Var(namex);
 		}
 		HIT_VAR(lblock).add(vhit);
 		
 		// Create x_miss variable
 		ilp::Var *miss;
 		if(!_explicit)
-			miss = system->newVar();
+			miss = new ilp::Var;
 		else {
 			StringBuffer buf1;
 			buf1 << "xmiss_" << lblock->address();
 			String name1 = buf1.toString();
-			miss = system->newVar(name1);
+			miss = new ilp::Var(name1);
 		}
 		MISS_VAR(lblock).add(miss);
 	}
