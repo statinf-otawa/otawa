@@ -7,12 +7,11 @@
 #ifndef OTAWA_ILP_VAR_H
 #define OTAWA_ILP_VAR_H
 
-#include <elm/string.h>
 #include <elm/io.h>
 
 namespace otawa { namespace ilp {
 
-using namespace elm::io;
+using namespace elm;
 
 // Var class
 class Var {
@@ -20,8 +19,12 @@ class Var {
 public:
 	inline Var(void);
 	inline Var(const char *name);
-	inline Var(elm::String& name);
+	inline Var(const elm::String& name);
 	inline elm::String& name(void);
+	inline String makeName(void) {
+		if(_name) return _name;
+		else return _ << "0x" << (void *)this;
+	}
 };
 
 // Inlines
@@ -31,7 +34,7 @@ inline Var::Var(void) {
 inline Var::Var(const char *name): _name(name) {
 }
 
-inline Var::Var(elm::String& name): _name(name) {
+inline Var::Var(const elm::String& name): _name(name) {
 }
 
 inline elm::String& Var::name(void) {
@@ -39,8 +42,8 @@ inline elm::String& Var::name(void) {
 }
 
 // Output
-inline Output& operator<<(Output& out, Var *var) {
-	out << var->name();
+inline io::Output& operator<<(io::Output& out, Var *var) {
+	out << "ilp::Var(" << var->makeName() << ')';
 	return out;
 }
 

@@ -12,6 +12,8 @@
 
 namespace otawa { namespace lp_solve {
 
+using namespace elm;
+
 // External classes
 class Constraint;
 
@@ -26,6 +28,12 @@ public:
 	inline int column(void) const;
 	inline double value(void) const;
 	inline void setValue(double value);
+	string makeVarName(void) const {
+		if(var->name())
+			return var->name();
+		else
+			return _ << '_' << col;
+	}
 };
 
 // System class
@@ -52,11 +60,10 @@ public:
 	virtual void addObjectFunction(double coef, ilp::Var *var = 0);
 	virtual double valueOf(ilp::Var *var);
 	virtual double value(void);
-	virtual ilp::Var *newVar(elm::String name);
-	virtual void dump(elm::io::OutStream& out = elm::io::stdout);
 	virtual int countVars(void);
 	virtual int countConstraints(void);
-	
+	virtual void exportLP(io::Output& out = elm::cout);
+	virtual void dumpSolution(io::Output& out = elm::cout);
 };
 
 // System::Var Inlines
