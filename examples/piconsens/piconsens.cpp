@@ -233,7 +233,7 @@ void Command::compute(String fun) {
 				if(STAT(bb)) {
 					ilp::System *system = SYSTEM(fw);
 					node_cons = system->newConstraint(ilp::Constraint::EQ);
-					node_cons->addRight(1, ipet::getVar(system, bb));
+					node_cons->addRight(1, VAR(bb));
 					cons_used = false;
 					buildBoundConstraint(0, STAT(bb), 0, TIME(bb));
 					if(!cons_used)
@@ -241,7 +241,7 @@ void Command::compute(String fun) {
 					else
 						for(BasicBlock::InIterator edge(bb); edge; edge++)
 							if(!MARK(edge))
-								node_cons->addLeft(1, getVar(system, edge));
+								node_cons->addLeft(1, VAR(edge));
 				}
 			}
 		else 
@@ -503,7 +503,7 @@ void Command::addSuffixConstraints(
 			// add extra object function factor
 			int delta = time - TIME(tree->rootLabel());
 			ilp::System *system = SYSTEM(fw);
-			ilp::Var *var = system->newVar();
+			ilp::Var *var = new ilp::Var;
 			system->addObjectFunction(delta, var);
 			 
 			// Add edge constraints 
@@ -524,7 +524,7 @@ void Command::addSuffixConstraints(
 		 		// add constraint
 		 		ilp::Constraint *cons = system->newConstraint(ilp::Constraint::LE);
 		 		cons->addLeft(1, var);
-		 		cons->addRight(1, getVar(system, edge));
+		 		cons->addRight(1, VAR(edge));
 		 	}
 		}
 	}
@@ -637,7 +637,7 @@ int level, int min) {
 		
 		// add extra object function factor
 		ilp::System *system = SYSTEM(fw);
-		ilp::Var *var = system->newVar(buf.toString());
+		ilp::Var *var = new ilp::Var(buf.toString());
 		node_cons->addLeft(1, var);
 		cons_used = true;
 		system->addObjectFunction(node->max - min, var);
@@ -660,7 +660,7 @@ int level, int min) {
 		 	// add constraint
 		 	ilp::Constraint *cons = system->newConstraint(ilp::Constraint::LE);
 		 	cons->addLeft(1, var);
-		 	cons->addRight(1, getVar(system, edge));
+		 	cons->addRight(1, VAR(edge));
 		}
 	}
 }
