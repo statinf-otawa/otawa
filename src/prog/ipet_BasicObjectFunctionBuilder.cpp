@@ -66,7 +66,7 @@ void BasicObjectFunctionBuilder::processBB(
 		if(time < 0)
 			throw ProcessorException(*this, _ << "no time on BB " << bb->address()
 				<< " (" << bb->number() << " of " << &cfg->label());
-		system->addObjectFunction(time, getVar(system, bb));
+		system->addObjectFunction(time, VAR(bb));
 	}
 }
 
