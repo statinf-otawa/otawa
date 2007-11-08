@@ -215,20 +215,26 @@ bool System::solve(void) {
 	return result;
 }
 
+
 /**
- * !!TODO!!
- * Variable by this way cannot be fried. Must be fixed.
  */
-ilp::Var *System::newVar(elm::String name) {
-	return new ilp::Var(name);
+int System::countVars(void) {
+	return cols;
 }
 
 
 /**
  */
-void System::dump(elm::io::OutStream& _out) {
+int System::countConstraints(void) {
+	return rows;
+}
+
+
+/**
+ */
+void System::exportLP(io::Output& out) {
 	static CString texts[] = { "<", "<=", "=", ">=", ">" };
-	elm::io::Output out(_out);
+	out << "/* IPET system */\n"; 
 	
 	// Output the objective function
 	if(ofun->comparator() >= 0)
@@ -245,31 +251,21 @@ void System::dump(elm::io::OutStream& _out) {
 			<< " " << (int)cons->constant() << ";\n"; 
 	}
 	
-	// Output solution
-	genstruct::Vector<ilp::Var *> ilp_vars;
-	for(genstruct::HashTable<ilp::Var *, Var *>::KeyIterator var(vars); var; var++)
-		ilp_vars.add(*var);
-	for(int i = 0; i < ilp_vars.length(); i++) {
-		out << ilp_vars[i]->name() << " = ";
-		/*printf("!%g!\n", valueOf(ilp_vars[i]));
-	}*/
-		out << (int)valueOf(ilp_vars[i]) << "\n";
-	}
-	
+	// Output int constraints
+	for(genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
+	var; var++)
+		out << "int " << var->makeVarName() << ";\n";
 }
 
 
 /**
  */
-int System::countVars(void) {
-	return cols;
-}
-
-
-/**
- */
-int System::countConstraints(void) {
-	return rows;
+void System::dumpSolution(io::Output& out) {
+	out << "/* IPET solution */\n";
+	for(genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
+	var; var++)
+		out << var->makeVarName() << " = "
+			<< (int)var->value() << io::endl;
 }
 
 } }	// otawa::lp_solve

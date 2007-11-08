@@ -116,6 +116,12 @@ public:
 	inline int column(void) const;
 	inline double value(void) const;
 	inline void setValue(double value);
+	string makeVarName(void) const {
+		if(var->name())
+			return var->name();
+		else
+			return _ << '_' << col;
+	}
 };
 
 
@@ -139,10 +145,10 @@ public:
 	virtual void addObjectFunction(double coef, ilp::Var *var = 0);
 	virtual double valueOf(ilp::Var *var);
 	virtual double value(void);
-	virtual ilp::Var *newVar(elm::String name);
-	virtual void dump(elm::io::OutStream& out = elm::io::stdout);
 	virtual int countVars(void);
 	virtual int countConstraints(void);
+	virtual void exportLP(io::Output& out = elm::cout);
+	virtual void dumpSolution(io::Output& out = elm::cout);
 
 private:	
 	friend class Constraint;
@@ -479,20 +485,26 @@ bool System::solve(void) {
 	return result;
 }
 
+
 /**
- * !!TODO!!
- * Variable by this way cannot be fried. Must be fixed.
  */
-ilp::Var *System::newVar(elm::String name) {
-	return new ilp::Var(name);
+int System::countVars(void) {
+	return cols;
 }
 
 
 /**
  */
-void System::dump(elm::io::OutStream& _out) {
+int System::countConstraints(void) {
+	return rows;
+}
+
+
+/**
+ */
+void System::exportLP(io::Output& out) {
 	static CString texts[] = { "<", "<=", "=", ">=", ">" };
-	elm::io::Output out(_out);
+	out << "/* IPET system */\n"; 
 	
 	// Output the objective function
 	if(ofun->comparator() >= 0)
@@ -509,32 +521,21 @@ void System::dump(elm::io::OutStream& _out) {
 			<< " " << (int)cons->constant() << ";\n"; 
 	}
 	
-	// Output solution
-	genstruct::Vector<ilp::Var *> ilp_vars;
-	for(genstruct::HashTable<ilp::Var *, Var *>::KeyIterator var(vars); var; var++)
-		ilp_vars.add(*var);
-	for(int i = 0; i < ilp_vars.length(); i++) {
-		if(ilp_vars[i]->name())
-			out << ilp_vars[i]->name();
-		else
-			out << '_' << vars.get(ilp_vars[i], 0)->column();
-		out << " = " << (int)valueOf(ilp_vars[i]) << "\n";
-	}
-	
+	// Output int constraints
+	for(genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
+	var; var++)
+		out << "int " << var->makeVarName() << ";\n";
 }
 
 
 /**
  */
-int System::countVars(void) {
-	return cols;
-}
-
-
-/**
- */
-int System::countConstraints(void) {
-	return rows;
+void System::dumpSolution(io::Output& out) {
+	out << "/* IPET solution */\n";
+	for(genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
+	var; var++)
+		out << var->makeVarName() << " = "
+			<< (int)var->value() << io::endl;
 }
 
 
@@ -552,7 +553,7 @@ public:
  * Build the plugin.
  */
 Plugin::Plugin(void)
-: ILPPlugin("lp_solve5", Version(1, 0, 0), OTAWA_ILP_VERSION) {
+: ILPPlugin("lp_solve5", Version(1, 1, 0), OTAWA_ILP_VERSION) {
 }
 
 
