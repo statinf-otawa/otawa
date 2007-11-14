@@ -55,6 +55,15 @@ public:
 		const PropList& defaultEdgeStyle = PropList::EMPTY) const = 0;
 };
 
+
+// Exception class
+class Exception: public otawa::Exception {
+public:
+	inline Exception(const String& message)
+		: otawa::Exception(message) { }
+};
+
+
 // Configuration
 extern Identifier<kind_t> OUTPUT_KIND;
 extern Identifier<string> OUTPUT_PATH;
