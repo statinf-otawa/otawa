@@ -7,6 +7,10 @@ libodisplay_la_LIBADD= @OTAWA_LIBS@
 
 libodisplay_la_SOURCES = \
 	CFGDrawer.cpp \
+	display.cpp \
+	display_AbstractDrawer.cpp \
+	display_CFGAdapter.cpp \
+	display_GenDrawer.cpp \
 	display_Graph.cpp \
 	display_graphviz.cpp \
 	display_Plugin.cpp \
