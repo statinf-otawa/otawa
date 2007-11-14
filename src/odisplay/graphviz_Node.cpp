@@ -97,42 +97,42 @@ bool GraphVizNode::printAttribute(elm::io::Output &out, const PropList::Iter& pr
 		_shapeAcceptsBody = false;
 		out << "shape=";
 		switch(prop.get<int>()){
-			case SHAPE_RECORD:
+			case ShapeStyle::SHAPE_RECORD:
 				out << "record";
 				_shapeAcceptsBody = true;
 				break;
-			case SHAPE_MRECORD:
+			case ShapeStyle::SHAPE_MRECORD:
 				out << "Mrecord";
 				_shapeAcceptsBody = true;
 				break;
-			case SHAPE_BOX:
+			case ShapeStyle::SHAPE_BOX:
 				out << "box";
 				break;
-			case SHAPE_CIRCLE:
+			case ShapeStyle::SHAPE_CIRCLE:
 				out << "circle";
 				break;
-			case SHAPE_ELLIPSE:
+			case ShapeStyle::SHAPE_ELLIPSE:
 				out << "ellipse";
 				break;
-			case SHAPE_EGG:
+			case ShapeStyle::SHAPE_EGG:
 				out << "egg";
 				break;
-			case SHAPE_TRIANGLE:
+			case ShapeStyle::SHAPE_TRIANGLE:
 				out << "triangle";
 				break;
-			case SHAPE_TRAPEZIUM:
+			case ShapeStyle::SHAPE_TRAPEZIUM:
 				out << "trapezium";
 				break;
-			case SHAPE_PARALLELOGRAM:
+			case ShapeStyle::SHAPE_PARALLELOGRAM:
 				out << "parallelogram";
 				break;
-			case SHAPE_HEXAGON:
+			case ShapeStyle::SHAPE_HEXAGON:
 				out << "hexagon";
 				break;
-			case SHAPE_OCTAGON:
+			case ShapeStyle::SHAPE_OCTAGON:
 				out << "octagon";
 				break;
-			case SHAPE_DIAMOND:
+			case ShapeStyle::SHAPE_DIAMOND:
 				out << "diamond";
 				break;
 			default:
