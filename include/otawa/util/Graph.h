@@ -9,7 +9,7 @@
 
 #include <assert.h>
 #include <elm/Iterator.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/genstruct/FragTable.h>
 #include <elm/util/BitVector.h>
 #include <elm/genstruct/VectorQueue.h>
 
@@ -25,9 +25,10 @@ class Graph;
 class Graph {
 	friend class Node;
 	friend class Edge;
-	elm::genstruct::Vector<Node *> nodes;
+	elm::genstruct::FragTable<Node *> nodes;
 public:
 	~Graph(void);
+	inline int count(void) const { return nodes.count(); }
 	
 	// Mutator
 	void add(Node * node);
@@ -36,7 +37,7 @@ public:
 	void destroy(Edge *edge);
 	
 	// NodeIterator class
-	class NodeIterator: public elm::genstruct::Vector<Node *>::Iterator {
+	class NodeIterator: public elm::genstruct::FragTable<Node *>::Iterator {
 	public:
 		inline NodeIterator(const Graph *graph);
 		inline NodeIterator(const NodeIterator& iter);
@@ -124,11 +125,11 @@ public:
 
 // Graph::NodeIterator class
 inline Graph::NodeIterator::NodeIterator(const Graph *graph):
-elm::genstruct::Vector<Node *>::Iterator(graph->nodes) {
+elm::genstruct::FragTable<Node *>::Iterator(graph->nodes) {
 }
 
 inline Graph::NodeIterator::NodeIterator(const NodeIterator& iter)
-: elm::genstruct::Vector<Node *>::Iterator(iter) {
+: elm::genstruct::FragTable<Node *>::Iterator(iter) {
 }
 
 
