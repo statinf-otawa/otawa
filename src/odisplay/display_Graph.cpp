@@ -265,7 +265,92 @@ Identifier<string> OUTPUT_PATH("otawa::display::output_path", "");
  * $ otawa-config --libs display
  * @endcode
  * 
- * @par Common Properties
+ * @par Graph Look
+ * 
+ * The look of the graph is described using a set of object allowing
+ * to set the different display attributes.
+ * 
+ * @li @ref display::LineStyle : define the style and the color of the
+ * lines (supported by edges and nodes),
+ * @li @ref display::TextStyle : define the style, the color and the font
+ * of the displayed text (supported by edge labels, node contents and graph
+ * caption),
+ * @li @ref display::FillStyle : define the fill style and the color
+ * of the background (supported by graph and nodes),
+ * @li @ref display::ShapeStyle : define the shape of a node
+ * (includes the TextStyle, the FillStyle and the LineStyle).
+ * 
+ * @par GenDrawer class
+ * 
+ * The Gendrawer<G, D> class is the main entry point to use the display module.
+ * It accepts two generic arguments. The first one is the type of the
+ * displayed graph and must implement the concept
+ * @ref otawa::concept::DiGraphWithNodeMap. The second one gives the look
+ * of each item of the graph and must implement the concept display::Decorator.
+ * 
+ * To display a graph, you have to :
+ * @li provide a Decorator class,
+ * @li build the GenDrawer object,
+ * @li configure this object,
+ * @li launch the drawing using the GenDrawer::draw() method.
+ * 
+ * In the example below, we draw a CFG from OTAWA. As the CFG does not implement
+ * the DiGraphWithNodeMap concept, we use te display::CFGAdapter to wrap it.
+ * The nodes of the graph is displayed with their basic block number except
+ * for entry and exit that are described with diamond and name. The edges
+ * are displayed using dashed lines.
+ * 
+ * @code
+ * #include <otawa/cfg.h>
+ * #include <otawa/display/GenDrawer.h>
+ * #include <otawa/display/CFGAdapter.h>
+ * using namespace otawa::display;
+ * 
+ * class MyDecorator {
+ * public:
+ * class CFGDecorator {
+ * public:
+ *	static void decorate(
+ *		const display::CFGAdapter& graph,
+ *		Output& caption,
+ *		display::TextStyle& text,
+ *		display::FillStyle& fill)
+ *	{ caption << graph->label() << " CFG"; }
+ *	
+ *	static void decorate(
+ *		const display::CFGAdapter::Vertex vertex,
+ *		Output& content,
+ *		display::ShapeStyle& style)
+ *	{
+ * 		if(vertex->isEntry() || vertex->isExit())
+ * 			style.shape = ShapeStyle::SHAPE_DIAMOND;
+ * 		if(vertex->isEntry()) content << "ENTRY";
+ * 		else if(vertex->isExit()) content << "EXIT";
+ * 		else content << vertex->number();
+ *	}
+ *
+ *	static void decorate(
+ *		const display::CFGAdapter::Edge edge,
+ *		Output& label,
+ *		display::TextStyle& text,
+ *		display::LineStyle& line)
+ *	{ line.style = LineStyle::DASHED;
+ * };
+ * 
+ * CFG *my_cfg;
+ * CFGAdapter adapter(my_cfg);
+ * GenDrawer<CFGAdapter, MyDecorator> drawer(adapter);
+ * drawer.path = "my_cfg.ps";
+ * drawer.draw();
+ * @endcode
+ * 
+ * There exist other adapters like the display::GenGraphAdapter for the
+ * GenGraph class.
+ * 
+ * @par Old Properties
+ * This system of properties to describe the graph look is still supported but
+ * deprecated. It used in the CFGDrawer class.
+ * 
  * Most classes of this library use a common set of properties described here.
  * 
  * The first set concerns the selection of the displayed attributes.
@@ -297,7 +382,7 @@ Identifier<string> OUTPUT_PATH("otawa::display::output_path", "");
  * ODisplay is delivered with a driver for the GraphViz package using the DOT
  * textual format. This is the default driver and it accepts some specialized
  * properties:
- * @li @ref GRAPHVIZ_LAYOUT - layout of the displayed graph,
+ * @li @ref GRAPHVIZ_LAYOUT - layout of the displayed graph.
  */
 
 } }
