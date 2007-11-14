@@ -32,170 +32,74 @@ namespace otawa { namespace concept {
 class DiGraph: public Collection {
 public:
 
-	/** The type of the nodes. */
+	/** Vertex class. */
 	class Vertex {
-		
-		/**
-		 * Get the index of the vertex in the graph vertices list.
-		 * @return	Vertex index.
-		 */
-		int index(void);
-	};
-
-	/** The edge kind. */
-	class Edge {
 	public:
+		/** Get the output degree of the vertex. */
+		int outDegree(void) const;
 		
-		/**
-		 * Get the source of the edge.
-		 * @return	Source vertex.
-		 */
-		Vertex *source(void) const;
-		
-		/**
-		 * Get the sink node of the edge.
-		 * @return	Sink vertex.
-		 */
-		Vertex *sink(void) const;
+		/** Get the input degree of the vertex. */
+		int inDegree(void) const;
 	};
 	
+	/** Opaque type for the edges. */
+	class Edge {
+	public:
+		/** Get the source vertex of the edge. */
+		Vertex source(void) const;
+		
+		/** Get the sink vertex of the edge. */
+		Vertex sink(void) const;
+	};
+
 	/** Forward iterator on a node. */
-	class Forward: public Iterator<Edge *> {
+	class Successor: public Iterator<Edge> {
 	public:
 		
 		/**
 		 * Build the iterator on the outing edge of the source.
 		 * @param source	Source node.
 		 */
-		Forward(Vertex *source);
+		Successor(const Vertex& source);
 		
 		/**
 		 * Clone the given forward iterator.
 		 * @param forward	Iterator to clone.
 		 */
-		Forward(const Forward& forward);
-	};
-	
-	/**
-	 * Get the entry of the digraph.
-	 * @return	Entry vertex.
-	 */
-	Vertex *entry(void);
-	
-	/**
-	 * Get the count of vertices in the graph.
-	 * @return	Vertices count.
-	 */
-	int count(void);
-};
-
-
-/**
- * A graph that may be traversed in both directions.
- */
-class BiDiGraph: public DiGraph {
-public:
-	
-	/** Iterator back from a node. */
-	class Backward: public Iterator<Edge *> {
-	public:
-		
-		/**
-		 * Constructor from the sink node.
-		 * @param sink	Sink node.
-		 */
-		Backward(Vertex *sink);
-		
-		/**
-		 * Constructor by cloning.
-		 * @param backward	Iterator to clone.
-		 */
-		Backward(const Backward& backward);
-	};
-	
-	/**
-	 * In bidirectionnal digraph, the exit vertex.
-	 * @return	Exit vertex.
-	 */
-	Vertex *exit(void);
-};
-
-
-/**
- * A direction provides a way to traverse a graph. There is usually two
- * implementation: @ref otawa::graph::ForwardDirection and
- * @ref otawa::graph::BackwardDirection.
- * @param G	Type of graph.
- */
-template <class G>
-class Direction {
-public:
-	
-	/**
-	 * Get the start vertex to traverse the graph.
-	 * @return	Start vertex.
-	 */
-	G::Vertex *start(void);
-	
-	/** Iterator the next vertices. */
-	class Next: public Iterator<G::Vertex *> {
-	public:
-		
-		/**
-		 * Build the iterator on thegiven vertex.
-		 * @param vertex	Vertex to look for next vertics.
-		 */
-		Next(G::Vertex *vertex);
-		
-		/**
-		 * Build the iterator by cloning.
-		 * @param next	Iterator to clone.
-		 */
-		Next(const Next& next);
+		Successor(const Forward& forward);
 	};
 };
 
 
-/**
- * Concept of class that may process graphs.
- * @param G		Graph type (@ref DiGraph concept).
- */
-template <class G>
-class VertexProcessor {
-public:
-	
-	/**
-	 * Called to process a vertex.
-	 * @param graph		Container graph.
-	 * @param vertex	Current vertex.
-	 */
-	void process(G *graph, G::Vertex *vertex);
+/** Concept of directed graph providing a node map. */
+class DiGraphWithNodeMap: public DiGraph {
+public:	
+	/** Efficient map for the nodes. */
+	template <class T> class NodeMap: public Map<Node, T> { };
 };
 
 
-/**
- * All algorithm implementing a graph traversal must implement this concept.
- * @param P		Vertex processor type (@ref VertexProcessor concept).
- * @param G		Type of graph (@ref DiGraph concept).
- * @param D		Direction of traversal (@ref Direction concept).
- * 
- * The algorithm is used as in the example below:
- * @code
- * MyVertexProcessor processor;
- * MyGraph *graph;
- * MyAlgo<MyVertexProcessor, MyGraph> algo(processor, graph);
- * @endcode
- */
-template <class P, class G, template <class T> class D = ForwardDirection<T> >
-class TraversalAlgo {
+/** Concept of directed graph providing an edge map. */
+class DiGraphWithEdgeMap: public DiGraph {
 public:
-	
-	/**
-	 * Launch the traversal of the graph.
-	 * @param processor	Vertex processor to use.
-	 * @param graph		Graph to traverse.
-	 */
-	TraversalAlgo(P& processor, G *graph);
+	/** Efficient map for the edges. */
+	template <class T> class EdgeMap: public Map<Edge, T> { };
+};
+
+
+/** Directed graph with a unique entry point. */
+class DiGraphWithEntry: public DiGraph {
+public:
+	/** @return the entry vertex. */
+	Vertex entry(void);
+};
+
+
+/** Directed graph with a unique entry and exit points. */
+class DiGraphWithEntryAndExit: public DiGraphWithEntry {
+public:
+	/** @return the exit vertex. */
+	Vertex exit(void);
 };
 
 } } // otawa::concept
