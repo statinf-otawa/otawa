@@ -7,6 +7,7 @@ libotawa_la_LDFLAGS=
 libotawa_la_LIBADD=@GEL_LIBS@ @ELM_LIBS@
 
 libotawa_la_SOURCES = \
+	feature.h \
 	BlockAST.cpp \
 	FunAST.cpp \
 	ASTInfo.cpp \
@@ -33,6 +34,9 @@ libotawa_la_SOURCES = \
 	ilp_Constraint.cpp \
 	ilp_System.cpp \
 	ilp_ILPPlugin.cpp \
+	pfg_BB.cpp \
+	pfg_Edge.cpp \
+	pfg_PFG.cpp \
 	proc_Processor.cpp \
 	proc_CFGProcessor.cpp \
 	proc_Feature.cpp \
