@@ -8,6 +8,7 @@
 #define OTAWA_DISPLAY_GRAPH_H
 
 #include <otawa/properties.h>
+#include <otawa/display/display.h>
 
 namespace otawa { namespace display {
 
@@ -52,21 +53,6 @@ extern Identifier<elm::String> TITLE;
 extern Identifier<elm::String> BODY;
 
 // form_t enum
-typedef enum shape_t {
-	SHAPE_NONE = 0,
-	SHAPE_RECORD,
-	SHAPE_MRECORD,
-	SHAPE_BOX,
-	SHAPE_CIRCLE,
-	SHAPE_ELLIPSE,
-	SHAPE_EGG,
-	SHAPE_TRIANGLE,
-	SHAPE_TRAPEZIUM,
-	SHAPE_PARALLELOGRAM,
-	SHAPE_HEXAGON,
-	SHAPE_OCTAGON,
-	SHAPE_DIAMOND
-} shape_t;
 extern Identifier<int> SHAPE;
 
 
