@@ -110,7 +110,7 @@ void CFGDrawer::display(void){
  * @param edges PropList for the default properties of edges
  */
 void CFGDrawer::onInit(PropList& graph, PropList& nodes, PropList& edges){
-	SHAPE(nodes) = SHAPE_MRECORD;
+	SHAPE(nodes) = ShapeStyle::SHAPE_MRECORD;
 	FONT_SIZE(nodes) = 12;
 	FONT_SIZE(edges) = 12;
 	EXCLUDE(nodes).add(&INDEX);
@@ -124,7 +124,7 @@ void CFGDrawer::onInit(PropList& graph, PropList& nodes, PropList& edges){
  * @param node Node made. One can give some properties to it
  */
 void CFGDrawer::onNode(otawa::BasicBlock *bb, otawa::display::Node *node){
-	SHAPE(node) = SHAPE_MRECORD;
+	SHAPE(node) = ShapeStyle::SHAPE_MRECORD;
 
 	// make title
 	StringBuffer title;
