@@ -20,6 +20,8 @@ template <class N, class E> class GenEdge;
 template <class N, class E>
 class GenGraph: private graph::Graph {
 public:
+	typedef N _Node;
+	typedef E _Edge;
 
 	// GenNode class
 	class Node: private graph::Node {
@@ -54,6 +56,7 @@ public:
 	inline void remove(Node *node);
 	inline void destroy(Node *node);
 	inline void destroy(Edge *edge);
+	inline int count(void) const { return Graph::count(); }
 
 	// Successor class
 	class Successor: public elm::PreIterator<Successor, N *> {
