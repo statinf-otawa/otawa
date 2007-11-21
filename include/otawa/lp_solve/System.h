@@ -56,6 +56,7 @@ public:
 	// ilp::System overload
 	virtual ilp::Constraint *newConstraint(ilp::Constraint::comparator_t comp,
 		double constant = 0);
+	virtual ilp::Var *newVar(const string& name);
 	virtual bool solve(void);
 	virtual void addObjectFunction(double coef, ilp::Var *var = 0);
 	virtual double valueOf(ilp::Var *var);

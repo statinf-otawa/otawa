@@ -10,16 +10,22 @@
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/Feature.h>
 
-namespace otawa { namespace ipet {
+namespace otawa {
+
+namespace ilp { class System; }
+
+namespace ipet {
 
 // VarAsignment class
 class VarAssignment: public BBProcessor {
 	bool _explicit, _recursive;
+	ilp::System *sys;
 	String makeNodeVar(BasicBlock *bb, CFG *cfg);
 	String makeEdgeVar(Edge *edge, CFG *cfg);
 
 protected:
 	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+	virtual void setup(WorkSpace *ws);
 
 public:
 	VarAssignment(void);
