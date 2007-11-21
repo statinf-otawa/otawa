@@ -37,6 +37,11 @@ static Configuration explicit_conf(EXPLICIT, AUTODOC "/namespaceotawa_1_1ipet.ht
  */
 
 
+void VarAssignment::setup(WorkSpace *ws) {
+	sys = SYSTEM(ws);
+}
+
+
 /**
  * Perform the actual work on the given basic block.
  * @param bb	Basic block to process.
@@ -48,7 +53,7 @@ void VarAssignment::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 		String name = "";
 		if(_explicit)
 			name = makeNodeVar(bb, cfg);
-		VAR(bb) = new Var(name);
+		VAR(bb) = sys->newVar(name);
 	}
 	
 	// Check out edges
@@ -57,7 +62,7 @@ void VarAssignment::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 			String name = "";
 			if(_explicit)
 				name = makeEdgeVar(edge, cfg);
-			VAR(edge) = new Var(name);
+			VAR(edge) =sys-> newVar(name);
 		}
 	}
 }
@@ -71,6 +76,7 @@ VarAssignment::VarAssignment(void)
 	_explicit(false),
 	_recursive(false)
 {
+	require(ILP_SYSTEM_FEATURE);
 	provide(ASSIGNED_VARS_FEATURE);
 	config(	explicit_conf);
 }
@@ -82,7 +88,6 @@ void VarAssignment::configure(const PropList& props) {
 	BBProcessor::configure(props);
 	_explicit = EXPLICIT(props);
 	_recursive = otawa::RECURSIVE(props);
-	//cout << "_explicit = " << _explicit << io::endl;
 }
 
 

@@ -22,7 +22,7 @@ namespace otawa { namespace ilp {
  * Build a new constraint that may be initialized by the user. As the ILP system
  * manage the memory of the constraint, the constraint must never be deleted
  * by the user.
- * @param comp		Comparator used (one of ILP_xxx).
+ * @param comp		Comparator used (one of Constraint::LT, LE, EQ, GT, GE).
  * @param constant	Constant value.
  * @return			Built constraint.
  */
@@ -58,14 +58,6 @@ namespace otawa { namespace ilp {
  * @fn double System::value(void);
  * Return the value of the optimized object function.
  * @return	Object function optimum.
- */
-
-/**
- * @fn Var *System::newVar(void);
- * Build a new artifact variable, that is, a variable usable in the ILP system
- * but that is not linked to any other item from the OTAWA program
- * representation. Its life ends with the destruction of the ILP system.
- * @return	Created ILP variable.
  */
 
 
@@ -118,6 +110,37 @@ void System::dumpSystem(io::Output& out) {
  * Dump the solution textually to the given output.
  * @param out	Stream to output to (default to cout).
  */
+
+
+/**
+ * @fn Var *System::newVar(cstring name = "");
+ * Build a new variable.
+ * @param name	Name of the variable (may be an empty string for an anonymous
+ *				variable).
+ * @return		Built variable.
+ */
+
+
+/**
+ * Var *System::newVar(const string& name);
+ * Build a new variable.
+ * @param name	Name of the variable (may be an empty string for an anonymous
+ *				variable).
+ * @return		Built variable.
+ */
+
+
+/**
+ * Build a named constraint.
+ * @param label		Label of the constraint.
+ * @param comp		Used comparator (one of Constraint::LT, LE, EQ, GT, GE).
+ * @param constant	Used constant.
+ * @return			Built constraint.
+ */
+Constraint *System::newConstraint(const string& label,
+Constraint::comparator_t comp, double constant) {
+	return newConstraint(comp, constant);
+}
 
 } // ilp
 
