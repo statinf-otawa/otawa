@@ -34,9 +34,6 @@ libotawa_la_SOURCES = \
 	ilp_Constraint.cpp \
 	ilp_System.cpp \
 	ilp_ILPPlugin.cpp \
-	pfg_BB.cpp \
-	pfg_Edge.cpp \
-	pfg_PFG.cpp \
 	proc_Processor.cpp \
 	proc_CFGProcessor.cpp \
 	proc_Feature.cpp \
