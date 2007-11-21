@@ -114,7 +114,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 					<< '_' << lblock->bb()->cfg()->label();
 				namex = buf.toString();
 			}
-			ilp::Var *vhit = new ilp::Var(namex);
+			ilp::Var *vhit = system->newVar(namex);
 			HIT_VAR(lblock) = vhit;
 		
 			// Create x_miss variable
@@ -126,7 +126,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 					 << '_' << lblock->bb()->cfg()->label();
 			 	name1 = buf1.toString();
 			}
-			ilp::Var *miss = new ilp::Var(name1);
+			ilp::Var *miss = system->newVar(name1);
 			MISS_VAR(lblock) = miss;
 		}
 		
@@ -151,7 +151,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 						<< '_' << succ->lblock()->bb()->cfg()->label();
 				name = buf.toString();
 			}
-			VAR(succ.edge()) = new ilp::Var(name); 
+			VAR(succ.edge()) = system->newVar(name); 
 		}
 	}
 	
