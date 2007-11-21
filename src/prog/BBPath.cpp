@@ -275,10 +275,10 @@ ilp::Var* BBPath::getVar(System *system, bool explicit_names){
 	ilp::Var *var = VAR(this);
 	if(!var) {
 		if(explicit_names){
-			var = new ilp::Var(makeVarName());
+			var = system->newVar(makeVarName());
 		}
 		else {
-			var = new ilp::Var;
+			var = system->newVar();
 		}
 		set(VAR, var);
 	}

@@ -149,6 +149,11 @@ public:
 	virtual int countConstraints(void);
 	virtual void exportLP(io::Output& out = elm::cout);
 	virtual void dumpSolution(io::Output& out = elm::cout);
+	class LocalVar: public ilp::Var {
+	public:
+		inline LocalVar(const string& name): ilp::Var(name) { }
+	};
+	virtual ilp::Var *newVar(const string& name) { return new LocalVar(name); }
 
 private:	
 	friend class Constraint;

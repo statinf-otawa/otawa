@@ -268,5 +268,18 @@ void System::dumpSolution(io::Output& out) {
 			<< (int)var->value() << io::endl;
 }
 
+
+class LocalVar: public ilp::Var {
+public:
+	inline LocalVar(const string& name): ilp::Var(name) { }
+};
+
+
+/**
+ */
+ilp::Var *System::newVar(const string& name) {
+	return new LocalVar(name);
+}
+
 } }	// otawa::lp_solve
 
