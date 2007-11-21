@@ -503,7 +503,7 @@ void Command::addSuffixConstraints(
 			// add extra object function factor
 			int delta = time - TIME(tree->rootLabel());
 			ilp::System *system = SYSTEM(fw);
-			ilp::Var *var = new ilp::Var;
+			ilp::Var *var = system->newVar();
 			system->addObjectFunction(delta, var);
 			 
 			// Add edge constraints 
@@ -637,7 +637,7 @@ int level, int min) {
 		
 		// add extra object function factor
 		ilp::System *system = SYSTEM(fw);
-		ilp::Var *var = new ilp::Var(buf.toString());
+		ilp::Var *var = system->newVar(buf.toString());
 		node_cons->addLeft(1, var);
 		cons_used = true;
 		system->addObjectFunction(node->max - min, var);
