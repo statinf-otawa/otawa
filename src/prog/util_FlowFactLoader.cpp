@@ -94,6 +94,7 @@ FlowFactLoader::FlowFactLoader(void):
 void FlowFactLoader::configure (const PropList &props) {
 	Processor::configure(props);
 	path = FLOW_FACTS_PATH(props);
+	mandatory = FLOW_FACTS_MANDATORY(props);
 }
 
 
@@ -108,9 +109,13 @@ void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 
 	// Open the file
 	util_fft_in = fopen(&path, "r");
-	if(!util_fft_in)
-		throw ProcessorException(*this,
-			_ << "cannot open the constraint file \"" << path << "\".");
+	if(!util_fft_in) {
+		string msg = _ << "cannot open the constraint file \"" << path << "\".";
+		if(mandatory)
+			throw ProcessorException(*this, msg);
+		else
+			warn(msg);
+	}
 	
 	// Perform the parsing
 	util_fft_parse(this);
@@ -277,5 +282,12 @@ Identifier<bool> NO_RETURN("otawa::no_return", false);
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
  */
 Identifier<int> MAX_ITERATION("otawa::max_iteration", -1);
+
+
+/**
+ * In configuration of the FlowFactLoader, makes it fail if no flow fact
+ * fail is available.
+ */
+Identifier<bool> FLOW_FACTS_MANDATORY("otawa.flow_facts_mandatory", false);
 
 } // otawa
