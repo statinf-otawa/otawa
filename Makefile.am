@@ -17,7 +17,7 @@ ILP_PATH=$(libdir)/otawa/ilp
 ilp_default:
 if HAS_PLUGIN
 if HAS_ILP
-	test -e $(ILP_PATH)/default.la && rm -f $(ILP_PATH)/default.la
+	test -e $(ILP_PATH)/default.la && rm -f $(ILP_PATH)/default.la; \
 	ln -s $(ILP_PATH)/@ILP_DEFAULT@.la $(ILP_PATH)/default.la
 endif
 endif
