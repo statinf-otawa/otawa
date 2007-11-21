@@ -53,6 +53,7 @@ class FlowFactLoader: public Processor {
 	WorkSpace *_fw;
 	bool checksummed;
 	String path;
+	bool mandatory;
 	void onCheckSum(const String& name, unsigned long sum);
 protected:
 	void onError(const char *fmt, ...);
@@ -70,6 +71,7 @@ public:
 
 // Properties
 extern Identifier<elm::system::Path> FLOW_FACTS_PATH;
+extern Identifier<bool> FLOW_FACTS_MANDATORY;
 
 // Features
 extern Feature<FlowFactLoader> FLOW_FACTS_FEATURE;
