@@ -113,8 +113,10 @@ void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 		string msg = _ << "cannot open the constraint file \"" << path << "\".";
 		if(mandatory)
 			throw ProcessorException(*this, msg);
-		else
+		else {
 			warn(msg);
+			return;
+		}
 	}
 	
 	// Perform the parsing
