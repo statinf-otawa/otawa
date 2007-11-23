@@ -9,6 +9,7 @@
 
 #include <otawa/base.h>
 #include <otawa/sim/Driver.h>
+#include <otawa/prop/PropList.h>
 
 namespace otawa {
 
@@ -18,7 +19,7 @@ class Inst;
 namespace sim {
 
 // State class
-class State {
+class State: public PropList {
 protected:
 	virtual ~State(void);
 public:
