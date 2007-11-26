@@ -108,18 +108,20 @@ void Processor::init(const PropList& props) {
 		
 	// Process statistics
 	stats = STATS(props);
-	if(stats) { 
-		if(TIMED(props))
-			flags |= IS_TIMED;
-		else
-			flags &= ~IS_TIMED;
-	}
 	
 	// Process verbosity
 	if(VERBOSE(props))
 		flags |= IS_VERBOSE;
 	else
 		flags &= ~IS_VERBOSE;
+
+	// Process timing
+	if(isVerbose() || recordsStats()) {
+		if(TIMED(props))
+			flags |= IS_TIMED;
+		else
+			flags &= ~IS_TIMED;
+	}
 }
 
 
@@ -200,9 +202,10 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 		log << "Ending " << name();
 	if(isTimed()) {
 		swatch.stop();
-		RUNTIME(*stats) = swatch.delay();
+		if(recordsStats())
+			RUNTIME(*stats) = swatch.delay();
 		if(isVerbose()) 
-			log << " (" << (swatch.delay() / 1000) << "ms)" << io::endl;
+			log << " (" << ((double)swatch.delay() / 1000) << "ms)" << io::endl;
 	}
 	if(isVerbose()) 
 		log << io::endl;

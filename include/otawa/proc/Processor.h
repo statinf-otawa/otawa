@@ -158,7 +158,7 @@ inline bool Processor::isVerbose(void) const {
 }
 
 inline bool Processor::isTimed(void) const {
-	return stats && (flags & IS_TIMED);
+	return flags & IS_TIMED;
 }
 
 inline bool Processor::recordsStats(void) const {
