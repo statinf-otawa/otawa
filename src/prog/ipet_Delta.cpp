@@ -181,7 +181,15 @@ void Delta::processCFG(WorkSpace* fw, CFG* cfg){
 		/*if(truebbPath.tail()->countInstructions() < FLUSH_TIME(bbPath)){
 			bbPathVector.add(bbPathPtr);
 		}*/
-		if(!bbpath->tail()->isCall()) {
+		bool isCall = false;
+		for (BasicBlock::OutIterator outedge(bbpath->tail()); outedge; outedge++) {
+		        if (outedge->kind() == Edge::CALL) {
+		                break;
+                                isCall = true;
+                        }
+		}
+		
+		if(!isCall) {
 			bool cont = false;
 			if(levels)
 				cont = bbpath->length() < levels;
@@ -195,8 +203,9 @@ void Delta::processCFG(WorkSpace* fw, CFG* cfg){
 			if(cont) {
 				Vector<BBPath*> *toInsert = bbpath->nexts();
 				int l2 = toInsert->length();
-				for(int k = 0 ; k < l2 ; k++)
+				for(int k = 0 ; k < l2 ; k++) {
 					to_process.put(toInsert->get(k));
+                                }
 				delete toInsert;
 			}
 		}	 
