@@ -251,7 +251,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		// cache_block(uv) = cach_block(ij)
 		// (19) p(ij, ij) + p(uv, ij) <= xihit <= p(ij, ij) + p(uv, ij) + p(entry, ij) if p(entry, ij) and p(ij, exit)
 		// (20) p(ij, ij) + p(uv, ij) = xihit else
-		 cout << "pre-examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " findlooplb = " << findlooplb << "\n";
+		// cout << "pre-examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " findlooplb = " << findlooplb << "\n";
 	
 		
 		if (findlooplb) {
@@ -283,7 +283,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	//	 		unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
 		 		for(GenGraph<CCGNode,CCGEdge>::Predecessor inedge(CCG::NODE(lbloc));
 		 		inedge; inedge++) {
-		 			cout << "examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " avec predecesseur : " << inedge->lblock()->id() << "\n";
+		 			// cout << "examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " avec predecesseur : " << inedge->lblock()->id() << "\n";
 //		 			unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
 					if(inedge->lblock()->id() != 0
 					&& inedge->lblock()->id() != lbset->count() - 1){
