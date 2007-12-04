@@ -350,6 +350,7 @@ void Command::compute(String fun) {
 			CATConstraintBuilder decomp;
 			decomp.process(fw, props);
 		}
+		break;
 	
 	case icache_cat2:
 		{
@@ -369,15 +370,11 @@ void Command::compute(String fun) {
 			CAT2ConstraintBuilder decomp;
 			decomp.process(fw, props);
 		}
-	
-	case icache_none:
-		{
-			// Build the object function to maximize
-			BasicObjectFunctionBuilder fun_builder;
-			fun_builder.process(fw, props);	
-		}
-		break;
 	}
+	
+	// Build the object function to maximize
+	BasicObjectFunctionBuilder fun_builder;
+	fun_builder.process(fw, props);	
 
 	// Delta processing
 	if(bbtime_option == bbtime_delta) {
