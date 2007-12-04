@@ -39,7 +39,7 @@ public:
 		Constraint::comparator_t comp, double constant = 0);
 	virtual void addObjectFunction(double coef, Var *var = 0) = 0;
 	virtual Var *newVar(const string& name) = 0;
-	inline Var *newVar(cstring name = "") { return newVar(name); }
+	inline Var *newVar(cstring name = "") { return newVar(string(name)); }
 	
 	virtual bool solve(void) = 0;
 	virtual int countVars(void) = 0;
