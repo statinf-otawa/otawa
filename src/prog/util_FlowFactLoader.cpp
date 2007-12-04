@@ -33,38 +33,75 @@ namespace otawa {
 
 using namespace elm::system;
 
+extern int fft_line;
+
+
 /**
  * @page f4 F4 : Flow Facts File Format
  * 
  * This file format is used to store flow facts information, currently, the
  * loop bounds. The usual non-mandatory extension of F4 files is "ff".
  * 
- * F4 is a simple text format. It may contain comments a-la C++, that is, one
+ * @par Lexical Level
+ * 
+ * F4 is a simple plain text format. It may contain comments a-la C++, that is, one
  * line comments prefixed by "//" or enclosed comments between "/*" and "* /"."
  * Spaces and line format are not meaningful for other commands.
  * 
- * Other commands includes :
+ * @par Directives
  * 
- * @li "loop ADDRESS COUNT ;"
+ * @li <b><tt>loop ADDRESS COUNT ;</tt></b> @n
  * Declare that the loop whose header start at the
  * given address has the given maximal bound,
 
- * @li "checksum VALUE ;"
+ * @li <b><tt>checksum VALUE ;</tt></b> @n
  * This command is used to check the consistency
  * between the flow fact file and the matching executable file (it is the
  * Fletcher checksum of the executable file).
  * 
- * @li "return ADDRESS ;"
+ * @li <b><tt>return ADDRESS ;</tt></b> @n
  * Mark a complex control instruction as equivallent to sub-program return.
+ * 
+ * @li <b><tt>noreturn FUNCTION_ADDRESS ;</tt></b> @n
+ * Mark the function as non-returning like the standard C library "exit".
+ * 
+ * @li <b><tt>ignorecontrol ADDRESS ;</tt></b> @n
+ * Force to ignore the control effect of the addressed instruction.
+ * 
+ * @li <b><tt>multibranch ADDRESS to ADDRESS, ADDRESS, ... ;</tt></b> @n
+ * List the different tagets of a multi-target control instruction
+ * (function pointer call, switch-like construction).
+ * 
+ * @li <b><tt>nocall FUNCTION_ADDRESS ;</tt></b> @n
+ * Process each call to the given function as a non-control instruction.
+ * It may be useful to remove call to intrusive initialization function like
+ * "__eabi" in main.
+ * 
+ * @li <b><tt>preserve ADDRESS ;</tt></b> @n
+ * Ensure that flow fact loader will not change the addressed instruction.
+ * 
+ * @par Syntactic items
+ * 
+ * FUNCTION_ADDRESS may have one of the following form:
+ * @li INTEGER: integer address,
+ * @li STRING: double-quoted string that must match a program label,
+ * 
+ * ADDRESS may have one of the following form:
+ * @li INTEGER: integer address,
+ * @li STRING: double-quoted string that must match a program label,
+ * @li STRING <b><tt>+</tt></b> INTEGER: address relative to a label,
+ * @li STRING <b><tt>-</tt></b> INTEGER: address back-relative to a label.
+ * 
+ * INTEGER may have one of the following form:
+ * @li {DECIMAL_DIGIT}+: decimal integer
+ * @li <b><tt>0</tt></b>{OCTAL_DIGIT}+: octal integer
+ * @li <b><tt>0x</tt></b>{HEXADECIMAL_DIGIT}+: hexadecimal integer
+ * @li <b><tt>0b</tt></b>{BINARY_DIGIT}+: binary integer
  * 
  * @par To Come
  * @li "branch ADDRESS to ADDRESS ;"
  * @li "loop ADDRESS max COUNT min COUNT ;"
- * @li "multibranch ADDRESS to ADDRESS, ADDRESS, ... ;"
  * @li "recursive ADDRESS max COUNT min COUNT ;" 
- * @li "ignore ADDRESS ;"
- * @li "ignore call ADDRESS ;"
- * @li "ignore call NAME ;"
  * @li "entry ADDRESS ;"
  * @li "entry NAME ;"
  */
@@ -85,7 +122,10 @@ using namespace elm::system;
  */
 FlowFactLoader::FlowFactLoader(void):
 	Processor("otawa::util::FlowFactLoader", Version(1, 0, 0)),
-	checksummed(false) {
+	checksummed(false)
+{
+	provide(FLOW_FACTS_FEATURE);
+	provide(MKFF_PRESERVATION_FEATURE);
 }
 
 
@@ -120,6 +160,7 @@ void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 	}
 	
 	// Perform the parsing
+	fft_line = 1;
 	util_fft_parse(this);
 	
 	// Close all
@@ -133,29 +174,21 @@ void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 
 /**
  * This method is called when an error is encountered.
- * @param message	Message format a-la printf.
- * @param ...	Argument for the string format.
+ * @param message				Message of the error.
+ * @throw ProcessorException	With the given message and position in the file.
  */
-void FlowFactLoader::onError(const char *fmt, ...) {
-	VARARG_BEGIN(args, fmt)
-		StringBuffer buf;
-		buf.format(fmt, args);
-		throw ProcessorException(*this, buf.toString());
-	VARARG_END
+void FlowFactLoader::onError(const string& message) {
+	throw ProcessorException(*this,
+		_ << path << ": " << fft_line << ": " << message);
 }
 
 
 /**
  * This method is called when a warning need to be displayed.
- * @param fmt	Message format a-la printf.
- * @param ...	Argument for the string format.
+ * @param fmt	Message.
  */
-void FlowFactLoader::onWarning(const char *fmt, ...) {
-	VARARG_BEGIN(args, fmt)
-		StringBuffer buf;
-		buf.format(fmt, args);
-		warn(buf.toString());
-	VARARG_END	
+void FlowFactLoader::onWarning(const string& message) {
+	warn(_ << path << ": " << fft_line << ": " << message);
 }
 
 
@@ -196,8 +229,7 @@ void FlowFactLoader::onCheckSum(const String& name, unsigned long sum) {
 	}
 	
 	// Name not found
-	cout << "!!" << name << "!!" << io::endl;
-	onError("bad checksum: file not found: \"%s\".", &name);	
+	onError(_ << "bad checksum: file not found: \"" << name << "\".");	
 }
 
 
@@ -236,6 +268,87 @@ void FlowFactLoader::onNoReturn(String name) {
 
 
 /**
+ * Get the address of the given label.
+ * @param label					Label to look for.
+ * @return						Matching address.
+ * @throw ProcessorException	If the label cannot be found.
+ */
+Address FlowFactLoader::addressOf(const string& label) {
+	Address res = _fw->process()->findLabel(label);
+	if(res.isNull())
+		throw ProcessorException(*this,
+			_ << "label \"" << label << "\" does not exist.");
+	else
+		return res;
+}
+
+
+/**
+ * Called for the F4 production: "nocall ADDRESS".
+ * @param address	Address of the instruction to work on.
+ * @throw ProcessorException	If the instruction cannot be found.
+ */
+void FlowFactLoader::onNoCall(Address address) {
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		throw ProcessorException(*this,
+			_ << " no instruction at  " << address << ".");
+	else
+		NO_CALL(inst) = true;		
+}
+
+
+/**
+ * Called for the F4 production: "preserver ADDRESS".
+ * @param address	Address of instruction to preserve.
+ * @throw ProcessorException	If the instruction cannot be found.
+ */
+void FlowFactLoader::onPreserve(Address address) {
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		throw ProcessorException(*this,
+			_ << " no instruction at  " << address << ".");
+	else
+		PRESERVED(inst) = true;			
+}
+
+
+/**
+ * Called for the F4 construction "ignorecontrol ADDRESS"
+ * @param address	Address of the ignored instruction.
+ */
+void FlowFactLoader::onIgnoreControl(Address address) {
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		throw ProcessorException(*this,
+			_ << " no instruction at  " << address << ".");
+	else
+		IGNORE_CONTROL(inst) = true;			
+}
+
+
+/**
+ * Called for the F4 construction "multibranch ADDRESS to ADDRESS, ...".
+ * @param control	Multi-branch instruction address.
+ * @param target	List of targets.
+ */
+void FlowFactLoader::onMultiBranch(
+	Address control,
+	const Vector<Address>& targets
+) {
+	// Find the instruction
+	Inst *inst = _fw->process()->findInstAt(control);
+	if(!inst)
+		throw ProcessorException(*this,
+			_ << " no instruction at  " << control << ".");
+	
+	// List of targets
+	for(int i = 0; i < targets.length(); i++)
+		BRANCH_TARGET(inst).add(targets[i]);
+}
+
+
+/**
  * This property may be used in the configuration of a code processor
  * to pass the path of an F4 file containing flow facts.
  */
@@ -253,6 +366,16 @@ Identifier<Path> FLOW_FACTS_PATH("otawa::flow_facts_path", "");
  * @li @ref MAX_ITERATION
  */
 Feature<FlowFactLoader> FLOW_FACTS_FEATURE;
+
+
+/**
+ * This feature ensures that preservation information used by mkff is put
+ * on instruction.
+ * 
+ * @par Hooked Properties
+ * @li @ref PRESERVED
+ */
+Feature<FlowFactLoader> MKFF_PRESERVATION_FEATURE;
 
 
 /**
@@ -291,5 +414,48 @@ Identifier<int> MAX_ITERATION("otawa::max_iteration", -1);
  * fail is available.
  */
 Identifier<bool> FLOW_FACTS_MANDATORY("otawa.flow_facts_mandatory", false);
+
+
+/**
+ * Put on the first instruction of a function that must be no called.
+ * @par Features
+ * @li @ref FLOW_FACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ */
+Identifier<bool> NO_CALL("otawa::NO_CALL", false);
+
+
+/**
+ * Put on a control instruction to prevent it to be interpreted as is.
+ * @par Features
+ * @li @ref FLOW_fACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ */
+Identifier<bool> IGNORE_CONTROL("otawa::IGNORE_CONTROL", false);
+
+
+/**
+ * Put on instruction that may branch to several targets or whose target
+ * computation cannot computed. There is one property
+ * with this identifier for each branched target.
+ * @par Features
+ * @li @ref FLOW_fACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ */
+Identifier<Address> BRANCH_TARGET("otawa::BRANCH_TARGET", 0);
+
+
+/**
+ * Put on instruction that must preserved from the mkff special flow-fact
+ * detection.
+ * @par Features
+ * @li @ref MKFF_PRESERVATION_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ */
+Identifier<bool> PRESERVED("otawa::PRESERVED", false);
 
 } // otawa

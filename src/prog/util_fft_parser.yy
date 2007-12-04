@@ -22,9 +22,12 @@
 %{
 #include <otawa/util/FlowFactLoader.h>
 #include <elm/io.h>
+#include <elm/genstruct/Vector.h>
 using namespace elm;
+using namespace elm::genstruct;
 int util_fft_lex(void);
 void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
+static Vector<otawa::Address> addresses;
 %}
 
 %name-prefix="util_fft_"
@@ -34,8 +37,9 @@ void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 %parse-param {otawa::FlowFactLoader *loader}
 
 %union {
-	long _int;
+	int _int;
 	elm::String *_str;
+	otawa::Address *addr;
 }
 
 %token <_int> INTEGER
@@ -45,7 +49,12 @@ void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 %token BAD_TOKEN
 %token RETURN
 %token NORETURN
-
+%token KW_NOCALL
+%token KW_MULTIBRANCH
+%token KW_IGNORECONTROL
+%token KW_TO
+%token KW_PRESERVE
+%type<addr> full_address id_or_address
 
 %%
 
@@ -60,26 +69,52 @@ commands:
 ;
 
 command:
-	LOOP INTEGER INTEGER ';'
-		{
-			//cout << "loop " << (void *)$2 << ", " << $3 << "\n";
-			loader->onLoop((otawa::address_t)$2, $3);
-		}
+	LOOP full_address INTEGER ';'
+		{ loader->onLoop(*$2, $3); delete $2; }
 |	CHECKSUM STRING INTEGER ';'
 		{
 			//cout << "checksum = " << io::hex($2) << io::endl;
 			loader->onCheckSum(*$2, $3);
 			delete $2;
 		}
-|	RETURN INTEGER ';'
-		{ loader->onReturn($2); }
-|	NORETURN INTEGER ';'
-		{ loader->onNoReturn($2); }
-|	NORETURN STRING ';'
-		{
-			loader->onNoReturn(*$2);
-			delete $2;
-		}
+|	RETURN full_address ';'
+		{ loader->onReturn(*$2); delete $2; }
+|	NORETURN full_address ';'
+		{ loader->onNoReturn(*$2); delete $2; }
+|	KW_NOCALL id_or_address ';'
+		{ loader->onNoCall(*$2); delete $2; }
+|	KW_IGNORECONTROL full_address ';'
+		{ loader->onIgnoreControl(*$2); delete $2; }
+|	KW_MULTIBRANCH { addresses.setLength(0); } full_address KW_TO address_list ';'
+		{ loader->onMultiBranch(*$3, addresses); delete $3; }
+|	KW_PRESERVE full_address ';'
+		{ loader->onPreserve(*$2); delete $2; }
+;
+
+address_list:
+	full_address
+		{ addresses.add(*$1); delete $1; }
+|	address_list ',' full_address
+		{ addresses.add(*$3); delete $3; }
+;
+
+id_or_address:
+	INTEGER
+		{ $$ = new otawa::Address($1); }
+|	STRING
+		{ $$ = new otawa::Address(loader->addressOf(*$1)); }
+;
+
+
+full_address:
+	INTEGER
+		{ $$ = new otawa::Address($1); }
+|	STRING
+		{ $$ = new otawa::Address(loader->addressOf(*$1)); delete $1; }
+|	STRING '+' INTEGER
+		{ $$ = new otawa::Address(loader->addressOf(*$1) + $3); delete $1; }
+|	STRING '-' INTEGER
+		{ $$ = new otawa::Address(loader->addressOf(*$1) - $3); delete $1; }
 ;
 
 %%

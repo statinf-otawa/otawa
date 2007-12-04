@@ -25,6 +25,10 @@
 #include "util_fft_parser.h"
 
 elm::StringBuffer buf;
+namespace otawa {
+	int fft_line = 0;
+}
+
 %}
 
 %option noyywrap
@@ -35,6 +39,7 @@ DEC	[1-9][0-9]*
 OCT	0[0-7]*
 HEX	0[xX][0-9a-fA-F]+
 BIN 0[bB][0-1]+
+SYM [;,+-]
 
 %x ECOM
 %x TCOM
@@ -43,16 +48,21 @@ BIN 0[bB][0-1]+
 %%
 
 [ \t]	;
-\n		;
+\n		otawa::fft_line++;
 "//"		BEGIN(ECOM);
 "/*"		BEGIN(TCOM);
 
-[;]			return *yytext;
+{SYM}			return *yytext;
 
-"loop"		return LOOP;
-"checksum"	return CHECKSUM;
-"return"	return RETURN;
-"noreturn"	return NORETURN;
+"loop"			return LOOP;
+"checksum"		return CHECKSUM;
+"return"		return RETURN;
+"noreturn"		return NORETURN;
+"nocall"		return KW_NOCALL;
+"multibranch"	return KW_MULTIBRANCH;
+"ignorecontrol"	return KW_IGNORECONTROL;
+"to"			return KW_TO;
+"preserve"		return KW_PRESERVE;
 
 \"			BEGIN(STR);
 {DEC}		util_fft_lval._int = strtol(yytext, 0, 10); return INTEGER;
@@ -60,12 +70,13 @@ BIN 0[bB][0-1]+
 {HEX}		util_fft_lval._int = strtoul(yytext + 2, 0, 16); return INTEGER;
 {BIN}		util_fft_lval._int = strtol(yytext + 2, 0, 2); return INTEGER;
 
-.			return BAD_TOKEN;
+.			elm::cerr << "[" << *yytext << "]\n"; return BAD_TOKEN;
 
-<ECOM>\n	BEGIN(INITIAL);
+<ECOM>\n	BEGIN(INITIAL); otawa::fft_line++;
 <ECOM>.		;
 
 <TCOM>"*/"	BEGIN(INITIAL);
+<TCOM>\n	otawa::fft_line++;
 <TCOM>.		;
 
 <STR>\"		{
@@ -74,7 +85,7 @@ BIN 0[bB][0-1]+
 				BEGIN(INITIAL);
 				return STRING;
 			}
-<STR>\\n	buf << '\n';
+<STR>\\n	buf << '\n'; otawa::fft_line++;
 <STR>\\t	buf << '\t';
 <STR>\\.	buf << yytext;
 <STR>.		buf << *yytext;
