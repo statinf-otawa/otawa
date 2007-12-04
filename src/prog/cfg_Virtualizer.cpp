@@ -112,6 +112,7 @@ BasicBlock *exit) {
 	// Prepare data
 	elm::genstruct::HashTable<void *, BasicBlock *> map;
 	call_t call = { stack, cfg, 0 };
+	Vector<CFG *> called_cfgs;
 	
 	// Translate BB
 	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
@@ -140,7 +141,7 @@ BasicBlock *exit) {
 			assert(src);
 
 			// Is there a call ?			
-			CFG *called = 0;
+			// CFG *called = 0;
 			
 			BasicBlock *called_exit = 0;
 			if(isInlined())
@@ -159,9 +160,8 @@ BasicBlock *exit) {
 								vcalled->addBB(vcalled->exit());
 								vcalled->numberBB();
 							}  
-						} else {
-							called = edge->calledCFG();
-						}
+						} else if(edge->calledCFG())
+							called_cfgs.add(edge->calledCFG());
 					}
 						
 			// Look edges
@@ -185,7 +185,7 @@ BasicBlock *exit) {
 					else {
 						BasicBlock *tgt = map.get(edge->target(), 0);
 						assert(tgt);
-						if(called)
+						if(called_cfgs)
 							called_exit = tgt;
 						else
 							new Edge(src, tgt, edge->kind());
@@ -193,25 +193,37 @@ BasicBlock *exit) {
 				}
 			
 			// Process the call
-			if(called) {
-				for(call_t *cur = &call; cur; cur = cur->back)
-					if(cur->cfg == called) {
-						Edge *edge = new Edge(map.get(bb), cur->entry, Edge::VIRTUAL_CALL);
-						CALLED_CFG(edge) = cur->cfg;
-						RECURSIVE_LOOP(edge) = true;
+			if(called_cfgs) {
+				
+				// Process each call
+				for(Vector<CFG *>::Iterator called(called_cfgs); called; called++) {
+					
+					// Check recursivity
+					bool recursive = false;
+					for(call_t *cur = &call; cur; cur = cur->back)
+						if(cur->cfg == called) {
+							recursive = true;
+							Edge *edge = new Edge(map.get(bb), cur->entry, Edge::VIRTUAL_CALL);
+							CALLED_CFG(edge) = cur->cfg;
+							RECURSIVE_LOOP(edge) = true;
+							VIRTUAL_RETURN_BLOCK(src) = called_exit;
+							if(isVerbose())
+								out << "INFO: recursivity found at " << bb->address()
+									<< " to " << called->label() << io::endl;
+							break;
+						}
+					
+					// Virtualize the called CFG
+					if(!recursive) {
+						ASSERT(called_exit);
 						VIRTUAL_RETURN_BLOCK(src) = called_exit;
-						called = 0;
-						if(isVerbose())
-							out << "INFO: recursivity found at " << bb->address()
-								<< " to " << called->label() << io::endl;
-						break;
-					}
-				if(called) {
-					ASSERT(called_exit);
-					VIRTUAL_RETURN_BLOCK(src) = called_exit;
-					virtualize(&call, called, vcfg, src, called_exit);
+						virtualize(&call, called, vcfg, src, called_exit);
 
+					}
 				}
+				
+				// Reset the called list
+				called_cfgs.setLength(0);
 			}
 		}
 }
