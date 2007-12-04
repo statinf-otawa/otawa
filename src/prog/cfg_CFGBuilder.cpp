@@ -139,7 +139,7 @@ void CFGBuilder::addSubProgram(Inst *inst) {
  * Build the CFG for the given code.
  * @param code	Code to build the CFG for.
  */
-void CFGBuilder::buildCFG(Segment *seg) {
+void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 	assert(seg);
 	PseudoInst *pseudo;
 	
@@ -158,7 +158,7 @@ void CFGBuilder::buildCFG(Segment *seg) {
 	for(; item; item++) {
 		//cerr << "Processing " << item->address() << io::endl;
 		Inst *inst = item->toInst();
-		if(inst && inst->isControl()) {
+		if(inst && inst->isControl() && !IGNORE_CONTROL(inst)) {
 			
 			// Found BB starting on target instruction			
 			Inst *target = inst->target();
@@ -179,6 +179,19 @@ void CFGBuilder::buildCFG(Segment *seg) {
 				inst->dump(out);
 				cout << io::endl;
 			}
+			else
+				for(Identifier<Address>::Getter target(inst, BRANCH_TARGET);
+				target; target++) {
+					Inst *target_inst = ws->findInstAt(target);
+					if(target_inst) {
+						assert(!target_inst->isPseudo());
+						BasicBlock *bb = thisBB(target_inst);
+						assert(bb);
+						if(inst->isCall())
+							IS_ENTRY(bb) = true;
+					}
+				}
+					
 
 			// Found BB starting on next instruction
 			BasicBlock *bb = nextBB(inst);
@@ -217,11 +230,22 @@ void CFGBuilder::buildCFG(Segment *seg) {
 			
 				// Record the taken edge
 				Inst *target = inst->target();
-				if(target) {
+				if(target && (!inst->isCall() || !NO_CALL(target))) {
 					BasicBlock *target_bb = thisBB(target);
 					assert(target_bb);
 					new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
 				}
+				if(!target)
+					for(Identifier<Address>::Getter target(inst, BRANCH_TARGET);
+					target; target++) {
+						Inst *inst_target = ws->findInstAt(target);
+						if(inst_target) {
+							BasicBlock *target_bb = thisBB(inst_target);
+							assert(target_bb);
+							new Edge(bb, target_bb,
+								inst->isCall() ? EDGE_Call : EDGE_Taken);
+						}
+					}
 			
 				// Record BB flags
 				if(isReturn(inst))
@@ -243,9 +267,10 @@ void CFGBuilder::buildCFG(Segment *seg) {
 
 /**
  * Add a file to the builder.
+ * @param ws	Current workspace.
  * @param file	Added file.
  */
-void CFGBuilder::addFile(File *file) {
+void CFGBuilder::addFile(WorkSpace *ws, File *file) {
 	assert(file);
 	
 	// Scan file symbols
@@ -259,7 +284,7 @@ void CFGBuilder::addFile(File *file) {
 	// Scan file segments
 	for(File::SegIter seg(file); seg; seg++)
 		if(seg->isExecutable())
-			buildCFG(seg);
+			buildCFG(ws, seg);
 }
 
 
@@ -281,7 +306,7 @@ void CFGBuilder::buildAll(WorkSpace *fw) {
 	
 	// Compute CFG for each code piece
 	for(Process::FileIter file(fw->process()); file; file++)
-		addFile(file);
+		addFile(fw, file);
 	
 	// Build the CFGInfo
 	CFGInfo *info = new CFGInfo(fw);

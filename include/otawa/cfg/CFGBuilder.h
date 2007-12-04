@@ -23,8 +23,8 @@ class CFGBuilder: public Processor {
 	BasicBlock *nextBB(Inst *inst);
 	BasicBlock *thisBB(Inst *inst);
 	void addSubProgram(Inst *inst);
-	void buildCFG(Segment *seg);
-	void addFile(File *file);
+	void buildCFG(WorkSpace *ws, Segment *seg);
+	void addFile(WorkSpace *ws, File *file);
 	void buildAll(WorkSpace *fw);
 public:
 	CFGBuilder(void);
