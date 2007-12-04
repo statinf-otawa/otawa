@@ -1,8 +1,23 @@
 /*
- * $Id$
- * Copyright (c) 2005 IRIT-UPS
+ *	$Id$
+ *	ContextTree class interface
  *
- * include/otawa/util/ContextTree.h -- ContextTree class interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_CONTEXT_TREE_H
 #define OTAWA_CONTEXT_TREE_H
@@ -10,7 +25,7 @@
 #include <assert.h>
 #include <elm/datastruct/Vector.h>
 #include <otawa/properties.h>
-#include <otawa/proc/Processor.h>
+#include <otawa/proc/CFGProcessor.h>
 #include <otawa/proc/Feature.h>
 
 namespace otawa {
@@ -38,11 +53,11 @@ private:
 	ContextTree *_parent;
 	ContextTree(BasicBlock *bb, CFG *cfg, ContextTree *parent);
 	void addChild(ContextTree *tree);
-	void addBB(BasicBlock *bb);
+	void addBB(BasicBlock *bb, bool _inline);
 public:
 
 	// Methods
-	ContextTree(CFG *cfg, ContextTree *parent = 0);
+	ContextTree(CFG *cfg, ContextTree *parent = 0, bool _inline = true);
 	~ContextTree(void);
 	inline BasicBlock *bb(void) const;
 	inline kind_t kind(void) const;
@@ -62,15 +77,25 @@ public:
 
 
 // ContextTreeBuilder class
-
 class ContextTreeBuilder: public Processor {
 public:
 	ContextTreeBuilder(void);
+protected:
 	virtual void processWorkSpace(WorkSpace *fw);
+};
+
+
+// ContextTreeByCFGBuilder class
+class ContextTreeByCFGBuilder: public CFGProcessor {
+public:
+	ContextTreeByCFGBuilder(void);
+protected:
+	virtual void processCFG(WorkSpace *fw, CFG *cfg);	
 };
 
 // Features
 extern Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE;
+extern Feature<ContextTreeByCFGBuilder> CONTEXT_TREE_BY_CFG_FEATURE;
 
 // Identifiers
 extern Identifier<ContextTree *> CONTEXT_TREE;

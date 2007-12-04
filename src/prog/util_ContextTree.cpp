@@ -1,8 +1,23 @@
 /*
- * $Id$
- * Copyright (c) 2005 IRIT-UPS
+ *	$Id$
+ *	ContextTree class implementation
  *
- * src/prog/ContextTree.h -- ContextTree class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/util/ContextTree.h>
@@ -13,6 +28,9 @@
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/prog/WorkSpace.h>
+
+//#define TRACE(x) cerr << x << io::endl;
+#define TRACE(x)
 
 using namespace elm;
 
@@ -47,16 +65,16 @@ namespace otawa {
  * Build a new context tree for the given CFG.
  * @param cfg		CFG to build the context tree for.
  * @param parent	Parent context tree.
+ * @param _inline	If true, inline the call BB.
  */
-ContextTree::ContextTree(CFG *cfg, ContextTree *parent):
+ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 	_kind(ROOT),
 	_bb(cfg->entry()),
 	_parent(parent),
 	_cfg(cfg)
 {
 	assert(cfg);
-	//cerr << "Computing " << cfg->label() << "\n";
-	
+	TRACE("Computing " << cfg->label());
 	
 	/*
 	 * First, create a ContextTree for each loop.
@@ -64,7 +82,7 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent):
 	for (CFG::BBIterator bb(cfg); bb; bb++)
 		if (Dominance::isLoopHeader(bb)) {
 			OWNER_CONTEXT_TREE(bb) = new ContextTree(bb, cfg, this);
-			OWNER_CONTEXT_TREE(bb)->addBB(bb);
+			OWNER_CONTEXT_TREE(bb)->addBB(bb, _inline);
 		}
 	
 	/*
@@ -84,12 +102,12 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent):
 			/* Not loop header: add the BasicBlock to its ContextTree */		
 			if (!ENCLOSING_LOOP_HEADER(bb)) {
 				/* bb is not in a loop: add bb to the root ContextTree */
-				addBB(bb);
+				addBB(bb, _inline);
 				OWNER_CONTEXT_TREE(bb)=this;			
 			} else {
 				/* The bb is in a loop: add the bb to the loop's ContextTree. */
 				ContextTree *parent = OWNER_CONTEXT_TREE(ENCLOSING_LOOP_HEADER(bb));
-				parent->addBB(bb);
+				parent->addBB(bb, _inline);
 				OWNER_CONTEXT_TREE(bb) = parent;
 			}
 		}
@@ -126,14 +144,17 @@ ContextTree::~ContextTree(void) {
 /**
  * Add the given basic block to the context tree.
  * @param bb	Added BB.
+ * @param bb	If true, inline the call.
  */
-void ContextTree::addBB(BasicBlock *bb) {
+void ContextTree::addBB(BasicBlock *bb, bool _inline) {
+	ASSERT(bb);
+	TRACE("inline=" << _inline);
 	
 	// Add the BB
 	_bbs.add(bb);
 	
 	// Process call
-	if(bb->isCall())
+	if(_inline && bb->isCall())
 		for(BasicBlock::OutIterator edge(bb); edge; edge++)
 			if(edge->kind() == Edge::CALL && edge->calledCFG()) {
 				
@@ -156,14 +177,13 @@ void ContextTree::addBB(BasicBlock *bb) {
  * @param child	Context tree to add.
  */
 void ContextTree::addChild(ContextTree *child) {
-	assert(child);
+	ASSERT(child);
 	_children.add(child);
-	//child->_parent = this;
 
 	if(child->kind() == ROOT) {
-	  //cerr << "!!!" <<_cfg->label() << " calls " << child->cfg()->label() << io::endl;
+		TRACE("!!!" <<_cfg->label() << " calls " << child->cfg()->label());
 		child->_kind = FUNCTION;
-        }
+	}
 }
 
 
@@ -300,14 +320,63 @@ void ContextTreeBuilder::processWorkSpace(WorkSpace *fw) {
 
 
 /**
+ * @class ContextTreeByCFGBuilder
+ * Build a context tree for each CFG involved in the current computation.
+ * 
+ * @par Configuration
+ * none
+ *
+ * @par Required Features
+ * @li @ref DOMINANCE_FEATURE
+ * @li @ref LOOP_HEADERS_FEATURE
+ * @li @ref LOOP_INFO_FEATURE
+ * @li @ref COLLECTED_CFG_FEATURE
+ *
+ * @par Provided Features
+ * @li @ref CONTEXT_TREE_BY_CFG_FEATURE
+ *
+ * @par Statistics
+ * none
+ */
+
+
+/**
+ */
+ContextTreeByCFGBuilder::ContextTreeByCFGBuilder(void)
+: CFGProcessor("otawa::ContextTreeByCFGBuilder", Version(1, 0, 0)) {
+	require(DOMINANCE_FEATURE);
+	require(LOOP_HEADERS_FEATURE);
+	require(LOOP_INFO_FEATURE);
+	provide(CONTEXT_TREE_BY_CFG_FEATURE);
+}
+
+
+/**
+ */
+void ContextTreeByCFGBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
+	CONTEXT_TREE(cfg) = new ContextTree(cfg, 0, false);	
+}
+
+
+/**
  * This feature asserts that a context tree of the task is available in
  * the framework.
  * 
  * @par Properties
- * @li @ref CONTEXT_TREE (@ref FrameWork). 
- * @li @ref OWNER_CONTEXT_TREE (@ref BasicBlock).
+ * @li @ref CONTEXT_TREE (hooked to the @ref FrameWork). 
  */
 Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE("otawa::context_tree");
+
+
+/**
+ * Assert that a context tree has been built for each CFG involved in the
+ * current computation.
+ * 
+ * @par Properties
+ * @li @ref CONTEXT_TREE (hooked to the @ref CFG).
+ */
+Feature<ContextTreeByCFGBuilder>
+	CONTEXT_TREE_BY_CFG_FEATURE("otawa::context_tree_by_cfg");
 
 
 /**
@@ -323,8 +392,11 @@ Identifier<ContextTree *> CONTEXT_TREE("otawa::context_tree", 0);
 /**
  * Annotations with this identifier are hooked to basic blocks and gives
  * the owner context tree (ContextTree * data).
+ * 
  * @par Hooks
  * @li @ref BasicBlock
+ * 
+ * @deprecated	Not working without inlining.
  */
 Identifier<ContextTree *> OWNER_CONTEXT_TREE("otawa::owner_context_tree", 0);
 
