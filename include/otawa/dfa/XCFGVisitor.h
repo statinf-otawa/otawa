@@ -76,26 +76,33 @@ XCFGVisitor<D>::XCFGVisitor(CFGCollection& _cfgs, D& domain)
 	
 	// Record nodes and CFG next nodes
 	// !!NOTE!! Does not support CFG ending with a branch on another CFG
+	// !!TOCHECK!! For multicall
 	int bbi = 0, cfgi = 0;
 	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++, cfgi++)
 		for(CFG::BBIterator bb(cfg); bb; bb++, bbi++) {
 			nodes[bbi].bb = bb;
 			nodes[bbi].cfg = cfgi;
 			BasicBlock *next = 0;
-			CFG *called = 0;
+			//CFG *called = 0;
 			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-				if(edge->kind() == Edge::CALL)
-					called = edge->calledCFG(); 
-				else
-					next = edge->target();
+				if(edge->kind() == Edge::CALL) {
+					CFG *called = edge->calledCFG();
+					int called_index = INDEX(called);
+					nodes[bbi].to = offs[called_index];
+					nodes[offs[cfgi] + next->number()].from =
+						offs[called_index + 1] - 1;
+					preds[called_index].add(bbi);
+				}
+				/*else
+					next = edge->target();*/
 			}
-			if(called) {
+			/*if(called) {
 				int called_index = INDEX(called);
 				nodes[bbi].to = offs[called_index];
 				nodes[offs[cfgi] + next->number()].from =
 					offs[called_index + 1] - 1;
 				preds[called_index].add(bbi);
-			}
+			}*/
 		}
 }
 
