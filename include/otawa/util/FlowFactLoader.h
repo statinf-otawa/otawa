@@ -29,6 +29,7 @@
 #include <otawa/base.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Feature.h>
+#include <elm/genstruct/Vector.h>
 
 // Externals
 namespace otawa  {
@@ -40,7 +41,7 @@ void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 namespace otawa {
 
 using namespace elm;
-using namespace elm;
+using namespace elm::genstruct;
 
 // Extern class
 class File;
@@ -56,12 +57,18 @@ class FlowFactLoader: public Processor {
 	bool mandatory;
 	void onCheckSum(const String& name, unsigned long sum);
 protected:
-	void onError(const char *fmt, ...);
-	void onWarning(const char *fmt, ...);
-	void onLoop(address_t addr, int count);
-	void onReturn(address_t addr);
-	void onNoReturn(address_t addr);
-	void onNoReturn(String name);
+	Address addressOf(const string& label);
+	void onError(const string& message);
+	void onWarning(const string& message);
+	
+	virtual void onLoop(address_t addr, int count);
+	virtual void onReturn(address_t addr);
+	virtual void onNoReturn(address_t addr);
+	virtual void onNoReturn(String name);
+	virtual void onNoCall(Address address);
+	virtual void onIgnoreControl(Address address);
+	virtual void onMultiBranch(Address control, const Vector<Address>& target);
+	virtual void onPreserve(Address address);
 	
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void configure (const PropList &props);
@@ -75,11 +82,16 @@ extern Identifier<bool> FLOW_FACTS_MANDATORY;
 
 // Features
 extern Feature<FlowFactLoader> FLOW_FACTS_FEATURE;
+extern Feature<FlowFactLoader> MKFF_PRESERVATION_FEATURE;
 
 // Annotations
 extern Identifier<bool> IS_RETURN;
 extern Identifier<bool> NO_RETURN;
 extern Identifier<int> MAX_ITERATION;
+extern Identifier<bool> NO_CALL;
+extern Identifier<bool> IGNORE_CONTROL;
+extern Identifier<Address> BRANCH_TARGET;
+extern Identifier<bool> PRESERVED;
 
 } // otawa
 
