@@ -167,7 +167,7 @@ const hard::CacheConfiguration& Process::cache(void) {
  * @param label		Label to find.
  * @return			Found address or null.
  */
-address_t Process::findLabel(String& label) {
+address_t Process::findLabel(const string& label) {
 	address_t result = 0;
 	for(FileIter file(this); file; file++) {
 		//cerr << "Looking at " << file->name() << io::endl;
@@ -185,7 +185,7 @@ address_t Process::findLabel(String& label) {
  * @param label		Label to look for.
  * @return			Matching instruction or null.
  */
-Inst *Process::findInstAt(String& label) {
+Inst *Process::findInstAt(const string& label) {
 	address_t addr = findLabel(label);
 	if(!addr)
 		return 0;

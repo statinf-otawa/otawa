@@ -90,8 +90,8 @@ public:
 	virtual const hard::CacheConfiguration& cache(void);
 	virtual Inst *start(void) = 0;
 	virtual Inst *findInstAt(address_t addr);
-	virtual address_t findLabel(String& label);
-	virtual Inst *findInstAt(String& label);
+	virtual address_t findLabel(const string& label);
+	virtual Inst *findInstAt(const string& label);
 	inline File *program(void) const { return prog; }
 	virtual int instSize(void) const = 0;
 	virtual Processor *decoder(void);
