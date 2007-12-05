@@ -70,7 +70,7 @@ class HalfAbsInt {
 	bool fixpoint;
 	bool mainEntry;
 	
-	Identifier<typename FixPoint::FixPointState*> FIXPOINT_STATE;	
+	static Identifier<typename FixPoint::FixPointState*> FIXPOINT_STATE;	
 	inline bool isEdgeDone(Edge *edge);	
 	inline bool tryAddToWorkList(BasicBlock *bb);
 	Edge *detectCalls(bool &call_node, BasicBlock *bb);
@@ -89,10 +89,12 @@ class HalfAbsInt {
 	
 };
 
+template <class FixPoint>
+Identifier<typename FixPoint::FixPointState*> HalfAbsInt<FixPoint>::FIXPOINT_STATE("", NULL, otawa::NS);
 
 template <class FixPoint>
 inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, WorkSpace& _fw)
- : entry_cfg(*ENTRY_CFG(_fw)), cur_cfg(ENTRY_CFG(_fw)), in(_fp.bottom()), out(_fp.bottom()), fw(_fw), fp(_fp), FIXPOINT_STATE("", NULL, otawa::NS) {
+ : entry_cfg(*ENTRY_CFG(_fw)), cur_cfg(ENTRY_CFG(_fw)), in(_fp.bottom()), out(_fp.bottom()), fw(_fw), fp(_fp) {
 		workList = new elm::genstruct::Vector<BasicBlock*>();
 		callStack = new elm::genstruct::Vector<Edge*>();
 		cfgStack = new elm::genstruct::Vector<CFG*>();
