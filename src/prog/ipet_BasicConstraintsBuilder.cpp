@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	BasicConstraintsBuilder class implementation
  *
- *	src/ipet_BasicConstraintsBuilder.h -- BasicConstraintsBuilder class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/ilp.h>
@@ -58,6 +73,25 @@ Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::calling_constraint", 0
 
 
 /**
+ * Add the given variable to the entry constraint of the given CFG.
+ * @param system	Current ILP system.
+ * @param called	Looked CFG.
+ * @param var		Variable to add.
+ * @return			Entry CFG constraint.
+ */
+void BasicConstraintsBuilder::addEntryConstraint(System *system, CFG *called, Var *var) {
+	Constraint *cons = CALLING_CONSTRAINT(called);
+	if(!cons) {
+		cons = system->newConstraint(Constraint::EQ);
+		ASSERT(cons);
+		cons->addLeft(1, VAR(called->entry()));
+		CALLING_CONSTRAINT(called) = cons;
+	}
+	cons->addRight(1, var);
+}
+
+
+/**
  */
 void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb)
 {
@@ -86,6 +120,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 		delete cons;
 	
 	// Output constraint
+	bool many_calls = false;
 	cons = system->newConstraint(Constraint::EQ);
 	cons->addLeft(1, bbv);
 	used = false;
@@ -94,22 +129,46 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 			cons->addRight(1, VAR(edge));
 			used = true;
 		}
-		else
-			called = edge->calledCFG();
+		else {
+			if(!edge->calledCFG())
+				throw ProcessorException(*this, _ << "unresolved call at " << bb->address());
+			if(called)
+				many_calls = true;
+			else
+				called = edge->calledCFG();
+		}
 	}
 	if(!used)
 		delete cons;
 
 	// Process the call
 	if(called) {
-		cons = CALLING_CONSTRAINT(called);
-		if(!cons) {
-			cons = system->newConstraint(Constraint::EQ);
-			assert(cons);
-			cons->addLeft(1, VAR(called->entry()));
-			CALLING_CONSTRAINT(called) = cons;
+		
+		// Simple call
+		if(!many_calls)
+			addEntryConstraint(system, called, bbv);
+		
+		// Multiple calls
+		else {
+			Constraint *call_cons = system->newConstraint(Constraint::EQ);
+			ASSERT(call_cons);
+			call_cons->addLeft(1, bbv);
+			for(BasicBlock::OutIterator edge(bb); edge; edge++)
+				if(edge->kind() == Edge::CALL) {
+					CFG *called_cfg = edge->calledCFG();
+					
+					// Create the variable
+					String name;
+					if(_explicit)
+						name = _ << "call_" << bb->number() << '_' << cfg->label()
+							<< "_to_" << called_cfg->label();
+					Var *call_var = system->newVar(name);
+					
+					// Add the variable to the constraints
+					addEntryConstraint(system, called_cfg, call_var);
+					call_cons->addRight(1, call_var);
+				}
 		}
-		cons->addRight(1, bbv);
 	}	
 }
 
@@ -141,6 +200,12 @@ BasicConstraintsBuilder::BasicConstraintsBuilder(void)
 	provide(CONTROL_CONSTRAINTS_FEATURE);
 	require(ASSIGNED_VARS_FEATURE);
 	require(ILP_SYSTEM_FEATURE);
+}
+
+
+void BasicConstraintsBuilder::configure(const PropList &props) {
+	BBProcessor::configure(props);
+	_explicit = EXPLICIT(props);
 }
 
 
