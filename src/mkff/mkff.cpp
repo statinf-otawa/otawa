@@ -472,7 +472,8 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 				// Undefined branch target
 				if(!inst->target()) {
 					prepare(ws, cfg);
-					out << "multibranch 0x" << inst->address() << " to ?;";
+					out << "multibranch " << addressOf(cfg, inst->address())
+						<< " to ?;";
 					if(inst->isCall())
 						out << "\t// indirect call in "; 
 					else
