@@ -130,6 +130,19 @@ FlowFactLoader::FlowFactLoader(void):
 
 
 /**
+ * Constructor for inheritance.
+ * @param name		Name of the processor.
+ * @param version	Version of the processor.
+ */
+FlowFactLoader::FlowFactLoader(const string& name, const Version& version):
+	Processor(name, version), checksummed(false)
+{
+	provide(FLOW_FACTS_FEATURE);
+	provide(MKFF_PRESERVATION_FEATURE);	
+}
+
+
+/**
  */
 void FlowFactLoader::configure (const PropList &props) {
 	Processor::configure(props);
@@ -349,6 +362,26 @@ void FlowFactLoader::onMultiBranch(
 
 
 /**
+ * This method is called each the production "loop ADDRESS ?" is found.
+ * It usually emit an error.
+ * @param addr	Address of the loop entry.
+ */
+void FlowFactLoader::onUnknownLoop(Address addr) {
+	onError(_ << "no bound for loop at " << addr);
+}
+
+
+/**
+ * This method is called each the production "multibranch ADDRESS to ?" is found.
+ * It usually emit an error.
+ * @param control	Address of the control instruction.
+ */
+void FlowFactLoader::onUnknownMultiBranch(Address control) {
+	onError(_ << "undefined targets for multi-branch at " << control);
+}
+
+
+/**
  * This property may be used in the configuration of a code processor
  * to pass the path of an F4 file containing flow facts.
  */
@@ -445,7 +478,7 @@ Identifier<bool> IGNORE_CONTROL("otawa::IGNORE_CONTROL", false);
  * @par Hooks
  * @li @ref Inst
  */
-Identifier<Address> BRANCH_TARGET("otawa::BRANCH_TARGET", 0);
+Identifier<Address> BRANCH_TARGET("otawa::BRANCH_TARGET", Address());
 
 
 /**

@@ -55,12 +55,14 @@ class FlowFactLoader: public Processor {
 	bool checksummed;
 	String path;
 	bool mandatory;
-	void onCheckSum(const String& name, unsigned long sum);
 protected:
+	inline WorkSpace *workSpace(void) const { return _fw; }
+	
 	Address addressOf(const string& label);
 	void onError(const string& message);
 	void onWarning(const string& message);
 	
+	virtual void onCheckSum(const String& name, unsigned long sum);
 	virtual void onLoop(address_t addr, int count);
 	virtual void onReturn(address_t addr);
 	virtual void onNoReturn(address_t addr);
@@ -70,8 +72,13 @@ protected:
 	virtual void onMultiBranch(Address control, const Vector<Address>& target);
 	virtual void onPreserve(Address address);
 	
+	virtual void onUnknownLoop(Address addr);
+	virtual void onUnknownMultiBranch(Address control);
+	
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void configure (const PropList &props);
+	
+	FlowFactLoader(const string& name, const Version& version);
 public:
 	FlowFactLoader(void);
 };

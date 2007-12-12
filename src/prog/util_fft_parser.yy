@@ -71,6 +71,8 @@ commands:
 command:
 	LOOP full_address INTEGER ';'
 		{ loader->onLoop(*$2, $3); delete $2; }
+|	LOOP full_address '?' ';'
+		{ loader->onUnknownLoop(*$2); delete $2; }
 |	CHECKSUM STRING INTEGER ';'
 		{
 			//cout << "checksum = " << io::hex($2) << io::endl;
@@ -85,10 +87,17 @@ command:
 		{ loader->onNoCall(*$2); delete $2; }
 |	KW_IGNORECONTROL full_address ';'
 		{ loader->onIgnoreControl(*$2); delete $2; }
-|	KW_MULTIBRANCH { addresses.setLength(0); } full_address KW_TO address_list ';'
-		{ loader->onMultiBranch(*$3, addresses); delete $3; }
+|	KW_MULTIBRANCH { addresses.setLength(0); } multibranch
+		{ }
 |	KW_PRESERVE full_address ';'
 		{ loader->onPreserve(*$2); delete $2; }
+;
+
+multibranch:
+	full_address KW_TO address_list ';'
+		{ loader->onMultiBranch(*$1, addresses); delete $1; }
+|	full_address KW_TO '?' ';'
+		{ loader->onUnknownMultiBranch(*$1); delete $1; }
 ;
 
 address_list:
