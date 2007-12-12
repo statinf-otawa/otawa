@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Base declaration interface.
  *
- *	base.h -- base definition for Otawa framework.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_BASE_H
 #define OTAWA_BASE_H
@@ -15,13 +30,13 @@
 #include <elm/util/strong_type.h>
 #include <elm/util/AutoComparator.h>
 #include <elm/util/HashKey.h>
+#include <elm/types.h>
 
 namespace otawa {
 using namespace elm;
 
 // Base types
 typedef unsigned char byte_t;
-//STRONG_TYPE(address_t, unsigned long);
 typedef unsigned long size_t;
 typedef signed long offset_t;
 typedef unsigned long mask_t;
@@ -33,12 +48,13 @@ public:
 	typedef unsigned long page_t;
 	typedef unsigned long offset_t;
 	static Address null;
+	static const page_t null_page = elm::type_info<page_t>::max;
 
 	// Constructors
-	inline Address(void): pg(0), off(0) { }
+	inline Address(void): pg(null_page), off(0) { }
 	inline Address(offset_t offset): pg(0), off(offset) { }
 	inline Address(page_t page, offset_t offset)
-		: pg(page), off(offset) { }
+		: pg(page), off(offset) { ASSERT(page != null_page); }
 	inline Address(const Address& address)
 		: pg(address.pg), off(address.off) { }
 
@@ -46,7 +62,7 @@ public:
 	inline page_t page(void) const { return pg; }
 	inline offset_t offset(void) const { return off; }
 	inline offset_t operator*(void) const { return offset(); }
-	inline bool isNull(void) const { return this == &null; }
+	inline bool isNull(void) const { return pg == null_page; }
 	inline operator offset_t(void) const { return offset(); }
 
 	// Assignment
@@ -55,32 +71,33 @@ public:
 	inline Address& operator=(offset_t offset)
 		{ pg = 0; off = offset; return *this; }
 	inline Address& operator+=(int offset)
-		{ off += offset; return *this; }
+		{ ASSERT(!isNull()); off += offset; return *this; }
 	inline Address& operator+=(size_t offset)
-		{ off += offset; return *this; }
+		{ ASSERT(!isNull()); off += offset; return *this; }
 	inline Address& operator-=(int offset)
-		{ off -= offset; return *this; }
+		{ ASSERT(!isNull()); off -= offset; return *this; }
 	inline Address& operator-=(size_t offset)
-		{ off -= offset; return *this; }
+		{ ASSERT(!isNull()); off -= offset; return *this; }
 
 	// Operations
 	inline Address operator+(int offset) const
-		{ return Address(pg, off + offset); }
+		{ ASSERT(!isNull()); return Address(pg, off + offset); }
 	inline Address operator+(size_t offset) const
-		{ return Address(pg, off + offset); }
+		{ ASSERT(!isNull()); return Address(pg, off + offset); }
 	inline Address operator-(int offset) const
-		{ return Address(pg, off + offset); }
+		{ ASSERT(!isNull()); return Address(pg, off + offset); }
 	inline Address operator-(size_t offset) const
-		{ return Address(pg, off + offset); }
+		{ ASSERT(!isNull()); return Address(pg, off + offset); }
 	inline offset_t operator-(const Address& address) const {
+		ASSERT(!isNull()); 
 		ASSERT(pg == address.pg);
 		return off - address.off;
 	}
 
 	// Comparisons
-	inline bool equals(const Address& address)
+	inline bool equals(const Address& address) const
 		{ return pg == address.pg && off == address.off; }
-	inline int compare(const Address& address) {
+	inline int compare(const Address& address) const {
 		ASSERT(pg == address.pg);
 		return off - address.off;
 	}
@@ -89,7 +106,7 @@ public:
 	inline offset_t address(void) const { return off; }
 	
 private:
-	unsigned long pg;
+	page_t pg;
 	offset_t off;
 };
 typedef Address address_t;
@@ -105,12 +122,7 @@ namespace fmt {
 
 
 // Address display
-inline elm::io::Output& operator<<(elm::io::Output& out, Address addr) {
-	if(addr.page())
-		out << addr.page() << ':';
-	out << fmt::address(addr.offset());
-	return out;
-}
+elm::io::Output& operator<<(elm::io::Output& out, Address addr);
 
 
 // Exception class
@@ -124,9 +136,9 @@ public:
 
 // Useful ELM predefinitions
 namespace elm {
-	namespace xom {
+	/*namespace xom {
 		class Element;
-	} // xom
+	} // xom*/
 	
 	template <>
 	class HashKey<otawa::Address> {
