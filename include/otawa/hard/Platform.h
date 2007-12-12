@@ -27,6 +27,13 @@
 #include <otawa/hard/Register.h>
 #include <elm/datastruct/Collection.h>
 
+// External classes
+namespace elm {
+	namespace xom {
+		class Element;
+	}
+}
+
 namespace otawa {
 
 class Manager;
