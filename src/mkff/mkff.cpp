@@ -122,14 +122,14 @@ const char *nocall_labels[] = {
  * -# generate a first version: @c{$ mkff xxx > xxx.ff},
  * -# if required, fix the non-loop directives and removes the loop directives,
  * -# generate a new version: @c{$ mkff xxx >> xxx.ff},
- * -# remove the duplicated directives and restart at (2).
+ * -# while it remains unfixed non-loop,  restart at step 2.
  * 
  * In the second phase, you must fix the loop directives, that is, to replace
  * the question marks '?' by actual loop iteration bounds.
  */
 
-// Marker for processed sub-programs
-//static Identifier ID_Processed("mkff.processed");
+// Marker for recorded symbols
+static Identifier<bool> RECORDED("recorded", false);
 
 
 /**
@@ -221,7 +221,6 @@ protected:
 	bool one;
 	otawa::Manager manager;
 	WorkSpace *fw;
-	CFGInfo *info;
 	genstruct::Vector<String> added;
 	void perform(String name);
 };
@@ -250,6 +249,39 @@ protected:
 private:
 	void scanFun(ContextTree *ctree);
 	void scanLoop(CFG *cfg, ContextTree *ctree, int indent);
+	bool checkLoop(ContextTree *ctree);
+};
+
+
+// QuestFlowFactLoader class
+class QuestFlowFactLoader: public FlowFactLoader {
+public:
+	QuestFlowFactLoader(void)
+		: FlowFactLoader("QuestFlowFactLoader", Version(1, 0, 0)),
+		check_summed(false) { }
+
+	inline bool checkSummed(void) const { return check_summed; }
+	
+protected:
+
+	virtual void onCheckSum(const String& name, unsigned long sum) {
+		FlowFactLoader::onCheckSum(name, sum);
+		check_summed = true;
+	}
+
+	virtual void onUnknownLoop(Address addr) { record(addr); }
+	virtual void onUnknownMultiBranch(Address control) { record(control); }
+
+private:
+
+	void record(Address addr) {
+		Inst *inst = workSpace()->findInstAt(addr);
+		if(!inst)
+			onError(_ << "no instruction at " << addr);
+		RECORDED(inst) = true;		
+	}
+	
+	bool check_summed;
 };
 
 
@@ -262,7 +294,7 @@ static Command command;
  * @param name	Name of the function to process.
  */
 void Command::perform(String name) {
-	assert(name);
+	ASSERT(name);
 
 	// Configuration	
 	PropList props;
@@ -271,16 +303,22 @@ void Command::perform(String name) {
 	for(int i = 0; i < added.length(); i++)
 		CFGCollector::ADDED_FUNCTION(props).add(added[i].toCString());
 
+	// Load flow facts and record unknown values
+	QuestFlowFactLoader ffl;
+	ffl.process(fw, props);
+	
 	// Build the checksums of the binary files
-	for(Process::FileIter file(fw->process()); file; file++) {
-		checksum::Fletcher sum;
-		io::InFileStream stream(file->name());
-		sum.put(stream);
-		elm::system::Path path = file->name();
-		cout << "checksum \"" << path.namePart()
-			 << "\" 0x" << io::hex(sum.sum()) << ";\n";
+	if(!ffl.checkSummed()) {
+		for(Process::FileIter file(fw->process()); file; file++) {
+			checksum::Fletcher sum;
+			io::InFileStream stream(file->name());
+			sum.put(stream);
+			elm::system::Path path = file->name();
+			cout << "checksum \"" << path.namePart()
+				 << "\" 0x" << io::hex(sum.sum()) << ";\n";
+		}
+		cout << io::endl;
 	}
-	cout << io::endl;
 
 	// Display low-level flow facts
 	ControlOutput ctrl;
@@ -303,7 +341,6 @@ void Command::process(String arg) {
 		PropList props;
 		NO_SYSTEM(props) = true;
 		fw = manager.load(arg.toCString(), props);
-		info = fw->getCFGInfo();
 	}
 	
 	// Process function names
@@ -380,25 +417,20 @@ void FFOutput::scanFun(ContextTree *ctree) {
 	assert(ctree);
 	
 	// Display header
-	bool display = false;
-	for(Iterator<ContextTree *> child(ctree->children()); child; child++)
-		if(child->kind() == ContextTree::LOOP) {
-			display = true;
-			break;
-		}
-	if(display) {
+	if(checkLoop(ctree)) {
+		
+		// Display header
 		String label = ctree->cfg()->label();
 		if(!label)
 			label = _ << "0x" << ctree->cfg()->address(); 
 		cout << "// Function " << label << "\n";
+		
+		// Scan the loop
+		scanLoop(ctree->cfg(), ctree, 0);		
+		
+		// Displayer footer
+		cout << io::endl;
 	}
-
-	// Scan the content
-	scanLoop(ctree->cfg(), ctree, 0);		
-	
-	// Display footer
-	if(display)
-		cout << "\n";
 }
 
 
@@ -418,10 +450,28 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
 		if(child->kind() == ContextTree::LOOP) {
 			for(int i = 0; i < indent; i++)
 				cout << "  ";
-			cout << "loop " << addressOf(cfg, child->bb()->address()) << " ?;\n"; 
+			BasicBlock::InstIterator inst(child->bb());
+			if(RECORDED(inst) || MAX_ITERATION(inst) != -1)
+				cout << "// loop " << addressOf(cfg, child->bb()->address()) << io::endl;
+			else 
+				cout << "loop " << addressOf(cfg, child->bb()->address()) << " ?;\n"; 
 			scanLoop(cfg, child, indent + 1);
 		}
 	}
+}
+
+
+bool FFOutput::checkLoop(ContextTree *ctree) {
+	for(Iterator<ContextTree *> child(ctree->children()); child; child++) {
+		ASSERT(child->kind() != ContextTree::FUNCTION);
+		if(child->kind() == ContextTree::LOOP) {
+			BasicBlock::InstIterator inst(child->bb());
+			if((!RECORDED(inst) && MAX_ITERATION(inst) == -1)
+			|| checkLoop(child))
+				return true;
+		}
+	}
+	return false;
 }
 
 
@@ -467,18 +517,23 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 	// Look in BB
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		for(BasicBlock::InstIterator inst(bb); inst; inst++)
-			if(inst->isControl() && !PRESERVED(inst) && !inst->isReturn()) {
+			if(inst->isControl()
+			&& !inst->isReturn()
+			&& !RECORDED(inst)
+			&& !PRESERVED(inst)) {
 				
 				// Undefined branch target
 				if(!inst->target()) {
-					prepare(ws, cfg);
-					out << "multibranch " << addressOf(cfg, inst->address())
-						<< " to ?;";
-					if(inst->isCall())
-						out << "\t// indirect call in "; 
-					else
-						out << "\t// switch-like branch in ";
-					out << nameOf(cfg) << io::endl;
+					if(BRANCH_TARGET(inst).get().isNull()) {
+						prepare(ws, cfg);
+						out << "multibranch " << addressOf(cfg, inst->address())
+							<< " to ?;";
+						if(inst->isCall())
+							out << "\t// indirect call in "; 
+						else
+							out << "\t// switch-like branch in ";
+						out << nameOf(cfg) << io::endl;
+					}
 				}
 				
 				// call to next instruction
@@ -508,7 +563,8 @@ void ControlOutput::prepare(WorkSpace *ws, CFG *cfg) {
 /**
  */
 void ControlOutput::cleanup(WorkSpace *ws) {
-	out << io::endl;
+	if(one)
+		out << io::endl;
 }
 
 
