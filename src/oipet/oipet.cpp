@@ -36,6 +36,7 @@
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/display/CFGDrawer.h>
 #include <otawa/cfg/CFGCollector.h>
+#include <otawa/cfg/Virtualizer.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -43,6 +44,7 @@ using namespace otawa;
 using namespace otawa::ipet;
 using namespace otawa::hard;
 using namespace elm::option;
+using namespace elm::system;
 
 
 /*
@@ -132,6 +134,8 @@ using namespace elm::option;
  * @li -G, --dump-graph -- for each function involved in the task, generate a file named
  * function_name.ps containing the graph of the processed functions in DOT
  * file format.
+ * 
+ * @li -o, --output prefix -- prepend the given prefix to the dump files names.
  */
 
 // Options
@@ -219,6 +223,7 @@ BoolOption linkedblocks(command, 'l', "linkedblocks", "enable LinkedBlocksDetect
 BoolOption pseudounrolling(command, 'u', "pseudounrolling", "enable Pseudo-Unrolling (cat2 only)", false);
 BoolOption not_inlining(command, 'I', "do-not-inline", "do not inline function calls", false);
 static StringOption ilp_plugin(command, "ilp", "select the ILP solver", "solver name");
+static StringOption output_prefix(command, 'o', "output", "Prefix of output file names", "output prefix", "");
 
 
 /**
@@ -251,12 +256,12 @@ void Command::process (String arg) {
 void Command::compute(String fun) {
 	
 	// Get the VCFG
-	CFG *cfg = fw->getCFGInfo()->findCFG(fun);
+	/*CFG *cfg = fw->getCFGInfo()->findCFG(fun);
 	if(!cfg) {
 		cerr << "ERROR: binary file does not contain the function \""
 			 << fun << "\".\n";
 		return;
-	}
+	}*/
 	//VirtualCFG vcfg(cfg);
 	
 	if(not_inlining && icache_option == icache_ccg) {
@@ -267,13 +272,7 @@ void Command::compute(String fun) {
 	
 	// Prepare processor configuration
 	PropList props;
-	if(not_inlining)
-		ENTRY_CFG(props) = cfg;
-	else {
-		if(verbose)
-			cout << "NOTICE: OIPET: inlining the task !\n";
-		ENTRY_CFG(props) = new VirtualCFG(cfg);
-	}
+	TASK_ENTRY(props) = fun.toCString();
 	if(dump_constraints || dump_graph)
 		props.set(EXPLICIT, true);
 	if(verbose) {
@@ -282,6 +281,12 @@ void Command::compute(String fun) {
 	}
 	if(ilp_plugin)
 		ipet::ILP_PLUGIN_NAME(props) = ilp_plugin.value().toCString();
+	
+	// Virtualization
+	if(!not_inlining) {
+		Virtualizer virt;
+		virt.process(fw, props);
+	}
 	
 	// Compute BB times
 	switch(bbtime_option) {
@@ -399,7 +404,7 @@ void Command::compute(String fun) {
 	
 	// Dump the ILP system
 	if(dump_constraints) {
-		String out_file = fun + ".lp";
+		String out_file = _ << output_prefix.value() << fun << ".lp";
 		io::OutFileStream stream(&out_file);
 		if(!stream.isReady())
 			throw MessageException(_ << "cannot create file \"" << out_file
@@ -421,7 +426,7 @@ void Command::compute(String fun) {
 			if(verbose)
 				cout << "\tprocess CFG " << cfg->label() << io::endl;
 			StringBuffer buf;
-			buf << cfg->label() << ".ps";
+			buf << output_prefix.value() << cfg->label() << ".ps";
 			String filename = buf.toString();
 			display::OUTPUT_PATH(props) = filename.toCString();
 			display::CFGDrawer drawer(cfg, props);
