@@ -367,7 +367,9 @@ otawa::Inst *Process::decode(address_t addr) {
 			case ID_BC_:
 			case ID_BCA_:
 			case ID_BCCTR_:
-				kind |= Inst::IS_COND;
+				if(inst->instrinput[0].val.Uint5 != 20
+				&& inst->instrinput[1].val.Uint5 != 0)
+					kind |= Inst::IS_COND;
 				break;
 			case ID_BCLR_:
 				if(inst->instrinput[0].val.Uint5 == 20
