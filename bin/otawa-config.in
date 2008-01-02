@@ -82,6 +82,7 @@ while test "$1" != ""; do
 		;;
 	--doc)
 		doc=ok
+		option=ok
 		;;
 	--has-so)
 		exit @HAS_SO@
@@ -201,7 +202,7 @@ if [ "$ilp" == "ok" ]; then
 	paths="@ILP_PATHS@ $HOME/.otawa/ilp $PWD/.otawa/ilp"
 	for path in $paths; do
 		if [ -d "$path" ]; then
-			for plugin in $path/ilp/*.so; do
+			for plugin in $path/*.so; do
 				echo "${plugin%*.so} ($path)"
 				one="yes"
 			done
