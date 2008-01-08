@@ -272,6 +272,7 @@ AC_CONFIG_FILES([
 	src/arm/Makefile
 	src/ppc/Makefile
 	src/s12x/Makefile
+	src/bpred/Makefile
 	examples/Makefile
 	bin/Makefile
 	test/Makefile
