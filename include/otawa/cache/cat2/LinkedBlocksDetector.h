@@ -25,7 +25,6 @@
 
 #include <otawa/proc/Processor.h>
 #include <otawa/cache/cat2/CAT2Builder.h>
-#include <elm/genstruct/SortedSLList.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/cache/LBlock.h>
 #include <otawa/prop/Identifier.h>
@@ -34,18 +33,8 @@ namespace otawa {
 
 extern Identifier<genstruct::Vector<LBlock*> *> LINKED_BLOCKS;
 
-class NumberOrder {
-	public:
-	bool greaterThan(LBlock *lb1, LBlock *lb2) {
-		return(CATEGORY_HEADER(lb1)->number() < CATEGORY_HEADER(lb2)->number());
-	}
-};
-
-typedef genstruct::SortedSLList<LBlock*, NumberOrder> LinkedBlockList;
-
 class LinkedBlocksDetector : public otawa::Processor {
 	bool _explicit;
-	NumberOrder order;
 	void recordBlocks(Vector<LBlock*> *equiv);
 	public:
 	LinkedBlocksDetector(void);
