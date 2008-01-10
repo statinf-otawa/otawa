@@ -1,8 +1,23 @@
 /*
- * $Id$
- * Copyright (c) 2005 IRIT-UPS
+ *	$Id$
+ *	LoopInfoBuilder class implementation
  *
- * src/prog/ContextTree.h -- ContextTree class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/util/LoopInfoBuilder.h>
@@ -103,9 +118,45 @@ Identifier<elm::genstruct::Vector<Edge*>*> EXIT_LIST("otawa::exit_list", 0);
  * @par Statistics
  * none
  */
- 
+
+// LoopInfoProblem class
+class LoopInfoProblem {
+	class DominanceOrder {
+ 		public:
+ 		static inline int compare(BasicBlock *bb1, BasicBlock *bb2) {
+ 			if(bb1 == bb2)
+ 				return 0;
+ 			else if(Dominance::dominates(bb1, bb2))
+ 				return +1;
+ 			else
+ 				return -1;
+ 		}
+ 	};
+	CFG& _cfg;
+	genstruct::SortedSLList<BasicBlock *, DominanceOrder> headersLList;
+	genstruct::Vector<BasicBlock *> hdrs;
+
+ 	public:
+ 	LoopInfoProblem(CFG& cfg);
+ 	inline dfa::BitSet *empty(void) const;
+ 	dfa::BitSet *gen(BasicBlock *bb) const;
+ 	dfa::BitSet *kill(BasicBlock *bb) const;
+ 	bool equals(dfa::BitSet *set1, dfa::BitSet *set2) const;
+ 	void reset(dfa::BitSet *set) const;
+ 	void merge(dfa::BitSet *dst, dfa::BitSet *src) const;
+ 	void set(dfa::BitSet *dst, dfa::BitSet *src) const;
+ 	void add(dfa::BitSet *dst, dfa::BitSet *src) const;
+ 	void diff(dfa::BitSet *dst, dfa::BitSet *src);
+ 	inline int count(void) const;
+ 	inline BasicBlock *get(int index) const;
+#ifndef NDEBUG
+ 	void dump(elm::io::Output& out, dfa::BitSet *set);
+#endif 	
+ 	
+};
+
 /* Constructors/Methods for LoopInfoProblem */
-LoopInfoProblem::LoopInfoProblem(CFG& cfg): _cfg(cfg), headersLList(order) {
+LoopInfoProblem::LoopInfoProblem(CFG& cfg): _cfg(cfg), headersLList() {
 		
 		/*
 		 * Find all the headers of the CFG

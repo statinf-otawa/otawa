@@ -3,7 +3,7 @@
  *	LinkedBlocksDetector class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-07, IRIT UPS.
+ *	Copyright (c) 2003-08, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -33,20 +33,35 @@
 #include <otawa/hard/Platform.h>
 #include <otawa/ipet/TrivialInstCacheManager.h>
 #include <elm/util/Pair.h>
+#include <elm/genstruct/SortedSLList.h>
 
 #include <otawa/cache/cat2/ACSBuilder.h>
 #include <otawa/cache/cat2/CAT2Builder.h>
 #include <otawa/cache/cat2/LinkedBlocksDetector.h>
+
+
+
 
 using namespace otawa;
 using namespace otawa::ilp;
 using namespace otawa::ipet;
 
 namespace otawa {
-	
+
+
+// Ordered list
+class NumberOrder {
+public:
+	static inline int compare(LBlock *lb1, LBlock *lb2) {
+		return CATEGORY_HEADER(lb1)->number() - CATEGORY_HEADER(lb2)->number();
+	}
+};
+typedef genstruct::SortedSLList<LBlock*, NumberOrder> LinkedBlockList;
+
   
 /**
  * @class LinkedBlocksDetector
+ * @author C. Ballabriga <ballabri@irit.fr>
  *
  * This processor computes the list of l-blocks which are FIRST_MISS and occupies the same cache block.
  *
@@ -101,7 +116,7 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 				int cbid = lblock->cacheblock();
 				
 				if (blockList[cbid] == NULL)
-					blockList[cbid] = new LinkedBlockList(order);
+					blockList[cbid] = new LinkedBlockList();
 				blockList[cbid]->add(lblock);	
 			}
 		}
