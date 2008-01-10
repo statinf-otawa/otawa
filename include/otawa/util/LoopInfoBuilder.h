@@ -1,8 +1,23 @@
 /*
- * $Id$
- * Copyright (c) 2005 IRIT-UPS
+ *	$Id$
+ *	LoopInfoBuilder class interface
  *
- * include/otawa/util/LoopInfo.h -- Loop Info Processor.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_LOOP_INFO_BUILDER_H
 #define OTAWA_LOOP_INFO_BUILDER_H
@@ -28,7 +43,7 @@ extern Identifier<BasicBlock*> LOOP_EXIT_EDGE;
 extern Identifier<elm::genstruct::Vector<Edge*> *> EXIT_LIST;
 
 
- 
+// LoopInfoBuilder class
 class LoopInfoBuilder: public CFGProcessor {
 public:
         LoopInfoBuilder(void);
@@ -39,37 +54,6 @@ private:
 		 * Builds the EXIT_LIST property for all the loop headers.
 		 */
 		void buildLoopExitList(otawa::CFG* cfg);
-};
-
-class LoopInfoProblem {
-	class DominanceOrder {
- 		public:
- 		bool greaterThan(BasicBlock *bb1, BasicBlock *bb2) {
- 			return(Dominance::dominates(bb1, bb2));
- 		}
- 	};
-	CFG& _cfg;
-	DominanceOrder order;
-	genstruct::SortedSLList<BasicBlock *, DominanceOrder> headersLList;
-	genstruct::Vector<BasicBlock *> hdrs;
-
- 	public:
- 	LoopInfoProblem(CFG& cfg);
- 	inline dfa::BitSet *empty(void) const;
- 	dfa::BitSet *gen(BasicBlock *bb) const;
- 	dfa::BitSet *kill(BasicBlock *bb) const;
- 	bool equals(dfa::BitSet *set1, dfa::BitSet *set2) const;
- 	void reset(dfa::BitSet *set) const;
- 	void merge(dfa::BitSet *dst, dfa::BitSet *src) const;
- 	void set(dfa::BitSet *dst, dfa::BitSet *src) const;
- 	void add(dfa::BitSet *dst, dfa::BitSet *src) const;
- 	void diff(dfa::BitSet *dst, dfa::BitSet *src);
- 	inline int count(void) const;
- 	inline BasicBlock *get(int index) const;
-#ifndef NDEBUG
- 	void dump(elm::io::Output& out, dfa::BitSet *set);
-#endif 	
- 	
 };
 
 extern Feature<LoopInfoBuilder> LOOP_INFO_FEATURE;
