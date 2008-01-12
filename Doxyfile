@@ -416,9 +416,10 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = src/prog/ \
+INPUT                  = include/otawa/ \
+						 src/prog/ \
                          src/odisplay/ \
-                         include/otawa/ \
+                    	 src/bpred/BPredProcessor.cpp \
                          src/dumpcfg/dumpcfg.cpp \
                          src/ostat/ostat.cpp \
                     	 src/mkff/mkff.cpp
