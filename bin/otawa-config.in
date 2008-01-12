@@ -8,6 +8,7 @@ data=
 doc=
 ilp=
 loader=
+list_proc=
 list_modules=
 cflags_text="-I@prefix@/include"
 libs_text="@prefix@/lib/libotawa.la"
@@ -54,6 +55,11 @@ function config_arm {
 	DOC="ARM architecture loader"
 }
 
+function config_bpred {
+	KIND="proc"
+	DOC="branch prediction"
+}
+
 
 # Compute the module list
 modules="display"
@@ -63,6 +69,7 @@ modules="display"
 @HAS_GLISS_PPC_TRUE@	modules="$modules ppc"
 @HAS_GLISS_S12X_TRUE@	modules="$modules s12x"
 @HAS_GLISS_ARM_TRUE@	modules="$modules arm"
+@HAS_ILP_TRUE@				modules="$modules bpred"
 
 
 # Decode options
@@ -91,7 +98,7 @@ while test "$1" != ""; do
 		echo "@PACKAGE@ @VERSION@"
 		exit 1
 		;;
-	--help)
+	--help|-h)
 		;;
 	--ilp)
 		option=ok
@@ -104,6 +111,10 @@ while test "$1" != ""; do
 	--modules)
 		option=ok
 		list_modules=ok
+		;;
+	--proc)
+		option=ok
+		list_proc=ok
 		;;
 	-*)
 		echo "ERROR: unknown option '$1'."
@@ -129,6 +140,9 @@ while test "$1" != ""; do
 			lib)
 				LIB_STATIC="@prefix@/lib/libo$mod.la"
 				;;
+			proc)
+				LIB_STATIC="@prefix@/lib/otawa/proc/$mod.la"
+				;;
 			esac
 		fi
 		libs_text="$LIB_STATIC $libs_text"
@@ -153,6 +167,9 @@ while test "$1" != ""; do
 			lib)
 				LIB="@prefix@/lib/libo$mod.la"
 				;;
+			proc)
+				LIB="@prefix@/lib/otawa/proc/$mod.la"
+				;;
 			esac
 		fi
 		libs_text="$LIB $libs_text"
@@ -163,7 +180,7 @@ done
 
 # Check options
 if test "$option" == ""; then
-	echo "SYNTAX: otawa-config [--cflags] [--libs] [--data] [+]modules..."
+	echo "SYNTAX: otawa-config [-h|--help] [--cflags] [--libs] [--data] [+]modules..."
 	echo "	--cflags: display required compilation flags."
 	echo "	--data: display path to package data."
 	echo "	--doc: display path to the auto-documentation."
@@ -172,6 +189,7 @@ if test "$option" == ""; then
 	echo "	--libs: display required libs."
 	echo "	--loader: list loader plugins available."
 	echo "	--modules: list available modules."
+	echo "	--proc: list available processor collections."
 	echo "	+module: Link module statically, even if we have plugins."
 	echo "Modules may be:"
 	for mod in $modules; do
@@ -202,7 +220,7 @@ if [ "$ilp" == "ok" ]; then
 	paths="@ILP_PATHS@ $HOME/.otawa/ilp $PWD/.otawa/ilp"
 	for path in $paths; do
 		if [ -d "$path" ]; then
-			for plugin in $path/*.so; do
+			for plugin in `cd $path; ls *.so`; do
 				echo "${plugin%*.so} ($path)"
 				one="yes"
 			done
@@ -219,8 +237,25 @@ if [ "$loader" == "ok" ]; then
 	paths="@LOADER_PATHS@ $HOME/.otawa/loader $PWD/.otawa/loader"
 	for path in $paths; do
 		if [ -d "$path" ]; then
-			for plugin in $path/*.so; do
+			for plugin in ` cd $path; ls *.so`; do
 				echo "${plugin%*.so} ($path)"
+				one="yes"
+			done
+		fi
+	done
+	if [ "$one" == "no" ]; then
+		echo "no plugin found in [$paths]"
+	fi
+fi
+
+# --proc
+if [ "$list_proc" == "ok" ]; then
+	one="no"
+	paths="@prefix@/lib/otawa/proc $HOME/.otawa/proc $PWD/.otawa/proc"
+	for path in $paths; do
+		if [ -d "$path" ]; then
+			for plugin in `cd $path; ls *.la`; do
+				echo "${plugin%*.la} ($path)"
 				one="yes"
 			done
 		fi
