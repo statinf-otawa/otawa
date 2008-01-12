@@ -4,6 +4,7 @@ includeotawaipet_HEADERS = \
 	ConstraintLoader.h \
 	BasicObjectFunctionBuilder.h \
 	BBPath.h \
+	BPredProcessor.h \
 	BBTimeSimulator.h \
 	Delta.h \
 	FlowFactLoader.h \
