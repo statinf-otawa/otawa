@@ -1,11 +1,14 @@
+procdir=$(libdir)/otawa/proc
+
 AM_CXXFLAGS = @OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@
 
-lib_LTLIBRARIES = libbpred.la
+proc_LTLIBRARIES = bpred.la
 
-libbpred_la_LIBADD = @OTAWA_LIBS@
-libbpred_la_DEPENDENCIES = @OTAWA_DEPS@
+bpred_la_LDFLAGS = -module
+bpred_la_LIBADD = @OTAWA_LIBS@
+bpred_la_DEPENDENCIES = @OTAWA_DEPS@
 
-libbpred_la_SOURCES = \
+bpred_la_SOURCES = \
 					  BBHG.cpp \
 					  BBHGDrawer.h \
 					  BBHGDrawer.cpp \
