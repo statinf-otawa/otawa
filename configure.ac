@@ -68,6 +68,12 @@ AS_IF(test "$HAS_PLUGIN" = "yes", [ AC_ENABLE_SHARED ], [ AC_DISABLE_SHARED ])
 AC_LIBTOOL_DLOPEN
 AC_PROG_LIBTOOL
 
+
+# ==== sed lookup ====
+AC_CHECK_PROG(HAS_SED, sed, yes)
+AM_CONDITIONAL(HAS_SED, test "$HAS_SED" = "yes")
+
+
 # ==== Endianness ====
 AC_C_BIGENDIAN(
 	[IS_BIG="1"],
@@ -323,12 +329,18 @@ AC_CONFIG_FILES([
 	include/otawa/sim/Makefile
 	include/otawa/util/Makefile
 	data/Makefile
-	data/procs/Makefile
 	data/caches/Makefile
+	data/makefiles/Makefile
+	data/procs/Makefile
 ])
-AC_CONFIG_FILES([bin/otawa-config], [], [
+AC_CONFIG_FILES([
+	bin/otawa-config
+	bin/otawa-new
+], [], [
 	echo "setting +x to bin/otawa-config"
 	chmod +x bin/otawa-config
+	echo "setting +x to bin/otawa-new"
+	chmod +x bin/otawa-new
 ])
 AC_OUTPUT()
 
