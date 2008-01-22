@@ -116,6 +116,10 @@ while test "$1" != ""; do
 		option=ok
 		list_proc=ok
 		;;
+	--prefix)
+		echo "@prefix@"
+		exit 0
+		;;
 	-*)
 		echo "ERROR: unknown option '$1'."
 		exit 1
@@ -189,6 +193,7 @@ if test "$option" == ""; then
 	echo "	--libs: display required libs."
 	echo "	--loader: list loader plugins available."
 	echo "	--modules: list available modules."
+	echo "  --prefix: get the prefix of installation."
 	echo "	--proc: list available processor collections."
 	echo "	+module: Link module statically, even if we have plugins."
 	echo "Modules may be:"
