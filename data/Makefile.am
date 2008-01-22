@@ -1,3 +1,4 @@
 SUBDIRS = \
-	procs \
-	caches
+	caches \
+	makefiles \
+	procs
