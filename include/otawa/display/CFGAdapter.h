@@ -30,6 +30,7 @@ namespace otawa { namespace display {
 class CFGAdapter {
 public:
 
+	// DiGraph concept
 	class Vertex {
 	public:
 		inline Vertex(BasicBlock *_bb): bb(_bb) { }
@@ -47,7 +48,7 @@ public:
 	
 	class Successor: public PreIterator<Successor, Edge> {
 	public:
-		inline Successor(Vertex source): iter(source.bb) { }
+		inline Successor(const CFGAdapter& ad, Vertex source): iter(source.bb) { }
 		inline Successor(const Successor& succ): iter(succ.iter) { }
 		inline bool ended(void) const { return iter.ended(); }
 		inline Edge item(void) const { return Edge(*iter); }
@@ -56,6 +57,7 @@ public:
 		BasicBlock::OutIterator iter;
 	};
 	
+	// Collection concept
 	class Iterator: public PreIterator<Iterator, Vertex> {
 	public:
 		inline Iterator(const CFGAdapter& adapter): iter(adapter.cfg) { }
@@ -67,10 +69,11 @@ public:
 		CFG::BBIterator iter;
 	};
 	
+	// DiGraphWithVertexMap concept
 	template <class T>
-	class NodeMap {
+	class VertexMap {
 	public:
-		inline NodeMap(const CFGAdapter& adapter)
+		inline VertexMap(const CFGAdapter& adapter)
 			: vals(new T[adapter.count()]) { }
 		inline const T& get(const Vertex& vertex) const
 			{ return vals[vertex.bb->number()]; }
