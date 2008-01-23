@@ -11,8 +11,7 @@ namespace otawa {
 	
 using namespace elm::io;
 
-class PCG
-{
+class PCG: public PropList {
 	CFG * cfg;
 protected:	
 	genstruct::Vector<PCGBlock *> _pcgbs;

@@ -7,8 +7,7 @@
 #include <elm/Iterator.h>
 
 namespace otawa {
-class PCGBlock 
-{
+class PCGBlock: public PropList {
 	BasicBlock *bb;
 	elm::genstruct::Vector<PCGBlock *> ins, outs;
 	CFG* cfg;
