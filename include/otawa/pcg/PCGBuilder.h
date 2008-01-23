@@ -13,6 +13,11 @@ namespace otawa{
 
 class PCGBuilder: public Processor
 {
+	typedef struct stack_t {
+		struct stack_t *up;
+		CFG *cfg;
+	} stack_t;
+
 	elm::genstruct::HashTable <void *, PCGBlock *> mapCFG;
 	elm::genstruct::HashTable <void *, PCGBlock *> mapBB;
 
@@ -22,7 +27,7 @@ class PCGBuilder: public Processor
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void processCFG(CFG* cfg, PCG *pcg, CFG*src);
+	virtual void processCFG(CFG* cfg, PCG *pcg, CFG*src, stack_t *up);
 
 public:	
 	PCGBuilder(void);
