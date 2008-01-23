@@ -23,7 +23,7 @@ using namespace otawa;
 #endif
 
 namespace otawa {
- 
+
 /*
  * Get the main CFG, build the corresponding PCG and print it to sceen.
  * @class PCGBlock
@@ -32,7 +32,7 @@ PCG* PCGBuilder::buildPCG(CFG *cfg)
 {
 	assert(cfg);
 	PCG *pcg=new PCG(cfg);
-	processCFG(cfg,pcg,NULL);
+	processCFG(cfg,pcg,NULL, 0);
 	
 	//cout<<"nb outs de main: "<<(((pcg->pcgbs()).get(0))->getSons()).length()<<"\n";
 	//cout<<"nb pcgb: "<<pcg->pcgbs().length()<<"\n";	
@@ -63,10 +63,19 @@ PCG* PCGBuilder::buildPCG(CFG *cfg)
  * we have the recursive call of this method for every function found in this scan in order to cover every function call.
  * @class PCGBlock
  */
-void PCGBuilder::processCFG(CFG* cfg,PCG* pcg,CFG * src)
+void PCGBuilder::processCFG(CFG* cfg,PCG* pcg,CFG * src, stack_t *up)
 {	//il  faut parcourir le cfg de base ainsi que le cfg des fonctions appelees. On conserve la trace du cfg appelant
 	//pour la construction du PCG
 	
+	// Look for recursivity
+	for(stack_t *cur = up; cur; cur = cur->up)
+		if(cur->cfg == cfg)
+			return;
+	
+	// Prepare stack
+	stack_t ablock = { up, cfg };
+	
+	// Look for call BB
 	for(Iterator<BasicBlock*> bb(cfg->bbs()); bb; bb++)
 	{	
 		if(bb->isEntry())
@@ -76,7 +85,7 @@ void PCGBuilder::processCFG(CFG* cfg,PCG* pcg,CFG * src)
 			for(otawa::BasicBlock::OutIterator edge(bb);edge;edge++)
 			{	
 				if(edge->kind()==Edge::CALL)
-					processCFG(edge->calledCFG(),pcg,cfg); 
+					processCFG(edge->calledCFG(), pcg, cfg, &ablock); 
 			}
 		}
 	}
