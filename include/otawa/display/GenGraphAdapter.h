@@ -50,7 +50,8 @@ public:
 	
 	class Successor: public PreIterator<Successor, Edge> {
 	public:
-		inline Successor(Vertex source): iter(source.node) { }
+		inline Successor(const GenGraphAdapter& graph, Vertex source)
+			: iter(source.node) { }
 		inline Successor(const Successor& succ): iter(succ.iter) { }
 		inline bool ended(void) const { return iter.ended(); }
 		inline Edge item(void) const { return Edge(iter.edge()); }
@@ -71,9 +72,9 @@ public:
 	};
 	
 	template <class T>
-	class NodeMap {
+	class VertexMap {
 	public:
-		inline NodeMap(const GenGraphAdapter& adapter)
+		inline VertexMap(const GenGraphAdapter& adapter)
 			: vals(new T[adapter.graph->count()]) { }
 		inline const T& get(const Vertex& vertex) const
 			{ return vals[vertex.node->index()]; }
