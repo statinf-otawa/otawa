@@ -29,17 +29,11 @@ namespace otawa { namespace concept {
  * 			index in the range of 0 and the count of vertices in the graph.
  * 			This is useful to implement some optimizations. 
  */
-class DiGraph: public Collection {
+class DiGraph: public Collection<Vertex> {
 public:
 
 	/** Vertex class. */
 	class Vertex {
-	public:
-		/** Get the output degree of the vertex. */
-		int outDegree(void) const;
-		
-		/** Get the input degree of the vertex. */
-		int inDegree(void) const;
 	};
 	
 	/** Opaque type for the edges. */
@@ -60,7 +54,7 @@ public:
 		 * Build the iterator on the outing edge of the source.
 		 * @param source	Source node.
 		 */
-		Successor(const Vertex& source);
+		Successor(const DiGraph& graph, const Vertex& source);
 		
 		/**
 		 * Clone the given forward iterator.
@@ -68,14 +62,21 @@ public:
 		 */
 		Successor(const Forward& forward);
 	};
+	
+	/**
+	 * Get the output degree of the vertex.
+	 * @param vertex	Vertex to get the out degree.
+	 * @return			Out degreee.
+	 */
+	int outDegree(const Vertex& vertex) const;
 };
 
 
-/** Concept of directed graph providing a node map. */
-class DiGraphWithNodeMap: public DiGraph {
+/** Concept of directed graph providing a vertex map. */
+class DiGraphWithVertexMap: public DiGraph {
 public:	
 	/** Efficient map for the nodes. */
-	template <class T> class NodeMap: public Map<Node, T> { };
+	template <class T> class VertexMap: public Map<Vertex, T> { };
 };
 
 
