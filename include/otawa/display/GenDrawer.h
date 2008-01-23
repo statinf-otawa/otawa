@@ -63,7 +63,7 @@ private:
 // GenDrawer::GenDrawer constructor
 template <class G, class D>
 GenDrawer<G, D>::GenDrawer(const G& graph): _graph(&graph) {
-	typename G::template NodeMap<Vertex *> map(graph);
+	typename G::template VertexMap<Vertex *> map(graph);
 	
 	// Process the vertices
 	for(typename G::Iterator vertex(graph); vertex; vertex++)
@@ -71,7 +71,7 @@ GenDrawer<G, D>::GenDrawer(const G& graph): _graph(&graph) {
 	
 	// Process the edges
 	for(typename G::Iterator vertex(graph); vertex; vertex++)
-		for(typename G::Successor edge(vertex); edge; edge++)
+		for(typename G::Successor edge(*_graph, vertex); edge; edge++)
 			new Edge(*this, map.get(vertex), map.get((*edge).sink()), *edge); 
 }
 
