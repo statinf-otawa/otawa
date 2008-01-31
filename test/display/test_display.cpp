@@ -37,6 +37,7 @@ public:
 	}
 	
 	static inline void decorate(
+		const display::CFGAdapter& graph,
 		const display::CFGAdapter::Vertex vertex,
 		Output& content,
 		display::ShapeStyle& style)
@@ -58,6 +59,7 @@ public:
 	}
 
 	static inline void decorate(
+		const display::CFGAdapter& graph,
 		const display::CFGAdapter::Edge edge,
 		Output& label,
 		display::TextStyle& text,
@@ -93,6 +95,7 @@ public:
 	{ caption << "my graph : " << (void *)graph.graph; }
 	
 	static inline void decorate(
+			const display::GenGraphAdapter<MyGraph>& graph,
 		const display::GenGraphAdapter<MyGraph>::Vertex vertex,
 		Output& content,
 		display::ShapeStyle& style)
@@ -102,6 +105,7 @@ public:
 	}
 
 	static inline void decorate(
+			const display::GenGraphAdapter<MyGraph>& graph,
 		const display::GenGraphAdapter<MyGraph>::Edge edge,
 		Output& label,
 		display::TextStyle& text,
