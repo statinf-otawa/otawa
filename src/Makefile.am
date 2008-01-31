@@ -1,7 +1,8 @@
 SUBDIRS= \
 	prog \
 	odisplay \
-	oloader
+	oloader \
+	opcg
 
 # ILP Plugins
 if HAS_LP_SOLVE
