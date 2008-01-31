@@ -36,23 +36,25 @@ private:
 	
 	class Vertex: public AbstractDrawer::Vertex {
 	public:
-		inline Vertex(AbstractDrawer& drawer, typename G::Vertex vertex)
-			: AbstractDrawer::Vertex(drawer), _(vertex) { }
+		inline Vertex(AbstractDrawer& drawer, const G *graph, typename G::Vertex vertex)
+			: AbstractDrawer::Vertex(drawer), _(vertex), _graph(graph) { }
 		virtual void configure(Output& content, ShapeStyle& shape)
-			{ D::decorate(_, content, shape); }
+			{ D::decorate(_graph, _, content, shape); }
 	private:
 		typename G::Vertex _;
+		const G *_graph;
 	};
 	
 	class Edge: public AbstractDrawer::Edge {
 	public:
-		inline Edge(AbstractDrawer& drawer, Vertex *source, Vertex *sink,
+		inline Edge(AbstractDrawer& drawer, const G *graph, Vertex *source, Vertex *sink,
 			typename G::Edge edge)
-			: AbstractDrawer::Edge(drawer, source, sink), _(edge) { }
+			: AbstractDrawer::Edge(drawer, source, sink), _(edge), _graph(graph) { }
 		virtual void configure(Output& label, TextStyle& text, LineStyle& line)
-			{ D::decorate(_, label, text, line); }		
+			{ D::decorate(_graph, _, label, text, line); }		
 	private:
 		typename G::Edge _;
+		const G *_graph;
 	};
 	
 	const G *_graph;
@@ -67,12 +69,12 @@ GenDrawer<G, D>::GenDrawer(const G& graph): _graph(&graph) {
 	
 	// Process the vertices
 	for(typename G::Iterator vertex(graph); vertex; vertex++)
-		map.put(vertex, new Vertex(*this, vertex));
+		map.put(vertex, new Vertex(*this, _graph, vertex));
 	
 	// Process the edges
 	for(typename G::Iterator vertex(graph); vertex; vertex++)
 		for(typename G::Successor edge(*_graph, vertex); edge; edge++)
-			new Edge(*this, map.get(vertex), map.get((*edge).sink()), *edge); 
+			new Edge(*this, _graph, map.get(vertex), map.get((*edge).sink()), *edge); 
 }
 
 
@@ -83,15 +85,17 @@ public:
 	static inline void decorate(
 		const G& graph,
 		Output& caption,
-		FillStyle& fill,
-		TextStyle& text) { }
+		TextStyle& text,
+		FillStyle& fill) { }
 	
 	static inline void decorate(
+		const G& graph,
 		const typename G::Vertex vertex,
 		Output& content,
 		ShapeStyle& style) { content << vertex; }
 	
 	static inline void decorate(
+		const G& graph,
 		const typename G::Edge edge,
 		Output& label,
 		TextStyle& text,
