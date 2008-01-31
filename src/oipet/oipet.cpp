@@ -47,7 +47,7 @@ using namespace elm::option;
 using namespace elm::system;
 
 
-/*
+/**
  * @page oipet oipet Command
  * 
  * oipet allows to use WCET IPET computation facilities of OTAWA. Currently,
