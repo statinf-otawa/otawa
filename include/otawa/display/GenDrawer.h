@@ -36,35 +36,35 @@ private:
 	
 	class Vertex: public AbstractDrawer::Vertex {
 	public:
-		inline Vertex(AbstractDrawer& drawer, const G *graph, typename G::Vertex vertex)
+		inline Vertex(AbstractDrawer& drawer, const G& graph, typename G::Vertex vertex)
 			: AbstractDrawer::Vertex(drawer), _(vertex), _graph(graph) { }
 		virtual void configure(Output& content, ShapeStyle& shape)
 			{ D::decorate(_graph, _, content, shape); }
 	private:
 		typename G::Vertex _;
-		const G *_graph;
+		const G& _graph;
 	};
 	
 	class Edge: public AbstractDrawer::Edge {
 	public:
-		inline Edge(AbstractDrawer& drawer, const G *graph, Vertex *source, Vertex *sink,
+		inline Edge(AbstractDrawer& drawer, const G& graph, Vertex *source, Vertex *sink,
 			typename G::Edge edge)
 			: AbstractDrawer::Edge(drawer, source, sink), _(edge), _graph(graph) { }
 		virtual void configure(Output& label, TextStyle& text, LineStyle& line)
 			{ D::decorate(_graph, _, label, text, line); }		
 	private:
 		typename G::Edge _;
-		const G *_graph;
+		const G& _graph;
 	};
 	
-	const G *_graph;
+	const G& _graph;
 	virtual void configure(Output& caption, TextStyle& text, FillStyle& fill)
-		{ D::decorate(*_graph, caption, text, fill); }
+		{ D::decorate(_graph, caption, text, fill); }
 };
 
 // GenDrawer::GenDrawer constructor
 template <class G, class D>
-GenDrawer<G, D>::GenDrawer(const G& graph): _graph(&graph) {
+GenDrawer<G, D>::GenDrawer(const G& graph): _graph(graph) {
 	typename G::template VertexMap<Vertex *> map(graph);
 	
 	// Process the vertices
@@ -73,7 +73,7 @@ GenDrawer<G, D>::GenDrawer(const G& graph): _graph(&graph) {
 	
 	// Process the edges
 	for(typename G::Iterator vertex(graph); vertex; vertex++)
-		for(typename G::Successor edge(*_graph, vertex); edge; edge++)
+		for(typename G::Successor edge(_graph, vertex); edge; edge++)
 			new Edge(*this, _graph, map.get(vertex), map.get((*edge).sink()), *edge); 
 }
 
