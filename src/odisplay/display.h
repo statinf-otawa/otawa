@@ -57,6 +57,7 @@ public:
 	 * @param shape		Shape style of the vertex.
 	 */
 	static void decorate(
+		const G& graph,
 		const typename G::Vertex vertex,
 		Output& content,
 		ShapeStyle& style);
@@ -68,6 +69,7 @@ public:
 	 * @param line		Line style of the edge.
 	 */
 	static void decorate(
+		const G& graph,
 		const typename G::Edge edge,
 		Output& label,
 		TextStyle& text,
