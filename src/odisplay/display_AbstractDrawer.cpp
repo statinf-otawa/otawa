@@ -126,10 +126,12 @@ void AbstractDrawer::draw(void) {
 		OUTPUT_KIND(graph) = kind;
 	
 	// Setup the vertices and edges
-	for(FragTable<Vertex *>::Iterator vertex(vertices); vertex; vertex++)
+	for(FragTable<Vertex *>::Iterator vertex(vertices); vertex; vertex++) {
 		vertex->setup();
-	for(FragTable<Edge *>::Iterator edge(edges); edge; edge++)
+        }
+	for(FragTable<Edge *>::Iterator edge(edges); edge; edge++) {
 		edge->setup();
+        }
 	
 	// Draw
 	graph->display();

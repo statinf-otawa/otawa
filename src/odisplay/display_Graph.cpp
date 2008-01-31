@@ -311,6 +311,7 @@ Identifier<string> OUTPUT_PATH("otawa::display::output_path", "");
  * class CFGDecorator {
  * public:
  *	static void decorate(
+ *		const G& graph,
  *		const display::CFGAdapter& graph,
  *		Output& caption,
  *		display::TextStyle& text,
@@ -318,6 +319,7 @@ Identifier<string> OUTPUT_PATH("otawa::display::output_path", "");
  *	{ caption << graph->label() << " CFG"; }
  *	
  *	static void decorate(
+*                 const G& graph,
  *		const display::CFGAdapter::Vertex vertex,
  *		Output& content,
  *		display::ShapeStyle& style)
