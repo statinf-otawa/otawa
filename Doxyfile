@@ -421,6 +421,8 @@ INPUT                  = include/otawa/ \
                          src/odisplay/ \
                     	 src/bpred/BPredProcessor.cpp \
                          src/dumpcfg/dumpcfg.cpp \
+                         src/oipet/oipet.cpp \
+                         src/opcg/opcg.cpp \
                          src/ostat/ostat.cpp \
                     	 src/mkff/mkff.cpp
 

@@ -130,6 +130,12 @@ OTAWA_USE_LIB(LP_SOLVE5,
 	OTAWA_CHECK_LIB(LP_SOLVE5, lpsolve/lp_lib.h, lpsolve55  -lcolamd)))
 
 
+# ===== GLPK check =====
+#OTAWA_USE_LIB(GLPK,
+#	OTAWA_CHECK_LIB(GLPK, glpk.h, glpk, $PWD/../glpk/, $PWD/../glpk/,
+#	OTAWA_CHECK_LIB(GLPK, glpk.h, glpk))) 
+
+
 # ===== ILP check =====
 HAS_ILP="no"
 ILP_DEPS=""
@@ -137,6 +143,7 @@ ILP_LIBS=""
 ILP_DEFAULT=""
 OTAWA_ILP(LP_SOLVE5, lp_solve5)
 OTAWA_ILP(LP_SOLVE, lp_solve)
+#OTAWA_ILP(GLPK, glpk)
 AM_CONDITIONAL(HAS_ILP, test "$HAS_ILP" = "yes")
 AC_SUBST(ILP_LIBS)
 AC_SUBST(ILP_DEPS)
@@ -261,6 +268,7 @@ AC_SUBST(HAS_SO)
 
 
 # ==== Output ====
+#	src/glpk/Makefile
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
@@ -279,6 +287,7 @@ AC_CONFIG_FILES([
 	src/ppc/Makefile
 	src/s12x/Makefile
 	src/bpred/Makefile
+	src/opcg/Makefile
 	examples/Makefile
 	bin/Makefile
 	test/Makefile
