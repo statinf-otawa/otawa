@@ -22,25 +22,25 @@ namespace sim {
 class AbstractCacheDriver: public CacheDriver {
 public:	
 	typedef unsigned long tag_t;
-	AbstractCacheDriver(hard::Cache *cache);
+	AbstractCacheDriver(const hard::Cache *cache);
 	virtual ~AbstractCacheDriver(void); 
 	virtual result_t access(address_t address, size_t size, action_t action);
-	inline hard::Cache *cache(void) const { return _cache; }
-	static CacheDriver *lookup(hard::Cache *cache);
+	inline const hard::Cache *cache(void) const { return _cache; }
+	static CacheDriver *lookup(const hard::Cache *cache);
 
 protected:
 	virtual void touch(int index, int num, tag_t *line) = 0;
 	virtual void replace(tag_t tag, int num, tag_t *line) = 0;
 
 private:
-	hard::Cache *_cache;
+	const hard::Cache *_cache;
 	tag_t *lines;
 };
 
 // LRUCacheDriver class
 class LRUCacheDriver: public AbstractCacheDriver {
 public:
-	LRUCacheDriver(hard::Cache *cache);
+	LRUCacheDriver(const hard::Cache *cache);
 
 protected:
 	virtual void touch(int index, int num, tag_t *line);
@@ -50,7 +50,7 @@ protected:
 // DirectMappedCacheDriver class
 class DirectMappedCacheDriver: public AbstractCacheDriver {
 public:
-	DirectMappedCacheDriver(hard::Cache *cache);
+	DirectMappedCacheDriver(const hard::Cache *cache);
 
 protected:
 	virtual void touch(int index, int num, tag_t *line);
@@ -60,7 +60,7 @@ protected:
 // FIFOCacheDriver class
 class FIFOCacheDriver: public AbstractCacheDriver {
 public:
-	FIFOCacheDriver(hard::Cache *cache);
+	FIFOCacheDriver(const hard::Cache *cache);
 	~FIFOCacheDriver(void);
 
 protected:
