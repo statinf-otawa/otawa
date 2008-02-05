@@ -27,7 +27,7 @@ namespace otawa { namespace sim {
  * @param cache	Cache to look a driver for.
  * @return		Matching cache driver or null.
  */
-CacheDriver *AbstractCacheDriver::lookup(hard::Cache *cache) {
+CacheDriver *AbstractCacheDriver::lookup(const hard::Cache *cache) {
 	if(cache->wayCount() == 1)
 		return new DirectMappedCacheDriver(cache);
 	else
@@ -68,7 +68,7 @@ CacheDriver *AbstractCacheDriver::lookup(hard::Cache *cache) {
  * Build a cache driver with the given cache.
  * @param cache	Used cache.
  */
-AbstractCacheDriver::AbstractCacheDriver(hard::Cache *cache)
+AbstractCacheDriver::AbstractCacheDriver(const hard::Cache *cache)
 : _cache(cache), lines(new tag_t[cache->blockCount()]) {
 	assert(cache);
 	assert(lines);
@@ -133,7 +133,7 @@ void LRUCacheDriver::replace(tag_t tag, int num, tag_t *line) {
  * Build a LRU cache driver.
  * @param cache	Used cache.
  */
-LRUCacheDriver::LRUCacheDriver(hard::Cache *cache)
+LRUCacheDriver::LRUCacheDriver(const hard::Cache *cache)
 : AbstractCacheDriver(cache) {
 }
 
@@ -162,7 +162,7 @@ void DirectMappedCacheDriver::replace(tag_t tag, int num, tag_t *line) {
  * @param cache	Used cache.
  * @warning The passed cache must be direct-mapped.
  */
-DirectMappedCacheDriver::DirectMappedCacheDriver(hard::Cache *cache)
+DirectMappedCacheDriver::DirectMappedCacheDriver(const hard::Cache *cache)
 : AbstractCacheDriver(cache) {
 	assert(cache->wayCount() == 1);
 }
@@ -192,7 +192,7 @@ void FIFOCacheDriver::replace(tag_t tag, int num, tag_t *line) {
  * Build an associative cache driver with FIFO replacement policy.
  * @param cache	Used cache.
  */
-FIFOCacheDriver::FIFOCacheDriver(hard::Cache *cache)
+FIFOCacheDriver::FIFOCacheDriver(const hard::Cache *cache)
 : AbstractCacheDriver(cache), counters(new int[cache->rowCount()]) {
 	for(int i = 0; i < cache->rowCount(); i++)
 		counters[i] = 0;
