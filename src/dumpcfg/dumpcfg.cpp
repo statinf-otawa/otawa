@@ -134,7 +134,8 @@ static option::BoolOption inline_calls(command, 'i', "inline",
 	"Inline the function calls.", false);
 option::BoolOption display_assembly(command, 'd', "display assembly instructions",
 	"Display assembly.", false);
-
+option::BoolOption verbose(command, 'v', "verbose",
+	"activate verbose mode", false);
 
 // Simple output option
 class SimpleOption: public option::ActionOption {
