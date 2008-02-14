@@ -103,6 +103,7 @@ uint32_t  GetDataBaseAddr ( void );
 uint32_t  GetDataAddr ( void );
 uint32_t  GetDataSize ( void );                          
 
+extern int Is_Elf_Little;
 
 
 #if 0
