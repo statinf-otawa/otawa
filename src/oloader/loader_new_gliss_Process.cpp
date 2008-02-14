@@ -16,6 +16,8 @@
 
 #define TRACE(m) //cerr << m << io::endl
 
+extern "C" int Is_Elf_Little;
+
 namespace otawa { namespace loader { namespace new_gliss {
 
 // Segment class
@@ -226,15 +228,57 @@ File *Process::loadFile(elm::CString path) {
 	return file;
 }
 
+/*
+ * Workaround buggy GLISS code to read from memory.
+ */
+static inline unsigned char read8(void *memory, const Address& at) {
+	return iss_mem_read8_little(memory, at.offset());
+}
+
+static inline unsigned short read16(void *memory, const Address& at) {
+	unsigned short	b0 = read8(memory, at),
+					b1 = read8(memory, at + 1);
+	if(Is_Elf_Little == 0)
+		return (b0 << 8) | b1;
+	else
+		return (b1 << 8) | b0; 
+}
+
+static inline unsigned long read32(void *memory, const Address& at) {
+	unsigned long	b0 = read8(memory, at),
+					b1 = read8(memory, at + 1),
+					b2 = read8(memory, at + 2),
+					b3 = read8(memory, at + 3);
+	if(Is_Elf_Little == 0)
+		return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
+	else
+		return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0; 
+}
+
+static inline unsigned long long read64(void *memory, const Address& at) {
+	unsigned long long	b0 = read8(memory, at),
+						b1 = read8(memory, at + 1),
+						b2 = read8(memory, at + 2),
+						b3 = read8(memory, at + 3),
+						b4 = read8(memory, at + 4),
+						b5 = read8(memory, at + 5),
+						b6 = read8(memory, at + 6),
+						b7 = read8(memory, at + 7);
+	if(Is_Elf_Little == 0)
+		return	(b0 << 56) | (b1 << 48) | (b2 << 40) | (b3 << 32) |
+				(b4 << 24) | (b5 << 16) | (b6 << 8) | b7;
+	else
+		return (b7 << 56) | (b6 << 48) | (b5 << 40) | (b4 << 32) |
+		(b3 << 24) | (b2 << 16) | (b1 << 8) | b0; 
+}
+
 
 // Memory read
-#if IS_BIG == 1
-#	define GET(t) iss_mem_read##t##_big((memory_t *)_memory, at.address())
-#else
-#	define READ_MEM(t) iss_mem_read##t##_little(_memory, at.address())
-#endif
 #define GET(t, s) \
-	void Process::get(Address at, t& val) { val = READ_MEM(s); }
+	void Process::get(Address at, t& val) { \
+			val = read##s(_memory, at.address()); \
+		cerr << "val = " << (void *)(int)val << " at " << at << io::endl; \
+	}
 GET(signed char, 8);
 GET(unsigned char, 8);
 GET(signed short, 16);
@@ -250,7 +294,7 @@ GET(Address, 32);
  */
 void Process::get(Address at, string& str) {
 	Address base = at;
-	while(!READ_MEM(8))
+	while(!iss_mem_read8_little(_memory, at.address()))
 		at = at + 1;
 	int len = at - base;
 	char buf[len];
