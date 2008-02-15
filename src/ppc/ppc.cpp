@@ -28,9 +28,12 @@
 #include <otawa/hard/Register.h>
 #include <gel/gel.h>
 #include <otawa/proc/Processor.h>
+#include <otawa/util/FlowFactLoader.h>
+#include <elm/genstruct/SortedSLList.h>
 #define ISS_DISASM
 #include <emul.h>
 #include <iss_include.h>
+#include "InstPattern.h"
 
 using namespace otawa::hard;
 
@@ -39,6 +42,9 @@ extern "C" gel_file_t *loader_file(memory_t* memory);
 #define TRACE(m) //cerr << m << io::endl
 #define RTRACE(m)	//m
 //#define SCAN_ARGS
+
+// Trace for switch parsing
+#define STRACE(m)	//cerr << m << io::endl
 
 // Kind Table
 static unsigned long kinds[] = {
@@ -189,6 +195,7 @@ protected:
 		((Process&)process()).decodeRegs(this, &in_regs, &out_regs);
 	}
 	Option<Address> checkFarCall(address_t call);
+	bool checkSwitch(void);
 };
 
 
@@ -435,13 +442,15 @@ address_t BranchInst::decodeTargetAddress(void) {
 		assert(inst->instrinput[2].type == PARAM_INT14_T);
 		target_addr = (address_t)(inst->instrinput[2].val.Int14 << 2);
 		break;
-	case ID_BCCTRL_:
-	case ID_BCCTR_: {
+	case ID_BCCTR_:
+		target_addr = 0;
+		checkSwitch();
+		break;
+	case ID_BCCTRL_: {
 			iss_free(inst);
 			Option<Address> addr = checkFarCall(address());
 			if(addr.isOne()) {
 				target_addr = *addr;
-				//cerr << "Match at " << address() << " to " << target_addr << io::endl;
 			}
 		}
 		return target_addr;
@@ -873,6 +882,110 @@ Option<Address> BranchInst::checkFarCall(address_t call) {
 	
 	// Called address: (up << 16) + low
 	return Address((up << 16) + low);
+}
+
+
+using namespace otawa::loader;
+
+template <int n> class R: public Reg<n> { };
+template <int n> class C: public ConstUInt8<n> { };
+template <int n> class C16: public ConstUInt16<n> { };
+
+bool BranchInst::checkSwitch(void) {
+	Address addr = topAddress();
+	typedef UInt16<0> size;
+	typedef UInt16<1> table_hi;
+	typedef Int16<2> table_lo;
+	typedef UInt16<2> base_hi;
+	typedef Int16<3> base_lo;
+	typedef ConstReg<0> zero;
+
+	// Short switch template
+	typedef Seq<
+		Seq <
+			I<ID_ADDI_R_R_, R<0>, R<1>, Ignore >,		// R1 = switch value, R0 = fixed switch value
+			I<ID_CMPLI_R_, C<0>, C<0>, R<0>, size >,
+			I<ID_BC_, C<12>, C<1>, Ignore >
+		>,
+		Seq <
+			I<ID_ADDIS_R_R_, R<2>, zero, table_hi >,
+			I<ID_ADDI_R_R_, R<2>, R<2>, table_lo >,				// R2 = table address
+			I<ID_RLWINM_R_R_, R<3>, R<0>, C<2>, C<0>, C<29> >,	// R3 = table offset
+			I<ID_LWZX_R_R_R, R<4>, R<2>, R<3> >					// R4 = branch offset
+		>,
+		Seq <
+			I<ID_ADDIS_R_R_, R<5>, zero, base_hi >,
+			I<ID_ADDI_R_R_, R<5>, R<5>, base_lo >,				// R5 = branch base
+			I<ID_ADD_R_R_R, R<6>, R<4>, R<5> >
+		>,
+		Seq <
+			I<ID_MTSPR_R, R<6>, C16<288> >,
+			I<ID_BCCTR_, C<20>, C<0> >
+		>
+	> short_switch;
+
+	// Long switch template
+	// ri = R<0>, rj = R<1>, rk = R<2>, rl = R<3>,
+	// rm = R<4>, rn = R<5>, rp = R<6>, rq = R<7>,
+	// ro = R<8>, rr = R<9>
+	typedef Seq<
+		Seq<
+			I<ID_ADDI_R_R_, R<0>, Ignore, Ignore>,
+			I<ID_CMPLI_R_, C<0>, C<0>, R<0>, size >,
+			I<ID_BC_, C<12>, C<1>, Ignore >
+		>,
+		Seq<
+			I<ID_OR_R_R_R, R<0>, R<1>, R<0> >,
+			I<ID_RLWINM_R_R_, R<1>, R<2>, C<2>, C<0>, C<29> >,
+			I<ID_ADDIS_R_R_, R<3>, zero, table_hi>,
+			I<ID_ADDI_R_R_, R<4>, R<3>, table_lo>
+		>,
+		Seq<
+			I<ID_ADD_R_R_R, R<5>, R<2>, R<4> >,
+			I<ID_LWZ_R_R_, R<6>, R<5>, C<0> >,
+			I<ID_ADDIS_R_R_, R<7>, zero, base_hi>,
+			I<ID_ADDI_R_R_, R<8>, R<7>, base_lo >
+		>,
+		Seq<
+			I<ID_ADD_R_R_R, R<9>, R<6>, R<8> >,
+			I<ID_MTSPR_R, R<9>, C16<288> >,
+			I<ID_BCCTR_, C<20>, C<0> >			
+		>
+	> long_switch; 
+
+	// Check template
+	STRACE("look for short switch at " << addr);
+	short_switch::reset();
+	bool res = short_switch::matchBack((state_t *)process().state(), addr);
+	if(!res) {
+		STRACE("look for long switch at " << addr);
+		addr = topAddress();
+		long_switch::reset();
+		res = long_switch::matchBack((state_t *)process().state(), addr);
+		if(!res) {
+			STRACE("no switch at " << addr << io::endl);
+			return false;
+		}
+	}
+
+	// Record the information
+	genstruct::SortedSLList<Address> addresses;
+	STRACE("switch at " << addr);
+	Address table = (table_hi::value() << 16) + table_lo::value();
+	Address base = (base_hi::value() << 16) + base_lo::value();
+	STRACE("table = " << table << ", base = " << base);
+	for(int i = 0; i <= size::value(); i++) {
+		signed long offset;
+		process().get(table + i * 4, offset);
+		Address addr = base.offset() + offset;
+		STRACE("\tbranch to " << addr << ", offset=" << (void *)offset);
+		if(!addresses.contains(addr)) {
+			addresses.add(addr);
+			BRANCH_TARGET(this).add(addr);
+		}
+	}
+	STRACE(io::endl);
+	return true;
 }
 
 } }	// otawa::ppc
