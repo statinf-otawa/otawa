@@ -252,7 +252,7 @@ elm::CString pattern, int count)
 PlainBank::~PlainBank(void) {
 	for(int i = 0; i < _regs.count(); i++)
 		delete _regs[i];
-	delete [] (Register **)_regs.table();
+	//delete [] (Register **)_regs.table();
 }
 
 
@@ -288,7 +288,7 @@ MeltedBank::MeltedBank(elm::CString name, ...)
 /*
  */
 MeltedBank::~MeltedBank(void) {
-	delete [] (Register **)_regs.table();
+	//delete [] (Register **)_regs.table();
 }
 
 /**
