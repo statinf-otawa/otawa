@@ -277,7 +277,7 @@ static inline unsigned long long read64(void *memory, const Address& at) {
 #define GET(t, s) \
 	void Process::get(Address at, t& val) { \
 			val = read##s(_memory, at.address()); \
-		cerr << "val = " << (void *)(int)val << " at " << at << io::endl; \
+			/*cerr << "val = " << (void *)(int)val << " at " << at << io::endl;*/ \
 	}
 GET(signed char, 8);
 GET(unsigned char, 8);
