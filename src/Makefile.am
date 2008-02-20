@@ -1,8 +1,7 @@
 SUBDIRS= \
 	prog \
 	odisplay \
-	oloader \
-	opcg
+	oloader
 
 # ILP Plugins
 if HAS_LP_SOLVE
@@ -30,7 +29,8 @@ endif
 SUBDIRS += \
 	dumpcfg \
 	mkff \
-	ostat
+	ostat \
+	opcg
 
 # Dependent libraries
 if HAS_SYSTEMC
