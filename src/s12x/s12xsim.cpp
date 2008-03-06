@@ -388,9 +388,9 @@ int State::access16(Inst *inst, instruction_t *_inst, bool write) {
 	// !!TODO!! Worst case : external unaligned.
 	// Must be detailed with alignement and type of memory.
 	Address addr = getAccessAddress(inst, _inst, write);
-	if(addr.isNull() || addr.address() & 0x1)
+	/*if(addr.isNull() || addr.address() & 0x1)
 		return 2;
-	else
+	else*/
 		return 1;
 }
 
