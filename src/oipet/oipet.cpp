@@ -138,6 +138,50 @@ using namespace elm::system;
  * @li -o, --output prefix -- prepend the given prefix to the dump files names.
  */
 
+// BBRatioDisplayer class
+class BBRatioDisplayer: public BBProcessor {
+public:
+	BBRatioDisplayer(void): BBProcessor("BBTimeDisplayer", Version(1, 0, 0)) {
+		require(ipet::WCET_FEATURE);
+		require(ipet::ASSIGNED_VARS_FEATURE);
+	}
+protected:
+	virtual void setup(WorkSpace *ws) {
+		wcet = ipet::WCET(ws);
+		system = ipet::SYSTEM(ws);
+		out << "ADDRESS\tSIZE\tTIME\tCOUNT\tRATIO\tFUNCTION\n";
+	}
+	
+	virtual void processCFG(WorkSpace *fw, CFG *cfg) {
+		BBProcessor::processCFG(fw, cfg);
+		out << "TOTAL FUNCTION\t"
+			<< SUM(cfg) << '\t'
+			<< (int)system->valueOf(ipet::VAR(cfg->entry())) << '\t'
+			<< (float)SUM(cfg) * 100 / wcet << "%\t"
+			<< cfg->label() << io::endl; 		
+	}
+	
+	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
+		if(bb->isEnd())
+			return;
+		int count = (int)system->valueOf(ipet::VAR(bb)),
+			time = ipet::TIME(bb),
+			total = time * count;
+		SUM(cfg) = SUM(cfg) + total;
+		out << bb->address() << '\t'
+			<< bb->size() << '\t'
+			<< time << '\t'
+			<< count << '\t'
+			<< (float)total * 100 / wcet << "%\t"
+			<< cfg->label() << io::endl; 
+	}
+private:
+	static otawa::Identifier<int> SUM;
+	int wcet;
+	ilp::System *system;
+};
+otawa::Identifier<int> BBRatioDisplayer::SUM("", 0);
+
 // Options
 class Command: public elm::option::Manager {
 	String file;
@@ -215,6 +259,8 @@ BoolOption dump_constraints(command, 'C', "dump-constraints",
 	"dump lp_solve constraints", false);
 BoolOption dump_graph(command, 'G', "dump-graph",
 	"dump DOT graph of the processed function", false);
+BoolOption dump_ratio(command, 'R', "dump-ratios",
+	"dump ratio of each BB for the WCET", false);
 
 
 // Other options
@@ -434,6 +480,12 @@ void Command::compute(String fun) {
 			if(verbose)
 				cout << "Starting otawa::ipet::CFGDrawer\n";
 		}
+	}
+	
+	// Dump the ratio
+	if(dump_ratio) {
+		BBRatioDisplayer displayer;
+		displayer.process(fw, props);
 	}
 }
 
