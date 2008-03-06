@@ -97,8 +97,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 	else {
 		if(!entry && name) {
 			CFGInfo *info = fw->getCFGInfo();
-		CString name = TASK_ENTRY(fw);
-		entry = info->findCFG(name);
+			entry = info->findCFG(name);
 		}
 		if(!entry)
 			throw ProcessorException(*this, _
