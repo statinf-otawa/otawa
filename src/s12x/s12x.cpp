@@ -265,7 +265,8 @@ Process::Process(
 	hard::Platform *pf,
 	const PropList& props
 ): otawa::loader::old_gliss::Process(manager, loader, pf, props) {
-	provide(STACK_USAGE_FEATURE);
+	//provide(STACK_USAGE_FEATURE);
+	provide(REGISTER_USAGE_FEATURE);
 }
 
 
@@ -670,17 +671,8 @@ otawa::Process *Loader::load(Manager *man, CString path, const PropList& props) 
 		delete proc;
 		return 0;
 	}
-	else {
-	
-		// Mark main as no returning
-		// CodeWarrior specific -- no more needed
-		/* Symbol *sym = proc->findSymbol("main");
-		if(sym && sym->kind() == Symbol::FUNCTION)
-			sym->setNoReturn();*/
-	
-		// Return process
+	else
 		return proc;
-	}
 }
 
 
