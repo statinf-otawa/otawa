@@ -47,7 +47,7 @@ AC_DEFUN([OTAWA_USE_LIB], [
 #	If the code cannot set the HAS_$var to yes, issue a message failure.
 AC_DEFUN([OTAWA_REQUIRE_LIB], [
 	$3
-	AS_IF(test "$HAS_$1" != yes, AC_MSG_FAILURE([$2]))
+	AS_IF(test "$HAS_$1" != yes -a $"with_makedist" != yes, AC_MSG_FAILURE([$2]))
 ])
 
 
