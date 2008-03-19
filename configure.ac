@@ -15,6 +15,8 @@ AS_IF(test "$with_plugin" = "yes",
 	[ HAS_PLUGIN=no ])
 AM_CONDITIONAL(HAS_PLUGIN, test "$HAS_PLUGIN" = "yes")
 
+# === Distribution activation ===
+AC_ARG_WITH(makedist, [  --with-makedist={yes, no}],,[with_makedist=yes])
 
 
 # === Loader Selection ====
