@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
 		
 		if(print){
 			PropList display_props;
-			display::GRAPHVIZ_FILE(display_props) = "cfg.ps";
+			display::OUTPUT_PATH(display_props) = "cfg.ps";
 			
 			display::INCLUDE(display_props).add(&TIME);
 			display::INCLUDE(display_props).add(&Delta::DELTA);

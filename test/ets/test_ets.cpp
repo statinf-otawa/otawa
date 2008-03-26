@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
 		
 		// assignment for each loop
 		TEST_OUT(cout << ">>Setting flow fact\n");
-		ets::FlowFactLoader ffl(fw);
+		ets::FlowFactLoader ffl;
 		ffl.processAST(fw, ast);
 		TEST_OUT(cout << ">>OK for setting flow fact\n");
 		

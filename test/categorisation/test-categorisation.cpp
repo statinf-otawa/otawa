@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
 		wcomp.process(fw, props);
 		
 		// Display the result
-		ilp::System *sys = SYSTEM(fw);
+		//ilp::System *sys = SYSTEM(fw);
 		/*sys->dump();
 		cout << sys->countVars() << " variables and "
 			 << sys->countConstraints() << " constraints.\n";*/
