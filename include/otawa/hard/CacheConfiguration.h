@@ -21,6 +21,7 @@ class CacheConfiguration {
 	SERIALIZABLE(CacheConfiguration, FIELD(icache) & FIELD(dcache));
 	const Cache *icache, *dcache;
 public:
+	virtual ~CacheConfiguration(void) { }
 	static const CacheConfiguration NO_CACHE;
 	inline CacheConfiguration(const Cache *inst_cache = 0,
 		const Cache *data_cache = 0);
