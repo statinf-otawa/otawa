@@ -66,6 +66,8 @@ public:
 	void clearProps(void);
 	void addProps(const PropList& props);
 	void print(elm::io::Output& out) const;
+	inline PropList& operator=(const PropList& props)
+		{ clearProps(); addProps(props); }
 
 	// Iter class
 	class Iter: public PreIterator<Iter, Property *> {
