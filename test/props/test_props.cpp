@@ -7,6 +7,7 @@
 
 #include <elm/util/test.h>
 #include <otawa/properties.h>
+#include <elm/genstruct/Vector.h>
 
 using namespace elm;
 using namespace otawa;
@@ -79,6 +80,24 @@ int main(void) {
 		ID2(props) = ID1(props);
 		CHECK(ID1(props) == ID2(props));
 		cout << "prop-to-prop: " << ID1(props) << " = " << ID2(props) << io::endl;
+	}
+	
+	// Proplist in collection
+	{
+		genstruct::Vector<PropList> props;
+		for(int i = 0; i < 256; i++) {
+			//cout << "-> " << i << io::endl;
+			PropList propl;
+			MY_ID(propl) = 111;
+			props.add(propl);
+		}
+		bool checked = true;
+		for(int i = 0; i < 256; i++)
+			if(MY_ID(props[i]) != 111) {
+				checked = false;
+				break;
+			}
+		CHECK(checked);
 	}
 	
 	CHECK_END
