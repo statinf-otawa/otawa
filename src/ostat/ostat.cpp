@@ -92,6 +92,7 @@ protected:
 	long long bra_max;
 public:
 	Statistics(void);
+	virtual ~Statistics(void) { }
 	void addBB(BasicBlock *bb);
 	inline long long bbCount(void) const { return bb_cnt; };
 	virtual void print(elm::io::Output& out = cout);
@@ -116,8 +117,8 @@ public:
  * Print the statistics.
  * @param out	Output to use (default cout).
  */
-Statistics::Statistics(void): bb_cnt(0), inst_cnt(0), mem_cnt(0), bra_cnt(0),
-inst_max(0), mem_max(0), bra_max(0) {
+Statistics::Statistics(void): bb_cnt(0), inst_cnt(0), inst_max(0), mem_cnt(0),
+mem_max(0), bra_cnt(0), bra_max(0) {
 }
 
 
@@ -195,6 +196,7 @@ class CFGStatistics: public Statistics {
 	CFG *_cfg;
 public:
 	CFGStatistics(CFG *cfg);
+	virtual ~CFGStatistics(void) { }
 	inline CFG *cfg(void) { return _cfg; };
 	virtual void print(elm::io::Output& out = cout);
 };
@@ -232,6 +234,7 @@ class TreeStatistics: public Statistics {
 	VectorQueue<CFG *> todo;
 public:
 	TreeStatistics(CFG *cfg);
+	virtual ~TreeStatistics(void) { }
 	virtual void print(elm::io::Output& out = cout);
 };
 

@@ -67,8 +67,12 @@ bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
  * the matching CFG.
  */
 CFG::CFG(Segment *seg, BasicBlock *entry)
-: ent(entry), _seg(seg), flags(0),
-_entry(BasicBlock::FLAG_Entry), _exit(BasicBlock::FLAG_Exit) {
+:	_seg(seg),
+	ent(entry),
+	flags(0),
+	_entry(BasicBlock::FLAG_Entry),
+	_exit(BasicBlock::FLAG_Exit)
+{
 	assert(seg && entry);
 	
 	// Mark entry
@@ -85,8 +89,12 @@ _entry(BasicBlock::FLAG_Entry), _exit(BasicBlock::FLAG_Exit) {
 /**
  * Build an empty CFG.
  */
-CFG::CFG(void): _seg(0), ent(0), _entry(BasicBlock::FLAG_Entry),
-_exit(BasicBlock::FLAG_Exit), flags(0) {
+CFG::CFG(void):
+	_seg(0),
+	ent(0),
+	 flags(0),
+	_entry(BasicBlock::FLAG_Entry),
+	_exit(BasicBlock::FLAG_Exit) {
 }
 
 

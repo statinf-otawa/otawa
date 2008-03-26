@@ -184,7 +184,7 @@ WorkSpace *Manager::loadBin(
 	const elm::system::Path& path,
 	const PropList& props)
 {
-	Process *proc = 0;
+	//Process *proc = 0;
 
 	// Simple identified loader
 	Loader *loader = LOADER(props);

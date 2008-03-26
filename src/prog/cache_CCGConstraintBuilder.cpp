@@ -88,7 +88,7 @@ void CCGConstraintBuilder::configure(const PropList& props) {
 void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	
 	// Initialization
-	CFG *entry_cfg = ENTRY_CFG(fw);
+	//CFG *entry_cfg = ENTRY_CFG(fw);
 	System *system = SYSTEM(fw);
 	assert (system);
 	const hard::Cache *cach = fw->platform()->cache().instCache();
@@ -173,7 +173,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			
 		// Non-entry, non-exit node
 		if(lbloc->id() != 0 && lbloc->id() != lbset->count() - 1) {
-			int identif = lbloc->id();				
+			/*int identif =*/ lbloc->id();				
 			address_t address = lbloc->address();
 			
 			/*
@@ -193,7 +193,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			bool used = false;
 			bool findend = false;
 			bool findlooplb = false;
-			ilp::Var *xhit;
+			//ilp::Var *xhit;
 			Constraint *cons2;
 			// !!CONS!!
 			Constraint *cons17 = system->newConstraint(Constraint::EQ);

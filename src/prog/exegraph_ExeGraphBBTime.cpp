@@ -45,6 +45,7 @@ using namespace otawa::graph;
 #	define LOG(c)
 #else
 #	define LOG(c) c
+#	undef OUT
 #	define OUT	dumpFile
 #endif
 
@@ -88,4 +89,3 @@ namespace otawa {
  * @param	bb	The basic block to be analyzed.
  * */
 
- 

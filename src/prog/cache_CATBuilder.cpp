@@ -98,7 +98,7 @@ void CATBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	assert(ct); 
 	/*for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++)
 		CATBuilder::NODE(lblock) += new CATNode(lblock);*/
-	BitSet *virtuel = buildLBLOCKSET(lbset, ct);
+	/*BitSet *virtuel =*/ buildLBLOCKSET(lbset, ct);
 	setCATEGORISATION(lbset, ct, cach->blockBits());
 	
 	// Clean up
@@ -222,7 +222,7 @@ void CATBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *idset, int 
 	
 	in = IN(bb);
 
-	int count = 0;
+	//int count = 0;
 	bool nonconflitdetected = false;
 	bool continu = false;
 	unsigned long tagcachline,tagline;

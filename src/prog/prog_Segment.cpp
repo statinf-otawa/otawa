@@ -18,7 +18,6 @@
 namespace otawa {
 
 /**
- /**
  * @class Segment
  * @par In usual file format like ELF, COFF and so on, the program file is
  * divided in segment according platform needs or memory propertes.
@@ -40,14 +39,14 @@ Segment::Segment(
 	address_t address,
 	size_t size,
 	unsigned long flags)
-:	_name(name),
+:	_flags(flags),
+	_name(name),
 	_address(address),
 	_size(size),
-	_flags(flags),
 	map(new ProgItem *[MAP_SIZE(size)])
 {
 	ASSERTP(size, "zero size segment");
-	for(int i = 0; i < MAP_SIZE(size); i++)
+	for(size_t i = 0; i < MAP_SIZE(size); i++)
 		map[i] = 0; 
 }
 

@@ -33,7 +33,7 @@ int CCGProblem::vars = 0;
 /**
  */
 CCGDomain *CCGProblem::gen(CFG *cfg, BasicBlock *bb) {
-	int length = ccggraph->count();
+	/*int length =*/ ccggraph->count();
 	CCGDomain *bitset = empty();
 	if(bb->isEntry() && (cfg == ENTRY_CFG(fw))) {
 		bitset->add(0);
@@ -67,7 +67,7 @@ CCGDomain *CCGProblem::gen(CFG *cfg, BasicBlock *bb) {
 /**
  */
 CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
-	Inst *inst;
+	//Inst *inst;
 	bool testnotconflit = false;
 	bool visit = false;
 	address_t adlbloc;
@@ -95,7 +95,7 @@ CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
 							if(adlbloc != lbloc1->address() && tag == taglblock
 							&& bb != lbloc1->bb()) {
 								identnonconf = lbloc1->id();
-								LBlock *ccgnode = ccggraph->lblock(identif1); 
+								/*LBlock *ccgnode =*/ ccggraph->lblock(identif1); 
 								break;
 							}
 						}
@@ -122,7 +122,7 @@ CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
 	}
 	
 	// the bit vector of kill
-	int length = ccggraph->count();
+	/*int length =*/ ccggraph->count();
 	CCGDomain *kill;
 	kill = empty();
 	if(identif1 == 0)  {

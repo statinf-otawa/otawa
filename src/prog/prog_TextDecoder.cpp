@@ -103,6 +103,8 @@ void TextDecoder::processWorkSpace(WorkSpace *fw) {
 					case Symbol::LABEL:
 						LABEL(inst).add(sym->name());
 						break;
+					default:
+						break;
 					}
 			}
 		}
