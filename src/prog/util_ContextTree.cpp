@@ -70,8 +70,8 @@ namespace otawa {
 ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 	_kind(ROOT),
 	_bb(cfg->entry()),
-	_parent(parent),
-	_cfg(cfg)
+	_cfg(cfg),
+	_parent(parent)
 {
 	assert(cfg);
 	TRACE("Computing " << cfg->label());
@@ -122,10 +122,10 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
  * @param parent	Parent context tree.
  */
 ContextTree::ContextTree(BasicBlock *bb, CFG *cfg, ContextTree *parent):
-	_bb(bb),
 	_kind(LOOP),
-	_parent(parent),
-	_cfg(cfg)
+	_bb(bb),
+	_cfg(cfg),
+	_parent(parent)
 {
 	assert(bb);
 	assert(parent);

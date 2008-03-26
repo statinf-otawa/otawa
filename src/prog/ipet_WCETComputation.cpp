@@ -53,7 +53,7 @@ WCETComputation::WCETComputation(void)
 /**
  */
 void WCETComputation::processWorkSpace(WorkSpace *fw) {
-	CFG *cfg = ENTRY_CFG(fw);
+	//CFG *cfg = ENTRY_CFG(fw);
 	System *system = SYSTEM(fw);
 	if(!system)
 		throw ProcessorException(*this, "no ILP system defined in this CFG");

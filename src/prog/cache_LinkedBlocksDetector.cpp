@@ -98,8 +98,8 @@ void LinkedBlocksDetector::configure(const PropList& props) {
                 
 void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 	const hard::Cache *cache = fw->platform()->cache().instCache();
-	ilp::System *system = SYSTEM(fw);
-	int penalty = cache->missPenalty();
+	/*ilp::System *system = SYSTEM(fw);
+	int penalty = cache->missPenalty();*/
 	LBlockSet **lbsets = LBLOCKS(fw);
 	
 	
@@ -112,7 +112,7 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 			if ((lblock->id() == 0) || (lblock->id() == (lbsets[i]->count() - 1)))
 				continue; /* Skip first / last l-blocks */
 			if (CATEGORY(lblock) == FIRST_MISS) {
-				BasicBlock *header = CATEGORY_HEADER(lblock);
+				//BasicBlock *header = CATEGORY_HEADER(lblock);
 				int cbid = lblock->cacheblock();
 				
 				if (blockList[cbid] == NULL)

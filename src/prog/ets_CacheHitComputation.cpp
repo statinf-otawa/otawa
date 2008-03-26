@@ -27,7 +27,7 @@ namespace otawa { namespace ets {
  * @param ast	AST to process.
  */	
 void CacheHitComputation::processAST(WorkSpace *fw, AST *ast) {
-	int tmp = computation(fw, ast);
+	/*int tmp =*/ computation(fw, ast);
 }
 
 /**
@@ -141,6 +141,7 @@ int CacheHitComputation::computation(WorkSpace *fw, AST *ast){
 		default :
 			return 0;
 	}
+	return 0;
 }
 
 } }// otawa::ets

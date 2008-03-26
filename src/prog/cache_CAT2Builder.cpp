@@ -71,8 +71,8 @@ CAT2Builder::CAT2Builder(void) : CFGProcessor("otawa::CAT2Builder", Version(1, 0
 
 void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard::Cache *cache) {
 	int line = lbset->line();
-	static double moypr = 0;
-	static double moy = 0;
+	/*static double moypr = 0;
+	static double moy = 0;*/
 	
 	/* Use the results to set the categorization */
 	for (LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
@@ -136,7 +136,7 @@ void CAT2Builder::configure(const PropList &props) {
 }
 
 void CAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
-	int i;
+	//int i;
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = fw->platform()->cache().instCache();
 	

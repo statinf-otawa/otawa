@@ -194,7 +194,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 					
 
 			// Found BB starting on next instruction
-			BasicBlock *bb = nextBB(inst);
+			/*BasicBlock *bb =*/ nextBB(inst);
 			//assert(bb);
 		}
 	}

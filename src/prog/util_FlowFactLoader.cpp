@@ -45,7 +45,7 @@ extern int fft_line;
  * @par Lexical Level
  * 
  * F4 is a simple plain text format. It may contain comments a-la C++, that is, one
- * line comments prefixed by "//" or enclosed comments between "/*" and "* /"."
+ * line comments prefixed by "//" or enclosed comments between "/ *" and "* /"."
  * Spaces and line format are not meaningful for other commands.
  * 
  * @par Directives

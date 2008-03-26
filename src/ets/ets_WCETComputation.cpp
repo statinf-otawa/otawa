@@ -31,7 +31,7 @@ namespace otawa { namespace ets {
  */	
 void WCETComputation::processAST(WorkSpace *fw, AST *ast) {
 	assert(ast);
-	int tmp=computation(fw, ast);
+	/*int tmp=*/ computation(fw, ast);
 }
 
 
