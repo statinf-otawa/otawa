@@ -117,8 +117,8 @@ Platform::Platform(const Platform::Identification& _id, const PropList& props)
 	_cache(&CacheConfiguration::NO_CACHE),
 	_processor(0),
 	depth(5),
-	_banks(&null_banks),
-	rcnt(0)
+	rcnt(0),
+	_banks(&null_banks)
 {
 	configure(props);
 }
@@ -135,8 +135,8 @@ Platform::Platform(const Platform& platform, const PropList& props)
 	_cache(&platform.cache()),
 	_processor(0),
 	depth(5),
-	_banks(&null_banks),
-	rcnt(0)
+	rcnt(0),
+	_banks(&null_banks)
 {
 	configure(props);
 }
@@ -362,6 +362,7 @@ const Platform::Identification& id) {
 	_arch = id._arch;
 	_abi = id._abi;
 	_mach = id._mach;
+	return *this;
 }
 
 
