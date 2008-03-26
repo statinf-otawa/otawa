@@ -66,6 +66,7 @@ private:
 public:
 	inline Cache(void);
 	inline Cache(const Cache& cache, const Cache *next = 0);
+	virtual ~Cache(void) { }
 	
 	// Simple accessors
 	inline const Cache *nextLevel(void) const;
