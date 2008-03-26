@@ -25,7 +25,7 @@ namespace otawa { namespace display {
  * @param number node number
  */
 GraphVizNode::GraphVizNode(int number)
-:_number(number), _shapeAcceptsBody(false), _hasTitle(false), _hasBody(false){
+: _hasTitle(false), _hasBody(false), _shapeAcceptsBody(false), _number(number) {
 }
 
 

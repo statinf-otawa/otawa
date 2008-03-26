@@ -25,7 +25,7 @@ namespace otawa { namespace display {
  * @param dest target node
  */
 GraphVizEdge::GraphVizEdge(GraphVizNode *src, GraphVizNode *dest)
-: _src(src), _dest(dest), _hasLabel(false){
+: _hasLabel(false), _src(src), _dest(dest){
 }
 
 
