@@ -37,7 +37,7 @@ FlowFactLoader::FlowFactLoader(void) {
  * @param ast	AST to process.
  */		
 void FlowFactLoader::processAST(WorkSpace *fw, AST *ast){
-	int val;
+	//int val;
 	switch(ast->kind()) {
 		case AST_Seq:
 			processAST(fw, ast->toSeq()->child1());

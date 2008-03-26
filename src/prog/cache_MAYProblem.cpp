@@ -35,11 +35,15 @@ namespace otawa {
 
 	
 MAYProblem::MAYProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A) 
-	: callstate(_size, _A), line(lbset->line()), cache(_cache), bot(_size, _A), ent(_size, _A), lbset(_lbset),  fw(_fw) {
-
-
+:	lbset(_lbset),
+	fw(_fw),
+	line(lbset->line()),
+	cache(_cache),
+	bot(_size, _A),
+	ent(_size, _A),
+	callstate(_size, _A)
+{
 		ent.empty();
-	
 }
 	
 MAYProblem::~MAYProblem() {
