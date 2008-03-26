@@ -28,6 +28,7 @@ class FunctionalUnit {
 	bool pipelined;
 public:
 	inline FunctionalUnit(void): latency(1), width(1), pipelined(false) { };
+	virtual ~FunctionalUnit(void) { }
 	inline elm::String getName(void) const { return name; };
 	inline int getLatency(void) const { return latency; };
 	inline int getWidth(void) const { return width; };
@@ -44,6 +45,7 @@ private:
 	FunctionalUnit *fu;
 public:
 	inline Dispatch(void): type(0), fu(0) { };
+	virtual ~Dispatch(void) { }
 	inline type_t getType(void) const { return type; };
 	inline FunctionalUnit *getFU(void) const { return fu; };
 };
@@ -70,6 +72,7 @@ private:
 	bool ordered;
 public:
 	inline Stage(type_t _type = NONE): type(_type), width(1), latency(1), ordered(false) { };
+	virtual ~Stage(void) { }
 	inline type_t getType(void) const { return type; };
 	inline elm::String getName(void) const { return name; };
 	inline int getWidth(void) const { return width; };
@@ -91,6 +94,7 @@ class Queue {
 	AllocatedTable<Stage *> intern;
 public:
 	inline Queue(void): size(0), input(0), output(0) { }
+	virtual ~Queue(void) { }
 	inline elm::String getName(void) const { return name; }
 	inline int getSize(void) const { return size; }
 	inline Stage *getInput(void) const { return input; }
@@ -109,6 +113,7 @@ class Processor {
 	AllocatedTable<Stage *> stages;
 	AllocatedTable<Queue *> queues;
 public:
+	virtual ~Processor(void) { }
 	inline elm::String getArch(void) const { return arch; };
 	inline elm::String getModel(void) const { return model; };
 	inline elm::String getBuilder(void) const { return builder; };

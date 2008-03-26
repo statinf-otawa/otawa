@@ -80,9 +80,9 @@ class SimulatedInstruction {
 inline SimulatedInstruction::SimulatedInstruction(
 	otawa::Inst* inst,
 	elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions
-):	instruction(inst),
-	instruction_state(READY), 
-	active_instructions(_active_instructions)
+):	active_instructions(_active_instructions),
+	instruction(inst),
+	instruction_state(READY)
 {
 	active_instructions->addLast(this);
 	_type = inst->kind();	
