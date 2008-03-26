@@ -31,7 +31,7 @@ elm::genstruct::SLList<Inst::kind_t> * FunctionalUnitConfiguration::instructionT
 }
 
 FunctionalUnit::FunctionalUnit(bool is_pipelined, int latency, int width)
-	: _is_pipelined(is_pipelined), _latency(latency), _width(width), new_instructions(0), pending_instructions(0) {
+	: _is_pipelined(is_pipelined), _latency(latency), _width(width), pending_instructions(0), new_instructions(0) {
 }
 
 bool FunctionalUnit::isPipelined() {
@@ -58,7 +58,7 @@ ExecuteInOrderStageIQ::ExecuteInOrderStageIQ(sc_module_name name, int width, Gen
 	in_instruction = new sc_in<SimulatedInstruction *>[width];
 	int fu_number = _functional_units->count();
 	functional_units = new elm::genstruct::AllocatedTable<FunctionalUnit *>(fu_number);
-	int inst_type_number = INST_TYPE_NUMBER /*FIXME*/;
+	//int inst_type_number = INST_TYPE_NUMBER; !!FIXME!!
 	/*fu_bindings = new elm::genstruct::AllocatedTable<FunctionalUnit *>(inst_type_number);
 	for (int index=0 ; index<inst_type_number ; index++) {
 		(*fu_bindings)[index] = NULL;
@@ -88,7 +88,7 @@ void ExecuteInOrderStageIQ::action() {
 	while ( ok && (issued < in_number_of_ins.read()) ){
 		inst = in_instruction[issued].read() ;
 		assert(inst->state() == READY);
-		instruction_type_t type;
+		//instruction_type_t type;
 		//FunctionalUnit * fu = (*fu_bindings)[inst->type()];
 		FunctionalUnit * fu = findFU(inst->type());
 		assert(fu);
@@ -154,7 +154,7 @@ ExecuteOOOStage::ExecuteOOOStage(sc_module_name name, int width,
 	rename_tables = _rename_tables;
 	int fu_number = _functional_units->count();
 	functional_units = new elm::genstruct::AllocatedTable<FunctionalUnit *>(fu_number);
-	int inst_type_number = INST_TYPE_NUMBER /*FIXME*/;
+	//int inst_type_number = INST_TYPE_NUMBER; !!FIXME!!
 	/*fu_bindings = new elm::genstruct::AllocatedTable<FunctionalUnit *>(inst_type_number);
 	for (int index=0 ; index<inst_type_number ; index++) {
 		(*fu_bindings)[index] = NULL;
@@ -180,7 +180,7 @@ ExecuteOOOStage::ExecuteOOOStage(sc_module_name name, int width,
 void ExecuteOOOStage::action() {
 	int executed = 0;
 	TRACE(elm::cout << "ExecuteOOOStage->action()\n";)
-	bool memory_pending = false, memory_ordering = false;
+	bool /*memory_pending = false,*/ memory_ordering = false;
 	int i;
 	for (i=0 ; ( (i<rob->size()) /*&& (executed<stage_width)*/ && !memory_ordering) ; i++) {
 		SimulatedInstruction * inst = rob->read(i);

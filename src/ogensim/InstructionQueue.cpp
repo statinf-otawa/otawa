@@ -8,10 +8,10 @@ InstructionQueueConfiguration::InstructionQueueConfiguration(
 	int capacity,
 	simulated_instruction_state_t condition
 )
-:	queue_name(name),
-	cap(capacity),
+:	cap(capacity),
 	number_of_write_ports(0),
 	number_of_read_ports(0), 
+	queue_name(name),
 	leaving_condition(condition)
 {
 }
@@ -140,7 +140,7 @@ void InstructionQueue::action() {
 	TRACE(elm::cout << "\tin_number_of_accepted_outs=" << in_number_of_accepted_outs.read() << "\n";)
 	int outs = 0;
 	while ( !isEmpty() && (outs < in_number_of_accepted_outs.read()) ) {
-		SimulatedInstruction * inst = get();
+		/*SimulatedInstruction * inst =*/ get();
 		TRACE(elm::cout << "\textracting " << inst->inst()->address() << "\n";)
 		outs++;
 	}
