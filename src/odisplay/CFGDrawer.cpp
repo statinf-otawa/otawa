@@ -188,6 +188,8 @@ void CFGDrawer::onEdge(otawa::Edge *cfg_edge, otawa::display::Edge *display_edge
 			LABEL(display_edge) = "return";
 			STYLE(display_edge) = STYLE_DASHED;
 			break;
+		default:
+			ASSERT(false);
 	}
 	display_edge->setProps(*cfg_edge);
 }

@@ -73,7 +73,9 @@ int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
 		}
 		cout << ")";
 		break;
-		
+	
+	default:
+		ASSERT(false);
 	}
 }
 
@@ -82,7 +84,6 @@ int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
  */
 void DisassemblerDisplayer::onBBEnd(BasicBlock *bb, int index) {
 	cout << '\n';
-	PseudoInst *pseudo;
 	for(Iterator<Inst *> inst(*bb); inst; inst++) {
 			
 		// Put the label

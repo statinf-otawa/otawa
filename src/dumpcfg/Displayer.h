@@ -12,6 +12,7 @@
 // Displayer class
 class Displayer {
 public:
+	virtual ~Displayer(void) { }
 	virtual void onCFGBegin(otawa::CFG *cfg) = 0;
 	virtual void onCFGEnd(otawa::CFG *cfg) = 0;
 	virtual void onBBBegin(otawa::BasicBlock *bb, int index) = 0;
