@@ -1,6 +1,6 @@
 lib_LTLIBRARIES=libodisplay.la
 
-AM_CXXFLAGS=@OTAWA_CXXFLAGS@
+AM_CXXFLAGS=@OTAWA_CXXFLAGS@ -Wall
 
 libodisplay_la_LDFLAGS=
 libodisplay_la_LIBADD= @OTAWA_LIBS@

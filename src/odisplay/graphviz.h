@@ -58,6 +58,7 @@ protected:
 	virtual bool printAttribute(elm::io::Output &out, const PropList::Iter& prop);
 public:
 	GraphVizItem();
+	virtual ~GraphVizItem(void) { }
 	virtual void setProps(const PropList& props);
 	virtual String attributes() = 0;
 };
@@ -66,6 +67,7 @@ public:
 // Nodes and Edges
 class GraphVizGraphElement: public GraphVizItem{
 protected:
+	virtual ~GraphVizGraphElement(void) { }
 	virtual bool printAttribute(elm::io::Output &out, const PropList::Iter& prop);
 };
 
