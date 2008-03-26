@@ -86,8 +86,9 @@ public:
 	
 };
 
-inline FeatureDependency::FeatureDependency(const AbstractFeature *feature) : graph(new genstruct::DAGNode<const AbstractFeature*>(feature)), refcount(0) {
-}
+inline FeatureDependency::FeatureDependency(const AbstractFeature *feature)
+	: refcount(0), graph(new genstruct::DAGNode<const AbstractFeature*>(feature))
+	{ }
 
 inline FeatureDependency::~FeatureDependency() {
 	delete graph;

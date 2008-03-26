@@ -33,6 +33,8 @@ using namespace elm;
 // System class
 class System {
 public:
+	virtual ~System(void) { }
+	
 	virtual Constraint *newConstraint(Constraint::comparator_t comp,
 		double constant = 0) = 0;
 	virtual Constraint *newConstraint(const string& label,

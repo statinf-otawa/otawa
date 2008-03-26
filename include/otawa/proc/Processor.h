@@ -85,6 +85,7 @@ public:
 	Processor(const PropList& props = PropList::EMPTY);
 	Processor(elm::String name, elm::Version version, const PropList& props);
 	Processor(String name, Version version);
+	virtual ~Processor(void) { }
 	
 	// Accessors
 	inline elm::String name(void) const;
