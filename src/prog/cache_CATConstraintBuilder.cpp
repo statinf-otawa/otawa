@@ -237,7 +237,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 			this fuction compute  chit & cmiss with 5 cycles trivial execition
 		 	and return the number of instructions in the l-block with cache as parametre
 		 	*/
-			int counter = bloc->countInsts(/*cach*/);
+			/*int counter =*/ bloc->countInsts(/*cach*/);
 //			int latence = bloc->missCount() - bloc->hitCount();
 			int latence = cach->missPenalty();
   			system->addObjectFunction(latence, MISS_VAR(bloc));

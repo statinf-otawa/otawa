@@ -62,7 +62,7 @@ CATDomain *CATProblem::gen(CFG *cfg, BasicBlock *bb) {
 /**
  */
 CATDomain *CATProblem::preserve(CFG *cfg, BasicBlock *bb) {
-		Inst *inst;
+		//Inst *inst;
 		bool testnotconflit = false;
 		bool visit = false;
 		address_t adlbloc;
