@@ -74,7 +74,7 @@ namespace otawa {
  * Build a new edge.
  */
 Edge::Edge(BasicBlock *source, BasicBlock *target, edge_kind_t kind)
-: src(source), tgt(target), knd(kind) {
+: knd(kind), src(source), tgt(target) {
 	assert(source);
 	assert(target);
 	assert(kind != EDGE_Null);
