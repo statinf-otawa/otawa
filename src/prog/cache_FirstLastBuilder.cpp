@@ -89,7 +89,7 @@ void FirstLastBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 	LBlock **min_lblock, **max_lblock;
 
 		
-	LBlockSet **lbsets = LBLOCKS(fw);
+	//LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = fw->platform()->cache().instCache();
 		
 	for (CFG::BBIterator bb(cfg); bb; bb++)
