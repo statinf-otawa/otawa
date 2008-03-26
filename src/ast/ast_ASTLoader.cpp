@@ -30,7 +30,7 @@ namespace otawa {
 /**
  * Build a new AST loader.
  */
-ASTLoader::ASTLoader(void): file(0), fw(0) {
+ASTLoader::ASTLoader(void): fw(0), file(0) {
 }
 
 
