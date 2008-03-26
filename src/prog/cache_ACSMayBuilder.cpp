@@ -130,7 +130,7 @@ void ACSMayBuilder::configure(const PropList &props) {
 }
 
 void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
-	int i;
+	//int i;
 	
 	// Build the vectors for receiving the ACS...
 	for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {

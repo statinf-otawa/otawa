@@ -133,7 +133,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	
 	// Building the ccg edges using DFA
 	length = lbset->count();
-	Inst *inst;
+	//Inst *inst;
 	address_t adinst;			
 	PseudoInst *pseudo;
 	LBlock *aux;

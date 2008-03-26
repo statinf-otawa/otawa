@@ -34,7 +34,12 @@ namespace otawa {
 
 	
 MUSTPERS::MUSTPERS(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A) 
-	: persProb(_size, _lbset, _fw, _cache, _A), mustProb(_size, _lbset, _fw, _cache, _A), bot(_size, _A), ent(_size, _A), line(_lbset->line()) {
+:	mustProb(_size, _lbset, _fw, _cache, _A),
+	persProb(_size, _lbset, _fw, _cache, _A),
+	bot(_size, _A),
+	ent(_size, _A),
+	line(_lbset->line())
+{
 		
 		persProb.assign(bot.pers, persProb.bottom());
 		mustProb.assign(bot.must, mustProb.bottom());

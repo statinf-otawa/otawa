@@ -52,7 +52,7 @@ void ACSComputation::processAST(WorkSpace *fw, AST *ast) {
 			for(int i = 0; i<fw->cache().instCache()->wayCount(); i++){
 				acs->cache_state.add(new BitVector(cache_line_length));
 			}
-			AbstractCacheState::AbstractCacheState *tmp=applyProcess(fw, ast, acs);
+			/*AbstractCacheState::AbstractCacheState *tmp =*/ applyProcess(fw, ast, acs);
 			cache_line_length = 0;
 		}
 	}
@@ -94,7 +94,7 @@ void ACSComputation::initialization(WorkSpace *fw, AST *ast, AbstractCacheState 
 							acs->htable.put(inst->address(), cache_line_length);
 							cache_line_length++;
 						}
-						if (same_lblock < (fw->cache().instCache()->blockSize()/inst->size())-1)
+						if (same_lblock < (int)(fw->cache().instCache()->blockSize()/inst->size())-1)
 							same_lblock++;
 						else 
 							same_lblock = 0;

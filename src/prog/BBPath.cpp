@@ -38,7 +38,7 @@ namespace otawa { namespace ipet {
  * @param start starting basic block
  */
 BBPath::BBPath(BasicBlock *start)
-: basicBlocks(1), _length(1)/*, ending_state(0)*/{
+: _length(1), basicBlocks(1)/*, ending_state(0)*/{
 	assert(start);
 	basicBlocks.add(start);
 }

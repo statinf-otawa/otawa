@@ -21,7 +21,7 @@ namespace otawa {
  */
 ForAST::ForAST(AST *initialization, AST *condition,
 AST *incrementation, AST *body)
-: init(initialization), cnd(condition), inc(incrementation), bod(body) {
+: bod(body), cnd(condition),init(initialization), inc(incrementation) {
 	assert(initialization && condition && incrementation && body);
 }
 

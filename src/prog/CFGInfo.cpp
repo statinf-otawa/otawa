@@ -63,7 +63,7 @@ CFGInfo::~CFGInfo(void) {
  * Remove all CFG stored in this CFG information.
  */
 void CFGInfo::clear(void) {
-	PseudoInst *pseudo;
+	//PseudoInst *pseudo;
 	
 	// Remove CFGs
 	for(int i = 0; i < _cfgs.length(); i++)

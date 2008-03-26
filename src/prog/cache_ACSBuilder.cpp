@@ -203,7 +203,7 @@ void ACSBuilder::configure(const PropList &props) {
 }
 
 void ACSBuilder::processWorkSpace(WorkSpace *fw) {
-	int i;
+	//int i;
 	
 	FIRSTMISS_LEVEL(fw) = level;
 	// Build the vectors for receiving the ACS...

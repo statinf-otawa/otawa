@@ -593,6 +593,7 @@ elm::io::Output& operator<<(elm::io::Output& out, Process *proc) {
 	File *file = proc->program();
 	if(file)
 		out << "[progam=\"" << file->name() << "\"]";
+	return out;
 }
 
 
