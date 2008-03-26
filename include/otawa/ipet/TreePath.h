@@ -52,7 +52,7 @@ public:
 // TreePath private methods
 template <class T1, class T2>
 inline TreePath<T1,T2>::TreePath(const T1 label, int max_childs)
-:_childs(max_childs), _max_childs(max_childs){
+:  _max_childs(max_childs), _childs(max_childs) {
 	_label = label;
 	_data = elm::none;
 }
@@ -77,14 +77,14 @@ inline TreePath<T1,T2>::TreePath(int max_childs)
 
 template <class T1, class T2>
 inline TreePath<T1,T2>::TreePath(const T1 label, const T2 data, int max_childs)
-:_childs(max_childs), _max_childs(max_childs){
+: _max_childs(max_childs), _childs(max_childs) {
 	_label = label;
 	_data = data;
 }
 
 template <class T1, class T2>
 inline TreePath<T1,T2>::TreePath(elm::genstruct::Vector<T1> &path, const T2 data, int max_childs)
-:_childs(max_childs), _max_childs(max_childs){
+: _max_childs(max_childs), _childs(max_childs){
 	_label = path[0];
 	_data = elm::none;
 	add(path,data,1);
