@@ -28,7 +28,7 @@ namespace otawa { namespace loader { namespace new_gliss {
  * @param address	Instruction address.
  */
 Inst::Inst(Process& process, kind_t kind, address_t address)
-: proc(process), _kind(kind), addr(address) {
+: _kind(kind), addr(address), proc(process) {
 }
 
 
