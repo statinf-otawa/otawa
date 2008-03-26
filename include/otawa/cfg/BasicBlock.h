@@ -85,7 +85,7 @@ public:
 	};	
 
 	// Constructors
-	inline BasicBlock(void): _head(0), flags(0), _cfg(0) { };
+	inline BasicBlock(void): flags(0), _head(0), _cfg(0) { };
 	static BasicBlock *findBBAt(WorkSpace *fw, address_t addr);
 	
 	// Generic accessors
@@ -199,6 +199,7 @@ inline IteratorInst<Inst *> *BasicBlock::visit(void) {
 // Output
 inline Output& operator<<(Output& out, BasicBlock *bb) {
 	out << "bb(" << bb->number() << ")";
+	return out;
 }
 
 } // otawa

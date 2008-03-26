@@ -21,6 +21,9 @@ class BlockType;
 
 // Type class
 class Type {
+protected:
+	virtual ~Type(void) { }
+
 public:
 
 	// Kind

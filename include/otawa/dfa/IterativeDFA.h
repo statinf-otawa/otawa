@@ -67,7 +67,7 @@ public:
 // IterativeDFA::IterativeDFA inline
 template <class Problem, class Set, class Iter>
 inline IterativeDFA<Problem, Set, Iter>::IterativeDFA(Problem& problem, CFG& cfg)
-: _cfg(cfg), cnt(cfg.countBB()), prob(problem) {
+: prob(problem), _cfg(cfg), cnt(cfg.countBB()) {
 	ins = new Set *[cnt];
 	outs = new Set *[cnt];
 	gens = new Set *[cnt];

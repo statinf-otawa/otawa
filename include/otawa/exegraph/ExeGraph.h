@@ -153,8 +153,12 @@ class ExeGraph  {
 				elm::genstruct::Vector<N *> _contenders;
 			public:
 				inline ExeNode(ExeGraph<N> *graph, PipelineStage<N> *stage, ExeInst<N> *inst)
-					:  _pipeline_stage(stage), _inst(inst), _needs_operands(false),
-					_produces_operands(false), GenGraph<N,ExeEdge>::Node((otawa::graph::Graph *)graph->graph()) {
+				:	GenGraph<N,ExeEdge>::Node((otawa::graph::Graph *)graph->graph()),
+					_inst(inst),
+					_pipeline_stage(stage),
+					_needs_operands(false),
+					_produces_operands(false)
+				{
 					_latency[MIN] = stage->minLatency();
 					_latency[MAX] = stage->maxLatency();	
 					StringBuffer _buffer;
@@ -219,6 +223,9 @@ class ExeGraph  {
 				_last_node[i] = NULL;
 			}
 		}
+		
+		virtual ~ExeGraph(void) { }
+		
 		inline GenGraph<N, typename ExeGraph<N>::ExeEdge>  * graph()
 			{return &_graph;}
 		inline void setEntryNode(N *node)
@@ -395,7 +402,7 @@ void ExeGraph<N>::build(WorkSpace *fw, Microprocessor<N> * microprocessor, ExeSe
     for (InstNodeIterator node (inst) ; node ; node++) {
       if (previous != NULL) {
 				// edge between consecutive pipeline stages
-				ExeEdge *edge = new ExeEdge(previous, node, ExeEdge::SOLID);
+				/*ExeEdge *edge = */new ExeEdge(previous, node, ExeEdge::SOLID);
       }
       previous = node;
       if (node->needsOperands()) {
@@ -416,7 +423,7 @@ void ExeGraph<N>::build(WorkSpace *fw, Microprocessor<N> * microprocessor, ExeSe
 								}
 								if (!exists) {
 		  						// add an edge for data dependency
-		  						ExeEdge *edge = new ExeEdge(producing_node, node, ExeEdge::SOLID);
+									/*ExeEdge *edge =*/ new ExeEdge(producing_node, node, ExeEdge::SOLID);
 								}
 	      			}
 	    			}
@@ -447,7 +454,7 @@ void ExeGraph<N>::build(WorkSpace *fw, Microprocessor<N> * microprocessor, ExeSe
 				for (StageNodeIterator node(stage) ; node ; node++) {
 	  			if (previous != NULL) {				  
 	    			// scalar stage => draw a solid edge
-	    			ExeEdge * edge = new ExeEdge(previous, node, ExeEdge::SOLID);
+	    			/*ExeEdge * edge =*/ new ExeEdge(previous, node, ExeEdge::SOLID);
 	  			}
 	  			previous = node;
 				}
@@ -457,10 +464,10 @@ void ExeGraph<N>::build(WorkSpace *fw, Microprocessor<N> * microprocessor, ExeSe
 				for (StageNodeIterator node(stage) ; node ; node++) {			
 	  			// superscalar => draw a slashed edge between adjacent instructions
 	  			if(previous)
-	    			ExeEdge *edge = new ExeEdge(previous, node, ExeEdge::SLASHED);
+	    			/*ExeEdge *edge =*/ new ExeEdge(previous, node, ExeEdge::SLASHED);
 	  				// draw a solid edge to model the stage width 
 	  			if (previous_nodes.count() == stage->width()) {
-	    			ExeEdge *edge = new ExeEdge(previous_nodes.first(), node, ExeEdge::SOLID);
+	    			/*ExeEdge *edge =*/ new ExeEdge(previous_nodes.first(), node, ExeEdge::SOLID);
 	    			previous_nodes.removeFirst();	
 	  			}
 	  			previous_nodes.addLast(node);
@@ -484,7 +491,7 @@ void ExeGraph<N>::build(WorkSpace *fw, Microprocessor<N> * microprocessor, ExeSe
 				int index = node->inst()->index() + stage->sourceQueue()->size();
 				for (StageNodeIterator waiting_node(prod_stage) ; waiting_node ; waiting_node++) {
 	  			if (waiting_node->inst()->index() == index) {
-	    			ExeEdge *edge = new ExeEdge(node, waiting_node, ExeEdge::SLASHED);
+	    			/*ExeEdge *edge =*/ new ExeEdge(node, waiting_node, ExeEdge::SLASHED);
 	    			break;
 	  			}
 				}

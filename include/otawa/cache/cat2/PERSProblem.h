@@ -66,7 +66,7 @@ class PERSProblem {
 				ASSERT((A == src.A) && (size == src.size));
 				for (int i = 0; i < size ; i++)
 					age[i] = src.age[i];
-				
+				return *this;
 			}
 			
 			inline void refresh(int id, int newage) {
@@ -182,7 +182,7 @@ class PERSProblem {
 					delete data[i];
 			}
 			
-			inline Domain(const Domain &source) : A(source.A), size(source.size), whole(source.whole), isBottom(source.isBottom) {
+			inline Domain(const Domain &source) : A(source.A), size(source.size), isBottom(source.isBottom), whole(source.whole) {
 				
 				for (int i = 0; i < source.data.length(); i++)
 					data.add(new Item(*source.data[i]));
@@ -194,6 +194,7 @@ class PERSProblem {
 				isBottom = src.isBottom;
 				for (int i = 0; i < src.data.length(); i++)
 					data.add(new Item(*src.data[i]));
+				return *this;
 			}	
 			
 			inline void lub(const Domain &dom) {
