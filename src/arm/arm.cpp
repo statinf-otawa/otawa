@@ -60,7 +60,7 @@ otawa::Inst *Process::decode(address_t addr) {
 
 	// Decode the instruction
 	code_t buffer[20];
-	char out_buffer[200];
+	//char out_buffer[200];
 	instruction_t *inst;
 	iss_fetch((::address_t)addr, buffer);
 	inst = iss_decode((state_t *)state(), (::address_t)addr, buffer, 0);
@@ -179,6 +179,7 @@ otawa::Inst *Process::decode(address_t addr) {
 		
 	default:
 		ASSERT(false);
+		return 0;
 	}
 }
 
@@ -189,7 +190,7 @@ address_t BranchInst::decodeTargetAddress(void) {
 
 	// Decode the instruction
 	code_t buffer[20];
-	char out_buffer[200];
+	//char out_buffer[200];
 	instruction_t *inst;
 	iss_fetch(address(), buffer);
 	inst = iss_decode((state_t *)process().state(), address(), buffer, 0);
@@ -205,6 +206,7 @@ address_t BranchInst::decodeTargetAddress(void) {
     }	
 	default:
 		ASSERT(false);
+		return 0;
 	}
 }
 

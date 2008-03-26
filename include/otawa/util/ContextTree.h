@@ -149,6 +149,7 @@ inline ContextTree::ChildrenIterator::ChildrenIterator(ContextTree *tree)
 // Output
 inline Output& operator<<(Output& out, ContextTree *ct) {
 	out << "context_tree(" << (void *)ct << ")";
+	return out;
 } 
 
 }	// otawa

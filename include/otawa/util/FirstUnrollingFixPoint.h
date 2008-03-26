@@ -70,7 +70,7 @@ class FirstUnrollingFixPoint {
 
 	
 	inline FirstUnrollingFixPoint(Listener & _list)
-	:prob(_list.getProb()),ai(NULL), STATE("", NULL), list(_list)
+	: STATE("", NULL), prob(_list.getProb()), list(_list), ai(NULL)
 	{
 	}	
 	// Destructor

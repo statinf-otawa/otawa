@@ -94,7 +94,7 @@ Identifier<typename FixPoint::FixPointState*> HalfAbsInt<FixPoint>::FIXPOINT_STA
 
 template <class FixPoint>
 inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, WorkSpace& _fw)
- : entry_cfg(*ENTRY_CFG(_fw)), cur_cfg(ENTRY_CFG(_fw)), in(_fp.bottom()), out(_fp.bottom()), fw(_fw), fp(_fp) {
+: fp(_fp), fw(_fw), entry_cfg(*ENTRY_CFG(_fw)), cur_cfg(ENTRY_CFG(_fw)), in(_fp.bottom()), out(_fp.bottom()) {
 		workList = new elm::genstruct::Vector<BasicBlock*>();
 		callStack = new elm::genstruct::Vector<Edge*>();
 		cfgStack = new elm::genstruct::Vector<CFG*>();
@@ -235,7 +235,7 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
             	
         if (current->isExit() && (callStack->length() > 0)) {
           	/* Exit from function: pop callstack, mark edge with return state for the caller */
-           	int last_pos = callStack->length() - 1;
+           	/*int last_pos =*/ callStack->length() /*- 1*/;
            	Edge *edge = callStack->pop();
            	cur_cfg = cfgStack->pop();
 #ifdef DEBUG

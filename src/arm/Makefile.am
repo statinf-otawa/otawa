@@ -1,7 +1,7 @@
 loaderdir=$(libdir)/otawa/loader
 loader_LTLIBRARIES=arm.la
 
-AM_CXXFLAGS = @GLISS_ARM_CXXFLAGS@ @OTAWA_CXXFLAGS@
+AM_CXXFLAGS = @GLISS_ARM_CXXFLAGS@ @OTAWA_CXXFLAGS@ -Wall
 
 arm_la_LDFLAGS = -module
 

@@ -29,7 +29,7 @@ public:
 	static const PropList EMPTY;
 	inline PropList(const PropList& props) { addProps(props); };
 	inline PropList(void): head(0) { };
-	inline ~PropList(void) { clearProps(); };
+	virtual ~PropList(void) { clearProps(); };
 
 	// Variable argument constructors
 	PropList(const AbstractIdentifier *id, ...);
@@ -67,7 +67,7 @@ public:
 	void addProps(const PropList& props);
 	void print(elm::io::Output& out) const;
 	inline PropList& operator=(const PropList& props)
-		{ clearProps(); addProps(props); }
+		{ clearProps(); addProps(props); return *this; }
 
 	// Iter class
 	class Iter: public PreIterator<Iter, Property *> {

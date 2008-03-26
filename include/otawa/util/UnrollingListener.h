@@ -42,11 +42,12 @@ class UnrollingListener {
   public:
 	typedef P Problem;
 	 
-	Identifier<typename Problem::Domain*> BB_OUT_STATE;
+	static Identifier<typename Problem::Domain*> BB_OUT_STATE;
 	
 	typename Problem::Domain ***results;
 	
-	UnrollingListener(WorkSpace *_fw, Problem& _prob) : fw(_fw), prob(_prob), BB_OUT_STATE("", NULL) {
+	UnrollingListener(WorkSpace *_fw, Problem& _prob)
+	: fw(_fw), prob(_prob) {
 		CFGCollection *col = INVOLVED_CFGS(fw);
 		results = new typename Problem::Domain**[col->count()];
 		
@@ -109,7 +110,12 @@ void UnrollingListener<Problem>::blockInterpreted(const FirstUnrollingFixPoint<U
 template <class Problem >
 void UnrollingListener<Problem>::fixPointReached(const FirstUnrollingFixPoint<UnrollingListener> *fp, BasicBlock*bb ) {
 }
-	
-}
+
+template <class T>
+Identifier<typename UnrollingListener<T>::Problem::Domain*> UnrollingListener<T>::BB_OUT_STATE("", 0);
+
+
+
+} // otawa
 
 #endif 

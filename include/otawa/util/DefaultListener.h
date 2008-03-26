@@ -49,7 +49,8 @@ class DefaultListener {
 
 	typename Problem::Domain ***results;
 	
-	DefaultListener(WorkSpace *_fw, Problem& _prob) : fw(_fw), prob(_prob), BB_OUT_STATE("", NULL) {
+	DefaultListener(WorkSpace *_fw, Problem& _prob)
+	: BB_OUT_STATE("", NULL), fw(_fw), prob(_prob)  {
 		CFGCollection *col = INVOLVED_CFGS(fw);
 		results = new typename Problem::Domain**[col->count()];
 		

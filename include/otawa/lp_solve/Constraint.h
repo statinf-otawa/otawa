@@ -60,7 +60,7 @@ public:
 
 // Constraint::SolveInst inlines
 inline Constraint::Factor::Factor(double coefficient, Var *variable,
-Factor *next) : var(variable), coef(coefficient), nxt(next) {
+Factor *next) : nxt(next), var(variable), coef(coefficient) {
 }
 
 inline Var *Constraint::Factor::variable(void) const {
@@ -87,8 +87,8 @@ inline Constraint::Factor& Constraint::Factor::operator-=(double value) {
 
 // Constraint inlines
 inline Constraint::Constraint(System *system, ilp::Constraint::comparator_t comp,
-double constant, Constraint *next): sys(system), cmp(comp), cst(constant),
-nxt(next), facts(0) {
+double constant, Constraint *next): sys(system), nxt(next), facts(0),
+cst(constant),  cmp(comp) {
 	assert(sys);
 }
 

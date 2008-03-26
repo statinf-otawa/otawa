@@ -112,6 +112,8 @@ edge_kind_t kind, BasicBlock *target, int target_index) {
 			cout << "label=\"taken\", ";
 			weight = 3;
 			break;
+		default:
+			ASSERT(false);
 		}
 		cout << "weight=" << weight << "];\n";
 	}

@@ -47,6 +47,7 @@ class AbstractIdentifier {
 public:	
 	AbstractIdentifier(void);
 	AbstractIdentifier(elm::String name, NameSpace& parent = ::NS);
+	virtual ~AbstractIdentifier(void) { }
 
 	inline NameSpace const & parent(void) const { return _parent; };
 	virtual NameSpace *toNameSpace(void);
