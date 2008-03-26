@@ -26,11 +26,11 @@ int main(void) {
 	nodes[0] = new MyNode(&graph, 0),
 	nodes[1] = new MyNode(&graph, 1),
 	nodes[2] = new MyNode(&graph, 2);
-	Edge 	*e1 = new Edge(nodes[0], nodes[1]),
-			*e2 = new Edge(nodes[0], nodes[0]),
-			*e3 = new Edge(nodes[0], nodes[2]),
-			*e4 = new Edge(nodes[2], nodes[1]),
-			*e5 = new Edge(nodes[2], nodes[1]);
+	new Edge(nodes[0], nodes[1]);
+	new Edge(nodes[0], nodes[0]);
+	new Edge(nodes[0], nodes[2]);
+	new Edge(nodes[2], nodes[1]);
+	new Edge(nodes[2], nodes[1]);
 	
 	// Display nodes
 	for(int i = 0; i < 3; i++) {
