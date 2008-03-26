@@ -1,4 +1,4 @@
-AM_CXXFLAGS = @OTAWA_CXXFLAGS@ @LP_SOLVE_CXXFLAGS@
+AM_CXXFLAGS = @OTAWA_CXXFLAGS@ @LP_SOLVE_CXXFLAGS@ -Wall
 
 ilpdir=$(libdir)/otawa/ilp
 ilp_LTLIBRARIES = lp_solve.la
