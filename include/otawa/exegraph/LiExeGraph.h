@@ -71,7 +71,7 @@ class LiExeGraph : public ExeGraph<LiExeNode> {
 };
 
 inline  LiExeNode::LiExeNode(ExeGraph<LiExeNode> *graph, PipelineStage<LiExeNode> *stage, ExeInst<LiExeNode> *inst) 
-	: _graph((LiExeGraph *)graph), _shaded(false), ExeNode(graph, stage, inst) {
+	: ExeNode(graph, stage, inst), _shaded(false), _graph((LiExeGraph *)graph)  {
 	 if (inst->codePart() >= ExeGraph<LiExeNode>::BODY) {
 		setTime(ExeGraph<LiExeNode>::READY,ExeGraph<LiExeNode>::MIN,0);
 		setTime(ExeGraph<LiExeNode>::START,ExeGraph<LiExeNode>::MIN,0);

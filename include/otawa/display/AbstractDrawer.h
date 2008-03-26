@@ -40,6 +40,7 @@ public:
 	class Vertex {
 	public:
 		Vertex(AbstractDrawer& drawer);
+		virtual ~Vertex(void) { }
 		ShapeStyle shape;
 		virtual void configure(Output& out, ShapeStyle& shape);
 		
@@ -54,6 +55,7 @@ public:
 	class Edge {
 	public:
 		Edge(AbstractDrawer& drawer, Vertex *source, Vertex *sink);
+		virtual ~Edge(void) { }
 		TextStyle text;
 		LineStyle line;
 		virtual void configure(Output& label, TextStyle& text, LineStyle& line);
@@ -67,6 +69,7 @@ public:
 	// Methods
 	AbstractDrawer(void);
 	AbstractDrawer(Driver& driver);
+	virtual ~AbstractDrawer(void) { }
 	void draw(void);
 	virtual void configure(Output& caption, TextStyle& text, FillStyle& fill);
 	

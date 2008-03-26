@@ -49,6 +49,7 @@ public:
 	static Driver *find(string name = "");
 	static Driver *find(kind_t kind);
 	
+	virtual ~Driver(void) { }
 	virtual Graph *newGraph(
 		const PropList& defaultGraphStyle = PropList::EMPTY,
 		const PropList& defaultNodeStyle = PropList::EMPTY,

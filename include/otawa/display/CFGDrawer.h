@@ -28,6 +28,7 @@ protected:
 public:
 	CFGDrawer(CFG *cfg, Graph *graph);
 	CFGDrawer(CFG *cfg, const PropList& props = PropList::EMPTY, Driver& driver = graphviz_driver);
+	virtual ~CFGDrawer(void) { }
 	virtual void display();
 };
 
