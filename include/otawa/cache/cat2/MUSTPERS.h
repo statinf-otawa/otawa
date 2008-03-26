@@ -60,6 +60,7 @@ class MUSTPERS {
 			inline Domain& operator=(const Domain &src) {
 				pers = src.pers;
 				must = src.must;
+				return *this;
 			}
 
 			inline MUSTProblem::Domain& getMust() {

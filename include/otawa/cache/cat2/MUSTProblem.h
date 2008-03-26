@@ -173,7 +173,7 @@ class MUSTProblem {
 				return(age[id]);
 			}
 			
-			inline int setAge(const int id, const int _age) {
+			inline void setAge(const int id, const int _age) {
 				ASSERT(id < size);
 				ASSERT((_age < A) || (_age == -1));
 				age[id] = _age;
