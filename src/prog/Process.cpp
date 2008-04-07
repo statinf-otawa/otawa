@@ -664,4 +664,40 @@ Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE("float_memory_access_feature");
  */
 Feature<NoProcessor> REGISTER_USAGE_FEATURE("register_usage_feature");
 
+
+/**
+ * This feature is put on the process object whose image supports Unix-like
+ * argument passing. It contains the image address of the argv vector.
+ * @p Hooks
+ * @li @ref Process
+ */
+Identifier<Address> ARGV_ADDRESS("otawa::argv_address", Address::null);
+
+
+/**
+ * This feature is put on the process object whose image supports Unix-like
+ * argument passing. It contains the image address of the envp vector.
+ * @p Hooks
+ * @li @ref Process
+ */
+Identifier<Address> ENVP_ADDRESS("otawa::envp_address", Address::null);
+
+
+/**
+ * This feature is put on the process object whose image supports Unix-like
+ * argument passing. It contains the image address of the auxv vector.
+ * @p Hooks
+ * @li @ref Process
+ */
+Identifier<Address> AUXV_ADDRESS("otawa::auxv_address", Address::null);
+
+
+/**
+ * This feature is put on the process to get information about the built image.
+ * It contains the startup address of the stack pointer.
+ * @p Hooks
+ * @li @ref Process
+ */
+Identifier<Address> SP_ADDRESS("otawa::sp_address", Address::null);
+
 } // otawa
