@@ -21,6 +21,7 @@
  */
 
 #include <elm/assert.h>
+#include <otawa/prog/Manager.h>
 #include <otawa/loader/new_gliss/Process.h>
 #include <otawa/loader/new_gliss/BranchInst.h>
 #include <otawa/prog/Loader.h>
@@ -107,15 +108,25 @@ public:
 		: otawa::SimState(process) {
 		ASSERT(process);
 		ASSERT(state);
-		_state = new state_t;
-		*_state = *state;
+		/* !!DEBUG!!
+		 * _state = new state_t;
+		*_state = *state; */
+		_state = state;
 	}
 	virtual ~SimState(void) {
-		delete [] (char *)_state;
+		//delete [] (char *)_state;
 	}
 	inline state_t *state(void) const { return _state; }
 	virtual Inst *execute(Inst *oinst) {
 		ASSERTP(oinst, "null instruction pointer");
+		
+		/*cerr << "r1=" << (void *)_state->gpr[1] << ", ";
+		cerr << "r3=" << (void *)_state->gpr[3] << ", ";
+		cerr << "r4=" << (void *)_state->gpr[4] << ", ";
+		cerr << "r29=" << (void *)_state->gpr[29] << ", ";
+		cerr << "r30=" << (void *)_state->gpr[30] << ", ";
+		cerr << "r31=" << (void *)_state->gpr[31] << io::endl;*/
+		
 		Address addr = oinst->address();
 		code_t buffer[20];
 		instruction_t *inst;
@@ -126,15 +137,14 @@ public:
 		iss_free(inst);
 		if(NIA(_state) == oinst->topAddress()) {
 			Inst *next = oinst->nextInst();
-			while(next->isPseudo())
+			while(next && next->isPseudo())
 				next = next->nextInst();
-			return next;
+			if(next && next->address() == Address(NIA(_state)))
+				return next;
 		} 
-		else {
-			Inst *next = process()->findInstAt(NIA(_state));
-			ASSERTP(next, "cannot find instruction at " << (void *)NIA(_state) << " from " << oinst->address());
-			return next; 
-		}
+		Inst *next = process()->findInstAt(NIA(_state));
+		ASSERTP(next, "cannot find instruction at " << (void *)NIA(_state) << " from " << oinst->address());
+		return next; 
 	}
 private:
 	state_t *_state;
@@ -155,7 +165,47 @@ public:
 	virtual otawa::SimState *newState(void) {
 		return new SimState(this, (state_t *)state());
 	}
-
+	/*virtual File *loadFile(cstring name) {
+		File *res = otawa::loader::new_gliss::Process::loadFile(name);
+		
+		// !!DEBUG!!
+		Address sp = ((state_t *)state())->gpr[1];
+		Address top = Address(0x80000000);
+		while(sp < top) {
+			cout << sp << '\t';
+			for(int i = 0; i < 8; i++) {
+				unsigned char byte;
+				get(sp + i, byte);
+				cout << io::right(io::pad('0', io::width(2, io::hex(byte))));
+			}
+			cout << '\t';
+			for(int i = 0; i < 8; i++) {
+				unsigned char byte;
+				get(sp + i, byte);
+				if(byte < 32 || byte >= 128)
+					cout << '.';
+				else
+					cout << (char)byte;
+			}
+			cout << io::endl;
+			sp += 8;
+		}
+		cout << "r1 = " << (void *)(((state_t *)state())->gpr[1]) << io::endl;
+		cout << "r3 = " << (void *)(((state_t *)state())->gpr[3]) << io::endl;
+		cout << "r4 = " << (void *)(((state_t *)state())->gpr[4]) << io::endl;
+		cout << "r5 = " << (void *)(((state_t *)state())->gpr[5]) << io::endl;
+		cout << "r6 = " << (void *)(((state_t *)state())->gpr[6]) << io::endl;
+		
+		// !!DEBUG!!
+		sp = ((state_t *)state())->gpr[1];
+		unsigned long v;
+		get(sp, v);
+		((state_t *)state())->gpr[3] = v;
+		((state_t *)state())->gpr[4] = sp + 4;		
+		
+		return res;
+	}*/
+	
 protected:
 	virtual otawa::Inst *decode(address_t addr);
 	virtual void *gelFile(void) {
@@ -309,7 +359,9 @@ Process::Process(
 /**
  */
 otawa::Inst *Process::decode(address_t addr) {
-
+	//cerr << "!! " << io::hex(iss_mem_read8_little(((state_t *)state())->M, 0x1006c680)) << io::endl;
+	//cerr << "!! " << io::hex(iss_mem_read8_little(((state_t *)state())->M, 0x1006c670)) << io::endl;
+	
 	// Decode the instruction
 	code_t buffer[20];
 	instruction_t *inst;
