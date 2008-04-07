@@ -179,6 +179,12 @@ private:
 	Address addr;
 };
 
+// Process information
+extern Identifier<Address> ARGV_ADDRESS;
+extern Identifier<Address> ENVP_ADDRESS;
+extern Identifier<Address> AUXV_ADDRESS;
+extern Identifier<Address> SP_ADDRESS;
+
 // Features
 extern Feature<NoProcessor> MEMORY_ACCESS_FEATURE;
 extern Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE;

@@ -10,6 +10,7 @@
 #include <otawa/prog/Manager.h>
 #include <gel/gel.h>
 #include <gel/gel_elf.h>
+#include <gel/image.h>
 #include "old_gliss.h"
 #include <otawa/loader/gliss.h>
 #include "config.h"
@@ -17,6 +18,7 @@
 #define TRACE(m) //cerr << m << io::endl
 
 extern "C" int Is_Elf_Little;
+extern "C" gel_image_t *loader_image(memory_t *memory);
 
 namespace otawa { namespace loader { namespace new_gliss {
 
@@ -112,7 +114,7 @@ private:
  * @return	State as returned by GLISS.
  */
 
-
+ 	
 /**
  */
 hard::Platform *Process::platform(void) {
@@ -221,10 +223,24 @@ File *Process::loadFile(elm::CString path) {
 	gel_enum_free(iter);
 
 	// Last initializations
-	_start = findInstAt((address_t)infos.entry);
-	otawa::gliss::GLISS_STATE(this) = _state;
 	_memory = memory();
 	ASSERTP(_memory, "memory information mandatory"); 
+	_start = findInstAt((address_t)infos.entry);
+	otawa::gliss::GLISS_STATE(this) = _state;
+	gel_image_t *image = loader_image(_memory);
+	gel_env_t *env = gel_image_env(image);
+	if(env) {
+		if(env->argc_return)
+			ARGC(this) = env->argc_return;
+		if(env->argv_return)
+			ARGV_ADDRESS(this) = env->argv_return;
+		if(env->envp_return)
+			ENVP_ADDRESS(this) = env->envp_return;
+		if(env->auxv_return)
+			AUXV_ADDRESS(this) = env->auxv_return;
+		if(env->sp_return)
+			SP_ADDRESS(this) = env->sp_return;
+	}
 	return file;
 }
 
