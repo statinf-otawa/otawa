@@ -252,6 +252,8 @@ void FlowFactLoader::onCheckSum(const String& name, unsigned long sum) {
  */
 void FlowFactLoader::onReturn(address_t addr) {
 	Inst *inst = _fw->process()->findInstAt(addr);
+	if(!inst)
+	  throw ProcessorException(*this, _ << "no instruction at " << addr);
 	IS_RETURN(inst) = true;
 }
 
@@ -262,6 +264,8 @@ void FlowFactLoader::onReturn(address_t addr) {
  */
 void FlowFactLoader::onNoReturn(address_t addr) {
 	Inst *inst = _fw->process()->findInstAt(addr);
+	if(!inst)
+	  throw ProcessorException(*this, _ << "no instruction at " << addr);
 	NO_RETURN(inst) = true;
 }
 
