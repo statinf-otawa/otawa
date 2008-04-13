@@ -37,6 +37,7 @@ libotawa_la_SOURCES = \
 	proc_Processor.cpp \
 	proc_CFGProcessor.cpp \
 	proc_Feature.cpp \
+	proc_FeatureRequirer.cpp \
 	proc_FunProcessor.cpp \
 	proc_LBlockProcessor.cpp \
 	proc_ASTProcessor.cpp \
