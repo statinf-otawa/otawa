@@ -62,6 +62,7 @@ protected:
 	PropList *stats;
 	
 	// Facility methods
+	friend class FeatureRequirer;
 	inline bool isVerbose(void) const;
 	inline bool isTimed(void) const;
 	inline bool recordsStats(void) const;
