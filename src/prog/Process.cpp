@@ -641,7 +641,7 @@ String OutOfSegmentException::message(void) {
  * @par Provided Methods
  * @li @ref Process::get() family of methods. 
  */
-Feature<NoProcessor> MEMORY_ACCESS_FEATURE("memory_access_feature");
+Feature<NoProcessor> MEMORY_ACCESS_FEATURE("otawa::MEMORY_ACCESS_FEATURE");
 
 
 /**
@@ -652,7 +652,7 @@ Feature<NoProcessor> MEMORY_ACCESS_FEATURE("memory_access_feature");
  * @li @ref Process::get(Address, double&), 
  * @li @ref Process::get(Address, long double&), 
  */
-Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE("float_memory_access_feature");
+Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE("otawa::FLOAT_MEMORY_ACCES_FEATURE");
 
 
 /**
@@ -660,9 +660,20 @@ Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE("float_memory_access_feature");
  * register usage information.
  * @par Provided Methods
  * @li @ref	Inst::readRegs(void);
- * @li @ref writtenRegs(void);
+ * @li @ref Inst::writtenRegs(void);
  */
-Feature<NoProcessor> REGISTER_USAGE_FEATURE("register_usage_feature");
+Feature<NoProcessor> REGISTER_USAGE_FEATURE("otawa::REGISTER_USAGE_FEATURE");
+
+
+/**
+ * This feature is usually provided by the loader providing decoding facility
+ * for control instructions.
+ * @par Hooks
+ * @li @ref Process
+ * @par Provided Methods
+ * @li @ref Inst::target()
+ */
+Feature<NoProcessor> CONTROL_DECODING_FEATURE("otawa::CONTROL_DECODING");
 
 
 /**

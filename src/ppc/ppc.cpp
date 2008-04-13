@@ -348,6 +348,7 @@ Process::Process(
 	hard::Platform *pf,
 	const PropList& props
 ): otawa::loader::new_gliss::Process(manager, pf, props) {
+	provide(CONTROL_DECODING_FEATURE);
 	provide(REGISTER_USAGE_FEATURE);
 	/*if(Processor::VERBOSE(props)) {
 		cerr << "PPC: sizeof(Inst) = " << sizeof(Inst) << io::endl;

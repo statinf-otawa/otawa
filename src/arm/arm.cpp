@@ -171,10 +171,16 @@ otawa::Inst *Process::decode(address_t addr) {
     	kind |= Inst::IS_TRAP;
     	goto branch;
  
+    // Create just a branch instruction 
     branch:
 		return new BranchInst(*this, kind, addr);
     
+	// Check if the PC is modified
     simple:
+    	for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
+    		if(inst->instroutput[i].type == GPR_T
+    		&& inst->instroutput[i].val.uint8 == 15)
+    			goto branch;
 		return new Inst(*this, kind, addr);
 		
 	default:
@@ -190,22 +196,15 @@ address_t BranchInst::decodeTargetAddress(void) {
 
 	// Decode the instruction
 	code_t buffer[20];
-	//char out_buffer[200];
 	instruction_t *inst;
 	iss_fetch(address(), buffer);
 	inst = iss_decode((state_t *)process().state(), address(), buffer, 0);
 
 	// San instruction
 	switch(inst->ident) {
-    case ID_BX_:
-    case ID_SWI_:
-    case ID_MOV__1:
-    	return 0;
-    case ID_B_: {
+    case ID_B_:
     	return inst->instrinput[2].val.int32 << 2;
-    }	
 	default:
-		ASSERT(false);
 		return 0;
 	}
 }
@@ -298,6 +297,7 @@ Process::Process(
 	hard::Platform *pf,
 	const PropList& props
 ): otawa::loader::old_gliss::Process(manager, &arm_plugin, pf, props) {
+	provide(CONTROL_DECODING_FEATURE);
 }
 
 } } // otawa::arm

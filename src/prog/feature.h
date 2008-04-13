@@ -21,7 +21,7 @@
  */
 
 /**
- * @page features "Available Features"
+ * @page features Available Features
  * 
  * @par Program Features
  * 
@@ -70,6 +70,7 @@
  * 
  * @par Loader Features
  * 
+ * @li @ref CONTROL_DECODING_FEATURE
  * @li @ref FLOAT_MEMORY_ACCESS_FEATURE
  * @li @ref MEMORY_ACCESS_FEATURE
  * @li @ref REGISTER_USAGE_FEATURE

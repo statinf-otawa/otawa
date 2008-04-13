@@ -190,6 +190,7 @@ extern Feature<NoProcessor> MEMORY_ACCESS_FEATURE;
 extern Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE;
 extern Feature<NoProcessor> STACK_USAGE_FEATURE;
 extern Feature<NoProcessor> REGISTER_USAGE_FEATURE;
+extern Feature<NoProcessor> CONTROL_DECODING_FEATURE;
 
 } // otawa
 
