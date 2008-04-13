@@ -14,6 +14,13 @@ namespace otawa {
  * This interface is implemented by all objects that may build and provide
  * a process. Many kind of loader may exists from the simple binary
  * loader to the complex program builder.
+ * 
+ * The loader may put on the created processes zero or several of the following
+ * features according the machine-level feature provided:
+ * @li @ref FLOAT_MEMORY_ACCESS_FEATURE
+ * @li @ref MEMORY_ACCESS_FEATURE
+ * @li @ref REGISTER_USAGE_FEATURE
+ * @li @ref STACK_USAGE_FEATURE
  */
 
 
