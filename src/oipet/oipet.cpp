@@ -1,5 +1,5 @@
 /*
- *	$Id $
+ *	$Id$
  *	oipet command
  *
  *	This file is part of OTAWA
@@ -37,6 +37,7 @@
 #include <otawa/display/CFGDrawer.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg/Virtualizer.h>
+#include <otawa/cfg/CFGOutput.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -301,15 +302,7 @@ void Command::process (String arg) {
  */
 void Command::compute(String fun) {
 	
-	// Get the VCFG
-	/*CFG *cfg = fw->getCFGInfo()->findCFG(fun);
-	if(!cfg) {
-		cerr << "ERROR: binary file does not contain the function \""
-			 << fun << "\".\n";
-		return;
-	}*/
-	//VirtualCFG vcfg(cfg);
-	
+	// Inlining required for CCG
 	if(not_inlining && icache_option == icache_ccg) {
 		not_inlining.set(false);
 		cerr << "WARNING: using CCG without inlining may induce, in some cases, "
@@ -466,20 +459,8 @@ void Command::compute(String fun) {
 		recorder.process(fw, props);
 		
 		// Generates output
-		if(verbose)
-			cout << "Starting otawa::ipet::CFGDrawer\n";
-		for(CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
-			if(verbose)
-				cout << "\tprocess CFG " << cfg->label() << io::endl;
-			StringBuffer buf;
-			buf << output_prefix.value() << cfg->label() << ".ps";
-			String filename = buf.toString();
-			display::OUTPUT_PATH(props) = filename.toCString();
-			display::CFGDrawer drawer(cfg, props);
-			drawer.display();
-			if(verbose)
-				cout << "Starting otawa::ipet::CFGDrawer\n";
-		}
+		CFGOutput output;
+		output.process(fw, props);
 	}
 	
 	// Dump the ratio
