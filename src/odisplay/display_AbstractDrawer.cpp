@@ -79,6 +79,7 @@ static void setShapeStyle(PropList *props, const ShapeStyle& style) {
  * 
  * AbstractDrawer is rarely used as is. You may prefer automatic graph drawing
  * facilities based on AbstractDrawer provides by @ref GenDrawer.
+ * @ingroup display
  */
 
 
@@ -155,6 +156,7 @@ void AbstractDrawer::configure(
 /**
  * @class AbstractDrawer::Vertex
  * This class represents vertices in the @ref AbstractDrawer.
+ * @ingroup display
  */
 
 
@@ -200,12 +202,14 @@ void AbstractDrawer::Vertex::setup(void) {
 /**
  * @var AbstractDrawer::Vertex::shape;
  * Shape of the vertex publicly accessible for customization.
+ * @ingroup display
  */
 
 
 /**
  * @class AbstractDrawer::Edge
  * An edge in a @ref AbstractDrawer.
+ * @ingroup display
  */
 
 
