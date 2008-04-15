@@ -1,19 +1,34 @@
 /*
  *	$Id$
- *	Copyright (c) 2006, IRIT UPS.
+ *	graphviz plugin implementation
  *
- *	src/odisplay/graphviz_Graph.cpp -- GraphVizGraph class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006-07, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
 #include "graphviz.h"
 #include <otawa/display/Driver.h>
 #include <elm/io/UnixOutStream.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <fcntl.h>
+#include <elm/system/ProcessBuilder.h>
+#include <elm/system/System.h>
 
 using namespace elm::genstruct;
 using namespace elm::io;
+using namespace elm::system;
 
 namespace otawa { namespace display {
 
@@ -131,10 +146,11 @@ void GraphVizGraph::printGraphData(Output& out){
 }
 
 
-void GraphVizGraph::display(void){
-	CString command;
-	CString param_type;
-	String file = display::OUTPUT_PATH(this);;
+void GraphVizGraph::display(void) throw(DisplayException) {
+	String file = display::OUTPUT_PATH(this);
+	
+	// Select the command
+	CString command;	
 	switch(GRAPHVIZ_LAYOUT(this)){
 		case LAYOUT_DOT:
 			command = "dot";
@@ -152,12 +168,17 @@ void GraphVizGraph::display(void){
 			command = "fdp";
 			break;
 		default:
-			assert(false);
+			throw DisplayException("unsupported layout");
 	}
+	system::ProcessBuilder builder(command);
+
+	// Select the type
+	CString param_type;
 	switch(OUTPUT_KIND(this)){
 		case OUTPUT_DOT:
 			param_type = "-Tdot";
 			break;
+		case OUTPUT_PDF:
 		case OUTPUT_PS:
 		case OUTPUT_ANY:
 			param_type = "-Tps";
@@ -175,48 +196,31 @@ void GraphVizGraph::display(void){
 			param_type = "-Tsvg";
 			break;
 		default:
-			assert(false);
+			throw DisplayException("unsupported output kind");
 	}
+	builder.addArgument(param_type);
 	
-	int pipe_graph_dot[2];
-	if(pipe(pipe_graph_dot) == -1){
-		cerr << "Error while creating pipe\n";
-		return;
-	}
-	/*int file_descr = open(&file, O_CREAT, 0644);
-	if(file_descr < 0){
-		cerr << "Error while creating the file " << file << endl;
-		return;
-	}
-	close(file_descr);*/
-	pid_t child;
-	switch(child = fork()){
-		case -1:
-			cerr << "Error while creating new process\n";
-			return;
-		case 0:
-			{
-				close(pipe_graph_dot[1]);
-				dup2(pipe_graph_dot[0], 0);
-				execlp(&command, &command, &param_type, "-o" , &file, NULL);
-				exit(0);
-			}
-		default:
-			{
-				close(pipe_graph_dot[0]);
-				UnixOutStream unixOutStream(pipe_graph_dot[1]);
-				Output output(unixOutStream);
-				printGraphData(output);
-				close(unixOutStream.fd());
-				close(pipe_graph_dot[1]);
-				waitpid(child, 0, 0);
-			}
-	}
+	// Add the output
+	builder.addArgument("-o");
+	builder.addArgument(&file);
+	
+	// Redirect IO
+	Pair<PipeInStream *, PipeOutStream *> pipe = System::pipe();
+	builder.setInput(pipe.fst);
+	Process *proc = builder.run();
+	
+	// Perform the output
+	Output output(*pipe.snd);
+	printGraphData(output);
+
+	// Cleanup
+	delete pipe.fst;
+	delete pipe.snd;
+	proc->wait();
+	delete proc;
 }
 
-
-
-} }
+} }	// otawa::display
 
 
 
