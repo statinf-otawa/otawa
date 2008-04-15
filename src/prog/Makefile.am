@@ -142,6 +142,7 @@ libotawa_la_SOURCES = \
 	BBTimeSimulator.cpp \
 	BBPath.cpp \
 	cfg_CFGCollector.cpp \
+	cfg_CFGOutput.cpp \
 	prop_NameSpace.cpp \
 	prop_Identifier.cpp \
 	prop_GenericIdentifier.cpp \
