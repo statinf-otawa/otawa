@@ -161,7 +161,7 @@ public:
 		Node *target,
 		const PropList& style = PropList::EMPTY,
 		const PropList& props = PropList::EMPTY);
-	virtual void display(void);
+	virtual void display(void) throw(DisplayException);
 };
 
 /******************************************************************************/
