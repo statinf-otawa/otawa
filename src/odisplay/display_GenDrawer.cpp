@@ -32,6 +32,7 @@ namespace otawa { namespace display {
  * @param D		Type describing the decorator of the nodes and edges of the
  * 				graph (must implement the @ref otawa::display::Decorator
  * 				concept).
+ * @ingroup display
  */
 
 
@@ -47,6 +48,7 @@ namespace otawa { namespace display {
  * Default decorator that just output the given edges and vertices.
  * This class implements the @ref otawa::display::Decorator concept.
  * @param G		Type of the graph.
+ * @ingroup display
  */
 
 } } // otawa::display
