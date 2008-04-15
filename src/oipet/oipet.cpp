@@ -489,19 +489,8 @@ void Command::run(void) {
 	}
 	if(cache)
 		CACHE_CONFIG_PATH(props) = elm::system::Path(cache);
+	otawa::Processor::VERBOSE(props) = verbose;
 	fw = manager.load(&file, props);
-	
-	// Removing __eabi call if available (should move in a file configuration)
-	CFG *cfg = fw->getCFGInfo()->findCFG("main");
-	if(cfg != 0)
-		for(CFG::BBIterator bb(cfg); bb; bb++)
-			for(BasicBlock::OutIterator edge(bb); edge; edge++)
-				if(edge->kind() == Edge::CALL
-				&& edge->target()
-				&& edge->calledCFG()->label() == "__eabi") {
-					delete(*edge);
-					break;
-				}
 	
 	// Instruction cache preparation
 	if(icache_option == icache_def) {
