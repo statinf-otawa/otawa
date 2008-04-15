@@ -16,7 +16,7 @@ CONFIG	= otawa-config
 PREFIX		= $(shell $(CONFIG) --prefix)
 FLAGS		= $(shell $(CONFIG) --cflags $(MODULES))
 DATADIR 	= $(shell $(CONFIG) --data $(MODULES))
-CXXFLAGS	= $(CUSTOM_CXXFLAGS) $(FLAGS) -DDATA_DIR="$(DATADIR)"
+CXXFLAGS	= $(CUSTOM_CXXFLAGS) $(FLAGS) -DDATA_DIR="\"$(DATADIR)\""
 LDLIBS		= $(CUSTOM_LDLIBS) $(shell $(CONFIG) --libs $(MODULES))
 LDFLAGS 	= $(CUSTOM_LDFLAGS)
 OBJECTS 	= $(SOURCES:.cpp=.lo)
