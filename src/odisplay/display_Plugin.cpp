@@ -27,6 +27,7 @@ namespace otawa { namespace display {
 /**
  * @class Plugin
  * A plugin to provide driver to display graphs.
+ * @ingroup display
  */
 
 
