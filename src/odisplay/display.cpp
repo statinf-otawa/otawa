@@ -33,6 +33,7 @@ inline io::IntFormat hex2(int v) {
 /**
  * @class Color
  * A color description.
+ * @ingroup display
  */
 
 
@@ -68,6 +69,7 @@ Color::Color(String name) {
 /**
  * @class TextStyle
  * Description of the style of text.
+ * @ingroup display
  */
 
 
@@ -118,6 +120,7 @@ Color::Color(String name) {
 /**
  * @class FillStyle
  * The style of a filled area.
+ * @ingroup display
  */
 
 
@@ -136,6 +139,7 @@ Color::Color(String name) {
 /**
  * @class ShapeStyle
  * Shape style.
+ * @ingroup display
  */
 
 
