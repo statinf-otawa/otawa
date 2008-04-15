@@ -63,6 +63,15 @@ public:
 extern Identifier<int> WEIGHT;
 extern Identifier<elm::String> LABEL;
 
+
+// DisplayException class
+class DisplayException: public Exception {
+public:
+	inline DisplayException(void) { }
+	inline DisplayException(const string& msg): Exception(msg) { }
+};
+
+
 // Graph class
 class Graph: public Item {
 public:
@@ -71,7 +80,7 @@ public:
 	virtual Edge *newEdge(Node *source, Node *target,
 		const PropList& style = PropList::EMPTY,
 		const PropList& props = PropList::EMPTY) = 0;
-	virtual void display(void) = 0;
+	virtual void display(void) throw(DisplayException) = 0;
 };
 
 } } // otawa::display
