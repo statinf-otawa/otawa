@@ -28,12 +28,14 @@ namespace otawa { namespace display {
 
 /**
  * Tells that the properties with the given identifier have to be printed
+ * @ingroup display
  */
 Identifier<AbstractIdentifier*> INCLUDE("otawa::display::include");
 
 
 /**
  * Tells that the properties with the given identifier mustn't be printed
+ * @ingroup display
  */
 Identifier<AbstractIdentifier*> EXCLUDE("otawa::display::exclude");
 
@@ -42,18 +44,21 @@ Identifier<AbstractIdentifier*> EXCLUDE("otawa::display::exclude");
  * The value of the property must be either INCLUDE or EXCLUDE.
  * Gives a default behaviour to the properties that doesn't appear in
  * any of the INCLUDE / EXCLUDE lists.
+ * @ingroup display
  */
 Identifier<AbstractIdentifier*> DEFAULT("otawa::display::default");
 
 
 /**
  * Identifier of the background color
+ * @ingroup display
  */
 Identifier<elm::CString> BACKGROUND("otawa::display::background");
 
 
 /**
  * Identifier of the drawing color (boxes, edges)
+ * @ingroup display
  */
 Identifier<elm::CString> COLOR("otawa::display::color");
 
@@ -61,72 +66,84 @@ Identifier<elm::CString> COLOR("otawa::display::color");
 /**
  * Identifier of the drawing style.
  * Must be one of @ref style_t
+ * @ingroup display
  */
 Identifier<int> STYLE("otawa::display::style");
 
 
 /**
  * Identifier of the text color. It is the same Identifier as TEXT_COLOR
+ * @ingroup display
  */
 Identifier<elm::CString> FONT_COLOR("otawa::display::text_color");
 
 
 /**
  * Identifier of the text color. It is the same Identifier as FONT_COLOR
+ * @ingroup display
  */
 Identifier<elm::CString> &TEXT_COLOR = FONT_COLOR;
 
 
 /**
  * Identifier of the text size. It is the same Identifier as TEXT_SIZE
+ * @ingroup display
  */
 Identifier<int>  FONT_SIZE("otawa::display::text_size");
 
 
 /**
  * Identifier of the text size. It is the same Identifier as FONT_SIZE
+ * @ingroup display
  */
 Identifier<int>& TEXT_SIZE = FONT_SIZE;
 
 
 /**
  * Identifier of the font name
+ * @ingroup display
  */
 Identifier<elm::CString> FONT("otawa::display::font_name");
 
 
 /**
  * Identifier of the url of the link the object is pointing to
+ * @ingroup display
  */
 Identifier<elm::CString> HREF("otawa::display::href");
 
 
 /**
  * Identifier of the title of a node
+ * @ingroup display
  */
 Identifier<elm::String> TITLE("otawa::display::title");
 
 
 /**
  * Identifier of the body of a node
+ * @ingroup display
  */
 Identifier<elm::String> BODY("otawa::display::body");
 
 
 /**
  * Identifier of a shape of a node. Must be one of @ref shape_t
+ * @ingroup display
  */
 Identifier<int> SHAPE("otawa::display::shape");
 
 
 /**
  * Identifier of a label of an edge
+ * @ingroup display
  */
 Identifier<elm::String> LABEL("otawa::display::label");
 
 
 /**
  * Identifier of a weight of an edge
+ * @ingroup display
  */
 Identifier<int> WEIGHT("otawa::display::weight");
 
@@ -136,6 +153,7 @@ Identifier<int> WEIGHT("otawa::display::weight");
  * This class is the base of @ref Graph, @ref Node and @ref Edge. It contains
  * facilities to display the graph.
  * @see @ref odisplay
+ * @ingroup display
  */
 
 
@@ -152,6 +170,7 @@ Identifier<int> WEIGHT("otawa::display::weight");
  * methods  builds the graph that is displayed when the display() method is
  * called.
  * @see @ref odisplay
+ * @ingroup display
  */
 
 
@@ -187,6 +206,7 @@ Identifier<int> WEIGHT("otawa::display::weight");
  * build a graph that may be populated according the needs of the graph to
  * display.
  * @see @ref odisplay
+ * @ingroup display
  */
 
 
@@ -230,6 +250,7 @@ Driver *find(kind_t kind) {
 /**
  * Passed to the graph style of the Driver::newGraph() method, selects the
  * kind of output.
+ * @ingroup display
  */
 Identifier<kind_t> OUTPUT_KIND("otawa::display::output_kind", OUTPUT_ANY);
 
@@ -237,12 +258,13 @@ Identifier<kind_t> OUTPUT_KIND("otawa::display::output_kind", OUTPUT_ANY);
 /**
  * Passed to the graph style of the Driver::newGraph() method, selects the
  * file to output to when the driver display in a file.
+ * @ingroup display
  */
 Identifier<string> OUTPUT_PATH("otawa::display::output_path", "");
 
 
 /**
- * @page odisplay ODisplay Library
+ * @defgroup display ODisplay Library
  * 
  * This library is delivered with OTAWA to provide graphical display
  * of managed graphs.
@@ -385,6 +407,13 @@ Identifier<string> OUTPUT_PATH("otawa::display::output_path", "");
  * textual format. This is the default driver and it accepts some specialized
  * properties:
  * @li @ref GRAPHVIZ_LAYOUT - layout of the displayed graph.
+ */
+
+
+/**
+ * @class DisplayException
+ * This exception is thrown during the display of a graph if there is an error.
+ * @ingroup display
  */
 
 } }
