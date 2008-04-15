@@ -38,6 +38,7 @@ namespace otawa { namespace display {
  * 	GenDrawer<CFGAdapter, MyDecorator> drawer(adapter);
  * 	drawer.draw();
  * @endcode
+ * @ingroup display
  */
 
 
