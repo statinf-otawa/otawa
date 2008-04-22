@@ -402,7 +402,7 @@ Identifier<Path> FLOW_FACTS_PATH("otawa::flow_facts_path", "");
  * @li @ref NO_RETURN
  * @li @ref MAX_ITERATION
  */
-Feature<FlowFactLoader> FLOW_FACTS_FEATURE;
+Feature<FlowFactLoader> FLOW_FACTS_FEATURE("otawa::FLOW_FACTS_FEATURE");
 
 
 /**
@@ -412,7 +412,7 @@ Feature<FlowFactLoader> FLOW_FACTS_FEATURE;
  * @par Hooked Properties
  * @li @ref PRESERVED
  */
-Feature<FlowFactLoader> MKFF_PRESERVATION_FEATURE;
+Feature<FlowFactLoader> MKFF_PRESERVATION_FEATURE("otawa::MKFF_PRESERVATION_FEATURE");
 
 
 /**
