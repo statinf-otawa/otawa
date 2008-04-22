@@ -105,8 +105,8 @@ inline void FeatureDependency::decUseCount()  {
 	refcount--;
 }
 
-
-
+// Feature
+extern Feature<NoProcessor> NULL_FEATURE;
 
 } // otawa
 
