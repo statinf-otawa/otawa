@@ -74,6 +74,7 @@ public:
 	void initialize(void);
 
 protected:
+	AbstractRegistration(void);
 	virtual ~AbstractRegistration(void) { }
 
 private:
