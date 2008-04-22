@@ -1,32 +1,39 @@
 /*
  *	$Id$
- *	Copyright (c) 2007, IRIT UPS.
+ *	Registry class interface
  *
- *	Registry class interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-7, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_PROC_PROC_REGISTER_H
-#define OTAWA_PROC_PROC_REGISTER_H
+#ifndef OTAWA_PROC_PROC_REGISTRY_H
+#define OTAWA_PROC_PROC_REGISTRY_H
 
 #include <elm/genstruct/HashTable.h>
-#include <elm/genstruct/SLList.h>
-#include <elm/util/Initializer.h>
-#include <otawa/proc/Processor.h>
+#include <otawa/proc/Registration.h>
 
 namespace otawa {
 
-using namespace elm;
-
-// Pre-declaration
-class Registration;
-class Configuration;
-
 // Registry class
-class Registry: public Initializer<Registration> {
-	friend class Registration;
-	typedef genstruct::HashTable<String, const Registration *> htab_t; 
+class Registry: public Initializer<AbstractRegistration> {
+	friend class AbstractRegistration;
+	typedef genstruct::HashTable<String, const AbstractRegistration *> htab_t; 
 
 public:
-	static const Registration *find(CString name);
+	static const AbstractRegistration *find(CString name);
 
 	// Iter class
 	class Iter: public htab_t::ItemIterator {
@@ -41,62 +48,40 @@ private:
 };
 
 
-// Registration class
-class Registration {
-	friend class ProcessorConfig;
-	
+// Macro
+template <class T>
+inline AbstractRegistration& registration(void) { return T::__reg; }
 
+
+// ConfigIter class
+class ConfigIter: public PreIterator<ConfigIter, AbstractIdentifier&> {
 public:
-	Registration(Processor& processor, CString help = "");
-	Registration(CString name, Version version, ...); 
-	inline String name(void) const { return _processor->name(); }
-	inline Version version(void) const { return _processor->version(); }
-	inline Processor *processor(void) const { return _processor; }
-	inline CString help(void) const { return _help; }
-
-	// ConfigIter class
-	class ConfigIter: public genstruct::Vector<Configuration *>::Iterator {
-	public:
-		inline ConfigIter(const Registration& reg):
-			genstruct::Vector<Configuration *>::Iterator(reg.configs())
-			{ }
-		inline ConfigIter(const Registration *reg):
-			genstruct::Vector<Configuration *>::Iterator(reg->configs())
-			{ }
-	};
-
-	// Configuration properties
-	static Identifier<Registration *> BASE;
-	static Identifier<Configuration *> CONFIG;
-	static Identifier<AbstractFeature *> REQUIRE;
-	static Identifier<AbstractFeature *> PROVIDE;
-	static Identifier<AbstractFeature *> HELP;
-
-	// Private use only
-	void initialize(void);
-
+	inline ConfigIter(AbstractRegistration& registration)
+		: reg(&registration), iter(reg->configs) { step(); }
+	inline AbstractIdentifier& item(void) const { return *iter.item(); }
+	inline void next(void) { iter.next(); step(); }
+	inline bool ended(void) const { return !reg; }
+	
 private:
-	inline const Vector<Configuration *>& configs(void) const
-		{ return _processor->configs; }
-	Processor *_processor;
-	CString _help;
-	SLList<Configuration *> config;
-	SLList<AbstractFeature *> required;
-	SLList<AbstractFeature *> provided; 
+	void step(void);
+	AbstractRegistration *reg;
+	SLList<AbstractIdentifier *>::Iterator iter;
 };
 
 
-// Configuration class
-class Configuration {
+// FeatureIter class
+class FeatureIter: public PreIterator<FeatureIter, const FeatureUsage&> {
 public:
-	inline Configuration(AbstractIdentifier& id, CString help = "")
-		: _id(id), _help(help) { }
-	inline AbstractIdentifier& id(void) const { return _id; }
-	inline CString help(void) const { return _help; }
-		
+	inline FeatureIter(AbstractRegistration& registration)
+		: reg(&registration), iter(reg->features) { step(); }
+	inline const FeatureUsage& item(void) const { return iter.item(); }
+	inline void next(void) { iter.next(); step(); }
+	inline bool ended(void) const { return !reg; }
+	
 private:
-	AbstractIdentifier &_id;
-	CString _help;
+	void step(void);
+	AbstractRegistration *reg;
+	SLList<FeatureUsage>::Iterator iter;
 };
 
 } // otawa
