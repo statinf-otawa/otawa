@@ -11,6 +11,7 @@
 
 namespace otawa {
 
+using namespace elm;
 
 // Defined class
 class Type;
@@ -29,36 +30,36 @@ public:
 	// Kind
 	typedef enum kind_t {
 		NONE = 0,
-		BASE,
-		ENUM,
-		ARRAY,
-		STRUCT,
-		UNION,
-		PTR,
-		FUN
+		BASE = 1,
+		ENUM = 2,
+		ARRAY = 3,
+		STRUCT = 4,
+		UNION = 5,
+		PTR = 6,
+		FUN = 7
 	} kind_t;
 
 	// Base types
 	typedef enum base_t {
 		VOID = 0,
-		BLOCK,
-		BOOL,
-		CHAR,
-		INT8,
-		UINT8,
-		INT16,
-		UINT16,
-		INT32,
-		UINT32,
-		INT64,
-		UINT64,
-		FLOAT32,
-		FLOAT64,
-		FLOAT128,
-		ADDR32,
-		CSTRING,
-		STRING_,
-		BASE_TOP
+		BLOCK = 1,
+		BOOL = 2,
+		CHAR = 3,
+		INT8 = 4,
+		UINT8 =5,
+		INT16 = 6,
+		UINT16 = 7,
+		INT32 = 8,
+		UINT32 = 9,
+		INT64 = 10,
+		UINT64 = 11,
+		FLOAT32 = 12,
+		FLOAT64 = 13,
+		FLOAT128 = 14,
+		ADDR32 = 15,
+		CSTRING = 16,
+		STRING_ = 17,
+		BASE_TOP = 18
 	} base_t;
 
 	// Predefined types
@@ -144,6 +145,13 @@ template <> struct __type<elm::CString> { static inline const Type& _(void) { re
 template <> struct __type<elm::String> { static inline const Type& _(void) { return Type::string_type; } };
 
 template <class T> inline const Type& type(void) { return __type<T>::_(); }
+
+
+// display
+inline io::Output& operator<<(io::Output& out, const Type& type) {
+	type.print(out);
+	return out;
+}
 
 } // namespace otawa
 
