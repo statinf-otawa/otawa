@@ -307,6 +307,7 @@ AC_CONFIG_FILES([
 	test/props/Makefile
 	test/pcg/Makefile
 	test/exegraph/Makefile
+	test/reg/Makefile
 	test/simulator/Makefile
 	test/generic_simulator/Makefile
 	examples/ilp_times/Makefile

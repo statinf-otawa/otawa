@@ -5,7 +5,8 @@ SUBDIRS = \
 	graph \
 	hard \
 	pcg \
-	props
+	props \
+	reg
 
 if HAS_ILP
 SUBDIRS += \
