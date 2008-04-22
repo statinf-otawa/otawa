@@ -30,63 +30,29 @@
 //#include <otawa/prog/WorkSpace.h>
 #include <otawa/properties.h>
 #include <otawa/proc/ProcessorException.h>
+#include <otawa/proc/Registration.h>
 
 namespace otawa {
 
 using namespace elm;
 using namespace elm::genstruct;
 class AbstractFeature;
-class Registration;
 class Configuration;
 class WorkSpace;
 class FeatureDependency;
 
+
 // Processor class
 class Processor {
-	friend class Registration;
-	elm::String _name;
-	elm::Version _version;
-	void init(const PropList& props);
-	Vector<const AbstractFeature *> required;
-	Vector<const AbstractFeature *> provided;
-	Vector<const AbstractFeature *> invalidated;
-	Vector<Configuration *> configs;
-
-
-protected:
-	static const unsigned long IS_TIMED = 0x01;
-	static const unsigned long IS_VERBOSE = 0x02;
-	unsigned long flags;
-	elm::io::Output out;
-	elm::io::Output log;
-	PropList *stats;
-	
-	// Facility methods
-	friend class FeatureRequirer;
-	inline bool isVerbose(void) const;
-	inline bool isTimed(void) const;
-	inline bool recordsStats(void) const;
-	void require(const AbstractFeature& feature);
-	void provide(const AbstractFeature& feature);
-	void invalidate(const AbstractFeature& feature);
-	inline void config(Configuration& config) { configs.add(&config); }
-	void warn(const String& message);
-
-	// Overwritable methods
-	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void setup(WorkSpace *fw);
-	virtual void cleanup(WorkSpace *fw);
-
-	// Deprecared
-	virtual void processFrameWork(WorkSpace *fw);
-
 public:
+	static struct __init: Registration<Processor> { __init(void); } __reg;
 
 	// Constructors
-	Processor(const PropList& props = PropList::EMPTY);
-	Processor(elm::String name, elm::Version version, const PropList& props);
+	Processor(void);
+	Processor(AbstractRegistration& registration);
 	Processor(String name, Version version);
-	virtual ~Processor(void) { }
+	Processor(String name, Version version, AbstractRegistration& registration);
+	virtual ~Processor(void);
 	
 	// Accessors
 	inline elm::String name(void) const;
@@ -106,6 +72,41 @@ public:
 
 	// Statistics Properties
 	static Identifier<elm::system::time_t> RUNTIME;
+
+	// Deprecated
+	Processor(const PropList& props);
+	Processor(elm::String name, elm::Version version, const PropList& props);
+
+protected:
+	static const unsigned long IS_TIMED = 0x01;
+	static const unsigned long IS_VERBOSE = 0x02;
+	static const unsigned long IS_ALLOCATED = 0x04;
+	unsigned long flags;
+	elm::io::Output out;
+	elm::io::Output log;
+	PropList *stats;
+	
+	// Facility methods
+	friend class FeatureRequirer;
+	inline bool isVerbose(void) const;
+	inline bool isTimed(void) const;
+	inline bool recordsStats(void) const;
+	void require(const AbstractFeature& feature);
+	void provide(const AbstractFeature& feature);
+	void invalidate(const AbstractFeature& feature);
+	void warn(const String& message);
+
+	// Overwritable methods
+	virtual void processWorkSpace(WorkSpace *fw);
+	virtual void setup(WorkSpace *fw);
+	virtual void cleanup(WorkSpace *fw);
+
+	// Deprecated
+	virtual void processFrameWork(WorkSpace *fw);
+
+private:
+	void init(const PropList& props);
+	AbstractRegistration *reg;
 };
 
 
@@ -148,11 +149,11 @@ private:
 
 // Inlines
 inline elm::String Processor::name(void) const {
-	return _name;
+	return reg->name();
 }
 
 inline elm::Version Processor::version(void) const {
-	return _version;
+	return reg->version();
 }
 
 inline bool Processor::isVerbose(void) const {
