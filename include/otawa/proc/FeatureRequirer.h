@@ -34,9 +34,6 @@ protected:
 	static void require(Processor& proc, AbstractFeature *features[]);
 };
 
-// Feature
-extern Feature<NoProcessor> NULL_FEATURE;
-
 }	// otawa
 
 #endif /* OTAWA_PROC_FEATUREREQUIRER_H_ */
