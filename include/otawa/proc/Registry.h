@@ -50,21 +50,21 @@ private:
 
 // Macro
 template <class T>
-inline AbstractRegistration& registration(void) { return T::__reg; }
+inline const AbstractRegistration& registration(void) { return T::__reg; }
 
 
 // ConfigIter class
-class ConfigIter: public PreIterator<ConfigIter, AbstractIdentifier&> {
+class ConfigIter: public PreIterator<ConfigIter, AbstractIdentifier *> {
 public:
-	inline ConfigIter(AbstractRegistration& registration)
+	inline ConfigIter(const AbstractRegistration& registration)
 		: reg(&registration), iter(reg->configs) { step(); }
-	inline AbstractIdentifier& item(void) const { return *iter.item(); }
+	inline AbstractIdentifier *item(void) const { return iter.item(); }
 	inline void next(void) { iter.next(); step(); }
 	inline bool ended(void) const { return !reg; }
 	
 private:
 	void step(void);
-	AbstractRegistration *reg;
+	const AbstractRegistration *reg;
 	SLList<AbstractIdentifier *>::Iterator iter;
 };
 
@@ -72,7 +72,7 @@ private:
 // FeatureIter class
 class FeatureIter: public PreIterator<FeatureIter, const FeatureUsage&> {
 public:
-	inline FeatureIter(AbstractRegistration& registration)
+	inline FeatureIter(const AbstractRegistration& registration)
 		: reg(&registration), iter(reg->features) { step(); }
 	inline const FeatureUsage& item(void) const { return iter.item(); }
 	inline void next(void) { iter.next(); step(); }
@@ -80,7 +80,7 @@ public:
 	
 private:
 	void step(void);
-	AbstractRegistration *reg;
+	const AbstractRegistration *reg;
 	SLList<FeatureUsage>::Iterator iter;
 };
 
