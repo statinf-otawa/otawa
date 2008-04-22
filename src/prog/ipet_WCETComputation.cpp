@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	WCETComputation class implementation
  *
- *	src/ipet_WCETComputation.h -- WCETComputation class interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/ilp.h>
@@ -21,8 +36,16 @@ using namespace otawa::ilp;
 namespace otawa { namespace ipet {
 
 // Registration
-static WCETComputation proc;
-static Registration reg(proc, AUTODOC "/classotawa_1_1ets_1_1WCETComputation.html");
+void WCETComputation::init(void) {
+	_name("otawa::ipet::WCETComputation");
+	_version(1, 0, 0);
+	_require(CONTROL_CONSTRAINTS_FEATURE);
+	_require(OBJECT_FUNCTION_FEATURE);
+	_require(FLOW_FACTS_CONSTRAINTS_FEATURE);
+	_provide(WCET_FEATURE);
+}
+	
+
 /**
  * @class WCETComputation
  * This class is used for computing the WCET from the system found in the root
@@ -41,12 +64,7 @@ static Registration reg(proc, AUTODOC "/classotawa_1_1ets_1_1WCETComputation.htm
 /**
  * Build a new WCET computer.
  */
-WCETComputation::WCETComputation(void)
-: Processor("otawa::ipet::WCETComputation", Version(1, 0, 0)) {
-	require(CONTROL_CONSTRAINTS_FEATURE);
-	require(OBJECT_FUNCTION_FEATURE);
-	require(FLOW_FACTS_CONSTRAINTS_FEATURE);
-	provide(WCET_FEATURE);
+WCETComputation::WCETComputation(void) {
 }
 
 

@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2007, IRIT UPS.
- *
  *	TextDecoder class implementation
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2007-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/prog/TextDecoder.h>
@@ -21,10 +36,10 @@ TextDecoder TextDecoder::_;
 
 
 // Registration
-static Configuration follow_paths_config(TextDecoder::FOLLOW_PATHS,
+/*static Configuration follow_paths_config(TextDecoder::FOLLOW_PATHS,
 	AUTODOC "/classotawa_1_1ets_1_1TextDecoder.html");
 static Registration reg(TextDecoder::_,
-	AUTODOC "/classotawa_1_1ets_1_1TextDecoder.html");
+	AUTODOC "/classotawa_1_1ets_1_1TextDecoder.html");*/
 
 
 /**
@@ -62,7 +77,7 @@ TextDecoder::TextDecoder(void)
 	follow_paths(false)
 {
 	provide(DECODED_TEXT);
-	config(follow_paths_config);
+	//config(follow_paths_config);
 	require(FLOW_FACTS_FEATURE);
 }
 
@@ -79,15 +94,16 @@ void TextDecoder::processWorkSpace(WorkSpace *fw) {
 		if(!fw->process()->instSize() || follow_paths) {
 			if(isVerbose())
 				out << "INFO: using VarTextDecoder\n";
-			decoder = &VarTextDecoder::_;
+			VarTextDecoder decoder;
+			decoder.process(fw);
 		}
 		else {
 			if(isVerbose())
 				out << "INFO: using FixedTextDecoder\n";
-			decoder = &FixedTextDecoder::_;
+			FixedTextDecoder decoder;
+			decoder.process(fw);
 		}
 	}
-	decoder->process(fw);
 	
 	// Put the labels
 	for(Process::FileIter file(fw->process()); file; file++)

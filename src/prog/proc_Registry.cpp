@@ -1,16 +1,40 @@
 /*
  *	$Id$
- *	Copyright (c) 2007, IRIT UPS.
+ *	Registration class implementation
  *
- *	Registry class implementation
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/proc/Registry.h>
 
 namespace otawa {
 
+
 /**
+ * @class Registry
  * Class dedicated to the registering of the processors.
+ * A registration contains:
+ * @li name and version of the processor,
+ * @li list of configuration identifiers,
+ * @li list of the used features (provided, required, invalidated).
+ * 
+ * The registration may be used to write processor scripts or for GUI to provide
+ * list of processors to the user.
  */
 
 
@@ -25,7 +49,7 @@ Registry Registry::_;
  * @param name	Name of the processor to look for.
  * @return		Found processor or null.
  */
-const Registration *Registry::find(CString name) {
+const AbstractRegistration *Registry::find(CString name) {
 	return _.procs.get(name);
 }
 
@@ -33,54 +57,16 @@ const Registration *Registry::find(CString name) {
 /**
  * To ensure that no other registry is built.
  */
-Registry::Registry(void): Initializer<Registration>(false) {
+Registry::Registry(void): Initializer<AbstractRegistration>(false) {
 	startup();
 }
 
 
 /**
- * @class Registration
+ * @class AbstractRegistration
  * Abstract class to represent the registered processors.
- * 
- * To build a full registration for a processor, we need:
- * @li a processor piece (the default processor value),
- * @li a list of configuration (identifier allowing the configuation of the
- * processor),
- * @li and the registration itself.
- * Note that the configuration objects must registered in the processor
- * constructor using the ''config()'' protected method.
- * 
- * Below is an example of registration of the @ref WCETComputation.
- * @code
- * #include <otawa/proc/Registry.h>
- * #include <otawa/ipet/WCETComputation.h>
- * 
- * using namespace otawa;
- * using namespace otawa::ipet;
- * 
- * static Configuration verbose(VERBOSE, DOC_PATH "/verbose.html");
- * static WCETComputation proc;
- * static Registration reg(
- * 		proc,
- * 		DOC_PATH "/WCETComputation.html");
- * 
- * WCETComputation::WCETComputation(void) {
- * 		...
- * 		config(verbose)
- * }
- * @endcode
  */
 
-
-/**
- * Build a processor registering.
- * @param processor	Default processor value.
- * @param help		URL to an help document.
- */
-Registration::Registration(Processor& processor, CString help)
-: _processor(&processor), _help(help) {
-	Registry::_.record(this);
-}
 
 
 /**
@@ -98,69 +84,91 @@ Registration::Registration(Processor& processor, CString help)
 
 
 /**
- * @fn Processor *Registration::processor(void) const;
- * Get the default processor.
- * @return	Default processor.
- */
-
-
-/**
- * @fn CString Registration::help(void) const;
- * Get the URL of a help document.
- * @return	Help document URL.
+ * @fn Processor *Registration::make(void) const;
+ * Build the registered processor.
+ * @return	Built processor.
  */
 
 
 /**
  * Internal.
  */
-void Registration::initialize(void) {
+void AbstractRegistration::initialize(void) {
 	Registry::_.procs.put(name(), this);
 }
 
 
 /**
- * @class Configuration
- * Class to record a configuration identifier for a processor.  
- */
-
-
-/**
- * @fn Configuration::Configuration(AbstractIdentifier& id, CString help);
- * Build a configuration.
- * @param id	Used identifier.
- * @param help	URL to get an help message.
- */
-
-
-/**
- * @fn AbstractIdentifier& Configuration::id(void) const;
- * Get the identifier of this configuration.
- */
-
-
-/**
- * @fn CString Configuration::help(void) const;
- * Get the help URL of this configuration.
- */
-
-
-/**
- * @class Registration::ConfigIter
+ * @class ConfigIter
  * Iterator on the configurations of a processor.
+ * @param T	Processor class.
  */
 
 
 /**
- * @fn Registration::ConfigIterConfigIter(Registration& reg);
- * Build the configuration iterator.
- * @param reg	Registration to look configuration in.
  */
+void ConfigIter::step(void) {
+	while(reg && iter.ended()) {
+		if((reg = &reg->base()))
+			iter = SLList<AbstractIdentifier *>::Iterator(reg->configs);
+	}
+}
+
 
 /**
- * @fn Registration::ConfigIterConfigIter(Registration *reg);
- * Build the configuration iterator.
- * @param reg	Registration to look configuration in.
+ * @class FeatureIter
+ * Iterator on the features used by the processor.
+ * @param T		Type of the processor.
+ */
+
+
+/**
+ */
+void FeatureIter::step(void) {
+	while(reg && iter.ended()) {
+		if((reg = &reg->base()))
+			iter = SLList<FeatureUsage>::Iterator(reg->features);
+	}
+}
+
+
+/*
+ * @class Registration
+ * A registration for a processor of type T.
+ * @param T		Type of the registered processor.
+ */
+
+
+/**
+ * @class Registered
+ * A registered class is used to build automatically a processor with a
+ * registration.
+ * @param T	Type of the processor to register.
+ * @param B	Base type of the parent processor.
+ *
+ * To make a processor registrable, it must inherit from Registered and
+ * defines a static function init() responsbible to initialize the registration.
+ * This function invokes the initialization functions: name(), version(),
+ * require(), provide(), invalidate().
+ * 
+ * An example is given below:
+ * @code
+ *	class MyProcessor: public Registered<MyProcessor, BBProcessor> {
+ *	public:
+ *		static void init(void) {
+ *			name("my_namespace::MyProcessor");
+ *			version(1, 0, 1);
+ *			require(SOME_FEATURE);
+ *			require(ANOTHER_FEATURE);
+ *			provide(MY_FEATURE);
+ *		}
+ *	
+ *	protected:
+ *		void processBB(WorkSpace *ws, CFG *cfg, BB *bb) {
+ *			// something useful
+ *		}
+ *	};
+ * @endcode
  */
 
 } // otawa

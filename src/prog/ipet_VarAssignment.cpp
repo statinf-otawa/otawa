@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2005-06, IRIT UPS.
+ *	VarAssignment class implementation
  *
- *	VarAssignment class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/ipet/IPET.h>
@@ -14,12 +29,18 @@
 using namespace elm;
 using namespace otawa::ilp;
 
-namespace otawa { namespace ipet {
+namespace otawa {
+
+namespace ipet {
 
 // Registration
-static VarAssignment proc;
-static Registration reg(proc, AUTODOC "/classotawa_1_1ets_1_1VarAssignment.html");
-static Configuration explicit_conf(EXPLICIT, AUTODOC "/namespaceotawa_1_1ipet.html");
+void VarAssignment::init(void) {
+	_name("otawa::ipet::VarAssignment");
+	_version(1, 0, 0);
+	_require(ILP_SYSTEM_FEATURE);
+	_provide(ASSIGNED_VARS_FEATURE);
+	_config(EXPLICIT);
+}
 
 
 /**
@@ -72,13 +93,7 @@ void VarAssignment::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
  * Build a new variable assignment processor.
  */
 VarAssignment::VarAssignment(void)
-: 	BBProcessor("otawa::ipet::VarAssignment", Version(1, 0, 0)),
-	_explicit(false),
-	_recursive(false)
-{
-	require(ILP_SYSTEM_FEATURE);
-	provide(ASSIGNED_VARS_FEATURE);
-	config(	explicit_conf);
+: _explicit(false), _recursive(false) {
 }
 
 
