@@ -40,10 +40,14 @@ int main(void) {
 	// Display registrations
 	for(Registry::Iter reg; reg; reg++) {
 		cout << "REGISTRATION " << reg->name() << " " << reg->version() << io::endl;
+		
+		// Configuration
 		cout << "\tconfiguration\n";
 		for(ConfigIter config(**reg); config; config++)
 			cout << "\t\t" << config->name() << ": "
 				 << config->type() << io::endl;
+		
+		// Features
 		cout << "\tfeatures\n";
 		for(FeatureIter feature(**reg); feature; feature++) {
 			cout << "\t\t";
@@ -55,7 +59,16 @@ int main(void) {
 			}
 			cout << (*feature).feature().name() << io::endl;
 		}
+		
+		// Existence test
+		const AbstractRegistration *found = Registry::find(&reg->name());
+		cout << "\treg = " << (void *)*reg << ", found = " << (void *)found << io::endl;
 	}
+	
+	
+	// Bad find
+	const AbstractRegistration *found = Registry::find("oksdfsdfsdf");
+	cout << "bad found = " << (void *)found << io::endl;
 	
 	// Display identifiers types
 	cout << "ID_BOOL: " << ID_BOOL.type() << io::endl;
