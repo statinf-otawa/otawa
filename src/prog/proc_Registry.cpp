@@ -68,6 +68,13 @@ Registry::Registry(void): Initializer<AbstractRegistration>(false) {
  */
 
 
+/**
+ * Build the registration.
+ */
+AbstractRegistration::AbstractRegistration(void) {
+	Registry::_.record(this);	
+}
+
 
 /**
  * @fn String Registration::name(void) const;
