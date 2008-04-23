@@ -20,12 +20,12 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/cfg/CFGOutput.h>
+#include <otawa/display/CFGOutput.h>
 #include <otawa/proc/Processor.h>
 #include <elm/system/Path.h>
 #include <otawa/display/CFGDrawer.h>
 
-namespace otawa {
+namespace otawa { namespace display {
 
 using namespace elm::system;
 using namespace display;
@@ -114,4 +114,4 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 	drawer.display();
 }
 
-} // otawa
+} } // otawa::display

@@ -10,6 +10,7 @@ libodisplay_la_SOURCES = \
 	display.cpp \
 	display_AbstractDrawer.cpp \
 	display_CFGAdapter.cpp \
+	display_CFGOutput.cpp \
 	display_GenDrawer.cpp \
 	display_Graph.cpp \
 	display_graphviz.cpp \
