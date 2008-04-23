@@ -67,7 +67,7 @@ const BaseType Type::float32_type(Type::FLOAT32);
 const BaseType Type::float64_type(Type::FLOAT64);
 const BaseType Type::float128_type(Type::FLOAT128);
 const BaseType Type::addr32_type(Type::ADDR32);
-const BaseType Type::cstring_type(Type::ADDR32);
+const BaseType Type::cstring_type(Type::CSTRING);
 const BaseType Type::string_type(Type::STRING_);
 
 // array of base types
@@ -88,7 +88,8 @@ static const BaseType *_base_types[] = {
 	&Type::float64_type,
 	&Type::float128_type,
 	&Type::addr32_type,
-	&Type::cstring_type
+	&Type::cstring_type,
+	&Type::string_type
 };
 
 // array of base types displays
@@ -109,7 +110,8 @@ elm::CString _base_displays[] = {
 	"float64",
 	"float128",
 	"addr32",
-	"cstring"
+	"cstring",
+	"string"
 };
 
 
