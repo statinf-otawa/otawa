@@ -68,7 +68,8 @@ public:
 	inline string name(void) const { return _name; }
 	inline Version version(void) const { return _version; }
 	inline AbstractRegistration& base(void) const { return *_base; }
-	virtual Processor *make(void) const { return 0; };
+	virtual Processor *make(void) const = 0;
+	virtual bool isFinal(void) const = 0;
 	
 	// Private use only
 	void initialize(void);
@@ -87,6 +88,7 @@ private:
 	AbstractRegistration *_base;
 	SLList<AbstractIdentifier *> configs;
 	SLList<FeatureUsage> features;
+	void record(void);
 };
 
 
@@ -94,6 +96,7 @@ private:
 class NullRegistration: public AbstractRegistration {
 public:
 	virtual Processor *make(void) const { return 0; }
+	virtual bool isFinal(void) const { return false; }
 };
 
 
@@ -101,6 +104,7 @@ public:
 template <class T> class Registration: public AbstractRegistration {
 public:
 	virtual Processor *make(void) const { return new T; }
+	virtual bool isFinal(void) const { return true; }
 };
 
 
@@ -111,6 +115,7 @@ struct Registered: public B {
 	
 	static struct __reg_init: C {
 		__reg_init(void) {
+			T::__reg.record();
 		 	T::__reg._base = &B::__reg;
 			T::init();
 		};
