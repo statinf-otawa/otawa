@@ -9,6 +9,7 @@ includeotawaproc_HEADERS = \
 	FunProcessor.h \
 	Processor.h \
 	ProcessorException.h \
+	Registration.h \
 	Registry.h
 
 
