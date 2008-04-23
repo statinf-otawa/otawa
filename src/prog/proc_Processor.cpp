@@ -39,6 +39,7 @@ Processor::__init::__init(void) {
 	__reg.configs.add(&Processor::VERBOSE);
 	__reg.configs.add(&Processor::STATS);
 	__reg.configs.add(&Processor::TIMED);
+	__reg.record();
 }
 Processor::__init Processor::__reg;
 
@@ -66,7 +67,7 @@ Processor::__init Processor::__reg;
  * Build a simple anonymous processor.
  */
 Processor::Processor(void): flags(0), stats(0) {
-	reg = new AbstractRegistration();
+	reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	reg->_base = &__reg;
 }
@@ -94,7 +95,7 @@ Processor::Processor(AbstractRegistration& registration)
  */
 Processor::Processor(String name, Version version, AbstractRegistration& registration)
 : flags(0), stats(0) {
-	reg = new AbstractRegistration();
+	reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	reg->_base = &registration;
 	reg->_name = name;
@@ -111,7 +112,7 @@ Processor::Processor(String name, Version version, AbstractRegistration& registr
  */
 Processor::Processor(elm::String name, elm::Version version,
 const PropList& props): flags(0), stats(0) {
-	reg = new AbstractRegistration();
+	reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	reg->_base = &__reg;
 	reg->_name = name;
@@ -126,7 +127,7 @@ const PropList& props): flags(0), stats(0) {
  */
 Processor::Processor(String name, Version version)
 : flags(0), stats(0) {
-	reg = new AbstractRegistration();
+	reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	reg->_base = &__reg;
 	reg->_name = name;
@@ -140,7 +141,7 @@ Processor::Processor(String name, Version version)
  * @deprecated		Configuration must be passed at the process() call.
  */
 Processor::Processor(const PropList& props): flags(0), stats(0) {
-	reg = new AbstractRegistration();
+	reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	reg->_base = &__reg;
 	init(props);

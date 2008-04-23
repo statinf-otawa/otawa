@@ -50,7 +50,7 @@ Registry Registry::_;
  * @return		Found processor or null.
  */
 const AbstractRegistration *Registry::find(CString name) {
-	return _.procs.get(name);
+	return _.procs.get(name, 0);
 }
 
 
@@ -71,7 +71,13 @@ Registry::Registry(void): Initializer<AbstractRegistration>(false) {
 /**
  * Build the registration.
  */
-AbstractRegistration::AbstractRegistration(void) {
+AbstractRegistration::AbstractRegistration(void): _base(0) {
+}
+
+
+/**
+ */
+void AbstractRegistration::record(void) {
 	Registry::_.record(this);	
 }
 
