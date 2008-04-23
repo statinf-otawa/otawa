@@ -311,7 +311,7 @@ Manager::Manager(void):
 		buildPaths("loader", LOADER_PATHS)),
 	sim_plugger(OTAWA_SIMULATOR_NAME, OTAWA_SIMULATOR_VERSION, SIMULATOR_PATHS)
 {
-	AbstractIdentifier::init();
+	//AbstractIdentifier::init();
 }
 
 
