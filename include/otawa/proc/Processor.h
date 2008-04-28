@@ -46,6 +46,7 @@ class FeatureDependency;
 class Processor {
 public:
 	static struct __init: NullRegistration { __init(void); } __reg;
+	static void init(void);
 
 	// Constructors
 	Processor(void);

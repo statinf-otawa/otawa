@@ -32,6 +32,11 @@ namespace otawa {
 
 // Registration
 Processor::__init::__init(void) {
+	Processor::init();
+}
+void Processor::init(void) {
+	// workaround right bug in GCC 4.0
+	// subclass of a friend class is not friend
 	__reg._name = "otawa::Processor";
 	__reg._version = Version(1, 1, 0);
 	__reg.configs.add(&Processor::OUTPUT);
