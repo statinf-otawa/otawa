@@ -113,14 +113,6 @@ template <class T, class B, class C = Registration<T> >
 struct Registered: public B {
 	typedef Registered<T, B, C> super;
 	
-	static struct __reg_init: C {
-		__reg_init(void) {
-			T::__reg.record();
-		 	T::__reg._base = &B::__reg;
-			T::init();
-		};
-	} __reg;
-
 	Registered(void): B(__reg) { }
 	Registered(AbstractRegistration& reg): B(reg) { }
 	Registered(cstring name, const Version& version)
@@ -128,6 +120,13 @@ struct Registered: public B {
 	Registered(cstring name, const Version& version, AbstractRegistration& reg)
 		: B(name, version, reg) { }
 
+	static void __reg_do_init(void) {
+		__reg.record();
+		__reg._base = &B::__reg;
+		T::init();
+	}
+	static struct __reg_init: C { __reg_init(void) { T::__reg_do_init(); } } __reg;
+	
 protected:
 	inline static void _name(cstring name)
 		{ __reg._name = name; }
