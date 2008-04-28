@@ -37,7 +37,7 @@
 #include <otawa/display/CFGDrawer.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg/Virtualizer.h>
-#include <otawa/cfg/CFGOutput.h>
+#include <otawa/display/CFGOutput.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -459,7 +459,7 @@ void Command::compute(String fun) {
 		recorder.process(fw, props);
 		
 		// Generates output
-		CFGOutput output;
+		display::CFGOutput output;
 		output.process(fw, props);
 	}
 	
