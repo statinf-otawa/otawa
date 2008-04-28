@@ -121,7 +121,7 @@ void AbstractRegistration::initialize(void) {
 /**
  */
 void ConfigIter::step(void) {
-	while(reg && iter.ended()) {
+	while(_all && reg && iter.ended()) {
 		if((reg = &reg->base()))
 			iter = SLList<AbstractIdentifier *>::Iterator(reg->configs);
 	}

@@ -56,8 +56,8 @@ inline const AbstractRegistration& registration(void) { return T::__reg; }
 // ConfigIter class
 class ConfigIter: public PreIterator<ConfigIter, AbstractIdentifier *> {
 public:
-	inline ConfigIter(const AbstractRegistration& registration)
-		: reg(&registration), iter(reg->configs) { step(); }
+	inline ConfigIter(const AbstractRegistration& registration, bool all = true)
+		: reg(&registration), iter(reg->configs), _all(all) { step(); }
 	inline AbstractIdentifier *item(void) const { return iter.item(); }
 	inline void next(void) { iter.next(); step(); }
 	inline bool ended(void) const { return !reg; }
@@ -66,6 +66,7 @@ private:
 	void step(void);
 	const AbstractRegistration *reg;
 	SLList<AbstractIdentifier *>::Iterator iter;
+	bool _all;
 };
 
 
