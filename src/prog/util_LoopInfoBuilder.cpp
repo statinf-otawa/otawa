@@ -124,12 +124,12 @@ class LoopInfoProblem {
 	class DominanceOrder {
  		public:
  		static inline int compare(BasicBlock *bb1, BasicBlock *bb2) {
- 			if(bb1 == bb2)
- 				return 0;
- 			else if(Dominance::dominates(bb1, bb2))
+ 			if(Dominance::dominates(bb1, bb2))
  				return +1;
- 			else
+ 			else if(Dominance::dominates(bb2, bb1))
  				return -1;
+ 			else
+ 				return 0;
  		}
  	};
 	CFG& _cfg;
@@ -282,21 +282,22 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
     		return;    
         IterativeDFA<LoopInfoProblem, dfa::BitSet, Successor> dfa(prob, *cfg);
         dfa.compute();
-                     
+   
   
         /* Iterate to find the enclosing loop headers */
         for (CFG::BBIterator bb(cfg); bb; bb++) {
 			bool found = false;
+
 			/*
 			 * Detects the enclosing loop header of this bb by selecting the last element (that is, the lowest in the
 			 * order defined by the Dominance relation) 
 			 */
-        	for (dfa::BitSet::Iterator bit(*dfa.outSet(bb)); bit; bit++) {
-        		i = *bit;
-        		found = true;
+        	dfa::BitSet::Iterator bit(*dfa.outSet(bb)); 
+
+        	if (bit) {
+        		ENCLOSING_LOOP_HEADER(bb) = prob.get(*bit);
         	}
-        	if (found)
-        		ENCLOSING_LOOP_HEADER(bb) = prob.get(i);
+        	
         }
         
         /*
