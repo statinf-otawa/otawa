@@ -86,7 +86,7 @@ ACSMayBuilder::ACSMayBuilder(void) : Processor("otawa::ACSMayBuilder", Version(1
 	require(LOOP_INFO_FEATURE);
 	require(COLLECTED_LBLOCKS_FEATURE);
 	require(ICACHE_FIRSTLAST_FEATURE);
-	provide(ICACHE_ACS_FEATURE);
+	provide(ICACHE_ACS_MAY_FEATURE);
 }
 
 
