@@ -88,21 +88,26 @@ void TextDecoder::processWorkSpace(WorkSpace *fw) {
 	
 	// Decode the text
 	Processor *decoder = fw->process()->decoder();
-	if(!decoder) {
-		if(isVerbose())
-			out << "INFO: no default decoder\n";
-		if(!fw->process()->instSize() || follow_paths) {
-			if(isVerbose())
-				out << "INFO: using VarTextDecoder\n";
-			VarTextDecoder decoder;
-			decoder.process(fw);
-		}
-		else {
-			if(isVerbose())
-				out << "INFO: using FixedTextDecoder\n";
-			FixedTextDecoder decoder;
-			decoder.process(fw);
-		}
+	if(decoder) {
+	    if(isVerbose())
+	        log << "INFO: using loade plugin decoder.\n";
+	    decoder->process(fw, *conf_props);
+        }
+        else {
+            if(isVerbose())
+                log << "INFO: no default decoder\n";
+            if(!fw->process()->instSize() || follow_paths) {
+                if(isVerbose())
+		    log << "INFO: using VarTextDecoder\n";
+		    VarTextDecoder decoder;
+		    decoder.process(fw, *conf_props);
+            }
+            else {
+                if(isVerbose())
+                    log << "INFO: using FixedTextDecoder\n";
+                FixedTextDecoder decoder;
+		decoder.process(fw, *conf_props);
+            }
 	}
 	
 	// Put the labels
@@ -132,6 +137,7 @@ void TextDecoder::processWorkSpace(WorkSpace *fw) {
 void TextDecoder::configure(const PropList& props) {
 	Processor::configure(props);
 	follow_paths = FOLLOW_PATHS(props);
+	conf_props = &props;
 }
 
 
