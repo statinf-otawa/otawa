@@ -23,6 +23,8 @@ public:
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
 	bool follow_paths;
+private:
+	const PropList *conf_props;
 };
 
 // Features
