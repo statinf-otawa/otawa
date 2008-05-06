@@ -227,7 +227,6 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 		}
 		
 		
-		
 		/* Connect the internal edges for the current loop */
 		for (genstruct::Vector<BasicBlock*>::Iterator bb(bbs); bb; bb++) {
 			for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
@@ -238,8 +237,8 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 				if (outedge->target() == cfg->exit())
 					continue;
 					
-				VirtualBasicBlock *vsrc = map.get(*bb);
-				VirtualBasicBlock *vdst = map.get(outedge->target());
+				VirtualBasicBlock *vsrc = map.get(*bb, NULL);
+				VirtualBasicBlock *vdst = map.get(outedge->target(), NULL);
 				if (outedge->kind() == Edge::CALL) {
 					CFG *called_cfg = outedge->calledCFG();
 					int called_idx = INDEX(called_cfg);
@@ -248,7 +247,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 					ENTRY(called_vcfg->entry()) = called_vcfg;
 					CALLED_CFG(outedge) = called_vcfg;
 				
-				} else if ((outedge->target() != header) || ((i == 1) && !dont_unroll)) {
+				} else if ((outedge->target() != header) || ((i == 1) /* XXX && !dont_unroll */ )) {
 					new Edge(vsrc, vdst, outedge->kind());
 				} else {
 					backEdges.add(pair(vsrc, outedge->kind()));
