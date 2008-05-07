@@ -286,7 +286,6 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
   
         /* Iterate to find the enclosing loop headers */
         for (CFG::BBIterator bb(cfg); bb; bb++) {
-			bool found = false;
 
 			/*
 			 * Detects the enclosing loop header of this bb by selecting the last element (that is, the lowest in the
