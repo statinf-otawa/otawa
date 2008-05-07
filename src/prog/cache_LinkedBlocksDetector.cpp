@@ -85,7 +85,7 @@ typedef genstruct::SortedSLList<LBlock*, NumberOrder> LinkedBlockList;
 
 LinkedBlocksDetector::LinkedBlocksDetector(void) : Processor("otawa::LinkedBlocksDetector", Version(1, 0, 0)), _explicit(false) {
 	require(ASSIGNED_VARS_FEATURE);
-	require(ICACHE_CATEGORY_FEATURE);
+	require(ICACHE_CATEGORY2_FEATURE);
 	require(LOOP_INFO_FEATURE);
 	require(COLLECTED_LBLOCKS_FEATURE);
 	require(ILP_SYSTEM_FEATURE);
