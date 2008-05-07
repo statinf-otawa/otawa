@@ -8,3 +8,4 @@ main.dot
 Makefile
 Makefile.in
 .deps
+.libs
