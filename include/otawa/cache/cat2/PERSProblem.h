@@ -63,7 +63,7 @@ class PERSProblem {
 			} 
 			
 			inline Item& operator=(const Item &src) {
-				ASSERT((A == src.A) && (size == src.size));
+				ASSERT((A == src.A) && (size == src.size));		
 				for (int i = 0; i < size ; i++)
 					age[i] = src.age[i];
 				return *this;
@@ -77,10 +77,10 @@ class PERSProblem {
 			}
 			
 			inline void lub(const Item &dom) {
-				ASSERT((A == dom.A) && (size == dom.size));
+				/* ASSERT((A == dom.A) && (size == dom.size)); */
 
 				for (int i = 0; i < size; i++) {					
-					if (((age[i] < dom.age[i]) && (dom.age[i] != -1)) || (age[i] == -1))
+					if ((age[i] == -1) || ((age[i] < dom.age[i]) && (dom.age[i] != -1)) )
 						age[i] = dom.age[i];
 				}
 			}
@@ -188,13 +188,32 @@ class PERSProblem {
 					data.add(new Item(*source.data[i]));
 			} 
 			
-			inline Domain& operator=(const Domain &src) {
-				empty(); /* XXX !!gruik!! */
-				whole = src.whole;
-				isBottom = src.isBottom;
-				for (int i = 0; i < src.data.length(); i++)
-					data.add(new Item(*src.data[i]));
-				return *this;
+			inline Domain& operator=(const Domain &src) { 
+				if (src.isBottom) {
+					setToBottom();
+				} else {			
+					whole = src.whole;
+					isBottom = false;
+					
+					/*
+					for (int i = 0; i < src.data.length(); i++)
+						data.add(new Item(*src.data[i]));
+					*/
+					int sdl = src.data.length();
+					int dl = data.length();
+					int minl = (sdl > dl) ? dl : sdl;
+					data.setLength((sdl > dl) ? dl : sdl);
+					
+					for (int i = 0; i < minl; i++)
+						*data[i] = *src.data[i];
+						
+					for (int i = dl; i < sdl; i++) 
+						data.add(new Item(*src.data[i]));
+						
+						
+				}	
+				return *this;			
+
 			}	
 			
 			inline void lub(const Domain &dom) {
@@ -205,32 +224,29 @@ class PERSProblem {
 				 * 3. lub(dom1,dom2) where dom1 has less items than dom2: we discard  items of dom2 (starting from outer-most loop)
 				 * until it has the same size as dom1, then apply rule 2.
 				 */
-				
-				if (isBottom && !dom.isBottom) {
+				if (dom.isBottom)
+					return;
+									
+				if (isBottom) {
 					for (int i = 0; i < dom.data.length(); i++)
 						data.add(new Item(*dom.data[i]));
 					whole = dom.whole;
 					isBottom = false;
-				}
-				
-				
-				if (dom.isBottom)
 					return;
+				}
+
+				int dl = data.length();
+				int ddl = dom.data.length();
+				int length = (dl < ddl) ? dl : ddl;
 				
-				int length = (data.length() < dom.data.length()) ? data.length() : dom.data.length();
-				
-				for (int i = data.length() - 1, j = dom.data.length() - 1, k = 0; k < length; i--, j--, k++) {
+				for (int i = dl - 1, j = ddl - 1, k = 0; k < length; i--, j--, k++) {
 					data[i]->lub(*dom.data[j]);
 				}
-				
-			
-				for (int i = 0; i < data.length() - length; i++) {
-					
+
+				for (int i = 0; i < dl - length; i++) {
 					data.remove(0);
 				}
-				
 				whole.lub(dom.whole);
-				
 			}
 
 
