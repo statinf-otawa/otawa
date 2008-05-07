@@ -45,12 +45,11 @@ class DefaultListener {
   	
 	typedef P Problem;
 	
-	Identifier<typename Problem::Domain*> BB_OUT_STATE; 
+	static Identifier<typename Problem::Domain*> BB_OUT_STATE; 
 
 	typename Problem::Domain ***results;
 	
-	DefaultListener(WorkSpace *_fw, Problem& _prob)
-	: BB_OUT_STATE("", NULL), fw(_fw), prob(_prob)  {
+	DefaultListener(WorkSpace *_fw, Problem& _prob) : fw(_fw), prob(_prob) {
 		CFGCollection *col = INVOLVED_CFGS(fw);
 		results = new typename Problem::Domain**[col->count()];
 		
@@ -92,6 +91,12 @@ class DefaultListener {
 
 	
 };
+
+/**
+ * PRIVATE - DO NOT USE
+ */ 
+template <class Problem >
+Identifier<typename Problem::Domain*> DefaultListener<Problem>::BB_OUT_STATE("", NULL);
 
 template <class Problem >
 void DefaultListener<Problem>::blockInterpreted(const DefaultFixPoint<DefaultListener>  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
