@@ -70,7 +70,7 @@ void LoopUnroller::processWorkSpace(otawa::WorkSpace *fw) {
 	
 	// Create the new VCFG collection first, so that it will be available when we do the loop unrolling
 	for (CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++, cfgidx++) {
-		VirtualCFG *vcfg = new VirtualCFG();
+		VirtualCFG *vcfg = new VirtualCFG(false);
 		coll->cfgs.add(vcfg);
 		INDEX(vcfg) = cfgidx;
 		vcfg->addBB(vcfg->entry());
@@ -114,15 +114,15 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 	BackEdgePairVector backEdges;
 	bool dont_unroll = false;
 	int start;
-	 
-	
+
 	/* Avoid unrolling loops with LOOP_COUNT of 0, since it would create a LOOP_COUNT of -1 for the non-unrolled part of the loop*/
 	if (header && (ipet::LOOP_COUNT(header) == 0)) {
 		dont_unroll = true;
 	}
-	
+		
 	//if (header) dont_unroll = true;
 	start = dont_unroll ? 1 : 0;
+	
 	
 	for (int i = start; ((i < 2) && header) || (i < 1); i++) {		
 		doneList.clear();
@@ -141,9 +141,11 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 			
 			if (Dominance::isLoopHeader(current) && (current != header)) {
 				/* we enter another loop */
+		
 				loopList.put(current); 
 				
 				/* add exit edges destinations to the worklist */
+				
 				for (genstruct::Vector<Edge*>::Iterator exitedge(*EXIT_LIST(current)); exitedge; exitedge++) {
 					if (!doneList.contains(exitedge->target())) {
 						workList.put(exitedge->target());
@@ -185,18 +187,21 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 				
 				
 					bbs.add(current);
-//					cout << "Adding virtual BB " << new_bb->number() << " for BB: " << current->number() << "of cfg " << current->cfg()->label() << " ( i == " << i << ") with count " << ipet::LOOP_COUNT(new_bb) << "\n"; 
+	
 					map.put(current, new_bb);
 				}
 						
 				
 				/* add successors which are in loop (including possible sub-loop headers) */ 
 				for (BasicBlock::OutIterator outedge(current); outedge; outedge++) {
+					
 					if (outedge->target() == cfg->exit())
 						continue;
 					if (outedge->kind() == Edge::CALL)
 						continue;
+						
 					if (ENCLOSING_LOOP_HEADER(outedge->target()) == header) {
+					//	cout << "Test for add: " << outedge->target()->number() << "\n";
 						if (!doneList.contains(outedge->target())) {
 							workList.put(outedge->target());
 							doneList.add(outedge->target());
@@ -216,8 +221,10 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 		while (!virtualCallList.isEmpty()) {
 			BasicBlock *vcall = virtualCallList.get();
 			BasicBlock *vreturn = map.get(VIRTUAL_RETURN_BLOCK(vcall), NULL);
+			
 			ASSERT(vreturn != NULL);
 			VIRTUAL_RETURN_BLOCK(vcall) = vreturn;
+			
 		}
 
 
@@ -227,6 +234,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 		}
 		
 		
+
 		/* Connect the internal edges for the current loop */
 		for (genstruct::Vector<BasicBlock*>::Iterator bb(bbs); bb; bb++) {
 			for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
@@ -239,6 +247,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 					
 				VirtualBasicBlock *vsrc = map.get(*bb, NULL);
 				VirtualBasicBlock *vdst = map.get(outedge->target(), NULL);
+				
 				if (outedge->kind() == Edge::CALL) {
 					CFG *called_cfg = outedge->calledCFG();
 					int called_idx = INDEX(called_cfg);
@@ -247,7 +256,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 					ENTRY(called_vcfg->entry()) = called_vcfg;
 					CALLED_CFG(outedge) = called_vcfg;
 				
-				} else if ((outedge->target() != header) || ((i == 1) /* XXX && !dont_unroll */ )) {
+				} else if ((outedge->target() != header) || ((i == 1) /* XXX && !dont_unroll XXX*/ )) {
 					new Edge(vsrc, vdst, outedge->kind());
 				} else {
 					backEdges.add(pair(vsrc, outedge->kind()));
@@ -289,6 +298,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 			new Edge(vsrc, vcfg->exit(), Edge::VIRTUAL_RETURN);
 		}
 	}
+
 }
 
 } /* end namespace */
