@@ -32,7 +32,6 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/ipet/TrivialInstCacheManager.h>
-
 #include <otawa/cache/cat2/ACSBuilder.h>
 #include <otawa/cache/cat2/CAT2Builder.h>
 #include <otawa/cache/cat2/CAT2ConstraintBuilder.h>
@@ -75,7 +74,7 @@ Identifier<ilp::Var *> MISS_VAR("otawa::miss_var", 0, otawa::NS);
 CAT2ConstraintBuilder::CAT2ConstraintBuilder(void) : Processor("otawa::CAT2ConstraintBuilder", Version(1, 0, 0)), _explicit(false) {
 	require(ASSIGNED_VARS_FEATURE);
 	require(ICACHE_CATEGORY2_FEATURE);
-	require(LOOP_INFO_FEATURE);
+	require(DOMINANCE_FEATURE);
 	require(COLLECTED_LBLOCKS_FEATURE);
 	require(ILP_SYSTEM_FEATURE);
 	provide(INST_CACHE_SUPPORT_FEATURE);
@@ -109,7 +108,7 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 	                        miss = system->newVar();
 	                else {
 	                        StringBuffer buf1;
-	                        buf1 << "xmiss_" << lblock->address() << "," << i << "," << lblock->id() << ","<< lblock->bb()->number();
+	                        buf1 << "XMISS_ADDR_" << lblock->address() << "_" << lblock->id();
 	                        String name1 = buf1.toString();
 	                        miss = system->newVar(name1);
 	                }
@@ -175,6 +174,7 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 							break;
 							
 	                	default:
+	                		ASSERT(false);
 					break;
 	            }
 	                // Add x_miss*penalty to object function
