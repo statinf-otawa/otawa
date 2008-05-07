@@ -37,7 +37,11 @@
 #include <otawa/prop/Identifier.h>
 #include <otawa/prog/WorkSpace.h>
 
-
+#if defined(NDEBUG) || !defined(DEBUG)
+#	define TRACE(x)
+#else
+#	define TRACE(x) cerr << x << io::endl
+#endif
 
 namespace otawa { namespace util {
 
@@ -47,10 +51,13 @@ typedef enum hai_context_t {
 } hai_context_t;
 
 
+
+
 extern Identifier<bool> FIXED;
 extern Identifier<bool> FIRST_ITER;
 extern Identifier<bool> HAI_DONT_ENTER;
-extern Identifier<BasicBlock*> HAI_BYPASS_EDGE;
+extern Identifier<BasicBlock*> HAI_BYPASS_SOURCE;
+extern Identifier<BasicBlock*> HAI_BYPASS_TARGET;
 
 template <class FixPoint>
 class HalfAbsInt {
@@ -65,17 +72,19 @@ class HalfAbsInt {
 	elm::genstruct::Vector<CFG*> *cfgStack;
 	BasicBlock *current;
 	typename FixPoint::Domain in,out;
-	Edge *call_edge; /* call_edge == current node's call-edge to another CFG */
-	bool call_node; /* call_node == true: we need to process this call. call_node == false: already processed (call return) */
+	elm::genstruct::Vector<Edge*> call_edges; /* call_edge == current node's call-edge to another CFG */
+	Edge *next_edge;
+	bool enter_call; /* enter_call == true: we need to process this call. enter_call == false: already processed (call return) */
 	bool fixpoint;
 	bool mainEntry;
 	
 	static Identifier<typename FixPoint::FixPointState*> FIXPOINT_STATE;	
 	inline bool isEdgeDone(Edge *edge);	
 	inline bool tryAddToWorkList(BasicBlock *bb);
-	Edge *detectCalls(bool &call_node, BasicBlock *bb);
+	Edge *detectCalls(bool &enter_call, elm::genstruct::Vector<Edge*> &call_edges, BasicBlock *bb);
 	void inputProcessing(typename FixPoint::Domain &entdom);
 	void outputProcessing();
+	void addSuccessors();
 	
   public:
   	inline typename FixPoint::FixPointState *getFixPointState(BasicBlock *bb);
@@ -94,7 +103,7 @@ Identifier<typename FixPoint::FixPointState*> HalfAbsInt<FixPoint>::FIXPOINT_STA
 
 template <class FixPoint>
 inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, WorkSpace& _fw)
-: fp(_fp), fw(_fw), entry_cfg(*ENTRY_CFG(_fw)), cur_cfg(ENTRY_CFG(_fw)), in(_fp.bottom()), out(_fp.bottom()) {
+: fp(_fp), fw(_fw), entry_cfg(*ENTRY_CFG(_fw)), cur_cfg(NULL), in(_fp.bottom()), out(_fp.bottom()) {
 		workList = new elm::genstruct::Vector<BasicBlock*>();
 		callStack = new elm::genstruct::Vector<Edge*>();
 		cfgStack = new elm::genstruct::Vector<CFG*>();
@@ -117,231 +126,290 @@ inline typename FixPoint::FixPointState *HalfAbsInt<FixPoint>::getFixPointState(
 template <class FixPoint>
 void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	
+	/*
+	 * This function computes the IN state, and unmark the not-needed-anymore edges.
+	 */
 	fp.assign(in, fp.bottom());
+	/* Main entry case */
 	if (mainEntry) {
-		/* Main entry case */
 		fp.assign(in, entdom);		
 		mainEntry = false;
-	} else if (current->isEntry()) {		
-		/* Function-call entry case */
+	}
+	
+	/* Function-call entry case, state is on the called CFG's entry */
+	else if (current->isEntry()) {		
 		fp.assign(in, *fp.getMark(current));
 		fp.unmarkEdge(current);
-	} else if (fp.getMark(current) && !current->isEntry()) {
-		/* Edge bypass case */
-		fp.assign(in, *fp.getMark(current));
-		fp.unmarkEdge(current);
-	} else if (call_edge && !call_node) {
-		/* Call return case */
-		fp.assign(in, *fp.getMark(call_edge));
-		fp.unmarkEdge(call_edge);
-	} else if (Dominance::isLoopHeader(current)) {
-		/* Loop header case: launch fixPoint() */
+	}
+	
+	/* Call return case, merge return-state for all functions called from this node */
+	else if (!next_edge && !call_edges.isEmpty()) {
+		for (elm::genstruct::Vector<Edge*>::Iterator iter(call_edges); iter; iter++) {
+			fp.lub(in, *fp.getMark(*iter));
+			fp.unmarkEdge(*iter);
+		}
+	}
+	
+	/* Loop header case: launch fixPoint() */
+	else if (Dominance::isLoopHeader(current)) {
+		
+		/* Compute the IN thanks to the fixpoint handler */
 		if (FIRST_ITER(current))
-        		FIXPOINT_STATE(current) = fp.newState();
-            	fp.fixPoint(current, fixpoint, in, FIRST_ITER(current));            	
-#ifdef DEBUG
-            	cout << "Loop header " << current->number() << ", fixpoint reached = " << fixpoint << "\n";
-#endif            	
-            	if (FIRST_ITER(current)) {
-            		ASSERT(!fixpoint);
-            		FIRST_ITER(current) = false;
-            	}
-            	 
-            	FIXED(current) = fixpoint;
+        	FIXPOINT_STATE(current) = fp.newState();
+    	fp.fixPoint(current, fixpoint, in, FIRST_ITER(current));            	
+    	TRACE("Loop header " << current->number() << ", fixpoint reached = " << fixpoint);
+    	if (FIRST_ITER(current)) {
+    		ASSERT(!fixpoint);
+    		FIRST_ITER(current) = false;
+    	}
+        FIXED(current) = fixpoint;
+        
+        /* Unmark edges depending on the fixpoint status.
+         * If fixpoint, unmark all in-edges, else unmark only back-edges
+         */
             	
-            	/* In any case, the values of the back-edges are not needed anymore */
-            	for (BasicBlock::InIterator inedge(current); inedge; inedge++) {
-            		if (inedge->kind() == Edge::CALL)
-            			continue;
-            		if (Dominance::dominates(current, inedge->source())) {
-            			fp.unmarkEdge(*inedge);
-#ifdef DEBUG        
-            			cout << "Unmarking back-edge: " << inedge->source()->number() << "->" << inedge->target()->number() << "\n";
-#endif            			
-            		}
-            	}
+    	/* In any case, the values of the back-edges are not needed anymore */
+    	for (BasicBlock::InIterator inedge(current); inedge; inedge++) {
+    		if (inedge->kind() == Edge::CALL)
+    			continue;
+    		if (Dominance::dominates(current, inedge->source())) {
+    			fp.unmarkEdge(*inedge);
+    			TRACE("Unmarking back-edge: " << inedge->source()->number() << "->" << inedge->target()->number());
+    		}
+    	}
             	
-            	if (fixpoint) {
-            		/* Cleanups associated with end of the processing of a loop */
-            		fp.fixPointReached(current);
-            		delete FIXPOINT_STATE(current);
-            		FIXPOINT_STATE(current) = NULL;
-            		FIRST_ITER(current) = true;            	        		
-
-            		/* The values of the entry edges are not needed anymore */
-                	for (BasicBlock::InIterator inedge(current); inedge; inedge++) {
-                		if (inedge->kind() == Edge::CALL)
-            				continue;
-                		if (!Dominance::dominates(current, inedge->source())) {
-#ifdef DEBUG                			
-                			cout << "Unmarking entry-edge: " << inedge->source()->number() << "->" << inedge->target()->number() << "\n";
-#endif                			
-            				fp.unmarkEdge(*inedge);
-                		}
-                	}
-                	
-            	}               	
-	} else {
-		/* Case of the simple basic block: IN = union of the OUTs of the predecessors. */
+		if (fixpoint) {
+			/* Cleanups associated with end of the processing of a loop */
+			fp.fixPointReached(current);
+			delete FIXPOINT_STATE(current);
+			FIXPOINT_STATE(current) = NULL;
+			FIRST_ITER(current) = true;            	        		
+	
+			/* The values of the entry edges are not needed anymore */
+	    	for (BasicBlock::InIterator inedge(current); inedge; inedge++) {
+	    		if (inedge->kind() == Edge::CALL)
+					continue;
+				if (HAI_BYPASS_TARGET(current) && (inedge->kind() == Edge::VIRTUAL_RETURN))
+					continue;
+	    		if (!Dominance::dominates(current, inedge->source())) {
+	    			TRACE("Unmarking entry-edge: " << inedge->source()->number() << "->" << inedge->target()->number());           			
+					fp.unmarkEdge(*inedge);
+	    		}
+	    	}
+	    	if (HAI_BYPASS_TARGET(current)) {
+	    		fp.unmarkEdge(current);
+	    	}	    	
+		}               	
+	} 
+	
+	/* Case of the simple basic block: IN = union of the OUTs of the predecessors. */
+	else {
+		
 		/* Un-mark all the in-edges since the values are not needed.  */
-		fp.assign(in,fp.bottom());
 		for (BasicBlock::InIterator inedge(current); inedge; inedge++) {
-			if (inedge->kind() == Edge::CALL)
+			ASSERT(inedge->kind() != Edge::CALL);
+			if (HAI_BYPASS_TARGET(current) && (inedge->kind() == Edge::VIRTUAL_RETURN))
 				continue;
 			typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
 			ASSERT(edgeState != NULL);
 			fp.lub(in, *edgeState);										
 			fp.unmarkEdge(*inedge);
-#ifdef DEBUG                    
-                   	cout << "Unmarking in-edge: " << inedge->source()->number() << "->" << inedge->target()->number() << "\n";
-#endif                     
-		}   					
+                    
+            TRACE("Unmarking in-edge: " << inedge->source()->number() << "->" << inedge->target()->number());
+                     
+		}
+		if (HAI_BYPASS_TARGET(current)) {
+			typename FixPoint::Domain *bypassState = fp.getMark(current);
+			ASSERT(bypassState != NULL);
+			fp.lub(in, *bypassState);
+			fp.unmarkEdge(current);      
+            TRACE("Unmarking bypass in-edge: " << HAI_BYPASS_TARGET(current)->number() << "->" << current->number());
+		}  					
 	} 
 }
 
 template <class FixPoint>
 void HalfAbsInt<FixPoint>::outputProcessing() {
+	/*
+	 * This function computes the out-state, propagates it to the needed edges, and
+	 * try to add the next node(s) to the worklist.
+	 */
+	
+	/* Fixpoint reached: activate the associated loop-exit-edges */
 	if (Dominance::isLoopHeader(current) && fixpoint) {
-		/* Fixpoint reached: activate the associated loop-exit-edges. */
         elm::genstruct::Vector<Edge*> *vec;
         vec = EXIT_LIST(current);
       
 		genstruct::Vector<BasicBlock*> alreadyAdded;
-        for (elm::genstruct::Vector<Edge*>::Iterator iter(*EXIT_LIST(current)); iter; iter++) {
-#ifdef DEBUG            		
-           	cout << "Activating edge: " << iter->source()->number() << "->" << iter->target()->number() << "\n";
-#endif            	
-			if (!alreadyAdded.contains(iter->target())) {	
-           			if (tryAddToWorkList(iter->target()))
-           				alreadyAdded.add(iter->target());
-			}
-
-           	fp.leaveContext(*fp.getMark(*iter), current, CTX_LOOP);
-
-        }           		
-	} else {            	
-        /* Simple BasicBlock: try to add its sucessors to the worklist */
-        	 
-        /* if call_edge && !call_node, then we're at a call return, we don't call update(), because we already
-         * did it during the call processing */
-        if (call_node || !call_edge) {
-           	fp.update(out, in, current);
-
-#ifdef DEBUG            	
-        	cout << "Updating for basicblock: " << current->number() << "\n"; 
-#endif            	
-        	fp.blockInterpreted(current, in, out, cur_cfg, callStack);
-        }
-            	
-        if (current->isExit() && (callStack->length() > 0)) {
-          	/* Exit from function: pop callstack, mark edge with return state for the caller */
-           	/*int last_pos =*/ callStack->length() /*- 1*/;
-           	Edge *edge = callStack->pop();
-           	cur_cfg = cfgStack->pop();
-#ifdef DEBUG
-           	cout << "Returning to CFG: " << cur_cfg->label() << "\n";
-#endif
-			fp.leaveContext(out, cur_cfg->entry(), CTX_FUNC);
-           	fp.markEdge(edge, out);
-           	workList->push(edge->source());
-        }
-
-        if (call_node) {
-    		/* Going into sub-function: push callstack, mark function entry with call state for the callee */
-			BasicBlock *func_entry = call_edge->calledCFG()->entry();
-            callStack->push(call_edge);
-            cfgStack->push(cur_cfg);
-            cur_cfg = call_edge->calledCFG();
-#ifdef DEBUG            		
-            cout << "Going to CFG: " << cur_cfg->label() << "\n";
-#endif
-            workList->push(func_entry);
-            fp.enterContext(out, cur_cfg->entry(), CTX_FUNC);
-            fp.markEdge(func_entry, out);
+		if ((EXIT_LIST(current) == NULL) || EXIT_LIST(current)->isEmpty()) {
+			cerr << "HalfAbsInt Warning: You are computing the WCET of a task which contains an infinite loop\n";
 		} else {
-        	/* Standard case: use out-state to mark out-edges, and try to add successors to worklist */
-	        if (HAI_BYPASS_EDGE(current)) {
-	        	fp.markEdge(HAI_BYPASS_EDGE(current), out);
-	        	workList->push(HAI_BYPASS_EDGE(current));
-	        	ASSERT(!HAI_BYPASS_EDGE(current)->isEntry());
-	        } else {
-		        for (BasicBlock::OutIterator outedge(current); outedge; outedge++) {
-		            if (outedge->kind() == Edge::CALL) 
-		            	continue;
-		            	
-			    if (HAI_DONT_ENTER(outedge->target()))
-			    	continue;
+	        for (elm::genstruct::Vector<Edge*>::Iterator iter(*EXIT_LIST(current)); iter; iter++) {
+    		
+	           	TRACE("Activating edge: " << iter->source()->number() << "->" << iter->target()->number());
+
+				if (!alreadyAdded.contains(iter->target())) {	
+	           			if (tryAddToWorkList(iter->target()))
+	           				alreadyAdded.add(iter->target());
+				}
 	
-		            fp.markEdge(*outedge, out);
-	#ifdef DEBUG           		
-		            cout << "Marking edge: " << outedge->source()->number() << "->" << outedge->target()->number() << "\n";
-	#endif            		
-		            tryAddToWorkList(outedge->target());
-		        }
-	        }
-        }
+	           	fp.leaveContext(*fp.getMark(*iter), current, CTX_LOOP);
+	        } 
+		}          		
+	} 
+	
+	/* Exit from function: pop callstack, mark edge with return state for the caller */
+	else if (current->isExit() && (callStack->length() > 0)) {
+      	
+   
+       	
+       	fp.update(out, in, current);
+		TRACE("Updating for exit block while returning from call: " << current->number());
+		
+       	Edge *edge = callStack->pop();
+       	cur_cfg = cfgStack->pop();
+
+       	TRACE("Returning to CFG: " << cur_cfg->label());
+
+		fp.leaveContext(out, cur_cfg->entry(), CTX_FUNC);
+       	fp.markEdge(edge, out);
+       	workList->push(edge->source());
+	}
+	
+	/* Visit call-node, and there is still function calls to process */
+	else if (next_edge != NULL) {
+		/* If first time, mark entry points. */
+		if (enter_call) {
+			fp.update(out, in, current);
+			TRACE("Updating for basicblock while visiting call-node for the first time: " << current->number());
+		    for (elm::genstruct::Vector<Edge*>::Iterator iter(call_edges); iter; iter++) {
+				// Mark all the function entries 
+				BasicBlock *func_entry = iter->calledCFG()->entry();
+				fp.markEdge(func_entry, out); 
+		    }		
+		}
+		/* In all cases, add next entry point to worklist. */
+        callStack->push(next_edge);
+        cfgStack->push(cur_cfg);
+        cur_cfg = next_edge->calledCFG();
+       		
+        TRACE("Going to CFG: " << cur_cfg->label());
+
+        workList->push(cur_cfg->entry());
+        fp.enterContext(out, cur_cfg->entry(), CTX_FUNC);
+	}
+	 
+	/* Visit call-node for the last-time, propagate state to successors */
+	else if (!call_edges.isEmpty()) {
+		TRACE("Finished processing function calls for bb " << current->number());
+		fp.assign(out, in);
+		addSuccessors();
+	}
+	
+	/* Standard case, update and propagate state to successors */
+	else {            	
+
+        fp.update(out, in, current);
+		TRACE("Updating for basicblock: " << current->number());	
+        fp.blockInterpreted(current, in, out, cur_cfg, callStack);
+        addSuccessors();
 	}
 }
 
-
 template <class FixPoint>
-Edge *HalfAbsInt<FixPoint>::detectCalls(bool &call_node, BasicBlock *bb) {
-	Edge *call_edge = NULL;
+void HalfAbsInt<FixPoint>::addSuccessors() {
 
-	call_node = false;
-       	for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
-        	if ((outedge->kind() == Edge::CALL) && (!HAI_DONT_ENTER(outedge->calledCFG()))) {
-        		call_edge = *outedge;
-        		if (!fp.getMark(call_edge)) {
-        			call_node = true;
-        		}
-        	}
+	for (BasicBlock::OutIterator outedge(current); outedge; outedge++) {
+	    if (outedge->kind() == Edge::CALL) 
+	    	continue;
+	    
+	if (HAI_BYPASS_SOURCE(current) && outedge->kind() == Edge::VIRTUAL_CALL)
+		continue;	
+	if (HAI_DONT_ENTER(outedge->target()))
+		continue;
+	
+	    fp.markEdge(*outedge, out);
+	
+	    TRACE("Marking edge: " << outedge->source()->number() << "->" << outedge->target()->number());
+		
+	    tryAddToWorkList(outedge->target());
 	}
-        return(call_edge);
+	 
+	if (HAI_BYPASS_SOURCE(current)) {
+	
+		fp.markEdge(HAI_BYPASS_SOURCE(current), out);
+		
+	    TRACE("Marking bypass out-edge: " << current->number() << "->" << HAI_BYPASS_SOURCE(current)->number());
+	    	
+		tryAddToWorkList(HAI_BYPASS_SOURCE(current));
+	}
+}	    
+    
+template <class FixPoint>
+Edge *HalfAbsInt<FixPoint>::detectCalls(bool &enter_call, elm::genstruct::Vector<Edge*> &call_edges, BasicBlock *bb) {
+	Edge *next_edge = NULL;
+	enter_call = true;
+	call_edges.clear();
+    for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
+    	if ((outedge->kind() == Edge::CALL) && (!HAI_DONT_ENTER(outedge->calledCFG()))) {
+    		call_edges.add(*outedge);
+    		if (fp.getMark(*outedge)) {
+    			enter_call = false;
+    		} else if (next_edge == NULL) {
+    			next_edge = *outedge;    			
+    		}    		
+    	}
+	}
+    return(next_edge);
 }
 
 
 template <class FixPoint>
 int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, 
 	typename FixPoint::Domain *entdom, BasicBlock *start_bb) {        
-	int iterations = 0;
-    
+		int iterations = 0;
+    	typename FixPoint::Domain default_entry(fp.entry());
+    	
         /* workList / callStack initialization */
         workList->clear();
         callStack->clear();
         mainEntry = true;
-        if (main_cfg != NULL) 
-        	cur_cfg = main_cfg;
-	if (start_bb != NULL) {
+        
+        if (main_cfg == NULL)
+        	main_cfg = &entry_cfg;
+        	
+        if (start_bb == NULL)
+        	start_bb = main_cfg->entry();
+   
+   		if (entdom == NULL)
+   			entdom = &default_entry;
+   			
+		ASSERT(main_cfg != NULL);
+		ASSERT(start_bb != NULL);
+		     	 
+        cur_cfg = main_cfg;
+		
 		workList->push(start_bb);
-	} else {
-	        workList->push((main_cfg != NULL) ? main_cfg->entry() : entry_cfg.entry());
-	}
-#ifdef DEBUG
-		cout << "==== Beginning of the HalfAbsInt solve() ====\n";
-#endif        
+
+
+		TRACE("==== Beginning of the HalfAbsInt solve() ====");
+        
         /* HalfAbsInt main loop */
         while (!workList->isEmpty()) {
-        
         	iterations++;
-		fixpoint = false;
+			fixpoint = false;
       		current = workList->pop();      		
-      		call_edge = detectCalls(call_node, current);
-#ifdef DEBUG
-        	cout << "\n=== HalfAbsInt Iteration ==\n";
-        	cout << "Processing BB: " << current->number() << " \n";
-#endif
-		if (entdom != NULL) {
-			inputProcessing(*entdom);
-		} else {
-			typename FixPoint::Domain default_entry(fp.entry());
-			inputProcessing(default_entry);
-		}
-		outputProcessing();        	
+      		next_edge = detectCalls(enter_call, call_edges, current);
+
+        	TRACE("\n=== HalfAbsInt Iteration ==");
+        	TRACE("Processing BB: " << current->number());
+
+			inputProcessing(*entdom);	
+			outputProcessing();        	
 	}
-#ifdef DEBUG        
-        cout << "==== HalfAbsInt solve() completed ====\n";
-#endif
+     
+        TRACE("==== HalfAbsInt solve() completed ====");
+
         return(iterations);
 }
 
@@ -376,12 +444,19 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(BasicBlock
         for (BasicBlock::InIterator inedge(bb); inedge; inedge++) {
         		if (inedge->kind() == Edge::CALL)
             			continue;
+            	if (HAI_BYPASS_TARGET(bb) && (inedge->kind() == Edge::VIRTUAL_RETURN))
+            		continue; 
                 if (!Dominance::dominates(bb, inedge->source())) {
                         typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
                         ASSERT(edgeState);
                         fp.lub(result, *edgeState);
                 }
   
+        }
+        if (HAI_BYPASS_TARGET(bb)) {
+        	typename FixPoint::Domain *bypassState = fp.getMark(bb);
+        	ASSERT(bypassState);
+        	fp.lub(result, *bypassState);
         }
         fp.enterContext(result, bb, CTX_LOOP);
         return(result);
@@ -394,21 +469,26 @@ inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(BasicBlock *bb) {
 	for (BasicBlock::InIterator inedge(bb); inedge; inedge++) {
 		if (inedge->kind() == Edge::CALL)
             			continue;
+        if (HAI_BYPASS_TARGET(bb) && (inedge->kind() == Edge::VIRTUAL_RETURN))
+        	continue;
 		if (!isEdgeDone(*inedge)) {
 			add = false;
 		}	
 	}
+	if (HAI_BYPASS_TARGET(bb)) {
+        typename FixPoint::Domain *bypassState = fp.getMark(bb);
+        if (bypassState == NULL)
+        	add = false;
+    }
+        
 	if (add) {
 		if (Dominance::isLoopHeader(bb)) {			
-#ifdef DEBUG
-			if (FIRST_ITER(bb) == true) {
-				cout << "Ignoring back-edges for loop header " << bb->number() << " because it's the first iteration.\n";			
-			}
-#endif
+#			ifdef DEBUG
+				if (FIRST_ITER(bb) == true)
+					cerr << "Ignoring back-edges for loop header " << bb->number() << " because it's the first iteration.\n";			
+#			endif
 		}
-#ifdef DEBUG
-		cout << "Adding to worklist BB: " << bb->number() << "\n";;
-#endif
+		TRACE("Adding to worklist BB: " << bb->number());
 		workList->push(bb);
 	}
 	return(add);

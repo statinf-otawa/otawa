@@ -47,7 +47,7 @@ class DefaultFixPoint {
 
 	 
 	// Fields
-	Identifier<Domain*> STATE;	
+	static Identifier<Domain*> STATE;	
 	Problem& prob;
 	Listener  &list;
 	util::HalfAbsInt<DefaultFixPoint> *ai;
@@ -67,7 +67,7 @@ class DefaultFixPoint {
 
 	
 	inline DefaultFixPoint(Listener & _list)
-	: STATE("", NULL), prob(_list.getProb()), list(_list), ai(NULL)
+	:prob(_list.getProb()),list(_list),ai(NULL)
 	{
 	}	
 	// Destructor
@@ -101,6 +101,8 @@ class DefaultFixPoint {
 	
 };
 	
+template < class Listener > Identifier<typename Listener::Problem::Domain*> DefaultFixPoint<Listener >::STATE("", NULL, otawa::NS);
+
 template < class Listener >	
 inline void DefaultFixPoint<Listener >::init(util::HalfAbsInt<DefaultFixPoint> *_ai) {
 		ai = _ai;
