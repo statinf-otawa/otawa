@@ -51,6 +51,7 @@ public:
 
 // Features
 extern Feature<VarAssignment> ASSIGNED_VARS_FEATURE;
+extern Identifier<String*> FORCE_NAME;
 
 } } // otawa::ipet
 
