@@ -90,6 +90,7 @@ AbstractIdentifier::AbstractIdentifier(void)
 :	nam(""),
 	_parent(::NS)
 {
+		ASSERT(!((((unsigned int)this) > 0xbf000000) && (((unsigned int)this) < 0xc0000000)));
 }
 
 
@@ -104,6 +105,7 @@ AbstractIdentifier::AbstractIdentifier(elm::String name, NameSpace& parent)
 :	nam(name),
  	_parent(parent)
 {
+	ASSERT(!((((unsigned int)this) > 0xbf000000) && (((unsigned int)this) < 0xc0000000)));
 	if(name) {
 		if(initialized)
 			link();
