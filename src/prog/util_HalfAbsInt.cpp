@@ -110,20 +110,15 @@ Identifier<bool> FIRST_ITER("otawa::util::first_iter", true);
  */
 Identifier<bool> HAI_DONT_ENTER("otawa::util::hai_dont_enter", false);
 
-
 /**
- * This property tells HalfAbsInt to go directly from the basic block
- * which has this property, to the basic block contained in the property. 
- * It virtually adds an edge from bb to HAI_BYPASS_EDGE(bb), and virtually
- * removes all other out-edges from bb, and other in-edges from HAI_BYPASS_EDGE(bb)
- *
- * Warnings:
- * - The two basic blocks of the bypass edge must be in the same CFG.
- * - It can't exist a path in the CFG going to the target-basicblock of the bypass
- *   edge without passing first through the source-basicblock of the bypass edge.
+ * This property enables the user to create a virtual "bypass" edge from the source
+ * block to the target block. Moreover, it ensures that this virtual edge is the only
+ * mean to reach target basic block from source basic block.
+ * This should be used only to bypass function calls in inlined CFGs.
  */
-Identifier<BasicBlock*> HAI_BYPASS_EDGE("otawa::util::hai_bypass_edge", false);
  
+Identifier<BasicBlock*> HAI_BYPASS_SOURCE("otawa::util::HAI_BYPASS_SOURCE", false);
+Identifier<BasicBlock*> HAI_BYPASS_TARGET("otawa::util::HAI_BYPASS_TARGET", false);
 
 /**
  * @fn typename FixPoint::FixPointState *HalfAbsInt::getFixPointState(BasicBlock *bb);
