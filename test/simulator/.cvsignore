@@ -5,3 +5,5 @@ Makefile
 Makefile.in
 simulator
 scan_args.elf
+bitcount
+bitcount.native
