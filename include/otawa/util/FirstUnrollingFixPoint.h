@@ -47,7 +47,7 @@ class FirstUnrollingFixPoint {
 
 	 
 	// Fields
-	Identifier<Domain*> STATE;	
+	static Identifier<Domain*> STATE;	
 	Problem& prob;
 	Listener  &list;
 	util::HalfAbsInt<FirstUnrollingFixPoint> *ai;
@@ -70,7 +70,7 @@ class FirstUnrollingFixPoint {
 
 	
 	inline FirstUnrollingFixPoint(Listener & _list)
-	: STATE("", NULL), prob(_list.getProb()), list(_list), ai(NULL)
+	:prob(_list.getProb()), list(_list) ,ai(NULL)
 	{
 	}	
 	// Destructor
@@ -104,6 +104,8 @@ class FirstUnrollingFixPoint {
 	inline void leaveContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const;
 	
 };
+
+template <class Listener> Identifier<typename Listener::Problem::Domain*> FirstUnrollingFixPoint<Listener>::STATE("", NULL, otawa::NS);	
 	
 template < class Listener >	
 inline void FirstUnrollingFixPoint<Listener >::init(util::HalfAbsInt<FirstUnrollingFixPoint> *_ai) {
