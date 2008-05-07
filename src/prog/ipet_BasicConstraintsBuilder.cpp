@@ -189,6 +189,7 @@ void BasicConstraintsBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(entry);
 	Constraint *cons = system->newConstraint(Constraint::EQ, 1);
 	cons->addLeft(1, VAR(entry));
+	CALLING_CONSTRAINT(cfg) = cons;
 };
 
 
