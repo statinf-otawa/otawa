@@ -42,6 +42,12 @@ void VarAssignment::init(void) {
 	_config(EXPLICIT);
 }
 
+/**
+ *
+ * Force the ilp variable name of an edge or basic block
+ */
+Identifier<String* > FORCE_NAME("otawa::FORCE_NAME", NULL, otawa::NS);
+
 
 /**
  * @class VarAssignment
@@ -72,8 +78,13 @@ void VarAssignment::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 	// Check BB
 	if(!VAR(bb)) {
 		String name = "";
-		if(_explicit)
-			name = makeNodeVar(bb, cfg);
+		if(_explicit) {
+		        if (FORCE_NAME(bb)) {
+		                name = *FORCE_NAME(bb);
+		        } else {
+			        name = makeNodeVar(bb, cfg);
+                        }
+                }
 		VAR(bb) = sys->newVar(name);
 	}
 	
@@ -81,8 +92,13 @@ void VarAssignment::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 		if(!VAR(edge)) {
 			String name = "";
-			if(_explicit)
-				name = makeEdgeVar(edge, cfg);
+			if(_explicit) {
+			        if (FORCE_NAME(edge)) {
+			              name = *FORCE_NAME(edge);
+                                } else {
+				      name = makeEdgeVar(edge, cfg);
+                                }
+                        }
 			VAR(edge) =sys-> newVar(name);
 		}
 	}
