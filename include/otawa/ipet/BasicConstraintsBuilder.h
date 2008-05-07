@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/Feature.h>
-
+#include <otawa/ilp/Constraint.h>
 namespace otawa {
 
 // External classes	
@@ -36,7 +36,9 @@ namespace ilp {
 } //ilp
 
 namespace ipet {
-	
+
+extern Identifier<otawa::ilp::Constraint *> CALLING_CONSTRAINT;	
+
 // BasicConstraintsBuilder class
 class BasicConstraintsBuilder: public BBProcessor {
 public:
