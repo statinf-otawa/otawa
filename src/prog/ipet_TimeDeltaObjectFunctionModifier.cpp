@@ -53,7 +53,7 @@ void TimeDeltaObjectFunctionModifier::processBB(
 	CFG *cfg,
 	BasicBlock *bb)
 {
-	if(!bb->isEntry() && !bb->isExit()) {
+	if(!bb->isEntry()) {
 		System *system = SYSTEM(fw);
 		for(BasicBlock::InIterator edge(bb); edge; edge++) {
 			int time = TIME_DELTA(edge);
