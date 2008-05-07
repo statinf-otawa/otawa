@@ -79,7 +79,7 @@ inline elm::io::Output& operator<<(elm::io::Output& out,
 inline elm::io::Output& operator<<(elm::io::Output& out,
 	const AbstractIdentifier *id)
 {
-	assert(id);
+	ASSERT(id);
 	return out << *id;
 }
 
@@ -92,7 +92,7 @@ inline const elm::String AbstractIdentifier::name(void) const {
 inline void AbstractIdentifier::print(elm::io::Output& output,
 	const Property *prop) const
 {
-	assert(prop);
+	ASSERT(prop);
 	return print(output, *prop);
 }
 

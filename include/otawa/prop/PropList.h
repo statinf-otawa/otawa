@@ -7,7 +7,6 @@
 #ifndef OTAWA_PROP_PROPLIST_H
 #define OTAWA_PROP_PROPLIST_H
 
-#include <assert.h>
 #include <elm/utility.h>
 #include <elm/Iterator.h>
 #include <elm/util/VarArg.h>
@@ -120,7 +119,7 @@ template <class T> elm::Option<T> PropList::get(const AbstractIdentifier *id) co
 template <class T> T PropList::use(const AbstractIdentifier *id) const {
 	Property *prop = getProp(id);
 	if(!prop)
-		assert(0);
+		ASSERT(0);
 	return ((const GenericProperty<T> *)prop)->value();
 };
 
@@ -157,7 +156,7 @@ template <class T> elm::Option<T> PropList::get(const AbstractIdentifier& id) co
 template <class T> T PropList::use(const AbstractIdentifier& id) const {
 	Property *prop = getProp(&id);
 	if(!prop)
-		assert(0);
+		ASSERT(0);
 	return ((GenericProperty<T> *)prop)->value();
 };
 
@@ -199,7 +198,7 @@ inline PropList::Iter::Iter(const PropList *list): prop(list->head) {
 }
 
 inline void PropList::Iter::next(void) {
-	assert(prop);
+	ASSERT(prop);
 	prop = prop->next();
 }
 
@@ -208,7 +207,7 @@ inline bool PropList::Iter::ended(void) const {
 }
 
 inline Property *PropList::Iter::item(void) const {
-	assert(prop);
+	ASSERT(prop);
 	return prop;
 }
 
