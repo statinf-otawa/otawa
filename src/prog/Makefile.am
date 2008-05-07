@@ -73,6 +73,7 @@ libotawa_la_SOURCES = \
 	ets_CacheMissComputation.cpp \
 	ets_CacheFirstMissComputation.cpp \
 	util_Dominance.cpp \
+	util_PostDominance.cpp \
 	util_ContextTree.cpp \
 	cfg_VirtualBasicBlock.cpp \
 	cfg_LoopUnroller.cpp \
