@@ -25,6 +25,7 @@
 #include <otawa/prog/WorkSpace.h>
 #include <elm/checksum/Fletcher.h>
 #include <elm/io/InFileStream.h>
+#include <elm/io/BufferedInStream.h>
 
 // Externals
 extern FILE *util_fft_in;
@@ -231,7 +232,8 @@ void FlowFactLoader::onCheckSum(const String& name, unsigned long sum) {
 			// Compute the checksum
 			checksum::Fletcher summer;
 			io::InFileStream stream(file->name());
-			summer.put(stream);
+			io::BufferedInStream buf(stream);
+			summer.put(buf);
 			unsigned long sum2 = summer.sum();
 			//cout << io::hex(sum) << " = " << io::hex(sum2) << io::endl;
 			if(sum2 != sum)
