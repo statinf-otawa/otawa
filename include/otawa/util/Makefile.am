@@ -4,6 +4,7 @@ includeotawautil_HEADERS = \
 	ContextTree.h \
 	HalfAbsInt.h \
 	Dominance.h \
+	PostDominance.h \
 	Graph.h \
 	GenGraph.h \
 	FlowFactLoader.h \
