@@ -7,7 +7,6 @@
 #ifndef OTAWA_CFG_BASIC_BLOCK_H
 #define OTAWA_CFG_BASIC_BLOCK_H
 
-#include <assert.h>
 #include <otawa/prop/Identifier.h>
 #include <elm/genstruct/SLList.h>
 #include <elm/inhstruct/DLList.h>
@@ -154,7 +153,7 @@ public:
 // BasicBlock::InstIterator inlines
 inline BasicBlock::InstIterator::InstIterator(BasicBlock *bb)
 : inst((Inst *)bb->head()->next()) {
-	assert(bb);
+	ASSERT(bb);
 }
 
 inline bool BasicBlock::InstIterator::ended(void) const {
@@ -180,14 +179,14 @@ inline BasicBlock::EdgeIterator::EdgeIterator(elm::genstruct::SLList<Edge *>& ed
 // BasicBlock::InIterator inlines
 inline BasicBlock::InIterator::InIterator(BasicBlock *bb)
 : EdgeIterator(bb->ins) {
-	assert(bb);
+	ASSERT(bb);
 };
 
 
 // BasicBlock::OutIterator inlines
 inline BasicBlock::OutIterator::OutIterator(BasicBlock *bb)
 : EdgeIterator(bb->outs) {
-	assert(bb);
+	ASSERT(bb);
 };
 
 // BasicBlock inlines
