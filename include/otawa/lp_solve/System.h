@@ -8,6 +8,7 @@
 #define OTAWA_LP_SOLVE_SYSTEM_H
 
 #include <elm/genstruct/HashTable.h>
+#include <elm/assert.h>
 #include <otawa/ilp.h>
 
 namespace otawa { namespace lp_solve {
@@ -65,6 +66,8 @@ public:
 	virtual int countConstraints(void);
 	virtual void exportLP(io::Output& out = elm::cout);
 	virtual void dumpSolution(io::Output& out = elm::cout);
+	virtual elm::IteratorInst<otawa::ilp::Constraint*>* constraints() { ASSERTP("Not implemented in lpsolve 4", false); return NULL;};
+	virtual elm::IteratorInst<elm::Pair<otawa::ilp::Var*, double> >* objTerms() { ASSERTP("Not implemented in lpsolve 4", false); return NULL;};
 };
 
 // System::Var Inlines

@@ -76,26 +76,55 @@ public:
 	virtual comparator_t comparator(void) const;
 	virtual void add(double coef, ilp::Var *var = 0);
 	virtual void sub(double coef, ilp::Var *var = 0);
+	elm::IteratorInst<ilp::Constraint::Term> *terms(void);
 
 private:
 	friend class System;
 	
+	
+	
 	// Factor class
 	class Factor {
 	public:
-		inline Factor(double coefficient, Var *variable, Factor *next);
+		inline Factor(double coefficient, Var *variable, Factor *next, ilp::Var *_ilpvar);
 		inline Var *variable(void) const;
+		virtual ilp::Var *getVar(void) const;
 		inline double coefficient(void) const;
 		inline Factor *next(void) const;
 		inline void add(double value);
 		inline Factor& operator+=(double value);
 		inline Factor& operator-=(double value);
+		inline ~Factor() { }
 	private:
 		Factor *nxt;
 		Var *var;
+		ilp::Var *ilpvar;
 		double coef;
 	};
 	
+	Factor *getFacts();
+	// TermIterInst class
+	class TermIterInst: public elm::IteratorInst<ilp::Constraint::Term> {
+	
+		Factor *cur;
+		public:
+		TermIterInst(Constraint *_cons) : cur(_cons->getFacts()) {
+		}
+		
+		bool ended (void) const {
+			return (!cur);
+		}
+		
+		ilp::Constraint::Term item(void) const {
+			return(elm::pair(cur->getVar(), cur->coefficient()));
+
+		}
+		
+		void next(void) {
+			cur = cur->next();
+			
+		}
+	};
 	// Attributes
 	System *sys;
 	Constraint *nxt;
@@ -149,6 +178,8 @@ public:
 	virtual int countConstraints(void);
 	virtual void exportLP(io::Output& out = elm::cout);
 	virtual void dumpSolution(io::Output& out = elm::cout);
+	elm::IteratorInst<ilp::Constraint*> *constraints(void);
+	elm::IteratorInst<ilp::Constraint::Term> *objTerms(void);
 	class LocalVar: public ilp::Var {
 	public:
 		inline LocalVar(const string& name): ilp::Var(name) { }
@@ -158,6 +189,29 @@ public:
 private:	
 	friend class Constraint;
 	
+	Constraint *getConss(void);
+	// ConstIterInst
+	class ConstIterInst: public elm::IteratorInst<ilp::Constraint*> {
+		System *sys;
+		Constraint *cur;
+		public:
+		ConstIterInst(System *_sys) : sys(_sys), cur(_sys->getConss()) {
+		}
+		
+		bool ended (void) const {
+			return (!cur);	
+		}
+		
+		ilp::Constraint* item(void) const {
+			return(cur);
+		}
+		
+		void next(void) {
+			cur = cur->next();
+		}
+	};	
+	
+
 	elm::genstruct::HashTable<ilp::Var *, Var *> vars;
 	Constraint *conss;
 	Constraint *ofun;
@@ -167,10 +221,17 @@ private:
 	void removeConstraint(Constraint *cons);
 };
 
+inline Constraint *System::getConss(void) {
+	return(conss);
+}
+
+ilp::Var *Constraint::Factor::getVar(void) const {
+	return ilpvar;
+}
 
 // Constraint::Factor inlines
-inline Constraint::Factor::Factor(double coefficient, Var *variable,
-Factor *next) : nxt(next), var(variable), coef(coefficient) {
+inline Constraint::Factor::Factor(double coefficient, Var *variable, 
+Factor *next, ilp::Var *_ilpvar) : nxt(next), var(variable), ilpvar(_ilpvar), coef(coefficient)   {
 }
 
 inline Var *Constraint::Factor::variable(void) const {
@@ -202,12 +263,20 @@ cst(constant), cmp(comp) {
 	ASSERT(sys);
 }
 
+inline Constraint::Factor *Constraint::getFacts(void) {
+	return facts;
+}
+
 inline double Constraint::constant(void) const {
 	return cst;
 }
 
 inline Constraint::Factor *Constraint::Factor::next(void) const {
 	return nxt;
+}
+
+elm::IteratorInst<ilp::Constraint::Term> *Constraint::terms(void) {
+		 return(new TermIterInst(this)); 
 }
 
 inline Constraint *Constraint::next(void) const {
@@ -286,7 +355,7 @@ void Constraint::add(double coef, ilp::Var *var) {
 				fact->add(coef);
 				return;
 			}
-		facts = new Factor(coef, lvar, facts);
+		facts = new Factor(coef, lvar, facts, var);
 	}
 }
 
@@ -371,7 +440,13 @@ Var *System::getVar(ilp::Var *var) {
 	return lvar;
 }
 
+elm::IteratorInst<ilp::Constraint*> *System::constraints(void) {
+	 return(new ConstIterInst(this)); 
+}
 
+elm::IteratorInst<ilp::Constraint::Term> *System::objTerms(void) {
+	 return(new Constraint::TermIterInst(ofun)); 
+}
 /**
  * Free all ressources.
  */
@@ -481,9 +556,10 @@ bool System::solve(void) {
 		var; var++)
 			var->setValue((double)lp->best_solution[lp->rows + var->column()]);
 
+
 		// Get optimization result
 		//cout << "=> " << get_objective(lp) << " <=> " << int(get_objective(lp)) << "<=\n";
-		val = get_objective(lp);
+		val = rint(get_objective(lp));
 	}
 	
 	// Clean up

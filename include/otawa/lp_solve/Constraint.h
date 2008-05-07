@@ -9,6 +9,7 @@
 
 #include <elm/io.h>
 #include <otawa/ilp.h>
+#include <elm/assert.h>
 
 namespace otawa { namespace lp_solve {
 
@@ -56,6 +57,8 @@ public:
 	virtual comparator_t comparator(void) const;
 	virtual void add(double coef, ilp::Var *var = 0);
 	virtual void sub(double coef, ilp::Var *var = 0);
+	virtual elm::IteratorInst<elm::Pair<otawa::ilp::Var*, double> >* terms() { ASSERTP("Not implemented with lpsolve 4", false); return NULL; }		
+	
 };
 
 // Constraint::SolveInst inlines
