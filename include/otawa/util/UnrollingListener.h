@@ -46,7 +46,7 @@ class UnrollingListener {
 	
 	typename Problem::Domain ***results;
 	
-	UnrollingListener(WorkSpace *_fw, Problem& _prob)
+	UnrollingListener(WorkSpace *_fw, Problem& _prob) 
 	: fw(_fw), prob(_prob) {
 		CFGCollection *col = INVOLVED_CFGS(fw);
 		results = new typename Problem::Domain**[col->count()];
@@ -90,6 +90,9 @@ class UnrollingListener {
 	
 };
 
+template <class Problem > 
+Identifier<typename Problem::Domain*> UnrollingListener<Problem>::BB_OUT_STATE("", NULL);
+ 
 template <class Problem >
 void UnrollingListener<Problem>::blockInterpreted(const FirstUnrollingFixPoint<UnrollingListener>  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
 
@@ -110,12 +113,7 @@ void UnrollingListener<Problem>::blockInterpreted(const FirstUnrollingFixPoint<U
 template <class Problem >
 void UnrollingListener<Problem>::fixPointReached(const FirstUnrollingFixPoint<UnrollingListener> *fp, BasicBlock*bb ) {
 }
-
-template <class T>
-Identifier<typename UnrollingListener<T>::Problem::Domain*> UnrollingListener<T>::BB_OUT_STATE("", 0);
-
-
-
-} // otawa
+	
+}
 
 #endif 
