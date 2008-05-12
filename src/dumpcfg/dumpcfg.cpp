@@ -94,9 +94,10 @@ using namespace otawa;
  * @image html dot.png
  * 
  * dumpcfg accepts other options like:
- * @li -i: inline the functions calls (recursive calls are reduced to loops),
- * @li -d: disassemble the machine code contained in each basic block,
- * @li -a: dump all functions.
+ * @li -a -- dump all functions.
+ * @li -d -- disassemble the machine code contained in each basic block,
+ * @li -i -- inline the functions calls (recursive calls are reduced to loops),
+ * @li -v -- verbose information about the work.
  */
 
 // Command class
@@ -132,9 +133,9 @@ static option::BoolOption all_functions(command, 'a', "all",
 	"Dump all functions.", false);
 static option::BoolOption inline_calls(command, 'i', "inline",
 	"Inline the function calls.", false);
-option::BoolOption display_assembly(command, 'd', "display assembly instructions",
-	"Display assembly.", false);
-option::BoolOption verbose(command, 'v', "verbose",
+option::BoolOption display_assembly(command, 'd', "display",
+	"Display assembly instructions.", false);
+static option::BoolOption verbose(command, 'v', "verbose",
 	"activate verbose mode", false);
 
 // Simple output option
@@ -182,19 +183,6 @@ static DotOption dot(command);
  */
 void Command::dump(CFG *cfg) {
 	CFG *current_inline = 0;
-	
-	   // Removing __eabi call if available
-	   if (remove_eabi)
-       		for(CFG::BBIterator bb(cfg); bb; bb++)
-            	for(BasicBlock::OutIterator edge(bb); edge; edge++)
-                	if(edge->kind() == Edge::CALL
-                            && edge->target()
-                            && edge->calledCFG()->label() == "__eabi") 
-                    {
-                    	delete(*edge);
-                    	break;
-                    }
-
 
 	// Get the virtual CFG
 	VirtualCFG vcfg(cfg, inline_calls);
