@@ -32,7 +32,8 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 			if(display_assembly) {
 				cout << " | ";
 				bool first = true;
-				for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
+				for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+				//for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
 					if(first)
 						first = false;
 					else 
@@ -44,7 +45,16 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 					label; label++)
 						cout << *label << ":\\l";
 					cout << fmt::address(inst->address()) << "    ";
-					inst->dump(cout);
+					StringBuffer buf;
+					inst->dump(buf);
+					String dis = buf.toString();
+					for(int i = 0; i < dis.length(); i++) {
+						if(dis[i] == '{'
+						|| dis[i] == '|'
+						|| dis[i] == '}')
+							cout << '\\';
+						cout << dis[i];
+					}
 				}
 				cout << "\\l }";
 			}
