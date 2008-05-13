@@ -87,11 +87,24 @@ Identifier<fmlevel_t> FIRSTMISS_LEVEL("otawa::firstmiss_level", FML_MULTI);
 /**
  * @class ACSBuilder
  *
- * This processor produces the Abstract Cache States (ACS), for the May and Persistence problems.
+ * This processor builds the MUST and PERS cache states before each basic block.
+ * The MUST cache state lists the ID of cache blocks which must be in the cache and is useful to determine
+ * ALWAYS_HIT blocks.
+ * The PERS cache state lists the ID of cache blocks which may be in the cache, but cannot be replaced once
+ * they have been loaded. It is useful to determine the FIRST_MISS blocks.
+ * 
+ * The Persistence can be computed in 3 ways:
+ * - Outer: A block is FIRST_MISS if it can not be replaced within the whole program
+ * - Inner: A block is FIRST_MISS if it can not be replaced from the inner-most loop containing it.
+ * - Multi: The FIRST_MISS is parametrized by a variable L, representing the outer-most loop whose execution does not replace the block. 
  *
+ * The analysis can be used with Pseudo-Unrolling:
+ * In this case, unroll (using FirstUnrollingFixPoint with HalfAbsInt) the first iteration of each loop during abstract interpretation.
+ * But the ACS corresponding to multiple iterations of a basic block are merged back into one ACS at the end of the analysis.
+ *   
  * @par Configuration
  * @li @ref FIRSTMISS_LEVEL identifier determines the First Miss method (FML_OUTER, FML_INNER, FML_MULTI, FML_NONE). FML_MULTI is the default.
- * @li @ref PSEUDO_UNROLLIG identifier determines if we do the Pseudo-Unrolling while doing the abstract interpretation.
+ * @li @ref PSEUDO_UNROLLIG identifier determines if we do the Pseudo-Unrolling while doing the abstract interpretation. 
  *
  * @par Required features
  * @li @ref DOMINANCE_FEATURE
