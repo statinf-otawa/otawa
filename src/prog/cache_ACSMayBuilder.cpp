@@ -60,10 +60,11 @@ Feature<ACSMayBuilder> ICACHE_ACS_MAY_FEATURE("otawa.cache.acsmayfeature");
 /**
  * @class ACSMayBuilder
  *
- * This processor produces the Abstract Cache States (ACS), for the May and Persistence problems.
+ * This processor produces the Abstract Cache States (ACS), for the MAY ACS.
+ * The MAY ACS represents cache blocks which may be in the cache. It is only useful for differentiating between
+ * NOT_CLASSIFIED and ALWAYS_MISS. 
  *
  * @par Configuration
- * @li @ref FIRSTMISS_LEVEL identifier determines the First Miss method (FML_OUTER, FML_INNER, FML_MULTI, FML_NONE). FML_MULTI is the default.
  * @li @ref PSEUDO_UNROLLIG identifier determines if we do the Pseudo-Unrolling while doing the abstract interpretation.
  *
  * @par Required features
