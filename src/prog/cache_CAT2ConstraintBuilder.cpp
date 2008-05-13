@@ -50,7 +50,18 @@ Identifier<ilp::Var *> MISS_VAR("otawa::miss_var", 0, otawa::NS);
 /**
  * @class CAT2ConstraintBuilder
  *
- * This processor produces constraints for the categorization of l-blocks.
+ * This processor produces constraints, using the categorization of the lblocks.
+ * 
+ * It creates a xmiss for each lblock, and add constraints:
+ * ALWAYS_HIT: xmiss = 0
+ * ALWAYS_MISS: xmiss = x
+ * 
+ * In the case of FIRST_MISS, we take into account the FIRST_MISS level, and the possibility
+ * of Linked lblocks. If LinkedBlocksDetector was not ran, each lblock is treated separately.  
+ * FIRST_MISS(L): (sum xmiss_for_lblocks_sharing_the_same_cacheblock) <= sum entry_edges_for_loop_L
+ * 
+ * NOT_CLASSIFIED: xmiss <= x
+ * 
  *
  * @par Configuration
  * none
@@ -123,7 +134,12 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 							}
 	                		break;
 						case FIRST_HIT:
-				case NOT_CLASSIFIED:
+						case NOT_CLASSIFIED: {
+		                		// Add constraint: xmiss <= x
+		                		Constraint *cons3 = system->newConstraint(Constraint::LE);
+	    	            		cons3->addLeft(1, MISS_VAR(lblock));
+	        	        		cons3->addRight(1, VAR(lblock->bb()));
+							}						
 	                	case ALWAYS_MISS: {
 		                		// Add constraint: xmiss = x
 		                		Constraint *cons3 = system->newConstraint(Constraint::EQ);

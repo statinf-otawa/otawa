@@ -39,7 +39,17 @@ Identifier<BasicBlock*> CATEGORY_HEADER("otawa::category_header", 0);
 /**
  * @class CAT2Builder
  *
- * This processor produces categorization information for each l-block
+ * This processor produces categorization information for each l-block.
+ * 
+ * For each lblock: 
+ * If the cache block exists in the MUST ACS, then the l-block is ALWAYS_HIT
+ * If the cache block exists in the PERS ACS, then the block is FIRST_MISS
+ * If we performed the MAY ACS computation, and the cache block is not in MAY ACS, the block is ALWAYS_MISS
+ * Otherwise the lblock is NOT_CLASSIFIED.
+ * 
+ * If the Multi-Level persistence was computed, then the FIRST_MISS level is computed as follow: 
+ * We iterate over the Items of the PERS ACS, from inner to outer 
+ * The first Pers Item for which the lblock is not persistent determines the FIRST_MISS level. 
  *
  * @par Configuration
  * none
