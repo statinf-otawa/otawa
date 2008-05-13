@@ -28,7 +28,24 @@ using namespace otawa::ipet;
  * 
  * Problem for computing the cache MAY ACS.
  * This implements Ferdinand's MAY analysis.
+ * MAY ACS information:
+ * - The ACS lists the ID of each cache block with MAY be in the cache, with its oldest possible age
+ *   (noted mayACS[cacheblockID] = age). Age is between [0..A-1],age ==  represents an absent block
+ *
+ * MAY ACS computation:
+ * - Initialization to Empty ACS (ACS[*] == -1) (XXX FIXME: This is wrong)
+ * - The Update function injects the newly accessed blocks in the ACS:
+ *     mayACS2=update(mayACS,newBlock)
+ * 	   In all cases, mayACS2[newBlock] = 0. Furthermore,
+ *     if the accessed block was not in the ACS:
+ *       foreach cb in mayACS, mayACS2[cb] = mayACS[cb] (+) 1
+ *     otherwise:
+ *       foreach cb in mayACS older than newBlock: mayACS2[cb]=mayACS[cb]
+ * 		 foreach cb in mayACS younger or equal to newBlock: mayACS2[cb] = mayCS[cb] (+) 1
+ *  where: a (+) b == if (a+b < A) then (a+b) else -1
  * 
+ * - Join: join(acs1,acs2) is the union of ACS, taking the younger age when
+ * a block is in both ACS.
  */
 
 namespace otawa {
