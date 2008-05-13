@@ -63,7 +63,14 @@ typedef genstruct::SortedSLList<LBlock*, NumberOrder> LinkedBlockList;
  * @class LinkedBlocksDetector
  * @author C. Ballabriga <ballabri@irit.fr>
  *
- * This processor computes the list of l-blocks which are FIRST_MISS and occupies the same cache block.
+ * This processor computes the list of l-blocks which are FIRST_MISS, and occupies the same cache block,
+ * and whose FIRST_MISS loop header is the same.
+ * i.e. for each loop, it is computed a vector of l-blocks which are FIRST_MISS for this loop.
+ * 
+ * This is useful for the CAT2ConstraintBuilder, where constraints of type x1miss + x2miss <= 1 can be 
+ * constructed (instead of x1miss <=1 and x2miss <=1). Indeed, the two blocks together will cause only 
+ * one miss (since if we access the first l-block, we load the whole cache block, and so the 
+ * second l-block will cause a hit)
  *
  * @par Configuration
  * none
