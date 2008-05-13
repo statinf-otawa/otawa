@@ -3,6 +3,8 @@
  * @class DefaultListener
  *
  * This listener gathers in an array the LUB of the in-states for all analyzed basic blocks.
+ * At the end of the analysis, you can access result[CFGNUMBER][BBNUMBER] to obtain
+ * the in-state of the basic block BBNUMBER of cfg CFGNUMBER.
  * 
  */
  
