@@ -19,6 +19,7 @@
  *	along with OTAWA; if not, write to the Free Software 
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
 #ifndef EXECUTIONGRAPH_BBTIME_H
 #define EXECUTIONGRAPH_BBTIME_H
 
@@ -28,59 +29,48 @@
 #include <elm/genstruct/DLList.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/ipet.h>
-//#include <LiExeGraph.h>
 
-
-
-#define DO_LOG
-#if defined(NDEBUG) || !defined(DO_LOG)
-#	define LOG(c)
-#else
-#	define LOG(c) c
-#	define OUT	elm::cerr
-#endif
 
 
 namespace otawa {
-	
+
 using namespace elm::genstruct; 
-	
+
 template <class G>
 class ExeGraphBBTime: public BBProcessor {
-	protected:
-		typedef typename G::Node ExeNode;
-		WorkSpace *fw;
-		PropList *properties;
-		Microprocessor<ExeNode> *microprocessor;
-	public:
-		ExeGraphBBTime(const PropList& props = PropList::EMPTY);
-		// BBProcessor overload
-		void processWorkSpace(WorkSpace *fw);
-		void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {}
-		// Configuration Properties
-		static Identifier<Microprocessor<ExeNode> *> PROCESSOR;
-		static Identifier<elm::io::Output *>  LOG_OUTPUT;
+protected:
+	typedef typename G::Node ExeNode;
+	WorkSpace *fw;
+	PropList *properties;
+	Microprocessor<ExeNode> *microprocessor;
+public:
+	ExeGraphBBTime(const PropList& props = PropList::EMPTY);
+	// BBProcessor overload
+	void processWorkSpace(WorkSpace *fw);
+	void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {}
+	// Configuration Properties
+	static Identifier<Microprocessor<ExeNode> *> PROCESSOR;
+	static Identifier<elm::io::Output *>  LOG_OUTPUT;
 };
 
 template <class G>
 Identifier<Microprocessor<typename G::Node> *> 
-	ExeGraphBBTime<G>::PROCESSOR("otawa.ExeGraphBBTime.proc.", NULL);
+ExeGraphBBTime<G>::PROCESSOR("otawa.ExeGraphBBTime.proc.", NULL);
 
 
 template <class G>
 ExeGraphBBTime<G>::ExeGraphBBTime(const PropList& props) 
-:	BBProcessor(),
-	microprocessor(PROCESSOR(props)),
-	fw(0)
+:	BBProcessor(), fw(0),
+	microprocessor(PROCESSOR(props))
 {
-  provide(ipet::BB_TIME_FEATURE);
+	provide(ipet::BB_TIME_FEATURE);
 }
 
 template <class G>
 void ExeGraphBBTime<G>::processWorkSpace(WorkSpace *fw) {
 	bool built = false, reset = false;
 	this->fw = fw;
-	
+
 	// If required, find the microprocessor
 	if(!microprocessor) {
 		microprocessor = PROCESSOR(fw);
@@ -97,11 +87,11 @@ void ExeGraphBBTime<G>::processWorkSpace(WorkSpace *fw) {
 			}
 		}
 	}
-	elm::cerr << "=> microprocessor = " << microprocessor << io::endl;
-	
+	//elm::cerr << "=> microprocessor = " << microprocessor << io::endl;
+
 	// Perform the actual process
 	BBProcessor::processWorkSpace(fw);
-	
+
 	// Cleanup if required
 	if(built)
 		delete microprocessor;
