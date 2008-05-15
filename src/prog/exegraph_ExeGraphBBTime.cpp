@@ -20,34 +20,13 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-//#include <stdlib.h>
-//#include <otawa/otawa.h>
-//#include <otawa/cfg/BasicBlock.h>
-//#include <otawa/ipet/IPET.h>
-//#include <elm/genstruct/Vector.h>
-//#include <ExeGraph.h>
-//#include <elm/genstruct/Table.h>
-//#include <elm/genstruct/DLList.h>
-//#include <otawa/hard/Register.h>
 #include <otawa/exegraph/ExeGraphBBTime.h>
-//#include <otawa/hard/Processor.h>
-//#include <otawa/ilp.h>
-//#include <LiExeGraph.h>
 
 using namespace otawa;
 using namespace otawa::hard;
 using namespace elm;
 using namespace elm::genstruct;
 using namespace otawa::graph;
-
-#define DO_LOG
-#if defined(NDEBUG) || !defined(DO_LOG)
-#	define LOG(c)
-#else
-#	define LOG(c) c
-#	undef OUT
-#	define OUT	dumpFile
-#endif
 
 //#define ACCURATE_STATS
 #if defined(NDEBUG) || !defined(ACCURATE_STATS)
@@ -89,3 +68,4 @@ namespace otawa {
  * @param	bb	The basic block to be analyzed.
  * */
 
+ 
