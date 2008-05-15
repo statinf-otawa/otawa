@@ -1,62 +1,65 @@
-# OTAWA configuration for MASCOTTE project
-default_modules="elm hcs12 lp_solve otawa"
-all_modules="$default_modules gel frontc gliss ppc"
+# Default module configuration
+default_modules="hcs12 lp_solve5 otawa"
+all_modules="$default_modules elm gel frontc gliss hcs12 lp_solve"
 
 function mod_elm {
 	NAME=elm
-	DOWNLOAD=home
-	VERSION=MASCOTTE_0_1
-	SETUP=bootstrap
-	LIBTOOLIZE_FLAGS=--ltdl
-	BUILD=autotool
-	INSTALL=autotool
-	CLEAN=autotool
-	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
-	MAKE_FLAGS="-j"
-	AUTOCONF_FLAGS=""
-	AUTOCONF_DEBUG="--with-mode=dev"
-}
-
-function mod_gel {
-	NAME=gel
+	VERSION=MASCOTTE_0_3
+	CHECK=exist
+	CHECK_FILES=src/libelm.la
 	DOWNLOAD=home
 	SETUP=bootstrap
-	LIBTOOLIZE_FLAGS=--ltdl
 	BUILD=autotool
 	INSTALL=autotool
-	DISTCLEAN=autotool
-	MAKE_FLAGS="-j"
-	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
-	AUTOCONF_FLAGS=""
+	MAKE_FLAGS="-j $jobs"
+	AUTOCONF_FLAGS="--with-mode=dev"
+	DIST=copy
+	REQUIRE="automake autoconf libtool"
 }
 
-function mod_frontc {
-	NAME=frontc
-	DOWNLOAD=wget
-	WGET_ADDRESS=http://www.irit.fr/recherches/ARCHI/MARCH/frontc/
-	WGET_PACKAGE=Frontc-3.2.tgz
-	BUILD=make
-	INSTALL=make
-	DISTCLEAN=make
+function mod_otawa {
+	NAME=otawa
+	VERSION=MASCOTTE_0_3
+	DOWNLOAD=home
+	SETUP=bootstrap
+	BUILD=autotool
+	INSTALL=autotool
+	AUTOCONF_FLAGS="--with-mode=dev"
+	DIST=copy
+	REQUIRE="elm gel"
 }
 
+
+# Architectures
 function mod_gliss {
 	NAME=gliss
+	VERSION=MASCOTTE_0_2
 	DOWNLOAD=home
-	VERSION=MASCOTTE_0_1
 	BUILD=make
-	DISTCLEAN=make
+	DIST=copy
 }
+
 
 function mod_ppc {
 	NAME=ppc
 	DOWNLOAD=home
 	BUILD=make
 	MAKE_FLAGS='OPT=-DISS_DISASM GEP_OPTS="-a user0 int8 -a category int8"'
-	REQUIRES="gliss gel"
-	DISTCLEAN=make
+	DIST=copy
+	REQUIRE="gliss gel"
 }
 
+function mod_hcs12 {
+	NAME=hcs12
+	DOWNLOAD=home
+	BUILD=make
+	MAKE_FLAGS='OPT=-DISS_DISASM GEP_OPTS="-a otawa_kind uint32 -a time string -a time_select uint8 -a time_select2 uint8"'
+	DIST=copy
+	REQUIRE="gliss"
+}
+
+
+# ILP solvers
 function mod_lp_solve {
 	NAME=lp_solve
 	DOWNLOAD=wget
@@ -64,29 +67,80 @@ function mod_lp_solve {
 	WGET_PACKAGE=lp_solve_4.0.tar.gz
 	BUILD=make
 	MAKE_FLAGS=Makefile.linux
-	DISTCLEAN=clean
+	DIST=copy
 }
 
-function mod_otawa {
-	NAME=otawa
+function patch_lp_solve5 {
+	patch -p0 <<EOF
+diff -Naur lp_solve_5.5.old/lpsolve55/ccc lp_solve_5.5/lpsolve55/ccc
+--- lp_solve_5.5/lpsolve55/ccc       2007-07-27 10:34:13.000000000 +0200
++++ lp_solve_5.5.new/lpsolve55/ccc  2005-06-11 21:27:18.000000000 +0200
+@@ -7,7 +7,7 @@
+ then def='-dy -K PIC -DNOLONGLONG'
+      dl=-lc
+ else dl=-ldl
+-     so=y
++#     so=y
+ fi
+ 
+ opts='-O3'
+EOF
+}
+
+function mod_lp_solve5 {
+	NAME=lp_solve5
+	DOWNLOAD=wget
+	WGET_ADDRESS=http://switch.dl.sourceforge.net/sourceforge/lpsolve/
+	WGET_PACKAGE=lp_solve_5.5.0.10_source.tar.gz
+	WGET_DIR=lp_solve_5.5
+	PATCH=fun
+	BUILD=cmd
+	BUILD_CMD="(cd lpsolve55; sh ccc)"
+	CLEAN=none
+	DIST=copy
+}
+
+
+
+# Utilities
+function mod_frontc {
+	NAME=frontc
+	DOWNLOAD=wget
+	WGET_ADDRESS="http://www.irit.fr/recherches/ARCHI/MARCH/frontc/"
+	WGET_PACKAGE="Frontc-3.2.tgz"
+	BUILD=make
+	INSTALL=make
+	DIST=copy
+}
+
+function mod_gel {
+	NAME=gel
 	DOWNLOAD=home
-	VERSION=MASCOTTE_0_1
 	SETUP=bootstrap
 	BUILD=autotool
-	INSTALL=make
-	REQUIRES="elm hcs12"
-	DISTCLEAN=autotool
-	MAKE_FLAGS="-j"
-	AUTOCONF_FLAGS="$plugin_param  --with-loader=s12x"
-	AUTOCONF_DEBUG="--with-mode=debug"
+	INSTALL=autotool
+	AUTOCONF_FLAGS=""
+	DIST="copy"
+	REQUIRE="automake autoconf libtool"
 }
 
-function mod_hcs12 {
-	NAME=hcs12
-	DOWNLOAD=home
-	VERSION=MASCOTTE_0_1
-	BUILD=make
-	MAKE_FLAGS='OPT=-DISS_DISASM GEP_OPTS="-a otawa_kind uint32 -a time string -a time_select uint8 -a time_select2 uint8"'
-	REQUIRES="gliss"
-	DISTCLEAN=make
+
+# External dependencies
+function mod_automake {
+	NAME=automake
+	VERSION=1.7
+	CHECK=tool
 }
+
+function mod_autoconf {
+	NAME=autoconf
+	VERSION=2.59
+	CHECK=tool
+}
+
+function mod_libtool {
+	NAME=libtool
+	VERSION=1.5.12
+	CHECK=tool
+}
+
