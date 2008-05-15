@@ -1,44 +1,51 @@
 #!/bin/bash
-# $Id$
+tool=otawa-build-new
+version=2.0
 
-# Compute root path
-if [ "$root" == "" ]; then
-	root=`dirname $0`
-fi
+# Actions
+#	dist
+#	install
+#	make
 
+# Build modes
+#	dev		development
+#	debug	debugging
+#	normal	normal working
+#	prod	production mode
 
-# Managing the test list
-if [ "$testlist" == "" ]; then
-  testlist="ct delta";
-fi
-
-# Initial configuration
-tool=OBuild
-version=0.7
-basedir=otawa
-verbose=no
-log=build.log
-config=
-dev=
+# Configuration
 action=make
+basedir=otawa
+config=
+curdir=`pwd`
 cvs_user=anonymous
-dist_flags=
-systemc_location=
-with_so=
+debug=no
+dev=no
 done=
-checked=
-build_script=test.sh
-making_script=
-plugin_param=
-testdir=deployed_tests
-tags=
-debug=
-default_modules="elm ppc lp_solve otawa"
-all_modules="$default_modules gel frontc gliss hcs12"
-jobs="5"
+jobs=5
+log=build.log
+mode=
+modules=
+package=otawa-dist
+prefix=
+systemc_location=
+verbose=no
+with_so=no
 
 
-###### Output functions ######
+###### Util functions ######
+
+# Get the basolute name of a path
+#	$1	file to get the absolute path of.
+#	return the absolute path
+function absname {
+	if expr "$1" : "/.*" > /dev/null; then
+		echo "$1"
+	else
+		echo "`pwd`/$1"
+	fi
+}
+
 
 # Output message to the log
 function log {
@@ -101,207 +108,55 @@ function failed {
 
 # Perform a command and log its output
 function log_command {
-	if [ "$making_script" == yes ]; then
-		echo $* '|| exit 1' >> $build_script
-	else
-		say "$*"
-		echo "$*" | bash >> $basedir/$log 2>&1 || failed
-		success
-	fi
-}
-
-
-# get_tag module default_version
-#	set VERSION variable
-function get_tag {
-	for tag in `echo $tags | tr "," "\n"`; do
-		program=${tag%%:*}
-		version=${tag#*:}
-		if [ "$program" == "$1" ]; then
-			VERSION="$version"
-			return
-		fi
-	done
-	VERSION="$2"
-}
-
-
-############# Downloads #################
-
-function download_home {
-	if [ -z "$CVS_MOD" ]; then
-		CVS_MOD=$NAME
-	fi
-	FLAGS=
-	get_tag $NAME $VERSION
-	if [ -n "$VERSION" ]; then
-		FLAGS="$FLAGS -r $VERSION"
-	fi
-	log_command cvs -d ":pserver:$cvs_user@cvs.irit.fr:/usr/local/CVS_IRIT/CVS_OTAWA" co $FLAGS $CVS_MOD
-}
-
-function download_cvs {
-	log_command cvs -d $CVS_ROOT co $CVS_MOD
-}
-
-# Download using wget
-#	WGET_ADDRESS: address to download from,
-#	WGET_PACKAGE: package to download,
-#	WGET_DIR: directory name after unpacking.
-#
-function download_wget {
-	log_command wget $WGET_ADDRESS/$WGET_PACKAGE
-	package=${WGET_PACKAGE%.tgz}
-	if test "$package" != $WGET_PACKAGE; then
-		log_command tar xvfz $WGET_PACKAGE
-	else
-		package=${WGET_PACKAGE%.tar.gz}
-		if test "$package" != $WGET_PACKAGE; then
-			log_command tar xvfz $WGET_PACKAGE
-		else
-			error "Unsupported archive"
-		fi
-	fi
-	if [ "$WGET_DIR" = "" ]; then
-		WGET_DIR="$package"
-	fi
-	if test "$mod" != "$WGET_DIR"; then
-		log_command ln -s $WGET_DIR $mod
-	fi
-	rm -rf $WGET_PACKAGE
-}
-
-
-########## update_XXX ############
-
-function update_home {
-	log_command cvs -d ":pserver:$cvs_user@cvs.irit.fr:/usr/local/CVS_IRIT/CVS_OTAWA" update
-}
-
-function update_cvs {
-	log_command cvs -d $CVS_ROOT update
-}
-
-function update_wget {
-	_x=
-}
-
-
-###### patch_XXX ######
-# NAME: module name
-
-function patch_fun {
-	say "patching "
-	patch_$NAME >> $basedir/$log 2>&1 || failed
+	say "$*"
+	echo "$*" | bash >> $basedir/$log 2>&1 || failed
 	success
 }
 
 
-########## setup_XXX ############
+########### clean_XXX ###########
 
-function setup_autotool {
-	if [ ! -e configure ]; then
-		log_command aclocal
-		log_command autoheader
-		log_command automake --add-missing
-		log_command autoconf
+#	NAME : module name
+#	CLEAN : clean mode (make[default], none)
+function do_clean {
+	if [ -n "CLEAN" ]; then
+		clean_$CLEAN
 	fi
 }
 
-function setup_libtool {
-	if [ ! -e configure ]; then
-		log_command aclocal
-		log_command autoheader
-		log_command libtoolize $LIBTOOLIZE_FLAGS
-		log_command automake --add-missing
-		log_command autoconf
-	fi
-}
-
-function setup_bootstrap {
-	if [ ! -e configure ]; then
-		log_command ./bootstrap
-	fi
-}
-
-
-########## build_XXX ############
-# PWD = module directory
-
-function build_autotool {
-	if [ ! -e Makefile ]; then
-		args="--prefix=$prefix"
-		if [ "$with_so" == yes ]; then
-			args="$args --enable-shared"
-		fi
-		if [ "$debug" == yes ]; then
-			args="$args $AUTOCONF_DEBUG"
-		fi
-		args="$args $AUTOCONF_FLAGS"
-		log_command ./configure  $args
-	fi
-	log_command make all $MAKE_FLAGS
-}
-
-
-function build_make {
-	#echo "make all $MAKE_FLAGS"
-	echo "#!/bin/bash" > build.sh
-	echo "make all $MAKE_FLAGS" >> build.sh
-	log_command make all "$MAKE_FLAGS"
-}
-
-
-# Launch the command
-# BUILD_CMD: command to launch
-function build_cmd {
-	log_command $BUILD_CMD
-}
-
-
-########### install_XXX ##########
-
-function install_make {
-	log_command make install
-}
-
-function install_autotool {
-	install_make
-}
-
-
-########### distclean_XXX ##########
-
-function distclean_autotool {
-	log_command make distclean
-}
-
-function distclean_make {
-	log_command make distclean
-}
-
-function distclean_clean {
+# Clean invoking the make.
+function clean_make {
 	log_command make clean
 }
 
-
-###### done_XXX ######
-# doit=yes|no -- need the build to be done
-
-function done_exists {
-	#echo "PWD=$PWD"
-	#echo "test -e \"$DONE_FILE\" || doit=\"no\""
-	test -e "$DONE_FILE" && doit="no"
-	#echo "doit=$doit"
+# No clean action available.
+function clean_none {
+	true
 }
 
 
-########### Useful functions ########
+########### check_XXX ###########
 
-function check_program {
-	program=${1%-*}
-	version=${1#*-}
-	expr "$checked" : "$program" > /dev/null && return
+#	NAME : module name
+#	CHECK : check mode (tool, exist)
+function do_check {
+	if [ -n "$CHECK" ]; then
+		if check_$CHECK; then
+			done="$done $NAME"
+			true
+			return
+		fi
+	fi
+	false
+}
+
+# Check for an external tool
+#	NAME	name of the tool
+#	VERSION	version of the tool
+function check_tool {
+	program=$NAME
+	version=$VERSION
+	#expr "$checked" : "$program" > /dev/null && return
 
 	#echo "$program -> $version"
 	say "Checking $program for version $version"
@@ -316,7 +171,252 @@ function check_program {
 	else
 		checked="$checked $program"
 		success
+		true
 	fi
+}
+
+
+# Check for built files
+#	NAME		name of the built module
+#	CHECK_FILES	files to check
+#	CHECK_DIRS	directories to check
+function check_exist {
+	for file in $CHECK_FILES; do
+		if [ ! -e "$NAME/$file" ]; then
+			false
+			return
+		fi
+	done
+	for dir in $CHECK_DIRS; do
+		if [ ! -d "$NAME/$dir" ]; then
+			false
+			return
+		fi
+	done
+	true
+}
+
+
+############# download_XXX #################
+
+# Do the download of the current module
+# 	DOWNLOAD	type of download to perform (home, cvs, wget).
+function do_download {
+	if [ -n "$DOWNLOAD" ]; then
+		download_$DOWNLOAD
+	fi
+}
+
+# Download from OTAWA home repository.
+#	NAME	name of the module
+#	CVS_MOD	if different of the name
+#	VERSION	version to download
+function download_home {
+	if [ -z "$CVS_MOD" ]; then
+		CVS_MOD=$NAME
+	fi
+	FLAGS=
+	#get_tag $NAME $VERSION
+	if [ -n "$VERSION" ]; then
+		FLAGS="$FLAGS -r $VERSION"
+	fi
+	log_command cvs -d ":pserver:$cvs_user@cvs.irit.fr:/usr/local/CVS_IRIT/CVS_OTAWA" co $FLAGS $CVS_MOD
+}
+
+# Download from CVS server
+#	NAME		name of the module
+#	CVS_MOD		if different of the name
+#	CVS_ROOT	CVS root to use
+function download_cvs {
+	if [ -z "$CVS_MOD" ]; then
+		CVS_MOD=$NAME
+	fi
+	FLAGS=
+	#get_tag $NAME $VERSION
+	if [ -n "$VERSION" ]; then
+		FLAGS="$FLAGS -r $VERSION"
+	fi
+	log_command cvs -d $CVS_ROOT co $FLAGS $CVS_MOD
+}
+
+# Download using wget
+#	WGET_ADDRESS: address to download from,
+#	WGET_PACKAGE: package to download,
+#	WGET_DIR: directory name after unpacking.
+#
+function download_wget {
+	log_command wget $WGET_ADDRESS/$WGET_PACKAGE
+	wpackage=${WGET_PACKAGE%.tgz}
+	if test "$wpackage" != $WGET_PACKAGE; then
+		log_command tar xvfz $WGET_PACKAGE
+	else
+		wpackage=${WGET_PACKAGE%.tar.gz}
+		if test "$wpackage" != $WGET_PACKAGE; then
+			log_command tar xvfz $WGET_PACKAGE
+		else
+			error "Unsupported archive"
+		fi
+	fi
+	if [ "$WGET_DIR" = "" ]; then
+		WGET_DIR="$wpackage"
+	fi
+	if test "$mod" != "$WGET_DIR"; then
+		log_command ln -s $WGET_DIR $mod
+	fi
+	rm -rf $WGET_PACKAGE
+}
+
+
+###### patch_XXX ######
+
+# Do the patch of the current module
+# 	PATCH	type of patch to perform (fun).
+function do_patch {
+	if [ -n "$PATCH" ]; then
+		patch_$PATCH
+	fi
+}
+
+# Patch by calling the function patch_$NAME
+# NAME	 module name
+function patch_fun {
+	say "patching "
+	patch_$NAME >> $basedir/$log 2>&1 || failed
+	success
+}
+
+
+########## setup_XXX ############
+
+# Do the setup of the current module
+# 	SETUP	type of setup to perform (autotool, libtool, bootstrap).
+function do_setup {
+	if [ -n "$SETUP" ]; then
+		setup_$SETUP
+	fi
+}
+
+# Use autotool for setup.
+function setup_autotool {
+	if [ ! -e configure ]; then
+		log_command aclocal
+		log_command autoheader
+		log_command automake --add-missing
+		log_command autoconf
+	fi
+}
+
+# Use libtool for setup.
+#	LIBTOOLIZE_FLAGS	flags to pass to libtoolize.
+function setup_libtool {
+	if [ ! -e configure ]; then
+		log_command aclocal
+		log_command autoheader
+		log_command libtoolize $LIBTOOLIZE_FLAGS
+		log_command automake --add-missing
+		log_command autoconf
+	fi
+}
+
+# Use the bootstrap file found in the module.
+function setup_bootstrap {
+	if [ ! -e configure ]; then
+		log_command ./bootstrap
+	fi
+}
+
+
+########## build_XXX ############
+
+# Do the build of the current module
+# 	BUILD	type of build to perform (autotool, make, cmd).
+function do_build {
+	if [ -n "$BUILD" ]; then
+		build_$BUILD
+	fi
+}
+
+# Build using autotool
+#	AUTOCONF_DEBUG	debug flags to pass to autoconf
+#	AUTOCONF_FLAGS	flags to pass to autoconf
+#	MAKE_FLAGS		flags to pass to make
+function build_autotool {
+	if [ ! -e Makefile ]; then
+		args="--prefix=$prefix"
+		if [ "$with_so" == yes ]; then
+			args="$args --enable-shared"
+		fi
+		args="$args $AUTOCONF_FLAGS"
+		log_command ./configure  $args
+	fi
+	log_command make all $MAKE_FLAGS
+}
+
+# Build using a simple make
+#	MAKE_FLAGS	flags to pass to make
+function build_make {
+	#echo "make all $MAKE_FLAGS"
+	echo "#!/bin/bash" > build.sh
+	echo "make all $MAKE_FLAGS" >> build.sh
+	log_command make all "$MAKE_FLAGS"
+}
+
+# Build using a dedicated command
+#	BUILD_CMD	command to launch
+function build_cmd {
+	log_command $BUILD_CMD
+}
+
+
+########### install_XXX ##########
+
+# Do the installation of the current module
+# 	INSTALL	type of build to perform (autotool, make).
+function do_install {
+	if [ -n "$INSTALL" ]; then
+		install_$INSTALL
+	fi
+}
+
+# Install using make
+function install_make {
+	log_command make install
+}
+
+# Install using autotool
+function install_autotool {
+	install_make
+}
+
+
+########### dist_XXX ##########
+
+# Do the distribution of the current module
+# 	DIST	type of distribution to perform (autotool).
+function do_dist {
+	if [ -n "$DIST" ]; then
+		dist_$DIST
+	fi
+}
+
+# Build distribution by autotool
+#	NAME			name of the module
+function dist_autotool {
+	if [ ! -e Makefile ]; then
+		log_command ./configure $DIST_CONFIGURE_FLAGS
+	fi
+	do_clean
+	log_command make distdir distdir=$distdir/$NAME
+}
+
+# Build distribution by copy
+#	NAME		name of the module
+#	MAKE_FLAGS	flags used to perform make
+function dist_copy {
+	save_pwd=$PWD
+	cd ..
+	log_command cp -RL $NAME $distdir
+	cd $save_pwd
 }
 
 
@@ -325,89 +425,50 @@ function check_program {
 function help {
 	echo "$tool $version"
 	echo "SYNTAX: build.sh [options] modules..."
-	echo "	--with-so: use shared object libraries (enable plugins)."
-	echo "	--download: just download modules."
-	echo "	--make: download and make modules."
-	echo "	--dev: download and make modules for internal development."
-	echo "	--install: download, make and install modules."
+	echo "  --auto: build an automatic script, including the configuraion."
+	echo "	--build: download and make modules."
+	echo "  --config=PATH: path to the configuration file to use."
+	echo "  --dev: use development mode (identified checkout)."  
 	echo "	--dist: download and generate a distribution."
 	echo "	-h|--help: display this message."
+	echo "	--install: download, make and install modules."
 	echo "  --jobs=N: number of jobs to create to parallel compilation (default 10)"
-	echo "	--prefix=PATH: target path of the build."
-	echo "	--build=PATH: directory to build in."
-	echo "	--release=NUMBER: release of the distribution."
-	echo "	--proxy=ADDRESS:PORT: configure a proxy use."
-	echo "	--update: update the current installation."
-	echo "	--with-systemc: SystemC location."
-	echo "	--check: download, make, install, and test."
-	echo "	--checkonly: test only."
-	echo "  --tag=module:version: use the given CVS version for the module."
-	echo "  --debug: use debug options to build the modules."
-	echo "  --config=PATH: path to the configuration file to use."
 	echo "  --list: list available configurations."
+	echo "  --mode=[dev,debug,normal,prod]: select building mode"
+	echo "  --package=NAME: name of the package for 'dist' building"
+	echo "	--prefix=PATH: target path of the build."
+	echo "	--proxy=ADDRESS:PORT: configure a proxy use."
+	echo "	--with-systemc: SystemC location."
+	echo "	--work=PATH: directory to build in."
 }
 
-modules=
 for arg in $*; do
 	case $arg in
-	--prefix=*)
-		prefix=${arg#--prefix=}
+	--auto)
+		action=auto
 		;;
-	--build=*)
-		basedir=${arg#--build=}
-		;;
-	--make)
-		action=make
-		;;
-	--dev)
-		action=dev
-		cvs_user=$LOGNAME
-		;;
-	--download)
-		action=download
-		;;
-	--check)
-		action=check
-		;;
-	--checkonly)
-		action=checkonly
-		;;
-	--dist)
-		action=dist
-		;;
-	--release=*)
-		action=dist
-		release=${arg#--release}
-		dist_flags="$dist_flags RELEASE=$release"
-		;;
-	--with-systemc=*)
-		systemc_location=${arg#--with-systemc=}
+	--build)
+		action=build
 		;;
 	--config=*)
 		config=${arg#--config=}
 		;;
-	--jobs=*)
-		jobs=${arg#--jobs=}
+	--dev)
+		dev=yes
+		cvs_user=$USER
+		;;
+	--dist)
+		action=dist
+		;;
+	-h|--help)
+		help
+		exit
 		;;
 	--install)
 		action=install
 		;;
-	--update)
-		action=update
-		;;
-	--with-so)
-		with_so=yes
-		plugin_param="--with-plugin=yes"
-		;;
-	--proxy=*)
-		export http_proxy=${arg#--proxy=}
-		export ftp_proxy=${arg#--proxy=}
-		;;
-	--tag=*)
-		tags="$tags,${arg#--tag=}"
-		;;
-	--debug|-d)
-		debug=yes
+	--jobs=*)
+		jobs=${arg#--jobs=}
 		;;
 	--list)
 		echo "Available configurations:"
@@ -418,9 +479,27 @@ for arg in $*; do
 		done
 		exit 0
 		;;
-	-h|--help)
-		help
-		exit
+	--mode=*)
+		mode=${arg#--mode=}
+		;;
+	--package=*)
+		package=${arg#--package=}
+		;;
+	--prefix=*)
+		prefix=${arg#--prefix=}
+		;;
+	--proxy=*)
+		export http_proxy=${arg#--proxy=}
+		export ftp_proxy=${arg#--proxy=}
+		;;
+	--verbose)
+		verbose=yes
+		;;
+	--with-systemc=*)
+		systemc_location=${arg#--with-systemc=}
+		;;
+	--work=*)
+		basedir=${arg#--work=}
 		;;
 	-*|--*)
 		help
@@ -436,9 +515,147 @@ done
 # Configuration
 ###configuration###
 
+########### Actions ###########
+
+# Make a distribution build script
+#	$1 configuration to use
+#	$2 default action
+function make_build {
+	cd $curdir
+	line=`grep -n "^###configuration###" "$rootscript" | cut -f 1 -d ":"`
+	head -$line "$rootscript" | sed -e "s/^action=make$/action=$2/" -e "s/^config=.*/config=no/"
+	if [ -n "$1" ]; then
+		cat $1 | sed -e "s/^default_modules=.*/default_modules=\"$modules\"/"
+	fi
+	size=`wc -l < $rootscript`
+	tail=`expr $size - $line - 2`
+	tail -$tail $rootscript
+	cd $basedir
+}
+
+
+# Load the module information
+#	$1	Name of the module
+function load_module {
+	BUILD=
+	CHECK=
+	CLEAN=make
+	CVS_MOD=
+	DIST=
+	DIST_CONFIGURE_FLAGS=
+	DOWNLOAD=
+	#DONE=
+	#DONE_FILE=
+	INSTALL=
+	LIBTOOLIZE_FLAGS=
+	MAKE_FLAGS=
+	PATCH=
+	REQUIRE=
+	SETUP=
+	VERSION=
+	WGET_ADDRESS=
+	WGET_PACKAGE=
+	DIST=
+	mod_$1
+}
+
+# Build the requirements
+#	$*	list of requirements
+function require {
+	for mod in $*; do
+		display "requiring $mod in [$done]"  
+		if expr "$done" : ".*$mod" > /dev/null; then
+			true
+		else
+			action_$action $mod
+		fi
+	done
+}
+
+
+# Perform the make action
+#	$1	Name of the module to make
+function action_make {
+	load_module $1
+	if do_check; then
+		return
+	fi
+	require $REQUIRE
+	load_module $1
+	info "*** making $1 ***"
+	do_download
+	do_patch
+	cd $basedir/$NAME
+	do_setup
+	do_build
+	cd $basedir
+	done="$done $1"
+}
+
+# Perform the install action
+#	$1	name of the module to install
+function action_install {
+	action_make $1
+	if [ -n "$INSTALL" ]; then
+		cd $basedir/$NAME
+		do_install
+		cd $basedir
+	fi
+}
+
+# Perform distribution building
+#	$1	name of the module to install
+function action_dist {
+	load_module $1
+	if do_check; then
+		return
+	fi
+	require $REQUIRE
+	load_module $1
+	info "*** making dist for $1 ***"
+	do_download
+	do_patch
+	cd $basedir/$NAME
+	do_setup
+	do_dist
+	cd $basedir
+}
+
+# Perform a make for a distribution.
+#	$1	name of the module to dist make
+function action_distmake {
+	load_module $1
+	if do_check; then
+		return
+	fi
+	require $REQUIRE
+	load_module $1
+	info "*** making $1 ***"
+	cd $basedir/$NAME
+	do_build
+	do_install
+	cd $basedir
+	done="$done $1"
+}
+
+
+################# Entry #####################
+
+# Compute root path
+rootscript=`absname $0`
+rootdir=`dirname $0`
+
+# Make the build base directory
+if [ "$action" != distmake ]; then
+	mkdir -p $basedir
+	cd $basedir
+fi
+basedir=`pwd`
+log "Build by $tool $version (" `date` ")\n" > $basedir/$log
 
 # Select configuration
 if [ "$config" != "no" ]; then
+	cd $curdir
 	if [ "$config" == "" ]; then
 		if test -f "default.otawa"; then
 			config="./default.otawa"
@@ -452,14 +669,12 @@ if [ "$config" != "no" ]; then
 			error "cannot use the configuration file $config."
 		fi
 	fi
-	if [ "$verbose" == yes ]; then
 	display "INFO: configuration = $config"
-	fi
 	. $config
+	cd $basedir
 fi
 
-
-# Other preparation
+# Module selection
 if [ -z "$modules" ]; then
 	modules="$default_modules"
 fi
@@ -467,6 +682,8 @@ display "INFO: modules = $modules"
 if [ $action = update ]; then
 	updates="$modules"
 fi
+
+# Prefix management
 if [ -z "$prefix" ]; then
 	prefix=$basedir
 fi
@@ -474,216 +691,38 @@ if [ "${prefix:0:1}" != "/" ]; then
 	prefix="$PWD/$prefix"
 fi
 
-
-# Make the build basedirectory
-mkdir -p $basedir
-cd $basedir
+# systemc
 if [ ! -z $systemc_location ]; then
 	rm -f systemc
 	ln -s $systemc_location systemc
 fi
-basedir=`pwd`
-log "Build by $tool $version (" `date` ")\n" > $basedir/$log
 
-
-
-########### Process a module ###########
-function process {
-	expr "$done" : "$1" > /dev/null && return
-	
-	# Perfom requirements first
-	REQUIRES=
-	mod_$1
-	for m in $REQUIRES; do
-		if [ $action != update -o `expr match "$updates" ".*$m.*"` != 0 ]; then
-			process $m
-		else
-			action=make
-			process $m
-			action=update
-		fi
-	done
-
-	# Configure
-	BUILD=
-	INSTALL=
-	DOWNLOAD=
-	PATCH=
-	MAKE_FLAGS=
-	CVS_MOD=
-	WGET_ADDRESS=
-	WGET_PACKAGE=
-	SETUP=
-	LIBTOOLIZE_FLAGS=
-	CHECK=
-	VERSION=
-	DISTCLEAN=
-	DONE=
-	DONE_FILe=
-	mod_$1
-	info
-	info "*** Module $1 ***"
-	display "done = $done"
-	done="$done $1"
-
-	# Perform checking
-	for check in $CHECK; do
-		check_program $check
-	done
-	
-	# Perform the download
-	if [ -n "$DOWNLOAD" ]; then
-		if [ ! -d $1 ]; then
-			display "INFO: $1 does not exist: download it !"
-			download_$DOWNLOAD
-			if [ "$PATCH" != "" ]; then
-				patch_$PATCH
-			fi
-		else
-			if [ $action = update ]; then
-				cd $1
-				if [ -n "$DISTCLEAN" ]; then
-					distclean_$DISTCLEAN
-				fi
-				update_$DOWNLOAD
-				cd $basedir
-			fi
-		fi
-	fi
-	
-	# Already done ?
-	if [ -n "$DONE" ]; then
-		doit=yes
-		pushd $1
-		done_$DONE
-		popd
-		if [ "$doit" = "no" ]; then
-			info "Already done !"
-			return
-		fi
-	fi
-	
-	
-	# Requires setup and build ?
-	case "$action" in
-	update|make|install|dev|check)
-		if [ -n "$SETUP" ]; then
-			cd $1
-			setup_$SETUP
-			cd $basedir
-		fi
-		if [ -n "$BUILD" ]; then
-			cd $1
-			build_$BUILD
-			cd $basedir
-		fi
-		;;
-	esac
-	
-	# Perform install
-	case "$action" in
-	install|check)
-		if [ -n "$INSTALL" ]; then
-			cd $1
-			install_$INSTALL
-			cd $basedir
-		fi
-		;;
-	esac
-	
-	
-	# Perform distribution
-	case "$action" in
+# pre-action
+case $action in
 	dist)
-		old_prefix="$prefix"
-		prefix='$prefix'
-		making_script=yes
-		echo "cd $1" >> $build_script
-		if [ -n "$SETUP" ]; then
-			setup_$SETUP
-		fi
-		if [ -n "$BUILD" ]; then
-			build_$BUILD
-		fi
-		if [ -n "$INSTALL" ]; then
-			install_$INSTALL
-		fi
-		echo "cd .." >> $build_script
-		macking_script=
-		prefix="$old_prefix"
+		distdir=$curdir/$package
+		log_command mkdir "$distdir"
+		distscript="$distdir/build.sh"
+		make_build $rootdir/$config distmake > $distscript
+		chmod +x "$distscript"
 		;;
-	esac
-
-}
-
-function do_tst {
-
-	say "Processing test: $1"
-	if [ ! -d $basedir/$testdir/$1 ]; then
-		mkdir -p $basedir/$testdir/$1
-	fi
-	cp $basedir/otawa/test/$1/*.cpp $basedir/otawa/test/$1/*.h $basedir/$testdir/$1/ 2>/dev/null
-	objects="`ls $basedir/otawa/test/$1/*.cpp |while read A ; do basename $A |sed 's/\.cpp$/.o/g' ; done `"
-	objects="`echo $objects`"
-	cat <<EOF > $basedir/$testdir/$1/Makefile
-CXXFLAGS=\$(shell otawa-config --cflags gensim display ppc lp_solve) -DDATA_DIR="\"\$(shell otawa-config --data gensim display ppc lp_solve)\""
-LDLIBS=\$(shell otawa-config --libs gensim display ppc lp_solve)
-LDFLAGS=-dlopen force
-CXX=libtool --mode=compile --tag=CXX g++
-CC=libtool --mode=link --tag=CXX g++
-all: test_$1
-test_$1: $objects
-clean:
-	rm -rf *.o test_$1 *~ core *.lo .libs
-EOF
-	success
-	
-	say "Building test: $1"
-	
-	(
-		cd $basedir/$testdir/$1
-		PATH=$PATH:$prefix/bin/ make 
-	) || error "Test build failed."
-	success
-	
-	say "Checking for: $1"
-	cd $basedir/otawa/test/$1/
-	../../bin/check.sh --benchdir $basedir/snu-rt/ $basedir/$testdir/$1/test_$1 || error "Test failed."
-	success
-	
-}
-
-
-# Process modules
-if [ "$action" == dist ]; then
-	echo '#!/bin/bash' > $build_script
-	echo 'prefix=$PWD' >> $build_script
-	echo 'if [ -n "$1" ]; then' >> $build_script
-	echo '	prefix="$1"' >> $build_script
-	echo 'fi' >> $build_script
-	chmod +x $build_script
-fi
-
-done=
-for mod in $modules; do
-	process $mod
-done
-
-
-# Perform test
-case "$action" in
-checkonly|check)
-	echo "Doing tests..."
-	if [ ! -d $basedir/snu-rt ]; then
-		echo "Downloading the benchs"
-		WGET_ADDRESS="http://www.irit.fr/recherches/ARCHI/MARCH/frontc/" WGET_PACKAGE="snu-rt.tgz" mod="snu-rt" download_wget
-	fi
-	for tst in $testlist; do
-		do_tst $tst
-	done
+	auto)
+		make_build $rootdir/$config make
+		exit 0
+		;;
 esac
 
+# build entry
+for mod in $modules; do
+	action_$action $mod
+	true
+done
 
-if [ "$action" == dist ]; then
-	echo "Not implemented yet."
-fi
+# post-action
+case $action in
+	dist)
+		cd $curdir
+		log_command tar cvfz $distdir.tgz $package/
+		#log_command rm -rf $distdir
+		;;
+esac
