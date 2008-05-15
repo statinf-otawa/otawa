@@ -4,48 +4,37 @@ all_modules="$default_modules gel frontc gliss hcs12"
 
 function mod_elm {
 	NAME=elm
+	CHECK=exist
+	CHECK_FILES=src/libelm.la
 	DOWNLOAD=home
+	SETUP=bootstrap
+	BUILD=autotool
+	INSTALL=autotool
+	MAKE_FLAGS="-j $jobs"
+	DIST=copy
+	REQUIRE="automake autoconf libtool"
+}
+
+function mod_otawa {
+	NAME=otawa
 	VERSION=V_0_5
-	SETUP=bootstrap
-	LIBTOOLIZE_FLAGS=--ltdl
-	BUILD=autotool
-	INSTALL=autotool
-	CLEAN=autotool
-	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
-	MAKE_FLAGS="-j"
-	AUTOCONF_FLAGS=""
-	AUTOCONF_DEBUG="--with-mode=dev"
-}
-
-function mod_gel {
-	NAME=gel
 	DOWNLOAD=home
 	SETUP=bootstrap
-	LIBTOOLIZE_FLAGS=--ltdl
 	BUILD=autotool
 	INSTALL=autotool
-	DISTCLEAN=autotool
-	MAKE_FLAGS="-j"
-	CHECK="automake-1.7 autoconf-2.59 libtool-1.5.12"
 	AUTOCONF_FLAGS=""
+	DIST=copy
+	REQUIRE="elm gel"
 }
 
-function mod_frontc {
-	NAME=frontc
-	DOWNLOAD=wget
-	WGET_ADDRESS=http://www.irit.fr/recherches/ARCHI/MARCH/frontc/
-	WGET_PACKAGE=Frontc-3.2.tgz
-	BUILD=make
-	INSTALL=make
-	DISTCLEAN=make
-}
 
+# Architectures
 function mod_gliss {
 	NAME=gliss
+	VERSION=BEFORE_1_2
 	DOWNLOAD=home
 	BUILD=make
-	DISTCLEAN=make
-	VERSION=BEFORE_1_2
+	DIST=copy
 }
 
 function mod_ppc {
@@ -53,32 +42,8 @@ function mod_ppc {
 	DOWNLOAD=home
 	BUILD=make
 	MAKE_FLAGS='OPT=-DISS_DISASM GEP_OPTS="-a user0 int8 -a category int8"'
-	REQUIRES="gliss gel"
-	DISTCLEAN=make
-}
-
-function mod_lp_solve {
-	NAME=lp_solve
-	DOWNLOAD=wget
-	WGET_ADDRESS=ftp://ftp.es.ele.tue.nl/pub/lp_solve/old_versions_which_you_probably_dont_want/
-	WGET_PACKAGE=lp_solve_4.0.tar.gz
-	BUILD=make
-	MAKE_FLAGS=Makefile.linux
-	DISTCLEAN=clean
-}
-
-function mod_otawa {
-	NAME=otawa
-	DOWNLOAD=home
-	VERSION=V_0_5
-	SETUP=bootstrap
-	BUILD=autotool
-	INSTALL=make
-	REQUIRES="elm gel"
-	DISTCLEAN=autotool
-	MAKE_FLAGS="-j"
-	AUTOCONF_FLAGS="$plugin_param"
-	AUTOCONF_DEBUG="--with-mode=debug"
+	DIST=copy
+	REQUIRE="gliss gel"
 }
 
 function mod_hcs12 {
@@ -86,6 +51,62 @@ function mod_hcs12 {
 	DOWNLOAD=home
 	BUILD=make
 	MAKE_FLAGS='OPT=-DISS_DISASM GEP_OPTS="-a otawa_kind uint32 -a time string -a time_select uint8 -a time_select2 uint8"'
-	REQUIRES="gliss"
-	DISTCLEAN=make
+	DIST=copy
+	REQUIRE="gliss"
 }
+
+
+# ILP solvers
+function mod_lp_solve {
+	NAME=lp_solve
+	DOWNLOAD=wget
+	WGET_ADDRESS=ftp://ftp.es.ele.tue.nl/pub/lp_solve/old_versions_which_you_probably_dont_want/
+	WGET_PACKAGE=lp_solve_4.0.tar.gz
+	BUILD=make
+	MAKE_FLAGS=Makefile.linux
+	DIST=copy
+}
+
+
+# Utilities
+function mod_frontc {
+	NAME=frontc
+	DOWNLOAD=wget
+	WGET_ADDRESS="http://www.irit.fr/recherches/ARCHI/MARCH/frontc/"
+	WGET_PACKAGE="Frontc-3.2.tgz"
+	BUILD=make
+	INSTALL=make
+	DIST=copy
+}
+
+function mod_gel {
+	NAME=gel
+	DOWNLOAD=home
+	SETUP=bootstrap
+	BUILD=autotool
+	INSTALL=autotool
+	AUTOCONF_FLAGS=""
+	DIST="copy"
+	REQUIRE="automake autoconf libtool"
+}
+
+
+# External dependencies
+function mod_automake {
+	NAME=automake
+	VERSION=1.7
+	CHECK=tool
+}
+
+function mod_autoconf {
+	NAME=autoconf
+	VERSION=2.59
+	CHECK=tool
+}
+
+function mod_libtool {
+	NAME=libtool
+	VERSION=1.5.12
+	CHECK=tool
+}
+
