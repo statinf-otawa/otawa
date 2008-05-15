@@ -4,4 +4,6 @@ includeotawaexegraph_HEADERS = \
 	ExeGraph.h \
 	LiExeGraphBBTime.h \
 	LiExeGraph.h \
-	Microprocessor.h
+	Microprocessor.h \
+	ParamExeGraph.h \
+	ParamExeGraphBBTime.h

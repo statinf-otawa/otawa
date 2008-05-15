@@ -44,13 +44,13 @@ namespace hard {
 } // hard
 
 typedef enum instruction_category_t {	
-	IALU = 0,
-	FALU = 1,
-	MEMORY = 2,
-	CONTROL = 3,
-	MUL = 4,
-	DIV = 5,
-	INST_CATEGORY_NUMBER   // must be the last value
+  IALU = 0,
+  FALU = 1,
+  MEMORY = 2,
+  CONTROL = 3,
+  MUL = 4,
+  DIV = 5,
+  INST_CATEGORY_NUMBER   // must be the last value
 } instruction_category_t;	
 
 instruction_category_t instCategory(Inst *inst);
@@ -95,144 +95,145 @@ class Queue {
 
 template <class N>
 class PipelineStage {
-	public:
-		typedef enum order_policy_t {
-			NO_POLICY = 0,
-			IN_ORDER = 1,
-			OUT_OF_ORDER = 2,
-			NUMBER_OF_POLICIES=3
-		} order_policy_t;
-		typedef enum pipeline_stage_category_t {
-			NO_CATEGORY = 0,
-			FETCH = 1,
-			DECODE = 2,
-			EXECUTE = 3,
-			WRITE = 4,
-			COMMIT=5,
-			DELAY=6,
-			NUMBER_OF_CATEGORIES=7  // must be the last value
-		} pipeline_stage_category_t;
-
-		class FunctionalUnit {
-			public :
-				typedef struct fu_info_t {
-					elm::String name;
-					elm::String short_name;
-					bool is_pipelined;
-					int min_latency; // overrides pipeline stage latency
-					int max_latency;
-					int width;	
-					order_policy_t order_policy;
-				} fu_info_t; 
-			private:
-				fu_info_t _info;
-				elm::genstruct::Vector<PipelineStage<N> *> _pipeline;
-				Microprocessor<N> * _processor;   
-			public:
-				inline FunctionalUnit(fu_info_t& info, PipelineStage<N> *user_stage, Microprocessor<N> *proc);
-				inline elm::String name(void)
-					{return _info.name;}
-				inline elm::String shortName(void)
-					{return _info.short_name;}
-				inline bool isPipelined(void)
-					{return _info.is_pipelined;}
-				inline order_policy_t orderPolicy()
-					{return _info.ordder_policy;}
-				inline int minLatency(void)
-					{return _info.min_latency;}
-				inline int maxLatency(void)
-					{return _info.max_latency;}
-				inline int width(void)
-					{return _info.width;}
-				inline PipelineStage<N> * firstStage()
-					{return _pipeline.get(0);}
-    		class PipelineIterator: public elm::genstruct::Vector<PipelineStage<N> *>::Iterator {
-    			public:
-      			inline PipelineIterator(const FunctionalUnit *fu)
-						: elm::genstruct::Vector<PipelineStage<N> *>::Iterator(fu->_pipeline) {}
-    		};
-  	};
+ public:
+  typedef enum order_policy_t {
+    NO_POLICY = 0,
+    IN_ORDER = 1,
+    OUT_OF_ORDER = 2,
+    NUMBER_OF_POLICIES=3
+  } order_policy_t;
+  typedef enum pipeline_stage_category_t {
+    NO_CATEGORY = 0,
+    FETCH = 1,
+    DECODE = 2,
+    EXECUTE = 3,
+    WRITE = 4,
+    COMMIT=5,
+    DELAY=6,
+    NUMBER_OF_CATEGORIES=7  // must be the last value
+  } pipeline_stage_category_t;
   
-		typedef struct pipeline_info_t {
-			order_policy_t order_policy;
-			int stage_width;
-			elm::String stage_name;
-			elm::String stage_short_name;
-			pipeline_stage_category_t stage_category;
-			Queue<N> *source_queue;
-			Queue<N> *destination_queue;	
-			int min_latency;
-			int max_latency;
-		} pipeline_info_t;
+  class FunctionalUnit {
+    public :
+      typedef struct fu_info_t {
+	elm::String name;
+	elm::String short_name;
+	bool is_pipelined;
+	int min_latency; // overrides pipeline stage latency
+	int max_latency;
+	int width;	
+	order_policy_t order_policy;
+      } fu_info_t; 
+  private:
+    fu_info_t _info;
+    elm::genstruct::Vector<PipelineStage<N> *> _pipeline;
+    Microprocessor<N> * _processor;   
+  public:
+    inline FunctionalUnit(fu_info_t& info, PipelineStage<N> *user_stage, Microprocessor<N> *proc);
+    inline elm::String name(void)
+      {return _info.name;}
+    inline elm::String shortName(void)
+      {return _info.short_name;}
+    inline bool isPipelined(void)
+      {return _info.is_pipelined;}
+    inline order_policy_t orderPolicy()
+      {return _info.ordder_policy;}
+    inline int minLatency(void)
+      {return _info.min_latency;}
+    inline int maxLatency(void)
+      {return _info.max_latency;}
+    inline int width(void)
+      {return _info.width;}
+    inline PipelineStage<N> * firstStage()
+      {return _pipeline.get(0);}
+    class PipelineIterator: public elm::genstruct::Vector<PipelineStage<N> *>::Iterator {
+    public:
+      inline PipelineIterator(const FunctionalUnit *fu)
+	: elm::genstruct::Vector<PipelineStage<N> *>::Iterator(fu->_pipeline) {}
+    };
+  };
   
-	private:
-		pipeline_info_t _info;
-		bool _uses_fus;
-		Vector<Pair<Inst::kind_t, FunctionalUnit *> > bindings;
-		elm::genstruct::Vector<FunctionalUnit *> fus;
-		int _index;
-		Microprocessor<N> * _processor;
-		elm::genstruct::Vector<N *> _nodes;
-		StringBuffer _category_name[NUMBER_OF_CATEGORIES];
-		StringBuffer _order_name[NUMBER_OF_POLICIES];
-	public:
-		inline PipelineStage(pipeline_info_t& info, Microprocessor<N>* proc);
-		inline order_policy_t orderPolicy(void)
-			{return _info.order_policy;}
-		inline int width(void) const
-			{return _info.stage_width;}
-		inline elm::String name(void) 
-			{return _info.stage_name;}
-		inline elm::String shortName(void)
-			{return _info.stage_short_name;}
-		inline pipeline_stage_category_t category(void)
-			{return _info.stage_category;}
-		inline elm::String categoryString(void)
-			{return _category_name[_info.stage_category].toString();}
-		inline elm::String orderPolicyString(void)
-			{return _order_name[_info.order_policy].toString();}
-		inline Queue<N> * sourceQueue(void)
-			{return _info.source_queue;}
-		inline Queue<N> * destinationQueue(void)
-			{return _info.destination_queue;}
-		inline int index(void)
-			{return _index;}
-		inline int minLatency(void)
-			{return _info.min_latency;}
-		inline int maxLatency(void)
-			{return _info.max_latency;}
-		FunctionalUnit * addFunctionalUnit(typename PipelineStage<N>::FunctionalUnit::fu_info_t& fu_info);
-		inline bool usesFunctionalUnits(void)
-			{return _uses_fus;}
-		inline void addNode(N * node)
-			{_nodes.add(node);}
-		inline void deleteNodes()
-			{_nodes.clear();}
-		inline int numberOfNodes()
-			{return _nodes.length();}
-		inline N * node(int index) {
-			if (index >= _nodes.length())
-				return NULL;
-			return _nodes[index];
-		}
-  	elm::genstruct::Vector<FunctionalUnit *>& getFUs(void) 
-  		{return fus;}
-		inline void addBinding(Inst::kind_t kind, FunctionalUnit *fu)
-  		{bindings.add(pair(kind, fu));}
-		inline FunctionalUnit *findFU(Inst::kind_t kind) {
-  		for(int i = 0; i < bindings.length(); i++) {
-    		Inst::kind_t mask = bindings[i].fst;
-    		if((kind & mask) == mask)
-					return bindings[i].snd;
-  		}
-  		cerr << "Unsupported instruction kind : " << io::hex(kind) << io::endl;
-  		assert(0);
-		}
-		class ExeNodeIterator: public elm::genstruct::Vector<N *>::Iterator {
-			public:
-				inline ExeNodeIterator(const PipelineStage<N> *stage)
-					: elm::genstruct::Vector<N *>::Iterator(stage->_nodes) {}
-		};
+  typedef struct pipeline_info_t {
+    order_policy_t order_policy;
+    int stage_width;
+    elm::String stage_name;
+    elm::String stage_short_name;
+    pipeline_stage_category_t stage_category;
+    Queue<N> *source_queue;
+    Queue<N> *destination_queue;	
+    int min_latency;
+    int max_latency;
+  } pipeline_info_t;
+  
+ private:
+  pipeline_info_t _info;
+  bool _uses_fus;
+  Vector<Pair<Inst::kind_t, FunctionalUnit *> > bindings;
+  elm::genstruct::Vector<FunctionalUnit *> fus;
+  int _index;
+  Microprocessor<N> * _processor;
+  elm::genstruct::Vector<N *> _nodes;
+  StringBuffer _category_name[NUMBER_OF_CATEGORIES];
+  StringBuffer _order_name[NUMBER_OF_POLICIES];
+ public:
+  inline PipelineStage(pipeline_info_t& info, Microprocessor<N>* proc);
+  inline order_policy_t orderPolicy(void)
+    {return _info.order_policy;}
+  inline int width(void) const
+    {return _info.stage_width;}
+  inline elm::String name(void) 
+    {return _info.stage_name;}
+  inline elm::String shortName(void)
+    {return _info.stage_short_name;}
+  inline pipeline_stage_category_t category(void)
+    {return _info.stage_category;}
+  inline elm::String categoryString(void)
+    {return _category_name[_info.stage_category].toString();}
+  inline elm::String orderPolicyString(void)
+    {return _order_name[_info.order_policy].toString();}
+  inline Queue<N> * sourceQueue(void)
+    {return _info.source_queue;}
+  inline Queue<N> * destinationQueue(void)
+    {return _info.destination_queue;}
+  inline int index(void)
+    {return _index;}
+  inline int minLatency(void)
+    {return _info.min_latency;}
+  inline int maxLatency(void)
+    {return _info.max_latency;}
+  FunctionalUnit * addFunctionalUnit(typename PipelineStage<N>::FunctionalUnit::fu_info_t& fu_info);
+  inline bool usesFunctionalUnits(void)
+    {return _uses_fus;}
+  inline void addNode(N * node)
+    {_nodes.add(node);}
+  inline void deleteNodes()
+    {_nodes.clear();}
+  inline int numberOfNodes()
+    {return _nodes.length();}
+  inline N * node(int index) {
+    if (index >= _nodes.length())
+      return NULL;
+    return _nodes[index];
+  }
+  elm::genstruct::Vector<FunctionalUnit *>& getFUs(void) 
+    {return fus;}
+  inline void addBinding(Inst::kind_t kind, FunctionalUnit *fu)
+    {bindings.add(pair(kind, fu));}
+  inline FunctionalUnit *findFU(Inst::kind_t kind) {
+    for(int i = 0; i < bindings.length(); i++) {
+      Inst::kind_t mask = bindings[i].fst;
+      if((kind & mask) == mask) {
+	return bindings[i].snd;
+      }
+    }
+    cerr << "Unsupported instruction kind : " << io::hex(kind) << io::endl;
+    assert(0);
+  }
+  class ExeNodeIterator: public elm::genstruct::Vector<N *>::Iterator {
+  public:
+    inline ExeNodeIterator(const PipelineStage<N> *stage)
+      : elm::genstruct::Vector<N *>::Iterator(stage->_nodes) {}
+  };
 };
 
 template <class N>
