@@ -3,15 +3,17 @@ includeotawautil_HEADERS = \
 	CFGNormalizer.h \
 	ContextTree.h \
 	HalfAbsInt.h \
+	DefaultFixPoint.h \
+	DefaultListener.h \
 	Dominance.h \
-	PostDominance.h \
-	Graph.h \
+	FirstUnrollingFixPoint.h \
 	GenGraph.h \
+	Graph.h \
 	FlowFactLoader.h \
 	LBlockBuilder.h \
 	LoopInfoBuilder.h \
-	DefaultFixPoint.h \
-	DefaultListener.h \
-	FirstUnrollingFixPoint.h \
-	UnrollingListener.h \
-	TrivialLBlockTime.h
+	PostDominance.h \
+	Trace.h \
+	TrivialLBlockTime.h \
+	UnrollingListener.h
+	
