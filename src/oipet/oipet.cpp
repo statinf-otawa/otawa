@@ -38,6 +38,7 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg/Virtualizer.h>
 #include <otawa/display/CFGOutput.h>
+#include <otawa/exegraph/ParamExeGraphBBTime.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -117,7 +118,7 @@ using namespace elm::system;
  * @par Pipeline Management Options
  * 
  * @li -t method, --bbtiming=method -- selects the method to time the blocks. The
- * method may be one of trivial, sim, delta or exegraph.
+ * method may be one of trivial, sim, delta, exegraph or paramexegraph.
  * 
  * @li -p path, --processor=path -- load the processor description from the file
  * whose path is given.
@@ -239,7 +240,8 @@ typedef enum bbtime_t {
 	bbtime_sim,
 	bbtime_delta,
 	bbtime_exegraph,
-	bbtime_trivial
+	bbtime_trivial,
+	bbtime_paramexegraph
 } bbtime_t;
 EnumOption<int>::value_t bbtime_values[] = {
 	{ "method", bbtime_trivial },
@@ -247,6 +249,7 @@ EnumOption<int>::value_t bbtime_values[] = {
 	{ "delta", bbtime_delta },
 	{ "exegraph", bbtime_exegraph },
 	{ "trivial", bbtime_trivial },
+	{ "paramexegraph", bbtime_paramexegraph },
 	{ "" }
 };
 EnumOption<int> bbtime_option(command, 't', "bbtiming",
@@ -349,6 +352,12 @@ void Command::compute(String fun) {
 			tbt.process(fw, props);
 		}
 		break;
+	
+	case bbtime_paramexegraph: {
+			ParamExeGraphBBTime tbt;
+			tbt.process(fw, props);
+		}
+		break;		
 
 	default:
 		assert(0);

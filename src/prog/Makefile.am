@@ -153,7 +153,10 @@ libotawa_la_SOURCES = \
 	exegraph_ExeGraph.cpp \
 	exegraph_LiExeGraphBBTime.cpp \
 	exegraph_LiExeGraph.cpp \
-	exegraph_Microprocessor.cpp
+	exegraph_Microprocessor.cpp \
+	exegraph_ParamExeGraph.cpp \
+	exegraph_ParamExeGraphBBTime.cpp \
+	util_Trace.cpp
 
 	
 
