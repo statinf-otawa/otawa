@@ -1,19 +1,106 @@
 /*
  *	$Id$
- *	Copyright (c) 2007, IRIT UPS <casse@irit.fr>
- *
  *	ARM plugin implementation
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2007-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <elm/assert.h>
+#define ISS_DISASM
+#include "emul.h"
 #include <otawa/loader/old_gliss/Process.h>
 #include <otawa/loader/old_gliss/BranchInst.h>
 #include <otawa/prog/Loader.h>
-#include "emul.h"
 
-#define TRACE(m) cout << m << io::endl
+#define TRACE(m) //cout << m << io::endl
+
+
+/*
+ * FLOW DECODING
+ *	- branches : B label, Bcnd label
+ *  - call : BL label
+ *  - return :	LDMIA sp, {..., pc, ..., sp, ...}
+ *  			MOV pc, lr
+ * 				BX lr
+ *  - shortcut return : B label (GCC -O2)
+ *  - guarded statement : op+cnd (GGC -O2) (special pass in decoding)
+ * 
+ *  - indirect call (normal and -O2)
+ * 		mov lr, pc
+ * 		mov pc, ri
+ * 		NOTE: function address are stored in data format in the code
+ *		ldr	ri, [pc, #offset]
+ * 		function address at (instruction address + 8 + offset)
+ * 
+ *  - switch indirect branch (normale and -O2)
+ * 		cmp		ri, #table_size
+ * 		ldrls	pc, [pc, ri, lsl #2]	@ indirect branch
+ *		b		default_label
+ * 		<indirect table>
+ */
 
 namespace otawa { namespace arm {
+
+// Specialized registers
+static const int pc = 15;
+static const int lr = 14;
+static const int sp = 13;
+
+
+/**
+ * Test if the instruction read the given register.
+ * @param inst	Instruction to look in.
+ * @param reg	Register to check.
+ * @return		True if the register is read, false else.
+ */
+static bool readsReg(instruction_t *inst, int reg) {
+	for(int i = 0; inst->instrinput[i].type != VOID_T; i++)
+		if(inst->instrinput[i].type == GPR_T
+		&& inst->instrinput[i].val.uint8 == reg)
+			return true;
+	return false;
+}
+
+
+/**
+ * Test if the instruction write the given register.
+ * @param inst	Instruction to look in.
+ * @param reg	Register to check.
+ * @return		True if the register is written, false else.
+ */
+static bool writesReg(instruction_t *inst, int reg) {
+	for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
+		if(inst->instroutput[i].type == GPR_T
+		&& inst->instroutput[i].val.uint8 == reg)
+			return true;
+	return false;
+}
+
+
+/**
+ * Test if the instruction is conditional (guarded).
+ * @param inst	Instruction to test.
+ * @return		True if it is conditional, false else.
+ */
+static bool isConditional(instruction_t *inst) {
+	return inst->instrinput[0].val.uint8 != 14;
+}
+
 
 // Process class
 class Process: public otawa::loader::old_gliss::Process {
@@ -53,6 +140,7 @@ protected:
 };
 
 
+
 /**
  */
 otawa::Inst *Process::decode(address_t addr) {
@@ -62,28 +150,29 @@ otawa::Inst *Process::decode(address_t addr) {
 	code_t buffer[20];
 	//char out_buffer[200];
 	instruction_t *inst;
-	iss_fetch((::address_t)addr, buffer);
-	inst = iss_decode((state_t *)state(), (::address_t)addr, buffer, 0);
+	iss_fetch(addr.offset(), buffer);
+	inst = iss_decode((state_t *)state(), addr.offset(), buffer);
 
 	// Look condition	
 	Inst::kind_t kind = 0;
-	if(inst->instrinput[0].val.uint8 != 14)
+	if(isConditional(inst))
 		kind |= Inst::IS_COND;
 
 	// Look the instruction
 	switch(inst->ident) {
 
 	case ID_Instrunknown:
+		//cerr << addr << ": unknown\n";
 		return new Inst(*this, 0, addr);
 
 	 case ID_MOV__1:
-		if(inst->instrinput[2].val.uint8 == 15
-		&& inst->instrinput[5].val.uint8 == 14
-		&& inst->instrinput[3].val.uint8 == 0) {
-			kind = Inst::IS_CONTROL | Inst::IS_RETURN;
-			goto branch;
-		}
-	
+		 if(inst->instrinput[2].val.uint8 == pc
+		 && inst->instrinput[5].val.uint8 == lr
+		 && inst->instrinput[3].val.uint8 == 0) {
+			 kind |= Inst::IS_RETURN;
+			 goto branch;
+		 }
+		
 	case ID_UMLAL_: case ID_SMLAL_:
 	case ID_UMULL_: case ID_SMULL_:
     case ID_MUL_: case ID_MLA_:
@@ -95,10 +184,10 @@ otawa::Inst *Process::decode(address_t addr) {
     case ID_RSB_: case ID_RSB__0: case ID_RSB__1:
     case ID_ORR_: case ID_ORR__0: case ID_ORR__1:
     case ID_MVN_: case ID_MVN__0: case ID_MVN__1:
-    case ID_MOV_: case ID_MOV__0:     
+    case ID_MOV_: case ID_MOV__0:
     case ID_EOR_: case ID_EOR__0: case ID_EOR__1:
     case ID_CMP_: case ID_CMP__0: case ID_CMP__1:
-    case ID_CMN_: case ID_CMN__0: case ID_CMN__1:     
+    case ID_CMN_: case ID_CMN__0: case ID_CMN__1:
     case ID_BIC_: case ID_BIC__0: case ID_BIC__1:
     case ID_AND_: case ID_AND__0: case ID_AND__1:
     case ID_ADD_: case ID_ADD__0: case ID_ADD__1:
@@ -109,11 +198,11 @@ otawa::Inst *Process::decode(address_t addr) {
 		goto simple;
 
     case ID_BX_:
-		kind |= Inst::IS_CONTROL;
-		goto branch;
+    	if(inst->instrinput[1].val.uint8 == lr)
+    		kind |= Inst::IS_RETURN;
+    	goto branch;
 
     case ID_B_:
-		kind |= Inst::IS_CONTROL;
 		if(inst->instrinput[1].val.uint8)
 			kind |= Inst::IS_CALL;
 		goto branch;
@@ -129,8 +218,13 @@ otawa::Inst *Process::decode(address_t addr) {
 
     case ID_R_: case ID_R__0:
 		kind |= Inst::IS_INT | Inst::IS_MEM;
-		if(inst->instrinput[5].val.uint8)
+		if(inst->instrinput[5].val.uint8) {
 			kind |= Inst::IS_LOAD;
+			if(inst->instrinput[7].val.uint8 != pc)
+				return new Inst(*this, kind, addr);
+			else
+				goto branch;
+		}
 		else
 			kind |= Inst::IS_STORE;
 		goto simple;
@@ -160,9 +254,20 @@ otawa::Inst *Process::decode(address_t addr) {
 		goto simple;    
         
     case ID_M_:
+    	/*for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
+    		if(inst->instroutput[i].type == GPR_T)
+    			cerr << addr << ": written to r" << inst->instroutput[i].val.uint8 << io::endl;*/
 		kind |= Inst::IS_INT | Inst::IS_MEM;
-		if(inst->instrinput[4].val.uint8)
+		if(inst->instrinput[4].val.uint8) {
+			/*for(int i = 7; i <= 10; i++)
+				cerr << addr << ": M[" << i << "] = " << io::hex(inst->instrinput[i].val.uint8) << io::endl;*/
 			kind |= Inst::IS_LOAD;
+			if(inst->instrinput[5].val.uint8 == sp
+			&& /*writesReg(inst, pc)*/ (inst->instrinput[7].val.uint8 && (1 << (pc - 12)))) {
+					kind |= Inst::IS_RETURN;
+					goto branch;
+				}
+		}
 		else
 			kind |= Inst::IS_STORE;
 		goto simple;    
@@ -171,22 +276,34 @@ otawa::Inst *Process::decode(address_t addr) {
     	kind |= Inst::IS_TRAP;
     	goto branch;
  
-    // Create just a branch instruction 
-    branch:
-		return new BranchInst(*this, kind, addr);
-    
 	// Check if the PC is modified
     simple:
-    	for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
-    		if(inst->instroutput[i].type == GPR_T
-    		&& inst->instroutput[i].val.uint8 == 15)
-    			goto branch;
-		return new Inst(*this, kind, addr);
+    	if(!writesReg(inst, pc)) {
+        	//cerr << addr << ": no branch\n";
+    		return new Inst(*this, kind, addr);
+    	}
+    	/*for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
+    		if(inst->instroutput[i].type == GPR_T)
+    			cerr << addr << ": written to r" << inst->instroutput[i].val.uint8 << io::endl;*/
+
 		
-	default:
-		ASSERT(false);
-		return 0;
+	// Create just a branch instruction 
+	branch:
+		kind |= Inst::IS_CONTROL;
+		/*cerr << addr << ": ";
+		if(kind & Inst::IS_RETURN)
+			cerr << "return";
+		else if(kind & Inst::IS_CALL)
+			cerr << "call";
+		else
+			cerr << "branch found";
+		if(kind & Inst::IS_COND)
+			cerr << " conditional";
+		cerr << io::endl;*/
+		return new BranchInst(*this, kind, addr);	    
 	}
+	ASSERTP(false, (_ << "id " << io::hex(inst->ident) << "not handled at " << addr));
+	return 0;
 }
 
 
@@ -197,14 +314,27 @@ address_t BranchInst::decodeTargetAddress(void) {
 	// Decode the instruction
 	code_t buffer[20];
 	instruction_t *inst;
-	iss_fetch(address(), buffer);
-	inst = iss_decode((state_t *)process().state(), address(), buffer, 0);
+	iss_fetch(address().offset(), buffer);
+	inst = iss_decode((state_t *)process().state(), address().offset(), buffer);
 
 	// San instruction
 	switch(inst->ident) {
-    case ID_B_:
-    	return inst->instrinput[2].val.int32 << 2;
+    case ID_B_: {
+    		long off = inst->instrinput[2].val.int32;
+    		if(off >= 0x2000000)
+    			off = (off << 6) >> 6;
+    		Address to = address() + int(off + 8); 
+    		//cerr << address() << ": branch to " << to << "(" << io::hex(off) << ")" << io::endl; 
+    		return to;
+    	}
+    case ID_BX_:
+    case ID_MOV__1:
+    case ID_R__0:
+    case ID_SWI_:
+    case ID_M_:
+    	return 0;
 	default:
+		//ASSERTP(false, "internal error at " << address());
 		return 0;
 	}
 }
