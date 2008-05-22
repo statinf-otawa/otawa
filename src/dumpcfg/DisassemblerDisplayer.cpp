@@ -74,8 +74,13 @@ int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
 		cout << ")";
 		break;
 	
-	default:
-		ASSERT(false);
+	case Edge::VIRTUAL_CALL:
+		cout << " VC(" << target_index << ")";
+		break;
+		
+	case Edge::VIRTUAL_RETURN:
+		cout << " VR(" << target_index << ")";
+		break;
 	}
 }
 
