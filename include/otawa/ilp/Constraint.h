@@ -9,6 +9,7 @@
 
 #include <otawa/ilp/Var.h>
 #include <elm/Iterator.h>
+#include <elm/utility.h>
 
 namespace otawa { namespace ilp {
 	
