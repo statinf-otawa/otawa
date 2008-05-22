@@ -33,6 +33,7 @@ namespace otawa {
 class BasicBlock;
 class CodeItem;
 class CFG;
+class CFGInfo;
 
 // Properties
 extern Identifier<CFG *> ENTRY;
@@ -47,6 +48,8 @@ class CFG: public PropList, private elm::Collection<BasicBlock *> {
 	virtual elm::MutableCollection<BasicBlock *> *empty(void);
 	typedef genstruct::FragTable<BasicBlock *> bbs_t;
 protected:
+	friend class CFGInfo;
+	virtual ~CFG(void);
 	unsigned long flags;
 	EndBasicBlock _entry, _exit;
 	static const unsigned long FLAG_Scanned = 0x01;

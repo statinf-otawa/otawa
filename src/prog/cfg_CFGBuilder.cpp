@@ -252,6 +252,8 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 					bb->flags |= BasicBlock::FLAG_Return;
 				else if(inst->isCall())
 					bb->flags |= BasicBlock::FLAG_Call;
+				if(inst->isConditional())
+					bb->flags |= BasicBlock::FLAG_Cond;
 				if(!target && !isReturn(inst))
 					bb->flags |= BasicBlock::FLAG_Unknown;
 				follow = inst->isCall() || inst->isConditional();

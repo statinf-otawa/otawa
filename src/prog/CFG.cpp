@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	CFG class implementation
  *
- *	cfg.cpp -- control flow graph classes implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <assert.h>
@@ -12,6 +27,10 @@
 #include <elm/debug.h>
 #include <otawa/util/Dominance.h>
 #include <otawa/dfa/BitSet.h>
+#include <elm/genstruct/HashTable.h>
+#include <elm/genstruct/VectorQueue.h>
+
+using namespace elm::genstruct;
 
 namespace otawa {
 
@@ -167,7 +186,112 @@ MutableCollection<BasicBlock *> *CFG::empty(void) {
  * is used (call to an accessors method).
  */
 void CFG::scan(void) {
+	//cerr << "begin CFG::scan()\n";
 	
+	// Experimental code
+
+	// Prepare data
+	typedef HashTable<BasicBlock *, BasicBlock *> map_t; 
+	map_t map;
+	VectorQueue<BasicBlock *> todo;
+	todo.put(ent);
+	
+	// Find all BB
+	_bbs.add(&_entry);
+	while(todo) {
+		BasicBlock *bb = todo.get();
+		ASSERT(bb);
+		// second case : calling jump to a function
+		if(map.exists(bb) || (bb != ent && ENTRY(bb)))	
+			continue;
+		BasicBlock *vbb = new VirtualBasicBlock(bb);
+		_bbs.add(vbb);
+		map.put(bb, vbb);
+		ASSERTP(map.exists(bb), "not for " << bb->address());
+
+		// !!DEBUG!!
+		/*if(bb->address() == Address(0x8a98))
+			cerr << "1 BB " << (void *)bb  << " at " << bb->address() << io::endl;*/
+		
+		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+
+			// !!DEBUG!!
+			/*cerr << edge->source()->address() << " => ";
+			if(!edge->target())
+				cerr << "unknown";
+			else
+				cerr << edge->target()->address();
+			cerr << io::endl;*/
+			
+			if(edge->target() && edge->kind() != Edge::CALL)
+				todo.put(edge->target());
+		}
+	}
+	
+	/*for(map_t::ItemIterator vbb(map); vbb; vbb++)
+		cerr << (void *)vbb.key() << " -> " << (void *)vbb << io::endl;*/ 
+	
+	// Relink the BB
+	BasicBlock *vent = map.get(ent, 0);
+	ASSERT(vent);
+	new Edge(&_entry, vent, Edge::VIRTUAL);
+	for(bbs_t::Iterator vbb(_bbs); vbb; vbb++) {
+		if(vbb->isEnd())
+			continue;
+		BasicBlock *bb = ((VirtualBasicBlock *)*vbb)->bb(); 
+		if(bb->isReturn())
+			new Edge(vbb, &_exit, Edge::VIRTUAL);
+		
+		// !!DEBUG!!
+		/*if(bb->address() == Address(0x8a98))
+			cerr << "2 BB " << (void *)bb  << " at " << bb->address() << io::endl;*/
+		
+		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+			
+			// !!DEBUG!!
+			/*cerr << edge->source()->address() << " -> ";
+			if(!edge->target())
+				cerr << "unknown";
+			else
+				cerr << edge->target()->address();
+			cerr << io::endl;*/
+			
+			// A call
+			if(edge->kind() == Edge::CALL) {
+				Edge *vedge = new Edge(vbb, edge->target(), Edge::CALL);
+				vedge->toCall();
+				//cerr << vbb->address() << ": call" << io::endl;
+			}
+			
+			// Pending edge
+			else if(!edge->target()) {
+				new Edge(vbb, 0, edge->kind());
+				//cerr << vbb->address() << ": pending edge" << io::endl;
+			}
+			
+			// Possibly a not explicit call
+			else {
+				ASSERT(edge->target());
+				BasicBlock *vtarget = map.get(edge->target(), 0);
+				if(vtarget)	{	// simple branch
+					new Edge(vbb, vtarget, edge->kind());
+					//cerr << vbb->address() << ": to " << vtarget->address() << io::endl;
+				}
+				else {		// calling jump to a function
+					new Edge(vbb, edge->target(), Edge::CALL);
+					//cerr << vbb->address() << ": calling jump" << io::endl;
+					vbb->flags |= BasicBlock::FLAG_Call;
+					new Edge(vbb, &_exit, Edge::VIRTUAL);
+					//cerr << vbb->address() << ": exit" << io::endl;
+				}
+			}
+
+		}	
+	}
+	_bbs.add(&_exit);
+	
+	
+#	if 0
 	// All entering edges becomes calls
 	for(BasicBlock::InIterator edge(ent); edge; edge++)
 		edge->toCall();		// !!BUG!!
@@ -227,7 +351,20 @@ void CFG::scan(void) {
 	for(int i = 0; i < ends.length(); i++) {
 		new Edge(ends[i], &_exit, EDGE_Virtual);
 	}
+#	endif
+
+	// Number the BB
+	for(int i = 0; i < _bbs.length(); i++) {
+		// !!DEBUG!!
+		/*if(_bbs[i]->address() == Address(0x8a9c)) {
+			BasicBlock *bb = _bbs[i];
+			cerr << bb << io::endl;
+		}*/
+		INDEX(_bbs[i]) = i;
+		_bbs[i]->_cfg = this;
+	}
 	flags |= FLAG_Scanned;
+	//cerr << "end CFG::scan()\n";
 }
 
 
@@ -246,6 +383,14 @@ void CFG::numberBB(void) {
 template <>
 void Identifier<CFG *>::print(elm::io::Output& out, const Property& prop) const {
 	out << "cfg(" << get(prop)->label() << ")";
+}
+
+
+/**
+ */
+CFG::~CFG(void) {
+	for(int i = 1; i < _bbs.length() - 1; i++)
+		delete _bbs[i];
 }
 
 } // namespace otawa
