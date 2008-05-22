@@ -46,8 +46,10 @@ otawa::Inst *BranchInst::target(void) {
 	if(!(_kind & TARGET_DONE)) {
 		_kind |= TARGET_DONE;
 		address_t target_addr = decodeTargetAddress();
-		if(target_addr)
+		if(target_addr) {
 			_target = process().findInstAt(target_addr);
+			ASSERTP(_target, "bad target pointer by instruction at " << address() << " to " << target_addr);
+		}
 	}
 	return _target;
 }
