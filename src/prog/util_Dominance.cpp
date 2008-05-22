@@ -128,7 +128,9 @@ bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 	ASSERTP(bb1 == bb2	
 		||	!REVERSE_DOM(bb1)->contains(bb2->number())
 		||  !REVERSE_DOM(bb2)->contains(bb1->number()),
-			"CFG with disconnected nodes");
+			"CFG with disconnected nodes (BB "
+				<< bb1->number() << ":" << bb1->address()
+				<< ", BB " << bb2->number() << ":" << bb2->address() << ")");
 	return set->contains(index);
 }
 
