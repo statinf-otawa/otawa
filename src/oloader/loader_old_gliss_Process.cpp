@@ -13,6 +13,9 @@
 #include "elfread.h"
 #include <otawa/loader/gliss.h>
 #include "config.h"
+extern "C" {
+#include <gel/dwarf_line.h>
+}
 
 #define TRACE(m) //cout << m << io::endl
 
@@ -41,6 +44,60 @@ protected:
 
 private:
 	Process& proc;
+};
+
+
+// File class
+class File: public otawa::File {
+public:
+	File(const string& name): otawa::File(name), init(false), file(0), map(0) { }
+
+	Option<Pair<cstring, int> > getSourceLine(Address addr)
+	throw (UnsupportedFeatureException) {
+		setup();
+		const char *file;
+		int line;
+		if(!map
+		|| dwarf_line_from_address(map, addr.offset(), &file, &line) < 0)
+			return none;
+		return some(pair(cstring(file), line));
+	}
+
+	void getAddresses(cstring file, int line,
+	Vector<Pair<Address, Address> >& addresses)
+	throw (UnsupportedFeatureException) {
+		addresses.clear();
+		dwarf_line_iter_t iter;
+		dwarf_location_t loc;
+		for(loc = dwarf_first_line(&iter, map);
+		loc.file;
+		loc = dwarf_next_line(&iter))
+			if(file == loc.file && line == loc.line)
+				addresses.add(
+					pair(Address(loc.low_addr), Address(loc.high_addr)));
+	}
+
+protected:
+	virtual ~File(void) {
+		if(map)
+			 dwarf_delete_line_map(map);
+		if(file)
+			gel_close(file);
+	}
+	
+private:
+	void setup(void) {
+		if(init)
+			return;
+		init = true;
+		if(!file) {
+			file = gel_open(&name(), 0, GEL_OPEN_NOPLUGINS); 
+		}
+	}
+
+	bool init;
+	gel_file_t *file;
+	 dwarf_line_map_t *map;
 };
 
 
@@ -81,7 +138,8 @@ private:
 	ASSERTP(manager, "manager required");
 	ASSERTP(platform, "platform required");
 
-	static char *default_argv[] = { "", 0 };
+	static char empty[] = "";
+	static char *default_argv[] = { empty, 0 };
 	static char *default_envp[] = { 0 };
 	argc = ARGC(props);
 	if(argc < 0)
@@ -130,7 +188,7 @@ Inst *Process::start(void) {
 
 /**
  */
-File *Process::loadFile(elm::CString path) {
+otawa::File *Process::loadFile(elm::CString path) {
 
 	// Check if there is not an already opened file !
 	if(program())
@@ -164,7 +222,7 @@ File *Process::loadFile(elm::CString path) {
     if(!state)
     	throw LoadException(_ << "cannot load \"" << path << "\".");
     _state = state;
-    File *file = new otawa::File(path);
+    File *file = new File(path);
     
     // Initialize the text segments
     for(struct text_secs *text = Text.secs; text; text = text->next) {
@@ -267,6 +325,26 @@ Inst *Segment::decode(address_t address) {
 	TRACE("otawa::loader::old_gliss::Segment::decode(" << address << ") = "
 		<< (void *)result);
 	return result;
+}
+
+
+/**
+ */
+Option<Pair<cstring, int> > Process::getSourceLine(Address addr) 
+throw (UnsupportedFeatureException) {
+	File *file = (File *)program();
+	return file->getSourceLine(addr);
+}
+
+
+/**
+ */
+void Process::getAddresses(
+	cstring file,
+	int line,
+	Vector<Pair<Address, Address> >& addresses)
+throw (UnsupportedFeatureException) {
+	
 }
 
 } } } // otawa::loader::old_gliss

@@ -598,6 +598,38 @@ elm::io::Output& operator<<(elm::io::Output& out, Process *proc) {
 
 
 /**
+ * Get the source file and the line matching the given address.
+ * @param addr	Address to get source and line.
+ * @return		Optional (file, line) pair if the address is found.
+ * @throw UnsupportedFeatureException	If this function is called and
+ * 				the feature @ref SOURCE_LINE_FEATURE is not implemented.
+ */
+Option<Pair<cstring, int> > Process::getSourceLine(Address addr)
+throw (UnsupportedFeatureException) {
+	throw UnsupportedFeatureException(this, SOURCE_LINE_FEATURE);
+}
+
+
+/**
+ * Get the list of addresses implementing the given (source, line) pair.
+ * @param file		Looked source file.
+ * @param line		Looked source line.
+ * @param addresses	Output parameter containing the list of address ranges
+ * 					matching the given line. This vector is empty if the
+ * 					source (file, line) cannot be found.
+ * @throw UnsupportedFeatureException	If this function is called and
+ * 				the feature @ref SOURCE_LINE_FEATURE is not implemented.
+ */
+void Process::getAddresses(
+	cstring file,
+	int line,
+	Vector<Pair<Address, Address> >& addresses)
+throw (UnsupportedFeatureException) {
+	throw UnsupportedFeatureException(this, SOURCE_LINE_FEATURE);	
+}
+
+
+/**
  * @class ProcessException
  * An exception generated from a process.
  */
@@ -668,12 +700,20 @@ Feature<NoProcessor> REGISTER_USAGE_FEATURE("otawa::REGISTER_USAGE_FEATURE");
 /**
  * This feature is usually provided by the loader providing decoding facility
  * for control instructions.
- * @par Hooks
- * @li @ref Process
  * @par Provided Methods
  * @li @ref Inst::target()
  */
 Feature<NoProcessor> CONTROL_DECODING_FEATURE("otawa::CONTROL_DECODING");
+
+
+/**
+ * This feature asserts that a table matching program address and source
+ * (file, lines) is available.
+ * @par Provided Methods
+ * @li @ref Process::getSourceLine()
+ * @li @ref Process::getAddresses()
+ */
+Feature<NoProcessor> SOURCE_LINE_FEATURE("otawa::SOURCE_LINE_FEATURE");
 
 
 /**
