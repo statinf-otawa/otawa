@@ -528,10 +528,11 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 						prepare(ws, cfg);
 						out << "multibranch " << addressOf(cfg, inst->address())
 							<< " to ?;";
+						out << "\t// (" << inst->address() << ") ";
 						if(inst->isCall())
-							out << "\t// indirect call in "; 
+							out << "indirect call in "; 
 						else
-							out << "\t// switch-like branch in ";
+							out << "switch-like branch in ";
 						out << nameOf(cfg) << io::endl;
 					}
 				}
