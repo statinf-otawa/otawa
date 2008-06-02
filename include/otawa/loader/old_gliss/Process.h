@@ -41,6 +41,11 @@ public:
 	virtual void get(Address at, Address& val);
 	virtual void get(Address at, string& str);
 	virtual void get(Address at, char *buf, int size);
+	virtual Option<Pair<cstring, int> > getSourceLine(Address addr)
+		throw (UnsupportedFeatureException);
+	virtual void getAddresses(cstring file, int line,
+		Vector<Pair<Address, Address> >& addresses)
+		throw (UnsupportedFeatureException);
 
 protected:
 	friend class Segment;
