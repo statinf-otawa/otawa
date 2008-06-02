@@ -1,9 +1,9 @@
-AM_CXXFLAGS = @OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@ -Wall
+AM_CXXFLAGS = @OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@ -Wall @GEL_DWARF_CXXFLAGS@
 
 lib_LTLIBRARIES = liboloader.la
 
 liboloader_la_LDFLAGS = -all-static
-liboloader_la_LIBADD = @OTAWA_LIBS@
+liboloader_la_LIBADD = @OTAWA_LIBS@ @GEL_DWARF_LIBS@
 liboloader_la_DEPENDENCIES = @OTAWA_DEPS@
 
 liboloader_la_SOURCES = \
