@@ -118,12 +118,13 @@ int main(int argc, char **argv) {
 		fw->require(DECODED_TEXT);
 		cout << "READ/WRITTEN REGS TEST\n";
 		String label("main");
-		Inst *inst = fw->findInstAt((address_t)0x50140);
+		Inst *inst = fw->process()->findInstAt("main");
 		//fw->findLabel(label));
 		if(!inst)
 			throw new otawa::Exception(CString("no main in this file ?"));
 		for(int i = 0; i < 10; i++, inst = inst->nextInst()) {
-			cout << '\n' << inst << " (" << io::hex(inst->kind()) << ")\n";
+			cout << '\n' << inst->address() << ": "
+				 << inst << " (" << io::hex(inst->kind()) << ")\n";
 			const elm::genstruct::Table<hard::Register *>& reads = inst->readRegs();
 			cout << "\tread registers : ";
 			for(int i = 0; i < reads.count(); i++)
