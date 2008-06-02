@@ -54,6 +54,48 @@ class Symbol;
 class TextDecoder;
 
 
+// ProcessException class
+class ProcessException: public Exception {
+public:
+	inline ProcessException(Process *process): proc(process)
+		{ ASSERTP(process, "null process passed"); }
+	inline Process *process(void) const { return proc; }
+private:
+	Process *proc;
+};
+
+
+// UnsupportedFeatureException class
+class UnsupportedFeatureException: public ProcessException {
+public:
+	
+ 	inline UnsupportedFeatureException(
+ 		Process *proc,
+ 		const AbstractFeature& feature
+ 	): ProcessException(proc), f(feature) { }
+ 		
+ 	 inline UnsupportedFeatureException(const AbstractFeature& feature)
+ 	 : ProcessException(0), f(feature) { }
+ 	 		
+ 	 inline const AbstractFeature& feature(void) const { return f; }
+ 	virtual String 	message(void); 
+private:
+	const AbstractFeature& f;
+};
+
+
+// OutOfSegmentException class
+class OutOfSegmentException: public ProcessException { 
+public:
+	OutOfSegmentException(Process *proc, Address address)
+		: ProcessException(proc), addr(address) { }
+	inline Address address(void) const { return addr; }
+ 	virtual String 	message(void); 	
+private:
+	Address addr;
+};
+
+
 // SimState class
 class SimState {
 public:
@@ -114,6 +156,13 @@ public:
 	virtual void get(Address at, string& str);
 	virtual void get(Address at, char *buf, int size);
 	
+	// LineNumber feature
+	virtual Option<Pair<cstring, int> > getSourceLine(Address addr)
+		throw (UnsupportedFeatureException);
+	virtual void getAddresses(cstring file, int line,
+		Vector<Pair<Address, Address> >& addresses)
+		throw (UnsupportedFeatureException);
+	
 	// Simulation management
 	virtual SimState *newState(void);
 	virtual sim::Simulator *simulator(void);
@@ -138,47 +187,6 @@ public:
 elm::io::Output& operator<<(elm::io::Output& out, Process *proc); 
 
 
-// ProcessException class
-class ProcessException: public Exception {
-public:
-	inline ProcessException(Process *process): proc(process)
-		{ ASSERTP(process, "null process passed"); }
-	inline Process *process(void) const { return proc; }
-private:
-	Process *proc;
-};
-
-
-// UnsupportedFeatureException class
-class UnsupportedFeatureException: public ProcessException {
-public:
-	
- 	inline UnsupportedFeatureException(
- 		Process *proc,
- 		const AbstractFeature& feature
- 	): ProcessException(proc), f(feature) { }
- 		
- 	 inline UnsupportedFeatureException(const AbstractFeature& feature)
- 	 : ProcessException(0), f(feature) { }
- 	 		
- 	 inline const AbstractFeature& feature(void) const { return f; }
- 	virtual String 	message(void); 
-private:
-	const AbstractFeature& f;
-};
-
-
-// OutOfSegmentException class
-class OutOfSegmentException: public ProcessException { 
-public:
-	OutOfSegmentException(Process *proc, Address address)
-		: ProcessException(proc), addr(address) { }
-	inline Address address(void) const { return addr; }
- 	virtual String 	message(void); 	
-private:
-	Address addr;
-};
-
 // Process information
 extern Identifier<Address> ARGV_ADDRESS;
 extern Identifier<Address> ENVP_ADDRESS;
@@ -191,6 +199,7 @@ extern Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE;
 extern Feature<NoProcessor> STACK_USAGE_FEATURE;
 extern Feature<NoProcessor> REGISTER_USAGE_FEATURE;
 extern Feature<NoProcessor> CONTROL_DECODING_FEATURE;
+extern Feature<NoProcessor> SOURCE_LINE_FEATURE;
 
 } // otawa
 
