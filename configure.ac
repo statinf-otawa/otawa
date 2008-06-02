@@ -155,7 +155,8 @@ AC_SUBST(ILP_DEFAULT)
 # ===== SYSTEMC check =====
 OTAWA_USE_LIB(SYSTEMC,
 	OTAWA_CHECK_LIB(SYSTEMC, systemc.h, systemc, $PWD/../systemc/objdir/src, $PWD/../systemc/src,
-	OTAWA_CHECK_LIB(SYSTEMC, systemc.h, systemc, /usr/lib-linux, /usr/include))) 
+	OTAWA_CHECK_LIB(SYSTEMC, systemc.h, systemc, /usr/lib-linux, /usr/include,
+	OTAWA_CHECK_LIB(SYSTEMC, systemc.h, systemc, $PWD/../systemc/lib-linux, $PWD/../systemc/include)))) 
 
 
 # ===== dot check =====
@@ -310,6 +311,7 @@ AC_CONFIG_FILES([
 	test/reg/Makefile
 	test/simulator/Makefile
 	test/generic_simulator/Makefile
+	test/mytest/Makefile
 	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
 	examples/piconsens/Makefile
