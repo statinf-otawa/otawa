@@ -95,6 +95,10 @@ OTAWA_USE_LIB(GEL_PPC,
 		OTAWA_CHECK_LTLIB(GEL_PPC, , libgel_ppc.la, $PWD/../gel/src, $PWD/../gel/include,
 		OTAWA_CHECK_LTLIB(GEL_PPC, , libgel_ppc.la, ${prefix}, ,
 		OTAWA_CHECK_LTLIB(GEL_PPC, , libgel_ppc.la))))
+OTAWA_USE_LIB(GEL_DWARF,
+		OTAWA_CHECK_LTLIB(GEL_DWARF, gel/dwarf_line.h, libgel_dwarf.la, $PWD/../gel/src, $PWD/../gel/include,
+		OTAWA_CHECK_LTLIB(GEL_DWARF, gel/dwarf_line.h, libgel_dwarf.la, ${prefix}, ,
+		OTAWA_CHECK_LTLIB(GEL_DWARF, gel/dwarf_line.h, libgel_dwarf.la))))
 
 
 # ===== ELM check =====
@@ -311,7 +315,6 @@ AC_CONFIG_FILES([
 	test/reg/Makefile
 	test/simulator/Makefile
 	test/generic_simulator/Makefile
-	test/mytest/Makefile
 	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
 	examples/piconsens/Makefile
