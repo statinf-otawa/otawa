@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2007, IRIT UPS <casse@irit.fr>
+ *	loader::old_gliss::Process class implementation
  *
- *	loader::old_gliss::Process class interface
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-7, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <elm/assert.h>
@@ -71,10 +86,12 @@ public:
 		dwarf_location_t loc;
 		for(loc = dwarf_first_line(&iter, map);
 		loc.file;
-		loc = dwarf_next_line(&iter))
+		loc = dwarf_next_line(&iter)) {
+			//cerr << loc.file << ":" << loc.line << ":" << loc.low_addr << "-" << loc.high_addr << io::endl;
 			if(file == loc.file && line == loc.line)
 				addresses.add(
 					pair(Address(loc.low_addr), Address(loc.high_addr)));
+		}
 	}
 
 protected:
@@ -90,9 +107,19 @@ private:
 		if(init)
 			return;
 		init = true;
+		
+		// Open the file
 		if(!file) {
 			file = gel_open(&name(), 0, GEL_OPEN_NOPLUGINS); 
+			if(!file) {
+				cerr << "WARNING: file \"" << name()
+					 << "\" seems to have disappeared !\n";
+				return;
+			}
 		}
+		
+		// Open the map
+		map = dwarf_new_line_map(file, 0);
 	}
 
 	bool init;
@@ -344,7 +371,8 @@ void Process::getAddresses(
 	int line,
 	Vector<Pair<Address, Address> >& addresses)
 throw (UnsupportedFeatureException) {
-	
+	File *ofile = (File *)program();
+	return ofile->getAddresses(file, line, addresses);	
 }
 
 } } } // otawa::loader::old_gliss
