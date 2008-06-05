@@ -6,7 +6,8 @@ SUBDIRS = \
 	hard \
 	pcg \
 	props \
-	reg
+	reg \
+	source
 
 if HAS_ILP
 SUBDIRS += \

@@ -306,6 +306,7 @@ AC_CONFIG_FILES([
 	test/delta/Makefile
 	test/ct/Makefile
 	test/ccg/Makefile
+	test/generic_simulator/Makefile
 	test/graph/Makefile
 	test/categorisation/Makefile
 	test/hard/Makefile
@@ -314,7 +315,7 @@ AC_CONFIG_FILES([
 	test/exegraph/Makefile
 	test/reg/Makefile
 	test/simulator/Makefile
-	test/generic_simulator/Makefile
+	test/source/Makefile
 	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
 	examples/piconsens/Makefile
