@@ -800,11 +800,11 @@ otawa::Inst *Process::decode(address_t addr) {
     	if(!writesReg(inst, pc)) {
         	//cerr << addr << ": no branch\n";
     		res = new Inst(*this, kind, addr);
+        	break;
     	}
     	/*for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
     		if(inst->instroutput[i].type == GPR_T)
     			cerr << addr << ": written to r" << inst->instroutput[i].val.uint8 << io::endl;*/
-    	break;
 
 		
 	// Create just a branch instruction 
