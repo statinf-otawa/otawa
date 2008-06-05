@@ -27,6 +27,7 @@
 #include <otawa/loader/old_gliss/BranchInst.h>
 #include <otawa/prog/Loader.h>
 #include <otawa/hard/Register.h>
+#include <otawa/loader/arm.h>
 
 #define TRACE(m) //cout << m << io::endl
 
@@ -58,6 +59,7 @@
 using namespace otawa::hard;
 
 namespace otawa { namespace arm {
+
 
 // Specialized registers
 static const int pc = 15;
@@ -317,7 +319,8 @@ void Process::decodeRegs(
 		written_cnt += 2;
 		goto cnt_uses;
 
-    case ID_MUL_: case ID_MLA_:
+	 case ID_MLA_:
+	 case ID_MUL_:
     	read_cnt += 2;
     	written_cnt += 1;
     	goto cnt_uses;
@@ -662,17 +665,21 @@ otawa::Inst *Process::decode(address_t addr) {
 	iss_fetch(addr.offset(), buffer);
 	inst = iss_decode((state_t *)state(), addr.offset(), buffer);
 
-	// Look condition	
+	// Look condition
 	Inst::kind_t kind = 0;
 	if(isConditional(inst))
 		kind |= Inst::IS_COND;
 
 	// Look the instruction
+	bool is_mla = false;
+	bool is_multiple = false;
+	otawa::Inst *res = 0;
 	switch(inst->ident) {
 
 	case ID_Instrunknown:
 		//cerr << addr << ": unknown\n";
-		return new Inst(*this, 0, addr);
+		res = new Inst(*this, 0, addr);
+		break;
 
 	 case ID_MOV__1:
 		 if(inst->instrinput[2].val.uint8 == pc
@@ -684,7 +691,9 @@ otawa::Inst *Process::decode(address_t addr) {
 		
 	case ID_UMLAL_: case ID_SMLAL_:
 	case ID_UMULL_: case ID_SMULL_:
-    case ID_MUL_: case ID_MLA_:
+	 case ID_MLA_:
+		 is_mla = true;
+    case ID_MUL_:
     case ID_TST_: case ID_TST__0: case ID_TST__1:
     case ID_TEQ_: case ID_TEQ__0: case ID_TEQ__1:
     case ID_SUB_: case ID_SUB__0: case ID_SUB__1:
@@ -763,6 +772,7 @@ otawa::Inst *Process::decode(address_t addr) {
 		goto simple;    
         
     case ID_M_:
+    	is_multiple = true;
     	/*for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
     		if(inst->instroutput[i].type == GPR_T)
     			cerr << addr << ": written to r" << inst->instroutput[i].val.uint8 << io::endl;*/
@@ -789,11 +799,12 @@ otawa::Inst *Process::decode(address_t addr) {
     simple:
     	if(!writesReg(inst, pc)) {
         	//cerr << addr << ": no branch\n";
-    		return new Inst(*this, kind, addr);
+    		res = new Inst(*this, kind, addr);
     	}
     	/*for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
     		if(inst->instroutput[i].type == GPR_T)
     			cerr << addr << ": written to r" << inst->instroutput[i].val.uint8 << io::endl;*/
+    	break;
 
 		
 	// Create just a branch instruction 
@@ -809,10 +820,16 @@ otawa::Inst *Process::decode(address_t addr) {
 		if(kind & Inst::IS_COND)
 			cerr << " conditional";
 		cerr << io::endl;*/
-		return new BranchInst(*this, kind, addr);	    
+		res = new BranchInst(*this, kind, addr);
+		break;
 	}
-	ASSERTP(false, (_ << "id " << io::hex(inst->ident) << "not handled at " << addr));
-	return 0;
+	
+	// Set the annotations
+	if(is_mla)
+		IS_MLA(res) = true;
+	if(is_multiple)
+		IS_MULTIPLE_LOAD_STORE(res) = true;
+	return res;
 }
 
 

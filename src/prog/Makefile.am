@@ -156,7 +156,8 @@ libotawa_la_SOURCES = \
 	exegraph_Microprocessor.cpp \
 	exegraph_ParamExeGraph.cpp \
 	exegraph_ParamExeGraphBBTime.cpp \
-	util_Trace.cpp
+	util_Trace.cpp \
+	loader_arm.cpp
 
 	
 
