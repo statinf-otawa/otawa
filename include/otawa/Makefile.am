@@ -37,6 +37,7 @@ includeotawa_HEADERS = \
 	base.h  \
 	cfg.h \
 	ets.h\
+	flowfact \
 	gliss.h \
 	hard.h \
 	ilp.h \

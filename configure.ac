@@ -331,6 +331,7 @@ AC_CONFIG_FILES([
 	include/otawa/display/Makefile
 	include/otawa/ets/Makefile
 	include/otawa/exegraph/Makefile
+	include/otawa/flowfact/Makefile
 	include/otawa/gensim/Makefile
 	include/otawa/hard/Makefile
 	include/otawa/hardware/Makefile
