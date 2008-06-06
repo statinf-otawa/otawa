@@ -39,7 +39,6 @@ class LBlockBuilder: public BBProcessor {
 	LBlockSet **lbsets;
 	const hard::Cache *cache;
 	HashTable<int,int> *cacheBlocks;
-	int numFakeBlocks;
 	//void processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset, const hard::Cache *cach, int *tableindex);
 	void addLBlock(
 		BasicBlock *bb,
@@ -47,11 +46,9 @@ class LBlockBuilder: public BBProcessor {
 		int& index,
 		genstruct::AllocatedTable<LBlock *> *lblocks);
 
-	
 protected:
 	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 	virtual void cleanup(WorkSpace *fw);
-	virtual void configure(const PropList &props);
 	virtual void setup(WorkSpace *fw);
 
 public:
@@ -60,7 +57,6 @@ public:
 
 // Features
 extern Feature<LBlockBuilder> COLLECTED_LBLOCKS_FEATURE;
-extern Identifier<int> FAKE_LBLOCKS_COUNT;
 
 } // otawa
 

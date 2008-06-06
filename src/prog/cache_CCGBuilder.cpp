@@ -16,8 +16,6 @@
 #include <otawa/hard/Platform.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/prog/WorkSpace.h>
-#include <otawa/cache/ccg/CCGDFA.h>
-#include <otawa/ipet.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
@@ -28,10 +26,6 @@ namespace otawa {
 
 // DFA Properties
 static Identifier<dfa::BitSet *> IN("", 0);
-
-
-Identifier<HashTable<Pair<BasicBlock*,BasicBlock*>, Pair<dfa::BitSet*, int> > *> CCG_CONF_MAP("otawa::CCG_CONF_MAP", NULL, otawa::NS);
-
 
 
 /**
@@ -46,12 +40,6 @@ Identifier<HashTable<Pair<BasicBlock*,BasicBlock*>, Pair<dfa::BitSet*, int> > *>
  * @ref @li COLLECTED_LBLOCKS_FEATURE
  */
 
-
-
-void CCGBuilder::configure(const PropList &props) {
-  Processor::configure(props);
-  confmap = CCG_CONF_MAP(props);
-}
 
 /**
  * Create a new CCGBuilder.
@@ -112,7 +100,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	}
 
 	// Run the DFA
-	CCGProblem prob(lbset, lbset->count(), cache, fw, confmap);
+	CCGProblem prob(lbset, lbset->count(), cache, fw);
 	CFGCollection *coll = INVOLVED_CFGS(fw);
 	dfa::XCFGVisitor<CCGProblem> visitor(*coll, prob);
 	dfa::XIterativeDFA<dfa::XCFGVisitor<CCGProblem> > engine(visitor);
@@ -131,9 +119,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	BasicBlock *BB;
 	LBlock *line;
 	int length = lbset->count();		
-	for(Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++) {
-		if (lbloc->isVirtual())
-			continue;
+	for(Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++)
 		if(lbloc->id() != 0 && lbloc->id() != length - 1) {
 			BB = lbloc->bb();
 			dfa::BitSet *inid = IN(BB);
@@ -144,7 +130,6 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 					NON_CONFLICT(lbloc) = true;
 				
 		}
-	}
 	
 	// Building the ccg edges using DFA
 	length = lbset->count();
@@ -167,8 +152,6 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 						adinst = inst->address();				
 						for (Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++){
 							address_t address = lbloc->address();
-							if (lbloc->isVirtual())
-								continue;
 							// the first lblock in the BB it's a conflict
 							if(adinst == address && !test && bb == lbloc->bb()) {		
 								for (int i = 0; i< length; i++)
@@ -210,19 +193,6 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	// Build edge from 'S' till 'end'
 	LBlock *s = lbset->lblock(0);
 	new CCGEdge(CCG::NODE(s), CCG::NODE(end));
-	
-	// Build the edges to fake lblocks 
-	if (confmap) {
-		for (HashTable<Pair<BasicBlock*,BasicBlock*>,Pair<dfa::BitSet*,int> >::ItemIterator iter(*confmap); iter; iter++) {		
-				Pair<dfa::BitSet*, int> val = *iter;
-				dfa::BitSet *predset = prob.fakePreds.get(val.snd).value();
-				LBlock *fake = lbset->lblock(lbset->count() - (val.snd +2));		
-				for (dfa::BitSet::Iterator bit(*predset); bit; bit++) {
-					LBlock *pred = lbset->lblock(*bit);
-					new CCGEdge(CCG::NODE(pred), CCG::NODE(fake));	
-				}	
-		}
-	}
 			
 	// Cleanup the DFA annotations
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++)

@@ -22,8 +22,6 @@ using namespace elm;
 
 namespace otawa {
 	
-Identifier<BasicBlock*> UNROLLED_FROM("otawa::unrolled_from", NULL);
-
 Feature<LoopUnroller> UNROLLED_LOOPS_FEATURE ("otawa::unrolled_loops_feature");
 
 
@@ -116,7 +114,6 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 	BackEdgePairVector backEdges;
 	bool dont_unroll = false;
 	int start;
-	BasicBlock *unrolled_from;
 
 	/* Avoid unrolling loops with LOOP_COUNT of 0, since it would create a LOOP_COUNT of -1 for the non-unrolled part of the loop*/
 	if (header && (ipet::LOOP_COUNT(header) == 0)) {
@@ -172,13 +169,6 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 					if (VIRTUAL_RETURN_BLOCK(new_bb))
 						virtualCallList.put(new_bb);
 					
-					if ((current == header) && (!dont_unroll)) {
-						if (i == 0) {
-							unrolled_from = new_bb;
-						} else {
-							UNROLLED_FROM(new_bb) = unrolled_from;
-						} 
-					}
 					if (ipet::LOOP_COUNT(new_bb) != -1) {
 						if (i == 0) {
 							new_bb->removeAllProp(&ipet::LOOP_COUNT);

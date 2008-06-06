@@ -4,7 +4,6 @@
 #include <otawa/cfg/Virtualizer.h>
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/cfg/CFGCollector.h>
-#include <otawa/cfg/LoopUnroller.h>
 #include <otawa/prog/Manager.h>
 
 using namespace otawa;
@@ -123,14 +122,6 @@ BasicBlock *exit) {
 			vcfg->addBB(new_bb);
 		}
 	
-	// Translate BB properties
-	for (CFG::BBIterator bb(cfg); bb; bb++) {
-		if (UNROLLED_FROM(bb)) {
-			BasicBlock *new_bb = map.get(bb, NULL);
-			BasicBlock *new_unrolled_from = map.get(UNROLLED_FROM(bb), NULL);
-			UNROLLED_FROM(new_bb) = new_unrolled_from;
-		}
-	}
 	// Find local entry
 	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++) {
 		ASSERT(!call.entry);
