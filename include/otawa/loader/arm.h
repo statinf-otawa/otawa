@@ -26,8 +26,14 @@
 
 namespace otawa { namespace arm {
 
+typedef enum multiple_t {
+	no_multiple = 0,
+	only_one = 1,
+	several = 2
+};
+
 extern Identifier<bool> IS_MLA;
-extern Identifier<bool> IS_MULTIPLE_LOAD_STORE;
+extern Identifier<multiple_t> IS_MULTIPLE_LOAD_STORE;
 
 } } // otawa::arm
 

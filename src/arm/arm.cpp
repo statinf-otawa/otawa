@@ -656,183 +656,290 @@ void Process::decodeRegs(
 /**
  */
 otawa::Inst *Process::decode(address_t addr) {
-  TRACE("decode(" << addr << ")");
+	TRACE("decode(" << addr << ")");
 
-  // Decode the instruction
-  code_t buffer[20];
-  //char out_buffer[200];
-  instruction_t *inst;
-  iss_fetch(addr.offset(), buffer);
-  inst = iss_decode((state_t *)state(), addr.offset(), buffer);
-  
-  // Look condition
-  Inst::kind_t kind = 0;
-  if(isConditional(inst))
-    kind |= Inst::IS_COND;
-  
-  // Look the instruction
-  bool is_mla = false;
-  bool is_multiple = false;
-  otawa::Inst *res = 0;
-  switch(inst->ident) {
-    
-  case ID_Instrunknown:
-    //cerr << addr << ": unknown\n";
-    res = new Inst(*this, 0, addr);
-    break;
-    
-  case ID_UMLAL_: case ID_SMLAL_:
-  case ID_UMULL_: case ID_SMULL_:
-  case ID_MLA_:
-    is_mla = true;
-    kind |= Inst::IS_INT | Inst::IS_ALU;
-    goto simple;
+	// Decode the instruction
+	code_t buffer[20];
+	//char out_buffer[200];
+	instruction_t *inst;
+	iss_fetch(addr.offset(), buffer);
+	inst = iss_decode((state_t *)state(), addr.offset(), buffer);
 
-  case ID_MOV__1:
-    if(inst->instrinput[2].val.uint8 == pc
-       && inst->instrinput[5].val.uint8 == lr
-       && inst->instrinput[3].val.uint8 == 0) {
-      kind |= Inst::IS_RETURN;
-      goto branch;
-    }
-    
-  case ID_MUL_:
-  case ID_TST_: case ID_TST__0: case ID_TST__1:
-  case ID_TEQ_: case ID_TEQ__0: case ID_TEQ__1:
-  case ID_SUB_: case ID_SUB__0: case ID_SUB__1:
-  case ID_SBC_: case ID_SBC__0: case ID_SBC__1:
-  case ID_RSC_: case ID_RSC__0: case ID_RSC__1:
-  case ID_RSB_: case ID_RSB__0: case ID_RSB__1:
-  case ID_ORR_: case ID_ORR__0: case ID_ORR__1:
-  case ID_MVN_: case ID_MVN__0: case ID_MVN__1:
-  case ID_MOV_: case ID_MOV__0:
-  case ID_EOR_: case ID_EOR__0: case ID_EOR__1:
-  case ID_CMP_: case ID_CMP__0: case ID_CMP__1:
-  case ID_CMN_: case ID_CMN__0: case ID_CMN__1:
-  case ID_BIC_: case ID_BIC__0: case ID_BIC__1:
-  case ID_AND_: case ID_AND__0: case ID_AND__1:
-  case ID_ADD_: case ID_ADD__0: case ID_ADD__1:
-  case ID_ADC_: case ID_ADC__0: case ID_ADC__1:
-  case ID_CLZ_:
-  case ID_SWPB_: case ID_SWP_:
-    kind |= Inst::IS_INT | Inst::IS_ALU;
-    goto simple;
-    
-  case ID_BX_:
-    if(inst->instrinput[1].val.uint8 == lr)
-      kind |= Inst::IS_RETURN;
-    goto branch;
-    
-  case ID_B_:
-    if(inst->instrinput[1].val.uint8)
-      kind |= Inst::IS_CALL;
-    goto branch;
-    
-  case ID_LDRSH_: case ID_LDRSH__0: case ID_LDRSB_: case ID_LDRSB__0:
-  case ID_LDRH_: case ID_LDRH__0:
-    kind |= Inst::IS_INT | Inst::IS_LOAD | Inst::IS_MEM;
-    goto simple;
-    
-  case ID_STRH_: case ID_STRH__0:
-    kind |= Inst::IS_INT | Inst::IS_STORE | Inst::IS_MEM;
-    goto simple;
-    
-  case ID_R_: case ID_R__0:
-    kind |= Inst::IS_INT | Inst::IS_MEM;
-    if(inst->instrinput[5].val.uint8) {
-      kind |= Inst::IS_LOAD;
-      if(inst->instrinput[7].val.uint8 != pc)
-	return new Inst(*this, kind, addr);
-      else
-	goto branch;
-    }
-    else
-      kind |= Inst::IS_STORE;
-    goto simple;
-    
-  case ID_MRS_SPSR: case ID_MRS_CPSR: case ID_MSR_CPSR_F_:
-  case ID_MSR_CPSR_S_: case ID_MSR_CPSR_X_: case ID_MSR_CPSR_C_:
-  case ID_MSR_CPSR_FS_: case ID_MSR_CPSR_FX_: case ID_MSR_CPSR_F__0:
-  case ID_MSR_CPSR_SX_: case ID_MSR_CPSR_SC_: case ID_MSR_CPSR_XC_:
-  case ID_MSR_CPSR_FSX_: case ID_MSR_CPSR_FXC_: case ID_MSR_CPSR_SXC_:
-  case ID_MSR_CPSR_FSXC_: case ID_MSR_CPSR_: case ID_MSR_SPSR_F_:
-  case ID_MSR_SPSR_S_: case ID_MSR_SPSR_X_: case ID_MSR_SPSR_C_:
-  case ID_MSR_SPSR_FS_: case ID_MSR_SPSR_FX_: case ID_MSR_SPSR_F__0:
-  case ID_MSR_SPSR_SX_: case ID_MSR_SPSR_SC_: case ID_MSR_SPSR_XC_:
-  case ID_MSR_SPSR_FSX_: case ID_MSR_SPSR_FXC_: case ID_MSR_SPSR_SXC_:
-  case ID_MSR_SPSR_FSXC_: case ID_MSR_SPSR_: case ID_MSR_CPSR_F__1:
-  case ID_MSR_CPSR_S__0: case ID_MSR_CPSR_X__0: case ID_MSR_CPSR_C__0:
-  case ID_MSR_CPSR_FS__0: case ID_MSR_CPSR_FX__0: case ID_MSR_CPSR_F__2:
-  case ID_MSR_CPSR_SX__0: case ID_MSR_CPSR_SC__0: case ID_MSR_CPSR_XC__0:
-  case ID_MSR_CPSR_FSX__0: case ID_MSR_CPSR_FXC__0: case ID_MSR_CPSR_SXC__0:
-  case ID_MSR_CPSR_FSXC__0: case ID_MSR_CPSR__0: case ID_MSR_SPSR_F__1:
-  case ID_MSR_SPSR_S__0: case ID_MSR_SPSR_X__0: case ID_MSR_SPSR_C__0:
-  case ID_MSR_SPSR_FS__0: case ID_MSR_SPSR_FX__0: case ID_MSR_SPSR_F__2:
-  case ID_MSR_SPSR_SX__0: case ID_MSR_SPSR_SC__0: case ID_MSR_SPSR_XC__0:
-  case ID_MSR_SPSR_FSX__0: case ID_MSR_SPSR_FXC__0: case ID_MSR_SPSR_SXC__0:
-  case ID_MSR_SPSR_FSXC__0: case ID_MSR_SPSR__0:
-    kind |= Inst::IS_INTERN;
-    goto simple;    
-    
-  case ID_M_:
-    is_multiple = true;
-    /*for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
-      if(inst->instroutput[i].type == GPR_T)
-      cerr << addr << ": written to r" << inst->instroutput[i].val.uint8 << io::endl;*/
-    kind |= Inst::IS_INT | Inst::IS_MEM;
-    if(inst->instrinput[4].val.uint8) {
-      /*for(int i = 7; i <= 10; i++)
-	cerr << addr << ": M[" << i << "] = " << io::hex(inst->instrinput[i].val.uint8) << io::endl;*/
-      kind |= Inst::IS_LOAD;
-      if(inst->instrinput[5].val.uint8 == sp
-	 && /*writesReg(inst, pc)*/ (inst->instrinput[7].val.uint8 && (1 << (pc - 12)))) {
-	kind |= Inst::IS_RETURN;
-	goto branch;
-      }
-    }
-    else
-      kind |= Inst::IS_STORE;
-    goto simple;    
-    
-  case ID_SWI_:
-    kind |= Inst::IS_TRAP;
-    goto branch;
-    
-    // Check if the PC is modified
-  simple:
-    if(!writesReg(inst, pc)) {
-      //cerr << addr << ": no branch\n";
-      res = new Inst(*this, kind, addr);
-      break;
-    }
-    /*for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
-      if(inst->instroutput[i].type == GPR_T)
-      cerr << addr << ": written to r" << inst->instroutput[i].val.uint8 << io::endl;*/
-    
-    
-    // Create just a branch instruction 
-  branch:
-    kind |= Inst::IS_CONTROL;
-    /*cerr << addr << ": ";
-      if(kind & Inst::IS_RETURN)
-      cerr << "return";
-      else if(kind & Inst::IS_CALL)
-      cerr << "call";
-      else
-      cerr << "branch found";
-      if(kind & Inst::IS_COND)
-      cerr << " conditional";
-      cerr << io::endl;*/
-    res = new BranchInst(*this, kind, addr);
-    break;
-  }
-  
-  // Set the annotations
-  if(is_mla)
-    IS_MLA(res) = true;
-  if(is_multiple)
-    IS_MULTIPLE_LOAD_STORE(res) = true;
-  return res;
+	// Look condition
+	Inst::kind_t kind = 0;
+	if (isConditional(inst))
+		kind |= Inst::IS_COND;
+
+	// Look the instruction
+	bool is_mla = false;
+	multiple_t is_multiple = arm::no_multiple;
+	otawa::Inst *res = 0;
+	switch (inst->ident) {
+
+	case ID_Instrunknown:
+		//cerr << addr << ": unknown\n";
+		res = new Inst(*this, 0, addr);
+		break;
+
+	case ID_UMLAL_:
+	case ID_SMLAL_:
+	case ID_UMULL_:
+	case ID_SMULL_:
+	case ID_MLA_:
+		is_mla = true;
+		kind |= Inst::IS_INT | Inst::IS_ALU | Inst::IS_MUL;
+		goto simple;
+
+	case ID_MUL_:
+		kind |= Inst::IS_MUL | Inst::IS_INT | Inst::IS_ALU;
+		goto simple;
+
+	case ID_MOV__1:
+		if (inst->instrinput[2].val.uint8 == pc
+				&& inst->instrinput[5].val.uint8 == lr
+				&& inst->instrinput[3].val.uint8 == 0) {
+			kind |= Inst::IS_RETURN;
+			goto branch;
+		}
+	case ID_MVN__1:
+		if(inst->instrinput[3].val.uint8)
+			kind |= Inst::IS_SHIFT;		
+		kind |= Inst::IS_INT | Inst::IS_ALU;
+		goto simple;
+
+	case ID_CMN__1:
+	case ID_CMP__1:
+	case ID_TST__1:
+	case ID_TEQ__1:
+		if(inst->instrinput[2].val.uint8)
+			kind |= Inst::IS_SHIFT;
+		kind |= Inst::IS_INT | Inst::IS_ALU;
+		goto simple;
+	
+	case ID_ADC__1:
+	case ID_ADD__1:
+	case ID_AND__1:
+	case ID_BIC__1:
+	case ID_EOR__1:
+	case ID_ORR__1:
+	case ID_RSB__1:
+	case ID_RSC__1:
+	case ID_SBC__1:
+	case ID_SUB__1:
+		if(inst->instrinput[4].val.uint8)
+			kind |= Inst::IS_SHIFT;
+		kind |= Inst::IS_INT | Inst::IS_ALU;
+		goto simple;
+
+	case ID_TST_:
+	case ID_TEQ_:
+	case ID_SUB_:
+	case ID_SBC_:
+	case ID_RSC_:
+	case ID_RSB_:
+	case ID_ORR_:
+	case ID_MVN_:
+	case ID_MOV_:
+	case ID_EOR_:
+	case ID_CMP_:
+	case ID_CMN_:
+	case ID_BIC_:
+	case ID_AND_:
+	case ID_ADD_:
+	case ID_ADC_:
+	case ID_CLZ_:
+	case ID_SWPB_:
+	case ID_SWP_:
+		kind |= Inst::IS_INT | Inst::IS_ALU;
+		goto simple;
+
+	case ID_ADC__0:
+	case ID_ADD__0:
+	case ID_AND__0:
+	case ID_BIC__0:
+	case ID_CMN__0:
+	case ID_CMP__0:
+	case ID_EOR__0:
+	case ID_MOV__0:
+	case ID_MVN__0:
+	case ID_ORR__0:
+	case ID_RSB__0:
+	case ID_RSC__0:
+	case ID_SBC__0:
+	case ID_SUB__0:	
+	case ID_TEQ__0:
+	case ID_TST__0:
+		kind |= Inst::IS_INT | Inst::IS_ALU | Inst::IS_SHIFT;
+		goto simple;		
+		
+	case ID_BX_:
+		if (inst->instrinput[1].val.uint8 == lr)
+			kind |= Inst::IS_RETURN;
+		goto branch;
+
+	case ID_B_:
+		if (inst->instrinput[1].val.uint8)
+			kind |= Inst::IS_CALL;
+		goto branch;
+
+	case ID_LDRSH_:
+	case ID_LDRSH__0:
+	case ID_LDRSB_:
+	case ID_LDRSB__0:
+	case ID_LDRH_:
+	case ID_LDRH__0:
+		kind |= Inst::IS_INT | Inst::IS_LOAD | Inst::IS_MEM;
+		goto simple;
+
+	case ID_STRH_:
+	case ID_STRH__0:
+		kind |= Inst::IS_INT | Inst::IS_STORE | Inst::IS_MEM;
+		goto simple;
+
+	case ID_R_:
+		if(inst->instrinput[8].val.uint8)
+			kind |= Inst::IS_SHIFT;
+	case ID_R__0:
+		kind |= Inst::IS_INT | Inst::IS_MEM;
+		if (inst->instrinput[5].val.uint8) {
+			kind |= Inst::IS_LOAD;
+			if (inst->instrinput[7].val.uint8 != pc)
+				return new Inst(*this, kind, addr);
+			else
+				goto branch;
+		} else
+			kind |= Inst::IS_STORE;
+		goto simple;
+
+	case ID_MRS_SPSR:
+	case ID_MRS_CPSR:
+	case ID_MSR_CPSR_F_:
+	case ID_MSR_CPSR_S_:
+	case ID_MSR_CPSR_X_:
+	case ID_MSR_CPSR_C_:
+	case ID_MSR_CPSR_FS_:
+	case ID_MSR_CPSR_FX_:
+	case ID_MSR_CPSR_F__0:
+	case ID_MSR_CPSR_SX_:
+	case ID_MSR_CPSR_SC_:
+	case ID_MSR_CPSR_XC_:
+	case ID_MSR_CPSR_FSX_:
+	case ID_MSR_CPSR_FXC_:
+	case ID_MSR_CPSR_SXC_:
+	case ID_MSR_CPSR_FSXC_:
+	case ID_MSR_CPSR_:
+	case ID_MSR_SPSR_F_:
+	case ID_MSR_SPSR_S_:
+	case ID_MSR_SPSR_X_:
+	case ID_MSR_SPSR_C_:
+	case ID_MSR_SPSR_FS_:
+	case ID_MSR_SPSR_FX_:
+	case ID_MSR_SPSR_F__0:
+	case ID_MSR_SPSR_SX_:
+	case ID_MSR_SPSR_SC_:
+	case ID_MSR_SPSR_XC_:
+	case ID_MSR_SPSR_FSX_:
+	case ID_MSR_SPSR_FXC_:
+	case ID_MSR_SPSR_SXC_:
+	case ID_MSR_SPSR_FSXC_:
+	case ID_MSR_SPSR_:
+	case ID_MSR_CPSR_F__1:
+	case ID_MSR_CPSR_S__0:
+	case ID_MSR_CPSR_X__0:
+	case ID_MSR_CPSR_C__0:
+	case ID_MSR_CPSR_FS__0:
+	case ID_MSR_CPSR_FX__0:
+	case ID_MSR_CPSR_F__2:
+	case ID_MSR_CPSR_SX__0:
+	case ID_MSR_CPSR_SC__0:
+	case ID_MSR_CPSR_XC__0:
+	case ID_MSR_CPSR_FSX__0:
+	case ID_MSR_CPSR_FXC__0:
+	case ID_MSR_CPSR_SXC__0:
+	case ID_MSR_CPSR_FSXC__0:
+	case ID_MSR_CPSR__0:
+	case ID_MSR_SPSR_F__1:
+	case ID_MSR_SPSR_S__0:
+	case ID_MSR_SPSR_X__0:
+	case ID_MSR_SPSR_C__0:
+	case ID_MSR_SPSR_FS__0:
+	case ID_MSR_SPSR_FX__0:
+	case ID_MSR_SPSR_F__2:
+	case ID_MSR_SPSR_SX__0:
+	case ID_MSR_SPSR_SC__0:
+	case ID_MSR_SPSR_XC__0:
+	case ID_MSR_SPSR_FSX__0:
+	case ID_MSR_SPSR_FXC__0:
+	case ID_MSR_SPSR_SXC__0:
+	case ID_MSR_SPSR_FSXC__0:
+	case ID_MSR_SPSR__0:
+		kind |= Inst::IS_INTERN;
+		goto simple;
+
+	case ID_M_:
+		{
+			int count = countQuad(inst->instrinput[10].val.uint8);
+			if(count < 2) count += countQuad(inst->instrinput[9].val.uint8);
+			if(count < 2) count += countQuad(inst->instrinput[8].val.uint8);
+    		if(count < 2) count += countQuad(inst->instrinput[7].val.uint8);
+    		if(count >= 2)
+    			is_multiple = arm::several;
+    		else
+    			is_multiple = arm::only_one;
+		}
+		/*for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
+		 if(inst->instroutput[i].type == GPR_T)
+		 cerr << addr << ": written to r" << inst->instroutput[i].val.uint8 << io::endl;*/
+		kind |= Inst::IS_INT | Inst::IS_MEM;
+		if (inst->instrinput[4].val.uint8) {
+			/*for(int i = 7; i <= 10; i++)
+			 cerr << addr << ": M[" << i << "] = " << io::hex(inst->instrinput[i].val.uint8) << io::endl;*/
+			kind |= Inst::IS_LOAD;
+			if (inst->instrinput[5].val.uint8 == sp
+					&& (inst->instrinput[7].val.uint8 & (1 << (pc - 12)))) {
+				kind |= Inst::IS_RETURN;
+				goto branch;
+			}
+		} else
+			kind |= Inst::IS_STORE;
+		goto simple;
+
+	case ID_SWI_:
+		kind |= Inst::IS_TRAP;
+		goto branch;
+
+		// Check if the PC is modified
+		simple: if (!writesReg(inst, pc)) {
+			//cerr << addr << ": no branch\n";
+			res = new Inst(*this, kind, addr);
+			break;
+		}
+		/*for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
+		 if(inst->instroutput[i].type == GPR_T)
+		 cerr << addr << ": written to r" << inst->instroutput[i].val.uint8 << io::endl;*/
+
+		// Create just a branch instruction 
+		branch: kind |= Inst::IS_CONTROL;
+		/*cerr << addr << ": ";
+		 if(kind & Inst::IS_RETURN)
+		 cerr << "return";
+		 else if(kind & Inst::IS_CALL)
+		 cerr << "call";
+		 else
+		 cerr << "branch found";
+		 if(kind & Inst::IS_COND)
+		 cerr << " conditional";
+		 cerr << io::endl;*/
+		res = new BranchInst(*this, kind, addr);
+		break;
+	}
+
+	// Set the annotations
+	if(is_mla)
+		IS_MLA(res) = true;
+	if(is_multiple)
+		IS_MULTIPLE_LOAD_STORE(res) = is_multiple;
+	return res;
 }
 
 
