@@ -15,13 +15,11 @@
 #include <elm/genstruct/Table.h>
 #include <otawa/cache/LBlock.h>
 #include <elm/Iterator.h>
+#include <otawa/cache/ccg/CCGDFA.h>
 
 using namespace elm;
 
 namespace otawa {
-
-class CCGDFA;
-class LBlock;
 
 // LBlockSet class
 class LBlockSet {
