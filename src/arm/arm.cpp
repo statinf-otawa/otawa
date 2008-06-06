@@ -702,20 +702,10 @@ otawa::Inst *Process::decode(address_t addr) {
 			goto branch;
 		}
 	case ID_MVN__1:
-		if(inst->instrinput[3].val.uint8)
-			kind |= Inst::IS_SHIFT;		
-		kind |= Inst::IS_INT | Inst::IS_ALU;
-		goto simple;
-
 	case ID_CMN__1:
 	case ID_CMP__1:
 	case ID_TST__1:
 	case ID_TEQ__1:
-		if(inst->instrinput[2].val.uint8)
-			kind |= Inst::IS_SHIFT;
-		kind |= Inst::IS_INT | Inst::IS_ALU;
-		goto simple;
-	
 	case ID_ADC__1:
 	case ID_ADD__1:
 	case ID_AND__1:
@@ -726,11 +716,6 @@ otawa::Inst *Process::decode(address_t addr) {
 	case ID_RSC__1:
 	case ID_SBC__1:
 	case ID_SUB__1:
-		if(inst->instrinput[4].val.uint8)
-			kind |= Inst::IS_SHIFT;
-		kind |= Inst::IS_INT | Inst::IS_ALU;
-		goto simple;
-
 	case ID_TST_:
 	case ID_TEQ_:
 	case ID_SUB_:
