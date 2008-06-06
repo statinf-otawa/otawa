@@ -49,7 +49,7 @@ class LoopUnroller: public Processor {
 };
 
 extern Feature<LoopUnroller> UNROLLED_LOOPS_FEATURE;
-extern Identifier<BasicBlock*> UNROLLED_FROM;
+
 }
 
 
