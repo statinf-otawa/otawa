@@ -9,19 +9,13 @@
 
 #include <assert.h>
 #include <elm/genstruct/Table.h>
-
-#include <elm/genstruct/HashTable.h>
 #include <otawa/proc/Processor.h>
-#include <otawa/cfg/BasicBlock.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/util/GenGraph.h>
-#include <otawa/dfa/BitSet.h>
 
 namespace otawa {
 
 using namespace elm::genstruct;
-extern Identifier<HashTable<Pair<BasicBlock*,BasicBlock*>, Pair<dfa::BitSet*, int> > *> CCG_CONF_MAP;
-
 
 // Extern classes
 class LBlockSet;
@@ -58,9 +52,6 @@ public:
 
 // CCGBuilder class
 class CCGBuilder: public Processor {
-
-	HashTable<Pair<BasicBlock*, BasicBlock*>, Pair<dfa::BitSet*, int> > *confmap;
-	
 	void processLBlockSet(WorkSpace *fw, LBlockSet *lbset);
 public:
 	static Identifier<bool> NON_CONFLICT;
@@ -68,7 +59,6 @@ public:
 
 	// CFGProcessor overload
 	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void configure(const PropList &props);
 };
 
 // Features
