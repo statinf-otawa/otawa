@@ -48,10 +48,16 @@ public:
 	inline address_t address(void);
 	inline BasicBlock *bb(void);
 	int countInsts(void);
+	inline bool isVirtual() const;
 	inline size_t size(void) const;
 };
 
 // Inlines
+
+inline bool LBlock::isVirtual(void) const {
+	return _cacheblock < -1;
+}
+
 inline size_t LBlock::size(void) const {
 	return _size;
 }

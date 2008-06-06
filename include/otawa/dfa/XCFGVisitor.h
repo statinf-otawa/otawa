@@ -47,6 +47,8 @@ public:
 		{ return dom.gen(cfgs[nodes[node].cfg], nodes[node].bb); }
  	inline domain_t *preserve(int node)
 		{ return dom.preserve(cfgs[nodes[node].cfg], nodes[node].bb); }
+ 	inline void edge(domain_t *target, int pred, int node)
+		{ dom.edge(target, cfgs[nodes[pred].cfg], nodes[pred].bb, cfgs[nodes[node].cfg],nodes[node].bb); }
 
 	typedef Pair<CFG *, BasicBlock *> key_t;
 	inline int index(const key_t& key)
@@ -127,13 +129,13 @@ void XCFGVisitor<D>::visitPreds(XIterativeDFA< XCFGVisitor<D> >& engine, int nod
 	if(info.bb->isEntry()) {
 		Vector<int>& pred = preds[info.cfg];
 		for(int i = 0; i < pred.length(); i++)
-			engine.nextPred(pred[i]);
+			engine.nextPred(pred[i], node);
 	}
 	else if(info.from != -1)
-		engine.nextPred(info.from);
+		engine.nextPred(info.from, node);
 	else
 		for(BasicBlock::InIterator edge(info.bb); edge; edge++)
-			engine.nextPred(offs[info.cfg] + edge->source()->number());
+			engine.nextPred(offs[info.cfg] + edge->source()->number(), node);
 }
 
 

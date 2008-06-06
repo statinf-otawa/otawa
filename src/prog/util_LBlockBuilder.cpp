@@ -49,6 +49,9 @@ namespace otawa {
  */
 
 
+Identifier<int> FAKE_LBLOCKS_COUNT("otawa::FAKE_LBLOCKS_COUNT", 0, otawa::NS);
+
+
 /**
  * Build a new l-block builder.
  */
@@ -56,6 +59,11 @@ LBlockBuilder::LBlockBuilder(void)
 : BBProcessor("otawa::util::LBlockBuilder", Version(1, 1, 0)) {
 	require(COLLECTED_CFG_FEATURE);
 	provide(COLLECTED_LBLOCKS_FEATURE);
+}
+
+void LBlockBuilder::configure(const PropList &props) {
+  BBProcessor::configure(props);
+  numFakeBlocks = FAKE_LBLOCKS_COUNT(props);
 }
 
 
@@ -88,8 +96,13 @@ void LBlockBuilder::cleanup(WorkSpace *fw) {
 	ASSERT(fw);
 	
 	// Add end blocks
-	for(int i = 0; i < cache->rowCount(); i++)
+	
+      
+	for(int i = 0; i < cache->rowCount(); i++) {
+		for (int num = 0; num < numFakeBlocks; num++)
+		  new LBlock(lbsets[i], 0, 0, 0, -2);
 		new LBlock(lbsets[i], 0, 0, 0, -1);
+        }
 	
 	// Remove hash
 	delete cacheBlocks;

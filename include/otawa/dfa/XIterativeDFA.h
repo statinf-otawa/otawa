@@ -21,7 +21,7 @@ public:
 	inline XIterativeDFA(V& visitor);
 	inline ~XIterativeDFA(void);
 	inline void process(void);
-	inline void nextPred(int pred);
+	inline void nextPred(int pred, int node);
 	inline typename V::domain_t *in(const typename V::key_t& key)
 		{ return ins[visit.index(key)]; }
 	inline typename V::domain_t *out(const typename V::key_t& key)
@@ -65,9 +65,16 @@ inline XIterativeDFA<V>::~XIterativeDFA(void) {
 }
 
 template <class V>
-inline void XIterativeDFA<V>::nextPred(int pred) {
+inline void XIterativeDFA<V>::nextPred(int pred, int node) {
 	assert(pred < size);
-	new_out->join(outs[pred]);
+
+	typename V::domain_t *tmp = visit.empty();
+	
+	tmp->join(outs[pred]);
+	visit.edge(tmp, node, pred);
+	new_out->join(tmp);
+	visit.free(tmp);
+
 }
 
 template <class V>

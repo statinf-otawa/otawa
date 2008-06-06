@@ -10,12 +10,11 @@
 
 #include <otawa/instruction.h>
 #include <otawa/cfg/BasicBlock.h>
-
+#include <otawa/cache/LBlock.h>
+#include <otawa/cache/LBlockSet.h>
 
 namespace otawa {
 
-class LBlockSet;
-class LBlock;
 
 // CCGNode class
 class CATNode: public elm::inhstruct::DLNode, public PropList {

@@ -10,8 +10,15 @@
 #include <assert.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/hard/Cache.h>
+#include <otawa/dfa/BitSet.h>
+#include <elm/genstruct/Vector.h>
+#include <elm/genstruct/HashTable.h>
+#include <otawa/cfg/BasicBlock.h>
+#include <elm/util/Pair.h>
+
 
 namespace otawa {
+
 
 // Extern class
 class CCGNode;
@@ -26,9 +33,13 @@ namespace ilp {
 
 namespace ipet {
 
+extern Identifier<dfa::BitSet*> CCG_CONTEXTS;
 // CCGConstraintBuilder class
 class CCGConstraintBuilder: public Processor {
 	bool _explicit;
+	dfa::BitSet *ccg_contexts;
+	HashTable<Pair<BasicBlock*, BasicBlock*>, Pair<dfa::BitSet*, int> > *confmap;
+	
 	void processLBlockSet(WorkSpace *fw, LBlockSet *lbset);
 	void addConstraintHeader(ilp::System *system, LBlockSet *graph, ContextTree *ct,
 		LBlock *boc);

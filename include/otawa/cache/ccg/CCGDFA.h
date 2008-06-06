@@ -20,13 +20,13 @@ namespace otawa {
 
 // Extern classes	
 class BasicBlock;
-class LBlockSet;
 
 class CCGDomain: public dfa::BitSet {
 
 public:
 	inline CCGDomain(int size) : dfa::BitSet(size) {
 	}
+	
 	void reset(void) {
 		empty();
 	}
@@ -48,11 +48,14 @@ class CCGProblem {
     static int vars;
     int size;
     WorkSpace *fw;
+    HashTable<Pair<BasicBlock*, BasicBlock*>, Pair<dfa::BitSet*, int> > *confmap;
 
 public:
 
 	typedef CCGDomain domain_t;
-	inline CCGProblem (LBlockSet *_ccggraph, int _size , const hard::Cache *_cach, WorkSpace *_fw);
+	
+	HashTable<int, dfa::BitSet*> fakePreds;
+	inline CCGProblem (LBlockSet *_ccggraph, int _size , const hard::Cache *_cach, WorkSpace *_fw, HashTable<Pair<BasicBlock*, BasicBlock*>, Pair<dfa::BitSet*, int> > *_confmap);
 
 	CCGDomain *empty(void) {
 		CCGDomain *tmp = new CCGDomain(size);
@@ -63,6 +66,22 @@ public:
 	CCGDomain *gen(CFG *cfg, BasicBlock *bb);
 	CCGDomain *preserve(CFG *cfg, BasicBlock *bb);
 
+	inline void edge(CCGDomain *target, CFG *cfg1, BasicBlock *bb1, CFG *cfg2, BasicBlock *bb2) {
+
+		if ((confmap != NULL) && confmap->hasKey(pair(bb2, bb1))) {
+
+			Pair<dfa::BitSet*, int> val = confmap->get(pair(bb2, bb1)).value();
+			if (fakePreds.get(val.snd, NULL) == NULL) {
+				fakePreds.put(val.snd, new dfa::BitSet(*target));
+			} else {
+				*fakePreds.get(val.snd, NULL) = *target;
+			}
+			target->empty();
+			target->add(size - (val.snd + 2));
+			
+		}
+		
+	}
 	void free(CCGDomain *d) {
 		delete d;
 	}
@@ -70,7 +89,8 @@ public:
 
 
 // Inlines
-inline CCGProblem::CCGProblem (LBlockSet *_ccggraph, int _size, const hard::Cache *_cach, WorkSpace *_fw) {
+inline CCGProblem::CCGProblem (LBlockSet *_ccggraph, int _size, const hard::Cache *_cach, WorkSpace *_fw, HashTable<Pair<BasicBlock*, BasicBlock*>, Pair<dfa::BitSet*, int> > *_confmap) 
+: confmap(_confmap) {
 	ccggraph = _ccggraph;
 	cach = _cach;
 	size = _size;

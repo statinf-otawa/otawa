@@ -58,6 +58,9 @@ class CATProblem {
 	void free(CATDomain *d) {
 		delete d;
 	}
+	
+	inline  void edge(CATDomain *target, CFG *cfg1, BasicBlock *bb1, CFG *cfg2, BasicBlock *bb2) {
+	}
     
 	CATProblem (LBlockSet *point, int _size, const hard::Cache *mem, WorkSpace *_fw){
 		lines = point;

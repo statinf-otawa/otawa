@@ -74,7 +74,11 @@ void System::dump(elm::io::OutStream& out) {
 	dumpSystem(output);
 	dumpSolution(output);
 }
+/*
 
+void System::getTableau() {
+}
+*/
 /**
  * Dump the system to the given output and format. 
  * @param out	Used output.

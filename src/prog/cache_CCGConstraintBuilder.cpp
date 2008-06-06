@@ -41,6 +41,9 @@ static Identifier<ilp::Var *> HIT_VAR("otawa::hit_var", 0);
 static Identifier<ilp::Var *> MISS_VAR("otawa::miss_var", 0);
 
 
+Identifier<dfa::BitSet*> CCG_CONTEXTS("otawa::ccg_contexts", 0);
+
+
 /**
  * @class CCGConstraintBuilder
  * This processor allows handling timing effects of the instruction cache in
@@ -80,6 +83,10 @@ CCGConstraintBuilder::CCGConstraintBuilder(void):
 void CCGConstraintBuilder::configure(const PropList& props) {
 	Processor::configure(props);
 	_explicit = EXPLICIT(props);
+	ccg_contexts = CCG_CONTEXTS(props);
+	confmap = CCG_CONF_MAP(props);
+	if (confmap && (confmap->count() == 0))
+		confmap = NULL;
 }
 
 
@@ -88,16 +95,48 @@ void CCGConstraintBuilder::configure(const PropList& props) {
 void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	
 	// Initialization
+	dfa::BitSet *exit_ctx = NULL;
+	
+	if (confmap)
+		exit_ctx = new dfa::BitSet(confmap->count());
+		
+	bool hit_context = ccg_contexts ? ccg_contexts->contains(lbset->line()) : false;
 	//CFG *entry_cfg = ENTRY_CFG(fw);
 	System *system = SYSTEM(fw);
 	assert (system);
 	const hard::Cache *cach = fw->platform()->cache().instCache();
 	int dec = cach->blockBits();
 	
+	if (confmap) {
+		exit_ctx->empty();
+		for (HashTable<Pair<BasicBlock*,BasicBlock*>,Pair<dfa::BitSet*,int> >::ItemIterator iter(*confmap); iter; iter++) {
+			
+			
+			Pair<dfa::BitSet*, int> val = *iter;
+			if (val.fst->contains(lbset->line())) {
+				exit_ctx->add(val.snd);
+			} 
+		}
+	}
+	
 	// Initialization
 	for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
 		
+		
 		// Build variables
+		
+		if (lblock->isVirtual()) {
+			
+			String namex;
+			if (_explicit) {
+				StringBuffer buf;
+				namex = buf.toString();
+			}
+			
+		    // Create fake BB_VAR for virtual lblock, since it is needed for the rule p(*,ij) = p(ij,*) = xi
+			BB_VAR(lblock) = system->newVar(namex);
+		}
+		
 		if(lblock->bb()) {
 			
 			// Link BB variable
@@ -136,15 +175,19 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			if(_explicit) {
 				StringBuffer buf;
 				buf << "eccg_";
-				if(!lblock->address())
-					buf << "ENTRY";
+				if (lblock->isVirtual())
+					buf << "VIRTUAL" << lblock->id() << "_" << lbset->line();					
+				else if(!lblock->address())
+					buf << "ENTRY" << lbset->line();
 				else
 					buf << lblock->address()
 						<< '_' << lblock->bb()->number()
 						<< '_' << lblock->bb()->cfg()->label();
 				buf << '_';
-				if(!succ->lblock()->address())
-					buf << "EXIT";
+				if (succ->lblock()->isVirtual())
+					buf << "VIRTUAL" << lblock->id() << "_" << lbset->line();
+				else if(!succ->lblock()->address())
+					buf << "EXIT" << lbset->line();
 				else
 					buf << succ->lblock()->address()
 						<< '_' << succ->lblock()->bb()->number()
@@ -155,9 +198,11 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		}
 	}
 	
+	
 	// Building all the constraints of each lblock
 	for (Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++) {
 		
+
 		
 		/* P(x,y) == eccg_x_y */	
 		/* 
@@ -173,18 +218,20 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			
 		// Non-entry, non-exit node
 		if(lbloc->id() != 0 && lbloc->id() != lbset->count() - 1) {
-			/*int identif =*/ lbloc->id();				
+			// int identif = lbloc->id();				
 			address_t address = lbloc->address();
 			
-			/*
-			 * Rule 13:
-                         * xi = xhit_xxxxx_i + xmiss_xxxx_i 
-			 */
-			Constraint *cons = system->newConstraint(Constraint::EQ);
-			cons->addLeft(1, BB_VAR(lbloc));
-			cons->addRight(1, HIT_VAR(lbloc));
-			cons->addRight(1, MISS_VAR(lbloc));
-		
+			
+			if (!lbloc->isVirtual()) {
+				/*
+				 * Rule 13:
+	                         * xi = xhit_xxxxx_i + xmiss_xxxx_i 
+				 */
+				Constraint *cons = system->newConstraint(Constraint::EQ);
+				cons->addLeft(1, BB_VAR(lbloc));
+				cons->addRight(1, HIT_VAR(lbloc));
+				cons->addRight(1, MISS_VAR(lbloc));
+			}
 			//contraints of input/output (17)	
 			/*
 			 * Rule 17:
@@ -197,6 +244,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			Constraint *cons2;
 			// !!CONS!!
 			Constraint *cons17 = system->newConstraint(Constraint::EQ);
+			
 			cons17->addLeft(1, BB_VAR(lbloc));
 			
 			for(GenGraph<CCGNode,CCGEdge>::Successor outedg(CCG::NODE(lbloc));
@@ -218,7 +266,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				delete cons17;
 				
 			// contraint of input(17)	
-			cons = system->newConstraint(Constraint::EQ);
+			Constraint *cons = system->newConstraint(Constraint::EQ);
 			cons->addLeft(1, BB_VAR(lbloc));
 			used = false;
 			bool finds = false;
@@ -243,85 +291,135 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 					cons2->addLeft(1,inedge.edge()->varEDGE());
 					cons2->addRight(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_BBVar));
 				}*/
-                        }
+			}
                 if(!used)
                         delete cons;
 				
-		// building contraints (19) & (20)
-		// cache_block(uv) = cach_block(ij)
-		// (19) p(ij, ij) + p(uv, ij) <= xihit <= p(ij, ij) + p(uv, ij) + p(entry, ij) if p(entry, ij) and p(ij, exit)
-		// (20) p(ij, ij) + p(uv, ij) = xihit else
-		// cout << "pre-examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " findlooplb = " << findlooplb << "\n";
-	
-		
-		if (findlooplb) {
-		  	if (finds && findend) {
-		  	        // constraint 19
-		 		cons = system->newConstraint(Constraint::LE);
-		 		cons2 = system->newConstraint(Constraint::LE);
-				cons->addLeft(1, HIT_VAR(lbloc));
-				
-				unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-				for(CCG::Predecessor inedge(CCG::NODE(lbloc)); inedge; inedge++)
-				{
-					unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
-					if(inedge->lblock()->id() != 0
-					&& inedge->lblock()->id() != lbset->count() - 1){
-						if (taglbloc == taginedge) {
+			// building contraints (19) & (20)
+			// cache_block(uv) = cach_block(ij)
+			// (19) p(ij, ij) + p(uv, ij) <= xihit <= p(ij, ij) + p(uv, ij) + p(entry, ij) if p(entry, ij) and p(ij, exit)
+			// (20) p(ij, ij) + p(uv, ij) = xihit else
+			// cout << "pre-examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " findlooplb = " << findlooplb << "\n";
+			if (!lbloc->isVirtual()) {
+				if (findlooplb) {
+				  	if (finds && findend) {
+				  	        // constraint 19
+				 		cons = system->newConstraint(Constraint::LE);
+				 		cons2 = system->newConstraint(Constraint::LE);
+						cons->addLeft(1, HIT_VAR(lbloc));
+						
+						unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
+						for(CCG::Predecessor inedge(CCG::NODE(lbloc)); inedge; inedge++)
+						{
+							unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
+							if(inedge->lblock()->id() != 0
+							&& inedge->lblock()->id() != lbset->count() - 1 && !inedge->lblock()->isVirtual()){
+								if (taglbloc == taginedge) {
+										cons->addRight(1, VAR(inedge.edge()));
+										cons2->addLeft(1, VAR(inedge.edge()));
+								}
+							}
+							
+							if ((inedge->lblock()->id() == 0) && (hit_context)) {
 								cons->addRight(1, VAR(inedge.edge()));
 								cons2->addLeft(1, VAR(inedge.edge()));
-						}
-					}
-		 		}
-				cons->addRight(1, psi);
-				cons2->addRight(1, HIT_VAR(lbloc));
-		 	}
-		 	else {
-				// contraint 20
-		 		cons2 = system->newConstraint(Constraint::EQ);
-		 		cons2->addLeft(1, HIT_VAR(lbloc));
-	//	 		unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-		 		for(GenGraph<CCGNode,CCGEdge>::Predecessor inedge(CCG::NODE(lbloc));
-		 		inedge; inedge++) {
-		 			// cout << "examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " avec predecesseur : " << inedge->lblock()->id() << "\n";
-//		 			unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
-					if(inedge->lblock()->id() != 0
-					&& inedge->lblock()->id() != lbset->count() - 1){
-						if (inedge->lblock()->cacheblock() == lbloc->cacheblock())
-							cons2->addRight(1, VAR(inedge.edge()));
-					}
-		 		}
-		 	} 
-		 }
+							}
+							
+							if (inedge->lblock()->isVirtual()) {
+								ASSERT(exit_ctx);
+								if (exit_ctx->contains(lbset->count() - (inedge->lblock()->id() + 2))) {
+															
+									cons->addRight(1, VAR(inedge.edge()));
+									cons2->addLeft(1, VAR(inedge.edge()));
+								}
+							}
+							
+				 		}
+						cons->addRight(1, psi);
+						cons2->addRight(1, HIT_VAR(lbloc));
+				 	}
+				 	else {
+						// contraint 20
+				 		cons2 = system->newConstraint(Constraint::EQ);
+				 		cons2->addLeft(1, HIT_VAR(lbloc));
+			//	 		unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
+				 		for(GenGraph<CCGNode,CCGEdge>::Predecessor inedge(CCG::NODE(lbloc));
+				 		inedge; inedge++) {
+				 			// cout << "examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " avec predecesseur : " << inedge->lblock()->id() << "\n";
+		//		 			unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
+							if(inedge->lblock()->id() != 0
+							&& inedge->lblock()->id() != lbset->count() - 1 && !inedge->lblock()->isVirtual()){
+								if (inedge->lblock()->cacheblock() == lbloc->cacheblock())
+									cons2->addRight(1, VAR(inedge.edge()));
+							}
+							if ((inedge->lblock()->id() == 0) && (hit_context)) {
+								cons2->addRight(1, VAR(inedge.edge()));
+							}
+							if (inedge->lblock()->isVirtual()) {
+								ASSERT(exit_ctx);
+								if (exit_ctx->contains(lbset->count() - (inedge->lblock()->id() + 2))) {
+									
+									cons2->addRight(1, VAR(inedge.edge()));
 		
-		// building the (16)
-//		if(lbloc->getNonConflictState() && !findlooplb){
-                // xihit = sum p(uv, ij) / cache_block(uv) = cache_block(ij)
-		else if(CCGBuilder::NON_CONFLICT(lbloc)) {
-			cons = system->newConstraint(Constraint::EQ);
-			cons->addLeft(1, HIT_VAR(lbloc));
-			unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-			for(CCG::Predecessor inedge(CCG::NODE(lbloc)); inedge; inedge++) {
-				unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> 3;
-				if(inedge->lblock()->id() != 0
-					&& inedge->lblock()->id() != lbset->count() - 1) {
-						if(taglbloc == taginedge)
-							cons->addRight(1,  VAR(inedge.edge()));
-					}					
-				}
-			}
+								}
+							}					
+				 		}
+				 	} 
+				 }
 				
+				// building the (16)
+		//		if(lbloc->getNonConflictState() && !findlooplb){
+		                // xihit = sum p(uv, ij) / cache_block(uv) = cache_block(ij)
+				else {
+					cons = system->newConstraint(Constraint::EQ);
+					bool used = false;
+					cons->addLeft(1, HIT_VAR(lbloc));
+					unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
+					
+					for(CCG::Predecessor inedge(CCG::NODE(lbloc)); inedge; inedge++) {
+						unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> 3;
+						if(inedge->lblock()->id() != 0
+							&& inedge->lblock()->id() != lbset->count() - 1 && !inedge->lblock()->isVirtual()) {
+								if(taglbloc == taginedge) {
+									cons->addRight(1,  VAR(inedge.edge()));
+									used = true;
+								}
+							}			
+					
+						if ((inedge->lblock()->id() == 0) && (hit_context)) {
+							cons->addRight(1, VAR(inedge.edge()));
+							used = true;
+						}
+						if (inedge->lblock()->isVirtual()) {
+							ASSERT(exit_ctx);
+							if (exit_ctx->contains(lbset->count() - (inedge->lblock()->id() + 2))) {									
+								cons->addRight(1, VAR(inedge.edge()));
+		
+							}
+						}				
+					}
+						
+				} /* end of findloop test */
+		
+				if (!used)
+					delete cons;
+				
+			} /* end of isVirtual test */
 			//builduig the constraint (32)
 			ContextTree *cont = CONTEXT_TREE(fw);
 			addConstraintHeader(system, lbset, cont, lbloc);
-		}
-	}
+		} /* end of non-entry/exit test */
+	} /* end of lblock iteration */
   
   	// Fix the object function
 	for(Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++) {
+		if (lbloc->isVirtual())
+			continue;
 		if(lbloc->id() != 0 && lbloc->id() != lbset->count()- 1)
   			system->addObjectFunction( cach->missPenalty(), MISS_VAR(lbloc));
-	}		
+	}
+	if (exit_ctx)
+		delete exit_ctx;		
 }
 
 
@@ -361,8 +459,9 @@ void CCGConstraintBuilder::addConstraintHeader(
 				for(GenGraph<CCGNode,CCGEdge>::Predecessor inedge(CCG::NODE(boc));
 				inedge; inedge++) {
 					CCGNode *source = inedge;
+					
 					if(source->lblock()->id() != 0
-					&& source->lblock()->id() !=  size-1) {
+					&& source->lblock()->id() !=  size-1 && !source->lblock()->isVirtual()) {
 						BasicBlock *bblock = source->lblock()->bb();
 						if(header->cfg() != bblock->cfg())
 							throw ProcessorException(*this,
@@ -372,6 +471,9 @@ void CCGConstraintBuilder::addConstraintHeader(
 						else
 							dominate = Dominance::dominates(header, bblock);
 					}
+					 if (source->lblock()->isVirtual())
+						dominate = true;
+						
 					if(boc != source->lblock()
 					&& (!dominate || source->lblock()->id() == 0)) {
 						cons32->addLeft(1, VAR(inedge.edge()));
