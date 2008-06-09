@@ -21,7 +21,19 @@ typedef struct call_t {
         BasicBlock *entry;
 } call_t;
 
-Feature<Virtualizer> VIRTUALIZED_CFG_FEATURE("otawa::virtualized_cfg_feature");
+
+/**
+ * This features only show that the CFG has been virtualized. This may implies
+ * a lot of transformation like function call inlining or loop unrolling.
+ * 
+ * @par Properties
+ * @li @ref CALLED_CFG (@ref Edge) -- put on edge resulting from a function
+ * inlining to identify the original CFG.
+ */
+Feature<Virtualizer> VIRTUALIZED_CFG_FEATURE("otawa::VIRTUALIZED_CFG_FEATURE");
+
+
+
 Identifier<bool> VIRTUAL_INLINING("otawa::virtual_inlining", true);
 Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::virtual_return_block", NULL);
 
@@ -32,7 +44,7 @@ Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::virtual_return_block", NULL
  * This processor inlines the function calls. 
  *
  * @par Configuration
- * @li @ref DONT_INLINE : The CFG with DONT_INLINEcfg) == true are not inlined
+ * @li @ref DONT_INLINE : The CFG with DONT_INLINE(cfg) == true are not inlined
  *
  * @par Required features
  * @li @ref FLOW_FACTS_FEATURE
@@ -41,18 +53,18 @@ Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::virtual_return_block", NULL
  * @li @ref COLLECTED_CFG_FEATURE
  * 
  * @par Provided features
- * @li @ref VIRTUALIZED_CFG_FEATURES
+ * @li @ref VIRTUALIZED_CFG_FEATURE
  * 
  * @par Statistics
  * none
  */
 
 Virtualizer::Virtualizer(void) : Processor("otawa::Virtualizer", Version(1, 0, 0)) {
-	require(ipet::FLOW_FACTS_FEATURE);
+	//require(ipet::FLOW_FACTS_FEATURE);
 	require(COLLECTED_CFG_FEATURE);
 	invalidate(COLLECTED_CFG_FEATURE);
 	provide(VIRTUALIZED_CFG_FEATURE);
-	provide(ipet::FLOW_FACTS_FEATURE);
+	//provide(ipet::FLOW_FACTS_FEATURE);
 }
 
 void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
@@ -115,15 +127,18 @@ BasicBlock *exit) {
 	Vector<CFG *> called_cfgs;
 	
 	// Translate BB
-	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
+	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
 			BasicBlock *new_bb = new VirtualBasicBlock(bb);
 			map.put(bb, new_bb);
 			vcfg->addBB(new_bb);
+			// !!DEBUG!!
+			//cerr << (void *)bb << " -> " << (void *)new_bb << io::endl;
 		}
 	
 	// Find local entry
 	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++) {
+		ASSERT(edge->kind() == Edge::VIRTUAL);
 		ASSERT(!call.entry);
 		call.entry = map.get(edge->target(), 0);
 		ASSERT(call.entry);
@@ -132,7 +147,7 @@ BasicBlock *exit) {
 	}
 	
 	// Translate edges
-	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
+	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
 //			assert(!bb->isVirtual());
 			
