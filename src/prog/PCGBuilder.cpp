@@ -76,8 +76,7 @@ void PCGBuilder::processCFG(CFG* cfg,PCG* pcg,CFG * src, stack_t *up)
 	stack_t ablock = { up, cfg };
 	
 	// Look for call BB
-	for(Iterator<BasicBlock*> bb(cfg->bbs()); bb; bb++)
-	{	
+	for(CFG::BBIterator bb(cfg); bb; bb++) {	
 		if(bb->isEntry())
 			addPCGBlock(bb,cfg,pcg,src);
 		if(bb->isCall())
