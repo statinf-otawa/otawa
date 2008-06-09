@@ -72,7 +72,7 @@ inline IterativeDFA<Problem, Set, Iter>::IterativeDFA(Problem& problem, CFG& cfg
 	outs = new Set *[cnt];
 	gens = new Set *[cnt];
 	kills = new Set *[cnt];
-	for(elm::Iterator<BasicBlock *> bb(_cfg.bbs()); bb; bb++) {
+	for(CFG::BBIterator bb(&_cfg); bb; bb++) {
 		int idx = INDEX(bb);
 		ins[idx] = prob.empty();
 		outs[idx] = prob.empty();
