@@ -442,7 +442,7 @@ void Command::buildTrees(WorkSpace* fw, CFG* cfg) {
 	assert(cfg);
 	int levels = suffix;
 	
-	Vector<BBPath*> bbPathVector(4*cfg->bbs().count());
+	Vector<BBPath*> bbPathVector(4*cfg->countBB());
 	for(CFG::BBIterator bb(cfg) ; bb ; bb++){
 		if(!bb->isEntry() && !bb->isExit()){
 			bbPathVector.add(BBPath::getBBPath(bb));

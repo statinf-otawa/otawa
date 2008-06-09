@@ -206,7 +206,7 @@ public:
  * Initialize a statistics for a CFG.
  */
 CFGStatistics::CFGStatistics(CFG *cfg): _cfg(cfg) {
-	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
+	for(CFG::BBIterator bb(cfg); bb; bb++)
 		addBB(bb);
 };
 
@@ -265,7 +265,7 @@ TreeStatistics::TreeStatistics(CFG *cfg) {
 			bra_max = stat->maxBranchCount();
 		
 		// Look for called CFG
-		for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
+		for(CFG::BBIterator bb(cfg); bb; bb++)
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL
 				&& edge->calledCFG()
