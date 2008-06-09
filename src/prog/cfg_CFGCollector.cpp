@@ -127,26 +127,36 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 	
 	// Entry CFG
 	cfgs->cfgs.add(entry);
+	if(isVerbose())
+		log << "\tadding " << entry->label() << io::endl;
 	
 	// Added functions
 	for(int i = 0; i < added_funs.length(); i++) {
 		CFGInfo *info = fw->getCFGInfo();
 		CFG *cfg = info->findCFG(added_funs[i]);
-		if(cfg)
+		if(cfg) {
 			cfgs->cfgs.add(cfg);
+			if(isVerbose())
+				log << "\tadding " << cfg->label() << io::endl;
+		}
 		else
 			warn(_ << "cannot find a function called \"" << added_funs[i] << "\".");
 	}
 	
 	// Added CFG
-	for(int i = 0; i < added_cfgs.length(); i++)
+	for(int i = 0; i < added_cfgs.length(); i++) {
 		cfgs->cfgs.add(added_cfgs[i]);
+		if(isVerbose())
+			log << "\tadding " << added_cfgs[i]->label() << io::endl;
+	}
 
 	INVOLVED_CFGS(fw) = cfgs;
 	
 	// Build it recursively
-	if(rec)
-		for(int i = 0; i < cfgs->count(); i++)
+	if(rec) {
+		if(isVerbose())
+			log << "\tstarting recursive traversal\n";
+		for(int i = 0; i < cfgs->count(); i++) {
 			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++)
 				for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 					if(edge->kind() == Edge::CALL
@@ -156,8 +166,14 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 					        index++;
 							cfgs->cfgs.add(edge->calledCFG());
 							MARK(edge->calledCFG()) = true;
+							if(isVerbose())
+								log << "\t\tadding " << edge->calledCFG()->label() << io::endl;
 					} 
 				}
+		}
+		if(isVerbose())
+			log << "\tending recursive traversal\n";
+	}
 }
 
 
