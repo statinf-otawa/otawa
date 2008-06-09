@@ -85,12 +85,12 @@ bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
  * Constructor. Add a property to the basic block for quick retrieval of
  * the matching CFG.
  */
-CFG::CFG(Segment *seg, BasicBlock *entry)
-:	_seg(seg),
-	ent(entry),
+CFG::CFG(Segment *seg, BasicBlock *entry):
 	flags(0),
 	_entry(BasicBlock::FLAG_Entry),
-	_exit(BasicBlock::FLAG_Exit)
+	_exit(BasicBlock::FLAG_Exit),
+	_seg(seg),
+	ent(entry)
 {
 	assert(seg && entry);
 	
@@ -109,11 +109,12 @@ CFG::CFG(Segment *seg, BasicBlock *entry)
  * Build an empty CFG.
  */
 CFG::CFG(void):
-	_seg(0),
-	ent(0),
 	 flags(0),
 	_entry(BasicBlock::FLAG_Entry),
-	_exit(BasicBlock::FLAG_Exit) {
+	_exit(BasicBlock::FLAG_Exit),
+	_seg(0),
+	ent(0)
+{
 }
 
 
@@ -139,11 +140,17 @@ CFG::CFG(void):
 
 
 /**
- * Get the CFG name, that is, the label associated with the entry of the CFG.
- * @return	CFG label or an empty string.
+ * Get some label to identify the CFG.
+ * @return	CFG label or any other identification way.
  */
 String CFG::label(void) {
-	return LABEL(this);
+	Inst *first = firstInst();
+	string id = FUNCTION_LABEL(first);
+	if(!id)
+		id = LABEL(first);
+	if(!id)
+		id = _ << "0x" << first->address();
+	return id;
 }
 
 
@@ -152,24 +159,8 @@ String CFG::label(void) {
  * @return	Return address of the first instruction.
  */
 address_t CFG::address(void) {
-	return ent->address();
-}
-
-
-/**
- * @see elm::datastruct::Collection::visit()
- */
-IteratorInst<BasicBlock *> *CFG::visit(void) {
-	BBIterator iter(this);
-	return new elm::IteratorObject<BBIterator, BasicBlock *>(iter);
-}
-
-
-/**
- * @see elm::Collection::empty()
- */
-MutableCollection<BasicBlock *> *CFG::empty(void) {
-	return 0;
+	BasicBlock *bb = firstBB();
+	return bb->address();
 }
 
 
@@ -186,7 +177,7 @@ MutableCollection<BasicBlock *> *CFG::empty(void) {
  * is used (call to an accessors method).
  */
 void CFG::scan(void) {
-	//cerr << "begin CFG::scan()\n";
+	//cerr << "begin CFG::scan(" << (void *)this << ") -> " << ent->address() << "\n";
 	
 	// Experimental code
 
@@ -290,80 +281,22 @@ void CFG::scan(void) {
 	}
 	_bbs.add(&_exit);
 	
-	
-#	if 0
-	// All entering edges becomes calls
-	for(BasicBlock::InIterator edge(ent); edge; edge++)
-		edge->toCall();		// !!BUG!!
-	new Edge(&_entry, ent, EDGE_Virtual);
-	
-	// Explore CFG
-	genstruct::Vector<BasicBlock *> ends;
-	_bbs.add(&_entry);
-	_entry._cfg = this;
-	INDEX(_entry) = 0;
-	for(int pos = 0; pos < _bbs.length(); pos++) {
-		BasicBlock *bb = _bbs[pos];
-		bb->_cfg = this;
-		if(bb->isReturn())
-			ends.add(bb);
-		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-			if(edge->kind() == EDGE_Call) {
-				bool not_taken = false;
-				for(BasicBlock::OutIterator edge(bb); edge; edge++)
-					if(edge->kind() != Edge::CALL) {
-						not_taken = true;
-						break;
-					}
-				if(!not_taken)
-					ends.add(bb);
-			}
-			else {
-				BasicBlock *target = edge->target();
-				if(target != ent && ENTRY(target)) {
-					ends.add(bb);
-					edge->toCall();
-				}
-				else if(!_bbs.contains(target)) {
-					INDEX(target) = _bbs.length();
-					_bbs.add(target);
-				}
-			}
-		}
-	}
-	
-	// Check for entering dead code
-	Vector<Edge *> cut;
-	for(int i = 0; i < _bbs.length(); i++) {
-		BasicBlock *bb = _bbs[i];
-		for(BasicBlock::InIterator edge(bb); edge; edge++)
-			if(!_bbs.contains(edge->source()))
-				cut.add(edge);
-		for(int j = 0; j < cut.length(); j++)
-			bb->removeInEdge(cut[j]);
-		cut.clear();
-	}
-	
-	// Add exit edges
-	INDEX(_exit) = _bbs.length();
-	_exit._cfg = this;
-	_bbs.add(&_exit);
-	for(int i = 0; i < ends.length(); i++) {
-		new Edge(ends[i], &_exit, EDGE_Virtual);
-	}
-#	endif
-
 	// Number the BB
 	for(int i = 0; i < _bbs.length(); i++) {
-		// !!DEBUG!!
-		/*if(_bbs[i]->address() == Address(0x8a9c)) {
-			BasicBlock *bb = _bbs[i];
-			cerr << bb << io::endl;
-		}*/
 		INDEX(_bbs[i]) = i;
 		_bbs[i]->_cfg = this;
 	}
 	flags |= FLAG_Scanned;
+
+	// !!DEBUG!!
+	/*for(bbs_t::Iterator bb(_bbs); bb; bb++)
+		for(BasicBlock::OutIterator edge(bb); edge; edge++)
+			if(edge->kind() != Edge::CALL)
+				cerr << bb->number() << " (" << bb->address()
+					 << ") - > " << edge->target()->number()
+					 << " (" << edge->target()->address()
+					 << "): " << edge->kind() << io::endl;*/
+
 	//cerr << "end CFG::scan()\n";
 }
 
@@ -391,6 +324,29 @@ void Identifier<CFG *>::print(elm::io::Output& out, const Property& prop) const 
 CFG::~CFG(void) {
 	for(int i = 1; i < _bbs.length() - 1; i++)
 		delete _bbs[i];
+}
+
+
+/**
+ * Get the first basic block of the CFG.
+ * @return	First basic block.
+ */
+BasicBlock *CFG::firstBB(void) {
+	ASSERT(_bbs.length() > 2);
+	return _bbs[1];
+}
+
+
+/**
+ * Get the first instruction of the CFG.
+ * @return	First instruction of the CFG.
+ */
+Inst *CFG::firstInst(void) {
+	if(!(flags & FLAG_Scanned))
+		scan();
+	BasicBlock *bb = firstBB();
+	BasicBlock::InstIterator inst(bb);
+	return *inst;
 }
 
 } // namespace otawa
