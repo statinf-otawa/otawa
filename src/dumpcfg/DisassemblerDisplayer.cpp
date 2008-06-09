@@ -35,7 +35,7 @@ void DisassemblerDisplayer::onBBBegin(BasicBlock *bb, int index) {
 void DisassemblerDisplayer::onEdge(CFGInfo *info, BasicBlock *source,
 int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
 	switch(kind) {
-		
+	
 	case EDGE_Null:
 		if(target_index >= 0)
 			cout << " R(" << target_index << ")";
@@ -80,6 +80,10 @@ int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
 		
 	case Edge::VIRTUAL_RETURN:
 		cout << " VR(" << target_index << ")";
+		break;
+
+	case Edge::VIRTUAL:
+		cout << " V(" << target_index << ")";
 		break;
 	}
 }
