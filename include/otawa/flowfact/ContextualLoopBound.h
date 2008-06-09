@@ -24,6 +24,7 @@
 #define OTAWA_FLOWFACT_CONTEXTUALLOOPBOUND_H_
 
 #include <otawa/base.h>
+#include <otawa/properties.h>
 #include <elm/genstruct/Tree.h>
 #include <elm/genstruct/Vector.h>
 
@@ -41,6 +42,9 @@ public:
 	inline int count(void) const { return stack.length(); }
 	inline const T& get(int i) const { return stack[stack.length() - i - 1]; }
 	inline const T& operator[](int i) const { return get(i); }
+	inline bool isEmpty(void) const { return stack.isEmpty(); }
+	inline operator bool(void) const { return !isEmpty(); }
+	inline void clear(void) { stack.clear(); }
 	
 private:
 	genstruct::Vector<T> stack;
@@ -52,7 +56,6 @@ class ContextualLoopBound {
 public:
 	static const int undefined = -1;
 	
-	ContextualLoopBound(void);
 	ContextualLoopBound(int max = undefined, int total = undefined);
 	
 	void addMax(const ContextPath<Address>& path, int max);
