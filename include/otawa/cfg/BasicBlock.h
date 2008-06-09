@@ -215,7 +215,7 @@ inline IteratorInst<Inst *> *BasicBlock::visit(void) {
 
 // Output
 inline Output& operator<<(Output& out, BasicBlock *bb) {
-	out << "bb(" << bb->number() << ")";
+	out << "BB" << bb->number() << " (" << bb->address() << ")";
 	return out;
 }
 
