@@ -102,7 +102,7 @@ BasicBlock *exit) {
 	call_t call = { stack, cfg, 0 };
 	
 	// Translate BB
-	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
+	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
 			BasicBlock *new_bb = new VirtualBasicBlock(bb);
 			map.put(bb, new_bb);
@@ -119,7 +119,7 @@ BasicBlock *exit) {
 	}
 	
 	// Translate edges
-	for(Iterator<BasicBlock *> bb(cfg->bbs()); bb; bb++)
+	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
 			//assert(!bb->isVirtual());
 			
@@ -205,7 +205,8 @@ void VirtualCFG::scan(void) {
  * @param cfg		CFG to buid from.
  * @param inlined	If true, performs inlining.
  */
-VirtualCFG::VirtualCFG(CFG *cfg, bool inlined): _cfg(cfg) {
+VirtualCFG::VirtualCFG(CFG *cfg, bool inlined)
+: _cfg(cfg) {
 	assert(cfg);
 	flags |= FLAG_Virtual;
 	if(inlined)
