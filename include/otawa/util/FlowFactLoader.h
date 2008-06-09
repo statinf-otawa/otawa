@@ -30,6 +30,7 @@
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Feature.h>
 #include <elm/genstruct/Vector.h>
+#include <otawa/flowfact/ContextualLoopBound.h>
 
 // Externals
 namespace otawa  {
@@ -63,7 +64,7 @@ protected:
 	void onWarning(const string& message);
 	
 	virtual void onCheckSum(const String& name, unsigned long sum);
-	virtual void onLoop(address_t addr, int count);
+	virtual void onLoop(address_t addr, int count, const ContextPath<Address>& path);
 	virtual void onReturn(address_t addr);
 	virtual void onNoReturn(address_t addr);
 	virtual void onNoReturn(String name);
