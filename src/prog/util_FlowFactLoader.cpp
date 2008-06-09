@@ -26,6 +26,7 @@
 #include <elm/checksum/Fletcher.h>
 #include <elm/io/InFileStream.h>
 #include <elm/io/BufferedInStream.h>
+#include <otawa/flowfact/features.h>
 
 // Externals
 extern FILE *util_fft_in;
@@ -211,9 +212,39 @@ void FlowFactLoader::onWarning(const string& message) {
  * @param addr	Address of the header of the loop.
  * @param count	Bound on the loop iterations.
  */
-void FlowFactLoader::onLoop(address_t addr, int count) {
+void FlowFactLoader::onLoop(
+	address_t addr,
+	int count,
+	const ContextPath<Address>& path)
+{
 	Inst *inst = _fw->process()->findInstAt(addr);
-	MAX_ITERATION(inst) = count;
+	if(!inst)
+		onError(_ << "unmarked loop because instruction at " << addr << " not found");
+	if(!path) {
+		MAX_ITERATION(inst) = count;
+		if(isVerbose())
+			log << "\tMAX_ITERATION(" << inst->address() << ") = " << count << io::endl;
+	}
+	else {
+		
+		// Get the contextual loop bound object
+		ContextualLoopBound *bound = CONTEXTUAL_LOOP_BOUND(inst);
+		if(!bound) {
+			bound = new ContextualLoopBound();
+			inst->addDeletable(CONTEXTUAL_LOOP_BOUND, bound);
+			if(isVerbose())
+				log << "\tCONTEXTUAL_LOOP_BOUND(" << inst->address() << ") = " << (void *)bound << io::endl;
+		}
+		
+		// Set the bound
+		bound->addMax(path, count);
+		if(isVerbose()) {
+			log << "\tmax bound " << count << " to " << inst->address() << " in ";
+			for(int i = 0; i < path.count(); i++)
+				log << path[i] << "/";
+			log << io::endl;
+		}
+	}
 }
  
  

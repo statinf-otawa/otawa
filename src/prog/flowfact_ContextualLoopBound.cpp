@@ -21,6 +21,7 @@
  */
 
 #include <otawa/flowfact/ContextualLoopBound.h>
+#include <otawa/flowfact/features.h>
 
 namespace otawa {
 
@@ -95,13 +96,6 @@ namespace otawa {
  * @typedef ContextualLoopBounds::bound_t
  * This structure contains information about loop bounds for a given context.
  */
-
-
-/**
- * Build an empty loop bound.
- */
-ContextualLoopBound::ContextualLoopBound(void): tree(data_t())	{
-}
 
 
 /**
@@ -235,22 +229,23 @@ int ContextualLoopBound::findMax(const ContextPath<Address>& path) {
 	// Build the path
 	for(int i = 0; i < path.count(); i++) {
 		genstruct::Tree<data_t> *child;
-		for(child = cur->children(); child; child = child->sibling())
+		for(child = cur->children(); child; child = child->sibling()) {
 			if(child->data().fun == path[i])
 				break;
+		}
 		if(!child)
 			break;
 		cur = child;
-		if(cur->data().max != undefined && cur->data().max < cmax)
+		if(cmax == undefined
+		|| (cur->data().max != undefined && cur->data().max < cmax))
 			cmax = cur->data().max;
 	}
 	
 	// Look for a max
 	int lmax = lookMax(cur);
-	if(lmax == undefined)
-		return cmax;
-	else
-		return min(cmax, lmax);
+	if(lmax != undefined)
+		cmax = min(cmax, lmax);
+	return cmax;
 }
 
 
@@ -283,5 +278,15 @@ int ContextualLoopBound::findTotal(const ContextPath<Address>& path) {
 	else
 		return ctotal;
 }
+
+
+/**
+ * This property provides context-dependent loop bounds. It is part of information
+ * given by @ref FLOW_FACT_FEATURE.
+ * 
+ * @par Hooks
+ * @li @ref Inst
+ */
+Identifier<ContextualLoopBound *> CONTEXTUAL_LOOP_BOUND("otawa::CONTEXTUAL_LOOP_BOUND", 0);
 
 } // otawa

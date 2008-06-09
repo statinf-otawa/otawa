@@ -39,7 +39,7 @@ DEC	[1-9][0-9]*
 OCT	0[0-7]*
 HEX	0[xX][0-9a-fA-F]+
 BIN 0[bB][0-1]+
-SYM [?;,+-]
+SYM [?;,+-/]
 
 %x ECOM
 %x TCOM
@@ -63,6 +63,7 @@ SYM [?;,+-]
 "ignorecontrol"	return KW_IGNORECONTROL;
 "to"			return KW_TO;
 "preserve"		return KW_PRESERVE;
+"in"			return KW_IN;
 
 \"			BEGIN(STR);
 {DEC}		util_fft_lval._int = strtol(yytext, 0, 10); return INTEGER;

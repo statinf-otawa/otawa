@@ -23,11 +23,13 @@
 #include <otawa/util/FlowFactLoader.h>
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
+#include <otawa/flowfact/ContextualLoopBound.h>
 using namespace elm;
 using namespace elm::genstruct;
 int util_fft_lex(void);
 void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 static Vector<otawa::Address> addresses;
+static otawa::ContextPath<otawa::Address> path;
 %}
 
 %name-prefix="util_fft_"
@@ -54,6 +56,7 @@ static Vector<otawa::Address> addresses;
 %token KW_IGNORECONTROL
 %token KW_TO
 %token KW_PRESERVE
+%token KW_IN
 %type<addr> full_address id_or_address
 
 %%
@@ -69,10 +72,10 @@ commands:
 ;
 
 command:
-	LOOP full_address INTEGER ';'
-		{ loader->onLoop(*$2, $3); delete $2; }
-|	LOOP full_address '?' ';'
-		{ loader->onUnknownLoop(*$2); delete $2; }
+	LOOP full_address INTEGER opt_in ';'
+		{ loader->onLoop(*$2, $3, path); delete $2; path.clear(); }
+|	LOOP full_address '?' opt_in ';'
+		{ loader->onUnknownLoop(*$2); delete $2; path.clear(); }
 |	CHECKSUM STRING INTEGER ';'
 		{
 			//cout << "checksum = " << io::hex($2) << io::endl;
@@ -124,6 +127,20 @@ full_address:
 		{ $$ = new otawa::Address(loader->addressOf(*$1) + $3); delete $1; }
 |	STRING '-' INTEGER
 		{ $$ = new otawa::Address(loader->addressOf(*$1) - $3); delete $1; }
+;
+
+opt_in:
+	/* empty */
+		{ }
+|	KW_IN path
+		{ }
+;
+
+path:
+	full_address
+		{ path.push(*$1); delete $1; }
+|	full_address '/' path
+		{ path.push(*$1); delete $1; }
 ;
 
 %%

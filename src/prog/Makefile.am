@@ -36,6 +36,7 @@ libotawa_la_SOURCES = \
 	ilp_ILPPlugin.cpp \
 	proc_Processor.cpp \
 	proc_CFGProcessor.cpp \
+	proc_ContextualProcessor.cpp \
 	proc_Feature.cpp \
 	proc_FeatureRequirer.cpp \
 	proc_FunProcessor.cpp \

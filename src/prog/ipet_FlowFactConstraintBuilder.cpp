@@ -3,7 +3,7 @@
  *	ipet::FlowFactLoader class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-07, IRIT UPS.
+ *	Copyright (c) 2005-08, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/util/Dominance.h>
 #include <otawa/ipet/VarAssignment.h>
+#include <otawa/flowfact/features.h>
 
 namespace otawa { namespace ipet {
 
@@ -57,7 +58,7 @@ namespace otawa { namespace ipet {
  * Build a new flow fact loader.
  */
 FlowFactConstraintBuilder::FlowFactConstraintBuilder(void)
-:	CFGProcessor("otawa::ipet::FlowFactConstraintBuilder", Version(1, 1, 0))
+:	ContextualProcessor("otawa::ipet::FlowFactConstraintBuilder", Version(1, 1, 0))
 {
 	require(COLLECTED_CFG_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
@@ -69,32 +70,71 @@ FlowFactConstraintBuilder::FlowFactConstraintBuilder(void)
 
 /**
  */
-void FlowFactConstraintBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
-
-	ilp::System *system = SYSTEM(fw);
-	
-	for (CFG::BBIterator bb(cfg); bb; bb++) {
-		if (Dominance::isLoopHeader(bb)) {
-			if(LOOP_COUNT(bb) == -1)
-			 	warn(_ << "no loop count for header at " << bb->address());
-			else {
-				// sum{(i,h) / h dom i} eih <= count * sum{(i, h) / not h dom x} xeih
-				otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);
-				for(BasicBlock::InIterator edge(bb); edge; edge++) {
-					assert(edge->source());
-					otawa::ilp::Var *var = VAR(edge);
-					//edge->source()->use<otawa::ilp::Var *>(VAR);
-					if(Dominance::dominates(bb, edge->source()))
-						cons->addLeft(1, var);
-					else
-						cons->addRight(LOOP_COUNT(bb), var);
-				}
-			}
-		}
-	}
+void FlowFactConstraintBuilder::setup(WorkSpace *ws) {
+	path.clear();
+	system = SYSTEM(ws);
+	ASSERT(system);
 }
 
 
+/**
+ */
+void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+	if (Dominance::isLoopHeader(bb)) {
+		int bound = ContextualLoopBound::undefined;
+		if(isVerbose())
+			log << "\t\tlooking bound for " << bb << io::endl;
+		
+		// Test contextual
+		if(bound == ContextualLoopBound::undefined) {
+			ContextualLoopBound *cbound = CONTEXTUAL_LOOP_BOUND(bb);
+			if(cbound) {
+				if(isVerbose())
+					log << "\t\tfound CONTEXTUAL_LOOP_BOUND(" << bb << ") = " << cbound << io::endl;
+				bound = cbound->findMax(path);
+			}
+		}
+		
+		// Look simple bound
+		if(bound == ContextualLoopBound::undefined)
+			bound = LOOP_COUNT(bb);
+		
+		// Generate the constraint
+		// sum{(i,h) / h dom i} eih <= count * sum{(i, h) / not h dom x} xeih
+		if(bound == ContextualLoopBound::undefined)
+			warn(_ << "no flow fact constraint for loop at " << bb->address());
+		else  {
+			otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);
+			for(BasicBlock::InIterator edge(bb); edge; edge++) {
+				assert(edge->source());
+				otawa::ilp::Var *var = VAR(edge);
+				if(Dominance::dominates(bb, edge->source()))
+					cons->addLeft(1, var);
+				else
+					cons->addRight(bound, var);
+			}
+		}
+	}	
+}
+
+
+/**
+ */
+void FlowFactConstraintBuilder::enteringCall(
+	WorkSpace *ws,
+	CFG *cfg,
+	BasicBlock *caller,
+	BasicBlock *callee)
+{
+	path.push(callee->address());
+}
+
+
+/**
+ */
+void FlowFactConstraintBuilder::leavingCall(WorkSpace *ws, CFG *cfg) {
+	path.pop();
+}
 
 
 /**
