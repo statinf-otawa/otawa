@@ -151,15 +151,15 @@ protected:
 	virtual void setup(WorkSpace *ws) {
 		wcet = ipet::WCET(ws);
 		system = ipet::SYSTEM(ws);
-		out << "ADDRESS\tSIZE\tTIME\tCOUNT\tRATIO\tFUNCTION\n";
+		out << "ADDRESS\t\tSIZE\tTIME\tCOUNT\tRATIO\t\tFUNCTION\n";
 	}
 	
 	virtual void processCFG(WorkSpace *fw, CFG *cfg) {
 		BBProcessor::processCFG(fw, cfg);
-		out << "TOTAL FUNCTION\t"
+		out << "TOTAL FUNCTION\t\t"
 			<< SUM(cfg) << '\t'
 			<< (int)system->valueOf(ipet::VAR(cfg->entry())) << '\t'
-			<< (float)SUM(cfg) * 100 / wcet << "%\t"
+			<< (float)SUM(cfg) * 100 / wcet << "%\t\t"
 			<< cfg->label() << io::endl; 		
 	}
 	
@@ -437,8 +437,8 @@ void Command::compute(String fun) {
 	}
 
 	// Load flow facts
-	ipet::FlowFactLoader loader;
-	loader.process(fw, props);
+	/*ipet::FlowFactLoader loader;
+	loader.process(fw, props);*/
 		
 	// Resolve the system
 	WCETComputation wcomp;
