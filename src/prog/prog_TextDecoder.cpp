@@ -47,7 +47,8 @@ static Registration reg(TextDecoder::_,
  * and, consequently, that instructions are available.
  * 
  * @par Provided properties
- * None.
+ * @li @ref FUNCTION_LABEL
+ * @li @ref LABEL
  */
 Feature<TextDecoder> DECODED_TEXT("otawa::DECODED_TEXT");
 
