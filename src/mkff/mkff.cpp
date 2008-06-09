@@ -50,6 +50,7 @@ const char *nocall_labels[] = {
 
 /**
  * @page mkff mkff Command
+ * @ingroup f4
  * 
  * This command is used to generate F4 file template file template (usually
  * suffixed by a @e .ff) to pass flow facts
