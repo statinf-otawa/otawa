@@ -64,6 +64,8 @@ SYM [?;,+-/]
 "to"			return KW_TO;
 "preserve"		return KW_PRESERVE;
 "in"			return KW_IN;
+"max"			return KW_MAX;
+"total"			return KW_TOTAL;
 
 \"			BEGIN(STR);
 {DEC}		util_fft_lval._int = strtol(yytext, 0, 10); return INTEGER;

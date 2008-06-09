@@ -30,6 +30,13 @@ int util_fft_lex(void);
 void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 static Vector<otawa::Address> addresses;
 static otawa::ContextPath<otawa::Address> path;
+
+// Loop counting
+static int loop_max = -1, loop_total = -1;
+static void reset_counts(void) {
+	loop_max = -1;
+	loop_total = -1;
+}
 %}
 
 %name-prefix="util_fft_"
@@ -57,6 +64,8 @@ static otawa::ContextPath<otawa::Address> path;
 %token KW_TO
 %token KW_PRESERVE
 %token KW_IN
+%token KW_MAX
+%token KW_TOTAL
 %type<addr> full_address id_or_address
 
 %%
@@ -73,7 +82,14 @@ commands:
 
 command:
 	LOOP full_address INTEGER opt_in ';'
-		{ loader->onLoop(*$2, $3, path); delete $2; path.clear(); }
+		{ loader->onLoop(*$2, $3, -1, path); delete $2; path.clear(); }
+|	LOOP full_address counts opt_in ';'
+		{
+			loader->onLoop(*$2, loop_max, loop_total, path);
+			delete $2;
+			path.clear();
+			reset_counts();
+		}
 |	LOOP full_address '?' opt_in ';'
 		{ loader->onUnknownLoop(*$2); delete $2; path.clear(); }
 |	CHECKSUM STRING INTEGER ';'
@@ -94,6 +110,28 @@ command:
 		{ }
 |	KW_PRESERVE full_address ';'
 		{ loader->onPreserve(*$2); delete $2; }
+;
+
+counts:
+	count			{ }
+|	count counts	{ }
+;
+
+count:
+	KW_MAX INTEGER
+		{
+			if(loop_max >= 0)
+				loader->onError(_ << "several 'max' keywords");
+			else
+				loop_max = $2;
+		}
+|	KW_TOTAL INTEGER
+		{
+			if(loop_total >= 0)
+				loader->onError(_ << "several 'total' keywords");
+			else
+				loop_total = $2;
+		}
 ;
 
 multibranch:

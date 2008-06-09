@@ -39,7 +39,7 @@ extern int fft_line;
 
 
 /**
- * @page f4 F4 : Flow Facts File Format
+ * @defgroup f4 F4 : Flow Facts File Format
  * 
  * This file format is used to store flow facts information, currently, the
  * loop bounds. The usual non-mandatory extension of F4 files is "ff".
@@ -54,8 +54,20 @@ extern int fft_line;
  * 
  * @li <b><tt>loop ADDRESS COUNT ;</tt></b> @n
  * Declare that the loop whose header start at the
- * given address has the given maximal bound,
-
+ * given address has the given maximal bound.
+ * 
+ * @li <b><tt>loop ADDRESS ... in ADDRESS1 / ADDRESS2 / ...;</tt></b> @n
+ * Same as above but limit the loop bound to the given calling context.
+ * ADDRESS1 is the address of the function calling the loop, ADDRESS2 is the
+ * address of the function calling the former one and so on. It is not
+ * required to go back to the task entry point. In the latter case, the bound
+ * will be applied to any call context whose prefix matches the given one.
+ * 
+ * @li <b><tt>loop ADDRESS [max MAX] [total TOTAL] [in ...]</tt></b> @n
+ * In addition to select the MAX number of iterations per startup of a loop,
+ * this form of <b><tt>loop</tt></b> allows also to select the TOTAL number
+ * of iterations for the whole task run.
+ * 
  * @li <b><tt>checksum VALUE ;</tt></b> @n
  * This command is used to check the consistency
  * between the flow fact file and the matching executable file (it is the
@@ -100,6 +112,44 @@ extern int fft_line;
  * @li <b><tt>0x</tt></b>{HEXADECIMAL_DIGIT}+: hexadecimal integer
  * @li <b><tt>0b</tt></b>{BINARY_DIGIT}+: binary integer
  * 
+ * @par Examples
+ * 
+ * This example shows a program composed of two function, "main" and "ludcmp"
+ * containing nested loops.
+ * 
+ * @code
+ * checksum "ludcmp.elf" 0xaa9b6952;
+ *
+ * // Function main
+ * loop "main" + 0x40 6;
+ *  loop "main" + 0x70 6;
+ *
+ * // Function ludcmp
+ * loop "ludcmp" + 0x80 5;
+ *   loop "ludcmp" + 0x108 5;
+ *     loop "ludcmp" + 0x170 5;
+ *   loop "ludcmp" + 0x2e0 5;
+ *     loop "ludcmp" + 0x344 5;
+ * loop "ludcmp" + 0x4a4 5;
+ *   loop "ludcmp" + 0x4e0 5;
+ * loop "ludcmp" + 0x654 5;
+ *   loop "ludcmp" + 0x6a0 5;
+ * @endcode
+ * 
+ * This second example shows the use of contextual loop bounds, that is,
+ * bounds only applied according the function call context. In this example,
+ * the loop in "f" iterates 10 or 20 times according "f"'s caller being
+ * "g1" or "g2". In addition, this flow facts states that the loop in the
+ * second state iterates at most 50 times for the whole task run.
+ * 
+ * @code
+ * checksum "test.arm" 0xdac4ee63;
+ * 
+ * // Function f
+ * loop "f" + 0x24 10 in "f" / "g1" / "main";
+ * loop "f" + 0x24 max 20 total 50 in "f" / "g2" / "main";
+ * @endcode
+ * 
  * @par To Come
  * @li "branch ADDRESS to ADDRESS ;"
  * @li "loop ADDRESS max COUNT min COUNT ;"
@@ -116,6 +166,8 @@ extern int fft_line;
  * 
  * @see
  * 		@ref f4 for more details on the flow facts files.
+ * @ingroup f4
+ * @author H. Cassé <casse@irit.fr>
  */
 
 
@@ -215,6 +267,7 @@ void FlowFactLoader::onWarning(const string& message) {
 void FlowFactLoader::onLoop(
 	address_t addr,
 	int count,
+	int total,
 	const ContextPath<Address>& path)
 {
 	Inst *inst = _fw->process()->findInstAt(addr);
@@ -236,13 +289,24 @@ void FlowFactLoader::onLoop(
 				log << "\tCONTEXTUAL_LOOP_BOUND(" << inst->address() << ") = " << (void *)bound << io::endl;
 		}
 		
-		// Set the bound
-		bound->addMax(path, count);
-		if(isVerbose()) {
-			log << "\tmax bound " << count << " to " << inst->address() << " in ";
-			for(int i = 0; i < path.count(); i++)
-				log << path[i] << "/";
-			log << io::endl;
+		// Set the bounds
+		if(count >= 0) {
+			bound->addMax(path, count);
+			if(isVerbose()) {
+				log << "\tmax bound " << count << " to " << inst->address() << " in ";
+				for(int i = 0; i < path.count(); i++)
+					log << path[i] << "/";
+				log << io::endl;
+			}
+		}
+		if(total >= 0) {
+			bound->addTotal(path, total);
+			if(isVerbose()) {
+				log << "\total bound " << total << " to " << inst->address() << " in ";
+				for(int i = 0; i < path.count(); i++)
+					log << path[i] << "/";
+				log << io::endl;
+			}
 		}
 	}
 }
@@ -421,6 +485,7 @@ void FlowFactLoader::onUnknownMultiBranch(Address control) {
 /**
  * This property may be used in the configuration of a code processor
  * to pass the path of an F4 file containing flow facts.
+ * @ingroup f4
  */
 Identifier<Path> FLOW_FACTS_PATH("otawa::flow_facts_path", "");
 
@@ -429,6 +494,7 @@ Identifier<Path> FLOW_FACTS_PATH("otawa::flow_facts_path", "");
  * This feature ensures that the flow facts has been loaded.
  * Currrently, only the @ref otawa::util::FlowFactLoader provides this kind
  * of information from F4 files.
+ * @ingroup f4
  * 
  * @par Hooked Properties
  * @li @ref IS_RETURN
@@ -441,6 +507,7 @@ Feature<FlowFactLoader> FLOW_FACTS_FEATURE("otawa::FLOW_FACTS_FEATURE");
 /**
  * This feature ensures that preservation information used by mkff is put
  * on instruction.
+ * @ingroup f4
  * 
  * @par Hooked Properties
  * @li @ref PRESERVED
@@ -452,6 +519,7 @@ Feature<FlowFactLoader> MKFF_PRESERVATION_FEATURE("otawa::MKFF_PRESERVATION_FEAT
  * Put on a control flow instruction, this shows that this instruction
  * is equivalent to a function return. It may be useful with assembly providing
  * very complex ways to express a function return.
+ * @ingroup f4
  * 
  * @par Hooks
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
@@ -462,6 +530,7 @@ Identifier<bool> IS_RETURN("otawa::is_return", false);
 /**
  * This annotation is put on the first instruction of functions that does not
  * never return. It is usually put on the C library "_exit" function.
+ * @ingroup f4
  * 
  * @par Hooks
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
@@ -472,6 +541,7 @@ Identifier<bool> NO_RETURN("otawa::no_return", false);
 /**
  * Put on the first instruction of a loop, it gives the maximum number of
  * iteration of this loop.
+ * @ingroup f4
  * 
  * @par Hooks
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
@@ -482,6 +552,7 @@ Identifier<int> MAX_ITERATION("otawa::max_iteration", -1);
 /**
  * In configuration of the FlowFactLoader, makes it fail if no flow fact
  * fail is available.
+ * @ingroup f4
  */
 Identifier<bool> FLOW_FACTS_MANDATORY("otawa.flow_facts_mandatory", false);
 
@@ -492,6 +563,7 @@ Identifier<bool> FLOW_FACTS_MANDATORY("otawa.flow_facts_mandatory", false);
  * @li @ref FLOW_FACTS_FEATURE
  * @par Hooks
  * @li @ref Inst
+ * @ingroup f4
  */
 Identifier<bool> NO_CALL("otawa::NO_CALL", false);
 
@@ -502,6 +574,7 @@ Identifier<bool> NO_CALL("otawa::NO_CALL", false);
  * @li @ref FLOW_fACTS_FEATURE
  * @par Hooks
  * @li @ref Inst
+ * @ingroup f4
  */
 Identifier<bool> IGNORE_CONTROL("otawa::IGNORE_CONTROL", false);
 
@@ -514,6 +587,7 @@ Identifier<bool> IGNORE_CONTROL("otawa::IGNORE_CONTROL", false);
  * @li @ref FLOW_fACTS_FEATURE
  * @par Hooks
  * @li @ref Inst
+ * @ingroup f4
  */
 Identifier<Address> BRANCH_TARGET("otawa::BRANCH_TARGET", Address());
 
@@ -525,6 +599,7 @@ Identifier<Address> BRANCH_TARGET("otawa::BRANCH_TARGET", Address());
  * @li @ref MKFF_PRESERVATION_FEATURE
  * @par Hooks
  * @li @ref Inst
+ * @ingroup f4
  */
 Identifier<bool> PRESERVED("otawa::PRESERVED", false);
 

@@ -81,7 +81,8 @@ void FlowFactConstraintBuilder::setup(WorkSpace *ws) {
  */
 void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	if (Dominance::isLoopHeader(bb)) {
-		int bound = ContextualLoopBound::undefined;
+		int bound = ContextualLoopBound::undefined,
+			total = ContextualLoopBound::undefined;
 		if(isVerbose())
 			log << "\t\tlooking bound for " << bb << io::endl;
 		
@@ -92,6 +93,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 				if(isVerbose())
 					log << "\t\tfound CONTEXTUAL_LOOP_BOUND(" << bb << ") = " << cbound << io::endl;
 				bound = cbound->findMax(path);
+				total = cbound->findTotal(path);
 			}
 		}
 		
@@ -100,18 +102,34 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 			bound = LOOP_COUNT(bb);
 		
 		// Generate the constraint
-		// sum{(i,h) / h dom i} eih <= count * sum{(i, h) / not h dom x} xeih
-		if(bound == ContextualLoopBound::undefined)
+		if(bound == ContextualLoopBound::undefined
+		&& total == ContextualLoopBound::undefined)
 			warn(_ << "no flow fact constraint for loop at " << bb->address());
 		else  {
-			otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);
-			for(BasicBlock::InIterator edge(bb); edge; edge++) {
-				assert(edge->source());
-				otawa::ilp::Var *var = VAR(edge);
-				if(Dominance::dominates(bb, edge->source()))
-					cons->addLeft(1, var);
-				else
-					cons->addRight(bound, var);
+			
+			// sum{(i,h) / h dom i} eih <= count * sum{(i, h) / not h dom x} xeih
+			if(bound != ContextualLoopBound::undefined) {
+				otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);
+				for(BasicBlock::InIterator edge(bb); edge; edge++) {
+					assert(edge->source());
+					otawa::ilp::Var *var = VAR(edge);
+					if(Dominance::dominates(bb, edge->source()))
+						cons->addLeft(1, var);
+					else
+						cons->addRight(bound, var);
+				}
+			}
+			
+			// eih <= total
+			if(total != ContextualLoopBound::undefined) {
+				otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);
+				for(BasicBlock::InIterator edge(bb); edge; edge++) {
+					assert(edge->source());
+					otawa::ilp::Var *var = VAR(edge);
+					if(Dominance::dominates(bb, edge->source()))
+						cons->addLeft(1, var);
+				}
+				cons->addRight(total);
 			}
 		}
 	}	
