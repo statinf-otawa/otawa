@@ -40,46 +40,24 @@ extern Identifier<CFG *> ENTRY;
 extern Identifier<int> INDEX;
 
 // CFG class
-class CFG: public PropList, private elm::Collection<BasicBlock *> {
-	Segment *_seg;
-	BasicBlock *ent;
-
-	virtual elm::IteratorInst<BasicBlock *> *visit(void);
-	virtual elm::MutableCollection<BasicBlock *> *empty(void);
+class CFG: public PropList {
 	typedef genstruct::FragTable<BasicBlock *> bbs_t;
-protected:
-	friend class CFGInfo;
-	virtual ~CFG(void);
-	unsigned long flags;
-	EndBasicBlock _entry, _exit;
-	static const unsigned long FLAG_Scanned = 0x01;
-	static const unsigned long FLAG_Virtual = 0x02;
-	static const unsigned long FLAG_Inlined = 0x04;
-	bbs_t _bbs;
-	virtual void scan(void);
-	inline const bbs_t& __bbs(void) {
-		if(!(flags & FLAG_Scanned))
-			scan();
-		return _bbs;
-	}
 public:
 	//static Identifier ID_Dom;
 	
 	// Iterator
 	class BBIterator: public bbs_t::Iterator {
 	public:
-		inline BBIterator(CFG *cfg): bbs_t::Iterator(cfg->__bbs()) { }
+		inline BBIterator(CFG *cfg): bbs_t::Iterator(cfg->getBBS()) { }
 		inline BBIterator(const BBIterator& iter): bbs_t::Iterator(iter) { }
 	};
 	
 	// Methods
-	CFG(void);
 	CFG(Segment *seg, BasicBlock *entry);
 	inline Segment *segment(void) const;
 	String label(void);
 	inline int number(void);
 	address_t address(void);
-	inline elm::Collection<BasicBlock *>& bbs(void);
 	inline BasicBlock *entry(void);
 	inline BasicBlock *exit(void);
 	inline int countBB(void);
@@ -87,14 +65,35 @@ public:
 	inline bool isVirtual(void) const;
 	inline bool isInlined(void) const;
 	void numberBB(void);
+	BasicBlock *firstBB(void);
+	Inst *firstInst(void);
+
+protected:
+	friend class CFGInfo;
+
+	unsigned long flags;
+	EndBasicBlock _entry, _exit;
+	static const unsigned long FLAG_Scanned = 0x01;
+	static const unsigned long FLAG_Virtual = 0x02;
+	static const unsigned long FLAG_Inlined = 0x04;
+	bbs_t _bbs;
+
+	CFG(void);
+	virtual ~CFG(void);
+	virtual void scan(void);
+
+private:
+	inline const bbs_t& getBBS(void) {
+		if(!(flags & FLAG_Scanned))
+			scan();
+		return _bbs;
+	}
+	Segment *_seg;
+	BasicBlock *ent;
 };
 
 
 // CFG inlines
-inline elm::Collection<BasicBlock *>& CFG::bbs(void) {
-	return *this;
-}
-
 inline Segment *CFG::segment(void) const {
 	return _seg;
 };
