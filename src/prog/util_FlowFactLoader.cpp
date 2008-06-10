@@ -27,6 +27,9 @@
 #include <elm/io/InFileStream.h>
 #include <elm/io/BufferedInStream.h>
 #include <otawa/flowfact/features.h>
+#include <elm/xom.h>
+#include <elm/io/BlockInStream.h>
+#include <elm/system/Path.h>
 
 // Externals
 extern FILE *util_fft_in;
@@ -209,11 +212,72 @@ void FlowFactLoader::configure (const PropList &props) {
  */
 void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 	_fw = fw;
+	bool xml = false;
 	
 	// Build the F4 file path
-	if(!path)
-		path = _ << fw->process()->program()->name() << ".ff";
+	elm::system::Path file_path = path;
+	if(file_path) {
+		if(file_path.extension() == "ffx")
+			xml = true;
+	}
+	else {
+		bool done = false;
+		
+		// replace suffix with "ff"
+		if(!done) {
+			file_path = fw->process()->program()->name();
+			file_path = file_path.setExtension("ff");
+			done = file_path.isReadable();
+		}
+		
+		// add suffix ".ff"
+		if(!done) {
+			file_path = fw->process()->program()->name() + ".ff";
+			done = file_path.isReadable();
+		}
+		
+		// replace suffix with ".ffx"
+		if(!done) {
+			xml = true;
+			file_path = fw->process()->program()->name();
+			file_path = file_path.setExtension("ffx");
+			done = file_path.isReadable();			
+		}
 
+		// add suffix ".ffx"
+		if(!done) {
+			xml = true;
+			file_path = fw->process()->program()->name() + ".ffx";
+			done = file_path.isReadable();
+		}
+		
+		// Something found
+		if(!done) {
+			warn(_ << "no flow fact file for " << fw->process()->program()->name());
+			return;
+		}
+	}
+
+	// process the file
+	if(!xml)
+		loadF4(file_path);
+	else
+		loadXML(file_path);
+		
+	// Display warning if there is no checksum
+	if(!checksummed && isVerbose())
+		warn("no checksum: flow facts and executable file may no match !");
+}
+
+
+/**
+ * Load an F4 file.
+ * @param path	Path of the file.
+ */
+void FlowFactLoader::loadF4(const string& path) throw(ProcessorException) {
+	if(isVerbose())
+		log << "\tloading " << path << io::endl;
+	
 	// Open the file
 	util_fft_in = fopen(&path, "r");
 	if(!util_fft_in) {
@@ -228,14 +292,13 @@ void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 	
 	// Perform the parsing
 	fft_line = 1;
-	util_fft_parse(this);
-	
-	// Close all
-	fclose(util_fft_in);
-	
-	// Display warning if there is no checksum
-	if(!checksummed && isVerbose())
-		warn("no checksum: flow facts and executable file may no match !");
+	try {
+		util_fft_parse(this);
+		fclose(util_fft_in);
+	}
+	catch(...) {
+		throw;
+	}
 }
 
 
@@ -479,6 +542,165 @@ void FlowFactLoader::onUnknownLoop(Address addr) {
  */
 void FlowFactLoader::onUnknownMultiBranch(Address control) {
 	onError(_ << "undefined targets for multi-branch at " << control);
+}
+
+
+/**
+ * Load the flow facts from an XML file.
+ * @param path	Path of the XML file.
+ */
+void FlowFactLoader::loadXML(const string& path) throw(ProcessorException) {
+	
+	// open the file
+	xom::Builder builder;
+	xom::Document *doc = builder.build(&path);
+	if(!doc)
+		throw ProcessorException(*this, _ << "cannot open " << path);
+	xom::Element *root = doc->getRootElement();
+	ASSERT(root);
+	if(root->getLocalName() != "flowfacts")
+		throw ProcessorException(*this, _ << "bad flow fact format in " << path);
+	
+	// traverse the flow facts
+	ContextPath<Address> cpath;
+	for(int i = 0; i < root->getChildCount(); i++) {
+		xom::Node *child = root->getChild(i);
+		if(child->kind() == xom::Node::ELEMENT) {
+			xom::Element *element = (xom::Element *)child;
+			xom::String name = element->getLocalName();
+			if(name == "loop")
+				scanXLoop(element, cpath);
+			else if(name == "function")
+				scanXFun(element, cpath);
+		}
+	}
+}
+
+
+/**
+ * Scan a function XML element.
+ * @param element	Element of the function.
+ * @param path		Context path to access the function.
+ */
+void FlowFactLoader::scanXFun(xom::Element *element, ContextPath<Address>& path)
+throw(ProcessorException) {
+	
+	// get the address
+	Address addr = scanAddress(element, path);
+	Inst *inst = _fw->process()->findInstAt(addr);
+	if(!inst)
+		throw ProcessorException(*this,
+			_ << " no instruction at  " << addr << ".");
+	path.push(addr);
+	
+	// scan the content
+	scanXContent(element, path);
+	path.pop();
+}
+
+	
+/**
+ * Scan a loop XML element.
+ * @param element	Element of the loop.
+ * @param path		Context path to access the loop.
+ */
+void FlowFactLoader::scanXLoop(xom::Element *element, ContextPath<Address>& path)
+throw(ProcessorException) {
+	
+	// get the address
+	Address addr = scanAddress(element, path);
+	Inst *inst = _fw->process()->findInstAt(addr);
+	if(!inst)
+		throw ProcessorException(*this,
+			_ << " no instruction at  " << addr << ".");	
+	
+	// get the information
+	Option<long> max = scanInt(element, "max");
+	Option<long> total = scanInt(element, "total");
+	onLoop(addr, (max ? *max : -1), (total ? *total : -1), path);
+	
+	// look for content
+	scanXContent(element, path);
+}
+
+
+/**
+ * Retrieve the address of an element (function, loop, ...) from its XML element.
+ * @param element	Element to scan in.
+ * @param path		Context path.
+ */
+Address FlowFactLoader::scanAddress(xom::Element *element,
+ContextPath<Address>& path) throw(ProcessorException) {
+	
+	// look "address" attribute
+	Option<long> res = scanInt(element, "address");
+	if(res)
+		return *res;
+	
+	// look for "name" and "offset
+	Option<xom::String> val = element->getAttributeValue("label");
+	if(!val)
+		val = element->getAttributeValue("name");
+	if(val) {
+		Address addr = addressOf(*val);
+		Option<long> offset = scanInt(element, "offset");
+		return addr + (int)(offset ? *offset : 0);
+	}
+	
+	// look for lonely offset
+	Option<long> offset = scanInt(element, "offset");
+	if(offset) {
+		if(!path)
+			throw ProcessorException(*this, "'offset' out of addressed element");
+		return path.top() + (int)*offset;
+	}
+	
+	// it is an error
+	throw ProcessorException(*this, "no location in loop");
+}
+
+
+/**
+ * Scan an integer attribute.
+ * @param element	Element to scan in.
+ * @param name		Name of the element.
+ * @return			Read element or none.
+ */
+Option<long> FlowFactLoader::scanInt(xom::Element *element, cstring name) {
+	Option<xom::String> val = element->getAttributeValue(name);
+	if(!val)
+		return none;
+	io::BlockInStream buf(val);
+	io::Input in(buf);
+	long res;
+	try {
+		in >> res;
+		return res;
+	}
+	catch(io::IOException e) {
+		throw ProcessorException(*this, "bad formatted address");
+	}
+}
+
+
+/**
+ * Scan the content of 'function' or of a 'loop'.
+ * @param element	Container element.
+ * @param path		Current context path.
+ */
+void FlowFactLoader::scanXContent(xom::Element *element, ContextPath<Address>& path)
+throw(ProcessorException) {
+	for(int i = 0; i < element->getChildCount(); i++) {
+		xom::Node *child = element->getChild(i);
+		if(child->kind() == xom::Node::ELEMENT) {
+			xom::Element *element = (xom::Element *)child;
+			xom::String name = element->getLocalName();
+			if(name == "loop")
+				scanXLoop(element, path);
+			else if(name == "call")
+				scanXFun(element, path);
+		}
+	}
 }
 
 

@@ -33,9 +33,8 @@
 #include <otawa/flowfact/ContextualLoopBound.h>
 
 // Externals
-namespace otawa  {
-	class FlowFactLoader;
-} // otawa
+namespace otawa  { class FlowFactLoader; }
+namespace elm { namespace xom { class Element; } }
 int util_fft_parse(otawa::FlowFactLoader *loader);
 void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 
@@ -52,10 +51,9 @@ class WorkSpace;
 class FlowFactLoader: public Processor {
 	friend int ::util_fft_parse(FlowFactLoader *loader);
 	friend void ::util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
-	WorkSpace *_fw;
-	bool checksummed;
-	String path;
-	bool mandatory;
+public:
+	FlowFactLoader(void);
+
 protected:
 	inline WorkSpace *workSpace(void) const { return _fw; }
 	
@@ -84,8 +82,25 @@ protected:
 	virtual void configure (const PropList &props);
 	
 	FlowFactLoader(const string& name, const Version& version);
-public:
-	FlowFactLoader(void);
+
+private:
+	WorkSpace *_fw;
+	bool checksummed;
+	string path;
+	bool mandatory;
+	void loadF4(const string& path) throw(ProcessorException);
+	
+	// XML support
+	void loadXML(const string& path) throw(ProcessorException);
+	void scanXLoop(xom::Element *element, ContextPath<Address>& path)
+		throw(ProcessorException);
+	void scanXFun(xom::Element *element, ContextPath<Address>& path)
+		throw(ProcessorException);
+	Address scanAddress(xom::Element *element, ContextPath<Address>& path)
+		throw(ProcessorException);
+	Option<long> scanInt(xom::Element *element, cstring name);
+	void scanXContent(xom::Element *element, ContextPath<Address>& path)
+		throw(ProcessorException);
 };
 
 // Properties
