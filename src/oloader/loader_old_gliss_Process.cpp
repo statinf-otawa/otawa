@@ -81,6 +81,7 @@ public:
 	void getAddresses(cstring file, int line,
 	Vector<Pair<Address, Address> >& addresses)
 	throw (UnsupportedFeatureException) {
+		setup();
 		addresses.clear();
 		dwarf_line_iter_t iter;
 		dwarf_location_t loc;
@@ -178,6 +179,7 @@ private:
 	if(!envp)
 		envp = default_envp;
 	provide(MEMORY_ACCESS_FEATURE);
+	provide(SOURCE_LINE_FEATURE);
 }
 
 
