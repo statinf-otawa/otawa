@@ -214,6 +214,9 @@ void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 	_fw = fw;
 	bool xml = false;
 	
+	// lines available ?
+	lines_available = fw->isProvided(SOURCE_LINE_FEATURE);
+	
 	// Build the F4 file path
 	elm::system::Path file_path = path;
 	if(file_path) {
@@ -655,6 +658,15 @@ ContextPath<Address>& path) throw(ProcessorException) {
 		return path.top() + (int)*offset;
 	}
 	
+	// look for source and line
+	Option<xom::String> source = element->getAttributeValue("source");
+	if(source) {
+		Option<long> line = scanInt(element, "line");
+		if(!line)
+			throw ProcessorException(*this, "no 'line' but a 'source' ?");
+		return addressOf(*source, *line);
+	}
+	
 	// it is an error
 	throw ProcessorException(*this, "no location in loop");
 }
@@ -701,6 +713,27 @@ throw(ProcessorException) {
 				scanXFun(element, path);
 		}
 	}
+}
+
+
+/**
+ * Get the address matching the given source file name and line.
+ * @param file	Source file path.
+ * @param line	Line in the source file.
+ * @return		Matching first address.
+ * @throw ProcessorException	If the file/line cannot be resolved to an address.
+ */
+Address FlowFactLoader::addressOf(const string& file, int line)
+throw(ProcessorException) {
+	if(!lines_available)
+		throw ProcessorException(*this,
+			"the current loader does not provide source line information");
+	Vector<Pair<Address, Address> > addresses;
+ 	workSpace()->process()->getAddresses(file.toCString(), line, addresses);
+ 	if(!addresses)
+ 		throw ProcessorException(*this,
+ 			_ << "cannot find the source line " << file << ":" << line);
+ 	return addresses[0].fst;
 }
 
 
