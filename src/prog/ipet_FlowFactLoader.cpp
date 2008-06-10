@@ -60,37 +60,76 @@ FlowFactLoader::FlowFactLoader(void)
 
 
 /**
+ * Transfer flow information from the given source instruction to the given BB.
+ * @param source	Source instruction.
+ * @param bb		Target BB.
+ * @return			True if some loop bound informatio has been found, false else.
+ */
+bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
+	bool one = false;
+	
+	// look for MAX_ITERATION
+	int count = MAX_ITERATION(source);
+	if(count >= 0) {
+		LOOP_COUNT(bb) = count;
+		one = true;
+		if(isVerbose())
+			log << "\t\t\tLOOP_COUNT(" << bb << ") = " << count << io::endl;
+	}
+	
+	// loop for CONTEXTUAL_LOOP_BOUND
+	ContextualLoopBound *bound = CONTEXTUAL_LOOP_BOUND(source);
+	if(bound) {
+		CONTEXTUAL_LOOP_BOUND(bb) = bound;
+		one = true;
+		if(isVerbose())
+			log << "\t\t\tCONTEXTUAL_LOOP_BOUND(" << bb << ") = " << bound << io::endl;
+	}
+	
+	return one;
+}
+
+
+/**
+ */
+void FlowFactLoader::setup(WorkSpace *ws) {
+	lines_available = ws->isProvided(SOURCE_LINE_FEATURE);
+}
+
+
+/**
  */
 void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	ASSERT(ws);
 	ASSERT(cfg);
 	ASSERT(bb);
 	if(!bb->isEnd() && Dominance::isLoopHeader(bb)) {
+		
+		// Look in the first instruction of the BB
 		BasicBlock::InstIterator iter(bb);
 		ASSERT(iter);
-		bool one = false;
+		if(transfer(iter, bb))
+			return;
 		
-		// look for MAX_ITERATION
-		int count = MAX_ITERATION(iter);
-		if(count >= 0) {
-			LOOP_COUNT(bb) = count;
-			one = true;
-			if(isVerbose())
-				log << "\t\t\tLOOP_COUNT(" << bb << ") = " << count << io::endl;
-		}
-		
-		// loop for CONTEXTUAL_LOOP_BOUND
-		ContextualLoopBound *bound = CONTEXTUAL_LOOP_BOUND(iter);
-		if(bound) {
-			CONTEXTUAL_LOOP_BOUND(bb) = bound;
-			one = true;
-			if(isVerbose())
-				log << "\t\t\tCONTEXTUAL_LOOP_BOUND(" << bb << ") = " << bound << io::endl;
+		// Attempt to look at the start of the matching source line
+		if(lines_available) {
+			// get the matching line
+			Option<Pair<cstring, int> > res =
+				ws->process()->getSourceLine(bb->address());
+			if(res) {
+				// go back to the first statement of the line
+				Vector<Pair<Address, Address> > addresses;
+				ws->process()->getAddresses((*res).fst, (*res).snd, addresses);
+				ASSERT(addresses);
+				Inst *inst = ws->findInstAt(addresses[0].fst);
+				ASSERT(inst);
+				if(transfer(inst, bb))
+					return;
+			}
 		}
 
 		// warning for lacking loops
-		if(!one)
-			warn(_ << "no limit for the loop at " << bb->address() << ".");
+		warn(_ << "no limit for the loop at " << bb->address() << ".");
 	}
 }
 

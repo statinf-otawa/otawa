@@ -27,7 +27,12 @@ public:
 	FlowFactLoader(void);
 
 protected:
+	virtual void setup(WorkSpace *ws);
 	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+
+private:
+	bool lines_available;
+	bool transfer(Inst *source, BasicBlock *bb);
 };
 
 // Features
