@@ -58,6 +58,7 @@ protected:
 	inline WorkSpace *workSpace(void) const { return _fw; }
 	
 	Address addressOf(const string& label);
+	Address addressOf(const string& file, int line) throw(ProcessorException);
 	void onError(const string& message);
 	void onWarning(const string& message);
 	
@@ -89,6 +90,7 @@ private:
 	string path;
 	bool mandatory;
 	void loadF4(const string& path) throw(ProcessorException);
+	bool lines_available;
 	
 	// XML support
 	void loadXML(const string& path) throw(ProcessorException);
