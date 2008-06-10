@@ -165,6 +165,8 @@ full_address:
 		{ $$ = new otawa::Address(loader->addressOf(*$1) + $3); delete $1; }
 |	STRING '-' INTEGER
 		{ $$ = new otawa::Address(loader->addressOf(*$1) - $3); delete $1; }
+|	STRING ':' INTEGER
+		{ $$ = new otawa::Address(loader->addressOf(*$1, $3)); delete $1; }
 ;
 
 opt_in:
