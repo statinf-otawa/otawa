@@ -28,6 +28,9 @@
 #include <otawa/prog/Loader.h>
 #include <otawa/hard/Register.h>
 #include <otawa/loader/arm.h>
+#include <elm/genstruct/SortedSLList.h>
+#include <otawa/util/FlowFactLoader.h>
+
 
 #define TRACE(m) //cout << m << io::endl
 
@@ -927,7 +930,6 @@ otawa::Inst *Process::decode(address_t addr) {
 	return res;
 }
 
-
 /**
  */
 address_t BranchInst::decodeTargetAddress(void) {
@@ -948,9 +950,63 @@ address_t BranchInst::decodeTargetAddress(void) {
     		//cerr << address() << ": branch to " << to << "(" << io::hex(off) << ")" << io::endl; 
     		return to;
     	}
+    case ID_R_:
+    	/* 		cmp		ri, #table_size
+    	 * 		ldrls	pc, [pc, ri, lsl #2]	@ indirect branch
+    	 *		b		default_label
+    	 * 		<indirect table> */
+    	if(inst->instrinput[5].val.uint8
+    	&& inst->instrinput[0].val.uint8 == 9	/* ls */
+    	&& !inst->instrinput[3].val.uint8
+    	&& inst->instrinput[1].val.uint8
+    	&& inst->instrinput[7].val.uint8 == pc
+    	&& inst->instrinput[6].val.uint8 == pc
+    	&& inst->instrinput[9].val.uint8 == 0	/* lsl */
+    	&& inst->instrinput[8].val.uint8 == 2) {
+    		Address table_base = address() + 8;
+    		int ri = inst->instrinput[10].val.uint8;
+    		
+    		// check cmp
+    		instruction_t *cmp;
+    		iss_fetch(address().offset() - 4, buffer);
+    		cmp = iss_decode((state_t *)process().state(), address().offset() - 4, buffer);
+    		if(cmp->ident == ID_CMP_
+    		|| cmp->instrinput[0].val.uint8 == 14
+    		|| cmp->instrinput[1].val.uint8 == ri) {
+    			int table_size = cmp->instrinput[4].val.uint32 + 1; 
+    			
+        		// check branch to default
+        		instruction_t *branch;
+        		iss_fetch(address().offset() + 4, buffer);
+        		branch = iss_decode((state_t *)process().state(), address().offset() + 4, buffer);
+        		if(branch->ident == ID_B_
+        		&& branch->instrinput[0].val.uint8 == 14
+        		&& !branch->instrinput[1].val.uint8) {
+        			            		
+            		// decode the table
+        			/*cerr << "table = " << table_base << io::endl
+        				 << "size = " << table_size << io::endl
+        				 << "table top = " << (table_base + table_size * 4) << io::endl;*/
+        			genstruct::SortedSLList<Address> addresses;
+        			for(Address table = table_base; table < table_base + table_size * 4; table += 4) {
+        				unsigned long offset;
+        				process().get(table, offset);
+        				//cerr << "switch at " << table << " to " << (void *)offset << io::endl; 
+        				Address addr = offset;
+        				if(!addresses.contains(addr)) {
+        					addresses.add(addr);
+        					BRANCH_TARGET(this).add(addr);
+        				}
+        			}
+        		}
+        		iss_free(cmp);
+    		}
+    		iss_free(cmp);    		
+    	}
+    	
+    case ID_R__0:
     case ID_BX_:
     case ID_MOV__1:
-    case ID_R__0:
     case ID_SWI_:
     case ID_M_:
     	return 0;
