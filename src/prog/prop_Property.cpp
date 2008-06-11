@@ -12,7 +12,7 @@ using namespace elm;
 namespace otawa {
 
 /**
- * @page prop OTAWA Properties
+ * @defgroup prop Properties System
  * Most OTAWA objects provides a facility to store annotations. These annotations
  * are implemented using @ref otawa::Property to implement annotations and
  * @ref PropList to implement objects supporting annotations. As, in OTAWA,
@@ -141,10 +141,11 @@ namespace otawa {
  */
 
 /**
- * @class Property <otawa/properties.h>
+ * @class Property
  * A property associates a data with an identifier. They are stored in ProgObject
  * and allow storage and retrieval of any data. For efficiency purpose, they use
  * integer identifier that are associated with string names.
+ * @ingroup prop
  */
 
 
@@ -221,9 +222,10 @@ void Property::print(elm::io::Output& out) const {
 
 
 /**
- * @class GenericProperty otawa/properties.h
+ * @class GenericProperty
  * This generic class allows attaching any type of data to a property.
  * @param T	Type of the date stored in the property.
+ * @ingroup prop
  */
 
 
@@ -277,11 +279,12 @@ void Property::print(elm::io::Output& out) const {
 
 
 /**
- * @class LockedProperty otawa/properties.h
+ * @class LockedProperty
  * This class is used for building a lock property, that is, for taking pointer
  * values implementing the elm::Locked class. It provides management of the lock
  * along the life of the property: creation, copy and deletion.
  * @param T	Type of the date stored in the property.
+ * @ingroup prop
  */
 
 
