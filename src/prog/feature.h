@@ -21,7 +21,7 @@
  */
 
 /**
- * @page features Available Features
+ * @defgroup features Available Features
  * 
  * @par Program Features
  * 
@@ -49,7 +49,8 @@
  * @li @ref WCET_COUNT_RECORDED_FEATURE
  * @li @ref WCET_FEATURE
  * 
- * Pipeline timings features :
+ * @par Pipeline timings features
+ * 
  * @li @ref ASSIGNED_VARS_FEATURE
  * @li @ref BB_TIME_FEATURE
  * @li @ref DELTA_SEQUENCES_FEATURE
@@ -57,7 +58,8 @@
  * @li @ref ipet::FLOW_FACTS_FEATURE
  * @li @ref INTERBLOCK_SUPPORT_FEATURE
  * 
- * Cache specific features :
+ * @par Cache specific features
+ * 
  * @li @ref CCG_FEATURE
  * @li @ref COLLECTED_LBLOCKS_FEATURE
  * @li @ref DATA_CACHE_SUPPORT_FEATURE
@@ -74,6 +76,7 @@
  * @li @ref FLOAT_MEMORY_ACCESS_FEATURE
  * @li @ref MEMORY_ACCESS_FEATURE
  * @li @ref REGISTER_USAGE_FEATURE
+ * @li @ref SOURCE_LINE_FEATURE
  * @li @ref STACK_USAGE_FEATURE
  */
 

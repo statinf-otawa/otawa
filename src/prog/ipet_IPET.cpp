@@ -16,12 +16,12 @@ namespace otawa { namespace ipet {
 using namespace ilp;
  
 /**
- * @page ipet IPET Method
+ * @defgroup ipet IPET Method
  * 
  * OTAWA provides many code processors supporting IPET approach:
  * @li @ref VarAssignment - assign ILP variable to each basic block and edge
  * of the graph.
- * @li @ref BasicConstraintBuilder - build constraints generated from the
+ * @li @ref BasicConstraintsBuilder - build constraints generated from the
  * program CFG,
  * @li @ref BasicObjectFunctionBuilder - build the object function to maximize
  * to get the WCET,
@@ -66,6 +66,7 @@ using namespace ilp;
 /**
  * This identifier is used for storing the time of execution in cycles (int)
  * of the program area it applies to.
+ * @ingroup ipet
  */
 Identifier<int> TIME("otawa::ipet::time", -1);
 
@@ -73,6 +74,7 @@ Identifier<int> TIME("otawa::ipet::time", -1);
 /**
  * This identifier is used for storing in basic blocks and edges the variables
  * (otawa::ilp::Var *) used in ILP resolution.
+ * @ingroup ipet
  */
 Identifier<ilp::Var *> VAR("otawa::ipet::var", 0);
 
@@ -87,6 +89,7 @@ Identifier<ilp::Var *> VAR("otawa::ipet::var", 0);
 /**
  * Identifier of annotation used for storing for storing the WCET value (int)
  * in the CFG of the computed function.
+ * @ingroup ipet
  */
 Identifier<int> WCET("otawa::ipet::wcet", -1);
 
@@ -95,6 +98,7 @@ Identifier<int> WCET("otawa::ipet::wcet", -1);
  * Identifier of a boolean property requiring that explicit names must be used.
  * The generation of explicit names for variables may be time-consuming and
  * must only be activated for debugging purposes.
+ * @ingroup ipet
  */
 Identifier<bool> EXPLICIT("otawa::ipet::explicit", false);
 
@@ -104,6 +108,7 @@ Identifier<bool> EXPLICIT("otawa::ipet::explicit", false);
  * to improve accuracy of the IPET system with a time modifier based on
  * edges (use the @ref TimeDeltaObjectFunctionModifier to add time deltas
  * to the object function).
+ * @ingroup ipet
  */
 Identifier<int> TIME_DELTA("otawa::ipet::time_delta", 0);
 
@@ -114,6 +119,7 @@ Identifier<int> TIME_DELTA("otawa::ipet::time_delta", 0);
  * 
  * @par Hooks
  * @li @ref otawa::BasicBlock (header of loops)
+ * @ingroup ipet
  */
 Identifier<int> LOOP_COUNT("otawa::ipet::loop_count", -1);
 
@@ -128,6 +134,7 @@ Identifier<int> LOOP_COUNT("otawa::ipet::loop_count", -1);
  * @par Hooks
  * @li @ref otawa::BasicBlock
  * @li @ref otawa::Edge
+ * @ingroup ipet
  */
 Identifier<int> COUNT("otawa::ipet::count", -1);
 
@@ -150,6 +157,7 @@ ilp::System *getSystem(WorkSpace *fw, CFG *cfg) {
  * 
  * @par Implementing Processors
  * @ref @li Delta
+ * @ingroup ipet
  */
 Feature<NoProcessor>
 	INTERBLOCK_SUPPORT_FEATURE("otawa::ipet::interblock_support");
