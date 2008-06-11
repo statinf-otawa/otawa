@@ -32,6 +32,7 @@ namespace otawa {
  * @class DuplicateIdentifierException
  * This exception is thrown when two identifier with the same name are
  * declared.
+ * @ingroup prop
  */
 
 
@@ -48,6 +49,7 @@ DuplicateIdentifierException::DuplicateIdentifierException(String& name)
  * @class AbstractIdentifier
  * Represents a unique identifier used by the annotation system.
  * Identifier pointers may be compared for testing equality.
+ * @ingroup prop
  */
 
 

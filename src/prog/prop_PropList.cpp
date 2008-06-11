@@ -15,15 +15,17 @@ namespace otawa {
 /**
  * This identifier is used for marking the end of property list definition
  * in variable arguments "...".
+ * @ingroup prop
  */
 const AbstractIdentifier END("end", otawa::NS);
 
 
 /**
- * @class PropList otawa/properties.h
+ * @class PropList
  * This a list of properties. This may be inherited for binding properties to
  * other classes or used as-is for passing heterogeneous properties to a function
  * call.
+ * @ingroup prop
  */
 
 
@@ -374,8 +376,9 @@ void PropList::print(elm::io::Output& out) const {
 
 
 /**
- * @class PropList::Iter otawa/properties.h
+ * @class PropList::Iter
  * This iterator is used for reading all properties of a property list.
+ * @ingroup prop
  */
 
 
@@ -472,6 +475,7 @@ void PropList::print(elm::io::Output& out) const {
  * @class PropList::Getter
  * This class is used for accessing all properties of property list with a
  * given identifier.
+ * @ingroup prop
  */
 
 
