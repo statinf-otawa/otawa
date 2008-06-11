@@ -19,6 +19,7 @@ namespace otawa {
  * @p Note that the property management functions of this class are safer to
  * use than the rough @ref PropList functions because they ensure safe value
  * type management.
+ * @ingroup prop
  */
 
 
