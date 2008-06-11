@@ -24,7 +24,7 @@ using namespace otawa;
 
 
 /**
- * @page dumpcfg dumpcfg Command
+ * @defgroup dumpcfg dumpcfg Command
  * 
  * This command is used to output the CFG of a binary program using different
  * kind of output.

@@ -50,7 +50,7 @@ using namespace elm::system;
 
 
 /**
- * @page oipet oipet Command
+ * @defgroup oipet oipet Command
  * 
  * oipet allows to use WCET IPET computation facilities of OTAWA. Currently,
  * you may only choose the algorithm for instruction cache support:
