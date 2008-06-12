@@ -42,6 +42,7 @@
  *  - return :	LDMIA sp, {..., pc, ..., sp, ...}
  *  			MOV pc, lr
  * 				BX lr
+ *				LDR pc, [sp], #4
  *  - shortcut return : B label (GCC -O2)
  *  - guarded statement : op+cnd (GGC -O2) (special pass in decoding)
  * 
@@ -208,6 +209,8 @@ public:
 		elm::genstruct::AllocatedTable<hard::Register *>& out
 	);
 
+
+	
 protected:
 	virtual otawa::Inst *decode(address_t addr);
 	virtual void *memory(void) { return ((state_t *)state())->M; }
@@ -786,8 +789,7 @@ otawa::Inst *Process::decode(address_t addr) {
 
 	case ID_R_:
 		if(inst->instrinput[8].val.uint8)
-			kind |= Inst::IS_SHIFT;
-	case ID_R__0:
+			kind |= Inst::IS_SHIFT;		
 		kind |= Inst::IS_INT | Inst::IS_MEM;
 		if (inst->instrinput[5].val.uint8) {
 			kind |= Inst::IS_LOAD;
@@ -795,6 +797,23 @@ otawa::Inst *Process::decode(address_t addr) {
 				return new Inst(*this, kind, addr);
 			else
 				goto branch;
+		} else
+			kind |= Inst::IS_STORE;
+		goto simple;
+
+	case ID_R__0:
+		kind |= Inst::IS_INT | Inst::IS_MEM;
+		if (inst->instrinput[5].val.uint8) {
+			kind |= Inst::IS_LOAD;
+			if (inst->instrinput[7].val.uint8 != pc)
+				return new Inst(*this, kind, addr);
+			else {
+				// LDR pc, [sp], #4
+				if(inst->instrinput[6].val.uint8 != pc
+				&& inst->instrinput[8].val.uint16 == 4)
+					kind |= Inst::IS_RETURN;
+				goto branch;
+			}
 		} else
 			kind |= Inst::IS_STORE;
 		goto simple;
