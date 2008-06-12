@@ -612,6 +612,8 @@ throw(ProcessorException) {
 	
 	// get the address
 	Address addr = scanAddress(element, path);
+	if(addr.isNull())
+		return;
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
 		throw ProcessorException(*this,
@@ -730,9 +732,10 @@ throw(ProcessorException) {
 			"the current loader does not provide source line information");
 	Vector<Pair<Address, Address> > addresses;
  	workSpace()->process()->getAddresses(file.toCString(), line, addresses);
- 	if(!addresses)
- 		throw ProcessorException(*this,
- 			_ << "cannot find the source line " << file << ":" << line);
+ 	if(!addresses) {
+		warn(_ << "cannot find the source line " << file << ":" << line);
+		return Address::null;
+	}
  	return addresses[0].fst;
 }
 
