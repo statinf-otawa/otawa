@@ -85,6 +85,7 @@ void CFGProcessor::processWorkSpace(WorkSpace *fw) {
 	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++) {
 		if(isVerbose())
 			log << "\tprocess CFG " << cfg->label() << io::endl;
+		_cfg = cfg;
 		processCFG(fw, cfg);
 		count++;
 	}
@@ -126,6 +127,37 @@ void CFGProcessor::configure(const PropList& props) {
 	Processor::configure(props);
 	init(props);
 }
+
+
+/**
+ * Transform an address to a smart string, that is,
+ * if a source line is available, transform it to "source_file:source_line",
+ * if the CFG has a label, it gives "label + 0xoffset", else return the
+ * address.
+ * @param address	Address to display.
+ * @return			Address transformed in string.
+ */
+string CFGProcessor::str(const Address& address) {
+	Inst *first = _cfg->firstInst();
+	String label = FUNCTION_LABEL(first);
+	if(label) {
+		int offset = address.offset() - first->address().offset();
+		if(offset < 0)
+			return _ << label << " - 0x" << io::hex(-offset) << " (" << address << ")";
+		else
+			return _ << label << " + 0x" << io::hex(offset) << " (" << address << ")";
+	}
+	else
+		return _ << address;
+}
+
+
+/**
+ * @fn CFG *CFGProcessor::cfg(void) const { return cfg; }
+ * Get the current CFG.
+ * @return	Current CFG.
+ */
+
 
 /**
  * Activate the recucursive feature of BBProcessors : each time a basic block
