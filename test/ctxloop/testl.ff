@@ -1,0 +1,5 @@
+// Function f
+loop "test.c":5 max 10 total 15 in "f" / "g1" / "main";
+loop "test.c":5 max 20 total 15 in "f" / "g2" / "main";
+//loop "f" + 0x24 max 20 total 15 in "f";
+

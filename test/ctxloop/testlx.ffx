@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<flowfacts>
+	<function name="main">
+		<call name="g1">
+			<call name="f">
+				<loop source="test.c" line="5" max="10" total="15"/>
+			</call>
+		</call>
+		<call name="g2">
+			<call name="f">
+				<loop source="test.c" line="5" max="20" total="15"/>
+			</call>
+		</call>
+	</function>
+</flowfacts>
