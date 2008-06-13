@@ -26,7 +26,7 @@ void TrivialDataCacheManager::configure(WorkSpace *framework) {
 	fw = framework;
 	if(!fw->cache().hasDataCache()) {
 		time = 0;
-		out << "WARNING: there is no data cache here !\n";
+		log << "WARNING: there is no data cache here !\n";
 	}
 	else
 		time = fw->cache().dataCache()->missPenalty();
