@@ -223,6 +223,18 @@ Dominance::Dominance(void): CFGProcessor("otawa::dominance", Version(1, 1, 0)) {
 
 
 /**
+ * Test if the given edge is a back edge.
+ * @param edge	Edge to test.
+ * @return		True if the edge is a back edge, false else.
+ */
+bool Dominance::isBackEdge(Edge *edge) {
+	ASSERT(edge);
+	ASSERTP(edge->target(), "cannot test back edge if the target is not known");
+	return dominates(edge->target(), edge->source());
+}
+
+
+/**
  * This feature ensures that information about domination between nodes
  * of a CFG is vailable.
  * 
