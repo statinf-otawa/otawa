@@ -1,0 +1,7 @@
+checksum "test.arm" 0xdac4ee63;
+
+// Function f
+loop "f" + 0x24 max 10 total 15 in "f" / "g1" / "main";
+loop "f" + 0x24 max 20 total 15 in "f" / "g2" / "main";
+//loop "f" + 0x24 max 20 total 15 in "f";
+
