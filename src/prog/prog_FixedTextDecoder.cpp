@@ -52,11 +52,11 @@ void FixedTextDecoder::processWorkSpace(WorkSpace *fw) {
 	ASSERT(fw);
 	for(Process::FileIter file(fw->process()); file; file++) {
 		if(isVerbose())
-			out << "\tProcessing file " << file->name() << io::endl;
+			log << "\tProcessing file " << file->name() << io::endl;
 		for(File::SegIter seg(file); seg; seg++)
 			if(seg->isExecutable()) {
 				if(isVerbose())
-					out << "\t\tProcessing segment " << seg->name() << io::endl;
+					log << "\t\tProcessing segment " << seg->name() << io::endl;
 				if(seg->size() % size != 0)
 					warn(elm::_ << "segment " << seg->name() << " from file "
 						<< file->name() << " does not seems to be well aligned");
