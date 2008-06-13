@@ -227,6 +227,7 @@ void Processor::configure(const PropList& props) {
 void Processor::process(WorkSpace *fw, const PropList& props) {
 	
 	// Perform configuration
+	ws = fw;
 	configure(props);
 
 	// Check required feature
