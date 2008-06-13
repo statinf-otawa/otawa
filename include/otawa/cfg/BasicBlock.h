@@ -123,6 +123,7 @@ public:
 	inline unsigned long getFlags(void) const { return flags; };
 	inline int number(void) { return INDEX(this); };
 	inline CFG *cfg(void) { return _cfg; }
+	inline Inst *firstInst(void) const { return head(); }
 	
 	// Edge management
 	inline void addInEdge(Edge *edge) { ins.addFirst(edge); };
