@@ -33,7 +33,7 @@ typedef enum multiple_t {
 };
 
 extern Identifier<bool> IS_MLA;
-extern Identifier<multiple_t> IS_MULTIPLE_LOAD_STORE;
+extern Identifier<int> NUM_REGS_LOAD_STORE;
 
 } } // otawa::arm
 

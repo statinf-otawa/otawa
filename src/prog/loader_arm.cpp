@@ -42,7 +42,8 @@ Identifier<bool> IS_MLA("otawa::arm::IS_MLA", false);
  * @par Hooks
  * @li @ref otawa::Inst
  */
-Identifier<multiple_t> IS_MULTIPLE_LOAD_STORE("otawa::arm::IS_MULTIPLE_LOAD_STORE", no_multiple);
+
+Identifier<int> NUM_REGS_LOAD_STORE("otawa::arm::NUM_REGS_LOAD_STORE", 1);
 
 } } // otawa::arm
 
