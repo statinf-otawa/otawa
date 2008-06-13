@@ -678,7 +678,7 @@ otawa::Inst *Process::decode(address_t addr) {
 
 	// Look the instruction
 	bool is_mla = false;
-	multiple_t is_multiple = arm::no_multiple;
+	int num_regs = 1;
 	otawa::Inst *res = 0;
 	switch (inst->ident) {
 
@@ -889,10 +889,12 @@ otawa::Inst *Process::decode(address_t addr) {
 			if(count < 2) count += countQuad(inst->instrinput[9].val.uint8);
 			if(count < 2) count += countQuad(inst->instrinput[8].val.uint8);
     		if(count < 2) count += countQuad(inst->instrinput[7].val.uint8);
-    		if(count >= 2)
-    			is_multiple = arm::several;
-    		else
-    			is_multiple = arm::only_one;
+    		if(count >= 2) {
+		  num_regs = count;
+		}
+    		else {
+		  num_regs = 1;
+		}
 		}
 		/*for(int i = 0; inst->instroutput[i].type != VOID_T; i++)
 		 if(inst->instroutput[i].type == GPR_T)
@@ -944,8 +946,7 @@ otawa::Inst *Process::decode(address_t addr) {
 	// Set the annotations
 	if(is_mla)
 		IS_MLA(res) = true;
-	if(is_multiple)
-		IS_MULTIPLE_LOAD_STORE(res) = is_multiple;
+	NUM_REGS_LOAD_STORE(res) = num_regs;
 	return res;
 }
 
