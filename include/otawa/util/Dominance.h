@@ -15,9 +15,8 @@ namespace otawa {
 
 // External
 class BasicBlock;
-namespace dfa {
-	class BitSet;
-}
+class Edge;
+namespace dfa { class BitSet; }
 
 // Dominance class
 class Dominance: public CFGProcessor {
@@ -28,6 +27,7 @@ public:
 	static bool isLoopHeader(BasicBlock *bb);
 	static void markLoopHeaders(CFG *cfg,
 		elm::MutableCollection<BasicBlock *> *headers = 0);
+	static bool isBackEdge(Edge *edge);
 
 	// Constructor
 	Dominance(void);
