@@ -32,11 +32,7 @@ class CFG;
 class BasicBlock;
 	
 // Processor class
-class CFGProcessor: public Registered<CFGProcessor, Processor, NullRegistration> {
-	void init(const PropList& props);
-protected:
-	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void processCFG(WorkSpace *fw, CFG *cfg) = 0;
+class CFGProcessor: public Registered<CFGProcessor, Processor, NullRegistration> {	
 public:
 	CFGProcessor(void);
 	CFGProcessor(cstring name, elm::Version version);
@@ -45,6 +41,16 @@ public:
 		: super(name, version, reg) { }
 	virtual void configure(const PropList& props);
 	static void init(void);
+
+protected:
+	virtual void processWorkSpace(WorkSpace *fw);
+	virtual void processCFG(WorkSpace *fw, CFG *cfg) = 0;
+	string str(const Address& address);
+	inline CFG *cfg(void) const { return _cfg; }
+	
+private:
+	void init(const PropList& props);
+	CFG *_cfg;
 };
 
 // Configuration Properties
