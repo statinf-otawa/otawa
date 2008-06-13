@@ -100,9 +100,13 @@ private:
 		throw(ProcessorException);
 	Address scanAddress(xom::Element *element, ContextPath<Address>& path)
 		throw(ProcessorException);
-	Option<long> scanInt(xom::Element *element, cstring name);
+	Option<long> scanInt(xom::Element *element, cstring name)
+		throw(ProcessorException);
+	Option<long> scanBound(xom::Element *element, cstring name)
+		throw(ProcessorException);
 	void scanXContent(xom::Element *element, ContextPath<Address>& path)
 		throw(ProcessorException);
+	string xline(xom::Element *element);
 };
 
 // Properties

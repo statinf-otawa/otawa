@@ -352,7 +352,8 @@ void FlowFactLoader::onLoop(
 			bound = new ContextualLoopBound();
 			inst->addDeletable(CONTEXTUAL_LOOP_BOUND, bound);
 			if(isVerbose())
-				log << "\tCONTEXTUAL_LOOP_BOUND(" << inst->address() << ") = " << (void *)bound << io::endl;
+				log << "\tcontextual loop bound (" << count << "," << total
+					 << ") at "<< inst->address() << io::endl;
 		}
 		
 		// Set the bounds
@@ -368,7 +369,7 @@ void FlowFactLoader::onLoop(
 		if(total >= 0) {
 			bound->addTotal(path, total);
 			if(isVerbose()) {
-				log << "\total bound " << total << " to " << inst->address() << " in ";
+				log << "\ttotal bound " << total << " to " << inst->address() << " in ";
 				for(int i = 0; i < path.count(); i++)
 					log << path[i] << "/";
 				log << io::endl;
@@ -593,7 +594,7 @@ throw(ProcessorException) {
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
 		throw ProcessorException(*this,
-			_ << " no instruction at  " << addr << ".");
+			_ << " no instruction at  " << addr << " from " << xline(element));
 	path.push(addr);
 	
 	// scan the content
@@ -617,11 +618,13 @@ throw(ProcessorException) {
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
 		throw ProcessorException(*this,
-			_ << " no instruction at  " << addr << ".");	
+			_ << " no instruction at  " << addr << " from " << xline(element));	
 	
 	// get the information
-	Option<long> max = scanInt(element, "max");
-	Option<long> total = scanInt(element, "total");
+	Option<long> max = scanBound(element, "maxcount");
+	Option<long> total = scanBound(element, "totalcount");
+	if(!max && !total)
+		warn(_ << "loop exists at " <<  addr << " but no bound at " << xline(element));
 	onLoop(addr, (max ? *max : -1), (total ? *total : -1), path);
 	
 	// look for content
@@ -656,7 +659,8 @@ ContextPath<Address>& path) throw(ProcessorException) {
 	Option<long> offset = scanInt(element, "offset");
 	if(offset) {
 		if(!path)
-			throw ProcessorException(*this, "'offset' out of addressed element");
+			throw ProcessorException(*this,
+				_ << "'offset' out of addressed element at " << xline(element));
 		return path.top() + (int)*offset;
 	}
 	
@@ -665,12 +669,14 @@ ContextPath<Address>& path) throw(ProcessorException) {
 	if(source) {
 		Option<long> line = scanInt(element, "line");
 		if(!line)
-			throw ProcessorException(*this, "no 'line' but a 'source' ?");
+			throw ProcessorException(*this,
+				_ << "no 'line' but a 'source' at " << xline(element));
 		return addressOf(*source, *line);
 	}
 	
 	// it is an error
-	throw ProcessorException(*this, "no location in loop");
+	throw ProcessorException(*this,
+		_ << "no location in loop at " << xline(element));
 }
 
 
@@ -680,7 +686,8 @@ ContextPath<Address>& path) throw(ProcessorException) {
  * @param name		Name of the element.
  * @return			Read element or none.
  */
-Option<long> FlowFactLoader::scanInt(xom::Element *element, cstring name) {
+Option<long> FlowFactLoader::scanInt(xom::Element *element, cstring name)
+throw(ProcessorException) {
 	Option<xom::String> val = element->getAttributeValue(name);
 	if(!val)
 		return none;
@@ -692,8 +699,34 @@ Option<long> FlowFactLoader::scanInt(xom::Element *element, cstring name) {
 		return res;
 	}
 	catch(io::IOException e) {
-		throw ProcessorException(*this, "bad formatted address");
+		throw ProcessorException(*this, _ << "bad formatted address at " << xline(element));
 	}
+}
+
+
+/**
+ * Scan a a bound attribute.
+ * @param element	Element to scan in.
+ * @param name		Name of the element.
+ * @return			Read element or none.
+ */
+Option<long> FlowFactLoader::scanBound(xom::Element *element, cstring name)
+throw (ProcessorException) {
+	Option<xom::String> val = element->getAttributeValue(name);
+	if(!val)
+		return none;
+	if(val == "NOCOMP")
+		return none;
+	io::BlockInStream buf(val);
+	io::Input in(buf);
+	long res;
+	try {
+		in >> res;
+		return res;
+	}
+	catch(io::IOException e) {
+		throw ProcessorException(*this, _ << "bad formatted bound at " << xline(element));
+	}	
 }
 
 
@@ -719,6 +752,15 @@ throw(ProcessorException) {
 
 
 /**
+ * Build an XML element position for user.
+ * @param element	Current XML element.
+ */
+string FlowFactLoader::xline(xom::Element *element) {
+	return _ << element->getBaseURI() << ":" << element->line();
+}
+
+
+/**
  * Get the address matching the given source file name and line.
  * @param file	Source file path.
  * @param line	Line in the source file.
@@ -736,6 +778,8 @@ throw(ProcessorException) {
 		warn(_ << "cannot find the source line " << file << ":" << line);
 		return Address::null;
 	}
+ 	if(isVerbose())
+ 		log << "\t" << file << ":" << line << " is " << addresses[0].fst << io::endl; 
  	return addresses[0].fst;
 }
 
