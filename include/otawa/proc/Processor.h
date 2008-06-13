@@ -96,6 +96,7 @@ protected:
 	void provide(const AbstractFeature& feature);
 	void invalidate(const AbstractFeature& feature);
 	void warn(const String& message);
+	inline WorkSpace *workspace(void) const { return ws; }
 
 	// Overwritable methods
 	virtual void processWorkSpace(WorkSpace *fw);
@@ -108,6 +109,7 @@ protected:
 private:
 	void init(const PropList& props);
 	AbstractRegistration *reg;
+	WorkSpace *ws;
 };
 
 
