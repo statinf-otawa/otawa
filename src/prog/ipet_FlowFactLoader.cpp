@@ -72,6 +72,7 @@ bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
 	int count = MAX_ITERATION(source);
 	if(count >= 0) {
 		LOOP_COUNT(bb) = count;
+		found_loop++;
 		one = true;
 		if(isVerbose())
 			log << "\t\t\tLOOP_COUNT(" << bb << ") = " << count << io::endl;
@@ -81,6 +82,8 @@ bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
 	ContextualLoopBound *bound = CONTEXTUAL_LOOP_BOUND(source);
 	if(bound) {
 		CONTEXTUAL_LOOP_BOUND(bb) = bound;
+		found_loop++;
+		line_loop++;
 		one = true;
 		if(isVerbose())
 			log << "\t\t\tCONTEXTUAL_LOOP_BOUND(" << bb << ") = " << bound << io::endl;
@@ -94,6 +97,51 @@ bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
  */
 void FlowFactLoader::setup(WorkSpace *ws) {
 	lines_available = ws->isProvided(SOURCE_LINE_FEATURE);
+	total_loop = 0;
+	found_loop = 0;
+	line_loop = 0;
+}
+
+
+/**
+ */
+void FlowFactLoader::cleanup(WorkSpace *ws) {
+	if(isVerbose()) {
+		if(!total_loop)
+			log << "\tno loop found\n";
+		else {
+			log << "\ttotal loop = " << total_loop << " (100%)\n";
+			log << "\tfound loop = " << found_loop << " (" << ((float)found_loop * 100 / total_loop) << "%)\n";
+			log << "\tline loop = " << line_loop << " (" << ((float)line_loop * 100 / total_loop) << "%)\n";
+		}
+	}
+}
+
+
+/**
+ * Look for a bound for the given basic block according to a source/line 
+ * found on the instruction.
+ * @param inst	Instruction to look in.
+ * @param bb	BB to put the bound to.
+ * @return		True if the bound has been found, false else.
+ */ 
+bool FlowFactLoader::lookLineAt(Inst *inst, BasicBlock *bb) {
+	if(!lines_available)
+		return false;
+	
+	// get the matching line
+	Option<Pair<cstring, int> > res =
+		workspace()->process()->getSourceLine(inst->address());
+	if(!res)
+		return false;
+	
+	// go back to the first statement of the line
+	Vector<Pair<Address, Address> > addresses;
+	workspace()->process()->getAddresses((*res).fst, (*res).snd, addresses);
+	ASSERT(addresses);
+	Inst *line_inst = workspace()->findInstAt(addresses[0].fst);
+	ASSERT(line_inst);
+	return transfer(line_inst, bb);
 }
 
 
@@ -104,6 +152,7 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	ASSERT(cfg);
 	ASSERT(bb);
 	if(!bb->isEnd() && Dominance::isLoopHeader(bb)) {
+		total_loop++;
 		
 		// Look in the first instruction of the BB
 		BasicBlock::InstIterator iter(bb);
@@ -112,24 +161,25 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 			return;
 		
 		// Attempt to look at the start of the matching source line
-		if(lines_available) {
-			// get the matching line
-			Option<Pair<cstring, int> > res =
-				ws->process()->getSourceLine(bb->address());
-			if(res) {
-				// go back to the first statement of the line
-				Vector<Pair<Address, Address> > addresses;
-				ws->process()->getAddresses((*res).fst, (*res).snd, addresses);
-				ASSERT(addresses);
-				Inst *inst = ws->findInstAt(addresses[0].fst);
-				ASSERT(inst);
-				if(transfer(inst, bb))
-					return;
-			}
-		}
+		if(lookLineAt(bb->firstInst(), bb))
+			return;
+		
+		// Look all instruction in the header
+		// (in case of aggregation in front of the header)
+		for(BasicBlock::InstIterator inst(bb); inst; inst++)
+			if(lookLineAt(inst, bb))
+				
+				return;
+		
+		// look in back edge in case of "while() ..." to "do ... while(...)" optimization
+		for(BasicBlock::InIterator edge(bb); edge; edge++)
+			if(Dominance::isBackEdge(edge))
+				for(BasicBlock::InstIterator inst(edge->source()); inst; inst++)
+					if(lookLineAt(inst, bb)) 
+						return;
 
 		// warning for lacking loops
-		warn(_ << "no limit for the loop at " << bb->address() << ".");
+		warn(_ << "no limit for the loop at " << str(bb->address()) << ".");
 	}
 }
 
