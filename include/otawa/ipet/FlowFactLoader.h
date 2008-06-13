@@ -28,11 +28,14 @@ public:
 
 protected:
 	virtual void setup(WorkSpace *ws);
+	virtual void cleanup (WorkSpace *fw);
 	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 
 private:
 	bool lines_available;
+	int total_loop, found_loop, line_loop;
 	bool transfer(Inst *source, BasicBlock *bb);
+	bool lookLineAt(Inst *source, BasicBlock *bb);
 };
 
 // Features
