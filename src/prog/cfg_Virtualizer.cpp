@@ -91,7 +91,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 	vcfg->addBB(vcfg->exit());
 	vcfg->numberBBs();
 	if(isVerbose())
-		out << "INFO: " << vcfg->countBB() << " basic blocks." << io::endl;
+		log << "\tINFO: " << vcfg->countBB() << " basic blocks." << io::endl;
 		
 	ENTRY_CFG(fw) = vcfg;
 	if (coll != NULL)
