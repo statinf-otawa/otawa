@@ -51,6 +51,14 @@ private:
 };
 
 
+// AmbiguousBoundException class
+class AmbiguousBoundException: public MessageException {
+public:
+	inline AmbiguousBoundException(const string& message)
+		: MessageException(message) { }
+};
+
+
 // ContextualLoopBound class
 class ContextualLoopBound {
 public:
@@ -58,8 +66,10 @@ public:
 	
 	ContextualLoopBound(int max = undefined, int total = undefined);
 	
-	void addMax(const ContextPath<Address>& path, int max);
-	void addTotal(const ContextPath<Address>& path, int total);
+	void addMax(const ContextPath<Address>& path, int max)
+		throw(AmbiguousBoundException);
+	void addTotal(const ContextPath<Address>& path, int total)
+		throw(AmbiguousBoundException);
 	int findMax(const ContextPath<Address>& path);
 	int findTotal(const ContextPath<Address>& path);
 	
