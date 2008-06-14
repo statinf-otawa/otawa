@@ -145,11 +145,15 @@ ContextualLoopBound::look(const ContextPath<Address>& path) {
  * Add a context max bound.
  * @param path	Call context.
  * @param max	Max bound.
+ * @throw AmbiguousBoundException	Thrown when there is already a bound
+ * 									for the given context.
  */
-void ContextualLoopBound::addMax(const ContextPath<Address>& path, int max) {
+void ContextualLoopBound::addMax(const ContextPath<Address>& path, int max)
+throw(AmbiguousBoundException) {
 	genstruct::Tree<data_t> *cur = look(path);
-	if(cur->data().max == -1 || cur->data().max > max)
-		cur->data().max = max;
+	if(cur->data().max != -1)
+		throw AmbiguousBoundException("ambiguous maximum bound");
+	cur->data().max = max;
 }
 
 
@@ -157,11 +161,15 @@ void ContextualLoopBound::addMax(const ContextPath<Address>& path, int max) {
  * Add a context total bound.
  * @param path	Call context.
  * @param total	Total bound.
+ * @throw AmbiguousBoundException	Thrown when there is already a bound
+ * 									for the given context.
  */
-void ContextualLoopBound::addTotal(const ContextPath<Address>& path, int total) {
+void ContextualLoopBound::addTotal(const ContextPath<Address>& path, int total)
+throw(AmbiguousBoundException) {
 	genstruct::Tree<data_t> *cur = look(path);
-	if(cur->data().total == -1 || cur->data().total > total)
-		cur->data().total = total;
+	if(cur->data().total != -1)
+		throw AmbiguousBoundException("ambiguous total bound");
+	cur->data().total = total;
 }
 
 
