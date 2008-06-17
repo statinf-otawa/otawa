@@ -576,6 +576,14 @@ void FlowFactLoader::loadXML(const string& path) throw(ProcessorException) {
 				scanXLoop(element, cpath);
 			else if(name == "function")
 				scanXFun(element, cpath);
+			else if(name == "noreturn") {
+				Address addr = scanAddress(element, cpath);
+				onNoReturn(addr);
+			}
+			else if(name == "nocall") {
+				Address addr = scanAddress(element, cpath);
+				onNoCall(addr);
+			}
 		}
 	}
 }
@@ -625,7 +633,12 @@ throw(ProcessorException) {
 	Option<long> total = scanBound(element, "totalcount");
 	if(!max && !total)
 		warn(_ << "loop exists at " <<  addr << " but no bound at " << xline(element));
-	onLoop(addr, (max ? *max : -1), (total ? *total : -1), path);
+	try {
+		onLoop(addr, (max ? *max : -1), (total ? *total : -1), path);
+	}
+	catch(AmbiguousBoundException& e) {
+		throw ProcessorException(*this, _ << e.message() << " at " << xline(element));
+	}
 	
 	// look for content
 	scanXContent(element, path);
