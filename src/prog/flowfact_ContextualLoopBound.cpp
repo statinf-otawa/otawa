@@ -180,12 +180,6 @@ throw(AmbiguousBoundException) {
  */
 int ContextualLoopBound::lookMax(genstruct::Tree<data_t> *cur) {
 	ASSERT(cur);
-	
-	// Look for a maximum
-	if(cur->data().max != undefined)
-		return cur->data().max;
-	
-	// Derive it from children
 	int tmax = undefined;
 	for(genstruct::Tree<data_t> *child = cur->children();
 	child;
@@ -203,13 +197,9 @@ int ContextualLoopBound::lookMax(genstruct::Tree<data_t> *cur) {
  * @return			Total.
  */
 int ContextualLoopBound::lookTotal(genstruct::Tree<data_t> *cur) {
-	ASSERT(cur);
-	
-	// Look for a maximum
-	if(cur->data().total != undefined)
-		return cur->data().total;
-	
-	// Derive it from children
+	ASSERT(cur);	
+	if(cur->isEmpty())
+		return undefined;
 	int ttotal = 0;
 	for(genstruct::Tree<data_t> *child = cur->children();
 	child;
@@ -247,13 +237,12 @@ int ContextualLoopBound::findMax(const ContextPath<Address>& path) {
 		if(cmax == undefined
 		|| (cur->data().max != undefined && cur->data().max < cmax))
 			cmax = cur->data().max;
+			if(cmax != undefined)
+				return cmax;
 	}
 	
 	// Look for a max
-	int lmax = lookMax(cur);
-	if(lmax != undefined)
-		cmax = min(cmax, lmax);
-	return cmax;
+	return max(cmax, lookMax(cur));
 }
 
 
@@ -275,16 +264,15 @@ int ContextualLoopBound::findTotal(const ContextPath<Address>& path) {
 		if(!child)
 			break;
 		cur = child;
-		if(cur->data().total != undefined)
+		if(cur->data().total != undefined) {
 			ctotal = cur->data().total;
+			if(ctotal != undefined)
+				return ctotal;
+		}
 	}
 	
 	// Look for a max
-	int ltotal = lookTotal(cur);
-	if(ltotal != undefined)
-		return ltotal;
-	else
-		return ctotal;
+	return max(ctotal, lookTotal(cur));
 }
 
 
