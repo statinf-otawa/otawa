@@ -94,6 +94,8 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 					log << "\t\tfound CONTEXTUAL_LOOP_BOUND(" << bb << ") = " << cbound << io::endl;
 				bound = cbound->findMax(path);
 				total = cbound->findTotal(path);
+				if(isVerbose())
+					log << "\t\tmax = " << bound << ", total = " << total << io::endl;
 			}
 		}
 		
