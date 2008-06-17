@@ -106,7 +106,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 
 		// process the current BB
 		if(isVerbose())
-			log << "\tprocessing BB" << bb->number() << io::endl;
+			log << "\tprocessing BB" << bb->number() << " (" << bb->address() << ")\n";
 		processBB(ws, cfg, bb);
 		
 		// look outing edge
@@ -126,13 +126,21 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 			
 			case Edge::TAKEN:
 			case Edge::NOT_TAKEN:
-			case Edge::VIRTUAL:
 				if(edge->target() && MARK(edge->target()) != calls.top()) {
 					todo.push(edge->target());
 					MARK(edge->target()) = calls.top();
 				}
 				break;
 				
+			case Edge::VIRTUAL:
+				ASSERT(edge->target());
+				if(edge->target()->isExit()) {
+					returns.push(edge->target());
+					break;
+				}
+				// !!WORKAROUND!!
+				CALLED_CFG(edge) = cfg;			
+
 			case Edge::VIRTUAL_CALL:
 				
 				// check recursivity
