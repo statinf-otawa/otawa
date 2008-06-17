@@ -45,7 +45,8 @@ Segment::Segment(
 	_size(size),
 	map(new ProgItem *[MAP_SIZE(size)])
 {
-	ASSERTP(size, "zero size segment");
+	// Removed : segment with 0 size seems to be normal
+	// ASSERTP(size, "zero size segment");
 	for(size_t i = 0; i < MAP_SIZE(size); i++)
 		map[i] = 0; 
 }
