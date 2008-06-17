@@ -39,6 +39,7 @@
 #include <otawa/cfg/Virtualizer.h>
 #include <otawa/display/CFGOutput.h>
 #include <otawa/exegraph/ParamExeGraphBBTime.h>
+#include <otawa/util/FlowFactLoader.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -107,6 +108,8 @@ using namespace elm::system;
  * 
  * @li -c path, --cache=path -- load the cache description from the file whose
  * path is given.
+ * 
+ * @li -f path, --flow-facts=path -- use the given flow fact file,
  *
  * @li -p, --pseudounrolling -- enable Pseudo-Unrolling (cat2 only)
  *
@@ -274,6 +277,7 @@ BoolOption pseudounrolling(command, 'u', "pseudounrolling", "enable Pseudo-Unrol
 BoolOption not_inlining(command, 'I', "do-not-inline", "do not inline function calls", false);
 static StringOption ilp_plugin(command, "ilp", "select the ILP solver", "solver name");
 static StringOption output_prefix(command, 'o', "output", "Prefix of output file names", "output prefix", "");
+static StringOption flow_facts(command, 'f', "flowfacts", "Select the fow fact file", "flow facts file", "");
 
 
 /**
@@ -323,6 +327,8 @@ void Command::compute(String fun) {
 	}
 	if(ilp_plugin)
 		ipet::ILP_PLUGIN_NAME(props) = ilp_plugin.value().toCString();
+	if(flow_facts)
+		FLOW_FACTS_PATH(props) = Path(flow_facts);
 	
 	// Virtualization
 	if(!not_inlining) {
