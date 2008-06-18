@@ -66,9 +66,11 @@ namespace otawa { namespace arm {
 
 
 // Specialized registers
-static const int pc = 15;
-static const int lr = 14;
-static const int sp = 13;
+static const int pc = 15,
+				 lr = 14,
+				 sp = 13,
+				 ip = 12,
+				 fp = 11;
 
 // Registers
 static PlainBank gpr("GPR", Register::INT, 32, "r%d", 16);
@@ -76,6 +78,19 @@ static Register sr("sr", Register::BITS, 32);
 static MeltedBank misc("misc", &sr, 0);
 static const RegBank *banks_tab[] = { &gpr, &misc };
 static Table<const RegBank *> banks(banks_tab, 2);
+
+
+/**
+ * Set the IS_PC_RELATIVE and IS_SP_RELATIVE identifier according instruction.
+ * @param inst	Current instruction.
+ * @param reg	Base register.
+ */
+static void setMemAccess(bool& is_pc, bool& is_sp, int reg) {
+	if(reg == pc)
+		is_pc = true;
+	else if(reg == sp || reg == fp)
+		is_sp = true;
+}
 
 
 /**
@@ -677,7 +692,7 @@ otawa::Inst *Process::decode(address_t addr) {
 		kind |= Inst::IS_COND;
 
 	// Look the instruction
-	bool is_mla = false;
+	bool is_mla = false, is_pc = false, is_sp = false;
 	int num_regs = 1;
 	otawa::Inst *res = 0;
 	switch (inst->ident) {
@@ -774,20 +789,23 @@ otawa::Inst *Process::decode(address_t addr) {
 		goto branch;
 
 	case ID_LDRSH_:
-	case ID_LDRSH__0:
 	case ID_LDRSB_:
-	case ID_LDRSB__0:
 	case ID_LDRH_:
+	case ID_LDRSB__0:
+	case ID_LDRSH__0:
 	case ID_LDRH__0:
+		setMemAccess(is_pc, is_sp, inst->instrinput[4].val.uint8);
 		kind |= Inst::IS_INT | Inst::IS_LOAD | Inst::IS_MEM;
 		goto simple;
 
 	case ID_STRH_:
 	case ID_STRH__0:
+		setMemAccess(is_pc, is_sp, inst->instrinput[4].val.uint8);
 		kind |= Inst::IS_INT | Inst::IS_STORE | Inst::IS_MEM;
 		goto simple;
 
 	case ID_R_:
+		setMemAccess(is_pc, is_sp, inst->instrinput[6].val.uint8);
 		if(inst->instrinput[8].val.uint8)
 			kind |= Inst::IS_SHIFT;		
 		kind |= Inst::IS_INT | Inst::IS_MEM;
@@ -802,6 +820,7 @@ otawa::Inst *Process::decode(address_t addr) {
 		goto simple;
 
 	case ID_R__0:
+		setMemAccess(is_pc, is_sp, inst->instrinput[6].val.uint8);
 		kind |= Inst::IS_INT | Inst::IS_MEM;
 		if (inst->instrinput[5].val.uint8) {
 			kind |= Inst::IS_LOAD;
@@ -884,6 +903,7 @@ otawa::Inst *Process::decode(address_t addr) {
 		goto simple;
 
 	case ID_M_:
+		setMemAccess(is_pc, is_sp, inst->instrinput[5].val.uint8);
 		{
 			int count = countQuad(inst->instrinput[10].val.uint8);
 			if(count < 2) count += countQuad(inst->instrinput[9].val.uint8);
@@ -946,6 +966,19 @@ otawa::Inst *Process::decode(address_t addr) {
 	// Set the annotations
 	if(is_mla)
 		IS_MLA(res) = true;
+	if(is_pc)
+		IS_PC_RELATIVE(res) = true;
+	if(is_sp)
+		IS_SP_RELATIVE(res) = true;
+
+	// !!DEBUG!!
+	/*if(res->isMem()) {
+		cerr << ">>> " << res->address() << ":\t" << res
+			 << (IS_PC_RELATIVE(res) ? "pc " : " ")
+			 << (IS_SP_RELATIVE(res) ? "sp " : " ")
+			 << io::endl;
+	}*/
+	
 	NUM_REGS_LOAD_STORE(res) = num_regs;
 	return res;
 }
