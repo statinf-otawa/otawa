@@ -151,9 +151,13 @@ ContextualLoopBound::look(const ContextPath<Address>& path) {
 void ContextualLoopBound::addMax(const ContextPath<Address>& path, int max)
 throw(AmbiguousBoundException) {
 	genstruct::Tree<data_t> *cur = look(path);
-	if(cur->data().max != -1)
-		throw AmbiguousBoundException("ambiguous maximum bound");
-	cur->data().max = max;
+	if(cur->data().max != -1 && cur->data().max != max) {
+		cur->data().max = elm::max(max, cur->data().max);
+		// !!FIX!!
+		//throw AmbiguousBoundException("ambiguous maximum bound");
+	}
+	else
+		cur->data().max = max;
 }
 
 
@@ -167,9 +171,13 @@ throw(AmbiguousBoundException) {
 void ContextualLoopBound::addTotal(const ContextPath<Address>& path, int total)
 throw(AmbiguousBoundException) {
 	genstruct::Tree<data_t> *cur = look(path);
-	if(cur->data().total != -1)
-		throw AmbiguousBoundException("ambiguous total bound");
-	cur->data().total = total;
+	if(cur->data().total != -1 && cur->data().total != total) {
+		cur->data().total = elm::max(total, cur->data().total);
+		// !!FIX!!
+		//throw AmbiguousBoundException("ambiguous total bound");
+	}
+	else
+		cur->data().total = total;
 }
 
 
@@ -180,6 +188,8 @@ throw(AmbiguousBoundException) {
  */
 int ContextualLoopBound::lookMax(genstruct::Tree<data_t> *cur) {
 	ASSERT(cur);
+	if(cur->data().max != undefined)
+		return cur->data().max;
 	int tmax = undefined;
 	for(genstruct::Tree<data_t> *child = cur->children();
 	child;
