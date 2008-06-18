@@ -45,5 +45,24 @@ Identifier<bool> IS_MLA("otawa::arm::IS_MLA", false);
 
 Identifier<int> NUM_REGS_LOAD_STORE("otawa::arm::NUM_REGS_LOAD_STORE", 1);
 
+
+/**
+ * This identifier is set to true on load/store instructions accessing the
+ * memory through the SP or the FP registers.
+ * 
+ * @par Hooks
+ * @li @ref otawa::Inst
+ */
+Identifier <bool> IS_SP_RELATIVE("otawa::arm::IS_SP_RELATIVE", false);
+
+/**
+ * This identifier is set to true on load/store instructions accessing the
+ * memory through the PC register.
+ * 
+ * @par Hooks
+ * @li @ref otawa::Inst
+ */
+Identifier <bool> IS_PC_RELATIVE("otawa::arm::IS_PC_RELATIVE", false);
+
 } } // otawa::arm
 
