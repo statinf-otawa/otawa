@@ -90,7 +90,7 @@ class NormalizationException {
  * the @ref ConstraintLoader (argument of type @ref elm::String).
  * @ingroup extcons
  */
-GenericIdentifier<Path> ConstraintLoader::PATH("otawa::ipet::ConstraintLoader::path", "");
+Identifier<Path> ConstraintLoader::PATH("otawa::ipet::ConstraintLoader::path", "");
 
 
 /**
@@ -114,7 +114,6 @@ GenericIdentifier<Path> ConstraintLoader::PATH("otawa::ipet::ConstraintLoader::p
 ConstraintLoader::ConstraintLoader(void):
 	CFGProcessor("otawa::ipet::ConstraintLoader", Version(1, 0, 0))
 {
-	require(CFG_INFO_FEATURE);
 }
 
 
@@ -144,7 +143,7 @@ bool ConstraintLoader::newBBVar(CString name, address_t addr) {
 	BasicBlock *bb = getBB(addr);
 	if(!bb)
 		return false;
-	ilp::Var *var = bb->get<ilp::Var *>(IPET::ID_Var, 0);
+	ilp::Var *var = bb->get<ilp::Var *>(ipet::VAR, 0);
 	if(!var)
 		out << "ERROR: variable " << name << " of basic block at " << addr
 			<< " is not defined.\n";
@@ -170,7 +169,7 @@ bool ConstraintLoader::newEdgeVar(CString name, address_t src, address_t dst) {
 	// Find edge 
 	for(BasicBlock::OutIterator edge(src_bb); edge; edge++) {
 		if(edge->target() == dst_bb) {
-			ilp::Var *var = edge->get<ilp::Var *>(IPET::ID_Var, 0);
+			ilp::Var *var = edge->get<ilp::Var *>(ipet::VAR, 0);
 			if(var) {
 				vars.put(name, var);
 				return var;
@@ -307,26 +306,24 @@ void ConstraintLoader::configure(const PropList& props) {
  * <p>The read file path is taken from configuration if available, or built
  * from the binary file path with ".ipet" appended.</p>
  */
-void ConstraintLoader::processCFG(FrameWork *_fw, CFG *cfg) {
+void ConstraintLoader::processCFG(WorkSpace *_fw, CFG *cfg) {
 	
 	// Initialization
 	fw = _fw;
-	system = ipet::getSystem(_fw, cfg);
+	system = ipet::SYSTEM(_fw);
 	assert(system);
 	
 	// Select the file
 	if(!path) {
-		Iterator<File *> file(*fw->files());
 		elm::StringBuffer buffer;
-		buffer.put(file->name());
-		buffer.put(".ipet");
+		buffer <<_fw->process()->program()->name() << ".ipet";
 		path = buffer.toString();
 	}
 	
 	// Open the file
 	ipet_in = fopen(&path.toCString(), "r");
 	if(!ipet_in) {
-		warn("ERROR: cannot open the constraint file \"%s\".", &path);
+		warn(_ << "cannot open the constraint file \"" << &path << "\".");
 		return;
 	}
 	

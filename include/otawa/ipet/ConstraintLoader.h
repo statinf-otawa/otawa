@@ -17,17 +17,17 @@
 
 // External class
 namespace otawa {
-	class ConstraintLoader;
+	namespace ipet { class ConstraintLoader; }
 	class ExpNode;
 	class BasicBlock;
-	class NormNode;
 }
-int ipet_parse(otawa::ConstraintLoader *);
-void ipet_error(otawa::ConstraintLoader *, const char *);
+int ipet_parse(otawa::ipet::ConstraintLoader *);
+void ipet_error(otawa::ipet::ConstraintLoader *, const char *);
 
 namespace otawa { namespace ipet {
 
 using namespace elm::system;
+class NormNode;
 
 
 // ConstraintLoader class
@@ -35,9 +35,9 @@ class ConstraintLoader: public CFGProcessor {
 	friend int ::ipet_parse(ConstraintLoader *);
 	friend void ::ipet_error(ConstraintLoader *, const char *);
 	
-	FrameWork *fw;
+	WorkSpace *fw;
 	ilp::System *system;
-	elm::genstruct::HashTable<void *, BasicBlock *> bbs;
+	elm::genstruct::HashTable<Address, BasicBlock *> bbs;
 	elm::genstruct::HashTable<String, ilp::Var *> vars;
 	elm::String path;
 
@@ -49,10 +49,10 @@ class ConstraintLoader: public CFGProcessor {
 	NormNode *normalize(ExpNode *node, double mult = 1);
 
 protected:
-	virtual void processCFG(FrameWork *fw, CFG *cfg);
+	virtual void processCFG(WorkSpace *fw, CFG *cfg);
 
 public:
-	static GenericIdentifier<Path> PATH;
+	static Identifier<Path> PATH;
 	ConstraintLoader(void);
 	virtual void configure(const PropList& prop = PropList::EMPTY);
 };

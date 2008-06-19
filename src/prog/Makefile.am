@@ -48,6 +48,9 @@ libotawa_la_SOURCES = \
 	Process.cpp \
 	ipet_BasicConstraintsBuilder.cpp \
 	ipet_BasicObjectFunctionBuilder.cpp \
+	ipet_ConstraintLoader.cpp \
+	ipet_parser.yy \
+	ipet_lexer.ll \
 	ipet_Delta.cpp \
 	ipet_FlowFactLoader.cpp \
 	ipet_FlowFactConstraintBuilder.cpp \
@@ -159,7 +162,8 @@ libotawa_la_SOURCES = \
 	exegraph_ParamExeGraphBBTime.cpp \
 	util_Trace.cpp \
 	loader_arm.cpp \
-	flowfact_ContextualLoopBound.cpp
+	flowfact_ContextualLoopBound.cpp \
+	loader_mcode.cpp
 
 	
 

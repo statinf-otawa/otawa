@@ -19,7 +19,7 @@ int ipet_lex(void);
 %locations
 %defines
 %error-verbose
-%parse-param {otawa::ConstraintLoader *loader}
+%parse-param {otawa::ipet::ConstraintLoader *loader}
 
 %union {
 	char *id;
@@ -108,6 +108,6 @@ exp:
 
 %%
 
-void ipet_error(otawa::ConstraintLoader *loader, const char *msg) {
+void ipet_error(otawa::ipet::ConstraintLoader *loader, const char *msg) {
 	loader->out << "ERROR: " << msg << ".\n";
 }
