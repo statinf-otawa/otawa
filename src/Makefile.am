@@ -41,10 +41,8 @@ endif
 # Dependent tools
 if HAS_ILP
 SUBDIRS += bpred
-if HAS_SYSTEMC
+endif
 SUBDIRS += oipet
-endif
-endif
 
 
 
