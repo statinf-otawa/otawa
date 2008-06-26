@@ -193,7 +193,9 @@ class Command: public elm::option::Manager {
 	genstruct::Vector<String> funs;
 	otawa::Manager manager;
 	WorkSpace *fw;
-	gensim::GenericSimulator sim;
+	#ifdef	HAS_SYSTEMC
+		gensim::GenericSimulator sim;
+	#endif
 public:
 	Command(void);
 	void compute(String fun);
@@ -340,7 +342,8 @@ void Command::compute(String fun) {
 	switch(bbtime_option) {
 
 	case bbtime_sim:
-	case bbtime_delta: {
+	case bbtime_delta:
+		{
 			BBTimeSimulator bbts;
 			bbts.process(fw, props);
 		}
@@ -500,7 +503,9 @@ void Command::run(void) {
 	NO_SYSTEM(props) = true;
 	if(proc) {
 		PROCESSOR_PATH(props) = proc.value();
-		SIMULATOR(props) = &sim;
+#		ifdef HAS_SYSTEMC
+			SIMULATOR(props) = &sim;
+#		endif
 	}
 	if(cache)
 		CACHE_CONFIG_PATH(props) = elm::system::Path(cache);
