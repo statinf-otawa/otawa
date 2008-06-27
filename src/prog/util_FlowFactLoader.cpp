@@ -42,7 +42,128 @@ extern int fft_line;
 
 
 /**
- * @defgroup f4 F4 : Flow Facts File Format
+ * @defgroup ff Flow Facts
+ * 
+ * This module addresses the problem of the use of flow facts in OTAWA.
+ * As this kind of information may be provided by the user or external tools,
+ * OTAWA accepts several formats of input :
+ * @li @ref f4 is a textual format with specific commands, 
+ * @li @ref ffx is an XML format.
+ * 
+ * During the work of OTAWA, the load of this file is performed using a special
+ * code processor: @ref otawa::util::FlowFactLoader.
+ */
+
+/**
+ * @page ffx Flow Fact XML format
+ * @ingroup ff
+ * 
+ * The format FFX, usually with the extension @c{.ffx}, provide the expressivity
+ * of XML applied to the expression of flow facts. The top level element must
+ * be @c{flowfacts}:
+ * 
+ * @code
+ * <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+ * <flowfacts>
+ *	...
+ * </flowfacts>
+ * @endcode
+ * 
+ * @par Addressing of program parts
+ * 
+ * The different element of this XML flow fact description usually designs
+ * some location in the program code. There are is different ways to describe
+ * code locations (as shown below) and the syntax, based on attributes of the
+ * elements, is shared by most flow fact elements.
+ * 
+ * In the following location forms, the used integers may have the following
+ * forms:
+ * @li a decimal integer,
+ * @li prefixed by '0', an octal integer,
+ * @li prefixed by '0[xX]', an hexadecimal integer.
+ * 
+ * @code
+ * <element address="ADDRESS"/>
+ * @endcode
+ * This is the simplest way to design a code piece just by its address. This
+ * address represents an integer coded as above. As this way is not very human
+ * compliant, you may prefer one of the following form.
+ * 
+ * @code
+ * <element label="LABEL" offset="OFFSET"/>
+ * @endcode
+ * This form provide a bit more portability and usability as the previous one.
+ * The address is represented as a label found in the code (usually a function
+ * label) and a signed integer offset to add to or substract from the label address.
+ * This location may be useful for symbol found in libraries. As the actual
+ * address is not known before program linkage, the location may be used
+ * and remains valid after linkage. 
+ * 
+ * @code
+ * <element source="SOURCE_FILE" line="LINE"/>
+ * @endcode
+ * This is the most advanced to locate code using the source file name and
+ * the line of the designed program part. Yet, according to the way the code
+ * is written (many source constructor on one line or use of macros) and
+ * to the performed optimization, this method may be imprecise as a	a source line
+ * may match differents parts in the code.
+ * 
+ * In the remaining of the document, the location defines above are identified
+ * by the keyword @c LOCATION in the element attributes.
+ * 
+ * @par Top level elements
+ * 
+ * Inside the @c flowfacts elements, the FFX format accepts the following
+ * components.
+ * 
+ * @code
+ * <noreturn LOCATION/>
+ * @endcode
+ * This flow fact inform that the located function never return. This may be
+ * helpful for function as the C library "_exit".
+ * 
+ * @code
+ * <nocall LOCATION/>
+ * @endcode
+ * When OTAWA encounters a call to the located function, it will be ignored
+ * 
+ * @code
+ * <function LOCATION>
+ * 	CONTENT
+ * </function>
+ * @endcode
+ * This flow fact informs that the CONTENT elements are applied to the
+ * located function. This element is mainly used to build function call
+ * contextual flow fact.
+ * 
+ * @code
+ * <loop LOCATION maxcount="INTEGER" totalcount="INTEGER"/>
+ * @endcode
+ * This element allows to put iteration limits on bounds. The LOCATION designs
+ * the header of the loop. @c maxcount gives the maximal number of iteration
+ * per loop start and @c totalcount gives the total number of loop iteration
+ * for the whole program execution. At least one of them must be given.
+ * 
+ * @par Content of functions and calls
+ * 
+ * The @ function element content may be either @c loop elements as given
+ * above or @c call  elements.
+ * 
+ * @code
+ * <call LOCATION>
+ * 	CONTENT
+ * </call>
+ * @endcode
+ * This elements represents a function call inside an existing function. The
+ * LOCATION gives the address of the called function. The content is the same
+ * as of a @c function, that is, @c loop and @c call elements. The embedding
+ * of calls allows to build function call contexts to make the loop bounds
+ * context aware and tighten the WCET.
+ */
+
+/**
+ * @page f4 F4 : Flow Facts File Format
+ * @ingroup ff
  * 
  * This file format is used to store flow facts information, currently, the
  * loop bounds. The usual non-mandatory extension of F4 files is "ff".
@@ -169,7 +290,7 @@ extern int fft_line;
  * 
  * @see
  * 		@ref f4 for more details on the flow facts files.
- * @ingroup f4
+ * @ingroup ff
  * @author H. Cassé <casse@irit.fr>
  */
 
@@ -800,7 +921,7 @@ throw(ProcessorException) {
 /**
  * This property may be used in the configuration of a code processor
  * to pass the path of an F4 file containing flow facts.
- * @ingroup f4
+ * @ingroup ff
  */
 Identifier<Path> FLOW_FACTS_PATH("otawa::flow_facts_path", "");
 
@@ -809,7 +930,7 @@ Identifier<Path> FLOW_FACTS_PATH("otawa::flow_facts_path", "");
  * This feature ensures that the flow facts has been loaded.
  * Currrently, only the @ref otawa::util::FlowFactLoader provides this kind
  * of information from F4 files.
- * @ingroup f4
+ * @ingroup ff
  * 
  * @par Hooked Properties
  * @li @ref IS_RETURN
@@ -834,7 +955,7 @@ Feature<FlowFactLoader> MKFF_PRESERVATION_FEATURE("otawa::MKFF_PRESERVATION_FEAT
  * Put on a control flow instruction, this shows that this instruction
  * is equivalent to a function return. It may be useful with assembly providing
  * very complex ways to express a function return.
- * @ingroup f4
+ * @ingroup ff
  * 
  * @par Hooks
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
@@ -845,7 +966,7 @@ Identifier<bool> IS_RETURN("otawa::is_return", false);
 /**
  * This annotation is put on the first instruction of functions that does not
  * never return. It is usually put on the C library "_exit" function.
- * @ingroup f4
+ * @ingroup ff
  * 
  * @par Hooks
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
@@ -856,7 +977,7 @@ Identifier<bool> NO_RETURN("otawa::no_return", false);
 /**
  * Put on the first instruction of a loop, it gives the maximum number of
  * iteration of this loop.
- * @ingroup f4
+ * @ingroup ff
  * 
  * @par Hooks
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
@@ -867,7 +988,7 @@ Identifier<int> MAX_ITERATION("otawa::max_iteration", -1);
 /**
  * In configuration of the FlowFactLoader, makes it fail if no flow fact
  * fail is available.
- * @ingroup f4
+ * @ingroup ff
  */
 Identifier<bool> FLOW_FACTS_MANDATORY("otawa.flow_facts_mandatory", false);
 
@@ -878,7 +999,7 @@ Identifier<bool> FLOW_FACTS_MANDATORY("otawa.flow_facts_mandatory", false);
  * @li @ref FLOW_FACTS_FEATURE
  * @par Hooks
  * @li @ref Inst
- * @ingroup f4
+ * @ingroup ff
  */
 Identifier<bool> NO_CALL("otawa::NO_CALL", false);
 
@@ -889,7 +1010,7 @@ Identifier<bool> NO_CALL("otawa::NO_CALL", false);
  * @li @ref FLOW_fACTS_FEATURE
  * @par Hooks
  * @li @ref Inst
- * @ingroup f4
+ * @ingroup ff
  */
 Identifier<bool> IGNORE_CONTROL("otawa::IGNORE_CONTROL", false);
 
@@ -902,7 +1023,7 @@ Identifier<bool> IGNORE_CONTROL("otawa::IGNORE_CONTROL", false);
  * @li @ref FLOW_fACTS_FEATURE
  * @par Hooks
  * @li @ref Inst
- * @ingroup f4
+ * @ingroup ff
  */
 Identifier<Address> BRANCH_TARGET("otawa::BRANCH_TARGET", Address());
 
@@ -914,7 +1035,7 @@ Identifier<Address> BRANCH_TARGET("otawa::BRANCH_TARGET", Address());
  * @li @ref MKFF_PRESERVATION_FEATURE
  * @par Hooks
  * @li @ref Inst
- * @ingroup f4
+ * @ingroup ff
  */
 Identifier<bool> PRESERVED("otawa::PRESERVED", false);
 
