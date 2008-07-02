@@ -2,3 +2,5 @@ Makefile.in
 Makefile
 .deps
 .libs
+lp_solve5.lo
+lp_solve5.la
