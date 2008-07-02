@@ -1,5 +1,6 @@
 includeotawautildir=$(includedir)/otawa/util
 includeotawautil_HEADERS = \
+	BBRatiodisplayer.h \
 	CFGNormalizer.h \
 	ContextTree.h \
 	HalfAbsInt.h \

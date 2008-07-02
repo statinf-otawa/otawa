@@ -40,6 +40,7 @@
 #include <otawa/display/CFGOutput.h>
 #include <otawa/exegraph/ParamExeGraphBBTime.h>
 #include <otawa/util/FlowFactLoader.h>
+#include <otawa/util/BBRatioDisplayer.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -144,7 +145,7 @@ using namespace elm::system;
  */
 
 // BBRatioDisplayer class
-class BBRatioDisplayer: public BBProcessor {
+/*class BBRatioDisplayer: public BBProcessor {
 public:
 	BBRatioDisplayer(void): BBProcessor("BBTimeDisplayer", Version(1, 0, 0)) {
 		require(ipet::WCET_FEATURE);
@@ -185,7 +186,7 @@ private:
 	int wcet;
 	ilp::System *system;
 };
-otawa::Identifier<int> BBRatioDisplayer::SUM("", 0);
+otawa::Identifier<int> BBRatioDisplayer::SUM("", 0);*/
 
 // Options
 class Command: public elm::option::Manager {
