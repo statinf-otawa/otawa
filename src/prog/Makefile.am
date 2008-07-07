@@ -162,7 +162,8 @@ libotawa_la_SOURCES = \
 	exegraph_ParamExeGraphBBTime.cpp \
 	util_Trace.cpp \
 	loader_arm.cpp \
-	flowfact_ContextualLoopBound.cpp
+	flowfact_ContextualLoopBound.cpp \
+	BBRatioDisplayer.cpp
 
 	
 
