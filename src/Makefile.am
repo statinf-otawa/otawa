@@ -1,5 +1,6 @@
 SUBDIRS= \
 	prog \
+	ets \
 	odisplay \
 	oloader
 

@@ -67,15 +67,6 @@ libotawa_la_SOURCES = \
 	util_LoopInfoBuilder.cpp \
 	dfa_XCFGVisitor.cpp \
 	dfa_XIterativeDFA.cpp \
-	ets_ETS.cpp \
-	ets_WCETComputation.cpp \
-	ets_TrivialAstBlockTime.cpp \
-	ets_FlowFactLoader.cpp \
-	ets_AbstractCacheState.cpp \
-	ets_ACSComputation.cpp \
-	ets_CacheHitComputation.cpp \
-	ets_CacheMissComputation.cpp \
-	ets_CacheFirstMissComputation.cpp \
 	util_Dominance.cpp \
 	util_PostDominance.cpp \
 	util_ContextTree.cpp \

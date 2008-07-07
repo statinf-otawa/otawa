@@ -59,17 +59,21 @@ function config_bpred {
 	KIND="proc"
 	DOC="branch prediction"
 }
+function config_ets {
+	KIND="proc"
+	DOC="Extended Timing Schema"
+}
 
 
 # Compute the module list
-modules="display"
+modules="display ets"
 @HAS_SYSTEMC_TRUE@		modules="$modules gensim"
 @HAS_LP_SOLVE_TRUE@		modules="$modules lp_solve"
 @HAS_LP_SOLVE5_TRUE@	modules="$modules lp_solve5"
 @HAS_GLISS_PPC_TRUE@	modules="$modules ppc"
 @HAS_GLISS_S12X_TRUE@	modules="$modules s12x"
 @HAS_GLISS_ARM_TRUE@	modules="$modules arm"
-@HAS_ILP_TRUE@				modules="$modules bpred"
+@HAS_ILP_TRUE@			modules="$modules bpred"
 
 
 # Decode options

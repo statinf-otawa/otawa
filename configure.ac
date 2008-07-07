@@ -280,6 +280,7 @@ AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
 	src/prog/Makefile
+	src/ets/Makefile
 	src/oshell/Makefile
 	src/lp_solve/Makefile
 	src/lp_solve5/Makefile
