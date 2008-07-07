@@ -46,6 +46,21 @@ WorkSpace::WorkSpace(Process *_proc): proc(_proc), featMap() {
 
 
 /**
+ * Build a new workspace on the same process as the given one.
+ * @param ws	Workspace to get the process form.
+ */
+WorkSpace::WorkSpace(const WorkSpace *ws) {
+	TRACE(this << ".WorkSpace::WorkSpace(" << ws << ')');
+	assert(ws);
+	proc = ws->process();
+	addProps(*proc);
+	Manager *man = proc->manager();
+	man->frameworks.add(this);
+	proc->link(this);	
+}
+
+
+/**
  * Delete the workspace and the associated process.
  */
 WorkSpace::~WorkSpace(void) {

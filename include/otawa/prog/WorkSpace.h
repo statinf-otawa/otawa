@@ -54,6 +54,7 @@ protected:
 		{ return proc->getProp(id); };
 public:
 	WorkSpace(Process *_proc);
+	WorkSpace(const WorkSpace *ws);
 	~WorkSpace(void);
 	inline Process *process(void) const { return proc; };
 	
