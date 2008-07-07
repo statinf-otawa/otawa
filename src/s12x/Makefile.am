@@ -8,7 +8,7 @@ AM_CXXFLAGS = @GLISS_S12X_CXXFLAGS@ @OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@
 # Library configuration
 s12x_la_LDFLAGS = -module
 
-s12x_la_LIBADD = @GLISS_S12X_LIBS@ @GEL_PPC_LIBS@ @OTAWA_LIBS@ ../oloader/liboloader.la
+s12x_la_LIBADD = @GLISS_S12X_LIBS@ @GEL_PPC_LIBS@ @OTAWA_LIBS@ ../oloader/liboloader.la @GEL_DWARF_LIBS@
 
 s12x_la_SOURCES = \
 	s12x.cpp \
