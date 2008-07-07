@@ -33,11 +33,12 @@ NameSpace NS("otawa");
 
 /**
  * Retrieve an identifier matching the given name.
- * @param name	Identifier name.
+ * @param _name	Identifier name.
  * @return		Null if not found else the identifier.
  */
-AbstractIdentifier *NameSpace::get(elm::String name) {
+AbstractIdentifier *NameSpace::get(const elm::String& _name) {
 	NameSpace *ns = this;
+	string name = _name;
 	int dot = name.indexOf('.');
 	while(dot >= 0) {
 		AbstractIdentifier *id = ns->names.get(name.substring(0, dot), 0);

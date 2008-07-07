@@ -23,7 +23,7 @@ class NameSpace: public AbstractIdentifier {
 
 public:
 	NameSpace(elm::CString prefix, NameSpace& parent = ::NS);
-	AbstractIdentifier *get(elm::String name);
+	AbstractIdentifier *get(const elm::String& name);
 	elm::String uri(void);
 	
 	// Identifier overload
