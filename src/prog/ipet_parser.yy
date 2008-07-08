@@ -6,10 +6,11 @@
  */
 %{
 #include "ExpNode.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <otawa/ipet/ConstraintLoader.h>
 
-using namespace otawa;
+//using namespace otawa;
 
 // Prototypes
 int ipet_lex(void);
@@ -56,54 +57,54 @@ lines:
 line:
 	/* empty */
 |	BB ID INTEGER
-		{ if(!loader->newBBVar($2, (address_t)$3)) YYABORT; free($2); }
+		{ if(!loader->newBBVar($2, otawa::Address($3))) YYABORT; free($2); }
 |	EDGE ID INTEGER INTEGER
-		{ if(!loader->newEdgeVar($2, (address_t)$3, (address_t)$4)) YYABORT; free($2); }
+		{ if(!loader->newEdgeVar($2, otawa::Address($3), otawa::Address($4))) YYABORT; free($2); }
 |	exp  comparator exp
 		{ if(!loader->addConstraint($1, $2, $3)) YYABORT; }
 ;
 
 comparator:
 	'='
-		{ $$ = ilp::Constraint::EQ; }
+		{ $$ = otawa::ilp::Constraint::EQ; }
 |	'<'
-		{ $$ = ilp::Constraint::LT; }
+		{ $$ = otawa::ilp::Constraint::LT; }
 |	OP_LE
-		{ $$ = ilp::Constraint::LE; }
+		{ $$ = otawa::ilp::Constraint::LE; }
 |	'>'
-		{ $$ = ilp::Constraint::GT; }
+		{ $$ = otawa::ilp::Constraint::GT; }
 |	OP_GE
-		{ $$ = ilp::Constraint::GE; }
+		{ $$ = otawa::ilp::Constraint::GE; }
 ;
 
 exp:
 	INTEGER
-		{ $$ = new ExpNode($1); }
+		{ $$ = new otawa::ExpNode($1); }
 |	REAL
-		{ $$ = new ExpNode($1); }
+		{ $$ = new otawa::ExpNode($1); }
 |	ID
 		{
-			ilp::Var *var = loader->getVar($1);
+			otawa::ilp::Var *var = loader->getVar($1);
 			free($1);
 			if(!var)
 				YYABORT;
 			else
-				$$ = new ExpNode(var);
+				$$ = new otawa::ExpNode(var);
 		}
 |	'(' exp ')'
 		{ $$ = $2; }
 |	'+' exp
-		{ $$ = new ExpNode(ExpNode::POS, $2);; }
+		{ $$ = new otawa::ExpNode(otawa::ExpNode::POS, $2);; }
 |	'-' exp
-		{ $$ = new ExpNode(ExpNode::NEG, $2);; }
+		{ $$ = new otawa::ExpNode(otawa::ExpNode::NEG, $2);; }
 |	exp '+' exp
-		{ $$ = new ExpNode(ExpNode::ADD, $1, $3); }
+		{ $$ = new otawa::ExpNode(otawa::ExpNode::ADD, $1, $3); }
 |	exp '-' exp
-		{ $$ = new ExpNode(ExpNode::SUB, $1, $3); }
+		{ $$ = new otawa::ExpNode(otawa::ExpNode::SUB, $1, $3); }
 |	exp '*' exp
-		{ $$ = new ExpNode(ExpNode::MUL, $1, $3); }
+		{ $$ = new otawa::ExpNode(otawa::ExpNode::MUL, $1, $3); }
 |	exp '/' exp
-		{ $$ = new ExpNode(ExpNode::DIV, $1, $3); }
+		{ $$ = new otawa::ExpNode(otawa::ExpNode::DIV, $1, $3); }
 ;
 
 %%
