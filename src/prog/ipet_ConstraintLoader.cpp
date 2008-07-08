@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <elm/string/StringBuffer.h>
+#include <otawa/cfg/CFGCollector.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/ConstraintLoader.h>
 #include <otawa/cfg.h>
@@ -125,7 +126,12 @@ ConstraintLoader::ConstraintLoader(void):
 BasicBlock *ConstraintLoader::getBB(address_t addr) {
 	BasicBlock *bb = bbs.get(addr, 0);
 	if(!bb) {
-		bb = BasicBlock::findBBAt(fw, addr);
+		for (CFGCollection::Iterator icfg(INVOLVED_CFGS(fw)); icfg; icfg++) {
+			for (CFG::BBIterator ibb(icfg); ibb; ibb++) {
+				if (ibb->address().compare(addr) == 0)
+					bb = ibb;
+			}
+		}
 		if(!bb) {
 			out << "ERROR: cannot find basic block at " << addr << ".\n"; 
 			return 0;
