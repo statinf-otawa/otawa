@@ -164,14 +164,18 @@ size_t BasicBlock::size(void) const {
 	assert(_head);
 	Inst *inst;
 	PseudoInst *pseudo;
+	int size = 0;
 	
 	// Find the next BB marker
-	for(inst = _head->nextInst(); inst; inst = inst->nextInst())
+	/*for(inst = _head->nextInst(); inst; inst = inst->nextInst())
 		if((pseudo = inst->toPseudo()) && pseudo->id() == &ID)
-			return inst->address() - address();
+			return inst->address() - address();*/
+	for(InstIterator inst((BasicBlock *)this); inst; inst++)
+		if(!inst->isPseudo())
+			size += inst->size();
 
 	// Else this is the last block
-	return 0;
+	return size;
 }
 
 
