@@ -52,7 +52,7 @@ BasicBlock& BasicBlock::null_bb = null_bb_inst;
 /**
  * Identifier of the basic block pseudo-instruction.
  */
-Identifier<BasicBlock *> BasicBlock::ID("ptawa::BasicBlock::id", 0, otawa::NS);
+Identifier<BasicBlock *> BasicBlock::ID("ptawa::BasicBlock::id", 0);
 
 
 /**
@@ -162,14 +162,9 @@ void BasicBlock::setNotTaken(BasicBlock *bb) {
  */
 size_t BasicBlock::size(void) const {
 	assert(_head);
-	Inst *inst;
-	PseudoInst *pseudo;
 	int size = 0;
 	
 	// Find the next BB marker
-	/*for(inst = _head->nextInst(); inst; inst = inst->nextInst())
-		if((pseudo = inst->toPseudo()) && pseudo->id() == &ID)
-			return inst->address() - address();*/
 	for(InstIterator inst((BasicBlock *)this); inst; inst++)
 		if(!inst->isPseudo())
 			size += inst->size();

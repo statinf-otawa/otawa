@@ -44,8 +44,8 @@ using namespace otawa::ipet;
 namespace otawa {
 	
 
-Identifier<ilp::Var *> HIT_VAR("otawa::hit_var", 0, otawa::NS);
-Identifier<ilp::Var *> MISS_VAR("otawa::miss_var", 0, otawa::NS);
+Identifier<ilp::Var *> HIT_VAR("otawa::HIT_VAR", 0);
+Identifier<ilp::Var *> MISS_VAR("otawa::MISS_VAR", 0);
   
 /**
  * @class CAT2ConstraintBuilder

@@ -38,7 +38,7 @@ namespace otawa { namespace ipet {
 
 /**
  */
-Identifier<ilp::Var *> HIT_VAR("otawa::ipet::hit_var", 0, otawa::NS);
+Identifier<ilp::Var *> HIT_VAR("otawa::ipet::hit_var", 0);
 
 
 /**
@@ -53,7 +53,7 @@ Identifier<ilp::Var *> BB_VAR("otawa::ipet::bb_var");
 
 /**
  */
-Identifier<CATNode *> NODE("otawa::ipet::node", 0, otawa::NS);
+Identifier<CATNode *> NODE("otawa::ipet::node", 0);
 
 
 /**
