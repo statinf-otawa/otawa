@@ -178,7 +178,7 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
  * @li @ref LBLOCKS
  * @li @ref BB_LBLOCKS
  */
-Feature<LBlockBuilder> COLLECTED_LBLOCKS_FEATURE("otawa::lblocks");
+Feature<LBlockBuilder> COLLECTED_LBLOCKS_FEATURE("otawa::COLLECTED_LBLOCKS_FEATURE");
 
 
 } // otawa

@@ -365,7 +365,7 @@ void ContextTreeByCFGBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
  * @par Properties
  * @li @ref CONTEXT_TREE (hooked to the @ref FrameWork). 
  */
-Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE("otawa::context_tree");
+Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE("otawa::CONTEXT_TREE_FEATURE");
 
 
 /**
@@ -376,7 +376,7 @@ Feature<ContextTreeBuilder> CONTEXT_TREE_FEATURE("otawa::context_tree");
  * @li @ref CONTEXT_TREE (hooked to the @ref CFG).
  */
 Feature<ContextTreeByCFGBuilder>
-	CONTEXT_TREE_BY_CFG_FEATURE("otawa::context_tree_by_cfg");
+	CONTEXT_TREE_BY_CFG_FEATURE("otawa::CONTEXT_TREE_BY_CFG_FEATURE");
 
 
 /**
@@ -386,7 +386,7 @@ Feature<ContextTreeByCFGBuilder>
  * @par Hooks
  * @li @ref FrameWork
  */
-Identifier<ContextTree *> CONTEXT_TREE("otawa::context_tree", 0);
+Identifier<ContextTree *> CONTEXT_TREE("otawa::CONTEXT_TREE", 0);
 
 
 /**
@@ -398,6 +398,6 @@ Identifier<ContextTree *> CONTEXT_TREE("otawa::context_tree", 0);
  * 
  * @deprecated	Not working without inlining.
  */
-Identifier<ContextTree *> OWNER_CONTEXT_TREE("otawa::owner_context_tree", 0);
+Identifier<ContextTree *> OWNER_CONTEXT_TREE("otawa::OWNER_CONTEXT_TREE", 0);
 
 } // otawa
