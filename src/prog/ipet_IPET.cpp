@@ -162,10 +162,4 @@ ilp::System *getSystem(WorkSpace *fw, CFG *cfg) {
 Feature<NoProcessor>
 	INTERBLOCK_SUPPORT_FEATURE("otawa::ipet::interblock_support");
 
-
-/**
- * IPET namespace.
- */
-NameSpace NS("ipet", otawa::NS);
-
 } } // otawa::ipet
