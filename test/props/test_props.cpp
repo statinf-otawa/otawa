@@ -8,6 +8,7 @@
 #include <elm/util/test.h>
 #include <otawa/properties.h>
 #include <elm/genstruct/Vector.h>
+#include <otawa/ipet/IPET.h>
 
 using namespace elm;
 using namespace otawa;
@@ -98,6 +99,12 @@ int main(void) {
 				break;
 			}
 		CHECK(checked);
+	}
+	
+	// Identifie find
+	{
+		AbstractIdentifier *id = AbstractIdentifier::find("otawa::ipet::wcet");
+		CHECK(id == & otawa::ipet::WCET);
 	}
 	
 	CHECK_END
