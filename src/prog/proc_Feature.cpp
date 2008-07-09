@@ -6,7 +6,6 @@
  */
 
 #include <otawa/proc/Feature.h>
-#include <otawa/prop/NameSpace.h>
 
 namespace otawa {
 
@@ -17,17 +16,11 @@ namespace otawa {
  */
 
 /**
- * Basically, the features are identifier owned by this name space.
- */
-NameSpace AbstractFeature::NS("features", otawa::NS);
-
-
-/**
  * Build a simple feature.
  * @param name Name of the feature (only for information).
  */
 AbstractFeature::AbstractFeature(CString name)
-: Identifier<Processor *>(name, 0, NS) {
+: Identifier<Processor *>(name, 0) {
 }
 
 
