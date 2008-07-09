@@ -17,7 +17,7 @@ namespace otawa {
  * in variable arguments "...".
  * @ingroup prop
  */
-const AbstractIdentifier END("end", otawa::NS);
+const AbstractIdentifier END("end");
 
 
 /**
