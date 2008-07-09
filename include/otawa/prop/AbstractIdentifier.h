@@ -1,5 +1,5 @@
 /*
- * ADTREE -- OTAWA plugin for Eclipse
+ * OTAWA -- WCET computation framework
  * Copyright (C) 2007-08  IRIT - UPS <casse@irit.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -27,44 +27,26 @@
 #include <otawa/type.h>
 
 
+namespace elm { template <class T> class Initializer; }
+
 namespace otawa {
 
 // External classes
 class Property;
 class PropList;
-class NameSpace;
 
-// External Data
-extern NameSpace NS;
-
-} // otawa
-
-// Root namespace
-extern otawa::NameSpace NS;
-
-namespace otawa {
 
 // Identifier class
 class AbstractIdentifier {
-	friend class Manager;
-	elm::String nam;
-	NameSpace& _parent;
-	AbstractIdentifier *next;
-
-	static bool initialized;
-	static AbstractIdentifier *init_list;
-	static void init(void);
-	void link(void);
+	friend class Initializer<AbstractIdentifier>;
 
 public:	
 	static AbstractIdentifier *find(const string& name);
 
 	AbstractIdentifier(void);
-	AbstractIdentifier(elm::String name, NameSpace& parent = ::NS);
+	AbstractIdentifier(elm::String name);
 	virtual ~AbstractIdentifier(void) { }
 
-	inline NameSpace const & parent(void) const { return _parent; };
-	virtual NameSpace *toNameSpace(void);
 	inline const elm::String name(void) const;
 
 	virtual void print(elm::io::Output& out) const;
@@ -72,6 +54,10 @@ public:
 	inline void print(elm::io::Output& output, const Property *prop) const;
 	virtual const Type& type(void) const;
 	virtual void scan(PropList& props, VarArg& args) const;
+
+private:
+	elm::String nam;
+	void initialize(void);
 };
 
 
