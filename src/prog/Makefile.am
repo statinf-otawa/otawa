@@ -8,16 +8,6 @@ libotawa_la_LIBADD=@GEL_LIBS@ @ELM_LIBS@
 
 libotawa_la_SOURCES = \
 	feature.h \
-	BlockAST.cpp \
-	FunAST.cpp \
-	ASTInfo.cpp \
-	CallAST.cpp \
-	SeqAST.cpp \
-	IfAST.cpp \
-	WhileAST.cpp \
-	DoWhileAST.cpp \
-	ForAST.cpp \
-	AST.cpp \
 	base.cpp \
 	manager.cpp \
 	platform.cpp \
@@ -41,7 +31,6 @@ libotawa_la_SOURCES = \
 	proc_FeatureRequirer.cpp \
 	proc_FunProcessor.cpp \
 	proc_LBlockProcessor.cpp \
-	proc_ASTProcessor.cpp \
 	proc_BBProcessor.cpp \
 	proc_ProcessorException.cpp \
 	proc_Registry.cpp \
@@ -87,9 +76,6 @@ libotawa_la_SOURCES = \
 	hardware_Cache.cpp \
 	hardware_CacheConfiguration.cpp \
 	hardware_Platform.cpp \
-	ast_parser.yy \
-	ast_lexer.ll \
-	ast_ASTLoader.cpp \
 	cache_CCGBuilder.cpp \
 	cache_CCGConstraintBuilder.cpp \
 	cache_CCGDFA.cpp \
