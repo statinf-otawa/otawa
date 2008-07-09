@@ -256,33 +256,33 @@ int Delta::delta(BBPath &bbp, WorkSpace *fw){
  * This identifier is used for forcing the depth of the Delta algorith.
  * If this identifier is not set, the depth will be adjusted automatically
  */
-Identifier<int>  Delta::LEVELS("Delta::levels", 0, ipet::NS);
+Identifier<int>  Delta::LEVELS("Delta::levels", 0);
 
 /**
  * This identifier is used for storing the delta value of a path
  */
-Identifier<int> Delta::DELTA("Delta::delta", 0, ipet::NS);
+Identifier<int> Delta::DELTA("Delta::delta", 0);
 
 /**
  * This identifier is used for storing the time for the first
  * instruction to fetch after all instructions from the
  * beginning of the sequence have been fetched.
  */
-Identifier<int> Delta::SEQ_COMPLETION("Delta::seq_completion", 0, ipet::NS);
+Identifier<int> Delta::SEQ_COMPLETION("Delta::seq_completion", 0);
 
 
 /**
  * Property used to return statistics about the @ref Delta processor about
  * the maximal sequence length in instructions.
  */
-Identifier<double> Delta::MAX_LENGTH("otawa::ipet::Delta::max_length", 0, ipet::NS);
+Identifier<double> Delta::MAX_LENGTH("otawa::ipet::Delta::max_length", 0);
 
 
 /**
  * Property used to return statistics about the @ref Delta processor about
  * the mean sequence length in instructions.
  */
-Identifier<double> Delta::MEAN_LENGTH("otawa::ipet::Delta::min_length", 0, ipet::NS);
+Identifier<double> Delta::MEAN_LENGTH("otawa::ipet::Delta::min_length", 0);
 
 
 /**
@@ -290,7 +290,7 @@ Identifier<double> Delta::MEAN_LENGTH("otawa::ipet::Delta::min_length", 0, ipet:
  * storing all BBPath starting from this basic block
  */
 Identifier<TreePath<BasicBlock*,BBPath*>*>
-	Delta::TREE("otawa::ipet::Delta::tree", 0, ipet::NS);
+	Delta::TREE("otawa::ipet::Delta::tree", 0);
 
 
 /**
