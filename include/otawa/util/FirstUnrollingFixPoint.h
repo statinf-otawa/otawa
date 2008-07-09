@@ -105,7 +105,7 @@ class FirstUnrollingFixPoint {
 	
 };
 
-template <class Listener> Identifier<typename Listener::Problem::Domain*> FirstUnrollingFixPoint<Listener>::STATE("", NULL, otawa::NS);	
+template <class Listener> Identifier<typename Listener::Problem::Domain*> FirstUnrollingFixPoint<Listener>::STATE("", NULL);	
 	
 template < class Listener >	
 inline void FirstUnrollingFixPoint<Listener >::init(util::HalfAbsInt<FirstUnrollingFixPoint> *_ai) {

@@ -101,7 +101,7 @@ class DefaultFixPoint {
 	
 };
 	
-template < class Listener > Identifier<typename Listener::Problem::Domain*> DefaultFixPoint<Listener >::STATE("", NULL, otawa::NS);
+template < class Listener > Identifier<typename Listener::Problem::Domain*> DefaultFixPoint<Listener >::STATE("", NULL);
 
 template < class Listener >	
 inline void DefaultFixPoint<Listener >::init(util::HalfAbsInt<DefaultFixPoint> *_ai) {
