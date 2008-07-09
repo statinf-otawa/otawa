@@ -99,7 +99,7 @@ class HalfAbsInt {
 };
 
 template <class FixPoint>
-Identifier<typename FixPoint::FixPointState*> HalfAbsInt<FixPoint>::FIXPOINT_STATE("", NULL, otawa::NS);
+Identifier<typename FixPoint::FixPointState*> HalfAbsInt<FixPoint>::FIXPOINT_STATE("", NULL);
 
 template <class FixPoint>
 inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, WorkSpace& _fw)
