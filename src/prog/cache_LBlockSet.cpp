@@ -19,7 +19,7 @@ namespace otawa {
  * @par Hooks
  * @li @ref FrameWork
  */
-Identifier<LBlockSet **> LBLOCKS("otawa::lblocks", 0);
+Identifier<LBlockSet **> LBLOCKS("otawa::LBLOCKS", 0);
 
 /**
  * This property is used for storing the list of L-Blocks of a BasicBlock.
