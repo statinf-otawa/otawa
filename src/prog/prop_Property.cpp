@@ -157,8 +157,7 @@ namespace otawa {
  * @return				Allocated identifier code.
  */
 const AbstractIdentifier *Property::getID(elm::CString name) {
-	String _(name);
-	return ::NS.get(name);
+	return AbstractIdentifier::find(name);
 }
 
 
