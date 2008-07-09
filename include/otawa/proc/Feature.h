@@ -24,7 +24,6 @@ class FeatureDependency;
 // AbstractFeature class
 class AbstractFeature: public Identifier<Processor *> {
 public:
-	static NameSpace NS;
 	AbstractFeature(CString name = "");
 	inline void incUseCount();
 	inline void decUseCount();
