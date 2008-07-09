@@ -60,13 +60,19 @@ function config_bpred {
 	DOC="branch prediction"
 }
 function config_ets {
-	KIND="proc"
+	KIND="proc_otawa"
 	DOC="Extended Timing Schema"
+	REQUIRE="ast"
+}
+
+function config_ast {
+	KIND="proc_otawa"
+	DOC="Abstract Syntactic Tree"
 }
 
 
 # Compute the module list
-modules="display ets"
+modules="display ast ets"
 @HAS_SYSTEMC_TRUE@		modules="$modules gensim"
 @HAS_LP_SOLVE_TRUE@		modules="$modules lp_solve"
 @HAS_LP_SOLVE5_TRUE@	modules="$modules lp_solve5"
@@ -74,7 +80,82 @@ modules="display ets"
 @HAS_GLISS_S12X_TRUE@	modules="$modules s12x"
 @HAS_GLISS_ARM_TRUE@	modules="$modules arm"
 @HAS_ILP_TRUE@			modules="$modules bpred"
+module_done=""
 
+
+# use a module ($1: module, $2: static)
+function use_module {
+	mod="$1"
+	#echo "use_module($1)"
+	
+	# test already done
+	if [ `expr match "$modules" ".*$mod.*"` == 0 ]; then
+		echo "ERROR: unknown module $mod"
+		exit 1
+	fi
+	if [ `expr match "$module_done" ".*$mod.*"` != 0 ]; then
+		#echo "$1 already done !"
+		return
+	fi
+	
+	# configure the module
+	KIND=""
+	LIB=""
+	STATIC_LIB=""
+	REQUIRE=""
+	config_$mod
+	
+	# setup the module
+	if [ "$2" = yes ]; then
+		if [ -z "$LIB_STATIC" ]; then
+			case "$KIND" in
+			ilp)
+				LIB_STATIC="-u${mod}_plugin @prefix@/lib/otawa/ilp/$mod.la"
+				;;
+			loader)
+				LIB_STATIC="-u${mod}_plugin @prefix@/lib/otawa/loader/$mod.la"
+				;;
+			lib)
+				LIB_STATIC="@prefix@/lib/libo$mod.la"
+				;;
+			proc)
+				LIB_STATIC="@prefix@/lib/otawa/proc/$mod.la"
+				;;
+			proc_otawa)
+				LIB_STATIC="@prefix@/lib/otawa/proc/otawa/$mod.la"
+				;;
+			esac
+		fi
+		libs_text="$libs_text $LIB_STATIC "
+	else
+		if [ -z "$LIB" ]; then
+			case "$KIND" in
+			ilp)
+				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin @prefix@/lib/otawa/ilp/$mod.la"
+				;;
+			loader)
+				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin @prefix@/lib/otawa/loader/$mod.la"
+				;;
+			lib)
+				LIB="@prefix@/lib/libo$mod.la"
+				;;
+			proc)
+				LIB="@prefix@/lib/otawa/proc/$mod.la"
+				;;
+			proc_otawa)
+				LIB="@prefix@/lib/otawa/proc/otawa/$mod.la"
+				;;
+			esac
+			fi
+			libs_text="$libs_text $LIB "
+	fi
+
+	# handle the requirements
+	module_done="$module_done $mod"
+	for require in $REQUIRE; do
+		use_module $require $2
+	done	
+}
 
 # Decode options
 while test "$1" != ""; do
@@ -129,58 +210,10 @@ while test "$1" != ""; do
 		exit 1
 		;;
 	+*)
-		mod="${1#+}"
-		if [ `expr match "$modules" ".*$mod.*"` == 0 ]; then
-			echo "ERROR: unknown module $mod"
-			exit 1
-		fi
-		KIND=""
-		LIB_STATIC=""
-		config_$mod
-		if [ -z "$LIB_STATIC" ]; then
-			case "$KIND" in
-			ilp)
-				LIB_STATIC="-u${mod}_plugin @prefix@/lib/otawa/ilp/$mod.la"
-				;;
-			loader)
-				LIB_STATIC="-u${mod}_plugin @prefix@/lib/otawa/loader/$mod.la"
-				;;
-			lib)
-				LIB_STATIC="@prefix@/lib/libo$mod.la"
-				;;
-			proc)
-				LIB_STATIC="@prefix@/lib/otawa/proc/$mod.la"
-				;;
-			esac
-		fi
-		libs_text="$LIB_STATIC $libs_text"
+		use_module "${1#+}" yes
 		;;
 	*)
-		mod="$1"
-		if [ `expr match "$modules" ".*$mod.*"` == 0 ]; then
-			echo "ERROR: unknown module $mod"
-			exit 1
-		fi
-		KIND=""
-		LIB=""
-		config_$mod
-		if [ -z "$LIB" ]; then
-			case "$KIND" in
-			ilp)
-				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin @prefix@/lib/otawa/ilp/$mod.la"
-				;;
-			loader)
-				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin @prefix@/lib/otawa/loader/$mod.la"
-				;;
-			lib)
-				LIB="@prefix@/lib/libo$mod.la"
-				;;
-			proc)
-				LIB="@prefix@/lib/otawa/proc/$mod.la"
-				;;
-			esac
-		fi
-		libs_text="$LIB $libs_text"
+		use_module $1 no
 		;;
 	esac
 	shift
