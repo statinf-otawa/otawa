@@ -79,8 +79,8 @@ public:
 	};
 	
 	// Constructors
-	inline Identifier(elm::CString name, NameSpace& ns = ::NS);
-	inline Identifier(elm::CString name, const T& default_value, NameSpace& = ::NS);
+	inline Identifier(elm::CString name);
+	inline Identifier(elm::CString name, const T& default_value);
 		
 	// PropList& Accessors
 	inline void add(PropList& list, const T& value) const;
@@ -133,16 +133,15 @@ inline const T& Identifier<T>::get(const Property& prop) const {
 }
 
 template <class T>
-inline Identifier<T>::Identifier(elm::CString name, NameSpace& ns)
-: AbstractIdentifier(name, ns) {
+inline Identifier<T>::Identifier(elm::CString name)
+: AbstractIdentifier(name) {
 }
 
 template <class T>
 inline Identifier<T>::Identifier(
 	elm::CString name,
-	const T& default_value,
-	NameSpace& ns)
-: AbstractIdentifier(name, ns), def(default_value) {
+	const T& default_value)
+: AbstractIdentifier(name), def(default_value) {
 }
 
 template <class T>
