@@ -55,7 +55,7 @@ public:
 
 template <class G>
 Identifier<Microprocessor<typename G::Node> *> 
-ExeGraphBBTime<G>::PROCESSOR("otawa.ExeGraphBBTime.proc.", NULL);
+ExeGraphBBTime<G>::PROCESSOR("", NULL);
 
 
 template <class G>
