@@ -1,8 +1,8 @@
-procdir=$(libdir)/otawa/proc
+otawaprocdir=$(libdir)/otawa/proc/otawa
 
 AM_CXXFLAGS = @OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@
 
-proc_LTLIBRARIES = ets.la
+otawaproc_LTLIBRARIES = ets.la
 
 ets_la_LDFLAGS = -module
 ets_la_LIBADD = @OTAWA_LIBS@
