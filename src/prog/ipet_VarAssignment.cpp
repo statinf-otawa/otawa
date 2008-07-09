@@ -46,7 +46,7 @@ void VarAssignment::init(void) {
  *
  * Force the ilp variable name of an edge or basic block
  */
-Identifier<String* > FORCE_NAME("otawa::FORCE_NAME", NULL, otawa::NS);
+Identifier<String* > FORCE_NAME("otawa::FORCE_NAME", NULL);
 
 
 /**
