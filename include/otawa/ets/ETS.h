@@ -16,7 +16,6 @@ namespace otawa { namespace ets {
 class AbstractCacheState;
 
 // Identifiers
-extern NameSpace NS;
 extern Identifier<int> LOOP_COUNT;
 extern Identifier<int> WCET;
 extern Identifier<AbstractCacheState *> ACS;
