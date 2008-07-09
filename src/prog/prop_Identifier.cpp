@@ -1,5 +1,5 @@
 /*
- * ADTREE -- OTAWA plugin for Eclipse
+ * OTAWA -- WCET computation framework
  * Copyright (C) 2003-08  IRIT - UPS <casse@irit.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,9 +20,11 @@
 #include <elm/io.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/properties.h>
-#include <otawa/prop/NameSpace.h>
+#include <elm/util/Initializer.h>
 
 using namespace elm;
+
+#define TRACE(txt) //cerr << txt << io::endl;
 
 namespace otawa {
 
@@ -57,6 +59,11 @@ DuplicateIdentifierException::DuplicateIdentifierException(String& name)
 };
 
 
+// Storage of known identifiers
+static genstruct::HashTable<String, AbstractIdentifier *> ids;
+static Initializer<AbstractIdentifier> ids_init;
+
+
 /**
  * @class AbstractIdentifier
  * Represents a unique identifier used by the annotation system.
@@ -71,39 +78,21 @@ DuplicateIdentifierException::DuplicateIdentifierException(String& name)
  * @return	Found identifier or null.
  */
 AbstractIdentifier *AbstractIdentifier::find(const string& name) {
-	return NS.get(name);
+	return ids.get(name, 0);
 }
 
 
 /**
  * For internal use only.
  */
-AbstractIdentifier *AbstractIdentifier::init_list = 0;
-bool AbstractIdentifier::initialized = false;
-
-
-/**
- * For internal use only.
- */
-void AbstractIdentifier::init(void) {
-	if(!initialized) {
-		for(AbstractIdentifier *id = init_list; id; id = id->next)
-			id->link();
-		initialized = true;
-	}
-}
-
-
-/**
- * For internal use only.
- */
-void AbstractIdentifier::link(void) {
-	if(_parent.get(nam)) {
+void AbstractIdentifier::initialize(void) {
+	TRACE("initialize(" << (void *)this << ", " << nam << ")");
+	if(ids.get(nam)) {
 		cerr << "FATAL ERROR: identifier \"" << nam << "\" defined multiple times.";
 		String _(nam);
 		throw DuplicateIdentifierException(_);
 	}
-	_parent.add(this);
+	ids.add(nam, this);
 }
 
 
@@ -111,10 +100,8 @@ void AbstractIdentifier::link(void) {
  * Build an aninymouns identifier.
  */
 AbstractIdentifier::AbstractIdentifier(void)
-:	nam(""),
-	_parent(::NS)
-{
-		ASSERT(!((((unsigned int)this) > 0xbf000000) && (((unsigned int)this) < 0xc0000000)));
+:	nam("") {
+		//ASSERT(!((((unsigned int)this) > 0xbf000000) && (((unsigned int)this) < 0xc0000000)));
 }
 
 
@@ -125,18 +112,14 @@ AbstractIdentifier::AbstractIdentifier(void)
  * @param name		Name of the identifier.
  * @param parent	Parent namespace.
  */
-AbstractIdentifier::AbstractIdentifier(elm::String name, NameSpace& parent)
-:	nam(name),
- 	_parent(parent)
+AbstractIdentifier::AbstractIdentifier(elm::String name)
+:	nam(name)
 {
-	ASSERT(!((((unsigned int)this) > 0xbf000000) && (((unsigned int)this) < 0xc0000000)));
+	//ASSERT(!((((unsigned int)this) > 0xbf000000) && (((unsigned int)this) < 0xc0000000)));
+	TRACE("construct(" << (void *)this << ", " << nam << ")");
 	if(name) {
-		if(initialized)
-			link();
-		else {
-			next = init_list;
-			init_list = this;
-		}
+		TRACE("record(" << (void *)this << ", " << nam << ")");
+		ids_init.record(this);
 	}
 }
 
@@ -146,15 +129,6 @@ AbstractIdentifier::AbstractIdentifier(elm::String name, NameSpace& parent)
  * Get the parent namespace.
  * @return Parent namespace.
  */
-
-
-/**
- * If this identifier is a namespace, return it.
- * @return	Matching namespace or null.
- */
-NameSpace *AbstractIdentifier::toNameSpace(void) {
-	return 0;
-}
 
 
 /**
