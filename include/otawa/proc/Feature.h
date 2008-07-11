@@ -73,36 +73,63 @@ void Feature<T, C>::check(WorkSpace *fw) const {
 // FeatureDependency class
 class FeatureDependency {
 	int refcount;
+	bool invalidated;
+	const AbstractFeature *feature;
 	
 public:
-	genstruct::DAGNode<const AbstractFeature*> *graph;
+	genstruct::DAGNode<FeatureDependency*> *graph;
 	
-	inline FeatureDependency(const AbstractFeature *feature);
+	inline FeatureDependency(const AbstractFeature *_feature);
 	inline ~FeatureDependency();
-	inline void incUseCount();
-	inline void decUseCount();
+	inline void addChild(FeatureDependency *fdep);
+	inline void removeChild(FeatureDependency *fdep);
 	inline bool isInUse();
+	inline bool isInvalidated();
+	inline void setInvalidated(bool inv);
+	inline const AbstractFeature *getFeature() const;
+	
 	
 };
 
-inline FeatureDependency::FeatureDependency(const AbstractFeature *feature)
-	: refcount(0), graph(new genstruct::DAGNode<const AbstractFeature*>(feature))
+inline FeatureDependency::FeatureDependency(const AbstractFeature *_feature)
+	: refcount(0), invalidated(false), feature(_feature), graph(new genstruct::DAGNode<FeatureDependency*>(this))
 	{ }
 
 inline FeatureDependency::~FeatureDependency() {
 	delete graph;
 }
-inline void FeatureDependency::incUseCount()  {
-	refcount++;
+
+inline const AbstractFeature *FeatureDependency::getFeature() const {
+	return feature;
 }
 
+inline void FeatureDependency::addChild(FeatureDependency *fdep)  {	
+	graph->addChild(fdep->graph);
+	fdep->refcount++;
+}
+
+inline void FeatureDependency::removeChild(FeatureDependency *fdep)  {
+	fdep->refcount--;
+	graph->removeChild(fdep->graph);
+	ASSERT(fdep->refcount >= 0);
+	if (fdep->refcount == 0) {
+		delete fdep;
+	}
+}
 inline bool FeatureDependency::isInUse() {
 	return (refcount > 0);
 }
 
-inline void FeatureDependency::decUseCount()  {
-	refcount--;
+inline bool FeatureDependency::isInvalidated() {
+	return invalidated;
 }
+
+inline void FeatureDependency::setInvalidated(bool inv) {
+	invalidated = inv;
+	if (invalidated && (refcount == 0))
+		delete this;
+}
+
 
 // Feature
 extern Feature<NoProcessor> NULL_FEATURE;
