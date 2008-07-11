@@ -6,6 +6,7 @@ includeotawaproc_HEADERS = \
 	LBlockProcessor.h \
 	Feature.h \
 	FeatureRequirer.h \
+	ContextualProcessor.h \
 	FunProcessor.h \
 	Processor.h \
 	ProcessorException.h \

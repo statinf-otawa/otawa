@@ -7,6 +7,7 @@ SUBDIRS= \
 	display \
 	ets \
 	exegraph \
+	flowfact \
 	hard \
 	hardware \
 	ilp \
@@ -37,7 +38,6 @@ includeotawa_HEADERS = \
 	base.h  \
 	cfg.h \
 	ets.h\
-	flowfact \
 	gliss.h \
 	hard.h \
 	ilp.h \
