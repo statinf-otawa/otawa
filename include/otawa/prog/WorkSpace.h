@@ -87,10 +87,10 @@ public:
 	void invalidate(const AbstractFeature& feature);
 	
 	// Feature dependency graph management
-	FeatureDependency* getGraph(const AbstractFeature* feature);
-	void newGraph(const AbstractFeature* feature);
-	bool hasGraph(const AbstractFeature* feature);
-	void delGraph(const AbstractFeature* feature);
+	FeatureDependency* getFeatDep(const AbstractFeature* feature);
+	void newFeatDep(const AbstractFeature* feature);
+	bool hasFeatDep(const AbstractFeature* feature);
+	void delFeatDep(const AbstractFeature* feature);
 };
 
 };	// otawa

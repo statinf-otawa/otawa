@@ -174,45 +174,40 @@ xom::Element *WorkSpace::config(void) {
  * Get the dependency graph node associated with the feature and workspace
  * @param feature	Provided feature.
  */
-FeatureDependency* WorkSpace::getGraph(const AbstractFeature* feature) {
+FeatureDependency* WorkSpace::getFeatDep(const AbstractFeature* feature) {
 	FeatureDependency *result = featMap.get(feature, NULL);
 	ASSERT(result != NULL);
+	ASSERT(!result->isInvalidated());
 	return(result);
 }
 
 /**
- * Create a new dependency graph node associated with the feature and workspace
- * Replace a old deleted graph, if necessary.
+ * Create a new FeatureDependency associated with the feature. 
  * @param feature	Provided feature.
  */
- void WorkSpace::newGraph(const AbstractFeature* feature) {
- 	FeatureDependency *old = featMap.get(feature, NULL);
- 	if (old) {
- 		ASSERT(old->graph->isDeleted());
- 		featMap.remove(feature);
- 	}
+ void WorkSpace::newFeatDep(const AbstractFeature* feature) {
+ 	ASSERT(featMap.get(feature, NULL) == NULL); 	
  	featMap.put(feature, new FeatureDependency(feature));
 }
 
 /**
- * Delete the dependency graph node associated with the feature and workspace
- * It merely remove the item from the hashtable, it has to be freed by the user.
+ * Invalidates and delete the FeatureDependency associated w/ this feature and workspace
+ * It has to be freed by the user.
  * @param feature	Provided feature.
  */
- void WorkSpace::delGraph(const AbstractFeature* feature) {
+ void WorkSpace::delFeatDep(const AbstractFeature* feature) {
  	FeatureDependency *old = featMap.get(feature, NULL);
  	ASSERT(old);
- 	ASSERT(old->graph->isDeleted());
- 	ASSERT(!old->isInUse());
- 	delete old;
  	featMap.remove(feature);
+ 	old->setInvalidated(true);
 }
 
 /**
  * Tests if the feature has a dependency graph associated with it, in the context of the present workspace
  * @param feature	Provided feature.
  */
-bool WorkSpace::hasGraph(const AbstractFeature* feature) {
+bool WorkSpace::hasFeatDep(const AbstractFeature* feature) {
+	ASSERT(!featMap.exists(feature) || !featMap.get(feature, NULL)->isInvalidated()); 
 	return (featMap.exists(feature));
 }
 
@@ -222,15 +217,14 @@ bool WorkSpace::hasGraph(const AbstractFeature* feature) {
  * @param feature	Provided feature.
  */
 void WorkSpace::provide(const AbstractFeature& feature, const Vector<const AbstractFeature*> *required) {
-	if(!isProvided(feature)) {			
-		if (!hasGraph(&feature) || getGraph(&feature)->graph->isDeleted()) 
-			newGraph(&feature);
+	if(!isProvided(feature)) {
+		ASSERT(!hasFeatDep(&feature));					
+		newFeatDep(&feature);
 		
 		if (required != NULL) {
 			for (int j = 0; j < required->length(); j++) {
 				if (isProvided(*required->get(j))) {
-					getGraph(required->get(j))->graph->addChild(getGraph(&feature)->graph);
-					getGraph(&feature)->incUseCount();
+					getFeatDep(required->get(j))->addChild(getFeatDep(&feature));
 				}
 			}
 		}
@@ -244,14 +238,13 @@ void WorkSpace::provide(const AbstractFeature& feature, const Vector<const Abstr
  */
 void WorkSpace::invalidate(const AbstractFeature& feature) {
 	if (isProvided(feature)) {
-		for (genstruct::DAGNode<const AbstractFeature *>::Iterator dep(*getGraph(&feature)->graph); dep; dep++) {
-			DAGNode<const AbstractFeature *> *node = *dep;
-			invalidate(*node->useValue());
-			getGraph(&feature)->graph->delChild(node);
-			getGraph(node->useValue())->decUseCount();
-			if (!getGraph(node->useValue())->isInUse())
-				delGraph(node->useValue());
+		for (genstruct::DAGNode<FeatureDependency *>::Iterator iter(*getFeatDep(&feature)->graph); iter; iter++) {
+			DAGNode<FeatureDependency *> *childNode = *iter;
+			FeatureDependency *childDep = childNode->useValue();
+			invalidate(*childDep->getFeature());
+			getFeatDep(&feature)->removeChild(childDep);		
 		}
+		delFeatDep(&feature);
 		remove(feature);
 	}
 }
