@@ -1,7 +1,7 @@
 SUBDIRS= \
 	prog \
-	ets \
 	ast \
+	ets \
 	odisplay \
 	oloader
 
