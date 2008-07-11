@@ -23,6 +23,7 @@ using namespace elm;
 namespace otawa {
 	
 Feature<LoopUnroller> UNROLLED_LOOPS_FEATURE ("otawa::unrolled_loops_feature");
+Identifier<BasicBlock*> UNROLLED_FROM("otawa::UNROLLED_FROM", NULL);
 
 
 /**
@@ -53,13 +54,11 @@ LoopUnroller::LoopUnroller(void) : Processor("otawa::LoopUnroller", Version(1, 0
 	require(LOOP_HEADERS_FEATURE);
 	require(LOOP_INFO_FEATURE);
 	require(COLLECTED_CFG_FEATURE);
-	require(ipet::FLOW_FACTS_FEATURE);
 
 	invalidate(COLLECTED_CFG_FEATURE);
 	
 	provide(COLLECTED_CFG_FEATURE);
 	provide(UNROLLED_LOOPS_FEATURE);
-	provide(ipet::FLOW_FACTS_FEATURE);
 	idx = 0;
 }
 
@@ -113,13 +112,18 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 	typedef genstruct::Vector<Pair<VirtualBasicBlock*, Edge::kind_t> > BackEdgePairVector;
 	BackEdgePairVector backEdges;
 	bool dont_unroll = false;
+	BasicBlock *unrolled_from;
 	int start;
 
 	/* Avoid unrolling loops with LOOP_COUNT of 0, since it would create a LOOP_COUNT of -1 for the non-unrolled part of the loop*/
+	
+	/*
+	
 	if (header && (ipet::LOOP_COUNT(header) == 0)) {
 		dont_unroll = true;
 	}
-		
+	
+	*/	
 	//if (header) dont_unroll = true;
 	start = dont_unroll ? 1 : 0;
 	
@@ -169,18 +173,28 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 					if (VIRTUAL_RETURN_BLOCK(new_bb))
 						virtualCallList.put(new_bb);
 					
+					if ((current == header) && (!dont_unroll)) {
+						if (i == 0) {
+							unrolled_from = new_bb;
+						} else {
+							UNROLLED_FROM(new_bb) = unrolled_from;
+						} 
+					}
+					/*
 					if (ipet::LOOP_COUNT(new_bb) != -1) {
 						if (i == 0) {
 							new_bb->removeAllProp(&ipet::LOOP_COUNT);
-						} else {
+						} 
+						else {
 							int old_count = ipet::LOOP_COUNT(new_bb);
 							new_bb->removeAllProp(&ipet::LOOP_COUNT);
 							ipet::LOOP_COUNT(new_bb) = old_count - (1 - start);
 							assert(ipet::LOOP_COUNT(new_bb) >= 0);
 							
 						}
+						
 					}
-					
+					*/
 					INDEX(new_bb) = idx;
 					idx++;
 					vcfg->addBB(new_bb);
@@ -254,7 +268,8 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 					CFG *called_vcfg = coll->get(called_idx);
 					new Edge(vsrc, called_vcfg->entry(), Edge::CALL);
 					ENTRY(called_vcfg->entry()) = called_vcfg;
-					CALLED_CFG(outedge) = called_vcfg;
+					CALLED_CFG(outedge) = called_vcfg; /* XXX:  ??!? */
+					 
 				
 				} else if ((outedge->target() != header) || ((i == 1) /* XXX && !dont_unroll XXX*/ )) {
 					new Edge(vsrc, vdst, outedge->kind());

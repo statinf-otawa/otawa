@@ -27,6 +27,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/util/Dominance.h>
 #include <otawa/ilp.h>
+#include <otawa/cfg/LoopUnroller.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/util/Dominance.h>
@@ -109,28 +110,58 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 			warn(_ << "no flow fact constraint for loop at " << bb->address());
 		else  {
 			
+			
+			
 			// sum{(i,h) / h dom i} eih <= count * sum{(i, h) / not h dom x} xeih
 			if(bound != ContextualLoopBound::undefined) {
-				otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);
+				
+				
+				ASSERT(bound >= 0);
+				
+				/* Substract unrolling from loop bound */
+				for (BasicBlock *bb2 = UNROLLED_FROM(bb); bb2; bb2 = UNROLLED_FROM(bb2))
+					bound--;
+
+				/* Set execution count to 0 for each unrolled iteration that cannot be taken */	
+				if (bound < 0) {
+					BasicBlock *bb2 = bb;
+					otawa::ilp::Constraint *cons0 = system->newConstraint(otawa::ilp::Constraint::EQ);
+					for (int i = 0; i < (-bound); i++) {
+						for (BasicBlock::InIterator edge(bb); edge; edge++) {
+							ASSERT(edge->source());
+							otawa::ilp::Var *var  = VAR(edge);
+							cons0->addLeft(1, var);
+						}
+						bb2 = UNROLLED_FROM(bb2);
+					}
+				}
+				
+				otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);	
 				for(BasicBlock::InIterator edge(bb); edge; edge++) {
-					assert(edge->source());
+					ASSERT(edge->source());
 					otawa::ilp::Var *var = VAR(edge);
 					if(Dominance::dominates(bb, edge->source()))
 						cons->addLeft(1, var);
 					else
-						cons->addRight(bound, var);
+						cons->addRight((bound < 0) ? 0 : bound, var);
 				}
+
 			}
 			
 			// eih <= total
 			if(total != ContextualLoopBound::undefined) {
 				otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);
-				for(BasicBlock::InIterator edge(bb); edge; edge++) {
-					assert(edge->source());
-					otawa::ilp::Var *var = VAR(edge);
-					if(Dominance::dominates(bb, edge->source()))
-						cons->addLeft(1, var);
-				}
+				
+				BasicBlock *bb2 = bb;
+				do {
+					for(BasicBlock::InIterator edge(bb2); edge; edge++) {
+						ASSERT(edge->source());
+						otawa::ilp::Var *var = VAR(edge);
+						if(Dominance::dominates(bb2, edge->source()) || UNROLLED_FROM(bb2))
+							cons->addLeft(1, var);
+					}
+					bb2 = UNROLLED_FROM(bb2);				
+				} while (bb2 != NULL);
 				cons->addRight(total);
 			}
 		}
