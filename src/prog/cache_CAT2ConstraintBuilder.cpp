@@ -139,7 +139,8 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 		                		Constraint *cons3 = system->newConstraint(Constraint::LE);
 	    	            		cons3->addLeft(1, MISS_VAR(lblock));
 	        	        		cons3->addRight(1, VAR(lblock->bb()));
-							}						
+							}
+						break;						
 	                	case ALWAYS_MISS: {
 		                		// Add constraint: xmiss = x
 		                		Constraint *cons3 = system->newConstraint(Constraint::EQ);
