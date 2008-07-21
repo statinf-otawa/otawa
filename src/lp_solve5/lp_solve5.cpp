@@ -451,6 +451,7 @@ elm::IteratorInst<ilp::Constraint::Term> *System::objTerms(void) {
  * Free all ressources.
  */
 System::~System(void) {
+	delete ofun;
 	while(conss)
 		delete conss;
 }
