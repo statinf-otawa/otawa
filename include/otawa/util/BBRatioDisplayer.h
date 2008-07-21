@@ -22,7 +22,10 @@
 #ifndef OTAWA_BBRATIODISPLAYER_H_
 #define OTAWA_BBRATIODISPLAYER_H_
 
+#include <elm/system/Path.h>
 #include <otawa/proc/BBProcessor.h>
+
+namespace elm { namespace io { class OutFileStream; } }
 
 namespace otawa {
 
@@ -32,14 +35,23 @@ namespace ilp { class System; }
 class BBRatioDisplayer: public BBProcessor {
 public:
 	BBRatioDisplayer(void);
+	static Identifier<bool> TO_FILE;
+	static Identifier<elm::system::Path> PATH;
+	
 protected:
+	virtual void configure(const PropList& props);
 	virtual void setup(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
 	virtual void processCFG(WorkSpace *fw, CFG *cfg);
 	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 private:
 	static otawa::Identifier<int> SUM;
 	int wcet;
 	ilp::System *system;
+	elm::io::Output out;
+	elm::system::Path path;
+	bool to_file;
+	elm::io::OutFileStream *stream;
 };
 
 } // otawa

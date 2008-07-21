@@ -23,6 +23,8 @@
 #include <otawa/ipet.h>
 #include <otawa/util/BBRatioDisplayer.h>
 
+using namespace elm::system;
+
 namespace otawa {
 
 // Private identifier
@@ -51,6 +53,10 @@ otawa::Identifier<int> BBRatioDisplayer::SUM("", 0);
  * @par Required features
  * @li @ref ipet::WCET_FEATURE
  * @li @ref ipet::ASSIGNED_VARS_FEATURE
+ *
+ * @par Configuration
+ * @li @ref otawa::BBRatioDisplay::TO_FILE
+ * @li @ref otawa::BBRatioDisplay::PATH
  */
 
 
@@ -58,15 +64,35 @@ otawa::Identifier<int> BBRatioDisplayer::SUM("", 0);
  * Build the processor.
  */
 BBRatioDisplayer::BBRatioDisplayer(void)
-: BBProcessor("BBTimeDisplayer", Version(1, 0, 0)) {
-		require(ipet::WCET_FEATURE);
-		require(ipet::ASSIGNED_VARS_FEATURE);
+: BBProcessor("BBTimeDisplayer", Version(1, 0, 0)), path(""), to_file(false), stream(0) {
+	require(ipet::WCET_FEATURE);
+	require(ipet::ASSIGNED_VARS_FEATURE);
+}
+
+
+/**
+ */
+void BBRatioDisplayer::configure(const PropList& props) {
+	path = PATH(props);
+	to_file = TO_FILE(props);
 }
 
 
 /**
  */
 void BBRatioDisplayer::setup(WorkSpace *ws) {
+
+	// prepare the output
+	if(!path && to_file)
+		path = _ << ENTRY_CFG(ws)->label() << ".ratio";
+	if(path) {
+		stream = new OutFileStream(&path.toString());
+		if(!stream->isReady())
+			throw ProcessorException(*this, _ << "cannot open \"" << path << "\"");
+		out.setStream(*stream);
+	}
+
+	// prepare the work
 	wcet = ipet::WCET(ws);
 	system = ipet::SYSTEM(ws);
 	out << "ADDRESS\t\tNUM\tSIZE\tTIME\tCOUNT\tRATIO\t\tFUNCTION\n";
@@ -102,5 +128,28 @@ void BBRatioDisplayer::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 		<< (float)total * 100 / wcet << "%\t"
 		<< cfg->label() << io::endl; 
 }
+
+
+/**
+ */
+void BBRatioDisplayer::cleanup(WorkSpace *ws) {
+	if(stream)
+		delete stream;
+}
+
+
+/**
+ * Configure the @ref BBRatiodisplayer to perform its output to a file.
+ * If no @ref BBRatioDisplayer::PATH is given, the file name is obtained
+ * from the entry function name and postfixed with ".ratio".
+ */
+Identifier<bool> BBRatioDisplayer::TO_FILE("otawa::BBRatioDisplayer::TO_FILE", false);
+
+
+/**
+ * Configure the @ref BBRatioDisplayer to perform its output to the named file.
+ */
+Identifier<elm::system::Path> BBRatioDisplayer::PATH("otawa::BBRatioDisplayer::PATH", "");
+
 
 } // otawa
