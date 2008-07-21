@@ -71,11 +71,11 @@ private:
 
 
 // FeatureIter class
-class FeatureIter: public PreIterator<FeatureIter, const FeatureUsage&> {
+class FeatureIter: public PreIterator<FeatureIter, const FeatureUsage *> {
 public:
 	inline FeatureIter(const AbstractRegistration& registration)
 		: reg(&registration), iter(reg->features) { step(); }
-	inline const FeatureUsage& item(void) const { return iter.item(); }
+	inline const FeatureUsage *item(void) const { return &iter.item(); }
 	inline void next(void) { iter.next(); step(); }
 	inline bool ended(void) const { return !reg; }
 	
