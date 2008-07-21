@@ -54,6 +54,7 @@ libotawa_la_SOURCES = \
 	ipet_WCETComputation.cpp \
 	ipet_WCETCountRecorder.cpp \
 	util_LoopInfoBuilder.cpp \
+	dfa_IterativeDFA.cpp \
 	dfa_XCFGVisitor.cpp \
 	dfa_XIterativeDFA.cpp \
 	util_Dominance.cpp \
