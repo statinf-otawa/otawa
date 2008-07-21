@@ -1155,6 +1155,7 @@ Process::Process(
 	const PropList& props
 ): otawa::loader::old_gliss::Process(manager, &arm_plugin, pf, props) {
 	provide(CONTROL_DECODING_FEATURE);
+	provide(REGISTER_USAGE_FEATURE);
 }
 
 } } // otawa::arm
