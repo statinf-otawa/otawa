@@ -42,6 +42,7 @@ Exception::Exception(void): MessageException("") {
  * @param message	Message of the exception.
  */
 Exception::Exception(const string& message): MessageException(message) {
+	//cerr << "otawa::Exception::Exception(\"" << message << "\")\n";
 }
 
 
