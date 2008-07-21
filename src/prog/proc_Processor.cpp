@@ -3,7 +3,7 @@
  *	Processor class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-7, IRIT UPS.
+ *	Copyright (c) 2005-8, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -230,35 +230,45 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	ws = fw;
 	configure(props);
 
-	// Check required feature
+	// Remove non-required invalidated features
+	for(FeatureIter feature(*reg); feature; feature++)
+		if(feature->kind() == FeatureUsage::invalidate
+		&& !reg->requires(feature->feature())) {
+			if(isVerbose())
+				log << "INVALIDATED: " << feature->feature().name()
+					<< " by " << reg->name() << io::endl;
+			fw->invalidate(feature->feature());
+		}
+
+	// Get required feature
 	Vector<const AbstractFeature *> required;
 	for(FeatureIter feature(*reg); feature; feature++)
-		if((*feature).kind() == FeatureUsage::require) {
-			required.add(&(*feature).feature());
+		if(feature->kind() == FeatureUsage::require) {
+			required.add(&feature->feature());
 			if(isVerbose())
-				log << "REQUIRED: " << (*feature).feature().name()
+				log << "REQUIRED: " << feature->feature().name()
 					<< " by " << reg->name() << io::endl;
 			try {
-				fw->require((*feature).feature(), props);				
+				fw->require(feature->feature(), props);				
 			}
 			catch(NoProcessorException& e) {
-				throw UnavailableFeatureException(this, (*feature).feature());
+				throw UnavailableFeatureException(this, feature->feature());
 			}
 		}
 
 	// Pre-processing actions
 	if(isVerbose()) 
-	log << "Starting " << name() << " (" << version() << ')' << io::endl;
+		log << "Starting " << name() << " (" << version() << ')' << io::endl;
 	system::StopWatch swatch;
 	if(isTimed())
 		swatch.start();
+	setup(fw);
 	
 	// Launch the work
-	setup(fw);
 	processWorkSpace(fw);
-	cleanup(fw);
 	
 	// Post-processing actions
+	cleanup(fw);
 	if(isVerbose())
 		log << "Ending " << name();
 	if(isTimed()) {
@@ -271,24 +281,31 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	if(isVerbose()) 
 		log << io::endl;
 	
-	// Remove invalidated features
+	// Cleanup required invalidated features
 	for(FeatureIter feature(*reg); feature; feature++)
-		if((*feature).kind() == FeatureUsage::invalidate) {
-			// recursively invalidate all children
+		if(feature->kind() == FeatureUsage::invalidate
+		&& reg->requires(feature->feature())) {
 			if(isVerbose())
-				log << "INVALIDATED: " << (*feature).feature().name()
+				log << "INVALIDATED: " << feature->feature().name()
 					<< " by " << reg->name() << io::endl;
-			fw->invalidate((*feature).feature());
+			fw->invalidate(feature->feature());
 		}
 	
 	// Add provided features
 	for(FeatureIter feature(*reg); feature; feature++)
-		if((*feature).kind() == FeatureUsage::provide) {
+		if(feature->kind() == FeatureUsage::provide) {
 			if(isVerbose())
-				log << "PROVIDED: " << (*feature).feature().name()
+				log << "PROVIDED: " << feature->feature().name()
 					<< " by " << reg->name() << io::endl;
-			fw->provide((*feature).feature(), &required);
+			fw->provide(feature->feature(), &required);
 		}
+	
+	// Put the cleaners
+	for(clean_list_t::Iterator clean; clean; clean++) {
+		FeatureDependency *dep = ws->getDependency((*clean).fst);
+		ASSERTP(dep, "cleanup invoked for a not provided feature: " + (*clean).fst->name());
+		(*dep)((*clean).snd);
+	}
 }
 
 
@@ -423,6 +440,22 @@ void Processor::invalidate(const AbstractFeature& feature) {
 void Processor::provide(const AbstractFeature& feature) {
 	reg->features.add(FeatureUsage(FeatureUsage::provide, feature));
 }
+
+
+/**
+ * @fn void Processor::addCleaner(const AbstractFeature *feature, Cleaner *cleaner);
+ * Add a cleaner for the given feature.
+ * @param feature	Feature the cleaner apply to.
+ * @param cleaner	Cleaner to add.
+ */
+
+
+/**
+ * @fn T *Processor::deletor(AbstractFeature *feature, T *object);
+ * Add cleaner that deletes the given object.
+ * @param feature	Feature the cleaner applies to.
+ * @param object	Object to delete.
+ */
 
 
 /**

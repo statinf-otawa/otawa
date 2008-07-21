@@ -83,21 +83,63 @@ void AbstractRegistration::record(void) {
 
 
 /**
- * @fn String Registration::name(void) const;
+ * Test if the current processor provides the given feature.
+ * @param feature	Tested feature.
+ * @return			True if the feature is provided, false else.
+ */
+bool AbstractRegistration::provides(const AbstractFeature& feature) {
+	for(FeatureIter fuse(*this); fuse; fuse++)
+		if(&(fuse->feature()) == &feature
+		&& fuse->kind() == FeatureUsage::provide)
+			return true;
+	return false;
+}
+ 
+
+/**
+ * Test if the current processor requires the given feature.
+ * @param feature	Tested feature.
+ * @return			True if the feature is required, false else.
+ */
+bool AbstractRegistration::requires(const AbstractFeature& feature) {
+	for(FeatureIter fuse(*this); fuse; fuse++)
+		if(&(fuse->feature()) == &feature
+		&& fuse->kind() == FeatureUsage::require)
+			return true;
+	return false;
+}
+ 
+
+/**
+ * Test if the current processor invalidates the given feature.
+ * @param feature	Tested feature.
+ * @return			True if the feature is invalidated, false else.
+ */
+bool AbstractRegistration::invalidates(const AbstractFeature& feature) {
+	for(FeatureIter fuse(*this); fuse; fuse++)
+		if(&(fuse->feature()) == &feature
+		&& fuse->kind() == FeatureUsage::invalidate)
+			return true;
+	return false;
+}
+ 
+
+/**
+ * @fn const string& AbstractRegistration::name(void) const;
  * Get the name of the processor.
  * @return	Processor name.
  */
 
 
 /**
- * @fn Version Registration::version(void) const;
+ * @fn const Version& AbstractRegistration::version(void) const;
  * Get the version of the processor.
  * @return	Processor version.
  */
 
 
 /**
- * @fn Processor *Registration::make(void) const;
+ * @fn Processor *AbstractRegistration::make(void) const;
  * Build the registered processor.
  * @return	Built processor.
  */

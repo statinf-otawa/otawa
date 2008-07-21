@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2007, IRIT UPS.
- *
  *	WorkSpace class implementation
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2007, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/manager.h>
@@ -65,7 +80,17 @@ WorkSpace::WorkSpace(const WorkSpace *ws) {
  */
 WorkSpace::~WorkSpace(void) {
 	TRACE(this << ".WorkSpace::~WorkSpace()");
+	
+	// clean-up
+	Vector<const AbstractFeature *> deps;
+	for(feat_map_t::ItemIterator dep(featMap); dep; dep++)
+		deps.add(dep->getFeature());
+	for(int i = 0; i < deps.length(); i++)
+		if(isProvided(*deps[i]))
+			invalidate(*deps[i]);
 	clearProps();
+	
+	// removal from manager and process
 	Manager *man = proc->manager();
 	man->frameworks.remove(this);
 	proc->unlink(this);
@@ -174,7 +199,7 @@ xom::Element *WorkSpace::config(void) {
  * Get the dependency graph node associated with the feature and workspace
  * @param feature	Provided feature.
  */
-FeatureDependency* WorkSpace::getFeatDep(const AbstractFeature* feature) {
+FeatureDependency* WorkSpace::getDependency(const AbstractFeature* feature) {
 	FeatureDependency *result = featMap.get(feature, NULL);
 	ASSERT(result != NULL);
 	ASSERT(!result->isInvalidated());
@@ -224,11 +249,10 @@ void WorkSpace::provide(const AbstractFeature& feature, const Vector<const Abstr
 		if (required != NULL) {
 			for (int j = 0; j < required->length(); j++) {
 				if (isProvided(*required->get(j))) {
-					getFeatDep(required->get(j))->addChild(getFeatDep(&feature));
+					getDependency(required->get(j))->addChild(getDependency(&feature));
 				}
 			}
 		}
-		features.add(&feature);
 	}
 }
 
@@ -238,11 +262,11 @@ void WorkSpace::provide(const AbstractFeature& feature, const Vector<const Abstr
  */
 void WorkSpace::invalidate(const AbstractFeature& feature) {
 	if (isProvided(feature)) {
-		for (genstruct::DAGNode<FeatureDependency *>::Iterator iter(*getFeatDep(&feature)->graph); iter; iter++) {
+		for (genstruct::DAGNode<FeatureDependency *>::Iterator iter(*getDependency(&feature)->graph); iter; iter++) {
 			DAGNode<FeatureDependency *> *childNode = *iter;
 			FeatureDependency *childDep = childNode->useValue();
 			invalidate(*childDep->getFeature());
-			getFeatDep(&feature)->removeChild(childDep);		
+			getDependency(&feature)->removeChild(childDep);		
 		}
 		delFeatDep(&feature);
 		remove(feature);
@@ -257,7 +281,7 @@ void WorkSpace::invalidate(const AbstractFeature& feature) {
  * @return			True if it is provided, false else.
  */
 bool WorkSpace::isProvided(const AbstractFeature& feature) {
-	return features.contains(&feature);
+	return featMap.get(&feature, 0);
 }
 
 
@@ -267,7 +291,7 @@ bool WorkSpace::isProvided(const AbstractFeature& feature) {
  * @param feature	Feature to remove.
  */
 void WorkSpace::remove(const AbstractFeature& feature) {
-	features.remove(&feature);
+	feature.clean(this);
 }
 
 
