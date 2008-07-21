@@ -3,7 +3,7 @@
  *	Register and RegBank classes interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-07, IRIT UPS.
+ *	Copyright (c) 2003-08, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -67,15 +67,6 @@ private:
 // RegBank class
 class RegBank {
 	friend class Register;
-protected:
-	elm::CString _name;
-	Register::kind_t _kind;
-	int _size;
-	elm::genstruct::Table<Register *> _regs;
-	RegBank(elm::CString name, Register::kind_t kind, int size, int count, 
-		Register **regs);
-	inline ~RegBank(void) { };
-	inline void set(int index, Register *reg);
 public:
 	inline elm::CString name(void) const;
 	inline Register::kind_t kind(void) const;
@@ -84,6 +75,15 @@ public:
 	inline Register *get(int index) const;
 	inline Register *operator[](int index) const;
 	inline const elm::genstruct::Table<Register *>& registers() const;
+protected:
+	elm::CString _name;
+	Register::kind_t _kind;
+	int _size;
+	elm::genstruct::AllocatedTable<Register *> _regs;
+	RegBank(elm::CString name, Register::kind_t kind, int size);
+	RegBank(elm::CString name, Register::kind_t kind, int size, int count);
+	inline ~RegBank(void) { };
+	inline void set(int index, Register *reg);
 };
 
 
