@@ -50,6 +50,20 @@ static Identifier<bool> MARK("", false);
  */
 
 
+// CFGCollection cleaner
+class CFGCollectionCleaner: public Cleaner {
+public:
+	inline CFGCollectionCleaner(CFGCollection *_cfgs) { cfgs = _cfgs; }
+	virtual ~CFGCollectionCleaner(void) {
+		for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++)
+			delete *cfg;
+		delete cfgs;
+	}
+private:
+	CFGCollection *cfgs;	
+};
+
+
 /**
  * @fn int CFGCollection::count(void) const;
  * Get the count of CFG in the collection.
@@ -151,6 +165,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 	}
 
 	INVOLVED_CFGS(fw) = cfgs;
+	addCleaner(COLLECTED_CFG_FEATURE, new CFGCollectionCleaner(cfgs));
 	
 	// Build it recursively
 	if(rec) {
