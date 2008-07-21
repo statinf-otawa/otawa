@@ -462,6 +462,8 @@ System::~System(void) {
  * @param cons	Constraint to remove.
  */
 void System::removeConstraint(Constraint *cons) {
+        if(cons == ofun)
+            return;
 	if(cons == conss)
 		conss = conss->nxt;
 	else {
