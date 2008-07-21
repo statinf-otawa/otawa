@@ -23,11 +23,11 @@
 #define OTAWA_PROC_PROCESSOR_H
 
 #include <elm/io.h>
+#include <elm/util/Cleaner.h>
 #include <elm/util/Version.h>
 #include <elm/system/StopWatch.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/genstruct/HashTable.h>
-//#include <otawa/prog/WorkSpace.h>
 #include <otawa/properties.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/proc/Registration.h>
@@ -97,6 +97,10 @@ protected:
 	void invalidate(const AbstractFeature& feature);
 	void warn(const String& message);
 	inline WorkSpace *workspace(void) const { return ws; }
+	inline void addCleaner(const AbstractFeature& feature, Cleaner *cleaner)
+		{ cleaners.add(clean_t(&feature, cleaner)); }
+	template <class T> T *addDeletor(const AbstractFeature& feature, T *object)
+		{ addCleaner(new Deletor<T>(&feature, object)); return object; }
 
 	// Overwritable methods
 	virtual void processWorkSpace(WorkSpace *fw);
@@ -110,6 +114,9 @@ private:
 	void init(const PropList& props);
 	AbstractRegistration *reg;
 	WorkSpace *ws;
+	typedef Pair<const AbstractFeature *, Cleaner *> clean_t;
+	typedef elm::genstruct::SLList<clean_t> clean_list_t;
+	clean_list_t cleaners;
 };
 
 

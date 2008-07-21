@@ -65,11 +65,14 @@ private:
 // AbstractRegistration class
 class AbstractRegistration {
 public:	
-	inline string name(void) const { return _name; }
-	inline Version version(void) const { return _version; }
+	inline const string& name(void) const { return _name; }
+	inline const Version& version(void) const { return _version; }
 	inline AbstractRegistration& base(void) const { return *_base; }
 	virtual Processor *make(void) const = 0;
 	virtual bool isFinal(void) const = 0;
+	bool provides(const AbstractFeature& feature); 
+	bool requires(const AbstractFeature& feature); 
+	bool invalidates(const AbstractFeature& feature); 
 	
 	// Private use only
 	void initialize(void);
