@@ -54,6 +54,7 @@ public:
 	
 	// Methods
 	CFG(Segment *seg, BasicBlock *entry);
+	virtual ~CFG(void);
 	inline Segment *segment(void) const;
 	String label(void);
 	inline int number(void);
@@ -79,7 +80,6 @@ protected:
 	bbs_t _bbs;
 
 	CFG(void);
-	virtual ~CFG(void);
 	virtual void scan(void);
 
 private:
