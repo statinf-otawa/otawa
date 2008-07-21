@@ -149,6 +149,7 @@ class LoopInfoProblem {
  	void diff(dfa::BitSet *dst, dfa::BitSet *src);
  	inline int count(void) const;
  	inline BasicBlock *get(int index) const;
+ 	inline void free(dfa::BitSet *set) { delete set; }
 #ifndef NDEBUG
  	void dump(elm::io::Output& out, dfa::BitSet *set);
 #endif 	

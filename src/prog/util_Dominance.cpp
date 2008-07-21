@@ -100,6 +100,7 @@ public:
 	void diff(BitSet *dset, BitSet *tset) {
 		dset->remove(*tset);
 	}
+	void free(BitSet *set) { delete set; }
 };
 
 
