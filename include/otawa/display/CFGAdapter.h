@@ -48,12 +48,17 @@ public:
 	
 	class Successor: public PreIterator<Successor, Edge> {
 	public:
-		inline Successor(const CFGAdapter& ad, Vertex source): iter(source.bb) { }
+		inline Successor(const CFGAdapter& ad, Vertex source): iter(source.bb)
+			{ step(); }
 		inline Successor(const Successor& succ): iter(succ.iter) { }
 		inline bool ended(void) const { return iter.ended(); }
 		inline Edge item(void) const { return Edge(*iter); }
-		inline void next(void) { iter.next(); }
+		inline void next(void) { iter.next(); step(); }
 	private:
+		void step(void) {
+			while(!iter.ended() && iter->kind() == otawa::Edge::CALL)
+				iter.next();
+		}
 		BasicBlock::OutIterator iter;
 	};
 	
