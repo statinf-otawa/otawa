@@ -170,12 +170,21 @@ int size): _number(-1), _kind(kind), _size(size), _name(name) {
  * @param name		Name of the bank.
  * @param kind		Kind of register (may be NONE for melted bank).
  * @param size		Size in bits of the register (may be -1 for melted bank).
- * @param count		Count of registers.
- * @param regs		Table of registers.
  */
-RegBank::RegBank(CString name, Register::kind_t kind, int size, int count, 
-Register **regs)
-: _name(name), _kind(kind), _size(size), _regs(regs, count) {
+RegBank::RegBank(CString name, Register::kind_t kind, int size)
+: _name(name), _kind(kind), _size(size) {
+}
+
+
+/**
+ * Buil a new register bank.
+ * @param name		Name of the bank.
+ * @param kind		Kind of register (may be NONE for melted bank).
+ * @param size		Size in bits of the register (may be -1 for melted bank).
+ * @param count		Count of registers.
+ */
+RegBank::RegBank(CString name, Register::kind_t kind, int size, int count)
+: _name(name), _kind(kind), _size(size), _regs(count) {
 }
 
 
@@ -240,10 +249,10 @@ Register **regs)
  */
 PlainBank::PlainBank(elm::CString name, Register::kind_t kind, int size,
 elm::CString pattern, int count)
-: RegBank(name, kind, size, count, new Register *[count]) {
+: RegBank(name, kind, size, count) {
 	RegisterFormatter format(pattern);
 	for(int i = 0; i < count; i++)
-		set(i, new Register(format.make(i), kind, size));
+		_regs[i] = new Register(format.make(i), kind, size);
 }
 
 
@@ -252,7 +261,6 @@ elm::CString pattern, int count)
 PlainBank::~PlainBank(void) {
 	for(int i = 0; i < _regs.count(); i++)
 		delete _regs[i];
-	//delete [] (Register **)_regs.table();
 }
 
 
@@ -270,17 +278,16 @@ PlainBank::~PlainBank(void) {
  * @param ...	List of registers in the bank.
  */
 MeltedBank::MeltedBank(elm::CString name, ...)
-: RegBank(name, Register::NONE, 0, 0, 0) {
+: RegBank(name, Register::NONE, 0, 0) {
 	int cnt = 0;
 	VARARG_BEGIN(args, name);
 		while(args.next<Register *>())
 			cnt++;
 	VARARG_END
-	Register **regs = new Register *[cnt];
-	_regs = genstruct::Table<Register *>(regs, cnt);
+	_regs.allocate(cnt);
 	VARARG_BEGIN(args, name);
 		for(int i = 0; i < cnt; i++)
-			set(i, args.next<Register *>());
+			_regs[i] = args.next<Register *>();
 	VARARG_END	
 }
 
