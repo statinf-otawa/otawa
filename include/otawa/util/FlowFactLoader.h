@@ -110,7 +110,7 @@ private:
 };
 
 // Properties
-extern Identifier<elm::system::Path> FLOW_FACTS_PATH;
+extern Identifier<Path> FLOW_FACTS_PATH;
 extern Identifier<bool> FLOW_FACTS_MANDATORY;
 
 // Features
