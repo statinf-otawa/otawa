@@ -114,7 +114,7 @@ Property *PropList::getProp(const AbstractIdentifier *id) const {
 		}
 		
 	/* Perform deep search */
-	return getDeep(id);
+	return 0;
 }
 
 
@@ -247,18 +247,6 @@ void PropList::clearProps(void) {
  * @param id	Identifier of the property.
  * @param value	Value of the property.
  */
-
-
-/**
- * This protected method is called when the usual property retrieval method fails. It lets a chance
- * for sub-classes to provide special ways for getting properties. It may be used, for example,
- * for implementing lazy evaluation of special values or for merging property list of many objects.
- * @param id	Identifier of the looked property.
- * @return	Return the found property or null.
- */
-Property *PropList::getDeep(const AbstractIdentifier *id) const {
-	return 0;
-}
 
 
 /**
