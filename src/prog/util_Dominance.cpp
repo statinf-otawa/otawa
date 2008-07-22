@@ -47,6 +47,15 @@ Identifier<BitSet *> REVERSE_DOM("otawa::reverse_dom", 0);
  */
 Identifier<bool> LOOP_HEADER("otawa::loop_header", false);
 
+/**
+ * Identifier for marking back edges.
+ * 
+ * @par Hooks
+ * @li @ref BasicBlock
+ */
+Identifier<bool> BACK_EDGE("otawa::back_edge", false);
+
+
 
 /**
  * This is the Problem used to instanciate DFAEngine for computing the 
@@ -176,6 +185,7 @@ elm::MutableCollection<BasicBlock *> *headers) {
 			&& edge->kind() != Edge::CALL
 			&& dominates(edge->target(), bb)) {
 				LOOP_HEADER(edge->target()) = true;
+				BACK_EDGE(edge) = true;
 				if(headers)
 					headers->add(bb);
 				break;
@@ -247,7 +257,7 @@ Feature<Dominance> DOMINANCE_FEATURE("dominance");
 
 /**
  * This feature ensures that all loop header are marked with a @ref LOOP_HEADER
- * property.
+ * property, and the backedges are marked with a @ref BACK_EDGE property.
  * 
  * @Properties
  * @li @ref LOOP_HEADER (BasicBlock).
