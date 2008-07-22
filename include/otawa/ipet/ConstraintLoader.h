@@ -26,7 +26,6 @@ void ipet_error(otawa::ipet::ConstraintLoader *, const char *);
 
 namespace otawa { namespace ipet {
 
-using namespace elm::system;
 class NormNode;
 
 
