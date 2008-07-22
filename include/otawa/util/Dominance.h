@@ -43,6 +43,7 @@ extern Feature<Dominance> LOOP_HEADERS_FEATURE;
 // Properties
 extern Identifier<dfa::BitSet *> REVERSE_DOM;
 extern Identifier<bool> LOOP_HEADER;
+extern Identifier<bool> BACK_EDGE;
 
 } // otawa
 
