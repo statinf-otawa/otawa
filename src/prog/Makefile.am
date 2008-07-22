@@ -62,6 +62,8 @@ libotawa_la_SOURCES = \
 	util_ContextTree.cpp \
 	cfg_VirtualBasicBlock.cpp \
 	cfg_LoopUnroller.cpp \
+	cfg_LoopReductor.cpp \
+	cfg_SpanningTreeBuilder.cpp \
 	cfg_Virtualizer.cpp \
 	cfg_VirtualCFG.cpp \
 	cfg_CFGBuilder.cpp \
