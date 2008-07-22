@@ -19,7 +19,7 @@
  *	along with OTAWA; if not, write to the Free Software 
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
+#include <elm/deprecated.h>
 #include <otawa/util/Dominance.h>
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/dfa/BitSet.h>
@@ -199,11 +199,8 @@ elm::MutableCollection<BasicBlock *> *headers) {
  * @return True if it is a loop ehader, false else.
  */
 bool Dominance::isLoopHeader(BasicBlock *bb) {
-	for(BasicBlock::InIterator edge(bb); edge; edge++)
-		if(edge->kind() != Edge::CALL
-		&& Dominance::dominates(bb, edge->source()))
-			return true;
-	return false;
+	ELM_DEPRECATED
+	return(LOOP_HEADER(bb));
 }
 
 
@@ -239,9 +236,10 @@ Dominance::Dominance(void): CFGProcessor("otawa::dominance", Version(1, 1, 0)) {
  * @return		True if the edge is a back edge, false else.
  */
 bool Dominance::isBackEdge(Edge *edge) {
+	ELM_DEPRECATED
 	ASSERT(edge);
 	ASSERTP(edge->target(), "cannot test back edge if the target is not known");
-	return dominates(edge->target(), edge->source());
+	return(BACK_EDGE(edge));
 }
 
 
