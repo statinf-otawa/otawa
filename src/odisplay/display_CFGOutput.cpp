@@ -27,7 +27,6 @@
 
 namespace otawa { namespace display {
 
-using namespace elm::system;
 using namespace display;
 
 /**
