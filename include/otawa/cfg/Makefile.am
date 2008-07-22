@@ -9,5 +9,7 @@ includeotawacfg_HEADERS = \
 	Edge.h \
 	VirtualBasicBlock.h \
 	LoopUnroller.h \
+	LoopReductor.h \
+	SpanningTreeBuilder.h \
 	VirtualCFG.h
 
