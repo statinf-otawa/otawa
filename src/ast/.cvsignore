@@ -4,3 +4,4 @@ Makefile
 ast_lexer.cc
 Makefile.in
 .deps
+.libs
