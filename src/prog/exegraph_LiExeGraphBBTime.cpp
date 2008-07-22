@@ -5,6 +5,7 @@
  *	src/prog/ipet_TrivialBBTime.cpp --TrivialBBTime class implementation.
  */
 
+#include <elm/io/OutFileStream.h>
 #include <otawa/exegraph/LiExeGraphBBTime.h>
 
 using namespace otawa;
@@ -196,7 +197,7 @@ int LiExeGraphBBTime::processSequence( WorkSpace *fw,
 		number = file_name.toString();
 		string_file_name = string_file_name.concat(number);
 		string_file_name = string_file_name.concat(extension);
-		elm::io::OutFileStream dotStream(string_file_name.toCString());
+		elm::io::OutFileStream dotStream(string_file_name);
 		elm::io::Output dotFile(dotStream);
 	#endif // DO_LOG	
 			
@@ -206,7 +207,7 @@ int LiExeGraphBBTime::processSequence( WorkSpace *fw,
 	#ifdef DO_LOG
 		string_timed_file_name = string_timed_file_name.concat(number);
 		string_timed_file_name = string_timed_file_name.concat(extension2);
-		elm::io::OutFileStream timedDotStream(string_timed_file_name.toCString());
+		elm::io::OutFileStream timedDotStream(string_timed_file_name);
 		elm::io::Output timedDotFile(timedDotStream);
 		// dump the execution graph *with times* in dot format
 //		LOG(execution_graph.dump(timedDotFile));		
