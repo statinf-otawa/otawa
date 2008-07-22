@@ -43,9 +43,10 @@ namespace otawa { namespace display {
 
 
 /**
- * @fn CFGAdapter::CFGAdapter(CFG *_cfg);
+ * @fn CFGAdapter::CFGAdapter(CFG *_cfg, WorkSpace *_ws);
  * Build the adapter.
  * @param _cfg	CFG to do adapt to.
+ * @param _ws	Container workspace (optional).
  */
 
 } } // otawa::display
