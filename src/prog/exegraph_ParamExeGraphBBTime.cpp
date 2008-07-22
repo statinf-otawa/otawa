@@ -20,6 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/io/OutFileStream.h>
 #include <otawa/exegraph/ParamExeGraphBBTime.h>
 
 using namespace otawa;
@@ -48,7 +49,7 @@ ParamExeGraphBBTime::ParamExeGraphBBTime(const PropList& props, int prologue_dep
 : ExeGraphBBTime<ParamExeGraph>(props), _prologue_depth(prologue_depth) {
   if (!OUTPUT_FILE(props).isEmpty()) {
     String file_name = OUTPUT_FILE(props);
-    _output_stream = new io::OutFileStream(file_name.toCString());
+    _output_stream = new io::OutFileStream(file_name);
   }
   else
     _output_stream = &(elm::cout.stream());
@@ -146,7 +147,7 @@ void ParamExeGraphBBTime::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
       buffer << _graphs_dir_name << "/";
       buffer << bb->number() << "-c" << context_index << ".dot";
       elm::String string = buffer.toString();
-      elm::io::OutFileStream dotStream(string.toCString());
+      elm::io::OutFileStream dotStream(string);
       elm::io::Output dotFile(dotStream);
       execution_graph.dump(dotFile);
     }		
@@ -196,7 +197,7 @@ void ParamExeGraphBBTime::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	buffer << _graphs_dir_name << "/";
 	buffer << bb->number() << "-c" << context_index << ".dot";
 	elm::String string = buffer.toString();
-	elm::io::OutFileStream dotStream(string.toCString());
+	elm::io::OutFileStream dotStream(string);
 	elm::io::Output dotFile(dotStream);
 	execution_graph.dump(dotFile);
       }	
