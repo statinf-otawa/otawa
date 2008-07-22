@@ -88,9 +88,10 @@ public:
 		T *vals;
 	};
 	
-	inline CFGAdapter(CFG *_cfg): cfg(_cfg) { }
+	inline CFGAdapter(CFG *_cfg, WorkSpace *_ws = 0): cfg(_cfg), ws(_ws) { }
 	inline int count(void) const{ return cfg->countBB(); }
 	CFG *cfg;
+	WorkSpace *ws;
 };
 
 } } // otawa::display
