@@ -24,6 +24,7 @@
 #include <elm/io.h>
 #include <elm/io/OutFileStream.h>
 #include <elm/options.h>
+#include <elm/io/OutFileStream.h>
 #include <otawa/otawa.h>
 #include <otawa/ipet.h>
 #include <otawa/ilp.h>
