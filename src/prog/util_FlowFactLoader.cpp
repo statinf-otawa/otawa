@@ -36,8 +36,6 @@ extern FILE *util_fft_in;
 
 namespace otawa {
 
-using namespace elm::system;
-
 extern int fft_line;
 
 
