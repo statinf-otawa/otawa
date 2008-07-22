@@ -3,7 +3,7 @@
  *	Process class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-7, IRIT UPS.
+ *	Copyright (c) 2003-8, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 
 #include <elm/string.h>
 #include <elm/system/Path.h>
+#include <elm/util/AutoPtr.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/instruction.h>
 #include <otawa/program.h>
@@ -109,7 +110,7 @@ private:
 };
 
 // Process class
-class Process: public PropList {
+class Process: public PropList, public Lock {
 	Vector<File *> files;
 	Vector<AbstractFeature *> provided;
 	File *prog;

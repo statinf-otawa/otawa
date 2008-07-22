@@ -1,9 +1,9 @@
 /*
  *	$Id$
- *	Workspace class interface
+ *	WorkSpace class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2007-08, IRIT UPS.
+ *	Copyright (c) 2007-8, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
  *	You should have received a copy of the GNU General Public License
  *	along with OTAWA; if not, write to the Free Software 
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *	This file is part of OTAWA
+ *	Copyright (c) 2007-08, IRIT UPS.
  */
 #ifndef OTAWA_PROG_WORK_SPACE_H
 #define OTAWA_PROG_WORK_SPACE_H
@@ -65,7 +67,7 @@ public:
 	WorkSpace(Process *_proc);
 	WorkSpace(const WorkSpace *ws);
 	~WorkSpace(void);
-	inline Process *process(void) const { return proc; };
+	inline Process *process(void) const { return &proc; };
 	
 	// Process overload
 	virtual hard::Platform *platform(void) { return proc->platform(); };
@@ -98,16 +100,13 @@ public:
 	// Feature dependency graph management
 	FeatureDependency* getDependency(const AbstractFeature* feature);
 
-protected:
-	virtual Property *getDeep(const AbstractIdentifier *id)
-		{ return proc->getProp(id); };
-
 private:
 	void newFeatDep(const AbstractFeature* feature);
 	bool hasFeatDep(const AbstractFeature* feature);
 	void delFeatDep(const AbstractFeature* feature);
 
-	Process *proc;
+private:
+	AutoPtr<Process> proc;
 	typedef HashTable<const AbstractFeature*, FeatureDependency*> feat_map_t;
 	feat_map_t featMap;
 };
