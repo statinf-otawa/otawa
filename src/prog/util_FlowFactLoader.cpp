@@ -286,6 +286,16 @@ extern int fft_line;
  * simple access to the flow fact files, a new class must be inherited from
  * this class and this class must implement the virtual "onXXX" methods.
  * 
+ * @par Provided features
+ * @li @ref otawa::FLOW_FACTS_FEATURE
+ * @li @ref otawa::MKFF_PRESERVATION_FEATURE
+ * 
+ * @par Configuration
+ * @li @ref otawa::FLOW_FACTS_PATH -- select the flow fact to load (if not present, the flow fact name is obtained
+ * 		by replacing extension or by appending ".ff" or ".ffx").
+ * @li @ref otawa::FLOW_FACTS_MANDATORY -- if set to true, the processing fails if one loop bound is not available
+ * 		(default to false).
+ * 
  * @see
  * 		@ref f4 for more details on the flow facts files.
  * @ingroup ff
@@ -536,7 +546,9 @@ void FlowFactLoader::onCheckSum(const String& name, unsigned long sum) {
 void FlowFactLoader::onReturn(address_t addr) {
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
-	  throw ProcessorException(*this, _ << "no instruction at " << addr);
+		throw ProcessorException(*this, _ << "no instruction at " << addr);
+	if(isVerbose())
+		log << "\treturn at " << addr << io::endl;
 	IS_RETURN(inst) = true;
 }
 
@@ -699,10 +711,16 @@ void FlowFactLoader::loadXML(const string& path) throw(ProcessorException) {
 				Address addr = scanAddress(element, cpath);
 				onNoReturn(addr);
 			}
+			else if(name == "return") {
+				Address addr = scanAddress(element, cpath);
+				onReturn(addr);
+			}
 			else if(name == "nocall") {
 				Address addr = scanAddress(element, cpath);
 				onNoCall(addr);
 			}
+			else
+				warn(_ << "garbage in \"" << path << "\"");
 		}
 	}
 }
