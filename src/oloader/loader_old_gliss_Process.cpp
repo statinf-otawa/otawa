@@ -70,6 +70,8 @@ public:
 	Option<Pair<cstring, int> > getSourceLine(Address addr)
 	throw (UnsupportedFeatureException) {
 		setup();
+		if(!map)
+			return none;
 		const char *file;
 		int line;
 		if(!map
@@ -83,6 +85,8 @@ public:
 	throw (UnsupportedFeatureException) {
 		setup();
 		addresses.clear();
+		if(!map)
+			return;
 		dwarf_line_iter_t iter;
 		dwarf_location_t loc;
 		for(loc = dwarf_first_line(&iter, map);
