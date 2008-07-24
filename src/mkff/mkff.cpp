@@ -3,7 +3,7 @@
  *	mkff utility
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-07, IRIT UPS.
+ *	Copyright (c) 2005-08, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
 
 #include <elm/io.h>
 #include <elm/options.h>
+#include <elm/option/StringOption.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/cfg.h>
 #include <otawa/otawa.h>
@@ -31,6 +32,7 @@
 #include <elm/system/Path.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/util/FlowFactLoader.h>
+#include <otawa/flowfact/features.h>
 
 using namespace elm;
 using namespace otawa;
@@ -208,25 +210,6 @@ inline string makeAddress(CFG *cfg, Address addr) {
 }
 
 
-// Command class
-class Command: public option::Manager {
-public:
-	Command(void);
-	~Command(void);
-	void run(int argc, char **argv);
-	
-	// Manager overload
-	virtual void process (String arg);
-
-protected:
-	bool one;
-	otawa::Manager manager;
-	WorkSpace *fw;
-	genstruct::Vector<String> added;
-	void perform(String name);
-};
-
-
 // ControlOutput processor
 class ControlOutput: public CFGProcessor {
 public:
@@ -272,6 +255,18 @@ protected:
 
 	virtual void onUnknownLoop(Address addr) { record(addr); }
 	virtual void onUnknownMultiBranch(Address control) { record(control); }
+	virtual void onIgnoreControl(Address address) {
+		FlowFactLoader::onIgnoreControl(address);
+		record(address);
+	}
+	virtual void onMultiBranch(Address control, const Vector< Address > &target) {
+		FlowFactLoader::onMultiBranch(control, target);
+		record(control);
+	}
+	virtual void onReturn(address_t addr) {
+		FlowFactLoader::onReturn(addr);
+		record(addr);
+	}
 
 private:
 
@@ -286,8 +281,29 @@ private:
 };
 
 
+// Command class
+class Command: public option::Manager {
+public:
+	Command(void);
+	~Command(void);
+	void run(int argc, char **argv);
+	
+	// Manager overload
+	virtual void process (String arg);
+
+protected:
+	otawa::Manager manager;
+	WorkSpace *fw;
+	String task;
+	genstruct::Vector<String> added;
+	void perform(String name);
+};
+
+
 // Options
 static Command command;
+static option::StringOption ff_file(command, 'f', "flowfacts", "select flowfact file to use", "flow fact file", "");
+static option::BoolOption verb(command, 'v', "verbose", "activate the verbose mode", false);
 
 
 /**
@@ -299,10 +315,13 @@ void Command::perform(String name) {
 
 	// Configuration	
 	PropList props;
-	//Processor::VERBOSE(props) = true;
 	TASK_ENTRY(props) = &name;
 	for(int i = 0; i < added.length(); i++)
 		CFGCollector::ADDED_FUNCTION(props).add(added[i].toCString());
+	if(ff_file)
+		FLOW_FACTS_PATH(props) = Path(ff_file);
+	if(verb)
+		Processor::VERBOSE(props) = true;
 
 	// Load flow facts and record unknown values
 	QuestFlowFactLoader ffl;
@@ -345,10 +364,8 @@ void Command::process(String arg) {
 	}
 	
 	// Process function names
-	else if(!one) {
-		one = true;
-		perform(arg);	
-	}
+	else if(!task)
+		task = arg;
 	else
 		added.add(arg);
 }
@@ -357,7 +374,7 @@ void Command::process(String arg) {
 /**
  * Build the command.
  */
-Command::Command(void): one(false), fw(0) {
+Command::Command(void): fw(0) {
 	program = "mkff";
 	version = "1.0";
 	author = "Hugues Cassé";
@@ -378,8 +395,9 @@ void Command::run(int argc, char **argv) {
 		displayHelp();
 		throw option::OptionException("no binary file to process");
 	}
-	else if(!one)
-		process("main");
+	if(!task)
+		task = "main";
+	perform(task);
 }
 
 
@@ -452,7 +470,7 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
 			for(int i = 0; i < indent; i++)
 				cout << "  ";
 			BasicBlock::InstIterator inst(child->bb());
-			if(RECORDED(inst) || MAX_ITERATION(inst) != -1)
+			if(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst))
 				cout << "// loop " << addressOf(cfg, child->bb()->address()) << io::endl;
 			else 
 				cout << "loop " << addressOf(cfg, child->bb()->address()) << " ?;\n"; 
