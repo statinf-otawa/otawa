@@ -133,7 +133,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 			}
 			else {
 				if(isVerbose())
-					out << "WARNING: no target for branch at " << inst->address()
+					log << "WARNING: no target for branch at " << inst->address()
 						<< io::endl;
 			}
 			if(inst->isCall() && (!target || !NO_RETURN(target))) {
