@@ -48,7 +48,9 @@ otawa::Inst *BranchInst::target(void) {
 		address_t target_addr = decodeTargetAddress();
 		if(target_addr) {
 			_target = process().findInstAt(target_addr);
-			ASSERTP(_target, "bad target pointer by instruction at " << address() << " to " << target_addr);
+			if(!_target)
+				throw ProcessException(&process(),
+					_ << "bad target pointer by instruction at " << address() << " to " << target_addr);
 		}
 	}
 	return _target;
