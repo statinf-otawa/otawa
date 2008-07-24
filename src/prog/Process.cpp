@@ -3,7 +3,7 @@
  *	Process class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-7, IRIT UPS.
+ *	Copyright (c) 2003-08, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -633,6 +633,40 @@ throw (UnsupportedFeatureException) {
  * @class ProcessException
  * An exception generated from a process.
  */
+
+
+/**
+ * @class ProcessException::ProcessException(Process *process);
+ * Build a a simple exception for the given process.
+ * @param process	Current process.
+ */
+
+
+/**
+ * @fn ProcessException::ProcessException(Process *process, const string& message);
+ * Build a process exception with a message.
+ * @param process		Current process.
+ * @param message		Exception message.
+ */
+
+
+/**
+ * @fn Process *ProcessException::process(void) const;
+ * Get the process where the exception was thrown.
+ * @return	Exception process.
+ */
+
+
+/**
+ */
+String ProcessException::message(void) {
+	string name;
+	if(process()->program())
+		name = process()->program()->name();
+	else
+		name = "unknown";
+	return _ << name << ": "<< otawa::Exception::message(); 
+} 
 
 
 /**
