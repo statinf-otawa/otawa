@@ -60,7 +60,11 @@ class ProcessException: public Exception {
 public:
 	inline ProcessException(Process *process): proc(process)
 		{ ASSERTP(process, "null process passed"); }
+	inline ProcessException(Process *process, const string& message): Exception(message), proc(process)
+		{ ASSERTP(process, "null process passed"); }
 	inline Process *process(void) const { return proc; }
+ 	virtual String message(void); 
+	
 private:
 	Process *proc;
 };
@@ -79,7 +83,7 @@ public:
  	 : ProcessException(0), f(feature) { }
  	 		
  	 inline const AbstractFeature& feature(void) const { return f; }
- 	virtual String 	message(void); 
+ 	virtual String message(void); 
 private:
 	const AbstractFeature& f;
 };
@@ -94,6 +98,17 @@ public:
  	virtual String 	message(void); 	
 private:
 	Address addr;
+};
+
+
+// DecodingException class
+class DecodingException: public elm::MessageException {
+public:
+	inline DecodingException(const string& message): MessageException(message) { }
+ 	virtual String message(void) { return msg; }
+ 
+private:
+	string msg; 
 };
 
 
