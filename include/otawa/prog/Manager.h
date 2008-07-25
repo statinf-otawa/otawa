@@ -58,7 +58,7 @@ public:
 class Manager {
 	friend class WorkSpace;
 	datastruct::Vector<hard::Platform *> platforms;
-	datastruct::Vector<WorkSpace *> frameworks;
+	//datastruct::Vector<WorkSpace *> frameworks;
 	elm::system::Plugger ilp_plugger;
 	elm::system::Plugger loader_plugger;
 	elm::system::Plugger sim_plugger;

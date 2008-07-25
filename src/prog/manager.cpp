@@ -93,8 +93,8 @@ LoadException::LoadException(const String& message)
  * Delete all used resources.
  */
 Manager::~Manager(void) {
-	for(int i = 0; i < frameworks.count(); i++)
-		delete frameworks[i];
+	/*for(int i = 0; i < frameworks.count(); i++)
+		delete frameworks[i];*/
 	for(int i = 0; i < platforms.count(); i++)
 		delete platforms[i];
 }

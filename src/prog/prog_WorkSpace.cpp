@@ -53,8 +53,8 @@ namespace otawa {
 WorkSpace::WorkSpace(Process *_proc): proc(_proc), featMap() {
 	TRACE(this << ".WorkSpace::WorkSpace(" << _proc << ')');
 	assert(_proc);
-	Manager *man = _proc->manager();
-	man->frameworks.add(this);
+	//Manager *man = _proc->manager();
+	//man->frameworks.add(this);
 	proc->link(this);
 }
 
@@ -67,8 +67,8 @@ WorkSpace::WorkSpace(const WorkSpace *ws) {
 	TRACE(this << ".WorkSpace::WorkSpace(" << ws << ')');
 	assert(ws);
 	proc = ws->process();
-	Manager *man = proc->manager();
-	man->frameworks.add(this);
+	//Manager *man = proc->manager();
+	//man->frameworks.add(this);
 	proc->link(this);	
 }
 
@@ -89,8 +89,8 @@ WorkSpace::~WorkSpace(void) {
 	clearProps();
 	
 	// removal from manager and process
-	Manager *man = proc->manager();
-	man->frameworks.remove(this);
+	//Manager *man = proc->manager();
+	//man->frameworks.remove(this);
 	proc->unlink(this);
 }
 

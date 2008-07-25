@@ -595,10 +595,10 @@ void ControlOutput::cleanup(WorkSpace *ws) {
  * @return		0 for success, >0 for error.
  */
 int main(int argc, char **argv) {
-	try {
+	//try {
 		command.run(argc, argv);
 		return 0;
-	}
+	/*}
 	catch(option::OptionException& e) {
 		cerr << "ERROR: " << e.message() << io::endl;
 		command.displayHelp();
@@ -607,6 +607,6 @@ int main(int argc, char **argv) {
 	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
 		return 2;
-	}
+	}*/
 }
 
