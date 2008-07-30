@@ -12,6 +12,7 @@
 #include "ExpNode.h"
 #include <otawa/ipet/ConstraintLoader.h>
 #include <ipet_parser.h>
+extern int ipet_line;
 %}
 
 %option noyywrap
@@ -19,7 +20,7 @@
 %option outfile="lex.yy.c"
 
 DEC		[1-9][0-9]+
-OCT		0[0-9]+
+OCT		0[0-9]*
 HEX		0[xX][a-fA-F0-9]+
 BIN		0[bB][01]+
 ID		[a-zA-Z_][a-zA-Z_0-9]*
@@ -32,8 +33,8 @@ COM		#.*\n
 %%
 
 [ \t]+		/* ignore spaces */ ;
-{COM}		/* ignore comment */ ;
-\n			return EOL;
+{COM}		ipet_line++; /* ignore comment */ ;
+\n			ipet_line++; return EOL;
 
 
 "bb"		return BB;
