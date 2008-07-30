@@ -14,6 +14,7 @@
 
 // Prototypes
 int ipet_lex(void);
+int ipet_line = 1;
 %}
 
 %name-prefix="ipet_"
@@ -110,5 +111,5 @@ exp:
 %%
 
 void ipet_error(otawa::ipet::ConstraintLoader *loader, const char *msg) {
-	loader->out << "ERROR: " << msg << ".\n";
+	loader->log << "ERROR: " << loader->path << ":" << ipet_line << ": " << msg << ".\n";
 }
