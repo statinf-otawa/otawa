@@ -91,7 +91,7 @@ class NormalizationException {
  * the @ref ConstraintLoader (argument of type @ref elm::String).
  * @ingroup extcons
  */
-Identifier<Path> ConstraintLoader::PATH("otawa::ipet::ConstraintLoader::path", "");
+Identifier<string> ConstraintLoader::PATH("otawa::ipet::ConstraintLoader::path", "");
 
 
 /**
@@ -128,12 +128,13 @@ BasicBlock *ConstraintLoader::getBB(address_t addr) {
 	if(!bb) {
 		for (CFGCollection::Iterator icfg(INVOLVED_CFGS(fw)); icfg; icfg++) {
 			for (CFG::BBIterator ibb(icfg); ibb; ibb++) {
-				if (ibb->address().compare(addr) == 0)
+				if(ibb->address().offset() <= addr.offset()
+				&& addr.offset() < ibb->address().offset() + ibb->size())
 					bb = ibb;
 			}
 		}
 		if(!bb) {
-			out << "ERROR: cannot find basic block at " << addr << ".\n"; 
+			log << "ERROR: cannot find basic block at " << addr << ".\n"; 
 			return 0;
 		}
 		bbs.put(addr, bb);
@@ -151,7 +152,7 @@ bool ConstraintLoader::newBBVar(CString name, address_t addr) {
 		return false;
 	ilp::Var *var = bb->get<ilp::Var *>(ipet::VAR, 0);
 	if(!var)
-		out << "ERROR: variable " << name << " of basic block at " << addr
+		log << "ERROR: variable " << name << " of basic block at " << addr
 			<< " is not defined.\n";
 	else
 		vars.put(name, var);
@@ -181,7 +182,7 @@ bool ConstraintLoader::newEdgeVar(CString name, address_t src, address_t dst) {
 				return var;
 			}
 			else
-				cout << "ERROR: variable " << name
+				log << "ERROR: variable " << name
 					<< " of edge from basic block " << src
 					<< " to basic block " << dst
 					<< " is not defined.\n";
@@ -189,7 +190,7 @@ bool ConstraintLoader::newEdgeVar(CString name, address_t src, address_t dst) {
 	}
 	
 	// Not found error
-	out << "ERROR: no edge from basic block " << src
+	log << "ERROR: no edge from basic block " << src
 		<< " to basic block " << dst << ".\n";
 	return false;
 }
@@ -201,7 +202,7 @@ bool ConstraintLoader::newEdgeVar(CString name, address_t src, address_t dst) {
 ilp::Var *ConstraintLoader::getVar(CString name) {
 	ilp::Var *var = vars.get(name, 0);
 	if(!var)
-		cout << "ERROR: variable \"" << name << "\" is not defined.\n";
+		log << "ERROR: variable \"" << name << "\" is not defined.\n";
 	return var;
 }
 
@@ -224,7 +225,7 @@ ExpNode *right) {
 		return true;
 	}
 	catch(NormalizationException e) {
-		out << "ERROR: expression cannot be reduced !\n";
+		log << "ERROR: expression cannot be reduced !\n";
 		return false;
 	}
 }
@@ -302,8 +303,8 @@ NormNode *ConstraintLoader::normalize(ExpNode *node, double mult) {
 /**
  */
 void ConstraintLoader::configure(const PropList& props) {
-	path = PATH(props);
 	CFGProcessor::configure(props);
+	path = PATH(props);
 }
 
 
