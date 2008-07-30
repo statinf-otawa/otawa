@@ -49,11 +49,11 @@ class ConstraintLoader: public CFGProcessor {
 
 protected:
 	virtual void processCFG(WorkSpace *fw, CFG *cfg);
+	virtual void configure(const PropList &props = PropList::EMPTY);
 
 public:
-	static Identifier<Path> PATH;
+	static Identifier<String> PATH;
 	ConstraintLoader(void);
-	virtual void configure(const PropList& prop = PropList::EMPTY);
 };
 	
 } } // otawa::ipet
