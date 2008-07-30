@@ -703,11 +703,11 @@ case $action in
 		distdir=$curdir/$package
 		log_command mkdir "$distdir"
 		distscript="$distdir/build.sh"
-		make_build $rootdir/$config distmake > $distscript
+		make_build $config distmake > $distscript
 		chmod +x "$distscript"
 		;;
 	auto)
-		make_build $rootdir/$config make
+		make_build $config make
 		exit 0
 		;;
 esac
