@@ -12,7 +12,8 @@ SUBDIRS = \
 if HAS_ILP
 SUBDIRS += \
 	ccg \
-	categorisation
+	categorisation \
+	ilp 
 endif
 
 if HAS_SYSTEMC

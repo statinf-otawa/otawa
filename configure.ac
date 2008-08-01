@@ -312,6 +312,7 @@ AC_CONFIG_FILES([
 	test/graph/Makefile
 	test/categorisation/Makefile
 	test/hard/Makefile
+	test/ilp/Makefile
 	test/props/Makefile
 	test/pcg/Makefile
 	test/exegraph/Makefile
