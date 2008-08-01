@@ -117,6 +117,7 @@ public:
 	inline bool isConditional(void) const { return flags & FLAG_Cond; }
 	inline Mark *head(void) const { return _head; };
 	inline address_t address(void) const { return _head->address(); };
+	inline Address topAddress(void) const { return address() + size(); }
 	virtual int countInstructions(void) const;
 	size_t size(void) const;
 	inline bool isVirtual(void) const { return flags & FLAG_Virtual; };
