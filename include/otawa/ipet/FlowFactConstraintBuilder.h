@@ -41,6 +41,7 @@ namespace ipet {
 class FlowFactConstraintBuilder: public ContextualProcessor {
 public:
 	FlowFactConstraintBuilder(void);
+	virtual void configure(const PropList& props = PropList::EMPTY);
 
 protected:
 	virtual void enteringCall(
@@ -54,6 +55,7 @@ protected:
 private:
 	ContextPath<Address> path;
 	ilp::System *system;
+	bool _explicit;
 };
 
 // Features
