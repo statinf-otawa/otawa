@@ -79,10 +79,13 @@ Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::calling_constraint", 0
  * @param var		Variable to add.
  * @return			Entry CFG constraint.
  */
-void BasicConstraintsBuilder::addEntryConstraint(System *system, CFG *called, Var *var) {
+void BasicConstraintsBuilder::addEntryConstraint(System *system, CFG *cfg, BasicBlock *bb, CFG *called, Var *var) {
+	string label;
+	if(_explicit)
+		label = _ << "call constraint from BB" << INDEX(bb) << "/" << cfg->label() << " to " << called->label(); 
 	Constraint *cons = CALLING_CONSTRAINT(called);
 	if(!cons) {
-		cons = system->newConstraint(Constraint::EQ);
+		cons = system->newConstraint(label, Constraint::EQ);
 		ASSERT(cons);
 		cons->addLeft(1, VAR(called->entry()));
 		CALLING_CONSTRAINT(called) = cons;
@@ -95,9 +98,9 @@ void BasicConstraintsBuilder::addEntryConstraint(System *system, CFG *called, Va
  */
 void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb)
 {
-	assert(fw);
-	assert(cfg);
-	assert(bb);
+	ASSERT(fw);
+	ASSERT(cfg);
+	ASSERT(bb);
 
 	// Prepare data
 	Constraint *cons;
@@ -108,7 +111,10 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 	Var *bbv = VAR( bb);
 		
 	// Input constraint
-	cons = system->newConstraint(Constraint::EQ);
+	string label;
+	if(_explicit)
+		label = _ << "structural input constraint of BB" << INDEX(bb) << "/" << cfg->label();
+	cons = system->newConstraint(label, Constraint::EQ);
 	cons->addLeft(1, bbv);
 	used = false;
 	for(BasicBlock::InIterator edge(bb); edge; edge++)
@@ -120,8 +126,10 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 		delete cons;
 	
 	// Output constraint
+	if(_explicit)
+		label = _ << "structural output constraint of BB" << INDEX(bb) << "/" << cfg->label();
 	bool many_calls = false;
-	cons = system->newConstraint(Constraint::EQ);
+	cons = system->newConstraint(label, Constraint::EQ);
 	cons->addLeft(1, bbv);
 	used = false;
 	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
@@ -146,10 +154,12 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 		
 		// Simple call
 		if(!many_calls)
-			addEntryConstraint(system, called, bbv);
+			addEntryConstraint(system, cfg, bb, called, bbv);
 		
 		// Multiple calls
 		else {
+			if(_explicit)
+				label << "multiple from BB" << INDEX(bb) << "/" << cfg->label();
 			Constraint *call_cons = system->newConstraint(Constraint::EQ);
 			ASSERT(call_cons);
 			call_cons->addLeft(1, bbv);
@@ -165,7 +175,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 					Var *call_var = system->newVar(name);
 					
 					// Add the variable to the constraints
-					addEntryConstraint(system, called_cfg, call_var);
+					addEntryConstraint(system, cfg, bb, called_cfg, call_var);
 					call_cons->addRight(1, call_var);
 				}
 		}
