@@ -61,6 +61,7 @@ libotawa_la_SOURCES = \
 	util_PostDominance.cpp \
 	util_ContextTree.cpp \
 	cfg_VirtualBasicBlock.cpp \
+	cfg_PSTBuilder.cpp \
 	cfg_LoopUnroller.cpp \
 	cfg_LoopReductor.cpp \
 	cfg_SpanningTreeBuilder.cpp \
