@@ -20,6 +20,7 @@ public:
 		int source_index, otawa::edge_kind_t kind, otawa::BasicBlock *target,
 		int target_index) = 0;
 	virtual void onBBEnd(otawa::BasicBlock *bb, int index) = 0;
+	virtual void onCall(otawa::Edge *edge) = 0;
 	virtual void onInlineBegin(otawa::CFG *cfg) = 0;
 	virtual void onInlineEnd(otawa::CFG *cfg) = 0;
 };

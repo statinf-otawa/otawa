@@ -7,6 +7,7 @@
 
 #include <elm/io.h>
 #include <elm/options.h>
+#include <elm/genstruct/HashTable.h>
 #include "DotDisplayer.h"
 
 using namespace elm;
@@ -64,6 +65,15 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 		cout << "unknow";
 }
 
+/**
+ */
+void DotDisplayer::onCall(Edge *edge) {
+  BasicBlock *bb = edge->source();
+  CFG *called = edge->calledCFG();
+  cout << "\t\"" << (void*) edge << LABEL(called) << "\" [label=\"" << LABEL(called) << "\"]\n";
+  cout << "\t\"" << bb->number() << "\" -> \"" << (void*) edge << LABEL(called) << "\" [label=\"call\", style=dashed, weight=1]\n";
+}  
+  
 
 /**
  */
