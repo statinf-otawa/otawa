@@ -64,8 +64,11 @@ class Constraint: public ilp::Constraint {
 public:
 	inline Constraint(System *sys, comparator_t comp, double constant,
 		Constraint *next);
+	inline Constraint(System *sys, const string& label, comparator_t comp, double constant,
+		Constraint *next);
 	~Constraint(void);
 	inline double constant(void) const;
+	virtual const string& label(void) const { return _label; }
 	inline Constraint *next(void) const;
 	void fillRow(double *row);
 	void resetRow(double *row);
@@ -131,6 +134,7 @@ private:
 	Factor *facts;
 	double cst;
 	comparator_t cmp;
+	string _label;
 };
 
 
@@ -170,6 +174,8 @@ public:
 	// ilp::System overload
 	virtual ilp::Constraint *newConstraint(ilp::Constraint::comparator_t comp,
 		double constant = 0);
+	virtual ilp::Constraint *newConstraint(const string& label,
+		ilp::Constraint::comparator_t comp, double constant = 0);
 	virtual bool solve(void);
 	virtual void addObjectFunction(double coef, ilp::Var *var = 0);
 	virtual double valueOf(ilp::Var *var);
@@ -260,6 +266,21 @@ inline Constraint::Factor& Constraint::Factor::operator-=(double value) {
 inline Constraint::Constraint(System *system, ilp::Constraint::comparator_t comp,
 double constant, Constraint *next): sys(system), nxt(next), facts(0),
 cst(constant), cmp(comp) {
+	ASSERT(sys);
+}
+
+inline Constraint::Constraint(
+	System *system,
+	const string& label,
+	ilp::Constraint::comparator_t comp,
+	double constant, Constraint *next)
+:	sys(system),
+	nxt(next),
+	facts(0),
+	cst(constant),
+	cmp(comp),
+	_label(label)
+{
 	ASSERT(sys);
 }
 
@@ -486,6 +507,17 @@ double constant) {
 }
 
 
+ilp::Constraint *System::newConstraint(
+	const string& label,
+	ilp::Constraint::comparator_t comp,
+	double constant
+) {
+	conss = new Constraint(this, label, comp, constant, conss);
+	rows++;
+	return conss;
+}
+
+
 // Overload
 void System::addObjectFunction(double coef, ilp::Var *var) {
 	ofun->add(coef, var);
@@ -603,7 +635,11 @@ void System::exportLP(io::Output& out) {
 	for(Constraint *cons = conss; cons; cons = cons->next()) {
 		cons->dump(out);
 		out << " " << texts[cons->comparator() + 2]
-			<< " " << (int)cons->constant() << ";\n"; 
+			<< " " << (int)cons->constant() << ";";
+		const string& label = cons->label();
+		if(label)
+			out << "\t/* " << label << "*/";
+		out << io::endl; 
 	}
 	
 	// Output int constraints
