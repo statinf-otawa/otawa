@@ -23,6 +23,7 @@
 #include <elm/io/OutFileStream.h>
 #include <otawa/ipet.h>
 #include <otawa/display/ILPSystemDisplayer.h>
+#include <otawa/cfg/CFGCollector.h>
 
 namespace otawa { namespace display {
 
@@ -71,6 +72,7 @@ namespace otawa { namespace display {
 ILPSystemDisplayer::ILPSystemDisplayer(void)
 : Processor("otawa::display::ILPSystemDisplayer", Version(1, 0, 0)) {
 	require(ipet::ILP_SYSTEM_FEATURE);
+	require(COLLECTED_CFG_FEATURE);
 }
 
 
