@@ -456,9 +456,9 @@ void System::dumpSystem(io::Output& out) {
  * @param constant	Used constant.
  * @return			Built constraint.
  */
-Constraint *System::newConstraint(const string& label, Constraint::comparator_t comp, double constant) {
+/*Constraint *System::newConstraint(const string& label, Constraint::comparator_t comp, double constant) {
 	return newConstraint(comp, constant);
-}
+}*/
 
 } // ilp
 
