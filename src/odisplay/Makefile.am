@@ -22,5 +22,6 @@ libodisplay_la_SOURCES = \
 	graphviz_Item.cpp \
 	graphviz_Node.cpp \
 	graphviz_quote.cpp \
+	ILPSystemDisplayer.cpp \
 	utility.cpp
 
