@@ -59,7 +59,8 @@ namespace otawa { namespace ipet {
  * Build a new flow fact loader.
  */
 FlowFactConstraintBuilder::FlowFactConstraintBuilder(void)
-:	ContextualProcessor("otawa::ipet::FlowFactConstraintBuilder", Version(1, 1, 0))
+:	ContextualProcessor("otawa::ipet::FlowFactConstraintBuilder", Version(1, 1, 0)),
+	_explicit(false)
 {
 	require(COLLECTED_CFG_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
@@ -136,7 +137,11 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 					}
 				}
 				
-				otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);	
+				// generate the constraint
+				string label;
+				if(_explicit)
+					label = _ << "loop constraint on BB" << INDEX(bb) << "/" << cfg->label();
+				otawa::ilp::Constraint *cons = system->newConstraint(label, otawa::ilp::Constraint::LE);	
 				for(BasicBlock::InIterator edge(bb); edge; edge++) {
 					ASSERT(edge->source());
 					otawa::ilp::Var *var = VAR(edge);
@@ -185,6 +190,14 @@ void FlowFactConstraintBuilder::enteringCall(
  */
 void FlowFactConstraintBuilder::leavingCall(WorkSpace *ws, CFG *cfg) {
 	path.pop();
+}
+
+
+/**
+ */
+void FlowFactConstraintBuilder::configure(const PropList& props) {
+	ContextualProcessor::configure(props);
+	_explicit = EXPLICIT(props);
 }
 
 
