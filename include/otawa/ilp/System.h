@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	ilp::System class interface
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-07, IRIT UPS.
@@ -44,7 +44,7 @@ public:
 	virtual Constraint *newConstraint(Constraint::comparator_t comp,
 		double constant = 0) = 0;
 	virtual Constraint *newConstraint(const string& label,
-		Constraint::comparator_t comp, double constant = 0);
+		Constraint::comparator_t comp, double constant = 0) = 0;
 	virtual bool solve(void) = 0;
 	virtual void addObjectFunction(double coef, Var *var = 0) = 0;
 	virtual double valueOf(Var *var) = 0;
