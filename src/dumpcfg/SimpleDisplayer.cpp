@@ -24,6 +24,10 @@ void SimpleDisplayer::onCFGEnd(CFG *cfg) {
 	cout << '\n';
 }
 
+/**
+ */
+void SimpleDisplayer::onCall(Edge *edge) {
+}
 
 /**
  */
