@@ -207,10 +207,13 @@ void Command::dump(CFG *cfg) {
 		// Look out edges
 		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 			int target_index = -1;
-			if(edge->target() && edge->kind() != Edge::CALL)
+			if(edge->target() && edge->kind() != Edge::CALL) {
 				target_index = edge->target()->number();
-			displayer->onEdge(0, bb, index, edge->kind(), edge->target(),
-				target_index);
+				displayer->onEdge(0, bb, index, edge->kind(), edge->target(),
+					target_index);
+			} else {
+				displayer->onCall(edge);
+			}
 		}
 		
 		// BB end
