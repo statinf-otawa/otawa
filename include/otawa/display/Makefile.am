@@ -10,6 +10,7 @@ includeotawadisplay_HEADERS = \
 	GenGraphAdapter.h \
 	Graph.h \
 	graphviz.h \
+	ILPSystemDisplayer.h \
 	Plugin.h
 
 
