@@ -21,6 +21,8 @@ public:
 	virtual void onBBEnd(otawa::BasicBlock *bb, int index);
 	virtual void onInlineBegin(otawa::CFG *cfg);
 	virtual void onInlineEnd(otawa::CFG *cfg);
+	virtual void onCall(otawa::Edge *edge);
+	        
 };
 
 #endif	// OTAWA_DUMPCFG_DISASSEMBLER_DISPLAYER_H
