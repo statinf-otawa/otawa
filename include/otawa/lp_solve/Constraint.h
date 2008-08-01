@@ -20,7 +20,29 @@ class Var;
 // Constraint class
 class Constraint: public ilp::Constraint {
 	friend class System;
+public:
+	inline Constraint(System *sys, comparator_t comp, double constant,
+		Constraint *next);
+	inline Constraint(System *system, const string& label, comparator_t comp,
+		double constant, Constraint *next)
+		: sys(system), nxt(next), facts(0), _label(label) { ASSERT(sys); }
+	~Constraint(void);
+
+	inline double constant(void) const;
+	virtual const string& label(void) const { return _label; }
+	inline Constraint *next(void) const;
+	void fillRow(double *row);
+	void resetRow(double *row);
+	void dump(elm::io::Output& out);
+
+	// ilp::Constraint overload	
+	virtual double coefficient(ilp::Var *var = 0) const;
+	virtual comparator_t comparator(void) const;
+	virtual void add(double coef, ilp::Var *var = 0);
+	virtual void sub(double coef, ilp::Var *var = 0);
+	virtual elm::IteratorInst<elm::Pair<otawa::ilp::Var*, double> >* terms() { ASSERTP("Not implemented with lpsolve 4", false); return NULL; }		
 	
+private:
 	// Factor class
 	class Factor {
 		Factor *nxt;
@@ -42,28 +64,12 @@ class Constraint: public ilp::Constraint {
 	Factor *facts;
 	double cst;
 	comparator_t cmp;
-public:
-	inline Constraint(System *sys, comparator_t comp, double constant,
-		Constraint *next);
-	~Constraint(void);
-	inline double constant(void) const;
-	inline Constraint *next(void) const;
-	void fillRow(double *row);
-	void resetRow(double *row);
-	void dump(elm::io::Output& out);
-
-	// ilp::Constraint overload	
-	virtual double coefficient(ilp::Var *var = 0) const;
-	virtual comparator_t comparator(void) const;
-	virtual void add(double coef, ilp::Var *var = 0);
-	virtual void sub(double coef, ilp::Var *var = 0);
-	virtual elm::IteratorInst<elm::Pair<otawa::ilp::Var*, double> >* terms() { ASSERTP("Not implemented with lpsolve 4", false); return NULL; }		
-	
+	string _label;
 };
 
 // Constraint::SolveInst inlines
 inline Constraint::Factor::Factor(double coefficient, Var *variable,
-Factor *next) : nxt(next), var(variable), coef(coefficient) {
+Factor *next): nxt(next), var(variable), coef(coefficient) {
 }
 
 inline Var *Constraint::Factor::variable(void) const {
