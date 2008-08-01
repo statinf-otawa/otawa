@@ -128,8 +128,7 @@ BasicBlock *ConstraintLoader::getBB(address_t addr) {
 	if(!bb) {
 		for (CFGCollection::Iterator icfg(INVOLVED_CFGS(fw)); icfg; icfg++) {
 			for (CFG::BBIterator ibb(icfg); ibb; ibb++) {
-				if(ibb->address().offset() <= addr.offset()
-				&& addr.offset() < ibb->address().offset() + ibb->size())
+				if(ibb->address() <= addr && addr < ibb->topAddress())
 					bb = ibb;
 			}
 		}
