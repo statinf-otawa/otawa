@@ -23,6 +23,11 @@ void DisassemblerDisplayer::onCFGBegin(CFG *cfg) {
 void DisassemblerDisplayer::onCFGEnd(CFG *cfg) {
 }
 
+/**
+ */
+void DisassemblerDisplayer::onCall(Edge *edge) {
+}  
+   
 
 /**
  */
