@@ -111,6 +111,18 @@ double constant) {
 
 
 // Overload
+ilp::Constraint *System::newConstraint(
+	const string& label,
+	ilp::Constraint::comparator_t comp,
+	double constant)
+{
+	conss = new Constraint(this, label, comp, constant, conss);
+	rows++;
+	return conss;
+}
+
+
+// Overload
 void System::addObjectFunction(double coef, ilp::Var *var) {
 	ofun->add(coef, var);
 }
