@@ -179,5 +179,9 @@ elm::io::Output& operator<<(elm::io::Output& out, Address addr) {
 	return out;
 }
 
+/**
+ * @typedef signed long long time_t;
+ * This type represents timing in OTAWA, in processor cycles.
+ */
 }	// otawa
 
