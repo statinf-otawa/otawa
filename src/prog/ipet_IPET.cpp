@@ -68,7 +68,7 @@ using namespace ilp;
  * of the program area it applies to.
  * @ingroup ipet
  */
-Identifier<int> TIME("otawa::ipet::time", -1);
+Identifier<time_t> TIME("otawa::ipet::time", -1);
 
 
 /**
@@ -91,7 +91,7 @@ Identifier<ilp::Var *> VAR("otawa::ipet::var", 0);
  * in the CFG of the computed function.
  * @ingroup ipet
  */
-Identifier<int> WCET("otawa::ipet::wcet", -1);
+Identifier<time_t> WCET("otawa::ipet::wcet", -1);
 
 
 /**
@@ -110,7 +110,7 @@ Identifier<bool> EXPLICIT("otawa::ipet::explicit", false);
  * to the object function).
  * @ingroup ipet
  */
-Identifier<int> TIME_DELTA("otawa::ipet::time_delta", 0);
+Identifier<time_t> TIME_DELTA("otawa::ipet::time_delta", 0);
 
 
 /**

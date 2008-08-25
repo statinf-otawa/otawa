@@ -28,18 +28,15 @@ class Var;
 namespace ipet {
 
 // Properties
-extern Identifier<int> TIME;
-extern Identifier<int> TIME_DELTA;
+extern Identifier<time_t> TIME;
+extern Identifier<time_t> TIME_DELTA;
 extern Identifier<ilp::Var *> VAR;
-//extern Identifier<ilp::System *> SYSTEM;
-extern Identifier<int> WCET;
+extern Identifier<time_t> WCET;
 extern Identifier<bool> EXPLICIT;
 extern Identifier<int> LOOP_COUNT;
 extern Identifier<int> COUNT;
 	
 // Subprograms
-/*ilp::Var *getVar(ilp::System *system, BasicBlock *bb);
-ilp::Var *getVar(ilp::System *system, Edge *edge);*/
 
 // Feratures
 extern Feature<NoProcessor> INTERBLOCK_SUPPORT_FEATURE;
