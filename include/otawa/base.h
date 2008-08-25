@@ -132,14 +132,13 @@ public:
 	Exception(const String& message);
 };
 
+// time measurement
+typedef signed long long time_t;
+
 } // otawa
 
 // Useful ELM predefinitions
 namespace elm {
-	/*namespace xom {
-		class Element;
-	} // xom*/
-	
 	template <>
 	class HashKey<otawa::Address> {
 	public:
