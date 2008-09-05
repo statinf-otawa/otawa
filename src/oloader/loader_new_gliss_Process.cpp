@@ -205,11 +205,15 @@ File *Process::loadFile(elm::CString path) {
 		case STT_FUNC:
 			kind = Symbol::FUNCTION;
 			addr = (address_t)infos.vaddr;
+			TRACE("SYMBOL: function " << infos.name << " at " << addr);
 			break;
 		case STT_NOTYPE:
 			kind = Symbol::LABEL;
 			addr = (address_t)infos.vaddr;
+			TRACE("SYMBOL: notype " << infos.name << " at " << addr);
 			break;
+		default:
+			continue;
 		}
 		
 		// Build the label if required
