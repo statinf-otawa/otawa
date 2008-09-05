@@ -54,14 +54,27 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 	
 	// Look the _start
 	Inst *start = ws->start();
-	if(start)
+	if(start) {
+		if(isVerbose())
+			log << "\tprocessing entry at " << start->address() << io::endl;
 		processEntry(ws, start->address());
+	}
+	else if(isVerbose())
+		log << "\tno entry to process\n";
 	
 	// Look the function symbols
 	for(Process::FileIter file(ws->process()); file; file++)
 		for(File::SymIter sym(file); sym; sym++)
-			if(sym->kind() == Symbol::FUNCTION)
-				processEntry(ws, sym->address());
+			if(sym->kind() == Symbol::FUNCTION) {
+				if(isVerbose())
+					log << "\tprocessing function \"" << sym->name() << " at " << sym->address() << io::endl;
+				Inst *inst = ws->findInstAt(sym->address());
+				if(inst)
+					processEntry(ws, sym->address());
+				else
+					warn(elm::_ << "bad function symbol \"" << sym->name()
+						   << "\" no code segment at " << sym->address());
+			}
 }
 
 
@@ -127,7 +140,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 		}
 		if(!inst->isReturn() && !IS_RETURN(inst)) {
 			Inst *target = inst->target();
-			if(target) {
+			if(target && !NO_CALL(target)) {
 				TRACE("otawa::VarTextDecoder::processEntry: put(" << target->address() << ")");
 				todo.put(target->address());
 			}
