@@ -29,7 +29,7 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 		else {
 			if(display_assembly)
 				cout << "{";
-			cout << index << " (" << fmt::address(bb->address()) << ")";
+			cout << "BB " << index << " (" << fmt::address(bb->address()) << ")";
 			if(display_assembly) {
 				cout << " | ";
 				bool first = true;
@@ -39,12 +39,16 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 						first = false;
 					else 
 						cout << "\\l";
+					
+					// Display labels
 					for(PropList::Getter<String> label(inst, FUNCTION_LABEL);
 					label; label++)
 						cout << *label << ":\\l";
 					for(PropList::Getter<String> label(inst, LABEL);
 					label; label++)
 						cout << *label << ":\\l";
+						
+					// Display the instruction
 					cout << fmt::address(inst->address()) << "    ";
 					StringBuffer buf;
 					inst->dump(buf);
@@ -55,6 +59,23 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 						|| dis[i] == '}')
 							cout << '\\';
 						cout << dis[i];
+					}
+					
+					// Add called label for branch
+					if(inst->isControl() && !inst->isReturn()) {
+						cout << "    # ";
+						Inst *target = inst->target();
+						if(!target)
+							cout << "unknown";
+						else {
+							string label = FUNCTION_LABEL(target);
+							if(!label)
+								label = LABEL(target);
+							if(label)
+								cout << label;
+							else
+								cout << target->address();
+						}
 					}
 				}
 				cout << "\\l }";
