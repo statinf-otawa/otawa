@@ -166,7 +166,7 @@ function check_tool {
 	cmajor=${cversion%%.*}
 	minor=${version#*.}
 	cminor=${cversion#*.}
-	if [ "$major" \> "$cmajor" -o "${minor%%.*}" \> "${cminor%%.*}"  ]; then
+	if [ "$major" -gt "$cmajor" -o "${minor%%.*}" -gt "${cminor%%.*}"  ]; then
 		failed "at least version $version required !"
 	else
 		checked="$checked $program"
