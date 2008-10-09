@@ -52,6 +52,7 @@ private:
 	elm::system::Path path;
 	bool to_file;
 	elm::io::OutFileStream *stream;
+	bool line;
 };
 
 } // otawa

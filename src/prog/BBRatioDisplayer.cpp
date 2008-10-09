@@ -63,7 +63,7 @@ otawa::Identifier<int> BBRatioDisplayer::SUM("", 0);
  * Build the processor.
  */
 BBRatioDisplayer::BBRatioDisplayer(void)
-: BBProcessor("BBTimeDisplayer", Version(1, 0, 0)), path(""), to_file(false), stream(0) {
+: BBProcessor("BBTimeDisplayer", Version(1, 0, 0)), path(""), to_file(false), stream(0), line(false) {
 	require(ipet::WCET_FEATURE);
 	require(ipet::ASSIGNED_VARS_FEATURE);
 }
@@ -72,6 +72,7 @@ BBRatioDisplayer::BBRatioDisplayer(void)
 /**
  */
 void BBRatioDisplayer::configure(const PropList& props) {
+	BBProcessor::configure(props);
 	path = PATH(props);
 	to_file = TO_FILE(props);
 }
@@ -81,10 +82,18 @@ void BBRatioDisplayer::configure(const PropList& props) {
  */
 void BBRatioDisplayer::setup(WorkSpace *ws) {
 
+	// source available ?
+	if(ws->isProvided(SOURCE_LINE_FEATURE))
+		line = true;
+	if(isVerbose())
+		log << "\tsource/line information " << (line ? "" : "not ") << "available\n";
+
 	// prepare the output
 	if(!path && to_file)
 		path = _ << ENTRY_CFG(ws)->label() << ".ratio";
 	if(path) {
+		if(isVerbose())
+			log << "\toutputting to " << path << io::endl;
 		stream = new OutFileStream(path);
 		if(!stream->isReady())
 			throw ProcessorException(*this, _ << "cannot open \"" << path << "\"");
@@ -94,7 +103,10 @@ void BBRatioDisplayer::setup(WorkSpace *ws) {
 	// prepare the work
 	wcet = ipet::WCET(ws);
 	system = ipet::SYSTEM(ws);
-	out << "ADDRESS\t\tNUM\tSIZE\tTIME\tCOUNT\tRATIO\t\tFUNCTION\n";
+	out << "ADDRESS\t\tNUM\tSIZE\tTIME\tCOUNT\tRATIO\t\tFUNCTION";
+	if(line)
+		out << "\tLINE";
+	out << io::endl;
 }
 
 
@@ -125,7 +137,34 @@ void BBRatioDisplayer::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 		<< time << '\t'
 		<< count << '\t'
 		<< (float)total * 100 / wcet << "%\t"
-		<< cfg->label() << io::endl; 
+		<< cfg->label();
+	
+	// Line display
+	if(line) {
+		out << '\t';
+		bool one = false;
+		Pair<cstring, int> old = pair(cstring(""), 0);
+		for(Address addr = bb->address(); addr.offset() < bb->topAddress().offset(); addr = addr + 1) {
+			Option<Pair<cstring, int> > res = fw->process()->getSourceLine(addr);
+			if(res) {
+				if((*res).fst != old.fst) {
+					old = *res;
+		 			if(one)
+		 				out << ", ";
+		 			else
+		 				one = true;
+		 			out << old.fst << ':' << old.snd;
+				}
+				else if((*res).snd != old.snd) {
+					old = *res;
+					out << ',' << old.snd;
+				}
+			} 
+		}
+	}
+	
+	// End of line
+	out << io::endl; 
 }
 
 
