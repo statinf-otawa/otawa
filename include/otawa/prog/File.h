@@ -50,6 +50,7 @@ public:
 	
 	// Symbol management
 	inline void addSymbol(Symbol *sym) { syms.put(sym->name(), sym); }
+	inline void removeSymbol(Symbol *sym) { syms.remove(sym->name()); }
 	address_t findLabel(const String& label);
 	Symbol *findSymbol(String name);
 	class SymIter: public syms_t::ItemIterator {
