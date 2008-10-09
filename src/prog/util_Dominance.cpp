@@ -188,7 +188,6 @@ elm::MutableCollection<BasicBlock *> *headers) {
 				BACK_EDGE(edge) = true;
 				if(headers)
 					headers->add(bb);
-				break;
 			}
 	}
 }
