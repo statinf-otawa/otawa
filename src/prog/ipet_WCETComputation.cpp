@@ -75,9 +75,16 @@ void WCETComputation::processWorkSpace(WorkSpace *fw) {
 	System *system = SYSTEM(fw);
 	if(!system)
 		throw ProcessorException(*this, "no ILP system defined in this CFG");
-	int wcet = -1;
-	if(system->solve())
-		wcet = (int)system->value();
+	time_t wcet = -1;
+	if(isVerbose())
+		log << "\tlaunching ILP solver\n";
+	if(system->solve()) {
+		if(isVerbose())
+			log << "\tobjective function = " << system->value() << io::endl;
+		wcet = (time_t)system->value();
+	}
+	if(isVerbose())
+		log << "\tWCET = " << wcet << io::endl; 
 	WCET(fw) = wcet;
 }
 
