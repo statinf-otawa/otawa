@@ -473,7 +473,8 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
 			if(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst))
 				cout << "// loop " << addressOf(cfg, child->bb()->address()) << io::endl;
 			else 
-				cout << "loop " << addressOf(cfg, child->bb()->address()) << " ?;\n"; 
+				cout << "loop " << addressOf(cfg, child->bb()->address()) << " ?; // "
+					 << child->bb()->address() << io::endl;
 			scanLoop(cfg, child, indent + 1);
 		}
 	}
@@ -595,10 +596,10 @@ void ControlOutput::cleanup(WorkSpace *ws) {
  * @return		0 for success, >0 for error.
  */
 int main(int argc, char **argv) {
-	//try {
+	try {
 		command.run(argc, argv);
 		return 0;
-	/*}
+	}
 	catch(option::OptionException& e) {
 		cerr << "ERROR: " << e.message() << io::endl;
 		command.displayHelp();
@@ -607,6 +608,6 @@ int main(int argc, char **argv) {
 	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
 		return 2;
-	}*/
+	}
 }
 
