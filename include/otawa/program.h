@@ -8,8 +8,8 @@
 #define OTAWA_PROGRAM_H
 
 #include <elm/inhstruct/DLList.h>
-#include <elm/Collection.h>
-#include <elm/datastruct/Map.h>
+//#include <elm/Collection.h>
+//#include <elm/datastruct/Map.h>
 #include <otawa/instruction.h>
 #include <otawa/prog/Symbol.h>
 #include <otawa/prog/Segment.h>

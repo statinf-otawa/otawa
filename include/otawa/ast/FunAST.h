@@ -7,8 +7,6 @@
 #ifndef OTAWA_AST_FUN_AST_H
 #define OTAWA_AST_FUN_AST_H
 
-#include <elm/datastruct/Map.h>
-#include <elm/Collection.h>
 #include <otawa/ast/AST.h>
 #include <otawa/manager.h>
 
