@@ -23,7 +23,7 @@
 #define OTAWA_CONTEXT_TREE_H
 
 #include <assert.h>
-#include <elm/datastruct/Vector.h>
+#include <elm/genstruct/Vector.h>
 #include <otawa/properties.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/proc/Feature.h>
@@ -47,8 +47,8 @@ private:
 	kind_t _kind;
 	BasicBlock *_bb;
 	CFG *_cfg;
-	elm::datastruct::Vector<BasicBlock *> _bbs;
-	elm::datastruct::Vector<ContextTree *> _children;
+	elm::genstruct::Vector<BasicBlock *> _bbs;
+	elm::genstruct::Vector<ContextTree *> _children;
 	
 	ContextTree *_parent;
 	ContextTree(BasicBlock *bb, CFG *cfg, ContextTree *parent);
@@ -63,15 +63,22 @@ public:
 	inline kind_t kind(void) const;
 	inline CFG *cfg(void) const;
 	inline ContextTree *parent(void) const;
-	inline elm::Collection<ContextTree *>& children(void);
-	inline elm::Collection<BasicBlock *>& bbs(void);
+	/*inline elm::Collection<ContextTree *>& children(void);
+	inline elm::Collection<BasicBlock *>& bbs(void);*/
 	inline bool isChildOf(const ContextTree *ct);
 	ContextTree *enclosingFunction(void);
 	
-	// Iterator
-	class ChildrenIterator: public elm::Iterator<ContextTree *> {
+	// ChildrenIterator class
+	class ChildrenIterator: public elm::genstruct::Vector<ContextTree *>::Iterator {
 	public:
 		inline ChildrenIterator(ContextTree *tree);
+	};
+	
+	// BBIterator class
+	class BBIterator: public elm::genstruct::Vector<BasicBlock *>::Iterator {
+	public:
+		inline BBIterator(ContextTree *tree):
+			elm::genstruct::Vector<BasicBlock *>::Iterator(tree->_bbs) { }
 	};
 };
 
@@ -116,13 +123,13 @@ inline ContextTree *ContextTree::parent(void) const {
 	return _parent;
 };
 
-inline elm::Collection<BasicBlock *>& ContextTree::bbs(void) {
+/*inline elm::Collection<BasicBlock *>& ContextTree::bbs(void) {
 	return _bbs;
 }
 
 inline elm::Collection<ContextTree *>& ContextTree::children(void) {
 	return _children;
-}
+}*/
 
 
 inline bool ContextTree::isChildOf(const ContextTree *ct) {
@@ -142,7 +149,7 @@ inline CFG *ContextTree::cfg(void) const {
 
 // ContextTree::ChildrenIterator class
 inline ContextTree::ChildrenIterator::ChildrenIterator(ContextTree *tree)
-: elm::Iterator<ContextTree *>(tree->_children.visit()) {
+: elm::genstruct::Vector<ContextTree *>::Iterator(tree->_children) {
 	assert(tree);
 };
 

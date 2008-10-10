@@ -7,7 +7,6 @@
 #ifndef OTAWA_UTIL_POSTDOMINANCE_H
 #define OTAWA_UTIL_POSTDOMINANCE_H
 
-#include <elm/Collection.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/proc/Feature.h>
 
