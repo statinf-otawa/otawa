@@ -21,6 +21,7 @@
  */
 
 #include <otawa/exegraph/LiExeGraph.h>
+#include <otawa/graph/PreorderIterator.h>
 
 using namespace  otawa;
 
