@@ -288,10 +288,10 @@ BasicBlock *BasicBlock::findBBAt(WorkSpace *fw, address_t addr) {
  * @return	Entering edge iterator.
  * @deprecated	Use InIterator instead.
  */
-IteratorInst<Edge *> *BasicBlock::inEdges(void) {
+/*IteratorInst<Edge *> *BasicBlock::inEdges(void) {
 	InIterator iter(this);
 	return new IteratorObject<InIterator, Edge *>(iter);
-}
+}*/
 
 
 /**
@@ -299,10 +299,10 @@ IteratorInst<Edge *> *BasicBlock::inEdges(void) {
  * @return	Leaving edge iterator.
  * @deprecated	Use OutIterator instead.
  */
-IteratorInst<Edge *> *BasicBlock::outEdges(void) {
+/*IteratorInst<Edge *> *BasicBlock::outEdges(void) {
 	OutIterator iter(this);
 	return new IteratorObject<OutIterator, Edge *>(iter);
-}
+}*/
 
 
 /**

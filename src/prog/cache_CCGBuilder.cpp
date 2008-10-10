@@ -119,7 +119,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	BasicBlock *BB;
 	LBlock *line;
 	int length = lbset->count();		
-	for(Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++)
+	for(LBlockSet::Iterator lbloc(*lbset); lbloc; lbloc++)
 		if(lbloc->id() != 0 && lbloc->id() != length - 1) {
 			BB = lbloc->bb();
 			dfa::BitSet *inid = IN(BB);
@@ -145,12 +145,12 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				assert(info);
 				bool test = false;
 				bool visit;
-				for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
+				for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 					visit = false;
 					pseudo = inst->toPseudo();			
 					if(!pseudo){
 						adinst = inst->address();				
-						for (Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++){
+						for (LBlockSet::Iterator lbloc(*lbset); lbloc; lbloc++){
 							address_t address = lbloc->address();
 							// the first lblock in the BB it's a conflict
 							if(adinst == address && !test && bb == lbloc->bb()) {		

@@ -166,7 +166,7 @@ void CATBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S ,int dec){
 	/*
 	 * Categorize first all the l-blocks in the children ContextTree
 	 */
-	for(Iterator<ContextTree *> fils(S->children()); fils; fils++){
+	for(ContextTree::ChildrenIterator fils(S); fils; fils++){
 		setCATEGORISATION(lineset,fils,dec);		
 	}
 	
@@ -187,12 +187,12 @@ void CATBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S ,int dec){
 		/* 
 		 * Call worst() on each l-block of this ContextTree.
 		 */
-		for(Iterator<BasicBlock *> bk(S->bbs()); bk; bk++){
-			for(Iterator<Inst *> inst(bk->visit()); inst; inst++) {
+		for(ContextTree::BBIterator bk(S); bk; bk++){
+			for(BasicBlock::InstIterator inst(bk); inst; inst++) {
 				 PseudoInst *pseudo = inst->toPseudo();
 				if(!pseudo){
 					address_t adlbloc = inst->address();
-					for (Iterator<LBlock *> lbloc(lineset->visit()); lbloc; lbloc++){
+					for (LBlockSet::Iterator lbloc(*lineset); lbloc; lbloc++){
 						if ((adlbloc == (lbloc->address()))&&(bk == lbloc->bb())){
 							ident = lbloc->id();
 							cachelin = lineset->lblock(ident);
@@ -375,7 +375,7 @@ BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
 		 * Call recursively buildLBLOCKSET for each ContextTree children
 		 * Merge result with current set
 		 */
-		for(Iterator<ContextTree *> son(root->children()); son; son++){
+		for(ContextTree::ChildrenIterator son(root); son; son++){
 			 v = buildLBLOCKSET(lcache, son);
 			 set->add(*v);
 		}
@@ -385,13 +385,13 @@ BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
 		 *   - Set the lblock's categorization to INVALID
 		 *   - Add this lblock to the current set.
 		 */
-		for(Iterator<BasicBlock *> bb(root->bbs()); bb; bb++){
+		for(ContextTree::BBIterator bb(root); bb; bb++){
 			if ((!bb->isEntry())&&(!bb->isExit())){ /* XXX */
-			for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
+			for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 				 PseudoInst *pseudo = inst->toPseudo();
 				if(!pseudo){
 					address_t adlbloc = inst->address();
-					for (Iterator<LBlock *> lbloc(lcache->visit()); lbloc; lbloc++){
+					for (LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
 						if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
 							ident = lbloc->id();
 							CATEGORY(lbloc).add(INVALID_CATEGORY);

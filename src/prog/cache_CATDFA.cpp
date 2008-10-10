@@ -39,11 +39,11 @@ CATDomain *CATProblem::gen(CFG *cfg, BasicBlock *bb) {
 		address_t adlbloc;
 	    PseudoInst *pseudo;
 	    int identif=0;	    
-	for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
+	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 		pseudo = inst->toPseudo();			
 		if(!pseudo){
 			adlbloc = inst->address();				
-			for (Iterator<LBlock *> lbloc(lines->visit()); lbloc; lbloc++){
+			for (LBlockSet::Iterator lbloc(*lines); lbloc; lbloc++){
 				address_t address = lbloc->address();
 				if ((adlbloc == address)&& (bb == lbloc->bb()))
 					identif = lbloc->id();
@@ -68,7 +68,7 @@ CATDomain *CATProblem::preserve(CFG *cfg, BasicBlock *bb) {
 		address_t adlbloc;
 	    PseudoInst *pseudo;
 	    int identif1 = 0 , identnonconf = 0 , identif2 = 0;
-	for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
+	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 		visit = false;
 		// decallage x where each block containts 2^x ocets
 		int dec = cach->blockBits();
@@ -77,12 +77,12 @@ CATDomain *CATProblem::preserve(CFG *cfg, BasicBlock *bb) {
 			adlbloc = inst->address();
 			if (!testnotconflit){
 				// lblocks iteration
-				for (Iterator<LBlock *> lbloc(lines->visit()); lbloc; lbloc++){
+				for (LBlockSet::Iterator lbloc(*lines); lbloc; lbloc++){
 				if ((adlbloc == (lbloc->address()))&&(bb == (lbloc->bb()))){
 					//testnotconflit = true;
 					identif1 = lbloc->id();					
 					unsigned long tag = ((unsigned long)adlbloc) >> dec;
-					for (Iterator<LBlock *> lbloc1(lines->visit()); lbloc1; lbloc1++){
+					for (LBlockSet::Iterator lbloc1(*lines); lbloc1; lbloc1++){
 						unsigned long taglblock = ((unsigned long)lbloc1->address()) >> dec;
 						if (adlbloc != (lbloc1->address())&&(tag == taglblock)){
 						    	identnonconf = lbloc1->id();
@@ -103,7 +103,7 @@ CATDomain *CATProblem::preserve(CFG *cfg, BasicBlock *bb) {
 			
 							
 			if (!visit){
-			for (Iterator<LBlock *> lbloc(lines->visit()); lbloc; lbloc++){
+			for (LBlockSet::Iterator lbloc(*lines); lbloc; lbloc++){
 				if (adlbloc == (lbloc->address())){
 				identif2 = lbloc->id();
 				break ;
