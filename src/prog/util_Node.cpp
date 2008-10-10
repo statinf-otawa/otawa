@@ -29,9 +29,9 @@ namespace otawa { namespace graph {
  */
 void Node::unlink(void) {
 	while(ins)
-		_graph->destroy(ins);
+		_graph->remove(ins);
 	while(outs)
-		_graph->destroy(outs);
+		_graph->remove(outs);
 }
 
 
