@@ -3,14 +3,16 @@ includeotawacfg_HEADERS = \
 	BasicBlock.h \
 	CFG.h \
 	CFGBuilder.h \
-	PSTBuilder.h \
 	CFGCollector.h \
 	CFGInfo.h \
-	Virtualizer.h \
 	Edge.h \
-	VirtualBasicBlock.h \
-	LoopUnroller.h \
+	features.h \
 	LoopReductor.h \
+	LoopUnroller.h \
+	PFG.h \
+	PFGBuilder.h \
+	PSTBuilder.h \
 	SpanningTreeBuilder.h \
-	VirtualCFG.h
-
+	VirtualBasicBlock.h \
+	VirtualCFG.h \
+	Virtualizer.h
