@@ -6,7 +6,7 @@
  */
 
 #include <assert.h>
-#include <elm/Iterator.h>
+#include <elm/PreIterator.h>
 #include <otawa/manager.h>
 #include <otawa/cfg/Edge.h>
 #include <otawa/pcg/PCGBuilder.h>
