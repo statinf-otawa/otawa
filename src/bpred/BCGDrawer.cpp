@@ -81,16 +81,16 @@ void BCGDrawer::make(){
 	
 	// Construct the Graph
 	HashTable<void*, Node*> map;
-	for(BCG::NodeIterator bb(_bcg); bb; bb++){
+	for(BCG::Iterator bb(_bcg); bb; bb++){
 		Node *node = _graph->newNode();
 		map.put(*bb, node);
 		onNode(*bb, node);
 	}
 
-	for(BCG::NodeIterator bb(_bcg); bb; bb++){
+	for(BCG::Iterator bb(_bcg); bb; bb++){
 		Node *node = map.get(*bb);
-		for(BCG::Successor succ(bb); succ; succ++){
-			BCGEdge* edge = succ.edge();
+		for(BCG::OutIterator succ(bb); succ; succ++){
+			BCGEdge* edge = succ;
 			display::Edge *display_edge;
 			display_edge = _graph->newEdge(node,map.get(edge->target()));
 			onEdge(edge, display_edge);

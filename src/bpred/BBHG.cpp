@@ -27,7 +27,7 @@ using namespace elm;
 
 /// BBHGEdge
 BBHGEdge::BBHGEdge(BBHGNode *source, BBHGNode *target, bool taken, bool from_branch) :
-				GenGraph<BBHGNode,BBHGEdge>::Edge(source,target) {
+				GenGraph<BBHGNode,BBHGEdge>::GenEdge(source,target) {
 	this->m_edge_taken = taken;
 	this->m_from_branch = from_branch;
 }
@@ -90,10 +90,10 @@ bool BBHGNode::exitsWithNT() {
 bool BBHGNode::isSuccessor(BBHGNode* succ,bool& withT, bool& withNT) {
 	withT = false;
 	withNT = false;
-	for(BBHG::Successor s(this);s ;s++) {
-		if(s->getCorrespondingBB()->number() == succ->getCorrespondingBB()->number()) {
-			withT = withT || s.edge()->isTaken();
-			withNT = withNT || !(s.edge()->isTaken());
+	for(BBHG::OutIterator s(this); s ;s++) {
+		if(s->target()->getCorrespondingBB()->number() == succ->getCorrespondingBB()->number()) {
+			withT = withT || s->isTaken();
+			withNT = withNT || !(s->isTaken());
 		}
 	}
 	return (withT || withNT);
