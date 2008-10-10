@@ -68,8 +68,8 @@ public:
 	virtual int countConstraints(void);
 	virtual void exportLP(io::Output& out = elm::cout);
 	virtual void dumpSolution(io::Output& out = elm::cout);
-	virtual elm::IteratorInst<otawa::ilp::Constraint*>* constraints() { ASSERTP("Not implemented in lpsolve 4", false); return NULL;};
-	virtual elm::IteratorInst<elm::Pair<otawa::ilp::Var*, double> >* objTerms() { ASSERTP("Not implemented in lpsolve 4", false); return NULL;};
+	virtual elm::datastruct::IteratorInst<otawa::ilp::Constraint*>* constraints() { ASSERTP("Not implemented in lpsolve 4", false); return NULL;};
+	virtual elm::datastruct::IteratorInst<elm::Pair<otawa::ilp::Var*, double> >* objTerms() { ASSERTP("Not implemented in lpsolve 4", false); return NULL;};
 };
 
 // System::Var Inlines

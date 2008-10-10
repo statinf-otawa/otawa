@@ -25,7 +25,7 @@
 #include <elm/io/OutStream.h>
 #include <elm/string.h>
 #include <otawa/ilp/Constraint.h>
-#include <elm/Iterator.h>
+#include <elm/datastruct/Iterator.h>
 
 
 namespace otawa { namespace ilp {
@@ -53,8 +53,8 @@ public:
 	inline Var *newVar(cstring name = "") { return newVar(string(name)); }		
 	virtual int countVars(void) = 0;
 	virtual int countConstraints(void) = 0;
-	virtual elm::IteratorInst<ilp::Constraint*> *constraints(void) = 0; 
-	virtual elm::IteratorInst<ilp::Constraint::Term> *objTerms(void) = 0; 
+	virtual elm::datastruct::IteratorInst<ilp::Constraint*> *constraints(void) = 0; 
+	virtual elm::datastruct::IteratorInst<ilp::Constraint::Term> *objTerms(void) = 0; 
 	virtual void exportLP(io::Output& out = elm::cout) = 0;
 	virtual void dumpSystem(io::Output& out = elm::cout);
 	virtual void dumpSolution(io::Output& out = elm::cout) = 0;
@@ -63,27 +63,23 @@ public:
 	void dump(format_t fmt, elm::io::OutStream& out = elm::io::stdout);
 	
 	
-	class ConstIterator: public elm::Iterator<Constraint*> {
+	class ConstIterator: public elm::datastruct::Iterator<Constraint*> {
 		public:
 		
-		inline ConstIterator(elm::IteratorInst<Constraint*> *_inst) : elm::Iterator<Constraint*>(_inst) {
-
-		}
-		inline ConstIterator(System *_sys) : elm::Iterator<Constraint*>(_sys->constraints()) {
+		inline ConstIterator(elm::datastruct::IteratorInst<Constraint*> *_inst):
+			elm::datastruct::Iterator<Constraint*>(_inst) { }
+		inline ConstIterator(System *_sys) : elm::datastruct::Iterator<Constraint*>(_sys->constraints()) {
 
 		}	
 
 	};	
-	class ObjTermIterator: public elm::Iterator<Constraint::Term> {
+	class ObjTermIterator: public elm::datastruct::Iterator<Constraint::Term> {
 		public:
 		
-		inline ObjTermIterator(elm::IteratorInst<Constraint::Term> *_inst) : elm::Iterator<Constraint::Term>(_inst) {
-
-		}
-		inline ObjTermIterator(System *_sys) : elm::Iterator<Constraint::Term>(_sys->objTerms()) {
-
-		}	
-
+		inline ObjTermIterator(elm::datastruct::IteratorInst<Constraint::Term> *_inst):
+			elm::datastruct::Iterator<Constraint::Term>(_inst) { }
+		inline ObjTermIterator(System *_sys):
+			elm::datastruct::Iterator<Constraint::Term>(_sys->objTerms()) { }	
 	};	
 };
 	

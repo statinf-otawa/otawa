@@ -18,7 +18,7 @@ namespace otawa { namespace ipet {
 
 class PathManager;
 
-class BBPath: public PropList, private Collection<BasicBlock*> {
+class BBPath: public PropList {
 	friend class PathManager;
 protected:
 	BBPath(BasicBlock *start);
@@ -30,8 +30,8 @@ protected:
 	//sim::State *ending_state;
 	WorkSpace *last_framework_used; // Last framework used for simulation
 	
-	virtual elm::IteratorInst<BasicBlock*> *visit(void);
-	virtual elm::MutableCollection<BasicBlock *> *empty(void);
+	/*virtual elm::IteratorInst<BasicBlock*> *visit(void);
+	virtual elm::MutableCollection<BasicBlock *> *empty(void);*/
 	
 	int simulate(WorkSpace *fw);
 	//sim::State *getEndingState(FrameWork *fw);
@@ -52,7 +52,7 @@ public:
 	ilp::Var *getVar(ilp::System *system, bool explicit_names = false);
 	BBPath* sub(int begin, int end);
 	inline BBPath* operator() (int begin, int end);
-	inline Collection<BasicBlock*>& bbs();
+	//inline Collection<BasicBlock*>& bbs();
 	
 	// Iterator
 	class BBIterator: public elm::PreIterator<BBIterator, BasicBlock *> {
@@ -81,7 +81,7 @@ inline BBPath* BBPath::operator() (int begin, int end){return sub(begin, end);}
 //inline bool BBPath::operator== (BBPath &bbpath){return equals(bbpath);}
 inline BasicBlock* BBPath::head() {return basicBlocks[0];}
 inline BasicBlock* BBPath::tail() {return basicBlocks.top();}
-inline Collection<BasicBlock*>& BBPath::bbs(){return *this;}
+//inline Collection<BasicBlock*>& BBPath::bbs(){return *this;}
 
 // BBIterator inlines
 inline BBPath::BBIterator::BBIterator(BBPath *bbpath)
