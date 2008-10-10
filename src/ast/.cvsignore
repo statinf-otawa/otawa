@@ -20,3 +20,4 @@ CallAST.lo
 FunAST.lo
 ast_ASTLoader.lo
 WhileAST.lo
+proc_FunProcessor.lo
