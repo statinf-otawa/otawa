@@ -24,7 +24,7 @@ using namespace otawa;
 
 /// BCGEdge
 BCGEdge::BCGEdge(BCGNode *source, BCGNode *target, bool taken) :
-				GenGraph<BCGNode,BCGEdge>::Edge(source,target) {
+				GenGraph<BCGNode,BCGEdge>::GenEdge(source,target) {
 	this->m_edge_taken = taken;
 	
 }
@@ -86,10 +86,10 @@ bool BCGNode::exitsWithNT() {
 bool BCGNode::isSuccessor(BCGNode* succ,bool& withT, bool& withNT) {
 	withT = false;
 	withNT = false;
-	for(BCG::Successor s(this);s ;s++) {
-		if(s->getCorrespondingBBNumber() == succ->getCorrespondingBBNumber()) {
-			withT = withT || s.edge()->isTaken();
-			withNT = withNT || !(s.edge()->isTaken());
+	for(BCG::OutIterator s(this);s ;s++) {
+		if(s->target()->getCorrespondingBBNumber() == succ->getCorrespondingBBNumber()) {
+			withT = withT || s->isTaken();
+			withNT = withNT || !(s->isTaken());
 		}
 	}
 	return (withT || withNT);

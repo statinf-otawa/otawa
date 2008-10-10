@@ -47,7 +47,7 @@ public:
 
 
 
-class BCGEdge : public otawa::GenGraph<BCGNode,BCGEdge>::Edge {
+class BCGEdge : public otawa::GenGraph<BCGNode,BCGEdge>::GenEdge {
 private:
 	bool m_edge_taken;
 public:
@@ -59,7 +59,7 @@ public:
 
 
 
-class BCGNode : public otawa::GenGraph<BCGNode,BCGEdge>::Node{
+class BCGNode : public otawa::GenGraph<BCGNode,BCGEdge>::GenNode{
 private:
 	bool m_entry;
 	bool m_exit;
