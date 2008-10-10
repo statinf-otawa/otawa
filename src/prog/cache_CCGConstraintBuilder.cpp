@@ -13,10 +13,8 @@
 #include <otawa/cache/ccg/CCGDFA.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet/IPET.h>
-#include <elm/Collection.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/util/Dominance.h>
-//#include <otawa/util/DFABitSet.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/cfg.h>
 #include <otawa/hard/CacheConfiguration.h>
@@ -131,7 +129,8 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		}
 		
 		// Put variables on edges
-		for(CCG::Successor succ(CCG::NODE(lblock)); succ; succ++) {
+		for(CCG::OutIterator edge(CCG::NODE(lblock)); edge; edge++) {
+			CCGNode *succ = edge->target();
 			String name;
 			if(_explicit) {
 				StringBuffer buf;
@@ -151,12 +150,12 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 						<< '_' << succ->lblock()->bb()->cfg()->label();
 				name = buf.toString();
 			}
-			VAR(succ.edge()) = system->newVar(name); 
+			VAR(edge) = system->newVar(name); 
 		}
 	}
 	
 	// Building all the constraints of each lblock
-	for (Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++) {
+	for (LBlockSet::Iterator lbloc(*lbset); lbloc; lbloc++) {
 		
 		
 		/* P(x,y) == eccg_x_y */	
@@ -167,8 +166,8 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		if (lbloc->id() == 0) {
 			// !!CONS!!
 			Constraint *cons18 = system->newConstraint(Constraint::EQ,1);
-			for(CCG::Successor outedg(CCG::NODE(lbloc)); outedg; outedg++)
-				cons18->add(1, VAR(outedg.edge()));
+			for(CCG::OutIterator edge(CCG::NODE(lbloc)); edge; edge++)
+				cons18->add(1, VAR(edge));
 		}
 			
 		// Non-entry, non-exit node
@@ -199,10 +198,10 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			Constraint *cons17 = system->newConstraint(Constraint::EQ);
 			cons17->addLeft(1, BB_VAR(lbloc));
 			
-			for(GenGraph<CCGNode,CCGEdge>::Successor outedg(CCG::NODE(lbloc));
-			outedg; outedg++) {
-				cons17->addRight(1, VAR(outedg.edge()));
-				CCGNode *target = outedg;
+			for(GenGraph<CCGNode,CCGEdge>::OutIterator edge(CCG::NODE(lbloc));
+			edge; edge++) {
+				cons17->addRight(1, VAR(edge));
+				CCGNode *target = edge->target();
 				if (target->lblock()->id() == lbset->count() - 1)
 					findend = true;
 
@@ -223,14 +222,14 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			used = false;
 			bool finds = false;
 			ilp::Var * psi;
-			for(GenGraph<CCGNode,CCGEdge>::Predecessor inedge(CCG::NODE(lbloc));
+			for(GenGraph<CCGNode,CCGEdge>::InIterator inedge(CCG::NODE(lbloc));
 			inedge; inedge++) {
 
-				cons->addRight(1, VAR(inedge.edge()));
-				CCGNode *source = inedge;
+				cons->addRight(1, VAR(inedge));
+				CCGNode *source = inedge->source();
 				if (source->lblock()->id() == 0){
 					 finds = true;
-					 psi = VAR(inedge.edge());
+					 psi = VAR(inedge);
 				}
 				if (source->lblock()->cacheblock() == lbloc->cacheblock()) 
 					findlooplb = true;
@@ -262,14 +261,14 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				cons->addLeft(1, HIT_VAR(lbloc));
 				
 				unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-				for(CCG::Predecessor inedge(CCG::NODE(lbloc)); inedge; inedge++)
+				for(CCG::InIterator inedge(CCG::NODE(lbloc)); inedge; inedge++)
 				{
-					unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
-					if(inedge->lblock()->id() != 0
-					&& inedge->lblock()->id() != lbset->count() - 1){
+					unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address()) >> dec;
+					if(inedge->source()->lblock()->id() != 0
+					&& inedge->source()->lblock()->id() != lbset->count() - 1){
 						if (taglbloc == taginedge) {
-								cons->addRight(1, VAR(inedge.edge()));
-								cons2->addLeft(1, VAR(inedge.edge()));
+								cons->addRight(1, VAR(inedge));
+								cons2->addLeft(1, VAR(inedge));
 						}
 					}
 		 		}
@@ -281,14 +280,14 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		 		cons2 = system->newConstraint(Constraint::EQ);
 		 		cons2->addLeft(1, HIT_VAR(lbloc));
 	//	 		unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-		 		for(GenGraph<CCGNode,CCGEdge>::Predecessor inedge(CCG::NODE(lbloc));
+		 		for(GenGraph<CCGNode,CCGEdge>::InIterator inedge(CCG::NODE(lbloc));
 		 		inedge; inedge++) {
 		 			// cout << "examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " avec predecesseur : " << inedge->lblock()->id() << "\n";
 //		 			unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
-					if(inedge->lblock()->id() != 0
-					&& inedge->lblock()->id() != lbset->count() - 1){
-						if (inedge->lblock()->cacheblock() == lbloc->cacheblock())
-							cons2->addRight(1, VAR(inedge.edge()));
+					if(inedge->source()->lblock()->id() != 0
+					&& inedge->source()->lblock()->id() != lbset->count() - 1){
+						if (inedge->source()->lblock()->cacheblock() == lbloc->cacheblock())
+							cons2->addRight(1, VAR(inedge));
 					}
 		 		}
 		 	} 
@@ -301,12 +300,12 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			cons = system->newConstraint(Constraint::EQ);
 			cons->addLeft(1, HIT_VAR(lbloc));
 			unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-			for(CCG::Predecessor inedge(CCG::NODE(lbloc)); inedge; inedge++) {
-				unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> 3;
-				if(inedge->lblock()->id() != 0
-					&& inedge->lblock()->id() != lbset->count() - 1) {
+			for(CCG::InIterator inedge(CCG::NODE(lbloc)); inedge; inedge++) {
+				unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address()) >> 3;
+				if(inedge->source()->lblock()->id() != 0
+					&& inedge->source()->lblock()->id() != lbset->count() - 1) {
 						if(taglbloc == taginedge)
-							cons->addRight(1,  VAR(inedge.edge()));
+							cons->addRight(1,  VAR(inedge));
 					}					
 				}
 			}
@@ -318,7 +317,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	}
   
   	// Fix the object function
-	for(Iterator<LBlock *> lbloc(lbset->visit()); lbloc; lbloc++) {
+	for(LBlockSet::Iterator lbloc(*lbset); lbloc; lbloc++) {
 		if(lbloc->id() != 0 && lbloc->id() != lbset->count()- 1)
   			system->addObjectFunction( cach->missPenalty(), MISS_VAR(lbloc));
 	}		
@@ -347,20 +346,20 @@ void CCGConstraintBuilder::addConstraintHeader(
 ) {
 	int size = graph->count();
 	bool dominate = false;
-	for(Iterator<ContextTree *> son(cont->children()); son; son++)
+	for(ContextTree::ChildrenIterator son(cont); son; son++)
 		addConstraintHeader(system, graph, son, boc);
 	BasicBlock *b = boc->bb();
 	if(cont->kind() == ContextTree::LOOP){
-		for(Iterator<BasicBlock *> bs(cont->bbs()); bs; bs++) {
+		for(ContextTree::BBIterator bs(cont); bs; bs++) {
 			if (b == bs){
 			    // p(uv, ij) / header not dom bb(uv) <= sum xi
 			    // / (xi, header) in E and header not dom xi
 				BasicBlock *header = cont->bb();
 				bool used = false;
 				Constraint *cons32 = system->newConstraint(Constraint::LE);
-				for(GenGraph<CCGNode,CCGEdge>::Predecessor inedge(CCG::NODE(boc));
+				for(GenGraph<CCGNode,CCGEdge>::InIterator inedge(CCG::NODE(boc));
 				inedge; inedge++) {
-					CCGNode *source = inedge;
+					CCGNode *source = inedge->source();
 					if(source->lblock()->id() != 0
 					&& source->lblock()->id() !=  size-1) {
 						BasicBlock *bblock = source->lblock()->bb();
@@ -374,7 +373,7 @@ void CCGConstraintBuilder::addConstraintHeader(
 					}
 					if(boc != source->lblock()
 					&& (!dominate || source->lblock()->id() == 0)) {
-						cons32->addLeft(1, VAR(inedge.edge()));
+						cons32->addLeft(1, VAR(inedge));
 						dominate = false;
 						used = true;
 					}
@@ -382,7 +381,7 @@ void CCGConstraintBuilder::addConstraintHeader(
 				}
 				if(used) {
 				        bool set = false;
-					for(Iterator<Edge *> inedg(header->inEdges()); inedg ; inedg++) {
+					for(BasicBlock::InIterator inedg(header); inedg ; inedg++) {
 						BasicBlock *preheader = inedg->source();
 						if(!Dominance::dominates(header, inedg->source()))
 						cons32->addRight(1, preheader->use<ilp::Var *>(VAR));
