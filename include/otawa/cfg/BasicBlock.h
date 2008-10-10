@@ -27,7 +27,7 @@
 #include <elm/genstruct/SLList.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/utility.h>
-#include <elm/Iterator.h>
+#include <elm/PreIterator.h>
 #include <otawa/program.h>
 #include <otawa/instruction.h>
 
@@ -105,8 +105,8 @@ public:
 	static BasicBlock *findBBAt(WorkSpace *fw, address_t addr);
 	
 	// Generic accessors
-	virtual inline IteratorInst<Inst *> *visit(void);
-	inline operator IteratorInst<Inst *> *(void) { return visit(); };
+	/*virtual inline IteratorInst<Inst *> *visit(void);
+	inline operator IteratorInst<Inst *> *(void) { return visit(); };*/
 	inline bool isCall(void) const { return (flags & FLAG_Call) != 0; };
 	inline bool isReturn(void) const { return (flags & FLAG_Return) != 0; };
 	inline bool isTargetUnknown(void) const
@@ -146,8 +146,8 @@ public:
 	BasicBlock *getTaken(void);
 	BasicBlock *getNotTaken(void);
 	inline size_t getBlockSize(void) const { return size(); };
-	IteratorInst<Edge *> *inEdges(void);
-	IteratorInst<Edge *> *outEdges(void);	
+	/*IteratorInst<Edge *> *inEdges(void);
+	IteratorInst<Edge *> *outEdges(void);*/	
 };
 
 
@@ -210,10 +210,10 @@ inline BasicBlock::OutIterator::OutIterator(BasicBlock *bb)
 };
 
 // BasicBlock inlines
-inline IteratorInst<Inst *> *BasicBlock::visit(void) {
+/*inline IteratorInst<Inst *> *BasicBlock::visit(void) {
 	InstIterator iter(this);
 	return new IteratorObject<InstIterator, Inst *>(iter);
-}
+}*/
 
 // Output
 inline Output& operator<<(Output& out, BasicBlock *bb) {
