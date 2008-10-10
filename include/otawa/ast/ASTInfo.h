@@ -1,14 +1,29 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, Institut de Recherche en Informatique de Toulouse.
+ *	ASTInfo class interface
  *
- *	otaw/ast/ASTInfo.h -- interface for ASTInfo class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_AST_AST_INFO_H
 #define OTAWA_AST_AST_INFO_H
 
-#include <elm/datastruct/HashTable.h>
-#include <elm/datastruct/Vector.h>
+#include <elm/genstruct/HashTable.h>
+#include <elm/genstruct/Vector.h>
 #include <otawa/ast/FunAST.h>
 
 // Extern
@@ -18,21 +33,29 @@ namespace otawa {
 
 // ASTInfo class
 class ASTInfo: public PropList {
-	friend class CallAST;
-	friend class FunAST;
-	friend class GenericProperty<ASTInfo *>;
-	friend int ::heptane_parse(void);
-	elm::datastruct::Vector<FunAST *> funs;
-	elm::datastruct::HashTable<String, FunAST *> _map;
-	void add(FunAST *fun);
-	ASTInfo(WorkSpace *fw);
 public:
 	~ASTInfo(void);
 	static Identifier<ASTInfo *> ID;
 	static ASTInfo *getInfo(WorkSpace *fw);
 	FunAST *getFunction(Inst *inst);
-	inline elm::datastruct::Map<String, FunAST *>& map(void) { return _map; };
-	inline elm::Collection< FunAST *>& functions(void) { return funs; };
+
+	class Iterator: public elm::genstruct::Vector<FunAST *>::Iterator {
+	public:
+		inline Iterator(ASTInfo *info): 
+			elm::genstruct::Vector<FunAST *>::Iterator(info->funs) { }
+	};
+	
+	void add(FunAST *fun);
+	inline Option<FunAST *> get(const string& name) { return _map.get(name); }
+
+private:	
+	friend class CallAST;
+	friend class FunAST;
+	friend class GenericProperty<ASTInfo *>;
+	friend int ::heptane_parse(void);
+	elm::genstruct::Vector<FunAST *> funs;
+	elm::genstruct::HashTable<String, FunAST *> _map;
+	ASTInfo(WorkSpace *fw);
 };
 	
 } // otawa
