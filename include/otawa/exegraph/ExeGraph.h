@@ -23,14 +23,14 @@
 #define __EXEGRAPH_H__
 
 #include <assert.h>
-#include <elm/Collection.h>
 #include <elm/genstruct/Vector.h>
-#include <otawa/util/GenGraph.h>
+#include <otawa/graph/GenGraph.h>
 #include "Microprocessor.h"
 #include <otawa/instruction.h>
 #include <elm/genstruct/DLList.h>
 #include <otawa/otawa.h>
 #include <otawa/hard/Platform.h>
+#include <otawa/graph/PreorderIterator.h>
 
 namespace otawa { 
 
@@ -117,7 +117,7 @@ public:
 	typedef enum {MIN=0, MAX=1, BOUNDS=2} time_bound_t;
 	typedef enum {READY=0, START=1, FINISH=2, STEPS=3} time_step_t;
 
-	class ExeEdge: public GenGraph<N, ExeEdge>::Edge {
+	class ExeEdge: public GenGraph<N, ExeEdge>::GenEdge {
 	public:
 		typedef enum edge_type_t {	
 			SOLID = 1,
@@ -129,10 +129,10 @@ public:
 		elm::String _name;
 	public: 
 		inline ExeEdge(N *source, N *target, edge_type_t type)
-		: GenGraph<N, ExeEdge>::Edge(source,target), _type(type) {
+		: GenGraph<N, ExeEdge>::GenEdge(source,target), _type(type) {
 			StringBuffer _buffer;
-			_buffer << GenGraph<N, ExeEdge>::Edge::source()->name() << "->" ;
-			_buffer << GenGraph<N, ExeEdge>::Edge::target()->name();
+			_buffer << GenGraph<N, ExeEdge>::GenEdge::source()->name() << "->" ;
+			_buffer << GenGraph<N, ExeEdge>::GenEdge::target()->name();
 			_name = _buffer.toString();
 		}
 		inline edge_type_t type(void) 
@@ -141,7 +141,7 @@ public:
 		{return _name;}
 	};
 
-	class ExeNode: public GenGraph<N, ExeEdge >::Node {
+	class ExeNode: public GenGraph<N, ExeEdge >::GenNode {
 	private:
 		ExeInst<N> *_inst;
 		PipelineStage<N> * _pipeline_stage;
@@ -153,7 +153,7 @@ public:
 		elm::genstruct::Vector<N *> _contenders;
 	public:
 		inline ExeNode(ExeGraph<N> *graph, PipelineStage<N> *stage, ExeInst<N> *inst)
-		:   GenGraph<N,ExeEdge>::Node((otawa::graph::Graph *)graph->graph()),
+		:   GenGraph<N,ExeEdge>::GenNode((otawa::graph::Graph *)graph->graph()),
 			_inst(inst), _pipeline_stage(stage), _needs_operands(false),
 			_produces_operands(false)
 		 {
@@ -271,20 +271,33 @@ public:
 			: PipelineStage<N>::ExeNodeIterator(stage) {}
 		};
 
-		class Predecessor: public GenGraph<N,ExeEdge>::Predecessor {
+		class Predecessor: public PreIterator<Predecessor, N *> {
 		public:
-			inline Predecessor(const N* node)
-			: GenGraph<N,ExeEdge>::Predecessor(node) {}
+			inline Predecessor(const N* node): iter(node) { }
+			inline bool ended(void) const { return iter.ended(); }
+			inline N *item(void) const { return iter->source(); }
+			inline void next(void) { iter.next(); }
+			inline ExeEdge *edge(void) const { return iter; }
+		private:
+			typename GenGraph<N,ExeEdge>::InIterator iter;
 		};
-		class Successor: public GenGraph<N,ExeEdge>::Successor {
+		
+		class Successor: public PreIterator<Successor, N *> {
 		public:
-			inline Successor(const N* node)
-			: GenGraph<N,ExeEdge>::Successor(/*(typename GenGraph<N,ExeEdge>::Node *)*/ node) {}
+			inline Successor(const N* node): iter(node) {}
+			inline bool ended(void) const { return iter.ended(); }
+			inline N *item(void) const { return iter->target(); }
+			inline void next(void) { iter.next(); }
+			inline ExeEdge *edge(void) const { return iter; }
+		private:
+			typename GenGraph<N,ExeEdge>::OutIterator iter;
 		};
-		class PreorderIterator: public GenGraph<N,typename ExeGraph<N>::ExeEdge>::PreorderIterator {
+
+		typedef GenGraph<N,typename ExeGraph<N>::ExeEdge> Graph;
+		class PreorderIterator: public graph::PreorderIterator<Graph> {
 		public:
 			inline PreorderIterator(ExeGraph<N> * graph, N *node)
-			: GenGraph<N,typename ExeGraph<N>::ExeEdge>::PreorderIterator(graph->graph(), node) {}
+			: graph::PreorderIterator<Graph>(*graph->graph(), node) {}
 		}; 	 
 };
 
@@ -411,6 +424,7 @@ void ExeGraph<N>::build(WorkSpace *fw, Microprocessor<N> * microprocessor, ExeSe
 								// check whether there is already an edge between the two nodes
 								bool exists = false;
 								for (Predecessor pred(node) ; pred ; pred++) {
+									// !!WARNING!! modified by casse
 									if (pred == producing_node) {
 										exists = true;
 										break;
