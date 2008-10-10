@@ -427,8 +427,8 @@ otawa::Inst *Process::decode(address_t addr) {
 			case ID_BC_:
 			case ID_BCA_:
 			case ID_BCCTR_:
-				if(inst->instrinput[0].val.Uint5 != 20
-				&& inst->instrinput[1].val.Uint5 != 0)
+				if(!(inst->instrinput[0].val.Uint5 == 20
+				&& inst->instrinput[1].val.Uint5 == 0))
 					kind |= Inst::IS_COND;
 				break;
 			case ID_BCLR_:
@@ -486,7 +486,7 @@ address_t BranchInst::decodeTargetAddress(void) {
 		break;
 	case ID_BCL_:
 	case ID_BC_:
-		_kind |= IS_COND;
+		//_kind |= IS_COND;
 		assert(inst->instrinput[2].type == PARAM_INT14_T);
 		target_addr = address() + (inst->instrinput[2].val.Int14 << 2);
 		break;
