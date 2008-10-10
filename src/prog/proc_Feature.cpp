@@ -25,6 +25,8 @@
 
 namespace otawa {
 
+// null feature
+static Feature<NullProcessor> _null;
 
 /**
  * @class AbstractFeature
@@ -38,6 +40,12 @@ namespace otawa {
 AbstractFeature::AbstractFeature(CString name)
 : Identifier<Processor *>(name, 0) {
 }
+
+
+/**
+ * Null value for features.
+ */
+AbstractFeature& AbstractFeature::null = _null;
 
 
 /**
