@@ -23,7 +23,7 @@
 #define OTAWA_MANAGER_H
 
 #include <elm/system/Path.h>
-#include <elm/datastruct/Vector.h>
+#include <elm/genstruct/Vector.h>
 #include <elm/util/MessageException.h>
 #include <elm/system/Plugger.h>
 #include <otawa/properties.h>
@@ -57,7 +57,7 @@ public:
 // Manager class
 class Manager {
 	friend class WorkSpace;
-	datastruct::Vector<hard::Platform *> platforms;
+	genstruct::Vector<hard::Platform *> platforms;
 	//datastruct::Vector<WorkSpace *> frameworks;
 	elm::system::Plugger ilp_plugger;
 	elm::system::Plugger loader_plugger;
