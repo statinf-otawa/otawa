@@ -79,7 +79,7 @@ namespace ipet {
  * @return 		The BCG Node found.
  */
 BCGNode* getBCGNode(int id,BCG* bcg) {
-	for(BCG::NodeIterator node(bcg);node;node++) {
+	for(BCG::Iterator node(bcg);node;node++) {
 		if(node->getCorrespondingBBNumber()== id) return node;
 	}
 	return NULL;
@@ -179,7 +179,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 	///////////////////////////////////////////////
 	for(int g=0;g<graphs.length();++g) {
 		BCG* bcg = graphs[g];
-		for(BCG::NodeIterator br(bcg);br; br++) {
+		for(BCG::Iterator br(bcg);br; br++) {
 			
 			// on recupere le BB correspondant depuis le cfg
 			BasicBlock* bb=getBB(br->getCorrespondingBBNumber(), cfg);
@@ -210,13 +210,13 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				B21->addRight(1,eb);
 
 				// recherche des membres de gauche à ajouter
-				for(BCG::Successor s(br);s;s++) {
-					if( s.edge()->isTaken() == (t == Edge::TAKEN) ) {
+				for(BCG::OutIterator s(br);s;s++) {
+					if( s->isTaken() == (t == Edge::TAKEN) ) {
 						Var *C00,*C01,*C10,*C11;
-						NEW_VAR_FROM_BUFF(C00,Xi->name() << "A" << bcg->getClass() << "C00D" << cpt << "S" << s->getCorrespondingBBNumber());
-						NEW_VAR_FROM_BUFF(C01,Xi->name() << "A" << bcg->getClass() << "C01D" << cpt << "S" << s->getCorrespondingBBNumber());
-						NEW_VAR_FROM_BUFF(C10,Xi->name() << "A" << bcg->getClass() << "C10D" << cpt << "S" << s->getCorrespondingBBNumber());
-						NEW_VAR_FROM_BUFF(C11,Xi->name() << "A" << bcg->getClass() << "C11D" << cpt << "S" << s->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(C00,Xi->name() << "A" << bcg->getClass() << "C00D" << cpt << "S" << s->target()->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(C01,Xi->name() << "A" << bcg->getClass() << "C01D" << cpt << "S" << s->target()->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(C10,Xi->name() << "A" << bcg->getClass() << "C10D" << cpt << "S" << s->target()->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(C11,Xi->name() << "A" << bcg->getClass() << "C11D" << cpt << "S" << s->target()->getCorrespondingBBNumber());
 						B21->addLeft(1,C00);
 						B21->addLeft(1,C01);
 						B21->addLeft(1,C10);
@@ -256,10 +256,10 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				B22_pred->addLeft(1,Xi);
 				
 				// Recherche de tous les predecesseurs de br
-				for(BCG::Predecessor p(br) ; p ; p++ ) {
-					if(var_added[p->getCorrespondingBBNumber()]==0) {
+				for(BCG::InIterator p(br) ; p ; p++ ) {
+					if(var_added[p->source()->getCorrespondingBBNumber()]==0) {
 						Var *C00,*C01,*C10,*C11;
-						BasicBlock* bb_pred=getBB(p->getCorrespondingBBNumber(), cfg);
+						BasicBlock* bb_pred=getBB(p->source()->getCorrespondingBBNumber(), cfg);
 						Var *Xj = ipet::VAR( bb_pred);
 						assert(Xj);
 						NEW_VAR_FROM_BUFF(C00,Xj->name() << "A" << bcg->getClass() << "C00S" << br->getCorrespondingBBNumber());
@@ -271,7 +271,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 						B22_pred->addRight(1,C10);
 						B22_pred->addRight(1,C11);
 						
-						var_added[p->getCorrespondingBBNumber()] ++;
+						var_added[p->source()->getCorrespondingBBNumber()] ++;
 					}
 				}
 				// s'il s'agit d'une entrée on ajoute les variables correspondantes
@@ -295,19 +295,19 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				Var *v_succ;
 				B22_succ->addLeft(1,Xi);
 				// Recherche de tous les successeurs de br
-				for(BCG::Successor s(br) ; s ; s++ ) {
-					if(var_added[s->getCorrespondingBBNumber()]==0) {
+				for(BCG::OutIterator s(br) ; s ; s++ ) {
+					if(var_added[s->target()->getCorrespondingBBNumber()]==0) {
 						Var *C00,*C01,*C10,*C11;
-						NEW_VAR_FROM_BUFF(C00,Xi->name() << "A" << bcg->getClass() << "C00S" << s->getCorrespondingBBNumber());
-						NEW_VAR_FROM_BUFF(C01,Xi->name() << "A" << bcg->getClass() << "C01S" << s->getCorrespondingBBNumber());
-						NEW_VAR_FROM_BUFF(C10,Xi->name() << "A" << bcg->getClass() << "C10S" << s->getCorrespondingBBNumber());
-						NEW_VAR_FROM_BUFF(C11,Xi->name() << "A" << bcg->getClass() << "C11S" << s->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(C00,Xi->name() << "A" << bcg->getClass() << "C00S" << s->target()->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(C01,Xi->name() << "A" << bcg->getClass() << "C01S" << s->target()->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(C10,Xi->name() << "A" << bcg->getClass() << "C10S" << s->target()->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(C11,Xi->name() << "A" << bcg->getClass() << "C11S" << s->target()->getCorrespondingBBNumber());
 						B22_succ->addRight(1,C00);
 						B22_succ->addRight(1,C01);
 						B22_succ->addRight(1,C10);
 						B22_succ->addRight(1,C11);
 						
-						var_added[s->getCorrespondingBBNumber()] ++;
+						var_added[s->target()->getCorrespondingBBNumber()] ++;
 					}
 				}
 				// s'il s'agit d'une sortie on ajoute les variables correspondantes
@@ -335,8 +335,8 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				int var_added[cfg->countBB()];
 				for(int i=0;i<cfg->countBB();++i) var_added[i]=0;
 
-				for(BCG::Successor s(br) ; s ; s++ ){
-					if(var_added[s->getCorrespondingBBNumber()]==0) {
+				for(BCG::OutIterator s(br) ; s ; s++ ){
+					if(var_added[s->target()->getCorrespondingBBNumber()]==0) {
 							
 						NEW_SPECIAL_CONSTRAINT(B23_00,EQ,0);
 						NEW_SPECIAL_CONSTRAINT(B23_01,EQ,0);
@@ -344,23 +344,23 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 						NEW_SPECIAL_CONSTRAINT(B23_11,EQ,0);
 						Var *v00, *v01, *v10, *v11;
 	
-						NEW_VAR_FROM_BUFF(v00,Xi->name() << "A" << bcg->getClass() << "C00S" << s->getCorrespondingBBNumber());
-						NEW_VAR_FROM_BUFF(v01,Xi->name() << "A" << bcg->getClass() << "C01S" << s->getCorrespondingBBNumber());
-						NEW_VAR_FROM_BUFF(v10,Xi->name() << "A" << bcg->getClass() << "C10S" << s->getCorrespondingBBNumber());
-						NEW_VAR_FROM_BUFF(v11,Xi->name() << "A" << bcg->getClass() << "C11S" << s->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(v00,Xi->name() << "A" << bcg->getClass() << "C00S" << s->target()->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(v01,Xi->name() << "A" << bcg->getClass() << "C01S" << s->target()->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(v10,Xi->name() << "A" << bcg->getClass() << "C10S" << s->target()->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(v11,Xi->name() << "A" << bcg->getClass() << "C11S" << s->target()->getCorrespondingBBNumber());
 						B23_00->addLeft(1,v00);
 						B23_01->addLeft(1,v01);
 						B23_10->addLeft(1,v10);
 						B23_11->addLeft(1,v11);
 						
 						bool withT=false, withNT=false;
-						br->isSuccessor(s,withT,withNT);
+						br->isSuccessor(s->target(),withT,withNT);
 						if(withT) {
 							Var *T00,*T01,*T10,*T11;
-							NEW_VAR_FROM_BUFF(T00,Xi->name() << "A" << bcg->getClass() << "C00D1S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(T01,Xi->name() << "A" << bcg->getClass() << "C01D1S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(T10,Xi->name() << "A" << bcg->getClass() << "C10D1S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(T11,Xi->name() << "A" << bcg->getClass() << "C11D1S" << s->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(T00,Xi->name() << "A" << bcg->getClass() << "C00D1S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(T01,Xi->name() << "A" << bcg->getClass() << "C01D1S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(T10,Xi->name() << "A" << bcg->getClass() << "C10D1S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(T11,Xi->name() << "A" << bcg->getClass() << "C11D1S" << s->target()->getCorrespondingBBNumber());
 							B23_00->addRight(1,T00);
 							B23_01->addRight(1,T01);
 							B23_10->addRight(1,T10);
@@ -368,17 +368,17 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 						}
 						if(withNT) {
 							Var *NT00,*NT01,*NT10,*NT11;
-							NEW_VAR_FROM_BUFF(NT00,Xi->name() << "A" << bcg->getClass() << "C00D0S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(NT01,Xi->name() << "A" << bcg->getClass() << "C01D0S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(NT10,Xi->name() << "A" << bcg->getClass() << "C10D0S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(NT11,Xi->name() << "A" << bcg->getClass() << "C11D0S" << s->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(NT00,Xi->name() << "A" << bcg->getClass() << "C00D0S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(NT01,Xi->name() << "A" << bcg->getClass() << "C01D0S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(NT10,Xi->name() << "A" << bcg->getClass() << "C10D0S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(NT11,Xi->name() << "A" << bcg->getClass() << "C11D0S" << s->target()->getCorrespondingBBNumber());
 							B23_00->addRight(1,NT00);
 							B23_01->addRight(1,NT01);
 							B23_10->addRight(1,NT10);
 							B23_11->addRight(1,NT11);
 						}
 						
-						var_added[s->getCorrespondingBBNumber()] ++;
+						var_added[s->target()->getCorrespondingBBNumber()] ++;
 
 					}
 				}
@@ -460,15 +460,15 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				int var_added[cfg->countBB()];
 				for(int i=0;i<cfg->countBB();++i) var_added[i]=0;
 
-				for(BCG::Predecessor p(br);p;p++) {
-					if(var_added[p->getCorrespondingBBNumber()]==0) {
+				for(BCG::InIterator p(br);p;p++) {
+					if(var_added[p->source()->getCorrespondingBBNumber()]==0) {
 						bool withT=false, withNT=false;
 						
-						BasicBlock* bb_pred=getBB(p->getCorrespondingBBNumber(), cfg);
+						BasicBlock* bb_pred=getBB(p->source()->getCorrespondingBBNumber(), cfg);
 						Var *Xj = ipet::VAR( bb_pred);
 						assert(Xj);
 						
-						p->isSuccessor(br,withT,withNT);
+						p->source()->isSuccessor(br,withT,withNT);
 						if(withT) {
 							Var *x00d1, *x01d1, *x10d1, *x11d1;
 							NEW_VAR_FROM_BUFF(x00d1,Xj->name() << "A" << bcg->getClass() << "C00D1S" << br->getCorrespondingBBNumber());
@@ -492,7 +492,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 							C10_1->addRight(1,x11d0);
 						}
 						
-						var_added[p->getCorrespondingBBNumber()] ++;
+						var_added[p->source()->getCorrespondingBBNumber()] ++;
 					}
 				}
 				if(br->isEntry()) {
@@ -509,16 +509,16 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				
 				// toujours pour l'unicité des contraintes
 				for(int i=0;i<cfg->countBB();++i) var_added[i]=0;
-				for(BCG::Successor s(br);s;s++) {
-					if(var_added[s->getCorrespondingBBNumber()]==0) {
+				for(BCG::OutIterator s(br);s;s++) {
+					if(var_added[s->target()->getCorrespondingBBNumber()]==0) {
 						bool withT=false, withNT=false;
-						br->isSuccessor(s,withT,withNT);
+						br->isSuccessor(s->target(),withT,withNT);
 						if(withT) {
 							Var *x00_d1, *x01_d1, *x10_d1, *x11_d1;
-							NEW_VAR_FROM_BUFF(x00_d1,Xi->name() << "A" << bcg->getClass() << "C00D1S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(x01_d1,Xi->name() << "A" << bcg->getClass() << "C01D1S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(x10_d1,Xi->name() << "A" << bcg->getClass() << "C10D1S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(x11_d1,Xi->name() << "A" << bcg->getClass() << "C11D1S" << s->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(x00_d1,Xi->name() << "A" << bcg->getClass() << "C00D1S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(x01_d1,Xi->name() << "A" << bcg->getClass() << "C01D1S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(x10_d1,Xi->name() << "A" << bcg->getClass() << "C10D1S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(x11_d1,Xi->name() << "A" << bcg->getClass() << "C11D1S" << s->target()->getCorrespondingBBNumber());
 							C00_2->addRight(1,x00_d1);
 							C01_2->addRight(1,x01_d1);
 							C10_2->addRight(1,x10_d1);
@@ -526,17 +526,17 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 						}
 						if(withNT) {
 							Var *x00_d0, *x01_d0, *x10_d0, *x11_d0;
-							NEW_VAR_FROM_BUFF(x00_d0,Xi->name() << "A" << bcg->getClass() << "C00D0S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(x01_d0,Xi->name() << "A" << bcg->getClass() << "C01D0S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(x10_d0,Xi->name() << "A" << bcg->getClass() << "C10D0S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(x11_d0,Xi->name() << "A" << bcg->getClass() << "C11D0S" << s->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(x00_d0,Xi->name() << "A" << bcg->getClass() << "C00D0S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(x01_d0,Xi->name() << "A" << bcg->getClass() << "C01D0S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(x10_d0,Xi->name() << "A" << bcg->getClass() << "C10D0S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(x11_d0,Xi->name() << "A" << bcg->getClass() << "C11D0S" << s->target()->getCorrespondingBBNumber());
 							C00_2->addRight(1,x00_d0);
 							C01_2->addRight(1,x01_d0);
 							C10_2->addRight(1,x10_d0);
 							C11_2->addRight(1,x11_d0);							
 						}
 
-						var_added[s->getCorrespondingBBNumber()] ++;
+						var_added[s->target()->getCorrespondingBBNumber()] ++;
 					}
 				}
 				if(br->isExit()) {
@@ -592,27 +592,27 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				int var_added[cfg->countBB()];
 				for(int i=0;i<cfg->countBB();++i) var_added[i]=0;
 
-				for(BCG::Successor s(br);s;s++) {
+				for(BCG::OutIterator s(br);s;s++) {
 	
-					if(var_added[s->getCorrespondingBBNumber()]==0) {
+					if(var_added[s->target()->getCorrespondingBBNumber()]==0) {
 						bool withT, withNT;
-						br->isSuccessor(s,withT,withNT);
+						br->isSuccessor(s->target(),withT,withNT);
 						if(withT) {
 							Var *v00, *v01;
-							NEW_VAR_FROM_BUFF(v00, Xi->name() << "A" << bcg->getClass() << "C00D1S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(v01, Xi->name() << "A" << bcg->getClass() << "C01D1S" << s->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(v00, Xi->name() << "A" << bcg->getClass() << "C00D1S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(v01, Xi->name() << "A" << bcg->getClass() << "C01D1S" << s->target()->getCorrespondingBBNumber());
 							M_T->addRight(1,v00);
 							M_T->addRight(1,v01);
 						}
 						if(withNT) {
 							Var *v10, *v11;
-							NEW_VAR_FROM_BUFF(v10, Xi->name() << "A" << bcg->getClass() << "C10D0S" << s->getCorrespondingBBNumber());
-							NEW_VAR_FROM_BUFF(v11, Xi->name() << "A" << bcg->getClass() << "C11D0S" << s->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(v10, Xi->name() << "A" << bcg->getClass() << "C10D0S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(v11, Xi->name() << "A" << bcg->getClass() << "C11D0S" << s->target()->getCorrespondingBBNumber());
 							M_NT->addRight(1,v10);
 							M_NT->addRight(1,v11);
 							
 						}
-						var_added[s->getCorrespondingBBNumber()] ++;
+						var_added[s->target()->getCorrespondingBBNumber()] ++;
 					}
 				}
 				if(br->isExit()) {
