@@ -21,6 +21,7 @@
  */
 
 #include <otawa/proc/Feature.h>
+#include <otawa/proc/SilentFeature.h>
 
 namespace otawa {
 
@@ -85,6 +86,76 @@ AbstractFeature::AbstractFeature(CString name)
  * @fn Feature::GenFeature(CString name);
  * Build a feature.
  * @param name	Feature name.
+ */
+
+
+/**
+ * @class SilentFeature;
+ * The usual @ref Feature class has as drawback to exhibit completely the processing of the feature
+ * and therefore, in C++, to require too much header file inclusion (like the default processor
+ * or the default handler structure).
+ * 
+ * @par 
+ * 
+ * This class allow to fix this using default processor builder that does not need to be included
+ * in the feature declaration. The constructor of this class requires as parameter the name of
+ * the feature and a factory class for the processor, @ref SilentFeature::AbstractMaker.
+ * Usually, the factory object is implemented used the @ref SilenfFeature::Maker, that is a template
+ * but does only need to be declared in the source file. Consequently, the header file declaring
+ * the feature is no more overloaded with the inclusion of the default processor.
+ * 
+ * Here is an example of use, first the header file "my_feature.h":
+ * @code
+ * #include <otawa/proc/SilentFeature.h>
+ * 
+ * extern SilentFeature MyFeature;
+ * @endcode
+ * 
+ * Then, the source is defined as:
+ * @code
+ * #include <path_to/MyFeature.h>
+ * #include <path_to/MyDefaultProcessor.h>
+ * 
+ * static SilentFeature::Maker<MyDefaultProcessor> maker;
+ * SilentFeature MyFeature("MyFeature", maker);
+ * @endcode
+ */
+
+
+/**
+ * @fn SilentFeature::SilentFeature(cstring name, const AbstractMaker& maker);
+ * Build a silent feature.
+ * @param name	Name of the feature.
+ * @param maker	Factory to build the default processor.
+ */
+
+
+/**
+ */
+void SilentFeature::process(WorkSpace *fw, const PropList& props) const {
+	Processor *processor = _maker.make();
+	processor->process(fw, props);
+}
+
+
+/**
+ * @class SilentFeature::AbstractMaker;
+ * Interface for the processor maker of @ref SilentFeature.
+ */
+
+
+/**
+ * @fn Processor *SilentFeature::make(void) const;
+ * Build the linked processor.
+ * @return	Built processor.
+ */
+
+
+/**
+ * @class Maker
+ * Template to make a processor from its class passed as template parameter.
+ * @param C	Type of the processor.
+ * @seealso SilentFeature
  */
 
 } // otawa
