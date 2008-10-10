@@ -23,7 +23,7 @@
 #define OTAWA_ILP_CONSTRAINT_H
 
 #include <otawa/ilp/Var.h>
-#include <elm/Iterator.h>
+#include <elm/datastruct/Iterator.h>
 #include <elm/utility.h>
 
 namespace otawa { namespace ilp {
@@ -50,17 +50,16 @@ public:
 	virtual void add(double coef, Var *var = 0) = 0;
 	virtual void sub(double coef, Var *var = 0) = 0;
 	
-	virtual elm::IteratorInst<Term> *terms(void) = 0;
+	virtual elm::datastruct::IteratorInst<Term> *terms(void) = 0;
 	inline void addLeft(double coef, Var *var = 0);
 	inline void addRight(double coef, Var *var = 0);
 	
-	class TermIterator: public elm::Iterator<Term> {
+	class TermIterator: public elm::datastruct::Iterator<Term> {
 		public:
 		
-		inline TermIterator(elm::IteratorInst<Term> *_inst) : elm::Iterator<Term>(_inst) {
-
-		}
-		inline TermIterator(Constraint *_cons) : elm::Iterator<Term>(_cons->terms()) {
+		inline TermIterator(elm::datastruct::IteratorInst<Term> *_inst)
+			: elm::datastruct::Iterator<Term>(_inst) { }
+		inline TermIterator(Constraint *_cons) : elm::datastruct::Iterator<Term>(_cons->terms()) {
 
 		}	
 
