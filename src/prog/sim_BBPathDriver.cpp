@@ -1,4 +1,4 @@
-#include <elm/Iterator.h>
+#include <elm/PreIterator.h>
 #include <otawa/sim/BBPathDriver.h>
 
 using namespace elm;
@@ -8,8 +8,8 @@ namespace otawa { namespace sim {
 
 
 BBPathDriver::BBPathDriver(ipet::BBPath& bbpath)
-: bb_iter(bbpath.bbs().visit()), ended(false){
-	inst_iter = new Iterator<Inst*>(bb_iter.item()->visit());
+: bb_iter(&bbpath), ended(false){
+	inst_iter = new BasicBlock::InstIterator(bb_iter.item());
 	if(bb_iter.ended()){
 		ended = true;
 	}
@@ -32,7 +32,7 @@ Inst* BBPathDriver::nextInstruction(State &state, Inst *inst){
 	}
 	while(inst_iter->ended() && !bb_iter.ended()){
 		delete inst_iter;
-		inst_iter = new Iterator<Inst*>(bb_iter.item()->visit());
+		inst_iter = new BasicBlock::InstIterator(bb_iter.item());
 		bb_iter.next();
 	}
 	if(inst_iter->ended() && bb_iter.ended()){
