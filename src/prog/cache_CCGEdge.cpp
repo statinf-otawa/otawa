@@ -21,7 +21,7 @@ namespace otawa {
  * Build a new CCG edge.
  */
 CCGEdge::CCGEdge(CCGNode *source, CCGNode *target) :
-	GenGraph<CCGNode,CCGEdge>::Edge(source,target)
+	GenGraph<CCGNode,CCGEdge>::GenEdge(source,target)
 {
 }
 
