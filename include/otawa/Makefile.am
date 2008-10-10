@@ -8,6 +8,7 @@ SUBDIRS= \
 	ets \
 	exegraph \
 	flowfact \
+	graph \
 	hard \
 	hardware \
 	ilp \
