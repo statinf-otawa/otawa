@@ -29,7 +29,6 @@ libotawa_la_SOURCES = \
 	proc_ContextualProcessor.cpp \
 	proc_Feature.cpp \
 	proc_FeatureRequirer.cpp \
-	proc_FunProcessor.cpp \
 	proc_LBlockProcessor.cpp \
 	proc_BBProcessor.cpp \
 	proc_ProcessorException.cpp \
@@ -64,6 +63,8 @@ libotawa_la_SOURCES = \
 	cfg_PSTBuilder.cpp \
 	cfg_LoopUnroller.cpp \
 	cfg_LoopReductor.cpp \
+	cfg_PFG.cpp \
+	cfg_PFGBuilder.cpp \
 	cfg_SpanningTreeBuilder.cpp \
 	cfg_Virtualizer.cpp \
 	cfg_VirtualCFG.cpp \
@@ -143,7 +144,8 @@ libotawa_la_SOURCES = \
 	util_Trace.cpp \
 	loader_arm.cpp \
 	flowfact_ContextualLoopBound.cpp \
-	BBRatioDisplayer.cpp
+	BBRatioDisplayer.cpp \
+	graph_PreorderIterator.cpp
 
 	
 
