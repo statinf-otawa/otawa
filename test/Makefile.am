@@ -5,6 +5,7 @@ SUBDIRS = \
 	graph \
 	hard \
 	pcg \
+	pfg \
 	props \
 	reg \
 	source

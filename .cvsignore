@@ -49,3 +49,4 @@ TODO.tasks
 OTAWA.anjuta
 *.lineno
 .cproject
+.bzr
