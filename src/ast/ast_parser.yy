@@ -71,7 +71,7 @@ def:
 			fun->setName(name.substring(1, name.length() - 1));
 			AST *ast($3);
 			fun->setAst(ast);
-			info->map().put(name.substring(1, name.length() - 1), fun);
+			info->add(fun); //map().put(name.substring(1, name.length() - 1), fun);
 			free($1);
 		}
 ;
