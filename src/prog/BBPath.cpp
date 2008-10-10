@@ -148,14 +148,14 @@ Vector<BBPath*> *BBPath::nexts(){
 
 
 
-IteratorInst<BasicBlock*> *BBPath::visit(void){
+/*IteratorInst<BasicBlock*> *BBPath::visit(void){
 	BBIterator iter(this);
 	return new elm::IteratorObject<BBIterator, BasicBlock *>(iter);
 }
 
 MutableCollection<BasicBlock *> *BBPath::empty(void){
 	return 0;
-}
+}*/
 
 
 
