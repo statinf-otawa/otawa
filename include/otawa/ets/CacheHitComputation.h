@@ -8,7 +8,7 @@
 #ifndef OTAWA_ETS_CACHE_HIT_COMPUTATION_H
 #define OTAWA_ETS_CACHE_HIT_COMPUTATION_H
 
-#include <otawa/proc/ASTProcessor.h>
+#include <otawa/ast/ASTProcessor.h>
 
 namespace otawa { namespace ets {
 

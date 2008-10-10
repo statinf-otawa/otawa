@@ -8,7 +8,7 @@
 #ifndef OTAWA_ETS_FLOWFACTLOADER_H
 #define OTAWA_ETS_FLOWFACTLOADER_H
 
-#include <otawa/proc/ASTProcessor.h>
+#include <otawa/ast/ASTProcessor.h>
 
 namespace otawa { namespace ets {
 

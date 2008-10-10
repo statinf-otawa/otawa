@@ -9,7 +9,7 @@
 #define OTAWA_ETS_TRIVIALASTBLOCKTIME_H
 
 #include <assert.h>
-#include <otawa/proc/ASTProcessor.h>
+#include <otawa/ast/ASTProcessor.h>
 
 namespace otawa { namespace ets {
 
