@@ -11,7 +11,7 @@
 #include <elm/genstruct/SLList.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/inhstruct/DLList.h>
-#include <elm/Iterator.h>
+#include <elm/PreIterator.h>
 #include <otawa/instruction.h>
 #include <otawa/cache/ccg/CCGNode.h>
 #include <otawa/cfg/BasicBlock.h>

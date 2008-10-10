@@ -10,11 +10,10 @@
 #include <assert.h>
 #include <otawa/properties.h>
 #include <otawa/instruction.h>
-#include <elm/Collection.h> 
 #include <elm/genstruct/Vector.h>
 #include <elm/genstruct/Table.h>
 #include <otawa/cache/LBlock.h>
-#include <elm/Iterator.h>
+#include <elm/PreIterator.h>
 #include <otawa/cache/ccg/CCGDFA.h>
 
 using namespace elm;
@@ -41,7 +40,7 @@ public:
 	
 	// Methods
 	inline LBlockSet(int line);
-	inline IteratorInst<LBlock *> *visit(void);
+	//inline IteratorInst<LBlock *> *visit(void);
 	int add (LBlock *node);
 	int count(void);
 	int cacheBlockCount(void);
@@ -60,10 +59,10 @@ inline LBlockSet::LBlockSet(int line): linenumber(line), _cacheBlockCount(0) {
 	assert(line >= 0);
 }
 	
-inline IteratorInst<LBlock *> *LBlockSet::visit(void) {
+/*inline IteratorInst<LBlock *> *LBlockSet::visit(void) {
 	Iterator iter(*this);
 	return new IteratorObject<Iterator, LBlock *>(iter); 
-}
+}*/
 
 // LBlockSet::Iterator inlines
 inline LBlockSet::Iterator::Iterator(LBlockSet& lbset)

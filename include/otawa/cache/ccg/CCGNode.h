@@ -10,7 +10,7 @@
 
 #include <elm/genstruct/SLList.h>
 #include <elm/inhstruct/DLList.h>
-#include <elm/Iterator.h>
+#include <elm/PreIterator.h>
 #include <otawa/instruction.h>
 #include <otawa/cache/ccg/CCGEdge.h>
 #include <otawa/cfg/BasicBlock.h>
@@ -21,7 +21,7 @@ namespace otawa {
 class LBlock;
 // CCGNode class
 
-class CCGNode: public GenGraph<CCGNode,CCGEdge>::Node {
+class CCGNode: public GenGraph<CCGNode,CCGEdge>::GenNode {
 
 	//address_t lblc;
 	LBlock *lbl;

@@ -17,7 +17,7 @@ class CCGNode;
 class Var;
 
 // Edge class
-class CCGEdge: public GenGraph<CCGNode,CCGEdge>::Edge, public PropList {
+class CCGEdge: public GenGraph<CCGNode,CCGEdge>::GenEdge, public PropList {
 public:
 	CCGEdge(CCGNode *source, CCGNode *target);
 	~CCGEdge(void);
