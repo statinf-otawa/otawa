@@ -22,7 +22,6 @@
 
 #include <assert.h>
 #include <elm/debug.h>
-#include <elm/Collection.h>
 #include <otawa/cfg.h>
 #include <elm/debug.h>
 #include <otawa/util/Dominance.h>

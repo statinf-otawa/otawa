@@ -43,11 +43,11 @@ CCGDomain *CCGProblem::gen(CFG *cfg, BasicBlock *bb) {
 		address_t adlbloc;
 	    PseudoInst *pseudo;
 	    int identif = 0;	    
-		for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
+		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 			pseudo = inst->toPseudo();			
 			if(!pseudo){
 				adlbloc = inst->address();				
-				for (Iterator<LBlock *> lbloc(ccggraph->visit()); lbloc; lbloc++) {
+				for (LBlockSet::Iterator lbloc(*ccggraph); lbloc; lbloc++) {
 					address_t address = lbloc->address();
 					if(adlbloc == address && lbloc->bb()== bb)
 						identif = lbloc->id();
@@ -74,7 +74,7 @@ CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
    PseudoInst *pseudo;
     int identif1 = 0 , identnonconf = 0 , identif2 = 0;
     
-	for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
+	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 		visit = false;
 		int dec = cach->blockBits();
 		
@@ -84,12 +84,12 @@ CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
 			if (!testnotconflit) {
 				
 				// lblocks iteration
-				for (Iterator<LBlock *> lbloc(ccggraph->visit()); lbloc; lbloc++) {
+				for (LBlockSet::Iterator lbloc(*ccggraph); lbloc; lbloc++) {
 					if (adlbloc == lbloc->address() && bb == lbloc->bb()) {
 						testnotconflit = true; 
 						identif1 = lbloc->id();					
 						unsigned long tag = ((unsigned long)adlbloc) >> dec;
-						for(Iterator<LBlock *> lbloc1(ccggraph->visit()); lbloc1; lbloc1++) {
+						for(LBlockSet::Iterator lbloc1(*ccggraph); lbloc1; lbloc1++) {
 							unsigned long taglblock = ((unsigned long)lbloc1->address()) >> dec;
 							address_t faddress = lbloc1->address();
 							if(adlbloc != lbloc1->address() && tag == taglblock
@@ -107,7 +107,7 @@ CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
 			}
 							
 			if (!visit) {
-				for (Iterator<LBlock *> lbloc(ccggraph->visit()); lbloc; lbloc++) {
+				for (LBlockSet::Iterator lbloc(*ccggraph); lbloc; lbloc++) {
 					if(adlbloc == lbloc->address() && bb != lbloc->bb()) {
 						identif2 = lbloc->id();
 						break ;

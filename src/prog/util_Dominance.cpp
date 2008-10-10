@@ -176,8 +176,8 @@ void Dominance::processCFG(WorkSpace *fw, CFG *cfg) {
  * @param cfg		CFG to process.
  * @param headers	Collection filled with found headers.
  */
-void Dominance::markLoopHeaders(CFG *cfg,
-elm::MutableCollection<BasicBlock *> *headers) {
+void Dominance::markLoopHeaders(CFG *cfg/*,
+elm::MutableCollection<BasicBlock *> *headers*/) {
 	assert(cfg);
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
 		for(BasicBlock::OutIterator edge(bb); edge; edge++)
@@ -186,8 +186,7 @@ elm::MutableCollection<BasicBlock *> *headers) {
 			&& dominates(edge->target(), bb)) {
 				LOOP_HEADER(edge->target()) = true;
 				BACK_EDGE(edge) = true;
-				if(headers)
-					headers->add(bb);
+				break;
 			}
 	}
 }
