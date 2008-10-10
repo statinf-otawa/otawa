@@ -315,6 +315,7 @@ AC_CONFIG_FILES([
 	test/ilp/Makefile
 	test/props/Makefile
 	test/pcg/Makefile
+	test/pfg/Makefile
 	test/exegraph/Makefile
 	test/reg/Makefile
 	test/simulator/Makefile
@@ -336,6 +337,7 @@ AC_CONFIG_FILES([
 	include/otawa/exegraph/Makefile
 	include/otawa/flowfact/Makefile
 	include/otawa/gensim/Makefile
+	include/otawa/graph/Makefile
 	include/otawa/hard/Makefile
 	include/otawa/hardware/Makefile
 	include/otawa/ilp/Makefile
