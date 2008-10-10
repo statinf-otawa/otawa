@@ -4,7 +4,7 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/CFG.h>
 #include <elm/genstruct/Vector.h>
-#include <elm/Iterator.h>
+#include <elm/PreIterator.h>
 
 namespace otawa {
 class PCGBlock: public PropList {
