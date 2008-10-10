@@ -5,7 +5,7 @@
  *	src/prog/proc_ASTProcessor.cpp -- ASTProcessor class implementation.
  */
 
-#include <otawa/proc/ASTProcessor.h>
+#include <otawa/ast/ASTProcessor.h>
 #include <otawa/ast/ASTInfo.h>
 
 namespace otawa {
