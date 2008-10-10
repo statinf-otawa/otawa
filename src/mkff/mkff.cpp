@@ -462,7 +462,7 @@ void FFOutput::scanFun(ContextTree *ctree) {
 void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
 	assert(ctree);
 	
-	for(Iterator<ContextTree *> child(ctree->children()); child; child++) {
+	for(ContextTree::ChildrenIterator child(ctree); child; child++) {
 		ASSERT(child->kind() != ContextTree::FUNCTION);
 		
 		// Process loop
@@ -482,7 +482,7 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
 
 
 bool FFOutput::checkLoop(ContextTree *ctree) {
-	for(Iterator<ContextTree *> child(ctree->children()); child; child++) {
+	for(ContextTree::ChildrenIterator child(ctree); child; child++) {
 		ASSERT(child->kind() != ContextTree::FUNCTION);
 		if(child->kind() == ContextTree::LOOP) {
 			BasicBlock::InstIterator inst(child->bb());

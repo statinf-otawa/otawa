@@ -15,7 +15,6 @@
 #include <otawa/ilp.h>
 #include <otawa/ipet.h>
 #include <otawa/ipet/IPET.h>
-#include <elm/Collection.h>
 #include <otawa/util/ContextTree.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/util/Dominance.h>
@@ -144,7 +143,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 	/*
 	 * Process each l-block, creating constraints using the l-block's categorisation
 	 */
-	for (Iterator<LBlock *> bloc(id->visit()); bloc; bloc++){
+	for (LBlockSet::Iterator bloc(*id); bloc; bloc++){
 		int test = bloc->id();
 		
 		/* Avoid first/last l-block */
@@ -167,7 +166,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 				cons = system->newConstraint(Constraint::EQ);
 				cons->addLeft(1, HIT_VAR(bloc));
 				bool used = false;
-				for(Iterator<Edge *> edge(bb->inEdges()); edge; edge++) {
+				for(BasicBlock::InIterator edge(bb); edge; edge++) {
 					if (!Dominance::dominates(bb, edge->source())){
 						cons->addRight(1, edge->use<ilp::Var *>(VAR));
 						used = true;
@@ -209,7 +208,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 				//}
 						Constraint * boundingmiss = system->newConstraint(Constraint::LE);
 						boundingmiss->addLeft(1, MISS_VAR(bloc));
-						for(Iterator<Edge *> entry(NODE(bloc)->HEADERLBLOCK()->inEdges());
+						for(BasicBlock::InIterator entry(NODE(bloc)->HEADERLBLOCK());
 							entry; entry++) {
 							if (!Dominance::dominates(NODE(bloc)->HEADERLBLOCK(), entry->source())){
 								boundingmiss->addRight(1, entry->use<ilp::Var *>(VAR));
@@ -280,7 +279,7 @@ void CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , ContextTree *root)
 		 * Call recursively buildLBLOCKSET for each ContextTree children
 		 * Merge result with current set
 		 */
-		for(Iterator<ContextTree *> son(root->children()); son; son++)
+		for(ContextTree::ChildrenIterator son(root); son; son++)
 			buildLBLOCKSET(lcache, son);
 		
 		/*
@@ -288,13 +287,13 @@ void CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , ContextTree *root)
 		 *   - Set the lblock's categorization to INVALID
 		 *   - Add this lblock to the current set.
 		 */
-		for(Iterator<BasicBlock *> bb(root->bbs()); bb; bb++){
+		for(ContextTree::BBIterator bb(root); bb; bb++){
 			if ((!bb->isEntry())&&(!bb->isExit())){ /* XXX */
-			for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
+			for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 				 PseudoInst *pseudo = inst->toPseudo();
 				if(!pseudo){
 					address_t adlbloc = inst->address();
-					for (Iterator<LBlock *> lbloc(lcache->visit()); lbloc; lbloc++){
+					for (LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
 						if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
 							ident = lbloc->id();
 							NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);

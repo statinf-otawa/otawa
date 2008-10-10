@@ -79,7 +79,7 @@ public:
 	virtual comparator_t comparator(void) const;
 	virtual void add(double coef, ilp::Var *var = 0);
 	virtual void sub(double coef, ilp::Var *var = 0);
-	elm::IteratorInst<ilp::Constraint::Term> *terms(void);
+	elm::datastruct::IteratorInst<ilp::Constraint::Term> *terms(void);
 
 private:
 	friend class System;
@@ -107,7 +107,7 @@ private:
 	
 	Factor *getFacts();
 	// TermIterInst class
-	class TermIterInst: public elm::IteratorInst<ilp::Constraint::Term> {
+	class TermIterInst: public elm::datastruct::IteratorInst<ilp::Constraint::Term> {
 	
 		Factor *cur;
 		public:
@@ -119,7 +119,7 @@ private:
 		}
 		
 		ilp::Constraint::Term item(void) const {
-			return(elm::pair(cur->getVar(), cur->coefficient()));
+			return elm::pair(cur->getVar(), cur->coefficient());
 
 		}
 		
@@ -184,8 +184,8 @@ public:
 	virtual int countConstraints(void);
 	virtual void exportLP(io::Output& out = elm::cout);
 	virtual void dumpSolution(io::Output& out = elm::cout);
-	elm::IteratorInst<ilp::Constraint*> *constraints(void);
-	elm::IteratorInst<ilp::Constraint::Term> *objTerms(void);
+	elm::datastruct::IteratorInst<ilp::Constraint*> *constraints(void);
+	elm::datastruct::IteratorInst<ilp::Constraint::Term> *objTerms(void);
 	class LocalVar: public ilp::Var {
 	public:
 		inline LocalVar(const string& name): ilp::Var(name) { }
@@ -197,7 +197,7 @@ private:
 	
 	Constraint *getConss(void);
 	// ConstIterInst
-	class ConstIterInst: public elm::IteratorInst<ilp::Constraint*> {
+	class ConstIterInst: public elm::datastruct::IteratorInst<ilp::Constraint*> {
 		System *sys;
 		Constraint *cur;
 		public:
@@ -296,7 +296,7 @@ inline Constraint::Factor *Constraint::Factor::next(void) const {
 	return nxt;
 }
 
-elm::IteratorInst<ilp::Constraint::Term> *Constraint::terms(void) {
+elm::datastruct::IteratorInst<ilp::Constraint::Term> *Constraint::terms(void) {
 		 return(new TermIterInst(this)); 
 }
 
@@ -461,11 +461,11 @@ Var *System::getVar(ilp::Var *var) {
 	return lvar;
 }
 
-elm::IteratorInst<ilp::Constraint*> *System::constraints(void) {
+elm::datastruct::IteratorInst<ilp::Constraint*> *System::constraints(void) {
 	 return(new ConstIterInst(this)); 
 }
 
-elm::IteratorInst<ilp::Constraint::Term> *System::objTerms(void) {
+elm::datastruct::IteratorInst<ilp::Constraint::Term> *System::objTerms(void) {
 	 return(new Constraint::TermIterInst(ofun)); 
 }
 /**
