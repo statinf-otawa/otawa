@@ -92,7 +92,7 @@ namespace otawa {
  */
 FeatureRequirer::FeatureRequirer(WorkSpace *ws, AbstractFeature *features[]) {
 #	ifndef NDEBUG
-		for(int i = 0; features[i] != &NULL_FEATURE; i++)
+		for(int i = 0; features[i] != &AbstractFeature::null; i++)
 			ASSERTP(ws->isProvided(*features[i]),
 				"require() method on a feature requirer class has not been called");
 #	endif
@@ -106,7 +106,7 @@ FeatureRequirer::FeatureRequirer(WorkSpace *ws, AbstractFeature *features[]) {
  * 					NULL_FEATURE).
  */
 void FeatureRequirer::require(Processor& proc, AbstractFeature *features[]) {
-	for(int i = 0; features[i] != &NULL_FEATURE; i++)
+	for(int i = 0; features[i] != &AbstractFeature::null; i++)
 		proc.require(*features[i]);	
 }
 

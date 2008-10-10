@@ -21,7 +21,6 @@
  */
 #include <assert.h>
 #include <elm/debug.h>
-#include <elm/Collection.h>
 #include <otawa/exegraph/ExeGraph.h>
 #include <elm/debug.h>
 #include <otawa/dfa/BitSet.h>
