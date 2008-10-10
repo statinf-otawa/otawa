@@ -83,16 +83,16 @@ void BHGDrawer::make(){
 	// Construct the Graph
 	HashTable<void*, Node*> map;
 
-	for(BHG::NodeIterator bb(_bhg); bb; bb++){
+	for(BHG::Iterator bb(_bhg); bb; bb++){
 		Node *node = _graph->newNode();
 		map.put(*bb, node);
 		onNode(*bb, node);
 	}
 
-	for(BHG::NodeIterator bb(_bhg); bb; bb++){
+	for(BHG::Iterator bb(_bhg); bb; bb++){
 		Node *node = map.get(*bb);
-		for(BHG::Successor succ(bb); succ; succ++){
-			BHGEdge* edge = succ.edge();
+		for(BHG::OutIterator succ(bb); succ; succ++){
+			BHGEdge* edge = succ;
 			display::Edge *display_edge;
 			display_edge = _graph->newEdge(node,map.get(edge->target()));
 			onEdge(edge, display_edge);
