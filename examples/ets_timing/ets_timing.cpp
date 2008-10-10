@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
 		ASTInfo *info = fw->getASTInfo();
 		
 		// Find main AST
-		Option< FunAST *> result = info->map().get("main");
+		Option< FunAST *> result = info->get("main");
 		if(!result) {
 			TRACE;
 			throw IOException("Cannot find main !");
