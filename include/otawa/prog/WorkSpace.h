@@ -24,7 +24,6 @@
 #ifndef OTAWA_PROG_WORK_SPACE_H
 #define OTAWA_PROG_WORK_SPACE_H
 
-#include <elm/Collection.h>
 #include <elm/system/Path.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/properties.h>
