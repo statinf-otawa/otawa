@@ -27,6 +27,7 @@
 #include <otawa/cfg/CFGBuilder.h>
 #include <config.h>
 #include <elm/xom.h>
+#include <otawa/proc/FeatureDependency.h>
 
 
 // Trace

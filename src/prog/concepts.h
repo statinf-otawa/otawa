@@ -33,35 +33,17 @@ class DiGraph: public Collection<Vertex> {
 public:
 
 	/** Vertex class. */
-	class Vertex {
-	};
+	class Vertex { };
 	
 	/** Opaque type for the edges. */
-	class Edge {
-	public:
-		/** Get the source vertex of the edge. */
-		Vertex source(void) const;
-		
-		/** Get the sink vertex of the edge. */
-		Vertex sink(void) const;
-	};
+	class Edge { };
 
-	/** Forward iterator on a node. */
-	class Successor: public Iterator<Edge> {
-	public:
-		
-		/**
-		 * Build the iterator on the outing edge of the source.
-		 * @param source	Source node.
-		 */
-		Successor(const DiGraph& graph, const Vertex& source);
-		
-		/**
-		 * Clone the given forward iterator.
-		 * @param forward	Iterator to clone.
-		 */
-		Successor(const Forward& forward);
-	};
+	/**
+	 * Get the sink of the given edge.
+	 * @param edge	Edge to get target of.
+	 * @return		Sink of the given edge.
+	 */
+	const Vertex& sinkOf(const Edge& edge);
 	
 	/**
 	 * Get the output degree of the vertex.
@@ -69,6 +51,83 @@ public:
 	 * @return			Out degreee.
 	 */
 	int outDegree(const Vertex& vertex) const;
+	
+	/**
+	 * Test if the succ vertex is successor of the ref vertex.
+	 * @param succ	Successor vertex.
+	 * @param ref	Reference vertex.
+	 * @return		True if succ is successor of ref.
+	 */
+	bool isSuccessorOf(const Vertex& succ, const Vertex& ref);
+
+	/** Outing edge iterator on a node. */
+	class OutIterator: public Iterator<Edge> {
+	public:
+		
+		/**
+		 * Build the iterator on the successor edge of the source.
+		 * @param source	Source node.
+		 */
+		OutIterator(const DiGraph& graph, const Vertex& source);
+		
+		/**
+		 * Clone the given successor iterator.
+		 * @param forward	Iterator to clone.
+		 */
+		OutIterator(const OutIterator& iterator);
+	};
+	
+};
+
+
+/** This kind of digraph contain indexed graph. */ 
+class DiGraphWithIndexedVertex: public DiGraph {
+public:
+	int indexOf(const Vertex& vertex) const;
+};
+
+
+/** Concept of directed graph with predecessor available. */
+class BiDiGraph: public DiGraph {
+
+	/** Entering-in edge iterator on a node. */
+	class InIterator: public Iterator<Edge> {
+	public:
+		
+		/**
+		 * Build the iterator on the entering-in edges of the source.
+		 * @param source	Source node.
+		 */
+		InIterator(const DiGraph& graph, const Vertex& source);
+		
+		/**
+		 * Clone the given predecessor iterator.
+		 * @param forward	Iterator to clone.
+		 */
+		InIterator(const InIterator& iterator);
+	};
+	
+	/**
+	 * Get the source of the given edge.
+	 * @param edge	Edge to get target of.
+	 * @return		Source of the given edge.
+	 */
+	const Vertex& sourceOf(const Edge& edge);
+
+	/**
+	 * Get the output degree of the vertex.
+	 * @param vertex	Vertex to get the out degree.
+	 * @return			In degree.
+	 */
+	int inDegree(const Vertex& vertex) const;
+	
+	/**
+	 * Test if the pred vertex is predecessor of the ref vertex.
+	 * @param pred	Predecessor vertex.
+	 * @param ref	Reference vertex.
+	 * @return		True if pred is predecessor of ref.
+	 */
+	bool isSuccessorOf(const Vertex& succ, const Vertex& ref);
 };
 
 
@@ -97,7 +156,7 @@ public:
 
 
 /** Directed graph with a unique entry and exit points. */
-class DiGraphWithEntryAndExit: public DiGraphWithEntry {
+class DiGraphWithExit: public BiDiGraph {
 public:
 	/** @return the exit vertex. */
 	Vertex exit(void);

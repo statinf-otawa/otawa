@@ -24,6 +24,7 @@
 #include <otawa/proc/Feature.h>
 #include <otawa/proc/Registry.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/proc/FeatureDependency.h>
 
 using namespace elm;
 using namespace elm::io;
