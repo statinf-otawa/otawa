@@ -25,7 +25,7 @@
 #include <elm/system/Path.h>
 #include <otawa/properties.h>
 #include <otawa/hard/Register.h>
-#include <elm/datastruct/Collection.h>
+//#include <elm/datastruct/Collection.h>
 
 // External classes
 namespace elm {
