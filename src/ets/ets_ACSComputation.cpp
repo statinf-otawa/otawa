@@ -76,7 +76,7 @@ void ACSComputation::initialization(WorkSpace *fw, AST *ast, AbstractCacheState 
 	switch (ast->kind()){
 		case AST_Call:	{	
 			ASTInfo *ast_info = fw->getASTInfo();
-			Option< FunAST *> fun_res = ast_info->map().get(ast->toCall()->function()->name());
+			Option< FunAST *> fun_res = ast_info->get(ast->toCall()->function()->name());
 			if (fun_res){
 				AST *fun_ast = (*fun_res)->ast();
 				initialization(fw, fun_ast, acs);
@@ -145,7 +145,7 @@ AbstractCacheState * ACSComputation::applyProcess(WorkSpace *fw, AST *ast, Abstr
 		case AST_Call:{	
 			AC_OUT(cout << ".:Call : "<< " :.\n");
 			ASTInfo *ast_info = fw->getASTInfo();
-			Option< FunAST *> fun_res = ast_info->map().get(ast->toCall()->function()->name());
+			Option< FunAST *> fun_res = ast_info->get(ast->toCall()->function()->name());
 			if (fun_res){
 				AST *fun_ast = (*fun_res)->ast();
 				AbstractCacheState::AbstractCacheState *acs = new AbstractCacheState::AbstractCacheState(state);

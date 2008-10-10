@@ -42,7 +42,7 @@ void TrivialAstBlockTime::processAST(WorkSpace *fw, AST *ast) {
 	switch(ast->kind()) {
 			case AST_Call:{
 				ASTInfo *ast_info = fw->getASTInfo();
-				Option< FunAST *> fun_res = ast_info->map().get(ast->toCall()->function()->name());
+				Option< FunAST *> fun_res = ast_info->get(ast->toCall()->function()->name());
 				if(fun_res) {
 					AST *fun_ast = (*fun_res)->ast();
 					processAST(fw, fun_ast);
