@@ -23,7 +23,7 @@
 #define OTAWA_PROP_PROPLIST_H
 
 #include <elm/utility.h>
-#include <elm/Iterator.h>
+#include <elm/PreIterator.h>
 #include <elm/util/VarArg.h>
 #include <otawa/prop/Property.h>
 #include <otawa/prop/DeletableProperty.h>

@@ -10,8 +10,8 @@ namespace otawa { namespace sim {
 class InstIterator;
 
 class BBPathDriver: public Driver {
-	Iterator<BasicBlock*> bb_iter;
-	Iterator<Inst*> *inst_iter;
+	ipet::BBPath::BBIterator bb_iter;
+	BasicBlock::InstIterator *inst_iter;
 	bool ended;
 public:
 	BBPathDriver(ipet::BBPath& bbpath);
