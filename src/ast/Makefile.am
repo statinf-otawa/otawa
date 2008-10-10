@@ -19,6 +19,7 @@ ast_la_SOURCES = \
 	DoWhileAST.cpp \
 	ForAST.cpp \
 	FunAST.cpp \
+	proc_FunProcessor.cpp \
 	IfAST.cpp \
 	proc_ASTProcessor.cpp \
 	SeqAST.cpp \

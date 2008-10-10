@@ -5,8 +5,8 @@
  *	otaw/ast/FunAST.cpp -- interface for FunAST class.
  */
 
-#include <elm/datastruct/Vector.h>
-#include <elm/datastruct/HashTable.h>
+#include <elm/genstruct/Vector.h>
+#include <elm/genstruct/HashTable.h>
 #include <otawa/ast/FunAST.h>
 #include <otawa/ast/ASTInfo.h>
 
