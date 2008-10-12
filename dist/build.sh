@@ -1,8 +1,9 @@
 #!/bin/bash
 tool=otawa-build-new
-version=2.0
+version=2.1
 
 # Actions
+#	help
 #	dist
 #	install
 #	make
@@ -13,8 +14,127 @@ version=2.0
 #	normal	normal working
 #	prod	production mode
 
+# Global variables
+#	action: type of performed action
+#	added_modules: modules added to the current selection
+#	config: configuration file
+#	curdir: invocation directory
+#	cvs_user: CVS user
+#	done: list of done modules
+#	jobs: number of jobs for make
+#	log: log file
+#	mod: current module
+#	modules: list of modules to build
+#	options: module providing an option
+#		(must define functions option_XXX, help_XXX)
+#	package: package name
+#	prefix: path to install to
+#	verbose: verbose mode
+#	with_so: shared library activated
+
+# Module description
+#	NAME: name of the module
+#	REQUIRE: required modules
+#	USE: possibly used modules
+#	DESCRIPTION: description of the module
+#	VARIABLES: variables used by the module
+
+#	CLEAN: command to clean the sources
+#	CHECK: command to call to check for existence
+#	DOWNLOAD: command to download the module
+#	PATCH: command to patch the downloaded module
+#	SETUP: command to setup the downloaded module
+#	BUILD: command to build the module
+#	INSTALL: command to install the module
+#	DIST: command to distribute the source of the module
+
+# Command
+#
+#	clean_XXX (CLEAN)
+#		clean_make
+#			do "make clean"
+#		clean_non
+#			no cleanup
+#
+#	check_XXX (CHECK)
+#		check_tool
+#			check if a tool exist
+#			NAME: tool name
+#			VERSION: tool version
+#		check_exist
+#			check if some files exist
+#			NAME: name of the directory
+#			CHECK_FILES: file to check in directory $NAME
+#
+#	download_XXX (DOWNLOAD)
+#		download_home
+#			download from cvs.irit.fr
+#			NAME: module name
+#			CVS_MOD=NAME: CVS module name
+#			VERSION?: version to download
+#		download_cvs
+#			download from CVS
+#			NAME: module name
+#			CVS_MOD=NAME: CVS module name
+#			VERSION?: version to download
+#			CVS_ROOT: CVSROOT to use
+#		download_wget
+#			download using wget
+#			WGET_ADDRESS: address of the site
+#			WGET_PACKAGE: namee of the package
+#			WGET_DIR?: directory name to rename unpacked package
+#		download_link
+#			LINKPATH: path to the ressource to link
+#
+#	patch_XXX (PATCH)
+#		patch_fun
+#			call patch_$NAME
+#			NAME: name of the module
+#
+#	setup_XXX (SETUP)
+#		setup_autotool
+#			aclocal, autoheader, automake, autoconf
+#		setup_libtool
+#			aclocal, autoheader, libtoolize, automake, autoconf
+#			LIBTOOLIZE_FLAGS: flags for libtoolize
+#		setup_bootstrap
+#			call "bootstrap"
+#
+#	build_XXX (BUILD)
+#		build_autotool
+#			perform configure and make all
+#			prefix: installation directory
+#			with_so: if "yes", use of shared libraries
+#			AUTOCONF_FLAGS: flags for configure (???)
+#			MAKE_FLAGS: flags for make
+#		build_make
+#			perform a simple make
+#			MAKE_FLAGS: flags for make
+#		build_cmd
+#			use a special command
+#			BUILD_CMD: command to use
+#
+#	install_XXX (INSTALL)
+#		install_make
+#			peform "make install"
+#		install_autotool
+#			same as install_make
+#
+#	dist_XXX (DIST)
+#		distdir: directory to install the distribution in
+#		dist_autotool
+#			use autotool to make distribution
+#			NAME: name of the module
+#			DIST_CONFIGURE_FLAGS: flags for configure in distribution
+#		dist_copy
+#			build distribution by simple copy
+#			NAME: name of the module
+
+
+
 # Configuration
 action=make
+added_modules=
 basedir=otawa
 config=
 curdir=`pwd`
@@ -286,6 +406,16 @@ function patch_fun {
 }
 
 
+# Use a simple link
+function download_link {
+	if [ -z "$LINKPATH" ]; then
+		error "no path given for $NAME link"
+	fi
+	log_command ln -s "$LINKPATH" $NAME
+}
+
+
+
 ########## setup_XXX ############
 
 # Do the setup of the current module
@@ -420,27 +550,11 @@ function dist_copy {
 }
 
 
-########### Scan arguments ###########
+# Configuration
+###configuration###
 
-function help {
-	echo "$tool $version"
-	echo "SYNTAX: build.sh [options] modules..."
-	echo "  --auto: build an automatic script, including the configuraion."
-	echo "	--build: download and make modules."
-	echo "  --config=PATH: path to the configuration file to use."
-	echo "  --dev: use development mode (identified checkout)."  
-	echo "	--dist: download and generate a distribution."
-	echo "	-h|--help: display this message."
-	echo "	--install: download, make and install modules."
-	echo "  --jobs=N: number of jobs to create to parallel compilation (default 10)"
-	echo "  --list: list available configurations."
-	echo "  --mode=[dev,debug,normal,prod]: select building mode"
-	echo "  --package=NAME: name of the package for 'dist' building"
-	echo "	--prefix=PATH: target path of the build."
-	echo "	--proxy=ADDRESS:PORT: configure a proxy use."
-	echo "	--with-systemc: SystemC location."
-	echo "	--work=PATH: directory to build in."
-}
+
+########### Scan arguments ###########
 
 for arg in $*; do
 	case $arg in
@@ -461,8 +575,7 @@ for arg in $*; do
 		action=dist
 		;;
 	-h|--help)
-		help
-		exit
+		action=help
 		;;
 	--install)
 		action=install
@@ -495,14 +608,13 @@ for arg in $*; do
 	--verbose)
 		verbose=yes
 		;;
-	--with-systemc=*)
-		systemc_location=${arg#--with-systemc=}
+	--with-*=*)
 		;;
 	--work=*)
 		basedir=${arg#--work=}
 		;;
 	-*|--*)
-		help
+		action=help
 		error "unknown option \"$arg\"."
 		;;
 	*)
@@ -512,10 +624,36 @@ for arg in $*; do
 done
 
 
-# Configuration
-###configuration###
-
 ########### Actions ###########
+
+function make_help {
+
+	# arguments
+	echo "$tool $version"
+	echo "SYNTAX: build.sh [options] modules..."
+	echo "  --auto: build an automatic script, including the configuraion."
+	echo "  --build: download and make modules."
+	echo "  --config=PATH: path to the configuration file to use."
+	echo "  --dev: use development mode (identified checkout)."  
+	echo "  --dist: download and generate a distribution."
+	echo "  -h|--help: display this message."
+	echo "  --install: download, make and install modules."
+	echo "  --jobs=N: number of jobs to create to parallel compilation (default 10)"
+	echo "  --list: list available configurations."
+	echo "  --mode=[dev,debug,normal,prod]: select building mode"
+	echo "  --package=NAME: name of the package for 'dist' building"
+	echo "  --prefix=PATH: target path of the build."
+	echo "  --proxy=ADDRESS:PORT: configure a proxy use."
+	echo "  --with-VARIABLE=VALUE: set a variable value."
+	echo "  --work=PATH: directory to build in."
+
+	# modules
+	echo "MODULES:"
+	for mod in $options; do
+		echo "  $mod"
+		help_$mod
+	done
+}
 
 # Make a distribution build script
 #	$1 configuration to use
@@ -544,13 +682,12 @@ function load_module {
 	DIST=
 	DIST_CONFIGURE_FLAGS=
 	DOWNLOAD=
-	#DONE=
-	#DONE_FILE=
 	INSTALL=
 	LIBTOOLIZE_FLAGS=
 	MAKE_FLAGS=
 	PATCH=
 	REQUIRE=
+	USE=
 	SETUP=
 	VERSION=
 	WGET_ADDRESS=
@@ -560,9 +697,10 @@ function load_module {
 }
 
 # Build the requirements
-#	$*	list of requirements
+#	$1	list of requirements
+#	$2	list of uses
 function require {
-	for mod in $*; do
+	for mod in $1; do
 		display "requiring $mod in [$done]"  
 		if expr "$done" : ".*$mod" > /dev/null; then
 			true
@@ -570,17 +708,31 @@ function require {
 			action_$action $mod
 		fi
 	done
+	
+	for mod in $2; do
+		if expr "$modules" : ".*$mod" > /dev/null; then
+			display "using $mod in [$modules]"  
+			if expr "$done" : ".*$mod" > /dev/null; then
+				true
+			else
+				action_$action $mod
+			fi
+		fi
+	done	
 }
 
 
 # Perform the make action
 #	$1	Name of the module to make
 function action_make {
+	if expr "$done" : ".*$mod" > /dev/null; then
+		return
+	fi
 	load_module $1
 	if do_check; then
 		return
 	fi
-	require $REQUIRE
+	require "$REQUIRE" "$USE"
 	load_module $1
 	info "*** making $1 ***"
 	do_download
@@ -610,7 +762,7 @@ function action_dist {
 	if do_check; then
 		return
 	fi
-	require $REQUIRE
+	require "$REQUIRE" "$USE"
 	load_module $1
 	info "*** making dist for $1 ***"
 	do_download
@@ -628,7 +780,7 @@ function action_distmake {
 	if do_check; then
 		return
 	fi
-	require $REQUIRE
+	require "$REQUIRE" "$USE"
 	load_module $1
 	info "*** making $1 ***"
 	cd $basedir/$NAME
@@ -669,18 +821,9 @@ if [ "$config" != "no" ]; then
 			error "cannot use the configuration file $config."
 		fi
 	fi
-	display "INFO: configuration = $config"
+	display "INFO: configuration  = $config"
 	. $config
 	cd $basedir
-fi
-
-# Module selection
-if [ -z "$modules" ]; then
-	modules="$default_modules"
-fi
-display "INFO: modules = $modules"
-if [ $action = update ]; then
-	updates="$modules"
 fi
 
 # Prefix management
@@ -691,11 +834,29 @@ if [ "${prefix:0:1}" != "/" ]; then
 	prefix="$PWD/$prefix"
 fi
 
-# systemc
-if [ ! -z $systemc_location ]; then
-	rm -f systemc
-	ln -s $systemc_location systemc
+
+# options for modules
+for arg in $*; do
+	case $arg in
+	--with-*=*)
+		tmp=${arg#--with-}
+		for mod in $options; do
+			option_$mod "${tmp%%=*}" "${tmp#*=}"
+		done
+		;;
+	*)
+		;;
+	esac
+done	
+
+
+# Module selection
+if [ -z "$modules" ]; then
+	modules="$default_modules"
 fi
+modules="$modules $added_modules"
+display "INFO: modules = $modules"
+
 
 # pre-action
 case $action in
@@ -710,6 +871,9 @@ case $action in
 		make_build $config make
 		exit 0
 		;;
+	help)
+		make_help
+		exit 1
 esac
 
 # build entry
