@@ -1,6 +1,6 @@
 # Default module configuration
-default_modules="ppc lp_solve5 otawa"
-all_modules="$default_modules elm gel frontc gliss hcs12 lp_solve"
+default_modules="otawa ppc lp_solve5"
+all_modules="$default_modules elm gel frontc gliss hcs12 lp_solve systemc"
 
 function mod_elm {
 	NAME=elm
@@ -25,6 +25,7 @@ function mod_otawa {
 	AUTOCONF_FLAGS="--with-mode=dev"
 	DIST=copy
 	REQUIRE="elm gel"
+	USE="systemc ppc hcs12 lp_solve5 lp_solve frontc"
 }
 
 
@@ -140,5 +141,25 @@ function mod_libtool {
 	NAME=libtool
 	VERSION=1.5.12
 	CHECK=tool
+}
+
+
+# systemc module
+function mod_systemc {
+	NAME=systemc
+	DESCRIPTION="C++ library for hardware simulation"
+	VARIABLES="    --with-systemc=PATH -- path to the systemc source directory"
+	DOWNLOAD=link
+	LINKPATH="$systemc_path"
+}
+options="$options systemc"
+function option_systemc {
+	if [ "$1" = "systemc" ]; then
+		added_modules="$added_modules systemc"
+		systemc_path="$2"
+	fi
+}
+function help_systemc {
+	echo "    -with-systemc=PATH: path to systemc source"
 }
 
