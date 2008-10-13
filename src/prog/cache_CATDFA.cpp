@@ -39,7 +39,7 @@ CATDomain *CATProblem::gen(CFG *cfg, BasicBlock *bb) {
 		address_t adlbloc;
 	    PseudoInst *pseudo;
 	    int identif=0;	    
-	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+	for(BasicBlock::InstIter inst(bb); inst; inst++) {
 		pseudo = inst->toPseudo();			
 		if(!pseudo){
 			adlbloc = inst->address();				
@@ -68,7 +68,7 @@ CATDomain *CATProblem::preserve(CFG *cfg, BasicBlock *bb) {
 		address_t adlbloc;
 	    PseudoInst *pseudo;
 	    int identif1 = 0 , identnonconf = 0 , identif2 = 0;
-	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+	for(BasicBlock::InstIter inst(bb); inst; inst++) {
 		visit = false;
 		// decallage x where each block containts 2^x ocets
 		int dec = cach->blockBits();
