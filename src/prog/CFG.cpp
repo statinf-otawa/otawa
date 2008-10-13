@@ -97,7 +97,7 @@ CFG::CFG(Segment *seg, BasicBlock *entry):
 	ENTRY(ent) = this;
 	
 	// Get label
-	BasicBlock::InstIterator inst(entry);
+	BasicBlock::InstIter inst(entry);
 	String label = FUNCTION_LABEL(inst);
 	if(label)
 		LABEL(this) = label;
@@ -344,7 +344,7 @@ Inst *CFG::firstInst(void) {
 	if(!(flags & FLAG_Scanned))
 		scan();
 	BasicBlock *bb = firstBB();
-	BasicBlock::InstIterator inst(bb);
+	BasicBlock::InstIter inst(bb);
 	return *inst;
 }
 
