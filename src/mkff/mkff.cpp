@@ -469,7 +469,7 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
 		if(child->kind() == ContextTree::LOOP) {
 			for(int i = 0; i < indent; i++)
 				cout << "  ";
-			BasicBlock::InstIterator inst(child->bb());
+			BasicBlock::InstIter inst(child->bb());
 			if(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst))
 				cout << "// loop " << addressOf(cfg, child->bb()->address()) << io::endl;
 			else 
@@ -485,7 +485,7 @@ bool FFOutput::checkLoop(ContextTree *ctree) {
 	for(ContextTree::ChildrenIterator child(ctree); child; child++) {
 		ASSERT(child->kind() != ContextTree::FUNCTION);
 		if(child->kind() == ContextTree::LOOP) {
-			BasicBlock::InstIterator inst(child->bb());
+			BasicBlock::InstIter inst(child->bb());
 			if((!RECORDED(inst) && MAX_ITERATION(inst) == -1)
 			|| checkLoop(child))
 				return true;
@@ -536,7 +536,7 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 	
 	// Look in BB
 	for(CFG::BBIterator bb(cfg); bb; bb++)
-		for(BasicBlock::InstIterator inst(bb); inst; inst++)
+		for(BasicBlock::InstIter inst(bb); inst; inst++)
 			if(inst->isControl()
 			&& !inst->isReturn()
 			&& !RECORDED(inst)
