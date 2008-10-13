@@ -42,7 +42,7 @@ int LBlock::countInsts(void) {
 	
 	if(_bb != 0){
 		PseudoInst *pseudo;
-		for(BasicBlock::InstIterator instr(_bb); instr; instr++) {
+		for(BasicBlock::InstIter instr(_bb); instr; instr++) {
 			pseudo = instr->toPseudo();
 			if(!pseudo){
 				if(instr->address() >= addr && instr->address() < addr + _size)
