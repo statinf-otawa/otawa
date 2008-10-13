@@ -83,6 +83,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 	Vector<BasicBlock *> todo;
 	Vector<BasicBlock *> calls;
 	Vector<BasicBlock *> returns;
+	int level = 0;
 	todo.push(cfg->entry());
 	calls.push(cfg->entry());
 	MARK(cfg->entry()) = calls.top();
@@ -101,12 +102,13 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 			calls.pop();
 			while((bb = returns.pop()))
 				todo.push(bb);
+			level--;
 			continue;
 		}
 
 		// process the current BB
 		if(isVerbose())
-			log << "\tprocessing BB" << bb->number() << " (" << bb->address() << ")\n";
+			log << "\tprocessing " << level << ": BB" << bb->number() << " (" << bb->address() << ")\n";
 		processBB(ws, cfg, bb);
 		
 		// look outing edge
@@ -160,6 +162,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 				// do the call
 				if(isVerbose()) {
 					log << "\tentering call";
+					level++;
 					CFG *cfg = CALLED_CFG(edge);
 					if(cfg)
 						log << " to " << cfg->label();
