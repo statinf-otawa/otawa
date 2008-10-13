@@ -155,7 +155,7 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		total_loop++;
 		
 		// Look in the first instruction of the BB
-		BasicBlock::InstIterator iter(bb);
+		BasicBlock::InstIter iter(bb);
 		ASSERT(iter);
 		if(transfer(iter, bb))
 			return;
@@ -166,7 +166,7 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		
 		// Look all instruction in the header
 		// (in case of aggregation in front of the header)
-		for(BasicBlock::InstIterator inst(bb); inst; inst++)
+		for(BasicBlock::InstIter inst(bb); inst; inst++)
 			if(lookLineAt(inst, bb))
 				
 				return;
@@ -174,7 +174,7 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		// look in back edge in case of "while() ..." to "do ... while(...)" optimization
 		for(BasicBlock::InIterator edge(bb); edge; edge++)
 			if(Dominance::isBackEdge(edge))
-				for(BasicBlock::InstIterator inst(edge->source()); inst; inst++)
+				for(BasicBlock::InstIter inst(edge->source()); inst; inst++)
 					if(lookLineAt(inst, bb)) 
 						return;
 
