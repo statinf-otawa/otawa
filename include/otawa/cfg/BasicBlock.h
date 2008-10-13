@@ -69,14 +69,22 @@ protected:
 
 public:
 	// InstIterator class
-	class InstIterator: public PreIterator<InstIterator, Inst *> {
-		otawa::Inst *inst;
+	class InstIter: public PreIterator<InstIter, Inst *> {
 	public:
-		inline InstIterator(BasicBlock *bb);
-		inline bool ended(void) const;
-		inline Inst *item(void) const;
-		inline void next(void);
+		inline InstIter(BasicBlock *bb): inst((Inst *)bb->head()->next()) { ASSERT(bb); }
+		inline InstIter(const InstIter& iter): inst(iter.inst) { }
+		
+		inline bool ended(void) const {
+			PseudoInst *pseudo;
+			return !inst || ((pseudo = inst->toPseudo()) && pseudo->id() == &ID);
+		}
+
+		inline Inst *item(void) const { return inst; }
+		inline void next(void)  { inst = inst->nextInst(); }
+	private:
+		otawa::Inst *inst;
 	};
+	typedef InstIter InstIterator;
 
 protected:
 	static BasicBlock& null_bb;
@@ -105,8 +113,6 @@ public:
 	static BasicBlock *findBBAt(WorkSpace *fw, address_t addr);
 	
 	// Generic accessors
-	/*virtual inline IteratorInst<Inst *> *visit(void);
-	inline operator IteratorInst<Inst *> *(void) { return visit(); };*/
 	inline bool isCall(void) const { return (flags & FLAG_Call) != 0; };
 	inline bool isReturn(void) const { return (flags & FLAG_Return) != 0; };
 	inline bool isTargetUnknown(void) const
@@ -118,7 +124,7 @@ public:
 	inline Mark *head(void) const { return _head; };
 	inline address_t address(void) const { return _head->address(); };
 	inline Address topAddress(void) const { return address() + size(); }
-	virtual int countInstructions(void) const;
+	virtual int countInsts(void) const;
 	size_t size(void) const;
 	inline bool isVirtual(void) const { return flags & FLAG_Virtual; };
 	inline unsigned long getFlags(void) const { return flags; };
@@ -146,8 +152,7 @@ public:
 	BasicBlock *getTaken(void);
 	BasicBlock *getNotTaken(void);
 	inline size_t getBlockSize(void) const { return size(); };
-	/*IteratorInst<Edge *> *inEdges(void);
-	IteratorInst<Edge *> *outEdges(void);*/	
+	inline int countInstructions(void) const { return countInsts(); }
 };
 
 
@@ -168,26 +173,6 @@ public:
 		_head = null_bb.head();
 	};
 };
-
-
-// BasicBlock::InstIterator inlines
-inline BasicBlock::InstIterator::InstIterator(BasicBlock *bb)
-: inst((Inst *)bb->head()->next()) {
-	ASSERT(bb);
-}
-
-inline bool BasicBlock::InstIterator::ended(void) const {
-	PseudoInst *pseudo;
-	return !inst || ((pseudo = inst->toPseudo()) && pseudo->id() == &ID);
-}
-
-inline Inst *CodeBasicBlock::InstIterator::item(void) const {
-	return inst;
-}
-
-inline void CodeBasicBlock::InstIterator::next(void) {
-	inst = inst->nextInst();
-}
 
 
 // BasicBlock::EdgeIterator inlines
