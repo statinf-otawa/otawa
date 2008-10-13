@@ -145,7 +145,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				assert(info);
 				bool test = false;
 				bool visit;
-				for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+				for(BasicBlock::InstIter inst(bb); inst; inst++) {
 					visit = false;
 					pseudo = inst->toPseudo();			
 					if(!pseudo){
