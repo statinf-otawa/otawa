@@ -149,20 +149,20 @@ bool BB::isMultiTarget(void) const {
 
 
 /**
- * @class BB::InstIterator
+ * @class BB::InstIter
  * Iterator on the instructions of a basic block.
  */
 
 
 /**
- * @fn BB:BB::InstIterator(const BB *bb);
+ * @fn BB:BB::InstIter(const BB *bb);
  * Build the iterator on the given BB.
  * @param bb	Basic block to iterate instructions on.
  */
 
 
 /**
- * @fn BB::BB::InstIterator(const InstIterator& iter);
+ * @fn BB::BB::InstIter(const InstIter& iter);
  * Construction by cloning an existing iterator.
  * @param iter	Iterator to clone.
  */
