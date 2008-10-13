@@ -33,6 +33,7 @@
 #include <otawa/util/Dominance.h>
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/flowfact/features.h>
+#include <otawa/dfa/BitSet.h>
 
 namespace otawa { namespace ipet {
 
@@ -82,6 +83,7 @@ void FlowFactConstraintBuilder::setup(WorkSpace *ws) {
 /**
  */
 void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+
 	if (Dominance::isLoopHeader(bb)) {
 		int bound = ContextualLoopBound::undefined,
 			total = ContextualLoopBound::undefined;
@@ -154,7 +156,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 			}
 			
 			// eih <= total
-			if(total != ContextualLoopBound::undefined) {
+			/*if(total != ContextualLoopBound::undefined) {
 				otawa::ilp::Constraint *cons = system->newConstraint(otawa::ilp::Constraint::LE);
 				
 				BasicBlock *bb2 = bb;
@@ -168,7 +170,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 					bb2 = UNROLLED_FROM(bb2);				
 				} while (bb2 != NULL);
 				cons->addRight(total);
-			}
+			}*/
 		}
 	}	
 }

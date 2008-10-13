@@ -165,7 +165,7 @@ size_t BasicBlock::size(void) const {
 	int size = 0;
 	
 	// Find the next BB marker
-	for(InstIterator inst((BasicBlock *)this); inst; inst++)
+	for(InstIter inst((BasicBlock *)this); inst; inst++)
 		if(!inst->isPseudo())
 			size += inst->size();
 
@@ -186,7 +186,7 @@ size_t BasicBlock::size(void) const {
  * Count the number of instructions in the basic block.
  * @return	Number of instruction in the basic block.
  */
-int BasicBlock::countInstructions(void) const {
+int BasicBlock::countInsts(void) const {
 	assert(_head);
 	Inst *inst;
 	int cnt = 0;
@@ -345,7 +345,7 @@ BasicBlock *BasicBlock::findBBAt(WorkSpace *fw, address_t addr) {
 
 
 /**
- * @class BasicBlock::InstIterator
+ * @class BasicBlock::InstIter
  * Iterator for instructions in the basic block.
  */
 

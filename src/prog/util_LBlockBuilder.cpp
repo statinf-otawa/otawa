@@ -159,7 +159,7 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 	// Traverse instruction
 	int index = 0;
 	int block = -1;
-	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+	for(BasicBlock::InstIter inst(bb); inst; inst++) {
 		int new_block = cache->block(inst->address());
 		if(!inst->isPseudo() && new_block != block) {
 			addLBlock(bb, inst, index, lblocks);
