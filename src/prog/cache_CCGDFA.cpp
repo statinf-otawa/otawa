@@ -43,7 +43,7 @@ CCGDomain *CCGProblem::gen(CFG *cfg, BasicBlock *bb) {
 		address_t adlbloc;
 	    PseudoInst *pseudo;
 	    int identif = 0;	    
-		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+		for(BasicBlock::InstIter inst(bb); inst; inst++) {
 			pseudo = inst->toPseudo();			
 			if(!pseudo){
 				adlbloc = inst->address();				
@@ -74,7 +74,7 @@ CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
    PseudoInst *pseudo;
     int identif1 = 0 , identnonconf = 0 , identif2 = 0;
     
-	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+	for(BasicBlock::InstIter inst(bb); inst; inst++) {
 		visit = false;
 		int dec = cach->blockBits();
 		

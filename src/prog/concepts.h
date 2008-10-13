@@ -162,6 +162,48 @@ public:
 	Vertex exit(void);
 };
 
+/** An iterable block of instruction. **/
+class InstBlock {
+public:
+
+	/**
+	 * Get the address of the first instruction.
+	 * @return	First instruction address.
+	 */
+	Address address(void);
+
+	/**
+	 * Get the size of the block.
+	 * @return	Size in bytes.
+	 */
+	size_t size(void);
+	
+	/**
+	 * Address succeeding the last byte of the block.
+	 * @return	address() + size().
+	 */
+	Address topAddress(void);
+
+	/**
+	 * Count the number of instructions.
+	 * @return	Number of instructions.
+	 */
+	int countInsts(void);
+	
+	/**
+	 * Iterator on the instruction of the block.
+	 */
+	class InstIter: public Iterator<Inst *> {
+	public:
+	
+		/** Build an iterator on the given block. */
+		InstIter(const InstBlock *block);
+		
+		/** Build an iterator cloning the given one. */
+		InstIter(const InstIter& iter);
+	};
+};
+
 } // concept
 
 namespace dfa {
