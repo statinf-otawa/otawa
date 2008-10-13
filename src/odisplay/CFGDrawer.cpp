@@ -133,7 +133,7 @@ void CFGDrawer::onNode(otawa::BasicBlock *bb, otawa::display::Node *node){
 
 	// make body
 	StringBuffer body;
-	for(BasicBlock::InstIterator inst(bb); inst; inst++){
+	for(BasicBlock::InstIter inst(bb); inst; inst++){
 		if(body.length() > 0)
 			body << '\n';
 		if(inst->hasProp(LABEL)){
