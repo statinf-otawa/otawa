@@ -188,7 +188,7 @@ void CATBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S ,int dec){
 		 * Call worst() on each l-block of this ContextTree.
 		 */
 		for(ContextTree::BBIterator bk(S); bk; bk++){
-			for(BasicBlock::InstIterator inst(bk); inst; inst++) {
+			for(BasicBlock::InstIter inst(bk); inst; inst++) {
 				 PseudoInst *pseudo = inst->toPseudo();
 				if(!pseudo){
 					address_t adlbloc = inst->address();
@@ -387,7 +387,7 @@ BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
 		 */
 		for(ContextTree::BBIterator bb(root); bb; bb++){
 			if ((!bb->isEntry())&&(!bb->isExit())){ /* XXX */
-			for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+			for(BasicBlock::InstIter inst(bb); inst; inst++) {
 				 PseudoInst *pseudo = inst->toPseudo();
 				if(!pseudo){
 					address_t adlbloc = inst->address();
