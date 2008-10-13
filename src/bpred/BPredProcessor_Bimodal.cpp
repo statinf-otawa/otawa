@@ -846,7 +846,7 @@ void BPredProcessor::generateClasses(CFG *cfg, BSets& bs) {
 		// Si un branchement a ete trouve ...
 		if(nb_OE == 2 ) {
 			Inst* inst = NULL;
-			for(BasicBlock::InstIterator i(bb); i; i++) {
+			for(BasicBlock::InstIter i(bb); i; i++) {
 				inst=i;
 			}
 			bs.add((inst->address() & (this->BHT)), bb->number());
