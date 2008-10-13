@@ -289,7 +289,7 @@ void CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , ContextTree *root)
 		 */
 		for(ContextTree::BBIterator bb(root); bb; bb++){
 			if ((!bb->isEntry())&&(!bb->isExit())){ /* XXX */
-			for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+			for(BasicBlock::InstIter inst(bb); inst; inst++) {
 				 PseudoInst *pseudo = inst->toPseudo();
 				if(!pseudo){
 					address_t adlbloc = inst->address();
