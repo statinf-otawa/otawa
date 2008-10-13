@@ -98,7 +98,7 @@ int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
  */
 void DisassemblerDisplayer::onBBEnd(BasicBlock *bb, int index) {
 	cout << '\n';
-	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+	for(BasicBlock::InstIter inst(bb); inst; inst++) {
 			
 		// Put the label
 		for(PropList::Getter<String> label(inst, FUNCTION_LABEL); label; label++)

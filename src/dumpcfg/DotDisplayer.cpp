@@ -33,7 +33,7 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 			if(display_assembly) {
 				cout << " | ";
 				bool first = true;
-				for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+				for(BasicBlock::InstIter inst(bb); inst; inst++) {
 				//for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
 					if(first)
 						first = false;
