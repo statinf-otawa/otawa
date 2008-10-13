@@ -25,3 +25,4 @@ libotawa.a
 *.lo
 libotawa.la
 .libs
+proc_FunProcessor.loT

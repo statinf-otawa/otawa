@@ -135,7 +135,7 @@ void Statistics::addBB(BasicBlock *bb) {
 	bb_cnt++;
 	
 	// Count instructions
-	for(BasicBlock::InstIterator inst(bb); inst; inst++)
+	for(BasicBlock::InstIter inst(bb); inst; inst++)
 		if(!inst->isPseudo()) {
 			insts++;
 			if(inst->isMem())

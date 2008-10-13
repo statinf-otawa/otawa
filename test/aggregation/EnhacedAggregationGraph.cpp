@@ -41,7 +41,7 @@ bool EnhacedAggregationGraph::isBoundary(BBPath *cur_bbpath, BBPath *next_bbpath
 		bound = bound || next_bbpath->length() > *max_length;
 	}
 	if(max_insts){
-		bound = bound || next_bbpath->countInstructions() > *max_insts;
+		bound = bound || next_bbpath->countInsts() > *max_insts;
 	}
 	if(max_splits){
 		BasicBlock *cur_bb = cur_bbpath->tail();

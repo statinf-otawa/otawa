@@ -51,7 +51,7 @@ public:
 			content << " BB " << vertex.bb->number()
 				<< " (" << vertex.bb->address() << ")\n"
 				<< "---\n";
-			for(BasicBlock::InstIterator inst(vertex.bb); inst; inst++)
+			for(BasicBlock::InstIter inst(vertex.bb); inst; inst++)
 				content << inst->address() << '\t' << *inst << io::endl;
 			content << "---\n"
 				<< (PropList *)vertex.bb;

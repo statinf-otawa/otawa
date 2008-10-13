@@ -37,7 +37,7 @@ BBTimeSimulator::BBTimeSimulator(const PropList& props)
  * the type of the given basic block
  */
 void BBTimeSimulator::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb){
-	if(bb->countInstructions() == 0){
+	if(bb->countInsts() == 0){
 		TIME(bb) = 0;
 	}
 	else if(dynamic_cast<SequenceBasicBlock*>(bb)){

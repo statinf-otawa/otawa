@@ -382,7 +382,7 @@ void AggregationGraph::printStats(elm::io::Output &out){
 	
 	int instructions_to_simul = 0;
 	for(int i = 0; i < elts.length(); i++)
-		instructions_to_simul += elts[i]->countInstructions();
+		instructions_to_simul += elts[i]->countInsts();
 	out << "If simulator state doesn't support cloning, "
 		<< instructions_to_simul
 		<< " instructions will be simulated.\n";
