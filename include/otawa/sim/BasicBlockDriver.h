@@ -19,7 +19,7 @@ namespace sim {
 
 // BasicBlockDriver class
 class BasicBlockDriver: public Driver {
-	BasicBlock::InstIterator inst;
+	BasicBlock::InstIter inst;
 public:
 	inline BasicBlockDriver(BasicBlock *bb);
 	

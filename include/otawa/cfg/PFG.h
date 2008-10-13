@@ -57,12 +57,12 @@ public:
 	bool isMultiTarget(void) const;
 	inline void setSize(size_t size) { _size = size; }
 
-	// InstIterator class
-	class InstIterator: public PreIterator<InstIterator, Inst *> {
+	// InstIter class
+	class InstIter: public PreIterator<InstIter, Inst *> {
 	public:
-		inline InstIterator(const BB *bb): inst(bb->first()), top(bb->topAddress()) { }
-		inline InstIterator(const InstIterator& iter): inst(iter.inst), top(iter.top) { }
-		inline InstIterator& operator=(const InstIterator& iter)
+		inline InstIter(const BB *bb): inst(bb->first()), top(bb->topAddress()) { }
+		inline InstIter(const InstIter& iter): inst(iter.inst), top(iter.top) { }
+		inline InstIter& operator=(const InstIter& iter)
 			{ inst = iter.inst; top = iter.top; return *this; }
 		
 		inline bool ended(void) const { return !inst || inst->address() >= top; }

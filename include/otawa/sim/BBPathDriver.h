@@ -11,7 +11,7 @@ class InstIterator;
 
 class BBPathDriver: public Driver {
 	ipet::BBPath::BBIterator bb_iter;
-	BasicBlock::InstIterator *inst_iter;
+	BasicBlock::InstIter *inst_iter;
 	bool ended;
 public:
 	BBPathDriver(ipet::BBPath& bbpath);
