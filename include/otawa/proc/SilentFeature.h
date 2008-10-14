@@ -34,6 +34,7 @@ public:
 
 	class AbstractMaker {
 	public:
+		virtual ~AbstractMaker(void) { }
 		virtual Processor *make(void) const = 0;
 	};
 
