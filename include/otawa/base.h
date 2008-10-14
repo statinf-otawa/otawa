@@ -43,7 +43,7 @@ typedef unsigned long mask_t;
 
 
 // Address class
-class Address: public AutoPartialComparator<Address> {
+class Address {
 public:
 	typedef unsigned long page_t;
 	typedef unsigned long offset_t;
@@ -85,9 +85,9 @@ public:
 	inline Address operator+(size_t offset) const
 		{ ASSERT(!isNull()); return Address(pg, off + offset); }
 	inline Address operator-(int offset) const
-		{ ASSERT(!isNull()); return Address(pg, off + offset); }
+		{ ASSERT(!isNull()); return Address(pg, off - offset); }
 	inline Address operator-(size_t offset) const
-		{ ASSERT(!isNull()); return Address(pg, off + offset); }
+		{ ASSERT(!isNull()); return Address(pg, off - offset); }
 	inline offset_t operator-(const Address& address) const {
 		ASSERT(!isNull()); 
 		ASSERT(pg == address.pg);
@@ -99,8 +99,17 @@ public:
 		{ return pg == address.pg && off == address.off; }
 	inline int compare(const Address& address) const {
 		ASSERT(pg == address.pg);
-		return off - address.off;
+		if(off < address.off) return -1;
+		else if(off > address.off) return 1;
+		else return 0;
 	}
+	inline bool operator==(const Address& addr) const { return equals(addr); }
+	inline bool operator!=(const Address& addr) const { return !equals(addr); }
+	inline bool operator<(const Address& addr) const { ASSERT(pg == addr.pg); return off < addr.off; }
+	inline bool operator<=(const Address& addr) const { ASSERT(pg == addr.pg); return off <= addr.off; }
+	inline bool operator>(const Address& addr) const { ASSERT(pg == addr.pg); return off > addr.off; }
+	inline bool operator>=(const Address& addr) const { ASSERT(pg == addr.pg); return off >= addr.off; }
+	
 
 	// Deprecated
 	inline offset_t address(void) const { return off; }
