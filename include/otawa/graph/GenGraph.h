@@ -24,6 +24,13 @@
 #include <elm/PreIterator.h>
 #include <otawa/graph/Graph.h>
 
+// GCC work-around
+#if defined(__GNUC__) && __GNUC__ <= 4 && __GNUC_MINOR__ <= 0
+#	define OTAWA_GCAST(t, e) ((t)(e))	
+#else
+#	define OTAWA_GCAST(t, e) static_cast<t>(e)
+#endif
+
 namespace otawa {
 
 // GenGraph class
@@ -57,8 +64,8 @@ public:
 		virtual ~GenEdge(void) { }
 	public:
 		inline GenEdge(GenNode *source, GenNode *target): graph::Edge(_(source), _(target)) { }
-		inline N *source(void) const { return static_cast<N *>(graph::Edge::source()); }
-		inline N *target(void) const { return static_cast<N *>(graph::Edge::target()); }
+		inline N *source(void) const { return OTAWA_GCAST(N *, graph::Edge::source()); }
+		inline N *target(void) const { return OTAWA_GCAST(N *, graph::Edge::target()); }
 	};
 
 	// Collection concept
@@ -74,7 +81,7 @@ public:
 		inline Iterator(const GenGraph<N, E> *graph): iter(graph) { }
 		inline Iterator(const GenGraph<N, E>::Iterator& iterator): iter(iterator.iter) { }
 		inline bool ended(void) const { return iter.ended(); }
-		inline N *item(void) const  { return static_cast<N *>(iter.item()); }
+		inline N *item(void) const  { return OTAWA_GCAST(N *, iter.item()); }
 		inline void next(void) { iter.next(); }
 	};
 
@@ -99,7 +106,7 @@ public:
 		inline OutIterator(const GenGraph<N, E>& graph, const N *node): iter(_(node)) { }
 		inline bool ended(void) const { return iter.ended(); }
 		inline void next(void) { iter.next(); }
-		inline E *item(void) const { return static_cast<E *>(iter.item()); }
+		inline E *item(void) const { return OTAWA_GCAST(E *, iter.item()); }
 	private:
 		Graph::OutIterator iter;
 	};
@@ -116,7 +123,7 @@ public:
 		inline InIterator(const GenGraph<N, E>& graph, const N *node): iter(_(node)) { }
 		inline bool ended(void) const { return iter.ended(); }
 		inline void next(void) { iter.next(); }
-		inline E *item(void) const { return static_cast<E *>(iter.item()); }
+		inline E *item(void) const { return OTAWA_GCAST(E *, iter.item()); }
 	private:
 		Graph::InIterator iter;
 	};

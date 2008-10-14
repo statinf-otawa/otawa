@@ -38,6 +38,7 @@ public:
 	static AbstractFeature& null;
 
 	AbstractFeature(CString name = "");
+	virtual ~AbstractFeature(void) { }
 	virtual void process(WorkSpace *fw,
 		const PropList& props = PropList::EMPTY) const = 0;
 	virtual void check(WorkSpace *fw) const = 0;
