@@ -19,7 +19,7 @@ CXXFLAGS	= $(CUSTOM_CXXFLAGS) $(FLAGS) -DDATA_DIR="\"$(DATADIR)\""
 LDFLAGS 	= $(CUSTOM_LDFLAGS)
 LDLIBS		= $(CUSTOM_LDLIBS) $(shell $(CONFIG) --libs $(MODULES))
 OBJECTS 	= $(SOURCES:.cpp=.o)
-DEPS		= $(addprefix .deps,$(SOURCES:.cpp=.d))
+DEPS		= $(addprefix .deps/,$(SOURCES:.cpp=.d))
 CLEAN		= $(CUSTOM_CLEAN) $(PROGRAM) $(OBJECTS) .deps
 
 # Rules
