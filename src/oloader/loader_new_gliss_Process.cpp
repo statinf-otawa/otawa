@@ -14,6 +14,9 @@
 #include "old_gliss.h"
 #include <otawa/loader/gliss.h>
 #include "config.h"
+extern "C" {
+#	include <gel/dwarf_line.h>
+}
 
 #define TRACE(m) //cerr << m << io::endl
 
@@ -77,11 +80,15 @@ private:
 	_start(0),
 	_platform(platform), 
 	_state(0),
-	_memory(0)
+	_memory(0),
+	init(false),
+	map(0),
+	file(0)
 {
 	ASSERTP(manager, "manager required");
 	ASSERTP(platform, "platform required");
 
+	// build arguments
 	static char *default_argv[] = { "", 0 };
 	static char *default_envp[] = { 0 };
 	argc = ARGC(props);
@@ -93,7 +100,79 @@ private:
 	envp = ENVP(props);
 	if(!envp)
 		envp = default_envp;
+	
+	// handle features
 	provide(MEMORY_ACCESS_FEATURE);
+	provide(SOURCE_LINE_FEATURE);
+}
+
+
+/**
+ */
+Option<Pair<cstring, int> > Process::getSourceLine(Address addr)
+throw (UnsupportedFeatureException) {
+	setup();
+	if(!map)
+		return none;
+	const char *file;
+	int line;
+	if(!map
+	|| dwarf_line_from_address(map, addr.offset(), &file, &line) < 0)
+		return none;
+	return some(pair(cstring(file), line));
+}
+
+
+/**
+ */
+void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses)
+throw (UnsupportedFeatureException) {
+	//cerr << "looking for " << file << ":" << line << io::endl;
+	setup();
+	addresses.clear();
+	if(!map)
+		return;
+	dwarf_line_iter_t iter;
+	dwarf_location_t loc, ploc = { 0, 0, 0, 0 };
+	for(loc = dwarf_first_line(&iter, map);
+	loc.file;
+	loc = dwarf_next_line(&iter)) {
+		//cerr << loc.file << ":" << loc.line << ", " << loc.low_addr << "-" << loc.high_addr << io::endl;
+		if(file == loc.file) {
+			if(line == loc.line) {
+				//cerr << "added (1) " << loc.file << ":" << loc.line << " -> " << loc.low_addr << io::endl;
+				addresses.add(pair(Address(loc.low_addr), Address(loc.high_addr)));
+			}
+			else if(loc.file == ploc.file && line > ploc.line && line < loc.line) {
+				//cerr << "added (2) " << ploc.file << ":" << ploc.line << " -> " << ploc.low_addr << io::endl;
+				addresses.add(pair(Address(ploc.low_addr), Address(ploc.high_addr)));
+			}
+		}
+		ploc = loc;
+	}
+}
+
+
+/**
+ * Setup the source line map.
+ */
+void Process::setup(void) {
+	if(init)
+		return;
+	init = true;
+	
+	// Open the file
+	if(!file) {
+		file = gel_open(&program()->name(), 0, GEL_OPEN_NOPLUGINS); 
+		if(!file) {
+			cerr << "WARNING: file \"" << program()->name()
+				 << "\" seems to have disappeared !\n";
+			return;
+		}
+	}
+	
+	// Open the map
+	map = dwarf_new_line_map(file, 0);
 }
 
 
