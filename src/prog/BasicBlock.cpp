@@ -46,6 +46,9 @@ BasicBlock& BasicBlock::null_bb = null_bb_inst;
 /**
  * @class BasicBlock
  * This is the minimal definition of a basic block.
+ * 
+ * @par Implemented concepts
+ * @li @ref otawa::concept::InstBlock
  */
 
 
