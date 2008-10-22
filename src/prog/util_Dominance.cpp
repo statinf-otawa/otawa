@@ -186,7 +186,6 @@ elm::MutableCollection<BasicBlock *> *headers*/) {
 			&& dominates(edge->target(), bb)) {
 				LOOP_HEADER(edge->target()) = true;
 				BACK_EDGE(edge) = true;
-				break;
 			}
 	}
 }
