@@ -597,6 +597,10 @@ bool System::solve(void) {
 		val = rint(get_objective(lp));
 	}
 	
+	// !!DEBUG!!
+	else
+		cerr << "\tfailed due to " << fail << io::endl;
+	
 	// Clean up
 	delete_lp(lp);
 	return result;
