@@ -9,6 +9,9 @@
 
 #include <otawa/prog/Process.h>
 
+struct dwarf_line_map_t;
+struct gel_file_info_t;
+
 namespace otawa {
 	
 namespace loader { namespace new_gliss {
@@ -37,7 +40,11 @@ public:
 	virtual void get(Address at, Address& val);
 	virtual void get(Address at, string& str);
 	virtual void get(Address at, char *buf, int size);
-
+	virtual Option<Pair<cstring, int> > getSourceLine(Address addr)
+		throw (UnsupportedFeatureException);
+	virtual void getAddresses(cstring file, int line,
+		Vector<Pair<Address, Address> >& addresses)
+		throw (UnsupportedFeatureException);
 	
 protected:
 	friend class Segment;
@@ -46,6 +53,7 @@ protected:
 	virtual void *memory(void) = 0;
 	
 public:
+	void setup(void);
 	Inst *_start; 
 	hard::Platform *_platform;
 	void *_state;
@@ -53,6 +61,9 @@ public:
 	int argc;
 	char **argv, **envp;
 	bool no_stack;
+	bool init;
+	struct dwarf_line_map_t *map;
+	struct gel_file_info_t *file;
 };
 
 } } } // otawa::loader::new_gliss
