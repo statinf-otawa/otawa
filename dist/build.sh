@@ -281,7 +281,7 @@ function check_tool {
 	#echo "$program -> $version"
 	say "Checking $program for version $version"
 	which $program > /dev/null || failed "not found";
-	cversion=`$program --version | head -1 |  sed -e 's/.* \([0-9]\+.[0-9]\+.[0-9]\+\).*/\1/'`
+	cversion=`$program --version | head -1 |  sed -e 's/[^0-9]\+ \([0-9]\+.[0-9]\+.[0-9]\+\).*/\1/'`
 	major=${version%%.*}
 	cmajor=${cversion%%.*}
 	minor=${version#*.}
