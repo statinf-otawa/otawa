@@ -240,18 +240,18 @@ bool WorkSpace::hasFeatDep(const AbstractFeature* feature) {
  * @param feature	Provided feature.
  */
 void WorkSpace::provide(const AbstractFeature& feature, const Vector<const AbstractFeature*> *required) {
-	if(!isProvided(feature)) {
-		ASSERT(!hasFeatDep(&feature));					
-		newFeatDep(&feature);
-		
-		if (required != NULL) {
-			for (int j = 0; j < required->length(); j++) {
-				if (isProvided(*required->get(j))) {
-					getDependency(required->get(j))->addChild(getDependency(&feature));
-				}
-			}
-		}
-	}
+	if(isProvided(feature))
+		return;
+	
+	// record the providing of the feature
+	ASSERT(!hasFeatDep(&feature));
+	newFeatDep(&feature);
+	
+	// add dependencies
+	if (required != NULL)
+		for (int j = 0; j < required->count(); j++)
+			if(required->get(j) != &feature && isProvided(*required->get(j)))
+				getDependency(required->get(j))->addChild(getDependency(&feature));
 }
 
 /**
