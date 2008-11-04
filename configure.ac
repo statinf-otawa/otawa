@@ -325,6 +325,7 @@ AC_CONFIG_FILES([
 	examples/piconsens/Makefile
 	include/Makefile
 	include/otawa/Makefile
+	include/otawa/app/Makefile
 	include/otawa/ast/Makefile
 	include/otawa/cache/Makefile
 	include/otawa/cache/categorisation/Makefile
