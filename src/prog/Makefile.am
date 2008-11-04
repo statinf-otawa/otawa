@@ -20,6 +20,7 @@ libotawa_la_SOURCES = \
 	Edge.cpp \
 	PCGBlock.cpp\
 	PCGBuilder.cpp\
+	app_Application.cpp \
 	ilp_Var.cpp \
 	ilp_Constraint.cpp \
 	ilp_System.cpp \
