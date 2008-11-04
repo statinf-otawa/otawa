@@ -1,5 +1,6 @@
 # Sub-directories
 SUBDIRS= \
+	app \
 	ast \
 	cache \
 	cfg \
