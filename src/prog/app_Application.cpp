@@ -162,6 +162,7 @@ void Application::prepare(PropList& props) {
 /**
  * @fn void Application::work(void);
  * This method must overriden to implement the action of the application.
+ * @throw	elm::Exception	For any found error.
  */
 
 

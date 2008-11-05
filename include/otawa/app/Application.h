@@ -45,7 +45,7 @@ public:
 
 protected:
 	virtual void prepare(PropList& props);	
-	virtual void work(void) = 0;
+	virtual void work(void) throw(elm::Exception) = 0;
 
 	inline WorkSpace *workspace(void) const { return ws; }
 	inline void require(AbstractFeature&  feature) { ws->require(feature, props); }
