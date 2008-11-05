@@ -85,8 +85,8 @@ Application::Application(
 ):
 	help(*this, 'h', "help", "display this help", false),
 	verbose(*this, 'v', "verbose", "verbose display of the process", false),
-	ws(0),
-	result(0)
+	result(0),
+	ws(0)
 {
 	program = _program;
 	version = _version;
