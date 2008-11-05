@@ -205,7 +205,7 @@ class ExeInst {
      hard::RegBank * reg_bank;
      elm::genstruct::AllocatedTable<N *> *table;
    } rename_table_t;
-   GenGraph<N, /*typename ExeGraph<N>::*/ExeEdge> _graph;
+   GenGraph<N, ExeEdge> _graph;
  public:
    inline ExeGraph()  {
      StringBuffer _buffer[CODE_PARTS_NUMBER];
@@ -328,7 +328,6 @@ class ExeInst {
 	   fu_stage->deleteNodes();
      }
    }
-   //int bb_num = -1;
    int nb_inst = 0;
    for (InstIterator inst(sequence) ; inst ; inst++) {
      inst->deleteNodes();
@@ -399,8 +398,6 @@ class ExeInst {
 
    setEntryNode(sequence->first()->firstNode());
    bool trace = false;
-   /*   if ((sequence->length() == 9)) */
-   /*     trace = true; */
 
    // build edges for pipeline order and data dependencies
    for (InstIterator inst(sequence) ; inst ; inst++)  {
@@ -408,7 +405,7 @@ class ExeInst {
      for (InstNodeIterator node (inst) ; node ; node++) {
        if (previous != NULL) {
 	 // edge between consecutive pipeline stages
-	 /*ExeEdge *edge = */new ExeEdge(previous, node, ExeEdge::SOLID);
+	 new ExeEdge(previous, node, ExeEdge::SOLID);
 	 if (trace)
 	   elm::cout << "SOLID edge between " << previous->name() << " and " << node->name() << " (pipeline order)\n";
        }
@@ -424,7 +421,6 @@ class ExeInst {
 		 // check whether there is already an edge between the two nodes
 		 bool exists = false;
 		 for (Predecessor pred(node) ; pred ; pred++) {
-		   // !!WARNING!! modified by casse
 		   if (pred == producing_node) {
 		     exists = true;
 		     break;
@@ -434,7 +430,7 @@ class ExeInst {
 		   // add an edge for data dependency
 		   if (trace)
 		     elm::cout << "SOLID edge between " << producing_node->name() << " and " << node->name() << " (data dependency)\n";
-		   /*ExeEdge *edge =*/ new ExeEdge(producing_node, node, ExeEdge::SOLID);
+		   new ExeEdge(producing_node, node, ExeEdge::SOLID);
 		 }
 	       }
 	     }
@@ -461,14 +457,14 @@ class ExeInst {
    for (PipelineIterator stage(microprocessor) ; stage ; stage++) {
      if (stage->orderPolicy() == PipelineStage<N>::IN_ORDER) {
        if (microprocessor->operandReadingStage() == stage)
-	 in_order = true; // ------------- FIXME = PAS BEAU
+	 in_order = true; 
        if (stage->width() == 1) {
 	 // scalar stage
 	 N * previous = NULL;
 	 for (StageNodeIterator node(stage) ; node ; node++) {
 	   if (previous != NULL) {				  
 	     // scalar stage => draw a solid edge
-	     /*ExeEdge * edge =*/ new ExeEdge(previous, node, ExeEdge::SOLID);
+	     new ExeEdge(previous, node, ExeEdge::SOLID);
 	     if (trace)
 	       elm::cout << "SOLID edge between " << previous->name() << " and " << node->name() << " (program order)\n";
 	   }
@@ -486,12 +482,12 @@ class ExeInst {
 	       }
 	       else {
 		 if (node->inst()->inst()->address().address() != previous->inst()->inst()->address().address() + 4)
-		   /*ExeEdge *edge =*/ new ExeEdge(previous, node, ExeEdge::SOLID);
+		   new ExeEdge(previous, node, ExeEdge::SOLID);
 		 else {
 		   if (node->inst()->inst()->address().address() % (stage->width()*4) == 0) 
-		     /*ExeEdge *edge =*/ new ExeEdge(previous, node, ExeEdge::SOLID);
+		     new ExeEdge(previous, node, ExeEdge::SOLID);
 		   else
-		     /*ExeEdge *edge =*/ new ExeEdge(previous, node, ExeEdge::SLASHED);
+		     new ExeEdge(previous, node, ExeEdge::SLASHED);
 		 }
 	       }
 	     }
@@ -505,13 +501,13 @@ class ExeInst {
 	     for (StageNodeIterator node(stage) ; node ; node++) {			
 	       // superscalar => draw a slashed edge between adjacent instructions	    
 	       if(previous){
-		 /*ExeEdge *edge =*/ new ExeEdge(previous, node, ExeEdge::SLASHED);
+		 new ExeEdge(previous, node, ExeEdge::SLASHED);
 		 if (trace)
 		   elm::cout << "SLASHED edge between " << previous->name() << " and " << node->name() << " (stage width)\n";
 	       }
 	       // draw a solid edge to model the stage width 
 	       if (previous_nodes.count() == stage->width()) {
-		 /*ExeEdge *edge =*/ new ExeEdge(previous_nodes.first(), node, ExeEdge::SOLID);
+		 new ExeEdge(previous_nodes.first(), node, ExeEdge::SOLID);
 		 if (trace)
 		   elm::cout << "SOLID edge between " << previous_nodes.first()->name() << " and " << node->name() << " (stage width)\n";
 		 previous_nodes.removeFirst();	
@@ -527,13 +523,13 @@ class ExeInst {
 	       N * previous = NULL;
 	       for (StageNodeIterator node(fu_stage) ; node ; node++) {
 		 if(previous) {
-		   /*ExeEdge *edge =*/ new ExeEdge(previous, node, ExeEdge::SLASHED);
+		   new ExeEdge(previous, node, ExeEdge::SLASHED);
 		   if (trace)
 		     elm::cout << "SLASHED edge between " << previous->name() << " and " << node->name() << " (stage width)\n";
 		 }
 		 // draw a solid edge to model the stage width 
 		 if (previous_nodes.count() == fu_stage->width()) {
-		   /*ExeEdge *edge =*/ new ExeEdge(previous_nodes.first(), node, ExeEdge::SOLID);
+		   new ExeEdge(previous_nodes.first(), node, ExeEdge::SOLID);
 		   if (trace)
 		     elm::cout << "SOLID edge between " << previous_nodes.first()->name() << " and " << node->name() << " (stage width)\n";
 		   previous_nodes.removeFirst();	
@@ -553,10 +549,10 @@ class ExeInst {
 	   N * previous_load = NULL;
 	   N * previous_store = NULL;
 	   for (StageNodeIterator node(fu_stage) ; node ; node++) {			
-	     if (node->inst()->inst()->isMem()) { // PAS BO = FIXME
+	     if (node->inst()->inst()->isMem()) { 
 	       if (node->inst()->inst()->isLoad()) {
 		 if (previous_store) {// memory access are executed in order  
-		   /*ExeEdge * edge =*/ new ExeEdge(previous_store, node, ExeEdge::SLASHED);
+		   new ExeEdge(previous_store, node, ExeEdge::SLASHED);
 		   if (trace)
 		     elm::cout << "SLASHED edge between " << previous_store->name() << " and " << node->name() << " (load after store)\n";
 		 }
@@ -564,12 +560,12 @@ class ExeInst {
 	       }
 	       if (node->inst()->inst()->isStore()) {
 		 if (previous_store) {// memory access are executed in order
-		   /*ExeEdge * edge =*/ new ExeEdge(previous_store, node, ExeEdge::SLASHED);
+		   new ExeEdge(previous_store, node, ExeEdge::SLASHED);
 		   if (trace)
 		     elm::cout << "SLASHED edge between " << previous_store->name() << " and " << node->name() << " (store after store)\n";
 		 }
 		 if (previous_load) {// memory access are executed in order
-		   /*ExeEdge * edge =*/ new ExeEdge(previous_load, node, ExeEdge::SLASHED);
+		   new ExeEdge(previous_load, node, ExeEdge::SLASHED);
 		   if (trace)
 		     elm::cout << "SLASHED edge between " << previous_load->name() << " and " << node->name() << " (store after load)\n";
 		 }
@@ -586,7 +582,7 @@ class ExeInst {
 	 for (InstNodeIterator node (inst) ; node ; node++) {
 	   if (node->needsOperands()) {
 	     if (previous) {
-	       /*ExeEdge *edge =*/ new ExeEdge(previous, node, ExeEdge::SLASHED);
+	       new ExeEdge(previous, node, ExeEdge::SLASHED);
 	       if (trace)
 		 elm::cout << "SLASHED edge between " << previous->name() << " and " << node->name() << " (program order)\n";
 	     }
@@ -612,7 +608,7 @@ class ExeInst {
 	 int index = node->inst()->index() + stage->sourceQueue()->size();
 	 for (StageNodeIterator waiting_node(prod_stage) ; waiting_node ; waiting_node++) {
 	   if (waiting_node->inst()->index() == index) {
-	     /*ExeEdge *edge =*/ new ExeEdge(node, waiting_node, ExeEdge::SLASHED);
+	     new ExeEdge(node, waiting_node, ExeEdge::SLASHED);
 	     break;
 	   }
 	 }
@@ -634,7 +630,6 @@ class ExeInst {
        else {
 	 for(FunctionalUnitIterator fu(stage); fu; fu++) {
 	   PipelineStage<N> *fu_stage = fu->firstStage();
-	   //N * previous_mem = NULL;
 	   for (StageNodeIterator node1(fu_stage) ; node1 ; node1++) {
 	     for (StageNodeIterator node2(fu_stage) ; node2 ; node2++) {
 	       if ((N*)node1 != (N*)node2) 
