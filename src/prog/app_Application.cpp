@@ -138,7 +138,7 @@ int Application::run(int argc, char **argv) {
 		displayHelp();
 		result = 1;
 	}
-	catch(otawa::Exception& e) {
+	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << io::endl;
 		result = 1;
 	}
@@ -160,10 +160,25 @@ void Application::prepare(PropList& props) {
 
 
 /**
- * @fn void Application::work(void);
  * This method must overriden to implement the action of the application.
+ * As a default, it call the work(string) method for each free argument on a command line
+ * (supposed to be a task entry).
  * @throw	elm::Exception	For any found error.
  */
+void Application::work(void) throw(elm::Exception) {
+	for(int i = 0; i < entries.count(); i++)
+		work(entries[i]);
+}
+
+
+/**
+ * This method must be overriden to give a special behaviour for each free argument
+ * of the command line (supposed to be the tasks entry points). As a default, do nothing.
+ * @param entry				Task entry point name or any free argument.
+ * @throw elm::Exception	For any found error.
+ */
+void Application::work(const string& entry) throw(elm::Exception) {
+}
 
 
 /**
