@@ -104,11 +104,7 @@ private:
 // DecodingException class
 class DecodingException: public elm::MessageException {
 public:
-	inline DecodingException(const string& message): MessageException(message) { }
- 	virtual String message(void) { return msg; }
- 
-private:
-	string msg; 
+	DecodingException(const string& message);
 };
 
 
