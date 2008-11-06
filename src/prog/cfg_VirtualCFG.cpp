@@ -95,6 +95,7 @@ BasicBlock *exit) {
 	assert(cfg);
 	assert(entry);
 	assert(exit);
+	DEPRECATED
 	//cout << "Virtualizing " << cfg->label() << "(" << cfg->address() << ")\n";
 	
 	// Prepare data
