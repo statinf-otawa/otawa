@@ -120,13 +120,6 @@ public:
 	virtual Inst *execute(Inst *oinst) {
 		ASSERTP(oinst, "null instruction pointer");
 		
-		/*cerr << "r1=" << (void *)_state->gpr[1] << ", ";
-		cerr << "r3=" << (void *)_state->gpr[3] << ", ";
-		cerr << "r4=" << (void *)_state->gpr[4] << ", ";
-		cerr << "r29=" << (void *)_state->gpr[29] << ", ";
-		cerr << "r30=" << (void *)_state->gpr[30] << ", ";
-		cerr << "r31=" << (void *)_state->gpr[31] << io::endl;*/
-		
 		Address addr = oinst->address();
 		code_t buffer[20];
 		instruction_t *inst;
@@ -165,47 +158,6 @@ public:
 	virtual otawa::SimState *newState(void) {
 		return new SimState(this, (state_t *)state());
 	}
-	/*virtual File *loadFile(cstring name) {
-		File *res = otawa::loader::new_gliss::Process::loadFile(name);
-		
-		// !!DEBUG!!
-		Address sp = ((state_t *)state())->gpr[1];
-		Address top = Address(0x80000000);
-		while(sp < top) {
-			cout << sp << '\t';
-			for(int i = 0; i < 8; i++) {
-				unsigned char byte;
-				get(sp + i, byte);
-				cout << io::right(io::pad('0', io::width(2, io::hex(byte))));
-			}
-			cout << '\t';
-			for(int i = 0; i < 8; i++) {
-				unsigned char byte;
-				get(sp + i, byte);
-				if(byte < 32 || byte >= 128)
-					cout << '.';
-				else
-					cout << (char)byte;
-			}
-			cout << io::endl;
-			sp += 8;
-		}
-		cout << "r1 = " << (void *)(((state_t *)state())->gpr[1]) << io::endl;
-		cout << "r3 = " << (void *)(((state_t *)state())->gpr[3]) << io::endl;
-		cout << "r4 = " << (void *)(((state_t *)state())->gpr[4]) << io::endl;
-		cout << "r5 = " << (void *)(((state_t *)state())->gpr[5]) << io::endl;
-		cout << "r6 = " << (void *)(((state_t *)state())->gpr[6]) << io::endl;
-		
-		// !!DEBUG!!
-		sp = ((state_t *)state())->gpr[1];
-		unsigned long v;
-		get(sp, v);
-		((state_t *)state())->gpr[3] = v;
-		((state_t *)state())->gpr[4] = sp + 4;		
-		
-		return res;
-	}*/
-	
 protected:
 	virtual otawa::Inst *decode(address_t addr);
 	virtual void *gelFile(void) {
@@ -350,18 +302,12 @@ Process::Process(
 ): otawa::loader::new_gliss::Process(manager, pf, props) {
 	provide(CONTROL_DECODING_FEATURE);
 	provide(REGISTER_USAGE_FEATURE);
-	/*if(Processor::VERBOSE(props)) {
-		cerr << "PPC: sizeof(Inst) = " << sizeof(Inst) << io::endl;
-		cerr << "PPC: sizeof(BranchInst) = " << sizeof(BranchInst) << io::endl;
-	}*/
 }
 
 
 /**
  */
 otawa::Inst *Process::decode(address_t addr) {
-	//cerr << "!! " << io::hex(iss_mem_read8_little(((state_t *)state())->M, 0x1006c680)) << io::endl;
-	//cerr << "!! " << io::hex(iss_mem_read8_little(((state_t *)state())->M, 0x1006c670)) << io::endl;
 	
 	// Decode the instruction
 	code_t buffer[20];
@@ -371,7 +317,7 @@ otawa::Inst *Process::decode(address_t addr) {
 	inst = iss_decode((state_t *)state(), addr.address(), buffer);
 
 	// Build the instruction
-	otawa::Inst *result;	
+	otawa::Inst *result = 0;	
 	if(inst->ident == ID_Instrunknown) {
 		result = new Inst(*this, 0, addr);
 		TRACE("UNKNOWN !!!\n" << result);
@@ -404,17 +350,23 @@ otawa::Inst *Process::decode(address_t addr) {
 		case 8:		// BRANCH
 		case 10:	// SYSTEM
 		case 11:	// TRAP
-			//cerr << "A BRANCH !!!\n";
-			/*if(inst->ident == ID_BL_ && inst->instrinput[0].val.Int24 == 1) {
-				result = new Inst(*this, kind, addr);
-				break;
-			}*/
 			switch(inst->ident) {
 			case ID_BL_:
+				ASSERT(inst->instrinput[0].type == PARAM_INT24_T);
+				if(inst->instrinput[0].val.Int24 == 1) {
+					kind = Inst::IS_ALU | Inst::IS_INT;
+					goto simple;
+				}
 			case ID_BLA_:
 				kind |= Inst::IS_CALL;
 				break;
 			case ID_BCL_:
+				//ASSERT(inst->instrinput[2].type == PARAM_INT16_T);
+				if(inst->instrinput[2].val.Int16 == 1) {
+					kind = Inst::IS_ALU | Inst::IS_INT;
+					cerr << "INFO: no control at " << io::endl;
+					goto simple;
+				}
 			case ID_BCLA_:
 				kind |= Inst::IS_CALL | Inst::IS_COND;
 				break;
@@ -432,22 +384,19 @@ otawa::Inst *Process::decode(address_t addr) {
 					kind |= Inst::IS_COND;
 				break;
 			case ID_BCLR_:
-				if(inst->instrinput[0].val.Uint5 == 20
-				&& inst->instrinput[1].val.Uint5 == 0) {
-					kind |= Inst::IS_RETURN;
-					break;
-				}
 			case ID_BCLRL_:
-				kind |= Inst::IS_CALL;	// !!WARNING!! sometimes a return !
-				if(inst->instrinput[0].val.uint8 != 20
-				|| inst->instrinput[1].val.uint8 != 0)
+				kind |= Inst::IS_RETURN;
+				if((inst->instrinput[0].val.Uint5 & 0x14) != 0x14) // 0b1x1xx
 					kind |= Inst::IS_COND;
 				break;
 			}
-			result = new BranchInst(*this, kind, addr);
-			//cerr << "BRANCH " << result << " : " << io::hex(result->kind()) << io::endl;
+			if(!result) {
+				kind |= Inst::IS_CONTROL;
+				result = new BranchInst(*this, kind, addr);
+			}
 			break;
 		default:
+		simple:
 			result = new Inst(*this, kind, addr);
 			break;
 		}
