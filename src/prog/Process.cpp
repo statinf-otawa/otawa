@@ -785,4 +785,20 @@ Identifier<Address> AUXV_ADDRESS("otawa::auxv_address", Address::null);
  */
 Identifier<Address> SP_ADDRESS("otawa::sp_address", Address::null);
 
+
+/**
+ * @class DecodingException
+ * This exception is thrown by a loader to inform about problems during decoding.
+ */
+
+
+/**
+ * Build the exception with the given message.
+ * @param message	Message about the exception.
+ */
+DecodingException::DecodingException(const string& message):
+	MessageException(message)
+{
+}
+
 } // otawa
