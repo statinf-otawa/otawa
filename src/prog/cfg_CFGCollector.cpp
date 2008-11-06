@@ -34,19 +34,7 @@ static Identifier<bool> MARK("", false);
 /**
  * @class CFGCollection <otawa/cfg.h>
  * Contains a collection of CFGs (used with @ref INVOLVED_CFGS property).
- *
- * @par Configuration
- * @li @ref ENTRY_CFG: CFG of the entry of the current task,
- * @li @ref TASK_ENTRY: name if the entry function of the current task,
- * @li @ref RECURSIVE: collect CFG recursively.
- * @li @ref CFGCollector::ADDED_CFG: CFG to add to the collection.
- * @li @ref CFGCollector::ADDED_FUNCTION: function name to add to the collection.
- * 
- * @par Provided Features
- * @ref COLLECTED_CFG_FEATURE
- * 
- * @par Required Features
- * @li @ref CFG_INFO_FEATURE
+ * @see otawa::CFGCollector, otawa::INVOLVED_CFGS
  */
 
 
@@ -108,8 +96,23 @@ private:
 /**
  * @class CFGCollector
  * This processor is used to collect all CFG implied in a computation.
- * It uses the @ref ENTRY_CFG or @ref TASK_ENTRY properties to find
+ * It uses the @ref otawa::ENTRY_CFG or @ref otawa::TASK_ENTRY properties to find
  * the base CFG and explore in depth the CFG along subprograms calls.
+ *
+ * @par Configuration
+ * @li @ref ENTRY_CFG -- CFG of the entry of the current task,
+ * @li @ref TASK_ENTRY -- name if the entry function of the current task,
+ * @li @ref RECURSIVE -- collect CFG recursively.
+ * @li @ref CFGCollector::ADDED_CFG -- CFG to add to the collection.
+ * @li @ref CFGCollector::ADDED_FUNCTION -- function name to add to the collection.
+ * 
+ * @note @ref otawa::ENTRY_CFG is first looked on the @ref WorkSpace and then in the configuration properties.
+ * 
+ * @par Provided Features
+ * @ref COLLECTED_CFG_FEATURE
+ * 
+ * @par Required Features
+ * @li @ref CFG_INFO_FEATURE
  */
 
 
