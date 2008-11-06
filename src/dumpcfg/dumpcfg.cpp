@@ -1,19 +1,36 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	dumpcfg command implementation
  *
- *	src/dumpcfg/dumpcfg.cpp -- dumpcfg utility source.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2004-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <elm/io.h>
 #include <elm/genstruct/DLList.h>
 #include <elm/genstruct/SortedBinMap.h>
 #include <elm/genstruct/DLList.h>
 #include <elm/options.h>
+
+#include <otawa/app/Application.h>
 #include <otawa/manager.h>
+#include <otawa/cfg/CFGCollector.h>
+#include <otawa/cfg/Virtualizer.h>
+#include <otawa/cfg/CFGBuilder.h>
 
 #include "SimpleDisplayer.h"
 #include "DisassemblerDisplayer.h"
@@ -100,96 +117,99 @@ using namespace otawa;
  * @li -v -- verbose information about the work.
  */
 
-// Command class
-class Command: public option::Manager {
-	bool one;
-	otawa::Manager manager;
-	WorkSpace *fw;
-	CFGInfo *info;
-	void dump(CFG *cfg);
-	void dump(CString name);
-public:
-	Command(void);
-	~Command(void);
-	void run(int argc, char **argv);
-	
-	// Manager overload
-	virtual void 	process (String arg);
-};
-
-
 // Displayers
-static SimpleDisplayer simple_displayer;
-static DisassemblerDisplayer disassembler_displayer;
-static DotDisplayer dot_displayer;
-static Displayer *displayer = &simple_displayer;
+SimpleDisplayer simple_displayer;
+DisassemblerDisplayer disassembler_displayer;
+DotDisplayer dot_displayer;
 
 
-// Options
-static Command command;
-static option::BoolOption remove_eabi(command, 'r', "remove",
-	"Remove __eabi function call, if available.", false);
-static option::BoolOption all_functions(command, 'a', "all",
-	"Dump all functions.", false);
-static option::BoolOption inline_calls(command, 'i', "inline",
-	"Inline the function calls.", false);
-option::BoolOption display_assembly(command, 'd', "display",
-	"Display assembly instructions.", false);
-static option::BoolOption verbose(command, 'v', "verbose",
-	"activate verbose mode", false);
-
-// Simple output option
-class SimpleOption: public option::ActionOption {
+// DumpCFG class
+class DumpCFG: public Application {
 public:
-	inline SimpleOption(Command& command): option::ActionOption(command,
-	'S', "simple", "Select simple output (default).") {
-	}
-	virtual void perform(void) {
+	
+	DumpCFG(void);
+	
+	// options
+	option::BoolOption remove_eabi;
+	option::BoolOption all_functions;
+	option::BoolOption inline_calls;
+	option::BoolOption display_assembly;
+	//option::BoolOption verbose;
+	option::BoolOption simple;
+	option::BoolOption disassemble;
+	option::BoolOption dot;
+	Displayer *displayer;
+
+protected:
+	virtual void work(const string& entry) throw(elm::Exception) { dump(entry); }
+	virtual void prepare(PropList &props);
+	
+private:
+	void dump(CFG *cfg);
+	void dump(const string& name);
+
+};
+
+
+/**
+ */
+void DumpCFG::prepare(PropList &props) {
+	if(simple)
 		displayer = &simple_displayer;
-	};
-};
-static SimpleOption simple(command);
-
-
-// Disassemble output option
-class DisassembleOption: public option::ActionOption {
-public:
-	inline DisassembleOption(Command& command): option::ActionOption(command,
-	'L', "list", "Select listing output.") {
-	};
-	virtual void perform(void) {
+	else if(disassemble)
 		displayer = &disassembler_displayer;
-	};
-};
-static DisassembleOption disassemble(command);
-
-
-// Dot output option
-class DotOption: public option::ActionOption {
-public:
-	inline DotOption(Command& command): option::ActionOption(command,
-	'D', "dot", "Select DOT output.") {
-	};
-	virtual void perform(void) {
+	else if(dot)
 		displayer = &dot_displayer;
-	};
-};
-static DotOption dot(command);
+}
+
+
+/**
+ * Build the command.
+ */
+DumpCFG::DumpCFG(void):
+	Application(
+		"DumpCFG",
+		Version(0, 3),
+		"Dump to the standard output the CFG of functions."
+			"If no function name is given, the main function is dumped.",
+		"Hugues Casse <casse@irit.fr",
+		"Copyright (c) 2004-08, IRIT-UPS France"
+	),
+	
+	remove_eabi(*this, 'r', "remove", "Remove __eabi function call, if available.", false),
+	all_functions(*this, 'a', "all", "Dump all functions.", false),
+	inline_calls(*this, 'i', "inline", "Inline the function calls.", false),
+	display_assembly(*this, 'd', "display", "Display assembly instructions.", false),
+	//verbose(*this, 'v', "verbose", "activate verbose mode", false),
+	simple(*this, 'S', "simple", "Select simple output (default).", false),
+	disassemble(*this, 'L', "list", "Select listing output.", false),
+	dot(*this, 'D', "dot", "Select DOT output.", false),
+
+	displayer(&simple_displayer)
+{
+	free_argument_description = "[function names...]";
+}
 
 
 /**
  * Dump the CFG.
  * @param cfg	CFG to dump.
  */
-void Command::dump(CFG *cfg) {
+void DumpCFG::dump(CFG *cfg) {
 	CFG *current_inline = 0;
 
 	// Get the virtual CFG
-	VirtualCFG vcfg(cfg, inline_calls);
+	workspace()->invalidate(COLLECTED_CFG_FEATURE);
+	ENTRY_CFG(workspace()) = cfg;
+	require(VIRTUALIZED_CFG_FEATURE);
+	require(COLLECTED_CFG_FEATURE);
+	CFGCollection *coll = INVOLVED_CFGS(workspace());
+	CFG *vcfg = (*coll)[0];
 	
 	// Dump the CFG
+	displayer->display_assembly = display_assembly;
 	displayer->onCFGBegin(cfg);
-	for(CFG::BBIterator bb(&vcfg); bb; bb++) {
+	for(CFG::BBIterator bb(vcfg); bb; bb++) {
 		
 		// Looking for start of inline
 		for(BasicBlock::InIterator edge(bb); edge; edge++)
@@ -229,108 +249,16 @@ void Command::dump(CFG *cfg) {
 
 /**
  * Process the given CFG, that is, build the sorted list of BB in the CFG and then display it.
- * @param fw		Framework to use.
  * @param name	Name of the function to process.
  */
-void Command::dump(CString name) {
-	
-	// Get the CFG information
-	CFGInfo *info = fw->getCFGInfo();
-	
-	// Find label address
-	address_t addr = 0;
-	for(Process::FileIter file(fw->process()); file; file++) {
-		addr = file->findLabel(name);
-		if(addr)
-			break;
-	}
-	if(!addr) {
-		cerr << "ERROR: cannot find the label \"" << name << "\".\n";
-		return;
-	}
-		
-	// Find the matching CFG
-	Inst *inst = fw->findInstAt(addr);
-	if(!inst) {
-		cerr << "ERROR: label \"" << name << "\" does not match code.\n";
-		return;
-	}
-	CFG *cfg = info->findCFG(inst);
-	if(!cfg) {
-		cerr << "ERROR: label \"" << name
-			 << "\" does not match sub-program entry.\n";
-		return;
-	}
-	
-	// Output the CFG
+void DumpCFG::dump(const string& name) {
+	require(CFG_INFO_FEATURE);
+	CFGInfo *info = CFGInfo::ID(workspace());
+	ASSERT(info);
+	CFG *cfg = info->findCFG(name);
+	if(!cfg)
+		throw elm::MessageException(_ << "cannot find function named \"" << name << '"');
 	dump(cfg);
-}
-
-
-
-/**
- * Process the free arguments.
- * @param arg	Free param value.
- */
-void Command::process (String arg) {
-
-	// First free argument is binary path
-	if(!fw) {
-		PropList props;
-//		LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
-		NO_SYSTEM(props) = true;
-		fw = manager.load(arg.toCString(), props);
-		info = fw->getCFGInfo();
-	}
-	
-	// Process function names
-	else {
-		one = true;
-		dump(arg.toCString());
-	}
-}
-
-
-/**
- * Build the command.
- */
-Command::Command(void): one(false), fw(0) {
-	program = "DumpCFG";
-	version = "0.2";
-	author = "Hugues Cass�";
-	copyright = "Copyright (c) 2004, IRIT-UPS France";
-	description = "Dump to the standard output the CFG of functions."
-		"If no function name is given, the main function is dumped.";
-	free_argument_description = "[function names...]";
-}
-
-
-/**
- * Run the command.
- * @param argc	Argument count.
- * @param argv	Argument vector.
- */
-void Command::run(int argc, char **argv) {
-	parse(argc, argv);
-	if(!fw) {
-		throw option::OptionException("no binary file given.");
-	}
-	if(all_functions) {
-		CFGInfo *info = fw->getCFGInfo();
-		for(CFGInfo::Iter cfg(info); cfg; cfg++)
-			if(cfg->label())
-				dump(cfg);
-	}
-	else if(!one)
-		process("main");
-}
-
-
-/**
- * Release all command ressources.
- */
-Command::~Command(void) {
-	delete fw;
 }
 
 
@@ -341,17 +269,6 @@ Command::~Command(void) {
  * @return		0 for success, >0 for error.
  */
 int main(int argc, char **argv) {
-	try {
-		command.run(argc, argv);
-		return 0;
-	}
-	catch(option::OptionException& e) {
-		cerr << "ERROR: " << e.message() << io::endl;
-		command.displayHelp();
-		return 1;
-	}
-	catch(elm::Exception& e) {
-		cerr << "ERROR: " << e.message() << '\n';
-		return 2;
-	}
+	DumpCFG dump;
+	return dump.run(argc, argv);
 }
