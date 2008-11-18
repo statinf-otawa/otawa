@@ -23,6 +23,7 @@
 #include <otawa/cache/ccg/CCGBuilder.h>
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
+#include <otawa/cfg.h>
 
 using namespace elm;
 using namespace otawa;
