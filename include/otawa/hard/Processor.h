@@ -60,7 +60,8 @@ public:
 		FETCH,
 		LAZY,
 		EXEC,
-		COMMIT
+		COMMIT,
+		DECOMP
 	} type_t;
 private:
 	type_t type;
