@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2006, IRIT UPS.
+ *	Platform class interface
  *
- *	otawa/hard/Memory.h -- Memory class interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2008, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_HARD_MEMORY_H
 #define OTAWA_HARD_MEMORY_H
@@ -11,113 +26,174 @@
 #include <elm/genstruct/Table.h>
 #include <elm/string.h>
 #include <otawa/base.h>
+#include <elm/serial2/macros.h>
+#include <elm/serial2/collections.h>
+#include <elm/system/Path.h>
+#include <elm/genstruct/HashTable.h>
+#include <otawa/prog/Manager.h>
+
+namespace elm { namespace xom { class Element; } }
 
 namespace otawa { namespace hard {
 
-// Memory flags
-const int 	IO = 0x0001,
-			READABLE = 0x0002,
-			WRITABLE = 0x0004,
-			CACHEABLE = 0x0008;
+using namespace elm;
+using namespace elm::genstruct;
 
-// AddressSegment class
-class AddressSegment {
+// ModeTransition class
+class Mode;
+class ModeTransition {
+	SERIALIZABLE(ModeTransition,
+		field("latency", _latency) & field("power", _power) & field("dest", _dest));
 public:
+	inline ModeTransition(void): _latency(1), _power(0), _dest(0) { }
+	inline int latency(void) const { return _latency; }
+	inline int power(void) const { return _power; }
+	inline const Mode *dest(void) const { return _dest; }
+
 private:
-	int flags;
-	int rtime, wtime;
-	address_t addr;
-	size_t _size;
-public:
-	AddressSegment(address_t address, size_t size,
-		int flags = READABLE | CACHEABLE, int read_time = 10, int write_time = -1);
-	
-	// Accessors
-	inline address_t address(void) const;
-	inline size_t size(void) const;
-	inline bool isReadable(void) const;
-	inline bool isWritable(void) const;
-	inline bool isCacheable(void) const;
-	inline bool isIO(void) const;
-	inline int readTime(void) const;
-	inline int writeTime(void) const;
-	inline bool contains(address_t addr) const;
+	int _latency;
+	int _power;
+	const Mode *_dest;
 };
 
-// AddressSpace class
-class AddressSpace {
-	elm::CString _name;
-	elm::genstruct::Table<AddressSegment *> segs;
+
+// Mode class
+class Mode {
+	SERIALIZABLE(Mode,
+		field("name", _name)
+		& field("latency", _latency)
+		& field("static_power", _static_power)
+		& field("dynamic_power", _dynamic_power)
+		& field("transitions", _transitions));
+public:	
+	inline Mode(void): _name("no name"), _latency(1), _static_power(0), _dynamic_power(0) { }
+	inline const string& name(void) const { return _name; }
+	inline int latency(void) const { return _latency; }
+	inline int staticPower(void) const { return _static_power; }
+	inline int dynamicPower(void) const { return _dynamic_power; }
+	inline const Table<ModeTransition>& transitions(void) const { return _transitions; }
+
+private:
+	string _name;
+	int _latency;
+	int _static_power, _dynamic_power;
+	AllocatedTable<ModeTransition> _transitions;
+};
+
+// Bank class
+class Bus;
+class Bank {
 public:
-	AddressSpace(elm::CString name, AddressSegment *segments[]);
+	typedef enum type_t {
+		NONE = 0,
+		DRAM = 1,
+		SPM = 2,
+		ROM = 3,
+		IO = 4
+	} type_t;
+private:
+	SERIALIZABLE(Bank,
+		field("name", _name) &
+		field("address", _address) &
+		field("size", _size) &
+		field("type", _type) &
+		field("latency", _latency) &
+		field("power", _power) &
+		field("block_bits", _block_bits) &
+		field("modes", _modes) &
+		field("cached", _cached) &
+		field("on_chip", _on_chip) &
+		field("writable", _writable) &
+		field("port_num", _port_num) &
+		field("bus", _bus));
+public:
+	static Bank full;
+	Bank(void): _name("no name"), _size(0), _type(NONE), _latency(10),
+		_power(0), _block_bits(0), _cached(true), _on_chip(true),
+		_writable(true), _port_num(1), _bus(0) { }
+	Bank(cstring name, Address address, size_t size):
+		_name(name), _address(address), _size(size), _type(NONE), _latency(10),
+		_power(0), _block_bits(0), _cached(true), _on_chip(true),
+		_writable(true), _port_num(1), _bus(0) { }
 	
-	// Accessors
-	inline const elm::CString name(void) const;
-	inline const elm::genstruct::Table<AddressSegment *>& segments(void) const;
-	AddressSegment *segmentOf(address_t addr) const;
+	inline const string& name(void) const { return _name; }
+	inline const Address& address(void) const { return _address; }
+	inline const int size(void) const { return _size; }
+	inline type_t type(void) const { return _type; }
+	inline int latency(void) const { return _latency; }
+	inline int power(void) const { return _power; }
+	inline int blockBits(void) const { return _block_bits; }
+	inline int blockSize(void) const { return 1 << _block_bits; }
+	inline const Table<const Mode *>& modes(void) const { return _modes; }
+	inline bool isCached(void) const { return _cached; }
+	inline bool isOnChip(void) const { return _on_chip; }
+	inline bool isWritable(void) const { return _writable; }
+	inline int portNum(void) const { return _port_num; }
+	inline const Bus *bus(void) const { return _bus; }
+
+	inline Address topAddress(void) const { return address() + size(); }
+	inline bool contains(Address addr) const
+		{ return addr.page() == address().page() && addr >= address() && addr <= (topAddress() - 1); }
+private:
+	string _name;
+	Address _address;
+	int _size;
+	type_t _type;
+	int _latency, _power;
+	int _block_bits;
+	AllocatedTable<const Mode *> _modes;
+	bool _cached;
+	bool _on_chip;
+	bool _writable;
+	int _port_num;
+	const Bus *_bus;
+};
+
+
+// Bus class
+class Bus {
+public:
+	typedef enum type_t {
+		LOCAL = 0,
+		SHARED = 1
+	} type_t;
+private:
+	SERIALIZABLE(Bus, field("name", _name) & field("type", _type));
+public:
+	inline Bus(void): _name("no name"), _type(LOCAL) { }
+	inline const string& name(void) const { return _name; }
+	inline type_t type(void) const { return _type; }
+
+private:
+	string _name;
+	type_t _type;
 };
 
 
 // Memory class
 class Memory {
-	elm::genstruct::AllocatedTable<AddressSpace *> _spaces;
+private:
+	SERIALIZABLE(Memory, field("banks", _banks) & field("buses", _buses));
 public:
-	Memory(AddressSpace *space[]);
-	static Memory regular;
-	
-	// Accessors
-	inline const elm::genstruct::Table<AddressSpace *>& spaces(void) const;
-	AddressSpace *spaceOf(elm::CString name) const;
-	AddressSegment *segmentOf(elm::CString space, address_t addr) const;
+	static const Memory null, full;
+	Memory(bool full = false);
+	inline const Table<const Bank *>& banks(void) const { return _banks; }
+	inline const Table<const Bus *>& buses(void) const  { return _buses; }
+	static Memory *load(const elm::system::Path& path) throw(LoadException);
+	static Memory *load(xom::Element *element) throw(LoadException);
+	const Bank *get(Address address) const;
+private:
+	AllocatedTable<const Bank *> _banks;
+	AllocatedTable<const Bus *> _buses;
 };
 
-
-// AddressSegment inlines
-inline address_t AddressSegment::address(void) const {
-	return addr;
-}
-
-inline size_t AddressSegment::size(void) const {
-	return _size;
-}
-
-inline bool AddressSegment::isReadable(void) const {
-	return flags & READABLE;
-}
-
-inline bool AddressSegment::isWritable(void) const {
-	return flags & WRITABLE;
-}
-
-inline bool AddressSegment::isCacheable(void) const {
-	return flags & CACHEABLE;
-}
-
-inline bool AddressSegment::isIO(void) const {
-	return flags & IO;
-}
-
-inline int AddressSegment::readTime(void) const {
-	return rtime;
-}
-
-inline int AddressSegment::writeTime(void) const {
-	return wtime;
-}
-
-inline bool AddressSegment::contains(address_t address) const {
-	return address >= addr && address < addr + _size;
-}
-
-// AddressSpace inlines
-inline const elm::CString AddressSpace::name(void) const {
-	return _name;
-}
-
-inline const elm::genstruct::Table<AddressSegment *>& AddressSpace::segments(void) const {
-	return segs;
-}
-
 } } // otawa::hard
+
+ENUM(otawa::hard::Bus::type_t);
+ENUM(otawa::hard::Bank::type_t);
+namespace elm { namespace serial2 {
+	void __serialize(elm::serial2::Serializer &serializer, const otawa::Address& address);
+	void __unserialize(elm::serial2::Unserializer &serializer, otawa::Address& address);
+}}
 
 #endif // OTAWA_HARD_MEMORY_H_
