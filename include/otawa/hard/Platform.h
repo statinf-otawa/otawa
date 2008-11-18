@@ -3,7 +3,7 @@
  *	Platform class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-07, IRIT UPS.
+ *	Copyright (c) 2005-08, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
 #include <elm/system/Path.h>
 #include <otawa/properties.h>
 #include <otawa/hard/Register.h>
-//#include <elm/datastruct/Collection.h>
+#include <otawa/prog/Manager.h>
 
 // External classes
 namespace elm {
@@ -42,6 +42,7 @@ namespace hard {
 	
 // Extern Classes
 class CacheConfiguration;
+class Memory;
 class Processor;
 
 // Platform class
@@ -92,13 +93,12 @@ public:
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
 
 	// Cache information
-	inline const Identification& identification(void) const;
 	inline const CacheConfiguration& cache(void) const;
-	inline const int pipelineDepth(void) const;
 	void loadCacheConfig(const elm::system::Path& path);
 	void loadCacheConfig(elm::xom::Element *element);
 
-	// Compatibility test
+	// Identification
+	inline const Identification& identification(void) const;
 	virtual bool accept(const Identification& id);
 	inline bool accept(elm::CString name);
 	inline bool accept(const elm::String& name);
@@ -111,6 +111,12 @@ public:
 	void loadProcessor(const elm::system::Path& path);
 	void loadProcessor(elm::xom::Element *element);
 	inline const Processor *processor(void) const { return _processor; };
+	inline const int pipelineDepth(void) const;
+
+	// Memory information
+	inline const Memory& memory(void) const { return *_memory; }
+	void loadMemory(const elm::system::Path& path) throw(otawa::LoadException);
+	void loadMemory(elm::xom::Element *element) throw(otawa::LoadException); 
 
 protected:
 	friend class otawa::Manager;
@@ -119,12 +125,14 @@ protected:
 	void setBanks(const banks_t& banks);
 
 private:
-	static const unsigned long HAS_PROCESSOR = 0x00000001;
-	static const unsigned long HAS_CACHE = 0x00000002;
+	static const unsigned long HAS_PROCESSOR	= 0x00000001;
+	static const unsigned long HAS_CACHE		= 0x00000002;
+	static const unsigned long HAS_MEMORY		= 0x00000004;
 	unsigned long flags;
 	Identification id;
 	const CacheConfiguration *_cache;
 	Processor *_processor;
+	const Memory *_memory;
 	int depth;
 	int rcnt;
 	const banks_t *_banks;
