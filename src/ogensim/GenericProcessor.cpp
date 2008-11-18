@@ -1,5 +1,6 @@
 #include <otawa/gensim/GenericProcessor.h>
 #include <otawa/gensim/debug.h>
+#include <otawa/platform.h>
 
 namespace otawa { namespace gensim {
 

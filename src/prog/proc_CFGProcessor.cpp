@@ -22,6 +22,7 @@
 
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/cfg/CFGInfo.h>
+#include <otawa/cfg.h>
 #include <otawa/otawa.h>
 #include <otawa/cfg/CFGCollector.h>
 
