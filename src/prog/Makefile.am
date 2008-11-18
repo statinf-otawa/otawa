@@ -146,7 +146,8 @@ libotawa_la_SOURCES = \
 	loader_arm.cpp \
 	flowfact_ContextualLoopBound.cpp \
 	BBRatioDisplayer.cpp \
-	graph_PreorderIterator.cpp
+	graph_PreorderIterator.cpp \
+	hard_Memory.cpp
 
 	
 
