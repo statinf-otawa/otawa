@@ -3,7 +3,7 @@
  *	Platform class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-07, IRIT UPS.
+ *	Copyright (c) 2005-08, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -25,7 +25,9 @@
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/hard/Processor.h>
 #include <elm/serial2/XOMUnserializer.h>
+#include <elm/genstruct/Table.h>
 #include <otawa/prog/Manager.h>
+#include <otawa/hard/Memory.h>
 #include <elm/xom.h>
 
 namespace otawa { namespace hard {
@@ -103,6 +105,32 @@ void Platform::configure(const PropList& props) {
 			}
 		}
 	}
+	
+	// configure the memory
+	Memory *memory = MEMORY_OBJECT(props);
+	if(memory) {
+		_memory = memory;
+		flags &= ~HAS_MEMORY;
+	}
+	else {
+		xom::Element *element = MEMORY_ELEMENT(props);
+		if(element) 
+			loadMemory(element);
+		else {
+			elm::system::Path path = MEMORY_PATH(props);
+			if(path)
+				loadMemory(path);
+			else {
+				element = CONFIG_ELEMENT(props);
+				if(element) {
+					xom::Element *memory_elem = element->getFirstChildElement(
+						Manager::MEMORY_NAME, Manager::OTAWA_NS);
+					if(memory_elem)
+						loadMemory(memory_elem);
+				}
+			}
+		}
+	}
 }
 
 
@@ -116,6 +144,7 @@ Platform::Platform(const Platform::Identification& _id, const PropList& props)
 	id(_id),
 	_cache(&CacheConfiguration::NO_CACHE),
 	_processor(0),
+	_memory(&Memory::full),
 	depth(5),
 	rcnt(0),
 	_banks(&null_banks)
@@ -134,6 +163,7 @@ Platform::Platform(const Platform& platform, const PropList& props)
 	id(platform.identification()),
 	_cache(&platform.cache()),
 	_processor(0),
+	_memory(&platform.memory()),
 	depth(5),
 	rcnt(0),
 	_banks(&null_banks)
@@ -149,6 +179,8 @@ Platform::~Platform(void) {
 		delete _processor;
 	if(flags & HAS_CACHE)
 		delete _cache;
+	if(flags & HAS_MEMORY)
+		delete _memory;
 }
 
 
@@ -486,6 +518,34 @@ void Platform::loadCacheConfig(elm::xom::Element *element) {
 	catch(elm::Exception& e) {
 		throw LoadException(&e.message());
 	}
+}
+
+
+/**
+ * Load a memory configuration from the given path.
+ * @param path				Path to the memory configuration.
+ * @throws LoadException	Throws if there is an error.
+ */
+void Platform::loadMemory(const elm::system::Path& path) throw(LoadException) {
+	Memory *new_memory = Memory::load(path);
+	if(flags & HAS_MEMORY)
+		delete _memory;
+	flags |= HAS_MEMORY;
+	_memory = new_memory;
+}
+
+
+/**
+ * Load a memory configuration from an XML element.
+ * @param element	Element to read from.
+ * @throws LoadException	Thrown if there is an error.
+ */
+void Platform::loadMemory(elm::xom::Element *element) throw(LoadException) {
+	Memory *new_memory = Memory::load(element);
+	if(flags & HAS_MEMORY)
+		delete _memory;
+	flags |= HAS_MEMORY;
+	_memory = new_memory;
 }
 
 

@@ -28,6 +28,7 @@
 #include <gel/gel.h>
 #include <elm/xom.h>
 #include <otawa/sim/Simulator.h>
+#include <otawa/prog/Loader.h>
 
 using namespace elm;
 
@@ -66,6 +67,12 @@ const CString Manager::PROCESSOR_NAME = "processor";
  * Name of the XML element containing the cache configuration.
  */
 const CString Manager::CACHE_CONFIG_NAME = "cache-config";
+
+
+/**
+ * Name of the XML element containing the memory configuration.
+ */
+const CString Manager::MEMORY_NAME = "memory";
 
 
 /**
@@ -140,6 +147,9 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * @li @ref LOADER_NAME,
  * @li @ref NO_STACK,
  * @li @ref NO_SYSTEM,
+ * @li @ref MEMORY_ELEMENT
+ * @li @ref MEMORY_OBJECT
+ * @li @ref MEMORY_PATH
  * @li @ref PIPELINE_DEPTH,
  * @li @ref PLATFORM,
  * @li @ref PLATFORM_NAME,
@@ -501,6 +511,26 @@ Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("otawa::cache_config_elemen
  * It is often used with the _exit function.
  */
 Identifier<string> NO_RETURN_FUNCTION("otawa::no_return_function", "");
+
+
+/**
+ * Passed to Manager::load() to give the path of the file describing the memory.
+ */
+Identifier<elm::system::Path> MEMORY_PATH("otawa::MEMORY_PATH", "");
+
+
+/**
+ * Passed to manager::load() to give the XML element describing the memory configuration.
+ * This property is often used with an XML file containing different configurations.
+ */
+Identifier<elm::xom::Element *> MEMORY_ELEMENT("otawa::MEMORY_ELEMENT", 0);
+
+
+/**
+ * Passed to manager::load() to set the memory configuration.
+ * The user is responsible of the release of the memory occipied by the memory object.
+ */
+Identifier<hard::Memory *> MEMORY_OBJECT("otawa::MEMORY_OBJECT", 0);
 
 
 /**
