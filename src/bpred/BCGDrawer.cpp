@@ -20,6 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include "BCGDrawer.h"
+#include <otawa/cfg.h>
 #include <otawa/display/Driver.h>
 #include <otawa/display/graphviz.h>
 #include <elm/genstruct/HashTable.h>

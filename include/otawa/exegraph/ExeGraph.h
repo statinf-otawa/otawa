@@ -31,6 +31,7 @@
 #include <otawa/otawa.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/graph/PreorderIterator.h>
+#include <otawa/cfg.h>
 
 namespace otawa { 
 

@@ -25,6 +25,7 @@
 #include <otawa/otawa.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/otawa.h>
+#include <otawa/cfg.h>
 
 class BBHGNode;
 class BBHGEdge;
