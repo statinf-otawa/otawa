@@ -28,11 +28,10 @@
 #include <elm/system/Plugger.h>
 #include <otawa/properties.h>
 #include <otawa/base.h>
-#include <otawa/platform.h>
 #include <otawa/program.h>
-#include <otawa/cfg.h>
+//#include <otawa/cfg.h>
 #include <otawa/prog/WorkSpace.h>
-#include <otawa/prog/Loader.h>
+//#include <otawa/prog/Loader.h>
 
 namespace otawa {
 
@@ -40,12 +39,16 @@ using namespace elm;
 
 // Classes
 class File;
+class Loader;
 class Manager;
 namespace ilp {
 	class System;
 }
 namespace sim {
 	class Simulator;
+}
+namespace hard {
+	class Memory;
 }
 
 // LoadException class
@@ -69,6 +72,7 @@ public:
 	static const CString OTAWA_NAME;
 	static const CString PROCESSOR_NAME;
 	static const CString CACHE_CONFIG_NAME;
+	static const CString MEMORY_NAME;
 
 	Manager(void);
 	~Manager(void);
@@ -89,7 +93,6 @@ extern Identifier<hard::Platform *> PLATFORM;
 extern Identifier<Loader *> LOADER;
 extern Identifier<elm::CString> PLATFORM_NAME;
 extern Identifier<elm::CString>  LOADER_NAME;
-//extern GenericIdentifier<hard::Platform::Identification *> PLATFORM_IDENTIFIER;
 extern Identifier<int> ARGC;
 extern Identifier<char **> ARGV;
 extern Identifier<char **> ENVP;
@@ -98,15 +101,22 @@ extern Identifier<elm::CString> SIMULATOR_NAME;
 extern Identifier<int> PIPELINE_DEPTH;
 extern Identifier<bool> NO_SYSTEM;
 extern Identifier<bool> NO_STACK;
+extern Identifier<string> NO_RETURN_FUNCTION;
+
 extern Identifier<elm::system::Path> CONFIG_PATH;
 extern Identifier<elm::xom::Element *> CONFIG_ELEMENT;
+
 extern Identifier<elm::system::Path> CACHE_CONFIG_PATH;
 extern Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT;
 extern Identifier<hard::CacheConfiguration *> CACHE_CONFIG;
+
+extern Identifier<elm::system::Path> MEMORY_PATH;
+extern Identifier<elm::xom::Element *> MEMORY_ELEMENT;
+extern Identifier<hard::Memory *> MEMORY_OBJECT;
+
 extern Identifier<elm::system::Path> PROCESSOR_PATH;
 extern Identifier<elm::xom::Element *> PROCESSOR_ELEMENT;
 extern Identifier<hard::Processor *> PROCESSOR;
-extern Identifier<string> NO_RETURN_FUNCTION;
 
 } // otawa
 
