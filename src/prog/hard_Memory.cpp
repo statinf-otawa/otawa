@@ -1,12 +1,27 @@
 /*
  *	$Id$
- *	Copyright (c) 2006, IRIT UPS.
+ *	Platform class implementation
  *
- *	src/prog/hard_Memory.h -- Memory class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2008, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/util/VarArg.h>
 #include <otawa/hard/Memory.h>
+#include <elm/serial2/XOMUnserializer.h>
 
 using namespace elm;
 using namespace elm::genstruct;
@@ -14,212 +29,415 @@ using namespace elm::genstruct;
 namespace otawa { namespace hard {
 
 /**
- * @class AddressSegment
- * This class represents a range of addresses in an address space that shares
- * common features.
+ * @class ModeTransition
+ * Representation of a memory bank transition.
+ * @author H. Cassé <casse@irit.fr>
+ * @ingroup hard
  */
 
 
 /**
- * Build a new address segment.
- * @param address	Base address of the segement.
- * @param size		Size of the segment (in bytes).
- * @param flags		Some flags for accessing the segement (combination of
- * 					IO, READABLE, WRITABLE and CACHEABLE). As default, it is
- * 					readable and cacheable.
- * @param read_time		Read time in the segment in cycles (default 10).
- * @param write_time	Write time in the segement in cycles (default equal to
- * 						read time).
- */
-AddressSegment::AddressSegment(address_t address, size_t size, int _flags,
-int read_time, int write_time): addr(address), _size(size), flags(_flags),
-rtime(read_time), wtime(write_time < 0 ? read_time : write_time) {
-	assert(read_time >= 0);
-}
-
-
-/**
- * @fn address_t AddressSegment::address(void) const;
- * Get the base address of the segment.
- * @return Segment base address.
+ * @fn ModeTransition::ModeTransition(void);
+ * Build a default transition mode with :
+ * @li latency to 1,
+ * @li power to 0,
+ * @li no destination mode.
  */
 
 
 /**
- * @fn size_t AddressSegment::size(void) const;
- * Get the size of the segment.
- * @return Segment size.
+ * @fn int ModeTransition::latency(void) const;
+ * Get the latency of the transition.
+ * @return Transition latency (in cyles).
  */
 
 
 /**
- * @fn bool AddressSegment::isReadable(void) const;
- * Test if the segement is readable.
- * @return True if the segment is readable, false else.
+ * @fn int ModeTransition::power(void) const;
+ * Get the power consumed by the transition.
+ * @return	Consumed power.
  */
 
 
 /**
- * @fn bool AddressSegment::isWritable(void) const;
- * Test if the segement is writable.
- * @return True if the segment is writable, false else.
+ * @fn const Mode *ModeTransition::dest(void) const;
+ * Get the destination mode of the transition.
+ * @return	Destination mode.
  */
 
 
 /**
- * @fn bool AddressSegment::isCacheable(void) const;
- * Test if the segement is cacheable.
- * @return True if the segment is cacheable, false else.
+ * @class Mode
+ * A working mode for the hardware memory.
+ * @author H. Cassé <casse@irit.fr>
+ * @ingroup hard
  */
 
 
 /**
- * @fn bool AddressSegment::isIO(void) const;
- * Test if the segement is mapped to input/output registers.
- * @return True if the segment is mapped to I/O, false else.
+ * @fn Mode::Mode(void);
+ * Constructor with default initialization:
+ * @li no name,
+ * @li latency to 1 cycle,
+ * @li static power to 0,
+ * @li dynamic power to 0,
+ * @li no transition available.
  */
 
 
 /**
- * @fn int AddressSegment::readTime(void) const;
- * Get the read time in cycle for this segement.
- * @return	Read time in cycles.
+ * @fn const string& Mode::name(void) const;
+ * Get the mode name.
+ * @return Mode name.
  */
 
 
 /**
- * @fn int AddressSegment::writeTime(void) const;
- * Get the write time in cycle for this segement.
- * @return	Write time in cycles.
+ * @fn int Mode::latency(void) const;
+ * Get the latency to access the memory in this mode.
+ * @return	Access latency (in cycles).
  */
 
 
 /**
- * @fn bool AddressSegment::contains(address_t address) const;
- * Test if an address is contained in the segement.
- * @param address	Address to check.
- * @return			True if it is contained, false else.
+ * @fn int Mode::staticPower(void) const;
+ * Get the static power consumed by this memory.
+ * @return	Static power.
  */
 
 
 /**
- * @class AddressSpace
- * This class represents a full address space composed by different segements
- * with differents features.
- * @par
- * Many processor have a unique address space, we call it generally "main".
- * Processors with seperated address space for IO, x86 family for example, may
- * have another one called "io". There are some processors that separates code
- * and data in two address space (AVR family for example). In this case, two
- * address spaces are provided and may be named "code" and "data".
+ * @fn int Mode::dynamicPower(void) const;
+ * Get the dynamic power consumed by this memory.
+ * @return	Dynamic power.
  */
 
 
 /**
- * Build an address space from its name and a list of address segments.
- * @param name		Address space name.
- * @param segments	Null-ended table of address segment pointers.
- */
-AddressSpace::AddressSpace(elm::CString name, AddressSegment *segments[])
-: _name(name) {
-	int cnt = 0;
-	while(segments[cnt])
-		cnt++;
-	segs = Table<AddressSegment *>(segments, cnt);
-}
-
-
-/**
- * @fn const elm::CString AddressSpace::name(void) const;
- * Get the name of the address space.
- * @return Address space name.
+ * @fn const Table<ModeTransition>& Mode::transitions(void) const;
+ * Get the mode transition table (may be empty).
+ * @return	Mode transition table.
  */
 
 
 /**
- * @fn const elm::genstruct::Table<AddressSegment *>& AddressSpace::segments(void) const;
- * Get the space segments.
- * @return	Space segements.
+ * @class Bus
+ * A bus that tie together several memory banks.
+ * @author H. Cassé <casse@irit.fr>
+ * @ingroup hard
  */
 
 
 /**
- * Get a segment containing the given address.
- * @param addr	Address to look for.
- * @return		Container segment or null if none matches.
+ * @typedef Bus::type_t
+ * Type of used bus. Either @ref otawa::hard::Bus::LOCAL for an in-chip bus
+ * or @ref otawa::hard::Bus::SHARED for a bus by different active parts.
  */
-AddressSegment *AddressSpace::segmentOf(address_t addr) const {
-	for(int i = 0; i < segs.count(); i++)
-		if(segs[i]->contains(addr))
-			return segs[i];
-	return 0;
-}
+
+
+/**
+ * @fn Bus::Bus(void);
+ * Default bus building:
+ * @li no name,
+ * @li the type is @ref Bus::LOCAL.
+ */
+
+
+/**
+ * @class Bank
+ * A bank in the memory. Usually, objects of this class map real hardware chip but some
+ * memory segments may grouped or separated according their characteristics.
+ * @author H. Cassé <casse@irit.fr>
+ * @ingroup hard
+ */
+
+
+/**
+ * The full covering all page one memory.
+ */
+Bank Bank::full("DRAM", 0, 0);
+
+
+/**
+ * @typedef Bank::type_t
+ * This type represents the type of banks:
+ * @li Bank::NONE -- null type,
+ * @li Bank::DRAM -- dynamic RAM,
+ * @li Bank::SPM -- ScratchPad memory,
+ * @li Bank::ROM -- Read-Only memory,
+ * @li Bank::IO -- input/output register area.
+ */
+
+
+/**
+ * @fn Bank::Bank(void)
+ *default constructor for a bank:
+ * @li no name,
+ * @li size to 0 bytes,
+ * @li no type,
+ * @li latency to one cycle,
+ * @li no power consumed,
+ * @li 0 block bits,
+ * @li cached,
+ * @li on chip,
+ * @li writable,
+ * @li 1 port number,
+ * @li no tied bus.
+ */
+
+
+/**
+ * Full bank, covering all address range of page 0.
+ */
+static Bank full("RAM", 0, 0);
+
+
+/**
+ * @fn const string& Bank::name(void) const;
+ * Get the name of the bank.
+ * @return Bank name.
+ */
+
+
+/**
+ * @fn const Address& Bank::address(void) const;
+ * Get the base address of the bank.
+ * @return	Base address.
+ */
+
+
+/**
+ * @fn const int Bank::size(void) const;
+ * Get the size of the bank.
+ * @return	Bank size (in bytes).
+ */
+
+
+/**
+ * @fn type_t Bank::type(void) const;
+ * Get the type of the bank.
+ * @return	Bank type.
+ */
+
+
+/**
+ * @fn int Bank::latency(void) const;
+ * Get the default latency for accessing this bank.
+ * @return	Default latency (in cycle).
+ */
+
+
+/**
+ * @fn int Bank::power(void) const;
+ * Get the default power for accessing this bank.
+ * @return	Default power.
+ */
+
+
+/**
+ * @fn int Bank::blockBits(void) const;
+ * Get the number of bits in the block size of the bank.
+ * @return	Default bits per block (0 if there is no blocking).
+ */
+
+
+/**
+ * @fn int Bank::blockSize(void) const;
+ * Get the block size of this bank.
+ * @return	Block size (in bytes, 0 if the bank is not blocked).
+ */
+
+
+/**
+ * @fn const Table<const Mode *>& Bank::modes(void);
+ * Get the mode transition table of the bank. The first mode is the default mode.
+ * @return	Mode transition table.
+ */
+
+
+/**
+ * @fn bool Bank::isCached(void) const;
+ * Test if the bank is cached.
+ * @return	True if the bank is cached, false else.
+ */
+
+
+/**
+ * @fn bool Bank::isOnChip(void) const;
+ * Test if the bank is on the same chip than the processor.
+ * @return	True if it is on the same chip, false else.
+ */
+
+
+/**
+ * @fn bool Bank::isWritable(void) const;
+ * Test if the bank is writable.
+ * @return	True if the bank is writable, false else.
+ */
+
+
+/**
+ * @fn int Bank::portNum(void) const;
+ * Get the number of port on the bank bus.
+ * @return	Number of ports.
+ */
+
+
+/**
+ * @fn const Bus *Bank::bus(void) const;
+ * Get the bus of the bank.
+ * @return	Bank bus.
+ */
+
+
+/**
+ * @fn Address Bank::topAddress(void) const;
+ * Get the top successor address of the bank, that is, bank address + bank size.
+ * @return	Bank top address.
+ */
+
+
+/**
+ * @fn bool Bank::contains(Address addr) const;
+ * Test if the address is contained in the bank.
+ * @return	True if the address is in the bank, false else.
+ */
 
 
 /**
  * @class Memory
- * This class represents the full description of a memory of a platform.
- */
- 
-
-/**
- * Build a memory.
- * @param spaces	Null-ended table of address spaces.
- */
-Memory::Memory(AddressSpace *spaces[]) {
-	int cnt = 0;
-	while(spaces[cnt])
-		cnt++;
-	_spaces = Table<AddressSpace *>(spaces, cnt);
-}
-
-
-/* regular data */
-static AddressSegment regular_seg(0, 0xffffffff, READABLE | WRITABLE | CACHEABLE);
-static AddressSegment *regular_segs[] = { &regular_seg, 0 };
-static AddressSpace regular_space("main", regular_segs);
-static AddressSpace *regular_spaces[] = { &regular_space, 0 };
-
-
-/**
- * This simple memory provides a unique address space containing a unique
- * segement readable, writable and cacheable.
- */
-Memory Memory::regular(regular_spaces);
-	
-/*
- * @fn const elm::genstruct::Table<AddressSpace *>& spaces(void) const;
- * Return the address spaces in this memory.
- * @return	Address spaces.
+ * Class to represent the whole memory of the platform.
+ * @author H. Cassé <casse@irit.fr>
+ * @ingroup hard
  */
 
 
 /**
- * Return the space matching the given name.
- * @param name	Looked space name.
- * @return		Matching address space or null if not found.
+ * @fn const Table<const Bank *>& Memory::banks(void) const;
+ * Get the list of banks in memory.
+ * @return	List of memory banks.
  */
-AddressSpace *Memory::spaceOf(elm::CString name) const {
-	for(int i = 0; i < _spaces.count(); i++)
-		if(_spaces[i]->name() == name)
-			return _spaces[i];
+
+
+/**
+ * @fn const Table<const Bus *>& Memory::buses(void) const;
+ * Get the list of buses connected to memory banks.
+ * @return	List of memory buses.
+ */
+
+
+/**
+ * Default null memory.
+ */
+const Memory Memory::null;
+
+
+/**
+ * Full memory: all memory is occupied by big RAM bank.
+ */
+const Memory Memory::full(true);
+
+
+/**
+ * Get the bank matching the given address.
+ * @param address	Address to find bank for.
+ * @return			Found bank or null.
+ */
+const Bank *Memory::get(Address address) const {
+	for(int i = 0; i < _banks.count(); i++)
+		if(_banks[i]->contains(address))
+			return _banks[i];
 	return 0;
 }
 
 
 /**
- * Find the segment in the named address space mathcing the given address.
- * @param space	Space to look in.
- * @param name	Address to look for.
- * @return Matching segment or null.
+ * Load a memory configuration from the given element.
+ * @param element	Element to load from.
+ * @return			Built cache configuration.
  */
-AddressSegment *Memory::segmentOf(elm::CString name, address_t addr) const {
-	AddressSpace *space = spaceOf(name);
-	if(!space)
-		return 0;
-	else
-		return space->segmentOf(addr);
+Memory *Memory::load(elm::xom::Element *element) throw(LoadException) {
+	elm::serial2::XOMUnserializer unserializer(element);
+	Memory *conf = new Memory();
+	try {
+		unserializer >> *conf;
+		return conf;
+	}
+	catch(elm::Exception& exn) {
+		delete conf;
+		throw LoadException(_ << "cannot load the memory configuration:" << exn.message());
+	}
+}
+
+
+/**
+ * Load a memory configuration from an XML file.
+ * @param path	Path to the file.
+ * @return		Built cache configuration.
+ */
+Memory *Memory::load(const elm::system::Path& path) throw(LoadException) {
+	elm::serial2::XOMUnserializer unserializer(&path);
+	Memory *conf = new Memory();
+	try {
+		unserializer >> *conf;
+		return conf;
+	}
+	catch(elm::Exception& exn) {
+		delete conf;
+		throw LoadException(_ << "cannot load the memory configuration from \"" << path << "\": " << exn.message());
+	}
+}
+
+
+/**
+ * Memory constructor.
+ */
+Memory::Memory(bool full) {
+	if(full) {
+		_banks.allocate(1);
+		_banks[0] = &Bank::full;
+	}
 }
 
 } } // otawa::hard
 
+SERIALIZE(otawa::hard::ModeTransition);
+SERIALIZE(otawa::hard::Mode);
+SERIALIZE(otawa::hard::Bus);
+SERIALIZE(otawa::hard::Bank);
+SERIALIZE(otawa::hard::Memory);
+
+ENUM_BEGIN(otawa::hard::Bus::type_t)
+	VALUE(otawa::hard::Bus::LOCAL),
+	VALUE(otawa::hard::Bus::SHARED)
+ENUM_END
+
+ENUM_BEGIN(otawa::hard::Bank::type_t)
+		VALUE(otawa::hard::Bank::NONE),
+		VALUE(otawa::hard::Bank::DRAM),
+		VALUE(otawa::hard::Bank::SPM),
+		VALUE(otawa::hard::Bank::ROM),
+		VALUE(otawa::hard::Bank::IO)
+ENUM_END
+
+namespace elm { namespace serial2 {
+	static serial2::Class<otawa::Address> _class("otawa::Address");
+
+	void __serialize(elm::serial2::Serializer &serializer, const otawa::Address& address) {
+		serializer.beginObject(_class, &address);
+		otawa::Address::page_t page = address.page();
+		otawa::Address::offset_t offset = address.offset();
+		serializer & field("page", page) & field("offset", offset);
+		serializer.endObject();
+	}
+
+	void __unserialize(serial2::Unserializer &serializer, otawa::Address& address) {
+		serializer.beginObject(_class, &address);
+		otawa::Address::page_t page = 0;
+		otawa::Address::offset_t offset = 0;
+		serializer & field("page", page) & field("offset", offset);
+		serializer.endObject();
+		address = otawa::Address(page, offset);
+	}
+
+} }
