@@ -33,6 +33,7 @@ const Level L7(7);
 const Level L8(8); 
 const Level L9(9); 
 
+NullStream null_stream;
 }
 
 
