@@ -49,6 +49,13 @@ public:
 	int _level;
 };
 
+class NullStream: public elm::io::OutStream {
+ virtual int write (const char *buffer, int size) { return 0;}
+ int flush (void) { }
+ };
+
+extern NullStream null_stream;
+
 class Trace : public elm::io::Output {
 	int _level;
 	elm::String _module_name;
@@ -57,14 +64,14 @@ class Trace : public elm::io::Output {
 public:
 	Trace (elm::io::OutStream& stream, int level, elm::String module_name)
 	: _level(level), _module_name(module_name), _stream(stream) {
-#ifdef OTAWA_TRACE
+#ifndef OTAWA_NOTRACE
 		setStream(_stream);
 #else
 		setStream(elm::io::OutStream::null);
 #endif
 	}
 	inline void checkLevel(int level) {
-#ifdef OTAWA_TRACE
+#ifndef OTAWA_NOTRACE
 		if (level <= _level)
 			setStream(_stream);
 		else
