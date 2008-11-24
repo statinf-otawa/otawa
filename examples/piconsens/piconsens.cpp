@@ -327,7 +327,7 @@ void Command::run(void) {
 	GenericSimulator sim;
 	PropList props;
 	SIMULATOR(props) = &sim;
-	DEGREE(props) = degree;
+	//DEGREE(props) = degree;
 	PROCESSOR_PATH(props) = proc.value();
 	fw = manager.load(&file, props);
 	
