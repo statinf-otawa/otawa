@@ -12,9 +12,10 @@ libogensim_la_SOURCES = \
 	FullSimulationDriver.cpp \
 	GenericProcessor.cpp \
 	GenericSimulator.cpp \
+	GenericState.cpp \
 	InstructionQueue.cpp \
 	LazyStage.cpp \
 	Memory.cpp \
 	MemoryDriver.cpp \
 	PipelineStage.cpp \
-	GenericState.cpp
+	SimulatedInstruction.cpp

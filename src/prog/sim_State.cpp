@@ -1,11 +1,28 @@
 /*
  *	$Id$
- *	Copyright (c) 2006, IRIT-UPS <casse@irit.fr>.
+ *	State class implementation
  *
- *	prog/sim_State.cpp -- State class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/sim/State.h>
+#include <otawa/sim/features.h>
+#include <otawa/prog/Process.h>
 
 namespace otawa { namespace sim {
 
@@ -63,5 +80,66 @@ State::~State(void) {
  * @fn void State::reset(void);
  * Reset the cycle counter.
  */
+
+
+/**
+ * @fn Process *State::process(void);
+ * Get the process where the simulator is running in.
+ * @return	Current process.
+ */
+
+
+/**
+ * Get the lower read address of the last executed instruction.
+ * @return	Lower read address.
+ */
+Address State::lowerRead(void) {
+		throw UnsupportedFeatureException(process(), MEMORY_ACCESSES);
+}
+
+
+/**
+ * Get the upper read address of the last executed instruction.
+ * @return	Upper read address.
+ */
+Address State::upperRead(void) {
+		throw UnsupportedFeatureException(process(), MEMORY_ACCESSES);
+}
+
+
+/**
+ * Get the lower written address of the last executed instruction.
+ * @return	Lower written address.
+ */
+Address State::lowerWrite(void) {
+		throw UnsupportedFeatureException(process(), MEMORY_ACCESSES);
+}
+
+
+/**
+ * Get the upper written address of the last executed instruction.
+ * @return	Lower written address.
+ */
+Address State::upperWrite(void) {
+		throw UnsupportedFeatureException(process(), MEMORY_ACCESSES);
+}
+
+
+static SilentFeature::Maker<NoProcessor> maker;
+/**
+ * This feature, put on a process, informs that the functionnal simulator
+ * provides the ability to give information about meory accesses.
+ * 
+ * @par Hooks
+ * @li @ref Process
+ * 
+ * @par Activated Methods
+ * @li @ref otawa::sim::State::lowerRead()
+ * @li @ref otawa::sim::State::upperRead()
+ * @li @ref otawa::sim::State::lowerWrite()
+ * @li @ref otawa::sim::State::upperWrite()
+ */
+SilentFeature MEMORY_ACCESSES("otawa::sim::MEMORY_ACCESSES", maker);
+
 
 } } // otawa::sim
