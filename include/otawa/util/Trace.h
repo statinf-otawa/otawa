@@ -51,7 +51,7 @@ public:
 
 class NullStream: public elm::io::OutStream {
  virtual int write (const char *buffer, int size) { return 0;}
- int flush (void) { }
+ int flush (void) { return 0; }
  };
 
 extern NullStream null_stream;
