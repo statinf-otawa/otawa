@@ -94,62 +94,22 @@ public:
 		for (elm::genstruct::SLList<SimulationStats *>::Iterator stat(stats); stat; stat++)
 			stat->reset();
 	}
+	
+	void resetProc(void);
 
 	// State overload
-	virtual State *clone(void) {
-		return new GenericState(*this);
-	}
-	virtual void run(sim::Driver& driver) {
-		this->driver = &driver;
-		if(!icache_driver)
-			this->icache_driver = &(sim::CacheDriver::ALWAYS_HIT);
-		running = true;
-		while (running)
-			step();
-	}
+	virtual State *clone(void);
+	virtual void run(sim::Driver& driver);
 	virtual void run(sim::Driver& driver, sim::CacheDriver* icache_driver,
-			sim::CacheDriver* dcache_driver, sim::MemoryDriver *mem_driver) {
-		this->driver = &driver;
-		if (!icache_driver) {
-		  if (ICACHE(this))
-		    this->icache_driver = ICACHE(this);
-		  else
-		    this->icache_driver = &(sim::CacheDriver::ALWAYS_MISS);
-		}
-		else
-		  this->icache_driver = icache_driver;
-		if (!dcache_driver){
-		  if (DCACHE(this))
-		    this->dcache_driver = DCACHE(this);
-		  else
-		    this->dcache_driver = &(sim::CacheDriver::ALWAYS_MISS);
-		}
-		else
-			this->dcache_driver = dcache_driver;
-		if (!mem_driver)
-			this->mem_driver = &(sim::MemoryDriver::ALWAYS_DATA_CACHE);
-		else
-			this->mem_driver = mem_driver;
-		running = true;
-		while (running)
-			step();
-	}
-	virtual void stop(void) {
-		running = false;
-	}
-	virtual void flush(void) {
-	}
-	virtual int cycle(void) {
-		return _cycle;
-	}
-	virtual void reset(void) {
-		_cycle = 0;
-	}
-	void resetProc(void);
+			sim::CacheDriver* dcache_driver, sim::MemoryDriver *mem_driver);
+	virtual void stop(void);
+	virtual void flush(void);
+	virtual int cycle(void);
+	virtual void reset(void);
+	virtual Process *process(void);
 };
 
-}
-} // otawa::gensim
+} } // otawa::gensim
 
 
 #endif // OTAWA_GENSIM_GENERIC_STATE_H

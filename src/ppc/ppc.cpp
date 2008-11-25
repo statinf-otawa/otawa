@@ -31,6 +31,7 @@
 #include <otawa/proc/Processor.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <elm/genstruct/SortedSLList.h>
+#include <otawa/sim/features.h>
 #define ISS_DISASM
 #include <emul.h>
 #include <iss_include.h>
@@ -46,6 +47,12 @@ extern "C" gel_file_t *loader_file(memory_t* memory);
 
 // Trace for switch parsing
 #define STRACE(m)	//cerr << m << io::endl
+
+// External memory accesses
+extern uint32_t Mem_Base_Read_First;
+extern uint32_t Mem_Base_Write_First;
+extern uint32_t Mem_Base_Read_Last;
+extern uint32_t Mem_Base_Write_Last;
 
 // Kind Table
 static unsigned long kinds[] = {
@@ -108,9 +115,6 @@ public:
 		: otawa::SimState(process) {
 		ASSERT(process);
 		ASSERT(state);
-		/* !!DEBUG!!
-		 * _state = new state_t;
-		*_state = *state; */
 		_state = state;
 	}
 	virtual ~SimState(void) {
@@ -139,6 +143,13 @@ public:
 		ASSERTP(next, "cannot find instruction at " << (void *)NIA(_state) << " from " << oinst->address());
 		return next; 
 	}
+	
+	// memory accesses
+	virtual Address lowerRead(void) { return Mem_Base_Read_First; }
+	virtual Address upperRead(void) { return Mem_Base_Read_Last; }
+	virtual Address lowerWrite(void) { return Mem_Base_Write_First; }
+	virtual Address upperWrite(void) { return Mem_Base_Write_Last; }
+
 private:
 	state_t *_state;
 };
@@ -302,6 +313,7 @@ Process::Process(
 ): otawa::loader::new_gliss::Process(manager, pf, props) {
 	provide(CONTROL_DECODING_FEATURE);
 	provide(REGISTER_USAGE_FEATURE);
+	provide(sim::MEMORY_ACCESSES);
 }
 
 
