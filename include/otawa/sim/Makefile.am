@@ -5,6 +5,7 @@ includeotawasim_HEADERS = \
 	BBPathDriver.h \
 	CacheDriver.h \
 	Driver.h \
+	features.h \
 	State.h \
 	Simulator.h \
 	TrivialSimulator.h
