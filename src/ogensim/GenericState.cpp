@@ -4,8 +4,7 @@
 #include <otawa/gensim/Memory.h>
 #include <otawa/gensim/GenericState.h>
 
-namespace otawa {
-namespace gensim {
+namespace otawa { namespace gensim {
 
 Identifier<sim::CacheDriver*> ICACHE("otawa::gensim::icache",NULL);
 Identifier<sim::CacheDriver*> DCACHE("otawa::gensim::dcache",NULL);
@@ -99,5 +98,90 @@ Identifier<sim::CacheDriver*> DCACHE("otawa::gensim::dcache",NULL);
 //   return(NULL);
 // }
 
+
+/**
+ */
+sim::State *GenericState::clone(void) {
+	return new GenericState(*this);
 }
+
+
+/**
+ */
+void GenericState::run(sim::Driver& driver) {
+	this->driver = &driver;
+	if(!icache_driver)
+		this->icache_driver = &(sim::CacheDriver::ALWAYS_HIT);
+	running = true;
+	while (running)
+		step();
 }
+
+
+/**
+ */
+void GenericState::run(sim::Driver& driver, sim::CacheDriver* icache_driver,
+		sim::CacheDriver* dcache_driver, sim::MemoryDriver *mem_driver) {
+	// !!NOTE!! This method is not mandatory if we use properties : to remove. 
+	this->driver = &driver;
+	if (!icache_driver) {
+	  if (ICACHE(this))
+	    this->icache_driver = ICACHE(this);
+	  else
+	    this->icache_driver = &(sim::CacheDriver::ALWAYS_MISS);
+	}
+	else
+	  this->icache_driver = icache_driver;
+	if (!dcache_driver){
+	  if (DCACHE(this))
+	    this->dcache_driver = DCACHE(this);
+	  else
+	    this->dcache_driver = &(sim::CacheDriver::ALWAYS_MISS);
+	}
+	else
+		this->dcache_driver = dcache_driver;
+	if (!mem_driver)
+		this->mem_driver = &(sim::MemoryDriver::ALWAYS_DATA_CACHE);
+	else
+		this->mem_driver = mem_driver;
+	running = true;
+	while (running)
+		step();
+}
+
+
+/**
+ */
+void GenericState::stop(void) {
+	running = false;
+}
+
+
+/**
+ */
+void GenericState::flush(void) {
+}
+
+
+/**
+ */
+int GenericState::cycle(void) {
+	return _cycle;
+}
+
+
+/**
+ */
+void GenericState::reset(void) {
+	_cycle = 0;
+}
+
+
+/**
+ */
+Process *GenericState::process(void) {
+	return fw->process();
+}
+
+} } //otawa::sim
+
