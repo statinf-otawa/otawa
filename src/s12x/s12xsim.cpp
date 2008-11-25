@@ -86,6 +86,7 @@ public:
 	virtual void flush(void)  { }
 	virtual int cycle(void) { return _cycle; }
 	virtual void reset(void) { _cycle = 0; }
+	virtual otawa::Process *process(void) { return _ws->process(); }
 	
 private:
 	void interpretFull(Inst *inst);
