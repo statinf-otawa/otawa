@@ -26,13 +26,11 @@
 #include <otawa/hard/Register.h>
 #include <elm/genstruct/Table.h>
 
-extern unsigned long Mem_Base_Read_First;
-extern unsigned long Mem_Base_Write_First;
-extern unsigned long Mem_Base_Read_Last;
-extern unsigned long Mem_Base_Write_Last;
-
 namespace otawa {
 namespace gensim {
+
+// External class
+class GenericState;
 
 typedef enum {NONE, WAITING, READY, EXECUTING, EXECUTED, NOTIFIED}
 		simulated_instruction_state_t; // ordered set
@@ -86,16 +84,13 @@ private:
     source_instructions.remove(source_inst);
   }
 
- public:
-  inline SimulatedInstruction(otawa::Inst* inst, int index,
-			      elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions)
-    : active_instructions(_active_instructions), instruction(inst), instruction_state(READY), _index(index), 
-    Mem_Read_First(Mem_Base_Read_First), Mem_Read_Last(Mem_Base_Read_Last),
-    Mem_Write_First(Mem_Base_Write_First), Mem_Write_Last(Mem_Base_Write_Last) {
-      active_instructions->addLast(this);
-      _type = inst->kind();
-      _is_control = inst->isControl();
-    }
+public:
+	 SimulatedInstruction(
+		otawa::Inst* inst,
+		int index,
+		elm::genstruct::SLList<SimulatedInstruction *> * _active_instructions,
+		GenericState *state);
+
   inline ~SimulatedInstruction() {
     active_instructions->remove(this);
   }

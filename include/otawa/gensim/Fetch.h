@@ -118,7 +118,7 @@ namespace otawa {
 		 bool *ended, Trace *trace);
 
       inline void GetInstruction() {
-	_inst = new SimulatedInstruction(_next_inst, _inst_index++, active_instructions);
+	_inst = new SimulatedInstruction(_next_inst, _inst_index++, active_instructions, sim_state);
 	_inst->renameOperands(rename_tables);
 	fetched_instructions.addLast(_inst);
 	_nb_fetched++;
