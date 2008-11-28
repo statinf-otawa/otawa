@@ -217,6 +217,22 @@ namespace otawa {
 								rename_tables, conf->functionalUnitsList(), &(conf->fu_bindings), trace);
 	  pipeline_stages.addLast(execute_stage);
 	  execute_stage->in_clock(clock);
+	  sc_signal<address_t> * data_addr = new sc_signal<address_t>;
+	  memory->in_data_address(*data_addr);
+	  execute_stage->out_address(*data_addr);
+	  sc_signal<int> * data_size = new sc_signal<int>;
+	  memory->in_data_size(*data_size);
+	  execute_stage->out_size(*data_size);
+	  sc_signal<otawa::sim::CacheDriver::action_t> * data_access_type =
+	    new sc_signal<otawa::sim::CacheDriver::action_t>;
+	  memory->in_data_access_type(*data_access_type);
+	  execute_stage->out_access_type(*data_access_type);
+	  sc_signal<bool> * data_req = new sc_signal<bool>;
+	  memory->in_data_request(*data_req);
+	  execute_stage->out_request(*data_req);
+	  sc_signal<bool> * data_wait = new sc_signal<bool>;
+	  memory->out_data_wait(*data_wait);
+	  execute_stage->in_wait(*data_wait);
 	}
 	  break;
 
