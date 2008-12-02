@@ -42,4 +42,39 @@ Driver::~Driver(void) {
  * @param inst	Terminated instruction.
  */
 	
+/**
+ * Get the lower read address of the last executed instruction.
+ * @return	Lower read address.
+ */
+Address Driver::lowerRead(void) {
+		return Address::null;
+}
+
+
+/**
+ * Get the upper read address of the last executed instruction.
+ * @return	Upper read address.
+ */
+Address Driver::upperRead(void) {
+	return Address::null;
+}
+
+
+/**
+ * Get the lower written address of the last executed instruction.
+ * @return	Lower written address.
+ */
+Address Driver::lowerWrite(void) {
+	return Address::null;
+}
+
+
+/**
+ * Get the upper written address of the last executed instruction.
+ * @return	Lower written address.
+ */
+Address Driver::upperWrite(void) {
+	return Address::null;
+}
+
 } } // otawa::sim
