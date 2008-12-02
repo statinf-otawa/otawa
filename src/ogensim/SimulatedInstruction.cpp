@@ -34,10 +34,10 @@ SimulatedInstruction::SimulatedInstruction(
 	active_instructions(_active_instructions),
 	instruction(inst), instruction_state(READY),
 	_index(index), 
-	Mem_Read_First(state->lowerRead()),
-	Mem_Read_Last(state->upperRead()),
-	Mem_Write_First(state->lowerWrite()),
-	Mem_Write_Last(state->upperWrite())
+	Mem_Read_First(state->driver->lowerRead()),
+	Mem_Read_Last(state->driver->upperRead()),
+	Mem_Write_First(state->driver->lowerWrite()),
+	Mem_Write_Last(state->driver->upperWrite())
 {
 	active_instructions->addLast(this);
 	_type = inst->kind();

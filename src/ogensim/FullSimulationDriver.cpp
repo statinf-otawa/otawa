@@ -110,3 +110,26 @@ void FullSimulationDriver::terminateInstruction(State& state, Inst *inst)
 {
 }
 
+/**
+ */
+Address FullSimulationDriver::lowerRead(void) {
+	return emulator_state->lowerRead();
+}
+
+/**
+ */
+Address FullSimulationDriver::upperRead(void) {
+	return emulator_state->upperRead();
+}
+
+/**
+ */
+Address FullSimulationDriver::lowerWrite(void) {
+	return emulator_state->lowerWrite();
+}
+
+/**
+ */
+Address FullSimulationDriver::upperWrite(void) {
+	return emulator_state->upperWrite();
+}
