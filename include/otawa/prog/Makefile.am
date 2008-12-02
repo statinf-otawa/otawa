@@ -1,5 +1,6 @@
 includeotawaprogdir=$(includedir)/otawa/prog
 includeotawaprog_HEADERS = \
+	features.h \
 	File.h \
 	FixedTextDecoder.h \
 	FrameWork.h \

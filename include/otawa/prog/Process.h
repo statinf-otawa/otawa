@@ -29,6 +29,7 @@
 #include <otawa/instruction.h>
 #include <otawa/program.h>
 #include <otawa/proc/Feature.h>
+#include <otawa/prog/features.h>
 
 namespace elm { namespace xom {
 	class Element;
@@ -115,6 +116,12 @@ public:
 	virtual ~SimState(void);
 	inline Process *process(void) const { return proc; }
 	virtual Inst *execute(Inst *inst) = 0;
+	
+	// memory accesses
+	virtual Address lowerRead(void);
+	virtual Address upperRead(void);
+	virtual Address lowerWrite(void);
+	virtual Address upperWrite(void);
 
 private:
 	Process *proc;
@@ -197,21 +204,6 @@ public:
 
 // Process display
 elm::io::Output& operator<<(elm::io::Output& out, Process *proc); 
-
-
-// Process information
-extern Identifier<Address> ARGV_ADDRESS;
-extern Identifier<Address> ENVP_ADDRESS;
-extern Identifier<Address> AUXV_ADDRESS;
-extern Identifier<Address> SP_ADDRESS;
-
-// Features
-extern Feature<NoProcessor> MEMORY_ACCESS_FEATURE;
-extern Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE;
-extern Feature<NoProcessor> STACK_USAGE_FEATURE;
-extern Feature<NoProcessor> REGISTER_USAGE_FEATURE;
-extern Feature<NoProcessor> CONTROL_DECODING_FEATURE;
-extern Feature<NoProcessor> SOURCE_LINE_FEATURE;
 
 } // otawa
 
