@@ -331,7 +331,8 @@ CFG::~CFG(void) {
  * @return	First basic block.
  */
 BasicBlock *CFG::firstBB(void) {
-	ASSERT(_bbs.length() > 2);
+	if(!(flags & FLAG_Scanned))
+		scan();
 	return _bbs[1];
 }
 
