@@ -44,7 +44,7 @@ public:
 		virtual Processor *make(void) const { return new C(); }	
 	};
 
-	inline SilentFeature(cstring name, const AbstractMaker& maker): _maker(maker) { }
+	inline SilentFeature(cstring name, const AbstractMaker& maker): AbstractFeature(name), _maker(maker) { }
 	virtual void process(WorkSpace *fw, const PropList& props = PropList::EMPTY) const;
 	virtual void check(otawa::WorkSpace*) const { }
 	virtual void clean(otawa::WorkSpace*) const { }
