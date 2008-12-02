@@ -9,6 +9,7 @@
 #include <elm/io.h>
 #include <otawa/otawa.h>
 #include <otawa/util/Dominance.h>
+#include <otawa/cfg.h>
 
 using namespace otawa;
 using namespace elm;
@@ -17,7 +18,6 @@ int main(int argc, char **argv) {
 
 	Manager manager;
 	PropList props;
-//	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
 	try {
 		WorkSpace *fw = manager.load(argv[1], props);
 		
