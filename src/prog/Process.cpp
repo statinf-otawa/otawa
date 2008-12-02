@@ -75,6 +75,42 @@ SimState::~SimState(void) {
 
 
 /**
+ * Get the lower read address of the last executed instruction.
+ * @return	Lower read address.
+ */
+Address SimState::lowerRead(void) {
+		throw UnsupportedFeatureException(process(), MEMORY_ACCESSES);
+}
+
+
+/**
+ * Get the upper read address of the last executed instruction.
+ * @return	Upper read address.
+ */
+Address SimState::upperRead(void) {
+		throw UnsupportedFeatureException(process(), MEMORY_ACCESSES);
+}
+
+
+/**
+ * Get the lower written address of the last executed instruction.
+ * @return	Lower written address.
+ */
+Address SimState::lowerWrite(void) {
+		throw UnsupportedFeatureException(process(), MEMORY_ACCESSES);
+}
+
+
+/**
+ * Get the upper written address of the last executed instruction.
+ * @return	Lower written address.
+ */
+Address SimState::upperWrite(void) {
+		throw UnsupportedFeatureException(process(), MEMORY_ACCESSES);
+}
+
+
+/**
  * @class Process
  * A process is the realization of a program on a platform. It represents the
  * program and its implementation on the platform. A process may be formed
@@ -589,7 +625,7 @@ void Process::get(Address at, char *buf, int size) {
 /**
  */
 elm::io::Output& operator<<(elm::io::Output& out, Process *proc) {
-	out << "process(" << (void *)proc << ")";
+	out << "process";
 	File *file = proc->program();
 	if(file)
 		out << "[progam=\"" << file->name() << "\"]";
@@ -800,5 +836,22 @@ DecodingException::DecodingException(const string& message):
 	MessageException(message)
 {
 }
+
+
+static SilentFeature::Maker<NoProcessor> maker;
+/**
+ * This feature, put on a process, informs that the functionnal simulator
+ * provides the ability to give information about meory accesses.
+ * 
+ * @par Hooks
+ * @li @ref Process
+ * 
+ * @par Activated Methods
+ * @li @ref otawa::sim::State::lowerRead()
+ * @li @ref otawa::sim::State::upperRead()
+ * @li @ref otawa::sim::State::lowerWrite()
+ * @li @ref otawa::sim::State::upperWrite()
+ */
+SilentFeature MEMORY_ACCESSES("otawa::MEMORY_ACCESSES", maker);
 
 } // otawa
