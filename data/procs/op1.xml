@@ -84,6 +84,12 @@
 
 		</stage>
 		
+		<stage id="CM">
+			<name>CM</name>
+			<type>COMMIT</type>
+			<width>2</width>
+		</stage>
+
 	</stages>
 	
 	<queues>
@@ -97,7 +103,10 @@
 			<name>ISSUE_QUEUE</name>
 			<size>3</size>
 			<input ref="DI"/>
-			<output ref="EX"/>
+			<output ref="CM"/>
+			<intern>
+				<stage ref="EX"/>
+			</intern>
 		</queue>
 	</queues>
 	
