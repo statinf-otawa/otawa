@@ -313,7 +313,7 @@ Process::Process(
 ): otawa::loader::new_gliss::Process(manager, pf, props) {
 	provide(CONTROL_DECODING_FEATURE);
 	provide(REGISTER_USAGE_FEATURE);
-	provide(sim::MEMORY_ACCESSES);
+	provide(MEMORY_ACCESSES);
 }
 
 
