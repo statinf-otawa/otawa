@@ -41,12 +41,17 @@ class FullSimulationDriver : public Driver {
 	int cpt;
 public:
 	inline FullSimulationDriver(WorkSpace *_fw, address_t start);
+
 	// Driver overload
 	virtual Inst *nextInstruction(State& state, Inst *inst);
 	virtual void terminateInstruction(State& state, Inst *inst);
 	virtual void redirect(State &state, Inst * branch, bool direction);
 	virtual bool PredictBranch(State &state, Inst * branch, bool pred);
 	inline int simulationEnded();
+	virtual Address lowerRead(void);
+	virtual Address upperRead(void);
+	virtual Address lowerWrite(void);
+	virtual Address upperWrite(void);
 };
 
 // FullSimulationDriver inlines
