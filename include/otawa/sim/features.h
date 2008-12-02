@@ -22,11 +22,7 @@
 #ifndef OTAWA_SIM_FEATURES_H_
 #define OTAWA_SIM_FEATURES_H_
 
-#include <otawa/proc/SilentFeature.h>
-
 namespace otawa { namespace sim {
-
-extern SilentFeature MEMORY_ACCESSES;
 
 } } // otawa::sim
 

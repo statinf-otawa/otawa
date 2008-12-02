@@ -46,12 +46,6 @@ public:
 	virtual int cycle(void) = 0;
 	virtual void reset(void) = 0;
 	virtual Process *process(void) = 0;
-	
-	// memory accesses
-	virtual Address lowerRead(void);
-	virtual Address upperRead(void);
-	virtual Address lowerWrite(void);
-	virtual Address upperWrite(void);
 };
 
 } } // otawa::sim

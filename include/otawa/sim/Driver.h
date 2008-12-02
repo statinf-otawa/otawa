@@ -22,9 +22,19 @@ class State;
 // Driver class
 class Driver {
 public :
-	virtual ~Driver(void); 
+	virtual ~Driver(void);
+	
+	// control flow
 	virtual Inst *nextInstruction(State& state, Inst *inst) = 0;
 	virtual void terminateInstruction(State& state, Inst *inst) = 0;
+	
+	// memory accesses
+	virtual Address lowerRead(void);
+	virtual Address upperRead(void);
+	virtual Address lowerWrite(void);
+	virtual Address upperWrite(void);
+
+	// !!TODO!! remove them
 	virtual void redirect(State &state, Inst * branch, bool direction) {
 	};
 	virtual bool PredictBranch(State &state, Inst * branch, bool pred) {
