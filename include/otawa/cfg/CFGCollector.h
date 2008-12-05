@@ -1,38 +1,32 @@
 /*
  *	$Id$
- *	Copyright (c) 2006 IRIT - UPS.
+ *	CFGCollector processor interface
  *
- *	otawa/cfg/CollectCFG.h -- interface of CFGCollector class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_CFG_CFG_COLLECTOR_H
 #define OTAWA_CFG_CFG_COLLECTOR_H
 
-#include <elm/genstruct/FragTable.h>
 #include <elm/genstruct/Vector.h>
+#include <otawa/cfg/features.h>
 #include <otawa/proc/Processor.h>
-#include <otawa/proc/Feature.h>
 
 namespace otawa {
-
-// External Classes
-class CFG;
-
-// CFGCollection Class
-class CFGCollection {
-	friend class CFGCollector;
-	friend class LoopUnroller;
-	elm::genstruct::FragTable<CFG *> cfgs;
-public:
-	inline int count(void) const;
-	inline CFG *get(int index) const;
-	inline CFG *operator[](int index) const;
-	
-	class Iterator: public elm::genstruct::FragTable<CFG *>::Iterator {
-	public:
-		inline Iterator(const CFGCollection *cfgs);
-		inline Iterator(const CFGCollection& cfgs);
-	};
-};
 
 // CFGCollector Class
 class CFGCollector: public Processor {
@@ -54,36 +48,6 @@ private:
 	CFG *entry;
 	bool rec;
 };
-
-// Features
-extern Feature<CFGCollector> COLLECTED_CFG_FEATURE;
-
-// Properties
-extern Identifier<CFGCollection *> INVOLVED_CFGS;
-
-
-// CFGCollection Inlines
-inline int CFGCollection::count(void) const {
-	return cfgs.length();
-}
-
-inline CFG *CFGCollection::get(int index) const {
-	return cfgs[index];
-}
-
-inline CFG *CFGCollection::operator[](int index) const {
-	return cfgs[index];
-}
-
-
-// CFGCollection::Iterator Inlines	
-inline CFGCollection::Iterator::Iterator(const CFGCollection *cfgs)
-: elm::genstruct::FragTable<CFG *>::Iterator(cfgs->cfgs) {
-}
-
-inline CFGCollection::Iterator::Iterator(const CFGCollection& cfgs)
-: elm::genstruct::FragTable<CFG *>::Iterator(cfgs.cfgs) {
-}
 
 } // otawa
 

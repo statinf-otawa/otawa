@@ -23,18 +23,72 @@
 #define OTAWA_CFG_FEATURES_H_
 
 #include <otawa/proc/SilentFeature.h>
+#include <elm/genstruct/FragTable.h>
+
+namespace elm { namespace genstruct { template <class T> class Tree; } }
 
 namespace otawa {
 
 // Pre-declarations
+class BasicBlock;
+class CFG;
+class CFGCollector;
+class CFGInfo;
+class Edge;
+class LoopUnroller;
 namespace pfg { class PFG; class BB; }
+class SESERegion;
+typedef elm::genstruct::Tree<SESERegion*> PSTree;
 
-// Features
+// CFGCollection Class
+class CFGCollection {
+	friend class CFGCollector;
+	friend class LoopUnroller;
+	elm::genstruct::FragTable<CFG *> cfgs;
+public:
+	inline int count(void) const { return cfgs.length(); }
+	inline CFG *get(int index) const { return cfgs[index]; }
+	inline CFG *operator[](int index) const { return cfgs[index]; }
+	
+	class Iterator: public elm::genstruct::FragTable<CFG *>::Iterator {
+	public:
+		inline Iterator(const CFGCollection *cfgs)
+			: elm::genstruct::FragTable<CFG *>::Iterator(cfgs->cfgs) { }
+		inline Iterator(const CFGCollection& cfgs)
+			: elm::genstruct::FragTable<CFG *>::Iterator(cfgs.cfgs) { }
+	};
+};
+
+// PFG_FEATURE
 extern SilentFeature PFG_FEATURE;
-
-// Properties
 extern Identifier<pfg::PFG *> PFG;
 extern Identifier<pfg::BB *> PFG_BB;
+
+// COLLECTED_CFG_FEATURE
+extern SilentFeature COLLECTED_CFG_FEATURE;
+extern Identifier<CFGCollection *> INVOLVED_CFGS;
+
+// CFGInfoFeature
+extern SilentFeature CFG_INFO_FEATURE;
+extern Identifier<CFGInfo *> CFG_INFO;
+
+// REDUCED_LOOPS_FEATURE
+extern SilentFeature REDUCED_LOOPS_FEATURE;
+
+// UNROLLED_LOOPS_FEATURE
+extern SilentFeature UNROLLED_LOOPS_FEATURE;
+extern Identifier<BasicBlock*> UNROLLED_FROM;
+
+// PST_FEATURE
+extern SilentFeature PST_FEATURE;
+extern Identifier<BasicBlock*> FROM_BB;
+extern Identifier<Edge *> FROM_EDGE;
+extern Identifier<PSTree *> PROGRAM_STRUCTURE_TREE; 
+
+// VIRTUALIZED_CFG_FEATURE
+extern SilentFeature VIRTUALIZED_CFG_FEATURE;
+extern Identifier<bool> VIRTUAL_INLINING;
+extern Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK;
 
 } // otawa
 

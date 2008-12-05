@@ -29,7 +29,7 @@ class CFGInfo: public elm::Lock {
 	WorkSpace *fw;
 	genstruct::Vector<CFG *> _cfgs;
 public:
-	static Identifier<CFGInfo *> ID;
+	static Identifier<CFGInfo *>& ID;
 	
 	// Constructors
 	CFGInfo(WorkSpace *fw);
