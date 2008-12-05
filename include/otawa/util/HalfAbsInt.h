@@ -151,7 +151,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	}
 	
 	/* Loop header case: launch fixPoint() */
-	else if (Dominance::isLoopHeader(current)) {
+	else if (LOOP_HEADER(current)) {
 		
 		/* Compute the IN thanks to the fixpoint handler */
 		if (FIRST_ITER(current))
@@ -236,7 +236,7 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
 	 */
 	
 	/* Fixpoint reached: activate the associated loop-exit-edges */
-	if (Dominance::isLoopHeader(current) && fixpoint) {
+	if (LOOP_HEADER(current) && fixpoint) {
         elm::genstruct::Vector<Edge*> *vec;
         vec = EXIT_LIST(current);
       
@@ -482,7 +482,7 @@ inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(BasicBlock *bb) {
     }
         
 	if (add) {
-		if (Dominance::isLoopHeader(bb)) {			
+		if (LOOP_HEADER(bb)) {			
 #			ifdef DEBUG
 				if (FIRST_ITER(bb) == true)
 					cerr << "Ignoring back-edges for loop header " << bb->number() << " because it's the first iteration.\n";			

@@ -151,7 +151,7 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	ASSERT(ws);
 	ASSERT(cfg);
 	ASSERT(bb);
-	if(!bb->isEnd() && Dominance::isLoopHeader(bb)) {
+	if(!bb->isEnd() && LOOP_HEADER(bb)) {
 		total_loop++;
 		
 		// Look in the first instruction of the BB

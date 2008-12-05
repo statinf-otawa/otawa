@@ -84,7 +84,7 @@ void FlowFactConstraintBuilder::setup(WorkSpace *ws) {
  */
 void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
-	if (Dominance::isLoopHeader(bb)) {
+	if (LOOP_HEADER(bb)) {
 		int bound = ContextualLoopBound::undefined,
 			total = ContextualLoopBound::undefined;
 		if(isVerbose())
