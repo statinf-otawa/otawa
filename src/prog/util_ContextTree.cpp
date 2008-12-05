@@ -80,7 +80,7 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 	 * First, create a ContextTree for each loop.
 	 */
 	for (CFG::BBIterator bb(cfg); bb; bb++)
-		if (Dominance::isLoopHeader(bb)) {
+		if (LOOP_HEADER(bb)) {
 			OWNER_CONTEXT_TREE(bb) = new ContextTree(bb, cfg, this);
 			OWNER_CONTEXT_TREE(bb)->addBB(bb, _inline);
 		}
@@ -89,7 +89,7 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 	 * Then, link each ContextTree to its parents.
 	 */
 	for (CFG::BBIterator bb(cfg); bb; bb++) {
-		if (Dominance::isLoopHeader(bb)) {
+		if (LOOP_HEADER(bb)) {
 			/* Loop header: add the ContextTree to its parent ContextTree */
 			if (!ENCLOSING_LOOP_HEADER(bb)) {
 				/* The loop is not in another loop: add to the root context tree. */
