@@ -29,13 +29,11 @@
 #include <otawa/dfa/BitSet.h>
 #include <otawa/cfg/PSTBuilder.h>
 
-
-
-
 namespace otawa {
 
 using namespace elm;
 
+static SilentFeature::Maker<PSTBuilder> PST_MAKER;
 /**
  * This feature represents the availability of the Program Structure Tree.
  * 
@@ -43,7 +41,7 @@ using namespace elm;
  * @li @ref otawa::PROGRAM_STRUCTURE_TREE
  * 
  */
-Feature<PSTBuilder> PST_FEATURE("otawa:PST_FEATURE");
+SilentFeature PST_FEATURE("otawa:PST_FEATURE", PST_MAKER);
 
 // Private Properties
 Identifier<int> PSTBuilder::PST_DFSNUM("", -1 );
