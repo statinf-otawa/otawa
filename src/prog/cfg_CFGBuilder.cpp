@@ -324,7 +324,7 @@ void CFGBuilder::configure(const PropList& props) {
 	Processor::configure(props);
 }
 
-
+static SilentFeature::Maker<CFGBuilder> CFG_INFO_MAKER;
 /**
  * Feature asserting that the CFG has been scanned in the program. The result
  * is put the @ref CFGInfo::ID.
@@ -332,6 +332,6 @@ void CFGBuilder::configure(const PropList& props) {
  * @Properties
  * @li @ref CFGInfo::ID (FrameWork)
  */
-Feature<CFGBuilder> CFG_INFO_FEATURE("otawa::cfg_info");
+SilentFeature CFG_INFO_FEATURE("otawa::cfg_info", CFG_INFO_MAKER);
 
 } // otawa
