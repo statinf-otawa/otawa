@@ -22,6 +22,7 @@ typedef struct call_t {
 } call_t;
 
 
+static SilentFeature::Maker<Virtualizer> VIRTUALIZED_CFG_MAKER;
 /**
  * This features only show that the CFG has been virtualized. This may implies
  * a lot of transformation like function call inlining or loop unrolling.
@@ -30,7 +31,7 @@ typedef struct call_t {
  * @li @ref CALLED_CFG (@ref Edge) -- put on edge resulting from a function
  * inlining to identify the original CFG.
  */
-Feature<Virtualizer> VIRTUALIZED_CFG_FEATURE("otawa::VIRTUALIZED_CFG_FEATURE");
+SilentFeature VIRTUALIZED_CFG_FEATURE("otawa::VIRTUALIZED_CFG_FEATURE", VIRTUALIZED_CFG_MAKER);
 
 
 
