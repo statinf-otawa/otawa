@@ -88,9 +88,6 @@ class CEClass {
 };
 
 class SESERegion;
-typedef elm::genstruct::Tree<SESERegion*> PSTree;
-
-
 
 class SESERegion : public PropList {
 	
@@ -220,14 +217,6 @@ class PSTBuilder : public otawa::CFGProcessor {
 	static int displayTree(PSTree *node, int col = 0, bool ending = false);
 		
 };
-
-// Public Properties
-extern Identifier<BasicBlock*> FROM_BB;
-extern Identifier<Edge*> FROM_EDGE;
-extern Identifier<PSTree*> PROGRAM_STRUCTURE_TREE; 
-
-// Features
-extern Feature<PSTBuilder> PST_FEATURE;
 
 }
 
