@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	LoopUnroller processor
+ *	LoopUnroller processor interface
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
@@ -33,7 +33,7 @@
 namespace otawa {
 
 
-
+// LoopUnroller class
 class LoopUnroller: public Processor {
 
 	public:
@@ -48,11 +48,6 @@ class LoopUnroller: public Processor {
 	int idx;
 };
 
-extern Feature<LoopUnroller> UNROLLED_LOOPS_FEATURE;
-
-extern Identifier<BasicBlock*> UNROLLED_FROM;
-
 }
-
 
 #endif 

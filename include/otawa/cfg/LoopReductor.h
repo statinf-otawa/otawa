@@ -1,9 +1,9 @@
 /*
  *	$Id$
- *	LoopReductor processor
+ *	LoopReductor processor interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2007, IRIT UPS.
+ *	Copyright (c) 2007-08, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -55,8 +55,6 @@ class LoopReductor: public Processor {
 	bool reduce_loops;
 ;
 };
-
-extern Feature<LoopReductor> REDUCED_LOOPS_FEATURE;
 
 }
 
