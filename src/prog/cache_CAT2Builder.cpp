@@ -106,7 +106,7 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 			} else if (may && !may->contains(lblock->cacheblock())) {
 				CATEGORY(lblock) = ALWAYS_MISS;
 			} else if (firstmiss_level != FML_NONE) {
-				if (Dominance::isLoopHeader(lblock->bb()))
+				if (LOOP_HEADER(lblock->bb()))
 					header = lblock->bb();
 			  	else header = ENCLOSING_LOOP_HEADER(lblock->bb());
 			  	
