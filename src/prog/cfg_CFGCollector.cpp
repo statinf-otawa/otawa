@@ -243,6 +243,7 @@ void CFGCollector::configure(const PropList& props) {
 Identifier<CFGCollection *> INVOLVED_CFGS("otawa::involved_cfgs", 0);
 
 
+static SilentFeature::Maker<CFGCollector> COLLECTED_CFG_MAKER;
 /**
  * This feature asserts that all CFG involved in the current computation has
  * been collected and accessible thanks to @ref INVOLVED_CFGS property
@@ -251,7 +252,7 @@ Identifier<CFGCollection *> INVOLVED_CFGS("otawa::involved_cfgs", 0);
  * @ref ENTRY_CFG (FrameWork).
  * @ref INVOLVED_CFGS (FrameWork).
  */
-Feature<CFGCollector> COLLECTED_CFG_FEATURE("otawa::collected_cfg");
+SilentFeature COLLECTED_CFG_FEATURE("otawa::collected_cfg", COLLECTED_CFG_MAKER);
 
 
 /**

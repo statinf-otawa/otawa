@@ -28,6 +28,7 @@
 #include <otawa/util/Dominance.h>
 #include <elm/genstruct/SortedSLList.h>
 #include <otawa/cfg/LoopReductor.h>
+#include <otawa/cfg/features.h>
 
 /* a virer plus tard */ 
 
@@ -294,7 +295,12 @@ void LoopReductor::reduce(VirtualCFG *vcfg, CFG *cfg) {
 	delete ancestors;
 }
 
-Feature<LoopReductor> REDUCED_LOOPS_FEATURE ("otawa::reduced_loops_feature");
+
+static SilentFeature::Maker<LoopReductor> REDUCED_LOOPS_MAKER;
+/**
+ * 
+ */
+SilentFeature REDUCED_LOOPS_FEATURE ("otawa::reduced_loops_feature", REDUCED_LOOPS_MAKER);
 
 
 

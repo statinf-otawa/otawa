@@ -1,6 +1,26 @@
+/*
+ *	$Id$
+ *	LoopUnroller processor interface
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2007, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
+ */
 
-
-#include <stdio.h>
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/genstruct/HashTable.h>
@@ -21,8 +41,14 @@ using namespace elm;
 
 
 namespace otawa {
-	
-Feature<LoopUnroller> UNROLLED_LOOPS_FEATURE ("otawa::unrolled_loops_feature");
+
+static SilentFeature::Maker<LoopUnroller> UNROLLED_LOOPS_MAKER;
+/**
+ */
+SilentFeature UNROLLED_LOOPS_FEATURE ("otawa::unrolled_loops_feature", UNROLLED_LOOPS_MAKER);
+
+/**
+ */
 Identifier<BasicBlock*> UNROLLED_FROM("otawa::UNROLLED_FROM", NULL);
 
 
@@ -143,7 +169,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 		
 			BasicBlock *current = workList.get();
 			
-			if (Dominance::isLoopHeader(current) && (current != header)) {
+			if (LOOP_HEADER(current) && (current != header)) {
 				/* we enter another loop */
 		
 				loopList.put(current); 
@@ -254,7 +280,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 			for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
 				if (LOOP_EXIT_EDGE(outedge))
 					continue;
-				if (Dominance::isLoopHeader(outedge->target()) && (outedge->target() != header))
+				if (LOOP_HEADER(outedge->target()) && (outedge->target() != header))
 					continue;
 				if (outedge->target() == cfg->exit())
 					continue;
