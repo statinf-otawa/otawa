@@ -602,7 +602,6 @@ int main(int argc, char **argv) {
 	}
 	catch(option::OptionException& e) {
 		cerr << "ERROR: " << e.message() << io::endl;
-		command.displayHelp();
 		return 1;
 	}
 	catch(elm::Exception& e) {
