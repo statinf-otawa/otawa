@@ -1,10 +1,26 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	CFGInfo processor implementation
  *
- *	src/prog/CFGInfo.cpp -- implementation of CFGInfo class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2004-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <otawa/cfg/features.h>
 #include <otawa/instruction.h>
 #include <otawa/manager.h>
 #include <otawa/cfg.h>
@@ -31,12 +47,9 @@ namespace otawa {
 
 
 /**
- * Identifier for retrieving CFG information from the workspace properties.
- * 
- * @par Hooks
- * @li @ref FrameWork
+ * @see CFG_INFO
  */
-Identifier<CFGInfo *> CFGInfo::ID("otawa::CFGInfo::id", 0);
+Identifier<CFGInfo *>& CFGInfo::ID = CFG_INFO;
 
 
 /**
@@ -163,5 +176,17 @@ void CFGInfo::add(CFG *cfg) {
 	ASSERTP(cfg, "null cfg given");
 	_cfgs.add(cfg);
 }
+
+
+/**
+ * Get the collection of CFG found in the program.
+ * 
+ * @par Feature
+ * @li @ref CFG_INFO_FEATURE
+ * 
+ * @par Hooks
+ * @ref @ref WorkSpace
+ */
+Identifier<CFGInfo *> CFG_INFO("otawa::CFG_INFO", 0);
 
 } // otawa
