@@ -164,7 +164,7 @@ LoopInfoProblem::LoopInfoProblem(CFG& cfg): _cfg(cfg), headersLList() {
 		 * Adds them in a SORTED list
 		 */
 		for (CFG::BBIterator bb(&cfg); bb; bb++) {
-			if (!bb->isEntry() && Dominance::isLoopHeader(bb)) {
+			if (!bb->isEntry() && LOOP_HEADER(bb)) {
 				headersLList.add(bb); 
 			}
 		}
@@ -180,7 +180,7 @@ inline dfa::BitSet* LoopInfoProblem::empty(void) const {
 
 dfa::BitSet* LoopInfoProblem::gen(BasicBlock *bb) const {
 		dfa::BitSet *result = empty();
-		if(!Dominance::isLoopHeader(bb))
+		if(!LOOP_HEADER(bb))
 			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 				if(edge->kind() != Edge::CALL
 				&& Dominance::dominates(edge->target(), bb))
@@ -191,7 +191,7 @@ dfa::BitSet* LoopInfoProblem::gen(BasicBlock *bb) const {
 	
 dfa::BitSet* LoopInfoProblem::kill(BasicBlock *bb) const {
 		dfa::BitSet *result = empty();
-		if(Dominance::isLoopHeader(bb))
+		if(LOOP_HEADER(bb))
 			result->add(hdrs.indexOf(bb));
 		return result;
 }
@@ -309,10 +309,10 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
                 
         /* Iterate to find loop exit edges */
         for (CFG::BBIterator bb(cfg); bb; bb++) {
-                if (ENCLOSING_LOOP_HEADER(bb) || Dominance::isLoopHeader(bb)) {
+                if (ENCLOSING_LOOP_HEADER(bb) || LOOP_HEADER(bb)) {
                         /* If this basicBlock is in a loop, then we try to detect
                          * the loop-exit edges starting from it. 
-                         * We use Dominace::isLoopHeader() to not forget the loop-header
+                         * We use LOOP_HEADER() to not forget the loop-header
                          * of the most outer loop.
                          */
         		for (BasicBlock::OutIterator outedge(*bb); outedge; outedge++) {
