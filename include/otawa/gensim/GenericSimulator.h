@@ -35,6 +35,13 @@ namespace gensim {
 extern Identifier<String> TRACE_FILE_PATH;
 extern Identifier<int> TRACE_LEVEL;
 
+// Exception class
+class Exception: public otawa::Exception {
+public:
+	Exception(const string& message = "");
+};
+
+
 // GenericSimulator class
 class GenericSimulator : public sim::Simulator {
 
