@@ -48,6 +48,7 @@ namespace gensim {
 
 // External class
 class GenericState;
+class SimulatorFactory;
 
 class ProcessorStats : public SimulationStats {
 	int _time;
@@ -120,17 +121,30 @@ public:
 	void step();
 	void Flush();
 
-	GenericProcessor(sc_module_name name, ProcessorConfiguration * conf,
-			GenericState * sim_state, otawa::hard::Platform *pf);
+	GenericProcessor(
+		sc_module_name name,
+		ProcessorConfiguration * conf,
+		GenericState * sim_state,
+		otawa::hard::Platform *pf,
+		SimulatorFactory *factory);
 
-	GenericProcessor(sc_module_name name, ProcessorConfiguration * conf,
-			GenericState * sim_state, otawa::hard::Platform *pf,
-			String trace_file_path, int trace_level);
+	GenericProcessor(
+		sc_module_name name,
+		ProcessorConfiguration * conf,
+		GenericState * sim_state,
+		otawa::hard::Platform *pf,
+		String trace_file_path,
+		int trace_level,
+		SimulatorFactory *factory);
 	~GenericProcessor() {
 	}
 
-	void build(ProcessorConfiguration * conf, GenericState * sim_state,
-			otawa::hard::Platform *pf, int trace_level);
+	void build(
+		ProcessorConfiguration * conf,
+		GenericState * sim_state,
+		otawa::hard::Platform *pf,
+		int trace_level,
+		SimulatorFactory *factory);
 
 }
 ;

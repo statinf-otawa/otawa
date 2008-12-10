@@ -23,6 +23,7 @@
 #include <otawa/gensim/GenericProcessor.h>
 #include <otawa/gensim/GenericState.h>
 #include <otawa/gensim/debug.h>
+#include <otawa/gensim/SimulatorFactory.h>
 
 namespace otawa {
   namespace gensim {
@@ -51,8 +52,13 @@ namespace otawa {
       out_stream << "---- end of configuration ----\n";
     }
 
-    void GenericProcessor::build(ProcessorConfiguration * conf,
-				 GenericState * sim_state, otawa::hard::Platform *pf, int trace_level) {
+    void GenericProcessor::build(
+    	ProcessorConfiguration * conf,
+		GenericState * sim_state,
+		otawa::hard::Platform *pf,
+		int trace_level,
+		SimulatorFactory *factory)
+    {
       int iports=0, oports=0;
       InstructionQueue * input_queue = NULL;
       InstructionQueue * output_queue = NULL;
@@ -83,7 +89,8 @@ namespace otawa {
       }
 
       Trace *mem_trace = new Trace(*_trace_stream, trace_level, (elm::String) "MemorySystem");
-      MemorySystem * memory = new MemorySystem("memory", sim_state, mem_trace, &pf->memory());
+      MemorySystem * memory = factory->makeMemory("memory", sim_state, mem_trace, &pf->memory());
+    	  // !!TODO!! new MemorySystem("memory", sim_state, mem_trace, &pf->memory());
       memory->in_clock(clock);
       for (elm::genstruct::SLList<PipelineStageConfiguration *>::Iterator
 	     stage_conf(*(conf->pipelineStagesList())); stage_conf; stage_conf++) {
@@ -313,17 +320,26 @@ namespace otawa {
       clock.write(0);
     }
 
-    GenericProcessor::GenericProcessor(sc_module_name name,
-				       ProcessorConfiguration * conf, GenericState * sim_state,
-				       otawa::hard::Platform *pf) {
+    GenericProcessor::GenericProcessor(
+    	sc_module_name name,
+    	ProcessorConfiguration * conf, GenericState * sim_state,
+    	otawa::hard::Platform *pf,
+    	SimulatorFactory *factory)
+    {
       _ended = false;
 
-      build(conf, sim_state, pf, -1);
+      build(conf, sim_state, pf, -1, factory);
     }
 
-    GenericProcessor::GenericProcessor(sc_module_name name,
-				       ProcessorConfiguration * conf, GenericState * sim_state,
-				       otawa::hard::Platform *pf, String trace_file_path, int trace_level) {
+    GenericProcessor::GenericProcessor(
+    	sc_module_name name,
+    	ProcessorConfiguration * conf,
+    	GenericState * sim_state,
+    	otawa::hard::Platform *pf,
+    	String trace_file_path,
+    	int trace_level,
+    	SimulatorFactory *factory)
+    {
       _ended = false;
       if (!trace_file_path.isEmpty()) {
 	_trace_stream = new io::OutFileStream(trace_file_path);
@@ -331,7 +347,7 @@ namespace otawa {
 	_trace_stream = &elm::io::OutStream::null;
       _trace = new Trace(*_trace_stream, 1, (elm::String) "Processor");
 
-      build(conf, sim_state, pf, trace_level);
+      build(conf, sim_state, pf, trace_level, factory);
     }
 
     bool GenericProcessor::isEmpty() {

@@ -36,9 +36,10 @@
 namespace otawa {
 namespace gensim {
 
-class SimulationStats;
 class GenericProcessor;
 class MemoryStats;
+class SimulationStats;
+class SimulatorFactory;
 
 //extern Identifier<int> INSTRUCTION_TIME; ---- A REMETTRE
 
@@ -69,7 +70,7 @@ public:
 	GenericState(const GenericState& state) :
 		fw(state.fw), _cycle(state._cycle), driver(NULL) {
 	}
-	void init();
+	void init(SimulatorFactory *factory);
 	inline void addStats(SimulationStats * new_stats) {
 		stats.addLast(new_stats);
 	}
