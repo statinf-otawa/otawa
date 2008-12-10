@@ -18,4 +18,5 @@ libogensim_la_SOURCES = \
 	Memory.cpp \
 	MemoryDriver.cpp \
 	PipelineStage.cpp \
-	SimulatedInstruction.cpp
+	SimulatedInstruction.cpp \
+	SimulatorFactory.cpp
