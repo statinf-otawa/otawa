@@ -23,9 +23,6 @@
 #ifndef OTAWA_GENSIM_MEMORY_H
 #define OTAWA_GENSIM_MEMORY_H
 
-/* #include "PipelineStage.h" */
-/* #include "InstructionQueue.h" */
-/* #include "SimulatedInstruction.h" */
 #include <otawa/otawa.h>
 #include "SimulationStats.h"
 #include <otawa/util/Trace.h>
