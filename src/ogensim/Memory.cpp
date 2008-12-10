@@ -23,6 +23,7 @@
 #include <otawa/gensim/Memory.h>
 #include <otawa/gensim/GenericState.h>
 #include <otawa/hard/Memory.h>
+#include <otawa/gensim/GenericSimulator.h>
 
 namespace otawa {
   namespace gensim {
@@ -199,13 +200,14 @@ namespace otawa {
      */
     int MemorySystem::getLatency(Address address) const {
       const hard::Bank *bank = mem->get(address);
-      ASSERTP(bank, "Access out of defined banks !");
+      ASSERT(bank);
       return bank->latency();
     }
 
     bool MemorySystem::isCached(Address address) const {
       const hard::Bank *bank = mem->get(address);
-      ASSERTP(bank, "Access out of defined banks !");
+      if(!bank)
+    	  throw gensim::Exception(_ << "access out of defined banks for address " << address);
       return bank->isCached();
     }
 
