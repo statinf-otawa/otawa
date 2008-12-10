@@ -49,6 +49,12 @@ public:
   virtual void redirect (sim::State &_state, Inst *branch, bool direction) { }
   virtual bool PredictBranch (sim::State &_state, Inst *branch, bool pred) { }
 
+	// memory accesses
+	virtual Address lowerRead(void) { return state.lowerRead(); }
+	virtual Address upperRead(void) { return state.upperRead(); }
+	virtual Address lowerWrite(void) { return state.lowerWrite(); }
+	virtual Address upperWrite(void) { return state.upperWrite(); }
+
 private:
   SimState& state;
   Inst *next, *exit;
