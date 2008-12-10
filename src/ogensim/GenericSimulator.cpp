@@ -31,6 +31,7 @@
 #include <otawa/hard/Platform.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/sim/AbstractCacheDriver.h>
+#include <otawa/gensim/SimulatorFactory.h>
 
 int sc_main(int argc, char *argv[]) {
 	int err = dup(2);
@@ -45,6 +46,19 @@ namespace otawa {
 namespace gensim {
 
 //Identifier<int> DEGREE("otawa::gensim::degree", 1);  ---------- A REMETTRE
+
+/**
+ * @class Exception
+ * Exception thrown by the OGenSim module.
+ */
+
+
+/**
+ * Build a simulator exception.
+ * @param message	Message of the exception.
+ */
+Exception::Exception(const string& message): otawa::Exception(message) {
+}
 
 
 /**
@@ -76,14 +90,14 @@ GenericSimulator::GenericSimulator(void) :
       TRACE_LEVEL(state) = TRACE_LEVEL(props);
       ICACHE(state) = ICACHE(props);
       DCACHE(state) = DCACHE(props);
-      state->init();
+      state->init(FACTORY(props));
       initialized = true;
     }
     assert(fw == state->fw);
     return state;
   }
 
-  void GenericState::init() {
+  void GenericState::init(SimulatorFactory *factory) {
     ProcessorConfiguration conf;
 
     // Get the processor description
@@ -204,7 +218,14 @@ GenericSimulator::GenericSimulator(void) :
 
     // Create the processor
     elm::String file_name = TRACE_FILE_PATH(this);
-    processor = new GenericProcessor("GenericProcessor",&conf, this, fw->platform(), file_name.toCString(), TRACE_LEVEL(this));
+    processor = new GenericProcessor(
+    	"GenericProcessor",
+    	&conf,
+    	this,
+    	fw->platform(),
+    	file_name.toCString(),
+    	TRACE_LEVEL(this),
+    	factory);
 	
     // build the caches
     hard::Platform *pf = fw->platform();
