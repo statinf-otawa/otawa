@@ -45,11 +45,11 @@ public:
 
 protected:
 	virtual void prepare(PropList& props);	
-	virtual void work(void) throw(elm::Exception);
-	virtual void work(const string& entry) throw(elm::Exception);
+	virtual void work(PropList& props) throw(elm::Exception);
+	virtual void work(const string& entry, PropList &props) throw(elm::Exception);
 
 	inline WorkSpace *workspace(void) const { return ws; }
-	inline void require(AbstractFeature&  feature) { ws->require(feature, props); }
+	inline void require(AbstractFeature&  feature) { ws->require(feature, *props2); }
 	virtual void process(string arg);
 
 private:
@@ -57,6 +57,7 @@ private:
 	system::Path path;
 	genstruct::Vector<string> entries;
 	PropList props;
+	PropList *props2;
 	int result;
 	WorkSpace *ws;
 };

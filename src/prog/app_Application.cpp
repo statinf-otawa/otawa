@@ -85,6 +85,7 @@ Application::Application(
 ):
 	help(*this, 'h', "help", "display this help", false),
 	verbose(*this, 'v', "verbose", "verbose display of the process", false),
+	props2(0),
 	result(0),
 	ws(0)
 {
@@ -131,7 +132,7 @@ int Application::run(int argc, char **argv) {
 		
 		// do the work
 		ws = MANAGER.load(path, props);
-		work();
+		work(props);
 	}
 	catch(option::OptionException& e) {
 		cerr << "ERROR: " << e.message() << io::endl;
@@ -165,9 +166,14 @@ void Application::prepare(PropList& props) {
  * (supposed to be a task entry).
  * @throw	elm::Exception	For any found error.
  */
-void Application::work(void) throw(elm::Exception) {
-	for(int i = 0; i < entries.count(); i++)
-		work(entries[i]);
+void Application::work(PropList &props) throw(elm::Exception) {
+	for(int i = 0; i < entries.count(); i++) {
+		props2 = new PropList(props);
+		ASSERT(props2 != NULL);
+	        TASK_ENTRY(props2) = entries[i].toCString();
+		work(entries[i], *props2);
+		delete props2;
+	}
 }
 
 
@@ -177,7 +183,7 @@ void Application::work(void) throw(elm::Exception) {
  * @param entry				Task entry point name or any free argument.
  * @throw elm::Exception	For any found error.
  */
-void Application::work(const string& entry) throw(elm::Exception) {
+void Application::work(const string& entry, PropList &props) throw(elm::Exception) {
 }
 
 
