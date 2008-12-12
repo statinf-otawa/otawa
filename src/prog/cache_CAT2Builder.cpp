@@ -1,4 +1,25 @@
-
+/*
+ *	$Id $
+ *	CAT2Builder processor implementation
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2007-08, IRIT UPS.
+ * 
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software 
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
+ */
 
 #include <stdio.h>
 #include <elm/io.h>
@@ -69,7 +90,10 @@ Identifier<BasicBlock*> CATEGORY_HEADER("otawa::category_header", 0);
  * none
  */
 
-CAT2Builder::CAT2Builder(void) : CFGProcessor("otawa::CAT2Builder", Version(1, 0, 0)) {
+
+/**
+ */
+CAT2Builder::CAT2Builder(void): CFGProcessor("otawa::CAT2Builder", Version(1, 0, 0)) {
 	require(DOMINANCE_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
 	require(LOOP_INFO_FEATURE);
@@ -79,12 +103,14 @@ CAT2Builder::CAT2Builder(void) : CFGProcessor("otawa::CAT2Builder", Version(1, 0
 	provide(ICACHE_CATEGORY2_FEATURE);
 }
 
+
+/**
+ * !!TODO!!
+ */
 void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard::Cache *cache) {
 	int line = lbset->line();
-	/*static double moypr = 0;
-	static double moy = 0;*/
 	
-	/* Use the results to set the categorization */
+	// Use the results to set the categorization
 	for (LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
 		if ((lblock->id() == 0) || (lblock->id() == lbset->count() - 1))
 			continue;
@@ -131,20 +157,37 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 			} /* of category condition test */			
 		} else {
 			CATEGORY(lblock) = ALWAYS_MISS;
-		} 
+		}
+		
+		// record stats
+		if(cstats)
+			cstats->add(CATEGORY(lblock));
 	}
 	
 
 }
 
+
+/**
+ * !!TODO!!
+ */
 void CAT2Builder::setup(WorkSpace *fw) {
 }
 
+
+/**
+ */
 void CAT2Builder::configure(const PropList &props) {
 	CFGProcessor::configure(props);
 	firstmiss_level = FIRSTMISS_LEVEL(props);
+	cstats = CATEGORY_STATS(props);
+	if(cstats)
+		cstats->reset();
 }
 
+
+/**
+ */
 void CAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
 	//int i;
 	LBlockSet **lbsets = LBLOCKS(fw);
@@ -155,6 +198,95 @@ void CAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
 	}	
 }
 
-  Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE("otawa::icache_category2");
+
+/**
+ * !!TODO!!
+ */
+Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE("otawa::icache_category2");
+
+
+/**
+ * @class CategoryStats
+ * This class is used to store statistics about the categories about cache
+ * accesses. It it provided by cache category builders.
+ * @see CATBuilder, CAT2Builder 
+ */
+
+/**
+ */
+CategoryStats::CategoryStats(void) {
+	reset();
+}
+
+/**
+ * Reset the statistics.
+ */
+void CategoryStats::reset(void) {
+	_total = 0;
+	_linked = 0;
+	for(int i = 0; i <= NOT_CLASSIFIED; i++)
+		counts[i] = 0;
+}
+
+/**
+ * @fn  void Categorystats::add(category_t cat);
+ * Increment the counter for the given category.
+ * @param cat	Category to increment the counter.
+ */
+
+/**
+ * @fn void CategoryStats::addLinked(void);
+ * Add a new linked l-block to the statistics.
+ */
+
+/**
+ * @fn int CategoryStats::get(category_t cat) const;
+ * Get the counter of a category.
+ * @param cat	Category to get counter for.
+ * @return		Category count.
+ */
+
+/**
+ * @fn int CategoryStats::total(void) const;
+ * Get the total count of categories.
+ * @return		Category total count.
+ */
+
+/**
+ * @fn int CategoryStats::linked(void) const;
+ * Get the count of linked statistics.
+ * @return	Linked l-block statistics.
+ */
+
+
+/**
+ * Put in the statistics to get statistics about cache categories.
+ * 
+ * @par Hooks
+ * @li processor configuration property list
+ */ 
+Identifier<CategoryStats *> CATEGORY_STATS("otawa::CATEGORY_STATS", 0);
+
+
+/**
+ */
+io::Output& operator<<(io::Output& out, const CategoryStats& stats) {
+	static cstring names[] = {
+			"invalid",
+			"always-hit",
+			"first-hit",
+			"first-miss",
+			"always-miss",
+			"not-classified"
+	};
+	
+	for(int i = ALWAYS_HIT; i <= NOT_CLASSIFIED; i++)
+		out << names[i] << '\t' << (float(stats.get(category_t(i))) * 100 / stats.total())
+			<< "% (" << stats.get(category_t(i)) << ")\n";
+	out << "total\t\t100% (" << stats.total() << ")\n";
+	out << "linked\t\t" << (float(stats.linked()) * 100 / stats.total())
+		<< "% (" << stats.linked() << ")\n";
+	return out;
+}
 
 }

@@ -2,6 +2,7 @@ SUBDIRS = categorisation ccg cat2
 
 includeotawacachedir=$(includedir)/otawa/cache
 includeotawacache_HEADERS = \
-	LBlock.h \
+	features.h \
 	FirstLastBuilder.h \
+	LBlock.h \
 	LBlockSet.h

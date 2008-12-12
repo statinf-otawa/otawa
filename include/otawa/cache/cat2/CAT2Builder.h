@@ -1,9 +1,9 @@
 /*
  *	$Id$
- *	exegraph module implementation
+ *	CAT2Builder processor interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2007, IRIT UPS.
+ *	Copyright (c) 2007-08, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/cache/cat2/ACSBuilder.h>
+#include <otawa/cache/features.h>
 
 namespace otawa {
 
@@ -38,20 +39,24 @@ namespace otawa {
 extern Identifier<category_t> CATEGORY;
 extern Identifier<BasicBlock*> CATEGORY_HEADER;
 
+// CAT2Builder class
 class CAT2Builder: public CFGProcessor{
-	void processLBlockSet(otawa::CFG*, LBlockSet *, const hard::Cache *);
-	fmlevel_t firstmiss_level;
-	public:
+public:
 	CAT2Builder(void);
 	virtual void processCFG(WorkSpace*, otawa::CFG*);
 	virtual void setup(WorkSpace*);
 	virtual void configure(const PropList &props);	
+
+private:
+	void processLBlockSet(otawa::CFG*, LBlockSet *, const hard::Cache *);
+	fmlevel_t firstmiss_level;
+	CategoryStats *cstats;
 };
 
+// feature
 extern Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE;
 
-
-}
+} // otawa
 
 
 #endif /*CACHE_CAT2BUILDER_H_*/
