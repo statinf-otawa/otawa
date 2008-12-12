@@ -175,9 +175,9 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 					<< inst->address() << " ("
 					<< (sym ? &sym->name()  : "") << " + 0x"
 					<< (sym ? (inst->address() - sym->address()) : 0) << ")");
-				cout << '\t' << inst->address() << '\t';
-				inst->dump(out);
-				cout << io::endl;
+				log << '\t' << inst->address() << '\t';
+				inst->dump(log);
+				log << io::endl;
 			}
 			else
 				for(Identifier<Address>::Getter target(inst, BRANCH_TARGET);
