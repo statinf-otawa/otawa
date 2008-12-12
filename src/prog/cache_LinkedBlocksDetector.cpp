@@ -89,7 +89,8 @@ typedef genstruct::SortedSLList<LBlock*, NumberOrder> LinkedBlockList;
  */
 
 
-
+/**
+ */
 LinkedBlocksDetector::LinkedBlocksDetector(void) : Processor("otawa::LinkedBlocksDetector", Version(1, 0, 0)), _explicit(false) {
 	require(ASSIGNED_VARS_FEATURE);
 	require(ICACHE_CATEGORY2_FEATURE);
@@ -98,15 +99,20 @@ LinkedBlocksDetector::LinkedBlocksDetector(void) : Processor("otawa::LinkedBlock
 	require(ILP_SYSTEM_FEATURE);
 }
 
+
+/**
+ */
 void LinkedBlocksDetector::configure(const PropList& props) {
         Processor::configure(props);
 	_explicit = EXPLICIT(props);
+	cstats = CATEGORY_STATS(props);
 }
-                
+
+
+/**
+ */
 void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 	const hard::Cache *cache = fw->platform()->cache().instCache();
-	/*ilp::System *system = SYSTEM(fw);
-	int penalty = cache->missPenalty();*/
 	LBlockSet **lbsets = LBLOCKS(fw);
 	
 	
@@ -156,6 +162,10 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 	}
 }
 
+
+/**
+ * !!TODO!!
+ */
 void LinkedBlocksDetector::recordBlocks(Vector<LBlock*> *equiv) {
 	if (equiv->length() == 1)
 		return;		
@@ -164,8 +174,14 @@ void LinkedBlocksDetector::recordBlocks(Vector<LBlock*> *equiv) {
 		assert(CATEGORY(lblock) == FIRST_MISS);
 		LINKED_BLOCKS(lblock) = copy;   		
 	}
+	if(cstats)
+		cstats->addLinked();
 }
 
+
+/**
+ * !!TODO!!
+ */
 Identifier<genstruct::Vector<LBlock*> *> LINKED_BLOCKS("otawa::linked_blocks", NULL);
 
 }
