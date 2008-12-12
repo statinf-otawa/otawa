@@ -196,6 +196,12 @@ WorkSpace *Manager::loadBin(
 {
 	//Process *proc = 0;
 
+	// get log
+	io::OutStream *log_stream = Processor::LOG(props);
+	if(!log_stream)
+		log_stream = &io::stderr;
+	Output log(*log_stream);
+	
 	// Simple identified loader
 	Loader *loader = LOADER(props);
 	if(!loader) {
@@ -216,12 +222,11 @@ WorkSpace *Manager::loadBin(
 		buf << "elf_" << infos.machine;
 		gel_close(file);
 		String name = buf.toString();
-/*		cout << "Try to load " << name << " from " << LOADER_PATHS << io::endl; */
 		if(Processor::VERBOSE(props)) {
-			cerr << "INFO: looking for loader \"" << name << "\"\n";
-			cerr << "INFO: available loaders\n";
+			log << "INFO: looking for loader \"" << name << "\"\n";
+			log << "INFO: available loaders\n";
 			for(elm::system::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
-				cerr << "INFO:\t- " << *plugin << io::endl;
+				log << "INFO:\t- " << *plugin << io::endl;
 		}
 		loader = findLoader(name.toCString());
 	}
