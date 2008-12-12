@@ -28,18 +28,23 @@
 #include <elm/genstruct/Vector.h>
 #include <otawa/cache/LBlock.h>
 #include <otawa/prop/Identifier.h>
+#include <otawa/cache/features.h>
 
 namespace otawa {
 
 extern Identifier<genstruct::Vector<LBlock*> *> LINKED_BLOCKS;
 
+// LinkedBlocksDetector class
 class LinkedBlocksDetector : public otawa::Processor {
-	bool _explicit;
-	void recordBlocks(Vector<LBlock*> *equiv);
-	public:
+public:
 	LinkedBlocksDetector(void);
 	virtual void processWorkSpace(otawa::WorkSpace*);
 	virtual void configure(const PropList& props);
+
+private:
+	bool _explicit;
+	CategoryStats *cstats;
+	void recordBlocks(Vector<LBlock*> *equiv);
 };
 
 }
