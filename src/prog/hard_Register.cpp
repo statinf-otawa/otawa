@@ -126,7 +126,14 @@ public:
  * @param bank		Owner bank.
  */
 Register::Register(const elm::String& name, Register::kind_t kind,
-int size): _number(-1), _kind(kind), _size(size), _name(name) {
+int size):
+	_number(-1),
+	_kind(kind),
+	_size(size),
+	_name(name),
+	_bank(0),
+	pfnum(-1)
+{
 	assert(kind != NONE);
 	assert(size > 0);
 }
@@ -252,7 +259,7 @@ elm::CString pattern, int count)
 : RegBank(name, kind, size, count) {
 	RegisterFormatter format(pattern);
 	for(int i = 0; i < count; i++)
-		_regs[i] = new Register(format.make(i), kind, size);
+		set(i, new Register(format.make(i), kind, size));
 }
 
 
@@ -287,7 +294,7 @@ MeltedBank::MeltedBank(elm::CString name, ...)
 	_regs.allocate(cnt);
 	VARARG_BEGIN(args, name);
 		for(int i = 0; i < cnt; i++)
-			_regs[i] = args.next<Register *>();
+			set(i, args.next<Register *>());
 	VARARG_END	
 }
 
