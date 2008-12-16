@@ -3,7 +3,7 @@
  *	Inst class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-07, IRIT UPS.
+ *	Copyright (c) 2003-08, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -32,13 +32,14 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
 
 
 /**
- * @class Inst <otawa/program.h>
+ * @class Inst
  * This class represents assembly instruction of a piece of code.
  * As they must represents a large set of machine language that may contain
  * unusual instruction, it provides a very generic way to access information
  * about the instruction. When the instruction is usual or simple enough, it may
  * be derived in more accurate and specialized representation like MemInst or
  * ControlInst.
+ * @ingroup prog
  */
 
 
@@ -108,30 +109,43 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
  */
 
 /**
- * @var Instr::IS_SHIFT
+ * @var Inst::IS_SHIFT
  * Mask of an instruction performing a shift (this includes logicial shifts,
  * arithmetic shifts and rotations).
  */
 
 /**
- * @var Instr::IS_TRAP
+ * @var Inst::IS_TRAP
  * Mask of a trap instruction. It may be a programmed interruption, a system
  * call, a debugging break or any control instruction whose control target
  * is computed by the system.
  */
 
 /**
- * @var Instr::IS_INTERN
+ * @var Inst::IS_INTERN
  * Mask of an instruction performing setup internal to the processor.
+ */
+
+/**
+ * @var Inst::IS_MULTI
+ * This mask denotes an instructions that perform multi-value store or load.
+ * For example, the "ldmfd" or "stmfd" in the ARM ISA.
+ */
+
+/**
+ * @var Inst::IS_SPECIAL
+ * This mask denotes an instruction that is processed in a special way in the pipeline.
+ * This concerns very complex instruction usually found in old CISC processors.
  */
 
 /**
  * @type Instr::kind_t;
  * The kind of an instruction is a bit array where each bit represents an
  * instruction property. The following masks gives access to the property bits:
- * IS_COND, IS_CONTROL, IS_CALL, IS_RETURN,
- * IS_MEM, IS_LOAD, IS_STORE, IS_INT, IS_FLOAT, IS_ALU, IS_MUL, IS_DIV, IS_SHIFT,
- * IS_TRAP, IS_INTERN.
+ * @ref IS_COND, @ref IS_CONTROL, @ref IS_CALL, @ref IS_RETURN,
+ * @ref IS_MEM, @ref IS_LOAD, @ref IS_STORE, @ref IS_INT, @ref IS_FLOAT, @ref IS_ALU,
+ * @ref IS_MUL, @ref IS_DIV, @ref IS_SHIFT, @ref IS_TRAP, @ref IS_INTERN,
+ * @ref IS_MULTI, @ref IS_SPECIAL.
  */
 
 
@@ -204,6 +218,38 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
  * Test if the instruction is a sub-program return, that is, it modifies the control flow
  * retrieving its context from a preceding call instruction.
  * @return True if it is a sub-program return.
+ */
+
+
+/**
+ * @fn bool Inst::isMulti(void);
+ * Test if the instruction is multi-memory accesss load / store.
+ * @return	True if it is multi-memory accesses, false else.
+ * @see IS_MULTI
+ */
+
+
+/**
+ * @fn bool Inst::isSpecial(void);
+ * Test if the instruction is a complex special instruction.
+ * @return	True if it is a complex special instruction, false else.
+ * @see IS_SPECIAL
+ */
+
+
+/**
+ * @fn bool Inst::isMul(void);
+ * Test if the instruction is a multiplication.
+ * @return	True if it is a multiplication, false else.
+ * @see Inst::IS_MUL
+ */
+
+
+/**
+ * @fn bool Inst::isDiv(void);
+ * Test if the instruction is a division.
+ * @return	True if it is a division, false else.
+ * @see Inst::IS_DIV
  */
 
 
@@ -384,6 +430,17 @@ void PseudoInst::dump(io::Output& out) {
  */
 Inst *Inst::toInst(void) {
 	return this;
+}
+
+
+/**
+ * This function is only defined for ISA supporting the @ref IS_MULTI attribute.
+ * It returns the number of stored during the multi-memory access
+ * (in term of memory accesses).
+ * @return	Number of memory accesses.
+ */
+int Inst::multiCount(void) {
+	return 0;
 }
 
 }	// otawa

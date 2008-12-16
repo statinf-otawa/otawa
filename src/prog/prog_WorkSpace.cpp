@@ -38,12 +38,53 @@
 #	define TRACE(str) cerr << __FILE__ << ':' << __LINE__ << ": " << str << '\n';
 #endif
 
+/**
+ * @defgroup prog	Program Representation
+ * 
+ * The program representation module of OTAWA is the main module providing all details
+ * about the processed program. It provides a representation built from the program
+ * binary form (@ref Process) and provides a workspace to perform analyses (@ref WorkSpace).
+ * Usually, a workspace containing a process is provided by the manager (@ref otawa::Manager)
+ * as a simple Manager::load() call:
+ * @code
+ * #include <otawa/otawa.h>
+ * 
+ * using namespace elm;
+ * using namespace otawa;
+ * 
+ * try {
+ *   PropList props;
+ *   Processor::VERBOSE(props) = true;
+ *   WorkSpace *ws = MANAGER.load("path_to_file", props);
+ *   ...
+ *   return 0;
+ * }
+ * catch(otawa::Exception& e) {
+ *   cerr << "ERROR: " << e.message() << io::endl;
+ *   return 1;
+ * } 
+ * @endcode
+ * The load may possibly fail and throw an @ref otawa::Exception exception.
+ * 
+ * The @ref Process class describes the full program and its execution environment as
+ * different items of description:
+ * @li the @ref otawa::File represents a binary file involved in the building of the execution environments
+ *   (each program has at least one file containing the main program and possibly
+ *   other file for dynamically linked libraries -- most often zero in embedded systems),
+ * @li the @ref otawa::Segment divides the program in different parts (code, date, etc),
+ * @li the @ref otawa::ProgItem decompose each segment into code or data items,
+ * @li the @ref otawa::Inst is an instance of @ref otawa::ProgItem that represents a single instruction,
+ * @li the @ref otawa::DataItem is an instance of @ref otawa::ProgItem that represents a piece of data,
+ * @li the @ref otawa::Symbol represents a named reference on some @ref ProgItem
+ */
+
 namespace otawa {
 
 /**
  * @class WorkSpace
  * A workspace represents a program, its run-time and all information about
  * WCET computation or any other analysis.
+ * @ingroup prog
  */
 
 	
