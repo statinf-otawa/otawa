@@ -133,6 +133,7 @@ void LBlockBuilder::addLBlock(
 			cbid
 		);
 	lblocks->set(index, lblock); 											
+	LBLOCK(inst) = lblock;
 	index++;
 }
 
@@ -169,6 +170,14 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 	ASSERT(index == num_lblocks);
 }
 
+
+/**
+ * This properties is set on the first instruction of each lblock and points to the lblock
+ *
+ * @par Hooks
+ * @li @ref Inst
+ */
+Identifier<LBlock *> LBLOCK("otawa::LBLOCK");
 
 /**
  * This feature ensures that the L-blocks of the current task has been
