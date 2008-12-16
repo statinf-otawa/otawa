@@ -55,6 +55,7 @@ public:
 	LBlockBuilder(void);
 };
 
+extern Identifier<LBlock *> LBLOCK;
 // Features
 extern Feature<LBlockBuilder> COLLECTED_LBLOCKS_FEATURE;
 
