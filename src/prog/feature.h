@@ -21,6 +21,24 @@
  */
 
 /**
+ * @mainpage
+ * OTAWA is logically split in different module representing different layers and usage of the
+ * framework. In the following, you will find a guide to explore theses modules. Notice that
+ * the OTAWA module splitting is not ever reflected by the header files and the libraries,
+ * specially the kernel module of OTAWA.
+ * 
+ * OTAWA is logically split in different layer matching module:
+ * @li @ref prog -- the main module and the root any work in OTAWA provides the abstract
+ * representation of the program to handle.
+ * @li @ref prop -- the property layer is built just above the program representation
+ * to link properties or annotation to the program representation.
+ * @li @ref proc -- this layer allows to make automatic the chaining and dependency
+ * solving of analyses.
+ * @li @ref hard -- this layer provides the description of the host platform where
+ * the loaded program will run.
+ */
+
+/**
  * @defgroup features Available Features
  * 
  * @par Program Features
