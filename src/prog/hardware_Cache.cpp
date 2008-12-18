@@ -14,6 +14,7 @@ namespace otawa { namespace hard {
 
 /**
  * @class Cache
+ * @ingroup hard
  * @p This class contains the configuration of a level of cache of processor.
  * @p It may represents direct-mapped or associative cache (with any associatvity
  * level) using bits as block/line boundaries. Supported management policies
