@@ -141,7 +141,7 @@ public:
 	Displayer *displayer;
 
 protected:
-	virtual void work(const string& entry) throw(elm::Exception) { dump(entry); }
+	virtual void work(const string& entry, PropList &props) throw(elm::Exception) { dump(entry); }
 	virtual void prepare(PropList &props);
 	
 private:
