@@ -16,6 +16,7 @@ namespace otawa {
  * This is a specialization of the processor class dedicated to function
  * processing. The @ref Processor::processFrameWork() method just take each
  * function of the framework and apply the processor on.
+ * @ingroup proc
  */
 
 
