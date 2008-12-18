@@ -16,6 +16,7 @@ namespace otawa {
 /**
  * @class ProcessorException
  * This class is used for returning exceptions from the processors.
+ * @ingroup proc
  */
 
 /**
