@@ -64,6 +64,7 @@ public:
 
 /**
  * @class Register
+ * @ingroup hard
  * Objects of this class are simple machine register, more accurately
  * unbreakable atomic registers. If you architecture provides register spanning
  * on multiple atomic register, use the SpanReg class for representing them.
@@ -168,6 +169,7 @@ int size):
 
 /**
  * @class RegBank
+ * @ingroup hard
  * This class represents a bank of registers.
  */
 
@@ -239,6 +241,7 @@ RegBank::RegBank(CString name, Register::kind_t kind, int size, int count)
 
 /**
  * @class PlainBank
+ * @ingroup hard
  * A plain bank is a register bank whose registers have the same size and the
  * same type. It represents the usual integer or floating-point banks.
  */
@@ -273,6 +276,7 @@ PlainBank::~PlainBank(void) {
 
 /**
  * @class MeltedBank
+ * @ingroup hard
  * A melted bank may contains registers with different sizes and kinds.
  * It is useful for grouping state registers.
  */
