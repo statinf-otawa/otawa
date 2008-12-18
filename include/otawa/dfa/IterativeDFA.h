@@ -23,9 +23,14 @@
 #define OTAWA_UTIL_ITERATIVE_DFA_H
 
 #include <assert.h>
+#include <elm/genstruct/VectorQueue.h>
+#include <elm/util/BitVector.h>
 #include <otawa/cfg.h>
 
 namespace otawa { namespace dfa {
+
+// predeclaration
+class Successor;
 
 // Predecessor
 class Predecessor: public PreIterator<Predecessor, BasicBlock *> {
@@ -35,9 +40,11 @@ class Predecessor: public PreIterator<Predecessor, BasicBlock *> {
 			iter++;
 	}
 public:
+	typedef Successor Forward;
 	inline Predecessor(BasicBlock *bb): iter(bb) {
 		look();
 	};
+	static inline BasicBlock *entry(CFG& cfg) { return cfg.entry(); }
 	inline BasicBlock *item(void) const { return iter.item()->source(); };
 	inline bool ended(void) const { return iter.ended(); };
 	inline void next(void) { iter.next(); look(); };
@@ -52,9 +59,11 @@ class Successor: public PreIterator<Successor, BasicBlock *> {
 			iter++;
 	}
 public:
+	typedef Predecessor Forward;
 	inline Successor(BasicBlock *bb): iter(bb) {
 		look();
 	};
+	static inline BasicBlock *entry(CFG& cfg) { return cfg.exit(); }
 	inline BasicBlock *item(void) const { return iter.item()->target(); };
 	inline bool ended(void) const { return iter.ended(); };
 	inline void next(void) { iter.next(); look(); };
@@ -146,37 +155,58 @@ inline Set *IterativeDFA<Problem, Set, Iter>::killSet(BasicBlock *bb) {
 // IterativeDFA::compute() inline
 template <class Problem, class Set, class Iter>
 inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
-	bool changed = true;
+	//bool changed = true;
+	
+	// initialization
+	VectorQueue<BasicBlock *> todo;
+	BitVector present(_cfg.countBB());
 	Set *comp = prob.empty(), *ex;
-	while(changed) {
-		changed = false;
-		for(CFG::BBIterator bb(&_cfg); bb; bb++) {
-			int idx = bb->number();
-			assert(idx >= 0);
-			
-			// IN = union OUT of predecessors
-			prob.reset(ins[idx]);
-			for(Iter pred(bb); pred; pred++) {
-				BasicBlock *bb_pred = pred;
-				int pred_idx = bb_pred->number();
-				assert(pred_idx >= 0);
-				prob.merge(ins[idx], outs[pred_idx]);
-			}
-			
-			// OUT = IN \ KILL U GEN
-			prob.set(comp, ins[idx]);
-			prob.diff(comp, kills[idx]);
-			prob.add(comp, gens[idx]);
-			
-			// Any modification ?
-			if(!prob.equals(comp, outs[idx])) {
-				ex = outs[idx];
-				outs[idx] = comp;
-				comp = ex;
-				changed = true;
-			}
-			prob.reset(comp);
+	for(CFG::BBIterator bb(&_cfg); bb; bb++)
+		/*if(bb != Iter::entry(_cfg))*/ {
+			//cerr << "DFA: push BB" << bb->number() << io::endl;	// !!DEBUG!!
+			todo.put(bb);
+			present.set(bb->number());
 		}
+	
+	// perform until no change
+	while(todo) {
+		BasicBlock *bb = todo.get();
+		int idx = bb->number();
+		ASSERT(idx >= 0);
+		present.clear(idx);
+		//cerr << "DFA: processing BB" << idx << io::endl;	// !!DEBUG!!
+			
+		// IN = union OUT of predecessors
+		prob.reset(ins[idx]);
+		for(Iter pred(bb); pred; pred++) {
+			BasicBlock *bb_pred = pred;
+			int pred_idx = bb_pred->number();
+			assert(pred_idx >= 0);
+			prob.merge(ins[idx], outs[pred_idx]);
+		}
+			
+		// OUT = IN \ KILL U GEN
+		prob.set(comp, ins[idx]);
+		prob.diff(comp, kills[idx]);
+		prob.add(comp, gens[idx]);
+			
+		// Any modification ?
+		if(!prob.equals(comp, outs[idx])) {
+			
+			// record new out
+			ex = outs[idx];
+			outs[idx] = comp;
+			comp = ex;
+			
+			// add successors
+			for(typename Iter::Forward next(bb); next; next++)
+				if(!present.bit(next->number())) {
+					//cerr << "DFA: push BB" << next->number() << io::endl;	// !!DEBUG!!
+					todo.put(next);
+					present.set(next->number());
+				}
+		}
+		prob.reset(comp);
 	}
 	
 	// cleanup
