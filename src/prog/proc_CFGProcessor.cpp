@@ -45,6 +45,7 @@ namespace otawa {
  * @li @ref INVOLVED_CFGS: collection of CFG used by the current task.
  *
  * @note This processor automatically call @ref CFGCollector.
+ * @ingroup proc
  */
 
 

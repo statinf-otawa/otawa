@@ -16,6 +16,7 @@ namespace otawa {
  * This is a specialization of the processor class dedicated to LBlock
  *
  * @note This processor automatically call @ref LBlockBuilder
+ * @ingroup proc
  */
 
 
