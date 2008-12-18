@@ -30,6 +30,7 @@ namespace otawa {
  * This processor is dedicated to the basic block process thru proccessBB()
  * method. Yet, it may also be applied to CFG and framework. In this case,
  * it is applied at each basic block from these higher structures.
+ * @ingroup proc
  */
 
 

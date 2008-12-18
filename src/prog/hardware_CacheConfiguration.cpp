@@ -13,6 +13,7 @@ namespace otawa { namespace hard {
 	
 /**
  * @class CacheConfiguration
+ * @ingroup hard
  * This class represents the full configuration of caches of a processor.
  */
 
