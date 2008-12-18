@@ -10,7 +10,6 @@ libotawa_la_SOURCES = \
 	feature.h \
 	base.cpp \
 	manager.cpp \
-	platform.cpp \
 	instruction.cpp \
 	type.cpp \
 	Loader.cpp \

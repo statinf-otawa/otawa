@@ -35,6 +35,7 @@ namespace otawa {
  * 
  * The registration may be used to write processor scripts or for GUI to provide
  * list of processors to the user.
+ * @ingroup proc
  */
 
 
@@ -65,6 +66,7 @@ Registry::Registry(void): Initializer<AbstractRegistration>(false) {
 /**
  * @class AbstractRegistration
  * Abstract class to represent the registered processors.
+ * @ingroup proc
  */
 
 
@@ -224,6 +226,7 @@ void FeatureIter::step(void) {
  *		}
  *	};
  * @endcode
+ * @ingroup proc
  */
 
 } // otawa
