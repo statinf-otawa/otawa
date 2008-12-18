@@ -33,7 +33,20 @@
 namespace otawa { namespace hard {
 
 /**
- * @class Platform Platform.h "otawa/hardware/Platform.h"
+ * @defgroup hard Platform Description
+ * 
+ * This module provides information about the host platform where the loaded program
+ * will run on. It includes descriptions for:
+ * @li processor pipeline,
+ * @li processor registers,
+ * @li cache hierarchy,
+ * @li memory spaces.
+ */
+
+
+/**
+ * @class Platform Platform.h
+ * @ingroup hard
  * This class records information about the architecture where the processed
  * program will run.
  */
@@ -295,6 +308,7 @@ const Platform::Identification Platform::ANY_PLATFORM(ANY);
 
 /**
  * @class Platform::Identification
+ * @ingroup hard
  * <p>This class represents a platform identification that is composed by:</p>
  * @li architecture: processor family like 'x86', 'powerpc', 'arm', ...
  * possibly followed by the exact model : i586, arm7, ...

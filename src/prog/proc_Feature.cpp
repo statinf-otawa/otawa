@@ -31,6 +31,7 @@ static Feature<NullProcessor> _null;
 /**
  * @class AbstractFeature
  * See @ref Feature.
+ * @ingroup proc
  */
 
 /**
@@ -87,6 +88,7 @@ AbstractFeature& AbstractFeature::null = _null;
  * @param T	Default processor to compute the feature.
  * @param C Feature checker. This type (class or structure) must provide
  * a function called "check" as provided by the @ref Feature class.
+ * @ingroup proc
  */
 
 
@@ -127,6 +129,7 @@ AbstractFeature& AbstractFeature::null = _null;
  * static SilentFeature::Maker<MyDefaultProcessor> maker;
  * SilentFeature MyFeature("MyFeature", maker);
  * @endcode
+ * @ingroup proc
  */
 
 

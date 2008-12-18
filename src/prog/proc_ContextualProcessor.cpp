@@ -62,6 +62,7 @@ using namespace elm::genstruct;
  * And we process the call to g: enteringCall(g), processBB(g1) and processBB(g2).
  * We call another time h: enteringCall(h), processBB(h1) and leavingCall(h).
  * Finally, we leaving g then g: processBB(g3), leavingCall(g), leavingCall(f).
+ * @ingroup proc
  */
 
 
