@@ -81,6 +81,9 @@ void FetchStage::fetch() {
   for (int i=0; i<in_number_of_accepted_instructions.read() ; i++)
     fetched_instructions.removeFirst();
   _nb_fetched = fetched_instructions.count();
+  if (_nb_fetched == out_ports)
+    stop = true;
+
   *_trace << L8
 	  << "\t\tnumber of instructions already fetched (and not yet in the destination queue = "
 	  << _nb_fetched << "\n";
