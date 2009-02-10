@@ -74,6 +74,7 @@ FetchStage::FetchStage(sc_module_name name, int number_of_out_ports,
 }
   
 void FetchStage::fetch() {
+  bool stop = false;
   *_trace << Level(5) << "[FetchStage] (cycle " << sim_state->cycle() << ")\n";
   
   *_trace << L8 << "\t\tnumber of insts accepted by the destination queue = "
@@ -92,7 +93,6 @@ void FetchStage::fetch() {
   out_request.write(false);
   
   address_t addr;
-  bool stop = false;
   if (_next_inst == NULL) {
     _next_inst = sim_state->driver->nextInstruction(*sim_state, _next_inst);
     if (_next_inst != NULL) {
