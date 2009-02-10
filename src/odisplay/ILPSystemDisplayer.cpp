@@ -20,7 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/io/OutFileStream.h>
+#include <elm/system/System.h>
 #include <otawa/ipet.h>
 #include <otawa/display/ILPSystemDisplayer.h>
 #include <otawa/cfg/CFGCollector.h>
@@ -108,10 +108,14 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 	system = ipet::SYSTEM(ws);
 	if(!path)
 		path = _ << ENTRY_CFG(ws)->label() << "-ilp.html";
-	io::OutFileStream file(path);
-	if(!file.isReady())
-		throw new ProcessorException(*this, _ << "cannot create file \"" << path << "\"");
-	cout.setStream(file);
+	io::OutStream *file;
+	try {
+		file = system::System::createFile(path);
+	}
+	catch(system::SystemException& exn) {
+		throw new ProcessorException(*this, _ << "cannot create file \"" << path << "\": " << exn.message());
+	}
+	cout.setStream(*file);
 	
 	// Build the hashtables
 	typedef genstruct::Vector<ilp::Constraint *> cons_list_t;
