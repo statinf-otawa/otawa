@@ -25,7 +25,7 @@
 #include <elm/system/Path.h>
 #include <otawa/proc/BBProcessor.h>
 
-namespace elm { namespace io { class OutFileStream; } }
+namespace elm { namespace io { class OutStream; } }
 
 namespace otawa {
 
@@ -51,7 +51,7 @@ private:
 	elm::io::Output out;
 	elm::system::Path path;
 	bool to_file;
-	elm::io::OutFileStream *stream;
+	elm::io::OutStream *stream;
 	bool line;
 };
 

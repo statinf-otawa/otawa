@@ -20,7 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/io/OutFileStream.h>
+#include <elm/system/System.h>
 #include <otawa/ipet.h>
 #include <otawa/util/BBRatioDisplayer.h>
 
@@ -94,9 +94,12 @@ void BBRatioDisplayer::setup(WorkSpace *ws) {
 	if(path) {
 		if(isVerbose())
 			log << "\toutputting to " << path << io::endl;
-		stream = new OutFileStream(path);
-		if(!stream->isReady())
+		try {
+			stream = system::System::createFile(path);
+		}
+		catch(system::SystemException& exn) {
 			throw ProcessorException(*this, _ << "cannot open \"" << path << "\"");
+		}
 		out.setStream(*stream);
 	}
 
