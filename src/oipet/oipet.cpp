@@ -22,9 +22,8 @@
 
 #include <stdlib.h>
 #include <elm/io.h>
-#include <elm/io/OutFileStream.h>
+#include <elm/system/System.h>
 #include <elm/options.h>
-#include <elm/io/OutFileStream.h>
 #include <otawa/otawa.h>
 #include <otawa/ipet.h>
 #include <otawa/ilp.h>
@@ -463,11 +462,14 @@ void Command::compute(String fun) {
 	// Dump the ILP system
 	if(dump_constraints) {
 		String out_file = _ << output_prefix.value() << fun << ".lp";
-		io::OutFileStream stream(&out_file);
-		if(!stream.isReady())
+		try {
+			io::OutStream *stream = elm::system::System::createFile(&out_file);
+			sys->dump(*stream);
+		}
+		catch(elm::system::SystemException& exn) {
 			throw MessageException(_ << "cannot create file \"" << out_file
-				<< "\".");
-		sys->dump(stream);
+				<< "\": " << exn.message());
+		}
 	}
 	
 	// Dump the CFG
