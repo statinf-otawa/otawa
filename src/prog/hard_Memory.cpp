@@ -428,7 +428,7 @@ namespace elm { namespace serial2 {
 		otawa::Address::page_t page = address.page();
 		otawa::Address::offset_t offset = address.offset();
 		serializer & field("page", page) & field("offset", offset);
-		serializer.endObject();
+		serializer.endObject(_class, &address);
 	}
 
 	void __unserialize(serial2::Unserializer &serializer, otawa::Address& address) {
@@ -436,7 +436,7 @@ namespace elm { namespace serial2 {
 		otawa::Address::page_t page = 0;
 		otawa::Address::offset_t offset = 0;
 		serializer & field("page", page) & field("offset", offset);
-		serializer.endObject();
+		serializer.endObject(_class, &address);
 		address = otawa::Address(page, offset);
 	}
 
