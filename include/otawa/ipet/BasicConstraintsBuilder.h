@@ -51,7 +51,7 @@ protected:
 	
 private:
 	bool _explicit;
-	void addEntryConstraint(ilp::System *system, CFG *cfg, BasicBlock *bb, CFG *cfg, ilp::Var *var);
+	void addEntryConstraint(ilp::System *system, CFG *caller, BasicBlock *bb, CFG *callee, ilp::Var *var);
 };
 
 
