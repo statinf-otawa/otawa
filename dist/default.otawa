@@ -1,6 +1,7 @@
 # Default module configuration
 default_modules="otawa ppc lp_solve5"
 all_modules="$default_modules elm gel frontc gliss hcs12 lp_solve systemc"
+otawa_web="http://www.irit.fr/recherches/APARA/MARCH/OTAWA"
 
 function mod_elm {
 	NAME=elm
@@ -32,7 +33,6 @@ function mod_otawa {
 # Architectures
 function mod_gliss {
 	NAME=gliss
-	VERSION=BEFORE_1_2
 	DOWNLOAD=home
 	BUILD=make
 	DIST=copy
@@ -43,7 +43,7 @@ function mod_ppc {
 	NAME=ppc
 	DOWNLOAD=home
 	BUILD=make
-	MAKE_FLAGS='OPT=-DISS_DISASM GEP_OPTS="-a user0 int8 -a category int8"'
+	MAKE_FLAGS='OPT="-DISS_DISASM -DISS_TRACE_MEMORY" GEP_OPTS="-a user0 int8 -a category int8"'
 	DIST=copy
 	REQUIRE="gliss gel"
 }
@@ -62,7 +62,7 @@ function mod_hcs12 {
 function mod_lp_solve {
 	NAME=lp_solve
 	DOWNLOAD=wget
-	WGET_ADDRESS=ftp://ftp.es.ele.tue.nl/pub/lp_solve/old_versions_which_you_probably_dont_want/
+	WGET_ADDRESS="$otawa_web/extern"
 	WGET_PACKAGE=lp_solve_4.0.tar.gz
 	BUILD=make
 	MAKE_FLAGS=Makefile.linux
@@ -89,7 +89,7 @@ EOF
 function mod_lp_solve5 {
 	NAME=lp_solve5
 	DOWNLOAD=wget
-	WGET_ADDRESS=http://switch.dl.sourceforge.net/sourceforge/lpsolve/
+	WGET_ADDRESS="$otawa_web/extern"
 	WGET_PACKAGE=lp_solve_5.5.0.10_source.tar.gz
 	WGET_DIR=lp_solve_5.5
 	PATCH=fun

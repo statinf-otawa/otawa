@@ -488,6 +488,7 @@ function build_make {
 	#echo "make all $MAKE_FLAGS"
 	echo "#!/bin/bash" > build.sh
 	echo "make all $MAKE_FLAGS" >> build.sh
+	chmod +x build.sh
 	log_command make all "$MAKE_FLAGS"
 }
 
