@@ -322,7 +322,6 @@ AC_CONFIG_FILES([
 	test/source/Makefile
 	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
-	examples/piconsens/Makefile
 	include/Makefile
 	include/otawa/Makefile
 	include/otawa/app/Makefile
