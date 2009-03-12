@@ -1,6 +1,6 @@
 /**
  * $Id$
- * Copyright (c) 2007, IRIT - UPS <casse@irit.fr>
+ * Copyright (c) 2007-09, IRIT - UPS <casse@irit.fr>
  *
  * Star12X temporal simulator.
  * This file is part of OTAWA
@@ -19,6 +19,8 @@
  * along with Foobar; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+#include <elm/system/System.h>
 
 #define ISS_DISASM
 #include <emul.h>
@@ -39,13 +41,15 @@
 class MemStats {
 public:
 
-	MemStats(void): count(0), resolved(0), file("mem.txt"), out(file) {
+	MemStats(void): count(0), resolved(0) {
+		file = system::System::createFile("mem.txt");
+		out.setStream(*file);
 	}
 	
 	~MemStats(void) {
 		elm::cerr << "[MEM] COUNT = " << count << elm::io::endl;
 		elm::cerr << "[MEM] RESOLVED = " << resolved << elm::io::endl;
-		file.close();
+		delete file;
 	}
 	
 	void add(void) {
@@ -60,7 +64,7 @@ public:
 	
 private:
 	int count, resolved;
-	elm::io::OutFileStream file;
+	elm::io::Stream *file;
 	elm::io::Output out;
 };
 static MemStats stats;
