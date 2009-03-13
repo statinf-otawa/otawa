@@ -36,6 +36,19 @@
  * solving of analyses.
  * @li @ref hard -- this layer provides the description of the host platform where
  * the loaded program will run.
+ * @li @ref dfa -- module devoted to generic classes to perform static analyses.
+ * @li @ref ipet -- module containing class to implements the WCET computation by IPET.
+ * @li @ref ff -- module providing support for flow fact information provided by user
+ * or external tool.
+ * @li @ref graph -- module providing classes to handle graphs.
+ * @li @ref display -- module providing facilities to display graphs.
+ * 
+ * In addition, some utilities are provided:
+ * @li @ref dumpcfg -- outputs CFG with different format (textual, .dot).
+ * @li @ref oipet -- computes WCET according to different alternativs of the
+ * IPET approach.
+ * @li @ref opcg -- outputs the Program Call Graph (PCG),
+ * @li @ref ostat -- computes some statistics about instructions of a program.
  */
 
 /**
