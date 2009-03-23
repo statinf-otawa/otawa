@@ -85,6 +85,10 @@ version=2.1
 #			WGET_DIR?: directory name to rename unpacked package
 #		download_link
 #			LINKPATH: path to the ressource to link
+#		download_bzr
+#			download from a Bazaar repository
+#			VERSION: module version
+#			BZR_REPO: location of the repository
 #
 #	patch_XXX (PATCH)
 #		patch_fun
@@ -234,6 +238,20 @@ function log_command {
 }
 
 
+# contains item item_list
+#	Test if the item is contained in the item list.
+function contains {
+	key="$1"
+	shift
+	for item in $*; do
+		if [ "$key" = "$item" ] ; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+
 ########### clean_XXX ###########
 
 #	NAME : module name
@@ -326,6 +344,19 @@ function do_download {
 		download_$DOWNLOAD
 	fi
 }
+
+# Download from OTAWA home repository.
+#	NAME		name of the module
+#	VERSION		version to download
+#	BZR_REPO	bazaar repository
+function download_bzr {
+	FLAGS=
+	if [ -n "$VERSION" ]; then
+		FLAGS="$FLAGS -r $VERSION"
+	fi
+	log_command bzr export $FLAGS $NAME $BZR_REPO/$NAME
+}
+
 
 # Download from OTAWA home repository.
 #	NAME	name of the module
@@ -650,10 +681,14 @@ function make_help {
 
 	# modules
 	echo "MODULES:"
-	for mod in $options; do
-		echo "  $mod"
-		help_$mod
-	done
+	if [ "$config" = "" ] ; then
+		echo "	no configuration provided."
+	else
+		for mod in $options; do
+			echo "  $mod"
+			help_$mod
+		done
+	fi
 }
 
 # Make a distribution build script
@@ -701,9 +736,11 @@ function load_module {
 #	$1	list of requirements
 #	$2	list of uses
 function require {
+	modules="$modules $1"
+
 	for mod in $1; do
 		display "requiring $mod in [$done]"  
-		if expr "$done" : ".*$mod" > /dev/null; then
+		if contains "$mod" $done; then
 			true
 		else
 			action_$action $mod
@@ -711,9 +748,9 @@ function require {
 	done
 	
 	for mod in $2; do
-		if expr "$modules" : ".*$mod" > /dev/null; then
+		if contains "$mod" $modules; then
 			display "using $mod in [$modules]"  
-			if expr "$done" : ".*$mod" > /dev/null; then
+			if contains "$mod" $done; then
 				true
 			else
 				action_$action $mod
@@ -772,6 +809,7 @@ function action_dist {
 	do_setup
 	do_dist
 	cd $basedir
+	done="$done $1"
 }
 
 # Perform a make for a distribution.
@@ -814,7 +852,7 @@ if [ "$config" != "no" ]; then
 			config="./default.otawa"
 		elif test -f "$root/dists/default.otawa"; then
 			config="$root/dists/default.otawa"
-		else
+		elif [ "$action" != "help" ] ; then
 			error "no default configuration available: select one with --config"
 		fi
 	else
@@ -822,9 +860,11 @@ if [ "$config" != "no" ]; then
 			error "cannot use the configuration file $config."
 		fi
 	fi
-	display "INFO: configuration  = $config"
-	. $config
-	cd $basedir
+	if [ "$config" != "" ] ; then
+		display "INFO: configuration  = $config"
+		. $config
+		cd $basedir
+	fi
 fi
 
 # Prefix management
