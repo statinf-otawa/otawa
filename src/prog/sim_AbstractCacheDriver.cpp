@@ -91,7 +91,7 @@ CacheDriver::result_t AbstractCacheDriver::access(
 {
 	int line = _cache->line(address);
 
-	tag_t *tags = lines + line;
+	tag_t *tags = lines + line*_cache->wayCount();
 	tag_t tag = _cache->tag(address);
 
 	for(int i = 0; i < 	_cache->wayCount(); i++)
