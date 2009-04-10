@@ -300,6 +300,7 @@ AC_CONFIG_FILES([
 	examples/Makefile
 	bin/Makefile
 	test/Makefile
+	test/checksum/Makefile
 	test/lp_solve/Makefile
 	test/ipet/Makefile
 	test/ets/Makefile
