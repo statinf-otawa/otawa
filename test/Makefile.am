@@ -1,5 +1,6 @@
 SUBDIRS = \
 	dom \
+	checksum \
 	ct \
 	ets \
 	graph \
