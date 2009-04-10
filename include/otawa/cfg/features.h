@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2008, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_CFG_FEATURES_H_
@@ -49,7 +49,7 @@ public:
 	inline int count(void) const { return cfgs.length(); }
 	inline CFG *get(int index) const { return cfgs[index]; }
 	inline CFG *operator[](int index) const { return cfgs[index]; }
-	
+
 	class Iterator: public elm::genstruct::FragTable<CFG *>::Iterator {
 	public:
 		inline Iterator(const CFGCollection *cfgs)
@@ -83,12 +83,16 @@ extern Identifier<BasicBlock*> UNROLLED_FROM;
 extern SilentFeature PST_FEATURE;
 extern Identifier<BasicBlock*> FROM_BB;
 extern Identifier<Edge *> FROM_EDGE;
-extern Identifier<PSTree *> PROGRAM_STRUCTURE_TREE; 
+extern Identifier<PSTree *> PROGRAM_STRUCTURE_TREE;
 
 // VIRTUALIZED_CFG_FEATURE
 extern SilentFeature VIRTUALIZED_CFG_FEATURE;
 extern Identifier<bool> VIRTUAL_INLINING;
 extern Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK;
+
+// CFG_CHECKSUM_FEATURE
+extern SilentFeature CFG_CHECKSUM_FEATURE;
+extern Identifier<unsigned long > CHECKSUM;
 
 } // otawa
 
