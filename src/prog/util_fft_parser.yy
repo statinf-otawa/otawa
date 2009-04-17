@@ -24,7 +24,6 @@
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/flowfact/ContextualLoopBound.h>
-using namespace elm;
 using namespace elm::genstruct;
 int util_fft_lex(void);
 void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
@@ -121,14 +120,14 @@ count:
 	KW_MAX INTEGER
 		{
 			if(loop_max >= 0)
-				loader->onError(_ << "several 'max' keywords");
+				loader->onError(elm::_ << "several 'max' keywords");
 			else
 				loop_max = $2;
 		}
 |	KW_TOTAL INTEGER
 		{
 			if(loop_total >= 0)
-				loader->onError(_ << "several 'total' keywords");
+				loader->onError(elm::_ << "several 'total' keywords");
 			else
 				loop_total = $2;
 		}
