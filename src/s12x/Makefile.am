@@ -8,7 +8,7 @@ AM_CXXFLAGS = @GLISS_S12X_CXXFLAGS@ @OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@
 # Library configuration
 s12x_la_LDFLAGS = -module
 
-s12x_la_LIBADD = @GLISS_S12X_LIBS@ @GEL_PPC_LIBS@ @OTAWA_LIBS@ ../oloader/liboloader.la @GEL_DWARF_LIBS@
+s12x_la_LIBADD = @GLISS_S12X_LIBS@ @GEL_PPC_LIBS@ ../oloader/liboloader.la @GEL_DWARF_LIBS@ @OTAWA_LIBS@
 
 s12x_la_SOURCES = \
 	s12x.cpp \
@@ -21,9 +21,9 @@ install-data-hook:
 
 
 # Test program configuration
-test_s12x_LDADD = @LOADER_LIBS@ @ILP_LIBS@ @OTAWA_LIBS@ @ODISPLAY_LIBS@ 
+test_s12x_LDADD = @LOADER_LIBS@ @ILP_LIBS@ @ODISPLAY_LIBS@ @OTAWA_LIBS@
 
-test_s12x_DEPENDENCIES = s12x.la @ILP_DEPS@ @OTAWA_DEPS@ @ODISPLAY_DEPS@ 
+test_s12x_DEPENDENCIES = s12x.la @ILP_DEPS@ @ODISPLAY_DEPS@ @OTAWA_DEPS@ @ODISPLAY_DEPS@ 
 
 test_s12x_SOURCES = test.cpp
 
