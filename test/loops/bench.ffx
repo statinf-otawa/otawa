@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<flowfacts>
+	<function name="sum">
+		<loop source="bench.c" line="4" maxcount="10">
+			<loop source="bench.c" line="5" maxcount="10" totalcount="45"/>
+		</loop>
+	</function>
+	
+	<function name="zero">
+		<loop source="bench.c" line="13" maxcount="10" totalcount="10"/>
+		<loop source="bench.c" line="16" maxcount="1000"/>
+	</function>
+</flowfacts>
