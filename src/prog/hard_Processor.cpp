@@ -72,8 +72,8 @@ namespace otawa { namespace hard {
  * To find if the dispatch match an instruction, an AND is performed between the
  * instruction kind and the dispatch type and if the result is equal to the dispatch
  * type, this dispatch functional unit is selected. This means that the dispatched
- * functional unit only process instructions that meets the instruction kind found
- * in the dispatch.
+ * functional unit only process instructions that meets the all properties found
+ * in the dispatch kind.
  */
 
 } } // otawa::hard
