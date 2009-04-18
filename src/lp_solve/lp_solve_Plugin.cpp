@@ -5,7 +5,7 @@
  *	src/lp_solve/LPSolvePlugin.cpp -- LPSolvePlugin class definition.
  */
 
-#include <otawa/lp_solve/System.h>
+#include "System.h"
 #include <otawa/ilp/ILPPlugin.h>
 
 using namespace elm;
@@ -17,7 +17,7 @@ namespace otawa { namespace lp_solve {
 class Plugin: public ILPPlugin {
 public:
 	Plugin(void);
-	
+
 	// ILPPlugin overload
 	virtual System *newSystem(void);
 };
