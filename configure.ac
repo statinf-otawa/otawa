@@ -301,7 +301,6 @@ AC_CONFIG_FILES([
 	bin/Makefile
 	test/Makefile
 	test/checksum/Makefile
-	test/lp_solve/Makefile
 	test/ipet/Makefile
 	test/ets/Makefile
 	test/dom/Makefile
@@ -346,7 +345,6 @@ AC_CONFIG_FILES([
 	include/otawa/loader/Makefile
 	include/otawa/loader/new_gliss/Makefile
 	include/otawa/loader/old_gliss/Makefile
-	include/otawa/lp_solve/Makefile
 	include/otawa/pcg/Makefile
 	include/otawa/proc/Makefile
 	include/otawa/prog/Makefile
