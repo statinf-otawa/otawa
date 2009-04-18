@@ -1,6 +1,0 @@
-Makefile
-Makefile.in
-test
-.deps
-test_lp_solve
-.libs

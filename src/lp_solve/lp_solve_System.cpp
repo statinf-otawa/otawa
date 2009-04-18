@@ -9,8 +9,8 @@
 #include <stdio.h>
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
-#include <otawa/lp_solve/System.h>
-#include <otawa/lp_solve/Constraint.h>
+#include "System.h"
+#include "Constraint.h"
 extern "C" {
 #	include <lpkit.h>
 }
@@ -147,7 +147,7 @@ double System::value(void) {
 bool System::solve(void) {
 	static short comps[] = { LE, LE, EQ, GE, GE };
 	static double corr[] = { -1, 0, 0, 0, +1 };
-	
+
 	// Allocate and initialize the lp_solve data structure
 	lprec *lp = make_lp(0, cols);
 	REAL row[cols + 1];
@@ -155,7 +155,7 @@ bool System::solve(void) {
 		row[i] = 0;
 		set_int(lp, i, TRUE);
 	}
-	
+
 	// Build the object function
 	ofun->fillRow(row);
 	row[cols] = 0;
@@ -165,7 +165,7 @@ bool System::solve(void) {
 		set_maxim(lp);
 	else
 		set_minim(lp);
-	
+
 	// Build the matrix
 	for(Constraint *cons = conss; cons; cons = cons->next()) {
 		cons->fillRow(row);
@@ -176,7 +176,7 @@ bool System::solve(void) {
 			cst + corr[comp - Constraint::LT]);
 		cons->resetRow(row);
 	}
-	
+
 	// Launch the resolution
 	set_print_sol(lp, FALSE);
 	/*set_epsilon(lp, DEF_EPSILON);
@@ -192,12 +192,12 @@ bool System::solve(void) {
 	set_scalemode(lp, MMSCALING);
 	set_bb_rule(lp, FIRST_SELECT);*/
 	int fail = ::solve(lp);
-	
+
 	// Record the result
 	int result = false;
 	if(fail == OPTIMAL) {
 		result = true;
-		
+
 		// Record variables values
 		for(elm::genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
 		var; var++)
@@ -205,10 +205,10 @@ bool System::solve(void) {
 
 		// Get optimization result
 		val = (double)lp->best_solution[0];
-		
+
 		// lp_solve seems to be buggy, so we recompute the max
 		//val = get_objective(lp);
-		
+
 		double sum = 0;
 		for(Constraint::Factor *fact = ofun->facts; fact; fact = fact->next()) {
 			if(fact->variable())
@@ -218,7 +218,7 @@ bool System::solve(void) {
 		}
 		val = sum;
 	}
-	
+
 	// Clean up
 	/*print_lp(lp);*/
 	//print_solution(lp);
@@ -246,8 +246,8 @@ int System::countConstraints(void) {
  */
 void System::exportLP(io::Output& out) {
 	static CString texts[] = { "<", "<=", "=", ">=", ">" };
-	out << "/* IPET system */\n"; 
-	
+	out << "/* IPET system */\n";
+
 	// Output the objective function
 	if(ofun->comparator() >= 0)
 		out << "max: ";
@@ -255,14 +255,14 @@ void System::exportLP(io::Output& out) {
 		out << "min: ";
 	ofun->dump(out);
 	out << ";\n";
-	
+
 	// Output the constraints
 	for(Constraint *cons = conss; cons; cons = cons->next()) {
 		cons->dump(out);
 		out << " " << texts[cons->comparator() + 2]
-			<< " " << (int)cons->constant() << ";\n"; 
+			<< " " << (int)cons->constant() << ";\n";
 	}
-	
+
 	// Output int constraints
 	for(genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
 	var; var++)
