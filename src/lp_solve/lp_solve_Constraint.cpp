@@ -6,8 +6,8 @@
  */
 
 #include <assert.h>
-#include <otawa/lp_solve/System.h>
-#include <otawa/lp_solve/Constraint.h>
+#include "System.h"
+#include "Constraint.h"
 
 namespace otawa { namespace lp_solve {
 
