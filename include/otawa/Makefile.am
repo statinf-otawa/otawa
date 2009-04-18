@@ -27,10 +27,6 @@ if HAS_SYSTEMC
 SUBDIRS += gensim
 endif
 
-if HAS_LP_SOLVE
-SUBDIRS += lp_solve
-endif
-
 
 # Headers
 includeotawadir=$(includedir)/otawa
