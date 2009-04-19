@@ -60,10 +60,10 @@ Identifier<CATNode *> NODE("otawa::ipet::node", 0);
  * This processor uses categories assigned to L-block of the instruction cache
  * to add contraints and to modify maximized function to support the instruction
  * cache.
- * 
+ *
  * @par Provided Features
  * @li @ref ICACHE_SUPPORT_FEATURE
- * 
+ *
  * @par Required Features
  * @li @ref CONTEXT_TREE_FEATURE
  * @li @ref ICACHE_CATEGORY_FEATURE
@@ -75,7 +75,7 @@ Identifier<CATNode *> NODE("otawa::ipet::node", 0);
  * Build a builder of constraints based on instruction cache access categories.
  */
 CATConstraintBuilder::CATConstraintBuilder(void)
-:	Processor("otawa.ipet.CATConstraintBuilder", Version(1, 0, 0)), 
+:	Processor("otawa.ipet.CATConstraintBuilder", Version(1, 0, 0)),
 	_explicit(false)
 {
 	require(CONTEXT_TREE_FEATURE);
@@ -93,17 +93,17 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 
 	ilp::System *system = SYSTEM(fw);
 	assert (system);
-	
+
 	// cache configuration
 	const hard::Cache *cach = fw->platform()->cache().instCache();
 
 	// LBlock initialization
 	ContextTree *ct = CONTEXT_TREE(fw);
-	assert(ct); 
+	assert(ct);
 	for(LBlockSet::Iterator lblock(*id); lblock; lblock++)
 		NODE(lblock).add(new CATNode(lblock));
 	buildLBLOCKSET(id, ct);
-	
+
 	// Set variables
 	for(LBlockSet::Iterator lblock(*id); lblock; lblock++) {
 		BasicBlock *bb = lblock->bb();
@@ -111,9 +111,9 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 			continue;
 
 		// Link BB variable
-		ilp::Var *bbvar = bb->use<ilp::Var *>(VAR);
+		ilp::Var *bbvar = VAR(bb);
 		BB_VAR(lblock).add(bbvar);
-		
+
 		// Create x_hit variable
 		ilp::Var *vhit;
 		if(!_explicit)
@@ -125,7 +125,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 			vhit = system->newVar(namex);
 		}
 		HIT_VAR(lblock).add(vhit);
-		
+
 		// Create x_miss variable
 		ilp::Var *miss;
 		if(!_explicit)
@@ -138,19 +138,19 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 		}
 		MISS_VAR(lblock).add(miss);
 	}
-	
-	int length = id->count();	
+
+	int length = id->count();
 	/*
 	 * Process each l-block, creating constraints using the l-block's categorisation
 	 */
 	for (LBlockSet::Iterator bloc(*id); bloc; bloc++){
 		int test = bloc->id();
-		
+
 		/* Avoid first/last l-block */
-		if ((test != 0)&&(test != (length-1))) {	
+		if ((test != 0)&&(test != (length-1))) {
 			category_t categorie = CATEGORY(bloc);
 			Constraint *cons;
-		
+
 			/* If ALWAYSHIT, then x_miss(i,j) = 0 */
 			if (categorie == ALWAYS_HIT){
 				cons = system->newConstraint(Constraint::EQ,0);
@@ -168,25 +168,25 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 				bool used = false;
 				for(BasicBlock::InIterator edge(bb); edge; edge++) {
 					if (!Dominance::dominates(bb, edge->source())){
-						cons->addRight(1, edge->use<ilp::Var *>(VAR));
+						cons->addRight(1, VAR(edge));
 						used = true;
 					}
 				}
 			if(!used)
 				delete cons;
-		
-		
+
+
 				Constraint *cons2 = system->newConstraint(Constraint::EQ);
 				cons2->addLeft(1, BB_VAR(bloc));
 				cons2->addRight(1, HIT_VAR(bloc));
-				cons2->addRight(1, MISS_VAR(bloc));		
+				cons2->addRight(1, MISS_VAR(bloc));
 			}
-		
+
 			/*
 			 * If FIRSTMISS,
 			 * xmiss(i,j) == 1  (?!??)
 			 */
-			 
+
 			if (categorie == FIRST_MISS){
 				cons = system->newConstraint(Constraint::EQ,1);
 				cons->add(1, MISS_VAR(bloc));
@@ -211,10 +211,10 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 						for(BasicBlock::InIterator entry(NODE(bloc)->HEADERLBLOCK());
 							entry; entry++) {
 							if (!Dominance::dominates(NODE(bloc)->HEADERLBLOCK(), entry->source())){
-								boundingmiss->addRight(1, entry->use<ilp::Var *>(VAR));
-							
+								boundingmiss->addRight(1, VAR(entry));
+
 							}
-					
+
 						}
 					}
 					else {
@@ -222,7 +222,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 						cons = system->newConstraint(Constraint::EQ);
 						cons->addLeft(1, MISS_VAR(bloc));
 						cons->addRight(1, BB_VAR(bloc));
-								
+
 					}
 				}
 				else {
@@ -243,14 +243,14 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 		} /* of if (not a first/last lblock) */
 	} /* of for(all lblocks) */
 }
-	
+
 
 
 void CATConstraintBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = fw->platform()->cache().instCache();
-	
+
 	for(int i = 0; i < cache->rowCount(); i++)
 		processLBlockSet(fw, lbsets[i]);
 }
@@ -265,23 +265,23 @@ void CATConstraintBuilder::processWorkSpace(WorkSpace *fw) {
  * @param lcache The lblock set.
  * @param root The root ContextTree
  * @return The set of all lblocks contained in the "root" ContextTree and its children (that is, the set of all processed l-blocks)
- * 
+ *
  */
 void CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , ContextTree *root){
 
 		// Cuurently in loop ?
-		bool inloop = false;		
+		bool inloop = false;
 		if (root->kind()== ContextTree::LOOP )
 				inloop = true;
 		int ident;
-	
+
 		/*
 		 * Call recursively buildLBLOCKSET for each ContextTree children
 		 * Merge result with current set
 		 */
 		for(ContextTree::ChildrenIterator son(root); son; son++)
 			buildLBLOCKSET(lcache, son);
-		
+
 		/*
 		 * For each lblock that is part of any non-(entry|exit) BB of the current ContextTree:
 		 *   - Set the lblock's categorization to INVALID

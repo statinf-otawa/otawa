@@ -16,6 +16,7 @@
 #include <otawa/hard/Platform.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/prop/DeletableProperty.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
@@ -32,10 +33,10 @@ static Identifier<dfa::BitSet *> IN("", 0);
  * @class CCGBuilder
  * This processor builds the Cache Conflict Graph of the current task.
  * An instruction cache is required to make it work.
- * 
+ *
  * @par Provided Feature
  * @ref @li CCG_FEATURE
- * 
+ *
  * @par Required Feature
  * @ref @li COLLECTED_LBLOCKS_FEATURE
  */
@@ -55,7 +56,7 @@ CCGBuilder::CCGBuilder(void):
 
 /**
  * This property stores the list of CCG for the current task.
- * 
+ *
  * @par Hooks
  * @li @ref FrameWork
  */
@@ -64,7 +65,7 @@ Identifier<CCGCollection *> CCG::GRAPHS("otawa::CCG::graphs", 0);
 
 /**
  * This property stores the CCG node matching the L-Block it is hooked to.
- * 
+ *
  * @par Hooks
  * @li @ref LBlock
  */
@@ -87,7 +88,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	CCGCollection *ccgs = CCG::GRAPHS(fw);
 	if(!ccgs) {
 		ccgs = new CCGCollection(cache->rowCount());
-		fw->addDeletable(CCG::GRAPHS, ccgs);
+		fw->addProp(new DeletableProperty<CCGCollection *>(CCG::GRAPHS, ccgs));
 	}
 	CCG *ccg = new CCG;
 	ccgs->ccgs[lbset->line()] = ccg;
@@ -105,20 +106,20 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	dfa::XCFGVisitor<CCGProblem> visitor(*coll, prob);
 	dfa::XIterativeDFA<dfa::XCFGVisitor<CCGProblem> > engine(visitor);
 	engine.process();
-	
-	// Add the annotations from the DFA result 
+
+	// Add the annotations from the DFA result
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
 		for (CFG::BBIterator block(*cfg); block; block++) {
 			dfa::XCFGVisitor<CCGProblem>::key_t pair(*cfg, *block);
 			dfa::BitSet *bitset = engine.in(pair);
-			block->addDeletable<dfa::BitSet *>(IN, new dfa::BitSet(*bitset));
+			block->addProp(new DeletableProperty<dfa::BitSet *>(IN, new dfa::BitSet(*bitset)));
 		}
 	}
-	
+
 	// Detecting the non conflict state of each lblock
 	BasicBlock *BB;
 	LBlock *line;
-	int length = lbset->count();		
+	int length = lbset->count();
 	for(LBlockSet::Iterator lbloc(*lbset); lbloc; lbloc++)
 		if(lbloc->id() != 0 && lbloc->id() != length - 1) {
 			BB = lbloc->bb();
@@ -128,13 +129,13 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				if(cache->block(line->address()) == cache->block(lbloc->address())
 					&& BB != line->bb())
 					NON_CONFLICT(lbloc) = true;
-				
+
 		}
-	
+
 	// Building the ccg edges using DFA
 	length = lbset->count();
 	//Inst *inst;
-	address_t adinst;			
+	address_t adinst;
 	PseudoInst *pseudo;
 	LBlock *aux;
 
@@ -147,13 +148,13 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				bool visit;
 				for(BasicBlock::InstIter inst(bb); inst; inst++) {
 					visit = false;
-					pseudo = inst->toPseudo();			
+					pseudo = inst->toPseudo();
 					if(!pseudo){
-						adinst = inst->address();				
+						adinst = inst->address();
 						for (LBlockSet::Iterator lbloc(*lbset); lbloc; lbloc++){
 							address_t address = lbloc->address();
 							// the first lblock in the BB it's a conflict
-							if(adinst == address && !test && bb == lbloc->bb()) {		
+							if(adinst == address && !test && bb == lbloc->bb()) {
 								for (int i = 0; i< length; i++)
 									if (info->contains(i)) {
 										LBlock *lblock = lbset->lblock(i);
@@ -165,7 +166,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 								visit = true;
 								break;
 							}
-					
+
 							if(adinst == address && !visit && bb == lbloc->bb()) {
 								new CCGEdge(CCG::NODE(aux), CCG::NODE(lbloc));
 								aux = lbloc;
@@ -174,12 +175,12 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 						}
 					}
 					else if(pseudo->id() == &bb->ID)
-						break;		
+						break;
 				}
 			}
 		}
 	}
-	
+
 	// build edge to LBlock end
 	BasicBlock *exit = ENTRY_CFG(fw)->exit();
 	LBlock *end = lbset->lblock(length-1);
@@ -189,28 +190,28 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			LBlock *ccgnode1 = lbset->lblock(i);
 			new CCGEdge(CCG::NODE(ccgnode1), CCG::NODE(end));
 		}
-		
+
 	// Build edge from 'S' till 'end'
 	LBlock *s = lbset->lblock(0);
 	new CCGEdge(CCG::NODE(s), CCG::NODE(end));
-			
+
 	// Cleanup the DFA annotations
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++)
 		for (CFG::BBIterator block(cfg); block; block++)
-			block->removeProp(&IN);	
+			block->removeProp(&IN);
 }
-			
-			
+
+
 /**
  */
 void CCGBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
-	
+
 	// Check the cache
 	const hard::Cache *cache = fw->platform()->cache().instCache();
 	if(!cache)
 		out << "WARNING: no instruction cache !\n";
-	
+
 	// Process the l-block sets
 	LBlockSet **lbsets = LBLOCKS(fw);
 	assert(lbsets);
@@ -222,7 +223,7 @@ void CCGBuilder::processWorkSpace(WorkSpace *fw) {
 /**
  * This feature ensures that Cache Conflict Graphs has been built. They may
  * accessed by @ref CCG::GRAPHS put on the framework.
- * 
+ *
  * @par Properties
  * @li @ref CCG::GRAPHS (Framework)
  * @li @ref CCG::NODE (LBlock)

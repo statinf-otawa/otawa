@@ -1,8 +1,23 @@
 /*
- *  $Id$
- *  Copyright (c) 2006, IRIT-UPS.
+ *	$Id$
+ *	Delta class implementation
  *
- *  src/prog/ipet_Delta.h -- Delta class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006-09, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <assert.h>
 #include <elm/genstruct/Vector.h>
@@ -23,18 +38,18 @@ namespace otawa { namespace ipet {
  * @class Delta
  * This processor is used for computing time effects of pipeline, between basic
  * blocks.
- * 
+ *
  * @par Configuration Properties accepted:
  * @li @ref Delta::LEVELS: depth of the delta algorithm: Level n = delta for
  * sequences with length n.
  * @li @ref Delta::SEQ_COMPLETION: number of instructions after the basic
  * block of a sequence to stop the sequence.
- * 
+ *
  * @par Required Feature
  * @li @ref ILP_SYSTEM_FEATURE
  * @li @ref CFG_INFO_FEATURE
  * @li @ref ASSIGNED_VARS_FEATURE
- * 
+ *
  * @par Provided Feature
  * @li @ref INTERBLOCK_SUPPORT_FEATURE
  * @li @ref BB_TIME_FEATURE
@@ -55,9 +70,9 @@ Delta::Delta(void)
 
 /**
  * Configures the delta calculator. Properties accepted are
- * 
+ *
  * <code>Delta::ID_Levels<int></code> : number of delta levels
- * 
+ *
  * <code>IPET::ID_Explicit<bool></code> : give explicit names for the sequences
  */
 void Delta::configure(const PropList& props){
@@ -104,7 +119,7 @@ void Delta::processBBPath(WorkSpace *fw, System *system, BBPath *bbpath) {
 		length_cnt++;
 		if(l > max_length)
 			max_length = l;
-		
+
 		// Compute delta
 		if(bbpath->length() == 1) {
 			int time = bbpath->time(fw);
@@ -114,7 +129,7 @@ void Delta::processBBPath(WorkSpace *fw, System *system, BBPath *bbpath) {
 		int delta = Delta::delta(bbPath, fw);
 
 		// Build its variable
-		ilp::Var *var = bbPath.getVar(system, explicitNames); 
+		ilp::Var *var = bbPath.getVar(system, explicitNames);
 		Constraint *cons;
 
 		// constraint S[A,B,C] <= S[A,B]
@@ -126,7 +141,7 @@ void Delta::processBBPath(WorkSpace *fw, System *system, BBPath *bbpath) {
 		cons = system->newConstraint(Constraint::LE);
 		cons->addLeft(1, var);
 		cons->addRight(1, bbPath(2, l)->getVar(system, explicitNames));
-		
+
 		// constraint S[A,B,C] >= S[A,B] - Sum(S[B,x], x != C)
 		BasicBlock *bb_B;
 		cons = system->newConstraint(Constraint::GE);
@@ -164,7 +179,7 @@ void Delta::processCFG(WorkSpace* fw, CFG* cfg){
 			to_process.put(BBPath::getBBPath(bb));
 		}
 	}
-	
+
 	// While there is something to process
 	while(!to_process.isEmpty()) {
 		BBPath *bbpath = to_process.get();
@@ -172,10 +187,10 @@ void Delta::processCFG(WorkSpace* fw, CFG* cfg){
 		for(BBPath::BBIterator bb(bbpath); bb; bb++)
 			cout << bb->address() << ", ";
 		cout << "]\n";*/
-		
+
 		// Generates constraints
 		processBBPath(fw, system, bbpath);
-		
+
 		// one search all length+1 sequences from sequences in bbPathVector
 		// and one put all these in bbPathToProcess
 		/*if(truebbPath.tail()->countInstructions() < FLUSH_TIME(bbPath)){
@@ -188,7 +203,7 @@ void Delta::processCFG(WorkSpace* fw, CFG* cfg){
                                 isCall = true;
                         }
 		}
-		
+
 		if(!isCall) {
 			bool cont = false;
 			if(levels)
@@ -208,7 +223,7 @@ void Delta::processCFG(WorkSpace* fw, CFG* cfg){
                                 }
 				delete toInsert;
 			}
-		}	 
+		}
 	}
 }
 
@@ -219,11 +234,11 @@ void Delta::processCFG(WorkSpace* fw, CFG* cfg){
  */
 int Delta::delta(BBPath &bbp, WorkSpace *fw){
 	assert(fw);
-	
+
 	if(bbp.length() <= 1)
 		return 0;
-	
-	elm::Option<int> delta = bbp.get<int>(DELTA);
+
+	elm::Option<int> delta = DELTA.get(bbp);
 	if(!delta){
 		//nbDeltasCalculated++;
 		int t = bbp.time(fw);
@@ -296,7 +311,7 @@ Identifier<TreePath<BasicBlock*,BBPath*>*>
 /**
  * Feature ensure that sequences have been built to achieve the Delta
  * interblock effect support.
- * 
+ *
  * @par Properties
  * @li @ref Delta::DELTA (@ref BBPATH).
  */
