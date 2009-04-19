@@ -1,8 +1,23 @@
 /*
- *  $Id$
- *  Copyright (c) 2006, IRIT-UPS.
+ *	$Id$
+ *	BBPath class implementation
  *
- *  src/prog/ipet_BBPath.h -- BBPath class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006-09, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/ipet/BBPath.h>
@@ -78,7 +93,7 @@ BBPath::~BBPath(){
 BBPath *BBPath::getBBPath(BasicBlock *start){
 	TreePath<BasicBlock*,BBPath*> *tree = Delta::TREE(start);
 	if(!tree){
-		BBPath *bbp = new BBPath(start); 
+		BBPath *bbp = new BBPath(start);
 		tree = new TreePath<BasicBlock*,BBPath*>(start,bbp);
 		Delta::TREE(start) = tree;
 		return bbp;
@@ -126,13 +141,13 @@ Vector<BBPath*> *BBPath::nexts(){
 	Vector<BBPath*> *nextbbp = new Vector<BBPath*>(2);
 	BasicBlock *bb = basicBlocks.top();
 	Vector<BasicBlock*> bbp(basicBlocks.length()+1);
-	
+
 	// copy the BBPath
 	int l = basicBlocks.length();
 	for(int i=0 ; i < l ; i++){
 		bbp.add(basicBlocks[i]);
 	}
-	
+
 	// add next basic block to each BBPath
 	for(BasicBlock::OutIterator edge(bb) ; edge ; edge++)
 		if(edge->target() && !edge->target()->isExit()) {
@@ -141,7 +156,7 @@ Vector<BBPath*> *BBPath::nexts(){
 		nextbbp->add(getBBPath(&bbp));
 		bbp.pop();
 	}
-	
+
 	return nextbbp;
 }
 
@@ -165,7 +180,7 @@ MutableCollection<BasicBlock *> *BBPath::empty(void){
  * @return number of cycles
  */
 int BBPath::time(WorkSpace *fw){
-	int time = get<int>(TIME,-1);
+	int time = TIME(this);
 	if(time < 0){
 		time = simulate(fw);
 		TIME(this) = time;
@@ -190,13 +205,23 @@ int BBPath::countInstructions(){
  */
 int BBPath::simulate(WorkSpace *fw){
 	int cycle;
+
+	// build the simulator
 	Simulator *simulator = fw->process()->simulator();
-	State *state = simulator->instantiate(fw);
+	PropList props;
+	USE_MEMORY(props) = false;
+	State *state = simulator->instantiate(fw, props);
+
+	// perform the simulation
 	BBPathDriver driver(*this);
 	state->reset();
 	state->run(driver);
+	state->flush();
+
+	// get results
 	cycle = state->cycle();
 	instructions_simulated += countInstructions();
+	cerr << *this << " -> " << cycle << io::endl;	// !!DEBUG!!
 	return cycle;
 }
 
@@ -252,8 +277,8 @@ String BBPath::makeVarName(){
 		if(i != 0){
 			buf << '_';
 		}
-		ilp::Var *var = basicBlocks[i]->get<ilp::Var*>(VAR,0);
-		if(var && !var->name().isEmpty()){ 
+		ilp::Var *var = VAR(basicBlocks[i]);
+		if(var && !var->name().isEmpty()){
 			buf << var->name();
 		}
 		else {
@@ -280,7 +305,7 @@ ilp::Var* BBPath::getVar(System *system, bool explicit_names){
 		else {
 			var = system->newVar();
 		}
-		set(VAR, var);
+		VAR(this) = var;
 	}
 	return var;
 }
@@ -339,6 +364,23 @@ BBPath* BBPath::sub(int begin, int end){
  */
 
 
+/**
+ * Display a BB path as a sequence of basic blocks.
+ * @param out	Output channel.
+ * @param path	Path to display.
+ * @return		Output channel.
+ */
+io::Output& operator<<(io::Output& out, BBPath& path) {
+	bool first = true;
+	for(BBPath::BBIterator bb(&path); bb; bb++) {
+		if(first)
+			first = false;
+		else
+			out << '-';
+		out << bb->number();
+	}
+	return out;
+}
 
 
 
