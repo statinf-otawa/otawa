@@ -73,6 +73,8 @@ public:
 	//inline bool operator== (BBPath &bbpath);
 };
 
+io::Output& operator<<(io::Output& out, BBPath& path);
+
 // BBPath inlines
 inline int BBPath::t(WorkSpace *fw) {return time(fw);}
 inline int BBPath::l() {return length();}
