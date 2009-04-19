@@ -35,7 +35,7 @@ String GraphVizItem::getPropertiesString(){
 	StringBuffer buf;
 	for(PropList::Iter prop(_props); !prop.ended(); prop.next()){
 		const AbstractIdentifier *id = prop->id();
-		if(_defaultInclude && !_exclude.exists(id) || _include.exists(id)){
+		if((_defaultInclude && !_exclude.exists(id)) || _include.exists(id)){
 			if(buf.length() != 0){
 				buf << '\n';
 			}
@@ -68,7 +68,7 @@ void GraphVizItem::printOthersAttributes(elm::io::Output& out){
  */
 bool GraphVizItem::printAttribute(elm::io::Output &out, const PropList::Iter& prop){
 	if(prop == DEFAULT){
-		AbstractIdentifier *id = prop.get<AbstractIdentifier*>();
+		AbstractIdentifier *id = INCLUDE(prop);
 		assert(id == &INCLUDE || id == &EXCLUDE);
 		if(id == &INCLUDE)
 			_defaultInclude = true;
@@ -76,30 +76,30 @@ bool GraphVizItem::printAttribute(elm::io::Output &out, const PropList::Iter& pr
 			_defaultInclude = false;
 	}
 	else if(prop == INCLUDE){
-		_include.put(prop.get<AbstractIdentifier*>(),0);
+		_include.put(INCLUDE(prop),0);
 		return false;
 	}
 	else if(prop == EXCLUDE){
-		_exclude.put(prop.get<AbstractIdentifier*>(),0);
+		_exclude.put(EXCLUDE(prop),0);
 		return false;
 	}
 	else if(prop == COLOR){
-		out << "color=\"" << quoteSpecials(prop.get<CString>()) << '"';
+		out << "color=\"" << quoteSpecials(COLOR(prop)) << '"';
 		return true;
 	}
 	if(prop == BACKGROUND){
-		out << "bgcolor=\"" << quoteSpecials(prop.get<CString>()) << '"';
+		out << "bgcolor=\"" << quoteSpecials(BACKGROUND(prop)) << '"';
 		return true;
 	}
 	else if(prop == HREF){
-		out << "href=\"" << quoteSpecials(prop.get<CString>()) << '"';
+		out << "href=\"" << quoteSpecials(HREF(prop)) << '"';
 		return true;
 	}
 	return false;
 }
 
 
-/** 
+/**
  * Prints all attributes (styles) in a string, between brackets.
  * First iterates on the style PropList, calling printAttribute() for
  * each property, and then, calls printOthersAttributes() to finish.
@@ -113,7 +113,7 @@ String GraphVizItem::attributes(const PropList& style){
 	elm::StringBuffer buf;
 	buf << '[';
 	for(PropList::Iter iter(style); !iter.ended(); iter.next()){
-		if(printAttribute(buf, iter)){ 
+		if(printAttribute(buf, iter)){
 			buf << ',';
 		}
 	}

@@ -20,7 +20,7 @@ namespace otawa { namespace display {
 bool GraphVizGraphElement::printAttribute(elm::io::Output &out, const PropList::Iter& prop){
 	if(prop == STYLE){
 		out << "style=";
-		switch(prop.get<int>()){
+		switch(STYLE(*prop)){
 			case STYLE_FILLED:
 				out << "filled";
 				break;
@@ -42,15 +42,15 @@ bool GraphVizGraphElement::printAttribute(elm::io::Output &out, const PropList::
 		return true;
 	}
 	else if(prop == FONT_COLOR){
-		out << "fontcolor=\"" << quoteSpecials(prop.get<CString>()) << '"';
+		out << "fontcolor=\"" << quoteSpecials(FONT_COLOR(prop)) << '"';
 		return true;
 	}
 	else if(prop == FONT_SIZE){
-		out << "fontsize=" << prop.get<int>();
+		out << "fontsize=" << FONT_SIZE(prop);
 		return true;
 	}
 	else if(prop == FONT){
-		out << "fontname=\"" << quoteSpecials(prop.get<CString>()) << '"';
+		out << "fontname=\"" << quoteSpecials(FONT(prop)) << '"';
 		return true;
 	}
 	return GraphVizItem::printAttribute(out, prop);

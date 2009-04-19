@@ -72,11 +72,11 @@ void GraphVizEdge::printOthersAttributes(elm::io::Output& out){
 bool GraphVizEdge::printAttribute(elm::io::Output &out, const PropList::Iter& prop){
 	if(prop == LABEL){
 		_hasLabel = true;
-		_label = prop.get<String>();
+		_label = LABEL.get(prop);
 		return false;
 	}
 	else if(prop == WEIGHT){
-		out << "weight=" << prop.get<int>();
+		out << "weight=" << WEIGHT.get(prop);
 		return true;
 	}
 	return GraphVizGraphElement::printAttribute(out, prop);
