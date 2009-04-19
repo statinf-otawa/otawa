@@ -83,20 +83,20 @@ void GraphVizNode::printOthersAttributes(elm::io::Output& out){
 
 bool GraphVizNode::printAttribute(elm::io::Output &out, const PropList::Iter& prop){
 	if(prop == TITLE){
-		_title = prop.get<String>();
+		_title = TITLE(prop);
 		//cerr << "TITLE = " << _title << '\n';
 		_hasTitle = true;
 		return false;
 	}
 	else if(prop == BODY){
-		_body = prop.get<String>();
+		_body = BODY(prop);
 		_hasBody = true;
 		return false;
 	}
 	else if(prop == SHAPE){
 		_shapeAcceptsBody = false;
 		out << "shape=";
-		switch(prop.get<int>()){
+		switch(SHAPE(prop)){
 			case ShapeStyle::SHAPE_RECORD:
 				out << "record";
 				_shapeAcceptsBody = true;
