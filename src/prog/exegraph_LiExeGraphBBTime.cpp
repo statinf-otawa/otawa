@@ -30,10 +30,10 @@ using namespace otawa::ipet;
 #	define STAT(c) c
 #endif
 
-namespace otawa { 
+namespace otawa {
 
 
-LiExeGraphBBTime::LiExeGraphBBTime(const PropList& props) 
+LiExeGraphBBTime::LiExeGraphBBTime(const PropList& props)
 :	ExeGraphBBTime<LiExeGraph>(props)
 {
 }
@@ -41,8 +41,8 @@ LiExeGraphBBTime::LiExeGraphBBTime(const PropList& props)
 
 void LiExeGraphBBTime::buildPrologueList(
 	BasicBlock * bb,
-	ExeSequence<ExeNode> * prologue, 
-	int capacity, 
+	ExeSequence<ExeNode> * prologue,
+	int capacity,
 	elm::genstruct::DLList<ExeSequence<ExeNode> *> * prologue_list) {
 	// prologues are recursively built by considering preceeding nodes
 	for(BasicBlock::InIterator edge(bb); edge; edge++) {
@@ -53,14 +53,14 @@ void LiExeGraphBBTime::buildPrologueList(
 				new ExeInst<ExeNode>(inst->inst(), inst->basicBlock(), inst->codePart(), inst->index());
 			new_prologue->addLast(eg_inst);
 		}
-		
+
 		if (pred->countInstructions() == 0) {
 			if (!new_prologue->isEmpty()) {
 				// current sequence is terminated (not more instructions to add)
-				// (end of recursive building)		 	 	
+				// (end of recursive building)
 				prologue_list->addLast(new_prologue);
 			}
-		}	
+		}
 		else {
 		  // build new sequence from pred
 		  elm::genstruct::DLList<Inst *> inst_list;
@@ -71,28 +71,28 @@ void LiExeGraphBBTime::buildPrologueList(
 		  if (!new_prologue->isEmpty())
 		    index = new_prologue->first()->index() - 1;
 		  while ( (new_prologue->count() < capacity) && (!inst_list.isEmpty()) ) {
-		    ExeInst<ExeNode> * eg_inst = 
-				new ExeInst<ExeNode>(inst_list.last(), pred, LiExeGraph::PROLOGUE, index--);	
+		    ExeInst<ExeNode> * eg_inst =
+				new ExeInst<ExeNode>(inst_list.last(), pred, LiExeGraph::PROLOGUE, index--);
 		    new_prologue->addFirst(eg_inst);
 		    inst_list.removeLast();
 		  }
 		  if (new_prologue->count() < capacity)
 		    buildPrologueList(pred, new_prologue, capacity, prologue_list);
 		  else {
-		    prologue_list->addLast(new_prologue);   
+		    prologue_list->addLast(new_prologue);
 		  }
 		}
 	}
-	
+
 	delete prologue;
-	
+
 }
 
 
 void LiExeGraphBBTime::buildEpilogueList(
 			BasicBlock * bb,
-			ExeSequence<ExeNode> * epilogue, 
-			int capacity, 
+			ExeSequence<ExeNode> * epilogue,
+			int capacity,
 			elm::genstruct::DLList<ExeSequence<ExeNode> *> * epilogue_list,
 			int start_index) {
 	// epilogues are recursively built by considering succeeding nodes
@@ -110,7 +110,7 @@ void LiExeGraphBBTime::buildEpilogueList(
 				// (end of recursive building)
 				epilogue_list->addLast(new_epilogue);
 			}
-		}	
+		}
 		else {
 		  // build new sequence from succ
 		  elm::genstruct::DLList<Inst *> inst_list;
@@ -123,8 +123,8 @@ void LiExeGraphBBTime::buildEpilogueList(
 		   else
 		   	index = start_index;
 		  while ( (new_epilogue->count() < capacity) && (!inst_list.isEmpty()) ) {
-		    ExeInst<ExeNode> * eg_inst = 
-				new ExeInst<ExeNode>(inst_list.first(), succ, LiExeGraph::EPILOGUE, index++);	
+		    ExeInst<ExeNode> * eg_inst =
+				new ExeInst<ExeNode>(inst_list.first(), succ, LiExeGraph::EPILOGUE, index++);
 		    new_epilogue->addLast(eg_inst);
 		    inst_list.removeFirst();
 		  }
@@ -132,12 +132,12 @@ void LiExeGraphBBTime::buildEpilogueList(
 		    buildEpilogueList(succ, new_epilogue, capacity, epilogue_list, new_epilogue->last()->index() + 1);
 		  else {
 		    epilogue_list->addLast(new_epilogue);
-		    
+
 		  }
 		}
 	}
 	delete epilogue;
-		
+
 }
 
 int LiExeGraphBBTime::processSequence( WorkSpace *fw,
@@ -145,23 +145,23 @@ int LiExeGraphBBTime::processSequence( WorkSpace *fw,
 				ExeSequence<ExeNode> * body,
 				ExeSequence<ExeNode> * epilogue,
 				int capacity ) {
-		
+
 	ExeSequence<ExeNode> sequence;
-	
+
 	sequence.clear();
 	if (prologue && (prologue->count() == capacity)) {
 		int index = 0;
 		index = prologue->first()->index() - 1;
-		ExeInst<ExeNode> * eg_inst = 
+		ExeInst<ExeNode> * eg_inst =
 			new ExeInst<ExeNode>(NULL, NULL, LiExeGraph::BEFORE_PROLOGUE, index);
 		sequence.addLast(eg_inst);
 	}
-	
+
 	if (prologue) {
 		for (InstIterator inst(prologue) ; inst ; inst++) {
 			sequence.addLast(inst);
 		}
-	}	
+	}
 	for (InstIterator inst(body); inst ; inst++) {
 		sequence.addLast(inst);
 	}
@@ -184,7 +184,7 @@ int LiExeGraphBBTime::processSequence( WorkSpace *fw,
 			int bbnum = -1;
 			file_name << body->first()->basicBlock()->number() << "+";
 			for (InstIterator inst(&sequence) ; inst ; inst++) {
-				if (inst->codePart() != part) 
+				if (inst->codePart() != part)
 					file_name << "---";
 				part = inst->codePart();
 				if (inst->basicBlock()) {
@@ -199,20 +199,20 @@ int LiExeGraphBBTime::processSequence( WorkSpace *fw,
 		string_file_name = string_file_name.concat(extension);
 		elm::io::OutFileStream dotStream(string_file_name);
 		elm::io::Output dotFile(dotStream);
-	#endif // DO_LOG	
-			
+	#endif // DO_LOG
+
 	LiExeGraph execution_graph(fw, microprocessor, &sequence);
 	int bbExecTime = execution_graph.analyze();
-	
+
 	#ifdef DO_LOG
 		string_timed_file_name = string_timed_file_name.concat(number);
 		string_timed_file_name = string_timed_file_name.concat(extension2);
 		elm::io::OutFileStream timedDotStream(string_timed_file_name);
 		elm::io::Output timedDotFile(timedDotStream);
 		// dump the execution graph *with times* in dot format
-//		LOG(execution_graph.dump(timedDotFile));		
+//		LOG(execution_graph.dump(timedDotFile));
 	#endif // DO_LOG
-	
+
 	return bbExecTime;
 }
 
@@ -224,38 +224,38 @@ void LiExeGraphBBTime::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 	LOG(for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 			OUT << inst->address() <<": ";
 			inst->dump(OUT);
-			OUT << "\n";	
+			OUT << "\n";
 		}
-	)	
-	
+	)
+
 	if (bb->countInstructions() == 0)
 		return;
-	
+
 	// compute prologue/epilogue size
 	int capacity = 0;
 	for(Microprocessor<ExeNode>::QueueIterator queue(microprocessor); queue; queue++){
-		capacity += queue->size();		
+		capacity += queue->size();
 	}
-	
+
 	elm::genstruct::DLList<ExeSequence<ExeNode> *> prologue_list, epilogue_list;
-	// build the list of body instructions	
+	// build the list of body instructions
 	int index = 1;
 	for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 		ExeInst<ExeNode> *eg_inst =
 			new ExeInst<ExeNode>(inst, bb, LiExeGraph::BODY, index++);
 		body.addLast(eg_inst);
 	}
-		
+
 	// build the list of possible prologues
 	ExeSequence<ExeNode> * new_prologue = new ExeSequence<ExeNode>();
 	buildPrologueList(bb, new_prologue, capacity, &prologue_list);
-		
+
 	// build the list of possible epilogues
 //	ExeSequence<ExeNode> * new_epilogue = new ExeSequence<ExeNode>();
 //	buildEpilogueList(bb, new_epilogue, capacity, &epilogue_list, body.count() + 1);
 	int maxExecTime = 0;
 	int bbExecTime;
-						
+
 	if (prologue_list.isEmpty()) {
 		if (epilogue_list.isEmpty()) {
 			bbExecTime = processSequence(fw, NULL, &body, NULL, capacity);
@@ -266,7 +266,7 @@ void LiExeGraphBBTime::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 			for (SeqIterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
 				bbExecTime = processSequence(fw, NULL, &body, epilogue, capacity);
 				if (bbExecTime > maxExecTime)
-					maxExecTime = bbExecTime;	
+					maxExecTime = bbExecTime;
 			}
 		}
 	}
@@ -275,22 +275,22 @@ void LiExeGraphBBTime::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 			if (epilogue_list.isEmpty()) {
 				bbExecTime = processSequence(fw, prologue, &body, NULL, capacity);
 				if (bbExecTime > maxExecTime)
-					maxExecTime = bbExecTime;	
+					maxExecTime = bbExecTime;
 			}
 			else {
 				for (SeqIterator epilogue(epilogue_list) ; epilogue ; epilogue++) {
 					bbExecTime = processSequence(fw, prologue, &body, epilogue, capacity);
 					if (bbExecTime > maxExecTime)
-						maxExecTime = bbExecTime;		
+						maxExecTime = bbExecTime;
 				}
-			}	
-		}		
-	}	
-		
+			}
+		}
+	}
+
 	LOG(	OUT << "WCC of block " << bb->number() << " is " << maxExecTime << "\n";
 		)
-	bb->set<int>(TIME, maxExecTime);
-	
+	TIME(bb) = maxExecTime;
+
 }
 
 /**
@@ -321,7 +321,7 @@ void LiExeGraphBBTime::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
  * Build the ExecutionGraphBBTime processor.
  * @param props	Configuration properties possibly including @ref PROC and
  * @ref LOG.
- */ 
+ */
 
 
 
