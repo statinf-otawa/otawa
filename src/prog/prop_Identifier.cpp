@@ -1,6 +1,6 @@
 /*
  * OTAWA -- WCET computation framework
- * Copyright (C) 2003-08  IRIT - UPS <casse@irit.fr>
+ * Copyright (C) 2006-08  IRIT - UPS <casse@irit.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,195 +17,270 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.package ojawa;
  */
 
-#include <elm/io.h>
-#include <elm/genstruct/HashTable.h>
-#include <otawa/properties.h>
-#include <elm/util/Initializer.h>
-
-using namespace elm;
-
-#define TRACE(txt) //cerr << txt << io::endl;
+#include <otawa/prop/Identifier.h>
+#include <otawa/prop/PropList.h>
 
 namespace otawa {
 
-
-/*
- * NOTE : init_list, initialized, init and link are workaround the C++
- * global constructor order FIASCO. Modify it only if you know what you do.
- * 
- * At construction time, the has table are not filled because the parent
- * namespace is possibly not initialized. The identifier records them in 
- * single link list (statically initialized to NULL... no construction).
- * Then, the init() function is called and the identifiers recorded in the
- * list ends their construction by recording themselves to their parent
- * namespaces.
- */
-
-
 /**
- * @class DuplicateIdentifierException
- * This exception is thrown when two identifier with the same name are
- * declared.
+ * @class Identifier
+ * This class represents identifier with a typed associated value.
+ * Identifier with a value should declared with this kind of identifier because
+ * it provides full support for reflexive facilities.
+ * @param T	The type of data stored in a property with this identifier.
+ * @p Note that the property management functions of this class are safer to
+ * use than the rough @ref PropList functions because they ensure safe value
+ * type management.
  * @ingroup prop
  */
 
 
 /**
- * Build a new exception.
- * @param name	Name of identifier causing the exception.
- */
-DuplicateIdentifierException::DuplicateIdentifierException(String& name)
-: Exception(_ << "identifier \"" << name << "\" is already declared") {
-};
-
-
-// Storage of known identifiers
-static genstruct::HashTable<String, AbstractIdentifier *> ids;
-static Initializer<AbstractIdentifier> ids_init;
-
-
-/**
- * @class AbstractIdentifier
- * Represents a unique identifier used by the annotation system.
- * Identifier pointers may be compared for testing equality.
- * @ingroup prop
+ * @fn Identifier<T>::Identifier(elm::CString name);
+ * Build a new generic identifier.
+ * @param name	Name of the generic identifier.
  */
 
 
 /**
- * Find an abstract identifier by its name.
- * @param name	Name of the looked identifier.
- * @return	Found identifier or null.
+ * @fn Identifier<T>::Identifier(elm::CString name, const T& default_value);
+ * Build a new generic identifier.
+ * @param name			Name of the generic identifier.
+ * @param default_value	Default value of the identifier.
  */
-AbstractIdentifier *AbstractIdentifier::find(const string& name) {
-	return ids.get(name, 0);
-}
 
 
 /**
+ * @fn void Identifier<T>::add(PropList& list, const T& value) const;
+ * Add a generic property to the given list with the current identifier.
+ * @param list	List to add to.
+ * @param value	Value of the property.
+ */
+
+
+/**
+ * @fn void Identifier<T>::add(PropList *list, const T& value) const;
+ * Add a generic property to the given list with the current identifier.
+ * @param list	List to add to.
+ * @param value	Value of the property.
+ */
+
+
+/**
+ * @fn void Identifier<T>::set(PropList& list, const T& value) const;
+ * Set the value of a generic property with the current identifier to the given list.
+ * @param list	List to set in.
+ * @param value	Value to set.
+ */
+
+
+/**
+ * @fn void Identifier<T>::set(PropList *list, const T& value) const;
+ * Set the value of a generic property with the current identifier to the given list.
+ * @param list	List to set in.
+ * @param value	Value to set.
+ */
+
+
+/**
+ * @fn const T& Identifier<T>::get(const PropList& list, const T& def) const;
+ * Get the value associated with a property matching the current identifier.
+ * If the property is not found, return the default value.
+ * @param list	List to look in.
+ * @param def	Default value.
+ * @return		Found value or the default value.
+ */
+
+
+/**
+ * @fn const T& Identifier<T>::get(const PropList *list, const T& def) const;
+ * Get the value associated with a property matching the current identifier.
+ * If the property is not found, return the default value.
+ * @param list	List to look in.
+ * @param def	Default value.
+ * @return		Found value or the default value.
+ */
+
+
+/**
+ * @fn const T& Identifier<T>::use(const PropList& list) const;
+ * Get the value matching the current identifier in the given list.
+ * Cause a run-time abort if the property is not available.
+ * @param list	List to look in.
+ * @return		Matching value.
+ */
+
+
+/**
+ * @fn const T& Identifier<T>::use(const PropList *list) const;
+ * Get the value matching the current identifier in the given list.
+ * Cause a run-time abort if the property is not available.
+ * @param list	List to look in.
+ * @return		Matching value.
+ */
+
+
+
+/**
+ * @fn const T& Identifier<T>::value(const PropList& list) const;
  * For internal use only.
+ * @internal Same as get() without default value. Only provided for symmetry.
  */
-void AbstractIdentifier::initialize(void) {
-	TRACE("initialize(" << (void *)this << ", " << nam << ")");
-	if(ids.get(nam)) {
-		cerr << "FATAL ERROR: identifier \"" << nam << "\" defined multiple times.";
-		String _(nam);
-		throw DuplicateIdentifierException(_);
+
+
+/**
+ * @fn const T& Identifier<T>::value(const PropList *list) const;
+ * For internal use only.
+ * @internal Same as get() without default value. Only provided for symmetry.
+ */
+
+
+/**
+ * @fn Value Identifier<T>::value(PropList& list) const;
+ * For internal use only.
+ * @internal Provide an assignable value.
+ */
+
+
+/**
+ * @fn Value Identifier<T>::value(PropList *list) const;
+ * For internal use only.
+ * @internal Provide an assignable value.
+ */
+
+
+/**
+ * @fn const T& Identifier<T>::operator()(const PropList& props) const;
+ * Read the value in a functional way.
+ * @param props	Property list to read the property from.
+ * @return		Value of the property matching the current identifier in
+ * the list.
+ */
+
+
+/**
+ * @fn const T& Identifier<T>::operator()(const PropList *props) const;
+ * Read the value in a functional way.
+ * @param props	Property list to read the property from.
+ * @return		Value of the property matching the current identifier in
+ * the list.
+ */
+
+
+/**
+ * @fn Value Identifier<T>::operator()(PropList& props) const;
+ * Read or write a property value in a functional way. The returned value
+ * may be read (automatic conversion to the value) or written (using operator
+ * = to set the value or += to add a new value at the property list.
+ * @param props	Property list to read the property from.
+ * @return		Value of the property matching the current identifier in
+ * the list.
+ */
+
+
+/**
+ * @fn Value Identifier<T>::operator()(PropList *props) const;
+ * Read or write a property value in a functional way. The returned value
+ * may be read (automatic conversion to the value) or written (using operator
+ * = to set the value or += to add a new value at the property list.
+ * @param props	Property list to read the property from.
+ * @return		Value of the property matching the current identifier in
+ * the list.
+ */
+
+
+// Identifier<T>::print Specializations
+static void escape(elm::io::Output& out, char chr, char quote) {
+	if(chr >= ' ') {
+		if(chr == quote)
+			out << '\\' << quote;
+		else
+			out << chr;
 	}
-	ids.add(nam, this);
-}
-
-
-/**
- * Build an aninymouns identifier.
- */
-AbstractIdentifier::AbstractIdentifier(void)
-:	nam("") {
-		//ASSERT(!((((unsigned int)this) > 0xbf000000) && (((unsigned int)this) < 0xc0000000)));
-}
-
-
-/**
- * Build a new identifier. Only one identifier may exists in the OTAWA with
- * a given name. If there is a name clash, the framework will immediatelly be
- * stopped.
- * @param name		Name of the identifier.
- * @param parent	Parent namespace.
- */
-AbstractIdentifier::AbstractIdentifier(elm::String name)
-:	nam(name)
-{
-	//ASSERT(!((((unsigned int)this) > 0xbf000000) && (((unsigned int)this) < 0xc0000000)));
-	TRACE("construct(" << (void *)this << ", " << nam << ")");
-	if(name) {
-		TRACE("record(" << (void *)this << ", " << nam << ")");
-		ids_init.record(this);
+	else
+		switch(chr) {
+		case '\n': out << "\\n"; break;
+		case '\t': out << "\\t"; break;
+		case '\r': out << "\\r"; break;
+		default: out << "\\x" << io::hex((unsigned char)chr); break;
 	}
 }
 
 
-/**
- * @fn NameSpace const & Identifier::parent(void) const;
- * Get the parent namespace.
- * @return Parent namespace.
- */
-
-
-/**
- * @fn const elm::String& AbstractIdentifier::name(void) const;
- * Get the string name of the identifier.
- * @return	Identifier name.
- */
-
-
-/**
- * <p>Print the value of the given property (accordint the property matches
- * the given identifier). It is an error to call this method with a property
- * matching a different identifier.</p>
- * <p>Use the print() method of a property instead.</p>
- */
-void AbstractIdentifier::print(
-	elm::io::Output& output,
-	const Property& prop) const
-{
-	output << "<not printable>";
-}
-
-/**
- * @fn void AbstractIdentifier::print(elm::io::Output& output, const Property *prop) const;
- * <p>Print the value of the given property (accordint the property matches
- * the given identifier). It is an error to call this method with a property
- * matching a different identifier.</p>
- * <p>Use the print() method of a property instead.</p>
- */
-
-
-/**
- * Get the identifier of data linked with this property. It may return @ref
- * Type::no_type ever meaning that the identifier does not support type system
- * or that it is just a flag without associated data.
- * @return	Type of the associated data.
- */
-const Type& AbstractIdentifier::type(void) const {
-	return Type::no_type;
+template <>
+void Identifier<char>::print(elm::io::Output& out, const Property& prop) const {
+	out << '\'';
+	escape(out, get(prop), '\'');
+	out << '\'';
 }
 
 
-/**
- * Read the value of an identifier from the given variable arguments and
- * create the matching property in the given property list.
- * @param props	Property list to create property in.
- * @param args	Variable arguments to read identifier value from.
- * @warning		It is an error to call this method on a non-typed identifier.
- */
-void AbstractIdentifier::scan(PropList& props, VarArg& args) const {
-	assert(0);
+template <>
+void Identifier<CString>::print(elm::io::Output& out, const Property& prop) const {
+	out << '"';
+	CString str = get(prop);
+	for(int i = 0; str[i]; i++)
+		escape(out, str[i], '"');
+	out << '"';
+}
+
+
+template <>
+void Identifier<elm::String>::print(elm::io::Output& out, const Property& prop) const {
+	out << '"';
+	const String& str = get(prop);
+	for(int i = 0; i < str.length(); i++)
+		escape(out, str[i], '"');
+	out << '"';
+}
+
+
+template <>
+void Identifier<PropList *>::print(elm::io::Output& out, const Property& prop) const {
+	out << "proplist(" << &prop << ")";
+}
+
+
+// GenericIdentifier<T>::scan Specializations
+template <>
+void Identifier<CString>::scan(PropList& props, VarArg& args) const {
+	set(props, args.next<char *>());
+}
+
+
+template <>
+void Identifier<String>::scan(PropList& props, VarArg& args) const {
+	set(props, args.next<char *>());
 }
 
 
 /**
- * Print the identifier.
- * @param out	Output stream.
+ * @fn void Identifier::remove(PropList& list) const;
+ * Remove the property with the current identifier from the given list.
+ * @param list	List to remove from.
  */
-void AbstractIdentifier::print(elm::io::Output& out) const {
-	out << nam;
-}
 
 
-// Specialisation for types
-template <>
-const Type& Identifier<bool>::type(void) const { return Type::bool_type; }
+/**
+ * @fn bool Identifier::exists(PropList& list) const;
+ * Test if the given list contains a property with the current identifier.
+ * @param list	List to look in.
+ * @return		True if there is a property with current identifier, false else.
+ */
 
-template <>
-const Type& Identifier<char>::type(void) const { return Type::char_type; }
 
-template <>
-const Type& Identifier<int>::type(void) const { return Type::int32_type; }
+/**
+ * @fn void Identifier::remove(PropList *list) const;
+ * Remove the property with the current identifier from the given list.
+ * @param list	List to remove from.
+ */
 
-template <>
-const Type& Identifier<long long>::type(void) const { return Type::int64_type; }
 
-template <>
-const Type& Identifier<char *>::type(void) const { return Type::cstring_type; }
+/**
+ * @fn bool Identifier::exists(PropList *list) const;
+ * Test if the given list contains a property with the current identifier.
+ * @param list	List to look in.
+ * @return		True if there is a property with current identifier, false else.
+ */
 
-} // otawa
+}	// otawa
