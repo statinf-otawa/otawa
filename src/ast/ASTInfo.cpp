@@ -6,6 +6,7 @@
  */
 
 #include <otawa/ast/ASTInfo.h>
+#include <otawa/prop/DeletableProperty.h>
 
 namespace otawa {
 
@@ -15,19 +16,19 @@ namespace otawa {
  * name mapped access.
  */
 
-	
+
 /**
  * Identifier of the property storing the AST information on the framework object.
  */
 Identifier<ASTInfo *> ASTInfo::ID("otawa::ASTInfo::id", 0);
 
-	
+
 /**
  * Build an new AST info linked to the given framework.
  * @param fw	Workspace to link to.
  */
 ASTInfo::ASTInfo(WorkSpace *fw) {
-	fw->addDeletable<ASTInfo *>(ID, this);
+	fw->addProp(new DeletableProperty<ASTInfo *>(ID, this));
 }
 
 /**
@@ -49,10 +50,10 @@ ASTInfo::ASTInfo(WorkSpace *fw) {
  * @param fun Function to add.
  */
 void ASTInfo::add(FunAST *fun) {
-	
+
 	// Add it to the list
 	funs.add(fun);
-	
+
 	// If there is a name, add it to the map
 	String name = fun->name();
 	if(name)
@@ -73,14 +74,14 @@ void ASTInfo::add(FunAST *fun) {
  * @return	Found or created AST function.
  */
 FunAST *ASTInfo::getFunction(Inst *inst) {
-	
+
 	// Look in the instruction
-	FunAST *fun = inst->get<FunAST *>(FunAST::ID, 0);
-	
+	FunAST *fun = FunAST::ID(inst);
+
 	// Create it else
 	if(!fun)
 		fun = new FunAST(this, inst);
-	
+
 	// Return the function
 	//cout <<" name : "<< fun->name()<<'\n';
 	return fun;
@@ -93,12 +94,12 @@ FunAST *ASTInfo::getFunction(Inst *inst) {
  * @return		AST information of the process.
  */
 ASTInfo *ASTInfo::getInfo(WorkSpace *fw) {
-	
+
 	// Look in the process
-	elm::Option<ASTInfo *> result = fw->get<ASTInfo *>(ID);
+	elm::Option<ASTInfo *> result = ID.get(fw);
 	if(result)
 		return *result;
-	
+
 	// Else build it
 	return new ASTInfo(fw);
 }
