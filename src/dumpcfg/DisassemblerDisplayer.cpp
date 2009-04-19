@@ -26,8 +26,8 @@ void DisassemblerDisplayer::onCFGEnd(CFG *cfg) {
 /**
  */
 void DisassemblerDisplayer::onCall(Edge *edge) {
-}  
-   
+}
+
 
 /**
  */
@@ -40,18 +40,18 @@ void DisassemblerDisplayer::onBBBegin(BasicBlock *bb, int index) {
 void DisassemblerDisplayer::onEdge(CFGInfo *info, BasicBlock *source,
 int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
 	switch(kind) {
-	
+
 	case EDGE_Null:
 		if(target_index >= 0)
 			cout << " R(" << target_index << ")";
 		else
 			cout << " R";
 		break;
-		
+
 	case EDGE_NotTaken:
 		cout << " NT(" << target_index << ')';
 		break;
-		
+
 	case EDGE_Taken:
 		cout << " T(";
 		if(target_index >= 0)
@@ -60,7 +60,7 @@ int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
 			cout << '?';
 		cout << ")";
 		break;
-		
+
 	case EDGE_Call:
 		cout << " C(";
 		if(target_index >= 0)
@@ -78,11 +78,11 @@ int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
 		}
 		cout << ")";
 		break;
-	
+
 	case Edge::VIRTUAL_CALL:
 		cout << " VC(" << target_index << ")";
 		break;
-		
+
 	case Edge::VIRTUAL_RETURN:
 		cout << " VR(" << target_index << ")";
 		break;
@@ -99,13 +99,13 @@ int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
 void DisassemblerDisplayer::onBBEnd(BasicBlock *bb, int index) {
 	cout << '\n';
 	for(BasicBlock::InstIter inst(bb); inst; inst++) {
-			
+
 		// Put the label
-		for(PropList::Getter<String> label(inst, FUNCTION_LABEL); label; label++)
+		for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
 			cout << '\t' << *label << ":\n";
-		for(PropList::Getter<String> label(inst, LABEL); label; label++)
+		for(Identifier<String>::Getter label(inst, LABEL); label; label++)
 			cout << '\t' << *label << ":\n";
-			
+
 		// Disassemble the instruction
 		cout << "\t\t" << fmt::address(inst->address()) << ' ';
 		inst->dump(cout);

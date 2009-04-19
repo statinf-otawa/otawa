@@ -37,17 +37,17 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 				//for(Iterator<Inst *> inst(bb->visit()); inst; inst++) {
 					if(first)
 						first = false;
-					else 
+					else
 						cout << "\\l";
-					
+
 					// Display labels
-					for(PropList::Getter<String> label(inst, FUNCTION_LABEL);
+					for(Identifier<String>::Getter label(inst, FUNCTION_LABEL);
 					label; label++)
 						cout << *label << ":\\l";
-					for(PropList::Getter<String> label(inst, LABEL);
+					for(Identifier<String>::Getter label(inst, LABEL);
 					label; label++)
 						cout << *label << ":\\l";
-						
+
 					// Display the instruction
 					cout << fmt::address(inst->address()) << "    ";
 					StringBuffer buf;
@@ -60,7 +60,7 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 							cout << '\\';
 						cout << dis[i];
 					}
-					
+
 					// Add called label for branch
 					if(inst->isControl() && !inst->isReturn()) {
 						cout << "    # ";
@@ -93,8 +93,8 @@ void DotDisplayer::onCall(Edge *edge) {
   CFG *called = edge->calledCFG();
   cout << "\t\"" << (void*) edge << LABEL(called) << "\" [label=\"" << LABEL(called) << "\"]\n";
   cout << "\t\"" << bb->number() << "\" -> \"" << (void*) edge << LABEL(called) << "\" [label=\"call\", style=dashed, weight=1]\n";
-}  
-  
+}
+
 
 /**
  */
