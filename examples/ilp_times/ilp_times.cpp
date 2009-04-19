@@ -48,7 +48,7 @@ void help(void) {
  * @return Error code.
  */
 int main(int argc, char **argv) {
-	
+
 	// Options
 	CString file;
 	enum {
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
 		CAT
 	} method = CCG;
 
-	// Cache configuration	
+	// Cache configuration
 	Cache::info_t inst_cache_info = {
 		1,
 		10,
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 	Cache inst_cache(inst_cache_info);
 	Cache data_cache(data_cache_info);
 	CacheConfiguration cache_conf(&inst_cache, &data_cache);
-	
+
 	// Processing the arguments
 	for(int i = 1; i < argc; i++) {
 		if(argv[i][0] != '-')
@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
 	// Start timer
 	elm::system::StopWatch main_sw;
 	main_sw.start();
-	
+
 	// Load the file
 	Manager manager;
 	PropList props;
@@ -107,14 +107,14 @@ int main(int argc, char **argv) {
 	CACHE_CONFIG(props) = &cache_conf;
 	try {
 		WorkSpace *fw = manager.load(file, props);
-		
+
 		// Find main CFG
 		CFG *cfg = fw->getCFGInfo()->findCFG("main");
 		if(cfg == 0) {
 			cerr << "ERROR: cannot find main !\n";
 			return 1;
 		}
-		
+
 		// Removing __eabi call if available
 		for(CFG::BBIterator bb(cfg); bb; bb++)
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
@@ -124,50 +124,50 @@ int main(int argc, char **argv) {
 					delete(*edge);
 					break;
 				}
-		
+
 		// Now, use an inlined VCFG
 		VirtualCFG vcfg(cfg);
 		ENTRY_CFG(fw) = &vcfg;
-		
+
 		// Prepare processor configuration
 		PropList props;
-		props.set(EXPLICIT, true);
-		
+		EXPLICIT(props) = true;
+
 		// Compute BB times
 		TrivialBBTime tbt;
 		ipet::PIPELINE_DEPTH(props) = 5;
 		tbt.process(fw, props);
-		
+
 		// Trivial data cache
 		TrivialDataCacheManager dcache;
 		dcache.process(fw, props);
-		
+
 		// Assign variables
 		VarAssignment assign;
 		assign.process(fw, props);
-		
+
 		// Build the system
 		BasicConstraintsBuilder builder;
 		builder.process(fw, props);
-		
+
 		// Process the instruction cache
 		if(method == CCG) {
-			
+
 			// build ccg graph
 			CCGBuilder ccgbuilder;
 			ccgbuilder.process(fw);
-			
+
 			// Build ccg contraint
 			CCGConstraintBuilder decomp;
-			decomp.process(fw);			
+			decomp.process(fw);
 		}
 		else {
 			if(method == CAT) {
-				
+
 				// build Cat lblocks
 				CATBuilder catbuilder;
 				catbuilder.process(fw);
-			
+
 				// Build CAT contraint
 				CATConstraintBuilder decomp;
 				decomp.process(fw);
@@ -175,13 +175,13 @@ int main(int argc, char **argv) {
 
 			// Build the object function to maximize
 			BasicObjectFunctionBuilder fun_builder;
-			fun_builder.process(fw);	
+			fun_builder.process(fw);
 		}
-		
+
 		// Load flow facts
 		ipet::FlowFactLoader loader;
 		loader.process(fw, props);
-		
+
 		// Resolve the system
 		elm::system::StopWatch ilp_sw;
 		ilp_sw.start();
@@ -196,15 +196,15 @@ int main(int argc, char **argv) {
 			for(File::SegIter seg(ffile); seg; seg++)
 				if(seg->flags() & Segment::EXECUTABLE)
 					size += seg->size();
-		
+
 		// Get the result
-		ilp::System *sys = vcfg.use<ilp::System *>(SYSTEM);
+		ilp::System *sys = SYSTEM(vcfg);
 		cout << file << '\t'
 			 << sys->countVars() << '\t'
 			 << sys->countConstraints() << '\t'
 			 << (int)(main_sw.delay() / 1000) << '\t'
 			 << (int)(ilp_sw.delay() / 1000) << '\t'
-			 << vcfg.use<int>(WCET) << '\t'
+			 << WCET(vcfg) << '\t'
 			 << size << '\n';
 	}
 	catch(elm::Exception& e) {

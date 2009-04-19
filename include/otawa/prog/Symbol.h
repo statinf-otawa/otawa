@@ -8,6 +8,7 @@
 #define OTAWA_PROG_SYMBOL_H
 
 #include <elm/io.h>
+#include <otawa/base.h>
 #include <otawa/properties.h>
 
 namespace otawa {
@@ -15,7 +16,7 @@ namespace otawa {
 // External classes
 class File;
 class Inst;
-	
+
 // Symbol class
 class Symbol {
 public:
@@ -25,7 +26,7 @@ public:
 		FUNCTION,
 		LABEL
 	} kind_t;
-	
+
 	static Identifier<Symbol *> ID;
 
 	Symbol(File& file, String name, kind_t kind, address_t address, size_t size = 0);
@@ -35,14 +36,14 @@ public:
 	inline address_t address(void) const { return _address; }
 	inline size_t size(void) const { return _size; }
 	Inst *findInst(void) const;
-	inline bool doesNotReturn(void) const { return no_return; } 
+	inline bool doesNotReturn(void) const { return no_return; }
 	void setNoReturn(void);
 
 private:
 	File& _file;
 	String _name;
 	kind_t _kind;
-	address_t _address;	
+	address_t _address;
 	size_t _size;
 	bool no_return;
 };

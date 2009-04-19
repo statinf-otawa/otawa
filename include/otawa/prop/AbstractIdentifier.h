@@ -24,34 +24,26 @@
 #include <elm/io.h>
 #include <elm/util/VarArg.h>
 #include <otawa/base.h>
-#include <otawa/type.h>
-
-
-namespace elm { template <class T> class Initializer; }
+#include <otawa/prop/PropList.h>
 
 namespace otawa {
 
-// External classes
-class Property;
-class PropList;
-
-
 // Identifier class
-class AbstractIdentifier {
-	friend class Initializer<AbstractIdentifier>;
+class AbstractIdentifier: public PropList {
+	friend class elm::Initializer<AbstractIdentifier>;
 
-public:	
+public:
 	static AbstractIdentifier *find(const string& name);
 
 	AbstractIdentifier(void);
 	AbstractIdentifier(elm::String name);
 	virtual ~AbstractIdentifier(void) { }
 
-	inline const elm::String name(void) const;
+	inline const elm::String name(void) const { return nam; }
 
 	virtual void print(elm::io::Output& out) const;
 	virtual void print(elm::io::Output& output, const Property& prop) const;
-	inline void print(elm::io::Output& output, const Property *prop) const;
+	inline void print(elm::io::Output& output, const Property *prop) const { print(output, *prop); }
 	virtual const Type& type(void) const;
 	virtual void scan(PropList& props, VarArg& args) const;
 
@@ -62,41 +54,21 @@ private:
 
 
 // DuplicateIdentifierException class
-class DuplicateIdentifierException: public Exception {
+class DuplicateIdentifierException: public otawa::Exception {
 public:
 	DuplicateIdentifierException(String& name);
 };
 
-
-// Output
-inline elm::io::Output& operator<<(elm::io::Output& out,
-	const AbstractIdentifier& id)
-{
+inline elm::io::Output& operator<<(elm::io::Output& out, const AbstractIdentifier& id) {
 	id.print(out);
 	return out;
 }
 
-inline elm::io::Output& operator<<(elm::io::Output& out,
-	const AbstractIdentifier *id)
-{
+inline elm::io::Output& operator<<(elm::io::Output& out, const AbstractIdentifier *id) {
 	ASSERT(id);
 	return out << *id;
 }
 
-
-// Inlines
-inline const elm::String AbstractIdentifier::name(void) const {
-	return nam;
-}
-
-inline void AbstractIdentifier::print(elm::io::Output& output,
-	const Property *prop) const
-{
-	ASSERT(prop);
-	return print(output, *prop);
-}
-
-
-} // otawa
+} //otawa
 
 #endif	// OTAWA_PROP_ABSTRACT_IDENTIFIER_H
