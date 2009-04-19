@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2004-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -25,6 +25,7 @@
 #include <otawa/manager.h>
 #include <otawa/cfg.h>
 #include <elm/assert.h>
+#include <otawa/prop/DeletableProperty.h>
 
 // Trace
 //#	define TRACE_CFG_INFO
@@ -59,7 +60,7 @@ Identifier<CFGInfo *>& CFGInfo::ID = CFG_INFO;
 CFGInfo::CFGInfo(WorkSpace *_fw)
 : fw(_fw) {
 	TRACE(this << ".CFGInfo::CFGInfo(" << _fw << ")");
-	fw->addDeletable(ID, this);
+	fw->addProp(new DeletableProperty<CFGInfo *>(ID, this));
 }
 
 
@@ -67,7 +68,7 @@ CFGInfo::CFGInfo(WorkSpace *_fw)
  * Delete the CFG information contained in this program.
  */
 CFGInfo::~CFGInfo(void) {
-	TRACE(this << ".CFGInfo::~CFGInfo()");	
+	TRACE(this << ".CFGInfo::~CFGInfo()");
 	clear();
 }
 
@@ -77,12 +78,12 @@ CFGInfo::~CFGInfo(void) {
  */
 void CFGInfo::clear(void) {
 	//PseudoInst *pseudo;
-	
+
 	// Remove CFGs
 	for(int i = 0; i < _cfgs.length(); i++)
 		delete _cfgs[i];
 	_cfgs.clear();
-	
+
 	// Release basic block
 	for(Process::FileIter file(fw->process()); file; file++)
 		for(File::SegIter seg(file); seg; seg++)
@@ -125,11 +126,11 @@ BasicBlock *CFGInfo::findBB(Inst *inst) {
  * @return 	Matching CFG or null.
  */
 CFG *CFGInfo::findCFG(Inst *inst) {
-	
+
 	// Get the basic block
 	BasicBlock *bb = findBB(inst);
 	assert(bb);
-	
+
 	// Look for a CFG
 	return findCFG(bb);
 }
@@ -180,10 +181,10 @@ void CFGInfo::add(CFG *cfg) {
 
 /**
  * Get the collection of CFG found in the program.
- * 
+ *
  * @par Feature
  * @li @ref CFG_INFO_FEATURE
- * 
+ *
  * @par Hooks
  * @ref @ref WorkSpace
  */
