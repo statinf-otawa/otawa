@@ -53,7 +53,7 @@ private:
  * This class provides support to build a loader plug-in based on the GLISS
  * with ELF file loading based on the GEL library. Currently, this only includes
  * the PPC ISA.
- * 
+ *
  * This class allows to load a binary file, extract the instructions and the
  * symbols (labels and function). You have to provide a consistent
  * platform description for the processor.
@@ -64,21 +64,21 @@ private:
  *   - the recognition of the instruction,
  *	 - the assignment of the memory pointer.
  */
- 
- 
+
+
  /**
   * Build a process for the new GLISS system.
   * @param manager	Current manager.
   * @param platform	Current platform.
   * @param props	Building properties.
-  */ 
+  */
  Process::Process(
  	Manager *manager,
  	hard::Platform *platform,
 	const PropList& props)
 :	otawa::Process(manager, props),
 	_start(0),
-	_platform(platform), 
+	_platform(platform),
 	_state(0),
 	_memory(0),
 	init(false),
@@ -89,7 +89,8 @@ private:
 	ASSERTP(platform, "platform required");
 
 	// build arguments
-	static char *default_argv[] = { "", 0 };
+	char no_name[1] = { 0 };
+	static char *default_argv[] = { no_name, 0 };
 	static char *default_envp[] = { 0 };
 	argc = ARGC(props);
 	if(argc < 0)
@@ -100,7 +101,7 @@ private:
 	envp = ENVP(props);
 	if(!envp)
 		envp = default_envp;
-	
+
 	// handle features
 	provide(MEMORY_ACCESS_FEATURE);
 	provide(SOURCE_LINE_FEATURE);
@@ -160,17 +161,17 @@ void Process::setup(void) {
 	if(init)
 		return;
 	init = true;
-	
+
 	// Open the file
 	if(!file) {
-		file = gel_open(&program()->name(), 0, GEL_OPEN_NOPLUGINS); 
+		file = gel_open(&program()->name(), 0, GEL_OPEN_NOPLUGINS);
 		if(!file) {
 			cerr << "WARNING: file \"" << program()->name()
 				 << "\" seems to have disappeared !\n";
 			return;
 		}
 	}
-	
+
 	// Open the map
 	map = dwarf_new_line_map(file, 0);
 }
@@ -193,7 +194,7 @@ void Process::setup(void) {
  * @return	State as returned by GLISS.
  */
 
- 	
+
 /**
  */
 hard::Platform *Process::platform(void) {
@@ -216,12 +217,12 @@ File *Process::loadFile(elm::CString path) {
 	if(program())
 		throw Exception("loader cannot open multiple files !");
 
-	
+
 	// System configuration
     void *system_list[3];
     int page_size = 4096;
     system_list[0] = &page_size;
-    system_list[1] = NULL; 
+    system_list[1] = NULL;
     system_list[2] = NULL;
 
     // Loader configuration
@@ -235,7 +236,7 @@ File *Process::loadFile(elm::CString path) {
     loader_list[4] = NULL;
     loader_list[5] = NULL;
     //cout << (void *)envp << " = " << loader_list[1] << io::endl;
-    
+
     // Memory configuration
     void *mem_list[3];
     int mem_size = 0;
@@ -251,10 +252,10 @@ File *Process::loadFile(elm::CString path) {
     _state = state;
     File *file = new otawa::File(path);
 	addFile(file);
-    
+
     // Build segments
     gel_file_t *gel_file = (gel_file_t *)gelFile();
-    assert(file); 
+    assert(file);
     gel_file_info_t infos;
 	gel_file_infos(gel_file, &infos);
     for(int i = 0; i < infos.sectnum; i++) {
@@ -267,7 +268,7 @@ File *Process::loadFile(elm::CString path) {
     		file->addSegment(seg);
     	}
     }
-    
+
     // Initialize symbols
 	gel_enum_t *iter = gel_enum_file_symbol(gel_file);
 	gel_enum_initpos(iter);
@@ -294,7 +295,7 @@ File *Process::loadFile(elm::CString path) {
 		default:
 			continue;
 		}
-		
+
 		// Build the label if required
 		if(addr) {
 			String label(infos.name);
@@ -307,7 +308,7 @@ File *Process::loadFile(elm::CString path) {
 
 	// Last initializations
 	_memory = memory();
-	ASSERTP(_memory, "memory information mandatory"); 
+	ASSERTP(_memory, "memory information mandatory");
 	_start = findInstAt((address_t)infos.entry);
 	otawa::gliss::GLISS_STATE(this) = _state;
 	gel_image_t *image = loader_image(_memory);
@@ -340,7 +341,7 @@ static inline unsigned short read16(void *memory, const Address& at) {
 	if(Is_Elf_Little == 0)
 		return (b0 << 8) | b1;
 	else
-		return (b1 << 8) | b0; 
+		return (b1 << 8) | b0;
 }
 
 static inline unsigned long read32(void *memory, const Address& at) {
@@ -351,7 +352,7 @@ static inline unsigned long read32(void *memory, const Address& at) {
 	if(Is_Elf_Little == 0)
 		return (b0 << 24) | (b1 << 16) | (b2 << 8) | b3;
 	else
-		return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0; 
+		return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
 }
 
 static inline unsigned long long read64(void *memory, const Address& at) {
@@ -368,7 +369,7 @@ static inline unsigned long long read64(void *memory, const Address& at) {
 				(b4 << 24) | (b5 << 16) | (b6 << 8) | b7;
 	else
 		return (b7 << 56) | (b6 << 48) | (b5 << 40) | (b4 << 32) |
-		(b3 << 24) | (b2 << 16) | (b1 << 8) | b0; 
+		(b3 << 24) | (b2 << 16) | (b1 << 8) | b0;
 }
 
 

@@ -297,7 +297,7 @@ void Command::compute(String fun) {
 	PropList props;
 	TASK_ENTRY(props) = fun.toCString();
 	if(dump_constraints || dump_graph)
-		props.set(EXPLICIT, true);
+		EXPLICIT(props) = true;
 	if(verbose) {
 		otawa::Processor::VERBOSE(props) = true;
 		//cerr << "verbose !\n";
