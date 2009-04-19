@@ -34,6 +34,11 @@ libotawa_la_SOURCES = \
 	proc_ProcessorException.cpp \
 	proc_Registry.cpp \
 	Process.cpp \
+	prop_AbstractIdentifier.cpp \
+	prop_DeletableProperty.cpp \
+	prop_Identifier.cpp \
+	prop_Property.cpp \
+	prop_PropList.cpp \
 	ipet_BasicConstraintsBuilder.cpp \
 	ipet_BasicObjectFunctionBuilder.cpp \
 	ipet_ConstraintLoader.cpp \
@@ -130,11 +135,6 @@ libotawa_la_SOURCES = \
 	BBTimeSimulator.cpp \
 	BBPath.cpp \
 	cfg_CFGCollector.cpp \
-	prop_Identifier.cpp \
-	prop_GenericIdentifier.cpp \
-	prop_PropList.cpp \
-	prop_Property.cpp \
-	prop_DeletableProperty.cpp \
 	exegraph_ExeGraphBBTime.cpp \
 	exegraph_ExeGraph.cpp \
 	exegraph_LiExeGraphBBTime.cpp \
