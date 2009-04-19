@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-07, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -24,6 +24,7 @@
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/cfg.h>
+#include <otawa/prop/DeletableProperty.h>
 
 using namespace otawa::dfa;
 
@@ -32,7 +33,7 @@ namespace otawa {
 
 /**
  * Identifier of annotation containing reverse-postdominance information.
- * 
+ *
  * @par Hooks
  * @li @ref BasicBlock
  */
@@ -40,9 +41,9 @@ Identifier<BitSet *> REVERSE_POSTDOM("otawa::reverse_postdom", 0);
 
 
 /**
- * This is the Problem used to instanciate DFAEngine for computing the 
- * reverse postdomination relation. For each basic block, the set of postdominators 
- * is computed and hooked to the basic block. Then, a simple bit test is 
+ * This is the Problem used to instanciate DFAEngine for computing the
+ * reverse postdomination relation. For each basic block, the set of postdominators
+ * is computed and hooked to the basic block. Then, a simple bit test is
  * used for testing the relation.
  */
 
@@ -54,19 +55,19 @@ public:
 		cfg = _cfg;
 		size = _cfg->countBB();
 	}
-	
+
 	BitSet *empty(void) {
 		BitSet *result = new BitSet(size);
 		result->fill();
 		return result;
 	}
-	
+
 	BitSet *gen(BasicBlock *bb) {
 		BitSet *result = new BitSet(size);
 		result->add(bb->number());
 		return result;
 	}
-	
+
 	BitSet *kill(BasicBlock *bb) {
 		BitSet *result = new BitSet(size);
 		if(bb->isExit())
@@ -117,12 +118,12 @@ bool PostDominance::postDominates(BasicBlock *bb1, BasicBlock *bb2) {
 	ASSERTP(index >= 0, "no index for BB 1");
 	BitSet *set = REVERSE_POSTDOM(bb2);
 	ASSERTP(set, "no index for BB 2");
-	
-	ASSERTP(bb1 == bb2	
+
+	ASSERTP(bb1 == bb2
 		||	!REVERSE_POSTDOM(bb1)->contains(bb2->number())
 		||  !REVERSE_POSTDOM(bb2)->contains(bb1->number()),
 			"CFG with disconnected nodes");
-	
+
 	return set->contains(index);
 }
 
@@ -147,7 +148,8 @@ void PostDominance::processCFG(WorkSpace *fw, CFG *cfg) {
 	for (CFG::BBIterator blocks(cfg); blocks; blocks++) {
 	  BitSet *b = engine.outSet(blocks.item());
 	  b = new BitSet(*b);
-	  blocks->addDeletable<BitSet *>(REVERSE_POSTDOM, b);
+	  //blocks->addDeletable<BitSet *>(REVERSE_POSTDOM, b);
+	  blocks->addProp(new DeletableProperty<BitSet *>(REVERSE_POSTDOM, b));
 	}
 }
 
@@ -167,7 +169,7 @@ void PostDominance::ensure(CFG *cfg) {
 /**
  * The postdominance processors computes postdominance relation
  * on the current CFG.
- * 
+ *
  * @Provided Features
  * @li @ref POSTDOMINANCE_FEATURE
  */
@@ -179,7 +181,7 @@ PostDominance::PostDominance(void): CFGProcessor("otawa::postdominance", Version
 /**
  * This feature ensures that information about postdomination between nodes
  * of a CFG is vailable.
- * 
+ *
  * @par Properties
  * @li @ref REVERSE_DOM (BasicBlock)
  */
