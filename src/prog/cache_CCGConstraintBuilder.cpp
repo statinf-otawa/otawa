@@ -45,10 +45,10 @@ static Identifier<ilp::Var *> MISS_VAR("otawa::ipet::MISS_VAR", 0);
  * the IPET approach. Based on the Cache Conflict Graph of the task,
  * it generates constraints and improve the objective function of the ILP system
  * representing the timing behaviour of the task.
- * 
+ *
  * @par Provided Features
  * @li @ref ICACHE_SUPPORT_FEATURE
- * 
+ *
  * @par Required Features
  * @li @ref CCG_FEATURE
  * @li @ref COLLECTED_LBLOCKS_FEATURE
@@ -84,25 +84,25 @@ void CCGConstraintBuilder::configure(const PropList& props) {
 /**
  */
 void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
-	
+
 	// Initialization
 	//CFG *entry_cfg = ENTRY_CFG(fw);
 	System *system = SYSTEM(fw);
 	assert (system);
 	const hard::Cache *cach = fw->platform()->cache().instCache();
 	int dec = cach->blockBits();
-	
+
 	// Initialization
 	for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
-		
+
 		// Build variables
 		if(lblock->bb()) {
-			
+
 			// Link BB variable
 			ilp::Var *bbvar = VAR(lblock->bb());
 			assert(bbvar);
 			BB_VAR(lblock) = bbvar;
-		
+
 			// Create x_hit variable
 			String namex;
 			if(_explicit) {
@@ -114,7 +114,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			}
 			ilp::Var *vhit = system->newVar(namex);
 			HIT_VAR(lblock) = vhit;
-		
+
 			// Create x_miss variable
 			String name1;
 			if(_explicit) {
@@ -127,7 +127,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			ilp::Var *miss = system->newVar(name1);
 			MISS_VAR(lblock) = miss;
 		}
-		
+
 		// Put variables on edges
 		for(CCG::OutIterator edge(CCG::NODE(lblock)); edge; edge++) {
 			CCGNode *succ = edge->target();
@@ -150,16 +150,16 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 						<< '_' << succ->lblock()->bb()->cfg()->label();
 				name = buf.toString();
 			}
-			VAR(edge) = system->newVar(name); 
+			VAR(edge) = system->newVar(name);
 		}
 	}
-	
+
 	// Building all the constraints of each lblock
 	for (LBlockSet::Iterator lbloc(*lbset); lbloc; lbloc++) {
-		
-		
-		/* P(x,y) == eccg_x_y */	
-		/* 
+
+
+		/* P(x,y) == eccg_x_y */
+		/*
 		 * (entry node) Rule 18:
 		 * sum P(entry,*) = 1
 		 */
@@ -169,22 +169,22 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			for(CCG::OutIterator edge(CCG::NODE(lbloc)); edge; edge++)
 				cons18->add(1, VAR(edge));
 		}
-			
+
 		// Non-entry, non-exit node
 		if(lbloc->id() != 0 && lbloc->id() != lbset->count() - 1) {
-			/*int identif =*/ lbloc->id();				
+			/*int identif =*/ lbloc->id();
 			address_t address = lbloc->address();
-			
+
 			/*
 			 * Rule 13:
-                         * xi = xhit_xxxxx_i + xmiss_xxxx_i 
+                         * xi = xhit_xxxxx_i + xmiss_xxxx_i
 			 */
 			Constraint *cons = system->newConstraint(Constraint::EQ);
 			cons->addLeft(1, BB_VAR(lbloc));
 			cons->addRight(1, HIT_VAR(lbloc));
 			cons->addRight(1, MISS_VAR(lbloc));
-		
-			//contraints of input/output (17)	
+
+			//contraints of input/output (17)
 			/*
 			 * Rule 17:
 			 * xi = sum p(*, xij) = sum p(xij, *)
@@ -197,7 +197,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			// !!CONS!!
 			Constraint *cons17 = system->newConstraint(Constraint::EQ);
 			cons17->addLeft(1, BB_VAR(lbloc));
-			
+
 			for(GenGraph<CCGNode,CCGEdge>::OutIterator edge(CCG::NODE(lbloc));
 			edge; edge++) {
 				cons17->addRight(1, VAR(edge));
@@ -205,18 +205,18 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				if (target->lblock()->id() == lbset->count() - 1)
 					findend = true;
 
-		
+
 				used = true;
 				// p(ij, uv)  <= xi
 				/*cons2 = system->newConstraint(Constraint::LE);
 				cons2->addLeft(1,outedg.edge()->varEDGE());
 				cons2->addRight(1, lbloc->use<ilp::Var *>(CCGBuilder::ID_BBVar));*/
 			}
-			
+
 			if(!used)
 				delete cons17;
-				
-			// contraint of input(17)	
+
+			// contraint of input(17)
 			cons = system->newConstraint(Constraint::EQ);
 			cons->addLeft(1, BB_VAR(lbloc));
 			used = false;
@@ -231,10 +231,10 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 					 finds = true;
 					 psi = VAR(inedge);
 				}
-				if (source->lblock()->cacheblock() == lbloc->cacheblock()) 
+				if (source->lblock()->cacheblock() == lbloc->cacheblock())
 					findlooplb = true;
 				used = true;
-				
+
 				// building contraint (30)
 				// p(uv, ij) <= xi
 				/*if (lbloc->id() != inedge->lblock()->id()) {
@@ -245,21 +245,21 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
                         }
                 if(!used)
                         delete cons;
-				
+
 		// building contraints (19) & (20)
 		// cache_block(uv) = cach_block(ij)
 		// (19) p(ij, ij) + p(uv, ij) <= xihit <= p(ij, ij) + p(uv, ij) + p(entry, ij) if p(entry, ij) and p(ij, exit)
 		// (20) p(ij, ij) + p(uv, ij) = xihit else
 		// cout << "pre-examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " findlooplb = " << findlooplb << "\n";
-	
-		
+
+
 		if (findlooplb) {
 		  	if (finds && findend) {
 		  	        // constraint 19
 		 		cons = system->newConstraint(Constraint::LE);
 		 		cons2 = system->newConstraint(Constraint::LE);
 				cons->addLeft(1, HIT_VAR(lbloc));
-				
+
 				unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
 				for(CCG::InIterator inedge(CCG::NODE(lbloc)); inedge; inedge++)
 				{
@@ -290,9 +290,9 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 							cons2->addRight(1, VAR(inedge));
 					}
 		 		}
-		 	} 
+		 	}
 		 }
-		
+
 		// building the (16)
 //		if(lbloc->getNonConflictState() && !findlooplb){
                 // xihit = sum p(uv, ij) / cache_block(uv) = cache_block(ij)
@@ -306,21 +306,21 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 					&& inedge->source()->lblock()->id() != lbset->count() - 1) {
 						if(taglbloc == taginedge)
 							cons->addRight(1,  VAR(inedge));
-					}					
+					}
 				}
 			}
-				
+
 			//builduig the constraint (32)
 			ContextTree *cont = CONTEXT_TREE(fw);
 			addConstraintHeader(system, lbset, cont, lbloc);
 		}
 	}
-  
+
   	// Fix the object function
 	for(LBlockSet::Iterator lbloc(*lbset); lbloc; lbloc++) {
 		if(lbloc->id() != 0 && lbloc->id() != lbset->count()- 1)
   			system->addObjectFunction( cach->missPenalty(), MISS_VAR(lbloc));
-	}		
+	}
 }
 
 
@@ -377,14 +377,14 @@ void CCGConstraintBuilder::addConstraintHeader(
 						dominate = false;
 						used = true;
 					}
-					
+
 				}
 				if(used) {
 				        bool set = false;
 					for(BasicBlock::InIterator inedg(header); inedg ; inedg++) {
 						BasicBlock *preheader = inedg->source();
 						if(!Dominance::dominates(header, inedg->source()))
-						cons32->addRight(1, preheader->use<ilp::Var *>(VAR));
+						cons32->addRight(1, VAR(preheader));
 						set = true;
 					}
 					assert(set);
@@ -394,10 +394,10 @@ void CCGConstraintBuilder::addConstraintHeader(
 				break;
 			}
 		}
-	}	
+	}
 }
 
-} } //otawa::ipet	
+} } //otawa::ipet
 
 
 
