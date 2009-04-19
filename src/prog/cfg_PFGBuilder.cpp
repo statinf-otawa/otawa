@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2008, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
@@ -50,20 +50,20 @@ PFGBuilder::PFGBuilder(void): Processor("otawa::PFGBuilder", Version(1, 0, 0)) {
  */
 void PFGBuilder::processWorkSpace(WorkSpace *ws) {
 	ASSERT(ws);
-	
+
 	// build the PFG
 	pfg = new pfg::PFG();
 	PFG(ws) = pfg;
-	
+
 	// find and mark the start
 	Inst *start = ws->start();
 	if(start)
 		addFunction(ws, start);
-	
+
 	// find BB for each function of each file
 	for(Process::FileIter file(ws->process()); file; file++)
 		addFile(ws, file);
-	
+
 	// finalize BB
 	for(pfg::PFG::Iterator bb(pfg); bb; bb++)
 		if(bb != &pfg->ret && bb != &pfg->unknown) {
@@ -102,47 +102,47 @@ void PFGBuilder::addFunction(WorkSpace *ws, Inst *inst) {
 	ASSERT(inst);
 	if(isVerbose())
 		log << "\tfunction entry at " << inst->address() << " (" << FUNCTION_LABEL(inst) << ")\n";
-	
+
 	// prepare to-do list
 	genstruct::Vector<Inst *> todo;
 	todo.push(inst);
-	
+
 	// follow allow paths
 	while(todo) {
-		
+
 		// make the BB
 		Inst *inst = todo.pop();
-		TRACE("\t\tprocessing " << inst->address()); 
+		TRACE("\t\tprocessing " << inst->address());
 		if(PFG_BB(inst))
 			continue;
 		pfg::BB *bb = new pfg::BB(inst, 0);
 		pfg->add(bb);
 		PFG_BB(inst) = bb;
-		
+
 		// find next branch
 		while(inst && !inst->isControl())
 			inst = inst->nextInst();
 		if(inst) {
-			
+
 			// !!DEBUG!!
 			//cerr << "DEBUG: kind(" << inst->address() << ") = " << inst->kind() << io::endl;
-			
+
 			if(inst->isConditional() || inst->isCall()) {
-				TRACE("\t\tpushing " << inst->nextInst()->address()); 
+				TRACE("\t\tpushing " << inst->nextInst()->address());
 				todo.push(inst->nextInst());
 			}
 			if(!inst->isReturn()) {
 				if(inst->target()) {
-					TRACE("\t\tpushing " << inst->target()->address()); 
+					TRACE("\t\tpushing " << inst->target()->address());
 					todo.push(inst->target());
 				}
 				else
-					for(PropList::Getter<Address> target(inst, BRANCH_TARGET);
+					for(Identifier<Address>::Getter target(inst, BRANCH_TARGET);
 					target;
 					target++) {
-						TRACE("\t\tpushing " << ws->process()->findInstAt(target)); 
+						TRACE("\t\tpushing " << ws->process()->findInstAt(target));
 						todo.push(ws->process()->findInstAt(target));
-					} 
+					}
 			}
 		}
 	}
@@ -155,22 +155,22 @@ void PFGBuilder::addFunction(WorkSpace *ws, Inst *inst) {
  */
 void PFGBuilder::finalizeBB(pfg::BB *bb) {
 	ASSERT(bb);
-	
+
 	for(Inst *inst = bb->first(); inst; inst = inst->nextInst()) {
-		
+
 		// instruction sequence cut as branch target
 		if(PFG_BB(inst) && inst != bb->first()) {
 			new pfg::Edge(bb, PFG_BB(inst), pfg::Edge::SEQ);
 			bb->setSize(inst->address() - bb->address());
 			return;
 		}
-		
+
 		// branch at end of a BB
 		else if(inst->isControl()) {
-			
+
 			// !!DEBUG!!
 			//cerr << "DEBUG: kind(" << inst->address() << ") = " << inst->kind() << io::endl;
-			
+
 			// build the edges
 			if(inst->isCall() || inst->isConditional()) {
 				ASSERTP(PFG_BB(inst->nextInst()),
@@ -180,7 +180,7 @@ void PFGBuilder::finalizeBB(pfg::BB *bb) {
 			if(inst->isReturn())
 				new pfg::Edge(bb, &pfg->ret,
 					inst->isConditional() ? pfg::Edge::COND_RETURN : pfg::Edge::RETURN);
-			else { 
+			else {
 				pfg::Edge::kind_t kind;
 				if(inst->isCall())
 					kind = inst->isConditional() ? pfg::Edge::COND_CALL : pfg::Edge::CALL;
@@ -189,20 +189,20 @@ void PFGBuilder::finalizeBB(pfg::BB *bb) {
 				if(inst->target())
 					new pfg::Edge(bb, PFG_BB(inst->target()), kind);
 				else if(inst->hasProp(BRANCH_TARGET))
-					for(PropList::Getter<Address> target(inst, BRANCH_TARGET);
+					for(Identifier<Address>::Getter target(inst, BRANCH_TARGET);
 					target;
 					target++)
 						new pfg::Edge(bb, PFG_BB(workspace()->process()->findInstAt(target)), kind);
 				else
 					new pfg::Edge(bb, &pfg->unknown, kind);
 			}
-			
+
 			// compute the size
 			bb->setSize(inst->topAddress() - bb->address());
 			return;
 		}
 	}
-	
+
 	// unended BB ???
 	throw ProcessorException(*this, _ << "unended BB at " << bb->address());
 }
