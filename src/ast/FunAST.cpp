@@ -12,19 +12,19 @@
 
 namespace otawa {
 
-	
+
 /**
  * @class FunAST
  * This class represents functions in the AST representation. It provides the root of the AST.
  */
-	
+
 /**
  * A property with this identifier is put on each instruction, start of an AST function.
  * Its value is of type "AST *".
  */
 Identifier<FunAST *> FunAST::ID("otawa::FunAST::id", 0);
 
-	
+
 /**
  * Build a new function AST.
  * @param fw		workspace containing the function.
@@ -33,22 +33,22 @@ Identifier<FunAST *> FunAST::ID("otawa::FunAST::id", 0);
  */
 FunAST::FunAST(WorkSpace *fw, Inst *entry, String name)
 : ent(entry), _name(name), _ast(&AST::UNDEF) {
-	
+
 	// Mark the entry
-	ent->set<FunAST *>(ID, this);
-	
+	ID(ent) = this;
+
 	// Obtain an AST information
-	info = fw->get<ASTInfo *>(ASTInfo::ID, 0);
+	info = ASTInfo::ID(fw);
 	if(!info)
 		info = new ASTInfo(fw);
-	
+
 	// If no name, look for a name
 	String label = LABEL(ent);
 	if(label)
 		_name = label;
-		
+
 	// Record the function
-	info->add(this);	
+	info->add(this);
 }
 
 
@@ -60,17 +60,17 @@ FunAST::FunAST(WorkSpace *fw, Inst *entry, String name)
  */
 FunAST::FunAST(ASTInfo *info, Inst *entry, String name)
 : ent(entry), _name(name), _ast(&AST::UNDEF) {
-	
+
 	// Mark the entry
-	ent->set<FunAST *>(ID, this);
-	
+	ID(ent) = this;
+
 	// If no name, look for a name
 	String label = LABEL(ent);
 	if(label)
 		_name = label;
-		
+
 	// Record the function
-	info->add(this);	
+	info->add(this);
 }
 
 

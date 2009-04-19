@@ -36,12 +36,12 @@ CallAST::CallAST(Inst *block, size_t size, FunAST *_fun)
  */
 CallAST::CallAST(WorkSpace *fw, Inst *block, size_t size, Inst *callee)
 : BlockAST(block, size) {
-	
+
 	// Find the ASTInfo
-	ASTInfo *info = fw->get<ASTInfo *>(ASTInfo::ID, 0);
+	ASTInfo *info = ASTInfo::ID(fw);
 	if(!info)
 		info = new ASTInfo(fw);
-	
+
 	// Find the function
 	fun = info->getFunction(callee);
 }
