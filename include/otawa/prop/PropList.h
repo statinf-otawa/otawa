@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-8, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_PROP_PROPLIST_H
@@ -25,13 +25,41 @@
 #include <elm/utility.h>
 #include <elm/PreIterator.h>
 #include <elm/util/VarArg.h>
-#include <otawa/prop/Property.h>
-#include <otawa/prop/DeletableProperty.h>
+//#include <otawa/base.h>
+
+namespace elm { template <class T> class Initializer; }
 
 namespace otawa {
-	
-// Constants	
+
+// pre-declaration
+class AbstractIdentifier;
+class Type;
+
+
+// Constants
 extern const AbstractIdentifier END;
+
+
+// Property description
+class Property {
+	friend class PropList;
+	mutable Property *_next;
+	const AbstractIdentifier *_id;
+protected:
+	virtual ~Property(void) { };
+	virtual Property *copy(void) { return new Property(_id); };
+public:
+	static const AbstractIdentifier *getID(elm::CString name);
+	inline Property(const AbstractIdentifier *id): _id(id) { };
+	inline Property(const AbstractIdentifier& id): _id(&id) { };
+	inline Property(elm::CString name): _id(getID(name)) { };
+	inline const AbstractIdentifier *id(void) const { return _id; };
+	inline Property *next(void) const { return _next; };
+	template <class T> inline const T& get(void) const;
+	template <class T> inline void set(const T& value);
+	virtual void print(elm::io::Output& out) const;
+};
+
 
 // PropList class
 class PropList {
@@ -55,24 +83,8 @@ public:
 	inline void setProp(const AbstractIdentifier *id) { setProp(new Property(id)); };
 	void addProp(Property *prop);
 	void removeAllProp(const AbstractIdentifier *id);
-	inline bool hasProp(const AbstractIdentifier& id) const;
-	
-	// Property value access with identifier pointer (DEPRECATED)
-	template <class T> inline const T& get(const AbstractIdentifier *id, const T& def_value) const;
-	template <class T> inline elm::Option<T> get(const AbstractIdentifier *id) const;
-	template <class T> inline T use(const AbstractIdentifier *id) const;
-	template <class T> inline void set(const AbstractIdentifier *id, const T value);
-	template <class T> inline void add(const AbstractIdentifier *id, const T value);
-	template <class T> inline void addLocked(const AbstractIdentifier *id, const T value);
-
-	// Property value access with identifier reference
-	template <class T> inline const T& get(const AbstractIdentifier& id, const T& def_value) const;
-	template <class T> inline elm::Option<T> get(const AbstractIdentifier& id) const;
-	template <class T> inline T use(const AbstractIdentifier& id) const;
-	template <class T> inline void set(const AbstractIdentifier& id, const T value);
-	template <class T> inline void add(const AbstractIdentifier& id, const T value);
-	template <class T> inline void addLocked(const AbstractIdentifier& id, const T value);
-	template <class T> inline void addDeletable(const AbstractIdentifier& id, const T value);
+	inline bool hasProp(const AbstractIdentifier& id) const
+		{ return getProp(&id) != 0; }
 
 	// Global management
 	void clearProps(void);
@@ -82,116 +94,45 @@ public:
 		{ clearProps(); addProps(props); return *this; }
 
 	// Iter class
-	class Iter: public PreIterator<Iter, Property *> {
+	class Iter: public elm::PreIterator<Iter, Property *> {
 		Property *prop;
 	public:
-		inline Iter(const PropList& list);
-		inline Iter(const PropList *list);
-		inline void next(void);
-		inline bool ended(void) const;
-		inline Property *item(void) const;
-		template <class T> inline T get(void) const;
-		inline bool operator==(const AbstractIdentifier *id) const;
-		inline bool operator!=(const AbstractIdentifier *id) const;
-		inline bool operator==(const AbstractIdentifier& id) const;
-		inline bool operator!=(const AbstractIdentifier& id) const;
+		inline Iter(const PropList& list): prop(list.head) { }
+		inline Iter(const PropList *list): prop(list->head) { }
+		inline void next(void) { ASSERT(prop); prop = prop->next(); }
+		inline bool ended(void) const { return prop == 0; }
+		inline Property *item(void) const { ASSERT(prop); return prop; }
+		inline bool operator==(const AbstractIdentifier *id) const
+			{ return item()->id() == id; }
+		inline bool operator!=(const AbstractIdentifier *id) const
+			{ return item()->id() != id; }
+		inline bool operator==(const AbstractIdentifier& id) const
+			{ return item()->id() == &id; }
+		inline bool operator!=(const AbstractIdentifier& id) const
+			{ return item()->id() != &id; }
 	};
 
 	// Getter class
-	template <class T>
-	class Getter: public PreIterator<Getter<T>, T> {
+	class Getter: public elm::PreIterator<Getter, Property *> {
+	public:
+		inline Getter(const PropList *list, const AbstractIdentifier& id)
+			: iter(*list), _id(id) { look(); }
+		inline Getter(const PropList& list, const AbstractIdentifier& id)
+			: iter(list), _id(id) { look(); }
+		inline bool ended(void) const { return iter.ended(); }
+		inline Property *item(void) const { return iter.item(); }
+		inline void next(void) { iter.next(); look(); }
+	private:
 		Iter iter;
 		const AbstractIdentifier& _id;
-		inline void look(void);
-	public:
-		inline Getter(const PropList *list, const AbstractIdentifier& id);
-		inline Getter(const PropList& list, const AbstractIdentifier& id);
-		inline bool ended(void) const;
-		inline T item(void) const;
-		inline void next(void);
+		inline void look(void)
+			{ for(; iter; iter++) if(iter->id() == &_id) return; }
 	};
 
 };
 
 
-// PropList inlines
-inline bool PropList::hasProp(const AbstractIdentifier& id) const {
-	return getProp(&id) != 0;	
-}
-
-template <class T> const T& PropList::get(const AbstractIdentifier *id, const T& def_value) const {
-	Property *prop = getProp(id);
-	return !prop ? def_value : ((GenericProperty<T> *)prop)->value();
-};
-
-template <class T> elm::Option<T> PropList::get(const AbstractIdentifier *id) const {
-	Property *prop = getProp(id);
-	return !prop ? elm::Option<T>() : elm::Option<T>(((GenericProperty<T> *)prop)->value());
-};
-
-template <class T> T PropList::use(const AbstractIdentifier *id) const {
-	Property *prop = getProp(id);
-	if(!prop)
-		ASSERT(0);
-	return ((const GenericProperty<T> *)prop)->value();
-};
-
-template <class T> void PropList::set(const AbstractIdentifier *id, const T value) {
-	setProp(GenericProperty<T>::make(id, value));
-};
-
-template <class T>
-inline void PropList::add(const AbstractIdentifier *id, const T value) {
-	addProp(GenericProperty<T>::make(id, value));
-};
-
-template <class T>
-inline void PropList::addLocked(const AbstractIdentifier *id, const T value) {
-	addProp(LockedProperty<T>::make(id, value));
-}
-
-template <class T> const T& PropList::get(
-	const AbstractIdentifier& id,
-	const T& def_value
-) const {
-	Property *prop = getProp(&id);
-	if(!prop)
-		return def_value;
-	else
-		return ((GenericProperty<T> *)prop)->value();
-};
-
-template <class T> elm::Option<T> PropList::get(const AbstractIdentifier& id) const {
-	Property *prop = getProp(&id);
-	return !prop ? elm::Option<T>() : elm::Option<T>(((GenericProperty<T> *)prop)->value());
-};
-
-template <class T> T PropList::use(const AbstractIdentifier& id) const {
-	Property *prop = getProp(&id);
-	if(!prop)
-		ASSERT(0);
-	return ((GenericProperty<T> *)prop)->value();
-};
-
-template <class T> void PropList::set(const AbstractIdentifier& id, const T value) {
-	setProp(GenericProperty<T>::make(&id, value));
-};
-
-template <class T>
-inline void PropList::add(const AbstractIdentifier& id, const T value) {
-	addProp(GenericProperty<T>::make(&id, value));
-};
-
-template <class T>
-inline void PropList::addLocked(const AbstractIdentifier& id, const T value) {
-	addProp(LockedProperty<T>::make(&id, value));
-}
-
-template <class T>
-inline void PropList::addDeletable(const AbstractIdentifier& id, const T value) {
-	addProp(new DeletableProperty<T>(id, value));
-}
-
+// output
 inline elm::io::Output& operator<<(elm::io::Output& out, const PropList& props) {
 	props.print(out);
 	return out;
@@ -200,85 +141,6 @@ inline elm::io::Output& operator<<(elm::io::Output& out, const PropList& props) 
 inline elm::io::Output& operator<<(elm::io::Output& out, const PropList *props) {
 	props->print(out);
 	return out;
-}
-
-
-// PropList::Iter inlines
-inline PropList::Iter::Iter(const PropList& list): prop(list.head) {
-}
-
-inline PropList::Iter::Iter(const PropList *list): prop(list->head) {
-}
-
-inline void PropList::Iter::next(void) {
-	ASSERT(prop);
-	prop = prop->next();
-}
-
-inline bool PropList::Iter::ended(void) const {
-	return prop == 0;
-}
-
-inline Property *PropList::Iter::item(void) const {
-	ASSERT(prop);
-	return prop;
-}
-
-inline bool PropList::Iter::operator==(const AbstractIdentifier *id) const {
-	return item()->id() == id;
-}
-
-inline bool PropList::Iter::operator!=(const AbstractIdentifier *id) const {
-	return item()->id() == id;
-}
-
-inline bool PropList::Iter::operator==(const AbstractIdentifier& id) const {
-	return item()->id() == &id;
-}
-
-inline bool PropList::Iter::operator!=(const AbstractIdentifier& id) const {
-	return item()->id() == &id;
-}
-
-template <class T>
-inline T PropList::Iter::get(void) const {
-	return ((GenericProperty<T> *)prop)->value();
-}
-
-// PropList::Getter inlines
-template <class T>
-inline void PropList::Getter<T>::look(void) {
-	for(; iter; iter++)
-		if(iter->id() == &_id)
-			return;
-}
-
-template <class T>
-inline PropList::Getter<T>::Getter(const PropList *list, const AbstractIdentifier& id)
-: iter(*list), _id(id) {
-	look();
-}
-
-template <class T>
-inline PropList::Getter<T>::Getter(const PropList& list, const AbstractIdentifier& id)
-: iter(list), _id(id) {
-	look();
-}
-
-template <class T>
-inline bool PropList::Getter<T>::ended(void) const {
-	return iter.ended();
-}
-
-template <class T>
-inline T PropList::Getter<T>::item(void) const {
-	return ((GenericProperty<T> *)iter.item())->value();
-}
-
-template <class T>
-inline void PropList::Getter<T>::next(void) {
-	iter++;
-	look();
 }
 
 };	// otawa
