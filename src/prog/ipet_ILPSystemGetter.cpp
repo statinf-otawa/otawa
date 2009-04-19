@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -24,6 +24,7 @@
 #include <otawa/prog/Manager.h>
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/ilp/System.h>
+#include <otawa/prop/DeletableProperty.h>
 
 namespace otawa { namespace ipet {
 
@@ -31,10 +32,10 @@ namespace otawa { namespace ipet {
  * @class ILPSystemGetter;
  * This processor looks for an ILP plugin and build a new system that will be
  * used by other IPET processor.
- * 
+ *
  * @par Provided Features
  * @li @ref ILP_SYSTEM_fEATURE
- * 
+ *
  * @par Configuration
  * @li @ref ILP_PLUGIN_NAME
  */
@@ -60,7 +61,8 @@ void ILPSystemGetter::processWorkSpace(WorkSpace *ws) {
 			<< "\" plugin\n";
 	if(!sys)
 		throw otawa::Exception("no ILP solver available !");
-	ws->addDeletable(SYSTEM, sys);
+	//ws->addDeletable(SYSTEM, sys);
+	ws->addProp(new DeletableProperty<ilp::System *>(SYSTEM, sys));
 }
 
 
