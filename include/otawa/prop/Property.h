@@ -11,36 +11,14 @@
 #include <elm/string.h>
 #include <elm/utility.h>
 #include <elm/io.h>
-#include <otawa/prop/AbstractIdentifier.h>
+#include <otawa/prop/PropList.h>
 
 namespace otawa {
-
-// Property description
-class Property {
-	friend class PropList;
-	Property *_next;
-	const AbstractIdentifier *_id;
-protected:
-	virtual ~Property(void) { };
-	virtual Property *copy(void) { return new Property(_id); };
-public:
-	static const AbstractIdentifier *getID(elm::CString name);
-	inline Property(const AbstractIdentifier *id): _id(id) { };
-	inline Property(const AbstractIdentifier& id): _id(&id) { };
-	inline Property(elm::CString name): _id(getID(name)) { };
-	inline const AbstractIdentifier *id(void) const { return _id; };
-	inline Property *next(void) const { return _next; };
-	template <class T> inline const T& get(void) const;
-	template <class T> inline void set(const T& value);
-	virtual void print(elm::io::Output& out) const;
-};
-
 
 // GenericProperty class
 template <class T>
 class GenericProperty: public Property {
-	T _value;
-protected:
+public:
 	inline GenericProperty(const AbstractIdentifier *id, T value)
 		: Property(id), _value(value) { };
 	inline GenericProperty(const AbstractIdentifier& id, T value)
@@ -50,12 +28,13 @@ protected:
 	virtual ~GenericProperty(void) { };
 	virtual Property *copy(void)
 		{ return new GenericProperty<T>(id(), value()); };
-public:
-	static GenericProperty<T> *make(const AbstractIdentifier *id, const T value) {
-		return new GenericProperty(id, value);
-	};
+	static GenericProperty<T> *make(const AbstractIdentifier *id, const T value)
+		{ return new GenericProperty(id, value); };
 	inline const T& value(void) const { return _value; };
 	inline T& value(void) { return _value; };
+
+private:
+	T _value;
 };
 
 
