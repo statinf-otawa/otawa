@@ -13,6 +13,7 @@
 #include <otawa/ilp.h>
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/hard/Processor.h>
+#include <otawa/hard/Platform.h>
 
 using namespace elm;
 using namespace otawa;
@@ -66,14 +67,14 @@ const Cache *dcache) {
 }
 
 int main(int argc, char **argv) {
-	
+
 	Manager manager;
 	PropList props;
 	PROCESSOR_PATH(props) = "../../data/procs/op1.xml";
 	CACHE_CONFIG_PATH(props) = "../../data/caches/inst-64x16x1.xml";
-	
+
 	try {
-		
+
 		// Load program
 		if(argc < 2) {
 			cerr << "ERROR: no argument.\n"
@@ -82,13 +83,13 @@ int main(int argc, char **argv) {
 		}
 		WorkSpace *fw = manager.load(argv[1], props);
 		assert(fw);
-		
+
 		// Display information
 		cout << "PLATFORM INFORMATION\n";
 		Platform *pf = fw->platform();
 		cout << "Platform : " << pf->identification().name() << '\n';
 		cout << '\n';
-		
+
 		// Display registers
 		cout << "REGISTERS\n";
 		for(int i = 0; i < pf->banks().count(); i++) {
@@ -107,13 +108,13 @@ int main(int argc, char **argv) {
 			cout << '\n';
 		}
 		cout << '\n';
-		
+
 		// Display cache
 		cout << "CACHE CONFIGURATION\n";
 		const CacheConfiguration& cconf(pf->cache());
 		display_cache_level(1, cconf.instCache(), cconf.dataCache());
 		cout << '\n';
-		
+
 		// Display some instructions
 		fw->require(DECODED_TEXT);
 		cout << "READ/WRITTEN REGS TEST\n";
@@ -137,8 +138,8 @@ int main(int argc, char **argv) {
 			cout << '\n';
 		}
 		cout << io::endl;
-		
-		
+
+
 		// Processor load test
 		cout << "Processor load test\n";
 		//pf->loadProcessor("proc.xml");
