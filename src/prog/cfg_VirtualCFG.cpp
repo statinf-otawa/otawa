@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -37,29 +37,6 @@ typedef struct call_t {
 
 
 /**
- * This property tells the VirtualCFG to not inline a call to a function.
- *
- * @par Hooks
- * @li @ref CFG
- */
-Identifier<bool> DONT_INLINE("otawa::dont_inline", false);
-
-/**
- * A property with this identifier is hooked at the edge performing a virtual
- * call when inling is used. The associated value is the CFG of the called
- * function.
- */
-Identifier<CFG *> CALLED_CFG("otawa::called_cfg", 0);
-
-
-/**
- * A property with this identifier is hooked to edge performing a recursive
- * call when inlining is used.
- */
-Identifier<bool> RECURSIVE_LOOP("otawa::recursive_loop", false);
-
-
-/**
  * @class VirtualCFG
  * A virtual CFG is a CFG not-mapped to real code, that is, it may contains
  * virtual nodes for inlining functions calls or for separating nodes according
@@ -74,7 +51,7 @@ void VirtualCFG::addBB(BasicBlock *bb) {
         _bbs.add(bb);
         bb->_cfg = this;
 }
- 
+
 
 /**
  * Give a number to each basic block of the virtual CFG
@@ -97,11 +74,11 @@ BasicBlock *exit) {
 	assert(exit);
 	DEPRECATED
 	//cout << "Virtualizing " << cfg->label() << "(" << cfg->address() << ")\n";
-	
+
 	// Prepare data
 	elm::genstruct::HashTable<void *, BasicBlock *> map;
 	call_t call = { stack, cfg, 0 };
-	
+
 	// Translate BB
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
@@ -109,7 +86,7 @@ BasicBlock *exit) {
 			map.put(bb, new_bb);
 			_bbs.add(new_bb);
 		}
-	
+
 	// Find local entry
 	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++) {
 		assert(!call.entry);
@@ -118,17 +95,17 @@ BasicBlock *exit) {
 		Edge *edge = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
 		CALLED_CFG(edge) = cfg;
 	}
-	
+
 	// Translate edges
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
 			//assert(!bb->isVirtual());
-			
+
 			// Resolve source
 			BasicBlock *src = map.get(bb, 0);
 			assert(src);
 
-			// Is there a call ?			
+			// Is there a call ?
 			CFG *called = 0;
 			BasicBlock *called_exit = 0;
 			if(isInlined())
@@ -145,7 +122,7 @@ BasicBlock *exit) {
 					if(!isInlined() || DONT_INLINE(edge->calledCFG()))
 						new Edge(src, edge->target(), Edge::CALL);
 				}
-				else if(edge->target()) { 
+				else if(edge->target()) {
 					if(edge->target()->isExit()) {
 						Edge *edge = new Edge(src, exit, Edge::VIRTUAL_RETURN);
 						CALLED_CFG(edge) = cfg;
@@ -160,7 +137,7 @@ BasicBlock *exit) {
 							new Edge(src, tgt, edge->kind());
 					}
 				}
-			
+
 			// Process the call
 			if(called) {
 				for(call_t *cur = &call; cur; cur = cur->back)
@@ -184,18 +161,18 @@ BasicBlock *exit) {
 /**
  */
 void VirtualCFG::scan(void) {
-	
+
 	// Build the virtual CFG
 	_bbs.add(&_entry);
 	virtualize(0, _cfg, &_entry, &_exit);
 	_bbs.add(&_exit);
-	
+
 	// Give a number to each BB
 	for(int i = 0; i < _bbs.length(); i++) {
 		INDEX(_bbs[i]) = i;
 		_bbs[i]->_cfg = this;
 	}
-	
+
 	// Set the tag
 	flags |= FLAG_Scanned;
 }
@@ -229,7 +206,7 @@ VirtualCFG::VirtualCFG(bool addEntryExit) {
   flags |= FLAG_Scanned;
   flags |= FLAG_Virtual;
 }
- 
+
 
 /**
  * @fn CFG *VirtualCFG::cfg(void) const;
