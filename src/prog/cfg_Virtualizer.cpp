@@ -26,39 +26,89 @@ static SilentFeature::Maker<Virtualizer> VIRTUALIZED_CFG_MAKER;
 /**
  * This features only show that the CFG has been virtualized. This may implies
  * a lot of transformation like function call inlining or loop unrolling.
- * 
+ *
  * @par Properties
- * @li @ref CALLED_CFG (@ref Edge) -- put on edge resulting from a function
- * inlining to identify the original CFG.
+ * @li @ref CALLED_CFG
+ * @li @ref RECURSIVE_LOOP
+ * @li @ref VIRTUAL_RETURN_BLOCK
+ *
  */
 SilentFeature VIRTUALIZED_CFG_FEATURE("otawa::VIRTUALIZED_CFG_FEATURE", VIRTUALIZED_CFG_MAKER);
 
 
+/**
+ * This property is put on a BB performing a function call that has been virtualized (inlined
+ * in the current CFG). It gives the BB after the return of the inlined CFG. It is useful
+ * to jump over inlinved CFG.
+ *
+ * @par Hooks
+ * @li @ref BasicBlock
+ */
+Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::VIRTUAL_RETURN_BLOCK", NULL);
 
-Identifier<bool> VIRTUAL_INLINING("otawa::virtual_inlining", true);
-Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::virtual_return_block", NULL);
+
+/**
+ * A property with this identifier is hooked at the edge performing a virtual
+ * call when inling is used. The associated value is the CFG of the called
+ * function.
+ *
+ * @par Hooks
+ * @li @ref Edge
+ */
+Identifier<CFG *> CALLED_CFG("otawa::CALLED_CFG", 0);
+
+
+/**
+ * A property with this identifier is hooked to edge performing a recursive
+ * call when inlining is used.
+ *
+ * @par Hooks
+ * @li @ref Edge
+ */
+Identifier<bool> RECURSIVE_LOOP("otawa::RECURSIVE_LOOP", false);
 
 
 /**
  * @class Virtualizer
  *
- * This processor inlines the function calls. 
+ * This processor inlines the function calls.
  *
  * @par Configuration
- * @li @ref DONT_INLINE : The CFG with DONT_INLINE(cfg) == true are not inlined
+ * @li @ref VIRTUAL_INLINING
+ * @li @ref DONT_INLINE
  *
  * @par Required features
  * @li @ref FLOW_FACTS_FEATURE
  *
  * @par Invalidated features
  * @li @ref COLLECTED_CFG_FEATURE
- * 
+ *
  * @par Provided features
  * @li @ref VIRTUALIZED_CFG_FEATURE
- * 
+ *
  * @par Statistics
  * none
  */
+
+
+/**
+ * Configuration property of @ref Virtualizer: it activates the inlining of function call
+ * during virtualization (default to true).
+ *
+ * @par Hooks
+ * @li Configuration of @ref Virtualizer code processor.
+ */
+Identifier<bool> VIRTUAL_INLINING("otawa::VIRTUAL_INLINING", true);
+
+
+/**
+ * This property tells the VirtualCFG to not inline a call to a function.
+ *
+ * @par Hooks
+ * @li @ref CFG
+ */
+Identifier<bool> DONT_INLINE("otawa::DONT_INLINE", false);
+
 
 Virtualizer::Virtualizer(void) : Processor("otawa::Virtualizer", Version(1, 0, 0)) {
 	//require(ipet::FLOW_FACTS_FEATURE);
@@ -70,7 +120,7 @@ Virtualizer::Virtualizer(void) : Processor("otawa::Virtualizer", Version(1, 0, 0
 
 void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 
-	CFGCollection *coll = INVOLVED_CFGS(fw);	
+	CFGCollection *coll = INVOLVED_CFGS(fw);
 	VirtualCFG *vcfg = new VirtualCFG(false);
         if (!entry)
         	entry = ENTRY_CFG(fw);
@@ -85,7 +135,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 	vcfg->addProps(*entry);
 	vcfg->entry()->addProps(*entry->entry());
 	vcfg->exit()->addProps(*entry->exit());
-	
+
 	virtual_inlining = VIRTUAL_INLINING(fw);
 	vcfg->addBB(vcfg->entry());
 	virtualize(0, entry, vcfg, vcfg->entry(), vcfg->exit());
@@ -93,7 +143,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 	vcfg->numberBBs();
 	if(isVerbose())
 		log << "\tINFO: " << vcfg->countBB() << " basic blocks." << io::endl;
-		
+
 	ENTRY_CFG(fw) = vcfg;
 	if (coll != NULL)
 		delete coll;
@@ -121,12 +171,12 @@ BasicBlock *exit) {
 	assert(entry);
 	assert(exit);
 	//cout << "Virtualizing " << cfg->label() << "(" << cfg->address() << ")\n";
-	
+
 	// Prepare data
 	elm::genstruct::HashTable<void *, BasicBlock *> map;
 	call_t call = { stack, cfg, 0 };
 	Vector<CFG *> called_cfgs;
-	
+
 	// Translate BB
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
@@ -136,7 +186,7 @@ BasicBlock *exit) {
 			// !!DEBUG!!
 			//cerr << (void *)bb << " -> " << (void *)new_bb << io::endl;
 		}
-	
+
 	// Find local entry
 	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++) {
 		ASSERT(edge->kind() == Edge::VIRTUAL);
@@ -146,19 +196,19 @@ BasicBlock *exit) {
 		Edge *edge = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
 		CALLED_CFG(edge) = cfg;
 	}
-	
+
 	// Translate edges
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
 //			assert(!bb->isVirtual());
-			
+
 			// Resolve source
 			BasicBlock *src = map.get(bb, 0);
 			assert(src);
 
-			// Is there a call ?			
+			// Is there a call ?
 			// CFG *called = 0;
-			
+
 			BasicBlock *called_exit = 0;
 			if(isInlined())
 				for(BasicBlock::OutIterator edge(bb); edge; edge++)
@@ -175,11 +225,11 @@ BasicBlock *exit) {
 								virtualize(&call, edge->calledCFG(), vcalled, vcalled->entry(), vcalled->exit());
 								vcalled->addBB(vcalled->exit());
 								vcalled->numberBB();
-							}  
+							}
 						} else if(edge->calledCFG())
 							called_cfgs.add(edge->calledCFG());
 					}
-						
+
 			// Look edges
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL) {
@@ -192,7 +242,7 @@ BasicBlock *exit) {
 						new Edge(src, vcalled->entry(), Edge::CALL);
 					}
 				}
-				else if(edge->target()) { 
+				else if(edge->target()) {
 					if(edge->target()->isExit()) {
 						Edge *edge = new Edge(src, exit, Edge::VIRTUAL_RETURN);
 						CALLED_CFG(edge) = cfg;
@@ -207,13 +257,13 @@ BasicBlock *exit) {
 							new Edge(src, tgt, edge->kind());
 					}
 				}
-			
+
 			// Process the call
 			if(called_cfgs) {
-				
+
 				// Process each call
 				for(Vector<CFG *>::Iterator called(called_cfgs); called; called++) {
-					
+
 					// Check recursivity
 					bool recursive = false;
 					for(call_t *cur = &call; cur; cur = cur->back)
@@ -228,7 +278,7 @@ BasicBlock *exit) {
 									<< " to " << called->label() << io::endl;
 							break;
 						}
-					
+
 					// Virtualize the called CFG
 					if(!recursive) {
 						ASSERT(called_exit);
@@ -237,7 +287,7 @@ BasicBlock *exit) {
 
 					}
 				}
-				
+
 				// Reset the called list
 				called_cfgs.setLength(0);
 			}
