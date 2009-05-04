@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-07, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_MANAGER_H
@@ -73,6 +73,7 @@ public:
 	static const CString PROCESSOR_NAME;
 	static const CString CACHE_CONFIG_NAME;
 	static const CString MEMORY_NAME;
+	static const cstring COMPILATION_DATE;
 
 	Manager(void);
 	~Manager(void);
@@ -82,9 +83,9 @@ public:
 		const PropList& props = PropList::EMPTY);
 	WorkSpace *load(const PropList& props = PropList::EMPTY);
 	WorkSpace *load(xom::Element *elem,
-		const PropList& props = PropList::EMPTY); 
+		const PropList& props = PropList::EMPTY);
 	ilp::System *newILPSystem(String plugin = "");
-	
+
 };
 
 // Configuration Properties

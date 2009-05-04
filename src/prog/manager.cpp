@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-07, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -133,7 +133,7 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * @param path		Path of the file to load.
  * @param props		Configuration properties.
  * @return 			The loaded workspace or null.
- * 
+ *
  * The configuration properties may be :
  * @li @ref ARGC,
  * @li @ref ARGV,
@@ -159,24 +159,24 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * @li @ref SIMULATOR,
  * @li @ref SIMULATOR_NAME,
  * @li @ref TASK_ENTRY.
- * 
+ *
  * @par
- * 
+ *
  * This call try to link a plugin matching the Instruction Set Architecture
  * of the loaded binary file. This plugin is looked in the following directories:
  * @li $HOME/.otawa/loader
  * @li $PWD/.otawa/loader
  * @li <installation directory>/lib/otawa/loader
- * 
+ *
  * The two first cases let the user to provide their own plugin for, as an
  * example, to develop a new loader plugin.
  */
 WorkSpace *Manager::load(const elm::system::Path&  path, const PropList& props) {
-	
+
 	// Just load binary ?
 	if(path.extension() != "xml")
 		return loadBin(path, props);
-	
+
 	// Load the XML file
 	loadXML(path, props);
 	return load(CONFIG_ELEMENT(props), props);
@@ -201,7 +201,7 @@ WorkSpace *Manager::loadBin(
 	if(!log_stream)
 		log_stream = &io::stderr;
 	Output log(*log_stream);
-	
+
 	// Simple identified loader
 	Loader *loader = LOADER(props);
 	if(!loader) {
@@ -209,7 +209,7 @@ WorkSpace *Manager::loadBin(
 		if(name)
 			loader = findLoader(name);
 	}
-	
+
 	// Try with gel
 	if(!loader) {
 		gel_file_t *file = gel_open((char *)&path, 0, 0);
@@ -230,7 +230,7 @@ WorkSpace *Manager::loadBin(
 		}
 		loader = findLoader(name.toCString());
 	}
-	
+
 	// No loader -> error
 	if(!loader)
 		throw LoadException(_ << "no loader for \"" << path << "\".");
@@ -246,24 +246,24 @@ WorkSpace *Manager::loadBin(
  * @param props	Property to install the configuration in.
  * @return		Loaded workspace.
  * @throws	LoadException	Error during load.
- */ 
+ */
 WorkSpace *Manager::loadXML(
 	const elm::system::Path& path,
 	const PropList& props)
 {
-	
+
 	// Load the file
 	xom::Builder builder;
 	xom::Document *doc = builder.build(&path);
 	if(!doc)
 		throw LoadException(_ << "cannot load \"" << path << "\".");
 	xom::Element *elem = doc->getRootElement();
-	
+
 	// Check the file
 	if(elem->getLocalName() != "otawa"
 	|| elem->getNamespaceURI() != OTAWA_NS)
 		throw LoadException("not a valid OTAWA XML.");
-	
+
 	// Record the configuration
 	if(Processor::VERBOSE(props))
 		cout << "MANAGER: load configuration from \"" << path << "\".\n";
@@ -290,7 +290,7 @@ WorkSpace *Manager::load(xom::Element *elem, const PropList& props) {
 	if(!bin_path)
 		throw LoadException("no binary available.");
 	return loadBin(bin_path, props);
-} 
+}
 
 
 /**
@@ -300,17 +300,17 @@ WorkSpace *Manager::load(xom::Element *elem, const PropList& props) {
  * @throws	LoadException	Error during load.
  */
 WorkSpace *Manager::load(const PropList& props) {
-	
+
 	// Look for an XML element
 	xom::Element *elem = CONFIG_ELEMENT(props);
 	if(elem)
 		return load(elem, props);
-	
+
 	// Look for a file name
 	elm::system::Path path = CONFIG_PATH(props);
 	if(path)
 		return load(path, props);
-	
+
 	// Nothing to do
 	throw LoadException("nothing to do.");
 }
@@ -338,7 +338,7 @@ Manager::Manager(void):
  */
 ilp::System *Manager::newILPSystem(String name) {
 	ilp::ILPPlugin *plugin;
-	
+
 	// Select the first available plugin
 	if(!name) {
 #		ifdef HAS_PLUGIN
@@ -352,7 +352,7 @@ ilp::System *Manager::newILPSystem(String name) {
 			plugin = (ilp::ILPPlugin *)plug.plug();
 		}
 	}
-	
+
 	// Find a plugin
 	else {
 		plugin = (ilp::ILPPlugin *)ilp_plugger.plug(name.toCString());
@@ -376,50 +376,50 @@ Identifier<CString> TASK_ENTRY("otawa::task_entry", "main");
 
 /**
  * Identifier of the property indicating the name (CString) of the platform to use.
- */	
+ */
 Identifier<CString> PLATFORM_NAME("otawa::platform_name", "");
 
 
 /**
  * Identifier of the property indicating a name (CString) of the loader to use..
- */	
+ */
 Identifier<CString> LOADER_NAME("otawa::loader_name", "");
 
 
 /**
  * Identifier of the property indicating a platform (Platform *) to use.
- */	
+ */
 Identifier<hard::Platform *> PLATFORM("otawa::platform", 0);
 
 
 /**
  * Identifier of the property indicating the loader to use.
- */	
+ */
 Identifier<Loader *> LOADER("otawa::loader", 0);
 
 
 /**
  * Identifier of the property indicating the identifier (PlatformId) of the loader to use.
- */	
+ */
 Identifier<hard::Platform::Identification *>
 	PLATFORM_IDENTFIER("otawa::platform_identifier", 0);
 
 
 /**
  * Argument count as passed to the program (int).
- */	
+ */
 Identifier<int> ARGC("otawa::argc", -1);
 
 
 /**
  * Argument values as passed to the program (char **).
- */	
+ */
 Identifier<char **> ARGV("otawa::argv", 0);
 
 
 /**
  * Argument values as passed to the program (char **).
- */	
+ */
 Identifier<char **> ENVP("otawa::envp", 0);
 
 
@@ -541,6 +541,12 @@ Identifier<hard::Memory *> MEMORY_OBJECT("otawa::MEMORY_OBJECT", 0);
 /**
  * Default manager. Avoid to declare one in the main.
  */
-Manager MANAGER;  
+Manager MANAGER;
+
+
+/**
+ * Compilation date of this OTAWA library.
+ */
+const cstring Manager::COMPILATION_DATE = DATE;
 
 }	// otawa
