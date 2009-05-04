@@ -1,6 +1,6 @@
 loaderdir=$(libdir)/otawa/loader
 loader_LTLIBRARIES=s12x.la
-noinst_PROGRAMS=test_s12x
+check_PROGRAMS=test_s12x
 
 AM_CXXFLAGS = @GLISS_S12X_CXXFLAGS@ @OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@
 
