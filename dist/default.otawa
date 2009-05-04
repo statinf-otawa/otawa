@@ -57,6 +57,24 @@ function mod_hcs12 {
 	REQUIRE="gliss"
 }
 
+function mod_arm {
+	NAME=arm
+	DOWNLOAD=home
+	VERSION=STABLE
+	PATCH=fun
+	BUILD=make
+	MAKE_FLAGS='OPT=-DISS_DISASM'
+	DIST=copy
+	REQUIRE="gliss"
+}
+
+function patch_arm {
+	cd $basedir/$NAME
+	cat goodies/arm_param/arm.nmp | sed -e 's/include "thumb.nmp"//' -e 's/| THUMB//'> arm.nmp
+	cp Makefile Makefile.old
+	cat Makefile.old | sed -e 's/\(@if test -d $(OUTPUT)\/\)debug;/\1.debug;/' > Makefile
+}
+
 
 # ILP solvers
 function mod_lp_solve {
