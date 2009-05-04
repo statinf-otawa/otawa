@@ -3,6 +3,6 @@
 mkdir .config
 aclocal \
 && autoheader \
-&& libtoolize -i -c \
+&& libtoolize --ltdl -c \
 && automake --gnu --add-missing \
 && autoconf
