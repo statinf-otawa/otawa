@@ -186,6 +186,7 @@ OGENSIM_LIBS="\$(top_builddir)/src/ogensim/libogensim.la"
 OGENSIM_DEPS="$OGENSIM_LIBS"
 ILP_PATHS=$libdir/otawa/ilp
 LOADER_PATHS=$libdir/otawa/loader
+PROC_PATHS=$libdir/otawa/proc
 SIMULATOR_PATHS=$libdir/otawa/sim
 AC_SUBST(OTAWA_CXXFLAGS)
 AC_SUBST(OTAWA_LIBS)
@@ -200,6 +201,8 @@ AS_AC_EXPAND(ILP_PATHS, "$ILP_PATHS")
 AC_DEFINE_UNQUOTED(ILP_PATHS, "$ILP_PATHS", [Paths for ILP plugins])
 AS_AC_EXPAND(LOADER_PATHS,"$LOADER_PATHS")
 AC_DEFINE_UNQUOTED(LOADER_PATHS, "$LOADER_PATHS", [Paths for loader plugins])
+AS_AC_EXPAND(PROC_PATHS,"$PROC_PATHS")
+AC_DEFINE_UNQUOTED(PROC_PATHS, "$PROC_PATHS", [Paths for processor plugins])
 AS_AC_EXPAND(SIMULATOR_PATHS, "$SIMULATOR_PATHS")
 AC_DEFINE_UNQUOTED(SIMULATOR_PATHS, "$SIMULATOR_PATHS", [Paths for simulator plugins])
 
@@ -304,6 +307,7 @@ AC_CONFIG_FILES([
 	test/ipet/Makefile
 	test/ets/Makefile
 	test/dom/Makefile
+	test/dynproc/Makefile
 	test/display/Makefile
 	test/delta/Makefile
 	test/ct/Makefile
