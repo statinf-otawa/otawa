@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -32,7 +32,7 @@ namespace otawa {
  * @li name and version of the processor,
  * @li list of configuration identifiers,
  * @li list of the used features (provided, required, invalidated).
- * 
+ *
  * The registration may be used to write processor scripts or for GUI to provide
  * list of processors to the user.
  * @ingroup proc
@@ -80,7 +80,7 @@ AbstractRegistration::AbstractRegistration(void): _base(0) {
 /**
  */
 void AbstractRegistration::record(void) {
-	Registry::_.record(this);	
+	Registry::_.record(this);
 }
 
 
@@ -96,7 +96,7 @@ bool AbstractRegistration::provides(const AbstractFeature& feature) {
 			return true;
 	return false;
 }
- 
+
 
 /**
  * Test if the current processor requires the given feature.
@@ -110,7 +110,7 @@ bool AbstractRegistration::requires(const AbstractFeature& feature) {
 			return true;
 	return false;
 }
- 
+
 
 /**
  * Test if the current processor invalidates the given feature.
@@ -124,7 +124,7 @@ bool AbstractRegistration::invalidates(const AbstractFeature& feature) {
 			return true;
 	return false;
 }
- 
+
 
 /**
  * @fn const string& AbstractRegistration::name(void) const;
@@ -207,7 +207,7 @@ void FeatureIter::step(void) {
  * defines a static function init() responsbible to initialize the registration.
  * This function invokes the initialization functions: name(), version(),
  * require(), provide(), invalidate().
- * 
+ *
  * An example is given below:
  * @code
  *	class MyProcessor: public Registered<MyProcessor, BBProcessor> {
@@ -219,7 +219,7 @@ void FeatureIter::step(void) {
  *			require(ANOTHER_FEATURE);
  *			provide(MY_FEATURE);
  *		}
- *	
+ *
  *	protected:
  *		void processBB(WorkSpace *ws, CFG *cfg, BB *bb) {
  *			// something useful
