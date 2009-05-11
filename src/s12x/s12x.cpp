@@ -9,7 +9,7 @@
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
  *	(at your option) any later version.
- * 
+ *
  *	OTAWA is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -42,15 +42,15 @@ static const unsigned long ADDRESS_TOP = 0x10000;
 
 /**
  * @page s12x Star12X Support
- * 
+ *
  * The Star12X (from FreeScale) is only a 16-bit processor with a very comlex
  * CISC instruction set. To be simulated by OTAWA, some instructions need
  * more information about their execution time. This kind of information is
  * given with two dedicated properties:
- * 
+ *
  * @li @ref otawa::s12x::COUNT,
  * @li @ref otawa::s12x::WAIT.
- * 
+ *
  * Although this instruction set architecture may be simulated with the usual
  * OGenSim simulator, the actual architecture of the Star12X is not pipelined
  * and the CISC instructions have complex time execution that may not be
@@ -93,12 +93,12 @@ static address_t normalize(address_t addr) {
  * @param inst	Address of the instruction.
  * @param addr	Rough address to fix.
  * @return		Fixed address.
- */ 
+ */
 static address_t fix(address_t inst, size_t addr) {
 	ASSERT(addr < ADDRESS_TOP);
 	return normalize(address_t(0, (inst.address() &  ~(ADDRESS_TOP - 1)) | addr));
 }
- 
+
 
 // Platform class
 class Platform: public hard::Platform {
@@ -145,9 +145,9 @@ public:
 			while(next->isPseudo())
 				next = next->nextInst();
 			return next;
-		} 
+		}
 		else
-			return process()->findInstAt(NPC(_state)); 
+			return process()->findInstAt(NPC(_state));
 	}
 private:
 	state_t *_state;
@@ -159,20 +159,20 @@ public:
 
 	inline Inst(Process& process, kind_t kind, address_t addr)
 		: otawa::loader::old_gliss::Inst(process, kind, addr), _size(0) { }
-		
+
 	virtual size_t size(void) const {
 		if(!_size)
 			_size = ((Process &)process()).computeSize(address());
 		return _size;
 	}
-	
+
 	virtual Loader *loader(void) const {
 	}
 
 	virtual long stackChange(void)
 		{ return ((Process&)process()).stackChange(this); }
 
-	virtual unsigned long stackAccess(void) 
+	virtual unsigned long stackAccess(void)
 		{ return ((Process&)process()).stackAccess(this); }
 
 private:
@@ -186,21 +186,21 @@ public:
 
 	inline BranchInst(Process& process, kind_t kind, address_t addr)
 		: otawa::loader::old_gliss::BranchInst(process, kind, addr), _size(0) { }
-		
+
 	virtual size_t size(void) const {
 		if(!_size)
 			_size = ((Process &)process()).computeSize(address());
 		return _size;
 	}
 
-	virtual unsigned long stackAccess(void) 
+	virtual unsigned long stackAccess(void)
 		{ return ((Process&)process()).stackAccess(this); }
 
 protected:
 	virtual address_t decodeTargetAddress(void);
 
 private:
-	mutable int _size;	
+	mutable int _size;
 };
 
 
@@ -309,7 +309,7 @@ otawa::Inst *Process::decode(address_t addr) {
 	if(kind & Inst::IS_CONTROL)
 		return new BranchInst(*this, kind, addr);
 	else
-		return new Inst(*this, kind, addr);	
+		return new Inst(*this, kind, addr);
 }
 
 
@@ -335,10 +335,10 @@ address_t BranchInst::decodeTargetAddress(void) {
 	// Scan instruction
 	address_t result;
 	switch(inst->ident) {
-	
+
 	/* short branches (PC + 2 + s8)
 	 *		B{RA|RN}
-	 * 		B{CC|CS|EQ|MI|NE|PL|VC|VS|HI|HS|LO|LS|GE|GT|LE|LT} */ 
+	 * 		B{CC|CS|EQ|MI|NE|PL|VC|VS|HI|HS|LO|LS|GE|GT|LE|LT} */
 	case ID_BRA_: case ID_BVS_: case ID_BVC_: case ID_BPL_: case ID_BNE_:
 	case ID_BMI_: case ID_BEQ_: case ID_BCS_: case ID_BCC_: case ID_BLS_:
     case ID_BHI_: case ID_BLT_: case ID_BLE_: case ID_BGT_: case ID_BGE_:
@@ -368,7 +368,7 @@ address_t BranchInst::decodeTargetAddress(void) {
 	case ID_BRCLR_SP__4: case ID_BRCLR_Y__4: case ID_BRCLR_X__4:
 	case ID_BRCLR_SP__5: case ID_BRCLR_Y__5: case ID_BRCLR_X__5:
 	case ID_BRCLR_SP__6: case ID_BRCLR_Y__6: case ID_BRCLR_X__6:
-	case ID_BRCLR_SP__7: case ID_BRCLR_Y__7: case ID_BRCLR_X__7: 
+	case ID_BRCLR_SP__7: case ID_BRCLR_Y__7: case ID_BRCLR_X__7:
     case ID_BRSET_: case ID_BRSET__0:
     case ID_BRSET_PC_: case ID_BRSET_SP_: case ID_BRSET_Y_:
 	case ID_BRSET_SP__0: case ID_BRSET_Y__0: case ID_BRSET_X_: case ID_BRSET_PC__0: case ID_BRSET_X__0:
@@ -378,7 +378,7 @@ address_t BranchInst::decodeTargetAddress(void) {
 	case ID_BRSET_SP__4: case ID_BRSET_Y__4: case ID_BRSET_X__4:
 	case ID_BRSET_SP__5: case ID_BRSET_Y__5: case ID_BRSET_X__5:
 	case ID_BRSET_SP__6: case ID_BRSET_Y__6: case ID_BRSET_X__6:
-	case ID_BRSET_SP__7: case ID_BRSET_Y__7: case ID_BRSET_X__7: 
+	case ID_BRSET_SP__7: case ID_BRSET_Y__7: case ID_BRSET_X__7:
  		ASSERT(inst->instrinput[2].type == PARAM_INT8_T);
 		result = normalize(address() + SIZE + inst->instrinput[2].val.int8);
 		break;
@@ -393,7 +393,7 @@ address_t BranchInst::decodeTargetAddress(void) {
 		ASSERT(inst->instrinput[1].type == PARAM_INT8_T);
 		result = normalize(address() + SIZE + inst->instrinput[1].val.int8);
 		break;
- 
+
 	 /* loop (PC + 3 + s8)
 	  * 		{DB|IB|TB}{EQ|NE} */
 	case ID_DBEQ_A_: case ID_DBEQ_B_: case ID_DBEQ_D_: case ID_DBEQ_X_:
@@ -411,7 +411,7 @@ address_t BranchInst::decodeTargetAddress(void) {
     	ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
     	result = normalize(address() + size_t(SIZE - inst->instrinput[0].val.uint8));
     	break;
-    	
+
 	case ID_DBEQ_A__0: case ID_DBEQ_B__0: case ID_DBEQ_D__0: case ID_DBEQ_X__0:
 	case ID_DBEQ_Y__0: case ID_DBEQ_SP__0:
 	case ID_DBNE_A__0: case ID_DBNE_B__0: case ID_DBNE_D__0: case ID_DBNE_X__0:
@@ -427,7 +427,7 @@ address_t BranchInst::decodeTargetAddress(void) {
     	ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
     	result = normalize(address() + SIZE + inst->instrinput[0].val.uint8);
     	break;
-	
+
 	/* case ID_DBNE_A__1: case ID_DBNE_B__1: case ID_DBNE_D__1: case ID_DBNE_X__1:
 	case ID_DBNE_Y__1: case ID_DBNE_SP__1: */
 
@@ -450,7 +450,7 @@ address_t BranchInst::decodeTargetAddress(void) {
 		ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
 		result = normalize(address() + inst->instrinput[0].val.uint8);
 		break;
-    case ID_JSR_PC_0: 
+    case ID_JSR_PC_0:
 	case ID_JSR_PC_2:
 		ASSERT(inst->instrinput[0].type == PARAM_UINT8_T);
 		result = normalize(address() - int(inst->instrinput[0].val.uint8));
@@ -476,8 +476,8 @@ address_t BranchInst::decodeTargetAddress(void) {
 		break;
 	case ID_RTS:
 		result = 0;
-		break;	
-		
+		break;
+
 	/* far calls
 	 *		CALL (expanded memory)
 	 *		RTC
@@ -561,12 +561,12 @@ address_t BranchInst::decodeTargetAddress(void) {
 	case ID_RTI:
 	case ID_SWI:
 		result = 0;
-		break;	
+		break;
 
 	default:
 		ASSERT(false);
 	}
-	
+
 	// Result
 	TRACE("otawa::s12x::BranchInst::decodeTargetAddress(" << address()
 		<< ") = " << result);
@@ -581,7 +581,7 @@ address_t BranchInst::decodeTargetAddress(void) {
  */
 long Process::stackChange(otawa::Inst *inst) {
 	long change = 0;
-	
+
 	// Get instruction
 	code_t buffer[20];
 	char out_buffer[200];
@@ -636,11 +636,11 @@ void *Process::memory(void) {
 
 
 // Alias table
-static CString table[] = {
+static string table[] = {
 	"elf_53"
 };
-static elm::genstruct::Table<CString> s12x_aliases(table, 1);
- 
+static elm::genstruct::Table<string> s12x_aliases(table, 1);
+
 
 /**
  * Build a new loader.
@@ -690,7 +690,7 @@ otawa::Process *Loader::create(Manager *man, const PropList& props) {
  * This property must be put on Star12X fuzzy instructions of the Star12X to
  * allow time computation. Its value represents the maximal iteration count
  * of this instructions.
- * 
+ *
  * This instructions are :  MEM, REV, REVW, WAV, WAVR.
  */
 Identifier<int> COUNT("otawa::s12x::count");
