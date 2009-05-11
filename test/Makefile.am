@@ -2,6 +2,7 @@ SUBDIRS = \
 	dom \
 	checksum \
 	ct \
+	dynproc \
 	ets \
 	graph \
 	hard \
