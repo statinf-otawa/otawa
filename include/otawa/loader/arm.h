@@ -9,7 +9,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * OTAWA is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -30,7 +30,7 @@ typedef enum multiple_t {
 	no_multiple = 0,
 	only_one = 1,
 	several = 2
-};
+} multiple_t;
 
 extern Identifier<bool> IS_MLA;
 extern Identifier<int> NUM_REGS_LOAD_STORE;
