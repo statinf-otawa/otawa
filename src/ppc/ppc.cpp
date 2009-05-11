@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -123,7 +123,7 @@ public:
 	inline state_t *state(void) const { return _state; }
 	virtual Inst *execute(Inst *oinst) {
 		ASSERTP(oinst, "null instruction pointer");
-		
+
 		Address addr = oinst->address();
 		code_t buffer[20];
 		instruction_t *inst;
@@ -138,12 +138,12 @@ public:
 				next = next->nextInst();
 			if(next && next->address() == Address(NIA(_state)))
 				return next;
-		} 
+		}
 		Inst *next = process()->findInstAt(NIA(_state));
 		ASSERTP(next, "cannot find instruction at " << (void *)NIA(_state) << " from " << oinst->address());
-		return next; 
+		return next;
 	}
-	
+
 	// memory accesses
 	virtual Address lowerRead(void) { return Mem_Base_Read_First; }
 	virtual Address upperRead(void) { return Mem_Base_Read_Last; }
@@ -183,7 +183,7 @@ public:
 
 	inline Inst(Process& process, kind_t kind, address_t addr)
 		: otawa::loader::new_gliss::Inst(process, kind, addr) { }
-		
+
 	virtual size_t size(void) const { return 4; }
 
 protected:
@@ -199,9 +199,9 @@ public:
 
 	inline BranchInst(Process& process, kind_t kind, address_t addr)
 		: otawa::loader::new_gliss::BranchInst(process, kind, addr) { }
-		
+
 	virtual size_t size(void) const { return 4; }
-	
+
 protected:
 	virtual address_t decodeTargetAddress(void);
 	virtual void decodeRegs(void) {
@@ -320,7 +320,7 @@ Process::Process(
 /**
  */
 otawa::Inst *Process::decode(address_t addr) {
-	
+
 	// Decode the instruction
 	code_t buffer[20];
 	instruction_t *inst;
@@ -329,7 +329,7 @@ otawa::Inst *Process::decode(address_t addr) {
 	inst = iss_decode((state_t *)state(), addr.address(), buffer);
 
 	// Build the instruction
-	otawa::Inst *result = 0;	
+	otawa::Inst *result = 0;
 	if(inst->ident == ID_Instrunknown) {
 		result = new Inst(*this, 0, addr);
 		TRACE("UNKNOWN !!!\n" << result);
@@ -337,7 +337,7 @@ otawa::Inst *Process::decode(address_t addr) {
 		return result;
 	}
 	else {
-		
+
 		// Compute the kind
 		assert(iss_table[inst->ident].category <= 26);
 		Inst::kind_t kind = kinds[iss_table[inst->ident].category];
@@ -417,7 +417,7 @@ otawa::Inst *Process::decode(address_t addr) {
 	// Cleanup
 	ASSERT(result);
 	iss_free(inst);
-	return result;	
+	return result;
 }
 
 
@@ -469,7 +469,7 @@ address_t BranchInst::decodeTargetAddress(void) {
 		}
 		return target_addr;
 	}
-	
+
 	// Return result
 	iss_free(inst);
 	/*cerr << "TARGET OF [" << address() << "] "
@@ -500,13 +500,13 @@ typedef struct param_t {
 		CString name;
 	#endif
 } param_t;
-	
+
 class ScanArgs {
 	param_t ids[VOID_T + 1];
 public:
-	
+
 	ScanArgs(void) {
-		
+
 		// Default initialization
 		for(int i = 0; i < VOID_T + 1; i++) {
 			ids[i].type = NO_SUPPORT;
@@ -514,7 +514,7 @@ public:
 				ids[i].name = "???";
 			#endif
 		}
-		
+
 		// Supported register initialization
 		ids[GPR_T].type = TO_BANK;
 		ids[GPR_T].data.bank = &Platform::GPR_bank;
@@ -528,7 +528,7 @@ public:
 		ids[XER_T].data.reg = &Platform::XER_reg;
 		ids[LR_T].type = TO_REG;
 		ids[LR_T].data.reg = &Platform::LR_reg;
-		
+
 		// Name initialization
 		#ifdef SCAN_ARGS
 	    	ids[PARAM_UINT3_T].name = "PARAM_UINT3_T";
@@ -588,14 +588,14 @@ public:
 			ids[THRM_T].name = "THRM_T";
 			ids[SR_T].name = "SR_T";
 			ids[VOID_T].name = "VOID_T";
-		#endif	
+		#endif
 	}
-	
+
 	#ifdef SCAN_ARGS
 		void decode(io::Output& out, ii_t *param) {
 			out << ids[param->type].name << '(' << param->val.int32 << ')';
 		}
-		
+
 		void decodeParams(io::Output& out, ii_t *params) {
 			bool first = true;
 			for(int i = 0; ; i++) {
@@ -607,7 +607,7 @@ public:
 			}
 		}
 	#endif
-	
+
 	bool isSupported(ii_t *param) {
 		switch(ids[param->type].type) {
 		case NO_SUPPORT:
@@ -617,8 +617,8 @@ public:
 		default:
 			return true;
 		}
-	}		
-	
+	}
+
 	hard::Register *reg(ii_t *param) {
 		switch(ids[param->type].type) {
 		case NO_SUPPORT:
@@ -638,7 +638,7 @@ public:
 };
 static ScanArgs scan_args;
 
-	
+
 /**
  */
 void Process::decodeRegs(
@@ -665,7 +665,7 @@ void Process::decodeRegs(
 	 * It should be fixed in a way or in another. Difficult di publish the
 	 * PPC loader in this conditions...
 	 */
-	bool no_reg = iss_table[inst->ident].user0;	
+	bool no_reg = iss_table[inst->ident].user0;
 
 	// Count read registers
 	RTRACE(dump(cout); cout << io::endl);
@@ -682,12 +682,12 @@ void Process::decodeRegs(
 	case ID_CRNOR_CRB_CRB_CRB: case ID_CREQV_CRB_CRB_CRB:
 	case ID_CRANDC_CRB_CRB_CRB: case ID_CRORC_CRB_CRB_CRB:
 		RTRACE(cout << "count " << i << io::endl);
-		cnt++;			
+		cnt++;
 	case ID_BCLR_: case ID_BCLRL_: case ID_BCCTR_: case ID_BCCTRL_:
-	case ID_BCLA_: case ID_BCL_: case ID_BCA_: case ID_BC_:	
+	case ID_BCLA_: case ID_BCL_: case ID_BCA_: case ID_BC_:
 	case ID_MCRF_CRF_CRF:
 		RTRACE(cout << "count " << i << io::endl);
-		cnt++;		
+		cnt++;
 	}
 	in->allocate(cnt);
 	elm::genstruct::AllocatedTable<hard::Register *> *tab = in;
@@ -743,7 +743,7 @@ void Process::decodeRegs(
 	case ID_MCRF_CRF_CRF:
 		RTRACE(cout << "count " << i << io::endl);
 		cnt++;
-		break;		
+		break;
 	}
 	out->allocate(cnt);
 	tab = out;
@@ -768,7 +768,7 @@ void Process::decodeRegs(
 		RTRACE(cout << "set " << i << io::endl);
 		tab->set(j++, Platform::CR_bank[(31 - inst->instrinput[0].val.uint8) / 4]);
 		assert(tab->get(j - 1));
-		break;		
+		break;
 	case ID_CRAND_CRB_CRB_CRB: case ID_CROR_CRB_CRB_CRB:
 	case ID_CRXOR_CRB_CRB_CRB: case ID_CRNAND_CRB_CRB_CRB:
 	case ID_CRNOR_CRB_CRB_CRB: case ID_CREQV_CRB_CRB_CRB:
@@ -780,7 +780,7 @@ void Process::decodeRegs(
 		break;
 	}
 	assert(j == cnt);
-	
+
 	// Free instruction
 	iss_free(inst);
 }
@@ -798,11 +798,11 @@ public:
 
 
 // Alias table
-static CString table[] = {
+static string table[] = {
 	"elf_20"
 };
-static elm::genstruct::Table<CString> ppc_aliases(table, 1);
- 
+static elm::genstruct::Table<string> ppc_aliases(table, 1);
+
 
 /**
  * Build a new loader.
@@ -855,7 +855,7 @@ otawa::Process *Loader::create(Manager *man, const PropList& props) {
  * @return		If the pattern matches, the called address.
  */
 Option<Address> BranchInst::checkFarCall(address_t call) {
-	
+
 	// call:	bcctrl 20,0
 	// call-4:	mtspr 288,ri
 	code_t buffer[20];
@@ -869,7 +869,7 @@ Option<Address> BranchInst::checkFarCall(address_t call) {
 	}
 	int i = inst->instrinput[0].val.uint8;
 	iss_free(inst);
-	
+
 	// call-8:	addi ri,ri,low
 	iss_fetch(call.address() - 8, buffer);
 	inst = iss_decode((state_t *)process().state(), call.address() - 8, buffer);
@@ -893,7 +893,7 @@ Option<Address> BranchInst::checkFarCall(address_t call) {
 	}
 	signed long up = inst->instrinput[2].val.int16;
 	iss_free(inst);
-	
+
 	// Called address: (up << 16) + low
 	return Address((up << 16) + low);
 }
@@ -963,9 +963,9 @@ bool BranchInst::checkSwitch(void) {
 		Seq<
 			I<ID_ADD_R_R_R, R<9>, R<6>, R<8> >,
 			I<ID_MTSPR_R, R<9>, C16<288> >,
-			I<ID_BCCTR_, C<20>, C<0> >			
+			I<ID_BCCTR_, C<20>, C<0> >
 		>
-	> long_switch; 
+	> long_switch;
 
 	// Check template
 	STRACE("look for short switch at " << addr);

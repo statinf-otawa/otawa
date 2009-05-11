@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -45,14 +45,14 @@
  *				LDR pc, [sp], #4
  *  - shortcut return : B label (GCC -O2)
  *  - guarded statement : op+cnd (GGC -O2) (special pass in decoding)
- * 
+ *
  *  - indirect call (normal and -O2)
  * 		mov lr, pc
  * 		mov pc, ri
  * 		NOTE: function address are stored in data format in the code
  *		ldr	ri, [pc, #offset]
  * 		function address at (instruction address + 8 + offset)
- * 
+ *
  *  - switch indirect branch (normale and -O2)
  * 		cmp		ri, #table_size
  * 		ldrls	pc, [pc, ri, lsl #2]	@ indirect branch
@@ -96,7 +96,7 @@ static void setMemAccess(bool& is_pc, bool& is_sp, int reg) {
 /**
  * Count the number of ones in bit quadruplet.
  * @param quad	Quadruplet to count in.
- * @return		Number of ones. 
+ * @return		Number of ones.
  */
 static int countQuad(int quad) {
 	int cnt = 0;
@@ -126,7 +126,7 @@ static void recordQuad(
 		if(quad & 0x1)
 			reg[cnt++] = gpr[offset + i];
 		quad >>= 1;
-	}	
+	}
 }
 
 
@@ -225,7 +225,7 @@ public:
 	);
 
 
-	
+
 protected:
 	virtual otawa::Inst *decode(address_t addr);
 	virtual void *memory(void) { return ((state_t *)state())->M; }
@@ -237,7 +237,7 @@ public:
 
 	inline Inst(Process& process, kind_t kind, address_t addr)
 		: otawa::loader::old_gliss::Inst(process, kind, addr) { }
-		
+
 	virtual size_t size(void) const { return 4; }
 
 protected:
@@ -253,9 +253,9 @@ public:
 
 	inline BranchInst(Process& process, kind_t kind, address_t addr)
 		: otawa::loader::old_gliss::BranchInst(process, kind, addr) { }
-		
+
 	virtual size_t size(void) const { return 4; }
-	
+
 protected:
 	virtual address_t decodeTargetAddress(void);
 	virtual void decodeRegs(void) {
@@ -288,7 +288,7 @@ void Process::decodeRegs(
 	instruction_t *inst;
 	iss_fetch(addr.offset(), buffer);
 	inst = iss_decode((state_t *)state(), addr.offset(), buffer);
-	
+
 	// Count registers
 	int read_cnt = 0, written_cnt = 0;
 	switch(inst->ident) {
@@ -377,7 +377,7 @@ void Process::decodeRegs(
     	if(inst->instrinput[4].val.uint8)
     		written_cnt++;
     	goto cnt_guarded;
-    
+
     case ID_R__0:
     	if(inst->instrinput[5].val.uint8)
     		read_cnt++;
@@ -396,7 +396,7 @@ void Process::decodeRegs(
     	else
     		read_cnt++;
     	goto cnt_guarded;
-    
+
     case ID_STRH_:
     	read_cnt += 2;
     	if(inst->instrinput[3].val.uint8)
@@ -404,7 +404,7 @@ void Process::decodeRegs(
     	else
     		read_cnt++;
     	goto cnt_guarded;
-    
+
 	case ID_LDRSH__0: case ID_LDRSB__0: case ID_LDRH__0:
     	written_cnt++;
     	if(inst->instrinput[3].val.uint8)
@@ -412,7 +412,7 @@ void Process::decodeRegs(
     	else
     		read_cnt++;
     	goto cnt_guarded;
-	
+
 	case ID_STRH__0:
     	written_cnt++;
     	if(inst->instrinput[3].val.uint8)
@@ -436,12 +436,12 @@ void Process::decodeRegs(
     case ID_MSR_SPSR_SX_: case ID_MSR_SPSR_SC_: case ID_MSR_SPSR_XC_:
     case ID_MSR_SPSR_FSX_: case ID_MSR_SPSR_FXC_: case ID_MSR_SPSR_SXC_:
     case ID_MSR_SPSR_FSXC_: case ID_MSR_SPSR_:
-	case ID_MSR_SPSR_F__0: case ID_MSR_CPSR_F__0: 
+	case ID_MSR_SPSR_F__0: case ID_MSR_CPSR_F__0:
     case ID_MSR_CPSR_S__0: case ID_MSR_CPSR_X__0: case ID_MSR_CPSR_C__0:
     case ID_MSR_CPSR_FS__0: case ID_MSR_CPSR_FX__0:
     case ID_MSR_CPSR_SX__0: case ID_MSR_CPSR_SC__0: case ID_MSR_CPSR_XC__0:
     case ID_MSR_CPSR_FSX__0: case ID_MSR_CPSR_FXC__0: case ID_MSR_CPSR_SXC__0:
-    case ID_MSR_CPSR_FSXC__0: case ID_MSR_CPSR__0: 
+    case ID_MSR_CPSR_FSXC__0: case ID_MSR_CPSR__0:
     case ID_MSR_SPSR_S__0: case ID_MSR_SPSR_X__0: case ID_MSR_SPSR_C__0:
     case ID_MSR_SPSR_FS__0: case ID_MSR_SPSR_FX__0:
     case ID_MSR_SPSR_SX__0: case ID_MSR_SPSR_SC__0: case ID_MSR_SPSR_XC__0:
@@ -452,10 +452,10 @@ void Process::decodeRegs(
     	written_cnt++;
     	read_cnt++;
     	goto cnt_guarded;
-    	
+
     case ID_SWI_:
     	goto cnt_guarded;
-		 
+
     case ID_M_:
     	if(inst->instrinput[4].val.uint8) {
     		written_cnt += countQuad(inst->instrinput[10].val.uint8);
@@ -467,7 +467,7 @@ void Process::decodeRegs(
     		read_cnt += countQuad(inst->instrinput[10].val.uint8);
     		read_cnt += countQuad(inst->instrinput[9].val.uint8);
     		read_cnt += countQuad(inst->instrinput[8].val.uint8);
-    		read_cnt += countQuad(inst->instrinput[7].val.uint8);    		
+    		read_cnt += countQuad(inst->instrinput[7].val.uint8);
     	}
     	read_cnt++;
     	if(inst->instrinput[3].val.uint8)
@@ -476,7 +476,7 @@ void Process::decodeRegs(
     		written_cnt++;
     	goto cnt_guarded;
 	}
-	
+
 	// Record registers
 	int i = 0, j = 0;
 	in.allocate(read_cnt);
@@ -493,7 +493,7 @@ void Process::decodeRegs(
 		break;
 
 	case ID_TST__0: case ID_CMP__0: case ID_TEQ__0: case ID_CMN__0:
-		in[i++] = gpr[inst->instrinput[2].val.uint8];		
+		in[i++] = gpr[inst->instrinput[2].val.uint8];
 	case ID_TST__1: case ID_CMP__1: case ID_TEQ__1: case ID_CMN__1:
 		in[i++] = gpr[inst->instrinput[4].val.uint8];
 	case ID_TST_: case ID_CMP_: case ID_TEQ_: case ID_CMN_:
@@ -502,9 +502,9 @@ void Process::decodeRegs(
 		goto rec_guarded;
 
 	case ID_MOV__0: case ID_MVN__0:
-		in[i++] = gpr[inst->instrinput[2].val.uint8];		
+		in[i++] = gpr[inst->instrinput[2].val.uint8];
 	case ID_MOV__1: case ID_MVN__1:
-		in[i++] = gpr[inst->instrinput[5].val.uint8];		
+		in[i++] = gpr[inst->instrinput[5].val.uint8];
 	case ID_MOV_: case ID_MVN_:
 		out[j++] = gpr[inst->instrinput[2].val.uint8];
 		goto rec_uses;
@@ -512,15 +512,15 @@ void Process::decodeRegs(
 	case ID_SUB__0: case ID_SBC__0: case ID_RSC__0: case ID_RSB__0:
 	case ID_ORR__0: case ID_EOR__0: case ID_BIC__0: case ID_AND__0:
 	case ID_ADD__0: case ID_ADC__0:
-		in[i++] = gpr[inst->instrinput[4].val.uint8];		
+		in[i++] = gpr[inst->instrinput[4].val.uint8];
 	case ID_SUB__1: case ID_SBC__1: case ID_RSC__1: case ID_RSB__1:
 	case ID_ORR__1: case ID_EOR__1: case ID_BIC__1: case ID_AND__1:
 	case ID_ADD__1: case ID_ADC__1:
-		in[i++] = gpr[inst->instrinput[6].val.uint8];		
+		in[i++] = gpr[inst->instrinput[6].val.uint8];
     case ID_SUB_: case ID_SBC_: case ID_RSC_: case ID_RSB_:
     case ID_ORR_: case ID_EOR_: case ID_BIC_: case ID_AND_:
     case ID_ADD_: case ID_ADC_:
-		in[i++] = gpr[inst->instrinput[2].val.uint8];		
+		in[i++] = gpr[inst->instrinput[2].val.uint8];
 		out[j++] = gpr[inst->instrinput[3].val.uint8];
     	goto rec_uses;
 
@@ -528,25 +528,25 @@ void Process::decodeRegs(
 	case ID_UMULL_: case ID_SMULL_:
 		out[j++] = gpr[inst->instrinput[2].val.uint8];
 		out[j++] = gpr[inst->instrinput[3].val.uint8];
-		in[i++] = gpr[inst->instrinput[4].val.uint8];		
-		in[i++] = gpr[inst->instrinput[5].val.uint8];		
+		in[i++] = gpr[inst->instrinput[4].val.uint8];
+		in[i++] = gpr[inst->instrinput[5].val.uint8];
 		goto rec_uses;
-	
+
     case ID_MUL_: case ID_MLA_:
 		out[j++] = gpr[inst->instrinput[2].val.uint8];
-		in[i++] = gpr[inst->instrinput[3].val.uint8];		
-		in[i++] = gpr[inst->instrinput[4].val.uint8];		
+		in[i++] = gpr[inst->instrinput[3].val.uint8];
+		in[i++] = gpr[inst->instrinput[4].val.uint8];
     	goto rec_uses;
-		
+
     case ID_CLZ_:
 		out[j++] = gpr[inst->instrinput[1].val.uint8];
-		in[i++] = gpr[inst->instrinput[2].val.uint8];		
+		in[i++] = gpr[inst->instrinput[2].val.uint8];
     	goto rec_guarded;
 
     case ID_SWPB_: case ID_SWP_:
 		out[j++] = gpr[inst->instrinput[2].val.uint8];
-		in[i++] = gpr[inst->instrinput[3].val.uint8];		
-		in[i++] = gpr[inst->instrinput[1].val.uint8];		
+		in[i++] = gpr[inst->instrinput[3].val.uint8];
+		in[i++] = gpr[inst->instrinput[1].val.uint8];
     	goto rec_guarded;
 
     case ID_B_:
@@ -571,7 +571,7 @@ void Process::decodeRegs(
     	if(inst->instrinput[4].val.uint8)
     		out[j++] = gpr[inst->instrinput[6].val.uint8];
     	goto rec_guarded;
-    
+
     case ID_R__0:
     	if(inst->instrinput[5].val.uint8)
     		in[i++] = gpr[inst->instrinput[7].val.uint8];
@@ -581,7 +581,7 @@ void Process::decodeRegs(
     	if(inst->instrinput[4].val.uint8)
     		out[j++] = gpr[inst->instrinput[6].val.uint8];
     	goto rec_guarded;
-    	
+
     case ID_LDRSH_: case ID_LDRSB_: case ID_LDRH_:
     	in[i++] = gpr[inst->instrinput[6].val.uint8];
     	out[j++] = gpr[inst->instrinput[5].val.uint8];
@@ -590,7 +590,7 @@ void Process::decodeRegs(
     	else
     		in[i++] = gpr[inst->instrinput[4].val.uint8];
     	goto rec_guarded;
-    
+
     case ID_STRH_:
     	in[i++] = gpr[inst->instrinput[6].val.uint8];
     	in[i++] = gpr[inst->instrinput[5].val.uint8];
@@ -599,7 +599,7 @@ void Process::decodeRegs(
     	else
     		in[i++] = gpr[inst->instrinput[4].val.uint8];
     	goto rec_guarded;
-    
+
 	case ID_LDRSH__0: case ID_LDRSB__0: case ID_LDRH__0:
     	out[j++] = gpr[inst->instrinput[5].val.uint8];
     	if(inst->instrinput[3].val.uint8)
@@ -607,7 +607,7 @@ void Process::decodeRegs(
     	else
     		in[i++] = gpr[inst->instrinput[4].val.uint8];
     	goto rec_guarded;
-	
+
 	case ID_STRH__0:
     	out[j++] = gpr[inst->instrinput[5].val.uint8];
     	if(inst->instrinput[3].val.uint8)
@@ -631,12 +631,12 @@ void Process::decodeRegs(
     case ID_MSR_SPSR_SX_: case ID_MSR_SPSR_SC_: case ID_MSR_SPSR_XC_:
     case ID_MSR_SPSR_FSX_: case ID_MSR_SPSR_FXC_: case ID_MSR_SPSR_SXC_:
     case ID_MSR_SPSR_FSXC_: case ID_MSR_SPSR_:
-	case ID_MSR_SPSR_F__0: case ID_MSR_CPSR_F__0: 
+	case ID_MSR_SPSR_F__0: case ID_MSR_CPSR_F__0:
     case ID_MSR_CPSR_S__0: case ID_MSR_CPSR_X__0: case ID_MSR_CPSR_C__0:
     case ID_MSR_CPSR_FS__0: case ID_MSR_CPSR_FX__0:
     case ID_MSR_CPSR_SX__0: case ID_MSR_CPSR_SC__0: case ID_MSR_CPSR_XC__0:
     case ID_MSR_CPSR_FSX__0: case ID_MSR_CPSR_FXC__0: case ID_MSR_CPSR_SXC__0:
-    case ID_MSR_CPSR_FSXC__0: case ID_MSR_CPSR__0: 
+    case ID_MSR_CPSR_FSXC__0: case ID_MSR_CPSR__0:
     case ID_MSR_SPSR_S__0: case ID_MSR_SPSR_X__0: case ID_MSR_SPSR_C__0:
     case ID_MSR_SPSR_FS__0: case ID_MSR_SPSR_FX__0:
     case ID_MSR_SPSR_SX__0: case ID_MSR_SPSR_SC__0: case ID_MSR_SPSR_XC__0:
@@ -650,7 +650,7 @@ void Process::decodeRegs(
 
 	case ID_SWI_:
     	goto rec_guarded;
-    	
+
     case ID_M_:
     	if(inst->instrinput[4].val.uint8) {
     		recordQuad(inst->instrinput[10].val.uint8, 0, out, j);
@@ -772,12 +772,12 @@ otawa::Inst *Process::decode(address_t addr) {
 	case ID_RSB__0:
 	case ID_RSC__0:
 	case ID_SBC__0:
-	case ID_SUB__0:	
+	case ID_SUB__0:
 	case ID_TEQ__0:
 	case ID_TST__0:
 		kind |= Inst::IS_INT | Inst::IS_ALU | Inst::IS_SHIFT;
-		goto simple;		
-		
+		goto simple;
+
 	case ID_BX_:
 		if (inst->instrinput[1].val.uint8 == lr)
 			kind |= Inst::IS_RETURN;
@@ -807,7 +807,7 @@ otawa::Inst *Process::decode(address_t addr) {
 	case ID_R_:
 		setMemAccess(is_pc, is_sp, inst->instrinput[6].val.uint8);
 		if(inst->instrinput[8].val.uint8)
-			kind |= Inst::IS_SHIFT;		
+			kind |= Inst::IS_SHIFT;
 		kind |= Inst::IS_INT | Inst::IS_MEM;
 		if (inst->instrinput[5].val.uint8) {
 			kind |= Inst::IS_LOAD;
@@ -947,7 +947,7 @@ otawa::Inst *Process::decode(address_t addr) {
 		 if(inst->instroutput[i].type == GPR_T)
 		 cerr << addr << ": written to r" << inst->instroutput[i].val.uint8 << io::endl;*/
 
-		// Create just a branch instruction 
+		// Create just a branch instruction
 		branch: kind |= Inst::IS_CONTROL;
 		/*cerr << addr << ": ";
 		 if(kind & Inst::IS_RETURN)
@@ -978,7 +978,7 @@ otawa::Inst *Process::decode(address_t addr) {
 			 << (IS_SP_RELATIVE(res) ? "sp " : " ")
 			 << io::endl;
 	}*/
-	
+
 	NUM_REGS_LOAD_STORE(res) = num_regs;
 	return res;
 }
@@ -999,8 +999,8 @@ address_t BranchInst::decodeTargetAddress(void) {
     		long off = inst->instrinput[2].val.int32;
     		if(off >= 0x2000000)
     			off = (off << 6) >> 6;
-    		Address to = address() + int(off + 8); 
-    		//cerr << address() << ": branch to " << to << "(" << io::hex(off) << ")" << io::endl; 
+    		Address to = address() + int(off + 8);
+    		//cerr << address() << ": branch to " << to << "(" << io::hex(off) << ")" << io::endl;
     		return to;
     	}
     case ID_R_:
@@ -1018,7 +1018,7 @@ address_t BranchInst::decodeTargetAddress(void) {
     	&& inst->instrinput[8].val.uint8 == 2) {
     		Address table_base = address() + 8;
     		int ri = inst->instrinput[10].val.uint8;
-    		
+
     		// check cmp
     		instruction_t *cmp;
     		iss_fetch(address().offset() - 4, buffer);
@@ -1026,8 +1026,8 @@ address_t BranchInst::decodeTargetAddress(void) {
     		if(cmp->ident == ID_CMP_
     		|| cmp->instrinput[0].val.uint8 == 14
     		|| cmp->instrinput[1].val.uint8 == ri) {
-    			int table_size = cmp->instrinput[4].val.uint32 + 1; 
-    			
+    			int table_size = cmp->instrinput[4].val.uint32 + 1;
+
         		// check branch to default
         		instruction_t *branch;
         		iss_fetch(address().offset() + 4, buffer);
@@ -1035,7 +1035,7 @@ address_t BranchInst::decodeTargetAddress(void) {
         		if(branch->ident == ID_B_
         		&& branch->instrinput[0].val.uint8 == 14
         		&& !branch->instrinput[1].val.uint8) {
-        			            		
+
             		// decode the table
         			/*cerr << "table = " << table_base << io::endl
         				 << "size = " << table_size << io::endl
@@ -1044,7 +1044,7 @@ address_t BranchInst::decodeTargetAddress(void) {
         			for(Address table = table_base; table < table_base + table_size * 4; table += 4) {
         				unsigned long offset;
         				process().get(table, offset);
-        				//cerr << "switch at " << table << " to " << (void *)offset << io::endl; 
+        				//cerr << "switch at " << table << " to " << (void *)offset << io::endl;
         				Address addr = offset;
         				if(!addresses.contains(addr)) {
         					addresses.add(addr);
@@ -1054,9 +1054,9 @@ address_t BranchInst::decodeTargetAddress(void) {
         		}
         		iss_free(cmp);
     		}
-    		iss_free(cmp);    		
+    		iss_free(cmp);
     	}
-    	
+
     case ID_R__0:
     case ID_BX_:
     case ID_MOV__1:
@@ -1083,11 +1083,11 @@ public:
 
 
 // Alias table
-static CString table[] = {
+static string table[] = {
 	"elf_40"
 };
-static elm::genstruct::Table<CString> arm_aliases(table, 1);
- 
+static elm::genstruct::Table<string> arm_aliases(table, 1);
+
 
 /**
  * Build a new loader.
@@ -1142,7 +1142,7 @@ otawa::arm::Loader& arm_plugin = OTAWA_LOADER_HOOK;
 
 
 namespace otawa { namespace arm {
-	
+
 /**
  * Build the process.
  * @param manager	Current manager.

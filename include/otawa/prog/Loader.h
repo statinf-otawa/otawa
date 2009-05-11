@@ -33,14 +33,14 @@ protected:
 	virtual ~Loader(void) { };
 public:
 	Loader(CString name, Version version, Version plugger_version,
-		const elm::genstruct::Table<CString>& aliases
-		= elm::genstruct::Table<CString>::EMPTY);
+		const system::Plugin::aliases_t & aliases
+		= system::Plugin::aliases_t::EMPTY);
 
 	// Method
 	virtual CString getName(void) const = 0;
 	virtual Process *load(Manager *man, CString path, const PropList& props) = 0;
 	virtual Process *create(Manager *man, const PropList& props) = 0;
-	
+
 	// Default platform and loader
 	static Loader& LOADER_Gliss_PowerPC;
 	static Loader& LOADER_Heptane_PowerPC;
