@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -28,6 +28,11 @@ namespace otawa {
 // null feature
 static Feature<NullProcessor> _null;
 
+
+// feature property
+Identifier<bool> IS_FEATURE("otawa::IS_FEATURE", false);
+
+
 /**
  * @class AbstractFeature
  * See @ref Feature.
@@ -38,8 +43,9 @@ static Feature<NullProcessor> _null;
  * Build a simple feature.
  * @param name Name of the feature (only for information).
  */
-AbstractFeature::AbstractFeature(CString name)
+AbstractFeature::AbstractFeature(cstring name)
 : Identifier<Processor *>(name, 0) {
+	IS_FEATURE(this) = true;
 }
 
 
@@ -83,8 +89,8 @@ AbstractFeature& AbstractFeature::null = _null;
  * processor. If a feature is not available, a processor matching the feature
  * is retrieved from the processor configuration property list if any or
  * from a default processor tied to the @ref Feature class. This processor
- * gives a default implementation computing the lacking feature. 
- * 
+ * gives a default implementation computing the lacking feature.
+ *
  * @param T	Default processor to compute the feature.
  * @param C Feature checker. This type (class or structure) must provide
  * a function called "check" as provided by the @ref Feature class.
@@ -104,28 +110,28 @@ AbstractFeature& AbstractFeature::null = _null;
  * The usual @ref Feature class has as drawback to exhibit completely the processing of the feature
  * and therefore, in C++, to require too much header file inclusion (like the default processor
  * or the default handler structure).
- * 
- * @par 
- * 
+ *
+ * @par
+ *
  * This class allow to fix this using default processor builder that does not need to be included
  * in the feature declaration. The constructor of this class requires as parameter the name of
  * the feature and a factory class for the processor, @ref SilentFeature::AbstractMaker.
  * Usually, the factory object is implemented used the @ref SilenfFeature::Maker, that is a template
  * but does only need to be declared in the source file. Consequently, the header file declaring
  * the feature is no more overloaded with the inclusion of the default processor.
- * 
+ *
  * Here is an example of use, first the header file "my_feature.h":
  * @code
  * #include <otawa/proc/SilentFeature.h>
- * 
+ *
  * extern SilentFeature MyFeature;
  * @endcode
- * 
+ *
  * Then, the source is defined as:
  * @code
  * #include <path_to/MyFeature.h>
  * #include <path_to/MyDefaultProcessor.h>
- * 
+ *
  * static SilentFeature::Maker<MyDefaultProcessor> maker;
  * SilentFeature MyFeature("MyFeature", maker);
  * @endcode
