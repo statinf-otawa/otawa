@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-7, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_PROC_REGISTRATION_H_
@@ -44,7 +44,7 @@ public:
 		provide,
 		invalidate
 	} kind_t;
-	
+
 	inline FeatureUsage(void): _kind(none), _feature(0) { }
 	inline FeatureUsage(kind_t kind, const AbstractFeature& feature)
 		: _kind(kind), _feature(&feature) { }
@@ -52,7 +52,7 @@ public:
 		: _kind(usage._kind), _feature(usage._feature) { }
 	inline FeatureUsage& operator=(const FeatureUsage& usage)
 		{ _kind = usage._kind; _feature = usage._feature; return *this; }
-	
+
 	inline kind_t kind(void) const { return _kind; }
 	inline const AbstractFeature& feature(void) const { return *_feature; }
 
@@ -64,16 +64,16 @@ private:
 
 // AbstractRegistration class
 class AbstractRegistration {
-public:	
+public:
 	inline const string& name(void) const { return _name; }
 	inline const Version& version(void) const { return _version; }
 	inline AbstractRegistration& base(void) const { return *_base; }
 	virtual Processor *make(void) const = 0;
 	virtual bool isFinal(void) const = 0;
-	bool provides(const AbstractFeature& feature); 
-	bool requires(const AbstractFeature& feature); 
-	bool invalidates(const AbstractFeature& feature); 
-	
+	bool provides(const AbstractFeature& feature);
+	bool requires(const AbstractFeature& feature);
+	bool invalidates(const AbstractFeature& feature);
+
 	// Private use only
 	void initialize(void);
 
@@ -115,7 +115,7 @@ public:
 template <class T, class B, class C = Registration<T> >
 struct Registered: public B {
 	typedef Registered<T, B, C> super;
-	
+
 	Registered(void): B(__reg) { }
 	Registered(AbstractRegistration& reg): B(reg) { }
 	Registered(cstring name, const Version& version)
@@ -124,12 +124,12 @@ struct Registered: public B {
 		: B(name, version, reg) { }
 
 	static void __reg_do_init(void) {
-		__reg.record();
 		__reg._base = &B::__reg;
 		T::init();
+		__reg.record();
 	}
 	static struct __reg_init: C { __reg_init(void) { T::__reg_do_init(); } } __reg;
-	
+
 protected:
 	inline static void _name(cstring name)
 		{ __reg._name = name; }
