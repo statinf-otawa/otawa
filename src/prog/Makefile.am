@@ -28,11 +28,14 @@ libotawa_la_SOURCES = \
 	proc_Processor.cpp \
 	proc_CFGProcessor.cpp \
 	proc_ContextualProcessor.cpp \
+	proc_DynFeature.cpp \
+	proc_DynProcessor.cpp \
 	proc_Feature.cpp \
 	proc_FeatureRequirer.cpp \
 	proc_LBlockProcessor.cpp \
 	proc_BBProcessor.cpp \
 	proc_ProcessorException.cpp \
+	proc_ProcessorPlugin.cpp \
 	proc_Registry.cpp \
 	Process.cpp \
 	prop_AbstractIdentifier.cpp \
