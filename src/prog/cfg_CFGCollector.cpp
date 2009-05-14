@@ -43,8 +43,6 @@ class CFGCollectionCleaner: public Cleaner {
 public:
 	inline CFGCollectionCleaner(CFGCollection *_cfgs) { cfgs = _cfgs; }
 	virtual ~CFGCollectionCleaner(void) {
-		for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++)
-			delete *cfg;
 		delete cfgs;
 	}
 private:
@@ -168,7 +166,8 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 	}
 
 	INVOLVED_CFGS(fw) = cfgs;
-	addCleaner(COLLECTED_CFG_FEATURE, new CFGCollectionCleaner(cfgs));
+	CFGCollectionCleaner *cleaner = new CFGCollectionCleaner(cfgs);
+	addCleaner(COLLECTED_CFG_FEATURE, cleaner);
 
 	// Build it recursively
 	if(rec) {

@@ -60,7 +60,6 @@ Identifier<CFGInfo *>& CFGInfo::ID = CFG_INFO;
 CFGInfo::CFGInfo(WorkSpace *_fw)
 : fw(_fw) {
 	TRACE(this << ".CFGInfo::CFGInfo(" << _fw << ")");
-	fw->addProp(new DeletableProperty<CFGInfo *>(ID, this));
 }
 
 

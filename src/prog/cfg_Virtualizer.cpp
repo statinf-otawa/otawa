@@ -1,3 +1,25 @@
+/*
+ *	$Id$
+ *	Virtualize class implementation
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-09, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 #include <elm/io.h>
 #include <otawa/cfg.h>
 #include <otawa/proc/CFGProcessor.h>
@@ -122,7 +144,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 
 	CFGCollection *coll = INVOLVED_CFGS(fw);
 	VirtualCFG *vcfg = new VirtualCFG(false);
-        if (!entry)
+       /* if (!entry)
         	entry = ENTRY_CFG(fw);
         if(!entry) {
                 CFGInfo *info = fw->getCFGInfo();
@@ -130,7 +152,8 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
                 entry = info->findCFG(name);
         }
         if(!entry)
-                throw ProcessorException(*this, "cannot find task entry point.");
+                throw ProcessorException(*this, "cannot find task entry point.");*/
+	entry = coll->get(0);
 
 	vcfg->addProps(*entry);
 	vcfg->entry()->addProps(*entry->entry());
@@ -144,9 +167,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 	if(isVerbose())
 		log << "\tINFO: " << vcfg->countBB() << " basic blocks." << io::endl;
 
-	ENTRY_CFG(fw) = vcfg;
-	if (coll != NULL)
-		delete coll;
+	track(VIRTUALIZED_CFG_FEATURE, ENTRY_CFG(fw) = vcfg);
 }
 
 void Virtualizer::configure(const PropList &props) {
