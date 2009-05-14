@@ -236,7 +236,7 @@ inline const T& Identifier<T>::use(const PropList *list) const {
 
 template <class T>
 inline const T& Identifier<T>::value(const PropList *list) const {
-	Property *prop = list->getProp(*this);
+	Property *prop = list->getProp(this);
 	if(!prop)
 		return def;
 	else
