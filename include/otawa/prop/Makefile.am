@@ -5,5 +5,6 @@ includeotawaprop_HEADERS = \
 	GenericIdentifier.h \
 	Identifier.h \
 	Property.h \
-	PropList.h
+	PropList.h \
+	Ref.h
 
