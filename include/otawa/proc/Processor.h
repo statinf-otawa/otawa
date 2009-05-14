@@ -28,6 +28,7 @@
 #include <elm/system/StopWatch.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/genstruct/HashTable.h>
+#include <elm/util/Cleaner.h>
 #include <otawa/properties.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/proc/Registration.h>
@@ -44,6 +45,16 @@ class FeatureDependency;
 
 // Processor class
 class Processor {
+
+	template <class T>
+	class Deletor: public elm::Cleaner {
+	public:
+		inline Deletor(const Ref<T *, Identifier<T *> >& ref): _ref(ref) { }
+		virtual ~Deletor(void) { delete _ref.get(); _ref.remove(); }
+	private:
+		Ref<T *, Identifier<T *> > _ref;
+	};
+
 public:
 	static struct __init: NullRegistration { __init(void); } __reg;
 	static void init(void);
@@ -99,8 +110,10 @@ protected:
 	inline WorkSpace *workspace(void) const { return ws; }
 	inline void addCleaner(const AbstractFeature& feature, Cleaner *cleaner)
 		{ cleaners.add(clean_t(&feature, cleaner)); }
-	template <class T> T *addDeletor(const AbstractFeature& feature, T *object)
+	template <class T> void track(const AbstractFeature& feature, T *object)
 		{ addCleaner(feature, new Deletor<T>(object)); return object; }
+	template <class T> void track(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
+		{ addCleaner(feature, new Deletor<T>(ref)); }
 
 	// Overwritable methods
 	virtual void processWorkSpace(WorkSpace *fw);
