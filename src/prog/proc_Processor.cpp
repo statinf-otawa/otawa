@@ -420,7 +420,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 		}
 
 	// Put the cleaners
-	for(clean_list_t::Iterator clean; clean; clean++) {
+	for(clean_list_t::Iterator clean(cleaners); clean; clean++) {
 		FeatureDependency *dep = ws->getDependency((*clean).fst);
 		ASSERTP(dep, "cleanup invoked for a not provided feature: " + (*clean).fst->name());
 		(*dep)((*clean).snd);
@@ -562,7 +562,14 @@ void Processor::provide(const AbstractFeature& feature) {
 
 
 /**
- * @fn void Processor::addCleaner(const AbstractFeature *feature, Cleaner *cleaner);
+ * @fn WorkSpace *Processor::workspace(void) const;
+ * Get the current workspace.
+ * @return	Current workspace.
+ */
+
+
+/**
+ * @fn void Processor::addCleaner(const AbstractFeature& feature, Cleaner *cleaner);
  * Add a cleaner for the given feature.
  * @param feature	Feature the cleaner apply to.
  * @param cleaner	Cleaner to add.
@@ -570,10 +577,25 @@ void Processor::provide(const AbstractFeature& feature) {
 
 
 /**
- * @fn T *Processor::deletor(AbstractFeature *feature, T *object);
- * Add cleaner that deletes the given object.
+ * @fn void Processor::track(AbstractFeature& feature, T *object);
+ * Track the release of an allocated object with the given feature.
+ * Ensure that the given object will be deleted when the feature is invalidated.
  * @param feature	Feature the cleaner applies to.
  * @param object	Object to delete.
+ */
+
+
+/**
+ * @fn void Processor::track(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref);
+ * Track the release of an allocated object assigned to an identifier relatively to the
+ * given feature. When the feature is deleted, the object is fried and the identifier
+ * is removed. It is used as below:
+ * @code
+ * 		track(MY_ID(props) = value);
+ * @endcode
+ *
+ * @param feature	Linked feature.
+ * @param ref		Reference to the identifier to remove.
  */
 
 
