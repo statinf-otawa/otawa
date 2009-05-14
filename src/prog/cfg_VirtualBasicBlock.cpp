@@ -14,15 +14,16 @@ namespace otawa {
  * @param bb	Virtualized basic block.
  */
 VirtualBasicBlock::VirtualBasicBlock(BasicBlock *bb): _bb(bb) {
-	
+
 	// Find root BB
 	while(_bb->isVirtual())
 		_bb = ((VirtualBasicBlock *)_bb)->_bb;
-	
+
 	// Initialization
 	flags = _bb->getFlags() | FLAG_Virtual;
-	_head = _bb->head();
+	first = bb->firstInst();
+	_size = bb->size();
 	addProps(*bb);
 };
-	
+
 } // otawa
