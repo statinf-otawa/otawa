@@ -86,6 +86,7 @@ libotawa_la_SOURCES = \
 	util_DefaultFixPoint.cpp \
 	util_DefaultListener.cpp \
 	util_FirstUnrollingFixPoint.cpp \
+	util_MemBlockMap.cpp \
 	util_UnrollingListener.cpp \
 	hard_Processor.cpp \
 	hardware_Cache.cpp \

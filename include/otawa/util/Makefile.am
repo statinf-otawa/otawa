@@ -13,6 +13,7 @@ includeotawautil_HEADERS = \
 	FlowFactLoader.h \
 	LBlockBuilder.h \
 	LoopInfoBuilder.h \
+	MemBlockMap.h \
 	PostDominance.h \
 	Trace.h \
 	TrivialLBlockTime.h \
