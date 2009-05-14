@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2006-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -48,7 +48,7 @@ public:
 		delete cfgs;
 	}
 private:
-	CFGCollection *cfgs;	
+	CFGCollection *cfgs;
 };
 
 
@@ -105,12 +105,12 @@ private:
  * @li @ref RECURSIVE -- collect CFG recursively.
  * @li @ref CFGCollector::ADDED_CFG -- CFG to add to the collection.
  * @li @ref CFGCollector::ADDED_FUNCTION -- function name to add to the collection.
- * 
+ *
  * @note @ref otawa::ENTRY_CFG is first looked on the @ref WorkSpace and then in the configuration properties.
- * 
+ *
  * @par Provided Features
  * @ref COLLECTED_CFG_FEATURE
- * 
+ *
  * @par Required Features
  * @li @ref CFG_INFO_FEATURE
  */
@@ -121,7 +121,7 @@ private:
 void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
         int index = 0;
-	
+
 	// Set first queue node
 	CFG *ws_entry = ENTRY_CFG(fw);
     if(ws_entry)
@@ -136,17 +136,17 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 				<< "cannot find task entry point \"" << name << "\"");
 		ENTRY_CFG(fw) = entry;
 	}
-	
+
 	// Build the involved collection
 	CFGCollection *cfgs = new CFGCollection();
 	INDEX(entry) = index;
 	index++;
-	
+
 	// Entry CFG
 	cfgs->cfgs.add(entry);
 	if(isVerbose())
 		log << "\tadding " << entry->label() << io::endl;
-	
+
 	// Added functions
 	for(int i = 0; i < added_funs.length(); i++) {
 		CFGInfo *info = fw->getCFGInfo();
@@ -159,7 +159,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 		else
 			warn(_ << "cannot find a function called \"" << added_funs[i] << "\".");
 	}
-	
+
 	// Added CFG
 	for(int i = 0; i < added_cfgs.length(); i++) {
 		cfgs->cfgs.add(added_cfgs[i]);
@@ -169,7 +169,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
 	INVOLVED_CFGS(fw) = cfgs;
 	addCleaner(COLLECTED_CFG_FEATURE, new CFGCollectionCleaner(cfgs));
-	
+
 	// Build it recursively
 	if(rec) {
 		if(isVerbose())
@@ -177,16 +177,20 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 		for(int i = 0; i < cfgs->count(); i++) {
 			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++)
 				for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-					if(edge->kind() == Edge::CALL
-					&& edge->calledCFG()
-					&& !MARK(edge->calledCFG())) {
+					if(edge->kind() == Edge::CALL) {
+						if(!edge->calledCFG()) {
+							log << "\t\tunknown function call at " << bb->address() << io::endl;
+							log << "DEBUG: " << edge->target() << io::endl;	// !!DEBUG!!
+						}
+						else if(!MARK(edge->calledCFG())) {
 					        INDEX(edge->calledCFG()) = index;
 					        index++;
 							cfgs->cfgs.add(edge->calledCFG());
 							MARK(edge->calledCFG()) = true;
 							if(isVerbose())
 								log << "\t\tadding " << edge->calledCFG()->label() << io::endl;
-					} 
+						}
+					}
 				}
 		}
 		if(isVerbose())
@@ -206,7 +210,7 @@ CFGCollector::CFGCollector(void)
 }
 
 void CFGCollector::cleanup(WorkSpace *ws) {
-	CFGCollection *coll = INVOLVED_CFGS(ws);	
+	CFGCollection *coll = INVOLVED_CFGS(ws);
 	for (CFGCollection::Iterator iter(*coll); iter; iter++)
 		MARK(iter) = false;
 }
@@ -216,7 +220,7 @@ void CFGCollector::cleanup(WorkSpace *ws) {
  */
 void CFGCollector::configure(const PropList& props) {
 	Processor::configure(props);
-	
+
 	// Misc configuration
 	entry = ENTRY_CFG(props);
 	if(!entry)
@@ -236,7 +240,7 @@ void CFGCollector::configure(const PropList& props) {
 /**
  * This property is used to link the current computation involved CFG
  * on the framework.
- * 
+ *
  * @par Hooks
  * FrameWork
  */
@@ -247,7 +251,7 @@ static SilentFeature::Maker<CFGCollector> COLLECTED_CFG_MAKER;
 /**
  * This feature asserts that all CFG involved in the current computation has
  * been collected and accessible thanks to @ref INVOLVED_CFGS property
- * 
+ *
  * @par Properties
  * @ref ENTRY_CFG (FrameWork).
  * @ref INVOLVED_CFGS (FrameWork).

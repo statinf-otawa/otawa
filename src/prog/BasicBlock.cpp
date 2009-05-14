@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -27,13 +27,6 @@ namespace otawa {
 
 // Null basic block
 class NullBasicBlock: public BasicBlock {
-	inhstruct::DLList list;
-	Mark null_mark;
-public:
-	inline NullBasicBlock(void): null_mark(this, 0) {
-		list.addFirst(&null_mark);		
-		_head = &null_mark;
-	};
 };
 static NullBasicBlock null_bb_inst;
 
@@ -46,7 +39,7 @@ BasicBlock& BasicBlock::null_bb = null_bb_inst;
 /**
  * @class BasicBlock
  * This is the minimal definition of a basic block.
- * 
+ *
  * @par Implemented concepts
  * @li @ref otawa::concept::InstBlock
  */
@@ -59,11 +52,10 @@ Identifier<BasicBlock *> BasicBlock::ID("ptawa::BasicBlock::id", 0);
 
 
 /**
- * @fn Mark *BasicBlock::head(void) const;
- * Get the mark pseudo-instruction of the basic block. Following instruction
- * until the next mark are the content of the basic block.
- * @return	Basic block mark.
+ * Build an empty basic block.
  */
+BasicBlock::BasicBlock(void): first(&Inst::null), _size(0), flags(0), _cfg(0) {
+}
 
 
 /**
@@ -160,21 +152,10 @@ void BasicBlock::setNotTaken(BasicBlock *bb) {
 
 
 /**
- * Compute the size of the basic block.
+ * @fn size_t BasicBlock::size(void) const;
+ * Get the size of the basic block.
  * @return Size of basic block.
  */
-size_t BasicBlock::size(void) const {
-	assert(_head);
-	int size = 0;
-	
-	// Find the next BB marker
-	for(InstIter inst((BasicBlock *)this); inst; inst++)
-		if(!inst->isPseudo())
-			size += inst->size();
-
-	// Else this is the last block
-	return size;
-}
 
 
 /**
@@ -190,18 +171,9 @@ size_t BasicBlock::size(void) const {
  * @return	Number of instruction in the basic block.
  */
 int BasicBlock::countInsts(void) const {
-	assert(_head);
-	Inst *inst;
 	int cnt = 0;
-	PseudoInst *pseudo;
-
-	for(inst = _head->nextInst(); inst; inst = inst->nextInst()) {
-		pseudo = inst->toPseudo();
-		if(!pseudo)
-			cnt++;
-		else if(pseudo->id() == &ID)
-			break;
-	}
+	for(InstIter inst(this); inst; inst++)
+		cnt++;
 	return cnt;
 }
 
@@ -265,25 +237,6 @@ BasicBlock::~BasicBlock(void) {
  * @fn BasicBlock::operator IteratorInst<Inst *> *(void);
  * Same as @ref visit() but allows passing basic block in @ref Iterator class.
  */
-
-
-/**
- * Find the basic block at the given address if it exists.
- * @param fw	Framework to look in.
- * @param addr	Address of basic block or null if it cannot be found.
- */
-BasicBlock *BasicBlock::findBBAt(WorkSpace *fw, address_t addr) {
-	Inst *inst = fw->findInstAt(addr);
-	PseudoInst *pseudo;
-	while(inst
-	&& (!(pseudo = inst->toPseudo())
-		|| pseudo->id() != &CodeBasicBlock::ID))
-		inst = inst->prevInst();
-	if(!inst)
-		return 0;
-	else
-		return ((CodeBasicBlock::Mark *)pseudo)->bb();
-}
 
 
 /**
@@ -361,38 +314,23 @@ BasicBlock *BasicBlock::findBBAt(WorkSpace *fw, address_t addr) {
  * in this definition.
  */
 
-	
+
 /**
  * Build a basic block from its container code and its sequence of instructions.
  * @param inst	First instruction of the basic block. The basic block
  * lay from this instruction to the next basic block head or end of code.
  */
 CodeBasicBlock::CodeBasicBlock(Inst *inst) {
-	assert(inst);
-	assert(inst->nextInst() || !inst->isPseudo());
-	
-	// Create the mark
-	assert(!inst->prevInst() || !inst->prevInst()->isPseudo());
-	_head = new Mark(this, inst);
-	
-	// Look for a label
-	if(inst->nextInst()) {
-		String label = LABEL(inst);
-		if(label)
-			LABEL(this) = label;
-	}
-	
-	// Set flags
+	ASSERT(inst);
+
+	// initialize
+	first = inst;
 	flags = 0;
+
+	// copy label if any
+	string label = LABEL(inst);
+	if(label)
+		LABEL(this) = label;
 }
-
-
-/**
- * Delete the basic block.
- */
-CodeBasicBlock::~CodeBasicBlock(void) {
-	if(_head)
-		delete _head;
-};
 
 } // otawa

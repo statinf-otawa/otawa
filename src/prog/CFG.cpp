@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -41,7 +41,7 @@ Identifier<CFG *> ENTRY("otawa::entry", 0);
 
 /**
  * Identifier used for storing in each basic block from the CFG its index.
- * Also used for storing each CFG's index. 
+ * Also used for storing each CFG's index.
  *
  * @par Hooks
  * @li @ref BasicBlock
@@ -66,7 +66,7 @@ Identifier<int> INDEX("otawa::index", -1);
 bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 	assert(bb1);
 	assert(bb2);
-	
+
 	// Look for reverse-dominating annotation
 	dfa::BitSet *set = REVERSE_DOM(bb2);
 	if(!set) {
@@ -74,7 +74,7 @@ bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 		dom.processCFG(0, this);
 		set = REVERSE_DOM(bb2);
 	}
-	
+
 	// Test with the index
 	return set->contains(INDEX(bb1));
 }
@@ -92,10 +92,7 @@ CFG::CFG(Segment *seg, BasicBlock *entry):
 	ent(entry)
 {
 	assert(seg && entry);
-	
-	// Mark entry
-	ENTRY(ent) = this;
-	
+
 	// Get label
 	BasicBlock::InstIter inst(entry);
 	String label = FUNCTION_LABEL(inst);
@@ -177,22 +174,22 @@ address_t CFG::address(void) {
  */
 void CFG::scan(void) {
 	//cerr << "begin CFG::scan(" << (void *)this << ") -> " << ent->address() << "\n";
-	
+
 	// Experimental code
 
 	// Prepare data
-	typedef HashTable<BasicBlock *, BasicBlock *> map_t; 
+	typedef HashTable<BasicBlock *, BasicBlock *> map_t;
 	map_t map;
 	VectorQueue<BasicBlock *> todo;
 	todo.put(ent);
-	
+
 	// Find all BB
 	_bbs.add(&_entry);
 	while(todo) {
 		BasicBlock *bb = todo.get();
 		ASSERT(bb);
 		// second case : calling jump to a function
-		if(map.exists(bb) || (bb != ent && ENTRY(bb)))	
+		if(map.exists(bb) || (bb != ent && ENTRY(bb)))
 			continue;
 		BasicBlock *vbb = new VirtualBasicBlock(bb);
 		_bbs.add(vbb);
@@ -202,7 +199,7 @@ void CFG::scan(void) {
 		// !!DEBUG!!
 		/*if(bb->address() == Address(0x8a98))
 			cerr << "1 BB " << (void *)bb  << " at " << bb->address() << io::endl;*/
-		
+
 		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 
 			// !!DEBUG!!
@@ -212,15 +209,15 @@ void CFG::scan(void) {
 			else
 				cerr << edge->target()->address();
 			cerr << io::endl;*/
-			
+
 			if(edge->target() && edge->kind() != Edge::CALL)
 				todo.put(edge->target());
 		}
 	}
-	
+
 	/*for(map_t::ItemIterator vbb(map); vbb; vbb++)
-		cerr << (void *)vbb.key() << " -> " << (void *)vbb << io::endl;*/ 
-	
+		cerr << (void *)vbb.key() << " -> " << (void *)vbb << io::endl;*/
+
 	// Relink the BB
 	BasicBlock *vent = map.get(ent, 0);
 	ASSERT(vent);
@@ -228,16 +225,16 @@ void CFG::scan(void) {
 	for(bbs_t::Iterator vbb(_bbs); vbb; vbb++) {
 		if(vbb->isEnd())
 			continue;
-		BasicBlock *bb = ((VirtualBasicBlock *)*vbb)->bb(); 
+		BasicBlock *bb = ((VirtualBasicBlock *)*vbb)->bb();
 		if(bb->isReturn())
 			new Edge(vbb, &_exit, Edge::VIRTUAL);
-		
+
 		// !!DEBUG!!
 		/*if(bb->address() == Address(0x8a98))
 			cerr << "2 BB " << (void *)bb  << " at " << bb->address() << io::endl;*/
-		
+
 		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-			
+
 			// !!DEBUG!!
 			/*cerr << edge->source()->address() << " -> ";
 			if(!edge->target())
@@ -245,20 +242,20 @@ void CFG::scan(void) {
 			else
 				cerr << edge->target()->address();
 			cerr << io::endl;*/
-			
+
 			// A call
 			if(edge->kind() == Edge::CALL) {
 				Edge *vedge = new Edge(vbb, edge->target(), Edge::CALL);
 				vedge->toCall();
 				//cerr << vbb->address() << ": call" << io::endl;
 			}
-			
+
 			// Pending edge
 			else if(!edge->target()) {
 				new Edge(vbb, 0, edge->kind());
 				//cerr << vbb->address() << ": pending edge" << io::endl;
 			}
-			
+
 			// Possibly a not explicit call
 			else {
 				ASSERT(edge->target());
@@ -276,10 +273,10 @@ void CFG::scan(void) {
 				}
 			}
 
-		}	
+		}
 	}
 	_bbs.add(&_exit);
-	
+
 	// Number the BB
 	for(int i = 0; i < _bbs.length(); i++) {
 		INDEX(_bbs[i]) = i;
@@ -321,6 +318,20 @@ void Identifier<CFG *>::print(elm::io::Output& out, const Property& prop) const 
 /**
  */
 CFG::~CFG(void) {
+
+	// remove edges
+	for(int i = 0; i < _bbs.length() - 1; i++) {
+		BasicBlock *bb = _bbs[i];
+		while(true) {
+			BasicBlock::OutIterator edge(bb);
+			if(edge)
+				delete *edge;
+			else
+				break;
+		}
+	}
+
+	// remover basic blocks
 	for(int i = 1; i < _bbs.length() - 1; i++)
 		delete _bbs[i];
 }

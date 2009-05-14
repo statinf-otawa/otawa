@@ -77,23 +77,24 @@ CFGInfo::~CFGInfo(void) {
  * Remove all CFG stored in this CFG information.
  */
 void CFGInfo::clear(void) {
-	//PseudoInst *pseudo;
-
-	// Remove CFGs
 	for(int i = 0; i < _cfgs.length(); i++)
 		delete _cfgs[i];
 	_cfgs.clear();
 
-	// Release basic block
-	for(Process::FileIter file(fw->process()); file; file++)
-		for(File::SegIter seg(file); seg; seg++)
-			if(seg->isExecutable())
-				for(Segment::ItemIter item(seg); item; item++) {
-					Inst *inst = item->toInst();
-					PseudoInst *pseudo = inst->toPseudo();
-					if(pseudo && pseudo->id() == &BasicBlock::ID)
-						delete ((BasicBlock::Mark *)pseudo)->bb();
-				}
+	// remove edges
+	for(FragTable<BasicBlock *>::Iterator bb(bbs); bb; bb++)
+		while(true) {
+			BasicBlock::OutIterator edge(bb);
+			if(edge)
+				delete *edge;
+			else
+				break;
+		}
+
+	// remove BB
+	for(FragTable<BasicBlock *>::Iterator bb(bbs); bb; bb++)
+		delete *bb;
+	bbs.clear();
 }
 
 
@@ -103,7 +104,7 @@ void CFGInfo::clear(void) {
  * @return				Found basic block. If the code is not already managed,
  * it is automatically added.
  */
-BasicBlock *CFGInfo::findBB(Inst *inst) {
+/*BasicBlock *CFGInfo::findBB(Inst *inst) {
 	PseudoInst *pseudo;
 	while(inst) {
 		if((pseudo = inst->toPseudo()) && pseudo->id() == &CodeBasicBlock::ID)
@@ -111,7 +112,7 @@ BasicBlock *CFGInfo::findBB(Inst *inst) {
 		inst = inst->prevInst();
 	}
 	assert(0);
-}
+}*/
 
 
 /**
@@ -126,13 +127,11 @@ BasicBlock *CFGInfo::findBB(Inst *inst) {
  * @return 	Matching CFG or null.
  */
 CFG *CFGInfo::findCFG(Inst *inst) {
-
-	// Get the basic block
-	BasicBlock *bb = findBB(inst);
-	assert(bb);
-
-	// Look for a CFG
-	return findCFG(bb);
+	const BasicBlock *bb = map.get(inst->address());
+	if(!bb)
+		return 0;
+	else
+		return findCFG(bb);
 }
 
 
@@ -141,18 +140,9 @@ CFG *CFGInfo::findCFG(Inst *inst) {
  * @param bb	Basic block to look at.
  * @return	Found CFG or this BB is not a CFG start.
  */
-CFG *CFGInfo::findCFG(BasicBlock *bb) {
+CFG *CFGInfo::findCFG(const BasicBlock *bb) {
 	return ENTRY(bb);
 }
-
-
-/**
- * Get the collection of CFG.
- * @return CFG collection.
- */
-/*elm::Collection<CFG *>& CFGInfo::cfgs(void) {
-	return _cfgs;
-}*/
 
 
 /**
@@ -176,6 +166,16 @@ CFG *CFGInfo::findCFG(String label) {
 void CFGInfo::add(CFG *cfg) {
 	ASSERTP(cfg, "null cfg given");
 	_cfgs.add(cfg);
+}
+
+
+/**
+ * Add the given BB to the CFG information.
+ * @param bb	BB to add.
+ */
+void CFGInfo::add(BasicBlock *bb) {
+	bbs.add(bb);
+	map.add(bb);
 }
 
 
