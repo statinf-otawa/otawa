@@ -508,6 +508,10 @@ void Command::run(void) {
 	else
 		for(int i = 0; i < funs.length(); i++)
 			compute(funs[i]);
+
+	// cleanup all
+	if(fw)
+		delete fw;
 }
 
 
