@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-07, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_BASE_H
@@ -54,7 +54,7 @@ public:
 	inline Address(void): pg(null_page), off(0) { }
 	inline Address(offset_t offset): pg(0), off(offset) { }
 	inline Address(page_t page, offset_t offset)
-		: pg(page), off(offset) { ASSERT(page != null_page); }
+		: pg(page), off(offset) { }
 	inline Address(const Address& address)
 		: pg(address.pg), off(address.off) { }
 
@@ -71,25 +71,25 @@ public:
 	inline Address& operator=(offset_t offset)
 		{ pg = 0; off = offset; return *this; }
 	inline Address& operator+=(int offset)
-		{ ASSERT(!isNull()); off += offset; return *this; }
+		{ ASSERT(!offset || !isNull()); off += offset; return *this; }
 	inline Address& operator+=(size_t offset)
-		{ ASSERT(!isNull()); off += offset; return *this; }
+		{ ASSERT(!offset || !isNull()); off += offset; return *this; }
 	inline Address& operator-=(int offset)
-		{ ASSERT(!isNull()); off -= offset; return *this; }
+		{ ASSERT(!offset || !isNull()); off -= offset; return *this; }
 	inline Address& operator-=(size_t offset)
-		{ ASSERT(!isNull()); off -= offset; return *this; }
+		{ ASSERT(!offset || !isNull()); off -= offset; return *this; }
 
 	// Operations
 	inline Address operator+(int offset) const
-		{ ASSERT(!isNull()); return Address(pg, off + offset); }
+		{ ASSERT(!offset || !isNull()); return Address(pg, off + offset); }
 	inline Address operator+(size_t offset) const
-		{ ASSERT(!isNull()); return Address(pg, off + offset); }
+		{ ASSERT(!offset || !isNull()); return Address(pg, off + offset); }
 	inline Address operator-(int offset) const
-		{ ASSERT(!isNull()); return Address(pg, off - offset); }
+		{ ASSERT(!offset || !isNull()); return Address(pg, off - offset); }
 	inline Address operator-(size_t offset) const
-		{ ASSERT(!isNull()); return Address(pg, off - offset); }
+		{ ASSERT(!offset || !isNull()); return Address(pg, off - offset); }
 	inline offset_t operator-(const Address& address) const {
-		ASSERT(!isNull()); 
+		ASSERT(!isNull() && !address.isNull());
 		ASSERT(pg == address.pg);
 		return off - address.off;
 	}
@@ -109,11 +109,11 @@ public:
 	inline bool operator<=(const Address& addr) const { ASSERT(pg == addr.pg); return off <= addr.off; }
 	inline bool operator>(const Address& addr) const { ASSERT(pg == addr.pg); return off > addr.off; }
 	inline bool operator>=(const Address& addr) const { ASSERT(pg == addr.pg); return off >= addr.off; }
-	
+
 
 	// Deprecated
 	inline offset_t address(void) const { return off; }
-	
+
 private:
 	page_t pg;
 	offset_t off;
