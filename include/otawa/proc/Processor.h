@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-7, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_PROC_PROCESSOR_H
@@ -54,7 +54,7 @@ public:
 	Processor(String name, Version version);
 	Processor(String name, Version version, AbstractRegistration& registration);
 	virtual ~Processor(void);
-	
+
 	// Accessors
 	inline elm::String name(void) const;
 	inline elm::Version version(void) const;
@@ -86,7 +86,7 @@ protected:
 	elm::io::Output out;
 	elm::io::Output log;
 	PropList *stats;
-	
+
 	// Facility methods
 	friend class FeatureRequirer;
 	inline bool isVerbose(void) const;
@@ -100,7 +100,7 @@ protected:
 	inline void addCleaner(const AbstractFeature& feature, Cleaner *cleaner)
 		{ cleaners.add(clean_t(&feature, cleaner)); }
 	template <class T> T *addDeletor(const AbstractFeature& feature, T *object)
-		{ addCleaner(new Deletor<T>(&feature, object)); return object; }
+		{ addCleaner(feature, new Deletor<T>(object)); return object; }
 
 	// Overwritable methods
 	virtual void processWorkSpace(WorkSpace *fw);
@@ -133,7 +133,7 @@ protected:
 	virtual void processWorkSpace(WorkSpace *fw);
 public:
 	NoProcessor(void);
-}; 
+};
 
 
 // NoProcessorException class
@@ -144,14 +144,14 @@ class NoProcessorException: public Exception {
 // UnavailableFeatureException class
 class UnavailableFeatureException: public ProcessorException {
 public:
-	
+
  	inline UnavailableFeatureException(
  		const Processor *processor,
  		const AbstractFeature& feature
  	): ProcessorException(*processor, ""), f(feature) { }
- 		
+
  	inline const AbstractFeature& feature(void) const { return f; }
- 	virtual String 	message(void); 
+ 	virtual String 	message(void);
 private:
 	const AbstractFeature& f;
 };
