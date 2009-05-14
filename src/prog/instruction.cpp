@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -348,7 +348,7 @@ const elm::genstruct::Table<hard::Register *>& Inst::writtenRegs(void) {
  * Get the kind of the current instruction. In fact, the kind is composed as
  * bit array representing an instruction property.
  * @return The kind of the instruction.
- */ 
+ */
 
 
 /**
@@ -365,13 +365,13 @@ long Inst::stackChange(void) {
 /**
  * Gives information about stack access of this instruction.
  * @return	A composition of masks @ref Inst::READ and @ref::WRITE (or 0 if
- * 			there is no stack access). 
+ * 			there is no stack access).
  */
 unsigned long Inst::stackAccess(void) {
 	return 0;
 }
 
- 
+
 /**
  * @class PseudoInst
  * Pseudo-instruction does not represents realinstruction but markers that
@@ -406,12 +406,12 @@ address_t PseudoInst::address(void) const {
 	for(Inst *inst = nextInst(); inst; inst = inst->nextInst())
 		if(!inst->isPseudo())
 			return inst->address();
-	
+
 	// Look backward
 	for(Inst *inst = prevInst(); inst; inst = inst->prevInst())
 		if(!inst->isPseudo())
 			return inst->address() + inst->size();
-	
+
 	// None found
 	return 0;
 }
@@ -442,5 +442,21 @@ Inst *Inst::toInst(void) {
 int Inst::multiCount(void) {
 	return 0;
 }
+
+
+// NullInst class
+class NullInst: public Inst {
+public:
+	virtual kind_t kind(void) { return 0; }
+	virtual Address address(void) const { return Address::null; }
+	virtual size_t size(void) const { return 0; }
+	virtual Inst *toInst(void) const { return (Inst *)this; }
+} static_null;
+
+
+/**
+ * Null instruction with null address and null size (no kind).
+ */
+Inst& Inst::null = static_null;
 
 }	// otawa
