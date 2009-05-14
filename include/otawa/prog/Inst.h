@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_INST_H
@@ -65,19 +65,22 @@ public:
 	static const kind_t IS_MULTI 	= 0x08000;
 	static const kind_t IS_SPECIAL 	= 0x10000;
 
+	// null instruction
+	static Inst& null;
+
 	// Accessors
 	inline Inst *nextInst(void) const
 		{ ProgItem *item = next(); if(!item) return 0; else return item->toInst(); }
 	inline Inst *prevInst(void) const
 		{ ProgItem *item = previous(); if(!item) return 0; else return item->toInst(); }
 	virtual void dump(io::Output& out);
-	
+
 	// Kind access
 	virtual kind_t kind(void) = 0;
 	inline bool meets(kind_t mask) { return (kind() & mask) == mask; }
 	inline bool oneOf(kind_t mask) { return kind() & mask; }
 	inline bool noneOf(kind_t mask) { return !oneOf(mask); }
-	
+
 	inline bool isIntern(void) { return oneOf(IS_INTERN); }
 	inline bool isMem(void) { return oneOf(IS_MEM); }
 	inline bool isControl(void) { return oneOf(IS_CONTROL); }
@@ -92,11 +95,11 @@ public:
 	inline bool isSpecial(void) { return oneOf(IS_SPECIAL); }
 	inline bool isMul(void) { return oneOf(IS_MUL); }
 	inline bool isDiv(void) { return oneOf(IS_DIV); }
-	
+
 	// Low-level register access
 	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
 	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
-	
+
 	// Specialized information
 	virtual bool isPseudo(void);
 	virtual PseudoInst *toPseudo(void);
