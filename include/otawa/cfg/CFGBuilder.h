@@ -3,8 +3,8 @@
  *	CFGBuilder processor interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-08, IRIT UPS.
- * 
+ *	Copyright (c) 2005-09, IRIT UPS.
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -32,21 +32,23 @@ namespace otawa {
 
 // CFGBuilder class
 class CFGBuilder: public Processor {
-	genstruct::Vector<CFG *> _cfgs;
-	bool verbose;
-	
-	BasicBlock *nextBB(Inst *inst);
-	BasicBlock *thisBB(Inst *inst);
+public:
+	CFGBuilder(void);
+
+	// Processor overload
+	virtual void processWorkSpace(WorkSpace *fw);
+	virtual void configure(const PropList& props = PropList::EMPTY);
+
+private:
+	CodeBasicBlock *nextBB(Inst *inst);
+	CodeBasicBlock *thisBB(Inst *inst);
 	void addSubProgram(Inst *inst);
 	void buildCFG(WorkSpace *ws, Segment *seg);
 	void addFile(WorkSpace *ws, File *file);
 	void buildAll(WorkSpace *fw);
-public:
-	CFGBuilder(void);
-	
-	// Processor overload
-	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void configure(const PropList& props = PropList::EMPTY);
+
+	genstruct::Vector<CFG *> _cfgs;
+	CFGInfo *info;
 };
 
 } // otawa

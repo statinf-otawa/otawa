@@ -9,9 +9,10 @@
 
 #include <elm/utility.h>
 #include <elm/util/AutoPtr.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/genstruct/FragTable.h>
 #include <elm/inhstruct/DLList.h>
 #include <otawa/cfg/BasicBlock.h>
+#include <otawa/util/MemBlockMap.h>
 
 namespace otawa {
 
@@ -23,36 +24,41 @@ class CFG;
 class CodeItem;
 class WorkSpace;
 class Inst;
-	
+
 // CFGInfo class
 class CFGInfo: public elm::Lock {
-	WorkSpace *fw;
-	genstruct::Vector<CFG *> _cfgs;
 public:
 	static Identifier<CFGInfo *>& ID;
-	
+
 	// Constructors
 	CFGInfo(WorkSpace *fw);
 	virtual ~CFGInfo(void);
-	
+
 	// Accessors
-	BasicBlock *findBB(Inst *inst);
+	//BasicBlock *findBB(Inst *inst);
 	CFG *findCFG(Inst *inst);
-	CFG *findCFG(BasicBlock *bb);
+	CFG *findCFG(const BasicBlock *bb);
 	CFG *findCFG(String label);
-	
+
 	// Modifiers
 	void add(CFG *cfg);
+	void add(BasicBlock *bb);
 	void clear(void);
-	
+
 	// Iter class
-	class Iter: public genstruct::Vector<CFG *>::Iterator {
+	class Iter: public genstruct::FragTable<CFG *>::Iterator {
 	public:
 		inline Iter(CFGInfo *info)
-			: genstruct::Vector<CFG *>::Iterator(info->_cfgs) { }
+			: genstruct::FragTable<CFG *>::Iterator(info->_cfgs) { }
 		inline Iter(const Iter& iter)
-			: genstruct::Vector<CFG *>::Iterator(iter) { }
+			: genstruct::FragTable<CFG *>::Iterator(iter) { }
 	};
+
+private:
+	WorkSpace *fw;
+	genstruct::FragTable<CFG *> _cfgs;
+	genstruct::FragTable<BasicBlock *> bbs;
+	MemBlockMap<BasicBlock> map;
 };
 
 } // otawa
