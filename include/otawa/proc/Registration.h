@@ -42,7 +42,8 @@ public:
 		none,
 		require,
 		provide,
-		invalidate
+		invalidate,
+		use
 	} kind_t;
 
 	inline FeatureUsage(void): _kind(none), _feature(0) { }
@@ -73,6 +74,7 @@ public:
 	bool provides(const AbstractFeature& feature);
 	bool requires(const AbstractFeature& feature);
 	bool invalidates(const AbstractFeature& feature);
+	bool uses(const AbstractFeature& feature);
 
 	// Private use only
 	void initialize(void);
@@ -143,6 +145,8 @@ protected:
 		{ __reg.features.add(FeatureUsage(FeatureUsage::provide, feature)); }
 	inline static void _invalidate(AbstractFeature& feature)
 		{ __reg.features.add(FeatureUsage(FeatureUsage::invalidate, feature)); }
+	inline static void _use(AbstractFeature& feature)
+		{ __reg.features.add(FeatureUsage(FeatureUsage::use, feature)); }
 };
 
 template <class T, class B, class C>
