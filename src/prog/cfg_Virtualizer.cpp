@@ -133,11 +133,9 @@ Identifier<bool> DONT_INLINE("otawa::DONT_INLINE", false);
 
 
 Virtualizer::Virtualizer(void) : Processor("otawa::Virtualizer", Version(1, 0, 0)) {
-	//require(ipet::FLOW_FACTS_FEATURE);
-	require(COLLECTED_CFG_FEATURE);
+	use(COLLECTED_CFG_FEATURE);
 	invalidate(COLLECTED_CFG_FEATURE);
 	provide(VIRTUALIZED_CFG_FEATURE);
-	//provide(ipet::FLOW_FACTS_FEATURE);
 }
 
 void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
