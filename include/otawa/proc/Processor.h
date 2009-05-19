@@ -106,6 +106,7 @@ protected:
 	void require(const AbstractFeature& feature);
 	void provide(const AbstractFeature& feature);
 	void invalidate(const AbstractFeature& feature);
+	void use(const AbstractFeature& feature);
 	void warn(const String& message);
 	inline WorkSpace *workspace(void) const { return ws; }
 	inline void addCleaner(const AbstractFeature& feature, Cleaner *cleaner)
