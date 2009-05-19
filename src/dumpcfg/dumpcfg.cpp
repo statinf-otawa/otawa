@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2004-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -42,7 +42,7 @@ using namespace otawa;
 
 /**
  * @defgroup dumpcfg dumpcfg Command
- * 
+ *
  * This command is used to output the CFG of a binary program using different
  * kind of output.
  * @par SYNTAX
@@ -52,9 +52,9 @@ using namespace otawa;
  * dumpcfg first loads the binary file then compute and display the CFG of the
  * functions whose name is given. If there is no function, the @e main functions
  * is dumped.
- * 
+ *
  * Currently, dumpcfg provides the following outputs:
- * 
+ *
  * @li -S (simple output): the basic blocks are displayed, one by one, with
  * their number, their address and the -1-ended list of their successors.
  * @code
@@ -70,7 +70,7 @@ using namespace otawa;
  * 7 1000041c 10000428 9 -1
  * 8 100003fc 10000408 1 -1
  * @endcode
- * 
+ *
  * @li -L (listing output): each basic block is displayed starting by "BB",
  * followed by its number, a colon and the list of its successors. Its
  * successors may be T(number) for a taken edge, NT(number) for a not-taken edge
@@ -104,12 +104,12 @@ using namespace otawa;
  *               10000828 lwz r31,-4(r11)
  *               1000082c or r1,r11,r11
  *               10000830 bclr 20,0
- * 
+ *
  * @endcode
- * 
+ *
  * @li -D (dot output): the CFG is output as a DOT graph description.
  * @image html dot.png
- * 
+ *
  * dumpcfg accepts other options like:
  * @li -a -- dump all functions.
  * @li -d -- disassemble the machine code contained in each basic block,
@@ -126,9 +126,9 @@ DotDisplayer dot_displayer;
 // DumpCFG class
 class DumpCFG: public Application {
 public:
-	
+
 	DumpCFG(void);
-	
+
 	// options
 	option::BoolOption remove_eabi;
 	option::BoolOption all_functions;
@@ -143,7 +143,7 @@ public:
 protected:
 	virtual void work(const string& entry, PropList &props) throw(elm::Exception) { dump(entry); }
 	virtual void prepare(PropList &props);
-	
+
 private:
 	void dump(CFG *cfg);
 	void dump(const string& name);
@@ -175,7 +175,7 @@ DumpCFG::DumpCFG(void):
 		"Hugues Casse <casse@irit.fr",
 		"Copyright (c) 2004-08, IRIT-UPS France"
 	),
-	
+
 	remove_eabi(*this, 'r', "remove", "Remove __eabi function call, if available.", false),
 	all_functions(*this, 'a', "all", "Dump all functions.", false),
 	inline_calls(*this, 'i', "inline", "Inline the function calls.", false),
@@ -197,20 +197,22 @@ DumpCFG::DumpCFG(void):
  */
 void DumpCFG::dump(CFG *cfg) {
 	CFG *current_inline = 0;
+	WorkSpace *my_ws = new WorkSpace(workspace());
 
 	// Get the virtual CFG
-	workspace()->invalidate(COLLECTED_CFG_FEATURE);
-	ENTRY_CFG(workspace()) = cfg;
-	require(VIRTUALIZED_CFG_FEATURE);
-	require(COLLECTED_CFG_FEATURE);
-	CFGCollection *coll = INVOLVED_CFGS(workspace());
+	//workspace()->invalidate(COLLECTED_CFG_FEATURE);
+	ENTRY_CFG(my_ws) = cfg;
+	if(inline_calls)
+		my_ws->require(VIRTUALIZED_CFG_FEATURE);
+	my_ws->require(COLLECTED_CFG_FEATURE);
+	CFGCollection *coll = INVOLVED_CFGS(my_ws);
 	CFG *vcfg = (*coll)[0];
-	
+
 	// Dump the CFG
 	displayer->display_assembly = display_assembly;
 	displayer->onCFGBegin(cfg);
 	for(CFG::BBIterator bb(vcfg); bb; bb++) {
-		
+
 		// Looking for start of inline
 		for(BasicBlock::InIterator edge(bb); edge; edge++)
 			if(edge->kind() == Edge::VIRTUAL_CALL) {
@@ -219,11 +221,11 @@ void DumpCFG::dump(CFG *cfg) {
 				current_inline = CALLED_CFG(edge);
 				displayer->onInlineBegin(current_inline);
 			}
-		
+
 		// BB begin
 		int index = bb->number();
 		displayer->onBBBegin(bb, index);
-		
+
 		// Look out edges
 		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 			int target_index = -1;
@@ -235,11 +237,11 @@ void DumpCFG::dump(CFG *cfg) {
 				displayer->onCall(edge);
 			}
 		}
-		
+
 		// BB end
 		displayer->onBBEnd(bb, index);
 	}
-	
+
 	// Perform end
 	if(current_inline)
 		displayer->onInlineEnd(current_inline);
