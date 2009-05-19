@@ -113,6 +113,20 @@ bool AbstractRegistration::requires(const AbstractFeature& feature) {
 
 
 /**
+ * Test if the current processor uses or requires the given feature.
+ * @param feature	Tested feature.
+ * @return			True if the feature is used or required, false else.
+ */
+bool AbstractRegistration::uses(const AbstractFeature& feature) {
+	for(FeatureIter fuse(*this); fuse; fuse++)
+		if(&(fuse->feature()) == &feature
+		&& (fuse->kind() == FeatureUsage::require || fuse->kind() == FeatureUsage::use))
+			return true;
+	return false;
+}
+
+
+/**
  * Test if the current processor invalidates the given feature.
  * @param feature	Tested feature.
  * @return			True if the feature is invalidated, false else.

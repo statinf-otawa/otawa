@@ -349,24 +349,30 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	ws = fw;
 	configure(props);
 
-	// Remove non-required invalidated features
+	// Remove non-used invalidated features
 	for(FeatureIter feature(*reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::invalidate
-		&& !reg->requires(feature->feature())) {
+		&& !reg->uses(feature->feature())) {
 			if(isVerbose())
 				log << "INVALIDATED: " << feature->feature().name()
 					<< " by " << reg->name() << io::endl;
 			fw->invalidate(feature->feature());
 		}
 
-	// Get required feature
+	// Get used feature
 	Vector<const AbstractFeature *> required;
 	for(FeatureIter feature(*reg); feature; feature++)
-		if(feature->kind() == FeatureUsage::require) {
-			required.add(&feature->feature());
-			if(isVerbose())
-				log << "REQUIRED: " << feature->feature().name()
+		if(feature->kind() == FeatureUsage::require
+		|| feature->kind() == FeatureUsage::use) {
+			if(feature->kind() == FeatureUsage::require)
+				required.add(&feature->feature());
+			if(isVerbose()) {
+				cstring kind = "USED";
+				if(feature->kind() == FeatureUsage::require)
+					kind = "REQUIRED";
+				log << kind << ": " << feature->feature().name()
 					<< " by " << reg->name() << io::endl;
+			}
 			try {
 				fw->require(feature->feature(), props);
 			}
@@ -400,10 +406,10 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	if(isVerbose())
 		log << io::endl;
 
-	// Cleanup required invalidated features
+	// Cleanup used invalidated features
 	for(FeatureIter feature(*reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::invalidate
-		&& reg->requires(feature->feature())) {
+		&& reg->uses(feature->feature())) {
 			if(isVerbose())
 				log << "INVALIDATED: " << feature->feature().name()
 					<< " by " << reg->name() << io::endl;
@@ -425,6 +431,13 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 		ASSERTP(dep, "cleanup invoked for a not provided feature: " + (*clean).fst->name());
 		(*dep)((*clean).snd);
 	}
+
+	// possibly cleanup only used features
+	// !!TO FIX!!
+	/*for(FeatureIter feature(*reg); feature; feature++)
+		if(feature->kind() == FeatureUsage::use
+		&& !ws->getDependency(&feature->feature())->isInUse())
+			ws->invalidate(feature->feature());*/
 }
 
 
@@ -550,6 +563,17 @@ void Processor::require(const AbstractFeature& feature) {
 void Processor::invalidate(const AbstractFeature& feature) {
 	reg->features.add(FeatureUsage(FeatureUsage::invalidate, feature));
 }
+
+
+/**
+ * Usually called from a processor constructor, this method records a feature
+ * as used by the work of the current processor.
+ * @param feature	Used feature.
+ */
+void Processor::use(const AbstractFeature& feature) {
+	reg->features.add(FeatureUsage(FeatureUsage::use, feature));
+}
+
 
 /**
  * Usually called from a processor constructor, this method records a feature
