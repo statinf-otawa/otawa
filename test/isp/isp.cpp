@@ -105,15 +105,6 @@ void Command::compute(String fun) {
    Virtualizer virt;
    virt.process(ws, props);
 
-#ifdef TRACE_FOR_CHECKING
-   ws->require(CFG_SIZE_FEATURE);
-   for (CFGCollection::Iterator cfg(INVOLVED_CFGS(ws)); cfg; cfg++) {
-     elm::cout << "cfg " << cfg->label() << ":\n";
-     elm::cout << "\tsize=" << CFG_SIZE(cfg) << " - lower address=" << CFG_LOWER_ADDR(cfg) << " - higher address=" << CFG_HIGHER_ADDR(cfg) << "\n";
-     elm::cout << "\tcumulative size=" << CFG_CUMULATIVE_SIZE(cfg) << " - cumulative lower address=" << CFG_CUMULATIVE_LOWER_ADDR(cfg) << " - cumulative higher address=" << CFG_CUMULATIVE_HIGHER_ADDR(cfg) << "\n";
-   }
-#endif
-
 
   // Analyze instruction scratchpad
    FunctionBlockBuilder fbb;
