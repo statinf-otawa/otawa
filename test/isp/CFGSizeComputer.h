@@ -24,25 +24,39 @@
 
 #include <elm/genstruct/Vector.h>
 #include <otawa/cfg/features.h>
-#include <otawa/proc/CFGProcessor.h>
+#include <otawa/proc/ContextualProcessor.h>
+#include <otawa/cfg/Edge.h>
+#include <otawa/cfg/VirtualCFG.h>
 
 namespace otawa {
 
 // CFGCollector Class
-class CFGSizeComputer: public CFGProcessor {
+class CFGSizeComputer: public ContextualProcessor {
 	
+  private:
+    elm::genstruct::Vector<address_t> _min_addr;
+    elm::genstruct::Vector<address_t> _max_addr;
+    elm::genstruct::Vector<CFG *> _inlined_cfg;
+    int _current_level;
 public:
 	CFGSizeComputer(void);
 
 protected:
-	virtual void processCFG(WorkSpace *fw, CFG *cfg);
+	virtual void enteringCall(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee);
+	virtual void leavingCall(WorkSpace *ws, CFG *cfg);
+	virtual void avoidingRecursive(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee);
+	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+	
 };
 
 // CFG_SIZE_FEATURE => a deplacer vers cfg/features.h
 extern SilentFeature CFG_SIZE_FEATURE;
 extern Identifier<size_t> CFG_SIZE;
+extern Identifier<size_t> CFG_CUMULATIVE_SIZE;
 extern Identifier<address_t> CFG_LOWER_ADDR;
 extern Identifier<address_t> CFG_HIGHER_ADDR;
+extern Identifier<address_t> CFG_CUMULATIVE_LOWER_ADDR;
+extern Identifier<address_t> CFG_CUMULATIVE_HIGHER_ADDR;
 
 
 } // otawa

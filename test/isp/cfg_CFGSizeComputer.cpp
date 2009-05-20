@@ -29,6 +29,9 @@ using namespace elm;
 
 namespace otawa {
 
+#define MIN_ADDR 0
+#define MAX_ADDR 0xFFFFFFFF
+
 /**
  * @class CFGSizeComputer
  * Computes the size, lower address and higher address of a CFG.
@@ -43,36 +46,67 @@ namespace otawa {
 
 
 /**
- * Build a new check summer.
+ * Build a new size computer.
  */
-CFGSizeComputer::CFGSizeComputer(void): CFGProcessor("otawa::CFGSizeComputer", Version(1, 0, 0)) {
+CFGSizeComputer::CFGSizeComputer(void): ContextualProcessor("otawa::CFGSizeComputer", Version(1, 0, 0)) {
   provide(CFG_SIZE_FEATURE);
+  _current_level = -1;
 }
+
+/**
+ */
+
+  void CFGSizeComputer::enteringCall(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee){
+    CFG *inlined_cfg = NULL;
+    for (BasicBlock::InIterator in_edge(callee) ; in_edge ; in_edge++){
+      if (in_edge->source() == caller){
+	assert(inlined_cfg == NULL);
+	inlined_cfg = CALLED_CFG(in_edge);
+      }
+    }
+    assert(inlined_cfg);
+    _current_level++;
+    _min_addr.add((address_t) MAX_ADDR); 
+    _max_addr.add((address_t) MIN_ADDR);
+    _inlined_cfg.add(inlined_cfg);
+
+  }
 
 
 /**
  */
-void CFGSizeComputer::processCFG(WorkSpace *ws, CFG *cfg) {
 
-  address_t min_addr = 0xFFFFFFFF;
-  address_t max_addr = 0;
-  for (CFG::BBIterator bb(cfg); bb ; bb++) {
+  void CFGSizeComputer::leavingCall(WorkSpace *ws, CFG *cfg){
+    CFG* icfg = _inlined_cfg[_current_level];
+    assert(icfg);
+    CFG_SIZE(icfg) = (size_t) (_max_addr[_current_level] - _min_addr[_current_level]);
+    CFG_HIGHER_ADDR(icfg) = _max_addr[_current_level];
+    CFG_LOWER_ADDR(icfg) = _min_addr[_current_level];
+    _min_addr.pop();
+    _max_addr.pop();
+    _inlined_cfg.pop();
+    _current_level--;
+  }
+
+/**
+ */
+   void CFGSizeComputer::avoidingRecursive(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee){
+  }
+
+/**
+ */
+  void CFGSizeComputer::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb){
     if (!bb->isEnd() && !bb->isEntry()){
       for (BasicBlock::InstIterator inst(bb); inst ; inst++){
 	address_t addr = inst->address();
-	if (addr < min_addr)
-	  min_addr = addr;
-	if (addr > max_addr)
-	  max_addr = addr;    
+	if (addr < _min_addr[_current_level])
+	  _min_addr[_current_level] = addr;
+	if (addr > _max_addr[_current_level])
+	  _max_addr[_current_level] = addr;    
       }
     }
   }
-  CFG_LOWER_ADDR(cfg) = min_addr;
-  CFG_HIGHER_ADDR(cfg) = max_addr;
-  CFG_SIZE(cfg) = (size_t) (max_addr - min_addr);
-}
-
-
+  
 static SilentFeature::Maker<CFGSizeComputer> maker;
 /**
  * This feature ensures that each CFG has hooked a checksum allowing
@@ -89,7 +123,10 @@ SilentFeature CFG_SIZE_FEATURE("otawa::CFG_SIZE_FEATURE", maker);
  * on the instruction of the CFG.
  */
   Identifier<size_t > CFG_SIZE("otawa::CFG_SIZE", 0);
+  Identifier<size_t > CFG_CUMULATIVE_SIZE("otawa::CFG_CUMULATIVE_SIZE", 0);
   Identifier<address_t> CFG_LOWER_ADDR("otawa::CFG__LOWER_ADDR",0);
   Identifier<address_t> CFG_HIGHER_ADDR("otawa::CFG_HIGHER_ADDR",0);
+  Identifier<address_t> CFG_CUMULATIVE_LOWER_ADDR("otawa::CFG__CUMULATIVE_LOWER_ADDR",0);
+  Identifier<address_t> CFG_CUMULATIVE_HIGHER_ADDR("otawa::CFG_CUMULATIVE_HIGHER_ADDR",0);
   
 } // otawa
