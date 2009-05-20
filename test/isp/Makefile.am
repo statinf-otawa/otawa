@@ -8,5 +8,6 @@ isp_DEPENDENCIES = @LOADER_DEPS@ @ILP_DEPS@ @OTAWA_DEPS@
 isp_SOURCES=\
 	isp.cpp \
 	FunctionBlockBuilder.cpp \
-	FunctionBlock.cpp
+	FunctionBlock.cpp \
+	cfg_CFGSizeComputer.cpp
 

@@ -22,32 +22,28 @@
 #ifndef OTAWA_UTIL_FUNCTIONBLOCKBUILDER_H
 #define OTAWA_UTIL_FUNCTIONBLOCKBUILDER_H
 
-#include <otawa/proc/BBProcessor.h>
 #include "FunctionBlock.h"
 #include <otawa/proc/Feature.h>
 #include <elm/genstruct/Vector.h> 
 #include <elm/genstruct/Table.h>
-
+#include <otawa/proc/ContextualProcessor.h>
+#include "CFGSizeComputer.h"
 
 namespace otawa {
 
 
 // FunctionBlockBuilder class
-class FunctionBlockBuilder: public BBProcessor {
-
-  private:
-    elm::genstruct::Vector<FunctionBlock *> * _fb_set;
-    int _current_function;
-    address_t _min_addr, _max_addr;
-    BasicBlock * _entry_bb;
+class FunctionBlockBuilder: public ContextualProcessor {
 
 protected:
+	virtual void enteringCall(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee);
+	virtual void leavingCall(WorkSpace *ws, CFG *cfg);
+	virtual void avoidingRecursive(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee);
 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
-	virtual void cleanup(WorkSpace *ws);
-	virtual void setup(WorkSpace *ws);
+	
 
 public:
-	FunctionBlockBuilder(void);
+	FunctionBlockBuilder();
 };
 
   //Identifiers

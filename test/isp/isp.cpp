@@ -25,6 +25,7 @@
 #include <otawa/ipet/WCETCountRecorder.h>
 #include <otawa/cfg/Virtualizer.h>
 
+#include "CFGSizeComputer.h"
 #include "FunctionBlockBuilder.h"
 
 using namespace elm;
@@ -100,22 +101,30 @@ void Command::compute(String fun) {
   LoopInfoBuilder lb;
   lb.process(ws, props);
 
+
+#ifdef TRACE_FOR_CHECKING
+   ws->require(CFG_SIZE_FEATURE);
+   for (CFGCollection::Iterator cfg(INVOLVED_CFGS(ws)); cfg; cfg++) {
+     elm::cout << "cfg " << cfg->label() << " has size " << CFG_SIZE(cfg) << ", lower address " << CFG_LOWER_ADDR(cfg) << " and higher address " << CFG_HIGHER_ADDR(cfg) << "\n";
+   }
+#endif
+
+  // virtual CFG
+   Virtualizer virt;
+   virt.process(ws, props);
+
   // Analyze instruction scratchpad
-  FunctionBlockBuilder fbb;
+   FunctionBlockBuilder fbb;
   fbb.process(ws,props);
 
-//   // virtual CFG
-//   Virtualizer virt;
-//   virt.process(ws, props);
-
-
+  
 #ifdef TRACE_FOR_CHECKING
   for (CFGCollection::Iterator cfg(INVOLVED_CFGS(ws)); cfg; cfg++) {
     for (CFG::BBIterator bb(cfg); bb ; bb++) {
       if (!bb->isEnd() && bb->size()){
 	FunctionBlock *fb = FUNCTION_BLOCK(bb);
 	if (fb) {
-	  elm::cout << "Function block found for bb" << bb->number() << " in cfg\"" << cfg->label() << "\": entry_bb is " << fb->entryBB()->number() << " and size is " << fb->size() << "\n";
+	  elm::cout << "Function block found for bb" << bb->number() << " with cfg\"" << fb->cfg()->label() << "\", size=" << CFG_SIZE(fb->cfg()) << "\n";
 	}
       }
     }

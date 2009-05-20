@@ -23,25 +23,15 @@ namespace otawa {
 
   // FunctionBlock class
   class FunctionBlock: public elm::inhstruct::DLNode, public PropList {
-    size_t _size;
-    BasicBlock *_entry_bb;
+    CFG *_cfg;
      // Private methods
     ~FunctionBlock(void) { delete this; };
 
   public:
-    FunctionBlock(BasicBlock *entry_bb, size_t size);
-    inline BasicBlock *entryBB(void);
-    inline size_t size(void) const;
+    FunctionBlock(CFG *cfg);
+    CFG *cfg()
+    { return _cfg;}
   };
-
-  // Inlines
-  inline size_t FunctionBlock::size(void) const {
-    return _size;
-  }
-
-  inline BasicBlock *FunctionBlock::entryBB(void) {
-    return _entry_bb;
-  }
 
 
 } // otawa

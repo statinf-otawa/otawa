@@ -51,68 +51,57 @@ namespace otawa {
   /**
    * Build a new function_block builder.
    */
-  FunctionBlockBuilder::FunctionBlockBuilder(void)
-  : BBProcessor("otawa::util::FunctionBlockBuilder", Version(1, 1, 0)) {
-    _current_function = -1;
+  FunctionBlockBuilder::FunctionBlockBuilder()
+  : ContextualProcessor("otawa::util::FunctionBlockBuilder", Version(1, 1, 0)) {
     require(COLLECTED_CFG_FEATURE);
+    require(CFG_SIZE_FEATURE);
     provide(COLLECTED_FUNCTIONBLOCKS_FEATURE);
+ 
   }
 
 
   /**
+   * processCFG ???
    */
-  void FunctionBlockBuilder::setup(WorkSpace *ws) {
-    ASSERT(ws);
-
-    _fb_set = new elm::genstruct::Vector<FunctionBlock *>;
-    FUNCTION_BLOCKS(ws) = _fb_set;
-  }
-
 
   /**
+   * Function called when a function call is found
    */
-  void FunctionBlockBuilder::cleanup(WorkSpace *ws) {
-    ASSERT(ws);
-	
-    // Add end blocks ???
-//     for(int i = 0; i < cache->rowCount(); i++)
-//       new LBlock(lbsets[i], 0, 0, 0, -1);
-	
+  
+  void FunctionBlockBuilder::enteringCall(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee){
+    CFG *inlined_cfg = NULL;
+    for (BasicBlock::InIterator in_edge(callee) ; in_edge ; in_edge++){
+      if (in_edge->source() == caller){
+	assert(inlined_cfg == NULL);
+	inlined_cfg = CALLED_CFG(in_edge);
+      }
+    }
+    assert(inlined_cfg);
+    FunctionBlock *fb = new FunctionBlock(inlined_cfg);
+    FUNCTION_BLOCK(callee) = fb;
+    if (!FUNCTION_BLOCKS(ws))
+      FUNCTION_BLOCKS(ws) = new elm::genstruct::Vector<FunctionBlock *>;
+    FUNCTION_BLOCKS(ws)->add(fb);
   }
 
-
+  /**
+   * Function called when a function return is found
+   */
+  
+  void FunctionBlockBuilder::leavingCall(WorkSpace *ws, CFG *cfg){
+  }
 
   /**
+   * Function called when a recursive function call is found
+   */
+  
+  void FunctionBlockBuilder::avoidingRecursive(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee){
+  }
+
+  /**
+   * ProcessBB
    */
   void FunctionBlockBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-    ASSERT(ws);
-    ASSERT(cfg);
-    ASSERT(bb);
-	
-    // Do not process entry and exit
-    if (bb->isEnd() || bb->isEntry())
-      return;
-
-    if (bb->cfg()->number() != _current_function){
-      if (_current_function != -1 /* value before start of process */){
-	FunctionBlock *fb = new FunctionBlock(_entry_bb, _max_addr-_min_addr);
-	FUNCTION_BLOCK(_entry_bb) = fb;
-	_fb_set->add(fb);
-      }
-      // starting a new function_block
-      _entry_bb = bb;
-      _current_function = bb->cfg()->number();
-      _min_addr = 0xFFFFFFFF;
-      _max_addr = 0;
-     }
-    for (BasicBlock::InstIterator inst(bb); inst ; inst++){
-      address_t addr = inst->address();
-      if (addr < _min_addr)
-	_min_addr = addr;
-      if (addr > _max_addr)
-	_max_addr = addr;
-      
-    }
   }
 
 
@@ -130,7 +119,7 @@ namespace otawa {
    * @par Hooks
    * @li @ref WorkSpace
    */
-  Identifier<elm::genstruct::Vector<FunctionBlock *> *> FUNCTION_BLOCKS("otawa::FUNCTION_BLOCKS");
+  Identifier<elm::genstruct::Vector<FunctionBlock *> *> FUNCTION_BLOCKS("otawa::FUNCTION_BLOCKS", NULL);
 
   /**
    * This feature ensures that the L-blocks of the current task has been
