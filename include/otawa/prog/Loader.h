@@ -13,6 +13,7 @@
 #include <otawa/prog/Process.h>
 #include <otawa/hard/Platform.h>
 
+
 namespace otawa {
 
 namespace sim {
@@ -33,8 +34,8 @@ protected:
 	virtual ~Loader(void) { };
 public:
 	Loader(CString name, Version version, Version plugger_version,
-		const system::Plugin::aliases_t & aliases
-		= system::Plugin::aliases_t::EMPTY);
+	       const elm::system::Plugin::aliases_t & aliases
+	       = elm::system::Plugin::aliases_t::EMPTY);
 
 	// Method
 	virtual CString getName(void) const = 0;
