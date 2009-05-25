@@ -27,6 +27,9 @@
 
 #include "CFGSizeComputer.h"
 #include "FunctionBlockBuilder.h"
+#include "ISPCATBuilder.h"
+
+#include "ISPMayProblem.h" // pour le test
 
 using namespace elm;
 using namespace elm::option;
@@ -102,15 +105,18 @@ void Command::compute(String fun) {
   lb.process(ws, props);
 
   // virtual CFG
-   Virtualizer virt;
-   virt.process(ws, props);
+  Virtualizer virt;
+  virt.process(ws, props);
 
 
   // Analyze instruction scratchpad
-   FunctionBlockBuilder fbb;
+  FunctionBlockBuilder fbb;
   fbb.process(ws,props);
 
   
+  ISPCATBuilder cat;
+  cat.process(ws,props);
+
 #ifdef TRACE_FOR_CHECKING
   for (CFGCollection::Iterator cfg(INVOLVED_CFGS(ws)); cfg; cfg++) {
     for (CFG::BBIterator bb(cfg); bb ; bb++) {
@@ -118,6 +124,20 @@ void Command::compute(String fun) {
 	FunctionBlock *fb = FUNCTION_BLOCK(bb);
 	if (fb) {
 	  elm::cout << "Function block found for bb" << bb->number() << " with cfg\"" << fb->cfg()->label() << "\", size=" << CFG_SIZE(fb->cfg()) << "\n";
+	  elm::cout << "\t category = ";
+	  switch(ISP_CATEGORY(fb)){
+	  case ISP_ALWAYS_HIT:
+	    elm::cout << "ALWAYS_HIT\n";
+	    break;
+	  case ISP_ALWAYS_MISS:
+	    elm::cout << "ALWAYS_MISS\n";
+	    break;
+	  case ISP_NOT_CLASSIFIED:
+	    elm::cout << "ALWAYS_NOT_CLASSIFIED\n";
+	    break;
+	  default:
+	    elm::cout << "unknown\n";
+	  }
 	}
       }
     }
