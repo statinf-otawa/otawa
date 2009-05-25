@@ -1,4 +1,4 @@
-AM_CXXFLAGS = @OTAWA_CXXFLAGS@ -Wall -DTRACE_FOR_CHECKING
+AM_CXXFLAGS = @OTAWA_CXXFLAGS@ -Wall -g3 -DTRACE_FOR_CHECKING
 
 check_PROGRAMS=isp
 
@@ -9,5 +9,8 @@ isp_SOURCES=\
 	isp.cpp \
 	FunctionBlockBuilder.cpp \
 	FunctionBlock.cpp \
-	cfg_CFGSizeComputer.cpp
+	cfg_CFGSizeComputer.cpp \
+	ISPMayProblem.cpp \
+	ISPCATBuilder.cpp
+
 
