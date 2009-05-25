@@ -10,70 +10,98 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/dfa/BitSet.h>
 #include "FunctionBlock.h"
+#include <elm/Collection.h>
 
 using namespace otawa::dfa;
 
 namespace otawa {
 
-  class ISP {
+  // == Function List
+  class FunctionList: public elm::genstruct::DLList<FunctionBlock *>{
   public:
-    static address_t const PF_BOTTOM;
-    static address_t const PF_TOP;
+    inline FunctionList(){}
+    inline FunctionList& operator=(const FunctionList& list);
+    inline bool operator==(FunctionList& list);
   };
 
-
-  // ?
-  class AMS {
-  public:
-    
-    BitSet P; /* Prefetch buffer */
-    BitSet T; /* Trail buffer */
-    BitSet L; /* Latch, trucs en cours de préchargement */
-    inline AMS(int size) : P(size), T(size), L(size){
+  inline FunctionList& FunctionList::operator=(const FunctionList& list) {
+    clear();
+    for (elm::genstruct::DLList<FunctionBlock *>::Iterator fb(list); fb; fb++)
+      addLast(fb);
+    return *this;
+  }
+  
+  inline bool FunctionList::operator==(FunctionList& list) {
+    bool equ = true;
+    elm::genstruct::DLList<FunctionBlock *>::Iterator fa(*this), fb(list);
+    while (equ && fa && fb){
+      if (fa.item() != fb.item())
+	equ = false;
+      else {
+	fa++;
+	fb++;
+      }
     }
-  };
-
-  class ASS {
-    inline ASS(){
-    }
+    if ((fa && !fb) || (!fa && fb))
+      equ = false;
+    return equ;
   }
 
-
-  class ISPMAYProblem {
+  // == AbstractISPState
+  class AbstractISPState: public elm::genstruct::DLList<FunctionList *>{
   public:
-    typedef ASS Domain;
-    inline ISPMayProblem(int size) : bot(size + 1), ent(size + 1),  INVALID_BLOCK(size) { 
+    inline AbstractISPState(){}
+    inline AbstractISPState& operator=(const AbstractISPState& list);
+    inline bool operator==(AbstractISPState& list);
+  };
 
-      /* bottom */
-      /* 		bot.P.empty(); */
-      /* 		bot.T.empty(); */
-      /* 		bot.L.empty(); */
-		
-      /* entry */
-      /* 		ent.P.empty(); */
-      /* 		ent.T.empty(); */
-      /* 		ent.L.empty();		 */
-      /* 		ent.P.add(INVALID_BLOCK); */
-      /* 		ent.T.add(INVALID_BLOCK); */
-      /* 		ent.L.add(INVALID_BLOCK); */
+  inline AbstractISPState& AbstractISPState::operator=(const AbstractISPState& list) {
+    while (!isEmpty()){
+      delete last();
+      removeLast();
     }
-	
+    for (elm::genstruct::DLList<FunctionList *>::Iterator fl(list); fl; fl++){
+      FunctionList *new_list = new FunctionList();
+      new_list = fl;
+      addLast(new_list);
+    }
+    return *this;
+  }
+  
+  inline bool AbstractISPState::operator==(AbstractISPState& state) {
+    bool equ = true;
+    elm::genstruct::DLList<FunctionList *>::Iterator fla(*this), flb(state);
+    while (equ && fla && flb){
+      if (!(fla.item() == flb.item()))
+	equ = false;
+      else {
+	fla++;
+	flb++;
+      }
+    }
+    if ((fla && !flb) || (!fla && flb))
+      equ = false;
+    return equ;
+  }
+  
+
+  class ISPMayProblem {
+  public:
+    typedef AbstractISPState Domain;
+
+    inline ISPMayProblem() {}	
     inline const Domain& bottom(void) const { 
-      return bot; 
+      return _bottom; 
     } 
     inline const Domain& entry(void) const { 
-      return ent; 
+      return _entry; 
     } 
-    inline void lub(Domain &a, const Domain &b) const {
-      a.P.add(b.P);
-      a.T.add(b.T);
-      a.L.add(b.L);
-    }
-    inline void assign(Domain &a, const Domain &b) const { 
-      a = b; 
+    inline void lub(Domain &a, const Domain &b) const;
+    inline void assign(Domain &a, const Domain &b) const {
+      a = b;
     }
     inline bool equals(const Domain &a, const Domain &b) const { 
-      return ((a.P == b.P) && (a.T == b.T) && (a.L == b.L) ) ;
+      return (a==b);
     }
 
     void update(Domain& out, const Domain& in, BasicBlock* bb); 
@@ -83,11 +111,27 @@ namespace otawa {
 
 
   private:
-    Domain bot; /* Bottom state */
-    Domain ent; /* Entry state */
-    const int INVALID_BLOCK;
-
+    Domain _bottom; /* Bottom state */
+    Domain _entry; /* Entry state */
+ 
   };
+
+  inline void ISPMayProblem::lub(Domain &a, const Domain &b) const {
+    for (elm::genstruct::DLList<FunctionList *>::Iterator flb(b); flb; flb++){
+      bool found = false;
+      // check if list already contained in a
+      for (elm::genstruct::DLList<FunctionList *>::Iterator fla(a); fla && !found; fla++){
+	if (fla.item() == flb.item())
+	  found = true;
+      }
+      if (!found){
+	// add list to a
+	FunctionList *new_list = new FunctionList();
+	new_list = flb;
+	a.addLast(new_list);
+      }
+    }
+  }
 
 } // otawa
 
