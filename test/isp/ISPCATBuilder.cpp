@@ -27,41 +27,31 @@ namespace otawa {
   }
 
   void ISPCATBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
-    elm::genstruct::Vector<FunctionBlock *> *function_blocks = FUNCTION_BLOCKS(ws);
-    ISPMAYProblem problem(/*size??*/);
-    DefaultListener<ISPMAYProblem> listener(ws, problem);
-    DefaultFixPoint<DefaultListener<ISPMAYProblem> > fixpoint(listener);
-    HalfAbsInt<DefaultFixPoint<DefaultListener<ISPMAYProblem> > > halfabsint(fixpoint, *ws);
+    ISPMayProblem problem(65536);
+    DefaultListener<ISPMayProblem> listener(ws, problem);
+    DefaultFixPoint<DefaultListener<ISPMayProblem> > fixpoint(listener);
+    HalfAbsInt<DefaultFixPoint<DefaultListener<ISPMayProblem> > > halfabsint(fixpoint, *ws);
     halfabsint.solve();
 	
     for(CFG::BBIterator bb(cfg); bb; bb++) {
       if (bb->isEntry() || bb->isExit())
 	continue;
-      bool seq = false;
-      bool branch = false;
-      for (BasicBlock::InIterator inedge(bb); inedge; inedge++) {
-	if (inedge->kind() == Edge::NOT_TAKEN) 
-	  seq = true;
-	else 
-	  branch = true;
-      }		
       FunctionBlock *fb = FUNCTION_BLOCK(bb);
-      ASSERT(fb);
-      int j = 1; 
-      ISPMAYProblem::Domain dom(*listener.results[cfg->number()][bb->number()]); 
-      if ((dom.P.contains(id) && (dom.P.count() == 1)) || ( dom.T.contains(id) && dom.T.count() == 1)) {
-	ISP_CATEGORY(fb) = ISP_ALWAYS_HIT;
-      } 
-      else {
-	if (!dom.P.contains(id) && !dom.T.contains(id)) {
-	  ISP_CATEGORY(fb) = ISP_ALWAYS_MISS;
+      if (fb) {
+	ISPMayProblem::Domain dom(*listener.results[cfg->number()][bb->number()]); 
+	bool may, must;
+	dom.contains(fb, &may, &must);
+	if (must) {
+	  ISP_CATEGORY(fb) = ISP_ALWAYS_HIT;
 	} 
 	else {
-	  ISP_CATEGORY(fb) = ISP_NOT_CLASSIFIED; 
+	  if (!may) {
+	    ISP_CATEGORY(fb) = ISP_ALWAYS_MISS;
+	  } 
+	  else {
+	    ISP_CATEGORY(fb) = ISP_NOT_CLASSIFIED; 
+	  }
 	}
-	prob.updateMBlock(dom, fb, seq, branch);
-	seq = true;
-	branch = false;
       }
     }
   }

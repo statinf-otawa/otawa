@@ -29,78 +29,106 @@ using namespace otawa::ipet;
 
 namespace otawa {
 
-  address_t const ISP::PF_TOP = 0;
-  address_t const ISP::PF_BOTTOM = -1;
+#define TRACE_ISP_PROBLEM 1
 
+//   address_t const ISP::PF_TOP = 0;
+//   address_t const ISP::PF_BOTTOM = -1;
+
+// ========================================================================
   void ISPMayProblem::update(Domain& out, const Domain& in, BasicBlock *bb) {
-	
-    bool seq = false;
-    bool branch = false;
-	
-    for (BasicBlock::InIterator inedge(bb); inedge; inedge++) {
-      if (inedge->kind() == Edge::NOT_TAKEN) 
-	seq = true;
-      else 
-	branch = true;
-    }
-
-    assign(out, in);
-	
-    FunctionBlock *fb = FUNCTION_BLOCK(bb);
-    if (!fb)
-      return;
-    
-    updateFunctionBlock(out, fb, seq, branch);
-
-    seq = true;
-    branch = false;
-    }
-  }
-
-  void ISPMayProblem::updateFunctionBlock(Domain &dom, FunctionBlock *fb, bool seq, bool branch) {
-    Domain branchdom(bot), seqdom(bot);
-    //   int id = mamblock->mamBlockID();
-	
-    assign(seqdom, dom);
-    assign(branchdom, dom);		
-    assign(dom, bot);
-		 
-    if (branch) {
-      if (!seqdom.P.contains(id)) {
-	seqdom.T.empty();
-	seqdom.T.add(id);
-      } 
-      else {
-	if ((seqdom.P.contains(id) && (seqdom.P.count() == 1)) || ( seqdom.T.contains(id) && seqdom.T.count() == 1)) {
-
-	} 
-	else {
-	  seqdom.T.add(id);						
-	}
-      }	
-      lub(dom, seqdom);	
-    } 
-    if (seq) {
-      if (!branchdom.T.contains(id)) {			
-	branchdom.P.empty();
-	branchdom.P.add(id);
-      } 
-      else {
-	if ((branchdom.P.contains(id) && (branchdom.P.count() == 1)) || ( branchdom.T.contains(id) && branchdom.T.count() == 1)) {
-	} 
-	else {
-	  branchdom.P.add(id);						
+#ifdef TRACE_ISP_PROBLEM
+    elm::cout << "==== Entering update for bb" << bb->number() << "\n";
+    in.dump(elm::cout,"Input abstract state:");
+    out.dump(elm::cout,"Output abstract state:");
+#endif
+    FunctionBlock *new_fb = FUNCTION_BLOCK(bb);
+    if (new_fb){
+      elm::cout << "new_fb != 0\n";
+      assert(CFG_SIZE(new_fb->cfg()) <= _size) ;
+      if (!out.isEmpty()){
+	elm::cout << "!out.isEmpty()\n";
+	for (AbstractISPState::Iterator fl(out); fl; fl++){
+	  // check whether list already contains the function block
+	  if (!fl->contains(new_fb)){
+	    elm::cout << "!fl->contains(new_fb))\n";
+	    while (fl->size() + CFG_SIZE(new_fb->cfg()) > _size)
+	      fl->remove();
+	    fl->add(new_fb);
+	  }
 	}
       }
-      lub(dom, branchdom);
+      else {
+	elm::cout << "out.isEmpty()\n";
+	FunctionList *new_fl = new FunctionList;
+	new_fl->add(new_fb);
+	assert(new_fb);
+	out.addLast(new_fl);
+     }
     }
-	
-	 
-    dom.L.empty();
-    dom.L.add(mamblock->next);
-
-
+    else {
+      elm::cout << "new_fb == 0\n";
+    }
+#ifdef TRACE_ISP_PROBLEM
+    elm::cout << "==== Exiting update with:\n";
+    out.dump(elm::cout, "Output abstract state:");
+#endif
   }
 
+  // ===================================================================================
+  void ISPMayProblem::lub(Domain &a, const Domain &b) const {
+ #ifdef TRACE_ISP_PROBLEM
+    elm::cout << "\t==Entering lub function with:\n";
+    a.dump(elm::cout, "\t\ta=");
+    b.dump(elm::cout, "\t\tb=");
+#endif
+    if (!b.isEmpty()){
+      for (elm::genstruct::DLList<FunctionList *>::Iterator flb(b); flb; flb++){
+	bool found = false;
+	// check if list already contained in a
+	if (!a.isEmpty()){
+	  for (AbstractISPState::Iterator fla(a); fla && !found; fla++){
+	    if (fla.item() == flb.item()){
+	      found = true;
+#ifdef TRACE_ISP_PROBLEM
+	      elm::cout << "\t\t\tthis list is already contained in a: ";
+	      fla->dump(elm::cout);
+#endif	      
+	    }
+	  }
+	}
+	if (!found){
+	  // add list to a
+	  FunctionList *new_list = new FunctionList(*(flb.item()));
+	  a.addLast(new_list);
+#ifdef TRACE_ISP_PROBLEM
+	  elm::cout << "\t\t\tadding this list to a: ";
+	  flb->dump(elm::cout);
+#endif	      
+	}
+      }
+    }
+ #ifdef TRACE_ISP_PROBLEM
+    elm::cout << "\t==Exiting lub function with:";
+    a.dump(elm::cout, "a=");
+#endif      
+  }
+
+
+  void AbstractISPState::contains(FunctionBlock *block, bool *may, bool *must){
+    *may = false;
+    *must = true;
+    for (Iterator fl(*this); fl && !may && must; fl++){
+      bool found = false;
+      for (FunctionList::Iterator fb(*(fl.item())) ; fb ; fb++){
+	if (fb.item() == block){
+	  *may = true;
+	  found = true;
+	}
+      }
+      if (!found)
+	*must = false;
+    }
+  }
+ 
 } // otawa
 

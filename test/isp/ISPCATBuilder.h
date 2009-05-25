@@ -2,7 +2,7 @@
 #define ISP_CATBUILDER_H
 
 #include <otawa/proc/CFGProcessor.h>
-#include "FunctionBuilder.h"
+#include "FunctionBlockBuilder.h"
 
 using namespace otawa;
 
