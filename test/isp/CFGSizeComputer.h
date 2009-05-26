@@ -43,7 +43,7 @@ public:
 
 protected:
 	virtual void enteringCall(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee);
-	virtual void leavingCall(WorkSpace *ws, CFG *cfg);
+	virtual void leavingCall(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 	virtual void avoidingRecursive(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee);
 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 	
