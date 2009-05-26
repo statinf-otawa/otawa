@@ -76,13 +76,15 @@ CFGSizeComputer::CFGSizeComputer(void): ContextualProcessor("otawa::CFGSizeCompu
 /**
  */
 
-  void CFGSizeComputer::leavingCall(WorkSpace *ws, CFG *cfg){
+  void CFGSizeComputer::leavingCall(WorkSpace *ws, CFG *cfg, BasicBlock *bb){
     CFG* icfg = _inlined_cfg[_current_level];
     assert(icfg);
     CFG_SIZE(icfg) = (size_t) (_max_addr[_current_level] - _min_addr[_current_level]);
     CFG_HIGHER_ADDR(icfg) = _max_addr[_current_level];
     CFG_LOWER_ADDR(icfg) = _min_addr[_current_level];
-    _min_addr.pop();
+    assert(CFG_SIZE(icfg));
+    elm::cout << "computing size for cfg " << icfg->label() << ": " << CFG_SIZE(icfg) << "\n";
+       _min_addr.pop();
     _max_addr.pop();
     _inlined_cfg.pop();
     _current_level--;
