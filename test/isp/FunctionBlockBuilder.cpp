@@ -74,21 +74,49 @@ namespace otawa {
       if (in_edge->source() == caller){
 	assert(inlined_cfg == NULL);
 	inlined_cfg = CALLED_CFG(in_edge);
+	assert(CFG_SIZE(inlined_cfg));
       }
     }
     assert(inlined_cfg);
-    FunctionBlock *fb = new FunctionBlock(inlined_cfg);
-    FUNCTION_BLOCK(callee) = fb;
-    if (!FUNCTION_BLOCKS(ws))
+    _call_stack.addLast(inlined_cfg);
+    //    elm::cout << "entering " << inlined_cfg->label() << "\n";
+     // check whether a FunctionBlock already exists for this cfg
+    bool found = false;
+    if (FUNCTION_BLOCKS(ws)){
+      for (elm::genstruct::Vector<FunctionBlock *>::Iterator fb(*FUNCTION_BLOCKS(ws)); fb && !found ; fb++){
+	if (fb->cfg() == inlined_cfg){
+	  FUNCTION_BLOCK(callee) = fb;
+	  found = true;
+	}
+      }
+    }
+    else
       FUNCTION_BLOCKS(ws) = new elm::genstruct::Vector<FunctionBlock *>;
-    FUNCTION_BLOCKS(ws)->add(fb);
+
+    if (!found){
+      FUNCTION_BLOCK(callee) = new FunctionBlock(inlined_cfg);
+      FUNCTION_BLOCKS(ws)->add(FUNCTION_BLOCK(callee));
+    }
   }
 
   /**
    * Function called when a function return is found
    */
   
-  void FunctionBlockBuilder::leavingCall(WorkSpace *ws, CFG *cfg){
+  void FunctionBlockBuilder::leavingCall(WorkSpace *ws, CFG *cfg, BasicBlock *bb){
+    //    elm::cout << "leaving " << _call_stack.last()->label() << " for ";
+     _call_stack.removeLast();
+     //     elm::cout <<  _call_stack.last()->label() << "\n";
+     if (!_call_stack.isEmpty()){
+       CFG *returned_cfg = _call_stack.last();
+       FunctionBlock *fb = NULL;
+       for (elm::genstruct::Vector<FunctionBlock *>::Iterator b(*FUNCTION_BLOCKS(ws)); b && !fb ; b++){
+	 if (b->cfg() == returned_cfg)
+	   fb = b.item();
+       }
+       assert(fb);
+       FUNCTION_BLOCK(bb) = fb;
+     }
   }
 
   /**
@@ -120,6 +148,16 @@ namespace otawa {
    * @li @ref WorkSpace
    */
   Identifier<elm::genstruct::Vector<FunctionBlock *> *> FUNCTION_BLOCKS("otawa::FUNCTION_BLOCKS", NULL);
+
+ /**
+   * This property is set on the workspace and specifies the size of the ISP
+   *
+   * @par Hooks
+   * @li @ref WorkSpace
+   */
+  Identifier<size_t> ISP_SIZE("otawa::ISP_SIZE", 2048);
+
+
 
   /**
    * This feature ensures that the L-blocks of the current task has been
