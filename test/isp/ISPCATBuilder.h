@@ -22,6 +22,8 @@ namespace otawa {
     ISPCATBuilder();
   protected:
     virtual void processCFG(WorkSpace *ws, CFG *cfg);
+  private:
+    size_t _isp_size;
   };
   
   extern Identifier<isp_category_t> ISP_CATEGORY;

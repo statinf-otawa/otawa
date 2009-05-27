@@ -26,14 +26,15 @@ namespace otawa {
     inline bool operator==(FunctionList& list);
     inline void add(FunctionBlock *fb);
     inline void remove();
+    inline void clear();
     inline bool contains(FunctionBlock *fb);
-    inline size_t size(){
+    inline size_t size() const{
       return _size;
     }
     inline bool isEmpty(){
       return elm::genstruct::DLList<FunctionBlock *>::isEmpty();
     }
-    inline void dump(elm::io::Output& out_stream);
+    inline void dump(elm::io::Output& out_stream) ;
     class Iterator:  public elm::genstruct::DLList<FunctionBlock *>::Iterator {
     public:
       inline Iterator(const FunctionList &fl)
@@ -44,10 +45,11 @@ namespace otawa {
   };
 
   inline FunctionList::FunctionList(const FunctionList& list){
-    for (Iterator fb(list); fb ; fb++){
+     for (Iterator fb(list); fb ; fb++){
       add(fb.item());
     }    
-  }
+    _size = list.size();
+   }
 
   inline FunctionList& FunctionList::operator=(const FunctionList& list) {
     clear();
@@ -75,13 +77,19 @@ namespace otawa {
     return equ;
   }
 
+  inline void FunctionList::clear(){
+    while (!isEmpty()){
+      removeLast();
+     }
+  }
+
   inline void FunctionList::add(FunctionBlock *fb){
+    assert(!contains(fb));
     addLast(fb);
     _size += CFG_SIZE(fb->cfg());
   }
   inline void FunctionList::remove(){
-    FunctionBlock *fb = first();
-    _size -= CFG_SIZE(fb->cfg());
+    _size -= CFG_SIZE(first()->cfg());
     removeFirst();
   }
 
@@ -89,7 +97,7 @@ namespace otawa {
     if (isEmpty())
       return false;
     for (Iterator fb(*this); fb ; fb++){
-      if (fb.item() == fblock)
+      if (fb->cfg() == fblock->cfg())
 	return true;
     }
     return false;
@@ -103,7 +111,7 @@ namespace otawa {
 	assert(fb.item());
 	out_stream << fb->cfg()->label() << "-";
       }
-      out_stream << "\n";
+      out_stream << " [" << _size << "]\n";
     }
   }
 
@@ -114,8 +122,10 @@ namespace otawa {
     inline AbstractISPState(const AbstractISPState& state){
       *this = state;
     }
+    inline void clear();
+    inline void add(FunctionList *fl);
     inline AbstractISPState& operator=(const AbstractISPState& list);
-    inline bool operator==(AbstractISPState& list);
+    inline bool operator==(const AbstractISPState& list) const;
     void contains(FunctionBlock *fb, bool *may, bool *must);
     inline void dump(elm::io::Output& out_stream, String header) const;
   
@@ -126,28 +136,55 @@ namespace otawa {
     };
   };
 
-  inline AbstractISPState& AbstractISPState::operator=(const AbstractISPState& state) {
-    while (!isEmpty()){
-      delete last();
-      removeLast();
+  inline void AbstractISPState::add(FunctionList *new_fl){
+    bool found = false;
+    for (Iterator fl(*this); fl && !found; fl++){
+      if (*(fl.item()) == *new_fl)
+	found = true;
     }
+    if (!found)
+      addLast(new_fl);
+  }
+
+  inline AbstractISPState& AbstractISPState::operator=(const AbstractISPState& state) {
+    clear();
+    assert(isEmpty());
     if (!state.isEmpty()){
       for (Iterator fl(state); fl; fl++){
-	FunctionList *new_list = new FunctionList();
-	new_list = fl;
+	FunctionList *new_list = new FunctionList(*(fl.item()));
 	addLast(new_list);
       }
     }
     return *this;
   }
   
-  inline bool AbstractISPState::operator==(AbstractISPState& state) {
+  inline void AbstractISPState::clear(){
+    while (!isEmpty()){
+      FunctionList *fl = last();
+      removeLast();
+      fl->clear();
+      delete fl;
+    }
+  }
+
+  inline bool AbstractISPState::operator==(const AbstractISPState& state) const {
     bool equ = true;
     Iterator fla(*this), flb(state);
     while (equ && fla && flb){
-      if (!(fla.item() == flb.item()))
+      if (!(*(fla.item()) == *(flb.item()))){
 	equ = false;
+	elm::cout << "operator ==: lists differ!\n";
+	elm::cout << "\tfla: ";
+	fla->dump(elm::cout);
+	elm::cout << "\tflb: ";
+	flb->dump(elm::cout);
+      }
       else {
+	elm::cout << "operator ==: lists are equal!\n";
+	elm::cout << "\tfla: ";
+	fla->dump(elm::cout);
+	elm::cout << "\tfla: ";
+	flb->dump(elm::cout);
 	fla++;
 	flb++;
       }
@@ -187,6 +224,7 @@ namespace otawa {
     }
     inline bool equals(const Domain &a, const Domain &b) const { 
       return (a==b);
+      //return(a.operator==(b));
     }
     inline void enterContext(Domain &dom, BasicBlock *header, otawa::util::hai_context_t&) { }
     inline void leaveContext(Domain &dom, BasicBlock *header, otawa::util::hai_context_t&) { }
