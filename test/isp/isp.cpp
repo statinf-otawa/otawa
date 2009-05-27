@@ -62,6 +62,7 @@ Command command;
 // Options
 StringOption proc(command, 'p', "processor", "used processor", "processor", "");
 StringOption graphs(command, 'g', "graphs", "graphs directory", "graphs_dir", "");
+IntOption isp_size(command,'s',"isp_size","size of the ISP", "ispsize", 2048);
 
 /**
  * Build the command manager.
@@ -108,8 +109,8 @@ void Command::compute(String fun) {
   Virtualizer virt;
   virt.process(ws, props);
 
-
   // Analyze instruction scratchpad
+  ISP_SIZE(props) = isp_size.value();
   FunctionBlockBuilder fbb;
   fbb.process(ws,props);
 
@@ -125,7 +126,7 @@ void Command::compute(String fun) {
 	if (fb) {
 	  elm::cout << "Function block found for bb" << bb->number() << " with cfg\"" << fb->cfg()->label() << "\", size=" << CFG_SIZE(fb->cfg()) << "\n";
 	  elm::cout << "\t category = ";
-	  switch(ISP_CATEGORY(fb)){
+	  switch(ISP_CATEGORY(bb)){
 	  case ISP_ALWAYS_HIT:
 	    elm::cout << "ALWAYS_HIT\n";
 	    break;

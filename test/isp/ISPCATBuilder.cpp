@@ -24,10 +24,12 @@ namespace otawa {
   
   void ISPCATBuilder::configure (const PropList &props) {
     CFGProcessor::configure(props);
+    _isp_size = ISP_SIZE(props);
+    elm::cerr << "ISP Size is " << _isp_size << "\n";
   }
 
   void ISPCATBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
-    ISPMayProblem problem(65536);
+    ISPMayProblem problem(_isp_size);
     DefaultListener<ISPMayProblem> listener(ws, problem);
     DefaultFixPoint<DefaultListener<ISPMayProblem> > fixpoint(listener);
     HalfAbsInt<DefaultFixPoint<DefaultListener<ISPMayProblem> > > halfabsint(fixpoint, *ws);
@@ -39,17 +41,21 @@ namespace otawa {
       FunctionBlock *fb = FUNCTION_BLOCK(bb);
       if (fb) {
 	ISPMayProblem::Domain dom(*listener.results[cfg->number()][bb->number()]); 
+	elm::cout << "bb" << bb->number() << " (" << fb->cfg()->label() << "):\n";
+	dom.dump(elm::cout, "\tdom=");
 	bool may, must;
 	dom.contains(fb, &may, &must);
+	elm::cout << "\tmay=" << may << " - must=" << must << "\n";
+	
 	if (must) {
-	  ISP_CATEGORY(fb) = ISP_ALWAYS_HIT;
+	  ISP_CATEGORY(bb) = ISP_ALWAYS_HIT;
 	} 
 	else {
 	  if (!may) {
-	    ISP_CATEGORY(fb) = ISP_ALWAYS_MISS;
+	    ISP_CATEGORY(bb) = ISP_ALWAYS_MISS;
 	  } 
 	  else {
-	    ISP_CATEGORY(fb) = ISP_NOT_CLASSIFIED; 
+	    ISP_CATEGORY(bb) = ISP_NOT_CLASSIFIED; 
 	  }
 	}
       }
