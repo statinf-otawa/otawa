@@ -24,11 +24,10 @@ namespace otawa {
   // FunctionBlock class
   class FunctionBlock: public elm::inhstruct::DLNode, public PropList {
     CFG *_cfg;
-     // Private methods
-    ~FunctionBlock(void) { delete this; };
 
   public:
     FunctionBlock(CFG *cfg);
+    ~FunctionBlock(void) { delete this; };
     CFG *cfg()
     { return _cfg;}
   };

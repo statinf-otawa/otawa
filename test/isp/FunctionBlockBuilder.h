@@ -35,9 +35,12 @@ namespace otawa {
 // FunctionBlockBuilder class
 class FunctionBlockBuilder: public ContextualProcessor {
 
+  private:
+    elm::genstruct::SLList<CFG *> _call_stack;
+
 protected:
 	virtual void enteringCall(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee);
-	virtual void leavingCall(WorkSpace *ws, CFG *cfg);
+	virtual void leavingCall(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 	virtual void avoidingRecursive(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee);
 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 	
@@ -49,7 +52,7 @@ public:
   //Identifiers
   extern Identifier<FunctionBlock *> FUNCTION_BLOCK;
   extern Identifier<elm::genstruct::Vector<FunctionBlock *> *> FUNCTION_BLOCKS;
-
+  extern Identifier<size_t> ISP_SIZE;
 // Features
 extern Feature<FunctionBlockBuilder> COLLECTED_FUNCTIONBLOCKS_FEATURE;
 
