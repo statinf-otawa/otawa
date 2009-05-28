@@ -5,7 +5,7 @@
 #include "FunctionBlockBuilder.h"
 #include "ISPCATBuilder.h"
 #include "FunctionBlock.h"
-#include "ISPMayProblem.h"
+#include "ISPProblem.h"
 
 using namespace elm;
 using namespace otawa;
@@ -29,10 +29,10 @@ namespace otawa {
   }
 
   void ISPCATBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
-    ISPMayProblem problem(_isp_size);
-    DefaultListener<ISPMayProblem> listener(ws, problem);
-    DefaultFixPoint<DefaultListener<ISPMayProblem> > fixpoint(listener);
-    HalfAbsInt<DefaultFixPoint<DefaultListener<ISPMayProblem> > > halfabsint(fixpoint, *ws);
+    ISPProblem problem(_isp_size);
+    DefaultListener<ISPProblem> listener(ws, problem,true);
+    DefaultFixPoint<DefaultListener<ISPProblem> > fixpoint(listener);
+    HalfAbsInt<DefaultFixPoint<DefaultListener<ISPProblem> > > halfabsint(fixpoint, *ws);
     halfabsint.solve();
 	
     for(CFG::BBIterator bb(cfg); bb; bb++) {
@@ -40,12 +40,9 @@ namespace otawa {
 	continue;
       FunctionBlock *fb = FUNCTION_BLOCK(bb);
       if (fb) {
-	ISPMayProblem::Domain dom(*listener.results[cfg->number()][bb->number()]); 
-	elm::cout << "bb" << bb->number() << " (" << fb->cfg()->label() << "):\n";
-	dom.dump(elm::cout, "\tdom=");
+	ISPProblem::Domain dom(*listener.results[cfg->number()][bb->number()]); 
 	bool may, must;
 	dom.contains(fb, &may, &must);
-	elm::cout << "\tmay=" << may << " - must=" << must << "\n";
 	
 	if (must) {
 	  ISP_CATEGORY(bb) = ISP_ALWAYS_HIT;
@@ -55,7 +52,40 @@ namespace otawa {
 	    ISP_CATEGORY(bb) = ISP_ALWAYS_MISS;
 	  } 
 	  else {
-	    ISP_CATEGORY(bb) = ISP_NOT_CLASSIFIED; 
+	    BasicBlock *pers_header = NULL;
+	    BasicBlock *loop_header = ENCLOSING_LOOP_HEADER(bb);
+ 	    while (loop_header){
+	      bool pers_entering, pers_back = true;
+ 	      for (BasicBlock::InIterator edge(loop_header) ; edge && pers_back; edge++){
+		BasicBlock * source = edge->source();
+		ISPProblem::Domain source_out(*listener.results_out[cfg->number()][source->number()]); 
+		bool pers_may, pers_must;
+		source_out.contains(fb, &pers_may, &pers_must);
+ 		if (!Dominance::isBackEdge(edge)){  // edge thats enters the loop
+		  pers_entering = pers_must;
+		}
+		else { // backedge
+		  if (!pers_must)
+		    pers_back = false;
+		}
+	      }
+	      if (pers_back){
+		pers_header = loop_header;
+		if (pers_entering)
+		  loop_header = ENCLOSING_LOOP_HEADER(loop_header);
+		else
+		  loop_header = NULL;
+	      }
+	      else
+		loop_header = NULL;
+	    }
+		  
+	    if (pers_header){
+	      ISP_CATEGORY(bb) = ISP_PERSISTENT; 
+	      ISP_HEADER(bb) = pers_header;
+	    }
+	    else
+	      ISP_CATEGORY(bb) = ISP_NOT_CLASSIFIED; 
 	  }
 	}
       }
@@ -63,6 +93,8 @@ namespace otawa {
   }
   
 Identifier<isp_category_t> ISP_CATEGORY("otawa::isp_category", ISP_ALWAYS_HIT);
+Identifier<BasicBlock *> ISP_HEADER("otawa::isp_header", NULL);
+
  Feature<ISPCATBuilder> ISP_CAT_FEATURE("otawa::isp_cat_feature");
 
 } // otawa
