@@ -48,16 +48,23 @@ class DefaultListener {
 	static Identifier<typename Problem::Domain*> BB_OUT_STATE; 
 
 	typename Problem::Domain ***results;
+	typename Problem::Domain ***results_out;
 	
-	DefaultListener(WorkSpace *_fw, Problem& _prob) : fw(_fw), prob(_prob) {
+ DefaultListener(WorkSpace *_fw, Problem& _prob, bool _store_out = false) : fw(_fw), prob(_prob), store_out(_store_out) {
 		CFGCollection *col = INVOLVED_CFGS(fw);
 		results = new typename Problem::Domain**[col->count()];
-		
+		if (store_out)
+		  	results_out = new typename Problem::Domain**[col->count()];
 		for (int i = 0; i < col->count();  i++) {
 			CFG *cfg = col->get(i); 
 			results[i] = new typename Problem::Domain*[cfg->countBB()];
-			for (int j = 0; j < cfg->countBB(); j++)
+			if (store_out)
+			  results_out[i] = new typename Problem::Domain*[cfg->countBB()];
+			for (int j = 0; j < cfg->countBB(); j++){
 				results[i][j] = new typename Problem::Domain(prob.bottom());
+				if (store_out)
+				  results_out[i][j] = new typename Problem::Domain(prob.bottom());
+			}
 		} 
 	}
 	
@@ -65,11 +72,18 @@ class DefaultListener {
 		CFGCollection *col = INVOLVED_CFGS(fw);
 		for (int i = 0; i < col->count();  i++) {
 			CFG *cfg = col->get(i); 
-			for (int j = 0; j < cfg->countBB(); j++)
+			for (int j = 0; j < cfg->countBB(); j++){
 				delete results[i][j];	
+				if (store_out)
+				  delete results_out[i][j];
+			}
 			delete [] results[i];
+			if (store_out)
+			  delete [] results_out[i];
 		} 
-		delete [] results;			
+		delete [] results;
+		if (store_out)
+		  delete [] results_out;
 	}
 
 	void blockInterpreted(const DefaultFixPoint< DefaultListener >  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
@@ -83,13 +97,9 @@ class DefaultListener {
   private:	
 	WorkSpace *fw;
 	Problem& prob;	
-	
+	bool store_out;
  
-		
-	
-	
-
-	
+			
 };
 
 /**
@@ -108,6 +118,9 @@ void DefaultListener<Problem>::blockInterpreted(const DefaultFixPoint<DefaultLis
 		
 		if (BB_OUT_STATE(bb) != NULL)
 			prob.lub(*BB_OUT_STATE(bb), out);
+
+		if (store_out)
+		  prob.lub(*results_out[cfgnumber][bbnumber], out);
 #ifdef DEBUG
 		cout << "[TRACE] Block " << bbnumber << ": IN=" << in << " OUT=" << out << "\n";
 #endif		
