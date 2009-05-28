@@ -9,7 +9,6 @@ using namespace otawa;
 namespace otawa {
 
   typedef enum isp_category_t {
-    ISP_INVALID,
     ISP_ALWAYS_HIT,
     ISP_ALWAYS_MISS,
     ISP_NOT_CLASSIFIED,
@@ -27,6 +26,7 @@ namespace otawa {
   };
   
   extern Identifier<isp_category_t> ISP_CATEGORY;
+  extern Identifier<BasicBlock *> ISP_HEADER;
   extern Feature<ISPCATBuilder> ISP_CAT_FEATURE;
 } // otawa
 
