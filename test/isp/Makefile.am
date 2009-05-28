@@ -10,7 +10,7 @@ isp_SOURCES=\
 	FunctionBlockBuilder.cpp \
 	FunctionBlock.cpp \
 	cfg_CFGSizeComputer.cpp \
-	ISPMayProblem.cpp \
+	ISPProblem.cpp \
 	ISPCATBuilder.cpp
 
 

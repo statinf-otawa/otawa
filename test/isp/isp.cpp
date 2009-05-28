@@ -29,7 +29,7 @@
 #include "FunctionBlockBuilder.h"
 #include "ISPCATBuilder.h"
 
-#include "ISPMayProblem.h" // pour le test
+#include "ISPProblem.h" // pour le test
 
 using namespace elm;
 using namespace elm::option;
@@ -134,7 +134,10 @@ void Command::compute(String fun) {
 	    elm::cout << "ALWAYS_MISS\n";
 	    break;
 	  case ISP_NOT_CLASSIFIED:
-	    elm::cout << "ALWAYS_NOT_CLASSIFIED\n";
+	    elm::cout << "NOT_CLASSIFIED\n";
+	    break;
+	  case ISP_PERSISTENT:
+	    elm::cout << "PERSISTENT (header=bb" << ISP_HEADER(bb)->number() << ")\n";
 	    break;
 	  default:
 	    elm::cout << "unknown\n";
