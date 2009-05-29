@@ -11,6 +11,8 @@ isp_SOURCES=\
 	FunctionBlock.cpp \
 	cfg_CFGSizeComputer.cpp \
 	ISPProblem.cpp \
-	ISPCATBuilder.cpp
+	ISPCATBuilder.cpp \
+	ISPConstraintBuilder.cpp
+
 
 
