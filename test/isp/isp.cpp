@@ -27,7 +27,8 @@
 
 #include "CFGSizeComputer.h"
 #include "FunctionBlockBuilder.h"
-#include "ISPCATBuilder.h"
+#include "ISPCATBuilder.h"c
+#include "ISPConstraintBuilder.h"
 
 #include "ISPProblem.h" // pour le test
 
@@ -147,33 +148,37 @@ void Command::compute(String fun) {
     }
   }
 #endif
-  //  GRAPHS_DIR(props) = graphs.value();
-  
-//   ParamExeGraphBBTime tbt(props,depth.value());
-//   tbt.process(ws);
+   
+  ParamExeGraphBBTime tbt(props,0);
+  tbt.process(ws);
 		
-//   // Build the system
-//   BasicConstraintsBuilder builder;
-//   builder.process(ws, props);
+  // Build the system
+  EXPLICIT(props) = true;
+  BasicConstraintsBuilder builder;
+  builder.process(ws, props);
   
-//   // Load flow facts
-//   ipet::FlowFactLoader loader;
-//   loader.process(ws, props);
+  // Load flow facts
+  ipet::FlowFactLoader loader;
+  loader.process(ws, props);
   
-//   //	ConstraintLoader cloader;
+  //	ConstraintLoader cloader;
   
-//   // Build the object function to maximize
-//   BasicObjectFunctionBuilder fun_builder;
-//   fun_builder.process(ws, props);	
+  // Build the object function to maximize
+  BasicObjectFunctionBuilder fun_builder;
+  fun_builder.process(ws, props);
+
+  ISPConstraintBuilder isp_c_builder;
+  isp_c_builder.process(ws, props);
+	
   
-//   // Resolve the system
-//   WCETComputation wcomp;
-//   wcomp.process(ws, props);
+  // Resolve the system
+  WCETComputation wcomp;
+  wcomp.process(ws, props);
   
-//   // Get the results
-//   ilp::System *sys = SYSTEM(ws);
-//   elm::cout << "WCET = " << WCET(ws) << "\n";
-//   //sys->dump();
+  // Get the results
+  ilp::System *sys = SYSTEM(ws);
+  elm::cout << "WCET = " << WCET(ws) << "\n";
+  sys->dump();
   
 }
 
