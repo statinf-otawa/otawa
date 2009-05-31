@@ -27,7 +27,7 @@
 
 #include "CFGSizeComputer.h"
 #include "FunctionBlockBuilder.h"
-#include "ISPCATBuilder.h"c
+#include "ISPCATBuilder.h"
 #include "ISPConstraintBuilder.h"
 
 #include "ISPProblem.h" // pour le test
@@ -64,6 +64,8 @@ Command command;
 StringOption proc(command, 'p', "processor", "used processor", "processor", "");
 StringOption graphs(command, 'g', "graphs", "graphs directory", "graphs_dir", "");
 IntOption isp_size(command,'s',"isp_size","size of the ISP", "ispsize", 2048);
+StringOption icache(command, 'c', "icache", "used icache", "icache", "");
+BoolOption dump(command, 'd', "dump ilp system", false);
 
 /**
  * Build the command manager.
@@ -110,50 +112,54 @@ void Command::compute(String fun) {
   Virtualizer virt;
   virt.process(ws, props);
 
-  // Analyze instruction scratchpad
-  ISP_SIZE(props) = isp_size.value();
-  FunctionBlockBuilder fbb;
-  fbb.process(ws,props);
-
-  
-  ISPCATBuilder cat;
-  cat.process(ws,props);
+  if (icache){
+    CAT2Builder catbuilder;
+    catbuilder.process(ws, props);
+  }
+  else { //scratchpad
+    ISP_SIZE(props) = isp_size.value();
+    FunctionBlockBuilder fbb;
+    fbb.process(ws,props);
+    ISPCATBuilder cat;
+    cat.process(ws,props);
 
 #ifdef TRACE_FOR_CHECKING
-  for (CFGCollection::Iterator cfg(INVOLVED_CFGS(ws)); cfg; cfg++) {
-    for (CFG::BBIterator bb(cfg); bb ; bb++) {
-      if (!bb->isEnd() && bb->size()){
-	FunctionBlock *fb = FUNCTION_BLOCK(bb);
-	if (fb) {
-	  elm::cout << "Function block found for bb" << bb->number() << " with cfg\"" << fb->cfg()->label() << "\", size=" << CFG_SIZE(fb->cfg()) << "\n";
-	  elm::cout << "\t category = ";
-	  switch(ISP_CATEGORY(bb)){
-	  case ISP_ALWAYS_HIT:
-	    elm::cout << "ALWAYS_HIT\n";
-	    break;
-	  case ISP_ALWAYS_MISS:
-	    elm::cout << "ALWAYS_MISS\n";
-	    break;
-	  case ISP_NOT_CLASSIFIED:
-	    elm::cout << "NOT_CLASSIFIED\n";
-	    break;
-	  case ISP_PERSISTENT:
-	    elm::cout << "PERSISTENT (header=bb" << ISP_HEADER(bb)->number() << ")\n";
-	    break;
-	  default:
-	    elm::cout << "unknown\n";
+    for (CFGCollection::Iterator cfg(INVOLVED_CFGS(ws)); cfg; cfg++) {
+      for (CFG::BBIterator bb(cfg); bb ; bb++) {
+	if (!bb->isEnd() && bb->size()){
+	  FunctionBlock *fb = FUNCTION_BLOCK(bb);
+	  if (fb) {
+	    elm::cout << "Function block found for bb" << bb->number() << " with cfg\"" << fb->cfg()->label() << "\", size=" << CFG_SIZE(fb->cfg()) << "\n";
+	    elm::cout << "\t category = ";
+	    switch(ISP_CATEGORY(bb)){
+	    case ISP_ALWAYS_HIT:
+	      elm::cout << "ALWAYS_HIT\n";
+	      break;
+	    case ISP_ALWAYS_MISS:
+	      elm::cout << "ALWAYS_MISS\n";
+	      break;
+	    case ISP_NOT_CLASSIFIED:
+	      elm::cout << "NOT_CLASSIFIED\n";
+	      break;
+	    case ISP_PERSISTENT:
+	      elm::cout << "PERSISTENT (header=bb" << ISP_HEADER(bb)->number() << ")\n";
+	      break;
+	    default:
+	      elm::cout << "unknown\n";
+	    }
 	  }
 	}
       }
     }
-  }
 #endif
+  }
    
   ParamExeGraphBBTime tbt(props,0);
   tbt.process(ws);
 		
   // Build the system
   EXPLICIT(props) = true;
+
   BasicConstraintsBuilder builder;
   builder.process(ws, props);
   
@@ -161,15 +167,19 @@ void Command::compute(String fun) {
   ipet::FlowFactLoader loader;
   loader.process(ws, props);
   
-  //	ConstraintLoader cloader;
-  
   // Build the object function to maximize
   BasicObjectFunctionBuilder fun_builder;
   fun_builder.process(ws, props);
 
-  ISPConstraintBuilder isp_c_builder;
-  isp_c_builder.process(ws, props);
-	
+  if (icache){
+    CAT2ConstraintBuilder cache_constraint_builder;
+    cache_constraint_builder.process(ws, props);
+  }
+  else { // scratchpad
+    RAM_PENALTY(props) = 5;
+    ISPConstraintBuilder isp_constraint_builder;
+    isp_constraint_builder.process(ws, props);
+  }
   
   // Resolve the system
   WCETComputation wcomp;
@@ -178,7 +188,8 @@ void Command::compute(String fun) {
   // Get the results
   ilp::System *sys = SYSTEM(ws);
   elm::cout << "WCET = " << WCET(ws) << "\n";
-  sys->dump();
+  if (dump)
+    sys->dump();
   
 }
 
@@ -190,6 +201,10 @@ void Command::run(void) {
 	
   // Load the file
   PROCESSOR_PATH(props) = proc.value();
+
+  if (icache){
+    CACHE_CONFIG_PATH(props) = elm::system::Path(icache.value());
+  }
 
   ws = manager.load(&file, props);
     
