@@ -141,9 +141,13 @@ void ISPConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 	  ASSERTP(false, "Unknown category");
 	  break;
 	}
+	// Add x_miss*penalty to object function
+	size_t function_size = CFG_SIZE(fb->cfg());
+	int function_load_penalty = (function_size / 4) * (penalty+3);
+	if (function_size % 4 != 0)
+	  function_load_penalty += penalty + (function_size % 4 - 1);
+	system->addObjectFunction(function_load_penalty, ISP_MISS_VAR(bb));
       }          
-      // Add x_miss*penalty to object function
-      system->addObjectFunction(penalty, ISP_MISS_VAR(bb));
     }    
   }
 }
