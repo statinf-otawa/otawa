@@ -89,7 +89,7 @@ public:
 };
 
 // Configuration Properties
-extern Identifier<CString> TASK_ENTRY;
+extern Identifier<string> TASK_ENTRY;
 extern Identifier<hard::Platform *> PLATFORM;
 extern Identifier<Loader *> LOADER;
 extern Identifier<elm::CString> PLATFORM_NAME;

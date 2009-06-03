@@ -371,7 +371,7 @@ ilp::System *Manager::newILPSystem(String name) {
  * This property, passed to the load configuration, gives the name of the
  * entry function of the current task.
  */
-Identifier<CString> TASK_ENTRY("otawa::task_entry", "main");
+Identifier<string> TASK_ENTRY("otawa::task_entry", "main");
 
 
 /**
