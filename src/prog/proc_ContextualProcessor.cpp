@@ -108,6 +108,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 			ASSERT(to);
 			level--;
 			leavingCall(ws, cfg, to);
+			todo.push(to);
 			continue;
 		}
 
@@ -130,6 +131,8 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 					BasicBlock *to = edge->target();
 					ASSERT(to);
 					ASSERT(!returns[returns.length() - 1] || returns[returns.length() - 1] == to);
+					if(isVerbose())
+						log << "\t[" << level << "] found virtual return to BB " << to->number() << io::endl;
 					returns[returns.length() - 1] = to;
 				}
 				break;
