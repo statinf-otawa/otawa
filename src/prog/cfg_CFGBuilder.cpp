@@ -283,13 +283,14 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 		CFG *cfg = new CFG(seg, entries[i]);
 		_cfgs.add(cfg);
 		ENTRY(entries[i]) = cfg;
+		cerr << "ENTRY(" << (void *)entries[i] << ")\n";	// !!DEBUG!!
 		if(isVerbose())
 			log << "\tadded CFG " << cfg->label() << " at " << cfg->address() << io::endl;
 	}
 
 	// clean instructions
-	for(Segment::ItemIter item(seg); item; item++)
-		BB(item).remove();
+	/*for(Segment::ItemIter item(seg); item; item++)
+		BB(item).remove();*/
 }
 
 
@@ -313,6 +314,12 @@ void CFGBuilder::addFile(WorkSpace *ws, File *file) {
 	for(File::SegIter seg(file); seg; seg++)
 		if(seg->isExecutable())
 			buildCFG(ws, seg);
+
+
+	// clean instructions
+	for(File::SegIter seg(file); seg; seg++)
+		for(Segment::ItemIter item(seg); item; item++)
+			BB(item).remove();
 }
 
 
