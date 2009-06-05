@@ -28,6 +28,7 @@
 #include <elm/io/BufferedInStream.h>
 #include <otawa/flowfact/features.h>
 #include <elm/xom.h>
+#include <elm/xom/XIncluder.h>
 #include <elm/io/BlockInStream.h>
 #include <elm/system/Path.h>
 #include <otawa/prop/DeletableProperty.h>
@@ -392,6 +393,8 @@ void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 	}
 
 	// process the file
+	if(isVerbose())
+		log << "\tloading \"" << file_path << "\"\n";
 	if(!xml)
 		loadF4(file_path);
 	else
@@ -692,15 +695,23 @@ void FlowFactLoader::loadXML(const string& path) throw(ProcessorException) {
 	xom::Document *doc = builder.build(&path);
 	if(!doc)
 		throw ProcessorException(*this, _ << "cannot open " << path);
+
+	// perform inclusion
+	xom::XIncluder::resolveInPlace(doc);
+
+	// scan the root element
 	xom::Element *root = doc->getRootElement();
 	ASSERT(root);
 	if(root->getLocalName() != "flowfacts")
 		throw ProcessorException(*this, _ << "bad flow fact format in " << path);
-
-	// traverse the flow facts
 	ContextPath<Address> cpath;
-	for(int i = 0; i < root->getChildCount(); i++) {
-		xom::Node *child = root->getChild(i);
+	scanXBody(root, cpath);
+}
+
+void FlowFactLoader::scanXBody(xom::Element *body, ContextPath<Address>& cpath)
+throw(ProcessorException) {
+	for(int i = 0; i < body->getChildCount(); i++) {
+		xom::Node *child = body->getChild(i);
 		if(child->kind() == xom::Node::ELEMENT) {
 			xom::Element *element = (xom::Element *)child;
 			xom::String name = element->getLocalName();
@@ -720,8 +731,10 @@ void FlowFactLoader::loadXML(const string& path) throw(ProcessorException) {
 				Address addr = scanAddress(element, cpath);
 				onNoCall(addr);
 			}
+			else if(name == "flowfacts")
+				scanXBody(element, cpath);
 			else
-				warn(_ << "garbage in \"" << path << "\"");
+				warn(_ << "garbage at \"" << xline(child) << "\"");
 		}
 	}
 }
@@ -906,7 +919,7 @@ throw(ProcessorException) {
  * Build an XML element position for user.
  * @param element	Current XML element.
  */
-string FlowFactLoader::xline(xom::Element *element) {
+string FlowFactLoader::xline(xom::Node *element) {
 	return _ << element->getBaseURI() << ":" << element->line();
 }
 
