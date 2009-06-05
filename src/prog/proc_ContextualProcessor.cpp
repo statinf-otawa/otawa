@@ -98,7 +98,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 
 			// verbosity and control
 			if(isVerbose())
-				log << "\tleaving\n";
+				log << "\t[" << level << "] leaving\n";
 			if(!calls)
 				throw ProcessorException(*this, _ << "unstructured CFG " + cfg->label());
 
@@ -108,16 +108,19 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 			ASSERT(to);
 			level--;
 			leavingCall(ws, cfg, to);
-			todo.push(to);
+			if(MARK(to) != calls.top()) {
+				todo.push(to);
+				MARK(to) = calls.top();
+			}
 			continue;
 		}
 
 		// process the current BB
 		if(isVerbose())
-			log << "\tprocessing " << level << ": BB" << bb->number() << " (" << bb->address() << ")\n";
+			log << "\t[" << level << "] processing " << bb->number() << " (" << bb->address() << ")\n";
 		processBB(ws, cfg, bb);
 
-		// look outing edge
+		// push simple branches (non-call)
 		for(BasicBlock::OutIterator edge(bb); edge; edge++)
 			switch(edge->kind()) {
 
@@ -132,7 +135,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 					ASSERT(to);
 					ASSERT(!returns[returns.length() - 1] || returns[returns.length() - 1] == to);
 					if(isVerbose())
-						log << "\t[" << level << "] found virtual return to BB " << to->number() << io::endl;
+						log << "\t[" << level << "] found return to " << to << io::endl;
 					returns[returns.length() - 1] = to;
 				}
 				break;
@@ -158,12 +161,18 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 				CALLED_CFG(edge) = cfg;
 
 			case Edge::VIRTUAL_CALL:
+				break;
+			}
+
+		// push calls
+		for(BasicBlock::OutIterator edge(bb); edge; edge++)
+			if(edge->kind() == Edge::VIRTUAL_CALL) {
 
 				// check recursivity
 				for(int i = 0; i < calls.length(); i++)
 					if(calls[i] == edge->target()) {
 						if(isVerbose()) {
-							log << "\trecursive call";
+							log << "\t[" << level << "] recursive call";
 							CFG *cfg = CALLED_CFG(edge);
 							if(cfg)
 								log << " to " << cfg->label();
@@ -175,7 +184,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 
 				// do the call
 				if(isVerbose()) {
-					log << "\tentering call";
+					log << "\t[" << level << "] entering call";
 					level++;
 					CFG *cfg = CALLED_CFG(edge);
 					if(cfg)
