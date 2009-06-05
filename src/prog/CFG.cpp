@@ -58,6 +58,25 @@ Identifier<int> INDEX("otawa::index", -1);
 
 
 /**
+ * Format the display of the given address relativelt to the given CFG.
+ * @param addr	Address to format.
+ * @return		Formatted address.
+ */
+string CFG::format(const Address& addr) {
+	string lab = LABEL(this);
+	if(!lab)
+		return _ << addr;
+	else {
+		long off = addr - address();
+		if(off >= 0)
+			return _ << lab << " + 0x" << io::hex(off);
+		else
+			return _ << lab << " - 0x" << io::hex(-off);
+	}
+}
+
+
+/**
  * Test if the first BB dominates the second one.
  * @param bb1	Dominator BB.
  * @param bb2	Dominated BB.
@@ -140,12 +159,11 @@ CFG::CFG(void):
  * @return	CFG label or any other identification way.
  */
 String CFG::label(void) {
-	Inst *first = firstInst();
-	string id = FUNCTION_LABEL(first);
+	if(!ent)
+		return "";
+	string id = LABEL(this);
 	if(!id)
-		id = LABEL(first);
-	if(!id)
-		id = _ << "0x" << first->address();
+		id = _ << "__0x" << ent->address();
 	return id;
 }
 
@@ -154,9 +172,11 @@ String CFG::label(void) {
  * Get the address of the first instruction of the CFG.
  * @return	Return address of the first instruction.
  */
-address_t CFG::address(void) {
-	BasicBlock *bb = firstBB();
-	return bb->address();
+Address CFG::address(void) {
+	if(ent)
+		return ent->address();
+	else
+		return Address::null;
 }
 
 
@@ -173,9 +193,6 @@ address_t CFG::address(void) {
  * is used (call to an accessors method).
  */
 void CFG::scan(void) {
-	//cerr << "begin CFG::scan(" << (void *)this << ") -> " << ent->address() << "\n";
-
-	// Experimental code
 
 	// Prepare data
 	typedef HashTable<BasicBlock *, BasicBlock *> map_t;
@@ -188,35 +205,33 @@ void CFG::scan(void) {
 	while(todo) {
 		BasicBlock *bb = todo.get();
 		ASSERT(bb);
+
 		// second case : calling jump to a function
 		if(map.exists(bb) || (bb != ent && ENTRY(bb)))
 			continue;
+
+		// unknown target ?
+		if(bb->isTargetUnknown()) {
+			Inst *last = 0;
+			for(BasicBlock::InstIter inst(bb); inst; inst++)
+				last = inst;
+			throw otawa::Exception(_ << "can not build CFG of " << label() << " because "
+				"there is an instruction with unknown target at " << format(last->address()));
+		}
+
+		// build the virtual BB
 		BasicBlock *vbb = new VirtualBasicBlock(bb);
 		_bbs.add(vbb);
 		map.put(bb, vbb);
 		ASSERTP(map.exists(bb), "not for " << bb->address());
 
-		// !!DEBUG!!
-		/*if(bb->address() == Address(0x8a98))
-			cerr << "1 BB " << (void *)bb  << " at " << bb->address() << io::endl;*/
-
+		// resolve targets
 		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-
-			// !!DEBUG!!
-			/*cerr << edge->source()->address() << " => ";
-			if(!edge->target())
-				cerr << "unknown";
-			else
-				cerr << edge->target()->address();
-			cerr << io::endl;*/
-
-			if(edge->target() && edge->kind() != Edge::CALL)
+			ASSERT(edge->target());
+			if(edge->kind() != Edge::CALL)
 				todo.put(edge->target());
 		}
 	}
-
-	/*for(map_t::ItemIterator vbb(map); vbb; vbb++)
-		cerr << (void *)vbb.key() << " -> " << (void *)vbb << io::endl;*/
 
 	// Relink the BB
 	BasicBlock *vent = map.get(ent, 0);
@@ -229,47 +244,29 @@ void CFG::scan(void) {
 		if(bb->isReturn())
 			new Edge(vbb, &_exit, Edge::VIRTUAL);
 
-		// !!DEBUG!!
-		/*if(bb->address() == Address(0x8a98))
-			cerr << "2 BB " << (void *)bb  << " at " << bb->address() << io::endl;*/
-
 		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-
-			// !!DEBUG!!
-			/*cerr << edge->source()->address() << " -> ";
-			if(!edge->target())
-				cerr << "unknown";
-			else
-				cerr << edge->target()->address();
-			cerr << io::endl;*/
 
 			// A call
 			if(edge->kind() == Edge::CALL) {
 				Edge *vedge = new Edge(vbb, edge->target(), Edge::CALL);
 				vedge->toCall();
-				//cerr << vbb->address() << ": call" << io::endl;
 			}
 
 			// Pending edge
 			else if(!edge->target()) {
 				new Edge(vbb, 0, edge->kind());
-				//cerr << vbb->address() << ": pending edge" << io::endl;
 			}
 
 			// Possibly a not explicit call
 			else {
 				ASSERT(edge->target());
 				BasicBlock *vtarget = map.get(edge->target(), 0);
-				if(vtarget)	{	// simple branch
+				if(vtarget)	// simple branch
 					new Edge(vbb, vtarget, edge->kind());
-					//cerr << vbb->address() << ": to " << vtarget->address() << io::endl;
-				}
 				else {		// calling jump to a function
 					new Edge(vbb, edge->target(), Edge::CALL);
-					//cerr << vbb->address() << ": calling jump" << io::endl;
 					vbb->flags |= BasicBlock::FLAG_Call;
 					new Edge(vbb, &_exit, Edge::VIRTUAL);
-					//cerr << vbb->address() << ": exit" << io::endl;
 				}
 			}
 
@@ -284,16 +281,6 @@ void CFG::scan(void) {
 	}
 	flags |= FLAG_Scanned;
 
-	// !!DEBUG!!
-	/*for(bbs_t::Iterator bb(_bbs); bb; bb++)
-		for(BasicBlock::OutIterator edge(bb); edge; edge++)
-			if(edge->kind() != Edge::CALL)
-				cerr << bb->number() << " (" << bb->address()
-					 << ") - > " << edge->target()->number()
-					 << " (" << edge->target()->address()
-					 << "): " << edge->kind() << io::endl;*/
-
-	//cerr << "end CFG::scan()\n";
 }
 
 
