@@ -135,11 +135,10 @@ throw (UnsupportedFeatureException) {
 		return;
 	dwarf_line_iter_t iter;
 	dwarf_location_t loc, ploc = { 0, 0, 0, 0 };
-	for(loc = dwarf_first_line(&iter, map);
-	loc.file;
-	loc = dwarf_next_line(&iter)) {
+	for(loc = dwarf_first_line(&iter, map); loc.file; loc = dwarf_next_line(&iter)) {
+		cstring lfile = loc.file;
 		//cerr << loc.file << ":" << loc.line << ", " << loc.low_addr << "-" << loc.high_addr << io::endl;
-		if(file == loc.file) {
+		if(file == loc.file || lfile.endsWith(file)) {
 			if(line == loc.line) {
 				//cerr << "added (1) " << loc.file << ":" << loc.line << " -> " << loc.low_addr << io::endl;
 				addresses.add(pair(Address(loc.low_addr), Address(loc.high_addr)));

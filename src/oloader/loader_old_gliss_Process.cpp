@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-7, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -83,19 +83,27 @@ public:
 	void getAddresses(cstring file, int line,
 	Vector<Pair<Address, Address> >& addresses)
 	throw (UnsupportedFeatureException) {
+		//cerr << "looking for " << file << ":" << line << io::endl;
 		setup();
 		addresses.clear();
 		if(!map)
 			return;
 		dwarf_line_iter_t iter;
-		dwarf_location_t loc;
-		for(loc = dwarf_first_line(&iter, map);
-		loc.file;
-		loc = dwarf_next_line(&iter)) {
-			//cerr << loc.file << ":" << loc.line << ":" << loc.low_addr << "-" << loc.high_addr << io::endl;
-			if(file == loc.file && line == loc.line)
-				addresses.add(
-					pair(Address(loc.low_addr), Address(loc.high_addr)));
+		dwarf_location_t loc, ploc = { 0, 0, 0, 0 };
+		for(loc = dwarf_first_line(&iter, map); loc.file; loc = dwarf_next_line(&iter)) {
+			cstring lfile = loc.file;
+			//cerr << loc.file << ":" << loc.line << ", " << loc.low_addr << "-" << loc.high_addr << io::endl;
+			if(file == loc.file || lfile.endsWith(file)) {
+				if(line == loc.line) {
+					//cerr << "added (1) " << loc.file << ":" << loc.line << " -> " << loc.low_addr << io::endl;
+					addresses.add(pair(Address(loc.low_addr), Address(loc.high_addr)));
+				}
+				else if(loc.file == ploc.file && line > ploc.line && line < loc.line) {
+					//cerr << "added (2) " << ploc.file << ":" << ploc.line << " -> " << ploc.low_addr << io::endl;
+					addresses.add(pair(Address(ploc.low_addr), Address(ploc.high_addr)));
+				}
+			}
+			ploc = loc;
 		}
 	}
 
@@ -106,23 +114,23 @@ protected:
 		if(file)
 			gel_close(file);
 	}
-	
+
 private:
 	void setup(void) {
 		if(init)
 			return;
 		init = true;
-		
+
 		// Open the file
 		if(!file) {
-			file = gel_open(&name(), 0, GEL_OPEN_NOPLUGINS); 
+			file = gel_open(&name(), 0, GEL_OPEN_NOPLUGINS);
 			if(!file) {
 				cerr << "WARNING: file \"" << name()
 					 << "\" seems to have disappeared !\n";
 				return;
 			}
 		}
-		
+
 		// Open the map
 		map = dwarf_new_line_map(file, 0);
 	}
@@ -138,24 +146,24 @@ private:
  * This class provides support to build a loader plug-in based on the GLISS
  * tool with the old ELF loader system. Currently, this includes the "arm"
  * and the "m68h" processors.
- * 
+ *
  * This class allows to load a binary file, extract the instructions and the
  * symbols (labels and function). You have to provide a consistent
  * platform description for the processor.
  *
  * The details of the interface with GLISS are managed by this class and you
  * have only to write the platform description and the recognition of the
- * instruction. 
+ * instruction.
  */
- 
- 
+
+
  /**
   * Build a process for the old GLISS system.
   * @param manager	Current manager.
   * @param loader	Current loader.
   * @param platform	Current platform.
   * @param props	Building properties.
-  */ 
+  */
  Process::Process(
  	Manager *manager,
  	Loader *loader,
@@ -163,7 +171,7 @@ private:
 	const PropList& props)
 :	otawa::Process(manager, props),
 	_start(0),
-	_platform(platform), 
+	_platform(platform),
 	_state(0),
 	_loader(loader)
 {
@@ -233,15 +241,15 @@ otawa::File *Process::loadFile(elm::CString path) {
     system_list[0] = &argc;
     system_list[1] = argv;
     system_list[2] = envp;
-    system_list[3] = &page_size; 
-    system_list[4] = NULL; 
+    system_list[3] = &page_size;
+    system_list[4] = NULL;
     system_list[5] = NULL;
 
     // Loader configuration
     void *loader_list[1+1];
     loader_list[0]=(void *)path.chars();
     loader_list[1]=NULL;
-    
+
     // Memory configuration
     void *mem_list[2+1];
     int mem_size = 0;
@@ -256,7 +264,7 @@ otawa::File *Process::loadFile(elm::CString path) {
     	throw LoadException(_ << "cannot load \"" << path << "\".");
     _state = state;
     File *file = new File(path);
-    
+
     // Initialize the text segments
     for(struct text_secs *text = Text.secs; text; text = text->next) {
     	Segment *seg = new Segment(*this, text->name, (address_t)text->address,
@@ -272,14 +280,14 @@ otawa::File *Process::loadFile(elm::CString path) {
 	for(int i = 0; i < sym_cnt; i++) {
 		address_t addr = 0;
 		Symbol::kind_t kind;
-		
+
 		// Function symbol
 		if(ELF32_ST_TYPE(syms[i].st_info)== STT_FUNC
 		&& syms[i].st_shndx != SHN_UNDEF) {
 			kind = Symbol::FUNCTION;
 			addr = (address_t)syms[i].st_value;
 		}
-		
+
 		// Simple label symbol
 		else if(ELF32_ST_TYPE(syms[i].st_info)== STT_NOTYPE
 		&& syms[i].st_shndx == Text.txt_index) {
@@ -301,7 +309,7 @@ otawa::File *Process::loadFile(elm::CString path) {
 	_start = findInstAt((address_t)Ehdr.e_entry);
 	otawa::gliss::GLISS_STATE(this) = _state;
 	_memory = memory();
-	ASSERTP(_memory, "memory information mandatory"); 
+	ASSERTP(_memory, "memory information mandatory");
 	return file;
 }
 
@@ -363,7 +371,7 @@ Inst *Segment::decode(address_t address) {
 
 /**
  */
-Option<Pair<cstring, int> > Process::getSourceLine(Address addr) 
+Option<Pair<cstring, int> > Process::getSourceLine(Address addr)
 throw (UnsupportedFeatureException) {
 	File *file = (File *)program();
 	return file->getSourceLine(addr);
@@ -378,7 +386,7 @@ void Process::getAddresses(
 	Vector<Pair<Address, Address> >& addresses)
 throw (UnsupportedFeatureException) {
 	File *ofile = (File *)program();
-	return ofile->getAddresses(file, line, addresses);	
+	return ofile->getAddresses(file, line, addresses);
 }
 
 } } } // otawa::loader::old_gliss
