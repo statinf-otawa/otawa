@@ -177,10 +177,8 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++)
 				for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 					if(edge->kind() == Edge::CALL) {
-						if(!edge->calledCFG()) {
-							log << "\t\tunknown function call at " << bb->address() << io::endl;
-							log << "DEBUG: " << edge->target() << io::endl;	// !!DEBUG!!
-						}
+						if(!edge->calledCFG())
+							log << "\t\tunknown function call at " << bb->address() << ":" << bb->topAddress() << io::endl;
 						else if(!MARK(edge->calledCFG())) {
 					        INDEX(edge->calledCFG()) = index;
 					        index++;
