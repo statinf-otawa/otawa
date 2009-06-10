@@ -1,12 +1,12 @@
 AM_CXXFLAGS = @OTAWA_CXXFLAGS@ -Wall
 
 # processor plugin
-dyndir=$(abs_builddir)/.otawa/proc
-dyn_LTLIBRARIES=dyn.la
+#dyndir=$(abs_builddir)/.otawa/proc
+#dyn_LTLIBRARIES=dyn.la
 
-dyn_la_LDFLAGS = -module
-dyn_la_LIBADD = @OTAWA_LIBS@
-dyn_la_SOURCES = dyn.cpp
+#dyn_la_LDFLAGS = -module
+#dyn_la_LIBADD = @OTAWA_LIBS@
+#dyn_la_SOURCES = dyn.cpp
 
 
 # test dynproc
