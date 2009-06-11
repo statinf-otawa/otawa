@@ -117,6 +117,9 @@ public:
 	inline Process *process(void) const { return proc; }
 	virtual Inst *execute(Inst *inst) = 0;
 	
+	// register access
+	virtual void setSP(const Address& addr);
+
 	// memory accesses
 	virtual Address lowerRead(void);
 	virtual Address upperRead(void);
