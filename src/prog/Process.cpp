@@ -111,6 +111,14 @@ Address SimState::upperWrite(void) {
 
 
 /**
+ * !!TODO!!
+ */
+void SimState::setSP(const Address& addr) {
+  ASSERTP(false, "SimState::setSP() unsupported");
+}
+
+
+/**
  * @class Process
  * A process is the realization of a program on a platform. It represents the
  * program and its implementation on the platform. A process may be formed
