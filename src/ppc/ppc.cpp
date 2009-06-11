@@ -111,15 +111,19 @@ public:
 // SimState class
 class SimState: public otawa::SimState {
 public:
-	SimState(Process *process, state_t *state)
-		: otawa::SimState(process) {
+  SimState(Process *process, state_t *state, bool _free = false)
+    : otawa::SimState(process) {
 		ASSERT(process);
 		ASSERT(state);
-		_state = state;
+		  _state = new state_t;
+		  *_state = *state;
 	}
 	virtual ~SimState(void) {
-		//delete [] (char *)_state;
+	    delete _state;
 	}
+  virtual void setSP(const Address& addr) {
+    state()->gpr[1] = addr.offset();
+  }
 	inline state_t *state(void) const { return _state; }
 	virtual Inst *execute(Inst *oinst) {
 		ASSERTP(oinst, "null instruction pointer");
@@ -167,7 +171,7 @@ public:
 		elm::genstruct::AllocatedTable<hard::Register *> *in,
 		elm::genstruct::AllocatedTable<hard::Register *> *out);
 	virtual otawa::SimState *newState(void) {
-		return new SimState(this, (state_t *)state());
+	  return new SimState(this, (state_t *)state(), true);
 	}
 protected:
 	virtual otawa::Inst *decode(address_t addr);
