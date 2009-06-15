@@ -210,14 +210,15 @@ void CFG::scan(void) {
 		if(map.exists(bb) || (bb != ent && ENTRY(bb)))
 			continue;
 
+		// !!TODO!! Add a CFGChecker !
 		// unknown target ?
-		if(bb->isTargetUnknown()) {
+		/*if(bb->isTargetUnknown()) {
 			Inst *last = 0;
 			for(BasicBlock::InstIter inst(bb); inst; inst++)
 				last = inst;
 			throw otawa::Exception(_ << "can not build CFG of " << label() << " because "
 				"there is an instruction with unknown target at " << format(last->address()));
-		}
+		}*/
 
 		// build the virtual BB
 		BasicBlock *vbb = new VirtualBasicBlock(bb);
