@@ -159,8 +159,12 @@ CFG::CFG(void):
  * @return	CFG label or any other identification way.
  */
 String CFG::label(void) {
-	if(!ent)
-		return "";
+	if(!ent) {
+		BasicBlock::OutIterator out(entry());
+		if(!out)
+			return "";
+		ent = out->target();
+	}
 	string id = LABEL(this);
 	if(!id)
 		id = _ << "__0x" << ent->address();
