@@ -352,4 +352,13 @@ Inst *CFG::firstInst(void) {
 	return *inst;
 }
 
+
+/**
+ * Print a reference for the CFG.
+ * @param out	Output stream.
+ */
+void CFG::print(io::Output& out) {
+	out << label();
+}
+
 } // namespace otawa

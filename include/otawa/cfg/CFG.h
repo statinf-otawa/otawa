@@ -59,8 +59,10 @@ public:
 	string format(const Address& addr);
 	inline int number(void);
 	address_t address(void);
-	inline BasicBlock *entry(void);
-	inline BasicBlock *exit(void);
+	inline BasicBlock *entry(void)
+		{ if(!(flags & FLAG_Scanned)) scan(); return &_entry; }
+	inline BasicBlock *exit(void)
+		 { if(!(flags & FLAG_Scanned)) scan(); return &_exit; }
 	inline int countBB(void);
 	bool dominates(BasicBlock *bb1, BasicBlock *bb2);
 	inline bool isVirtual(void) const;
@@ -68,6 +70,7 @@ public:
 	void numberBB(void);
 	BasicBlock *firstBB(void);
 	Inst *firstInst(void);
+	void print(io::Output& out);
 
 protected:
 	friend class CFGInfo;
@@ -89,8 +92,9 @@ private:
 		return _bbs;
 	}
 	Segment *_seg;
-	BasicBlock *ent;
+	mutable BasicBlock *ent;
 };
+inline io::Output& operator<<(io::Output& out, CFG *cfg) { cfg->print(out); return out; }
 
 
 // CFG inlines
@@ -98,17 +102,6 @@ inline Segment *CFG::segment(void) const {
 	return _seg;
 };
 
-inline BasicBlock *CFG::entry(void) {
-	if(!(flags & FLAG_Scanned))
-		scan();
-	return &_entry;
-}
-
-inline BasicBlock *CFG::exit(void) {
-	if(!(flags & FLAG_Scanned))
-		scan();
-	return &_exit;
-}
 inline int CFG::countBB(void) {
 	if(!(flags & FLAG_Scanned))
 		scan();

@@ -270,6 +270,20 @@ BasicBlock::~BasicBlock(void) {
 
 
 /**
+ * Print the reference for a basic block.
+ * @param	out		Output stream.
+ */
+void BasicBlock::print(io::Output& out) const {
+	if(isEntry())
+		out << "ENTRY";
+	else if(isExit())
+		out << "EXIT";
+	else
+		out << "BB" << number() << " (" << address() << ")";
+}
+
+
+/**
  * @class BasicBlock::Mark
  * This pseudo-instruction is used for marking the start of a basic block.
  */
