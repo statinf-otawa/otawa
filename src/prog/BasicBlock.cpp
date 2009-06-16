@@ -279,7 +279,7 @@ void BasicBlock::print(io::Output& out) const {
 	else if(isExit())
 		out << "EXIT";
 	else
-		out << "BB" << number() << " (" << address() << ")";
+		out << "BB " << number() << " (" << address() << ")";
 }
 
 
