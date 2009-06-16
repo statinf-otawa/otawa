@@ -248,15 +248,16 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 					new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
 				}
 				if(!target)
-					for(Identifier<Address>::Getter target(inst, BRANCH_TARGET);
-					target; target++) {
-						Inst *inst_target = ws->findInstAt(target);
-						if(inst_target) {
-							BasicBlock *target_bb = thisBB(inst_target);
-							assert(target_bb);
-							new Edge(bb, target_bb,
-								inst->isCall() ? EDGE_Call : EDGE_Taken);
+					for(Identifier<Address>::Getter addr(inst, BRANCH_TARGET); addr; addr++) {
+						target = ws->findInstAt(addr);
+						if(target) {
+							BasicBlock *target_bb = thisBB(target);
+							ASSERT(target_bb);
+							new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
 						}
+						else
+							throw otawa::Exception(_ << "branch target to " << *target << " at " << inst->address()
+								<< " does not match an instruction.");
 					}
 
 				// Record BB flags
@@ -283,7 +284,6 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 		CFG *cfg = new CFG(seg, entries[i]);
 		_cfgs.add(cfg);
 		ENTRY(entries[i]) = cfg;
-		cerr << "ENTRY(" << (void *)entries[i] << ")\n";	// !!DEBUG!!
 		if(isVerbose())
 			log << "\tadded CFG " << cfg->label() << " at " << cfg->address() << io::endl;
 	}
