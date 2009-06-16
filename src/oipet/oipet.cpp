@@ -239,10 +239,20 @@ EnumOption<int>::value_t cons_output_kinds[] = {
 		{ "html", HTML },
 		{ "" }
 };
+EnumOption<int>::value_t graph_output_kinds[] = {
+	{ "output kind", display::OUTPUT_ANY },
+	{ "ps", display::OUTPUT_PS },
+	{ "pdf", display::OUTPUT_PDF },
+	{ "png", display::OUTPUT_PNG },
+	{ "gif", display::OUTPUT_GIF },
+	{ "jpg", display::OUTPUT_JPG },
+	{ "svg", display::OUTPUT_SVG },
+	{ "dot", display::OUTPUT_DOT }
+};
 EnumOption<int> dump_constraints(command, 'C', "dump-constraints",
-	"dump lp_solve constraints", cons_output_kinds);
-BoolOption dump_graph(command, 'G', "dump-graph",
-	"dump DOT graph of the processed function", false);
+	"dump lp_solve constraints (lp or html)", cons_output_kinds);
+EnumOption<int> dump_graph(command, 'G', "dump-graph",
+	"dump DOT graph of the processed function", graph_output_kinds);
 BoolOption dump_time(command, 'T', "dump-time",
 	"dump ratio of each BB for the WCET", false);
 
@@ -296,7 +306,7 @@ void Command::compute(String fun) {
 	// Prepare processor configuration
 	PropList props;
 	TASK_ENTRY(props) = fun.toCString();
-	if(dump_constraints || dump_graph)
+	if(dump_constraints || dump_graph !=  display::OUTPUT_ANY)
 		EXPLICIT(props) = true;
 	if(verbose) {
 		otawa::Processor::VERBOSE(props) = true;
@@ -436,6 +446,7 @@ void Command::compute(String fun) {
 		break;
 	case LP: {
 			String out_file = _ << output_prefix.value() << fun << ".lp";
+			cerr << "INFO: outputting constraints to " << out_file << "...\n";
 			io::OutFileStream stream(&out_file);
 			if(!stream.isReady())
 				throw MessageException(_ << "cannot create file \"" << out_file << "\".");
@@ -444,6 +455,7 @@ void Command::compute(String fun) {
 		break;
 	case HTML: {
 			system::Path path(_ << output_prefix.value() << fun << ".html");
+			cerr << "INFO: outputting constraints to " << path << "...\n";
 			display::ILPSystemDisplayer::PATH(props) = path;
 			display::ILPSystemDisplayer disp;
 			disp.process(fw, props);
@@ -452,13 +464,15 @@ void Command::compute(String fun) {
 	}
 
 	// Dump the CFG
-	if(dump_graph) {
+	if(dump_graph != display::OUTPUT_ANY) {
+		cerr << "INFO: outputting graph...\n";
 
 		// Record results
 		WCETCountRecorder recorder;
 		recorder.process(fw, props);
 
 		// Generates output
+		display::CFGOutput::KIND(props) = display::kind_t(dump_graph.value());
 		display::CFGOutput output;
 		output.process(fw, props);
 	}
