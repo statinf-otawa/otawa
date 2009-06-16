@@ -44,7 +44,6 @@ String quoteSpecials(String str){
 			|| c == '>'
 			|| c == '|'
 			|| c == '\\'
-			|| c == ' '
 			|| c == '"')
 		{
 			buf << '\\';
@@ -54,7 +53,7 @@ String quoteSpecials(String str){
 			buf << c;
 		else
 			buf << "\\l";
-		
+
 	}
 	return buf.toString();
 }
