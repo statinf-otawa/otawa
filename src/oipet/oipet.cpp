@@ -479,6 +479,9 @@ void Command::compute(String fun) {
 
 	// Dump the ratio
 	if(dump_time) {
+		system::Path path(_ << output_prefix.value() << fun << ".time");
+		cerr << "INFO: outputting time information to " << path << "...\n";
+		BBRatioDisplayer::PATH(props) = path;
 		BBRatioDisplayer displayer;
 		displayer.process(fw, props);
 	}
