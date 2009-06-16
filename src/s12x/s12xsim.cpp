@@ -9,7 +9,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * OTAWA is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -45,23 +45,23 @@ public:
 		file = system::System::createFile("mem.txt");
 		out.setStream(*file);
 	}
-	
+
 	~MemStats(void) {
 		elm::cerr << "[MEM] COUNT = " << count << elm::io::endl;
 		elm::cerr << "[MEM] RESOLVED = " << resolved << elm::io::endl;
 		delete file;
 	}
-	
+
 	void add(void) {
 		resolved++;
 		count++;
 	}
-	
+
 	void unresolve(otawa::Inst *inst) {
 		out << inst << elm::io::endl;
 		resolved--;
 	}
-	
+
 private:
 	int count, resolved;
 	elm::io::Stream *file;
@@ -80,10 +80,10 @@ public:
 		ASSERT(ws);
 		ASSERT(state);
 	}
-	
+
 	State(const State& state)
 		: _ws(state._ws), _state(state._state), _cycle(state._cycle) { }
-	
+
 	virtual State *clone(void) { return new State(*this); }
 	virtual void run(sim::Driver& driver);
 	virtual void stop(void) { _stop = true; }
@@ -91,7 +91,7 @@ public:
 	virtual int cycle(void) { return _cycle; }
 	virtual void reset(void) { _cycle = 0; }
 	virtual otawa::Process *process(void) { return _ws->process(); }
-	
+
 private:
 	void interpretFull(Inst *inst);
 	int interpret(CString expr, Inst *inst, instruction_t *_inst, bool x18);
@@ -118,11 +118,11 @@ Simulator::Simulator(void)
 /**
  */
 sim::State *Simulator::instantiate(WorkSpace *ws, const PropList& props) {
-		
+
 	// Check consistency
 	if(ws->process()->loader() != &s12x_plugin)
 		throw otawa::Exception("s12x_simulator can only be used with the s12x loader !");
-		
+
 	// Compute the state
 	return new State(ws, (state_t *)((Process *)ws->process())->state());
 }
@@ -136,24 +136,32 @@ Simulator simulator;
 /**
  */
 void State::run(sim::Driver& driver)  {
-	
+
 	// Loop on instructions
 	_stop = false;
-	Inst *inst = 0;
+	Inst *inst = 0, *branch = 0;
 	while(!_stop) {
-		
+
 		// Get next instruction
 		inst = driver.nextInstruction(*this, inst);
 		if(!inst)
-			break; 
-		
+			break;
+
 		// Interpret the instruction time sequence
 		interpretFull(inst);
+
+		// process branch
+		if(branch && inst == branch->nextInst())
+			_cycle -= 2;
+		if(inst->isControl())
+			branch = inst;
+		else
+			branch = 0;
 
 		// Terminate the instruction
 		driver.terminateInstruction(*this, inst);
 		inst = inst->nextInst();
-	} 
+	}
 }
 
 
@@ -162,7 +170,7 @@ void State::run(sim::Driver& driver)  {
  * @param inst	Instruction to interpret.
  */
 void State::interpretFull(Inst *inst) {
-	
+
 	// Get information
 	code_t buffer[20];
 	instruction_t *_inst;
@@ -171,11 +179,11 @@ void State::interpretFull(Inst *inst) {
 	//cerr << "time = " << iss_table[_inst->ident].time << io::endl;
 	CString time = iss_table_time[iss_table[_inst->ident].time];
 	bool x18 = (buffer[0] >> 24) == 0x18;
-	
+
 	// Process prefix
 	int res = 0;
 	switch(time[0]) {
-		
+
 	// time[time_select]
 	case '!': {
 			int cnt = iss_table[_inst->ident].time_select;
@@ -204,30 +212,30 @@ void State::interpretFull(Inst *inst) {
 			res = interpret(time.substring(pos + 1), inst, _inst, x18);
 		}
 		break;
-	
+
 	// time[0] + time[1] * COUNT + time[2]
 	case '*': {
-		
+
 			// Prefix
 			int t1 = interpret(time.substring(1), inst, _inst, x18);
-			
+
 			// Body
 			int p1 = time.indexOf(',');
 			ASSERTT(p1 >= 0, "exp2 miss");
 			int t2 = interpret(time.substring(p1 + 1), inst, _inst, x18);
-			
+
 			// Suffix
 			int p2 = time.indexOf(',', p1 + 1);
 			ASSERTT(p2 >= 0, "exp3 miss");
 			int t3 = interpret(time.substring(p2 + 1), inst, _inst, x18);
-			
+
 			// Time computation
 			int cnt = COUNT(inst);
 			ASSERTP(cnt < 0, "fuzzy instruction without count");
 			res = t1 + t2 * cnt + t3;
 		}
 		break;
-	
+
 	// Conditional branch
 	case '?': {
 			int pos = time.indexOf(',');
@@ -249,30 +257,30 @@ void State::interpretFull(Inst *inst) {
 					ASSERTT(pos >= 0, "exp2 miss");
 					res = interpret(time.substring(pos + 1), inst, _inst, x18);
 					break;
-				}		
+				}
 			}
 			res = interpret(time.substring(1), inst, _inst, x18);
 		}
 		break;
 
-	// IT dependent (not managed) 	
+	// IT dependent (not managed)
 	case '%':
 		res = interpret(time.substring(1), inst, _inst, x18);
 		break;
-	
+
 	// Wait instruction
 	case '#': {
 			int wait = WAIT(inst);
 			ASSERTP(wait < 0, "undefined wait time at " << inst->address());
-			res = wait; 
+			res = wait;
 		}
 		break;
-	
+
 	// Simple expression
 	default:
 		res = interpret(time, inst, _inst, x18);
 	}
-	
+
 	// Cleanup
 	_cycle += res;
 	TRACE(inst->address() << ":" << inst << ", time=\"" << time
@@ -297,39 +305,39 @@ int State::interpret(CString time, Inst *inst, instruction_t *_inst, bool x18) {
 	bool end = false;
 	for(int i = 0; !end; i++)
 		switch(time[i]) {
-			
+
 		// End
 		case '\0': case ',':
 			end = true;
 			break;
-			
+
 		// single internal cycle
 		case 'f': case 'g': case 'n':
 			res++;
 			break;
-		
+
 		// 8-bits read / write
 		case 'i': case 'r': case 'u': case 't':
 		case 's': case 'w': case 'x':
 			res += access8(inst, _inst);
 			break;
-		
+
 		// 16-bits aligned
 		case 'P':
 			res += access16_code(inst, _inst);
-			break;		
+			break;
 		case 'V':
 			res += access16_aligned(inst, _inst, false);
 			break;
 
 		// 16-bits free
-		case 'I': case 'R': case 'U': case 'T': 
+		case 'I': case 'R': case 'U': case 'T':
 			res += access16(inst, _inst, false);
-			break;		
+			break;
 		case 'S': case 'W':
 			res += access16(inst, _inst, true);
 			break;
-		
+
 		// Special
 		case 'O':
 			if(!o_found) {
@@ -357,12 +365,12 @@ int State::interpret(CString time, Inst *inst, instruction_t *_inst, bool x18) {
 					res++;
 			}
 			break;
-		
+
 		// Else error
 		default:
 			ASSERTT(false, "unknown symbol \"" << time[i] << '"');
 		}
-	
+
 	// Return result
 	TRACE(inst->address() << ":" << inst->size() << ":" << inst
 		<< (x18 ? " x18" : "") << "\ttime = \"" << time << "\" = " << res);
@@ -450,7 +458,7 @@ Address State::getAccessAddress(Inst *inst, instruction_t *_inst, bool write) {
 		stats.add();
 	#endif
 	switch(_inst->ident) {
-		
+
 	/* opr16a: Absolute address 16-bits */
 	case ID_ADCA_: case ID_ADCB_: case ID_ADDA_: case ID_ADDB_:
 	case ID_ADDD_: case ID_ADDX_: case ID_ADDY_:
@@ -511,7 +519,7 @@ Address State::getAccessAddress(Inst *inst, instruction_t *_inst, bool write) {
 	case ID_SUBA__0: case ID_SUBB__0:
 	case ID_SUBD__0: case ID_SUBX__0: case ID_SUBY__0:
 		return _inst->instrinput[0].val.uint8;
-	
+
 	/* mov family */
 	case ID_MOVB_: case ID_MOVW_:
 		return 	_inst->instrinput[1].val.uint16;
@@ -520,7 +528,7 @@ Address State::getAccessAddress(Inst *inst, instruction_t *_inst, bool write) {
 			return _inst->instrinput[0].val.uint16;
 		else
 			return _inst->instrinput[1].val.uint16;
-	
+
 	/* default */
 	default:
 		#ifdef STATS
