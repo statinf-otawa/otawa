@@ -45,7 +45,7 @@ CFGDrawer::CFGDrawer(CFG *cfg, const PropList& props, Driver& driver): _made(fal
 	nodes.addProps(props);
 	edges.addProps(props);
 	onInit(general, nodes, edges);
-	
+
 	_graph = driver.newGraph(general, nodes, edges);
 	_graph->setProps(*cfg);
 	//make(cfg);
@@ -64,7 +64,7 @@ void CFGDrawer::make(){
 	}
 	assert(_cfg);
 	assert(_graph);
-	
+
 	// Construct the Graph
 	HashTable<void*, Node*> map;
 	for(CFG::BBIterator bb(_cfg); bb; bb++){
@@ -128,7 +128,7 @@ void CFGDrawer::onNode(otawa::BasicBlock *bb, otawa::display::Node *node){
 
 	// make title
 	StringBuffer title;
-	title << bb->number() << " (0x" << fmt::address(bb->address()) << ')';
+	title << bb; //->number() << " (0x" << fmt::address(bb->address()) << ')';
 	TITLE(node) = title.toString();
 
 	// make body
