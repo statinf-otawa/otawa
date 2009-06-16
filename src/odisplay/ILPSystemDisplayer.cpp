@@ -155,7 +155,7 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 		else
 			cout << " + ";
 		if((*term).snd != 1)
-			cout << -(*term).snd;
+			cout << (*term).snd;
 		displayVar((*term).fst);
 	}
 	cout << "\n\t\t\t</p>\n";
