@@ -40,7 +40,7 @@ class CFG;
 extern Identifier<int> INDEX;
 
 // BasicBlock class
-class BasicBlock: /*public elm::inhstruct::DLNode,*/ public PropList {
+class BasicBlock: public PropList {
 	friend class CFGBuilder;
 	friend class CFGInfo;
 	friend class CFG;
@@ -103,16 +103,16 @@ public:
 	inline bool isExit(void) const { return flags & FLAG_Exit; };
 	inline bool isEnd(void) const { return flags & (FLAG_Entry | FLAG_Exit); };
 	inline bool isConditional(void) const { return flags & FLAG_Cond; }
-	//inline Mark *head(void) const { return _head; };
 	inline address_t address(void) const { return first->address(); };
 	inline Address topAddress(void) const { return address() + size(); }
 	virtual int countInsts(void) const;
 	inline size_t size(void) const { return _size; }
 	inline bool isVirtual(void) const { return flags & FLAG_Virtual; };
 	inline unsigned long getFlags(void) const { return flags; };
-	inline int number(void) { return INDEX(this); };
+	inline int number(void) const { return INDEX(this); };
 	inline CFG *cfg(void) { return _cfg; }
 	inline Inst *firstInst(void) const { return first; }
+	void print(io::Output& out) const;
 
 	// Edge management
 	inline void addInEdge(Edge *edge) { ins.addFirst(edge); };
@@ -138,6 +138,7 @@ public:
 	inline size_t getBlockSize(void) const { return size(); };
 	inline int countInstructions(void) const { return countInsts(); }
 };
+inline Output& operator<<(Output& out, BasicBlock *bb) { bb->print(out); return out; }
 
 
 // BasicBlock class
@@ -157,13 +158,6 @@ public:
 		first = null_bb.firstInst();
 	};
 };
-
-
-// Output
-inline Output& operator<<(Output& out, BasicBlock *bb) {
-	out << "BB" << bb->number() << " (" << bb->address() << ")";
-	return out;
-}
 
 } // otawa
 
