@@ -1,0 +1,106 @@
+====== Property Work ======
+
+The properties are the first-class citizens of the OTAWA core used to annotate a program representation. They form a simple and usable facility to attach to/retrieve from the program representation some pieces of information. This section describes in details the use of properties.
+
+
+===== Using the properties =====
+
+A property is triple formed by:
+  * an identifier (usually an object of the class ''otawa::Identifier''),
+  * the type of the stored data,
+  * the stored data itself.
+
+The properties work as dynamic fields of the object they are hooked to. As C++ does not support such a kind of field, OTAWA encapsulates the management of properties in a specific syntax based on the C++ operator overload ability. So, the syntax to read a property the identifier of which is ''ID'', attached to the object ''list'' (an object that has some properties attached to it is called a property list) is:
+
+  ID ( list )
+
+To set a property, one has just to use the same syntax followed by the ''='' equal assignment symbol and the assigned expression. If the annotation is already hooked to the property list, its value is easily replaced.
+
+  ID ( list ) = expression ;
+
+The property system allow hooking several properties with the same identifier to a list. The trick is easily performed using the ''add()'' method.
+
+  ID ( list ).add( expression );
+
+To retrieve properties with the same identifier, one has to use a clumsy syntax as below:
+
+  for(Identifier< data type > data( list , ID ); data; data++)
+    use(data);
+
+The properties may also be removed using the ''remove'' method of the ''Identifier'' class.
+
+  ID ( list ) . remove ( ) ;
+
+Although the access time to OTAWA properties is longer than an access to classical C++ fields, the penalty is reduced thanks to a cache system that benefits from the temporal locality of accesses. The properties also have a slightly larger size in memory. Yet, these drawbacks are balanced by the induced improvement in flexibility and usability to work on the program representation.
+
+This section has listed the main primitives used to handle properties. The following section will show how to declare ''Identifier'' objects.
+
+
+
+
+
+
+
+
+===== Creating an identifier =====
+
+An ''Identifier'' is a static object used to identify properties hooked to objects. As static objects, they must be declared in the ''.h'' header file to be used out of the current module and defined in the ''.cpp'' source file to get existence. In both files, the type of the stored data must be specified.
+
+The following example shows how to declare in a header file an identifier called ''EXECUTION_TIME'' that stores a time expressed by a simple ''long long'' integer. Here, the extern C++ modifier ensures that the static object will not be defined in each source that includes the header file.
+
+<code c>
+#include <otawa/prop/Identifier.h>
+
+extern Identifier<long long> EXECUTION_TIME;
+</code>
+
+The definition of an identifier follows the usual rule of C++ but two arguments must be passed to the constructor: the string name of the identifier and its default value. This default value is returned by the property accessor if the property has not been not assigned. It may be a valid default value or an invalid value to show that the property is not defined.
+
+In our example, we specify a default value of -1 (invalid time) to show that the property is not set.
+
+<code c>
+#include <otawa/prop/Identifier.h>
+
+Identifier<long long> EXECUTION_TIME("execution_time", -1);
+</code>
+
+If the identifier is used as a static member of class named ''MyCLASS'', it must be declared as follows:
+
+<code c>
+#include <otawa/prop/Identifier.h>
+
+class MyClass: ... {
+  ...
+  static Identifier<long long> EXECUTION_TIME;
+  ...
+};
+</code>
+
+and defined as below:
+
+<code c>
+#include <otawa/prop/Identifier.h>
+
+Identifier<long long> MyClass::EXECUTION_TIME("MyClass::execution_time", -1);
+</code>
+
+Specifying the type of the stored data when defining an ''Identifier'' allows the type checking system of C++ to be applied to properties which might help to avoid a bunch of errors. The data type is also used to provide many automatic facilities like pretty printing, "..." arguments scanning, serialization and so on, for the usual scalar types.
+
+To maintain consistency in naming, we advise to use capital letters for the identifier names (it recalls the constant used in the ''#define'' directives).
+
+
+===== Creating an object supporting annotations =====
+
+To support properties, a class has to inherit publicly from the ''otawa::PropList'' class.
+
+<code c>
+#include <otawa/prop/PropList.h>
+
+class MyClass: public PropList {
+public:
+  ...
+};
+</code>
+
+
+This ''PropList'' has a really little memory overhead (a single pointer), making it useful even for small objects. Allocating and freeing the property is automatically handled by the ''PropList'' class and does not require any additional action for the new class.

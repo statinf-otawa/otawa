@@ -1,0 +1,18 @@
+====== References ======
+
+**[Aho&Sethi&Ullman]**, A.V. Aho, R. Sethi, J.D. Ullman, // Compilers - Principles, Techniques and Tools//, Addison Wesley, 1986.
+
+**[Engblom]** J. Engblom, A. Ermedahl, M. Sjoedin, J. Gustafsson, H. Hansson, //Worst-case execution-time analysis for embedded real-time systems//, Journal of Software Tools for Technology Transfer, 2001.
+
+**[Li&Malik]** Y.-T. Li, S. Malik, //Performance Analysis of Embedded
+Software using Implicit Path Enumeration.//
+ACM SIGPLAN Notices, 30(11), 1995.
+
+**[Li&Malik&Wolfe]** Y.-T. S. Li, S. Malik, A. Wolfe, //Efficient microarchitecture modelling and path analysis for real-time software//, Proceedings of the 16th IEEE Real-Time Systems Symposium, December 1995.
+
+**[Li&Mitra]** X. Li, A. Roychoudhury, T. Mitra, //Modeling Out-of-Order Processors for Software Timing Analysis//, Proceedings of the 25th IEEE International Real-Time Systems Symposium (RTSS'04), 2004.
+
+**[Muchnick]** S.S. Muchnick, //Advanced Compiler Design and Implementation//, Morgan Kaufman, 1997.
+
+**[Muller]**
+
