@@ -15,7 +15,7 @@ namespace otawa {
  * This property is used for storing the list of L-Blocks. The type of its
  * date is LBlockSet *[] with a size equal to the line count of the instruction
  * cache.
- * 
+ *
  * @par Hooks
  * @li @ref FrameWork
  */
@@ -28,7 +28,7 @@ Identifier<LBlockSet **> LBLOCKS("otawa::LBLOCKS", 0);
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<genstruct::AllocatedTable<LBlock* >* > BB_LBLOCKS("otawa::bb_lblocks", 0);
+Identifier<genstruct::AllocatedTable<LBlock* >* > BB_LBLOCKS("otawa::BB_LBLOCKS", 0);
 
 /**
  */
@@ -51,7 +51,7 @@ int LBlockSet::newCacheBlockID(void) {
 
 int LBlockSet::cacheBlockCount(void) {
 	return(_cacheBlockCount);
-}	
+}
 
 /**
  */
