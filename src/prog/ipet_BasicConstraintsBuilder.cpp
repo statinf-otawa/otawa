@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-07, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -34,7 +34,7 @@ namespace otawa { namespace ipet {
 /**
  * Used to record the constraint of a called CFG.
  */
-Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::calling_constraint", 0);
+Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::CALLING_CONSTRAINT", 0);
 
 
 /**
@@ -44,7 +44,7 @@ Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::calling_constraint", 0
  * <p>Y-T. S. Li, S. Malik, <i>Performance analysis of embedded software using
  * implicit path enumeration</i>, Workshop on languages, compilers, and tools
  * for real-time systems, 1995.</p>
- * 
+ *
  * <p>For each basic bloc, the following
  * constraint is added:</p>
  * <p>
@@ -57,7 +57,7 @@ Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::calling_constraint", 0
  *  <dt>ik</dt><dd>Count of traversal of input edge k in basic block i</dd>
  *  <dt>ok</dt><dd>Count of traversal of output edge k in basic block i</dd>
  * </dl>
- * 
+ *
  * <p>And, finally, put the constraint on the entry basic block of the CFG:</p>
  * <p>
  * 		n1 = 1
@@ -65,7 +65,7 @@ Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::calling_constraint", 0
  *
  * @par Provided Features
  * @li @ref ipet::CONTROL_CONSTRAINTS_FEATURE
- * 
+ *
  * @par Required Features
  * @li @ref ipet::ASSIGNED_VARS_FEATURE
  * @li @ref ipet::ILP_SYSTEM_FEATURE
@@ -82,7 +82,7 @@ Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::calling_constraint", 0
 void BasicConstraintsBuilder::addEntryConstraint(System *system, CFG *cfg, BasicBlock *bb, CFG *called, Var *var) {
 	string label;
 	if(_explicit)
-		label = _ << "call constraint from BB" << INDEX(bb) << "/" << cfg->label() << " to " << called->label(); 
+		label = _ << "call constraint from BB" << INDEX(bb) << "/" << cfg->label() << " to " << called->label();
 	Constraint *cons = CALLING_CONSTRAINT(called);
 	if(!cons) {
 		cons = system->newConstraint(label, Constraint::EQ);
@@ -109,7 +109,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 	System *system = SYSTEM(fw);
 	assert(system);
 	Var *bbv = VAR( bb);
-		
+
 	// Input constraint
 	string label;
 	if(_explicit)
@@ -124,7 +124,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 		}
 	if(!used)
 		delete cons;
-	
+
 	// Output constraint
 	if(_explicit)
 		label = _ << "structural output constraint of BB" << INDEX(bb) << "/" << cfg->label();
@@ -151,11 +151,11 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 
 	// Process the call
 	if(called) {
-		
+
 		// Simple call
 		if(!many_calls)
 			addEntryConstraint(system, cfg, bb, called, bbv);
-		
+
 		// Multiple calls
 		else {
 			if(_explicit)
@@ -166,31 +166,31 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL) {
 					CFG *called_cfg = edge->calledCFG();
-					
+
 					// Create the variable
 					String name;
 					if(_explicit)
 						name = _ << "call_" << bb->number() << '_' << cfg->label()
 							<< "_to_" << called_cfg->label();
 					Var *call_var = system->newVar(name);
-					
+
 					// Add the variable to the constraints
 					addEntryConstraint(system, cfg, bb, called_cfg, call_var);
 					call_cons->addRight(1, call_var);
 				}
 		}
-	}	
+	}
 }
 
 
 /**
- */	
+ */
 void BasicConstraintsBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
-	
+
 	// Call the orignal processing
 	BBProcessor::processWorkSpace(fw);
-	
+
 	// Just record the constraint "entry = 1"
 	CFG *cfg = ENTRY_CFG(fw);
 	assert(cfg);
@@ -225,6 +225,6 @@ void BasicConstraintsBuilder::configure(const PropList &props) {
  * current ILP system.
  */
 Feature <BasicConstraintsBuilder>
-	CONTROL_CONSTRAINTS_FEATURE("otawa::control_constraints");
+	CONTROL_CONSTRAINTS_FEATURE("otawa::CONTROL_CONSTRAINTS_FEATURE");
 
 } } //otawa::ipet
