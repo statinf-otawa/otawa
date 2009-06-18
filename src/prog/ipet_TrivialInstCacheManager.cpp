@@ -20,10 +20,10 @@ namespace otawa { namespace ipet {
 /**
  * This processor is a trivial manager of instruction cache for IPET approach.
  * Basically, it considers that each code line blocks causes a miss.
- * 
+ *
  * @par Provided Features
  * @li @ref ipet::INST_CACHE_SUPPORT_FEATURE
- * 
+ *
  * @par Required Features
  * @li @ref ipet::BB_TIME_FEATURE
  */
@@ -70,7 +70,7 @@ void TrivialInstCacheManager::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb)
 			size -= offset;
 		}
 		misses += size >> cache->blockBits();
-		TIME(bb) = TIME(bb) + misses * cache->missPenalty(); 
+		TIME(bb) = TIME(bb) + misses * cache->missPenalty();
 	}
 }
 
@@ -80,6 +80,6 @@ void TrivialInstCacheManager::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb)
  * in the IPET approach.
  */
 Feature<TrivialInstCacheManager>
-	INST_CACHE_SUPPORT_FEATURE("otawa::ipet::inst_cache_support"); 
+	INST_CACHE_SUPPORT_FEATURE("otawa::ipet::INST_CACHE_SUPPORT_FEATURE");
 
 } } // otawa::ipet

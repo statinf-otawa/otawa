@@ -79,7 +79,7 @@ void ILPSystemGetter::configure(const PropList &props) {
  * @par Processor Configuration
  * @li @ref ILPSystemGetter
  */
-Identifier<cstring> ILP_PLUGIN_NAME("otawa::ipet::ilp_plugin_name", "");
+Identifier<cstring> ILP_PLUGIN_NAME("otawa::ipet::ILP_PLUGIN_NAME", "");
 
 
 /**
@@ -89,7 +89,7 @@ Identifier<cstring> ILP_PLUGIN_NAME("otawa::ipet::ilp_plugin_name", "");
  * @par Features
  * @li @ref ILP_SYSTEM_FEATURE
  */
-Identifier<ilp::System *> SYSTEM("otawa::ipet::system", 0);
+Identifier<ilp::System *> SYSTEM("otawa::ipet::SYSTEM", 0);
 
 
 /**
@@ -99,6 +99,6 @@ Identifier<ilp::System *> SYSTEM("otawa::ipet::system", 0);
  * @par Default Processor
  * @ref @ref ILPSystemGetter
  */
-Feature<ILPSystemGetter> ILP_SYSTEM_FEATURE("otawa::ipet::ilp_system_");
+Feature<ILPSystemGetter> ILP_SYSTEM_FEATURE("otawa::ipet::ILP_SYSTEM_FEATURE");
 
 } } // otawa::ipet

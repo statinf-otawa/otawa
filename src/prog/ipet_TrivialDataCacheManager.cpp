@@ -46,13 +46,13 @@ TrivialDataCacheManager::TrivialDataCacheManager(void)
 
 
 /**
- */	
+ */
 void TrivialDataCacheManager::processBB(WorkSpace *framework, CFG *cfg,
 BasicBlock *bb) {
 	assert(framework);
 	assert(cfg);
 	assert(bb);
-	
+
 	// Check configuration
 	if(framework != fw)
 		configure(framework);
@@ -62,13 +62,13 @@ BasicBlock *bb) {
 	// Do not process entry and exit
 	if(bb->isEntry() || bb->isExit())
 		return;
-	
+
 	// Count the memory accesses
 	int count = 0;
 	for(BasicBlock::InstIter inst(bb); inst; inst++)
 		if(inst->isMem())
 			count++;
-	
+
 	// Store new BB time
 	TIME(bb) = TIME(bb) + count * time;
 }
@@ -77,11 +77,11 @@ BasicBlock *bb) {
 /**
  * This feature ensures that the first-level data cache has been taken in
  * account in the basic block timing.
- * 
+ *
  * @par Properties
  * @li @ref ipet::TIME
  */
 Feature<TrivialDataCacheManager>
-	DATA_CACHE_SUPPORT_FEATURE("otawa::ipet::data_cache_support");
+	DATA_CACHE_SUPPORT_FEATURE("otawa::ipet::DATA_CACHE_SUPPORT_FEATURE");
 
 } } // otawa::ipet

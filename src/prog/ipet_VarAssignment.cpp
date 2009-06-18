@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -53,12 +53,12 @@ Identifier<String* > FORCE_NAME("otawa::FORCE_NAME", NULL);
  * @class VarAssignment
  * This processor ensures that each basic block and each edge of the CFG
  * has a variable associated with a @ref ipet::VAR annotation.
- * 
+ *
  * @par Configuration
  * @li @ref ipet::EXPLICIT : use explicit name (takes more to compute but
  * provides more meaningful variable names).
  * @li @ref RECURSIVE : add function names to the explicit variable names.
- * 
+ *
  * @par Provided Features
  * @li @ref ASSIGNED_VARS_FEATURE
  */
@@ -74,7 +74,7 @@ void VarAssignment::setup(WorkSpace *ws) {
  * @param bb	Basic block to process.
  */
 void VarAssignment::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
-	
+
 	// Check BB
 	if(!VAR(bb)) {
 		String name = "";
@@ -87,7 +87,7 @@ void VarAssignment::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
                 }
 		VAR(bb) = sys->newVar(name);
 	}
-	
+
 	// Check out edges
 	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 		if(!VAR(edge)) {
@@ -154,7 +154,7 @@ String VarAssignment::makeEdgeVar(Edge *edge, CFG *cfg) {
 	assert(edge);
 	StringBuffer buf;
 	buf << "e";
-	
+
 	// Write source
 	int num = edge->source()->number();
 	if(num >= 0)
@@ -162,7 +162,7 @@ String VarAssignment::makeEdgeVar(Edge *edge, CFG *cfg) {
 	else
 		buf << edge->source()->address();
 	buf << "_";
-	
+
 	// Write target
 	if(edge->kind() == Edge::CALL) {
 		if(_recursive)
@@ -181,7 +181,7 @@ String VarAssignment::makeEdgeVar(Edge *edge, CFG *cfg) {
 		if(_recursive)
 			buf << "_" << cfg->label();
 	}
-	
+
 	// Return result
 	return buf.toString();
 }
@@ -190,10 +190,10 @@ String VarAssignment::makeEdgeVar(Edge *edge, CFG *cfg) {
 /**
  * This feature asserts that each block and each edge has a variable
  * name asserted.
- * 
+ *
  * @par Properties
  * @li @ref ipet::VAR
  */
-Feature<VarAssignment> ASSIGNED_VARS_FEATURE("otawa::ipet::assigned_vars");
+Feature<VarAssignment> ASSIGNED_VARS_FEATURE("otawa::ipet::ASSIGNED_VARS_FEATURE");
 
 } } // otawa::ipet
