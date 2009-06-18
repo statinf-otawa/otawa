@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
@@ -45,7 +45,7 @@ using namespace otawa::ipet;
 
 
 namespace otawa {
-	
+
 /**
  *
  * In the case of a FIRST_HIT (or FIRST_MISS) property, contains the header
@@ -54,23 +54,23 @@ namespace otawa {
  * @par Hooks
  * @li @ref LBlocks
  */
-Identifier<BasicBlock*> CATEGORY_HEADER("otawa::category_header", 0);
+Identifier<BasicBlock*> CATEGORY_HEADER("otawa::CATEGORY_HEADER", 0);
 
 
 /**
  * @class CAT2Builder
  *
  * This processor produces categorization information for each l-block.
- * 
- * For each lblock: 
+ *
+ * For each lblock:
  * If the cache block exists in the MUST ACS, then the l-block is ALWAYS_HIT
  * If the cache block exists in the PERS ACS, then the block is FIRST_MISS
  * If we performed the MAY ACS computation, and the cache block is not in MAY ACS, the block is ALWAYS_MISS
  * Otherwise the lblock is NOT_CLASSIFIED.
- * 
- * If the Multi-Level persistence was computed, then the FIRST_MISS level is computed as follow: 
- * We iterate over the Items of the PERS ACS, from inner to outer 
- * The first Pers Item for which the lblock is not persistent determines the FIRST_MISS level. 
+ *
+ * If the Multi-Level persistence was computed, then the FIRST_MISS level is computed as follow:
+ * We iterate over the Items of the PERS ACS, from inner to outer
+ * The first Pers Item for which the lblock is not persistent determines the FIRST_MISS level.
  *
  * @par Configuration
  * none
@@ -85,7 +85,7 @@ Identifier<BasicBlock*> CATEGORY_HEADER("otawa::category_header", 0);
  *
  * @par Provided features
  * @li @ref ICACHE_CATEGORY2_FEATURE
- * 
+ *
  * @par Statistics
  * none
  */
@@ -109,12 +109,12 @@ CAT2Builder::CAT2Builder(void): CFGProcessor("otawa::CAT2Builder", Version(1, 0,
  */
 void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard::Cache *cache) {
 	int line = lbset->line();
-	
+
 	// Use the results to set the categorization
 	for (LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
 		if ((lblock->id() == 0) || (lblock->id() == lbset->count() - 1))
 			continue;
-			
+
 		if (LBLOCK_ISFIRST(lblock)) {
 			MUSTProblem::Domain *must = CACHE_ACS_MUST(lblock->bb())->get(line);
 			MAYProblem::Domain *may = NULL;
@@ -126,7 +126,7 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 			} else {
 				CATEGORY(lblock) = ALWAYS_MISS;
 			}
-			
+
 			if (must->contains(lblock->cacheblock())) {
 				CATEGORY(lblock) = ALWAYS_HIT;
 			} else if (may && !may->contains(lblock->cacheblock())) {
@@ -135,15 +135,15 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 				if (LOOP_HEADER(lblock->bb()))
 					header = lblock->bb();
 			  	else header = ENCLOSING_LOOP_HEADER(lblock->bb());
-			  	
+
 			  	int bound;
-			  	bool perfect_firstmiss = true;										
+			  	bool perfect_firstmiss = true;
 				PERSProblem::Domain *pers = CACHE_ACS_PERS(lblock->bb())->get(line);
 				bound = 0;
-				
+
 				if ((pers->length() > 1) && (firstmiss_level == FML_INNER))
 					bound = pers->length() - 1;
-				CATEGORY_HEADER(lblock) = NULL;		
+				CATEGORY_HEADER(lblock) = NULL;
 			  	for (int k = pers->length() - 1 ; (k >= bound) && (header != NULL); k--) {
 					if (pers->isPersistent(lblock->cacheblock(), k)) {
 						CATEGORY(lblock) = FIRST_MISS;
@@ -151,19 +151,19 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 					} else perfect_firstmiss = false;
 					header = ENCLOSING_LOOP_HEADER(header);
 				}
-			
+
 				if ((firstmiss_level == FML_OUTER) && (perfect_firstmiss == false))
-					CATEGORY(lblock) = ALWAYS_MISS;																				
-			} /* of category condition test */			
+					CATEGORY(lblock) = ALWAYS_MISS;
+			} /* of category condition test */
 		} else {
 			CATEGORY(lblock) = ALWAYS_MISS;
 		}
-		
+
 		// record stats
 		if(cstats)
 			cstats->add(CATEGORY(lblock));
 	}
-	
+
 
 }
 
@@ -192,24 +192,24 @@ void CAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
 	//int i;
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = fw->platform()->cache().instCache();
-	
+
 	for (int i = 0; i < cache->rowCount(); i++) {
 		processLBlockSet(cfg, lbsets[i], cache );
-	}	
+	}
 }
 
 
 /**
  * !!TODO!!
  */
-Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE("otawa::icache_category2");
+Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE("otawa::ICACHE_CATEGORY2_FEATURE");
 
 
 /**
  * @class CategoryStats
  * This class is used to store statistics about the categories about cache
  * accesses. It it provided by cache category builders.
- * @see CATBuilder, CAT2Builder 
+ * @see CATBuilder, CAT2Builder
  */
 
 /**
@@ -261,10 +261,10 @@ void CategoryStats::reset(void) {
 
 /**
  * Put in the statistics to get statistics about cache categories.
- * 
+ *
  * @par Hooks
  * @li processor configuration property list
- */ 
+ */
 Identifier<CategoryStats *> CATEGORY_STATS("otawa::CATEGORY_STATS", 0);
 
 
@@ -279,7 +279,7 @@ io::Output& operator<<(io::Output& out, const CategoryStats& stats) {
 			"always-miss",
 			"not-classified"
 	};
-	
+
 	for(int i = ALWAYS_HIT; i <= NOT_CLASSIFIED; i++)
 		out << names[i] << '\t' << (float(stats.get(category_t(i))) * 100 / stats.total())
 			<< "% (" << stats.get(category_t(i)) << ")\n";

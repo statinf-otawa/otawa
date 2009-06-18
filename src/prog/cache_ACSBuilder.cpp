@@ -32,56 +32,56 @@ using namespace elm;
 namespace otawa {
 
 /**
- * 
+ *
  * This feature represents the availability of Abstract Cache State informations.
- * 
+ *
  * @par Properties
  * @li @ref CACHE_ACS
  */
-Feature<ACSBuilder> ICACHE_ACS_FEATURE("otawa.cache.acsfeature");
+Feature<ACSBuilder> ICACHE_ACS_FEATURE("otawa::ICACHE_ACS_FEATURE");
 
 /**
  * This property represents the "must" Abstract Cache State of a basic block.
  * The vector stores the abstract cache states corresponding to all cache lines.
  *
  * @par Hooks
- * @li @ref BasicBlock 
+ * @li @ref BasicBlock
  */
- Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST("otawa::cache_acs_must", NULL);
+ Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST("otawa::CACHE_ACS_MUST", NULL);
 
 /**
- * This property allows us to set an entry must ACS. 
+ * This property allows us to set an entry must ACS.
  *
  * @par Hooks
- * @li @ref PropList 
+ * @li @ref PropList
  */
- Identifier<Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST_ENTRY("otawa::cache_acs_must_entry", NULL);
- 
- 
- 
-/**
- * This property represents the "persistence" Abstract Cache State of a basic block.
- * The vector stores the abstract cache states corresponding to all cache lines.
- *
- * @par Hooks
- * @li @ref BasicBlock 
- */
-Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS("otawa::cache_acs_pers", NULL);
+ Identifier<Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST_ENTRY("otawa::CACHE_ACS_MUST_ENTRY", NULL);
+
+
 
 /**
  * This property represents the "persistence" Abstract Cache State of a basic block.
  * The vector stores the abstract cache states corresponding to all cache lines.
  *
  * @par Hooks
- * @li @ref BasicBlock 
+ * @li @ref BasicBlock
  */
-Identifier<bool> PSEUDO_UNROLLING("otawa::pseudo_unrolling", true);
+Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS("otawa::CACHE_ACS_PERS", NULL);
+
+/**
+ * This property represents the "persistence" Abstract Cache State of a basic block.
+ * The vector stores the abstract cache states corresponding to all cache lines.
+ *
+ * @par Hooks
+ * @li @ref BasicBlock
+ */
+Identifier<bool> PSEUDO_UNROLLING("otawa::PSEUDO_UNROLLING", true);
 
 
 /**
  * Specify the loop-level-precision of the First Miss computation (inner, outer, multi-level)
  */
-Identifier<fmlevel_t> FIRSTMISS_LEVEL("otawa::firstmiss_level", FML_MULTI);
+Identifier<fmlevel_t> FIRSTMISS_LEVEL("otawa::FIRSTMISS_LEVEL", FML_MULTI);
 
 
 /**
@@ -92,19 +92,19 @@ Identifier<fmlevel_t> FIRSTMISS_LEVEL("otawa::firstmiss_level", FML_MULTI);
  * ALWAYS_HIT blocks.
  * The PERS cache state lists the ID of cache blocks which may be in the cache, but cannot be replaced once
  * they have been loaded. It is useful to determine the FIRST_MISS blocks.
- * 
+ *
  * The Persistence can be computed in 3 ways:
  * - Outer: A block is FIRST_MISS if it can not be replaced within the whole program
  * - Inner: A block is FIRST_MISS if it can not be replaced from the inner-most loop containing it.
- * - Multi: The FIRST_MISS is parametrized by a variable L, representing the outer-most loop whose execution does not replace the block. 
+ * - Multi: The FIRST_MISS is parametrized by a variable L, representing the outer-most loop whose execution does not replace the block.
  *
  * The analysis can be used with Pseudo-Unrolling:
  * In this case, unroll (using FirstUnrollingFixPoint with HalfAbsInt) the first iteration of each loop during abstract interpretation.
  * But the ACS corresponding to multiple iterations of a basic block are merged back into one ACS at the end of the analysis.
- *   
+ *
  * @par Configuration
  * @li @ref FIRSTMISS_LEVEL identifier determines the First Miss method (FML_OUTER, FML_INNER, FML_MULTI, FML_NONE). FML_MULTI is the default.
- * @li @ref PSEUDO_UNROLLIG identifier determines if we do the Pseudo-Unrolling while doing the abstract interpretation. 
+ * @li @ref PSEUDO_UNROLLIG identifier determines if we do the Pseudo-Unrolling while doing the abstract interpretation.
  *
  * @par Required features
  * @li @ref DOMINANCE_FEATURE
@@ -115,7 +115,7 @@ Identifier<fmlevel_t> FIRSTMISS_LEVEL("otawa::firstmiss_level", FML_MULTI);
  *
  * @par Provided features
  * @li @ref ICACHE_ACS_FEATURE
- * 
+ *
  * @par Statistics
  * none
  */
@@ -132,11 +132,11 @@ ACSBuilder::ACSBuilder(void) : Processor("otawa::ACSBuilder", Version(1, 0, 0)) 
 
 void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::Cache *cache) {
 
-	int line = lbset->line();	
-	/* 
+	int line = lbset->line();
+	/*
 	 * Solve the problem for the current cache line:
-	 * Now that the first/last lblock are detected, execute the analysis. 
-	 */			
+	 * Now that the first/last lblock are detected, execute the analysis.
+	 */
 
 #ifdef DEBUG
 	cout << "[TRACE] Doing line " << line << "\n";
@@ -144,26 +144,26 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 	if (level == FML_NONE) {
 		/* do only the MUST */
 		MUSTProblem mustProb(lbset->cacheBlockCount(), lbset, fw, cache, cache->wayCount());
-		
-		
-		if (unrolling) {			
+
+
+		if (unrolling) {
 			UnrollingListener<MUSTProblem> mustList(fw, mustProb);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > mustFp(mustList);
 			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > > mustHai(mustFp, *fw);
 			mustHai.solve(NULL, must_entry ? must_entry->get(line) : NULL);
-		
-			
+
+
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 				for (CFG::BBIterator bb(cfg); bb; bb++)
 					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(*mustList.results[cfg->number()][bb->number()]));
-		
+
 		} else {
 			DefaultListener<MUSTProblem> mustList(fw, mustProb);
 			DefaultFixPoint<DefaultListener<MUSTProblem> > mustFp(mustList);
 			util::HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTProblem> > > mustHai(mustFp, *fw);
 			mustHai.solve(NULL, must_entry ? must_entry->get(line) : NULL);
-				
-			
+
+
 			/* Store the resulting ACS into the properties */
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 				for (CFG::BBIterator bb(cfg); bb; bb++)
@@ -177,18 +177,18 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > mustpersFp(mustpersList);
 			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
 			mustHai.solve();
-	
+
 			/* Store. */
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) 
+			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 				for (CFG::BBIterator bb(cfg); bb; bb++) {
 					MUSTProblem::Domain &must= mustpersList.results[cfg->number()][bb->number()]->getMust();
-					PERSProblem::Domain &pers= mustpersList.results[cfg->number()][bb->number()]->getPers();			
+					PERSProblem::Domain &pers= mustpersList.results[cfg->number()][bb->number()]->getPers();
 					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(must));
 					CACHE_ACS_PERS(bb)->add(new PERSProblem::Domain(pers));
-				   
+
 				}
 		} else {
-					
+
 			/* Do combined MUST/PERS analysis */
 			MUSTPERS mustpers(lbset->cacheBlockCount(), lbset, fw, cache, cache->wayCount());
 			DefaultListener<MUSTPERS> mustpersList( fw, mustpers);
@@ -197,13 +197,13 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			mustHai.solve();
 
 			/* Store. */
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) 
+			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 				for (CFG::BBIterator bb(cfg); bb; bb++) {
 					MUSTProblem::Domain &must= mustpersList.results[cfg->number()][bb->number()]->getMust();
-					PERSProblem::Domain &pers= mustpersList.results[cfg->number()][bb->number()]->getPers();			
+					PERSProblem::Domain &pers= mustpersList.results[cfg->number()][bb->number()]->getPers();
 					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(must));
-					CACHE_ACS_PERS(bb)->add(new PERSProblem::Domain(pers));		       	
-			}	
+					CACHE_ACS_PERS(bb)->add(new PERSProblem::Domain(pers));
+			}
 		}
 	}
 }
@@ -217,7 +217,7 @@ void ACSBuilder::configure(const PropList &props) {
 
 void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 	//int i;
-	
+
 	FIRSTMISS_LEVEL(fw) = level;
 	// Build the vectors for receiving the ACS...
 	for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
@@ -227,13 +227,13 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 				CACHE_ACS_PERS(bb) = new genstruct::Vector<PERSProblem::Domain*>;
 		}
 	}
-	
+
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = fw->platform()->cache().instCache();
-				
+
 	for (int i = 0; i < cache->rowCount(); i++) {
-		processLBlockSet(fw, lbsets[i], cache);	
-	}	
+		processLBlockSet(fw, lbsets[i], cache);
+	}
 }
 
 }
