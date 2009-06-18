@@ -9,7 +9,7 @@
 #include <otawa/prog/Symbol.h>
 
 namespace otawa {
-	
+
 /**
  * @class File
  * This class represents a file involved in the building of a process. A file
@@ -48,14 +48,14 @@ namespace otawa {
 /**
  * Property with this identifier is put on instructions or basic blocks which a symbol is known for.
  */
-Identifier<String> LABEL("otawa::label", "");
+Identifier<String> LABEL("otawa::LABEL", "");
 
 
 /**
  * This property is put on instruction. An instruction may accept many
  * properties of this type.
  */
-Identifier<String> FUNCTION_LABEL("otawa::function_label", "");
+Identifier<String> FUNCTION_LABEL("otawa::FUNCTION_LABEL", "");
 
 
 /**
@@ -164,11 +164,11 @@ ProgItem *File::findItemAt(address_t address) {
 /**
  */
 File::~File(void) {
-	
+
 	// Free segments
 	for(SegIter seg(this); seg; seg++)
 		delete seg;
-	
+
 	// Free symbols
 	for(SymIter sym(this); sym; sym++)
 		delete sym;

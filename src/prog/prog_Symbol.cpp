@@ -15,7 +15,7 @@ namespace otawa {
  * @class Symbol
  * A symbol is a name of a location in a program. Currently, only function
  * and label symbols are supported.
- * 
+ *
  * To fit with the OTAWA low-level abstraction architecture, this class is only
  * an empty interface implemented by the program loader.
  */
@@ -121,11 +121,11 @@ void Identifier<Symbol *>::print(elm::io::Output& out, const Property& prop) con
 
 /**
  * This property is used to attach a symbol to an instruction.
- * 
+ *
  * @par Hooks
  * @li @ref Inst
  */
-Identifier<Symbol *> Symbol::ID("otawa::Symbol::id", 0);
+Identifier<Symbol *> Symbol::ID("otawa::Symbol::ID", 0);
 
 
 /**
@@ -137,15 +137,15 @@ Identifier<Symbol *> Symbol::ID("otawa::Symbol::id", 0);
 
 /**
  * Set the no-return property to this symbol.
- */ 
+ */
 void Symbol::setNoReturn(void) {
 	ASSERTP(_kind == FUNCTION, "may only be called on function symbol");
 	ASSERTP(!no_return, "already set");
-	
-	// Find the instruction 
+
+	// Find the instruction
 	Inst *inst = _file.findInstAt(_address);
 	ASSERTP(inst, "bad function label \"" << _name << "\" !");
-	
+
 	// Set the property
 	NO_RETURN(inst) = true;
 }

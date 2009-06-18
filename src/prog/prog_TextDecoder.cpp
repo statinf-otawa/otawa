@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -45,7 +45,7 @@ static Registration reg(TextDecoder::_,
 /**
  * This feature ensures that text segment of the process has been decoded
  * and, consequently, that instructions are available.
- * 
+ *
  * @par Provided properties
  * @li @ref FUNCTION_LABEL
  * @li @ref LABEL
@@ -58,13 +58,13 @@ Feature<TextDecoder> DECODED_TEXT("otawa::DECODED_TEXT");
  * A default text decoder: try to find the most adapted text decoder. If the
  * instruction set has fixed size, use the @ref FixedTextDecoder(). Else call
  * the process provided text decoder.
- * 
+ *
  * @par Configuration
  * @li @ref FOLLOW_PATHS
- * 
+ *
  * @par Required Features
  * @li @ref otawa::FLOW_FACTS_FEATURE
- * 
+ *
  * @par Provided Features
  * @li @ref DECODED_TEXT
  */
@@ -86,7 +86,7 @@ TextDecoder::TextDecoder(void)
 /**
  */
 void TextDecoder::processWorkSpace(WorkSpace *fw) {
-	
+
 	// Decode the text
 	Processor *decoder = fw->process()->decoder();
 	if(decoder) {
@@ -110,7 +110,7 @@ void TextDecoder::processWorkSpace(WorkSpace *fw) {
 		decoder.process(fw, *conf_props);
             }
 	}
-	
+
 	// Put the labels
 	for(Process::FileIter file(fw->process()); file; file++)
 		for(File::SymIter sym(file); sym; sym++) {
@@ -149,7 +149,7 @@ void TextDecoder::configure(const PropList& props) {
  * increase in the computation time. This configuration property has no
  * effect on variable-size instruction set architectures (CISC).
  */
-Identifier<bool> TextDecoder::FOLLOW_PATHS("otawa::TextDecoer::follow_paths", false);
+Identifier<bool> TextDecoder::FOLLOW_PATHS("otawa::TextDecoer::FOLLOW_PATHS", false);
 
 
 } // otawa

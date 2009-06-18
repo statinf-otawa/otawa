@@ -371,69 +371,69 @@ ilp::System *Manager::newILPSystem(String name) {
  * This property, passed to the load configuration, gives the name of the
  * entry function of the current task.
  */
-Identifier<string> TASK_ENTRY("otawa::task_entry", "main");
+Identifier<string> TASK_ENTRY("otawa::TASK_ENTRY", "main");
 
 
 /**
  * Identifier of the property indicating the name (CString) of the platform to use.
  */
-Identifier<CString> PLATFORM_NAME("otawa::platform_name", "");
+Identifier<CString> PLATFORM_NAME("otawa::PLATFORM_NAME", "");
 
 
 /**
  * Identifier of the property indicating a name (CString) of the loader to use..
  */
-Identifier<CString> LOADER_NAME("otawa::loader_name", "");
+Identifier<CString> LOADER_NAME("otawa::LOADER_NAME", "");
 
 
 /**
  * Identifier of the property indicating a platform (Platform *) to use.
  */
-Identifier<hard::Platform *> PLATFORM("otawa::platform", 0);
+Identifier<hard::Platform *> PLATFORM("otawa::PLATFORM", 0);
 
 
 /**
  * Identifier of the property indicating the loader to use.
  */
-Identifier<Loader *> LOADER("otawa::loader", 0);
+Identifier<Loader *> LOADER("otawa::LOADER", 0);
 
 
 /**
  * Identifier of the property indicating the identifier (PlatformId) of the loader to use.
  */
 Identifier<hard::Platform::Identification *>
-	PLATFORM_IDENTFIER("otawa::platform_identifier", 0);
+	PLATFORM_IDENTFIER("otawa::PLATFORM_IDENTFIER", 0);
 
 
 /**
  * Argument count as passed to the program (int).
  */
-Identifier<int> ARGC("otawa::argc", -1);
+Identifier<int> ARGC("otawa::ARGC", -1);
 
 
 /**
  * Argument values as passed to the program (char **).
  */
-Identifier<char **> ARGV("otawa::argv", 0);
+Identifier<char **> ARGV("otawa::ARGV", 0);
 
 
 /**
  * Argument values as passed to the program (char **).
  */
-Identifier<char **> ENVP("otawa::envp", 0);
+Identifier<char **> ENVP("otawa::ENVP", 0);
 
 
 /**
  * This property defines the used the used simulator when a simulator is
  * needed to perform simulation.
  */
-Identifier<sim::Simulator *> SIMULATOR("otawa::simulator", 0);
+Identifier<sim::Simulator *> SIMULATOR("otawa::SIMULATOR", 0);
 
 
 /**
  * Name of the simulator to use.
  */
-Identifier<elm::CString> SIMULATOR_NAME("otawa::simulator_name", "");
+Identifier<elm::CString> SIMULATOR_NAME("otawa::SIMULATOR_NAME", "");
 
 
 /**
@@ -441,73 +441,73 @@ Identifier<elm::CString> SIMULATOR_NAME("otawa::simulator_name", "");
  * platform.
  */
 Identifier<hard::CacheConfiguration *>
-	CACHE_CONFIG("otawa::cache_config", 0);
+	CACHE_CONFIG("otawa::CACHE_CONFIG", 0);
 
 
 /**
  * This property is a hint to have an estimation of the pipeline depth.
  * It is better to look to the processor configuration in the patform.
  */
-Identifier<int> PIPELINE_DEPTH("otawa::pipeline_depth", -1);
+Identifier<int> PIPELINE_DEPTH("otawa::PIPELINE_DEPTH", -1);
 
 
 /**
  * This property shows that the system does not need to by simulated when
  * the binary image is built.
  */
-Identifier<bool> NO_SYSTEM("otawa::no_system", false);
+Identifier<bool> NO_SYSTEM("otawa::NO_SYSTEM", false);
 
 
 /**
  * This property shows that no stack need to be allocated.
  */
-Identifier<bool> NO_STACK("otawa::no_stack", false);
+Identifier<bool> NO_STACK("otawa::NO_STACK", false);
 
 
 /**
  * Path to the XML configuration file used in this computation.
  */
 Identifier<elm::system::Path>
-	CONFIG_PATH("otawa::config_path", "");
+	CONFIG_PATH("otawa::CONFIG_PATH", "");
 
 
 /**
  * XML element containing the configuration of the current computation.
  */
 Identifier<elm::xom::Element *>
-	CONFIG_ELEMENT("otawa::config_element", 0);
+	CONFIG_ELEMENT("otawa::CONFIG_ELEMENT", 0);
 
 
 /**
  * Path to the XML configuration file of the processor.
  */
 Identifier<elm::system::Path>
-	PROCESSOR_PATH("otawa::processor_path", "");
+	PROCESSOR_PATH("otawa::PROCESSOR_PATH", "");
 
 
 /**
  * XML element containing the configuration of the processor.
  */
 Identifier<elm::xom::Element *>
-	PROCESSOR_ELEMENT("otawa::processor_element", 0);
+	PROCESSOR_ELEMENT("otawa::PROCESSOR_ELEMENT", 0);
 
 
 /**
  * Gives the processor to use in the current computation.
  */
-Identifier<hard::Processor *> PROCESSOR("otawa::processor", 0);
+Identifier<hard::Processor *> PROCESSOR("otawa::PROCESSOR", 0);
 
 
 /**
  * Gives the path of file containing the cache configuration.
  */
-Identifier<elm::system::Path> CACHE_CONFIG_PATH("otawa::cache_config_path", "");
+Identifier<elm::system::Path> CACHE_CONFIG_PATH("otawa::CACHE_CONFIG_PATH", "");
 
 
 /**
  * Gives an XML element containing the cache configuration.
  */
-Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("otawa::cache_config_element", 0);
+Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("otawa::CACHE_CONFIG_ELEMENT", 0);
 
 
 /**
@@ -515,7 +515,7 @@ Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("otawa::cache_config_elemen
  * behaviour of some functions. The parameter is the name of the function.
  * It is often used with the _exit function.
  */
-Identifier<string> NO_RETURN_FUNCTION("otawa::no_return_function", "");
+Identifier<string> NO_RETURN_FUNCTION("otawa::NO_RETURN_FUNCTION", "");
 
 
 /**
