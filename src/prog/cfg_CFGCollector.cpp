@@ -241,7 +241,7 @@ void CFGCollector::configure(const PropList& props) {
  * @par Hooks
  * FrameWork
  */
-Identifier<CFGCollection *> INVOLVED_CFGS("otawa::involved_cfgs", 0);
+Identifier<CFGCollection *> INVOLVED_CFGS("otawa::INVOLVED_CFGS", 0);
 
 
 static SilentFeature::Maker<CFGCollector> COLLECTED_CFG_MAKER;
@@ -253,7 +253,7 @@ static SilentFeature::Maker<CFGCollector> COLLECTED_CFG_MAKER;
  * @ref ENTRY_CFG (FrameWork).
  * @ref INVOLVED_CFGS (FrameWork).
  */
-SilentFeature COLLECTED_CFG_FEATURE("otawa::collected_cfg", COLLECTED_CFG_MAKER);
+SilentFeature COLLECTED_CFG_FEATURE("otawa::COLLECTED_CFG_FEATURE", COLLECTED_CFG_MAKER);
 
 
 /**

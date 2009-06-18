@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
@@ -45,7 +45,7 @@ namespace otawa {
 static SilentFeature::Maker<LoopUnroller> UNROLLED_LOOPS_MAKER;
 /**
  */
-SilentFeature UNROLLED_LOOPS_FEATURE ("otawa::unrolled_loops_feature", UNROLLED_LOOPS_MAKER);
+SilentFeature UNROLLED_LOOPS_FEATURE ("otawa::UNROLLED_LOOPS_FEATURE", UNROLLED_LOOPS_MAKER);
 
 /**
  */
@@ -70,7 +70,7 @@ Identifier<BasicBlock*> UNROLLED_FROM("otawa::UNROLLED_FROM", NULL);
  *
  * @par Provided features
  * @li @ref UNROLLED_LOOPS_FEATURE
- * 
+ *
  * @par Statistics
  * none
  */
@@ -82,55 +82,55 @@ LoopUnroller::LoopUnroller(void) : Processor("otawa::LoopUnroller", Version(1, 0
 	require(COLLECTED_CFG_FEATURE);
 
 	invalidate(COLLECTED_CFG_FEATURE);
-	
+
 	provide(COLLECTED_CFG_FEATURE);
 	provide(UNROLLED_LOOPS_FEATURE);
 	idx = 0;
 }
 
 void LoopUnroller::processWorkSpace(otawa::WorkSpace *fw) {
-	
-	int cfgidx = 0;	
+
+	int cfgidx = 0;
 	CFGCollection *orig_coll = INVOLVED_CFGS(fw);
-	
+
 	// Create the new VCFG collection first, so that it will be available when we do the loop unrolling
 	for (CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++, cfgidx++) {
 		VirtualCFG *vcfg = new VirtualCFG(false);
 		coll->cfgs.add(vcfg);
 		INDEX(vcfg) = cfgidx;
 		vcfg->addBB(vcfg->entry());
-		
+
 	}
-	
-	
+
+
 	cfgidx = 0;
 	for (CFGCollection::Iterator vcfg(*coll), cfg(*orig_coll); vcfg; vcfg++, cfg++) {
 		ASSERT(INDEX(vcfg) == INDEX(cfg));
 		LABEL(vcfg) = cfg->label();
-		INDEX(vcfg->entry()) = 0;	
-		
-		
+		INDEX(vcfg->entry()) = 0;
+
+
 		idx = 1;
 //		if (isVerbose()) {
 			cout << "Processing CFG: " << cfg->label() << "\n";
 		//}
-		
+
 		/* !!GRUIK!! Ca serait bien d'avoir une classe VCFGCollection */
 		VirtualCFG *casted_vcfg = static_cast<otawa::VirtualCFG*>((otawa::CFG*)vcfg);
-		
+
 		unroll((otawa::CFG*) cfg, NULL, casted_vcfg);
-		if (ENTRY_CFG(fw) == cfg) 
-			ENTRY_CFG(fw) = vcfg;	
-		
-		casted_vcfg->addBB(vcfg->exit());		
-		INDEX(vcfg->exit()) = idx;		
+		if (ENTRY_CFG(fw) == cfg)
+			ENTRY_CFG(fw) = vcfg;
+
+		casted_vcfg->addBB(vcfg->exit());
+		INDEX(vcfg->exit()) = idx;
 	}
 	INVOLVED_CFGS(fw) = coll;
 }
 
 
 
-void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg) {	
+void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg) {
 	VectorQueue<BasicBlock*> workList;
 	VectorQueue<BasicBlock*> loopList;
 	VectorQueue<BasicBlock*> virtualCallList;
@@ -142,104 +142,104 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 	int start;
 
 	/* Avoid unrolling loops with LOOP_COUNT of 0, since it would create a LOOP_COUNT of -1 for the non-unrolled part of the loop*/
-	
+
 	/*
-	
+
 	if (header && (ipet::LOOP_COUNT(header) == 0)) {
 		dont_unroll = true;
 	}
-	
-	*/	
+
+	*/
 	//if (header) dont_unroll = true;
 	start = dont_unroll ? 1 : 0;
-	
-	
-	for (int i = start; ((i < 2) && header) || (i < 1); i++) {		
+
+
+	for (int i = start; ((i < 2) && header) || (i < 1); i++) {
 		doneList.clear();
 		assert(workList.isEmpty());
 		assert(loopList.isEmpty());
 		assert(doneList.isEmpty());
-	
-		workList.put(header ? header : cfg->entry());	
+
+		workList.put(header ? header : cfg->entry());
 		doneList.add(header ? header : cfg->entry());
 
 		genstruct::Vector<BasicBlock*> bbs;
-		
+
 		while (!workList.isEmpty()) {
-		
+
 			BasicBlock *current = workList.get();
-			
+
 			if (LOOP_HEADER(current) && (current != header)) {
 				/* we enter another loop */
-		
-				loopList.put(current); 
-				
+
+				loopList.put(current);
+
 				/* add exit edges destinations to the worklist */
-				
+
 				for (genstruct::Vector<Edge*>::Iterator exitedge(*EXIT_LIST(current)); exitedge; exitedge++) {
 					if (!doneList.contains(exitedge->target())) {
 						workList.put(exitedge->target());
 						doneList.add(exitedge->target());
 					}
-				} 	
+				}
 			} else {
 				VirtualBasicBlock *new_bb = NULL;
 				if ((!current->isEntry()) && (!current->isExit())) {
 					/* Duplicate the current basic block */
-				
+
 					new_bb = new VirtualBasicBlock(current);
 					new_bb->removeAllProp(&ENCLOSING_LOOP_HEADER);
 					new_bb->removeAllProp(&EXIT_LIST);
 					new_bb->removeAllProp(&REVERSE_DOM);
 					new_bb->removeAllProp(&LOOP_EXIT_EDGE);
 					new_bb->removeAllProp(&LOOP_HEADER);
-					new_bb->removeAllProp(&ENTRY); 
-					
+					new_bb->removeAllProp(&ENTRY);
+
 					/* Remember the call block so we can correct its destination when we have processed it */
 					if (VIRTUAL_RETURN_BLOCK(new_bb))
 						virtualCallList.put(new_bb);
-					
+
 					if ((current == header) && (!dont_unroll)) {
 						if (i == 0) {
 							unrolled_from = new_bb;
 						} else {
 							UNROLLED_FROM(new_bb) = unrolled_from;
-						} 
+						}
 					}
 					/*
 					if (ipet::LOOP_COUNT(new_bb) != -1) {
 						if (i == 0) {
 							new_bb->removeAllProp(&ipet::LOOP_COUNT);
-						} 
+						}
 						else {
 							int old_count = ipet::LOOP_COUNT(new_bb);
 							new_bb->removeAllProp(&ipet::LOOP_COUNT);
 							ipet::LOOP_COUNT(new_bb) = old_count - (1 - start);
 							assert(ipet::LOOP_COUNT(new_bb) >= 0);
-							
+
 						}
-						
+
 					}
 					*/
 					INDEX(new_bb) = idx;
 					idx++;
 					vcfg->addBB(new_bb);
-				
-				
+
+
 					bbs.add(current);
-	
+
 					map.put(current, new_bb);
 				}
-						
-				
-				/* add successors which are in loop (including possible sub-loop headers) */ 
+
+
+				/* add successors which are in loop (including possible sub-loop headers) */
 				for (BasicBlock::OutIterator outedge(current); outedge; outedge++) {
-					
+
 					if (outedge->target() == cfg->exit())
 						continue;
 					if (outedge->kind() == Edge::CALL)
 						continue;
-						
+
 					if (ENCLOSING_LOOP_HEADER(outedge->target()) == header) {
 					//	cout << "Test for add: " << outedge->target()->number() << "\n";
 						if (!doneList.contains(outedge->target())) {
@@ -253,18 +253,18 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 						VirtualBasicBlock *vdst = map.get(outedge->target());
 						new Edge(new_bb, vdst, outedge->kind());
 					}
-				} 
-				
-			}					
+				}
+
+			}
 		}
-		
+
 		while (!virtualCallList.isEmpty()) {
 			BasicBlock *vcall = virtualCallList.get();
 			BasicBlock *vreturn = map.get(VIRTUAL_RETURN_BLOCK(vcall), NULL);
-			
+
 			ASSERT(vreturn != NULL);
 			VIRTUAL_RETURN_BLOCK(vcall) = vreturn;
-			
+
 		}
 
 
@@ -272,8 +272,8 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 			BasicBlock *loop = loopList.get();
 			unroll(cfg, loop, vcfg);
 		}
-		
-		
+
+
 
 		/* Connect the internal edges for the current loop */
 		for (genstruct::Vector<BasicBlock*>::Iterator bb(bbs); bb; bb++) {
@@ -284,10 +284,10 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 					continue;
 				if (outedge->target() == cfg->exit())
 					continue;
-					
+
 				VirtualBasicBlock *vsrc = map.get(*bb, NULL);
 				VirtualBasicBlock *vdst = map.get(outedge->target(), NULL);
-				
+
 				if (outedge->kind() == Edge::CALL) {
 					CFG *called_cfg = outedge->calledCFG();
 					int called_idx = INDEX(called_cfg);
@@ -295,8 +295,8 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 					new Edge(vsrc, called_vcfg->entry(), Edge::CALL);
 					ENTRY(called_vcfg->entry()) = called_vcfg;
 					CALLED_CFG(outedge) = called_vcfg; /* XXX:  ??!? */
-					 
-				
+
+
 				} else if ((outedge->target() != header) || ((i == 1) /* XXX && !dont_unroll XXX*/ )) {
 					new Edge(vsrc, vdst, outedge->kind());
 				} else {
@@ -304,7 +304,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 				}
 			}
 		}
-		
+
 		if (i == start) {
 			/* Connect virtual entry edges */
 			if (header) {
@@ -315,18 +315,18 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 						continue;
 					VirtualBasicBlock *vsrc = map.get(inedge->source());
 					VirtualBasicBlock *vdst = map.get(header);
-					new Edge(vsrc, vdst, inedge->kind());									
+					new Edge(vsrc, vdst, inedge->kind());
 				}
 			}
-			
-		} else { 			
-			/* Connect virtual backedges from the first to the other iterations */	
-			for (BackEdgePairVector::Iterator iter(backEdges); iter; iter++) {		
+
+		} else {
+			/* Connect virtual backedges from the first to the other iterations */
+			for (BackEdgePairVector::Iterator iter(backEdges); iter; iter++) {
 				VirtualBasicBlock *vdst = map.get(header);
-				new Edge((*iter).fst, vdst, (*iter).snd);  
+				new Edge((*iter).fst, vdst, (*iter).snd);
 			}
-		}	
-	}	
+		}
+	}
 	if (!header) {
 		/* add main entry edges */
 		for (BasicBlock::OutIterator outedge(cfg->entry()); outedge; outedge++) {
