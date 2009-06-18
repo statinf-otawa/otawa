@@ -953,7 +953,7 @@ throw(ProcessorException) {
  * to pass the path of an F4 file containing flow facts.
  * @ingroup ff
  */
-Identifier<Path> FLOW_FACTS_PATH("otawa::flow_facts_path", "");
+Identifier<Path> FLOW_FACTS_PATH("otawa::FLOW_FACTS_PATH", "");
 
 
 /**
@@ -990,7 +990,7 @@ Feature<FlowFactLoader> MKFF_PRESERVATION_FEATURE("otawa::MKFF_PRESERVATION_FEAT
  * @par Hooks
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
  */
-Identifier<bool> IS_RETURN("otawa::is_return", false);
+Identifier<bool> IS_RETURN("otawa::IS_RETURN", false);
 
 
 /**
@@ -1001,7 +1001,7 @@ Identifier<bool> IS_RETURN("otawa::is_return", false);
  * @par Hooks
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
  */
-Identifier<bool> NO_RETURN("otawa::no_return", false);
+Identifier<bool> NO_RETURN("otawa::NO_RETURN", false);
 
 
 /**
@@ -1012,7 +1012,7 @@ Identifier<bool> NO_RETURN("otawa::no_return", false);
  * @par Hooks
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
  */
-Identifier<int> MAX_ITERATION("otawa::max_iteration", -1);
+Identifier<int> MAX_ITERATION("otawa::MAX_ITERATION", -1);
 
 
 /**
@@ -1020,7 +1020,7 @@ Identifier<int> MAX_ITERATION("otawa::max_iteration", -1);
  * fail is available.
  * @ingroup ff
  */
-Identifier<bool> FLOW_FACTS_MANDATORY("otawa.flow_facts_mandatory", false);
+Identifier<bool> FLOW_FACTS_MANDATORY("otawa::FLOW_FACTS_MANDATORY", false);
 
 
 /**

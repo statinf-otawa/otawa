@@ -37,7 +37,7 @@ namespace otawa {
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<BitSet *> REVERSE_DOM("otawa::reverse_dom", 0);
+Identifier<BitSet *> REVERSE_DOM("otawa::REVERSE_DOM", 0);
 
 
 /**
@@ -46,7 +46,7 @@ Identifier<BitSet *> REVERSE_DOM("otawa::reverse_dom", 0);
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<bool> LOOP_HEADER("otawa::loop_header", false);
+Identifier<bool> LOOP_HEADER("otawa::LOOP_HEADER", false);
 
 /**
  * Identifier for marking back edges.
@@ -54,7 +54,7 @@ Identifier<bool> LOOP_HEADER("otawa::loop_header", false);
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<bool> BACK_EDGE("otawa::back_edge", false);
+Identifier<bool> BACK_EDGE("otawa::BACK_EDGE", false);
 
 
 
@@ -249,7 +249,7 @@ bool Dominance::isBackEdge(Edge *edge) {
  * @par Properties
  * @li @ref REVERSE_DOM (BasicBlock)
  */
-Feature<Dominance> DOMINANCE_FEATURE("dominance");
+Feature<Dominance> DOMINANCE_FEATURE("otawa::DOMINANCE_FEATURE");
 
 
 /**
@@ -259,6 +259,6 @@ Feature<Dominance> DOMINANCE_FEATURE("dominance");
  * @Properties
  * @li @ref LOOP_HEADER (BasicBlock).
  */
-Feature<Dominance> LOOP_HEADERS_FEATURE("loop_headers");
+Feature<Dominance> LOOP_HEADERS_FEATURE("LOOP_HEADERS_FEATURE");
 
 } // otawa
