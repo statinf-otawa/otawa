@@ -365,6 +365,6 @@ static SilentFeature::Maker<CFGBuilder> CFG_INFO_MAKER;
  * @Properties
  * @li @ref CFGInfo::ID (FrameWork)
  */
-SilentFeature CFG_INFO_FEATURE("otawa::cfg_info", CFG_INFO_MAKER);
+SilentFeature CFG_INFO_FEATURE("otawa::CFG_INFO_FEATURE", CFG_INFO_MAKER);
 
 } // otawa

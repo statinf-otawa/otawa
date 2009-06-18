@@ -36,7 +36,7 @@ namespace otawa {
 /**
  * Identifier used for storing and retrieving the CFG on its entry BB.
  */
-Identifier<CFG *> ENTRY("otawa::entry", 0);
+Identifier<CFG *> ENTRY("otawa::ENTRY", 0);
 
 
 /**
@@ -47,7 +47,7 @@ Identifier<CFG *> ENTRY("otawa::entry", 0);
  * @li @ref BasicBlock
  * @li @ref CFG
  */
-Identifier<int> INDEX("otawa::index", -1);
+Identifier<int> INDEX("otawa::INDEX", -1);
 
 
 /**
