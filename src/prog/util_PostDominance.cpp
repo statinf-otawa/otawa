@@ -37,7 +37,7 @@ namespace otawa {
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<BitSet *> REVERSE_POSTDOM("otawa::reverse_postdom", 0);
+Identifier<BitSet *> REVERSE_POSTDOM("otawa::REVERSE_POSTDOM", 0);
 
 
 /**
@@ -173,7 +173,7 @@ void PostDominance::ensure(CFG *cfg) {
  * @Provided Features
  * @li @ref POSTDOMINANCE_FEATURE
  */
-PostDominance::PostDominance(void): CFGProcessor("otawa::postdominance", Version(1, 1, 0)) {
+PostDominance::PostDominance(void): CFGProcessor("otawa::PostDominance", Version(1, 1, 0)) {
 	provide(POSTDOMINANCE_FEATURE);
 }
 
@@ -185,7 +185,7 @@ PostDominance::PostDominance(void): CFGProcessor("otawa::postdominance", Version
  * @par Properties
  * @li @ref REVERSE_DOM (BasicBlock)
  */
-Feature<PostDominance> POSTDOMINANCE_FEATURE("postdominance");
+Feature<PostDominance> POSTDOMINANCE_FEATURE("otawa::POSTDOMINANCE_FEATURE");
 
 
 } // otawa
