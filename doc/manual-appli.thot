@@ -1,0 +1,253 @@
+====== Writing an OTAWA Application ======
+
+Basically, OTAWA is a framework providing a bunch of classes for static analysis and particularly Worst Case Execution Time Computation. Although OTAWA provides some ready-to-use utilities, more interesting is the implementation of an application filling exactly your needs or extending the OTAWA features.
+
+To achieve this goal, the following skills are required :
+  * a basic experience in C++,
+  * some experience with Makefiles,
+  * a solid knowledge about the IPET method to compute WCET.
+
+This tutorial will show you how to make and compile a little application using the OTAWA framework. First of all, you need to have compiled and installed OTAWA (see [[OTAWA Installation]]).
+
+
+===== Application Design =====
+
+Once you have installed OTAWA, you can start to write your first OTAWA application. As a first example, we want to use OTAWA to apply basic IPET method on some embedded program (whose architecture is supported by OTAWA). Our program will include the following passes :
+  - select the task entry point for which to compute the WCET,
+  - compute the execution time of each basic block using an instruction-level simulator and the delta approach,
+  - build the ILP system for the program control flow,
+  - resolve it to get the WCET.
+
+
+
+===== Source Header =====
+
+Now, we will write a simple C++ source file to perform our work. We call it ''ipet.cpp'' and it will start with the following lines :
+<code c>
+#include <elm/io.h>
+#include <otawa/otawa.h>
+#include <otawa/ipet.h>
+
+using namespace elm;
+using namespace otawa;
+</code>
+
+The first include ''<elm/io.h>'' imports classes to perform outputs. ELM is a general purpose library delivered and used by OTAWA. It provides I/O facilities and generic data structues (OTAWA main author is allergic to STL but this one may be used seamlessly with OTAWA).
+
+The following inclusion ''<otawa/otawa.h'' provides OTAWA main classes while the next one, ''otawa/ipet.h'', is dedicated to IPET classes. The last two lines just open the namespaces where ELM and OTAWA classes lie in.
+
+
+===== Main Function =====
+
+Now, we can write the main function :
+
+<code c>
+int main(void) {
+  try {
+    WorkSpace *ws = manager.load("program to analyze");
+    ...
+  }
+  catch(elm::Exception& e) {
+    cerr << "ERROR: " << e.message() << '\n';
+  }
+</code>
+
+The first step is to load the program into OTAWA. This is performed by the static object ''MANAGER'' that stores common ressources used in OTAWA. To open the file, we use the ''load'' method. This method return a ''WorkSpace'', that is, a location where the loaded binary file may be analyzed to get a WCET.
+
+The binary file ''open()'' call is enclosed in a ''try { ... } catch(...)'' statement in order, if an error arises during the file load, to catch the thrown  exception and to display the error message in the ''catch'' part.
+
+Most OTAWA objects throw an exception when an error is encountered. You may, at choice, process it immediately or simply ignore it and let the main function do the display work. The latter approach makes your program a bit easier to write and to read (providing that you have a way to free the allocated resources).
+
+
+
+===== Writing the Analysis =====
+
+The easiest way to perform the IPET analysis it to call the ''otawa::ipet::WCETComputation'' code processor as below:
+<code c>
+    ipet::WCETComputation comp;
+    comp.process(ws);
+    cout << "the wcet is " << ipet::WCET(ws) << io::endl;
+</code>
+
+In OTAWA, a code processor is a piece of code that performs an analysis on the workspace. Usually, a workspace contains the program representation augmented with a lot of annotations produced by the code processor. As an example, the last line is used to display the final ''ipet::WCET'' annotation linked to the workspace, that is, the WCET expressed in cycles.
+
+The code processors work on the framework and either of them use already tied annotations, or create new annotations. Here, ''WCETComputation'' has computed the WCET and has linked it with the ''ipet::WCET'' annotation. But computing a WCET is a big task involving many different code processors like CFG -- Control Flow Graph -- building, ILP -- Integer Linear Programming -- system generation, etc.
+
+To achieve the trick, the code processor automatically records some required features to the framework that, in turn, ensures the availability of this feature before launching the code processor. Attached to this feature, there is often a default processor that is called if the feature is not already available. In our case, as only the last code processor -- ''WCETComputation'' -- is called, all default analyses are performed based on the feature providers. To prove this point, you may ask OTAWA to display the chain of applied code processors using the ''Processor::VERBOSE'' annotation passed to the processor configuration:
+
+<code c>
+    PropList props;
+    Processor::VERBOSE(props) = true;
+    ipet::WCETComputation comp;
+    comp.process(ws, props);
+    cout << "the wcet is " << ipet::WCET(ws) << io::endl;
+</code>
+
+In this piece of code, you may see that the annotations are encoded by the ''Property'' class and that they are tied to ''PropList'' class. To assign the property to some property list, we have just to assign the value to the ''property_name(property_list)'' expression. Please note that simply accessing a property in a property list uses the same syntax: ''property_name(property_list'' as in the display of the WCET.
+
+To configure the ''WCETComputation'' processor, we just declare an empty property list, ''props'' ; we assign the configuration property ''Processor::VERBOSE'' and we pass it to the ''process'' method of the processor. This method launch the analysis of the processor on the given framework with the given configuration.
+
+
+
+
+
+
+
+
+===== Compiling the Sources =====
+
+In order to get the results of our analysis, we need first to compile the application. As OTAWA compilation is a bit complex to configure, we advise to use a ''Makefile'' like below:
+
+<code make>
+MODULES         = lp_solve ppc              # gensim
+PROGRAM         = ipet
+SOURCES         = ipet.cpp
+
+# Configuration
+FLAGS           = $(shell otawa-config --cflags $(MODULES))
+DATADIR         = $(shell otawa-config --data $(MODULES))
+CXXFLAGS        = $(FLAGS) -DDATA_DIR="$(DATADIR)"
+LDLIBS          = $(shell otawa-config --libs $(MODULES))
+LDFLAGS         = -dlopen force
+CXX             = g++
+LD              = libtool --mode=link --tag=CXX g++
+
+# Derivated
+OBJECTS         = $(SOURCES:.cpp=.o)
+DEPS            = $(addprefix .deps,$(SOURCES:.cpp=.d))
+
+# Rules
+all: .deps $(PROGRAM)
+
+$(PROGRAM): $(OBJECTS)
+        $(LD) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+
+clean:
+        rm -rf *.o $(PROGRAM) *~ core.* *.lo .libs .deps
+
+.deps:
+        mkdir .deps
+
+%.o: %.cpp
+        $(CXX) $(CXXFLAGS) -MM -MF .deps/$*.d -c $<
+        $(CXX) $(CXXFLAGS) -c $< -o $@ 
+
+-include $(DEPS)
+</code>
+
+The utility ''otawa-config'' provides all details about the OTAWA installation: C++ flags, libraries to link and path to shared resources. You may also configure which OTAWA modules you want to use.
+  - gensim: use of the generic simulator (see next section),
+  - ppc: use PowerPC loader (not required if you have compiled using shared libraries),
+  - lp_solve: ILP solver (not required if you have compiled using shared libraries).
+
+For now, we have just selected ''lp_solve'' -- required by IPET approach -- and ppc -- to process PowerPC binaries. Then, you have to launch the compilation (and possibly fix some syntax errors):
+<code sh>
+$ make
+</code>
+
+
+
+
+===== Running the Application =====
+
+If the ''make'' is successful, you get your executable analyzer that you can launch with:
+<code sh>
+$ ./ipet
+</code>
+
+The output of the command is presented below (applied to the ''fibcall'' program of SNU-RT benchmark).
+
+<code>
+Starting otawa::CFGBuilder (1.0.0)
+Ending otawa::CFGBuilder
+Starting CFGCollector (1.0.0)
+Ending CFGCollector
+Starting otawa::VarAssignment (1.0.0)
+	process CFG main
+		process BB 0 (00000000)
+		process BB 1 (00050158)
+		...
+	process CFG fib
+		process BB 0 (00000000)
+		process BB 1 (00050124)
+		...
+Ending otawa::VarAssignment
+Starting otawa::BasicConstraintsBuilder (1.0.0)
+	...
+Ending otawa::BasicConstraintsBuilder
+Starting otawa::TrivialBBTime (1.0.0)
+	...
+Ending otawa::TrivialBBTime
+Starting otawa::BasicObjectFunctionBuilder (1.0.0)
+	...
+Ending otawa::BasicObjectFunctionBuilder
+Starting otawa::dominance (1.1.0)
+	...
+Ending otawa::dominance
+Starting otawa::ipet::FlowFactLoader (1.0.0)
+Ending otawa::ipet::FlowFactLoader
+Starting otawa::WCETComputation (1.0.0)
+Ending otawa::WCETComputation
+the wcet is -1
+</code>
+
+One can see that the following analyses are performed:
+  - the CFG are built -- ''CFGBuilder'',
+  - the involved CFG are collected -- ''CFGCollector'',
+  - the ILP variables are assigned -- ''VarAssignment'',
+  - the ILP flow constraints are built -- ''BasicConstraintBuilder'',
+  - the basic block execution time are computed -- ''TrivialBBTime'',
+  - the ILP object function is built -- ''BasicObjectFunctionBuilder'',
+  - the flow facts are loaded -- ''FlowFactLoader'',
+  - and the WCET is computed -- ''WCETComputation''.
+
+Yet, in all this work, something goes wrong: the computed WCET is -1, that is, no solution can be computed. The problem comes from the loop contained in the tested program. OTAWA can not automatically compute the bound of the loop and, consequently, the generated system has an infinite maximal value.
+
+To get a right result, you have to provides loop bounds in a flow fact file. Refer to [[Computing a WCET]], "Specifying the Flow Facts" for a description of flow facts files. Actually, the flow fact file are managed by the ''FlowFactLoader'' processor. As no flow fact file was available, it gave up silently.
+
+
+
+
+
+
+
+
+
+
+===== Specializing the Computation =====
+
+OTAWA code processors chain themselves depending on the so-called ''Feature'' objects. A ''Feature'' simply asserts that a set of properties are available in the current workspace. To this end, each code processor declares its list of required features and provided framework. Shortly, required features are computed before the code processor execution is launched and provided features are granted once that the code processor has been executed.
+
+If a required feature is not present, a default code processor is invoked to compute lacking information. Often, the default code processor is very simple and its results are very approximative but conservative overestimations of the WCET. This work is well illustrated by our application where the WCET is only computed with all default code processors of features. Yet, notice that several features provide a fully functional processor (''CFGBuilder'', ''CFGConstraintBuilder'').
+
+Now, we will exploit the behavior of the feature system to specialize the performed analysis, that is, a feature is computed by its default processor only if it is not already defined. For example, we want to replace the coarse grain ''TrivialBBTime'' computation by the inter-block aware basic block timing Delta analysis [Engblom] implemented in the ''Delta'' code processor. To implement this, we have just to invoke this processor before the ''WCETComputation'' processor as in the following code:
+
+<code c>
+    PropList props;
+    Processor::VERBOSE(props) = true;
+    ipet::Delta delta;
+    delta.process(ws, props);
+    ipet::WCETComputation comp;
+    comp.process(ws, props);
+    cout << "the wcet is " << ipet::WCET(ws) << io::endl;
+</code>
+
+Now, we can compile again and launch the generated analyzer. Below is presented the interesting part of the output. You may notice that there is no more ''TrivialBBTime'' invocation that is replaced by ''Delta''.
+
+<code>
+</code>
+
+At this point, you know how to customize the computation of the WCET. To go further, you have just to read the documentation of the different code processors to know:
+  * which features are available,
+  * how to configure it.
+The auto-documentation of OTAWA code processors is available at ''INSTALL_DIR/share/Otawa/autodoc''.
+
+
+===== Conclusion =====
+
+In this tutorial, we have learned :
+  * to write a little analyzer using the OTAWA API,
+  * how to compile this application,
+  * to change the default behaviour of an analysis by straight invocation of code processors.
+
+Although OTAWA provides working analyses, the use of the framework is more valuable if we have to write new analyses and if we combine these analyses with the OTAWA framework. This will be presented in the next tutorial.
