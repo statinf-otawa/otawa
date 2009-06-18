@@ -30,7 +30,7 @@ namespace otawa {
 
 /**
  */
-Identifier<bool> CATBuilder::NON_CONFLICT("otawa::CATBuilder::non_conflict", false);
+Identifier<bool> CATBuilder::NON_CONFLICT("otawa::CATBuilder::NON_CONFLICT", false);
 
 
 /**
@@ -42,7 +42,7 @@ static Identifier<BitSet *> IN("", 0);
 /**
  * Private property.
  */
-static Identifier<BitSet *> SET("otawa::set", 0);
+static Identifier<BitSet *> SET("otawa::SET", 0);
 
 
 /**
@@ -68,7 +68,7 @@ Identifier<category_t> CATEGORY("otawa::category", INVALID_CATEGORY);
  * they was classified as first-miss but lowered to always-miss due to effect
  * of a surrounding loop (whose header basic block is stored).
  */
-Identifier<BasicBlock *> LOWERED_CATEGORY("otawa::lowered_category", 0);
+Identifier<BasicBlock *> LOWERED_CATEGORY("otawa::LOWERED_CATEGORY", 0);
 
 
 /**
@@ -426,7 +426,7 @@ BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
  * @li @ref CATEGORY (@ref LBlock).
  * @li @ref LOWERED_CATEGORY (@ref LBlock)
  */
-Feature<CATBuilder> ICACHE_CATEGORY_FEATURE("otawa::icache_category");
+Feature<CATBuilder> ICACHE_CATEGORY_FEATURE("otawa::ICACHE_CATEGORY_FEATURE");
 
 } // otawa
 

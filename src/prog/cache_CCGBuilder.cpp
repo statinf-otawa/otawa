@@ -60,7 +60,7 @@ CCGBuilder::CCGBuilder(void):
  * @par Hooks
  * @li @ref FrameWork
  */
-Identifier<CCGCollection *> CCG::GRAPHS("otawa::CCG::graphs", 0);
+Identifier<CCGCollection *> CCG::GRAPHS("otawa::CCG::GRAPHS", 0);
 
 
 /**
@@ -69,12 +69,12 @@ Identifier<CCGCollection *> CCG::GRAPHS("otawa::CCG::graphs", 0);
  * @par Hooks
  * @li @ref LBlock
  */
-Identifier<CCGNode *> CCG::NODE("otawa::CCG::node", 0);
+Identifier<CCGNode *> CCG::NODE("otawa::CCG::NODE", 0);
 
 
 /**
  */
-Identifier<bool> CCGBuilder::NON_CONFLICT("otawa::CCG::non_conflict", false);
+Identifier<bool> CCGBuilder::NON_CONFLICT("otawa::CCG::NON_CONFLICT", false);
 
 
 /**
@@ -228,6 +228,6 @@ void CCGBuilder::processWorkSpace(WorkSpace *fw) {
  * @li @ref CCG::GRAPHS (Framework)
  * @li @ref CCG::NODE (LBlock)
  */
-Feature<CCGBuilder> CCG_FEATURE("otawa::ccg");
+Feature<CCGBuilder> CCG_FEATURE("otawa::CCG_FEATURE");
 
 } //otawa
