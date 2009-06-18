@@ -18,11 +18,11 @@ namespace otawa { namespace ipet {
  * This processor is used for computing execution of basic blocks in a trivial
  * way, that is, the multiplication of basic block instruction count by the
  * pipeline depth.
- * 
+ *
  * @par Configuration Properties
  * @li @ref ipet::PIPELINE_DEPTH - used to compute execution time of the basic
  * block.
- * 
+ *
  * @par Provided Features
  * @li @ref ipet::BB_TIME_FEATURE
  */
@@ -55,17 +55,17 @@ void TrivialBBTime::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 /**
  * This property is used to configure the @ref TrivialBBTime processor
  * with the depth of the used pipeline.
- * 
+ *
  * @par Hooks
  * @li Configuration of @ref ipet::TrivialBBTime.
  */
-Identifier<unsigned> PIPELINE_DEPTH("otawa::ipet::pipeline_depth", 5);
+Identifier<unsigned> PIPELINE_DEPTH("otawa::ipet::PIPELINE_DEPTH", 5);
 
 
 /**
  * This feature ensures that the execution time of each basic block has been
  * computed.
  */
-Feature<TrivialBBTime> BB_TIME_FEATURE("otawa::bb_time");
+Feature<TrivialBBTime> BB_TIME_FEATURE("otawa::BB_TIME");
 
 } } // otawa::ipet
