@@ -18,15 +18,15 @@ namespace otawa {
  * @class CFGNormalizer
  * This processor check and transform the CFG to make it normalized, that is,
  * it performs the following checks and transformation:
- * 
+ *
  * @li the entering edges in entry from other CFG are cut,
  * @li the leaving edges from exit to other CFG are cut,
  * @li the entering edge from dead code cause an error or are removed
  * (@ref CFGNormalizer::FORCE option set).
- * 
+ *
  * @par Provided Feature
  * @li @ref NORMALIZED_CFGS_FEATURE
- * 
+ *
  * @par Required Feature
  * @li @ref COLLECTED_CFG_FEATURE
  */
@@ -38,7 +38,7 @@ namespace otawa {
  * same CFG).
  */
 Identifier<bool>
-	CFGNormalizer::FORCE("otawa::CFGNormalizer::force", false);
+	CFGNormalizer::FORCE("otawa::CFGNormalizer::FORCE", false);
 
 
 /**
@@ -46,11 +46,11 @@ Identifier<bool>
  * In verbose mode, each edge removal displays information about the action.
  */
 Identifier<bool>
-	CFGNormalizer::VERBOSE("otawa::CFGNormalizer::verbose", false);
+	CFGNormalizer::VERBOSE("otawa::CFGNormalizer::VERBOSE", false);
 
 
 // Internal use
-static Identifier<bool> IN_CFG("otawa::CFGNormalizer::in_cfg", false);
+static Identifier<bool> IN_CFG("", false);
 
 
 /**
@@ -69,13 +69,13 @@ CFGNormalizer::CFGNormalizer(void):
 /**
  */
 void CFGNormalizer::processCFG(WorkSpace *fw, CFG *cfg) {
-	
+
 	// Put marks
 	elm::genstruct::Vector<Edge *> removes;
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		IN_CFG(bb) = true;
-	
-	// Examine BB	
+
+	// Examine BB
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
 
 		// Look for an unresolved indirect branch
@@ -95,7 +95,7 @@ void CFGNormalizer::processCFG(WorkSpace *fw, CFG *cfg) {
 		for(BasicBlock::InIterator edge(bb); edge; edge++)
 			if(edge->source() && !IN_CFG(edge->source()))
 				removes.add(edge);
-		
+
 		// Remove entering edges
 		for(elm::genstruct::Vector<Edge *>::Iterator edge(removes); edge; edge++) {
 			if(!force)
@@ -112,7 +112,7 @@ void CFGNormalizer::processCFG(WorkSpace *fw, CFG *cfg) {
 		}
 		removes.clear();
 	}
-	
+
 	// Remove marks
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		bb->removeProp(&IN_CFG);
@@ -132,6 +132,6 @@ void CFGNormalizer::configure(const PropList& props) {
  * This feature ensures that the CFG are in a normalized form: fully resolved
  * branches, no entering or exiting edges to or from external CFGs.
  */
-Feature<CFGNormalizer> NORMALIZED_CFGS_FEATURE("otawa::normalized_cfgs");
+Feature<CFGNormalizer> NORMALIZED_CFGS_FEATURE("otawa::NORMALIZED_CFGS_FEATURE");
 
 } // otawa
