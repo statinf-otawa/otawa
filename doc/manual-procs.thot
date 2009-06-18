@@ -1,0 +1,281 @@
+====== Code Processors ======
+
+As seen in the previous sections, the main class to analyze programs is called a code processor and is represented by the ''otawa::proc::Processor'' class. We have also shown how to use them to perform WCET computation. This section presents how to extend OTAWA by developing new code processors.
+
+As a common example, all along this section, we show how to build a code processor that counts the number of instructions in the basic blocks and stores them in a property called ''INSTRUCTION_COUNT''.
+
+
+
+
+
+
+
+
+
+===== Writing a code processor =====
+
+The usual way to add an analysis is to add a code processor. To write a code processor, we have to :
+  * choose a name,
+  * choose a version,
+  * implement the algorithm performing the analysis.
+
+To implement the code processor, we must implement a class inheriting from the ''otawa::Processor'' class and to pass the name and the version to the parent constructor as in the example below:
+
+<code c>
+class InstructionCounter: public Processor {
+public:
+  InstructionCounter(void);
+  ...
+};
+
+InstructionCounter::InstructionCounter(void)
+: Processor("InstructionCounter", Version(1, 0, 0)) {
+  ...
+}
+</code>
+
+Notice that the class declaration and the constructor definition are usually placed, respectively, in a ''.h'' header file and in a ''.cpp'' source file according to classic C++ coding rules. The constructor often contains none or very few things as a processor may be used many times with an initialization and termination phase. It is also advised to give the full C++ qualified name of the class as the processor name to support future processor plugin system in OTAWA.
+
+Now, to implement the algorithm, we have to overload the ''Processor::processWorkSpace()'' method as below.
+
+<code c>
+class InstructionCounter: public Processor {
+public:
+  ...
+  virtual void processWorkSpace(WorkSpace *ws);
+};
+
+void InstructionCounter::processWorkSpace(WorkSpace *ws) {  
+  CFGCollection *cfgs = INVOLVED_CFGS(fw);
+  for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++)
+    for(CFG::BBIterator bb(cfg); bb; bb++)
+      INSTRUCTION_COUNT(bb) = bb->countInstructions();
+}
+</code>
+
+Details about the performed computation may be found in the previous sections. Shortly, the algorithm iterates on each CFG and basic blocks involved in the analysis and counts and stores the number of instructions.
+
+As the task to iterate on CFG and basic block is very common and tedious, OTAWA provides also helper processors performing this work automatically. If our processor inherit from ''CFGProcessor'' instead of ''Processor'', the algorithm may be implemented as below:
+
+<code c>
+class InstructionCounter: public CFGProcessor {
+public:
+  ...
+  virtual void processCFG(WorkSpace *ws, CFG *cfg);
+};
+
+void InstructionCounter::processCFG(WorkSpace *ws, CFG *cfg) {
+  for(CFG::BBIterator bb(cfg); bb; bb++)
+    INSTRUCTION_COUNT(bb) = bb->countInstructions();
+}
+</code>
+
+And things become even shorter with the ''BBProcessor'':
+<code c>
+class InstructionCounter: public BBProcessor {
+public:
+  ...
+  virtual void processBB(WorkSpace *ws, CFG *cfg), BasicBlock *bb;
+};
+
+void InstructionCounter::processCFG(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+  INSTRUCTION_COUNT(bb) = bb->countInstructions();
+}
+</code>
+
+There are several helper processors listed below:
+  * ''CFGProcessor'': iterates on the involved CFG,
+  * ''BBProcessor'': iterates on the involved basic blocks,
+  * ''FunProcessor'': iterates on functions expressed as Abstract Syntax Trees (AST),
+  * ''ASTProcessor'': iterates recursively in the AST.
+
+Finally, notice that the helper processors do not only iterate on a subset of the program's representation. They handle also automatic facilities provided by the processor according to the configuration properties like:
+  - ''Processor::VERBOSE'': displays messages about the performed computation,
+  - ''Processor::TIMED'': computes execution time of the processor,
+  - ''Processor::STATS'': computes statistics about the analysis.
+As a final word, helper classes must be used as often as possible because (1) they already provide a lot of services and (2) they make your own processor benefiting from their future improvements.
+
+
+
+
+
+===== Details about the Processing =====
+
+As shown above, the ''otawa::proc::Processor'' class is the base class to implement a code processor: it is inherited by all code processors. It provides an interface to process workspace and an  interface to let actual analyzers perform their work.
+
+The method ''perform'' is the main entry point to a code processor. It is called to launch the code processor on the passed workspace with a configuration passed as a property list. Except for some information accessors, it is the only method publicly accessible. Other methods are only declared protected to be overloaded by child classes. They are used to specialize the behavior of the code processor, that is, to implement the performed analysis.
+
+These functions are :
+  * ''void configure(const PropList *props)'': this function is called to configure the code processors with the property list passed to the ''process()'' method;
+  * ''void setup(WorkSpace *workspace)'': this method is called to setting up the processor, just before to perform the analysis: it may be used to perform resource allocation for example;
+  * ''void processWorkSpace(WorkSpace *workspace)'': this method must implement the performed analysis;
+  * ''void cleanup(WorkSpace *workspace)'': this is called just after the analysis  to clean up allocated resources.
+
+OTAWA ensures that these four functions are ever called in the following order:
+  - ''configure()''
+  - ''setup()''
+  - ''processWorkSpace()''
+  - ''cleanup()''
+
+If you are using an helper processor, ''setup()'' and ''cleanup()'' are good points to allocate and free resources used throughout the analysis. Notice it is advised to ever call the ''configure()'' method of the parent class to let it initialize itself from the configuration properties. In the end, this the ''Processor::configure()'' method that is called and provide common services like verbosity, time measures and statistics gathering. In the contrary, these services may be unavailable.
+
+In our example, we want to collect statistics about the average instruction count of basic block. We add two variables in order to sum the count of instructions and one to count the number of basic blocks. Each time a processing is launched, these values must be reset first and, finally, the statistics are filled with the average count of instructions. The statistics item is returned in a variable whose address is passed in the configuration ''AVERAGE_INSTRUCTION_COUNT'' property.
+
+<code c>
+class InstructionCounter: public BBProcessor {
+  ...
+protected:
+  virtual void configure(const PropList &props);
+  virtual void setup(WorkSpace *ws);
+  virtual void cleanup(WorkSpace *ws);
+  virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+private:
+  int sum, cnt, *avg;
+};
+</code>
+
+The ''configure()'' just record the average variable pointer.
+<code c>
+void InstructionCounter::configure(const PropList &props) {
+  avg = AVERAGE_INSTRUCTION_COUNT(props);
+}
+</code>
+
+The setup method initialize the attributes ''sum'' and ''cnt'' to zero before the processing.
+<code c>
+void InstructionCounter::setup(WorkSpace *ws) {
+  sum = 0;
+  cnt = 0;
+}
+</code>
+
+For each basic block, we record and sum the number of instructions and we increment the count of basic blocks.
+<code c>
+void InstructionCounter::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+  int inst_count = bb->countInstructions();
+  INSTRUCTION_COUNT(bb) = inst_count;
+  sum += inst_count;
+  cnt++;
+}
+</code>
+
+Finally, at cleanup time, we record the statistics.
+<code c>
+void InstructionCounter::cleanup(WorkSpace *ws) {
+  if(avg)
+    *avg = sum / cnt;
+}
+</code>
+
+===== Requiring and providing features =====
+
+As shown in the previous section, the dependencies between OTAWA processores are managed using the feature. A feature asserts that some services have performed on the current workspace and, consequently, that some properties become available.
+
+When you design a processor, you must :
+  - list the properties used by your processor and the features creating them (the requirement list),
+  - list the built properties and find the feature matching them (the providing list).
+
+Be careful: a processor can only declare to provide a feature if it builds all the required properties. To check a provided feature, one may use the ''check()'' of a feature. They are not automatically called as they may induce a big time overhead but they may be called at implementation time.
+
+To implement the processor, the constructor must declare required and provided feature. For each required feature ''RequiredFeature'', it must be a line of the form:
+
+<code c>
+  require(RequiredFeature);
+</code>
+
+For each provided feature ''ProvidedFeature''; it must be a line of the form:
+
+<code c>
+  provide(ProvidedFeature);
+</code>
+
+Do not forget to include the header file containing the declaration of the features. Details about the different features are given the automatic documentation, from ''<install directory>//share/Otawa/autodoc''.
+
+As an example, the code below is an excerpt from the constructor of the ''ipet::WCETComputation'' class:
+
+<code c>
+WCETComputation::WCETComputation(void)
+: Processor("otawa::ipet::WCETComputation", Version(1, 0, 0)) {
+	require(CONTROL_CONSTRAINTS_FEATURE);
+	require(OBJECT_FUNCTION_FEATURE);
+	require(FLOW_FACTS_CONSTRAINTS_FEATURE);
+	provide(WCET_FEATURE);
+}
+</code>
+
+In our example, we must list the used features. We need to get basic blocks from the CFG. This feature is provided by the ''COLLECTED_CFG_FEATURE'' (declared in ''otawa/cfg.h''). As we are adding a new property, there is not an already feature matching. So we need to declare our one (called INSTRUCTION_COUNT_FEATURE) in the header file of our processor. To declare a feature, we need to provide a default processor, that is, our example processor called ''InstructionCounter''.
+
+<code c>
+extern Feature<InstructionCounter> INSTRUCTION_COUNT_FEATURE;
+</code>
+
+Then, in the source, we have to give the implementation of our feature.
+
+<code c>
+Feature<InstructionCounter> INSTRUCTION_COUNT_FEATURE("INSTRUCTION_COUNT_FEATURE");
+</code>
+
+The string passed to the ''Feature'' constructor is used to name it in OTAWA. To be compatible with future processor plugin, it is advised to give to it the same fully-qualified name as the C++ object.
+
+Now, we may define the constructor of our processor:
+
+<code c>
+InstructionCounter::InstructionCounter(void)
+: Processor("InstructionCounter", Version(1, 0, 0)) {
+  require(COLLECTED_CFG_FEATURE);
+  provide(INSTRUCTION_COUNT_FEATURE);
+}
+</code>
+
+
+
+
+
+
+===== Code Processor Services =====
+
+To make the writing of processor easier, the ''Processor'' class provides many services listed in this section.
+
+First, the verbose option allows to activate verbose comments about the current processing. According the current code processor, some informations will be displayed. At least, the start and the end of each processor is displayed with different information items according the kind of the processor. To activate the verbose mode, the ''Processor::VERBOSE'' option must be set to true in the configuration properties. In the processor, the verbose mode state may be checked using the ''isVerbose()'' method.
+
+Then, the ''Processor'' class provides a common way to collect statistics about the performed analysis. To get these statistics, a property list pointer must be passed tp the ''Processor::STATS'' property in the configuration properties. In the processor, the ''stats'' protected attribute give access to this statistics property list and let the processor store the statistics in the usual way. If there is no statistics list, this pointer is simply null.
+
+The ''Processor::TIMED'' set to true, in the configuration property list, activates a stopwatch to measure the execution time of the processor. In the processor, this mode may be checked with ''isTimed()'' method. If the verbose mode is also activated, the measured time will be displayed. If the statistics are activated, the measured time is stored in the statistics with the ''Processor::RUNTIME'' property.
+
+With the verbose activated or no, the processors may perform some display. They must use the attribute ''out'' in the processor, a usual output stream like ''cout''. As a default, this output is equal to the standard output but it may be redirected using the ''Processor::OUTPUT'' option in the configuration property list.
+
+The following example shows how to initialize and pass a configuration property list to our custom processor and how to exploit the statistics. 
+<code c>
+PropList stats;
+PropList config;
+Processor::VERBOSE(config) = true;
+Processor::STATS(config) = &stats;
+Processor::TIMED(config) = true;
+Processor::OUTPUT(config) = &cerr.stream();
+
+InstructionCounter ic;
+ic.process(ws, config);
+cout << "execution time: " << Processor::RUNTIME(stats) << io::endl;
+</code>
+
+The processor provides also facilities to emit warning and error. The ''warn()'' method takes a string message and displays a warning line containing the message and the description of the processor. The best way to handle an error, in OTAWA, is to throw an exception. The processor may use the special ''ProcessorException'' that takes a processor reference and a message to string to build an exception message.
+
+In the examples below, we show first how to use the warning facility then the processor exception class when an empty basic block is found.
+
+<code c>
+void InstructionCounter::processBB(WorkSpce *ws, CFG *cfg, BasicBlock *bb) {
+  int inst_cnt = bb->countInstructions();
+  if(inst_cnt == 0)
+    warn(_ << "empty basic block at " << bb->address());
+  ...
+}
+</code>
+
+<code c>
+void InstructionCounter::processBB(WorkSpce *ws, CFG *cfg, BasicBlock *bb) {
+  int inst_cnt = bb->countInstructions();
+  if(inst_cnt == 0)
+    throw ProcessorException(*this, _ << "empty basic block at " << bb->address());
+  ...
+}
+</code>

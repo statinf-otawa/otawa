@@ -1,0 +1,126 @@
+====== Control Flow Graphs ======
+
+OTAWA provides several high-level program representations like Abstract Syntax Trees (AST) or Context Trees (CT). Yet, the Control Flow Graph (CFG) explained here is certainly the most used in the IPET approach.
+
+
+
+
+===== Principle of the CFG =====
+
+A CFG is a graph used to represent the program control flow. The nodes of the graph are blocks of code, called //basic blocks//, while the edges shows how the execution of the program passes from one block to another one.
+
+There are many different ways to split the code into CFG blocks. The only rule to keep sound basic blocks is that, whatever the execution of a program before the execution of the block:
+  - the first instruction of the block is the first executed and,
+  - when the first instruction is executed, all the following instructions are ever executed subsequently in order.
+
+If we cut the program according to this rule and if we take the maximal sequence of instructions to form block, we get a minimal CFG.
+
+
+
+===== Getting the CFG =====
+
+To use the CFG, we must first include the right header file defining the main classes involved (''CFGInfo'', ''CFG'', ''BasicBlock'').
+
+<code c>
+#include <otawa/cfg.h>
+</code>
+
+The CFG are built by any code processor implementing the feature ''CFG_INFO_FEATURE'' (''CFGBuilder'' is used as a usual default). To get the CFG of a specific function, a ''CFGInfo'' object may retrieved from the framework using the ''CFGInfo::ID'' property.
+
+<code c>
+ws->require(CFG_INFO_FEATURE);
+CFGInfo *info = CFGInfo::ID(ws);
+</code> 
+
+Then, we can ask for the CFG of a specific function, //f//:
+
+<code c>
+CFG *cfg = info->findCFG("f");
+</code>
+
+If the function can not be found, the returned value is null. Either the function is not contained in the current program, or the OTAWA CFG builder has not succeeded in its analysis. The function recognition is performed using several sources :
+  - the target of a call instruction is considered as a function entry,
+  - the binary format (currently ELF) contains label definitions whose type are explicit functions,
+  - in the future, OTAWA will also use debugging information from the program.
+
+
+ 
+
+
+
+
+
+
+
+===== Getting the basic blocks =====
+
+There are many ways to examine the basic blocks of a CFG. First, the ''CFG'' class provides a simple unordered iterator ''CFG::BBIterator'' to handle all the basic blocks of a CFG. The sample below computes the length in instructions of a CFG.
+
+<code c>
+int length = 0;
+for(CFG::BBIterator bb(cfg); bb; bb++)
+  length += bb->countInstructions();
+</code>
+
+Another way to access the basic blocks is to exploration of the graph. This graph has a unique entry (method ''cfg->entry()'') and a unique exit (method ''cfg->exit()''). Both methods returns a ''BasicBlock *'', two syntactic basic block that does not match any code((the unity of the graph ends makes easier some algorithm applied on the CFG)). They may be used to traverse the CFG forward or backward according to the program control flow.
+
+Then, each basic block is connected to some other ones by directed edges. The input edges may examined with the ''BasicBlock::InIterator()'' and the output edges with the ''BasicBlock::OutIterator()''. The edges are represented by the ''Edge'' class that provides the following information:
+  * ''source()'' - the source basic block of the edge,
+  * ''target()'' - the target basic block of the edge,
+  * ''calledCFG()'' - when the edge represents a program call, this points to the called CFG,
+  * ''kind()'' - the kind of edge.
+
+In OTAWA, there are several kinds of edge:
+  * ''Edge::TAKEN'' - represents the control when a branch instruction is taken,
+  * ''Edge::NOT_TAKEN'' - represents the control in sequence or when a branch instruction is not taken,
+  * ''Edge::CALL'' - represents the control of a taken call instruction (the ''calledCFG()'' returns a valid CFG).
+
+Be careful! As the source BB is ever defined, the target BB of an edge is undefined (null) in the following cases:
+  * the kind of the edge is ''Edge::CALL'' (use only the ''calledCFG()'' method),
+  * the branch instruction is indirect and OTAWA has not been able to compute it.
+In the same way, the ''calledCFG()'' may return a null if the call instruction is indirect and the call target has not been computed.
+
+In the following example, we use the graph traversal to test if there is a path between two basic blocks, from ''bb1'' to ''bb2''. The PROCESSED property is used to mark the traversed BB and avoid to be caught in loops.
+
+<code c>
+Identifier<bool> PROCESSED("", false);
+BasicBlock *queue[MAX], *bb;
+int h =0, t = 1;
+for(queue[0] = bb1; h < t && queue[h] != bb2; h++) {
+  for(BasicBlock::OutIterator edge(queue[h]); edge; edge++)
+    if(edge->target() && !PROCESSED(edge->target())) {
+      queue[t] = edge->target();
+      PROCESSED(queue[t]) = true;
+      t++;
+    }
+}
+if(h < t)
+  cout << "path from bb1 to bb2 !\n";
+else
+  cout << "no path from bb1 to bb2.\n";
+</code>
+
+
+===== Working with a basic block =====
+
+The basic blocks provides a lot of methods to get information (refer to the API documentation for more details). First, a list of accessors to known the nature of the basic block:
+  * ''isCall()'' returns true if the BB ends with a call instruction,
+  * ''isReturn()'' returns true if the BB ends with a return instruction,
+  * ''isTargetUnknown()'' returns true if the BB ends with a branch instruction whose target has not been computed,
+  * ''isEntry()'' returns true if the BB is the CFG entry,
+  * ''isExit()'' returns true if the BB is the CFG exit.
+
+BB instrinsic properties may also be accessed:
+  * ''cfg()'' returns the owner CFG,
+  * ''address()'' returns the address of the first instruction of the BB,
+  * ''size()'' returns the size of the BB in bytes,
+  * ''countInstructions()'' counts instructions in the BB,
+  * ''number()'' get the number of the BB in the CFG (notice that the number 0 is used for the entry and the number //n//-1 is used for the exit).
+
+To visit instructions in the BB, one may use the ''BasicBlock::InstIter'' class as in the example below that computes the size of the BB:
+
+<code c>
+int size = 0;
+for(BasicBlock::InstIter inst(bb); inst; inst++)
+  size += inst->size();
+</code>
