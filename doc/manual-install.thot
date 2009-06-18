@@ -1,0 +1,100 @@
+====== Building OTAWA ======
+
+This section describes the requirements to build and use the OTAWA framework.
+
+===== Requirements =====
+
+OTAWA has been mainly tested on a 32 and 64-bits Linux OS but it should work well with any other POSIX-compliant Unix system. Feel free to contact us for any problem at [[mailto:otawa@irit.fr|otawa@irit.fr]].
+
+To build OTAWA, the following tools are required:
+
+^ Package ^ Version ^ URL ^
+| GCC | 4.0.1 | http://gcc.gnu.org/ |
+| GMake | 3.80 | http://www.gnu.org/software/make/ |
+| AutoConf | 2.60 | http://www.gnu.org/software/autoconf/ |
+| AutoMake | 1.9.6 | http://www.gnu.org/software/automake/ |
+| LibTool | 1.5.22 | http://www.gnu.org/software/libtool/ |
+| Flex | 2.5.4 |  |
+| Bison | 2.0 |  |
+| OCaml | 3.08.3 |  |
+
+Depending on the use of OTAWA, you should also install :
+
+^ Package ^ Version ^ URL ^
+| gliss | 1.1.6 | http://www.irit.fr/recherches/ARCHI/MARCH/rubrique.php3?id_rubrique=54 |
+| gliss-ppc | 1.1.6 | http://www.irit.fr/recherches/ARCHI/MARCH/rubrique.php3?id_rubrique=54 |
+| lp_solve | 4.0 | ftp://ftp.es.ele.tue.nl/pub/lp_solve/old_versions_which_you_probably_dont_want/ |
+| OCAML | 3.0 | http://caml.inria.fr/ocaml/release.fr.html |
+| FrontC | 3.2 | http://www.irit.fr/recherches/ARCHI/MARCH/rubrique.php3?id_rubrique=61 |
+| SystemC | 2.1, 2.2 | http://www.systemc.org/ |
+
+OTAWA has been tested on the following platforms:
+^ Distribution ^ Version ^ Architecture ^ Remarks ^
+| Mandrake | 10.2 | x86-32 |  |
+|  |  | x86-64 | SystemC V2.1 does not compile on this architecture. |
+| Ubuntu | 6.01 | x86-32 |  |
+|  | 6.10 | x86-32 |  |
+|  | 7.04 | x86-32 |  |
+
+
+
+
+
+
+
+===== Building from source package =====
+
+Just download the source version from [[:resources:download]].
+
+Uncompact the archive, choose an installation directory and launch the build script :
+<code sh>
+$ tar xvfz Otawa-xxx.tgz
+$ cd Otawa-xxx.tgz
+$ ./build.sh --install --prefix=installation_directory
+</code>
+
+Please use an absolute path for the installation directory.
+
+If you plan to use simulation in Otawa, that is, the ''ogensim'' library, you need to get and compile manually the SystemC library (see above for an URL). Although the build script is able to download required dependencies, the SystemC download page requires a subscription. Then, pass the following option to the ''build.sh'':
+<code>
+--with-systemc=path_to_systemc
+</code>
+
+If you want to use Otawa as a shared library (advised to reduce the size of programs and to work with several architectures), you may use the following option:
+<code>
+--with-so
+</code>
+
+
+===== Building from CVS =====
+
+Although it is a bit harder, it may be useful to install OTAWA directly from the CVS to stay up to date with the OTAWA development process. To perform the job, the easiest way is to download the ''build.sh'' script from [[:resources:download]] and to execute the following command:
+
+<code sh>
+$ ./build.sh --install --prefix=installation_directory --tag=otawa:V_0_5
+</code>
+
+Please use an absolute path for the installation directory.
+
+A directory called ''otawa'' is created in the current directory where all components' sources are downloaded and compiled.
+
+All options presented in the previous section apply to this installation mode.
+
+To update your OTAWA installation, go to one of the components supported by OTAWA and type:
+<code>
+$ cd otawa/component
+$ cvs update -d
+$ make install
+</code>
+
+The table below summarize the order and the frequency of updates to perform:
+^ Component ^ Update frequency ^
+| gliss | rare |
+| gel | medium |
+| ppc | rare |
+| frontc | rare |
+| elm | frequent |
+| otawa | frequent |
+
+
+
