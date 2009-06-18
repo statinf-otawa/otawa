@@ -91,7 +91,7 @@ class NormalizationException {
  * the @ref ConstraintLoader (argument of type @ref elm::String).
  * @ingroup extcons
  */
-Identifier<string> ConstraintLoader::PATH("otawa::ipet::ConstraintLoader::path", "");
+Identifier<string> ConstraintLoader::PATH("otawa::ipet::ConstraintLoader::PATH", "");
 
 
 /**
