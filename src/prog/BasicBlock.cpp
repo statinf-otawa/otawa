@@ -48,7 +48,7 @@ BasicBlock& BasicBlock::null_bb = null_bb_inst;
 /**
  * Identifier of the basic block pseudo-instruction.
  */
-Identifier<BasicBlock *> BasicBlock::ID("ptawa::BasicBlock::id", 0);
+Identifier<BasicBlock *> BasicBlock::ID("ptawa::BasicBlock::ID", 0);
 
 
 /**
