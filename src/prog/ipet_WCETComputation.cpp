@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -44,18 +44,18 @@ void WCETComputation::init(void) {
 	_require(FLOW_FACTS_CONSTRAINTS_FEATURE);
 	_provide(WCET_FEATURE);
 }
-	
+
 
 /**
  * @class WCETComputation
  * This class is used for computing the WCET from the system found in the root
  * CFG.
- * 
+ *
  * @par Required Features
  * @li @ref ipet::CONTROL_CONSTRAINTS_FEATURE
  * @li @ref ipet::OBJECT_FUNCTION_FEATURE
  * @li @ref ipet::FLOW_FACTS_CONSTRAINTS_FEATURE
- * 
+ *
  * @par Provided Features
  * @li @re ipet::WCET_FEATURE
  */
@@ -84,17 +84,17 @@ void WCETComputation::processWorkSpace(WorkSpace *fw) {
 		wcet = (time_t)system->value();
 	}
 	if(isVerbose())
-		log << "\tWCET = " << wcet << io::endl; 
+		log << "\tWCET = " << wcet << io::endl;
 	WCET(fw) = wcet;
 }
 
 
 /**
  * This feature ensures that the WCET has been computed using IPET approach.
- * 
+ *
  * @par Properties
  * @li @ref ipet::WCET (FrameWork)
  */
-Feature<WCETComputation> WCET_FEATURE("otawa::ipet::WCET");
+Feature<WCETComputation> WCET_FEATURE("otawa::ipet::WCET_FEATURE");
 
 } } // otawa::ipet
