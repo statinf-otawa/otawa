@@ -454,7 +454,7 @@ void Command::compute(String fun) {
 		}
 		break;
 	case HTML: {
-			system::Path path(_ << output_prefix.value() << fun << ".html");
+	  elm::system::Path path(_ << output_prefix.value() << fun << ".html");
 			cerr << "INFO: outputting constraints to " << path << "...\n";
 			display::ILPSystemDisplayer::PATH(props) = path;
 			display::ILPSystemDisplayer disp;
@@ -479,7 +479,7 @@ void Command::compute(String fun) {
 
 	// Dump the ratio
 	if(dump_time) {
-		system::Path path(_ << output_prefix.value() << fun << ".time");
+	  elm::system::Path path(_ << output_prefix.value() << fun << ".time");
 		cerr << "INFO: outputting time information to " << path << "...\n";
 		BBRatioDisplayer::PATH(props) = path;
 		BBRatioDisplayer displayer;
