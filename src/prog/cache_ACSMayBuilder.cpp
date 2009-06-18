@@ -31,38 +31,38 @@ using namespace elm;
 namespace otawa {
 
 /**
- * 
+ *
  * This feature represents the availability of MAY Abstract Cache State informations.
- * 
+ *
  * @par Properties
  * @li @ref CACHE_ACS
  */
-Feature<ACSMayBuilder> ICACHE_ACS_MAY_FEATURE("otawa.cache.acsmayfeature");
+Feature<ACSMayBuilder> ICACHE_ACS_MAY_FEATURE("otawa::ICACHE_ACS_MAY_FEATURE");
 
 /**
  * This property represents the "may" Abstract Cache State of a basic block.
  * The vector stores the abstract cache states corresponding to all cache lines.
  *
  * @par Hooks
- * @li @ref BasicBlock 
+ * @li @ref BasicBlock
  */
- Identifier<genstruct::Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY("otawa::cache_acs_may", NULL);
+ Identifier<genstruct::Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY("otawa::CACHE_ACS_MAY", NULL);
 
 /**
- * This property allows us to set an entry may ACS. 
+ * This property allows us to set an entry may ACS.
  *
  * @par Hooks
- * @li @ref PropList 
+ * @li @ref PropList
  */
- Identifier<Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY_ENTRY("otawa::cache_acs_may_entry", NULL);
- 
+ Identifier<Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY_ENTRY("otawa::CACHE_ACS_MAY_ENTRY", NULL);
+
 
 /**
  * @class ACSMayBuilder
  *
  * This processor produces the Abstract Cache States (ACS), for the MAY ACS.
  * The MAY ACS represents cache blocks which may be in the cache. It is only useful for differentiating between
- * NOT_CLASSIFIED and ALWAYS_MISS. 
+ * NOT_CLASSIFIED and ALWAYS_MISS.
  *
  * @par Configuration
  * @li @ref PSEUDO_UNROLLIG identifier determines if we do the Pseudo-Unrolling while doing the abstract interpretation.
@@ -76,7 +76,7 @@ Feature<ACSMayBuilder> ICACHE_ACS_MAY_FEATURE("otawa.cache.acsmayfeature");
  *
  * @par Provided features
  * @li @ref ICACHE_ACS_FEATURE
- * 
+ *
  * @par Statistics
  * none
  */
@@ -93,17 +93,17 @@ ACSMayBuilder::ACSMayBuilder(void) : Processor("otawa::ACSMayBuilder", Version(1
 
 void ACSMayBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::Cache *cache) {
 
-	int line = lbset->line();	
-	/* 
+	int line = lbset->line();
+	/*
 	 * Solve the problem for the current cache line:
-	 * Now that the first/last lblock are detected, execute the analysis. 
-	 */			
+	 * Now that the first/last lblock are detected, execute the analysis.
+	 */
 
 #ifdef DEBUG
 	cout << "[TRACE] Doing line " << line << "\n";
 #endif
 	MAYProblem mayProb(lbset->cacheBlockCount(), lbset, fw, cache, cache->wayCount());
-	if (unrolling) {			
+	if (unrolling) {
 		UnrollingListener<MAYProblem> mayList(fw, mayProb);
 		FirstUnrollingFixPoint<UnrollingListener<MAYProblem> > mayFp(mayList);
 		util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MAYProblem> > > mayHai(mayFp, *fw);
@@ -111,7 +111,7 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard
 		for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 			for (CFG::BBIterator bb(cfg); bb; bb++)
 				CACHE_ACS_MAY(bb)->add(new MAYProblem::Domain(*mayList.results[cfg->number()][bb->number()]));
-	
+
 	} else {
 		DefaultListener<MAYProblem> mayList(fw, mayProb);
 		DefaultFixPoint<DefaultListener<MAYProblem> > mayFp(mayList);
@@ -132,19 +132,19 @@ void ACSMayBuilder::configure(const PropList &props) {
 
 void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
 	//int i;
-	
+
 	// Build the vectors for receiving the ACS...
 	for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 		for (CFG::BBIterator bb(cfg); bb; bb++)
 			CACHE_ACS_MAY(bb) = new genstruct::Vector<MAYProblem::Domain*>;
 	}
-	
+
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = fw->platform()->cache().instCache();
-				
+
 	for (int i = 0; i < cache->rowCount(); i++) {
-		processLBlockSet(fw, lbsets[i], cache);	
-	}	
+		processLBlockSet(fw, lbsets[i], cache);
+	}
 }
 
 }

@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -58,7 +58,7 @@ public:
 };
 typedef genstruct::SortedSLList<LBlock*, NumberOrder> LinkedBlockList;
 
-  
+
 /**
  * @class LinkedBlocksDetector
  * @author C. Ballabriga <ballabri@irit.fr>
@@ -66,10 +66,10 @@ typedef genstruct::SortedSLList<LBlock*, NumberOrder> LinkedBlockList;
  * This processor computes the list of l-blocks which are FIRST_MISS, and occupies the same cache block,
  * and whose FIRST_MISS loop header is the same.
  * i.e. for each loop, it is computed a vector of l-blocks which are FIRST_MISS for this loop.
- * 
- * This is useful for the CAT2ConstraintBuilder, where constraints of type x1miss + x2miss <= 1 can be 
- * constructed (instead of x1miss <=1 and x2miss <=1). Indeed, the two blocks together will cause only 
- * one miss (since if we access the first l-block, we load the whole cache block, and so the 
+ *
+ * This is useful for the CAT2ConstraintBuilder, where constraints of type x1miss + x2miss <= 1 can be
+ * constructed (instead of x1miss <=1 and x2miss <=1). Indeed, the two blocks together will cause only
+ * one miss (since if we access the first l-block, we load the whole cache block, and so the
  * second l-block will cause a hit)
  *
  * @par Configuration
@@ -83,7 +83,7 @@ typedef genstruct::SortedSLList<LBlock*, NumberOrder> LinkedBlockList;
  * @li @ref ILP_SYSTEM_FEATURE
  *
  * @par Provided features
- * 
+ *
  * @par Statistics
  * none
  */
@@ -114,8 +114,8 @@ void LinkedBlocksDetector::configure(const PropList& props) {
 void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 	const hard::Cache *cache = fw->platform()->cache().instCache();
 	LBlockSet **lbsets = LBLOCKS(fw);
-	
-	
+
+
 	for (int i = 0 ; i < cache->rowCount(); i++) {
 		genstruct::Vector<LinkedBlockList*> blockList;
 		int count = lbsets[i]->cacheBlockCount();
@@ -127,34 +127,34 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 			if (CATEGORY(lblock) == FIRST_MISS) {
 				//BasicBlock *header = CATEGORY_HEADER(lblock);
 				int cbid = lblock->cacheblock();
-				
+
 				if (blockList[cbid] == NULL)
 					blockList[cbid] = new LinkedBlockList();
-				blockList[cbid]->add(lblock);	
+				blockList[cbid]->add(lblock);
 			}
 		}
-		
+
 		for (int j = 0; j < count; j++) {
 			if (blockList[j] != NULL) {
-						
+
 				Vector<LBlock*> equiv;
 				BasicBlock *old_header = NULL;
 				equiv.clear();
-				for (LinkedBlockList::Iterator iter(*blockList[j]); iter; iter++) {	
-					/* We want to build another "equiv" set from scratch whenever the firstmiss-header changes */ 
+				for (LinkedBlockList::Iterator iter(*blockList[j]); iter; iter++) {
+					/* We want to build another "equiv" set from scratch whenever the firstmiss-header changes */
 					BasicBlock *header = CATEGORY_HEADER(*iter);
 					if ((old_header) && (old_header != header)) {
 						recordBlocks(&equiv);
 						equiv.clear();
 					}
-			
+
 					equiv.add(*iter);
 					old_header = header;
 				}
 				recordBlocks(&equiv);
-			}			
-		} 
-		
+			}
+		}
+
 		for (int j = 0; j < blockList.length(); j++) {
 			if (blockList[j] != NULL)
 				delete blockList[j];
@@ -168,11 +168,11 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
  */
 void LinkedBlocksDetector::recordBlocks(Vector<LBlock*> *equiv) {
 	if (equiv->length() == 1)
-		return;		
+		return;
 	genstruct::Vector<LBlock*> *copy = new genstruct::Vector<LBlock*>(*equiv);
 	for (genstruct::Vector<LBlock*>::Iterator lblock(*equiv); lblock; lblock++) {
 		assert(CATEGORY(lblock) == FIRST_MISS);
-		LINKED_BLOCKS(lblock) = copy;   		
+		LINKED_BLOCKS(lblock) = copy;
 	}
 	if(cstats)
 		cstats->addLinked();
@@ -182,6 +182,6 @@ void LinkedBlocksDetector::recordBlocks(Vector<LBlock*> *equiv) {
 /**
  * !!TODO!!
  */
-Identifier<genstruct::Vector<LBlock*> *> LINKED_BLOCKS("otawa::linked_blocks", NULL);
+Identifier<genstruct::Vector<LBlock*> *> LINKED_BLOCKS("otawa::LINKED_BLOCKS", NULL);
 
 }
