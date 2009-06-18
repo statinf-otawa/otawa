@@ -236,7 +236,7 @@ void FlowFactConstraintBuilder::configure(const PropList& props) {
  * has been added to the ILP system.
  */
 Feature<FlowFactConstraintBuilder>
-	FLOW_FACTS_CONSTRAINTS_FEATURE("otawa::ipet::flow_facts_constraints");
+	FLOW_FACTS_CONSTRAINTS_FEATURE("otawa::ipet::FLOW_FACTS_CONSTRAINTS_FEATURE");
 
 }
 

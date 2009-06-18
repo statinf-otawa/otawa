@@ -30,12 +30,12 @@ namespace otawa { namespace ipet {
  * 	<dt>tk</dt><dd>Time of execution of basic block k.</dd>
  *  <dt>nk</dt><dd>Count of execution if basic block k.</dd>
  * </dl>
- * 
+ *
  * @par Required Features
  * @li @ref ipet::ILP_SYSTEM_FEATURE
  * @li @ref ipet::ASSIGNED_VARS_FEATURE
  * @li @ref ipet::BB_TIME_FEATURE
- * 
+ *
  * @par Provided Features
  * @li @ref ipet::OBJECT_FUNCTION_FEATURE
  */
@@ -75,7 +75,7 @@ void BasicObjectFunctionBuilder::processBB(
  * has been built.
  */
 Feature<BasicObjectFunctionBuilder>
-	OBJECT_FUNCTION_FEATURE("ipet::object_function");
+	OBJECT_FUNCTION_FEATURE("ipet::OBJECT_FUNCTION_FEATURE");
 
 
 } } // otawa::ipet

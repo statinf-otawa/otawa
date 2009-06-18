@@ -14,10 +14,10 @@
 namespace otawa { namespace ipet {
 
 using namespace ilp;
- 
+
 /**
  * @defgroup ipet IPET Method
- * 
+ *
  * OTAWA provides many code processors supporting IPET approach:
  * @li @ref VarAssignment - assign ILP variable to each basic block and edge
  * of the graph.
@@ -29,7 +29,7 @@ using namespace ilp;
  * @li @ref FlowFactLoader - load and add constraints for the flow facts
  * (currently constante loop upper bounds only),
  * @li @ref WCETComputation - perform the WCET final computation.
- * 
+ *
  * Some processors are dedicated to pipeline-level analyses:
  * @li @ref TrivialBBTime - compute the execution time of a basic block by
  * applying a constant execution to each instruction,
@@ -37,7 +37,7 @@ using namespace ilp;
  * the Delta method for inter-basic-block pipe-line effect support,
  * @li @ref ExeGraphBBTime - compute the execution time of basic block using
  * an execution graph.
- * 
+ *
  * Some processors are dedicated to cache analyses:
  * @li @ref CATBuilder - compute the cache category of each instruction
  * (always-miss, always-hit, first-miss, first-it),
@@ -50,9 +50,9 @@ using namespace ilp;
  * @li @ref CCGObjectFunction - the CCG instruction cache approach requires
  * to use a special object function in order to get the WCET,
  * @li @ref TrivialDataCacheManager - consider each memory access as a miss.
- * 
+ *
  * These processors interacts using the following properties:
- * @li @ref TIME - execution time of a program part (usually a basic block), 
+ * @li @ref TIME - execution time of a program part (usually a basic block),
  * @li @ref VAR - ILP variable associated with a program component (usually
  * a basic block or an edge),
  * @li @ref SYSTEM - ILP system associated with a root CFG,
@@ -68,7 +68,7 @@ using namespace ilp;
  * of the program area it applies to.
  * @ingroup ipet
  */
-Identifier<time_t> TIME("otawa::ipet::time", -1);
+Identifier<time_t> TIME("otawa::ipet::TIME", -1);
 
 
 /**
@@ -76,7 +76,7 @@ Identifier<time_t> TIME("otawa::ipet::time", -1);
  * (otawa::ilp::Var *) used in ILP resolution.
  * @ingroup ipet
  */
-Identifier<ilp::Var *> VAR("otawa::ipet::var", 0);
+Identifier<ilp::Var *> VAR("otawa::ipet::VAR", 0);
 
 
 /**
@@ -91,7 +91,7 @@ Identifier<ilp::Var *> VAR("otawa::ipet::var", 0);
  * in the CFG of the computed function.
  * @ingroup ipet
  */
-Identifier<time_t> WCET("otawa::ipet::wcet", -1);
+Identifier<time_t> WCET("otawa::ipet::WCET", -1);
 
 
 /**
@@ -100,7 +100,7 @@ Identifier<time_t> WCET("otawa::ipet::wcet", -1);
  * must only be activated for debugging purposes.
  * @ingroup ipet
  */
-Identifier<bool> EXPLICIT("otawa::ipet::explicit", false);
+Identifier<bool> EXPLICIT("otawa::ipet::EXPLICIT", false);
 
 
 /**
@@ -110,33 +110,33 @@ Identifier<bool> EXPLICIT("otawa::ipet::explicit", false);
  * to the object function).
  * @ingroup ipet
  */
-Identifier<time_t> TIME_DELTA("otawa::ipet::time_delta", 0);
+Identifier<time_t> TIME_DELTA("otawa::ipet::TIME_DELTA", 0);
 
 
 /**
  * This is the easier way to represent the maximum iteration count of a loop
  * as a simple integer. This property is put on the header block of the loop.
- * 
+ *
  * @par Hooks
  * @li @ref otawa::BasicBlock (header of loops)
  * @ingroup ipet
  */
-Identifier<int> LOOP_COUNT("otawa::ipet::loop_count", -1);
+Identifier<int> LOOP_COUNT("otawa::ipet::LOOP_COUNT", -1);
 
 
 /**
  * This property is put on basic blocks and edge to record the execution count
  * of these object on the WCET path.
- * 
+ *
  * @par Feature
  * @li @ref ipet::WCET_COUNT_RECORDED_FEATURE
- * 
+ *
  * @par Hooks
  * @li @ref otawa::BasicBlock
  * @li @ref otawa::Edge
  * @ingroup ipet
  */
-Identifier<int> COUNT("otawa::ipet::count", -1);
+Identifier<int> COUNT("otawa::ipet::COUNT", -1);
 
 
 /**
@@ -154,12 +154,12 @@ ilp::System *getSystem(WorkSpace *fw, CFG *cfg) {
  * This feature ensures that effects of the inter-block have been modelized
  * in the current ILP system. Currently, there is no default processor to get
  * it cause the heterogeneity of solutions to this problem.
- * 
+ *
  * @par Implementing Processors
  * @ref @li Delta
  * @ingroup ipet
  */
 Feature<NoProcessor>
-	INTERBLOCK_SUPPORT_FEATURE("otawa::ipet::interblock_support");
+	INTERBLOCK_SUPPORT_FEATURE("otawa::ipet::INTERBLOCK_SUPPORT_FEATURE");
 
 } } // otawa::ipet

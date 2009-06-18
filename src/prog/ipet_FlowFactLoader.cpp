@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -35,14 +35,14 @@ namespace otawa { namespace ipet {
 /**
  * @class FlowFactLoader
  * This processor allows using extern flow facts in an IPET system.
- * 
+ *
  * @par Configuration
  * @li @ref FLOW_FACTS_PATH
- * 
+ *
  * @par Required Features
  * @li @ref ipet::LOOP_HEADERS_FEATURE
  * @li @ref otawa::FLOW_fACTS_FEATURE
- * 
+ *
  * @par Provided Features
  * @li @ref ipet::FLOW_FACTS_FEATURE
  */
@@ -67,7 +67,7 @@ FlowFactLoader::FlowFactLoader(void)
  */
 bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
 	bool one = false;
-	
+
 	// look for MAX_ITERATION
 	int count = MAX_ITERATION(source);
 	if(count >= 0) {
@@ -77,7 +77,7 @@ bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
 		if(isVerbose())
 			log << "\t\t\tLOOP_COUNT(" << bb << ") = " << count << io::endl;
 	}
-	
+
 	// loop for CONTEXTUAL_LOOP_BOUND
 	ContextualLoopBound *bound = CONTEXTUAL_LOOP_BOUND(source);
 	if(bound) {
@@ -88,7 +88,7 @@ bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
 		if(isVerbose())
 			log << "\t\t\tCONTEXTUAL_LOOP_BOUND(" << bb << ") = " << bound << io::endl;
 	}
-	
+
 	return one;
 }
 
@@ -119,22 +119,22 @@ void FlowFactLoader::cleanup(WorkSpace *ws) {
 
 
 /**
- * Look for a bound for the given basic block according to a source/line 
+ * Look for a bound for the given basic block according to a source/line
  * found on the instruction.
  * @param inst	Instruction to look in.
  * @param bb	BB to put the bound to.
  * @return		True if the bound has been found, false else.
- */ 
+ */
 bool FlowFactLoader::lookLineAt(Inst *inst, BasicBlock *bb) {
 	if(!lines_available)
 		return false;
-	
+
 	// get the matching line
 	Option<Pair<cstring, int> > res =
 		workspace()->process()->getSourceLine(inst->address());
 	if(!res)
 		return false;
-	
+
 	// go back to the first statement of the line
 	Vector<Pair<Address, Address> > addresses;
 	workspace()->process()->getAddresses((*res).fst, (*res).snd, addresses);
@@ -153,29 +153,29 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	ASSERT(bb);
 	if(!bb->isEnd() && LOOP_HEADER(bb)) {
 		total_loop++;
-		
+
 		// Look in the first instruction of the BB
 		BasicBlock::InstIter iter(bb);
 		ASSERT(iter);
 		if(transfer(iter, bb))
 			return;
-		
+
 		// Attempt to look at the start of the matching source line
 		if(lookLineAt(bb->firstInst(), bb))
 			return;
-		
+
 		// Look all instruction in the header
 		// (in case of aggregation in front of the header)
 		for(BasicBlock::InstIter inst(bb); inst; inst++)
 			if(lookLineAt(inst, bb))
-				
+
 				return;
-		
+
 		// look in back edge in case of "while() ..." to "do ... while(...)" optimization
 		for(BasicBlock::InIterator edge(bb); edge; edge++)
 			if(Dominance::isBackEdge(edge))
 				for(BasicBlock::InstIter inst(edge->source()); inst; inst++)
-					if(lookLineAt(inst, bb)) 
+					if(lookLineAt(inst, bb))
 						return;
 
 		// warning for lacking loops
@@ -187,11 +187,11 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 /**
  * This feature ensures that flow facts information (at less the loop bounds)
  * has been put on the CFG of the current task.
- * 
+ *
  * @par Properties
  * @li @ref ipet::LOOP_COUNT
  */
-Feature<FlowFactLoader> FLOW_FACTS_FEATURE("otawa::ipet::flow_facts");
+Feature<FlowFactLoader> FLOW_FACTS_FEATURE("otawa::ipet::FLOW_FACTS_FEATURE");
 
 
 } } // otawa::ipet
