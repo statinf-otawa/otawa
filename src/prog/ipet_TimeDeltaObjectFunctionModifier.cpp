@@ -25,10 +25,10 @@ namespace otawa { namespace ipet {
  * 	<dt>tdelta</dt><dd>Delta time found on edge (i, j).</dd>
  *  <dt>ei,j</dt><dd>Count of execution of edge (i, j).</dd>
  * </dl>
- * 
+ *
  * @par Provided Feature
  * @ref @li EDGE_TIME_FEATURE
- * 
+ *
  * @par Required Feature
  * @ref @li ILP_SYSTEM_FEATURE
  */
@@ -67,6 +67,6 @@ void TimeDeltaObjectFunctionModifier::processBB(
  * This feature ensurers that the @ref TIME_DELTA property linked to the CFG edges are
  * used in the maximized object function of the IPET ILP system.
  */
-Feature<TimeDeltaObjectFunctionModifier> EDGE_TIME_FEATURE("otawa::ipet::edge_time");
+Feature<TimeDeltaObjectFunctionModifier> EDGE_TIME_FEATURE("otawa::ipet::EDGE_TIME_FEATURE");
 
 } } // otawa::ipet
