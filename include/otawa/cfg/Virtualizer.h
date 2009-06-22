@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
@@ -33,19 +33,21 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/prop/PropList.h>
+
+
 namespace otawa {
 
 
 // Virtualizer class
-class Virtualizer: public Processor {
+class Virtualizer: public Registered<Virtualizer, Processor> {
 
-	public:
-	Virtualizer(void);
+public:
+	static void init(void);
 	virtual void processWorkSpace(WorkSpace*);
 	virtual void configure(const PropList& props);
-	
-	
-	private:	
+
+
+private:
 	void virtualize(struct call_t*, CFG *cfg, VirtualCFG *vcfg, BasicBlock *entry, BasicBlock *exit);
 	bool isInlined();
 	bool virtual_inlining;
@@ -56,4 +58,4 @@ class Virtualizer: public Processor {
 }
 
 
-#endif 
+#endif

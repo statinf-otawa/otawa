@@ -132,11 +132,15 @@ Identifier<bool> VIRTUAL_INLINING("otawa::VIRTUAL_INLINING", true);
 Identifier<bool> DONT_INLINE("otawa::DONT_INLINE", false);
 
 
-Virtualizer::Virtualizer(void) : Processor("otawa::Virtualizer", Version(1, 0, 0)) {
-	use(COLLECTED_CFG_FEATURE);
-	invalidate(COLLECTED_CFG_FEATURE);
-	provide(VIRTUALIZED_CFG_FEATURE);
+// Registration
+void Virtualizer::init(void) {
+	_name("otawa::Virtualizer");
+	_version(1, 1, 0);
+	_use(COLLECTED_CFG_FEATURE);
+	_invalidate(COLLECTED_CFG_FEATURE);
+	_provide(VIRTUALIZED_CFG_FEATURE);
 }
+
 
 void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 
