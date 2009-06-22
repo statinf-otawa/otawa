@@ -46,6 +46,7 @@ public:
 	inline void print(elm::io::Output& output, const Property *prop) const { print(output, *prop); }
 	virtual const Type& type(void) const;
 	virtual void scan(PropList& props, VarArg& args) const;
+	virtual void fromString(PropList& props, const string& str) const;
 
 private:
 	elm::String nam;

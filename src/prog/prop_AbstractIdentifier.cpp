@@ -153,7 +153,18 @@ const Type& AbstractIdentifier::type(void) const {
  * @warning		It is an error to call this method on a non-typed identifier.
  */
 void AbstractIdentifier::scan(PropList& props, VarArg& args) const {
-	assert(0);
+	ASSERTP(0, "scan() not available for identifier " << name());
+}
+
+
+/**
+ * Get value of an identifier from a string and store it in the given
+ * property list.
+ * @param props	Property list to store result into.
+ * @param str	String to get value from.
+ */
+void AbstractIdentifier::fromString(PropList& props, const string& str) const {
+	ASSERTP(0, "fromString() not available for identifier " << name());
 }
 
 

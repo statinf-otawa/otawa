@@ -19,6 +19,8 @@
 
 #include <otawa/prop/Identifier.h>
 #include <otawa/prop/PropList.h>
+#include <elm/io/BlockInStream.h>
+#include <elm/io/Input.h>
 
 namespace otawa {
 
@@ -282,5 +284,89 @@ void Identifier<String>::scan(PropList& props, VarArg& args) const {
  * @param list	List to look in.
  * @return		True if there is a property with current identifier, false else.
  */
+
+
+/**
+ * @fn Identifier<T>::fromString(PropList& props, const string& str)
+ * Extract a property value from a string and store it in the given property list.
+ */
+
+
+template <> void Identifier<bool>::fromString(PropList& props, const string& str) const {
+	io::BlockInStream stream(str);
+	io::Input in(stream);
+	set(props, in.scanBool());
+}
+
+
+template <> void Identifier<int>::fromString(PropList& props, const string& str) const {
+	io::BlockInStream stream(str);
+	io::Input in(stream);
+	set(props, in.scanLong());
+}
+
+
+template <> void Identifier<unsigned int>::fromString(PropList& props, const string& str) const {
+	io::BlockInStream stream(str);
+	io::Input in(stream);
+	set(props, in.scanULong());
+}
+
+
+template <> void Identifier<long>::fromString(PropList& props, const string& str) const {
+	io::BlockInStream stream(str);
+	io::Input in(stream);
+	set(props, in.scanLong());
+}
+
+
+template <> void Identifier<unsigned long>::fromString(PropList& props, const string& str) const {
+	io::BlockInStream stream(str);
+	io::Input in(stream);
+	set(props, in.scanULong());
+}
+
+
+template <> void Identifier<long long>::fromString(PropList& props, const string& str) const {
+	io::BlockInStream stream(str);
+	io::Input in(stream);
+	set(props, in.scanLLong());
+}
+
+
+template <> void Identifier<unsigned long long>::fromString(PropList& props, const string& str) const {
+	io::BlockInStream stream(str);
+	io::Input in(stream);
+	set(props, in.scanULLong());
+}
+
+
+template <> void Identifier<double>::fromString(PropList& props, const string& str) const {
+	io::BlockInStream stream(str);
+	io::Input in(stream);
+	set(props, in.scanDouble());
+}
+
+
+template <> void Identifier<string>::fromString(PropList& props, const string& str) const {
+	set(props, str);
+}
+
+
+template <> void Identifier<Address>::fromString(PropList& props, const string& str) const {
+	string buf = str;
+	Address::page_t page = 0;
+	int pos = buf.indexOf(':');
+	if(pos >= 0) {
+		io::BlockInStream stream(buf.substring(0, pos));
+		io::Input in(stream);
+		page = in.scanLong();
+		buf = buf.substring(pos + 1);
+	}
+	io::BlockInStream stream(str);
+	io::Input in(stream);
+	Address::offset_t off = in.scanLong();
+	set(props, Address(page, off));
+}
 
 }	// otawa

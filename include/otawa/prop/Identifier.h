@@ -88,9 +88,10 @@ public:
 	inline const T& operator()(Property *prop) const { return get(prop); }
 
 	// Identifier overload
-	virtual void print(elm::io::Output& output, const Property& prop) const	{ output << get(prop); }
+	virtual void print(elm::io::Output& out, const Property& prop) const;
 	virtual const Type& type(void) const { return otawa::type<T>(); }
 	virtual void scan(PropList& props, VarArg& args) const;
+	virtual void fromString(PropList& props, const string& str) const;
 
 	// Getter class
 	class Getter: public PreIterator<Getter, T> {
@@ -189,21 +190,17 @@ inline T& Identifier<T>::ref(const PropList& list) const {
 
 
 // GenericIdentifier<T>::print Specializations
-template <>
-void Identifier<char>::print(elm::io::Output& out, const Property& prop) const;
-template <>
-void Identifier<elm::CString>::print(elm::io::Output& out, const Property& prop) const;
-template <>
-void Identifier<elm::String>::print(elm::io::Output& out, const Property& prop) const;
-template <>
-void Identifier<PropList *>::print(elm::io::Output& out, const Property& prop) const;
+template <class T> void Identifier<T>::print(elm::io::Output& out, const Property& prop) const
+	{ out << get(prop); }
+template <> void Identifier<char>::print(elm::io::Output& out, const Property& prop) const;
+template <> void Identifier<cstring>::print(elm::io::Output& out, const Property& prop) const;
+template <> void Identifier<string>::print(elm::io::Output& out, const Property& prop) const;
+template <> void Identifier<PropList *>::print(elm::io::Output& out, const Property& prop) const;
 
 
 // GenericIdentifier<T>::scan Specializations
-template <>
-void Identifier<elm::CString>::scan(PropList& props, VarArg& args) const;
-template <>
-void Identifier<elm::String>::scan(PropList& props, VarArg& args) const;
+template <> void Identifier<elm::CString>::scan(PropList& props, VarArg& args) const;
+template <> void Identifier<elm::String>::scan(PropList& props, VarArg& args) const;
 
 
 template <class T>
@@ -221,6 +218,20 @@ template <class T>
 void Identifier<T>::scan(PropList& props, VarArg& args) const {
 	_if<type_info<T>::is_scalar, __scalar, __class>::_::scan(*this, props, args);
 }
+
+// GenericIdentifier<T>::fromString
+template <class T> inline void Identifier<T>::fromString(PropList& props, const string& str) const
+	{ ASSERTP(false, "type not supported for Identifier::fromString() call"); }
+template <> void Identifier<bool>::fromString(PropList& props, const string& str) const;
+template <> void Identifier<int>::fromString(PropList& props, const string& str) const;
+template <> void Identifier<unsigned int>::fromString(PropList& props, const string& str) const;
+template <> void Identifier<long>::fromString(PropList& props, const string& str) const;
+template <> void Identifier<unsigned long>::fromString(PropList& props, const string& str) const;
+template <> void Identifier<long long>::fromString(PropList& props, const string& str) const;
+template <> void Identifier<unsigned long long>::fromString(PropList& props, const string& str) const;
+template <> void Identifier<double>::fromString(PropList& props, const string& str) const;
+template <> void Identifier<string>::fromString(PropList& props, const string& str) const;
+template <> void Identifier<Address>::fromString(PropList& props, const string& str) const;
 
 } // otawa
 
