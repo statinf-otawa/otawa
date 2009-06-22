@@ -19,6 +19,7 @@ SUBDIRS= \
 	proc \
 	prog \
 	prop \
+	script \
 	sim \
 	util
 
