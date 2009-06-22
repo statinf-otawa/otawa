@@ -152,7 +152,8 @@ libotawa_la_SOURCES = \
 	flowfact_ContextualLoopBound.cpp \
 	BBRatioDisplayer.cpp \
 	graph_PreorderIterator.cpp \
-	hard_Memory.cpp
+	hard_Memory.cpp \
+	script_Script.cpp
 
 	
 
