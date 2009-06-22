@@ -10,6 +10,7 @@ SUBDIRS = \
 	pfg \
 	props \
 	reg \
+	script \
 	source
 
 if HAS_ILP

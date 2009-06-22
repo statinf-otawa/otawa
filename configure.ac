@@ -168,6 +168,12 @@ AC_PATH_PROG(HAS_DOT, dot, no)
 AM_CONDITIONAL(HAS_DOT, test "$HAS_DOT" != no)
 
 
+# ===== thot check =====
+AC_PATH_PROG(THOT_PATH, thot.py, no, "$PATH:$PWD/../thot")
+AM_CONDITIONAL(HAS_THOT, test "$THOT_PATH" != no)
+AC_SUBST(THOT_PATH)
+
+
 # ===== ocaml check =====
 AC_PATH_PROG(HAS_OCAMLC, ocamlc, no)
 AM_CONDITIONAL(HAS_OCAMLC, test "$HAS_OCAMLC" != no)
@@ -322,6 +328,7 @@ AC_CONFIG_FILES([
 	test/pfg/Makefile
 	test/exegraph/Makefile
 	test/reg/Makefile
+	test/script/Makefile
 	test/simulator/Makefile
 	test/source/Makefile
 	examples/ilp_times/Makefile
@@ -353,12 +360,15 @@ AC_CONFIG_FILES([
 	include/otawa/proc/Makefile
 	include/otawa/prog/Makefile
 	include/otawa/prop/Makefile
+	include/otawa/script/Makefile
 	include/otawa/sim/Makefile
 	include/otawa/util/Makefile
 	data/Makefile
 	data/caches/Makefile
 	data/makefiles/Makefile
 	data/procs/Makefile
+	data/scripts/Makefile
+	doc/Makefile
 ])
 AC_CONFIG_FILES([
 	bin/otawa-config
