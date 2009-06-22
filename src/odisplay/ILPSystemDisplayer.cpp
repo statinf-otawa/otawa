@@ -102,6 +102,14 @@ void ILPSystemDisplayer::configure(const PropList& props) {
 
 /**
  */
+void ILPSystemDisplayer::setup(WorkSpace *fw) {
+	cnt = 0;
+	names.clear();
+}
+
+
+/**
+ */
 void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 
 	// prepare configuration
@@ -168,7 +176,7 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 	// display variables
 	cout << "\t\t<h1><a name=\"__variables\">Variables</a></h1>\n";
 	for(vars_t::PairIterator var(vars); var; var++) {
-		cout << "\t\t\t<h2><a name=\"" << (*var).fst->name() << "\">" << (*var).fst->name() << " variable</a></h2>\n";
+		cout << "\t\t\t<h2><a name=\"" << nameOf((*var).fst) << "\">" << nameOf((*var).fst) << " variable</a></h2>\n";
 		cout << "\t\t\t\t<p>value = " << system->valueOf((*var).fst) << "</p>\n";
 		ASSERT((*var).snd);
 		for(int i = 0; i < (*var).snd->length(); i++)
@@ -241,8 +249,25 @@ void ILPSystemDisplayer::displayCons(ilp::Constraint *cons) {
  * @param var	Variable name to display.
  */
 void ILPSystemDisplayer::displayVar(ilp::Var *var) {
-	string name = var->name();
+	string name = nameOf(var);
 	cout << " <a href=\"#" << name << "\" title=\"value: " << system->valueOf(var) << "\">" << name << "</a>";
+}
+
+
+/**
+ * Get the name of a variable (even if ipet::EXPLICIT option is not set).
+ * @param var	Variable to get name of.
+ * @return		Variable name.
+ */
+string ILPSystemDisplayer::nameOf(ilp::Var *var) {
+	string name = names.get(var, "");
+	if(!name) {
+		name = var->name();
+		if(!name)
+			name = _ << "_x" << cnt++;
+		names.put(var, name);
+	}
+	return name;
 }
 
 } } // otawa::display
