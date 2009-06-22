@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
+<otawa-script xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<name>Trivial WCET computation</name>
+
+<info>
+This script may be used to compute trivial WCET (not realistic)
+with scalar pipelined processors. In the extreme case, it may give
+a rough overestimation of the real WCET.
+</info>
+
+<configuration>
+	<item name="virtual" type="bool" default="false" label="function call virtualization">
+		<help>Cause the function call to be replaced by inlining the function body.
+		Improve the precision of the WCET but may augment the computation time.</help>
+	</item>
+	<item name="stages" type="int" default="5" label="number of stages">
+		<help>Number of stages in the pipeline.</help>
+	</item>
+</configuration>
+
+<script>
+	<xsl:message>virtual is <xsl:value-of select="$virtual"/>
+	</xsl:message>
+	<xsl:if test="$virtual!=0">
+		<step processor="otawa::Virtualizer"/>
+	</xsl:if>
+	<step processor="otawa::ipet::WCETComputation">
+		<config name="otawa::Processor::VERBOSE" value="true"/>
+		<config name="otawa::ipet::PIPELINE_DEPTH" value="{$stages}"/>
+	</step>
+</script>
+
+</otawa-script>
