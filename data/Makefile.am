@@ -1,4 +1,5 @@
 SUBDIRS = \
 	caches \
 	makefiles \
-	procs
+	procs \
+	scripts
