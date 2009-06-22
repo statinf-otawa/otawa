@@ -166,37 +166,43 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 
 		// push calls
 		for(BasicBlock::OutIterator edge(bb); edge; edge++)
-			if(edge->kind() == Edge::VIRTUAL_CALL) {
+			switch(edge->kind()) {
+			case Edge::VIRTUAL:
+				if(edge->target()->isExit())
+					break;
+			case Edge::VIRTUAL_CALL: {
 
-				// check recursivity
-				for(int i = 0; i < calls.length(); i++)
-					if(calls[i] == edge->target()) {
-						if(isVerbose()) {
-							log << "\t[" << level << "] recursive call";
-							CFG *cfg = CALLED_CFG(edge);
-							if(cfg)
-								log << " to " << cfg->label();
-							log << io::endl;
+					// check recursivity
+					for(int i = 0; i < calls.length(); i++)
+						if(calls[i] == edge->target()) {
+							if(isVerbose()) {
+								log << "\t[" << level << "] recursive call";
+								CFG *cfg = CALLED_CFG(edge);
+								if(cfg)
+									log << " to " << cfg->label();
+								log << io::endl;
+							}
+							avoidingRecursive(ws, cfg, bb, edge->target());
+							continue;
 						}
-						avoidingRecursive(ws, cfg, bb, edge->target());
-						continue;
-					}
 
-				// do the call
-				if(isVerbose()) {
-					log << "\t[" << level << "] entering call";
-					level++;
-					CFG *cfg = CALLED_CFG(edge);
-					if(cfg)
-						log << " to " << cfg->label();
-					log << io::endl;
+					// do the call
+					if(isVerbose()) {
+						log << "\t[" << level << "] entering call";
+						level++;
+						CFG *cfg = CALLED_CFG(edge);
+						if(cfg)
+							log << " to " << cfg->label();
+						log << io::endl;
+					}
+					calls.push(edge->target());
+					todo.push(0);
+					todo.push(edge->target());
+					returns.push(0);
+					MARK(edge->target()) = calls.top();
+					enteringCall(ws, cfg, bb, edge->target());
 				}
-				calls.push(edge->target());
-				todo.push(0);
-				todo.push(edge->target());
-				returns.push(0);
-				MARK(edge->target()) = calls.top();
-				enteringCall(ws, cfg, bb, edge->target());
+			default:
 				break;
 			}
 	}
