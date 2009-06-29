@@ -1,5 +1,13 @@
 #!@BASH_PATH@
 
+# find the prefix
+prefix=`readlink -f "$0"`
+prefix=`dirname $prefix`/..
+if [ ! -d "$prefix/lib/libotawa.so" ]; then
+	prefix="@prefix@"
+fi
+
+
 # Initialization
 option=
 cflags=
@@ -10,8 +18,8 @@ ilp=
 loader=
 list_proc=
 list_modules=
-cflags_text="-I@prefix@/include"
-libs_text="@prefix@/lib/libotawa.la"
+cflags_text="-I$prefix/include"
+libs_text="$prefix/lib/libotawa.la"
 
 
 # Configurations
@@ -110,19 +118,19 @@ function use_module {
 		if [ -z "$LIB_STATIC" ]; then
 			case "$KIND" in
 			ilp)
-				LIB_STATIC="-u${mod}_plugin @prefix@/lib/otawa/ilp/$mod.la"
+				LIB_STATIC="-u${mod}_plugin $prefix/lib/otawa/ilp/$mod.la"
 				;;
 			loader)
-				LIB_STATIC="-u${mod}_plugin @prefix@/lib/otawa/loader/$mod.la"
+				LIB_STATIC="-u${mod}_plugin $prefix/lib/otawa/loader/$mod.la"
 				;;
 			lib)
-				LIB_STATIC="@prefix@/lib/libo$mod.la"
+				LIB_STATIC="$prefix/lib/libo$mod.la"
 				;;
 			proc)
-				LIB_STATIC="@prefix@/lib/otawa/proc/$mod.la"
+				LIB_STATIC="$prefix/lib/otawa/proc/$mod.la"
 				;;
 			proc_otawa)
-				LIB_STATIC="@prefix@/lib/otawa/proc/otawa/$mod.la"
+				LIB_STATIC="$prefix/lib/otawa/proc/otawa/$mod.la"
 				;;
 			esac
 		fi
@@ -131,19 +139,19 @@ function use_module {
 		if [ -z "$LIB" ]; then
 			case "$KIND" in
 			ilp)
-				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin @prefix@/lib/otawa/ilp/$mod.la"
+				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin $prefix/lib/otawa/ilp/$mod.la"
 				;;
 			loader)
-				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin @prefix@/lib/otawa/loader/$mod.la"
+				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin $prefix/lib/otawa/loader/$mod.la"
 				;;
 			lib)
-				LIB="@prefix@/lib/libo$mod.la"
+				LIB="$prefix/lib/libo$mod.la"
 				;;
 			proc)
-				LIB="@prefix@/lib/otawa/proc/$mod.la"
+				LIB="$prefix/lib/otawa/proc/$mod.la"
 				;;
 			proc_otawa)
-				LIB="@prefix@/lib/otawa/proc/otawa/$mod.la"
+				LIB="$prefix/lib/otawa/proc/otawa/$mod.la"
 				;;
 			esac
 			fi
@@ -202,7 +210,7 @@ while test "$1" != ""; do
 		list_proc=ok
 		;;
 	--prefix)
-		echo "@prefix@"
+		echo "$prefix"
 		exit 0
 		;;
 	-*)
@@ -250,16 +258,16 @@ if test "$libs" == "ok"; then
 	echo $libs_text
 fi
 if test "$data" == "ok"; then
-	echo @prefix@/share/Otawa
+	echo $prefix/share/Otawa
 fi
 if test "$doc" == "ok"; then
-	echo @prefix@/share/Otawa/autodoc/index.html
+	echo $prefix/share/Otawa/autodoc/index.html
 fi
 
 # --ilp
 if [ "$ilp" == "ok" ]; then
 	one="no"
-	paths="@ILP_PATHS@ $HOME/.otawa/ilp $PWD/.otawa/ilp"
+	paths="$prefix/lib/otawa/ilp $HOME/.otawa/ilp $PWD/.otawa/ilp"
 	for path in $paths; do
 		if [ -d "$path" ]; then
 			for plugin in `cd $path; ls *.so`; do
@@ -276,7 +284,7 @@ fi
 # --loader
 if [ "$loader" == "ok" ]; then
 	one="no"
-	paths="@LOADER_PATHS@ $HOME/.otawa/loader $PWD/.otawa/loader"
+	paths="$prefix/lib/otawa/loader $HOME/.otawa/loader $PWD/.otawa/loader"
 	for path in $paths; do
 		if [ -d "$path" ]; then
 			for plugin in ` cd $path; ls *.so`; do
@@ -293,7 +301,7 @@ fi
 # --proc
 if [ "$list_proc" == "ok" ]; then
 	one="no"
-	paths="@prefix@/lib/otawa/proc $HOME/.otawa/proc $PWD/.otawa/proc"
+	paths="$prefix/lib/otawa/proc $HOME/.otawa/proc $PWD/.otawa/proc"
 	for path in $paths; do
 		if [ -d "$path" ]; then
 			for plugin in `cd $path; ls *.la`; do
