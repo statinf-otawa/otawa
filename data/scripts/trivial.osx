@@ -20,8 +20,6 @@ a rough overestimation of the real WCET.
 </configuration>
 
 <script>
-	<xsl:message>virtual is <xsl:value-of select="$virtual"/>
-	</xsl:message>
 	<xsl:if test="$virtual!=0">
 		<step processor="otawa::Virtualizer"/>
 	</xsl:if>
