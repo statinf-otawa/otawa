@@ -1,11 +1,11 @@
 lib_LTLIBRARIES=libotawa.la
 
-DATE=$(shell date +%Y.%m.%d-%H:%M:%S)
-AM_CXXFLAGS=@OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@ -DAUTODOC="\"@AUTODOC@\"" -Wall -DDATE="\"$(DATE)\""
+
+AM_CXXFLAGS=@OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@ -DAUTODOC="\"@AUTODOC@\"" -Wall
 AM_YYFLAGS=-dv
 
 libotawa_la_LDFLAGS=
-libotawa_la_LIBADD=@GEL_LIBS@ @ELM_LIBS@
+libotawa_la_LIBADD=@GEL_LIBS@ @ELM_LIBS@ @LIB_LIBS@
 
 libotawa_la_SOURCES = \
 	feature.h \
