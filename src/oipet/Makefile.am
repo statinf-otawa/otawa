@@ -6,7 +6,8 @@ oipet_LDADD = \
 	@LOADER_LIBS@ \
 	@ILP_LIBS@ \
 	@OTAWA_LIBS@ \
-	@ODISPLAY_LIBS@
+	@ODISPLAY_LIBS@ \
+	@PROG_LIBS@
 	
 oipet_DEPENDENCIES = \
 	@LOADER_DEPS@ \
