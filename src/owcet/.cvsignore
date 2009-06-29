@@ -1,3 +1,5 @@
 Makefile.in
 owcet
 Makefile
+.deps
+.libs
