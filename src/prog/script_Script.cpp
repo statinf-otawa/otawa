@@ -33,6 +33,7 @@
 #include <otawa/proc/DynProcessor.h>
 #include <elm/xom/Elements.h>
 #include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/prog/Manager.h>
 
 using namespace elm;
 
@@ -140,9 +141,39 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	xom::Serializer serial2(*out2);
 	serial2.write(res);
 	delete out2;
-
-	// process the script
 	xom::Element *script = res->getRootElement();
+
+	// process the path
+	xom::Elements *elems = script->getChildElements("path");
+	for(int i = 0; i < elems->size(); i++) {
+		xom::Element *path_elem = elems->get(i);
+		Option<xom::String> value = path_elem->getAttributeValue("to");
+		if(value) {
+			Path path = *value;
+			if(path.isRelative()) {
+				Path base = path_elem->getBaseURI();
+				path = base / path;
+			}
+			ProcessorPlugin::addPath(path);
+		}
+	}
+	delete elems;
+
+	// scant the platform
+	xom::Element *pf = script->getFirstChildElement("platform");
+	if(pf) {
+		xom::Element *proc = script->getFirstChildElement("processor");
+		if(proc)
+			PROCESSOR_ELEMENT(props) = proc;
+		xom::Element *cache = script->getFirstChildElement("cache-config");
+		if(cache)
+			CACHE_CONFIG_ELEMENT(props) = cache;
+		xom::Element *mem = script->getFirstChildElement("memory");
+		if(mem)
+			MEMORY_ELEMENT(props) = mem;
+	}
+
+	// execute the script
 	if(script->getLocalName() != "otawa-script")
 		onError(script, "not an OTAWA script");
 	xom::Element *steps = script->getFirstChildElement("script");
