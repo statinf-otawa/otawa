@@ -29,6 +29,7 @@
 #include <elm/xom.h>
 #include <otawa/sim/Simulator.h>
 #include <otawa/prog/Loader.h>
+#include <elm/system/System.h>
 
 using namespace elm;
 
@@ -38,8 +39,15 @@ namespace otawa {
 static String buildPaths(cstring kind, string paths) {
 	StringBuffer buf;
 	buf << "./.otawa/" << kind << ":"
-		<< elm::system::Path::home() << "/.otawa/" << kind << ":"
-		<< paths;
+		<< elm::system::Path::home() << "/.otawa/" << kind << ":";
+#	ifdef HAS_RELOCATION
+		system::Path upath = system::System::getUnitPath((void *)buildPaths);
+		if(!upath)
+			buf << paths;
+		else
+			buf << (upath.parent() / "otawa" / kind) << ':';
+#	endif
+	buf << paths;
 	return buf.toString();
 }
 
@@ -224,6 +232,9 @@ WorkSpace *Manager::loadBin(
 		String name = buf.toString();
 		if(Processor::VERBOSE(props)) {
 			log << "INFO: looking for loader \"" << name << "\"\n";
+			log << "INFO: searchpaths:\n";
+			for(system::Plugger::PathIterator path(loader_plugger); path; path++)
+				log << "INFO:	- " << *path << io::endl;
 			log << "INFO: available loaders\n";
 			for(elm::system::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
 				log << "INFO:\t- " << *plugin << io::endl;
