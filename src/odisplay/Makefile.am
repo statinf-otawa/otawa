@@ -3,7 +3,7 @@ lib_LTLIBRARIES=libodisplay.la
 AM_CXXFLAGS=@OTAWA_CXXFLAGS@ -Wall
 
 libodisplay_la_LDFLAGS=
-libodisplay_la_LIBADD= @OTAWA_LIBS@
+libodisplay_la_LIBADD= @OTAWA_LIBS@ @LIB_LIBS@
 
 libodisplay_la_SOURCES = \
 	CFGDrawer.cpp \
