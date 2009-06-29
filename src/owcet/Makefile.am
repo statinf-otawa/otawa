@@ -1,0 +1,10 @@
+AM_CXXFLAGS = @OTAWA_CXXFLAGS@ -Wall
+
+bin_PROGRAMS=owcet
+
+owcet_LDADD = @LOADER_LIBS@ @OTAWA_LIBS@
+owcet_DEPENDENCIES = @LOADER_DEPS@ @OTAWA_DEPS@
+
+owcet_SOURCES= \
+	owcet.cpp
+
