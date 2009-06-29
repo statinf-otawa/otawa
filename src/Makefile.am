@@ -3,7 +3,8 @@ SUBDIRS= \
 	ast \
 	ets \
 	odisplay \
-	oloader
+	oloader \
+	owcet
 
 # ILP Plugins
 if HAS_LP_SOLVE
