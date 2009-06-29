@@ -15,6 +15,22 @@ AS_IF(test "$with_plugin" = "yes",
 	[ HAS_PLUGIN=no ])
 AM_CONDITIONAL(HAS_PLUGIN, test "$HAS_PLUGIN" = "yes")
 
+
+# ==== relocation option ====
+AC_ARG_WITH(relocation, [  --with-relocation={yes, no}],,[with_relocation=no])
+AS_IF(test "$with_relocation" = "yes",
+[
+	AC_DEFINE(HAS_RELOCATION, [], [support relocation])
+	PLUGIN_LIBS='-Wl,-rpath=\$$ORIGIN/../../lib'
+	PROG_LIBS='-Wl,-rpath=\$$ORIGIN/../lib'
+	LIB_LIBS='-Wl,-rpath=\$$ORIGIN'
+])
+AC_SUBST(PLUGIN_LIBS)
+AC_SUBST(PROG_LIBS)
+AC_SUBST(LIB_LIBS)
+AM_CONDITIONAL(HAS_RELOCATION, test "$with_relocation" = "yes")
+
+
 # === Distribution activation ===
 AC_ARG_WITH(makedist, [  --with-makedist={yes, no}],,[with_makedist=yes])
 
@@ -283,6 +299,12 @@ AS_IF( test "$HAS_PLUGIN" = "yes",
 AC_SUBST(HAS_SO)
 
 
+# ===== for date =====
+DATE=`date +%Y.%m.%d-%H:%M:%S `
+AS_AC_EXPAND(DATE, "$DATE")
+AC_DEFINE_UNQUOTED(DATE, "$DATE", [Current date])
+
+
 # ==== Output ====
 #	src/glpk/Makefile
 AC_CONFIG_FILES([
@@ -301,6 +323,7 @@ AC_CONFIG_FILES([
 	src/odisplay/Makefile
 	src/ogensim/Makefile
 	src/oloader/Makefile
+	src/owcet/Makefile
 	src/arm/Makefile
 	src/ppc/Makefile
 	src/s12x/Makefile
