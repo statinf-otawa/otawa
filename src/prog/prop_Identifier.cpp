@@ -209,37 +209,36 @@ static void escape(elm::io::Output& out, char chr, char quote) {
 }
 
 
-template <>
-void Identifier<char>::print(elm::io::Output& out, const Property& prop) const {
+template <> void Identifier<char>::printFormatted(io::Output& out, const char& v) {
 	out << '\'';
-	escape(out, get(prop), '\'');
+	escape(out, v, '\'');
 	out << '\'';
 }
 
 
-template <>
-void Identifier<CString>::print(elm::io::Output& out, const Property& prop) const {
+template <> void Identifier<string>::printFormatted(io::Output& out, const string& str) {
 	out << '"';
-	CString str = get(prop);
 	for(int i = 0; str[i]; i++)
 		escape(out, str[i], '"');
 	out << '"';
 }
 
 
-template <>
-void Identifier<elm::String>::print(elm::io::Output& out, const Property& prop) const {
+template <> void Identifier<cstring>::printFormatted(io::Output& out, const cstring& str) {
 	out << '"';
-	const String& str = get(prop);
 	for(int i = 0; i < str.length(); i++)
 		escape(out, str[i], '"');
 	out << '"';
 }
 
 
-template <>
-void Identifier<PropList *>::print(elm::io::Output& out, const Property& prop) const {
-	out << "proplist(" << &prop << ")";
+template <> void Identifier<PropList>::printFormatted(io::Output& out, const PropList& v) {
+	out << "proplist(" << &v << ")";
+}
+
+
+template <> void Identifier<const PropList *>::printFormatted(io::Output& out, const PropList * const & v) {
+	out << "proplist(" << (void *)v << ")";
 }
 
 

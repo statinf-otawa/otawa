@@ -300,13 +300,6 @@ void CFG::numberBB(void) {
 }
 
 
-// GenericIdentifier<CFG *>::print Specialization
-template <>
-void Identifier<CFG *>::print(elm::io::Output& out, const Property& prop) const {
-	out << "cfg(" << get(prop)->label() << ")";
-}
-
-
 /**
  */
 CFG::~CFG(void) {
