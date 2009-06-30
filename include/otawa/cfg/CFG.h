@@ -119,10 +119,6 @@ inline bool CFG::isInlined(void) const {
 	return flags & FLAG_Inlined;
 }
 
-// Property display
-template <>
-void Identifier<CFG *>::print(elm::io::Output& out, const Property& prop) const;
-
 } // otawa
 
 #endif // OTAWA_CFG_CFG_H

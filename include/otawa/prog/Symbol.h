@@ -38,6 +38,7 @@ public:
 	Inst *findInst(void) const;
 	inline bool doesNotReturn(void) const { return no_return; }
 	void setNoReturn(void);
+	void print(io::Output& out) const;
 
 private:
 	File& _file;
@@ -49,8 +50,7 @@ private:
 };
 
 // GenericIdentifier<Symbol_t *>::print Specialization
-template <>
-void Identifier<Symbol *>::print(elm::io::Output& output, const Property& prop) const;
+inline io::Output& operator<<(io::Output& out, Symbol *sym) { sym->print(out); return out; }
 
 } // otawa
 
