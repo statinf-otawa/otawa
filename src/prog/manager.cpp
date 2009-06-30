@@ -41,11 +41,7 @@ static String buildPaths(cstring kind, string paths) {
 	buf << "./.otawa/" << kind << ":"
 		<< elm::system::Path::home() << "/.otawa/" << kind << ":";
 #	ifdef HAS_RELOCATION
-		system::Path upath = system::System::getUnitPath((void *)buildPaths);
-		if(!upath)
-			buf << paths;
-		else
-			buf << (upath.parent() / "otawa" / kind) << ':';
+		buf << (Manager::prefixPath() / "otawa" / kind) << ':';
 #	endif
 	buf << paths;
 	return buf.toString();
@@ -375,6 +371,23 @@ ilp::System *Manager::newILPSystem(String name) {
 		return 0;
 	}
 	return plugin->newSystem();
+}
+
+
+/**
+ * Get the prefix path of the OTAWA installation,
+ * that is, the installation directory path that allows to retrieve other
+ * file resources of OTAWA.
+ * @return	Prefix path.
+ */
+system::Path Manager::prefixPath(void) {
+	static Path prefix;
+	if(!prefix) {
+		system::Path upath = system::System::getUnitPath((void *)buildPaths);
+		if(upath)
+			prefix = upath.parent();
+	}
+	return prefix;
 }
 
 

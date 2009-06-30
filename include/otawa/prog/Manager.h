@@ -3,7 +3,7 @@
  *	Manager class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-07, IRIT UPS.
+ *	Copyright (c) 2003-09, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -29,9 +29,7 @@
 #include <otawa/properties.h>
 #include <otawa/base.h>
 #include <otawa/program.h>
-//#include <otawa/cfg.h>
 #include <otawa/prog/WorkSpace.h>
-//#include <otawa/prog/Loader.h>
 
 namespace otawa {
 
@@ -60,13 +58,6 @@ public:
 // Manager class
 class Manager {
 	friend class WorkSpace;
-	genstruct::Vector<hard::Platform *> platforms;
-	//datastruct::Vector<WorkSpace *> frameworks;
-	elm::system::Plugger ilp_plugger;
-	elm::system::Plugger loader_plugger;
-	elm::system::Plugger sim_plugger;
-	WorkSpace *loadBin(const elm::system::Path& path, const PropList& props);
-	WorkSpace *loadXML(const elm::system::Path& path, const PropList& props);
 public:
 	static const CString OTAWA_NS;
 	static const CString OTAWA_NAME;
@@ -74,6 +65,7 @@ public:
 	static const CString CACHE_CONFIG_NAME;
 	static const CString MEMORY_NAME;
 	static const cstring COMPILATION_DATE;
+	static system::Path prefixPath(void);
 
 	Manager(void);
 	~Manager(void);
@@ -86,6 +78,14 @@ public:
 		const PropList& props = PropList::EMPTY);
 	ilp::System *newILPSystem(String plugin = "");
 
+private:
+	WorkSpace *loadBin(const elm::system::Path& path, const PropList& props);
+	WorkSpace *loadXML(const elm::system::Path& path, const PropList& props);
+
+	genstruct::Vector<hard::Platform *> platforms;
+	elm::system::Plugger ilp_plugger;
+	elm::system::Plugger loader_plugger;
+	elm::system::Plugger sim_plugger;
 };
 
 // Configuration Properties
