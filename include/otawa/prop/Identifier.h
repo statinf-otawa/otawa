@@ -88,7 +88,10 @@ public:
 	inline const T& operator()(Property *prop) const { return get(prop); }
 
 	// Identifier overload
-	virtual void print(elm::io::Output& out, const Property& prop) const;
+	inline void printProp(elm::io::Output& out, const Property& prop) const { print(get(prop)); }
+	virtual void print(io::Output& out, const T& v) const { out << v; }
+	inline void printFormattedProp(elm::io::Output& out, const Property& prop) const { printFormatted(get(prop)); }
+	virtual void printFormatted(io::Output& out, const T& v) { out << v; }
 	virtual const Type& type(void) const { return otawa::type<T>(); }
 	virtual void scan(PropList& props, VarArg& args) const;
 	virtual void fromString(PropList& props, const string& str) const;
@@ -189,16 +192,15 @@ inline T& Identifier<T>::ref(const PropList& list) const {
 }
 
 
-// GenericIdentifier<T>::print Specializations
-template <class T> void Identifier<T>::print(elm::io::Output& out, const Property& prop) const
-	{ out << get(prop); }
-template <> void Identifier<char>::print(elm::io::Output& out, const Property& prop) const;
-template <> void Identifier<cstring>::print(elm::io::Output& out, const Property& prop) const;
-template <> void Identifier<string>::print(elm::io::Output& out, const Property& prop) const;
-template <> void Identifier<PropList *>::print(elm::io::Output& out, const Property& prop) const;
+// Identifier<T>::printFormatted specializations
+template <> void Identifier<char>::printFormatted(io::Output& out, const char& v);
+template <> void Identifier<string>::printFormatted(io::Output& out, const string& v);
+template <> void Identifier<cstring>::printFormatted(io::Output& out, const cstring& v);
+template <> void Identifier<PropList>::printFormatted(io::Output& out, const PropList& v);
+template <> void Identifier<const PropList *>::printFormatted(io::Output& out, const PropList * const & v);
 
 
-// GenericIdentifier<T>::scan Specializations
+// Identifier<T>::scan Specializations
 template <> void Identifier<elm::CString>::scan(PropList& props, VarArg& args) const;
 template <> void Identifier<elm::String>::scan(PropList& props, VarArg& args) const;
 

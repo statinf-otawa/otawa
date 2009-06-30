@@ -39,7 +39,7 @@ public:
 	inline bool exists(void) const { return prop.hasProp(id); }
 	inline T& ref(void) const;
 	inline const T& get(void) const { return id.value(prop); }
-	inline void print(io::Output& out) const { id.print(out, *prop.getProp(&id)); }
+	inline void print(io::Output& out) const { out << get(); }
 
 	inline operator const T&(void) const { return id.get(prop, id.defaultValue()); }
 	inline Ref<T, I>& operator=(const T& value) { id.set(prop, value); return *this; }
