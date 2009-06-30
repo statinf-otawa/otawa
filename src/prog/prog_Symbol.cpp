@@ -113,9 +113,8 @@ Inst *Symbol::findInst(void) const {
 
 
 // GenericIdentifier<Symbol_t *>::print Specialization
-template <>
-void Identifier<Symbol *>::print(elm::io::Output& out, const Property& prop) const {
-	out << "symbol(" << get(prop)->name() << ")";
+void Symbol::print(elm::io::Output& out) const {
+	out << "symbol(" << name() << ")";
 }
 
 
