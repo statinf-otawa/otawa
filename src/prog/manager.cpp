@@ -385,7 +385,7 @@ system::Path Manager::prefixPath(void) {
 	if(!prefix) {
 		system::Path upath = system::System::getUnitPath((void *)buildPaths);
 		if(upath)
-			prefix = upath.parent();
+			prefix = upath.parent().parent();
 	}
 	return prefix;
 }
