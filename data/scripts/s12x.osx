@@ -29,7 +29,7 @@ These options prevents the compiler to generated code not supported by OTAWA.
 	<item name="delta" type="bool" default="true" label="analyze inter-block effects">
 		<help>This option makes the computed WCET more precise by analyzing timing
 		between basic block, mainly due to branch effects.
-		On a S12X, a branch instruction takes two more cycles if it is taken.
+		On a S12X, a branch instruction takes two more cycles if it is taken.</help>
 	</item>
 	<item name="virtual" type="bool" default="false" label="function call virtualization">
 		<help>Cause the function call to be replaced by inlining the function body.
@@ -40,7 +40,7 @@ These options prevents the compiler to generated code not supported by OTAWA.
 	</item>
 	<item name="cw" type="bool" default="false" label="CodeWarrior lib">
 		<help>Set this option if you are using CodeWarrior compiler to get
-		automatically some bounds for the emulation function for unsupported operators.""" 
+		automatically some bounds for the emulation function for unsupported operators.</help> 
 	</item>
 </configuration>
 
