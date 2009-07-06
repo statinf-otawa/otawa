@@ -176,6 +176,14 @@ function log {
 	echo -e "$*\n" >> $basedir/$log
 }
 
+# Output a message only in verbose mode
+function say_verbose {
+	if [ "$verbose" == yes ] ; then
+		echo $*
+		log $*
+	fi
+}
+
 # Display if verbose mode is enabled.
 function display {
 	if test "$verbose" = yes; then
@@ -279,12 +287,15 @@ function clean_none {
 #	CHECK : check mode (tool, exist)
 function do_check {
 	if [ -n "$CHECK" ]; then
+		say_verbose "CHECK: checking $NAME for $CHECK"
 		if check_$CHECK; then
+			say_verbose "CHECK: $NAME already done !"
 			done="$done $NAME"
 			true
 			return
 		fi
 	fi
+	say_verbose "CHECK: $NAME must be done..."
 	false
 }
 
@@ -319,14 +330,17 @@ function check_tool {
 #	CHECK_FILES	files to check
 #	CHECK_DIRS	directories to check
 function check_exist {
+	say_verbose "CHECK: exists $CHECK_FILES, $CHECK_DIRS ?"
 	for file in $CHECK_FILES; do
-		if [ ! -e "$NAME/$file" ]; then
+		if [ ! -e "$basedir/$NAME/$file" ]; then
+			say_verbose "CHECK: $basedir/$NAME/$file does not exist !"
 			false
 			return
 		fi
 	done
 	for dir in $CHECK_DIRS; do
-		if [ ! -d "$NAME/$dir" ]; then
+		if [ ! -d "$basedir/$NAME/$dir" ]; then
+			say_verbose "CHECK: $basedir/$NAME/$dir does not exist !"
 			false
 			return
 		fi
@@ -728,6 +742,7 @@ function load_module {
 	VERSION=
 	WGET_ADDRESS=
 	WGET_PACKAGE=
+	WGET_DIR=
 	DIST=
 	mod_$1
 }
