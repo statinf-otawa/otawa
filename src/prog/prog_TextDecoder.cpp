@@ -29,17 +29,13 @@
 
 namespace otawa {
 
+// for internal use only
+static Identifier<bool> LABELS_DONE("", false);
+
 /**
  * Static access to the text decoder.
  */
 TextDecoder TextDecoder::_;
-
-
-// Registration
-/*static Configuration follow_paths_config(TextDecoder::FOLLOW_PATHS,
-	AUTODOC "/classotawa_1_1ets_1_1TextDecoder.html");
-static Registration reg(TextDecoder::_,
-	AUTODOC "/classotawa_1_1ets_1_1TextDecoder.html");*/
 
 
 /**
@@ -112,24 +108,27 @@ void TextDecoder::processWorkSpace(WorkSpace *fw) {
 	}
 
 	// Put the labels
-	for(Process::FileIter file(fw->process()); file; file++)
-		for(File::SymIter sym(file); sym; sym++) {
-			ProgItem *item = file->findItemAt(sym->address());
-			if(item) {
-				Inst *inst = item->toInst();
-				if(inst)
-					switch(sym->kind()) {
-					case Symbol::FUNCTION:
-						FUNCTION_LABEL(inst).add(sym->name());
-						break;
-					case Symbol::LABEL:
-						LABEL(inst).add(sym->name());
-						break;
-					default:
-						break;
-					}
+	if(!LABELS_DONE(fw->process())) {
+		for(Process::FileIter file(fw->process()); file; file++)
+			for(File::SymIter sym(file); sym; sym++) {
+				ProgItem *item = file->findItemAt(sym->address());
+				if(item) {
+					Inst *inst = item->toInst();
+					if(inst)
+						switch(sym->kind()) {
+						case Symbol::FUNCTION:
+							FUNCTION_LABEL(inst).add(sym->name());
+							break;
+						case Symbol::LABEL:
+							LABEL(inst).add(sym->name());
+							break;
+						default:
+							break;
+						}
+				}
 			}
-		}
+		LABELS_DONE(fw->process()) = true;
+	}
 }
 
 
