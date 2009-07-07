@@ -160,33 +160,30 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 		Inst *inst = item->toInst();
 		if(inst && inst->isControl() && !IGNORE_CONTROL(inst)) {
 
-			// Found BB starting on target instruction
+			// found BB starting on target instruction
 			Inst *target = inst->target();
 			if(target) {
-				assert(!target->isPseudo());
+				ASSERT(!target->isPseudo());
 				BasicBlock *bb = thisBB(target);
-				assert(bb);
+				ASSERT(bb);
 				if(inst->isCall())
 					IS_ENTRY(bb) = true;
 			}
-			else if(!isReturn(inst) && isVerbose()) {
-				Symbol * sym = 0; //code->closerSymbol(inst);
-				warn( _ << "unresolved indirect control at 0x"
-					<< inst->address() << " ("
-					<< (sym ? &sym->name()  : "") << " + 0x"
-					<< (sym ? (inst->address() - sym->address()) : 0) << ")");
-				log << '\t' << inst->address() << '\t';
-				inst->dump(log);
-				log << io::endl;
-			}
+
+			// verbose message for non-return
+			else if(!isReturn(inst) && isVerbose())
+				warn( _ << "unresolved indirect control at 0x" << inst->address()
+					<< "\n\t" << inst->address() << '\t' << inst);
+
+			// look for target properties
 			else
 				for(Identifier<Address>::Getter target(inst, BRANCH_TARGET);
 				target; target++) {
 					Inst *target_inst = ws->findInstAt(target);
 					if(target_inst) {
-						assert(!target_inst->isPseudo());
+						ASSERT(!target_inst->isPseudo());
 						BasicBlock *bb = thisBB(target_inst);
-						assert(bb);
+						ASSERT(bb);
 						if(inst->isCall())
 							IS_ENTRY(bb) = true;
 					}
@@ -203,74 +200,80 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 	bb = 0;
 	bool follow = true;
 	for(Segment::ItemIter item(seg); item; item++) {
+
+		// an instruction ?
 		Inst *inst = item->toInst();
-		if(inst) {
+		if(!inst)
+			continue;
 
-			// Start of block found
-			CodeBasicBlock *next_bb = BB(inst);
-			if(next_bb) {
+		// start of block found
+		CodeBasicBlock *next_bb = BB(inst);
+		if(next_bb) {
 
-				// no current BB
-				if(!bb)
-					bb = next_bb;
+			// no current BB
+			if(!bb)
+				bb = next_bb;
 
-				// end of current BB
-				else {
-					bb->setSize(inst->address() - bb->address());
+			// end of current BB
+			else {
+				bb->setSize(inst->address() - bb->address());
 
-					// Record not-taken edge
-					if(bb && follow)
-						new Edge(bb, next_bb, EDGE_NotTaken);
+				// Record not-taken edge
+				if(bb && follow)
+					new Edge(bb, next_bb, EDGE_NotTaken);
 
-					// Initialize new BB
-					bb = next_bb;
-					follow = true;
-					if(IS_ENTRY(bb)) {
-						ASSERT(!entries.contains(bb));
-						entries.add(bb);
-					}
-					bb->removeProp(&IS_ENTRY);
-				}
+				// Initialize new BB
+				bb = next_bb;
+				follow = true;
 			}
 
-			// End of block
-			if(inst->isControl()) {
-				ASSERTP(bb, "no BB at " << inst->address() << io::endl);
-
-				// record BB size
-				bb->setSize(inst->topAddress() - bb->address());
-
-				// Record the taken edge
-				Inst *target = inst->target();
-				if(target && (!inst->isCall() || !NO_CALL(target))) {
-					BasicBlock *target_bb = thisBB(target);
-					assert(target_bb);
-					new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
-				}
-				if(!target)
-					for(Identifier<Address>::Getter addr(inst, BRANCH_TARGET); addr; addr++) {
-						target = ws->findInstAt(addr);
-						if(target) {
-							BasicBlock *target_bb = thisBB(target);
-							ASSERT(target_bb);
-							new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
-						}
-						else
-							throw otawa::Exception(_ << "branch target to " << *target << " at " << inst->address()
-								<< " does not match an instruction.");
-					}
-
-				// Record BB flags
-				if(isReturn(inst))
-					bb->flags |= BasicBlock::FLAG_Return;
-				else if(inst->isCall())
-					bb->flags |= BasicBlock::FLAG_Call;
-				if(inst->isConditional())
-					bb->flags |= BasicBlock::FLAG_Cond;
-				if(!target && !isReturn(inst))
-					bb->flags |= BasicBlock::FLAG_Unknown;
-				follow = inst->isCall() || inst->isConditional();
+			// record entries
+			if(IS_ENTRY(bb)) {
+				ASSERT(!entries.contains(bb));
+				entries.add(bb);
+				IS_ENTRY(bb).remove();
 			}
+		}
+
+		// end of block
+		if(inst->isControl()) {
+			ASSERTP(bb, "no BB at " << inst->address() << io::endl);
+
+			// record BB size
+			bb->setSize(inst->topAddress() - bb->address());
+
+			// record the taken edge
+			Inst *target = inst->target();
+			if(target && (!inst->isCall() || !NO_CALL(target))) {
+				BasicBlock *target_bb = thisBB(target);
+				ASSERT(target_bb);
+				new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
+			}
+
+			// look for target properties
+			if(!target)
+				for(Identifier<Address>::Getter addr(inst, BRANCH_TARGET); addr; addr++) {
+					target = ws->findInstAt(addr);
+					if(target) {
+						BasicBlock *target_bb = thisBB(target);
+						ASSERT(target_bb);
+						new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
+					}
+					else
+						warn(_ << "branch target to " << *target << " at " << inst->address()
+							<< " does not match an instruction.");
+				}
+
+			// record BB flags
+			if(isReturn(inst))
+				bb->flags |= BasicBlock::FLAG_Return;
+			else if(inst->isCall())
+				bb->flags |= BasicBlock::FLAG_Call;
+			if(inst->isConditional())
+				bb->flags |= BasicBlock::FLAG_Cond;
+			if(!target && !isReturn(inst))
+				bb->flags |= BasicBlock::FLAG_Unknown;
+			follow = inst->isCall() || inst->isConditional();
 		}
 	}
 
@@ -287,10 +290,6 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 		if(isVerbose())
 			log << "\tadded CFG " << cfg->label() << " at " << cfg->address() << io::endl;
 	}
-
-	// clean instructions
-	/*for(Segment::ItemIter item(seg); item; item++)
-		BB(item).remove();*/
 }
 
 
@@ -308,6 +307,8 @@ void CFGBuilder::addFile(WorkSpace *ws, File *file) {
 			Inst *inst = sym->findInst();
 			if(inst)
 				addSubProgram(inst);
+			else
+				warn(_ << "function symbol \"" << sym->name() << "\" does not match any instruction");
 	}
 
 	// Scan file segments
