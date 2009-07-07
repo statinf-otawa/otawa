@@ -51,7 +51,7 @@ VarTextDecoder::VarTextDecoder(void)
 /**
  */
 void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
-	
+
 	// Look the _start
 	Inst *start = ws->start();
 	if(start) {
@@ -61,7 +61,7 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 	}
 	else if(isVerbose())
 		log << "\tno entry to process\n";
-	
+
 	// Look the function symbols
 	for(Process::FileIter file(ws->process()); file; file++)
 		for(File::SymIter sym(file); sym; sym++)
@@ -83,13 +83,11 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
  * @param ws					Current workspace.
  * @param address				Address of the instruction to find.
  * @return						Instruction matching the given address.
- * @throws ProcessorException	If the instruction cannot be found.
  */
 Inst *VarTextDecoder::getInst(WorkSpace *ws, otawa::address_t address) {
 	Inst *inst = ws->findInstAt(address);
 	if(!inst)
-		throw ProcessorException(*this, elm::_
-			<< "unconsistant binary: no code segment at " << address);
+		warn( elm::_ << "unconsistant binary: no code segment at " << address);
 	return inst;
 }
 
@@ -104,55 +102,59 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 	ASSERT(ws);
 	ASSERT(address);
 	TRACE("otawa::VarTextDecoder::processEntry("  << address << ")");
-	
+
 	// Initialize the queue
 	VectorQueue<address_t> todo(QUEUE_SIZE);
 	todo.put(address);
-	
+
 	// Repeat until there is no more address to explore
 	while(!todo.isEmpty()) {
-		
+
 		// Get the next instruction
 		address_t addr = todo.get();
 		TRACE("otawa::VarTextDecoder::processEntry: starting from " << addr);
 		Inst *inst = getInst(ws,  addr);
-		if(MARKER(inst)) {
+		if(!inst || MARKER(inst)) {
 			TRACE("otawa::VarTextDecoder::processEntry: already done !");
 			continue;
 		}
 		MARKER(inst) = true;
-			
+
 		// Follow the instruction until a branch
 		while(!inst->isControl()) {
 			TRACE("otawa::VarTextDecoder::processEntry: process "
 				<< inst->address() << " : " << io::hex(inst->kind()));
 			address_t next = inst->topAddress();
 			inst = getInst(ws, next);
-			if(MARKER(inst))
-				continue;	
+			if(!inst || MARKER(inst))
+				continue;
 		}
 		TRACE("otawa::VarTextDecoder::processEntry: end found");
-		
+
 		// Record target and next
 		if(inst->isConditional()) {
 			TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
 			todo.put(inst->topAddress());
 		}
 		if(!inst->isReturn() && !IS_RETURN(inst)) {
-			Inst *target = inst->target();
+			Inst *target = 0;
+			try {
+				target = inst->target();
+			}
+			catch(ProcessException& e) {
+				warn(elm::_ << e.message() << ": the branched code will not be decoded");
+			}
 			if(target && !NO_CALL(target)) {
 				TRACE("otawa::VarTextDecoder::processEntry: put(" << target->address() << ")");
 				todo.put(target->address());
 			}
-			else {
-				if(isVerbose())
-					log << "WARNING: no target for branch at " << inst->address()
-						<< io::endl;
-			}
+			else if(isVerbose() && !target)
+				log << "WARNING: no target for branch at " << inst->address()
+					<< io::endl;
 			if(inst->isCall() && (!target || !NO_RETURN(target))) {
 				TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
 				todo.put(inst->topAddress());
-			}				
+			}
 		}
 	}
 }
