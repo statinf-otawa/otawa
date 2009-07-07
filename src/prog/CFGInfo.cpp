@@ -98,23 +98,6 @@ void CFGInfo::clear(void) {
 
 
 /**
- * Find the basic block containing the given instruction.
- * @param inst		Instruction to find the BB for.
- * @return				Found basic block. If the code is not already managed,
- * it is automatically added.
- */
-/*BasicBlock *CFGInfo::findBB(Inst *inst) {
-	PseudoInst *pseudo;
-	while(inst) {
-		if((pseudo = inst->toPseudo()) && pseudo->id() == &CodeBasicBlock::ID)
-			return ((CodeBasicBlock::Mark *)pseudo)->bb();
-		inst = inst->prevInst();
-	}
-	assert(0);
-}*/
-
-
-/**
  * Find the CFG starting by the basic block containing this instruction.
  * If the CFG does not exists, it is created and added.
  * @par
