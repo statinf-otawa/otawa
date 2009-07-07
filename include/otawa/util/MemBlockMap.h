@@ -59,10 +59,10 @@ public:
 	}
 
 	void add(const T *block) {
-		size_t top = block->topAddress().offset() >> pow;
+		size_t top = (block->topAddress().offset() - 1) >> pow;
 		if(top & (bsize - 1))
 			top++;
-		for(size_t ptr = block->address().offset() >> pow; ptr < top; ptr++) {
+		for(size_t ptr = block->address().offset() >> pow; ptr <= top; ptr++) {
 			size_t entry = ptr % tsize;
 			nodes[entry] = new node_t(block, nodes[entry]);
 		}
