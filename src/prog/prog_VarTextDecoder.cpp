@@ -113,23 +113,28 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 		// Get the next instruction
 		address_t addr = todo.get();
 		TRACE("otawa::VarTextDecoder::processEntry: starting from " << addr);
-		Inst *inst = getInst(ws,  addr);
-		if(!inst || MARKER(inst)) {
-			TRACE("otawa::VarTextDecoder::processEntry: already done !");
-			continue;
-		}
-		MARKER(inst) = true;
+		Inst *first_inst = getInst(ws,  addr);
+		Inst *inst = first_inst;
 
 		// Follow the instruction until a branch
-		while(!inst->isControl()) {
+		address_t next;
+		while(inst && !MARKER(inst) && !inst->isControl()) {
 			TRACE("otawa::VarTextDecoder::processEntry: process "
 				<< inst->address() << " : " << io::hex(inst->kind()));
-			address_t next = inst->topAddress();
+			next = inst->topAddress();
 			inst = getInst(ws, next);
-			if(!inst || MARKER(inst))
-				continue;
 		}
+
+		// mark the block
 		TRACE("otawa::VarTextDecoder::processEntry: end found");
+		if(!inst) {
+			warn(elm::_ << "unknown instruction at " << next);
+			continue;
+		}
+		bool marker_found = MARKER(inst);
+		MARKER(first_inst) = true;
+		if(marker_found)
+			continue;
 
 		// Record target and next
 		if(inst->isConditional()) {
