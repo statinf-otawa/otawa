@@ -41,6 +41,13 @@ namespace otawa { namespace script {
 
 static const cstring XSL_URI = "http://www.w3.org/1999/XSL/Transform";
 
+// Registration
+void Script::init(void) {
+	_name("otawa::script::Script");
+	_version(1, 0, 0);
+}
+
+
 /**
  * @class Script
  * A script processor allows to interpret a file that performs a WCET computation.
@@ -50,7 +57,7 @@ static const cstring XSL_URI = "http://www.w3.org/1999/XSL/Transform";
 
 /**
  */
-Script::Script(void): Processor("otawa::script::Script", Version(1, 0, 0)) {
+Script::Script(void) {
 }
 
 
