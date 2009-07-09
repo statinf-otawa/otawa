@@ -3,6 +3,7 @@ includeotawacfg_HEADERS = \
 	BasicBlock.h \
 	CFG.h \
 	CFGBuilder.h \
+	CFGChecker.h \
 	CFGCheckSummer.h \
 	CFGCollector.h \
 	CFGInfo.h \
