@@ -48,6 +48,19 @@ void Script::init(void) {
 }
 
 
+// ScriptErrorHandler class
+class ScriptErrorHandler: public ErrorHandler {
+public:
+	ScriptErrorHandler(Output& _log): log(_log) { }
+	virtual void onError(error_level_t level, const string& message) {
+		log << getLevelString(level) << ": " << message << io::endl;
+	}
+
+private:
+	Output& log;
+};
+
+
 /**
  * @class Script
  * A script processor allows to interpret a file that performs a WCET computation.
@@ -131,6 +144,8 @@ void Script::processWorkSpace(WorkSpace *ws) {
 
 	// perform the transformation
 	xom::XSLTransform xslt(xsl);
+	ScriptErrorHandler handler(log);
+	xslt.setErrorHandler(&handler);
 	for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param; param++) {
 		xslt.setParameter((*param).fst, (*param).snd);
 		if(isVerbose())
