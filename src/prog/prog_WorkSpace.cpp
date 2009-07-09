@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -40,7 +40,7 @@
 
 /**
  * @defgroup prog	Program Representation
- * 
+ *
  * The program representation module of OTAWA is the main module providing all details
  * about the processed program. It provides a representation built from the program
  * binary form (@ref Process) and provides a workspace to perform analyses (@ref WorkSpace).
@@ -48,10 +48,10 @@
  * as a simple Manager::load() call:
  * @code
  * #include <otawa/otawa.h>
- * 
+ *
  * using namespace elm;
  * using namespace otawa;
- * 
+ *
  * try {
  *   PropList props;
  *   Processor::VERBOSE(props) = true;
@@ -62,10 +62,10 @@
  * catch(otawa::Exception& e) {
  *   cerr << "ERROR: " << e.message() << io::endl;
  *   return 1;
- * } 
+ * }
  * @endcode
  * The load may possibly fail and throw an @ref otawa::Exception exception.
- * 
+ *
  * The @ref Process class describes the full program and its execution environment as
  * different items of description:
  * @li the @ref otawa::File represents a binary file involved in the building of the execution environments
@@ -87,12 +87,12 @@ namespace otawa {
  * @ingroup prog
  */
 
-	
+
 /**
  * Build a new wokspace with the given process.
  * @param _proc	Process to use.
  */
-WorkSpace::WorkSpace(Process *_proc): proc(_proc), featMap() {
+WorkSpace::WorkSpace(Process *_proc): proc(_proc), featMap(), cancelled(false) {
 	TRACE(this << ".WorkSpace::WorkSpace(" << _proc << ')');
 	assert(_proc);
 	//Manager *man = _proc->manager();
@@ -105,13 +105,13 @@ WorkSpace::WorkSpace(Process *_proc): proc(_proc), featMap() {
  * Build a new workspace on the same process as the given one.
  * @param ws	Workspace to get the process form.
  */
-WorkSpace::WorkSpace(const WorkSpace *ws) {
+WorkSpace::WorkSpace(const WorkSpace *ws): cancelled(false) {
 	TRACE(this << ".WorkSpace::WorkSpace(" << ws << ')');
 	assert(ws);
 	proc = ws->process();
 	//Manager *man = proc->manager();
 	//man->frameworks.add(this);
-	proc->link(this);	
+	proc->link(this);
 }
 
 
@@ -120,7 +120,7 @@ WorkSpace::WorkSpace(const WorkSpace *ws) {
  */
 WorkSpace::~WorkSpace(void) {
 	TRACE(this << ".WorkSpace::~WorkSpace()");
-	
+
 	// clean-up
 	Vector<const AbstractFeature *> deps;
 	for(feat_map_t::ItemIterator dep(featMap); dep; dep++)
@@ -129,7 +129,7 @@ WorkSpace::~WorkSpace(void) {
 		if(isProvided(*deps[i]))
 			invalidate(*deps[i]);
 	clearProps();
-	
+
 	// removal from manager and process
 	//Manager *man = proc->manager();
 	//man->frameworks.remove(this);
@@ -141,12 +141,12 @@ WorkSpace::~WorkSpace(void) {
  * Get the CFG of the project. If it does not exists, built it.
  */
 CFGInfo *WorkSpace::getCFGInfo(void) {
-	
+
 	// Already built ?
 	CFGInfo *info = CFGInfo::ID(this);
 	if(info)
 		return info;
-	
+
 	// Build it
 	CFGBuilder builder;
 	builder.process(this);
@@ -159,22 +159,22 @@ CFGInfo *WorkSpace::getCFGInfo(void) {
  * @return Entry CFG if any or null.
  */
 CFG *WorkSpace::getStartCFG(void) {
-	
+
 	// Find the entry
 	Inst *_start = start();
 	if(!_start)
 		return 0;
-	
+
 	// Get the CFG information
 	CFGInfo *info = getCFGInfo();
-	
+
 	// Find CFG attached to the entry
 	return info->findCFG(_start);
 }
 
 
 /**
- * Get the AST of the project. 
+ * Get the AST of the project.
  */
 ASTInfo *WorkSpace::getASTInfo(void) {
 	DEPRECATED
@@ -246,11 +246,11 @@ FeatureDependency* WorkSpace::getDependency(const AbstractFeature* feature) {
 }
 
 /**
- * Create a new FeatureDependency associated with the feature. 
+ * Create a new FeatureDependency associated with the feature.
  * @param feature	Provided feature.
  */
  void WorkSpace::newFeatDep(const AbstractFeature* feature) {
- 	ASSERT(featMap.get(feature, NULL) == NULL); 	
+ 	ASSERT(featMap.get(feature, NULL) == NULL);
  	featMap.put(feature, new FeatureDependency(feature));
 }
 
@@ -271,7 +271,7 @@ FeatureDependency* WorkSpace::getDependency(const AbstractFeature* feature) {
  * @param feature	Provided feature.
  */
 bool WorkSpace::hasFeatDep(const AbstractFeature* feature) {
-	ASSERT(!featMap.exists(feature) || !featMap.get(feature, NULL)->isInvalidated()); 
+	ASSERT(!featMap.exists(feature) || !featMap.get(feature, NULL)->isInvalidated());
 	return (featMap.exists(feature));
 }
 
@@ -283,11 +283,11 @@ bool WorkSpace::hasFeatDep(const AbstractFeature* feature) {
 void WorkSpace::provide(const AbstractFeature& feature, const Vector<const AbstractFeature*> *required) {
 	if(isProvided(feature))
 		return;
-	
+
 	// record the providing of the feature
 	ASSERT(!hasFeatDep(&feature));
 	newFeatDep(&feature);
-	
+
 	// add dependencies
 	if (required != NULL)
 		for (int j = 0; j < required->count(); j++)
@@ -296,7 +296,7 @@ void WorkSpace::provide(const AbstractFeature& feature, const Vector<const Abstr
 }
 
 /**
- * Invalidate a feature (removing its dependancies) 
+ * Invalidate a feature (removing its dependancies)
  * @param feature	Provided feature.
  */
 void WorkSpace::invalidate(const AbstractFeature& feature) {
@@ -305,7 +305,7 @@ void WorkSpace::invalidate(const AbstractFeature& feature) {
 			DAGNode<FeatureDependency *> *childNode = *iter;
 			FeatureDependency *childDep = childNode->useValue();
 			invalidate(*childDep->getFeature());
-			getDependency(&feature)->removeChild(childDep);		
+			getDependency(&feature)->removeChild(childDep);
 		}
 		delFeatDep(&feature);
 		remove(feature);
@@ -344,5 +344,31 @@ void WorkSpace::require(const AbstractFeature& feature, const PropList& props) {
 		feature.process(this, props);
 	}
 }
+
+
+/**
+ * @fn void WorkSpace::clearCancellation(void);
+ * Reset the cancellation bit. This function must be called before
+ * starting a long running time computation.
+ */
+
+
+/**
+ * @fn void WorkSpace::cancel(void);
+ * Informs the current computation to stop as soon as possible.
+ * This feature has not direct on the workspace but is used by code processor
+ * to change their behaviour. It may be used to stop a computation
+ * in a parallel or a GUI context.
+ */
+
+
+/**
+ * @fn bool WorkSpace::isCancelled(void) const;
+ * Test if the cancel() method has been called on the workspace.
+ * This method is usually called by code processor to know if
+ * the computation has been canceled.
+ * @return	True if the computation has been cancelled, false else.
+ */
+
 
 } // otawa
