@@ -25,6 +25,7 @@
 #include <otawa/dfa/BitSet.h>
 #include <otawa/cfg.h>
 #include <otawa/prop/DeletableProperty.h>
+#include <otawa/cfg/features.h>
 
 using namespace otawa::dfa;
 
@@ -114,12 +115,29 @@ public:
 };
 
 
-
 /**
  * @class Dominance
  * This CFG processor computes and hook to the CFG the dominance relation
- * that, tehn, may be tested with @ref Dominance::dominate() function.
+ * that, then, may be tested with @ref Dominance::dominate() function.
+ *
+ * @p Provided Features
+ * @li @ref DOMINANCE_FEATURE
+ * @li @ref LOOP_HEADERS_FEATURE
+ *
+ * @p Required Features
+ * @li @ref CHECKED_CFG_FEATURE
  */
+
+
+/**
+ * The dominance processors computes dominance relation and the loop headers
+ * on the current CFG.
+ */
+Dominance::Dominance(void): CFGProcessor("otawa::dominance", Version(1, 1, 0)) {
+	provide(DOMINANCE_FEATURE);
+	provide(LOOP_HEADERS_FEATURE);
+	require(CHECKED_CFG_FEATURE);
+}
 
 
 /**
@@ -212,20 +230,6 @@ void Dominance::ensure(CFG *cfg) {
 		Dominance dom;
 		dom.processCFG(0, cfg);
 	}
-}
-
-
-/**
- * The dominance processors computes dominance relation and the loop headers
- * on the current CFG.
- *
- * @Provided Features
- * @li @ref DOMINANCE_FEATURE
- * @li @ref LOOP_HEADERS_FEATURE
- */
-Dominance::Dominance(void): CFGProcessor("otawa::dominance", Version(1, 1, 0)) {
-	provide(DOMINANCE_FEATURE);
-	provide(LOOP_HEADERS_FEATURE);
 }
 
 
