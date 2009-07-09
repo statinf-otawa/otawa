@@ -4,7 +4,7 @@
  *
  *	otawa/ipet/Delta.h -- Delta class interface.
  */
- 
+
 #ifndef OTAWA_IPET_DELTA_H
 #define OTAWA_IPET_DELTA_H
 #include <otawa/ipet/BBPath.h>
@@ -18,13 +18,13 @@ namespace otawa {
 namespace ilp {
 	class System;
 }
-	
+
 namespace ipet {
-	
+
 class BBPath;
 class Delta;
 
-class Delta: public CFGProcessor {
+class Delta: public Registered<Delta, CFGProcessor> {
 	int levels;
 	int completion;
 	bool explicitNames;
@@ -41,7 +41,8 @@ protected:
 
 public:
 	Delta(void);
-	
+	static void init(void);
+
 	virtual void configure(const PropList& props);
 
 	static Identifier<int> LEVELS;

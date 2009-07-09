@@ -55,17 +55,21 @@ namespace otawa { namespace ipet {
  * @li @ref BB_TIME_FEATURE
  */
 
+void Delta::init(void) {
+	_name("otawa::ipet::Delta");
+	_version(1, 0, 0);
+	_require(ASSIGNED_VARS_FEATURE);
+	_require(ILP_SYSTEM_FEATURE);
+	_provide(BB_TIME_FEATURE);
+	_provide(INTERBLOCK_SUPPORT_FEATURE);
+}
+
+
 /**
  * Build a new delta calculator.
  * @param props Configuration properties.
  */
-Delta::Delta(void)
-: CFGProcessor("otawa::ipet::Delta", Version(1, 0, 0)) {
-	require(ASSIGNED_VARS_FEATURE);
-	require(ILP_SYSTEM_FEATURE);
-	provide(BB_TIME_FEATURE);
-	provide(INTERBLOCK_SUPPORT_FEATURE);
-}
+Delta::Delta(void) { }
 
 
 /**
@@ -251,9 +255,10 @@ int Delta::delta(BBPath &bbp, WorkSpace *fw){
 		o = t - f;
 		FLUSH_TIME(bbp) = o;*/
 		if(bbp.length() == 2){
-			delta =
-				t - bbp(1,l-1)->t(fw)
-			      - bbp(2,l)->t(fw);
+			int left = bbp(1,l-1)->t(fw);
+			int right = bbp(2,l)->t(fw);
+			delta = t - left  - right;
+			cerr << "DELTA = " << t << " - " << left << " - " << right << " = " << *delta << io::endl;
 		}
 		else{
 			delta =
@@ -271,33 +276,33 @@ int Delta::delta(BBPath &bbp, WorkSpace *fw){
  * This identifier is used for forcing the depth of the Delta algorith.
  * If this identifier is not set, the depth will be adjusted automatically
  */
-Identifier<int>  Delta::LEVELS("Delta::levels", 0);
+Identifier<int>  Delta::LEVELS("Delta::LEVELS", 0);
 
 /**
  * This identifier is used for storing the delta value of a path
  */
-Identifier<int> Delta::DELTA("Delta::delta", 0);
+Identifier<int> Delta::DELTA("Delta::DELTA", 0);
 
 /**
  * This identifier is used for storing the time for the first
  * instruction to fetch after all instructions from the
  * beginning of the sequence have been fetched.
  */
-Identifier<int> Delta::SEQ_COMPLETION("Delta::seq_completion", 0);
+Identifier<int> Delta::SEQ_COMPLETION("Delta::SEQ_COMPLETION", 0);
 
 
 /**
  * Property used to return statistics about the @ref Delta processor about
  * the maximal sequence length in instructions.
  */
-Identifier<double> Delta::MAX_LENGTH("otawa::ipet::Delta::max_length", 0);
+Identifier<double> Delta::MAX_LENGTH("otawa::ipet::Delta::MAX_LENGTH", 0);
 
 
 /**
  * Property used to return statistics about the @ref Delta processor about
  * the mean sequence length in instructions.
  */
-Identifier<double> Delta::MEAN_LENGTH("otawa::ipet::Delta::min_length", 0);
+Identifier<double> Delta::MEAN_LENGTH("otawa::ipet::Delta::MIN_LENGTH", 0);
 
 
 /**
@@ -315,6 +320,6 @@ Identifier<TreePath<BasicBlock*,BBPath*>*>
  * @par Properties
  * @li @ref Delta::DELTA (@ref BBPATH).
  */
-Feature<Delta> DELTA_SEQUENCES_FEATURE("delta_sequences");
+Feature<Delta> DELTA_SEQUENCES_FEATURE("otawa::ipet::DELTA_SEQUENCES_FEATURE");
 
 } } // otawa::ipet

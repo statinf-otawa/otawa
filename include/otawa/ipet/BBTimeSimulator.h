@@ -9,7 +9,7 @@
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
  *	(at your option) any later version.
- * 
+ *
  *	OTAWA is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,19 +25,20 @@
 #include <otawa/cfg.h>
 #include <otawa/proc/BBProcessor.h>
 
-namespace otawa { 
+namespace otawa {
 
 // Predeclaration
 namespace sim {
 	class State;
-}	
-	
+}
+
 namespace ipet {
 
 // BBTimeSimulator class
-class BBTimeSimulator : public BBProcessor {
+class BBTimeSimulator : public Registered<BBTimeSimulator, BBProcessor> {
 public:
 	BBTimeSimulator(void);
+	static void init(void);
 
 protected:
 	virtual void setup(WorkSpace *ws);
