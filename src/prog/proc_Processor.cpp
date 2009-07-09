@@ -299,7 +299,7 @@ void Processor::init(const PropList& props) {
 }
 
 
-// Only for the deprecatio warning
+// Only for the deprecation warning
 static bool deprecated;
 
 /**
@@ -361,7 +361,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 
 	// Get used feature
 	Vector<const AbstractFeature *> required;
-	for(FeatureIter feature(*reg); feature; feature++)
+	for(FeatureIter feature(*reg); !ws->isCancelled() && feature; feature++)
 		if(feature->kind() == FeatureUsage::require
 		|| feature->kind() == FeatureUsage::use) {
 			if(feature->kind() == FeatureUsage::require)
@@ -380,6 +380,17 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 				throw UnavailableFeatureException(this, feature->feature());
 			}
 		}
+	if(ws->isCancelled())
+		return;
+
+	// check before starting processor
+	for(FeatureIter feature(*reg); feature; feature++)
+		if((feature->kind() == FeatureUsage::require
+		|| feature->kind() == FeatureUsage::use)
+		&& !fw->isProvided(feature->feature()))
+			throw otawa::Exception(_ << 'feature ' << feature->feature().name()
+				<< " is not provided after one cycle of requirements:\n"
+				<< "stopping -- this may denotes circular dependencies.");
 
 	// Pre-processing actions
 	if(isVerbose())
@@ -431,13 +442,6 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 		ASSERTP(dep, "cleanup invoked for a not provided feature: " + (*clean).fst->name());
 		(*dep)((*clean).snd);
 	}
-
-	// possibly cleanup only used features
-	// !!TO FIX!!
-	/*for(FeatureIter feature(*reg); feature; feature++)
-		if(feature->kind() == FeatureUsage::use
-		&& !ws->getDependency(&feature->feature())->isInUse())
-			ws->invalidate(feature->feature());*/
 }
 
 
