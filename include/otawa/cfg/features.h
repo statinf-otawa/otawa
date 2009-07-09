@@ -94,6 +94,9 @@ extern Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK;
 extern SilentFeature CFG_CHECKSUM_FEATURE;
 extern Identifier<unsigned long > CHECKSUM;
 
+// CHECKED_CFG_FEATURE
+extern SilentFeature CHECKED_CFG_FEATURE;
+
 } // otawa
 
 #endif /* OTAWA_CFG_FEATURES_H_ */
