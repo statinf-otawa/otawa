@@ -60,7 +60,7 @@ void CFGChecker::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		Inst *last;
 		for(BasicBlock::InstIter inst(bb); inst; inst++)
 			last = inst;
-		warn(_ << "instruction at " << cfg->format(last->address()) << " contains unresolved branches.");
+		warn(_ << "instruction at " << cfg->format(last->address()) << " (" << last->address() << ") contains unresolved branches.");
 	}
 }
 

@@ -143,6 +143,8 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	delete out;
 
 	// perform the transformation
+	if(isVerbose())
+		log << "\tperforming XSLT transformation\n";
 	xom::XSLTransform xslt(xsl);
 	ScriptErrorHandler handler(log);
 	xslt.setErrorHandler(&handler);
@@ -166,6 +168,8 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	xom::Element *script = res->getRootElement();
 
 	// process the path
+	if(isVerbose())
+		log << "\tprocessing paths\n";
 	xom::Elements *elems = script->getChildElements("path");
 	for(int i = 0; i < elems->size(); i++) {
 		xom::Element *path_elem = elems->get(i);
@@ -182,6 +186,8 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	delete elems;
 
 	// scant the platform
+	if(isVerbose())
+		log << "\tprocessing platform\n";
 	xom::Element *pf = script->getFirstChildElement("platform");
 	if(pf) {
 		xom::Element *proc = script->getFirstChildElement("processor");
@@ -196,6 +202,8 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	}
 
 	// execute the script
+	if(isVerbose())
+		log << "\tprocessing script\n";
 	if(script->getLocalName() != "otawa-script")
 		onError(script, "not an OTAWA script");
 	xom::Element *steps = script->getFirstChildElement("script");
