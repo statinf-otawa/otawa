@@ -41,7 +41,7 @@ static String buildPaths(cstring kind, string paths) {
 	buf << "./.otawa/" << kind << ":"
 		<< elm::system::Path::home() << "/.otawa/" << kind << ":";
 #	ifdef HAS_RELOCATION
-		buf << (Manager::prefixPath() / "otawa" / kind) << ':';
+		buf << (Manager::prefixPath() / "lib" / "otawa" / kind) << ':';
 #	endif
 	buf << paths;
 	return buf.toString();
