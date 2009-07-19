@@ -236,10 +236,14 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 		}
 
 		// end of block
-		if(inst->isControl()) {
-			ASSERTP(bb, "no BB at " << inst->address() << io::endl);
+		if(IS_RETURN(inst)) {
+			bb->setSize(inst->topAddress() - bb->address());
+			bb->flags |= BasicBlock::FLAG_Return;
+			follow = false;
+		}
 
-			// record BB size
+		else if(inst->isControl() && !IGNORE_CONTROL(inst)) {
+			ASSERTP(bb, "no BB at " << inst->address() << io::endl);
 			bb->setSize(inst->topAddress() - bb->address());
 
 			// record the taken edge
