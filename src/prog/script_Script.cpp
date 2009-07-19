@@ -37,6 +37,8 @@
 
 using namespace elm;
 
+#define DEBUG(x)	//x
+
 namespace otawa { namespace script {
 
 static const cstring XSL_URI = "http://www.w3.org/1999/XSL/Transform";
@@ -137,14 +139,12 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	}
 
 	// !!DEBUG!!
-	OutStream *out = system::System::createFile("out.xml");
+	DEBUG(OutStream *out = system::System::createFile("out.xml");
 	xom::Serializer serial(*out);
 	serial.write(xsl);
-	delete out;
+	delete out);
 
 	// perform the transformation
-	if(isVerbose())
-		log << "\tperforming XSLT transformation\n";
 	xom::XSLTransform xslt(xsl);
 	ScriptErrorHandler handler(log);
 	xslt.setErrorHandler(&handler);
@@ -161,15 +161,13 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	delete doc;
 
 	// !!DEBUG!!
-	OutStream *out2 = system::System::createFile("out2.xml");
+	DEBUG(OutStream *out2 = system::System::createFile("out2.xml");
 	xom::Serializer serial2(*out2);
 	serial2.write(res);
-	delete out2;
-	xom::Element *script = res->getRootElement();
+	delete out2;)
 
 	// process the path
-	if(isVerbose())
-		log << "\tprocessing paths\n";
+	xom::Element *script = res->getRootElement();
 	xom::Elements *elems = script->getChildElements("path");
 	for(int i = 0; i < elems->size(); i++) {
 		xom::Element *path_elem = elems->get(i);
@@ -186,8 +184,6 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	delete elems;
 
 	// scant the platform
-	if(isVerbose())
-		log << "\tprocessing platform\n";
 	xom::Element *pf = script->getFirstChildElement("platform");
 	if(pf) {
 		xom::Element *proc = script->getFirstChildElement("processor");
@@ -202,8 +198,6 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	}
 
 	// execute the script
-	if(isVerbose())
-		log << "\tprocessing script\n";
 	if(script->getLocalName() != "otawa-script")
 		onError(script, "not an OTAWA script");
 	xom::Element *steps = script->getFirstChildElement("script");
