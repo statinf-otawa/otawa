@@ -86,6 +86,10 @@ private:
 	elm::system::Plugger ilp_plugger;
 	elm::system::Plugger loader_plugger;
 	elm::system::Plugger sim_plugger;
+	bool isVerbose(void);
+	void setVerbosity(const PropList& props);
+	void resetVerbosity(void);
+	int verbose;
 };
 
 // Configuration Properties
