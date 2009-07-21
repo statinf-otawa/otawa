@@ -20,6 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/system/System.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/proc/Registry.h>
@@ -147,6 +148,9 @@ using namespace elm::io;
 
 namespace otawa {
 
+extern cstring VERBOSE_ENV;
+
+
 // Registration
 Processor::__init::__init(void) {
 	Processor::init();
@@ -182,6 +186,11 @@ Processor::__init Processor::__reg;
  * @p Statistics
  * The statistics are recorded in the property list passed by @ref Processor::STATS.
  * @li @ref Processor::RUNTIME.
+ *
+ * @p Verbosity
+ * OTAWA provides two way to activate verbosity in code processors.
+ * @li passing the @ref Processor::VERBOSE to the processor property list
+ * @li define the environment variable "OTAWA_VERBOSE"
  *
  * @ingroup proc
  */
@@ -284,7 +293,12 @@ void Processor::init(const PropList& props) {
 	stats = STATS(props);
 
 	// Process verbosity
-	if(VERBOSE(props))
+	bool verbose;
+	if(props.hasProp(VERBOSE))
+		verbose = VERBOSE(props);
+	else
+		verbose = system::System::hasEnv(VERBOSE_ENV);
+	if(verbose)
 		flags |= IS_VERBOSE;
 	else
 		flags &= ~IS_VERBOSE;

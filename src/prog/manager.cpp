@@ -41,11 +41,14 @@ static String buildPaths(cstring kind, string paths) {
 	buf << "./.otawa/" << kind << ":"
 		<< elm::system::Path::home() << "/.otawa/" << kind << ":";
 #	ifdef HAS_RELOCATION
-		buf << (Manager::prefixPath() / "otawa" / kind) << ':';
+		buf << (Manager::prefixPath() / "lib/otawa" / kind) << ':';
 #	endif
 	buf << paths;
 	return buf.toString();
 }
+
+// environment variable activating verbosity
+cstring VERBOSE_ENV = "OTAWA_VERBOSE";
 
 
 /**
@@ -100,12 +103,61 @@ LoadException::LoadException(const String& message)
  * resources like loaders and platforms.
  */
 
+
+// test if verbose mode is activated
+bool Manager::isVerbose(void) {
+	return verbose == 1;
+}
+
+
+// reset verbosity at end of an action
+void Manager::resetVerbosity(void) {
+	verbose = -1;
+}
+
+
+// look for verbosity activation
+void Manager::setVerbosity(const PropList& props) {
+
+	// already set ?
+	if(verbose != -1)
+		return;
+
+	// look in properties
+	if(props.hasProp(Processor::VERBOSE)) {
+		if(Processor::VERBOSE(props))
+			verbose = 1;
+		else
+			verbose = 0;
+		return;
+	}
+
+	// look in environment
+	if(system::System::hasEnv(VERBOSE_ENV))
+		verbose = 1;
+	else
+		verbose = 0;
+}
+
+
+/**
+ * Manager builder. Install the PPC GLISS loader.
+ */
+Manager::Manager(void):
+	ilp_plugger("ilp_plugin", Version(1, 0, 0),
+		buildPaths("ilp", ILP_PATHS)),
+	loader_plugger(OTAWA_LOADER_NAME, OTAWA_LOADER_VERSION,
+		buildPaths("loader", LOADER_PATHS)),
+	sim_plugger(OTAWA_SIMULATOR_NAME, OTAWA_SIMULATOR_VERSION, SIMULATOR_PATHS)
+{
+	resetVerbosity();
+}
+
+
 /**
  * Delete all used resources.
  */
 Manager::~Manager(void) {
-	/*for(int i = 0; i < frameworks.count(); i++)
-		delete frameworks[i];*/
 	for(int i = 0; i < platforms.length(); i++)
 		delete platforms[i];
 }
@@ -176,6 +228,7 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * example, to develop a new loader plugin.
  */
 WorkSpace *Manager::load(const elm::system::Path&  path, const PropList& props) {
+	setVerbosity(props);
 
 	// Just load binary ?
 	if(path.extension() != "xml")
@@ -198,7 +251,7 @@ WorkSpace *Manager::loadBin(
 	const elm::system::Path& path,
 	const PropList& props)
 {
-	//Process *proc = 0;
+	setVerbosity(props);
 
 	// get log
 	io::OutStream *log_stream = Processor::LOG(props);
@@ -218,15 +271,16 @@ WorkSpace *Manager::loadBin(
 	if(!loader) {
 		gel_file_t *file = gel_open((char *)&path, 0, 0);
 		if(!file) {
+			resetVerbosity();
 			throw LoadException(gel_strerror());
-                }
+		}
 		gel_file_info_t infos;
 		gel_file_infos(file, &infos);
 		StringBuffer buf;
 		buf << "elf_" << infos.machine;
 		gel_close(file);
 		String name = buf.toString();
-		if(Processor::VERBOSE(props)) {
+		if(isVerbose()) {
 			log << "INFO: looking for loader \"" << name << "\"\n";
 			log << "INFO: searchpaths:\n";
 			for(system::Plugger::PathIterator path(loader_plugger); path; path++)
@@ -239,6 +293,7 @@ WorkSpace *Manager::loadBin(
 	}
 
 	// No loader -> error
+	resetVerbosity();
 	if(!loader)
 		throw LoadException(_ << "no loader for \"" << path << "\".");
 
@@ -258,21 +313,26 @@ WorkSpace *Manager::loadXML(
 	const elm::system::Path& path,
 	const PropList& props)
 {
+	setVerbosity(props);
 
 	// Load the file
 	xom::Builder builder;
 	xom::Document *doc = builder.build(&path);
-	if(!doc)
+	if(!doc) {
+		resetVerbosity();
 		throw LoadException(_ << "cannot load \"" << path << "\".");
+	}
 	xom::Element *elem = doc->getRootElement();
 
 	// Check the file
 	if(elem->getLocalName() != "otawa"
-	|| elem->getNamespaceURI() != OTAWA_NS)
+	|| elem->getNamespaceURI() != OTAWA_NS) {
+		resetVerbosity();
 		throw LoadException("not a valid OTAWA XML.");
+	}
 
 	// Record the configuration
-	if(Processor::VERBOSE(props))
+	if(isVerbose())
 		cout << "MANAGER: load configuration from \"" << path << "\".\n";
 	PropList new_config;
 	new_config.addProps(props);
@@ -291,11 +351,15 @@ WorkSpace *Manager::loadXML(
 WorkSpace *Manager::load(xom::Element *elem, const PropList& props) {
 	assert(elem);
 	xom::Element *bin = elem->getFirstChildElement("binary");
-	if(!bin)
+	if(!bin) {
+		resetVerbosity();
 		throw LoadException("no binary available.");
+	}
 	elm::system::Path bin_path = (CString)bin->getAttributeValue("ref");
-	if(!bin_path)
+	if(!bin_path) {
+		resetVerbosity();
 		throw LoadException("no binary available.");
+	}
 	return loadBin(bin_path, props);
 }
 
@@ -319,21 +383,8 @@ WorkSpace *Manager::load(const PropList& props) {
 		return load(path, props);
 
 	// Nothing to do
+	resetVerbosity();
 	throw LoadException("nothing to do.");
-}
-
-
-/**
- * Manager builder. Install the PPC GLISS loader.
- */
-Manager::Manager(void):
-	ilp_plugger("ilp_plugin", Version(1, 0, 0),
-		buildPaths("ilp", ILP_PATHS)),
-	loader_plugger(OTAWA_LOADER_NAME, OTAWA_LOADER_VERSION,
-		buildPaths("loader", LOADER_PATHS)),
-	sim_plugger(OTAWA_SIMULATOR_NAME, OTAWA_SIMULATOR_VERSION, SIMULATOR_PATHS)
-{
-	//AbstractIdentifier::init();
 }
 
 
