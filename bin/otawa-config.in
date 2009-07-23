@@ -3,7 +3,7 @@
 # find the prefix
 prefix=`readlink -f "$0"`
 prefix=`dirname $prefix`/..
-if [ ! -x "$prefix/lib/libotawa.so" ]; then
+if [ ! -d "$prefix/lib/libotawa.so" ]; then
 	prefix="@prefix@"
 fi
 
