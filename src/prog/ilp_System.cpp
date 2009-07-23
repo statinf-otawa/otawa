@@ -30,10 +30,12 @@ namespace otawa { namespace ilp {
 
 
 /**
- * @fn boolean System::solve(void);
+ * @fn boolean System::solve(WorkSpace *ws);
  * Solve the ILP system.
- * @return	True if the resolution is succesful or false else (mainly due
- * 			to lack of constraint).
+ * @param ws	If passed (default to null), the given workspace is used to test
+ * 				if the computation is cancelled in order to stop the solver.
+ * @return		True if the resolution is succesful or false else (mainly due
+ * 				to lack of constraint).
  */
 
 
