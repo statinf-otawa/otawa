@@ -5,7 +5,7 @@ dumpcfg_SOURCES= \
 	DisassemblerDisplayer.cpp \
 	DotDisplayer.cpp
 
-dumpcfg_LDADD = @LOADER_LIBS@ @OTAWA_LIBS@
+dumpcfg_LDADD = @LOADER_LIBS@ @OTAWA_LIBS@ @PROG_LIBS@
 dumpcfg_DEPENDENCIES = @LOADER_DEPS@ @OTAWA_DEPS@
 
 AM_CXXFLAGS = @OTAWA_CXXFLAGS@ -Wall

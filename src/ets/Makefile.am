@@ -5,7 +5,7 @@ AM_CXXFLAGS = @OTAWA_CXXFLAGS@ @GEL_CXXFLAGS@
 otawaproc_LTLIBRARIES = ets.la
 
 ets_la_LDFLAGS = -module
-ets_la_LIBADD = @OTAWA_LIBS@
+ets_la_LIBADD = @OTAWA_LIBS@  @PLUGIN_LIBS@
 ets_la_DEPENDENCIES = @OTAWA_DEPS@
 
 ets_la_SOURCES = \
