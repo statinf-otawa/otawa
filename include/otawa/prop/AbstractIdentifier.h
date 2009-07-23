@@ -40,10 +40,13 @@ public:
 	virtual ~AbstractIdentifier(void) { }
 
 	inline const elm::String name(void) const { return nam; }
+	void print(elm::io::Output& out) const;
 
-	virtual void print(elm::io::Output& out) const;
-	virtual void print(elm::io::Output& output, const Property& prop) const;
-	inline void print(elm::io::Output& output, const Property *prop) const { print(output, *prop); }
+	virtual void print(elm::io::Output& output, const Property *prop) const;
+	inline void print(elm::io::Output& output, const Property& prop) const { print(output, &prop); }
+	virtual void printFormatted(io::Output& out, const Property *prop) const;
+	inline void printFormatted(elm::io::Output& output, const Property& prop) const { printFormatted(output, &prop); }
+
 	virtual const Type& type(void) const;
 	virtual void scan(PropList& props, VarArg& args) const;
 	virtual void fromString(PropList& props, const string& str) const;
@@ -60,15 +63,11 @@ public:
 	DuplicateIdentifierException(String& name);
 };
 
-inline elm::io::Output& operator<<(elm::io::Output& out, const AbstractIdentifier& id) {
-	id.print(out);
-	return out;
-}
 
-inline elm::io::Output& operator<<(elm::io::Output& out, const AbstractIdentifier *id) {
-	ASSERT(id);
-	return out << *id;
-}
+inline elm::io::Output& operator<<(elm::io::Output& out, const AbstractIdentifier& id)
+	{ id.print(out); return out; }
+inline elm::io::Output& operator<<(elm::io::Output& out, const AbstractIdentifier *id)
+	{ ASSERT(id); return out << *id; }
 
 } //otawa
 
