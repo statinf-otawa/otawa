@@ -30,17 +30,17 @@ int main(void) {
 	CHECK(!cprops.hasProp(ID2));
 	
 	// Simple getter
-	props.set(ID1, 111);
+	ID1(props) = 111;
 	CHECK(props.hasProp(ID1));
-	CHECK(props.get<int>(ID1) == 111);
+	CHECK(ID1(props) == 111);
 	
 	// Iterator getter
 	int cnt = 0;
-	for(PropList::Getter<int> prop(cprops, ID1); prop; prop++)
+	for(Identifier<int>::Getter prop(cprops, ID1); prop; prop++)
 		cnt++;
 	CHECK(cnt == 1);
 	cnt = 0;
-	for(PropList::Getter<int> prop(cprops, ID2); prop; prop++)
+	for(Identifier<int>::Getter prop(cprops, ID2); prop; prop++)
 		cnt++;
 	CHECK(cnt == 0);
 	
@@ -57,11 +57,11 @@ int main(void) {
 	CHECK(ID1(cprops) == 666);
 	CHECK(ID2(cprops) == 0);
 	cnt = 0;
-	for(PropList::Getter<int> prop(cprops, ID1); prop; prop++)
+	for(Identifier<int>::Getter prop(cprops, ID1); prop; prop++)
 		cnt++;
 	CHECK(cnt == 1);
 	cnt = 0;
-	for(PropList::Getter<int> prop(cprops, ID2); prop; prop++)
+	for(Identifier<int>::Getter prop(cprops, ID2); prop; prop++)
 		cnt++;
 	CHECK(cnt == 0);
 	
@@ -101,13 +101,28 @@ int main(void) {
 		CHECK(checked);
 	}
 	
-	// Identifie find
+	// Identifier find
 	{
-		AbstractIdentifier *id = AbstractIdentifier::find("otawa::ipet::wcet");
+		AbstractIdentifier *id = AbstractIdentifier::find("otawa::ipet::WCET");
 		CHECK(id == & otawa::ipet::WCET);
 	}
 	
 	CHECK_END
 	
+	CHECK_BEGIN("props.print")
+#		define PRINT(n) cout << #n << " = " << (n) << io::endl
+		static Identifier<int> INT("", -1);
+		AbstractIdentifier *pINT = &INT;
+		PropList props;
+		INT(props) = 111;
+
+		PRINT(INT(props));
+		PRINT((*(Identifier<int> *)pINT)(props));
+
+		//INT.print(cout, props.getProp(&INT));
+		pINT->print(cout, props.getProp(pINT)); cout << io::endl;
+
+	CHECK_END
+
 	return 0;
 }

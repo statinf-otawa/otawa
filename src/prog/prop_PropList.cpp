@@ -15,14 +15,20 @@ namespace otawa {
 /**
  * @defgroup prop Properties System
  *
+ * The properties are the first-class citizens of the OTAWA core used to annotate
+ * a program representation. They form a simple and usable facility to attach
+ * to/retrieve from the program representation some pieces of information.
+ *
+ *
+ * @section prop_def Principles
+ *
  * Most OTAWA objects provides a facility to store annotations. These annotations
  * are implemented using @ref otawa::Property to implement annotations and
  * @ref PropList to implement objects supporting annotations. As, in OTAWA,
  * the annotation system is the first-class feature to provide adaptability and
  * extensibility, the C++ API provides a lot of facilities to use them.
  *
- * @section prop_what What Is An Annotation?
- * In OTAWA, annotation is a pair whose first member is an identifier and the
+ * An annotation is a pair whose first member is an identifier and the
  * second one is value. The C++ template facilities are used to implemented
  * such a flexible feature.
  *
@@ -34,6 +40,56 @@ namespace otawa {
  * matching a name string. This constraint makes easier and faster the
  * management of identifier and, specialy, the comparison that resumes to
  * a pointer comparison.
+ *
+ * @section prop_using Using the properties
+ *
+ * A property is composed of:
+ * @li an identifier (usually an object of the class ''otawa::Identifier''),
+ * @li the type of the stored data,
+ * @li the stored data itself.
+ *
+ * The properties work as dynamic fields of the object they are hooked to.
+ * As C++ does not support such a kind of field, OTAWA encapsulates the management of
+ * properties in a specific syntax based on the C++ operator overload ability. So,
+ * the syntax to read a property the identifier of which is ''ID'', attached
+ * to the object ''list'' (an object that has some properties attached to it is called
+ * a property list) is:
+ * @code
+ * ID ( list )
+ * @endcode
+ *
+ * To set a property, one has just to use the same syntax followed by the ''='' equal
+ * assignment symbol and the assigned expression. If the annotation is already hooked
+ * to the property list, its value is easily replaced.
+ * @code
+ * ID ( list ) = expression ;
+ * @endcode
+ *
+ * The property system allow hooking several properties with the same identifier to a list.
+ * The trick is easily performed using the ''add()'' method.
+ * @code
+ * ID ( list ).add( expression );
+ * @endcode
+ *
+ * To retrieve properties with the same identifier, one has to use a clumsy syntax as below:
+
+  for(Identifier< data type > data( list , ID ); data; data++)
+    use(data);
+
+The properties may also be removed using the ''remove'' method of the ''Identifier'' class.
+
+  ID ( list ) . remove ( ) ;
+
+Although the access time to OTAWA properties is longer than an access to classical C++ fields, the penalty is reduced thanks to a cache system that benefits from the temporal locality of accesses. The properties also have a slightly larger size in memory. Yet, these drawbacks are balanced by the induced improvement in flexibility and usability to work on the program representation.
+
+This section has listed the main primitives used to handle properties. The following section will show how to declare ''Identifier'' objects.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  *
  * An identifier may be declared as a global variable or a static class member.
  * In the header file, they may be ddeclared as below:

@@ -108,7 +108,7 @@ AbstractIdentifier::AbstractIdentifier(elm::String name)
  * @param out	Output stream.
  */
 void AbstractIdentifier::print(elm::io::Output& out) const {
-	out << nam;
+	out << "ID(" << nam << ')';
 }
 
 
@@ -119,8 +119,20 @@ void AbstractIdentifier::print(elm::io::Output& out) const {
  *
  * Use the print() method of a property instead.
  */
-void AbstractIdentifier::print(io::Output& output, const Property& prop) const {
-	output << "<not printable>";
+void AbstractIdentifier::print(io::Output& out, const Property *prop) const {
+	out << "<not printable>";
+}
+
+
+/**
+ * Print the value of the given property in a formatted way, that is, possibly
+ * to perform re-scanning after. For example, string are quoted and special
+ * character escaped.
+ * @param out	Output to use.
+ * @param prop	Property to display.
+ */
+void AbstractIdentifier::printFormatted(io::Output& out, const Property *prop) const {
+	out << "<not printable>";
 }
 
 
