@@ -3,7 +3,7 @@ AM_CXXFLAGS=@OTAWA_CXXFLAGS@ @SYSTEMC_CXXFLAGS@ -Wall -O2
 lib_LTLIBRARIES=libogensim.la
 
 libogensim_la_LDFLAGS=
-libogensim_la_LIBADD= @OTAWA_LIBS@ @SYSTEMC_LIBS@ 
+libogensim_la_LIBADD= @OTAWA_LIBS@ @SYSTEMC_LIBS@ @LIB_LIBS@ 
 
 libogensim_la_SOURCES = \
 	Cache.cpp \
@@ -17,6 +17,7 @@ libogensim_la_SOURCES = \
 	LazyStage.cpp \
 	Memory.cpp \
 	MemoryDriver.cpp \
+	NullMemory.cpp \
 	PipelineStage.cpp \
 	SimulatedInstruction.cpp \
 	SimulatorFactory.cpp
