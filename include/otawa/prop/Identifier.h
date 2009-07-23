@@ -88,10 +88,10 @@ public:
 	inline const T& operator()(Property *prop) const { return get(prop); }
 
 	// Identifier overload
-	inline void printProp(elm::io::Output& out, const Property& prop) const { print(get(prop)); }
-	virtual void print(io::Output& out, const T& v) const { out << v; }
-	inline void printFormattedProp(elm::io::Output& out, const Property& prop) const { printFormatted(get(prop)); }
-	virtual void printFormatted(io::Output& out, const T& v) { out << v; }
+	virtual void print(elm::io::Output& out, const Property *prop) const
+		{ out << (!prop ? def : get(*prop)); }
+	virtual void printFormatted(io::Output& out, const Property *prop) const
+		{ out << (!prop ? def : get(*prop)); }
 	virtual const Type& type(void) const { return otawa::type<T>(); }
 	virtual void scan(PropList& props, VarArg& args) const;
 	virtual void fromString(PropList& props, const string& str) const;
@@ -193,11 +193,11 @@ inline T& Identifier<T>::ref(const PropList& list) const {
 
 
 // Identifier<T>::printFormatted specializations
-template <> void Identifier<char>::printFormatted(io::Output& out, const char& v);
-template <> void Identifier<string>::printFormatted(io::Output& out, const string& v);
-template <> void Identifier<cstring>::printFormatted(io::Output& out, const cstring& v);
-template <> void Identifier<PropList>::printFormatted(io::Output& out, const PropList& v);
-template <> void Identifier<const PropList *>::printFormatted(io::Output& out, const PropList * const & v);
+template <> void Identifier<char>::printFormatted(io::Output& out, const Property *prop) const;
+template <> void Identifier<string>::printFormatted(io::Output& out, const Property *prop) const;
+template <> void Identifier<cstring>::printFormatted(io::Output& out, const Property *prop) const;
+template <> void Identifier<PropList>::printFormatted(io::Output& out, const Property *prop) const;
+template <> void Identifier<const PropList *>::printFormatted(io::Output& out, const Property *prop) const;
 
 
 // Identifier<T>::scan Specializations
