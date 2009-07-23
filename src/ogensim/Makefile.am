@@ -17,7 +17,6 @@ libogensim_la_SOURCES = \
 	LazyStage.cpp \
 	Memory.cpp \
 	MemoryDriver.cpp \
-	NullMemory.cpp \
 	PipelineStage.cpp \
 	SimulatedInstruction.cpp \
 	SimulatorFactory.cpp
