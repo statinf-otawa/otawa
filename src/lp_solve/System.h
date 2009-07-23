@@ -60,7 +60,7 @@ public:
 	virtual ilp::Constraint *newConstraint(const string& label,
 		ilp::Constraint::comparator_t comp, double constant = 0);
 	virtual ilp::Var *newVar(const string& name);
-	virtual bool solve(void);
+	virtual bool solve(WorkSpace *ws = 0);
 	virtual void addObjectFunction(double coef, ilp::Var *var = 0);
 	virtual double valueOf(ilp::Var *var);
 	virtual double value(void);

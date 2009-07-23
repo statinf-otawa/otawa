@@ -144,7 +144,7 @@ double System::value(void) {
 
 
 // Overload
-bool System::solve(void) {
+bool System::solve(WorkSpace *ws) {
 	static short comps[] = { LE, LE, EQ, GE, GE };
 	static double corr[] = { -1, 0, 0, 0, +1 };
 

@@ -26,6 +26,7 @@
 #include <elm/genstruct/HashTable.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/ilp/ILPPlugin.h>
+#include <otawa/prog/WorkSpace.h>
 #include <lp_lib.h>
 #include <math.h>
 
@@ -176,7 +177,7 @@ public:
 		double constant = 0);
 	virtual ilp::Constraint *newConstraint(const string& label,
 		ilp::Constraint::comparator_t comp, double constant = 0);
-	virtual bool solve(void);
+	virtual bool solve(WorkSpace *ws = 0);
 	virtual void addObjectFunction(double coef, ilp::Var *var = 0);
 	virtual double valueOf(ilp::Var *var);
 	virtual double value(void);
@@ -538,9 +539,16 @@ double System::value(void) {
 	return val;
 }
 
+static int test_cancellation(lprec *lp, void *userhandle) {
+	WorkSpace *ws = (WorkSpace *)userhandle;
+	if(ws->isCancelled())
+		return 1;
+	else
+		return 0;
+}
 
 // Overload
-bool System::solve(void) {
+bool System::solve(WorkSpace *ws) {
 	static short comps[] = { LE, LE, EQ, GE, GE };
 	static double corr[] = { -1, 0, 0, 0, +1 };
 	
@@ -578,29 +586,35 @@ bool System::solve(void) {
 		cons->resetRow(row);
 	}
 	
+	// if required, record the cancellation test
+	if(ws)
+		put_abortfunc(lp, test_cancellation, ws);
+
 	// Launch the resolution
 	int fail = ::solve(lp);
 	
 	// Record the result
 	int result = false;
-	if(fail == OPTIMAL) {
-		result = true;
+	if(!ws || !ws->isCancelled()) {
+		if(fail == OPTIMAL) {
+			result = true;
+
+			// Record variables values
+			for(elm::genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
+			var; var++)
+				var->setValue((double)lp->best_solution[lp->rows + var->column()]);
+
+
+			// Get optimization result
+			//cout << "=> " << get_objective(lp) << " <=> " << int(get_objective(lp)) << "<=\n";
+			val = rint(get_objective(lp));
+		}
 		
-		// Record variables values
-		for(elm::genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
-		var; var++)
-			var->setValue((double)lp->best_solution[lp->rows + var->column()]);
-
-
-		// Get optimization result
-		//cout << "=> " << get_objective(lp) << " <=> " << int(get_objective(lp)) << "<=\n";
-		val = rint(get_objective(lp));
+		// !!DEBUG!!
+		else
+			cerr << "\tfailed due to " << fail << io::endl;
 	}
-	
-	// !!DEBUG!!
-	else
-		cerr << "\tfailed due to " << fail << io::endl;
-	
+
 	// Clean up
 	delete_lp(lp);
 	return result;
