@@ -28,7 +28,11 @@
 #include <elm/datastruct/Iterator.h>
 
 
-namespace otawa { namespace ilp {
+namespace otawa {
+
+class WorkSpace;
+
+namespace ilp {
 
 typedef enum format_t {
 	DEFAULT = 0,
@@ -45,7 +49,7 @@ public:
 		double constant = 0) = 0;
 	virtual Constraint *newConstraint(const string& label,
 		Constraint::comparator_t comp, double constant = 0) = 0;
-	virtual bool solve(void) = 0;
+	virtual bool solve(WorkSpace *ws = 0) = 0;
 	virtual void addObjectFunction(double coef, Var *var = 0) = 0;
 	virtual double valueOf(Var *var) = 0;
 	virtual double value(void) = 0;
