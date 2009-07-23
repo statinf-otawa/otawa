@@ -21,7 +21,7 @@ AC_ARG_WITH(relocation, [  --with-relocation={yes, no}],,[with_relocation=no])
 AS_IF(test "$with_relocation" = "yes",
 [
 	AC_DEFINE(HAS_RELOCATION, [], [support relocation])
-	PLUGIN_LIBS='-Wl,-rpath=\$$ORIGIN/../../lib'
+	PLUGIN_LIBS='-Wl,-rpath=\$$ORIGIN/../..'
 	PROG_LIBS='-Wl,-rpath=\$$ORIGIN/../lib'
 	LIB_LIBS='-Wl,-rpath=\$$ORIGIN'
 ])
