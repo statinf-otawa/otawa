@@ -78,7 +78,7 @@ void WCETComputation::processWorkSpace(WorkSpace *fw) {
 	time_t wcet = -1;
 	if(isVerbose())
 		log << "\tlaunching ILP solver\n";
-	if(system->solve()) {
+	if(system->solve(fw)) {
 		if(isVerbose())
 			log << "\tobjective function = " << system->value() << io::endl;
 		wcet = (time_t)system->value();
