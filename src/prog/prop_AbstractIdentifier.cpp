@@ -54,6 +54,26 @@ static Initializer<AbstractIdentifier> ids_init;
  * @class AbstractIdentifier
  * Represents a unique identifier used by the annotation system.
  * Identifier pointers may be compared for testing equality.
+ *
+ * @par Information on identifiers
+ *
+ * To have nice display of identifier and their value, one can provide
+ * to the OTAWA identifier system informations for human reading.
+ * As an identifier is also a property list, one may attach properties
+ * with the following identifier:
+ * @ref otawa::IDENTIFIER_LABEL -- a short label to display in front of
+ * 		the property value,
+ * @ref otawa::IDENTIFIER_DESC -- a more precise description of the identifier.
+ *
+ * Both information may be set using some dedicated macros:
+ * @code
+ * #include <otawa/prop/info.h>
+ *
+ * Identifier<int> MY_ID("MY_ID", 111);
+ * SET_LABEL(MY_ID, "my identifier");
+ * SET_DESC(MY_ID, "this is my identifier !");
+ * @endcode
+ *
  * @ingroup prop
  */
 
@@ -209,5 +229,31 @@ const Type& Identifier<long long>::type(void) const { return Type::int64_type; }
 
 template <>
 const Type& Identifier<char *>::type(void) const { return Type::cstring_type; }
+
+
+/**
+ * Property of this identifier is put on identifier to give a more
+ * human-readable name to the identifier.
+ *
+ * @par Hooks
+ * @li @ref AbstractIdentifier
+ * @li @ref Identifier
+ *
+ * @ingroup prop
+ */
+Identifier<cstring> IDENTIFIER_LABEL("otawa::IDENTIFIER_LABEL", "");
+
+
+/**
+ * Property of this identifier is put on identifier to give a more
+ * precise description of the identifier.
+ *
+ * @par Hooks
+ * @li @ref AbstractIdentifier
+ * @li @ref Identifier
+ *
+ * @ingroup prop
+ */
+Identifier<cstring> IDENTIFIER_DESC("otawa::IDENTIFIER_DESC", "");
 
 } // otawa
