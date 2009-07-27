@@ -4,6 +4,7 @@ includeotawaprop_HEADERS = \
 	DeletableProperty.h \
 	GenericIdentifier.h \
 	Identifier.h \
+	info.h \
 	Property.h \
 	PropList.h \
 	Ref.h

@@ -10,6 +10,7 @@
 #include <otawa/ilp.h>
 #include <otawa/manager.h>
 #include <otawa/ipet/ILPSystemGetter.h>
+#include <otawa/prop/info.h>
 
 namespace otawa { namespace ipet {
 
@@ -69,6 +70,7 @@ using namespace ilp;
  * @ingroup ipet
  */
 Identifier<time_t> TIME("otawa::ipet::TIME", -1);
+SET_LABEL(TIME, "time (in cycles)");
 
 
 /**
@@ -77,6 +79,7 @@ Identifier<time_t> TIME("otawa::ipet::TIME", -1);
  * @ingroup ipet
  */
 Identifier<ilp::Var *> VAR("otawa::ipet::VAR", 0);
+SET_LABEL(VAR, "variable in ILP system");
 
 
 /**
@@ -92,6 +95,7 @@ Identifier<ilp::Var *> VAR("otawa::ipet::VAR", 0);
  * @ingroup ipet
  */
 Identifier<time_t> WCET("otawa::ipet::WCET", -1);
+SET_LABEL(WCET, "WCET (in cycles)");
 
 
 /**
@@ -111,6 +115,7 @@ Identifier<bool> EXPLICIT("otawa::ipet::EXPLICIT", false);
  * @ingroup ipet
  */
 Identifier<time_t> TIME_DELTA("otawa::ipet::TIME_DELTA", 0);
+SET_LABEL(TIME_DELTA, "time fix for an edge traversale (in cycles)");
 
 
 /**
@@ -137,6 +142,7 @@ Identifier<int> LOOP_COUNT("otawa::ipet::LOOP_COUNT", -1);
  * @ingroup ipet
  */
 Identifier<int> COUNT("otawa::ipet::COUNT", -1);
+SET_LABEL(COUNT, "execution count in WCET");
 
 
 /**
