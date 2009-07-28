@@ -33,7 +33,6 @@ extern Identifier<time_t> TIME_DELTA;
 extern Identifier<ilp::Var *> VAR;
 extern Identifier<time_t> WCET;
 extern Identifier<bool> EXPLICIT;
-extern Identifier<int> LOOP_COUNT;
 extern Identifier<int> COUNT;
 	
 // Subprograms
