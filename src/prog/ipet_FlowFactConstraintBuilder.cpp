@@ -114,7 +114,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 			total = TOTAL_ITERATION(bb);
 
 		// Generate the constraint
-		if(min == ContextualLoopBound::undefined
+		if(max == ContextualLoopBound::undefined
 		&& total == ContextualLoopBound::undefined) {
 			warn(_ << "no flow fact constraint for loop at " << bb->address());
 			return;
