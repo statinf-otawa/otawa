@@ -69,13 +69,39 @@ bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
 	bool one = false;
 
 	// look for MAX_ITERATION
-	int count = MAX_ITERATION(source);
-	if(count >= 0) {
-		LOOP_COUNT(bb) = count;
-		found_loop++;
-		one = true;
-		if(isVerbose())
-			log << "\t\t\tLOOP_COUNT(" << bb << ") = " << count << io::endl;
+	{
+		int max_iteration = MAX_ITERATION(source);
+		if(max_iteration >= 0) {
+			MAX_ITERATION(bb) = max_iteration;
+			found_loop++;
+			one = true;
+			if(isVerbose())
+				log << "\t\t\tMAX_ITERATION(" << bb << ") = " << max_iteration << io::endl;
+		}
+	}
+
+	// look for MIN_ITERATION
+	{
+		int min_iteration = MIN_ITERATION(source);
+		if(min_iteration >= 0) {
+			MIN_ITERATION(bb) = min_iteration;
+			found_loop++;
+			one = true;
+			if(isVerbose())
+				log << "\t\t\tMIN_ITERATION(" << bb << ") = " << min_iteration << io::endl;
+		}
+	}
+
+	// look for TOTAL_ITERATION
+	{
+		int total_iteration = TOTAL_ITERATION(source);
+		if(total_iteration >= 0) {
+			TOTAL_ITERATION(bb) = total_iteration;
+			found_loop++;
+			one = true;
+			if(isVerbose())
+				log << "\t\t\tMAX_ITERATION(" << bb << ") = " << total_iteration << io::endl;
+		}
 	}
 
 	// loop for CONTEXTUAL_LOOP_BOUND
@@ -189,7 +215,9 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
  * has been put on the CFG of the current task.
  *
  * @par Properties
- * @li @ref ipet::LOOP_COUNT
+ * @li @ref ipet::MAX_ITERATION
+ * @li @ref ipet::MIN_ITERATION
+ * @li @ref ipet::TOTAL_ITERATION
  */
 Feature<FlowFactLoader> FLOW_FACTS_FEATURE("otawa::ipet::FLOW_FACTS_FEATURE");
 

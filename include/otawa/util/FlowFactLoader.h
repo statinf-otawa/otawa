@@ -123,6 +123,8 @@ extern Feature<FlowFactLoader> MKFF_PRESERVATION_FEATURE;
 extern Identifier<bool> IS_RETURN;
 extern Identifier<bool> NO_RETURN;
 extern Identifier<int> MAX_ITERATION;
+extern Identifier<int> MIN_ITERATION;
+extern Identifier<int> TOTAL_ITERATION;
 extern Identifier<bool> NO_CALL;
 extern Identifier<bool> IGNORE_CONTROL;
 extern Identifier<Address> BRANCH_TARGET;

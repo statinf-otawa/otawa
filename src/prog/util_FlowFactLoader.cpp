@@ -1069,4 +1069,30 @@ Identifier<Address> BRANCH_TARGET("otawa::BRANCH_TARGET", Address());
  */
 Identifier<bool> PRESERVED("otawa::PRESERVED", false);
 
+
+/**
+ * Put on the first instruction of a loop, it gives the minimal
+ * number of iterations.
+ *
+ * @par Features
+ * @li @ref MKFF_PRESERVATION_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier<int> MIN_ITERATION("otawa::MIN_ITERATION", -1);
+
+
+/**
+ * Put on the first instruction of a loop, it gives the total
+ * number of iterations during the whole execution of the program.
+ *
+ * @par Features
+ * @li @ref MKFF_PRESERVATION_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier<int> TOTAL_ITERATION("otawa::TOTAL_ITERATION", -1);
+
 } // otawa

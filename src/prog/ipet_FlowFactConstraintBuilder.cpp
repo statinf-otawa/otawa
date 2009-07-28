@@ -34,6 +34,7 @@
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/flowfact/features.h>
 #include <otawa/dfa/BitSet.h>
+#include <otawa/util/FlowFactLoader.h>
 
 namespace otawa { namespace ipet {
 
@@ -85,120 +86,163 @@ void FlowFactConstraintBuilder::setup(WorkSpace *ws) {
 void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 	if (LOOP_HEADER(bb)) {
-		int bound = ContextualLoopBound::undefined,
-			total = ContextualLoopBound::undefined;
+		int max = ContextualLoopBound::undefined,
+			total = ContextualLoopBound::undefined,
+			min = ContextualLoopBound::undefined;
 		if(isVerbose())
 			log << "\t\tlooking bound for " << bb << io::endl;
 
 		// Test contextual
-		if(bound == ContextualLoopBound::undefined) {
+		if(max == ContextualLoopBound::undefined) {
 			ContextualLoopBound *cbound = CONTEXTUAL_LOOP_BOUND(bb);
 			if(cbound) {
 				if(isVerbose())
 					log << "\t\tfound CONTEXTUAL_LOOP_BOUND(" << bb << ") = " << cbound << io::endl;
-				bound = cbound->findMax(path);
+				max = cbound->findMax(path);
 				total = cbound->findTotal(path);
 				if(isVerbose())
-					log << "\t\tmax = " << bound << ", total = " << total << io::endl;
+					log << "\t\tmax = " << max << ", total = " << total << io::endl;
 			}
 		}
 
 		// Look simple bound
-		if(bound == ContextualLoopBound::undefined)
-			bound = LOOP_COUNT(bb);
+		if(max == ContextualLoopBound::undefined)
+			max = MAX_ITERATION(bb);
+		if(min == ContextualLoopBound::undefined)
+			min = MIN_ITERATION(bb);
+		if(total == ContextualLoopBound::undefined)
+			total = TOTAL_ITERATION(bb);
 
 		// Generate the constraint
-		if(bound == ContextualLoopBound::undefined
-		&& total == ContextualLoopBound::undefined)
+		if(min == ContextualLoopBound::undefined
+		&& total == ContextualLoopBound::undefined) {
 			warn(_ << "no flow fact constraint for loop at " << bb->address());
-		else  {
+			return;
+		}
 
+		// constraint for MAX_ITERATION
+		if(max != ContextualLoopBound::undefined) {
 
+			ASSERT(max >= 0);
 
-			// sum{(i,h) / h dom i} eih <= count * sum{(i, h) / not h dom x} xeih
-			if(bound != ContextualLoopBound::undefined) {
+			// Substract unrolling from loop bound
+			for (BasicBlock *bb2 = UNROLLED_FROM(bb); bb2; bb2 = UNROLLED_FROM(bb2))
+				max--;
 
-
-				ASSERT(bound >= 0);
-
-				// Substract unrolling from loop bound
-				for (BasicBlock *bb2 = UNROLLED_FROM(bb); bb2; bb2 = UNROLLED_FROM(bb2))
-					bound--;
-
-				// Set execution count to 0 for each unrolled iteration that cannot be taken
-				if (bound < 0) {
-					BasicBlock *bb2 = bb;
-					string label;
-					if(_explicit)
-						label = _ << "unrolled loop constraint for BB" << INDEX(bb) << "/" << cfg->label();
-					otawa::ilp::Constraint *cons0 = system->newConstraint(label, otawa::ilp::Constraint::EQ);
-					for (int i = 0; i < (-bound); i++) {
-						for (BasicBlock::InIterator edge(bb); edge; edge++) {
-							ASSERT(edge->source());
-							otawa::ilp::Var *var  = VAR(edge);
-							cons0->addLeft(1, var);
-						}
-						bb2 = UNROLLED_FROM(bb2);
-					}
-				}
-
-				// generate the constraint
+			// Set execution count to 0 for each unrolled iteration that cannot be taken
+			if (max < 0) {
+				BasicBlock *bb2 = bb;
 				string label;
 				if(_explicit)
-					label = _ << "loop constraint on BB" << INDEX(bb) << "/" << cfg->label();
-				otawa::ilp::Constraint *cons = system->newConstraint(label, otawa::ilp::Constraint::LE);
-				for(BasicBlock::InIterator edge(bb); edge; edge++) {
-					ASSERT(edge->source());
-					otawa::ilp::Var *var = VAR(edge);
-					if(Dominance::dominates(bb, edge->source()))
-						cons->addLeft(1, var);
-					else
-						cons->addRight((bound < 0) ? 0 : bound, var);
+					label = _ << "unrolled loop constraint for BB" << INDEX(bb) << "/" << cfg->label();
+				otawa::ilp::Constraint *cons0 = system->newConstraint(label, otawa::ilp::Constraint::EQ);
+				for(int i = 0; i < (-max); i++) {
+					for(BasicBlock::InIterator edge(bb); edge; edge++) {
+						ASSERT(edge->source());
+						otawa::ilp::Var *var  = VAR(edge);
+						cons0->addLeft(1, var);
+					}
+					bb2 = UNROLLED_FROM(bb2);
 				}
-
 			}
 
-			/* basic constraint
-			 * sum {h dom i} eih + sum {u in unrolled(h))} eiu <= total
-			 * ensure if enty constraint
-			 * sum {h dom i} eih <= total * sum {i dom h} eih + (total - 1) sum {u in unrolled(h))} eiu) */
-			if(total != ContextualLoopBound::undefined) {
+			// sum{(i,h) / h dom i} eih <= max * sum{(i, h) / not h dom x} xeih
+			string label;
+			if(_explicit)
+				label = _ << "loop constraint on BB" << INDEX(bb) << "/" << cfg->label();
+			otawa::ilp::Constraint *cons = system->newConstraint(label, otawa::ilp::Constraint::LE);
+			for(BasicBlock::InIterator edge(bb); edge; edge++) {
+				ASSERT(edge->source());
+				otawa::ilp::Var *var = VAR(edge);
+				if(Dominance::dominates(bb, edge->source()))
+					cons->addLeft(1, var);
+				else
+					cons->addRight((max < 0) ? 0 : max, var);
+			}
 
-				// build constraints
+		}
+
+		// constraint for MIN_ITERATION
+		if(min != ContextualLoopBound::undefined) {
+			ASSERT(min >= 0);
+
+			// Substract unrolling from loop bound
+			for (BasicBlock *bb2 = UNROLLED_FROM(bb); bb2; bb2 = UNROLLED_FROM(bb2))
+				min--;
+
+			// Set execution count to 0 for each unrolled iteration that cannot be taken
+			if (min < 0) {
+				BasicBlock *bb2 = bb;
 				string label;
 				if(_explicit)
-					label = _ << "total loop constraint for BB" << INDEX(bb) << "/" << cfg->label();
-				otawa::ilp::Constraint *cons = system->newConstraint(label, otawa::ilp::Constraint::LE);
-				label = "";
-				if(_explicit)
-					label = _ << "0-execution for total loop constraint for BB" << INDEX(bb) << "/" << cfg->label();
-				otawa::ilp::Constraint *zero = system->newConstraint(label, otawa::ilp::Constraint::LE);
+					label = _ << "unrolled loop constraint for BB" << INDEX(bb) << "/" << cfg->label();
+				otawa::ilp::Constraint *cons0 = system->newConstraint(label, otawa::ilp::Constraint::EQ);
+				for(int i = 0; i < (-min); i++) {
+					for(BasicBlock::InIterator edge(bb); edge; edge++) {
+						ASSERT(edge->source());
+						otawa::ilp::Var *var  = VAR(edge);
+						cons0->addLeft(1, var);
+					}
+					bb2 = UNROLLED_FROM(bb2);
+				}
+			}
 
-				// 0 <= total
-				// 0 <= 0
-				cons->addRight(total);
+			// sum{(i,h) / h dom i} eih >= min * sum{(i, h) / not h dom x} xeih
+			string label;
+			if(_explicit)
+				label = _ << "loop constraint on BB" << INDEX(bb) << "/" << cfg->label();
+			otawa::ilp::Constraint *cons = system->newConstraint(label, otawa::ilp::Constraint::GE);
+			for(BasicBlock::InIterator edge(bb); edge; edge++) {
+				ASSERT(edge->source());
+				otawa::ilp::Var *var = VAR(edge);
+				if(Dominance::dominates(bb, edge->source()))
+					cons->addLeft(1, var);
+				else
+					cons->addRight((min < 0) ? 0 : min, var);
+			}
 
-				// sum {h dom i} eih <= total
-				// sum {h dom i} eih <= total * sum {i dom h} eih
-				for(BasicBlock::InIterator edge(bb); edge; edge++) {
-					ASSERT(edge->source());
-					if(Dominance::dominates(bb, edge->source())) {
+		}
+
+		// constraint for TOTAL_ITERATION
+		// sum {h dom i} eih + sum {u in unrolled(h))} eiu <= total
+		// ensure that the back-edges does not increase alone
+		// sum {h dom i} eih <= total * sum {i dom h} eih + (total - 1) sum {u in unrolled(h))} eiu)
+		if(total != ContextualLoopBound::undefined) {
+
+			// build constraints
+			string label;
+			if(_explicit)
+				label = _ << "total loop constraint for BB" << INDEX(bb) << "/" << cfg->label();
+			otawa::ilp::Constraint *cons = system->newConstraint(label, otawa::ilp::Constraint::LE);
+			label = "";
+			if(_explicit)
+				label = _ << "0-execution for total loop constraint for BB" << INDEX(bb) << "/" << cfg->label();
+			otawa::ilp::Constraint *zero = system->newConstraint(label, otawa::ilp::Constraint::LE);
+
+			// 0 <= total
+			// 0 <= 0
+			cons->addRight(total);
+
+			// sum {h dom i} eih <= total
+			// sum {h dom i} eih <= total * sum {i dom h} eih
+			for(BasicBlock::InIterator edge(bb); edge; edge++) {
+				ASSERT(edge->source());
+				if(Dominance::dominates(bb, edge->source())) {
+					cons->addLeft(1, VAR(edge));
+					zero->addLeft(1, VAR(edge));
+				}
+				else if(Dominance::dominates(edge->source(), bb))
+					zero->addRight(total, VAR(edge));
+			}
+
+			// eih + sum {u in unrolled(h))} eiu <= total
+			// eih + sum {u in unrolled(h))} eiu <= total * sum {i dom h} eih + (total - 1) sum {u in unrolled(h))} eiu)
+			for(BasicBlock *hd = UNROLLED_FROM(bb); hd; hd = UNROLLED_FROM(hd))
+				for(BasicBlock::InIterator edge(hd); edge; edge++)
+					if(Dominance::dominates(edge->source(), hd)) {
 						cons->addLeft(1, VAR(edge));
-						zero->addLeft(1, VAR(edge));
+						zero->addRight(total - 1, VAR(edge));
 					}
-					else if(Dominance::dominates(edge->source(), bb))
-						zero->addRight(total, VAR(edge));
-				}
-
-				// eih + sum {u in unrolled(h))} eiu <= total
-				// eih + sum {u in unrolled(h))} eiu <= total * sum {i dom h} eih + (total - 1) sum {u in unrolled(h))} eiu)
-				for(BasicBlock *hd = UNROLLED_FROM(bb); hd; hd = UNROLLED_FROM(hd))
-					for(BasicBlock::InIterator edge(hd); edge; edge++)
-						if(Dominance::dominates(edge->source(), hd)) {
-							cons->addLeft(1, VAR(edge));
-							zero->addRight(total - 1, VAR(edge));
-						}
-			}
 		}
 	}
 }

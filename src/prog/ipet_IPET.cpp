@@ -115,18 +115,7 @@ Identifier<bool> EXPLICIT("otawa::ipet::EXPLICIT", false);
  * @ingroup ipet
  */
 Identifier<time_t> TIME_DELTA("otawa::ipet::TIME_DELTA", 0);
-SET_LABEL(TIME_DELTA, "time fix for an edge traversale (in cycles)");
-
-
-/**
- * This is the easier way to represent the maximum iteration count of a loop
- * as a simple integer. This property is put on the header block of the loop.
- *
- * @par Hooks
- * @li @ref otawa::BasicBlock (header of loops)
- * @ingroup ipet
- */
-Identifier<int> LOOP_COUNT("otawa::ipet::LOOP_COUNT", -1);
+SET_LABEL(TIME_DELTA, "time fix for an edge traversal (in cycles)");
 
 
 /**
