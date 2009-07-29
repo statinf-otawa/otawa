@@ -224,25 +224,23 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 			cons->addRight(total);
 
 			// sum {h dom i} eih <= total
-			// sum {h dom i} eih <= total * sum {i dom h} eih
+			// sum {h dom i} eih <= total * sum {(i, h) in V & h -dom i} eih
 			for(BasicBlock::InIterator edge(bb); edge; edge++) {
 				ASSERT(edge->source());
 				if(Dominance::dominates(bb, edge->source())) {
 					cons->addLeft(1, VAR(edge));
 					zero->addLeft(1, VAR(edge));
 				}
-				else if(Dominance::dominates(edge->source(), bb))
+				else if(!Dominance::dominates(bb, edge->source()))
 					zero->addRight(total, VAR(edge));
 			}
 
-			// eih + sum {u in unrolled(h))} eiu <= total
-			// eih + sum {u in unrolled(h))} eiu <= total * sum {i dom h} eih + (total - 1) sum {u in unrolled(h))} eiu)
+			// sum{h dom i} eih + sum {u in unrolled(h))} eiu <= total
+			// sum {h dom i} eih <= total * sum {(i, h) in V & h -dom i} eih
 			for(BasicBlock *hd = UNROLLED_FROM(bb); hd; hd = UNROLLED_FROM(hd))
 				for(BasicBlock::InIterator edge(hd); edge; edge++)
-					if(Dominance::dominates(edge->source(), hd)) {
+					if(Dominance::dominates(edge->source(), hd))
 						cons->addLeft(1, VAR(edge));
-						zero->addRight(total - 1, VAR(edge));
-					}
 		}
 	}
 }
