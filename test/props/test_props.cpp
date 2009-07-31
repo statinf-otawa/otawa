@@ -9,6 +9,7 @@
 #include <otawa/properties.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/ipet/IPET.h>
+#include <otawa/prop/info.h>
 
 using namespace elm;
 using namespace otawa;
@@ -122,6 +123,12 @@ int main(void) {
 		//INT.print(cout, props.getProp(&INT));
 		pINT->print(cout, props.getProp(pINT)); cout << io::endl;
 
+	CHECK_END
+
+	CHECK_BEGIN("props.label")
+		cerr << "ipet::WCET = " << IDENTIFIER_LABEL(ipet::WCET) << io::endl;
+		cerr << "ipet::TIME = " << IDENTIFIER_LABEL(ipet::TIME) << io::endl;
+		cerr << "ipet::COUNT = " << IDENTIFIER_LABEL(ipet::COUNT) << io::endl;
 	CHECK_END
 
 	return 0;
