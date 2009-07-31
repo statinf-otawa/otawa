@@ -70,7 +70,8 @@ using namespace ilp;
  * @ingroup ipet
  */
 Identifier<time_t> TIME("otawa::ipet::TIME", -1);
-SET_LABEL(TIME, "time (in cycles)");
+SET_LABEL(TIME, "time");
+SET_DESC(TIME, "execution time (in cycles)");
 
 
 /**
@@ -79,14 +80,8 @@ SET_LABEL(TIME, "time (in cycles)");
  * @ingroup ipet
  */
 Identifier<ilp::Var *> VAR("otawa::ipet::VAR", 0);
-SET_LABEL(VAR, "variable in ILP system");
-
-
-/**
- * Identifier of annotations used for storing ILP system (otawa::ilp::System *)
- * in the CFG object.
- */
-//Identifier<ilp::System *> SYSTEM("otawa::ipet::system", 0);
+SET_LABEL(VAR, "variable");
+SET_DESC(VAR, "variable in ILP system for IPET resolution");
 
 
 /**
@@ -95,7 +90,8 @@ SET_LABEL(VAR, "variable in ILP system");
  * @ingroup ipet
  */
 Identifier<time_t> WCET("otawa::ipet::WCET", -1);
-SET_LABEL(WCET, "WCET (in cycles)");
+SET_LABEL(WCET, "WCET");
+SET_DESC(WCET, "WCET (in cycles)");
 
 
 /**
@@ -115,7 +111,8 @@ Identifier<bool> EXPLICIT("otawa::ipet::EXPLICIT", false);
  * @ingroup ipet
  */
 Identifier<time_t> TIME_DELTA("otawa::ipet::TIME_DELTA", 0);
-SET_LABEL(TIME_DELTA, "time fix for an edge traversal (in cycles)");
+SET_LABEL(TIME_DELTA, "time delta");
+SET_DESC(TIME_DELTA, "time fix for an edge traversal (in cycles)");
 
 
 /**
@@ -131,7 +128,8 @@ SET_LABEL(TIME_DELTA, "time fix for an edge traversal (in cycles)");
  * @ingroup ipet
  */
 Identifier<int> COUNT("otawa::ipet::COUNT", -1);
-SET_LABEL(COUNT, "execution count in WCET");
+SET_LABEL(COUNT, "execution count");
+SET_DESC(COUNT, "execution count in WCET");
 
 
 /**
