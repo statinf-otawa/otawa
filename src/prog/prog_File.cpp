@@ -7,6 +7,7 @@
 
 #include <otawa/prog/File.h>
 #include <otawa/prog/Symbol.h>
+#include <otawa/prop/info.h>
 
 namespace otawa {
 
@@ -49,6 +50,8 @@ namespace otawa {
  * Property with this identifier is put on instructions or basic blocks which a symbol is known for.
  */
 Identifier<String> LABEL("otawa::LABEL", "");
+SET_LABEL(LABEL, "label");
+SET_DESC(LABEL, "label in assembly code");
 
 
 /**
