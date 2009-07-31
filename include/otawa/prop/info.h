@@ -43,7 +43,7 @@ public:
 #define __UNIQUE(pref)		__UNIQUE_AUX(pref, __COUNTER__)
 #define SET_LABEL(id, label) \
 	static SetCString __UNIQUE(__label_)(id, IDENTIFIER_LABEL, label);
-#define SET_DESC(id, label)	 \
+#define SET_DESC(id, desc)	 \
 	static SetCString __UNIQUE(__desc_)(id, IDENTIFIER_DESC, desc);
 
 }	// otawa
