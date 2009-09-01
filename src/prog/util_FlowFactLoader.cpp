@@ -467,16 +467,43 @@ void FlowFactLoader::onLoop(
 	address_t addr,
 	int count,
 	int total,
-	const ContextPath<Address>& path)
+	const ContextualPath& path)
 {
+
+	// find the instruction
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
 		onError(_ << "unmarked loop because instruction at " << addr << " not found");
-	if(!path) {
-		MAX_ITERATION(inst) = count;
+
+	// put the max iteration
+	if(count >= 0) {
+		path.ref(MAX_ITERATION, inst) = count;
 		if(isVerbose())
-			log << "\tMAX_ITERATION(" << inst->address() << ") = " << count << io::endl;
+			log << "\t" << path << "(MAX_ITERATION," << inst->address() << ") = " << count << io::endl;
 	}
+
+	// put the total iteration
+	if(total >= 0) {
+		path.ref(TOTAL_ITERATION, inst) = total;
+		if(isVerbose())
+			log << "\t" << path << "(TOTAL_ITERATION," << inst->address() << ") = " << total << io::endl;
+	}
+
+	// no path bound
+	/*if(!path) {
+		if(count >= 0) {
+			MAX_ITERATION(inst) = count;
+			if(isVerbose())
+				log << "\tMAX_ITERATION(" << inst->address() << ") = " << count << io::endl;
+		}
+		if(total >= 0) {
+			TOTAL_ITERATION(inst) = total;
+			if(isVerbose())
+				log << "\tTOTAL_ITERATION(" << inst->address() << ") = " << total << io::endl;
+		}
+	}
+
+	// bounds with path
 	else {
 
 		// Get the contextual loop bound object
@@ -485,8 +512,7 @@ void FlowFactLoader::onLoop(
 			bound = new ContextualLoopBound();
 			inst->addProp(new DeletableProperty<ContextualLoopBound *>(CONTEXTUAL_LOOP_BOUND, bound));
 			if(isVerbose())
-				log << "\tcontextual loop bound (" << count << "," << total
-					 << ") at "<< inst->address() << io::endl;
+				log << "\tcreatubt contextual loop bound at " << inst->address() << io::endl;
 		}
 
 		// Set the bounds
@@ -508,7 +534,7 @@ void FlowFactLoader::onLoop(
 				log << io::endl;
 			}
 		}
-	}
+	}*/
 }
 
 
@@ -704,11 +730,19 @@ void FlowFactLoader::loadXML(const string& path) throw(ProcessorException) {
 	ASSERT(root);
 	if(root->getLocalName() != "flowfacts")
 		throw ProcessorException(*this, _ << "bad flow fact format in " << path);
-	ContextPath<Address> cpath;
+	ContextualPath cpath;
 	scanXBody(root, cpath);
 }
 
-void FlowFactLoader::scanXBody(xom::Element *body, ContextPath<Address>& cpath)
+
+/**
+ * Supports an XML flow fact content.
+ * Supported elements includes "loop", "function", "noreturn", "return",
+ * "nocall", "flowfacts".
+ * @param body	Content of the file.
+ * @param cpath	Contextual path.
+ */
+void FlowFactLoader::scanXBody(xom::Element *body, ContextualPath& cpath)
 throw(ProcessorException) {
 	for(int i = 0; i < body->getChildCount(); i++) {
 		xom::Node *child = body->getChild(i);
@@ -745,7 +779,7 @@ throw(ProcessorException) {
  * @param element	Element of the function.
  * @param path		Context path to access the function.
  */
-void FlowFactLoader::scanXFun(xom::Element *element, ContextPath<Address>& path)
+void FlowFactLoader::scanXFun(xom::Element *element, ContextualPath& path)
 throw(ProcessorException) {
 
 	// get the address
@@ -754,7 +788,7 @@ throw(ProcessorException) {
 	if(!inst)
 		throw ProcessorException(*this,
 			_ << " no instruction at  " << addr << " from " << xline(element));
-	path.push(addr);
+	path.push(ContextualStep::FUNCTION, addr);
 
 	// scan the content
 	scanXContent(element, path);
@@ -767,7 +801,7 @@ throw(ProcessorException) {
  * @param element	Element of the loop.
  * @param path		Context path to access the loop.
  */
-void FlowFactLoader::scanXLoop(xom::Element *element, ContextPath<Address>& path)
+void FlowFactLoader::scanXLoop(xom::Element *element, ContextualPath& path)
 throw(ProcessorException) {
 
 	// get the address
@@ -784,12 +818,7 @@ throw(ProcessorException) {
 	Option<long> total = scanBound(element, "totalcount");
 	if(!max && !total)
 		warn(_ << "loop exists at " <<  addr << " but no bound at " << xline(element));
-	try {
-		onLoop(addr, (max ? *max : -1), (total ? *total : -1), path);
-	}
-	catch(AmbiguousBoundException& e) {
-		throw ProcessorException(*this, _ << e.message() << " at " << xline(element));
-	}
+	onLoop(addr, (max ? *max : -1), (total ? *total : -1), path);
 
 	// look for content
 	scanXContent(element, path);
@@ -801,8 +830,8 @@ throw(ProcessorException) {
  * @param element	Element to scan in.
  * @param path		Context path.
  */
-Address FlowFactLoader::scanAddress(xom::Element *element,
-ContextPath<Address>& path) throw(ProcessorException) {
+Address FlowFactLoader::scanAddress(xom::Element *element, ContextualPath& path)
+throw(ProcessorException) {
 
 	// look "address" attribute
 	Option<long> res = scanInt(element, "address");
@@ -825,7 +854,7 @@ ContextPath<Address>& path) throw(ProcessorException) {
 		if(!path)
 			throw ProcessorException(*this,
 				_ << "'offset' out of addressed element at " << xline(element));
-		return path.top() + (int)*offset;
+		return path[path.count() - 1].address() + (int)*offset;
 	}
 
 	// look for source and line
@@ -899,7 +928,7 @@ throw (ProcessorException) {
  * @param element	Container element.
  * @param path		Current context path.
  */
-void FlowFactLoader::scanXContent(xom::Element *element, ContextPath<Address>& path)
+void FlowFactLoader::scanXContent(xom::Element *element, ContextualPath& path)
 throw(ProcessorException) {
 	for(int i = 0; i < element->getChildCount(); i++) {
 		xom::Node *child = element->getChild(i);
