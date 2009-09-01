@@ -623,10 +623,20 @@ const PropList PropList::EMPTY;
  * @param out	Output to use.
  */
 void PropList::print(elm::io::Output& out) const {
-	out << "{ " << io::endl;
-	for(Iter prop(this); prop; prop++)
-		out << *prop << io::endl;
-	out << " }";
+	if(!head)
+		out << "{ }";
+	else {
+		bool first = true;
+		out << "{ ";
+		for(Iter prop(this); prop; prop++) {
+			if(first)
+				first = false;
+			else
+				out << ", ";
+			prop->print(out);
+		}
+		out << " }";
+	}
 }
 
 
