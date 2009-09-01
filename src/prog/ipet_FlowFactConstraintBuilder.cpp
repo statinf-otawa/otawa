@@ -61,7 +61,7 @@ namespace otawa { namespace ipet {
  * Build a new flow fact loader.
  */
 FlowFactConstraintBuilder::FlowFactConstraintBuilder(void)
-:	ContextualProcessor("otawa::ipet::FlowFactConstraintBuilder", Version(1, 1, 0)),
+:	BBProcessor("otawa::ipet::FlowFactConstraintBuilder", Version(1, 1, 0)),
 	_explicit(false)
 {
 	require(COLLECTED_CFG_FEATURE);
@@ -75,7 +75,6 @@ FlowFactConstraintBuilder::FlowFactConstraintBuilder(void)
 /**
  */
 void FlowFactConstraintBuilder::setup(WorkSpace *ws) {
-	path.clear();
 	system = SYSTEM(ws);
 	ASSERT(system);
 }
@@ -109,7 +108,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 		}
 
 		// constraint for MAX_ITERATION
-		if(max != ContextualLoopBound::undefined) {
+		if(max >= 0) {
 
 			ASSERT(max >= 0);
 
@@ -151,7 +150,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 		}
 
 		// constraint for MIN_ITERATION
-		if(min != ContextualLoopBound::undefined) {
+		if(min >= 0) {
 			ASSERT(min >= 0);
 
 			// Substract unrolling from loop bound
@@ -195,7 +194,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 		// sum {h dom i} eih + sum {u in unrolled(h))} eiu <= total
 		// ensure that the back-edges does not increase alone
 		// sum {h dom i} eih <= total * sum {i dom h} eih + (total - 1) sum {u in unrolled(h))} eiu)
-		if(total != ContextualLoopBound::undefined) {
+		if(total >= 0) {
 
 			// build constraints
 			string label;
@@ -236,27 +235,8 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 
 /**
  */
-void FlowFactConstraintBuilder::enteringCall(
-	WorkSpace *ws,
-	CFG *cfg,
-	BasicBlock *caller,
-	BasicBlock *callee)
-{
-	path.push(callee->address());
-}
-
-
-/**
- */
-void FlowFactConstraintBuilder::leavingCall(WorkSpace *ws, CFG *cfg, BasicBlock *to) {
-	path.pop();
-}
-
-
-/**
- */
 void FlowFactConstraintBuilder::configure(const PropList& props) {
-	ContextualProcessor::configure(props);
+	BBProcessor::configure(props);
 	_explicit = EXPLICIT(props);
 }
 

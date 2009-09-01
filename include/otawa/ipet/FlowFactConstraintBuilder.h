@@ -22,11 +22,8 @@
 #ifndef OTAWA_IPET_IPET_FLOW_FACT_CONSTRAINT_BUILDER_H
 #define OTAWA_IPET_IPET_FLOW_FACT_CONSTRAINT_BUILDER_H
 
-//#include <elm/system/Path.h>
-#include <otawa/proc/ContextualProcessor.h>
-//#include <otawa/cfg/CFGCollector.h>
 #include <otawa/proc/Feature.h>
-#include <otawa/flowfact/ContextualLoopBound.h>
+#include <otawa/proc/BBProcessor.h>
 
 namespace otawa { 
 
@@ -38,25 +35,15 @@ namespace ilp { class System; }
 namespace ipet {
 	
 // FlowFactConstraintBuilder class
-class FlowFactConstraintBuilder: public ContextualProcessor {
+class FlowFactConstraintBuilder: public BBProcessor {
 public:
 	FlowFactConstraintBuilder(void);
 	virtual void configure(const PropList& props = PropList::EMPTY);
 
 protected:
-	virtual void enteringCall(
-		WorkSpace *ws,
-		CFG *cfg,
-		BasicBlock *caller,
-		BasicBlock *callee);
-	virtual void leavingCall(
-		WorkSpace *ws,
-		CFG *cfg,
-		BasicBlock *to);
 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 	virtual void setup(WorkSpace *ws);
 private:
-	ContextPath<Address> path;
 	ilp::System *system;
 	bool _explicit;
 };
