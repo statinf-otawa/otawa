@@ -64,4 +64,11 @@ private:
 
 }	// otawa
 
+// application macro
+#define OTAWA_RUN(name) \
+	int main(int argc, char **argv) { \
+		name app; \
+		return app.run(argc, argv); \
+	}
+
 #endif /* OTAWA_APP_APPLICATION_H_ */
