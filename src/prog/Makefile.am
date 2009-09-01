@@ -39,6 +39,7 @@ libotawa_la_SOURCES = \
 	proc_Registry.cpp \
 	Process.cpp \
 	prop_AbstractIdentifier.cpp \
+	prop_ContextualProperty.cpp \
 	prop_DeletableProperty.cpp \
 	prop_Identifier.cpp \
 	prop_Property.cpp \

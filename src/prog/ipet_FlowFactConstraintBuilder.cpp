@@ -86,36 +86,24 @@ void FlowFactConstraintBuilder::setup(WorkSpace *ws) {
 void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 	if (LOOP_HEADER(bb)) {
-		int max = ContextualLoopBound::undefined,
-			total = ContextualLoopBound::undefined,
-			min = ContextualLoopBound::undefined;
+
+		// look bounds
 		if(isVerbose())
 			log << "\t\tlooking bound for " << bb << io::endl;
-
-		// Test contextual
-		if(max == ContextualLoopBound::undefined) {
-			ContextualLoopBound *cbound = CONTEXTUAL_LOOP_BOUND(bb);
-			if(cbound) {
-				if(isVerbose())
-					log << "\t\tfound CONTEXTUAL_LOOP_BOUND(" << bb << ") = " << cbound << io::endl;
-				max = cbound->findMax(path);
-				total = cbound->findTotal(path);
-				if(isVerbose())
-					log << "\t\tmax = " << max << ", total = " << total << io::endl;
-			}
+		int max = MAX_ITERATION(bb),
+			total = TOTAL_ITERATION(bb),
+			min = MIN_ITERATION(bb);
+		if(isVerbose()) {
+			if(max >= 0)
+				log << "\t\tmax = " << max << io::endl;
+			if(total >= 0)
+				log << "\t\ttotal = " << total << io::endl;
+			if(min >= 0)
+				log << "\t\tmin = " << min << io::endl;
 		}
 
-		// Look simple bound
-		if(max == ContextualLoopBound::undefined)
-			max = MAX_ITERATION(bb);
-		if(min == ContextualLoopBound::undefined)
-			min = MIN_ITERATION(bb);
-		if(total == ContextualLoopBound::undefined)
-			total = TOTAL_ITERATION(bb);
-
 		// Generate the constraint
-		if(max == ContextualLoopBound::undefined
-		&& total == ContextualLoopBound::undefined) {
+		if(max < 0 && total < 0) {
 			warn(_ << "no flow fact constraint for loop at " << bb->address());
 			return;
 		}
@@ -260,7 +248,7 @@ void FlowFactConstraintBuilder::enteringCall(
 
 /**
  */
-void FlowFactConstraintBuilder::leavingCall(WorkSpace *ws, CFG *cfg) {
+void FlowFactConstraintBuilder::leavingCall(WorkSpace *ws, CFG *cfg, BasicBlock *to) {
 	path.pop();
 }
 
