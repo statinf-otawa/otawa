@@ -197,7 +197,10 @@ void BasicConstraintsBuilder::processWorkSpace(WorkSpace *fw) {
 	System *system = SYSTEM(fw);
 	BasicBlock *entry = cfg->entry();
 	assert(entry);
-	Constraint *cons = system->newConstraint(Constraint::EQ, 1);
+	string label;
+	if(_explicit)
+		label = "program entry constraint";
+	Constraint *cons = system->newConstraint(label, Constraint::EQ, 1);
 	cons->addLeft(1, VAR(entry));
 	CALLING_CONSTRAINT(cfg) = cons;
 };
