@@ -140,7 +140,6 @@ ContextualLoopBound::look(const ContextPath<Address>& path) {
 	return cur;
 }
 
-
 /**
  * Add a context max bound.
  * @param path	Call context.

@@ -88,6 +88,7 @@ private:
 	genstruct::Tree<data_t> *look(const ContextPath<Address>& path);
 	int lookMax(genstruct::Tree<data_t> *cur);
 	int lookTotal(genstruct::Tree<data_t> *cur);
+	void print(genstruct::Tree<data_t> *cur, int tab = 0);
 };
 
 } // otawa
