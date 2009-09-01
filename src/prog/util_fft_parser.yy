@@ -23,12 +23,12 @@
 #include <otawa/util/FlowFactLoader.h>
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
-#include <otawa/flowfact/ContextualLoopBound.h>
+#include <otawa/prop/ContextualProperty.h>
 using namespace elm::genstruct;
 int util_fft_lex(void);
 void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 static Vector<otawa::Address> addresses;
-static otawa::ContextPath<otawa::Address> path;
+static otawa::ContextualPath path;
 
 // Loop counting
 static int loop_max = -1, loop_total = -1;
@@ -177,9 +177,9 @@ opt_in:
 
 path:
 	full_address
-		{ path.push(*$1); delete $1; }
+		{ path.push(otawa::ContextualStep::FUNCTION, *$1); delete $1; }
 |	full_address '/' path
-		{ path.push(*$1); delete $1; }
+		{ path.push(otawa::ContextualStep::FUNCTION, *$1); delete $1; }
 ;
 
 %%

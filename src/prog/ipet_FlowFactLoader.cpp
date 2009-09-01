@@ -27,8 +27,8 @@
 #include <otawa/util/Dominance.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/util/FlowFactLoader.h>
-#include <otawa/flowfact/ContextualLoopBound.h>
 #include <otawa/flowfact/features.h>
+#include <otawa/prog/Inst.h>
 
 namespace otawa { namespace ipet {
 
@@ -52,10 +52,24 @@ namespace otawa { namespace ipet {
  * Build a new flow fact loader.
  */
 FlowFactLoader::FlowFactLoader(void)
-:	BBProcessor("otawa::ipet::FlowFactLoader", Version(1, 1, 0)) {
+:	ContextualProcessor("otawa::ipet::FlowFactLoader", Version(1, 1, 0)) {
 	require(LOOP_HEADERS_FEATURE);
 	require(otawa::FLOW_FACTS_FEATURE);
 	provide(otawa::ipet::FLOW_FACTS_FEATURE);
+}
+
+
+/**
+ */
+void FlowFactLoader::enteringCall(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee) {
+	path.push(ContextualStep::FUNCTION, callee->address());
+}
+
+
+/**
+ */
+void FlowFactLoader::leavingCall(WorkSpace *ws, CFG *cfg, BasicBlock *to) {
+	path.pop();
 }
 
 
@@ -66,56 +80,48 @@ FlowFactLoader::FlowFactLoader(void)
  * @return			True if some loop bound informatio has been found, false else.
  */
 bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
-	bool one = false;
+	bool all = true;
 
 	// look for MAX_ITERATION
-	{
-		int max_iteration = MAX_ITERATION(source);
-		if(max_iteration >= 0) {
-			MAX_ITERATION(bb) = max_iteration;
-			found_loop++;
-			one = true;
+	if(max < 0) {
+		max = path(MAX_ITERATION, source);
+		if(max < 0)
+			all = false;
+		else {
+			MAX_ITERATION(bb) = max;
+			if(total < 0)
+				found_loop++;
 			if(isVerbose())
-				log << "\t\t\tMAX_ITERATION(" << bb << ") = " << max_iteration << io::endl;
+				log << "\t\t\tMAX_ITERATION(" << path << ":" << bb << ") = " << max << io::endl;
 		}
 	}
 
 	// look for MIN_ITERATION
-	{
-		int min_iteration = MIN_ITERATION(source);
-		if(min_iteration >= 0) {
-			MIN_ITERATION(bb) = min_iteration;
-			found_loop++;
-			one = true;
+	if(min < 0) {
+		min = path(MIN_ITERATION, source);
+		if(min < 0)
+			all = false;
+		else {
+			MIN_ITERATION(bb) = min;
 			if(isVerbose())
-				log << "\t\t\tMIN_ITERATION(" << bb << ") = " << min_iteration << io::endl;
+				log << "\t\t\tMIN_ITERATION(" << path << ":" << bb << ") = " << min << io::endl;
 		}
 	}
 
 	// look for TOTAL_ITERATION
-	{
-		int total_iteration = TOTAL_ITERATION(source);
-		if(total_iteration >= 0) {
-			TOTAL_ITERATION(bb) = total_iteration;
-			found_loop++;
-			one = true;
+	if(total < 0){
+		total = path(TOTAL_ITERATION, source);
+		if(total < 0)
+			all = false;
+		else {
+			TOTAL_ITERATION(bb) = total;
+			if(max < 0)
+				found_loop++;
 			if(isVerbose())
-				log << "\t\t\tMAX_ITERATION(" << bb << ") = " << total_iteration << io::endl;
+				log << "\t\t\tTOTAL_ITERATION(" << path << ":" << bb << ") = " << total << io::endl;
 		}
 	}
-
-	// loop for CONTEXTUAL_LOOP_BOUND
-	ContextualLoopBound *bound = CONTEXTUAL_LOOP_BOUND(source);
-	if(bound) {
-		CONTEXTUAL_LOOP_BOUND(bb) = bound;
-		found_loop++;
-		line_loop++;
-		one = true;
-		if(isVerbose())
-			log << "\t\t\tCONTEXTUAL_LOOP_BOUND(" << bb << ") = " << bound << io::endl;
-	}
-
-	return one;
+	return all;
 }
 
 
@@ -167,7 +173,12 @@ bool FlowFactLoader::lookLineAt(Inst *inst, BasicBlock *bb) {
 	ASSERT(addresses);
 	Inst *line_inst = workspace()->findInstAt(addresses[0].fst);
 	ASSERT(line_inst);
-	return transfer(line_inst, bb);
+
+	// perform transfer
+	bool trans = transfer(line_inst, bb);
+	if(trans)
+		line_loop++;
+	return trans;
 }
 
 
@@ -177,36 +188,43 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	ASSERT(ws);
 	ASSERT(cfg);
 	ASSERT(bb);
-	if(!bb->isEnd() && LOOP_HEADER(bb)) {
-		total_loop++;
 
-		// Look in the first instruction of the BB
-		BasicBlock::InstIter iter(bb);
-		ASSERT(iter);
-		if(transfer(iter, bb))
+	// only for loop headers
+	if(bb->isEnd() || !LOOP_HEADER(bb))
+		return;
+	total_loop++;
+
+	// initialization
+	max = -1;
+	total = -1;
+	min = -1;
+
+	// Look in the first instruction of the BB
+	BasicBlock::InstIter iter(bb);
+	ASSERT(iter);
+	if(transfer(iter, bb))
+		return;
+
+	// Attempt to look at the start of the matching source line
+	if(lookLineAt(bb->firstInst(), bb))
+		return;
+
+	// Look all instruction in the header
+	// (in case of aggregation in front of the header)
+	for(BasicBlock::InstIter inst(bb); inst; inst++)
+		if(lookLineAt(inst, bb))
 			return;
 
-		// Attempt to look at the start of the matching source line
-		if(lookLineAt(bb->firstInst(), bb))
-			return;
+	// look in back edge in case of "while() ..." to "do ... while(...)" optimization
+	for(BasicBlock::InIterator edge(bb); edge; edge++)
+		if(Dominance::isBackEdge(edge))
+			for(BasicBlock::InstIter inst(edge->source()); inst; inst++)
+				if(lookLineAt(inst, bb))
+					return;
 
-		// Look all instruction in the header
-		// (in case of aggregation in front of the header)
-		for(BasicBlock::InstIter inst(bb); inst; inst++)
-			if(lookLineAt(inst, bb))
-
-				return;
-
-		// look in back edge in case of "while() ..." to "do ... while(...)" optimization
-		for(BasicBlock::InIterator edge(bb); edge; edge++)
-			if(Dominance::isBackEdge(edge))
-				for(BasicBlock::InstIter inst(edge->source()); inst; inst++)
-					if(lookLineAt(inst, bb))
-						return;
-
-		// warning for lacking loops
+	// warning for lacking loops
+	if(max < 0 && total < 0)
 		warn(_ << "no limit for the loop at " << str(bb->address()) << ".");
-	}
 }
 
 
