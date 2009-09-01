@@ -10,6 +10,7 @@
 #include <elm/genstruct/Vector.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/prop/info.h>
+#include <otawa/prop/ContextualProperty.h>
 
 using namespace elm;
 using namespace otawa;
@@ -129,6 +130,66 @@ int main(void) {
 		cerr << "ipet::WCET = " << IDENTIFIER_LABEL(ipet::WCET) << io::endl;
 		cerr << "ipet::TIME = " << IDENTIFIER_LABEL(ipet::TIME) << io::endl;
 		cerr << "ipet::COUNT = " << IDENTIFIER_LABEL(ipet::COUNT) << io::endl;
+	CHECK_END
+
+	CHECK_BEGIN("props.contextual")
+		static Identifier<int> ID("ID", -1), BAD("BAD", -1), ID2("ID2", -1);
+		PropList props;
+		ContextualPath path;
+
+		// simple case
+		ID(props) = 111;
+		ContextualProperty::print(cerr, props);
+		CHECK(ID(props) == 111);
+		CHECK(BAD(props) == -1);
+		CHECK(path(ID, props) == 111);
+		CHECK(path(BAD, props) == -1);
+
+		// simple path
+		path.push(ContextualStep::FUNCTION, Address(1));
+		path.ref(ID, props) = 222;
+		ContextualProperty::print(cerr, props);
+		CHECK(ID(props) == 111);
+		CHECK(BAD(props) == -1);
+		CHECK_EQUAL((int)path(ID, props), 222);
+		CHECK(path(BAD, props) == -1);
+
+		// double value
+		path.ref(ID2, props) = 333;
+		ContextualProperty::print(cerr, props);
+		CHECK_EQUAL((int)ID2(props), -1);
+		CHECK_EQUAL(path(ID2, props), 333);
+
+		// far value
+		path.clear();
+		path.push(ContextualStep::FUNCTION, Address(3));
+		path.push(ContextualStep::FUNCTION, Address(2));
+		path.push(ContextualStep::FUNCTION, Address(1));
+		path.ref(ID, props) = 444;
+		ContextualProperty::print(cerr, props);
+		CHECK_EQUAL((int)ID(props), 111);
+		CHECK_EQUAL(path(ID, props), 444);
+		CHECK_EQUAL(path(ID2, props), 333);
+
+		// blurred path value
+		path.clear();
+		path.push(ContextualStep::FUNCTION, Address(3));
+		path.push(ContextualStep::FUNCTION, Address(1));
+		path.ref(ID, props) = 555;
+		ContextualProperty::print(cerr, props);
+		CHECK_EQUAL(path(ID, props), 555);
+		CHECK_EQUAL(path(ID2, props), 333);
+
+		// more precise path
+		path.clear();
+		path.push(ContextualStep::FUNCTION, Address(3));
+		path.push(ContextualStep::CALL, Address(3));
+		path.push(ContextualStep::FUNCTION, Address(2));
+		path.push(ContextualStep::FUNCTION, Address(1));
+		CHECK_EQUAL((int)ID(props), 111);
+		CHECK_EQUAL(path(ID, props), 444);
+		CHECK_EQUAL(path(ID2, props), 333);
+
 	CHECK_END
 
 	return 0;
