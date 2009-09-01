@@ -33,20 +33,24 @@ public:
 	inline Ref(PropList& _prop, const I& _id): prop(_prop), id(_id) { }
 	inline Ref(PropList *_prop, const I& _id): prop(*_prop), id(_id) { }
 	inline Ref(const Ref<T, I>& ref): prop(ref.prop), id(ref.id)  { }
+	inline const PropList& proplist(void) const { return prop; }
+	inline const I& identifier(void) const { return id; }
 
-	inline Ref& add(const T& value) { id.add(prop, value); return *this; }
-	inline void remove(void) { prop.removeProp(id); }
+	// accessors
 	inline bool exists(void) const { return prop.hasProp(id); }
-	inline T& ref(void) const;
 	inline const T& get(void) const { return id.value(prop); }
 	inline void print(io::Output& out) const { id.print(out, prop.getProp(&id)); }
-
 	inline operator const T&(void) const { return id.get(prop, id.defaultValue()); }
+	inline T operator->(void) const { return id.get(prop, id.defaultValue()); }
+
+	// mutators
+	inline Ref& add(const T& value) { id.add(prop, value); return *this; }
+	inline void remove(void) { prop.removeProp(id); }
+	inline T& ref(void) const;
+
+	inline T& operator&(void) const { return ref(); }
 	inline Ref<T, I>& operator=(const T& value) { id.set(prop, value); return *this; }
 	inline Ref<T, I>& operator=(const Ref<T, I>& value) { id.set(prop, value.get()); return *this; }
-	inline T operator->(void) const { return id.get(prop, id.defaultValue()); }
-	inline T& operator&(void) const { return ref(); }
-
 	inline Ref<T, I>& operator+=(const T& v) const { ref() +=  v; return *this; }
 	inline Ref<T, I>& operator-=(const T& v) const { ref() -=  v; return *this; }
 	inline Ref<T, I>& operator*=(const T& v) const { ref() *=  v; return *this; }
