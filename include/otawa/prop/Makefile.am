@@ -1,6 +1,7 @@
 includeotawapropdir=$(includedir)/otawa/prop
 includeotawaprop_HEADERS = \
 	AbstractIdentifier.h \
+	ContextualProperty.h \
 	DeletableProperty.h \
 	GenericIdentifier.h \
 	Identifier.h \
