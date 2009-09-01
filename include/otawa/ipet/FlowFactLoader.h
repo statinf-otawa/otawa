@@ -9,6 +9,8 @@
 
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/Feature.h>
+#include <otawa/prop/ContextualProperty.h>
+#include <otawa/proc/ContextualProcessor.h>
 
 namespace otawa { 
 
@@ -22,7 +24,7 @@ namespace ilp {
 namespace ipet {
 	
 // FlowFactLoader class
-class FlowFactLoader: public BBProcessor {
+class FlowFactLoader: public ContextualProcessor {
 public:
 	FlowFactLoader(void);
 
@@ -30,10 +32,15 @@ protected:
 	virtual void setup(WorkSpace *ws);
 	virtual void cleanup (WorkSpace *fw);
 	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+	virtual void enteringCall (WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee);
+	virtual void leavingCall (WorkSpace *ws, CFG *cfg, BasicBlock *to);
 
 private:
 	bool lines_available;
 	int total_loop, found_loop, line_loop;
+	int max, total, min;
+	ContextualPath path;
+
 	bool transfer(Inst *source, BasicBlock *bb);
 	bool lookLineAt(Inst *source, BasicBlock *bb);
 };
