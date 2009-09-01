@@ -3,7 +3,7 @@
  *	FlowFactLoader class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-07, IRIT UPS.
+ *	Copyright (c) 2005-09, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Feature.h>
 #include <elm/genstruct/Vector.h>
-#include <otawa/flowfact/ContextualLoopBound.h>
+#include <otawa/prop/ContextualProperty.h>
 
 // Externals
 namespace otawa  { class FlowFactLoader; }
@@ -44,6 +44,7 @@ using namespace elm;
 using namespace elm::genstruct;
 
 // Extern class
+class ContextualPath;
 class File;
 class WorkSpace;
 
@@ -67,7 +68,7 @@ protected:
 		address_t addr,
 		int count,
 		int total,
-		const ContextPath<Address>& path);
+		const ContextualPath& path);
 	virtual void onReturn(address_t addr);
 	virtual void onNoReturn(address_t addr);
 	virtual void onNoReturn(String name);
@@ -94,20 +95,13 @@ private:
 
 	// XML support
 	void loadXML(const string& path) throw(ProcessorException);
-	void scanXLoop(xom::Element *element, ContextPath<Address>& path)
-		throw(ProcessorException);
-	void scanXFun(xom::Element *element, ContextPath<Address>& path)
-		throw(ProcessorException);
-	Address scanAddress(xom::Element *element, ContextPath<Address>& path)
-		throw(ProcessorException);
-	Option<long> scanInt(xom::Element *element, cstring name)
-		throw(ProcessorException);
-	Option<long> scanBound(xom::Element *element, cstring name)
-		throw(ProcessorException);
-	void scanXContent(xom::Element *element, ContextPath<Address>& path)
-		throw(ProcessorException);
-	void scanXBody(xom::Element *element, ContextPath<Address>& path)
-		throw(ProcessorException);
+	void scanXLoop(xom::Element *element, ContextualPath& path) throw(ProcessorException);
+	void scanXFun(xom::Element *element, ContextualPath& path) throw(ProcessorException);
+	Address scanAddress(xom::Element *element, ContextualPath& path) throw(ProcessorException);
+	Option<long> scanInt(xom::Element *element, cstring name) throw(ProcessorException);
+	Option<long> scanBound(xom::Element *element, cstring name) throw(ProcessorException);
+	void scanXContent(xom::Element *element, ContextualPath& path) throw(ProcessorException);
+	void scanXBody(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	string xline(xom::Node *element);
 };
 
