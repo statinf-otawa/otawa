@@ -155,7 +155,8 @@ libotawa_la_SOURCES = \
 	BBRatioDisplayer.cpp \
 	graph_PreorderIterator.cpp \
 	hard_Memory.cpp \
-	script_Script.cpp
+	script_Script.cpp \
+	sem.cpp
 
 	
 
