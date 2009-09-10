@@ -25,6 +25,7 @@
 #include <elm/string.h>
 #include <elm/io.h>
 #include <elm/genstruct/Table.h>
+#include <elm/genstruct/Vector.h>
 #include <otawa/prog/ProgItem.h>
 #include <otawa/properties.h>
 
@@ -33,9 +34,8 @@ namespace otawa {
 // Declaration
 class Inst;
 class PseudoInst;
-namespace hard {
-	class Register;
-} // hard
+namespace hard { class Register; }
+namespace sem { class Block; }
 
 // Inst class
 class Inst: public ProgItem {
@@ -107,12 +107,8 @@ public:
 	virtual Type *type(void);
 	virtual int multiCount(void);
 
-	// Stack information
-	static const unsigned long READ = 0x01;
-	static const unsigned long WRITE = 0x02;
-	static const long UNKNOW_CHANGE = 0x80000000;
-	virtual long stackChange(void);
-	virtual unsigned long stackAccess(void);
+	// semantics information
+	virtual void semInsts(sem::Block& block);
 
 	// ProgItem overload
 	virtual Inst *toInst(void);
