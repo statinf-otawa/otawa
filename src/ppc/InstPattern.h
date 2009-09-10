@@ -203,8 +203,8 @@ public:
 
 
 // Seq class
-template <class I1, class I2 = NoInst, class I3 = NoInst, class I4 = NoInst>
-class Seq: public InstCons<I1, InstCons<I2, InstCons<I3, I4> > > { };
+template <class I1, class I2 = NoInst, class I3 = NoInst, class I4 = NoInst, class I5 = NoInst>
+class Seq: public InstCons<I1, InstCons<I2, InstCons<I3, InstCons<I4, I5> > > > { };
 
 } } // otawa::loader
 
