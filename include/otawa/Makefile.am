@@ -3,6 +3,7 @@ SUBDIRS= \
 	app \
 	ast \
 	cache \
+	dcache \
 	cfg \
 	dfa \
 	display \
