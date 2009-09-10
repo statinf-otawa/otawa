@@ -348,27 +348,20 @@ const elm::genstruct::Table<hard::Register *>& Inst::writtenRegs(void) {
  * Get the kind of the current instruction. In fact, the kind is composed as
  * bit array representing an instruction property.
  * @return The kind of the instruction.
+
  */
 
 
 /**
- * Return a value indicating how the SP value is modified.
- * @return	Stack change as a signed values (number of bytes of modification).
- * 			Must be 0 if there is no stack change or @ref Inst::UNKNOWN_CHANGE
- * 			if the change can nbot be evaluated.
+ * Return a list of semantics pseudo-instruction representing the effect
+ * of the instruction.
+ * @param block	Block to write semantics instruction to. An empty vector
+ * 				means there is no operation.
+ * @note		The passed block is not cleared by the method that
+ * 				accumulates instructions allowing to wholly
+ * 				translates parts of code.
  */
-long Inst::stackChange(void) {
-	return 0;
-}
-
-
-/**
- * Gives information about stack access of this instruction.
- * @return	A composition of masks @ref Inst::READ and @ref::WRITE (or 0 if
- * 			there is no stack access).
- */
-unsigned long Inst::stackAccess(void) {
-	return 0;
+void Inst::semInsts(sem::Block& block) {
 }
 
 
