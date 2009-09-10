@@ -156,9 +156,15 @@ libotawa_la_SOURCES = \
 	graph_PreorderIterator.cpp \
 	hard_Memory.cpp \
 	script_Script.cpp \
-	sem.cpp
+	sem.cpp \
+	util_AccessedAddress.cpp \
+	util_StackAnalysis.cpp \
+	dcache_ACSBuilder.cpp \
+	dcache_BlockBuilder.cpp \
+	dcache_CatBuilder.cpp \
+	dcache_CatConstraintBuilder.cpp \
+	dcache_ACSMayBuilder.cpp
 
-	
 
 #	Microprocessor.cpp
 #	ExecutionGraph.cpp
