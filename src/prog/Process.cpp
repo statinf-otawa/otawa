@@ -631,6 +631,19 @@ void Process::get(Address at, char *buf, int size) {
 
 
 /**
+ * Get the initial address of the stack pointer.
+ * If the program is embedded, this call does not return any meaningful value as the
+ * value is initialized at the program start. For program running in a rich OS environment,
+ * this is the value of the stack pointer after the OS has filled environment and program
+ * arguments.
+ * @return	Initial stack pointer address.
+ */
+Address Process::initialSP(void) const {
+	return Address::null;
+}
+
+
+/**
  */
 elm::io::Output& operator<<(elm::io::Output& out, Process *proc) {
 	out << "process";
