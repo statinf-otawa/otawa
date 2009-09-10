@@ -32,6 +32,7 @@
 #include <otawa/util/FlowFactLoader.h>
 #include <elm/genstruct/SortedSLList.h>
 #include <otawa/sim/features.h>
+#include <otawa/prog/sem.h>
 #define ISS_DISASM
 #include <emul.h>
 #include <iss_include.h>
@@ -173,6 +174,10 @@ public:
 	virtual otawa::SimState *newState(void) {
 	  return new SimState(this, (state_t *)state(), true);
 	}
+
+	virtual Address initialSP(void) const {
+		return ((state_t *)state())->gpr[1];
+	}
 protected:
 	virtual otawa::Inst *decode(address_t addr);
 	virtual void *gelFile(void) {
@@ -189,6 +194,7 @@ public:
 		: otawa::loader::new_gliss::Inst(process, kind, addr) { }
 
 	virtual size_t size(void) const { return 4; }
+	virtual void semInsts(sem::Block& block);
 
 protected:
 	virtual void decodeRegs(void) {
@@ -204,6 +210,7 @@ public:
 	inline BranchInst(Process& process, kind_t kind, address_t addr)
 		: otawa::loader::new_gliss::BranchInst(process, kind, addr) { }
 
+	virtual void semInsts(sem::Block& block);
 	virtual size_t size(void) const { return 4; }
 
 protected:
@@ -213,6 +220,10 @@ protected:
 	}
 	Option<Address> checkFarCall(address_t call);
 	bool checkSwitch(void);
+
+private:
+	void do_branch(sem::Block& block, unsigned long off, bool abs, bool link);
+	void do_branch_cond(sem::Block& block, unsigned long off, int bo, int bi, bool abs, bool link);
 };
 
 
@@ -655,7 +666,7 @@ void Process::decodeRegs(
 	code_t buffer[20];
 	instruction_t *inst;
 	iss_fetch(oinst->address().address(), buffer);
-	inst = iss_decode((state_t *)state(), oinst->address().address(), buffer /*, 0*/);
+	inst = iss_decode((state_t *)state(), oinst->address().address(), buffer);
 	if(inst->ident == ID_Instrunknown) {
 		/* in_regs = new elm::genstruct::AllocatedTable<hard::Register *>(0);
 		out_regs = new elm::genstruct::AllocatedTable<hard::Register *>(0); */
@@ -971,39 +982,525 @@ bool BranchInst::checkSwitch(void) {
 		>
 	> long_switch;
 
+	// Indirect switch template
+	typedef UInt16<2> jump_hi, def_hi;
+	typedef Int16<3> jump_lo, def_lo;
+	typedef Seq<
+		Seq<													// before:
+			I<ID_ADDI_R_R_, R<0>, R<1> >,						//	addi	x0, x1, *
+			I<ID_RLWINM_R_R_, R<0>, R<2>, C<0>, C<24>, C<31> >,	//	rlwinm	x2, x0, 0, 24, 31
+			I<ID_CMPLI_R_, C<0>, C<0>, R<2>, size>,				//	cmpli	0,0, x2, table_max
+			I<ID_BC_, C<12>, C<1>, C<10> >						//	bc		12, 1, 10
+		>,
+		Seq<													// cases:
+			I<ID_ADDIS_R_R_, R<3>, zero, jump_hi >,				//	addis	x3, r0, jump_high
+			I<ID_ADDI_R_R_, R<3>, R<3>, jump_lo >,				//	addi	x3, x3, jump_low
+			I<ID_ADDIS_R_R_, R<4>, zero, table_hi >,			//	addis	x4, r0, table_high
+			I<ID_ADDI_R_R_, R<4>, R<4>, table_lo >				//	addi	x4, x4, table_low
+		>,
+		Seq<
+			I<ID_RLWINM_R_R_, R<0>, R<5>, C<2>, C<0>, C<29> >,	//	rlwinm	x5, x0, 2, 0, 29
+			I<ID_LWZX_R_R_R, R<6>, R<4>, R<5> >,				//	lwzx	x6, x4, x5
+			I<ID_RLWINM_R_R_, R<6>, R<6>, C<2>, C<0>, C<29> >,	//	rlwinm	x6, x6, 2, 0, 29
+			I<ID_LWZX_R_R_R, R<7>, R<3>, R<6> >					//	lwzx	x7, x3, x6
+		>,
+		I<ID_B_, C<3> >,										//	b		3
+		Seq<													// default:
+			I<ID_ADDIS_R_R_, R<8>, zero, def_hi>,				//	addis	x8, r0, def_high
+			I<ID_ADDI_R_R_, R<7>, R<8>, def_lo>,				//	addi	x7, x8, def_low
+																// branch:
+			I<ID_MTSPR_R, R<7>, C16<288> >,						//	mtspr	288, x7
+			I<ID_BCCTR_, C<20>, C<0> >							//	bcctr	20, 0
+		>
+	> indirect_switch;
+
 	// Check template
+	addr = topAddress();
 	STRACE("look for short switch at " << addr);
 	short_switch::reset();
 	bool res = short_switch::matchBack((state_t *)process().state(), addr);
 	if(!res) {
-		STRACE("look for long switch at " << addr);
 		addr = topAddress();
+		STRACE("look for long switch at " << addr);
 		long_switch::reset();
 		res = long_switch::matchBack((state_t *)process().state(), addr);
-		if(!res) {
-			STRACE("no switch at " << addr << io::endl);
-			return false;
-		}
 	}
 
 	// Record the information
-	genstruct::SortedSLList<Address> addresses;
-	STRACE("switch at " << addr);
-	Address table = (table_hi::value() << 16) + table_lo::value();
-	Address base = (base_hi::value() << 16) + base_lo::value();
-	STRACE("table = " << table << ", base = " << base);
-	for(int i = 0; i <= size::value(); i++) {
-		signed long offset;
-		process().get(table + i * 4, offset);
-		Address addr = base.offset() + offset;
-		STRACE("\tbranch to " << addr << ", offset=" << (void *)offset);
-		if(!addresses.contains(addr)) {
-			addresses.add(addr);
-			BRANCH_TARGET(this).add(addr);
+	if(res) {
+		genstruct::SortedSLList<Address> addresses;
+		STRACE("switch at " << addr);
+		Address table = (table_hi::value() << 16) + table_lo::value();
+		Address base = (base_hi::value() << 16) + base_lo::value();
+		STRACE("table = " << table << ", base = " << base);
+		for(int i = 0; i <= size::value(); i++) {
+			signed long offset;
+			process().get(table + i * 4, offset);
+			Address addr = base.offset() + offset;
+			STRACE("\tbranch to " << addr << ", offset=" << (void *)offset);
+			if(!addresses.contains(addr)) {
+				addresses.add(addr);
+				BRANCH_TARGET(this).add(addr);
+			}
 		}
+		STRACE(io::endl);
+		return true;
 	}
-	STRACE(io::endl);
-	return true;
+
+	// Check indirect switch template
+	indirect_switch::reset();
+	addr = topAddress();
+	STRACE("look for indirect switch at " << addr);
+	res = indirect_switch::matchBack((state_t *)process().state(), addr);
+	if(res) {
+		genstruct::SortedSLList<Address> addresses;
+		STRACE("indirect switch at " << addr);
+
+		// Add the default branch
+		Address target = (def_hi::value() << 16) + def_lo::value();
+		addresses.add(target);
+		BRANCH_TARGET(this).add(target);
+
+		// Process tables
+		Address table = (table_hi::value() << 16) + table_lo::value();
+		Address jump = (jump_hi::value() << 16) + jump_lo::value();
+		STRACE("table = " << table << ", jump = " << jump);
+		for(int i = 0; i <= size::value(); i++) {
+
+			// compute the target
+			unsigned long index;
+			process().get(table + i * 4, index);
+			unsigned long offset;
+			process().get(jump + index * 4, offset);
+			Address target = offset;
+
+			// add the target
+			if(!addresses.contains(target)) {
+				STRACE("\tbranch to " << target << ", index=" << index << io::endl);
+				addresses.add(target);
+				BRANCH_TARGET(this).add(target);
+			}
+		}
+		return true;
+	}
+
+	// Template not recognized
+	STRACE("no switch at " << addr << io::endl);
+	return false;
+}
+
+// fast generation
+#define arg(i)	inst->instrinput[i].val.uint8
+#define r(i)	Platform::GPR_bank[arg(i)]->platformNumber()
+#define fr(i)	Platform::FPR_bank[arg(i)]->platformNumber()
+#define	cr(i)	Platform::CR_bank[i]->platformNumber()
+#define i(i)	inst->instrinput[i].val.int16
+#define ib(i)	inst->instrinput[i].val.int8
+#define il(i)	inst->instrinput[i].val.int32
+#define t1		(-1)
+#define t2		(-2)
+#define	lr		Platform::LR_reg.platformNumber()
+#define	ctr		Platform::CTR_reg.platformNumber()
+
+static void sem_load_indexed(sem::Block& block, instruction_t *inst, int size, bool update, bool flt) {
+	if(!update && !arg(1))
+		block.add(sem::load(flt ? fr(0) : r(0), r(2), size));
+	else {
+		block.add(sem::add(t1, r(1), r(2)));
+		block.add(sem::load(flt ? fr(0) : r(0), t1, size));
+		if(update)
+			block.add(sem::set(r(1), t1));
+	}
+}
+
+static void sem_store_indexed(sem::Block& block, instruction_t *inst, int size, bool update, bool flt) {
+	if(!update && !arg(1))
+		block.add(sem::store(flt ? fr(0) : r(0), r(2), size));
+	else {
+		block.add(sem::add(t1, r(1), r(2)));
+		block.add(sem::store(flt ? fr(0) : r(0), t1, size));
+		if(update)
+			block.add(sem::set(r(1), t1));
+	}
+}
+
+static void sem_load_immediate(sem::Block& block, instruction_t *inst, int size, bool update, bool flt) {
+	block.add(sem::seti(t2, i(2)));
+	if(!update && !arg(1))
+		block.add(sem::load(r(0), t2, size));
+	else {
+		block.add(sem::add(t1, r(1), t2));
+		block.add(sem::load(flt ? fr(0) : r(0), t1, size));
+		if(update)
+			block.add(sem::set(r(1), t1));
+	}
+}
+
+static void sem_store_immediate(sem::Block& block, instruction_t *inst, int size, bool update, bool flt) {
+	block.add(sem::seti(t2, i(2)));
+	if(!update && !arg(1))
+		block.add(sem::store(r(0), t2, size));
+	else {
+		block.add(sem::add(t1, r(1), t2));
+		block.add(sem::store(flt ? fr(0) : r(0), t1, size));
+		if(update)
+			block.add(sem::set(r(1), t1));
+	}
+}
+
+
+void Inst::semInsts(sem::Block& block)  {
+
+	// Decode the instruction
+	code_t buffer[20];
+	char out_buffer[200];
+	instruction_t *inst;
+	iss_fetch(address().address(), buffer);
+	inst = iss_decode((state_t *)process().state(), address().address(), buffer);
+
+	// scan the instruction
+	switch(inst->ident) {
+
+	// unknown effect on the stack
+	case ID_Instrunknown:
+		break;
+
+	// no effect on the stack
+	// system
+	case ID_TLBIA: case ID_TLBIE_R: case ID_TLBSYNC:
+	case ID_SYNC: case ID_ISYNC:
+	case ID_EIEIO: case ID_ICBI_R_R:
+	case ID_DCBA_R_R: case ID_DCBZ_R_R: case ID_DCBTST_R_R:
+	case ID_DCBT_R_R: case ID_DCBST_R_R: case ID_DCBF_R_R: case ID_DCBI_R_R:
+	// float
+	case ID_MTFSFI_D_CRF_: case ID_MTFSFI_CRF_: case ID_MTFSF_D_FR: case ID_MTFSF_FR:
+	case ID_MTFSB_CRB: case ID_MTFSB_CRB_0: case ID_MTFSB_D_CRB: case ID_MTFSB_D_CRB_0:
+	case ID_MFFS_D_FR: case ID_MFFS_FR: case ID_MCRFS_CRF_CRF: case ID_FCTIWZ_D_FR_FR:
+	case ID_FCTIWZ_FR_FR: case ID_FCTIW_D_FR_FR: case ID_FCTIW_FR_FR: case ID_FRSP_D_FR_FR:
+	case ID_FRSP_FR_FR: case ID_FNABS_FR_FR: case ID_FNABS_D_FR_FR: case ID_FABS_FR_FR:
+	case ID_FABS_D_FR_FR: case ID_FNEG_FR_FR: case ID_FNEG_D_FR_FR: case ID_FMR_FR_FR:
+	case ID_FMR_D_FR_FR: case ID_FCMPU_CRF_FR_FR: case ID_FCMPO_CRF_FR_FR: case ID_FMSUB_FR_FR_FR_FR:
+	case ID_FMSUB_D_FR_FR_FR_FR: case ID_FMSUBS_FR_FR_FR_FR: case ID_FMSUBS_D_FR_FR_FR_FR: case ID_FNMSUB_FR_FR_FR_FR:
+	case ID_FNMSUB_D_FR_FR_FR_FR: case ID_FNMSUBS_FR_FR_FR_FR: case ID_FNMSUBS_D_FR_FR_FR_FR: case ID_FMADD_FR_FR_FR_FR:
+	case ID_FMADD_D_FR_FR_FR_FR: case ID_FMADDS_FR_FR_FR_FR: case ID_FMADDS_D_FR_FR_FR_FR: case ID_FNMADD_FR_FR_FR_FR:
+	case ID_FNMADD_D_FR_FR_FR_FR: case ID_FNMADDS_FR_FR_FR_FR: case ID_FNMADDS_D_FR_FR_FR_FR: case ID_FADD_FR_FR_FR:
+	case ID_FADD_D_FR_FR_FR: case ID_FADDS_FR_FR_FR: case ID_FADDS_D_FR_FR_FR: case ID_FSUB_FR_FR_FR:
+	case ID_FSUB_D_FR_FR_FR: case ID_FSUBS_FR_FR_FR: case ID_FSUBS_D_FR_FR_FR: case ID_FMUL_FR_FR_FR:
+	case ID_FMUL_D_FR_FR_FR: case ID_FMULS_FR_FR_FR: case ID_FMULS_D_FR_FR_FR: case ID_FDIV_FR_FR_FR:
+	case ID_FDIV_D_FR_FR_FR: case ID_FDIVS_FR_FR_FR: case ID_FDIVS_D_FR_FR_FR:
+	// control
+	case ID_BL_: case ID_BLA_: case ID_BA_: case ID_B_:
+	case ID_BCLR_: case ID_BCLRL_: case ID_BCCTR_: case ID_BCCTRL_:
+	case ID_BCLA_: case ID_BCL_: case ID_BCA_: case ID_BC_:
+	case ID_SC: case ID_RFI: case ID_TW_R_R: case ID_TWI_R_:
+	// too complex
+	case ID_LSWX_R_R_R: case ID_LSWI_R_R_:
+	case ID_STSWX_R_R_R: case ID_STSWI_R_R_:
+	case ID_ECOWX_R_R_R: case ID_ECIWX_R_R_R:
+	case ID_STWCX_D_R_R_R:
+	// condition codes
+	case ID_CRAND_CRB_CRB_CRB: case ID_CROR_CRB_CRB_CRB: case ID_CRXOR_CRB_CRB_CRB:
+	case ID_CRNAND_CRB_CRB_CRB: case ID_CRNOR_CRB_CRB_CRB: case ID_CREQV_CRB_CRB_CRB:
+	case ID_CRANDC_CRB_CRB_CRB: case ID_CRORC_CRB_CRB_CRB:
+	case ID_MCRF_CRF_CRF: case ID_MCRXR_CRF: case ID_MTCRF_R:
+	// special registers
+	case ID_MTSPR_R: case ID_MTSPR_R_0:
+	case ID_MTMSR_R: case ID_MTSR_R: case ID_MTSRIN_R_R:
+		break;
+
+	// comparisons
+	case ID_CMP_R_R:
+		block.add(sem::cmp(cr(ib(0)), r(2), r(3)));
+		break;
+	case ID_CMPI_R_:
+		block.add(sem::seti(t1, i(3)));
+		block.add(sem::cmp(cr(ib(0)), r(2), t1));
+		break;
+	case ID_CMPL_R_R:
+		block.add(sem::cmpu(cr(ib(0)), r(2), r(3)));
+		break;
+	case ID_CMPLI_R_:
+		block.add(sem::seti(t1, i(3)));
+		block.add(sem::cmpu(cr(ib(0)), r(2), t1));
+		break;
+
+	// load indexed
+	case ID_LFDUX_FR_R_R: sem_load_indexed(block, inst, 8, true, true); break;
+	case ID_LFDX_FR_R_R:  sem_load_indexed(block, inst, 8, false, true); break;
+	case ID_LFSUX_FR_R_R: sem_load_indexed(block, inst, 4, true, true); break;
+	case ID_LFSX_FR_R_R: sem_load_indexed(block, inst, 4, false, true); break;
+	case ID_LBZUX_R_R_R: sem_load_indexed(block, inst, 1, true, false); break;
+	case ID_LBZX_R_R_R: sem_load_indexed(block, inst, 1, false, false); break;
+	case ID_LHAUX_R_R_R: sem_load_indexed(block, inst, 2, true, false); break;
+	case ID_LHAX_R_R_R: sem_load_indexed(block, inst, 2, false, false); break;
+	case ID_LHZUX_R_R_R: sem_load_indexed(block, inst, 2, true, false); break;
+	case ID_LHZX_R_R_R: sem_load_indexed(block, inst, 2, false, false); break;
+	case ID_LWZUX_R_R_R: sem_load_indexed(block, inst, 4, true, false); break;
+	case ID_LWZX_R_R_R: sem_load_indexed(block, inst, 4, false, false); break;
+	case ID_LWBRX_R_R_R: sem_load_indexed(block, inst, 4, false, false); break;
+	case ID_LHBRX_R_R_R: sem_load_indexed(block, inst, 2, false, false); break;
+	case ID_LWARX_R_R_R: sem_load_indexed(block, inst, 4, false, false); break;
+
+	// load immediate
+	case ID_LFDU_FR_R_: sem_load_immediate(block, inst, 8, true, true); break;
+	case ID_LFD_FR_R_: sem_load_immediate(block, inst, 8, false, true); break;
+	case ID_LFSU_FR_R_: sem_load_immediate(block, inst, 4, true, true); break;
+	case ID_LFS_FR_R_: sem_load_immediate(block, inst, 4, false, true); break;
+	case ID_LBZU_R_R_: sem_load_immediate(block, inst, 1, true, false); break;
+	case ID_LBZ_R_R_: sem_load_immediate(block, inst, 1, false, false); break;
+	case ID_LHZU_R_R_: sem_load_immediate(block, inst, 2, true, false); break;
+	case ID_LHAU_R_R_: sem_load_immediate(block, inst, 2, false, false); break;
+	case ID_LHA_R_R_: sem_load_immediate(block, inst, 2, true, false); break;
+	case ID_LHZ_R_R_: sem_load_immediate(block, inst, 2, false, false); break;
+	case ID_LWZU_R_R_: sem_load_immediate(block, inst, 4, true, false); break;
+	case ID_LWZ_R_R_: sem_load_immediate(block, inst, 4, false, false); break;
+
+	// load multiple
+	case ID_LMW_R_R_:
+		block.add(sem::seti(t2, 4));
+		block.add(sem::seti(t1, i(2)));
+		if(r(1) != 0)
+			block.add(sem::add(t1, t1, r(1)));
+		for(int i = arg(0); i < 32; i++) {
+			block.add(sem::load(Platform::GPR_bank[i]->platformNumber(), t1, 4));
+			block.add(sem::add(t1, t1, t2));
+		}
+		break;
+
+	// store indexed
+	case ID_STFDUX_FR_R_R: sem_store_indexed(block, inst, 8, true, true); break;
+	case ID_STFDX_FR_R_R: sem_store_indexed(block, inst, 8, false, true); break;
+	case ID_STFSUX_FR_R_R: sem_store_indexed(block, inst, 4, true, true); break;
+	case ID_STFSX_FR_R_R: sem_store_indexed(block, inst, 4, false, true); break;
+	case ID_STBUX_R_R_R: sem_store_indexed(block, inst, 1, true, false); break;
+	case ID_STBX_R_R_R: sem_store_indexed(block, inst, 1, false, false); break;
+	case ID_STHUX_R_R_R: sem_store_indexed(block, inst, 2, true, false); break;
+	case ID_STHX_R_R_R: sem_store_indexed(block, inst, 2, false, false); break;
+	case ID_STWUX_R_R_R: sem_store_indexed(block, inst, 4, true, false); break;
+	case ID_STWX_R_R_R: sem_store_indexed(block, inst, 4, false, false); break;
+	case ID_STWBRX_R_R_R: sem_store_indexed(block, inst, 4, false, false); break;
+	case ID_STHBRX_R_R_R: sem_store_indexed(block, inst, 2, false, false); break;
+
+	// store immediate
+	case ID_STFDU_FR_R_: sem_store_immediate(block, inst, 8, true, true); break;
+	case ID_STFD_FR_R_: sem_store_immediate(block, inst, 8, false, true); break;
+	case ID_STFSU_FR_R_: sem_store_immediate(block, inst, 4, true, true); break;
+	case ID_STFS_FR_R_: sem_store_immediate(block, inst, 4, false, true); break;
+	case ID_STBU_R_R_: sem_store_immediate(block, inst, 1, true, false); break;
+	case ID_STB_R_R_: sem_store_immediate(block, inst, 1, false, false); break;
+	case ID_STHU_R_R_: sem_store_immediate(block, inst, 2, true, false); break;
+	case ID_STH_R_R_: sem_store_immediate(block, inst, 2, false, false); break;
+	case ID_STWU_R_R_: sem_store_immediate(block, inst, 4, true, false); break;
+	case ID_STW_R_R_: sem_store_immediate(block, inst, 4, false, false); break;
+
+	// store multiple
+	case ID_STMW_R_R_:
+		block.add(sem::seti(t2, 4));
+		block.add(sem::seti(t1, i(2)));
+		if(r(1) != 0)
+			block.add(sem::add(t1, t1, r(1)));
+		for(int i = arg(0); i < 32; i++) {
+			block.add(sem::store(Platform::GPR_bank[i]->platformNumber(), t1, 4));
+			block.add(sem::add(t1, t1, t2));
+		}
+		break;
+
+	// unsupported unary arithmetics
+	case ID_NEGO_D_R_R: case ID_NEGO_R_R: case ID_NEG_D_R_R: case ID_NEG_R_R:
+	case ID_MFCR_R: case ID_MFSPR_R_: case ID_MFTB_R_: case ID_MFSR_R_: case ID_MFMSR_R:
+	case ID_MFSPR_R__0: case ID_MFSRIN_R_R:
+	// unsupported binary arithmetics
+	case ID_DIVWU_R_R_R: case ID_DIVWU_D_R_R_R: case ID_DIVWUO_R_R_R: case ID_DIVWUO_D_R_R_R:
+	case ID_DIVW_R_R_R: case ID_DIVW_D_R_R_R: case ID_DIVWO_R_R_R: case ID_DIVWO_D_R_R_R:
+	case ID_MULHWU_R_R_R: case ID_MULHWU_D_R_R_R: case ID_MULHW_R_R_R: case ID_MULHW_D_R_R_R:
+	case ID_MULLI_R_R_: case ID_MULLW_R_R_R: case ID_MULLW_D_R_R_R: case ID_MULLWO_R_R_R:
+	case ID_MULLWO_D_R_R_R:
+	case ID_SUBF_D_R_R_R: case ID_SUBFO_R_R_R: case ID_SUBFO_D_R_R_R:
+	case ID_SUBFC_R_R_R: case ID_SUBFC_D_R_R_R: case ID_SUBFCO_R_R_R: case ID_SUBFCO_D_R_R_R:
+	case ID_SUBFE_R_R_R: case ID_SUBFE_D_R_R_R: case ID_SUBFEO_R_R_R: case ID_SUBFEO_D_R_R_R:
+	case ID_SUBFIC_R_R_:
+	case ID_SUBFME_R_R: case ID_SUBFME_D_R_R: case ID_SUBFMEO_R_R: case ID_SUBFMEO_D_R_R:
+	case ID_SUBFZE_R_R: case ID_SUBFZE_D_R_R: case ID_SUBFZEO_R_R: case ID_SUBFZEO_D_R_R:
+	case ID_ADDC_R_R_R: case ID_ADDC_D_R_R_R: case ID_ADDCO_R_R_R: case ID_ADDCO_D_R_R_R:
+	case ID_ADDE_R_R_R: case ID_ADDE_D_R_R_R: case ID_ADDEO_R_R_R: case ID_ADDEO_D_R_R_R:
+	case ID_ADDZE_R_R: case ID_ADDZE_D_R_R: case ID_ADDZEO_R_R:	case ID_ADDZEO_D_R_R:
+	case ID_ADDME_R_R: case ID_ADDME_D_R_R:	case ID_ADDMEO_R_R:	case ID_ADDMEO_D_R_R:
+		block.add(sem::scratch(r(0)));
+		break;
+
+	case ID_ADD_R_R_R:
+		block.add(sem::add(r(0), r(1), r(2)));
+		break;
+	case ID_SUBF_R_R_R:
+		block.add(sem::sub(r(0), r(2), r(1)));
+		break;
+
+	// unsupported arithmetics : target second argument ! (Too bad ppc.nml)
+	case ID_ORC_R_R_R: case ID_ORC_D_R_R_R: case ID_ORIS_R_R_: case ID_ORI_R_R_:
+	case ID_OR_D_R_R_R:
+	case ID_ANDC_R_R_R: case ID_ANDC_D_R_R_R: case ID_ANDIS_D_R_R_: case ID_ANDI_D_R_R_:
+	case ID_AND_D_R_R_R:
+	case ID_XORIS_R_R_: case ID_XORI_R_R_: case ID_XOR_R_R_R: case ID_XOR_D_R_R_R:
+	case ID_NOR_D_R_R_R: case ID_NOR_R_R_R:
+	case ID_NAND_D_R_R_R: case ID_NAND_R_R_R:
+	case ID_EQV_D_R_R_R: case ID_EQV_R_R_R:
+	case ID_EXTSH_R_R: case ID_EXTSH_D_R_R:
+	case ID_EXTSB_R_R: case ID_EXTSB_D_R_R:
+	case ID_CNTLZW_D_R_R: case ID_CNTLZW_R_R:
+	case ID_RLWIMI_R_R_: case ID_RLWIMI_D_R_R_:
+	case ID_RLWNM_R_R_R_: case ID_RLWNM_D_R_R_R_:
+	case ID_RLWINM_R_R_: case ID_RLWINM_D_R_R_:
+	case ID_SRAW_R_R_R: case ID_SRAW_D_R_R_R: case ID_SRAWI_R_R_: case ID_SRAWI_D_R_R_:
+	case ID_SRW_R_R_R: case ID_SRW_D_R_R_R:
+	case ID_SLW_R_R_R: case ID_SLW_D_R_R_R:
+		block.add(sem::scratch(r(1)));
+		break;
+
+	// supported arithmetics
+	case ID_OR_R_R_R: case ID_AND_R_R_R:
+		if(arg(0) == arg(2))
+			block.add(sem::set(r(1), r(0)));
+		else
+			block.add(sem::scratch(r(1)));
+		break;
+	case ID_ADDI_R_R_:
+	case ID_ADDIC_R_R_: case ID_ADDIC_D_R_R_:
+		if(arg(1) == 0)
+			block.add(sem::seti(r(0), i(2)));
+		else {
+			block.add(sem::seti(t1, i(2)));
+			block.add(sem::add(r(0), r(1), t1));
+		}
+		break;
+	case ID_ADDIS_R_R_:
+		if(arg(1) == 0)
+			block.add(sem::seti(r(0), long(i(2)) << 16));
+		else {
+			block.add(sem::seti(t1, long(i(2)) << 16));
+			block.add(sem::add(r(0), r(1), t1));
+		}
+		break;
+	}
+
+	// clean up
+	iss_free(inst);
+}
+
+void BranchInst::do_branch(sem::Block& block, unsigned long off, bool abs, bool link) {
+	Address addr;
+	if(link) {
+		addr = address() + 4;
+		block.add(sem::seti(lr, addr.offset()));
+	}
+	if(!abs)
+		addr = address() + (off << 2);
+	else
+		addr = off << 2;
+	block.add(sem::seti(t1, addr.offset()));
+	block.add(sem::branch(t1));
+}
+
+#define BO(i)		(bo & (1 << (4 - i)))
+void BranchInst::do_branch_cond(sem::Block& block, unsigned long off, int bo, int bi, bool abs, bool link) {
+
+	// if ¬ BO[2] then CTR ← CTR – 1
+	if(!BO(2)) {
+		block.add(sem::seti(t1, 1));
+		block.add(sem::sub(ctr, ctr, t1));
+		// add compare
+		// add condition
+	}
+
+	// do the link
+	if(link) {
+		Address addr = address() + 4;
+		block.add(sem::seti(lr, addr.offset()));
+	}
+
+	// (CTR ≠ 0) ⊕ BO[3])
+	if(BO(0)) {
+		block.add(sem::seti(t1, 0));
+		block.add(sem::cmp(t2, ctr, t1));
+		block.add(sem::_if(!BO(3) ? sem::NE : sem::EQ, t2, 1));
+		block.add(sem::cont());
+	}
+
+	// (CR[BI] ≡ BO[1])
+	if(BO(2)) {
+		sem::cond_t cond;
+		// cmp : if a < b then c ← 0b100 else if a > b then c ← 0b010 else c ← 0b001
+		if(BO(1))	// inverted condition !
+			switch(bi & 0x3) {
+			case 0: cond = sem::GE; break;
+			case 1: cond = sem::LE; break;
+			case 2: cond = sem::NE; break;
+			case 3: cond = sem::ANY_COND; break;
+			}
+		else
+			switch(bi & 0x3) {
+			case 0: cond = sem::LT; break;
+			case 1: cond = sem::GT; break;
+			case 2: cond = sem::EQ; break;
+			case 3: cond = sem::ANY_COND; break;
+			}
+		block.add(sem::_if(cond, cr(bi >> 2), 1));
+		block.add(sem::cont());
+	}
+
+	// perform the jump
+	do_branch(block, off, abs, false);
+}
+
+
+void BranchInst::semInsts(sem::Block& block)  {
+	Address addr;
+
+	// Decode the instruction
+	code_t buffer[20];
+	char out_buffer[200];
+	instruction_t *inst;
+	iss_fetch(address().address(), buffer);
+	inst = iss_decode((state_t *)process().state(), address().address(), buffer);
+
+	// scan the instruction
+	switch(inst->ident) {
+	case ID_B_:
+		do_branch(block, il(0), false, false);
+		break;
+	case ID_BA_:
+		do_branch(block, il(0), true, false);
+		break;
+	case ID_BL_:
+		do_branch(block, il(0), false, true);
+		break;
+	case ID_BLA_:
+		do_branch(block, il(0), true, true);
+		break;
+	case ID_BC_:
+		do_branch_cond(block, i(2), ib(0), ib(1), false, false);
+		break;
+	case ID_BCA_:
+		do_branch_cond(block, i(2), ib(0), ib(1), true, false);
+		break;
+	case ID_BCL_:
+		do_branch_cond(block, i(2), ib(0), ib(1), false, true);
+		break;
+	case ID_BCLA_:
+		do_branch_cond(block, i(2), ib(0), ib(1), true, true);
+		break;
+
+	case ID_BCLR_:
+	case ID_BCLRL_:
+
+	case ID_BCCTRL_:
+	case ID_BCCTR_:
+	case ID_SC:
+		block.add(sem::trap(sem::ANY_COND));
+		break;
+	}
+
+	// clean up
+	iss_free(inst);
 }
 
 } }	// otawa::ppc
