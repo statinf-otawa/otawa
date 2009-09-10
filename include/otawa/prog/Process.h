@@ -160,7 +160,8 @@ public:
 	virtual int instSize(void) const = 0;
 	virtual Processor *decoder(void);
 	virtual Loader *loader(void) const;
-	Symbol *findSymbol(const string& name); 	
+	Symbol *findSymbol(const string& name);
+	virtual Address initialSP(void) const;
 
 	// Memory access
 	virtual void get(Address at, signed char& val);

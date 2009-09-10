@@ -17,5 +17,7 @@ includeotawautil_HEADERS = \
 	PostDominance.h \
 	Trace.h \
 	TrivialLBlockTime.h \
-	UnrollingListener.h
+	UnrollingListener.h \
+	AccessedAddress.h \
+	StackAnalysis.h
 	
