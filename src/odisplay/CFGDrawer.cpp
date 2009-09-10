@@ -136,10 +136,23 @@ void CFGDrawer::onNode(otawa::BasicBlock *bb, otawa::display::Node *node){
 	for(BasicBlock::InstIter inst(bb); inst; inst++){
 		if(body.length() > 0)
 			body << '\n';
+
+		// Display labels
+		for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
+			body << *label << ":\n";
+		for(Identifier<String>::Getter label(inst, otawa::LABEL); label; label++)
+			body << *label << ":\n";
+
+
+		/*if(inst->hasProp(FUNCTION_LABEL)){
+			String label = FUNCTION_LABEL(inst);
+			body << label << ":\n";
+		}
 		if(inst->hasProp(LABEL)){
 			String label = LABEL(inst);
 			body << label << ":\n";
-		}
+		}*/
+
 		body << "0x" << fmt::address(inst->address()) << ":  ";
 		inst->dump(body);
 	}

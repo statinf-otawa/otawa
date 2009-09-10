@@ -57,10 +57,10 @@ void GraphVizNode::printOthersAttributes(elm::io::Output& out){
 		if(_shapeAcceptsBody){
 			out << '{' << quoteSpecials(_title);
 			if(_hasBody){
-				out << '|' << quoteSpecials(_body) << "\\l";
+				out << "|\\l" << quoteSpecials(_body) << "\\l";
 			}
 			if(props.length() > 0){
-				out << '|' << quoteSpecials(props) << "\\l";
+				out << "|\\l" << quoteSpecials(props) << "\\l";
 			}
 			out << '}';
 		}
