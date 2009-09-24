@@ -23,6 +23,7 @@
 
 #include <elm/string.h>
 #include <otawa/prog/sem.h>
+#include <otawa/hard/Platform.h>
 
 using namespace elm;
 
@@ -50,11 +51,18 @@ static cstring inst_names[] = {
 
 };
 
-static void printArg(io::Output& out, signed short arg) {
-	if(arg < 0)
+static void printArg(const hard::Platform *pf, io::Output& out, signed short arg) {
+	if(arg < 0) {
 		out << 't' << (-arg);
-	else
-		out << 'r' << arg;
+		return;
+	}
+	if(pf) {
+		hard::Register *reg = pf->findReg(arg);
+		if(reg)
+			out << reg->name();
+		return;
+	}
+	out << '?' << arg;
 }
 
 static cstring cond_names[] = {
@@ -100,50 +108,8 @@ static cstring cond_names[] = {
  * @param out	Output to print to.
  */
 void inst::print(io::Output& out) const {
-	out << inst_names[op];
-	switch(op) {
-	case BRANCH:
-		out << ' '; printArg(out, d());
-		break;
-	case TRAP:
-		break;
-	case CONT:
-		break;
-	case LOAD:
-	case STORE:
-		out << ' '; printArg(out, d());
-		out << ", "; printArg(out, a());
-		out << ", " << b();
-		break;
-	case SCRATCH:
-		out << ' '; printArg(out, d());
-		break;
-	case SET:
-		out << ' '; printArg(out, d());
-		out << ", "; printArg(out, a());
-		break;
-	case SETI:
-	case SETP:
-		out << ' '; printArg(out, d());
-		out << ", " << io::hex(cst());
-		break;
-	case IF:
-		out << ' ' << cond_names[d()];
-		out << ", "; printArg(out, a());
-		out << ", " << b();
-		break;
-	case CMP:
-	case CMPU:
-	case ADD:
-	case SUB:
-	case SHL:
-	case SHR:
-	case ASR:
-		out << ' '; printArg(out, d());
-		out << ", "; printArg(out, a()); out << ", ";
-		printArg(out, b());
-		break;
-	}
+	Printer printer;
+	printer.print(out, *this);
 }
 
 
@@ -157,8 +123,85 @@ void inst::print(io::Output& out) const {
  * @param out	Output to print to.
  */
 void Block::print(elm::io::Output& out) const {
-	for(InstIter inst(*this); inst; inst++)
-		out << *inst << io::endl;
+	Printer printer;
+	printer.print(out, *this);
+}
+
+
+/**
+ * @class Printer
+ * Printer class for semantics instructions (resolve the generic register value
+ * to the their real platform name).
+ */
+
+
+/**
+ * @fn Printer::Printer(hard::Platform *platform);
+ * Build a semantics instruction printer using the given platform.
+ * @param platform	Current platform.
+ */
+
+/**
+ * Print the given block.
+ * @param out	Output stream to use.
+ * @param block	Block to output.
+ */
+void Printer::print(elm::io::Output& out, const Block& block) const {
+	for(Block::InstIter inst(block); inst; inst++)
+		print(out, inst);
+}
+
+
+/**
+ * Print the given instruction.
+ * @param out	Output stream to use.
+ * @param inst	Semantics instruction to output.
+ */
+void Printer::print(elm::io::Output& out, const inst& inst) const {
+	out << inst_names[inst.op];
+	switch(inst.op) {
+	case BRANCH:
+		out << ' '; printArg(pf, out, inst.d());
+		break;
+	case TRAP:
+		break;
+	case CONT:
+		break;
+	case LOAD:
+	case STORE:
+		out << ' '; printArg(pf, out, inst.d());
+		out << ", "; printArg(pf, out, inst.a());
+		out << ", " << inst.b();
+		break;
+	case SCRATCH:
+		out << ' '; printArg(pf, out, inst.d());
+		break;
+	case SET:
+		out << ' '; printArg(pf, out, inst.d());
+		out << ", "; printArg(pf, out, inst.a());
+		break;
+	case SETI:
+	case SETP:
+		out << ' '; printArg(pf, out, inst.d());
+		out << ", 0x" << io::hex(inst.cst()) << " (" << inst.cst() << ")";
+		break;
+	case IF:
+		out << ' ' << cond_names[inst.d()];
+		out << ", "; printArg(pf, out, inst.a());
+		out << ", " << inst.b();
+		break;
+	case CMP:
+	case CMPU:
+	case ADD:
+	case SUB:
+	case SHL:
+	case SHR:
+	case ASR:
+		out << ' '; printArg(pf, out, inst.d());
+		out << ", "; printArg(pf, out, inst.a()); out << ", ";
+		printArg(pf, out, inst.b());
+		break;
+	}
 }
 
 } }	// otawa::sem

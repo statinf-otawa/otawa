@@ -27,7 +27,11 @@
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
 
-namespace otawa { namespace sem {
+namespace otawa {
+
+namespace hard { class Platform; }
+
+namespace sem {
 
 // type of instruction
 typedef enum opcode {
@@ -133,6 +137,17 @@ public:
 	void print(elm::io::Output& out) const;
 };
 inline elm::io::Output& operator<<(elm::io::Output& out, const Block& b) { b.print(out); return out; }
+
+// Printer class
+class Printer {
+public:
+	inline Printer(const hard::Platform *platform = 0): pf(platform) { }
+
+	void print(elm::io::Output& out, const Block& block) const;
+	void print(elm::io::Output& out, const inst& inst) const;
+private:
+	const hard::Platform *pf;
+};
 
 } }	// otawa::sem
 
