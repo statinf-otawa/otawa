@@ -106,6 +106,7 @@ public:
 	// Register bank access
 	inline const banks_t& banks(void) const;
 	inline int regCount(void) const { return rcnt; }
+	Register *findReg(int uniq) const;
 	
 	// Configuration Loader
 	void loadProcessor(const elm::system::Path& path);
