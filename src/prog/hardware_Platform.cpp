@@ -584,4 +584,18 @@ void Platform::setBanks(const banks_t& banks) {
  * @return	Count of registers.
  */
 
+
+/**
+ * Find the register matching the given unique identifier.
+ * @param uniq		Unique identifier of the register.
+ * @return			Found register or null.
+ */
+Register *Platform::findReg(int uniq) const {
+	for(int i = 0; i < _banks->count(); i++)
+		for(int j = 0; j < _banks->get(i)->count(); j++)
+			if(_banks->get(i)->get(j)->pfnum == uniq)
+				return _banks->get(i)->get(j);
+	return 0;
+}
+
 } } // otawa::hard
