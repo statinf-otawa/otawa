@@ -82,7 +82,7 @@ public:
 		if(_size) {
 			for(int i = 0; i < _size; i++)
 				delete addrs[i];
-			delete addrs;
+			delete [] addrs;
 			_size = 0;
 		}
 	}
