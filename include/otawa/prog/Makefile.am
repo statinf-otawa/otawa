@@ -11,6 +11,7 @@ includeotawaprog_HEADERS = \
 	Process.h \
 	ProgItem.h \
 	Segment.h \
+	sem.h \
 	Symbol.h \
 	TextDecoder.h \
 	VarTextDecoder.h \
