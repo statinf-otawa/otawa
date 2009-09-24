@@ -1,8 +1,24 @@
 /*
- * StackAnalysis.cpp
+ *	$Id$
+ *	StackAnalysis process implementation
  *
- *  Created on: 2 juil. 2009
- *      Author: casse
+ *	This file is part of OTAWA
+ *	Copyright (c) 2009, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
  */
 
 #include <otawa/prog/sem.h>
@@ -15,6 +31,7 @@
 #include <otawa/cfg/Virtualizer.h>
 #include <otawa/util/StackAnalysis.h>
 #include <otawa/util/AccessedAddress.h>
+#include <otawa/hard/Register.h>
 
 using namespace elm;
 using namespace otawa;
@@ -26,6 +43,18 @@ using namespace otawa::util;
 #define TRACED(t)	//t
 
 namespace otawa {
+
+/**
+ * This identifier is a configuration for the @ref StackAnalysis processor.
+ * It allows to provide initial values for the registers involved in the analysis.
+ * The argument is a pair of register and its initial value as an address.
+ * A null address express the fact that the register is initialized with the default
+ * stack pointer address.
+ */
+Identifier<StackAnalysis::init_t> StackAnalysis::INITIAL(
+		"otawa::StackAnalysis::INITIAL",
+		pair((const hard::Register *)0, Address::null));
+
 
 namespace stack {
 
@@ -346,8 +375,17 @@ public:
 	Problem& getProb(void) { return *this; }
 
 	StackProblem(void) {
-		stack::Value v(stack::SP, 0);
-		set(_init, 1, v);
+		//stack::Value v(stack::SP, 0);
+		//set(_init, 1, v);
+	}
+
+	void initialize(const hard::Register *reg, const Address& address) {
+		stack::Value v;
+		if(address.isNull())
+			v = stack::Value(stack::SP, 0);
+		else
+			v = stack::Value(stack::CST, address.offset());
+		set(_init, reg->platformNumber(), v);
 	}
 
 	inline const Domain& bottom(void) const { return stack::State::EMPTY; }
@@ -437,8 +475,6 @@ public:
 					case sem::SETP:
 					case sem::CMP:
 					case sem::CMPU:
-					case sem::SHL:
-					case sem::SHR:
 					case sem::ASR:
 					case sem::SCRATCH:
 						set(*state, i.d(), stack::Value::all);
@@ -459,6 +495,16 @@ public:
 					case sem::SUB: {
 							stack::Value v = get(*state, i.a());
 							v.sub(get(*state, i.b()));
+							set(*state, i.d(), v);
+						} break;
+					case sem::SHL: {
+							stack::Value v = get(*state, i.a());
+							v.shl(get(*state, i.b()));
+							set(*state, i.d(), v);
+						} break;
+					case sem::SHR: {
+							stack::Value v = get(*state, i.a());
+							v.shr(get(*state, i.b()));
 							set(*state, i.d(), v);
 						} break;
 					}
@@ -502,10 +548,31 @@ private:
 	genstruct::Vector<AccessedAddress *> addrs;
 };
 
-// Processor definition
-StackAnalysis::StackAnalysis(void): Processor("StackAnalysis", Version(0, 1, 0)) {
-	require(VIRTUALIZED_CFG_FEATURE);
+
+/**
+ * @class StackAnalysis
+ *
+ * This analyzer computes accessed addresses
+ * @li non-array stack accesses,
+ * @li non-array absolute address accesses.
+ *
+ * Basically, there is two use of this analyzer:
+ * @li analysis of data cache
+ * @li stack size analysis
+ *
+ * @par Configuration
+ *
+ * @par Provided Features
+ * @li @ref otawa::STACK_ANALYSIS_FEATURE
+ * @li @ref otawa::ADDRESS_ANALYSIS_FEATURE
+ *
+ * @par Required Features
+ * @li @ref otawa::VIRTUALIZED_CFG_FEATURE
+ * @li @ref otawa::LOOP_INFO_FEATURE
+ */
+StackAnalysis::StackAnalysis(void): Processor("otawa::StackAnalysis", Version(0, 1, 0)) {
 	require(LOOP_INFO_FEATURE);
+	require(VIRTUALIZED_CFG_FEATURE);
 	provide(STACK_ANALYSIS_FEATURE);
 	provide(ADDRESS_ANALYSIS_FEATURE);
 }
@@ -526,6 +593,8 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	// perform the analysis
 	cerr << "FUNCTION " << cfg->label() << io::endl;
 	StackProblem prob;
+	for(int i = 0; i < inits.count(); i++)
+		prob.initialize(inits[i].fst, inits[i].snd);
 	StackListener list(ws, prob);
 	StackFP fp(list);
 	StackAI sai(fp, *ws);
@@ -542,6 +611,21 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	}
 }
 
+
+/**
+ */
+void StackAnalysis::configure(const PropList &props) {
+	Processor::configure(props);
+	for(Identifier<init_t>::Getter init(props, INITIAL); init; init++)
+		inits.add(init);
+}
+
+
+/**
+ * This features ensure that the stack analysis has been identified.
+ * @par Default Processor
+ * @li @ref otawa::StackAnalysis
+ */
 Feature<StackAnalysis> STACK_ANALYSIS_FEATURE("otawa::STACK_ANALYSIS_FEATURE");
 
 }	//otawa
