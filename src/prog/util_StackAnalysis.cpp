@@ -37,7 +37,7 @@ using namespace elm;
 using namespace otawa;
 using namespace otawa::util;
 
-#define TRACEU(t)	t
+#define TRACEU(t)	//t
 #define TRACEI(t)	//t
 #define TRACES(t)	//t
 #define TRACED(t)	//t
@@ -541,7 +541,7 @@ public:
 	}
 
 private:
-	stack::Value tmp[3];
+	stack::Value tmp[16];
 	stack::State _init;
 	sem::Block b;
 	genstruct::Vector<Pair<int, Domain *> > todo;
