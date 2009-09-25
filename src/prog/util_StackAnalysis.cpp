@@ -434,7 +434,7 @@ public:
 	void update(Domain& out, const Domain& in, BasicBlock* bb) {
 		int pc;
 		out.copy(in);
-		Domain *state = &out;
+		Domain *state;
 		TRACEU(cerr << "update(BB" << bb->number() << ", " << in << ")\n");
 		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 			TRACEU(cerr << '\t'; inst->dump(cerr); cerr << io::endl);
@@ -443,6 +443,7 @@ public:
 			b.clear();
 			inst->semInsts(b);
 			pc = 0;
+			state = &out;
 
 			// perform interpretation
 			while(true) {
