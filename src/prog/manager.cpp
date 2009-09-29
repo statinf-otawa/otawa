@@ -133,7 +133,7 @@ void Manager::setVerbosity(const PropList& props) {
 	}
 
 	// look in environment
-	if(system::System::hasEnv(VERBOSE_ENV))
+	if(elm::system::System::hasEnv(VERBOSE_ENV))
 		verbose = 1;
 	else
 		verbose = 0;
@@ -283,7 +283,7 @@ WorkSpace *Manager::loadBin(
 		if(isVerbose()) {
 			log << "INFO: looking for loader \"" << name << "\"\n";
 			log << "INFO: searchpaths:\n";
-			for(system::Plugger::PathIterator path(loader_plugger); path; path++)
+			for(elm::system::Plugger::PathIterator path(loader_plugger); path; path++)
 				log << "INFO:	- " << *path << io::endl;
 			log << "INFO: available loaders\n";
 			for(elm::system::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
@@ -431,10 +431,10 @@ ilp::System *Manager::newILPSystem(String name) {
  * file resources of OTAWA.
  * @return	Prefix path.
  */
-system::Path Manager::prefixPath(void) {
+  elm::system::Path Manager::prefixPath(void) {
 	static Path prefix;
 	if(!prefix) {
-		system::Path upath = system::System::getUnitPath((void *)buildPaths);
+	  elm::system::Path upath = elm::system::System::getUnitPath((void *)buildPaths);
 		if(upath)
 			prefix = upath.parent().parent();
 	}
