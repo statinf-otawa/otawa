@@ -149,6 +149,10 @@ libotawa_la_SOURCES = \
 	exegraph_Microprocessor.cpp \
 	exegraph_ParamExeGraph.cpp \
 	exegraph_ParamExeGraphBBTime.cpp \
+	parexegraph_ParExeProc.cpp \
+	parexegraph_Resource.cpp \
+	parexegraph_ParExeGraph.cpp \
+	parexegraph_GraphBBTime.cpp \
 	util_Trace.cpp \
 	loader_arm.cpp \
 	flowfact_ContextualLoopBound.cpp \
