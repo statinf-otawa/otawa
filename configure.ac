@@ -354,6 +354,10 @@ AC_CONFIG_FILES([
 	test/script/Makefile
 	test/simulator/Makefile
 	test/source/Makefile
+	test/paramexegraph/Makefile
+	test/parexegraph/Makefile
+	test/isp/Makefile
+	test/wcc/Makefile
 	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
 	include/Makefile
@@ -370,6 +374,7 @@ AC_CONFIG_FILES([
 	include/otawa/display/Makefile
 	include/otawa/ets/Makefile
 	include/otawa/exegraph/Makefile
+	include/otawa/parexegraph/Makefile
 	include/otawa/flowfact/Makefile
 	include/otawa/gensim/Makefile
 	include/otawa/graph/Makefile
