@@ -196,7 +196,7 @@ public:
 	void clear(void) {
 		for(Node *cur = first.next, *next; cur; cur = next) {
 			next = cur->next;
-			delete cur;
+			//delete cur;         FIXME
 		}
 		first.next = 0;
 	}
