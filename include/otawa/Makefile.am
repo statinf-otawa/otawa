@@ -16,6 +16,7 @@ SUBDIRS= \
 	ilp \
 	ipet \
 	loader \
+	parexegraph \
 	pcg \
 	proc \
 	prog \
