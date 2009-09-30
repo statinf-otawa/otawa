@@ -27,6 +27,14 @@
 
 namespace otawa {
 
+
+/**
+ * In configuration of @ref otawa::CFGChecker . Inform the CFG checker
+ * that it must not issue an exception when an error is found: only a warning.
+ */
+Identifier<bool> CFGChecker::NO_EXCEPTION("otawa::CFGChecker::NO_EXCEPTION", true);
+
+
 /**
  * @class CFGChecker
  * The analysis does not produce anything but simply check some properties
@@ -34,14 +42,24 @@ namespace otawa {
  * @li	there exists at least one path from the entry to the exit,
  * @li	no branch is unresolved.
  *
- * @p Provided Features
+ * @par Provided Features
  * @li @ref CHECKED_CFG_FEATURE
+ *
+ * @par Configuration
+ * @li @ref otawa::CFGChecker::NO_EXCEPTION
  */
 
 void CFGChecker::init(void) {
 	_name("otawa::CFGChecker");
 	_version(1, 0, 0);
 	_provide(CHECKED_CFG_FEATURE);
+}
+
+
+/**
+ */
+void CFGChecker::configure(const PropList& props) {
+	no_exn = NO_EXCEPTION(props);
 }
 
 
@@ -80,7 +98,7 @@ void CFGChecker::processCFG(WorkSpace *ws, CFG *cfg) {
 /**
  */
 void CFGChecker::cleanup(WorkSpace *ws) {
-	if(failed)
+	if(!no_exn && failed)
 		throw otawa::Exception("CFG checking has show anomalies (see above for details).");
 }
 
