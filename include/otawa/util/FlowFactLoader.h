@@ -31,6 +31,7 @@
 #include <otawa/proc/Feature.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/prop/ContextualProperty.h>
+#include <elm/types.h>
 
 // Externals
 namespace otawa  { class FlowFactLoader; }
@@ -99,6 +100,7 @@ private:
 	void scanXFun(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	Address scanAddress(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	Option<long> scanInt(xom::Element *element, cstring name) throw(ProcessorException);
+	Option<unsigned long> scanUInt(xom::Element *element, cstring name) throw(ProcessorException);
 	Option<long> scanBound(xom::Element *element, cstring name) throw(ProcessorException);
 	void scanXContent(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXBody(xom::Element *element, ContextualPath& path) throw(ProcessorException);

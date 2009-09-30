@@ -834,7 +834,7 @@ Address FlowFactLoader::scanAddress(xom::Element *element, ContextualPath& path)
 throw(ProcessorException) {
 
 	// look "address" attribute
-	Option<long> res = scanInt(element, "address");
+	Option<unsigned long> res = scanUInt(element, "address");
 	if(res)
 		return *res;
 
@@ -891,8 +891,26 @@ throw(ProcessorException) {
 		in >> res;
 		return res;
 	}
-	catch(io::IOException e) {
-		throw ProcessorException(*this, _ << "bad formatted address at " << xline(element));
+	catch(io::IOException& e) {
+		throw ProcessorException(*this, _ << "bad formatted address(" << e.message() << ") at " << xline(element));
+	}
+}
+
+
+Option<unsigned long> FlowFactLoader::scanUInt(xom::Element *element, cstring name)
+throw(ProcessorException) {
+	Option<xom::String> val = element->getAttributeValue(name);
+	if(!val)
+		return none;
+	io::BlockInStream buf(val);
+	io::Input in(buf);
+	unsigned long res;
+	try {
+		in >> res;
+		return res;
+	}
+	catch(io::IOException& e) {
+		throw ProcessorException(*this, _ << "bad formatted address(" << e.message() << ") at " << xline(element));
 	}
 }
 
