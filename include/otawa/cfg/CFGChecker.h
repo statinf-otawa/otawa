@@ -30,14 +30,18 @@ namespace otawa {
 // CFGChecker class
 class CFGChecker: public Registered<CFGChecker, BBProcessor> {
 public:
+	static Identifier<bool> NO_EXCEPTION;
+
 	static void init(void);
+
+	virtual void configure(const PropList& props);
 	virtual void setup(WorkSpace *ws);
 	virtual void processCFG(WorkSpace *ws, CFG *cfg);
 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 	virtual void cleanup(WorkSpace *ws);
 
 private:
-	bool failed;
+	bool failed, no_exn;
 };
 
 }	// otawa
