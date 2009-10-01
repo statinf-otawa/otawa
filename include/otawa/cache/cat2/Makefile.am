@@ -5,8 +5,9 @@ includeotawacachecat2_HEADERS = \
 	CAT2Builder.h \
 	CAT2NCBuilder.h \
 	CAT2ConstraintBuilder.h \
-	PERSProblem.h \
+	LinkedBlocksDetector.h \
+	MAYProblem.h \
 	MUSTProblem.h \
 	MUSTPERS.h \
-	LinkedBlocksDetector.h
+	PERSProblem.h
 	
