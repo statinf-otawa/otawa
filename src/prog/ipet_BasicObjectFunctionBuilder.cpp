@@ -62,11 +62,18 @@ void BasicObjectFunctionBuilder::processBB(
 {
 	if(!bb->isEntry() && !bb->isExit()) {
 		System *system = SYSTEM(fw);
-		int time = TIME(bb);
-		if(time < 0)
+		bool times_on_edges = true;
+		int time;
+		for (BasicBlock::InIterator edge(bb); edge; edge++) {
+		    if (TIME(edge) >= 0)
+			time = TIME(edge);
+		    else
+			time = TIME(bb);
+		    if(time < 0)
 			throw ProcessorException(*this, _ << "no time on BB " << bb->address()
-				<< " (" << bb->number() << " of " << &cfg->label());
-		system->addObjectFunction(time, VAR(bb));
+						 << " (" << bb->number() << " of " << &cfg->label());
+		    system->addObjectFunction(time, VAR(edge));
+		}
 	}
 }
 
