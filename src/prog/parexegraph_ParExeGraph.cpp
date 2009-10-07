@@ -233,9 +233,9 @@ void ParExeGraph::analyzeContentions() {
 						finishes_before = false;
 					    }
 					    else {
-						int contention_delay = 
-						    ((cont->lateContenders() + cont->possibleContenders()->countBits()) / stage->width()) 
-						    * node->latency();
+// 						int contention_delay = 
+// 						    ((cont->lateContenders() + cont->possibleContenders()->countBits()) / stage->width()) 
+// 						    * node->latency();
 						if (1 /*node->d(r) < cont->d(r) + cont->latency() + cont_contention_delay*/)
 						    finishes_before = false;
 					    }
@@ -271,7 +271,7 @@ void ParExeGraph::analyzeContentions() {
     } // end: foreach stage
 }
 
-// --------------------------------------------------------------------------------------------------
+// -- initDelays ------------------------------------------------------------------------------------------------
 
 void ParExeGraph::initDelays() {
     int index = 0;
@@ -339,6 +339,35 @@ void ParExeGraph::initDelays() {
 	index++;
     }
 }
+
+// -- clearDelays ------------------------------------------------------------------------------------------------
+
+void ParExeGraph::clearDelays() {
+    for (PreorderIterator node(this); node; node++) {
+	for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
+	    int index = resource->index();
+	    node->setE(index, false);
+	    node->setD(index, 0);
+	}
+    }
+}
+
+// -- restoreDefaultLatencies ------------------------------------------------------------------------------------------------
+
+void ParExeGraph::restoreDefaultLatencies(){
+    for (PreorderIterator node(this); node; node++) {
+	node->restoreDefaultLatency();
+    }
+}
+
+// -- setDefaultLatencies ------------------------------------------------------------------------------------------------
+
+void ParExeGraph::setDefaultLatencies(TimingContext *tctxt){
+    for (TimingContext::NodeLatencyIterator nl(*tctxt) ; nl ; nl++){
+	nl->node()->setDefaultLatency(nl->latency());
+    }
+}
+
 
 // --------------------------------------------
 void ParExeNode::buildContendersMasks(){
@@ -546,26 +575,35 @@ void ParExeGraph::createNodes() {
     for (InstIterator inst(_sequence) ; inst ; inst++)  {
 	// consider every pipeline stage
 	for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
-      
+	    
 	    // create node
-	    ParExeNode *node = new ParExeNode(this, stage, inst);
-	    inst->addNode(node);
-	    stage->addNode(node);
-	    if (!_first_node)
-		_first_node = node;
-	    if (inst->codePart() == PROLOGUE)
-		_last_prologue_node = node;
-	    if (!_first_bb_node && (inst->codePart() == BODY) )
-		_first_bb_node = node;
-	    _last_node = node;
-      
-	    if (stage->category() == ParExeStage::EXECUTE){
+	    ParExeNode *node;
+	    if (stage->category() != ParExeStage::EXECUTE) {
+		node = new ParExeNode(this, stage, inst);
+		inst->addNode(node);
+		stage->addNode(node);
+		if (stage->category() == ParExeStage::FETCH) {
+		    inst->setFetchNode(node);
+		}
+		if (!_first_node)
+		    _first_node = node;
+		if (inst->codePart() == PROLOGUE)
+		    _last_prologue_node = node;
+		if (!_first_bb_node && (inst->codePart() == BODY) )
+		    _first_bb_node = node;
+		_last_node = node;
+	    }
+	    else {
 		// add FU nodes
 		ParExePipeline *fu = stage->findFU(inst->inst()->kind()); 
+		int index = 0;
 		for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {                         
 		    ParExeNode *fu_node = new ParExeNode(this, fu_stage, inst);
 		    inst->addNode(fu_node);
 		    fu_stage->addNode(fu_node);
+		    if (index == 0)
+			inst->setExecNode(fu_node);
+		    index++;
 		}
 	    } 
     
@@ -575,84 +613,6 @@ void ParExeGraph::createNodes() {
 
 }
 
-// // ----------------------------------------------------------------
-
-// void ParExeGraph::createNodes() {
-
-//     otawa::hard::Platform *pf = _ws->platform();
-//     AllocatedTable<rename_table_t> rename_tables(pf->banks().count());
-//     int reg_bank_count = pf->banks().count();
-//     for(int i = 0; i <reg_bank_count ; i++) {
-// 	rename_tables[i].reg_bank = (otawa::hard::RegBank *) pf->banks()[i];
-// 	rename_tables[i].table = 
-// 	    new AllocatedTable<ParExeNode *>(rename_tables[i].reg_bank->count());
-// 	for (int j=0 ; j<rename_tables[i].reg_bank->count() ; j++)
-// 	    rename_tables[i].table->set(j,NULL);
-//     }
-
-//     // consider every instruction
-//     for (InstIterator inst(_sequence) ; inst ; inst++)  {
-// 	// consider every pipeline stage
-// 	for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
-      
-// 	    // create node
-// 	    ParExeNode *node = new ParExeNode(this, stage, inst);
-// 	    inst->addNode(node);
-// 	    stage->addNode(node);
-// 	    if (!_first_node)
-// 		_first_node = node;
-// 	    if (inst->codePart() == PROLOGUE)
-// 		_last_prologue_node = node;
-// 	    if (!_first_bb_node && (inst->codePart() == BODY) )
-// 		_first_bb_node = node;
-// 	    _last_node = node;
-      
-// 	    if (stage->category() == ParExeStage::EXECUTE){
-// 		// add FU nodes
-// 		ParExePipeline *fu = stage->findFU(inst->inst()->kind()); 
-// 		ParExeNode *fu_node, *first_fu_node;
-// 		bool first = true;
-// 		for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {                         
-// 		    fu_node = new ParExeNode(this, fu_stage, inst);
-// 		    if (first){
-// 			first_fu_node = fu_node;
-// 			first = false;
-// 		    }
-// 		    inst->addNode(fu_node);
-// 		    fu_stage->addNode(fu_node);
-// 		}
-// 		// check for data dependencies
-// 		const elm::genstruct::Table<hard::Register *>& reads = first_fu_node->inst()->inst()->readRegs();
-// 		for(int i = 0; i < reads.count(); i++) {
-// 		    for (int b=0 ; b<reg_bank_count ; b++) {
-// 			if (rename_tables[b].reg_bank == reads[i]->bank()) {
-// 			    ParExeNode *producer = rename_tables[b].table->get(reads[i]->number());
-// 			    if (producer != NULL) {
-// 				first_fu_node->addProducer(producer);
-// 			    }
-// 			}
-// 		    }
-// 		}	
-// 		// fu_node is the last FU node
-// 		const elm::genstruct::Table<hard::Register *>& writes = fu_node->inst()->inst()->writtenRegs();
-// 		for(int i = 0; i < writes.count(); i++) {
-// 		    for (int b=0 ; b<reg_bank_count ; b++) {
-// 			if (rename_tables[b].reg_bank == writes[i]->bank()) {
-// 			    rename_tables[b].table->set(writes[i]->number(),fu_node);
-// 			}
-// 		    }
-// 		}
-// 	    } 
-    
-// 	} // endfor each pipeline stage
-    
-//     } // endfor each instruction
-
-//     // Free rename tables
-//     for(int i = 0; i <reg_bank_count ; i++)
-// 	delete rename_tables[i].table;
-
-// }
 
 // ----------------------------------------------------------------
 
@@ -671,7 +631,7 @@ void ParExeGraph::findDataDependencies() {
 
     // consider every instruction
     for (InstIterator inst(_sequence) ; inst ; inst++)  {
-	ParExeNode *first_fu_node, *last_fu_node;
+	ParExeNode *first_fu_node = NULL, *last_fu_node = NULL;
 	for (InstNodeIterator node(inst); node ; node++){
 	    if (node->stage()->category() == ParExeStage::FU){
 		if (!first_fu_node)
