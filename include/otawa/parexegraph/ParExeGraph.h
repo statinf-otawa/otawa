@@ -46,7 +46,8 @@ namespace otawa {
     EPILOGUE = 3,
     CODE_PARTS_NUMBER  // should be the last value
   } code_part_t;
-  
+
+ 
   /*
    * class ParExeInst
    *
@@ -59,6 +60,8 @@ namespace otawa {
   code_part_t _part;                           
   int _index;
   elm::genstruct::Vector<ParExeNode *> _nodes;
+  ParExeNode * _fetch_node;
+  ParExeNode *_exec_node;
 
  public:
   inline ParExeInst(Inst * inst, BasicBlock *bb, code_part_t part, int index) 
@@ -88,6 +91,14 @@ namespace otawa {
   {return _nodes.length();}
   inline ParExeNode *node(int index)
   {return _nodes[index];}
+  inline void setFetchNode(ParExeNode *node)
+  { _fetch_node = node;}
+  inline void setExecNode(ParExeNode *node)
+  { _exec_node = node;}
+  inline ParExeNode * fetchNode()
+  { return _fetch_node;}
+  inline ParExeNode * execNode()
+  { return _exec_node;}
   inline BasicBlock * basicBlock() 
     {return _bb;}		
   class NodeIterator: public elm::genstruct::Vector<ParExeNode *>::Iterator {
@@ -114,6 +125,51 @@ namespace otawa {
  };
 
 
+  /*
+   * class NodeLatency
+   *
+   */
+
+  class NodeLatency {
+  private:
+      ParExeNode *_node;
+        int _latency;
+  public:
+  NodeLatency(ParExeNode *node, int latency)
+	  : _node(node), _latency(latency) {}
+      ParExeNode *node()
+      { return _node; }
+      int latency()
+      {return _latency; }
+  };
+
+  // -- class TimingContext ----------------------------------------------------------------------------------------
+
+  class TimingContext {
+  private:
+      elm::genstruct::SLList<NodeLatency *> _node_latencies_list;
+  public:
+      TimingContext(){}
+      ~TimingContext() { 
+	  while (!_node_latencies_list.isEmpty()){
+	      NodeLatency * nl = _node_latencies_list.first();
+	      _node_latencies_list.removeFirst();
+	      delete nl;
+	  }
+      }
+      inline void addNodeLatency(NodeLatency *nl)
+      { _node_latencies_list.addLast(nl); }
+      inline bool isEmpty()
+      { return _node_latencies_list.isEmpty(); }
+
+      class NodeLatencyIterator: public elm::genstruct::SLList<NodeLatency *>::Iterator {
+      public:
+	  inline NodeLatencyIterator(const TimingContext& tctxt)
+	      : elm::genstruct::SLList<NodeLatency *>::Iterator(tctxt._node_latencies_list) {}
+      };
+  };
+
+ 
   /*
    * class ParExeGraph
    *
@@ -165,6 +221,9 @@ namespace otawa {
     void createResources();
     int analyze();
     void initDelays();
+    void clearDelays();
+    void restoreDefaultLatencies();
+    void setDefaultLatencies(TimingContext *tctxt);
     void propagate();
     void analyzeContentions();
     int cost();
@@ -243,6 +302,7 @@ namespace otawa {
     ParExeStage *_pipeline_stage;           
     ParExeInst *_inst;                        
     int _latency;
+    int _default_latency;
     elm::String _name;
     elm::genstruct::AllocatedTable<int> * _d;
     elm::genstruct::AllocatedTable<bool> * _e;
@@ -281,6 +341,10 @@ namespace otawa {
     {return _inst;}
     inline int latency()
       {return _latency;}
+    inline void setDefaultLatency(int lat)
+    { _default_latency = lat; _latency = lat;}
+    inline void restoreDefaultLatency()
+    { _latency = _default_latency; }
     inline void setLatency(int latency){
 	_latency = latency;
     }
