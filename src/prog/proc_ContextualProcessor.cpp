@@ -23,6 +23,7 @@
 #include <otawa/proc/ContextualProcessor.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/cfg.h>
+#include <otawa/cfg/features.h>
 
 namespace otawa {
 
@@ -81,136 +82,104 @@ ContextualProcessor::ContextualProcessor(cstring name, const Version& version)
  */
 void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 	static Identifier<BasicBlock *> MARK("", 0);
-	Vector<BasicBlock *> todo;
-	Vector<BasicBlock *> calls;
-	Vector<BasicBlock *> returns;
+	typedef Pair<CFG *, Edge *> call_t;
+	Vector<Edge *> todo;
+	Vector<call_t> calls;
 	int level = 0;
-	todo.push(cfg->entry());
-	calls.push(cfg->entry());
-	MARK(cfg->entry()) = calls.top();
 
-	// traverse the BB
+	// initialization
+	calls.push(call_t(cfg, 0));
+	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++)
+		todo.push(edge);
+
+	// traverse until the end
 	while(todo) {
-		BasicBlock *bb = todo.pop();
+		Edge *edge = todo.pop();
+		BasicBlock *bb;
 
-		// is it a return ?
-		if(!bb) {
-
-			// verbosity and control
-			if(isVerbose())
-				log << "\t[" << level << "] leaving\n";
-			if(!calls)
-				throw ProcessorException(*this, _ << "unstructured CFG " + cfg->label());
-
-			// pop call
+		// null edge -> leaving function
+		if(!edge) {
+			edge = calls.top().snd;
 			calls.pop();
-			BasicBlock *to = returns.pop();
-			ASSERT(to);
+			this->leavingCall(ws, cfg, edge->target());
+			if(isVerbose())
+				log << "\t\t[" << level << "] leaving call\n";
 			level--;
-			leavingCall(ws, cfg, to);
-			if(MARK(to) != calls.top()) {
-				todo.push(to);
-				MARK(to) = calls.top();
-			}
-			continue;
+			bb = edge->target();
 		}
 
-		// process the current BB
-		if(isVerbose())
-			log << "\t[" << level << "] processing " << bb->number() << " (" << bb->address() << ")\n";
-		processBB(ws, cfg, bb);
+		// a virtual call ?
+		else switch(edge->kind()) {
 
-		// push simple branches (non-call)
-		for(BasicBlock::OutIterator edge(bb); edge; edge++)
-			switch(edge->kind()) {
+		case Edge::NONE:
+			ASSERT(false);
 
-			case Edge::NONE:
-				ASSERT(false);
+		case Edge::VIRTUAL_RETURN:
+		case Edge::CALL:
+			bb = 0;
+			break;
 
-			case Edge::CALL:
+		case Edge::TAKEN:
+		case Edge::NOT_TAKEN:
+			if(!MARK(edge->target()))
+				bb = edge->target();
+			else
+				bb = 0;
+			break;
+
+		case Edge::VIRTUAL:
+			if(edge->target() == cfg->exit()) {
+				bb = 0;
 				break;
+			}
 
-			case Edge::VIRTUAL_RETURN: {
-					BasicBlock *to = edge->target();
-					ASSERT(to);
-					ASSERT(!returns[returns.length() - 1] || returns[returns.length() - 1] == to);
+		case Edge::VIRTUAL_CALL:
+			if(!MARK(edge->target())) {
+				bb = edge->target();
+
+				// recursive call
+				if(MARK(bb)) {
+					avoidingRecursive(ws, cfg, edge->source(), bb);
 					if(isVerbose())
-						log << "\t[" << level << "] found return to " << to << io::endl;
-					returns[returns.length() - 1] = to;
+						log << "\t\t[" << level << "] avoiding recursive call from " << edge->source() << " to " << bb << io::endl;
+					bb = 0;
 				}
-				break;
 
-			case Edge::TAKEN:
-			case Edge::NOT_TAKEN:
-				if(edge->target() && MARK(edge->target()) != calls.top()) {
-					todo.push(edge->target());
-					MARK(edge->target()) = calls.top();
-				}
-				break;
-
-			case Edge::VIRTUAL:
-				ASSERT(edge->target());
-				if(edge->target()->isExit()) {
-					BasicBlock *to = edge->target();
-					ASSERT(to);
-					ASSERT(!returns[returns.length() - 1] || returns[returns.length() - 1] == to);
-					returns[returns.length() - 1] = to;
-					break;
-				}
-				// !!WORKAROUND!!
-				CALLED_CFG(edge) = cfg;
-
-			case Edge::VIRTUAL_CALL:
-				break;
-			}
-
-		// push calls
-		for(BasicBlock::OutIterator edge(bb); edge; edge++)
-			switch(edge->kind()) {
-			case Edge::VIRTUAL:
-				if(edge->target()->isExit())
-					break;
-			case Edge::VIRTUAL_CALL: {
-
-					// check recursivity
-					for(int i = 0; i < calls.length(); i++)
-						if(calls[i] == edge->target()) {
-							if(isVerbose()) {
-								log << "\t[" << level << "] recursive call";
-								CFG *cfg = CALLED_CFG(edge);
-								if(cfg)
-									log << " to " << cfg->label();
-								log << io::endl;
-							}
-							avoidingRecursive(ws, cfg, bb, edge->target());
-							continue;
-						}
-
-					// do the call
-					if(isVerbose()) {
-						log << "\t[" << level << "] entering call";
-						level++;
-						CFG *cfg = CALLED_CFG(edge);
-						if(cfg)
-							log << " to " << cfg->label();
-						log << io::endl;
-					}
-					calls.push(edge->target());
+				// simple call
+				else {
+					enteringCall(ws, cfg, edge->source(), bb);
+					if(isVerbose())
+						log << "\t\t[" << level << "] entering call to " << bb << " from " << edge->source() << io::endl;
+					BasicBlock *ret = VIRTUAL_RETURN_BLOCK(edge->source());
+					if(!ret)
+						ret = cfg->exit();
+					CFG *called_cfg = CALLED_CFG(edge);
+					if(!called_cfg)
+						called_cfg = cfg;
+					calls.push(call_t(called_cfg, BasicBlock::InIterator(ret)));
 					todo.push(0);
-					todo.push(edge->target());
-					returns.push(0);
-					MARK(edge->target()) = calls.top();
-					enteringCall(ws, cfg, bb, edge->target());
+					level++;
 				}
-			default:
-				break;
 			}
+			break;
+		}
+
+		// process basic block
+		if(bb) {
+			processBB(ws, cfg, bb);
+			if(isVerbose())
+				log << "\t\t[" << level << "] processing " << bb << io::endl;
+			for(BasicBlock::OutIterator edge(bb); edge; edge++)
+				todo.push(edge);
+			MARK(bb) = calls.top().fst->entry();
+		}
 	}
 
 	// clean up
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		MARK(bb).remove();
 }
+
 
 
 /**
