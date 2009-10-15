@@ -354,11 +354,7 @@ AC_CONFIG_FILES([
 	test/script/Makefile
 	test/simulator/Makefile
 	test/source/Makefile
-	test/paramexegraph/Makefile
-	test/parexegraph/Makefile
 	test/isp/Makefile
-	test/wcc/Makefile
-	examples/ilp_times/Makefile
 	examples/ets_timing/Makefile
 	include/Makefile
 	include/otawa/Makefile
