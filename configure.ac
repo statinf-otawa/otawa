@@ -259,7 +259,7 @@ AS_IF(test "$HAS_PLUGIN" = "yes", [
 			LOADER_LIBS="-us12x_plugin $LOADER_DEPS"
 		],
 		[
-			AC_MSG_FAILURE([no loader selected !])
+			AC_MSG_WARN([no loader selected !])
 		])))
 	],
 	[
