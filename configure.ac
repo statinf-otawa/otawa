@@ -329,7 +329,6 @@ AC_CONFIG_FILES([
 	src/s12x/Makefile
 	src/bpred/Makefile
 	src/opcg/Makefile
-	examples/Makefile
 	bin/Makefile
 	test/Makefile
 	test/checksum/Makefile
@@ -355,7 +354,6 @@ AC_CONFIG_FILES([
 	test/simulator/Makefile
 	test/source/Makefile
 	test/isp/Makefile
-	examples/ets_timing/Makefile
 	include/Makefile
 	include/otawa/Makefile
 	include/otawa/app/Makefile
