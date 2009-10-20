@@ -24,7 +24,7 @@ a rough overestimation of the real WCET.
 		<step processor="otawa::Virtualizer"/>
 	</xsl:if>
 	<step processor="otawa::ipet::WCETComputation">
-		<config name="otawa::Processor::VERBOSE" value="true"/>
+		<!--config name="otawa::Processor::VERBOSE" value="true"/-->
 		<config name="otawa::ipet::PIPELINE_DEPTH" value="{$stages}"/>
 	</step>
 </script>
