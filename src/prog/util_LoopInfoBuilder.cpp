@@ -20,11 +20,11 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+//#define OTAWA_IDFA_DEBUG
 #include <otawa/util/LoopInfoBuilder.h>
 #include <otawa/util/Dominance.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/genstruct/SortedSLList.h>
-//#include <elm/util/BitVector.h>
 #include <otawa/cfg.h>
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/dfa/BitSet.h>
@@ -180,12 +180,12 @@ inline dfa::BitSet* LoopInfoProblem::empty(void) const {
 
 dfa::BitSet* LoopInfoProblem::gen(BasicBlock *bb) const {
 		dfa::BitSet *result = empty();
-		if(!LOOP_HEADER(bb))
-			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-				if(edge->kind() != Edge::CALL
-				&& Dominance::dominates(edge->target(), bb))
-					result->add(hdrs.indexOf(edge->target()));
-			}
+		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+			if(edge->kind() != Edge::CALL
+			&& bb != edge->target()		// required for single BB loop
+			&& Dominance::dominates(edge->target(), bb))
+				result->add(hdrs.indexOf(edge->target()));
+		}
 		return result;
 }
 
@@ -233,16 +233,16 @@ inline BasicBlock* LoopInfoProblem::get(int index) const {
 */
 	void LoopInfoProblem::dump(elm::io::Output& out, dfa::BitSet *set) {
 			bool first = true;
-			cout << "{ ";
+			out << "{ ";
 			for(int i = 0; i < hdrs.length(); i++)
 				if(set->contains(i)) {
 					if(first)
 						first = false;
 					else
-						cout << ", ";
-					cout << hdrs[i]->number();
+						out << ", ";
+					out << hdrs[i]->number();
 				}
-			cout << " }";
+			out << " }";
 	}
 #endif
 
