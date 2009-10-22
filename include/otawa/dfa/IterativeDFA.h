@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_UTIL_ITERATIVE_DFA_H
@@ -26,6 +26,14 @@
 #include <elm/genstruct/VectorQueue.h>
 #include <elm/util/BitVector.h>
 #include <otawa/cfg.h>
+
+#ifdef OTAWA_IDFA_DEBUG
+#	define OTAWA_IDFA_TRACE(x)	cerr << x << io::endl
+#	define OTAWA_IDFA_DUMP(m, s)		{ cerr << m << "= "; prob.dump(cerr, s); cerr << io::endl; }
+#else
+#	define OTAWA_IDFA_TRACE(x)
+#	define OTAWA_IDFA_DUMP(m, s)
+#endif
 
 namespace otawa { namespace dfa {
 
@@ -82,9 +90,9 @@ public:
 	inline ~IterativeDFA(void);
 	inline void compute(void);
 	inline Set *inSet(BasicBlock *bb);
-	inline Set *outSet(BasicBlock *bb); 
+	inline Set *outSet(BasicBlock *bb);
 	inline Set *genSet(BasicBlock *bb);
-	inline Set *killSet(BasicBlock *bb); 
+	inline Set *killSet(BasicBlock *bb);
 };
 
 
@@ -156,26 +164,26 @@ inline Set *IterativeDFA<Problem, Set, Iter>::killSet(BasicBlock *bb) {
 template <class Problem, class Set, class Iter>
 inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 	//bool changed = true;
-	
+
 	// initialization
 	VectorQueue<BasicBlock *> todo;
 	BitVector present(_cfg.countBB());
 	Set *comp = prob.empty(), *ex;
 	for(CFG::BBIterator bb(&_cfg); bb; bb++)
 		/*if(bb != Iter::entry(_cfg))*/ {
-			//cerr << "DFA: push BB" << bb->number() << io::endl;	// !!DEBUG!!
+			OTAWA_IDFA_TRACE("DFA: push BB" << bb->number());
 			todo.put(bb);
 			present.set(bb->number());
 		}
-	
+
 	// perform until no change
 	while(todo) {
 		BasicBlock *bb = todo.get();
 		int idx = bb->number();
 		ASSERT(idx >= 0);
 		present.clear(idx);
-		//cerr << "DFA: processing BB" << idx << io::endl;	// !!DEBUG!!
-			
+		OTAWA_IDFA_TRACE("DFA: processing BB" << idx);
+
 		// IN = union OUT of predecessors
 		prob.reset(ins[idx]);
 		for(Iter pred(bb); pred; pred++) {
@@ -184,31 +192,35 @@ inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 			assert(pred_idx >= 0);
 			prob.merge(ins[idx], outs[pred_idx]);
 		}
-			
+
 		// OUT = IN \ KILL U GEN
 		prob.set(comp, ins[idx]);
+		OTAWA_IDFA_DUMP("IN", comp);
 		prob.diff(comp, kills[idx]);
+		OTAWA_IDFA_DUMP("KILL", kills[idx]);
 		prob.add(comp, gens[idx]);
-			
+		OTAWA_IDFA_DUMP("GEN", gens[idx]);
+		OTAWA_IDFA_DUMP("OUT", comp);
+
 		// Any modification ?
 		if(!prob.equals(comp, outs[idx])) {
-			
+
 			// record new out
 			ex = outs[idx];
 			outs[idx] = comp;
 			comp = ex;
-			
+
 			// add successors
 			for(typename Iter::Forward next(bb); next; next++)
 				if(!present.bit(next->number())) {
-					//cerr << "DFA: push BB" << next->number() << io::endl;	// !!DEBUG!!
+					OTAWA_IDFA_TRACE("DFA: push BB" << next->number());
 					todo.put(next);
 					present.set(next->number());
 				}
 		}
 		prob.reset(comp);
 	}
-	
+
 	// cleanup
 	prob.free(comp);
 }
