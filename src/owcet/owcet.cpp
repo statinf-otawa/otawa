@@ -65,7 +65,7 @@ protected:
 		scr.process(workspace(), props);
 
 		// display the result
-		time_t wcet = ipet::WCET(workspace());
+		otawa::time_t wcet = ipet::WCET(workspace());
 		cout << "WCET[" << entry << "] = " << ipet::WCET(workspace()) << " cycles\n";
 	}
 
