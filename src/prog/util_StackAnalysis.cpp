@@ -21,6 +21,8 @@
  *	02110-1301  USA
  */
 
+//#define DEBUG
+
 #include <otawa/prog/sem.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/util/HalfAbsInt.h>
@@ -32,6 +34,7 @@
 #include <otawa/util/StackAnalysis.h>
 #include <otawa/util/AccessedAddress.h>
 #include <otawa/hard/Register.h>
+
 
 using namespace elm;
 using namespace otawa;
@@ -592,7 +595,8 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	CFG *cfg = coll->get(0);
 
 	// perform the analysis
-	cerr << "FUNCTION " << cfg->label() << io::endl;
+	if(isVerbose())
+		log << "FUNCTION " << cfg->label() << io::endl;
 	StackProblem prob;
 	for(int i = 0; i < inits.count(); i++)
 		prob.initialize(inits[i].fst, inits[i].snd);
@@ -602,14 +606,14 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	sai.solve(cfg);
 
 	// output the result
-	cout << "FUNCTION " << cfg->label() << io::endl;
+	/*cout << "FUNCTION " << cfg->label() << io::endl;
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
 		cout << "BB " << bb->number()
 			 << " (" << bb->address() << ") =\n";
 		AccessedAddresses *aa = ADDRESSES(bb);
 		if(aa)
 			out << aa;
-	}
+	}*/
 }
 
 
