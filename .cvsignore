@@ -50,3 +50,4 @@ OTAWA.anjuta
 *.lineno
 .cproject
 .bzr
+libltdl
