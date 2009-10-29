@@ -51,13 +51,14 @@ int main(void) {
 		cout << "\tfeatures\n";
 		for(FeatureIter feature(**reg); feature; feature++) {
 			cout << "\t\t";
-			switch((*feature).kind()) {
+			switch((*feature)->kind()) {
 			case FeatureUsage::none: ASSERT(false);
 			case FeatureUsage::require: cout << "require "; break;
 			case FeatureUsage::provide: cout << "provide "; break;
 			case FeatureUsage::invalidate: cout << "invalidate "; break;
+			case FeatureUsage::use: cout << "use "; break;
 			}
-			cout << (*feature).feature().name() << io::endl;
+			cout << (*feature)->feature().name() << io::endl;
 		}
 		
 		// Existence test
