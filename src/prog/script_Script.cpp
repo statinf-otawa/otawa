@@ -37,7 +37,7 @@
 
 using namespace elm;
 
-#define DEBUG(x)	//x
+#define DEBUG(x)	x
 
 namespace otawa { namespace script {
 
@@ -103,6 +103,8 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	if(!doc)
 		throw otawa::Exception(_ << "script " << path << " is not valid XML !");
 	xom::XIncluder::resolveInPlace(doc);
+	system::Path initial_base = doc->getBaseURI();
+	initial_base = initial_base.parent().absolute();
 
 	// build XSL
 	xom::Element *root = new xom::Element("xsl:stylesheet", XSL_URI);
@@ -126,7 +128,7 @@ void Script::processWorkSpace(WorkSpace *ws) {
 				onWarning(item, "\"name\" required !");
 			else {
 				if(isVerbose())
-					log << "\toparameter " << name << " found.\n";
+					log << "\tscript parameter \"" << *name << "\" found.\n";
 				xom::Element *param = new xom::Element("xsl:param", XSL_URI);
 				root->appendChild(param);
 				param->addAttribute(new xom::Attribute("xsl:name", XSL_URI, name));
@@ -151,7 +153,7 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param; param++) {
 		xslt.setParameter((*param).fst, (*param).snd);
 		if(isVerbose())
-			log << "\tadding argument " << (*param).fst << " to " << (*param).snd << io::endl;
+			log << "\tadding argument \"" << (*param).fst << "\" to \"" << (*param).snd << "\"\n";
 	}
 	xom::Element *empty_root = new xom::Element("empty");
 	xom::Document *empty = new xom::Document(empty_root);
@@ -176,9 +178,13 @@ void Script::processWorkSpace(WorkSpace *ws) {
 			Path path = *value;
 			if(path.isRelative()) {
 				Path base = path_elem->getBaseURI();
+				if(!base)
+					base = initial_base;
 				path = base / path;
 			}
 			ProcessorPlugin::addPath(path);
+			if(isVerbose())
+				log << "\tadding path \"" << path << "\"\n";
 		}
 	}
 	delete elems;
@@ -197,12 +203,15 @@ void Script::processWorkSpace(WorkSpace *ws) {
 			MEMORY_ELEMENT(props) = mem;
 	}
 
-	// execute the script
+	// scan configuration in the script
 	if(script->getLocalName() != "otawa-script")
 		onError(script, "not an OTAWA script");
 	xom::Element *steps = script->getFirstChildElement("script");
 	if(!steps)
 		onError(script, "no script list part");
+	makeConfig(steps, props);
+
+	// execute the script
 	for(int i = 0; i < steps->getChildCount(); i++) {
 		xom::Node *node = steps->getChild(i);
 		switch(node->kind()) {
@@ -222,9 +231,11 @@ void Script::processWorkSpace(WorkSpace *ws) {
 						proc.process(ws, list);
 						break;
 					}
-					onWarning(step, "nothing to to here !");
+					onWarning(step, "nothing do to here !");
 					break;
 				}
+				else if(step->getLocalName() == "config")
+					break;
 			}
 		default:
 			onWarning(node, "garbage here");
@@ -263,7 +274,6 @@ void Script::onWarning(xom::Node *node, const string& msg) {
  * @param props	Property list to fill.
  */
 void Script::makeConfig(xom::Element *elem, PropList& props) {
-	cerr << "makeConfig()\n";
 	xom::Elements *elems = elem->getChildElements("config");
 	for(int i = 0; i < elems->size(); i++) {
 		xom::Element *config = elems->get(i);
@@ -281,11 +291,17 @@ void Script::makeConfig(xom::Element *elem, PropList& props) {
 		}
 
 		// set the property
-		cerr << "config done for " << *name << " with " << *value << io::endl;
+		if(isVerbose())
+			log << "\tsetting property " << *name << " with " << *value << io::endl;
 		AbstractIdentifier *id = ProcessorPlugin::getIdentifier(*name);
 		if(!id)
 			throw Exception(_ << "can not find identifier " << *name);
-		id->fromString(props, *value);
+		try {
+			id->fromString(props, *value);
+		}
+		catch(elm::Exception& e) {
+			onError(config, _ << "bad formatted value: " << e.message());
+		}
 	}
 	delete elems;
 }
