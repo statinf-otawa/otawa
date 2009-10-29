@@ -217,6 +217,8 @@ void FeatureIter::step(void) {
  * @param T	Type of the processor to register.
  * @param B	Base type of the parent processor.
  *
+ * @deprecated Please use @ref otawa::Register instead.
+ *
  * To make a processor registrable, it must inherit from Registered and
  * defines a static function init() responsbible to initialize the registration.
  * This function invokes the initialization functions: name(), version(),
@@ -240,6 +242,45 @@ void FeatureIter::step(void) {
  *		}
  *	};
  * @endcode
+ * @ingroup proc
+ */
+
+
+/**
+ * @class Register
+ * The register class is used to register a processor to the registery,
+ * in order to make it visible from the registry. This is used in code processor
+ * plug-in to retrieve processor by their name.
+ * @param C	Type of the processor to register.
+ * @param B	Base type of the parent processor.
+ *
+ * To register a processor, one has to use special macro-definitions
+ * that encapsulate all details about registration. First, the declaration of the processor
+ * in the header must be done as below:
+ *
+ * @code
+ * #include <otawa/proc/Registration.h>
+ *
+ * PROC(MyProcessor, BaseProcessor)
+ * protected:
+ *		void processBB(WorkSpace *ws, CFG *cfg, BB *bb) {
+ *			// something useful
+ *		}
+ * END
+ * @endcode
+ *
+ * Then you have to provide all information required to define the processor:
+ * version, configuration identifiers, provided / required / used / invalidated features
+ * in the source file.
+ * @code
+ * DEFINE_PROC(MyProcessor,
+ *		version(1, 0, 1);
+ *		require(SOME_FEATURE);
+ *		require(ANOTHER_FEATURE);
+ *		provide(MY_FEATURE);
+ * )
+ * @endcode
+ *
  * @ingroup proc
  */
 
