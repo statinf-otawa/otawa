@@ -85,6 +85,7 @@ protected:
 
 private:
 	template <class T, class B, class C> friend class Registered;
+	template <class C, class B> friend class Register;
 	friend class Processor;
 	friend class ConfigIter;
 	friend class FeatureIter;
@@ -151,6 +152,60 @@ protected:
 
 template <class T, class B, class C>
 typename Registered<T, B, C>::__reg_init Registered<T, B, C>::__reg;
+
+
+// Register class
+template <class C, class B>
+class Register: public Registration<C> {
+public:
+	Register(void);
+private:
+	inline void name(cstring name)
+		{ Registration<C>::_name = name; }
+	inline void version(int major, int minor, int release)
+		{ Registration<C>::_version = Version(major, minor, release); }
+	inline void require(const AbstractFeature& feature)
+		{ Registration<C>::features.add(FeatureUsage(FeatureUsage::require, feature)); }
+	inline void provide(const AbstractFeature& feature)
+		{ Registration<C>::features.add(FeatureUsage(FeatureUsage::provide, feature)); }
+	inline void invalidate(const AbstractFeature& feature)
+		{ Registration<C>::features.add(FeatureUsage(FeatureUsage::invalidate, feature)); }
+	inline void use(const AbstractFeature& feature)
+		{ Registration<C>::features.add(FeatureUsage(FeatureUsage::use, feature)); }
+	inline void config(AbstractIdentifier& id)
+		{ Registration<C>::configs.add(&id); }
+};
+
+
+// Useful macros
+#define OTAWA_PROC(C, B) \
+	class C: public B { \
+	public: \
+		static Register<C, B> __reg; \
+		typedef B __base; \
+		C(void): __base(__reg) { } \
+		C(AbstractRegistration& reg): __base(reg) { } \
+		C(cstring name, const Version& version): __base(name, version, __reg) { } \
+		C(cstring name, const Version& version, AbstractRegistration& reg): __base(name, version, reg) { } \
+	private:
+
+#define OTAWA_DEFINE_PROC(C, defs) \
+	template <> \
+	Register<C, C::__base>::Register(void) { \
+		_base = &C::__base::__reg; \
+		name(#C); \
+		defs \
+		record(); \
+	} \
+	Register<C, C::__base> C::__reg;
+
+#define OTAWA_END }
+
+#ifndef NO_OTAWA_SHORTCUT
+#define PROC(c, b)			OTAWA_PROC(c, b)
+#define DEFINE_PROC(c, d)	OTAWA_DEFINE_PROC(c, d)
+#define	END					OTAWA_END
+#endif
 
 } // otawa
 
