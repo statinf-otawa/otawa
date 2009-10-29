@@ -20,16 +20,37 @@
 #include <otawa/util/UnrollingListener.h>
 #include <otawa/util/DefaultListener.h>
 
+#include <elm/rtti.h>
+
 using namespace otawa;
 using namespace otawa::ilp;
 using namespace otawa::ipet;
 using namespace otawa::util;
 using namespace elm;
 
-
-
+ENUM(otawa::fmlevel_t)
+ENUM_BEGIN(otawa::fmlevel_t)
+	VALUE(FML_INNER),
+	VALUE(FML_OUTER),
+	VALUE(FML_MULTI),
+	VALUE(FML_NONE)
+ENUM_END
 
 namespace otawa {
+
+template<>
+void Identifier<fmlevel_t>::fromString (PropList &props, const string &str) const {
+	value_t *val = type_info<fmlevel_t>::values();
+	while(val->name()) {
+		if(val->name() == str) {
+			this->set(props, (fmlevel_t)val->value());
+			return;
+		}
+		val++;
+	}
+	throw io::IOException("value does not match any enumerated value");
+}
+
 
 /**
  *
