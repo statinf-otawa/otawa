@@ -66,7 +66,10 @@ protected:
 
 		// display the result
 		otawa::time_t wcet = ipet::WCET(workspace());
-		cout << "WCET[" << entry << "] = " << ipet::WCET(workspace()) << " cycles\n";
+		if(wcet == -1)
+			cout << "ERROR: no WCET computed (see errors above).\n";
+		else
+			cout << "WCET[" << entry << "] = " << ipet::WCET(workspace()) << " cycles\n";
 	}
 
 private:
