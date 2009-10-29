@@ -33,7 +33,9 @@ namespace otawa {
  * @par Statistics
  * none
  */
-CAT2NCBuilder::CAT2NCBuilder(void) : CAT2Builder() {
+
+DEFINE_PROC(otawa::CAT2NCBuilder,
+	version(1, 0, 1);
 	require(DOMINANCE_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
 	require(LOOP_INFO_FEATURE);
@@ -42,6 +44,6 @@ CAT2NCBuilder::CAT2NCBuilder(void) : CAT2Builder() {
 	require(ICACHE_ACS_MAY_FEATURE);
 	require(ICACHE_FIRSTLAST_FEATURE);
 	provide(ICACHE_CATEGORY_FEATURE);
-}
+)
 
-}
+}	// otawa

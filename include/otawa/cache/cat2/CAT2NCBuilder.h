@@ -28,10 +28,8 @@
 
 namespace otawa {
 
-class CAT2NCBuilder: public CAT2Builder{
-	public:
-	CAT2NCBuilder(void);
-};
+PROC(CAT2NCBuilder, CAT2Builder)
+END;
 
 
 }

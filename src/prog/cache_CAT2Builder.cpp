@@ -90,10 +90,8 @@ Identifier<BasicBlock*> CATEGORY_HEADER("otawa::CATEGORY_HEADER", 0);
  * none
  */
 
-
-/**
- */
-CAT2Builder::CAT2Builder(void): CFGProcessor("otawa::CAT2Builder", Version(1, 0, 0)) {
+DEFINE_PROC(otawa::CAT2Builder,
+	version(1, 0, 0);
 	require(DOMINANCE_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
 	require(LOOP_INFO_FEATURE);
@@ -101,7 +99,7 @@ CAT2Builder::CAT2Builder(void): CFGProcessor("otawa::CAT2Builder", Version(1, 0,
 	require(ICACHE_ACS_FEATURE);
 	require(ICACHE_FIRSTLAST_FEATURE);
 	provide(ICACHE_CATEGORY2_FEATURE);
-}
+)
 
 
 /**
