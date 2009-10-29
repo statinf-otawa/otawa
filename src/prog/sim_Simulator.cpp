@@ -15,28 +15,28 @@ namespace otawa { namespace sim {
  * If supported by the simulator, enable or disable the functional part.
  * Default to false.
  */
-Identifier<bool> IS_FUNCTIONAL("otawa::sim::is_functional");
+Identifier<bool> IS_FUNCTIONAL("otawa::sim::IS_FUNCTIONAL");
 
 
 /**
  * If supported by the simulator, enable or disable the structural part.
  * Default to true.
  */
-Identifier<bool> IS_STRUCTURAL("otawa::sim::is_structural");
+Identifier<bool> IS_STRUCTURAL("otawa::sim::IS_STRUCTURAL");
 
 
 /**
  * Activate or unactivate the memory management.
- * Default to false.
+ * Default to true.
  */
-Identifier<bool> USE_MEMORY("otawa::sim::use_memory");
+Identifier<bool> USE_MEMORY("otawa::sim::USE_MEMORY", true);
 
 
 /**
  * Activate or unactivate the control management.
  * Default to false.
  */
-Identifier<bool> USE_CONTROL("otawa::sim::use_control");
+Identifier<bool> USE_CONTROL("otawa::sim::USE_CONTROL");
 
 
 /**
@@ -108,6 +108,6 @@ elm::String Exception::header(const Simulator& sim, const CString message) {
  Exception::Exception(const Simulator& sim, const String& message)
  : otawa::Exception(header(sim, message.toCString())) {
  }
-  
+
 } } // otawa::sim
 
