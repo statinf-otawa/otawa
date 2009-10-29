@@ -223,7 +223,7 @@ void Identifier<T>::scan(PropList& props, VarArg& args) const {
 
 // GenericIdentifier<T>::fromString
 template <class T> inline void Identifier<T>::fromString(PropList& props, const string& str) const
-	{ ASSERTP(false, "type not supported for Identifier::fromString() call"); }
+	{ throw io::IOException("type not supported for Identifier::fromString() call"); }
 template <> void Identifier<bool>::fromString(PropList& props, const string& str) const;
 template <> void Identifier<int>::fromString(PropList& props, const string& str) const;
 template <> void Identifier<unsigned int>::fromString(PropList& props, const string& str) const;
