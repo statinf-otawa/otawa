@@ -43,6 +43,16 @@ using namespace otawa;
 using namespace otawa::ilp;
 using namespace otawa::ipet;
 
+DEFINE_PROC(otawa::CAT2Builder,
+	version(1, 0, 0);
+	require(DOMINANCE_FEATURE);
+	require(LOOP_HEADERS_FEATURE);
+	require(LOOP_INFO_FEATURE);
+	require(COLLECTED_LBLOCKS_FEATURE);
+	require(ICACHE_ACS_FEATURE);
+	require(ICACHE_FIRSTLAST_FEATURE);
+	provide(ICACHE_CATEGORY2_FEATURE);
+)
 
 namespace otawa {
 
@@ -89,18 +99,6 @@ Identifier<BasicBlock*> CATEGORY_HEADER("otawa::CATEGORY_HEADER", 0);
  * @par Statistics
  * none
  */
-
-DEFINE_PROC(otawa::CAT2Builder,
-	version(1, 0, 0);
-	require(DOMINANCE_FEATURE);
-	require(LOOP_HEADERS_FEATURE);
-	require(LOOP_INFO_FEATURE);
-	require(COLLECTED_LBLOCKS_FEATURE);
-	require(ICACHE_ACS_FEATURE);
-	require(ICACHE_FIRSTLAST_FEATURE);
-	provide(ICACHE_CATEGORY2_FEATURE);
-)
-
 
 /**
  * !!TODO!!

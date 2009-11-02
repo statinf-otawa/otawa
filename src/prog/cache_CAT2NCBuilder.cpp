@@ -7,6 +7,18 @@
 #include <otawa/cache/FirstLastBuilder.h>
 #include <otawa/util/LBlockBuilder.h>
 
+DEFINE_PROC(otawa::CAT2NCBuilder,
+	version(1, 0, 1);
+	require(DOMINANCE_FEATURE);
+	require(LOOP_HEADERS_FEATURE);
+	require(LOOP_INFO_FEATURE);
+	require(COLLECTED_LBLOCKS_FEATURE);
+	require(ICACHE_ACS_FEATURE);
+	require(ICACHE_ACS_MAY_FEATURE);
+	require(ICACHE_FIRSTLAST_FEATURE);
+	provide(ICACHE_CATEGORY_FEATURE);
+)
+
 namespace otawa {
 	
 /**
@@ -33,17 +45,5 @@ namespace otawa {
  * @par Statistics
  * none
  */
-
-DEFINE_PROC(otawa::CAT2NCBuilder,
-	version(1, 0, 1);
-	require(DOMINANCE_FEATURE);
-	require(LOOP_HEADERS_FEATURE);
-	require(LOOP_INFO_FEATURE);
-	require(COLLECTED_LBLOCKS_FEATURE);
-	require(ICACHE_ACS_FEATURE);
-	require(ICACHE_ACS_MAY_FEATURE);
-	require(ICACHE_FIRSTLAST_FEATURE);
-	provide(ICACHE_CATEGORY_FEATURE);
-)
 
 }	// otawa
