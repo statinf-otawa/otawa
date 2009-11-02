@@ -34,6 +34,8 @@
 #include <elm/xom/Elements.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/prog/Manager.h>
+#include <otawa/hard/Platform.h>
+#include <otawa/proc/DynFeature.h>
 
 using namespace elm;
 
@@ -192,16 +194,32 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	// scant the platform
 	xom::Element *pf = script->getFirstChildElement("platform");
 	if(pf) {
-		xom::Element *proc = script->getFirstChildElement("processor");
-		if(proc)
-			PROCESSOR_ELEMENT(props) = proc;
-		xom::Element *cache = script->getFirstChildElement("cache-config");
-		if(cache)
-			CACHE_CONFIG_ELEMENT(props) = cache;
-		xom::Element *mem = script->getFirstChildElement("memory");
-		if(mem)
-			MEMORY_ELEMENT(props) = mem;
+		if(isVerbose())
+			log << "\tfound platform description.\n";
+		xom::Element *proc = pf->getFirstChildElement("processor");
+		if(proc) {
+			//PROCESSOR_ELEMENT(props) = proc;
+			ws->process()->platform()->loadProcessor(proc);
+			if(isVerbose())
+				log << "\tprocessor configuration found.\n";
+		}
+		xom::Element *cache = pf->getFirstChildElement("cache-config");
+		if(cache) {
+			//CACHE_CONFIG_ELEMENT(props) = cache;
+			ws->process()->platform()->loadCacheConfig(cache);
+			if(isVerbose())
+				log << "\tcache configuration found.\n";
+		}
+		xom::Element *mem = pf->getFirstChildElement("memory");
+		if(mem) {
+			//MEMORY_ELEMENT(props) = mem;
+			ws->process()->platform()->loadMemory(mem);
+			if(isVerbose())
+				log << "\tmemory configuration found.\n";
+		}
 	}
+	else if(isVerbose())
+		log << "\tno platform description.\n";
 
 	// scan configuration in the script
 	if(script->getLocalName() != "otawa-script")
@@ -229,6 +247,16 @@ void Script::processWorkSpace(WorkSpace *ws) {
 						makeConfig(step, list);
 						DynProcessor proc(name);
 						proc.process(ws, list);
+						break;
+					}
+					Option<xom::String> require = step->getAttributeValue("require");
+					if(require) {
+						if(isVerbose())
+							log << "INFO: requiring " << *require << io::endl;
+						PropList list = props;
+						makeConfig(step, list);
+						DynFeature feature(*require);
+						ws->require(feature, list);
 						break;
 					}
 					onWarning(step, "nothing do to here !");
