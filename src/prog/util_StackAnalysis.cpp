@@ -35,7 +35,6 @@
 #include <otawa/util/AccessedAddress.h>
 #include <otawa/hard/Register.h>
 
-
 using namespace elm;
 using namespace otawa;
 using namespace otawa::util;
@@ -199,7 +198,7 @@ public:
 	void clear(void) {
 		for(Node *cur = first.next, *next; cur; cur = next) {
 			next = cur->next;
-			//delete cur;         FIXME
+			delete cur;
 		}
 		first.next = 0;
 	}
@@ -440,7 +439,7 @@ public:
 		Domain *state;
 		TRACEU(cerr << "update(BB" << bb->number() << ", " << in << ")\n");
 		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
-			TRACEU(cerr << '\t'; inst->dump(cerr); cerr << io::endl);
+			TRACEU(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
 
 			// get instructions
 			b.clear();
@@ -606,7 +605,7 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	sai.solve(cfg);
 
 	// output the result
-	/*cout << "FUNCTION " << cfg->label() << io::endl;
+	/* cout << "FUNCTION " << cfg->label() << io::endl;
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
 		cout << "BB " << bb->number()
 			 << " (" << bb->address() << ") =\n";
