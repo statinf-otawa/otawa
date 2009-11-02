@@ -73,8 +73,8 @@ static const int pc = 15,
 				 fp = 11;
 
 // Registers
-static PlainBank gpr("GPR", Register::INT, 32, "r%d", 16);
-static Register sr("sr", Register::BITS, 32);
+static PlainBank gpr("GPR", hard::Register::INT, 32, "r%d", 16);
+static hard::Register sr("sr", hard::Register::BITS, 32);
 static MeltedBank misc("misc", &sr, 0);
 static const RegBank *banks_tab[] = { &gpr, &misc };
 static Table<const RegBank *> banks(banks_tab, 2);
