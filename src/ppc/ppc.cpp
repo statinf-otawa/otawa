@@ -28,7 +28,6 @@
 #include <otawa/platform.h>
 #include <otawa/hard/Register.h>
 #include <gel/gel.h>
-#include <otawa/proc/Processor.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <elm/genstruct/SortedSLList.h>
 #include <otawa/sim/features.h>
@@ -242,37 +241,37 @@ static const elm::genstruct::Table<const RegBank *> banks_table(banks, 4);
 /**
  * GPR register bank.
  */
-const PlainBank Platform::GPR_bank("GPR", Register::INT,  32, "r%d", 32);
+const PlainBank Platform::GPR_bank("GPR", hard::Register::INT,  32, "r%d", 32);
 
 
 /**
  * FPR register bank.
  */
-const PlainBank Platform::FPR_bank("FPR", Register::FLOAT, 64, "fr%d", 32);
+const PlainBank Platform::FPR_bank("FPR", hard::Register::FLOAT, 64, "fr%d", 32);
 
 
 /**
  * CR register bank
  */
-const PlainBank Platform::CR_bank("CR", Register::BITS, 4, "cr%d", 8);
+const PlainBank Platform::CR_bank("CR", hard::Register::BITS, 4, "cr%d", 8);
 
 
 /**
  * CTR register
  */
-hard::Register Platform::CTR_reg("ctr", Register::BITS, 32);
+hard::Register Platform::CTR_reg("ctr", hard::Register::BITS, 32);
 
 
 /**
  * LR register
  */
-hard::Register Platform::LR_reg("lr", Register::ADDR, 32);
+hard::Register Platform::LR_reg("lr", hard::Register::ADDR, 32);
 
 
 /**
  * XER register
  */
-hard::Register Platform::XER_reg("xer", Register::INT, 32);
+hard::Register Platform::XER_reg("xer", hard::Register::INT, 32);
 
 
 /**
