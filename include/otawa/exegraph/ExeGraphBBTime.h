@@ -45,6 +45,11 @@ protected:
 	Microprocessor<ExeNode> *microprocessor;
 public:
 	ExeGraphBBTime(const PropList& props = PropList::EMPTY);
+	ExeGraphBBTime(AbstractRegistration &reg)
+		: BBProcessor(reg), fw(0) { provide(ipet::BB_TIME_FEATURE); }
+	ExeGraphBBTime(cstring name, Version version)
+		: BBProcessor(name, version), fw(0) { provide(ipet::BB_TIME_FEATURE); }
+
 	// BBProcessor overload
 	void processWorkSpace(WorkSpace *fw);
 	void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {}
