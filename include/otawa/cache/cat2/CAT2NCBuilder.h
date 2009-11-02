@@ -28,11 +28,11 @@
 
 namespace otawa {
 
-PROC(CAT2NCBuilder, CAT2Builder)
+DECLARE_PROC(CAT2NCBuilder, CAT2Builder)
 END;
 
 
-}
+}	// otawa
 
 
 #endif /*CACHE_CAT2NCBUILDER_H_*/

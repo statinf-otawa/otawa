@@ -205,7 +205,7 @@ private:
 #define OTAWA_END }
 
 #ifndef NO_OTAWA_SHORTCUT
-#define PROC(c, b)			OTAWA_PROC(c, b)
+#define DECLARE_PROC(c, b)	OTAWA_PROC(c, b)
 #define DEFINE_PROC(c, d)	OTAWA_DEFINE_PROC(c, d)
 #define	END					OTAWA_END
 #endif

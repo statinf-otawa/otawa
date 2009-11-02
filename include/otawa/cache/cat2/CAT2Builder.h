@@ -38,7 +38,7 @@ extern Identifier<category_t> CATEGORY;
 extern Identifier<BasicBlock*> CATEGORY_HEADER;
 
 // CAT2Builder class
-PROC(CAT2Builder, CFGProcessor)
+DECLARE_PROC(CAT2Builder, CFGProcessor)
 public:
 	virtual void processCFG(WorkSpace*, otawa::CFG*);
 	virtual void setup(WorkSpace*);
