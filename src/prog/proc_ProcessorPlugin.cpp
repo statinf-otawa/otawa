@@ -132,6 +132,8 @@ ProcessorPlugin *ProcessorPlugin::get(string name) {
  * @param path	Path to add.
  */
 void ProcessorPlugin::addPath(const elm::system::Path& path) {
+	if(!initialized_paths)
+		init();
 	plugger.addPath(path);
 }
 
@@ -141,6 +143,8 @@ void ProcessorPlugin::addPath(const elm::system::Path& path) {
  * @param path	Path to remove.
  */
 void ProcessorPlugin::removePath(const elm::system::Path& path) {
+	if(!initialized_paths)
+		init();
 	plugger.removePath(path);
 }
 
