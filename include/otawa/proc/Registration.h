@@ -185,19 +185,22 @@ private:
 		typedef B __base; \
 		C(void): __base(__reg) { } \
 		C(AbstractRegistration& reg): __base(reg) { } \
-		C(cstring name, const Version& version): __base(name, version, __reg) { } \
-		C(cstring name, const Version& version, AbstractRegistration& reg): __base(name, version, reg) { } \
+		C(cstring name, const Version& version): __base(name, version) { } \
 	private:
 
+//C(cstring name, const Version& version, AbstractRegistration& reg): __base(name, version, reg) { }
+
 #define OTAWA_DEFINE_PROC(C, defs) \
-	template <> \
-	Register<C, C::__base>::Register(void) { \
-		_base = &C::__base::__reg; \
-		name(#C); \
-		defs \
-		record(); \
+	namespace otawa { \
+		template <> \
+		::otawa::Register<C, C::__base>::Register(void) { \
+			_base = &C::__base::__reg; \
+			name(#C); \
+			defs \
+			record(); \
+		} \
 	} \
-	Register<C, C::__base> C::__reg;
+	::otawa::Register<C, C::__base> C::__reg;
 
 #define OTAWA_END }
 
