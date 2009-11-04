@@ -8,9 +8,11 @@ CUSTOM_LDLIBS		=
 CUSTOM_CLEAN		=
 
 # Tools
-CXX		= libtool --tag=CXX --mode=compile g++
-LD		= libtool --tag=CXX --mode=link g++
-CONFIG	= otawa-config
+KIND		= 			# one of loader, ilp, proc/path
+CXX			= libtool --tag=CXX --mode=compile g++
+LD			= libtool --tag=CXX --mode=link g++  -module
+CONFIG		= otawa-config
+INSTALL_DIR =	$(otawa-config --prefix)/lib/otawa/$(KIND)
 
 # Internals
 PREFIX		= $(shell $(CONFIG) --prefix)
@@ -18,7 +20,7 @@ FLAGS		= $(shell $(CONFIG) --cflags $(MODULES))
 DATADIR 	= $(shell $(CONFIG) --data $(MODULES))
 CXXFLAGS	= $(CUSTOM_CXXFLAGS) $(FLAGS) -DDATA_DIR="\"$(DATADIR)\""
 LDLIBS		= $(CUSTOM_LDLIBS) $(shell $(CONFIG) --libs $(MODULES))
-LDFLAGS 	= $(CUSTOM_LDFLAGS)
+LDFLAGS 	= $(CUSTOM_LDFLAGS)  -rpath $(INSTALL_DIR) -Wl,-rpath=\$$ORIGIN/../..
 OBJECTS 	= $(SOURCES:.cpp=.lo)
 DEPS		= $(addprefix .deps/,$(SOURCES:.cpp=.d))
 CLEAN		= $(CUSTOM_CLEAN) $(PROGRAM) $(OBJECTS) .deps
@@ -38,8 +40,8 @@ clean:
 .deps:
 	mkdir .deps
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@ 
+%.lo: %.cpp
 	@$(CXX) $(CXXFLAGS) -MM -MF .deps/$*.d -c $<
+	$(CXX) $(CXXFLAGS) -c $< -o $@ 
 
 -include $(DEPS)
