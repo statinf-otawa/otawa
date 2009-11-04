@@ -410,8 +410,12 @@ otawa::Inst *Process::decode(address_t addr) {
 					kind |= Inst::IS_COND;
 				break;
 			case ID_BCLR_:
-			case ID_BCLRL_:
 				kind |= Inst::IS_RETURN;
+				if((inst->instrinput[0].val.Uint5 & 0x14) != 0x14) // 0b1x1xx
+					kind |= Inst::IS_COND;
+				break;
+			case ID_BCLRL_:
+				kind |= Inst::IS_CALL;
 				if((inst->instrinput[0].val.Uint5 & 0x14) != 0x14) // 0b1x1xx
 					kind |= Inst::IS_COND;
 				break;
