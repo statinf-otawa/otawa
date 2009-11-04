@@ -24,6 +24,7 @@
 #include <elm/system/Path.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/proc/Registry.h>
+#include <otawa/otawa.h>
 #include "config.h"
 
 namespace otawa {
@@ -90,6 +91,8 @@ void ProcessorPlugin::init(void) {
 	system::Path path = system::Path::current().append(".otawa/proc");
 	plugger.addPath(path);
 	path = system::Path::home().append(".otawa/proc");
+	plugger.addPath(path);
+	path = MANAGER.prefixPath() / "lib/otawa/proc";
 	plugger.addPath(path);
 	path = Path(PROC_PATHS);
 	plugger.addPath(path);
