@@ -177,10 +177,14 @@ String CFG::label(void) {
  * @return	Return address of the first instruction.
  */
 Address CFG::address(void) {
-	if(ent)
-		return ent->address();
-	else
-		return Address::null;
+	if(!ent) {
+		BasicBlock::OutIterator edge(entry());
+		if(edge)
+			ent = edge->target();
+		if(!ent)
+			return Address::null;
+	}
+	return ent->address();
 }
 
 
