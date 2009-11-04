@@ -32,7 +32,7 @@ namespace otawa {
  * In configuration of @ref otawa::CFGChecker . Inform the CFG checker
  * that it must not issue an exception when an error is found: only a warning.
  */
-Identifier<bool> CFGChecker::NO_EXCEPTION("otawa::CFGChecker::NO_EXCEPTION", true);
+Identifier<bool> CFGChecker::NO_EXCEPTION("otawa::CFGChecker::NO_EXCEPTION", false);
 
 
 /**
@@ -59,6 +59,7 @@ void CFGChecker::init(void) {
 /**
  */
 void CFGChecker::configure(const PropList& props) {
+	BBProcessor::configure(props);
 	no_exn = NO_EXCEPTION(props);
 }
 
