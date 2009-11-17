@@ -19,7 +19,7 @@ namespace otawa {
 
 Identifier<String> GRAPHS_OUTPUT_DIRECTORY("output directory for dot graphs","");
     
-
+    //Feature<GraphBBTime> ICACHE_ACCURATE_PENALTIES_FEATURE("otawa::ICACHE_ACCURATE_PENALTIES_FEATURE");
 
 
   
