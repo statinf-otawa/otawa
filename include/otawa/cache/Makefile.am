@@ -5,4 +5,5 @@ includeotawacache_HEADERS = \
 	features.h \
 	FirstLastBuilder.h \
 	LBlock.h \
-	LBlockSet.h
+	LBlockSet.h \
+	CachePenaltiesObjectFunctionBuilder.h 
