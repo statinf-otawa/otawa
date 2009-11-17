@@ -368,7 +368,13 @@ void ParExeGraph::setDefaultLatencies(TimingContext *tctxt){
     }
 }
 
+// -- setLatencies ------------------------------------------------------------------------------------------------
 
+void ParExeGraph::setLatencies(TimingContext *tctxt){
+    for (TimingContext::NodeLatencyIterator nl(*tctxt) ; nl ; nl++){
+	nl->node()->setLatency(nl->latency());
+    }
+}
 // --------------------------------------------
 void ParExeNode::buildContendersMasks(){
     if (_possible_contenders->countBits() == 0) {
@@ -495,6 +501,7 @@ void ParExeGraph::createResources(){
     }
     for (InstIterator inst(_sequence) ; inst ; inst++) {
 	const elm::genstruct::Table<hard::Register *>& reads = inst->inst()->readRegs();
+	
 	for(int i = 0; i < reads.count(); i++) {
 	    for (int b=0 ; b<reg_bank_count ; b++) {
 		if (inputs[b].reg_bank == reads[i]->bank()) {
@@ -964,7 +971,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile) {
 	    if (node->inst()->codePart() == BODY)
 		dotFile << "color=blue, ";
 	    dotFile << "label=\"" << node->stage()->name();
-	    dotFile << "(I" << node->inst()->index() << ") ";
+	    dotFile << "(I" << node->inst()->index() << ") [" << node->latency() << "]";
 	    dotFile << "| { ";
 	    int i=0;
 	    int num = _resources.length();
