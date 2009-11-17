@@ -16,71 +16,75 @@
 #include <otawa/parexegraph/ParExeGraph.h>
 #include <elm/io/OutFileStream.h>
 #include <otawa/ipet.h>
+#include <otawa/cache/cat2/CachePenalty.h>
 
 
 namespace otawa {
     extern Identifier<String> GRAPHS_OUTPUT_DIRECTORY;
     extern Identifier<int> TIME;
-  
+
+ 
+	/*      extern Feature<GraphBBTime> ICACHE_ACCURATE_PENALTIES_FEATURE; */
+
     using namespace elm::genstruct; 
     
     // -- class PathContext --------------------------------------------------------------------------------
     class PathContext{
     private:
-	elm::genstruct::SLList<BasicBlock *> _bb_list;
-	int _num_insts;
-	int _num_bbs;
-	BasicBlock * _bb;
-	Edge * _edge;
+		elm::genstruct::SLList<BasicBlock *> _bb_list;
+		int _num_insts;
+		int _num_bbs;
+		BasicBlock * _bb;
+		Edge * _edge;
     public:
-	PathContext(BasicBlock *bb){
-	    _bb_list.addFirst(bb);
-	    _num_insts = bb->countInstructions();
-	    _num_bbs = 1;
-	    _bb = bb;
-	    _edge = NULL;
-	}
-	PathContext(const PathContext& ctxt){
-	    for (elm::genstruct::SLList<BasicBlock *>::Iterator block(ctxt._bb_list) ; block ; block++)
-		_bb_list.addLast(block);
-	    _num_insts = ctxt._num_insts;
-	    _num_bbs = ctxt._num_bbs;
-	    _bb = ctxt._bb;
-	    _edge = ctxt._edge;
-	}
-	~PathContext(){
-	    _bb_list.clear();
-	}
-	void addBlock(BasicBlock * new_bb, Edge * edge){
-	    _bb_list.addFirst(new_bb);
-	    _num_insts += new_bb->countInstructions();
-	    _num_bbs += 1;
-	    if (_num_bbs == 1)
-		_bb = new_bb;
-	    if (_num_bbs == 2)
-		_edge = edge;
-	}
-	inline int numInsts()
-	{ return _num_insts;}
-	inline int numBlocks()
-	{ return _num_bbs;}
-	inline BasicBlock* lastBlock()
-	{ return _bb_list.last();}
-	inline BasicBlock* mainBlock()
-	{ return _bb;}
-	inline Edge * edge     ()
-	{ return _edge;}
-	void dump(io::Output& output) {
-	    for (elm::genstruct::SLList<BasicBlock *>::Iterator bb(_bb_list) ; bb ; bb++){
-		output << "b" << bb->number() << "-";
-	    }
-	}
+		PathContext(BasicBlock *bb){
+			_bb_list.addFirst(bb);
+			_num_insts = bb->countInstructions();
+			_num_bbs = 1;
+			_bb = bb;
+			_edge = NULL;
+		}
+		PathContext(const PathContext& ctxt){
+			for (elm::genstruct::SLList<BasicBlock *>::Iterator block(ctxt._bb_list) ; block ; block++)
+				_bb_list.addLast(block);
+			_num_insts = ctxt._num_insts;
+			_num_bbs = ctxt._num_bbs;
+			_bb = ctxt._bb;
+			_edge = ctxt._edge;
+		}
+		~PathContext(){
+			_bb_list.clear();
+		}
+		void addBlock(BasicBlock * new_bb, Edge * edge){
+			_bb_list.addFirst(new_bb);
+			_num_insts += new_bb->countInstructions();
+			_num_bbs += 1;
+			if (_num_bbs == 1)
+				_bb = new_bb;
+			if (_num_bbs == 2)
+				_edge = edge;
+		}
+		inline int numInsts()
+		{ return _num_insts;}
+		inline int numBlocks()
+		{ return _num_bbs;}
+		inline BasicBlock* lastBlock()
+		{ return _bb_list.last();}
+		inline BasicBlock* mainBlock()
+		{ return _bb;}
+		inline Edge * edge     ()
+		{ return _edge;}
+		void dump(io::Output& output) {
+			for (elm::genstruct::SLList<BasicBlock *>::Iterator bb(_bb_list) ; bb ; bb++){
+				output << "b" << bb->number() << "-";
+			}
+		}
 
-	class BasicBlockIterator: public elm::genstruct::SLList<BasicBlock *>::Iterator {
-	public:
-	    inline BasicBlockIterator(const PathContext& ctxt)
-		: elm::genstruct::SLList<BasicBlock *>::Iterator(ctxt._bb_list) {}
-	};
+		class BasicBlockIterator: public elm::genstruct::SLList<BasicBlock *>::Iterator {
+		public:
+			inline BasicBlockIterator(const PathContext& ctxt)
+				: elm::genstruct::SLList<BasicBlock *>::Iterator(ctxt._bb_list) {}
+		};
 
     };
 
@@ -88,259 +92,549 @@ namespace otawa {
     // -- class GraphBBTime ----------------------------------------------------------------------------------
 
     template <class G>
-	class GraphBBTime: public BBProcessor {
+		class GraphBBTime: public BBProcessor {
     private:
-	WorkSpace *_ws;
-	ParExeProc *_microprocessor;
-	int _last_stage_cap;
-	PropList _props;
-	int _prologue_depth;
-	OutStream *_output_stream;
-	elm::io::Output *_output;
-	String _graphs_dir_name;
-	bool _do_output_graphs;
-	bool _do_consider_icache;
+		WorkSpace *_ws;
+		ParExeProc *_microprocessor;
+		int _last_stage_cap;
+		PropList _props;
+		int _prologue_depth;
+		OutStream *_output_stream;
+		elm::io::Output *_output;
+		String _graphs_dir_name;
+		bool _do_output_graphs;
+		bool _do_consider_icache;
+		int _icache_miss_penalty;
     public:
-	GraphBBTime(const PropList& props = PropList::EMPTY);
-	void processWorkSpace(WorkSpace *ws);
-	void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
-	elm::genstruct::SLList<PathContext *> * buildListOfPathContexts(BasicBlock *bb, int depth = 1);
-	void FillSequence(PathContext *ctxt,
-			  elm::genstruct::SLList<PathContext *> *context_list, 		       
-			  int depth);
-	ParExeSequence * buildSequence(PathContext *ctxt);
-	void analyzePathContext(PathContext *ctxt, int context_index);
-	void buildTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
-	void computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq);
-	void outputGraph(G* graph, int bb_number, int context_number, int case_number);
+		GraphBBTime(const PropList& props = PropList::EMPTY);
+		void processWorkSpace(WorkSpace *ws);
+		void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+		elm::genstruct::SLList<PathContext *> * buildListOfPathContexts(BasicBlock *bb, int depth = 1);
+		void FillSequence(PathContext *ctxt,
+						  elm::genstruct::SLList<PathContext *> *context_list, 		       
+						  int depth);
+		ParExeSequence * buildSequence(PathContext *ctxt);
+		void analyzePathContext(PathContext *ctxt, int context_index);
+		int analyzeTimingContext(G* graph, TimingContext *NC_ctxt, TimingContext *FM_ctxt);
+		void buildNCTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
+		void buildFMTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
+		void computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq);
+		void outputGraph(G* graph, int bb_number, int context_number, int case_number);
     
     };
-  // -- GraphBBTime ------------------------------------------------------------------------------------------
+	// -- GraphBBTime ------------------------------------------------------------------------------------------
 
- template <class G>
-GraphBBTime<G>::GraphBBTime(const PropList& props) 
-    : BBProcessor() {
-    _graphs_dir_name = GRAPHS_OUTPUT_DIRECTORY(props);
-    if (!_graphs_dir_name.isEmpty())
-	_do_output_graphs = true;
-    else
-	_do_output_graphs = false;
-    if (CACHE_CONFIG_PATH(props))
-	_do_consider_icache = true;
-    else
-	_do_consider_icache = false;
-    _props = props;
-    provide(ipet::BB_TIME_FEATURE);
-}
+	template <class G>
+		GraphBBTime<G>::GraphBBTime(const PropList& props) 
+		: BBProcessor() {
+		_graphs_dir_name = GRAPHS_OUTPUT_DIRECTORY(props);
+		if (!_graphs_dir_name.isEmpty())
+			_do_output_graphs = true;
+		else
+			_do_output_graphs = false;
+		_icache_miss_penalty = -1;
+		if (CACHE_CONFIG_PATH(props)){
+			_do_consider_icache = true;
+		}
+		else 
+			_do_consider_icache = false;
+   
+		_props = props;
+		provide(ipet::BB_TIME_FEATURE);
+		//    provide(ICACHE_ACCURATE_PENALTIES_FEATURE);
+	}
 
 
   
-// -- processWorkSpace ------------------------------------------------------------------------------------------
+	// -- processWorkSpace ------------------------------------------------------------------------------------------
 
-template <class G>  
-void GraphBBTime<G>::processWorkSpace(WorkSpace *ws) {
+	template <class G>  
+		void GraphBBTime<G>::processWorkSpace(WorkSpace *ws) {
 
-  _ws = ws;
-  const hard::Processor *proc = _ws->platform()->processor();
+		_ws = ws;
+		const hard::Processor *proc = _ws->platform()->processor();
 
-  if(!proc)
-    throw ProcessorException(*this, "no processor to work with");
-  else {
-    _microprocessor = new ParExeProc(proc);
-    _last_stage_cap = _microprocessor->lastStage()->width();
+		if(!proc)
+			throw ProcessorException(*this, "no processor to work with");
+		else {
+			_microprocessor = new ParExeProc(proc);
+			_last_stage_cap = _microprocessor->lastStage()->width();
 
-  }
-   // Perform the actual process
-  BBProcessor::processWorkSpace(ws);
-}
+		}
 
-
-// -- FillSequence ------------------------------------------------------------------------------------------
- 
- template <class G>
- void GraphBBTime<G>::FillSequence(PathContext *ctxt,
-				   elm::genstruct::SLList<PathContext *> *context_list, 		       
-				   int depth){
-
-    BasicBlock *bb = ctxt->lastBlock();
-    int num_preds = 0;
-    for(BasicBlock::InIterator edge(bb); edge; edge++) {
-	BasicBlock *pred = edge->source();
-	if (!pred->isEntry() && !pred->isExit()) {
-	    num_preds++;
-	    PathContext *new_ctxt = new PathContext(*ctxt);
-	    new_ctxt->addBlock(pred, edge);
-	    if ( (new_ctxt->numInsts() >= _last_stage_cap)
-		 &&
-		 (new_ctxt->numBlocks() > depth) )
-		context_list->addLast(new_ctxt);
-	    else
-		FillSequence(new_ctxt, context_list, depth);
+		const hard::Cache *cache = _ws->platform()->cache().instCache();
+		if (cache)
+			_icache_miss_penalty = cache->missPenalty();
+		// Perform the actual process
+		BBProcessor::processWorkSpace(ws);
 	}
-    }
-    if (num_preds == 0){
-	context_list->addLast(ctxt);
-    }
-    else
-	delete ctxt;
-}
+
+
+	// -- FillSequence ------------------------------------------------------------------------------------------
+ 
+	template <class G>
+		void GraphBBTime<G>::FillSequence(PathContext *ctxt,
+										  elm::genstruct::SLList<PathContext *> *context_list, 		       
+										  int depth){
+
+		BasicBlock *bb = ctxt->lastBlock();
+		int num_preds = 0;
+		for(BasicBlock::InIterator edge(bb); edge; edge++) {
+			BasicBlock *pred = edge->source();
+			if (!pred->isEntry() && !pred->isExit()) {
+				num_preds++;
+				PathContext *new_ctxt = new PathContext(*ctxt);
+				new_ctxt->addBlock(pred, edge);
+				if ( (new_ctxt->numInsts() >= _last_stage_cap)
+					 &&
+					 (new_ctxt->numBlocks() > depth) )
+					context_list->addLast(new_ctxt);
+				else
+					FillSequence(new_ctxt, context_list, depth);
+			}
+		}
+		if (num_preds == 0){
+			context_list->addLast(ctxt);
+		}
+		else
+			delete ctxt;
+	}
  
 
-// -- buildListOfPathContexts ---------------------------------------------------------------------------------------
+	// -- buildListOfPathContexts ---------------------------------------------------------------------------------------
  
-template <class G>
-elm::genstruct::SLList<PathContext *> * GraphBBTime<G>::buildListOfPathContexts(BasicBlock *bb, int depth){
-     assert(depth > 0);
-     elm::genstruct::SLList<PathContext *> * context_list = new elm::genstruct::SLList<PathContext *>();
-     PathContext * ctxt = new PathContext(bb);
+	template <class G>
+		elm::genstruct::SLList<PathContext *> * GraphBBTime<G>::buildListOfPathContexts(BasicBlock *bb, int depth){
+		assert(depth > 0);
+		elm::genstruct::SLList<PathContext *> * context_list = new elm::genstruct::SLList<PathContext *>();
+		PathContext * ctxt = new PathContext(bb);
   
-     FillSequence(ctxt, context_list, depth);
+		FillSequence(ctxt, context_list, depth);
 
-     return context_list;
- }
-
-// -- buildSequence ------------------------------------------------------------------------------------------
-
-template <class G> 
-ParExeSequence * GraphBBTime<G>::buildSequence(PathContext *ctxt){
-    ParExeSequence * seq = new ParExeSequence();
-    code_part_t part = PROLOGUE;
-    int index = 0;
-    for (PathContext::BasicBlockIterator block(*ctxt) ; block ; block++){
-	if (block == ctxt->mainBlock())
-	    part = BODY;
-	for(BasicBlock::InstIterator inst(block); inst; inst++) {
-	    ParExeInst * par_exe_inst = new ParExeInst(inst, block, part, index++);
-	    seq->addLast(par_exe_inst);
+		return context_list;
 	}
-    }
-    return seq;
-}
 
-// -- outputGraph ------------------------------------------------------------------------------------------
+	// -- buildSequence ------------------------------------------------------------------------------------------
 
-template <class G> 
-void GraphBBTime<G>::outputGraph(G* graph, int bb_number, int context_index, int case_index){
-    elm::StringBuffer buffer;
-      buffer << _graphs_dir_name << "/";
-      buffer << "b" << bb_number << "-ctxt" << context_index << "-case" << case_index << ".dot";
-      elm::io::OutFileStream dotStream(buffer.toString());
-      elm::io::Output dotFile(dotStream);
-      graph->dump(dotFile);
-}
-
-
-// -- buildTimingContextListForICache ---------------------------------------------------------------------------
-
-template <class G>
-void GraphBBTime<G>::buildTimingContextListForICache(elm::genstruct::SLList<TimingContext *> * list, ParExeSequence *seq){
-    int miss_latency = 10; // FIXME !!!
-
-
-}
-
-// -- computeDefaultTimingContextForICache ---------------------------------------------------------------------------
-
-template <class G>
-void GraphBBTime<G>::computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq){
-    int miss_latency = 10; // FIXME !!!
-
-    for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
-	LBlock *lb = LBLOCK(inst->inst());
-	if (lb){
-	    if (CATEGORY(lb) == ALWAYS_MISS) {
-		NodeLatency * nl = new NodeLatency(inst->fetchNode(), miss_latency);
-		dtctxt->addNodeLatency(nl);
-	    }
+	template <class G> 
+		ParExeSequence * GraphBBTime<G>::buildSequence(PathContext *ctxt){
+		ParExeSequence * seq = new ParExeSequence();
+		code_part_t part = PROLOGUE;
+		int index = 0;
+		for (PathContext::BasicBlockIterator block(*ctxt) ; block ; block++){
+			if (block == ctxt->mainBlock())
+				part = BODY;
+			for(BasicBlock::InstIterator inst(block); inst; inst++) {
+				ParExeInst * par_exe_inst = new ParExeInst(inst, block, part, index++);
+				seq->addLast(par_exe_inst);
+			}
+		}
+		return seq;
 	}
-    }
 
-}
+	// -- outputGraph ------------------------------------------------------------------------------------------
 
-// -- analyzePathContext ------------------------------------------------------------------------------------------
-
-template <class G> 
-void GraphBBTime<G>::analyzePathContext(PathContext*ctxt, int context_index){
-    int exec_time;
-    int max_bb_time = 0;
-    int max_edge_time = 0;
-    int case_index = 0;
-    BasicBlock * bb = ctxt->mainBlock();
-    Edge *edge = ctxt->edge();
+	template <class G> 
+		void GraphBBTime<G>::outputGraph(G* graph, int bb_number, int context_index, int case_index){
+		elm::StringBuffer buffer;
+		buffer << _graphs_dir_name << "/";
+		buffer << "b" << bb_number << "-ctxt" << context_index << "-case" << case_index << ".dot";
+		elm::io::OutFileStream dotStream(buffer.toString());
+		elm::io::Output dotFile(dotStream);
+		graph->dump(dotFile);
+	}
 
 
-    ParExeSequence *sequence = buildSequence(ctxt);
-    G *execution_graph = new G(_ws,_microprocessor, sequence, _props);
-    execution_graph->build();
+	// -- buildNCTimingContextListForICache ---------------------------------------------------------------------------
+
+	template <class G>
+		void GraphBBTime<G>::buildNCTimingContextListForICache(elm::genstruct::SLList<TimingContext *> * list, ParExeSequence *seq){
+ 
+		elm::genstruct::SLList<TimingContext *> * to_add = new elm::genstruct::SLList<TimingContext *>();
+
+		// process NOT_CLASSIFIED lblocks
+		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
+			LBlock *lb = LBLOCK(inst->inst());
+			if (lb){
+				if (CATEGORY(lb) == NOT_CLASSIFIED){
+					if (list->isEmpty()){
+						TimingContext *tctxt = new TimingContext();
+						NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+						tctxt->addNodeLatency(nl);
+						list->addLast(tctxt);
+					}
+					else {
+						for (elm::genstruct::SLList<TimingContext *>::Iterator tctxt(*list) ; tctxt ; tctxt++){
+							TimingContext *new_tctxt = new TimingContext(tctxt.item());
+							NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+							new_tctxt->addNodeLatency(nl);
+							to_add->addLast(new_tctxt);
+						}
+						for (elm::genstruct::SLList<TimingContext *>::Iterator tctxt(*to_add) ; tctxt ; tctxt++){
+							list->addLast(tctxt.item());
+						}
+						to_add->clear();
+						TimingContext *new_tctxt = new TimingContext();
+						NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+						new_tctxt->addNodeLatency(nl);
+						list->addLast(new_tctxt);
+					}
+				}
+			}
+		}
+		delete to_add;
+	}
+
+	// -- buildFMTimingContextListForICache ---------------------------------------------------------------------------
+
+	template <class G>
+		void GraphBBTime<G>::buildFMTimingContextListForICache(elm::genstruct::SLList<TimingContext *> * list, ParExeSequence *seq){
+ 
+		BasicBlock *header0 = NULL;
+		BasicBlock *header1 = NULL;
+		int num_headers = 0;
+
+		// process FIRST_MISS lblocks
+
+		// find FIRST_MISS headers
+		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
+			LBlock *lb = LBLOCK(inst->inst());
+			if (lb){
+				if (CATEGORY(lb) == FIRST_MISS){
+					BasicBlock *header = CATEGORY_HEADER(lb);
+					//		elm::cout << "found header b" << header->number() << "\n";
+					if (header0 == NULL){
+						header0 = header;
+						//	    elm::cout << "\tsaved in header0\n";
+						num_headers++;
+					}
+					else {
+						if (header0 != header){
+							if (header1 == NULL){
+								if (Dominance::dominates(header, header0)){
+									header1 = header0;
+									header0 = header;
+									//		elm::cout << "\tsaved in header0 (header1 takes header0)\n";
+								}
+								else {
+									header1 = header;
+									//		elm::cout << "\tsaved in header1\n";
+								}
+								num_headers++;
+							}
+							else { 
+								if (header1 != header) {
+									// third header: is not expected to be found - could be implemented by ignoring the first headers in the sequence
+									ASSERTP(0, "this sequence has more than 2 headers for cache categories: this is not supported so far\n");
+								}
+								// else
+								//	elm::cout << "\talready found in header1\n";
+							}	  
+						} // header0 != header
+						// else {
+						//	elm::cout << "\talready found in header0\n";
+						// }
+					}
+				}
+			}
+		}
+		// create timing contexts
+		if (num_headers){
+			if (num_headers == 1){
+				TimingContext *tctxt_first = new TimingContext(header0);
+				tctxt_first->setType(CachePenalty::MISS); 
+				list->addLast(tctxt_first);
+
+				for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
+					LBlock *lb = LBLOCK(inst->inst());
+					if (lb){
+						if (CATEGORY(lb) == FIRST_MISS){ // must be with header0
+							NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+							tctxt_first->addNodeLatency(nl);
+						}
+					}
+				}
+				/* 	    elm::cout << "One header: context is: \n"; */
+				/* 	    for (TimingContext::NodeLatencyIterator nl(*tctxt_first) ; nl ; nl++){ */
+				/* 		elm::cout << "\t\t\t" << (nl.item())->node()->name() << " : lat=" << (nl.item())->latency() << "\n"; */
+				/* 	    }	 */
+			}
+			else { // num_headers == 2
+				TimingContext *tctxt_first_first = new TimingContext(header0, header1);
+				tctxt_first_first->setType(CachePenalty::MISS_MISS);
+				list->addLast(tctxt_first_first);
+				TimingContext *tctxt_others_first = new TimingContext(header0, header1);
+				tctxt_others_first->setType(CachePenalty::HIT_MISS);
+				list->addLast(tctxt_others_first);
+				TimingContext *tctxt_first_others = new TimingContext(header0, header1);
+				tctxt_first_others->setType(CachePenalty::x_HIT);
+				list->addLast(tctxt_first_others);
+				for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
+					LBlock *lb = LBLOCK(inst->inst());
+					if (lb){
+						if (CATEGORY(lb) == FIRST_MISS){ 
+							BasicBlock *header = CATEGORY_HEADER(lb);
+							NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+							tctxt_first_first->addNodeLatency(nl);
+							nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+							if (header == header0){
+								tctxt_first_others->addNodeLatency(nl);
+							}
+							else {// must be header==header1
+								tctxt_others_first->addNodeLatency(nl);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// -- computeDefaultTimingContextForICache ---------------------------------------------------------------------------
+
+	template <class G>
+		void GraphBBTime<G>::computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq){
+  
+		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
+			LBlock *lb = LBLOCK(inst->inst());
+			if (lb){
+				if (CATEGORY(lb) == ALWAYS_MISS) {
+					NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+					dtctxt->addNodeLatency(nl);
+				}
+			}
+		}
+
+	}
+
+	// -- analyzeTimingContext ------------------------------------------------------------------------------------------
+
+	template <class G> 
+		int GraphBBTime<G>::analyzeTimingContext(G* graph, TimingContext *NC_ctxt, TimingContext *FM_ctxt){
+		graph->restoreDefaultLatencies();
+		if (NC_ctxt)
+			graph->setLatencies(NC_ctxt);
+		if (FM_ctxt)
+			graph->setLatencies(FM_ctxt);
+		int cost = graph->analyze();
+		return cost;
+	}
+
+	// -- analyzePathContext ------------------------------------------------------------------------------------------
+
+	template <class G> 
+		void GraphBBTime<G>::analyzePathContext(PathContext*ctxt, int context_index){
+
+		int case_index = 0;
+		BasicBlock * bb = ctxt->mainBlock();
+		Edge *edge = ctxt->edge();
+
+
+		ParExeSequence *sequence = buildSequence(ctxt);
+		G *execution_graph = new G(_ws,_microprocessor, sequence, _props);
+		execution_graph->build();
     
-    elm::genstruct::SLList<TimingContext *> timing_context_list;
-    TimingContext default_timing_context;
-    if (_do_consider_icache){
 
-	computeDefaultTimingContextForICache(&default_timing_context, sequence);
-	elm::cout << "\tDefault timing context: \n";
-	for (TimingContext::NodeLatencyIterator nl(default_timing_context) ; nl ; nl++){
-	    elm::cout << "\t\t" << nl->node()->name() << " : lat=" << nl->latency() << "\n";
-	}
-	execution_graph->setDefaultLatencies(&default_timing_context);
-	
-	buildTimingContextListForICache(&timing_context_list, sequence);
-	//	elm::cout << "\tTiming contexts:\n";
-/* 	for (elm::genstruct::SLList<TimingContext *>::Iterator tctxt(timing_context_list) ; tctxt ; tctxt++){ */
-/* 	    elm::cout << "\t\tone context: \n"; */
-/* 	    for (TimingContext::NodeLatencyIterator nl(*(tctxt.item())) ; nl ; nl++){ */
-/* 		elm::cout << "\t\t\t" << nl->node()->name() << " : lat=" << nl->latency() << "\n"; */
-/* 	    } */
-/* 	} */
-    }
-
-    exec_time = execution_graph->analyze();
-    //execution_graph->display(elm::cout);
-    if (_do_output_graphs){
-	outputGraph(execution_graph, bb->number(), context_index, case_index);
-    }
-    elm::cout << "\n\twcc = " << exec_time << "\n";
-    if (exec_time > max_bb_time)
-	max_bb_time = exec_time;
-    if (exec_time > max_edge_time)
-	max_edge_time = exec_time;
-
+		int reference_cost = execution_graph->analyze();
+		//execution_graph->display(elm::cout);
+		if (_do_output_graphs){
+			outputGraph(execution_graph, bb->number(), context_index, case_index++);
+		}
+  		elm::cout << "reference cost = " << reference_cost << "\n\n";    
     
-    if (otawa::ipet::TIME(bb) < max_bb_time)
-	otawa::ipet::TIME(bb) = max_bb_time;
+		TimingContext default_timing_context;
 
-    if (edge){
-	if (otawa::ipet::TIME(edge) < max_bb_time)
-	    otawa::ipet::TIME(edge) = max_bb_time;
-    }
-    delete execution_graph;  
-}
+		if (_do_consider_icache){
+
+			for (ParExeSequence::InstIterator inst(sequence) ; inst ; inst++)  {
+				LBlock *lb = LBLOCK(inst->inst());
+				if (lb){
+					elm::cout << "\tcategory of I" << inst->index() << " is ";
+					switch( CATEGORY(lb)){
+					case ALWAYS_HIT:
+						elm::cout << "ALWAYS_HIT\n";
+						break;
+					case ALWAYS_MISS:
+						elm::cout << "ALWAYS_MISS\n";
+						break;
+					case FIRST_MISS:
+						elm::cout << "FIRST_MISS (with header b" << CATEGORY_HEADER(lb)->number() << ")\n";
+						break;
+					case NOT_CLASSIFIED:
+						elm::cout << "NOT_CLASSIFIED\n";
+						break;
+					default:
+						elm::cout << "unknown !!!\n";
+						break;
+					}  
+				}
+			}
+
+			// set constant latencies (ALWAYS_MISS in the cache)
+			TimingContext default_timing_context;
+			assert(_icache_miss_penalty >= 0);
+			computeDefaultTimingContextForICache(&default_timing_context, sequence);
+			int default_icache_cost = reference_cost;
+			if (!default_timing_context.isEmpty()){
+				elm::cout << "default timing context: misses for";
+				for (TimingContext::NodeLatencyIterator nl(default_timing_context) ; nl ; nl++){
+					elm::cout << "I" << nl->node()->inst()->index() << ", ";
+				}
+				elm::cout << " - ";
+				execution_graph->setDefaultLatencies(&default_timing_context);
+				default_icache_cost = execution_graph->analyze();
+				if (_do_output_graphs){
+					outputGraph(execution_graph, bb->number(), context_index, case_index++);
+				}
+				elm::cout << "cost = " << default_icache_cost << " (only accounting for fixed latencies)\n\n"; 
+				if (default_icache_cost > reference_cost)
+					reference_cost = default_icache_cost;
+			}
+	    
+ 
+			// consider variable latencies (FIRST_MISS, NOT_CLASSIFIED)
+			elm::genstruct::SLList<TimingContext *> NC_timing_context_list;
+			elm::genstruct::SLList<TimingContext *> FM_timing_context_list;
+			buildNCTimingContextListForICache(&NC_timing_context_list, sequence);	
+			buildFMTimingContextListForICache(&FM_timing_context_list, sequence);
+
+			int index = 0;
+			CachePenalty *cache_penalty = new CachePenalty();
+
+			bool first = true;
+			if (!FM_timing_context_list.isEmpty()){
+				for (elm::genstruct::SLList<TimingContext *>::Iterator FM_tctxt(FM_timing_context_list) ; FM_tctxt ; FM_tctxt++){
+					if (first) {
+						cache_penalty->setHeader(0, FM_tctxt->header(0));
+						cache_penalty->setHeader(1, FM_tctxt->header(1));
+						first = false;
+					}
+					if (!NC_timing_context_list.isEmpty()){
+						for (elm::genstruct::SLList<TimingContext *>::Iterator NC_tctxt(NC_timing_context_list) ; NC_tctxt ; NC_tctxt++){
+							int NC_cost = analyzeTimingContext(execution_graph, NC_tctxt.item(), NULL);
+							if (NC_cost > reference_cost)
+								reference_cost = NC_cost;
+							int cost = analyzeTimingContext(execution_graph, NC_tctxt.item(), FM_tctxt.item());
+							elm::cout << "\ncontext " << index << ": ";
+							for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++){
+								elm::cout << "I" << (nl.item())->node()->inst()->index() << ",";
+							}
+							for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++){
+								elm::cout << "I" << (nl.item())->node()->inst()->index() << ",";
+							}
+							elm::cout << "  - ";
+							elm::cout << "cost=" << cost;
+							elm::cout << "  - NC_cost=" << NC_cost << "\n";
+			
+							int penalty = cost - reference_cost; 
+							// default_icache_cost is when all NCs hit
+							if ((FM_tctxt->type() == CachePenalty::x_HIT) && (penalty < 0))
+								penalty = 0;  // penalty = max [ hit-hit, miss-hit ]
+							if (penalty > cache_penalty->penalty(FM_tctxt->type()))
+								cache_penalty->setPenalty(FM_tctxt->type(), penalty);
+							//cache_penalty->dump(elm::cout);
+							//elm::cout << "\n";
+							//elm::cout << " (penalty = " << penalty << " - p[" << FM_tctxt->type() << "] = " << cache_penalty->penalty(FM_tctxt->type()) << ")\n";
+							if (_do_output_graphs){
+								outputGraph(execution_graph, bb->number(), context_index, case_index++);
+							}
+						} 
+					}
+					else { // no NC context
+						int cost = analyzeTimingContext(execution_graph, NULL, FM_tctxt.item());
+						elm::cout << "context " << index << ": ";
+						for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++){
+							elm::cout << "I" << (nl.item())->node()->inst()->index() << ",";
+						}
+						elm::cout << "  - ";
+						elm::cout << "cost=" << cost << "\n";
+						int penalty = cost - reference_cost;
+						if ((FM_tctxt->type() == CachePenalty::x_HIT) && (penalty < 0))
+							penalty = 0;  // penalty = max [ hit-hit, miss-hit ]
+						if (penalty > cache_penalty->penalty(FM_tctxt->type()))
+							cache_penalty->setPenalty(FM_tctxt->type(), penalty);
+						/* cache_penalty->dump(elm::cout); */
+/* 							elm::cout << "\n"; */
+/* 						elm::cout << " (penalty = " << penalty << " - p[" << FM_tctxt->type() << "] = " << cache_penalty->penalty(FM_tctxt->type()) << ")\n"; */
+						if (_do_output_graphs){
+							outputGraph(execution_graph, bb->number(), context_index, case_index++);
+						}
+					}
+				}
+	    
+			}
+			else { // no FM context
+				for (elm::genstruct::SLList<TimingContext *>::Iterator NC_tctxt(NC_timing_context_list) ; NC_tctxt ; NC_tctxt++){
+					int NC_cost = analyzeTimingContext(execution_graph, NC_tctxt.item(), NULL); 
+					elm::cout << "context " << index << ": ";
+					for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++){
+						elm::cout << "I" << (nl.item())->node()->inst()->index() << ",";
+					}
+					elm::cout << " - ";
+					elm::cout << "cost=" << NC_cost << "\n";
+					if (NC_cost > reference_cost)
+						reference_cost = NC_cost;
+/* 					int penalty = cost - default_icache_cost; */
+/* 					if (penalty < 0) */
+/* 						penalty = 0; // penalty when all NCs hit is default_icache_cost; */
+/* 					if (penalty > cache_penalty->penalty(CachePenalty::MISS)) */
+/* 						cache_penalty->setPenalty(CachePenalty::MISS, penalty); */
+/* 					cache_penalty->dump(elm::cout); */
+/* 					elm::cout << "\n"; */
+				   //elm::cout << " (penalty = " << penalty << " - p[0] = " << cache_penalty->penalty(CachePenalty::MISS) << ")\n";
+					if (_do_output_graphs){
+						outputGraph(execution_graph, bb->number(), context_index, case_index++);
+					}
+				}
+			}
+			if (cache_penalty->header(0)){
+				ICACHE_PENALTY(bb) = cache_penalty;
+				if (edge)
+					ICACHE_PENALTY(edge) = cache_penalty;
+				elm::cout << "cache penalty: ";
+				cache_penalty->dump(elm::cout);
+				elm::cout << "\n";
+			}
+			
+		}
+		elm::cout << "Reference cost: " << reference_cost << "\n";
+		if (otawa::ipet::TIME(bb) < reference_cost)
+			otawa::ipet::TIME(bb) = reference_cost;
+		if (edge){
+			if (otawa::ipet::TIME(edge) < reference_cost){
+				otawa::ipet::TIME(edge) = reference_cost;
+			}
+		}
+    
+		delete execution_graph;  
+	}
 
 
-// -- processBB ------------------------------------------------------------------------------------------
+	// -- processBB ------------------------------------------------------------------------------------------
   
-template <class G>  
-void GraphBBTime<G>::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+	template <class G>  
+		void GraphBBTime<G>::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
-  // ignore empty basic blocks
-  if (bb->countInstructions() == 0)
-    return;
+		// ignore empty basic blocks
+		if (bb->countInstructions() == 0)
+			return;
 
-  elm::cout << "================================================================\n";
-  elm::cout << "Processing block b" << bb->number() << " (starts at " << bb->address() << " - " << bb->countInstructions() << " instructions)\n\n";
+		elm::cout << "\n================================================================\n";
+		elm::cout << "Processing block b" << bb->number() << " (starts at " << bb->address() << " - " << bb->countInstructions() << " instructions)\n";
 
-  int context_index = 0;
+		int context_index = 0;
 
-  elm::genstruct::SLList<PathContext *> *path_context_list = buildListOfPathContexts(bb);
+		elm::genstruct::SLList<PathContext *> *path_context_list = buildListOfPathContexts(bb);
 
-  for (elm::genstruct::SLList<PathContext *>::Iterator ctxt(*path_context_list) ; ctxt ; ctxt++){
-      elm::cout << "Considering context: ";
-      ctxt->dump(elm::cout);
-      elm::cout << "\n";
-      analyzePathContext(ctxt, context_index);   
-      context_index ++;
-  }
-}
+		for (elm::genstruct::SLList<PathContext *>::Iterator ctxt(*path_context_list) ; ctxt ; ctxt++){
+			elm::cout << "\n----- Considering context: ";
+			ctxt->dump(elm::cout);
+			elm::cout << "\n";
+			analyzePathContext(ctxt, context_index);   
+			context_index ++;
+		}
+	}
+
 
 } //otawa
 
