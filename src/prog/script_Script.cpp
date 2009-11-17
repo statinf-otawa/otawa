@@ -1,3 +1,4 @@
+
 /*
  *	$Id$
  *	Script processor implementation
@@ -105,7 +106,7 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	if(!doc)
 		throw otawa::Exception(_ << "script " << path << " is not valid XML !");
 	xom::XIncluder::resolveInPlace(doc);
-	system::Path initial_base = doc->getBaseURI();
+	elm::system::Path initial_base = doc->getBaseURI();
 	initial_base = initial_base.parent().absolute();
 
 	// build XSL
@@ -143,7 +144,7 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	}
 
 	// !!DEBUG!!
-	DEBUG(OutStream *out = system::System::createFile("out.xml");
+	DEBUG(OutStream *out = elm::system::System::createFile("out.xml");
 	xom::Serializer serial(*out);
 	serial.write(xsl);
 	delete out);
@@ -165,7 +166,7 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	delete doc;
 
 	// !!DEBUG!!
-	DEBUG(OutStream *out2 = system::System::createFile("out2.xml");
+	DEBUG(OutStream *out2 = elm::system::System::createFile("out2.xml");
 	xom::Serializer serial2(*out2);
 	serial2.write(res);
 	delete out2;)
