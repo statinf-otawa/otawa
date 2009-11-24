@@ -47,7 +47,7 @@ COM		#.*\n
 
 {DEC}		ipet_lval.integer = strtol(yytext, 0, 10); return INTEGER;
 {OCT}		ipet_lval.integer = strtol(yytext + 1, 0, 8); return INTEGER;
-{HEX}		ipet_lval.integer = strtol(yytext + 2, 0, 16); return INTEGER;
+{HEX}		ipet_lval.integer = strtoul(yytext + 2, 0, 16); return INTEGER;
 {BIN}		ipet_lval.integer = strtol(yytext + 2, 0, 2); return INTEGER;
 {REAL}		ipet_lval.real = strtod(yytext, 0); return REAL;
 {ID}		ipet_lval.id = strdup(yytext); return ID;
