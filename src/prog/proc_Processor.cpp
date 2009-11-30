@@ -402,7 +402,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 		if((feature->kind() == FeatureUsage::require
 		|| feature->kind() == FeatureUsage::use)
 		&& !fw->isProvided(feature->feature()))
-			throw otawa::Exception(_ << 'feature ' << feature->feature().name()
+			throw otawa::Exception(_ << "feature " << feature->feature().name()
 				<< " is not provided after one cycle of requirements:\n"
 				<< "stopping -- this may denotes circular dependencies.");
 
@@ -418,7 +418,6 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	processWorkSpace(fw);
 
 	// Post-processing actions
-	cleanup(fw);
 	if(isVerbose())
 		log << "Ending " << name();
 	if(isTimed()) {
@@ -440,6 +439,9 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 					<< " by " << reg->name() << io::endl;
 			fw->invalidate(feature->feature());
 		}
+
+	// perform cleanup
+	cleanup(fw);
 
 	// Add provided features
 	for(FeatureIter feature(*reg); feature; feature++)

@@ -78,6 +78,7 @@ libotawa_la_SOURCES = \
 	cfg_PFG.cpp \
 	cfg_PFGBuilder.cpp \
 	cfg_SpanningTreeBuilder.cpp \
+	cfg_SubCFGBuilder.cpp \
 	cfg_Virtualizer.cpp \
 	cfg_VirtualCFG.cpp \
 	cfg_CFGBuilder.cpp \
