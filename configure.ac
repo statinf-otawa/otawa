@@ -353,6 +353,7 @@ AC_CONFIG_FILES([
 	test/script/Makefile
 	test/simulator/Makefile
 	test/source/Makefile
+	test/subcfg/Makefile
 	test/isp/Makefile
 	include/Makefile
 	include/otawa/Makefile
