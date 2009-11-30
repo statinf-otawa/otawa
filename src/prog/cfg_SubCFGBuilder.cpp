@@ -315,7 +315,7 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 		if(bb->address() <= start && start < bb->address() + bb->size())
 			IS_START(bb) = true;
 		for(genstruct::Vector<Address>::Iterator stop(stops); stop; stop++)
-			if(bb->address() <= *stop && *stop <= bb->address() + bb->size()) {
+			if(bb->address() <= *stop && *stop < bb->address() + bb->size()) {
 				IS_STOP(bb) = true;
 				break;
 			}
@@ -326,33 +326,33 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 	ForwardCFGAdapter start_adapter(cfg);
 	AbsIntLite<ForwardCFGAdapter, StartDomain> start_ai(start_adapter, start_dom);
 	start_ai.process();
-	/*cout << "\nFORWARD\n";
+	cout << "\nFORWARD\n";
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		cout << *bb
 			 << "\tIN=" << Domain::toString(start_ai.in(bb))
 			 << "\tOUT=" << Domain::toString(start_ai.out(bb))
-			 << io::endl;*/
+			 << io::endl;
 
 	// stop flood analysis
 	StopDomain stop_dom(start, stops);
 	BackwardCFGAdapter stop_adapter(cfg);
 	AbsIntLite<BackwardCFGAdapter, StopDomain> stop_ai(stop_adapter, stop_dom);
 	stop_ai.process();
-	/*cout << "\nBACKWARD\n";
+	cout << "\nBACKWARD\n";
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		cout << *bb
 			 << "\tIN=" << Domain::toString(stop_ai.in(bb))
 			 << "\tOUT=" << Domain::toString(stop_ai.out(bb))
-			 << io::endl;*/
+			 << io::endl;
 
 	// find list of accepted nodes
-	/*cout << "\nRESULT\n";
+	cout << "\nRESULT\n";
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
 		if(IS_START(bb)
 		|| IS_STOP(bb)
 		|| (start_ai.in(bb) == Domain::TRUE && stop_ai.in(bb) == Domain::TRUE))
 			cout << " - " << *bb << io::endl;
-	}*/
+	}
 
 	// build the new CFG
 	vcfg = new VirtualCFG(false);
