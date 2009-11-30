@@ -11,7 +11,8 @@ SUBDIRS = \
 	props \
 	reg \
 	script \
-	source
+	source \
+	subcfg
 
 if HAS_ILP
 SUBDIRS += \
