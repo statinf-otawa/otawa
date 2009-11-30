@@ -170,9 +170,10 @@ void Application::work(PropList &props) throw(elm::Exception) {
 	for(int i = 0; i < entries.count(); i++) {
 		props2 = new PropList(props);
 		ASSERT(props2 != NULL);
-	        TASK_ENTRY(props2) = entries[i].toCString();
+		TASK_ENTRY(props2) = entries[i].toCString();
 		work(entries[i], *props2);
 		delete props2;
+		props2 = 0;
 	}
 }
 
@@ -195,11 +196,14 @@ void Application::work(const string& entry, PropList &props) throw(elm::Exceptio
 
 
 /**
- * @fn void Applicatio::require(AbstractFeature&  feature);
  * Perform a require request on the current process with the current configuration property list
  * (as configured in prepare()).
  * @param feature	Feature to require.
  */
+void Application::require(AbstractFeature&  feature) {
+	ASSERTP(props2, "require() is only callable from work(task_name, props) function");
+	ws->require(feature, *props2);
+}
 
 
 /**
