@@ -22,12 +22,14 @@
 
 #include <otawa/cfg/SubCFGBuilder.h>
 #include <otawa/cfg/features.h>
+#include <otawa/util/FlowFactLoader.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/cfg.h>
 #include <elm/util/BitVector.h>
 #include <elm/genstruct/VectorQueue.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/Iterator.h>
+#include <otawa/util/Dominance.h>
 
 using namespace elm;
 
@@ -37,6 +39,8 @@ DEFINE_PROC(otawa::SubCFGBuilder,
 	use(VIRTUALIZED_CFG_FEATURE);
 	invalidate(COLLECTED_CFG_FEATURE);
 	provide(VIRTUALIZED_CFG_FEATURE);
+			invalidate(LOOP_HEADERS_FEATURE);
+			invalidate(FLOW_FACTS_FEATURE);
 )
 
 namespace otawa {
@@ -403,7 +407,9 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 
 			// try to duplicate
 			else {
-				BasicBlock *vtarget = bbs.get(edge->target());
+				BasicBlock *vtarget;
+				if (bbs.exists(edge->target()))
+					vtarget = bbs.get(edge->target());
 				if(vtarget) {
 					new Edge(vsrc, vtarget, edge->kind());
 
