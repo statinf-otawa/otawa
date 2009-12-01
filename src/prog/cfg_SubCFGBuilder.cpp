@@ -326,7 +326,7 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 	ForwardCFGAdapter start_adapter(cfg);
 	AbsIntLite<ForwardCFGAdapter, StartDomain> start_ai(start_adapter, start_dom);
 	start_ai.process();
-	/*	cout << "\nFORWARD\n";
+	/*cout << "\nFORWARD\n";
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		cout << *bb
 			 << "\tIN=" << Domain::toString(start_ai.in(bb))
@@ -338,7 +338,7 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 	BackwardCFGAdapter stop_adapter(cfg);
 	AbsIntLite<BackwardCFGAdapter, StopDomain> stop_ai(stop_adapter, stop_dom);
 	stop_ai.process();
-	/*		cout << "\nBACKWARD\n";
+	/*cout << "\nBACKWARD\n";
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		cout << *bb
 			 << "\tIN=" << Domain::toString(stop_ai.in(bb))
@@ -346,13 +346,13 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 			 << io::endl;*/
 
 	// find list of accepted nodes
-	/*		cout << "\nRESULT\n";
+	cout << "\nRESULT\n";
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
 		if(IS_START(bb)
 		|| IS_STOP(bb)
 		|| (start_ai.in(bb) == Domain::TRUE && stop_ai.in(bb) == Domain::TRUE))
 			cout << " - " << *bb << io::endl;
-			}*/
+	}
 
 	// build the new CFG
 	vcfg = new VirtualCFG(false);
@@ -367,9 +367,8 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 			continue;
 		if(!IS_START(bb)
 		&& !IS_STOP(bb)
-		   && (start_ai.in(bb) != Domain::TRUE || stop_ai.in(bb) != Domain::TRUE)){
+		&& (start_ai.in(bb) != Domain::TRUE || stop_ai.in(bb) != Domain::TRUE))
 			continue;
-		}
 
 		// build the new basic block
 		BasicBlock *vbb = new VirtualBasicBlock(bb);
@@ -381,7 +380,8 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 	// build the virtual edges
 	for(genstruct::HashTable<BasicBlock *, BasicBlock *>::PairIterator pair(bbs); pair; pair++) {
 		BasicBlock *src = (*pair).fst, *vsrc = (*pair).snd;
-			// manage start
+
+		// manage start
 		if(IS_START(src)) {
 			new Edge(vcfg->entry(), vsrc, Edge::VIRTUAL_CALL);
 			src->removeProp(IS_START);
@@ -396,17 +396,25 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 
 		// manage successors
 		for(BasicBlock::OutIterator edge(src); edge; edge++) {
-			if(edge->kind() != Edge::CALL) {
-				BasicBlock *vtarget = NULL;
-				if (bbs.exists(edge->target()))
-					vtarget = bbs.get(edge->target());
+
+			// !!BUGGY!! we should build new CFG for the collection !
+			if(edge->kind() == Edge::CALL)
+				new Edge(vsrc, edge->target(), edge->kind());
+
+			// try to duplicate
+			else {
+				BasicBlock *vtarget = bbs.get(edge->target());
 				if(vtarget) {
 					new Edge(vsrc, vtarget, edge->kind());
-					// !!TODO!! handle virtual properties here
+
+					// take care of VIRTUAL_RETURN_BLOCK
+					if(edge->kind() == Edge::VIRTUAL_CALL) {
+						BasicBlock *ret = VIRTUAL_RETURN_BLOCK(src);
+						BasicBlock *vret = bbs.get(ret);
+							VIRTUAL_RETURN_BLOCK(vsrc) = vret ? vret :  vcfg->exit();
+					}
 				}
 			}
-			else
-				new Edge(vsrc, edge->target(), edge->kind());
 		}
 	}
 
