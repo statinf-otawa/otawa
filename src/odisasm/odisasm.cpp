@@ -73,7 +73,11 @@ public:
 					Inst *inst = item->toInst();
 					if(inst) {
 
+						// disassemble
+						cout << inst;
+
 						// display kind
+						cout << "\n\t kind = ";
 						Inst::kind_t kind = inst->kind();
 						for(int i = 0; kinds[i].kind; i++)
 							if(kinds[i].kind & kind)
