@@ -1,10 +1,9 @@
-
 /*
  *	$Id$
  *	PowerPC OTAWA plugin
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2007, IRIT UPS.
+ *	Copyright (c) 2010, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -502,14 +501,14 @@ Process::Process(Manager *manager, hard::Platform *platform, const PropList& pro
 Option<Pair<cstring, int> > Process::getSourceLine(Address addr)
 	throw (UnsupportedFeatureException)
 {
-/*	setup();
+	setup();
 	if (!map)
 		return none;
 	const char *file;
 	int line;
 	if (!map || dwarf_line_from_address(map, addr.offset(), &file, &line) < 0)
 		return none;
-	return some(pair(cstring(file), line));*/
+	return some(pair(cstring(file), line));
 }
 
 
@@ -518,7 +517,7 @@ Option<Pair<cstring, int> > Process::getSourceLine(Address addr)
 void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses)
 	throw (UnsupportedFeatureException)
 {
-/*	setup();
+	setup();
 	addresses.clear();
 	if (!map)
 		return;
@@ -542,7 +541,7 @@ void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address>
 			}
 		}
 		ploc = loc;
-	}*/
+	}
 }
 
 
@@ -551,16 +550,14 @@ void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address>
  */
 void Process::setup(void)
 {
-	/*if (init)
+	if(init)
 		return;
 	init = true;
 
 	// Open the file
-	if (!file)
-	{
+	if(!file) {
 		file = gel_open(&program()->name(), 0, GEL_OPEN_NOPLUGINS);
-		if (!file)
-		{
+		if (!file) {
 			cerr << "WARNING: file \"" << program()->name()
 				 << "\" seems to have disappeared !\n";
 			return;
@@ -568,12 +565,12 @@ void Process::setup(void)
 	}
 
 	// Open the map
-	map = dwarf_new_line_map(file, 0);*/
+	map = dwarf_new_line_map(file, 0);
 }
 
 
 /**
- * Inst *Process::decode(address_t addr);
+ * @fun Inst *Process::decode(address_t addr);
  * This function is called each time an instruction need to be decoded.
  * It is usually only one time per instruction. This function must be
  * defined by the user of this class.
@@ -1072,6 +1069,7 @@ CString Loader::getName(void) const
 	return "ppc";
 }
 
+
 /**
  * Load a file with the current loader.
  * @param man		Caller manager.
@@ -1100,7 +1098,7 @@ otawa::Process *Loader::load(Manager *man, CString path, const PropList& props)
  */
 otawa::Process *Loader::create(Manager *man, const PropList& props)
 {
-	cout << "INFO: using ppc2 loader.\n";
+	//cout << "INFO: using ppc2 loader.\n";
 	return new Process(man, new Platform(props), props);
 }
 
