@@ -36,7 +36,8 @@ SUBDIRS += \
 	dumpcfg \
 	mkff \
 	ostat \
-	opcg
+	opcg \
+	odisasm
 
 # Dependent libraries
 if HAS_SYSTEMC
