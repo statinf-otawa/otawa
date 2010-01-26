@@ -10,7 +10,7 @@ AM_CXXFLAGS = \
 ppc_la_LDFLAGS = -module
 
 ppc_la_LIBADD = \
-	@GLISS2_PPC_LIBS@
+	@GLISS2_PPC_LIBS@ \
 	@OTAWA_LIBS@ \
 	@GEL_PPC_LIBS@ \
 	@GEL_DWARF_LIBS@ \
