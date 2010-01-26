@@ -1,7 +1,7 @@
 AC_PREREQ(2.52)
 AC_INIT(src/prog/base.cpp)
 AC_CONFIG_AUX_DIR(.config)
-AM_INIT_AUTOMAKE(Otawa, 0.5)
+AM_INIT_AUTOMAKE(Otawa, 0.9)
 AC_LANG(C++)
 
 # ==== Plugin activation ====
@@ -130,6 +130,19 @@ OTAWA_USE_LIB(GLISS_PPC,
 	OTAWA_CHECK_LIB(GLISS_PPC, emul.h, emul, $PWD/../ppc/lib, $PWD/../ppc/include))
 
 
+# ===== gliss2 check =====
+AC_PATH_PROG(GLISS2_ATTR_PATH, gliss-attr, no, "$PATH:$PWD/../gliss2/gep")
+AM_CONDITIONAL(HAS_GLISS2_ATTR, test "$GLISS2_ATTR_PATH" != no)
+AC_SUBST(GLISS2_ATTR_PATH)
+
+
+# ===== GLISS2_PPC check ======
+AS_IF(test "$GLISS2_ATTR_PATH" = no,
+	AM_CONDITIONAL(HAS_GLISS2_PPC, false),
+	OTAWA_USE_LIB(GLISS2_PPC,
+		OTAWA_CHECK_LIB(GLISS2_PPC, ppc/api.h, ppc, $PWD/../ppc2/src, $PWD/../ppc2/include)))
+
+
 # ===== GLISS_ARM check ======
 OTAWA_USE_LIB(GLISS_ARM,
 	OTAWA_CHECK_LIB(GLISS_ARM, emul.h, emul, $PWD/../arm/lib, $PWD/../arm/include))
@@ -243,6 +256,11 @@ AS_IF(test "$HAS_PLUGIN" = "yes", [
 [
 	AC_MSG_CHECKING([for a loader])
 	AS_IF(test "$with_loader" = "no", [
+		AS_IF(test "$HAS_GLISS2_PPC" = "yes", [
+			HAS_LOADER="yes"
+			LOADER_DEPS="\$(top_builddir)/src/ppc2/ppc.la"
+			LOADER_LIBS="-uppc_plugin $LOADER_DEPS"
+		],
 		AS_IF(test "$HAS_GLISS_PPC" = "yes", [
 			HAS_LOADER="yes"
 			LOADER_DEPS="\$(top_builddir)/src/ppc/ppc.la"
@@ -260,13 +278,15 @@ AS_IF(test "$HAS_PLUGIN" = "yes", [
 		],
 		[
 			AC_MSG_WARN([no loader selected !])
-		])))
+		]))))
 	],
 	[
 		AS_IF(test "$with_loader" = "ppc",
 		[
 			HAS_LOADER="yes"
-			LOADER_DEPS="\$(top_builddir)/src/ppc/ppc.la"
+			AS_IF(test "HAS_GLISS2_PPC" = "yes",
+				[ LOADER_DEPS="\$(top_builddir)/src/ppc2/ppc.la" ],
+				[ LOADER_DEPS="\$(top_builddir)/src/ppc/ppc.la" ])
 			LOADER_LIBS="-uppc_plugin $LOADER_DEPS"
 		],
 		AS_IF(test "$with_loader" = "arm",
@@ -326,6 +346,7 @@ AC_CONFIG_FILES([
 	src/owcet/Makefile
 	src/arm/Makefile
 	src/ppc/Makefile
+	src/ppc2/Makefile
 	src/s12x/Makefile
 	src/bpred/Makefile
 	src/opcg/Makefile
