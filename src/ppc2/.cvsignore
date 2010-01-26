@@ -1,0 +1,10 @@
+.libs
+.deps
+ppc.la
+Makefile.in
+Makefile
+gel_loader.lo
+ppc.lo
+otawa_used_regs.h
+otawa_target.h
+otawa_kind.h
