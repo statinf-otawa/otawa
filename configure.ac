@@ -340,6 +340,7 @@ AC_CONFIG_FILES([
 	src/mkff/Makefile
 	src/ostat/Makefile
 	src/oipet/Makefile
+	src/odisasm/Makefile
 	src/odisplay/Makefile
 	src/ogensim/Makefile
 	src/oloader/Makefile
