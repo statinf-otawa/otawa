@@ -1,0 +1,10 @@
+AM_CXXFLAGS = @OTAWA_CXXFLAGS@ -Wall
+
+noinst_PROGRAMS=odisasm
+
+odisasm_LDADD = @LOADER_LIBS@ @OTAWA_LIBS@ @PROG_LIBS@
+odisasm_DEPENDENCIES = @LOADER_DEPS@ @OTAWA_DEPS@
+
+odisasm_SOURCES= \
+	odisasm.cpp
+
