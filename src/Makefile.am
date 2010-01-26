@@ -15,8 +15,12 @@ SUBDIRS += lp_solve5
 endif
 
 # Loader selection
+if HAS_GLISS2_PPC
+SUBDIRS += ppc2
+else
 if HAS_GLISS_PPC
 SUBDIRS += ppc
+endif
 endif
 
 if HAS_GLISS_ARM
@@ -26,7 +30,6 @@ endif
 if HAS_GLISS_S12X
 SUBDIRS += s12x
 endif
-
 
 # Tools
 SUBDIRS += \
