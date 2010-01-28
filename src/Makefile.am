@@ -3,8 +3,7 @@ SUBDIRS= \
 	ast \
 	ets \
 	odisplay \
-	oloader \
-	owcet
+	oloader 
 
 # ILP Plugins
 if HAS_LP_SOLVE
@@ -37,7 +36,8 @@ SUBDIRS += \
 	mkff \
 	ostat \
 	opcg \
-	odisasm
+	odisasm \
+	owcet
 
 # Dependent libraries
 if HAS_SYSTEMC
