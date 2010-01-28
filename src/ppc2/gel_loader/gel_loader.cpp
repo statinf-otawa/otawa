@@ -26,7 +26,7 @@
 int Is_Elf_Little = 0;
 
 /* temporary module reference to memory */
-static ppc_memory_t *memory_reference;
+/*static ppc_memory_t *memory_reference;*/
 
 /* struct designed to be referenced by the image_link field of memory64_t */
 typedef struct
@@ -260,7 +260,7 @@ void loader_init(ppc_state_t *state, ppc_memory_t *mem, void *param_list[])
 		throw "Error : loader_init, error while converting gel to gliss memory";
 
 	/* temporary reference : all global reference should be removed in future */
-	memory_reference = mem;
+	/*memory_reference = mem;*/
 
 	/* set the initial state -- fix to comply with System V ABI */
 	PPC_GPR[1] = gel_env->sp_return; /*image_info.stack_pointer;*/
@@ -388,23 +388,23 @@ int loader_free_gel_memory_reference (ppc_memory_t* mem, gel_image_t* gel_image)
  * halt properly the loader module, doing all memory release needed
  *------------------------------------------------------------------------------
  */
-void loader_halt(void)
+void loader_halt(ppc_memory_t* memory_reference)
 {
-	ppc_memory_t *memory;
-	memory = (ppc_memory_t *) memory_reference;
+	/*ppc_memory_t *memory;
+	memory = (ppc_memory_t *) memory_reference;*/
 
 	/* erase all reference to gel memory */
-	if (loader_free_gel_memory_reference (memory_reference, ((gel_memory_link_t*)memory->image_link)->gel_image) != 0)
+	if (loader_free_gel_memory_reference (memory_reference, ((gel_memory_link_t*)memory_reference->image_link)->gel_image) != 0)
 		throw "Error : error while freeing gel memory references\n";
 
 	/* then close gel image */
-	gel_image_close(((gel_memory_link_t*)memory->image_link)->gel_image);
+	gel_image_close(((gel_memory_link_t*)memory_reference->image_link)->gel_image);
 
 	/* free the link to image */
-	free(memory->image_link);
+	free(memory_reference->image_link);
 
-	memory->image_link = NULL;
-	memory_reference = NULL;
+	memory_reference->image_link = NULL;
+	/*memory_reference = NULL;*/
 }
 
 /*==============================================================================

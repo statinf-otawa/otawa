@@ -157,6 +157,7 @@ public:
 	{
 		ppc_delete_decoder(_ppcDecoder);
 		ppc_unlock_platform(_ppcPlatform);
+		loader_halt(_ppcMemory);
 	}
 	virtual int instSize(void) const { return 4; }
 	void decodeRegs( Inst *inst, elm::genstruct::AllocatedTable<hard::Register *> *in, elm::genstruct::AllocatedTable<hard::Register *> *out);

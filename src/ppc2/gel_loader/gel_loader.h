@@ -88,7 +88,7 @@ void loader_init(ppc_state_t *etat, ppc_memory_t *mem, void *loader_params[]);
  * halt properly the loader module, doing all memory release needed
  *------------------------------------------------------------------------------
  */
-void loader_halt(void);
+void loader_halt(ppc_memory_t* memory_reference);
 
 /*==============================================================================
  * uint32_t loader_get_brk_point(ppc_memory_t* memory, int memory_page_size))

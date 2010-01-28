@@ -285,9 +285,14 @@ AS_IF(test "$HAS_PLUGIN" = "yes", [
 		[
 			HAS_LOADER="yes"
 			AS_IF(test "$HAS_GLISS2_PPC" = "yes",
-				[ LOADER_DEPS="\$(top_builddir)/src/ppc2/ppc.la" ],
-				[ LOADER_DEPS="\$(top_builddir)/src/ppc/ppc.la" ])
-			LOADER_LIBS="-uppc_plugin $LOADER_DEPS"
+				[
+					LOADER_DEPS="\$(top_builddir)/src/ppc2/ppc.la"
+					LOADER_LIBS="-uppc2_plugin $LOADER_DEPS"
+				],
+				[
+					LOADER_DEPS="\$(top_builddir)/src/ppc/ppc.la" 
+					LOADER_LIBS="-uppc_plugin $LOADER_DEPS"
+				])
 		],
 		AS_IF(test "$with_loader" = "arm",
 		[
