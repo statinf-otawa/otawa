@@ -3,7 +3,7 @@
  *	Processor class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-7, IRIT UPS.
+ *	Copyright (c) 2005-7, IRIT UPS <casse@irit.fr>
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by

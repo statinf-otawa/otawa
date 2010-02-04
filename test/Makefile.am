@@ -6,6 +6,7 @@ SUBDIRS = \
 	ets \
 	graph \
 	hard \
+	param \
 	pcg \
 	pfg \
 	props \
