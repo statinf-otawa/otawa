@@ -247,12 +247,14 @@ template <> void Identifier<const PropList *>::printFormatted(io::Output& out, c
 // GenericIdentifier<T>::scan Specializations
 template <>
 void Identifier<CString>::scan(PropList& props, VarArg& args) const {
+	cerr << "Identifier<CString>::scan()\n";
 	set(props, args.next<char *>());
 }
 
 
 template <>
 void Identifier<String>::scan(PropList& props, VarArg& args) const {
+	cerr << "Identifier<String>::scan()\n";
 	set(props, args.next<char *>());
 }
 
