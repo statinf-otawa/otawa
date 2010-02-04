@@ -175,4 +175,11 @@ void SilentFeature::process(WorkSpace *fw, const PropList& props) const {
  * @seealso SilentFeature
  */
 
+
+/**
+ * Identifier for identifier property providing ownerness of an identifier.
+ * The arguments describes the feature owning the current
+ */
+Identifier<const AbstractFeature *> DEF_BY("otawa::DEF_BY", 0);
+
 } // otawa
