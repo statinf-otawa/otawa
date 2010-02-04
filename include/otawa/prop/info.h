@@ -26,25 +26,24 @@
 
 namespace otawa {
 
+// property maker
+template <class T>
+inline Property *make(const Identifier<T>& id, const T& v) {
+	return new GenericProperty<T>(id, v);
+}
+
+// string adaptaters
+inline Property *make(const Identifier<cstring>& id, const char *v)
+	{ return make(id, cstring(v)); }
+inline Property *make(const Identifier<string>& id, const char *v)
+	{ return make(id, string(v)); }
+
+
 // identifiers
 extern Identifier<cstring> IDENTIFIER_LABEL;
 extern Identifier<cstring> IDENTIFIER_DESC;
-
-// SetString class
-class SetCString {
-public:
-	inline SetCString(PropList& props, Identifier<cstring>& id, cstring str)
-		{ id(props) = str; }
-};
-
-// macros
-#define __UNIQUE_AUX2(x, y)	x##y
-#define __UNIQUE_AUX(x, y)	__UNIQUE_AUX2(x, y)
-#define __UNIQUE(pref)		__UNIQUE_AUX(pref, __COUNTER__)
-#define SET_LABEL(id, label) \
-	static SetCString __UNIQUE(__label_)(id, IDENTIFIER_LABEL, label);
-#define SET_DESC(id, desc)	 \
-	static SetCString __UNIQUE(__desc_)(id, IDENTIFIER_DESC, desc);
+inline Property *idLabel(cstring label) { return make(IDENTIFIER_LABEL, label); }
+inline Property *idDesc(cstring desc) { return make(IDENTIFIER_DESC, desc); }
 
 }	// otawa
 
