@@ -9,6 +9,6 @@ includeotawacachecat2_HEADERS = \
 	MAYProblem.h \
 	MUSTProblem.h \
 	MUSTPERS.h \
-	CachePenalty.h
+	CachePenalty.h \
 	PERSProblem.h
 	
