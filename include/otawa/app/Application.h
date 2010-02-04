@@ -49,7 +49,7 @@ protected:
 	virtual void work(const string& entry, PropList &props) throw(elm::Exception);
 
 	inline WorkSpace *workspace(void) const { return ws; }
-	void require(AbstractFeature&  feature);
+	void require(const AbstractFeature&  feature);
 	virtual void process(string arg);
 
 private:
