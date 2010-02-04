@@ -1,6 +1,6 @@
 /*
  * OTAWA -- WCET computation framework
- * Copyright (C) 2007-08  IRIT - UPS <casse@irit.fr>
+ * Copyright (C) 2007-09  IRIT - UPS <casse@irit.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,10 +36,11 @@ public:
 	static AbstractIdentifier *find(const string& name);
 
 	AbstractIdentifier(void);
-	AbstractIdentifier(elm::String name);
+	AbstractIdentifier(cstring name);
+	AbstractIdentifier(cstring name, Property *prop, VarArg& args);
 	virtual ~AbstractIdentifier(void) { }
 
-	inline const elm::String name(void) const { return nam; }
+	inline const string name(void) const { return nam; }
 	void print(elm::io::Output& out) const;
 
 	virtual void print(elm::io::Output& output, const Property *prop) const;
@@ -51,8 +52,13 @@ public:
 	virtual void scan(PropList& props, VarArg& args) const;
 	virtual void fromString(PropList& props, const string& str) const;
 
+	virtual bool equals(const Property *prop1, const Property *prop2) const;
+
+protected:
+	void initProps(Property *prop, VarArg& args);
+
 private:
-	elm::String nam;
+	string nam;
 	void initialize(void);
 };
 

@@ -45,9 +45,16 @@ class Identifier: public AbstractIdentifier {
 public:
 
 	// Constructors
-	inline Identifier(elm::CString name): AbstractIdentifier(name) { }
-	inline Identifier(elm::CString name, const T& default_value)
+	inline Identifier(cstring name): AbstractIdentifier(name) { }
+	inline Identifier(cstring name, const T& default_value)
 		: AbstractIdentifier(name), def(default_value) { }
+
+	inline Identifier(cstring name, const T& default_value, Property *prop, ...)
+		: AbstractIdentifier(name), def(default_value)
+		{ VARARG_BEGIN(args, prop); initProps(prop, args); VARARG_END }
+
+	inline Identifier(cstring name, const T& default_value, VarArg& args)
+		: AbstractIdentifier(name, args), def(default_value) { }
 
 	// PropList& Accessors
 	inline void add(PropList& list, const T& value) const;
@@ -75,10 +82,10 @@ public:
 	inline bool exists(PropList *list) const { return list->getProp(this); }
 
 	// Property accessors
-	inline const T& get(Property *prop) const
-		{ return ((GenericProperty<T> *)prop)->value(); }
+	inline const T& get(const Property *prop) const
+		{ return static_cast<const GenericProperty<T> *>(prop)->value(); }
 	inline void set(Property *prop, const T& value) const
-		{ ((GenericProperty<T> *)prop)->value() = value; }
+		{ static_cast<GenericProperty<T> *>(prop)->value() = value; }
 
 	// Operators
 	inline const T& operator()(const PropList& props) const { return value(props); }
@@ -95,6 +102,8 @@ public:
 	virtual const Type& type(void) const { return otawa::type<T>(); }
 	virtual void scan(PropList& props, VarArg& args) const;
 	virtual void fromString(PropList& props, const string& str) const;
+	virtual bool equals(const Property *prop1, const Property *prop2) const
+		{ return prop1->id() == prop2->id() && Equiv<T>::equals(get(prop1), get(prop2)); }
 
 	// Getter class
 	class Getter: public PreIterator<Getter, T> {
@@ -114,12 +123,11 @@ private:
 
 	typedef struct {
 		static inline void scan(const Identifier<T>& id, PropList& props, VarArg& args);
-	} __scalar;
+	} __class;
 
 	typedef struct {
-		static inline void scan(const Identifier<T>& id, PropList& props,
-			VarArg& args);
-	} __class;
+		static inline void scan(const Identifier<T>& id, PropList& props, VarArg& args);
+	} __simple;
 };
 
 
@@ -201,10 +209,6 @@ template <> void Identifier<const PropList *>::printFormatted(io::Output& out, c
 
 
 // Identifier<T>::scan Specializations
-template <> void Identifier<elm::CString>::scan(PropList& props, VarArg& args) const;
-template <> void Identifier<elm::String>::scan(PropList& props, VarArg& args) const;
-
-
 template <class T>
 inline void Identifier<T>::__class::scan(const Identifier<T>& id,
 PropList& props, VarArg& args) {
@@ -213,13 +217,21 @@ PropList& props, VarArg& args) {
 }
 
 template <class T>
-inline void Identifier<T>::__scalar::scan(const Identifier<T>& id, PropList& props, VarArg& args)
-	{ }
+inline void Identifier<T>::__simple::scan(const Identifier<T>& id, PropList& props, VarArg& args) {
+	T ptr = args.next<T>();
+	id.set(props, ptr);
+}
 
 template <class T>
 void Identifier<T>::scan(PropList& props, VarArg& args) const {
-	_if<type_info<T>::is_scalar, __scalar, __class>::_::scan(*this, props, args);
+	_if<type_info<T>::is_scalar || type_info<T>::is_ptr, __simple, __class>
+	::_::scan(*this, props, args);
 }
+
+template <> void Identifier<elm::CString>::scan(PropList& props, VarArg& args) const;
+template <> void Identifier<cstring>::scan(PropList& props, VarArg& args) const;
+template <> void Identifier<elm::String>::scan(PropList& props, VarArg& args) const;
+
 
 // GenericIdentifier<T>::fromString
 template <class T> inline void Identifier<T>::fromString(PropList& props, const string& str) const
