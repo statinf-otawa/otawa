@@ -200,7 +200,7 @@ void Application::work(const string& entry, PropList &props) throw(elm::Exceptio
  * (as configured in prepare()).
  * @param feature	Feature to require.
  */
-void Application::require(AbstractFeature&  feature) {
+void Application::require(const AbstractFeature&  feature) {
 	ASSERTP(props2, "require() is only callable from work(task_name, props) function");
 	ws->require(feature, *props2);
 }
