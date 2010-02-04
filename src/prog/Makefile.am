@@ -34,6 +34,8 @@ libotawa_la_SOURCES = \
 	proc_FeatureRequirer.cpp \
 	proc_LBlockProcessor.cpp \
 	proc_BBProcessor.cpp \
+	proc_ParamFeature.cpp \
+	proc_ParamProcessor.cpp \
 	proc_ProcessorException.cpp \
 	proc_ProcessorPlugin.cpp \
 	proc_Registry.cpp \
