@@ -27,6 +27,7 @@
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/prog/Manager.h>
+#include <otawa/prop/info.h>
 
 using namespace otawa;
 using namespace elm;
@@ -77,7 +78,9 @@ Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::VIRTUAL_RETURN_BLOCK", NULL
  * @par Hooks
  * @li @ref Edge
  */
-Identifier<CFG *> CALLED_CFG("otawa::CALLED_CFG", 0);
+Identifier<CFG *> CALLED_CFG("otawa::CALLED_CFG", 0,
+	make(DEF_BY, (const AbstractFeature *)&VIRTUALIZED_CFG_FEATURE),
+	0);
 
 
 /**
