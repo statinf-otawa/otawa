@@ -22,6 +22,8 @@
 #include <otawa/properties.h>
 #include <elm/util/Initializer.h>
 
+#include <otawa/prop/info.h>
+
 using namespace elm;
 
 #define TRACE(txt) //cerr << txt << io::endl;
@@ -46,8 +48,15 @@ DuplicateIdentifierException::DuplicateIdentifierException(String& name)
 
 
 // Storage of known identifiers
-static genstruct::HashTable<String, AbstractIdentifier *> ids;
-static Initializer<AbstractIdentifier> ids_init;
+static class Init {
+public:
+	Init(void): init(false) {
+		init.startup();
+	}
+
+	genstruct::HashTable<String, AbstractIdentifier *> map;
+	Initializer<AbstractIdentifier> init;
+} ids;
 
 
 /**
@@ -84,7 +93,7 @@ static Initializer<AbstractIdentifier> ids_init;
  * @return	Found identifier or null.
  */
 AbstractIdentifier *AbstractIdentifier::find(const string& name) {
-	return ids.get(name, 0);
+	return ids.map.get(name, 0);
 }
 
 
@@ -104,14 +113,43 @@ AbstractIdentifier::AbstractIdentifier(void)
  * @param name		Name of the identifier.
  * @param parent	Parent namespace.
  */
-AbstractIdentifier::AbstractIdentifier(elm::String name)
+AbstractIdentifier::AbstractIdentifier(cstring name)
 :	nam(name)
 {
 	//ASSERT(!((((unsigned int)this) > 0xbf000000) && (((unsigned int)this) < 0xc0000000)));
 	TRACE("construct(" << (void *)this << ", " << nam << ")");
 	if(name) {
 		TRACE("record(" << (void *)this << ", " << nam << ")");
-		ids_init.record(this);
+		ids.init.record(this);
+	}
+}
+
+
+/**
+ * Build an identifier with the given name and properties read from
+ * the given arguments that must be a list of @ref Property * pointer
+ * (1) ended by a null identifier pointer and (2) and will be released
+ * by the current identifier.
+ * @param name		Name of the identifier ("" for anonymous)
+ * @param prop		First property.
+ * @param args		Arguments to derive identifier properties.
+ */
+AbstractIdentifier::AbstractIdentifier(cstring name, Property *prop, VarArg& args)
+: nam(name) {
+	initProps(prop, args);
+}
+
+
+/**
+ * Add the properties found in the arguments (list of
+ * @ref Property * ended by null) to the identifier properties.
+ * @param prop	First property.
+ * @param args	Null-ended properties to scan.
+ */
+void AbstractIdentifier::initProps(Property *prop, VarArg& args) {
+	while(prop) {
+		addProp(prop);
+		prop = args.next<Property *>();
 	}
 }
 
@@ -205,12 +243,12 @@ void AbstractIdentifier::fromString(PropList& props, const string& str) const {
  */
 void AbstractIdentifier::initialize(void) {
 	TRACE("initialize(" << (void *)this << ", " << nam << ")");
-	if(ids.get(nam)) {
+	if(ids.map.get(nam)) {
 		cerr << "FATAL ERROR: identifier \"" << nam << "\" defined multiple times.";
 		String _(nam);
 		throw DuplicateIdentifierException(_);
 	}
-	ids.add(nam, this);
+	ids.map.add(nam, this);
 }
 
 
@@ -255,5 +293,16 @@ Identifier<cstring> IDENTIFIER_LABEL("otawa::IDENTIFIER_LABEL", "");
  * @ingroup prop
  */
 Identifier<cstring> IDENTIFIER_DESC("otawa::IDENTIFIER_DESC", "");
+
+
+/**
+ * Test if two properties are equal.
+ * @param prop1		First property.
+ * @param prop2		Second property.
+ * @return			True if they are equal, false else.
+ */
+bool AbstractIdentifier::equals(const Property *prop1, const Property *prop2) const {
+	return prop1 == prop2;
+}
 
 } // otawa
