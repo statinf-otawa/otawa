@@ -24,6 +24,7 @@
 
 #include <elm/string.h>
 #include <otawa/proc/AbstractFeature.h>
+#include <otawa/prop/info.h>
 
 namespace otawa {
 	
@@ -52,6 +53,12 @@ public:
 	virtual void check(WorkSpace *fw) const { C::check(fw); }
 	virtual void clean(WorkSpace *ws) const { C::clean(ws); }
 };
+
+
+// identifier property
+extern Identifier<const AbstractFeature *> DEF_BY;
+inline Property *defBy(const AbstractFeature *feature)
+	{ return make(DEF_BY, feature); }
 
 
 // Inline
