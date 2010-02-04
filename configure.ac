@@ -372,6 +372,7 @@ AC_CONFIG_FILES([
 	test/categorisation/Makefile
 	test/hard/Makefile
 	test/ilp/Makefile
+	test/param/Makefile
 	test/props/Makefile
 	test/pcg/Makefile
 	test/pfg/Makefile
