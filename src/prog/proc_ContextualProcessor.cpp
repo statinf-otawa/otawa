@@ -133,8 +133,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 				break;
 			}
 
-		case Edge::VIRTUAL_CALL:
-			if(!MARK(edge->target())) {
+		case Edge::VIRTUAL_CALL: {
 				bb = edge->target();
 
 				// recursive call
