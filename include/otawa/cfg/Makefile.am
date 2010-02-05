@@ -15,6 +15,7 @@ includeotawacfg_HEADERS = \
 	PFGBuilder.h \
 	PSTBuilder.h \
 	SpanningTreeBuilder.h \
+	SubCFGBuilder.h \
 	VirtualBasicBlock.h \
 	VirtualCFG.h \
 	Virtualizer.h
