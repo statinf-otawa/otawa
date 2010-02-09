@@ -33,6 +33,7 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/flowfact/features.h>
+#include <otawa/cfg/CFGChecker.h>
 
 using namespace elm;
 using namespace otawa;
@@ -322,6 +323,7 @@ void Command::perform(String name) {
 		FLOW_FACTS_PATH(props) = Path(ff_file);
 	if(verb)
 		Processor::VERBOSE(props) = true;
+	CFGChecker::NO_EXCEPTION(props) = true;
 
 	// Load flow facts and record unknown values
 	QuestFlowFactLoader ffl;
