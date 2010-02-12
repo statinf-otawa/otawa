@@ -21,6 +21,7 @@ libotawa_la_SOURCES = \
 	PCGBlock.cpp\
 	PCGBuilder.cpp\
 	app_Application.cpp \
+	app_AddressOption.cpp \
 	ilp_Var.cpp \
 	ilp_Constraint.cpp \
 	ilp_System.cpp \
