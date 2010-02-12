@@ -287,12 +287,14 @@ WorkSpace *Manager::loadBin(
 				log << "INFO:	- " << *path << io::endl;
 			log << "INFO: available loaders\n";
 			for(elm::system::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
-				log << "INFO:\t- " << *plugin << io::endl;
+				log << "INFO:\t- " << *plugin << " (" << plugin.path() << ")\n";
 		}
 		loader = findLoader(name.toCString());
 	}
 
-	// No loader -> error
+	// post-process
+	if(loader && isVerbose())
+		cerr << "INFO: selected loader: " << loader->name() << " (" << loader->path() << ")\n";
 	resetVerbosity();
 	if(!loader)
 		throw LoadException(_ << "no loader for \"" << path << "\".");
