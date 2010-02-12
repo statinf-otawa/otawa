@@ -17,8 +17,7 @@ ppc_la_LIBADD = \
 	@PLUGIN_LIBS@
 
 ppc_la_SOURCES = \
-	ppc.cpp \
-	gel_loader/gel_loader.cpp
+	ppc.cpp
 
 
 # install alias
