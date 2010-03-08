@@ -166,7 +166,12 @@ void AbstractIdentifier::initProps(Property *prop, VarArg& args) {
  * @param out	Output stream.
  */
 void AbstractIdentifier::print(elm::io::Output& out) const {
-	out << "ID(" << nam << ')';
+	out << "ID(";
+	if(nam)
+		out << nam;
+	else
+		out << (void *)this;
+	out << ')';
 }
 
 
