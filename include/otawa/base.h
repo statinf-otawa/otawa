@@ -31,6 +31,7 @@
 #include <elm/util/AutoComparator.h>
 #include <elm/util/HashKey.h>
 #include <elm/types.h>
+#include <elm/type_info.h>
 
 namespace otawa {
 using namespace elm;
