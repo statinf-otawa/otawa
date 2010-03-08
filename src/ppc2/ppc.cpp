@@ -227,8 +227,6 @@ public:
 		ppc_disasm(out_buffer, inst);
 		ppc_free_inst(inst);
 		out << out_buffer;
-
-		cout << "DEBUG: " << address() << &proc << io::endl;	// !!DEBUG!!
 	}
 
 	virtual kind_t kind() { return _kind; }
@@ -668,7 +666,6 @@ void Process::get(Address at, char *buf, int size)
 /**
  */
 otawa::Inst *Process::decode(Address addr) {
-	cerr << "DECODING: " << addr << io::endl;
 
 	// Decode the instruction
 	ppc_inst_t *inst;
