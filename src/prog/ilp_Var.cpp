@@ -73,7 +73,7 @@ void Var::print(io::Output& out) {
 	if(_name)
 		out << _name;
 	else
-		out << '_' << io::hex((int)this);
+		out << '_' << (void *)this;
 }
 
 } } // otawa::ilp
