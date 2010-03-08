@@ -26,13 +26,13 @@
 
 namespace otawa {
 
-// Ref class
+// ImmutableRef class
 template <class T, class I>
-class Ref {
+class ImmutableRef {
 public:
-	inline Ref(PropList& _prop, const I& _id): prop(_prop), id(_id) { }
-	inline Ref(PropList *_prop, const I& _id): prop(*_prop), id(_id) { }
-	inline Ref(const Ref<T, I>& ref): prop(ref.prop), id(ref.id)  { }
+	inline ImmutableRef(const PropList& _prop, const I& _id): prop(_prop), id(_id) { }
+	inline ImmutableRef(const PropList *_prop, const I& _id): prop(*_prop), id(_id) { }
+	inline ImmutableRef(const ImmutableRef<T, I>& ref): prop(ref.prop), id(ref.id)  { }
 	inline const PropList& proplist(void) const { return prop; }
 	inline const I& identifier(void) const { return id; }
 
@@ -43,18 +43,32 @@ public:
 	inline operator const T&(void) const { return id.get(prop, id.defaultValue()); }
 	inline T operator->(void) const { return id.get(prop, id.defaultValue()); }
 
+protected:
+	const PropList& prop;
+	const I& id;
+};
+
+
+// Ref class
+template <class T, class I>
+class Ref: public ImmutableRef<T, I> {
+public:
+	inline Ref(PropList& _prop, const I& _id): ImmutableRef<T, I>(_prop, _id) { }
+	inline Ref(PropList *_prop, const I& _id): ImmutableRef<T, I>(_prop, _id) { }
+	inline Ref(const Ref<T, I>& ref): ImmutableRef<T, I>(ref)  { }
+
 	// mutators
-	inline Ref& add(const T& value) { id.add(prop, value); return *this; }
-	inline void remove(void) { prop.removeProp(id); }
-	inline T& ref(void) const;
+	inline const Ref& add(const T& value) const { id().add(props(), value); return *this; }
+	inline void remove(void) const { props().removeProp(id()); }
+	inline T& ref(void) const { return id().ref(props()); }
 
 	inline T& operator&(void) const { return ref(); }
-	inline Ref<T, I>& operator=(const T& value) { id.set(prop, value); return *this; }
-	inline Ref<T, I>& operator=(const Ref<T, I>& value) { id.set(prop, value.get()); return *this; }
-	inline Ref<T, I>& operator+=(const T& v) const { ref() +=  v; return *this; }
-	inline Ref<T, I>& operator-=(const T& v) const { ref() -=  v; return *this; }
-	inline Ref<T, I>& operator*=(const T& v) const { ref() *=  v; return *this; }
-	inline Ref<T, I>& operator/=(const T& v) const { ref() /=  v; return *this; }
+	inline const Ref<T, I>& operator=(const T& value) const { id().set(props(), value); return *this; }
+	inline Ref<T, I>& operator=(const Ref<T, I>& value) { id().set(props(), value.get()); return *this; }
+	inline Ref<T, I>& operator+=(const T& v) { ref() +=  v; return *this; }
+	inline Ref<T, I>& operator-=(const T& v) { ref() -=  v; return *this; }
+	inline Ref<T, I>& operator*=(const T& v) { ref() *=  v; return *this; }
+	inline Ref<T, I>& operator/=(const T& v) { ref() /=  v; return *this; }
 	inline Ref<T, I>& operator%=(const T& v) const { ref() %=  v; return *this; }
 	inline Ref<T, I>& operator&=(const T& v) const { ref() &=  v; return *this; }
 	inline Ref<T, I>& operator|=(const T& v) const { ref() |=  v; return *this; }
@@ -67,12 +81,12 @@ public:
 	inline Ref<T, I>& operator--(int) const { ref()--; }
 
 private:
-	PropList& prop;
-	const I& id;
+	inline PropList& props(void) const { return const_cast<PropList&>(ImmutableRef<T, I>::proplist()); }
+	inline const I& id(void) const { return ImmutableRef<T, I>::identifier(); }
 };
 
 template <class T, class I>
-io::Output& operator<<(io::Output& out, const Ref<T, I>& ref) { ref.print(out); return out; }
+io::Output& operator<<(io::Output& out, const ImmutableRef<T, I>& ref) { ref.print(out); return out; }
 
 }	// otawa
 
