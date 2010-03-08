@@ -111,7 +111,7 @@ Address SimState::upperWrite(void) {
 
 
 /**
- * !!TODO!!
+ * Set the current value of the SP.
  */
 void SimState::setSP(const Address& addr) {
   ASSERTP(false, "SimState::setSP() unsupported");
