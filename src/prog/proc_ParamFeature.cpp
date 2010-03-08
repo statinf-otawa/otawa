@@ -292,7 +292,7 @@ AbstractIdentifier AbstractParamIdentifier::ACTUAL_ID("otawa::AbstractIdentifier
  */
 AbstractParamIdentifier::AbstractParamIdentifier(ParamFeature& feature, cstring name)
 : Identifier<AbstractIdentifier *>(name) {
-	ParamFeature::PARAM_ID(feature) = this;
+	ParamFeature::PARAM_ID(feature).add(this);
 }
 
 
