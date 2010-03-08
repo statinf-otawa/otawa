@@ -129,7 +129,6 @@ Inst *Segment::findInstAt(address_t addr) {
 	ProgItem *item = findItemAt(addr);
 	if(!item) {
 		Inst *inst = decode(addr);
-		//cerr << "findInstAt(" << addr << ") = " << inst << io::endl;
 		if(inst)
 			insert(inst);
 		return inst;
