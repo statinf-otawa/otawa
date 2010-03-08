@@ -22,6 +22,8 @@
 
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/cfg.h>
+#include <otawa/cfg/features.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 
@@ -71,5 +73,52 @@ void BBProcessor::processCFG(WorkSpace *fw, CFG *cfg) {
 		processBB(fw, cfg, bb);
 	}
 }
+
+
+/**
+ * @class BBCleaner
+ * Efficient implementation of a cleaner for properties found on a basic block.
+ * To instantiate it, juste overload the process() methods
+ */
+
+/**
+ */
+void BBCleaner::clean(void) {
+	CFGCollection *coll = INVOLVED_CFGS(ws);
+	ASSERT(coll);
+	for(CFGCollection::Iterator cfg(coll); cfg; cfg++)
+		for(CFG::BBIterator bb(cfg); bb; bb++)
+			clean(ws, cfg, bb);
+}
+
+/**
+ * @fn void BBProcessor::trackBB(const AbstractFeature& feature, const Identifier<T *>& id);
+ * Track and delete the content of the given identifier on each basic block.
+ * @param feature	Feature this identifier is linked to.
+ * @param id		Identifier of the properties to remove.
+ */
+
+
+/**
+ * @fn void BBProcessor::trackBB(const AbstractFeature& feature, const Identifier<T>& id)
+ * Track and remove properties put on basic blocks.
+ * @param feature	Feature this identifier is linked to.
+ * @param id		Identifier of the properties to remove.
+ */
+
+
+/**
+ * @class BBDeletor
+ * Basic block cleaner removing an identifier and deleting its content.
+ * @param T		Type of data pointed by the identifier.
+ */
+
+/**
+ * @class BBCleaner
+ * Basic block cleaner simply removing an identifier from basic blocks.
+ * @param T		Type of property value.
+ */
+
+
 
 } // otawa

@@ -3,7 +3,7 @@
  *	BBProcessor class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-08, IRIT UPS.
+ *	Copyright (c) 2005-10, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -29,6 +29,45 @@ namespace otawa {
 
 using namespace elm;
 
+// BBCleaner class
+class BBCleaner: public Cleaner {
+public:
+	BBCleaner(WorkSpace *_ws): ws(_ws) { }
+	virtual void clean(void);
+protected:
+	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb) = 0;
+private:
+	WorkSpace *ws;
+};
+
+
+// BBRemover class
+template <class T>
+class BBRemover: public BBCleaner {
+public:
+	inline BBRemover(WorkSpace *ws, Identifier<T>& identifier)
+		: BBCleaner(ws), id(identifier) { }
+protected:
+	Identifier<T>& id;
+	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb)
+		{ bb->removeProp(id); }
+};
+
+
+// BBDeletor class
+template <class T>
+class BBDeletor: public BBRemover<T> {
+public:
+	inline BBDeletor(WorkSpace *ws, Identifier<T *>& identifier)
+		: BBDeletor(ws), id(identifier) { }
+protected:
+	Identifier<T *>& id;
+	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb)
+		{ T *p = id(bb); if(p) delete p; BBRemover<T>::clean(ws, cfg, bb); }
+};
+
+
+// BBProcessor class
 class BBProcessor: public CFGProcessor {
 protected:
 	virtual void processCFG(WorkSpace *fw, CFG *cfg);
@@ -40,6 +79,12 @@ public:
 	inline BBProcessor(cstring name, const Version& version, AbstractRegistration& reg)
 		: CFGProcessor(name, version, reg) { }
 	BBProcessor(cstring name, elm::Version version = elm::Version::ZERO);
+
+protected:
+	template <class T> void trackBB(const AbstractFeature& feature, const Identifier<T *>& id)
+		{ addCleaner(feature, new BBDeletor<T>(workspace(), id)); }
+	template <class T> void trackBB(const AbstractFeature& feature, const Identifier<T>& id)
+		{ addCleaner(feature, new BBRemover<T>(workspace(), id)); }
 };
 
 } // otawa
