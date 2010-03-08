@@ -40,7 +40,7 @@
 
 using namespace elm;
 
-#define DEBUG(x)	x
+#define DEBUG(x)	//x
 
 namespace otawa { namespace script {
 
