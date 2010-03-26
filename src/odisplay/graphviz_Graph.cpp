@@ -62,8 +62,10 @@ GraphVizGraph::GraphVizGraph(
 
 
 void GraphVizGraph::printOthersAttributes(Output& out){
-	String props = getPropertiesString();
-	out << "label=\"" << quoteSpecials(props) << "\\l\"";
+	//String props = getPropertiesString();
+	string label = BODY(this);
+	if(label)
+		out << "label=\"" << quoteSpecials(label) << "\\l\"";
 }
 
 
