@@ -31,12 +31,14 @@ using namespace otawa::sim;
 
 namespace otawa { namespace ipet {
 
-void BBTimeSimulator::init(void) {
-	_name("otawa::ipet::BBTimeSimulator");
-	_version(1, 0, 0);
-	_provide(BB_TIME_FEATURE);
-	_require(REGISTER_USAGE_FEATURE);
-}
+Registration<BBTimeSimulator> BBTimeSimulator::reg(
+	"otawa::ipet::BBTimeSimulator",
+	Version(1, 0, 0),
+	p::base, &BBProcessor::reg,
+	p::provide, &BB_TIME_FEATURE,
+	p::require, &REGISTER_USAGE_FEATURE,
+	p::end
+);
 
 /**
  * This processor compute the execution time of each basic block using the
@@ -48,7 +50,7 @@ void BBTimeSimulator::init(void) {
  * @par Required Feature
  * @li @ref otawa::REGISTER_USAGE_FEATURE
  */
-BBTimeSimulator::BBTimeSimulator(void) {
+BBTimeSimulator::BBTimeSimulator(void): BBProcessor(reg) {
 }
 
 /**
