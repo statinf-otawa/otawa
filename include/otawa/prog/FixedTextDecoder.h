@@ -27,11 +27,11 @@
 namespace otawa {
 
 // FixedTextDecoder class
-class FixedTextDecoder: public Registered<FixedTextDecoder, Processor> {
+class FixedTextDecoder: public Processor {
 public:
 	static FixedTextDecoder _;
 	FixedTextDecoder(void);
-	static void init(void);
+	static Registration<FixedTextDecoder> reg;
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);

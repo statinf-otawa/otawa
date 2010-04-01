@@ -3,7 +3,7 @@
  *	Registration test program
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2008, IRIT UPS.
+ *	Copyright (c) 2008-10, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -41,6 +41,11 @@ int main(void) {
 	for(Registry::Iter reg; reg; reg++) {
 		cout << "REGISTRATION " << reg->name() << " " << reg->version() << io::endl;
 		
+		// base
+		AbstractRegistration *base = &reg->base();
+		if(base)
+			cout << "\tbase = " << base->name() << " V" << base->version() << io::endl;
+
 		// Configuration
 		cout << "\tconfiguration\n";
 		for(ConfigIter config(**reg); config; config++)
@@ -63,7 +68,7 @@ int main(void) {
 		
 		// Existence test
 		const AbstractRegistration *found = Registry::find(&reg->name());
-		cout << "\treg = " << (void *)*reg << ", found = " << (void *)found << io::endl;
+		cout << "\treg = " << (void *)*reg << ", found = " << (void *)found << "\n\n";
 	}
 	
 	
