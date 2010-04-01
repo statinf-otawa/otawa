@@ -32,8 +32,20 @@ namespace otawa {
 using namespace elm;
 using namespace elm::genstruct;
 
+// Pre-declaration
 class Processor;
 class AbstractFeature;
+
+// fast initialization
+namespace p {
+	const int end = 0;
+	const int require = 1;		// AbstractFeature *
+	const int provide = 2;		// AbstractFeature *
+	const int invalidate = 3;	// AbstractFeature *
+	const int use = 4;			// AbstractFeature *
+	const int base = 5;			// AbstractRegistration *
+	const int config = 6;		// AbstractIdentifier *
+} // p
 
 // FeatureUsage class
 class FeatureUsage {
@@ -82,6 +94,7 @@ public:
 protected:
 	AbstractRegistration(void);
 	virtual ~AbstractRegistration(void) { }
+	void init(cstring name, const Version& version, int tag, VarArg& args);
 
 private:
 	template <class T, class B, class C> friend class Registered;
@@ -106,109 +119,29 @@ public:
 };
 
 
+// MetaRegistration class
+class MetaRegistration: public AbstractRegistration {
+public:
+	inline MetaRegistration(cstring name, const Version& version, int tag, ...)
+		{ VARARG_BEGIN(args, tag) init(name, version, tag, args); VARARG_END }
+	inline MetaRegistration(cstring name, const Version& version, int tag, VarArg& args)
+		{ init(name, version, tag, args); }
+	virtual Processor *make(void) const { return 0; }
+	virtual bool isFinal(void) const { return false; }
+};
+
+
 // Registration class
 template <class T> class Registration: public AbstractRegistration {
 public:
+	inline Registration(void) { }
+	inline Registration(cstring name, const Version& version, int tag, ...)
+		{ VARARG_BEGIN(args, tag) init(name, version, tag, args); VARARG_END }
+	inline Registration(cstring name, const Version& version, int tag, VarArg& args)
+		{ init(name, version, tag, args); }
 	virtual Processor *make(void) const { return new T; }
 	virtual bool isFinal(void) const { return true; }
 };
-
-
-// Registered class
-template <class T, class B, class C = Registration<T> >
-struct Registered: public B {
-	typedef Registered<T, B, C> super;
-
-	Registered(void): B(__reg) { }
-	Registered(AbstractRegistration& reg): B(reg) { }
-	Registered(cstring name, const Version& version)
-		: B(name, version, __reg) { }
-	Registered(cstring name, const Version& version, AbstractRegistration& reg)
-		: B(name, version, reg) { }
-
-	static void __reg_do_init(void) {
-		__reg._base = &B::__reg;
-		T::init();
-		__reg.record();
-	}
-	static struct __reg_init: C { __reg_init(void) { T::__reg_do_init(); } } __reg;
-
-protected:
-	inline static void _name(cstring name)
-		{ __reg._name = name; }
-	inline static void _version(int major, int minor, int release)
-		{ __reg._version = Version(major, minor, release); }
-	inline static void _config(AbstractIdentifier& id)
-		{ __reg.configs.add(&id); }
-	inline static void _require(AbstractFeature& feature)
-		{ __reg.features.add(FeatureUsage(FeatureUsage::require, feature)); }
-	inline static void _provide(AbstractFeature& feature)
-		{ __reg.features.add(FeatureUsage(FeatureUsage::provide, feature)); }
-	inline static void _invalidate(AbstractFeature& feature)
-		{ __reg.features.add(FeatureUsage(FeatureUsage::invalidate, feature)); }
-	inline static void _use(AbstractFeature& feature)
-		{ __reg.features.add(FeatureUsage(FeatureUsage::use, feature)); }
-};
-
-template <class T, class B, class C>
-typename Registered<T, B, C>::__reg_init Registered<T, B, C>::__reg;
-
-
-// Register class
-template <class C, class B>
-class Register: public Registration<C> {
-public:
-	Register(void);
-private:
-	inline void name(cstring name)
-		{ Registration<C>::_name = name; }
-	inline void version(int major, int minor, int release)
-		{ Registration<C>::_version = Version(major, minor, release); }
-	inline void require(const AbstractFeature& feature)
-		{ Registration<C>::features.add(FeatureUsage(FeatureUsage::require, feature)); }
-	inline void provide(const AbstractFeature& feature)
-		{ Registration<C>::features.add(FeatureUsage(FeatureUsage::provide, feature)); }
-	inline void invalidate(const AbstractFeature& feature)
-		{ Registration<C>::features.add(FeatureUsage(FeatureUsage::invalidate, feature)); }
-	inline void use(const AbstractFeature& feature)
-		{ Registration<C>::features.add(FeatureUsage(FeatureUsage::use, feature)); }
-	inline void config(AbstractIdentifier& id)
-		{ Registration<C>::configs.add(&id); }
-};
-
-
-// Useful macros
-#define OTAWA_PROC(C, B) \
-	class C: public B { \
-	public: \
-		static Register<C, B> __reg; \
-		typedef B __base; \
-		C(void): __base(__reg) { } \
-		C(AbstractRegistration& reg): __base(reg) { } \
-		C(cstring name, const Version& version): __base(name, version) { } \
-	private:
-
-//C(cstring name, const Version& version, AbstractRegistration& reg): __base(name, version, reg) { }
-
-#define OTAWA_DEFINE_PROC(C, defs) \
-	namespace otawa { \
-		template <> \
-		::otawa::Register<C, C::__base>::Register(void) { \
-			_base = &C::__base::__reg; \
-			name(#C); \
-			defs \
-			record(); \
-		} \
-	} \
-	::otawa::Register<C, C::__base> C::__reg;
-
-#define OTAWA_END }
-
-#ifndef NO_OTAWA_SHORTCUT
-#define DECLARE_PROC(c, b)	OTAWA_PROC(c, b)
-#define DEFINE_PROC(c, d)	OTAWA_DEFINE_PROC(c, d)
-#define	END					OTAWA_END
-#endif
 
 } // otawa
 
