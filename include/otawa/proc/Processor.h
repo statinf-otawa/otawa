@@ -56,8 +56,6 @@ class Processor {
 	};
 
 public:
-	static struct __init: NullRegistration { __init(void); } __reg;
-	static void init(void);
 
 	// Constructors
 	Processor(void);
@@ -65,6 +63,7 @@ public:
 	Processor(String name, Version version);
 	Processor(String name, Version version, AbstractRegistration& registration);
 	virtual ~Processor(void);
+	static MetaRegistration reg;
 
 	// Accessors
 	inline elm::String name(void) const;
@@ -126,7 +125,7 @@ protected:
 
 private:
 	void init(const PropList& props);
-	AbstractRegistration *reg;
+	AbstractRegistration *_reg;
 	WorkSpace *ws;
 	typedef Pair<const AbstractFeature *, Cleaner *> clean_t;
 	typedef elm::genstruct::SLList<clean_t> clean_list_t;
@@ -173,11 +172,11 @@ private:
 
 // Inlines
 inline elm::String Processor::name(void) const {
-	return reg->name();
+	return _reg->name();
 }
 
 inline elm::Version Processor::version(void) const {
-	return reg->version();
+	return _reg->version();
 }
 
 inline bool Processor::isVerbose(void) const {
