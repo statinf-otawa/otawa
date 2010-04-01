@@ -55,21 +55,23 @@ namespace otawa { namespace ipet {
  * @li @ref BB_TIME_FEATURE
  */
 
-void Delta::init(void) {
-	_name("otawa::ipet::Delta");
-	_version(1, 0, 0);
-	_require(ASSIGNED_VARS_FEATURE);
-	_require(ILP_SYSTEM_FEATURE);
-	_provide(BB_TIME_FEATURE);
-	_provide(INTERBLOCK_SUPPORT_FEATURE);
-}
+Registration<Delta> Delta::reg(
+	"otawa::ipet::Delta",
+	Version(1, 0, 0),
+	p::base, &CFGProcessor::reg,
+	p::require, &ASSIGNED_VARS_FEATURE,
+	p::require, &ILP_SYSTEM_FEATURE,
+	p::provide, &BB_TIME_FEATURE,
+	p::provide, &INTERBLOCK_SUPPORT_FEATURE,
+	p::end
+);
 
 
 /**
  * Build a new delta calculator.
  * @param props Configuration properties.
  */
-Delta::Delta(void) { }
+Delta::Delta(void): CFGProcessor(reg) { }
 
 
 /**
