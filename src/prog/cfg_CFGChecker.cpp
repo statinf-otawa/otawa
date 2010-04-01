@@ -49,10 +49,18 @@ Identifier<bool> CFGChecker::NO_EXCEPTION("otawa::CFGChecker::NO_EXCEPTION", fal
  * @li @ref otawa::CFGChecker::NO_EXCEPTION
  */
 
-void CFGChecker::init(void) {
-	_name("otawa::CFGChecker");
-	_version(1, 0, 0);
-	_provide(CHECKED_CFG_FEATURE);
+Registration<CFGChecker> CFGChecker::reg(
+	"otawa::CFGChecker",
+	Version(1, 0, 0),
+	p::base, &CFGProcessor::reg,
+	p::provide, &CHECKED_CFG_FEATURE,
+	p::end
+);
+
+
+/**
+ */
+CFGChecker::CFGChecker(void): BBProcessor(reg) {
 }
 
 
