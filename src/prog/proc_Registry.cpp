@@ -21,6 +21,7 @@
  */
 
 #include <otawa/proc/Registry.h>
+#include <otawa/proc/Processor.h>
 
 namespace otawa {
 
@@ -73,7 +74,7 @@ Registry::Registry(void): Initializer<AbstractRegistration>(false) {
 /**
  * Build the registration.
  */
-AbstractRegistration::AbstractRegistration(void): _base(0) {
+AbstractRegistration::AbstractRegistration(void): _base(&Processor::reg) {
 }
 
 
@@ -170,6 +171,45 @@ void AbstractRegistration::initialize(void) {
 
 
 /**
+ * Initialize a registration from an argument list.
+ * @param name		Processor name.
+ * @param version	Processor version.
+ * @param tag		First tag.
+ * @param args		List of pair (tag, value) ended by a @ref otawa::p::end value.
+ */
+void AbstractRegistration::init(cstring name, const Version& version, int tag, VarArg& args) {
+	_name = name;
+	_version = version;
+	while(tag != p::end) {
+		switch(tag) {
+		case p::require:
+			features.add(FeatureUsage(FeatureUsage::require, *args.next<const AbstractFeature *>()));
+			break;
+		case p::provide:
+			features.add(FeatureUsage(FeatureUsage::provide, *args.next<const AbstractFeature *>()));
+			break;
+		case p::invalidate:
+			features.add(FeatureUsage(FeatureUsage::invalidate, *args.next<const AbstractFeature *>()));
+			break;
+		case p::use:
+			features.add(FeatureUsage(FeatureUsage::use, *args.next<const AbstractFeature *>()));
+			break;
+		case p::base:
+			_base = args.next<AbstractRegistration *>();
+			break;
+		case p::config:
+			configs.add(args.next<AbstractIdentifier *>());
+			break;
+		default:
+			ASSERTP(0, "bad registration argument for processor " << name << " (" << version << ")");
+		}
+		tag = args.next<int>();
+	}
+	record();
+}
+
+
+/**
  * @class ConfigIter
  * Iterator on the configurations of a processor.
  * @param T	Processor class.
@@ -211,77 +251,26 @@ void FeatureIter::step(void) {
 
 
 /**
- * @class Registered
- * A registered class is used to build automatically a processor with a
- * registration.
- * @param T	Type of the processor to register.
- * @param B	Base type of the parent processor.
- *
- * @deprecated Please use @ref otawa::Register instead.
- *
- * To make a processor registrable, it must inherit from Registered and
- * defines a static function init() responsbible to initialize the registration.
- * This function invokes the initialization functions: name(), version(),
- * require(), provide(), invalidate().
- *
- * An example is given below:
- * @code
- *	class MyProcessor: public Registered<MyProcessor, BBProcessor> {
- *	public:
- *		static void init(void) {
- *			name("my_namespace::MyProcessor");
- *			version(1, 0, 1);
- *			require(SOME_FEATURE);
- *			require(ANOTHER_FEATURE);
- *			provide(MY_FEATURE);
- *		}
- *
- *	protected:
- *		void processBB(WorkSpace *ws, CFG *cfg, BB *bb) {
- *			// something useful
- *		}
- *	};
- * @endcode
- * @ingroup proc
+ * @fn Registration::Registration(void);
+ * Default constructor.
  */
 
 
 /**
- * @class Register
- * The register class is used to register a processor to the registery,
- * in order to make it visible from the registry. This is used in code processor
- * plug-in to retrieve processor by their name.
- * @param C	Type of the processor to register.
- * @param B	Base type of the parent processor.
- *
- * To register a processor, one has to use special macro-definitions
- * that encapsulate all details about registration. First, the declaration of the processor
- * in the header must be done as below:
- *
- * @code
- * #include <otawa/proc/Registration.h>
- *
- * PROC(MyProcessor, BaseProcessor)
- * protected:
- *		void processBB(WorkSpace *ws, CFG *cfg, BB *bb) {
- *			// something useful
- *		}
- * END
- * @endcode
- *
- * Then you have to provide all information required to define the processor:
- * version, configuration identifiers, provided / required / used / invalidated features
- * in the source file.
- * @code
- * DEFINE_PROC(MyProcessor,
- *		version(1, 0, 1);
- *		require(SOME_FEATURE);
- *		require(ANOTHER_FEATURE);
- *		provide(MY_FEATURE);
- * )
- * @endcode
- *
- * @ingroup proc
+ * @fn Registration::Registration(cstring name, const Version& version, int tag, ...);
+ * @param name		Name of the processor.
+ * @param version	Version of the processor.
+ * @param tag		First tag.
+ * @param ...		List of pairs (tag, value) ended by @ref otawa::p::end .
+ */
+
+
+/**
+ * @fn Registration::Registration(cstring name, const Version& version, int tag, VarArgs& args);
+ * @param name		Name of the processor.
+ * @param version	Version of the processor.
+ * @param tag		First tag.
+ * @param args		List of pairs (tag, value) ended by @ref otawa::p::end .
  */
 
 } // otawa
