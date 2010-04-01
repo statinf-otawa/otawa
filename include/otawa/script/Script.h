@@ -30,12 +30,12 @@ namespace elm { namespace xom { class Node; } }
 namespace otawa { namespace script {
 
 // Script class
-class Script: public Registered<Script, Processor> {
+class Script: public Processor {
 public:
 
 	Script(void);
 	virtual void configure (const PropList &props);
-	static void init(void);
+	static Registration<Script> reg;
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
