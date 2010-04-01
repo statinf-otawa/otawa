@@ -28,9 +28,11 @@
 
 namespace otawa {
 
-DECLARE_PROC(CAT2NCBuilder, CAT2Builder)
-END;
-
+class CAT2NCBuilder: public CAT2Builder {
+public:
+	CAT2NCBuilder(void);
+	static Registration<CAT2NCBuilder> reg;
+};
 
 }	// otawa
 

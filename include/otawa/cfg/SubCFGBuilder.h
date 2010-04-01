@@ -33,7 +33,11 @@ namespace otawa {
 class VirtualCFG;
 
 // SubCFGBuilder class
-DECLARE_PROC(SubCFGBuilder, Processor)
+class SubCFGBuilder: public Processor {
+public:
+	SubCFGBuilder(void);
+	static Registration<SubCFGBuilder> reg;
+
 	virtual void configure(const PropList &props);
 protected:
 	virtual void processWorkSpace(WorkSpace *ws);
@@ -42,7 +46,7 @@ private:
 	Address start;
 	elm::genstruct::Vector<Address> stops;
 	VirtualCFG *vcfg;
-END;
+};
 
 extern Identifier<Address> CFG_START;
 extern Identifier<Address> CFG_STOP;

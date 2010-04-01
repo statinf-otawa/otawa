@@ -32,15 +32,15 @@ class CFG;
 class BasicBlock;
 	
 // Processor class
-class CFGProcessor: public Registered<CFGProcessor, Processor, NullRegistration> {	
+class CFGProcessor: public Processor {
 public:
 	CFGProcessor(void);
 	CFGProcessor(cstring name, elm::Version version);
-	inline CFGProcessor(AbstractRegistration& reg): super(reg) { }
+	inline CFGProcessor(AbstractRegistration& reg): Processor(reg) { }
 	inline CFGProcessor(cstring name, const Version& version, AbstractRegistration& reg)
-		: super(name, version, reg) { }
+		: Processor(name, version, reg) { }
 	virtual void configure(const PropList& props);
-	static void init(void);
+	static MetaRegistration reg;
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);

@@ -28,13 +28,16 @@
 namespace otawa { namespace ipet {
 
 // WCETComputation class
-class WCETComputation: public Registered<WCETComputation, Processor> {
-	ilp::System *system;
-protected:
-	virtual void processWorkSpace(WorkSpace *fw);
+class WCETComputation: public Processor {
 public:
 	WCETComputation(void);
-	static void init(void);
+	static Registration<WCETComputation> reg;
+
+protected:
+	virtual void processWorkSpace(WorkSpace *fw);
+
+private:
+	ilp::System *system;
 };
 
 // Features

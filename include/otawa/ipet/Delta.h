@@ -24,7 +24,7 @@ namespace ipet {
 class BBPath;
 class Delta;
 
-class Delta: public Registered<Delta, CFGProcessor> {
+class Delta: public CFGProcessor {
 	int levels;
 	int completion;
 	bool explicitNames;
@@ -41,7 +41,7 @@ protected:
 
 public:
 	Delta(void);
-	static void init(void);
+	static Registration<Delta> reg;
 
 	virtual void configure(const PropList& props);
 

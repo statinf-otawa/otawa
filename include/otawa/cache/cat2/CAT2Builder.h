@@ -38,8 +38,11 @@ extern Identifier<category_t> CATEGORY;
 extern Identifier<BasicBlock*> CATEGORY_HEADER;
 
 // CAT2Builder class
-DECLARE_PROC(CAT2Builder, CFGProcessor)
+class CAT2Builder: public CFGProcessor {
 public:
+	CAT2Builder(AbstractRegistration& registration = reg);
+	static Registration<CAT2Builder> reg;
+
 	virtual void processCFG(WorkSpace*, otawa::CFG*);
 	virtual void setup(WorkSpace*);
 	virtual void configure(const PropList &props);	
@@ -48,7 +51,7 @@ private:
 	void processLBlockSet(otawa::CFG*, LBlockSet *, const hard::Cache *);
 	fmlevel_t firstmiss_level;
 	CategoryStats *cstats;
-END;
+};
 
 // feature
 extern Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE;

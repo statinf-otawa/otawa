@@ -39,10 +39,12 @@ namespace otawa {
 
 
 // Virtualizer class
-class Virtualizer: public Registered<Virtualizer, Processor> {
+class Virtualizer: public Processor {
 
 public:
-	static void init(void);
+	Virtualizer(void);
+	static Registration<Virtualizer> reg;
+
 	virtual void processWorkSpace(WorkSpace*);
 	virtual void configure(const PropList& props);
 

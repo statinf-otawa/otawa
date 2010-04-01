@@ -35,10 +35,10 @@ namespace sim {
 namespace ipet {
 
 // BBTimeSimulator class
-class BBTimeSimulator : public Registered<BBTimeSimulator, BBProcessor> {
+class BBTimeSimulator : public BBProcessor {
 public:
 	BBTimeSimulator(void);
-	static void init(void);
+	static Registration<BBTimeSimulator> reg;
 
 protected:
 	virtual void setup(WorkSpace *ws);

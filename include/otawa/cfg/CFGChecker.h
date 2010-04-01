@@ -28,11 +28,12 @@
 namespace otawa {
 
 // CFGChecker class
-class CFGChecker: public Registered<CFGChecker, BBProcessor> {
+class CFGChecker: public  BBProcessor {
 public:
 	static Identifier<bool> NO_EXCEPTION;
 
-	static void init(void);
+	CFGChecker(void);
+	static Registration<CFGChecker> reg;
 
 	virtual void configure(const PropList& props);
 	virtual void setup(WorkSpace *ws);

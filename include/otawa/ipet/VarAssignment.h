@@ -33,7 +33,7 @@ namespace ilp { class System; }
 namespace ipet {
 
 // VarAsignment class
-class VarAssignment: public Registered<VarAssignment, BBProcessor> {
+class VarAssignment: public BBProcessor {
 	bool _explicit, _recursive;
 	ilp::System *sys;
 	String makeNodeVar(BasicBlock *bb, CFG *cfg);
@@ -46,7 +46,7 @@ protected:
 public:
 	VarAssignment(void);
 	virtual void configure(const PropList& props);
-	static void init(void);
+	static Registration<VarAssignment> reg;
 };
 
 // Features
