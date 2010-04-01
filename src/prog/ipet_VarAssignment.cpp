@@ -34,13 +34,15 @@ namespace otawa {
 namespace ipet {
 
 // Registration
-void VarAssignment::init(void) {
-	_name("otawa::ipet::VarAssignment");
-	_version(1, 0, 0);
-	_require(ILP_SYSTEM_FEATURE);
-	_provide(ASSIGNED_VARS_FEATURE);
-	_config(EXPLICIT);
-}
+Registration<VarAssignment> VarAssignment::reg(
+	"otawa::ipet::VarAssignment",
+	Version(1, 0, 0),
+	p::base, &BBProcessor::reg,
+	p::require, &ILP_SYSTEM_FEATURE,
+	p::provide, &ASSIGNED_VARS_FEATURE,
+	p::config, &EXPLICIT,
+	p::end
+);
 
 /**
  *

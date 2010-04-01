@@ -36,14 +36,15 @@ using namespace otawa::ilp;
 namespace otawa { namespace ipet {
 
 // Registration
-void WCETComputation::init(void) {
-	_name("otawa::ipet::WCETComputation");
-	_version(1, 0, 0);
-	_require(CONTROL_CONSTRAINTS_FEATURE);
-	_require(OBJECT_FUNCTION_FEATURE);
-	_require(FLOW_FACTS_CONSTRAINTS_FEATURE);
-	_provide(WCET_FEATURE);
-}
+Registration<WCETComputation> WCETComputation::reg(
+	"otawa::ipet::WCETComputation",
+	Version(1, 0, 0),
+	p::require, &CONTROL_CONSTRAINTS_FEATURE,
+	p::require, &OBJECT_FUNCTION_FEATURE,
+	p::require, &FLOW_FACTS_CONSTRAINTS_FEATURE,
+	p::provide, &WCET_FEATURE,
+	p::end
+);
 
 
 /**
@@ -64,7 +65,7 @@ void WCETComputation::init(void) {
 /**
  * Build a new WCET computer.
  */
-WCETComputation::WCETComputation(void) {
+WCETComputation::WCETComputation(void): Processor(reg) {
 }
 
 

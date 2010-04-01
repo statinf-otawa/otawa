@@ -152,22 +152,17 @@ extern cstring VERBOSE_ENV;
 
 
 // Registration
-Processor::__init::__init(void) {
-	Processor::init();
-}
-void Processor::init(void) {
-	// workaround right bug in GCC 4.0
-	// subclass of a friend class is not friend
-	__reg._name = "otawa::Processor";
-	__reg._version = Version(1, 1, 0);
-	__reg.configs.add(&Processor::OUTPUT);
-	__reg.configs.add(&Processor::LOG);
-	__reg.configs.add(&Processor::VERBOSE);
-	__reg.configs.add(&Processor::STATS);
-	__reg.configs.add(&Processor::TIMED);
-	__reg.record();
-}
-Processor::__init Processor::__reg;
+MetaRegistration Processor::reg(
+	"otawa::Processor",
+	Version(1, 1, 0),
+	p::base, 0,
+	p::config, &Processor::OUTPUT,
+	p::config, &Processor::LOG,
+	p::config, &Processor::VERBOSE,
+	p::config, &Processor::STATS,
+	p::config, &Processor::TIMED,
+	p::end
+);
 
 
 /**
@@ -200,9 +195,9 @@ Processor::__init Processor::__reg;
  * Build a simple anonymous processor.
  */
 Processor::Processor(void): flags(0), stats(0) {
-	reg = new NullRegistration();
+	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
-	reg->_base = &__reg;
+	_reg->_base = &reg;
 }
 
 
@@ -210,7 +205,7 @@ Processor::Processor(void): flags(0), stats(0) {
  */
 Processor::~Processor(void) {
 	if(flags & IS_ALLOCATED)
-		delete reg;
+		delete _reg;
 }
 
 
@@ -219,7 +214,7 @@ Processor::~Processor(void) {
  */
 Processor::Processor(AbstractRegistration& registration)
 : flags(0), stats(0) {
-	reg = &registration;
+	_reg = &registration;
 }
 
 
@@ -228,11 +223,11 @@ Processor::Processor(AbstractRegistration& registration)
  */
 Processor::Processor(String name, Version version, AbstractRegistration& registration)
 : flags(0), stats(0) {
-	reg = new NullRegistration();
+	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
-	reg->_base = &registration;
-	reg->_name = name;
-	reg->_version = version;
+	_reg->_base = &registration;
+	_reg->_name = name;
+	_reg->_version = version;
 }
 
 
@@ -245,11 +240,11 @@ Processor::Processor(String name, Version version, AbstractRegistration& registr
  */
 Processor::Processor(elm::String name, elm::Version version,
 const PropList& props): flags(0), stats(0) {
-	reg = new NullRegistration();
+	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
-	reg->_base = &__reg;
-	reg->_name = name;
-	reg->_version = version;
+	_reg->_base = &reg;
+	_reg->_name = name;
+	_reg->_version = version;
 	init(props);
 }
 
@@ -260,11 +255,11 @@ const PropList& props): flags(0), stats(0) {
  */
 Processor::Processor(String name, Version version)
 : flags(0), stats(0) {
-	reg = new NullRegistration();
+	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
-	reg->_base = &__reg;
-	reg->_name = name;
-	reg->_version = version;
+	_reg->_base = &reg;
+	_reg->_name = name;
+	_reg->_version = version;
 }
 
 
@@ -274,9 +269,9 @@ Processor::Processor(String name, Version version)
  * @deprecated		Configuration must be passed at the process() call.
  */
 Processor::Processor(const PropList& props): flags(0), stats(0) {
-	reg = new NullRegistration();
+	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
-	reg->_base = &__reg;
+	_reg->_base = &reg;
 	init(props);
 }
 
@@ -364,18 +359,18 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	configure(props);
 
 	// Remove non-used invalidated features
-	for(FeatureIter feature(*reg); feature; feature++)
+	for(FeatureIter feature(*_reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::invalidate
-		&& !reg->uses(feature->feature())) {
+		&& !_reg->uses(feature->feature())) {
 			if(isVerbose())
 				log << "INVALIDATED: " << feature->feature().name()
-					<< " by " << reg->name() << io::endl;
+					<< " by " << _reg->name() << io::endl;
 			fw->invalidate(feature->feature());
 		}
 
 	// Get used feature
 	Vector<const AbstractFeature *> required;
-	for(FeatureIter feature(*reg); !ws->isCancelled() && feature; feature++)
+	for(FeatureIter feature(*_reg); !ws->isCancelled() && feature; feature++)
 		if(feature->kind() == FeatureUsage::require
 		|| feature->kind() == FeatureUsage::use) {
 			if(feature->kind() == FeatureUsage::require)
@@ -385,7 +380,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 				if(feature->kind() == FeatureUsage::require)
 					kind = "REQUIRED";
 				log << kind << ": " << feature->feature().name()
-					<< " by " << reg->name() << io::endl;
+					<< " by " << _reg->name() << io::endl;
 			}
 			try {
 				fw->require(feature->feature(), props);
@@ -398,7 +393,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 		return;
 
 	// check before starting processor
-	for(FeatureIter feature(*reg); feature; feature++)
+	for(FeatureIter feature(*_reg); feature; feature++)
 		if((feature->kind() == FeatureUsage::require
 		|| feature->kind() == FeatureUsage::use)
 		&& !fw->isProvided(feature->feature()))
@@ -431,12 +426,12 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 		log << io::endl;
 
 	// Cleanup used invalidated features
-	for(FeatureIter feature(*reg); feature; feature++)
+	for(FeatureIter feature(*_reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::invalidate
-		&& reg->uses(feature->feature())) {
+		&& _reg->uses(feature->feature())) {
 			if(isVerbose())
 				log << "INVALIDATED: " << feature->feature().name()
-					<< " by " << reg->name() << io::endl;
+					<< " by " << _reg->name() << io::endl;
 			fw->invalidate(feature->feature());
 		}
 
@@ -444,11 +439,11 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	cleanup(fw);
 
 	// Add provided features
-	for(FeatureIter feature(*reg); feature; feature++)
+	for(FeatureIter feature(*_reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::provide) {
 			if(isVerbose())
 				log << "PROVIDED: " << feature->feature().name()
-					<< " by " << reg->name() << io::endl;
+					<< " by " << _reg->name() << io::endl;
 			fw->provide(feature->feature(), &required);
 		}
 
@@ -571,7 +566,7 @@ Identifier<bool> Processor::VERBOSE("otawa::Processor::VERBOSE", false);
  * @param feature	Required feature.
  */
 void Processor::require(const AbstractFeature& feature) {
-	reg->features.add(FeatureUsage(FeatureUsage::require, feature));
+	_reg->features.add(FeatureUsage(FeatureUsage::require, feature));
 }
 
 
@@ -581,7 +576,7 @@ void Processor::require(const AbstractFeature& feature) {
  * @param feature	Invalidated feature.
  */
 void Processor::invalidate(const AbstractFeature& feature) {
-	reg->features.add(FeatureUsage(FeatureUsage::invalidate, feature));
+	_reg->features.add(FeatureUsage(FeatureUsage::invalidate, feature));
 }
 
 
@@ -591,7 +586,7 @@ void Processor::invalidate(const AbstractFeature& feature) {
  * @param feature	Used feature.
  */
 void Processor::use(const AbstractFeature& feature) {
-	reg->features.add(FeatureUsage(FeatureUsage::use, feature));
+	_reg->features.add(FeatureUsage(FeatureUsage::use, feature));
 }
 
 
@@ -601,7 +596,7 @@ void Processor::use(const AbstractFeature& feature) {
  * @param feature	Provided feature.
  */
 void Processor::provide(const AbstractFeature& feature) {
-	reg->features.add(FeatureUsage(FeatureUsage::provide, feature));
+	_reg->features.add(FeatureUsage(FeatureUsage::provide, feature));
 }
 
 

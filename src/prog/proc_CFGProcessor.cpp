@@ -50,17 +50,18 @@ namespace otawa {
 
 
 // registration
-void CFGProcessor::init(void) {
-	_name("otawa::CFGProcessor");
-	_version(1, 0, 0);
-	_require(COLLECTED_CFG_FEATURE);	
-}
+MetaRegistration CFGProcessor::reg(
+	"otawa::CFGProcessor",
+	Version(1, 0, 0),
+	p::require, &COLLECTED_CFG_FEATURE,
+	p::end
+);
 
 
 /**
  * Build a new CFG processor.
  */
-CFGProcessor::CFGProcessor(void) {
+CFGProcessor::CFGProcessor(void): Processor(reg) {
 }
 
 
@@ -70,7 +71,7 @@ CFGProcessor::CFGProcessor(void) {
  * @param version	Processor version.
  */
 CFGProcessor::CFGProcessor(cstring name, elm::Version version)
-: super(name, version) {
+: Processor(name, version, reg) {
 }
 
 
