@@ -60,6 +60,8 @@
  * 
  * @par CFG Features
  * 
+ * Includes @ref otawa/cfg/features.h
+ *
  * @li @ref CFG_INFO_FEATURE
  * @li @ref COLLECTED_CFG_FEATURE
  * @li @ref CONTEXT_TREE_FEATURE
