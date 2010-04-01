@@ -85,6 +85,9 @@ private:
 	inline const I& id(void) const { return ImmutableRef<T, I>::identifier(); }
 };
 
+// output
+template <class T, class I>
+io::Output& operator<<(io::Output& out, const Ref<T, I>& ref) { ref.print(out); return out; }
 template <class T, class I>
 io::Output& operator<<(io::Output& out, const ImmutableRef<T, I>& ref) { ref.print(out); return out; }
 
