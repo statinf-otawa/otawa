@@ -134,15 +134,20 @@ Identifier<bool> VIRTUAL_INLINING("otawa::VIRTUAL_INLINING", true);
  */
 Identifier<bool> DONT_INLINE("otawa::DONT_INLINE", false);
 
+/**
+ */
+Virtualizer::Virtualizer(void): Processor(reg) {
+}
 
 // Registration
-void Virtualizer::init(void) {
-	_name("otawa::Virtualizer");
-	_version(1, 1, 0);
-	_use(COLLECTED_CFG_FEATURE);
-	_invalidate(COLLECTED_CFG_FEATURE);
-	_provide(VIRTUALIZED_CFG_FEATURE);
-}
+Registration<Virtualizer> Virtualizer::reg(
+	"otawa::Virtualizer",
+	Version(1, 1, 0),
+	p::use, &COLLECTED_CFG_FEATURE,
+	p::invalidate, &COLLECTED_CFG_FEATURE,
+	p::provide, &VIRTUALIZED_CFG_FEATURE,
+	p::end
+);
 
 
 void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
@@ -202,6 +207,8 @@ BasicBlock *exit) {
 	elm::genstruct::HashTable<void *, BasicBlock *> map;
 	call_t call = { stack, cfg, 0 };
 	Vector<CFG *> called_cfgs;
+	if(isVerbose())
+		log << "\tbegin inlining " << cfg->label() << io::endl;
 
 	// Translate BB
 	for(CFG::BBIterator bb(cfg); bb; bb++)
@@ -209,8 +216,6 @@ BasicBlock *exit) {
 			BasicBlock *new_bb = new VirtualBasicBlock(bb);
 			map.put(bb, new_bb);
 			vcfg->addBB(new_bb);
-			// !!DEBUG!!
-			//cerr << (void *)bb << " -> " << (void *)new_bb << io::endl;
 		}
 
 	// Find local entry
@@ -226,19 +231,16 @@ BasicBlock *exit) {
 	// Translate edges
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
-//			assert(!bb->isVirtual());
+			cerr << "\t\tprocessing " << *bb << io::endl;
 
 			// Resolve source
 			BasicBlock *src = map.get(bb, 0);
 			assert(src);
 
-			// Is there a call ?
-			// CFG *called = 0;
-
 			BasicBlock *called_exit = 0;
 			if(isInlined())
 				for(BasicBlock::OutIterator edge(bb); edge; edge++)
-					if(edge->kind() == Edge::CALL) {
+					if(edge->kind() == Edge::CALL && edge->calledCFG()) {
 						if (DONT_INLINE(edge->calledCFG()))  {
 							if ((cfgMap.get(edge->calledCFG(), 0) == 0)) {
 								VirtualCFG *vcalled = new VirtualCFG(false);
@@ -252,7 +254,8 @@ BasicBlock *exit) {
 								vcalled->addBB(vcalled->exit());
 								vcalled->numberBB();
 							}
-						} else if(edge->calledCFG())
+						}
+						else
 							called_cfgs.add(edge->calledCFG());
 					}
 
@@ -262,7 +265,7 @@ BasicBlock *exit) {
 					if(!isInlined()) {
 						new Edge(src, edge->target(), Edge::CALL);
 					}
-					if (isInlined() && DONT_INLINE(edge->calledCFG())) {
+					if (isInlined() && edge->calledCFG() && DONT_INLINE(edge->calledCFG())) {
 						VirtualCFG *vcalled = cfgMap.get(edge->calledCFG(), 0);
 						ASSERT(vcalled != 0);
 						new Edge(src, vcalled->entry(), Edge::CALL);
@@ -318,6 +321,8 @@ BasicBlock *exit) {
 				called_cfgs.setLength(0);
 			}
 		}
+
+	log << "\tend inlining " << cfg->label() << io::endl;
 }
 
 

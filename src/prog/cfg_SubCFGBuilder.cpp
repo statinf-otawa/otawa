@@ -22,27 +22,32 @@
 
 #include <otawa/cfg/SubCFGBuilder.h>
 #include <otawa/cfg/features.h>
-#include <otawa/util/FlowFactLoader.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/cfg.h>
 #include <elm/util/BitVector.h>
 #include <elm/genstruct/VectorQueue.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/Iterator.h>
-#include <otawa/util/Dominance.h>
 
 using namespace elm;
 
-DEFINE_PROC(otawa::SubCFGBuilder,
-	version(1, 0, 0);
-	require(COLLECTED_CFG_FEATURE);
-	use(VIRTUALIZED_CFG_FEATURE);
-	invalidate(COLLECTED_CFG_FEATURE);
-	provide(VIRTUALIZED_CFG_FEATURE);
-		
-)
-
 namespace otawa {
+
+/**
+ */
+SubCFGBuilder::SubCFGBuilder(): Processor(reg) {
+}
+
+Registration<SubCFGBuilder> SubCFGBuilder::reg(
+	"otawa::SubCFGBuilder",
+	Version(1, 0, 0),
+	p::require, &COLLECTED_CFG_FEATURE,
+	p::use, &VIRTUALIZED_CFG_FEATURE,
+	p::invalidate, &COLLECTED_CFG_FEATURE,
+	p::provide, &VIRTUALIZED_CFG_FEATURE,
+	p::end
+);
+
 
 Identifier<bool> IS_START("", false);
 Identifier<bool> IS_STOP("", false);
@@ -360,7 +365,7 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 	// build the new CFG
 	vcfg = new VirtualCFG(false);
 	genstruct::HashTable<BasicBlock *, BasicBlock *> bbs;
-	genstruct::HashTable<BasicBlock *, BasicBlock *> second_bbs;
+	genstruct::Vector<BasicBlock *> orgs;
 
 	// make all virtual BB
 	vcfg->addBB(vcfg->entry());
@@ -378,47 +383,46 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 		BasicBlock *vbb = new VirtualBasicBlock(bb);
 		vcfg->addBB(vbb);
 		bbs.put(bb, vbb);
-		second_bbs.put(bb, vbb);
+		orgs.add(bb);
 	}
 	vcfg->addBB(vcfg->exit());
 
 	// build the virtual edges
-	for(genstruct::HashTable<BasicBlock *, BasicBlock *>::PairIterator pair(bbs); pair; pair++) {
-		BasicBlock *src = (*pair).fst, *vsrc = (*pair).snd;
-			// manage start
+	for(genstruct::Vector<BasicBlock *>::Iterator src(orgs); src; src++) {
+		BasicBlock *vsrc = bbs.get(src, 0);
+		ASSERT(vsrc);
+
+		// manage start
 		if(IS_START(src)) {
 			new Edge(vcfg->entry(), vsrc, Edge::VIRTUAL_CALL);
 			src->removeProp(IS_START);
-			}
+		}
 
 		// manage stop
 		if(IS_STOP(src)) {
 			new Edge(vsrc, vcfg->exit(), Edge::VIRTUAL_RETURN);
 			src->removeProp(IS_STOP);
-					continue;
+			continue;
 		}
 
 		// manage successors
 		for(BasicBlock::OutIterator edge(src); edge; edge++) {
 
 			// !!BUGGY!! we should build new CFG for the collection !
-			if(edge->kind() == Edge::CALL){
+			if(edge->kind() == Edge::CALL)
 				new Edge(vsrc, edge->target(), edge->kind());
-			}
 
 			// try to duplicate
 			else {
-				BasicBlock *vtarget = NULL;
-				//if (bbs.exists(edge->target()))
-				vtarget = second_bbs.get(edge->target(),0);
-
+				BasicBlock *vtarget = bbs.get(edge->target(), 0);
 				if(vtarget) {
 					new Edge(vsrc, vtarget, edge->kind());
-							// take care of VIRTUAL_RETURN_BLOCK
+
+					// take care of VIRTUAL_RETURN_BLOCK
 					if(edge->kind() == Edge::VIRTUAL_CALL) {
 						BasicBlock *ret = VIRTUAL_RETURN_BLOCK(src);
 						BasicBlock *vret = bbs.get(ret);
-							VIRTUAL_RETURN_BLOCK(vsrc) = vret ? vret :  vcfg->exit();
+						VIRTUAL_RETURN_BLOCK(vsrc) = vret ? vret :  vcfg->exit();
 					}
 				}
 			}
