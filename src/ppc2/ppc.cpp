@@ -690,10 +690,8 @@ otawa::Inst *Process::decode(Address addr) {
 				kind = Inst::IS_ALU | Inst::IS_INT;
 			break;
 		case PPC_BCL_D_D_D:
-			if (PPC_BCL_D_D_D_x_x_x_BD_n == 1) {
+			if (PPC_BCL_D_D_D_x_x_x_BD_n == 1)
 				kind = Inst::IS_ALU | Inst::IS_INT;
-				cerr << "INFO: no control at " << io::endl;
-			}
 			break;
 	}
 	bool is_branch = kind & Inst::IS_CONTROL;

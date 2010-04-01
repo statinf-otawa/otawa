@@ -390,7 +390,6 @@ otawa::Inst *Process::decode(address_t addr) {
 				//ASSERT(inst->instrinput[2].type == PARAM_INT16_T);
 				if(inst->instrinput[2].val.Int16 == 1) {
 					kind = Inst::IS_ALU | Inst::IS_INT;
-					cerr << "INFO: no control at " << io::endl;
 					goto simple;
 				}
 			case ID_BCLA_:
