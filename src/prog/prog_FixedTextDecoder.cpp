@@ -42,7 +42,7 @@ namespace otawa {
 /**
  * Constructor.
  */
-FixedTextDecoder::FixedTextDecoder(void) {
+FixedTextDecoder::FixedTextDecoder(void): Processor(reg) {
 }
 
 
@@ -79,10 +79,11 @@ void FixedTextDecoder::setup(WorkSpace *fw) {
 
 
 // Registration
-void FixedTextDecoder::init(void) {
-	_name("otawa::FixedTextDecoder");
-	_version(1, 0, 0);
-	_provide(DECODED_TEXT);
-}
+Registration<FixedTextDecoder> FixedTextDecoder::reg(
+	"otawa::FixedTextDecoder",
+	Version(1, 0, 0),
+	p::provide, &DECODED_TEXT,
+	p::end
+);
 
 } // otawa

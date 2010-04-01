@@ -47,10 +47,11 @@ namespace otawa { namespace script {
 static const cstring XSL_URI = "http://www.w3.org/1999/XSL/Transform";
 
 // Registration
-void Script::init(void) {
-	_name("otawa::script::Script");
-	_version(1, 0, 0);
-}
+Registration<Script> Script::reg(
+	"otawa::script::Script",
+	Version(1, 0, 0),
+	p::end
+);
 
 
 // ScriptErrorHandler class
@@ -75,7 +76,7 @@ private:
 
 /**
  */
-Script::Script(void) {
+Script::Script(void): Processor(reg) {
 }
 
 
