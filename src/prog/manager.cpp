@@ -263,9 +263,16 @@ WorkSpace *Manager::loadBin(
 	Loader *loader = LOADER(props);
 	if(!loader) {
 		CString name = LOADER_NAME(props);
-		if(name)
+		if(name) {
+			if(isVerbose())
+				log << "INFO: got loader name \"" << name << "\": ";
 			loader = findLoader(name);
+			if(isVerbose())
+				log << (loader ? "found" : "not found") << io::endl;
+		}
 	}
+	else if(isVerbose())
+		log << "INFO: got loader from proplist: " << loader << io::endl;
 
 	// Try with gel
 	if(!loader) {
