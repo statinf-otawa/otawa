@@ -74,6 +74,7 @@ protected:
 	virtual void onNoReturn(address_t addr);
 	virtual void onNoReturn(String name);
 	virtual void onNoCall(Address address);
+	virtual void onIgnoreSeq(Address address);
 	virtual void onIgnoreControl(Address address);
 	virtual void onMultiBranch(Address control, const Vector<Address>& target);
 	virtual void onPreserve(Address address);
@@ -123,6 +124,7 @@ extern Identifier<int> MIN_ITERATION;
 extern Identifier<int> TOTAL_ITERATION;
 extern Identifier<bool> NO_CALL;
 extern Identifier<bool> IGNORE_CONTROL;
+extern Identifier<bool> IGNORE_SEQ;
 extern Identifier<Address> BRANCH_TARGET;
 extern Identifier<bool> PRESERVED;
 
