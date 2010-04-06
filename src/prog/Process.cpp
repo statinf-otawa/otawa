@@ -859,12 +859,12 @@ DecodingException::DecodingException(const string& message):
 }
 
 
-static SilentFeature::Maker<NoProcessor> maker;
+static SilentFeature::Maker<NoProcessor> no_maker;
 /**
- * This feature, put on a process, informs that the functionnal simulator
- * provides the ability to give information about meory accesses.
+ * This feature, put on a process, informs that the functional simulator
+ * provides the ability to give information about memory accesses.
  *
- * @par Hooks
+ * @par Provider
  * @li @ref Process
  *
  * @par Activated Methods
@@ -873,6 +873,19 @@ static SilentFeature::Maker<NoProcessor> maker;
  * @li @ref otawa::sim::State::lowerWrite()
  * @li @ref otawa::sim::State::upperWrite()
  */
-SilentFeature MEMORY_ACCESSES("otawa::MEMORY_ACCESSES", maker);
+SilentFeature MEMORY_ACCESSES("otawa::MEMORY_ACCESSES", no_maker);
+
+
+/**
+ * This feature is present when the loader provides implementation
+ * of semantics information.
+ *
+ * @par Provider
+ * @li @ref Process
+ *
+ * @par Activated Methods
+ * @li @ref otawa::Inst::semInsts() method.
+ */
+SilentFeature SEMANTICS_INFO("otawa::SEMANTICS_INFO", no_maker);
 
 } // otawa

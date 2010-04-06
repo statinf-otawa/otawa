@@ -328,6 +328,7 @@ Process::Process(
 	provide(CONTROL_DECODING_FEATURE);
 	provide(REGISTER_USAGE_FEATURE);
 	provide(MEMORY_ACCESSES);
+	provide(SEMANTICS_INFO);
 }
 
 

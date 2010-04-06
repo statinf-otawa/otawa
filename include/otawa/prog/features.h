@@ -40,6 +40,7 @@ extern Feature<NoProcessor> REGISTER_USAGE_FEATURE;
 extern Feature<NoProcessor> CONTROL_DECODING_FEATURE;
 extern Feature<NoProcessor> SOURCE_LINE_FEATURE;
 extern SilentFeature MEMORY_ACCESSES;
+extern SilentFeature SEMANTICS_INFO;
 
 } // otawa
 
