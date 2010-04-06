@@ -111,7 +111,7 @@ void VarAssignment::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
  * Build a new variable assignment processor.
  */
 VarAssignment::VarAssignment(void)
-: _explicit(false), _recursive(false) {
+: BBProcessor(reg), _explicit(false), _recursive(false) {
 }
 
 
