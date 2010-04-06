@@ -231,7 +231,8 @@ BasicBlock *exit) {
 	// Translate edges
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
-			cerr << "\t\tprocessing " << *bb << io::endl;
+			if(isVerbose())
+				cerr << "\t\tprocessing " << *bb << io::endl;
 
 			// Resolve source
 			BasicBlock *src = map.get(bb, 0);
@@ -322,7 +323,8 @@ BasicBlock *exit) {
 			}
 		}
 
-	log << "\tend inlining " << cfg->label() << io::endl;
+	if(isVerbose())
+		log << "\tend inlining " << cfg->label() << io::endl;
 }
 
 
