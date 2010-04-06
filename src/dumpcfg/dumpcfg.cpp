@@ -31,6 +31,7 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg/Virtualizer.h>
 #include <otawa/cfg/CFGBuilder.h>
+#include <otawa/util/FlowFactLoader.h>
 
 #include "SimpleDisplayer.h"
 #include "DisassemblerDisplayer.h"
@@ -138,6 +139,7 @@ public:
 	option::BoolOption simple;
 	option::BoolOption disassemble;
 	option::BoolOption dot;
+	option::ValueOption<string> ff;
 	Displayer *displayer;
 
 protected:
@@ -160,6 +162,8 @@ void DumpCFG::prepare(PropList &props) {
 		displayer = &disassembler_displayer;
 	else if(dot)
 		displayer = &dot_displayer;
+	if(ff)
+		FLOW_FACTS_PATH(props) = Path(ff);
 }
 
 
@@ -184,6 +188,7 @@ DumpCFG::DumpCFG(void):
 	simple(*this, 'S', "simple", "Select simple output (default).", false),
 	disassemble(*this, 'L', "list", "Select listing output.", false),
 	dot(*this, 'D', "dot", "Select DOT output.", false),
+	ff(*this, option::cmd, "-f", option::cmd, "--flowfacts", option::description, "flowfacts to use", option::arg_desc, "PATH", option::end),
 
 	displayer(&simple_displayer)
 {
