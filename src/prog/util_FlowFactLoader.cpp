@@ -670,6 +670,20 @@ void FlowFactLoader::onIgnoreControl(Address address) {
 
 
 /**
+ * Called for the F4 construction "ignoreseq ADDRESS"
+ * @param address	Address of the ignored instruction.
+ */
+void FlowFactLoader::onIgnoreSeq(Address address) {
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		throw ProcessorException(*this,
+			_ << " no instruction at  " << address << ".");
+	else
+		IGNORE_SEQ(inst) = true;
+}
+
+
+/**
  * Called for the F4 construction "multibranch ADDRESS to ADDRESS, ...".
  * @param control	Multi-branch instruction address.
  * @param target	List of targets.
@@ -1084,12 +1098,23 @@ Identifier<bool> NO_CALL("otawa::NO_CALL", false);
 /**
  * Put on a control instruction to prevent it to be interpreted as is.
  * @par Features
- * @li @ref FLOW_fACTS_FEATURE
+ * @li @ref FLOW_FACTS_FEATURE
  * @par Hooks
  * @li @ref Inst
  * @ingroup ff
  */
 Identifier<bool> IGNORE_CONTROL("otawa::IGNORE_CONTROL", false);
+
+
+/**
+ * Put on a control instruction to prevent to pass in sequence.
+ * @par Features
+ * @li @ref FLOW_FACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier<bool> IGNORE_SEQ("otawa::IGNORE_SEQ", false);
 
 
 /**
