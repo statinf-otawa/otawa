@@ -61,6 +61,7 @@ SYM [?;,+-/:]
 "nocall"		return KW_NOCALL;
 "multibranch"	return KW_MULTIBRANCH;
 "ignorecontrol"	return KW_IGNORECONTROL;
+"ignoreseq"		return KW_IGNORESEQ;
 "to"			return KW_TO;
 "preserve"		return KW_PRESERVE;
 "in"			return KW_IN;

@@ -3,7 +3,7 @@
  *	F4 parser
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-07, IRIT UPS.
+ *	Copyright (c) 2005-10, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -60,6 +60,7 @@ static void reset_counts(void) {
 %token KW_NOCALL
 %token KW_MULTIBRANCH
 %token KW_IGNORECONTROL
+%token KW_IGNORESEQ
 %token KW_TO
 %token KW_PRESERVE
 %token KW_IN
@@ -105,6 +106,8 @@ command:
 		{ loader->onNoCall(*$2); delete $2; }
 |	KW_IGNORECONTROL full_address ';'
 		{ loader->onIgnoreControl(*$2); delete $2; }
+|	KW_IGNORESEQ full_address ';'
+		{ loader->onIgnoreSeq(*$2); delete $2; }
 |	KW_MULTIBRANCH { addresses.setLength(0); } multibranch
 		{ }
 |	KW_PRESERVE full_address ';'
