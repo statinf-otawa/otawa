@@ -41,6 +41,77 @@ namespace otawa { namespace hard {
  * @li processor registers,
  * @li cache hierarchy,
  * @li memory spaces.
+ *
+ * Register description is provided by the current loader plugin as it is part
+ * of the ISA (Instruction Set Architecture). Other hardware feature are independent
+ * and must be provided when the @ref otawa::Process is built in the
+ * configuration properties with properties :
+ * @li otawa::PLATFORM -- whole platform description
+ * @li @ref otawa::CACHE_CONFIG -- cache configuration
+ * @li @ref otawa::CACHE_CONFIG_ELEMENT -- cache configuration as an XML element
+ * @li @ref otawa::CACHE_CONFIG_PATH -- cache configuration contained in a file
+ * @li @ref otawa::MEMORY_OBJECT -- memory configuration
+ * @li @ref otawa::MEMORY_ELEMENT -- memory configuration as an XML element
+ * @li @ref otawa::MEMORY_PATH -- memory configuration contained in a file
+ * @li @ref otawa::PROCESSOR -- processor configuration
+ * @li @ref otawa::PROCESSOR_ELEMENT -- processor configuration as an XML element
+ * @li @ ref otawa::PROCESSOR_PATH -- processor configuration contained in a file
+ *
+ * @par hard_proc Processor Format
+ *
+ * We describe here the format of processor configuration expressed in XML.
+ * This file is unserialized according the @ref elm::serial2 module and therefore
+ * supports all its features. The XML format notation is detailed in @ref hard_format .
+ *
+ * @code
+ * <!-- PROCESSOR ::= -->
+ *	<?xml version="1.0" encoding="UTF-8"?>
+ *	<processor class="otawa::hard::Processor">
+ *		<arch><!-- ISA name --></arch>
+ *		<model><!-- processor model --></model>
+ *		<builder><!-- processor builder --></builder>
+ *
+ *		<stages> <!-- STAGE* --> </stages>
+ *
+ *		<queues> <!-- QUEUE* --> </queues>
+ *	<processor>
+ * @endcode
+ *
+ * A processor is made of several stages linked by queues. A stage has a type that may
+ * be:
+ * @li FETCH -- this stage gets instruction from the memory (it must the first in the pipeline and only one is accepted)
+ * @li LAZY -- nothing interesting the analysis, just takes time
+ * @li EXEC (execution) -- the instruction are executed at this point (this stage may contains functional unit and dispatcher)
+ * @li COMMIT -- this is the last stage where instruction exits the pipeline
+ *
+ * @code
+ * <!-- STAGE ::= -->
+ *	<stage id="STAGE IDENTIFIER">
+ *		<name><!-- name for human user --></name>
+ *		<type><!-- one of FETCH, LAZY, EXEC or COMMIT (default LAZY) --></type>
+ *		<width><!-- number of processed instruction per cycle (default 1) --></width>
+ *
+ *		<!-- only for EXEC type of stage -->
+ *		<fus><!-- FU* --></fus>
+ *		<dispatch><!-- INST * --></dispatch>
+ *	</stage>
+ * @endcode
+ *
+ * The "fus" contains the list of available functional units. The dispatching of
+ * instructions between the functional units is given in the "dispatch" element.
+ *
+ * @code
+ * <!-- FU ::= -->
+ * 	<fu id="FU identifier">
+ * 		<name><!-- name for human user --></name>
+ * 		<width><!-- number of instruction processed by cycle (default 1) --></width>?
+ * 		<latency><!-- number of cycle passed in the FU --></latency>?
+ * 		<pipelined><!-- TRUE if the FU is pipelined, FALSE else (default) --></pipelined>?
+ * 	</fu>
+ * @endcode
+ *
+ * The "inst" allows to dispatch instruction in the FU.
+ *
  */
 
 
