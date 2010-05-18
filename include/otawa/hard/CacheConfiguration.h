@@ -33,6 +33,7 @@ public:
 	inline bool isHarvard(void) const;
 	static CacheConfiguration *load(elm::xom::Element *element);
 	static CacheConfiguration *load(const elm::system::Path& path);
+	string cacheName(const Cache *cache) const;
 };
 
 // Inlines

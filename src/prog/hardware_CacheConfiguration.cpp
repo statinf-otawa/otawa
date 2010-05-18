@@ -114,6 +114,39 @@ CacheConfiguration *CacheConfiguration::load(const elm::system::Path& path) {
 	}
 }
 
+/**
+ * Compute name of the cache.
+ * @param cache		Cache to get name for.
+ * @return			Cache name.
+ */
+string CacheConfiguration::cacheName(const Cache *cache) const {
+	int level = 1;
+
+	// traverse cache hierarchy
+	const Cache *icache = instCache(), *dcache = dataCache();
+	while(icache != cache && dcache != cache) {
+		if(!icache && !dcache)
+			return "unknown";
+		if(icache)
+			icache = icache->nextLevel();
+		if(dcache)
+			dcache = dcache->nextLevel();
+	}
+
+	// build the name
+	StringBuffer buf;
+	buf << 'L' << level;
+	if(!icache)
+		buf << " data";
+	else if(!dcache)
+		buf << " instruction";
+	else
+		buf << " unified";
+	buf << " cache";
+	return buf.toString();
+}
+
+
 } } // otawa::hard
 
 SERIALIZE(otawa::hard::CacheConfiguration)
