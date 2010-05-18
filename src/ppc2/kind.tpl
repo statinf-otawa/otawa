@@ -3,8 +3,7 @@
 #include <$(proc)/api.h>
 #include <$(proc)/id.h>
 #include <$(proc)/macros.h>
-
-#include <grt.h>
+#include <$(proc)/grt.h>
 
 #ifdef __cplusplus
 extern "C" {
