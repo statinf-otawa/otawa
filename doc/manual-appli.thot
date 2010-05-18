@@ -135,16 +135,31 @@ clean:
 -include $(DEPS)
 </code>
 
-The utility ''otawa-config'' provides all details about the OTAWA installation: C++ flags, libraries to link and path to shared resources. You may also configure which OTAWA modules you want to use.
-  - gensim: use of the generic simulator (see next section),
-  - ppc: use PowerPC loader (not required if you have compiled using shared libraries),
-  - lp_solve: ILP solver (not required if you have compiled using shared libraries).
+The utility ''otawa-config'' provides all details about the OTAWA installation: C++ flags, libraries to link and path to shared resources.
+You may also configure which OTAWA modules you want to use. Usual modules includes:
+  * ast: AST (Abstract Syntax Tree) classes
+  * display: use of the display namespace classes,
+  * ets: ETS (Extended Timing Schema) code processors,
+  * gensim: use of the generic simulator,
+  * bpred: branch prediction classes.
 
-For now, we have just selected ''lp_solve'' -- required by IPET approach -- and ppc -- to process PowerPC binaries. Then, you have to launch the compilation (and possibly fix some syntax errors):
+If you choose to perform static link of OTAWA, you may also link with some plugins:
+  * lp_solve: ILP solver,
+  * lp_solve5: last version of lp_solve,
+  * ppc: PowerPC loader,
+  * s12x: Star12X loader,
+  * arm loader.
+
+For now, we have just selected ''lp_solve'' -- required by IPET approach -- and ppc -- to process PowerPC binaries.
+Then, you have to launch the compilation (and possibly fix some syntax errors):
 <code sh>
 $ make
 </code>
 
+To get all available modules, you may perform the following call:
+<code sh>
+$ otawa-config --modules
+</code>
 
 
 
@@ -241,6 +256,68 @@ At this point, you know how to customize the computation of the WCET. To go furt
   * which features are available,
   * how to configure it.
 The auto-documentation of OTAWA code processors is available at ''INSTALL_DIR/share/Otawa/autodoc''.
+
+
+
+===== Fast Way =====
+
+The previous sections have presented the hard way to make an OTAWA application
+but OTAWA implements some utilities and classes to simplify the work.
+
+First, ''otawa-new'' is a small program to generate an OTAWA project. Just pass
+the name of the project as argument and it generates a directory containing
+the ''Makefile'' for your project:
+<code sh>
+$ otawa-new my_project
+</code>
+Then, you have just to configure the ''Makefile'' by editing it. 
+
+Second, it is usually a burden and a repetitive task to scan the application
+arguments, to open the binary file and to process each entry point passed
+as argument. With the class otawa::Application, you have just to provide
+the function to process the entry points:
+
+<code cpp>
+#include <otawa/app/Application.h>
+
+using namespace otawa;
+
+class MyApplication: public Application {
+public:
+	MyApplication: Application("MyApplication", Version(1, 0, 0)) {
+		// initialization
+	}
+
+protected:
+	virtual void work(const string &entry, PropList &props) throw (elm::Exception) {
+		// do the work here
+	} 
+};
+
+OTAWA_RUN(MyApplication)
+</code>
+
+Notice that the ''main'' is automatically handled by the ''OTAWA_RUN'' macro 
+and the application class automatically supports ''-v'' and ''-h'' options.
+You may additional options as below:
+
+<code cpp>
+class MyApplication: public Application {
+public:
+	MyApplication:
+		Application("MyApplication", Version(1, 0, 0)),
+		option1(*this, ...),
+		option2(*this, ...)
+	{ // initialization }
+
+private:
+	MyOption1 option1;
+	MyOption2 option2;
+};
+</code>
+
+Please, refer to the ''options'' module of ELM library to get details on the option classes (inheriting from ''elm::option::Option'').
+
 
 
 ===== Conclusion =====
