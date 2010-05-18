@@ -26,6 +26,7 @@
 #include <otawa/proc/Registry.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/proc/FeatureDependency.h>
+#include <otawa/proc/Progress.h>
 
 using namespace elm;
 using namespace elm::io;
@@ -305,7 +306,17 @@ void Processor::init(const PropList& props) {
 		else
 			flags &= ~IS_TIMED;
 	}
+
+	// Progress
+	_progress = PROGRESS(props);
 }
+
+
+/**
+ * @fn Progress& Processor::progress(void);
+ * Get the current progress handler.
+ * @return	Progress handler.
+ */
 
 
 // Only for the deprecation warning
@@ -561,6 +572,12 @@ Identifier<bool> Processor::VERBOSE("otawa::Processor::VERBOSE", false);
 
 
 /**
+ * Install
+ */
+Identifier<Progress *> Processor::PROGRESS("otawa::Processor::PROGRESS", &Progress::null);
+
+
+/**
  * Usually called from a processor constructor, this method records a
  * required feature for the work of the current processor.
  * @param feature	Required feature.
@@ -702,5 +719,81 @@ String UnavailableFeatureException::message(void) {
 	return _ << ProcessorException::message()
 			 << " requires the feature \"" << f.name() << "\".";
 }
+
+
+/**
+ * @class Progress
+ * This class is an interface to get progress information about
+ * execution of a processor. To use it, you have to overload its pure
+ * virtual members and to pass it to the processor configuration
+ * via @ref otawa::Processor::PROGRESS property.
+ *
+ * @warning Not all processor supports progress and some of them
+ * may ignore it.
+ * @ingroup proc
+ */
+
+
+// Null progress implementation
+class NullProgress: public Progress {
+public:
+	virtual void start(const Processor& processor, mode_t mode, int max = 0) { }
+	virtual void stop(void) { }
+	virtual void report(string info, int level) { }
+	virtual void restart(string info)  { }
+};
+static NullProgress null_progress;
+
+
+/**
+ * Progress handler that do nothing.
+ */
+Progress& Progress::null = null_progress;
+
+
+/**
+ * @fn void Progress::start(const Processor& processor, mode_t mode, int max);
+ * This method is called when the processor is starting. The mode parameter
+ * describe the way the processor is working.
+ *
+ * A mode @ref otawa::Progess::living can not produce statistics about progress.
+ * The report() is called regularly to inform that the processor is living.
+ * The max parameter is meaningless.
+ *
+ * A mode @ref otawa::Progress::linear says the report() method is called
+ * each a progress is performed until the end. max represents the number
+ * of stages before end.
+ *
+ * A mode @ref otawa::Progress::fixpoint informs the computation produces
+ * an undefined number of steps but each step is separated by a call to
+ * restart(). max represents the number of level before end.
+ *
+ * @param processor		Current processor.
+ * @param mode			Current mode.
+ * @param max			Number of levels.
+ */
+
+
+/**
+ * @fn void Progress::stop(void);
+ * Called at the end of the work.
+ */
+
+
+/**
+ * @fn void Progress::report(string info, int level);
+ * Called each time to inform about the progression.
+ * @param info	Info about the report.
+ * @param level	Current level.
+ */
+
+
+/**
+ * @fn void Progress::restart(string info);
+ * This method is only called in @ref otawa::Processor::fixpoint mode
+ * at each step start.
+ * @param info	Current step information.
+ */
+
 
 } // otawa

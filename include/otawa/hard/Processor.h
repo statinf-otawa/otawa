@@ -107,19 +107,25 @@ public:
 // Processor class
 class Processor {
 	SERIALIZABLE(otawa::hard::Processor, FIELD(arch) & FIELD(model)
-		& FIELD(builder) & FIELD(stages) & FIELD(queues));
-	elm::String arch;
-	elm::String model;
-	elm::String builder;
-	AllocatedTable<Stage *> stages;
-	AllocatedTable<Queue *> queues;
+		& FIELD(builder) & FIELD(stages) & FIELD(queues) & FIELD(frequency));
+
 public:
+	inline Processor(void): frequency(0) { }
 	virtual ~Processor(void) { }
 	inline elm::String getArch(void) const { return arch; };
 	inline elm::String getModel(void) const { return model; };
 	inline elm::String getBuilder(void) const { return builder; };
 	inline const Table<Stage *>& getStages(void) const { return stages; };
 	inline const Table<Queue *>& getQueues(void) const { return queues; };
+	inline t::uint64 getFrequency(void) const { return frequency; }
+
+private:
+	elm::String arch;
+	elm::String model;
+	elm::String builder;
+	AllocatedTable<Stage *> stages;
+	AllocatedTable<Queue *> queues;
+	t::uint64 frequency;
 };
 
 
