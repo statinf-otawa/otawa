@@ -51,7 +51,7 @@ class DefaultListener {
 	typename Problem::Domain ***results_out;
 	
  DefaultListener(WorkSpace *_fw, Problem& _prob, bool _store_out = false) : fw(_fw), prob(_prob), store_out(_store_out) {
-		CFGCollection *col = INVOLVED_CFGS(fw);
+		const CFGCollection *col = INVOLVED_CFGS(fw);
 		results = new typename Problem::Domain**[col->count()];
 		if (store_out)
 		  	results_out = new typename Problem::Domain**[col->count()];
@@ -69,7 +69,7 @@ class DefaultListener {
 	}
 	
 	~DefaultListener() {
-		CFGCollection *col = INVOLVED_CFGS(fw);
+		const CFGCollection *col = INVOLVED_CFGS(fw);
 		for (int i = 0; i < col->count();  i++) {
 			CFG *cfg = col->get(i); 
 			for (int j = 0; j < cfg->countBB(); j++){
