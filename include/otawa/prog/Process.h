@@ -162,6 +162,8 @@ public:
 	virtual Loader *loader(void) const;
 	Symbol *findSymbol(const string& name);
 	virtual Address initialSP(void) const;
+	virtual Inst *newNOp(Address addr = Address::null);
+	virtual void deleteNop(Inst *inst);
 
 	// Memory access
 	virtual void get(Address at, signed char& val);
