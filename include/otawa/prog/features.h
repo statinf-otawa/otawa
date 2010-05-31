@@ -26,11 +26,19 @@
 
 namespace otawa {
 
+// delayed_t type
+typedef enum delayed_t {
+	DELAYED_None = 0,
+	DELAYED_Always = 1,
+	DELAYED_Taken = 2
+} delayed_t;
+
 // Process information
 extern Identifier<Address> ARGV_ADDRESS;
 extern Identifier<Address> ENVP_ADDRESS;
 extern Identifier<Address> AUXV_ADDRESS;
 extern Identifier<Address> SP_ADDRESS;
+extern Identifier<delayed_t> DELAYED;
 
 // Features
 extern Feature<NoProcessor> MEMORY_ACCESS_FEATURE;
@@ -41,6 +49,7 @@ extern Feature<NoProcessor> CONTROL_DECODING_FEATURE;
 extern Feature<NoProcessor> SOURCE_LINE_FEATURE;
 extern SilentFeature MEMORY_ACCESSES;
 extern SilentFeature SEMANTICS_INFO;
+extern Feature<NoProcessor> DELAYED_FEATURE;
 
 } // otawa
 
