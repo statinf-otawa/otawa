@@ -15,6 +15,7 @@ includeotawaproc_HEADERS = \
 	Processor.h \
 	ProcessorException.h \
 	ProcessorPlugin.h \
+	Progress.h \
 	Registration.h \
 	Registry.h \
 	SilentFeature.h

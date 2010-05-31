@@ -41,6 +41,7 @@ class AbstractFeature;
 class Configuration;
 class WorkSpace;
 class FeatureDependency;
+class Progress;
 
 
 // Processor class
@@ -80,6 +81,7 @@ public:
 	static Identifier<bool> TIMED;
 	static Identifier<bool> VERBOSE;
 	static Identifier<bool> RECURSIVE;
+	static Identifier<Progress *> PROGRESS;
 
 	// Statistics Properties
 	static Identifier<elm::system::time_t> RUNTIME;
@@ -114,6 +116,7 @@ protected:
 		{ addCleaner(feature, new Deletor<T>(object)); return object; }
 	template <class T> void track(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
 		{ addCleaner(feature, new Deletor<T>(ref)); }
+	inline Progress& progress(void) { return *_progress; }
 
 	// Overwritable methods
 	virtual void processWorkSpace(WorkSpace *fw);
@@ -130,6 +133,7 @@ private:
 	typedef Pair<const AbstractFeature *, Cleaner *> clean_t;
 	typedef elm::genstruct::SLList<clean_t> clean_list_t;
 	clean_list_t cleaners;
+	Progress *_progress;
 };
 
 
