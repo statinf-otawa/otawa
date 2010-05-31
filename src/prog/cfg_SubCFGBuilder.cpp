@@ -302,7 +302,7 @@ void SubCFGBuilder::configure(const PropList &props) {
 void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 
 	// get the CFG
-	CFGCollection *coll = INVOLVED_CFGS(ws);
+	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
 	CFG *cfg = coll->get(0);
 
