@@ -72,7 +72,7 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *fw) {
 
 	int idx = 0;
 
-	CFGCollection *orig_coll = INVOLVED_CFGS(fw);
+	const CFGCollection *orig_coll = INVOLVED_CFGS(fw);
 	if (reduce_loops) {
 
 		for (CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++) {

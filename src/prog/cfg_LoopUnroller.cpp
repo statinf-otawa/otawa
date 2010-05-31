@@ -91,12 +91,12 @@ LoopUnroller::LoopUnroller(void) : Processor("otawa::LoopUnroller", Version(1, 0
 void LoopUnroller::processWorkSpace(otawa::WorkSpace *fw) {
 
 	int cfgidx = 0;
-	CFGCollection *orig_coll = INVOLVED_CFGS(fw);
+	const CFGCollection *orig_coll = INVOLVED_CFGS(fw);
 
 	// Create the new VCFG collection first, so that it will be available when we do the loop unrolling
 	for (CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++, cfgidx++) {
 		VirtualCFG *vcfg = new VirtualCFG(false);
-		coll->cfgs.add(vcfg);
+		coll->add(vcfg);
 		INDEX(vcfg) = cfgidx;
 		vcfg->addBB(vcfg->entry());
 
