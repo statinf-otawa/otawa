@@ -230,11 +230,25 @@ class FFOutput: public CFGProcessor {
 public:
 	FFOutput(void);
 protected:
+	virtual void setup(WorkSpace *ws) {
+		has_debug = ws->isProvided(otawa::SOURCE_LINE_FEATURE);
+	}
+
 	virtual void processCFG(WorkSpace *ws, CFG *cfg);
 private:
 	void scanFun(ContextTree *ctree);
 	void scanLoop(CFG *cfg, ContextTree *ctree, int indent);
 	bool checkLoop(ContextTree *ctree);
+
+	void printSourceLine(Output& out, WorkSpace *ws, Address address) {
+		if(!has_debug)
+			return;
+		Option<Pair< cstring, int> > loc = ws->process()->getSourceLine(address);
+		if(loc)
+			out << (*loc).fst << ":" << (*loc).snd << io::endl;
+	}
+
+	bool has_debug;
 };
 
 
@@ -414,7 +428,7 @@ Command::~Command(void) {
 /**
  * Display the flow facts.
  */
-FFOutput::FFOutput(void): CFGProcessor("FFOutput", Version(1, 0, 0)) {
+FFOutput::FFOutput(void): CFGProcessor("FFOutput", Version(1, 0, 0)), has_debug(false) {
 	require(CONTEXT_TREE_BY_CFG_FEATURE);
 }
 
@@ -444,7 +458,9 @@ void FFOutput::scanFun(ContextTree *ctree) {
 		String label = ctree->cfg()->label();
 		if(!label)
 			label = _ << "0x" << ctree->cfg()->address(); 
-		cout << "// Function " << label << "\n";
+		cout << "// Function " << label << " ";
+		this->printSourceLine(cout, workspace(), ctree->cfg()->address());
+		cout << "\n";
 		
 		// Scan the loop
 		scanLoop(ctree->cfg(), ctree, 0);		

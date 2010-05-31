@@ -80,7 +80,7 @@ void CATBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	// Compute Abstract Cache States
 	const hard::Cache *cach = fw->platform()->cache().instCache();
 	CATProblem prob(lbset, lbset->count(), cach, fw);
-	CFGCollection *coll = INVOLVED_CFGS(fw);
+	const CFGCollection *coll = INVOLVED_CFGS(fw);
 	dfa::XCFGVisitor<CATProblem> visitor(*coll, prob);
 	dfa::XIterativeDFA<dfa::XCFGVisitor<CATProblem> > engine(visitor);
 	engine.process();

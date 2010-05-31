@@ -347,4 +347,16 @@ CodeBasicBlock::CodeBasicBlock(Inst *inst) {
 		LABEL(this) = label;
 }
 
+
+/**
+ * Get the last instruction of a basic block.
+ * @return		Last instruction (or NULL if the basic block is an end).
+ */
+Inst *BasicBlock::lastInst(void) const {
+	Inst *last = 0;
+	for(BasicBlock::InstIter inst(this); inst; inst++)
+		last = inst;
+	return last;
+}
+
 } // otawa

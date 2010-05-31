@@ -888,4 +888,87 @@ SilentFeature MEMORY_ACCESSES("otawa::MEMORY_ACCESSES", no_maker);
  */
 SilentFeature SEMANTICS_INFO("otawa::SEMANTICS_INFO", no_maker);
 
+
+/**
+ * @enum delayed_t
+ * Enumeration giving the type of delayed modes used by control instruction.
+ */
+
+/**
+ * @var delayed_t::DELAYED_None
+ * No delayed instruction.
+ */
+
+/**
+ * @var delayed_t::DELAYED_Always;
+ * The delayed instruction is ever executed, branch taken or not.
+ */
+
+/**
+ * @var delayed_t::DELAYED_Taken
+ * The delayed instruction is only executed when the branch is taken.
+ */
+
+
+/**
+ * This kind of property is put on control branch to know if the following
+ * instruction is executed as part of a delayed branch.
+ * @par Feature
+ * @li @ref otawa::DELAYED_FEATURE
+ * @par Hook
+ * @li @ref otawa::Inst (control instruction)
+ */
+Identifier<delayed_t> DELAYED("otawa::DELAYED", DELAYED_None);
+
+/**
+ * This feature is put on processes by the loader to inform that the
+ * control instruction of the current instruction contains delayed branches
+ *
+ * @par Provider
+ * @li program loader
+ *
+ * @par Properties
+ * @li @ref otawa::DELAYED
+ *
+ */
+Feature<NoProcessor> DELAYED_FEATURE("otawa::DELAYED_FEATURE");
+
+
+/* Nop instruction */
+class NopInst: public Inst {
+public:
+	NopInst(Address address, t::size size): addr(address), _size(size) { }
+
+	virtual void dump (io::Output &out) { out << "<nop>"; }
+	virtual kind_t kind (void) { return 0; }
+	virtual Inst *toInst(void) { return this; }
+	virtual Address address(void) const { return addr; }
+	virtual size_t	size(void) const { return _size; }
+
+private:
+	Address addr;
+	t::size _size;
+};
+
+/**
+ * Build a NOP instruction at the given address.
+ * @param addr	Address of the instruction (default to null address).
+ * @return		Built NOP instruction (must fried by deleteNop() call).
+ */
+Inst *Process::newNOp(Address addr) {
+	t::size size = this->instSize();
+	if(size == 0)
+		size = 1;
+	return new NopInst(addr, size);
+}
+
+
+/**
+ * Delete a NOP instruction previously allocated by NewOP().
+ * @param inst	Instruction to delete.
+ */
+void Process::deleteNop(Inst *inst) {
+	delete (NopInst *)inst;
+}
+
 } // otawa

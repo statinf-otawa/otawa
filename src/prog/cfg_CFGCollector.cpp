@@ -141,7 +141,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 	index++;
 
 	// Entry CFG
-	cfgs->cfgs.add(entry);
+	cfgs->add(entry);
 	if(isVerbose())
 		log << "\tadding " << entry->label() << io::endl;
 
@@ -150,7 +150,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 		CFGInfo *info = fw->getCFGInfo();
 		CFG *cfg = info->findCFG(added_funs[i]);
 		if(cfg) {
-			cfgs->cfgs.add(cfg);
+			cfgs->add(cfg);
 			if(isVerbose())
 				log << "\tadding " << cfg->label() << io::endl;
 		}
@@ -160,7 +160,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
 	// Added CFG
 	for(int i = 0; i < added_cfgs.length(); i++) {
-		cfgs->cfgs.add(added_cfgs[i]);
+		cfgs->add(added_cfgs[i]);
 		if(isVerbose())
 			log << "\tadding " << added_cfgs[i]->label() << io::endl;
 	}
@@ -182,7 +182,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 						else if(!MARK(edge->calledCFG())) {
 					        INDEX(edge->calledCFG()) = index;
 					        index++;
-							cfgs->cfgs.add(edge->calledCFG());
+							cfgs->add(edge->calledCFG());
 							MARK(edge->calledCFG()) = true;
 							if(isVerbose())
 								log << "\t\tadding " << edge->calledCFG()->label() << io::endl;
@@ -207,7 +207,7 @@ CFGCollector::CFGCollector(void)
 }
 
 void CFGCollector::cleanup(WorkSpace *ws) {
-	CFGCollection *coll = INVOLVED_CFGS(ws);
+	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	for (CFGCollection::Iterator iter(*coll); iter; iter++)
 		MARK(iter) = false;
 }
@@ -241,7 +241,7 @@ void CFGCollector::configure(const PropList& props) {
  * @par Hooks
  * FrameWork
  */
-Identifier<CFGCollection *> INVOLVED_CFGS("otawa::INVOLVED_CFGS", 0);
+Identifier<const CFGCollection *> INVOLVED_CFGS("otawa::INVOLVED_CFGS", 0);
 
 
 static SilentFeature::Maker<CFGCollector> COLLECTED_CFG_MAKER;

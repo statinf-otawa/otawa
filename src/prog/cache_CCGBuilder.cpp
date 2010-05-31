@@ -102,7 +102,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 
 	// Run the DFA
 	CCGProblem prob(lbset, lbset->count(), cache, fw);
-	CFGCollection *coll = INVOLVED_CFGS(fw);
+	const CFGCollection *coll = INVOLVED_CFGS(fw);
 	dfa::XCFGVisitor<CCGProblem> visitor(*coll, prob);
 	dfa::XIterativeDFA<dfa::XCFGVisitor<CCGProblem> > engine(visitor);
 	engine.process();
