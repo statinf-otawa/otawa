@@ -210,7 +210,7 @@ void DumpCFG::dump(CFG *cfg) {
 	if(inline_calls)
 		my_ws->require(VIRTUALIZED_CFG_FEATURE);
 	my_ws->require(COLLECTED_CFG_FEATURE);
-	CFGCollection *coll = INVOLVED_CFGS(my_ws);
+	const CFGCollection *coll = INVOLVED_CFGS(my_ws);
 	CFG *vcfg = (*coll)[0];
 
 	// Dump the CFG

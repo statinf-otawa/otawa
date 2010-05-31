@@ -48,7 +48,7 @@ class UnrollingListener {
 	
 	UnrollingListener(WorkSpace *_fw, Problem& _prob) 
 	: fw(_fw), prob(_prob) {
-		CFGCollection *col = INVOLVED_CFGS(fw);
+		const CFGCollection *col = INVOLVED_CFGS(fw);
 		results = new typename Problem::Domain**[col->count()];
 		
 		for (int i = 0; i < col->count();  i++) {
@@ -60,7 +60,7 @@ class UnrollingListener {
 	}
 	
 	~UnrollingListener() {
-		CFGCollection *col = INVOLVED_CFGS(fw);
+		const CFGCollection *col = INVOLVED_CFGS(fw);
 		for (int i = 0; i < col->count();  i++) {
 			CFG *cfg = col->get(i); 
 			for (int j = 0; j < cfg->countBB(); j++)
