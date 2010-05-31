@@ -152,7 +152,7 @@ Registration<Virtualizer> Virtualizer::reg(
 
 void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 
-	CFGCollection *coll = INVOLVED_CFGS(fw);
+	const CFGCollection *coll = INVOLVED_CFGS(fw);
 	VirtualCFG *vcfg = new VirtualCFG(false);
        /* if (!entry)
         	entry = ENTRY_CFG(fw);
