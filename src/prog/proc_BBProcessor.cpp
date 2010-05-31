@@ -84,7 +84,7 @@ void BBProcessor::processCFG(WorkSpace *fw, CFG *cfg) {
 /**
  */
 void BBCleaner::clean(void) {
-	CFGCollection *coll = INVOLVED_CFGS(ws);
+	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
 	for(CFGCollection::Iterator cfg(coll); cfg; cfg++)
 		for(CFG::BBIterator bb(cfg); bb; bb++)

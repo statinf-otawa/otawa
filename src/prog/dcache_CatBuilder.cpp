@@ -41,7 +41,7 @@ void CATBuilder::cleanup(WorkSpace *ws) {
 	if(!isVerbose())
 		return;
 
-	CFGCollection *cfgs = INVOLVED_CFGS(ws);
+	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
 	ASSERT(cfgs);
 	for(int i = 0; i < cfgs->count(); i++)
 		for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++) {
@@ -66,7 +66,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const otawa::BlockCollection& c
 	int line = coll.set();
 	MUSTProblem::Domain dom(coll.count(), cache->wayCount());
 
-	CFGCollection *cfgs = INVOLVED_CFGS(ws);
+	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
 	ASSERT(cfgs);
 	for(int i = 0; i < cfgs->count(); i++)
 		for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++) {

@@ -589,7 +589,7 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	typedef HalfAbsInt<StackFP> StackAI;
 
 	// get the entry
-	CFGCollection *coll = INVOLVED_CFGS(ws);
+	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
 	CFG *cfg = coll->get(0);
 

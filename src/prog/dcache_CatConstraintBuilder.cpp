@@ -48,7 +48,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 	//LBlockSet **lbsets = LBLOCKS(fw);
 
 	// traverse CFG
-	CFGCollection *cfgs = INVOLVED_CFGS(ws);
+	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
 	ASSERT(cfgs);
 	for(int i = 0; i < cfgs->count(); i++) {
 		CFG *cfg = cfgs->get(i);

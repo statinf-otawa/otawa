@@ -80,7 +80,7 @@ CFGProcessor::CFGProcessor(cstring name, elm::Version version)
 void CFGProcessor::processWorkSpace(WorkSpace *fw) {
 
 	// Get the CFG collection
-	CFGCollection *cfgs = INVOLVED_CFGS(fw);
+	const CFGCollection *cfgs = INVOLVED_CFGS(fw);
 	assert(cfgs);
 
 	// Visit CFG
