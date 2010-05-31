@@ -30,14 +30,14 @@ class XCFGVisitor {
 		inline node_t(void): bb(0), cfg(-1), to(-1), from(-1) { }
 	} node_t;
 	P& dom;
-	CFGCollection& cfgs;
+	const CFGCollection& cfgs;
 	FragTable<node_t> nodes;
 	int *offs;
 	Vector<int> *preds;
 
 public:
 
-	XCFGVisitor(CFGCollection& cfgs, P& domain);
+	XCFGVisitor(const CFGCollection& cfgs, P& domain);
 	~XCFGVisitor(void); 
 	
 	typedef typename P::domain_t domain_t;
@@ -59,7 +59,7 @@ public:
 
 // Inlines
 template <class D>
-XCFGVisitor<D>::XCFGVisitor(CFGCollection& _cfgs, D& domain)
+XCFGVisitor<D>::XCFGVisitor(const CFGCollection& _cfgs, D& domain)
 :	dom(domain),
 	cfgs(_cfgs),
 	offs(new int[cfgs.count() + 1]),
