@@ -7,6 +7,7 @@ includeotawacfg_HEADERS = \
 	CFGCheckSummer.h \
 	CFGCollector.h \
 	CFGInfo.h \
+	DelayedBuilder.h \
 	Edge.h \
 	features.h \
 	LoopReductor.h \

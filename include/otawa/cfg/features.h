@@ -42,8 +42,8 @@ typedef elm::genstruct::Tree<SESERegion*> PSTree;
 
 // CFGCollection Class
 class CFGCollection {
-	friend class CFGCollector;
-	friend class LoopUnroller;
+	/*friend class CFGCollector;
+	friend class LoopUnroller;*/
 	elm::genstruct::FragTable<CFG *> cfgs;
 public:
 	inline int count(void) const { return cfgs.length(); }
@@ -57,6 +57,8 @@ public:
 		inline Iterator(const CFGCollection& cfgs)
 			: elm::genstruct::FragTable<CFG *>::Iterator(cfgs.cfgs) { }
 	};
+
+	inline void add(CFG *cfg) { cfgs.add(cfg); }
 };
 
 // PFG_FEATURE
@@ -66,7 +68,7 @@ extern Identifier<pfg::BB *> PFG_BB;
 
 // COLLECTED_CFG_FEATURE
 extern SilentFeature COLLECTED_CFG_FEATURE;
-extern Identifier<CFGCollection *> INVOLVED_CFGS;
+extern Identifier<const CFGCollection *> INVOLVED_CFGS;
 
 // CFGInfoFeature
 extern SilentFeature CFG_INFO_FEATURE;
@@ -96,6 +98,11 @@ extern Identifier<unsigned long > CHECKSUM;
 
 // CHECKED_CFG_FEATURE
 extern SilentFeature CHECKED_CFG_FEATURE;
+
+// DELAYED_CFG_FEATURE
+extern SilentFeature DELAYED_CFG_FEATURE;
+extern Identifier<bool> DELAYED_INST;
+extern Identifier<bool> DELAYED_NOP;
 
 } // otawa
 

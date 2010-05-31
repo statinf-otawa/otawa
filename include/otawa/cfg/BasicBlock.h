@@ -112,6 +112,7 @@ public:
 	inline int number(void) const { return INDEX(this); };
 	inline CFG *cfg(void) { return _cfg; }
 	inline Inst *firstInst(void) const { return first; }
+	Inst *lastInst(void) const;
 	void print(io::Output& out) const;
 
 	// Edge management
