@@ -109,6 +109,7 @@ libotawa_la_SOURCES = \
 	cache_CAT2Builder.cpp \
 	cache_CAT2NCBuilder.cpp \
 	cache_CAT2ConstraintBuilder.cpp \
+	cache_CachePenalty.cpp \
 	cache_MUSTProblem.cpp \
 	cache_MAYProblem.cpp \
 	cache_PERSProblem.cpp \
@@ -117,6 +118,7 @@ libotawa_la_SOURCES = \
 	cache_LBlock.cpp \
 	cache_FirstLastBuilder.cpp \
 	cache_LBlockSet.cpp \
+	cache_CachePenaltiesObjectFunctionBuilder.cpp \
 	prog_File.cpp \
 	prog_FixedTextDecoder.cpp \
 	prog_ProgItem.cpp \
