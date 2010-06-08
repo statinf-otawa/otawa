@@ -107,6 +107,9 @@ namespace otawa {
 		int _icache_miss_penalty;
     public:
 		GraphBBTime(const PropList& props = PropList::EMPTY);
+		GraphBBTime(AbstractRegistration& reg);
+		virtual void configure(const PropList& props);
+
 		void processWorkSpace(WorkSpace *ws);
 		void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 		elm::genstruct::SLList<PathContext *> * buildListOfPathContexts(BasicBlock *bb, int depth = 1);
@@ -143,6 +146,29 @@ namespace otawa {
 		provide(ipet::BB_TIME_FEATURE);
 		//    provide(ICACHE_ACCURATE_PENALTIES_FEATURE);
 	}
+
+template <class G>
+GraphBBTime<G>::GraphBBTime(AbstractRegistration& reg)
+: BBProcessor(reg) {
+	provide(ipet::BB_TIME_FEATURE);
+}
+
+template <class G>
+void GraphBBTime<G>::configure(const PropList& props) {
+	BBProcessor::configure(props);
+	_graphs_dir_name = GRAPHS_OUTPUT_DIRECTORY(props);
+	if(!_graphs_dir_name.isEmpty())
+		_do_output_graphs = true;
+	else
+		_do_output_graphs = false;
+	_icache_miss_penalty = -1;
+	if(CACHE_CONFIG_PATH(props)){
+		_do_consider_icache = true;
+	}
+	else
+		_do_consider_icache = false;
+	_props = props;
+}
 
 
   
@@ -440,35 +466,37 @@ namespace otawa {
 		if (_do_output_graphs){
 			outputGraph(execution_graph, bb->number(), context_index, case_index++);
 		}
-  		elm::cout << "reference cost = " << reference_cost << "\n\n";    
+		if(isVerbose())
+			log << "\t\treference cost = " << reference_cost << "\n\n";
     
 		TimingContext default_timing_context;
 
 		if (_do_consider_icache){
 
-			for (ParExeSequence::InstIterator inst(sequence) ; inst ; inst++)  {
-				LBlock *lb = LBLOCK(inst->inst());
-				if (lb){
-					elm::cout << "\tcategory of I" << inst->index() << " is ";
-					switch( CATEGORY(lb)){
-					case ALWAYS_HIT:
-						elm::cout << "ALWAYS_HIT\n";
-						break;
-					case ALWAYS_MISS:
-						elm::cout << "ALWAYS_MISS\n";
-						break;
-					case FIRST_MISS:
-						elm::cout << "FIRST_MISS (with header b" << CATEGORY_HEADER(lb)->number() << ")\n";
-						break;
-					case NOT_CLASSIFIED:
-						elm::cout << "NOT_CLASSIFIED\n";
-						break;
-					default:
-						elm::cout << "unknown !!!\n";
-						break;
-					}  
+			if(isVerbose())
+				for (ParExeSequence::InstIterator inst(sequence) ; inst ; inst++)  {
+					LBlock *lb = LBLOCK(inst->inst());
+					if (lb){
+						log << "\t\t\tcategory of I" << inst->index() << " is ";
+						switch( CATEGORY(lb)){
+						case ALWAYS_HIT:
+							log << "ALWAYS_HIT\n";
+							break;
+						case ALWAYS_MISS:
+							log << "ALWAYS_MISS\n";
+							break;
+						case FIRST_MISS:
+							log << "FIRST_MISS (with header b" << CATEGORY_HEADER(lb)->number() << ")\n";
+							break;
+						case NOT_CLASSIFIED:
+							log << "NOT_CLASSIFIED\n";
+							break;
+						default:
+							log << "unknown !!!\n";
+							break;
+						}
+					}
 				}
-			}
 
 			// set constant latencies (ALWAYS_MISS in the cache)
 			TimingContext default_timing_context;
@@ -476,17 +504,20 @@ namespace otawa {
 			computeDefaultTimingContextForICache(&default_timing_context, sequence);
 			int default_icache_cost = reference_cost;
 			if (!default_timing_context.isEmpty()){
-				elm::cout << "default timing context: misses for";
-				for (TimingContext::NodeLatencyIterator nl(default_timing_context) ; nl ; nl++){
-					elm::cout << "I" << nl->node()->inst()->index() << ", ";
+				if(isVerbose()) {
+					log << "\t\t\t\tdefault timing context: misses for";
+					for (TimingContext::NodeLatencyIterator nl(default_timing_context) ; nl ; nl++){
+						log << "I" << nl->node()->inst()->index() << ", ";
+					}
+					log << " - ";
 				}
-				elm::cout << " - ";
 				execution_graph->setDefaultLatencies(&default_timing_context);
 				default_icache_cost = execution_graph->analyze();
 				if (_do_output_graphs){
 					outputGraph(execution_graph, bb->number(), context_index, case_index++);
 				}
-				elm::cout << "cost = " << default_icache_cost << " (only accounting for fixed latencies)\n\n"; 
+				if(isVerbose())
+					log << "cost = " << default_icache_cost << " (only accounting for fixed latencies)\n\n";
 				if (default_icache_cost > reference_cost)
 					reference_cost = default_icache_cost;
 			}
@@ -515,16 +546,18 @@ namespace otawa {
 							if (NC_cost > reference_cost)
 								reference_cost = NC_cost;
 							int cost = analyzeTimingContext(execution_graph, NC_tctxt.item(), FM_tctxt.item());
-							elm::cout << "\ncontext " << index << ": ";
-							for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++){
-								elm::cout << "I" << (nl.item())->node()->inst()->index() << ",";
+							if(isVerbose()) {
+								log << "\n\t\tcontext " << index << ": ";
+								for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++){
+									log << "I" << (nl.item())->node()->inst()->index() << ",";
+								}
+								for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++){
+									log << "I" << (nl.item())->node()->inst()->index() << ",";
+								}
+								log << "  - ";
+								log << "cost=" << cost;
+								log << "  - NC_cost=" << NC_cost << "\n";
 							}
-							for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++){
-								elm::cout << "I" << (nl.item())->node()->inst()->index() << ",";
-							}
-							elm::cout << "  - ";
-							elm::cout << "cost=" << cost;
-							elm::cout << "  - NC_cost=" << NC_cost << "\n";
 			
 							int penalty = cost - reference_cost; 
 							// default_icache_cost is when all NCs hit
@@ -542,12 +575,14 @@ namespace otawa {
 					}
 					else { // no NC context
 						int cost = analyzeTimingContext(execution_graph, NULL, FM_tctxt.item());
-						elm::cout << "context " << index << ": ";
-						for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++){
-							elm::cout << "I" << (nl.item())->node()->inst()->index() << ",";
+						if(isVerbose()) {
+							log << "\t\tcontext " << index << ": ";
+							for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++){
+								log << "I" << (nl.item())->node()->inst()->index() << ",";
+							}
+							log << "  - ";
+							log << "cost=" << cost << "\n";
 						}
-						elm::cout << "  - ";
-						elm::cout << "cost=" << cost << "\n";
 						int penalty = cost - reference_cost;
 						if ((FM_tctxt->type() == CachePenalty::x_HIT) && (penalty < 0))
 							penalty = 0;  // penalty = max [ hit-hit, miss-hit ]
@@ -565,13 +600,15 @@ namespace otawa {
 			}
 			else { // no FM context
 				for (elm::genstruct::SLList<TimingContext *>::Iterator NC_tctxt(NC_timing_context_list) ; NC_tctxt ; NC_tctxt++){
-					int NC_cost = analyzeTimingContext(execution_graph, NC_tctxt.item(), NULL); 
-					elm::cout << "context " << index << ": ";
-					for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++){
-						elm::cout << "I" << (nl.item())->node()->inst()->index() << ",";
+					int NC_cost = analyzeTimingContext(execution_graph, NC_tctxt.item(), NULL);
+					if(isVerbose()) {
+						log << "\t\tcontext " << index << ": ";
+						for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++){
+							log << "I" << (nl.item())->node()->inst()->index() << ",";
+						}
+						log << " - ";
+						log << "cost=" << NC_cost << "\n";
 					}
-					elm::cout << " - ";
-					elm::cout << "cost=" << NC_cost << "\n";
 					if (NC_cost > reference_cost)
 						reference_cost = NC_cost;
 /* 					int penalty = cost - default_icache_cost; */
@@ -591,13 +628,16 @@ namespace otawa {
 				ICACHE_PENALTY(bb) = cache_penalty;
 				if (edge)
 					ICACHE_PENALTY(edge) = cache_penalty;
-				elm::cout << "cache penalty: ";
-				cache_penalty->dump(elm::cout);
-				elm::cout << "\n";
+				if(isVerbose()) {
+					log << "\t\tcache penalty: ";
+					cache_penalty->dump(log);
+					log << "\n";
+				}
 			}
 			
 		}
-		elm::cout << "Reference cost: " << reference_cost << "\n";
+		if(isVerbose())
+			log << "\t\tReference cost: " << reference_cost << "\n";
 		if (otawa::ipet::TIME(bb) < reference_cost)
 			otawa::ipet::TIME(bb) = reference_cost;
 		if (edge){
@@ -619,17 +659,21 @@ namespace otawa {
 		if (bb->countInstructions() == 0)
 			return;
 
-		elm::cout << "\n================================================================\n";
-		elm::cout << "Processing block b" << bb->number() << " (starts at " << bb->address() << " - " << bb->countInstructions() << " instructions)\n";
+		if(isVerbose()) {
+			log << "\n\t\t================================================================\n";
+			log << "\t\tProcessing block b" << bb->number() << " (starts at " << bb->address() << " - " << bb->countInstructions() << " instructions)\n";
+		}
 
 		int context_index = 0;
 
 		elm::genstruct::SLList<PathContext *> *path_context_list = buildListOfPathContexts(bb);
 
 		for (elm::genstruct::SLList<PathContext *>::Iterator ctxt(*path_context_list) ; ctxt ; ctxt++){
-			elm::cout << "\n----- Considering context: ";
-			ctxt->dump(elm::cout);
-			elm::cout << "\n";
+			if(isVerbose()) {
+				log << "\n\t\t----- Considering context: ";
+				ctxt->dump(log);
+				log << "\n";
+			}
 			analyzePathContext(ctxt, context_index);   
 			context_index ++;
 		}
