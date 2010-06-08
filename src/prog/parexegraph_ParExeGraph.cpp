@@ -604,7 +604,8 @@ void ParExeGraph::createNodes() {
 			}
 			else {
 				// add FU nodes
-				ParExePipeline *fu = stage->findFU(inst->inst()->kind()); 
+				ParExePipeline *fu = stage->findFU(inst->inst()->kind());
+				ASSERTP(fu, "cannot find FU for instruction " << inst->inst()->address() << " " << inst->inst());
 				int index = 0;
 				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {                         
 					ParExeNode *fu_node = new ParExeNode(this, fu_stage, inst);
@@ -948,11 +949,17 @@ void ParExeGraph::dump(elm::io::Output& dotFile) {
     dotFile << "} ";
     dotFile << "\"] ; \n";
   
-    dotFile << "\"code\" [shape=record, label= \"";
+    dotFile << "\"code\" [shape=record, label= \"\\l";
+    bool body = true;
     for (InstIterator inst(_sequence) ; inst ; inst++) {
+		if(inst->codePart() == BODY && body) {
+			body = false;
+			dotFile << "------\\l";
+		}
+    	dotFile << "I" << inst->index() << ": ";
 		dotFile << "0x" << fmt::address(inst->inst()->address()) << ":  "; 
 		inst->inst()->dump(dotFile);
-		dotFile << "\\" << "n" ;
+		dotFile << "\\l";
     }
     dotFile << "\"] ; \n";
   
@@ -973,7 +980,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile) {
 			if (node->inst()->codePart() == BODY)
 				dotFile << "color=blue, ";
 			dotFile << "label=\"" << node->stage()->name();
-			dotFile << "(I" << node->inst()->index() << ") [" << node->latency() << "]";
+			dotFile << "(I" << node->inst()->index() << ") [" << node->latency() << "]\\l" << node->inst()->inst();
 			dotFile << "| { ";
 			int i=0;
 			int num = _resources.length();

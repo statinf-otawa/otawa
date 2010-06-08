@@ -144,15 +144,16 @@ namespace otawa {
     }
      inline void addBinding(Inst::kind_t kind, ParExePipeline *fu)
       {_bindings.add(pair(kind, fu));}
-    inline ParExePipeline *findFU(Inst::kind_t kind) {
-      for(int i = 0; i < _bindings.length(); i++) {
-	Inst::kind_t mask = _bindings[i].fst;
-	if((kind & mask) == mask)
-	  return _bindings[i].snd;
-      }
-      cerr << "Unsupported instruction kind : " << io::hex(kind) << io::endl;
-      assert(0);
-    }
+
+     inline ParExePipeline *findFU(Inst::kind_t kind) {
+		for(int i = 0; i < _bindings.length(); i++) {
+			Inst::kind_t mask = _bindings[i].fst;
+			if((kind & mask) == mask)
+				return _bindings[i].snd;
+		}
+		return 0;
+	}
+
     class NodeIterator: public elm::genstruct::Vector<ParExeNode *>::Iterator {
     public:
       inline NodeIterator(const ParExeStage *stage)

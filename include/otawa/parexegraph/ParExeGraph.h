@@ -208,6 +208,7 @@ namespace otawa {
 	 */
 
 	class ParExeGraph: public GenGraph<ParExeNode, ParExeEdge> {
+		friend class InstIterator;
 	protected:
 		WorkSpace * _ws;
 		PropList _props;
@@ -277,6 +278,8 @@ namespace otawa {
 		public:
 			inline InstIterator(const ParExeSequence *sequence)
 				: ParExeSequence::InstIterator(sequence) {}
+			inline InstIterator(const ParExeGraph *graph)
+				: ParExeSequence::InstIterator(graph->_sequence) {}
 		};
 		class InstNodeIterator : public ParExeInst::NodeIterator {
 		public:
