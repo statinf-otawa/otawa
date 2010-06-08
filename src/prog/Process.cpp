@@ -251,6 +251,7 @@ Inst *Process::findInstAt(const string& label) {
 File *Process::loadProgram(elm::CString path) {
 	assert(!prog);
 	File *file = loadFile(path);
+	ASSERT(file);
 	if(file)
 		prog = file;
 	return file;
