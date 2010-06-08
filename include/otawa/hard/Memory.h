@@ -105,7 +105,8 @@ private:
 		field("on_chip", _on_chip) &
 		field("writable", _writable) &
 		field("port_num", _port_num) &
-		field("bus", _bus));
+		field("bus", _bus) &
+		field("write_latency", _write_latency));
 public:
 	static Bank full;
 	Bank(void): _name("no name"), _size(0), _type(NONE), _latency(10),
@@ -121,6 +122,7 @@ public:
 	inline const int size(void) const { return _size; }
 	inline type_t type(void) const { return _type; }
 	inline int latency(void) const { return _latency; }
+	inline int writeLatency(void) const { if(!_write_latency) return _latency; else return _write_latency; }
 	inline int power(void) const { return _power; }
 	inline int blockBits(void) const { return _block_bits; }
 	inline int blockSize(void) const { return 1 << _block_bits; }
@@ -134,12 +136,13 @@ public:
 	inline Address topAddress(void) const { return address() + size(); }
 	inline bool contains(Address addr) const
 		{ return addr.page() == address().page() && addr >= address() && addr <= (topAddress() - 1); }
+
 private:
 	string _name;
 	Address _address;
 	int _size;
 	type_t _type;
-	int _latency, _power;
+	int _latency, _power, _write_latency;
 	int _block_bits;
 	AllocatedTable<const Mode *> _modes;
 	bool _cached;
@@ -182,6 +185,10 @@ public:
 	static Memory *load(const elm::system::Path& path) throw(LoadException);
 	static Memory *load(xom::Element *element) throw(LoadException);
 	const Bank *get(Address address) const;
+	int worstAccess(void) const;
+	int worstReadAccess(void) const;
+	int worstWriteAccess(void) const;
+
 private:
 	AllocatedTable<const Bank *> _banks;
 	AllocatedTable<const Bus *> _buses;

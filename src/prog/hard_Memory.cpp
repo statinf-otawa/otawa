@@ -399,6 +399,39 @@ Memory::Memory(bool full) {
 	}
 }
 
+
+/**
+ * Compute the worst access latency.
+ * @return Worst access latency.
+ */
+int Memory::worstAccess(void) const {
+	return max(worstReadAccess(), worstWriteAccess());
+}
+
+
+/**
+ * Compute the worst read access latency.
+ * @return Worst read access latency.
+ */
+int Memory::worstReadAccess(void) const {
+	int w = 0;
+	for(int i = 0; i < _banks.count(); i++)
+		w = max(w, _banks[i]->latency());
+	return w;
+}
+
+
+/**
+ * Compute the worst read access latency.
+ * @return Worst read access latency.
+ */
+int Memory::worstWriteAccess(void) const {
+	int w = 0;
+	for(int i = 0; i < _banks.count(); i++)
+		w = max(w, _banks[i]->writeLatency());
+	return w;
+}
+
 } } // otawa::hard
 
 SERIALIZE(otawa::hard::ModeTransition);
