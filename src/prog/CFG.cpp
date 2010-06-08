@@ -166,8 +166,16 @@ String CFG::label(void) {
 		ent = out->target();
 	}
 	string id = LABEL(this);
-	if(!id)
-		id = _ << "__0x" << ent->address();
+	if(!id) {
+		Inst *first = ent->firstInst();
+		if(first) {
+			id = FUNCTION_LABEL(first);
+			if(!id)
+				id = LABEL(first);
+		}
+		if(!id)
+			id = _ << "__0x" << ent->address();
+	}
 	return id;
 }
 
