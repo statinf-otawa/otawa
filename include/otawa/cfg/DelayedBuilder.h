@@ -32,13 +32,14 @@ class Inst;
 class Process;
 class VirtualCFG;
 
-class DelayedBuilder: public Processor {
+class DelayedBuilder: public CFGProcessor {
 public:
 	static Registration<DelayedBuilder> reg;
+	DelayedBuilder(void);
 
 protected:
 	virtual void setup(WorkSpace *ws);
-	virtual void process(WorkSpace *ws);
+	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void processCFG(WorkSpace *ws, CFG *cfg);
 	virtual void cleanup(WorkSpace *ws);
 

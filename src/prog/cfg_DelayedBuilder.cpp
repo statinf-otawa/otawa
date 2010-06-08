@@ -123,8 +123,15 @@ Registration<DelayedBuilder> DelayedBuilder::reg(
 	p::require, &COLLECTED_CFG_FEATURE,
 	p::invalidate, &COLLECTED_CFG_FEATURE,
 	p::provide, &COLLECTED_CFG_FEATURE,
+	p::provide, &DELAYED_CFG_FEATURE,
 	p::end
 );
+
+
+/**
+ */
+DelayedBuilder::DelayedBuilder(void): CFGProcessor(reg) {
+}
 
 
 /**
@@ -146,7 +153,10 @@ void DelayedBuilder::cleanup(WorkSpace *ws) {
 
 /**
  */
-void DelayedBuilder::process(WorkSpace *ws) {
+void DelayedBuilder::processWorkSpace(WorkSpace *ws) {
+	cerr << "ICI\n";
+
+	// mark instructions
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	for(CFGCollection::Iterator cfg(coll); cfg; cfg++) {
 
@@ -163,17 +173,20 @@ void DelayedBuilder::process(WorkSpace *ws) {
 				case DELAYED_None:
 					break;
 				case DELAYED_Always:
-					DELAYED_INST(last) = true;
+					DELAYED_INST(last->nextInst()) = true;
 					ACTION(bb) = DO_SWALLOW;
 					break;
 				case DELAYED_Taken:
-					DELAYED_INST(last) = true;
+					DELAYED_INST(last->nextInst()) = true;
 					ACTION(bb) = DO_INSERT;
 					break;
 				}
 			}
 		}
 	}
+
+	// usual CFG processing
+	CFGProcessor::processWorkSpace(ws);
 }
 
 
@@ -198,7 +211,7 @@ void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 			Inst *first = bb->firstInst();
 			size_t size = bb->size();
 			ASSERT(first);
-			if(DELAYED(first)) {
+			if(DELAYED_INST(first)) {
 				size -= first->size();
 				first = first->nextInst();
 			}
@@ -220,7 +233,7 @@ void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 		if(ACTION(bb) != DO_INSERT) {
 			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 				if(edge->kind() != Edge::CALL)
-					new Edge(vbb, map.get(edge->target()), edge->kind());
+					new Edge(vbb, map.get(edge->target(), 0), edge->kind());
 				else if(!edge->calledCFG())
 					new Edge(vbb, 0, Edge::CALL);
 				else
@@ -253,6 +266,9 @@ void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 				}
 			}
 	}
+
+	// finalization
+	vcfg->numberBBs();
 }
 
 
