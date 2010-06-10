@@ -54,6 +54,9 @@ private:
 		genstruct::SLList<Inst *> nops;
 	};
 
+	typedef genstruct::HashTable<BasicBlock *, BasicBlock *> map_t;
+	void fix(Edge *oedge, Edge *nedge, map_t& map);
+
 	CFGCollection *coll;
 	Cleaner *cleaner;
 	genstruct::HashTable<CFG *, VirtualCFG *> cfg_map;

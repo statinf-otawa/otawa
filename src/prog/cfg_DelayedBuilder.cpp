@@ -145,23 +145,23 @@ void DelayedBuilder::setup(WorkSpace *ws) {
 /**
  */
 void DelayedBuilder::cleanup(WorkSpace *ws) {
-	INVOLVED_CFGS(ws) = coll;
-	coll = 0;
+	track(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = coll);
 	addCleaner(COLLECTED_CFG_FEATURE, cleaner);
+	ENTRY_CFG(ws) = coll->get(0);		// should cleaned at some time
+	coll = 0;
 }
 
 
 /**
  */
 void DelayedBuilder::processWorkSpace(WorkSpace *ws) {
-	cerr << "ICI\n";
 
 	// mark instructions
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	for(CFGCollection::Iterator cfg(coll); cfg; cfg++) {
 
 		// create the virtual CFG
-		VirtualCFG *vcfg = new VirtualCFG();
+		VirtualCFG *vcfg = new VirtualCFG(false);
 		this->coll->add(vcfg);
 		cfg_map.put(cfg, vcfg);
 
@@ -192,19 +192,48 @@ void DelayedBuilder::processWorkSpace(WorkSpace *ws) {
 
 /**
  */
+void DelayedBuilder::fix(Edge *oedge, Edge *nedge, map_t& map) {
+	if(oedge->kind() != Edge::VIRTUAL_CALL)
+		return;
+
+	// virtual return
+	BasicBlock *oreturn = VIRTUAL_RETURN_BLOCK(oedge->source());
+	if(oreturn) {
+		BasicBlock *nreturn = map.get(oreturn);
+		ASSERT(nreturn);
+		VIRTUAL_RETURN_BLOCK(nedge->source()) = nreturn;
+	}
+
+	// called CFG
+	CFG *cfg = CALLED_CFG(oedge);
+	if(cfg)
+		CALLED_CFG(nedge) = cfg;
+
+	// recursive
+	if(RECURSIVE_LOOP(oedge))
+		RECURSIVE_LOOP(nedge) = true;
+}
+
+
+/**
+ */
 void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 	genstruct::HashTable<BasicBlock *, BasicBlock *> map;
 	VirtualCFG *vcfg = cfg_map.get(cfg, 0);
 	ASSERT(vcfg);
 
+	// add entry
+	vcfg->addBB(vcfg->entry());
+
 	// build the basic blocks
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
+		BasicBlock *vbb = 0;
 		if(bb->isEnd()) {
 			if(bb->isEntry())
-				map.put(bb, vcfg->entry());
+				vbb = vcfg->entry();
 			else {
 				ASSERT(bb->isExit());
-				map.add(bb, vcfg->exit());
+				vbb = vcfg->exit();
 			}
 		}
 		else {
@@ -217,11 +246,12 @@ void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 			}
 			if(ACTION(bb) == DO_SWALLOW)
 				size += bb->lastInst()->nextInst()->size();
-			CodeBasicBlock *vbb = new CodeBasicBlock(first);
-			vbb->setSize(size);
-			vcfg->addBB(vbb);
-			map.put(bb, vbb);
+			CodeBasicBlock *cbb = new CodeBasicBlock(first);
+			cbb->setSize(size);
+			vcfg->addBB(cbb);
+			vbb = cbb;
 		}
+		map.put(bb, vbb);
 	}
 
 	// build the edges
@@ -233,7 +263,7 @@ void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 		if(ACTION(bb) != DO_INSERT) {
 			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 				if(edge->kind() != Edge::CALL)
-					new Edge(vbb, map.get(edge->target(), 0), edge->kind());
+					fix(edge, new Edge(vbb, map.get(edge->target(), 0), edge->kind()), map);
 				else if(!edge->calledCFG())
 					new Edge(vbb, 0, Edge::CALL);
 				else
@@ -260,7 +290,7 @@ void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 				default:
 					ibb = makeNext(vcfg, bb);
 				link:
-					new Edge(vbb, ibb, edge->kind());
+					fix(edge, new Edge(vbb, ibb, edge->kind()), map);
 					new Edge(ibb, map.get(edge->target(), 0), Edge::NOT_TAKEN);
 					break;
 				}
@@ -268,6 +298,7 @@ void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 	}
 
 	// finalization
+	vcfg->addBB(vcfg->exit());
 	vcfg->numberBBs();
 }
 
