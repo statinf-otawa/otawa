@@ -104,7 +104,9 @@ namespace otawa {
 		String _graphs_dir_name;
 		bool _do_output_graphs;
 		bool _do_consider_icache;
-		int _icache_miss_penalty;
+		const hard::Memory *mem;
+		int cacheMissPenalty(Address addr) const;
+
     public:
 		GraphBBTime(const PropList& props = PropList::EMPTY);
 		GraphBBTime(AbstractRegistration& reg);
@@ -128,6 +130,13 @@ namespace otawa {
 	// -- GraphBBTime ------------------------------------------------------------------------------------------
 
 	template <class G>
+	int GraphBBTime<G>::cacheMissPenalty(Address addr) const {
+		const hard::Bank *bank = mem->get(addr);
+		ASSERTP(bank, "no bank for memory access at " << addr);
+		return bank->latency();
+	}
+
+	template <class G>
 		GraphBBTime<G>::GraphBBTime(const PropList& props) 
 		: BBProcessor() {
 		_graphs_dir_name = GRAPHS_OUTPUT_DIRECTORY(props);
@@ -135,7 +144,7 @@ namespace otawa {
 			_do_output_graphs = true;
 		else
 			_do_output_graphs = false;
-		_icache_miss_penalty = -1;
+		//_icache_miss_penalty = -1;
 		if (CACHE_CONFIG_PATH(props)){
 			_do_consider_icache = true;
 		}
@@ -161,7 +170,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		_do_output_graphs = true;
 	else
 		_do_output_graphs = false;
-	_icache_miss_penalty = -1;
+	//_icache_miss_penalty = -1;
 	if(CACHE_CONFIG_PATH(props)){
 		_do_consider_icache = true;
 	}
@@ -188,9 +197,11 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 		}
 
+		// look for memory hierarchy
 		const hard::Cache *cache = _ws->platform()->cache().instCache();
-		if (cache)
-			_icache_miss_penalty = cache->missPenalty();
+		_do_consider_icache = cache;
+		mem = &_ws->platform()->memory();
+
 		// Perform the actual process
 		BBProcessor::processWorkSpace(ws);
 	}
@@ -285,14 +296,14 @@ void GraphBBTime<G>::configure(const PropList& props) {
 				if (CATEGORY(lb) == NOT_CLASSIFIED){
 					if (list->isEmpty()){
 						TimingContext *tctxt = new TimingContext();
-						NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+						NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 						tctxt->addNodeLatency(nl);
 						list->addLast(tctxt);
 					}
 					else {
 						for (elm::genstruct::SLList<TimingContext *>::Iterator tctxt(*list) ; tctxt ; tctxt++){
 							TimingContext *new_tctxt = new TimingContext(tctxt.item());
-							NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+							NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 							new_tctxt->addNodeLatency(nl);
 							to_add->addLast(new_tctxt);
 						}
@@ -301,7 +312,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 						}
 						to_add->clear();
 						TimingContext *new_tctxt = new TimingContext();
-						NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+						NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 						new_tctxt->addNodeLatency(nl);
 						list->addLast(new_tctxt);
 					}
@@ -375,7 +386,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 					LBlock *lb = LBLOCK(inst->inst());
 					if (lb){
 						if (CATEGORY(lb) == FIRST_MISS){ // must be with header0
-							NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+							NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 							tctxt_first->addNodeLatency(nl);
 						}
 					}
@@ -400,9 +411,9 @@ void GraphBBTime<G>::configure(const PropList& props) {
 					if (lb){
 						if (CATEGORY(lb) == FIRST_MISS){ 
 							BasicBlock *header = CATEGORY_HEADER(lb);
-							NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+							NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 							tctxt_first_first->addNodeLatency(nl);
-							nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+							nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 							if (header == header0){
 								tctxt_first_others->addNodeLatency(nl);
 							}
@@ -425,7 +436,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			LBlock *lb = LBLOCK(inst->inst());
 			if (lb){
 				if (CATEGORY(lb) == ALWAYS_MISS) {
-					NodeLatency * nl = new NodeLatency(inst->fetchNode(), _icache_miss_penalty);
+					NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 					dtctxt->addNodeLatency(nl);
 				}
 			}
@@ -460,7 +471,12 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		G *execution_graph = new G(_ws,_microprocessor, sequence, _props);
 		execution_graph->build();
     
+		// no cache
+		if(!_do_consider_icache)
+			for(typename G::InstIterator inst(execution_graph); inst; inst++)
+				inst->fetchNode()->setLatency(cacheMissPenalty(inst->inst()->address()));
 
+		// compute reference cost
 		int reference_cost = execution_graph->analyze();
 		//execution_graph->display(elm::cout);
 		if (_do_output_graphs){
@@ -500,7 +516,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 			// set constant latencies (ALWAYS_MISS in the cache)
 			TimingContext default_timing_context;
-			assert(_icache_miss_penalty >= 0);
+			//assert(_icache_miss_penalty >= 0);
 			computeDefaultTimingContextForICache(&default_timing_context, sequence);
 			int default_icache_cost = reference_cost;
 			if (!default_timing_context.isEmpty()){
