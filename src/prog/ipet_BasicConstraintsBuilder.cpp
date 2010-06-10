@@ -193,10 +193,10 @@ void BasicConstraintsBuilder::processWorkSpace(WorkSpace *fw) {
 
 	// Just record the constraint "entry = 1"
 	CFG *cfg = ENTRY_CFG(fw);
-	assert(cfg);
+	ASSERT(cfg);
 	System *system = SYSTEM(fw);
 	BasicBlock *entry = cfg->entry();
-	assert(entry);
+	ASSERT(entry);
 	string label;
 	if(_explicit)
 		label = "program entry constraint";
