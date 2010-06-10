@@ -151,7 +151,7 @@ string CFGProcessor::str(const Address& address) {
 			return _ << label << " + 0x" << io::hex(offset) << " (" << address << ")";
 	}
 	else
-		return _ << address;
+		return _ << "0x" << address;
 }
 
 
