@@ -938,14 +938,16 @@ Feature<NoProcessor> DELAYED_FEATURE("otawa::DELAYED_FEATURE");
 /* Nop instruction */
 class NopInst: public Inst {
 public:
+	typedef elm::genstruct::Table<hard::Register * > reg_t;
 	NopInst(Address address, t::size size): addr(address), _size(size) { }
 
 	virtual void dump (io::Output &out) { out << "<nop>"; }
-	virtual kind_t kind (void) { return 0; }
+	virtual kind_t kind (void) { return IS_INT; }
 	virtual Inst *toInst(void) { return this; }
 	virtual Address address(void) const { return addr; }
 	virtual size_t	size(void) const { return _size; }
-
+	virtual const reg_t& readRegs(void) { return reg_t::EMPTY; }
+	virtual const reg_t& writtenRegs(void) { return reg_t::EMPTY; }
 private:
 	Address addr;
 	t::size _size;
