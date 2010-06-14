@@ -32,6 +32,8 @@ typedef enum action_t {
 	DO_INSERT
 } action_t;
 static Identifier<action_t> ACTION("", DO_NOTHING);
+static Identifier<BasicBlock *> DELAYED_TARGET("", 0);
+
 
 static SilentFeature::Maker<DelayedBuilder> maker;
 /**
@@ -77,24 +79,22 @@ Identifier<bool> DELAYED_NOP("otawa::DELAYED_NOP", false);
 
 /**
  * Build a single BB containing the instruction following the given BB.
- * @param cfg	Result CFG.
  * @param bb	Original BB.
  * @return		Built basic block.
  */
-static BasicBlock *makeNext(VirtualCFG *cfg, BasicBlock *bb) {
-	Inst *next = bb->lastInst()->nextInst();
-	CodeBasicBlock *rbb = new CodeBasicBlock(next);
-	rbb->setSize(next->size());
-	cfg->addBB(rbb);
+BasicBlock *DelayedBuilder::makeBB(Inst *inst) {
+	CodeBasicBlock *rbb = new CodeBasicBlock(inst);
+	rbb->setSize(inst->size());
+	vcfg->addBB(rbb);
 	return rbb;
 }
 
 
-static BasicBlock *makeNOp(WorkSpace *ws, VirtualCFG *cfg, BasicBlock *bb) {
-	Inst *nop = ws->process()->newNOp(bb->lastInst()->nextInst()->address());
+BasicBlock *DelayedBuilder::makeNOp(BasicBlock *bb) {
+	Inst *nop = workspace()->process()->newNOp(bb->lastInst()->nextInst()->address());
 	CodeBasicBlock *rbb = new CodeBasicBlock(nop);
 	rbb->setSize(nop->size());
-	cfg->addBB(rbb);
+	vcfg->addBB(rbb);
 	return rbb;
 }
 
@@ -192,7 +192,7 @@ void DelayedBuilder::processWorkSpace(WorkSpace *ws) {
 
 /**
  */
-void DelayedBuilder::fix(Edge *oedge, Edge *nedge, map_t& map) {
+void DelayedBuilder::fix(Edge *oedge, Edge *nedge) {
 	if(oedge->kind() != Edge::VIRTUAL_CALL)
 		return;
 
@@ -216,18 +216,77 @@ void DelayedBuilder::fix(Edge *oedge, Edge *nedge, map_t& map) {
 
 
 /**
+ * Clone an existing edge.
+ * @param edge		Cloned edge.
+ * @param source	Source BB.
+ * @param target	Target BB.
  */
-void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
-	genstruct::HashTable<BasicBlock *, BasicBlock *> map;
-	VirtualCFG *vcfg = cfg_map.get(cfg, 0);
-	ASSERT(vcfg);
+void DelayedBuilder::cloneEdge(Edge *edge, BasicBlock *source) {
+	if(edge->kind() == Edge::CALL) {
+		BasicBlock *target;
+		if(edge->target() == 0)
+			target = 0;
+		else
+			target = cfg_map.get(edge->calledCFG(), 0)->entry();
+		new Edge(source, target, Edge::CALL);
+	}
+	else {
+		// target BB of a delayed BB with multiple entries
+		BasicBlock *target = DELAYED_TARGET(edge->target());
+		if(!target)
+			target = map.get(edge->target(), 0);
+		ASSERT(target);
+		fix(edge, new Edge(source, target, edge->kind()));
+	}
+}
 
-	// add entry
-	vcfg->addBB(vcfg->entry());
+
+/**
+ * Insert a basic block into an edge.
+ * @param edge	Split edge.
+ * @param ibb	Inserted basic block.
+ * @param map	Used map.
+ */
+void DelayedBuilder::insert(Edge *edge, BasicBlock *ibb) {
+	BasicBlock *source = map.get(edge->source(), 0);
+	ASSERT(source);
+
+	// call case
+	if(edge->kind() == Edge::CALL) {
+		BasicBlock *target;
+		if(edge->target() == 0)
+			target = 0;
+		else
+			target = cfg_map.get(edge->calledCFG(), 0)->entry();
+		new Edge(source, ibb, Edge::TAKEN);
+		new Edge(ibb, target, Edge::CALL);
+	}
+
+	// other cases
+	else {
+		// target BB of a delayed BB with multiple entries
+		BasicBlock *target = DELAYED_TARGET(edge->target());
+
+		// else find normal target
+		if(!target)
+			target = map.get(edge->target(), 0);
+
+		// make edges
+		fix(edge, new Edge(source, ibb, edge->kind()));
+		new Edge(ibb, target, Edge::NOT_TAKEN);
+	}
+}
+
+
+/**
+ * Build the BB.
+ * @param cfg	Current CFG.
+ */
+void DelayedBuilder::buildBB(CFG *cfg) {
 
 	// build the basic blocks
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
-		BasicBlock *vbb = 0;
+		BasicBlock *vbb = 0, *delayed = 0;
 		if(bb->isEnd()) {
 			if(bb->isEntry())
 				vbb = vcfg->entry();
@@ -240,66 +299,125 @@ void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 			Inst *first = bb->firstInst();
 			size_t size = bb->size();
 			ASSERT(first);
+
+			// contains delayed instruction
 			if(DELAYED_INST(first)) {
+
+				// remove delayed mono-instruction BB
+				if(bb->countInstructions() == 1) {
+					if(isVerbose()) {
+						log << "\t\tmono-instruction delayed BB removed: " << *bb << io::endl;
+					}
+					continue;
+				}
+
+				// add undirect BB for other entering edges
+				for(BasicBlock::InIterator edge(bb); edge; edge++)
+					if(edge->kind() != Edge::NOT_TAKEN
+					&& edge->kind() != Edge::VIRTUAL_RETURN) {
+						delayed = makeBB(first);
+						DELAYED_TARGET(bb) = delayed;
+						break;
+					}
+
+				// reduce delayed BB
 				size -= first->size();
 				first = first->nextInst();
 			}
+
+			// perform swallowing
 			if(ACTION(bb) == DO_SWALLOW)
 				size += bb->lastInst()->nextInst()->size();
+
+			// create block
 			CodeBasicBlock *cbb = new CodeBasicBlock(first);
 			cbb->setSize(size);
 			vcfg->addBB(cbb);
 			vbb = cbb;
+
+			// delayed edge
+			if(delayed)
+				new Edge(delayed, vbb, Edge::NOT_TAKEN);
 		}
 		map.put(bb, vbb);
 	}
+}
 
-	// build the edges
+
+/**
+ * Build the edges.
+ * @param cfg	Current CFG.
+ */
+void DelayedBuilder::buildEdges(CFG *cfg) {
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
 		BasicBlock *vbb = map.get(bb, 0);
-		ASSERT(vbb);
+		if(!vbb)
+			continue;
 
-		// no insertion
-		if(ACTION(bb) != DO_INSERT) {
+		switch(ACTION(bb)) {
+
+		// no delay
+		case DO_NOTHING:
+			for(BasicBlock::OutIterator edge(bb); edge; edge++)
+				cloneEdge(edge, vbb);
+			break;
+
+		// just swallowing
+		case DO_SWALLOW:
 			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-				if(edge->kind() != Edge::CALL)
-					fix(edge, new Edge(vbb, map.get(edge->target(), 0), edge->kind()), map);
-				else if(!edge->calledCFG())
-					new Edge(vbb, 0, Edge::CALL);
+				if(map.get(edge->target(), 0))
+					cloneEdge(edge, vbb);
 				else
-					new Edge(vbb, cfg_map.get(edge->calledCFG(), 0)->entry(), Edge::CALL);
+					// relink successors of removed mono-instruction BB
+					for(BasicBlock::OutIterator out(edge->target()); out; out++)
+						cloneEdge(out, vbb);
 			}
-		}
+			break;
 
-		// insertion
-		else
+		// do insertion
+		case DO_INSERT:
 			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-				BasicBlock *ibb;
-				switch(edge->kind()) {
-				case Edge::CALL:
-					ibb = makeNext(vcfg, bb);
-					new Edge(vbb, ibb, Edge::TAKEN);
-					if(!edge->calledCFG())
-						new Edge(ibb, 0, Edge::CALL);
+
+				// not taken
+				if(edge->kind() == Edge::NOT_TAKEN || edge->kind() == Edge::VIRTUAL_RETURN) {
+					BasicBlock *nop = makeNOp(bb);
+					new Edge(vbb, nop, edge->kind());
+					BasicBlock *vtarget = map.get(edge->target(), 0);
+
+					// simple not-taken edge
+					if(vtarget)
+						new Edge(nop, vtarget, Edge::NOT_TAKEN);
+
+					// relink successors of removed mono-instruction BB
 					else
-						new Edge(ibb, cfg_map.get(edge->calledCFG(), 0)->entry(), Edge::CALL);
-					break;
-				case Edge::NOT_TAKEN:
-					ibb = makeNOp(ws,vcfg, bb);
-					goto link;
-				default:
-					ibb = makeNext(vcfg, bb);
-				link:
-					fix(edge, new Edge(vbb, ibb, edge->kind()), map);
-					new Edge(ibb, map.get(edge->target(), 0), Edge::NOT_TAKEN);
-					break;
+						for(BasicBlock::OutIterator out(edge->target()); out; out++)
+							cloneEdge(out, nop);
+				}
+
+				// other edges
+				else {
+					BasicBlock *ibb = makeBB(bb->lastInst()->nextInst());
+					insert(edge, ibb);
 				}
 			}
-	}
 
-	// finalization
+		}
+	}
+}
+
+
+
+/**
+ */
+void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
+	vcfg = cfg_map.get(cfg, 0);
+	ASSERT(vcfg);
+	vcfg->addBB(vcfg->entry());
+	buildBB(cfg);
+	buildEdges(cfg);
 	vcfg->addBB(vcfg->exit());
 	vcfg->numberBBs();
+	map.clear();
 }
 
 
