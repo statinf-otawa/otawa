@@ -55,11 +55,19 @@ private:
 	};
 
 	typedef genstruct::HashTable<BasicBlock *, BasicBlock *> map_t;
-	void fix(Edge *oedge, Edge *nedge, map_t& map);
+	void fix(Edge *oedge, Edge *nedge);
+	void cloneEdge(Edge *edge, BasicBlock *source);
+	void insert(Edge *edge, BasicBlock *ibb);
+	BasicBlock *makeBB(Inst *inst);
+	BasicBlock *makeNOp(BasicBlock *bb);
+	void buildBB(CFG *cfg);
+	void buildEdges(CFG *cfg);
 
 	CFGCollection *coll;
 	Cleaner *cleaner;
 	genstruct::HashTable<CFG *, VirtualCFG *> cfg_map;
+	map_t map;
+	VirtualCFG *vcfg;
 };
 
 } // otawa
