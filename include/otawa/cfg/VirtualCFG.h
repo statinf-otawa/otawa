@@ -23,6 +23,7 @@ public:
 	VirtualCFG(bool addEntryExit = true);
 	inline CFG *cfg(void) const;
 	void addBB(BasicBlock *bb);
+	void removeBB(BasicBlock *bb);
 	void numberBBs(void);
 };
 

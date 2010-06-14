@@ -75,9 +75,10 @@ namespace otawa {
  */
 Edge::Edge(BasicBlock *source, BasicBlock *target, edge_kind_t kind)
 : knd(kind), src(source), tgt(target) {
-	assert(source);
-	assert(target);
-	assert(kind != EDGE_Null);
+	ASSERTP(source, "null source edge");
+	ASSERTP(target, "null target edge");
+	ASSERTP(kind != EDGE_Null, "null kind edge");
+	ASSERTP(kind == CALL || source->cfg() == target->cfg(), "nodes in different CFG");
 	src->addOutEdge(this);
 	if(knd != CALL)
 		tgt->addInEdge(this);

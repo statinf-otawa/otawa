@@ -46,10 +46,39 @@ typedef struct call_t {
 
 /**
  * Adds a basic block
+ * @param bb	Added basic block.
  */
 void VirtualCFG::addBB(BasicBlock *bb) {
+		INDEX(bb) = _bbs.count();
         _bbs.add(bb);
         bb->_cfg = this;
+}
+
+
+/**
+ * Remove a basic block.
+ * @param bb	Removed basic block.
+ * @note This operation may be faster if BB are numbered.
+ */
+void VirtualCFG::removeBB(BasicBlock *bb) {
+
+	// find the index
+	int index = INDEX(bb);
+	if(index < 0) {
+		for(int i = 0; i < _bbs.count(); i++)
+			if(bb == _bbs[i]) {
+				index = i;
+				break;
+			}
+		ASSERTP(index >= 0, "BB out of CFG cannot be removed");
+	}
+
+	// not last one : move the last one
+	if(index + 1 != _bbs.count()) {
+		_bbs[index] = _bbs[_bbs.count() - 1];
+		INDEX(_bbs[index]) = index;
+	}
+	_bbs.shrink(_bbs.count() - 1);
 }
 
 

@@ -71,11 +71,13 @@ public:
 	// InstIterator class
 	class InstIter: public PreIterator<InstIter, Inst *> {
 	public:
-		inline InstIter(const BasicBlock *bb): inst(bb->first), top(bb->topAddress()) { ASSERT(bb); }
+		inline InstIter(const BasicBlock *bb)
+			{ ASSERT(bb); if(bb->isEnd()) inst = 0;
+			else { inst = bb->firstInst(); top = bb->topAddress(); } }
 		inline InstIter(const InstIter& iter): inst(iter.inst) { }
-		inline bool ended(void) const { return !inst || inst->address() >= top; }
+		inline bool ended(void) const { return !inst; }
 		inline Inst *item(void) const { return inst; }
-		inline void next(void)  { inst = inst->nextInst(); }
+		inline void next(void)  { if(inst->topAddress() >= top) inst = 0; else inst = inst->nextInst(); }
 	private:
 		otawa::Inst *inst;
 		Address top;
@@ -146,8 +148,10 @@ inline Output& operator<<(Output& out, BasicBlock *bb) { bb->print(out); return 
 class CodeBasicBlock: public BasicBlock {
 	friend class CFGInfo;
 public:
-	CodeBasicBlock(Inst *head);
+	CodeBasicBlock(Inst *head, size_t size = 0);
+	inline void set(Inst *_first, size_t size) { first = _first; _size = size; }
 	inline void setSize(size_t size) { _size = size; }
+	inline void setFirst(Inst *_first) { first = _first; }
 };
 
 
