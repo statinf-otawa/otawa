@@ -105,7 +105,10 @@ namespace otawa {
 		bool _do_output_graphs;
 		bool _do_consider_icache;
 		const hard::Memory *mem;
-		int cacheMissPenalty(Address addr) const;
+
+    protected:
+		virtual int cacheMissPenalty(Address addr) const;
+		virtual int memoryLatency(Address addr) const;
 
     public:
 		GraphBBTime(const PropList& props = PropList::EMPTY);
@@ -131,6 +134,13 @@ namespace otawa {
 
 	template <class G>
 	int GraphBBTime<G>::cacheMissPenalty(Address addr) const {
+		const hard::Bank *bank = mem->get(addr);
+		ASSERTP(bank, "no bank for memory access at " << addr);
+		return bank->latency();
+	}
+
+	template <class G>
+	int GraphBBTime<G>::memoryLatency(Address addr) const {
 		const hard::Bank *bank = mem->get(addr);
 		ASSERTP(bank, "no bank for memory access at " << addr);
 		return bank->latency();
@@ -474,7 +484,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		// no cache
 		if(!_do_consider_icache)
 			for(typename G::InstIterator inst(execution_graph); inst; inst++)
-				inst->fetchNode()->setLatency(cacheMissPenalty(inst->inst()->address()));
+				inst->fetchNode()->setLatency(memoryLatency(inst->inst()->address()));
 
 		// compute reference cost
 		int reference_cost = execution_graph->analyze();
