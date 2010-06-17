@@ -58,7 +58,7 @@ public:
 			: elm::genstruct::FragTable<CFG *>::Iterator(cfgs.cfgs) { }
 	};
 
-	inline void add(CFG *cfg) { cfgs.add(cfg); }
+	void add(CFG *cfg);
 };
 
 // PFG_FEATURE

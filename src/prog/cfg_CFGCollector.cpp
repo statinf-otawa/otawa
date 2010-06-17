@@ -118,8 +118,6 @@ private:
  */
 void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
-        int index = 0;
-
 	// Set first queue node
 	CFG *ws_entry = ENTRY_CFG(fw);
     if(ws_entry)
@@ -137,8 +135,6 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
 	// Build the involved collection
 	CFGCollection *cfgs = new CFGCollection();
-	INDEX(entry) = index;
-	index++;
 
 	// Entry CFG
 	cfgs->add(entry);
@@ -180,8 +176,6 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 						if(!edge->calledCFG())
 							log << "\t\tunknown function call at " << bb->address() << ":" << bb->topAddress() << io::endl;
 						else if(!MARK(edge->calledCFG())) {
-					        INDEX(edge->calledCFG()) = index;
-					        index++;
 							cfgs->add(edge->calledCFG());
 							MARK(edge->calledCFG()) = true;
 							if(isVerbose())
@@ -235,6 +229,16 @@ void CFGCollector::configure(const PropList& props) {
 
 
 /**
+ * Add a CFG to the collection.
+ * @param cfg	Added CFG.
+ */
+void CFGCollection::add(CFG *cfg) {
+	INDEX(cfg) = cfgs.count();
+	cfgs.add(cfg);
+}
+
+
+/**
  * This property is used to link the current computation involved CFG
  * on the framework.
  *
@@ -250,8 +254,9 @@ static SilentFeature::Maker<CFGCollector> COLLECTED_CFG_MAKER;
  * been collected and accessible thanks to @ref INVOLVED_CFGS property
  *
  * @par Properties
- * @ref ENTRY_CFG (FrameWork).
- * @ref INVOLVED_CFGS (FrameWork).
+ * @ref ENTRY_CFG (@ref WorkSpace).
+ * @ref INVOLVED_CFGS (@ref WorkSpace).
+ * @ref INDEX (@ref CFG)
  */
 SilentFeature COLLECTED_CFG_FEATURE("otawa::COLLECTED_CFG_FEATURE", COLLECTED_CFG_MAKER);
 
