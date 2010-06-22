@@ -109,6 +109,9 @@ namespace otawa {
     protected:
 		virtual int cacheMissPenalty(Address addr) const;
 		virtual int memoryLatency(Address addr) const;
+		virtual void buildNCTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
+		virtual void buildFMTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
+		virtual void computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq);
 
     public:
 		GraphBBTime(const PropList& props = PropList::EMPTY);
@@ -124,10 +127,7 @@ namespace otawa {
 		ParExeSequence * buildSequence(PathContext *ctxt);
 		void analyzePathContext(PathContext *ctxt, int context_index);
 		int analyzeTimingContext(G* graph, TimingContext *NC_ctxt, TimingContext *FM_ctxt);
-		void buildNCTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
-		void buildFMTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
-		void computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq);
-		void outputGraph(G* graph, int bb_number, int context_number, int case_number);
+		void outputGraph(G* graph, int bb_number, int context_number, int case_number, const string& info = "");
     
     };
 	// -- GraphBBTime ------------------------------------------------------------------------------------------
@@ -282,13 +282,13 @@ void GraphBBTime<G>::configure(const PropList& props) {
 	// -- outputGraph ------------------------------------------------------------------------------------------
 
 	template <class G> 
-		void GraphBBTime<G>::outputGraph(G* graph, int bb_number, int context_index, int case_index){
+		void GraphBBTime<G>::outputGraph(G* graph, int bb_number, int context_index, int case_index, const string& info){
 		elm::StringBuffer buffer;
 		buffer << _graphs_dir_name << "/";
 		buffer << "b" << bb_number << "-ctxt" << context_index << "-case" << case_index << ".dot";
 		elm::io::OutFileStream dotStream(buffer.toString());
 		elm::io::Output dotFile(dotStream);
-		graph->dump(dotFile);
+		graph->dump(dotFile, info);
 	}
 
 
@@ -488,12 +488,12 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 		// compute reference cost
 		int reference_cost = execution_graph->analyze();
-		//execution_graph->display(elm::cout);
-		if (_do_output_graphs){
-			outputGraph(execution_graph, bb->number(), context_index, case_index++);
-		}
 		if(isVerbose())
 			log << "\t\treference cost = " << reference_cost << "\n\n";
+		if (_do_output_graphs){
+			outputGraph(execution_graph, bb->number(), context_index, case_index++,
+				_ << "reference cost = " << reference_cost);
+		}
     
 		TimingContext default_timing_context;
 
@@ -526,7 +526,6 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 			// set constant latencies (ALWAYS_MISS in the cache)
 			TimingContext default_timing_context;
-			//assert(_icache_miss_penalty >= 0);
 			computeDefaultTimingContextForICache(&default_timing_context, sequence);
 			int default_icache_cost = reference_cost;
 			if (!default_timing_context.isEmpty()){
@@ -539,8 +538,13 @@ void GraphBBTime<G>::configure(const PropList& props) {
 				}
 				execution_graph->setDefaultLatencies(&default_timing_context);
 				default_icache_cost = execution_graph->analyze();
-				if (_do_output_graphs){
-					outputGraph(execution_graph, bb->number(), context_index, case_index++);
+				if (_do_output_graphs) {
+					StringBuffer buf;
+					buf << "cost with AM = " << default_icache_cost << "\\lAM (";
+					for (TimingContext::NodeLatencyIterator nl(default_timing_context) ; nl ; nl++)
+						buf << "I" << nl->node()->inst()->index() << ", ";
+					buf << ")";
+					outputGraph(execution_graph, bb->number(), context_index, case_index++, buf.toString());
 				}
 				if(isVerbose())
 					log << "cost = " << default_icache_cost << " (only accounting for fixed latencies)\n\n";
@@ -548,7 +552,6 @@ void GraphBBTime<G>::configure(const PropList& props) {
 					reference_cost = default_icache_cost;
 			}
 	    
- 
 			// consider variable latencies (FIRST_MISS, NOT_CLASSIFIED)
 			elm::genstruct::SLList<TimingContext *> NC_timing_context_list;
 			elm::genstruct::SLList<TimingContext *> FM_timing_context_list;
@@ -594,8 +597,16 @@ void GraphBBTime<G>::configure(const PropList& props) {
 							//cache_penalty->dump(elm::cout);
 							//elm::cout << "\n";
 							//elm::cout << " (penalty = " << penalty << " - p[" << FM_tctxt->type() << "] = " << cache_penalty->penalty(FM_tctxt->type()) << ")\n";
-							if (_do_output_graphs){
-								outputGraph(execution_graph, bb->number(), context_index, case_index++);
+							if (_do_output_graphs) {
+								StringBuffer buf;
+								buf << "FM-NC cost = " << cost << "\\lfirst(";
+									for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++)
+										buf << "I" << (nl.item())->node()->inst()->index() << ",";
+								buf << "),\\lNC(";
+									for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++)
+										buf << "I" << (nl.item())->node()->inst()->index() << ",";
+								buf << ")";
+								outputGraph(execution_graph, bb->number(), context_index, case_index++, buf.toString());
 							}
 						} 
 					}
@@ -618,7 +629,12 @@ void GraphBBTime<G>::configure(const PropList& props) {
 /* 							elm::cout << "\n"; */
 /* 						elm::cout << " (penalty = " << penalty << " - p[" << FM_tctxt->type() << "] = " << cache_penalty->penalty(FM_tctxt->type()) << ")\n"; */
 						if (_do_output_graphs){
-							outputGraph(execution_graph, bb->number(), context_index, case_index++);
+							StringBuffer buf;
+							buf << "NC cost = " << cost << "\\lNC (";
+								for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++)
+									buf << "I" << (nl.item())->node()->inst()->index() << ",";
+							buf << ")";
+							outputGraph(execution_graph, bb->number(), context_index, case_index++, buf.toString());
 						}
 					}
 				}
@@ -637,16 +653,13 @@ void GraphBBTime<G>::configure(const PropList& props) {
 					}
 					if (NC_cost > reference_cost)
 						reference_cost = NC_cost;
-/* 					int penalty = cost - default_icache_cost; */
-/* 					if (penalty < 0) */
-/* 						penalty = 0; // penalty when all NCs hit is default_icache_cost; */
-/* 					if (penalty > cache_penalty->penalty(CachePenalty::MISS)) */
-/* 						cache_penalty->setPenalty(CachePenalty::MISS, penalty); */
-/* 					cache_penalty->dump(elm::cout); */
-/* 					elm::cout << "\n"; */
-				   //elm::cout << " (penalty = " << penalty << " - p[0] = " << cache_penalty->penalty(CachePenalty::MISS) << ")\n";
 					if (_do_output_graphs){
-						outputGraph(execution_graph, bb->number(), context_index, case_index++);
+						StringBuffer buf;
+						buf << "NC cost = " << NC_cost << "\\l NC (";
+						for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++)
+							buf << "I" << (nl.item())->node()->inst()->index() << ",";
+						buf << ")";
+						outputGraph(execution_graph, bb->number(), context_index, case_index++, buf.toString());
 					}
 				}
 			}
