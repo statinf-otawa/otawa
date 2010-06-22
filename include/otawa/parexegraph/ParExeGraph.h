@@ -262,7 +262,7 @@ namespace otawa {
 		void analyzeContentions();
 		int cost();
 		int Delta(ParExeNode *a, Resource *res);
-		void dump(elm::io::Output& dotFile);
+		void dump(elm::io::Output& dotFile, const string& info = "");
 		void display(elm::io::Output& output);
 
 		inline int numResources()

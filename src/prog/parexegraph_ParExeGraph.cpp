@@ -7,6 +7,7 @@ using namespace  otawa;
 
 int ParExeGraph::analyze() {
 
+	clearDelays();
     initDelays();
 
     _capacity = 0;
@@ -919,14 +920,50 @@ ParExeGraph::~ParExeGraph() {
     }
 }
 
+
+/**
+ * Manage the attribute dump.
+ * Must be called before the first attribute is generated.
+ */
+static void dumpAttrBegin(io::Output& out, bool& first) {
+	first = true;
+}
+
+/**
+ * Manage the attribute dump.
+ * Must be called before displaying an attribute.
+ */
+static void dumpAttr(io::Output& out, bool& first) {
+	if(first)
+		out << " [ ";
+	else
+		out << ", ";
+	first = false;
+}
+
+/**
+ * Manage the attribute dump.
+ * Must be called after the last attribute has been generated.
+ */
+static void dumpAttrEnd(io::Output& out, bool& first) {
+	if(!first)
+		out << " ]";
+}
+
+
 // ---------------------------------------
-void ParExeGraph::dump(elm::io::Output& dotFile) {
-	
-    dotFile << "digraph G {\n";
-    dotFile << "\"legend\" [shape=record, label= \"{ ";
+void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
     int i=0;
     bool first_line = true;
     int width = 5;
+    dotFile << "digraph G {\n";
+
+    // dipsplay information if any
+    if(info)
+    	dotFile << "\"info\" [shape=record, label=\"{" << info << "}\"];\n";
+
+    // display ressources
+    dotFile << "\"legend\" [shape=record, label= \"{ ";
     for (elm::genstruct::Vector<Resource *>::Iterator res(_resources) ; res ; res++) {
 		if (i == 0) {
 			if (!first_line)
@@ -949,13 +986,20 @@ void ParExeGraph::dump(elm::io::Output& dotFile) {
     dotFile << "} ";
     dotFile << "\"] ; \n";
   
+    // display instruction sequence
     dotFile << "\"code\" [shape=record, label= \"\\l";
     bool body = true;
+    BasicBlock *bb = 0;
     for (InstIterator inst(_sequence) ; inst ; inst++) {
 		if(inst->codePart() == BODY && body) {
 			body = false;
 			dotFile << "------\\l";
 		}
+    	BasicBlock *cbb = inst->basicBlock();
+    	if(cbb != bb) {
+    		bb = cbb;
+    		dotFile << bb << "\\l";
+    	}
     	dotFile << "I" << inst->index() << ": ";
 		dotFile << "0x" << fmt::address(inst->inst()->address()) << ":  "; 
 		inst->inst()->dump(dotFile);
@@ -963,7 +1007,12 @@ void ParExeGraph::dump(elm::io::Output& dotFile) {
     }
     dotFile << "\"] ; \n";
   
-  
+    // edges between info, legend, code
+    if(info)
+    	dotFile << "\"info\" -> \"legend\";\n";
+    dotFile << "\"legend\" -> \"code\";\n";
+
+    // display nodes
     for (InstIterator inst(_sequence) ; inst ; inst++) {
 		// dump nodes
 		dotFile << "{ rank = same ; ";
@@ -1007,7 +1056,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile) {
 		dotFile << "\n";
     }
   
-  
+    // display edges
     int group_number = 0;
     for (InstIterator inst(_sequence) ; inst ; inst++) {	
 		// dump edges
@@ -1016,27 +1065,50 @@ void ParExeGraph::dump(elm::io::Output& dotFile) {
 				if ( node != inst->firstNode()
 					 ||
 					 (node->stage()->category() != ParExeStage::EXECUTE) 
-					 || (node->inst()->index() == next->inst()->index()) ) {				
+					 || (node->inst()->index() == next->inst()->index()) ) {
+
+					// display edges
 					dotFile << "\"" << node->stage()->name();
 					dotFile << "I" << node->inst()->index() << "\"";
 					dotFile << " -> ";
 					dotFile << "\"" << next->stage()->name();
 					dotFile << "I" << next->inst()->index() << "\"";
+
+					// display attributes
+					bool first;
+					dumpAttrBegin(dotFile, first);
+
+					// latency if any
+					if(next.edge()->latency()) {
+						dumpAttr(dotFile, first);
+						dotFile << "label=\"" << next.edge()->latency() << "\"";
+					}
+
+					// edge style
 					switch( next.edge()->type()) {
 					case ParExeEdge::SOLID:
-						if (node->inst()->index() == next->inst()->index())
-							dotFile << "[minlen=4]";
-						dotFile << " ;\n";
+						if (node->inst()->index() == next->inst()->index()) {
+							dumpAttr(dotFile, first);
+							dotFile << "minlen=4";
+						}
 						break;
 					case ParExeEdge::SLASHED:
-						dotFile << " [style=dotted";
-						if (node->inst()->index() == next->inst()->index())
-							dotFile << ", minlen=4";
-						dotFile << "] ;\n";
+						dumpAttr(dotFile, first);
+						dotFile << " style=dotted";
+						if (node->inst()->index() == next->inst()->index()) {
+							dumpAttr(dotFile, first);
+							dotFile << "minlen=4";
+						}
 						break;	
 					default:
 						break;
 					}	
+
+					// dump attribute end
+					dumpAttrEnd(dotFile, first);
+					dotFile << ";\n";
+
+					// group
 					if ((node->inst()->index() == next->inst()->index())
 						|| ((node->stage()->index() == next->stage()->index())
 							&& (node->inst()->index() == next->inst()->index()-1)) ) {
