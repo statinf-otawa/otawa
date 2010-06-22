@@ -20,6 +20,13 @@ using namespace otawa::ilp;
 
 namespace otawa { namespace ipet {
 
+Registration<CachePenaltiesObjectFunctionBuilder> CachePenaltiesObjectFunctionBuilder::reg(
+	"otawa::ipet::CachePenaltiesObjectFunctionBuilder",
+	Version(1, 0, 1),
+	p::require, &ASSIGNED_VARS_FEATURE,
+	p::end
+);
+
 		/**
 		 * @class BasicObjectFunctionBuilder
 		 * This processor is used for building the basic object function function
@@ -46,10 +53,13 @@ namespace otawa { namespace ipet {
 		 * Build a new basic object function builder.
 		 */
 		CachePenaltiesObjectFunctionBuilder::CachePenaltiesObjectFunctionBuilder(void)
-			: BBProcessor("otawa::ipet::CachePenaltiesObjectFunctionBuilder", Version(1, 0, 0)) {
-			//	require(ASSIGNED_VARS_FEATURE);
+			: BBProcessor(reg) {
 		}
 
+		void CachePenaltiesObjectFunctionBuilder::configure(const PropList& props) {
+			BBProcessor::configure(props);
+			_explicit = EXPLICIT(props);
+		}
 
 		/**
 		 */
@@ -62,10 +72,9 @@ namespace otawa { namespace ipet {
 				System *system = SYSTEM(fw);
 				for (BasicBlock::InIterator edge(bb); edge; edge++) {
 					CachePenalty * cache_penalty = ICACHE_PENALTY(edge);
-					//if (!cache_penalty)
-					//	cache_penalty = ICACHE_PENALTY(bb);
 					if (cache_penalty){
-						elm::cout << "[b" << edge->source()->number() << "->b" << edge->target()->number() << "]";
+						//if(isVerbose())
+						//	log << "\t\t\t[b" << edge->source()->number() << "->b" << edge->target()->number() << "]\n";
 						if (!cache_penalty->header(1)){
 							assert(cache_penalty->header(0));
 							for (BasicBlock::InIterator h_edge(cache_penalty->header(0)) ; h_edge ; h_edge++){
@@ -76,7 +85,7 @@ namespace otawa { namespace ipet {
 						}
 						else { // 2 headers
 							ilp::Var *entry, *loop;
-							if(0 /*!_explicit*/){
+							if(!_explicit){
 								entry = system->newVar();
 								loop = system->newVar();;
 							}
@@ -90,9 +99,9 @@ namespace otawa { namespace ipet {
 								String name2 = buf2.toString();
 								loop = system->newVar(name2);
 							}
-							Constraint *cons_entry = system->newConstraint(Constraint::EQ,0);
+							Constraint *cons_entry = system->newConstraint("double FM header: sum of entering", Constraint::EQ, 0);
 							cons_entry->addLeft(1, entry);
-							Constraint *cons_loop = system->newConstraint(Constraint::EQ,0);
+							Constraint *cons_loop = system->newConstraint("double FM header: sum of entering and backing", Constraint::EQ, 0);
 							cons_loop->addLeft(1, loop);
 							for (BasicBlock::InIterator edge(cache_penalty->header(0)) ; edge ; edge++){
 								if (!Dominance::isBackEdge(edge)){
@@ -107,7 +116,7 @@ namespace otawa { namespace ipet {
 							system->addObjectFunction(cache_penalty->penalty(CachePenalty::HIT_MISS), loop);
 
 							BasicBlock *h1 = cache_penalty->header(1);
-							if(0/*!_explicit*/){
+							if(!_explicit){
 								entry = system->newVar();
 								loop = system->newVar();;
 							}
@@ -120,7 +129,7 @@ namespace otawa { namespace ipet {
 								String name2 = buf2.toString();
 								loop = system->newVar(name2);
 							}
-							cons_loop = system->newConstraint(Constraint::EQ,0);
+							cons_loop = system->newConstraint("double FM header: sum of entering", Constraint::EQ,0);
 							cons_loop->addLeft(1, loop);
 							for (BasicBlock::InIterator edge(cache_penalty->header(1)) ; edge ; edge++){
 								if (!Dominance::isBackEdge(edge)){

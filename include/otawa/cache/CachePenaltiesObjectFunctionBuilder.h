@@ -18,7 +18,13 @@ namespace otawa { namespace ipet {
 // CachePenaltiesObjectFunctionBuilder class
 class CachePenaltiesObjectFunctionBuilder: public BBProcessor {
 public:
+	static Registration<CachePenaltiesObjectFunctionBuilder> reg;
 	CachePenaltiesObjectFunctionBuilder(void);
+
+	virtual void configure(const PropList& props = PropList::EMPTY);
+
+protected:
+	bool _explicit;
 
 	// BBProcessor overload
 	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
