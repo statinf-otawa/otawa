@@ -207,16 +207,16 @@ void Script::processWorkSpace(WorkSpace *ws) {
 		}
 		xom::Element *cache = pf->getFirstChildElement("cache-config");
 		if(cache) {
-			//CACHE_CONFIG_ELEMENT(props) = cache;
-			ws->process()->platform()->loadCacheConfig(cache);
+			CACHE_CONFIG_ELEMENT(props) = cache;
+			//ws->process()->platform()->loadCacheConfig(cache);
 			if(isVerbose())
 				log << "\tcache configuration found.\n";
 		}
 		xom::Element *mem = pf->getFirstChildElement("memory");
 		if(mem) {
-			//MEMORY_ELEMENT(props) = mem;
+			MEMORY_ELEMENT(props) = mem;
 			ws->process()->platform()->loadMemory(mem);
-			if(isVerbose())
+			//if(isVerbose())
 				log << "\tmemory configuration found.\n";
 		}
 	}

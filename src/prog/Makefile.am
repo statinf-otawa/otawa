@@ -95,6 +95,7 @@ libotawa_la_SOURCES = \
 	util_FirstUnrollingFixPoint.cpp \
 	util_MemBlockMap.cpp \
 	util_UnrollingListener.cpp \
+	hard_Dumper.cpp \
 	hard_Processor.cpp \
 	hardware_Cache.cpp \
 	hardware_CacheConfiguration.cpp \
