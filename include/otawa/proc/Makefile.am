@@ -1,6 +1,7 @@
 includeotawaprocdir=$(includedir)/otawa/proc
 includeotawaproc_HEADERS = \
 	AbstractFeature.h \
+	Accessor.h \
 	BBProcessor.h \
 	CFGProcessor.h \
 	ContextualProcessor.h \
