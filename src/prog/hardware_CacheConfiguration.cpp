@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <elm/serial2/XOMUnserializer.h>
+#include <otawa/manager.h>
+#include <otawa/proc/Processor.h>
 
 namespace otawa { namespace hard {
 	
@@ -146,6 +148,118 @@ string CacheConfiguration::cacheName(const Cache *cache) const {
 	return buf.toString();
 }
 
+
+class CacheConfigurationProcessor: public otawa::Processor {
+public:
+	CacheConfigurationProcessor(void)
+		: Processor("otawa::CacheConfigurationProcessor", Version(1, 0, 0)) {
+			provide(CACHE_CONFIGURATION_FEATURE);
+		}
+
+	virtual void configure(const PropList& props) {
+		Processor::configure(props);
+		config = CACHE_CONFIG(props);
+		if(!config) {
+			xml = CACHE_CONFIG_ELEMENT(props);
+			if(!xml)
+				path = CACHE_CONFIG_PATH(props);
+		}
+	}
+
+protected:
+	virtual void processWorkSpace(WorkSpace *ws) {
+		if(config) {
+			CACHE_CONFIGURATION(ws) = config;
+			if(isVerbose())
+				log << "\tcustom cache configuration\n";
+		}
+		else if(xml) {
+			config = CacheConfiguration::load(xml);
+			track(CACHE_CONFIGURATION_FEATURE, CACHE_CONFIGURATION(ws) = config);
+			if(isVerbose())
+				log << "\t cache configuration from XML element\n";
+		}
+		else if(path) {
+			if(isVerbose())
+				log << "\t cache configuration from \"" << path << "\"\n";
+			config = CacheConfiguration::load(path);
+			track(CACHE_CONFIGURATION_FEATURE, CACHE_CONFIGURATION(ws) = config);
+		}
+		else if(isVerbose())
+			log << "\tno cache configuration\n";
+	}
+
+private:
+	const CacheConfiguration *config;
+	xom::Element *xml;
+	Path path;
+};
+
+
+static SilentFeature::Maker<CacheConfigurationProcessor> maker;
+/**
+ * This feature ensures we have obtained the cache configuration
+ * of the system.
+ *
+ * @par Properties
+ * @li @ref otawa::CACHE_CONFIGURATION
+ *
+ * @par Accessors
+ * @li @ref otawa::L1_ICACHE
+ * @li @ref otawa::L2_DCACHE
+ */
+SilentFeature CACHE_CONFIGURATION_FEATURE("otawa::hard::CACHE_CONFIGURATION_FEATURE", maker);
+
+
+/**
+ * Current configuration.
+ *
+ * @par Hooks
+ * @li @ref otawa::WorkSpace
+ *
+ * @par Features
+ * @li @ref otawa::CACHE_CONFIGURATION_FEATURE
+ *
+ * @par Default Value
+ * Cache configuration without any cache (never null).
+ */
+Identifier<const CacheConfiguration *> CACHE_CONFIGURATION("otawa::hard::CACHE_CONFIGURATION", &CacheConfiguration::NO_CACHE);
+
+
+// accessors functions
+static const Cache *l1_icache(WorkSpace *ws) {
+	const CacheConfiguration *conf = CACHE_CONFIGURATION(ws);
+	if(!ws)
+		return 0;
+	else
+		return conf->instCache();
+}
+
+static const Cache *l1_dcache(WorkSpace *ws) {
+	const CacheConfiguration *conf = CACHE_CONFIGURATION(ws);
+	if(!ws)
+		return 0;
+	else
+		return conf->dataCache();
+}
+
+
+/**
+ * Accessor on the instruction cache L1.
+ *
+ * @par Feature
+ * @li @ref otawa::CACHE_CONFIGURATION_FEATURE
+ */
+FunAccessor<const Cache *> L1_ICACHE(l1_icache, "otawa::hard::L1_ICACHE");
+
+
+/**
+ * Accessor on the data cache L1.
+ *
+ * @par Feature
+ * @li @ref otawa::CACHE_CONFIGURATION_FEATURE
+ */
+FunAccessor<const Cache *> L1_DCACHE(l1_dcache, "otawa::hard::L1_DCACHE");;
 
 } } // otawa::hard
 
