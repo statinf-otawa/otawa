@@ -17,7 +17,7 @@ using namespace otawa::ipet;
 
 namespace otawa { 
 
-Identifier<String> GRAPHS_OUTPUT_DIRECTORY("output directory for dot graphs","");
+Identifier<String> GRAPHS_OUTPUT_DIRECTORY("otawa::GRAPHS_OUTPUT_DIRECTORY","");
     
     //Feature<GraphBBTime> ICACHE_ACCURATE_PENALTIES_FEATURE("otawa::ICACHE_ACCURATE_PENALTIES_FEATURE");
 
