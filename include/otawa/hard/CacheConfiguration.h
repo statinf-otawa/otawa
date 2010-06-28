@@ -1,14 +1,31 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	CacheConfiguration class interface
  *
- *	otawa/hard/CacheConfiguration.h -- CacheConfiguration class interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-10, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_HARD_CONFIGURATION_CACHE_H
 #define OTAWA_HARD_CONFIGURATION_CACHE_H
 
 #include <otawa/hard/Cache.h>
 #include <elm/system/Path.h>
+#include <otawa/proc/SilentFeature.h>
+#include <otawa/proc/Accessor.h>
 
 namespace elm { namespace xom {
 	class Element;
@@ -23,47 +40,25 @@ class CacheConfiguration {
 public:
 	virtual ~CacheConfiguration(void) { }
 	static const CacheConfiguration NO_CACHE;
-	inline CacheConfiguration(const Cache *inst_cache = 0,
-		const Cache *data_cache = 0);
-	inline const Cache *instCache(void) const;
-	inline const Cache *dataCache(void) const;
-	inline bool hasInstCache(void) const;
-	inline bool hasDataCache(void) const;
-	inline bool isUnified(void) const;
-	inline bool isHarvard(void) const;
+	inline CacheConfiguration(const Cache *inst_cache = 0, const Cache *data_cache = 0)
+		: icache(inst_cache), dcache(data_cache) { }
+	inline const Cache *instCache(void) const { return icache; }
+	inline const Cache *dataCache(void) const  { return dcache; }
+	inline bool hasInstCache(void) const { return icache != 0; }
+	inline bool hasDataCache(void) const { return dcache != 0; }
+	inline bool isUnified(void) const { return icache == dcache; }
+	inline bool isHarvard(void) const { return icache != dcache; }
 	static CacheConfiguration *load(elm::xom::Element *element);
 	static CacheConfiguration *load(const elm::system::Path& path);
 	string cacheName(const Cache *cache) const;
 };
 
-// Inlines
-inline CacheConfiguration::CacheConfiguration(const Cache *inst_cache,
-const Cache *data_cache): icache(inst_cache), dcache(data_cache) {
-}
 
-inline const Cache *CacheConfiguration::instCache(void) const {
-	return icache;
-}
-
-inline const Cache *CacheConfiguration::dataCache(void) const {
-	return dcache;
-}
-
-inline bool CacheConfiguration::hasInstCache(void) const {
-	return icache != 0;
-}
-
-inline bool CacheConfiguration::hasDataCache(void) const {
-	return dcache != 0;
-}
-
-inline bool CacheConfiguration::isUnified(void) const {
-	return icache == dcache;
-}
-
-inline bool CacheConfiguration::isHarvard(void) const {
-	return icache != dcache;
-}
+// features
+extern SilentFeature CACHE_CONFIGURATION_FEATURE;
+extern Identifier<const CacheConfiguration *> CACHE_CONFIGURATION;
+extern FunAccessor<const Cache *> L1_ICACHE;
+extern FunAccessor<const Cache *> L1_DCACHE;
 
 } } // otawa::hard
 
