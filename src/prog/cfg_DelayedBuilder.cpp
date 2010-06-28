@@ -34,7 +34,6 @@ typedef enum action_t {
 static Identifier<action_t> ACTION("", DO_NOTHING);
 static Identifier<BasicBlock *> DELAYED_TARGET("", 0);
 
-
 static SilentFeature::Maker<DelayedBuilder> maker;
 /**
  * This feature informs that the current microprocessor supports
@@ -145,10 +144,18 @@ void DelayedBuilder::setup(WorkSpace *ws) {
 /**
  */
 void DelayedBuilder::cleanup(WorkSpace *ws) {
+
+	// track feature cleanup
 	track(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = coll);
 	addCleaner(COLLECTED_CFG_FEATURE, cleaner);
-	ENTRY_CFG(ws) = coll->get(0);		// should cleaned at some time
+	ENTRY_CFG(ws) = coll->get(0);		// should be cleaned at some time
+
+	// cleanup
 	coll = 0;
+	cleaner = 0;
+	cfg_map.clear();
+	map.clear();
+	vcfg = 0;
 }
 
 
@@ -302,12 +309,13 @@ void DelayedBuilder::buildBB(CFG *cfg) {
 
 			// contains delayed instruction
 			if(DELAYED_INST(first)) {
+				if(isVerbose())
+					log << "\t\t" << *bb << " reduced due to delayed instruction\n";
 
 				// remove delayed mono-instruction BB
 				if(bb->countInstructions() == 1) {
-					if(isVerbose()) {
+					if(isVerbose())
 						log << "\t\tmono-instruction delayed BB removed: " << *bb << io::endl;
-					}
 					continue;
 				}
 
@@ -326,8 +334,11 @@ void DelayedBuilder::buildBB(CFG *cfg) {
 			}
 
 			// perform swallowing
-			if(ACTION(bb) == DO_SWALLOW)
+			if(ACTION(bb) == DO_SWALLOW) {
+				if(isVerbose())
+					log << "\t\t" << *bb << " extended by a delayed instruction\n";
 				size += bb->lastInst()->nextInst()->size();
+			}
 
 			// create block
 			CodeBasicBlock *cbb = new CodeBasicBlock(first);
