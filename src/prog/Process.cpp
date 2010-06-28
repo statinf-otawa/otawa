@@ -921,6 +921,29 @@ SilentFeature SEMANTICS_INFO("otawa::SEMANTICS_INFO", no_maker);
  */
 Identifier<delayed_t> DELAYED("otawa::DELAYED", DELAYED_None);
 
+
+/**
+ */
+template <>
+void Identifier<delayed_t>::print (elm::io::Output &out, const Property *prop) const {
+	switch(get(*prop)) {
+	case DELAYED_None:
+		out << "none";
+		break;
+	case DELAYED_Always:
+		out << "always";
+		break;
+	case DELAYED_Taken:
+		out << "taken";
+		break;
+	default:
+		out << "unknown";
+	}
+}
+
+
+
+
 /**
  * This feature is put on processes by the loader to inform that the
  * control instruction of the current instruction contains delayed branches
