@@ -103,15 +103,23 @@ namespace otawa {
 		elm::io::Output *_output;
 		String _graphs_dir_name;
 		bool _do_output_graphs;
-		bool _do_consider_icache;
-		const hard::Memory *mem;
 
     protected:
+		bool _do_consider_icache;
+		const hard::Memory *mem;
+		const hard::Cache *icache;
+
 		virtual int cacheMissPenalty(Address addr) const;
 		virtual int memoryLatency(Address addr) const;
 		virtual void buildNCTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
 		virtual void buildFMTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
 		virtual void computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq);
+
+		virtual void configureMem(WorkSpace *ws) {
+			icache = ws->platform()->cache().instCache();
+			_do_consider_icache = icache;
+			mem = &ws->platform()->memory();
+		}
 
     public:
 		GraphBBTime(const PropList& props = PropList::EMPTY);
@@ -208,9 +216,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		}
 
 		// look for memory hierarchy
-		const hard::Cache *cache = _ws->platform()->cache().instCache();
-		_do_consider_icache = cache;
-		mem = &_ws->platform()->memory();
+		configureMem(_ws);
 
 		// Perform the actual process
 		BBProcessor::processWorkSpace(ws);
