@@ -681,19 +681,6 @@ otawa::Inst *Process::decode(Address addr) {
 		TRACE("UNKNOWN !!!\n" << result);
 	else
 		kind = ppc_kind(inst);
-
-	// detect the false branch instructions
-	switch (inst->ident)
-	{
-		case PPC_BL_D:
-			if (PPC_BL_D_x_x_BRANCH_ADDR_n == 1)
-				kind = Inst::IS_ALU | Inst::IS_INT;
-			break;
-		case PPC_BCL_D_D_D:
-			if (PPC_BCL_D_D_D_x_x_x_BD_n == 1)
-				kind = Inst::IS_ALU | Inst::IS_INT;
-			break;
-	}
 	bool is_branch = kind & Inst::IS_CONTROL;
 
 	// build the object
@@ -719,26 +706,9 @@ ppc_address_t BranchInst::decodeTargetAddress(void) {
 	inst = ppc_decode(proc.ppcDecoder(), (ppc_address_t)address());
 
 	// retrieve the target addr from the nmp otawa_target attribute
-	Address target_addr = 0;
-	switch (inst->ident)
-	{
-		case PPC_BL_D:
-		case PPC_B_D:
-		case PPC_BLA_D:
-		case PPC_BA_D:
-		case PPC_BCL_D_D_D:
-		case PPC_BC_D_D_D:
-		case PPC_BCLA_D_D_D:
-		case PPC_BCA_D_D_D:
-		case PPC_BCCTR_D_D:
-		case PPC_BCCTRL_D_D:
-			target_addr = ppc_target(inst);
-			break;
-		default:
-			break;
-	}
+	Address target_addr = ppc_target(inst);
 
-	// Return result
+	// cleanup
 	ppc_free_inst(inst);
 	return target_addr;
 }
