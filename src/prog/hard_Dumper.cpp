@@ -65,6 +65,9 @@ void Dumper::processWorkSpace(WorkSpace *ws) {
 		}
 		out << io::endl;
 		out << "\t\trange = " << bank.address() << "-" << bank.topAddress() << io::endl;
+		out << "\t\tlatency = " << bank.latency() << " cycles\n";
+		if(bank.writeLatency())
+			out << "\t\twrite latency = " << bank.writeLatency() << " cycles\n";
 	}
 }
 
