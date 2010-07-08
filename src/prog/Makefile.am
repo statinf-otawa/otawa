@@ -66,12 +66,14 @@ libotawa_la_SOURCES = \
 	ipet_WCETComputation.cpp \
 	ipet_WCETCountRecorder.cpp \
 	util_LoopInfoBuilder.cpp \
+	dfa_AbsIntLite.cpp \
 	dfa_IterativeDFA.cpp \
 	dfa_XCFGVisitor.cpp \
 	dfa_XIterativeDFA.cpp \
 	util_Dominance.cpp \
 	util_PostDominance.cpp \
 	util_ContextTree.cpp \
+	cfg_CFGAdapter.cpp \
 	cfg_CFGChecker.cpp \
 	cfg_CFGCheckSummer.cpp \
 	cfg_DelayedBuilder.cpp \
