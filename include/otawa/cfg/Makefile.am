@@ -2,6 +2,7 @@ includeotawacfgdir=$(includedir)/otawa/cfg
 includeotawacfg_HEADERS = \
 	BasicBlock.h \
 	CFG.h \
+	CFGAdapter.h \
 	CFGBuilder.h \
 	CFGChecker.h \
 	CFGCheckSummer.h \
