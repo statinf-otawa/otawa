@@ -24,12 +24,14 @@
 #include <otawa/cfg/features.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/cfg.h>
+#include <otawa/dfa/AbsIntLite.h>
+#include <otawa/cfg/CFGAdapter.h>
 #include <elm/util/BitVector.h>
-#include <elm/genstruct/VectorQueue.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/Iterator.h>
 
 using namespace elm;
+using namespace otawa::dfa;
 
 namespace otawa {
 
@@ -51,77 +53,6 @@ Registration<SubCFGBuilder> SubCFGBuilder::reg(
 
 Identifier<bool> IS_START("", false);
 Identifier<bool> IS_STOP("", false);
-
-#ifdef OTAWA_AIL_DEBUG
-#	define OTAWA_AILD(x)	x
-#else
-#	define OTAWA_AILD(x)
-#endif
-
-template <class G, class T>
-class AbsIntLite {
-public:
-
-	inline AbsIntLite(const G& graph, const T& domain): g(graph), d(domain) {
-		vals = new typename T::t[g.count()];
-		for(int i = 0; i < g.count(); i++)
-			d.set(vals[i], d.bottom());
-	}
-
-	inline void process(void) {
-
-		// initialization
-		genstruct::VectorQueue<typename G::Vertex> todo;
-		d.set(vals[g.index(g.entry())], d.initial());
-		for(typename G::Successor succ(g, g.entry()); succ; succ++)
-			todo.put(succ);
-
-		// loop until fixpoint
-		while(todo) {
-			typename G::Vertex v = todo.get();
-			OTAWA_AILD(cerr << "NEXT: " << v << io::endl);
-
-			// join of predecessor
-			d.set(tmp, d.bottom());
-			for(typename G::Predecessor pred(g, v); pred; pred++)
-				d.join(tmp, vals[g.index(pred)]);
-			OTAWA_AILD(cerr << "- JOIN IN: "; d.dump(cerr, tmp); cerr << io::endl);
-
-			// update value
-			d.update(v, tmp);
-			OTAWA_AILD(cerr << "- UPDATE: "; d.dump(cerr, tmp); cerr << io::endl);
-
-			// new value ?
-			if(d.equals(d.bottom(), vals[g.index(v)]) || !d.equals(tmp, vals[g.index(v)])) {
-				OTAWA_AILD(cerr << "- NEW VALUE\n");
-				d.set(vals[g.index(v)], tmp);
-
-				// add successors
-				for(typename G::Successor succ(g, v); succ; succ++) {
-					todo.put(*succ);
-					OTAWA_AILD(cerr << "- PUTTING " << *succ << io::endl);
-				}
-			}
-		}
-	}
-
-	inline const typename T::t& in(typename G::Vertex v) {
-		d.set(tmp, d.bottom());
-		for(typename G::Predecessor pred(g, v); pred; pred++)
-			d.join(tmp, vals[g.index(pred)]);
-		return tmp;
-	}
-
-	inline const typename T::t& out(typename G::Vertex v) const {
-		return vals[g.index(v)];
-	}
-
-private:
-	const G& g;
-	T d;
-	typename T::t *vals;
-	typename T::t tmp;
-};
 
 class Domain {
 public:
@@ -184,84 +115,6 @@ public:
 private:
 	const Address& start;
 	const genstruct::Vector<Address> &stops;
-};
-
-
-class ForwardCFGAdapter {
-public:
-
-	typedef BasicBlock *Vertex;
-
-	inline ForwardCFGAdapter(CFG *_cfg): cfg(_cfg) { }
-	inline int count(void) const { return cfg->countBB(); }
-	inline Vertex entry(void) const { return cfg->entry(); }
-	inline int index(Vertex v) const { return v->number(); }
-
-	class Predecessor: public PreIterator<Predecessor, Vertex> {
-	public:
-		inline Predecessor(const ForwardCFGAdapter& g, const Vertex& v): iter(v) { }
-		inline bool ended (void) const { return iter.ended(); }
-		const Vertex item (void) const { return iter->source(); }
-		void next(void) { iter++; }
-	private:
-		BasicBlock::InIterator iter;
-	};
-
-	class Successor: public PreIterator<Successor, Vertex> {
-	public:
-		inline Successor(const ForwardCFGAdapter& g, const Vertex& v): iter(v) { step(); }
-		inline bool ended (void) const { return iter.ended(); }
-		const Vertex item (void) const { return iter->target(); }
-		void next(void) { iter++; step(); }
-	private:
-		inline void step(void) {
-			while(iter && iter->kind() == Edge::CALL)
-				iter++;
-		}
-		BasicBlock::OutIterator iter;
-	};
-
-private:
-	CFG *cfg;
-};
-
-
-class BackwardCFGAdapter {
-public:
-
-	typedef BasicBlock *Vertex;
-
-	inline BackwardCFGAdapter(CFG *_cfg): cfg(_cfg) { }
-	inline int count(void) const { return cfg->countBB(); }
-	inline Vertex entry(void) const { return cfg->exit(); }
-	inline int index(Vertex v) const { return v->number(); }
-
-	class Successor: public PreIterator<Successor, Vertex> {
-	public:
-		inline Successor(const BackwardCFGAdapter& g, const Vertex& v): iter(v) { }
-		inline bool ended (void) const { return iter.ended(); }
-		const Vertex item (void) const { return iter->source(); }
-		void next(void) { iter++; }
-	private:
-		BasicBlock::InIterator iter;
-	};
-
-	class Predecessor: public PreIterator<Predecessor, Vertex> {
-	public:
-		inline Predecessor(const BackwardCFGAdapter& g, const Vertex& v): iter(v) { step(); }
-		inline bool ended (void) const { return iter.ended(); }
-		const Vertex item (void) const { return iter->target(); }
-		void next(void) { iter++; step(); }
-	private:
-		inline void step(void) {
-			while(iter && iter->kind() == Edge::CALL)
-				iter++;
-		}
-		BasicBlock::OutIterator iter;
-	};
-
-private:
-	CFG *cfg;
 };
 
 
