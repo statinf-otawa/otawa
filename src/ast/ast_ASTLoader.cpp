@@ -30,7 +30,7 @@ namespace otawa {
 /**
  * Build a new AST loader.
  */
-ASTLoader::ASTLoader(void): fw(0), file(0) {
+ASTLoader::ASTLoader(void): ws(0), file(0) {
 }
 
 
@@ -60,13 +60,13 @@ void ASTLoader::onError(const char *fmt, ...) {
 
 /**
  */
-void ASTLoader::processWorkSpace(WorkSpace *_fw) {
-	assert(_fw);
-	fw = _fw;
+void ASTLoader::processWorkSpace(WorkSpace *ws) {
+	assert(ws);
+	this->ws= ws;
 	
 	// Get a valid path
 	if(!path) {
-		file = fw->process()->program();
+		file = ws->process()->program();
 		assert(file);
 		elm::StringBuffer buffer;
 		buffer << file->name() << ".ast";
@@ -104,7 +104,7 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 	
 	// Retrieve entry instruction
 	String entry_name(&entry, entry.length() - 1);
-	Inst *entry_inst = fw->findInstAt(findLabel(entry_name));
+	Inst *entry_inst = ws->findInstAt(findLabel(entry_name));
 	if(!entry_inst)
 		throw LoadException(_ << "Cannot find instruction at \"" << entry << "\".");
 	
@@ -119,7 +119,7 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 	// Resolve called labels
 	genstruct::Vector<Inst *> call_insts;
 	for(int i = 0; i < calls.length(); i++) {
-		Inst *inst = fw->findInstAt(findLabel(calls[i].toCString()));
+		Inst *inst = ws->findInstAt(findLabel(calls[i].toCString()));
 		if(!inst)
 			throw LoadException(_ << "Cannot find instruction at \"" << calls[i] << "\".");
 		else
@@ -127,7 +127,7 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 	}
 	
 	// Find AST info
-	ASTInfo *info = fw->getASTInfo();
+	ASTInfo *info = ws->getASTInfo();
 	
 	// Build the matching sequence
 	AST *ast = 0;
@@ -182,7 +182,7 @@ address_t ASTLoader::findLabel(elm::String raw_label) {
 
 	// Retrieve the file
 	if(!file)
-		file = fw->process()->program();
+		file = ws->process()->program();
 	assert(file);
 	
 	// Compute entry

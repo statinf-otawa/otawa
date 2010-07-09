@@ -35,14 +35,14 @@ FunProcessor::~FunProcessor(void) {
 /**
  * Override @ref Processor::processFrameWork().
  */
-void FunProcessor::processWorkSpace(WorkSpace *fw) {
+void FunProcessor::processWorkSpace(WorkSpace *ws) {
 
 	// Get AST information
-	ASTInfo *info = fw->getASTInfo();
+	ASTInfo *info = ws->getASTInfo();
 	
 	// For each AST
 	for(ASTInfo::Iterator ast(info); ast; ast++)
-		processFun(fw, ast);	
+		processFun(ws, ast);
 }
 
 } // otawa

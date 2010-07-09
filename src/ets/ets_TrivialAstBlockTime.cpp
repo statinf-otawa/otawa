@@ -35,17 +35,17 @@ namespace otawa { namespace ets {
 
 /**
  * Edit the WCET of the ast blocks to ETS::ID_WCET.
- * @param fw	Container framework.
+ * @param ws	Container framework.
  * @param ast	AST to process.
  */
-void TrivialAstBlockTime::processAST(WorkSpace *fw, AST *ast) {
+void TrivialAstBlockTime::processAST(WorkSpace *ws, AST *ast) {
 	switch(ast->kind()) {
 			case AST_Call:{
-				ASTInfo *ast_info = fw->getASTInfo();
+				ASTInfo *ast_info = ws->getASTInfo();
 				Option< FunAST *> fun_res = ast_info->get(ast->toCall()->function()->name());
 				if(fun_res) {
 					AST *fun_ast = (*fun_res)->ast();
-					processAST(fw, fun_ast);
+					processAST(ws, fun_ast);
 				}
 			}
 			case AST_Block:
@@ -53,27 +53,27 @@ void TrivialAstBlockTime::processAST(WorkSpace *fw, AST *ast) {
 				TABT_OUT(cout << "|| " << ast->toBlock()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toBlock()->use<int>(ETS::ID_WCET)<< '\n');
 				break;
 			case AST_Seq:
-				processAST(fw, ast->toSeq()->child1());
-				processAST(fw, ast->toSeq()->child2());
+				processAST(ws, ast->toSeq()->child1());
+				processAST(ws, ast->toSeq()->child2());
 				break;
 			case AST_If:
-				processAST(fw, ast->toIf()->condition());
-				processAST(fw, ast->toIf()->thenPart());
-				processAST(fw, ast->toIf()->elsePart());
+				processAST(ws, ast->toIf()->condition());
+				processAST(ws, ast->toIf()->thenPart());
+				processAST(ws, ast->toIf()->elsePart());
 				break;
 			case AST_While:
-			 	processAST(fw, ast->toWhile()->condition());
-				processAST(fw, ast->toWhile()->body());
+			 	processAST(ws, ast->toWhile()->condition());
+				processAST(ws, ast->toWhile()->body());
 				break;
 			case AST_DoWhile:
-				processAST(fw, ast->toDoWhile()->body());
-				processAST(fw, ast->toDoWhile()->condition());
+				processAST(ws, ast->toDoWhile()->body());
+				processAST(ws, ast->toDoWhile()->condition());
 				break;
 			case AST_For:
-				processAST(fw, ast->toFor()->initialization());
-				processAST(fw, ast->toFor()->condition());
-				processAST(fw, ast->toFor()->incrementation());
-				processAST(fw, ast->toFor()->body());
+				processAST(ws, ast->toFor()->initialization());
+				processAST(ws, ast->toFor()->condition());
+				processAST(ws, ast->toFor()->incrementation());
+				processAST(ws, ast->toFor()->body());
 				break;
 			default:
 				;

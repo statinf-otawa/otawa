@@ -36,36 +36,36 @@ namespace otawa { namespace ets {
  */
 
 /**
- * @fn void ACSComputation::processAST(FrameWork *fw, AST *ast);
+ * @fn void ACSComputation::processAST(FrameWork *ws, AST *ast);
  * Process each cache line.
- * @param fw	Container framework.
+ * @param ws	Container framework.
  * @param ast	AST to process.
  */	
-void ACSComputation::processAST(WorkSpace *fw, AST *ast) {
+void ACSComputation::processAST(WorkSpace *ws, AST *ast) {
 	for(int j=0;j<cache_size;j++){
 		AbstractCacheState::AbstractCacheState *acs= new AbstractCacheState::AbstractCacheState(j);
 		AC_OUT(cout <<"||||||- "<<j<<" -||||||\n");
-		initialization(fw, ast, acs);
+		initialization(ws, ast, acs);
 		AC_OUT(cout <<"|| length["<<j<<"] : "<<cache_line_length<<'\n');
 		AC_OUT(cout <<"|| htable["<<j<<"] : "<<acs->htable.count()<<'\n');
 		if (cache_line_length != 0){
-			for(int i = 0; i<fw->cache().instCache()->wayCount(); i++){
+			for(int i = 0; i<ws->cache().instCache()->wayCount(); i++){
 				acs->cache_state.add(new BitVector(cache_line_length));
 			}
-			/*AbstractCacheState::AbstractCacheState *tmp =*/ applyProcess(fw, ast, acs);
+			/*AbstractCacheState::AbstractCacheState *tmp =*/ applyProcess(ws, ast, acs);
 			cache_line_length = 0;
 		}
 	}
 }
 
 /**
- * @fn void ACSComputation::initialization(FrameWork *fw, AST *ast, AbstractCacheState *acs);
+ * @fn void ACSComputation::initialization(FrameWork *ws, AST *ast, AbstractCacheState *acs);
  * Initialize the abstract cache.
- * @param fw	Container framework.
+ * @param ws	Container framework.
  * @param ast	AST to process.
  * @param acs	AbstractCacheState of preceding nodes.
  */
-void ACSComputation::initialization(WorkSpace *fw, AST *ast, AbstractCacheState *acs) {
+void ACSComputation::initialization(WorkSpace *ws, AST *ast, AbstractCacheState *acs) {
 	if (HITS(ast) == -1){
 		HITS(ast) = 0;
 		MISSES(ast) = 0;
@@ -75,26 +75,26 @@ void ACSComputation::initialization(WorkSpace *fw, AST *ast, AbstractCacheState 
 	
 	switch (ast->kind()){
 		case AST_Call:	{	
-			ASTInfo *ast_info = fw->getASTInfo();
+			ASTInfo *ast_info = ws->getASTInfo();
 			Option< FunAST *> fun_res = ast_info->get(ast->toCall()->function()->name());
 			if (fun_res){
 				AST *fun_ast = (*fun_res)->ast();
-				initialization(fw, fun_ast, acs);
+				initialization(ws, fun_ast, acs);
 			}
 		}
 		case AST_Block: {
 			address_t last = ast->toBlock()->block()->address() + ast->toBlock()->size();
 			int same_lblock = 0;
 			for(Inst *inst = ast->toBlock()->block(); inst->address() < last; inst = inst->nextInst()){
-				if(fw->cache().hasInstCache() && !fw->cache().isUnified()) {
-					int which_line = fw->cache().instCache()->line(inst->address());
+				if(ws->cache().hasInstCache() && !ws->cache().isUnified()) {
+					int which_line = ws->cache().instCache()->line(inst->address());
 					if ((which_line == acs->cache_line)&&(!acs->htable.exists(inst->address()))){
 						if (same_lblock == 0 ){
 							AC_OUT(cout <<"|| "<< inst->address() <<" ~ "<< which_line <<" indice : "<<cache_line_length<<'\n');
 							acs->htable.put(inst->address(), cache_line_length);
 							cache_line_length++;
 						}
-						if (same_lblock < (int)(fw->cache().instCache()->blockSize()/inst->size())-1)
+						if (same_lblock < (int)(ws->cache().instCache()->blockSize()/inst->size())-1)
 							same_lblock++;
 						else 
 							same_lblock = 0;
@@ -104,27 +104,27 @@ void ACSComputation::initialization(WorkSpace *fw, AST *ast, AbstractCacheState 
 			break;
 		}
 		case AST_Seq: 	
-			initialization(fw, ast->toSeq()->child1(), acs);
-			initialization(fw, ast->toSeq()->child2(), acs);
+			initialization(ws, ast->toSeq()->child1(), acs);
+			initialization(ws, ast->toSeq()->child2(), acs);
 			break;
 		case AST_If:
-			initialization(fw, ast->toIf()->condition(), acs);
-			initialization(fw, ast->toIf()->thenPart(), acs);
-			initialization(fw, ast->toIf()->elsePart(), acs);
+			initialization(ws, ast->toIf()->condition(), acs);
+			initialization(ws, ast->toIf()->thenPart(), acs);
+			initialization(ws, ast->toIf()->elsePart(), acs);
 			break;
 		case AST_While:
-			initialization(fw, ast->toWhile()->condition(), acs);
-			initialization(fw, ast->toWhile()->body(), acs);
+			initialization(ws, ast->toWhile()->condition(), acs);
+			initialization(ws, ast->toWhile()->body(), acs);
 			break;
 		case AST_For:		
-			initialization(fw, ast->toFor()->initialization(), acs);
-			initialization(fw, ast->toFor()->condition(), acs);
-			initialization(fw, ast->toFor()->body(), acs);
-			initialization(fw, ast->toFor()->incrementation(), acs);
+			initialization(ws, ast->toFor()->initialization(), acs);
+			initialization(ws, ast->toFor()->condition(), acs);
+			initialization(ws, ast->toFor()->body(), acs);
+			initialization(ws, ast->toFor()->incrementation(), acs);
 			break;
 		case AST_DoWhile:	
-			initialization(fw, ast->toDoWhile()->body(), acs);
-			initialization(fw, ast->toDoWhile()->condition(), acs);
+			initialization(ws, ast->toDoWhile()->body(), acs);
+			initialization(ws, ast->toDoWhile()->condition(), acs);
 			break;
 		default :
 			;
@@ -132,19 +132,19 @@ void ACSComputation::initialization(WorkSpace *fw, AST *ast, AbstractCacheState 
 }
 
 /**
- * @fn AbstractCacheState * ACSComputation::applyProcess(FrameWork *fw, AST *ast, AbstractCacheState *state);
+ * @fn AbstractCacheState * ACSComputation::applyProcess(FrameWork *ws, AST *ast, AbstractCacheState *state);
  * Simulate the cache and put of each AST node its input AbstractCacheState.
- * @param fw	Container framework.
+ * @param ws	Container framework.
  * @param ast	AST to process.
  * @param state	AbstractCacheState of preceding nodes.
  * @return AbstractCacheState of the current AST.
  * @remarks I use in this method the C. Ferdinand's algorithme (Update - Must) to load one l-block in the ACS. 
  */
-AbstractCacheState * ACSComputation::applyProcess(WorkSpace *fw, AST *ast, AbstractCacheState *state){
+AbstractCacheState * ACSComputation::applyProcess(WorkSpace *ws, AST *ast, AbstractCacheState *state){
 	switch (ast->kind()){
 		case AST_Call:{	
 			AC_OUT(cout << ".:Call : "<< " :.\n");
-			ASTInfo *ast_info = fw->getASTInfo();
+			ASTInfo *ast_info = ws->getASTInfo();
 			Option< FunAST *> fun_res = ast_info->get(ast->toCall()->function()->name());
 			if (fun_res){
 				AST *fun_ast = (*fun_res)->ast();
@@ -152,7 +152,7 @@ AbstractCacheState * ACSComputation::applyProcess(WorkSpace *fw, AST *ast, Abstr
 				ACS(ast->toCall()) = acs;
 				
 				//Algorithme to calculate cache state for Call.
-				acs->assignment(applyProcess (fw, fun_ast, state));
+				acs->assignment(applyProcess (ws, fun_ast, state));
 				
 				return acs;
 			}
@@ -165,7 +165,7 @@ AbstractCacheState * ACSComputation::applyProcess(WorkSpace *fw, AST *ast, Abstr
 			ACS(ast->toBlock()) = acs;
 			address_t last = ast->toBlock()->block()->address() + ast->toBlock()->size();
 			for(Inst *inst = ast->toBlock()->block(); inst->address() < last; inst = inst->nextInst()){
-				if(fw->cache().hasInstCache() && !fw->cache().isUnified()) {
+				if(ws->cache().hasInstCache() && !ws->cache().isUnified()) {
 					if (acs->htable.exists(inst->address())){
 							
 						AC_OUT(cout<<"|| en entree : "<<"\n";
@@ -269,9 +269,9 @@ AbstractCacheState * ACSComputation::applyProcess(WorkSpace *fw, AST *ast, Abstr
 			//cout <<"test2\n";
 			
 			//Algorithme to calculate cache state for Seq.
-			acs->assignment(applyProcess (	fw, 
+			acs->assignment(applyProcess (	ws,
 											ast->toSeq()->child2(), 
-											applyProcess (	fw, 
+											applyProcess (	ws,
 															ast->toSeq()->child1(), 
 															state)));
 			
@@ -284,16 +284,16 @@ AbstractCacheState * ACSComputation::applyProcess(WorkSpace *fw, AST *ast, Abstr
 			ACS(ast->toIf()) = acs;
 			
 			//Algorithme to calculate cache state for If.
-			AbstractCacheState::AbstractCacheState *tmp = new AbstractCacheState::AbstractCacheState(applyProcess (fw, ast->toIf()->condition(), state));
+			AbstractCacheState::AbstractCacheState *tmp = new AbstractCacheState::AbstractCacheState(applyProcess (ws, ast->toIf()->condition(), state));
 			if(ast->toIf()->elsePart()->kind() != AST_Nop)
-				acs->join(	applyProcess (	fw, 
+				acs->join(	applyProcess (	ws,
 											ast->toIf()->thenPart(), 
 											tmp),
-							applyProcess (	fw, 
+							applyProcess (	ws,
 				 							ast->toIf()->elsePart(), 
 				 							tmp));
 			else
-				acs->assignment(	applyProcess (	fw, 
+				acs->assignment(	applyProcess (	ws,
 													ast->toIf()->thenPart(), 
 													tmp));
 			
@@ -309,13 +309,13 @@ AbstractCacheState * ACSComputation::applyProcess(WorkSpace *fw, AST *ast, Abstr
 			ACS(ast->toWhile()) = acs;
 			
 			//Algorithme to calculate cache state for While.
-			acs->assignment(applyProcess (fw, ast->toWhile()->condition(), state));
+			acs->assignment(applyProcess (ws, ast->toWhile()->condition(), state));
 			AbstractCacheState::AbstractCacheState *tmp = new AbstractCacheState::AbstractCacheState(state);
 			while (((acs->areDifferent(tmp))||(is_start))&&(i < N)){
 				tmp->assignment(acs);
-				acs->assignment(applyProcess (	fw, 
+				acs->assignment(applyProcess (	ws,
 												ast->toWhile()->condition(), 
-												applyProcess (fw, ast->toWhile()->body(), acs)));
+												applyProcess (ws, ast->toWhile()->body(), acs)));
 				is_start = false;
 				i++;
 			}
@@ -332,17 +332,17 @@ AbstractCacheState * ACSComputation::applyProcess(WorkSpace *fw, AST *ast, Abstr
 			ACS(ast->toFor()) = acs;
 			
 			//Algorithme to calculate cache state for For.
-			acs->assignment(applyProcess (	fw, 
+			acs->assignment(applyProcess (	ws,
 											ast->toFor()->condition(),
-											applyProcess (fw, ast->toFor()->initialization(), state)));
+											applyProcess (ws, ast->toFor()->initialization(), state)));
 			AbstractCacheState::AbstractCacheState *tmp = new AbstractCacheState::AbstractCacheState(state);
 			while (((acs->areDifferent(tmp))||(is_start))&&(i < N)){
 				tmp->assignment(acs);
-				acs->assignment(applyProcess (	fw, 
+				acs->assignment(applyProcess (	ws,
 												ast->toFor()->condition(),
-												applyProcess (	fw, 
+												applyProcess (	ws,
 																ast->toFor()->incrementation(), 
-																applyProcess (fw, ast->toFor()->body(), acs))));
+																applyProcess (ws, ast->toFor()->body(), acs))));
 				is_start = false;
 				i++;
 			}
@@ -359,13 +359,13 @@ AbstractCacheState * ACSComputation::applyProcess(WorkSpace *fw, AST *ast, Abstr
 			ACS(ast->toDoWhile()) = acs;
 			
 			//Algorithme to calculate cache state for DoWhile.
-			acs->assignment(applyProcess (fw, ast->toDoWhile()->body(), state));
+			acs->assignment(applyProcess (ws, ast->toDoWhile()->body(), state));
 			AbstractCacheState::AbstractCacheState *tmp = new AbstractCacheState::AbstractCacheState(state);
 			while (((acs->areDifferent(tmp))||(is_start))&&(i < N)){
 				tmp->assignment(acs);
-				acs->assignment(applyProcess (	fw, 
+				acs->assignment(applyProcess (	ws,
 												ast->toDoWhile()->body(), 
-												applyProcess (fw, ast->toDoWhile()->condition(), acs)));
+												applyProcess (ws, ast->toDoWhile()->condition(), acs)));
 				is_start = false;
 				i++;
 			}

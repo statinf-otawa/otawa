@@ -25,35 +25,35 @@ namespace otawa { namespace ets {
  */
  
 /**
- * Get the WCET of ast with the recursive function: WCETComputation::computation(FrameWork *fw, AST *ast).
- * @param fw	Container framework.
+ * Get the WCET of ast with the recursive function: WCETComputation::computation(FrameWork *ws, AST *ast).
+ * @param ws	Container framework.
  * @param ast	AST to process.
  */	
-void WCETComputation::processAST(WorkSpace *fw, AST *ast) {
+void WCETComputation::processAST(WorkSpace *ws, AST *ast) {
 	assert(ast);
-	/*int tmp=*/ computation(fw, ast);
+	/*int tmp=*/ computation(ws, ast);
 }
 
 
 /**
- * @fn int WCETComputation::computation(FrameWork *fw, AST *ast);
+ * @fn int WCETComputation::computation(FrameWork *ws, AST *ast);
  * Compute the WCET for each AST node by using annotations coming from other modules. 
  * Furthermore put annotations (WCET) of each AST node.
- * @param fw	Container workspace.
+ * @param ws	Container workspace.
  * @param ast	AST to process.
  * @return	WCET of the current AST.
  * @exception	io::IOException if one number of iteration of loop or one WCET of function cannot be found.
  */
-int WCETComputation::computation(WorkSpace *fw, AST *ast) {
+int WCETComputation::computation(WorkSpace *ws, AST *ast) {
 		assert(ast);
 		int ELSE, THEN, wcet, N;
 		switch(ast->kind()) {
 			case AST_Call:{
-				ASTInfo *ast_info = fw->getASTInfo();
+				ASTInfo *ast_info = ws->getASTInfo();
 				Option< FunAST *> fun_res = ast_info->get(ast->toCall()->function()->name());
 				if (fun_res){
 					AST *fun_ast = (*fun_res)->ast();
-					wcet=computation(fw, fun_ast);
+					wcet=computation(ws, fun_ast);
 					WCET(ast->toCall()) = wcet;
 					WC_OUT(cout << "|| " << ast->toCall()->function()->name() << " a pour wcet : " << ast->toCall()->use<int>(ETS::ID_WCET)<< '\n');	
 					return wcet;
@@ -70,17 +70,17 @@ int WCETComputation::computation(WorkSpace *fw, AST *ast) {
 				return WCET(ast->toBlock());
 				break;
 			case AST_Seq:
-				wcet=computation(fw, ast->toSeq()->child1())
-						+ computation(fw, ast->toSeq()->child2());
+				wcet=computation(ws, ast->toSeq()->child1())
+						+ computation(ws, ast->toSeq()->child2());
 				WCET(ast->toSeq()) = wcet;
 				WC_OUT(cout << "|| " << ast->toSeq()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toSeq()->use<int>(ETS::ID_WCET)<< '\n');
 				return wcet;
 				break;
 			case AST_If:
-				THEN=computation(fw, ast->toIf()->condition())
-					+ computation(fw, ast->toIf()->thenPart());
-				ELSE=computation(fw, ast->toIf()->condition())
-					+ computation(fw, ast->toIf()->elsePart());
+				THEN=computation(ws, ast->toIf()->condition())
+					+ computation(ws, ast->toIf()->thenPart());
+				ELSE=computation(ws, ast->toIf()->condition())
+					+ computation(ws, ast->toIf()->elsePart());
 				if (THEN>ELSE) 
 					WCET(ast->toIf()) = THEN;
 				else 
@@ -98,9 +98,9 @@ int WCETComputation::computation(WorkSpace *fw, AST *ast) {
 						<< (void *)(int)ast->toWhile()->condition()->first()->address()
 						<< ")");
 				}
-				wcet=N*(computation(fw, ast->toWhile()->condition())
-							+ computation(fw, ast->toWhile()->body()))
-						+ computation(fw, ast->toWhile()->condition());
+				wcet=N*(computation(ws, ast->toWhile()->condition())
+							+ computation(ws, ast->toWhile()->body()))
+						+ computation(ws, ast->toWhile()->condition());
 				WCET(ast->toWhile()) = wcet;
 				WC_OUT(cout << "|| " << ast->toWhile()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toWhile()->use<int>(ETS::ID_WCET)<< '\n');		
 				return wcet;
@@ -112,8 +112,8 @@ int WCETComputation::computation(WorkSpace *fw, AST *ast) {
 						throw io::IOException(_ << "no iteration count for loop"
 							<< LABEL(ast->toDoWhile()->condition()->first()) /* "unknown "*/);
 				}
-				wcet=N*(computation(fw, ast->toDoWhile()->body())
-							+ computation(fw, ast->toDoWhile()->condition()));
+				wcet=N*(computation(ws, ast->toDoWhile()->body())
+							+ computation(ws, ast->toDoWhile()->condition()));
 				WCET(ast->toDoWhile()) = wcet;	
 				WC_OUT(cout << "|| " << ast->toDoWhile()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toDoWhile()->use<int>(ETS::ID_WCET)<< '\n');		
 				return wcet;
@@ -125,11 +125,11 @@ int WCETComputation::computation(WorkSpace *fw, AST *ast) {
 					throw io::IOException(_ << "no iteration count for loop "
 						<< LABEL(ast->toFor()->condition()->first()) /* "unknown " */);
 				}
-				wcet=computation(fw, ast->toFor()->initialization())
-						+ N*(computation(fw, ast->toFor()->condition())
-							+ computation(fw, ast->toFor()->incrementation())
-							+ computation(fw, ast->toFor()->body()))
-						+ computation(fw, ast->toFor()->condition());
+				wcet=computation(ws, ast->toFor()->initialization())
+						+ N*(computation(ws, ast->toFor()->condition())
+							+ computation(ws, ast->toFor()->incrementation())
+							+ computation(ws, ast->toFor()->body()))
+						+ computation(ws, ast->toFor()->condition());
 				WCET(ast->toFor()) = wcet;
 				WC_OUT(cout << "|| " << ast->toFor()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour wcet : " << ast->toFor()->use<int>(ETS::ID_WCET)<< '\n');	
 				return wcet;

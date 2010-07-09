@@ -18,9 +18,9 @@ namespace otawa {
  */
 
 /**
- * @fn void ASTProcessor::processAST(FrameWork *fw, AST *ast);
+ * @fn void ASTProcessor::processAST(FrameWork *ws, AST *ast);
  * Process the given AST.
- * @param fw	Container framework.
+ * @param ws	Container framework.
  * @param AST	AST to process.
  */
 
@@ -33,8 +33,8 @@ ASTProcessor::~ASTProcessor(void) {
 
 /**
  */
-void ASTProcessor::processFun(WorkSpace *fw, FunAST *fa) {
-	processAST(fw, fa->ast());
+void ASTProcessor::processFun(WorkSpace *ws, FunAST *fa) {
+	processAST(ws, fa->ast());
 }
 
 

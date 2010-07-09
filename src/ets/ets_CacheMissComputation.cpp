@@ -21,32 +21,32 @@ namespace otawa { namespace ets {
  */
  
 /**
- * @fn void CacheMissComputation::processAST(FrameWork *fw, AST *ast);
- * Get the number of Miss of ast with the recursive function: CacheMissComputation::computation(FrameWork *fw, AST *ast).
- * @param fw	Container framework.
+ * @fn void CacheMissComputation::processAST(FrameWork *ws, AST *ast);
+ * Get the number of Miss of ast with the recursive function: CacheMissComputation::computation(FrameWork *ws, AST *ast).
+ * @param ws	Container framework.
  * @param ast	AST to process.
  */	
-void CacheMissComputation::processAST(WorkSpace *fw, AST *ast) {
-	/*int tmp =*/ computation(fw, ast);
+void CacheMissComputation::processAST(WorkSpace *ws, AST *ast) {
+	/*int tmp =*/ computation(ws, ast);
 }
 
 /**
- * @fn int CacheMissComputation::computation(FrameWork *fw, AST *ast);
+ * @fn int CacheMissComputation::computation(FrameWork *ws, AST *ast);
  * Compute the number of Miss for each AST node by using annotations coming from other modules. 
  * Furthermore put annotations (ETS::MISSES) of each AST node.
- * @param fw	Container framework.
+ * @param ws	Container framework.
  * @param ast	AST to process.
  * @return Miss of the current AST.
  */
-int CacheMissComputation::computation(WorkSpace *fw, AST *ast){
+int CacheMissComputation::computation(WorkSpace *ws, AST *ast){
 	int misses;
 	switch (ast->kind()){
 		case AST_Call:{	
-			ASTInfo *ast_info = fw->getASTInfo();
+			ASTInfo *ast_info = ws->getASTInfo();
 			Option< FunAST *> fun_res = ast_info->get(ast->toCall()->function()->name());
 			if (fun_res){
 				AST *fun_ast = (*fun_res)->ast();
-				misses = computation(fw, fun_ast);
+				misses = computation(ws, fun_ast);
 				MISSES(ast->toCall()) = misses;
 				CHC_OUT(cout << "|| " << ast->toCall()->function()->name() << " a pour nb de miss : " << ast->toCall()->use<int>(ETS::ID_MISSES)<< '\n');	
 				return MISSES(ast->toCall());
@@ -58,20 +58,20 @@ int CacheMissComputation::computation(WorkSpace *fw, AST *ast){
 			return MISSES(ast->toBlock()) + CONFLICTS(ast->toBlock());
 			break;
 		case AST_Seq: {	
-			misses = 	computation(fw, ast->toSeq()->child1()) 
-						+ computation(fw, ast->toSeq()->child2());
+			misses = 	computation(ws, ast->toSeq()->child1())
+						+ computation(ws, ast->toSeq()->child2());
 			MISSES(ast->toSeq()) = misses;
 			CHC_OUT(cout << "|| " << ast->toSeq()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de miss : " << ast->toSeq()->use<int>(ETS::ID_MISSES)<< '\n');
 			return MISSES(ast->toSeq());
 			break;
 		}
 		case AST_If: {
-		 	misses = computation(fw, ast->toIf()->elsePart());
-			int misses1 = computation(fw, ast->toIf()->thenPart());
+		 	misses = computation(ws, ast->toIf()->elsePart());
+			int misses1 = computation(ws, ast->toIf()->thenPart());
 			if(misses < misses1)
-				MISSES(ast->toIf()) = misses1 + computation(fw, ast->toIf()->condition());
+				MISSES(ast->toIf()) = misses1 + computation(ws, ast->toIf()->condition());
 			else
-				MISSES(ast->toIf()) = misses + computation(fw, ast->toIf()->condition());
+				MISSES(ast->toIf()) = misses + computation(ws, ast->toIf()->condition());
 			CHC_OUT(cout << "|| " << ast->toIf()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de miss : " << ast->toIf()->use<int>(ETS::ID_MISSES)<< '\n');
 			return MISSES(ast->toIf());
 			break;
@@ -79,10 +79,10 @@ int CacheMissComputation::computation(WorkSpace *fw, AST *ast){
 		case AST_While:	{
 			int N = LOOP_COUNT(ast->toWhile());
 			
-			misses = 	computation(fw, ast->toWhile()->condition())
+			misses = 	computation(ws, ast->toWhile()->condition())
 						+ N
-						*( 	computation(fw, ast->toWhile()->condition())
-							+ computation(fw, ast->toWhile()->body()));
+						*( 	computation(ws, ast->toWhile()->condition())
+							+ computation(ws, ast->toWhile()->body()));
 							
 			int misses_coming_from_first_misses =
 				FIRST_MISSES(ast->toWhile()->condition())
@@ -96,12 +96,12 @@ int CacheMissComputation::computation(WorkSpace *fw, AST *ast){
 		case AST_For:	{	
 			int N = LOOP_COUNT(ast->toFor());
 			
-			misses = 	computation(fw, ast->toFor()->condition())
-						+ computation(fw, ast->toFor()->initialization())
+			misses = 	computation(ws, ast->toFor()->condition())
+						+ computation(ws, ast->toFor()->initialization())
 						+ N
-						*( 	computation(fw, ast->toFor()->condition())
-							+ computation(fw, ast->toFor()->body())
-							+ computation(fw, ast->toFor()->incrementation()));
+						*( 	computation(ws, ast->toFor()->condition())
+							+ computation(ws, ast->toFor()->body())
+							+ computation(ws, ast->toFor()->incrementation()));
 			
 			int misses_coming_from_first_misses =
 				FIRST_MISSES(ast->toFor()->condition())
@@ -116,10 +116,10 @@ int CacheMissComputation::computation(WorkSpace *fw, AST *ast){
 		case AST_DoWhile:	{
 			int N = LOOP_COUNT(ast->toDoWhile());
 			
-			misses = 	computation(fw, ast->toDoWhile()->body())
+			misses = 	computation(ws, ast->toDoWhile()->body())
 						+ N
-						*( 	computation(fw, ast->toDoWhile()->condition())
-							+ computation(fw, ast->toDoWhile()->body()));
+						*( 	computation(ws, ast->toDoWhile()->condition())
+							+ computation(ws, ast->toDoWhile()->body()));
 							
 			int misses_coming_from_first_misses =
 				FIRST_MISSES(ast->toDoWhile()->body())

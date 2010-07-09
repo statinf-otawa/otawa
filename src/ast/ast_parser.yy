@@ -59,11 +59,11 @@ defs:
 def:
 	NAME '=' ast
 		{ 
-			ASTInfo *info = loader->fw->getASTInfo();
+			ASTInfo *info = loader->ws->getASTInfo();
 			address_t addr = loader->file->findLabel($1 + 1);
 			if(!addr)
 				throw LoadException(_ << "Cannot resolve label \"" << $1 << "\".");
-			Inst *inst = loader->fw->findInstAt(addr);
+			Inst *inst = loader->ws->findInstAt(addr);
 			if(!inst)
 				throw LoadException(_ << "Cannot find instruction at \"" << $1 << "\".");
 			FunAST *fun = info->getFunction(inst);

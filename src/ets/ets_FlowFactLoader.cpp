@@ -33,20 +33,20 @@ FlowFactLoader::FlowFactLoader(void) {
  * 	<br>-to ETS::ID_LOOP_COUNT for loop.
  * <br>If the table contains the key put its value,
  * <br>else put -1.
- * @param fw	Container framework.
+ * @param ws	Container framework.
  * @param ast	AST to process.
  */		
-void FlowFactLoader::processAST(WorkSpace *fw, AST *ast){
+void FlowFactLoader::processAST(WorkSpace *ws, AST *ast){
 	//int val;
 	switch(ast->kind()) {
 		case AST_Seq:
-			processAST(fw, ast->toSeq()->child1());
-			processAST(fw, ast->toSeq()->child2());
+			processAST(ws, ast->toSeq()->child1());
+			processAST(ws, ast->toSeq()->child2());
 			break;
 		case AST_If:
-			processAST(fw, ast->toIf()->condition());
-			processAST(fw, ast->toIf()->thenPart());
-			processAST(fw, ast->toIf()->elsePart());
+			processAST(ws, ast->toIf()->condition());
+			processAST(ws, ast->toIf()->thenPart());
+			processAST(ws, ast->toIf()->elsePart());
 			break;
 		case AST_While: {
 				Inst *inst = ast->toWhile()->condition()->first();
@@ -57,8 +57,8 @@ void FlowFactLoader::processAST(WorkSpace *fw, AST *ast){
 					FFL_OUT(cout << "|| " << ast->toWhile()->condition()->first()->get<String>(File::ID_Label, "unknown ")<< " a pour nb d'iter : "<< count << '\n');
 					LOOP_COUNT(ast->toWhile()) = count;
 				}
-				processAST(fw, ast->toWhile()->condition());
-				processAST(fw, ast->toWhile()->body());
+				processAST(ws, ast->toWhile()->condition());
+				processAST(ws, ast->toWhile()->body());
 			}
 		 	break;
 		case AST_DoWhile: {
@@ -70,8 +70,8 @@ void FlowFactLoader::processAST(WorkSpace *fw, AST *ast){
 					FFL_OUT(cout << "|| "<< ast->toDoWhile()->condition()->first()->get<String>(File::ID_Label, "unknown ") << " a pour nb d'iter : "<< count << '\n');
 					LOOP_COUNT(ast->toDoWhile()) = count;
 				}
-				processAST(fw, ast->toDoWhile()->condition());
-				processAST(fw, ast->toDoWhile()->body());
+				processAST(ws, ast->toDoWhile()->condition());
+				processAST(ws, ast->toDoWhile()->body());
 			}
 			break;
 		case AST_For: {
@@ -83,18 +83,18 @@ void FlowFactLoader::processAST(WorkSpace *fw, AST *ast){
 					FFL_OUT(cout << "|| " << ast->toFor()->condition()->first()->address()<<" ~ "<<ast->toFor()->condition()->first()->get<String>(File::ID_Label, "unknown ") << " a pour nb d'iter : "<< count << '\n');
 					LOOP_COUNT(ast->toFor()) = count;
 				}
-				processAST(fw, ast->toFor()->initialization());
-				processAST(fw, ast->toFor()->condition());
-				processAST(fw, ast->toFor()->body());
-				processAST(fw, ast->toFor()->incrementation());
+				processAST(ws, ast->toFor()->initialization());
+				processAST(ws, ast->toFor()->condition());
+				processAST(ws, ast->toFor()->body());
+				processAST(ws, ast->toFor()->incrementation());
 			}
 			break;
 		case AST_Call:{
-			ASTInfo *ast_info = fw->getASTInfo();
+			ASTInfo *ast_info = ws->getASTInfo();
 			Option< FunAST *> fun_res = ast_info->get(ast->toCall()->function()->name());
 			if(fun_res) {
 				AST *fun_ast = (*fun_res)->ast();
-				processAST(fw, fun_ast);
+				processAST(ws, fun_ast);
 			}
 			break;
 		}

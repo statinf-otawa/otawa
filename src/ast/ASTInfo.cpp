@@ -25,10 +25,10 @@ Identifier<ASTInfo *> ASTInfo::ID("otawa::ASTInfo::id", 0);
 
 /**
  * Build an new AST info linked to the given framework.
- * @param fw	Workspace to link to.
+ * @param ws	Workspace to link to.
  */
-ASTInfo::ASTInfo(WorkSpace *fw) {
-	fw->addProp(new DeletableProperty<ASTInfo *>(ID, this));
+ASTInfo::ASTInfo(WorkSpace *ws) {
+	ws->addProp(new DeletableProperty<ASTInfo *>(ID, this));
 }
 
 /**
@@ -90,18 +90,18 @@ FunAST *ASTInfo::getFunction(Inst *inst) {
 
 /**
  * Find or create the AST information attached to the given process.
- * @param fw	Workspace to look in.
+ * @param ws	Workspace to look in.
  * @return		AST information of the process.
  */
-ASTInfo *ASTInfo::getInfo(WorkSpace *fw) {
+ASTInfo *ASTInfo::getInfo(WorkSpace *ws) {
 
 	// Look in the process
-	elm::Option<ASTInfo *> result = ID.get(fw);
+	elm::Option<ASTInfo *> result = ID.get(ws);
 	if(result)
 		return *result;
 
 	// Else build it
-	return new ASTInfo(fw);
+	return new ASTInfo(ws);
 }
 
 

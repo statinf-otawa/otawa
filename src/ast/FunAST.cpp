@@ -27,20 +27,20 @@ Identifier<FunAST *> FunAST::ID("otawa::FunAST::id", 0);
 
 /**
  * Build a new function AST.
- * @param fw		workspace containing the function.
+ * @param ws		workspace containing the function.
  * @param entry	First instruction of the function.
  * @param name	Function name.
  */
-FunAST::FunAST(WorkSpace *fw, Inst *entry, String name)
+FunAST::FunAST(WorkSpace *ws, Inst *entry, String name)
 : ent(entry), _name(name), _ast(&AST::UNDEF) {
 
 	// Mark the entry
 	ID(ent) = this;
 
 	// Obtain an AST information
-	info = ASTInfo::ID(fw);
+	info = ASTInfo::ID(ws);
 	if(!info)
-		info = new ASTInfo(fw);
+		info = new ASTInfo(ws);
 
 	// If no name, look for a name
 	String label = LABEL(ent);

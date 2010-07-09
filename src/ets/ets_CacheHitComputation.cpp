@@ -21,24 +21,24 @@ namespace otawa { namespace ets {
  */
  
 /**
- * @fn void CacheHitComputation::processAST(FrameWork *fw, AST *ast);
- * Get the number of Hit of ast with the recursive function: CacheHitComputation::computation(FrameWork *fw, AST *ast).
- * @param fw	Container framework.
+ * @fn void CacheHitComputation::processAST(FrameWork *ws, AST *ast);
+ * Get the number of Hit of ast with the recursive function: CacheHitComputation::computation(FrameWork *ws, AST *ast).
+ * @param ws	Container framework.
  * @param ast	AST to process.
  */	
-void CacheHitComputation::processAST(WorkSpace *fw, AST *ast) {
-	/*int tmp =*/ computation(fw, ast);
+void CacheHitComputation::processAST(WorkSpace *ws, AST *ast) {
+	/*int tmp =*/ computation(ws, ast);
 }
 
 /**
- * @fn int CacheHitComputation::computation(FrameWork *fw, AST *ast);
+ * @fn int CacheHitComputation::computation(FrameWork *ws, AST *ast);
  * Compute the number of Hit for each AST node by using annotations coming from other modules. 
  * Furthermore put annotations (ETS::HITS) of each AST node.
- * @param fw	Container framework.
+ * @param ws	Container framework.
  * @param ast	AST to process.
  * @return Hits of the current AST.
  */
-int CacheHitComputation::computation(WorkSpace *fw, AST *ast){
+int CacheHitComputation::computation(WorkSpace *ws, AST *ast){
 	int hits;
 	switch (ast->kind()){
 		case AST_Block: 
@@ -46,20 +46,20 @@ int CacheHitComputation::computation(WorkSpace *fw, AST *ast){
 			return HITS(ast->toBlock());
 			break;
 		case AST_Seq: {	
-			hits = 	computation(fw, ast->toSeq()->child1()) 
-						+ computation(fw, ast->toSeq()->child2());
+			hits = 	computation(ws, ast->toSeq()->child1())
+						+ computation(ws, ast->toSeq()->child2());
 			HITS(ast->toSeq()) = hits;
 			CHC_OUT(cout << "|| " << ast->toSeq()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de hit : " << ast->toSeq()->use<int>(ETS::ID_HITS)<< '\n');
 			return HITS(ast->toSeq());
 			break;
 		}
 		case AST_If: {
-		 	hits = computation(fw, ast->toIf()->elsePart());
-			int hits1 = computation(fw, ast->toIf()->thenPart());
+		 	hits = computation(ws, ast->toIf()->elsePart());
+			int hits1 = computation(ws, ast->toIf()->thenPart());
 			if(hits < hits1)
-				HITS(ast->toIf()) = hits1 + computation(fw, ast->toIf()->condition());
+				HITS(ast->toIf()) = hits1 + computation(ws, ast->toIf()->condition());
 			else
-				HITS(ast->toIf()) = hits + computation(fw, ast->toIf()->condition());
+				HITS(ast->toIf()) = hits + computation(ws, ast->toIf()->condition());
 			CHC_OUT(cout << "|| " << ast->toIf()->condition()->first()->get<String>(File::ID_Label,"unknown ") << " a pour nb de hit : " << ast->toIf()->use<int>(ETS::ID_HITS)<< '\n');
 			return HITS(ast->toIf());
 			break;
@@ -67,10 +67,10 @@ int CacheHitComputation::computation(WorkSpace *fw, AST *ast){
 		case AST_While:	{
 			int N = LOOP_COUNT(ast->toWhile());
 			
-			hits = 	computation(fw, ast->toWhile()->condition())
+			hits = 	computation(ws, ast->toWhile()->condition())
 						+ N
-						*( 	computation(fw, ast->toWhile()->condition())
-							+ computation(fw, ast->toWhile()->body()));
+						*( 	computation(ws, ast->toWhile()->condition())
+							+ computation(ws, ast->toWhile()->body()));
 			
 			int hits_coming_from_first_misses =
 				FIRST_MISSES(ast->toWhile()->condition()) 
@@ -87,12 +87,12 @@ int CacheHitComputation::computation(WorkSpace *fw, AST *ast){
 		case AST_For:	{	
 			int N = LOOP_COUNT(ast->toFor());
 			
-			hits = 	computation(fw, ast->toFor()->condition())
-						+ computation(fw, ast->toFor()->initialization())
+			hits = 	computation(ws, ast->toFor()->condition())
+						+ computation(ws, ast->toFor()->initialization())
 						+ N
-						*( 	computation(fw, ast->toFor()->condition())
-							+ computation(fw, ast->toFor()->body())
-							+ computation(fw, ast->toFor()->incrementation()));
+						*( 	computation(ws, ast->toFor()->condition())
+							+ computation(ws, ast->toFor()->body())
+							+ computation(ws, ast->toFor()->incrementation()));
 			
 			int hits_coming_from_first_misses =
 				FIRST_MISSES(ast->toFor()->condition()) 
@@ -110,10 +110,10 @@ int CacheHitComputation::computation(WorkSpace *fw, AST *ast){
 		case AST_DoWhile:	{
 			int N = LOOP_COUNT(ast->toDoWhile());
 			
-			hits = 	computation(fw, ast->toDoWhile()->body())
+			hits = 	computation(ws, ast->toDoWhile()->body())
 						+ N
-						*( 	computation(fw, ast->toDoWhile()->condition())
-							+ computation(fw, ast->toDoWhile()->body()));
+						*( 	computation(ws, ast->toDoWhile()->condition())
+							+ computation(ws, ast->toDoWhile()->body()));
 			
 			int hits_coming_from_first_misses =
 				FIRST_MISSES(ast->toDoWhile()->condition())
@@ -127,11 +127,11 @@ int CacheHitComputation::computation(WorkSpace *fw, AST *ast){
 			break;
 		}
 		case AST_Call:{	
-			ASTInfo *ast_info = fw->getASTInfo();
+			ASTInfo *ast_info = ws->getASTInfo();
 			Option< FunAST *> fun_res = ast_info->get(ast->toCall()->function()->name());
 			if (fun_res){
 				AST *fun_ast = (*fun_res)->ast();
-				hits = computation(fw, fun_ast);
+				hits = computation(ws, fun_ast);
 				HITS(ast->toCall()) = hits;
 				CHC_OUT(cout << "|| " << ast->toCall()->function()->name() << " a pour nb de hit : " << ast->toCall()->use<int>(ETS::ID_HITS)<< '\n');	
 				return HITS(ast->toCall());
