@@ -38,7 +38,7 @@ Driver::~Driver(void) {
 /**
  * @fn void Driver::terminateInstruction(State& state, Inst *inst);
  * This method is called when an instruction is terminated.
- * @param stat	Current state of the simulator.
+ * @param state	Current state of the simulator.
  * @param inst	Terminated instruction.
  */
 	

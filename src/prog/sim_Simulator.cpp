@@ -43,7 +43,7 @@ Identifier<bool> USE_CONTROL("otawa::sim::USE_CONTROL");
  * @class Simulator
  * This class represents a plugin to use facilities provided by a simulator.
  * Before simulation, this class allows to instantiate a simulator for the
- * current framework and the result, a @ref otawa::sim::State_t object, provides
+ * current framework and the result, a @ref otawa::sim::State object, provides
  * services to drive the simulation.
  */
 

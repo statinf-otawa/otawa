@@ -81,7 +81,7 @@ Identifier<int> INSTRUCTION_TIME("otawa::sim::instruction_time");
  * @class TrivialSimulator
  * The trivial simulator is a simplistic simulator with a fixed execution time
  * for each instruction (defined by @ref otawa::sim::INSTRUCTION_TIME). It only
- * accepts structural simulator (@ref otawa::sim::IS_STRUCUTURAL) wtihout
+ * accepts structural simulator (@ref otawa::sim::IS_STRUCTURAL) wtihout
  * management of memory and control (@ref otawa::sim::USE_MEMORY and
  * @ref otawa::sim::USE_CONTROL).
  */
