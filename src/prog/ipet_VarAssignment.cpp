@@ -72,10 +72,8 @@ void VarAssignment::setup(WorkSpace *ws) {
 
 
 /**
- * Perform the actual work on the given basic block.
- * @param bb	Basic block to process.
  */
-void VarAssignment::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
+void VarAssignment::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 	// Check BB
 	if(!VAR(bb)) {

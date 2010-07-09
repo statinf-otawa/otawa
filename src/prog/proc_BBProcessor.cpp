@@ -57,7 +57,7 @@ BBProcessor::BBProcessor(cstring name, elm::Version version)
  * @fn void BBProcessor::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb);
  * Perform the work of the given basic block.
  * @param fw	Container framework.
- * @param CFG	Parent CFG.
+ * @param cfg	Parent CFG.
  * @param bb	Basic block to process.
  */
 

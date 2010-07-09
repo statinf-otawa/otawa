@@ -58,7 +58,7 @@ Registration<WCETComputation> WCETComputation::reg(
  * @li @ref ipet::FLOW_FACTS_CONSTRAINTS_FEATURE
  *
  * @par Provided Features
- * @li @re ipet::WCET_FEATURE
+ * @li @ref ipet::WCET_FEATURE
  */
 
 
