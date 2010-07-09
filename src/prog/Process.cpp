@@ -602,7 +602,7 @@ void Process::get(Address at, long double& val) {
 /**
  * Get a string value from the process.
  * @param at	Address of the value to get.
- * @param val	Got value.
+ * @param str	Got value.
  * @throws UnsupportedFeatureException if this method is called but the loader
  * 		does not provide this feature.
  * @throws OutOfMemStaticException if the given address does not point
@@ -610,7 +610,7 @@ void Process::get(Address at, long double& val) {
  * @warning	To use this method, you must assert that the
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
-void Process::get(Address at, String& val) {
+void Process::get(Address at, String& str) {
 	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
@@ -618,7 +618,8 @@ void Process::get(Address at, String& val) {
 /**
  * Get a byte block value from the process.
  * @param at	Address of the value to get.
- * @param val	Got value.
+ * @param buf	Buffer to store block to.
+ * @param size	Size of block.
  * @throws UnsupportedFeatureException if this method is called but the loader
  * 		does not provide this feature.
  * @throws OutOfMemStaticException if the given address does not point
