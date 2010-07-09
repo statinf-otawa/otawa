@@ -35,7 +35,6 @@ void TrivialDataCacheManager::configure(WorkSpace *framework) {
 
 /**
  * Build the trivial data cache manager.
- * @param props		Configuration properties.
  */
 TrivialDataCacheManager::TrivialDataCacheManager(void)
 : BBProcessor("ipet::TrivialDataCacheManager", Version(1, 0, 0)), fw(0) {
