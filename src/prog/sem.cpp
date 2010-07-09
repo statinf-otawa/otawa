@@ -89,7 +89,7 @@ static cstring cond_names[] = {
  * It contains an opcode, giving the performed operation, and arguments depending on this opcode.
  *
  * The variable is ever used to store the result of an instruction. A variable may match a register
- * (index is positive and matches the register unique number in @ref Platform description) or
+ * (index is positive and matches the register unique number in @ref otawa::hard::Platform description) or
  * a temporary (index is strictly negative).
  *
  * @ref LOAD, @ref STORE access memory data and uses variable a to get the address and b is an immediate
@@ -99,7 +99,7 @@ static cstring cond_names[] = {
  *
  * @ref SET and @ref SETI assigns to d the variable in b or the immediate value in cst.
  *
- * @ref CMP, @ref ADD, @ref SUB, @ref SHL, @ref SHR and @ASR uses both variable a and b to perform, respectively,
+ * @ref CMP, @ref ADD, @ref SUB, @ref SHL, @ref SHR and @ref ASR uses both variable a and b to perform, respectively,
  * comparison, addition, subtraction, logical shift left, logical shift right, arithmetics shift right.
  */
 

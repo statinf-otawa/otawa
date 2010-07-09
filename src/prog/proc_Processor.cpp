@@ -492,18 +492,18 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 /**
  * This method is called before an anlysis to let the processor do some
  * initialization.
- * @param fw	Processed workspace.
+ * @param ws	Processed workspace.
  */
-void Processor::setup(WorkSpace *fw) {
+void Processor::setup(WorkSpace *ws) {
 }
 
 
 /**
  * This method is called after the end of the processor analysis to let it
  * do some clean up.
- * @param fw	Workspace to work on.
+ * @param ws	Workspace to work on.
  */
-void Processor::cleanup(WorkSpace *fw) {
+void Processor::cleanup(WorkSpace *ws) {
 }
 
 
