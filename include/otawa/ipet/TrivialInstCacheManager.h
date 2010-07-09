@@ -22,9 +22,9 @@ namespace ipet {
 class TrivialInstCacheManager: public BBProcessor {
 	const hard::Cache *cache;
 protected:
-	virtual void setup(WorkSpace *fw);
-	virtual void cleanup(WorkSpace *fw);
-	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+	virtual void setup(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
+	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 
 public:
 	TrivialInstCacheManager(void);

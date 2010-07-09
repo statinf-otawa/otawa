@@ -22,7 +22,7 @@ class FunAST: public Lock {
 	~FunAST(void);
 public:
 	static Identifier<FunAST *> ID;
-	FunAST(WorkSpace *fw, Inst *entry, String name = "");
+	FunAST(WorkSpace *ws, Inst *entry, String name = "");
 	FunAST(ASTInfo *info, Inst *entry, String name = "");
 	inline Inst *entry(void) const { return ent; };
 	inline String& name(void) { return _name; };

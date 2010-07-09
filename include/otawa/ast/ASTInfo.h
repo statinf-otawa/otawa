@@ -36,7 +36,7 @@ class ASTInfo: public PropList {
 public:
 	~ASTInfo(void);
 	static Identifier<ASTInfo *> ID;
-	static ASTInfo *getInfo(WorkSpace *fw);
+	static ASTInfo *getInfo(WorkSpace *ws);
 	FunAST *getFunction(Inst *inst);
 
 	class Iterator: public elm::genstruct::Vector<FunAST *>::Iterator {
@@ -55,7 +55,7 @@ private:
 	friend int ::heptane_parse(void);
 	elm::genstruct::Vector<FunAST *> funs;
 	elm::genstruct::HashTable<String, FunAST *> _map;
-	ASTInfo(WorkSpace *fw);
+	ASTInfo(WorkSpace *ws);
 };
 	
 } // otawa

@@ -70,8 +70,8 @@ protected:
 // BBProcessor class
 class BBProcessor: public CFGProcessor {
 protected:
-	virtual void processCFG(WorkSpace *fw, CFG *cfg);
-	virtual void processBB(WorkSpace *fw, CFG *cfd, BasicBlock *bb) = 0;
+	virtual void processCFG(WorkSpace *ws, CFG *cfg);
+	virtual void processBB(WorkSpace *ws, CFG *cfd, BasicBlock *bb) = 0;
 	
 public:
 	BBProcessor(void);
