@@ -27,10 +27,10 @@ namespace otawa { namespace ipet {
  * </dl>
  *
  * @par Provided Feature
- * @ref @li EDGE_TIME_FEATURE
+ * @li @ref EDGE_TIME_FEATURE
  *
  * @par Required Feature
- * @ref @li ILP_SYSTEM_FEATURE
+ * @li @ref ILP_SYSTEM_FEATURE
  */
 
 

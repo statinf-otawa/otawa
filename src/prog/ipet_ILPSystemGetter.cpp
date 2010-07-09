@@ -34,7 +34,7 @@ namespace otawa { namespace ipet {
  * used by other IPET processor.
  *
  * @par Provided Features
- * @li @ref ILP_SYSTEM_fEATURE
+ * @li @ref ILP_SYSTEM_FEATURE
  *
  * @par Configuration
  * @li @ref ILP_PLUGIN_NAME

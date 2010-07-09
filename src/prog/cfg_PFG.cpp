@@ -29,7 +29,7 @@ namespace otawa { namespace pfg {
 
 /**
  * @class BB
- * A basic block in a @ref otawa::pfg:PFG.
+ * A basic block in a @ref otawa::pfg::PFG .
  */
 
 
@@ -190,14 +190,14 @@ bool BB::isMultiTarget(void) const {
  * @li It must be at most one @ref Edge::SEQ,  @ref Edge::RETURN
  * 		or @ref Edge::COND_RETURN.
  * @li The basic block must not exit in the same time with @ref Edge::BRANCH,
- * 		@ref Edge::CALL or @ref::RETURN.
+ * 		@ref Edge::CALL or @ref Edge::RETURN.
  * @li If a block has a @ref Edge::COND_BRANCH, @ref Edge::COND_CALL,
  * 		@ref Edge::CALL or @ref Edge::COND_RETURN, an edge @ref Edge::SEQ
  * 		must also be available.
  * 
  * @par
  * Notice also that basic block that branch to unknown address have an edge with
- * @ref Edge::unknown as sink basic block.
+ * @ref PFG::unknown as sink basic block.
  */
 
 
