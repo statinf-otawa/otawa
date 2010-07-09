@@ -72,7 +72,7 @@ public:
 
 	// Mutators
 	virtual void configure(const PropList& props);
-	void process(WorkSpace *fw, const PropList& props = PropList::EMPTY);
+	void process(WorkSpace *ws, const PropList& props = PropList::EMPTY);
 
 	// Configuration Properties
 	static Identifier<elm::io::OutStream *> OUTPUT;
@@ -119,9 +119,9 @@ protected:
 	inline Progress& progress(void) { return *_progress; }
 
 	// Overwritable methods
-	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void setup(WorkSpace *fw);
-	virtual void cleanup(WorkSpace *fw);
+	virtual void processWorkSpace(WorkSpace *ws);
+	virtual void setup(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
 
 	// Deprecated
 	virtual void processFrameWork(WorkSpace *fw);
