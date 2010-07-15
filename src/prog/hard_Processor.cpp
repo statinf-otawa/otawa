@@ -1,11 +1,28 @@
 /*
  *	$Id$
- *	Copyright (c) 2006, IRIT - UPS.
+ *	hard::Processor class implementation
  *
- *	otawa/hard_Processor.cpp -- processor description interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006-10, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/hard/Processor.h>
+#include <otawa/manager.h>
+#include <elm/serial2/XOMUnserializer.h>
 
 namespace otawa { namespace hard {
 
@@ -75,6 +92,123 @@ namespace otawa { namespace hard {
  * functional unit only process instructions that meets the all properties found
  * in the dispatch kind.
  */
+
+
+const Processor Processor::null;
+
+
+/**
+ * Load a processor descriptor from the given file.
+ * @param path	Path to the file.
+ * @throw LoadException 	Thrown if an error is found.
+ */
+hard::Processor *Processor::load(const elm::system::Path& path) throw(LoadException) {
+	Processor *_processor = new Processor();
+	try {
+		elm::serial2::XOMUnserializer unser(&path);
+		unser >> *_processor;
+		unser.flush();
+		return _processor;
+	}
+	catch(elm::io::IOException& e) {
+		delete _processor;
+		throw LoadException(&e.message());
+	}
+}
+
+
+/**
+ * Load a processor description from an XML element.
+ * @param element			XML element to load from.
+ * @throw LoadException 	Thrown if an error is found.
+ */
+hard::Processor *Processor::load(xom::Element *element) throw(LoadException) {
+	Processor *_processor = new Processor();
+	try {
+		elm::serial2::XOMUnserializer unser(element);
+		unser >> *_processor;
+		unser.flush();
+		return _processor;
+	}
+	catch(elm::Exception& e) {
+		delete _processor;
+		throw LoadException(&e.message());
+	}
+}
+
+
+// ProcessorProcessor class
+class ProcessorProcessor: public otawa::Processor {
+public:
+	ProcessorProcessor(void)
+		: Processor("otawa::ProcessorProcessor", Version(1, 0, 0)) {
+			provide(PROCESSOR_FEATURE);
+		}
+
+	virtual void configure(const PropList& props) {
+		Processor::configure(props);
+		config = otawa::PROCESSOR(props);
+		if(!config) {
+			xml = PROCESSOR_ELEMENT(props);
+			if(!xml)
+				path = PROCESSOR_PATH(props);
+		}
+	}
+
+protected:
+	virtual void processWorkSpace(WorkSpace *ws) {
+		if(config) {
+			hard::PROCESSOR(ws) = config;
+			if(isVerbose())
+				log << "\tcustom processor configuration\n";
+		}
+		else if(xml) {
+			config = hard::Processor::load(xml);
+			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = config);
+			if(isVerbose())
+				log << "\tprocessor configuration from XML element\n";
+		}
+		else if(path) {
+			if(isVerbose())
+				log << "\tprocessor configuration from \"" << path << "\"\n";
+			config = hard::Processor::load(path);
+			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = config);
+		}
+		else if(isVerbose())
+			log << "\tno processor configuration\n";
+	}
+
+private:
+	const hard::Processor *config;
+	xom::Element *xml;
+	Path path;
+};
+
+
+static SilentFeature::Maker<ProcessorProcessor> maker;
+/**
+ * This feature ensures we have obtained the memory configuration
+ * of the system.
+ *
+ * @par Properties
+ * @li @ref otawa::hard::PROCESSOR
+ */
+SilentFeature PROCESSOR_FEATURE("otawa::hard::PROCESSOR_FEATURE", maker);
+
+
+/**
+ * Current memory.
+ *
+ * @par Hooks
+ * @li @ref otawa::WorkSpace
+ *
+ * @par Features
+ * @li @ref otawa::CACHE_CONFIGURATION_FEATURE
+ *
+ * @par Default Value
+ * Cache configuration without any cache (never null).
+ */
+Identifier<const hard::Processor *> PROCESSOR("otawa::hard::PROCESSOR", &Processor::null);
 
 } } // otawa::hard
 

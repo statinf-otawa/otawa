@@ -3,7 +3,7 @@
  *	Platform class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-08, IRIT UPS.
+ *	Copyright (c) 2005-10, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -165,7 +165,7 @@ void Platform::configure(const PropList& props) {
 		depth = new_depth;
 	
 	// Configure processor 
-	Processor *new_processor = PROCESSOR(props);
+	Processor *new_processor = otawa::PROCESSOR(props);
 	if(new_processor) {
 		_processor = new_processor;
 		flags &= ~HAS_PROCESSOR;
@@ -524,18 +524,17 @@ bool Platform::Identification::matches(const Identification& id) {
  * @throws	elm::io::IOException	If a configuration file cannot be loaded.
  */
 void Platform::loadProcessor(const elm::system::Path& path) {
-	if(flags & HAS_PROCESSOR)
+
+	// free an existing one
+	if(flags & HAS_PROCESSOR) {
 		delete _processor;
-	try {
-		elm::serial2::XOMUnserializer unser(&path);
-		_processor = new Processor();
-		flags |= HAS_PROCESSOR;
-		unser >> *_processor;
-		unser.flush();
+		_processor = 0;
+		flags &= ~HAS_PROCESSOR;
 	}
-	catch(elm::io::IOException& e) {
-		throw LoadException(&e.message());
-	}
+
+	// load the new one
+	_processor = Processor::load(path);
+	flags |= HAS_PROCESSOR;
 }
 
 
@@ -545,19 +544,18 @@ void Platform::loadProcessor(const elm::system::Path& path) {
  * @throws	LoadException	If the XML element is mal-formed.
  */
 void Platform::loadProcessor(elm::xom::Element *element) {
-	assert(element);
-	if(flags & HAS_PROCESSOR)
+	ASSERT(element);
+
+	// free it already exists
+	if(flags & HAS_PROCESSOR) {
 		delete _processor;
-	try {
-		elm::serial2::XOMUnserializer unser(element);
-		_processor = new Processor();
-		flags |= HAS_PROCESSOR;
-		unser >> *_processor;
-		unser.flush();
+		_processor = 0;
+		flags &= ~HAS_PROCESSOR;
 	}
-	catch(elm::Exception& e) {
-		throw LoadException(&e.message());
-	}
+
+	// load the new one
+	_processor = Processor::load(element);
+	flags |= HAS_PROCESSOR;
 }
 
 
