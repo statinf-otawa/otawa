@@ -116,9 +116,9 @@ namespace otawa {
 		virtual void computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq);
 
 		virtual void configureMem(WorkSpace *ws) {
-			icache = ws->platform()->cache().instCache();
+			icache = hard::CACHE_CONFIGURATION(ws)->instCache();
 			_do_consider_icache = icache;
-			mem = &ws->platform()->memory();
+			mem = hard::MEMORY(ws);
 		}
 
     public:
@@ -177,6 +177,7 @@ namespace otawa {
 template <class G>
 GraphBBTime<G>::GraphBBTime(AbstractRegistration& reg)
 : BBProcessor(reg) {
+	require(hard::PROCESSOR_FEATURE);
 	provide(ipet::BB_TIME_FEATURE);
 }
 
@@ -205,7 +206,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		void GraphBBTime<G>::processWorkSpace(WorkSpace *ws) {
 
 		_ws = ws;
-		const hard::Processor *proc = _ws->platform()->processor();
+		const hard::Processor *proc = hard::PROCESSOR(_ws);
 
 		if(!proc)
 			throw ProcessorException(*this, "no processor to work with");
