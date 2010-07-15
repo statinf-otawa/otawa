@@ -37,16 +37,18 @@ namespace otawa { namespace hard {
  * 
  * This module provides information about the host platform where the loaded program
  * will run on. It includes descriptions for:
- * @li processor pipeline,
  * @li processor registers,
+ * @li processor pipeline,
  * @li cache hierarchy,
  * @li memory spaces.
  *
- * Register description is provided by the current loader plugin as it is part
- * of the ISA (Instruction Set Architecture). Other hardware feature are independent
- * and must be provided when the @ref otawa::Process is built in the
- * configuration properties with properties :
- * @li otawa::PLATFORM -- whole platform description
+ * The ISA (Instruction Set architecture) is provided by the executable loader.
+ * It mainly includes register description and some other description (length of instructions
+ * and so on).
+ *
+ * Other hardware items like processor, caches and memory are loaded by their own processor
+ * and configuration is passed as usual in the configuration property list passed to run
+ * a code processor. These configuration properties may be:
  * @li @ref otawa::CACHE_CONFIG -- cache configuration
  * @li @ref otawa::CACHE_CONFIG_ELEMENT -- cache configuration as an XML element
  * @li @ref otawa::CACHE_CONFIG_PATH -- cache configuration contained in a file
@@ -57,7 +59,13 @@ namespace otawa { namespace hard {
  * @li @ref otawa::PROCESSOR_ELEMENT -- processor configuration as an XML element
  * @li @ ref otawa::PROCESSOR_PATH -- processor configuration contained in a file
  *
- * @par hard_proc Processor Format
+ * A code processor may get these hardware items from the workspace if it requires
+ * the corresponding feature:
+ * @li @ref otawa::hard::PROCESSOR_FEATURE
+ * @li @ref otawa::hard::CACHE_CONFIGURATION_FEATURE
+ * @li @ref otawa::hard::MEMORY_FEATURE
+ *
+ * @par Processor Format
  *
  * We describe here the format of processor configuration expressed in XML.
  * This file is unserialized according the @ref elm::serial2 module and therefore
@@ -111,6 +119,10 @@ namespace otawa { namespace hard {
  * @endcode
  *
  * The "inst" allows to dispatch instruction in the FU.
+ *
+ * @par Cache Configuration Format
+ *
+ * @par Memory Description Format
  *
  */
 
