@@ -432,6 +432,79 @@ int Memory::worstWriteAccess(void) const {
 	return w;
 }
 
+
+class MemoryProcessor: public otawa::Processor {
+public:
+	MemoryProcessor(void)
+		: Processor("otawa::MemoryProcessor", Version(1, 0, 0)) {
+			provide(MEMORY_FEATURE);
+		}
+
+	virtual void configure(const PropList& props) {
+		Processor::configure(props);
+		config = MEMORY_OBJECT(props);
+		if(!config) {
+			xml = MEMORY_ELEMENT(props);
+			if(!xml)
+				path = MEMORY_PATH(props);
+		}
+	}
+
+protected:
+	virtual void processWorkSpace(WorkSpace *ws) {
+		if(config) {
+			MEMORY(ws) = config;
+			if(isVerbose())
+				log << "\tcustom memory configuration\n";
+		}
+		else if(xml) {
+			config = Memory::load(xml);
+			track(MEMORY_FEATURE, MEMORY(ws) = config);
+			if(isVerbose())
+				log << "\tmemory configuration from XML element\n";
+		}
+		else if(path) {
+			if(isVerbose())
+				log << "\tmemory configuration from \"" << path << "\"\n";
+			config = Memory::load(path);
+			track(MEMORY_FEATURE, MEMORY(ws) = config);
+		}
+		else if(isVerbose())
+			log << "\tno memory configuration\n";
+	}
+
+private:
+	const Memory *config;
+	xom::Element *xml;
+	Path path;
+};
+
+
+static SilentFeature::Maker<MemoryProcessor> maker;
+/**
+ * This feature ensures we have obtained the memory configuration
+ * of the system.
+ *
+ * @par Properties
+ * @li @ref otawa::hard::MEMORY
+ */
+SilentFeature MEMORY_FEATURE("otawa::hard::MEMORY_FEATURE", maker);
+
+
+/**
+ * Current memory.
+ *
+ * @par Hooks
+ * @li @ref otawa::WorkSpace
+ *
+ * @par Features
+ * @li @ref otawa::CACHE_CONFIGURATION_FEATURE
+ *
+ * @par Default Value
+ * Cache configuration without any cache (never null).
+ */
+Identifier<const Memory *> MEMORY("otawa::hard::MEMORY", &Memory::full);
+
 } } // otawa::hard
 
 SERIALIZE(otawa::hard::ModeTransition);
