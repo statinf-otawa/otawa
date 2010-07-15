@@ -194,6 +194,10 @@ private:
 	AllocatedTable<const Bus *> _buses;
 };
 
+// features
+extern SilentFeature MEMORY_FEATURE;
+extern Identifier<const Memory *> MEMORY;
+
 } } // otawa::hard
 
 ENUM(otawa::hard::Bus::type_t);

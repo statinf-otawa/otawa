@@ -13,6 +13,9 @@
 #include <elm/genstruct/Table.h>
 #include <otawa/prog/Inst.h>
 #include <elm/util/strong_type.h>
+#include <otawa/proc/SilentFeature.h>
+#include <elm/system/Path.h>
+#include <otawa/prog/Manager.h>
 
 namespace otawa { namespace hard {
 
@@ -119,6 +122,10 @@ public:
 	inline const Table<Queue *>& getQueues(void) const { return queues; };
 	inline t::uint64 getFrequency(void) const { return frequency; }
 
+	static const Processor null;
+	static Processor *load(const elm::system::Path& path) throw(LoadException);
+	static Processor *load(xom::Element *element) throw(LoadException);
+
 private:
 	elm::String arch;
 	elm::String model;
@@ -143,6 +150,10 @@ inline T Stage::select(Inst::kind_t kind, const T table[]) const {
 			return table[i];
 	}
 }
+
+// features
+extern SilentFeature PROCESSOR_FEATURE;
+extern Identifier<const Processor *> PROCESSOR;
 
 } } // otawa::hard
 
