@@ -200,8 +200,8 @@ void Script::processWorkSpace(WorkSpace *ws) {
 			log << "\tfound platform description.\n";
 		xom::Element *proc = pf->getFirstChildElement("processor");
 		if(proc) {
-			//PROCESSOR_ELEMENT(props) = proc;
-			ws->process()->platform()->loadProcessor(proc);
+			PROCESSOR_ELEMENT(props) = proc;
+			//ws->process()->platform()->loadProcessor(proc);
 			if(isVerbose())
 				log << "\tprocessor configuration found.\n";
 		}
@@ -215,8 +215,8 @@ void Script::processWorkSpace(WorkSpace *ws) {
 		xom::Element *mem = pf->getFirstChildElement("memory");
 		if(mem) {
 			MEMORY_ELEMENT(props) = mem;
-			ws->process()->platform()->loadMemory(mem);
-			//if(isVerbose())
+			//ws->process()->platform()->loadMemory(mem);
+			if(isVerbose())
 				log << "\tmemory configuration found.\n";
 		}
 	}
