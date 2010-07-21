@@ -208,7 +208,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		_ws = ws;
 		const hard::Processor *proc = hard::PROCESSOR(_ws);
 
-		if(!proc)
+		if(proc == &hard::Processor::null)
 			throw ProcessorException(*this, "no processor to work with");
 		else {
 			_microprocessor = new ParExeProc(proc);
