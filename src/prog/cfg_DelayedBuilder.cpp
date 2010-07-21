@@ -206,8 +206,22 @@ void DelayedBuilder::fix(Edge *oedge, Edge *nedge) {
 	// virtual return
 	BasicBlock *oreturn = VIRTUAL_RETURN_BLOCK(oedge->source());
 	if(oreturn) {
-		BasicBlock *nreturn = map.get(oreturn);
-		ASSERT(nreturn);
+		BasicBlock *nreturn = map.get(oreturn, 0);
+
+		// returning to single-instruction delayed BB -> no match in map
+		if(!nreturn) {
+			BasicBlock::OutIterator edge(oreturn);
+			if(!edge)
+				throw otawa::Exception(_ << "delayed mono-instruction BB without successor at " << oreturn);
+			if(edge->kind() == Edge::NOT_TAKEN) {
+				nreturn = edge->target();
+				edge++;
+			}
+			if(edge)
+				throw otawa::Exception(_ << "branch in delayed instruction unsupported at " << oreturn->firstInst());
+		}
+
+		// reset virtual return block
 		VIRTUAL_RETURN_BLOCK(nedge->source()) = nreturn;
 	}
 
