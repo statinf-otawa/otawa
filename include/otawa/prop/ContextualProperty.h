@@ -98,6 +98,8 @@ public:
 		{ return ref(id, *props); }
 	template <class T> inline const T& operator()(const Identifier<T>& id, const PropList *props) const
 		{ return get(id, *props); }
+	template <class T> inline const Ref<T, Identifier<T> > operator()(const Identifier<T>& id, PropList *props) const
+		{ return ref(id, *props); }
 
 private:
 	genstruct::Vector<ContextualStep> stack;
