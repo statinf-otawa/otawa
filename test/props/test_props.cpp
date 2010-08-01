@@ -147,7 +147,7 @@ int main(void) {
 
 		// simple path
 		path.push(ContextualStep::FUNCTION, Address(1));
-		path.ref(ID, props) = 222;
+		path(ID, props) = 222;
 		ContextualProperty::print(cerr, props);
 		CHECK(ID(props) == 111);
 		CHECK(BAD(props) == -1);
@@ -155,21 +155,21 @@ int main(void) {
 		CHECK(path(BAD, props) == -1);
 
 		// double value
-		path.ref(ID2, props) = 333;
+		path(ID2, props) = 333;
 		ContextualProperty::print(cerr, props);
 		CHECK_EQUAL((int)ID2(props), -1);
-		CHECK_EQUAL(path(ID2, props), 333);
+		CHECK(path(ID2, props) == 333);
 
 		// far value
 		path.clear();
 		path.push(ContextualStep::FUNCTION, Address(3));
 		path.push(ContextualStep::FUNCTION, Address(2));
 		path.push(ContextualStep::FUNCTION, Address(1));
-		path.ref(ID, props) = 444;
+		path(ID, props) = 444;
 		ContextualProperty::print(cerr, props);
 		CHECK_EQUAL((int)ID(props), 111);
-		CHECK_EQUAL(path(ID, props), 444);
-		CHECK_EQUAL(path(ID2, props), 333);
+		CHECK_EQUAL(int(path(ID, props)), 444);
+		CHECK_EQUAL(int(path(ID2, props)), 333);
 
 		// blurred path value
 		path.clear();
@@ -177,8 +177,8 @@ int main(void) {
 		path.push(ContextualStep::FUNCTION, Address(1));
 		path.ref(ID, props) = 555;
 		ContextualProperty::print(cerr, props);
-		CHECK_EQUAL(path(ID, props), 555);
-		CHECK_EQUAL(path(ID2, props), 333);
+		CHECK(path(ID, props) == 555);
+		CHECK(path(ID2, props) == 333);
 
 		// more precise path
 		path.clear();
@@ -187,8 +187,12 @@ int main(void) {
 		path.push(ContextualStep::FUNCTION, Address(2));
 		path.push(ContextualStep::FUNCTION, Address(1));
 		CHECK_EQUAL((int)ID(props), 111);
-		CHECK_EQUAL(path(ID, props), 444);
-		CHECK_EQUAL(path(ID2, props), 333);
+		CHECK(path(ID, props) == 444);
+		CHECK(path(ID2, props) == 333);
+
+		// removal test
+		path(ID, props).remove();
+		CHECK(path(ID, props) == 222);
 
 	CHECK_END
 

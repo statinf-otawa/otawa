@@ -242,6 +242,96 @@ PropList& ContextualProperty::make(PropList& props, const ContextualPath& path) 
 
 
 /**
+ * Test if a contextual property exists, that is,
+ * the property value is defined at any step of the given
+ * contextual path.
+ * @param props		Property list to look in.
+ * @param path		Contextual path.
+ * @param id		Looked identifier.
+ */
+bool ContextualProperty::exists(
+	const PropList& props,
+	const ContextualPath& path,
+	const AbstractIdentifier& id
+) {
+	ContextualProperty *cprop = (ContextualProperty *)props.getProp(&ID);
+	if(!cprop)
+		return props.getProp(&id);
+	else
+		return cprop->findProps(props, path, id).getProp(&id);
+}
+
+
+/**
+ * Obtain a reference on a property value in the given contextual path.
+ * If the property does not exists, create and return it. If the property
+ * exists at an intermediate level, copy it at the top level and
+ * return reference to it.
+ *
+ * @param props		Property list to look in.
+ * @param path		Contextual path.
+ * @param id		Looked identifier.
+ */
+PropList& ContextualProperty::ref(
+	PropList& props,
+	const ContextualPath& path,
+	const AbstractIdentifier& id
+) {
+	if(!path.count())
+		return props;
+	ContextualProperty *cprop = (ContextualProperty *)props.getProp(&ID);
+	if(!cprop) {
+		cprop = new ContextualProperty();
+		props.addProp(cprop);
+	}
+	return cprop->refProps(props, path, id);
+}
+
+
+/**
+ */
+PropList& ContextualProperty::refProps(
+	PropList& props,
+	const ContextualPath& path,
+	const AbstractIdentifier& id
+) {
+
+	// already existing ?
+	PropList& res = make(props, path);
+	if(res.getProp(&id))
+		return res;
+
+	// find top proplist and intermediate property
+	Property *prop = props.getProp(&id);
+	Node *parent = &root;
+	for(int i = path.count() - 1; i >= 0; i--) {
+		bool found = false;
+		for(Node::Iterator child(parent); child; child++) {
+			Node *node = (Node *)*child;
+			if(node->step == path[i]) {
+				parent = node;
+				found = true;
+				break;
+			}
+		}
+		if(!found) {
+			Node *node = new Node(path[i]);
+			parent->add(node);
+			parent = node;
+		}
+		Property *new_prop = parent->getProp(&id);
+		if(new_prop)
+			prop = new_prop;
+	}
+
+	// copy the property if found
+	if(prop)
+		parent->addProp(id.copy(prop));
+	return *parent;
+}
+
+
+/**
  * Display the contextual information of the given property list.
  * @param out	Stream to output to.
  * @param props	Property list.

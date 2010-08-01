@@ -19,16 +19,16 @@ namespace otawa {
 template <class T>
 class GenericProperty: public Property {
 public:
-	inline GenericProperty(const AbstractIdentifier *id, T value)
+	inline GenericProperty(const AbstractIdentifier *id, const T& value)
 		: Property(id), _value(value) { };
-	inline GenericProperty(const AbstractIdentifier& id, T value)
+	inline GenericProperty(const AbstractIdentifier& id, const T& value)
 		: Property(id), _value(value) { };
-	inline GenericProperty(elm::CString name, T value)
+	inline GenericProperty(elm::CString name, const T& value)
 		: Property(name), _value(value) { };
 	virtual ~GenericProperty(void) { };
 	virtual Property *copy(void)
 		{ return new GenericProperty<T>(id(), value()); };
-	static GenericProperty<T> *make(const AbstractIdentifier *id, const T value)
+	static GenericProperty<T> *make(const AbstractIdentifier *id, const T& value)
 		{ return new GenericProperty(id, value); };
 	inline const T& value(void) const { return _value; };
 	inline T& value(void) { return _value; };

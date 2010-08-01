@@ -30,6 +30,10 @@ namespace otawa {
 
 using namespace elm;
 
+// pre-declaration
+class ContextualPath;
+
+
 // ContextualStep class
 class ContextualStep {
 public:
@@ -65,9 +69,88 @@ inline io::Output& operator<<(io::Output& out, const ContextualStep& path)
 	{ path.print(out); return out; }
 
 
+// ContextualProperty class
+class ContextualProperty: public Property {
+
+	// Node class
+	class Node: public PropList, public inhstruct::Tree {
+	public:
+		inline Node(void) { }
+		inline Node(const ContextualStep& _step): step(_step) { }
+		ContextualStep step;
+	};
+
+public:
+	ContextualProperty(void);
+
+	static bool exists(const PropList& props, const ContextualPath& path, const AbstractIdentifier& id);
+	static PropList& ref(PropList& props, const ContextualPath& path, const AbstractIdentifier& id);
+
+	static const PropList& find(const PropList& props, const ContextualPath& path, const AbstractIdentifier& id);
+	static PropList& make(PropList& props, const ContextualPath& path);
+	static void print(io::Output& out, const PropList& props);
+
+private:
+	const PropList& findProps(const PropList& props, const ContextualPath& path, const AbstractIdentifier& id) const;
+	PropList& makeProps(const ContextualPath& path);
+	PropList& refProps(PropList& props, const ContextualPath& path, const AbstractIdentifier& id);
+	void print(io::Output& out, const Node& node, int indent = 0) const;
+
+	Node root;
+	static AbstractIdentifier ID;
+};
+
+
 // ContextualPath class
 class ContextualPath {
 public:
+
+	// Ref for ContextualPath
+	template <class T>
+	class Ref {
+	public:
+		inline Ref(const ContextualPath& _cp, PropList& _p, const Identifier<T>& _i): cp(_cp), p(_p), i(_i) { }
+		inline Ref(const Ref<T>& r): cp(r.cp), p(r.p), i(r.i) { }
+		inline Ref<T>& operator=(const Ref<T>& r) { cp = r.cp; p = r.p; i = r.i; return *this; }
+
+		// immutable part
+		inline const ContextualPath& path(void) const { return cp; }
+		inline const PropList &proplist (void) const { return p; }
+		inline const Identifier<T>& identifier (void) const { return i; }
+		inline bool exists(void) const { return ContextualProperty::exists(p, cp, i); };
+		inline const T &get (void) const { return cp.get(i, p); }
+		inline operator const T &(void) const { return get(); }
+		inline T operator->(void) const { return get(); }
+		inline void print(io::Output& out) { i.print(out, find(p, cp, i).getProp(&i)); }
+
+		// mutable part
+		inline const Ref &add(const T &value) const { i(ContextualProperty::make(p, cp, i)).add(value); }
+		inline void remove(void) const { ContextualProperty::make(p, cp).removeProp(i); }
+		inline T& ref(void) const { return i.ref(ContextualProperty::ref(p, cp, i)); }
+		inline T& 	operator&(void) const { return ref(); }
+		const Ref<T> &operator=(const T &value) const { ref() = value; return *this; }
+		inline Ref<T> &operator+= (const T &v) const { ref() += value; return *this; }
+		inline Ref<T> &operator-= (const T &v) const { ref() -= value; return *this; }
+		inline Ref<T> &operator *= (const T &v) const { ref() *= value; return *this; }
+		inline Ref<T> &operator/= (const T &v) const { ref() /= value; return *this; }
+		inline Ref<T> &operator%= (const T &v) const { ref() %= value; return *this; }
+		inline Ref<T> &operator &= (const T &v) const { ref() &= value; return *this; }
+		inline Ref<T> &operator|= (const T &v) const { ref() |= value; return *this; }
+		inline Ref<T> &operator^= (const T &v) const { ref() ^= value; return *this; }
+		inline Ref<T> &operator<<= (const T &v) const { ref() <<= value; return *this; }
+		inline Ref<T> &operator>>= (const T &v) const { ref() >>= value; return *this; }
+		inline Ref<T> &operator++ (void) const { ref()++; return *this; }
+		inline Ref<T> &operator-- (void) const { ref()--; return *this; }
+		inline Ref<T> &operator++ (int) const { ref()++; return *this; }
+		inline Ref<T> &operator-- (int) const { ref()--; return *this; }
+
+	private:
+		const ContextualPath& cp;
+		PropList& p;
+		const Identifier<T>& i;
+	};
+
+	// constructors
 	inline ContextualPath(void) { }
 	ContextualPath(const ContextualPath& path);
 	ContextualPath& operator=(const ContextualPath& path);
@@ -85,66 +168,37 @@ public:
 	inline operator bool(void) const { return !isEmpty(); }
 	void print(io::Output& out) const;
 
-	template <class T> inline const T& get(const Identifier<T>& id, const PropList& props) const;
-	template <class T> inline Ref<T, Identifier<T> > ref(const Identifier<T>& id, PropList& props) const;
-	template <class T> inline const T& operator()(const Identifier<T>& id, const PropList& props) const
-		{ return get(id, props); }
-	//template <class T> inline Ref<T, Identifier<T> > operator()(const Identifier<T>& id, PropList& props)
-	//	{ return ref(id, props); }
+	template <class T> inline const T& get(const Identifier<T>& id, const PropList& props) const {
+		const PropList& fprops = ContextualProperty::find(props, *this, id);
+		return id.value(fprops);
+	}
 
+	template <class T> inline Ref<T> ref(const Identifier<T>& id, PropList& props) const
+		{ return Ref<T>(*this, props, id); }
 	template <class T> inline const T& get(const Identifier<T>& id, const PropList *props) const
 		{ return get(id, *props); }
-	template <class T> inline Ref<T, Identifier<T> > ref(const Identifier<T>& id, PropList *props) const
+	template <class T> inline Ref<T> ref(const Identifier<T>& id, PropList *props) const
 		{ return ref(id, *props); }
+
 	template <class T> inline const T& operator()(const Identifier<T>& id, const PropList *props) const
 		{ return get(id, *props); }
-	template <class T> inline const Ref<T, Identifier<T> > operator()(const Identifier<T>& id, PropList *props) const
+	template <class T> inline const T& operator()(const Identifier<T>& id, const PropList& props) const
+		{ return get(id, props); }
+	template <class T> inline Ref<T> operator()(const Identifier<T>& id, PropList *props) const
 		{ return ref(id, *props); }
+	template <class T> inline Ref<T> operator()(const Identifier<T>& id, PropList& props) const
+		{ return ref(id, props); }
 
 private:
 	genstruct::Vector<ContextualStep> stack;
 };
+
+// I/O
 inline io::Output& operator<<(io::Output& out, const ContextualPath& path)
 	{ path.print(out); return out; }
-
-
-// ContextualProperty class
-class ContextualProperty: public Property {
-
-	// Node class
-	class Node: public PropList, public inhstruct::Tree {
-	public:
-		inline Node(void) { }
-		inline Node(const ContextualStep& _step): step(_step) { }
-		ContextualStep step;
-	};
-
-public:
-	ContextualProperty(void);
-
-	static const PropList& find(const PropList& props, const ContextualPath& path, const AbstractIdentifier& id);
-	static PropList& make(PropList& props, const ContextualPath& path);
-	static void print(io::Output& out, const PropList& props);
-
-private:
-	const PropList& findProps(const PropList& props, const ContextualPath& path, const AbstractIdentifier& id) const;
-	PropList& makeProps(const ContextualPath& path);
-	void print(io::Output& out, const Node& node, int indent = 0) const;
-
-	Node root;
-	static AbstractIdentifier ID;
-};
-
-// inlines
 template <class T>
-inline const T& ContextualPath::get(const Identifier<T>& id, const PropList& props) const {
-	const PropList& fprops = ContextualProperty::find(props, *this, id);
-	return id.value(fprops);
-}
-
-template <class T>
-inline Ref<T, Identifier<T> > ContextualPath::ref(const Identifier<T>& id, PropList& props) const
-	{ return Ref<T, Identifier<T> >(ContextualProperty::make(props, *this), id); }
+inline io::Output& operator<<(io::Output& out, const ContextualPath::Ref<T>& r)
+	{ r.print(out); return out; }
 
 }	// otawa
 

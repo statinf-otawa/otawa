@@ -56,30 +56,35 @@ public:
 	inline Identifier(cstring name, const T& default_value, VarArg& args)
 		: AbstractIdentifier(name, args), def(default_value) { }
 
+	// intrinsic accessor
+	inline const T& defaultValue(void) const { return def; }
+
 	// PropList& Accessors
 	inline void add(PropList& list, const T& value) const;
 	inline void set(PropList& list, const T& value) const;
 	inline elm::Option<T> get(const PropList& list) const;
 	inline const T& get(const PropList& list, const T& def) const;
-	inline T& ref(const PropList& list) const;
+	inline T& ref(PropList& list) const;
 	inline const T& use(const PropList& list) const;
 	inline const T& value(const PropList& list) const;
 	inline Ref<T, Identifier> value(PropList& list) const;
 	inline void remove(PropList& list) const { list.removeProp(this); }
 	inline bool exists(PropList& list) const { return list.getProp(this); }
-	inline const T& defaultValue(void) const { return def; }
+	inline void copy(PropList& list, Property *prop)
+		{ list.addProp(GenericProperty<T>::make(this, get(prop))); }
 
 	// PropList* Accessors
 	inline void add(PropList *list, const T& value) const { add(*list, value); }
 	inline void set(PropList *list, const T& value) const { set(*list, value); }
 	inline elm::Option<T> get(const PropList *list) const { return get(*list); }
 	inline const T& get(const PropList *list, const T& def) const { return get(*list, def); }
-	inline T& ref(const PropList *list) const { return ref(*list); }
+	inline T& ref(PropList *list) const { return ref(*list); }
 	inline const T& use(const PropList *list) const { return use(*list); }
 	inline const T& value(const PropList *list) const { return value(*list); }
 	inline Ref<T, Identifier<T> > value(PropList *list) const { return value(*list); }
 	inline void remove(PropList *list) const { list->removeProp(this); }
 	inline bool exists(PropList *list) const { return list->getProp(this); }
+	inline void copy(PropList *list, Property *prop) { copy(*list, prop); }
 
 	// Property accessors
 	inline const T& get(const Property *prop) const
@@ -104,6 +109,8 @@ public:
 	virtual void fromString(PropList& props, const string& str) const;
 	virtual bool equals(const Property *prop1, const Property *prop2) const
 		{ return prop1->id() == prop2->id() && Equiv<T>::equals(get(prop1), get(prop2)); }
+	virtual Property *copy(Property& prop) const
+		{ return GenericProperty<T>::make(this, get(&prop)); }
 
 	// Getter class
 	class Getter: public PreIterator<Getter, T> {
@@ -190,7 +197,7 @@ inline class Ref<T, Identifier<T> > Identifier<T>::value(PropList& list) const
 	{ return Ref<T, Identifier<T> >(list, *this); }
 
 template <class T>
-inline T& Identifier<T>::ref(const PropList& list) const {
+inline T& Identifier<T>::ref(PropList& list) const {
 	GenericProperty<T> *_prop = (GenericProperty<T> *)list.getProp(this);
 	if(!_prop) {
 		_prop = GenericProperty<T>::make(this, def);

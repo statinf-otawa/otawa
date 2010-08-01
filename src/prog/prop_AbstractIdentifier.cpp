@@ -310,4 +310,22 @@ bool AbstractIdentifier::equals(const Property *prop1, const Property *prop2) co
 	return prop1 == prop2;
 }
 
+
+/**
+ * Build a copy of the given property.
+ * @param prop	Property to copy.
+ * @return		Copy of the property.
+ */
+Property *AbstractIdentifier::copy(Property& prop) const {
+	return 0;
+}
+
+
+/**
+ * @fn Property *AbstractIdentifier::copy(Property *prop);
+ * Build a copy of the given property.
+ * @param prop	Property to copy.
+ * @return		Copy of the property.
+ */
+
 } // otawa

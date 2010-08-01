@@ -53,6 +53,8 @@ public:
 	virtual void fromString(PropList& props, const string& str) const;
 
 	virtual bool equals(const Property *prop1, const Property *prop2) const;
+	virtual Property *copy(Property& prop) const;
+	inline Property *copy(Property *prop) const { return copy(*prop); }
 
 protected:
 	void initProps(Property *prop, VarArg& args);
