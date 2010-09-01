@@ -24,4 +24,7 @@ uninstall-local:
 manual.html: manual.thot
 	@THOT_PATH@ -t html $< -o $@ -DHTML_ONE_FILE_PER=chapter
 
+clean-local:
+	rm -rf manual*.html manual-imports
+
 endif
