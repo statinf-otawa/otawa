@@ -25,7 +25,7 @@ for arg in $*; do
 		plugin=
 		;;
 	-l|--loader)
-		template=plugin.mk
+		template=loader.mk
 		plugin=loader
 		;;
 	-i|--ilp)
