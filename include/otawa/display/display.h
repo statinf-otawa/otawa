@@ -31,11 +31,11 @@ using namespace elm;
 // Color class
 class Color {
 public:
-	typedef unsigned char comp_t;
+	typedef t::uint8 comp_t;
 	
 	inline Color(void) { }
 	Color(comp_t red, comp_t green, comp_t blue);
-	Color(unsigned long color);
+	Color(t::uint32 color);
 	Color(string name);
 	inline const string& asText(void) const { return text; }
 	
