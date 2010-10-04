@@ -52,7 +52,7 @@ Color::Color(comp_t red, comp_t green, comp_t blue) {
  * Build a color from its RGB value.
  * @param color		RGB value (bits 23-16: red, bits 15-8: green, bits 7..0: blue).
  */
-Color::Color(unsigned long color) {
+Color::Color(t::uint32 color) {
 	text = _ << '#' << io::pad('0', io::width(6, io::hex(color)));
 }
 

@@ -29,6 +29,8 @@
 
 namespace otawa {
 
+using namespace elm;
+
 namespace hard { class Platform; }
 
 namespace sem {
@@ -75,11 +77,11 @@ typedef enum cond_t {
 
 // inst type
 typedef struct inst {
-	unsigned short op;
-	signed short _d;
+	t::uint16 op;
+	t::int16 _d;
 	union {
-		unsigned long cst;							// set, seti, setp
-		struct { signed short a, b;  } regs;		// others
+		t::uint32 cst;							// set, seti, setp
+		struct { t::int16 a, b;  } regs;		// others
 	} args;
 
 	inst(void) { }
@@ -91,10 +93,10 @@ typedef struct inst {
 	inst(opcode _op, int d, int a, int b): op(_op)
 		{ _d = d; args.regs.a = a; args.regs.b = b; }
 
-	inline signed short d(void) const { return _d; }
-	inline signed short a(void) const { return args.regs.a; }
-	inline signed short b(void) const { return args.regs.b; }
-	inline unsigned long cst(void) const { return args.cst; }
+	inline t::int16 d(void) const { return _d; }
+	inline t::int16 a(void) const { return args.regs.a; }
+	inline t::int16 b(void) const { return args.regs.b; }
+	inline t::uint32 cst(void) const { return args.cst; }
 
 	void print(elm::io::Output& out) const;
 } inst;
@@ -129,10 +131,10 @@ public:
 		inline InstIter(const Block& block): S::Iterator(block) { }
 		inline InstIter(const InstIter& iter): S::Iterator(iter) { }
 		inline opcode op(void) const { return opcode(item().op); }
-		inline signed short d(void) const { return item().d(); }
-		inline signed short a(void) const { return item().a(); }
-		inline signed short b(void) const { return item().b(); }
-		inline unsigned long cst(void) const { return item().cst(); }
+		inline t::int16 d(void) const { return item().d(); }
+		inline t::int16 a(void) const { return item().a(); }
+		inline t::int16 b(void) const { return item().b(); }
+		inline t::uint32 cst(void) const { return item().cst(); }
 	};
 	void print(elm::io::Output& out) const;
 };

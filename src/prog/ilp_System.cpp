@@ -103,7 +103,7 @@ void System::dump(format_t fmt, elm::io::OutStream& out) {
 			/* dump the objective function */
 			
 			for (ObjTermIterator term(this); term; term++) {
-				long int val = lrint((*term).snd);
+				t::int32 val = lrint((*term).snd);
 				if (!rename.hasKey((*term).fst)) {
 					rename.put((*term).fst, new String((_ << "x" << idx)));
 					idx++;
@@ -143,7 +143,7 @@ void System::dump(format_t fmt, elm::io::OutStream& out) {
 					continue;
 				
 				for (Constraint::TermIterator term(cons2); term; term++) {
-					long int val = lrint((*term).snd);
+					t::int32 val = lrint((*term).snd);
 					if (!rename.hasKey((*term).fst)) {
 						rename.put((*term).fst, new String((_ << "x" << idx)));
 						idx++;
@@ -261,7 +261,7 @@ case MOSEK:
 			/* dump the objective function */
 			
 			for (ObjTermIterator term(this); term; term++) {
-				long int val = lrint((*term).snd);
+				t::int32 val = lrint((*term).snd);
 				if (!rename.hasKey((*term).fst)) {
 					rename.put((*term).fst, new String((_ << "x" << idx)));
 					idx++;
@@ -296,7 +296,7 @@ case MOSEK:
 					bound = false;
 				
 				for (Constraint::TermIterator term(cons2); term; term++) {
-					long int val = lrint((*term).snd);
+					t::int32 val = lrint((*term).snd);
 					if (!rename.hasKey((*term).fst)) {
 						rename.put((*term).fst, new String((_ << "x" << idx)));
 						idx++;

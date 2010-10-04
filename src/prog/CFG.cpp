@@ -67,7 +67,7 @@ string CFG::format(const Address& addr) {
 	if(!lab)
 		return _ << addr;
 	else {
-		long off = addr - address();
+		t::int32 off = addr - address();
 		if(off >= 0)
 			return _ << lab << " + 0x" << io::hex(off);
 		else

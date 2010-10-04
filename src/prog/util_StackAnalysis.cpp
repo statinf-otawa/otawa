@@ -110,7 +110,7 @@ public:
 		case REG: out << 'r' << _value; break;
 		case CST: out << "k(" << io::hex(_value) << ')'; break;
 		case SP: {
-				long v = _value;
+				t::int32 v = _value;
 				if(v >= 0)
 					out << "sp+" << io::hex(v);
 				else
@@ -154,7 +154,7 @@ public:
 private:
 	inline void set(kind_t kind, unsigned long value) { _kind = kind; _value = value; }
 	kind_t _kind;
-	unsigned long _value;
+	t::uint32 _value;
 };
 inline io::Output& operator<<(io::Output& out, const Value& v) { v.print(out); return out; }
 const Value Value::none(NONE), Value::all(ALL);
@@ -332,7 +332,7 @@ public:
 					out << Address(cur->addr.value());
 					break;
 				case SP: {
-						long v = cur->addr.value();
+						t::int32 v = cur->addr.value();
 						if(v >= 0)
 							out << "[sp+" << io::hex(v) << ']';
 						else
