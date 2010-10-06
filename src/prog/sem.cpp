@@ -27,6 +27,61 @@
 
 using namespace elm;
 
+/**
+ * @defgroup sem Semantics Instructions
+ *
+ * OTAWA provides an abstraction layer between the actual binary program and static analyses.
+ * This abstraction is composed of generic information about the processed instruction:
+ * type of instruction, target for branch instruction, read and writtent registers, and so on.
+ *
+ * To perform value or interval analysis, we need to understand the processing of instructions.
+ * To maintain this abstraction layer, OTAWA provides with some architecture plugins a way
+ * to translate instruction into a list of architecture-independent instructions to let
+ * value analyses to be independent of the actual architecture.
+ *
+ * @section sem-set Semantics Instruction Set
+ *
+ * Designing a language to describe any instruction set is may an impossible task.
+ * In the opposite, our semantics language has for goal to allow to perform analyses
+ * while retaining only important things for such a task: basic arithmetics and comparison
+ * for integer and address and integer computation, minimal flow of control to allow
+ * fast analysis.
+ *
+ * @section sem-set-comp Computation Instructions
+ *
+ * Basically, our semantics instructions have three operands and works with registers.
+ * The first operand d is the target registers to store the result and next ones represents source operands (a and b).
+ * The following arithmetics operations exists:
+ * @li CMP -- comparison
+ * @li CMPU -- unsigned comparison
+ * @li ADD -- addition
+ * @li SUB -- subtraction
+ * @li SHL -- logical shift left
+ * @li SHR -- logical shift right
+ * @li ASR -- arithmetic shift right
+ *
+ * The comparison puts its result in the target register that may be one of the following constants:
+ * @li EQ -- a == b
+ * @li LT -- a < b
+ * @li LE -- a <= b
+ * @li GE -- a >= b
+ * @li GT -- a > b
+ * @li NE -- a != b
+ * @li ANY_COND -- do not know anything (recall we are performing static analysis).
+ * In addition, some architecture requires an unsigned comparison that may produces other conditions:
+ * @li ULT -- a < b
+ * @li ULE -- a <= b
+ * @li UGE -- a >= b
+ * @li UGT -- a > b
+ *
+ *
+ *
+ * @section sem-reg Register and Temporaries
+ *
+ * @section sem-anal Building Analyses
+ */
+
+
 namespace otawa { namespace sem {
 
 static cstring inst_names[] = {
