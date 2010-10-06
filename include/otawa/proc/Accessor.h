@@ -37,7 +37,7 @@ template <class T>
 class Accessor: public AbstractAccessor {
 public:
 	inline Accessor(cstring name = ""): AbstractAccessor(name) { }
-	virtual T get(WorkSpace *ws) = 0;
+	virtual T get(WorkSpace *ws) const = 0;
 };
 
 template <class T>
@@ -45,7 +45,7 @@ class FunAccessor: public Accessor<T> {
 public:
 	typedef T (*fun_t)(WorkSpace *ws);
 	inline FunAccessor(fun_t _f, cstring name = ""): Accessor<T>(name), f(_f) { }
-	virtual T get(WorkSpace *ws) { return f(ws); }
+	virtual T get(WorkSpace *ws) const { return f(ws); }
 private:
 	fun_t f;
 };
