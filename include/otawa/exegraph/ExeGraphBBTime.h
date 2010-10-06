@@ -82,7 +82,7 @@ void ExeGraphBBTime<G>::processWorkSpace(WorkSpace *fw) {
 		if(microprocessor) 
 			reset = true;
 		else {
-			const hard::Processor *proc = fw->platform()->processor();
+			const hard::Processor *proc = hard::PROCESSOR(fw);
 			if(!proc)
 				throw ProcessorException(*this, "no processor to work with");
 			else {
