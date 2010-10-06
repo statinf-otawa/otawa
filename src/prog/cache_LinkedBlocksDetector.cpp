@@ -112,7 +112,7 @@ void LinkedBlocksDetector::configure(const PropList& props) {
 /**
  */
 void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
-	const hard::Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 	LBlockSet **lbsets = LBLOCKS(fw);
 
 

@@ -195,7 +195,7 @@ void CAT2Builder::configure(const PropList &props) {
 void CAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
 	//int i;
 	LBlockSet **lbsets = LBLOCKS(fw);
-	const hard::Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 
 	for (int i = 0; i < cache->rowCount(); i++) {
 		processLBlockSet(cfg, lbsets[i], cache );

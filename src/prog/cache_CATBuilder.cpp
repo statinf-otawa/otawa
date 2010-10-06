@@ -78,7 +78,7 @@ void CATBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	assert(lbset);
 
 	// Compute Abstract Cache States
-	const hard::Cache *cach = fw->platform()->cache().instCache();
+	const hard::Cache *cach = hard::CACHE_CONFIGURATION(fw)->instCache();
 	CATProblem prob(lbset, lbset->count(), cach, fw);
 	const CFGCollection *coll = INVOLVED_CFGS(fw);
 	dfa::XCFGVisitor<CATProblem> visitor(*coll, prob);
@@ -115,7 +115,7 @@ void CATBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 
 	// Check the cache
-	const hard::Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 	if(!cache)
 		return;
 

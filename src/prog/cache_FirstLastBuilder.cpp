@@ -90,7 +90,7 @@ void FirstLastBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 
 
 	//LBlockSet **lbsets = LBLOCKS(fw);
-	const hard::Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 
 	for (CFG::BBIterator bb(cfg); bb; bb++)
 			LAST_LBLOCK(bb) = new LBlock*[cache->rowCount()];

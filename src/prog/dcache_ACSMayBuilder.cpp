@@ -120,7 +120,7 @@ void ACSMayBuilder::configure(const PropList &props) {
 }
 
 void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
-	const hard::Cache *cache = fw->platform()->cache().dataCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->dataCache();
 
 	// prepare the template of the final vector
 	typedef genstruct::Vector<MAYProblem::Domain*> acs_result_t;

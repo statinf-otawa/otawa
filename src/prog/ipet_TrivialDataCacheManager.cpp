@@ -24,7 +24,7 @@ namespace otawa { namespace ipet {
 
 void TrivialDataCacheManager::configure(WorkSpace *framework) {
 	fw = framework;
-	if(!fw->cache().hasDataCache()) {
+	if(!hard::CACHE_CONFIGURATION(fw)->hasDataCache()) {
 		time = 0;
 		log << "WARNING: there is no data cache here !\n";
 	}

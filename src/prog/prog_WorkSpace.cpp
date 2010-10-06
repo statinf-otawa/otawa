@@ -28,6 +28,7 @@
 #include <config.h>
 #include <elm/xom.h>
 #include <otawa/proc/FeatureDependency.h>
+#include <elm/deprecated.h>
 
 
 // Trace
@@ -185,6 +186,7 @@ ASTInfo *WorkSpace::getASTInfo(void) {
 /**
  */
 const hard::CacheConfiguration& WorkSpace::cache(void) {
+	DEPRECATED;
 	return proc->cache();
 }
 

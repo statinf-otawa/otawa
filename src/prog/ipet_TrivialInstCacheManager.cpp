@@ -43,8 +43,8 @@ TrivialInstCacheManager::TrivialInstCacheManager(void):
 /**
  */
 void TrivialInstCacheManager::setup(WorkSpace *fw) {
-	const hard::CacheConfiguration& conf = fw->platform()->cache();
-	cache = conf.instCache();
+	const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(fw);
+	cache = conf->instCache();
 	if(!cache)
 		warn("no instruction cache available.");
 }

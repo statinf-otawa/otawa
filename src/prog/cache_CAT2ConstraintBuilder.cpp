@@ -101,7 +101,7 @@ void CAT2ConstraintBuilder::setup(otawa::WorkSpace *fw) {
 
                 
 void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
-	const hard::Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 	ilp::System *system = SYSTEM(fw);
 	int penalty = cache->missPenalty();
 	LBlockSet **lbsets = LBLOCKS(fw);

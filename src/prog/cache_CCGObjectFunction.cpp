@@ -27,7 +27,7 @@ void CCGObjectFunction::processFrameWork(FrameWork *fw) {
 	System *system = getSystem(fw, entry_cfg);
 	assert (system);
 	LBlockSet **lbsets = LBLOCKS(fw);
-	const hard::Cache *cach = fw->platform()->cache().instCache();
+	const hard::Cache *cach = hard::CACHE_CONFIGURATION(fw)->instCache();
 	
 	for(int i = 0; i < cach->lineCount(); i++) {
 		LBlockSet *idg = lbsets[i];

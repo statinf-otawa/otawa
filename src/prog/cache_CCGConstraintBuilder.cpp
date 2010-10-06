@@ -89,7 +89,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	//CFG *entry_cfg = ENTRY_CFG(fw);
 	System *system = SYSTEM(fw);
 	assert (system);
-	const hard::Cache *cach = fw->platform()->cache().instCache();
+	const hard::Cache *cach = hard::CACHE_CONFIGURATION(fw)->instCache();
 	int dec = cach->blockBits();
 
 	// Initialization
@@ -329,7 +329,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 void CCGConstraintBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 	LBlockSet **lbsets = LBLOCKS(fw);
-	const hard::Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 	if(!cache)
 		return;
 	for(int i = 0; i < cache->rowCount(); i++)

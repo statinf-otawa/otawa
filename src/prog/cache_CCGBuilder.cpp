@@ -82,7 +82,7 @@ Identifier<bool> CCGBuilder::NON_CONFLICT("otawa::CCG::NON_CONFLICT", false);
 void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	assert(fw);
 	assert(lbset);
-	const hard::Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 
 	// Create the CCG
 	CCGCollection *ccgs = CCG::GRAPHS(fw);
@@ -208,7 +208,7 @@ void CCGBuilder::processWorkSpace(WorkSpace *fw) {
 	assert(fw);
 
 	// Check the cache
-	const hard::Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 	if(!cache)
 		out << "WARNING: no instruction cache !\n";
 

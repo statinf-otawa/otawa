@@ -55,6 +55,7 @@ namespace otawa {
 LBlockBuilder::LBlockBuilder(void)
 : BBProcessor("otawa::util::LBlockBuilder", Version(1, 1, 0)) {
 	require(COLLECTED_CFG_FEATURE);
+	require(hard::CACHE_CONFIGURATION_FEATURE);
 	provide(COLLECTED_LBLOCKS_FEATURE);
 }
 
@@ -65,7 +66,10 @@ void LBlockBuilder::setup(WorkSpace *fw) {
 	ASSERT(fw);
 
 	// Check the cache
-	cache = fw->platform()->cache().instCache();
+	cache = 0;
+	const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(fw);
+	if(conf)
+	cache = conf->instCache();
 	if(!cache)
 		throw ProcessorException(*this, "No cache in this platform.");
 
