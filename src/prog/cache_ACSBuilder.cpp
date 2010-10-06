@@ -250,7 +250,7 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 	}
 
 	LBlockSet **lbsets = LBLOCKS(fw);
-	const hard::Cache *cache = fw->platform()->cache().instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 
 	for (int i = 0; i < cache->rowCount(); i++) {
 		processLBlockSet(fw, lbsets[i], cache);

@@ -31,6 +31,7 @@
 #include <otawa/prog/FixedTextDecoder.h>
 #include <elm/genstruct/DAGNode.h>
 #include <otawa/proc/Feature.h>
+#include <elm/deprecated.h>
 
 using namespace elm;
 
@@ -147,6 +148,7 @@ Process::Process(Manager *manager, const PropList& props, File *program)
  * @return	Cache hierarchy.
  */
 const hard::CacheConfiguration& Process::cache(void) {
+	DEPRECATED;
 	return platform()->cache();
 }
 
