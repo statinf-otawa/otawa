@@ -3,7 +3,7 @@
  *	octree command
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2007, IRIT UPS.
+ *	Copyright (c) 2010, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@
 #include <otawa/display/GenDrawer.h>
 #include <otawa/pcg/PCGBuilder.h>
 #include <elm/genstruct/VectorQueue.h>
-
+#include <otawa/app/Application.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -73,6 +73,43 @@ using namespace otawa::display;
 // Selection tag
 Identifier<bool> SELECTED("", false);
 
+// BBCounter analysis
+class BBCounter: public Processor {
+public:
+	static Identifier<int> COUNT;
+	static Identifier<int> TOTAL;
+
+	BBCounter(void): Processor("BBCounter", Version(1, 0, 0)) {
+		require(PCG_FEATURE);
+	}
+
+protected:
+
+	void eval(PCGBlock *block) {
+		if(TOTAL(block) >= 0)
+			return;
+		TOTAL(block) = 0;
+		int total = 0;
+		for(PCGBlock::PCGBlockOutIterator called(block); called; called++) {
+			eval(called);
+			total += TOTAL(*called);
+		}
+		int cnt = block->getCFG()->countBB();
+		COUNT(block) = cnt;
+		TOTAL(block) = total + cnt;
+	}
+
+	virtual void processWorkSpace(WorkSpace *ws) {
+		PCG *pcg = PCG::ID(ws);
+		ASSERT(pcg);
+		for(PCG::PCGIterator child(pcg); child; child++)
+			eval(child);
+	}
+
+private:
+};
+Identifier<int> BBCounter::COUNT("BBCounter::COUNT", -1);
+Identifier<int> BBCounter::TOTAL("BBCounter::TOTAL", -1);
 
 // PCGAdapter class
 class PCGAdapter {
@@ -177,6 +214,10 @@ public:
 		ShapeStyle &style
 	) {
 		content << vertex.blk->getName();
+		int cnt = BBCounter::COUNT(vertex.blk),
+			total = BBCounter::TOTAL(vertex.blk);
+		if(cnt >= 0)
+			content << "\nBB: " << cnt << " / " << total;
 	}
 	
 	static void decorate(
@@ -207,29 +248,29 @@ EnumOption<int>::value_t out_values[] = {
 /**
  * Manager for the application.
  */
-class OctreeManager: public option::Manager {
-public:
-	
-	// Options
+class OctreeManager: public Application {
 	BoolOption no_int;
 	StringOption chain;
 	EnumOption<int> out;
+	SwitchOption bb_cnt;
 	
+public:
+
 	OctreeManager(void)
-	:	no_int(*this, 'I', "no-internal",
+	:	Application("opcg", Version(1, 1, 0),
+			"Draw the program call tree of the given executable.",
+			"F. Nemer",
+			"Copyrigh (c) 2010 IRIT - UPS"),
+		no_int(*this, 'I', "no-internal",
 			"do not include internal functions (starting with '_')", false),
 		chain(*this, 'c', "chain", "generate calling chain to a function",
 			"function", ""),
-		out(*this, 'o', "out", "select the output", out_values)
-	{
-		program ="octree";
-		version = "1.0.0";
-		author = "H. Cassé";
-		copyright = "Copyright (c) IRIT - UPS";
-		description = "Draw the program call tree of the given executable.";
-		free_argument_description = "program [entry_function...]";
-	}
+		out(*this, 'o', "out", "select the output", out_values),
+		bb_cnt(*this, option::cmd, "--count-bb", option::help, "display BB counts/total for each function", option::end)
+	{ }
 	
+protected:
+
 	bool accept(PCGBlock *block) {
 		if(!no_int)
 			return true;
@@ -266,31 +307,15 @@ public:
 					todo.put(parent);
 		}
 	}
-	
-	void run(int argc, char *argv[]) {
-		
-		// Parse option
-		parse(argc, argv);
-		if(!prog_name)
-			throw OptionException("program name required.");
-		if(!entry)
-			entry = "main";
-		
-		// Open the file
-		PropList config;
-		//Processor::VERBOSE(config) = true;
-		WorkSpace *ws = MANAGER.load(prog_name, config);
-		ASSERT(ws);
+
+	virtual void work(const string &entry, PropList &props) throw(elm::Exception) {
 
 		// Build the PCG
-		//cerr << "BUILD THE PCG\n";
 		PCGBuilder builder;
-		TASK_ENTRY(config) = &entry;
-		builder.process(ws, config);
-		PCG *pcg = PCG::ID(ws);
+		TASK_ENTRY(props) = &entry;
+		builder.process(workspace(), props);
+		PCG *pcg = PCG::ID(workspace());
 		ASSERT(pcg);
-		/*for(PCG::PCGIterator blk(pcg); blk; blk++)
-			cout << "  * " << blk->getName() << io::endl;*/
 	
 		// Select the interesting PCG blocks
 		if(chain)
@@ -299,8 +324,13 @@ public:
 			for(PCG::PCGIterator block(pcg); block; block++)
 				SELECTED(block) = accept(block);
 		
+		// count BB if required
+		if(bb_cnt) {
+			BBCounter counter;
+			counter.process(workspace(), props);
+		}
+
 		// Display the PCG
-		//cerr << "PRODUCE THE OUTPUT\n";
 		PCGAdapter ad(pcg);
 		GenDrawer<PCGAdapter, PCGDecorator> drawer(ad);
 		drawer.kind = (kind_t)out.value();
@@ -309,35 +339,9 @@ public:
 		
 	}
 	
-protected:
-	virtual void process(string arg) {
-		if(!prog_name)
-			prog_name = arg;
-		else if(!entry)
-			entry = arg;
-		else
-			throw OptionException("bad argument list");
-	}
-	
 private:
 	string prog_name;
 	string entry;
 };
 
-
-/**
- * Entry point.
- */
-int main(int argc, char *argv[]) {
-	OctreeManager man;
-	try {
-		man.run(argc, argv);
-	}
-	catch(option::OptionException& e) {
-		man.displayHelp();
-		cerr << "ERROR: " << e.message() << io::endl;
-	}
-	catch(elm::Exception& e) {
-		cerr << "ERROR: " << e.message() << io::endl;
-	}
-}
+OTAWA_RUN(OctreeManager);

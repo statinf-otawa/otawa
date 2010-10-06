@@ -21,6 +21,7 @@ public:
 	inline String getName(){return cfg->label();};
 	inline elm::genstruct::Vector<PCGBlock*>& getFathers(){return ins;};
 	inline elm::genstruct::Vector<PCGBlock*>& getSons(){return outs;};
+	inline CFG *getCFG(void) const { return cfg; }
 	
 	class PCGBlockInIterator: public elm::PreIterator<PCGBlockInIterator, PCGBlock *> {
 		elm::genstruct::Vector<PCGBlock *>& ins;
