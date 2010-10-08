@@ -6,5 +6,6 @@ includeotawahard_HEADERS = \
 	Memory.h \
 	Platform.h \
 	Processor.h \
+	BHT.h \
+	PureCache.h \
 	Register.h
-
