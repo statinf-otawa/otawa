@@ -37,6 +37,7 @@
 #include <otawa/prop/Identifier.h>
 #include <otawa/prog/WorkSpace.h>
 
+
 #if defined(NDEBUG) || !defined(DEBUG)
 #	define TRACE(x)
 #else
@@ -211,6 +212,8 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			if (HAI_BYPASS_TARGET(current) && (inedge->kind() == Edge::VIRTUAL_RETURN))
 				continue;
 			typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
+	    TRACE("Got state: " << *edgeState << "\n");
+			
 			ASSERT(edgeState != NULL);
 			fp.lub(in, *edgeState);
 			fp.unmarkEdge(*inedge);
@@ -260,7 +263,6 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
 
 	/* Exit from function: pop callstack, mark edge with return state for the caller */
 	else if (current->isExit() && (callStack->length() > 0)) {
-
 
 
        	fp.update(out, in, current);
@@ -330,7 +332,7 @@ void HalfAbsInt<FixPoint>::addSuccessors() {
 
 	    fp.markEdge(*outedge, out);
 
-	    TRACE("Marking edge: " << outedge->source()->number() << "->" << outedge->target()->number());
+/*	    TRACE("Marking edge: " << outedge->source()->number() << "->" << outedge->target()->number()) << "\n"); */
 
 	    tryAddToWorkList(outedge->target());
 	}

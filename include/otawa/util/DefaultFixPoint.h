@@ -134,6 +134,7 @@ void DefaultFixPoint<Listener >::fixPoint(BasicBlock *bb, bool &fixpoint, Domain
 template < class Listener >	
 inline void DefaultFixPoint<Listener>::markEdge(PropList *e, const Domain &s) {
 	
+		Domain tmp(bottom());
 		/*
 		 * Because this FixPoint unrolls the first iteration of each loop, 
 		 * the loop-exit-edges will be marked at least 2 times 
@@ -143,8 +144,12 @@ inline void DefaultFixPoint<Listener>::markEdge(PropList *e, const Domain &s) {
 		 */
 		if (STATE(e) == NULL)
 			STATE(e) = new Domain(bottom());
-			
+		
+/*		prob.lub(tmp, *STATE(e)); */ 
 		prob.lub(*STATE(e), s);
+		prob.lub(tmp, s);
+		ASSERT(tmp.equals(s));
+		
 	}
 	
 template < class Listener >	
