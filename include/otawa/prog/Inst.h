@@ -64,6 +64,7 @@ public:
 	static const kind_t IS_INTERN	= 0x04000;
 	static const kind_t IS_MULTI 	= 0x08000;
 	static const kind_t IS_SPECIAL 	= 0x10000;
+	static const kind_t IS_INDIRECT	= 0x10000;
 
 	// null instruction
 	static Inst& null;
@@ -95,6 +96,8 @@ public:
 	inline bool isSpecial(void) { return oneOf(IS_SPECIAL); }
 	inline bool isMul(void) { return oneOf(IS_MUL); }
 	inline bool isDiv(void) { return oneOf(IS_DIV); }
+	inline bool isIndirect(void) { return oneOf(IS_INDIRECT); }
+	 
 
 	// Low-level register access
 	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
