@@ -93,15 +93,19 @@ libotawa_la_SOURCES = \
 	util_fft_lexer.ll \
 	util_CFGNormalizer.cpp \
 	util_DefaultFixPoint.cpp \
+	util_WideningFixPoint.cpp \
 	util_DefaultListener.cpp \
+	util_WideningListener.cpp \
 	util_FirstUnrollingFixPoint.cpp \
 	util_MemBlockMap.cpp \
 	util_UnrollingListener.cpp \
 	hard_Dumper.cpp \
+	hard_BHT.cpp \
 	hard_Processor.cpp \
 	hardware_Cache.cpp \
 	hardware_CacheConfiguration.cpp \
 	hardware_Platform.cpp \
+	hardware_PureCache.cpp \
 	cache_CCGBuilder.cpp \
 	cache_CCGConstraintBuilder.cpp \
 	cache_CCGDFA.cpp \
@@ -122,6 +126,10 @@ libotawa_la_SOURCES = \
 	cache_FirstLastBuilder.cpp \
 	cache_LBlockSet.cpp \
 	cache_CachePenaltiesObjectFunctionBuilder.cpp \
+	branch_BranchBuilder.cpp \
+	branch_BranchProblem.cpp \
+	branch_CondNumber.cpp \
+	branch_ConsBuilder.cpp \
 	prog_File.cpp \
 	prog_FixedTextDecoder.cpp \
 	prog_ProgItem.cpp \
