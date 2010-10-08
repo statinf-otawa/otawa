@@ -6,6 +6,7 @@ includeotawautil_HEADERS = \
 	HalfAbsInt.h \
 	DefaultFixPoint.h \
 	DefaultListener.h \
+	WideningListener.h \
 	Dominance.h \
 	FirstUnrollingFixPoint.h \
 	GenGraph.h \
@@ -16,6 +17,7 @@ includeotawautil_HEADERS = \
 	MemBlockMap.h \
 	PostDominance.h \
 	Trace.h \
+	WideningFixPoint.h \
 	TrivialLBlockTime.h \
 	UnrollingListener.h \
 	AccessedAddress.h \
