@@ -1,0 +1,874 @@
+
+#ifndef CACHE_BRANCHPROBLEM_H_
+#define CACHE_BRANCHPROBLEM_H_
+
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/cache/LBlockSet.h>
+#include <otawa/hard/Cache.h>
+#include <otawa/cfg/BasicBlock.h>
+#include <otawa/util/HalfAbsInt.h>
+
+
+namespace otawa {
+
+
+class MUSTBranch {
+	int row;
+	// Types
+	public:
+
+	class Domain {
+			int A, size;
+						
+			public:		
+					/**
+			 * @class Result
+			 *
+			 * Class to hold the results (for each basic block) of the abstract interpretation.
+			 */
+			
+		
+			inline Domain(const int _size, const int _A)
+			: A (_A), size(_size)
+			{
+				age = new int [size];
+				for (int i = 0; i < size; i++)
+					age[i] = 0;
+			}
+			
+			inline ~Domain() {
+				delete [] age;
+			}
+			
+			inline Domain(const Domain &source) : A(source.A), size(source.size) {
+				age = new int [size];
+				for (int i = 0; i < size; i++)
+					age[i] = source.age[i];
+
+			} 
+		
+			inline Domain& operator=(const Domain &src) {
+				ASSERT((A == src.A) && (size == src.size));
+				for (int i = 0; i < size ; i++)
+					age[i] = src.age[i];
+				return(*this);
+				
+			}
+
+			
+			inline void lub(const Domain &dom) {
+				ASSERT((A == dom.A) && (size == dom.size));
+
+				for (int i = 0; i < size; i++) {
+					if (age[i] < dom.age[i])
+						age[i] = dom.age[i];
+				}
+			}
+			
+			inline int getSize(void) {
+				return size;
+			}
+
+			inline bool equals(const Domain &dom) const {
+				ASSERT((A == dom.A) && (size == dom.size));
+				for (int i = 0; i < size; i++)
+					if (age[i] != dom.age[i])
+						return false;
+				return true;
+			}
+			
+			inline void empty() {
+				for (int i = 0; i < size; i++)
+					age[i] = A;
+				
+			}
+			
+			inline bool contains(const int id) {
+				ASSERT((id < size) && (id >= 0));
+				return(age[id] != A);				
+			}
+			
+			
+			inline void inject(const int id) {
+				if (contains(id)) {
+					for (int i = 0; i < size; i++) {
+						if (age[i] < age[id])
+							age[i]++;						
+					}
+				} else {
+					for (int i = 0; i < size; i++) {
+						if (age[i] != A) 
+							age[i]++;
+					}
+				}
+				age[id] = 0;				
+			}
+			
+			inline void print(elm::io::Output &output) const {
+				bool first = true;
+				output << "[";
+				for (int i = 0; i < size; i++) {
+					if (age[i] != A) {
+						if (!first) {
+							output << ", ";
+						}
+						// output << i << ":" << age[i];
+						output << i;
+						output << ":";
+						output << age[i];
+						
+						first = false;
+					}
+				}
+				output << "]";
+				
+			}
+			
+			inline int getAge(int id) const {
+				ASSERT(id < size);
+				return(age[id]);
+			}
+			
+			inline void setAge(const int id, const int _age) {
+				ASSERT(id < size);
+				ASSERT((_age <= A) || (_age >= 0));
+				age[id] = _age;
+			}
+			
+		
+			/*
+			 * For each cache block belonging to the set: 
+			 * age[block] represents its age, from 0 (newest) to A-1 (oldest).
+			 * The value -1 means that the block is not in the set.
+			 */  
+			int *age;
+	};
+	
+	private:
+	
+	// Fields
+	WorkSpace *fw;
+	Domain bot;
+	Domain ent;
+	
+	public:
+
+	// Public fields
+	
+	// Constructors
+	MUSTBranch(const int _size,  WorkSpace *_fw, const int _A, const int _row);
+	
+	// Destructors
+	~MUSTBranch();
+	
+	// Problem methods
+	const Domain& bottom(void) const;
+	const Domain& entry(void) const;
+		
+		
+	
+	inline void lub(Domain &a, const Domain &b) const {
+		a.lub(b);
+	}
+	inline void assign(Domain &a, const Domain &b) const {
+		a = b;
+	}
+	inline bool equals(const Domain &a, const Domain &b) const {
+		return (a.equals(b));
+	}
+	
+
+	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	
+	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+
+	}
+
+	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+
+	}		
+
+};
+
+
+
+class MAYBranch {
+	int row;
+	// Types
+	public:
+
+	class Domain {
+			int A, size;
+						
+			public:		
+					/**
+			 * @class Result
+			 *
+			 * Class to hold the results (for each basic block) of the abstract interpretation.
+			 */
+			
+		
+			inline Domain(const int _size, const int _A)
+			: A (_A), size(_size)
+			{
+				age = new int [size];
+				for (int i = 0; i < size; i++)
+					age[i] = A;
+			}
+			
+			inline ~Domain() {
+				delete [] age;
+			}
+			
+			inline Domain(const Domain &source) : A(source.A), size(source.size) {
+				age = new int [size];
+				for (int i = 0; i < size; i++)
+					age[i] = source.age[i];
+
+			} 
+		
+			inline Domain& operator=(const Domain &src) {
+				ASSERT((A == src.A) && (size == src.size));
+				for (int i = 0; i < size ; i++)
+					age[i] = src.age[i];
+				return(*this);
+				
+			}
+
+			
+			inline void lub(const Domain &dom) {
+				ASSERT((A == dom.A) && (size == dom.size));
+
+				for (int i = 0; i < size; i++) {
+					if (age[i] >= dom.age[i])
+						age[i] = dom.age[i];
+				}
+			}
+			
+			inline int getSize(void) {
+				return size;
+			}
+
+			inline bool equals(const Domain &dom) const {
+				ASSERT((A == dom.A) && (size == dom.size));
+				for (int i = 0; i < size; i++)
+					if (age[i] != dom.age[i])
+						return false;
+				return true;
+			}
+			
+			inline void empty() {
+				for (int i = 0; i < size; i++)
+					age[i] = A;
+				
+			}
+			
+			inline bool contains(const int id) {
+				ASSERT((id < size) && (id >= 0));
+				return(age[id] != A);				
+			}
+			
+			
+			inline void inject(const int id) {
+				if (contains(id)) {
+					for (int i = 0; i < size; i++) {
+						if (age[i] <= age[id])
+							age[i]++;						
+					}
+				} else {
+					for (int i = 0; i < size; i++) {
+						if (age[i] != A) 
+							age[i]++;
+					}
+				}
+				age[id] = 0;				
+			}
+			
+			inline void print(elm::io::Output &output) const {
+				bool first = true;
+				output << "[";
+				for (int i = 0; i < size; i++) {
+					if (age[i] != A) {
+						if (!first) {
+							output << ", ";
+						}
+						// output << i << ":" << age[i];
+						output << i;
+						output << ":";
+						output << age[i];
+						
+						first = false;
+					}
+				}
+				output << "]";
+				
+			}
+			
+			inline int getAge(int id) const {
+				ASSERT(id < size);
+				return(age[id]);
+			}
+			
+			inline void setAge(const int id, const int _age) {
+				ASSERT(id < size);
+				ASSERT((_age <= A) || (_age >= 0));
+				age[id] = _age;
+			}
+			
+		
+			/*
+			 * For each cache block belonging to the set: 
+			 * age[block] represents its age, from 0 (newest) to A-1 (oldest).
+			 * The value -1 means that the block is not in the set.
+			 */  
+			int *age;
+	};
+	
+	private:
+	
+	// Fields
+	WorkSpace *fw;
+	Domain bot;
+	Domain ent;
+	
+	public:
+
+	// Public fields
+	
+	// Constructors
+	MAYBranch(const int _size,  WorkSpace *_fw, const int _A, const int _row);
+	
+	// Destructors
+	~MAYBranch();
+	
+	// Problem methods
+	const Domain& bottom(void) const;
+	const Domain& entry(void) const;
+		
+		
+	
+	inline void lub(Domain &a, const Domain &b) const {
+		a.lub(b);
+	}
+	inline void assign(Domain &a, const Domain &b) const {
+		a = b;
+	}
+	inline bool equals(const Domain &a, const Domain &b) const {
+		return (a.equals(b));
+	}
+	
+
+	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	
+	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+
+	}
+
+	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+
+	}		
+
+};
+
+
+
+
+
+class PERSBranch {
+	int row;
+	// Types
+	public:
+	class Item {
+			int A, size;
+			
+			public:			
+			inline Item(const int _size, const int _A)
+			: A (_A), size(_size)
+			{
+				age = new int [size];
+				for (int i = 0; i < size; i++)
+					age[i] = -1;
+			}
+			
+			inline ~Item() {
+				delete [] age;
+			}
+			
+			inline Item(const Item &source) : A(source.A), size(source.size) {
+				age = new int [size];
+				for (int i = 0; i < size; i++)
+					age[i] = source.age[i];
+
+			} 
+			
+			inline Item& operator=(const Item &src) {
+				ASSERT((A == src.A) && (size == src.size));		
+				for (int i = 0; i < size ; i++)
+					age[i] = src.age[i];
+				return *this;
+			}
+
+			inline void lub(const Item &dom) {
+				/* ASSERT((A == dom.A) && (size == dom.size)); */
+
+				for (int i = 0; i < size; i++) {					
+					if ((age[i] == -1) || ((age[i] < dom.age[i]) && (dom.age[i] != -1)) )
+						age[i] = dom.age[i];
+				}
+			}
+			
+			inline bool equals(const Item &dom) const {
+				ASSERT((A == dom.A) && (size == dom.size));
+				for (int i = 0; i < size; i++)
+					if (age[i] != dom.age[i])
+						return false;
+				return true;
+			}
+			
+			inline void empty() {
+				for (int i = 0; i < size; i++)
+					age[i] = -1;
+				
+			}
+			
+			inline bool contains(const int id) {
+				ASSERT((id < size) && (id >= 0));
+				return(age[id] != -1);				
+			}
+			
+			inline void inject(MUSTBranch::Domain *must, const int id) {
+				if (must->contains(id)) {
+					for (int i = 0; i < size; i++) {
+						if ((age[i] < age[id]) && (age[i] != -1) && (age[i] != A))
+							age[i]++;						
+					}
+				} else {
+					for (int i = 0; i < size; i++) {
+						if ((age[i] != -1) && (age[i] != A)) 
+							age[i]++;
+					}
+				}
+				age[id] = 0;				
+			}
+			
+			inline bool isWiped(const int id) {
+				return(age[id] == A);				
+			}
+			
+			inline bool isPersistent(const int id) {
+				return(contains(id) && !isWiped(id));			
+			}
+			inline int getAge(const int id) const {
+				ASSERT((id >= 0) && (id < size));
+				return age[id];
+			}
+
+			inline void print(elm::io::Output &output) const {
+				bool first = true;
+				output << "[";
+				for (int i = 0; i < size; i++) {
+					if (age[i] != -1) {
+						if (!first) {
+							output << ", ";
+						}
+						output << i << ":" << age[i];
+						first = false;
+					}
+				}
+				output << "]";
+				
+			}
+		
+			/*
+			 * For each cache block belonging to the set: 
+			 * age[block] represents its age, from 0 (newest) to A-1 (oldest).
+			 * The value -1 means that the block is not in the set.
+			 */  
+			int *age;
+	};
+	
+	class Domain {
+			int A, size;
+			bool isBottom;
+		public:
+
+			inline Domain(const int _size, const int _A)
+			: A (_A), size(_size), whole(_size, _A)
+			{
+				isBottom = true;
+				whole.empty();
+			}
+
+			inline ~Domain() {
+				for (int i = 0; i < data.length(); i++)
+					delete data[i];
+			}
+			
+			inline Domain(const Domain &source) : A(source.A), size(source.size), isBottom(source.isBottom), whole(source.whole) {
+				
+				for (int i = 0; i < source.data.length(); i++)
+					data.add(new Item(*source.data[i]));
+			} 
+			
+			inline Domain& operator=(const Domain &src) { 
+				if (src.isBottom) {
+					setToBottom();
+				} else {			
+					whole = src.whole;
+					isBottom = false;
+					
+					/*
+					for (int i = 0; i < src.data.length(); i++)
+						data.add(new Item(*src.data[i]));
+					*/
+					int sdl = src.data.length();
+					int dl = data.length();
+					int minl = (sdl > dl) ? dl : sdl;
+					data.setLength((sdl > dl) ? dl : sdl);
+					
+					for (int i = 0; i < minl; i++)
+						*data[i] = *src.data[i];
+						
+					for (int i = dl; i < sdl; i++) 
+						data.add(new Item(*src.data[i]));
+						
+						
+				}	
+				return *this;			
+
+			}	
+			
+			inline void lub(const Domain &dom) {
+				/*
+				 * Rules for the LUB:
+				 * 1. lub(anything,bottom) == anything
+				 * 2. lub(dom1,dom2) where dom1 and dom2 has the same size, do the LUB of each corresponding item. 
+				 * 3. lub(dom1,dom2) where dom1 has less items than dom2: we discard  items of dom2 (starting from outer-most loop)
+				 * until it has the same size as dom1, then apply rule 2.
+				 */
+				if (dom.isBottom)
+					return;
+									
+				if (isBottom) {
+					for (int i = 0; i < dom.data.length(); i++)
+						data.add(new Item(*dom.data[i]));
+					whole = dom.whole;
+					isBottom = false;
+					return;
+				}
+
+				int dl = data.length();
+				int ddl = dom.data.length();
+				int length = (dl < ddl) ? dl : ddl;
+				
+				for (int i = dl - 1, j = ddl - 1, k = 0; k < length; i--, j--, k++) {
+					data[i]->lub(*dom.data[j]);
+				}
+
+				for (int i = 0; i < dl - length; i++) {
+					data.remove(0);
+				}
+				whole.lub(dom.whole);
+			}
+
+
+			inline void lub(const Item &item) {
+				/* Special LUB: do the lub of each Item in current domain with
+				 * item passed as parameter. Used for the partial analysis
+				 */
+				 for (int i = 0; i < data.length(); i++)
+				 	data[i]->lub(item);
+				 
+				 whole.lub(item);
+				 
+			}
+
+			
+			inline bool equals(const Domain &dom) const {
+				ASSERT(!isBottom && !dom.isBottom);			
+				for (int i = 0; i < dom.data.length(); i++) {
+					if (!data[i]->equals(*dom.data[i]))
+						return false;
+				}
+				return (whole.equals(dom.whole) && (isBottom == dom.isBottom));
+			}
+			
+			inline void empty() {
+				for (int i = 0; i < data.length(); i++)
+					delete data[i];
+				data.clear();
+				whole.empty();
+				isBottom = false;		
+			}
+			
+			inline void setToBottom() {
+				for (int i = 0; i < data.length(); i++)
+					delete data[i];
+				data.clear();
+				whole.empty();
+				isBottom = true;		
+			}
+			
+			inline Item &getWhole() {
+				return whole;
+			}
+			
+			inline bool contains(const int id, const int index) {
+				ASSERT(!isBottom);
+				return(data[index]->contains(id));
+			}
+			
+			
+			inline void inject(MUSTBranch::Domain *must, const int id) {
+				ASSERT(!isBottom);
+				for (int i = 0; i < data.length(); i++)
+					data[i]->inject(must, id);		
+				whole.inject(must, id);	
+			}
+			
+			inline bool isWiped(const int id, const int index) {
+				ASSERT(!isBottom);
+				return(data[index]->isWiped(id));
+				
+			}
+			
+			inline int getAge(const int id, const int index) const {
+				ASSERT(!isBottom);
+				return(data[index]->getAge(id));
+			}
+			
+			inline bool isPersistent(const int id, const int index) {
+				ASSERT(!isBottom);
+				return(data[index]->isPersistent(id));
+		
+			}
+		
+			inline void print(elm::io::Output &output) const {
+				bool first = true;
+				if (isBottom) {
+					output << "BOTTOM";
+					return;
+				}
+				output << "(W=";
+				whole.print(output); 
+				output << ", ";
+				for (int i = 0; i < data.length(); i++) {
+					if (!first)
+						output << "|";
+					data[i]->print(output);
+					first = false;
+				}
+				output << ")";
+			}
+			
+			inline void enterContext() {
+				ASSERT(!isBottom);
+				Item item(size, A);
+				item.empty();
+				data.push(new Item(item));
+				
+			}
+			
+			inline void leaveContext() {
+				ASSERT(!isBottom);
+				Item *ptr = data.pop();
+				delete ptr;
+			}
+			
+			inline int length() {
+				ASSERT(!isBottom);
+				return data.length();
+			}
+			
+			inline Item& getItem(const int idx) const {
+				ASSERT(!isBottom);
+				return(*data.get(idx));
+			}
+			
+					
+		private:
+		
+			Item whole;
+			genstruct::Vector<Item*> data;
+
+	};
+
+
+	
+	private:
+	
+	// Fields
+
+
+	WorkSpace *fw;
+
+	Domain bot;
+	Domain ent;
+
+	
+	public:
+	// Public fields
+	
+	// Constructors
+	PERSBranch(const int _size, WorkSpace *_fw,  const int _A, const int _row);
+	
+	// Destructors
+	~PERSBranch();
+	
+	// Problem methods
+	const Domain& bottom(void) const;
+	const Domain& entry(void) const;
+		
+	inline void lub(Domain &a, const Domain &b) const {
+		a.lub(b);
+	}
+	inline void assign(Domain &a, const Domain &b) const {
+		a = b;
+	}
+	inline bool equals(const Domain &a, const Domain &b) const {
+		return (a.equals(b));
+	}
+	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	
+	inline void enterContext(Domain& dom, BasicBlock *header, util::hai_context_t ctx) {
+		if (ctx == util::CTX_LOOP)
+			dom.enterContext(); 
+	}
+
+	inline void leaveContext(Domain& dom, BasicBlock *header, util::hai_context_t ctx) {
+		if (ctx == util::CTX_LOOP)
+			dom.leaveContext();
+	}	
+};
+
+
+class BranchProblem {
+
+	MUSTBranch mustProb;
+	PERSBranch persProb;
+	MAYBranch mayProb;
+	WorkSpace *fw;
+	int row;
+		
+	// Types
+	public:	
+	class Domain {
+			friend class BranchProblem;
+
+			PERSBranch::Domain pers;
+			MUSTBranch::Domain must;  	
+			MAYBranch::Domain may;		
+									
+			public:
+			inline Domain(const int _size, const int _A)
+			: pers(PERSBranch::Domain(_size, _A)), must(MUSTBranch::Domain(_size, _A)), may(MAYBranch::Domain(_size, _A)) {	
+	
+			}
+			
+			
+			inline Domain(const Domain &source) : pers(source.pers), must(source.must), may(source.may) {
+			} 
+			
+			inline Domain& operator=(const Domain &src) {
+				pers = src.pers;
+				must = src.must;
+				may = src.may;
+				return *this;
+			}
+
+			inline MAYBranch::Domain& getMay() {
+				return may;
+			}
+				
+			inline MUSTBranch::Domain& getMust() {
+				return must;
+			}	
+	
+
+		        inline PERSBranch::Domain& getPers() {
+				return pers;
+			}	
+			
+			inline void lub(const Domain &dom) {
+				pers.lub(dom.pers);
+				must.lub(dom.must);
+				may.lub(dom.may);
+			}
+			
+			inline int getSize(void) {
+				return must.getSize();
+			}
+			
+			inline bool equals(const Domain &dom) const {
+				return (pers.equals(dom.pers) && must.equals(dom.must) && may.equals(dom.may));
+			}
+			
+			inline void empty() {
+				must.empty();
+				pers.empty();
+				may.empty();
+			}
+			
+			inline void inject(const int id) {
+				pers.inject(&must, id);
+				must.inject(id);
+				may.inject(id);
+			}
+			
+			inline void print(elm::io::Output &output) const {
+				output << "PERS=[ ";
+				pers.print(output);
+				output << "] MUST=[ ";
+				must.print(output);
+				output << "] MAY=[ ";
+				may.print(output);				
+				output << "]";
+			}
+
+	};
+	
+	
+	private:
+	Domain bot;
+	Domain ent;
+
+
+	public:
+	
+	// Constructors
+	BranchProblem(const int _size,  WorkSpace *_fw, const int _A, const int _row);
+
+	// Problem methods
+	const Domain& bottom(void) const;
+	const Domain& entry(void) const;
+		
+	inline void lub(Domain &a, const Domain &b) const {
+		a.lub(b);
+	}
+	inline void assign(Domain &a, const Domain &b) const {
+		a = b;
+	}
+	inline bool equals(const Domain &a, const Domain &b) const {
+		return (a.equals(b));
+	}
+	
+	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	void updateLBlock(Domain& acs, LBlock *lblock);
+	
+	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+		persProb.enterContext(dom.pers, header, ctx);
+		mustProb.enterContext(dom.must, header, ctx);
+		mayProb.enterContext(dom.may, header, ctx);		
+	}
+
+	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+		persProb.leaveContext(dom.pers, header, ctx);
+		mustProb.leaveContext(dom.must, header, ctx);
+		mayProb.leaveContext(dom.may, header, ctx);
+	}		
+
+};
+
+}
+
+#endif /*CACHE_MUSTPROBLEM_H_*/
