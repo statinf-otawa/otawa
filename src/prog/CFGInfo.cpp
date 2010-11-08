@@ -76,6 +76,8 @@ CFGInfo::~CFGInfo(void) {
  * Remove all CFG stored in this CFG information.
  */
 void CFGInfo::clear(void) {
+
+	// remove CFG
 	for(int i = 0; i < _cfgs.length(); i++)
 		delete _cfgs[i];
 	_cfgs.clear();

@@ -97,7 +97,6 @@ CodeBasicBlock *CFGBuilder::nextBB(Inst *inst) {
 	// create it
 	next_bb = new CodeBasicBlock(next_inst);
 	BB(next_inst) = next_bb;
-	info->add(next_bb);
 	if(isVerbose())
 		log << "\tfound BB at " << next_bb->address() << io::endl;
 	return next_bb;
@@ -120,7 +119,6 @@ CodeBasicBlock *CFGBuilder::thisBB(Inst *inst) {
 	// at start, create it
 	bb = new CodeBasicBlock(inst);
 	BB(inst) = bb;
-	info->add(bb);
 	if(isVerbose())
 		log << "\tfound BB at " << bb->address() << io::endl;
 	return bb;
@@ -133,10 +131,10 @@ CodeBasicBlock *CFGBuilder::thisBB(Inst *inst) {
  */
 void CFGBuilder::addSubProgram(Inst *inst) {
 	assert(inst);
-	BasicBlock *bb = thisBB(inst);
-	IS_ENTRY(bb) = true;
 	if(isVerbose())
 		log << "\tadd subprogram " << inst->address() << " (" << FUNCTION_LABEL(inst) << ")\n";
+	BasicBlock *bb = thisBB(inst);
+	IS_ENTRY(bb) = true;
 }
 
 
@@ -216,7 +214,10 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 
 			// end of current BB
 			else {
-				bb->setSize(inst->address() - bb->address());
+				if(!bb->size()) {
+					bb->setSize(inst->address() - bb->address());
+					info->add(bb);
+				}
 
 				// Record not-taken edge
 				if(bb && follow)
@@ -238,6 +239,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 		// end of block
 		if(IS_RETURN(inst)) {
 			bb->setSize(inst->topAddress() - bb->address());
+			info->add(bb);
 			bb->flags |= BasicBlock::FLAG_Return;
 			follow = false;
 		}
@@ -245,6 +247,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 		else if(inst->isControl() && !IGNORE_CONTROL(inst)) {
 			ASSERTP(bb, "no BB at " << inst->address() << io::endl);
 			bb->setSize(inst->topAddress() - bb->address());
+			info->add(bb);
 
 			// record the taken edge
 			Inst *target = inst->target();
@@ -283,8 +286,10 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 
 
 	// last size
-	if(bb)
+	if(bb && !bb->size()) {
 		bb->setSize(seg->topAddress() - bb->address());
+		info->add(bb);
+	}
 
 	// Recording the CFG
 	for(int i = 0; i < entries.length(); i++) {
