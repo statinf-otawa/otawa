@@ -587,7 +587,7 @@ File *Process::loadFile(elm::CString path) {
 	gel_enum_initpos(iter);
 	for(char *name = (char *)gel_enum_next(iter); name; name = (char *)gel_enum_next(iter)) {
 		ASSERT(name);
-		address_t addr = 0;
+		Address addr = Address::null;
 		Symbol::kind_t kind;
 		gel_sym_t *sym = gel_find_file_symbol(_gelFile, name);
 		assert(sym);
@@ -596,12 +596,12 @@ File *Process::loadFile(elm::CString path) {
 		switch(ELF32_ST_TYPE(infos.info)) {
 		case STT_FUNC:
 			kind = Symbol::FUNCTION;
-			addr = (address_t)infos.vaddr;
+			addr = Address(infos.vaddr);
 			TRACE("SYMBOL: function " << infos.name << " at " << addr);
 			break;
 		case STT_NOTYPE:
 			kind = Symbol::LABEL;
-			addr = (address_t)infos.vaddr;
+			addr = Address(infos.vaddr);
 			TRACE("SYMBOL: notype " << infos.name << " at " << addr);
 			break;
 		default:
@@ -609,7 +609,7 @@ File *Process::loadFile(elm::CString path) {
 		}
 
 		// Build the label if required
-		if(addr) {
+		if(addr != Address::null) {
 			String label(infos.name);
 			Symbol *sym = new Symbol(*file, label, kind, addr);
 			file->addSymbol(sym);
