@@ -59,6 +59,7 @@ public:
 	}
 
 	void add(const T *block) {
+		ASSERT(block->size());
 		size_t top = (block->topAddress().offset() - 1) >> pow;
 		if(top & (bsize - 1))
 			top++;
