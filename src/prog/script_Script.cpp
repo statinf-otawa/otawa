@@ -92,6 +92,26 @@ void Script::configure(const PropList &props) {
 /**
  */
 void Script::processWorkSpace(WorkSpace *ws) {
+	ErrorHandler *old = ProcessorPlugin::getErrorHandler();
+	try {
+		if(isVerbose())
+			ProcessorPlugin::setErrorHandler(this);
+		work(ws);
+		if(isVerbose())
+			ProcessorPlugin::setErrorHandler(old);
+	}
+	catch(elm::Exception& e) {
+		if(isVerbose())
+			ProcessorPlugin::setErrorHandler(old);
+		throw e;
+	}
+}
+
+
+/**
+ * Do the real work.
+ */
+void Script::work(WorkSpace *ws) {
 
 	// find the script
 	if(!path) {
@@ -334,6 +354,13 @@ void Script::makeConfig(xom::Element *elem, PropList& props) {
 		}
 	}
 	delete elems;
+}
+
+
+/**
+ */
+void Script::onError(error_level_t level, const string &message) {
+	log << getLevelString(level) << ": " << message << io::endl;
 }
 
 
