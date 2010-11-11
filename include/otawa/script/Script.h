@@ -24,23 +24,27 @@
 
 #include <elm/system/Path.h>
 #include <otawa/proc/Processor.h>
+#include <elm/util/ErrorHandler.h>
 
 namespace elm { namespace xom { class Node; } }
 
 namespace otawa { namespace script {
 
 // Script class
-class Script: public Processor {
+class Script: public Processor, public ErrorHandler {
 public:
 
 	Script(void);
 	virtual void configure (const PropList &props);
 	static Registration<Script> reg;
 
+	virtual void onError(error_level_t level, const string &message);
+
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
 
 private:
+	void work(WorkSpace *ws);
 	void onError(xom::Node *node, const string& msg);
 	void onWarning(xom::Node *node, const string& msg);
 	void makeConfig(xom::Element *elem, PropList& props);

@@ -221,7 +221,6 @@ int BBPath::simulate(WorkSpace *fw){
 	// get results
 	cycle = state->cycle();
 	instructions_simulated += countInstructions();
-	cerr << *this << " -> " << cycle << io::endl;	// !!DEBUG!!
 	return cycle;
 }
 

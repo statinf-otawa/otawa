@@ -26,6 +26,7 @@
 #include <elm/system/Plugin.h>
 #include <elm/system/Path.h>
 #include <otawa/proc/Registration.h>
+#include <elm/util/ErrorHandler.h>
 
 namespace otawa {
 
@@ -46,6 +47,8 @@ public:
 	static Processor *getProcessor(cstring name);
 	static AbstractFeature *getFeature(cstring name);
 	static AbstractIdentifier *getIdentifier(cstring name);
+	static void setErrorHandler (ErrorHandler *error_handler);
+	static ErrorHandler *getErrorHandler(void);
 
 private:
 	static void init(void);

@@ -38,6 +38,21 @@ static elm::system::Plugger plugger(OTAWA_PROC_NAME, OTAWA_PROC_VERSION);
 static bool initialized_paths = false;
 
 
+// error handling
+class ProcessorBase: public ErrorBase {
+public:
+	inline void setErrorHandler(ErrorHandler *error_handler) {
+		plugger.setErrorHandler(error_handler);
+		ErrorBase::setErrorHandler(error_handler);
+	}
+
+	inline void onError(error_level_t level, const string &message) {
+		ErrorBase::onError(level, message);
+	}
+};
+static ProcessorBase base;
+
+
 // build a canonical name
 static string makeCanonical(string name) {
 	StringBuffer buf;
@@ -105,7 +120,7 @@ void ProcessorPlugin::init(void) {
  * composed of "comp1::comp2::...::compn". First, a module whose path is
  * by replacing in processor name "::" by "/" is looked. If not found, the last component
  * of  the path is removed and the obtained path is looked again for module. This process
- * continue until the module is found or the path becomes empty resulting a linkage failure.
+ * continue until the module is found or the path becomes empty resulting in a linkage failure.
  *
  * @param name	Full-qualified name of the processor.
  * @return		Built processor or null if the processor cannot be found.
@@ -121,10 +136,14 @@ ProcessorPlugin *ProcessorPlugin::get(string name) {
 	while(true) {
 		int pos = cname.lastIndexOf('/');
 		ProcessorPlugin *plugin = (ProcessorPlugin *)plugger.plug(cname);
-		if(plugin)
+		if(plugin) {
+			base.onError(level_info, _ << "plugged " << plugin->name() << " (" << plugin->path() << ")");
 			return plugin;
-		if(pos < 0)
+		}
+		if(pos < 0) {
+			base.onError(level_error, _ << "cannot resolve " << name);
 			return 0;
+		}
 		cname = cname.substring(0, pos);
 	}
 }
@@ -193,6 +212,24 @@ AbstractIdentifier *ProcessorPlugin::getIdentifier(cstring name) {
 	if(!id && get(name))
 		id = AbstractIdentifier::find(name);
 	return id;
+}
+
+
+/**
+ * Set an error handler for the processor resolution plugger.
+ * @param error_handler		New error handler.
+ */
+void ProcessorPlugin::setErrorHandler(ErrorHandler *error_handler) {
+	base.setErrorHandler(error_handler);
+}
+
+
+/**
+ * Get the error handler of the processor resolution plugger.
+ * @return	Current error handler.
+ */
+ErrorHandler *ProcessorPlugin::getErrorHandler(void) {
+	return base.getErrorHandler();
 }
 
 }	// otawa
