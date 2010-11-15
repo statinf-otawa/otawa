@@ -1367,13 +1367,16 @@ void Inst::semInsts(sem::Block& block)  {
 			block.add(sem::scratch(r(1)));
 		break;
 	case ID_ADDI_R_R_:
-	case ID_ADDIC_R_R_: case ID_ADDIC_D_R_R_:
 		if(arg(1) == 0)
 			block.add(sem::seti(r(0), i(2)));
 		else {
 			block.add(sem::seti(t1, i(2)));
 			block.add(sem::add(r(0), r(1), t1));
 		}
+		break;
+	case ID_ADDIC_R_R_: case ID_ADDIC_D_R_R_:
+		block.add(sem::seti(t1, i(2)));
+		block.add(sem::add(r(0), r(1), t1));
 		break;
 	case ID_ADDIS_R_R_:
 		if(arg(1) == 0)
