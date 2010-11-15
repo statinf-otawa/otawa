@@ -301,7 +301,7 @@ WorkSpace *Manager::loadBin(
 
 	// post-process
 	if(loader && isVerbose())
-		cerr << "INFO: selected loader: " << loader->name() << " (" << loader->path() << ")\n";
+		cerr << "INFO: selected loader: " << loader->name() << " (" << loader->pluginVersion() << ") ( " << loader->path() << ")\n";
 	resetVerbosity();
 	if(!loader)
 		throw LoadException(_ << "no loader for \"" << path << "\".");
