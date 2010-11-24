@@ -103,7 +103,7 @@ void Script::processWorkSpace(WorkSpace *ws) {
 	catch(elm::Exception& e) {
 		if(isVerbose())
 			ProcessorPlugin::setErrorHandler(old);
-		throw e;
+		throw;
 	}
 }
 
