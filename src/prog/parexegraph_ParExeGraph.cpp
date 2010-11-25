@@ -698,7 +698,9 @@ void ParExeGraph::addEdgesForFetch(){
 		ParExeNode *node = fetch_stage->node(i);
 		ParExeNode *next = fetch_stage->node(i+1);
 		// taken banch ?
-		if (node->inst()->inst()->address().address() + 4/*instruction size: to be FIXED !!! */ != next->inst()->inst()->address().address()){
+		if (node->inst()->inst()->topAddress() != next->inst()->inst()->address()){
+			// fixed by casse: topAddress() is address() + size()
+			// TODO is it not more valid to test if instruction isBranch() ?
 			ParExeEdge * edge = new ParExeEdge(node, next, ParExeEdge::SOLID);
 			edge->setLatency(2); // taken branch penalty when no branch prediction is enabled
 			edge = new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID);
@@ -1125,6 +1127,42 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
     }
     dotFile << "}\n";
 }
+
+/**
+ * Build a parametric execution graph.
+ * @param ws	Current workspace.
+ * @param proc	Processor description.
+ * @param seq	Instruction sequence to compute.
+ * @param props	Other parameters.
+ */
+ParExeGraph::ParExeGraph(
+	WorkSpace *ws,
+	ParExeProc *proc,
+	ParExeSequence *seq,
+	const PropList& props
+)
+:	_ws(ws),
+ 	_microprocessor(proc),
+ 	_sequence(seq),
+ 	_first_node(NULL),
+ 	_first_bb_node(NULL),
+ 	_last_prologue_node(NULL),
+ 	_last_node(NULL)
+{
+	if ( ws->platform()->cache().instCache())
+		_cache_line_size = ws->platform()->cache().instCache()->blockSize();
+	else
+		_cache_line_size = ws->process()->instSize();	// FIXED by casse
+	_props = props;
+}
+
+
+/**
+ * @fn void ParExeGraph::setFetchSize(int size);
+ * Set the size in bytes used to fetch instructions.
+ * @param size	Size in bytes of fetched blocks.
+ */
+
 
 // ----------------------------------------------------------------
 

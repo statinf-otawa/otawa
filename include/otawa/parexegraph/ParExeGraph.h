@@ -229,16 +229,9 @@ namespace otawa {
 
     
 	public:
-	ParExeGraph(WorkSpace * ws, ParExeProc *proc, ParExeSequence *seq, const PropList& props = PropList::EMPTY)
-		: _ws(ws), _microprocessor(proc), _sequence(seq), _first_node(NULL), _first_bb_node(NULL), _last_prologue_node(NULL), _last_node(NULL) {
-			if ( ws->platform()->cache().instCache())
-				_cache_line_size = ws->platform()->cache().instCache()->blockSize();
-			else
-				_cache_line_size = 4 /* FIXME: size of an instruction word */;
-			_props = props;
-		}
+		ParExeGraph(WorkSpace * ws, ParExeProc *proc, ParExeSequence *seq, const PropList& props = PropList::EMPTY);
 		~ParExeGraph();
-
+		inline void setFetchSize(int size) { _cache_line_size = size; }
       
 		void build(bool compressed_code=false);
 		void createNodes();
@@ -266,13 +259,13 @@ namespace otawa {
 		void display(elm::io::Output& output);
 
 		inline int numResources()
-		{return _resources.length();}
+			{return _resources.length();}
 		inline Resource *resource(int index)
-		{return _resources[index];}
+			{return _resources[index];}
 		inline int numInstructions()
-		{return _sequence->length();}
+			{return _sequence->length();}
 		inline ParExeNode * firstNode()
-		{return _first_node;}
+				{return _first_node;}
     
 		class InstIterator : public ParExeSequence::InstIterator {
 		public:
