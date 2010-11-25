@@ -150,7 +150,8 @@ namespace otawa {
 	template <class G>
 	int GraphBBTime<G>::memoryLatency(Address addr) const {
 		const hard::Bank *bank = mem->get(addr);
-		ASSERTP(bank, "no bank for memory access at " << addr);
+		if(!bank)
+			throw ProcessorException(*this, _ << "no bank for memory access at " << addr);
 		return bank->latency();
 	}
 
@@ -178,6 +179,7 @@ template <class G>
 GraphBBTime<G>::GraphBBTime(AbstractRegistration& reg)
 : BBProcessor(reg) {
 	require(hard::PROCESSOR_FEATURE);
+	require(hard::MEMORY_FEATURE);
 	provide(ipet::BB_TIME_FEATURE);
 }
 
