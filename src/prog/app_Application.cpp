@@ -56,15 +56,10 @@ namespace otawa {
  * 		MyOption2 option2;
  * 		...
  * };
+ *
+ * OTAWA_RUN(MyApp)
  * @endcode
  * 
- * The main program has usually the form below:
- * @code
- * int main(int argc, char **argv) {
- * 		MyApplication app;
- * 		return app.run(argc, argv);
- * }
- * @endcode 
  */
 
 
