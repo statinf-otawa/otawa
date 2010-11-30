@@ -20,6 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <errno.h>
 #include <elm/assert.h>
 #include <otawa/prog/Manager.h>
 #include <otawa/prog/Loader.h>
@@ -415,22 +416,23 @@ Process::Process(Manager *manager, hard::Platform *platform, const PropList& pro
 	_ppcMemory(0),
 	init(false),
 	map(0),
-	file(0)
+	file(0),
+	no_stack(true)
 {
 	ASSERTP(manager, "manager required");
 	ASSERTP(platform, "platform required");
 
 	// gliss2 ppc structs
 	_ppcPlatform = ppc_new_platform();
-	ASSERTP(_ppcPlatform, "otawa::ppc2::Process::Process(..), cannot create a ppc_platform");
+	ASSERTP(_ppcPlatform, "cannot create a ppc_platform");
 	_ppcDecoder = ppc_new_decoder(_ppcPlatform);
-	ASSERTP(_ppcDecoder, "otawa::ppc2::Process::Process(..), cannot create a ppc_decoder");
+	ASSERTP(_ppcDecoder, "cannot create a ppc_decoder");
 	_ppcMemory = ppc_get_memory(_ppcPlatform, PPC_MAIN_MEMORY);
-	ASSERTP(_ppcMemory, "otawa::ppc2::Process::Process(..), cannot get main ppc_memory");
+	ASSERTP(_ppcMemory, "cannot get main ppc_memory");
 	ppc_lock_platform(_ppcPlatform);
 
 	// build arguments
-	char no_name[1] = { 0 };
+	static char no_name[1] = { 0 };
 	static char *default_argv[] = { no_name, 0 };
 	static char *default_envp[] = { 0 };
 	argc = ARGC(props);
@@ -439,9 +441,13 @@ Process::Process(Manager *manager, hard::Platform *platform, const PropList& pro
 	argv = ARGV(props);
 	if (!argv)
 		argv = default_argv;
+	else
+		no_stack = false;
 	envp = ENVP(props);
 	if (!envp)
 		envp = default_envp;
+	else
+		no_stack = false;
 
 	// handle features
 	provide(MEMORY_ACCESS_FEATURE);
@@ -543,31 +549,46 @@ File *Process::loadFile(elm::CString path) {
 	if(program())
 		throw LoadException("loader cannot open multiple files !");
 
+	// make the file
+	LTRACE;
 	File *file = new otawa::File(path);
 	addFile(file);
 
-	// initialize the environment
-	ASSERTP(_ppcPlatform, "invalid ppc_platform !");
-	ppc_env_t *env = ppc_get_sys_env(_ppcPlatform);
-	ASSERT(env);
-	env->argc = argc;
-	env->argv = argv;
-	env->envp = envp;
+	// build the environment
+	gel_env_t genv = *gel_default_env();
+	genv.argv = argv;
+	genv.envp = envp;
+	if(no_stack)
+		genv.flags = GEL_ENV_NO_STACK;
 
-	// load the binary
-	if(ppc_load_platform(_ppcPlatform, (char *)&path) == -1)
-		throw LoadException(_ << "cannot load \"" << path << "\".");
+	// build the GEL image
+	LTRACE;
+	_gelFile = gel_open(&path, NULL, 0);
+	if(!_gelFile)
+		throw LoadException(_ << "cannot load \"" << path << "\": " << gel_strerror());
+	gel_image_t *gimage = gel_image_load(_gelFile, &genv, 0);
+	if(!gimage) {
+		gel_close(_gelFile);
+		throw LoadException(_ << "cannot build image of \"" << path << "\": " << gel_strerror());
+	}
 
-	// get the initial state
-	SimState *state = dynamic_cast<SimState *>(newState());
-	ppc_state_t *ppcState = state->ppcState();
-	if (!ppcState)
-		throw LoadException("invalid ppc_state !");
+	// build the GLISS image
+	gel_image_info_t iinfo;
+	gel_image_infos(gimage, &iinfo);
+	for(int i = 0; i < iinfo.membersnum; i++) {
+		gel_cursor_t cursor;
+		gel_block2cursor(iinfo.members[i], &cursor);
+		ppc_mem_write(_ppcMemory,
+			gel_cursor_vaddr(cursor),
+			gel_cursor_addr(&cursor),
+			gel_cursor_avail(cursor));
+	}
+
+	// cleanup image
+	gel_image_close(gimage);
 
 	// build segments
-	_gelFile = gel_open(&path, 0, GEL_OPEN_NOPLUGINS);
-	if(!_gelFile)
-		throw LoadException(_ << "cannot load \"" << path << "\".");
+	LTRACE;
 	gel_file_info_t infos;
 	gel_file_infos(_gelFile, &infos);
 	for (int i = 0; i < infos.sectnum; i++) {
