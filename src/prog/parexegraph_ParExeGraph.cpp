@@ -608,6 +608,9 @@ void ParExeGraph::createNodes() {
 				ParExePipeline *fu = stage->findFU(inst->inst()->kind());
 				ASSERTP(fu, "cannot find FU for instruction " << inst->inst()->address() << " " << inst->inst());
 				int index = 0;
+
+				cerr << "DEBUG: fus for " << inst->inst();
+
 				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {                         
 					ParExeNode *fu_node = new ParExeNode(this, fu_stage, inst);
 					inst->addNode(fu_node);
@@ -615,7 +618,10 @@ void ParExeGraph::createNodes() {
 					if (index == 0)
 						inst->setExecNode(fu_node);
 					index++;
+					cerr << " " << fu_stage->name();
 				}
+
+				cerr << io::endl;
 			} 
     
 		} // endfor each pipeline stage

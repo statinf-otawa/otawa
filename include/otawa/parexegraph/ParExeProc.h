@@ -263,36 +263,39 @@ namespace otawa {
 
  
   inline ParExeStage::ParExeStage(pipeline_stage_category_t category, int latency, int width, order_t policy, ParExeQueue *sq, ParExeQueue *dq, elm::String name, int index)
-      : _category(category), _latency(latency), _width(width), _order_policy(policy),
+  : _category(category), _latency(latency), _width(width), _order_policy(policy),
     _source_queue(sq), _destination_queue(dq), _name(name), _index(index) {}
-    
-    inline void ParExeStage::addFunctionalUnit(bool pipelined, int latency, int width, elm::String name) {	
-      ParExePipeline *fu = new ParExePipeline();
-      if ( !pipelined) {
-	ParExeStage * stage = new ParExeStage(FU, latency, width, _order_policy, _source_queue, _destination_queue, name);
-	fu->addStage(stage);
-      }
-      else {
-	ParExeStage * stage;
-	// first_stage
-	stage = new ParExeStage(FU, 1, width, _order_policy, _source_queue, NULL, name.concat((elm::String)"1"));
-	// intermediate stages
-	for (int i=2 ; i<latency ; i++) {
-	  elm::StringBuffer *number = new elm::StringBuffer;
-	  *number << i;
-	  String number_string = number->toString();
-	  String fu_stage_name = name.concat(number_string); 
-	  delete number;
-	  stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, NULL, name);
-	}
-	// last stage
-	elm::StringBuffer number;
-	number << latency;
-	stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, _destination_queue, name.concat(number.toString()));
-	fu->addStage(stage);
-      }
-      _fus.add(fu);
-    }
+
+  inline void ParExeStage::addFunctionalUnit(bool pipelined, int latency, int width, elm::String name) {
+	  ParExePipeline *fu = new ParExePipeline();
+	  if ( !pipelined) {
+		  ParExeStage * stage = new ParExeStage(FU, latency, width, _order_policy, _source_queue, _destination_queue, name);
+		  fu->addStage(stage);
+	  }
+	  else {
+		  cerr << "DEBUG: pipelined " << name << ": ";
+		  ParExeStage * stage;
+
+		  // first_stage
+		  stage = new ParExeStage(FU, 1, width, _order_policy, _source_queue, NULL, name + "1");
+		  fu->addStage(stage);
+
+		  // intermediate stages
+		  cerr << stage->name();	// DEBUG
+		  for (int i=2 ; i<latency ; i++) {
+			  stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, NULL, _ << name << i);
+			  fu->addStage(stage);
+			  cerr << " " << stage->name();	// DEBUG
+		  }
+
+		  // last stage
+		  stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, _destination_queue, _ << name << latency);
+		  fu->addStage(stage);
+		  cerr << " " << stage->name();	// DEBUG
+		  cerr << io::endl;	// DEBUG
+	  }
+	  _fus.add(fu);
+  }
   
 
 
