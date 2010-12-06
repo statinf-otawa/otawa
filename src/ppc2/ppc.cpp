@@ -35,6 +35,7 @@
 #include <elm/genstruct/SortedSLList.h>
 #include <otawa/sim/features.h>
 #include <otawa/prop/Identifier.h>
+#include <otawa/loader/powerpc.h>
 
 
 extern "C"
@@ -148,8 +149,7 @@ private:
  *   - the recognition of the instruction,
  *	 - the assignment of the memory pointer.
  */
-class Process: public otawa::Process
-{
+class Process: public otawa::Process, public otawa::ppc::Info {
 public:
 	Process(Manager *manager, hard::Platform *pf, const PropList& props = PropList::EMPTY);
 
@@ -186,6 +186,9 @@ public:
 		throw (UnsupportedFeatureException);
 	virtual void getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses)
 		throw (UnsupportedFeatureException);
+
+	// Info overload
+	otawa::ppc::Info::prediction_t prediction(otawa::Inst *inst);
 
 protected:
 	friend class Segment;
@@ -403,6 +406,37 @@ private:
 };
 
 
+/**
+ * Provide static prediction information.
+ *
+ * Information from "EREF: A Programmer's Reference Manual for Freescale Book E Processors", p184.
+ */
+otawa::ppc::Info::prediction_t Process::prediction(otawa::Inst *_inst) {
+	prediction_t pred;
+
+	// only prediction for conditional and control
+	if(!_inst->isConditional() || !_inst->isControl())
+		return NO_PRED;
+	ppc_inst_t *inst = ppc_decode(_ppcDecoder, _inst->address().offset());
+
+	// basically only BC with negative offset is predicted taken
+	bool back = false;
+	if(inst->ident == PPC_BC_D_D_D && PPC_BC_D_D_D_x_x_x_BD_n < 0)
+		back = true;
+
+	// but bit BO[y] may invert this
+	if(PPC_BC_D_D_D_x_x_x_BO & 0x1)
+		back = !back;
+
+	// return result
+	ppc_free_inst(inst);
+	if(back)
+		return TAKEN;
+	else
+		return NOT_TAKEN;
+}
+
+
  /**
   * Build a process for the new GLISS V2 system.
   * @param manager	Current manager.
@@ -455,6 +489,8 @@ Process::Process(Manager *manager, hard::Platform *platform, const PropList& pro
 	provide(CONTROL_DECODING_FEATURE);
 	provide(REGISTER_USAGE_FEATURE);
 	provide(MEMORY_ACCESSES);
+	provide(otawa::ppc::INFO_FEATURE);
+	ppc::INFO(this) = this;
 }
 
 
@@ -926,15 +962,38 @@ otawa::Process *Loader::load(Manager *man, CString path, const PropList& props)
  * @param props	Properties.
  * @return		Created process.
  */
-otawa::Process *Loader::create(Manager *man, const PropList& props)
-{
-	//cout << "INFO: using ppc2 loader.\n";	// !!DEBUG!!
+otawa::Process *Loader::create(Manager *man, const PropList& props) {
 	return new Process(man, new Platform(props), props);
 }
 
+} // ppc2
+
+namespace ppc {
+
+/**
+ * Get information interface for the PowerPC loader.
+ *
+ * @par Owner Feature
+ * @li @ref otawa::ppc::INFO_FEATURE
+ *
+ * @par Hooks
+ * @li @ref otawa::Process
+ */
+Identifier<Info *> INFO("otawa::ppc::INFO", 0);
 
 
-//using namespace otawa::loader;
+/**
+ * This feature is put by the OTAWA PowerPC loader to get non-standard information
+ * currently including:
+ * @li static prediction of conditional branches
+ *
+ * @par Default Processor
+ * None.
+ *
+ * @par  Properties
+ * @li @ref otawa::ppc::INFO
+ */
+Feature<NoProcessor> INFO_FEATURE("otawa::ppc::INFO_FEATURE");
 
 
 } }	// namespace otawa::ppc
