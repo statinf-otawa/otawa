@@ -102,6 +102,12 @@ namespace otawa {
     elm::genstruct::Vector<ParExeNode *> _nodes;
   public:
     inline ParExeStage(pipeline_stage_category_t category, int latency, int width, order_t policy, ParExeQueue *sq, ParExeQueue *dq, elm::String name, int index=0);
+
+	inline void addNode(ParExeNode * node)
+		{ _nodes.add(node); }
+	inline void removeNode(ParExeNode *node)
+		{ _nodes.remove(node); }
+
     inline order_t orderPolicy(void)
       {return _order_policy;}
     inline int width(void) const
@@ -122,11 +128,9 @@ namespace otawa {
       {return (_category == FU);}
     inline void addFunctionalUnit(bool pipelined, int latency, int width, elm::String name);
     inline int numFus()
-    {return _fus.length();}
+		{return _fus.length();}
     inline ParExePipeline *fu(int index)
-    {return _fus[index];}
-    inline void addNode(ParExeNode * node)
-      {_nodes.add(node);}
+		{return _fus[index];}
     inline ParExeNode* firstNode(void)
       {return _nodes[0];}
     inline ParExeNode* lastNode(void)
@@ -273,7 +277,6 @@ namespace otawa {
 		  fu->addStage(stage);
 	  }
 	  else {
-		  cerr << "DEBUG: pipelined " << name << ": ";
 		  ParExeStage * stage;
 
 		  // first_stage
@@ -281,18 +284,14 @@ namespace otawa {
 		  fu->addStage(stage);
 
 		  // intermediate stages
-		  cerr << stage->name();	// DEBUG
 		  for (int i=2 ; i<latency ; i++) {
 			  stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, NULL, _ << name << i);
 			  fu->addStage(stage);
-			  cerr << " " << stage->name();	// DEBUG
 		  }
 
 		  // last stage
 		  stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, _destination_queue, _ << name << latency);
 		  fu->addStage(stage);
-		  cerr << " " << stage->name();	// DEBUG
-		  cerr << io::endl;	// DEBUG
 	  }
 	  _fus.add(fu);
   }
