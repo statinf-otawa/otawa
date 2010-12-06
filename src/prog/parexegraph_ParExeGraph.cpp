@@ -609,8 +609,6 @@ void ParExeGraph::createNodes() {
 				ASSERTP(fu, "cannot find FU for instruction " << inst->inst()->address() << " " << inst->inst());
 				int index = 0;
 
-				cerr << "DEBUG: fus for " << inst->inst();
-
 				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {                         
 					ParExeNode *fu_node = new ParExeNode(this, fu_stage, inst);
 					inst->addNode(fu_node);
@@ -618,10 +616,7 @@ void ParExeGraph::createNodes() {
 					if (index == 0)
 						inst->setExecNode(fu_node);
 					index++;
-					cerr << " " << fu_stage->name();
 				}
-
-				cerr << io::endl;
 			} 
     
 		} // endfor each pipeline stage
@@ -695,26 +690,45 @@ void ParExeGraph::addEdgesForPipelineOrder(){
     }
 }
 
-// ----------------------------------------------------------------
+
+/**
+ * Add edge for fetch blocking, that is, edges ensuring that instruction in the same
+ * block are fetched in the same and that instructions in sequence owned by different blocks
+ * require two fetches to be obtained.
+ *
+ * For example, for a block size of 16 with fixed size instructions of 4, the instruction
+ * sequence is marked with fetches bounds:
+ * @li start of basic block
+ * @li 0x100C	fetch
+ * @li 0x1010	fetch
+ * @li 0x1014
+ * @li 0x1018
+ * @li 0x101C
+ * @li 0x1010	fetch
+ * @li 0x1014
+ */
 void ParExeGraph::addEdgesForFetch(){
     ParExeStage *fetch_stage = _microprocessor->fetchStage();
+
+    // traverse all fetch nodes
     ParExeNode * first_cache_line_node = fetch_stage->firstNode();
     address_t current_cache_line = fetch_stage->firstNode()->inst()->inst()->address().address() /  _cache_line_size;
-    for (int i=0 ; i<fetch_stage->numNodes()-1 ; i++) {
+    for(int i=0 ; i<fetch_stage->numNodes()-1 ; i++) {
 		ParExeNode *node = fetch_stage->node(i);
 		ParExeNode *next = fetch_stage->node(i+1);
+
 		// taken banch ?
 		if (node->inst()->inst()->topAddress() != next->inst()->inst()->address()){
 			// fixed by casse: topAddress() is address() + size()
-			// TODO is it not more valid to test if instruction isBranch() ?
 			ParExeEdge * edge = new ParExeEdge(node, next, ParExeEdge::SOLID);
-			edge->setLatency(2); // taken branch penalty when no branch prediction is enabled
+			edge->setLatency(_branch_penalty); // taken branch penalty when no branch prediction is enabled
 			edge = new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID);
-			edge->setLatency(2); 
+			edge->setLatency(_branch_penalty);
 		}
 		else {
 			new ParExeEdge(node, next, ParExeEdge::SLASHED);
 		}
+
 		// new cache line?
 		//if (cache)         FIXME !!!!!!!!!!!!!!!
 		address_t cache_line = next->inst()->inst()->address().address() /  _cache_line_size;
@@ -851,6 +865,11 @@ void ParExeGraph::addEdgesForMemoryOrder(){
 
 // ----------------------------------------------------------------
 
+/**
+ * Add edges for data dependencies, that is, if an instruction (a)
+ * produces content of a register and instruction (b) uses this register value
+ * create a solid edge between their execute stages.
+ */
 void ParExeGraph::addEdgesForDataDependencies(){
     ParExeStage *exec_stage = _microprocessor->execStage();
     for (int j=0 ; j<exec_stage->numFus() ; j++) {
@@ -1153,7 +1172,8 @@ ParExeGraph::ParExeGraph(
  	_first_node(NULL),
  	_first_bb_node(NULL),
  	_last_prologue_node(NULL),
- 	_last_node(NULL)
+ 	_last_node(NULL),
+ 	_branch_penalty(2)
 {
 	if ( ws->platform()->cache().instCache())
 		_cache_line_size = ws->platform()->cache().instCache()->blockSize();
