@@ -68,41 +68,30 @@ namespace otawa {
 	public:
 		inline ParExeInst(Inst * inst, BasicBlock *bb, code_part_t part, int index) 
 			: _inst(inst), _bb(bb), _part(part), _index(index) {}
-		inline Inst * inst() 
-		{return _inst;}
-		inline code_part_t codePart() 
-		{return _part;}
-		inline int index() 
-		{return _index;}
-		inline void setIndex(int index) 
-		{_index=index;}
-		inline void addNode(ParExeNode * node) 
-		{_nodes.add(node);}
+
+		inline Inst * inst()  {return _inst;}
+		inline code_part_t codePart()  {return _part;}
+		inline int index()  {return _index;}
+		inline void setIndex(int index) {_index=index;}
+		inline ParExeNode * firstNode() { return _nodes[0];}
+		inline ParExeNode * lastNode() { return _nodes[_nodes.length()-1];}
+		inline bool hasNodes() { return (_nodes.length() != 0);}
+		inline int numNodes() { return _nodes.length();}
+		inline ParExeNode *node(int index) { return _nodes[index];}
+		inline void setFetchNode(ParExeNode *node) { _fetch_node = node;}
+		inline void setExecNode(ParExeNode *node) { _exec_node = node;}
+		inline ParExeNode * fetchNode() { return _fetch_node;}
+		inline ParExeNode * execNode() { return _exec_node;}
+		inline BasicBlock * basicBlock()  {return _bb;}
+
+		inline void addNode(ParExeNode * node)  { _nodes.add(node);}
+
+		inline void removeNode(ParExeNode *node) { _nodes.remove(node); }
+
 		inline void deleteNodes() {
-			if (_nodes.length() != 0) {
-				_nodes.clear();                                                        // FIXME: is there anything else to do?
-			}
-		}
-		inline ParExeNode * firstNode() 
-		{return _nodes[0];}
-		inline ParExeNode * lastNode() 
-		{return _nodes[_nodes.length()-1];}
-		inline bool hasNodes()
-		{return (_nodes.length() != 0);}
-		inline int numNodes()
-		{return _nodes.length();}
-		inline ParExeNode *node(int index)
-		{return _nodes[index];}
-		inline void setFetchNode(ParExeNode *node)
-		{ _fetch_node = node;}
-		inline void setExecNode(ParExeNode *node)
-		{ _exec_node = node;}
-		inline ParExeNode * fetchNode()
-		{ return _fetch_node;}
-		inline ParExeNode * execNode()
-		{ return _exec_node;}
-		inline BasicBlock * basicBlock() 
-		{return _bb;}		
+				if (_nodes.length() != 0) { _nodes.clear();	// FIXME: is there anything else to do?
+		} }
+
 		class NodeIterator: public elm::genstruct::Vector<ParExeNode *>::Iterator {
 		public:
 			inline NodeIterator(const ParExeInst *inst)
@@ -226,12 +215,14 @@ namespace otawa {
 		ParExeNode *_last_node;
 		int _cache_line_size;
 		int _capacity;
+		int _branch_penalty;
 
     
 	public:
 		ParExeGraph(WorkSpace * ws, ParExeProc *proc, ParExeSequence *seq, const PropList& props = PropList::EMPTY);
 		~ParExeGraph();
 		inline void setFetchSize(int size) { _cache_line_size = size; }
+		inline void setBranchPenalty(int penalty) { _branch_penalty = penalty; }
       
 		void build(bool compressed_code=false);
 		void createNodes();
