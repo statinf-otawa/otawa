@@ -88,6 +88,12 @@ namespace otawa {
 
 		inline void removeNode(ParExeNode *node) { _nodes.remove(node); }
 
+		inline void addAfter(ParExeNode *pos, ParExeNode *node) {
+			int p = _nodes.indexOf(pos);
+			ASSERT(p >= 0);
+			_nodes.insert(p + 1, node);
+		}
+
 		inline void deleteNodes() {
 				if (_nodes.length() != 0) { _nodes.clear();	// FIXME: is there anything else to do?
 		} }
