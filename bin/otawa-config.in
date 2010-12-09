@@ -139,10 +139,10 @@ function use_module {
 		if [ -z "$LIB" ]; then
 			case "$KIND" in
 			ilp)
-				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin $prefix/lib/otawa/ilp/$mod.la"
+				LIB="-u${mod}_plugin $prefix/lib/otawa/ilp/$mod.la"
 				;;
 			loader)
-				@HAS_PLUGIN_FALSE@ LIB="-u${mod}_plugin $prefix/lib/otawa/loader/$mod.la"
+				LIB="-u${mod}_plugin $prefix/lib/otawa/loader/$mod.la"
 				;;
 			lib)
 				LIB="$prefix/lib/libo$mod.la"
