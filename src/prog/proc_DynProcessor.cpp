@@ -29,6 +29,7 @@ namespace otawa {
 /**
  * @class ProcessorNotFound
  * This exception is thrown when a code processor can not be found.
+ * @ingroup dyn
  */
 
 /**
@@ -61,6 +62,7 @@ ProcessorNotFound::ProcessorNotFound(string name)
  * Find the processor whose name is given.
  * @param name					Name of the processor.
  * @throw	ProcessorNotFound	If the processor can not be found.
+ * @ingroup dyn
  */
 DynProcessor::DynProcessor(cstring name) throw(ProcessorNotFound) {
 	proc = ProcessorPlugin::getProcessor(name);
