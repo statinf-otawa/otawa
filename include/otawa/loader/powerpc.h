@@ -23,24 +23,21 @@
 #define OTAWA_LOADER_POWERPC_H_
 
 #include <otawa/prog/Inst.h>
-#include <otawa/proc/Feature.h>
+#include <otawa/proc/DynFeature.h>
+#include <otawa/prop/DynIdentifier.h>
 
 namespace otawa { namespace ppc {
 
-// Info class
-class Info {
-public:
-	typedef enum {
-		NO_PRED = 0,
-		TAKEN = 1,
-		NOT_TAKEN = 2
-	} prediction_t;
+// static prediction type
+typedef enum {
+	PRED_NONE = 0,
+	PRED_TAKEN = 1,
+	PRED_NOT_TAKEN = 2
+} prediction_t;
 
-	virtual prediction_t prediction(Inst *inst) = 0;
-};
-
-extern Identifier<Info *> INFO;
-extern Feature<NoProcessor> INFO_FEATURE;
+#define USE_GLISS2_DECODER namespace otawa { namespace ppc { static DynIdentifier<void *> GLISS2_DECODER("otawa::ppc::GLISS2_DECODER"); } }
+#define USE_STATIC_PREDICTION namespace otawa { namespace ppc { static DynIdentifier<prediction_t> STATIC_PREDICTION("otawa::ppc::STATIC_PREDICTION"); } }
+#define USE_INFO_FEATURE namespace otawa { namespace ppc { static DynFeature INFO_FEATURE("otawa::ppc::INFO_FEATURE"); } }
 
 } }	// ppc
 

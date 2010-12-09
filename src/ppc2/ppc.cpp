@@ -66,7 +66,51 @@ using namespace otawa::hard;
 #define STRACE(m)	//cerr << m << io::endl
 
 
-namespace otawa { namespace ppc2 {
+namespace otawa {
+
+namespace ppc {
+
+/**
+ * Get static prediction information interface for the PowerPC loader.
+ *
+ * @par Owner Feature
+ * @li @ref otawa::ppc::INFO_FEATURE
+ *
+ * @par Hooks
+ * @li @ref otawa::Inst
+ */
+Identifier<prediction_t> STATIC_PREDICTION("otawa::ppc::STATIC_PREDICTION", PRED_NONE);
+
+
+/**
+ * Get GLISS decoder used in the loader.
+ *
+ * @par Owner Feature
+ * @li @ref otawa::ppc::INFO_FEATURE
+ *
+ * @par Hooks
+ * @li @ref otawa::Process
+ */
+Identifier<void *> GLISS2_DECODER("otawa::ppc::GLISS2_DECODER", 0);
+
+
+/**
+ * This feature is put by the OTAWA PowerPC loader to get non-standard information
+ * currently including:
+ * @li static prediction of conditional branches
+ *
+ * @par Default Processor
+ * None.
+ *
+ * @par  Properties
+ * @li @ref otawa::ppc::STATIC_PREDICTION
+ * @li @ref otawa::ppc::GLISS2_DECODER
+ */
+Feature<NoProcessor> INFO_FEATURE("otawa::ppc::INFO_FEATURE");
+
+} // otawa::ppc
+
+namespace ppc2 {
 
 // Platform class
 class Platform: public hard::Platform {
@@ -149,7 +193,7 @@ private:
  *   - the recognition of the instruction,
  *	 - the assignment of the memory pointer.
  */
-class Process: public otawa::Process, public otawa::ppc::Info {
+class Process: public otawa::Process {
 public:
 	Process(Manager *manager, hard::Platform *pf, const PropList& props = PropList::EMPTY);
 
@@ -188,10 +232,16 @@ public:
 		throw (UnsupportedFeatureException);
 
 	// Info overload
-	otawa::ppc::Info::prediction_t prediction(otawa::Inst *inst);
+	virtual int opcode(Inst *inst) const {
+		ppc_inst_t *i = ppc_decode(_ppcDecoder, ppc_address_t(inst->address()));
+		int code = i->ident;
+		ppc_free_inst(i);
+		return code;
+	}
 
 protected:
 	friend class Segment;
+	friend class BranchInst;
 	virtual otawa::Inst *decode(Address addr);
 	virtual gel_file_t *gelFile(void) { return _gelFile; }
 	virtual ppc_memory_t *ppcMemory(void) { return _ppcMemory; }
@@ -277,7 +327,35 @@ class BranchInst: public Inst {
 public:
 
 	inline BranchInst(Process& process, kind_t kind, Address addr)
-		: Inst(process, kind, addr), _target(0), isTargetDone(false) { }
+	: Inst(process, kind, addr), _target(0), isTargetDone(false) {
+
+		// only prediction for conditional and control
+		if(!isConditional())
+			return;
+
+		// get description
+		ppc_inst_t *inst = ppc_decode(process._ppcDecoder, address().offset());
+
+		// basically only BC with negative offset is predicted taken
+		bool back = false;
+		if(inst->ident == PPC_BC_D_D_D && PPC_BC_D_D_D_x_x_x_BD_n < 0)
+			back = true;
+
+		// but bit BO[y] may invert this
+		if(PPC_BC_D_D_D_x_x_x_BO & 0x1)
+			back = !back;
+
+		// free descriptor
+		ppc_free_inst(inst);
+
+		// compute prediction
+		ppc::prediction_t pred;
+		if(back)
+			pred = ppc::PRED_TAKEN;
+		else
+			pred = ppc::PRED_NOT_TAKEN;
+		ppc::STATIC_PREDICTION(this) = pred;
+	}
 
 	virtual size_t size() const { return 4; }
 
@@ -406,37 +484,6 @@ private:
 };
 
 
-/**
- * Provide static prediction information.
- *
- * Information from "EREF: A Programmer's Reference Manual for Freescale Book E Processors", p184.
- */
-otawa::ppc::Info::prediction_t Process::prediction(otawa::Inst *_inst) {
-	prediction_t pred;
-
-	// only prediction for conditional and control
-	if(!_inst->isConditional() || !_inst->isControl())
-		return NO_PRED;
-	ppc_inst_t *inst = ppc_decode(_ppcDecoder, _inst->address().offset());
-
-	// basically only BC with negative offset is predicted taken
-	bool back = false;
-	if(inst->ident == PPC_BC_D_D_D && PPC_BC_D_D_D_x_x_x_BD_n < 0)
-		back = true;
-
-	// but bit BO[y] may invert this
-	if(PPC_BC_D_D_D_x_x_x_BO & 0x1)
-		back = !back;
-
-	// return result
-	ppc_free_inst(inst);
-	if(back)
-		return TAKEN;
-	else
-		return NOT_TAKEN;
-}
-
-
  /**
   * Build a process for the new GLISS V2 system.
   * @param manager	Current manager.
@@ -490,7 +537,7 @@ Process::Process(Manager *manager, hard::Platform *platform, const PropList& pro
 	provide(REGISTER_USAGE_FEATURE);
 	provide(MEMORY_ACCESSES);
 	provide(otawa::ppc::INFO_FEATURE);
-	ppc::INFO(this) = this;
+	ppc::GLISS2_DECODER(this) = _ppcDecoder;
 }
 
 
@@ -966,37 +1013,7 @@ otawa::Process *Loader::create(Manager *man, const PropList& props) {
 	return new Process(man, new Platform(props), props);
 }
 
-} // ppc2
-
-namespace ppc {
-
-/**
- * Get information interface for the PowerPC loader.
- *
- * @par Owner Feature
- * @li @ref otawa::ppc::INFO_FEATURE
- *
- * @par Hooks
- * @li @ref otawa::Process
- */
-Identifier<Info *> INFO("otawa::ppc::INFO", 0);
-
-
-/**
- * This feature is put by the OTAWA PowerPC loader to get non-standard information
- * currently including:
- * @li static prediction of conditional branches
- *
- * @par Default Processor
- * None.
- *
- * @par  Properties
- * @li @ref otawa::ppc::INFO
- */
-Feature<NoProcessor> INFO_FEATURE("otawa::ppc::INFO_FEATURE");
-
-
-} }	// namespace otawa::ppc
+} }	// namespace otawa::ppc2
 
 
 // PowerPC GLISS Loader entry point
