@@ -1,0 +1,17 @@
+
+macro bo(n) = BO<(4 - n)..(4 - n)>
+macro s = BD<14..14> 
+
+extend bran_cond_rel, bran_cond_abs, bran_cond_link, bran_cond_link_abs
+	otawa_pred = 
+		if bo(0) && bo(2) then -1
+		else if s ^ bo(4) then 1
+		else 0
+		endif endif
+
+extend branch_cond_ctr, branch_cond_ctr_link, branch_cond_lr, branch_cond_lr_link
+	otawa_pred =
+		if bo(0) && bo(2) then -1
+		else if bo(4) then 1
+		else 0
+		endif endif

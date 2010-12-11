@@ -8,3 +8,4 @@ ppc.lo
 otawa_used_regs.h
 otawa_target.h
 otawa_kind.h
+otawa_pred.h

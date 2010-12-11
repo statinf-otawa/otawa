@@ -49,6 +49,7 @@ extern "C"
 	#include "otawa_kind.h"
 	#include "otawa_target.h"
 	#include "otawa_used_regs.h"
+	#include "otawa_pred.h"
 }
 
 /*#include "gel_loader/gel_loader.h"*/
@@ -336,25 +337,13 @@ public:
 		// get description
 		ppc_inst_t *inst = ppc_decode(process._ppcDecoder, address().offset());
 
-		// basically only BC with negative offset is predicted taken
-		bool back = false;
-		if(inst->ident == PPC_BC_D_D_D && PPC_BC_D_D_D_x_x_x_BD_n < 0)
-			back = true;
-
-		// but bit BO[y] may invert this
-		if(PPC_BC_D_D_D_x_x_x_BO & 0x1)
-			back = !back;
+		// manage the prediction:
+		ppc::prediction_t pred = ppc::prediction_t(ppc_pred(inst));
+		if(pred != ppc::PRED_NONE)
+			ppc::STATIC_PREDICTION(this) = pred;
 
 		// free descriptor
 		ppc_free_inst(inst);
-
-		// compute prediction
-		ppc::prediction_t pred;
-		if(back)
-			pred = ppc::PRED_TAKEN;
-		else
-			pred = ppc::PRED_NOT_TAKEN;
-		ppc::STATIC_PREDICTION(this) = pred;
 	}
 
 	virtual size_t size() const { return 4; }

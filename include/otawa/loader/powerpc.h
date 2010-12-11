@@ -30,9 +30,9 @@ namespace otawa { namespace ppc {
 
 // static prediction type
 typedef enum {
-	PRED_NONE = 0,
-	PRED_TAKEN = 1,
-	PRED_NOT_TAKEN = 2
+	PRED_NONE = -1,
+	PRED_NOT_TAKEN = 0,
+	PRED_TAKEN = 1
 } prediction_t;
 
 #define USE_GLISS2_DECODER namespace otawa { namespace ppc { static DynIdentifier<void *> GLISS2_DECODER("otawa::ppc::GLISS2_DECODER"); } }

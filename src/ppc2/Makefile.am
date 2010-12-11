@@ -37,4 +37,8 @@ otawa_target.h: target.tpl $(PPC2_IRG)
 otawa_used_regs.h: used_regs.tpl $(PPC2_IRG)
 	@GLISS2_ATTR_PATH@ $(PPC2_IRG) -o $@ -a otawa_used_regs -d "tmp_var[0] = END_REG; return 0;" -f -t $<
 
-ppc.lo: otawa_kind.h otawa_target.h otawa_used_regs.h
+otawa_pred.h: pred.tpl $(PPC2_IRG) otawa_pred.nmp
+	@GLISS2_ATTR_PATH@ $(PPC2_IRG) -o $@ -a otawa_pred -d "return -1;" -f -t $< -e otawa_pred.nmp
+
+ppc.lo: otawa_kind.h otawa_target.h otawa_used_regs.h otawa_pred.h
+
