@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	FlowFactLoader class implementation
+ *	FlowFactLoader analyzer implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-07, IRIT UPS.
@@ -32,6 +32,7 @@
 #include <elm/io/BlockInStream.h>
 #include <elm/system/Path.h>
 #include <otawa/prop/DeletableProperty.h>
+#include <otawa/prog/File.h>
 
 // Externals
 extern FILE *util_fft_in;
