@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	TextDecoder class implementation
+ *	TextDecoder analyzer implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007-08, IRIT UPS.
@@ -24,8 +24,8 @@
 #include <otawa/prog/FixedTextDecoder.h>
 #include <otawa/prog/VarTextDecoder.h>
 #include <otawa/proc/Registry.h>
-#include <otawa/prog/WorkSpace.h>
 #include <otawa/util/FlowFactLoader.h>
+#include <otawa/program.h>
 
 namespace otawa {
 

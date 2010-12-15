@@ -49,7 +49,9 @@ class File;
 class Inst;
 class Loader;
 class Manager;
+class Process;
 namespace hard {
+	class CacheConfiguration;
 	class Platform;
 	class Processor;
 }

@@ -46,7 +46,9 @@ namespace sim {
 	class Simulator;
 }
 namespace hard {
+	class CacheConfiguration;
 	class Memory;
+	class Processor;
 }
 
 // LoadException class

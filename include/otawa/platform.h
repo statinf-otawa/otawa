@@ -1,76 +1,27 @@
 /*
  *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	deprecated
  *
- *	platform.h -- platform description classes.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-10, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_PLATFORM_H
 #define OTAWA_PLATFORM_H
 
-#include <elm/string.h>
-#include <otawa/hard/Platform.h>
-
-namespace otawa {
-using namespace elm;
-
-// Classes
-/*class Register;
-class RegBank;
-class RegSet;*/
-
-// RegBank class
-/*class Type;
-class RegBank {
-public:
-	virtual CString name(void) = 0;
-	virtual int bits(void) = 0;
-	virtual int count(void) = 0;
-	virtual RegSet unalias(Register reg) = 0;
-	virtual Type *type(void) = 0;
-};*/
-
-// RegSet class
-/*class RegSet {
-	RegBank *bnk;
-	int _base, _size;
-public:
-	inline RegSet(RegBank *bank, int base, int size) : bnk(bank), _base(base), _size(size) { };
-	inline RegSet(const RegSet& set): bnk(set.bnk), _base(set._base), _size(set._size) { };
-	inline RegSet& operator=(const RegSet& set)
-		{ bnk = set.bnk; _base = set._base; _size = set._size; };
-	inline RegBank *bank(void) const { return bnk; };
-	inline int base(void) const { return _base; };
-	inline int size(void) const { return _size; };
-	inline bool equals(const RegSet& set) const
-		{ return bnk == set.bnk && _base == set._base && _size == set._size; };
-	inline bool operator==(const RegSet& set) const { return equals(set); };
-	inline bool operator!=(const RegSet& set) const { return !equals(set); };
-	inline bool override(const RegSet& set) const
-		{ return bnk == set.bnk
-				&& ((_base < set._base && _base + _size >= set._base)
-				|| _base <= set._base + set._size); };
-};*/
-
-// Register class
-/*class Register {
-	RegBank *bnk;
-	int num;
-public:
-	inline Register(RegBank *bank, int number): bnk(bank), num(number) { };
-	inline Register(const Register& reg): bnk(reg.bnk), num(reg.num) { };
-	inline Register& operator=(const Register& reg)
-		{ bnk = reg.bnk; num = reg.num; return *this; };
-	inline RegBank *bank(void) const { return bnk; };
-	inline int number(void) const { return num; };
-	inline bool equals(const Register& reg)
-		{ return (bnk->unalias(*this)).equals(reg.bnk->unalias(*this)); };
-	inline bool operator==(const Register& reg) { return equals(reg); };
-	inline bool operator!=(const Register& reg) { return !equals(reg); };
-	inline bool override(const Register& reg)
-		{ return (bnk->unalias(*this)).override(reg.bnk->unalias(*this)); };		
-};*/
-
-}; // namespace otawa
-
+#include <otawa/hard.h>
 
 #endif	// OTAWA_PLATFORM_H

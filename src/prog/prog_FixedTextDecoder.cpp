@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	FixedTextDecoder class implementation
+ *	FixedTextDecoder analyzer implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007-08, IRIT UPS.
@@ -26,6 +26,7 @@
 #include <otawa/proc/Registry.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/prog/File.h>
 
 namespace otawa {
 

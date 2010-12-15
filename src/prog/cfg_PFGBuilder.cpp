@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	PFGBuilder class implementation
+ *	PFGBuilder analyzer implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2008, IRIT UPS.
@@ -27,6 +27,7 @@
 #include <otawa/prog/Inst.h>
 #include <otawa/cfg/PFG.h>
 #include <otawa/util/FlowFactLoader.h>
+#include <otawa/prog/File.h>
 
 namespace otawa {
 

@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	SubCFGBuilder class implementation
+ *	SubCFGBuilder analyzer implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2009, IRIT UPS.
@@ -28,7 +28,6 @@
 #include <otawa/cfg/CFGAdapter.h>
 #include <elm/util/BitVector.h>
 #include <elm/genstruct/HashTable.h>
-#include <elm/Iterator.h>
 
 using namespace elm;
 using namespace otawa::dfa;

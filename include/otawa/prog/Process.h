@@ -27,7 +27,6 @@
 #include <elm/util/AutoPtr.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/instruction.h>
-#include <otawa/program.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prog/features.h>
 
