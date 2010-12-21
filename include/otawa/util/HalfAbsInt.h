@@ -38,6 +38,7 @@
 #include <otawa/prog/WorkSpace.h>
 
 
+
 #if defined(NDEBUG) || !defined(DEBUG)
 #	define TRACE(x)
 #else
@@ -215,6 +216,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	    TRACE("Got state: " << *edgeState << "\n");
 			
 			ASSERT(edgeState != NULL);
+			fp.updateEdge(*inedge, *edgeState);
 			fp.lub(in, *edgeState);
 			fp.unmarkEdge(*inedge);
 
@@ -332,7 +334,7 @@ void HalfAbsInt<FixPoint>::addSuccessors() {
 
 	    fp.markEdge(*outedge, out);
 
-/*	    TRACE("Marking edge: " << outedge->source()->number() << "->" << outedge->target()->number()) << "\n"); */
+	    TRACE("Marking edge: " << outedge->source()->number() << "->" << outedge->target()->number() << "\n"); 
 
 	    tryAddToWorkList(outedge->target());
 	}

@@ -90,6 +90,7 @@ class FirstUnrollingFixPoint {
 	inline void markEdge(PropList *e, const Domain &s);
 	inline void unmarkEdge(PropList *e);
 	inline Domain *getMark(PropList *e);
+	inline void updateEdge(Edge *edge, Domain &dom);
 	
 	// Problem wrapper functions
 	inline const Domain& bottom(void) const;
@@ -248,6 +249,10 @@ inline void FirstUnrollingFixPoint<Listener >::enterContext(Domain &dom, BasicBl
 template < class Listener >	
 inline void FirstUnrollingFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const {
 		prob.leaveContext(dom, bb, ctx);
+}
+
+template < class Listener > 
+inline void FirstUnrollingFixPoint<Listener>::updateEdge(Edge *edge, Domain &dom) {
 }
 	
 	
