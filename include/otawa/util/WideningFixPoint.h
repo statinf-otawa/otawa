@@ -86,6 +86,7 @@ class WideningFixPoint {
 	inline void markEdge(PropList *e, const Domain &s);
 	inline void unmarkEdge(PropList *e);
 	inline Domain *getMark(PropList *e);
+	inline void updateEdge(Edge *edge, Domain &dom);
 	
 	// Problem wrapper functions
 	inline const Domain& bottom(void) const;
@@ -218,6 +219,11 @@ inline void WideningFixPoint<Listener >::enterContext(Domain &dom, BasicBlock* b
 template < class Listener >	
 inline void WideningFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const {
 		prob.leaveContext(dom, bb, ctx);
+}
+
+template < class Listener >
+inline void WideningFixPoint<Listener>::updateEdge(Edge *edge, Domain &dom) {
+		prob.updateEdge(edge, dom);
 }
 	
 	
