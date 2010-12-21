@@ -85,6 +85,7 @@ class DefaultFixPoint {
 	// Edge marking functions
 	inline void markEdge(PropList *e, const Domain &s);
 	inline void unmarkEdge(PropList *e);
+	inline void updateEdge(Edge *edge, Domain &dom);
 	inline Domain *getMark(PropList *e);
 	
 	// Problem wrapper functions
@@ -192,6 +193,11 @@ template < class Listener >
 inline bool DefaultFixPoint<Listener >::equals(const typename Problem::Domain &a, const typename Problem::Domain &b) const {
 		return (prob.equals(a,b));
 }
+
+template < class Listener > 
+inline void DefaultFixPoint<Listener>::updateEdge(Edge *edge, Domain &dom) {
+}
+
 
 template < class Listener >	
 inline void DefaultFixPoint<Listener>::update(Domain &out, const typename Problem::Domain &in, BasicBlock* bb)  {
