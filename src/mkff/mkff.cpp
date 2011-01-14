@@ -162,7 +162,7 @@ inline string addressOf(CFG *cfg, Address address) {
 	string label = cfg->label();
 	if(!label)
 		return _ << "0x" << address;
-	long offset = address - cfg->address();
+	t::uint32 offset = address - cfg->address();
 	StringBuffer buf;
 	buf << '"' << label << '"';
 	if(offset > 0)
