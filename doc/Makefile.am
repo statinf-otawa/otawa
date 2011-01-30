@@ -21,7 +21,7 @@ install-data-local: manual.html
 uninstall-local:
 	rm -rf $(pkgdatadir)/doc
 
-manual.html: manual.thot
+manual.html: manual.thot *.thot
 	@THOT_PATH@ -t html $< -o $@ -DHTML_ONE_FILE_PER=chapter
 
 clean-local:

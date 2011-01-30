@@ -17,3 +17,5 @@
 @include manual-dfa.thot
 @include manual-ai.thot
 @include manual-refs.thot
+@include manual-formats.thot
+
