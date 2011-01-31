@@ -37,22 +37,20 @@ namespace otawa {
 template <class Listener>
 class FirstUnrollingFixPoint {
 	
-	// Types
-	public:
+// Types
+public:
 	typedef typename Listener::Problem Problem;
 	typedef typename Problem::Domain Domain;
 		
-	private:	
-	
 
-	 
+protected:
 	// Fields
 	static Identifier<Domain*> STATE;	
 	Problem& prob;
 	Listener  &list;
 	util::HalfAbsInt<FirstUnrollingFixPoint> *ai;
 	
-	public:
+public:
 	// FixPointState class
 	class FixPointState {
 		public:
