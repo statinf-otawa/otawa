@@ -1,0 +1,274 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>OTAWA Manual</title>
+	<meta name="AUTHOR" content="H. Cassé &lt;casse@irit.fr&gt;, C. Rochange &lt;rochange@irit.fr&gt;, C. Ballabriga &lt;ballabri@irit.fr&gt;">
+	<meta name="GENERATOR" content="Thot - HTML">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link rel="stylesheet" type="text/css" href="css/manual.css"/>
+	<link rel="stylesheet" type="text/css" href="manual-imports/highlight.css"/>
+</head>
+<body>
+<div class="main">
+<div class="header">
+	<div class="title">OTAWA Manual</div>
+	<div class="authors"><a href="mailto:casse@irit.fr">H. Cassé </a>, <a href="mailto:rochange@irit.fr"> C. Rochange </a>, <a href="mailto:ballabri@irit.fr"> C. Ballabriga </a></div>
+</div>	<div class="toc">
+		<h1><a name="toc"/>Table of content</h1>
+		<ul class="toc">
+			<li><a href="manual-0.html">1  Building OTAWA  </a></li>
+			<li><a href="manual-1.html">2  Computing a WCET  </a></li>
+			<li><a href="manual-2.html">3  Writing an OTAWA Application  </a></li>
+			<li><a href="manual-3.html">4  Control Flow Graphs  </a></li>
+			<li><a href="manual-4.html">5  Property Work  </a></li>
+			<li><a href="manual-5.html">6  Code Processors  </a></li>
+			<li><a href="manual-6.html">7  Features  </a></li>
+			<li><a href="manual-7.html">8  Using ELM  </a></li>
+			<li><a href="manual-8.html">9  Performing Iterative Data Flow Analysis  </a></li>
+			<li><a href="manual-9.html">10  Using Abstract Interpretation  </a></li>
+			<li><a href="manual-10.html">11  References  </a></li>
+			<li><a href="manual-11.html">12  Architecture Formats  </a>		<ul class="toc">
+			<li><a href="#12.1">12.1  Notation  </a></li>
+			<li><a href="#12.2">12.2  Microprocessor Pipeline  </a>		<ul class="toc">
+			<li><a href="#12.2.1">12.2.1  To Level  </a></li>
+			<li><a href="#12.2.2">12.2.2  Stage Description  </a></li>
+			<li><a href="#12.2.3">12.2.3  Functional Unit  </a></li>
+			<li><a href="#12.2.4">12.2.4  <tt>&lt;inst&gt;</tt> Element  </a></li>
+			<li><a href="#12.2.5">12.2.5  Queue  </a></li>
+		</ul>
+</li>
+			<li><a href="#12.3">12.3  Cache Hierarchy  </a></li>
+		</ul>
+</li>
+		</ul>
+	</div>
+<div class="page">
+<h1><a name="12"/>12 Architecture Formats  </h1>
+<p>
+This sections describes the format of the files used to describe an architecture. They includes description for: </p>
+<ul>
+<li><p>
+ microprocessor pipeline, </p>
+</li>
+<li><p>
+ cache hierarchy, </p>
+</li>
+<li><p>
+ memory address space. </p>
+</li>
+</ul>
+<h2><a name="12.1"/>12.1 Notation  </h2>
+<p>
+These description files formats are based on <a href="http://www.w3.org/TR/2006/REC-xml11-20060816/">XML</a>. XML allows to represent structured documents with a textual representation organized as a tree of elements. Elements are delimited by tags and identifier between brackets, <tt>&lt;</tt> and <tt>&gt;</tt>, possibly containing attributes. </p>
+<p>
+This document describes dialects of XML whose syntax is given with a special notation derived from <a href="http://fr.wikipedia.org/wiki/Extended_Backus-Naur_Form">EBNF</a>. </p>
+<pre class="code">
+<span class="hl com">&lt;!-- NT ::= --&gt;</span>
+<span class="hl kwa">&lt;mytag</span> <span class="hl kwb">att</span>=<span class="hl str">&quot;INT&quot;</span><span class="hl kwa">?&gt;</span> <span class="hl com">&lt;!-- NT1 --&gt;</span> (<span class="hl com">&lt;!-- NT2 --&gt;</span> | <span class="hl com">&lt;!-- NT3 --&gt;</span>) <span class="hl kwa">&lt;/mytag&gt;</span>
+</pre><p>
+The example below allows to define the non-terminal symbol NT that starts and ends with tags <tt>mytag</tt>. It may have an attribute called <tt>att</tt> containing an integer. Its content start first with a an element <tt>NT1</tt> (defined elsewhere) and followed either by an element of type <tt>NT2</tt> or <tt>NT3</tt>. </p>
+<p>
+Words in uppercase describe a <i>terminal</i> textual content while the tags are represented as-is. </p>
+<p>
+Tags and attributes may be followed with one of this symbol: </p>
+<ul>
+<li><p>
+ <tt>*</tt> &#8208; item may be repeated zero or several times, </p>
+</li>
+<li><p>
+ <tt>+</tt> &#8208; item may be repeated one or several times, </p>
+</li>
+<li><p>
+ <tt>?</tt> &#8208; item is optional. </p>
+</li>
+</ul>
+<p>
+The <i>terminals</i> may be: </p>
+<ul>
+<li><p>
+ <tt>INT</tt> &#8208; an integer (accepting C decimal, binary, octal or hexadecimal notation), </p>
+</li>
+<li><p>
+ <tt>TEXT</tt> &#8208; any text supported by XML, </p>
+</li>
+<li><p>
+ <tt>BOOL</tt> &#8208; one of <tt>true</tt> or <tt>false</tt>, </p>
+</li>
+</ul>
+<h2><a name="12.2"/>12.2 Microprocessor Pipeline  </h2>
+<p>
+A microprocessor pipeline allows to describes the stages and the queue composing the pipeline. References between stages and queues is performed by assigning <tt>id</tt> attributes to the items and referencing them using <tt>ref</tt> attributes. </p>
+<h3><a name="12.2.1"/>12.2.1 To Level  </h3>
+<p>
+The top-level element is given below (notice that the <tt>class</tt> attribute is mandatory): </p>
+<pre class="code">
+<span class="hl com">&lt;!-- PIPELINE::= --&gt;</span>
+<span class="hl kwa">&lt;processor</span> <span class="hl kwb">class</span>=<span class="hl str">&quot;otawa::hard::Processor&quot;</span><span class="hl kwa">&gt;</span>
+	<span class="hl kwa">&lt;arch&gt;</span>TEXT<span class="hl kwa">&lt;/arch&gt;</span>?
+	<span class="hl kwa">&lt;model&gt;</span>TEXT<span class="hl kwa">&lt;/model&gt;</span>?
+	<span class="hl kwa">&lt;builder&gt;</span>TEXT<span class="hl kwa">&lt;/builder&gt;</span>?
+	<span class="hl kwa">&lt;frequency&gt;</span>INT<span class="hl kwa">&lt;/frequency&gt;</span>?
+
+	<span class="hl kwa">&lt;stages&gt;</span> <span class="hl com">&lt;!-- STAGE --&gt;</span>* <span class="hl kwa">&lt;/stages&gt;</span>?
+	<span class="hl kwa">&lt;queues&gt;</span> <span class="hl com">&lt;!-- QUEUE --&gt;</span>* <span class="hl kwa">&lt;/queues&gt;</span>?
+<span class="hl kwa">&lt;/processor&gt;</span>
+</pre><p>
+The contained items have the following description: </p>
+<ul>
+<li><p>
+ <tt>&lt;arch&gt;</tt> &#8208; describe the Instruction-Set Architecture of the processor (this may be used to identify the loader plug-in used with this description), </p>
+</li>
+<li><p>
+ <tt>&lt;model&gt;</tt> &#8208; processor model name as provided by the builder, </p>
+</li>
+<li><p>
+ <tt>&lt;builder&gt;</tt> &#8208; builder name </p>
+</li>
+<li><p>
+ <tt>&lt;frequency&gt;</tt> &#8208; frequency of the processor in Hz, </p>
+</li>
+<li><p>
+ <tt>&lt;stages&gt;</tt> &#8208; list of stages, </p>
+</li>
+<li><p>
+ <tt>&lt;queues&gt;</tt> &#8208; list of queues.  </p>
+</li>
+</ul>
+<h3><a name="12.2.2"/>12.2.2 Stage Description  </h3>
+<pre class="code">
+<span class="hl com">&lt;!-- STAGE ::= --&gt;</span>
+<span class="hl kwa">&lt;stage</span> <span class="hl kwb">id</span>=<span class="hl str">&quot;TEXT&quot;</span><span class="hl kwa">?&gt;</span>
+	<span class="hl kwa">&lt;name&gt;</span>TEXT<span class="hl kwa">&lt;/name&gt;</span>?
+	<span class="hl kwa">&lt;width&gt;</span>INT<span class="hl kwa">&lt;/width&gt;</span>?
+	<span class="hl kwa">&lt;latency&gt;</span>INT<span class="hl kwa">&lt;/latency&gt;</span>?
+	<span class="hl kwa">&lt;pipelined&gt;</span>BOOL<span class="hl kwa">&lt;/pipelined&gt;</span>?
+	<span class="hl kwa">&lt;type&gt;</span>FETCH|LAZY|EXEC|COMMIT<span class="hl kwa">&lt;/type&gt;</span>?
+	<span class="hl kwa">&lt;ordered&gt;</span>BOOL<span class="hl kwa">&lt;/ordered&gt;</span>?
+	<span class="hl kwa">&lt;fus&gt;</span> <span class="hl com">&lt;!-- FU --&gt;</span>* <span class="hl kwa">&lt;/fus&gt;</span>?
+	<span class="hl kwa">&lt;dispatch&gt;</span> <span class="hl com">&lt;!-- INST --&gt;</span>* <span class="hl kwa">&lt;/dispatch&gt;</span>?
+<span class="hl kwa">&lt;/stage&gt;</span>
+</pre><p>
+A pipeline stage may have <tt>&lt;name&gt;</tt> (for the human user), a <tt>&lt;width&gt;</tt> that gives the numer of instructions that may processed by the stage in one cycle and a <tt>&lt;type&gt;</tt>. <tt>&lt;latency&gt;</tt> gives the number of cycles an instruction spends in the stage while <tt>&lt;pipelined&gt;</tt> says if the instruction execution in the stage is pipelined, that is, overlapped. </p>
+<p>
+The types have the following meaning: </p>
+<ul>
+<li><p>
+ <tt>FETCH</tt> &#8208; stage getting instruction from memory, </p>
+</li>
+<li><p>
+ <tt>LAZY</tt> &#8208; do noting special (only spends time), </p>
+</li>
+<li><p>
+ <tt>EXEC</tt> &#8208; stage performing execution of instructions, </p>
+</li>
+<li><p>
+ <tt>COMMIT</tt> &#8208; stage where instructions are leaving the pipeline. </p>
+</li>
+</ul>
+<p>
+<tt>&lt;ordered&gt;</tt>, <tt>fus</tt> and <tt>dispatch</tt> elements are only used with <tt>EXEC</tt> type stages. <tt>ordered</tt> allows to know if the execution is in-order or not. <tt>FU</tt> gives the list of FU (Functional Units) while the <tt>&lt;dispatch&gt;</tt> allows to dispatch instructions to the different FUs. An <tt>EXEC</tt> stage dispatches instruction to FU for instruction only if the data dependencies are already fulfilled.  </p>
+<h3><a name="12.2.3"/>12.2.3 Functional Unit  </h3>
+<p>
+A FU is responsible for performing the execution of an instruction. </p>
+<pre class="code">
+<span class="hl com">&lt;!-- FU ::= --&gt;</span>
+<span class="hl kwa">&lt;fu</span> <span class="hl kwb">id</span>=<span class="hl str">&quot;TEXT&quot;</span><span class="hl kwa">?&gt;</span>
+	<span class="hl kwa">&lt;name&gt;</span>TEXT<span class="hl kwa">&lt;/name&gt;</span>
+	<span class="hl kwa">&lt;width&gt;</span>INT<span class="hl kwa">&lt;/width&gt;</span>
+	<span class="hl kwa">&lt;latency&gt;</span>INT<span class="hl kwa">&lt;/latency&gt;</span>
+	<span class="hl kwa">&lt;pipelined&gt;</span>BOOL<span class="hl kwa">&gt;&lt;/pipelined&gt;</span>
+<span class="hl kwa">&lt;/fu&gt;</span>
+</pre><p>
+The <tt>&lt;name&gt;</tt> is only for display to the human user and may be any text. In <tt>&lt;width&gt;</tt> element gives the number of instruction that may executed in parallel in each cycle with <tt>&lt;latency&gt;</tt> gives the number of cycles an instruction spends in the stage. With a latency of several cycles, the instruction traversal of the FU may be pipelined, element <tt>&lt;pipelined&gt;</tt>, that is, the different cycles may be overlapped. </p>
+<h3><a name="12.2.4"/>12.2.4 <tt>&lt;inst&gt;</tt> Element  </h3>
+<p>
+<tt>&lt;inst&gt;</tt> element allows to select which FU will execute an instruction. </p>
+<pre class="code">
+<span class="hl kwa">&lt;inst&gt;</span>
+	<span class="hl kwa">&lt;type&gt;</span>FLAGS<span class="hl kwa">&lt;/type&gt;</span>
+	<span class="hl kwa">&lt;fu</span> <span class="hl kwb">ref</span>=<span class="hl str">&quot;TEXT&quot;</span><span class="hl kwa">/&gt;</span>
+</pre><p>
+The <tt>&lt;fu&gt;</tt> element gives the FU that will execute an instruction matching the flags in the <tt>&lt;type&gt;</tt> element. </p>
+<p>
+The flags are separated by <tt>|</tt> pipes and are a composition of identifier selecting the properties of the instruction (as provided by the loader). To be selected, an instruction must match all flags of the <tt>&lt;type&gt;</tt> element. </p>
+<p>
+Known flags are derived from the <tt>otawa::Inst</tt> class kinds and includes: </p>
+<ul>
+<li><p>
+ IS_COND &#8208; conditional instruction, </p>
+</li>
+<li><p>
+ IS_CONTROL &#8208; control instruction, </p>
+</li>
+<li><p>
+ IS_CALL &#8208; sub-program call, </p>
+</li>
+<li><p>
+ IS_RETURN &#8208; sub-program return, </p>
+</li>
+<li><p>
+ IS_MEM &#8208; instruction performing memory access, </p>
+</li>
+<li><p>
+ IS_LOAD &#8208; instruction reading in memory, </p>
+</li>
+<li><p>
+ IS_STORE &#8208; instruction writing in memory, </p>
+</li>
+<li><p>
+ IS_INT &#8208; instruction working on integers, </p>
+</li>
+<li><p>
+ IS_FLOAT &#8208; instruction working on floats, </p>
+</li>
+<li><p>
+ IS_ALU &#8208; computation instruction, </p>
+</li>
+<li><p>
+ IS_MUL &#8208; multiplication, </p>
+</li>
+<li><p>
+ IS_DIV &#8208; division, </p>
+</li>
+<li><p>
+ IS_SHIFT &#8208; shift or rotation, </p>
+</li>
+<li><p>
+ IS_TRAP &#8208; trap or exception instruction, </p>
+</li>
+<li><p>
+ IS_INTERN &#8208; instruction performing internal work in hardware (not changing program behaviour), </p>
+</li>
+<li><p>
+ IS_MULTI &#8208; performs multiple loads or stores, </p>
+</li>
+<li><p>
+ IS_SPECIAL &#8208; instruction that can not be classified with other flags, </p>
+</li>
+<li><p>
+ IS_INDIRECT &#8208; indirect control (branching on address obtained from a register). </p>
+</li>
+</ul>
+<h3><a name="12.2.5"/>12.2.5 Queue  </h3>
+<p>
+A queue is a small memory containing instructions processed by the pipeline. It may be interleft between two stages (FIFO queue) or used as an instruction store for a stage (like a re-order buffer with out-of-order execution architecture) </p>
+<pre class="code">
+<span class="hl com">&lt;!-- QUEUE ::= --&gt;</span>
+<span class="hl kwa">&lt;queue&gt;</span>
+	<span class="hl kwa">&lt;name&gt;</span>TEXT<span class="hl kwa">&lt;/name&gt;</span>?
+	<span class="hl kwa">&lt;size&gt;</span>INT<span class="hl kwa">&lt;/size&gt;</span>?
+	<span class="hl kwa">&lt;input</span> <span class="hl kwb">ref</span>=<span class="hl str">&quot;TEXT&quot;</span><span class="hl kwa">/&gt;</span>
+	<span class="hl kwa">&lt;output</span> <span class="hl kwb">ref</span>=<span class="hl str">&quot;TEXT&quot;</span><span class="hl kwa">/&gt;</span>
+	<span class="hl kwa">&lt;intern&gt;</span>
+		<span class="hl kwa">&lt;stage</span> <span class="hl kwb">ref</span>=<span class="hl str">&quot;TEXT&quot;</span><span class="hl kwa">/&gt;</span>
+	<span class="hl kwa">&lt;/intern&gt;</span>?
+<span class="hl kwa">&lt;/queue&gt;</span>
+</pre><p>
+The <tt>&lt;name&gt;</tt> element is only used for human display while the <tt>&lt;size&gt;</tt> elements gives the number of instruction the queue can contain. </p>
+<p>
+A queue must ever have an <tt>&lt;input&gt;</tt> stage (stage putting instructions in) and an <tt>&lt;output&gt;</tt> stage (stage getting instructions from). In addition, a queue may have several <tt>&lt;intern&gt;</tt> stages that use it as an instruction buffer. The referenced stages in an <tt>&lt;intern&gt;</tt> are usually of type <tt>EXEC</tt> and allows the instruction to leave the queue only if it has been executed. </p>
+<h2><a name="12.3"/>12.3 Cache Hierarchy  </h2>
+</div>
+</div>
+</body>
+</html>
