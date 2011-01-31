@@ -37,17 +37,28 @@ public:
 	       const elm::system::Plugin::aliases_t & aliases
 	       = elm::system::Plugin::aliases_t::EMPTY);
 
-	// Method
 	virtual CString getName(void) const = 0;
 	virtual Process *load(Manager *man, CString path, const PropList& props) = 0;
 	virtual Process *create(Manager *man, const PropList& props) = 0;
 
+	void check(WorkSpace *ws, cstring name, const Version& version);
+
 	// Default platform and loader
-	static Loader& LOADER_Gliss_PowerPC;
+	/*static Loader& LOADER_Gliss_PowerPC;
 	static Loader& LOADER_Heptane_PowerPC;
 	static CString LOADER_NAME_Gliss_PowerPC;
 	static CString LOADER_NAME_Heptane;
-	static CString PLATFORM_NAME_PowerPC_Gliss;
+	static CString PLATFORM_NAME_PowerPC_Gliss;*/
+};
+
+// LoaderCheck class
+template <class T>
+class LoaderChecker {
+public:
+	LoaderChecker(WorkSpace *ws, cstring name = "", Version& version = Version::ZERO);
+	inline T *operator->(void) const { return loader; }
+private:
+	T *loader;
 };
 
 } // otawa

@@ -46,7 +46,7 @@ protected:
 public:
 
 	// Kind management
-	typedef t::uint32 kind_t;
+	typedef elm::t::uint32 kind_t;
 	static const kind_t IS_COND		= 0x00001;
 	static const kind_t IS_CONTROL	= 0x00002;
 	static const kind_t IS_CALL		= 0x00004;
