@@ -8,6 +8,7 @@
 #include <otawa/proc/LBlockProcessor.h>
 #include <otawa/otawa.h>
 #include <otawa/util/LBlockBuilder.h>
+#include <otawa/hard/CacheConfiguration.h>
 
 namespace otawa {
 
@@ -19,13 +20,13 @@ namespace otawa {
  * @ingroup proc
  */
 
-
-/**
- * Build a new LBlock processor.
- */
-LBlockProcessor::LBlockProcessor(void) {
-	require(COLLECTED_LBLOCKS_FEATURE);
-}
+MetaRegistration LBlockProcessor::reg(
+	"otawa::LBlockProcessor", Version(1, 0, 0),
+	p::base, &Processor::reg,
+	p::require, &COLLECTED_LBLOCKS_FEATURE,
+	p::require, &hard::CACHE_CONFIGURATION_FEATURE,
+	p::end
+);
 
 
 /**
@@ -33,34 +34,45 @@ LBlockProcessor::LBlockProcessor(void) {
  * @param name		Processor name.
  * @param version	Processor version.
  */
-LBlockProcessor::LBlockProcessor(elm::String name, elm::Version version)
-: Processor(name, version) {
-	require(COLLECTED_LBLOCKS_FEATURE);
+LBlockProcessor::LBlockProcessor(AbstractRegistration &registration): Processor(registration) {
 }
 
 
 /**
  */
-void LBlockProcessor::processWorkSpace(WorkSpace *fw) {
+void LBlockProcessor::processWorkSpace(WorkSpace *ws) {
 
-	// Visit LBlocks
+	// get configuration
+	LBlockSet **sets = LBLOCKS(ws);
+	ASSERT(sets);
+	const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(ws);
+	ASSERT(conf);
+	_cache = conf->instCache();
+	ASSERT(_cache);
+
+	// process the sets
+	for(int i = 0; i < _cache->rowCount(); i++)
+		processLBlockSet(ws, sets[i]);
+}
+
+
+/**
+ * Called for each LBlock set.
+ * @param ws	Current workspace.
+ * @param set	Current LBlock set.
+ */
+void LBlockProcessor::processLBlockSet(WorkSpace *ws, LBlockSet *set) {
+	for(LBlockSet::Iterator lb(*set); lb; lb++)
+		processLBlock(ws, set, lb);
 }
 
 /**
- * Initialize the processor.
- * @param props	Configuration properties.
+ * Called for each LBlock.
+ * @param ws		Current workspace.
+ * @param set		Current LBlock set.
+ * @param lblock	Current LBlock.
  */
-void LBlockProcessor::init(const PropList& props) {
-}
-
-
-/**
- * Configure the current processor.
- * @param props	Configuration properties.
- */
-void LBlockProcessor::configure(const PropList& props) {
-	Processor::configure(props);
-	init(props);
+void LBlockProcessor::processLBlock(WorkSpace *ws, LBlockSet *set, LBlock *lblock) {
 }
 
 } // otawa
