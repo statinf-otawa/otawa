@@ -1,8 +1,23 @@
 /*
  *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Cache class interface.
  *
- *	otawa/hard/Cache.h -- interface for Cache class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-11, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_HARD_CACHE_H
 #define OTAWA_HARD_CACHE_H
@@ -64,40 +79,42 @@ private:
 	const Cache *_next;
 
 public:
-	inline Cache(void);
-	inline Cache(const Cache& cache, const Cache *next = 0);
+	inline Cache(void) { }
+	inline Cache(const Cache& cache, const Cache *next = 0): _info(cache._info), _next(next) { }
 	virtual ~Cache(void) { }
 	
 	// Simple accessors
-	inline const Cache *nextLevel(void) const;
-	inline size_t cacheSize(void) const;
-	inline size_t blockSize(void) const;
+	inline const Cache *nextLevel(void) const  { return _next; }
+	inline size_t cacheSize(void) const { return 1 << (blockBits() + rowBits() + wayBits()); }
+	inline size_t blockSize(void) const { return 1 << blockBits(); }
+
 	inline int wayCount(void) const { return 1 << wayBits(); }
-	inline int rowCount(void) const { return 1 << rowBits(); }
-	inline int blockCount(void) const
-		{ return 1 << (_info.row_bits + _info.way_bits); }
-	inline replace_policy_t replacementPolicy(void) const;
-	inline write_policy_t writePolicy(void) const;
-	inline bool doesWriteAllocate(void) const;
-	inline int missPenalty(void) const;
+	inline int setCount(void) const { return 1 << rowBits(); }
+	inline int blockCount(void) const { return 1 << (_info.row_bits + _info.way_bits); }
+
+	inline replace_policy_t replacementPolicy(void) const { return _info.replace; }
+	inline write_policy_t writePolicy(void) const { return _info.write; }
+	inline bool doesWriteAllocate(void) const { return _info.allocate; }
+	inline int missPenalty(void) const { return _info.miss_penalty; }
 	inline int writeBufferSize(void) const { return _info.write_buffer_size; }
 	inline int readPortSize(void) const { return _info.read_port_size; }
 	inline int writePortSize(void) const { return _info.write_port_size; }
 	
 	// Low-level information
-	inline int blockBits(void) const;
-	inline int rowBits(void) const;
-	inline int tagBits(void) const;	
-	inline int wayBits(void) const;
-	inline mask_t blockMask(void) const; 
-	inline mask_t lineMask(void) const;
-	inline mask_t tagMask(void) const;
+	inline int blockBits(void) const { return _info.block_bits; }
+	inline int setBits(void) const { return _info.row_bits; }
+	inline int tagBits(void) const { return 32 - blockBits() + rowBits(); }
+	inline int wayBits(void) const { return _info.way_bits; }
+
+	inline t::mask blockMask(void) const { return blockSize() - 1; }
+	inline t::mask setMask(void) const { return (rowCount() - 1) << blockBits(); }
+	inline t::mask tagMask(void) const { return ~(lineMask() | blockMask()); }
 	
 	// Address decomposition
-	inline mask_t offset(address_t addr) const;
-	inline mask_t line(address_t addr) const;
-	inline mask_t tag(address_t addr) const;
-	inline mask_t block(address_t addr) const;
+	inline t::mask offset(address_t addr) const { return t::mask(addr.address()) & blockMask(); }
+	inline t::mask set(address_t addr) const { return (t::mask(addr.address()) & lineMask()) >> blockBits(); }
+	inline t::mask tag(address_t addr) const { return t::mask(addr.address()) >> (blockBits() + rowBits()); }
+	inline t::mask block(address_t addr) const { return t::mask(addr.address()) >> blockBits(); }
 	
 	// Modifiers
 	void setAccessTime(int access_time);
@@ -111,95 +128,14 @@ public:
 	void setWriteBufferSize(int write_buffer_size);
 	void setReadPortSize(int read_port_size);
 	void setWritePortSize(int write_port_size);
-	
-	// Deprecated
-	inline Cache(const info_t& info, const Cache *next = 0);
+
+	// deprecated
+	inline int rowBits(void) const { return _info.row_bits; }
+	inline t::mask lineMask(void) const { return (rowCount() - 1) << blockBits(); }
+	inline t::mask rowMask(void) const { return (rowCount() - 1) << blockBits(); }
+	inline t::mask line(const Address& addr) const { return (t::mask(addr.address()) & lineMask()) >> blockBits(); }
+	inline int rowCount(void) const { return 1 << rowBits(); }
 };
-
-
-// Inlines
-inline Cache::Cache(void) {
-}
-
-inline Cache::Cache(const info_t& info, const Cache *next)
-: _info(info), _next(next) {
-}
-
-inline Cache::Cache(const Cache& cache, const Cache *next)
-: _info(cache._info), _next(next) {
-}
-
-inline const Cache *Cache::nextLevel(void) const {
-	return _next;
-}
-
-inline size_t Cache::cacheSize(void) const {
-	return 1 << (blockBits() + rowBits() + wayBits());
-}
-
-inline size_t Cache::blockSize(void) const {
-	return 1 << blockBits();
-}
-
-inline Cache::replace_policy_t Cache::replacementPolicy(void) const {
-	return _info.replace;
-}
-
-inline Cache::write_policy_t Cache::writePolicy(void) const {
-	return _info.write;
-}
-
-inline bool Cache::doesWriteAllocate(void) const {
-	return _info.allocate;
-}
-
-inline int Cache::blockBits(void) const {
-	return _info.block_bits;
-}
-
-inline int Cache::rowBits(void) const {
-	return _info.row_bits;
-}
-
-inline int Cache::wayBits(void) const {
-	return _info.way_bits;
-}
-
-inline int Cache::tagBits(void) const {
-	return 32 - blockBits() + rowBits();
-}
-
-inline mask_t Cache::blockMask(void) const {
-	return blockSize() - 1;
-}
-
-inline mask_t Cache::lineMask(void) const {
-	return (rowCount() - 1) << blockBits();
-}
-
-inline mask_t Cache::tagMask(void) const {
-	return ~(lineMask() | blockMask());
-}
-	
-inline mask_t Cache::offset(address_t addr) const {
-	return ((mask_t)addr.address()) & blockMask();
-}
-
-inline mask_t Cache::line(address_t addr) const {
-	return (((mask_t)addr.address()) & lineMask()) >> blockBits();
-}
-
-inline mask_t Cache::tag(address_t addr) const {
-	return ((mask_t)addr.address()) >> (blockBits() + rowBits());
-}
-
-inline mask_t Cache::block(address_t addr) const {
-	return ((mask_t )addr.address()) >> blockBits();
-}
-
-inline int Cache::missPenalty(void) const {
-	return _info.miss_penalty;
-}
 
 } } // otawa::hard
 
