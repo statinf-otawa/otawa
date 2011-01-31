@@ -134,7 +134,7 @@ int ParExeGraph::Delta(ParExeNode *a, Resource *res) {
 				} // end: is lp depends on S
 
 				else { //lp does not depend on S
-					for (elm::genstruct::SLList<elm::BitVector *>::Iterator mask(*(S->contendersMasksList())) ; mask ; mask++) {
+					for (elm::genstruct::DLList<elm::BitVector *>::Iterator mask(*(S->contendersMasksList())) ; mask ; mask++) {
 						int tmp = a->d(s);
 						tmp += (((mask->countBits()+S->lateContenders())/S->stage()->width())*S->latency());
 						int tmp2 = 0;
@@ -395,8 +395,8 @@ void ParExeNode::buildContendersMasks(){
 			_contenders_masks_list.addLast(mask);
 		}
 		else {
-			elm::genstruct::SLList<elm::BitVector *> new_masks;
-			for (elm::genstruct::SLList<elm::BitVector *>::Iterator mask(_contenders_masks_list) ; 
+			elm::genstruct::DLList<elm::BitVector *> new_masks;
+			for (elm::genstruct::DLList<elm::BitVector *>::Iterator mask(_contenders_masks_list) ;
 				 mask ; mask++) {
 				assert(mask->size() == _possible_contenders->size());
 				elm::BitVector *new_mask = new elm::BitVector(**mask);
@@ -404,7 +404,7 @@ void ParExeNode::buildContendersMasks(){
 				new_mask->set(one.item());
 				new_masks.addLast(new_mask);
 			}
-			for (elm::genstruct::SLList<elm::BitVector *>::Iterator new_mask(new_masks) ; 
+			for (elm::genstruct::DLList<elm::BitVector *>::Iterator new_mask(new_masks) ;
 				 new_mask ; new_mask++)
 				_contenders_masks_list.addLast(new_mask);
 		}

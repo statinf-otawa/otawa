@@ -337,7 +337,7 @@ namespace otawa {
 		elm::genstruct::Vector<ParExeNode *> _producers;
 		elm::genstruct::Vector<ParExeNode *> _contenders;
 		elm::BitVector * _possible_contenders;
-		elm::genstruct::SLList<elm::BitVector *> _contenders_masks_list;
+		elm::genstruct::DLList<elm::BitVector *> _contenders_masks_list;
 		int _late_contenders;
    
 	public:
@@ -384,8 +384,7 @@ namespace otawa {
 		{return _producers[index];}
 		inline void addContender(ParExeNode *cont) 
 		{_contenders.add(cont);}
-		elm::genstruct::SLList<elm::BitVector *>* contendersMasksList()
-			{return &_contenders_masks_list;}
+		inline elm::genstruct::DLList<elm::BitVector *>* contendersMasksList() {return &_contenders_masks_list;}
 		inline elm::String name()
 		{return _name;}
 		inline int d(int index)
