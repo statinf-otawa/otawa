@@ -76,18 +76,47 @@ Loader::Loader(
 
 
 /**
+ * Check the loader used in the given workspace matches the given name
+ * and version.
+ * @param ws				Current workspace.
+ * @param name				Name to check.
+ * @param version			Version to check.
+ * @throw otawa::Exception	If the loader does not match.
+ */
+void Loader::check(WorkSpace *ws, cstring name, const Version& version) {
+	Loader *loader = ws->process()->loader();
+	ASSERT(loader);
+
+	// check name and aliases
+	bool found_name = true;
+	if(loader->name() != name) {
+		found_name = false;
+		const Plugin::aliases_t& aliases = loader->aliases();
+		for(int i = 0; i < aliases.count(); i++)
+			if(name == aliases[i]) {
+				found_name = true;
+				break;
+			}
+
+	// check version
+	if(!found_name && !version.accepts(loader->pluginVersion()))
+		throw otawa::Exception(_ << name << " loader is required!");
+	}
+}
+
+/**
  * Name of the "Heptane" loader.
  */
-CString Loader::LOADER_NAME_Heptane = "heptane";
+//CString Loader::LOADER_NAME_Heptane = "heptane";
 
 /**
  * Name of the "GLISS PowerPC" loader.
  */
-CString Loader::LOADER_NAME_Gliss_PowerPC = "gliss-powerpc";
+//CString Loader::LOADER_NAME_Gliss_PowerPC = "gliss-powerpc";
 
 /**
  * Name of the default PowerPC platform.
  */
-CString Loader::PLATFORM_NAME_PowerPC_Gliss = "powerpc/ppc601-elf/gliss-gliss";
+//CString Loader::PLATFORM_NAME_PowerPC_Gliss = "powerpc/ppc601-elf/gliss-gliss";
 	
 } // otawa
