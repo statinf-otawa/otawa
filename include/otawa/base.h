@@ -33,21 +33,21 @@
 #include <elm/types.h>
 #include <elm/type_info.h>
 
+// Base types
+namespace elm { namespace t {
+typedef uint8 byte;
+typedef uint32 size;
+typedef uint32 mask;
+} }
+
 namespace otawa {
 using namespace elm;
-
-// Base types
-typedef unsigned char byte_t;
-typedef unsigned long size_t;
-typedef signed long offset_t;
-typedef unsigned long mask_t;
-
 
 // Address class
 class Address {
 public:
-	typedef unsigned long page_t;
-	typedef unsigned long offset_t;
+	typedef t::size page_t;
+	typedef t::size offset_t;
 	static Address null;
 	static const page_t null_page = elm::type_info<page_t>::max;
 
