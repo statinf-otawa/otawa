@@ -148,6 +148,7 @@ ACSBuilder::ACSBuilder(void) : Processor("otawa::ACSBuilder", Version(1, 0, 0)) 
 	require(COLLECTED_LBLOCKS_FEATURE);
 	require(ICACHE_FIRSTLAST_FEATURE);
 	provide(ICACHE_ACS_FEATURE);
+	require(hard::CACHE_CONFIGURATION_FEATURE);
 }
 
 
