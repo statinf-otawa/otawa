@@ -159,6 +159,8 @@ void Application::prepare(PropList& props) {
  * This method must overriden to implement the action of the application.
  * As a default, it call the work(string) method for each free argument on a command line
  * (supposed to be a task entry).
+ *
+ * When this method is called, the program has been already loaded.
  * @throw	elm::Exception	For any found error.
  */
 void Application::work(PropList &props) throw(elm::Exception) {
@@ -176,6 +178,11 @@ void Application::work(PropList &props) throw(elm::Exception) {
 /**
  * This method must be overriden to give a special behaviour for each free argument
  * of the command line (supposed to be the tasks entry points). As a default, do nothing.
+ *
+ * When this method is called, the program is been loaded and the workspace
+ * is marked as having as entry point the given one: the ready is so ready
+ * for computation.
+ *
  * @param entry				Task entry point name or any free argument.
  * @throw elm::Exception	For any found error.
  */
