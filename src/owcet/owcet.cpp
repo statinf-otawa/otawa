@@ -24,6 +24,7 @@
 #include <elm/option/StringList.h>
 #include <otawa/script/Script.h>
 #include <otawa/ipet/IPET.h>
+#include <otawa/util/FlowFactLoader.h>
 
 using namespace otawa;
 
@@ -37,7 +38,8 @@ public:
 		"Copyright (c) IRIT - UPS <casse@irit.fr>"
 	),
 	params(*this, 'p', "param", "parameter passed to the script", "IDENTIFIER=VALUE"),
-	script(*this, 's', "script", "script used to compute WCET", "PATH", "")
+	script(*this, 's', "script", "script used to compute WCET", "PATH", ""),
+	flowfacts(*this, option::cmd, "-f", option::cmd, "--flowfacts", option::help, "use the given to get flowfacts information", option::arg_desc, "PATH", option::end)
 	{ }
 
 protected:
@@ -57,6 +59,10 @@ protected:
 				script::PARAM(props).add(pair(param.substring(0, idx), param.substring(idx + 1)));
 		}
 
+		// process flow facts
+		if(flowfacts)
+			FLOW_FACTS_PATH(props) = Path(flowfacts);
+
 		// launch the script
 		//Processor::VERBOSE(props) = true;
 		TASK_ENTRY(props) = entry;
@@ -75,6 +81,7 @@ protected:
 private:
 	option::StringList params;
 	option::StringOption script;
+	option::ValueOption<string> flowfacts;
 	string bin, task;
 };
 
