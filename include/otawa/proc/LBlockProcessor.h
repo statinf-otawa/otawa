@@ -8,7 +8,7 @@
 #define OTAWA_PROC_LBLOCKPROCESSOR_H
 
 #include <otawa/proc/Processor.h>
-#include <elm/genstruct/SLList.h>
+#include <otawa/cache/LBlockSet.h>
 
 namespace otawa {
 	
@@ -18,15 +18,18 @@ class BasicBlock;
 	
 // Processor class
 class LBlockProcessor: public Processor {
-	elm::CString name;
-	void init(const PropList& props);
-protected:
-	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void processLBlock(WorkSpace *fw, LBlock *lblock) = 0;
 public:
-	LBlockProcessor(void);
-	LBlockProcessor(elm::String name, elm::Version version);
-	virtual void configure(const PropList& props);	
+	LBlockProcessor(AbstractRegistration &registration = reg);
+	static MetaRegistration reg;
+
+protected:
+	inline const hard::Cache *cache(void) const { return _cache; }
+	virtual void processWorkSpace(WorkSpace *ws);
+	virtual void processLBlockSet(WorkSpace *ws, LBlockSet *set);
+	virtual void processLBlock(WorkSpace *ws, LBlockSet *set, LBlock *lblock);
+
+private:
+	const hard::Cache *_cache;
 };
 
 } // otawa
