@@ -73,21 +73,21 @@ public:
 		{ pg = 0; off = offset; return *this; }
 	inline Address& operator+=(int offset)
 		{ ASSERT(!offset || !isNull()); off += offset; return *this; }
-	inline Address& operator+=(size_t offset)
+	inline Address& operator+=(t::size offset)
 		{ ASSERT(!offset || !isNull()); off += offset; return *this; }
 	inline Address& operator-=(int offset)
 		{ ASSERT(!offset || !isNull()); off -= offset; return *this; }
-	inline Address& operator-=(size_t offset)
+	inline Address& operator-=(t::size offset)
 		{ ASSERT(!offset || !isNull()); off -= offset; return *this; }
 
 	// Operations
-	inline Address operator+(int offset) const
+	inline Address operator+(t::int32 offset) const
 		{ ASSERT(!offset || !isNull()); return Address(pg, off + offset); }
-	inline Address operator+(size_t offset) const
+	inline Address operator+(t::uint32 offset) const
 		{ ASSERT(!offset || !isNull()); return Address(pg, off + offset); }
-	inline Address operator-(int offset) const
+	inline Address operator-(t::int32 offset) const
 		{ ASSERT(!offset || !isNull()); return Address(pg, off - offset); }
-	inline Address operator-(size_t offset) const
+	inline Address operator-(t::uint32 offset) const
 		{ ASSERT(!offset || !isNull()); return Address(pg, off - offset); }
 	inline offset_t operator-(const Address& address) const {
 		ASSERT(!isNull() && !address.isNull());

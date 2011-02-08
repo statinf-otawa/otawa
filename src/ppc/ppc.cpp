@@ -136,7 +136,7 @@ public:
 		inst = iss_decode(_state, addr.address(), buffer);
 		iss_complete(inst, _state);
 		iss_free(inst);
-		if(NIA(_state) == oinst->topAddress()) {
+		if(NIA(_state) == *(oinst->topAddress())) {
 			Inst *next = oinst->nextInst();
 			while(next && next->isPseudo())
 				next = next->nextInst();
@@ -1074,7 +1074,7 @@ bool BranchInst::checkSwitch(void) {
 			unsigned long index;
 			process().get(table + i * 4, index);
 			unsigned long offset;
-			process().get(jump + index * 4, offset);
+			process().get(jump + t::uint32(index) * 4, offset);
 			Address target = offset;
 
 			// add the target
@@ -1399,7 +1399,7 @@ void BranchInst::do_branch(sem::Block& block, unsigned long off, bool abs, bool 
 		block.add(sem::seti(lr, addr.offset()));
 	}
 	if(!abs)
-		addr = address() + (off << 2);
+		addr = address() + (t::uint32(off) << 2);
 	else
 		addr = off << 2;
 	block.add(sem::seti(t1, addr.offset()));

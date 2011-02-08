@@ -165,8 +165,8 @@ public:
 	static inline void reset(void) { ops::reset(); }
 	static inline bool match(state_t *state, const Address& addr) {
 		code_t buffer[20];
-		iss_fetch(addr, buffer);
-		instruction_t *inst = iss_decode(state, addr, buffer);
+		iss_fetch(*addr, buffer);
+		instruction_t *inst = iss_decode(state, *addr, buffer);
 		char dis[256];
 		iss_disasm(dis, inst);
 		OTAWA_PATTERN_DISPLAY("\t" << addr << " " << dis << '\n');
