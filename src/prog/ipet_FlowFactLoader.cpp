@@ -62,6 +62,18 @@ FlowFactLoader::FlowFactLoader(void)
 /**
  */
 void FlowFactLoader::enteringCall(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee) {
+	if(!caller->isEntry()) {
+		Inst *call = caller->lastInst();
+		if(!call->isCall()) {
+			for(BasicBlock::InstIter inst(caller); inst; inst++)
+				if(inst->isControl())
+					call = inst;
+			if(!call)
+				call = caller->lastInst();
+			ASSERT(call);
+		}
+		path.push(ContextualStep::CALL, call->address());
+	}
 	path.push(ContextualStep::FUNCTION, callee->address());
 }
 
@@ -70,6 +82,8 @@ void FlowFactLoader::enteringCall(WorkSpace *ws, CFG *cfg, BasicBlock *caller, B
  */
 void FlowFactLoader::leavingCall(WorkSpace *ws, CFG *cfg, BasicBlock *to) {
 	path.pop();
+	if(!to->isExit())
+		path.pop();
 }
 
 
