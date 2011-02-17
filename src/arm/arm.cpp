@@ -30,7 +30,7 @@
 #include <otawa/loader/arm.h>
 #include <elm/genstruct/SortedSLList.h>
 #include <otawa/util/FlowFactLoader.h>
-
+#include <otawa/prog/VarTextDecoder.h>
 
 #define TRACE(m) //cout << m << io::endl
 
@@ -224,7 +224,9 @@ public:
 		elm::genstruct::AllocatedTable<hard::Register *>& out
 	);
 
-
+	virtual Processor *decoder(void) {
+		return new VarTextDecoder();
+	}
 
 protected:
 	virtual otawa::Inst *decode(address_t addr);
