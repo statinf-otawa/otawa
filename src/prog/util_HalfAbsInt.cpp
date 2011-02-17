@@ -79,6 +79,13 @@ namespace otawa { namespace util {
  * 
  * @li void FixPointReached(BasicBlock*) const : Called by HalfAbsInt when the fixpoint is reached on a particular loop. The loop header
  * is passed in the parameter.
+ *
+ * @par Inside a code processor
+ *
+ * To be used inside an OTAWA code processor, the following features must be available
+ * (passed in the requirement list of the code processor):
+ * @li otawa::LOOP_INFO_FEATURE
+ * @li otawa::COLLECTED_CFG_FEATURE
  */
  
 /**
