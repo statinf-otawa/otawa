@@ -56,60 +56,66 @@
  * 
  * @par Program Features
  * 
- * @li @ref FLOW_FACTS_FEATURE
+ * @li @ref otawa::FLOW_FACTS_FEATURE
  * 
  * @par CFG Features
  * 
  * Includes @ref otawa/cfg/features.h
  *
- * @li @ref CFG_INFO_FEATURE
- * @li @ref COLLECTED_CFG_FEATURE
- * @li @ref CONTEXT_TREE_FEATURE
- * @li @ref DOMINANCE_FEATURE
- * @li @ref LOOP_HEADERS_FEATURE
- * @li @ref LOOP_INFO_FEATURE
- * @li @ref NORMALIZED_CFGS_FEATURE
- * @li @ref PCG_FEATURE
- * @li @ref UNROLLED_LOOPS_FEATURE
- * @li @ref VIRTUALIZED_CFG_FEATURE
+ * @li @ref otawa::CFG_INFO_FEATURE
+ * @li @ref otawa::COLLECTED_CFG_FEATURE
+ * @li @ref otawa::CONTEXT_TREE_FEATURE
+ * @li @ref otawa::DOMINANCE_FEATURE
+ * @li @ref otawa::LOOP_HEADERS_FEATURE
+ * @li @ref otawa::LOOP_INFO_FEATURE
+ * @li @ref otawa::NORMALIZED_CFGS_FEATURE
+ * @li @ref otawa::PCG_FEATURE
+ * @li @ref otawa::UNROLLED_LOOPS_FEATURE
+ * @li @ref otawa::VIRTUALIZED_CFG_FEATURE
  * 
  * @par IPET Features
  * 
- * @li @ref CONTROL_CONSTRAINTS_FEATURE
- * @li @ref FLOW_FACTS_CONSTRAINTS_FEATURE
- * @li @ref ILP_SYSTEM_FEATURE
- * @li @ref OBJECT_FUNCTION_FEATURE
- * @li @ref WCET_COUNT_RECORDED_FEATURE
- * @li @ref WCET_FEATURE
+ * @li @ref otawa::ipet::CONTROL_CONSTRAINTS_FEATURE
+ * @li @ref otawa::ipet::FLOW_FACTS_CONSTRAINTS_FEATURE
+ * @li @ref otawa::ipet::ILP_SYSTEM_FEATURE
+ * @li @ref otawa::ipet::OBJECT_FUNCTION_FEATURE
+ * @li @ref otawa::ipet::WCET_COUNT_RECORDED_FEATURE
+ * @li @ref otawa::ipet::WCET_FEATURE
  * 
  * @par Pipeline timings features
  * 
- * @li @ref ASSIGNED_VARS_FEATURE
- * @li @ref BB_TIME_FEATURE
- * @li @ref DELTA_SEQUENCES_FEATURE
- * @li @ref EDGE_TIME_FEATURE
- * @li @ref ipet::FLOW_FACTS_FEATURE
- * @li @ref INTERBLOCK_SUPPORT_FEATURE
+ * @li @ref otawa::ipet::ASSIGNED_VARS_FEATURE
+ * @li @ref otawa::ipet::BB_TIME_FEATURE
+ * @li @ref otawa::ipet::DELTA_SEQUENCES_FEATURE
+ * @li @ref otawa::ipet::EDGE_TIME_FEATURE
+ * @li @ref otawa::ipet::FLOW_FACTS_FEATURE
+ * @li @ref otawa::ipet::INTERBLOCK_SUPPORT_FEATURE
  * 
  * @par Cache specific features
  * 
- * @li @ref CCG_FEATURE
- * @li @ref COLLECTED_LBLOCKS_FEATURE
- * @li @ref DATA_CACHE_SUPPORT_FEATURE
- * @li @ref ICACHE_ACS_FEATURE
- * @li @ref ICACHE_ACS_MAY_FEATURE
- * @li @ref ICACHE_CATEGORY_FEATURE
- * @li @ref ICACHE_CATEGORY2_FEATURE
- * @li @ref ICACHE_FIRSTLAST_FEATURE
- * @li @ref INST_CACHE_SUPPORT_FEATURE
+ * @li @ref otawa::CCG_FEATURE
+ * @li @ref otawa::COLLECTED_LBLOCKS_FEATURE
+ * @li @ref otawa::DATA_CACHE_SUPPORT_FEATURE
+ * @li @ref otawa::ICACHE_ACS_FEATURE
+ * @li @ref otawa::ICACHE_ACS_MAY_FEATURE
+ * @li @ref otawa::ICACHE_CATEGORY_FEATURE
+ * @li @ref otawa::ICACHE_CATEGORY2_FEATURE
+ * @li @ref otawa::ICACHE_FIRSTLAST_FEATURE
+ * @li @ref otawa::INST_CACHE_SUPPORT_FEATURE
  * 
  * @par Loader Features
  * 
- * @li @ref CONTROL_DECODING_FEATURE
- * @li @ref FLOAT_MEMORY_ACCESS_FEATURE
- * @li @ref MEMORY_ACCESS_FEATURE
- * @li @ref REGISTER_USAGE_FEATURE
- * @li @ref SOURCE_LINE_FEATURE
- * @li @ref STACK_USAGE_FEATURE
+ * @li @ref otawa::CONTROL_DECODING_FEATURE
+ * @li @ref otawa::FLOAT_MEMORY_ACCESS_FEATURE
+ * @li @ref otawa::MEMORY_ACCESS_FEATURE
+ * @li @ref otawa::REGISTER_USAGE_FEATURE
+ * @li @ref otawa::SOURCE_LINE_FEATURE
+ * @li @ref otawa::STACK_USAGE_FEATURE
+ *
+ * @par Hardware Configuration Features
+ *
+ * @li @ref otawa::hard::CACHE_CONFIGURATION_FEATURE
+ * @li @ref otawa::hard::MEMORY_FEATURE
+ * @li @ref otawa::hard::PROCESSOR_FEATURE
  */
 
