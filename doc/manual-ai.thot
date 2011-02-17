@@ -31,7 +31,8 @@ Actually, HalfAbsInt is only parametrized by the FixPoint. The FixPoint is in tu
 
 ===== The Problem class =====
 
-First, the Problem must define a domain, called ''Problem::Domain'', representing the Abstract Domain of the abstract interpretation. 
+First, the Problem must define a domain, called ''Problem::Domain'', representing
+the Abstract Domain of the abstract interpretation. 
 
 Additionnaly, the Problem must define the following methods: 
 
@@ -51,6 +52,20 @@ The following two functions are special and will be explained at the end of this
 
   * ''void enterContext(Domain &dom, BasicBlock *header)''
   * ''void leaveContext(Domain &dom, BasicBlock *header)''
+
+If the ''Problem::Domain'' is a class, it must also define a constructor by copy
+that is used to initialize domains used by analyzer:
+<code c++>
+class Problem {
+public:
+	Domain(const Domain& d);	// constructor by copy
+
+};
+</code>
+
+Be careful! C++ compiler will not complain if this constructor is not available
+and will generate one automatically if not present. This constructor just performs
+a byte-per-byte copy with possible bad effects when pointers or references are used.
 
 
 
