@@ -343,6 +343,7 @@ AC_CONFIG_FILES([
 	src/lp_solve5/Makefile
 	src/dumpcfg/Makefile
 	src/mkff/Makefile
+	src/ocpp/Makefile
 	src/ostat/Makefile
 	src/oipet/Makefile
 	src/odisasm/Makefile
@@ -391,6 +392,7 @@ AC_CONFIG_FILES([
 	include/otawa/cache/categorisation/Makefile
 	include/otawa/cache/cat2/Makefile
 	include/otawa/cache/ccg/Makefile
+	include/otawa/cpp/Makefile
 	include/otawa/dcache/Makefile
 	include/otawa/cfg/Makefile
 	include/otawa/dfa/Makefile

@@ -5,6 +5,7 @@ SUBDIRS= \
 	cache \
 	dcache \
 	cfg \
+	cpp \
 	dfa \
 	display \
 	ets \
