@@ -39,10 +39,10 @@
 
 
 
-#if defined(NDEBUG) || !defined(DEBUG)
-#	define TRACE(x)
+#if defined(NDEBUG) || !defined(HAI_DEBUG)
+#	define HAI_TRACE(x)
 #else
-#	define TRACE(x) cerr << x << io::endl
+#	define HAI_TRACE(x) cerr << x << io::endl
 #endif
 
 namespace otawa { namespace util {
@@ -159,7 +159,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 		if (FIRST_ITER(current))
         	FIXPOINT_STATE(current) = fp.newState();
     	fp.fixPoint(current, fixpoint, in, FIRST_ITER(current));
-    	TRACE("Loop header " << current->number() << ", fixpoint reached = " << fixpoint);
+    	HAI_TRACE("at loop header " << current << ", fixpoint reached = " << fixpoint);
     	if (FIRST_ITER(current)) {
     		ASSERT(!fixpoint);
     		FIRST_ITER(current) = false;
@@ -176,7 +176,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
     			continue;
     		if (Dominance::dominates(current, inedge->source())) {
     			fp.unmarkEdge(*inedge);
-    			TRACE("Unmarking back-edge: " << inedge->source()->number() << "->" << inedge->target()->number());
+    			HAI_TRACE("unmarking back-edge: " << inedge->source() << " -> " << inedge->target());
     		}
     	}
 
@@ -194,7 +194,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 				if (HAI_BYPASS_TARGET(current) && (inedge->kind() == Edge::VIRTUAL_RETURN))
 					continue;
 	    		if (!Dominance::dominates(current, inedge->source())) {
-	    			TRACE("Unmarking entry-edge: " << inedge->source()->number() << "->" << inedge->target()->number());
+	    			HAI_TRACE("unmarking entry-edge " << inedge->source() << " -> " << inedge->target());
 					fp.unmarkEdge(*inedge);
 	    		}
 	    	}
@@ -213,14 +213,14 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			if (HAI_BYPASS_TARGET(current) && (inedge->kind() == Edge::VIRTUAL_RETURN))
 				continue;
 			typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
-	    TRACE("Got state: " << *edgeState << "\n");
+	    HAI_TRACE("got state: " << *edgeState << "\n");
 			
 			ASSERT(edgeState != NULL);
 			fp.updateEdge(*inedge, *edgeState);
 			fp.lub(in, *edgeState);
 			fp.unmarkEdge(*inedge);
 
-            TRACE("Unmarking in-edge: " << inedge->source()->number() << "->" << inedge->target()->number());
+            HAI_TRACE("unmarking in-edge " << inedge->source() << " -> " << inedge->target());
 
 		}
 		if (HAI_BYPASS_TARGET(current)) {
@@ -228,7 +228,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			ASSERT(bypassState != NULL);
 			fp.lub(in, *bypassState);
 			fp.unmarkEdge(current);
-            TRACE("Unmarking bypass in-edge: " << HAI_BYPASS_TARGET(current)->number() << "->" << current->number());
+            HAI_TRACE("unmarking bypass in-edge " << HAI_BYPASS_TARGET(current) << " -> " << current);
 		}
 	}
 }
@@ -251,7 +251,7 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
 		} else {
 	        for (elm::genstruct::Vector<Edge*>::Iterator iter(*EXIT_LIST(current)); iter; iter++) {
 
-	           	TRACE("Activating edge: " << iter->source()->number() << "->" << iter->target()->number());
+	           	HAI_TRACE("activating edge " << iter->source() << " -> " << iter->target());
 
 				if (!alreadyAdded.contains(iter->target())) {
 	           			if (tryAddToWorkList(iter->target()))
@@ -268,12 +268,12 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
 
 
        	fp.update(out, in, current);
-		TRACE("Updating for exit block while returning from call: " << current->number());
+		HAI_TRACE("updating for exit block while returning from call at " << current);
 
        	Edge *edge = callStack->pop();
        	cur_cfg = cfgStack->pop();
 
-       	TRACE("Returning to CFG: " << cur_cfg->label());
+       	HAI_TRACE("returning to CFG " << cur_cfg->label());
 
 		fp.leaveContext(out, cur_cfg->entry(), CTX_FUNC);
        	fp.markEdge(edge, out);
@@ -285,7 +285,7 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
 		/* If first time, mark entry points. */
 		if (enter_call) {
 			fp.update(out, in, current);
-			TRACE("Updating for basicblock while visiting call-node for the first time: " << current->number());
+			HAI_TRACE("updating for BB " << current << " while visiting call-node for the first time");
 		    for (elm::genstruct::Vector<Edge*>::Iterator iter(call_edges); iter; iter++) {
 				// Mark all the function entries
 				BasicBlock *func_entry = iter->calledCFG()->entry();
@@ -297,7 +297,7 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
         cfgStack->push(cur_cfg);
         cur_cfg = next_edge->calledCFG();
 
-        TRACE("Going to CFG: " << cur_cfg->label());
+        HAI_TRACE("calling CFG " << cur_cfg->label());
 
         workList->push(cur_cfg->entry());
         fp.enterContext(out, cur_cfg->entry(), CTX_FUNC);
@@ -305,7 +305,7 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
 
 	/* Visit call-node for the last-time, propagate state to successors */
 	else if (!call_edges.isEmpty()) {
-		TRACE("Finished processing function calls for bb " << current->number());
+		HAI_TRACE("returning from function calls at " << current);
 		fp.assign(out, in);
 		addSuccessors();
 	}
@@ -314,7 +314,7 @@ void HalfAbsInt<FixPoint>::outputProcessing() {
 	else {
 
         fp.update(out, in, current);
-		TRACE("Updating for basicblock: " << current->number());
+		HAI_TRACE("updating " << current);
         fp.blockInterpreted(current, in, out, cur_cfg, callStack);
         addSuccessors();
 	}
@@ -334,7 +334,7 @@ void HalfAbsInt<FixPoint>::addSuccessors() {
 
 	    fp.markEdge(*outedge, out);
 
-	    TRACE("Marking edge: " << outedge->source()->number() << "->" << outedge->target()->number() << "\n"); 
+	    HAI_TRACE("marking edge " << outedge->source() << " -> " << outedge->target() << "\n");
 
 	    tryAddToWorkList(outedge->target());
 	}
@@ -343,7 +343,7 @@ void HalfAbsInt<FixPoint>::addSuccessors() {
 
 		fp.markEdge(HAI_BYPASS_SOURCE(current), out);
 
-	    TRACE("Marking bypass out-edge: " << current->number() << "->" << HAI_BYPASS_SOURCE(current)->number());
+	    HAI_TRACE("marking bypass out-edge " << current << " -> " << HAI_BYPASS_SOURCE(current));
 
 		tryAddToWorkList(HAI_BYPASS_SOURCE(current));
 	}
@@ -396,7 +396,7 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg,
 		workList->push(start_bb);
 
 
-		TRACE("==== Beginning of the HalfAbsInt solve() ====");
+		HAI_TRACE("==== Beginning HalfAbsInt solve() ====");
 
         /* HalfAbsInt main loop */
         while (!workList->isEmpty()) {
@@ -405,14 +405,14 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg,
       		current = workList->pop();
       		next_edge = detectCalls(enter_call, call_edges, current);
 
-        	TRACE("\n=== HalfAbsInt Iteration ==");
-        	TRACE("Processing BB: " << current->number());
+        	HAI_TRACE("\n=== HalfAbsInt Next Iteration ==");
+        	HAI_TRACE("Processing " << current);
 
 			inputProcessing(*entdom);
 			outputProcessing();
 	}
 
-        TRACE("==== HalfAbsInt solve() completed ====");
+        HAI_TRACE("==== HalfAbsInt solve() completed ====");
 
         return(iterations);
 }
@@ -477,7 +477,7 @@ inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(BasicBlock *bb) {
         	continue;
 		if (!isEdgeDone(*inedge)) {
 			add = false;
-			TRACE("edge is not done !\n");
+			HAI_TRACE("edge is not done !\n");
 		}
 	}
 	if (HAI_BYPASS_TARGET(bb)) {
@@ -493,7 +493,7 @@ inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(BasicBlock *bb) {
 					cerr << "Ignoring back-edges for loop header " << bb->number() << " because it's the first iteration.\n";
 #			endif
 		}
-		TRACE("Adding to worklist BB: " << bb->number());
+		HAI_TRACE("adding " << bb << " to worklist\n");
 		workList->push(bb);
 	}
 	return(add);

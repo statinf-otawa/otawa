@@ -43,42 +43,41 @@ namespace otawa { namespace util {
  *		void assign(Domain &, const Domain &) const;
  *		bool equals(const Domain &, const Domain &) const;
  *		void update(Domain &, const Domain &, BasicBlock*) const;
- *		inline void blockInterpreted(BasicBlock*, const Domain&, const Domain&) const ;
- *		inline void fixPointReached(BasicBlock*) const;
- * 
+ *		void blockInterpreted(BasicBlock*, const Domain&, const Domain&) const ;
+ *		void fixPointReached(BasicBlock*) const;
+ * 		const Domain& entry(void);
  * }
  * </pre></code>
  * 
  * @par Signature explanation 
  * 
- * @li The Domain type is the Domain of the abstract values used in the abstract interpretation.
- * 
- * @li The FixPointState class can holds, for each loop, status informations needed by FixPoint. 
+ * @li Domain -- this type is the Domain of the abstract values used in the abstract interpretation.
+ * @li FixPointState -- this class can holds, for each loop, status informations needed by FixPoint.
  * This status information can be accessed and modified by calling the halfAbsInt::getFixPointState() method.
- * 
- * @li void init(CFG*, HalfAbsInt<FixPoint>*) : Method called at HalfAbsInt initialization. Gives FixPoint the 
+ * @li void init(CFG*, HalfAbsInt<FixPoint>*) -- Method called at HalfAbsInt initialization. Gives FixPoint the
  * chance to perform initialization tasks that were impossible to do in FixPoint's constructor because HalfAbsInt was not
  * instantiated yet.
- * 
- * @li FixPointState *newState(void) : Create a new (empty) FixPointState.
- * 
- * @li markEdge(Edge*, Domain&) : Mark the edge with the value.
- * 
- * @li unmarkEdge(Edge*) : Delete the mark from the edge.
- *  
- * @li Domain* getMark(Edge*) : Retrieve the value from the marked edge.
- * 
- * @li Domain& bottom(void) : Returns the least abstract value (BOTTOM) 
- *
+ * @li FixPointState *newState(void) -- Create a new (empty) FixPointState.
+ * @li markEdge(Edge*, Domain&) -- Mark the edge with the value.
+ * @li unmarkEdge(Edge*) -- Delete the mark from the edge.
+ * @li Domain* getMark(Edge*) -- Retrieve the value from the marked edge.
+ * @li Domain& bottom(void) -- Returns the least abstract value (BOTTOM)
  * @li The lub, assign, equals methods are easy to understand.
- *  
- * @li void update(Domain& out, const Domain& in, BasicBlock*) const : Compute the OUT value, from the IN value and the BasicBlock.
- * 
- * @li void blockInterpreted(BasicBlock*, const Domain& in, const Domain& out) const : Is called when a BasicBlock is interpreted by
+ * @li void update(Domain& out, const Domain& in, BasicBlock*) const -- Compute the OUT value, from the IN value and the BasicBlock.
+ * @li void blockInterpreted(BasicBlock*, const Domain& in, const Domain& out) const -- Is called when a BasicBlock is interpreted by
  * HalfAbsInt. Informations provided: The BasicBlock, and its IN & OUT values
- * 
- * @li void FixPointReached(BasicBlock*) const : Called by HalfAbsInt when the fixpoint is reached on a particular loop. The loop header
+ * @li void FixPointReached(BasicBlock*) const -- Called by HalfAbsInt when the fixpoint is reached on a particular loop. The loop header
  * is passed in the parameter.
+ * @li const Domain& bottom(void) -- returns the least element of the domain.
+ * @li const Domain& entry(void) -- returns the domain value at the entry of CFG.
+ *
+ * An important precondition on the implementation of the fixpoint is that the Domain MUST support a complete partial order, we use "<=" to denote this order.
+ * The following applies on the different functions handling the domain:
+ * @li bottom() must returns the least element of the domain, that is, whatever d in Domain, bottom() <= d.
+ * @li update() must be monotonic, that is, if d1 <= d2, update(d'1, BB, d1) and update(d'2, BB, d2), d'1 <= d'2.
+ * @li lub() must gives a greater element, that is, if d = d1 and join(d, d2) then d1 <= d and d2 <= d.
+ *
+ * If these constraints are not ensured, the termination of the analysis performed by HalfAbsInst can not be asserted.
  *
  * @par Inside a code processor
  *
@@ -86,6 +85,23 @@ namespace otawa { namespace util {
  * (passed in the requirement list of the code processor):
  * @li otawa::LOOP_INFO_FEATURE
  * @li otawa::COLLECTED_CFG_FEATURE
+ *
+ * @par Debugging the analysis
+ * Causes of a failed abstract interpretation performed by HalfAbsInt may be hard to understand.
+ * To get details on what does the analyzer for debugging purpose, you may define the constant HAI_DEBUG before
+ * including the HalfAbsInt header file. When the analysis will be launched, the processing performed
+ * on basic block will be outputted with the values of the domain. To have a readable display of the domain,
+ * you have also to provide an overload of "<<" operator to perform the display:
+ * @code
+ * #define HAI_DEBUG
+ * #include <otawa/util/HalfAbsInt.h>
+ *
+ * // definition of domain, fixpoint, etc
+ *
+ * elm::io::Output operator<<(elm::io::Output& out, const TheDomain& d) {
+ * 		// display the domain to output
+ * }
+ * @endcode
  */
  
 /**

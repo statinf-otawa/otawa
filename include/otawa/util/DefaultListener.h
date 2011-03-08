@@ -121,8 +121,8 @@ void DefaultListener<Problem>::blockInterpreted(const DefaultFixPoint<DefaultLis
 
 		if (store_out)
 		  prob.lub(*results_out[cfgnumber][bbnumber], out);
-#ifdef DEBUG
-		cout << "[TRACE] Block " << bbnumber << ": IN=" << in << " OUT=" << out << "\n";
+#ifdef HAI_DEBUG
+		cout << "INFO: " << bb << "\n\tIN = " << in << "\n\tOUT= " << out << "\n";
 #endif		
 }
 
