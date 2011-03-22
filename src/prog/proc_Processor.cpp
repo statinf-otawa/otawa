@@ -151,6 +151,25 @@ namespace otawa {
 
 extern cstring VERBOSE_ENV;
 
+/**
+ * A registration to customize.
+ */
+class CustomRegistration: public AbstractRegistration {
+public:
+	CustomRegistration(AbstractRegistration& reg) {
+		custom_init(&reg.name(), reg.version(), p::base, &reg, p::end);
+	}
+
+	virtual Processor *make(void) const { return 0; }
+	virtual bool isFinal(void) const { return true; }
+
+private:
+	void custom_init(cstring name, const Version& version, int tag, ...) {
+		VARARG_BEGIN(args, tag)
+			init(name, version, tag, args);
+		VARARG_END
+	}
+};
 
 // Registration
 MetaRegistration Processor::reg(
@@ -365,6 +384,10 @@ void Processor::configure(const PropList& props) {
  */
 void Processor::process(WorkSpace *fw, const PropList& props) {
 
+	// first, perform preparation
+	if(!isPrepared())
+		prepare(fw);
+
 	// Perform configuration
 	ws = fw;
 	configure(props);
@@ -530,7 +553,7 @@ void Processor::warn(const String& message) {
  * the processor to write results.
  */
 Identifier<elm::io::OutStream *>
-	Processor::OUTPUT("otawa::Processor::OUTPUT", &io::stdout);
+	Processor::OUTPUT("otawa::Processor::OUTPUT", &io::out);
 
 
 /**
@@ -538,7 +561,7 @@ Identifier<elm::io::OutStream *>
  * the processor to write messages (information, warning, error).
  */
 Identifier<elm::io::OutStream *>
-	Processor::LOG("otawa::Processor::LOG", &io::stderr);
+	Processor::LOG("otawa::Processor::LOG", &io::err);
 
 
 /**
@@ -583,6 +606,11 @@ Identifier<Progress *> Processor::PROGRESS("otawa::Processor::PROGRESS", &Progre
  * @param feature	Required feature.
  */
 void Processor::require(const AbstractFeature& feature) {
+	ASSERTP(isPrepared(), "require() must only be called in constructor or in prepare()");
+	if(!isAllocated()) {
+		_reg = new CustomRegistration(*_reg);
+		flags |= IS_ALLOCATED;
+	}
 	_reg->features.add(FeatureUsage(FeatureUsage::require, feature));
 }
 
@@ -593,6 +621,11 @@ void Processor::require(const AbstractFeature& feature) {
  * @param feature	Invalidated feature.
  */
 void Processor::invalidate(const AbstractFeature& feature) {
+	ASSERTP(isPrepared(), "invalidate() must only be called in constructor or in prepare()");
+	if(!isAllocated()) {
+		_reg = new CustomRegistration(*_reg);
+		flags |= IS_ALLOCATED;
+	}
 	_reg->features.add(FeatureUsage(FeatureUsage::invalidate, feature));
 }
 
@@ -603,6 +636,11 @@ void Processor::invalidate(const AbstractFeature& feature) {
  * @param feature	Used feature.
  */
 void Processor::use(const AbstractFeature& feature) {
+	ASSERTP(isPrepared(), "use() must only be called in constructor or in prepare()");
+	if(!isAllocated()) {
+		_reg = new CustomRegistration(*_reg);
+		flags |= IS_ALLOCATED;
+	}
 	_reg->features.add(FeatureUsage(FeatureUsage::use, feature));
 }
 
@@ -613,6 +651,11 @@ void Processor::use(const AbstractFeature& feature) {
  * @param feature	Provided feature.
  */
 void Processor::provide(const AbstractFeature& feature) {
+	ASSERTP(isPrepared(), "provide() must only be called in constructor or in prepare()");
+	if(!isAllocated()) {
+		_reg = new CustomRegistration(*_reg);
+		flags |= IS_ALLOCATED;
+	}
 	_reg->features.add(FeatureUsage(FeatureUsage::provide, feature));
 }
 
@@ -622,6 +665,17 @@ void Processor::provide(const AbstractFeature& feature) {
  * Get the current workspace.
  * @return	Current workspace.
  */
+
+
+/**
+ * This method called to let the processor customize its requirements
+ * according to some generic feature. When overload, the original method
+ * MUST be called at the end of the custom overriding implementation.
+ * @param ws		Current workspace.
+ */
+void Processor::prepare(WorkSpace *ws) {
+	flags |= IS_PREPARED;
+}
 
 
 /**
