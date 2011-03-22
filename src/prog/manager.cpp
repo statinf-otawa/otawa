@@ -256,7 +256,7 @@ WorkSpace *Manager::loadBin(
 	// get log
 	io::OutStream *log_stream = Processor::LOG(props);
 	if(!log_stream)
-		log_stream = &io::stderr;
+		log_stream = &io::err;
 	Output log(*log_stream);
 
 	// Simple identified loader

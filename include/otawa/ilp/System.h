@@ -62,9 +62,9 @@ public:
 	virtual void exportLP(io::Output& out = elm::cout) = 0;
 	virtual void dumpSystem(io::Output& out = elm::cout);
 	virtual void dumpSolution(io::Output& out = elm::cout) = 0;
-	virtual void dump(elm::io::OutStream& out = elm::io::stdout);
+	virtual void dump(elm::io::OutStream& out = elm::io::out);
 	bool hasDump(format_t fmt);
-	void dump(format_t fmt, elm::io::OutStream& out = elm::io::stdout);
+	void dump(format_t fmt, elm::io::OutStream& out = elm::io::out);
 	
 	
 	class ConstIterator: public elm::datastruct::Iterator<Constraint*> {
