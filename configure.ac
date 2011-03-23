@@ -148,11 +148,6 @@ OTAWA_USE_LIB(GLISS_ARM,
 	OTAWA_CHECK_LIB(GLISS_ARM, emul.h, emul, $PWD/../arm/lib, $PWD/../arm/include))
 
 
-# ===== GLISS_S12X check ======
-OTAWA_USE_LIB(GLISS_S12X,
-	OTAWA_CHECK_LIB(GLISS_S12X, emul.h, emul, $PWD/../hcs12/lib, $PWD/../hcs12/include))
-
-
 # ===== LP_SOLVE check =====
 OTAWA_USE_LIB(LP_SOLVE,
 	OTAWA_CHECK_LIB(LP_SOLVE, lpkit.h, lpk, $PWD/../lp_solve, $PWD/../lp_solve,
@@ -354,7 +349,6 @@ AC_CONFIG_FILES([
 	src/arm/Makefile
 	src/ppc/Makefile
 	src/ppc2/Makefile
-	src/s12x/Makefile
 	src/bpred/Makefile
 	src/opcg/Makefile
 	bin/Makefile

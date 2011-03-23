@@ -53,11 +53,6 @@ function config_ppc {
 	DOC="PowerPC architecture loader"
 }
 
-function config_s12x {
-	KIND="loader"
-	DOC="Star12X architecture loader"
-}
-
 function config_arm {
 	KIND="loader"
 	DOC="ARM architecture loader"
@@ -85,7 +80,6 @@ modules="display ast ets"
 @HAS_LP_SOLVE_TRUE@		modules="$modules lp_solve"
 @HAS_LP_SOLVE5_TRUE@	modules="$modules lp_solve5"
 @HAS_GLISS_PPC_TRUE@	modules="$modules ppc"
-@HAS_GLISS_S12X_TRUE@	modules="$modules s12x"
 @HAS_GLISS_ARM_TRUE@	modules="$modules arm"
 @HAS_ILP_TRUE@			modules="$modules bpred"
 module_done=""
