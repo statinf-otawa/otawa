@@ -1,8 +1,0 @@
-.deps
-Makefile
-Makefile.in
-test_s12x
-.libs
-s12x.lo
-s12xsim.lo
-s12x.la

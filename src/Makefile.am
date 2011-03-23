@@ -27,10 +27,6 @@ if HAS_GLISS_ARM
 SUBDIRS += arm
 endif
 
-if HAS_GLISS_S12X
-SUBDIRS += s12x
-endif
-
 # Tools
 SUBDIRS += \
 	dumpcfg \
