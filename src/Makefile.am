@@ -36,25 +36,9 @@ SUBDIRS += \
 	odisasm \
 	owcet
 
-# Dependent libraries
-if HAS_SYSTEMC
-SUBDIRS += ogensim
-endif
-
-
 # Dependent tools
 if HAS_ILP
 SUBDIRS += bpred
 endif
 SUBDIRS += oipet
 
-
-
-#all-local:
-#	(cd mkast; make)
-
-#clean-local:
-#	(cd mkast; make clean)
-
-#install-exec-hook:
-#	(cd mkast; make install)
