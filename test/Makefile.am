@@ -21,16 +21,3 @@ SUBDIRS += \
 	categorisation \
 	ilp 
 endif
-
-if HAS_SYSTEMC
-SUBDIRS += \
-	delta \
-	generic_simulator \
-	display
-endif
-
-if HAS_ILP
-if HAS_SYSTEMC
-SUBDIRS += ipet
-endif
-endif

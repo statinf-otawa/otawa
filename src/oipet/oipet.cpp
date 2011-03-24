@@ -33,7 +33,6 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/ipet/BBTimeSimulator.h>
 #include <otawa/exegraph/LiExeGraphBBTime.h>
-#include <otawa/gensim/GenericSimulator.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/display/CFGDrawer.h>
 #include <otawa/cfg/CFGCollector.h>

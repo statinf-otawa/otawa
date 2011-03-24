@@ -15,12 +15,5 @@ oipet_DEPENDENCIES = \
 	@OTAWA_DEPS@  \
 	@ODISPLAY_LIBS@
 
-if HAS_SYSTEMC
-AM_CXXFLAGS += -DHAS_SYSTEMC
-oipet_LDADD += @OGENSIM_LIBS@
-oipet_DEPENDENCIES += @OGENSIM_DEPS@
-else
-endif
-
 oipet_SOURCES= \
 	oipet.cpp
