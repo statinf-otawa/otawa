@@ -180,13 +180,6 @@ AC_SUBST(ILP_DEPS)
 AC_SUBST(ILP_DEFAULT)
 
 
-# ===== SYSTEMC check =====
-OTAWA_USE_LIB(SYSTEMC,
-	OTAWA_CHECK_LIB(SYSTEMC, systemc.h, systemc, $PWD/../systemc/objdir/src, $PWD/../systemc/src,
-	OTAWA_CHECK_LIB(SYSTEMC, systemc.h, systemc, /usr/lib-linux, /usr/include,
-	OTAWA_CHECK_LIB(SYSTEMC, systemc.h, systemc, $PWD/../systemc/lib-linux, $PWD/../systemc/include)))) 
-
-
 # ===== dot check =====
 AC_PATH_PROG(HAS_DOT, dot, no)
 AM_CONDITIONAL(HAS_DOT, test "$HAS_DOT" != no)
@@ -212,8 +205,6 @@ AS_IF(test "$HAS_PLUGIN" != yes, [ OTAWA_DEPS="$OTAWA_DEPS" ])
 OTAWA_LIBS="$OTAWA_DEPS -dlopen force $GEL_LIBS"
 ODISPLAY_LIBS="\$(top_builddir)/src/odisplay/libodisplay.la"
 ODISPLAY_DEPS="$ODISPLAY_LIBS"
-OGENSIM_LIBS="\$(top_builddir)/src/ogensim/libogensim.la"
-OGENSIM_DEPS="$OGENSIM_LIBS"
 ILP_PATHS=$libdir/otawa/ilp
 LOADER_PATHS=$libdir/otawa/loader
 PROC_PATHS=$libdir/otawa/proc
@@ -343,7 +334,6 @@ AC_CONFIG_FILES([
 	src/oipet/Makefile
 	src/odisasm/Makefile
 	src/odisplay/Makefile
-	src/ogensim/Makefile
 	src/oloader/Makefile
 	src/owcet/Makefile
 	src/arm/Makefile
@@ -395,7 +385,6 @@ AC_CONFIG_FILES([
 	include/otawa/exegraph/Makefile
 	include/otawa/parexegraph/Makefile
 	include/otawa/flowfact/Makefile
-	include/otawa/gensim/Makefile
 	include/otawa/graph/Makefile
 	include/otawa/hard/Makefile
 	include/otawa/hardware/Makefile

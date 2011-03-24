@@ -27,11 +27,6 @@ SUBDIRS= \
 	util
 
 
-if HAS_SYSTEMC
-SUBDIRS += gensim
-endif
-
-
 # Headers
 includeotawadir=$(includedir)/otawa
 includeotawa_HEADERS = \
