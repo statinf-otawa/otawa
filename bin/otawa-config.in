@@ -76,7 +76,6 @@ function config_ast {
 
 # Compute the module list
 modules="display ast ets"
-@HAS_SYSTEMC_TRUE@		modules="$modules gensim"
 @HAS_LP_SOLVE_TRUE@		modules="$modules lp_solve"
 @HAS_LP_SOLVE5_TRUE@	modules="$modules lp_solve5"
 @HAS_GLISS_PPC_TRUE@	modules="$modules ppc"
