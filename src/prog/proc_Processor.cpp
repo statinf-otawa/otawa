@@ -606,7 +606,7 @@ Identifier<Progress *> Processor::PROGRESS("otawa::Processor::PROGRESS", &Progre
  * @param feature	Required feature.
  */
 void Processor::require(const AbstractFeature& feature) {
-	ASSERTP(isPrepared(), "require() must only be called in constructor or in prepare()");
+	ASSERTP(!isPrepared(), "require() must only be called in constructor or in prepare()");
 	if(!isAllocated()) {
 		_reg = new CustomRegistration(*_reg);
 		flags |= IS_ALLOCATED;
@@ -621,7 +621,7 @@ void Processor::require(const AbstractFeature& feature) {
  * @param feature	Invalidated feature.
  */
 void Processor::invalidate(const AbstractFeature& feature) {
-	ASSERTP(isPrepared(), "invalidate() must only be called in constructor or in prepare()");
+	ASSERTP(!isPrepared(), "invalidate() must only be called in constructor or in prepare()");
 	if(!isAllocated()) {
 		_reg = new CustomRegistration(*_reg);
 		flags |= IS_ALLOCATED;
@@ -636,7 +636,7 @@ void Processor::invalidate(const AbstractFeature& feature) {
  * @param feature	Used feature.
  */
 void Processor::use(const AbstractFeature& feature) {
-	ASSERTP(isPrepared(), "use() must only be called in constructor or in prepare()");
+	ASSERTP(!isPrepared(), "use() must only be called in constructor or in prepare()");
 	if(!isAllocated()) {
 		_reg = new CustomRegistration(*_reg);
 		flags |= IS_ALLOCATED;
@@ -651,7 +651,7 @@ void Processor::use(const AbstractFeature& feature) {
  * @param feature	Provided feature.
  */
 void Processor::provide(const AbstractFeature& feature) {
-	ASSERTP(isPrepared(), "provide() must only be called in constructor or in prepare()");
+	ASSERTP(!isPrepared(), "provide() must only be called in constructor or in prepare()");
 	if(!isAllocated()) {
 		_reg = new CustomRegistration(*_reg);
 		flags |= IS_ALLOCATED;
