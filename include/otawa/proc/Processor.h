@@ -50,10 +50,11 @@ class Processor {
 	template <class T>
 	class Deletor: public elm::Cleaner {
 	public:
-		inline Deletor(const Ref<T *, Identifier<T *> >& ref): _ref(ref) { }
+		inline Deletor(const Ref<T *, Identifier<T *> >& ref): _ref(ref.props(), ref.id()) { }
+		inline Deletor(const Ref<T *, const Identifier<T *> >& ref): _ref(ref) { }
 		virtual ~Deletor(void) { delete _ref.get(); _ref.remove(); }
 	private:
-		Ref<T *, Identifier<T *> > _ref;
+		Ref<T *, const Identifier<T *> > _ref;
 	};
 
 public:
@@ -67,8 +68,8 @@ public:
 	static MetaRegistration reg;
 
 	// Accessors
-	inline elm::String name(void) const;
-	inline elm::Version version(void) const;
+	inline elm::String name(void) const { return _reg->name(); }
+	inline elm::Version version(void) const { return _reg->version(); }
 
 	// Mutators
 	virtual void configure(const PropList& props);
@@ -91,23 +92,31 @@ public:
 	Processor(elm::String name, elm::Version version, const PropList& props);
 
 protected:
-	static const unsigned long IS_TIMED = 0x01;
-	static const unsigned long IS_VERBOSE = 0x02;
-	static const unsigned long IS_ALLOCATED = 0x04;
+	static const t::uint32
+		IS_TIMED		= 0x01,
+		IS_VERBOSE		= 0x02,
+		IS_ALLOCATED	= 0x04,
+		IS_PREPARED		= 0x8;
 	unsigned long flags;
 	elm::io::Output out;
 	elm::io::Output log;
 	PropList *stats;
 
-	// Facility methods
+	// accessors
 	friend class FeatureRequirer;
-	inline bool isVerbose(void) const;
-	inline bool isTimed(void) const;
-	inline bool recordsStats(void) const;
+	inline bool isVerbose(void) const { return flags & IS_VERBOSE; }
+	inline bool isTimed(void) const { return flags & IS_TIMED; }
+	inline bool recordsStats(void) const { return stats; }
+	inline bool isAllocated(void) const { return flags & IS_ALLOCATED; }
+	inline bool isPrepared(void) const { return flags & IS_PREPARED; }
+
+	// configuration
 	void require(const AbstractFeature& feature);
 	void provide(const AbstractFeature& feature);
 	void invalidate(const AbstractFeature& feature);
 	void use(const AbstractFeature& feature);
+
+	// utilities
 	void warn(const String& message);
 	inline WorkSpace *workspace(void) const { return ws; }
 	inline void addCleaner(const AbstractFeature& feature, Cleaner *cleaner)
@@ -116,9 +125,12 @@ protected:
 		{ addCleaner(feature, new Deletor<T>(object)); return object; }
 	template <class T> void track(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
 		{ addCleaner(feature, new Deletor<T>(ref)); }
+	template <class T> void track(const AbstractFeature& feature, const Ref<T *, const Identifier<T *> >& ref)
+		{ addCleaner(feature, new Deletor<T>(ref)); }
 	inline Progress& progress(void) { return *_progress; }
 
-	// Overwritable methods
+	// Methods for customizing
+	virtual void prepare(WorkSpace *ws);
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void setup(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
@@ -172,28 +184,6 @@ public:
 private:
 	const AbstractFeature& f;
 };
-
-
-// Inlines
-inline elm::String Processor::name(void) const {
-	return _reg->name();
-}
-
-inline elm::Version Processor::version(void) const {
-	return _reg->version();
-}
-
-inline bool Processor::isVerbose(void) const {
-	return flags & IS_VERBOSE;
-}
-
-inline bool Processor::isTimed(void) const {
-	return flags & IS_TIMED;
-}
-
-inline bool Processor::recordsStats(void) const {
-	return stats;
-}
 
 } // otawa
 

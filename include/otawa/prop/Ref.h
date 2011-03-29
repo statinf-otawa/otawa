@@ -57,6 +57,10 @@ public:
 	inline Ref(PropList *_prop, const I& _id): ImmutableRef<T, I>(_prop, _id) { }
 	inline Ref(const Ref<T, I>& ref): ImmutableRef<T, I>(ref)  { }
 
+	// accessors
+	inline PropList& props(void) const { return const_cast<PropList&>(ImmutableRef<T, I>::proplist()); }
+	inline const I& id(void) const { return ImmutableRef<T, I>::identifier(); }
+
 	// mutators
 	inline const Ref& add(const T& value) const { id().add(props(), value); return *this; }
 	inline void remove(void) const { props().removeProp(id()); }
@@ -79,10 +83,6 @@ public:
 	inline Ref<T, I>& operator--(void) const { ref()--; }
 	inline Ref<T, I>& operator++(int) const { ref()++; }
 	inline Ref<T, I>& operator--(int) const { ref()--; }
-
-private:
-	inline PropList& props(void) const { return const_cast<PropList&>(ImmutableRef<T, I>::proplist()); }
-	inline const I& id(void) const { return ImmutableRef<T, I>::identifier(); }
 };
 
 // output
