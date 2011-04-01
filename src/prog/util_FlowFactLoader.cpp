@@ -207,6 +207,10 @@ extern int fft_line;
  * @li <b><tt>ignorecontrol ADDRESS ;</tt></b> @n
  * Force to ignore the control effect of the addressed instruction.
  *
+ * @li <b><tt>ignoreseq ADDRESS ;</tt></b> @n
+ * Force the target instruction to be considered to be considered as an unconditional branch.
+ * Can only be put on a conditional branch instruction.
+ *
  * @li <b><tt>multibranch ADDRESS to ADDRESS, ADDRESS, ... ;</tt></b> @n
  * List the different tagets of a multi-target control instruction
  * (function pointer call, switch-like construction).
