@@ -156,19 +156,10 @@ extern cstring VERBOSE_ENV;
  */
 class CustomRegistration: public AbstractRegistration {
 public:
-	CustomRegistration(AbstractRegistration& reg) {
-		custom_init(&reg.name(), reg.version(), p::base, &reg, p::end);
-	}
-
+	CustomRegistration(AbstractRegistration& reg): AbstractRegistration(&reg)
+		{ }
 	virtual Processor *make(void) const { return 0; }
 	virtual bool isFinal(void) const { return true; }
-
-private:
-	void custom_init(cstring name, const Version& version, int tag, ...) {
-		VARARG_BEGIN(args, tag)
-			init(name, version, tag, args);
-		VARARG_END
-	}
 };
 
 // Registration

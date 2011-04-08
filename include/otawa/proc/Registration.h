@@ -93,6 +93,7 @@ public:
 
 protected:
 	AbstractRegistration(void);
+	AbstractRegistration(AbstractRegistration *base);
 	virtual ~AbstractRegistration(void) { }
 	void init(cstring name, const Version& version, int tag, VarArg& args);
 

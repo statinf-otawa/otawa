@@ -79,6 +79,17 @@ AbstractRegistration::AbstractRegistration(void): _base(&Processor::reg) {
 
 
 /**
+ * Build of a custom registration.
+ * @param base		Base registration.
+ */
+AbstractRegistration::AbstractRegistration(AbstractRegistration *base) {
+	_base = base;
+	_name = base->_name;
+	_version = base->_version;
+}
+
+
+/**
  */
 void AbstractRegistration::record(void) {
 	Registry::_.record(this);

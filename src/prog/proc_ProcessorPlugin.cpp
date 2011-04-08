@@ -178,8 +178,11 @@ void ProcessorPlugin::removePath(const elm::system::Path& path) {
  */
 Processor *ProcessorPlugin::getProcessor(cstring name) {
 	const AbstractRegistration *reg = Registry::find(name);
-	if(!reg && get(name))
-		reg = Registry::find(name);
+	if(!reg) {
+		ProcessorPlugin *plugin = get(name);
+		if(plugin)
+			reg = Registry::find(name);
+	}
 	if(!reg)
 		return 0;
 	else
