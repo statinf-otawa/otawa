@@ -28,6 +28,54 @@
 
 using namespace otawa;
 
+/**
+ * @defgroup owcet owcet Command
+ *
+ * owcet command allows to compute WCET of an application using a script
+ * provided for a particular architecture implementation. It provide full power
+ * of OTAWA framework including selection of architecture-dependent plugin
+ * and fine-tuned computation scripts.
+ *
+ * @par Syntax
+ *
+ * @code
+ * SYNTAX: owcet [options] EXECUTABLE_PATH [TASK_ENTRY] -s SCRIPT_PATH
+ * @endcode
+ *
+ * The @i EXECUTABLE_PATH must be the path of the executable file to compute WCET for.
+ * This executable file must be in a machine language understood by OTAWA (currently OTAWA
+ * supports PowerPC, ARM, Sparc, HCS12 and partly TriCore).
+ *
+ * The optional @i TASK_ENTRY designs the function to compute the WCET for and usually
+ * matches a task in the real-time applications. If this parameter is not given,
+ * the @tt main function is used.
+ *
+ * The @i SCRIPT_PATH is the path of the file containing the script. These file are usually
+ * found in $OTAWA_HOME/share/Otawa/scripts. When an architecture plugin is installed,
+ * it provides usually its own script.
+ *
+ * Other options includes:
+ * @li -p, --param ID=VAL: several parameters with this form may be passed; these definition are used
+ * to pass parameters to the script and the supported @i ID depends on the launched script (see its documentation
+ * for more details),
+ * @li -f, --flowfacts PATH: OTAWA can not automatically found loops so this options is used
+ * to design the file containing loop bounds; supported formats includes .ff or .ffx (@ref ff). Flowfacts allows also
+ * to pass specific configuration for the flow execution of a program.
+ *
+ * @par Hints
+ *
+ * Real-time systems do not usually perform formatted output as @tt printf family of functions but such a function
+ * are often used in case of error. Usually formatting performed by @tt printf is big and complex piece of code
+ * that, in the case we take it into account in the WCET computation, would dominate the execution time
+ * and drive to a very overestimated WCET. To avoid this, you can command to OTAWA to ignore them
+ * without recompiling your application. Just create a file named YOU_EXECUTABLE.ff and write inside:
+ * @code
+ * nocall "printf";
+ * @endcode
+ * You can do the like with any function disturbing your computation. You can find in @ref f4 more details
+ * about the commande @tt .ff files. You may also use XML format called @tt .ffx (see @ref ffx).
+ */
+
 class OWCET: public Application {
 public:
 	OWCET(void): Application(

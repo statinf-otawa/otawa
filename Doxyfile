@@ -23,7 +23,7 @@ PROJECT_NAME           = Otawa
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = 0.5
+PROJECT_NUMBER         = 0.9
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) 
 # base path where the generated documentation will be put. 
@@ -424,6 +424,7 @@ INPUT                  = include/otawa/ \
                          src/oipet/oipet.cpp \
                          src/opcg/opcg.cpp \
                          src/ostat/ostat.cpp \
+                         src/owcet/owcet.cpp \
                     	 src/mkff/mkff.cpp
 
 # If the value of the INPUT tag contains directories, you can use the 
