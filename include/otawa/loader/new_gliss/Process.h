@@ -9,7 +9,7 @@
 
 #include <otawa/prog/Process.h>
 
-struct dwarf_line_map_t;
+struct gel_line_map_t;
 struct gel_file_info_t;
 
 namespace otawa {
@@ -62,7 +62,7 @@ public:
 	char **argv, **envp;
 	bool no_stack;
 	bool init;
-	struct dwarf_line_map_t *map;
+	struct gel_line_map_t *map;
 	struct gel_file_info_t *file;
 };
 
