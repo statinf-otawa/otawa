@@ -32,7 +32,7 @@ using namespace elm;
 
 #define QUEUE_SIZE	512
 
-#define TRACE(m)	//cerr << m << io::endl;
+#define TRACE(m)	cerr << m << io::endl;
 
 namespace otawa {
 
@@ -168,9 +168,15 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 				TRACE("otawa::VarTextDecoder::processEntry: put(" << target->address() << ")");
 				todo.put(target->address());
 			}
-			else if(isVerbose() && !target)
-				log << "WARNING: no target for branch at " << inst->address()
-					<< io::endl;
+			else if(!target) {
+				bool one = false;
+				for(Identifier<Address>::Getter target(inst, BRANCH_TARGET); target; target++) {
+					one = true;
+					todo.put(target);
+				}
+				if(!one && isVerbose())
+					log << "WARNING: no target for branch at " << inst->address() << io::endl;
+			}
 			if(inst->isCall() && (!target || !NO_RETURN(target))) {
 				TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
 				todo.put(inst->topAddress());
