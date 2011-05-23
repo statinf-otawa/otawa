@@ -32,7 +32,7 @@ using namespace elm;
 
 #define QUEUE_SIZE	512
 
-#define TRACE(m)	cerr << m << io::endl;
+#define TRACE(m)	//cerr << m << io::endl;
 
 namespace otawa {
 
