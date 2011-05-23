@@ -1,0 +1,603 @@
+/*
+ *	$Id$
+ *	Symbolic Expression definition and processor
+ *	
+ *	This file is part of OTAWA
+ *	Copyright (c) 2011, IRIT UPS.
+ *	
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *	
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *	
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
+ */
+
+#ifndef OTAWA_DATA_CLP_SYMBOLICEXPR_H_
+#define OTAWA_DATA_CLP_SYMBOLICEXPR_H_
+
+#include <elm/io.h>
+#include <elm/io/Output.h>
+#include <elm/genstruct/Vector.h>
+#include <elm/string/AutoString.h>
+#include <otawa/cfg/BasicBlock.h>
+#include <otawa/data/clp/ClpValue.h>
+
+using namespace elm;
+using namespace elm::genstruct;
+
+namespace otawa {
+
+namespace se{
+	
+	typedef clp::Value V;
+	
+	/** Defined operators */
+	typedef enum {
+		NONE,
+		CONST,		/** Constant */
+		ADDR,		/** Memory reference */
+		REG,		/** Register */
+		NEG,		/** Oposite of */
+		ADD,		/** Addition */
+		CMP,		/** Undeterminate compare */
+		CMPU,		/** Undeterminate unsigned compare */
+					/** Determinate compare: */
+		LE,			/**		less or equal */
+		LT,			/**		less than */
+		GE,			/**		greater or equal */
+		GT,			/**		greater than */
+		EQ,			/**		equal */
+		NE,			/**		not equal */
+					/**	Unsigned forms: */
+		ULE,
+		ULT,
+		UGE,
+		UGT,
+	} op_t;
+	
+	/** Symbolic expression*/
+	class SymbExpr{
+	public:
+		/** Constructor and destructor */
+		/**
+		 * Build a new symbolic expression
+		 * You shoul instaciate childs instead of this expression
+		*/
+		SymbExpr(op_t op=NONE, SymbExpr *a=NULL, SymbExpr *b=NULL, V val=0, SymbExpr *parent=NULL):
+			_op(op), _a(a), _b(b), _val(val), _parent(parent) {
+			if(_a != NULL)
+				_a->set_parent(this);
+			if(_b != NULL)
+				_b->set_parent(this);
+		}
+		/**
+		 * Copy constructor
+		 * @param expr the expression to copy
+		*/
+		SymbExpr(const SymbExpr &expr):
+			_op(expr._op), _val(expr._val), _parent(expr._parent) {
+			set_a(expr._a); // to copy expr._a
+			set_b(expr._b); // to copy expr._b
+		}
+		/**
+		 * Destructor of a symbolic expression
+		 * This recursively delete a and b childs, and set to NULL the reference
+		 * of this in the parent (if any).
+		*/
+		~SymbExpr(){
+			delete _a;
+			delete _b;
+			if (_parent != NULL){
+				if (_parent->_a == this)
+					_parent->_a = NULL;
+				else if (_parent->_b == this)
+					_parent->_b = NULL;
+			}
+		}
+		
+		/** Operators */
+		/**
+		 * Copy operator
+		 * @return a pointer to a copy of this
+		*/
+		virtual SymbExpr* copy(void);
+		/**
+		 * Affectation operator
+		 * @param expr the expression to be copied in this
+		 * @return this
+		*/
+		virtual SymbExpr& operator=(const SymbExpr& expr);
+		/**
+		 * Equality
+		 * @param expr the expression to be compared with this
+		 * @return if the expression reprensents the same as expr (recursively)
+		*/
+		virtual bool operator==(const SymbExpr& expr) const;
+		/**
+		 * Not equal operator
+		 * @param expr the expression to be compared with this
+		 * @return if the expression doesn't reprensents the same as expr
+		*/
+		bool operator!=(const SymbExpr& expr) const;
+		
+		/** Accessors **/
+		/**
+		 * @return the operator of the expression
+		*/
+		op_t op(void) const { return _op; }
+		/**
+		 * @return a pointer to the first child (a) of the expression (or NULL)
+		*/
+		SymbExpr* a(void) const { return _a; }
+		/**
+		 * @return a pointer to the second child (b) of the expression (or NULL)
+		*/
+		SymbExpr* b(void) const { return _b; }
+		/**
+		 * @return the value of this expression
+		*/
+		V val(void) const { return _val; }
+		/**
+		 * @return a pointer to the parent of this (or NULL)
+		*/
+		SymbExpr* parent(void) const { return _parent; }
+		
+		/** Operation **/
+		/**
+		 * Recursively replace in this the searched_se expression by new_se
+		 * @param searched_se the researched expression
+		 * @param new_se the expression that will replace searched_se
+		 *
+		 * new_se will be copied each time it replace a searched_se.
+		*/
+		void replace(SymbExpr *searched_se, SymbExpr *new_se);
+		/**
+		 * @return a string reprensentation of the expression
+		*/
+		virtual String asString(void);
+		/**
+		 * Output a string representation of the expression
+		 * @param out the output channel
+		*/
+		void print(io::Output& out);
+		/**
+		 * Try to recursively transform the expression into it its canonized
+		 * form.
+		*/
+		virtual void canonize(void);
+		/**
+		 * Return the list of registers used
+		 * (recursively) in this expression.
+		 * @return a vector of int.
+		*/
+		virtual Vector<V> used_reg(void);
+		/**
+		 * Return the list of memory addresses used
+		 * (recursively) in this expression.
+		 * @return a vector of int.
+		*/
+		virtual Vector<V> used_addr(void);
+		
+		/** Setters */
+		/**
+		 * Set the first child expression (a)
+		 * @param a a pointer to the new first child
+		 * 
+		 * A *copy* of a will be set as first child.
+		 * If there was a first child in this expression, it will be delete, but
+		 * after the copy of a (so it's safe to set_a() a child expression of
+		 * this->a()).
+		*/
+		void set_a(SymbExpr *a){
+			SymbExpr *olda = _a;
+			if (a) {
+				_a = a->copy();
+				_a->set_parent(this);
+			} else
+				_a = NULL;
+			// in last, because a can be delete here, we must copy it before
+			delete olda;
+		}
+		/**
+		 * Set the second child expression (b)
+		 * @param b a pointer to the new second child
+		 * 
+		 * A *copy* of b will be set as second child.
+		 * If there was a second child in this expression, it will be delete,
+		 * but after the copy of b (so it's safe to set_b() a child expression
+		 * of this->b()).
+		*/
+		void set_b(SymbExpr *b){
+			SymbExpr *oldb = _b;
+			if (b) {
+				_b = b->copy();
+				_b->set_parent(this);
+			} else
+				_b = NULL;
+			// in last, because b can be delete here, we must copy it before
+			delete oldb;
+		}
+		/**
+		 * Set the reference to the parent of this
+		 * @param parent a pointer to the new parent.
+		 *
+		 * Warning: this do not remove the reference to this in the old parent.
+		*/
+		void set_parent(SymbExpr *parent) { _parent = parent ; }
+	
+	protected:
+		/** Attributes **/
+		op_t _op;
+		SymbExpr *_a;
+		SymbExpr *_b;
+		V _val;
+		SymbExpr *_parent;
+	};
+	
+	// output
+	inline elm::io::Output& operator<<(elm::io::Output& out, SymbExpr &se) {
+		se.print(out);
+		return out;
+	}
+	
+	/** Constants */
+	class SEConst: public SymbExpr{
+	public:
+		/** Constructors */
+		/**
+		 * Build a new Constant Symbolic Expression [K value]
+		 * @param value the value of the constant
+		 * @param parent a pointer to the parent
+		*/
+		SEConst(V value, SymbExpr *parent=NULL):
+			SymbExpr(CONST, NULL, NULL, value, parent) {}
+		/**
+		 * Copy constructor
+		 * @param expr the expression to copy
+		*/
+		SEConst(const SEConst &expr): SymbExpr(expr) {}
+		
+		/** Operators */
+		/**
+		 * Copy operator
+			 * @return a pointer to a copy of this
+		*/
+		virtual SEConst* copy(void);
+		/**
+		 * Affectation operator
+		 * @param expr the expression to be copied in this
+		 * @return this
+		*/
+		virtual SymbExpr& operator=(const SEConst& expr);
+		/**
+		 * Equality
+		 * @param expr the expression to be compared with this
+		 * @return if the expression reprensents the same as expr (recursively)
+		*/
+		virtual bool operator==(const SymbExpr& expr) const;
+		
+		/** Operation **/
+		/**
+		 * @return a string reprensentation of the expression
+		*/
+		virtual String asString(void);
+		/**
+		 * Try to recursively transform the expression into it its canonized
+		 * form.
+		*/
+		virtual void canonize(void);
+	};
+	
+	/** Memory reference */
+	class SEAddr: public SymbExpr{
+	public:
+		/** Constructors */
+		/**
+		 * Build a new Memory Reference Symbolic Expression [@ value]
+		 * @param value the memory address
+		 * @param parent a pointer to the parent
+		*/
+		SEAddr(V value, SymbExpr* parent=NULL):
+			SymbExpr(ADDR, NULL, NULL, value, parent) {}
+		/**
+		 * Copy constructor
+		 * @param expr the expression to copy
+		*/
+		SEAddr(const SEAddr &expr): SymbExpr(expr) {}
+		
+		/** Operators */
+		/**
+		 * Copy operator
+		 * @return a pointer to a copy of this
+		*/
+		virtual SEAddr* copy(void);
+		/**
+		 * Equality
+		 * @param expr the expression to be compared with this
+		 * @return if the expression reprensents the same as expr (recursively)
+		*/
+		virtual SymbExpr& operator=(const SEAddr& expr);
+		/**
+		 * Not equal operator
+		 * @param expr the expression to be compared with this
+		 * @return if the expression doesn't reprensents the same as expr
+		*/
+		virtual bool operator==(const SymbExpr& expr) const;
+		
+		/** Operation **/
+		/**
+		 * @return a string reprensentation of the expression
+		*/
+		virtual String asString(void);
+		/**
+		 * Try to recursively transform the expression into it its canonized
+		 * form.
+		*/
+		virtual void canonize(void);
+		/**
+		 * Return the list of memory addresses used
+		 * (recursively) in this expression.
+		 * @return a vector of memory addresses.
+		*/
+		virtual Vector<V> used_addr(void);
+	};
+	
+	/** Register */
+	class SEReg: public SymbExpr{
+	public:
+		/** Constructors */
+		/**
+		 * Build a new Register Symbolic Expression [R value]
+		 * @param value the identifier of the register (<0 for temp registers)
+		 * @param parent a pointer to the parent
+		*/
+		SEReg(V value, SymbExpr *parent=NULL):
+			SymbExpr(REG, NULL, NULL, value, parent) {}
+		/**
+		 * Copy constructor
+		 * @param expr the expression to copy
+		*/
+		SEReg(const SEReg &expr): SymbExpr(expr) {}
+		
+		/** Operators */
+		/**
+		 * Copy operator
+		 * @return a pointer to a copy of this
+		*/
+		virtual SEReg* copy(void);
+		/**
+		 * Affectation operator
+		 * @param expr the expression to be copied in this
+		 * @return this
+		*/
+		virtual SymbExpr& operator=(const SEReg& expr);
+		/**
+		 * Not equal operator
+		 * @param expr the expression to be compared with this
+		 * @return if the expression doesn't reprensents the same as expr
+		*/
+		virtual bool operator==(const SymbExpr& expr) const;
+		
+		/** Operation **/
+		/**
+		 * @return a string reprensentation of the expression
+		*/
+		virtual String asString(void);
+		/**
+		 * Try to recursively transform the expression into it its canonized
+		 * form.
+		*/
+		virtual void canonize(void);
+		/**
+		 * Return the list of registers used
+		 * (recursively) in this expression.
+		 * @return a vector of int
+		*/
+		virtual Vector<V> used_reg(void);
+	};
+	
+	/** Negation */
+	class SENeg: public SymbExpr{
+	public:
+		/** Constructors */
+		/**
+		 * Build a new Negation Symbolic Expression [- a]
+		 * @param expr a pointer to the first child expression. This pointer
+		 *			will be used as is (no copy), so make sure you 'new' or
+		 *			'->copy()' the expression before.
+		 * @param parent a pointer to the parent
+		*/
+		SENeg(SymbExpr *expr=NULL, SymbExpr *parent=NULL):
+			SymbExpr(NEG, expr, NULL, 0, parent) {}
+		/**
+		 * Copy constructor
+		 * @param expr the expression to copy
+		*/
+		SENeg(const SENeg &expr): SymbExpr(expr) {}
+		
+		/** Operators */
+		/**
+		 * Copy operator
+		 * @return a pointer to a copy of this
+		*/
+		virtual SENeg* copy(void);
+		/**
+		 * Affectation operator
+		 * @param expr the expression to be copied in this
+		 * @return this
+		*/
+		virtual SymbExpr& operator=(const SENeg& expr);
+		/**
+		 * Not equal operator
+		 * @param expr the expression to be compared with this
+		 * @return if the expression doesn't reprensents the same as expr
+		*/
+		virtual bool operator==(const SymbExpr& expr) const;
+		
+		/** Operation **/
+		/**
+		 * @return a string reprensentation of the expression
+		*/
+		virtual String asString(void);
+		/**
+		 * Try to recursively transform the expression into it its canonized
+		 * form.
+		*/
+		virtual void canonize(void);
+	};
+	
+	/** Addition */
+	class SEAdd: public SymbExpr{
+	public:
+		/** Constructors */
+		/**
+		 * Build a new Addition Symbolic Expression [+ a b]
+		 * @param a is a pointer to the first child expression. This pointer
+		 *			will be used as is (no copy), so make sure you 'new' or
+		 *			'->copy()' the expression before.
+		 * @param b is a pointer to the second child expression. This pointer
+		 *			will be used as is (no copy), so make sure you 'new' or
+		 *			'->copy()' the expression before.
+		 * @param parent a pointer to the parent
+		*/
+		SEAdd(SymbExpr *a=NULL, SymbExpr *b=NULL, SymbExpr *parent=NULL):
+			SymbExpr(ADD, a, b, 0, parent) {}
+		/**
+		 * Copy constructor
+		 * @param expr the expression to copy
+		*/
+		SEAdd(const SEAdd &expr): SymbExpr(expr) {}
+		
+		/** Operators */
+		/**
+		 * Copy operator
+		 * @return a pointer to a copy of this
+		*/
+		virtual SEAdd* copy(void);
+		/**
+		 * Affectation operator
+		 * @param expr the expression to be copied in this
+		 * @return this
+		*/
+		virtual SymbExpr& operator=(const SEAdd& expr);
+		/**
+		 * Equality
+		 * @param expr the expression to be compared with this
+		 * @return if the expression reprensents the same as expr (recursively)
+		*/
+		virtual bool operator==(const SymbExpr& expr) const;
+		
+		/** Operation **/
+		/**
+		 * @return a string reprensentation of the expression
+		*/
+		virtual String asString(void);
+		/**
+		 * Try to recursively transform the expression into it its canonized
+		 * form.
+		*/
+		virtual void canonize(void);
+	};
+	
+	/** Compare symbolic expression
+		This class define three type of compare expression:
+			* condition (if): SECmp(operator, expression)
+			* undetermined compare: SECmp(CMP, exp1, exp2)
+			* determined compare: SECmp(operator, exp1, exp2)
+	*/
+	class SECmp: public SymbExpr{
+	public:
+		/** Constructors */
+		/**
+		 * Build a new Addition Symbolic Expression]
+		 * @param a is a pointer to the first child expression. This pointer
+		 *			will be used as is (no copy), so make sure you 'new' or
+		 *			'->copy()' the expression before.
+		 * @param b is a pointer to the second child expression. This pointer
+		 *			will be used as is (no copy), so make sure you 'new' or
+		 *			'->copy()' the expression before.
+		 * @param parent a pointer to the parent
+		 *
+		 * This class can reprensts three forms of expressions:
+		 * (oplog is in [LE, LT, GE, GT, EQ, NE])
+		 *	* [oplog a] for a condition (sem instr 'if')
+		 *	* [CMP a b] for an undetermined compare (sem instr 'cmp')
+		 *	* [oplog a b] for a determined compare (result of canonize)
+		*/
+		SECmp(op_t op, SymbExpr *a=NULL, SymbExpr *b=NULL, SymbExpr *parent=NULL):
+			SymbExpr(op, a, b, 0, parent) {}
+		/**
+		 * Copy constructor
+		 * @param expr the expression to copy
+		*/
+		SECmp(const SECmp &expr): SymbExpr(expr) {}
+		
+		/** Operators */
+		/**
+		 * Copy operator
+		 * @return a pointer to a copy of this
+		*/
+		virtual SECmp* copy(void);
+		/**
+		 * Affectation operator
+		 * @param expr the expression to be copied in this
+		 * @return this
+		*/
+		virtual SymbExpr& operator=(const SECmp& expr);
+		/**
+		 * Not equal operator
+		 * @param expr the expression to be compared with this
+		 * @return if the expression doesn't reprensents the same as expr
+		*/
+		virtual bool operator==(const SymbExpr& expr) const;
+		
+		/** Operation **/
+		/**
+		 * @return a string reprensentation of the expression
+		*/
+		virtual String asString(void);
+		/**
+		 * Try to recursively transform the expression into it its canonized
+		 * form.
+		*/
+		virtual void canonize(void);
+		/**
+		 * @return the logical not condition
+		*/
+		SECmp* logicalNot(void);
+	};
+	
+	
+	extern Identifier<Vector<SECmp *> > REG_FILTERS;
+	extern Identifier<Vector<SECmp *> > ADDR_FILTERS;
+	
+	/**
+	 * Find filters that apply on the basic block
+	 * @param bb the Basic Block to analysis
+	 * Two properties are sets:
+	 *		REG_FILTERS for filters on registers
+	 *		ADDR_FILTERS for filters on memory addresses
+	*/
+	void getFilters(BasicBlock* bb);
+	
+	/**
+	 * Apply a filter on the value
+	 * @param v the CLP to be filtred
+	 * @param cmp_op compare operator
+	 * @param f CLP to filter with
+	*/
+	void applyFilter(V &v, se::op_t cmp_op, V f);
+} // se
+
+} // otawa
+
+#endif /* OTAWA_DATA_CLP_SYMBOLICEXPR_H_ */

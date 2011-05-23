@@ -185,7 +185,9 @@ libotawa_la_SOURCES = \
 	dcache_BlockBuilder.cpp \
 	dcache_CatBuilder.cpp \
 	dcache_CatConstraintBuilder.cpp \
-	dcache_ACSMayBuilder.cpp
+	dcache_ACSMayBuilder.cpp \
+	clp_analysis.cpp \
+	clp_symbolic_expr.cpp
 
 
 #	Microprocessor.cpp

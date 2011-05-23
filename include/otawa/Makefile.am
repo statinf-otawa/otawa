@@ -3,6 +3,7 @@ SUBDIRS= \
 	app \
 	ast \
 	cache \
+	data \
 	dcache \
 	cfg \
 	cpp \

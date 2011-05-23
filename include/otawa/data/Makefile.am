@@ -1,0 +1,5 @@
+# Sub-directories
+SUBDIRS= \
+	clp
+
+

@@ -379,6 +379,8 @@ AC_CONFIG_FILES([
 	include/otawa/cpp/Makefile
 	include/otawa/dcache/Makefile
 	include/otawa/cfg/Makefile
+	include/otawa/data/Makefile
+	include/otawa/data/clp/Makefile
 	include/otawa/dfa/Makefile
 	include/otawa/display/Makefile
 	include/otawa/ets/Makefile
