@@ -64,17 +64,25 @@ namespace clp {
 	 */
 	class Value {
 	public:
-		/** Constructors **/
+		/** Constructor for a new CLP
+		*	@param kind the kind of the CLP
+		*	@param lower the lower bound
+		*	@param delta the delta
+		*	@param mtimes the number of time the delta is applied
+		*/
 		inline Value(kind_t kind=VAL, OCLP_intn_t lower=0, OCLP_intn_t delta=0,
 			OCLP_uintn_t mtimes=0): _kind(kind), _lower(lower), _delta(delta),
 			_mtimes(mtimes) { }
+		/** Copy constructor */
 		inline Value(const Value& val):
 			_kind(val._kind), _lower(val._lower), _delta(val._delta),
 			_mtimes(val._mtimes) { }
+		/** Singleton constructor
+		*	@param val the single integer element of the CLP
+		*	@return the CLP (val, 0, 0)
+		*/
 		inline Value(const int val):
 			_kind(VAL), _lower(val), _delta(0), _mtimes(0) {}
-		
-		/** Operators **/
 		
 		inline Value& operator=(const Value& val){
 			_kind = val._kind;
@@ -105,19 +113,23 @@ namespace clp {
 			return _lower >= val;
 		}
 		
-		/** Accessors **/
-		
 		inline kind_t kind(void) const { return _kind; }
 		inline OCLP_intn_t lower(void) const { return _lower; }
 		inline OCLP_intn_t delta(void) const { return _delta; }
 		inline OCLP_uintn_t mtimes(void) const { return _mtimes; }
 		
+		/** @return the "start" of the CLP, i.e. the lower bound if delta >= 0,
+		*	lower + delta * mtimes else.
+		*/
 		inline OCLP_intn_t start(void) const {
 			if (_delta < 0)
 				return _lower + _delta * _mtimes;
 			else
 				return _lower;
 		}
+		/** @return the "stop" of the CLP, i.e. the upper bound if delta >= 0,
+		*	lower else.
+		*/
 		inline OCLP_intn_t stop(void) const {
 			if (_delta < 0)
 				return _lower;
@@ -167,8 +179,12 @@ namespace clp {
 		 * @param val the value to do the intersection with
 		 */
 		void inter(const Value& val);
-	static const Value none, all;
-	
+		
+		/** Represents the bottom element */
+		static const Value none;
+		/** Represents the top element */
+		static const Value all;
+		
 		/** 
 		 * Set the values for the current object
 		 * @param kind the kind of the object

@@ -33,7 +33,8 @@ namespace hard { class Register; }
 
 namespace clp {
 	/**
-	 * The abstract state of the computer (abstract domain)
+	 * The abstract state of the computer (abstract domain). The abstract state
+	 * is a list of register states and memory states.
 	*/
 	class State {
 	public:
@@ -55,9 +56,11 @@ namespace clp {
 			Value val;
 		};
 		
-		/** Constructors */
+		/** Constructors of a new State	*/
 		State(const Value& def = Value::all): first(0, def) {}
+		/** Copy constructor */
 		State(const State& state): first(0, Value::all){copy(state);}
+		/** Destructor */
 		~State(void) { clear(); }
 		
 		inline State& operator=(const State& state){copy(state); return *this; }

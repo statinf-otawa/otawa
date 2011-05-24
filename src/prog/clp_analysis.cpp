@@ -1383,16 +1383,19 @@ private:
  *
  * This analyzer tracks values in the form of a CLP.
  *
- * @par Configuration
+ * @par Widening
+ *
+ * The widening of this analysis is performed using filtering from symbolic
+ * expressions.
  *
  * @par Provided Features
  * @li @ref otawa::CLP_ANALYSIS_FEATURE
  *
  * @par Required Features
  * @li @ref otawa::LOOP_INFO_FEATURE
- * @li @ref otawa::ipet::FLOW_FACTS_FEATURE
  * @li @ref otawa::VIRTUALIZED_CFG_FEATURE
- */
+ *
+*/ 
 ClpAnalysis::ClpAnalysis(void): Processor("otawa::ClpAnalysis", Version(0, 1, 0)),
 								_nb_inst(0), _nb_sem_inst(0), _nb_set(0), 
 								_nb_top_set(0), _nb_store(0), _nb_top_store(0),
@@ -1496,31 +1499,47 @@ Identifier<clp::State> CLP_STATE_IN("otawa::CLP_STATE_IN");
 Identifier<clp::State> CLP_STATE_OUT("otawa::CLP_STATE_OUT");
 
 namespace clp {
-/** A pack of Clp State inside a Basic Block.
-*	Use it to retreive the state of a specific instruction or semantic
-*	instruction.
+
+// ClpStatePack
+/** Constructor of a new ClpStatePack.
+*	@param bb is the BasicBlock to be analysed.
+*	
+*	A ClpStatePack must be constructed after the run of the ClpAnalysis.
+*	This constructor will use the input state of the BasicBlock, and run again
+*	the analysis until the end of the block.
+*	
+*	The state for each instruction and semantic instruction will be saved inside
+*	the pack.
 */
 ClpStatePack::ClpStatePack(BasicBlock *bb): _bb(bb), _packs(){
 	ASSERT(CLP_STATE_IN.exists(*bb));
 	ClpProblem prob;
 	prob.fillPack(_bb, this);
 }
+/** Destructor for ClpStatePack */
 ClpStatePack::~ClpStatePack(void){
 	while(!_packs.isEmpty()){
 		InstPack *p = _packs.pop();
 		delete p;
 	}
 }
+/** Destructor for InstPack */
 ClpStatePack::InstPack::~InstPack(void){
 	while(!_states.isEmpty()){
 		clp::State *st = _states.pop();
 		delete st;
 	}
 }
+/** Add a new state at the end of this pack.
+*	@param state the state to be added.
+*/
 void ClpStatePack::InstPack::append(clp::State &state){
 	clp::State *st = new clp::State(state);
 	_states.add(st);
 }
+/** @return the CLP state after the given instruction
+*	@param instruction is the address of the instruction to get the state of.
+*/
 clp::State ClpStatePack::state_after(address_t instruction){
 	for(PackIterator packs = getIterator(); packs; packs++){
 		InstPack *ipack = (*packs);
@@ -1529,6 +1548,12 @@ clp::State ClpStatePack::state_after(address_t instruction){
 	}
 	return clp::State::EMPTY; // FIXME: we should raise an exception?
 }
+/** @return the CLP state after the given semantic instruction
+*	@param instruction is the address of the instruction where the semantic
+*		instruction is.
+*	@param sem is the index (starting from 0) of the semantic instruction inside
+*		the block corresponding to the machine instruction.
+*/
 clp::State ClpStatePack::state_after(address_t instruction, int sem){
 	for(PackIterator packs = getIterator(); packs; packs++){
 		InstPack *ipack = (*packs);
@@ -1537,6 +1562,9 @@ clp::State ClpStatePack::state_after(address_t instruction, int sem){
 	}
 	return clp::State::EMPTY; // FIXME: we should raise an exception?
 }
+/** @return the CLP state before the given instruction
+*	@param instruction is the address of the instruction to get the state before.
+*/
 clp::State ClpStatePack::state_before(address_t instruction){
 	clp::State last_state = CLP_STATE_IN(_bb);
 	for(PackIterator packs = getIterator(); packs; packs++){
@@ -1547,6 +1575,12 @@ clp::State ClpStatePack::state_before(address_t instruction){
 	}
 	return last_state;
 }
+/** @return the CLP state before the given semantic instruction
+*	@param instruction is the address of the instruction where the semantic
+*		instruction is.
+*	@param sem is the index (starting from 0) of the semantic instruction inside
+*		the block corresponding to the machine instruction.
+*/
 clp::State ClpStatePack::state_before(address_t instruction, int sem){
 	clp::State last_state = CLP_STATE_IN(_bb);
 	for(PackIterator packs = getIterator(); packs; packs++){
@@ -1562,6 +1596,7 @@ clp::State ClpStatePack::state_before(address_t instruction, int sem){
 	return last_state;
 }
 
+/** Add a new instruction pack inside the ClpStatePack. */
 ClpStatePack::InstPack* ClpStatePack::newPack(address_t inst){
 	InstPack *ipack = new InstPack(inst);
 	_packs.add(ipack);
@@ -1574,10 +1609,10 @@ ClpStatePack::InstPack* ClpStatePack::newPack(address_t inst){
  *
  * This analyzer add the NEVER_TAKEN identifer on edges which are never taken.
  *
+ * @par Provided Features
+ * @li @ref otawa::DEAD_CODE_ANALYSIS_FEATURE
+ *
  * @par Required Features
- * @li @ref otawa::LOOP_INFO_FEATURE
- * @li @ref otawa::ipet::FLOW_FACTS_FEATURE
- * @li @ref otawa::VIRTUALIZED_CFG_FEATURE
  * @li @ref otawa::CLP_ANALYSIS_FEATURE
  */
 DeadCodeAnalysis::DeadCodeAnalysis(void): Processor("otawa::DeadCodeAnalysis", Version(0, 1, 0)) {

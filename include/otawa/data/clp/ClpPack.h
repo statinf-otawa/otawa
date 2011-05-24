@@ -31,7 +31,7 @@ namespace otawa {
 
 namespace clp {
 
-/** A pack of Clp State inside a Basic Block.
+/** A pack of CLP states inside a BasicBlock.
 *	Use it to retreive the state of a specific instruction or semantic
 *	instruction.
 */
@@ -40,14 +40,28 @@ friend class ClpProblem;
 public:
 	typedef Vector<clp::State*>::Iterator StateIterator;
 	
+	/** A pack of CLP states inside a machine instruction.
+	*	Each state of this pack is the state after a semantic instruction, in
+	*	the order of the semantic instructions.
+	*/
 	class InstPack{
 	friend class ClpStatePack; friend class ClpProblem;
 	public:
+		/** Constructor for a new instruction pack */
 		inline InstPack(): _inst_addr(0), _states() {}
+		/** Constructor for a new instruction pack
+		*	@param inst the address of the instruction of this pack
+		*/
 		inline InstPack(address_t inst): _inst_addr(inst), _states() {}
+		/** Destructor */
 		~InstPack(void);
+		/** @return the address of the instruction of this Pack */
 		inline address_t inst_addr(void) { return _inst_addr; }
+		/** @return an iterator over the states of this Pack.*/
 		inline StateIterator getIterator(void) { return StateIterator(_states);}
+		/** @return the last output state of this pack (i.e. the output state
+		*	of the machine instruction of this pack).
+		*/
 		clp::State& outputState(void) { return *(_states[_states.length() - 1]);}
 		void append(clp::State &state);
 	private:
@@ -60,7 +74,9 @@ public:
 	ClpStatePack(BasicBlock *bb);
 	~ClpStatePack(void);
 	
+	/** @return the BasicBlock corresponding to this Pack. */
 	inline BasicBlock *bb(void){ return _bb; }
+	/** @return an iterator over instruction packs. */
 	inline PackIterator getIterator(void) { return PackIterator(_packs); }
 	
 	clp::State state_after(address_t instruction);
