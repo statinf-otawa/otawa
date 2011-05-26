@@ -109,12 +109,16 @@ Identifier<string> ConstraintLoader::PATH("otawa::ipet::ConstraintLoader::PATH",
  */
 
 
+Registration<ConstraintLoader> ConstraintLoader::reg(
+	"otawa::ipet::ConstraintLoader", Version(1, 0, 0),
+	p::base,	&CFGProcessor::reg,
+	p::end
+);
+
 /**
  * Constructor.
  */
-ConstraintLoader::ConstraintLoader(void):
-	CFGProcessor("otawa::ipet::ConstraintLoader", Version(1, 0, 0))
-{
+ConstraintLoader::ConstraintLoader(AbstractRegistration& r): CFGProcessor(r) {
 }
 
 

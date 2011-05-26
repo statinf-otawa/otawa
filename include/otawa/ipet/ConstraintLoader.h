@@ -53,7 +53,8 @@ protected:
 
 public:
 	static Identifier<String> PATH;
-	ConstraintLoader(void);
+	static Registration<ConstraintLoader> reg;
+	ConstraintLoader(AbstractRegistration& r = reg);
 };
 	
 } } // otawa::ipet
