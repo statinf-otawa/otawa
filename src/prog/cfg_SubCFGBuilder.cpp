@@ -161,8 +161,8 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 	// fix start and stops
 	if(!start) {
 		BasicBlock::OutIterator next(cfg->entry());
-		ASSERT(start);
 		start = next->target()->address();
+		ASSERT(start);
 	}
 	if(!stops)
 		for(BasicBlock::InIterator prev(cfg->exit()); prev; prev++)

@@ -112,6 +112,7 @@ Identifier<string> ConstraintLoader::PATH("otawa::ipet::ConstraintLoader::PATH",
 Registration<ConstraintLoader> ConstraintLoader::reg(
 	"otawa::ipet::ConstraintLoader", Version(1, 0, 0),
 	p::base,	&CFGProcessor::reg,
+	p::require,	&otawa::ipet::ILP_SYSTEM_FEATURE,
 	p::end
 );
 
@@ -328,14 +329,16 @@ void ConstraintLoader::processCFG(WorkSpace *_fw, CFG *cfg) {
 		elm::StringBuffer buffer;
 		buffer <<_fw->process()->program()->name() << ".ipet";
 		path = buffer.toString();
+		if(isVerbose())
+			log << "\tno file provided: trying with " << path << io::endl;
 	}
 
 	// Open the file
+	if(isVerbose())
+		log << "\tloading constraints from " << path << io::endl;
 	ipet_in = fopen(&path.toCString(), "r");
-	if(!ipet_in) {
-		warn(_ << "cannot open the constraint file \"" << &path << "\".");
-		return;
-	}
+	if(!ipet_in)
+		throw ProcessorException(*this, _ << "cannot open the constraint file \"" << &path << "\".");
 
 	// Perform the parsing
 	ipet_parse(this);
