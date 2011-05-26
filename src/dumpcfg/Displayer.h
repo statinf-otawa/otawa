@@ -7,13 +7,19 @@
 #ifndef OTAWA_DUMPCFG_DISPLAYER_H
 #define OTAWA_DUMPCFG_DISPLAYER_H
 
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/cfg.h>
+
+using namespace otawa;
 
 // Displayer class
 class Displayer {
 public:
 	bool display_assembly;
+	bool source_info;
 	virtual ~Displayer(void) { }
+	virtual void onProgramBegin(WorkSpace *ws) { }
+	virtual void onProgramEnd(WorkSpace *ws) { }
 	virtual void onCFGBegin(otawa::CFG *cfg) = 0;
 	virtual void onCFGEnd(otawa::CFG *cfg) = 0;
 	virtual void onBBBegin(otawa::BasicBlock *bb, int index) = 0;

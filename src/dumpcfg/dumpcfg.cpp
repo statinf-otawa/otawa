@@ -140,6 +140,7 @@ public:
 	option::BoolOption disassemble;
 	option::BoolOption dot;
 	option::ValueOption<string> ff;
+	option::SwitchOption source;
 	Displayer *displayer;
 
 protected:
@@ -189,6 +190,7 @@ DumpCFG::DumpCFG(void):
 	disassemble(*this, 'L', "list", "Select listing output.", false),
 	dot(*this, 'D', "dot", "Select DOT output.", false),
 	ff(*this, option::cmd, "-f", option::cmd, "--flowfacts", option::description, "flowfacts to use", option::arg_desc, "PATH", option::end),
+	source(*this, option::short_cmd, 's', option::cmd, "--source", option::description, "enable source debugging information output", option::def, false, option::end),
 
 	displayer(&simple_displayer)
 {
@@ -213,8 +215,12 @@ void DumpCFG::dump(CFG *cfg) {
 	const CFGCollection *coll = INVOLVED_CFGS(my_ws);
 	CFG *vcfg = (*coll)[0];
 
-	// Dump the CFG
+	// set options
 	displayer->display_assembly = display_assembly;
+	displayer->source_info = source;
+
+	// Dump the CFG
+	displayer->onProgramBegin(my_ws);
 	displayer->onCFGBegin(cfg);
 	for(CFG::BBIterator bb(vcfg); bb; bb++) {
 
@@ -251,6 +257,7 @@ void DumpCFG::dump(CFG *cfg) {
 	if(current_inline)
 		displayer->onInlineEnd(current_inline);
 	displayer->onCFGEnd(cfg);
+	displayer->onProgramEnd(my_ws);
 }
 
 

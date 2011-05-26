@@ -21,6 +21,9 @@ extern option::BoolOption display_assembly;
  * @param bb	Displayed basic block.
  */
 void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
+	cstring file;
+	int line = 0;
+
 	if(bb) {
 		if(bb->isEntry())
 			cout <<  "ENTRY";
@@ -47,6 +50,22 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 					for(Identifier<String>::Getter label(inst, LABEL);
 					label; label++)
 						cout << *label << ":\\l";
+
+					// display the debug line
+					if(source_info) {
+						Option<Pair<cstring, int> > info = ws->process()->getSourceLine(inst->address());
+						if(info) {
+							if((*info).fst != file || (*info).snd != line) {
+								file = (*info).fst;
+								line = (*info).snd;
+								cout << file << ":" << line << "\\l";
+							}
+						}
+						else {
+							file = "";
+							line = 0;
+						}
+					}
 
 					// Display the instruction
 					cout << fmt::address(inst->address()) << "    ";

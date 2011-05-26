@@ -11,8 +11,8 @@
 
 // SimpleDisplayer class
 class DotDisplayer: public Displayer {
-	void displayLabel(otawa::BasicBlock *bb, int index);
 public:
+	virtual void onProgramBegin(WorkSpace *_ws) { ws = _ws; }
 	virtual void onCFGBegin(otawa::CFG *cfg);
 	virtual void onCFGEnd(otawa::CFG *cfg);
 	virtual void onBBBegin(otawa::BasicBlock *bb, int index);
@@ -23,7 +23,10 @@ public:
 	virtual void onInlineBegin(otawa::CFG *cfg);
 	virtual void onInlineEnd(otawa::CFG *cfg);
 	virtual void onCall(otawa::Edge *edge);
-	        
+
+private:
+	WorkSpace *ws;
+	void displayLabel(otawa::BasicBlock *bb, int index);
 };
 
 #endif	// OTAWA_DUMPCFG_DOT_DISPLAYER_H
