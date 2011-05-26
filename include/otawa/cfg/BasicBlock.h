@@ -152,6 +152,10 @@ public:
 	inline void set(Inst *_first, size_t size) { first = _first; _size = size; }
 	inline void setSize(size_t size) { _size = size; }
 	inline void setFirst(Inst *_first) { first = _first; }
+	inline void setReturn(void) { flags |= FLAG_Return; flags &= ~ FLAG_Call; }
+	inline void setCall(void) { flags |= FLAG_Call; flags &= ~ FLAG_Return; }
+	inline void setCond(void) { flags |= FLAG_Cond; }
+	inline void setUnknown(void) { flags |= FLAG_Unknown; }
 };
 
 
