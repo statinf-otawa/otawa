@@ -11,6 +11,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/ConstraintLoader.h>
 #include <otawa/cfg.h>
+#include <otawa/ipet/VarAssignment.h>
 #include "ExpNode.h"
 
 // Externals
@@ -113,6 +114,7 @@ Registration<ConstraintLoader> ConstraintLoader::reg(
 	"otawa::ipet::ConstraintLoader", Version(1, 0, 0),
 	p::base,	&CFGProcessor::reg,
 	p::require,	&otawa::ipet::ILP_SYSTEM_FEATURE,
+	p::require,	&otawa::ipet::ASSIGNED_VARS_FEATURE,
 	p::end
 );
 
@@ -132,10 +134,11 @@ BasicBlock *ConstraintLoader::getBB(address_t addr) {
 	BasicBlock *bb = bbs.get(addr, 0);
 	if(!bb) {
 		for (CFGCollection::Iterator icfg(INVOLVED_CFGS(fw)); icfg; icfg++) {
-			for (CFG::BBIterator ibb(icfg); ibb; ibb++) {
-				if(ibb->address() <= addr && addr < ibb->topAddress())
-					bb = ibb;
-			}
+			for (CFG::BBIterator ibb(icfg); ibb; ibb++)
+				if(!ibb->isEnd()) {
+					if(ibb->address() <= addr && addr < ibb->topAddress())
+						bb = ibb;
+				}
 		}
 		if(!bb) {
 			log << "ERROR: cannot find basic block at " << addr << ".\n";
