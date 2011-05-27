@@ -50,7 +50,8 @@ public:
 // ILPSystemDisplayer class
 class ILPSystemDisplayer: public Processor {
 public:
-	ILPSystemDisplayer(void);
+	static Registration<ILPSystemDisplayer> reg;
+	ILPSystemDisplayer(AbstractRegistration& r = reg);
 	virtual void configure(const PropList& props);
 
 	// Configuration

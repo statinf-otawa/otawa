@@ -67,12 +67,18 @@ namespace otawa { namespace display {
  */
 
 
+Registration<ILPSystemDisplayer> ILPSystemDisplayerreg(
+	"otawa::display::ILPSystemDisplayer", Version(1, 0, 1),
+	p::require,	&ipet::ILP_SYSTEM_FEATURE,
+	p::require,	&COLLECTED_CFG_FEATURE,
+	p::end
+);
+
+
 /**
  */
-ILPSystemDisplayer::ILPSystemDisplayer(void)
-: Processor("otawa::display::ILPSystemDisplayer", Version(1, 0, 0)) {
-	require(ipet::ILP_SYSTEM_FEATURE);
-	require(COLLECTED_CFG_FEATURE);
+ILPSystemDisplayer::ILPSystemDisplayer(AbstractRegistration& r)
+: Processor(r) {
 }
 
 
