@@ -227,8 +227,30 @@ ExpNode *right) {
 		NormNode *norm = normalize(left, 1);
 		norm->append(normalize(right, -1));
 		ilp::Constraint *cons = system->newConstraint(t);
-		for(; norm; norm = norm->next())
+		if(isVerbose())
+			log << '\t';
+		for(; norm; norm = norm->next()) {
 			cons->add(norm->coefficient(), norm->variable());
+			if(isVerbose()) {
+				log << norm->coefficient() << ' ';
+				if(norm->variable()) {
+					if(norm->variable()->name() == "")
+						log << "X" << (void *)norm->variable() << ' ';
+					else
+						log << norm->variable()->name() << ' ';
+				}
+			}
+		}
+		if(isVerbose()) {
+			switch(t) {
+			case ilp::Constraint::EQ: log << "="; break;
+			case ilp::Constraint::GE: log << ">="; break;
+			case ilp::Constraint::GT: log << ">"; break;
+			case ilp::Constraint::LT: log << "<"; break;
+			case ilp::Constraint::LE: log << "<="; break;
+			}
+			log << " 0\n";
+		}
 		return true;
 	}
 	catch(NormalizationException e) {

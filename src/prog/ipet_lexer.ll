@@ -34,6 +34,7 @@ COM		#.*\n
 
 [ \t]+		/* ignore spaces */ ;
 {COM}		ipet_line++; /* ignore comment */ ;
+"//".*		ipet_line++; /* ignore comment */ ;
 \n			ipet_line++; return EOL;
 
 

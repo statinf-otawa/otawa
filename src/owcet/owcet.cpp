@@ -87,7 +87,8 @@ public:
 	),
 	params(*this, 'p', "param", "parameter passed to the script", "IDENTIFIER=VALUE"),
 	script(*this, 's', "script", "script used to compute WCET", "PATH", ""),
-	flowfacts(*this, option::cmd, "-f", option::cmd, "--flowfacts", option::help, "use the given to get flowfacts information", option::arg_desc, "PATH", option::end)
+	flowfacts(*this, option::cmd, "-f", option::cmd, "--flowfacts", option::help, "use the given to get flowfacts information", option::arg_desc, "PATH", option::end),
+	ilp_dump(*this, option::cmd, "-i", option::cmd, "--dump-ilp", option::help, "dump ILP system to stdandard output", option::end)
 	{ }
 
 protected:
@@ -124,12 +125,18 @@ protected:
 			cout << "ERROR: no WCET computed (see errors above).\n";
 		else
 			cout << "WCET[" << entry << "] = " << ipet::WCET(workspace()) << " cycles\n";
+
+		if(ilp_dump) {
+			ilp::System *sys = ipet::SYSTEM(workspace());
+			sys->dump(out);
+		}
 	}
 
 private:
 	option::StringList params;
 	option::StringOption script;
 	option::ValueOption<string> flowfacts;
+	option::SwitchOption ilp_dump;
 	string bin, task;
 };
 
