@@ -67,7 +67,7 @@ namespace otawa { namespace display {
  */
 
 
-Registration<ILPSystemDisplayer> ILPSystemDisplayerreg(
+Registration<ILPSystemDisplayer> ILPSystemDisplayer::reg(
 	"otawa::display::ILPSystemDisplayer", Version(1, 0, 1),
 	p::require,	&ipet::ILP_SYSTEM_FEATURE,
 	p::require,	&COLLECTED_CFG_FEATURE,
