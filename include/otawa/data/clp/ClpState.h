@@ -73,13 +73,13 @@ namespace clp {
 		void set(const Value& addr, const Value& val);
 		bool equals(const State& state) const;
 		void join(const State& state);
-		void widening(const State& state);
+		void widening(const State& state, int loopBound);
 		void print(io::Output& out) const;
 		const Value& get(const Value& addr) const;
 		
 		static const State EMPTY, FULL;
 	
-	private:
+	protected:
 		Node first;
 		genstruct::Vector<Value> registers;
 		genstruct::Vector<Value> tmpreg;

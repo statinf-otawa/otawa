@@ -38,6 +38,8 @@
 #include <otawa/data/clp/ClpPack.h>
 #include <otawa/data/clp/DeadCodeAnalysis.h>
 #include <otawa/data/clp/SymbolicExpr.h>
+#include <otawa/util/FlowFactLoader.h>
+#include <otawa/ipet/FlowFactLoader.h>
  
 using namespace elm;
 using namespace otawa;
@@ -268,7 +270,7 @@ void Value::join(const Value& val) {
 }
 
 /**
- * Perform a widening
+ * Perform a widening to the infinite (to be filtred later)
  * @param val the value of the next iteration state
 */
 void Value::widening(const Value& val) {
@@ -308,6 +310,38 @@ void Value::widening(const Value& val) {
 		}
 	}
 }
+
+/**
+ * Perform a widening, knowing flow facts for the loop
+ * @param val the value of the next iteration state
+ * @param loopBound the maximum number of iteration of the loop
+*/
+void Value::ffwidening(const Value& val, int loopBound){
+	if (_kind == NONE && val._kind == NONE) /* widen(NONE, NONE) = NONE */
+		return;
+	else if (_kind == ALL || val._kind == ALL) /* widen(ALL, *) = ALL */
+		set(ALL, 0, 1, OCLP_UMAXn);
+	else if (*this == val)					/* this == val -> do nothing */
+		return;
+	else if (OCLP_IS_CST((*this)) && OCLP_IS_CST(val)) {
+		if (_lower < val._lower)
+			/* widen((k1, 0, 0), (k2, 0, 0)) = (k1, k2 - k1, N) */
+			set(VAL, _lower, val._lower - _lower, loopBound);
+		else {
+			/* widen((k1, 0, 0), (k2, 0, 0)) = (k1-N(k1-k2),k1-k2,N) */
+			int step = _lower - val._lower;
+			set(VAL, _lower - loopBound * step, step, loopBound);
+		}
+	}
+	else if ((_delta == val._delta) &&		/* avoid division by 0 */
+			 ((val._lower - _lower) % _delta == 0) &&
+			 (_mtimes >= val._mtimes))
+		return;				/* val == this + k => this */
+	else
+		/* other cases: T */
+		set(ALL, 0, 1, OCLP_UMAXn);
+}
+
 /**
  * Intersection with the current value.
  * @param val the value to do the intersection with
@@ -706,9 +740,12 @@ void State::join(const State& state) {
 /**
  * Perform a widening.
  * @param state the state of the next iteration
+ * @param loopBound is the number of iteration of the loop. A different widening
+ *        operation will be used if the loopBound is known (>=0) or not.
 */
-void State::widening(const State& state) {
-	TRACED(cerr << "widening(\n\t"; print(cerr); cerr << ",\n\t";  state.print(cerr); cerr << "\n\t) = ");
+void State::widening(const State& state, int loopBound) {
+	TRACED(cerr << "widening(" << loopBound << "\n\t");
+	TRACED(print(cerr); cerr << ",\n\t";  state.print(cerr); cerr << "\n\t) = ");
 	
 	// test none states
 	if(state.first.val == Value::none)
@@ -721,13 +758,19 @@ void State::widening(const State& state) {
 	
 	// registers
 	for(int i=0; i<registers.length() && i<state.registers.length() ; i++)
-		registers[i].widening(state.registers[i]);
+		if (loopBound >= 0)
+			registers[i].ffwidening(state.registers[i], loopBound);
+		else
+			registers[i].widening(state.registers[i]);
 	if (registers.length() < state.registers.length())
 		for(int i=registers.length(); i < state.registers.length(); i++)
 			registers.add(state.registers[i]);
 	// tmp registers
 	for(int i=0; i<tmpreg.length() && i<state.tmpreg.length() ; i++)
-		tmpreg[i].widening(state.tmpreg[i]);
+		if (loopBound >= 0)
+			tmpreg[i].ffwidening(state.tmpreg[i], loopBound);
+		else
+			tmpreg[i].widening(state.tmpreg[i]);
 	if (tmpreg.length() < state.tmpreg.length())
 		for(int i=tmpreg.length(); i < state.tmpreg.length(); i++)
 			tmpreg.add(state.tmpreg[i]);
@@ -743,7 +786,10 @@ void State::widening(const State& state) {
 		}
 		// equality ? remove if join result in all
 		else if(cur->addr == cur2->addr) {
-			cur->val.widening(cur2->val);
+			if (loopBound >= 0)
+				cur->val.ffwidening(cur2->val, loopBound);
+			else
+				cur->val.widening(cur2->val);
 			if(cur->val.kind() == ALL) {
 				prev->next = cur->next;
 				delete cur;
@@ -855,7 +901,7 @@ public:
 	typedef ClpProblem Problem;
 	Problem& getProb(void) { return *this; }
 	
-	ClpProblem(void): specific_analysis(false), pack(NULL),
+	ClpProblem(void): last_max_iter(0), specific_analysis(false), pack(NULL),
 					   _nb_inst(0), _nb_sem_inst(0),
 					   _nb_set(0), _nb_top_set(0), _nb_store(0), 
 					   _nb_top_store(0), _nb_top_store_addr(0),
@@ -895,7 +941,7 @@ public:
 	inline void widening(Domain &a, Domain b) const{
 		TRACEP(cerr << "Widening");
 		TRACEP(cerr << a << "\n, " << b << ") = ");
-		a.widening(b);
+		a.widening(b, last_max_iter);
 		//DEBUG: print the state after the widening
 		TRACEP(a.print(cerr));
 		TRACEP(cerr << io::endl);
@@ -927,21 +973,9 @@ public:
 				clp::Value r = clp::Value(clp::REG, rval.lower(), 0, 0);
 				clp::Value v = dom.get(r);
 				TRACEP(v.print(cerr));
-				// if we are from a loop header, widen the value
-				/*if (LOOP_HEADER(*source)){
-					v.join(filter->b()->val());
-					TRACEP(cerr << " (widened to: ");
-					TRACEP(v.print(cerr));
-					TRACEP(cerr << ')');
-				}
-				if (!(v == clp::Value::all && LOOP_HEADER(*source))){
-					// don't apply the filter if the widening result is T,
-					// in order to get a fix point
-				*/
 				TRACEP(cerr << " -> ");
 				applyFilter(v, filter->op(), filter->b()->val());
 				TRACEP(v.print(cerr));
-				/*}*/
 				TRACEP(cerr << '\n');
 				dom.set(r, v);
 				_nb_filters++;
@@ -963,20 +997,9 @@ public:
 				clp::Value v = dom.get(a);
 				TRACEP(v.print(cerr));
 				// if we are from a loop header, widen the value
-				/*if (LOOP_HEADER(*source)){
-					v.join(filter->b()->val());
-					TRACEP(cerr << " (widened to: ");
-					TRACEP(v.print(cerr));
-					TRACEP(cerr << ')');
-				}
-				if (!(v == clp::Value::all && LOOP_HEADER(*source))){
-					// don't apply the filter if the widening result is T,
-					// in order to get a fix point
-				*/
 				TRACEP(cerr << " -> ");
 				applyFilter(v, filter->op(), filter->b()->val());
 				TRACEP(v.print(cerr));
-				/*}*/
 				TRACEP(cerr << '\n');
 				dom.set(a, v);
 				_nb_filters++;
@@ -1017,6 +1040,12 @@ public:
 		}
 		if (LOOP_HEADER(bb)){
 			TRACEU(cerr << "\tThis BB is a loop header.\n");
+			if (MAX_ITERATION.exists(bb)){
+				last_max_iter = MAX_ITERATION(bb);
+				TRACEU(cerr << "\tFlow facts available: max iter=" << last_max_iter << '\n');
+			} else {
+				last_max_iter = -1;
+			}
 		}
 		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 			TRACEI(cerr << '\t' << inst->address() << ": ";
@@ -1040,13 +1069,6 @@ public:
 				// interpret current
 				while(pc < b.length()) {
 					sem::inst& i = b[pc];
-					
-					if (specific_analysis && pack == NULL && \
-							inst->address() == stop_inst_addr && \
-							pc == stop_sem_instr && specific_before){
-						// if we want the input state of this instruction, stop here
-						return;
-					}
 					
 					_nb_sem_inst++;
 					
@@ -1180,12 +1202,6 @@ public:
 					//DEBUG: print the result of the instruction
 					TRACEI(cerr << "\t\t -> " << *state << io::endl);
 					
-					if (specific_analysis && pack == NULL && \
-							inst->address() == stop_inst_addr && \
-							pc == stop_sem_instr && !specific_before){
-						// if we want the output state of this instruction, stop here
-						return;
-					}
 					if (specific_analysis && pack != NULL){
 						ipack->append(*state);
 					}
@@ -1206,12 +1222,6 @@ public:
 					state = p.snd;
 				}
 				
-				if (specific_analysis && pack == NULL && \
-						inst->address() == stop_inst_addr && \
-						stop_sem_instr == -1 && !specific_before){
-					// if we want the output state of this instruction, stop here
-					return;
-				}
 			}
 			TRACEI(cerr << "\t-> " << out << io::endl);
 		}
@@ -1255,49 +1265,6 @@ public:
 		return state.set(addr, v);
 	}
 	
-	/**
-	 * Return the state after a specific instruction
-	 * @param bb the basic block where is the instruction
-	 * @param inst_addr the address of the given instruction
-	 * @param sem_inst is the semantic instruction to get the state after (use
-	 *        -1 to get the state at the end of the instruction)
-	*/
-	clp::State state_of_inst(BasicBlock* bb, address_t inst_addr, int sem_inst){
-		// This method must be called after a complete analysis, because it
-		// use CLP_STATE_IN. This is enforced by the ClpSpecificAnalysis
-		// processor.
-		specific_analysis = true;
-		specific_before = false;
-		stop_inst_addr = inst_addr;
-		stop_sem_instr = sem_inst;
-		clp::State output;
-		clp::State input = CLP_STATE_IN(*bb);
-		update(output, input, bb);
-		specific_analysis = false;
-		return output;
-	}
-	/**
-	 * Return the state before a specific instruction
-	 * @param bb the basic block where is the instruction
-	 * @param inst_addr the address of the given instruction
-	 * @param sem_inst is the semantic instruction to get the state before (use
-	 *        0 to get the state at the begining of the instruction)
-	*/
-	clp::State state_before_inst(BasicBlock* bb, address_t inst_addr, int sem_inst){
-		// This method must be called after a complete analysis, because it
-		// use CLP_STATE_IN. This is enforced by the ClpSpecificAnalysis
-		// processor.
-		specific_analysis = true;
-		specific_before = true;
-		stop_inst_addr = inst_addr;
-		stop_sem_instr = sem_inst;
-		clp::State output;
-		clp::State input = CLP_STATE_IN(*bb);
-		update(output, input, bb);
-		specific_analysis = false;
-		return output;
-	}
-	
 	void fillPack(BasicBlock* bb, clp::ClpStatePack *empty_pack){
 		specific_analysis = true;
 		pack = empty_pack;
@@ -1336,13 +1303,11 @@ private:
 	sem::Block b;
 	genstruct::Vector<Pair<int, Domain *> > todo;
 	
+	int last_max_iter;
+	
 	/* attribute for specific analysis / packing */
 	bool specific_analysis;
 	clp::ClpStatePack *pack;
-	// deprecated
-	bool specific_before;
-	address_t stop_inst_addr;
-	int stop_sem_instr;
 	
 	#ifdef DATA_LOADER
 	address_t _data_min, _data_max;
@@ -1393,6 +1358,7 @@ private:
  *
  * @par Required Features
  * @li @ref otawa::LOOP_INFO_FEATURE
+ * @li @ref otawa::ipet::FLOW_FACTS_FEATURE
  * @li @ref otawa::VIRTUALIZED_CFG_FEATURE
  *
 */ 
@@ -1401,6 +1367,7 @@ ClpAnalysis::ClpAnalysis(void): Processor("otawa::ClpAnalysis", Version(0, 1, 0)
 								_nb_top_set(0), _nb_store(0), _nb_top_store(0),
 								_nb_filters(0), _nb_top_filters(0){
 	require(LOOP_INFO_FEATURE);
+	require(ipet::FLOW_FACTS_FEATURE);
 	require(VIRTUALIZED_CFG_FEATURE);
 	provide(CLP_ANALYSIS_FEATURE);
 }

@@ -170,10 +170,16 @@ namespace clp {
 		 */
 		void join(const Value& val);
 		/**
-		 * Perform a widening
+		 * Perform a widening to the infinite (to be filtred later)
 		 * @param val the value of the next iteration state
 		*/
 		void widening(const Value& val);
+		/**
+		 * Perform a widening, knowing flow facts for the loop
+		 * @param val the value of the next iteration state
+		 * @param loopBound the maximum number of iteration of the loop
+		*/
+		void ffwidening(const Value& val, int loopBound);
 		/**
 		 * Intersection with the current value.
 		 * @param val the value to do the intersection with
