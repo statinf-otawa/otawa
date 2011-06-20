@@ -1558,7 +1558,8 @@ clp::State ClpStatePack::state_before(address_t instruction, int sem){
 			else
 				return *(ipack->_states[sem - 1]);
 		}
-		last_state = ipack->outputState();
+		if (! ipack->isEmpty())
+			last_state = ipack->outputState();
 	}
 	return last_state;
 }

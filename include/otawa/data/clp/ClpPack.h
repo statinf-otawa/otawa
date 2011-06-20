@@ -62,7 +62,12 @@ public:
 		/** @return the last output state of this pack (i.e. the output state
 		*	of the machine instruction of this pack).
 		*/
-		clp::State& outputState(void) { return *(_states[_states.length() - 1]);}
+		clp::State& outputState(void) { 
+			ASSERT(_states.length() > 0);
+			return *(_states[_states.length() - 1]);
+		}
+		/** @return if the InstPack is empty */
+		bool isEmpty(void){ return _states.length() == 0; }
 		void append(clp::State &state);
 	private:
 		address_t _inst_addr;
