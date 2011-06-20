@@ -1117,14 +1117,13 @@ public:
 								addrclp.print(cerr);
 								cerr << "<" << hex(*_data_max) << "]";
 								cerr << " -> ";
-								cerr << ((*_data_min <= addrclp.lower())&&(addrclp.lower() < *_data_max));
+								cerr << ((*_data_min <= (OCLP_uintn_t)addrclp.start())&&((OCLP_uintn_t)addrclp.start() < *_data_max));
 							}
-							if (    (get(*state, i.d()) == clp::Value::all)  &&
-								    (OCLP_IS_CST(addrclp))                   &&
-								    (*_data_min <= addrclp.lower())          &&
-								    (addrclp.lower() < *_data_max)           &&
-								    (bitsize <= OCLP_NBITS)                  ){
-								
+							if (    (get(*state, i.d()) == clp::Value::all)			&&
+								    (OCLP_IS_CST(addrclp))							&&
+								    (*_data_min <= (OCLP_uintn_t)addrclp.start())	&&
+								    ((OCLP_uintn_t)addrclp.start() < *_data_max)	){
+								ASSERT(i.b() * 8 <= OCLP_NBITS);
 								cerr << " -> loading data from process\n";
 								OCLP_intn_t value;
 								_process->get(addrclp.lower(), (char *)(&value), i.b());
