@@ -1206,10 +1206,16 @@ void Inst::semInsts(sem::Block& block)  {
 	case ID_CRNAND_CRB_CRB_CRB: case ID_CRNOR_CRB_CRB_CRB: case ID_CREQV_CRB_CRB_CRB:
 	case ID_CRANDC_CRB_CRB_CRB: case ID_CRORC_CRB_CRB_CRB:
 	case ID_MCRF_CRF_CRF: case ID_MCRXR_CRF: case ID_MTCRF_R:
-	// special registers
-	case ID_MTSPR_R: case ID_MTSPR_R_0:
+
+		// special registers
 	case ID_MTMSR_R: case ID_MTSR_R: case ID_MTSRIN_R_R:
 		break;
+
+	case ID_MTSPR_R: case ID_MTSPR_R_0:
+		if(inst->instrinput[1].val.uint16 == 288)
+			block.add(sem::set(ctr, r(0)));
+		else
+			break;
 
 	// comparisons
 	case ID_CMP_R_R:
@@ -1352,7 +1358,6 @@ void Inst::semInsts(sem::Block& block)  {
 	case ID_CNTLZW_D_R_R: case ID_CNTLZW_R_R:
 	case ID_RLWIMI_R_R_: case ID_RLWIMI_D_R_R_:
 	case ID_RLWNM_R_R_R_: case ID_RLWNM_D_R_R_R_:
-	case ID_RLWINM_R_R_: case ID_RLWINM_D_R_R_:
 	case ID_SRAW_R_R_R: case ID_SRAW_D_R_R_R: case ID_SRAWI_R_R_: case ID_SRAWI_D_R_R_:
 	case ID_SRW_R_R_R: case ID_SRW_D_R_R_R:
 	case ID_SLW_R_R_R: case ID_SLW_D_R_R_R:
@@ -1360,6 +1365,13 @@ void Inst::semInsts(sem::Block& block)  {
 		break;
 
 	// supported arithmetics
+	case ID_RLWINM_R_R_: case ID_RLWINM_D_R_R_:
+		if(arg(3) < arg(4) && (arg(4) - arg(3) + 1) + arg(2) == 32)
+			block.add(sem::shl(r(1), r(0), arg(2)));
+		else
+			block.add(sem::scratch(r(1)));
+			break;
+
 	case ID_OR_R_R_R: case ID_AND_R_R_R:
 		if(arg(0) == arg(2))
 			block.add(sem::set(r(1), r(0)));
