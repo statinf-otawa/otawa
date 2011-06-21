@@ -1366,11 +1366,13 @@ void Inst::semInsts(sem::Block& block)  {
 
 	// supported arithmetics
 	case ID_RLWINM_R_R_: case ID_RLWINM_D_R_R_:
-		if(arg(3) < arg(4) && (arg(4) - arg(3) + 1) + arg(2) == 32)
-			block.add(sem::shl(r(1), r(0), arg(2)));
-		else
+		if(arg(3) < arg(4) && (arg(4) - arg(3) + 1) + arg(2) == 32) {
+			block.add(sem::seti(t1, arg(2)));
+			block.add(sem::shl(r(1), r(0), t1));
+    } else {
 			block.add(sem::scratch(r(1)));
-			break;
+    }	
+    break;
 
 	case ID_OR_R_R_R: case ID_AND_R_R_R:
 		if(arg(0) == arg(2))
