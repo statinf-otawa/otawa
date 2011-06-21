@@ -1214,8 +1214,8 @@ void Inst::semInsts(sem::Block& block)  {
 	case ID_MTSPR_R: case ID_MTSPR_R_0:
 		if(inst->instrinput[1].val.uint16 == 288)
 			block.add(sem::set(ctr, r(0)));
-		else
-			break;
+		
+    break;
 
 	// comparisons
 	case ID_CMP_R_R:
