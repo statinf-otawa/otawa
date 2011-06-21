@@ -262,6 +262,7 @@ Feature<Dominance> DOMINANCE_FEATURE("otawa::DOMINANCE_FEATURE");
  *
  * @Properties
  * @li @ref LOOP_HEADER (BasicBlock).
+ * @li @ref BACK_EDGE (Edge). 
  */
 Feature<Dominance> LOOP_HEADERS_FEATURE("LOOP_HEADERS_FEATURE");
 
