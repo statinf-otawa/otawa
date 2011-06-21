@@ -223,6 +223,7 @@ protected:
 private:
 	void do_branch(sem::Block& block, unsigned long off, bool abs, bool link);
 	void do_branch_cond(sem::Block& block, unsigned long off, int bo, int bi, bool abs, bool link);
+	void do_branch_cond_ind(sem::Block& block, int bo, int bi, bool link, int target);
 };
 
 
@@ -1215,7 +1216,7 @@ void Inst::semInsts(sem::Block& block)  {
 		if(inst->instrinput[1].val.uint16 == 288)
 			block.add(sem::set(ctr, r(0)));
 		
-    break;
+			break;
 
 	// comparisons
 	case ID_CMP_R_R:
@@ -1372,7 +1373,7 @@ void Inst::semInsts(sem::Block& block)  {
     } else {
 			block.add(sem::scratch(r(1)));
     }	
-    break;
+			break;
 
 	case ID_OR_R_R_R: case ID_AND_R_R_R:
 		if(arg(0) == arg(2))
@@ -1472,6 +1473,55 @@ void BranchInst::do_branch_cond(sem::Block& block, unsigned long off, int bo, in
 }
 
 
+void BranchInst::do_branch_cond_ind(sem::Block& block, int bo, int bi, bool link, int target) {
+
+	// if ¬ BO[2] then CTR ← CTR – 1
+	if(!BO(2)) {
+		block.add(sem::seti(t1, 1));
+		block.add(sem::sub(ctr, ctr, t1));
+	}
+
+	// do the link
+	if(link) {
+		Address addr = address() + 4;
+		block.add(sem::seti(lr, addr.offset()));
+	}
+
+	// (CTR ≠ 0) ⊕ BO[3])
+	if(BO(0)) {
+		block.add(sem::seti(t1, 0));
+		block.add(sem::cmp(t2, ctr, t1));
+		block.add(sem::_if(!BO(3) ? sem::NE : sem::EQ, t2, 1));
+		block.add(sem::cont());
+	}
+
+	// (CR[BI] ≡ BO[1])
+	if(BO(2)) {
+		sem::cond_t cond;
+		// cmp : if a < b then c ← 0b100 else if a > b then c ← 0b010 else c ← 0b001
+		if(BO(1))	// inverted condition !
+			switch(bi & 0x3) {
+			case 0: cond = sem::GE; break;
+			case 1: cond = sem::LE; break;
+			case 2: cond = sem::NE; break;
+			case 3: cond = sem::ANY_COND; break;
+			}
+		else
+			switch(bi & 0x3) {
+			case 0: cond = sem::LT; break;
+			case 1: cond = sem::GT; break;
+			case 2: cond = sem::EQ; break;
+			case 3: cond = sem::ANY_COND; break;
+			}
+		block.add(sem::_if(cond, cr(bi >> 2), 1));
+		block.add(sem::cont());
+	}
+
+	// perform the jump
+	block.add(sem::branch(target));
+}
+
+
 void BranchInst::semInsts(sem::Block& block)  {
 	Address addr;
 
@@ -1509,11 +1559,20 @@ void BranchInst::semInsts(sem::Block& block)  {
 		do_branch_cond(block, i(2), ib(0), ib(1), true, true);
 		break;
 
+	case ID_BCCTRL_:
+		do_branch_cond_ind(block, ib(0), ib(1), false, ctr);
+		break;
+
+	case ID_BCCTR_:
+		do_branch_cond_ind(block, ib(0), ib(1), false, ctr);
+		break;
+
 	case ID_BCLR_:
 	case ID_BCLRL_:
+		block.add(sem::scratch(t1));
+		block.add(sem::branch(t1));
+		break;
 
-	case ID_BCCTRL_:
-	case ID_BCCTR_:
 	case ID_SC:
 		block.add(sem::trap(sem::ANY_COND));
 		break;
