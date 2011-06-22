@@ -1475,28 +1475,14 @@ void BranchInst::do_branch_cond(sem::Block& block, unsigned long off, int bo, in
 
 void BranchInst::do_branch_cond_ind(sem::Block& block, int bo, int bi, bool link, int target) {
 
-	// if ¬ BO[2] then CTR ← CTR – 1
-	if(!BO(2)) {
-		block.add(sem::seti(t1, 1));
-		block.add(sem::sub(ctr, ctr, t1));
-	}
-
 	// do the link
 	if(link) {
 		Address addr = address() + 4;
 		block.add(sem::seti(lr, addr.offset()));
 	}
 
-	// (CTR ≠ 0) ⊕ BO[3])
-	if(BO(0)) {
-		block.add(sem::seti(t1, 0));
-		block.add(sem::cmp(t2, ctr, t1));
-		block.add(sem::_if(!BO(3) ? sem::NE : sem::EQ, t2, 1));
-		block.add(sem::cont());
-	}
-
 	// (CR[BI] ≡ BO[1])
-	if(BO(2)) {
+	if(!BO(0)) {
 		sem::cond_t cond;
 		// cmp : if a < b then c ← 0b100 else if a > b then c ← 0b010 else c ← 0b001
 		if(BO(1))	// inverted condition !
