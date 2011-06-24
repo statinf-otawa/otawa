@@ -136,7 +136,7 @@ public:
 Dominance::Dominance(void): CFGProcessor("otawa::dominance", Version(1, 1, 0)) {
 	provide(DOMINANCE_FEATURE);
 	provide(LOOP_HEADERS_FEATURE);
-	require(CHECKED_CFG_FEATURE);
+	//require(CHECKED_CFG_FEATURE);
 }
 
 
