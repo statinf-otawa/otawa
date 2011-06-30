@@ -24,6 +24,10 @@
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/hard/Register.h>
 #include <elm/genstruct/SortedSLList.h>
+#include <elm/option/SwitchOption.h>
+#include <otawa/cfg/features.h>
+#include <elm/genstruct/AVLTree.h>
+#include <otawa/prog/sem.h>
 
 using namespace elm;
 using namespace otawa;
@@ -52,6 +56,7 @@ static struct {
 	{ 0, "" }
 };
 
+
 class ODisasm: public Application {
 public:
 
@@ -60,62 +65,119 @@ public:
 		"odisasm",
 		Version(1, 0, 0),
 		"Disassemble instruction to OTAWA instruction description",
-		"H. Cassé <casse@irit.fr>") { }
+		"H. Cassé <casse@irit.fr>"),
+	regs(*this, option::cmd, "-r", option::cmd, "--regs", option::help, "display register information", option::end),
+	kind(*this, option::cmd, "-k", option::cmd, "--kind", option::help, "display kind of instructions", option::end),
+	sem(*this, option::cmd, "-s", option::cmd, "--semantics", option::help, "display translation of instruction in semantics language", option::end),
+	target(*this, option::cmd, "-t", option::cmd, "--target", option::help, "display target of control instructions", option::end)
+	{ }
 
 	virtual void work (const string &entry, PropList &props) throw (elm::Exception) {
-		require(DECODED_TEXT);
-		for(Process::FileIter file(workspace()->process()); file; file++) {
-			cout << "FILE: " << file->name() << io::endl;
-			for(File::SegIter seg(file); seg; seg++) {
-				cout << "SEGMENT: " << seg->name() << io::endl;
-				for(Segment::ItemIter item(seg); item; item++) {
-					cout << item->address() << " ";
-					Inst *inst = item->toInst();
-					if(inst) {
+		require(otawa::COLLECTED_CFG_FEATURE);
+		const CFGCollection *coll = otawa::INVOLVED_CFGS(workspace());
+		for(int i = 0; i < coll->count(); i++)
+			processCFG(coll->get(i));
 
-						// disassemble
-						cout << inst;
+	}
 
-						// display kind
-						cout << "\n\t kind = ";
-						Inst::kind_t kind = inst->kind();
-						for(int i = 0; kinds[i].kind; i++)
-							if(kinds[i].kind & kind)
-								cout << kinds[i].name << ' ';
 
-						// display target if any
-						if(inst->isControl() && !inst->isReturn() && !(kind & Inst::IS_TRAP)) {
-							cout << "\n\ttarget = ";
-							Inst *target = inst->target();
-							if(!target)
-								cout << "unknown";
-							else
-								cout << target->address();
-						}
+private:
 
-						// display read registers
-						genstruct::SortedSLList<string> srr;
-						const elm::genstruct::Table<hard::Register * >& rr = inst->readRegs();
-						for(int i = 0; i < rr.count(); i++)
-							srr.add(rr[i]->name());
-						cout << "\n\tread regs = ";
-						for(genstruct::SortedSLList<string>::Iterator r(srr); r; r++)
-							cout << *r << " ";
+	class BasicBlockComparator {
+	public:
+		static int compare(const BasicBlock *v1, const BasicBlock *v2) { return v1->address() - v2->address(); }
+	};
 
-						// display read registers
-						genstruct::SortedSLList<string> swr;
-						const elm::genstruct::Table<hard::Register * >& wr = inst->writtenRegs();
-						for(int i = 0; i < wr.count(); i++)
-							swr.add(wr[i]->name());
-						cout << "\n\twritten regs = ";
-						for(genstruct::SortedSLList<string>::Iterator r(swr); r; r++)
-							cout << *r << " ";
-					}
-					cout << io::endl;
-				}
+	/**
+	 * Disassemble a CFG.
+	 */
+	void processCFG(CFG *cfg) {
+		cout << "# FUNCTION " << cfg->label() << io::endl;
+
+		// put BB in the right order
+		typedef elm::genstruct::AVLTree<BasicBlock *, Id<BasicBlock *>, BasicBlockComparator> avl_t;
+		avl_t avl;
+		for(CFG::BBIterator bb(cfg); bb; bb++)
+			if(!bb->isEnd())
+				avl.add(bb);
+
+		// disassemble the BB
+		for(avl_t::Iterator bb(avl); bb; bb++)
+			for(BasicBlock::InstIter inst(bb); inst; inst++)
+				processInst(inst);
+	}
+
+	/**
+	 * Disassemble an instruction.
+	 * @param	inst	Instruction to disassemble.
+	 */
+	void processInst(Inst *inst) {
+
+		// disassemble labels
+		for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
+			cout << '\t' << *label << ":\n";
+		for(Identifier<String>::Getter label(inst, LABEL); label; label++)
+			cout << '\t' << *label << ":\n";
+
+		// disassemble instruction
+		cout << inst->address() << "\t" << inst << io::endl;
+
+		// display kind if required
+		if(kind) {
+			cout << "\tkind = ";
+			Inst::kind_t kind = inst->kind();
+			for(int i = 0; kinds[i].kind; i++)
+				if(kinds[i].kind & kind)
+					cout << kinds[i].name << ' ';
+			cout << io::endl;
+		}
+
+		// display target if any
+		if(target) {
+			if(inst->isControl() && !inst->isReturn() && !(kind & Inst::IS_TRAP)) {
+				cout << "\ttarget = ";
+				Inst *target = inst->target();
+				if(!target)
+					cout << "unknown";
+				cout << io::endl;
 			}
 		}
+
+		// display registers
+		if(regs) {
+
+			// display read registers
+			genstruct::SortedSLList<string> srr;
+			const elm::genstruct::Table<hard::Register * >& rr = inst->readRegs();
+			for(int i = 0; i < rr.count(); i++)
+				srr.add(rr[i]->name());
+			cout << "\tread regs = ";
+			for(genstruct::SortedSLList<string>::Iterator r(srr); r; r++)
+				cout << *r << " ";
+			cout << io::endl;
+
+			// display read registers
+			genstruct::SortedSLList<string> swr;
+			const elm::genstruct::Table<hard::Register * >& wr = inst->writtenRegs();
+			for(int i = 0; i < wr.count(); i++)
+				swr.add(wr[i]->name());
+			cout << "\twritten regs = ";
+			for(genstruct::SortedSLList<string>::Iterator r(swr); r; r++)
+				cout << *r << " ";
+			cout << io::endl;
+		}
+
+		// display semantics
+		if(sem) {
+			otawa::sem::Block block;
+			inst->semInsts(block);
+			cout << "\t\tsemantics\n";
+			for(int i = 0; i < block.count(); i++)
+				cout << "\t\t\t" << block[i] << io::endl;
+		}
 	}
+
+	option::SwitchOption regs, kind, sem, target;
 };
 
 int main(int argc, char **argv) {
