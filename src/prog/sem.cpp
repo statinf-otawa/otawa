@@ -102,8 +102,17 @@ static cstring inst_names[] = {
 	"sub",		// SUB
 	"shl",		// SHL
 	"shr",		// SHR
-	"asr"		// ASR
-
+	"asr",		// ASR
+	"neg",		// NEG
+	"not",		// NOT
+	"and",		// AND
+	"or",		// OR
+	"mul",		// MUL
+	"mulu",		// MULU
+	"div",		// DIV
+	"divu",		// DIVU
+	"mod",		// MOD
+	"modu"		// MODU
 };
 
 static void printArg(const hard::Platform *pf, io::Output& out, signed short arg) {
@@ -232,6 +241,8 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
 		out << ' '; printArg(pf, out, inst.d());
 		break;
 	case SET:
+	case NEG:
+	case NOT:
 		out << ' '; printArg(pf, out, inst.d());
 		out << ", "; printArg(pf, out, inst.a());
 		break;
@@ -252,6 +263,14 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
 	case SHL:
 	case SHR:
 	case ASR:
+	case AND:
+	case OR:
+	case MUL:
+	case MULU:
+	case DIV:
+	case DIVU:
+	case MOD:
+	case MODU:
 		out << ' '; printArg(pf, out, inst.d());
 		out << ", "; printArg(pf, out, inst.a()); out << ", ";
 		printArg(pf, out, inst.b());

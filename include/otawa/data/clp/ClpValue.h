@@ -38,7 +38,7 @@ namespace clp {
 	#define OCLP_MINn std::numeric_limits<OCLP_intn_t>::min()
 	
 	// This macro allow to make asserts over clp that must be constants
-	#define OCLP_IS_CST(clp) (clp.delta() == 0 || clp.mtimes() == 0)
+	#define OCLP_IS_CST(clp) ((clp).delta() == 0 || (clp).mtimes() == 0)
 	
 	#define OCLP_STAT_UINT unsigned long long int
 	
@@ -164,6 +164,9 @@ namespace clp {
 		 *            positive constant.
 		*/
 		void shr(const Value& val);
+
+		void _or(const Value& val);
+
 		/**
 		 * Join another set to the current one
 		 * @param val the value to be joined with

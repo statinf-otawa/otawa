@@ -241,6 +241,34 @@ void Value::shr(const Value& val) {
 }
 
 /**
+ * Perform OR operator on values (modifying current one).
+ * @param val	The value to OR with the current one.
+ */
+void Value::_or(const Value& val) {
+	if(_kind == ALL  || val.kind() == NONE)
+		return;
+	if(val.kind() == ALL || _kind == NONE) {
+		*this = val;
+		return;
+	}
+	if(OCLP_IS_CST(val)) {
+		if(OCLP_IS_CST(*this))
+			_lower |= val._lower;
+		else if(val._lower < _delta)
+			_lower |= val._lower;
+		else
+			*this = all;
+	}
+	else {
+		if(OCLP_IS_CST(*this) && _lower < val.delta())
+			set(VAL, _lower | val._lower, val.delta(), val.mtimes());
+		else
+			*this = all;
+	}
+}
+
+
+/**
  * Join another set to the current one
  * @param val the value to be joined with
  */
@@ -1196,6 +1224,14 @@ public:
 							clp::Value v = get(*state, i.a());
 							v.shr(get(*state, i.b()));
 							set(*state, i.d(), v);
+						} break;
+					case sem::OR: {
+							clp::Value v = get(*state, i.a());
+							v._or(get(*state, i.b()));
+							set(*state, i.d(), v);
+						} break;
+					default: {
+							set(*state, i.d(), clp::Value::all);
 						} break;
 					}
 					//DEBUG: print the result of the instruction

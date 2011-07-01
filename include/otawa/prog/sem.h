@@ -52,9 +52,19 @@ typedef enum opcode {
 	CMPU,		// d <- a ~u b
 	ADD,		// d <- a + b
 	SUB,		// d <- a - b
-	SHL,		// d <- a << b
-	SHR,		// d <- a >> b
-	ASR,		// d <- a +>> b
+	SHL,		// d <- unsigned(a) << b
+	SHR,		// d <- unsigned(a) >> b
+	ASR,		// d <- a >> b
+	NEG,		// d <- -a
+	NOT,		// d <- ~a
+	AND,		// d <- a & b
+	OR,			// d <- a | b
+	MUL,		// d <- a * b
+	MULU,		// d <- unsigned(a) * unsigned(b)
+	DIV,		// d <- a / b
+	DIVU,		// d <- unsigned(a) / unsigned(b)
+	MOD,		// d <- a % b
+	MODU		// d <- unsigned(a) % unsigned(b)
 } opcode;
 
 
@@ -120,7 +130,16 @@ inline inst sub(int d, int a, int b) { return inst(SUB, d, a, b); }
 inline inst shl(int d, int a, int b) { return inst(SHL, d, a, b); }
 inline inst shr(int d, int a, int b) { return inst(SHR, d, a, b); }
 inline inst asr(int d, int a, int b) { return inst(ASR, d, a, b); }
-
+inline inst neg(int d, int a) { return inst(NEG, d, a); }
+inline inst _not(int d, int a) { return inst(NOT, d, a); }
+inline inst _and(int d, int a, int b) { return inst(AND, d, a, b); }
+inline inst _or(int d, int a, int b) { return inst(OR, d, a, b); }
+inline inst mul(int d, int a, int b) { return inst(MUL, d, a, b); }
+inline inst mulu(int d, int a, int b) { return inst(MULU, d, a, b); }
+inline inst div(int d, int a, int b) { return inst(DIV, d, a, b); }
+inline inst divu(int d, int a, int b) { return inst(DIVU, d, a, b); }
+inline inst mod(int d, int a, int b) { return inst(MOD, d, a, b); }
+inline inst modu(int d, int a, int b) { return inst(MODU, d, a, b); }
 
 // Block class
 class Block: public elm::genstruct::Vector<inst> {
