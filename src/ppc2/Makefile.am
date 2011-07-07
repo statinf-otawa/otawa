@@ -28,17 +28,20 @@ install-data-hook:
 
 # generate files
 PPC2_IRG=../../../ppc2/ppc.irg
-otawa_kind.h: kind.tpl $(PPC2_IRG)
-	@GLISS2_ATTR_PATH@ $(PPC2_IRG) -o $@ -a otawa_kind -f -t $<
+otawa_kind.h: kind.tpl $(PPC2_IRG) otawa_kind.nmp
+	@GLISS2_ATTR_PATH@ $(PPC2_IRG) -o $@ -a otawa_kind -f -d "return 0;" -t $< -e otawa_kind.nmp
 
-otawa_target.h: target.tpl $(PPC2_IRG)
-	@GLISS2_ATTR_PATH@ $(PPC2_IRG) -o $@ -a otawa_target -d "return 0;" -f -t $<
+otawa_target.h: target.tpl $(PPC2_IRG) otawa_target.nmp
+	@GLISS2_ATTR_PATH@ $(PPC2_IRG) -o $@ -a otawa_target -d "return 0;" -f -t $< -e otawa_target.nmp
 
-otawa_used_regs.h: used_regs.tpl $(PPC2_IRG)
-	@GLISS2_ATTR_PATH@ $(PPC2_IRG) -o $@ -a otawa_used_regs -d "tmp_var[0] = END_REG; return 0;" -f -t $<
+otawa_used_regs.h: used_regs.tpl $(PPC2_IRG) otawa_used_regs.nmp
+	@GLISS2_ATTR_PATH@ $(PPC2_IRG) -o $@ -a otawa_used_regs -d "tmp_var[0] = END_REG; return 0;" -f -t $< -e otawa_used_regs.nmp
 
 otawa_pred.h: pred.tpl $(PPC2_IRG) otawa_pred.nmp
 	@GLISS2_ATTR_PATH@ $(PPC2_IRG) -o $@ -a otawa_pred -d "return -1;" -f -t $< -e otawa_pred.nmp
 
-ppc.lo: otawa_kind.h otawa_target.h otawa_used_regs.h otawa_pred.h
+otawa_sem.h: otawa_sem.tpl $(PPC2_IRG) otawa_sem.nmp
+	@GLISS2_ATTR_PATH@ $(PPC2_IRG) -o $@ -p -a otawa_sem -d "" -f -t $< -e otawa_sem.nmp
+
+ppc.lo: otawa_kind.h otawa_target.h otawa_used_regs.h otawa_pred.h otawa_sem.h
 

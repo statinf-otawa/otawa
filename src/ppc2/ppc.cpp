@@ -36,14 +36,15 @@
 #include <otawa/sim/features.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/loader/powerpc.h>
-
+#include <otawa/prog/sem.h>
 
 extern "C"
 {
 	// gliss2 C include files
-	#include <ppc/api.h>
-	#include <ppc/id.h>
-	#include <ppc/macros.h>
+#	include <ppc/api.h>
+#	include <ppc/id.h>
+#	include <ppc/macros.h>
+#	include <ppc/config.h>
 
 	// generated code
 	#include "otawa_kind.h"
@@ -51,8 +52,6 @@ extern "C"
 	#include "otawa_used_regs.h"
 	#include "otawa_pred.h"
 }
-
-/*#include "gel_loader/gel_loader.h"*/
 
 using namespace otawa::hard;
 
@@ -70,6 +69,13 @@ using namespace otawa::hard;
 namespace otawa {
 
 namespace ppc {
+
+
+/**
+ * Put in configuration MANAGER::load() property list to activate
+ * VLE decoding (at microprocesor start time).
+ */
+Identifier<bool> VLE_ENABLED("otawa::ppc::VLE_ENABLED", false);
 
 /**
  * Get static prediction information interface for the PowerPC loader.
@@ -113,21 +119,48 @@ Feature<NoProcessor> INFO_FEATURE("otawa::ppc::INFO_FEATURE");
 
 namespace ppc2 {
 
+// registers
+static const PlainBank GPR_bank("GPR", hard::Register::INT,  32, "r%d", 32);
+static const PlainBank FPR_bank("FPR", hard::Register::FLOAT, 64, "fr%d", 32);
+static const PlainBank CR_bank("CR", hard::Register::BITS, 4, "cr%d", 8);
+static hard::Register CTR_reg("ctr", hard::Register::BITS, 32);
+static hard::Register LR_reg("lr", hard::Register::ADDR, 32);
+static hard::Register XER_reg("xer", hard::Register::INT, 32);
+static const hard::MeltedBank MISC_bank("MISC", &CTR_reg, &LR_reg, &XER_reg, 0);
+
+// Register banks
+static const RegBank *banks[] = {
+	&GPR_bank,
+	&FPR_bank,
+	&CR_bank,
+	&MISC_bank
+};
+static const elm::genstruct::Table<const RegBank *> banks_table(banks, 4);
+
+
+// semantics functions
+#define _GPR(n)			GPR_bank[n]->platformNumber()
+#define _CR(n)			CR_bank[n]->platformNumber()
+
+#define _add(d, a, b)	block.add(otawa::sem::add(d, a, b))
+#define _cmp(d, a, b)	block.add(otawa::sem::cmp(d, a, b))
+#define _cmpu(d, a, b)	block.add(otawa::sem::cmp(d, a, b))
+#define _load(d, a, b)	block.add(otawa::sem::load(d, a, b))
+#define _set(d, a)		block.add(otawa::sem::set(d, a))
+#define _seti(d, i)		block.add(otawa::sem::seti(d, i))
+#define _store(d, a, b)	block.add(otawa::sem::store(d, a, b))
+#define _scratch(a)		block.add(otawa::sem::scratch(a));
+
+#include "otawa_sem.h"
+
+
+
 // Platform class
 class Platform: public hard::Platform {
 public:
 	static const Identification ID;
 	Platform(const PropList& props = PropList::EMPTY);
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
-
-	// Registers
-	static hard::Register CTR_reg;
-	static hard::Register LR_reg;
-	static hard::Register XER_reg;
-	static const hard::PlainBank GPR_bank;
-	static const hard::PlainBank FPR_bank;
-	static const hard::PlainBank CR_bank;
-	static const hard::MeltedBank MISC_bank;
 
 	// otawa::Platform overload
 	virtual bool accept(const Identification& id);
@@ -234,7 +267,7 @@ public:
 
 	// Info overload
 	virtual int opcode(Inst *inst) const {
-		ppc_inst_t *i = ppc_decode(_ppcDecoder, ppc_address_t(inst->address()));
+		ppc_inst_t *i = decode_ppc(inst->address());
 		int code = i->ident;
 		ppc_free_inst(i);
 		return code;
@@ -242,12 +275,24 @@ public:
 
 protected:
 	friend class Segment;
+	friend class Inst;
 	friend class BranchInst;
 	virtual otawa::Inst *decode(Address addr);
 	virtual gel_file_t *gelFile(void) { return _gelFile; }
 	virtual ppc_memory_t *ppcMemory(void) { return _ppcMemory; }
 
 private:
+	ppc_inst_t *decode_ppc(Address addr) const {
+#		ifndef PPC_WITH_VLE
+			return ppc_decode(_ppcDecoder, ppc_address_t(addr.offset()));
+#		else
+			if(!vle_enabled)
+				return ppc_decode_PPC(_ppcDecoder, ppc_address_t(addr.offset()));
+			else
+				return ppc_decode_PPC(_ppcDecoder, ppc_address_t(addr.offset()));
+#		endif
+	}
+
 	otawa::Inst *_start;
 	hard::Platform *_platform;
 	ppc_platform_t *_ppcPlatform;
@@ -258,8 +303,8 @@ private:
 	bool no_stack;
 	bool init;
 	struct gel_line_map_t *map;
-	struct gel_file_info_t *file;
 	gel_file_t *_gelFile;
+	bool vle_enabled;
 };
 
 // Process display
@@ -278,7 +323,7 @@ public:
 	 */
 	void dump(io::Output& out) {
 		char out_buffer[200];
-		ppc_inst_t *inst = ppc_decode(proc.ppcDecoder(), _addr);
+		ppc_inst_t *inst = proc.decode_ppc(_addr);
 		ppc_disasm(out_buffer, inst);
 		ppc_free_inst(inst);
 		out << out_buffer;
@@ -335,7 +380,7 @@ public:
 			return;
 
 		// get description
-		ppc_inst_t *inst = ppc_decode(process._ppcDecoder, address().offset());
+		ppc_inst_t *inst = proc.decode_ppc(address());
 
 		// manage the prediction:
 		ppc::prediction_t pred = ppc::prediction_t(ppc_pred(inst));
@@ -365,61 +410,6 @@ private:
 	otawa::Inst *_target;
 	bool isTargetDone;
 };
-
-
-/**
- * Register banks.
- */
-static const RegBank *banks[] = {
-	&Platform::GPR_bank,
-	&Platform::FPR_bank,
-	&Platform::CR_bank,
-	&Platform::MISC_bank
-};
-static const elm::genstruct::Table<const RegBank *> banks_table(banks, 4);
-
-
-/**
- * GPR register bank.
- */
-const PlainBank Platform::GPR_bank("GPR", hard::Register::INT,  32, "r%d", 32);
-
-
-/**
- * FPR register bank.
- */
-const PlainBank Platform::FPR_bank("FPR", hard::Register::FLOAT, 64, "fr%d", 32);
-
-
-/**
- * CR register bank
- */
-const PlainBank Platform::CR_bank("CR", hard::Register::BITS, 4, "cr%d", 8);
-
-
-/**
- * CTR register
- */
-hard::Register Platform::CTR_reg("ctr", hard::Register::BITS, 32);
-
-
-/**
- * LR register
- */
-hard::Register Platform::LR_reg("lr", hard::Register::ADDR, 32);
-
-
-/**
- * XER register
- */
-hard::Register Platform::XER_reg("xer", hard::Register::INT, 32);
-
-
-/**
- * MISC register bank
- */
-const hard::MeltedBank Platform::MISC_bank("MISC", &Platform::CTR_reg,
-	&Platform::LR_reg, &Platform::XER_reg, 0);
 
 
 /**
@@ -486,8 +476,8 @@ Process::Process(Manager *manager, hard::Platform *platform, const PropList& pro
 	_ppcMemory(0),
 	init(false),
 	map(0),
-	file(0),
-	no_stack(true)
+	no_stack(true),
+	vle_enabled(otawa::ppc::VLE_ENABLED(props))
 {
 	ASSERTP(manager, "manager required");
 	ASSERTP(platform, "platform required");
@@ -500,6 +490,9 @@ Process::Process(Manager *manager, hard::Platform *platform, const PropList& pro
 	_ppcMemory = ppc_get_memory(_ppcPlatform, PPC_MAIN_MEMORY);
 	ASSERTP(_ppcMemory, "cannot get main ppc_memory");
 	ppc_lock_platform(_ppcPlatform);
+#	ifdef PPC_WITH_VLE
+		ppc_set_cond_state(_ppcDecoder, 0);
+#	endif
 
 	// build arguments
 	static char no_name[1] = { 0 };
@@ -763,7 +756,7 @@ otawa::Inst *Process::decode(Address addr) {
 	// Decode the instruction
 	ppc_inst_t *inst;
 	TRACE("ADDR " << addr);
-	inst = ppc_decode(_ppcDecoder, (ppc_address_t)addr.address());
+	inst = decode_ppc(addr);
 
 	// Build the instruction
 	Inst::kind_t kind = 0;
@@ -796,7 +789,7 @@ ppc_address_t BranchInst::decodeTargetAddress(void) {
 	// Decode the instruction
 	ppc_inst_t *inst;
 	TRACE("ADDR " << addr);
-	inst = ppc_decode(proc.ppcDecoder(), (ppc_address_t)address());
+	inst = proc.decode_ppc(address());
 
 	// retrieve the target addr from the nmp otawa_target attribute
 	Address target_addr = ppc_target(inst);
@@ -857,22 +850,22 @@ static void translate_gliss_reg_info(otawa_ppc_reg_t reg_info, elm::genstruct::V
 		case 255:
 			return;
 		case BANK_GPR:
-			reg_bank = &Platform::GPR_bank;
+			reg_bank = &GPR_bank;
 			break;
 		case BANK_FPR:
-			reg_bank = &Platform::FPR_bank;
+			reg_bank = &FPR_bank;
 			break;
 		case BANK_CR:
-			reg_bank = &Platform::CR_bank;
+			reg_bank = &CR_bank;
 			break;
 		case BANK_XER:
-			reg_no_bank = &Platform::XER_reg;
+			reg_no_bank = &XER_reg;
 			break;
 		case BANK_LR:
-			reg_no_bank = &Platform::LR_reg;
+			reg_no_bank = &LR_reg;
 			break;
 		case BANK_CTR:
-			reg_no_bank = &Platform::CTR_reg;
+			reg_no_bank = &CTR_reg;
 			break;
 		default:
 			ASSERTP(false, "unknown bank " << gliss_bank);
@@ -906,7 +899,7 @@ void Process::decodeRegs(otawa::Inst *oinst, elm::genstruct::AllocatedTable<hard
 
 	// Decode instruction
 	ppc_inst_t *inst;
-	inst = ppc_decode(_ppcDecoder, oinst->address().address());
+	inst = decode_ppc(oinst->address());
 	if(inst->ident == PPC_UNKNOWN)
 	{
 		ppc_free_inst(inst);

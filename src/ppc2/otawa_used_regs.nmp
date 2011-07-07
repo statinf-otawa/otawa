@@ -1,0 +1,179 @@
+
+// ****** read/write register macros ******
+
+macro rzero(r) = \
+	if r.value == 0 then -1 else rr(r.value) endif
+
+macro rr(n) = \
+	((READ_REG << 24) | (BANK_GPR << 16) | ((n) & 0xFFFF)) \
+macro wr(n) = \
+	((WRITE_REG << 24) | (BANK_GPR << 16) | ((n) & 0xFFFF)) \
+macro gpr_read_range(l, u) = \
+	((READ_RANGE << 24) | (BANK_GPR << 16) | (((l) & 0xFF) << 8) | ((u) & 0xFF)) \
+macro gpr_write_range(l, u) = \
+	((WRITE_RANGE << 24) | (BANK_GPR << 16) | (((l) & 0xFF) << 8) | ((u) & 0xFF)) \
+macro cr_read(n) = \
+	((READ_REG << 24) | (BANK_CR << 16) | ((n) & 0xFFFF)) \
+macro cr_write(n) = \
+	((WRITE_REG << 24) | (BANK_CR << 16) | ((n) & 0xFFFF)) \
+macro lr_read = \
+	((READ_REG << 24) | (BANK_LR << 16)) \
+macro lr_write = \
+	((WRITE_REG << 24) | (BANK_LR << 16)) \
+macro ctr_read = \
+	((READ_REG << 24) | (BANK_CTR << 16)) \
+macro ctr_write = \
+	((WRITE_REG << 24) | (BANK_CTR << 16)) \
+macro xer_read = \
+	((READ_REG << 24) | (BANK_XER << 16)) \
+macro xer_write = \
+	((WRITE_REG << 24) | (BANK_XER << 16)) \
+
+
+// ****** VLE 16-bits ******
+extend se_add, se_andc, se_mullw, se_or, se_slw, se_srw, se_sub, se_subf
+	otawa_used_regs = "USED_REGS"(rr(rX.index), rr(rY.index), wr(rX.index), 0)
+
+extend se_and
+	otawa_used_regs = "USED_REGS"(rr(rX.index), rr(rY.index), wr(rX.index),
+		if Rc then cr_write(0) else 0 endif, 0)
+
+extend se_subi
+	otawa_used_regs = "USED_REGS"(rr(rX.index), wr(rX.index),
+		if Rc then cr_write(0) else 0 endif, 0)
+
+extend se_addi, se_andi, se_bclri, se_bgeni, se_bseti,
+se_extsb, se_extsh, se_extzb, se_extzh,
+se_neg, se_not, se_slwi, se_sraw, se_srawi, se_srwi
+	otawa_used_regs = "USED_REGS"(rr(rX.index), wr(rX.index), 0)
+
+extend se_b
+	otawa_used_regs = "USED_REGS"(if LK then lr_write else 0 endif, 0)
+
+extend se_bctr
+	otawa_used_regs = "USED_REGS"(ctr_read, if LK then lr_write else 0 endif, 0)
+
+extend se_bctr
+	otawa_used_regs = "USED_REGS"(lr_read, if LK then lr_write else 0 endif, 0)
+
+extend se_bmski, se_li
+	otawa_used_regs = "USED_REGS"(wr(rX.index), 0)
+
+extend	se_btsti
+	otawa_used_regs = "USED_REGS"(rr(rX.index), cr_write(0), 0)
+
+extend se_cmp, se_cmph, se_cmphl, se_cmpl
+	otawa_used_regs = "USED_REGS"(rr(rX.index), rr(rY.index), cr_write(0), 0)
+
+extend se_cmp, se_cmpli
+	otawa_used_regs = "USED_REGS"(rr(rX.index), cr_write(0), 0)
+
+extend se_lbz, se_lhz, se_lwz
+	otawa_used_regs = "USED_REGS"(rr(rX.index), wr(rZ.index), 0)
+
+extend se_mfar
+	otawa_used_regs = "USED_REGS"(rr(rY.index), wr(rX.index), 0)
+	
+extend se_mfctr
+	otawa_used_regs = "USED_REGS"(ctr_read, wr(rX.index), 0)
+
+extend se_mflr
+	otawa_used_regs = "USED_REGS"(lr_read, wr(rX.index), 0)
+
+extend se_mtctr
+	otawa_used_regs = "USED_REGS"(ctr_write, rr(rX.index), 0)
+
+extend se_mtlr
+	otawa_used_regs = "USED_REGS"(lr_write, rr(rX.index), 0)
+
+extend se_stb, se_sth, se_stw
+	otawa_used_regs = "USED_REGS"(rr(rX.index), rr(rZ.index), 0)
+
+	
+// ****** vle 32-BITS ******
+
+extend e_add16i, e_mulli
+	otawa_used_regs = "USED_REGS"(rr(rA.index), wr(rD.index), 0)
+
+extend e_add2i_
+	otawa_used_regs = "USED_REGS"(rr(rA.index), wr(rA.index), cr_write(0), 0)
+
+extend e_add2is, e_mull2i
+	otawa_used_regs = "USED_REGS"(rr(rA.index), wr(rA.index), 0)
+
+extend e_addi, e_subfic
+	otawa_used_regs = "USED_REGS"(rr(rA.index), wr(rD.index), if Rc then cr_write(0) else 0 endif, 0)
+
+extend e_addic
+	otawa_used_regs = "USED_REGS"(rr(rA.index), wr(rD.index), xer_read, if Rc then cr_write(0) else 0 endif, 0) 
+
+extend e_and2i_, e_and2is_
+	otawa_used_regs = "USED_REGS"(rr(rD.index), wr(rD.index), cr_write(0), 0)
+
+extend e_andi, e_ori, e_xori
+	otawa_used_regs = "USED_REGS"(rr(rS.index), wr(rA.index), if Rc then cr_write(0) else 0 endif, 0)
+	
+
+extend e_b
+	otawa_used_regs = "USED_REGS"(if LK then lr_read else 0 endif, 0)
+
+extend e_bc
+	otawa_used_regs = "USED_REGS"(
+		if BO32<1..1> then ctr_read else cr_read((31 - BI32) >> 2) endif,
+		if BO32<1..1> then ctr_write else -1 endif,
+		if LK then lr_read else 0 endif, 0)
+	
+extend e_cmp16i, e_cmph16i, e_cmphl16i, e_cmpl16i
+	otawa_used_regs = "USED_REGS"(rr(rA.index), cr_write(0), 0)
+	
+extend e_cmphl
+	otawa_used_regs = "USED_REGS"(rr(rA.index), rr(rB.index), cr_write(crD), 0)
+
+
+extend e_cmpi, e_cmpli
+	otawa_used_regs = "USED_REGS"(rr(rA.index), cr_write(crD32), 0)
+
+extend  e_crand, e_crandc, e_creqv, e_crnand, e_crnor, e_cror, e_crorc, e_crxor
+	otawa_used_regs = "USED_REGS"(rr(crbA.index), rr(crbB.index), wr(crbD.index), 0)
+ 
+ extend e_lbz, e_lha, e_lhz, e_lwz
+ 	otawa_used_regs = "USED_REGS"(rzero(rA), wr(rD), 0)
+
+ extend e_lbzu, e_lhau, e_lhzu, e_lwzu
+ 	otawa_used_regs = "USED_REGS"(rzero(rA), wr(rD), wr(rA.value), 0)
+ 
+extend e_li, e_lis
+	otawa_used_regs = "USED_REGS"(wr(rD.index), 0)
+
+extend e_lmw
+	otawa_used_regs = "USED_REGS"(rzero(rA), gpr_write_range(rD, 31), 0)
+
+extend e_mcrf
+	otawa_used_regs = "USED_REGS"(cr_read(crS), cr_write(crD), 0)
+
+extend e_or2i, e_or2is
+	otawa_used_regs = "USED_REGS"(rr(rD.index), wr(rD.index), 0)
+
+extend e_rlw
+	otawa_used_regs = "USED_REGS"(rr(rS.index), rr(rB.index), wr(rA.index),
+		if Rc then cr_write(0) else 0 endif, 0)
+
+extend e_rlwi, e_slwi, e_srwi
+	otawa_used_regs = "USED_REGS"(rr(rS.index), wr(rA.index),
+		if Rc then cr_write(0) else 0 endif, 0)
+
+extend e_rlwimi
+	otawa_used_regs = "USED_REGS"(rr(rS.index), rr(rA.index), wr(rA.index), 0)
+
+extend e_rlwinm
+	otawa_used_regs = "USED_REGS"(rr(rS.index), wr(rA.index), 0)
+
+extend e_stb, e_sth, e_stw
+	otawa_used_regs = "USED_REGS"(rzero(rA), rr(rS), 0)
+
+extend e_stbu, e_sthu, e_stwu
+	otawa_used_regs = "USED_REGS"(rzero(rA), rr(rS), if rA.value == 0 then 0 else wr(rA.value) endif, 0)
+
+extend e_stmw
+	otawa_used_regs = "USED_REGS"(rzero(rA), gpr_write_range(rS, 31), 0)
+

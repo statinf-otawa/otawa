@@ -1,0 +1,13 @@
+macro VLE_EXTS(v) = coerce(int(32), v)
+
+extend se_b
+	otawa_target = __IADDR + (coerce(int(32), BD8) << 1)
+
+extend se_bc
+	otawa_target = __IADDR + (VLE_EXTS(BD8) << 1)
+
+extend e_b
+	otawa_target = __IADDR + (VLE_EXTS(BD24) << 1)
+
+extend e_bc
+	otawa_target = __IADDR + (VLE_EXTS(BD15) << 1)

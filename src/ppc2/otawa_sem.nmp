@@ -1,0 +1,135 @@
+
+var i[1, card(32)]
+
+let t1				= -1
+let t2				= -2
+macro CR(i)			= "_CR"(i)
+macro R(i)			= "_GPR"(i)
+
+macro add(a, b, c)	= "_add"(a, b, c)
+macro _cmp(a, b, c)	= "_cmp"(a, b, c)
+macro cmpu(a, b, c)	= "_cmpu"(a, b, c)
+macro load(a, b, c)	= "_load"(a, b, c)
+macro scratch(a)	= "_scratch"(a)
+macro set(a, b)		= "_set"(a, b)
+macro seti(a, b) 	= "_seti"(a, b)
+macro store(a, b, c)	= "_store"(a, b, c)
+
+extend REG_IND
+	sem = "_GPR"(r)
+extend REG_IND_ZERO
+	is_zero = r == 0
+	sem = "_GPR"(r)
+
+// comparisons
+extend cmp
+	otawa_sem = { _cmp(CR(crfd), ra.sem, rb.sem); }
+extend cmp_imm
+	otawa_sem = { seti(t1, imm); _cmp(CR(crfd), ra.sem, t1); } 
+extend cmp_log
+	otawa_sem = { cmpu(CR(crfd), ra.sem, rb.sem); }
+extend cmp_log_imm
+	otawa_sem = { seti(t1, imm); cmpu(CR(crfd), ra.sem, t1); }
+
+
+// integer load
+extend lb_zero
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); add(t1, ra.sem, t1); endif; load(R(rd), t1, 1); }
+extend lb_zero_indexed
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, 1); }
+extend lb_zero_update
+	otawa_sem = { add(t1, R(ra), d); load(R(rd), t1, 1); set(R(ra), t1); }
+extend lb_zero_update_indexed
+	otawa_sem = { add(t1, R(ra), rb.sem); load(R(rd), t1, 1); set(R(ra), t1); }
+
+extend lhw_zero, lhw_alg
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); add(t1, ra.sem, t1); endif; load(R(rd), t1, 2); }
+extend lhw_zero_indexed, lhw_alg_indexed
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, 2); }
+extend lhw_zero_update, lhw_alg_update
+	otawa_sem = { add(t1, R(ra), d); load(R(rd), t1, 2); set(R(ra), t1); }
+extend lhw_zero_update_indexed, lhw_alg_update_indexed
+	otawa_sem = { add(t1, R(ra), rb.sem); load(R(rd), t1, 2); set(R(ra), t1); }
+
+extend lw_zero
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); add(t1, ra.sem, t1); endif; load(R(rd), t1, 4); }
+extend lw_zero_indexed, lwarx
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, 4); }
+extend lw_zero_update
+	otawa_sem = { add(t1, R(ra), d); load(R(rd), t1, 4); set(R(ra), t1); }
+extend lw_zero_update_indexed
+	otawa_sem = { add(t1, R(ra), rb.sem); load(R(rd), t1, 4); set(R(ra), t1); }
+
+extend lhw_br_index
+	otawa_sem = { scratch(R(rd)); }
+extend lw_br_index
+	otawa_sem = { scratch(R(rd)); }
+
+/*extend int_load_multiple
+	otawa_rec = {
+		if i < 32 then
+			load(R(i), t1, 4);
+			add(t1, t1, t2);
+			i = i + 1;
+			otawa_rec;
+		endif;
+	}
+	otawa_sem = {
+		seti(t2, 4);
+		seti(t1, d);
+		if !ra.is_zero then add(t1, t1, ra.sem); endif;
+		i = rd;
+		otawa_rec;
+	}*/
+	
+
+// integer store
+extend st_byte
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); add(t1, ra.sem, t1); endif; store(R(rs), t1, 1); }
+extend st_byte_indexed
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, 1); }
+extend st_byte_update
+	otawa_sem = { add(t1, R(ra), d); store(R(rs), t1, 1); set(R(ra), t1); }
+extend st_byte_update_indexed
+	otawa_sem = { add(t1, R(ra), rb.sem); store(R(rs), t1, 1); set(R(ra), t1); }
+
+extend st_half_word
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); add(t1, ra.sem, t1); endif; store(R(rs), t1, 2); }
+extend st_half_word_indexed
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, 2); }
+extend st_half_word_update
+	otawa_sem = { add(t1, R(ra), d); store(R(rs), t1, 2); set(R(ra), t1); }
+extend st_half_word_update_indexed
+	otawa_sem = { add(t1, R(ra), rb.sem); store(R(rs), t1, 2); set(R(ra), t1); }
+
+extend st_word
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); add(t1, ra.sem, t1); endif; store(R(rs), t1, 4); }
+extend st_word_indexed, stw_br_index
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, 4); }
+extend st_word_update
+	otawa_sem = { add(t1, R(ra), d); store(R(rs), t1, 4); set(R(ra), t1); }
+extend st_word_update_indexed
+	otawa_sem = { add(t1, R(ra), rb.sem); store(R(rs), t1, 4); set(R(ra), t1); }
+
+extend sthw_br_index
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else add(t1, ra.sem, rb.sem); endif; scratch(t2); store(t2, t1, 2); }
+extend stw_br_index
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else add(t1, ra.sem, rb.sem); endif; scratch(t2); store(t2, t1, 4); }
+
+/*extend int_store_multiple
+	otawa_rec = {
+		if i < 32 then
+			store(R(i), t1, 4);
+			add(t1, t1, t2);
+			i = i + 1;
+			otawa_rec;
+		endif;
+	}
+	otawa_sem = {
+		set(t2, 4);
+		seti(t1, d);
+		if !ra.is_zero then add(t1, t1, ra.sem); endif;
+		i = rd;
+		otawa_rec;
+	}*/
+	

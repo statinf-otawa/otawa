@@ -1,0 +1,80 @@
+
+// ****** VLE 16-bits ******
+
+extend se_add, se_addi, se_and, se_andi, se_andc, se_bclri, se_bgeni, se_bmski, se_bseti, se_btsti,
+se_cmp, se_cmpi, se_cmph, se_cmphl, se_cmpl, se_cmpli, se_extsb, se_extsh, se_extzb, se_extzh,
+se_li, se_mfar, se_mfctr, se_mflr, se_mr, se_mtar, se_mtctr, se_mtlr, se_neg, se_not, se_or,
+se_sub, se_subf, se_subi
+	otawa_kind = IS_ALU | IS_INT
+
+extend se_b, se_bctr
+	otawa_kind = IS_CONTROL | (if LK then IS_CALL else 0 endif)
+
+extend se_bc
+	otawa_kind = IS_CONTROL | IS_COND
+
+extend se_blr
+	otawa_kind = IS_CONTROL | IS_RETURN
+
+extend se_lbz, se_lhz, se_lwz
+	otawa_kind = IS_MEM | IS_LOAD | IS_INT
+
+extend se_mullw
+	otawa_kind = IS_INT | IS_MUL
+
+extend se_rfci, se_rfdi, se_rfi
+	otawa_kind = IS_CONTROL | IS_RETURN | IS_INTERN
+
+extend se_sc
+	otawa_kind = IS_CONTROL | IS_CALL | IS_INTERN
+
+extend se_slw, se_slwi, se_sraw, se_srawi, se_srw, se_srwi
+	otawa_kind = IS_ALU | IS_INT | IS_SHIFT
+
+extend se_stb, se_sth, se_stw
+	otawa_kind = IS_MEM | IS_STORE | IS_INT
+
+
+// ****** VLE 32-bits ******
+
+extend e_add16i, e_add2i_, e_add2is, e_addi, e_addic, e_and2i_, e_and2is_, e_andi,
+e_cmp16i, e_cmph16i, e_cmphl, e_cmphl16i, e_cmpi, e_cmpl16i, e_cmpli, e_li, e_lis,
+e_or2i, e_or2is, e_ori, e_subfic, e_xori
+	otawa_kind = IS_ALU | IS_INT
+
+extend e_b
+	otawa_kind = IS_CONTROL | (if LK then IS_CALL else 0 endif)
+
+extend e_bc
+	otawa_kind = IS_CONTROL | IS_COND | (if LK then IS_CALL else 0 endif)
+
+extend e_crand, e_crandc, e_creqv, e_crnand, e_crnor, e_cror, e_crorc, e_crxor, e_mcrf
+	otawa_kind = IS_INTERN
+
+extend e_lbz, e_lbzu, e_lha, e_lhau, e_lhz, e_lhzu, e_lwz, e_lwzu
+	otawa_kind = IS_MEM | IS_LOAD | IS_INT
+
+extend e_lmw
+	otawa_kind = IS_MEM | IS_LOAD | IS_MULTI | IS_INT
+
+extend e_mulli, e_mull2i
+	otawa_kind = IS_ALU | IS_INT | IS_MUL
+
+extend e_rlw, e_rlwi, e_rlwimi, e_rlwinm, e_slwi, e_srwi
+	otawa_kind = IS_ALU | IS_INT | IS_SHIFT
+
+extend e_stb, e_stbu, e_sth, e_sthu, e_stw, e_stwu 
+	otawa_kind = IS_MEM | IS_STORE | IS_INT
+
+extend e_stmw
+	otawa_kind = IS_MEM | IS_STORE | IS_MULTI | IS_INT
+	
+
+// ****** Book E ******
+
+// It should be fine if OTAWA was providing support for cache prefetching
+extend icbt
+	otawa_kind = IS_MEM | IS_LOAD | IS_INTERN
+	
+extend mbar, mfdcr, msync, mtdcr, tlbivax, tlbre, tlbsx, tlbsync, tlbwe, wrtee, wrteei
+	otawa_kind = IS_INTERN
