@@ -23,6 +23,7 @@
 #define OTAWA_APP_APPLICATION_H_
 
 #include <elm/options.h>
+#include <elm/option/ListOption.h>
 #include <otawa/otawa.h>
 
 namespace otawa {
@@ -54,6 +55,7 @@ protected:
 
 private:
 	option::BoolOption help, verbose;
+	option::ListOption<string> sets;
 	system::Path path;
 	genstruct::Vector<string> entries;
 	PropList props;

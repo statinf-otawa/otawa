@@ -27,6 +27,7 @@ namespace otawa {
 /**
  * @class Application
  * A class making easier the use of applications built on OTAWA. It automatically support for
+ * @li --set ID=VALUE -- set a property in the configuration property list (passed to manager and other processors),
  * @li -h|--help -- option help display,
  * @li -v|--verbose -- verbose mode activation,
  * @li first argument as binary program,
@@ -80,6 +81,7 @@ Application::Application(
 ):
 	help(*this, 'h', "help", "display this help", false),
 	verbose(*this, 'v', "verbose", "verbose display of the process", false),
+	sets(*this, option::cmd, "--set", option::description, "set a configuration property", option::arg_desc, "ID=VALUE", option::end),
 	props2(0),
 	result(0),
 	ws(0)
@@ -123,6 +125,37 @@ int Application::run(int argc, char **argv) {
 		}
 		if(verbose)
 			Processor::VERBOSE(props) = true;
+
+		// process the sets
+		bool failed = false;
+		for(int i = 0; i < sets.count(); i++) {
+
+			// scan the argument
+			string arg = sets[i];
+			int p = arg.indexOf('=');
+			if(p < 0) {
+				cerr << "ERROR: bad --set argument: \"" << arg << "\"\n";
+				failed = true;
+				continue;
+			}
+			string name = arg.substring(0, p);
+			string val = arg.substring(p + 1);
+
+			// find the identifier
+			AbstractIdentifier *id = AbstractIdentifier::find(name);
+			if(!id) {
+				cerr << "ERROR: unknown identifier \"" << name << "\"\n";
+				failed = true;
+				continue;
+			}
+
+			// scan the value
+			id->fromString(props, val);
+		}
+		if(failed)
+			return 2;
+
+		// prepare the work
 		prepare(props);
 		
 		// do the work
