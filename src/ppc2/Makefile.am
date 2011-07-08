@@ -24,6 +24,8 @@ ppc_la_SOURCES = \
 install-data-hook:
 	rm -f $(libdir)/otawa/loader/elf_20.la
 	$(LN_S) ppc.la $(libdir)/otawa/loader/elf_20.la
+	rm -f $(libdir)/otawa/proc/otawa/ppc.la
+	$(LN_S) $(libdir)/otawa/loader/ppc.la $(libdir)/otawa/proc/otawa/ppc.la 	
 
 
 # generate files

@@ -37,6 +37,7 @@
 #include <otawa/prop/Identifier.h>
 #include <otawa/loader/powerpc.h>
 #include <otawa/prog/sem.h>
+#include <otawa/proc/ProcessorPlugin.h>
 
 extern "C"
 {
@@ -289,7 +290,7 @@ private:
 			if(!vle_enabled)
 				return ppc_decode_PPC(_ppcDecoder, ppc_address_t(addr.offset()));
 			else
-				return ppc_decode_PPC(_ppcDecoder, ppc_address_t(addr.offset()));
+				return ppc_decode_VLE(_ppcDecoder, ppc_address_t(addr.offset()));
 #		endif
 	}
 
@@ -995,9 +996,23 @@ otawa::Process *Loader::create(Manager *man, const PropList& props) {
 	return new Process(man, new Platform(props), props);
 }
 
+
+/**
+ * PowerPC is also a processor plugin.
+ */
+class Plugin: public ProcessorPlugin {
+public:
+	Plugin(): ProcessorPlugin("otawa::ppc", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
+	virtual elm::genstruct::Table<AbstractRegistration *>& processors(void) const {
+		static elm::genstruct::Table<AbstractRegistration *> none;
+		return none;
+	}
+};
+
 } }	// namespace otawa::ppc2
 
 
 // PowerPC GLISS Loader entry point
 otawa::ppc2::Loader OTAWA_LOADER_HOOK;
 otawa::ppc2::Loader& ppc2_plugin = OTAWA_LOADER_HOOK;
+otawa::ppc2::Plugin OTAWA_PROC_HOOK;
