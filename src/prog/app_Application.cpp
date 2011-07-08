@@ -21,6 +21,7 @@
  */
 
 #include <otawa/app/Application.h>
+#include <otawa/proc/ProcessorPlugin.h>
 
 namespace otawa {
 
@@ -81,7 +82,7 @@ Application::Application(
 ):
 	help(*this, 'h', "help", "display this help", false),
 	verbose(*this, 'v', "verbose", "verbose display of the process", false),
-	sets(*this, option::cmd, "--set", option::description, "set a configuration property", option::arg_desc, "ID=VALUE", option::end),
+	sets(*this, option::cmd, "--add-prop", option::description, "set a configuration property", option::arg_desc, "ID=VALUE", option::end),
 	props2(0),
 	result(0),
 	ws(0)
@@ -144,9 +145,12 @@ int Application::run(int argc, char **argv) {
 			// find the identifier
 			AbstractIdentifier *id = AbstractIdentifier::find(name);
 			if(!id) {
-				cerr << "ERROR: unknown identifier \"" << name << "\"\n";
-				failed = true;
-				continue;
+				id = ProcessorPlugin::getIdentifier(&name);
+				if(!id) {
+					cerr << "ERROR: unknown identifier \"" << name << "\"\n";
+					failed = true;
+					continue;
+				}
 			}
 
 			// scan the value
