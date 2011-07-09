@@ -83,6 +83,7 @@ Application::Application(
 	help(*this, 'h', "help", "display this help", false),
 	verbose(*this, 'v', "verbose", "verbose display of the process", false),
 	sets(*this, option::cmd, "--add-prop", option::description, "set a configuration property", option::arg_desc, "ID=VALUE", option::end),
+	params(*this, option::cmd, "--load-param", option::description, "add a load parameter", option::arg_desc, "ID=VALUE", option::end),
 	props2(0),
 	result(0),
 	ws(0)
@@ -158,6 +159,10 @@ int Application::run(int argc, char **argv) {
 		}
 		if(failed)
 			return 2;
+
+		// prepare the load params
+		for(int i = 0; i < params.count(); i++)
+			LOAD_PARAM(props).add(params[i]);
 
 		// prepare the work
 		prepare(props);

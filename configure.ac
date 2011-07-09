@@ -401,6 +401,7 @@ AC_CONFIG_FILES([
 	include/otawa/prop/Makefile
 	include/otawa/script/Makefile
 	include/otawa/sim/Makefile
+	include/otawa/stats/Makefile
 	include/otawa/util/Makefile
 	data/Makefile
 	data/caches/Makefile

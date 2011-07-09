@@ -25,6 +25,7 @@ SUBDIRS= \
 	prop \
 	script \
 	sim \
+	stats \
 	util
 
 

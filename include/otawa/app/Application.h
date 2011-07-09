@@ -56,6 +56,7 @@ protected:
 private:
 	option::BoolOption help, verbose;
 	option::ListOption<string> sets;
+	option::ListOption<string> params;
 	system::Path path;
 	genstruct::Vector<string> entries;
 	PropList props;

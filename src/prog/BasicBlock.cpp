@@ -359,4 +359,24 @@ Inst *BasicBlock::lastInst(void) const {
 	return last;
 }
 
+
+/**
+ * Find the last control instruction of the basic block.
+ * This is usually the last one but (1) delayed-branch architecture insert instructions after the control
+ * and (2) OTAWA CFG configuration system may make merge different blocks or ignore some control instructions.
+ * If no control is found, return the last instruction.
+ * @return	Last control instruction.
+ */
+Inst *BasicBlock::controlInst(void) const {
+	Inst *control = 0, *last = 0;
+	for(BasicBlock::InstIter inst(this); inst; inst++) {
+		last = inst;
+		if(inst->isControl())
+			control = inst;
+	}
+	if(!control)
+		control = last;
+	return control;
+}
+
 } // otawa

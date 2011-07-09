@@ -1,0 +1,19 @@
+<otawa-loader name="ppc" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+	<label>ppc</label>
+	<desc>
+The PowerPC plugin allows to handle
+ELF binary code with normal PowerPC
+instruction set or VLE instruction set.
+</desc>
+	<configuration>
+		<item name="vle_enabled" type="bool" label="VLE mode" default="false">
+			<help>If true, the binary is considered encoded in VLE instruction set.</help></item></configuration>
+	<load>
+		<config name="otawa::ppc::VLE_ENABLED">
+			<xsl:attribute name="value">
+				<xsl:value-of select="$vle_enabled">
+				</xsl:value-of>
+			</xsl:attribute>
+		</config>
+	</load>
+</otawa-loader>

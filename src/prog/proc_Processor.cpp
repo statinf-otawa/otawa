@@ -319,6 +319,10 @@ void Processor::init(const PropList& props) {
 
 	// Progress
 	_progress = PROGRESS(props);
+
+	// configure statistics
+	if(COLLECT_STATS(props))
+		flags |= IS_COLLECTING;
 }
 
 
@@ -553,6 +557,14 @@ Identifier<elm::io::OutStream *>
  */
 Identifier<elm::io::OutStream *>
 	Processor::LOG("otawa::Processor::LOG", &io::err);
+
+
+/**
+ * This property allows to activate collection of statistics for the
+ * work of the current processor. @see StatInfo class.
+ */
+Identifier<bool>
+	Processor::COLLECT_STATS("otawa::Processor::COLLECT_STATS", false);
 
 
 /**

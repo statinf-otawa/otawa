@@ -79,6 +79,8 @@ public:
 	WorkSpace *load(xom::Element *elem,
 		const PropList& props = PropList::EMPTY);
 	ilp::System *newILPSystem(String plugin = "");
+	system::Path retrieveConfig(const system::Path& path);
+	Loader *findFileLoader(const system::Path& path);
 
 private:
 	WorkSpace *loadBin(const elm::system::Path& path, const PropList& props);
@@ -124,6 +126,8 @@ extern Identifier<hard::Memory *> MEMORY_OBJECT;
 extern Identifier<elm::system::Path> PROCESSOR_PATH;
 extern Identifier<elm::xom::Element *> PROCESSOR_ELEMENT;
 extern Identifier<hard::Processor *> PROCESSOR;
+
+extern Identifier<string> LOAD_PARAM;
 
 } // otawa
 

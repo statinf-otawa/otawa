@@ -30,6 +30,8 @@
 #include <otawa/sim/Simulator.h>
 #include <otawa/prog/Loader.h>
 #include <elm/system/System.h>
+#include <elm/xom/XSLTransform.h>
+#include <otawa/util/XSLTScript.h>
 
 using namespace elm;
 
@@ -80,6 +82,16 @@ const CString Manager::CACHE_CONFIG_NAME = "cache-config";
  * Name of the XML element containing the memory configuration.
  */
 const CString Manager::MEMORY_NAME = "memory";
+
+
+/**
+ * Identifier used for Manager::load() configuration.
+ * For complex loading ISA, several properties with such an identifier
+ * may be put in the configuration property list. Its arguments is a string
+ * of the form ID=VALUE where ID is an identifier of the XXX-config.xml
+ * of the loader and VALUE the matching value.
+ */
+Identifier<string> LOAD_PARAM("otawa::LOAD_PARAM", "");
 
 
 /**
@@ -185,6 +197,28 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
 
 
 /**
+ * Retrieve the file XXX-config.xml matching the path of the given
+ * binary. XXX is usually the name of the instruction set.
+ * @param	Path to the binary.
+ * @return	Path to the configuration file if any, false else.
+ */
+system::Path Manager::retrieveConfig(const system::Path& path) {
+
+	// retrieve the loader
+	Loader *loader = findFileLoader(path);
+	if(!loader)
+		return "";
+
+	// build the path of the configuration file
+	Path cpath = loader->path().parent() / (loader->name() + "-config.xml");
+	if(cpath.exists())
+		return cpath;
+	else
+		return "";
+}
+
+
+/**
  * Load a file with the given path and the given properties.
  * @param path		Path of the file to load.
  * @param props		Configuration properties.
@@ -199,6 +233,7 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * @li @ref CONFIG_ELEMENT (experimental),
  * @li @ref CONFIG_PATH (experimental),
  * @li @ref ENVP,
+ * @li @ref LOAD_PARAM,
  * @li @ref LOADER,
  * @li @ref LOADER_NAME,
  * @li @ref NO_STACK,
@@ -241,6 +276,38 @@ WorkSpace *Manager::load(const elm::system::Path&  path, const PropList& props) 
 
 
 /**
+ * Look for loader of the given path.
+ * @param path	Path to the looked file.
+ * @return		Found loader or NULL.
+ */
+Loader *Manager::findFileLoader(const system::Path& path) {
+	Output log(io::err);
+
+	gel_file_t *file = gel_open((char *)&path, 0, 0);
+	if(!file) {
+		resetVerbosity();
+		throw LoadException(gel_strerror());
+	}
+	gel_file_info_t infos;
+	gel_file_infos(file, &infos);
+	StringBuffer buf;
+	buf << "elf_" << infos.machine;
+	gel_close(file);
+	String name = buf.toString();
+	if(isVerbose()) {
+		log << "INFO: looking for loader \"" << path << "\"\n";
+		log << "INFO: searchpaths:\n";
+		for(elm::system::Plugger::PathIterator path(loader_plugger); path; path++)
+			log << "INFO:	- " << *path << io::endl;
+		log << "INFO: available loaders\n";
+		for(elm::system::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
+			log << "INFO:\t- " << *plugin << " (" << plugin.path() << ")\n";
+	}
+	return findLoader(name.toCString());
+}
+
+
+/**
  * Load a binary file.
  * @param path	Path to the binary file.
  * @param props	Configuration properties.
@@ -251,6 +318,7 @@ WorkSpace *Manager::loadBin(
 	const elm::system::Path& path,
 	const PropList& props)
 {
+	PropList used_props(props);
 	setVerbosity(props);
 
 	// get log
@@ -302,12 +370,24 @@ WorkSpace *Manager::loadBin(
 	// post-process
 	if(loader && isVerbose())
 		cerr << "INFO: selected loader: " << loader->name() << " (" << loader->pluginVersion() << ") ( " << loader->path() << ")\n";
-	resetVerbosity();
-	if(!loader)
+	if(!loader) {
+		resetVerbosity();
 		throw LoadException(_ << "no loader for \"" << path << "\".");
+	}
+
+	// any configuration ?
+	Path cpath = loader->path().parent() / (loader->name() + "-config.xml");
+	if(cpath.exists()) {
+		XSLTScript script(cpath, elm::monitor, isVerbose());
+		script.setConfiguration();
+		script.addParams(props, LOAD_PARAM);
+		script.transform();
+		script.fillProps(used_props, "load");
+	}
 
 	// Try to load the binary
-	return new WorkSpace(loader->load(this, &path, props));
+	resetVerbosity();
+	return new WorkSpace(loader->load(this, &path, used_props));
 }
 
 

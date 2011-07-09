@@ -83,6 +83,7 @@ public:
 	static Identifier<bool> VERBOSE;
 	static Identifier<bool> RECURSIVE;
 	static Identifier<Progress *> PROGRESS;
+	static Identifier<bool> COLLECT_STATS;
 
 	// Statistics Properties
 	static Identifier<elm::system::time_t> RUNTIME;
@@ -96,7 +97,8 @@ protected:
 		IS_TIMED		= 0x01,
 		IS_VERBOSE		= 0x02,
 		IS_ALLOCATED	= 0x04,
-		IS_PREPARED		= 0x8;
+		IS_PREPARED		= 0x08,
+		IS_COLLECTING	= 0x10;
 	unsigned long flags;
 	elm::io::Output out;
 	elm::io::Output log;
@@ -109,6 +111,7 @@ protected:
 	inline bool recordsStats(void) const { return stats; }
 	inline bool isAllocated(void) const { return flags & IS_ALLOCATED; }
 	inline bool isPrepared(void) const { return flags & IS_PREPARED; }
+	inline bool isCollectingStats(void) const { return flags & IS_COLLECTING; }
 
 	// configuration
 	void require(const AbstractFeature& feature);
