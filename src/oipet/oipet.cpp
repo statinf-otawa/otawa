@@ -42,6 +42,7 @@
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/util/BBRatioDisplayer.h>
 #include <otawa/display/ILPSystemDisplayer.h>
+#include <otawa/stats.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -264,6 +265,7 @@ BoolOption not_inlining(command, 'I', "do-not-inline", "do not inline function c
 static StringOption ilp_plugin(command, "ilp", "select the ILP solver", "solver name");
 static StringOption output_prefix(command, 'o', "output", "Prefix of output file names", "output prefix", "");
 static StringOption flow_facts(command, 'f', "flowfacts", "Select the fow fact file", "flow facts file", "");
+static SwitchOption stats(command, option::cmd, "-s", option::cmd, "--stat", option::description, "dumps statistics of the computation", option::end);
 
 
 /**
@@ -290,6 +292,28 @@ void Command::process (String arg) {
 }
 
 
+/* class for collecting statistics */
+class MyCollector: public StatCollector::Collector {
+public:
+	inline MyCollector(StatCollector *collector): coll(collector) { }
+
+	virtual void enter(const ContextualStep& step) {
+		path.push(step);
+	}
+
+	virtual void collect(const Address& address, t::size size, int value) {
+		cout << value << ' ' << address << ':' << (address + size) << ' ' << path << io::endl;
+	}
+
+	virtual void leave(void) {
+		path.pop();
+	}
+
+private:
+	ContextualPath path;
+	StatCollector *coll;
+};
+
 /**
  * Compute the WCET for the given function.
  */
@@ -304,6 +328,8 @@ void Command::compute(String fun) {
 
 	// Prepare processor configuration
 	PropList props;
+	if(stats)
+		otawa::Processor::COLLECT_STATS(props) = true;
 	TASK_ENTRY(props) = fun.toCString();
 	if(dump_constraints || dump_graph !=  display::OUTPUT_ANY)
 		EXPLICIT(props) = true;
@@ -483,6 +509,15 @@ void Command::compute(String fun) {
 		BBRatioDisplayer::PATH(props) = path;
 		BBRatioDisplayer displayer;
 		displayer.process(fw, props);
+	}
+
+	// dump statistics
+	if(stats) {
+		for(StatInfo::Iter coll(fw); coll; coll++) {
+			cout << "****** STATISTICS FOR " << coll->name() << " (" << coll->unit() << ") *****\n";
+			MyCollector collector(coll);
+			coll->collect(collector);
+		}
 	}
 }
 

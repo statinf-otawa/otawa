@@ -36,7 +36,8 @@ class StatInfo {
 public:
 	static Identifier<StatInfo *> ID;
 
-	static void addStat(WorkSpace *ws, StatCollector& stats);
+	static void add(WorkSpace *ws, StatCollector& stats);
+	static void remove(WorkSpace *ws, StatCollector& stats);
 
 	class Iter: public Vector<StatCollector *>::Iterator {
 	public:

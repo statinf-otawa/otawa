@@ -47,6 +47,7 @@ includeotawa_HEADERS = \
 	platform.h \
 	program.h \
 	properties.h \
+	stats.h \
 	type.h \
 	pcg.h
 

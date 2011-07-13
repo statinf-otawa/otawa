@@ -30,6 +30,8 @@
 #include <otawa/ipet/FlowFactConstraintBuilder.h>
 #include <otawa/proc/Registry.h>
 #include <otawa/ipet/ILPSystemGetter.h>
+#include <otawa/stats/BBStatCollector.h>
+#include <otawa/stats/StatInfo.h>
 
 using namespace otawa::ilp;
 
@@ -47,6 +49,42 @@ Registration<WCETComputation> WCETComputation::reg(
 );
 
 
+/* BB time statistics collector */
+class BBTimeCollector: public BBStatCollector {
+public:
+	BBTimeCollector(WorkSpace *ws): BBStatCollector(ws) {
+		system = SYSTEM(ws);
+		ASSERT(system);
+	}
+
+	virtual cstring name(void) const { return "Execution Time"; }
+	virtual cstring unit(void) const { return "cycle"; }
+	virtual bool isEnum(void) const { return false; }
+	virtual const cstring valueName(int value) { return ""; }
+	virtual int total(void) const { return WCET(ws()); }
+	virtual int mergeContext(int v1, int v2) { return max(v1, v2); }
+	virtual int mergeAgreg(int v1, int v2) { return v1 + v2; }
+
+	void collect(Collector& collector, BasicBlock *bb) {
+		if(bb->isEnd())
+			return;
+		time_t time = TIME(bb);
+		if(time < 0)
+			return;
+		ilp::Var *var = VAR(bb);
+		if(!var)
+			return;
+		int cnt = int(system->valueOf(var));
+		if(cnt < 0)
+			return;
+		collector.collect(bb->address(), bb->size(), cnt * time);
+	}
+
+private:
+	ilp::System *system;
+};
+
+
 /**
  * @class WCETComputation
  * This class is used for computing the WCET from the system found in the root
@@ -59,6 +97,9 @@ Registration<WCETComputation> WCETComputation::reg(
  *
  * @par Provided Features
  * @li @ref ipet::WCET_FEATURE
+ *
+ * @par Statistics
+ * @li BB time
  */
 
 
@@ -72,7 +113,8 @@ WCETComputation::WCETComputation(void): Processor(reg) {
 /**
  */
 void WCETComputation::processWorkSpace(WorkSpace *fw) {
-	//CFG *cfg = ENTRY_CFG(fw);
+
+	// perform the computation
 	System *system = SYSTEM(fw);
 	if(!system)
 		throw ProcessorException(*this, "no ILP system defined in this CFG");
@@ -87,6 +129,10 @@ void WCETComputation::processWorkSpace(WorkSpace *fw) {
 	if(isVerbose())
 		log << "\tWCET = " << wcet << io::endl;
 	WCET(fw) = wcet;
+
+	// manage statistics
+	if(isCollectingStats())
+		recordStat(WCET_FEATURE, new BBTimeCollector(fw));
 }
 
 

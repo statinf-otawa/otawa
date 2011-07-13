@@ -26,6 +26,13 @@
 namespace otawa {
 
 /**
+ */
+StatCollector::~StatCollector(void) {
+
+}
+
+
+/**
  * @class StatCollector
  * A statistics collector allows to access statistics produced by an analysis.
  * Any specialized statistics provider must implements this class and store an instance
@@ -128,7 +135,7 @@ Identifier<StatInfo *> StatInfo::ID("otawa::StatInfo::ID", 0);
  * @param ws	Current workspace.
  * @param stats	Statistics collector to add.
  */
-void StatInfo::addStat(WorkSpace *ws, StatCollector& stats) {
+void StatInfo::add(WorkSpace *ws, StatCollector& stats) {
 
 	// get a statistics information
 	StatInfo *info = ID(ws);
@@ -140,6 +147,26 @@ void StatInfo::addStat(WorkSpace *ws, StatCollector& stats) {
 	// add the statistics
 	info->stats.add(&stats);
 }
+
+
+/**
+ * Remove a statistics.
+ * @param ws	Current workspace.
+ * @param stats	Statistics to remove.
+ */
+void StatInfo::remove(WorkSpace *ws, StatCollector& stats) {
+
+	// get a statistics information
+	StatInfo *info = ID(ws);
+	if(!info) {
+		info = new StatInfo();
+		ID(ws) = info;
+	}
+
+	// remove the statistics
+	info->stats.remove(&stats);
+}
+
 
 Vector<StatCollector *>& StatInfo::get(WorkSpace *ws) {
 	static Vector<StatCollector *> empty;

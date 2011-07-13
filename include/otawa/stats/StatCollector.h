@@ -29,24 +29,28 @@ namespace otawa {
 
 class StatCollector {
 public:
-  virtual cstring name(void) const = 0;
-  virtual cstring unit(void) const = 0;
+	virtual ~StatCollector(void);
 
-  // value processing
-  virtual bool isEnum(void) const = 0;
-  virtual const cstring valueName(int value) = 0;
-  virtual int total(void) const = 0;
+	virtual cstring name(void) const = 0;
+	virtual cstring unit(void) const = 0;
 
-  // collection
-  class Collector {
-  public:
-    virtual void collect(const ContextualPath& path, const Address& address, t::size size, int value) = 0;
-  };
-  virtual void collect(Collector& collector) = 0;
+	// value processing
+	virtual bool isEnum(void) const = 0;
+	virtual const cstring valueName(int value) = 0;
+	virtual int total(void) const = 0;
 
-  // statistics merge
-  virtual int mergeContext(int v1, int v2) = 0;
-  virtual int mergeAgreg(int v1, int v2) = 0;
+	// collection
+	class Collector {
+	public:
+		virtual void enter(const ContextualStep& step) = 0;
+		virtual void collect(const Address& address, t::size size, int value) = 0;
+		virtual void leave(void) = 0;
+	};
+	virtual void collect(Collector& collector) = 0;
+
+	// statistics merge
+	virtual int mergeContext(int v1, int v2) = 0;
+	virtual int mergeAgreg(int v1, int v2) = 0;
 };
 
 }	// otawa

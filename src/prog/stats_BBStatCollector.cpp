@@ -27,7 +27,7 @@
 namespace otawa {
 
 // constant list management
-template <class T>
+/*template <class T>
 class ListManager {
 public:
 	class Cons {
@@ -149,10 +149,10 @@ private:
 	chunk_t *fst;
 	Cons *free;
 	int _size;
-};
+};*/
 
 
-class ContextManager: public ListManager<ContextualStep> {
+/*class ContextManager: public ListManager<ContextualStep> {
 public:
 	typedef Pair<BasicBlock *, Cons *> pair_t;
 	typedef Vector<pair_t> todo_t;
@@ -181,7 +181,7 @@ protected:
 
 private:
 	todo_t todo;
-};
+};*/
 
 
 /**
@@ -216,71 +216,25 @@ void BBStatCollector::collect(Collector& collector) {
  * @param collector		Collector to use.
  */
 void BBStatCollector::process(Collector& collector) {
+	const CFGCollection *coll = INVOLVED_CFGS(_ws);
+	ASSERT(coll);
+	for(int i = 0; i < coll->count(); i++) {
+		_cfg = coll->get(i);
+		processCFG(collector, coll->get(i));
+	}
+}
+
+void BBStatCollector::processCFG(Collector& collector, CFG *cfg) {
 	BitVector marks(_cfg->countBB());
-	ContextManager todo;
-
-	// initialization
-	todo.ctx = todo.cons(ContextualStep(ContextualStep::FUNCTION, _cfg->address()), 0);
-	for(BasicBlock::OutIterator edge(_cfg->entry()); edge; edge++) {
-		todo.bb = edge->target();
-		todo.push();
-	}
-
-	// loop until end
-	while(todo) {
-
-		// process current
-		todo.pop();
-		// make context
-		collect(collector, todo.bb);
-		marks.set(todo.bb->number());
-
-		// look in successors
-		for(BasicBlock::OutIterator edge(todo.bb); edge; edge++) {
-
-			// already done ?
-			if(marks[edge->target()->number()])
-				continue;
-
-			// process edge
-			switch(edge->kind()) {
-			case Edge::NONE:
-				ASSERT(false);
-			case Edge::CALL:
-			case Edge::VIRTUAL:
-				continue;
-			case Edge::TAKEN:
-			case Edge::NOT_TAKEN:
-				break;
-			case Edge::VIRTUAL_RETURN:
-				todo.ctx = todo.ctx->tl()->tl();
-				break;
-			case Edge::VIRTUAL_CALL:
-				todo.ctx = todo.cons(ContextualStep(ContextualStep::CALL, todo.bb->controlInst()->address()), todo.ctx);
-				todo.ctx = todo.cons(ContextualStep(ContextualStep::FUNCTION, edge->target()->address()), todo.ctx);
-				break;
-			}
-
-			// add successor
-			todo.bb = edge->target();
-			if(todo.bb->isExit())
-				continue;
-			todo.push();
-		}
-	}
-
-#if 0
 	typedef Pair<CFG *, Edge *> call_t;
 	Vector<Edge *> todo;
 	Vector<call_t> calls;
-	int level = 0;
-	_path.clear();
 
 	// initialization
-	calls.push(call_t(_cfg, 0));
-	for(BasicBlock::OutIterator edge(_cfg->entry()); edge; edge++)
+	calls.push(call_t(cfg, 0));
+	//collector.enter(ContextualStep(ContextualStep::FUNCTION, cfg->address()));
+	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++)
 		todo.push(edge);
-	_path.push(ContextualStep(ContextualStep::FUNCTION, _cfg->address()));
 
 	// traverse until the end
 	while(todo) {
@@ -291,9 +245,8 @@ void BBStatCollector::process(Collector& collector) {
 		if(!edge) {
 			edge = calls.top().snd;
 			calls.pop();
-			level--;
+			collector.leave();
 			bb = edge->target();
-			_path.pop();
 		}
 
 		// a virtual call ?
@@ -301,25 +254,24 @@ void BBStatCollector::process(Collector& collector) {
 
 		case Edge::NONE:
 			ASSERT(false);
+			break;
 
 		case Edge::VIRTUAL_RETURN:
-			_path.pop();
 		case Edge::CALL:
 			bb = 0;
 			break;
 
 		case Edge::TAKEN:
 		case Edge::NOT_TAKEN:
-			if(!MARK(edge->target()))
+			if(!marks.bit(edge->target()->number()))
 				bb = edge->target();
 			else
 				bb = 0;
 			break;
 
 		case Edge::VIRTUAL:
-			if(edge->target() == _cfg->exit()) {
+			if(edge->target() == cfg->exit()) {
 				bb = 0;
-				_path.pop();
 				break;
 			}
 
@@ -327,21 +279,22 @@ void BBStatCollector::process(Collector& collector) {
 				bb = edge->target();
 
 				// recursive call
-				if(MARK(bb))
+				if(marks.bit(bb->number()))
 					bb = 0;
 
 				// simple call
 				else {
+					if(!edge->source()->isEntry())
+						collector.enter(ContextualStep(ContextualStep::CALL, edge->source()->controlInst()->address()));
+					collector.enter(ContextualStep(ContextualStep::FUNCTION, edge->target()->address()));
 					BasicBlock *ret = VIRTUAL_RETURN_BLOCK(edge->source());
 					if(!ret)
-						ret = _cfg->exit();
+						ret = cfg->exit();
 					CFG *called_cfg = CALLED_CFG(edge);
 					if(!called_cfg)
-						called_cfg = _cfg;
+						called_cfg = cfg;
 					calls.push(call_t(called_cfg, BasicBlock::InIterator(ret)));
 					todo.push(0);
-					level++;
-					//_path.push(ContextualStep(ContextualStep::CALL, edge->source()->));
 				}
 			}
 			break;
@@ -349,13 +302,12 @@ void BBStatCollector::process(Collector& collector) {
 
 		// process basic block
 		if(bb) {
-			this->collect(collector, bb);
+			collect(collector, bb);
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				todo.push(edge);
-			MARK(bb) = calls.top().fst->entry();
+			marks.set(bb->number());
 		}
 	}
-#endif
 }
 
 

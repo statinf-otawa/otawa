@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	BBStatCollector class interface
+ *	StatInfo class interface
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2011, IRIT UPS.
@@ -19,31 +19,10 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_STATS_BBSTATCOLLECTOR_H_
-#define OTAWA_STATS_BBSTATCOLLECTOR_H_
+#ifndef OTAWA_STATS_H_
+#define OTAWA_STATS_H_
 
-#include <otawa/cfg.h>
-#include "StatCollector.h"
+#include <otawa/stats/StatInfo.h>
+#include <otawa/stats/StatCollector.h>
 
-namespace otawa {
-
-class BBStatCollector: public StatCollector {
-public:
-	BBStatCollector(WorkSpace *ws);
-	virtual void collect(Collector& collector);
-
-protected:
-	inline WorkSpace *ws(void) const { return _ws; }
-	inline CFG *cfg(void) const { return _cfg; }
-	virtual void collect(Collector& collector, BasicBlock *bb) = 0;
-
-private:
-	virtual void processCFG(Collector& collector, CFG *cfg);
-	void process(Collector& collector);
-	WorkSpace *_ws;
-	CFG *_cfg;
-};
-
-}	// otawa
-
-#endif /* OTAWA_STATS_BBSTATCOLLECTOR_H_ */
+#endif /* OTAWA_STATS_H_ */

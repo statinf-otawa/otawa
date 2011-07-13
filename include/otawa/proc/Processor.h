@@ -42,6 +42,7 @@ class Configuration;
 class WorkSpace;
 class FeatureDependency;
 class Progress;
+class StatCollector;
 
 
 // Processor class
@@ -124,13 +125,14 @@ protected:
 	inline WorkSpace *workspace(void) const { return ws; }
 	inline void addCleaner(const AbstractFeature& feature, Cleaner *cleaner)
 		{ cleaners.add(clean_t(&feature, cleaner)); }
-	template <class T> void track(const AbstractFeature& feature, T *object)
-		{ addCleaner(feature, new Deletor<T>(object)); return object; }
+	template <class T> T *track(const AbstractFeature& feature, T *object)
+		{ addCleaner(feature, new elm::Deletor<T>(object)); return object; }
 	template <class T> void track(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
 		{ addCleaner(feature, new Deletor<T>(ref)); }
 	template <class T> void track(const AbstractFeature& feature, const Ref<T *, const Identifier<T *> >& ref)
 		{ addCleaner(feature, new Deletor<T>(ref)); }
 	inline Progress& progress(void) { return *_progress; }
+	void recordStat(const AbstractFeature& feature, StatCollector *collector);
 
 	// Methods for customizing
 	virtual void prepare(WorkSpace *ws);

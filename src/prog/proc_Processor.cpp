@@ -27,6 +27,8 @@
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/proc/FeatureDependency.h>
 #include <otawa/proc/Progress.h>
+#include <otawa/stats/StatInfo.h>
+#include <otawa/stats/StatCollector.h>
 
 using namespace elm;
 using namespace elm::io;
@@ -678,6 +680,35 @@ void Processor::provide(const AbstractFeature& feature) {
  */
 void Processor::prepare(WorkSpace *ws) {
 	flags |= IS_PREPARED;
+}
+
+/* statistics cleaner */
+class StatCleaner: public Cleaner {
+public:
+	inline StatCleaner(WorkSpace *_ws, StatCollector *_collector): ws(_ws), collector(_collector) { }
+
+	virtual void clean(void) {
+		StatInfo::remove(ws, *collector);
+		delete collector;
+	}
+
+private:
+	WorkSpace *ws;
+	StatCollector *collector;
+};
+
+/**
+ * Add a statistics collector to the current workspace collection.
+ * The statistics object is tracked and linked to the feature.
+ * In case of the feature invalidation, the statistics information
+ * instance is purged of the statistics collector.
+ * @param feature		Feature to link the collector to.
+ * @param collector		Statistics collector to add.
+ */
+void Processor::recordStat(const AbstractFeature& feature, StatCollector *collector) {
+	ASSERTP(isCollectingStats(), "no statistics collection at this time");
+	StatInfo::add(workspace(), *collector);
+	addCleaner(feature, new StatCleaner(workspace(), collector));
 }
 
 
