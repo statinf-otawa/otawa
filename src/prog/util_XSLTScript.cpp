@@ -232,8 +232,8 @@ void XSLTScript::transform(void) throw(otawa::Exception) {
 		xom::Document *res = xslt.transformDocument(empty);
 
 		// DEBUG
-		xom::Serializer serial(log.stream());
-		serial.write(res);
+		/*xom::Serializer serial(log.stream());
+		serial.write(res);*/
 
 
 		// cleanup at end
