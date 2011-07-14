@@ -142,15 +142,34 @@ static const elm::genstruct::Table<const RegBank *> banks_table(banks, 4);
 // semantics functions
 #define _GPR(n)			GPR_bank[n]->platformNumber()
 #define _CR(n)			CR_bank[n]->platformNumber()
+#define _XER			XER_reg.platformNumber()
+#define _LR				LR_reg.platformNumber()
+#define _CTR			CTR_reg.platformNumber()
 
-#define _add(d, a, b)	block.add(otawa::sem::add(d, a, b))
+#define _EQ				sem::EQ
+#define _NE				sem::NE
+#define _LT				sem::LT
+#define _LE				sem::LE
+#define _GT				sem::GT
+#define _GE				sem::GE
+#define _ANY_COND		sem::ANY_COND
+
+#define _add(d, a, b)		block.add(otawa::sem::add(d, a, b))
+#define _branch(d)		block.add(otawa::sem::branch(d))
 #define _cmp(d, a, b)	block.add(otawa::sem::cmp(d, a, b))
 #define _cmpu(d, a, b)	block.add(otawa::sem::cmp(d, a, b))
+#define _div(d, a, b)	block.add(otawa::sem::div(d, a, b))
+#define _divu(d, a, b)	block.add(otawa::sem::divu(d, a, b))
+#define _if(d, a, b)	block.add(otawa::sem::_if(d, a, b))
+#define _mul(d, a, b)	block.add(otawa::sem::mul(d, a, b))
+#define _mulu(d, a, b)	block.add(otawa::sem::mulu(d, a, b))
 #define _load(d, a, b)	block.add(otawa::sem::load(d, a, b))
 #define _set(d, a)		block.add(otawa::sem::set(d, a))
 #define _seti(d, i)		block.add(otawa::sem::seti(d, i))
+#define _shr(d, a, b)	block.add(otawa::sem::shr(d, a, b))
 #define _store(d, a, b)	block.add(otawa::sem::store(d, a, b))
 #define _scratch(a)		block.add(otawa::sem::scratch(a));
+#define _sub(d, a, b)	block.add(otawa::sem::sub(d, a, b))
 
 #include "otawa_sem.h"
 
