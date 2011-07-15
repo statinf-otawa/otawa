@@ -3,3 +3,6 @@ owcet
 Makefile
 .deps
 .libs
+cmake_install.cmake
+CMakeFiles
+owcet.exe

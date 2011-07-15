@@ -32,6 +32,7 @@
 #include <elm/system/System.h>
 #include <elm/xom/XSLTransform.h>
 #include <otawa/util/XSLTScript.h>
+#include "../../config.h"
 
 using namespace elm;
 
@@ -40,10 +41,10 @@ namespace otawa {
 // Private
 static String buildPaths(cstring kind, string paths) {
 	StringBuffer buf;
-	buf << "./.otawa/" << kind << ":"
-		<< elm::system::Path::home() << "/.otawa/" << kind << ":";
+	buf << "./.otawa/" << kind << elm::system::Path::PATH_SEPARATOR
+		<< elm::system::Path::home() << "/.otawa/" << kind << elm::system::Path::PATH_SEPARATOR;
 #	ifdef HAS_RELOCATION
-		buf << (Manager::prefixPath() / "lib/otawa" / kind) << ':';
+		buf << (Manager::prefixPath() / "lib/otawa" / kind) << elm::system::Path::PATH_SEPARATOR;
 #	endif
 	buf << paths;
 	return buf.toString();
@@ -357,6 +358,7 @@ WorkSpace *Manager::loadBin(
 		String name = buf.toString();
 		if(isVerbose()) {
 			log << "INFO: looking for loader \"" << name << "\"\n";
+			log << "INFO: prefix path = " << prefixPath() << io::endl;
 			log << "INFO: searchpaths:\n";
 			for(elm::system::Plugger::PathIterator path(loader_plugger); path; path++)
 				log << "INFO:	- " << *path << io::endl;
@@ -711,6 +713,10 @@ Manager MANAGER;
 /**
  * Compilation date of this OTAWA library.
  */
+#if defined(__unix)
 const cstring Manager::COMPILATION_DATE = DATE;
+#elif defined(__WIN32) || defined(__WIN64)
+const cstring Manager::COMPILATION_DATE = DAYDATE;
+#endif
 
 }	// otawa

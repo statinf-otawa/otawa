@@ -52,3 +52,9 @@ OTAWA.anjuta
 .bzr
 libltdl
 doxygen.err
+cmake_install.cmake
+CMakeFiles
+CMakeFiles
+.externalToolBuilders
+CMakeCache.txt
+config.in

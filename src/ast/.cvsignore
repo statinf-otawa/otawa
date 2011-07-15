@@ -21,3 +21,11 @@ FunAST.lo
 ast_ASTLoader.lo
 WhileAST.lo
 proc_FunProcessor.lo
+cmake_install.cmake
+cmake_install.cmake
+CMakeFiles
+ast_parser.c
+lex.ast_lexer.h
+libast.dll.a
+libast.dll
+lex.ast_lexer.c

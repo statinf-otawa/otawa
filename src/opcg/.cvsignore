@@ -9,3 +9,6 @@ Makefile
 Makefile.in
 .deps
 .libs
+cmake_install.cmake
+CMakeFiles
+opcg.exe

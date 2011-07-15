@@ -67,7 +67,7 @@ public:
 	static const CString CACHE_CONFIG_NAME;
 	static const CString MEMORY_NAME;
 	static const cstring COMPILATION_DATE;
-	static system::Path prefixPath(void);
+	static elm::system::Path prefixPath(void);
 
 	Manager(void);
 	~Manager(void);

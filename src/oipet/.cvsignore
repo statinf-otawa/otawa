@@ -4,3 +4,6 @@ Makefile.in
 oipet
 main.lp
 .libs
+cmake_install.cmake
+CMakeFiles
+oipet.exe

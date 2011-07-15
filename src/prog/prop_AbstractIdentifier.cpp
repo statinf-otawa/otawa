@@ -259,19 +259,39 @@ void AbstractIdentifier::initialize(void) {
 
 // Specialisation for types
 template <>
+#if defined(__unix)
 const Type& Identifier<bool>::type(void) const { return Type::bool_type; }
+#elif defined(__WIN32) || defined(__WIN64)
+inline const Type& Identifier<bool>::type(void) const { return Type::bool_type; }
+#endif
 
 template <>
+#if defined(__unix)
 const Type& Identifier<char>::type(void) const { return Type::char_type; }
+#elif defined(__WIN32) || defined(__WIN64)
+inline const Type& Identifier<char>::type(void) const { return Type::char_type; }
+#endif
 
 template <>
+#if defined(__unix)
 const Type& Identifier<int>::type(void) const { return Type::int32_type; }
+#elif defined(__WIN32) || defined(__WIN64)
+inline const Type& Identifier<int>::type(void) const { return Type::int32_type; }
+#endif
 
 template <>
+#if defined(__unix)
 const Type& Identifier<long long>::type(void) const { return Type::int64_type; }
+#elif defined(__WIN32) || defined(__WIN64)
+inline const Type& Identifier<long long>::type(void) const { return Type::int64_type; }
+#endif
 
 template <>
+#if defined(__unix)
 const Type& Identifier<char *>::type(void) const { return Type::cstring_type; }
+#elif defined(__WIN32) || defined(__WIN64)
+inline const Type& Identifier<char *>::type(void) const { return Type::cstring_type; }
+#endif
 
 
 /**

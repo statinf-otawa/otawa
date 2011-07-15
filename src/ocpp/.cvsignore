@@ -4,3 +4,6 @@ Makefile.in
 Makefile
 Unmangler.lo
 libocpp.la
+cmake_install.cmake
+CMakeFiles
+libocpp.dll.a

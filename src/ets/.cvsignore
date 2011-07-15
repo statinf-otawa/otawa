@@ -12,3 +12,6 @@ ets_CacheMissComputation.lo
 ets.la
 ets_CacheFirstMissComputation.lo
 ets_ACSComputation.lo
+cmake_install.cmake
+CMakeFiles
+libets.dll

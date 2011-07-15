@@ -27,7 +27,13 @@
 #include <elm/genstruct/Vector.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <otawa/prog/WorkSpace.h>
+#if defined(__unix)
 #include <lp_lib.h>
+#elif defined(__WIN32) || defined(__WIN64)
+extern "C"{
+#include <lp_lib.h>
+}
+#endif
 #include <math.h>
 
 using namespace elm;
@@ -539,7 +545,11 @@ double System::value(void) {
 	return val;
 }
 
+#if defined(__WIN32) || defined(__WIN64)
+static int __WINAPI test_cancellation(lprec *lp, void *userhandle) {
+#else
 static int test_cancellation(lprec *lp, void *userhandle) {
+#endif
 	WorkSpace *ws = (WorkSpace *)userhandle;
 	if(ws->isCancelled())
 		return 1;

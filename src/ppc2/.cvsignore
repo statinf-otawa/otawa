@@ -9,3 +9,7 @@ otawa_used_regs.h
 otawa_target.h
 otawa_kind.h
 otawa_pred.h
+CMakeFiles
+libppc2.dll
+cmake_install.cmake
+elf_20.link

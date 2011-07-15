@@ -4,3 +4,7 @@ Makefile
 .libs
 lp_solve5.lo
 lp_solve5.la
+cmake_install.cmake
+liblp_solve5.dll
+liblp_solve5.dll.a
+CMakeFiles

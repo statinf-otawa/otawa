@@ -4,3 +4,6 @@ mkff
 .deps
 .libs
 core
+cmake_install.cmake
+CMakeFiles
+mkff.exe

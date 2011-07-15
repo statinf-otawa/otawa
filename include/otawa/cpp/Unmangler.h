@@ -23,6 +23,9 @@
 #define OTAWA_CPP_UNMANGLER_H
 
 #include <elm/string.h>
+#if defined(__WIN32) || defined(__WIN64)
+#include <elm/util/MessageException.h>
+#endif
 
 namespace otawa { namespace cpp {
 
