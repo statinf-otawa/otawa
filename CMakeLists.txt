@@ -18,7 +18,7 @@ configure_file (
 )
 
 if(MINGW OR WIN32)
-set(LIBDIR "bin")
+set(LIBDIR "lib")
 else()
 set(LIBDIR "lib")
 endif()
