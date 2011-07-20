@@ -1,3 +1,4 @@
+set(CMAKE_INSTALL_RPATH "../lib/\\$ORIGIN")
 
 
 set(mkff_SOURCES
@@ -8,4 +9,4 @@ set(mkff_SOURCES
 add_executable(mkff ${mkff_SOURCES})
 
 target_link_libraries(mkff ${LIBELM})
-target_link_libraries(mkff libotawa)
+target_link_libraries(mkff otawa)

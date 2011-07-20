@@ -1,4 +1,4 @@
-
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN")
 
 set(ast_la_SOURCES
 	"ast_ASTLoader.cpp"
@@ -36,4 +36,4 @@ include_directories("../../include")
 
 add_library(ast SHARED ${ast_la_SOURCES})
 install(TARGETS ast DESTINATION ${LIBDIR})
-target_link_libraries(ast libotawa)
+target_link_libraries(ast otawa)

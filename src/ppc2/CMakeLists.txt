@@ -1,4 +1,5 @@
 # ppc2 plugin build
+set(CMAKE_INSTALL_RPATH "../../\\$ORIGIN")
 
 if(MINGW OR UNIX)
 	include_directories(${CMAKE_SOURCE_DIR}/../ppc2/include)
@@ -45,16 +46,24 @@ add_custom_command(
 #add_custom_command(
 #	OUTPUT ppc2.link COMMAND 
 #)
-if(WIN32)
-file(WRITE elf_20.link "libppc2.dll")
-endif()
 
 
 add_library(ppc2 MODULE ${ppc2_SOURCES})
 target_link_libraries(ppc2 ${LIBELM})
-target_link_libraries(ppc2 libotawa)
+target_link_libraries(ppc2 otawa)
 target_link_libraries(ppc2 ${LIBPPC2})
-install(TARGETS ppc2 DESTINATION lib/otawa/loader)
 if(WIN32)
-install(FILES elf_20.link DESTINATION lib/otawa/loader)
+	file(WRITE elf_20.link "libppc2.dll")
+elseif(UNIX OR APPLE)
+	add_custom_command(OUTPUT elf_20.so COMMAND ln -s libppc2.so elf_20.so)
+	add_custom_target(ELF_20 ALL DEPENDS elf_20.so)
+endif()
+
+# installation
+set(INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/otawa/loader)
+install(TARGETS ppc2 DESTINATION ${INSTALL_PATH})
+if(WIN32)
+	install(FILES elf_20.link DESTINATION ${INSTALL_PATH})
+elseif(UNIX OR APPLE)
+	install(FILES elf_20.so DESTINATION ${INSTALL_PATH})
 endif()

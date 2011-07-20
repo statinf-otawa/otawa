@@ -1,4 +1,4 @@
-
+set(CMAKE_INSTALL_RPATH "../lib/\\$ORIGIN")
 
 set(owcet_SOURCES
 	"owcet.cpp"
@@ -7,5 +7,5 @@ set(owcet_SOURCES
 add_executable(owcet ${owcet_SOURCES})
 
 target_link_libraries(owcet ${LIBELM})
-target_link_libraries(owcet libotawa)
+target_link_libraries(owcet otawa)
 

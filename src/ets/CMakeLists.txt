@@ -1,4 +1,4 @@
-
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN")
 
 set(ets_la_SOURCES
 	"ets_AbstractCacheState.cpp"

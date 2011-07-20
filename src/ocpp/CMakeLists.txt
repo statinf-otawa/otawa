@@ -1,4 +1,4 @@
-
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN")
 
 set(ocpp_SOURCES
 	"Unmangler.cpp"

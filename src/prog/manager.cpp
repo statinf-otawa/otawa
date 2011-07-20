@@ -504,7 +504,11 @@ ilp::System *Manager::newILPSystem(String name) {
 
 	// Find a plugin
 	else {
-		plugin = (ilp::ILPPlugin *)ilp_plugger.plug(name.toCString());
+#		ifdef OTAWA_CMAKE
+			plugin = (ilp::ILPPlugin *)ilp_plugger.plug("lib" + name.toCString());
+#		else
+			plugin = (ilp::ILPPlugin *)ilp_plugger.plug(name.toCString());
+#		endif
 	}
 
 	// Return a system
@@ -713,10 +717,10 @@ Manager MANAGER;
 /**
  * Compilation date of this OTAWA library.
  */
-#if defined(__unix)
-const cstring Manager::COMPILATION_DATE = DATE;
-#elif defined(__WIN32) || defined(__WIN64)
+#if defined(__WIN32) || defined(__WIN64) || defined(OTAWA_CMAKE)
 const cstring Manager::COMPILATION_DATE = DAYDATE;
+#elif defined(__unix)
+const cstring Manager::COMPILATION_DATE = DATE;
 #endif
 
 }	// otawa

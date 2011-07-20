@@ -1,3 +1,4 @@
+set(CMAKE_INSTALL_RPATH "../lib/\\$ORIGIN")
 
 
 set(oipet_SOURCES
@@ -7,5 +8,7 @@ set(oipet_SOURCES
 add_executable(oipet ${oipet_SOURCES})
 
 target_link_libraries(oipet ${LIBELM})
-target_link_libraries(oipet libotawa)
+target_link_libraries(oipet otawa)
 target_link_libraries(oipet odisplay)
+
+install(TARGETS oipet DESTINATION bin)

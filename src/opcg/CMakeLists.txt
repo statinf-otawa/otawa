@@ -1,3 +1,4 @@
+set(CMAKE_INSTALL_RPATH "../lib/\\$ORIGIN")
 
 
 set(opcg_SOURCES
@@ -7,5 +8,5 @@ set(opcg_SOURCES
 add_executable(opcg ${opcg_SOURCES})
 
 target_link_libraries(opcg ${LIBELM})
-target_link_libraries(opcg libotawa)
+target_link_libraries(opcg otawa)
 target_link_libraries(opcg odisplay)

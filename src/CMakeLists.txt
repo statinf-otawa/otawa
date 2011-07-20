@@ -7,8 +7,8 @@ if(WIN32)
 	set(BISON_PREFIX_OUTPUTS TRUE CACHE BOOL "activating Bison")
 	set(FLEX_PREFIX_OUTPUTS TRUE CACHE BOOL "activating Flex")
 elseif(UNIX)
-	find_package(Bison 0)
-	find_package(Flex 0)
+	find_package(BISON 0)
+	find_package(FLEX 0)
 	
 endif(WIN32)
 
@@ -35,9 +35,9 @@ if(HAS_LP_SOLVE)
 add_subdirectory(lp_solve)
 endif(HAS_LP_SOLVE)
 
-#if(HAS_LP_SOLVE5)
+if(LP_SOLVE5)
 add_subdirectory(lp_solve5)
-#endif(HAS_LP_SOLVE5)
+endif(LP_SOLVE5)
 
 
 # Loader selection
@@ -63,7 +63,7 @@ add_subdirectory(owcet)
 
 
 # Dependent tools
-if(HAS_ILP)
 add_subdirectory(bpred)
-endif(HAS_ILP)
+if(LP_SOLVE5)
 add_subdirectory(oipet)
+endif()

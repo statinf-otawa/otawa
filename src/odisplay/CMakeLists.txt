@@ -1,4 +1,4 @@
-
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN")
 
 set(libodisplay_la_SOURCES
 	"CFGDrawer.cpp"
@@ -26,5 +26,5 @@ include_directories(".")
 add_library(odisplay SHARED ${libodisplay_la_SOURCES})
 install(TARGETS odisplay DESTINATION ${LIBDIR})
 
-target_link_libraries(odisplay libotawa)
+target_link_libraries(odisplay otawa)
 target_link_libraries(odisplay ${LIBELM})

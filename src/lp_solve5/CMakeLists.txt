@@ -1,5 +1,9 @@
+set(CMAKE_INSTALL_RPATH "../../\\$ORIGIN")
 
-if(MINGW AND NOT WIN32)
+if(UNIX OR APPLE)
+	include_directories(${CMAKE_SOURCE_DIR}/../lp_solve5)
+	set(LPSOLVE "${CMAKE_SOURCE_DIR}/../lp_solve5/lpsolve55/liblpsolve55.a")	
+elseif(MINGW_LINUX)
 	include_directories(${CMAKE_SOURCE_DIR}/../lp_solve5)
 	set(LPSOLVE "${CMAKE_SOURCE_DIR}/../lp_solve5/lpsolve55.lib")
 elseif(WIN32)
@@ -13,6 +17,6 @@ set(lp_solve5_SOURCES
 	
 add_library(lp_solve5 MODULE ${lp_solve5_SOURCES})
 target_link_libraries(lp_solve5 ${LIBELM})
-target_link_libraries(lp_solve5 libotawa)
+target_link_libraries(lp_solve5 otawa)
 target_link_libraries(lp_solve5 ${LPSOLVE})
 install(TARGETS lp_solve5 DESTINATION lib/otawa/ilp)

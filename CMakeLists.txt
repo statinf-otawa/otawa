@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
 project("otawa")
+set(PACKAGE "otawa")
+set(VERSION "0.9.1")
 
 # gcc based compiler lack of support by cmake (opposed to VS)
 # so need to make some manual adjustment in this case
@@ -38,12 +40,13 @@ add_definitions(-DLOADER_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/loader\")
 add_definitions(-DSIMULATOR_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/sim\")
 add_definitions(-DPROC_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/proc\")
 add_definitions(-DHAS_RELOCATION)
+add_definitions(-DOTAWA_CMAKE)
 
 # ==== for Date ====
 if(WIN32)
 	execute_process(COMMAND "cmd" "/C date /T" OUTPUT_VARIABLE RESULT)
 #	message(STATUS ${RESULT})
-elseif(UNIX)
+elseif(UNIX OR MINGW_LINUX)
 	execute_process(COMMAND "date" "+%d/%m/%Y" OUTPUT_VARIABLE RESULT)
 endif(WIN32)
 if(WIN32 OR NOT MINGW)
@@ -95,20 +98,39 @@ endif(DOXYGEN AND WIN32)
 # linking to elm and gel libraries
 # linking is hardcoded, but libraries will be searched for
 # in all directories in PATH
-if(MINGW AND NOT WIN32)
-set(LIBELM ${otawa_SOURCE_DIR}/../site/bin/libelm.dll)
-message("LIBELM=${LIBELM}")
-set(LIBGEL ${otawa_SOURCE_DIR}/../site/bin/libgel.dll)
-set(LIBGEL_DWARF ${otawa_SOURCE_DIR}/../site/bin/libgel_dwarf.dll)
+if(MINGW_LINUX)
+	set(LIBELM ${otawa_SOURCE_DIR}/../site/bin/libelm.dll)
+	message("LIBELM=${LIBELM}")
+	set(LIBGEL ${otawa_SOURCE_DIR}/../site/bin/libgel.dll)
+	set(LIBGEL_DWARF ${otawa_SOURCE_DIR}/../site/bin/libgel_dwarf.dll)
 elseif(WIN32)
-find_library(LIBELM elm PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../elm)
-find_library(LIBGEL gel PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
-#find_library(LIBGEL_PPC gel_ppc PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
-find_library(LIBGEL_DWARF gel_dwarf PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
+	find_library(LIBELM elm PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../elm)
+	find_library(LIBGEL gel PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
+	find_library(LIBGEL_DWARF gel_dwarf PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
+else()
+	find_library(LIBELM elm PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../elm/src)
+	find_library(LIBGEL gel PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
+	find_library(LIBGEL_DWARF gel_dwarf PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
 endif()
 
+
+# look for lp_solve5
+if(UNIX OR APPLE OR MINGW_LINUX)
+	set(LP_SOLVE5_PATH ${CMAKE_SOURCE_DIR}/../lp_solve5)
+	set(LP_SOLVE5_LIB_PATH ${LP_SOLVE5_PATH}/lpsolve55)
+elseif(WIN32)
+	set(LP_SOLVE5_PATH "${CMAKE_SOURCE_DIR}/../lp_solve_5.5.2.0_dev_win32")
+	set(LP_SOLVE5_LIB_PATH ${LP_SOLVE5_PATH})
+endif()
+find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_LIB_PATH})
+if(LP_SOLVE5)
+	set(LP_SOLVE5_INCLUDE ${LP_SOLVE5_PATH})
+endif()
+
+
+# add subdirectories
 add_subdirectory(src)
-#add_subdirectory(include)
+add_subdirectory(bin)
 #add_subdirectory(bin)
 #add_subdirectory(test)
 #add_subdirectory(data)

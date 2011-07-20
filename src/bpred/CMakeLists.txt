@@ -1,3 +1,4 @@
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN")
 
 set(bpred_SOURCES
 	  "BBHG.cpp"

@@ -1,4 +1,4 @@
-
+set(CMAKE_INSTALL_RPATH "../lib/\\$ORIGIN")
 
 set(dumpcfg_SOURCES
 	"dumpcfg.cpp"
@@ -9,5 +9,5 @@ set(dumpcfg_SOURCES
 
 add_executable(dumpcfg ${dumpcfg_SOURCES})
 
-target_link_libraries(dumpcfg libotawa)
+target_link_libraries(dumpcfg otawa)
 install(TARGETS dumpcfg DESTINATION bin)

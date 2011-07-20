@@ -1,3 +1,4 @@
+set(CMAKE_INSTALL_RPATH "../lib/\\$ORIGIN")
 
 set(ostat_SOURCES
 	"ostat.cpp"
@@ -6,4 +7,4 @@ set(ostat_SOURCES
 add_executable(ostat ${ostat_SOURCES})
 
 target_link_libraries(ostat ${LIBELM})
-target_link_libraries(ostat libotawa)
+target_link_libraries(ostat otawa)
