@@ -259,7 +259,16 @@ public:
 		return new SimState(this, s, _ppcDecoder, true);
 	}
 
-	virtual int instSize(void) const { return 4; }
+	virtual int instSize(void) const {
+#		ifdef PPC_WITH_VLE
+			if(vle_enabled)
+				return 0;
+			else
+				return 4;
+#		else
+			return 4;
+#		endif
+	}
 	void decodeRegs( Inst *inst, elm::genstruct::AllocatedTable<hard::Register *> *in, elm::genstruct::AllocatedTable<hard::Register *> *out);
 	inline ppc_decoder_t *ppcDecoder() { return _ppcDecoder;}
 	inline void *ppcPlatform(void) const { return _ppcPlatform; }
@@ -313,6 +322,13 @@ private:
 #		endif
 	}
 
+	int get_size(const Inst *inst) {
+		ppc_inst_t *i = decode_ppc(inst->address());
+		int r = ppc_get_inst_size(i) >> 3;
+		ppc_free_inst(i);
+		return r;
+	}
+
 	otawa::Inst *_start;
 	hard::Platform *_platform;
 	ppc_platform_t *_ppcPlatform;
@@ -351,7 +367,15 @@ public:
 
 	virtual kind_t kind() { return _kind; }
 	virtual address_t address() const { return _addr; }
-	virtual size_t size() const { return 4; }
+
+	virtual size_t size() const {
+#		ifdef PPC_WITH_VLE
+			return proc.get_size(this);
+#		else
+			return 4;
+#		endif
+	}
+
 	virtual Process &process() { return proc; }
 
 	virtual const elm::genstruct::Table<hard::Register *>& readRegs() {
@@ -411,7 +435,13 @@ public:
 		ppc_free_inst(inst);
 	}
 
-	virtual size_t size() const { return 4; }
+	virtual size_t size() const {
+#		ifdef PPC_WITH_VLE
+			return proc.get_size(this);
+#		else
+			return 4;
+#		endif
+	}
 
 	virtual otawa::Inst *target() {
 		if (!isTargetDone) {
@@ -681,10 +711,10 @@ File *Process::loadFile(elm::CString path) {
 		gel_sect_t *sect = gel_getsectbyidx(_gelFile, i);
 		assert(sect);
 		gel_sect_infos(sect, &infos);
-		if (infos.flags & SHF_EXECINSTR) {
+		//if (infos.flags & SHF_EXECINSTR) {
 			Segment *seg = new Segment(*this, infos.name, infos.vaddr, infos.size);
 			file->addSegment(seg);
-		}
+		//}
 	}
 
 	// Initialize symbols
