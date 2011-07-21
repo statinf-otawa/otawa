@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.8)
 
 project("otawa")
 set(PACKAGE "otawa")
+
+# debugging activated
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g3")
+
 set(VERSION "0.9.1")
 
 # gcc based compiler lack of support by cmake (opposed to VS)
@@ -19,10 +23,10 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/config.h"
 )
 
-if(MINGW OR WIN32)
-set(LIBDIR "lib")
+if(MINGW_LINUX OR WIN32)
+	set(LIBDIR "bin")
 else()
-set(LIBDIR "lib")
+	set(LIBDIR "lib")
 endif()
 
 #set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_DIR}/lib)
@@ -49,7 +53,7 @@ if(WIN32)
 elseif(UNIX OR MINGW_LINUX)
 	execute_process(COMMAND "date" "+%d/%m/%Y" OUTPUT_VARIABLE RESULT)
 endif(WIN32)
-if(WIN32 OR NOT MINGW)
+if(WIN32 AND NOT MINGW_LINUX)
 string(REGEX REPLACE "([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*" "\\1\\2\\3" RESULT ${RESULT})
 endif()
 add_definitions(-DDAYDATE=\"${RESULT}\")
@@ -100,9 +104,9 @@ endif(DOXYGEN AND WIN32)
 # in all directories in PATH
 if(MINGW_LINUX)
 	set(LIBELM ${otawa_SOURCE_DIR}/../site/bin/libelm.dll)
-	message("LIBELM=${LIBELM}")
 	set(LIBGEL ${otawa_SOURCE_DIR}/../site/bin/libgel.dll)
 	set(LIBGEL_DWARF ${otawa_SOURCE_DIR}/../site/bin/libgel_dwarf.dll)
+	message(STATUS "DEBUG: MINGW_LINUX: ${LIBELM}")
 elseif(WIN32)
 	find_library(LIBELM elm PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../elm)
 	find_library(LIBGEL gel PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
@@ -115,14 +119,16 @@ endif()
 
 
 # look for lp_solve5
-if(UNIX OR APPLE OR MINGW_LINUX)
+if(UNIX OR APPLE)
 	set(LP_SOLVE5_PATH ${CMAKE_SOURCE_DIR}/../lp_solve5)
-	set(LP_SOLVE5_LIB_PATH ${LP_SOLVE5_PATH}/lpsolve55)
+	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH}/lpsolve55)
+elseif(MINGW_LINUX)
+	set(LP_SOLVE5_PATH ${CMAKE_SOURCE_DIR}/../lp_solve5)
+	set(LP_SOLVE5 ${LP_SOLVE_PATH}/lpsolve55.dll)
 elseif(WIN32)
 	set(LP_SOLVE5_PATH "${CMAKE_SOURCE_DIR}/../lp_solve_5.5.2.0_dev_win32")
-	set(LP_SOLVE5_LIB_PATH ${LP_SOLVE5_PATH})
+	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH})
 endif()
-find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_LIB_PATH})
 if(LP_SOLVE5)
 	set(LP_SOLVE5_INCLUDE ${LP_SOLVE5_PATH})
 endif()
@@ -131,11 +137,15 @@ endif()
 # add subdirectories
 add_subdirectory(src)
 add_subdirectory(bin)
-#add_subdirectory(bin)
-#add_subdirectory(test)
-#add_subdirectory(data)
-#add_subdirectory(doc)
 
+
+# share installation
+install(DIRECTORY data/caches DESTINATION share/Otawa/)
+install(DIRECTORY data/makefiles DESTINATION share/Otawa/)
+install(DIRECTORY data/procs DESTINATION share/Otawa/)
+install(DIRECTORY data/scripts DESTINATION share/Otawa/)
+#install(DIRECTORY autodoc DESTINATION share/Otawa/)
+install(DIRECTORY doc DESTINATION share/Otawa/ FILES_MATCHING PATTERN "*.html" PATTERN "*.jpg" PATTERN "*.gif" PATTERN "*.css")
 
 #install(DIRECTORY include/ DESTINATION include FILES_MATCHING PATTERN "*.h" )
 

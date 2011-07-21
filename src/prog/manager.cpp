@@ -203,7 +203,7 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * @param	Path to the binary.
  * @return	Path to the configuration file if any, false else.
  */
-system::Path Manager::retrieveConfig(const system::Path& path) {
+elm::system::Path Manager::retrieveConfig(const elm::system::Path& path) {
 
 	// retrieve the loader
 	Loader *loader = findFileLoader(path);
@@ -281,7 +281,7 @@ WorkSpace *Manager::load(const elm::system::Path&  path, const PropList& props) 
  * @param path	Path to the looked file.
  * @return		Found loader or NULL.
  */
-Loader *Manager::findFileLoader(const system::Path& path) {
+Loader *Manager::findFileLoader(const elm::system::Path& path) {
 	Output log(io::err);
 
 	gel_file_t *file = gel_open((char *)&path, 0, 0);

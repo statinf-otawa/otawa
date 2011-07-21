@@ -26,3 +26,6 @@ set(bpred_SOURCES
 
 add_library(bpred MODULE ${bpred_SOURCES})
 install(TARGETS bpred DESTINATION lib)
+target_link_libraries(bpred ${LIBELM})
+target_link_libraries(bpred otawa)
+target_link_libraries(bpred odisplay)

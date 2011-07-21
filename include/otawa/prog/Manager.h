@@ -79,8 +79,8 @@ public:
 	WorkSpace *load(xom::Element *elem,
 		const PropList& props = PropList::EMPTY);
 	ilp::System *newILPSystem(String plugin = "");
-	system::Path retrieveConfig(const system::Path& path);
-	Loader *findFileLoader(const system::Path& path);
+	elm::system::Path retrieveConfig(const elm::system::Path& path);
+	Loader *findFileLoader(const elm::system::Path& path);
 
 private:
 	WorkSpace *loadBin(const elm::system::Path& path, const PropList& props);

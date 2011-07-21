@@ -449,6 +449,7 @@ void FlowFactLoader::loadF4(const string& path) throw(ProcessorException) {
  * @throw ProcessorException	With the given message and position in the file.
  */
 void FlowFactLoader::onError(const string& message) {
+	cerr << "DEBUG: onError(" << message << ")\n";
 	throw ProcessorException(*this,
 		_ << path << ": " << fft_line << ": " << message);
 }
@@ -562,7 +563,6 @@ void FlowFactLoader::onCheckSum(const String& name, unsigned long sum) {
 			io::BufferedInStream buf(stream);
 			summer.put(buf);
 			unsigned long sum2 = summer.sum();
-			//cout << io::hex(sum) << " = " << io::hex(sum2) << io::endl;
 			if(sum2 != sum)
 				onError("bad checksum: flow facts and executable does not match !");
 			checksummed = true;
@@ -582,7 +582,7 @@ void FlowFactLoader::onCheckSum(const String& name, unsigned long sum) {
 void FlowFactLoader::onReturn(address_t addr) {
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
-		throw ProcessorException(*this, _ << "no instruction at " << addr);
+		onError(_ << "no instruction at " << addr);
 	if(isVerbose())
 		log << "\treturn at " << addr << io::endl;
 	IS_RETURN(inst) = true;
@@ -596,7 +596,7 @@ void FlowFactLoader::onReturn(address_t addr) {
 void FlowFactLoader::onNoReturn(address_t addr) {
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
-	  throw ProcessorException(*this, _ << "no instruction at " << addr);
+	  onError(_ << "no instruction at " << addr);
 	NO_RETURN(inst) = true;
 }
 
@@ -624,8 +624,7 @@ void FlowFactLoader::onNoReturn(String name) {
 Address FlowFactLoader::addressOf(const string& label) {
 	Address res = _fw->process()->findLabel(label);
 	if(res.isNull())
-		throw ProcessorException(*this,
-			_ << "label \"" << label << "\" does not exist.");
+		onError(_ << "label \"" << label << "\" does not exist.");
 	else
 		return res;
 }
@@ -639,8 +638,7 @@ Address FlowFactLoader::addressOf(const string& label) {
 void FlowFactLoader::onNoCall(Address address) {
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		throw ProcessorException(*this,
-			_ << " no instruction at  " << address << ".");
+		onError(_ << " no instruction at  " << address << ".");
 	else
 		NO_CALL(inst) = true;
 }
@@ -654,8 +652,7 @@ void FlowFactLoader::onNoCall(Address address) {
 void FlowFactLoader::onPreserve(Address address) {
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		throw ProcessorException(*this,
-			_ << " no instruction at  " << address << ".");
+		onError(_ << " no instruction at  " << address << ".");
 	else
 		PRESERVED(inst) = true;
 }
@@ -668,8 +665,7 @@ void FlowFactLoader::onPreserve(Address address) {
 void FlowFactLoader::onIgnoreControl(Address address) {
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		throw ProcessorException(*this,
-			_ << " no instruction at  " << address << ".");
+		onError(_ << " no instruction at  " << address << ".");
 	else
 		IGNORE_CONTROL(inst) = true;
 }
@@ -682,8 +678,7 @@ void FlowFactLoader::onIgnoreControl(Address address) {
 void FlowFactLoader::onIgnoreSeq(Address address) {
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		throw ProcessorException(*this,
-			_ << " no instruction at  " << address << ".");
+		onError(_ << " no instruction at  " << address << ".");
 	else
 		IGNORE_SEQ(inst) = true;
 }
@@ -701,8 +696,7 @@ void FlowFactLoader::onMultiBranch(
 	// Find the instruction
 	Inst *inst = _fw->process()->findInstAt(control);
 	if(!inst)
-		throw ProcessorException(*this,
-			_ << " no instruction at  " << control << ".");
+		onError(_ << " no instruction at  " << control << ".");
 
 	// List of targets
 	for(int i = 0; i < targets.length(); i++)
@@ -1001,8 +995,7 @@ string FlowFactLoader::xline(xom::Node *element) {
 Address FlowFactLoader::addressOf(const string& file, int line)
 throw(ProcessorException) {
 	if(!lines_available)
-		throw ProcessorException(*this,
-			"the current loader does not provide source line information");
+		onError("the current loader does not provide source line information");
 	Vector<Pair<Address, Address> > addresses;
  	workSpace()->process()->getAddresses(file.toCString(), line, addresses);
  	if(!addresses) {

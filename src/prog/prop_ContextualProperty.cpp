@@ -140,6 +140,11 @@ ContextualProperty::ContextualProperty(void): Property(ID) {
 }
 
 
+ContextualPath::ContextualPath(const ContextualPath& path) {
+	// TODO
+}
+
+
 /**
  * Find the property list matching the best the given path.
  * @param path	Path to match.
