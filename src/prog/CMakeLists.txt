@@ -200,11 +200,6 @@ if(WIN32)
 	FLEX_FILE("util_fft_lexer.ll")
 	list(APPEND libotawa_SOURCES lex.${PREFIX}.c lex.${PREFIX}.h)
 elseif(UNIX)
-	#list(APPEND libotawa_SOURCES
-	#	"ipet_parser.yy"
-	#	"ipet_lexer.ll"
-	#	"util_fft_parser.yy"
-	#	"util_fft_lexer.ll")
 	BISON_TARGET(ipet_parser ipet_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.cpp)
 	FLEX_TARGET(ipet_lexer ipet_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/ipet_lexer.cc)
 	ADD_FLEX_BISON_DEPENDENCY(ipet_lexer ipet_parser)

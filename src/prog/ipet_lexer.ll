@@ -11,7 +11,11 @@
 #include <stdio.h>
 #include "ExpNode.h"
 #include <otawa/ipet/ConstraintLoader.h>
-#include <ipet_parser.h>
+#ifdef __APPLE__
+#      include "ipet_parser.hpp"
+#else
+#	include <ipet_parser.h>
+#endif
 extern int ipet_line;
 %}
 

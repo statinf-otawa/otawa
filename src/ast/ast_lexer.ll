@@ -9,8 +9,11 @@
 #include <string.h>
 #include <otawa/ast.h>
 
-#include "ast_parser.h"
-
+#ifdef __APPLE__
+#	include "ast_parser.hpp"
+#else
+#	include "ast_parser.h"
+#endif
 %}
 
 %option noyywrap

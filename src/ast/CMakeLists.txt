@@ -25,7 +25,13 @@ if(WIN32)
 	list(APPEND ast_la_SOURCES ${OUTFILE})
 	FLEX_FILE("ast_lexer.ll")
 	list(APPEND ast_la_SOURCES lex.${PREFIX}.c lex.${PREFIX}.h)
-elseif(UNIX)
+elseif(UNIX OR APPLE)
+	BISON_TARGET(ast_parser ast_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ast_parser.cpp)
+	FLEX_TARGET(ast_lexer ast_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/ast_lexer.cc)
+	ADD_FLEX_BISON_DEPENDENCY(ast_lexer ast_parser)
+	list(APPEND ast_la_SOURCES
+		${BISON_ast_parser_OUTPUTS}
+		${FLEX_ast_lexer_OUTPUTS})
 	
 	
 endif(WIN32)

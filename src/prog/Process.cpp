@@ -970,7 +970,7 @@ public:
 	virtual kind_t kind (void) { return IS_INT; }
 	virtual Inst *toInst(void) { return this; }
 	virtual Address address(void) const { return addr; }
-	virtual size_t	size(void) const { return _size; }
+	virtual t::size	size(void) const { return _size; }
 	virtual const reg_t& readRegs(void) { return reg_t::EMPTY; }
 	virtual const reg_t& writtenRegs(void) { return reg_t::EMPTY; }
 private:

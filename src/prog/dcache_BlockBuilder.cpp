@@ -68,7 +68,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		case AccessedAddress::ANY:
 			break;
 		case AccessedAddress::SP:
-			addr = sp + size_t(((SPAddress *)aa)->offset());
+			addr = sp + t::size(((SPAddress *)aa)->offset());
 			break;
 		case AccessedAddress::ABS:
 			addr = ((AbsAddress *)aa)->address();

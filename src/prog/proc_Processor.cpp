@@ -305,7 +305,7 @@ void Processor::init(const PropList& props) {
 	if(props.hasProp(VERBOSE))
 		verbose = VERBOSE(props);
 	else
-		verbose = system::System::hasEnv(VERBOSE_ENV);
+		verbose = elm::system::System::hasEnv(VERBOSE_ENV);
 	if(verbose)
 		flags |= IS_VERBOSE;
 	else
@@ -435,7 +435,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	// Pre-processing actions
 	if(isVerbose())
 		log << "Starting " << name() << " (" << version() << ')' << io::endl;
-	system::StopWatch swatch;
+	elm::system::StopWatch swatch;
 	if(isTimed())
 		swatch.start();
 	setup(fw);

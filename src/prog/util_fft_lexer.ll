@@ -22,8 +22,11 @@
  */
 #include <stdlib.h>
 #include <otawa/util/FlowFactLoader.h>
-#include "util_fft_parser.h"
-
+#ifdef __APPLE__
+#      include "util_fft_parser.hpp"
+#else
+#	include "util_fft_parser.h"
+#endif
 elm::StringBuffer buf;
 namespace otawa {
 	int fft_line = 0;

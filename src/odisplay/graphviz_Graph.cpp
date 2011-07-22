@@ -172,7 +172,7 @@ void GraphVizGraph::display(void) throw(DisplayException) {
 		default:
 			throw DisplayException("unsupported layout");
 	}
-	system::ProcessBuilder builder(command);
+	elm::system::ProcessBuilder builder(command);
 
 	// Select the type
 	CString param_type;

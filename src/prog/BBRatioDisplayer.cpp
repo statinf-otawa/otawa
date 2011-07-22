@@ -95,9 +95,9 @@ void BBRatioDisplayer::setup(WorkSpace *ws) {
 		if(isVerbose())
 			log << "\toutputting to " << path << io::endl;
 		try {
-			stream = system::System::createFile(path);
+			stream = elm::system::System::createFile(path);
 		}
-		catch(system::SystemException& exn) {
+		catch(elm::system::SystemException& exn) {
 			throw ProcessorException(*this, _ << "cannot open \"" << path << "\"");
 		}
 		out.setStream(*stream);

@@ -51,7 +51,7 @@ if(WIN32)
 	execute_process(COMMAND "cmd" "/C date /T" OUTPUT_VARIABLE RESULT)
 #	message(STATUS ${RESULT})
 elseif(UNIX OR MINGW_LINUX)
-	execute_process(COMMAND "date" "+%d/%m/%Y" OUTPUT_VARIABLE RESULT)
+	execute_process(COMMAND "date" "+%d/%m/%Y" OUTPUT_VARIABLE RESULT OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif(WIN32)
 if(WIN32 AND NOT MINGW_LINUX)
 string(REGEX REPLACE "([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*" "\\1\\2\\3" RESULT ${RESULT})
@@ -62,7 +62,7 @@ add_definitions(-DDAYDATE=\"${RESULT}\")
 
 ###########################
 #adding Doxygen support
-if(UNIX AND NOT APPLE)
+if(UNIX OR APPLE)
 	#if using a unix system
 	message(STATUS "Using Unix system, not MacOS")
 	find_program(DOXYGEN doxygen
@@ -81,7 +81,7 @@ elseif(APPLE)
 else(UNIX AND NOT APPLE)
 	#in case of some more exotic OS
 	message(WARNING "OS not supported")
-endif(UNIX AND NOT APPLE)
+endif()
 	
 #once Doxygen path has been searched for
 #generation of documentation IF Doxygen has been found

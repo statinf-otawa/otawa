@@ -124,9 +124,9 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 		path = _ << ENTRY_CFG(ws)->label() << "-ilp.html";
 	io::OutStream *file;
 	try {
-		file = system::System::createFile(path);
+		file = elm::system::System::createFile(path);
 	}
-	catch(system::SystemException& exn) {
+	catch(elm::system::SystemException& exn) {
 		throw new ProcessorException(*this, _ << "cannot create file \"" << path << "\": " << exn.message());
 	}
 	cout.setStream(*file);

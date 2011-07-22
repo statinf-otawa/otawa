@@ -108,7 +108,7 @@ public:
 	inline address_t address(void) const { return first->address(); };
 	inline Address topAddress(void) const { return address() + size(); }
 	virtual int countInsts(void) const;
-	inline size_t size(void) const { return _size; }
+	inline t::size size(void) const { return _size; }
 	inline bool isVirtual(void) const { return flags & FLAG_Virtual; };
 	inline unsigned long getFlags(void) const { return flags; };
 	inline int number(void) const { return INDEX(this); };
@@ -139,7 +139,7 @@ public:
 	// Deprecated
 	BasicBlock *getTaken(void);
 	BasicBlock *getNotTaken(void);
-	inline size_t getBlockSize(void) const { return size(); };
+	inline t::size getBlockSize(void) const { return size(); };
 	inline int countInstructions(void) const { return countInsts(); }
 };
 inline Output& operator<<(Output& out, BasicBlock *bb) { bb->print(out); return out; }

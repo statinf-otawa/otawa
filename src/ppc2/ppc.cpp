@@ -368,7 +368,7 @@ public:
 	virtual kind_t kind() { return _kind; }
 	virtual address_t address() const { return _addr; }
 
-	virtual size_t size() const {
+	virtual t::size size() const {
 #		ifdef PPC_WITH_VLE
 			return proc.get_size(this);
 #		else
@@ -435,7 +435,7 @@ public:
 		ppc_free_inst(inst);
 	}
 
-	virtual size_t size() const {
+	virtual t::size size() const {
 #		ifdef PPC_WITH_VLE
 			return proc.get_size(this);
 #		else

@@ -103,9 +103,9 @@ ProcessorPlugin::ProcessorPlugin(
 void ProcessorPlugin::init(void) {
 	initialized_paths = true;
 	plugger.resetPaths();
-	system::Path path = system::Path::current().append(".otawa/proc");
+	elm::system::Path path = elm::system::Path::current().append(".otawa/proc");
 	plugger.addPath(path);
-	path = system::Path::home().append(".otawa/proc");
+	path = elm::system::Path::home().append(".otawa/proc");
 	plugger.addPath(path);
 	path = MANAGER.prefixPath() / "lib/otawa/proc";
 	plugger.addPath(path);

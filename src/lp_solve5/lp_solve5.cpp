@@ -27,7 +27,7 @@
 #include <elm/genstruct/Vector.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <otawa/prog/WorkSpace.h>
-#if defined(__unix)
+#if defined(__unix) || defined(__APPLE__)
 #include <lp_lib.h>
 #elif defined(__WIN32) || defined(__WIN64)
 extern "C"{
