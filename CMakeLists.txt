@@ -119,12 +119,12 @@ endif()
 
 
 # look for lp_solve5
-if(UNIX OR APPLE)
+if(MINGW_LINUX OR MINGW_WIN)
+	set(LP_SOLVE5_INCLUDE "${CMAKE_SOURCE_DIR}/../site/include" CACHE PATH "path to lp_solve5 include")
+	set(LP_SOLVE5 "${CMAKE_SOURCE_DIR}/../site/lib/liblpsolve55.lib" CACHE FILEPATH "path to lp_solve5 library")
+elseif(UNIX OR APPLE)
 	set(LP_SOLVE5_PATH ${CMAKE_SOURCE_DIR}/../lp_solve5)
 	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH}/lpsolve55)
-elseif(MINGW_LINUX)
-	set(LP_SOLVE5_PATH ${CMAKE_SOURCE_DIR}/../lp_solve5)
-	set(LP_SOLVE5 ${LP_SOLVE_PATH}/lpsolve55.dll)
 elseif(WIN32)
 	set(LP_SOLVE5_PATH "${CMAKE_SOURCE_DIR}/../lp_solve_5.5.2.0_dev_win32")
 	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH})
