@@ -22,24 +22,26 @@ set(ppc2_SOURCES
 )
 
 # GLISS derived sources
-set(PPC_IRG		"${CMAKE_SOURCE_DIR}/../ppc2/ppc.irg")
-set(GLISS_ATTR	"${CMAKE_SOURCE_DIR}/../gliss2/gep/gliss-attr")
-add_custom_command(
-	OUTPUT ${OTAWA_KIND} DEPENDS "kind.tpl" COMMAND ${GLISS_ATTR}
-	ARGS ${PPC_IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "kind.tpl" -d "return 0\\;"
-)
-add_custom_command(
-	OUTPUT ${OTAWA_PRED} DEPENDS "pred.tpl" COMMAND ${GLISS_ATTR}
-	ARGS ${PPC_IRG} -o ${OTAWA_PRED} -a otawa_pred -f -t "pred.tpl" -e otawa_pred.nmp -d "return -1\\;"
-)
-add_custom_command(
-	OUTPUT ${OTAWA_TARGET} DEPENDS "target.tpl" COMMAND ${GLISS_ATTR}
-	ARGS ${PPC_IRG} -o ${OTAWA_TARGET} -a otawa_target -f -t "target.tpl" -d "return 0\\;"
-)
-add_custom_command(
-	OUTPUT ${OTAWA_USED_REGS} DEPENDS "used_regs.tpl" COMMAND ${GLISS_ATTR}
-	ARGS ${PPC_IRG} -o ${OTAWA_USED_REGS} -a otawa_used_regs -f -t "used_regs.tpl" -d "tmp_var[0] = END_REG\\; return 0\\;"
-)
+if(NOT MINGW_WIN)
+	set(PPC_IRG		"${CMAKE_SOURCE_DIR}/../ppc2/ppc.irg")
+	set(GLISS_ATTR	"${CMAKE_SOURCE_DIR}/../gliss2/gep/gliss-attr")
+	add_custom_command(
+		OUTPUT ${OTAWA_KIND} DEPENDS "kind.tpl" COMMAND ${GLISS_ATTR}
+		ARGS ${PPC_IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "kind.tpl" -d "return 0\\;"
+	)
+	add_custom_command(
+		OUTPUT ${OTAWA_PRED} DEPENDS "pred.tpl" COMMAND ${GLISS_ATTR}
+		ARGS ${PPC_IRG} -o ${OTAWA_PRED} -a otawa_pred -f -t "pred.tpl" -e otawa_pred.nmp -d "return -1\\;"
+	)
+	add_custom_command(
+		OUTPUT ${OTAWA_TARGET} DEPENDS "target.tpl" COMMAND ${GLISS_ATTR}
+		ARGS ${PPC_IRG} -o ${OTAWA_TARGET} -a otawa_target -f -t "target.tpl" -d "return 0\\;"
+	)
+	add_custom_command(
+		OUTPUT ${OTAWA_USED_REGS} DEPENDS "used_regs.tpl" COMMAND ${GLISS_ATTR}
+		ARGS ${PPC_IRG} -o ${OTAWA_USED_REGS} -a otawa_used_regs -f -t "used_regs.tpl" -d "tmp_var[0] = END_REG\\; return 0\\;"
+	)
+endif()
 
 
 # ppc2.link on Windows
