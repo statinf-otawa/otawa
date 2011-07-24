@@ -3,3 +3,4 @@ Makefile.in
 otawa-config
 sandbox
 otawa-new
+CMakeFiles

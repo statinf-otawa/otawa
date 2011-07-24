@@ -8,3 +8,4 @@ cmake_install.cmake
 CMakeFiles
 libodisplay.dll
 libodisplay.dll.a
+libodisplay.so

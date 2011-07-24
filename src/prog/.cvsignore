@@ -36,3 +36,9 @@ ipet_parser.h
 lex.util_fft_lexer.h
 lex.ipet_lexer.c
 lex.ipet_lexer.h
+ipet_parser.hpp
+lex.yy.c
+util_fft_parser.hpp
+liblibotawa.so
+util_fft_parser.cpp
+ipet_parser.cpp

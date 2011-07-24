@@ -29,3 +29,4 @@ lex.ast_lexer.h
 libast.dll.a
 libast.dll
 lex.ast_lexer.c
+libast.so

@@ -16,3 +16,6 @@ bpred.la
 BPredProcessor_Global2B.lo
 BBHG.lo
 BPredProcessor_NoConflict.lo
+libbpred.so
+cmake_install.cmake
+CMakeFiles
