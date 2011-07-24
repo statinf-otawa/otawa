@@ -711,10 +711,10 @@ File *Process::loadFile(elm::CString path) {
 		gel_sect_t *sect = gel_getsectbyidx(_gelFile, i);
 		assert(sect);
 		gel_sect_infos(sect, &infos);
-		//if (infos.flags & SHF_EXECINSTR) {
+		if(infos.vaddr != 0 && infos.size != 0) {
 			Segment *seg = new Segment(*this, infos.name, infos.vaddr, infos.size);
 			file->addSegment(seg);
-		//}
+		}
 	}
 
 	// Initialize symbols
