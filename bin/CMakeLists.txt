@@ -39,3 +39,6 @@ configure_file(
 	otawa-config
 	@ONLY
 )
+
+install(FILES otawa-config DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE)
+
