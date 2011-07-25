@@ -1,5 +1,6 @@
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN")
 
-
+# sources
 set(libotawa_SOURCES
 	"feature.h"
 	"base.cpp"
@@ -183,12 +184,9 @@ set(libotawa_SOURCES
 	"dcache_ACSMayBuilder.cpp"
 	)
 
-#	Microprocessor.cpp
-#	ExecutionGraph.cpp
-#	ExeGraphBBTime.cpp
-
 include_directories(".")
 
+# generated sources by flex and bison
 if(WIN32)
 	BISON_FILE("ipet_parser.yy")
 	list(APPEND libotawa_SOURCES ${OUTFILE})
@@ -213,18 +211,11 @@ elseif(UNIX)
 		${FLEX_util_fft_lexer_OUTPUTS})
 endif()
 
-
-#add_library(elm SHARED IMPORTED)
-#set_property(TARGET elm APPEND PROPERTY IMPORTED_LOCATION "${LIBELM}")
-#message(STATUS ${elm})
-#add_library(gel SHARED IMPORTED)
-#set_target_properties(gel PROPERTIES IMPORTED_LOCATION "${LIBGEL}")
-
-
+# build
 add_library(otawa SHARED ${libotawa_SOURCES})
 target_link_libraries(otawa ${LIBELM})
 target_link_libraries(otawa ${LIBGEL})
 target_link_libraries(otawa ${LIBGEL_DWARF})
 
+# installation
 install(TARGETS otawa DESTINATION ${LIBDIR})
-#message(STATUS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib)

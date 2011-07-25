@@ -2044,7 +2044,6 @@ static otawa_target_t otawa_target_BCA_D_D_D(ppc_inst_t *inst) {
 };
 
 static otawa_target_t otawa_target_BC_D_D_D(ppc_inst_t *inst) {
-	printf("DEBUG: BC %08x\n", PPC_BC_D_D_D___IADDR + (((int32_t)(PPC_BC_D_D_D_x_x_x_BD_n)) << 2));
 	return (PPC_BC_D_D_D___IADDR + (((int32_t)(PPC_BC_D_D_D_x_x_x_BD_n)) << 2));
 
 };
