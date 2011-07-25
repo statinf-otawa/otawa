@@ -19,7 +19,7 @@ loader=
 list_proc=
 list_modules=
 cflags_text="-I$prefix/include"
-libs_text="$prefix/lib/libotawa.la"
+libs_text="-L$prefix/lib -lotawa -lelm"
 
 
 # Configurations

@@ -9,5 +9,10 @@ set (lp_solve_SOURCES
 include_directories(".")
 
 	
-add_library(lp_solve MODULE ${lp_solve_SOURCES})
+add_library(lp_solve SHARED ${lp_solve_SOURCES})
+set_property(TARGET lp_solve PROPERTY PREFIX "")
+target_link_libraries(lp_solve ${LIBELM})
+target_link_libraries(lp_solve otawa)
+
+
 install(TARGETS lp_solve DESTINATION lib)
