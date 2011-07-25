@@ -140,14 +140,10 @@ add_subdirectory(bin)
 
 
 # share installation
-install(DIRECTORY data/caches DESTINATION share/Otawa/)
-install(DIRECTORY data/makefiles DESTINATION share/Otawa/)
-install(DIRECTORY data/procs DESTINATION share/Otawa/)
-install(DIRECTORY data/scripts DESTINATION share/Otawa/)
-#install(DIRECTORY autodoc DESTINATION share/Otawa/)
-install(DIRECTORY doc DESTINATION share/Otawa/ FILES_MATCHING PATTERN "*.html" PATTERN "*.jpg" PATTERN "*.gif" PATTERN "*.css")
-
-#install(DIRECTORY include/ DESTINATION include FILES_MATCHING PATTERN "*.h" )
-
-
-# add ILP plugin later
+set(EXCLUDED_FILES PATTERN "CVS" EXCLUDE PATTERN "Makefile*" EXCLUDE PATTERN ".cvsignore" EXCLUDE)
+install(DIRECTORY include/otawa DESTINATION include ${EXCLUDED_FILES})
+install(DIRECTORY data/caches DESTINATION share/Otawa/ ${EXCLUDED_FILES})
+install(DIRECTORY data/makefiles DESTINATION share/Otawa/ ${EXCLUDED_FILES})
+install(DIRECTORY data/procs DESTINATION share/Otawa/ ${EXCLUDED_FILES})
+install(DIRECTORY data/scripts DESTINATION share/Otawa/ ${EXCLUDED_FILES})
+install(DIRECTORY doc DESTINATION share/Otawa/ PATTERN ${EXCLUDED_FILES} PATTERN "*.thot" EXCLUDE)
