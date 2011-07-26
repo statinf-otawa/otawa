@@ -64,7 +64,7 @@ protected:
 	void onError(const string& message);
 	void onWarning(const string& message);
 
-	virtual void onCheckSum(const String& name, unsigned long sum);
+	virtual void onCheckSum(const String& name, t::uint32 sum);
 	virtual void onLoop(
 		address_t addr,
 		int count,

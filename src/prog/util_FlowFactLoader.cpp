@@ -550,7 +550,7 @@ void FlowFactLoader::onLoop(
   * @param name	Concerned file name.
   * @param sum	Flow fact checksum.
   */
-void FlowFactLoader::onCheckSum(const String& name, unsigned long sum) {
+void FlowFactLoader::onCheckSum(const String& name, t::uint32 sum) {
 
 	// Find the file
 	for(Process::FileIter file(_fw->process()); file; file++) {
@@ -562,9 +562,9 @@ void FlowFactLoader::onCheckSum(const String& name, unsigned long sum) {
 			io::InFileStream stream(file->name());
 			io::BufferedInStream buf(stream);
 			summer.put(buf);
-			unsigned long sum2 = summer.sum();
+			t::uint32 sum2 = summer.sum();
 			if(sum2 != sum)
-				onError("bad checksum: flow facts and executable does not match !");
+				onError(_ << "bad checksum: flow facts and executable does not match\nff checksum: " << io::hex(sum) << "\nexecutable checksum: " << io::hex(sum2));
 			checksummed = true;
 			return;
 		}
