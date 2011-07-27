@@ -25,6 +25,8 @@ include_directories("../../gel/include")
 
 add_subdirectory(prog)
 add_subdirectory(ast)
+add_subdirectory(oloader)
+add_subdirectory(arm)
 #add_subdirectory(ets)
 add_subdirectory(ocpp)
 add_subdirectory(odisplay)
