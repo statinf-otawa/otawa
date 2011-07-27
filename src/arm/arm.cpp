@@ -240,7 +240,7 @@ public:
 	inline Inst(Process& process, kind_t kind, address_t addr)
 		: otawa::loader::old_gliss::Inst(process, kind, addr) { }
 
-	virtual size_t size(void) const { return 4; }
+	virtual t::size size(void) const { return 4; }
 
 protected:
 	virtual void decodeRegs(void) {
@@ -256,7 +256,7 @@ public:
 	inline BranchInst(Process& process, kind_t kind, address_t addr)
 		: otawa::loader::old_gliss::BranchInst(process, kind, addr) { }
 
-	virtual size_t size(void) const { return 4; }
+	virtual t::size size(void) const { return 4; }
 
 protected:
 	virtual address_t decodeTargetAddress(void);
