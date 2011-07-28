@@ -380,11 +380,15 @@ WorkSpace *Manager::loadBin(
 	// any configuration ?
 	Path cpath = loader->path().parent() / (loader->name() + "-config.xml");
 	if(cpath.exists()) {
+		if(isVerbose())
+			cerr << "INFO: starting evaluation of load configuration file\n";
 		XSLTScript script(cpath, elm::monitor, isVerbose());
 		script.setConfiguration();
 		script.addParams(props, LOAD_PARAM);
 		script.transform();
 		script.fillProps(used_props, "load");
+		if(isVerbose())
+			cerr << "INFO: ended evaluation of load configuration file\n";
 	}
 
 	// Try to load the binary

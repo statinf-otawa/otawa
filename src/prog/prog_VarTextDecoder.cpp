@@ -135,7 +135,8 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 		address_t next;
 		while(inst && !MARKER(inst) && !inst->isControl()) {
 			TRACE("otawa::VarTextDecoder::processEntry: process "
-				<< inst->address() << " : " << io::hex(inst->kind()));
+				<< inst->address() << " : " << io::hex(inst->kind())
+				<< ": " << inst);
 			next = inst->topAddress();
 			inst = getInst(ws, next);
 		}

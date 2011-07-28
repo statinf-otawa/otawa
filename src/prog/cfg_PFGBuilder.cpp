@@ -125,9 +125,6 @@ void PFGBuilder::addFunction(WorkSpace *ws, Inst *inst) {
 			inst = inst->nextInst();
 		if(inst) {
 
-			// !!DEBUG!!
-			//cerr << "DEBUG: kind(" << inst->address() << ") = " << inst->kind() << io::endl;
-
 			if(inst->isConditional() || inst->isCall()) {
 				TRACE("\t\tpushing " << inst->nextInst()->address());
 				todo.push(inst->nextInst());
@@ -168,9 +165,6 @@ void PFGBuilder::finalizeBB(pfg::BB *bb) {
 
 		// branch at end of a BB
 		else if(inst->isControl()) {
-
-			// !!DEBUG!!
-			//cerr << "DEBUG: kind(" << inst->address() << ") = " << inst->kind() << io::endl;
 
 			// build the edges
 			if(inst->isCall() || inst->isConditional()) {

@@ -449,7 +449,6 @@ void FlowFactLoader::loadF4(const string& path) throw(ProcessorException) {
  * @throw ProcessorException	With the given message and position in the file.
  */
 void FlowFactLoader::onError(const string& message) {
-	cerr << "DEBUG: onError(" << message << ")\n";
 	throw ProcessorException(*this,
 		_ << path << ": " << fft_line << ": " << message);
 }
