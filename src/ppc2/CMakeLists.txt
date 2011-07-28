@@ -27,7 +27,7 @@ if(NOT MINGW_WIN)
 	set(GLISS_ATTR	"${CMAKE_SOURCE_DIR}/../gliss2/gep/gliss-attr")
 	add_custom_command(
 		OUTPUT ${OTAWA_KIND} DEPENDS "kind.tpl" COMMAND ${GLISS_ATTR}
-		ARGS ${PPC_IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "kind.tpl" -d "return 0\\;"
+		ARGS ${PPC_IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "kind.tpl" -d "return 0\\;" -e otawa_kind.nmp
 	)
 	add_custom_command(
 		OUTPUT ${OTAWA_PRED} DEPENDS "pred.tpl" COMMAND ${GLISS_ATTR}
@@ -35,11 +35,11 @@ if(NOT MINGW_WIN)
 	)
 	add_custom_command(
 		OUTPUT ${OTAWA_TARGET} DEPENDS "target.tpl" COMMAND ${GLISS_ATTR}
-		ARGS ${PPC_IRG} -o ${OTAWA_TARGET} -a otawa_target -f -t "target.tpl" -d "return 0\\;"
+		ARGS ${PPC_IRG} -o ${OTAWA_TARGET} -a otawa_target -f -t "target.tpl" -d "return 0\\;" -e otawa_target.nmp
 	)
 	add_custom_command(
 		OUTPUT ${OTAWA_USED_REGS} DEPENDS "used_regs.tpl" COMMAND ${GLISS_ATTR}
-		ARGS ${PPC_IRG} -o ${OTAWA_USED_REGS} -a otawa_used_regs -f -t "used_regs.tpl" -d "tmp_var[0] = END_REG\\; return 0\\;"
+		ARGS ${PPC_IRG} -o ${OTAWA_USED_REGS} -a otawa_used_regs -f -t "used_regs.tpl" -d "tmp_var[0] = END_REG\\; return 0\\;" -e otawa_used_regs.nmp
 	)
 endif()
 
@@ -68,4 +68,5 @@ elseif(UNIX OR APPLE)
 	add_custom_target(ELF_20 ALL DEPENDS elf_20${SUFFIX})
 	install(FILES elf_20${SUFFIX} DESTINATION ${INSTALL_PATH})
 endif()
+install(FILES ppc-config.xml DESTINATION ${INSTALL_PATH})
 

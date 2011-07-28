@@ -4,3 +4,4 @@ Makefile
 arm.lo
 arm.la
 .libs
+CMakeFiles
