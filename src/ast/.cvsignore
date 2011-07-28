@@ -30,3 +30,6 @@ libast.dll.a
 libast.dll
 lex.ast_lexer.c
 libast.so
+ast_parser.cpp
+ast_parser.hpp
+lex.yy.c
