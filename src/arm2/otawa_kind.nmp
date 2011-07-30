@@ -1,0 +1,52 @@
+
+let NO_KIND		= 0x00000000
+let IS_COND		= 0x00000001
+let IS_CONTROL	= 0x00000002
+let IS_CALL		= 0x00000004	// save PC before branching
+let IS_RETURN	= 0x00000008
+let IS_MEM		= 0x00000010
+let IS_LOAD		= 0x00000020
+let IS_STORE	= 0x00000040
+let IS_INT		= 0x00000080
+let IS_FLOAT	= 0x00000100
+let IS_ALU		= 0x00000200	// basic arithmetic operations (like "+", "-")
+let IS_MUL		= 0x00000400
+let IS_DIV		= 0x00000800
+let IS_SHIFT	= 0x00001000
+let IS_TRAP		= 0x00002000
+let IS_INTERN	= 0x00004000
+let IS_MULTI	= 0x00008000
+let IS_SPECIAL	= 0x00010000
+
+// useful mode extensions
+extend regShift
+	reg_num = r.number
+	no_shift = 0
+
+extend immShift
+	reg_num = r.number
+	no_shift = shiftAmt == 0 && shiftKind != ROR
+
+extend REG_LIST
+	has_pc = r & (1 << 15)
+
+// instruction extensions
+
+extend B_Cond
+	otawa_kind = IS_CONTROL
+		| (if setl then IS_CALL else 0 endif)
+		| (if cond.value == 14 then 0 else IS_COND endif)
+
+extend MOV_shr
+	otawa_kind =
+		  (if cond.value == 14 && shifter_operand.reg_num == 15 && shifter_operand.no_shift
+			then IS_RETURN | IS_CONTROL else 0 endif)
+		| (if cond.value == 14 then 0 else IS_COND endif)
+ 
+extend Mem_load_store_multiple
+	otawa_kind = IS_MEM | IS_MULTI
+		| (if cond.value == 14 then 0 else IS_COND endif)
+		| (if setl then IS_LOAD else IS_STORE endif)
+		| (if setl && rn.number == 13 && reglist.has_pc then IS_CONTROL | IS_RETURN else 0 endif)
+	
+ 

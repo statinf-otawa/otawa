@@ -69,3 +69,4 @@ elseif(UNIX OR APPLE)
 	install(FILES elf_20${SUFFIX} DESTINATION ${INSTALL_PATH})
 endif()
 install(FILES ppc-config.xml DESTINATION ${INSTALL_PATH})
+

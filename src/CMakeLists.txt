@@ -18,19 +18,23 @@ endif(WIN32)
 include_directories("../include")
 include_directories(".")
 include_directories("..")
-#some .h files need elm files 
 include_directories("../../elm/include")
 include_directories("../../gel/include")
 
 
+# subdirectories
 add_subdirectory(prog)
 add_subdirectory(ast)
 #add_subdirectory(oloader)
-#add_subdirectory(arm)
 #add_subdirectory(ets)
 add_subdirectory(ocpp)
 add_subdirectory(odisplay)
 
+
+# arm2 check
+if(EXISTS "${CMAKE_SOURCE_DIR}/../ARMv5T")
+add_subdirectory(arm2)
+endif()
 
 # ILP Plugins
 if(HAS_LP_SOLVE)
