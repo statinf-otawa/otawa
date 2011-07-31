@@ -82,6 +82,13 @@ public:
 	}
 };
 
+class EGNodeFactory {
+public:
+	EGNode * newEGNode(ExecutionGraph *graph, EGStage *stage, EGInst *inst){
+		return new EGNode(graph, stage, inst);
+	}
+};
+
 /*
  * class EGEdge
  *
@@ -129,6 +136,7 @@ public:
 		} rename_table_t;
 //		elm::genstruct::Vector<Resource *> _resources;
 	private:
+		EGNodeFactory * _node_factory;
 		EGSequence * _sequence;
 		EGNode *_first_node;
 		EGNode *_first_bb_node;
@@ -140,7 +148,7 @@ public:
 
 
 	public:
-		ExecutionGraph(WorkSpace * ws, EGProc *proc, EGSequence *seq, const PropList& props = PropList::EMPTY);
+		ExecutionGraph(WorkSpace * ws, EGProc *proc, EGSequence *seq, EGNodeFactory *node_factory, const PropList& props = PropList::EMPTY);
 		~ExecutionGraph();
 		inline void setFetchSize(int size) { _cache_line_size = size; }
 		inline void setBranchPenalty(int penalty) { _branch_penalty = penalty; }

@@ -12,6 +12,7 @@
 //#include <elm/system/System.h>
 #include "EGBBTime.h"
 #include "ExecutionGraph.h"
+#include "EGBlockSeqList.h"
 
 using namespace otawa;
 using namespace elm;
@@ -35,7 +36,8 @@ protected:
 		cout << "Processing function: " << (TASK_ENTRY(props)) << "\n";
 
 		// build execution graphs
-		newexegraph::EGBBTime<newexegraph::ExecutionGraph> bbtime(props);
+		newexegraph::EGBlockSeqListFactory block_seq_list_factory;
+		newexegraph::EGBBTime<newexegraph::ExecutionGraph> bbtime(&block_seq_list_factory, props);
 		bbtime.process(ws, props);
 	}
 

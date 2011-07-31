@@ -28,6 +28,7 @@
 #include "ExecutionGraph.h"
 #include <elm/io/OutFileStream.h>
 #include <otawa/proc/BBProcessor.h>
+#include "EGBlockSeqList.h"
 
 
 namespace otawa { namespace newexegraph {
@@ -111,8 +112,11 @@ namespace otawa { namespace newexegraph {
 		elm::io::Output *_output;
 		String _graphs_dir_name;
 		bool _do_output_graphs;
+		EGBlockSeqListFactory * _block_seq_list_factory;
 
     public:
+		EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
+				const PropList& props = PropList::EMPTY);
 		EGBBTime(const PropList& props = PropList::EMPTY);
 		EGBBTime(AbstractRegistration& reg);
 		virtual void configure(const PropList& props);
@@ -135,13 +139,15 @@ namespace otawa { namespace newexegraph {
 		EGBBTime<G>::EGBBTime(const PropList& props)
 		: BBProcessor() {
 		require(otawa::hard::PROCESSOR_FEATURE);
-		_graphs_dir_name = GRAPHS_DIR(props);
-		if (!_graphs_dir_name.isEmpty())
-			_do_output_graphs = true;
-		else
-			_do_output_graphs = false;
+		_block_seq_list_factory = new EGBlockSeqListFactory();
+	}
 
-		_props = props;
+	template <class G>
+		EGBBTime<G>::EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
+								const PropList& props)
+		: BBProcessor() {
+		require(otawa::hard::PROCESSOR_FEATURE);
+		_block_seq_list_factory = block_seq_list_factory;
 	}
 
 template <class G>
@@ -258,6 +264,10 @@ void EGBBTime<G>::configure(const PropList& props) {
 		graph->dump(dotFile, info);
 	}
 
+
+	class test : public EGNodeFactory{
+
+	};
 	// -- analyzePathContext ------------------------------------------------------------------------------------------
 
 	template <class G>
@@ -269,7 +279,8 @@ void EGBBTime<G>::configure(const PropList& props) {
 
 
 		EGSequence *sequence = buildSequence(ctxt);
-		G *execution_graph = new G(_ws,_microprocessor, sequence, _props);
+		test * testObj = new test();
+		G *execution_graph = new G(_ws,_microprocessor, sequence, testObj, _props);
 		execution_graph->build();
 
 		if (_do_output_graphs){
@@ -298,15 +309,15 @@ void EGBBTime<G>::configure(const PropList& props) {
 
 		int context_index = 0;
 
-		elm::genstruct::SLList<EGPathContext *> *path_context_list = buildListOfPathContexts(bb);
+		EGBlockSeqList * seq_list = _block_seq_list_factory->newEGBlockSeqList(bb,_microprocessor);
 
-		for (elm::genstruct::SLList<EGPathContext *>::Iterator ctxt(*path_context_list) ; ctxt ; ctxt++){
+		for (EGBlockSeqList::SeqIterator seq(*seq_list) ; seq ; seq++){
 			if(isVerbose()) {
 				log << "\n\t\t----- Considering context: ";
-				ctxt->dump(log);
+				seq->dump(log);
 				log << "\n";
 			}
-			analyzePathContext(ctxt, context_index);
+			//analyzePathContext(ctxt, context_index);
 			context_index ++;
 		}
 	}

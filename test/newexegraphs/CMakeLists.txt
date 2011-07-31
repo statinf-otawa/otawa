@@ -24,6 +24,7 @@ set(newexegraphs_SOURCES
 	newexegraph_ExecutionGraph.cpp
 	newexegraph_EGBBTime.cpp
 	newexegraph_EGProc.cpp
+	newexegraph_EGBlockSeqList.cpp
 	test_newexegraphs.cpp
 	)
 	

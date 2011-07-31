@@ -26,9 +26,6 @@
 using namespace  otawa;
 using namespace otawa::newexegraph;
 
-
-
-
 // ----------------------------------------------------------------
 
 void ExecutionGraph::build(bool compressed_cod) {
@@ -62,7 +59,7 @@ void ExecutionGraph::createNodes() {
 			// create node
 			EGNode *node;
 			if (stage->category() != EGStage::EXECUTE) {
-				node = new EGNode(this, stage, inst);
+				node = _node_factory->newEGNode(this, stage, inst);
 				inst->addNode(node);
 				stage->addNode(node);
 				if (stage->category() == EGStage::FETCH) {
@@ -83,7 +80,7 @@ void ExecutionGraph::createNodes() {
 				int index = 0;
 
 				for(EGPipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {
-					EGNode *fu_node = new EGNode(this, fu_stage, inst);
+					EGNode *fu_node = _node_factory->newEGNode(this, fu_stage, inst);
 					inst->addNode(fu_node);
 					fu_stage->addNode(fu_node);
 					if (index == 0)
@@ -583,11 +580,13 @@ ExecutionGraph::ExecutionGraph(
 	WorkSpace *ws,
 	EGProc *proc,
 	EGSequence *seq,
+	EGNodeFactory * node_factory,
 	const PropList& props
 )
 :	_ws(ws),
  	_microprocessor(proc),
  	_sequence(seq),
+ 	_node_factory(node_factory),
  	_first_node(NULL),
  	_first_bb_node(NULL),
  	_last_prologue_node(NULL),
@@ -596,8 +595,9 @@ ExecutionGraph::ExecutionGraph(
 {
 	_props = props;
 	_cache_line_size = 1;
+	if (_node_factory == NULL)
+			_node_factory = new EGNodeFactory();
 }
-
 
 /**
  * @fn void ParExeGraph::setFetchSize(int size);
