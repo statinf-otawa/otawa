@@ -137,7 +137,7 @@ public:
 //		elm::genstruct::Vector<Resource *> _resources;
 	private:
 		EGNodeFactory * _node_factory;
-		EGSequence * _sequence;
+		EGInstSeq * _sequence;
 		EGNode *_first_node;
 		EGNode *_first_bb_node;
 		EGNode *_last_prologue_node;
@@ -148,7 +148,7 @@ public:
 
 
 	public:
-		ExecutionGraph(WorkSpace * ws, EGProc *proc, EGSequence *seq, EGNodeFactory *node_factory, const PropList& props = PropList::EMPTY);
+		ExecutionGraph(WorkSpace * ws, EGProc *proc, EGInstSeq *seq, EGNodeFactory *node_factory, const PropList& props = PropList::EMPTY);
 		~ExecutionGraph();
 		inline void setFetchSize(int size) { _cache_line_size = size; }
 		inline void setBranchPenalty(int penalty) { _branch_penalty = penalty; }
@@ -173,12 +173,12 @@ public:
 		inline EGNode * firstNode()
 				{return _first_node;}
 
-		class InstIterator : public EGSequence::InstIterator {
+		class InstIterator : public EGInstSeq::InstIterator {
 		public:
-			inline InstIterator(const EGSequence *sequence)
-				: EGSequence::InstIterator(sequence) {}
+			inline InstIterator(const EGInstSeq *sequence)
+				: EGInstSeq::InstIterator(sequence) {}
 			inline InstIterator(const ExecutionGraph *graph)
-				: EGSequence::InstIterator(graph->_sequence) {}
+				: EGInstSeq::InstIterator(graph->_sequence) {}
 		};
 		class InstNodeIterator : public EGInst::NodeIterator {
 		public:

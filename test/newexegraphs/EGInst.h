@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Interface to the EGInst, EGSequence classes.
+ *	Interface to the EGInst, EGInstSeq classes.
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
@@ -105,31 +105,21 @@ typedef enum part_t {
 	};
 
 	/*
-	 * class EGSequence
+	 * class EGInstSeq
 	 *
 	 */
 
-	class EGSequence : public elm::genstruct::Vector<EGInst *> {
+	class EGInstSeq : public elm::genstruct::Vector<EGInst *> {
 	public:
 		class InstIterator: public elm::genstruct::Vector<EGInst *>::Iterator {
 		public:
-			inline InstIterator(const EGSequence *seq):
+			inline InstIterator(const EGInstSeq *seq):
 				elm::genstruct::Vector<EGInst *>::Iterator(*seq){}
 		};
 		inline int length()
 		{return elm::genstruct::Vector<EGInst *>::length();}
 	};
 
-/*	class EGSequence : public elm::genstruct::DLList<EGInst *> {  // QUESTION: pourquoi ça ne compile pas ???
-	public:
-		class InstIterator: public elm::genstruct::DLList<EGInst *>::Iterator {
-		public:
-			inline InstIterator(const EGSequence *seq)
-				: elm::genstruct::DLList<EGInst *>::Iterator(*seq) {}
-		};
-		inline int length()
-		{return elm::genstruct::DLList<EGInst *>::count();}
-	};*/
 
 } // namespace newexegrpah
 } // namespace otawa

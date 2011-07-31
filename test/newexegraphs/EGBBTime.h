@@ -37,65 +37,7 @@ namespace otawa { namespace newexegraph {
 
     using namespace elm::genstruct;
 
-    // -- class PathContext --------------------------------------------------------------------------------
-    class EGPathContext{
-    private:
-		elm::genstruct::SLList<BasicBlock *> _bb_list;
-		int _num_insts;
-		int _num_bbs;
-		BasicBlock * _bb;
-		Edge * _edge;
-    public:
-		EGPathContext(BasicBlock *bb){
-			_bb_list.addFirst(bb);
-			_num_insts = bb->countInstructions();
-			_num_bbs = 1;
-			_bb = bb;
-			_edge = NULL;
-		}
-		EGPathContext(const EGPathContext& ctxt){
-			for (elm::genstruct::SLList<BasicBlock *>::Iterator block(ctxt._bb_list) ; block ; block++)
-				_bb_list.addLast(block);
-			_num_insts = ctxt._num_insts;
-			_num_bbs = ctxt._num_bbs;
-			_bb = ctxt._bb;
-			_edge = ctxt._edge;
-		}
-		~EGPathContext(){
-			_bb_list.clear();
-		}
-		void addBlock(BasicBlock * new_bb, Edge * edge){
-			_bb_list.addFirst(new_bb);
-			_num_insts += new_bb->countInstructions();
-			_num_bbs += 1;
-			if (_num_bbs == 1)
-				_bb = new_bb;
-			if (_num_bbs == 2)
-				_edge = edge;
-		}
-		inline int numInsts()
-		{ return _num_insts;}
-		inline int numBlocks()
-		{ return _num_bbs;}
-		inline BasicBlock* lastBlock()
-		{ return _bb_list.last();}
-		inline BasicBlock* mainBlock()
-		{ return _bb;}
-		inline Edge * edge     ()
-		{ return _edge;}
-		void dump(io::Output& output) {
-			for (elm::genstruct::SLList<BasicBlock *>::Iterator bb(_bb_list) ; bb ; bb++){
-				output << "b" << bb->number() << "-";
-			}
-		}
 
-		class BasicBlockIterator: public elm::genstruct::SLList<BasicBlock *>::Iterator {
-		public:
-			inline BasicBlockIterator(const EGPathContext& ctxt)
-				: elm::genstruct::SLList<BasicBlock *>::Iterator(ctxt._bb_list) {}
-		};
-
-    };
 
 
     // -- class EGBBTime ----------------------------------------------------------------------------------
@@ -123,12 +65,8 @@ namespace otawa { namespace newexegraph {
 
 		void processWorkSpace(WorkSpace *ws);
 		void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
-		elm::genstruct::SLList<EGPathContext *> * buildListOfPathContexts(BasicBlock *bb, int depth = 1);
-		void FillSequence(EGPathContext *ctxt,
-						  elm::genstruct::SLList<EGPathContext *> *context_list,
-						  int depth);
-		EGSequence * buildSequence(EGPathContext *ctxt);
-		void analyzePathContext(EGPathContext *ctxt, int context_index);
+		EGInstSeq * buildSequence(EGBlockSeq *bseq);
+		void analyzePathContext(EGBlockSeq *seq, int context_index);
 		void outputGraph(G* graph, int bb_number, int context_number, int case_number, const string& info = "");
 
     };
@@ -190,59 +128,16 @@ void EGBBTime<G>::configure(const PropList& props) {
 	}
 
 
-	// -- FillSequence ------------------------------------------------------------------------------------------
-
-	template <class G>
-		void EGBBTime<G>::FillSequence(EGPathContext *ctxt,
-										  elm::genstruct::SLList<EGPathContext *> *context_list,
-										  int depth){
-
-		BasicBlock *bb = ctxt->lastBlock();
-		int num_preds = 0;
-		for(BasicBlock::InIterator edge(bb); edge; edge++) {
-			BasicBlock *pred = edge->source();
-			if (!pred->isEntry() && !pred->isExit()) {
-				num_preds++;
-				EGPathContext *new_ctxt = new EGPathContext(*ctxt);
-				new_ctxt->addBlock(pred, edge);
-				if ( (new_ctxt->numInsts() >= _last_stage_cap)
-					 &&
-					 (new_ctxt->numBlocks() > depth) )
-					context_list->addLast(new_ctxt);
-				else
-					FillSequence(new_ctxt, context_list, depth);
-			}
-		}
-		if (num_preds == 0){
-			context_list->addLast(ctxt);
-		}
-		else
-			delete ctxt;
-	}
-
-
-	// -- buildListOfPathContexts ---------------------------------------------------------------------------------------
-
-	template <class G>
-		elm::genstruct::SLList<EGPathContext *> * EGBBTime<G>::buildListOfPathContexts(BasicBlock *bb, int depth){
-		assert(depth > 0);
-		elm::genstruct::SLList<EGPathContext *> * context_list = new elm::genstruct::SLList<EGPathContext *>();
-		EGPathContext * ctxt = new EGPathContext(bb);
-
-		FillSequence(ctxt, context_list, depth);
-
-		return context_list;
-	}
 
 	// -- buildSequence ------------------------------------------------------------------------------------------
 
 	template <class G>
-		EGSequence * EGBBTime<G>::buildSequence(EGPathContext *ctxt){
-		EGSequence * seq = new EGSequence();
+		EGInstSeq * EGBBTime<G>::buildSequence(EGBlockSeq *bseq){
+		EGInstSeq * seq = new EGInstSeq();
 		part_t part = PREDECESSOR;
 		int index = 0;
-		for (EGPathContext::BasicBlockIterator block(*ctxt) ; block ; block++){
-			if (block == ctxt->mainBlock())
+		for (EGBlockSeq::BasicBlockIterator block(*bseq) ; block ; block++){
+			if (block == bseq->mainBlock())
 				part = BLOCK;
 			for(BasicBlock::InstIterator inst(block); inst; inst++) {
 				EGInst * par_exe_inst = new EGInst(inst, block, part, index++);
@@ -265,22 +160,18 @@ void EGBBTime<G>::configure(const PropList& props) {
 	}
 
 
-	class test : public EGNodeFactory{
-
-	};
 	// -- analyzePathContext ------------------------------------------------------------------------------------------
 
 	template <class G>
-		void EGBBTime<G>::analyzePathContext(EGPathContext*ctxt, int context_index){
+		void EGBBTime<G>::analyzePathContext(EGBlockSeq *bseq, int context_index){
 
 		int case_index = 0;
-		BasicBlock * bb = ctxt->mainBlock();
-		Edge *edge = ctxt->edge();
+		BasicBlock * bb = bseq->mainBlock();
+		Edge *edge = bseq->edge();
 
 
-		EGSequence *sequence = buildSequence(ctxt);
-		test * testObj = new test();
-		G *execution_graph = new G(_ws,_microprocessor, sequence, testObj, _props);
+		EGInstSeq *sequence = buildSequence(bseq);
+		G *execution_graph = new G(_ws,_microprocessor, sequence, NULL, _props);
 		execution_graph->build();
 
 		if (_do_output_graphs){
@@ -317,7 +208,7 @@ void EGBBTime<G>::configure(const PropList& props) {
 				seq->dump(log);
 				log << "\n";
 			}
-			//analyzePathContext(ctxt, context_index);
+			analyzePathContext(seq, context_index);
 			context_index ++;
 		}
 	}

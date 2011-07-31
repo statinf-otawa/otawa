@@ -356,7 +356,7 @@ ExecutionGraph::~ExecutionGraph() {
 			}
 		}
     }
-    for (EGSequence::InstIterator inst(_sequence) ; inst ; inst++) {
+    for (EGInstSeq::InstIterator inst(_sequence) ; inst ; inst++) {
 		inst->deleteNodes();
     }
 }
@@ -579,7 +579,7 @@ void ExecutionGraph::dump(elm::io::Output& dotFile, const string& info) {
 ExecutionGraph::ExecutionGraph(
 	WorkSpace *ws,
 	EGProc *proc,
-	EGSequence *seq,
+	EGInstSeq *seq,
 	EGNodeFactory * node_factory,
 	const PropList& props
 )
