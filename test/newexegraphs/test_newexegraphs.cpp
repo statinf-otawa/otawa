@@ -36,18 +36,8 @@ protected:
 		WorkSpace *ws = workspace();
 		cout << "Processing function: " << (TASK_ENTRY(props)) << "\n";
 
-
-		class MyBlockSeqListFactory : public newexegraph::EGBlockSeqListFactory{
-
-		};
-		class MySolverFactory : public newexegraph::EGSolverFactory{
-
-		};
-
 		// build execution graphs
-		MyBlockSeqListFactory block_seq_list_factory;
-		MySolverFactory solver_factory;
-		newexegraph::EGBBTime bbtime(&solver_factory, props);
+		newexegraph::EGBBTime bbtime(props);
 		bbtime.process(ws, props);
 	}
 

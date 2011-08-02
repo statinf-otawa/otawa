@@ -23,13 +23,57 @@
 #ifndef _EGBUILDER_H
 #define _EGBUILDER_H_
 
-class EGBuilder {
+#include "ExecutionGraph.h"
 
+namespace otawa { namespace newexegraph {
+
+class EGBuilder {
+private:
+	ExecutionGraph * _graph;
+	WorkSpace * _ws;
+	PropList _props;
+	EGProc * _microprocessor;
+	EGInstSeq * _inst_seq;
+	EGNodeFactory * _node_factory;
+	uint32_t _branch_penalty;
+	uint32_t _cache_line_size;
+	typedef struct rename_table_t {
+		otawa::hard::RegBank * reg_bank;
+		elm::genstruct::AllocatedTable<EGNode *> *table;
+	} rename_table_t;
+
+public:
+	EGBuilder(WorkSpace * ws,
+			EGProc *proc,
+			EGInstSeq *inst_seq,
+			EGNodeFactory *node_factory,
+			const PropList& props = PropList::EMPTY);
+	~EGBuilder();
+	ExecutionGraph * graph()
+		{return _graph;}
+	void build();
+	void createNodes();
+	void findDataDependencies();
+	void addEdgesForPipelineOrder();
+	void addEdgesForFetch();
+	void addEdgesForFetchWithDecomp();
+	void addEdgesForProgramOrder(elm::genstruct::SLList<EGStage *> *list_of_stages = NULL);
+	void addEdgesForMemoryOrder();
+	void addEdgesForDataDependencies();
+	void addEdgesForQueues();
 };
 
 class EGBuilderFactory{
-
+public:
+	EGBuilder * newEGBuilder(WorkSpace * ws,
+			EGProc *proc,
+			EGInstSeq *inst_seq,
+			EGNodeFactory *node_factory,
+			const PropList& props = PropList::EMPTY)
+		{return new EGBuilder(ws, proc, inst_seq, node_factory, props);}
 };
 
+} // namespace newexegraph
+} // namespace otawa
 #endif // _EGBUILDER_H_
 

@@ -30,7 +30,6 @@
 #include <otawa/graph/PreorderIterator.h>
 #include "EGInst.h"
 #include "EGProc.h"
-#include "TAATimingInfo.h"
 
 namespace otawa { namespace newexegraph  {
 
@@ -44,7 +43,6 @@ private:
 	EGInst *_inst;
 	int _latency;
 	elm::String _name;
-	TimingInfo *_timing;
 protected:
 	elm::genstruct::Vector<EGNode *> _producers;
 	elm::genstruct::Vector<EGNode *> _contenders;
@@ -67,15 +65,11 @@ public:
 		{return _latency;}
 	inline elm::String name()
 		{return _name;}
-	inline TimingInfo * timing()
-		{return _timing;}
 	inline int numProducers()
 		{return _producers.length();}
 	inline EGNode *producer(int index)
 		{return _producers[index];}
 	// set information
-	inline void setTiming(TimingInfo *timing)
-		{_timing = timing;}
 	inline void addProducer(EGNode *prod) {
 		if (!_producers.contains(prod))
 			_producers.add(prod);
@@ -127,34 +121,38 @@ public:
 	class ExecutionGraph: public GenGraph<EGNode, EGEdge> {
 		friend class InstIterator;
 	protected:
-		WorkSpace * _ws;
-		PropList _props;
-		EGProc * _microprocessor;
+//		WorkSpace * _ws;
+//		PropList _props;
+//		EGProc * _microprocessor;
+/*
 		typedef struct rename_table_t {
 			otawa::hard::RegBank * reg_bank;
 			elm::genstruct::AllocatedTable<EGNode *> *table;
 		} rename_table_t;
+*/
 //		elm::genstruct::Vector<Resource *> _resources;
 	private:
-		EGNodeFactory * _node_factory;
-		EGInstSeq * _sequence;
+	//	EGNodeFactory * _node_factory;
+		EGInstSeq * _inst_seq;
 		EGNode *_first_node;
 		EGNode *_first_bb_node;
 		EGNode *_last_prologue_node;
 		EGNode *_last_node;
-		int _cache_line_size;
-		int _capacity;
-		int _branch_penalty;
+//		int _cache_line_size;
+//		int _capacity;
+//		int _branch_penalty;
 
 
 	public:
 		ExecutionGraph(WorkSpace * ws, EGProc *proc, EGInstSeq *seq, EGNodeFactory *node_factory, const PropList& props = PropList::EMPTY);
 		~ExecutionGraph();
+/*
 		inline void setFetchSize(int size) { _cache_line_size = size; }
 		inline void setBranchPenalty(int penalty) { _branch_penalty = penalty; }
+*/
 
-		void build(bool compressed_code=false);
-		void createNodes();
+//		void build(bool compressed_code=false);
+/*		void createNodes();
 		void findDataDependencies();
 		void addEdgesForPipelineOrder();
 		void addEdgesForFetch();
@@ -164,15 +162,27 @@ public:
 		void addEdgesForDataDependencies();
 		void addEdgesForQueues();
 		void findContendingNodes();
-		void createResources();
+		void createResources();*/
 		void dump(elm::io::Output& dotFile, const string& info = "");
 		void display(elm::io::Output& output);
 
+/*
 		inline int numInstructions()
 			{return _sequence->length();}
+*/
 		inline EGNode * firstNode()
 				{return _first_node;}
-
+		inline void setFirstNode(EGNode *node)
+		{_first_node = node;}
+		inline void setLastPredNode(EGNode *node)
+		{_last_prologue_node = node;}
+		inline EGNode *firstBlockNode()
+		{return _first_bb_node;}
+		inline void setFirstBlockNode(EGNode *node)
+		{_first_bb_node = node;}
+		inline void setLastNode(EGNode *node)
+		{_last_node = node;}
+/*
 		class InstIterator : public EGInstSeq::InstIterator {
 		public:
 			inline InstIterator(const EGInstSeq *sequence)
@@ -196,6 +206,7 @@ public:
 			inline StageNodeIterator(const EGStage *stage)
 				: EGStage::NodeIterator(stage) {}
 		};
+*/
 
 		class PreorderIterator: public graph::PreorderIterator<ExecutionGraph> {
 		public:

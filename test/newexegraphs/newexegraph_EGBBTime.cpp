@@ -178,15 +178,18 @@ void EGBBTime::analyzePathContext(EGBlockSeq *bseq, int context_index){
 	BasicBlock * bb = bseq->mainBlock();
 	Edge *edge = bseq->edge();
 
-	EGInstSeq *sequence = buildSequence(bseq);
-	ExecutionGraph *execution_graph = new ExecutionGraph(_ws,_microprocessor, sequence, NULL, _props);
-	execution_graph->build();
+	EGInstSeq *inst_seq = buildSequence(bseq);
+//	ExecutionGraph *execution_graph = new ExecutionGraph(_ws,_microprocessor, sequence, NULL, _props);
+//	execution_graph->build();
+	EGBuilder *builder = _builder_factory->newEGBuilder(_ws,_microprocessor, inst_seq, NULL,
+							/*_solver_factory->nodeFactory(),*/ _props);
+	ExecutionGraph * graph = builder->graph();
 
 	if (_do_output_graphs){
-		outputGraph(execution_graph, bb->number(), context_index, case_index++,
+		outputGraph(graph, bb->number(), context_index, case_index++,
 				_ << "");
 	}
-	delete execution_graph;
+	delete builder;
 }
 
 

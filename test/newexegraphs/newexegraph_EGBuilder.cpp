@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	Interface to the ExecutionGraph, EGNode, EGEdge classes.
+ *	Implementation of the EGBuilder class.
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
@@ -20,58 +20,86 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "EGBuilder.h"
 
-#include "ExecutionGraph.h"
-
-using namespace  otawa;
+using namespace otawa;
 using namespace otawa::newexegraph;
 
+EGBuilder::EGBuilder(WorkSpace * ws,
+		EGProc *proc,
+		EGInstSeq *inst_seq,
+		EGNodeFactory *node_factory,
+		const PropList& props)
+:	_ws(ws),
+ 	_microprocessor(proc),
+ 	_inst_seq(inst_seq),
+ 	_node_factory(node_factory),
+ 	_branch_penalty(2)
+{
+	_props = props;
+	_cache_line_size = 1;
+	if (_node_factory == NULL)
+			_node_factory = new EGNodeFactory();
+	_graph = new ExecutionGraph(ws, proc, inst_seq, node_factory, props);
+}
+
+EGBuilder::~EGBuilder(){
+	for (EGPipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
+		stage->deleteNodes();
+		if (stage->category() == EGStage::EXECUTE) {
+			for (int i=0 ; i<stage->numFus() ; i++) {
+				EGPipeline *fu = stage->fu(i);
+				for (EGPipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++)
+					fu_stage->deleteNodes();
+			}
+		}
+	}
+	for (EGInstSeq::InstIterator inst(_inst_seq) ; inst ; inst++) {
+		inst->deleteNodes();
+	}
+}
+
+
+void EGBuilder::build(){
+
+	createNodes();
+	findDataDependencies();
+
+	addEdgesForPipelineOrder();
+	addEdgesForFetch();
+	addEdgesForProgramOrder();
+
+	addEdgesForMemoryOrder();
+	addEdgesForDataDependencies();
+
+	addEdgesForQueues();
+}
+
 // ----------------------------------------------------------------
 
-/*void ExecutionGraph::build(bool compressed_cod) {
-
- //   createResources();
-
-    createNodes();
-    findDataDependencies();
-
-    addEdgesForPipelineOrder();
-    addEdgesForFetch();
-    addEdgesForProgramOrder();
-
-    addEdgesForMemoryOrder();
-    addEdgesForDataDependencies();
-
-    addEdgesForQueues();
- //   findContendingNodes();
-
-}*/
-
-// ----------------------------------------------------------------
-
-/*void ExecutionGraph::createNodes() {
+void EGBuilder::createNodes() {
 
     // consider every instruction
-    for (InstIterator inst(_sequence) ; inst ; inst++)  {
+    for (EGInstSeq::InstIterator inst(_inst_seq) ; inst ; inst++)  {
 		// consider every pipeline stage
 		for (EGPipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
 
 			// create node
 			EGNode *node;
 			if (stage->category() != EGStage::EXECUTE) {
-				node = _node_factory->newEGNode(this, stage, inst);
+				node = _node_factory->newEGNode(_graph, stage, inst);
 				inst->addNode(node);
 				stage->addNode(node);
 				if (stage->category() == EGStage::FETCH) {
 					inst->setFetchNode(node);
 				}
-				if (!_first_node)
-					_first_node = node;
+				if (!_graph->firstNode())
+					_graph->setFirstNode(node);
 				if (inst->part() == PREDECESSOR)  // FIXME
-					_last_prologue_node = node;
-				if (!_first_bb_node && (inst->part() == BLOCK) )
-					_first_bb_node = node;
-				_last_node = node;
+					_graph->setLastPredNode(node);
+				if (!_graph->firstBlockNode() && (inst->part() == BLOCK) )
+					_graph->setFirstBlockNode(node);
+				_graph->setLastNode(node);
 			}
 			else {
 				// add FU nodes
@@ -80,7 +108,7 @@ using namespace otawa::newexegraph;
 				int index = 0;
 
 				for(EGPipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {
-					EGNode *fu_node = _node_factory->newEGNode(this, fu_stage, inst);
+					EGNode *fu_node = _node_factory->newEGNode(_graph, fu_stage, inst);
 					inst->addNode(fu_node);
 					fu_stage->addNode(fu_node);
 					if (index == 0)
@@ -93,12 +121,12 @@ using namespace otawa::newexegraph;
 
     } // endfor each instruction
 
-}*/
+}
 
 
 // ----------------------------------------------------------------
 
-/*void ExecutionGraph::findDataDependencies() {
+void EGBuilder::findDataDependencies() {
 
     otawa::hard::Platform *pf = _ws->platform();
     AllocatedTable<rename_table_t> rename_tables(pf->banks().count());
@@ -112,9 +140,9 @@ using namespace otawa::newexegraph;
     }
 
     // consider every instruction
-    for (InstIterator inst(_sequence) ; inst ; inst++)  {
+    for (EGInstSeq::InstIterator inst(_inst_seq) ; inst ; inst++)  {
 		EGNode *first_fu_node = NULL, *last_fu_node = NULL;
-		for (InstNodeIterator node(inst); node ; node++){
+		for (EGInst::NodeIterator node(inst); node ; node++){
 			if (node->stage()->category() == EGStage::FU){
 				if (!first_fu_node)
 					first_fu_node = node;
@@ -148,17 +176,16 @@ using namespace otawa::newexegraph;
     // Free rename tables
     for(int i = 0; i <reg_bank_count ; i++)
 		delete rename_tables[i].table;
-
-}*/
+}
 
 // ----------------------------------------------------------------
-/*void ExecutionGraph::addEdgesForPipelineOrder(){
-    for (InstIterator inst(_sequence) ; inst ; inst++)  {
+void EGBuilder::addEdgesForPipelineOrder(){
+    for (EGInstSeq::InstIterator inst(_inst_seq) ; inst ; inst++)  {
 		for (int i=0 ; i<inst->numNodes()-1 ; i++){
 			new EGEdge(inst->node(i), inst->node(i+1), EGEdge::SOLID);
 		}
     }
-}*/
+}
 
 
 /**
@@ -177,7 +204,7 @@ using namespace otawa::newexegraph;
  * @li 0x1010	fetch
  * @li 0x1014
  */
-/*void ExecutionGraph::addEdgesForFetch(){
+void EGBuilder::addEdgesForFetch(){
     EGStage *fetch_stage = _microprocessor->fetchStage();
 
     // traverse all fetch nodes
@@ -210,12 +237,12 @@ using namespace otawa::newexegraph;
 		}
 		//    }
     }
-}*/
+}
 
 
 // ----------------------------------------------------------------
 
-/*void ExecutionGraph::addEdgesForProgramOrder(elm::genstruct::SLList<EGStage *> *list_of_stages){
+void EGBuilder::addEdgesForProgramOrder(elm::genstruct::SLList<EGStage *> *list_of_stages){
 
     elm::genstruct::SLList<EGStage *> *list;
     if (list_of_stages != NULL)
@@ -240,7 +267,7 @@ using namespace otawa::newexegraph;
 		}
     }
 
-    for (StageIterator stage(list) ; stage ; stage++) {
+    for (elm::genstruct::SLList<EGStage *>::Iterator stage(*list) ; stage ; stage++) {
 		int count = 1;
 		int prev = 0;
 		for (int i=0 ; i<stage->numNodes()-1 ; i++){
@@ -261,13 +288,12 @@ using namespace otawa::newexegraph;
 			}
 		}
     }
-}*/
+}
 
 
 // ----------------------------------------------------------------
 
-/*
-void ExecutionGraph::addEdgesForMemoryOrder(){
+void EGBuilder::addEdgesForMemoryOrder(){
 
     EGStage *stage = _microprocessor->execStage();
     for (int i=0 ; i<stage->numFus() ; i++) {
@@ -280,7 +306,7 @@ void ExecutionGraph::addEdgesForMemoryOrder(){
 				if (previous_store) {// memory access are executed in order
 					new EGEdge(previous_store, node, EGEdge::SOLID);
 				}
-				for (InstNodeIterator last_node(node->inst()); last_node ; last_node++){
+				for (EGInst::NodeIterator last_node(node->inst()); last_node ; last_node++){
 					if (last_node->stage()->category() == EGStage::FU)
 						previous_load = last_node;
 				}
@@ -292,7 +318,7 @@ void ExecutionGraph::addEdgesForMemoryOrder(){
 				if (previous_load) {// memory access are executed in order
 					new EGEdge(previous_load, node, EGEdge::SOLID);
 				}
-				for (InstNodeIterator last_node(node->inst()); last_node ; last_node++){
+				for (EGInst::NodeIterator last_node(node->inst()); last_node ; last_node++){
 					if (last_node->stage()->category() == EGStage::FU){
 						previous_store = last_node;
 					}
@@ -301,7 +327,6 @@ void ExecutionGraph::addEdgesForMemoryOrder(){
 		}
     }
 }
-*/
 
 // ----------------------------------------------------------------
 
@@ -310,7 +335,7 @@ void ExecutionGraph::addEdgesForMemoryOrder(){
  * produces content of a register and instruction (b) uses this register value
  * create a solid edge between their execute stages.
  */
-/*void ExecutionGraph::addEdgesForDataDependencies(){
+void EGBuilder::addEdgesForDataDependencies(){
     EGStage *exec_stage = _microprocessor->execStage();
     for (int j=0 ; j<exec_stage->numFus() ; j++) {
 		EGStage *fu_stage = exec_stage->fu(j)->firstStage();
@@ -322,13 +347,13 @@ void ExecutionGraph::addEdgesForMemoryOrder(){
 			}
 		}
     }
-}*/
+}
 
 // ----------------------------------------------------------------
 
-/*void ExecutionGraph::addEdgesForQueues(){
+void EGBuilder::addEdgesForQueues(){
 
-    // build edges for queues with limited capacity
+ /*   // build edges for queues with limited capacity */
     for (EGPipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
 		EGStage * prod_stage;
 		if (stage->sourceQueue() != NULL) {
@@ -341,282 +366,5 @@ void ExecutionGraph::addEdgesForMemoryOrder(){
 			}
 		}
     }
-}*/
-
-
-
-// ----------------------------------------------------------------
-
-ExecutionGraph::~ExecutionGraph() {
- /*   for (EGPipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
-		stage->deleteNodes();
-		if (stage->category() == EGStage::EXECUTE) {
-			for (int i=0 ; i<stage->numFus() ; i++) {
-				EGPipeline *fu = stage->fu(i);
-				for (EGPipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++)
-					fu_stage->deleteNodes();
-			}
-		}
-    }
-    for (EGInstSeq::InstIterator inst(_sequence) ; inst ; inst++) {
-		inst->deleteNodes();
-    }*/
 }
-
-
-/**
- * Manage the attribute dump.
- * Must be called before the first attribute is generated.
- */
-static void dumpAttrBegin(io::Output& out, bool& first) {
-	first = true;
-}
-
-/**
- * Manage the attribute dump.
- * Must be called before displaying an attribute.
- */
-static void dumpAttr(io::Output& out, bool& first) {
-	if(first)
-		out << " [ ";
-	else
-		out << ", ";
-	first = false;
-}
-
-/**
- * Manage the attribute dump.
- * Must be called after the last attribute has been generated.
- */
-static void dumpAttrEnd(io::Output& out, bool& first) {
-	if(!first)
-		out << " ]";
-}
-
-
-// ---------------------------------------
-void ExecutionGraph::dump(elm::io::Output& dotFile, const string& info) {
-    int i=0;
-    bool first_line = true;
-    int width = 5;
-    dotFile << "digraph G {\n";
-
-    // dipsplay information if any
-    if(info)
-    	dotFile << "\"info\" [shape=record, label=\"{" << info << "}\"];\n";
-
-/*    // display ressources
-    dotFile << "\"legend\" [shape=record, label= \"{ ";
-    for (elm::genstruct::Vector<Resource *>::Iterator res(_resources) ; res ; res++) {
-		if (i == 0) {
-			if (!first_line)
-				dotFile << " | ";
-			first_line = false;
-			dotFile << "{ ";
-		}
-		dotFile << res->name();
-		if (i < width-1){
-			dotFile << " | ";
-			i++;
-		}
-		else {
-			dotFile << "} ";
-			i = 0;
-		}
-    }
-    if (i!= 0)
-		dotFile << "} ";
-    dotFile << "} ";
-    dotFile << "\"] ; \n";*/
-
-    // display instruction sequence
-    dotFile << "\"code\" [shape=record, label= \"\\l";
-    bool body = true;
-    BasicBlock *bb = 0;
-    for (EGInstSeq::InstIterator inst(_inst_seq) ; inst ; inst++) {
-		if(inst->part() == BLOCK && body) {
-			body = false;
-			dotFile << "------\\l";
-		}
-    	BasicBlock *cbb = inst->basicBlock();
-    	if(cbb != bb) {
-    		bb = cbb;
-    		dotFile << bb << "\\l";
-    	}
-    	dotFile << "I" << inst->index() << ": ";
-		dotFile << "0x" << fmt::address(inst->inst()->address()) << ":  ";
-		inst->inst()->dump(dotFile);
-		dotFile << "\\l";
-    }
-    dotFile << "\"] ; \n";
-
-    // edges between info, legend, code
-    if(info)
-    	dotFile << "\"info\" -> \"legend\";\n";
-    dotFile << "\"legend\" -> \"code\";\n";
-
-    // display nodes
-    for (EGInstSeq::InstIterator inst(_inst_seq) ; inst ; inst++) {
-		// dump nodes
-		dotFile << "{ rank = same ; ";
-		for (EGInst::NodeIterator node(inst) ; node ; node++) {
-			dotFile << "\"" << node->stage()->name();
-			dotFile << "I" << node->inst()->index() << "\" ; ";
-		}
-		dotFile << "}\n";
-		// again to specify labels
-		for (EGInst::NodeIterator node(inst) ; node ; node++) {
-			dotFile << "\"" << node->stage()->name();
-			dotFile << "I" << node->inst()->index() << "\"";
-			dotFile << " [shape=record, ";
-			if (node->inst()->part() == BLOCK)
-				dotFile << "color=blue, ";
-			dotFile << "label=\"" << node->stage()->name();
-			dotFile << "(I" << node->inst()->index() << ") [" << node->latency() << "]\\l" << node->inst()->inst();
-			dotFile << "| { ";
-/*
-			int i=0;
-			int num = _resources.length();
-			while (i < num) {
-				int j=0;
-				dotFile << "{ ";
-				while ( j<width ) {
-					if ( (i<num) && (j<num) ) {
-						if (node->e(i))
-							dotFile << node->d(i);
-					}
-					if (j<width-1)
-						dotFile << " | ";
-					i++;
-					j++;
-				}
-				dotFile << "} ";
-				if (i<num)
-					dotFile << " | ";
-			}
-*/
-			dotFile << "} ";
-			dotFile << "\"] ; \n";
-		}
-		dotFile << "\n";
-    }
-
-    // display edges
-    int group_number = 0;
-    for (EGInstSeq::InstIterator inst(_inst_seq) ; inst ; inst++) {
-		// dump edges
-		for (EGInst::NodeIterator node(inst) ; node ; node++) {
-			for (Successor next(node) ; next ; next++) {
-				if ( node != inst->firstNode()
-					 ||
-					 (node->stage()->category() != EGStage::EXECUTE)
-					 || (node->inst()->index() == next->inst()->index()) ) {
-
-					// display edges
-					dotFile << "\"" << node->stage()->name();
-					dotFile << "I" << node->inst()->index() << "\"";
-					dotFile << " -> ";
-					dotFile << "\"" << next->stage()->name();
-					dotFile << "I" << next->inst()->index() << "\"";
-
-					// display attributes
-					bool first;
-					dumpAttrBegin(dotFile, first);
-
-					// latency if any
-					if(next.edge()->latency()) {
-						dumpAttr(dotFile, first);
-						dotFile << "label=\"" << next.edge()->latency() << "\"";
-					}
-
-					// edge style
-					switch( next.edge()->type()) {
-					case EGEdge::SOLID:
-						if (node->inst()->index() == next->inst()->index()) {
-							dumpAttr(dotFile, first);
-							dotFile << "minlen=4";
-						}
-						break;
-					case EGEdge::SLASHED:
-						dumpAttr(dotFile, first);
-						dotFile << " style=dotted";
-						if (node->inst()->index() == next->inst()->index()) {
-							dumpAttr(dotFile, first);
-							dotFile << "minlen=4";
-						}
-						break;
-					default:
-						break;
-					}
-
-					// dump attribute end
-					dumpAttrEnd(dotFile, first);
-					dotFile << ";\n";
-
-					// group
-					if ((node->inst()->index() == next->inst()->index())
-						|| ((node->stage()->index() == next->stage()->index())
-							&& (node->inst()->index() == next->inst()->index()-1)) ) {
-						dotFile << "\"" << node->stage()->name();
-						dotFile << "I" << node->inst()->index() << "\"  [group=" << group_number << "] ;\n";
-						dotFile << "\"" << next->stage()->name();
-						dotFile << "I" << next->inst()->index() << "\" [group=" << group_number << "] ;\n";
-						group_number++;
-					}
-				}
-			}
-		}
-		dotFile << "\n";
-    }
-    dotFile << "}\n";
-}
-
-/**
- * Build a parametric execution graph.
- * @param ws	Current workspace.
- * @param proc	Processor description.
- * @param seq	Instruction sequence to compute.
- * @param props	Other parameters.
- */
-ExecutionGraph::ExecutionGraph(
-	WorkSpace *ws,
-	EGProc *proc,
-	EGInstSeq *inst_seq,
-	EGNodeFactory * node_factory,
-	const PropList& props
-)
-: _inst_seq(inst_seq)
-/*:	_ws(ws),
- 	_microprocessor(proc),
- 	_sequence(seq),
- 	_node_factory(node_factory),
- 	_first_node(NULL),
- 	_first_bb_node(NULL),
- 	_last_prologue_node(NULL),
- 	_last_node(NULL),
- 	_branch_penalty(2)*/
-{
-/*	_props = props;
-	_cache_line_size = 1;
-	if (_node_factory == NULL)
-			_node_factory = new EGNodeFactory();*/
-}
-
-/**
- * @fn void ParExeGraph::setFetchSize(int size);
- * Set the size in bytes used to fetch instructions.
- * @param size	Size in bytes of fetched blocks.
- */
-
-
-// ----------------------------------------------------------------
-
-void ExecutionGraph::display(elm::io::Output&) {
-}
-
-
-
-
-
-
 
