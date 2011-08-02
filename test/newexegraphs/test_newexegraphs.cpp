@@ -13,6 +13,7 @@
 #include "EGBBTime.h"
 #include "ExecutionGraph.h"
 #include "EGBlockSeqList.h"
+#include "EGSolver.h"
 
 using namespace otawa;
 using namespace elm;
@@ -35,9 +36,18 @@ protected:
 		WorkSpace *ws = workspace();
 		cout << "Processing function: " << (TASK_ENTRY(props)) << "\n";
 
+
+		class MyBlockSeqListFactory : public newexegraph::EGBlockSeqListFactory{
+
+		};
+		class MySolverFactory : public newexegraph::EGSolverFactory{
+
+		};
+
 		// build execution graphs
-		newexegraph::EGBlockSeqListFactory block_seq_list_factory;
-		newexegraph::EGBBTime<newexegraph::ExecutionGraph> bbtime(&block_seq_list_factory, props);
+		MyBlockSeqListFactory block_seq_list_factory;
+		MySolverFactory solver_factory;
+		newexegraph::EGBBTime bbtime(&solver_factory, props);
 		bbtime.process(ws, props);
 	}
 

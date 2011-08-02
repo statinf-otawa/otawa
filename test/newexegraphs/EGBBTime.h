@@ -29,7 +29,8 @@
 #include <elm/io/OutFileStream.h>
 #include <otawa/proc/BBProcessor.h>
 #include "EGBlockSeqList.h"
-
+#include "EGSolver.h"
+#include "EGBuilder.h"
 
 namespace otawa { namespace newexegraph {
     extern Identifier<String> GRAPHS_DIR;
@@ -42,8 +43,7 @@ namespace otawa { namespace newexegraph {
 
     // -- class EGBBTime ----------------------------------------------------------------------------------
 
-    template <class G>
-		class EGBBTime: public BBProcessor {
+    class EGBBTime: public BBProcessor {
     private:
 		WorkSpace *_ws;
 		EGProc *_microprocessor;
@@ -55,11 +55,31 @@ namespace otawa { namespace newexegraph {
 		String _graphs_dir_name;
 		bool _do_output_graphs;
 		EGBlockSeqListFactory * _block_seq_list_factory;
+		EGBuilderFactory * _builder_factory;
+		EGSolverFactory * _solver_factory;
 
     public:
+		EGBBTime(const PropList& props = PropList::EMPTY);
 		EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
 				const PropList& props = PropList::EMPTY);
-		EGBBTime(const PropList& props = PropList::EMPTY);
+		EGBBTime(EGSolverFactory * solver_factory,
+				const PropList& props = PropList::EMPTY);
+		EGBBTime(EGBuilderFactory * builder_factory,
+				const PropList& props = PropList::EMPTY);
+		EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
+				EGSolverFactory * solver_factory,
+				const PropList& props = PropList::EMPTY);
+		EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
+				EGBuilderFactory * builder_factory,
+				const PropList& props = PropList::EMPTY);
+		EGBBTime(EGBuilderFactory * builder_factory,
+				EGSolverFactory * solver_factory,
+				const PropList& props = PropList::EMPTY);
+		EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
+				EGBuilderFactory * builder_factory,
+				EGSolverFactory * solver_factory,
+				const PropList& props = PropList::EMPTY);
+
 		EGBBTime(AbstractRegistration& reg);
 		virtual void configure(const PropList& props);
 
@@ -67,151 +87,10 @@ namespace otawa { namespace newexegraph {
 		void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 		EGInstSeq * buildSequence(EGBlockSeq *bseq);
 		void analyzePathContext(EGBlockSeq *seq, int context_index);
-		void outputGraph(G* graph, int bb_number, int context_number, int case_number, const string& info = "");
+		void outputGraph(ExecutionGraph* graph, int bb_number, int context_number, int case_number, const string& info = "");
 
     };
-	// -- EGBBTime ------------------------------------------------------------------------------------------
 
-
-	template <class G>
-		EGBBTime<G>::EGBBTime(const PropList& props)
-		: BBProcessor() {
-		require(otawa::hard::PROCESSOR_FEATURE);
-		_block_seq_list_factory = new EGBlockSeqListFactory();
-	}
-
-	template <class G>
-		EGBBTime<G>::EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
-								const PropList& props)
-		: BBProcessor() {
-		require(otawa::hard::PROCESSOR_FEATURE);
-		_block_seq_list_factory = block_seq_list_factory;
-	}
-
-template <class G>
-EGBBTime<G>::EGBBTime(AbstractRegistration& reg)
-: BBProcessor(reg) {
-	require(otawa::hard::PROCESSOR_FEATURE);
-}
-
-template <class G>
-void EGBBTime<G>::configure(const PropList& props) {
-	BBProcessor::configure(props);
-	_graphs_dir_name = GRAPHS_DIR(props);
-	if(!_graphs_dir_name.isEmpty())
-		_do_output_graphs = true;
-	else
-		_do_output_graphs = false;
-	_props = props;
-}
-
-
-
-	// -- processWorkSpace ------------------------------------------------------------------------------------------
-
-	template <class G>
-		void EGBBTime<G>::processWorkSpace(WorkSpace *ws) {
-
-		_ws = ws;
-		const otawa::hard::Processor *proc = otawa::hard::PROCESSOR(_ws);
-
-		if(proc == &otawa::hard::Processor::null)
-			throw ProcessorException(*this, "no processor to work with");
-		else {
-			_microprocessor = new EGProc(proc);
-			_last_stage_cap = _microprocessor->lastStage()->width();
-
-		}
-
-		// Perform the actual process
-		BBProcessor::processWorkSpace(ws);
-	}
-
-
-
-	// -- buildSequence ------------------------------------------------------------------------------------------
-
-	template <class G>
-		EGInstSeq * EGBBTime<G>::buildSequence(EGBlockSeq *bseq){
-		EGInstSeq * seq = new EGInstSeq();
-		part_t part = PREDECESSOR;
-		int index = 0;
-		for (EGBlockSeq::BasicBlockIterator block(*bseq) ; block ; block++){
-			if (block == bseq->mainBlock())
-				part = BLOCK;
-			for(BasicBlock::InstIterator inst(block); inst; inst++) {
-				EGInst * par_exe_inst = new EGInst(inst, block, part, index++);
-				seq->add(par_exe_inst);
-			}
-		}
-		return seq;
-	}
-
-	// -- outputGraph ------------------------------------------------------------------------------------------
-
-	template <class G>
-		void EGBBTime<G>::outputGraph(G* graph, int bb_number, int context_index, int case_index, const string& info){
-		elm::StringBuffer buffer;
-		buffer << _graphs_dir_name << "/";
-		buffer << "b" << bb_number << "-ctxt" << context_index << "-case" << case_index << ".dot";
-		elm::io::OutFileStream dotStream(buffer.toString());
-		elm::io::Output dotFile(dotStream);
-		graph->dump(dotFile, info);
-	}
-
-
-	// -- analyzePathContext ------------------------------------------------------------------------------------------
-
-	template <class G>
-		void EGBBTime<G>::analyzePathContext(EGBlockSeq *bseq, int context_index){
-
-		int case_index = 0;
-		BasicBlock * bb = bseq->mainBlock();
-		Edge *edge = bseq->edge();
-
-
-		EGInstSeq *sequence = buildSequence(bseq);
-		G *execution_graph = new G(_ws,_microprocessor, sequence, NULL, _props);
-		execution_graph->build();
-
-		if (_do_output_graphs){
-			outputGraph(execution_graph, bb->number(), context_index, case_index++,
-				_ << "");
-		}
-
-
-		delete execution_graph;
-	}
-
-
-	// -- processBB ------------------------------------------------------------------------------------------
-
-	template <class G>
-		void EGBBTime<G>::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-
-		// ignore empty basic blocks
-		if (bb->countInstructions() == 0)
-			return;
-
-		if(isVerbose()) {
-			log << "\n\t\t================================================================\n";
-			log << "\t\tProcessing block b" << bb->number() << " (starts at " << bb->address() << " - " << bb->countInstructions() << " instructions)\n";
-		}
-
-		int context_index = 0;
-
-		EGBlockSeqList * seq_list = _block_seq_list_factory->newEGBlockSeqList(bb,_microprocessor);
-
-		for (EGBlockSeqList::SeqIterator seq(*seq_list) ; seq ; seq++){
-			if(isVerbose()) {
-				log << "\n\t\t----- Considering context: ";
-				seq->dump(log);
-				log << "\n";
-			}
-			analyzePathContext(seq, context_index);
-			context_index ++;
-		}
-	}
 
 } // namespace newexegraph
 } // namespace otawa
