@@ -24,16 +24,18 @@
 #define _EGBUILDER_H_
 
 #include "ExecutionGraph.h"
+#include "EGBlockSeq.h"
 
-namespace otawa { namespace newexegraph {
+namespace otawa { namespace exegraph2 {
 
 class EGBuilder {
 private:
 	ExecutionGraph * _graph;
 	WorkSpace * _ws;
 	PropList _props;
-	EGProc * _microprocessor;
+	EGProc * _proc;
 	EGInstSeq * _inst_seq;
+	EGBlockSeq *_block_seq;
 	EGNodeFactory * _node_factory;
 	uint32_t _branch_penalty;
 	uint32_t _cache_line_size;
@@ -45,7 +47,7 @@ private:
 public:
 	EGBuilder(WorkSpace * ws,
 			EGProc *proc,
-			EGInstSeq *inst_seq,
+			EGBlockSeq *block_seq,
 			EGNodeFactory *node_factory,
 			const PropList& props = PropList::EMPTY);
 	~EGBuilder();
@@ -67,13 +69,13 @@ class EGBuilderFactory{
 public:
 	EGBuilder * newEGBuilder(WorkSpace * ws,
 			EGProc *proc,
-			EGInstSeq *inst_seq,
+			EGBlockSeq *block_seq,
 			EGNodeFactory *node_factory,
 			const PropList& props = PropList::EMPTY)
-		{return new EGBuilder(ws, proc, inst_seq, node_factory, props);}
+		{return new EGBuilder(ws, proc, block_seq, node_factory, props);}
 };
 
-} // namespace newexegraph
+} // namespace exegraph2
 } // namespace otawa
 #endif // _EGBUILDER_H_
 

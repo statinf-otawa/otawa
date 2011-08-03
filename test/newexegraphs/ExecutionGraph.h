@@ -31,7 +31,7 @@
 #include "EGInst.h"
 #include "EGProc.h"
 
-namespace otawa { namespace newexegraph  {
+namespace otawa { namespace exegraph2  {
 
 /*
  * class EGNode
@@ -45,15 +45,18 @@ private:
 	elm::String _name;
 protected:
 	elm::genstruct::Vector<EGNode *> _producers;
-	elm::genstruct::Vector<EGNode *> _contenders;
+/*	elm::genstruct::Vector<EGNode *> _contenders;
 	elm::BitVector * _possible_contenders;
 	elm::genstruct::DLList<elm::BitVector *> _contenders_masks_list;
-	int _late_contenders;
+	int _late_contenders;*/
 
 public:
 	inline EGNode(ExecutionGraph *graph, EGStage *stage, EGInst *inst)
 		: GenNode((otawa::graph::Graph *) graph),
 		_pipeline_stage(stage), _inst(inst),  _latency(stage->latency()){
+		StringBuffer _buffer;
+		_buffer << stage->name() << "(I" << inst->index() << ")";
+		_name = _buffer.toString();
 	}
 	~EGNode(){}
 	// get information
@@ -119,57 +122,20 @@ public:
 	 */
 
 	class ExecutionGraph: public GenGraph<EGNode, EGEdge> {
-		friend class InstIterator;
-	protected:
-//		WorkSpace * _ws;
-//		PropList _props;
-//		EGProc * _microprocessor;
-/*
-		typedef struct rename_table_t {
-			otawa::hard::RegBank * reg_bank;
-			elm::genstruct::AllocatedTable<EGNode *> *table;
-		} rename_table_t;
-*/
-//		elm::genstruct::Vector<Resource *> _resources;
 	private:
-	//	EGNodeFactory * _node_factory;
 		EGInstSeq * _inst_seq;
 		EGNode *_first_node;
 		EGNode *_first_bb_node;
 		EGNode *_last_prologue_node;
 		EGNode *_last_node;
-//		int _cache_line_size;
-//		int _capacity;
-//		int _branch_penalty;
 
 
 	public:
 		ExecutionGraph(WorkSpace * ws, EGProc *proc, EGInstSeq *seq, EGNodeFactory *node_factory, const PropList& props = PropList::EMPTY);
 		~ExecutionGraph();
-/*
-		inline void setFetchSize(int size) { _cache_line_size = size; }
-		inline void setBranchPenalty(int penalty) { _branch_penalty = penalty; }
-*/
 
-//		void build(bool compressed_code=false);
-/*		void createNodes();
-		void findDataDependencies();
-		void addEdgesForPipelineOrder();
-		void addEdgesForFetch();
-		void addEdgesForFetchWithDecomp();
-		void addEdgesForProgramOrder(elm::genstruct::SLList<EGStage *> *list_of_stages = NULL);
-		void addEdgesForMemoryOrder();
-		void addEdgesForDataDependencies();
-		void addEdgesForQueues();
-		void findContendingNodes();
-		void createResources();*/
 		void dump(elm::io::Output& dotFile, const string& info = "");
-		void display(elm::io::Output& output);
 
-/*
-		inline int numInstructions()
-			{return _sequence->length();}
-*/
 		inline EGNode * firstNode()
 				{return _first_node;}
 		inline void setFirstNode(EGNode *node)
@@ -182,31 +148,7 @@ public:
 		{_first_bb_node = node;}
 		inline void setLastNode(EGNode *node)
 		{_last_node = node;}
-/*
-		class InstIterator : public EGInstSeq::InstIterator {
-		public:
-			inline InstIterator(const EGInstSeq *sequence)
-				: EGInstSeq::InstIterator(sequence) {}
-			inline InstIterator(const ExecutionGraph *graph)
-				: EGInstSeq::InstIterator(graph->_sequence) {}
-		};
-		class InstNodeIterator : public EGInst::NodeIterator {
-		public:
-			inline InstNodeIterator(const EGInst *inst)
-				: EGInst::NodeIterator(inst) {}
-		};
-		class StageIterator : public elm::genstruct::SLList<EGStage *>::Iterator {
-		public:
-			inline StageIterator(const SLList<EGStage *>  *list)
-				: elm::genstruct::SLList<EGStage *>::Iterator(*list) {}
-		};
 
-		class StageNodeIterator : public EGStage::NodeIterator {
-		public:
-			inline StageNodeIterator(const EGStage *stage)
-				: EGStage::NodeIterator(stage) {}
-		};
-*/
 
 		class PreorderIterator: public graph::PreorderIterator<ExecutionGraph> {
 		public:
@@ -269,7 +211,7 @@ public:
 	}
 
 
-} // namespace newexegraph
+} // namespace exegraph2
 } // namespace otawa
 
 #endif //_BASIC_EXEGRAPH_H_

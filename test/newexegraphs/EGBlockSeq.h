@@ -28,11 +28,11 @@
 
 namespace otawa{
 
-namespace newexegraph {
+namespace exegraph2 {
 
 using namespace elm::genstruct;
 
-class EGBlockSeq{  // FIXME commentaire a effacer "equivalent de PathContext"
+class EGBlockSeq{
 private:
 	elm::genstruct::SLList<BasicBlock *> _bb_list;
 	int _num_insts;
@@ -86,7 +86,7 @@ public:
 		{return new EGBlockSeqList(bb, proc);}
 };
 
-} // namespace newexegraph
+} // namespace exegraph2
 } // namespace otawa
 
 #endif // _EGBlockSeqList_H_

@@ -21,12 +21,13 @@ include_directories("../../../gel/include")
 
 
 set(newexegraphs_SOURCES
-	newexegraph_ExecutionGraph.cpp
-	newexegraph_EGBBTime.cpp
-	newexegraph_EGProc.cpp
-	newexegraph_EGBlockSeqList.cpp
-	newexegraph_EGBuilder.cpp
-	test_newexegraphs.cpp
+	exegraph2_ExecutionGraph.cpp
+	exegraph2_EGBBTime.cpp
+	exegraph2_EGProc.cpp
+	exegraph2_EGBlockSeq.cpp
+	exegraph2_EGBuilder.cpp
+	exegraph2_EGSolver.cpp
+	test_exegraph2.cpp
 	)
 	
 add_executable(newexegraphs ${newexegraphs_SOURCES})

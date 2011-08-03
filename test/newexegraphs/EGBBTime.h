@@ -28,11 +28,11 @@
 #include "ExecutionGraph.h"
 #include <elm/io/OutFileStream.h>
 #include <otawa/proc/BBProcessor.h>
-#include "EGBlockSeqList.h"
+#include "EGBlockSeq.h"
 #include "EGSolver.h"
 #include "EGBuilder.h"
 
-namespace otawa { namespace newexegraph {
+namespace otawa { namespace exegraph2 {
     extern Identifier<String> GRAPHS_DIR;
  //   extern Identifier<int> TIME;
 
@@ -85,14 +85,13 @@ namespace otawa { namespace newexegraph {
 
 		void processWorkSpace(WorkSpace *ws);
 		void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
-		EGInstSeq * buildSequence(EGBlockSeq *bseq);
-		void analyzePathContext(EGBlockSeq *seq, int context_index);
+		void analyzeBlockSequence(EGBlockSeq *seq, int context_index);
 		void outputGraph(ExecutionGraph* graph, int bb_number, int context_number, int case_number, const string& info = "");
 
     };
 
 
-} // namespace newexegraph
+} // namespace exegraph2
 } // namespace otawa
 
 #endif // _EG_BBTIME_H_

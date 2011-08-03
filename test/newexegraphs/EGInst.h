@@ -35,7 +35,7 @@
 #include <otawa/graph/PreorderIterator.h>
 */
 
-namespace otawa { namespace newexegraph {
+namespace otawa { namespace exegraph2 {
 
 class EGNode;
 class EGEdge;

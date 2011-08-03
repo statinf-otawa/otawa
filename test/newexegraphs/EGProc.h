@@ -32,7 +32,7 @@
 #include <otawa/otawa.h>
 #include <otawa/hard/Processor.h>
 
-namespace otawa { namespace newexegraph {
+namespace otawa { namespace exegraph2 {
 
   using namespace elm;
   using namespace elm::genstruct;
@@ -299,7 +299,7 @@ namespace otawa { namespace newexegraph {
 
 
 
-} // newexegraph
+} // exegraph2
 } // otawa
 
 #endif // _EG__H

@@ -23,19 +23,31 @@
 #ifndef _EG_SOLVER_H_
 #define _EG_SOLVER_H_
 
+#include "ExecutionGraph.h"
+
 namespace otawa{
-namespace newexegraph {
+namespace exegraph2 {
 
 class EGSolver{
+private:
+	EGNodeFactory * _node_factory;
+public:
+	inline EGSolver(){
+		_node_factory = new EGNodeFactory();
+	}
+	inline EGNodeFactory * nodeFactory()
+		{return _node_factory;}
+	void solve(ExecutionGraph *graph);
 
 };
 
 class EGSolverFactory {
+public:
 	EGSolver * newEGSolver()
 		{ return new EGSolver();}
 };
 
-} // namespace newexegraph
+} // namespace exegraph2
 } // namespace otawa
 
 #endif // _EG_SOLVER_H_
