@@ -26,56 +26,25 @@ using namespace otawa;
 using namespace otawa::exegraph2;
 
 EGBuilder::EGBuilder(WorkSpace * ws,
-		EGProc *proc,
-		EGBlockSeq *block_seq,
-		EGNodeFactory *node_factory,
-		const PropList& props)
-:	_ws(ws),
- 	_proc(proc),
- 	_block_seq(block_seq),
- 	_node_factory(node_factory),
- 	_branch_penalty(2)
+		EGNodeFactory *node_factory)
+: _node_factory(node_factory){
+}
+
+EGGenericBuilder::EGGenericBuilder(WorkSpace * ws,
+		EGNodeFactory *node_factory)
+	: EGBuilder(ws, node_factory)
 {
-	_props = props;
+	_ws = ws;
 	_cache_line_size = 1;
 	if (_node_factory == NULL)
-			_node_factory = new EGNodeFactory();
-	build();
+		_node_factory = new EGGenericNodeFactory();
+	_branch_penalty = 2;
 }
 
-EGBuilder::~EGBuilder(){
-	for (EGPipeline::StageIterator stage(_proc->pipeline()) ; stage ; stage++) {
-		stage->deleteNodes();
-		if (stage->category() == EGStage::EXECUTE) {
-			for (int i=0 ; i<stage->numFus() ; i++) {
-				EGPipeline *fu = stage->fu(i);
-				for (EGPipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++)
-					fu_stage->deleteNodes();
-			}
-		}
-	}
-	for (EGInstSeq::InstIterator inst(_inst_seq) ; inst ; inst++) {
-		inst->deleteNodes();
-	}
-}
-
-
-void EGBuilder::build(){
-
-	_inst_seq = new EGInstSeq();
-	part_t part = PREDECESSOR;
-	int index = 0;
-	for (EGBlockSeq::BasicBlockIterator block(*_block_seq) ; block ; block++){
-		if (block == _block_seq->mainBlock())
-			part = BLOCK;
-		for(BasicBlock::InstIterator inst(block); inst; inst++) {
-			EGInst * par_exe_inst = new EGInst(inst, block, part, index++);
-			_inst_seq->add(par_exe_inst);
-		}
-	}
-
-	_graph = new ExecutionGraph(_ws, _proc, _inst_seq, _node_factory, _props);
-
+void EGGenericBuilder::build(ExecutionGraph *graph){
+	_graph = graph;
+	_inst_seq = _graph->instSeq();
+	_proc = _graph->proc();
 	createNodes();
 	findDataDependencies();
 
@@ -91,7 +60,7 @@ void EGBuilder::build(){
 
 // ----------------------------------------------------------------
 
-void EGBuilder::createNodes() {
+void EGGenericBuilder::createNodes() {
 
     // consider every instruction
     for (EGInstSeq::InstIterator inst(_inst_seq) ; inst ; inst++)  {
@@ -140,7 +109,7 @@ void EGBuilder::createNodes() {
 
 // ----------------------------------------------------------------
 
-void EGBuilder::findDataDependencies() {
+void EGGenericBuilder::findDataDependencies() {
 
     otawa::hard::Platform *pf = _ws->platform();
     AllocatedTable<rename_table_t> rename_tables(pf->banks().count());
@@ -193,7 +162,7 @@ void EGBuilder::findDataDependencies() {
 }
 
 // ----------------------------------------------------------------
-void EGBuilder::addEdgesForPipelineOrder(){
+void EGGenericBuilder::addEdgesForPipelineOrder(){
     for (EGInstSeq::InstIterator inst(_inst_seq) ; inst ; inst++)  {
 		for (int i=0 ; i<inst->numNodes()-1 ; i++){
 			new EGEdge(inst->node(i), inst->node(i+1), EGEdge::SOLID);
@@ -218,7 +187,7 @@ void EGBuilder::addEdgesForPipelineOrder(){
  * @li 0x1010	fetch
  * @li 0x1014
  */
-void EGBuilder::addEdgesForFetch(){
+void EGGenericBuilder::addEdgesForFetch(){
     EGStage *fetch_stage = _proc->fetchStage();
 
     // traverse all fetch nodes
@@ -256,7 +225,7 @@ void EGBuilder::addEdgesForFetch(){
 
 // ----------------------------------------------------------------
 
-void EGBuilder::addEdgesForProgramOrder(elm::genstruct::SLList<EGStage *> *list_of_stages){
+void EGGenericBuilder::addEdgesForProgramOrder(elm::genstruct::SLList<EGStage *> *list_of_stages){
 
     elm::genstruct::SLList<EGStage *> *list;
     if (list_of_stages != NULL)
@@ -307,7 +276,7 @@ void EGBuilder::addEdgesForProgramOrder(elm::genstruct::SLList<EGStage *> *list_
 
 // ----------------------------------------------------------------
 
-void EGBuilder::addEdgesForMemoryOrder(){
+void EGGenericBuilder::addEdgesForMemoryOrder(){
 
     EGStage *stage = _proc->execStage();
     for (int i=0 ; i<stage->numFus() ; i++) {
@@ -349,7 +318,7 @@ void EGBuilder::addEdgesForMemoryOrder(){
  * produces content of a register and instruction (b) uses this register value
  * create a solid edge between their execute stages.
  */
-void EGBuilder::addEdgesForDataDependencies(){
+void EGGenericBuilder::addEdgesForDataDependencies(){
     EGStage *exec_stage = _proc->execStage();
     for (int j=0 ; j<exec_stage->numFus() ; j++) {
 		EGStage *fu_stage = exec_stage->fu(j)->firstStage();
@@ -365,7 +334,7 @@ void EGBuilder::addEdgesForDataDependencies(){
 
 // ----------------------------------------------------------------
 
-void EGBuilder::addEdgesForQueues(){
+void EGGenericBuilder::addEdgesForQueues(){
 
  /*   // build edges for queues with limited capacity */
     for (EGPipeline::StageIterator stage(_proc->pipeline()) ; stage ; stage++) {

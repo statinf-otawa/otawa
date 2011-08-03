@@ -28,32 +28,34 @@
 
 namespace otawa { namespace exegraph2 {
 
+
 class EGBuilder {
-private:
-	ExecutionGraph * _graph;
-	WorkSpace * _ws;
-	PropList _props;
-	EGProc * _proc;
-	EGInstSeq * _inst_seq;
-	EGBlockSeq *_block_seq;
+protected:
 	EGNodeFactory * _node_factory;
+	EGProc *_proc;
+
+public:
+	EGBuilder(WorkSpace * ws,
+			EGNodeFactory *node_factory=NULL);
+	virtual void build(ExecutionGraph *graph) = 0;
+};
+
+class EGGenericBuilder : public EGBuilder{
+private:
+	WorkSpace * _ws;
 	uint32_t _branch_penalty;
 	uint32_t _cache_line_size;
 	typedef struct rename_table_t {
 		otawa::hard::RegBank * reg_bank;
 		elm::genstruct::AllocatedTable<EGNode *> *table;
 	} rename_table_t;
+	EGInstSeq *_inst_seq;
+	ExecutionGraph *_graph;
 
 public:
-	EGBuilder(WorkSpace * ws,
-			EGProc *proc,
-			EGBlockSeq *block_seq,
-			EGNodeFactory *node_factory,
-			const PropList& props = PropList::EMPTY);
-	~EGBuilder();
-	ExecutionGraph * graph()
-		{return _graph;}
-	void build();
+	EGGenericBuilder(WorkSpace * ws, EGNodeFactory *node_factory);
+
+	void build(ExecutionGraph *graph);
 	void createNodes();
 	void findDataDependencies();
 	void addEdgesForPipelineOrder();
@@ -65,15 +67,6 @@ public:
 	void addEdgesForQueues();
 };
 
-class EGBuilderFactory{
-public:
-	EGBuilder * newEGBuilder(WorkSpace * ws,
-			EGProc *proc,
-			EGBlockSeq *block_seq,
-			EGNodeFactory *node_factory,
-			const PropList& props = PropList::EMPTY)
-		{return new EGBuilder(ws, proc, block_seq, node_factory, props);}
-};
 
 } // namespace exegraph2
 } // namespace otawa

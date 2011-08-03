@@ -31,6 +31,7 @@
 #include "EGBlockSeq.h"
 #include "EGSolver.h"
 #include "EGBuilder.h"
+#include "EGDisplay.h"
 
 namespace otawa { namespace exegraph2 {
     extern Identifier<String> GRAPHS_DIR;
@@ -38,16 +39,26 @@ namespace otawa { namespace exegraph2 {
 
     using namespace elm::genstruct;
 
+    class EGBBTime;
 
-
+    class EGBBTimeConfig {
+    	friend class EGBBTime;
+    protected:
+    	EGBlockSeqListFactory *	_block_seq_list_factory;
+    	EGBuilder *_builder;
+    	EGSolver *_solver;
+    public:
+    	EGBBTimeConfig()
+    	: _block_seq_list_factory(NULL), _builder(NULL), _solver(NULL){}
+    };
 
     // -- class EGBBTime ----------------------------------------------------------------------------------
 
     class EGBBTime: public BBProcessor {
     private:
+    	EGBBTimeConfig *_config;
 		WorkSpace *_ws;
-		EGProc *_microprocessor;
-		int _last_stage_cap;
+		EGProc *_proc;
 		PropList _props;
 		int _prologue_depth;
 		OutStream *_output_stream;
@@ -55,38 +66,19 @@ namespace otawa { namespace exegraph2 {
 		String _graphs_dir_name;
 		bool _do_output_graphs;
 		EGBlockSeqListFactory * _block_seq_list_factory;
-		EGBuilderFactory * _builder_factory;
-		EGSolverFactory * _solver_factory;
+		EGBuilder * _builder;
+		EGSolver * _solver;
 
     public:
+		EGBBTime(EGBBTimeConfig *config=NULL, const PropList& props = PropList::EMPTY);
 		EGBBTime(const PropList& props = PropList::EMPTY);
-		EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
-				const PropList& props = PropList::EMPTY);
-		EGBBTime(EGSolverFactory * solver_factory,
-				const PropList& props = PropList::EMPTY);
-		EGBBTime(EGBuilderFactory * builder_factory,
-				const PropList& props = PropList::EMPTY);
-		EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
-				EGSolverFactory * solver_factory,
-				const PropList& props = PropList::EMPTY);
-		EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
-				EGBuilderFactory * builder_factory,
-				const PropList& props = PropList::EMPTY);
-		EGBBTime(EGBuilderFactory * builder_factory,
-				EGSolverFactory * solver_factory,
-				const PropList& props = PropList::EMPTY);
-		EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
-				EGBuilderFactory * builder_factory,
-				EGSolverFactory * solver_factory,
-				const PropList& props = PropList::EMPTY);
-
 		EGBBTime(AbstractRegistration& reg);
+		~EGBBTime();
 		virtual void configure(const PropList& props);
 
 		void processWorkSpace(WorkSpace *ws);
 		void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 		void analyzeBlockSequence(EGBlockSeq *seq, int context_index);
-		void outputGraph(ExecutionGraph* graph, int bb_number, int context_number, int case_number, const string& info = "");
 
     };
 

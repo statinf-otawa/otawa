@@ -28,7 +28,9 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/graph/PreorderIterator.h>
+#include <otawa/prog/WorkSpace.h>
 #include "EGInst.h"
+#include "EGBlockSeq.h"
 #include "EGProc.h"
 
 namespace otawa { namespace exegraph2  {
@@ -45,10 +47,6 @@ private:
 	elm::String _name;
 protected:
 	elm::genstruct::Vector<EGNode *> _producers;
-/*	elm::genstruct::Vector<EGNode *> _contenders;
-	elm::BitVector * _possible_contenders;
-	elm::genstruct::DLList<elm::BitVector *> _contenders_masks_list;
-	int _late_contenders;*/
 
 public:
 	inline EGNode(ExecutionGraph *graph, EGStage *stage, EGInst *inst)
@@ -81,6 +79,10 @@ public:
 
 class EGNodeFactory {
 public:
+	virtual EGNode * newEGNode(ExecutionGraph *graph, EGStage *stage, EGInst *inst) = 0;
+};
+
+class EGGenericNodeFactory : public EGNodeFactory {
 	EGNode * newEGNode(ExecutionGraph *graph, EGStage *stage, EGInst *inst){
 		return new EGNode(graph, stage, inst);
 	}
@@ -123,7 +125,8 @@ public:
 
 	class ExecutionGraph: public GenGraph<EGNode, EGEdge> {
 	private:
-		EGInstSeq * _inst_seq;
+		EGInstSeq _inst_seq;
+		EGProc *_proc;
 		EGNode *_first_node;
 		EGNode *_first_bb_node;
 		EGNode *_last_prologue_node;
@@ -131,24 +134,25 @@ public:
 
 
 	public:
-		ExecutionGraph(WorkSpace * ws, EGProc *proc, EGInstSeq *seq, EGNodeFactory *node_factory, const PropList& props = PropList::EMPTY);
+		ExecutionGraph(WorkSpace *ws, EGBlockSeq *block_seq);
 		~ExecutionGraph();
 
-		void dump(elm::io::Output& dotFile, const string& info = "");
-
 		inline EGNode * firstNode()
-				{return _first_node;}
+			{return _first_node;}
 		inline void setFirstNode(EGNode *node)
-		{_first_node = node;}
+			{_first_node = node;}
 		inline void setLastPredNode(EGNode *node)
-		{_last_prologue_node = node;}
+			{_last_prologue_node = node;}
 		inline EGNode *firstBlockNode()
-		{return _first_bb_node;}
+			{return _first_bb_node;}
 		inline void setFirstBlockNode(EGNode *node)
-		{_first_bb_node = node;}
+			{_first_bb_node = node;}
 		inline void setLastNode(EGNode *node)
-		{_last_node = node;}
-
+			{_last_node = node;}
+		inline EGInstSeq * instSeq()
+			{return &_inst_seq;}
+		inline EGProc * proc()
+			{return _proc;}
 
 		class PreorderIterator: public graph::PreorderIterator<ExecutionGraph> {
 		public:
@@ -159,10 +163,14 @@ public:
 		class Predecessor: public PreIterator<Predecessor, EGNode *> {
 		public:
 			inline Predecessor(const EGNode* node): iter(node) { }
-			inline bool ended(void) const;
-			inline EGNode *item(void) const;
-			inline void next(void);
-			inline EGEdge *edge(void) const;
+			inline bool ended(void) const
+				{ return iter.ended();}
+			inline EGNode *item(void) const
+				{return iter->source();}
+			inline void next(void)
+				{iter.next(); }
+			inline EGEdge *edge(void) const
+				{return iter;}
 		private:
 			GenGraph<EGNode,EGEdge>::InIterator iter;
 		};
@@ -170,45 +178,20 @@ public:
 		class Successor: public PreIterator<Successor, EGNode *> {
 		public:
 			inline Successor(const EGNode* node): iter(node) {}
-			inline bool ended(void) const;
-			inline EGNode *item(void) const;
-			inline void next(void);
-			inline EGEdge *edge(void) const;
+			inline bool ended(void) const
+				{return iter.ended();}
+			inline EGNode *item(void) const
+				{return iter->target();}
+			inline void next(void)
+				{iter.next();}
+			inline EGEdge *edge(void) const
+				{return iter;}
 		private:
 			GenGraph<EGNode,EGEdge>::OutIterator iter;
 		};
 
 
 	};
-
-
-
-
-	inline bool ExecutionGraph::Predecessor::ended(void) const {
-		return iter.ended();
-	}
-	inline EGNode *ExecutionGraph::Predecessor::item(void) const {
-		return iter->source();
-	}
-	inline void ExecutionGraph::Predecessor::next(void) {
-		iter.next();
-	}
-	inline EGEdge *ExecutionGraph::Predecessor::edge(void) const {
-		return iter;
-	}
-
-	inline bool ExecutionGraph::Successor::ended(void) const {
-		return iter.ended();
-	}
-	inline EGNode *ExecutionGraph::Successor::item(void) const {
-		return iter->target();
-	}
-	inline void ExecutionGraph::Successor::next(void) {
-		iter.next();
-	}
-	inline EGEdge *ExecutionGraph::Successor::edge(void) const {
-		return iter;
-	}
 
 
 } // namespace exegraph2

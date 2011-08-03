@@ -63,14 +63,14 @@ void EGBlockSeq::dump(io::Output& output) {
 	}
 }
 
-EGBlockSeqList::EGBlockSeqList(BasicBlock * bb, EGProc *proc){
+EGBlockSeqList::EGBlockSeqList(BasicBlock * bb, uint32_t min_pred_length){
 
 	EGBlockSeq * seq = new EGBlockSeq(bb);
-	build(seq, proc);
+	_min_pred_length = min_pred_length;
+	build(seq);
 }
 
-void EGBlockSeqList::build(EGBlockSeq *seq, EGProc *proc){
-	uint32_t min_num_pred_insts = proc->lastStage()->width();
+void EGBlockSeqList::build(EGBlockSeq *seq){
 	BasicBlock *bb = seq->lastBlock();
 	uint32_t num_preds = 0;
 	for(BasicBlock::InIterator edge(bb); edge; edge++) {
@@ -79,10 +79,10 @@ void EGBlockSeqList::build(EGBlockSeq *seq, EGProc *proc){
 			num_preds++;
 			EGBlockSeq *new_seq = new EGBlockSeq(*seq);
 			new_seq->addBlock(pred, edge);
-			if (new_seq->numInsts() >= min_num_pred_insts)
+			if (new_seq->numInsts() >= _min_pred_length)
 				_list.addLast(new_seq);
 			else
-				build(new_seq, proc);
+				build(new_seq);
 		}
 	}
 	if (num_preds == 0){

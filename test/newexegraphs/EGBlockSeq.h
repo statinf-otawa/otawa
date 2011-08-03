@@ -66,9 +66,10 @@ public:
 class EGBlockSeqList{
 private:
 	elm::genstruct::SLList<EGBlockSeq *> _list;
-	void build(EGBlockSeq *seq, EGProc *proc);
+	uint32_t _min_pred_length;
+	void build(EGBlockSeq *seq);
 public:
-	EGBlockSeqList(BasicBlock *bb, EGProc *proc);
+	EGBlockSeqList(BasicBlock *bb, uint32_t min_pred_length);
 	~EGBlockSeqList();
 	elm::genstruct::SLList<EGBlockSeq *> * getList()
 		{return &_list;}
@@ -82,8 +83,8 @@ public:
 
 class EGBlockSeqListFactory{
 public:
-	EGBlockSeqList * newEGBlockSeqList(BasicBlock *bb, EGProc *proc)
-		{return new EGBlockSeqList(bb, proc);}
+	EGBlockSeqList * newEGBlockSeqList(BasicBlock *bb, uint32_t min_pred_length)
+		{return new EGBlockSeqList(bb, min_pred_length);}
 };
 
 } // namespace exegraph2

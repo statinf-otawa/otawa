@@ -37,77 +37,14 @@ Identifier<String> GRAPHS_DIR("otawa::GRAPHS_DIR","");
 // -- EGBBTime ------------------------------------------------------------------------------------------
 
 
+EGBBTime::EGBBTime(EGBBTimeConfig *config, const PropList& props)
+	: _config(config), BBProcessor() {
+	require(otawa::hard::PROCESSOR_FEATURE);
+}
+
 EGBBTime::EGBBTime(const PropList& props)
-	: BBProcessor() {
+: _config(NULL), BBProcessor() {
 	require(otawa::hard::PROCESSOR_FEATURE);
-	_block_seq_list_factory = new EGBlockSeqListFactory();
-	_builder_factory = new EGBuilderFactory();
-	_solver_factory = new EGSolverFactory();
-}
-
-EGBBTime::EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
-					const PropList& props)
-	: BBProcessor() {
-	require(otawa::hard::PROCESSOR_FEATURE);
-	_block_seq_list_factory = block_seq_list_factory;
-	_builder_factory = new EGBuilderFactory();
-	_solver_factory = new EGSolverFactory();
-
-}
-
-EGBBTime::EGBBTime(EGBuilderFactory * builder_factory,
-		const PropList& props)
-	: BBProcessor(){
-	require(otawa::hard::PROCESSOR_FEATURE);
-	_block_seq_list_factory = new EGBlockSeqListFactory();
-	_builder_factory = builder_factory;
-	_solver_factory = new EGSolverFactory();
-}
-
-EGBBTime::EGBBTime(EGSolverFactory * solver_factory,
-		const PropList& props)
-	: BBProcessor(){
-	require(otawa::hard::PROCESSOR_FEATURE);
-	_block_seq_list_factory = new EGBlockSeqListFactory();
-	_builder_factory = new EGBuilderFactory();
-	_solver_factory = solver_factory;
-}
-
-EGBBTime::EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
-		EGBuilderFactory * builder_factory,
-		const PropList& props){
-	require(otawa::hard::PROCESSOR_FEATURE);
-	_block_seq_list_factory = block_seq_list_factory;
-	_builder_factory = builder_factory;
-	_solver_factory = new EGSolverFactory();
-}
-
-EGBBTime::EGBBTime(EGBuilderFactory * builder_factory,
-		EGSolverFactory * solver_factory,
-		const PropList& props){
-	require(otawa::hard::PROCESSOR_FEATURE);
-	_block_seq_list_factory = new EGBlockSeqListFactory();
-	_builder_factory = builder_factory;
-	_solver_factory = solver_factory;
-}
-
-EGBBTime::EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
-		EGSolverFactory * solver_factory,
-		const PropList& props){
-	require(otawa::hard::PROCESSOR_FEATURE);
-	_block_seq_list_factory = block_seq_list_factory;
-	_builder_factory = new EGBuilderFactory();
-	_solver_factory = solver_factory;
-}
-
-EGBBTime::EGBBTime(EGBlockSeqListFactory * block_seq_list_factory,
-		EGBuilderFactory * builder_factory,
-		EGSolverFactory * solver_factory,
-		const PropList& props){
-	require(otawa::hard::PROCESSOR_FEATURE);
-	_block_seq_list_factory = block_seq_list_factory;
-	_builder_factory = builder_factory;
-	_solver_factory = solver_factory;
 }
 
 
@@ -118,6 +55,7 @@ EGBBTime::EGBBTime(AbstractRegistration& reg)
 
 void EGBBTime::configure(const PropList& props) {
 	BBProcessor::configure(props);
+
 	_graphs_dir_name = GRAPHS_DIR(props);
 	if(!_graphs_dir_name.isEmpty())
 		_do_output_graphs = true;
@@ -126,6 +64,14 @@ void EGBBTime::configure(const PropList& props) {
 	_props = props;
 }
 
+EGBBTime::~EGBBTime(){
+	if (!_config || !_config->_block_seq_list_factory)
+		delete _block_seq_list_factory;
+	if (!_config || !_config->_solver)
+		delete _solver;
+	if (!_config || !_config->_builder)
+		delete _builder ;
+}
 
 
 // -- processWorkSpace ------------------------------------------------------------------------------------------
@@ -133,50 +79,46 @@ void EGBBTime::configure(const PropList& props) {
 void EGBBTime::processWorkSpace(WorkSpace *ws) {
 
 	_ws = ws;
-	const otawa::hard::Processor *proc = otawa::hard::PROCESSOR(_ws);
-
-	if(proc == &otawa::hard::Processor::null)
+	if(otawa::hard::PROCESSOR(_ws) == &otawa::hard::Processor::null)
 		throw ProcessorException(*this, "no processor to work with");
-	else {
-		_microprocessor = new EGProc(proc);
-		_last_stage_cap = _microprocessor->lastStage()->width();
-	}
+
+	if (!_config || !_config->_block_seq_list_factory)
+		_block_seq_list_factory = new EGBlockSeqListFactory();
+	else
+		_block_seq_list_factory = _config->_block_seq_list_factory;
+	if (!_config || !_config->_solver)
+		_solver = new EGGenericSolver();
+	else
+		_solver = _config->_solver;
+	if (!_config || !_config->_builder)
+		_builder = new EGGenericBuilder(_ws,_solver->nodeFactory());
+	else
+		_builder = _config->_builder;
+
 
 	// Perform the actual process
 	BBProcessor::processWorkSpace(ws);
 }
 
 
-// -- outputGraph ------------------------------------------------------------------------------------------
-
-void EGBBTime::outputGraph(ExecutionGraph* graph, int bb_number, int context_index, int case_index, const string& info){
-	elm::StringBuffer buffer;
-	buffer << _graphs_dir_name << "/";
-	buffer << "b" << bb_number << "-ctxt" << context_index << "-case" << case_index << ".dot";
-	elm::io::OutFileStream dotStream(buffer.toString());
-	elm::io::Output dotFile(dotStream);
-	graph->dump(dotFile, info);
-}
-
-
 // -- analyzePathContext ------------------------------------------------------------------------------------------
 
-void EGBBTime::analyzeBlockSequence(EGBlockSeq *block_seq, int context_index){
+void EGBBTime::analyzeBlockSequence(EGBlockSeq *block_seq, int seq_index){
 
 	int case_index = 0;
 	BasicBlock * bb = block_seq->mainBlock();
 	Edge *edge = block_seq->edge();
 
-	EGSolver *solver = _solver_factory->newEGSolver();
-	EGBuilder *builder = _builder_factory->newEGBuilder(_ws,_microprocessor, block_seq,
-							solver->nodeFactory(), _props);
-	ExecutionGraph * graph = builder->graph();
-	solver->solve(graph);
+	ExecutionGraph * graph = new ExecutionGraph(_ws, block_seq);
+	_builder->build(graph);
+	_solver->solve(graph);
 	if (_do_output_graphs){
-		outputGraph(graph, bb->number(), context_index, case_index++,
-				_ << "");
+		const elm::system::Path out_file_name(_ << _graphs_dir_name << "/" << "b" << bb->number() << "-ctxt" << seq_index << "-notime.dot");
+		EGGenericDotDisplayFactory display_factory;
+		display_factory.newEGDisplay(graph, out_file_name);
+		//solver->display();
 	}
-	delete builder;
+	delete graph;
 }
 
 
@@ -193,18 +135,18 @@ void EGBBTime::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		log << "\t\tProcessing block b" << bb->number() << " (starts at " << bb->address() << " - " << bb->countInstructions() << " instructions)\n";
 	}
 
-	int context_index = 0;
+	int seq_index = 0;
 
-	EGBlockSeqList * seq_list = _block_seq_list_factory->newEGBlockSeqList(bb,_microprocessor);
+	EGBlockSeqList * seq_list = _block_seq_list_factory->newEGBlockSeqList(bb,_proc->lastStage()->width());
 
 	for (EGBlockSeqList::SeqIterator seq(*seq_list) ; seq ; seq++){
 		if(isVerbose()) {
-			log << "\n\t\t----- Considering context: ";
+			log << "\n\t\t----- Considering sequence: ";
 			seq->dump(log);
 			log << "\n";
 		}
-		analyzeBlockSequence(seq, context_index);
-		context_index ++;
+		analyzeBlockSequence(seq, seq_index);
+		seq_index ++;
 	}
 }
 } // namespace exegraph2

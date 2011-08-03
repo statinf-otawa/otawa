@@ -29,23 +29,22 @@ namespace otawa{
 namespace exegraph2 {
 
 class EGSolver{
-private:
-	EGNodeFactory * _node_factory;
 public:
-	inline EGSolver(){
-		_node_factory = new EGNodeFactory();
+	virtual EGNodeFactory * nodeFactory() = 0;
+	virtual void solve(ExecutionGraph *graph) = 0;
+
+};
+
+class EGGenericSolver : public EGSolver {
+public:
+	EGNodeFactory * nodeFactory() {
+		return new EGGenericNodeFactory();
 	}
-	inline EGNodeFactory * nodeFactory()
-		{return _node_factory;}
-	void solve(ExecutionGraph *graph);
-
+	void solve(ExecutionGraph *graph) {
+		elm::cout << "solving...\n";
+	}
 };
 
-class EGSolverFactory {
-public:
-	EGSolver * newEGSolver()
-		{ return new EGSolver();}
-};
 
 } // namespace exegraph2
 } // namespace otawa
