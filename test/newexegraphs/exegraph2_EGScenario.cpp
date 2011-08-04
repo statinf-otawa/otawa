@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	EGSolver class.
+ *	 EGScenario, EGScenarioBuilder classes.
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
@@ -20,14 +20,14 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "EGSolver.h"
+
+#include "EGScenario.h"
 
 using namespace otawa;
 using namespace otawa::exegraph2;
 
-
-void EGGenericSolver::solve(ExecutionGraph *graph) {
-	elm::genstruct::Vector<EGScenario *> *scenarii_list = _scenario_builder->build(graph);
-	delete scenarii_list;
+elm::genstruct::Vector<EGScenario *> * EGGenericScenarioBuilder::build(ExecutionGraph * graph){
+	_graph = graph;
+	elm::genstruct::Vector<EGScenario *> *scenarii_list = new elm::genstruct::Vector<EGScenario *>;
 }
 

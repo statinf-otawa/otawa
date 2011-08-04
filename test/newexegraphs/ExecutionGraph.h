@@ -71,6 +71,8 @@ public:
 	inline EGNode *producer(int index)
 		{return _producers[index];}
 	// set information
+	inline void setLatency(uint32_t latency)
+		{_latency = latency;}
 	inline void addProducer(EGNode *prod) {
 		if (!_producers.contains(prod))
 			_producers.add(prod);

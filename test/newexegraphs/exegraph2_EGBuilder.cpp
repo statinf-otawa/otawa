@@ -25,6 +25,9 @@
 using namespace otawa;
 using namespace otawa::exegraph2;
 
+extern Identifier<category_t> CATEGORY;
+
+
 EGBuilder::EGBuilder(WorkSpace * ws,
 		EGNodeFactory *node_factory,
 		EGEdgeFactory *edge_factory)
@@ -58,9 +61,8 @@ EGGenericBuilder::EGGenericBuilder(WorkSpace * ws,
 	const otawa::hard::Cache *dcache = otawa::hard::CACHE_CONFIGURATION(ws)->dataCache();
 	_has_dcache = false;
 	// memory
-	const otawa::hard::Memory *mem = otawa::hard::MEMORY(ws);
-	_has_memory = (bool) mem;
-
+	_memory = otawa::hard::MEMORY(ws);
+	_has_memory = (bool) _memory;
 	// branch predictor?
 	// FIXME not implemented
 	_branch_penalty = 2;
@@ -100,6 +102,25 @@ void EGGenericBuilder::createNodes() {
 				stage->addNode(node);
 				if (stage->category() == EGStage::FETCH) {
 					inst->setFetchNode(node);
+					if (_has_icache){
+						LBlock *lb = LBLOCK(inst->inst());
+						if (lb){
+							switch (CATEGORY(lb)){
+							case ALWAYS_MISS:
+								node->setLatency(_icache_miss_latency);
+								break;
+							case ALWAYS_HIT:
+								node->setLatency(_icache_hit_latency);
+								break;
+							default:
+								_graph->addUnknownNode(node);
+								break;
+							}
+						}
+					}
+					else
+						if (_has_memory)
+							node->setLatency(_memory->get(inst->inst()->address())->latency());
 				}
 				if (!_graph->firstNode())
 					_graph->setFirstNode(node);
@@ -122,6 +143,11 @@ void EGGenericBuilder::createNodes() {
 					if (index == 0)
 						inst->setExecNode(fu_node);
 					index++;
+				}
+				// if inst is a load, set the latency of the last exec node
+				if (inst->inst()->isLoad()){
+					//if (_has_dcache) // FIXME not supported yet
+					//fu_node->setLatency(_dcache_hit_latency)
 				}
 			}
 
@@ -213,37 +239,39 @@ void EGGenericBuilder::addEdgesForPipelineOrder(){
  * @li 0x1014
  */
 void EGGenericBuilder::addEdgesForFetch(){
+
+	address_t current_cache_line, cache_line;
+
     EGStage *fetch_stage = _proc->fetchStage();
 
     // traverse all fetch nodes
     EGNode * first_cache_line_node = fetch_stage->firstNode();
-    address_t current_cache_line = fetch_stage->firstNode()->inst()->inst()->address().address() /  _icache_line_size;
+    if (_has_icache)
+    	current_cache_line =
+    			fetch_stage->firstNode()->inst()->inst()->address().address() /  _icache_line_size;
     for(int i=0 ; i<fetch_stage->numNodes()-1 ; i++) {
 		EGNode *node = fetch_stage->node(i);
 		EGNode *next = fetch_stage->node(i+1);
 
 		// taken banch ?
 		if (node->inst()->inst()->topAddress() != next->inst()->inst()->address()){
-			// fixed by casse: topAddress() is address() + size()
-			EGEdge * edge = _edge_factory->newEGEdge(node, next, EGEdge::SOLID);
-//			edge->setLatency(_branch_penalty); // taken branch penalty when no branch prediction is enabled  // FIXME
-			edge = _edge_factory->newEGEdge(first_cache_line_node, next, EGEdge::SOLID);
-//			edge->setLatency(_branch_penalty);  // FIXME
+			EGEdge * edge = _edge_factory->newEGEdge(node, next, EGEdge::SOLID, _branch_penalty);
+			edge = _edge_factory->newEGEdge(first_cache_line_node, next, EGEdge::SOLID, _branch_penalty);
 		}
 		else {
 			_edge_factory->newEGEdge(node, next, EGEdge::SLASHED);
 		}
 
 		// new cache line?
-		//if (cache)         FIXME !!!!!!!!!!!!!!!
-		address_t cache_line = next->inst()->inst()->address().address() /  _icache_line_size;
-		if ( cache_line != current_cache_line){
-			_edge_factory->newEGEdge(first_cache_line_node, next, EGEdge::SOLID);
-			_edge_factory->newEGEdge(node, next, EGEdge::SOLID);
-			first_cache_line_node = next;
-			current_cache_line = cache_line;
+		if (_has_icache){
+			cache_line = next->inst()->inst()->address().address() /  _icache_line_size;
+			if ( cache_line != current_cache_line){
+				_edge_factory->newEGEdge(first_cache_line_node, next, EGEdge::SOLID);
+				_edge_factory->newEGEdge(node, next, EGEdge::SOLID);
+				first_cache_line_node = next;
+				current_cache_line = cache_line;
+			}
 		}
-		//    }
     }
 }
 

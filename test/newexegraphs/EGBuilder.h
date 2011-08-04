@@ -28,6 +28,8 @@
 #include <otawa/hard/Memory.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/hard/CacheConfiguration.h>
+#include <otawa/cache/categorisation/CATBuilder.h>
+#include <otawa/util/LBlockBuilder.h>
 
 
 namespace otawa { namespace exegraph2 {
@@ -56,6 +58,7 @@ private:
 	uint32_t _dcache_hit_latency;
 	uint32_t _dcache_miss_latency;
 	bool _has_memory;
+	const otawa::hard::Memory *_memory;
 	uint32_t _memory_latency;
 	uint32_t _branch_penalty;
 	typedef struct rename_table_t {

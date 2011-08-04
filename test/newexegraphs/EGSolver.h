@@ -24,6 +24,7 @@
 #define _EG_SOLVER_H_
 
 #include "ExecutionGraph.h"
+#include "EGScenario.h"
 
 namespace otawa{
 namespace exegraph2 {
@@ -37,16 +38,22 @@ public:
 };
 
 class EGGenericSolver : public EGSolver {
+private:
+	EGScenarioBuilder * _scenario_builder;
 public:
+	EGGenericSolver(EGScenarioBuilder * scenario_builder=NULL){
+		if (scenario_builder == NULL)
+			_scenario_builder = new EGGenericScenarioBuilder();
+		else
+			_scenario_builder = scenario_builder;
+	}
 	EGNodeFactory * nodeFactory() {
 		return new EGGenericNodeFactory();
 	}
 	EGEdgeFactory * edgeFactory() {
 		return new EGGenericEdgeFactory();
 	}
-	void solve(ExecutionGraph *graph) {
-		elm::cout << "solving...\n";
-	}
+	void solve(ExecutionGraph *graph);
 };
 
 

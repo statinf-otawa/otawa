@@ -28,6 +28,7 @@ set(newexegraphs_SOURCES
 	exegraph2_EGBuilder.cpp
 	exegraph2_EGSolver.cpp
 	exegraph2_EGDisplay.cpp
+	exegraph2_EGScenario.cpp
 	test_exegraph2.cpp
 	)
 	
