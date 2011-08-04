@@ -87,7 +87,7 @@ void EGBBTime::processWorkSpace(WorkSpace *ws) {
 	else
 		_block_seq_list_factory = _config->_block_seq_list_factory;
 	if (!_config || !_config->_solver)
-		_solver = new EGGenericSolver();
+		_solver = new EGGenericSolver(ws);
 	else
 		_solver = _config->_solver;
 	if (!_config || !_config->_builder)

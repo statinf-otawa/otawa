@@ -40,8 +40,11 @@ public:
 class EGGenericSolver : public EGSolver {
 private:
 	EGScenarioBuilder * _scenario_builder;
+	WorkSpace *_ws;
 public:
-	EGGenericSolver(EGScenarioBuilder * scenario_builder=NULL){
+	EGGenericSolver(WorkSpace *ws, EGScenarioBuilder * scenario_builder=NULL)
+	:_ws(ws)
+	 {
 		if (scenario_builder == NULL)
 			_scenario_builder = new EGGenericScenarioBuilder();
 		else

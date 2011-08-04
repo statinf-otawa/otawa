@@ -28,8 +28,8 @@
 #include <otawa/hard/Memory.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/hard/CacheConfiguration.h>
-#include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/util/LBlockBuilder.h>
+#include <otawa/cache/cat2/CAT2Builder.h>
 
 
 namespace otawa { namespace exegraph2 {

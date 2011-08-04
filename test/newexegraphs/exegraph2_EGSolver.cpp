@@ -27,7 +27,9 @@ using namespace otawa::exegraph2;
 
 
 void EGGenericSolver::solve(ExecutionGraph *graph) {
-	elm::genstruct::Vector<EGScenario *> *scenarii_list = _scenario_builder->build(graph);
+	EGScenariiList *scenarii_list = _scenario_builder->build(_ws, graph);
+	elm::cout << "scenarii list:\n";
+	scenarii_list->dump();
 	delete scenarii_list;
 }
 

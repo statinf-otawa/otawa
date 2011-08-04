@@ -25,8 +25,6 @@
 using namespace otawa;
 using namespace otawa::exegraph2;
 
-extern Identifier<category_t> CATEGORY;
-
 
 EGBuilder::EGBuilder(WorkSpace * ws,
 		EGNodeFactory *node_factory,
