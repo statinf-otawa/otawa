@@ -91,7 +91,7 @@ void EGBBTime::processWorkSpace(WorkSpace *ws) {
 	else
 		_solver = _config->_solver;
 	if (!_config || !_config->_builder)
-		_builder = new EGGenericBuilder(_ws,_solver->nodeFactory());
+		_builder = new EGGenericBuilder(_ws,_solver->nodeFactory(), _solver->edgeFactory());
 	else
 		_builder = _config->_builder;
 

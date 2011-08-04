@@ -26,18 +26,43 @@ using namespace otawa;
 using namespace otawa::exegraph2;
 
 EGBuilder::EGBuilder(WorkSpace * ws,
-		EGNodeFactory *node_factory)
-: _node_factory(node_factory){
+		EGNodeFactory *node_factory,
+		EGEdgeFactory *edge_factory)
+: _node_factory(node_factory), _edge_factory(edge_factory){
 }
 
 EGGenericBuilder::EGGenericBuilder(WorkSpace * ws,
-		EGNodeFactory *node_factory)
-	: EGBuilder(ws, node_factory)
+		EGNodeFactory *node_factory,
+		EGEdgeFactory *edge_factory)
+	: EGBuilder(ws, node_factory, edge_factory)
 {
 	_ws = ws;
-	_cache_line_size = 1;
+
+	// instruction cache?
+	const otawa::hard::Cache *icache  = otawa::hard::CACHE_CONFIGURATION(ws)->instCache();
+	_has_icache = (bool) icache;
+	if (icache){
+		_icache_line_size = icache->blockSize();
+		_icache_hit_latency = 1;
+		_icache_miss_latency = icache->missPenalty();
+	}
+	else {
+		_has_icache = false;
+	}
 	if (_node_factory == NULL)
 		_node_factory = new EGGenericNodeFactory();
+	if (_edge_factory == NULL)
+		_edge_factory = new EGGenericEdgeFactory();
+	// data cache?
+	// FIXME not implemented
+	const otawa::hard::Cache *dcache = otawa::hard::CACHE_CONFIGURATION(ws)->dataCache();
+	_has_dcache = false;
+	// memory
+	const otawa::hard::Memory *mem = otawa::hard::MEMORY(ws);
+	_has_memory = (bool) mem;
+
+	// branch predictor?
+	// FIXME not implemented
 	_branch_penalty = 2;
 }
 
@@ -165,7 +190,7 @@ void EGGenericBuilder::findDataDependencies() {
 void EGGenericBuilder::addEdgesForPipelineOrder(){
     for (EGInstSeq::InstIterator inst(_inst_seq) ; inst ; inst++)  {
 		for (int i=0 ; i<inst->numNodes()-1 ; i++){
-			new EGEdge(inst->node(i), inst->node(i+1), EGEdge::SOLID);
+			_edge_factory->newEGEdge(inst->node(i), inst->node(i+1), EGEdge::SOLID);
 		}
     }
 }
@@ -192,7 +217,7 @@ void EGGenericBuilder::addEdgesForFetch(){
 
     // traverse all fetch nodes
     EGNode * first_cache_line_node = fetch_stage->firstNode();
-    address_t current_cache_line = fetch_stage->firstNode()->inst()->inst()->address().address() /  _cache_line_size;
+    address_t current_cache_line = fetch_stage->firstNode()->inst()->inst()->address().address() /  _icache_line_size;
     for(int i=0 ; i<fetch_stage->numNodes()-1 ; i++) {
 		EGNode *node = fetch_stage->node(i);
 		EGNode *next = fetch_stage->node(i+1);
@@ -200,21 +225,21 @@ void EGGenericBuilder::addEdgesForFetch(){
 		// taken banch ?
 		if (node->inst()->inst()->topAddress() != next->inst()->inst()->address()){
 			// fixed by casse: topAddress() is address() + size()
-			EGEdge * edge = new EGEdge(node, next, EGEdge::SOLID);
+			EGEdge * edge = _edge_factory->newEGEdge(node, next, EGEdge::SOLID);
 //			edge->setLatency(_branch_penalty); // taken branch penalty when no branch prediction is enabled  // FIXME
-			edge = new EGEdge(first_cache_line_node, next, EGEdge::SOLID);
+			edge = _edge_factory->newEGEdge(first_cache_line_node, next, EGEdge::SOLID);
 //			edge->setLatency(_branch_penalty);  // FIXME
 		}
 		else {
-			new EGEdge(node, next, EGEdge::SLASHED);
+			_edge_factory->newEGEdge(node, next, EGEdge::SLASHED);
 		}
 
 		// new cache line?
 		//if (cache)         FIXME !!!!!!!!!!!!!!!
-		address_t cache_line = next->inst()->inst()->address().address() /  _cache_line_size;
+		address_t cache_line = next->inst()->inst()->address().address() /  _icache_line_size;
 		if ( cache_line != current_cache_line){
-			new EGEdge(first_cache_line_node, next, EGEdge::SOLID);
-			new EGEdge(node, next, EGEdge::SOLID);
+			_edge_factory->newEGEdge(first_cache_line_node, next, EGEdge::SOLID);
+			_edge_factory->newEGEdge(node, next, EGEdge::SOLID);
 			first_cache_line_node = next;
 			current_cache_line = cache_line;
 		}
@@ -257,13 +282,13 @@ void EGGenericBuilder::addEdgesForProgramOrder(elm::genstruct::SLList<EGStage *>
 			EGNode *node = stage->node(i);
 			EGNode *next = stage->node(i+1);
 			if (stage->width() == 1){
-				new EGEdge(node, next, EGEdge::SOLID);
+				_edge_factory->newEGEdge(node, next, EGEdge::SOLID);
 			}
 			else {
 				new EGEdge(node, next, EGEdge::SLASHED);
 				if (count == stage->width()){
 					EGNode *previous = stage->node(prev);
-					new EGEdge(previous,next,EGEdge::SOLID);
+					_edge_factory->newEGEdge(previous,next,EGEdge::SOLID);
 					prev++;
 				}
 				else
@@ -287,7 +312,7 @@ void EGGenericBuilder::addEdgesForMemoryOrder(){
 			EGNode *node = fu_stage->node(j);
 			if (node->inst()->inst()->isLoad()) {
 				if (previous_store) {// memory access are executed in order
-					new EGEdge(previous_store, node, EGEdge::SOLID);
+					_edge_factory->newEGEdge(previous_store, node, EGEdge::SOLID);
 				}
 				for (EGInst::NodeIterator last_node(node->inst()); last_node ; last_node++){
 					if (last_node->stage()->category() == EGStage::FU)
@@ -296,10 +321,10 @@ void EGGenericBuilder::addEdgesForMemoryOrder(){
 			}
 			if (node->inst()->inst()->isStore()) {
 				if (previous_store) {// memory access are executed in order
-					new EGEdge(previous_store, node, EGEdge::SOLID);
+					_edge_factory->newEGEdge(previous_store, node, EGEdge::SOLID);
 				}
 				if (previous_load) {// memory access are executed in order
-					new EGEdge(previous_load, node, EGEdge::SOLID);
+					_edge_factory->newEGEdge(previous_load, node, EGEdge::SOLID);
 				}
 				for (EGInst::NodeIterator last_node(node->inst()); last_node ; last_node++){
 					if (last_node->stage()->category() == EGStage::FU){
@@ -326,7 +351,7 @@ void EGGenericBuilder::addEdgesForDataDependencies(){
 			EGNode *node = fu_stage->node(k);
 			for (int p=0 ; p<node->numProducers(); p++) {
 				EGNode *producer = node->producer(p);
-				new EGEdge(producer, node, EGEdge::SOLID);
+				_edge_factory->newEGEdge(producer, node, EGEdge::SOLID);
 			}
 		}
     }
@@ -345,7 +370,7 @@ void EGGenericBuilder::addEdgesForQueues(){
 			prod_stage = queue->fillingStage();
 			for (int i=0 ; i<stage->numNodes() - size ; i++) {
 				assert(i+size < prod_stage->numNodes());
-				new EGEdge(stage->node(i), prod_stage->node(i + size), EGEdge::SLASHED);
+				_edge_factory->newEGEdge(stage->node(i), prod_stage->node(i + size), EGEdge::SLASHED);
 			}
 		}
     }

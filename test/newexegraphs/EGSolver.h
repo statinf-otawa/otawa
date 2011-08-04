@@ -31,6 +31,7 @@ namespace exegraph2 {
 class EGSolver{
 public:
 	virtual EGNodeFactory * nodeFactory() = 0;
+	virtual EGEdgeFactory * edgeFactory() = 0;
 	virtual void solve(ExecutionGraph *graph) = 0;
 
 };
@@ -39,6 +40,9 @@ class EGGenericSolver : public EGSolver {
 public:
 	EGNodeFactory * nodeFactory() {
 		return new EGGenericNodeFactory();
+	}
+	EGEdgeFactory * edgeFactory() {
+		return new EGGenericEdgeFactory();
 	}
 	void solve(ExecutionGraph *graph) {
 		elm::cout << "solving...\n";

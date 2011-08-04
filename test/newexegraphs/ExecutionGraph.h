@@ -62,10 +62,10 @@ public:
 		{return _pipeline_stage;}
 	inline EGInst *inst()
 		{return _inst;}
-	inline int latency()
-		{return _latency;}
 	inline elm::String name()
 		{return _name;}
+	inline int latency()
+		{return _latency;}
 	inline int numProducers()
 		{return _producers.length();}
 	inline EGNode *producer(int index)
@@ -118,6 +118,17 @@ public:
 
 };
 
+class EGEdgeFactory {
+public:
+	virtual EGEdge * newEGEdge(EGNode *source, EGNode *target, EGEdge::edge_type_t type, int latency=0) = 0;
+};
+
+class EGGenericEdgeFactory : public EGEdgeFactory {
+	EGEdge * newEGEdge(EGNode *source, EGNode *target, EGEdge::edge_type_t type, int latency=0){
+		return new EGEdge(source, target, type, latency);
+	}
+};
+
 	/*
 	 * class ExecutionGraph
 	 *
@@ -131,6 +142,8 @@ public:
 		EGNode *_first_bb_node;
 		EGNode *_last_prologue_node;
 		EGNode *_last_node;
+		elm::genstruct::Vector<EGNode *> _unknown_nodes_list;
+		elm::genstruct::Vector<EGEdge *> _unknown_edges_list;
 
 
 	public:
@@ -153,7 +166,10 @@ public:
 			{return &_inst_seq;}
 		inline EGProc * proc()
 			{return _proc;}
-
+		inline void addUnknownNode(EGNode *node)
+			{ _unknown_nodes_list.add(node);}
+		inline void addUnknownEdge(EGEdge *edge)
+			{ _unknown_edges_list.add(edge);}
 		class PreorderIterator: public graph::PreorderIterator<ExecutionGraph> {
 		public:
 			inline PreorderIterator(ExecutionGraph * graph)
@@ -188,6 +204,18 @@ public:
 				{return iter;}
 		private:
 			GenGraph<EGNode,EGEdge>::OutIterator iter;
+		};
+
+		class UnknownNodeIterator: public elm::genstruct::Vector<EGNode *>::Iterator {
+		public:
+			inline UnknownNodeIterator(const ExecutionGraph *graph):
+				elm::genstruct::Vector<EGNode *>::Iterator(graph->_unknown_nodes_list){}
+		};
+
+		class UnknownEdgeIterator: public elm::genstruct::Vector<EGEdge *>::Iterator {
+		public:
+			inline UnknownEdgeIterator(const ExecutionGraph *graph):
+				elm::genstruct::Vector<EGEdge *>::Iterator(graph->_unknown_edges_list){}
 		};
 
 
