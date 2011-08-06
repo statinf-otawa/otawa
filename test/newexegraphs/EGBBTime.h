@@ -25,6 +25,7 @@
 
 #include <otawa/prop/Identifier.h>
 #include <otawa/cfg.h>
+#include <otawa/cfg/features.h>
 #include "ExecutionGraph.h"
 #include <elm/io/OutFileStream.h>
 #include <otawa/proc/BBProcessor.h>

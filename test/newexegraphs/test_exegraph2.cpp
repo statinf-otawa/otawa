@@ -36,6 +36,8 @@ protected:
 		WorkSpace *ws = workspace();
 		cout << "Processing function: " << (TASK_ENTRY(props)) << "\n";
 
+		require(otawa::VIRTUALIZED_CFG_FEATURE);
+
 		// build execution graphs
 		exegraph2::EGBBTime bbtime(props);
 		bbtime.process(ws, props);
@@ -43,6 +45,7 @@ protected:
 
 	virtual void prepare(PropList &props) {
 		PROCESSOR_PATH(props) = "pipeline.xml";
+		CACHE_CONFIG_PATH(props) = "cache.xml";
 		if(graphs)
 			exegraph2::GRAPHS_DIR(props) = graphs.value();
 	}

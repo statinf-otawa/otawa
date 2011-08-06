@@ -30,6 +30,8 @@ using namespace elm;
 using namespace elm::genstruct;
 using namespace otawa::graph;
 
+#define TRACE(x) x
+
 namespace otawa { namespace exegraph2 {
 
 Identifier<String> GRAPHS_DIR("otawa::GRAPHS_DIR","");
@@ -45,12 +47,16 @@ EGBBTime::EGBBTime(EGBBTimeConfig *config, const PropList& props)
 EGBBTime::EGBBTime(const PropList& props)
 : _config(NULL), BBProcessor() {
 	require(otawa::hard::PROCESSOR_FEATURE);
+	require(otawa::hard::CACHE_CONFIGURATION_FEATURE);
+	require(otawa::ICACHE_CATEGORY2_FEATURE);
 }
 
 
 EGBBTime::EGBBTime(AbstractRegistration& reg)
 : BBProcessor(reg) {
 	require(otawa::hard::PROCESSOR_FEATURE);
+	require(otawa::hard::CACHE_CONFIGURATION_FEATURE);
+	require(otawa::ICACHE_CATEGORY2_FEATURE);
 }
 
 void EGBBTime::configure(const PropList& props) {
@@ -109,6 +115,11 @@ void EGBBTime::analyzeBlockSequence(EGBlockSeq *block_seq, int seq_index){
 	BasicBlock * bb = block_seq->mainBlock();
 	Edge *edge = block_seq->edge();
 
+	TRACE(
+		elm::cerr << "---------------\nAnalyzing block sequence ";
+		block_seq->dump(elm::cerr);
+		elm::cerr << "\n---------------\n";
+	)
 	ExecutionGraph * graph = new ExecutionGraph(_ws, block_seq);
 	_builder->build(graph);
 	_solver->solve(graph);

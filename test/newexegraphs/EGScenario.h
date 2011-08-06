@@ -25,6 +25,8 @@
 
 #include "ExecutionGraph.h"
 
+#define TRACE(x) //x
+
 namespace otawa { namespace exegraph2 {
 
 class EGScenarioNodeItem {
@@ -41,7 +43,7 @@ public:
 	uint32_t latency()
 		{return _latency;}
 	void dump(){
-		elm::cout << "[" << _node->name() << "=" << _latency << "]";
+		elm::cerr << "[" << _node->name() << "=" << _latency << "]";
 	}
 };
 
@@ -78,8 +80,9 @@ public:
 	void dump(){
 		for (NodeItemIterator item(this); item ; item++){
 			item->dump();
-			elm::cout << "\n";
+			elm::cerr << " -- ";
 		}
+		elm::cerr << " END\n";
 	}
 
 	class NodeItemIterator: public elm::genstruct::Vector<EGScenarioNodeItem *>::Iterator {
@@ -100,12 +103,23 @@ private:
 public:
 	~EGScenariiList();
 	void add(EGScenario *scenario)
-		{_list.add(scenario);}
+		{_list.add(scenario);
+		TRACE(
+				elm::cerr << "[addScenario] adding scenario: ";
+				scenario->dump();
+				elm::cerr << " {" << scenario << "}\n";
+				)
+		}
+	uint32_t length()
+		{return _list.length();}
+	void clear()
+		{_list.clear();}
 	void dump(){
 		for (ScenarioIterator scenario(this) ; scenario; scenario++){
 			scenario->dump();
-			elm::cout << "\n";
+			elm::cerr << "\n";
 		}
+		elm::cerr << " END\n";
 	}
 	class ScenarioIterator: public elm::genstruct::Vector<EGScenario *>::Iterator {
 		public:

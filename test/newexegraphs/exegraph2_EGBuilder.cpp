@@ -22,6 +22,8 @@
 
 #include "EGBuilder.h"
 
+#define TRACE(x) x
+
 using namespace otawa;
 using namespace otawa::exegraph2;
 
@@ -106,12 +108,26 @@ void EGGenericBuilder::createNodes() {
 							switch (CATEGORY(lb)){
 							case ALWAYS_MISS:
 								node->setLatency(_icache_miss_latency);
+								TRACE(
+										elm::cerr << "[createNodes] node " << node->name() << "is ALWAYS_MISS\n";
+								)
 								break;
 							case ALWAYS_HIT:
 								node->setLatency(_icache_hit_latency);
+								TRACE(
+										elm::cerr << "[createNodes] node " << node->name() << "is ALWAYS_HIT\n";
+								)
 								break;
 							default:
+								node->setLatency(_icache_miss_latency);
 								_graph->addUnknownNode(node);
+								TRACE(
+										if (CATEGORY(lb) == FIRST_MISS)
+											elm::cout << "[createNodes] adding unknown (FIRST_MISS) node " << node->name()
+												<< " (header=b" << CATEGORY_HEADER(lb)->number() << ") {" << node << "}\n";
+										else
+											elm::cout << "[createNodes] adding unknown (NOT_CLASSIFIED) node " << node->name() << " {" << node << "}\n";
+								)
 								break;
 							}
 						}

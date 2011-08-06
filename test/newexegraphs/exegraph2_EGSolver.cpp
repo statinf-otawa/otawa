@@ -30,6 +30,6 @@ void EGGenericSolver::solve(ExecutionGraph *graph) {
 	EGScenariiList *scenarii_list = _scenario_builder->build(_ws, graph);
 	elm::cout << "scenarii list:\n";
 	scenarii_list->dump();
-	delete scenarii_list;
+	//delete scenarii_list; //FIXME
 }
 
