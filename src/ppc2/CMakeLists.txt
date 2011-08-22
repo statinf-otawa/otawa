@@ -12,6 +12,7 @@ set(OTAWA_KIND 		"${PROJECT_BINARY_DIR}/src/ppc2/otawa_kind.h")
 set(OTAWA_PRED 		"${PROJECT_BINARY_DIR}/src/ppc2/otawa_pred.h")
 set(OTAWA_TARGET 	"${PROJECT_BINARY_DIR}/src/ppc2/otawa_target.h")
 set(OTAWA_USED_REGS "${PROJECT_BINARY_DIR}/src/ppc2/otawa_used_regs.h")
+set(OTAWA_SEM		"${PROJECT_BINARY_DIR}/src/ppc2/otawa_sem.h")
 
 set(ppc2_SOURCES
 	"ppc.cpp"
@@ -19,6 +20,7 @@ set(ppc2_SOURCES
 	${OTAWA_PRED}
 	${OTAWA_TARGET}
 	${OTAWA_USED_REGS}
+	${OTAWA_SEM}
 )
 
 # GLISS derived sources
@@ -40,6 +42,10 @@ if(NOT MINGW_WIN)
 	add_custom_command(
 		OUTPUT ${OTAWA_USED_REGS} DEPENDS "used_regs.tpl" COMMAND ${GLISS_ATTR}
 		ARGS ${PPC_IRG} -o ${OTAWA_USED_REGS} -a otawa_used_regs -f -t "used_regs.tpl" -d "tmp_var[0] = END_REG\\; return 0\\;" -e otawa_used_regs.nmp
+	)
+	add_custom_command(
+		OUTPUT ${OTAWA_SEM} DEPENDS "otawa_sem.tpl" "otawa_sem.nmp" COMMAND ${GLISS_ATTR}
+		ARGS ${PPC_IRG} -o ${OTAWA_SEM} -a otawa_sem -p -t "otawa_sem.tpl" -d "';'" -e otawa_sem.nmp
 	)
 endif()
 
