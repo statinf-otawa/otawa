@@ -940,6 +940,7 @@ void Identifier<delayed_t>::print (elm::io::Output &out, const Property *prop) c
 		break;
 	default:
 		out << "unknown";
+		break;
 	}
 }
 
@@ -998,5 +999,16 @@ Inst *Process::newNOp(Address addr) {
 void Process::deleteNop(Inst *inst) {
 	delete (NopInst *)inst;
 }
+
+
+/**
+ * Get the maximum number of temporaries used in the semantics instruction
+ * block.
+ * @return	Maximum number of temporaries.
+ */
+int Process::maxTemp(void) const {
+	return 16;
+}
+
 
 } // otawa

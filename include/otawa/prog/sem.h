@@ -59,12 +59,14 @@ typedef enum opcode {
 	NOT,		// d <- ~a
 	AND,		// d <- a & b
 	OR,			// d <- a | b
+	XOR,		// d <- a ^ b
 	MUL,		// d <- a * b
 	MULU,		// d <- unsigned(a) * unsigned(b)
 	DIV,		// d <- a / b
 	DIVU,		// d <- unsigned(a) / unsigned(b)
 	MOD,		// d <- a % b
-	MODU		// d <- unsigned(a) % unsigned(b)
+	MODU,		// d <- unsigned(a) % unsigned(b)
+	SPEC		// special instruction (d: code, cst: sub-code)
 } opcode;
 
 
@@ -140,6 +142,7 @@ inline inst div(int d, int a, int b) { return inst(DIV, d, a, b); }
 inline inst divu(int d, int a, int b) { return inst(DIVU, d, a, b); }
 inline inst mod(int d, int a, int b) { return inst(MOD, d, a, b); }
 inline inst modu(int d, int a, int b) { return inst(MODU, d, a, b); }
+inline inst _xor(int d, int a, int b) { return inst(XOR, d, a, b); }
 
 // Block class
 class Block: public elm::genstruct::Vector<inst> {

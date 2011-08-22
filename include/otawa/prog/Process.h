@@ -163,6 +163,7 @@ public:
 	virtual Address initialSP(void) const;
 	virtual Inst *newNOp(Address addr = Address::null);
 	virtual void deleteNop(Inst *inst);
+	virtual int maxTemp(void) const;
 
 	// Memory access
 	virtual void get(Address at, signed char& val);

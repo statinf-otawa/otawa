@@ -59,6 +59,25 @@ using namespace elm;
  * @li SHL -- logical shift left
  * @li SHR -- logical shift right
  * @li ASR -- arithmetic shift right
+ * @li AND -- binary and
+ * @li OR -- binary inclusive or
+ * @li XOR -- binary inclusive xor
+ * @li MUL -- signed multiplication
+ * @li MULU -- unsigned multiplication
+ * @li DIV -- signed division
+ * @li DIVU -- unsigned division
+ * @li MOD -- signed integer division remainder
+ * @li MODU -- unsigned integer division remainder
+ *
+ * The following instructions represents unary operations applied on the a register and stores
+ * the result on the d register.
+ * @li NEG -- sign negation,
+ * @li NOT -- binary complement.
+ *
+ * There is also a SPEC semantics instruction kind that must be used by
+ * instruction effects not tractable with the current semantics instruction set.
+ * One using the SPEC instructions must be aware that standard usual analyses
+ * will not cope with such instructions: they will need to be customized.
  *
  * The comparison puts its result in the target register that may be one of the following constants:
  * @li EQ -- a == b
@@ -74,11 +93,53 @@ using namespace elm;
  * @li UGE -- a >= b
  * @li UGT -- a > b
  *
- *
- *
  * @section sem-reg Register and Temporaries
  *
+ * Operators used in the instruction (a, b and d) represents unique representation
+ * of registers (as returned by Register::platformNumber()) for positive number or
+ * temporaries when negative numbers are used.
+ *
+ * Temporary values are useful when
+ * the semantics expression of an instruction is complex and requires several
+ * temporary results. To alleviate the management of temporaries, they are easy
+ * identified as they are represented as negative numbers and their maximum number
+ * is provided by the @ref Process::tempMax(). Please, notice that the liveness
+ * of a temporary must not expand out of the semantics block of an instruction !
+ *
  * @section sem-anal Building Analyses
+ *
+ * Static analyses using instruction semantics are usually called data-flow
+ * analysis. Using Abstact Interpretation, the interpretation domain is
+ * usually an abstraction of the program variables state. The state includes
+ * usually the value of the registers (simply identified by the register platform
+ * number) and the addresses of used locations in memory. Register numbers
+ * and memory location addresses grouped together forms the address set.
+ *
+ * So, the state becomes usually maps from addresses to value. OTAWA provides
+ * already several representations for these maps.The next step is to define
+ * the abstraction of the values: values are stored in registers and in memory
+ * and must be specialized according to the performed analysis. For example,
+ * the CLP (Cycle Linear Progression) analysis, the values are represented
+ * as triplets (b, d, n) representing a set of integers (and adresses) from
+ * the set {b + i d / 0 <= i < n}. But, it may be any value you want, adapted
+ * to your analysis. Whatever, one must remark that addresses are usually
+ * storable in registers and in memory, the value set must provides a way
+ * to represent them.
+ *
+ * The usual map representations provide already functions to perform
+ * abstract interpretation (bottom value, initial value, update, join, etc).
+ * In the case of the value, you have also to provide function to perform
+ * abstract interpretation but also functions to interpret the different
+ * semantics instructions.
+ *
+ * A specific processing is devoted to SPEC instructions. A convenient analysis
+ * must let its user to specialize it in order to support these instructions.
+ * To achieve this goal, it must provide in the analysis a virtual function
+ * that is called each time the SPEC instruction is interpreted. It would be
+ * useful if this function takes as parameter the real instruction, the
+ * semantics instruction and the current ab stract state. In the initial analysis,
+ * this function simply do nothing but it lets customizer to overload it
+ * in order to customize the interpretation.
  */
 
 
@@ -107,12 +168,14 @@ static cstring inst_names[] = {
 	"not",		// NOT
 	"and",		// AND
 	"or",		// OR
+	"xor",		// XOR
 	"mul",		// MUL
 	"mulu",		// MULU
 	"div",		// DIV
 	"divu",		// DIVU
 	"mod",		// MOD
-	"modu"		// MODU
+	"modu",		// MODU
+	"spec"		// SPEC
 };
 
 static void printArg(const hard::Platform *pf, io::Output& out, signed short arg) {
@@ -274,6 +337,9 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
 		out << ' '; printArg(pf, out, inst.d());
 		out << ", "; printArg(pf, out, inst.a()); out << ", ";
 		printArg(pf, out, inst.b());
+		break;
+	case SPEC:
+		out << ' ' << inst.d() << ", " << inst.cst();
 		break;
 	}
 }
