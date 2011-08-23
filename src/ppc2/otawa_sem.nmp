@@ -53,13 +53,13 @@ extend REG_IND_ZERO
 
 // ****** control ******
 extend branch_abs
-	otawa_sem = { seti(t1, BRANCH_ADDR << 2); branch(t1); }
+	otawa_sem = { seti(t1, coerce(int(32), BRANCH_ADDR) << 2); branch(t1); }
 extend branch_link
-	otawa_sem = { seti(t1, __IADDR + BRANCH_ADDR << 2); seti(_LR, __IADDR + 4); branch(t1); }
+	otawa_sem = { seti(t1, __IADDR + (coerce(int(32), BRANCH_ADDR) << 2)); seti(_LR, __IADDR + 4); branch(t1); }
 extend branch_link_abs
-	otawa_sem = { seti(t1, BRANCH_ADDR << 2); seti(_LR, __IADDR + 4); branch(t1); }
+	otawa_sem = { seti(t1, coerce(int(32), BRANCH_ADDR) << 2); seti(_LR, __IADDR + 4); branch(t1); }
 extend branch_rel
-	otawa_sem = { seti(t1, __IADDR + BRANCH_ADDR << 2); branch(t1); }
+	otawa_sem = { seti(t1, __IADDR + (coerce(int(32), BRANCH_ADDR) << 2)); branch(t1); }
 
 macro test_cond(step) = \
 		if !BO<4..4> then \
@@ -106,13 +106,13 @@ extend tw, twi
 
 // *** comparisons ***
 extend cmp
-	otawa_sem = { _cmp(CR(crfd), ra.sem, rb.sem); }
+	otawa_sem = { _cmp(CR(7 - crfd), ra.sem, rb.sem); }
 extend cmp_imm
-	otawa_sem = { seti(t1, imm); _cmp(CR(crfd), ra.sem, t1); } 
+	otawa_sem = { seti(t1, imm); _cmp(CR(7 - crfd), ra.sem, t1); } 
 extend cmp_log
-	otawa_sem = { cmpu(CR(crfd), ra.sem, rb.sem); }
+	otawa_sem = { cmpu(CR(7 - crfd), ra.sem, rb.sem); }
 extend cmp_log_imm
-	otawa_sem = { seti(t1, imm); cmpu(CR(crfd), ra.sem, t1); }
+	otawa_sem = { seti(t1, imm); cmpu(CR(7 - crfd), ra.sem, t1); }
 
 
 // integer load
@@ -206,7 +206,7 @@ extend st_byte
 extend st_byte_indexed
 	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, 1); }
 extend st_byte_update
-	otawa_sem = { _add(t1, R(ra), d); store(R(rs), t1, 1); set(R(ra), t1); }
+	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); store(R(rs), t1, 1); set(R(ra), t1); }
 extend st_byte_update_indexed
 	otawa_sem = { _add(t1, R(ra), rb.sem); store(R(rs), t1, 1); set(R(ra), t1); }
 
@@ -215,7 +215,7 @@ extend st_half_word
 extend st_half_word_indexed
 	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, 2); }
 extend st_half_word_update
-	otawa_sem = { _add(t1, R(ra), d); store(R(rs), t1, 2); set(R(ra), t1); }
+	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); store(R(rs), t1, 2); set(R(ra), t1); }
 extend st_half_word_update_indexed
 	otawa_sem = { _add(t1, R(ra), rb.sem); store(R(rs), t1, 2); set(R(ra), t1); }
 
@@ -224,7 +224,7 @@ extend st_word
 extend st_word_indexed, stw_br_index
 	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, 4); }
 extend st_word_update
-	otawa_sem = { _add(t1, R(ra), d); store(R(rs), t1, 4); set(R(ra), t1); }
+	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); store(R(rs), t1, 4); set(R(ra), t1); }
 extend st_word_update_indexed
 	otawa_sem = { _add(t1, R(ra), rb.sem); store(R(rs), t1, 4); set(R(ra), t1); }
 
@@ -295,7 +295,14 @@ extend add
 	}
 
 extend add_imm
-	otawa_sem = { seti(t1, da); _add(R(rd), ra.sem, t1); }
+	otawa_sem = {
+		if ra.value == 0 then
+			seti(R(rd), da); 
+		else
+			seti(t1, da); 
+			_add(R(rd), ra.sem, t1);
+		endif;
+	}
 extend add_imm_shifted
 	otawa_sem = { seti(t1, da); seti(t2, 16); shl(t1, t1, t2); _add(R(rd), ra.sem, t1); }
 extend add_imm_carry
@@ -410,7 +417,10 @@ extend nor_cr_update
 	otawa_sem = { _or(t1, rs.sem, rb.sem); _not(R(ra), t1); seti(t1, 0); _cmp(CR(7), R(ra), t1); }
 
 extend or
-	otawa_sem = { _or(R(ra), rs.sem, rb.sem); }
+	otawa_sem = {
+		if rs.value == rb.value
+		then set(R(ra), rs.sem);
+		else _or(R(ra), rs.sem, rb.sem); endif; }
 extend or_cr_update
 	otawa_sem = { _or(R(ra), rs.sem, rb.sem); seti(t1, 0); _cmp(CR(7), R(ra), t1); }
 extend or_imm

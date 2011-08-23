@@ -154,22 +154,28 @@ static const elm::genstruct::Table<const RegBank *> banks_table(banks, 4);
 #define _GE				sem::GE
 #define _ANY_COND		sem::ANY_COND
 
-#define _add(d, a, b)		block.add(otawa::sem::add(d, a, b))
+#define _add(d, a, b)	block.add(otawa::sem::add(d, a, b))
+#define _and(d, a, b)	block.add(otawa::sem::_and(d, a, b))
+#define _asr(d, a, b)	block.add(otawa::sem::asr(d, a, b))
 #define _branch(d)		block.add(otawa::sem::branch(d))
 #define _cmp(d, a, b)	block.add(otawa::sem::cmp(d, a, b))
 #define _cmpu(d, a, b)	block.add(otawa::sem::cmp(d, a, b))
 #define _div(d, a, b)	block.add(otawa::sem::div(d, a, b))
 #define _divu(d, a, b)	block.add(otawa::sem::divu(d, a, b))
 #define _if(d, a, b)	block.add(otawa::sem::_if(d, a, b))
+#define _load(d, a, b)	block.add(otawa::sem::load(d, a, b))
 #define _mul(d, a, b)	block.add(otawa::sem::mul(d, a, b))
 #define _mulu(d, a, b)	block.add(otawa::sem::mulu(d, a, b))
-#define _load(d, a, b)	block.add(otawa::sem::load(d, a, b))
+#define _not(d, a)		block.add(otawa::sem::_not(d, a))
+#define _or(d, a, b)	block.add(otawa::sem::_or(d, a, b))
 #define _set(d, a)		block.add(otawa::sem::set(d, a))
 #define _seti(d, i)		block.add(otawa::sem::seti(d, i))
+#define _shl(d, a, b)	block.add(otawa::sem::shl(d, a, b))
 #define _shr(d, a, b)	block.add(otawa::sem::shr(d, a, b))
 #define _store(d, a, b)	block.add(otawa::sem::store(d, a, b))
 #define _scratch(a)		block.add(otawa::sem::scratch(a));
 #define _sub(d, a, b)	block.add(otawa::sem::sub(d, a, b))
+#define _xor(d, a, b)		block.add(otawa::sem::_xor(d, a, b))
 
 #include "otawa_sem.h"
 
@@ -379,8 +385,7 @@ public:
 	virtual Process &process() { return proc; }
 
 	virtual const elm::genstruct::Table<hard::Register *>& readRegs() {
-		if ( ! isRegsDone)
-		{
+		if ( ! isRegsDone) {
 			decodeRegs();
 			isRegsDone = true;
 		}
@@ -388,12 +393,17 @@ public:
 	}
 
 	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs() {
-		if ( ! isRegsDone)
-		{
+		if ( ! isRegsDone) {
 			decodeRegs();
 			isRegsDone = true;
 		}
 		return out_regs;
+	}
+
+	virtual void semInsts(sem::Block &block) {
+		ppc_inst_t *inst = proc.decode_ppc(_addr);
+		ppc_sem(inst, block);
+		ppc_free_inst(inst);
 	}
 
 protected:
