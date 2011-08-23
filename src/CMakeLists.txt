@@ -62,6 +62,7 @@ endif(HAS_GLISS_ARM)
 # Tools
 add_subdirectory(dumpcfg)
 add_subdirectory(mkff)
+add_subdirectory(odfa)
 add_subdirectory(ostat)
 add_subdirectory(opcg)
 add_subdirectory(odisasm)
