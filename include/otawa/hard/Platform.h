@@ -83,6 +83,7 @@ public:
 		inline const elm::String& machine(void) const;
 		bool matches(const Identification& id);
 		Identification& operator=(const Identification& id);
+		void print(io::Output& out) const;
 	};
 
 	// Platform
@@ -107,6 +108,7 @@ public:
 	inline const banks_t& banks(void) const;
 	inline int regCount(void) const { return rcnt; }
 	Register *findReg(int uniq) const;
+	const Register *findReg(const string& name) const;
 	
 	// Configuration Loader
 	void loadProcessor(const elm::system::Path& path);
@@ -140,6 +142,7 @@ private:
 
 	void configure(const PropList& props);
 };
+inline io::Output& operator<<(io::Output& out, const Platform::Identification& id) { id.print(out); return out; }
 
 // Inlines
 inline const Platform::Identification& Platform::identification(void) const {

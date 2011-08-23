@@ -679,4 +679,25 @@ Register *Platform::findReg(int uniq) const {
 	return 0;
 }
 
+/**
+ * Display the identification.
+ * @param out	Used output.
+ */
+void Platform::Identification::print(io::Output& out) const {
+	out << name();
+}
+
+/**
+ * Find a register by its name.
+ * @param name		Name of the register to find.
+ * @return			Found register or null.
+ */
+const Register *Platform::findReg(const string& name) const {
+	for(int i = 0; i < _banks->count(); i++)
+		for(int j = 0; j < _banks->get(i)->count(); j++)
+			if(_banks->get(i)->get(j)->name() == name)
+				return _banks->get(i)->get(j);
+	return 0;
+}
+
 } } // otawa::hard
