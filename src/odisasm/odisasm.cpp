@@ -29,6 +29,74 @@
 #include <elm/genstruct/AVLTree.h>
 #include <otawa/prog/sem.h>
 
+/**
+ * @defgroup odisasm odisasm Command
+ *
+ * ODisasm disassemble a binary program and display information provided
+ * by the instruction loader, that is,
+ * @li instruction kinds,
+ * @li branch target (for control instructions),
+ * @li read and written registers,
+ * @li semantics instructions (when available).
+ *
+ * This command is particularly useful when a loader is written.
+ * It allows to examine the information provided by the loader from
+ * the OTAWA run-time point of view and to find back possible errors.
+ *
+ * @par SYNTAX
+ * @code
+ * $ odisasm binary_file function1 function2 ...
+ * @endcode
+ *
+ * The following are provided:
+ * @li -r, --regs: display register information,
+ * @li -k, --kind: display kind of instructions,
+ * @li -s, --semantics:	display translation of instruction into semantics language,
+ * @li -t, --target: display target of control instructions
+ *
+ * @par Example
+ * @code
+ * $ odisasm -ktr loop1
+ * 01800248	lwz r0,12(r31)
+ *	kind = MEM LOAD INT
+ *	read regs = r31
+ *	written regs = r0
+ *0180024c	cmpi 7,0,r0,99
+ *	kind = INT ALU
+ *	read regs = r0 xer
+ *	written regs = cr0
+ *01800250	bc 4,29,-9
+ *	kind = COND CONTROL
+ *	target =
+ *	read regs = cr0 ctr
+ *	written regs =
+ *01800254	lwz r0,8(r31)
+ *	kind = MEM LOAD INT
+ *	read regs = r31
+ *	written regs = r0
+ *01800258	or r3,r0,r0
+ *	kind = INT ALU
+ *	read regs = r0 r0
+ *	written regs = r3
+ *0180025c	addi r11,r31,32
+ *	kind = INT ALU
+ *	read regs = r31
+ *	written regs = r11
+ *01800260	lwz r0,4(r11)
+ *	kind = MEM LOAD INT
+ *	read regs = r11
+ *	written regs = r0
+ *01800264	mtspr lr,r0
+ *	kind = INTERN
+ *	read regs = r0
+ *	written regs = lr
+ *01800268	lwz r31,-4(r11)
+ *	kind = MEM LOAD INT
+ *	read regs = r11
+ *	written regs = r31
+ * @endcode
+ */
+
 using namespace elm;
 using namespace otawa;
 

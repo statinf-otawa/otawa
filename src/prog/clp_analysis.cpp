@@ -1485,8 +1485,13 @@ void ClpAnalysis::configure(const PropList &props) {
 
 /**
  * This features ensure that the clp analysis has been identified.
+ *
  * @par Default Processor
  * @li @ref otawa::ClpAnalysis
+ *
+ * @par Hooked Propertues
+ * @li @ref otawa::CLP_STATE_IN
+ * @li @ref otawa::CLP_STATE_OUT
  */
 Feature<ClpAnalysis> CLP_ANALYSIS_FEATURE("otawa::CLP_ANALYSIS_FEATURE");
 
