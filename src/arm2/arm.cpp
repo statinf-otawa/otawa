@@ -388,12 +388,80 @@ public:
 			{ return arm_decode(decoder(), ::arm_address_t(addr.offset())); }
 #		endif
 
-	inline void free(arm_inst_t *inst) const
-		{ arm_free_inst(inst); }
+	inline void free(arm_inst_t *inst) const { arm_free_inst(inst); }
 	virtual gel_file_t *file(void) const { return _file; }
 	virtual arm_memory_t *memory(void) const { return _memory; }
 	inline arm_decoder_t *decoder() const { return _decoder; }
 	inline void *platform(void) const { return _platform; }
+
+	virtual Option<Pair<cstring, int> > getSourceLine(Address addr) throw (UnsupportedFeatureException) {
+		setup_debug();
+		if (!map)
+			return none;
+		const char *file;
+		int line;
+		if (!map || gel_line_from_address(map, addr.offset(), &file, &line) < 0)
+			return none;
+		return some(pair(cstring(file), line));
+	}
+
+	virtual void getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses) throw (UnsupportedFeatureException) {
+		setup_debug();
+		addresses.clear();
+		if (!map)
+			return;
+		gel_line_iter_t iter;
+		gel_location_t loc, ploc = { 0, 0, 0, 0 };
+		for (loc = gel_first_line(&iter, map); loc.file; loc = gel_next_line(&iter))
+		{
+			cstring lfile = loc.file;
+			//cerr << loc.file << ":" << loc.line << ", " << loc.low_addr << "-" << loc.high_addr << io::endl;
+			if (file == loc.file || lfile.endsWith(file))
+			{
+				if (line == loc.line)
+				{
+					//cerr << "added (1) " << loc.file << ":" << loc.line << " -> " << loc.low_addr << io::endl;
+					addresses.add(pair(Address(loc.low_addr), Address(loc.high_addr)));
+				}
+				else if(loc.file == ploc.file && line > ploc.line && line < loc.line)
+				{
+					//cerr << "added (2) " << ploc.file << ":" << ploc.line << " -> " << ploc.low_addr << io::endl;
+					addresses.add(pair(Address(ploc.low_addr), Address(ploc.high_addr)));
+				}
+			}
+			ploc = loc;
+		}
+	}
+
+	virtual void get(Address at, signed char& val)
+		{ val = arm_mem_read8(_memory, at.address()); }
+	virtual void get(Address at, unsigned char& val)
+		{ val = arm_mem_read8(_memory, at.address()); }
+	virtual void get(Address at, signed short& val)
+		{ val = arm_mem_read16(_memory, at.address()); }
+	virtual void get(Address at, unsigned short& val)
+		{ val = arm_mem_read16(_memory, at.address()); }
+	virtual void get(Address at, signed long& val)
+		{ val = arm_mem_read32(_memory, at.address()); }
+	virtual void get(Address at, unsigned long& val)
+		{ val = arm_mem_read32(_memory, at.address()); }
+	virtual void get(Address at, signed long long& val)
+		{ val = arm_mem_read64(_memory, at.address()); }
+	virtual void get(Address at, unsigned long long& val)
+		{ val = arm_mem_read64(_memory, at.address()); }
+	virtual void get(Address at, Address& val)
+		{ val = arm_mem_read32(_memory, at.address()); }
+	virtual void get(Address at, string& str) {
+		Address base = at;
+		while(!arm_mem_read8(_memory, at.address()))
+			at = at + 1;
+		int len = at - base;
+		char buf[len];
+		get(base, buf, len);
+		str = String(buf, len);
+	}
+	virtual void get(Address at, char *buf, int size)
+		{ arm_mem_read(_memory, at.address(), buf, size); }
 
 private:
 	void setup_debug(void) {
