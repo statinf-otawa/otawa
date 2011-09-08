@@ -8,7 +8,8 @@ if(WIN32)
 	set(FLEX_PREFIX_OUTPUTS TRUE CACHE BOOL "activating Flex")
 elseif(UNIX)
 	find_package(BISON 0)
-	find_package(FLEX 0)
+	#find_package(FLEX 0)
+	include("${CMAKE_SOURCE_DIR}/CMakeUserUseFlex.cmake")
 	
 endif(WIN32)
 
