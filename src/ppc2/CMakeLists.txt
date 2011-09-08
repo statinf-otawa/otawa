@@ -30,22 +30,27 @@ if(NOT MINGW_WIN)
 	add_custom_command(
 		OUTPUT ${OTAWA_KIND} DEPENDS "kind.tpl" COMMAND ${GLISS_ATTR}
 		ARGS ${PPC_IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "kind.tpl" -d "return 0\\;" -e otawa_kind.nmp
+		DEPENDS ${PPC_IRG}
 	)
 	add_custom_command(
 		OUTPUT ${OTAWA_PRED} DEPENDS "pred.tpl" COMMAND ${GLISS_ATTR}
 		ARGS ${PPC_IRG} -o ${OTAWA_PRED} -a otawa_pred -f -t "pred.tpl" -e otawa_pred.nmp -d "return -1\\;"
+		DEPENDS ${PPC_IRG}
 	)
 	add_custom_command(
 		OUTPUT ${OTAWA_TARGET} DEPENDS "target.tpl" COMMAND ${GLISS_ATTR}
 		ARGS ${PPC_IRG} -o ${OTAWA_TARGET} -a otawa_target -f -t "target.tpl" -d "return 0\\;" -e otawa_target.nmp
+		DEPENDS ${PPC_IRG}
 	)
 	add_custom_command(
 		OUTPUT ${OTAWA_USED_REGS} DEPENDS "used_regs.tpl" COMMAND ${GLISS_ATTR}
 		ARGS ${PPC_IRG} -o ${OTAWA_USED_REGS} -a otawa_used_regs -f -t "used_regs.tpl" -d "tmp_var[0] = END_REG\\; return 0\\;" -e otawa_used_regs.nmp
+		DEPENDS ${PPC_IRG}
 	)
 	add_custom_command(
 		OUTPUT ${OTAWA_SEM} DEPENDS "otawa_sem.tpl" "otawa_sem.nmp" COMMAND ${GLISS_ATTR}
 		ARGS ${PPC_IRG} -o ${OTAWA_SEM} -a otawa_sem -p -t "otawa_sem.tpl" -d "';'" -e otawa_sem.nmp
+		DEPENDS ${PPC_IRG}
 	)
 endif()
 
