@@ -76,7 +76,7 @@ macro test_cond_and_ctr(step) = \
 	if !BO<2..2> then seti(t1, 1); _sub(_CTR, _CTR, t1); endif; \
 		if !BO<2..2> then \
 			seti(t1, 0); \
-			_cmp(t1, _CTR, 0); \
+			_cmp(t1, _CTR, t1); \
 			_if(if BO<1..1> then "_EQ" else "_NE" endif, t1, if BO<4..4> then step else step + 1  endif); \
 		endif; \
 		test_cond(step);
