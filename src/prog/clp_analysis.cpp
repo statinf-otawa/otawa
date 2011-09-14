@@ -40,6 +40,7 @@
 #include <otawa/data/clp/SymbolicExpr.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/ipet/FlowFactLoader.h>
+#include <otawa/hard/Platform.h>
  
 using namespace elm;
 using namespace otawa;
@@ -254,16 +255,19 @@ void Value::_or(const Value& val) {
 	if(OCLP_IS_CST(val)) {
 		if(OCLP_IS_CST(*this))
 			_lower |= val._lower;
-		else if(val._lower < _delta)
-			_lower |= val._lower;
+		/*else if(val._lower < _delta)
+			_lower |= val._lower;*/		// TO CHECK
 		else
 			*this = all;
 	}
 	else {
-		if(OCLP_IS_CST(*this) && _lower < val.delta())
+		*this = all;
+		/*if(OCLP_IS_CST(*this))
+			set(V)
+			&& _lower < val.delta())
 			set(VAL, _lower | val._lower, val.delta(), val.mtimes());
 		else
-			*this = all;
+			*this = all;*/
 	}
 }
 
@@ -847,7 +851,7 @@ void State::widening(const State& state, int loopBound) {
 /**
  * Print the state
 */
-void State::print(io::Output& out) const {
+void State::print(io::Output& out, const hard::Platform *pf) const {
 	if(first.val == Value::none)
 		out << "None (bottom)\n";
 	else {
@@ -869,8 +873,14 @@ void State::print(io::Output& out) const {
 		// registers
 		for(int i = 0; i < registers.length(); i++){
 			Value val = registers[i];
-			if (val.kind() == VAL)
-				out << CLP_START << "r" << i << " = " << val << CLP_END;
+			if (val.kind() == VAL) {
+				out << CLP_START;
+				if(!pf)
+					out << "r" << i;
+				else
+					out << pf->findReg(i)->name();
+				out << " = " << val << CLP_END;
+			}
 		}
 		// memory
 		for(Node *cur = first.next; cur; cur = cur->next) {
@@ -987,13 +997,32 @@ public:
 			TRACEP(cerr << "\tApply filter on this edge!\n");
 			Vector<se::SECmp *> reg_filters = se::REG_FILTERS(source);
 			Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(source);
+
+			// if not taken, invert conditions
+			bool to_free = false;
+			if(edge->kind() != Edge::TAKEN) {
+				to_free = true;
+				for(int i = 0; i < reg_filters.count(); i++)
+					reg_filters[i] = reg_filters[i]->logicalNot();
+				for(int i = 0; i < addr_filters.count(); i++)
+					addr_filters[i] = addr_filters[i]->logicalNot();
+			}
+
+			// filter registers
+			Domain all = Domain::EMPTY, init;
+			init.copy(dom);
 			for (int i=0; i < reg_filters.length(); i++){
-				se::SECmp *filter; 
-				// if the branch is taken, 'not' the filter
-				if(edge->kind() == Edge::TAKEN)
-					filter = reg_filters[i]->logicalNot();
-				else
-					filter = reg_filters[i]->copy();
+				se::SECmp *filter = reg_filters[i];
+
+				// case of OR or NONE
+				if(filter->op() == se::NONE)
+					continue;
+				else if(filter->op() == se::OR) {
+					all.join(dom);
+					dom.copy(init);
+					continue;
+				}
+
 				// apply the filter
 				TRACEP(cerr << "\tFilter: " << filter->asString() << ' ');
 				//FIXME: check in a() and b() are valid pointers
@@ -1009,15 +1038,25 @@ public:
 				_nb_filters++;
 				if (filter->b()->val() == clp::Value::all)
 					_nb_top_filters++;
-				delete filter;
 			}
+
+			// complete fitering
+			dom.join(all);
+			init.copy(dom);
+
+			// filter addresses
 			for (int i=0; i < addr_filters.length(); i++){
-				se::SECmp *filter; 
-				// if the branch is taken, 'not' the filter
-				if(edge->kind() == Edge::TAKEN)
-					filter = addr_filters[i]->logicalNot();
-				else
-					filter = addr_filters[i]->copy();
+				se::SECmp *filter = addr_filters[i];
+
+				// case of OR or NONE
+				if(filter->op() == se::NONE)
+					continue;
+				else if(filter->op() == se::OR) {
+					all.join(dom);
+					dom.copy(init);
+					continue;
+				}
+
 				// apply the filter
 				TRACEP(cerr << "\tFilter: " << filter->asString() << ' ');
 				//FIXME: check in a() and b() are valid pointers
@@ -1033,9 +1072,18 @@ public:
 				_nb_filters++;
 				if (filter->b()->val() == clp::Value::all)
 					_nb_top_filters++;
-				delete filter;
 			}
-		
+
+			// complete computation
+			dom.join(all);
+
+			// free filters if required
+			if(to_free) {
+				for(int i = 0; i < reg_filters.count(); i++)
+					delete reg_filters[i];
+				for(int i = 0; i < addr_filters.count(); i++)
+					delete addr_filters[i];
+			}
 		}
 	}
 	
@@ -1273,7 +1321,7 @@ public:
 			//TODO: delete 'old' reg_filters if needed
 			//use Symbolic Expressions to get filters for this basic block
 			TRACEP(cerr << "> IF detected, getting filters..." << io::endl);
-			se::getFilters(bb);
+			se::FilterBuilder builder(bb);
 		}
 	}
 	

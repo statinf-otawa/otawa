@@ -29,7 +29,10 @@
 
 namespace otawa {
 
-namespace hard { class Register; }
+namespace hard {
+	class Platform;
+	class Register;
+}
 
 namespace clp {
 	/**
@@ -74,7 +77,7 @@ namespace clp {
 		bool equals(const State& state) const;
 		void join(const State& state);
 		void widening(const State& state, int loopBound);
-		void print(io::Output& out) const;
+		void print(io::Output& out, const hard::Platform *pf = 0) const;
 		const Value& get(const Value& addr) const;
 		
 		static const State EMPTY, FULL;

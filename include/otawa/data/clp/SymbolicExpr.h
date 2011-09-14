@@ -30,11 +30,16 @@
 #include <elm/string/AutoString.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/data/clp/ClpValue.h>
+#include <otawa/data/clp/ClpPack.h>
 
 using namespace elm;
 using namespace elm::genstruct;
 
 namespace otawa {
+
+namespace hard {
+	class Platform;
+}	// hard
 
 namespace se{
 	
@@ -62,6 +67,7 @@ namespace se{
 		ULT,
 		UGE,
 		UGT,
+		OR
 	} op_t;
 	
 	/** Symbolic expression*/
@@ -163,12 +169,13 @@ namespace se{
 		/**
 		 * @return a string reprensentation of the expression
 		*/
-		virtual String asString(void);
+		virtual String asString(const hard::Platform *pf = 0);
 		/**
 		 * Output a string representation of the expression
 		 * @param out the output channel
+		 * @param pf  current plarform
 		*/
-		void print(io::Output& out);
+		void print(io::Output& out, const hard::Platform *pf = 0);
 		/**
 		 * Try to recursively transform the expression into it its canonized
 		 * form.
@@ -243,12 +250,6 @@ namespace se{
 		SymbExpr *_parent;
 	};
 	
-	// output
-	inline elm::io::Output& operator<<(elm::io::Output& out, SymbExpr &se) {
-		se.print(out);
-		return out;
-	}
-	
 	/** Constants */
 	class SEConst: public SymbExpr{
 	public:
@@ -289,7 +290,7 @@ namespace se{
 		/**
 		 * @return a string reprensentation of the expression
 		*/
-		virtual String asString(void);
+		virtual String asString(const hard::Platform *pf = 0);
 		/**
 		 * Try to recursively transform the expression into it its canonized
 		 * form.
@@ -337,7 +338,7 @@ namespace se{
 		/**
 		 * @return a string reprensentation of the expression
 		*/
-		virtual String asString(void);
+		virtual String asString(const hard::Platform *pf = 0);
 		/**
 		 * Try to recursively transform the expression into it its canonized
 		 * form.
@@ -391,7 +392,7 @@ namespace se{
 		/**
 		 * @return a string reprensentation of the expression
 		*/
-		virtual String asString(void);
+		virtual String asString(const hard::Platform *pf = 0);
 		/**
 		 * Try to recursively transform the expression into it its canonized
 		 * form.
@@ -447,7 +448,7 @@ namespace se{
 		/**
 		 * @return a string reprensentation of the expression
 		*/
-		virtual String asString(void);
+		virtual String asString(const hard::Platform *pf = 0);
 		/**
 		 * Try to recursively transform the expression into it its canonized
 		 * form.
@@ -500,7 +501,7 @@ namespace se{
 		/**
 		 * @return a string reprensentation of the expression
 		*/
-		virtual String asString(void);
+		virtual String asString(const hard::Platform *pf = 0);
 		/**
 		 * Try to recursively transform the expression into it its canonized
 		 * form.
@@ -564,7 +565,7 @@ namespace se{
 		/**
 		 * @return a string reprensentation of the expression
 		*/
-		virtual String asString(void);
+		virtual String asString(const hard::Platform *pf = 0);
 		/**
 		 * Try to recursively transform the expression into it its canonized
 		 * form.
@@ -580,14 +581,24 @@ namespace se{
 	extern Identifier<Vector<SECmp *> > REG_FILTERS;
 	extern Identifier<Vector<SECmp *> > ADDR_FILTERS;
 	
-	/**
-	 * Find filters that apply on the basic block
-	 * @param bb the Basic Block to analysis
-	 * Two properties are sets:
-	 *		REG_FILTERS for filters on registers
-	 *		ADDR_FILTERS for filters on memory addresses
-	*/
-	void getFilters(BasicBlock* bb);
+	class FilterBuilder {
+	public:
+		FilterBuilder(BasicBlock *_bb);
+	private:
+		void getFilters(void);
+		void iterateBranchPaths(Inst *inst, const Vector<Inst *>& insts);
+		sem::cond_t reverseCond(sem::cond_t cond);
+		SECmp *makeFilters(SECmp *se, Inst *cur_inst, sem::Block& block);
+		void addFilters(SECmp *se, const Vector<Inst *>& insts);
+
+		BasicBlock *bb;
+		Vector<SECmp *> reg_filters;
+		Vector<SECmp *> addr_filters;
+		Vector<V> known_reg;
+		Vector<V> known_addr;
+		clp::ClpStatePack pack;
+	};
+
 	
 	/**
 	 * Apply a filter on the value
@@ -599,5 +610,15 @@ namespace se{
 } // se
 
 } // otawa
+
+inline io::Output& operator<<(io::Output& out, otawa::se::SymbExpr *sym)
+	{ out << "=> "; sym->print(out); return out; }
+// output
+inline elm::io::Output& operator<<(elm::io::Output& out, otawa::se::SymbExpr &se) {
+	cerr << "ici !\n";
+	se.print(out);
+	return out;
+}
+
 
 #endif /* OTAWA_DATA_CLP_SYMBOLICEXPR_H_ */

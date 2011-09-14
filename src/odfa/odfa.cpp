@@ -27,12 +27,16 @@
 #include <elm/option/ListOption.h>
 #include <elm/io/BlockInStream.h>
 #include <otawa/hard.h>
+#include <otawa/prog/sem.h>
+#include <otawa/data/clp/SymbolicExpr.h>
 
 using namespace elm;
 using namespace otawa;
 
 Identifier<bool> BEFORE("", false);
 Identifier<bool> AFTER("", false);
+Identifier<bool> SEM("", false);
+Identifier<bool> FILTER("", false);
 
 // Generic textual displayer
 class TextualDisplayer: public BBProcessor {
@@ -52,6 +56,8 @@ protected:
  			before = true;
  			after = true;
  		}
+ 		sem = SEM(props);
+ 		filter = FILTER(props);
  	}
 
 	virtual void processCFG(WorkSpace *ws, CFG *cfg) {
@@ -87,16 +93,45 @@ protected:
 					out << " (" << inst->target()->address() << ")";
 				out << io::endl;
 
+				// disassemble semantics instructions
+				if(sem) {
+					sem::Block block;
+					inst->semInsts(block);
+					for(int i = 0; i < block.count(); i++) {
+						sem::Printer printer(ws->process()->platform());
+						out << "\t\t\t";
+						printer.print(out, block[i]);
+						out << io::endl;
+					}
+				}
 			}
-			if(after)
+			if(after) {
+				if(filter) {
+					Vector<se::SECmp *> reg_filters = se::REG_FILTERS(bb);
+					Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(bb);
+					if(reg_filters.length() != 0 || addr_filters.length() != 0) {
+						out << "\tFILTERS = \n";
+						for(int i = 0; i < reg_filters.count(); i++) {
+							out << "\t\t";
+							reg_filters[i]->print(out, ws->process()->platform());
+							out << "\n";
+						}
+						for(int i = 0; i < addr_filters.count(); i++) {
+							out << "\t\t";
+							addr_filters[i]->print(out, ws->process()->platform());
+							out << "\n";
+						}
+					}
+				}
 				displayAfter(ws, cfg, bb);
+			}
 
 		}
 		out << io::endl;
 
 	}
 
-	bool after, before;
+	bool after, before, sem, filter;
 };
 
 // CLP textual displayer
@@ -105,13 +140,13 @@ protected:
 
  	virtual void displayBefore(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
  		clp::State state = CLP_STATE_IN(bb);
- 		state.print(out);
+ 		state.print(out, ws->process()->platform());
  		out<< io::endl;
  	}
 
  	virtual void displayAfter(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
  		clp::State state = CLP_STATE_OUT(bb);
- 		state.print(out);
+ 		state.print(out, ws->process()->platform());
  		out<< io::endl;
  	}
 
@@ -131,6 +166,8 @@ public:
 	list(*this, option::cmd, "-l", option::cmd, "--list", option::help, "display the list of registers", option::end),
 	before(*this, option::cmd, "--before", option::help, "display state before the BB", option::end),
 	after(*this, option::cmd, "--after", option::help, "display state after the BB", option::end),
+	sem(*this, option::cmd, "-s", option::cmd, "--sem", option::help, "display semantics instructions", option::end),
+	filter(*this, option::cmd, "-f", option::cmd, "--filter", option::help, "display filters", option::end),
 	inits(*this, option::cmd, "-r", option::cmd, "--reg", option::help, "add an initialization register", option::arg_desc, "REGISTER=VALUE", option::end)
 	{ }
 
@@ -174,6 +211,8 @@ private:
 		fillRegs(props);
 		BEFORE(props) = before;
 		AFTER(props) = after;
+		SEM(props) = sem;
+		FILTER(props) = filter;
 
 		// perform the analysis
 		require(otawa::VIRTUALIZED_CFG_FEATURE);
@@ -215,7 +254,7 @@ private:
 		}
 	}
 
-	option::SwitchOption clp, list, before, after;
+	option::SwitchOption clp, list, before, after, sem, filter;
 	option::ListOption<string> inits;
 };
 
