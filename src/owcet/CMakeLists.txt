@@ -1,4 +1,4 @@
-set(CMAKE_INSTALL_RPATH "../lib/\\$ORIGIN")
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../lib/")
 
 set(owcet_SOURCES
 	"owcet.cpp"
