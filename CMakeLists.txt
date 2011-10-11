@@ -137,6 +137,7 @@ endif()
 # add subdirectories
 add_subdirectory(src)
 add_subdirectory(bin)
+add_subdirectory(doc)
 
 
 # share installation
@@ -146,4 +147,3 @@ install(DIRECTORY data/caches DESTINATION share/Otawa/ ${EXCLUDED_FILES})
 install(DIRECTORY data/makefiles DESTINATION share/Otawa/ ${EXCLUDED_FILES})
 install(DIRECTORY data/procs DESTINATION share/Otawa/ ${EXCLUDED_FILES})
 install(DIRECTORY data/scripts DESTINATION share/Otawa/ ${EXCLUDED_FILES})
-install(DIRECTORY doc DESTINATION share/Otawa/ PATTERN ${EXCLUDED_FILES} PATTERN "*.thot" EXCLUDE)
