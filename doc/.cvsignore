@@ -22,3 +22,4 @@ manual.toc
 Makefile
 manual-10.html
 cmake_install.cmake
+CMakeFiles

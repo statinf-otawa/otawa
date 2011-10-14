@@ -1,5 +1,5 @@
 # ppc2 plugin build
-set(CMAKE_INSTALL_RPATH "../../\\$ORIGIN")
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
 
 if(MINGW OR UNIX)
 	include_directories(${CMAKE_SOURCE_DIR}/../ppc2/include)

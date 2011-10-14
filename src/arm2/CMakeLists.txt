@@ -5,7 +5,7 @@ set(PROC_PREFIX 	"${CMAKE_SOURCE_DIR}/../ARMv5T/")
 set(GLISS_LIB 		"${PROC_PREFIX}/src/lib${PROC}.a")
 set(ELF_NUM			"40")
 
-set(CMAKE_INSTALL_RPATH "../../\\$ORIGIN")
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
 include_directories(${PROC_PREFIX}/include)
 
 # file definitions

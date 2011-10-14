@@ -1,4 +1,4 @@
-set(CMAKE_INSTALL_RPATH "../../\\$ORIGIN")
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
 
 set(lp_solve5_SOURCES
 	"lp_solve5.cpp"
