@@ -14,7 +14,6 @@ elseif(UNIX)
 endif(WIN32)
 
 
-
 #include header files	
 include_directories("../include")
 include_directories(".")
@@ -26,7 +25,7 @@ include_directories("../../gel/include")
 # subdirectories
 add_subdirectory(prog)
 add_subdirectory(ast)
-#add_subdirectory(oloader)
+add_subdirectory(oloader)
 #add_subdirectory(ets)
 add_subdirectory(ocpp)
 add_subdirectory(odisplay)
@@ -55,9 +54,9 @@ elseif()
 add_subdirectory(ppc)
 endif()
 
-if(HAS_GLISS_ARM)
-add_subdirectory(arm)
-endif(HAS_GLISS_ARM)
+if(ARM_LIB)
+	add_subdirectory(arm)
+endif()
 
 
 # Tools

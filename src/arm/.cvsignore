@@ -5,3 +5,7 @@ arm.lo
 arm.la
 .libs
 CMakeFiles
+arm.so
+elf_40.so
+cmake_install.cmake
+arm1.so

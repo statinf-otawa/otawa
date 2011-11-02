@@ -46,6 +46,17 @@ add_definitions(-DPROC_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/proc\")
 add_definitions(-DHAS_RELOCATION)
 add_definitions(-DOTAWA_CMAKE)
 
+# looking for ARM loader
+set(ARM_PATH "${CMAKE_SOURCE_DIR}/../arm" CACHE PATH "path to GLISS ARM path")
+if(EXISTS "${ARM_PATH}")
+	find_library(ARM_LIB emul PATHS "${ARM_PATH}/lib" NO_DEFAULT_PATH)
+endif()
+if(ARM_LIB)
+	message(STATUS "ARM library found at ${ARM_LIB}")
+else()
+	message(STATUS "ARM library not found")
+endif()
+
 # ==== for Date ====
 if(WIN32)
 	execute_process(COMMAND "cmd" "/C date /T" OUTPUT_VARIABLE RESULT)

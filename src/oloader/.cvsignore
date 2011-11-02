@@ -11,3 +11,5 @@ loader_old_gliss_Process.lo
 .deps
 .libs
 CMakeFiles
+liboloader.a
+cmake_install.cmake
