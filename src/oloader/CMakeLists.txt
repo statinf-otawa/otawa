@@ -10,3 +10,5 @@ set(SOURCES
 	loader_old_gliss_Process.cpp
 )
 add_library(oloader STATIC ${SOURCES})
+set_property(TARGET oloader PROPERTY COMPILE_FLAGS -fPIC)
+
