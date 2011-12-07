@@ -32,7 +32,7 @@ add_subdirectory(odisplay)
 
 
 # arm2 check
-if(EXISTS "${CMAKE_SOURCE_DIR}/../ARMv5T")
+if(EXISTS "${CMAKE_SOURCE_DIR}/../armv5t")
 add_subdirectory(arm2)
 endif()
 

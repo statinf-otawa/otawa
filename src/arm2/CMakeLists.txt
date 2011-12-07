@@ -1,7 +1,7 @@
 # arm2 plugin build process
 
 set(PROC 			"arm")
-set(PROC_PREFIX 	"${CMAKE_SOURCE_DIR}/../ARMv5T/")
+set(PROC_PREFIX 	"${CMAKE_SOURCE_DIR}/../armv5t/")
 set(GLISS_LIB 		"${PROC_PREFIX}/src/lib${PROC}.a")
 set(ELF_NUM			"40")
 
