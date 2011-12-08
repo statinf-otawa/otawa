@@ -106,6 +106,10 @@ public:
 	inline void cancel(void) { cancelled = true; }
 	inline bool isCancelled(void) const { return cancelled; }
 
+	// serialization
+	virtual void serialize(elm::serial2::Serializer& serializer);
+	virtual void unserialize(elm::serial2::Unserializer& unserializer);
+
 private:
 	void newFeatDep(const AbstractFeature* feature);
 	bool hasFeatDep(const AbstractFeature* feature);

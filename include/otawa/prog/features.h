@@ -50,6 +50,8 @@ extern Feature<NoProcessor> SOURCE_LINE_FEATURE;
 extern SilentFeature MEMORY_ACCESSES;
 extern SilentFeature SEMANTICS_INFO;
 extern Feature<NoProcessor> DELAYED_FEATURE;
+extern SilentFeature SEMANTICS_INFO_EXTENDED;
+extern SilentFeature SEMANTICS_INFO_FLOAT;
 
 } // otawa
 

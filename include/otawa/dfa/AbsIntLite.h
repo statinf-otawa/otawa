@@ -23,6 +23,7 @@
 #define OTAWA_DFA_ABSINTLITE_H_
 
 #include <elm/genstruct/VectorQueue.h>
+#include <elm/util/BitVector.h>
 
 namespace otawa { namespace dfa {
 
@@ -42,39 +43,60 @@ public:
 			d.set(vals[i], d.bottom());
 	}
 
+	inline void push(typename G::Vertex v) {
+		if(!set.bit(g.index(v))) {
+			set.set(g.index(v));
+			todo.put(v);
+		}
+	}
+	
+	inline typename G::Vertex pop(void) {
+		typename G::Vertex v = todo.get();
+		set.clear(g.index(v));
+		return v;
+	}
+
 	inline void process(void) {
 
 		// initialization
-		genstruct::VectorQueue<typename G::Vertex> todo;
+		set.resize(g.count());
 		d.set(vals[g.index(g.entry())], d.initial());
-		for(typename G::Successor succ(g, g.entry()); succ; succ++)
-			todo.put(succ);
+		OTAWA_AILD(cerr << "INITIAL: " << g.entry() << ": " << vals[g.index(g.entry())] << io::endl);
+		for(typename G::Iterator v(g); v; v++)
+			if(v != g.entry())
+				step(v);
 
 		// loop until fixpoint
+		OTAWA_AILD(cerr << "\nINTERPRETING\n");
 		while(todo) {
-			typename G::Vertex v = todo.get();
+			typename G::Vertex v = pop();
 			OTAWA_AILD(cerr << "NEXT: " << v << io::endl);
+			step(v);
+		}
+	}
+	
+	inline void step(typename G::Vertex v) {
+		OTAWA_AILD(cerr << "processing " << v << io::endl);
 
-			// join of predecessor
-			d.set(tmp, d.bottom());
-			for(typename G::Predecessor pred(g, v); pred; pred++)
-				d.join(tmp, vals[g.index(pred)]);
-			OTAWA_AILD(cerr << "- JOIN IN: "; d.dump(cerr, tmp); cerr << io::endl);
+		// join of predecessor
+		d.set(tmp, d.bottom());
+		for(typename G::Predecessor pred(g, v); pred; pred++)
+			d.join(tmp, vals[g.index(pred)]);
+		OTAWA_AILD(cerr << "	- JOIN IN: "; d.dump(cerr, tmp); cerr << io::endl);
 
-			// update value
-			d.update(v, tmp);
-			OTAWA_AILD(cerr << "- UPDATE: "; d.dump(cerr, tmp); cerr << io::endl);
+		// update value
+		d.update(v, tmp);
+		OTAWA_AILD(cerr << "	- UPDATE: "; d.dump(cerr, tmp); cerr << io::endl);
 
-			// new value ?
-			if(d.equals(d.bottom(), vals[g.index(v)]) || !d.equals(tmp, vals[g.index(v)])) {
-				OTAWA_AILD(cerr << "- NEW VALUE\n");
-				d.set(vals[g.index(v)], tmp);
+		// new value ?
+		if(/*d.equals(d.bottom(), vals[g.index(v)]) ||*/ !d.equals(tmp, vals[g.index(v)])) {
+			OTAWA_AILD(cerr << "	- NEW VALUE\n");
+			d.set(vals[g.index(v)], tmp);
 
-				// add successors
-				for(typename G::Successor succ(g, v); succ; succ++) {
-					todo.put(*succ);
-					OTAWA_AILD(cerr << "- PUTTING " << *succ << io::endl);
-				}
+			// add successors
+			for(typename G::Successor succ(g, v); succ; succ++) {
+				push(*succ);
+				OTAWA_AILD(cerr << "	- PUTTING " << *succ << io::endl);
 			}
 		}
 	}
@@ -95,6 +117,8 @@ private:
 	T d;
 	typename T::t *vals;
 	typename T::t tmp;
+	genstruct::VectorQueue<typename G::Vertex> todo;
+	BitVector set;
 };
 
 } } // otawa::dfa

@@ -26,7 +26,9 @@ public:
 		CALL,
 		VIRTUAL,
 		VIRTUAL_CALL,
-		VIRTUAL_RETURN
+		VIRTUAL_RETURN,
+		EXN_CALL,
+		EXN_RETURN
 	} kind_t;
 private:
 	kind_t knd;

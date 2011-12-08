@@ -60,6 +60,12 @@ public:
 		BasicBlock::OutIterator iter;
 	};
 
+	class Iterator: public CFG::BBIterator {
+	public:
+		inline Iterator(const ForwardCFGAdapter& cfga): CFG::BBIterator(cfga.cfg) { }
+		inline Iterator(const Iterator& iter): CFG::BBIterator(iter) { }
+	};
+
 private:
 	CFG *cfg;
 };
@@ -97,6 +103,12 @@ public:
 				iter++;
 		}
 		BasicBlock::OutIterator iter;
+	};
+
+	class Iterator: public CFG::BBIterator {
+	public:
+		inline Iterator(const BackwardCFGAdapter& cfga): CFG::BBIterator(cfga.cfg) { }
+		inline Iterator(const Iterator& iter): CFG::BBIterator(iter) { }
 	};
 
 private:

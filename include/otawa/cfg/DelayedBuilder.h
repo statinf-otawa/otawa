@@ -24,6 +24,7 @@
 
 #include <elm/genstruct/SLList.h>
 #include <otawa/proc/CFGProcessor.h>
+#include <otawa/cfg/Edge.h>
 #include <otawa/cfg/features.h>
 
 namespace otawa {
@@ -56,7 +57,7 @@ private:
 
 	typedef genstruct::HashTable<BasicBlock *, BasicBlock *> map_t;
 	void fix(Edge *oedge, Edge *nedge);
-	void cloneEdge(Edge *edge, BasicBlock *source);
+	void cloneEdge(Edge *edge, BasicBlock *source, Edge::kind_t kind);
 	void insert(Edge *edge, BasicBlock *ibb);
 	BasicBlock *makeBB(Inst *inst);
 	BasicBlock *makeNOp(BasicBlock *bb);

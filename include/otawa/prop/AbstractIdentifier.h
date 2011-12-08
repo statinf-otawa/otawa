@@ -56,6 +56,10 @@ public:
 	virtual Property *copy(Property& prop) const;
 	inline Property *copy(Property *prop) const { return copy(*prop); }
 
+	// serialization
+	virtual void serialize(elm::serial2::Serializer& serializer);
+	virtual void unserialize(elm::serial2::Unserializer& unserializer);
+
 protected:
 	void initProps(Property *prop, VarArg& args);
 

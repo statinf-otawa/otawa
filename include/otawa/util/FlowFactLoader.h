@@ -99,6 +99,7 @@ private:
 	void loadXML(const string& path) throw(ProcessorException);
 	void scanXLoop(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXFun(xom::Element *element, ContextualPath& path) throw(ProcessorException);
+	void scanXConditional(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	Address scanAddress(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	Option<long> scanInt(xom::Element *element, cstring name) throw(ProcessorException);
 	Option<unsigned long> scanUInt(xom::Element *element, cstring name) throw(ProcessorException);

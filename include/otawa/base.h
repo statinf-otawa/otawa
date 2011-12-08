@@ -33,12 +33,18 @@
 #include <elm/types.h>
 #include <elm/type_info.h>
 
-// Base types
-namespace elm { namespace t {
-typedef uint8 byte;
-typedef uint32 size;
-typedef uint32 mask;
-} }
+// ELM definitions
+namespace elm {
+	namespace t {
+		typedef uint8 byte;
+		typedef uint32 size;
+		typedef uint32 mask;
+	}	// t
+	namespace serial2 {
+		class Serializer;
+		class Unserializer;
+	}	//serial2
+}	// elm
 
 namespace otawa {
 using namespace elm;

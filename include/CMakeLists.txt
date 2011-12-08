@@ -1,0 +1,2 @@
+
+install(DIRECTORY otawa DESTINATION include ${EXCLUDED_FILES})

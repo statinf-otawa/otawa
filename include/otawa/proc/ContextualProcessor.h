@@ -26,13 +26,17 @@
 
 namespace otawa {
 
+class Edge;
+
 // ContextualProcessor class
 class ContextualProcessor: public CFGProcessor {
 public:
 	ContextualProcessor(cstring name, const Version& version);
+	ContextualProcessor(AbstractRegistration & reg);
 
 protected:
-	virtual void processCFG (WorkSpace *fw, CFG *cfg);
+
+	// v1 methods
 	virtual void enteringCall(
 		WorkSpace *ws,
 		CFG *cfg,
@@ -44,6 +48,13 @@ protected:
 		CFG *cfg,
 		BasicBlock *caller,
 		BasicBlock *callee);
+
+	// v2 methods
+	virtual void enteringCall(WorkSpace *ws, CFG *cfg, Edge *edge);
+	virtual void leavingCall(WorkSpace *ws, CFG *cfg, Edge *edge);
+	virtual void avoidingRecursive(WorkSpace *ws, CFG *cfg, Edge *edge);	
+
+	virtual void processCFG (WorkSpace *fw, CFG *cfg);
 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) = 0;
 };
 
