@@ -348,4 +348,22 @@ Property *AbstractIdentifier::copy(Property& prop) const {
  * @return		Copy of the property.
  */
 
+
+/**
+ * Serialize the workspace to the current serializer.
+ * In the default implementation, do nothing.
+ * @param serializer	Serializer to serialize to.
+ */
+void AbstractIdentifier::serialize(elm::serial2::Serializer& serializer) {
+}
+
+
+/**
+ * Unserialize the workspace to the current unserializer.
+ * In the default implementation, do nothing.
+ * @param unserializer	Unserializer to unserialize to.
+ */
+void AbstractIdentifier::unserialize(elm::serial2::Unserializer& unserializer) {
+}
+
 } // otawa

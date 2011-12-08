@@ -29,7 +29,7 @@ namespace otawa { namespace concept {
  * 			index in the range of 0 and the count of vertices in the graph.
  * 			This is useful to implement some optimizations. 
  */
-class DiGraph: public Collection<Vertex> {
+class DiGraph: public elm::concept::Collection<Vertex> {
 public:
 
 	/** Vertex class. */
@@ -204,9 +204,65 @@ public:
 	};
 };
 
-} // concept
 
-namespace dfa {
+/** Concept used to implements @ref AbsIntLite domain.
+ *	The soundness and the termination of the analysis requires
+ *	a CPO (complete partial order) denoted "<=" on the domain values.
+ */
+template <class T, class G>
+class AbstractDomain {
+public:
+
+	/** Type of the values of the domain. */
+	typedef T t;
+	
+	/** Get the initial value (at graph entry). */
+	t initial(void);
+	
+	/** Get the smallest value of the domain "_"
+	 *  such that forall d in domain, join(_, d) = joind(d, _) = d */
+	t bottom(void);
+	
+	/**
+	 * Perform the join of two values, d = join(d1, d2)
+	 * and must satisfy the property: d1 <= d and d2 <= d.
+	 * @param d		First value to join and recipient of the result.
+	 * @param s		Second value to join.
+	 */
+	void join(t& d, t s);
+	
+	/**
+	 *  Test if two values are equal.
+	 * 	@param v1	First value.
+	 *  @param v2	Secondd value.
+	 *	@return		True if both values are equal. */
+	bool equals(t v1, t v2);
+	
+	/**
+	 *  Assign the value s to the value d.
+	 * 	@param d	Assigned value.
+	 * 	@param s	Value to assign.
+	 */
+	void set(t& d, t s);
+
+	/**
+	 * Only required if you use debug capabilities. It allows to
+	 * display value.
+	 * @param out	Stream to output to.
+	 * @param c		Value to output.
+	 */
+	void dump(io::Output& out, t c);
+	
+	/**
+	 * Update the value according to the given graph vertex.
+	 * Notice that this function must be monotonic:
+	 * forall domain values v1, v2 such that v1 <= v2, update(v1) <= update(v2).
+	 * @param vertex	Current vertex.
+	 * @param d			Input value and result value.
+	 */
+	void update(const typename G::Vertex& vertex, t& d);
+
+};
 
 /** Concept used to implements @ref IterativeDFA problems. */
 class IterativeDFAProblem {

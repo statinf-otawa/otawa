@@ -970,6 +970,24 @@ throw(ProcessorException) {
 				scanXLoop(element, path);
 			else if(name == "call")
 				scanXFun(element, path);
+			else if(name == "conditional")
+				scanXConditional(element, path);
+		}
+	}
+}
+
+
+void FlowFactLoader::scanXConditional(xom::Element *element, ContextualPath& path)
+throw(ProcessorException) {
+	for(int i = 0; i < element->getChildCount(); i++) {
+		xom::Node *child = element->getChild(i);
+		if(child->kind() == xom::Node::ELEMENT) {
+			xom::Element *element = (xom::Element *)child;
+			xom::String name = element->getLocalName();
+			if(name == "condition")
+				scanXContent(element, path);
+			else if(name == "case")
+				scanXContent(element, path);
 		}
 	}
 }

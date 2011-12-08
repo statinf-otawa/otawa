@@ -41,7 +41,7 @@ namespace otawa { namespace dfa {
  * For details on the abstract interpretation, you may define the symbol OTAWA_AIL_DEBUG
  * and process information will be printed on standard input.
  *
- * @param G		Type of processed graph (must implement concept @ref otawa::concept::DiGraphWithIndexedVertex)
+ * @param G		Type of processed graph (must implement concept @ref otawa::concept::DiGraphWithIndexedVertex and @ref otawa::concept::DiGraphWithEntry)
  * @param T		Type of abstract domain (must implement concept @ref otawa::concept::AbstractDomain)
  */
 
@@ -75,73 +75,6 @@ namespace otawa { namespace dfa {
  * @return		Input domain.
  */
 
-} } // otawa::dfa
-
-
-namespace otawa { namespace concept {
-
-/**
- * Concept defining type of abstract interpretation domain.
- * This type defines the abstract domain type and defines method to handle them.
- * @param G		Type of analyzed graph.
- */
-template <class G>
-class AbstractDomain {
-public:
-
-	/**
-	 * Type of abstract domains.
-	 */
-	typedef char t;
-
-	/**
-	 * Get the initial domain as input of the entry node.
-	 * @return		Initial domain value.
-	 */
-	t initial(void) const;
-
-	/**
-	 * Get the neutral value for the join operator.
-	 * @return	Neutral domain.
-	 */
-	t bottom(void) const;
-
-	/**
-	 * Update the given domain with the given vertex.
-	 * @param v		Vertex to perform update for.
-	 * @param d		Input domain before and output domain after.
-	 */
-	void update(typename G::Vertex v, t& d);
-
-	/**
-	 * Perform the join by computing d <- join(d, s).
-	 * @param d		First operand and result domain.
-	 * @param s		Second operand domain.
-	 */
-	void join(t& d, t s);
-
-	/**
-	 * Test if two domains are equals.
-	 * @param v1	First tested domain.
-	 * @param v2	Second tested domain.
-	 */
-	bool equals(t v1, t v2) const { return v1 == v2; }
-
-	/**
-	 * Assign a domain to another one.
-	 * @param d		Destination domain.
-	 * @param s		Source domain.
-	 */
-	void set(t& d, t s) const;
-
-	/**
-	 * Dump to the given output stream the given domain.
-	 * @param out	Stream to output to.
-	 * @param c		Domain to dump.
-	 */
-	void dump(io::Output& out, t c);
-};
-
-} } // otawa::concept
+} }
 
 #endif /* OTAWA_DFA_ABSINTLITE_H_ */

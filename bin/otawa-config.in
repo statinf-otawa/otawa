@@ -19,7 +19,7 @@ loader=
 list_proc=
 list_modules=
 cflags_text="-I$prefix/include"
-libs_text="-L$prefix/lib -lotawa -lelm"
+libs_text="-L$prefix/lib -lotawa -lelm -lgel"
 
 
 # Configurations
@@ -111,19 +111,19 @@ function use_module {
 		if [ -z "$LIB_STATIC" ]; then
 			case "$KIND" in
 			ilp)
-				LIB_STATIC="-u${mod}_plugin $prefix/lib/otawa/ilp/$mod.la"
+				LIB_STATIC="-u${mod}_plugin $prefix/lib/otawa/ilp/$mod.so"
 				;;
 			loader)
-				LIB_STATIC="-u${mod}_plugin $prefix/lib/otawa/loader/$mod.la"
+				LIB_STATIC="-u${mod}_plugin $prefix/lib/otawa/loader/$mod.so"
 				;;
 			lib)
-				LIB_STATIC="$prefix/lib/libo$mod.la"
+				LIB_STATIC="$prefix/lib/libo$mod.so"
 				;;
 			proc)
-				LIB_STATIC="$prefix/lib/otawa/proc/$mod.la"
+				LIB_STATIC="$prefix/lib/otawa/proc/$mod.so"
 				;;
 			proc_otawa)
-				LIB_STATIC="$prefix/lib/otawa/proc/otawa/$mod.la"
+				LIB_STATIC="$prefix/lib/otawa/proc/otawa/$mod.so"
 				;;
 			esac
 		fi
@@ -132,19 +132,19 @@ function use_module {
 		if [ -z "$LIB" ]; then
 			case "$KIND" in
 			ilp)
-				LIB="-u${mod}_plugin $prefix/lib/otawa/ilp/$mod.la"
+				LIB="-u${mod}_plugin $prefix/lib/otawa/ilp/$mod.so"
 				;;
 			loader)
-				LIB="-u${mod}_plugin $prefix/lib/otawa/loader/$mod.la"
+				LIB="-u${mod}_plugin $prefix/lib/otawa/loader/$mod.so"
 				;;
 			lib)
-				LIB="$prefix/lib/libo$mod.la"
+				LIB="$prefix/lib/libo$mod.so"
 				;;
 			proc)
-				LIB="$prefix/lib/otawa/proc/$mod.la"
+				LIB="$prefix/lib/otawa/proc/$mod.so"
 				;;
 			proc_otawa)
-				LIB="$prefix/lib/otawa/proc/otawa/$mod.la"
+				LIB="$prefix/lib/otawa/proc/otawa/$mod.so"
 				;;
 			esac
 			fi

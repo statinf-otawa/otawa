@@ -64,6 +64,24 @@ namespace otawa {
 
 
 /**
+ * @var Edge::kind_t Edge::EXN_CALL
+ * Edges of this kind are usually added after an analysis of the CFG
+ * to denote raise of exception (system call, error, etc). The body
+ * of the exception handler is linked with an edge of type EXN_CALL
+ * while the return is linked with an edge of type EXN_RETURN.
+ */
+
+
+/**
+ * @var Edge::kind_t Edge::EXN_CALL
+ * Edges of this kind are usually added after an analysis of the CFG
+ * to denote raise of exception (system call, error, etc). The body
+ * of the exception handler is linked with an edge of type EXN_CALL
+ * while the return is linked with an edge of type EXN_RETURN.
+ */
+
+
+/**
  * @class Edge
  * This class represents edges in the CFG representation.
  * They allow hooking annotations.

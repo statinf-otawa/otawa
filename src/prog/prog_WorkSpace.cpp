@@ -29,7 +29,8 @@
 #include <elm/xom.h>
 #include <otawa/proc/FeatureDependency.h>
 #include <elm/deprecated.h>
-
+ #include <elm/serial2/serial.h>
+#include <otawa/prog/Loader.h>
 
 // Trace
 //#define FRAMEWORK_TRACE
@@ -372,5 +373,31 @@ void WorkSpace::require(const AbstractFeature& feature, const PropList& props) {
  * @return	True if the computation has been cancelled, false else.
  */
 
+
+/**
+ * Serialize the workspace to the current serializer.
+ * @param serializer	Serializer to serialize to.
+ */
+void WorkSpace::serialize(elm::serial2::Serializer& serializer) {
+
+	// link to the loader
+	serializer.beginField("loader");
+	serializer << process()->loader()->path().toString();
+	serializer.endField();
+
+	// save the feature instances
+
+	// save the program representation
+
+}
+
+
+/**
+ * Unserialize the workspace to the current unserializer.
+ * @param unserializer	Unserializer to unserialize to.
+ */
+void WorkSpace::unserialize(elm::serial2::Unserializer& unserializer) {
+	// do nothing for now
+}
 
 } // otawa

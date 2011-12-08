@@ -113,6 +113,14 @@ BasicBlock *DelayedBuilder::makeNOp(BasicBlock *bb) {
  * in sequence and a basic block containing a NOP instruction is inserted in
  * the edge of sequential transfer of control (to take into account the delayed
  * instruction effect on memory hierarchy).
+ * 
+ * @par Required Features
+ * @li @ref COLLECTED_CFG_FEATURE
+ * @li @ref DELAYED_FEATURE
+ * 
+ * @par Provided Features
+ * @li @ref COLLECTED_CFG_FEATURE
+ * @li @ref DELAYED_CFG_FEATURE
  */
 
 Registration<DelayedBuilder> DelayedBuilder::reg(
@@ -214,7 +222,7 @@ void DelayedBuilder::fix(Edge *oedge, Edge *nedge) {
 			if(!edge)
 				throw otawa::Exception(_ << "delayed mono-instruction BB without successor at " << oreturn);
 			if(edge->kind() == Edge::NOT_TAKEN) {
-				nreturn = edge->target();
+				nreturn = map.get(edge->target());
 				edge++;
 			}
 			if(edge)
@@ -240,9 +248,9 @@ void DelayedBuilder::fix(Edge *oedge, Edge *nedge) {
  * Clone an existing edge.
  * @param edge		Cloned edge.
  * @param source	Source BB.
- * @param target	Target BB.
+ * @param kind		Kind of the created edge.
  */
-void DelayedBuilder::cloneEdge(Edge *edge, BasicBlock *source) {
+void DelayedBuilder::cloneEdge(Edge *edge, BasicBlock *source, Edge::kind_t kind) {
 	if(edge->kind() == Edge::CALL) {
 		BasicBlock *target;
 		if(edge->target() == 0)
@@ -257,7 +265,7 @@ void DelayedBuilder::cloneEdge(Edge *edge, BasicBlock *source) {
 		if(!target)
 			target = map.get(edge->target(), 0);
 		ASSERT(target);
-		fix(edge, new Edge(source, target, edge->kind()));
+		fix(edge, new Edge(source, target, kind));
 	}
 }
 
@@ -384,18 +392,18 @@ void DelayedBuilder::buildEdges(CFG *cfg) {
 		// no delay
 		case DO_NOTHING:
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
-				cloneEdge(edge, vbb);
+				cloneEdge(edge, vbb, edge->kind());
 			break;
 
 		// just swallowing
 		case DO_SWALLOW:
 			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 				if(map.get(edge->target(), 0))
-					cloneEdge(edge, vbb);
+					cloneEdge(edge, vbb, edge->kind());
 				else
 					// relink successors of removed mono-instruction BB
 					for(BasicBlock::OutIterator out(edge->target()); out; out++)
-						cloneEdge(out, vbb);
+						cloneEdge(out, vbb, edge->kind());
 			}
 			break;
 
@@ -416,7 +424,7 @@ void DelayedBuilder::buildEdges(CFG *cfg) {
 					// relink successors of removed mono-instruction BB
 					else
 						for(BasicBlock::OutIterator out(edge->target()); out; out++)
-							cloneEdge(out, nop);
+							cloneEdge(out, nop, out->kind());
 				}
 
 				// other edges

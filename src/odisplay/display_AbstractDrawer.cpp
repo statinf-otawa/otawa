@@ -79,6 +79,15 @@ static void setShapeStyle(PropList *props, const ShapeStyle& style) {
  * 
  * AbstractDrawer is rarely used as is. You may prefer automatic graph drawing
  * facilities based on AbstractDrawer provides by @ref GenDrawer.
+ * 
+ * The drawing is configured using several publicly accessible member attributes:
+ * @li kind					Kind of drawing
+ * @li path					path of the file to create
+ * @li page_fill			page backrgound fill style
+ * @li page_text			page text style
+ * @li default_vertex		default vertex shape style
+ * @li default_edge_line	default edge line style
+ * @li default_edge_text	default edge label text style
  * @ingroup display
  */
 

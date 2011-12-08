@@ -893,6 +893,47 @@ SilentFeature SEMANTICS_INFO("otawa::SEMANTICS_INFO", no_maker);
 
 
 /**
+ * This feature is present when the loader provides implementation
+ * of extended semantics information. This feature ensures that
+ * the following semantics instruction are generated:
+ * @li NEG
+ * @li NOT
+ * @li AND
+ * @li OR
+ * @li XOR
+ * @li MUL
+ * @li MULU
+ * @li DIV
+ * @li DIVU
+ * @li MOD
+ * @li MODU
+ * @li SPEC
+ *
+ * @par Provider
+ * @li @ref Process
+ *
+ * @par Activated Methods
+ * @li @ref otawa::Inst::semInsts() method.
+ */
+SilentFeature SEMANTICS_INFO_EXTENDED("otawa::SEMANTICS_INFO_EXTENDED", no_maker);
+
+
+/**
+ * This feature is present when the loader provides implementation
+ * of floating-point semantics instructions.
+ *
+ * @note This is a future feature as, currently, no floating-point instruction exists.
+ *
+ * @par Provider
+ * @li @ref Process
+ *
+ * @par Activated Methods
+ * @li @ref otawa::Inst::semInsts() method.
+ */
+SilentFeature SEMANTICS_INFO_FLOAT("otawa::SEMANTICS_INFO_FLOAT", no_maker);
+
+
+/**
  * @enum delayed_t
  * Enumeration giving the type of delayed modes used by control instruction.
  */

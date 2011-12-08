@@ -77,6 +77,13 @@ ContextualProcessor::ContextualProcessor(cstring name, const Version& version)
 :	CFGProcessor(name, version) {
 }
 
+/**
+ * Build a contextual processor.
+ * @param reg	Registration of the actual processor.
+ */
+ContextualProcessor::ContextualProcessor(AbstractRegistration & reg)
+: CFGProcessor(reg) {
+}
 
 /**
  */
@@ -101,7 +108,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 		if(!edge) {
 			edge = calls.top().snd;
 			calls.pop();
-			this->leavingCall(ws, cfg, edge->target());
+			this->leavingCall(ws, cfg, edge);
 			if(isVerbose())
 				log << "\t\t[" << level << "] leaving call\n";
 			level--;
@@ -138,7 +145,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 
 				// recursive call
 				if(MARK(bb)) {
-					avoidingRecursive(ws, cfg, edge->source(), bb);
+					avoidingRecursive(ws, cfg, edge);
 					if(isVerbose())
 						log << "\t\t[" << level << "] avoiding recursive call from " << edge->source() << " to " << bb << io::endl;
 					bb = 0;
@@ -146,7 +153,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 
 				// simple call
 				else {
-					enteringCall(ws, cfg, edge->source(), bb);
+					enteringCall(ws, cfg, edge);
 					if(isVerbose())
 						log << "\t\t[" << level << "] entering call to " << bb << " from " << edge->source() << io::endl;
 					BasicBlock *ret = VIRTUAL_RETURN_BLOCK(edge->source());
@@ -232,5 +239,38 @@ void ContextualProcessor::avoidingRecursive(
  * @param cfg		Current top CFG.
  * @param bb		Current basic block.
  */
+
+
+/**
+ * Called when the processor enters an inlined function.
+ * As a default, call enteringCall(ws, cfg, source, target).
+ * @param ws	Current workspace.
+ * @param cfg	Current CFG.
+ * @param edge	Edge causing the call.
+ */
+void ContextualProcessor::enteringCall(WorkSpace *ws, CFG *cfg, Edge *edge) {
+	enteringCall(ws, cfg, edge->source(), edge->target());
+}
+
+/**
+ * Called when the processor leaves an inlined function.
+ * As a default, call leavingCall(ws, cfg, source, target).
+ * @param ws	Current workspace.
+ * @param cfg	Current CFG.
+ * @param edge	Edge causing the call.
+ */
+void ContextualProcessor::leavingCall(WorkSpace *ws, CFG *cfg, Edge *edge) {
+	leavingCall(ws, cfg, edge->target());
+}
+
+
+/**
+ * Called to avoid a recursive call. As a default, call avoidingRecursive(ws, cfg, source, target).
+ * @param cfg	Current CFG.
+ * @param edge	Edge causing the call.
+ */
+void ContextualProcessor::avoidingRecursive(WorkSpace *ws, CFG *cfg, Edge *edge) {
+	avoidingRecursive(ws, cfg, edge->source(), edge->target());
+}
 
 } // otawa
