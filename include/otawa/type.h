@@ -116,6 +116,7 @@ public:
 // NoType class
 class NoType: public Type {
 public:
+	inline NoType(void) { }
 	
 	// Type overload
 	virtual kind_t kind(void) const;
