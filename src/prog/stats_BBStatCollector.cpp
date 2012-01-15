@@ -26,162 +26,8 @@
 
 namespace otawa {
 
-// constant list management
-/*template <class T>
-class ListManager {
-public:
-	class Cons {
-	public:
-		inline const T& hd(void) const { return h; }
-		inline Cons *tl(void) const { return t; }
-
-	private:
-		friend class ListManager<T>;
-		inline Cons(void) { }
-		void set(const T& hd, Cons *tl) { h = hd; t = tl; }
-		void link(Cons *tl) { t = tl; }
-		T h;
-		Cons *t;
-	};
-
-	ListManager(int size = 1024): fst(0), free(0), _size(size) { }
-
-	Cons *cons(const T& hd, Cons *tl) {
-		Cons *res = 0;
-
-		// look in free blocks
-		if(free) {
-			res = free;
-			free = free->tl();
-		}
-
-		// take from chunk
-		else if(fst && fst->used < _size) {
-			res = &fst->t[fst->used];
-			fst->used++;
-		}
-
-		// not enough memory
-		else {
-
-			// garbage collect
-			garbage();
-
-			// retry from free list
-			if(free) {
-				res = free;
-				free = free->tl();
-			}
-
-			// new chunk
-			else {
-				chunk_t *chunk = (chunk_t *)(new char[sizeof(chunk_t) + sizeof(Cons *) * _size]);
-				chunk->next = fst;
-				chunk->used = 1;
-				fst = chunk;
-				res = &fst->t[0];
-			}
-		}
-
-		// return result
-		res->set(hd, tl);
-		return res;
-	}
-
-protected:
-	virtual void collect(void) = 0;
-
-	void mark(Cons *item) {
-		while(item) {
-			chunk_t *chunk = find(item);
-			int i = item - chunk->t;
-			if(chunk->bits[word(i)] & mask(i));
-				break;
-			chunk->bits[word(i)] |= mask(i);
-			item = item->tl();
-		}
-	}
-
-private:
-	typedef struct chunk_t {
-		struct chunk_t *next;
-		int used;
-		t::uint32 *bits;
-		Cons t[];
-	} chunk_t;
-
-	inline int words(void) const { return (_size + 31) / 32; }
-	inline int word(int i) const { return i / 32; }
-	inline int bit(int i) const { return i & 0x1f; }
-	inline int mask(int i) const { return 1 << bit(i); }
-
-	chunk_t *find(Cons *cons) {
-		for(chunk_t *cur = fst; cur; cur = cur->next)
-			if(cur->t <= cons && cons < cur->t + _size)
-				return cur;
-		ASSERTP(false, "bad Cons * pointer: something nasty happened");
-		return 0;
-	}
-
-	void garbage(void) {
-
-		// allocate bitvectors
-		for(chunk_t *cur = fst; cur; cur = cur->next) {
-			cur->bits = new t::uint32[words()];
-			for(int i = 0; i < words(); i++)
-				cur->bits[i] = 0;
-		}
-
-		// perform the garbage
-		collect();
-
-		// free bitvectors and collect unused cons
-		for(chunk_t *cur = fst; cur; cur = cur->next) {
-			for(int i = 0; i < _size; i++)
-				if(!(cur->bits[word(i)] & mask(i))) {
-					cur->t[i].link(free);
-					free = &cur->t[i];
-				}
-			delete [] cur->bits;
-		}
-	}
-
-	chunk_t *fst;
-	Cons *free;
-	int _size;
-};*/
 
 
-/*class ContextManager: public ListManager<ContextualStep> {
-public:
-	typedef Pair<BasicBlock *, Cons *> pair_t;
-	typedef Vector<pair_t> todo_t;
-
-	BasicBlock *bb;
-	Cons *ctx;
-
-	inline void push(void) {
-		todo.push(pair_t(bb, ctx));
-	}
-
-	inline void pop(void) {
-		pair_t pair = todo.pop();
-		bb = pair.fst;
-		ctx = pair.snd;
-	}
-
-	inline operator bool(void) const { return todo; }
-
-protected:
-	virtual void collect(void) {
-		mark(ctx);
-		for(int i = 0; i < todo.count(); i++)
-			mark(todo[i].snd);
-	}
-
-private:
-	todo_t todo;
-};*/
 
 
 /**
@@ -231,8 +77,6 @@ void BBStatCollector::processCFG(Collector& collector, CFG *cfg) {
 	Vector<call_t> calls;
 
 	// initialization
-	calls.push(call_t(cfg, 0));
-	//collector.enter(ContextualStep(ContextualStep::FUNCTION, cfg->address()));
 	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++)
 		todo.push(edge);
 
@@ -246,7 +90,10 @@ void BBStatCollector::processCFG(Collector& collector, CFG *cfg) {
 			edge = calls.top().snd;
 			calls.pop();
 			collector.leave();
-			bb = edge->target();
+			if(calls) {
+				collector.leave();
+				bb = edge->target();
+			}
 		}
 
 		// a virtual call ?
@@ -270,10 +117,16 @@ void BBStatCollector::processCFG(Collector& collector, CFG *cfg) {
 			break;
 
 		case Edge::VIRTUAL:
-			if(edge->target() == cfg->exit()) {
+			if(edge->target() == cfg->exit())
 				bb = 0;
-				break;
+			else {
+				bb = edge->target();
+				collector.enter(ContextualStep(ContextualStep::FUNCTION, edge->target()->address()));
+				calls.push(call_t(cfg, BasicBlock::InIterator(cfg->exit())));
+				todo.push(0);
 			}
+			break;
+
 
 		case Edge::VIRTUAL_CALL: {
 				bb = edge->target();
