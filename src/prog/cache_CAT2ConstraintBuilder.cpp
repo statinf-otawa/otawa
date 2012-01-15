@@ -46,7 +46,20 @@ namespace otawa {
 
 Identifier<ilp::Var *> HIT_VAR("otawa::HIT_VAR", 0);
 Identifier<ilp::Var *> MISS_VAR("otawa::MISS_VAR", 0);
-  
+
+
+// registration
+static Registration<CAT2ConstraintBuilder> reg("otawa::CAT2ConstraintBuilder", Version(1, 0, 0),
+	p::require, &ASSIGNED_VARS_FEATURE,
+	p::require, &ICACHE_CATEGORY2_FEATURE,
+	p::require, &DOMINANCE_FEATURE,
+	p::require, &COLLECTED_LBLOCKS_FEATURE,
+	p::require, &ILP_SYSTEM_FEATURE,
+	p::require, &hard::CACHE_CONFIGURATION_FEATURE,
+	p::provide, &INST_CACHE_SUPPORT_FEATURE,
+	p::end);
+
+
 /**
  * @class CAT2ConstraintBuilder
  *
@@ -79,16 +92,7 @@ Identifier<ilp::Var *> MISS_VAR("otawa::MISS_VAR", 0);
  * @par Statistics
  * none
  */
-
-
-
-CAT2ConstraintBuilder::CAT2ConstraintBuilder(void) : Processor("otawa::CAT2ConstraintBuilder", Version(1, 0, 0)), _explicit(false) {
-	require(ASSIGNED_VARS_FEATURE);
-	require(ICACHE_CATEGORY2_FEATURE);
-	require(DOMINANCE_FEATURE);
-	require(COLLECTED_LBLOCKS_FEATURE);
-	require(ILP_SYSTEM_FEATURE);
-	provide(INST_CACHE_SUPPORT_FEATURE);
+CAT2ConstraintBuilder::CAT2ConstraintBuilder(void) : Processor(::reg), _explicit(false) {
 }
 
 void CAT2ConstraintBuilder::configure(const PropList& props) {
@@ -102,6 +106,8 @@ void CAT2ConstraintBuilder::setup(otawa::WorkSpace *fw) {
                 
 void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
+	if(!cache)
+		throw ProcessorException(*this, "no instruction cache available");
 	ilp::System *system = SYSTEM(fw);
 	int penalty = cache->missPenalty();
 	LBlockSet **lbsets = LBLOCKS(fw);
