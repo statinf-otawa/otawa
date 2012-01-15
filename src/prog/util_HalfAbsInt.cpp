@@ -140,8 +140,8 @@ Identifier<bool> HAI_DONT_ENTER("otawa::util::hai_dont_enter", false);
  * This should be used only to bypass function calls in inlined CFGs.
  */
  
-Identifier<BasicBlock*> HAI_BYPASS_SOURCE("otawa::util::HAI_BYPASS_SOURCE", false);
-Identifier<BasicBlock*> HAI_BYPASS_TARGET("otawa::util::HAI_BYPASS_TARGET", false);
+Identifier<BasicBlock*> HAI_BYPASS_SOURCE("otawa::util::HAI_BYPASS_SOURCE", 0);
+Identifier<BasicBlock*> HAI_BYPASS_TARGET("otawa::util::HAI_BYPASS_TARGET", 0);
 
 /**
  * @fn typename FixPoint::FixPointState *HalfAbsInt::getFixPointState(BasicBlock *bb);
