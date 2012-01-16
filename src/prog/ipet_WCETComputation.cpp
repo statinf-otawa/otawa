@@ -61,7 +61,7 @@ public:
 	virtual cstring unit(void) const { return "cycle"; }
 	virtual bool isEnum(void) const { return false; }
 	virtual const cstring valueName(int value) { return ""; }
-	virtual int total(void) const { return WCET(ws()); }
+	virtual int total(void) { return WCET(ws()); }
 	virtual int mergeContext(int v1, int v2) { return max(v1, v2); }
 	virtual int mergeAgreg(int v1, int v2) { return v1 + v2; }
 
@@ -113,8 +113,6 @@ WCETComputation::WCETComputation(void): Processor(reg) {
 /**
  */
 void WCETComputation::processWorkSpace(WorkSpace *fw) {
-
-	// perform the computation
 	System *system = SYSTEM(fw);
 	if(!system)
 		throw ProcessorException(*this, "no ILP system defined in this CFG");
@@ -129,10 +127,13 @@ void WCETComputation::processWorkSpace(WorkSpace *fw) {
 	if(isVerbose())
 		log << "\tWCET = " << wcet << io::endl;
 	WCET(fw) = wcet;
+}
 
-	// manage statistics
-	if(isCollectingStats())
-		recordStat(WCET_FEATURE, new BBTimeCollector(fw));
+
+/**
+ */
+void WCETComputation::collectStats(WorkSpace *ws) {
+	recordStat(WCET_FEATURE, new BBTimeCollector(ws));
 }
 
 

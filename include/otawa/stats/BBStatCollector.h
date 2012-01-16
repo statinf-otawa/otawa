@@ -35,13 +35,16 @@ public:
 protected:
 	inline WorkSpace *ws(void) const { return _ws; }
 	inline CFG *cfg(void) const { return _cfg; }
+	virtual int total(void);
 	virtual void collect(Collector& collector, BasicBlock *bb) = 0;
+	virtual int total(BasicBlock *bb);
 
 private:
 	virtual void processCFG(Collector& collector, CFG *cfg);
 	void process(Collector& collector);
 	WorkSpace *_ws;
 	CFG *_cfg;
+	int _total;
 };
 
 }	// otawa

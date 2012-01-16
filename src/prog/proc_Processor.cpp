@@ -484,6 +484,10 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 		ASSERTP(dep, "cleanup invoked for a not provided feature: " + (*clean).fst->name());
 		(*dep)((*clean).snd);
 	}
+
+	// record statistics
+	if(isCollectingStats())
+		collectStats(ws);
 }
 
 
@@ -524,6 +528,21 @@ void Processor::setup(WorkSpace *ws) {
  * @param ws	Workspace to work on.
  */
 void Processor::cleanup(WorkSpace *ws) {
+}
+
+
+/**
+ * This method is invoked if the user has required to collect statistics
+ * about the processor. In its default implementation, this method
+ * does nothing but it may be customized if the current implementation
+ * provides statistics. It is called after the main computation of the processor.
+ *
+ * Statistics must be objects inheriting from the class @ref StatCollector
+ * and recorded with method recordStat().
+ *
+ * @param ws	Current workspace.
+ */
+void Processor::collectStats(WorkSpace *ws) {
 }
 
 

@@ -35,6 +35,7 @@ public:
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
+	virtual void collectStats(WorkSpace *ws);
 
 private:
 	ilp::System *system;

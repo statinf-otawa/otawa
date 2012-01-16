@@ -37,7 +37,7 @@ public:
 	// value processing
 	virtual bool isEnum(void) const = 0;
 	virtual const cstring valueName(int value) = 0;
-	virtual int total(void) const = 0;
+	virtual int total(void) = 0;
 
 	// collection
 	class Collector {

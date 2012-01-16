@@ -42,7 +42,7 @@ namespace otawa {
  * Build the BB statistics collector.
  * @param ws	Current workspace.
  */
-BBStatCollector::BBStatCollector(WorkSpace *ws): _ws(ws), _cfg(0) {
+BBStatCollector::BBStatCollector(WorkSpace *ws): _ws(ws), _cfg(0), _total(-1) {
 }
 
 
@@ -176,5 +176,41 @@ void BBStatCollector::processCFG(Collector& collector, CFG *cfg) {
  * @param collector		The invoker collector to pass statistics information.
  * @param bb			Current basic block.
  */
+
+
+/**
+ * This method is automatically called on each basic block
+ * to compute the @ref total() result as the sum of total of each
+ * basic block. This methodmust be overriden to provide a customized behaviour.
+ * As a default, it returns 0.
+ * @param bb	Current basic block.
+ * @return		Total of the basic block.
+ */
+int BBStatCollector::total(BasicBlock *bb) {
+	return 0;
+}
+
+
+/**
+ * Default implementation of a total as the sum of the total
+ * of each basic block (method total(BasicBlock *). It may be overriden
+ * if the default behavior does not match.
+ * @notice	As a default, entry and exit nodes are ignored.
+ * @return	Total of the statistics.
+ */
+int BBStatCollector::total(void) {
+	if(_total < 0) {
+		_total = 0;
+		const CFGCollection *coll = INVOLVED_CFGS(_ws);
+		ASSERT(coll);
+		for(int i = 0; i < coll->count(); i++) {
+			_cfg = coll->get(i);
+			for(CFG::BBIterator bb(_cfg); bb; bb++)
+				if(!bb->isEnd())
+					_total += total(bb);
+		}
+	}
+	return _total;
+}
 
 }	// otawa

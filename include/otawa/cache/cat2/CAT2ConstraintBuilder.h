@@ -37,6 +37,7 @@ class CAT2ConstraintBuilder : public otawa::Processor {
 	virtual void processWorkSpace(otawa::WorkSpace*);
 	virtual void configure(const PropList& props);
 	virtual void setup(otawa::WorkSpace*);
+	virtual void collectStats(WorkSpace *ws);
 };
 
 }

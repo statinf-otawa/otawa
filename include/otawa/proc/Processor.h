@@ -139,6 +139,7 @@ protected:
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void setup(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
+	virtual void collectStats(WorkSpace *ws);
 
 	// Deprecated
 	virtual void processFrameWork(WorkSpace *fw);
