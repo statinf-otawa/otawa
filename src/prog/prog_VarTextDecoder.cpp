@@ -32,7 +32,7 @@ using namespace elm;
 
 #define QUEUE_SIZE	512
 
-#define TRACE(m)	//cerr << m << io::endl;
+#define TRACE(m)	cerr << m << io::endl;
 
 namespace otawa {
 
@@ -97,12 +97,19 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
  * Find the instruction at the given address or raise an exception.
  * @param ws					Current workspace.
  * @param address				Address of the instruction to find.
+ * @param source				Source instruction (before or branching from).
  * @return						Instruction matching the given address.
  */
-Inst *VarTextDecoder::getInst(WorkSpace *ws, otawa::address_t address) {
+Inst *VarTextDecoder::getInst(WorkSpace *ws, otawa::address_t address, Inst *source) {
 	Inst *inst = ws->findInstAt(address);
-	if(!inst)
-		warn( elm::_ << "unconsistant binary: no code segment at " << address);
+	if(!inst) {
+		if(!source)
+			warn( elm::_ << "unconsistant binary: no code segment at " << address << " from symbol");
+		if(source->topAddress() == address)
+			warn( elm::_ << "unconsistant binary: no code segment at " << address << " after instruction at " << source->address());
+		else
+			warn( elm::_ << "unconsistant binary: no code segment at " << address << "  target of branch at " << source->address());
+	}
 	return inst;
 }
 
@@ -119,26 +126,24 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 	TRACE("otawa::VarTextDecoder::processEntry("  << address << ")");
 
 	// Initialize the queue
-	VectorQueue<address_t> todo(QUEUE_SIZE);
-	todo.put(address);
+	VectorQueue<Inst *> todo(QUEUE_SIZE);
+	todo.put(getInst(ws, address));
 
 	// Repeat until there is no more address to explore
 	while(!todo.isEmpty()) {
 
 		// Get the next instruction
-		address_t addr = todo.get();
-		TRACE("otawa::VarTextDecoder::processEntry: starting from " << addr);
-		Inst *first_inst = getInst(ws,  addr);
+		Inst *first_inst = todo.get();
+		TRACE("otawa::VarTextDecoder::processEntry: starting from " << first_inst->address());
+		//Inst *first_inst = getInst(ws,  addr);
 		Inst *inst = first_inst;
 
 		// Follow the instruction until a branch
 		address_t next;
 		while(inst && !MARKER(inst) && !inst->isControl()) {
-			TRACE("otawa::VarTextDecoder::processEntry: process "
-				<< inst->address() << " : " << io::hex(inst->kind())
-				<< ": " << inst);
+			TRACE("otawa::VarTextDecoder::processEntry: process " << inst->address() << " : " << io::hex(inst->kind()) << ": " << inst);
 			next = inst->topAddress();
-			inst = getInst(ws, next);
+			inst = getInst(ws, next, inst);
 		}
 
 		// mark the block
@@ -155,7 +160,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 		// Record target and next
 		if(inst->isConditional()) {
 			TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
-			todo.put(inst->topAddress());
+			todo.put(getInst(ws, inst->topAddress(), inst));
 		}
 		if(!inst->isReturn() && !IS_RETURN(inst)) {
 			Inst *target = 0;
@@ -167,20 +172,20 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 			}
 			if(target && !NO_CALL(target)) {
 				TRACE("otawa::VarTextDecoder::processEntry: put(" << target->address() << ")");
-				todo.put(target->address());
+				todo.put(target);
 			}
 			else if(!target) {
 				bool one = false;
 				for(Identifier<Address>::Getter target(inst, BRANCH_TARGET); target; target++) {
 					one = true;
-					todo.put(target);
+					todo.put(getInst(ws, target, inst));
 				}
 				if(!one && isVerbose())
 					log << "WARNING: no target for branch at " << inst->address() << io::endl;
 			}
 			if(inst->isCall() && (!target || !NO_RETURN(target))) {
 				TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
-				todo.put(inst->topAddress());
+				todo.put(inst);
 			}
 		}
 	}
