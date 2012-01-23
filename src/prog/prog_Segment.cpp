@@ -229,8 +229,10 @@ void Segment::insert(ProgItem *item) {
 	else {
 		//cerr << "=>" << item->topAddress() << " < " << cur->address() << io::endl;
 		if(item->topAddress() > cur->address())
-			throw DecodingException(_ <<
-				"instruction at " << item->address() << " in middle of another instruction before " << cur->previous()->address());
+			throw DecodingException(_
+				<< "instruction at " << item->address() << ':' << item->size()
+				<< " in middle of instruction at " << cur->address() << ':' << cur->size()
+				<< " before " << cur->previous()->address() << ':' << cur->previous()->size());
 		cur->insertBefore(item);
 	}
 	
