@@ -1,12 +1,7 @@
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../lib")
 
 
-set(mkff_SOURCES
-	mkff.cpp
-	)
-	
-# making exe here ?
-add_executable(mkff ${mkff_SOURCES})
-
+add_executable(mkff mkff.cpp)
 target_link_libraries(mkff ${LIBELM})
 target_link_libraries(mkff otawa)
+install(TARGETS mkff DESTINATION bin)
