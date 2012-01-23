@@ -17,6 +17,15 @@
 
 namespace otawa { namespace ipet {
 
+static Registration<TrivialInstCacheManager> my_reg(
+	"otawa::ipet::TrivialInstCacheManager",
+	Version(1, 1, 0),
+	p::provide, &INST_CACHE_SUPPORT_FEATURE,
+	p::require, &BB_TIME_FEATURE,
+	p::require, &hard::CACHE_CONFIGURATION_FEATURE,
+	p::end
+);
+
 /**
  * This processor is a trivial manager of instruction cache for IPET approach.
  * Basically, it considers that each code line blocks causes a miss.
@@ -31,12 +40,7 @@ namespace otawa { namespace ipet {
 
 /**
  */
-TrivialInstCacheManager::TrivialInstCacheManager(void):
-	BBProcessor("otawa::ipet::TrivialInstCacheManager", Version(1, 0, 0)),
-	cache(0)
-{
-	provide(INST_CACHE_SUPPORT_FEATURE);
-	require(BB_TIME_FEATURE);
+TrivialInstCacheManager::TrivialInstCacheManager(void): BBProcessor(my_reg), cache(0) {
 }
 
 
