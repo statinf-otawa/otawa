@@ -162,6 +162,8 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 					CFG *called_cfg = CALLED_CFG(edge);
 					if(!called_cfg)
 						called_cfg = cfg;
+					if(!BasicBlock::InIterator(ret))
+						throw ProcessorException(*this, _ << "unconnected CFG for function " << called_cfg->label());
 					calls.push(call_t(called_cfg, BasicBlock::InIterator(ret)));
 					todo.push(0);
 					level++;
