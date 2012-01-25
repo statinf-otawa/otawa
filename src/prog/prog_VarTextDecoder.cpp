@@ -32,7 +32,7 @@ using namespace elm;
 
 #define QUEUE_SIZE	512
 
-#define TRACE(m)	cerr << m << io::endl;
+#define TRACE(m)	//cerr << m << io::endl;
 
 namespace otawa {
 
@@ -81,14 +81,20 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 	for(Process::FileIter file(ws->process()); file; file++)
 		for(File::SymIter sym(file); sym; sym++)
 			if(sym->kind() == Symbol::FUNCTION) {
-				if(isVerbose())
-					log << "\tprocessing function \"" << sym->name() << " at " << sym->address() << io::endl;
-				Inst *inst = ws->findInstAt(sym->address());
-				if(inst)
-					processEntry(ws, sym->address());
-				else
-					warn(elm::_ << "bad function symbol \"" << sym->name()
-						   << "\" no code segment at " << sym->address());
+				if(!IGNORE_ENTRY(sym)) {
+					if(isVerbose())
+						log << "\tignoring function symbol \"" << sym->name() << "\"\n";
+				}
+				else {
+					if(isVerbose())
+						log << "\tprocessing function \"" << sym->name() << " at " << sym->address() << io::endl;
+					Inst *inst = ws->findInstAt(sym->address());
+					if(inst)
+						processEntry(ws, sym->address());
+					else
+						warn(elm::_ << "bad function symbol \"" << sym->name()
+							   << "\" no code segment at " << sym->address());
+				}
 			}
 }
 
@@ -134,6 +140,8 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 
 		// Get the next instruction
 		Inst *first_inst = todo.get();
+		if(!first_inst)
+			continue;
 		TRACE("otawa::VarTextDecoder::processEntry: starting from " << first_inst->address());
 		//Inst *first_inst = getInst(ws,  addr);
 		Inst *inst = first_inst;
@@ -179,13 +187,14 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 				for(Identifier<Address>::Getter target(inst, BRANCH_TARGET); target; target++) {
 					one = true;
 					todo.put(getInst(ws, target, inst));
+					TRACE("otawa::VarTextDecoder::processEntry: put(" << target << ")");
 				}
 				if(!one && isVerbose())
 					log << "WARNING: no target for branch at " << inst->address() << io::endl;
 			}
 			if(inst->isCall() && (!target || !NO_RETURN(target))) {
 				TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
-				todo.put(inst);
+				todo.put(getInst(ws, inst->topAddress(), inst));
 			}
 		}
 	}
