@@ -145,6 +145,13 @@ extern int fft_line;
  * per loop start and @c totalcount gives the total number of loop iteration
  * for the whole program execution. At least one of them must be given.
  *
+ * @code
+ * <ignore-entry name="STRING"/>
+ * @endcode
+ * In some executable files, symbols are marked as function entries but are not,
+ * possibly causing problems in instruction decoding. This problem may be avoided
+ * by marking such symbols with this directive.
+ *
  * @par Content of functions and calls
  *
  * The @ function element content may be either @c loop elements as given
@@ -222,6 +229,12 @@ extern int fft_line;
  *
  * @li <b><tt>preserve ADDRESS ;</tt></b> @n
  * Ensure that flow fact loader will not change the addressed instruction.
+ *
+ * @li <b><tt>ignore entry STRING;</tt></b> @n
+ * In some executable files, symbols are marked as function entries but are not,
+ * possibly causing problems in instruction decoding. This problem may be avoided
+ * by marking such symbols with this directive.
+ *
  *
  * @par Syntactic items
  *
@@ -460,6 +473,27 @@ void FlowFactLoader::onError(const string& message) {
  */
 void FlowFactLoader::onWarning(const string& message) {
 	warn(_ << path << ": " << fft_line << ": " << message);
+}
+
+
+/**
+ * Called when an "ignore entry" command is found. This ensures that
+ * the symbol is not considered as a code entry during deconding phase.
+ * @param name	Name of the symbol.
+ */
+void FlowFactLoader::onIgnoreEntry(string name) {
+
+	// look for the symbol
+	for(Process::FileIter file(workspace()->process()); file; file++) {
+		Symbol *sym = file->findSymbol(name);
+		if(sym) {
+			IGNORE_ENTRY(sym) = true;
+			return;
+		}
+	}
+
+	// else produces a warning
+	onWarning(_ << "symbol \"" << name << "\" cannot be found.");
 }
 
 
@@ -780,6 +814,8 @@ throw(ProcessorException) {
 			}
 			else if(name == "flowfacts")
 				scanXBody(element, cpath);
+			else if(name == "ignore-entry")
+				scanIgnoreEntry(element);
 			else
 				warn(_ << "garbage at \"" << xline(child) << "\"");
 		}
@@ -977,6 +1013,11 @@ throw(ProcessorException) {
 }
 
 
+/**
+ * Called to scan an "if" element.
+ * @param element	"if" element.
+ * @param path		Current contextual path.
+ */
 void FlowFactLoader::scanXConditional(xom::Element *element, ContextualPath& path)
 throw(ProcessorException) {
 	for(int i = 0; i < element->getChildCount(); i++) {
@@ -990,6 +1031,19 @@ throw(ProcessorException) {
 				scanXContent(element, path);
 		}
 	}
+}
+
+
+/**
+ * Called when an "ignore-entry" elemet is found.
+ * @param element	Current element.
+ */
+void FlowFactLoader::scanIgnoreEntry(xom::Element *element) {
+	Option<xom::String> name = element->getAttributeValue("name");
+	if(!name || !*name)
+		onWarning(_ << xline(element) << ": no name given");
+	else
+		onIgnoreEntry(*name);
 }
 
 
@@ -1182,5 +1236,20 @@ Identifier<int> MIN_ITERATION("otawa::MIN_ITERATION", -1);
  * @ingroup ff
  */
 Identifier<int> TOTAL_ITERATION("otawa::TOTAL_ITERATION", -1);
+
+
+/**
+ * Put on function symbol that must be ignored as function entry.
+ * It mainly used to avoid problems with executable files containing
+ * symbols marked as function that are in fact data.
+ *
+ * @par Features
+ * @li @ref FLOW_FACTS_FEATURE
+ *
+ * @par Hooks
+ * @li @ref Symbol
+ */
+Identifier<bool> IGNORE_ENTRY("otawa::IGNORE_ENTRY", false);
+
 
 } // otawa

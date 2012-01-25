@@ -57,18 +57,24 @@ SYM [?;,+-/:]
 
 {SYM}			return *yytext;
 
-"loop"			return LOOP;
+"call"			return KW_CALL;
 "checksum"		return CHECKSUM;
-"return"		return RETURN;
-"noreturn"		return NORETURN;
-"nocall"		return KW_NOCALL;
-"multibranch"	return KW_MULTIBRANCH;
+"control"		return KW_CONTROL;
+"entry"			return KW_ENTRY;
+"ignore"		return KW_IGNORE;
 "ignorecontrol"	return KW_IGNORECONTROL;
 "ignoreseq"		return KW_IGNORESEQ;
-"to"			return KW_TO;
-"preserve"		return KW_PRESERVE;
 "in"			return KW_IN;
+"loop"			return LOOP;
 "max"			return KW_MAX;
+"multibranch"	return KW_MULTIBRANCH;
+"nocall"		return KW_NOCALL;
+"preserve"		return KW_PRESERVE;
+"no"			return KW_NO;
+"noreturn"		return NORETURN;
+"return"		return RETURN;
+"seq"			return KW_SEQ;
+"to"			return KW_TO;
 "total"			return KW_TOTAL;
 
 \"			BEGIN(STR);

@@ -52,20 +52,26 @@ static void reset_counts(void) {
 
 %token <_int> INTEGER
 %token <_str> STRING;
-%token LOOP
-%token CHECKSUM
 %token BAD_TOKEN
-%token RETURN
-%token NORETURN
-%token KW_NOCALL
-%token KW_MULTIBRANCH
+%token CHECKSUM
+%token KW_CALL
+%token KW_CONTROL
+%token KW_ENTRY
+%token KW_IGNORE
 %token KW_IGNORECONTROL
 %token KW_IGNORESEQ
-%token KW_TO
-%token KW_PRESERVE
 %token KW_IN
 %token KW_MAX
+%token KW_MULTIBRANCH
+%token KW_NO
+%token KW_NOCALL
+%token KW_PRESERVE
+%token KW_SEQ
+%token KW_TO
 %token KW_TOTAL
+%token LOOP
+%token NORETURN
+%token RETURN
 %type<addr> full_address id_or_address
 
 %%
@@ -102,16 +108,26 @@ command:
 		{ loader->onReturn(*$2); delete $2; }
 |	NORETURN full_address ';'
 		{ loader->onNoReturn(*$2); delete $2; }
+|	KW_NO RETURN full_address ';'
+		{ loader->onNoReturn(*$3); delete $3; }
 |	KW_NOCALL id_or_address ';'
 		{ loader->onNoCall(*$2); delete $2; }
+|	KW_NO KW_CALL id_or_address ';'
+		{ loader->onNoCall(*$3); delete $3; }
 |	KW_IGNORECONTROL full_address ';'
 		{ loader->onIgnoreControl(*$2); delete $2; }
+|	KW_IGNORE KW_CONTROL full_address ';'
+		{ loader->onIgnoreControl(*$3); delete $3; }
 |	KW_IGNORESEQ full_address ';'
 		{ loader->onIgnoreSeq(*$2); delete $2; }
+|	KW_IGNORE KW_SEQ full_address ';'
+		{ loader->onIgnoreSeq(*$3); delete $3; }
 |	KW_MULTIBRANCH { addresses.setLength(0); } multibranch
 		{ }
 |	KW_PRESERVE full_address ';'
 		{ loader->onPreserve(*$2); delete $2; }
+|	KW_IGNORE KW_ENTRY STRING ';'
+		{ loader->onIgnoreEntry(*$3); delete $3; }
 ;
 
 counts:

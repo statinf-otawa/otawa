@@ -18,7 +18,7 @@ class File;
 class Inst;
 
 // Symbol class
-class Symbol {
+class Symbol: public PropList {
 public:
 
 	typedef enum kind_t {
