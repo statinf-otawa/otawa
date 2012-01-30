@@ -31,10 +31,13 @@ add_subdirectory(ocpp)
 add_subdirectory(odisplay)
 
 
-# arm2 check
-if(EXISTS "${CMAKE_SOURCE_DIR}/../armv5t")
-add_subdirectory(arm2)
+# arm check
+if(EXISTS "${CMAKE_SOURCE_DIR}/../armv5t/arm.irg")
+	add_subdirectory(arm2)
+elseif(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/../../arm/lib/libemul.a")
+	add_subdirectory(arm)
 endif()
+
 
 # ILP Plugins
 if(HAS_LP_SOLVE)
@@ -52,10 +55,6 @@ add_subdirectory(ppc2)
 #message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/../../ppc2")
 elseif()
 add_subdirectory(ppc)
-endif()
-
-if(ARM_LIB)
-	add_subdirectory(arm)
 endif()
 
 
