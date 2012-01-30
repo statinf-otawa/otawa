@@ -312,13 +312,11 @@ protected:
 	String task;
 	genstruct::Vector<String> added;
 	void perform(String name);
+
+private:
+	option::StringOption ff_file;
+	option::BoolOption verb;
 };
-
-
-// Options
-static Command command;
-static option::StringOption ff_file(command, 'f', "flowfacts", "select flowfact file to use", "flow fact file", "");
-static option::BoolOption verb(command, 'v', "verbose", "activate the verbose mode", false);
 
 
 /**
@@ -390,7 +388,11 @@ void Command::process(String arg) {
 /**
  * Build the command.
  */
-Command::Command(void): fw(0) {
+Command::Command(void):
+	fw(0),
+	ff_file(*this, 'f', "flowfacts", "select flowfact file to use", "flow fact file", ""),
+	verb(*this, 'v', "verbose", "activate the verbose mode", false)
+{
 	program = "mkff";
 	version = "1.0";
 	author = "Hugues Cassé";
@@ -615,6 +617,7 @@ void ControlOutput::cleanup(WorkSpace *ws) {
  */
 int main(int argc, char **argv) {
 	try {
+		Command command;
 		command.run(argc, argv);
 		return 0;
 	}

@@ -50,6 +50,12 @@ AbstractFeature::AbstractFeature(cstring name)
 
 
 /**
+ */
+AbstractFeature::~AbstractFeature(void) {
+}
+
+
+/**
  * Null value for features.
  */
 AbstractFeature& AbstractFeature::null = _null;
