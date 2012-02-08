@@ -10,15 +10,14 @@ include_directories(${PROC_PREFIX}/include)
 
 # file definitions
 set(OTAWA_KIND 			"${CMAKE_CURRENT_BINARY_DIR}/otawa_kind.h")
-set(OTAWA_PRED 			"${CMAKE_CURRENT_BINARY_DIR}/otawa_pred.h")
 set(OTAWA_TARGET 		"${CMAKE_CURRENT_BINARY_DIR}/otawa_target.h")
-#set(OTAWA_USED_REGS	"${CMAKE_CURRENT_BINARY_DIR}/otawa_used_regs.h")
+set(OTAWA_SEM 			"${CMAKE_CURRENT_BINARY_DIR}/otawa_sem.h")
 
 set(SOURCES
 	"${PROC}.cpp"
 	${OTAWA_KIND}
 	${OTAWA_TARGET}
-#	${OTAWA_USED_REGS}
+	${OTAWA_SEM}
 )
 
 set(IRG			"${PROC_PREFIX}/${PROC}.irg")
@@ -27,7 +26,7 @@ set(GLISS_ATTR	"${CMAKE_SOURCE_DIR}/../gliss2/gep/gliss-attr")
 
 # otawa_XXX build
 add_custom_command(
-	OUTPUT ${OTAWA_KIND} DEPENDS "otawa_kind.tpl" "otawa_kind.nmp"
+	OUTPUT ${OTAWA_KIND} DEPENDS "otawa_kind.tpl" "otawa_kind.nmp" ${IRG}
 	COMMAND ${GLISS_ATTR}
 	ARGS ${IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "otawa_kind.tpl" -d "return 0\\;" -e otawa_kind.nmp
 )
@@ -35,11 +34,13 @@ add_custom_command(
 	OUTPUT ${OTAWA_TARGET} DEPENDS "otawa_target.tpl" "otawa_target.nmp"
 	COMMAND ${GLISS_ATTR}
 	ARGS ${IRG} -o ${OTAWA_TARGET} -a otawa_target -f -t "otawa_target.tpl" -d "return 0\\;" -e otawa_target.nmp
+	DEPEND ${IRG}
 )
-#add_custom_command(
-#	OUTPUT ${OTAWA_USED_REGS} DEPENDS "used_regs.tpl" COMMAND ${GLISS_ATTR}
-#	ARGS ${IRG} -o ${OTAWA_USED_REGS} -a otawa_used_regs -f -t "used_regs.tpl" -d "tmp_var[0] = END_REG\\; return 0\\;" -e otawa_used_regs.nmp
-#)
+add_custom_command(
+	OUTPUT ${OTAWA_SEM} DEPENDS "otawa_sem.tpl" "otawa_sem.nmp" ${IRG}
+	COMMAND ${GLISS_ATTR}
+	ARGS ${IRG} -o ${OTAWA_SEM} -a otawa_sem -p -t "otawa_sem.tpl" -d "';'" -e otawa_sem.nmp
+)
 
 
 # module definition
@@ -57,7 +58,7 @@ if(WIN32)
 	file(WRITE elf_${ELF_NUM}.link "${PROC}.dll")
 	install(FILES elf_${ELF_NUM}.link DESTINATION ${INSTALL_PATH})
 elseif(UNIX OR APPLE)
-	add_custom_command(OUTPUT elf_${ELF_NUM}${SUFFIX} COMMAND ln -s ${PROC}${SUFFIX} elf_${ELF_NUM}${SUFFIX})
+	add_custom_command(OUTPUT elf_${ELF_NUM}${SUFFIX} COMMAND rm -rf elf_${ELF_NUM}${SUFFIX} COMMAND ln -s ${PROC}${SUFFIX} elf_${ELF_NUM}${SUFFIX})
 	add_custom_target(ELF ALL DEPENDS elf_${ELF_NUM}${SUFFIX})
 	install(FILES elf_${ELF_NUM}${SUFFIX} DESTINATION ${INSTALL_PATH})
 endif()

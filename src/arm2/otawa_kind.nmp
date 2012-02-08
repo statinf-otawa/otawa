@@ -74,20 +74,30 @@ ORR_shr, RSB_shr, RSC_shr, SBC_shr, SUB_shr, CLZ, SWP
 		| (if cond.value == 14 then 0 else IS_COND endif)
 		| (if rd == 15 then IS_CONTROL else 0 endif)	
 
-extend Mem_load_store_multiple
-	otawa_kind = IS_MEM | IS_MULTI
+extend LDM
+	otawa_kind = IS_MEM | IS_MULTI | IS_LOAD
 		| (if cond.value == 14 then 0 else IS_COND endif)
-		| (if setl then IS_LOAD else IS_STORE endif)
-		| (if setl && rn.number == 13 && reglist.has_pc then IS_CONTROL | IS_RETURN else 0 endif)
+		| (if rn.number == 13 && reglist.has_pc then IS_CONTROL | IS_RETURN else 0 endif)
+
+extend STM
+	otawa_kind = IS_MEM | IS_MULTI | IS_STORE
+		| (if cond.value == 14 then 0 else IS_COND endif)
 	
-extend Mem_load_store_imm, Mem_load_store_shr
+extend LDR_imm, LDR_shr
  	otawa_kind =
  		  IS_MEM
  		| IS_INT
+ 		| IS_LOAD
  		| (if cond.value == 14 then 0 else IS_COND endif)
- 		| (if setl then IS_LOAD else IS_STORE endif)
- 		| (if setl && rd == 15 then IS_CONTROL else 0 endif)
- 		| (if setl && rd == 15 && rn == 13 then IS_RETURN else 0 endif) 
+ 		| (if rd == 15 then IS_CONTROL else 0 endif)
+ 		| (if rd == 15 && rn == 13 then IS_RETURN else 0 endif) 
+
+extend STR_imm, STR_shr
+ 	otawa_kind =
+ 		  IS_MEM
+ 		| IS_INT
+ 		| IS_STORE
+ 		| (if cond.value == 14 then 0 else IS_COND endif)
 
 extend STRH_imm, STRH_shr
  	otawa_kind =

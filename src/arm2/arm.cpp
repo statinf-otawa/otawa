@@ -25,9 +25,12 @@
 #include <gel/gel.h>
 #include <gel/gel_elf.h>
 #include <gel/debug_line.h>
+#include <otawa/prog/sem.h>
+
 extern "C" {
 #	include <arm/api.h>
 #	include <arm/config.h>
+#	include <arm/used_regs.h>
 }
 
 namespace otawa { namespace arm2 {
@@ -43,6 +46,63 @@ static hard::Register sr("sr", hard::Register::BITS, 32);
 static hard::MeltedBank misc("misc", &sr, 0);
 static const hard::RegBank *banks_tab[] = { &gpr, &misc };
 static genstruct::Table<const hard::RegBank *> banks_table(banks_tab, 2);
+
+// register decoding
+class RegisterDecoder {
+public:
+	RegisterDecoder(void) {
+
+		// clear the map
+		for(int i = 0; i < ARM_REG_COUNT; i++)
+			map[i] = 0;
+
+		// initialize it
+		map[ARM_REG_UCPSR] = &sr;
+		for(int i = 0; i < 16; i++)
+			map[ARM_REG_GPR(i)] = gpr[i];
+	}
+
+	inline hard::Register *operator[](int i) const { ASSERT(i < ARM_REG_COUNT); return map[i]; }
+
+private:
+	hard::Register *map[ARM_REG_COUNT];
+};
+static RegisterDecoder register_decoder;
+
+
+// semantics functions
+#define _GPR(i)			gpr[i]->platformNumber()
+#define _CPSR()			sr.platformNumber()
+#define _BRANCH(t)		sem::branch(t)
+#define _TRAP()			sem::trap(0)
+#define _CONT()			sem::cont()
+#define _IF(c, r, o)	sem::_if(c, r, o)
+#define _LOAD(d, a, b)	sem::load(d, a, b)
+#define _STORE(d, a, b)	sem::store(d, a, b)
+#define _SCRATCH(d)		sem::scratch(d)
+/*macro _set(d, a)			= "_SET"(d, a)*/
+//#define _SETI(d, a)		sem::seti(d, a)
+//#define _CMP(d, a, b)	sem::cmp(d, a, b)
+/*macro cmpu(d, a, b)		= "_CMPU"(d, a, b)*/
+//#define _ADD(d, a, b)	sem::add(d, a, b)
+/*macro sub(d, a, b)		= "_SUB"(d, a, b)*/
+//#define _SHL(d, a, b)	sem::shl(d, a, b)
+//#define _SHR(d, a, b)	sem::shr(d, a, b)
+//#define _ASR(d, a, b)	sem::asr(d, a, b)
+/*macro neg(d, a)			= "_NEG"(d, a)
+macro not(d, a)			= "_NOT"(d, a)
+macro and(d, a, b)		= "_AND"(d, a, b)
+macro or(d, a, b)		= "_AOR"(d, a, b)
+macro xor(d, a, b)		= "_XOR"(d, a, b)
+macro mul(d, a, b)		= "_MUL"(d, a, b)
+macro mulu(d, a, b)		= "_MULU"(d, a, b)
+macro div(d, a, b)		= "_DIV"(d, a, b)
+macro divu(d, a, b)		= "_DIVU"(d, a, b)
+macro mod(d, a, b)		= "_MOD"(d, a, b)
+macro modu(d, a, b)		= "_MODU"(d, a, b)*/
+
+#include "otawa_sem.h"
+
 
 // platform
 class Platform: public hard::Platform {
@@ -95,7 +155,8 @@ public:
 		}
 		return out_regs;
 	}
-
+	
+	virtual void semInsts (sem::Block &block);
 protected:
 	Process &proc;
 
@@ -135,7 +196,7 @@ public:
 	Segment(Process& process,
 		CString name,
 		address_t address,
-		size_t size)
+		t::size size)
 	: otawa::Segment(name, address, size, EXECUTABLE), proc(process) { }
 
 protected:
@@ -277,7 +338,7 @@ public:
 			Address addr = Address::null;
 			Symbol::kind_t kind;
 			gel_sym_t *sym = gel_find_file_symbol(_file, name);
-			assert(sym);
+			ASSERT(sym);
 			gel_sym_info_t infos;
 			gel_sym_infos(sym, &infos);
 			switch(ELF32_ST_TYPE(infos.info)) {
@@ -324,7 +385,6 @@ public:
 		throw (UnsupportedFeatureException);*/
 
 	// internal work
-#if 0
 	void decodeRegs(Inst *oinst,
 		elm::genstruct::AllocatedTable<hard::Register *> *in,
 		elm::genstruct::AllocatedTable<hard::Register *> *out)
@@ -336,28 +396,36 @@ public:
 			return;
 		}
 
-		// get register infos
-		/*elm::genstruct::Vector<hard::Register *> reg_in;
-		elm::genstruct::Vector<hard::Register *> reg_out;
-		otawa_arm_reg_t *addr_reg_info = arm_used_regs(inst);
-		if(addr_reg_info)
-			for (int i = 0; addr_reg_info[i] != END_REG; i++ )
-				translate_gliss_reg_info(addr_reg_info[i], reg_in, reg_out);*/
+		// get the registers
+		arm_used_regs_read_t rds;
+		arm_used_regs_write_t wrs;
+		arm_used_regs(inst, rds, wrs);
 
-		// store results
-		/*int cpt_in = reg_in.length();
-		in->allocate(cpt_in);
-		for (int i = 0 ; i < cpt_in ; i++)
+		// convert registers to OTAWA
+		elm::genstruct::Vector<hard::Register *> reg_in;
+		elm::genstruct::Vector<hard::Register *> reg_out;
+		for (int i = 0; rds[i] != -1; i++ ) {
+			hard::Register *r = register_decoder[rds[i]];
+			if(r)
+				reg_in.add(r);
+		}
+		for (int i = 0; wrs[i] != -1; i++ ) {
+			hard::Register *r = register_decoder[wrs[i]];
+			if(r)
+				reg_out.add(r);
+		}
+
+		// make the in and the out
+		in->allocate(reg_in.length());
+		for(int i = 0 ; i < reg_in.length(); i++)
 			in->set(i, reg_in.get(i));
-		int cpt_out = reg_out.length();
-		out->allocate(cpt_out);
-		for (int i = 0 ; i < cpt_out ; i++)
-			out->set(i, reg_out.get(i));*/
+		out->allocate(reg_out.length());
+		for (int i = 0 ; i < reg_out.length(); i++)
+			out->set(i, reg_out.get(i));
 
 		// Free instruction
 		free(inst);
 	}
-#endif
 
 	otawa::Inst *decode(Address addr) {
 		arm_inst_t *inst = decode_raw(addr);
@@ -500,32 +568,36 @@ void Inst::decodeRegs(void) {
 
 	// Decode instruction
 	arm_inst_t *inst = proc.decode_raw(address());
-	if(inst->ident == ARM_UNKNOWN) {
-		proc.free(inst);
+	if(inst->ident == ARM_UNKNOWN)
 		return;
-	}
 
 	// get register infos
-	/*elm::genstruct::Vector<hard::Register *> reg_in;
+	arm_used_regs_read_t rds;
+	arm_used_regs_write_t wrs;
+	elm::genstruct::Vector<hard::Register *> reg_in;
 	elm::genstruct::Vector<hard::Register *> reg_out;
-	otawa_arm_reg_t *addr_reg_info = arm_used_regs(inst);
-	if(addr_reg_info)
-		for (int i = 0; addr_reg_info[i] != END_REG; i++ )
-			translate_gliss_reg_info(addr_reg_info[i], reg_in, reg_out);*/
+	arm_used_regs(inst, rds, wrs);
+	for (int i = 0; rds[i] != -1; i++ ) {
+		hard::Register *r = register_decoder[rds[i]];
+		if(r)
+			reg_in.add(r);
+	}
+	for (int i = 0; wrs[i] != -1; i++ ) {
+		hard::Register *r = register_decoder[wrs[i]];
+		if(r)
+			reg_out.add(r);
+	}
 
 	// store results
-	/*int cpt_in = reg_in.length();
-	in->allocate(cpt_in);
-	for (int i = 0 ; i < cpt_in ; i++)
-		in->set(i, reg_in.get(i));
-	int cpt_out = reg_out.length();
-	out->allocate(cpt_out);
-	for (int i = 0 ; i < cpt_out ; i++)
-		out->set(i, reg_out.get(i));*/
+	in_regs.allocate(reg_in.length());
+	for(int i = 0 ; i < reg_in.length(); i++)
+		in_regs.set(i, reg_in.get(i));
+	out_regs.allocate(reg_out.length());
+	for (int i = 0 ; i < reg_out.length(); i++)
+		out_regs.set(i, reg_out.get(i));
 
 	// Free instruction
-	proc.free(inst);
-
+	arm_free_inst(inst);
 }
 
 
@@ -552,6 +624,15 @@ otawa::Inst *Segment::decode(address_t address) {
 	return proc.decode(address);
 }
 
+
+void Inst::semInsts (sem::Block &block) {
+	arm_inst_t *inst = proc.decode_raw(address());
+	if(inst->ident == ARM_UNKNOWN)
+		return;
+	arm_sem(inst, block);
+	arm_free_inst(inst);
+
+}
 
 /****** loader definition ******/
 

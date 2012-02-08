@@ -1,0 +1,91 @@
+let t1					= -1
+let t2					= -2
+macro R(i) 				= "_GPR"(i)
+macro _CPSR				= "_CPSR"()
+macro _branch(t)		= "block.add"("sem::branch"(t))
+macro trap				= "block.add"("sem::trap"())
+macro cont				= "block.add"("sem::cont"())
+macro _if(c, r, o)		= "block.add"("sem::_if"(c, r, o))
+macro load(d, a, b)		= "block.add"("sem::load"(d, a, b))
+macro store(d, a, b)	= "block.add"("sem::store"(d, a, b))
+macro scratch(d)		= "block.add"("sem::scratch"(d))
+macro _set(d, a)		= "block.add"("sem::set"(d, a))
+macro seti(d, a)		= "block.add"("sem::seti"(d, a))
+macro cmp(d, a, b)		= "block.add"("sem::cmp"(d, a, b))
+macro cmpu(d, a, b)		= "block.add"("sem::cmpu"(d, a, b))
+macro add(d, a, b)		= "block.add"("sem::add"(d, a, b))
+macro sub(d, a, b)		= "block.add"("sem::sub"(d, a, b))
+macro shl(d, a, b)		= "block.add"("sem::shl"(d, a, b))
+macro shr(d, a, b)		= "block.add"("sem::shr"(d, a, b))
+macro asr(d, a, b)		= "block.add"("sem::asr"(d, a, b))
+macro neg(d, a)			= "block.add"("sem::neg"(d, a))
+macro not(d, a)			= "block.add"("sem::_not"(d, a))
+macro and(d, a, b)		= "block.add"("sem::_and"(d, a, b))
+macro or(d, a, b)		= "block.add"("sem::_or"(d, a, b))
+macro xor(d, a, b)		= "block.add"("sem::_xor"(d, a, b))
+macro mul(d, a, b)		= "block.add"("sem::mul"(d, a, b))
+macro mulu(d, a, b)		= "block.add"("sem::mulu"(d, a, b))
+macro div(d, a, b)		= "block.add"("sem::div"(d, a, b))
+macro divu(d, a, b)		= "block.add"("sem::divu"(d, a, b))
+macro mod(d, a, b)		= "block.add"("sem::mod"(d, a, b))
+macro modu(d, a, b)		= "block.add"("sem::modu"(d, a, b))
+
+// ****** mode extends ******
+
+extend REG_INDEX
+	i = R(r)
+
+extend immShift
+	otawa_sem = {
+		if shiftAmt == 0 then seti(t1, shiftAmt); else
+			switch (shiftKind) {
+			case LSL: shl(t1, r.i, t1);
+			case LSR: shr(t1, r.i, t1);
+			case ASR: asr(t1, r.i, t1);
+			case ROR: scratch(t1); if shiftAmt == 0 then scratch(_CPSR); endif;
+			};
+		endif;
+	}
+
+extend regShift
+	otawa_sem = {
+		switch(shiftKind) {
+		case LSL: shl(t1, r.i, R(shiftAmt));
+		case LSR: shr(t1, r.i, R(shiftAmt));
+		case ASR: asr(t1, r.i, R(shiftAmt));
+		case ROR: scratch(t1); 
+		};
+	}
+
+extend rotatedImmediate
+	v = coerce(u32, v) >>> (coerce(u32, rotate) << 1)
+
+
+// ****** instructions extends ******
+
+extend ADD_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		add(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend ADD_imm
+	otawa_sem = {
+		seti(t1, shifter_operand.v);
+		add(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend ADC_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		scratch(rd.i);
+		if sets then scratch(_CPSR); endif;
+	}
+
+extend ADC_imm
+	otawa_sem = {
+		scratch(rd.i);
+		if sets then scratch(_CPSR); endif;
+	}
