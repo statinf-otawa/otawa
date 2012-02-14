@@ -517,7 +517,8 @@ void FlowFactLoader::onLoop(
 	// put the max iteration
 	if(count >= 0) {
 		int old_max = path(MAX_ITERATION, inst);
-		path.ref(MAX_ITERATION, inst) = max(old_max, count);
+		int new_max = max(old_max, count);
+		path.ref(MAX_ITERATION, inst) = new_max;
 		if(isVerbose())
 			log << "\t" << path << "(MAX_ITERATION," << inst->address() << ") = " << count << io::endl;
 	}
