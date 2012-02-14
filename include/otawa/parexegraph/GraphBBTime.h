@@ -122,8 +122,9 @@ namespace otawa {
 		}
 
     public:
-		GraphBBTime(const PropList& props = PropList::EMPTY);
-		GraphBBTime(AbstractRegistration& reg);
+		//GraphBBTime(const PropList& props = PropList::EMPTY);
+		static Registration<GraphBBTime<G> > reg;
+		GraphBBTime(AbstractRegistration& reg = reg);
 		virtual void configure(const PropList& props);
 
 		void processWorkSpace(WorkSpace *ws);
@@ -155,7 +156,7 @@ namespace otawa {
 		return bank->latency();
 	}
 
-	template <class G>
+	/*template <class G>
 		GraphBBTime<G>::GraphBBTime(const PropList& props) 
 		: BBProcessor() {
 		_graphs_dir_name = GRAPHS_OUTPUT_DIRECTORY(props);
@@ -173,15 +174,26 @@ namespace otawa {
 		_props = props;
 		provide(ipet::BB_TIME_FEATURE);
 		//    provide(ICACHE_ACCURATE_PENALTIES_FEATURE);
-	}
+	}*/
 
 template <class G>
 GraphBBTime<G>::GraphBBTime(AbstractRegistration& reg)
 : BBProcessor(reg) {
-	require(hard::PROCESSOR_FEATURE);
+	/*require(hard::PROCESSOR_FEATURE);
 	require(hard::MEMORY_FEATURE);
-	provide(ipet::BB_TIME_FEATURE);
+	provide(ipet::BB_TIME_FEATURE);*/
 }
+
+template <class G>
+Registration<GraphBBTime<G> > GraphBBTime<G>::reg(
+		"", Version(1, 0, 0),
+		p::base, &BBProcessor::reg,
+		p::require, &hard::PROCESSOR_FEATURE,
+		p::require, &hard::MEMORY_FEATURE,
+		p::provide, &ipet::BB_TIME_FEATURE,
+		p::end
+	);
+
 
 template <class G>
 void GraphBBTime<G>::configure(const PropList& props) {
