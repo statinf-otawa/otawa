@@ -67,6 +67,12 @@ using namespace elm::genstruct;
  */
 
 
+MetaRegistration ContextualProcessor::reg(
+	"otawa::ContextualProcessor", Version(1, 0, 0),
+	p::require, &CHECKED_CFG_FEATURE,
+	p::end);
+
+
 /**
  * Build a contextual processor.
  * @param name		Name of the implemented actual processor.
@@ -75,6 +81,7 @@ using namespace elm::genstruct;
  */
 ContextualProcessor::ContextualProcessor(cstring name, const Version& version)
 :	CFGProcessor(name, version) {
+	require(CHECKED_CFG_FEATURE);
 }
 
 /**

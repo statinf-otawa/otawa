@@ -31,8 +31,9 @@ class Edge;
 // ContextualProcessor class
 class ContextualProcessor: public CFGProcessor {
 public:
+	static MetaRegistration reg;
 	ContextualProcessor(cstring name, const Version& version);
-	ContextualProcessor(AbstractRegistration & reg);
+	ContextualProcessor(AbstractRegistration &_reg = reg);
 
 protected:
 
