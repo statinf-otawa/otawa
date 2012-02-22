@@ -170,7 +170,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 		if(isVerbose())
 			log << "\tstarting recursive traversal\n";
 		for(int i = 0; i < cfgs->count(); i++) {
-			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++)
+			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++) {
 				for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 					if(edge->kind() == Edge::CALL) {
 						if(!edge->calledCFG())
@@ -183,6 +183,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 						}
 					}
 				}
+			}
 		}
 		if(isVerbose())
 			log << "\tending recursive traversal\n";
