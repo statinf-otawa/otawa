@@ -63,6 +63,7 @@ static void reset_counts(void) {
 %token KW_IN
 %token KW_MAX
 %token KW_MULTIBRANCH
+%token KW_MULTICALL
 %token KW_NO
 %token KW_NOCALL
 %token KW_PRESERVE
@@ -124,6 +125,8 @@ command:
 		{ loader->onIgnoreSeq(*$3); delete $3; }
 |	KW_MULTIBRANCH { addresses.setLength(0); } multibranch
 		{ }
+|	KW_MULTICALL { addresses.setLength(0); } multicall
+		{ }
 |	KW_PRESERVE full_address ';'
 		{ loader->onPreserve(*$2); delete $2; }
 |	KW_IGNORE KW_ENTRY STRING ';'
@@ -157,6 +160,13 @@ multibranch:
 		{ loader->onMultiBranch(*$1, addresses); delete $1; }
 |	full_address KW_TO '?' ';'
 		{ loader->onUnknownMultiBranch(*$1); delete $1; }
+;
+
+multicall:
+	full_address KW_TO address_list ';'
+		{ loader->onMultiCall(*$1, addresses); delete $1; }
+|	full_address KW_TO '?' ';'
+		{ loader->onUnknownMultiCall(*$1); delete $1; }
 ;
 
 address_list:

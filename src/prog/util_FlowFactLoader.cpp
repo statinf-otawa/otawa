@@ -152,6 +152,15 @@ extern int fft_line;
  * possibly causing problems in instruction decoding. This problem may be avoided
  * by marking such symbols with this directive.
  *
+ * @code
+ * <return LOCATION/>
+ * @endcode
+ * The instruction at the given location is considered as a return. This element
+ * may be useful with languages where control management and computation is melted.
+ * For example, the ARM allows to store the return address of a function call out of
+ * the usual link register and move of a register value in the PC may as well be
+ * considered as an indirect call as a return.
+ *
  * @par Content of functions and calls
  *
  * The @ function element content may be either @c loop elements as given
@@ -167,6 +176,27 @@ extern int fft_line;
  * as of a @c function, that is, @c loop and @c call elements. The embedding
  * of calls allows to build function call contexts to make the loop bounds
  * context aware and tighten the WCET.
+ *
+ * @code
+ * <multibranch LOCATION>
+ *   <target LOCATION />
+ *   ...
+ * </multibranch>
+ * This elements is used to resolve a complex control to several targets
+ * (case of indirect branch found in switch compilation using tables).
+ * The first LOCATION is the control instruction itself and the target child
+ * elements locations represents the different possible targets.
+ *
+ * @code
+ * <multicall LOCATION>
+ *   <target LOCATION />
+ *   ...
+ * </multicall>
+ * This elements is used to resolve a complex control to several targets
+ * (case of function pointer calls).
+ * The first LOCATION is the call instruction itself and the target child
+ * elements locations represents the different possible targets.
+ *
  */
 
 /**
@@ -220,7 +250,11 @@ extern int fft_line;
  *
  * @li <b><tt>multibranch ADDRESS to ADDRESS, ADDRESS, ... ;</tt></b> @n
  * List the different tagets of a multi-target control instruction
- * (function pointer call, switch-like construction).
+ * (switch-like construction).
+ *
+ * @li <b><tt>multicall ADDRESS to ADDRESS, ADDRESS, ... ;</tt></b> @n
+ * List the different tagets of a multi-target call instruction
+ * (function pointer call).
  *
  * @li <b><tt>nocall FUNCTION_ADDRESS ;</tt></b> @n
  * Process each call to the given function as a non-control instruction.
@@ -739,6 +773,26 @@ void FlowFactLoader::onMultiBranch(
 
 
 /**
+ * Called for the F4 construction "multicall ADDRESS to ADDRESS, ...".
+ * @param control	Multi-call instruction address.
+ * @param target	List of targets.
+ */
+void FlowFactLoader::onMultiCall(
+	Address control,
+	const Vector<Address>& targets
+) {
+	// Find the instruction
+	Inst *inst = _fw->process()->findInstAt(control);
+	if(!inst)
+		onError(_ << " no instruction at  " << control << ".");
+
+	// List of targets
+	for(int i = 0; i < targets.length(); i++)
+		CALL_TARGET(inst).add(targets[i]);
+}
+
+
+/**
  * This method is called each the production "loop ADDRESS ?" is found.
  * It usually emit an error.
  * @param addr	Address of the loop entry.
@@ -755,6 +809,16 @@ void FlowFactLoader::onUnknownLoop(Address addr) {
  */
 void FlowFactLoader::onUnknownMultiBranch(Address control) {
 	onError(_ << "undefined targets for multi-branch at " << control);
+}
+
+
+/**
+ * This method is called each the production "multicall ADDRESS to ?" is found.
+ * It usually emit an error.
+ * @param control	Address of the control instruction.
+ */
+void FlowFactLoader::onUnknownMultiCall(Address control) {
+	onError(_ << "undefined targets for multi-call at " << control);
 }
 
 
@@ -817,10 +881,46 @@ throw(ProcessorException) {
 				scanXBody(element, cpath);
 			else if(name == "ignore-entry")
 				scanIgnoreEntry(element);
+			else if(name == "multibranch")
+				scanMultiBranch(element, cpath);
+			else if(name == "multicall")
+				scanMultiCall(element, cpath);
 			else
 				warn(_ << "garbage at \"" << xline(child) << "\"");
 		}
 	}
+}
+
+
+/**
+ * Scan a multibranch XML element composed of items with a different location each.
+ * @param element	multibranch element
+ * @param cpath		contextual path
+ */
+void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpath) {
+	Address control =scanAddress(element, cpath);
+	genstruct::Vector<Address> targets;
+	xom::Elements *items = element->getChildElements("target");
+	for(int i = 0; i < items->size(); i++)
+		targets.add(scanAddress(items->get(i), cpath));
+	delete items;
+	this->onMultiBranch(control, targets);
+}
+
+
+/**
+ * Scan a multicall XML element composed of items with a different location each.
+ * @param element	multicall element
+ * @param cpath		contextual path
+ */
+void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath) {
+	Address control =scanAddress(element, cpath);
+	genstruct::Vector<Address> targets;
+	xom::Elements *items = element->getChildElements("target");
+	for(int i = 0; i < items->size(); i++)
+		targets.add(scanAddress(items->get(i), cpath));
+	delete items;
+	this->onMultiCall(control, targets);
 }
 
 
@@ -1199,6 +1299,19 @@ Identifier<bool> IGNORE_SEQ("otawa::IGNORE_SEQ", false);
  * @ingroup ff
  */
 Identifier<Address> BRANCH_TARGET("otawa::BRANCH_TARGET", Address());
+
+
+/**
+ * Put on instruction that may call to several targets or whose target
+ * computation cannot computed. There is one property
+ * with this identifier for each called target.
+ * @par Features
+ * @li @ref FLOW_fACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier<Address> CALL_TARGET("otawa::CALL_TARGET", Address());
 
 
 /**

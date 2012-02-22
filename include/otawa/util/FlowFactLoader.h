@@ -77,11 +77,13 @@ protected:
 	virtual void onIgnoreSeq(Address address);
 	virtual void onIgnoreControl(Address address);
 	virtual void onMultiBranch(Address control, const Vector<Address>& target);
+	virtual void onMultiCall(Address control, const Vector<Address>& target);
 	virtual void onPreserve(Address address);
 	virtual void onIgnoreEntry(string name);
 
 	virtual void onUnknownLoop(Address addr);
 	virtual void onUnknownMultiBranch(Address control);
+	virtual void onUnknownMultiCall(Address control);
 
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void configure (const PropList &props);
@@ -109,6 +111,8 @@ private:
 	void scanXBody(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	string xline(xom::Node *element);
 	void scanIgnoreEntry(xom::Element *element);
+	void scanMultiBranch(xom::Element *element, ContextualPath& cpath);
+	void scanMultiCall(xom::Element *element, ContextualPath& cpath);
 };
 
 // Properties
@@ -131,6 +135,7 @@ extern Identifier<bool> IGNORE_SEQ;
 extern Identifier<Address> BRANCH_TARGET;
 extern Identifier<bool> PRESERVED;
 extern Identifier<bool> IGNORE_ENTRY;
+extern Identifier<Address> CALL_TARGET;
 
 } // otawa
 

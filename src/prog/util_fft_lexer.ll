@@ -65,6 +65,7 @@ SYM [?;,+-/:]
 "loop"			return LOOP;
 "max"			return KW_MAX;
 "multibranch"	return KW_MULTIBRANCH;
+"multicall"		return KW_MULTICALL;
 "nocall"		return KW_NOCALL;
 "preserve"		return KW_PRESERVE;
 "no"			return KW_NO;

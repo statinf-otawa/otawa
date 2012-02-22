@@ -174,18 +174,29 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 					<< "\n\t" << inst->address() << '\t' << inst);
 
 			// look for target properties
-			else
-				for(Identifier<Address>::Getter target(inst, BRANCH_TARGET);
-				target; target++) {
+			else {
+
+				// simple branches
+				for(Identifier<Address>::Getter target(inst, BRANCH_TARGET); target; target++) {
 					Inst *target_inst = ws->findInstAt(target);
 					if(target_inst) {
-						ASSERT(!target_inst->isPseudo());
 						BasicBlock *bb = thisBB(target_inst);
 						ASSERT(bb);
 						if(inst->isCall())
 							IS_ENTRY(bb) = true;
 					}
 				}
+
+				// simple branches
+				for(Identifier<Address>::Getter target(inst, CALL_TARGET); target; target++) {
+					Inst *target_inst = ws->findInstAt(target);
+					if(target_inst) {
+						BasicBlock *bb = thisBB(target_inst);
+						ASSERT(bb);
+						IS_ENTRY(bb) = true;
+					}
+				}
+			}
 
 
 			// Found BB starting on next instruction
@@ -258,21 +269,42 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 			}
 
 			// look for target properties
-			if(!target)
+			bool perform_call = false;
+			if(!target) {
+
+				// look for simple branches
 				for(Identifier<Address>::Getter addr(inst, BRANCH_TARGET); addr; addr++) {
 					target = ws->findInstAt(addr);
 					if(target) {
 						BasicBlock *target_bb = thisBB(target);
 						ASSERT(target_bb);
-						new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
+						new Edge(bb, target_bb, inst->isCall() ? Edge::CALL : Edge::TAKEN);
 					}
 					else
 						warn(_ << "branch target to " << *target << " at " << inst->address()
 							<< " does not match an instruction.");
 				}
 
+				// look for calls
+				for(Identifier<Address>::Getter addr(inst, CALL_TARGET); addr; addr++) {
+					target = ws->findInstAt(addr);
+					if(target) {
+						BasicBlock *target_bb = thisBB(target);
+						ASSERT(target_bb);
+						new Edge(bb, target_bb, Edge::CALL);
+						perform_call = true;
+					}
+					else
+						warn(_ << "call target to " << *target << " at " << inst->address()
+							<< " does not match an instruction.");
+				}
+
+			}
+
 			// record BB flags
-			if(isReturn(inst))
+			if(perform_call)
+				bb->flags |= BasicBlock::FLAG_Call;
+			else if(isReturn(inst))
 				bb->flags |= BasicBlock::FLAG_Return;
 			else if(inst->isCall())
 				bb->flags |= BasicBlock::FLAG_Call;
@@ -280,7 +312,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 				bb->flags |= BasicBlock::FLAG_Cond;
 			if(!target && !isReturn(inst))
 				bb->flags |= BasicBlock::FLAG_Unknown;
-			follow = (inst->isCall() || inst->isConditional()) && !IGNORE_SEQ(inst);
+			follow = (perform_call || inst->isCall() || inst->isConditional()) && !IGNORE_SEQ(inst);
 		}
 	}
 

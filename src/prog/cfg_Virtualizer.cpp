@@ -261,6 +261,7 @@ BasicBlock *exit) {
 					}
 
 			// Look edges
+			bool fix_exit = false;
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL) {
 					if(!isInlined()) {
@@ -274,13 +275,17 @@ BasicBlock *exit) {
 				}
 				else if(edge->target()) {
 					if(edge->target()->isExit()) {
-						Edge *edge = new Edge(src, exit, Edge::VIRTUAL_RETURN);
-						CALLED_CFG(edge) = cfg;
 						called_exit = exit;
+						if(!called_cfgs) {
+							Edge *edge = new Edge(src, exit, Edge::VIRTUAL_RETURN);
+							CALLED_CFG(edge) = cfg;
+						}
+						else // shared return edge will be added afterwards
+							fix_exit = true;
 					}
 					else {
 						BasicBlock *tgt = map.get(edge->target(), 0);
-						assert(tgt);
+						ASSERT(tgt);
 						if(called_cfgs)
 							called_exit = tgt;
 						else
@@ -314,12 +319,17 @@ BasicBlock *exit) {
 						ASSERT(called_exit);
 						VIRTUAL_RETURN_BLOCK(src) = called_exit;
 						virtualize(&call, called, vcfg, src, called_exit);
-
+						if(fix_exit)
+							for(BasicBlock::InIterator vin(called_exit); vin; vin++) {
+								for(Identifier<CFG *>::Getter found(vin, CALLED_CFG); found; found++)
+									if(*called == *found)
+										CALLED_CFG(vin).add(cfg);
+							}
 					}
 				}
 
 				// Reset the called list
-				called_cfgs.setLength(0);
+				called_cfgs.clear();
 			}
 		}
 
