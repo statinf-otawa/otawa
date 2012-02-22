@@ -31,7 +31,7 @@ namespace otawa {
 template <class T>
 class DynIdentifier {
 public:
-	inline DynIdentifier(cstring name): _name(name) { }
+	inline DynIdentifier(cstring name): _name(name), _id(0) { }
 	inline cstring name(void) const { return _name; }
 
 	const T &operator()(const PropList &props) const { return id()(props); }
