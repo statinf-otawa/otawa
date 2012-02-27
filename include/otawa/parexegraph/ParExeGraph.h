@@ -230,16 +230,19 @@ namespace otawa {
 		inline void setFetchSize(int size) { _cache_line_size = size; }
 		inline void setBranchPenalty(int penalty) { _branch_penalty = penalty; }
       
-		void build(bool compressed_code=false);
-		void createNodes();
-		void findDataDependencies();
-		void addEdgesForPipelineOrder();
-		void addEdgesForFetch();
-		void addEdgesForFetchWithDecomp();
-		void addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> *list_of_stages = NULL);
-		void addEdgesForMemoryOrder();
-		void addEdgesForDataDependencies();
-		void addEdgesForQueues();
+		// graph building
+		virtual void build(bool compressed_code=false);
+		virtual void createNodes();
+		virtual void findDataDependencies();
+		virtual void addEdgesForPipelineOrder();
+		virtual void addEdgesForFetch();
+		virtual void addEdgesForFetchWithDecomp();
+		virtual void addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> *list_of_stages = NULL);
+		virtual void addEdgesForMemoryOrder();
+		virtual void addEdgesForDataDependencies();
+		virtual void addEdgesForQueues();
+
+		// time computation
 		void findContendingNodes();
 		void createResources();
 		int analyze();

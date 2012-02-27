@@ -628,14 +628,19 @@ void ParExeGraph::createNodes() {
 
 // ----------------------------------------------------------------
 
+/**
+ * Compute for each first FU node which is the FU node producing
+ * the required data (and fill the producer list of a FU node).
+ */
 void ParExeGraph::findDataDependencies() {
 
+	// allocate the rename table
     otawa::hard::Platform *pf = _ws->platform();
     AllocatedTable<rename_table_t> rename_tables(pf->banks().count());
     int reg_bank_count = pf->banks().count();
     for(int i = 0; i <reg_bank_count ; i++) {
 		rename_tables[i].reg_bank = (otawa::hard::RegBank *) pf->banks()[i];
-		rename_tables[i].table = 
+		rename_tables[i].table =
 			new AllocatedTable<ParExeNode *>(rename_tables[i].reg_bank->count());
 		for (int j=0 ; j<rename_tables[i].reg_bank->count() ; j++)
 			rename_tables[i].table->set(j,NULL);
@@ -643,6 +648,8 @@ void ParExeGraph::findDataDependencies() {
 
     // consider every instruction
     for (InstIterator inst(_sequence) ; inst ; inst++)  {
+
+    	// find first and last FU nodes
 		ParExeNode *first_fu_node = NULL, *last_fu_node = NULL;
 		for (InstNodeIterator node(inst); node ; node++){
 			if (node->stage()->category() == ParExeStage::FU){
@@ -651,6 +658,7 @@ void ParExeGraph::findDataDependencies() {
 				last_fu_node = node;
 			}
 		}
+
 		// check for data dependencies
 		const elm::genstruct::Table<hard::Register *>& reads = first_fu_node->inst()->inst()->readRegs();
 		for(int i = 0; i < reads.count(); i++) {
@@ -662,7 +670,8 @@ void ParExeGraph::findDataDependencies() {
 					}
 				}
 			}
-		}	
+		}
+
 		// fu_node is the last FU node
 		const elm::genstruct::Table<hard::Register *>& writes = last_fu_node->inst()->inst()->writtenRegs();
 		for(int i = 0; i < writes.count(); i++) {
@@ -672,7 +681,7 @@ void ParExeGraph::findDataDependencies() {
 				}
 			}
 		}
-	
+
     } // endfor each instruction
 
     // Free rename tables
@@ -978,6 +987,28 @@ static void dumpAttrEnd(io::Output& out, bool& first) {
 }
 
 
+static void escape(io::Output& out, const string& str) {
+	static bool init = false;
+	static cstring escaped = "{}|";
+	static bool escape_tab[256];
+
+	// initialization
+	if(!init) {
+		init = true;
+		for(int i = 0; i < 256; i++)
+			escape_tab[i] = false;
+		for(int i = 0; i < escaped.length(); i++)
+			escape_tab[escaped[i]] = true;
+	}
+
+	// escape the string
+	for(int i = 0; i < str.length(); i++) {
+		if(escape_tab[str[i]])
+			out << '\\';
+		out << str[i];
+	}
+}
+
 // ---------------------------------------
 void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
     int i=0;
@@ -1029,7 +1060,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
     	}
     	dotFile << "I" << inst->index() << ": ";
 		dotFile << "0x" << fmt::address(inst->inst()->address()) << ":  "; 
-		inst->inst()->dump(dotFile);
+		escape(dotFile, elm::_ << inst->inst());
 		dotFile << "\\l";
     }
     dotFile << "\"] ; \n";
@@ -1056,7 +1087,8 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 			if (node->inst()->codePart() == BODY)
 				dotFile << "color=blue, ";
 			dotFile << "label=\"" << node->stage()->name();
-			dotFile << "(I" << node->inst()->index() << ") [" << node->latency() << "]\\l" << node->inst()->inst();
+			dotFile << "(I" << node->inst()->index() << ") [" << node->latency() << "]\\l";
+			escape(dotFile, elm::_ << inst->inst());
 			dotFile << "| { ";
 			int i=0;
 			int num = _resources.length();
@@ -1175,8 +1207,9 @@ ParExeGraph::ParExeGraph(
  	_last_node(NULL),
  	_branch_penalty(2)
 {
-	if ( ws->platform()->cache().instCache())
-		_cache_line_size = ws->platform()->cache().instCache()->blockSize();
+	const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION(ws);
+	if (cache && cache->instCache())
+		_cache_line_size = cache->instCache()->blockSize();
 	else
 		_cache_line_size = ws->process()->instSize();	// FIXED by casse
 	_props = props;
