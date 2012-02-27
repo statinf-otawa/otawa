@@ -23,6 +23,7 @@
 #define OTAWA_LOADER_ARM_H
 
 #include <otawa/properties.h>
+#include <otawa/prog/Inst.h>
 
 namespace otawa { namespace arm {
 
@@ -36,6 +37,13 @@ extern Identifier<bool> IS_MLA;
 extern Identifier<int> NUM_REGS_LOAD_STORE;
 extern Identifier <bool> IS_SP_RELATIVE;
 extern Identifier <bool> IS_PC_RELATIVE;
+
+// ARM information
+class Info {
+public:
+	virtual void *decode(Inst *inst) = 0;
+	virtual void free(void *decoded) = 0;
+};
 
 } } // otawa::arm
 

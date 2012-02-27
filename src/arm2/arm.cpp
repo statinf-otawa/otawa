@@ -26,6 +26,7 @@
 #include <gel/gel_elf.h>
 #include <gel/debug_line.h>
 #include <otawa/prog/sem.h>
+#include <otawa/loader/arm.h>
 
 extern "C" {
 #	include <arm/api.h>
@@ -33,10 +34,45 @@ extern "C" {
 #	include <arm/used_regs.h>
 }
 
-namespace otawa { namespace arm2 {
+namespace otawa {
+
+namespace arm {
+
+/**
+ * @class Info
+ * Information provided by an ARM loader supporting GLISS2 engine.
+ */
+
+/**
+ * @fn void *Info::decode(Inst *inst);
+ * Get the decode instruction by GLISS2.
+ * The obtained data must be fried with free() method.
+ * @param inst	Instruction to decode.
+ * @return		Decoded data castable to arm_inst_t *.
+ */
+
+/**
+ * @fn void Info::free(void *decoded);
+ * Free an instruction previously obtained by decode() method.
+ * @paramd decoded	Result of decode.
+ */
+
+/**
+ * Identifier used to retrieve ARM specific information.
+ * Must be accessed dynamically because ARM loader is a plugin !
+ *
+ * @par Hooks
+ * @li Process from ARM loader.
+ */
+Identifier<arm::Info *> INFO("otawa::arm::INFO", 0);
+
+}
+
+namespace arm2 {
 
 #include "otawa_kind.h"
 #include "otawa_target.h"
+
 
 /****** Platform definition ******/
 
@@ -209,7 +245,7 @@ private:
 
 /****** Process class ******/
 
-class Process: public otawa::Process {
+class Process: public otawa::Process, public arm::Info {
 public:
 
 	Process(Manager *manager, hard::Platform *pf, const PropList& props = PropList::EMPTY)
@@ -260,6 +296,7 @@ public:
 		provide(CONTROL_DECODING_FEATURE);
 		provide(REGISTER_USAGE_FEATURE);
 		provide(MEMORY_ACCESSES);
+		arm::INFO(this) = this;
 	}
 
 	virtual ~Process() {
@@ -368,22 +405,6 @@ public:
 		return file;
 	}
 
-	/*virtual void get(Address at, signed char& val);
-	virtual void get(Address at, unsigned char& val);
-	virtual void get(Address at, signed short& val);
-	virtual void get(Address at, unsigned short& val);
-	virtual void get(Address at, signed long& val);
-	virtual void get(Address at, unsigned long& val);
-	virtual void get(Address at, signed long long& val);
-	virtual void get(Address at, unsigned long long& val);
-	virtual void get(Address at, Address& val);
-	virtual void get(Address at, string& str);
-	virtual void get(Address at, char *buf, int size);
-	virtual Option<Pair<cstring, int> > getSourceLine(Address addr)
-		throw (UnsupportedFeatureException);
-	virtual void getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses)
-		throw (UnsupportedFeatureException);*/
-
 	// internal work
 	void decodeRegs(Inst *oinst,
 		elm::genstruct::AllocatedTable<hard::Register *> *in,
@@ -392,7 +413,7 @@ public:
 		// Decode instruction
 		arm_inst_t *inst = decode_raw(oinst->address());
 		if(inst->ident == ARM_UNKNOWN) {
-			free(inst);
+			free_inst(inst);
 			return;
 		}
 
@@ -424,7 +445,7 @@ public:
 			out->set(i, reg_out.get(i));
 
 		// Free instruction
-		free(inst);
+		free_inst(inst);
 	}
 
 	otawa::Inst *decode(Address addr) {
@@ -436,7 +457,7 @@ public:
 			result = new BranchInst(*this, kind, addr);
 		else
 			result = new Inst(*this, kind, addr);
-		free(inst);
+		free_inst(inst);
 		return result;
 	}
 
@@ -445,7 +466,7 @@ public:
 	inline int opcode(Inst *inst) const {
 		arm_inst_t *i = decode_raw(inst->address());
 		int code = i->ident;
-		free(i);
+		free_inst(i);
 		return code;
 	}
 
@@ -456,7 +477,7 @@ public:
 			{ return arm_decode(decoder(), ::arm_address_t(addr.offset())); }
 #		endif
 
-	inline void free(arm_inst_t *inst) const { arm_free_inst(inst); }
+	inline void free_inst(arm_inst_t *inst) const { arm_free_inst(inst); }
 	virtual gel_file_t *file(void) const { return _file; }
 	virtual arm_memory_t *memory(void) const { return _memory; }
 	inline arm_decoder_t *decoder() const { return _decoder; }
@@ -531,6 +552,10 @@ public:
 	virtual void get(Address at, char *buf, int size)
 		{ arm_mem_read(_memory, at.address(), buf, size); }
 
+	// otawa::arm::Info overload
+	virtual void *decode(otawa::Inst *inst) { return decode_raw(inst->address()); }
+	virtual void free(void *decoded) { free_inst((arm_inst_t *)decoded); }
+
 private:
 	void setup_debug(void) {
 		ASSERT(_file);
@@ -560,7 +585,7 @@ void Inst::dump(io::Output& out) {
 	char out_buffer[200];
 	arm_inst_t *inst = proc.decode_raw(_addr);
 	arm_disasm(out_buffer, inst);
-	proc.free(inst);
+	proc.free_inst(inst);
 	out << out_buffer;
 }
 
@@ -604,7 +629,7 @@ void Inst::decodeRegs(void) {
 arm_address_t BranchInst::decodeTargetAddress(void) {
 	arm_inst_t *inst= proc.decode_raw(address());
 	Address target_addr = arm_target(inst);
-	proc.free(inst);
+	proc.free_inst(inst);
 	return target_addr;
 }
 

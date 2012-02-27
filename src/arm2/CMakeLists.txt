@@ -31,10 +31,9 @@ add_custom_command(
 	ARGS ${IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "otawa_kind.tpl" -d "return 0\\;" -e otawa_kind.nmp
 )
 add_custom_command(
-	OUTPUT ${OTAWA_TARGET} DEPENDS "otawa_target.tpl" "otawa_target.nmp"
+	OUTPUT ${OTAWA_TARGET} DEPENDS "otawa_target.tpl" "otawa_target.nmp" ${IRG}
 	COMMAND ${GLISS_ATTR}
 	ARGS ${IRG} -o ${OTAWA_TARGET} -a otawa_target -f -t "otawa_target.tpl" -d "return 0\\;" -e otawa_target.nmp
-	DEPEND ${IRG}
 )
 add_custom_command(
 	OUTPUT ${OTAWA_SEM} DEPENDS "otawa_sem.tpl" "otawa_sem.nmp" ${IRG}

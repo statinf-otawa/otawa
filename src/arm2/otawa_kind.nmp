@@ -17,15 +17,22 @@ let IS_TRAP		= 0x00002000
 let IS_INTERN	= 0x00004000
 let IS_MULTI	= 0x00008000
 let IS_SPECIAL	= 0x00010000
+let IS_DATA_PROCESSING	= 0x80000000
+let IS_IMMEDIATE		= 0x40000000
+let IS_SHIFTED			= 0x20000000
+let IS_NO_DEST			= 0x10000000
+
 
 // useful mode extensions
 extend regShift
 	reg_num = r.number
 	no_shift = 0
+	otawa_kind = IS_SHIFTED 
 
 extend immShift
 	reg_num = r.number
 	no_shift = shiftAmt == 0 && shiftKind != ROR
+	otawa_kind = if no_shift then 0 else IS_SHIFTED | IS_IMMEDIATE endif
 
 extend rotatedImmediate
 	no_shift = v == 0
@@ -46,18 +53,29 @@ extend BX_ARM
 
 extend MOV_shr
 	otawa_kind =
-		  (if cond.value == 14 && shifter_operand.reg_num == 15 && shifter_operand.no_shift
-			then IS_RETURN | IS_CONTROL else 0 endif)
+		(if cond.value != 15 && rd.number == 15 then
+			if shifter_operand.reg_num == 14 then IS_RETURN | IS_CONTROL
+			else IS_CONTROL endif
+		else
+			IS_ALU | IS_INT
+		endif)
 		| (if cond.value == 14 then 0 else IS_COND endif)
-		| IS_ALU | IS_INT
  
-extend CMP_imm, CMP_shr, CMN_imm, CMN_shr, TEQ_imm, TEQ_shr,
-TST_imm, TST_shr
+extend CMP_imm, CMN_imm, TEQ_imm, TST_imm
 	otawa_kind =
 		  IS_ALU
 		| IS_INT
+		| IS_NO_DEST
 		| (if cond.value == 14 then 0 else IS_COND endif)
- 
+		| IS_IMMEDIATE
+
+extend CMP_shr, CMN_shr, TEQ_shr, TST_shr
+	otawa_kind =
+		  IS_ALU
+		| IS_INT
+		| IS_NO_DEST
+		| (if cond.value == 14 then 0 else IS_COND endif)
+
 extend ADD_imm, ADC_imm, AND_imm, BIC_imm, EOR_imm, MOV_imm, MVN_imm,
 ORR_imm, RSB_imm, RSC_imm, SBC_imm, SUB_imm
 	otawa_kind =
@@ -65,14 +83,23 @@ ORR_imm, RSB_imm, RSC_imm, SBC_imm, SUB_imm
 		| IS_INT
 		| (if cond.value == 14 then 0 else IS_COND endif)
 		| (if rd == 15 then IS_CONTROL else 0 endif)
+		| IS_IMMEDIATE
 
 extend ADC_shr, ADD_shr, AND_shr, BIC_shr, EOR_shr, MVN_shr,
-ORR_shr, RSB_shr, RSC_shr, SBC_shr, SUB_shr, CLZ, SWP
+ORR_shr, RSB_shr, RSC_shr, SBC_shr, SUB_shr
 	otawa_kind =
 		  IS_ALU
 		| IS_INT
 		| (if cond.value == 14 then 0 else IS_COND endif)
-		| (if rd == 15 then IS_CONTROL else 0 endif)	
+		| (if rd == 15 then IS_CONTROL else 0 endif)
+		| shifter_operand.otawa_kind
+
+extend CLZ, SWP
+	otawa_kind =
+		  IS_ALU
+		| IS_INT
+		| (if cond.value == 14 then 0 else IS_COND endif)
+		| (if rd == 15 then IS_CONTROL else 0 endif)
 
 extend LDM
 	otawa_kind = IS_MEM | IS_MULTI | IS_LOAD
