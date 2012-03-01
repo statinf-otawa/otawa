@@ -188,6 +188,11 @@ namespace clp {
 		 * @param val the value to do the intersection with
 		 */
 		void inter(const Value& val);
+		/**
+		 * Reverse the CLP direction (swap upper and lower bounds, and use
+		 * the opposite of delta as new delta).
+		*/
+		void reverse(void);
 		
 		/** Represents the bottom element */
 		static const Value none;

@@ -945,6 +945,7 @@ namespace se{
 	*/
 	void applyFilter(V &v, se::op_t cmp_op, V f){
 		V b;
+		OCLP_intn_t oldvdelta = v.delta();
 		switch(cmp_op){
 		case LE:
 			f.add(1);
@@ -1015,6 +1016,10 @@ namespace se{
 			break;
 		default:
 			break;
+		}
+		/* keed the orientation of v*/
+		if (oldvdelta < 0){
+			v.reverse();
 		}
 	}
 	

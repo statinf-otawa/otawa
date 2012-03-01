@@ -156,6 +156,7 @@ Value Value::operator-(const Value& val) const{
  * @param val the value to add
  */
 void Value::add(const Value& val){
+	bool needreverse = (delta() < 0) || (val.delta() < 0);
 	if (_kind == NONE && val._kind == NONE) 	/* NONE + NONE = NONE */
 		set(NONE, 0, 0, 0);
 	else if (_kind == ALL || val._kind == ALL) 	/* ALL + anything = ALL */
@@ -167,6 +168,9 @@ void Value::add(const Value& val){
 		set(VAL, start() + val.start(), g,
 		    _mtimes * (abs(_delta) / g) + val._mtimes * (abs(val._delta) / g));
 	}
+	if (needreverse){
+		reverse();
+	}
 }
 
 /**
@@ -174,6 +178,7 @@ void Value::add(const Value& val){
  * @param val the value to subtract
  */
 void Value::sub(const Value& val) {
+	bool needreverse = (delta() < 0) || (val.delta() < 0);
 	if (_kind == NONE && val._kind == NONE)		/* NONE - NONE = NONE */
 		set(NONE, 0, 0, 0);
 	else if (_kind == ALL || val._kind == ALL)	/* ALL - anything = ALL */
@@ -184,6 +189,9 @@ void Value::sub(const Value& val) {
 		OCLP_uintn_t g = gcd(_delta, val._delta);
 		set(VAL, start() - val.stop(), g,
 			_mtimes * (abs(_delta) / g) + val._mtimes * (abs(val._delta) / g));
+	}
+	if (needreverse){
+		reverse();
 	}
 }
 
@@ -332,7 +340,7 @@ void Value::widening(const Value& val) {
 				return;
 			}
 			OCLP_intn_t absd = abs(_delta);
-			set(_kind, stop(), -absd, OCLP_UMAXn / absd);
+			set(_kind, stop(), -absd, OCLP_MINn / absd);
 			return;
 		}
 		if (val.stop() > stop()){
@@ -539,6 +547,15 @@ void Value::inter(const Value& val) {
 	
 	// set the result!
 	set(VAL, ls, ds, ms);
+}
+
+/**
+ * Reverse the CLP direction (swap upper and lower bounds, and use
+ * the opposite of delta as new delta).
+*/
+void Value::reverse(void){
+	OCLP_uintn_t dist = (OCLP_uintn_t)abs(start() - stop());
+	set(clp::VAL, stop(), -delta(), dist / delta());
 }
 
 inline io::Output& operator<<(io::Output& out, const Value& v) { v.print(out); return out; }
