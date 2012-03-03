@@ -534,8 +534,8 @@ void Command::run(void) {
 	// Load the file
 	PropList props;
 	NO_SYSTEM(props) = true;
-	if(proc) {
-		PROCESSOR_PATH(props) = proc.value();
+	if(::proc) {
+		PROCESSOR_PATH(props) = ::proc.value();
 #		ifdef HAS_SYSTEMC
 			SIMULATOR(props) = &sim;
 #		endif

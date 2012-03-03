@@ -72,6 +72,17 @@ private:
  * A script processor allows to interpret a file that performs a WCET computation.
  * This file is expressed in XML and allows to use dynamic processors and features.
  * Its documentation may be found in module documentation.
+ *
+ * @par Configuration
+ * @li @ref PATH	path to the script file to load
+ * @li @ref PARAM	parameter for the script interpretation
+ *
+ * @par Properties
+ * This processor initialize the following properties before passing them
+ * to the script processor configuration:
+ * @li @ref SCRIPT		reference on the script XML
+ * @li @ref CONFIG		reference on the configuration part of the XML
+ *
  */
 
 /**
@@ -192,8 +203,11 @@ void Script::work(WorkSpace *ws) {
 	serial2.write(res);
 	delete out2;)
 
-	// process the path
+	// set the script parameter
 	xom::Element *script = res->getRootElement();
+	SCRIPT(props) = script;
+
+	// process the path
 	xom::Elements *elems = script->getChildElements("path");
 	for(int i = 0; i < elems->size(); i++) {
 		xom::Element *path_elem = elems->get(i);
@@ -215,20 +229,19 @@ void Script::work(WorkSpace *ws) {
 
 	// scant the platform
 	xom::Element *pf = script->getFirstChildElement("platform");
+	script::PLATFORM(props) = pf;
 	if(pf) {
 		if(isVerbose())
 			log << "\tfound platform description.\n";
 		xom::Element *proc = pf->getFirstChildElement("processor");
 		if(proc) {
 			PROCESSOR_ELEMENT(props) = proc;
-			//ws->process()->platform()->loadProcessor(proc);
 			if(isVerbose())
 				log << "\tprocessor configuration found.\n";
 		}
 		xom::Element *cache = pf->getFirstChildElement("cache-config");
 		if(cache) {
 			CACHE_CONFIG_ELEMENT(props) = cache;
-			//ws->process()->platform()->loadCacheConfig(cache);
 			if(isVerbose())
 				log << "\tcache configuration found.\n";
 		}
@@ -376,6 +389,20 @@ Identifier<elm::system::Path> PATH("otawa::script::PATH", "");
  * PARAM(props).add(pair(identifier, value)) .
  */
 Identifier<Pair<string, string> > PARAM("otawa::script::PARAM", pair(string(""), string("")));
+
+
+/**
+ * Put by the @ref Script intrepreter in the configuration properties launching the processor.
+ * XML node representing the script.
+ */
+Identifier<xom::Element *> SCRIPT("otawa::script::SCRIPT", 0);
+
+
+/**
+ * Put by the @ref Script intrepreter in the configuration properties launching the processor.
+ * XML node representing the configuration part of the script.
+ */
+Identifier<xom::Element *> PLATFORM("otawa::script::PLATFORM", 0);
 
 } } // otawa::script
 

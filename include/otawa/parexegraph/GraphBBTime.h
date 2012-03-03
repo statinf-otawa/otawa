@@ -515,11 +515,11 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			outputGraph(execution_graph, bb->number(), context_index, case_index++,
 				_ << "reference cost = " << reference_cost);
 		}
-    
-		TimingContext default_timing_context;
 
+		// case of a cache
 		if (_do_consider_icache){
 
+			// verbosity
 			if(isVerbose())
 				for (ParExeSequence::InstIterator inst(sequence) ; inst ; inst++)  {
 					LBlock *lb = LBLOCK(inst->inst());
@@ -684,6 +684,8 @@ void GraphBBTime<G>::configure(const PropList& props) {
 					}
 				}
 			}
+
+			// set the cache penalty
 			if (cache_penalty->header(0)){
 				ICACHE_PENALTY(bb) = cache_penalty;
 				if (edge)
@@ -696,6 +698,8 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			}
 			
 		}
+
+		// record the times
 		if(isVerbose())
 			log << "\t\tReference cost: " << reference_cost << "\n";
 		if (otawa::ipet::TIME(bb) < reference_cost)
@@ -706,6 +710,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			}
 		}
     
+		// cleanup
 		delete execution_graph;  
 	}
 

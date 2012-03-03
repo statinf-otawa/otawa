@@ -21,7 +21,9 @@
  */
 
 #include <otawa/proc/Registry.h>
+#include <otawa/proc/Registration.h>
 #include <otawa/proc/Processor.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa {
 
@@ -86,6 +88,39 @@ AbstractRegistration::AbstractRegistration(AbstractRegistration *base) {
 	_base = base;
 	_name = base->_name;
 	_version = base->_version;
+}
+
+
+/**
+ * Build a new registration.
+ * @param name		Processor name.
+ * @param version	Processor version.
+ * @param base		Base processor.
+ */
+AbstractRegistration::AbstractRegistration(string name, Version version, AbstractRegistration *base)
+: _name(name), _version(version), _base(base) {
+}
+
+
+/**
+ * Set the features.
+ * @param coll		Features to set.
+ */
+void AbstractRegistration::setFeatures(const SLList<FeatureUsage>& coll) {
+	features.clear();
+	for(genstruct::SLList<FeatureUsage>::Iterator use(coll); use; use++)
+		features.add(use);
+}
+
+
+/**
+ * Set the configurations.
+ * @param coll	Configures to set.
+ */
+void AbstractRegistration::setConfigs(const SLList<AbstractIdentifier *>& coll) {
+	configs.clear();
+	for(genstruct::SLList<AbstractIdentifier *>::Iterator use(coll); use; use++)
+		configs.add(use);
 }
 
 
@@ -283,5 +318,74 @@ void FeatureIter::step(void) {
  * @param tag		First tag.
  * @param args		List of pairs (tag, value) ended by @ref otawa::p::end .
  */
+
+namespace proc {
+
+/**
+ * @class make
+ * Used internally for processor declaration.
+ */
+
+/**
+ * @class declare
+ * Class to declare simple a processor.
+ * Each processor must have a static member of this type giving information about:
+ * @li configuration identifier,
+ * @li required features,
+ * @li provided features,
+ * @li invalidated features,
+ * @li used features,
+ * @li maker for the default processor.
+ *
+ * Below an example of processor registration using declaration:
+ * @code
+ * class MyProcessor: public BBProcessor {
+ * public:
+ * 	static proc::declare reg;
+ * 	...
+ * };
+ *
+ * proc::declare MyProcessor::reg(proc::init("MyProcessor", Version(1, 0, 0), BBProcessor::reg)
+ * 		.require(OTHER_FEATURE)
+ * 		.provide(MY_FEATURE)
+ * 		.config(MY_CONFIG)
+ * 		.make<MyProcessor>());
+ * @endcode
+ */
+
+
+/**
+ */
+declare::declare(otawa::proc::init& maker)
+	: AbstractRegistration(maker._name, maker._version, maker._base ? maker._base : &Processor::reg)
+{
+	setFeatures(maker.features);
+	setConfigs(maker.configs);
+	_maker = maker._maker;
+	record();
+}
+
+
+declare::~declare(void) {
+	if(_maker)
+		delete _maker;
+}
+
+/**
+ */
+Processor *declare::make(void) const {
+	if(_maker)
+		return _maker->make();
+	else
+		return 0;
+}
+
+/**
+ */
+bool declare::isFinal(void) const {
+	return true;
+}
+
+}	// proc
 
 } // otawa

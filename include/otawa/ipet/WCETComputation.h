@@ -31,7 +31,8 @@ namespace otawa { namespace ipet {
 class WCETComputation: public Processor {
 public:
 	WCETComputation(void);
-	static Registration<WCETComputation> reg;
+	static proc::declare reg;
+	//static Registration<WCETComputation> reg;
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);

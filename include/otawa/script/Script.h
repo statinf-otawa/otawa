@@ -26,7 +26,10 @@
 #include <otawa/proc/Processor.h>
 #include <elm/util/ErrorHandler.h>
 
-namespace elm { namespace xom { class Node; } }
+namespace elm { namespace xom {
+	class Node;
+	class Element;
+} }
 
 namespace otawa { namespace script {
 
@@ -55,6 +58,8 @@ private:
 // script path
 extern Identifier<elm::system::Path> PATH;
 extern Identifier<Pair<string, string> > PARAM;
+extern Identifier<xom::Element *> SCRIPT;
+extern Identifier<xom::Element *> PLATFORM;
 
 } } // otawa::script
 
