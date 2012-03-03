@@ -1,8 +1,0 @@
-#!/bin/sh
-
-mkdir .config
-aclocal \
-&& autoheader \
-&& libtoolize --ltdl -c \
-&& automake --gnu --add-missing \
-&& autoconf

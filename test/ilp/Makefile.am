@@ -1,9 +1,0 @@
-AM_CXXFLAGS = @OTAWA_CXXFLAGS@ -Wall
-
-check_PROGRAMS=test_ilp
-
-test_ilp_LDADD = @ILP_LIBS@ @LOADER_LIBS@ @OTAWA_LIBS@ @ODISPLAY_LIBS@
-test_ilp_DEPENDENCIES = @ILP_LIBS@ @LOADER_DEPS@ @OTAWA_DEPS@ @ODISPLAY_LIBS@
-
-test_ilp_SOURCES=\
-	test_ilp.cpp 

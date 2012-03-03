@@ -1,9 +1,0 @@
-AM_CXXFLAGS = @OTAWA_CXXFLAGS@ -Wall
-
-check_PROGRAMS=test_ipet
-
-test_ipet_LDADD = @LOADER_LIBS@  @ILP_LIBS@ @OTAWA_LIBS@ @OGENSIM_LIBS@
-test_ipet_DEPENDENCIES = @LOADER_DEPS@ @ILP_DEPS@ @OTAWA_DEPS@ @OGENSIM_DEPS@
-
-test_ipet_SOURCES=\
-	test_ipet.cpp
