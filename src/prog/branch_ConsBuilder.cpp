@@ -34,38 +34,75 @@
 #include <otawa/hard/BHT.h>
 #include <otawa/branch/CondNumber.h>
 
-namespace otawa {
+namespace otawa { namespace branch {
 
 using namespace ilp;
 using namespace ipet;
 
 static SilentFeature::Maker<ConsBuilder> BRANCH_SUPPORT_MAKER;
-SilentFeature BRANCH_SUPPORT_FEATURE("otawa::BRANCH_SUPPORT_FEATURE", BRANCH_SUPPORT_MAKER);
+/**
+ * This feature adds constraints required by the BHT behaviour.
+ *
+ * @par Properties
+ * @li @ref MISSPRED_VAR
+ */
+SilentFeature SUPPORT_FEATURE("otawa::branch::SUPPORT_FEATURE", BRANCH_SUPPORT_MAKER);
 
-extern SilentFeature BRANCH_CAT_FEATURE;
 
-Identifier<ilp::Var*> MISSPRED_VAR("otawa::MISSPRED_VAR", NULL);
+/**
+ * This properties gives the variables counting the number of miss-prediction
+ * for a basic block ending with a control instruction.
+ *
+ * @par Feature
+ * @li @ref SUPPORT_FEATURE
+ *
+ * @par Hook
+ * @li @ref BasicBlock
+ */
+Identifier<ilp::Var*> MISSPRED_VAR("otawa::branch::MISSPRED_VAR", NULL);
+
+
+/**
+ * @class ConsBuilder
+ * This processor add to the current ILP the constraint requires
+ * to model the behaviour of the BHT.
+ *
+ * @par Configuration
+ *
+ * @par Provided Features
+ * @li @ref SUPPORT_FEATURE
+ *
+ * @par Required Features
+ * @li @ref ipet::ASSIGNED_VARS_FEATURE,
+ * @li @ref LOOP_INFO_FEATURE,
+ * @li @ref CATEGORY_FEATURE,
+ */
+proc::declare ConsBuilder::reg =
+		proc::init("otawa::ConsBuilder", Version(1,0,0), BBProcessor::reg)
+		.require(ipet::ASSIGNED_VARS_FEATURE)
+		.require(LOOP_INFO_FEATURE)
+		.require(CATEGORY_FEATURE)
+		.provide(SUPPORT_FEATURE)
+		.maker<ConsBuilder>();
+
 
 ConsBuilder::ConsBuilder(void) : BBProcessor("otawa::ConsBuilder", Version(1,0,0)) {
-	require(ipet::ASSIGNED_VARS_FEATURE);
-	require(LOOP_INFO_FEATURE);
-	require(BRANCH_CAT_FEATURE);
-	provide(BRANCH_SUPPORT_FEATURE);
 }
 
 void ConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 
-	if (COND_NUMBER(bb) != -1) {
+	if (branch::COND_NUMBER(bb) != -1) {
 		int row = hard::BHT_CONFIG(ws)->line(bb->lastInst()->address());
 		cout << "Process jump on bb " << bb->number() << " on row " << row << "\n";
-		branch_category_t cat = BRANCH_CATEGORY(bb);
-		BasicBlock *cat_header = BRANCH_HEADER(bb);
+		branch::category_t cat = branch::CATEGORY(bb);
+		BasicBlock *cat_header = branch::HEADER(bb);
 		ilp::System *sys = ipet::SYSTEM(ws);
 		ilp::Constraint *cons; 
 		ilp::Var *misspred;
 		ilp::Var *bbvar = ipet::VAR(bb);
 		ilp::Var *NTvar, *Tvar;
 		
+		// build the miss-prediction variable
         if(!_explicit)
                 misspred = sys->newVar();
         else {
@@ -76,26 +113,31 @@ void ConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
         }
         MISSPRED_VAR(bb) = misspred;
 			
-
+        // add constraint according to the category
 		switch(cat) {
-			case BRANCH_ALWAYS_D:
+
+			// always default prediction (not-taken)
+			case branch::ALWAYS_D:
 			
+				// get the not-taken edge
 				Tvar = NULL;                	
-           
             	for (BasicBlock::OutIterator outedge(bb); bb; bb++) {
             		if (outedge->kind() == Edge::NOT_TAKEN) {
 						ASSERT(Tvar == NULL);
 						Tvar = VAR(outedge);                			
             		}
             	}
-            	/* misspred = taken */
+
+            	// x_misspred = e_not-taken
             	cons = sys->newConstraint(Constraint::EQ, 0);
             	cons->addLeft(1, misspred);
                 cons->addRight(1, Tvar); 
-                              	
-				break;			
-			case BRANCH_ALWAYS_H:
+				break;
+
+			// always in the BHT
+			case branch::ALWAYS_H:
 				
+				// find taken and not-taken edges
 				NTvar = NULL;
 				Tvar = NULL;
             	for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
@@ -109,23 +151,23 @@ void ConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
             		}            		
             	}
             	
-				/* misspred <= 2*taken + 2 */            				
+				// x_misspred <= 2 * e_taken + 2
 				cons = sys->newConstraint(Constraint::LE, 2);
 				cons->addLeft(1, misspred);	
 				cons->addRight(2, Tvar);
 				
-				/* misspred <= 2*not-taken + 2 */
+				// misspred <= 2 * e_not-taken + 2
 				cons = sys->newConstraint(Constraint::LE, 2);
 				cons->addLeft(1, misspred);	
 				cons->addRight(2, NTvar);
 
-				/* misspred <= bbvar */
+				// x_misspred <= x_bb
 				cons = sys->newConstraint(Constraint::LE, 0);	
                 cons->addLeft(1, misspred);
                 cons->addRight(1, bbvar); 		
-                			
-				break;		
-			case BRANCH_FIRST_UNKNOWN:	
+				break;
+
+			case branch::FIRST_UNKNOWN:
 				
 				NTvar = NULL;
 				Tvar = NULL;
@@ -163,7 +205,7 @@ void ConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
                 			
 				break;		
 								
-			case BRANCH_NOT_CLASSIFIED:
+			case branch::NOT_CLASSIFIED:
 			
 				/* misspred <= bbvar */
 				cons = sys->newConstraint(Constraint::LE, 0);	
@@ -195,4 +237,4 @@ void ConsBuilder::configure(const PropList &props) {
 	_explicit = ipet::EXPLICIT(props);
 }
                         
-}
+} }		// otawa::branch

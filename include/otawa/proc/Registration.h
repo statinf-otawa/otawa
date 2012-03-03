@@ -35,6 +35,7 @@ using namespace elm::genstruct;
 // Pre-declaration
 class Processor;
 class AbstractFeature;
+class declare;
 
 // fast initialization
 namespace p {
@@ -94,12 +95,15 @@ public:
 protected:
 	AbstractRegistration(void);
 	AbstractRegistration(AbstractRegistration *base);
+	AbstractRegistration(string name, Version version, AbstractRegistration *base);
 	virtual ~AbstractRegistration(void) { }
 	void init(cstring name, const Version& version, int tag, VarArg& args);
+	void setFeatures(const SLList<FeatureUsage>& features);
+	void setConfigs(const SLList<AbstractIdentifier *>& configs);
+	void record(void);
 
 private:
-	template <class T, class B, class C> friend class Registered;
-	template <class C, class B> friend class Register;
+	friend class declare;
 	friend class Processor;
 	friend class ConfigIter;
 	friend class FeatureIter;
@@ -108,7 +112,6 @@ private:
 	AbstractRegistration *_base;
 	SLList<AbstractIdentifier *> configs;
 	SLList<FeatureUsage> features;
-	void record(void);
 };
 
 
@@ -131,7 +134,6 @@ public:
 	virtual bool isFinal(void) const { return false; }
 };
 
-
 // Registration class
 template <class T> class Registration: public AbstractRegistration {
 public:
@@ -143,6 +145,63 @@ public:
 	virtual Processor *make(void) const { return new T; }
 	virtual bool isFinal(void) const { return true; }
 };
+
+namespace proc {
+
+// make class
+class init {
+	friend class declare;
+
+	class AbstractMaker {
+	public:
+		virtual ~AbstractMaker(void) { }
+		virtual Processor *make(void) = 0;
+	};
+
+	template <class T> class Maker: public AbstractMaker {
+	public:
+		virtual Processor *make(void) { return new T(); }
+	};
+
+public:
+	inline init(string name, Version version)
+		: _name(name), _version(version), _base(0), _maker(0) { }
+	inline init(string name, Version version, AbstractRegistration& base)
+		: _name(name), _version(version), _base(&base), _maker(0) { }
+	inline init& require(const AbstractFeature& feature)
+		{ features.add(FeatureUsage(FeatureUsage::require, feature)); return *this; }
+	inline init& provide(const AbstractFeature& feature)
+		{ features.add(FeatureUsage(FeatureUsage::provide, feature)); return *this; }
+	inline init& invalidate(const AbstractFeature& feature)
+		{ features.add(FeatureUsage(FeatureUsage::invalidate, feature)); return *this; }
+	inline init& use(const AbstractFeature& feature)
+		{ features.add(FeatureUsage(FeatureUsage::use, feature)); return *this; }
+	inline init& config(AbstractIdentifier& id) { configs.add(&id); return *this; }
+	template <class T> inline init& maker(void) { _maker = new Maker<T>(); return *this; }
+
+private:
+	string _name;
+	Version _version;
+	AbstractRegistration *_base;
+	SLList<AbstractIdentifier *> configs;
+	SLList<FeatureUsage> features;
+	AbstractMaker *_maker;
+};
+
+
+// declare class
+class declare: public AbstractRegistration {
+public:
+	declare(otawa::proc::init& i);
+	virtual ~declare(void);
+	virtual Processor *make(void) const;
+	virtual bool isFinal(void) const;
+private:
+	init::AbstractMaker *_maker;
+};
+
+
+}	// proc
 
 } // otawa
 

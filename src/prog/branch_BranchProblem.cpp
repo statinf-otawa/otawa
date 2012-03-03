@@ -154,17 +154,17 @@ void BranchProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
 	
 	if (last != NULL) {
   		if ((hard::BHT_CONFIG(fw)->line(last->address())) == row) {
-	      	if (COND_NUMBER(bb) != -1) {
-	      		cout << "Inject cond number " << COND_NUMBER(bb) << " for BB " << bb->number() << "\n";
-  				out.inject(COND_NUMBER(bb)); 
+	      	if (branch::COND_NUMBER(bb) != -1) {
+	      		//cout << "Inject cond number " << branch::COND_NUMBER(bb) << " for BB " << bb->number() << "\n";
+  				out.inject(branch::COND_NUMBER(bb));
           	}
   		}
   	}
-  	cout << "For BB: " << bb->number() << " IN=";
+  	/*cout << "For BB: " << bb->number() << " IN=";
   	in.print(cout);
   	cout << " OUT=";
   	out.print(cout);
-  	cout << "\n";
+  	cout << "\n";*/
   	 
 }
 

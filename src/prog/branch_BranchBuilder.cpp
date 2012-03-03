@@ -32,34 +32,95 @@
 #include <otawa/hard/BHT.h>
 #include <otawa/branch/CondNumber.h>
 
-namespace otawa {
+namespace otawa { namespace branch {
 
-Identifier<branch_category_t> BRANCH_CATEGORY("otawa::BRANCH_CATEGORY", BRANCH_NOT_CLASSIFIED);
-Identifier<BasicBlock*> BRANCH_HEADER("otawa::BRANCH_HEADER", NULL);
+/**
+ * Branch prediction category: it is put on the BB containing
+ * the branch instruction.
+ *
+ * @par Feature
+ * @li @ref CATEGORY_FEATURE
+ * @par Hooks
+ * @li @ref BasicBlock
+ */
+Identifier<category_t> CATEGORY("otawa::branch::CATEGORY", NOT_CLASSIFIED);
+
+
+/**
+ * Loop header of FIRST_UNKNOWN branch prediction category.
+ * If the loop iterates at most N times, the first time has an unknown behaviour
+ * and, in the N-1 next iterations, the predicted target is in the BHT.
+ *
+ * @par Feature
+ * @li @ref CATEGORY_FEATURE
+ * @par Hooks
+ * @li @ref BasicBlock
+ */
+Identifier<BasicBlock*> HEADER("otawa::branch::HEADER", NULL);
+
 
 static SilentFeature::Maker<BranchBuilder> BRANCH_CAT_MAKER;
-SilentFeature BRANCH_CAT_FEATURE("otawa::BRANCH_CAT_FEATURE", BRANCH_CAT_MAKER);
+/**
+ * This category assigns to each branch a category according to its branch prediction  behavior.
+ * The following branch prediction categories are supported:
+ * @li ALWAYS_D -- always predicted with default branch prediction
+ * @li ALWAYS_H -- always prediction is in the BHT
+ * @li FIRST_UNKNOWN -- first prediction unknown, other prediction in the BHT.
+ * @li NOT_CLASSIFIED -- the behavior cannot precisely be analyzed.
+ *
+ * @par Properties
+ * @li @ref CATEGORY
+ * @li @ref HEADER
+ *
+ */
+SilentFeature CATEGORY_FEATURE("otawa::branch::CATEGORY_FEATURE", BRANCH_CAT_MAKER);
 
-BranchBuilder::BranchBuilder(void) : Processor("otawa::BranchBuilder", Version(1,0,0)) {
-	require(COLLECTED_CFG_FEATURE);
-	require(LOOP_INFO_FEATURE);
-	require(DOMINANCE_FEATURE);
-	require(NUMBERED_CONDITIONS_FEATURE);
-	provide(BRANCH_CAT_FEATURE);
+
+/**
+ * @class BranchBuilder
+ * Compute the categories for branch prediction.
+ *
+ * @par Configuration
+ *
+ * @par Provided Features
+ * @li  @ref CATEGORY_FEATURE
+ *
+ * @par Required Features
+ * @li @ref COLLECTED_CFG_FEATURE,
+ * @li @ref LOOP_INFO_FEATURE,
+ * @li @ref DOMINANCE_FEATURE,
+ * @li @ref NUMBERED_CONDITIONS_FEATURE,
+ */
+proc::declare BranchBuilder::reg =
+	proc::init("otawa::branch::BranchBuilder", Version(1,0,0))
+	.require(COLLECTED_CFG_FEATURE)
+	.require(LOOP_INFO_FEATURE)
+	.require(DOMINANCE_FEATURE)
+	.require(NUMBERED_CONDITIONS_FEATURE)
+	.provide(CATEGORY_FEATURE)
+	.maker<BranchBuilder>();
+
+
+/**
+ */
+BranchBuilder::BranchBuilder(void) : Processor(reg) {
 }
 
-void BranchBuilder::categorize(BasicBlock *bb, BranchProblem::Domain *dom, BasicBlock* &cat_header, branch_category_t &cat) {
+/**
+ * Assign categories to the basic blocks.
+ */
+void BranchBuilder::categorize(BasicBlock *bb, BranchProblem::Domain *dom, BasicBlock* &cat_header, category_t &cat) {
 	BasicBlock *current_header;
 	int id = COND_NUMBER(bb);
 	
 	if (dom->getMust().contains(id)) {
-		cat = BRANCH_ALWAYS_H;
-		cout << "always history: " << cat << "\n";
+		cat = ALWAYS_H;
+		//cout << "always history: " << cat << "\n";
 	} else if (!dom->getMay().contains(id)) {
-		cat = BRANCH_ALWAYS_D; 
-		cout << "always default: " << cat << "\n";		
+		cat = ALWAYS_D;
+		//cout << "always default: " << cat << "\n";
 	} else {
-		cat = BRANCH_NOT_CLASSIFIED;
+		cat = NOT_CLASSIFIED;
 		if (Dominance::isLoopHeader(bb))
 			current_header = bb;
 		else current_header = ENCLOSING_LOOP_HEADER(bb);
@@ -69,8 +130,8 @@ void BranchBuilder::categorize(BasicBlock *bb, BranchProblem::Domain *dom, Basic
 				
 		  for (int k = dom->getPers().length() - 1 ; (k >= bound) && (current_header != NULL); k--) {
 				if (dom->getPers().isPersistent(id, k)) {
-					cat = BRANCH_FIRST_UNKNOWN;
-					cout << "first unknown\n";
+					cat = FIRST_UNKNOWN;
+					//cout << "first unknown\n";
 					cat_header = current_header;
 				}
 				current_header = ENCLOSING_LOOP_HEADER(current_header);
@@ -78,10 +139,12 @@ void BranchBuilder::categorize(BasicBlock *bb, BranchProblem::Domain *dom, Basic
 	}
 													
 				
-	cout << "cat result: " << cat << "\n";			
+	//cout << "cat result: " << cat << "\n";
 	
 }
 
+/**
+ */
 void BranchBuilder::processWorkSpace(WorkSpace* ws) {
 	int size;
 	int row;
@@ -99,15 +162,15 @@ void BranchBuilder::processWorkSpace(WorkSpace* ws) {
 		for (CFGCollection::Iterator cfg(*INVOLVED_CFGS(ws)); cfg; cfg++) {
 		  for (CFG::BBIterator bb(*cfg); bb; bb++) {
 		    if ((COND_NUMBER(bb) != -1) && (hard::BHT_CONFIG(ws)->line(bb->lastInst()->address()) == row)) {
-		    	cout << "Categorize jump on bb " << bb->number() << " on row " << row << "\n";
+		    	//cout << "Categorize jump on bb " << bb->number() << " on row " << row << "\n";
 		      BasicBlock *header = NULL;
-		      branch_category_t cat = BRANCH_NOT_CLASSIFIED;
+		      category_t cat = NOT_CLASSIFIED;
 		      BranchProblem::Domain *dom = list.results[cfg->number()][bb->number()];
 		      
 		      categorize(bb, dom, header, cat);
 		      
-		      BRANCH_CATEGORY(bb) = cat;
-		      BRANCH_HEADER(bb) = header; 
+		      CATEGORY(bb) = cat;
+		      HEADER(bb) = header;
 		      
 		    }
 		  }
@@ -115,8 +178,5 @@ void BranchBuilder::processWorkSpace(WorkSpace* ws) {
      }
 }
 
-void BranchBuilder::configure(const PropList &props) {
-	
-}
-                        
-}
+} }		// otawa::branch
+

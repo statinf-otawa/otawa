@@ -27,17 +27,64 @@
 #include <otawa/branch/CondNumber.h>
 #include <otawa/hard/BHT.h>
 
-namespace otawa {
+namespace otawa { namespace branch {
 
 static SilentFeature::Maker<CondNumber> NUMBERED_CONDITIONS_MAKER;
-SilentFeature NUMBERED_CONDITIONS_FEATURE("otawa::NUMBERED_CONDITIONS_FEATURE", NUMBERED_CONDITIONS_MAKER);
+/**
+ * This feature assign numbers to branch present in a workspace for next processing.
+ *
+ * @par Properties
+ * @li @ref COND_NUMBER
+ * @li @ref COND_MAX
+ */
+SilentFeature NUMBERED_CONDITIONS_FEATURE("otawa::branch::NUMBERED_CONDITIONS_FEATURE", NUMBERED_CONDITIONS_MAKER);
 
-Identifier<int> COND_NUMBER("otawa::COND_NUMBER", -1);
-Identifier<int*> COND_MAX("otawa::COND_MAX", NULL);
+/**
+ * Property giving the number of the control in its BHT set.
+ *
+ * @par Feature
+ * @li @ref NUMBERED_CONDITIONS_MAKER
+ *
+ * @par Hook
+ * @li @ref BasicBlock
+ */
+Identifier<int> COND_NUMBER("otawa::branch::COND_NUMBER", -1);
 
-CondNumber::CondNumber(void) : BBProcessor("otawa::CondNumber", Version(1,0,0)) {
-  require(COLLECTED_CFG_FEATURE);
-  provide(NUMBERED_CONDITIONS_FEATURE);
+/**
+ * This features returns an array integer giving, for each BHT set,
+ * the maximum number of branches in the workspace.
+ *
+ * @par Feature
+ * @li @ref NUMBERED_CONDITIONS_MAKER
+ *
+ * @par Hook
+ * @li @ref WorkSpace
+ */
+Identifier<int *> COND_MAX("otawa::branch::COND_MAX", NULL);
+
+
+/**
+ * @class CondNumber
+ * Associate numbers to each branch relatively to their BHT set.
+ *
+ * @par Configuration
+ *
+ * @par Provided Features
+ * @li @ref NUMBERED_CONDITIONS_FEATURE
+ *
+ * @par Required Features
+ * @li @ref COLLECTED_CFG_FEATUR
+ *
+ */
+proc::declare CondNumber::reg =
+		proc::init("otawa::branch::CondNumber", Version(1,0,0), BBProcessor::reg)
+		.require(COLLECTED_CFG_FEATURE)
+		.require(hard::BHT_FEATURE)
+		.provide(NUMBERED_CONDITIONS_FEATURE)
+		.maker<CondNumber>();
+
+
+CondNumber::CondNumber(void): BBProcessor(reg) {
 }
 
 void CondNumber::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
@@ -65,12 +112,9 @@ void CondNumber::setup(WorkSpace *ws) {
 } 
 
 void CondNumber::cleanup(WorkSpace *ws) {
+	// not cleaned
 	COND_MAX(ws) = current_index;	
 } 
 
+} }		// otawa::branch
 
-void CondNumber::configure(const PropList &props) {
-
-}
-                        
-}
