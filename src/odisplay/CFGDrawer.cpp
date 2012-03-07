@@ -18,6 +18,7 @@ namespace otawa { namespace display {
  * @author G. Cavaignac
  * @class CFGDrawer
  * This class uses the odisplay library to make a visual graph from a CFG
+ * @deprecated	Use instead CFGOutput that provides a lot of customizations.
  */
 
 

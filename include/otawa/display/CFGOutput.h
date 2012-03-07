@@ -25,18 +25,30 @@
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/display/AbstractDrawer.h>
 
-namespace otawa { namespace display {
+namespace otawa {
 
+class Edge;
 
+namespace display {
+
+class CFGOutputDecorator;
 
 // CFGOutput class
 class CFGOutput: public CFGProcessor {
+	friend class CDFGOutputDeclarator;
 public:
-	CFGOutput(void);
+	static proc::declare reg;
+	CFGOutput(proc::declare& _reg = reg);
 
 	// Configuration
 	static Identifier<display::kind_t> KIND;
 	static Identifier<string> PATH;
+
+	virtual void genGraphLabel(CFG *cfg, Output& out);
+	virtual void genBBLabel(CFG *cfg, BasicBlock *bb, Output& out);
+	virtual void genEdgeLabel(CFG *cfg, otawa::Edge *edge, Output& out);
+	virtual void genBBInfo(CFG *cfg, BasicBlock *bb, Output& out);
+	virtual void genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out);
 
 protected:
 	virtual void configure(const PropList &props);

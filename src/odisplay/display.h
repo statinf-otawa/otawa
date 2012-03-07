@@ -44,8 +44,8 @@ public:
 	static void decorate(
 		const G& graph,
 		Output& caption,
-		FillStyle& fill,
-		TextStyle& text);
+		TextStyle& text,
+		FillStyle& fill);
 	
 	/**
 	 * This method is called for each vertex of the graph to get its

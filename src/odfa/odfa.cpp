@@ -29,14 +29,36 @@
 #include <otawa/hard.h>
 #include <otawa/prog/sem.h>
 #include <otawa/data/clp/SymbolicExpr.h>
+#include <otawa/display/GenDrawer.h>
+#include <otawa/display/CFGAdapter.h>
 
 using namespace elm;
 using namespace otawa;
+using namespace otawa::display;
 
 Identifier<bool> BEFORE("", false);
 Identifier<bool> AFTER("", false);
 Identifier<bool> SEM("", false);
 Identifier<bool> FILTER("", false);
+
+
+// CLPDecorayor
+/*static ClpAnalysis *clpa_ptr;
+class CLPDecorator {
+public:
+	static void decorate(const CFGAdapter& graph, Output &caption, FillStyle &fill, TextStyle &text) {
+
+	}
+
+	static void decorate(const CFG *graph, const typename CFGAdapter::Vertex& vertex, Output &content, ShapeStyle &style) {
+
+	}
+
+	static void decorate(const CFG *graph, const typename CFGAdapter::Edge& edge, Output &label, TextStyle &text, LineStyle &line) {
+
+	}
+};*/
+
 
 // Generic textual displayer
 class TextualDisplayer: public BBProcessor {
@@ -223,8 +245,8 @@ private:
 		clpa.process(workspace(), props);
 
 		// display the CFG
-		if(cfg)
-			;
+		if(cfg) {
+		}
 		else {
 			CLPDisplayer displayer;
 			displayer.process(workspace(), props);
