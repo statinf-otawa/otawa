@@ -29,6 +29,7 @@
 #include <otawa/loader/arm.h>
 
 extern "C" {
+#	include <arm/grt.h>
 #	include <arm/api.h>
 #	include <arm/config.h>
 #	include <arm/used_regs.h>

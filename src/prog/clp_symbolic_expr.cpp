@@ -116,7 +116,7 @@ namespace se{
 		return (_op == expr.op() && _val == expr.val());
 	}
 	String SEConst::asString(const hard::Platform *pf){
-		if(OCLP_IS_CST(_val))
+		if(_val.isConst())
 			return (_ << "0x" << hex(_val.lower()));
 		else if (_val.kind() == clp::ALL)
 			return (_ << 'T');
@@ -138,7 +138,7 @@ namespace se{
 		return (_op == expr.op() && _val == expr.val());
 	}
 	String SEAddr::asString(const hard::Platform *pf) {
-		if(OCLP_IS_CST(_val))
+		if(_val.isConst())
 			return (_ << '@' << hex(_val.lower()));
 		else
 			return (_ << "@(0x" << hex(_val.lower()) \
@@ -165,7 +165,7 @@ namespace se{
 		return (_op == expr.op() && _val == expr.val());
 	}
 	String SEReg::asString(const hard::Platform *pf){
-		assert(OCLP_IS_CST(_val));
+		ASSERT(_val.isConst());
 		if (_val >= 0) {
 			if(pf)
 				return pf->findReg(_val.lower())->name();
@@ -529,11 +529,11 @@ namespace se{
 			begining of the BB each time we replace a register by its value */
 		clp::State state = pack.state_before(i->address(), sem);
 		
-		assert(OCLP_IS_CST(reg));
+		ASSERT(reg.isConst());
 		
 		// replace other registers
 		for (int i=0; i < used_reg.length(); i++){
-			assert(OCLP_IS_CST(used_reg[i]));
+			assert(used_reg[i].isConst());
 			if(used_reg[i].lower() != reg.lower()){
 				// get the actual value of used_reg[i]
 				clp::Value clpval = state.get(clp::Value(clp::REG, used_reg[i].lower()));
@@ -547,7 +547,7 @@ namespace se{
 		
 		// replace other memory refs
 		for (int i=0; i < used_addr.length(); i++){
-			assert(OCLP_IS_CST(used_addr[i]));
+			assert(used_addr[i].isConst());
 			// get the actual value of used_addr[i] 
 			clp::Value clpval = state.get(used_addr[i]);
 			SEConst *val = new SEConst(clpval);
@@ -574,11 +574,11 @@ namespace se{
 			begining of the BB each time we replace an address by its value */
 			clp::State state = pack.state_before(i->address(), sem);
 		
-		assert(OCLP_IS_CST(addr));
+		ASSERT(addr.isConst());
 		
 		// replace other registers
 		for (int i=0; i < used_reg.length(); i++){
-			assert(OCLP_IS_CST(used_reg[i]));
+			ASSERT(used_reg[i].isConst());
 			// get the actual value of used_reg[i]
 			clp::Value clpval = state.get(clp::Value(clp::REG, used_reg[i].lower()));
 			SEConst *val = new SEConst(clpval);
@@ -590,7 +590,7 @@ namespace se{
 		
 		// replace other memory refs
 		for (int i=0; i < used_addr.length(); i++){
-			assert(OCLP_IS_CST(used_addr[i]));
+			assert(used_addr[i].isConst());
 			if (used_addr[i] != addr){
 				// get the actual value of used_addr[i] 
 				clp::Value clpval = state.get(used_addr[i]);
@@ -768,7 +768,7 @@ namespace se{
 					clp::State state = pack.state_after(cur_inst->address(), pc);
 					clp::Value val = state.get(clp::Value(clp::REG, i.a()));
 					if (val != clp::Value::all){
-						if(!OCLP_IS_CST(val)){
+						if(!val.isConst()){
 							// if val is a set, we cannot insert the memory
 							// reference in the filter
 							// TODO: maybe we should 'fork' the filter?
@@ -945,24 +945,24 @@ namespace se{
 	*/
 	void applyFilter(V &v, se::op_t cmp_op, V f){
 		V b;
-		OCLP_intn_t oldvdelta = v.delta();
+		clp::intn_t oldvdelta = v.delta();
 		switch(cmp_op){
 		case LE:
 			f.add(1);
 		case LT:
 			if(f.stop() < f.lower())
-				b = V(clp::VAL, OCLP_MINn, 1, OCLP_UMAXn);
+				b = V(clp::VAL, clp::MINn, 1, clp::UMAXn);
 			else
-				b = V(clp::VAL, OCLP_MINn, 1, f.stop() - 1 - OCLP_MINn);
+				b = V(clp::VAL, clp::MINn, 1, f.stop() - 1 - clp::MINn);
 			v.inter(b);
 			break;
 		case GE:
 			f.sub(1);
 		case GT:
 			if(f.stop() < f.lower())
-				b = V(clp::VAL, f.start() + 1, 1, OCLP_UMAXn);
+				b = V(clp::VAL, f.start() + 1, 1, clp::UMAXn);
 			else
-				b = V(clp::VAL, f.start() + 1, 1, OCLP_MAXn - f.stop() - 1);
+				b = V(clp::VAL, f.start() + 1, 1, clp::MAXn - f.stop() - 1);
 			v.inter(b);
 			break;
 		case EQ:
@@ -973,19 +973,19 @@ namespace se{
 			   We cannnot test if the value is in the filter, because the filter
 			   will never - at execution time - be the whole set, but just a
 			   value in this set. */
-			if (OCLP_IS_CST(f)){
-				if (OCLP_IS_CST(v) && f.lower() == v.lower()){
+			if (f.isConst()){
+				if (v.isConst() && f.lower() == v.lower()){
 					v.set(clp::NONE, 0, 0, 0);
 				// if v is T, set to T/{f}
 				} else if (v == V::all) {
-					v.set(clp::VAL, f.lower() + 1, 1, OCLP_UMAXn - 1);
+					v.set(clp::VAL, f.lower() + 1, 1, clp::UMAXn - 1);
 				// check in the value is one extremity of the clp
 				} else if (f.lower() == v.lower()) {
 					if (v.mtimes() > 1)
 						v.set(v.kind(), v.lower() + v.delta(), v.delta(), v.mtimes() - 1);
 					else
 						v.set(v.kind(), v.lower() + v.delta(), 0, 0);
-				} else if (v.lower() + (OCLP_intn_t)(v.delta() * v.mtimes()) == f.lower()) {
+				} else if (v.lower() + (clp::intn_t)(v.delta() * v.mtimes()) == f.lower()) {
 					if (v.mtimes() > 1)
 						v.set(v.kind(), v.lower(), v.delta(), v.mtimes() - 1);
 					else
@@ -1009,7 +1009,7 @@ namespace se{
 			f.sub(1);
 		case UGT:
 			if (f.lower() <= f.stop()){
-				OCLP_uintn_t newm = (OCLP_uintn_t)OCLP_UMAXn - (OCLP_uintn_t)(f.lower() + 1);
+				clp::uintn_t newm = (clp::uintn_t)clp::UMAXn - (clp::uintn_t)(f.lower() + 1);
 				b = V(clp::VAL, f.lower() + 1, 1, newm);
 				v.inter(b);
 			}

@@ -168,7 +168,9 @@ public:
 	after(*this, option::cmd, "--after", option::help, "display state after the BB", option::end),
 	sem(*this, option::cmd, "-s", option::cmd, "--sem", option::help, "display semantics instructions", option::end),
 	filter(*this, option::cmd, "-f", option::cmd, "--filter", option::help, "display filters", option::end),
-	inits(*this, option::cmd, "-r", option::cmd, "--reg", option::help, "add an initialization register", option::arg_desc, "REGISTER=VALUE", option::end)
+	inits(*this, option::cmd, "-r", option::cmd, "--reg", option::help, "add an initialization register", option::arg_desc, "REGISTER=VALUE", option::end),
+	stats(*this, option::cmd, "-S", option::cmd, "--stats", option::help, "display statistics of the analysis", option::end),
+	cfg(*this, option::cmd, "-C", option::cmd, "--cfg", option::help, "dump the CFG in .dot format")
 	{ }
 
 protected:
@@ -216,11 +218,32 @@ private:
 
 		// perform the analysis
 		require(otawa::VIRTUALIZED_CFG_FEATURE);
-		require(otawa::CLP_ANALYSIS_FEATURE);
+		//require(otawa::CLP_ANALYSIS_FEATURE);
+		ClpAnalysis clpa;
+		clpa.process(workspace(), props);
 
 		// display the CFG
-		CLPDisplayer displayer;
-		displayer.process(workspace(), props);
+		if(cfg)
+			;
+		else {
+			CLPDisplayer displayer;
+			displayer.process(workspace(), props);
+		}
+
+		// display the statistics
+		if(stats) {
+			cerr << "machine instructions: " << clpa.get_nb_inst() << io::endl;
+			cerr << "semantics instructions: " << clpa.get_nb_sem_inst() << io::endl;
+			cerr << "sets: " << clpa.get_nb_set() << io::endl;
+			cerr << "sets to T: " << clpa.get_nb_top_set() << io::endl;
+			cerr << "stores: " << clpa.get_nb_store() << io::endl;
+			cerr << "stores of T: " << clpa.get_nb_top_store() << io::endl;
+			cerr << "stores at T: " << clpa.get_nb_top_store_addr() << io::endl;
+			cerr << "loads: " << clpa.get_nb_load() << io::endl;
+			cerr << "loads at T: " << clpa.get_nb_load_top_addr() << io::endl;
+			cerr << "filters: " << clpa.get_nb_filters() << io::endl;
+			cerr << "filters to T: " << clpa.get_nb_top_filters() << io::endl;
+		}
 	}
 
 	void fillRegs(PropList& props) {
@@ -254,7 +277,7 @@ private:
 		}
 	}
 
-	option::SwitchOption clp, list, before, after, sem, filter;
+	option::SwitchOption clp, list, before, after, sem, filter, stats, cfg;
 	option::ListOption<string> inits;
 };
 

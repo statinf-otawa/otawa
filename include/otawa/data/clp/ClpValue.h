@@ -24,37 +24,33 @@
 #ifndef OTAWA_DATA_CLP_VALUE_H_
 #define OTAWA_DATA_CLP_VALUE_H_
 
-#include <limits>
+#include <elm/type_info.h>
 
-namespace otawa {
+namespace otawa { namespace clp {
 
-namespace clp {
-	// Here we define the number of bits the CLP will be (here modulo 2^32)
-	#define OCLP_NBITS 32
-	#define OCLP_intn_t int32_t
-	#define OCLP_uintn_t uint32_t
-	#define OCLP_UMAXn std::numeric_limits<OCLP_uintn_t>::max()
-	#define OCLP_MAXn std::numeric_limits<OCLP_intn_t>::max()
-	#define OCLP_MINn std::numeric_limits<OCLP_intn_t>::min()
+// Here we define the number of bits the CLP will be (here modulo 2^32)
+const int NBITS = 32;
+typedef elm::t::int32 intn_t;
+typedef elm::t::uint32 uintn_t;
+typedef t::uint64 STAT_UINT;
+const uintn_t UMAXn = elm::type_info<uintn_t>::max;
+const intn_t MAXn = elm::type_info<intn_t>::max;
+const intn_t MINn = elm::type_info<intn_t>::min;
 	
-	// This macro allow to make asserts over clp that must be constants
-	#define OCLP_IS_CST(clp) ((clp).delta() == 0 || (clp).mtimes() == 0)
 	
-	#define OCLP_STAT_UINT unsigned long long int
-	
-	/**
-	 * Allowed types for values:
-	 * NONE represents nothing;
-	 * REG is only used for addresses, and represents a register;
-	 * VAL represents some values (either a constant or an interval);
-	 * ALL is the Top element.
-	 */
-	typedef enum {
-		NONE,
-		REG,	// only used for addresses
-		VAL,
-		ALL
-	} kind_t;
+/**
+ * Allowed types for values:
+ * NONE represents nothing;
+ * REG is only used for addresses, and represents a register;
+ * VAL represents some values (either a constant or an interval);
+ * ALL is the Top element.
+ */
+typedef enum {
+	NONE,
+	REG,	// only used for addresses
+	VAL,
+	ALL
+} kind_t;
 	
 	/**
 	 * A set of values represented by a Circular Linear Progression.
@@ -64,14 +60,17 @@ namespace clp {
 	 */
 	class Value {
 	public:
+
+		inline bool isConst(void) const { return delta() == 0 || mtimes() == 0; }
+
 		/** Constructor for a new CLP
 		*	@param kind the kind of the CLP
 		*	@param lower the lower bound
 		*	@param delta the delta
 		*	@param mtimes the number of time the delta is applied
 		*/
-		inline Value(kind_t kind=VAL, OCLP_intn_t lower=0, OCLP_intn_t delta=0,
-			OCLP_uintn_t mtimes=0): _kind(kind), _lower(lower), _delta(delta),
+		inline Value(kind_t kind=VAL, intn_t lower=0, intn_t delta=0,
+			uintn_t mtimes=0): _kind(kind), _lower(lower), _delta(delta),
 			_mtimes(mtimes) { }
 		/** Copy constructor */
 		inline Value(const Value& val):
@@ -100,7 +99,7 @@ namespace clp {
 						 _mtimes == val._mtimes) ||
 						( (_delta == 1 || _delta == -1) &&
 						  (val._delta == 1 || val._delta == -1) &&
-						 _mtimes == OCLP_UMAXn && val._mtimes == OCLP_UMAXn)
+						 _mtimes == UMAXn && val._mtimes == UMAXn)
 					);
 		}
 		inline bool operator!=(const Value& val) const {
@@ -114,14 +113,14 @@ namespace clp {
 		}
 		
 		inline kind_t kind(void) const { return _kind; }
-		inline OCLP_intn_t lower(void) const { return _lower; }
-		inline OCLP_intn_t delta(void) const { return _delta; }
-		inline OCLP_uintn_t mtimes(void) const { return _mtimes; }
+		inline intn_t lower(void) const { return _lower; }
+		inline intn_t delta(void) const { return _delta; }
+		inline uintn_t mtimes(void) const { return _mtimes; }
 		
 		/** @return the "start" of the CLP, i.e. the lower bound if delta >= 0,
 		*	lower + delta * mtimes else.
 		*/
-		inline OCLP_intn_t start(void) const {
+		inline intn_t start(void) const {
 			if (_delta < 0)
 				return _lower + _delta * _mtimes;
 			else
@@ -130,7 +129,7 @@ namespace clp {
 		/** @return the "stop" of the CLP, i.e. the upper bound if delta >= 0,
 		*	lower else.
 		*/
-		inline OCLP_intn_t stop(void) const {
+		inline intn_t stop(void) const {
 			if (_delta < 0)
 				return _lower;
 			else
@@ -207,8 +206,8 @@ namespace clp {
 		 * @param mtimes the number of times delta need to be added to get the
 		 *				 max bound of the CLP
 		 */
-		inline void set(kind_t kind, OCLP_intn_t lower, OCLP_intn_t delta,
-						OCLP_uintn_t mtimes){
+		inline void set(kind_t kind, intn_t lower, intn_t delta,
+						uintn_t mtimes){
 			_kind = kind;
 			_lower = lower;
 			_delta = delta;
@@ -216,9 +215,9 @@ namespace clp {
 		}
 	private:
 		kind_t _kind;
-		OCLP_intn_t _lower;
-		OCLP_intn_t _delta;
-		OCLP_uintn_t _mtimes;
+		intn_t _lower;
+		intn_t _delta;
+		uintn_t _mtimes;
 	};
 	
 	// output

@@ -39,42 +39,42 @@ public:
 	virtual void configure(const PropList &props);
 	
 	/** @return the number of machine instructions analysed. */
-	inline OCLP_STAT_UINT get_nb_inst(void){ return _nb_inst; }
+	inline clp::STAT_UINT get_nb_inst(void){ return _nb_inst; }
 	/** @return the number of semantic instructions analysed. */
-	inline OCLP_STAT_UINT get_nb_sem_inst(void){ return _nb_sem_inst; }
+	inline clp::STAT_UINT get_nb_sem_inst(void){ return _nb_sem_inst; }
 	/** @return the number of SET analysed. */
-	inline OCLP_STAT_UINT get_nb_set(void){ return _nb_set; }
+	inline clp::STAT_UINT get_nb_set(void){ return _nb_set; }
 	/** @return the number of SET with Top as result. */
-	inline OCLP_STAT_UINT get_nb_top_set(void){ return _nb_top_set; }
+	inline clp::STAT_UINT get_nb_top_set(void){ return _nb_top_set; }
 	/** @return the number of STORE analysed. */
-	inline OCLP_STAT_UINT get_nb_store(void){ return _nb_store; }
+	inline clp::STAT_UINT get_nb_store(void){ return _nb_store; }
 	/** @return the number of STORE with Top as result. */
-	inline OCLP_STAT_UINT get_nb_top_store(void){ return _nb_top_store; }
+	inline clp::STAT_UINT get_nb_top_store(void){ return _nb_top_store; }
 	/** @return the number of STORE with Top as address. */
-	inline OCLP_STAT_UINT get_nb_top_store_addr(void){return _nb_top_store_addr;}
+	inline clp::STAT_UINT get_nb_top_store_addr(void){return _nb_top_store_addr;}
 	/** @return the number of LOAD analysed. */
-	inline OCLP_STAT_UINT get_nb_load(void){return _nb_load;}
+	inline clp::STAT_UINT get_nb_load(void){return _nb_load;}
 	/** @return the number of LOAD with Top as address. */
-	inline OCLP_STAT_UINT get_nb_load_top_addr(void){return _nb_load_top_addr;}
+	inline clp::STAT_UINT get_nb_load_top_addr(void){return _nb_load_top_addr;}
 	/** @return the number of filters built. */
-	inline OCLP_STAT_UINT get_nb_filters(void){ return _nb_filters; }
+	inline clp::STAT_UINT get_nb_filters(void){ return _nb_filters; }
 	/** @return the number of filters with a comparison to Top. */
-	inline OCLP_STAT_UINT get_nb_top_filters(void){ return _nb_top_filters; }
+	inline clp::STAT_UINT get_nb_top_filters(void){ return _nb_top_filters; }
 	
 protected:
 	virtual void processWorkSpace(WorkSpace *ws);
 	genstruct::Vector<init_t> inits;
 private:
-	OCLP_STAT_UINT _nb_inst, _nb_sem_inst;
-	OCLP_STAT_UINT _nb_set;
-	OCLP_STAT_UINT _nb_top_set;
-	OCLP_STAT_UINT _nb_store;
-	OCLP_STAT_UINT _nb_top_store;
-	OCLP_STAT_UINT _nb_top_store_addr;
-	OCLP_STAT_UINT _nb_load;
-	OCLP_STAT_UINT _nb_load_top_addr;
-	OCLP_STAT_UINT _nb_filters;
-	OCLP_STAT_UINT _nb_top_filters;
+	clp::STAT_UINT _nb_inst, _nb_sem_inst;
+	clp::STAT_UINT _nb_set;
+	clp::STAT_UINT _nb_top_set;
+	clp::STAT_UINT _nb_store;
+	clp::STAT_UINT _nb_top_store;
+	clp::STAT_UINT _nb_top_store_addr;
+	clp::STAT_UINT _nb_load;
+	clp::STAT_UINT _nb_load_top_addr;
+	clp::STAT_UINT _nb_filters;
+	clp::STAT_UINT _nb_top_filters;
 };
 
 extern Feature<ClpAnalysis> CLP_ANALYSIS_FEATURE;

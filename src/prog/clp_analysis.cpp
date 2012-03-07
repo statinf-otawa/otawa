@@ -20,7 +20,6 @@
  */
 
 #include <stdlib.h>
-#include <stdint.h>
 #include <math.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/prog/sem.h>
@@ -59,7 +58,7 @@ using namespace otawa::util;
 #define STATE_MULTILINE
 
 // enable to load data from segments when load results with T
-//#define DATA_LOADER
+#define DATA_LOADER
 
 namespace otawa {
 
@@ -103,7 +102,7 @@ long lcm(long a, long b){
 /**
  * Return the min with a signed comparison
 */
-OCLP_intn_t min(OCLP_intn_t a, OCLP_intn_t b){
+intn_t min(intn_t a, intn_t b){
 	if ( a < b)
 		return a;
 	else
@@ -112,7 +111,7 @@ OCLP_intn_t min(OCLP_intn_t a, OCLP_intn_t b){
 /**
  * Return the max with a signed comparison
 */
-OCLP_intn_t max(OCLP_intn_t a, OCLP_intn_t b){
+intn_t max(intn_t a, intn_t b){
 	if ( a > b)
 		return a;
 	else
@@ -121,7 +120,7 @@ OCLP_intn_t max(OCLP_intn_t a, OCLP_intn_t b){
 /**
  * Return the min with an unsigned comparison
 */
-OCLP_uintn_t umin(OCLP_uintn_t a, OCLP_uintn_t b){
+uintn_t umin(uintn_t a, uintn_t b){
 	if (a < b)
 		return a;
 	else
@@ -130,7 +129,7 @@ OCLP_uintn_t umin(OCLP_uintn_t a, OCLP_uintn_t b){
 /**
  * Return the max with an usigned comparison
 */
-OCLP_uintn_t umax(OCLP_uintn_t a, OCLP_uintn_t b){
+uintn_t umax(uintn_t a, uintn_t b){
 	if ( a > b)
 		return a;
 	else
@@ -160,11 +159,11 @@ void Value::add(const Value& val){
 	if (_kind == NONE && val._kind == NONE) 	/* NONE + NONE = NONE */
 		set(NONE, 0, 0, 0);
 	else if (_kind == ALL || val._kind == ALL) 	/* ALL + anything = ALL */
-		set(ALL, 0, 1, OCLP_UMAXn);
+		set(ALL, 0, 1, UMAXn);
 	else if (_delta == 0 && val._delta == 0) 	/* two constants */
 		set(_kind, _lower + val._lower, 0, 0);
 	else {										/* other cases */
-		OCLP_uintn_t g = gcd(_delta, val._delta);
+		uintn_t g = gcd(_delta, val._delta);
 		set(VAL, start() + val.start(), g,
 		    _mtimes * (abs(_delta) / g) + val._mtimes * (abs(val._delta) / g));
 	}
@@ -182,11 +181,11 @@ void Value::sub(const Value& val) {
 	if (_kind == NONE && val._kind == NONE)		/* NONE - NONE = NONE */
 		set(NONE, 0, 0, 0);
 	else if (_kind == ALL || val._kind == ALL)	/* ALL - anything = ALL */
-		set(ALL, 0, 1, OCLP_UMAXn);
+		set(ALL, 0, 1, UMAXn);
 	else if (_delta == 0 && val._delta == 0)	/* two constants */
 		set(_kind, _lower - val._lower, 0, 0);
 	else {										/* other cases */
-		OCLP_uintn_t g = gcd(_delta, val._delta);
+		uintn_t g = gcd(_delta, val._delta);
 		set(VAL, start() - val.stop(), g,
 			_mtimes * (abs(_delta) / g) + val._mtimes * (abs(val._delta) / g));
 	}
@@ -219,8 +218,8 @@ void Value::print(io::Output& out) const {
  *				constant.
 */
 void Value::shl(const Value& val) {
-	if(!OCLP_IS_CST(val) || val._lower < 0){
-		set(ALL, 0, 1, OCLP_UMAXn);
+	if(!val.isConst() || val._lower < 0){
+		set(ALL, 0, 1, UMAXn);
 	} else if (_kind != NONE && _kind != ALL) {
 		if (_delta == 0 && _mtimes == 0)
 			set(VAL, _lower << val._lower, 0, 0);
@@ -235,8 +234,8 @@ void Value::shl(const Value& val) {
  *				constant.
 */
 void Value::shr(const Value& val) {
-	if(!OCLP_IS_CST(val) || val._lower < 0){
-		set(ALL, 0, 1, OCLP_UMAXn);
+	if(!val.isConst() || val._lower < 0){
+		set(ALL, 0, 1, UMAXn);
 	} else
 	if (_kind != NONE && _kind != ALL) {
 		if (_delta == 0 && _mtimes == 0)
@@ -260,8 +259,8 @@ void Value::_or(const Value& val) {
 		*this = val;
 		return;
 	}
-	if(OCLP_IS_CST(val)) {
-		if(OCLP_IS_CST(*this))
+	if(val.isConst()) {
+		if(isConst())
 			_lower |= val._lower;
 		/*else if(val._lower < _delta)
 			_lower |= val._lower;*/		// TO CHECK
@@ -288,16 +287,16 @@ void Value::join(const Value& val) {
 	if ((*this) == val)							/* A U A = A (nothing to do) */
 		return;
 	else if (_kind == ALL || val._kind == ALL)  /* ALL U anything = ALL */
-		set(ALL, 0, 1, OCLP_UMAXn);
+		set(ALL, 0, 1, UMAXn);
 	else if (_kind == NONE)						/* NONE U A = A */
 		set(VAL, val._lower, val._delta, val._mtimes);
 	else if (val._kind == NONE)					/* A U NONE = A (nothing to do) */
 		return;
-	else if (_delta == 0 && _mtimes == 0 && OCLP_IS_CST(val)) /* k1 U k2 */
+	else if (_delta == 0 && _mtimes == 0 && val.isConst()) /* k1 U k2 */
 		set(VAL, min(_lower, val._lower), abs(_lower - val._lower), 1);
 	else {										/* other cases */
-		OCLP_uintn_t g = gcd(gcd(abs(start() - val.start()), _delta), val._delta);
-		OCLP_intn_t ls = min(start(), val.start());
+		uintn_t g = gcd(gcd(abs(start() - val.start()), _delta), val._delta);
+		intn_t ls = min(start(), val.start());
 		int64_t u1 = (int64_t)start() + ((int64_t)abs(_delta))*(int64_t)_mtimes;
 		int64_t u2 = (int64_t)val.start() + ((int64_t)abs(val._delta))*(int64_t)val._mtimes;
 		int64_t umax;
@@ -317,18 +316,18 @@ void Value::widening(const Value& val) {
 	if (_kind == NONE && val._kind == NONE) /* widen(NONE, NONE) = NONE */
 		return;
 	else if (_kind == ALL || val._kind == ALL) /* widen(ALL, *) = ALL */
-		set(ALL, 0, 1, OCLP_UMAXn);
+		set(ALL, 0, 1, UMAXn);
 	else if (*this == val)					/* this == val -> do nothing */
 		return;
 	else {
 		if (_delta != val._delta && _delta != - val._delta){
 			// set to T
-			set(ALL, 0, 1, OCLP_UMAXn);
+			set(ALL, 0, 1, UMAXn);
 			return;
 		}
 		
 		// two constants: the delta is | k1 - k2 |
-		if ((OCLP_IS_CST((*this))) && OCLP_IS_CST(val)){
+		if (isConst() && val.isConst()){
 			_delta = abs(_lower - val._lower);
 		}
 		
@@ -336,17 +335,17 @@ void Value::widening(const Value& val) {
 			// go to negatives
 			if(val.stop() > stop()){
 				// and also to the positives
-				set(ALL, 0, 1, OCLP_UMAXn);
+				set(ALL, 0, 1, UMAXn);
 				return;
 			}
-			OCLP_intn_t absd = abs(_delta);
-			set(_kind, stop(), -absd, OCLP_MINn / absd);
+			intn_t absd = abs(_delta);
+			set(_kind, stop(), -absd, MINn / absd);
 			return;
 		}
 		if (val.stop() > stop()){
 			// go the positive
-			OCLP_intn_t absd = abs(_delta);
-			set(_kind, start(), absd, OCLP_UMAXn / absd);
+			intn_t absd = abs(_delta);
+			set(_kind, start(), absd, UMAXn / absd);
 		}
 	}
 }
@@ -360,10 +359,10 @@ void Value::ffwidening(const Value& val, int loopBound){
 	if (_kind == NONE && val._kind == NONE) /* widen(NONE, NONE) = NONE */
 		return;
 	else if (_kind == ALL || val._kind == ALL) /* widen(ALL, *) = ALL */
-		set(ALL, 0, 1, OCLP_UMAXn);
+		set(ALL, 0, 1, UMAXn);
 	else if (*this == val)					/* this == val -> do nothing */
 		return;
-	else if (OCLP_IS_CST((*this)) && OCLP_IS_CST(val)) {
+	else if (isConst() && val.isConst()) {
 		if (_lower < val._lower)
 			/* widen((k1, 0, 0), (k2, 0, 0)) = (k1, k2 - k1, N) */
 			set(VAL, _lower, val._lower - _lower, loopBound);
@@ -379,7 +378,7 @@ void Value::ffwidening(const Value& val, int loopBound){
 		return;				/* val == this + k => this */
 	else
 		/* other cases: T */
-		set(ALL, 0, 1, OCLP_UMAXn);
+		set(ALL, 0, 1, UMAXn);
 }
 
 /**
@@ -387,11 +386,11 @@ void Value::ffwidening(const Value& val, int loopBound){
  * @param val the value to do the intersection with
  */
 void Value::inter(const Value& val) {
-	OCLP_intn_t l1 = _lower, l2 = val._lower;
-	OCLP_intn_t sta1 = start(), sta2 = val.start();
-	OCLP_intn_t sto1 = stop(), sto2 = val.stop();
-	OCLP_intn_t d1 = _delta, d2 = val._delta;
-	OCLP_uintn_t m1 = _mtimes, m2 = val._mtimes;
+	intn_t l1 = _lower, l2 = val._lower;
+	intn_t sta1 = start(), sta2 = val.start();
+	intn_t sto1 = stop(), sto2 = val.stop();
+	intn_t d1 = _delta, d2 = val._delta;
+	uintn_t m1 = _mtimes, m2 = val._mtimes;
 	int64_t u1, u2;
 	if (_delta < 0)
 		u1 = _lower;
@@ -413,7 +412,7 @@ void Value::inter(const Value& val) {
 	}
 	
 	// 2.2. cst n cst
-	if (OCLP_IS_CST((*this)) && OCLP_IS_CST(val)){
+	if (isConst() && val.isConst()){
 		if (l1 == l2)
 			set(VAL, l1, 0, 0);
 		else
@@ -421,7 +420,7 @@ void Value::inter(const Value& val) {
 		return ;
 	}
 	// 2.3. cst n clp || clp n cst
-	if (OCLP_IS_CST((*this))) {
+	if (isConst()) {
 		if ( ((sta1 >= sta2) && ((sta1 - sta2) % d2 == 0) && (u1 <= u2)) ||
 		     (val == all))
 			set(VAL, sta1, 0, 0);
@@ -429,7 +428,7 @@ void Value::inter(const Value& val) {
 			set(NONE, 0, 0, 0);
 		return ;
 	}
-	if (OCLP_IS_CST(val)){
+	if (val.isConst()){
 		if ( ((sta2 >= sta1) && ((sta2 - sta1) % d1 == 0) && (u2 <= u1)) ||
 		     (*this == all))
 			set(VAL, sta2, 0, 0);
@@ -438,8 +437,8 @@ void Value::inter(const Value& val) {
 		return;
 	}
 	// 2.4. not overlapping intervals
-	OCLP_uintn_t l2test = (l2 - l1) / d1, m2test = (l2 + d2 * m2 - l1) / d1;
-	OCLP_uintn_t l1test = (l1 - l2) / d2, m1test = (l1 + d1 * m1 - l2) / d2;
+	uintn_t l2test = (l2 - l1) / d1, m2test = (l2 + d2 * m2 - l1) / d1;
+	uintn_t l1test = (l1 - l2) / d2, m1test = (l1 + d1 * m1 - l2) / d2;
 	
 	if (!(	( (0 <= l2test) && (l2test <= m1) ) ||
 			( (0 <= m2test) && (m2test <= m1) ) ||
@@ -451,20 +450,20 @@ void Value::inter(const Value& val) {
 	}
 	// 2.5 intersection with a continue interval
 	if (d1 == 1 || d1 == -1){
-		OCLP_intn_t ls;
-		OCLP_uintn_t ms;
+		intn_t ls;
+		uintn_t ms;
 		if (d2 > 0){
-			ls = max(l2, (OCLP_intn_t)ceil((float)(sta1 - l2)/d2) * d2 + l2);
+			ls = max(l2, (intn_t)ceil((float)(sta1 - l2)/d2) * d2 + l2);
 			ms = umin(
-				(OCLP_uintn_t)(sto1 - ls) / d2,
-				(OCLP_uintn_t)(sto2 - ls) / d2
+				(uintn_t)(sto1 - ls) / d2,
+				(uintn_t)(sto2 - ls) / d2
 			);
 		}else{
 			ASSERT(d2 < 0); // the d2==0 case is 2.2 or 2.3
 			ls = min(l2, ((sto1 - l2) / d2) * d2 + l2);
 			ms = min(
 				m2 + (l2 - ls) / d2,
-				(OCLP_uintn_t)(ls - sta1) / -d2
+				(uintn_t)(ls - sta1) / -d2
 			);
 		}
 		// normalize constants
@@ -474,20 +473,20 @@ void Value::inter(const Value& val) {
 		return;
 	}
 	if (d2 == 1 || d2 == -1){
-		OCLP_intn_t ls;
-		OCLP_uintn_t ms;
+		intn_t ls;
+		uintn_t ms;
 		if (d1 > 0){
-			ls = max(l1, (OCLP_intn_t)ceil((float)(sta2 - l1)/d1) * d1 + l1);
+			ls = max(l1, (intn_t)ceil((float)(sta2 - l1)/d1) * d1 + l1);
 			ms = umin(
-				(OCLP_uintn_t)(sto2 - ls) / d1,
-				(OCLP_uintn_t)(sto1 - ls) / d1
+				(uintn_t)(sto2 - ls) / d1,
+				(uintn_t)(sto1 - ls) / d1
 			);
 		}else{
 			ASSERT(d1 < 0); // the d1==0 case is 2.2 or 2.3
 			ls = min(l1, ((sto2 - l1) / d1) * d1 + l1);
 			ms = min(
 				m1 + (l1 - ls) / d1,
-				(OCLP_uintn_t)(ls - sta2) / -d1
+				(uintn_t)(ls - sta2) / -d1
 			);
 		}
 		// normalize constants
@@ -499,7 +498,7 @@ void Value::inter(const Value& val) {
 	
 	
 	// 3. Main case ==========================
-	OCLP_uintn_t d = gcd(d1, d2);
+	uintn_t d = gcd(d1, d2);
 	
 	// 3.1. Test if a solution exists
 	if ((l2 - l1) % d != 0){
@@ -508,12 +507,12 @@ void Value::inter(const Value& val) {
 	}
 	
 	// 3.2. ds: step of the solution
-	OCLP_uintn_t ds = lcm(d1, d2);
+	uintn_t ds = lcm(d1, d2);
 	
 	// 3.4. Research of a particular solution
 	bool solution_found = false;
 	long ip1p;
-	for(OCLP_uintn_t i = 1; i < (OCLP_uintn_t)abs(d2); i++){
+	for(uintn_t i = 1; i < (uintn_t)abs(d2); i++){
 		if((d1 * i - 1) % d2 == 0){
 			ip1p = i;
 			solution_found = true;
@@ -530,14 +529,14 @@ void Value::inter(const Value& val) {
 	
 	// 3.5. min of the intersection (ls)
 	long k = max(ceil(-i1p * (float)d1 / ds), ceil(-i2p * (float)d2 / ds));
-	OCLP_uintn_t i1s = i1p + k * ds / d1;
-	OCLP_uintn_t i2s = i2p + k * ds / d2;
-	OCLP_intn_t ls = l1 + d1 * i1s;
-	ASSERT((OCLP_uintn_t)ls == l2 + d2 * i2s);
+	uintn_t i1s = i1p + k * ds / d1;
+	uintn_t i2s = i2p + k * ds / d2;
+	intn_t ls = l1 + d1 * i1s;
+	ASSERT((uintn_t)ls == l2 + d2 * i2s);
 	
 	// 3.6. mtimes of the intersection (ms)
-	OCLP_intn_t umin = min(l1 + d1 * m1, l2 + d2 * m2);
-	OCLP_uintn_t ms = floor((float)(umin-ls) / ds);
+	intn_t umin = min(l1 + d1 * m1, l2 + d2 * m2);
+	uintn_t ms = floor((float)(umin-ls) / ds);
 	
 	// normalize constants
 	if((ds == 0) || (ms == 0)){
@@ -554,12 +553,12 @@ void Value::inter(const Value& val) {
  * the opposite of delta as new delta).
 */
 void Value::reverse(void){
-	OCLP_uintn_t dist = (OCLP_uintn_t)abs(start() - stop());
+	uintn_t dist = (uintn_t)abs(start() - stop());
 	set(clp::VAL, stop(), -delta(), dist / delta());
 }
 
 inline io::Output& operator<<(io::Output& out, const Value& v) { v.print(out); return out; }
-const Value Value::none(NONE), Value::all(ALL, 0, 1, OCLP_UMAXn); 
+const Value Value::none(NONE), Value::all(ALL, 0, 1, UMAXn);
 
 /* *** State methods *** */
 
@@ -623,7 +622,7 @@ void State::set(const Value& addr, const Value& val) {
 	}
 	
 	// we assume that addr is a constant... (or T)
-	ASSERT(OCLP_IS_CST(addr) || addr == Value::all);
+	ASSERT(addr.isConst() || addr == Value::all);
 	
 	// == Register ==
 	if(addr.kind() == REG) {
@@ -919,7 +918,7 @@ void State::print(io::Output& out, const hard::Platform *pf) const {
 */
 const Value& State::get(const Value& addr) const {
 	Node * cur;
-	ASSERT(OCLP_IS_CST(addr)); // we assume that addr is a constant...
+	ASSERT(addr.isConst()); // we assume that addr is a constant...
 	if(addr.kind() == REG){
 		// Tmp Registers
 		if (addr.lower() < 0)
@@ -1210,15 +1209,15 @@ public:
 								addrclp.print(cerr);
 								cerr << "<" << hex(*_data_max) << "]";
 								cerr << " -> ";
-								cerr << ((*_data_min <= (OCLP_uintn_t)addrclp.start())&&((OCLP_uintn_t)addrclp.start() < *_data_max));
+								cerr << ((*_data_min <= (clp::uintn_t)addrclp.start())&&((clp::uintn_t)addrclp.start() < *_data_max));
 							}
 							if (    (get(*state, i.d()) == clp::Value::all)			&&
-								    (OCLP_IS_CST(addrclp))							&&
-								    (*_data_min <= (OCLP_uintn_t)addrclp.start())	&&
-								    ((OCLP_uintn_t)addrclp.start() < *_data_max)	){
-								ASSERT(i.b() * 8 <= OCLP_NBITS);
+								    (addrclp.isConst())							&&
+								    (*_data_min <= (clp::uintn_t)addrclp.start())	&&
+								    ((clp::uintn_t)addrclp.start() < *_data_max)	){
+								ASSERT(i.b() * 8 <= clp::NBITS);
 								cerr << " -> loading data from process\n";
-								OCLP_intn_t value;
+								clp::intn_t value;
 								_process->get(addrclp.lower(), (char *)(&value), i.b());
 								set(*state, i.d(), clp::Value(value));
 							}
@@ -1378,17 +1377,17 @@ public:
 	/**
 	 * Return various statistics about the analysis
 	*/
-	inline OCLP_STAT_UINT get_nb_inst(void){ return _nb_inst; }
-	inline OCLP_STAT_UINT get_nb_sem_inst(void){ return _nb_sem_inst; }
-	inline OCLP_STAT_UINT get_nb_set(void){ return _nb_set; }
-	inline OCLP_STAT_UINT get_nb_top_set(void){ return _nb_top_set; }
-	inline OCLP_STAT_UINT get_nb_store(void){ return _nb_store; }
-	inline OCLP_STAT_UINT get_nb_top_store(void){ return _nb_top_store; }
-	inline OCLP_STAT_UINT get_nb_top_store_addr(void){return _nb_top_store_addr;}
-	inline OCLP_STAT_UINT get_nb_load(void){return _nb_load;}
-	inline OCLP_STAT_UINT get_nb_load_top_addr(void){return _nb_load_top_addr;}
-	inline OCLP_STAT_UINT get_nb_filters(void){ return _nb_filters;}
-	inline OCLP_STAT_UINT get_nb_top_filters(void){ return _nb_top_filters;}
+	inline clp::STAT_UINT get_nb_inst(void){ return _nb_inst; }
+	inline clp::STAT_UINT get_nb_sem_inst(void){ return _nb_sem_inst; }
+	inline clp::STAT_UINT get_nb_set(void){ return _nb_set; }
+	inline clp::STAT_UINT get_nb_top_set(void){ return _nb_top_set; }
+	inline clp::STAT_UINT get_nb_store(void){ return _nb_store; }
+	inline clp::STAT_UINT get_nb_top_store(void){ return _nb_top_store; }
+	inline clp::STAT_UINT get_nb_top_store_addr(void){return _nb_top_store_addr;}
+	inline clp::STAT_UINT get_nb_load(void){return _nb_load;}
+	inline clp::STAT_UINT get_nb_load_top_addr(void){return _nb_load_top_addr;}
+	inline clp::STAT_UINT get_nb_filters(void){ return _nb_filters;}
+	inline clp::STAT_UINT get_nb_top_filters(void){ return _nb_top_filters;}
 	
 	#ifdef DATA_LOADER
 	inline void set_data_space(address_t data_min, address_t data_max, Process* p){
@@ -1415,17 +1414,17 @@ private:
 	#endif
 	
 	/* attributes for statistics purpose */
-	OCLP_STAT_UINT _nb_inst;
-	OCLP_STAT_UINT _nb_sem_inst;
-	OCLP_STAT_UINT _nb_set;
-	OCLP_STAT_UINT _nb_top_set;
-	OCLP_STAT_UINT _nb_store;
-	OCLP_STAT_UINT _nb_top_store;
-	OCLP_STAT_UINT _nb_top_store_addr;
-	OCLP_STAT_UINT _nb_load;
-	OCLP_STAT_UINT _nb_load_top_addr;
-	OCLP_STAT_UINT _nb_filters;
-	OCLP_STAT_UINT _nb_top_filters;
+	clp::STAT_UINT _nb_inst;
+	clp::STAT_UINT _nb_sem_inst;
+	clp::STAT_UINT _nb_set;
+	clp::STAT_UINT _nb_top_set;
+	clp::STAT_UINT _nb_store;
+	clp::STAT_UINT _nb_top_store;
+	clp::STAT_UINT _nb_top_store_addr;
+	clp::STAT_UINT _nb_load;
+	clp::STAT_UINT _nb_load_top_addr;
+	clp::STAT_UINT _nb_filters;
+	clp::STAT_UINT _nb_top_filters;
 };
 
 // CLPStateCleaner
