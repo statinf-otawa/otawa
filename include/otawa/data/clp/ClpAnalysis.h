@@ -60,6 +60,8 @@ public:
 	inline clp::STAT_UINT get_nb_filters(void){ return _nb_filters; }
 	/** @return the number of filters with a comparison to Top. */
 	inline clp::STAT_UINT get_nb_top_filters(void){ return _nb_top_filters; }
+	/** @return the number of load resulting in a top value. */
+	inline clp::STAT_UINT get_nb_top_load(void) const { return _nb_top_load; }
 	
 protected:
 	virtual void processWorkSpace(WorkSpace *ws);
@@ -72,6 +74,7 @@ private:
 	clp::STAT_UINT _nb_top_store;
 	clp::STAT_UINT _nb_top_store_addr;
 	clp::STAT_UINT _nb_load;
+	clp::STAT_UINT _nb_top_load;
 	clp::STAT_UINT _nb_load_top_addr;
 	clp::STAT_UINT _nb_filters;
 	clp::STAT_UINT _nb_top_filters;

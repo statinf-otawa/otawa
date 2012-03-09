@@ -776,7 +776,7 @@ namespace se{
 							// we set the se to NULL, to
 							// invalidate the register i.a()
 							Vector<V> used_reg = se->used_reg();
-							for(int i; i < used_reg.length(); i++){
+							for(int i = 0; i < used_reg.length(); i++){
 								if(used_reg[i] == rd->val()){
 									delete se;
 									se = NULL;

@@ -29,8 +29,7 @@
 #include <otawa/hard.h>
 #include <otawa/prog/sem.h>
 #include <otawa/data/clp/SymbolicExpr.h>
-#include <otawa/display/GenDrawer.h>
-#include <otawa/display/CFGAdapter.h>
+#include <otawa/display/CFGOutput.h>
 
 using namespace elm;
 using namespace otawa;
@@ -42,23 +41,63 @@ Identifier<bool> SEM("", false);
 Identifier<bool> FILTER("", false);
 
 
-// CLPDecorayor
-/*static ClpAnalysis *clpa_ptr;
-class CLPDecorator {
+// CLPCFGOutput class
+class CLPCFGOutput: public display::CFGOutput {
 public:
-	static void decorate(const CFGAdapter& graph, Output &caption, FillStyle &fill, TextStyle &text) {
+	CLPCFGOutput() { }
 
+protected:
+	virtual void genBBInfo(CFG *cfg, BasicBlock *bb, Output& out) {
+
+		// display state before
+		if(before) {
+			out << "----\nbefore:";
+	 		clp::State state = CLP_STATE_IN(bb);
+	 		state.print(out, workspace()->process()->platform());
+		}
+
+		// display state after
+		if(after) {
+			out << "----\nafter:";
+	 		clp::State state = CLP_STATE_OUT(bb);
+	 		state.print(out, workspace()->process()->platform());
+		}
+
+		// display filters
+		if(filter) {
+			out << "----\nfilters:";
+			Vector<se::SECmp *> reg_filters = se::REG_FILTERS(bb);
+			Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(bb);
+			if(reg_filters.length() != 0 || addr_filters.length() != 0) {
+				out << "\tFILTERS = \n";
+				for(int i = 0; i < reg_filters.count(); i++) {
+					out << "\n\t\t";
+					reg_filters[i]->print(out, workspace()->process()->platform());
+				}
+				for(int i = 0; i < addr_filters.count(); i++) {
+					out << "\n\t\t";
+					addr_filters[i]->print(out, workspace()->process()->platform());
+				}
+			}
+		}
 	}
 
-	static void decorate(const CFG *graph, const typename CFGAdapter::Vertex& vertex, Output &content, ShapeStyle &style) {
+ 	virtual void configure(const PropList& props) {
+ 		CFGOutput::configure(props);
+		before = BEFORE(props);
+ 		after = AFTER(props);
+ 		if(!before && !after) {
+ 			before = true;
+ 			after = true;
+ 		}
+ 		sem = SEM(props);
+ 		filter = FILTER(props);
+ 	}
 
-	}
-
-	static void decorate(const CFG *graph, const typename CFGAdapter::Edge& edge, Output &label, TextStyle &text, LineStyle &line) {
-
-	}
-};*/
-
+private:
+	//ClpAnalysis& clpa;
+	bool before, after, filter, sem;
+};
 
 // Generic textual displayer
 class TextualDisplayer: public BBProcessor {
@@ -72,6 +111,7 @@ protected:
  	virtual void displayAfter(WorkSpace *ws, CFG *cfg, BasicBlock *bb) = 0;
 
  	virtual void configure(const PropList& props) {
+ 		BBProcessor::configure(props);
  		before = BEFORE(props);
  		after = AFTER(props);
  		if(!before && !after) {
@@ -240,12 +280,14 @@ private:
 
 		// perform the analysis
 		require(otawa::VIRTUALIZED_CFG_FEATURE);
-		//require(otawa::CLP_ANALYSIS_FEATURE);
 		ClpAnalysis clpa;
 		clpa.process(workspace(), props);
 
 		// display the CFG
 		if(cfg) {
+			display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
+			CLPCFGOutput output;
+			output.process(workspace(), props);
 		}
 		else {
 			CLPDisplayer displayer;
@@ -262,9 +304,14 @@ private:
 			cerr << "stores of T: " << clpa.get_nb_top_store() << io::endl;
 			cerr << "stores at T: " << clpa.get_nb_top_store_addr() << io::endl;
 			cerr << "loads: " << clpa.get_nb_load() << io::endl;
+			cerr << "loads of T: " << clpa.get_nb_top_load() << io::endl;
 			cerr << "loads at T: " << clpa.get_nb_load_top_addr() << io::endl;
 			cerr << "filters: " << clpa.get_nb_filters() << io::endl;
 			cerr << "filters to T: " << clpa.get_nb_top_filters() << io::endl;
+
+			cerr << "precise sets: " << (100 - (float(clpa.get_nb_inst() + clpa.get_nb_top_store() + clpa.get_nb_load_top_addr()) * 100 / (clpa.get_nb_sem_inst() + clpa.get_nb_store() + clpa.get_nb_load()))) << io::endl;
+			cerr << "precise addresses: " << (100 - (float(clpa.get_nb_top_store_addr() + clpa.get_nb_load_top_addr()) * 100 / (clpa.get_nb_store() + clpa.get_nb_load()))) << io::endl;
+			cerr << "precise filters: " << (100 - (float(clpa.get_nb_top_filters()) * 100 / clpa.get_nb_filters())) << io::endl;
 		}
 	}
 

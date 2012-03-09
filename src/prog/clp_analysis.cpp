@@ -50,11 +50,15 @@ using namespace otawa::util;
 // Debug output for the domain
 #define TRACED(t)	//t
 // Debug output for the problem
-#define TRACEP(t)	//t
+#define TRACEP(t)	t
 // Debug output for Update function 
 #define TRACEU(t)	//t
 // Debug output for instructions in the update function
 #define TRACEI(t)	//t
+// Debug output with only the values handled by an instruction
+#define TRACESI(t)	t
+// Debug output with alarm of creation of T
+#define TRACEA(t)	t
 #define STATE_MULTILINE
 
 // enable to load data from segments when load results with T
@@ -313,41 +317,49 @@ void Value::join(const Value& val) {
  * @param val the value of the next iteration state
 */
 void Value::widening(const Value& val) {
-	if (_kind == NONE && val._kind == NONE) /* widen(NONE, NONE) = NONE */
+
+	/* widen(NONE, NONE) = NONE */
+	if (_kind == NONE && val._kind == NONE)
 		return;
-	else if (_kind == ALL || val._kind == ALL) /* widen(ALL, *) = ALL */
+
+	/* widen(ALL, *) = ALL */
+	else if (_kind == ALL || val._kind == ALL)
 		set(ALL, 0, 1, UMAXn);
-	else if (*this == val)					/* this == val -> do nothing */
+
+	/* this == val = val */
+	else if (*this == val)
 		return;
-	else {
-		if (_delta != val._delta && _delta != - val._delta){
-			// set to T
-			set(ALL, 0, 1, UMAXn);
-			return;
-		}
-		
-		// two constants: the delta is | k1 - k2 |
-		if (isConst() && val.isConst()){
-			_delta = abs(_lower - val._lower);
-		}
-		
-		if (val.start() < start()){
+
+	// widen((k, 0, 0), (k', 0, 0)) = (min(k, k'), |k - k'|, 1)
+	else if (isConst() && val.isConst()) {
+		_lower = min(_lower, val._lower);
+		_delta = abs(_lower - val._lower);
+		_mtimes = 1;
+	}
+
+	// when d != d' /\ d != -d', widen((k, d, -), (k', d', -)) = T
+	else if (_delta != val._delta && _delta != - val._delta)
+		*this = all;
+
+	// when start(k', d', n') <= start(k, d, n)  /\ stop(k', d', n') <= stop(k, d, n),
+	// widen((k', d', n'), (k, d, n)) = (stop(k, d, n), -|d|, -inf / |d|)
+	else if (val.start() <= start() && val.stop() <= stop()){
 			// go to negatives
-			if(val.stop() > stop()){
-				// and also to the positives
-				set(ALL, 0, 1, UMAXn);
-				return;
-			}
 			intn_t absd = abs(_delta);
 			set(_kind, stop(), -absd, MINn / absd);
-			return;
-		}
-		if (val.stop() > stop()){
+	}
+
+	// when start(k', d', n') >= start(k, d, n)  /\ stop(k', d', n') >= stop(k, d, n),
+	// widen((k', d', n'), (k, d, n)) = (start(k', d', n'), -|d|, -inf / |d|)
+	else if (val.start() >= start() && val.stop() >= stop()) {
 			// go the positive
 			intn_t absd = abs(_delta);
 			set(_kind, start(), absd, UMAXn / absd);
-		}
 	}
+
+	// else widen((k, d, n), (k', d', n')) = T
+	else
+		*this = all;
 }
 
 /**
@@ -960,7 +972,8 @@ public:
 					   _nb_set(0), _nb_top_set(0), _nb_store(0), 
 					   _nb_top_store(0), _nb_top_store_addr(0),
 					   _nb_load(0), _nb_load_top_addr(0),
-					   _nb_filters(0), _nb_top_filters(0) {}
+					   _nb_filters(0), _nb_top_filters(0),
+					   _nb_top_load(0) {}
 	
 	/* Initialize a register in the init state */
 	void initialize(const hard::Register *reg, const Address& address) {
@@ -987,18 +1000,61 @@ public:
 		a.join(b);
 	}
 	
+	void checkWideningAlarm(Domain& d, Domain& a, Domain& b) const {
+		clp::State::Iter id(d), ia(a), ib(b);
+
+		// check the state
+		while(id && ia && ib) {
+			clp::Value idd = id.id(), ida = ia.id(), idb = ia.id();
+			if(idd.kind() == clp::REG && ida.kind() == clp::REG && ida.kind() == clp::REG) {
+				if((*id).kind() == clp::ALL && (*ia).kind() != clp::ALL && (*ib).kind() != clp::ALL) {
+					cerr << "\t\t\tALARM! widening register " << idd << ": " << *ia << ", " << *ib << " -> " << *id << io::endl;
+					return;
+				}
+				id++;
+				ia++;
+				ib++;
+			}
+			else if(idd.kind() == clp::VAL && ida.kind() == clp::VAL && ida.kind() == clp::VAL) {
+				t::uint32 ad = idd.lower(), aa = ida.lower(), ab = idb.lower();
+				if(ad > aa && ad > ab && aa == ab) {
+					cerr << "\t\t\tALARM! widening memory " << ida << ": " << *ia << ", " << *ib << io::endl;
+					return;
+				}
+				if(ad < aa && ad < ab)
+					id++;
+				else if(aa < ad && aa < ab)
+					ia++;
+				else
+					ib++;
+			}
+			else {
+				if(idd.kind() == clp::REG)
+					id++;
+				if(ida.kind() == clp::REG)
+					ia++;
+				if(idb.kind() == clp::REG)
+					ib++;
+			}
+		}
+
+		// check the end
+		if(!id && ia && ib)
+			cerr << "\t\t\tALARM! widening" << ia.id() << io::endl;
+	}
+
 	/**
 	 * The windening operation
 	 * This will be used to perform the junction between to iteration of
 	 * a loop.
 	*/
 	inline void widening(Domain &a, Domain b) const{
-		TRACEP(cerr << "Widening");
-		TRACEP(cerr << a << "\n, " << b << ") = ");
+		TRACEA(Domain di = a);
+		TRACEP(cerr << "*** widening ****\n");
+		TRACEP(cerr << "s1 = " << a << "\ns2 = " << b << ") = ");
 		a.widening(b, last_max_iter);
-		//DEBUG: print the state after the widening
-		TRACEP(a.print(cerr));
-		TRACEP(cerr << io::endl);
+		TRACEA(checkWideningAlarm(a, di, b));
+		TRACEP(cerr << a << io::endl);
 	}
 	
 	/**
@@ -1006,10 +1062,11 @@ public:
 	*/
 	inline void updateEdge(Edge *edge, Domain &dom){
 		BasicBlock *source = edge->source();
-		TRACEP(cerr << "Update edge from BB#" << source->number());
-		TRACEP(cerr << " to BB#" << edge->target()->number() << " [taken=");
-		TRACEP(cerr << (edge->kind() == Edge::TAKEN) << "]\n");
-		if(se::REG_FILTERS.exists(source)){
+		TRACEP(cerr << "\n*** Update edge from " << source
+					<< " to " << edge->target()
+					<< " [taken=" << (edge->kind() == Edge::TAKEN) << "] ***\n");
+		TRACEP(cerr << "s = " << dom << io::endl);
+		if(se::REG_FILTERS.exists(source)) {
 			TRACEP(cerr << "\tApply filter on this edge!\n");
 			Vector<se::SECmp *> reg_filters = se::REG_FILTERS(source);
 			Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(source);
@@ -1101,6 +1158,7 @@ public:
 					delete addr_filters[i];
 			}
 		}
+		TRACEP(cerr << "s' = " << dom << io::endl);
 	}
 	
 	/** This function does the assignation of a state to another. */
@@ -1124,7 +1182,8 @@ public:
 		Domain *state;
 		bool has_if = false;
 		clp::ClpStatePack::InstPack *ipack = NULL;
-		TRACEU(cerr << "update(BB" << bb->number() << ", " << in << ")\n");
+		TRACEP(cerr << "\n*** update(" << bb << ") ***\n");
+		TRACEP(cerr << "s = " << in << io::endl);
 		// save the input state in the basic block, join with an existing state
 		// if needed
 		if(!specific_analysis){
@@ -1140,8 +1199,7 @@ public:
 			}
 		}
 		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
-			TRACEI(cerr << '\t' << inst->address() << ": ";
-			inst->dump(cerr); cerr << io::endl);
+			TRACEP(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
 			
 			_nb_inst++;
 			
@@ -1167,10 +1225,16 @@ public:
 					TRACEI(cerr << "\t\t" << i << io::endl);
 					switch(i.op) {
 					case sem::BRANCH:
+						pc = b.length();
+						TRACESI(cerr << "\t\t\tbranch(" << get(*state, i.d()) << ")\n");
+						break;
 					case sem::TRAP:
+						pc = b.length();
+						TRACESI(cerr << "\t\t\ttrap\n");
+						break;
 					case sem::CONT:
 						pc = b.length();
-						TRACEI(cerr << "\t\tcut\n");
+						TRACESI(cerr << "\t\tcont\n");
 						break;
 					case sem::IF:
 						todo.push(pair(pc + i.b() + 1, new Domain(*state)));
@@ -1180,10 +1244,12 @@ public:
 					case sem::LOAD: {
 							_nb_load++;
 							clp::Value addrclp = get(*state, i.a());
+							TRACESI(cerr << "\t\t\tload(" << i.d() << ", " << addrclp << ") = ");
 							//int bitsize = i.b() * 8;
 							if (addrclp == clp::Value::all){
 								set(*state, i.d(), addrclp);
 								_nb_load_top_addr++;
+								TRACESI(cerr << "T\n");
 							} else if (addrclp.mtimes() < 42){
 								// if the addr is not cst, load only if
 								// there is less than 42 values to join
@@ -1198,18 +1264,21 @@ public:
 									val.join(state->get(addr));
 									set(*state, i.d(), val);
 								}
+								TRACESI(cerr << get(*state, i.d()) << io::endl);
 							} else {
 								set(*state, i.d(), clp::Value::all);
+								TRACESI(cerr << "T (too many)\n");
+								TRACEA(cerr << "\t\t\tALARM! load too many\n");
 							}
 							#ifdef DATA_LOADER
 							// if the value loaded is T, load from the process
 							if ((get(*state, i.d()) == clp::Value::all) && *_data_min != 0){
-								cerr << "DATA_LOADER: load gets a T -> ";
+								/*cerr << "DATA_LOADER: load gets a T -> ";
 								cerr << "@[" << hex(*_data_min) << "<=";
 								addrclp.print(cerr);
 								cerr << "<" << hex(*_data_max) << "]";
 								cerr << " -> ";
-								cerr << ((*_data_min <= (clp::uintn_t)addrclp.start())&&((clp::uintn_t)addrclp.start() < *_data_max));
+								cerr << ((*_data_min <= (clp::uintn_t)addrclp.start())&&((clp::uintn_t)addrclp.start() < *_data_max));*/
 							}
 							if (    (get(*state, i.d()) == clp::Value::all)			&&
 								    (addrclp.isConst())							&&
@@ -1224,10 +1293,13 @@ public:
 							if ((get(*state, i.d()) == clp::Value::all) && *_data_min != 0)
 								cerr << '\n';
 							#endif
+							if(get(*state, i.d()) == clp::Value::all)
+									_nb_top_load++;
 						} break;
 					case sem::STORE: {
 							clp::Value addrclp = get(*state, i.a());
 							//int bitsize = i.b() * 8;
+							TRACESI(cerr << "\t\t\tstore(" << get(*state, i.d()) << ", " << addrclp << ")\n");
 							if (addrclp == clp::Value::all){
 								state->set(addrclp, get(*state, i.d()));
 								_nb_store++; _nb_top_store ++;
@@ -1245,7 +1317,7 @@ public:
 							} else {
 								TRACEU(cerr << "Warning: STORE to ");
 								TRACEU(addrclp.print(cerr));
-								TRACEU(cerr << " : to many values, set memory");
+								TRACEU(cerr << " : too many values, set memory");
 								TRACEU(cerr << " to T.\n");
 								state->set(clp::Value::all, get(*state, i.d()));
 								_nb_store++; _nb_top_store++;
@@ -1257,10 +1329,12 @@ public:
 					case sem::CMPU:
 					case sem::SCRATCH:
 						set(*state, i.d(), clp::Value::all);
+						TRACESI(cerr << "\t\t\tscratch(" << i.d() << ")\n");
 						break;
 					case sem::SET: {
 							clp::Value v = get(*state, i.a());
 							set(*state, i.d(), v);
+							TRACESI(cerr << "\t\t\tset(" << i.d() << ", " << v << ")\n");
 							_nb_set++;
 							if (v == clp::Value::all)
 								_nb_top_set++;
@@ -1268,30 +1342,56 @@ public:
 					case sem::SETI: {
 							clp::Value v(clp::VAL, i.cst());
 							set(*state, i.d(), v);
+							TRACESI(cerr << "\t\t\tseti(" << i.d() << ", " << v << ")\n");
 						} break;
 					case sem::ADD: {
 							clp::Value v = get(*state, i.a());
+							TRACESI(cerr << "\t\t\tadd(" << i.d() << ", " << v << ", " << get(*state, i.b()));
 							v.add(get(*state, i.b()));
+							TRACESI(cerr << ") = " << v << io::endl);
+							TRACEA(if(get(*state, i.a()) != clp::Value::all
+								   && get(*state, i.b()) != clp::Value::all
+								   && v == clp::Value::all) cerr << "\t\t\tALARM! add\n");
 							set(*state, i.d(), v);
 						} break;
 					case sem::SUB: {
 							clp::Value v = get(*state, i.a());
+							TRACESI(cerr << "\t\t\tsub(" << i.d() << ", " << v << ", " << get(*state, i.b()));
 							v.sub(get(*state, i.b()));
+							TRACESI(cerr << ") = " << v << io::endl);
+							TRACEA(if(get(*state, i.a()) != clp::Value::all
+								   && get(*state, i.b()) != clp::Value::all
+								   && v == clp::Value::all) cerr << "\t\t\tALARM! sub\n");
 							set(*state, i.d(), v);
 						} break;
 					case sem::SHL: {
 							clp::Value v = get(*state, i.a());
+							TRACESI(cerr << "\t\t\tshl(" << i.d() << ", " << v << ", " << get(*state, i.b()));
 							v.shl(get(*state, i.b()));
+							TRACESI(cerr << ") = " << v << io::endl);
+							TRACEA(if(get(*state, i.a()) != clp::Value::all
+								   && get(*state, i.b()) != clp::Value::all
+								   && v == clp::Value::all) cerr << "\t\t\tALARM! shl\n");
 							set(*state, i.d(), v);
 						} break;
 					case sem::SHR: case sem::ASR: {
 							clp::Value v = get(*state, i.a());
+							TRACESI(cerr << "\t\t\tshr(" << i.d() << ", " << v << ", " << get(*state, i.b()));
 							v.shr(get(*state, i.b()));
+							TRACESI(cerr << ") = " << v << io::endl);
+							TRACEA(if(get(*state, i.a()) != clp::Value::all
+								   && get(*state, i.b()) != clp::Value::all
+								   && v == clp::Value::all) cerr << "\t\t\tALARM! shr\n");
 							set(*state, i.d(), v);
 						} break;
 					case sem::OR: {
 							clp::Value v = get(*state, i.a());
+							TRACESI(cerr << "\t\t\tor(" << i.d() << ", " << v << ", " << get(*state, i.b()));
 							v._or(get(*state, i.b()));
+							TRACESI(cerr << ") = " << v << io::endl);
+							TRACEA(if(get(*state, i.a()) != clp::Value::all
+								   && get(*state, i.b()) != clp::Value::all
+								   && v == clp::Value::all) cerr << "\t\t\tALARM! or\n");
 							set(*state, i.d(), v);
 						} break;
 					default: {
@@ -1299,7 +1399,7 @@ public:
 						} break;
 					}
 					//DEBUG: print the result of the instruction
-					TRACEI(cerr << "\t\t -> " << *state << io::endl);
+					TRACEI(cerr << "\t\t !!-> " << *state << io::endl);
 					
 					if (specific_analysis && pack != NULL){
 						ipack->append(*state);
@@ -1322,9 +1422,10 @@ public:
 				}
 				
 			}
-			TRACEI(cerr << "\t-> " << out << io::endl);
+			//TRACEI(cerr << "\t-> " << out << io::endl);
 		}
-		
+
+		TRACEP(cerr << "s' = " << out << io::endl);
 		if (specific_analysis)
 			return;
 		
@@ -1339,6 +1440,7 @@ public:
 			TRACEP(cerr << "> IF detected, getting filters..." << io::endl);
 			se::FilterBuilder builder(bb);
 		}
+
 	}
 	
 	/**
@@ -1388,6 +1490,7 @@ public:
 	inline clp::STAT_UINT get_nb_load_top_addr(void){return _nb_load_top_addr;}
 	inline clp::STAT_UINT get_nb_filters(void){ return _nb_filters;}
 	inline clp::STAT_UINT get_nb_top_filters(void){ return _nb_top_filters;}
+	inline clp::STAT_UINT get_nb_top_load(void) const { return _nb_top_load; }
 	
 	#ifdef DATA_LOADER
 	inline void set_data_space(address_t data_min, address_t data_max, Process* p){
@@ -1425,6 +1528,7 @@ private:
 	clp::STAT_UINT _nb_load_top_addr;
 	clp::STAT_UINT _nb_filters;
 	clp::STAT_UINT _nb_top_filters;
+	clp::STAT_UINT _nb_top_load;
 };
 
 // CLPStateCleaner
@@ -1464,7 +1568,7 @@ private:
 ClpAnalysis::ClpAnalysis(void): Processor("otawa::ClpAnalysis", Version(0, 1, 0)),
 								_nb_inst(0), _nb_sem_inst(0), _nb_set(0), 
 								_nb_top_set(0), _nb_store(0), _nb_top_store(0),
-								_nb_filters(0), _nb_top_filters(0){
+								_nb_filters(0), _nb_top_filters(0), _nb_top_load(0) {
 	require(LOOP_INFO_FEATURE);
 	require(ipet::FLOW_FACTS_FEATURE);
 	require(VIRTUALIZED_CFG_FEATURE);
@@ -1533,6 +1637,7 @@ void ClpAnalysis::processWorkSpace(WorkSpace *ws) {
 	_nb_load_top_addr = prob.get_nb_load_top_addr();
 	_nb_filters = prob.get_nb_filters();
 	_nb_top_filters = prob.get_nb_top_filters();
+	_nb_top_load = prob.get_nb_top_load();
 }
  
  
