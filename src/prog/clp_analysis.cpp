@@ -51,15 +51,15 @@ using namespace otawa::util;
 // Debug output for the domain
 #define TRACED(t)	//t
 // Debug output for the problem
-#define TRACEP(t)	//t
+#define TRACEP(t)	t
 // Debug output for Update function 
 #define TRACEU(t)	//t
 // Debug output for instructions in the update function
 #define TRACEI(t)	//t
 // Debug output with only the values handled by an instruction
-#define TRACESI(t)	//t
+#define TRACESI(t)	t
 // Debug output with alarm of creation of T
-#define TRACEA(t)	//t
+#define TRACEA(t)	t
 #define STATE_MULTILINE
 
 // enable to load data from segments when load results with T
@@ -1503,6 +1503,7 @@ clp::Value readFromMem(clp::uintn_t address, int size) {
 								set(*state, i.d(), addrclp);
 								_nb_load_top_addr++;
 								TRACESI(cerr << "T\n");
+								TRACEA(cerr << "\t\t\tALARM ! Load at T !\n");
 							} else if (addrclp.mtimes() < 42){
 								// if the addr is not cst, load only if
 								// there is less than 42 values to join

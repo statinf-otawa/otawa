@@ -538,13 +538,20 @@ extend oea_mtspr
 
 // ****** shift and masks ******
 
-extend rlwimi, rlwinm
+extend rlwimi
+	otawa_sem = { scratch(R(ra)); }
+extend rlwinm
 	otawa_sem = {
-		if mb == 0 && me + sh == 31 then
-			seti(t1, sh);
-			shl(R(ra), rs.sem, t1);
+		if sh == 0 then
+			seti(t1, (1 << (mb - me + 1) - 1) << (31 - mb));
+			_and(R(ra), rs.sem, t1);
 		else
-			scratch(R(ra));
+			if mb == 0 && me + sh == 31 then
+				seti(t1, sh);
+				shl(R(ra), rs.sem, t1);
+			else
+				scratch(R(ra));
+			endif;
 		endif;
 	}
 extend rlwimi_cr_update, rlwinm_cr_update
