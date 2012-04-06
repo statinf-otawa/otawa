@@ -6,6 +6,10 @@
 #  FLEX_VERSION - the version of flex
 #  FLEX_LIBRARIES - The flex libraries
 #
+# The minimum required version of flex can be specified using the
+# standard syntax, e.g. FIND_PACKAGE(FLEX 2.5.13)
+#
+#
 # If flex is found on the system, the module provides the macro:
 #  FLEX_TARGET(Name FlexInput FlexOutput [COMPILE_FLAGS <string>])
 # which creates a custom command  to generate the <FlexOutput> file from
@@ -26,14 +30,16 @@
 # where  <FlexTarget>  and <BisonTarget>  are  the  first parameters  of
 # respectively FLEX_TARGET and BISON_TARGET macros.
 #
+#	coucou
+#
 #  ====================================================================
 #  Example:
 #
 #   find_package(BISON)
 #   find_package(FLEX)
 #
-#   BISON_TARGET(MyParser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp
-#   FLEX_TARGET(MyScanner lexer.l  ${CMAKE_CURRENT_BIANRY_DIR}/lexer.cpp)
+#   BISON_TARGET(MyParser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp)
+#   FLEX_TARGET(MyScanner lexer.l  ${CMAKE_CURRENT_BINARY_DIR}/lexer.cpp)
 #   ADD_FLEX_BISON_DEPENDENCY(MyScanner MyParser)
 #
 #   include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -55,7 +61,7 @@
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 # See the License for more information.
 #=============================================================================
-# (To distributed this file outside of CMake, substitute the full
+# (To distribute this file outside of CMake, substitute the full
 #  License text for the above reference.)
 
 FIND_PROGRAM(FLEX_EXECUTABLE flex DOC "path to the flex executable")
@@ -74,7 +80,11 @@ IF(FLEX_EXECUTABLE)
     RESULT_VARIABLE FLEX_version_result
     OUTPUT_STRIP_TRAILING_WHITESPACE)
   IF(NOT ${FLEX_version_result} EQUAL 0)
-    MESSAGE(SEND_ERROR "Command \"${FLEX_EXECUTABLE} --version\" failed with output:\n${FLEX_version_error}")
+    IF(FLEX_FIND_REQUIRED)
+      MESSAGE(SEND_ERROR "Command \"${FLEX_EXECUTABLE} --version\" failed with output:\n${FLEX_version_output}\n${FLEX_version_error}")
+    ELSE()
+      MESSAGE("Command \"${FLEX_EXECUTABLE} --version\" failed with output:\n${FLEX_version_output}\n${FLEX_version_error}\nFLEX_VERSION will not be available")
+    ENDIF()
   ELSE()
     STRING(REGEX REPLACE "^flex (.*)$" "\\1"
       FLEX_VERSION "${FLEX_version_output}")
@@ -99,12 +109,14 @@ IF(FLEX_EXECUTABLE)
       ENDIF()
     ENDIF()
 
-    ADD_CUSTOM_COMMAND(OUTPUT ${Output}
-      COMMAND ${FLEX_EXECUTABLE} ARGS ${FLEX_EXECUTABLE_opts} ${Input}
-      COMMAND "mv" ARGS lex.yy.c "${Output}"
-      DEPENDS ${Input}
-      COMMENT "[FLEX][${Name}] Building scanner with flex ${FLEX_VERSION}"
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    ADD_CUSTOM_COMMAND(
+   		OUTPUT ${Output}
+      	DEPENDS ${Input}
+      	COMMENT "[FLEX][${Name}] Building scanner with flex ${FLEX_VERSION}"
+      	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      	COMMAND ${FLEX_EXECUTABLE} ARGS ${FLEX_EXECUTABLE_opts} ${Input} #-o${Output}
+      	COMMAND mv ARGS lex.yy.c ${Output}   
+    )
 
     SET(FLEX_${Name}_DEFINED TRUE)
     SET(FLEX_${Name}_OUTPUTS ${Output})
@@ -135,7 +147,9 @@ IF(FLEX_EXECUTABLE)
 
 ENDIF(FLEX_EXECUTABLE)
 
-INCLUDE(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(FLEX DEFAULT_MSG FLEX_EXECUTABLE)
+#INCLUDE(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)
+find_package(PackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(FLEX REQUIRED_VARS FLEX_EXECUTABLE
+                                       VERSION_VAR FLEX_VERSION)
 
 # FindFLEX.cmake ends here
