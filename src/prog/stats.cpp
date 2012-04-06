@@ -87,7 +87,7 @@ StatCollector::~StatCollector(void) {
 
 
 /**
- * @fn void StatCollector::Collector::collect(const Address& address, t::size size, int value);
+ * @fn void StatCollector::Collector::collect(const Address& address, t::uint32 size, int value);
  * Called for each program block for which a statistics exists.
  * @param address	Block address.
  * @param size		Block size (in bytes).

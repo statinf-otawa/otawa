@@ -41,10 +41,10 @@ class BB: public graph_t::GenNode {
 public:
 
 	inline BB(void): _first(0), _size(0) { }
-	inline BB(Inst *first, t::size size): _first(first), _size(size) { }
+	inline BB(Inst *first, t::uint32 size): _first(first), _size(size) { }
 	inline Address address(void) const { return _first->address(); }
 	inline Address topAddress(void) const { return address() + _size; }
-	inline t::size size(void) const { return _size; }
+	inline t::uint32 size(void) const { return _size; }
 	inline Inst *first(void) const { return _first; }
 	inline int count(void) const;
 	inline PFG& pfg(void) const;
@@ -76,7 +76,7 @@ public:
 
 private:
 	Inst *_first;
-	t::size _size;
+	t::uint32 _size;
 };
 
 // Edge class

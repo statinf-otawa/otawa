@@ -419,7 +419,7 @@ Symbol *Process::findSymbol(const String& name) {
  * @warning	To use this method, you must assert that the
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
-void Process::get(Address at, signed char& val) {
+void Process::get(Address at, t::int8& val) {
 	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
@@ -435,7 +435,7 @@ void Process::get(Address at, signed char& val) {
  * @warning	To use this method, you must assert that the
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
-void Process::get(Address at, unsigned char& val) {
+void Process::get(Address at, t::uint8& val) {
 	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
@@ -451,7 +451,7 @@ void Process::get(Address at, unsigned char& val) {
  * @warning	To use this method, you must assert that the
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
-void Process::get(Address at, signed short& val) {
+void Process::get(Address at, t::int16& val) {
 	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
@@ -467,7 +467,7 @@ void Process::get(Address at, signed short& val) {
  * @warning	To use this method, you must assert that the
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
-void Process::get(Address at, unsigned short& val) {
+void Process::get(Address at, t::uint16& val) {
 	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
@@ -483,7 +483,7 @@ void Process::get(Address at, unsigned short& val) {
  * @warning	To use this method, you must assert that the
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
-void Process::get(Address at, signed long& val) {
+void Process::get(Address at, t::int32& val) {
 	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
@@ -499,7 +499,7 @@ void Process::get(Address at, signed long& val) {
  * @warning	To use this method, you must assert that the
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
-void Process::get(Address at, unsigned long& val) {
+void Process::get(Address at, t::uint32& val) {
 	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
@@ -515,7 +515,7 @@ void Process::get(Address at, unsigned long& val) {
  * @warning	To use this method, you must assert that the
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
-void Process::get(Address at, signed long long& val) {
+void Process::get(Address at, t::int64& val) {
 	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
@@ -531,7 +531,7 @@ void Process::get(Address at, signed long long& val) {
  * @warning	To use this method, you must assert that the
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
-void Process::get(Address at, unsigned long long& val) {
+void Process::get(Address at, t::uint64& val) {
 	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
@@ -1006,18 +1006,18 @@ Feature<NoProcessor> DELAYED_FEATURE("otawa::DELAYED_FEATURE");
 class NopInst: public Inst {
 public:
 	typedef elm::genstruct::Table<hard::Register * > reg_t;
-	NopInst(Address address, t::size size): addr(address), _size(size) { }
+	NopInst(Address address, t::uint32 size): addr(address), _size(size) { }
 
 	virtual void dump (io::Output &out) { out << "<nop>"; }
 	virtual kind_t kind (void) { return IS_INT; }
 	virtual Inst *toInst(void) { return this; }
 	virtual Address address(void) const { return addr; }
-	virtual t::size	size(void) const { return _size; }
+	virtual t::uint32	size(void) const { return _size; }
 	virtual const reg_t& readRegs(void) { return reg_t::EMPTY; }
 	virtual const reg_t& writtenRegs(void) { return reg_t::EMPTY; }
 private:
 	Address addr;
-	t::size _size;
+	t::uint32 _size;
 };
 
 /**
@@ -1026,7 +1026,7 @@ private:
  * @return		Built NOP instruction (must fried by deleteNop() call).
  */
 Inst *Process::newNOp(Address addr) {
-	t::size size = this->instSize();
+	t::uint32 size = this->instSize();
 	if(size == 0)
 		size = 1;
 	return new NopInst(addr, size);

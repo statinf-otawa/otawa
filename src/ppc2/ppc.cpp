@@ -228,7 +228,7 @@ public:
 				return next;
 		}
 		Inst *next = process()->findInstAt(_ppcState->NIA);
-		ASSERTP(next, "cannot find instruction at " << (void *)_ppcState->NIA << " from " << oinst->address());
+		ASSERTP(next, "cannot find instruction at " << Address(_ppcState->NIA) << " from " << oinst->address());
 		return next;
 	}
 
@@ -284,14 +284,14 @@ public:
 	virtual hard::Platform *platform(void);
 	virtual otawa::Inst *start(void);
 	virtual File *loadFile(elm::CString path);
-	virtual void get(Address at, signed char& val);
-	virtual void get(Address at, unsigned char& val);
-	virtual void get(Address at, signed short& val);
-	virtual void get(Address at, unsigned short& val);
-	virtual void get(Address at, signed long& val);
-	virtual void get(Address at, unsigned long& val);
-	virtual void get(Address at, signed long long& val);
-	virtual void get(Address at, unsigned long long& val);
+	virtual void get(Address at, t::int8& val);
+	virtual void get(Address at, t::uint8& val);
+	virtual void get(Address at, t::int16& val);
+	virtual void get(Address at, t::uint16& val);
+	virtual void get(Address at, t::int32& val);
+	virtual void get(Address at, t::uint32& val);
+	virtual void get(Address at, t::int64& val);
+	virtual void get(Address at, t::uint64& val);
 	virtual void get(Address at, Address& val);
 	virtual void get(Address at, string& str);
 	virtual void get(Address at, char *buf, int size);
@@ -374,7 +374,7 @@ public:
 	virtual kind_t kind() { return _kind; }
 	virtual address_t address() const { return _addr; }
 
-	virtual t::size size() const {
+	virtual t::uint32 size() const {
 #		ifdef PPC_WITH_VLE
 			return proc.get_size(this);
 #		else
@@ -445,7 +445,7 @@ public:
 		ppc_free_inst(inst);
 	}
 
-	virtual t::size size() const {
+	virtual t::uint32 size() const {
 #		ifdef PPC_WITH_VLE
 			return proc.get_size(this);
 #		else
@@ -511,8 +511,9 @@ public:
 	Segment(Process& process,
 		CString name,
 		address_t address,
-		size_t size)
-	: otawa::Segment(name, address, size, EXECUTABLE), proc(process) { }
+		t::size size,
+		t::uint flags)
+	: otawa::Segment(name, address, size, flags), proc(process) { }
 
 protected:
 	virtual otawa::Inst *decode(address_t address)
@@ -719,10 +720,15 @@ File *Process::loadFile(elm::CString path) {
 	for (int i = 0; i < infos.sectnum; i++) {
 		gel_sect_info_t infos;
 		gel_sect_t *sect = gel_getsectbyidx(_gelFile, i);
-		assert(sect);
+		ASSERT(sect);
 		gel_sect_infos(sect, &infos);
 		if(infos.vaddr != 0 && infos.size != 0) {
-			Segment *seg = new Segment(*this, infos.name, infos.vaddr, infos.size);
+			t::uint flags = 0;
+			if(infos.flags & SHF_WRITE)
+				flags |= Segment::WRITABLE;
+			if(infos.flags & SHF_EXECINSTR)
+				flags |= Segment::EXECUTABLE;
+			Segment *seg = new Segment(*this, infos.name, infos.vaddr, infos.size, flags);
 			file->addSegment(seg);
 		}
 	}
@@ -779,14 +785,14 @@ File *Process::loadFile(elm::CString path) {
 			val = ppc_mem_read##s(_ppcMemory, at.address()); \
 			/*cerr << "val = " << (void *)(int)val << " at " << at << io::endl;*/ \
 	}
-GET(signed char, 8);
-GET(unsigned char, 8);
-GET(signed short, 16);
-GET(unsigned short, 16);
-GET(signed long, 32);
-GET(unsigned long, 32);
-GET(signed long long, 64);
-GET(unsigned long long, 64);
+GET(t::int8, 8);
+GET(t::uint8, 8);
+GET(t::int16, 16);
+GET(t::uint16, 16);
+GET(t::int32, 32);
+GET(t::uint32, 32);
+GET(t::int64, 64);
+GET(t::uint64, 64);
 GET(Address, 32);
 
 

@@ -166,14 +166,14 @@ public:
 	virtual int maxTemp(void) const;
 
 	// Memory access
-	virtual void get(Address at, signed char& val);
-	virtual void get(Address at, unsigned char& val);
-	virtual void get(Address at, signed short& val);
-	virtual void get(Address at, unsigned short& val);
-	virtual void get(Address at, signed long& val);
-	virtual void get(Address at, unsigned long& val);
-	virtual void get(Address at, signed long long& val);
-	virtual void get(Address at, unsigned long long& val);
+	virtual void get(Address at, t::int8& val);
+	virtual void get(Address at, t::uint8& val);
+	virtual void get(Address at, t::int16& val);
+	virtual void get(Address at, t::uint16& val);
+	virtual void get(Address at, t::int32& val);
+	virtual void get(Address at, t::uint32& val);
+	virtual void get(Address at, t::int64& val);
+	virtual void get(Address at, t::uint64& val);
 	virtual void get(Address at, Address& val);
 	virtual void get(Address at, float& val);
 	virtual void get(Address at, double& val);

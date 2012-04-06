@@ -618,7 +618,8 @@ namespace se{
 	 * Build a filter and install them on the current BB.
 	 * @param _bb	BB to work on.
 	 */
-	FilterBuilder::FilterBuilder(BasicBlock *_bb): bb(_bb), pack(bb) {
+	FilterBuilder::FilterBuilder(BasicBlock *_bb, ClpProblem& problem)
+	: bb(_bb), pack(bb, clp::ClpStatePack::Context(problem)) {
 		getFilters();
 	}
 
@@ -944,36 +945,25 @@ namespace se{
 	 * @param f CLP to filter with
 	*/
 	void applyFilter(V &v, se::op_t cmp_op, V f){
+		bool reverse;
 		V b;
-		clp::intn_t oldvdelta = v.delta();
+		//clp::intn_t oldvdelta = v.delta();
 		switch(cmp_op){
-		case LE:
-			f.add(1);
-		case LT:
-			if(f.stop() < f.lower())
-				b = V(clp::VAL, clp::MINn, 1, clp::UMAXn);
-			else
-				b = V(clp::VAL, clp::MINn, 1, f.stop() - 1 - clp::MINn);
-			v.inter(b);
-			break;
-		case GE:
-			f.sub(1);
-		case GT:
-			if(f.stop() < f.lower())
-				b = V(clp::VAL, f.start() + 1, 1, clp::UMAXn);
-			else
-				b = V(clp::VAL, f.start() + 1, 1, clp::MAXn - f.stop() - 1);
-			v.inter(b);
-			break;
-		case EQ:
-			v.inter(f);
-			break;
+		case LT:	if(!f.swrap()) v.le(f.stop() - 1); break;
+		case LE:	if(!f.swrap()) v.le(f.stop()); break;
+		case GE:	if(!f.swrap()) v.ge(f.start()); break;
+		case GT:	if(!f.swrap()) v.ge(f.start() + 1); break;
+		case ULE:	if(!f.uwrap()) v.leu(f.stop()); break;
+		case ULT:	if(!f.uwrap()) v.leu(f.stop() - 1); break;
+		case UGE:	if(!f.uwrap()) v.geu(f.start()); break;
+		case UGT:	if(!f.uwrap()) v.geu(f.start() + 1); break;
+		case EQ:	v.inter(f); break;
 		case NE:
 			/* We can't do anything if the filter is not a constant.
 			   We cannnot test if the value is in the filter, because the filter
 			   will never - at execution time - be the whole set, but just a
 			   value in this set. */
-			if (f.isConst()){
+			/*if (f.isConst()){
 				if (v.isConst() && f.lower() == v.lower()){
 					v.set(clp::NONE, 0, 0, 0);
 				// if v is T, set to T/{f}
@@ -995,32 +985,16 @@ namespace se{
 					v.set(v.kind(), v.lower(), v.delta() * 2, 1);
 				}
 			// check if v is in f
-			}
-			break;
-		case ULE:
-			f.add(1);
-		case ULT:
-			if (f.lower() <= f.stop()){
-				b = V(clp::VAL, 0, 1, f.lower() + (f.delta() * f.mtimes()) - 1);
-				v.inter(b);
-			}
-			break;
-		case UGE:
-			f.sub(1);
-		case UGT:
-			if (f.lower() <= f.stop()){
-				clp::uintn_t newm = (clp::uintn_t)clp::UMAXn - (clp::uintn_t)(f.lower() + 1);
-				b = V(clp::VAL, f.lower() + 1, 1, newm);
-				v.inter(b);
-			}
+			}*/
 			break;
 		default:
 			break;
 		}
+
 		/* keed the orientation of v*/
-		if (oldvdelta < 0){
+		/*if (oldvdelta < 0){
 			v.reverse();
-		}
+		}*/
 	}
 	
 	

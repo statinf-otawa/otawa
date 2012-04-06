@@ -28,7 +28,7 @@ namespace otawa {
  * @param block	First instruction in the block.
  * @param size	Size of the block.
  */
-BlockAST::BlockAST(Inst *block, t::size size): _block(block), _size(size) {
+BlockAST::BlockAST(Inst *block, t::uint32 size): _block(block), _size(size) {
 	assert(block);
 	assert(size >= 0);
 	ID(_block) = this;
@@ -49,7 +49,7 @@ BlockAST::~BlockAST(void) {
 
 
 /**
- * @fn size_t BlockAST::size(void) const;
+ * @fn size_t BlockAST::uint32(void) const;
  * Get the size of the AST block.
  */
 

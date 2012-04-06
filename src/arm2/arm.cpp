@@ -174,7 +174,7 @@ public:
 	virtual void dump(io::Output& out);
 	virtual kind_t kind() { return _kind; }
 	virtual address_t address() const { return _addr; }
-	virtual t::size size() const { return 4; }
+	virtual t::uint32 size() const { return 4; }
 	virtual Process &process() { return proc; }
 
 	virtual const elm::genstruct::Table<hard::Register *>& readRegs() {
@@ -233,7 +233,7 @@ public:
 	Segment(Process& process,
 		CString name,
 		address_t address,
-		t::size size)
+		t::uint32 size)
 	: otawa::Segment(name, address, size, EXECUTABLE), proc(process) { }
 
 protected:
@@ -523,21 +523,21 @@ public:
 		}
 	}
 
-	virtual void get(Address at, signed char& val)
+	virtual void get(Address at, t::int8& val)
 		{ val = arm_mem_read8(_memory, at.address()); }
-	virtual void get(Address at, unsigned char& val)
+	virtual void get(Address at, t::uint8& val)
 		{ val = arm_mem_read8(_memory, at.address()); }
-	virtual void get(Address at, signed short& val)
+	virtual void get(Address at, t::int16& val)
 		{ val = arm_mem_read16(_memory, at.address()); }
-	virtual void get(Address at, unsigned short& val)
+	virtual void get(Address at, t::uint16& val)
 		{ val = arm_mem_read16(_memory, at.address()); }
-	virtual void get(Address at, signed long& val)
+	virtual void get(Address at, t::int32& val)
 		{ val = arm_mem_read32(_memory, at.address()); }
-	virtual void get(Address at, unsigned long& val)
+	virtual void get(Address at, t::uint32& val)
 		{ val = arm_mem_read32(_memory, at.address()); }
-	virtual void get(Address at, signed long long& val)
+	virtual void get(Address at, t::int64& val)
 		{ val = arm_mem_read64(_memory, at.address()); }
-	virtual void get(Address at, unsigned long long& val)
+	virtual void get(Address at, t::uint64& val)
 		{ val = arm_mem_read64(_memory, at.address()); }
 	virtual void get(Address at, Address& val)
 		{ val = arm_mem_read32(_memory, at.address()); }

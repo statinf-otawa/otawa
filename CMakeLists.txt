@@ -154,8 +154,13 @@ add_subdirectory(include)
 
 # share installation
 set(EXCLUDED_FILES PATTERN "CVS" EXCLUDE PATTERN "Makefile*" EXCLUDE PATTERN ".cvsignore" EXCLUDE)
-#install(DIRECTORY include/otawa DESTINATION include ${EXCLUDED_FILES})
 install(DIRECTORY data/caches DESTINATION share/Otawa/ ${EXCLUDED_FILES})
 install(DIRECTORY data/makefiles DESTINATION share/Otawa/ ${EXCLUDED_FILES})
 install(DIRECTORY data/procs DESTINATION share/Otawa/ ${EXCLUDED_FILES})
 install(DIRECTORY data/scripts DESTINATION share/Otawa/ ${EXCLUDED_FILES})
+
+
+# testing
+if(OTAWA_TEST)
+	add_subdirectory(test)
+endif()

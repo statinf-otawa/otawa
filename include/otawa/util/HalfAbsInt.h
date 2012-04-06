@@ -132,6 +132,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	 * This function computes the IN state, and unmark the not-needed-anymore edges.
 	 */
 	fp.assign(in, fp.bottom());
+
 	/* Main entry case */
 	if (mainEntry) {
 		fp.assign(in, entdom);
@@ -213,7 +214,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			if (HAI_BYPASS_TARGET(current) && (inedge->kind() == Edge::VIRTUAL_RETURN))
 				continue;
 			typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
-	    HAI_TRACE("got state: " << *edgeState << "\n");
+			HAI_TRACE("got state: " << *edgeState << "\n");
 			
 			ASSERT(edgeState != NULL);
 			fp.updateEdge(*inedge, *edgeState);

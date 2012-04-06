@@ -29,7 +29,7 @@ class LBlock: public elm::inhstruct::DLNode, public PropList {
 	friend class LBlockSet;
 	
 	address_t addr;
-	t::size _size;
+	t::uint32 _size;
 	int ident;
 	int _cacheblock;
 	BasicBlock *_bb;
@@ -40,7 +40,7 @@ class LBlock: public elm::inhstruct::DLNode, public PropList {
 public:
 	
 	//constructor
-	LBlock(LBlockSet *graphe, address_t head, BasicBlock *bb, t::size size, int _cacheblock);
+	LBlock(LBlockSet *graphe, address_t head, BasicBlock *bb, t::uint32 size, int _cacheblock);
 	
 	// methodes
 	int id(void);

@@ -29,6 +29,8 @@
 
 namespace otawa {
 
+class ClpProblem;
+
 namespace clp {
 
 /** A pack of CLP states inside a BasicBlock.
@@ -36,7 +38,7 @@ namespace clp {
 *	instruction.
 */
 class ClpStatePack{
-friend class ClpProblem;
+	friend class ClpProblem;
 public:
 	typedef Vector<clp::State*>::Iterator StateIterator;
 	
@@ -73,10 +75,22 @@ public:
 		address_t _inst_addr;
 		Vector<clp::State*> _states;
 	};
+
+	class Context {
+	public:
+		Context(Process *process);
+		Context(ClpProblem& problem);
+		~Context(void);
+		inline ClpProblem& problem(void) const { return *prob; }
+	private:
+		ClpProblem *prob;
+		bool to_free;
+	};
 	
 	typedef Vector<InstPack*>::Iterator PackIterator;
 	
-	ClpStatePack(BasicBlock *bb);
+	ClpStatePack(BasicBlock *bb, Process *process);
+	ClpStatePack(BasicBlock *bb, const Context& context);
 	~ClpStatePack(void);
 	
 	/** @return the BasicBlock corresponding to this Pack. */

@@ -125,7 +125,7 @@ public:
 	inline PseudoInst(const AbstractIdentifier *id): _id(id) { };
 	inline const AbstractIdentifier *id(void) const { return _id; };
 	virtual address_t address(void) const;
-	virtual t::size size(void) const { return 0; };
+	virtual t::uint32 size(void) const { return 0; };
 	virtual void dump(io::Output& out);
 	virtual bool isPseudo(void) { return true; };
 	virtual PseudoInst *toPseudo(void) { return this; };
