@@ -26,7 +26,7 @@ public:
 	ProgItem *next(void) const;
 	ProgItem *previous(void) const;
 	virtual address_t address(void) const = 0;
-	virtual t::size size(void) const = 0;
+	virtual t::uint32 size(void) const = 0;
 	inline address_t topAddress(void) const { return address() + size(); }
 	virtual Inst *toInst(void);
 

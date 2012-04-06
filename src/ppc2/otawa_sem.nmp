@@ -90,13 +90,13 @@ extend branch_cond_ctr
 extend branch_cond_ctr_link
 	otawa_sem = { set(_LR, __IADDR + 4); if !BO<4..4> then test_cond(2); endif; set(t1, _CTR); branch(t1); }
 extend bran_cond_link_abs
-	otawa_sem = { set(_LR, __IADDR + 4); test_cond_and_ctr(2); set(1, BD << 2); branch(t1); }
+	otawa_sem = { set(_LR, __IADDR + 4); test_cond_and_ctr(2); seti(t1, BD << 2); branch(t1); }
 extend bran_cond_link
-	otawa_sem = { set(_LR, __IADDR + 4); test_cond_and_ctr(2); set(1, __IADDR + (BD << 2)); branch(t1); }
+	otawa_sem = { set(_LR, __IADDR + 4); test_cond_and_ctr(2); seti(t1, __IADDR + (BD << 2)); branch(t1); }
 extend bran_cond_abs
-	otawa_sem = { test_cond_and_ctr(2); set(1, BD << 2); branch(t1); }
+	otawa_sem = { test_cond_and_ctr(2); seti(t1, BD << 2); branch(t1); }
 extend bran_cond_rel
-	otawa_sem = { test_cond_and_ctr(2); set(1, __IADDR + (BD << 2)); branch(t1); }
+	otawa_sem = { test_cond_and_ctr(2); seti(t1, __IADDR + (BD << 2)); branch(t1); }
 
 extend sys_call, oea_rfi
 	otawa_sem = { scratch(t1); branch(t1); }
@@ -304,7 +304,12 @@ extend add_imm
 		endif;
 	}
 extend add_imm_shifted
-	otawa_sem = { seti(t1, da); seti(t2, 16); shl(t1, t1, t2); _add(R(rd), ra.sem, t1); }
+	otawa_sem = {
+		if ra.value == 0
+		then seti(R(rd), da << 16);
+		else seti(t1, da << 16); _add(R(rd), ra.sem, t1);
+		endif;
+	}
 extend add_imm_carry
 	otawa_sem = { seti(t1, imm); _add(R(rd), ra.sem, t1); scratch(_XER);  }
 extend add_imm_carry_record
@@ -533,18 +538,25 @@ extend oea_mtspr
 
 // ****** shift and masks ******
 
-extend rlwimi, rlwinm
+extend rlwimi
+	otawa_sem = { scratch(R(ra)); }
+extend rlwinm
 	otawa_sem = {
-		if mb == 0 && me + sh == 32 then
-			seti(t1, sh);
-			shl(R(ra), rs.sem, t1);
+		if sh == 0 then
+			seti(t1, (1 << (mb - me + 1) - 1) << (31 - mb));
+			_and(R(ra), rs.sem, t1);
 		else
-			scratch(R(ra));
+			if mb == 0 && me + sh == 31 then
+				seti(t1, sh);
+				shl(R(ra), rs.sem, t1);
+			else
+				scratch(R(ra));
+			endif;
 		endif;
 	}
 extend rlwimi_cr_update, rlwinm_cr_update
 	otawa_sem = {
-		if mb == 0 && me + sh == 32 then
+		if mb == 0 && me + sh == 31 then
 			seti(t1, sh);
 			shl(R(ra), rs.sem, t1);
 		else
@@ -577,7 +589,7 @@ extend sraw_cr_update
 	}
 extend srawi
 	otawa_sem = {
-		if sh < 32 then asr(R(ra), rs.sem, sh); else  scratch(R(ra)); endif; 
+		if sh < 32 then seti(t2, sh); asr(R(ra), rs.sem, t2); else  scratch(R(ra)); endif; 
 	}
 extend srawi_cr_update
 	otawa_sem = {

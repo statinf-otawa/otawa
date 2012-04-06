@@ -24,9 +24,13 @@
 #ifndef OTAWA_DATA_CLP_VALUE_H_
 #define OTAWA_DATA_CLP_VALUE_H_
 
+#include <elm/types.h>
 #include <elm/type_info.h>
+#include <elm/io.h>
 
 namespace otawa { namespace clp {
+
+using namespace elm;
 
 // Here we define the number of bits the CLP will be (here modulo 2^32)
 const int NBITS = 32;
@@ -192,7 +196,19 @@ typedef enum {
 		 * the opposite of delta as new delta).
 		*/
 		void reverse(void);
+
+		inline bool swrap(void) const
+			{ return _delta != 0 && _mtimes > (MAXn - _lower) / elm::abs(_delta); }
+		inline bool uwrap(void) const
+			{ return _delta != 0 && _mtimes > (UMAXn - _lower) / elm::abs(_delta); }
 		
+		void ge(intn_t k);
+		void geu(uintn_t k);
+		void le(intn_t k);
+		void leu(uintn_t k);
+		void eq(uintn_t k);
+		void ne(uintn_t k);
+
 		/** Represents the bottom element */
 		static const Value none;
 		/** Represents the top element */
@@ -219,13 +235,11 @@ typedef enum {
 		intn_t _delta;
 		uintn_t _mtimes;
 	};
-	
-	// output
-	inline elm::io::Output& operator<<(elm::io::Output& out, Value &val) {
-		val.print(out);
-		return out;
-	}
-	
+
+	inline elm::io::Output& operator<<(elm::io::Output& out, const otawa::clp::Value &val) {
+	val.print(out);
+	return out;
+}
 	
 }	// clp
 

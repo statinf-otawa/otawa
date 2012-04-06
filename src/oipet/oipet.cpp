@@ -301,7 +301,7 @@ public:
 		path.push(step);
 	}
 
-	virtual void collect(const Address& address, t::size size, int value) {
+	virtual void collect(const Address& address, t::uint32 size, int value) {
 		cout << value << ' ' << address << ':' << (address + size) << ' ' << path << io::endl;
 	}
 

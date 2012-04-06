@@ -15,14 +15,14 @@ namespace otawa {
 // BlockAST class
 class BlockAST: public AST {
 	Inst *_block;
-	t::size _size;
+	t::uint32 _size;
 protected:
 	virtual ~BlockAST(void);
 public:
 	static Identifier<AST *> ID;
-	BlockAST(Inst *block, t::size size);
+	BlockAST(Inst *block, t::uint32 size);
 	inline Inst *block(void) const { return _block; };
-	inline t::size size(void) const { return _size; };
+	inline t::uint32 size(void) const { return _size; };
 
 	// AST overload
 	virtual Inst *first(void) { return _block; };

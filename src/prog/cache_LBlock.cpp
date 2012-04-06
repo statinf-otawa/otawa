@@ -20,7 +20,7 @@ namespace otawa {
  * @param bb		Basic block containing this l-block.
  * @param size		Size of the l-block.
  */
-LBlock::LBlock(LBlockSet *lbset, address_t address, BasicBlock *bb, t::size size, int cacheblock)
+LBlock::LBlock(LBlockSet *lbset, address_t address, BasicBlock *bb, t::uint32 size, int cacheblock)
 : addr(address), _size(size), _cacheblock(cacheblock), _bb(bb) {
 	ident = lbset->LBlockSet::add(this);
 }

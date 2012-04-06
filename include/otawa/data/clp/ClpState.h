@@ -49,13 +49,15 @@ namespace clp {
 		public:
 			friend class State;
 			inline Node(void): next(0), addr(0), val(ALL) { }
-			inline Node(const int address, const Value& value)
-				: next(0), addr(address), val(value) { }
-			inline Node(const Node *node)
-				: next(0), addr(node->addr), val(node->val) { }
+			inline Node(t::uint32 address, const Value& value): next(0), addr(address), val(value) { }
+			inline Node(const Node *node): next(0), addr(node->addr), val(node->val) { }
+			inline Node *getNext(void) const { return next; }
+			inline t::uint32 getAddress(void) const { return addr; }
+			inline const Value& getValue(void) const { return val; }
+
 		private:
 			Node *next;
-			int addr;
+			t::uint32 addr;
 			Value val;
 		};
 		
@@ -81,7 +83,24 @@ namespace clp {
 		const Value& get(const Value& addr) const;
 		
 		static const State EMPTY, FULL;
-	
+
+		class Iter: public PreIterator<Iter, Value> {
+		public:
+			inline Iter(State& s): state(s), i(0), node(state.first.getNext()) { }
+			inline Iter(const Iter& iter): state(iter.state), i(iter.i), node(iter.node) { }
+			inline const Value& item(void) const
+				{ if(isReg()) return state.registers[i]; else return node->getValue(); }
+			inline void next(void) { if(isReg()) i++; else node = node->getNext(); }
+			inline bool ended(void) const { return !isReg() && !node; }
+			inline Value id(void) const { if(isReg()) return Value(REG, i); else return Value(VAL, node->getAddress()); }
+
+		private:
+			inline bool isReg(void) const { return i < state.registers.count(); }
+			State& state;
+			int i;
+			Node *node;
+		};
+
 	protected:
 		Node first;
 		genstruct::Vector<Value> registers;

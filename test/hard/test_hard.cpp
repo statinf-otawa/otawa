@@ -5,7 +5,6 @@
  *	test/ipet/test_hard.cpp -- test for hardware features.
  */
 
-#include <stdlib.h>
 #include <elm/io.h>
 #include <otawa/otawa.h>
 #include <otawa/proc/ProcessorException.h>
@@ -79,7 +78,7 @@ int main(int argc, char **argv) {
 		if(argc < 2) {
 			cerr << "ERROR: no argument.\n"
 				 << "Syntax is : test_ipet <executable>\n";
-			exit(2);
+			return 2;
 		}
 		WorkSpace *fw = manager.load(argv[1], props);
 		assert(fw);
@@ -198,7 +197,7 @@ int main(int argc, char **argv) {
 	}
 	catch(elm::Exception& e) {
 		cerr << "ERROR: " << e.message() << '\n';
-		exit(1);
+		return 1;
 	}
 	return 0;
 }

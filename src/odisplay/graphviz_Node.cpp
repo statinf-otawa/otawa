@@ -49,6 +49,33 @@ void GraphVizNode::setProps(const PropList& props){
 }
 
 
+static inline string processSeparations(string text) {
+	StringBuffer buf;
+	int l = 0;
+	int p = text.indexOf("\\l", l);
+	while(p >= 0) {
+
+		// loook for bars
+		int bars = 0;
+		for(int i = l; i < p; i++, bars++)
+			if(text[i] != '-') {
+				bars = 0;
+				break;
+			}
+
+		// process the result
+		if(bars)
+			buf << "|\\l";
+		else
+			buf << text.substring(l, p + 2 - l);
+
+		l = p + 2;
+		p = text.indexOf("\\l", l);
+	}
+	buf << text.substring(l);
+	return buf.toString();
+}
+
 
 void GraphVizNode::printOthersAttributes(elm::io::Output& out){
 	String props = getPropertiesString();
@@ -57,7 +84,7 @@ void GraphVizNode::printOthersAttributes(elm::io::Output& out){
 		if(_shapeAcceptsBody){
 			out << '{' << quoteSpecials(_title);
 			if(_hasBody){
-				out << "|\\l" << quoteSpecials(_body) << "\\l";
+				out << "|\\l" << processSeparations(quoteSpecials(_body)) << "\\l";
 			}
 			if(props.length() > 0){
 				out << "|\\l" << quoteSpecials(props) << "\\l";

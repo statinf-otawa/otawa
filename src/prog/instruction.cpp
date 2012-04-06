@@ -442,7 +442,7 @@ class NullInst: public Inst {
 public:
 	virtual kind_t kind(void) { return 0; }
 	virtual Address address(void) const { return Address::null; }
-	virtual t::size size(void) const { return 0; }
+	virtual t::uint32 size(void) const { return 0; }
 	virtual Inst *toInst(void) const { return (Inst *)this; }
 } static_null;
 

@@ -204,6 +204,7 @@ void CFGOutput::genBBLabel(CFG *cfg, BasicBlock *bb, Output& out) {
 		// display the instruction
 		out << "0x" << fmt::address(inst->address()) << ":  ";
 		inst->dump(out);
+		out << "\n";
 	}
 
 	// give special format for Entry and Exit
@@ -240,7 +241,12 @@ void CFGOutput::genEdgeLabel(CFG *cfg, otawa::Edge *edge, Output& out) {
  * @param out	Output to generate the CFG label to.
  */
 void CFGOutput::genBBInfo(CFG *cfg, BasicBlock *bb, Output& out) {
-	out << "---\n" << (PropList *)bb << io::endl;
+	out << "---\n";
+	for(PropList::Iter prop(bb); prop; prop++) {
+		out << prop->id()->name() << " = ";
+		prop->id()->print(out, prop);
+		out << io::endl;
+	}
 }
 
 
@@ -251,7 +257,12 @@ void CFGOutput::genBBInfo(CFG *cfg, BasicBlock *bb, Output& out) {
  * @param out	Output to generate the CFG label to.
  */
 void CFGOutput::genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out) {
-	out << "\n" << (PropList *)edge << io::endl;
+	out << "\n";
+	for(PropList::Iter prop(edge); prop; prop++) {
+		out << prop->id()->name() << " = ";
+		prop->id()->print(out, prop);
+		out << io::endl;
+	}
 }
 
 } } // otawa::display

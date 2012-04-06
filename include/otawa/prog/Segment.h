@@ -61,7 +61,7 @@ private:
 	unsigned long _flags;
 	CString _name;
 	address_t _address;
-	otawa::t::size _size;
+	otawa::t::uint32 _size;
 	inhstruct::DLList items;
 	ProgItem **map;
 };

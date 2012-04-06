@@ -37,7 +37,7 @@
 namespace elm {
 	namespace t {
 		typedef uint8 byte;
-		typedef uint32 size;
+		//typedef uint32 size;
 		typedef uint32 mask;
 	}	// t
 	namespace serial2 {
@@ -52,8 +52,8 @@ using namespace elm;
 // Address class
 class Address {
 public:
-	typedef t::size page_t;
-	typedef t::size offset_t;
+	typedef t::uint32 page_t;
+	typedef t::uint32 offset_t;
 	static Address null;
 	static const page_t null_page = elm::type_info<page_t>::max;
 
@@ -79,11 +79,11 @@ public:
 		{ pg = 0; off = offset; return *this; }
 	inline Address& operator+=(int offset)
 		{ ASSERT(!offset || !isNull()); off += offset; return *this; }
-	inline Address& operator+=(t::size offset)
+	inline Address& operator+=(t::uint32 offset)
 		{ ASSERT(!offset || !isNull()); off += offset; return *this; }
 	inline Address& operator-=(int offset)
 		{ ASSERT(!offset || !isNull()); off -= offset; return *this; }
-	inline Address& operator-=(t::size offset)
+	inline Address& operator-=(t::uint32 offset)
 		{ ASSERT(!offset || !isNull()); off -= offset; return *this; }
 
 	// Operations
