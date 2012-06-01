@@ -53,8 +53,8 @@ public:
 		: AbstractIdentifier(name), def(default_value)
 		{ VARARG_BEGIN(args, prop); initProps(prop, args); VARARG_END }
 
-	inline Identifier(cstring name, const T& default_value, VarArg& args)
-		: AbstractIdentifier(name, args), def(default_value) { }
+	inline Identifier(cstring name, const T& default_value, Property *prop, VarArg& args)
+		: AbstractIdentifier(name, prop, args), def(default_value) { }
 
 	// intrinsic accessor
 	inline const T& defaultValue(void) const { return def; }
