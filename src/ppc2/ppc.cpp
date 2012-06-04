@@ -665,6 +665,9 @@ otawa::Inst *Process::start(void) {
 	return _start;
 }
 
+inline IntFormat bytef(t::uint8 i) {
+	return io::right(io::hex(io::pad('0', io::width(2, i))));
+}
 
 /**
  */
@@ -682,10 +685,10 @@ File *Process::loadFile(elm::CString path) {
 
 	// build the environment
 	gel_env_t genv = *gel_default_env();
-	genv.argv = argv;
+	/*genv.argv = argv;
 	genv.envp = envp;
 	if(no_stack)
-		genv.flags = GEL_ENV_NO_STACK;
+		genv.flags = GEL_ENV_NO_STACK;*/
 
 	// build the GEL image
 	LTRACE;
@@ -697,6 +700,11 @@ File *Process::loadFile(elm::CString path) {
 		gel_close(_gelFile);
 		throw LoadException(_ << "cannot build image of \"" << path << "\": " << gel_strerror());
 	}
+
+	// DEBUG
+	t::uint8 *a = (t::uint8 *)gel_vaddr_to_raddr(0x000d98c6, gimage);
+	cerr << "DEBUG: in PLUG " << (void *)a << " "
+		<< bytef(a[0]) << " " << bytef(a[1]) << " " << bytef(a[2]) << " " << bytef(a[3]) << " " << io::endl;
 
 	// build the GLISS image
 	gel_image_info_t iinfo;
@@ -710,8 +718,25 @@ File *Process::loadFile(elm::CString path) {
 			gel_cursor_avail(cursor));
 	}
 
+	// DEBUG
+	t::uint8 b0, b1, b2, b3;
+	get(0x000d98c6, b0);
+	get(0x000d98c7, b1);
+	get(0x000d98c8, b2);
+	get(0x000d98c9, b3);
+	cerr << "DEBUG: in gliss mem "
+			<< bytef(b0) << " " << bytef(b1) << " " << bytef(b2) << " " << bytef(b3) << " " << io::endl;
+
 	// cleanup image
 	gel_image_close(gimage);
+
+	// DEBUG
+	get(0x000d98c6, b0);
+	get(0x000d98c7, b1);
+	get(0x000d98c8, b2);
+	get(0x000d98c9, b3);
+	cerr << "DEBUG: after image close "
+			<< bytef(b0) << " " << bytef(b1) << " " << bytef(b2) << " " << bytef(b3) << " " << io::endl;
 
 	// build segments
 	LTRACE;
@@ -732,6 +757,14 @@ File *Process::loadFile(elm::CString path) {
 			file->addSegment(seg);
 		}
 	}
+
+	// DEBUG
+	get(0x000d98c6, b0);
+	get(0x000d98c7, b1);
+	get(0x000d98c8, b2);
+	get(0x000d98c9, b3);
+	cerr << "DEBUG: after section build "
+			<< bytef(b0) << " " << bytef(b1) << " " << bytef(b2) << " " << bytef(b3) << " " << io::endl;
 
 	// Initialize symbols
 	LTRACE;
@@ -769,6 +802,14 @@ File *Process::loadFile(elm::CString path) {
 		}
 	}
 	gel_enum_free(iter);
+
+	// DEBUG
+	get(0x000d98c6, b0);
+	get(0x000d98c7, b1);
+	get(0x000d98c8, b2);
+	get(0x000d98c9, b3);
+	cerr << "DEBUG: after symbol make "
+			<< bytef(b0) << " " << bytef(b1) << " " << bytef(b2) << " " << bytef(b3) << " " << io::endl;
 
 	// Last initializations
 	LTRACE;
@@ -830,7 +871,7 @@ otawa::Inst *Process::decode(Address addr) {
 
 	// get the kind from the nmp otawa_kind attribute
 	if(inst->ident == PPC_UNKNOWN)
-		TRACE("UNKNOWN !!!\n" << result);
+		kind = Inst::IS_UNKNOWN;
 	else
 		kind = ppc_kind(inst);
 	bool is_branch = kind & Inst::IS_CONTROL;

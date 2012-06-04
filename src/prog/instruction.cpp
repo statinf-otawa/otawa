@@ -139,13 +139,20 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
  */
 
 /**
+ * @var Inst::IS_UNKNOWN
+ * This mask denotes an unknown instruction: its opcode does not match any known
+ * instruction in the loader. This may denotes either a limitation of the loader,
+ * or an execution path error in the program decoding.
+ */
+
+/**
  * @type Instr::kind_t;
  * The kind of an instruction is a bit array where each bit represents an
  * instruction property. The following masks gives access to the property bits:
  * @ref IS_COND, @ref IS_CONTROL, @ref IS_CALL, @ref IS_RETURN,
  * @ref IS_MEM, @ref IS_LOAD, @ref IS_STORE, @ref IS_INT, @ref IS_FLOAT, @ref IS_ALU,
  * @ref IS_MUL, @ref IS_DIV, @ref IS_SHIFT, @ref IS_TRAP, @ref IS_INTERN,
- * @ref IS_MULTI, @ref IS_SPECIAL.
+ * @ref IS_MULTI, @ref IS_SPECIAL, @ref IS_UNKNOWN.
  */
 
 
@@ -250,6 +257,14 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
  * Test if the instruction is a division.
  * @return	True if it is a division, false else.
  * @see Inst::IS_DIV
+ */
+
+
+/**
+ * @fn bool Inst::isUnknown(void);
+ * Test if an instruction is unknown.
+ * @return	True if it is unknown, false else.
+ * @see Inst::IS_UNKNOWN
  */
 
 

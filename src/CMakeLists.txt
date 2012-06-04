@@ -29,6 +29,7 @@ add_subdirectory(ast)
 add_subdirectory(oloader)
 #add_subdirectory(ets)
 add_subdirectory(ocpp)
+add_subdirectory(odec)
 add_subdirectory(odisplay)
 
 

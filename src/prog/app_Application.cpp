@@ -22,14 +22,17 @@
 
 #include <otawa/app/Application.h>
 #include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/util/FlowFactLoader.h>
 
 namespace otawa {
 
 /**
  * @class Application
  * A class making easier the use of applications built on OTAWA. It automatically support for
- * @li --set ID=VALUE -- set a property in the configuration property list (passed to manager and other processors),
+ * @li --add-prop ID=VALUE -- set a configuration property (passed to manager and other processors),
+ * @li -f|--flowfacts PATH -- select a flow fact file to load
  * @li -h|--help -- option help display,
+ * @li --load-param ID=VALUE -- add a load parameter (passed to the manager load command)
  * @li -v|--verbose -- verbose mode activation,
  * @li first argument as binary program,
  * @li following arguments as task entries.
@@ -38,7 +41,7 @@ namespace otawa {
  * Usually, it specialized according your application purpose:
  * @code
  * #include <otawa/app/Application.h>
- * class MyApp: public Application [
+ * class MyApp: public Application {
  * public:
  *		MyApplication(void):
  * 			Application("my_application", ...),
@@ -49,8 +52,8 @@ namespace otawa {
  * 		}
  * 
  * protected:
- * 		virtual void work(void) {
- * 			// do_something useful on the opened wotkspace
+ * void work(PropList &props) throw(elm::Exception) {
+ * 			// do_something useful on the opened workspace
  * 		} 
  * 
  * private:
@@ -84,6 +87,7 @@ Application::Application(
 	verbose(*this, 'v', "verbose", "verbose display of the process", false),
 	sets(*this, option::cmd, "--add-prop", option::description, "set a configuration property", option::arg_desc, "ID=VALUE", option::end),
 	params(*this, option::cmd, "--load-param", option::description, "add a load parameter", option::arg_desc, "ID=VALUE", option::end),
+	ff(*this, option::cmd, "--flowfacts", option::cmd, "-f", option::description, "select the flowfacts to load", option::arg_desc, "PATH", option::end),
 	props2(0),
 	result(0),
 	ws(0)
@@ -167,8 +171,14 @@ int Application::run(int argc, char **argv) {
 		// prepare the work
 		prepare(props);
 		
-		// do the work
+		// load the program
 		ws = MANAGER.load(path, props);
+
+		// if required, load the flowfacts
+		if(ff)
+			require(FLOW_FACTS_FEATURE);
+
+		// do the work
 		work(props);
 	}
 	catch(option::OptionException& e) {

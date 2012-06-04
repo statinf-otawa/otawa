@@ -52,11 +52,13 @@ protected:
 	inline WorkSpace *workspace(void) const { return ws; }
 	void require(const AbstractFeature&  feature);
 	virtual void process(string arg);
+	inline bool isVerbose(void) const { return verbose; }
 
 private:
 	option::BoolOption help, verbose;
 	option::ListOption<string> sets;
 	option::ListOption<string> params;
+	option::ValueOption<string> ff;
 	elm::system::Path path;
 	genstruct::Vector<string> entries;
 	PropList props;

@@ -1,4 +1,9 @@
 # ppc2 plugin build
+set(PROC 			"ppc")
+set(PROC_PREFIX 	"${CMAKE_SOURCE_DIR}/../ppc2/")
+set(GLISS_LIB 		"${PROC_PREFIX}/src/lib${PROC}.a")
+set(ELF_NUM			"20")
+
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
 
 if(MINGW OR UNIX)
@@ -29,7 +34,7 @@ if(NOT MINGW_WIN)
 	set(GLISS_ATTR	"${CMAKE_SOURCE_DIR}/../gliss2/gep/gliss-attr")
 	add_custom_command(
 		OUTPUT ${OTAWA_KIND} DEPENDS "kind.tpl" COMMAND ${GLISS_ATTR}
-		ARGS ${PPC_IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "kind.tpl" -d "return 0\\;" -e otawa_kind.nmp
+		ARGS ${PPC_IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "kind.tpl" -d "return 0 \\;" -e otawa_kind.nmp
 		DEPENDS ${PPC_IRG}
 	)
 	add_custom_command(
@@ -72,12 +77,12 @@ target_link_libraries(ppc2 ${LIBPPC2})
 set(INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/otawa/loader)
 install(TARGETS ppc2 DESTINATION ${INSTALL_PATH})
 if(WIN32)
-	file(WRITE elf_20.link "ppc2.dll")
-	install(FILES elf_20.link DESTINATION ${INSTALL_PATH})
+	file(WRITE elf_${ELF_NUM}.link "${PROC}.dll")
+	install(FILES elf_${ELF_NUM}.link DESTINATION ${INSTALL_PATH})
 elseif(UNIX OR APPLE)
-	add_custom_command(OUTPUT elf_20${SUFFIX} COMMAND ln -s ppc2${SUFFIX} elf_20${SUFFIX})
-	add_custom_target(ELF_20 ALL DEPENDS elf_20${SUFFIX})
-	install(FILES elf_20${SUFFIX} DESTINATION ${INSTALL_PATH})
+	add_custom_command(OUTPUT elf_${ELF_NUM}${SUFFIX} COMMAND rm -rf elf_${ELF_NUM}${SUFFIX} COMMAND ln -s ${PROC}2${SUFFIX} elf_${ELF_NUM}${SUFFIX})
+	add_custom_target(ELF${ELF_NUM} ALL DEPENDS elf_${ELF_NUM}${SUFFIX})
+	install(FILES elf_${ELF_NUM}${SUFFIX} DESTINATION ${INSTALL_PATH})
 endif()
 install(FILES ppc-config.xml DESTINATION ${INSTALL_PATH})
 

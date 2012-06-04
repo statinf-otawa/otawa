@@ -65,6 +65,7 @@ public:
 	static const kind_t IS_MULTI 	= 0x08000;
 	static const kind_t IS_SPECIAL 	= 0x10000;
 	static const kind_t IS_INDIRECT	= 0x10000;
+	static const kind_t IS_UNKNOWN	= 0x20000;
 
 	// null instruction
 	static Inst& null;
@@ -97,6 +98,7 @@ public:
 	inline bool isMul(void) { return oneOf(IS_MUL); }
 	inline bool isDiv(void) { return oneOf(IS_DIV); }
 	inline bool isIndirect(void) { return oneOf(IS_INDIRECT); }
+	inline bool isUnknown(void) { return oneOf(IS_UNKNOWN); }
 	 
 
 	// Low-level register access
@@ -104,8 +106,6 @@ public:
 	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
 
 	// Specialized information
-	virtual bool isPseudo(void);
-	virtual PseudoInst *toPseudo(void);
 	virtual Inst *target(void);
 	virtual Type *type(void);
 	virtual int multiCount(void);
@@ -115,6 +115,10 @@ public:
 
 	// ProgItem overload
 	virtual Inst *toInst(void);
+
+	// deprecated
+	virtual bool isPseudo(void);
+	virtual PseudoInst *toPseudo(void);
 };
 
 

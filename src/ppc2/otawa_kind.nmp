@@ -76,5 +76,5 @@ extend e_stmw
 extend icbt
 	otawa_kind = IS_MEM | IS_LOAD | IS_INTERN
 	
-extend mbar, mfdcr, msync, mtdcr, tlbivax, tlbre, tlbsx, tlbsync, tlbwe, wrtee, wrteei
+extend mbar, mfapidi, mfdcr, msync, mtdcr, tlbivax, tlbre, tlbsx, tlbsync, tlbwe, wrtee, wrteei
 	otawa_kind = IS_INTERN

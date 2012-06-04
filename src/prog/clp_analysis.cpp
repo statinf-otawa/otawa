@@ -767,6 +767,46 @@ void Value::ne(uintn_t k) {
 }
 
 
+/**
+ * Find a file of 1 in a word.
+ * @param w		Word to process.
+ * @param n		Number of bits to one.
+ * @return		True if one is found, false else.
+ */
+static bool findField(uint32_t w, int& n) {
+	n = 0;
+	while(!(w & (1 << n)))
+		n++;
+	return !(w & (0xffffffff << n));
+}
+
+/**
+ * Perform AND on the current value.
+ * @param val	Value to perform AND on.
+ */
+void Value::_and(const Value& val) {
+
+	// val const and contains a field ?
+	/*if(val.isConst()) {
+		if(!val.lower())
+			*this = Value(VAL, 0, 0, 0);
+		else {
+			int n;
+			if(findField(val.lower(), n))
+				le();
+		}
+	}*/
+
+	// current one contains a field ?
+	//if(isConst()) {
+
+	//}
+
+	// cannot compute it
+	*this = all;
+}
+
+
 //inline io::Output& operator<<(io::Output& out, const Value& v) { v.print(out); return out; }
 const Value Value::none(NONE), Value::all(ALL, 0, 1, UMAXn);
 

@@ -208,6 +208,7 @@ typedef enum {
 		void leu(uintn_t k);
 		void eq(uintn_t k);
 		void ne(uintn_t k);
+		void _and(const Value& val);
 
 		/** Represents the bottom element */
 		static const Value none;

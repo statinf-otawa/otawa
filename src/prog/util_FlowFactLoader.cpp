@@ -182,6 +182,7 @@ extern int fft_line;
  *   <target LOCATION />
  *   ...
  * </multibranch>
+ * @endcode
  * This elements is used to resolve a complex control to several targets
  * (case of indirect branch found in switch compilation using tables).
  * The first LOCATION is the control instruction itself and the target child
@@ -192,6 +193,7 @@ extern int fft_line;
  *   <target LOCATION />
  *   ...
  * </multicall>
+ * @endcode
  * This elements is used to resolve a complex control to several targets
  * (case of function pointer calls).
  * The first LOCATION is the call instruction itself and the target child

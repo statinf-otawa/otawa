@@ -543,7 +543,7 @@ extend rlwimi
 extend rlwinm
 	otawa_sem = {
 		if sh == 0 then
-			seti(t1, (1 << (mb - me + 1) - 1) << (31 - mb));
+			seti(t1, ((1 << (me - mb + 1)) - 1) << (31 - me));
 			_and(R(ra), rs.sem, t1);
 		else
 			if mb == 0 && me + sh == 31 then
