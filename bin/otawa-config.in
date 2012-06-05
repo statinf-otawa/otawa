@@ -1,7 +1,7 @@
 #!@BASH_PATH@
 
 # find the prefix
-prefix=`readlink -f "$0"`
+prefix=`@READLINK_PATH@ -f "$0"`
 prefix=`dirname $prefix`/..
 if [ ! -e "$prefix/lib/libotawa.so" ]; then
 	prefix="@prefix@"

@@ -1,7 +1,14 @@
- find_program(BASH_PATH bash)
- set(prefix ${CMAKE_INSTALL_PREFIX})
+find_program(BASH_PATH bash)
+
+if(APPLE)
+	find_program(READLINK_PATH "greadlink")
+else()
+	find_program(READLINK_PATH "readlink")
+endif()
+
+set(prefix ${CMAKE_INSTALL_PREFIX})
  
- if(HAS_LP_SOLVE)
+if(HAS_LP_SOLVE)
 	set(HAS_LP_SOLVE_TRUE "")
 else()
 	set(HAS_LP_SOLVE_TRUE "#")
@@ -32,7 +39,6 @@ else()
 endif()
 
 set(HAS_SO "yes")
-
 
 configure_file(
 	otawa-config.in
