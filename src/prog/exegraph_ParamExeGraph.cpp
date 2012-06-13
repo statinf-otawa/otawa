@@ -311,17 +311,16 @@ void ParamExeNode::buildContendersMasks(){
 
 // --------------------------------------------
 void ParamExeGraph::initDelays() {
-  for (ResourceIterator res(this) ; res ; res++) {
-    switch ( res->type() ) {
-    case BLOCK_START: {
-      ParamExeNode * node = _first_node[PROLOGUE];
-      if (!node) {
-	node = _first_node[BODY];
+	for (ResourceIterator res(this) ; res ; res++) {
+		switch ( res->type() ) {
+		case BLOCK_START: {
+				ParamExeNode *node = _first_node[PROLOGUE];
+				if (!node)
+					node = _first_node[BODY];
+				node->setE(res->index(),true);
+			}
+			break;
 
-      } 
-      node->setE(res->index(),true);
-    }
-      break;
     case STAGE: {
       PipelineStage<ParamExeNode> * stage = ((StageResource *) *res)->stage();
       int slot = ((StageResource *) *res)->slot();

@@ -39,6 +39,7 @@
 #include <otawa/cfg/Virtualizer.h>
 #include <otawa/display/CFGOutput.h>
 #include <otawa/exegraph/ParamExeGraphBBTime.h>
+#include <otawa/parexegraph/GraphBBTime.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/util/BBRatioDisplayer.h>
 #include <otawa/display/ILPSystemDisplayer.h>
@@ -210,7 +211,8 @@ typedef enum bbtime_t {
 	bbtime_delta,
 	bbtime_exegraph,
 	bbtime_trivial,
-	bbtime_paramexegraph
+	bbtime_paramexegraph,
+	bbtime_parexegraph
 } bbtime_t;
 EnumOption<int>::value_t bbtime_values[] = {
 	{ "method", bbtime_trivial },
@@ -219,6 +221,7 @@ EnumOption<int>::value_t bbtime_values[] = {
 	{ "exegraph", bbtime_exegraph },
 	{ "trivial", bbtime_trivial },
 	{ "paramexegraph", bbtime_paramexegraph },
+	{ "parexegraph", bbtime_parexegraph },
 	{ "" }
 };
 EnumOption<int> bbtime_option(command, 't', "bbtiming",
@@ -341,6 +344,8 @@ void Command::compute(String fun) {
 		ipet::ILP_PLUGIN_NAME(props) = ilp_plugin.value().toCString();
 	if(flow_facts)
 		FLOW_FACTS_PATH(props) = Path(flow_facts);
+	if(::proc)
+		PROCESSOR_PATH(props) = ::proc.value();
 
 	// Virtualization
 	if(!not_inlining) {
@@ -373,8 +378,16 @@ void Command::compute(String fun) {
 		break;
 
 	case bbtime_paramexegraph: {
-			ParamExeGraphBBTime tbt;
-			tbt.process(fw, props);
+			//ParamExeGraphBBTime tbt;
+			//tbt.process(fw, props);
+			cerr << "ERROR: paramexegraph is deprecared\n";
+			return;
+		}
+		break;
+
+	case bbtime_parexegraph: {
+			GraphBBTime<ParExeGraph> gbbt;
+			gbbt.process(fw, props);
 		}
 		break;
 
