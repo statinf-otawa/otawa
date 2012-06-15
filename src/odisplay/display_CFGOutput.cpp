@@ -72,14 +72,14 @@ public:
 		out->genGraphLabel(graph.cfg, caption);
 	}
 
-	static void decorate(const CFGAdapter &graph, const typename CFGAdapter::Vertex vertex, Output &content, ShapeStyle &style) {
+	static void decorate(const CFGAdapter &graph, const CFGAdapter::Vertex vertex, Output &content, ShapeStyle &style) {
 		style.shape = ShapeStyle::SHAPE_MRECORD;
 		CFGOutput *out = OUT(graph.cfg);
 		ASSERT(out);
 		out->genBBLabel(graph.cfg, vertex.bb, content);
 	}
 
-	static void decorate(const CFGAdapter &graph, const typename CFGAdapter::Edge edge, Output &label, TextStyle &text, LineStyle &line) {
+	static void decorate(const CFGAdapter &graph, const CFGAdapter::Edge edge, Output &label, TextStyle &text, LineStyle &line) {
 		switch(edge.edge->kind()){
 		case otawa::Edge::VIRTUAL_CALL:
 		case otawa::Edge::VIRTUAL:
