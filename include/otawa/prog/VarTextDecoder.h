@@ -26,6 +26,7 @@ protected:
 private:
 	void processEntry(WorkSpace *ws, address_t address);
 	Inst *getInst(WorkSpace *ws, address_t address, Inst *source = 0);
+	string getBytes(Address addr, int size);
 };
 
 } // otawa
