@@ -213,12 +213,13 @@ namespace otawa {
 			elm::genstruct::AllocatedTable<ParExeNode *> *table;
 		} rename_table_t;
 		elm::genstruct::Vector<Resource *> _resources;
-	private:
-		ParExeSequence * _sequence;
+
 		ParExeNode *_first_node;
 		ParExeNode *_first_bb_node;
 		ParExeNode *_last_prologue_node;
 		ParExeNode *_last_node;
+	private:
+		ParExeSequence * _sequence;
 		int _cache_line_size;
 		int _capacity;
 		int _branch_penalty;

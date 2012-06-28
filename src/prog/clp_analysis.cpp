@@ -19,7 +19,6 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-//#include <stdlib.h>
 #include <math.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/prog/sem.h>
@@ -780,30 +779,105 @@ static bool findField(uint32_t w, int& n) {
 	return !(w & (0xffffffff << n));
 }
 
+
+/**
+ * Threshold giving the maximum size of a CLP set
+ * to apply AND explicitly on the whole set
+ * (and rebuilding a new CLP value).
+ */
+int Value::and_threshold = 8;
+
 /**
  * Perform AND on the current value.
  * @param val	Value to perform AND on.
  */
 void Value::_and(const Value& val) {
 
-	// val const and contains a field ?
-	/*if(val.isConst()) {
-		if(!val.lower())
-			*this = Value(VAL, 0, 0, 0);
-		else {
-			int n;
-			if(findField(val.lower(), n))
-				le();
+	// T & v = v & T = T
+	if(*this == all)
+		return;
+	if(val == all) {
+		*this = all;
+		return;
+	}
+
+	// _ & v = v & _ = _
+	if(*this == none)
+		return;
+	if(val == none) {
+		*this = none;
+		return;
+	}
+
+	// check for any constant
+	Value v;
+	uintn_t k;
+	if(isConst()) {
+		if(val.isConst()) {		// k1 & k2
+			*this = val.lower() & lower();
+			return;
 		}
-	}*/
+		k = lower();
+		v = val;
+	}
+	else if(val.isConst()) {
+		v = *this;
+		k = val.lower();
+	}
+	else {						// no k : cannot compute
+		*this = all;
+		return;
+	}
 
-	// current one contains a field ?
-	//if(isConst()) {
+	// v & 0 = 0
+	if(k == 0) {
+		*this = 0;
+		return;
+	}
 
-	//}
+	// find the field of [n, m]
+	int n, m;
+	for(m = 0; !(k & (1 << m)); m++);
+	for(n = m; n < 32 && (k & (1 << n)); n++);
+	n--;
+	if(k & ~((1 << n) - 1)) {	// pure field ? (no one after n)
+		*this = all;
+		return;
+	}
 
-	// cannot compute it
-	*this = all;
+	// base % (1 << m) = 0
+	if(v.lower() % (1 << m) == 0) {
+
+		// 1 << m <= delta && delta
+		if((1 << m) <= v.delta()) {
+			// delta % (1 << m) = 0 -> (base, delta, n)
+			if(v.delta() % (1 << m) == 0) {
+				*this = v;
+				return;
+			}
+		}
+
+		// 1 << m > delta
+		else {
+			// (1 << m) % delta = 0 -> (base, 1 << m, (n + 1) / ((1 << m) / delta - 1)
+			if((1 << m) % v.delta() == 0) {
+				*this = Value(VAL, v.lower(), 1 << m, (v.mtimes() + 1) / ((1 << m) / v.delta()) - 1);
+				return;
+			}
+		}
+	}
+
+	// try to rebuild AND  if threshold not reached
+	if(v.mtimes() + 1 < and_threshold) {
+		*this = none;
+		intn_t n = v.lower();
+		for(int i = 0; i < v.mtimes(); i++, n += v.delta())
+			join(Value(VAL, n & k, 0, 0));
+		return;
+	}
+
+	// else (0, 1 << m, 1 << (n + 1 - m) - 1)
+	*this = Value(VAL, 0, 1 << m, 1 << (n + 1 - m) - 1);
 }
 
 

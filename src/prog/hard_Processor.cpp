@@ -21,6 +21,7 @@
  */
 
 #include <otawa/hard/Processor.h>
+#include <otawa/hard/ProcessorBuilder.h>
 #include <otawa/manager.h>
 #include <elm/serial2/XOMUnserializer.h>
 
@@ -210,6 +211,58 @@ SilentFeature PROCESSOR_FEATURE("otawa::hard::PROCESSOR_FEATURE", maker);
  * Cache configuration without any cache (never null).
  */
 Identifier<const hard::Processor *> PROCESSOR("otawa::hard::PROCESSOR", &Processor::null);
+
+
+/**
+ */
+void QueueBuilder::complete(void) {
+	if(completed)
+		return;
+	completed = true;
+	if(!interns.isEmpty()) {
+		queue->intern.allocate(interns.length());
+		for(int i = 0; i < interns.length(); i++)
+			queue->intern[i] = interns[i];
+	}
+}
+
+
+/**
+ */
+void StageBuilder::complete(void) {
+	if(completed)
+		return;
+	completed = true;
+	if(!fus.isEmpty()) {
+		stage->fus.allocate(fus.length());
+		for(int i = 0; i < fus.length(); i++)
+			stage->fus[i] = fus[i];
+	}
+	if(!disps.isEmpty()) {
+		stage->dispatch.allocate(disps.length());
+		for(int i = 0; i < disps.length(); i++)
+			stage->dispatch[i] = disps[i];
+	}
+}
+
+
+/**
+ */
+void ProcessorBuilder::complete(void) {
+	if(completed)
+		return;
+	completed = true;
+	if(!stages.isEmpty()) {
+		proc->stages.allocate(stages.length());
+		for(int i = 0; i < stages.length(); i++)
+			proc->stages[i] = stages[i];
+	}
+	if(!queues.isEmpty()) {
+		proc->queues.allocate(queues.length());
+		for(int i = 0; i < queues.length(); i++)
+			proc->queues[i] = queues[i];
+	}
+}
 
 } } // otawa::hard
 

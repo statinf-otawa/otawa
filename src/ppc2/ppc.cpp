@@ -351,7 +351,7 @@ private:
 
 // Process display
 elm::io::Output& operator<<(elm::io::Output& out, Process *proc)
-	{ out << "Process(" << (void *)proc << ")"; }
+	{ out << "Process(" << (void *)proc << ")"; return out; }
 
 
 // Inst class
@@ -742,34 +742,37 @@ File *Process::loadFile(elm::CString path) {
 	gel_enum_initpos(iter);
 	for(char *name = (char *)gel_enum_next(iter); name; name = (char *)gel_enum_next(iter)) {
 		ASSERT(name);
-		Address addr = Address::null;
-		Symbol::kind_t kind;
+
+		// get the symbol description
 		gel_sym_t *sym = gel_find_file_symbol(_gelFile, name);
 		assert(sym);
 		gel_sym_info_t infos;
 		gel_sym_infos(sym, &infos);
+
+		// compute the kind
+		Symbol::kind_t kind = Symbol::NONE;
 		switch(ELF32_ST_TYPE(infos.info)) {
 		case STT_FUNC:
 			kind = Symbol::FUNCTION;
-			addr = Address(infos.vaddr);
 			TRACE("SYMBOL: function " << infos.name << " at " << addr);
 			break;
 		case STT_NOTYPE:
 			kind = Symbol::LABEL;
-			addr = Address(infos.vaddr);
 			TRACE("SYMBOL: notype " << infos.name << " at " << addr);
+			break;
+		case STT_OBJECT:
+			kind = Symbol::DATA;
+			TRACE("SYMBOL: object " << infos.name << " at " << addr);
 			break;
 		default:
 			continue;
 		}
 
 		// Build the label if required
-		if(addr != Address::null) {
-			String label(infos.name);
-			Symbol *sym = new Symbol(*file, label, kind, addr);
-			file->addSymbol(sym);
-			TRACE("function " << label << " at " << addr);
-		}
+		String label(infos.name);
+		Symbol *symbol = new Symbol(*file, label, kind, infos.vaddr, infos.size);
+		file->addSymbol(symbol);
+		TRACE("function " << label << " at " << addr);
 	}
 	gel_enum_free(iter);
 
@@ -938,6 +941,7 @@ static void translate_gliss_reg_info(otawa_ppc_reg_t reg_info, elm::genstruct::V
 			break;
 		default:
 			ASSERTP(false, "unknown bank " << gliss_bank);
+			break;
 	}
 
 	//otawa_reg.allocate(reg_count);

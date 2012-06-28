@@ -64,6 +64,7 @@ typedef enum {
 	 */
 	class Value {
 	public:
+		static int and_threshold;
 
 		inline bool isConst(void) const { return delta() == 0 || mtimes() == 0; }
 

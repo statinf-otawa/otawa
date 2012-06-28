@@ -1,8 +1,22 @@
 /*
- *	$Id$
- *	Copyright (c) 2006, IRIT - UPS.
+ *	hard::Processor class interface
  *
- *	otawa/hard/Processor.h -- processor description interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-12, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_HARD_PROCESSOR_H
 #define OTAWA_HARD_PROCESSOR_H
@@ -20,9 +34,11 @@
 namespace otawa { namespace hard {
 
 using namespace elm::genstruct;
+class ProcessorBuilder;
 
 // FunctionalUnit class
 class FunctionalUnit {
+	friend class FunctionalUnitBuilder;
 	SERIALIZABLE(otawa::hard::FunctionalUnit,
 		FIELD(name) & FIELD(latency) & FIELD(width) & FIELD(pipelined));
 	elm::String name;
@@ -40,6 +56,7 @@ public:
 
 // Dispatch class
 class Dispatch {
+	friend class StageBuilder;
 	SERIALIZABLE(otawa::hard::Dispatch, FIELD(type) & FIELD(fu));
 public:
 	STRONG_TYPE(type_t, Inst::kind_t); 
@@ -55,6 +72,7 @@ public:
 
 // Stage class
 class Stage {
+	friend class StageBuilder;
 	SERIALIZABLE(otawa::hard::Stage, FIELD(type) & FIELD(name) & FIELD(width)
 		& FIELD(latency) & FIELD(fus) & FIELD(dispatch) & FIELD(ordered));
 public:
@@ -90,6 +108,7 @@ public:
 
 // Queue class
 class Queue {
+	friend class QueueBuilder;
 	SERIALIZABLE(otawa::hard::Queue, FIELD(name) & FIELD(size) & FIELD(input)
 		& FIELD(output) & FIELD(intern));
 	elm::String name;
@@ -109,6 +128,7 @@ public:
 
 // Processor class
 class Processor {
+	friend class ProcessorBuilder;
 	SERIALIZABLE(otawa::hard::Processor, FIELD(arch) & FIELD(model)
 		& FIELD(builder) & FIELD(stages) & FIELD(queues) & FIELD(frequency));
 

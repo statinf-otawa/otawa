@@ -420,9 +420,11 @@ void ParExeGraph::createResources(){
     int resource_index = 0;
     bool is_ooo_proc = false;
   
+    // build the start resource
     StartResource * new_resource = new StartResource((elm::String) "start", resource_index++);
     _resources.add(new_resource);
 	
+    // build resource for stages and FUs
     for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
 		if (stage->category() != ParExeStage::EXECUTE) {     
 			for (int i=0 ; i<stage->width() ; i++) {
@@ -450,6 +452,7 @@ void ParExeGraph::createResources(){
 		}
     }
 
+    // build resources for queues
     for (ParExeProc::QueueIterator queue(_microprocessor) ; queue ; queue++) {
 		int num = queue->size();
 		if (num > _sequence->count())
@@ -457,37 +460,45 @@ void ParExeGraph::createResources(){
 		for (int i=0 ; i<num ; i++) {
 			StringBuffer buffer;
 			buffer << queue->name() << "[" << i << "]";
-			int _i = 0, _empty_i;
+
+			// find emptying stage
+			/*int _i = 0, _empty_i;
 			for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
 				if (stage == queue->emptyingStage())
 					_empty_i = _i;
 				_i++;
-			}
+			}*/
+
+			//
 			StageResource * upper_bound;
-			int upper_bound_offset;
+			//int upper_bound_offset;
 			for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
 				if (resource->type() == Resource::STAGE) {
 					if (((StageResource *)(*resource))->stage() == queue->emptyingStage()) {
 						if (i < queue->size() - ((StageResource *)(*resource))->stage()->width() - 1) {
 							if (((StageResource *)(*resource))->slot() == ((StageResource *)(*resource))->stage()->width()-1) {
 								upper_bound = (StageResource *) (*resource);
-								upper_bound_offset = (queue->size() - i) / ((StageResource *)(*resource))->stage()->width();
+								//upper_bound_offset = (queue->size() - i) / ((StageResource *)(*resource))->stage()->width();
 							}
 						}
 						else {
 							if (((StageResource *)(*resource))->slot() == i - queue->size() + ((StageResource *)(*resource))->stage()->width()) {
 								upper_bound = (StageResource *) (*resource);
-								upper_bound_offset = 0;
+								//upper_bound_offset = 0;
 							}
 						}
 					}
 				}
 			}
 			assert(upper_bound);
+
+			// build the queue resource
 			QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound);
 			_resources.add(new_resource);
 		}
     }
+
+    // get the list of registers
     otawa::hard::Platform *pf = _ws->platform();
     AllocatedTable<Resource::input_t> inputs(pf->banks().count());
     int reg_bank_count = pf->banks().count();
@@ -502,6 +513,8 @@ void ParExeGraph::createResources(){
 			inputs[i]._resource_index->set(j,-1);
 		}
     }
+
+    // build the resource for the used registers
     for (InstIterator inst(_sequence) ; inst ; inst++) {
 		const elm::genstruct::Table<hard::Register *>& reads = inst->inst()->readRegs();
 	
@@ -535,6 +548,7 @@ void ParExeGraph::createResources(){
 		}	
     }
   
+    // build the resources for out-of-order execution
     if (is_ooo_proc) {
 		int i = 0;
 		for (InstIterator inst(_sequence) ; inst ; inst++) {
@@ -549,6 +563,8 @@ void ParExeGraph::createResources(){
 			i++;
 		}
     }
+
+    // clean up
     for(int i = 0; i <reg_bank_count ; i++) {
 		delete inputs[i]._is_input;
 		delete inputs[i]._resource_index;

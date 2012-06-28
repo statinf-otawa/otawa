@@ -53,7 +53,7 @@ namespace otawa {
 Segment::Segment(
 	CString name,
 	address_t address,
-	size_t size,
+	t::size size,
 	unsigned long flags)
 :	_flags(flags),
 	_name(name),
@@ -63,7 +63,7 @@ Segment::Segment(
 {
 	// Removed : segment with 0 size seems to be normal
 	// ASSERTP(size, "zero size segment");
-	for(size_t i = 0; i < MAP_SIZE(size); i++)
+	for(t::size i = 0; i < MAP_SIZE(size); i++)
 		map[i] = 0; 
 }
 

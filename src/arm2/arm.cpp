@@ -233,8 +233,9 @@ public:
 	Segment(Process& process,
 		CString name,
 		address_t address,
-		t::uint32 size)
-	: otawa::Segment(name, address, size, EXECUTABLE), proc(process) { }
+		t::uint32 size,
+		int flags = EXECUTABLE)
+	: otawa::Segment(name, address, size, flags), proc(process) { }
 
 protected:
 	virtual otawa::Inst *decode(address_t address);
@@ -363,7 +364,12 @@ public:
 			assert(sect);
 			gel_sect_infos(sect, &infos);
 			if(infos.vaddr != 0 && infos.size != 0) {
-				Segment *seg = new Segment(*this, infos.name, infos.vaddr, infos.size);
+				int flags = 0;
+				if(infos.flags & SHF_EXECINSTR)
+					flags |= Segment::EXECUTABLE;
+				if(infos.flags & SHF_WRITE)
+					flags |= Segment::WRITABLE;
+				Segment *seg = new Segment(*this, infos.name, infos.vaddr, infos.size, flags);
 				file->addSegment(seg);
 			}
 		}
@@ -373,31 +379,33 @@ public:
 		gel_enum_initpos(iter);
 		for(char *name = (char *)gel_enum_next(iter); name; name = (char *)gel_enum_next(iter)) {
 			ASSERT(name);
-			Address addr = Address::null;
-			Symbol::kind_t kind;
+
+			// get the symbol description
 			gel_sym_t *sym = gel_find_file_symbol(_file, name);
-			ASSERT(sym);
+			assert(sym);
 			gel_sym_info_t infos;
 			gel_sym_infos(sym, &infos);
+
+			// compute the kind
+			Symbol::kind_t kind = Symbol::NONE;
 			switch(ELF32_ST_TYPE(infos.info)) {
 			case STT_FUNC:
 				kind = Symbol::FUNCTION;
-				addr = Address(infos.vaddr);
 				break;
 			case STT_NOTYPE:
 				kind = Symbol::LABEL;
-				addr = Address(infos.vaddr);
+				break;
+			case STT_OBJECT:
+				kind = Symbol::DATA;
 				break;
 			default:
 				continue;
 			}
 
 			// Build the label if required
-			if(addr != Address::null) {
-				String label(infos.name);
-				Symbol *sym = new Symbol(*file, label, kind, addr);
-				file->addSymbol(sym);
-			}
+			String label(infos.name);
+			Symbol *symbol = new Symbol(*file, label, kind, infos.vaddr, infos.size);
+			file->addSymbol(symbol);
 		}
 		gel_enum_free(iter);
 

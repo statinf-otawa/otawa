@@ -22,14 +22,15 @@ class Symbol: public PropList {
 public:
 
 	typedef enum kind_t {
-		NONE,
-		FUNCTION,
-		LABEL
+		NONE = 0,
+		FUNCTION = 1,
+		LABEL = 2,
+		DATA = 3
 	} kind_t;
 
 	static Identifier<Symbol *> ID;
 
-	Symbol(File& file, String name, kind_t kind, address_t address, size_t size = 0);
+	Symbol(File& file, String name, kind_t kind, address_t address, t::size size = 0);
 	inline File& file(void) const { return _file; }
 	inline kind_t kind(void) const { return _kind; }
 	inline const String& name(void) const { return _name; }
