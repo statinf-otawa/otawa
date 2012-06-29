@@ -59,6 +59,8 @@ using namespace otawa::util;
 #define TRACESI(t)	t
 // Debug output with alarm of creation of T
 #define TRACEA(t)	t
+// Debug only the join function
+#define TRACEJ(t)	t
 #define STATE_MULTILINE
 
 // enable to load data from segments when load results with T
@@ -100,7 +102,7 @@ long gcd(long a, long b){
  * Return the lcm of two long integers
 */
 long lcm(long a, long b){
-	return abs(a * b) / gcd(a, b);
+	return elm::abs(a * b) / gcd(a, b);
 }
 
 /**
@@ -169,7 +171,7 @@ void Value::add(const Value& val){
 	else {										/* other cases */
 		uintn_t g = gcd(_delta, val._delta);
 		set(VAL, start() + val.start(), g,
-		    _mtimes * (abs(_delta) / g) + val._mtimes * (abs(val._delta) / g));
+		    _mtimes * (elm::abs(_delta) / g) + val._mtimes * (elm::abs(val._delta) / g));
 	}
 	if (needreverse){
 		reverse();
@@ -191,7 +193,7 @@ void Value::sub(const Value& val) {
 	else {										/* other cases */
 		uintn_t g = gcd(_delta, val._delta);
 		set(VAL, start() - val.stop(), g,
-			_mtimes * (abs(_delta) / g) + val._mtimes * (abs(val._delta) / g));
+			_mtimes * (elm::abs(_delta) / g) + val._mtimes * (elm::abs(val._delta) / g));
 	}
 	if (needreverse){
 		reverse();
@@ -297,12 +299,12 @@ void Value::join(const Value& val) {
 	else if (val._kind == NONE)					/* A U NONE = A (nothing to do) */
 		return;
 	else if (_delta == 0 && _mtimes == 0 && val.isConst()) /* k1 U k2 */
-		set(VAL, min(_lower, val._lower), abs(_lower - val._lower), 1);
+		set(VAL, min(_lower, val._lower), elm::abs(_lower - val._lower), 1);
 	else {										/* other cases */
-		uintn_t g = gcd(gcd(abs(start() - val.start()), _delta), val._delta);
+		uintn_t g = gcd(gcd(elm::abs(start() - val.start()), _delta), val._delta);
 		intn_t ls = min(start(), val.start());
-		int64_t u1 = (int64_t)start() + ((int64_t)abs(_delta))*(int64_t)_mtimes;
-		int64_t u2 = (int64_t)val.start() + ((int64_t)abs(val._delta))*(int64_t)val._mtimes;
+		int64_t u1 = (int64_t)start() + ((int64_t)elm::abs(_delta))*(int64_t)_mtimes;
+		int64_t u2 = (int64_t)val.start() + ((int64_t)elm::abs(val._delta))*(int64_t)val._mtimes;
 		int64_t umax;
 		if (u1 > u2)
 			umax = u1;
@@ -333,7 +335,7 @@ void Value::widening(const Value& val) {
 	// widen((k, 0, 0), (k', 0, 0)) = (min(k, k'), |k - k'|, 1)
 	else if (isConst() && val.isConst()) {
 		_lower = min(_lower, val._lower);
-		_delta = abs(_lower - val._lower);
+		_delta = elm::abs(_lower - val._lower);
 		_mtimes = 1;
 	}
 
@@ -345,9 +347,9 @@ void Value::widening(const Value& val) {
 	// widen((k', d', n'), (k, d, n)) = (stop(k, d, n), -D, -inf / D) with D = |d| if stop(k', d', n') = stop(k, d, n), 1 else
 	else if (val.start() <= start() && val.stop() <= stop()){
 		// go to negatives
-		intn_t absd = abs(_delta);
+		intn_t absd = elm::abs(_delta);
 		int startd = start() - val.start(), stopd = stop() - val.stop();
-		if(absd != abs(val.delta()) || (stopd != 0 && stopd != absd) || startd != absd)
+		if(absd != elm::abs(val.delta()) || (stopd != 0 && stopd != absd) || startd != absd)
 			absd = 1;
 		set(_kind, stop(), -absd, UMAXn / absd);
 	}
@@ -356,9 +358,9 @@ void Value::widening(const Value& val) {
 	// widen((k', d', n'), (k, d, n)) = (start(k', d', n'), D, -inf / D) with D = |d| if start(k', d', n') = start(k, d, n), 1 else
 	else if (val.start() >= start() && val.stop() >= stop()) {
 		// go the positive
-		intn_t absd = abs(_delta);
+		intn_t absd = elm::abs(_delta);
 		int startd = val.start() - start(), stopd = val.stop() - stop();
-		if(absd != abs(val.delta()) || (startd != 0 && startd != absd) || stopd != absd)
+		if(absd != elm::abs(val.delta()) || (startd != 0 && startd != absd) || stopd != absd)
 			absd = 1;
 		set(_kind, start(), absd, UMAXn / absd);
 	}
@@ -455,8 +457,8 @@ void Value::inter(const Value& val) {
 		return;
 	}
 	// 2.4. not overlapping intervals
-	uintn_t l2test = (sta2 - sta1) / abs(d1), m2test = (sto2 - sta1) / abs(d1),
-			l1test = (sta1 - sta2) / abs(d2), m1test = (sto1 - sta2) / abs(d2);
+	uintn_t l2test = (sta2 - sta1) / elm::abs(d1), m2test = (sto2 - sta1) / elm::abs(d1),
+			l1test = (sta1 - sta2) / elm::abs(d2), m1test = (sto1 - sta2) / elm::abs(d2);
 	
 	if (!(	( (0 <= l2test) && (l2test <= m1) ) ||
 			( (0 <= m2test) && (m2test <= m1) ) ||
@@ -532,7 +534,7 @@ void Value::inter(const Value& val) {
 	// 3.4. Research of a particular solution
 	bool solution_found = false;
 	long ip1p;
-	for(uintn_t i = 1; i < (uintn_t)abs(d2); i++){
+	for(uintn_t i = 1; i < (uintn_t)elm::abs(d2); i++){
 		if((d1 * i - 1) % d2 == 0){
 			ip1p = i;
 			solution_found = true;
@@ -1044,7 +1046,7 @@ bool State::equals(const State& state) const {
  * Merge a state with the current one.
 */
 void State::join(const State& state) {
-	TRACED(cerr << "join(\n\t"; print(cerr); cerr << ",\n\t";  state.print(cerr); cerr << "\n\t) = ");
+	TRACEJ(cerr << "join(\n\t"; print(cerr); cerr << ",\n\t";  state.print(cerr); cerr << "\n\t) = ");
 	
 	// test none states
 	if(state.first.val == Value::none)
@@ -1106,7 +1108,7 @@ void State::join(const State& state) {
 		delete cur;
 		cur = next;
 	}
-	TRACED(print(cerr); cerr << io::endl;);
+	TRACEJ(print(cerr); cerr << io::endl;);
 }
 
 /**

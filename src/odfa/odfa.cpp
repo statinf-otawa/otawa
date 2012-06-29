@@ -229,7 +229,7 @@ public:
 	before(*this, option::cmd, "--before", option::help, "display state before the BB", option::end),
 	after(*this, option::cmd, "--after", option::help, "display state after the BB", option::end),
 	sem(*this, option::cmd, "-s", option::cmd, "--sem", option::help, "display semantics instructions", option::end),
-	filter(*this, option::cmd, "-f", option::cmd, "--filter", option::help, "display filters", option::end),
+	filter(*this, option::cmd, "-F", option::cmd, "--filter", option::help, "display filters", option::end),
 	inits(*this, option::cmd, "-r", option::cmd, "--reg", option::help, "add an initialization register", option::arg_desc, "REGISTER=VALUE", option::end),
 	stats(*this, option::cmd, "-S", option::cmd, "--stats", option::help, "display statistics of the analysis", option::end),
 	cfg(*this, option::cmd, "-C", option::cmd, "--cfg", option::help, "dump the CFG in .dot format")
