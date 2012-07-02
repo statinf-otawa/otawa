@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#define HAI_DEBUG
 #include <math.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/prog/sem.h>
@@ -50,7 +51,7 @@ using namespace otawa::util;
 // Debug output for the domain
 #define TRACED(t)	//t
 // Debug output for the problem
-#define TRACEP(t)	t
+#define TRACEP(t)	//t
 // Debug output for Update function 
 #define TRACEU(t)	//t
 // Debug output for instructions in the update function
@@ -60,7 +61,7 @@ using namespace otawa::util;
 // Debug output with alarm of creation of T
 #define TRACEA(t)	t
 // Debug only the join function
-#define TRACEJ(t)	t
+#define TRACEJ(t)	//t
 #define STATE_MULTILINE
 
 // enable to load data from segments when load results with T
@@ -1568,7 +1569,7 @@ clp::Value readFromMem(clp::uintn_t address, int size) {
 			}
 		}
 		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
-			TRACEP(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
+			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
 			
 			_nb_inst++;
 			
@@ -1644,7 +1645,7 @@ clp::Value readFromMem(clp::uintn_t address, int size) {
 								// if the value loaded is T, load from the process
 								if(get(*state, i.d()) == clp::Value::all
 								&& addrclp.isConst()) {
-									cerr << "looking in memory for " << addrclp
+									cerr << "\t\t\tlooking in memory for " << addrclp
 										 << " in [" << _data_min << ", " << _data_max << "] "
 										 << ", problem = " << (void *)this << io::endl;
 									if(*_data_min <= (clp::uintn_t)addrclp.start()

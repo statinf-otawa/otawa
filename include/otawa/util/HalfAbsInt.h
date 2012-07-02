@@ -410,7 +410,9 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg,
         	HAI_TRACE("Processing " << current);
 
 			inputProcessing(*entdom);
+			HAI_TRACE("before update: " << in << "\n");
 			outputProcessing();
+			HAI_TRACE("after update: " << out << "\n");
 	}
 
         HAI_TRACE("==== HalfAbsInt solve() completed ====");
@@ -423,6 +425,7 @@ template <class FixPoint>
 inline typename FixPoint::Domain HalfAbsInt<FixPoint>::backEdgeUnion(BasicBlock *bb) {
         typename FixPoint::Domain result(fp.bottom());
 
+        HAI_TRACE("union of back edges\n");
         if (FIRST_ITER(bb)) {
         	/* If this is the first iteration, the back edge union is Bottom. */
         	return(result);
@@ -433,10 +436,12 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::backEdgeUnion(BasicBlock 
                 if (Dominance::dominates(bb, inedge->source())) {
                         typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
                         ASSERT(edgeState);
+                        HAI_TRACE("with " << *edgeState << io::endl);
                         fp.lub(result, *edgeState);
                 }
 
         }
+        HAI_TRACE("giving " << result << io::endl);
         return(result);
 }
 
@@ -446,6 +451,7 @@ template <class FixPoint>
 inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(BasicBlock *bb) {
         typename FixPoint::Domain result(fp.bottom());
 
+        HAI_TRACE("union of entry edges\n");
         for (BasicBlock::InIterator inedge(bb); inedge; inedge++) {
         		if (inedge->kind() == Edge::CALL)
             			continue;
@@ -454,6 +460,7 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(BasicBlock
                 if (!Dominance::dominates(bb, inedge->source())) {
                         typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
                         ASSERT(edgeState);
+                        HAI_TRACE("with " << *edgeState << io::endl);
                         fp.lub(result, *edgeState);
                 }
 
@@ -464,6 +471,7 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(BasicBlock
         	fp.lub(result, *bypassState);
         }
         fp.enterContext(result, bb, CTX_LOOP);
+        HAI_TRACE("giving " << result << io::endl);
         return(result);
 }
 

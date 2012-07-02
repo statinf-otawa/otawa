@@ -32,6 +32,12 @@
 #include <otawa/prop/PropList.h>
 #include <elm/genstruct/Vector.h>
 
+#ifdef HAI_DEBUG
+#	define HAIW_TRACE(t)	cerr << t;
+#else
+#	define HAIW_TRACE(t)
+#endif
+
 namespace otawa {
 
 template <class Listener>
@@ -118,10 +124,11 @@ void WideningFixPoint<Listener >::fixPoint(BasicBlock *bb, bool &fixpoint, Domai
 		fixpoint = false;
 		
 		
-		if (firstTime) {
+		if (firstTime)
 			assign(newHeaderState, ai->entryEdgeUnion(bb));
-		} else {
+		else {
 			assign(newHeaderState, fpstate->headerState);
+			HAIW_TRACE("before widening, state + 1: " << newHeaderState << io::endl);
 			prob.widening(newHeaderState, ai->backEdgeUnion(bb));
 
 			
@@ -131,6 +138,7 @@ void WideningFixPoint<Listener >::fixPoint(BasicBlock *bb, bool &fixpoint, Domai
 		
 		assign(fpstate->headerState, newHeaderState);
 		assign(in, newHeaderState);
+		HAIW_TRACE("after widening " << in << io::endl);
 	}
 	
 template < class Listener >	

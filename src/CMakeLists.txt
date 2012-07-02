@@ -61,6 +61,7 @@ endif()
 
 
 # Tools
+add_subdirectory(config)
 add_subdirectory(dumpcfg)
 add_subdirectory(mkff)
 add_subdirectory(odfa)
