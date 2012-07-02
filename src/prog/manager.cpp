@@ -39,7 +39,7 @@ using namespace elm;
 namespace otawa {
 
 // Private
-static String buildPaths(cstring kind, string paths) {
+String Manager::buildPaths(cstring kind, string paths) {
 	StringBuffer buf;
 	buf << "./.otawa/" << kind << elm::system::Path::PATH_SEPARATOR
 		<< elm::system::Path::home() << "/.otawa/" << kind << elm::system::Path::PATH_SEPARATOR;

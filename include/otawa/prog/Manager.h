@@ -68,6 +68,7 @@ public:
 	static const CString MEMORY_NAME;
 	static const cstring COMPILATION_DATE;
 	static elm::system::Path prefixPath(void);
+	static String buildPaths(cstring kind, string paths = "");
 
 	Manager(void);
 	~Manager(void);

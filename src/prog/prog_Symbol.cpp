@@ -58,7 +58,7 @@ Symbol::Symbol(
 	String name,
 	kind_t kind,
 	address_t address,
-	size_t size)
+	t::size size)
 :	_file(file),
 	_name(name),
 	_kind(kind),

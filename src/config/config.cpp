@@ -82,7 +82,7 @@ public:
 	};
 
 	virtual void adjust(::Configuration& config) {
-		config.libs << " -L "
+		config.libs << " -L"
 			<< config.prefix.append("lib/otawa/ilp") << " -l" << name();
 	}
 protected:
@@ -97,7 +97,7 @@ public:
 	};
 
 	virtual void adjust(::Configuration& config) {
-		config.libs << " -u" << name() << "_plugin -L "
+		config.libs << " -u" << name() << "_plugin -L"
 			<< config.prefix.append("lib/otawa/ilp") << " -l" << name();
 	}
 protected:
@@ -113,7 +113,7 @@ public:
 
 	Loader(const string& name): Module(name) { }
 	virtual void adjust(::Configuration& config) {
-		config.libs << " -u" << name() << "_plugin -L "
+		config.libs << " -u" << name() << "_plugin -L"
 			<< config.prefix.append("lib/otawa/loader") << " -l" << name();
 	}
 };
@@ -128,7 +128,7 @@ public:
 
 	Proc(const string& name): Module(name) { }
 	virtual void adjust(::Configuration& config) {
-		config.libs << " -L "
+		config.libs << " -L"
 			<< config.prefix.append("lib/otawa/proc").append(_path) << " -l" << name();
 	}
 private:
@@ -143,6 +143,7 @@ public:
 		data(*this, cmd, "--data", option::description, "output the OTAWA data path", end),
 		doc(*this, cmd, "--doc", option::description, "output the OTAWa document path", end),
 		has_so(*this, cmd, "--has-so", option::description, "exit with 0 if dynamic libraries are available, non-0 else", end),
+		help(*this, cmd, "-h", cmd, "--help", option::description, "display the help message", end),
 		ilp(*this, cmd, "--ilp", option::description, "list ILP solver plugins available", end),
 		libs(*this, cmd, "--libs", option::description, "output linkage C++ flags", end),
 		loader(*this, cmd, "--loader", option::description, "list loader plugins available", end),
@@ -176,6 +177,10 @@ public:
 
 		// perform the parse
 		this->parse(argc, argv);
+		if(help) {
+			displayHelp();
+			return;
+		}
 
 		// close the list of modules
 		genstruct::Vector<Module *> cmods;
@@ -203,7 +208,14 @@ public:
 		if(doc)
 			cout << config.prefix.append("share/Otawa/autodoc/index.html") << io::endl;
 		if(ilp)
-			showILP();
+			show("ilp");
+		if(loader)
+			show("loader");
+		if(procs)
+			show("proc");
+		if(modules)
+			for(HashTable<string, Module *>::Iterator mod(modmap); mod; mod++)
+				cout << '[' << mod->name() << "]\n" << mod->doc() << io::endl << io::endl;
 	}
 
 protected:
@@ -219,19 +231,20 @@ private:
 		modmap.put(mod->name(), mod);
 	}
 
-	void showILP(void) {
+	void show(cstring kind) {
 		system::Plugger plugger(
 			OTAWA_ILP_NAME,
 			OTAWA_ILP_VERSION,
-			config.prefix.append("lib/otawa/ilp"));
-		bool first = false;
+			otawa::Manager::buildPaths(kind));
+		bool first = true;
 		for(system::Plugger::Iterator plugin(plugger); plugin; plugin++) {
-			if(!first)
+			if(first)
 				first = false;
 			else
 				cout << ", ";
 			cout << *plugin;
 		}
+		cout << io::endl;
 	}
 
 	HashTable<string, Module *> modmap;
@@ -242,6 +255,7 @@ private:
 		data,
 		doc,
 		has_so,
+		help,
 		ilp,
 		libs,
 		loader,
@@ -251,6 +265,13 @@ private:
 		show_version;
 };
 
-int main(void) {
-
+int main(int argc, char **argv) {
+	try {
+		Config c;
+		c.run(argc, argv);
+	}
+	catch(OptionException& e) {
+		cerr << "ERROR: " << e.message() << io::endl;
+		return 1;
+	}
 }
