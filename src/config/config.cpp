@@ -43,7 +43,7 @@ public:
 	}
 
 	StringBuffer cflags, libs;
-	system::Path prefix;
+	elm::system::Path prefix;
 };
 
 // Module classes
@@ -232,12 +232,12 @@ private:
 	}
 
 	void show(cstring kind) {
-		system::Plugger plugger(
+		elm::system::Plugger plugger(
 			OTAWA_ILP_NAME,
 			OTAWA_ILP_VERSION,
 			otawa::Manager::buildPaths(kind));
 		bool first = true;
-		for(system::Plugger::Iterator plugin(plugger); plugin; plugin++) {
+		for(elm::system::Plugger::Iterator plugin(plugger); plugin; plugin++) {
 			if(first)
 				first = false;
 			else
