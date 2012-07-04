@@ -87,7 +87,6 @@ public:
 	),
 	params(*this, 'p', "param", "parameter passed to the script", "IDENTIFIER=VALUE"),
 	script(*this, 's', "script", "script used to compute WCET", "PATH", ""),
-	flowfacts(*this, option::cmd, "-f", option::cmd, "--flowfacts", option::help, "use the given to get flowfacts information", option::arg_desc, "PATH", option::end),
 	ilp_dump(*this, option::cmd, "-i", option::cmd, "--dump-ilp", option::help, "dump ILP system to stdandard output", option::end)
 	{ }
 
@@ -107,10 +106,6 @@ protected:
 			else
 				script::PARAM(props).add(pair(param.substring(0, idx), param.substring(idx + 1)));
 		}
-
-		// process flow facts
-		if(flowfacts)
-			FLOW_FACTS_PATH(props) = Path(flowfacts);
 
 		// launch the script
 		//Processor::VERBOSE(props) = true;
@@ -135,7 +130,6 @@ protected:
 private:
 	option::StringList params;
 	option::StringOption script;
-	option::ValueOption<string> flowfacts;
 	option::SwitchOption ilp_dump;
 	string bin, task;
 };
