@@ -44,7 +44,7 @@ namespace elm {
 	class HashKey<otawa::ilp::Var *> {
 	public:
 		static unsigned long hash(otawa::ilp::Var *v)
-			{ return (unsigned long)v; }
+			{ return t::intptr(v); }
 		static bool equals(otawa::ilp::Var *key1, otawa::ilp::Var *key2)
 			{ return key1 == key2; }
 	};
