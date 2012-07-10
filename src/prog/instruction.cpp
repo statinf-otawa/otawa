@@ -229,6 +229,14 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
 
 
 /**
+ * @fn  bool Inst::isAtomic(void);
+ * Test if the instruction is an atomic synchronization instruction, that is, performing
+ * an atomic read-write memory.
+ * @return True if it is an synchronization function.
+ */
+
+
+/**
  * @fn bool Inst::isMulti(void);
  * Test if the instruction is multi-memory accesss load / store.
  * @return	True if it is multi-memory accesses, false else.
