@@ -196,10 +196,10 @@ public:
 	virtual void semInsts (sem::Block &block);
 protected:
 	Process &proc;
+	kind_t _kind;
 
 private:
 	void decodeRegs(void);
-	kind_t _kind;
 	elm::genstruct::AllocatedTable<hard::Register *> in_regs;
 	elm::genstruct::AllocatedTable<hard::Register *> out_regs;
 	arm_address_t _addr;
@@ -645,10 +645,26 @@ arm_address_t BranchInst::decodeTargetAddress(void) {
 
 otawa::Inst *BranchInst::target() {
 	if (!isTargetDone) {
+		isTargetDone = true;
+
+		// try to decode the address
 		arm_address_t a = decodeTargetAddress();
 		if (a)
 			_target = process().findInstAt(a);
-		isTargetDone = true;
+
+		// else try to scan if it is a call
+		else if(size() == 4) {
+			otawa::Inst *prev = this->prevInst();
+			if(prev && prev->size() == 4) {
+				t::uint32 my_word, prev_word;
+				proc.get(address(), my_word);
+				proc.get(prev->address(), prev_word);
+				cerr << "DEBUG: looking for call at " << address() << ": " << io::hex(prev_word) << ", " << io::hex(my_word) << io::endl;
+				if((prev_word & 0x0fffffff) == 0x01a0e00f 					// test previous opcode
+				&& (prev_word & 0xf0000000) == (my_word & 0xf0000000))		// test same condition
+					_kind |= IS_CALL;
+			}
+		}
 	}
 	return _target;
 }

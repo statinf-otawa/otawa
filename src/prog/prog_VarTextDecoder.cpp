@@ -212,8 +212,8 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 			Inst *target = 0;
 			try {
 				target = inst->target();
-				if(!target)
-					continue;
+				/*if(!target)
+					continue;*/
 			}
 			catch(ProcessException& e) {
 				warn(elm::_ << e.message() << ": the branched code will not be decoded");
