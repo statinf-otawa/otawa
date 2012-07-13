@@ -81,7 +81,7 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 	for(Process::FileIter file(ws->process()); file; file++)
 		for(File::SymIter sym(file); sym; sym++)
 			if(sym->kind() == Symbol::FUNCTION) {
-				if(!IGNORE_ENTRY(sym)) {
+				if(IGNORE_ENTRY(sym)) {
 					if(isVerbose())
 						log << "\tignoring function symbol \"" << sym->name() << "\"\n";
 				}

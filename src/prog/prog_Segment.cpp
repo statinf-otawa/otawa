@@ -188,61 +188,46 @@ Inst *Segment::decode(address_t address) {
 void Segment::insert(ProgItem *item) {
 	ASSERTP(item->address() >= address() && item->address() < topAddress(),
 		"attempt to insert an item with out-of-bound address");
-	//cout << "Inserting item at " << item->address() << io::endl;
-	int index = MAP_INDEX(item->address());
-	//cerr << "insert(" << item->address() << ")\n";
-	//cerr << "index = " << index << "(" << MAP_BASE(index) << ")" << io::endl;
+
+	// compute map entry index
+	int index = MAP_INDEX(item->address()), init = index;
 	
-	// Empty map entry
+	// find first used entry for insertion
+	while(index > /*=*/ 0 && !map[index])
+		index--;
+
+	// find the insertion position
 	ProgItem *cur = map[index];
-	if(!cur) {
-		map[index] = item;
-		if(items.isEmpty()) {
-			items.addFirst(item);
-			return;
-		}
-		else {
-			do
-				index--;
-			while(index >= 0 && !map[index]);
-			if(index < 0) {
-				ASSERT(((ProgItem *)items.first())->address() > item->address());
-				items.addFirst(item);
-				return;
-			}
-		}
-		cur = map[index];
-		ASSERT(cur);
-	}
-	else if(item->address() < cur->address())
-		map[index] = item;
-		
-	// Find the position
 	while(cur && cur->address() < item->address()) {
 		ASSERT(cur->address() != item->address());
 		cur = cur->next();
 	}
-	if(!cur) {
-		ASSERT(((ProgItem *)items.last())->address() < item->address());
+
+	// end reached: add last
+	if(!cur)
 		items.addLast(item);
-	}
+
+	// perform insertion at this position
 	else {
-		//cerr << "=>" << item->topAddress() << " < " << cur->address() << io::endl;
-		if(item->topAddress() > cur->address())
+	
+		// check memory overriding
+		if(item->topAddress() > cur->address()) {
 			throw DecodingException(_
 				<< "instruction at " << item->address() << ':' << item->size()
 				<< " in middle of instruction at " << cur->address() << ':' << cur->size()
 				<< " before " << cur->previous()->address() << ':' << cur->previous()->size());
+		}
+
+		// insert the item
 		cur->insertBefore(item);
 	}
-	
-	// !!DEBUG!!
-	/*address_t prev;
-	for(ItemIter item(this); item; item++) {
-		//cerr << "> " << item->address() << io::endl;
-		ASSERT(item->address() > prev);
-		prev = item->address();
-	}*/
+
+	// initialize the entry if needed
+	if(!map[init] || cur == map[init])
+		map[init]= item;
+
+	ASSERT(!item->previous() || item->previous()->address() < item->address());
+	ASSERT(!item->next() || item->address() < item->next()->address());
 }
 
 }; // namespace otawa

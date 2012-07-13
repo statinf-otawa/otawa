@@ -4,7 +4,7 @@
 @VERSION=1
 @LANG=en_EN
 @ENCODING=utf-8
-@HTML_STYLES=css/manual.css
+@HTML_STYLES=../css/manual.css
 
 @include manual-install.thot
 @include manual-oipet.thot
