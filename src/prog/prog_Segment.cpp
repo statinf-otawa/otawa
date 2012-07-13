@@ -193,7 +193,7 @@ void Segment::insert(ProgItem *item) {
 	int index = MAP_INDEX(item->address()), init = index;
 	
 	// find first used entry for insertion
-	while(index > /*=*/ 0 && !map[index])
+	while(index > 0 && !map[index])
 		index--;
 
 	// find the insertion position
@@ -204,8 +204,12 @@ void Segment::insert(ProgItem *item) {
 	}
 
 	// end reached: add last
-	if(!cur)
-		items.addLast(item);
+	if(!cur) {
+		if(!map[index])
+			items.addFirst(item);
+		else
+			items.addLast(item);
+	}
 
 	// perform insertion at this position
 	else {

@@ -141,7 +141,7 @@ Inst *VarTextDecoder::getInst(WorkSpace *ws, otawa::address_t address, Inst *sou
 		return inst;
 	}
 	catch(otawa::DecodingException& e) {
-		log << "ERROR: " << e.message() << io::endl;
+		log << "WARNING: " << e.message() << io::endl;
 		return 0;
 	}
 }
@@ -162,7 +162,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 	VectorQueue<Inst *> todo(QUEUE_SIZE);
 	Inst *inst = getInst(workspace(), address);
 	if(!inst) {
-		log << "ERROR: bad function entry at " << address << io::endl;
+		log << "WARNING: bad function entry at " << address << io::endl;
 		return;
 	}
 	todo.put(inst);
@@ -204,7 +204,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 			todo.put(getInst(ws, inst->topAddress(), inst));
 			Inst *ti = getInst(ws, inst->topAddress(), inst);
 			if(!ti)
-				log << "ERROR: broken sequence from " << inst->address() << " to " <<  inst->topAddress() << io::endl;
+				log << "WARNING: broken sequence from " << inst->address() << " to " <<  inst->topAddress() << io::endl;
 			else
 				todo.put(ti);
 		}
@@ -228,7 +228,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 					one = true;
 					Inst *ti = getInst(ws, target, inst);
 					if(!ti) {
-						log << "ERROR: broken target from " << inst->address() << " to " << *target << io::endl;
+						log << "WARNING: broken target from " << inst->address() << " to " << *target << io::endl;
 						continue;
 					}
 					todo.put(ti);
@@ -241,7 +241,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 				TRACE("otawa::VarTextDecoder::processEntry: put(" << inst->topAddress() << ")");
 				Inst *ti = getInst(ws, inst->topAddress(), inst);
 				if(!ti) {
-					log << "ERROR: broken target from " << inst->address() << " to " << *target << io::endl;
+					log << "WARNING: broken target from " << inst->address() << " to " << *target << io::endl;
 					continue;
 				}
 				todo.put(ti);

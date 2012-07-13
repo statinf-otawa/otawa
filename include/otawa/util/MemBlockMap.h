@@ -27,7 +27,7 @@
 
 namespace otawa {
 
-size_t leastGreaterLog2(size_t x);
+t::size leastGreaterLog2(t::size x);
 
 // MemBlockMap class
 template <class T>
@@ -40,16 +40,16 @@ class MemBlockMap {
 	} node_t;
 
 public:
-	MemBlockMap(size_t block_size = 32, size_t table_size = 211)
+	MemBlockMap(t::size block_size = 32, t::size table_size = 211)
 	: pow(leastGreaterLog2(block_size)), bsize(1 << pow), tsize(table_size) {
 		nodes = new node_t *[tsize];
-		for(size_t i = 0; i < tsize; i++) nodes[i] = 0;
+		for(t::size i = 0; i < tsize; i++) nodes[i] = 0;
 	}
 
 	inline ~MemBlockMap(void) { clear(); delete [] nodes; }
 
 	void clear(void) {
-		for(size_t i = 0; i < tsize; i++) {
+		for(t::size i = 0; i < tsize; i++) {
 			for(node_t *cur = nodes[i], *next; cur; cur = next) {
 				next = cur->next;
 				delete cur;
@@ -60,17 +60,17 @@ public:
 
 	void add(const T *block) {
 		ASSERT(block->size());
-		size_t top = (block->topAddress().offset() - 1) >> pow;
+		t::size top = (block->topAddress().offset() - 1) >> pow;
 		if(top & (bsize - 1))
 			top++;
-		for(size_t ptr = block->address().offset() >> pow; ptr <= top; ptr++) {
-			size_t entry = ptr % tsize;
+		for(t::size ptr = block->address().offset() >> pow; ptr <= top; ptr++) {
+			t::size entry = ptr % tsize;
 			nodes[entry] = new node_t(block, nodes[entry]);
 		}
 	}
 
 	const T *get(Address address) {
-		size_t entry = (address.offset() >> pow) % tsize;
+		t::size entry = (address.offset() >> pow) % tsize;
 		for(node_t *node = nodes[entry]; node; node = node->next)
 			if(address >= node->block->address() && address < node->block->topAddress())
 				return node->block;
@@ -78,7 +78,7 @@ public:
 	}
 
 private:
-	size_t pow, bsize, tsize;
+	t::size pow, bsize, tsize;
 	node_t **nodes;
 };
 

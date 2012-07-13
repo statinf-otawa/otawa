@@ -29,12 +29,12 @@ namespace otawa {
  * @param x	Value to get LGL2.
  * @return	LGL2 of x.
  */
-size_t leastGreaterLog2(size_t x) {
+t::size leastGreaterLog2(t::size x) {
 	if(x == 0)
 		return 0;
-	size_t off = 0, mask = 0xffff, cnt = 16;
+	t::size off = 0, mask = 0xffff, cnt = 16;
 	while(cnt != 0) {
-		size_t fmask = mask << (off + cnt);
+		t::size fmask = mask << (off + cnt);
 		if(x & fmask)
 			off += cnt;
 		cnt >>= 1;
@@ -56,6 +56,7 @@ size_t leastGreaterLog2(size_t x) {
  * 		Address address(void) const;
  * 		Address topAddress(void) const;
  * 		size_t size(void) const;
+ * };
  * @endcode
  *
  * @param T	Type of stored memory blocks.

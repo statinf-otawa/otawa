@@ -176,7 +176,7 @@ int Application::run(int argc, char **argv) {
 
 		// if required, load the flowfacts
 		if(ff)
-			require(FLOW_FACTS_FEATURE);
+			ws->require(FLOW_FACTS_FEATURE);
 
 		// do the work
 		work(props);
