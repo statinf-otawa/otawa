@@ -1,0 +1,127 @@
+====== Development of Loader ======
+
+OTAWA supports different API thanks to a plugin mechanism and to an //architecture abstraction layer//.
+Developing a loader is mainly providing actual implementation of this layer
+for a particular ISA.
+
+===== The Architecture Abstraction Layer =====
+
+==== Overview ====
+
+{{ otawa-overview.png }}
+
+As shown in the figure above, this layer allows to make
+analysis implemented on OTAWA independent of the actual
+architecture of the processed program. This does not mean
+that the analyzes cannot be aware of the particular properties
+of the processed program but that they do not have to be tuned
+for a particular microprocessor. Yet, the analyzes can have
+as many information as required from the actual form of the
+processed program.
+
+The architecture //architecture abstraction layer// is mainly
+formed of two parts:
+  * a set of objects describing program image in memory, the files, the symbols and the instructions,
+  * a translator to get semantics of the actual instruction set expressed in a language of semantics instructions.
+
+==== Abstraction Objects ====
+
+The UML diagram below describes the classes and the relationship of C++ objects involved in the //architecture description layer//.
+
+{{ aal-uml.png }}
+
+The root class of the //architecture abstract layer// is the ''Process'' that represents the program ready to run in memory.
+It contains all information about the program in memory (start instruction, platform, file composing the memory image) with other information provided in the executable files like
+debugging information (matches between source lines and memory addresses). The ''Process'' is the root result of a loader work.
+
+In addition, the ''Process'' contains also information about the programming model of the architecture thanks to the ''Platform'' object:
+mainly, the list of register banks with their description.
+
+From the ''Process'', one can get the list of executable file composing the program image in memory. Although most OTAWA loader,
+at this time, only supported application made of a monolithic executable file, the framework is able to cope with processes
+made of several file: at least one ''program'' file and possibly several library files.
+
+The files, in turn, contains bits composing the program image in memory, called the ''Segments'' but also more functional information,
+the ''Symbol''. The ''Symbol''s matches any object with a name produced by the compiler, that is, function, data, labels, etc. The symbols
+may occupy a place in the memory (defined by its address and its size) or not (constants values, compiler or OS internal symbols).
+
+The ''Segment'' objects represents slices of memory sharing common properties. They may be initialized or not. Closer concepts
+from the ELF file format are either sections, or program headers. Whatever, a ''Segment'' has usually a name, an address, asize
+and may be executable or writable. They are composed of ''ProgItem'' object.
+
+
+A ''ProgItem'' object represents any atomic entity in the program, mainly, instructions and data items. The current version
+of OTAWA only supports instructions, ''Inst'' class, but next versions may be able to recognize data and add representation objects.
+Whatever, a program item is identified by its address and its size.
+
+Specializing the ''ProgItem'' class, the ''Inst'' objects represents the actual machine instructions of the architecture.
+The role of these objects is to give an abstract description of machine instructions as precise as possible to let higher level
+analyzes to work with the instruction. An ''Inst'' object have the following interface:
+  * ''dump'' - allows to get a textual representation (useful for debugging or for user output),
+  * ''kind'' - information about the nature of the instructions,
+  * ''readRegs'' - set of read registers,
+  * ''writtenRegs'' - set of written registers,
+  * ''target'' - when the instruction is a control, the target of the branch,
+  * ''semInsts'' - translate the instruction into semantics instruction.
+
+The ''kind'' allows to identify the type of an instruction whatever the used instruction set. It is composed of a bit vector
+with each bit giving a specific information:
+  * ''IS_COND'' - set if the instruction is conditional,
+  * ''IS_CONTROL'' - set if the instruction performs a branch, that is, changes the PC,
+    * ''IS_CALL'' - set if the instruction is a sub-program call (ever induces ''IS_CONTROL'' to be set),
+    * ''IS_RETURN'' - set if the instruction is sub-program return (ever induces ''IS_CONTROL'' to be set),
+    * ''IS_TRAP'' - set if the instruction performs a system trap like exception or system call (ever induces ''IS_CONTROL'' to be set),
+  * ''IS_MEM'' - set if the instruction performs memory access,
+    * ''IS_LOAD'' - set if the instruction performs memory load (ever induces ''IS_MEM'' to be set),
+    * ''IS_STORE'' - set if the instruction performs memory store (ever induces ''IS_MEM'' to be set),
+    * ''IS_MULTI'' - set if the instruction performs multiple memory accesses of the same type (ever induces ''IS_MEM'' to be set), 
+  * ''IS_INT'' - set if the instruction handles integer,
+  * ''IS_FLOAT'' - set if the  instruction handles floats,
+  * ''IS_ALU'' - set if the instruction performs arithmetic or logic operations,
+  * ''IS_MUL'' - set if the instruction performs multiplication operation,
+  * ''IS_DIV'' - set if the instruction performs division operation,
+  * ''IS_SHIFT'' - set if the instructions performs shift operation,
+  * ''IS_INTERN'' - set if the instructions performs operation internal to the microprocessor (hardware driving),
+  * ''IS_SPECIAL'' - set if the instruction is unusual (often found in old CISC ISA).
+
+A lot of facilities provided by the //architecture abstraction layer// are optional and the analyzes must be able to handle it:
+either assuming worst case configuration, or aborting the analysis. Whatever, each information availability
+is represented by a specific feature put on the ''Process'' and included in the ''WorkSpace'':
+  *	''MEMORY_ACCESS_FEATURE'' -- analyzes can read integer values in the process memory,
+  * ''FLOAT_MEMORY_ACCESS_FEATURE'' -- analyzes can read float values in the process memory,
+  * ''REGISTER_USAGE_FEATURE'' -- ensures that read and written registers are available,
+  * ''CONTROL_DECODING_FEATURE'' -- ensures that the control instruction target is decoded,
+  * ''SOURCE_LINE_FEATURE'' -- ensures that the source/line debugging information is available,
+  * ''SEMANTICS_INFO'' -- ensures that the semantics instruction translation is provided,
+  * ''DELAYED_FEATURE'' -- means that information about delayed control is provided,
+  * ''SEMANTICS_INFO_EXTENDED'' - means that the semantics instructions extension is available (multiplication, division, binary operations),
+  * ''SEMANTICS_INFO_FLOAT'' - means that the semantics instructions supports float operations.
+
+
+
+==== Semantics Instructions ====
+
+Semantics instructions provides a way to cope with the functional behavior of the instructions.
+Basically, the semantics instructions is a minimal regular instructions set including usual operations
+with the following features:
+  * the control flow is bound to a conditional instruction (no loop can be created),
+  * the memory operations are only performed by two specific instruction,
+  * the instructions can either use registers, or temporaries (not involved in the program state),
+  * constant values can only be processed through a specific instruction, ''seti'',
+  * the comparison instructions can only produces results based on inequality operators,
+  * as it is impossible, without adding a lot of complexity, to cope with any machine instruction, a specific one, ''scratch'', can inform that a result is unknown.
+
+The goal of this language is to make possible data flow analysis of the program, that is static analyzes like abstract interpretation.
+As such analyzes may have polynomial complexity, the interpretation must be as fast as possible. Therefore, the semantics instructions
+cannot create loops to avoid to have to compute fix points on the translation of the instruction. The idea is that the control flow
+is viewable inside the instruction but the control flow of the program is handled at an upper level (in the Control Flow Graph for example).
+
+The only conditional instruction, ''if''(//c//, //r//, //s//) allows to have several parallel interpretation paths but no loop. It means that
+if the condition //c// is true in register //r//, the interpretation path continue, else //s// instructions must be skipped. The misnamed
+instructions ''branch'' or ''trap'' means the instruction is performing a branch instruction here 
+
+
+===== Developing a Loader =====
+
+
+===== Developing a Loader with GLISS2 =====
