@@ -23,8 +23,8 @@ extern int ipet_line;
 %option prefix="ipet_"
 %option outfile="lex.yy.c"
 
-DEC		[1-9][0-9]+
-OCT		0[0-9]*
+DEC		[1-9][0-9]*
+OCT		0[0-9]+
 HEX		0[xX][a-fA-F0-9]+
 BIN		0[bB][01]+
 ID		[a-zA-Z_][a-zA-Z_0-9]*
@@ -50,6 +50,7 @@ COM		#.*\n
 [<>=]		return *yytext;
 [+\-*/()]	return *yytext;
 
+0			ipet_lval.integer = 0; return INTEGER;
 {DEC}		ipet_lval.integer = strtol(yytext, 0, 10); return INTEGER;
 {OCT}		ipet_lval.integer = strtol(yytext + 1, 0, 8); return INTEGER;
 {HEX}		ipet_lval.integer = strtoul(yytext + 2, 0, 16); return INTEGER;
