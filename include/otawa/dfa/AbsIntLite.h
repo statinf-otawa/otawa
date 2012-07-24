@@ -37,10 +37,8 @@ template <class G, class T>
 class AbsIntLite {
 public:
 
-	inline AbsIntLite(const G& graph, const T& domain): g(graph), d(domain) {
+	inline AbsIntLite(const G& graph, T& domain): g(graph), d(domain), set(g.count()) {
 		vals = new typename T::t[g.count()];
-		for(int i = 0; i < g.count(); i++)
-			d.set(vals[i], d.bottom());
 	}
 
 	inline void push(typename G::Vertex v) {
@@ -58,10 +56,15 @@ public:
 
 	inline void process(void) {
 
+		// set all values to bottom
+		for(int i = 0; i < g.count(); i++)
+			d.set(vals[i], d.bottom());
+
 		// initialization
-		set.resize(g.count());
 		d.set(vals[g.index(g.entry())], d.initial());
 		OTAWA_AILD(cerr << "INITIAL: " << g.entry() << ": " << vals[g.index(g.entry())] << io::endl);
+
+		// first step
 		for(typename G::Iterator v(g); v; v++)
 			if(v != g.entry())
 				step(v);
@@ -112,9 +115,21 @@ public:
 		return vals[g.index(v)];
 	}
 
+	class DomainIter: public PreIterator<DomainIter, typename T::t &> {
+	public:
+		inline DomainIter(const AbsIntLite& _ail): ail(_ail), i(-1) { }
+		inline DomainIter(const DomainIter& iter): ail(iter.ail), i(iter.i) { }
+		inline bool ended(void) const { return i >= ail.g.count(); }
+		inline void next(void) { i++; }
+		inline typename T::t& item(void) { if(i == -1) return tmp; else return vals[i]; }
+	private:
+		const AbsIntLite& ail;
+		int i;
+	};
+
 private:
 	const G& g;
-	T d;
+	T& d;
 	typename T::t *vals;
 	typename T::t tmp;
 	genstruct::VectorQueue<typename G::Vertex> todo;
