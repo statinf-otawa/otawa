@@ -28,17 +28,20 @@ set(GLISS_ATTR	"${CMAKE_SOURCE_DIR}/../gliss2/gep/gliss-attr")
 add_custom_command(
 	OUTPUT ${OTAWA_KIND} DEPENDS "otawa_kind.tpl" "otawa_kind.nmp" ${IRG}
 	COMMAND ${GLISS_ATTR}
-	ARGS ${IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "otawa_kind.tpl" -d "return 0\\;" -e otawa_kind.nmp
+	ARGS ${IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "otawa_kind.tpl" -d "return 0;" -e otawa_kind.nmp
+	VERBATIM
 )
 add_custom_command(
 	OUTPUT ${OTAWA_TARGET} DEPENDS "otawa_target.tpl" "otawa_target.nmp" ${IRG}
 	COMMAND ${GLISS_ATTR}
-	ARGS ${IRG} -o ${OTAWA_TARGET} -a otawa_target -f -t "otawa_target.tpl" -d "return 0\\;" -e otawa_target.nmp
+	ARGS ${IRG} -o ${OTAWA_TARGET} -a otawa_target -f -t "otawa_target.tpl" -d "return 0;" -e otawa_target.nmp
+	VERBATIM
 )
 add_custom_command(
 	OUTPUT ${OTAWA_SEM} DEPENDS "otawa_sem.tpl" "otawa_sem.nmp" ${IRG}
 	COMMAND ${GLISS_ATTR}
-	ARGS ${IRG} -o ${OTAWA_SEM} -a otawa_sem -p -t "otawa_sem.tpl" -d "';'" -e otawa_sem.nmp
+	ARGS ${IRG} -o ${OTAWA_SEM} -a otawa_sem -p -t "otawa_sem.tpl" -d ";" -e otawa_sem.nmp
+	VERBATIM
 )
 
 
