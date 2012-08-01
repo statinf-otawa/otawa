@@ -3,7 +3,7 @@
  *	Script processor interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2009, IRIT UPS.
+ *	Copyright (c) 2009-12, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -33,6 +33,36 @@ namespace elm { namespace xom {
 
 namespace otawa { namespace script {
 
+// ScriptItem class
+class ScriptItem {
+public:
+	typedef enum {
+		T_BOOL = 0,
+		T_INT = 1,
+		T_STRING = 2,
+		T_RANGE = 3,
+		T_ENUM = 4,
+		T_MAX = 5
+	} type_t;
+
+	static cstring type_labels[];
+
+	static ScriptItem *parse(xom::Element& elt);
+
+	virtual ~ScriptItem(void);
+	virtual string makeParam(const string& value);
+
+	string name;
+	type_t type;
+	string deflt;
+	string label;
+	string help;
+
+protected:
+	ScriptItem(type_t t, xom::Element& elt);
+};
+
+
 // Script class
 class Script: public Processor, public ErrorHandler {
 public:
@@ -42,6 +72,12 @@ public:
 	static Registration<Script> reg;
 
 	virtual void onError(error_level_t level, const string &message);
+
+	class ItemIter: public genstruct::Vector<ScriptItem *>::Iterator {
+	public:
+		inline ItemIter(Script& script)
+			: genstruct::Vector<ScriptItem *>::Iterator(script.items) { }
+	};
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
@@ -53,6 +89,8 @@ private:
 	void makeConfig(xom::Element *elem, PropList& props);
 	elm::system::Path path;
 	PropList props;
+	genstruct::Vector<ScriptItem *> items;
+	bool only_config;
 };
 
 // script path
@@ -60,6 +98,7 @@ extern Identifier<elm::system::Path> PATH;
 extern Identifier<Pair<string, string> > PARAM;
 extern Identifier<xom::Element *> SCRIPT;
 extern Identifier<xom::Element *> PLATFORM;
+extern Identifier<bool> ONLY_CONFIG;
 
 } } // otawa::script
 

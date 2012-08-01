@@ -688,15 +688,13 @@ void FlowFactLoader::onNoReturn(String name) {
 /**
  * Get the address of the given label.
  * @param label					Label to look for.
- * @return						Matching address.
- * @throw ProcessorException	If the label cannot be found.
+ * @return						Matching address or null address if not found.
  */
 Address FlowFactLoader::addressOf(const string& label) {
 	Address res = _fw->process()->findLabel(label);
 	if(res.isNull())
-		onError(_ << "label \"" << label << "\" does not exist.");
-	else
-		return res;
+		onWarning(_ << "label \"" << label << "\" does not exist.");
+	return res;
 }
 
 
@@ -869,15 +867,24 @@ throw(ProcessorException) {
 				scanXFun(element, cpath);
 			else if(name == "noreturn") {
 				Address addr = scanAddress(element, cpath);
-				onNoReturn(addr);
+				if(!addr.isNull())
+					onNoReturn(addr);
+				else
+					onWarning(_ << "ignoring this because its address cannot be determined: " << xline(element));
 			}
 			else if(name == "return") {
 				Address addr = scanAddress(element, cpath);
-				onReturn(addr);
+				if(!addr.isNull())
+					onReturn(addr);
+				else
+					onWarning(_ << "ignoring this because its address cannot be determined: " << xline(element));
 			}
 			else if(name == "nocall") {
 				Address addr = scanAddress(element, cpath);
-				onNoCall(addr);
+				if(!addr.isNull())
+					onNoCall(addr);
+				else
+					onWarning(_ << "ignoring this because its address cannot be determined: " << xline(element));
 			}
 			else if(name == "flowfacts")
 				scanXBody(element, cpath);
@@ -900,11 +907,20 @@ throw(ProcessorException) {
  * @param cpath		contextual path
  */
 void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpath) {
-	Address control =scanAddress(element, cpath);
+	Address control = scanAddress(element, cpath);
+	if(control.isNull()) {
+		onWarning(_ << "multibranch ignored at " << xline(element));
+		return;
+	}
 	genstruct::Vector<Address> targets;
 	xom::Elements *items = element->getChildElements("target");
-	for(int i = 0; i < items->size(); i++)
-		targets.add(scanAddress(items->get(i), cpath));
+	for(int i = 0; i < items->size(); i++) {
+		Address target = scanAddress(items->get(i), cpath);
+		if(target.isNull())
+			onWarning(_ << "target of multibranch ignored at " << xline(items->get(i)));
+		else
+			targets.add();
+	}
 	delete items;
 	this->onMultiBranch(control, targets);
 }
@@ -916,11 +932,20 @@ void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpat
  * @param cpath		contextual path
  */
 void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath) {
-	Address control =scanAddress(element, cpath);
+	Address control = scanAddress(element, cpath);
+	if(control.isNull()) {
+		onWarning(_ << "multicall ignored at " << xline(element));
+		return;
+	}
 	genstruct::Vector<Address> targets;
 	xom::Elements *items = element->getChildElements("target");
-	for(int i = 0; i < items->size(); i++)
-		targets.add(scanAddress(items->get(i), cpath));
+	for(int i = 0; i < items->size(); i++) {
+		Address target = scanAddress(items->get(i), cpath);
+		if(target.isNull())
+			onWarning(_ << "target of multicall ignored at " << xline(items->get(i)));
+		else
+			targets.add();
+	}
 	delete items;
 	this->onMultiCall(control, targets);
 }
@@ -945,8 +970,13 @@ throw(ProcessorException) {
 	}
 
 	// or an address
-	else
+	else {
 		addr = scanAddress(element, path);
+		if(addr.isNull()) {
+			onWarning(_ << "ignoring this function whose address cannot be found: "<< xline(element));
+			return;
+		}
+	}
 
 	// get the address
 	Inst *inst = _fw->process()->findInstAt(addr);
@@ -976,6 +1006,10 @@ void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) thro
 
 		// get the address
 		Address addr = scanAddress(element, path);
+		if(addr.isNull()) {
+			onWarning(_ << "ignoring this call whose address cannot be found: " << xline(element));
+			return;
+		}
 		Inst *inst = _fw->process()->findInstAt(addr);
 		if(!inst)
 			throw ProcessorException(*this,
@@ -993,6 +1027,10 @@ void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) thro
 
 		// get the address
 		Address addr = scanAddress(element, path);
+		if(addr.isNull()) {
+			onWarning(_ << "ignoring this call whose address cannot be found: " << xline(element));
+			return;
+		}
 		Inst *inst = _fw->process()->findInstAt(addr);
 		if(!inst)
 			throw ProcessorException(*this,
@@ -1020,8 +1058,10 @@ throw(ProcessorException) {
 
 	// get the address
 	Address addr = scanAddress(element, path);
-	if(addr.isNull())
+	if(addr.isNull()) {
+		onWarning(_ << "ignoring this loop whose address cannot be computed: " << xline(element));
 		return;
+	}
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
 		throw ProcessorException(*this,
@@ -1043,6 +1083,7 @@ throw(ProcessorException) {
  * Retrieve the address of an element (function, loop, ...) from its XML element.
  * @param element	Element to scan in.
  * @param path		Context path.
+ * @return			Address of the element or null if there is an error.
  */
 Address FlowFactLoader::scanAddress(xom::Element *element, ContextualPath& path)
 throw(ProcessorException) {
@@ -1054,10 +1095,10 @@ throw(ProcessorException) {
 
 	// look for "name" and "offset
 	Option<xom::String> val = element->getAttributeValue("label");
-	/*if(!val)
-		val = element->getAttributeValue("name");*/
 	if(val) {
 		Address addr = addressOf(*val);
+		if(addr.isNull())
+			return Address::null;
 		Option<long> offset = scanInt(element, "offset");
 		return addr + (int)(offset ? *offset : 0);
 	}

@@ -175,8 +175,10 @@ int Application::run(int argc, char **argv) {
 		ws = MANAGER.load(path, props);
 
 		// if required, load the flowfacts
-		if(ff)
-			ws->require(FLOW_FACTS_FEATURE);
+		if(ff) {
+			otawa::FLOW_FACTS_PATH(props) = Path(ff);
+			ws->require(FLOW_FACTS_FEATURE, props);
+		}
 
 		// do the work
 		work(props);

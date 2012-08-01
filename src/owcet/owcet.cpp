@@ -87,7 +87,8 @@ public:
 	),
 	params(*this, 'p', "param", "parameter passed to the script", "IDENTIFIER=VALUE"),
 	script(*this, 's', "script", "script used to compute WCET", "PATH", ""),
-	ilp_dump(*this, option::cmd, "-i", option::cmd, "--dump-ilp", option::help, "dump ILP system to stdandard output", option::end)
+	ilp_dump(*this, option::cmd, "-i", option::cmd, "--dump-ilp", option::help, "dump ILP system to stdandard output", option::end),
+	list(*this, option::cmd, "--list", option::help, "list configuration items", option::end)
 	{ }
 
 protected:
@@ -107,12 +108,50 @@ protected:
 				script::PARAM(props).add(pair(param.substring(0, idx), param.substring(idx + 1)));
 		}
 
+		// look for the script
+		Path path = *script;
+		if(!path.exists() && !path.isAbsolute()) {
+			Path file = *script;
+			if(file.extension() != "osx")
+				file = file.setExtension("osx");
+			bool found = false;
+			string paths = MANAGER.buildPaths("../../share/Otawa/scripts", "");
+			for(Path::PathIter p(paths); p; p++) {
+				path = Path(*p) / file;
+				if(isVerbose())
+					cerr << "INFO: looking script in directory " << *p << io::endl;
+				if(path.exists()) {
+					found = true;
+					break;
+				}
+			}
+			if(!found)
+				throw elm::option::OptionException(_ << "cannot find script " << *script);
+		}
+		if(this->isVerbose())
+			cerr << "INFO: using script from " << path << io::endl;
+
 		// launch the script
-		//Processor::VERBOSE(props) = true;
+		if(list)
+			script::ONLY_CONFIG(props) = true;
 		TASK_ENTRY(props) = entry;
-		script::PATH(props) = *script;
+		script::PATH(props) = path;
 		script::Script scr;
 		scr.process(workspace(), props);
+
+		// process the list option
+		if(list) {
+			cerr << "CONFIGURATION OF " << *script << io::endl;
+			for(script::Script::ItemIter item(scr); item; item++) {
+				cerr << "* item " << item->name << ": " << script::ScriptItem::type_labels[item->type];
+				if(item->deflt)
+					cerr << " (" << item->deflt << ")";
+				cerr << io::endl;
+				if(item->help)
+					cerr << item->help;
+				cerr << io::endl;
+			}
+		}
 
 		// display the result
 		otawa::time_t wcet = ipet::WCET(workspace());
@@ -131,6 +170,7 @@ private:
 	option::StringList params;
 	option::StringOption script;
 	option::SwitchOption ilp_dump;
+	option::SwitchOption list;
 	string bin, task;
 };
 

@@ -70,7 +70,7 @@ Identifier<String> FUNCTION_LABEL("otawa::FUNCTION_LABEL", "");
 address_t File::findLabel(const String& label) {
 	Symbol *sym = syms.get(label, 0);
 	if(!sym)
-		return 0;
+		return Address::null;
 	else
 		return sym->address();
 }

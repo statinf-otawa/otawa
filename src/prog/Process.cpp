@@ -213,7 +213,7 @@ const hard::CacheConfiguration& Process::cache(void) {
  * @return			Found address or null.
  */
 address_t Process::findLabel(const string& label) {
-	address_t result = 0;
+	address_t result = Address::null;
 	for(FileIter file(this); file; file++) {
 		//cerr << "Looking at " << file->name() << io::endl;
 		result = file->findLabel(label);

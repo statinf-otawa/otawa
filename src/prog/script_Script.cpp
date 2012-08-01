@@ -44,7 +44,133 @@ using namespace elm;
 
 namespace otawa { namespace script {
 
+class ParseError: public otawa::Exception {
+public:
+	inline ParseError(const string& msg): otawa::Exception(msg) { }
+};
+
 static const cstring XSL_URI = "http://www.w3.org/1999/XSL/Transform";
+
+
+/**
+ * Label matching the scripts (as passed in XML item elements).
+ */
+cstring ScriptItem::type_labels[] = {
+	"bool",
+	"int",
+	"string",
+	"range",
+	"enum",
+	""
+};
+
+/**
+ * @class ScriptItem
+ * These objects represents the item of the configuration
+ * of a script.
+ */
+
+
+/**
+ * Called to generate the string of parameter value
+ * before passing it to the XSLT processor. The result
+ * must be an XPath valid expression.
+ * @param value		Value of the parameter.
+ * @return			XPath expression representing the parameter value.
+ */
+string ScriptItem::makeParam(const string& value) {
+	return value;
+}
+
+
+/**
+ * Protected constructor.
+ */
+ScriptItem::ScriptItem(type_t t, xom::Element& elt):	type(t) {
+
+	// parse items
+	Option<xom::String> v = elt.getAttributeValue("name");
+	if(v)
+		name = v;
+	v = elt.getAttributeValue("default");
+	if(v)
+		deflt = v;
+	v = elt.getAttributeValue("label");
+	if(v)
+		label = v;
+	xom::Element *help_elem = elt.getFirstChildElement("help");
+	if(help_elem)
+		help = help_elem->getValue();
+}
+
+
+/**
+ */
+ScriptItem::~ScriptItem(void) {
+}
+
+
+// StringItem class
+class StringItem: public ScriptItem {
+public:
+
+	StringItem(xom::Element& elt): ScriptItem(T_STRING, elt) { }
+
+	virtual string makeParam(const string& value) {
+		StringBuffer buf;
+		buf << '"';
+		int p = value.indexOf('"');
+		while(p >= 0) {
+			buf << value.substring(0, p);
+			buf << "&quot;";
+			p = value.indexOf('"', p + 1);
+		}
+		buf << p;
+		buf << '"';
+		return buf.toString();
+	}
+
+};
+
+
+// BoolItem class
+class BoolItem: public ScriptItem {
+public:
+	BoolItem(xom::Element& elt): ScriptItem(T_BOOL, elt) { }
+
+	virtual string makeParam(const string& value) {
+		if(value == "true")
+			return "1";
+		else if(value == "false")
+			return "0";
+		else
+			return value;
+	}
+};
+
+
+/**
+ * Parse an XML element to build the matching script item.
+ * @param elt	Element to parse.
+ * @return		Built element.
+ * @throw		ParseError	If there is an error.
+ */
+ScriptItem *ScriptItem::parse(xom::Element& elt) {
+	Option<xom::String> v = elt.getAttributeValue("type");
+	if(!v)
+		throw ParseError("no type");
+	if(*v == "string")
+		return new StringItem(elt);
+	else if(*v == "bool")
+		return new BoolItem(elt);
+	else {
+		for(int i = 0; i < T_MAX; i++)
+			if(*v == type_labels[i])
+				return new ScriptItem(type_t(i), elt);
+		throw ParseError(_ << "unknown type " << *v);
+	}
+}
+
 
 // Registration
 Registration<Script> Script::reg(
@@ -74,8 +200,9 @@ private:
  * Its documentation may be found in module documentation.
  *
  * @par Configuration
- * @li @ref PATH	path to the script file to load
- * @li @ref PARAM	parameter for the script interpretation
+ * @li @ref PATH			path to the script file to load
+ * @li @ref PARAM			parameter for the script interpretation
+ * @li @ref ONLY_CONFIG		cause the processor to stop its work after the configuration item building (no XSLT processing)
  *
  * @par Properties
  * This processor initialize the following properties before passing them
@@ -97,6 +224,7 @@ void Script::configure(const PropList &props) {
 	Processor::configure(props);
 	path = PATH(props);
 	this->props = props;
+	only_config = ONLY_CONFIG(props);
 }
 
 
@@ -141,6 +269,26 @@ void Script::work(WorkSpace *ws) {
 	elm::system::Path initial_base = doc->getBaseURI();
 	initial_base = initial_base.parent().absolute();
 
+	// build the script items
+	items.clear();
+	xom::Element *oroot = doc->getRootElement();
+	xom::Element *conf = oroot->getFirstChildElement("configuration");
+	if(conf) {
+		xom::Elements *items = conf->getChildElements("item");
+		for(int i = 0; i < items->size(); i++) {
+			xom::Element *item = items->get(i);
+			ScriptItem *sitem = ScriptItem::parse(*item);
+			this->items.add(sitem);
+			if(isVerbose())
+				log << "\tscript parameter \"" << sitem->name << "\" found.\n";
+		}
+		delete items;
+	}
+	if(only_config) {
+		delete doc;
+		return;
+	}
+
 	// build XSL
 	xom::Element *root = new xom::Element("xsl:stylesheet", XSL_URI);
 	root->addAttribute(new xom::Attribute("version", XSL_URI, "1.0"));
@@ -148,31 +296,16 @@ void Script::work(WorkSpace *ws) {
 	xom::Element *temp = new xom::Element("xsl:template", XSL_URI);
 	root->appendChild(temp);
 	temp->addAttribute(new xom::Attribute("match", XSL_URI, "/"));
-	xom::Element *oroot = doc->getRootElement();
 	doc->removeChild(oroot);
 	temp->appendChild(oroot);
 
 	// build the parameter declaration
-	xom::Element *conf = oroot->getFirstChildElement("configuration");
-	if(conf) {
-		xom::Elements *items = conf->getChildElements("item");
-		for(int i = 0; i < items->size(); i++) {
-			xom::Element *item = items->get(i);
-			Option<xom::String> name = item->getAttributeValue("name");
-			if(!name)
-				onWarning(item, "\"name\" required !");
-			else {
-				if(isVerbose())
-					log << "\tscript parameter \"" << *name << "\" found.\n";
-				xom::Element *param = new xom::Element("xsl:param", XSL_URI);
-				root->appendChild(param);
-				param->addAttribute(new xom::Attribute("xsl:name", XSL_URI, name));
-				Option<xom::String> def = item->getAttributeValue("default");
-				if(def)
-					param->addAttribute(new xom::Attribute("xsl:select", XSL_URI, def));
-			}
-		}
-		delete items;
+	for(ItemIter item(*this); item; item++) {
+		xom::Element *param = new xom::Element("xsl:param", XSL_URI);
+		root->appendChild(param);
+		param->addAttribute(new xom::Attribute("xsl:name", XSL_URI, item->name.toCString()));
+		if(item->deflt)
+			param->addAttribute(new xom::Attribute("xsl:select", XSL_URI, item->makeParam(item->deflt).toCString()));
 	}
 
 	// !!DEBUG!!
@@ -186,9 +319,17 @@ void Script::work(WorkSpace *ws) {
 	ScriptErrorHandler handler(log);
 	xslt.setErrorHandler(&handler);
 	for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param; param++) {
-		xslt.setParameter((*param).fst, (*param).snd);
-		if(isVerbose())
-			log << "\tadding argument \"" << (*param).fst << "\" to \"" << (*param).snd << "\"\n";
+		bool found = false;
+		for(ItemIter item(*this); item; item++) {
+			if(item->name == (*param).fst) {
+				found = true;
+				xslt.setParameter((*param).fst, item->makeParam((*param).snd));
+				if(isVerbose())
+					log << "\tadding argument \"" << (*param).fst << "\" to \"" << (*param).snd << "\"\n";
+			}
+		}
+		if(!found)
+			warn(_ << "unknown configuration parameter: " << (*param).fst);
 	}
 	xom::Element *empty_root = new xom::Element("empty");
 	xom::Document *empty = new xom::Document(empty_root);
@@ -300,8 +441,11 @@ void Script::work(WorkSpace *ws) {
 				else if(step->getLocalName() == "config")
 					break;
 			}
+			onWarning(node, "garbage here");
+			break;
 		default:
 			onWarning(node, "garbage here");
+			break;
 		}
 	}
 
@@ -403,6 +547,13 @@ Identifier<xom::Element *> SCRIPT("otawa::script::SCRIPT", 0);
  * XML node representing the configuration part of the script.
  */
 Identifier<xom::Element *> PLATFORM("otawa::script::PLATFORM", 0);
+
+
+/**
+ * This property informs the script to stop its work just after
+ * parsing the configuration items.
+ */
+Identifier<bool> ONLY_CONFIG("otawa::script::ONLY_CONFIG", false);
 
 } } // otawa::script
 
