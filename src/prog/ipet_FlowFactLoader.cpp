@@ -237,8 +237,10 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 					return;
 
 	// warning for lacking loops
-	if(max < 0 && total < 0)
+	if(max < 0 && total < 0) {
 		warn(_ << "no limit for the loop at " << str(bb->address()) << ".");
+		warn(_ << " in the context " << path);
+	}
 }
 
 

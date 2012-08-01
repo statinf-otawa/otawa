@@ -621,7 +621,7 @@ void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address>
 	for (loc = dwarf_first_line(&iter, map); loc.file; loc = dwarf_next_line(&iter))
 	{
 		cstring lfile = loc.file;
-		//cerr << loc.file << ":" << loc.line << ", " << loc.low_addr << "-" << loc.high_addr << io::endl;
+		//cerr << "DEBUG: " << loc.file << ":" << loc.line << ", " << loc.low_addr << "-" << loc.high_addr << io::endl;
 		if (file == loc.file || lfile.endsWith(file))
 		{
 			if (line == loc.line)
@@ -648,7 +648,7 @@ void Process::setup(void) {
 	if(init)
 		return;
 	init = true;
-	map = dwarf_new_line_map(_gelFile, 0);
+	map = gel_new_line_map(_gelFile);
 }
 
 

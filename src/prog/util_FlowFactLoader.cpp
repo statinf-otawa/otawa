@@ -933,9 +933,22 @@ void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath)
  */
 void FlowFactLoader::scanXFun(xom::Element *element, ContextualPath& path)
 throw(ProcessorException) {
+	Address addr;
+
+	// look for the name attribute
+	Option<xom::String> val = element->getAttributeValue("name");
+	if(val) {
+		addr = addressOf(*val);
+		if(!addr)
+			throw ProcessorException(*this,
+				_ << " no function named \"" << *val << "\" from " << xline(element));
+	}
+
+	// or an address
+	else
+		addr = scanAddress(element, path);
 
 	// get the address
-	Address addr = scanAddress(element, path);
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
 		throw ProcessorException(*this,
@@ -946,6 +959,55 @@ throw(ProcessorException) {
 	scanXContent(element, path);
 	path.pop();
 }
+
+
+/**
+ * Scan a call element that may have possibly two forms:
+ * @li contains a list of called functions,
+ * @li contains a function content (compatibility with old syntax).
+ */
+void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) throw(ProcessorException) {
+
+	// look for functions
+	xom::Elements *elems = element->getChildElements("function");
+
+	// list of function form
+	if(elems->size() != 0) {
+
+		// get the address
+		Address addr = scanAddress(element, path);
+		Inst *inst = _fw->process()->findInstAt(addr);
+		if(!inst)
+			throw ProcessorException(*this,
+				_ << " no instruction at  " << addr << " from " << xline(element));
+		//path.push(ContextualStep::CALL, addr);
+
+		// scan the content
+		for(int i = 0; i < elems->size(); i++)
+			scanXFun(elems->get(i), path);
+		//path.pop();
+	}
+
+	// old form
+	else {
+
+		// get the address
+		Address addr = scanAddress(element, path);
+		Inst *inst = _fw->process()->findInstAt(addr);
+		if(!inst)
+			throw ProcessorException(*this,
+				_ << " no instruction at  " << addr << " from " << xline(element));
+		path.push(ContextualStep::FUNCTION, addr);
+
+		// scan the content
+		scanXContent(element, path);
+		path.pop();
+	}
+
+	// cleanup
+	delete elems;
+}
+
 
 
 /**
@@ -992,8 +1054,8 @@ throw(ProcessorException) {
 
 	// look for "name" and "offset
 	Option<xom::String> val = element->getAttributeValue("label");
-	if(!val)
-		val = element->getAttributeValue("name");
+	/*if(!val)
+		val = element->getAttributeValue("name");*/
 	if(val) {
 		Address addr = addressOf(*val);
 		Option<long> offset = scanInt(element, "offset");
@@ -1108,7 +1170,7 @@ throw(ProcessorException) {
 			if(name == "loop")
 				scanXLoop(element, path);
 			else if(name == "call")
-				scanXFun(element, path);
+				scanXCall(element, path);
 			else if(name == "conditional")
 				scanXConditional(element, path);
 		}

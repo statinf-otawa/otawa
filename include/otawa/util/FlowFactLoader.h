@@ -109,6 +109,7 @@ private:
 	Option<long> scanBound(xom::Element *element, cstring name) throw(ProcessorException);
 	void scanXContent(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXBody(xom::Element *element, ContextualPath& path) throw(ProcessorException);
+	void scanXCall(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	string xline(xom::Node *element);
 	void scanIgnoreEntry(xom::Element *element);
 	void scanMultiBranch(xom::Element *element, ContextualPath& cpath);
