@@ -100,6 +100,7 @@ using namespace elm::io;
  * SilentFeature MY_FEATURE("MY_FEATURE", MY_MAKER);
  * @endcode
  *
+ *
  * @par Code Processors
  *
  * A code processor performs an analysis, that is, scan the program representation,
@@ -147,6 +148,50 @@ using namespace elm::io;
  *
  * Notice that the configuration properties are passed to all processor invoked to provided
  * features required by the invoked processor.
+ *
+ *
+ * @par Processor Registration
+ *
+ * Code processors or analyzers can be invoked explicitly from C++ code, implicitly
+ * by requiring a feature or from a script (see @ref Script class or @c owcet command).
+ * In the latter case, the processor name is used to retrieve its code and to allow
+ * to create an instance.
+ *
+ * As C++ does not provide any reflexive information to find back the constructor of a class,
+ * the code processor need to record in the main registry of OTAWA. To achieve, it must
+ * declare a static object (1) that will record itself to the main registry and (2) that
+ * provides all details of the code processor to the OTAWA framework:
+ * @li the name
+ * @li the version
+ * @li required and/or used features,
+ * @li invalidated features,
+ * @li provided features,
+ * @li configuration properties,
+ * @li the constructor,
+ * @li possibly its base processor (as a default, all processor have for base otawa::Processor).
+ *
+ * Although this registration can be achieved in different ways, the current preferred way requires
+ * to declare, as public members, a static attribute named @c reg and a constructor taking an AbstractRegistration
+ * with @c reg as default value. The constructor definition allows to pass the actual registration of the subclass
+ * (that is including the one of the current class) to the OTAWA framework.
+ * @code
+ * class MyProcessor: public BBProcessor {
+ * public:
+ * 		static p::declare reg;
+ * 		MyProcessor(AbstractRegistration& r = reg): BBProcessor(r) { ... }
+ * };
+ * @endcode
+ *
+ * In turn, the @c static attribute must be declared with the details of the code processor
+ * in the source file:
+ * @code
+ * p::declare MyProcessor::reg =
+ * 	p::init("MyProcessor", Version(1, 0, 0))
+ * 	.base(BBProcessor::reg),
+ * 	.require(CFG_COLLECTED_FEATURE)
+ * 	.provide(MY_FEATURE)
+ * 	.make<MyProcessor>();
+ * @endcode
  */
 
 namespace otawa {

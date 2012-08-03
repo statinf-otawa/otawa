@@ -1,4 +1,5 @@
 
+#include <elm/string.h>
 #include <otawa/parexegraph/ParExeGraph.h>
 
 using namespace  otawa;
@@ -622,7 +623,8 @@ void ParExeGraph::createNodes() {
 			else {
 				// add FU nodes
 				ParExePipeline *fu = stage->findFU(inst->inst()->kind());
-				ASSERTP(fu, "cannot find FU for instruction " << inst->inst()->address() << " " << inst->inst());
+				if(!fu)
+					throw ParExeException(elm::_ << "cannot find FU for instruction " << inst->inst()->address() << " " << inst->inst());
 				int index = 0;
 
 				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {                         
@@ -1226,8 +1228,11 @@ ParExeGraph::ParExeGraph(
 	const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION(ws);
 	if (cache && cache->instCache())
 		_cache_line_size = cache->instCache()->blockSize();
-	else
-		_cache_line_size = ws->process()->instSize();	// FIXED by casse
+	else {
+		_cache_line_size = ws->process()->instSize();
+		if(!_cache_line_size)
+			_cache_line_size = 1;
+	}
 	_props = props;
 }
 

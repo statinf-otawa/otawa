@@ -41,6 +41,11 @@ namespace otawa {
 	class ParExeEdge;
 	class ParExeGraph;
 
+	class ParExeException: public otawa::Exception {
+	public:
+		inline ParExeException(string message): otawa::Exception(message) { }
+	};
+
 	typedef enum code_part_t {
 		BEFORE_PROLOGUE = 0,
 		PROLOGUE = 1,

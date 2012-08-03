@@ -39,7 +39,7 @@ extern SilentFeature NUMBERED_CONDITIONS_FEATURE;
 // processor
 class CondNumber : public otawa::BBProcessor {
 public:
-	static proc::declare reg;
+	static p::declare reg;
 	CondNumber(void);
 protected:
 	virtual void processBB(otawa::WorkSpace*, CFG *cfg, BasicBlock *bb);

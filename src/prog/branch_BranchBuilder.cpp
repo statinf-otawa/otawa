@@ -91,8 +91,8 @@ SilentFeature CATEGORY_FEATURE("otawa::branch::CATEGORY_FEATURE", BRANCH_CAT_MAK
  * @li @ref DOMINANCE_FEATURE,
  * @li @ref NUMBERED_CONDITIONS_FEATURE,
  */
-proc::declare BranchBuilder::reg =
-	proc::init("otawa::branch::BranchBuilder", Version(1,0,0))
+p::declare BranchBuilder::reg =
+	p::init("otawa::branch::BranchBuilder", Version(1,0,0))
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
 	.require(DOMINANCE_FEATURE)

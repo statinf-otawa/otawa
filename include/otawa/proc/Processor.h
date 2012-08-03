@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	Processor class interface
  *
  *	This file is part of OTAWA

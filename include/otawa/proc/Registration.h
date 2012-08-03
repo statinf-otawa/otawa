@@ -146,7 +146,7 @@ public:
 	virtual bool isFinal(void) const { return true; }
 };
 
-namespace proc {
+namespace p {
 
 // make class
 class init {
@@ -177,6 +177,7 @@ public:
 	inline init& use(const AbstractFeature& feature)
 		{ features.add(FeatureUsage(FeatureUsage::use, feature)); return *this; }
 	inline init& config(AbstractIdentifier& id) { configs.add(&id); return *this; }
+	inline init& base(AbstractRegistration& base) { _base = &base; return *this; }
 	template <class T> inline init& maker(void) { _maker = new Maker<T>(); return *this; }
 
 private:
@@ -192,7 +193,7 @@ private:
 // declare class
 class declare: public AbstractRegistration {
 public:
-	declare(otawa::proc::init& i);
+	declare(otawa::p::init& i);
 	virtual ~declare(void);
 	virtual Processor *make(void) const;
 	virtual bool isFinal(void) const;

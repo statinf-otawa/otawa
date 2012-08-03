@@ -319,7 +319,7 @@ void FeatureIter::step(void) {
  * @param args		List of pairs (tag, value) ended by @ref otawa::p::end .
  */
 
-namespace proc {
+namespace p {
 
 /**
  * @class make
@@ -341,22 +341,25 @@ namespace proc {
  * @code
  * class MyProcessor: public BBProcessor {
  * public:
- * 	static proc::declare reg;
+ * 	static p::declare reg;
  * 	...
  * };
  *
- * proc::declare MyProcessor::reg(proc::init("MyProcessor", Version(1, 0, 0), BBProcessor::reg)
+ * p::declare MyProcessor::reg =
+ * 		p::init("MyProcessor", Version(1, 0, 0), BBProcessor::reg)
  * 		.require(OTHER_FEATURE)
  * 		.provide(MY_FEATURE)
  * 		.config(MY_CONFIG)
  * 		.make<MyProcessor>());
  * @endcode
+ *
+ * @ingroup proc
  */
 
 
 /**
  */
-declare::declare(otawa::proc::init& maker)
+declare::declare(otawa::p::init& maker)
 	: AbstractRegistration(maker._name, maker._version, maker._base ? maker._base : &Processor::reg)
 {
 	setFeatures(maker.features);
@@ -386,6 +389,6 @@ bool declare::isFinal(void) const {
 	return true;
 }
 
-}	// proc
+}	// p
 
 } // otawa

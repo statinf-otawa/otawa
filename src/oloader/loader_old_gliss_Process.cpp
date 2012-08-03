@@ -36,6 +36,8 @@ extern "C" {
 
 extern "C" Elf32_Ehdr Ehdr;
 
+namespace otawa { namespace gliss { extern Identifier<state_t *> GLISS_STATE; } }
+
 namespace otawa { namespace loader { namespace old_gliss {
 
 

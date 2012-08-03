@@ -76,8 +76,8 @@ Identifier<int *> COND_MAX("otawa::branch::COND_MAX", NULL);
  * @li @ref COLLECTED_CFG_FEATUR
  *
  */
-proc::declare CondNumber::reg =
-		proc::init("otawa::branch::CondNumber", Version(1,0,0), BBProcessor::reg)
+p::declare CondNumber::reg =
+		p::init("otawa::branch::CondNumber", Version(1,0,0), BBProcessor::reg)
 		.require(COLLECTED_CFG_FEATURE)
 		.require(hard::BHT_FEATURE)
 		.provide(NUMBERED_CONDITIONS_FEATURE)

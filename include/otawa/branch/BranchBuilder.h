@@ -48,7 +48,7 @@ extern SilentFeature CATEGORY_FEATURE;
 // processor
 class BranchBuilder : public otawa::Processor {
 public:
-	static proc::declare reg;
+	static p::declare reg;
 	BranchBuilder(void);
 
 protected:

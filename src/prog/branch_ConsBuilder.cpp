@@ -77,8 +77,8 @@ Identifier<ilp::Var*> MISSPRED_VAR("otawa::branch::MISSPRED_VAR", NULL);
  * @li @ref LOOP_INFO_FEATURE,
  * @li @ref CATEGORY_FEATURE,
  */
-proc::declare ConsBuilder::reg =
-		proc::init("otawa::ConsBuilder", Version(1,0,0), BBProcessor::reg)
+p::declare ConsBuilder::reg =
+		p::init("otawa::ConsBuilder", Version(1,0,0), BBProcessor::reg)
 		.require(ipet::ASSIGNED_VARS_FEATURE)
 		.require(LOOP_INFO_FEATURE)
 		.require(CATEGORY_FEATURE)

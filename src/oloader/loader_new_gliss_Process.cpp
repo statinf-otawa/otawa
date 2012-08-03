@@ -23,6 +23,8 @@ extern "C" {
 extern "C" int Is_Elf_Little;
 extern "C" gel_image_t *loader_image(memory_t *memory);
 
+namespace otawa { namespace gliss { extern Identifier<state_t *> GLISS_STATE; } }
+
 namespace otawa { namespace loader { namespace new_gliss {
 
 // Segment class

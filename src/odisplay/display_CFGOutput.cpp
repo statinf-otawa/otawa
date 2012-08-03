@@ -93,14 +93,14 @@ public:
 	}
 };
 
-proc::declare CFGOutput::reg =
-	proc::init("otawa::display::CFGOutput", Version(1, 1, 0), CFGProcessor::reg)
+p::declare CFGOutput::reg =
+	p::init("otawa::display::CFGOutput", Version(1, 1, 0), CFGProcessor::reg)
 	.maker<CFGOutput>();
 
 /**
  * Build the processor.
  */
-CFGOutput::CFGOutput(proc::declare& _reg): CFGProcessor(_reg) {
+CFGOutput::CFGOutput(AbstractRegistration& _reg): CFGProcessor(_reg) {
 
 }
 

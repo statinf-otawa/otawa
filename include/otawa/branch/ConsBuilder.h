@@ -40,7 +40,7 @@ extern Identifier<ilp::Var*> MISSPRED_VAR;
 // processor
 class ConsBuilder: public BBProcessor {
 public:
-	static proc::declare reg;
+	static p::declare reg;
 	ConsBuilder(void);
 	virtual void processBB(otawa::WorkSpace*, CFG *cfg, BasicBlock *bb);
 	virtual void configure(const PropList &props);

@@ -1,11 +1,25 @@
 /*
- *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Load and gliss::Info implementation
  *
- *	src/prog/Loader.cpp -- implementation for Loader class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-12, IRIT UPS <casse@irit.fr>
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 #include <otawa/prog/Loader.h>
+#include <otawa/loader/gliss.h>
 
 namespace otawa {
 
@@ -104,19 +118,84 @@ void Loader::check(WorkSpace *ws, cstring name, const Version& version) {
 	}
 }
 
-/**
- * Name of the "Heptane" loader.
- */
-//CString Loader::LOADER_NAME_Heptane = "heptane";
+namespace gliss {
 
 /**
- * Name of the "GLISS PowerPC" loader.
+ * @class Info
+ * This class provides access to the stay-behind GLISS data structures and code
+ * provided by the GLISS v2 utility used by some loaders. This allows to re-use
+ * GLISS to embed ISA-specific processing inside some analysis (typically pipeline analysis).
+ *
+ * The existence of this object is tied to the gliss::INFO_FEATURE and linked to the process
+ * with the identifier gliss::Info::ID.
  */
-//CString Loader::LOADER_NAME_Gliss_PowerPC = "gliss-powerpc";
+
 
 /**
- * Name of the default PowerPC platform.
+ * @fn bool Info::check(t::uint32 checksum);
+ *
+ * As the validity of the data used in Gliss is strongly coupled
+ * with the data of an analysis using this object, OTAWA provides
+ * a way to generate a checksum of the file isa/id.h and to compare both
+ * values stored in the loader and in the analysis with this function.
+ * If the check fails, it is utterly risky to use this structure.
+ *
+ * @param	Checksum to check.
+ * @return	True, both checksum are compatible, false else.
  */
-//CString Loader::PLATFORM_NAME_PowerPC_Gliss = "powerpc/ppc601-elf/gliss-gliss";
-	
+
+
+/**
+ * @fn void *Info::decode(Inst *inst);
+ * Decode an instruction and return its descriptor.
+ * The returned descriptor must be released with Info::free().
+ * @param inst	Instruction to decode.
+ * @return		Decoded instruction.
+ */
+
+
+/**
+ * void Info::free(void *desc);
+ * Free a GLISS instruction descriptor previously allocated by Info::decode().
+ * @param desc	Instruction descriptor to release.
+ */
+
+
+/**
+ * @fn void Info::decode<T>(Inst *inst, T *&desc);
+ * A type-wise way to perform the decoding of an instruction.
+ * The returned descriptor must be fried with Info::free().
+ */
+
+
+/**
+ */
+Info::~Info(void) {
+}
+
+
+/**
+ * This feature that the current process has been built by a loader
+ * based on the GLISS tool. This allows to have low-level access
+ * to GLISS primitives.
+ *
+ * @par Properties
+ * @li gliss::Info::ID
+ */
+Feature<NoProcessor> INFO_FEATURE("otawa::gliss::INFO_FEATURE");
+
+/**
+ * This identifier allows to get the gliss::Info object from
+ * loader supporting it from a process generating it.
+ *
+ * @par Features
+ * @li @ref INFO_FEATURE
+ *
+ * @par Hooks
+ * @li @ref Process
+ */
+Identifier<Info *> INFO("otawa::gliss::INFO", 0);
+
+}	// gliss
+
 } // otawa

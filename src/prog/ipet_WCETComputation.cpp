@@ -47,7 +47,7 @@ namespace otawa { namespace ipet {
 	p::provide, &WCET_FEATURE,
 	p::end
 );*/
-proc::declare WCETComputation::reg = proc::init("otawa::ipet::WCETComputation", Version(1, 0, 0))
+p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Version(1, 0, 0))
 	.require(CONTROL_CONSTRAINTS_FEATURE)
 	.require(OBJECT_FUNCTION_FEATURE)
 	.require(FLOW_FACTS_CONSTRAINTS_FEATURE)

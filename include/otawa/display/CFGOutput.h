@@ -37,8 +37,8 @@ class CFGOutputDecorator;
 class CFGOutput: public CFGProcessor {
 	friend class CDFGOutputDeclarator;
 public:
-	static proc::declare reg;
-	CFGOutput(proc::declare& _reg = reg);
+	static p::declare reg;
+	CFGOutput(AbstractRegistration& _reg = reg);
 
 	// Configuration
 	static Identifier<display::kind_t> KIND;

@@ -135,7 +135,7 @@ Inst *VarTextDecoder::getInst(WorkSpace *ws, otawa::address_t address, Inst *sou
 			else
 				warn( elm::_ << "unconsistant binary: no code segment at " << address << "  target of branch at " << source->address());
 		}
-		if(inst->isUnknown())
+		else if(inst->isUnknown())
 			log << "WARNING: unknown instruction at " << address << ": "
 				<< getBytes(address, 4) << io::endl;
 		return inst;
