@@ -132,7 +132,7 @@ typedef Address address_t;
 namespace fmt {
 	inline elm::io::IntFormat address(address_t addr) {
 		return elm::io::right(elm::io::width(8, elm::io::pad('0',
-			elm::io::hex((int)addr.offset()))));
+			elm::io::hex(addr.offset()))));
 	}
 }
 

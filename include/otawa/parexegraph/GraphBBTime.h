@@ -110,7 +110,6 @@ namespace otawa {
 		class GraphBBTime: public BBProcessor {
     private:
 		WorkSpace *_ws;
-		ParExeProc *_microprocessor;
 		int _last_stage_cap;
 		PropList _props;
 		int _prologue_depth;
@@ -123,6 +122,7 @@ namespace otawa {
 		bool _do_consider_icache;
 		const hard::Memory *mem;
 		const hard::Cache *icache;
+		ParExeProc *_microprocessor;
 
 		virtual int cacheMissPenalty(Address addr) const;
 		virtual int memoryLatency(Address addr) const;
