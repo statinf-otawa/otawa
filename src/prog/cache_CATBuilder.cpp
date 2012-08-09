@@ -1,13 +1,26 @@
 /*
- *	$Id$
- *	Copyright (c) 2005-06, IRIT UPS.
+ *	CATBuilder implementation
+ *	Copyright (c) 2005-12, IRIT UPS.
  *
- *	CATBuilder class implementation.
+ *	This file is part of OTAWA
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
  */
-//#include <stdio.h>
 #include <elm/io.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
-//#include <otawa/instruction.h>
 #include <otawa/cache/LBlock.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/cfg.h>
@@ -20,6 +33,7 @@
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/prop/DeletableProperty.h>
+#include <otawa/cache/categories.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
@@ -27,6 +41,8 @@ using namespace otawa::ipet;
 using namespace otawa::dfa;
 
 namespace otawa {
+
+using namespace cache;
 
 /**
  */
@@ -43,24 +59,6 @@ static Identifier<BitSet *> IN("", 0);
  * Private property.
  */
 static Identifier<BitSet *> SET("otawa::SET", 0);
-
-
-/**
- * This property stores the instruction cache access category of L-Blocks.
- * This value may be :
- * @li ALWAYS_HIT : accesses to this l-block produces always a cache hit,
- * @li ALWAYS_MISS : accesses to this l-block produces always a cache miss,
- * @li FIRST_HIT : accesses to this l-block produces an cache hit at the first
- * 					iteration of the containing loop and cache misses in the
- * 					next iterations,
- * @li FIRST_MISS : accesses to this l-block produces a cache miss at the first
- * 					iteration of the containing loop and cache hits in the next
- * 					iterations,
- *
- * @par Hooks
- * @li @ref LBlock
- */
-Identifier<category_t> CATEGORY("otawa::category", INVALID_CATEGORY);
 
 
 /**

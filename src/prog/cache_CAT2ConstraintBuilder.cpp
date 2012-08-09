@@ -44,6 +44,7 @@ using namespace otawa::ipet;
 
 namespace otawa {
 	
+using namespace cache;
 
 Identifier<ilp::Var *> HIT_VAR("otawa::HIT_VAR", 0);
 Identifier<ilp::Var *> MISS_VAR("otawa::MISS_VAR", 0);

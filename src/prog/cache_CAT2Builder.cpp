@@ -45,6 +45,8 @@ using namespace otawa::ipet;
 
 namespace otawa {
 
+using namespace cache;
+
 /**
  */
 CAT2Builder::CAT2Builder(AbstractRegistration& registration): CFGProcessor(registration) {
@@ -62,17 +64,6 @@ Registration<CAT2Builder> CAT2Builder::reg(
 	p::provide, &ICACHE_CATEGORY2_FEATURE,
 	p::end
 );
-
-
-/**
- *
- * In the case of a FIRST_HIT (or FIRST_MISS) property, contains the header
- * of the loop causing the HIT (or MISS) at the first iteration.
- *
- * @par Hooks
- * @li @ref LBlocks
- */
-Identifier<BasicBlock*> CATEGORY_HEADER("otawa::CATEGORY_HEADER", 0);
 
 
 /**
@@ -208,89 +199,5 @@ void CAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
  */
 Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE("otawa::ICACHE_CATEGORY2_FEATURE");
 
-
-/**
- * @class CategoryStats
- * This class is used to store statistics about the categories about cache
- * accesses. It it provided by cache category builders.
- * @see CATBuilder, CAT2Builder
- */
-
-/**
- */
-CategoryStats::CategoryStats(void) {
-	reset();
-}
-
-/**
- * Reset the statistics.
- */
-void CategoryStats::reset(void) {
-	_total = 0;
-	_linked = 0;
-	for(int i = 0; i <= NOT_CLASSIFIED; i++)
-		counts[i] = 0;
-}
-
-/**
- * @fn  void Categorystats::add(category_t cat);
- * Increment the counter for the given category.
- * @param cat	Category to increment the counter.
- */
-
-/**
- * @fn void CategoryStats::addLinked(void);
- * Add a new linked l-block to the statistics.
- */
-
-/**
- * @fn int CategoryStats::get(category_t cat) const;
- * Get the counter of a category.
- * @param cat	Category to get counter for.
- * @return		Category count.
- */
-
-/**
- * @fn int CategoryStats::total(void) const;
- * Get the total count of categories.
- * @return		Category total count.
- */
-
-/**
- * @fn int CategoryStats::linked(void) const;
- * Get the count of linked statistics.
- * @return	Linked l-block statistics.
- */
-
-
-/**
- * Put in the statistics to get statistics about cache categories.
- *
- * @par Hooks
- * @li processor configuration property list
- */
-Identifier<CategoryStats *> CATEGORY_STATS("otawa::CATEGORY_STATS", 0);
-
-
-/**
- */
-io::Output& operator<<(io::Output& out, const CategoryStats& stats) {
-	static cstring names[] = {
-			"invalid",
-			"always-hit",
-			"first-hit",
-			"first-miss",
-			"always-miss",
-			"not-classified"
-	};
-
-	for(int i = ALWAYS_HIT; i <= NOT_CLASSIFIED; i++)
-		out << names[i] << '\t' << (float(stats.get(category_t(i))) * 100 / stats.total())
-			<< "% (" << stats.get(category_t(i)) << ")\n";
-	out << "total\t\t100% (" << stats.total() << ")\n";
-	out << "linked\t\t" << (float(stats.linked()) * 100 / stats.total())
-		<< "% (" << stats.linked() << ")\n";
-	return out;
-}
 
 }

@@ -48,6 +48,7 @@ using namespace otawa::ipet;
 
 namespace otawa {
 
+using namespace cache;
 
 // Ordered list
 class NumberOrder {

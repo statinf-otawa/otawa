@@ -10,11 +10,12 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/dcache/CatBuilder.h>
 #include <otawa/dcache/ACSMayBuilder.h>
+#include <otawa/cache/categories.h>
 
 namespace otawa { namespace dcache {
 
 Identifier<BasicBlock*> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
-Identifier<category_t> CATEGORY("otawa::dcache::category", INVALID_CATEGORY);
+Identifier<cache::category_t> CATEGORY("otawa::dcache::category", cache::INVALID_CATEGORY);
 
 
 /**
@@ -80,7 +81,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const otawa::BlockCollection& c
 			for(int j = 0; j < ab.fst; j++) {
 				BlockAccess& b = ab.snd[j];
 				if(b.kind() != BlockAccess::BLOCK) {
-					CATEGORY(b) = NOT_CLASSIFIED;
+					CATEGORY(b) = cache::NOT_CLASSIFIED;
 					dom.ageAll();
 				}
 				else if(b.block().set() == line) {
@@ -89,16 +90,16 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const otawa::BlockCollection& c
 					MAYProblem::Domain *may = NULL;
 					if(ACS_MAY(bb) != NULL) {
 						may = ACS_MAY(bb)->get(line);
-						CATEGORY(b) = NOT_CLASSIFIED;
+						CATEGORY(b) = cache::NOT_CLASSIFIED;
 					}
 					else
-						CATEGORY(b) = ALWAYS_MISS;
+						CATEGORY(b) = cache::ALWAYS_MISS;
 
 					// in MUST
 					if(dom.contains(b.block().index()))
-						CATEGORY(b) = ALWAYS_HIT;
+						CATEGORY(b) = cache::ALWAYS_HIT;
 					else if(may && !may->contains(b.block().index()))
-						CATEGORY(b) = ALWAYS_MISS;
+						CATEGORY(b) = cache::ALWAYS_MISS;
 
 					// update state
 					dom.inject(b.block().index());

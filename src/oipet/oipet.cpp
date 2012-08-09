@@ -299,6 +299,7 @@ void Command::process (String arg) {
 class MyCollector: public StatCollector::Collector {
 public:
 	inline MyCollector(StatCollector *collector): coll(collector) { }
+	virtual ~MyCollector(void) { }
 
 	virtual void enter(const ContextualStep& step) {
 		path.push(step);
@@ -392,7 +393,8 @@ void Command::compute(String fun) {
 		break;
 
 	default:
-		assert(0);
+		ASSERT(false);
+		break;
 	};
 
 	// Trivial data cache
@@ -455,6 +457,7 @@ void Command::compute(String fun) {
 			CAT2ConstraintBuilder decomp;
 			decomp.process(fw, props);
 		}
+		break;
 	}
 
 	// Build the object function to maximize
@@ -553,8 +556,8 @@ void Command::run(void) {
 			SIMULATOR(props) = &sim;
 #		endif
 	}
-	if(cache)
-		CACHE_CONFIG_PATH(props) = elm::system::Path(cache);
+	if(::cache)
+		CACHE_CONFIG_PATH(props) = elm::system::Path(::cache);
 	otawa::Processor::VERBOSE(props) = verbose;
 	fw = manager.load(&file, props);
 

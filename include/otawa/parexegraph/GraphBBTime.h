@@ -339,7 +339,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
 			LBlock *lb = LBLOCK(inst->inst());
 			if (lb){
-				if (CATEGORY(lb) == NOT_CLASSIFIED){
+				if (cache::CATEGORY(lb) == cache::NOT_CLASSIFIED){
 					if (list->isEmpty()){
 						TimingContext *tctxt = new TimingContext();
 						NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
@@ -383,8 +383,8 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
 			LBlock *lb = LBLOCK(inst->inst());
 			if (lb){
-				if (CATEGORY(lb) == FIRST_MISS){
-					BasicBlock *header = CATEGORY_HEADER(lb);
+				if (cache::CATEGORY(lb) == cache::FIRST_MISS){
+					BasicBlock *header = cache::CATEGORY_HEADER(lb);
 					//		elm::cout << "found header b" << header->number() << "\n";
 					if (header0 == NULL){
 						header0 = header;
@@ -431,7 +431,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 				for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
 					LBlock *lb = LBLOCK(inst->inst());
 					if (lb){
-						if (CATEGORY(lb) == FIRST_MISS){ // must be with header0
+						if (cache::CATEGORY(lb) == cache::FIRST_MISS){ // must be with header0
 							NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 							tctxt_first->addNodeLatency(nl);
 						}
@@ -455,8 +455,8 @@ void GraphBBTime<G>::configure(const PropList& props) {
 				for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
 					LBlock *lb = LBLOCK(inst->inst());
 					if (lb){
-						if (CATEGORY(lb) == FIRST_MISS){ 
-							BasicBlock *header = CATEGORY_HEADER(lb);
+						if (cache::CATEGORY(lb) == cache::FIRST_MISS){
+							BasicBlock *header = cache::CATEGORY_HEADER(lb);
 							NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 							tctxt_first_first->addNodeLatency(nl);
 							nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
@@ -481,7 +481,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
 			LBlock *lb = LBLOCK(inst->inst());
 			if (lb){
-				if (CATEGORY(lb) == ALWAYS_MISS) {
+				if (cache::CATEGORY(lb) == cache::ALWAYS_MISS) {
 					NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 					dtctxt->addNodeLatency(nl);
 				}
@@ -540,17 +540,17 @@ void GraphBBTime<G>::configure(const PropList& props) {
 					LBlock *lb = LBLOCK(inst->inst());
 					if (lb){
 						log << "\t\t\tcategory of I" << inst->index() << " is ";
-						switch( CATEGORY(lb)){
-						case ALWAYS_HIT:
+						switch(cache::CATEGORY(lb)){
+						case cache::ALWAYS_HIT:
 							log << "ALWAYS_HIT\n";
 							break;
-						case ALWAYS_MISS:
+						case cache::ALWAYS_MISS:
 							log << "ALWAYS_MISS\n";
 							break;
-						case FIRST_MISS:
-							log << "FIRST_MISS (with header b" << CATEGORY_HEADER(lb)->number() << ")\n";
+						case cache::FIRST_MISS:
+							log << "FIRST_MISS (with header b" << cache::CATEGORY_HEADER(lb)->number() << ")\n";
 							break;
-						case NOT_CLASSIFIED:
+						case cache::NOT_CLASSIFIED:
 							log << "NOT_CLASSIFIED\n";
 							break;
 						default:

@@ -30,12 +30,9 @@
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/cache/cat2/ACSBuilder.h>
-#include <otawa/cache/features.h>
+#include <otawa/cache/categories.h>
 
 namespace otawa {
-
-extern Identifier<category_t> CATEGORY;
-extern Identifier<BasicBlock*> CATEGORY_HEADER;
 
 // CAT2Builder class
 class CAT2Builder: public CFGProcessor {
@@ -50,13 +47,13 @@ public:
 private:
 	void processLBlockSet(otawa::CFG*, LBlockSet *, const hard::Cache *);
 	fmlevel_t firstmiss_level;
-	CategoryStats *cstats;
+	cache::CategoryStats *cstats;
 };
 
 // feature
 extern Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE;
 
-} // otawa
+}  // otawa
 
 
 #endif /*CACHE_CAT2BUILDER_H_*/

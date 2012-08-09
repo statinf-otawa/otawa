@@ -1,5 +1,5 @@
 /*
- *	$Id$
+ *	LinkedBlockDetector implementation
  *	Processor performing the non-conflicting lblocks detection
  *
  *	This file is part of OTAWA
@@ -28,7 +28,7 @@
 #include <elm/genstruct/Vector.h>
 #include <otawa/cache/LBlock.h>
 #include <otawa/prop/Identifier.h>
-#include <otawa/cache/features.h>
+#include <otawa/cache/categories.h>
 
 namespace otawa {
 
@@ -43,7 +43,7 @@ public:
 
 private:
 	bool _explicit;
-	CategoryStats *cstats;
+	cache::CategoryStats *cstats;
 	void recordBlocks(Vector<LBlock*> *equiv);
 };
 

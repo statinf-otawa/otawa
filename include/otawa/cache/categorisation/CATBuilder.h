@@ -23,17 +23,6 @@ class LBlock;
 class LBlockSet;
 
 
-// Categorisation
-typedef enum category_t {
-	INVALID_CATEGORY = 0,
-	ALWAYS_HIT = 1,
-	FIRST_HIT = 2,
-	FIRST_MISS = 3,
-	ALWAYS_MISS = 4,
-	NOT_CLASSIFIED = 5
-} category_t;
-	
-
 // CATBuilder class
 class CATBuilder: public Processor {
 	dfa::BitSet *buildLBLOCKSET(LBlockSet *lcache, ContextTree *root);
@@ -54,7 +43,6 @@ public:
 extern Feature<CATBuilder> ICACHE_CATEGORY_FEATURE;
 
 // Properties
-extern Identifier<category_t> CATEGORY;
 extern Identifier<BasicBlock *> LOWERED_CATEGORY;
 
 }	// otawa

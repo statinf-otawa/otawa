@@ -15,9 +15,6 @@
 namespace otawa { namespace dcache {
 
 
-extern Identifier<category_t> CATEGORY;
-extern Identifier<BasicBlock *> CATEGORY_HEADER;
-
 // CATBuilder class
 class CATBuilder: public Processor {
 public:

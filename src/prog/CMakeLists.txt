@@ -107,6 +107,7 @@ set(libotawa_SOURCES
 	"cache_CCGNode.cpp"
 	"cache_ACSBuilder.cpp"
 	"cache_ACSMayBuilder.cpp"
+	"cache_categories.cpp"
 	"cache_CAT2Builder.cpp"
 	"cache_CAT2NCBuilder.cpp"
 	"cache_CAT2ConstraintBuilder.cpp"

@@ -1,9 +1,8 @@
 /*
- *	$Id$
- *	cache module interface
+ *	categories module interface
+ *	Copyright (c) 2012, IRIT UPS.
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2008, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -20,13 +19,30 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
-#ifndef OTAWA_CACHE_FEATURES_H_
-#define OTAWA_CACHE_FEATURES_H_
+#ifndef OTAWA_CACHE_CATEGORIES_H_
+#define OTAWA_CACHE_CATEGORIES_H_
 
 #include <elm/assert.h>
-#include <otawa/cache/categorisation/CATBuilder.h>
+#include <otawa/prop/Identifier.h>
 
 namespace otawa {
+
+using namespace elm;
+class BasicBlock;
+
+namespace cache {
+
+// categories
+typedef enum category_t {
+	INVALID_CATEGORY = 0,
+	ALWAYS_HIT = 1,
+	FIRST_HIT = 2,
+	FIRST_MISS = 3,
+	ALWAYS_MISS = 4,
+	NOT_CLASSIFIED = 5
+} category_t;
+io::Output& operator<<(io::Output& out, category_t stats);
+
 
 // category stats
 class CategoryStats {
@@ -49,8 +65,10 @@ private:
 io::Output& operator<<(io::Output& out, const CategoryStats& stats); 
 
 // stats
+extern Identifier<category_t> CATEGORY;
+extern Identifier<BasicBlock *> CATEGORY_HEADER;
 extern Identifier<CategoryStats *> CATEGORY_STATS;
 
-} // otawa
+} }	// otawa::cache
 
 #endif // OTAWA_CACHE_FEATURES_H_

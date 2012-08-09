@@ -16,9 +16,11 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/dcache/CatBuilder.h>
 #include <otawa/dcache/CatConstraintBuilder.h>
+#include <otawa/cache/categories.h>
 
 namespace otawa { namespace dcache {
 
+using namespace otawa::cache;
 
 Identifier<ilp::Var *> HIT_VAR("otawa::dcache::HIT_VAR", 0);
 Identifier<ilp::Var *> MISS_VAR("otawa::dcache::MISS_VAR", 0);
