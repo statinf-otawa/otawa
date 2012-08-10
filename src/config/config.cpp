@@ -199,6 +199,8 @@ public:
 			cmods[i]->adjust(config);
 
 		// do the display
+		if(prefix)
+			cout << config.prefix << io::endl;
 		if(cflags)
 			cout << config.cflags.toString() << io::endl;
 		if(libs)
