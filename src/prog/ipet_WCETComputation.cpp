@@ -74,7 +74,7 @@ public:
 	void collect(Collector& collector, BasicBlock *bb) {
 		if(bb->isEnd())
 			return;
-		time_t time = TIME(bb);
+		ot::time time = TIME(bb);
 		if(time < 0)
 			return;
 		ilp::Var *var = VAR(bb);
@@ -122,13 +122,13 @@ void WCETComputation::processWorkSpace(WorkSpace *fw) {
 	System *system = SYSTEM(fw);
 	if(!system)
 		throw ProcessorException(*this, "no ILP system defined in this CFG");
-	time_t wcet = -1;
+	ot::time wcet = -1;
 	if(isVerbose())
 		log << "\tlaunching ILP solver\n";
 	if(system->solve(fw)) {
 		if(isVerbose())
 			log << "\tobjective function = " << system->value() << io::endl;
-		wcet = (time_t)system->value();
+		wcet = ot::time(system->value());
 	}
 	if(isVerbose())
 		log << "\tWCET = " << wcet << io::endl;

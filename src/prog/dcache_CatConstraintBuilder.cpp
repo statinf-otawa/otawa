@@ -73,27 +73,27 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
                 MISS_VAR(b) = miss;
 
                 // Add the constraint depending on the block access category
-                switch(CATEGORY(b)) {
-                	case ALWAYS_HIT: { // Add constraint: xmiss = 0
+                switch(cache::CATEGORY(b)) {
+                	case cache::ALWAYS_HIT: { // Add constraint: xmiss = 0
 	                		ilp::Constraint *cons2 = system->newConstraint(ilp::Constraint::EQ,0);
     	            		cons2->addLeft(1, miss);
 						}
                 		break;
-					case FIRST_HIT:
-					case NOT_CLASSIFIED: { // Add constraint: xmiss <= x
+					case cache::FIRST_HIT:
+					case cache::NOT_CLASSIFIED: { // Add constraint: xmiss <= x
 							ilp::Constraint *cons3 = system->newConstraint(ilp::Constraint::LE);
     	            		cons3->addLeft(1, miss);
         	        		cons3->addRight(1, ipet::VAR(bb));
 						}
 					break;
-                	case ALWAYS_MISS: { // Add constraint: xmiss = x
+                	case cache::ALWAYS_MISS: { // Add constraint: xmiss = x
 							ilp::Constraint *cons3 = system->newConstraint(ilp::Constraint::EQ);
     	            		cons3->addLeft(1, miss);
         	        		cons3->addRight(1, ipet::VAR(bb));
 						}
                 		break;
-					case FIRST_MISS: {
-							BasicBlock *header = CATEGORY_HEADER(b);
+					case cache::FIRST_MISS: {
+							BasicBlock *header = cache::CATEGORY_HEADER(b);
 							ASSERT(header != NULL);
 
 							// Add constraint: xmiss <= sum of entry-edges of the loop

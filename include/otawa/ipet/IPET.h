@@ -28,10 +28,10 @@ class Var;
 namespace ipet {
 
 // Properties
-extern Identifier<time_t> TIME;
-extern Identifier<time_t> TIME_DELTA;
+extern Identifier<ot::time> TIME;
+extern Identifier<ot::time> TIME_DELTA;
 extern Identifier<ilp::Var *> VAR;
-extern Identifier<time_t> WCET;
+extern Identifier<ot::time> WCET;
 extern Identifier<bool> EXPLICIT;
 extern Identifier<int> COUNT;
 	

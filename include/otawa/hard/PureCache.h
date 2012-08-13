@@ -47,8 +47,8 @@ public:
 	
 	// Simple accessors
 
-	inline size_t cacheSize(void) const;
-	inline size_t blockSize(void) const;
+	inline ot::size cacheSize(void) const;
+	inline ot::size blockSize(void) const;
 	inline int wayCount(void) const { return 1 << wayBits(); }
 	inline int rowCount(void) const { return 1 << rowBits(); }
 	inline int blockCount(void) const
@@ -60,15 +60,15 @@ public:
 	inline int rowBits(void) const;
 	inline int tagBits(void) const;	
 	inline int wayBits(void) const;
-	inline t::mask blockMask(void) const;
-	inline t::mask lineMask(void) const;
-	inline t::mask tagMask(void) const;
+	inline ot::mask blockMask(void) const;
+	inline ot::mask lineMask(void) const;
+	inline ot::mask tagMask(void) const;
 	
 	// Address decomposition
-	inline t::mask offset(address_t addr) const;
-	inline t::mask line(address_t addr) const;
-	inline t::mask tag(address_t addr) const;
-	inline t::mask block(address_t addr) const;
+	inline ot::mask offset(address_t addr) const;
+	inline ot::mask line(address_t addr) const;
+	inline ot::mask tag(address_t addr) const;
+	inline ot::mask block(address_t addr) const;
 	
 	// Modifiers
 	void setBlockBits(int block_bits);
@@ -83,11 +83,11 @@ public:
 inline PureCache::PureCache(void) {
 }
 
-inline size_t PureCache::cacheSize(void) const {
+inline ot::size PureCache::cacheSize(void) const {
 	return 1 << (blockBits() + rowBits() + wayBits());
 }
 
-inline size_t PureCache::blockSize(void) const {
+inline ot::size PureCache::blockSize(void) const {
 	return 1 << blockBits();
 }
 
@@ -112,32 +112,32 @@ inline int PureCache::tagBits(void) const {
 	return 32 - blockBits() + rowBits();
 }
 
-inline t::mask PureCache::blockMask(void) const {
+inline ot::mask PureCache::blockMask(void) const {
 	return blockSize() - 1;
 }
 
-inline t::mask PureCache::lineMask(void) const {
+inline ot::mask PureCache::lineMask(void) const {
 	return (rowCount() - 1) << blockBits();
 }
 
-inline t::mask PureCache::tagMask(void) const {
+inline ot::mask PureCache::tagMask(void) const {
 	return ~(lineMask() | blockMask());
 }
 	
-inline t::mask PureCache::offset(address_t addr) const {
-	return ((t::mask)addr.address()) & blockMask();
+inline ot::mask PureCache::offset(address_t addr) const {
+	return ((ot::mask)addr.address()) & blockMask();
 }
 
-inline t::mask PureCache::line(address_t addr) const {
-	return (((t::mask)addr.address()) & lineMask()) >> blockBits();
+inline ot::mask PureCache::line(address_t addr) const {
+	return (((ot::mask)addr.address()) & lineMask()) >> blockBits();
 }
 
-inline t::mask PureCache::tag(address_t addr) const {
-	return ((t::mask)addr.address()) >> (blockBits() + rowBits());
+inline ot::mask PureCache::tag(address_t addr) const {
+	return ((ot::mask)addr.address()) >> (blockBits() + rowBits());
 }
 
-inline t::mask PureCache::block(address_t addr) const {
-	return ((t::mask)addr.address()) >> blockBits();
+inline ot::mask PureCache::block(address_t addr) const {
+	return ((ot::mask)addr.address()) >> blockBits();
 }
 
 

@@ -154,7 +154,7 @@ protected:
 		}
 
 		// display the result
-		otawa::time_t wcet = ipet::WCET(workspace());
+		ot::time wcet = ipet::WCET(workspace());
 		if(wcet == -1)
 			cout << "ERROR: no WCET computed (see errors above).\n";
 		else

@@ -54,7 +54,7 @@ using namespace cache;
 class NumberOrder {
 public:
 	static inline int compare(LBlock *lb1, LBlock *lb2) {
-		return CATEGORY_HEADER(lb1)->number() - CATEGORY_HEADER(lb2)->number();
+		return cache::CATEGORY_HEADER(lb1)->number() - cache::CATEGORY_HEADER(lb2)->number();
 	}
 };
 typedef genstruct::SortedSLList<LBlock*, NumberOrder> LinkedBlockList;
@@ -106,7 +106,7 @@ LinkedBlocksDetector::LinkedBlocksDetector(void) : Processor("otawa::LinkedBlock
 void LinkedBlocksDetector::configure(const PropList& props) {
         Processor::configure(props);
 	_explicit = EXPLICIT(props);
-	cstats = CATEGORY_STATS(props);
+	cstats = cache::CATEGORY_STATS(props);
 }
 
 
@@ -125,7 +125,7 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 		for (LBlockSet::Iterator lblock(*lbsets[i]); lblock; lblock++) {
 			if ((lblock->id() == 0) || (lblock->id() == (lbsets[i]->count() - 1)))
 				continue; /* Skip first / last l-blocks */
-			if (CATEGORY(lblock) == FIRST_MISS) {
+			if (cache::CATEGORY(lblock) == cache::FIRST_MISS) {
 				//BasicBlock *header = CATEGORY_HEADER(lblock);
 				int cbid = lblock->cacheblock();
 
@@ -143,7 +143,7 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 				equiv.clear();
 				for (LinkedBlockList::Iterator iter(*blockList[j]); iter; iter++) {
 					/* We want to build another "equiv" set from scratch whenever the firstmiss-header changes */
-					BasicBlock *header = CATEGORY_HEADER(*iter);
+					BasicBlock *header = cache::CATEGORY_HEADER(*iter);
 					if ((old_header) && (old_header != header)) {
 						recordBlocks(&equiv);
 						equiv.clear();
@@ -172,7 +172,7 @@ void LinkedBlocksDetector::recordBlocks(Vector<LBlock*> *equiv) {
 		return;
 	genstruct::Vector<LBlock*> *copy = new genstruct::Vector<LBlock*>(*equiv);
 	for (genstruct::Vector<LBlock*>::Iterator lblock(*equiv); lblock; lblock++) {
-		assert(CATEGORY(lblock) == FIRST_MISS);
+		assert(cache::CATEGORY(lblock) == cache::FIRST_MISS);
 		LINKED_BLOCKS(lblock) = copy;
 	}
 	if(cstats)

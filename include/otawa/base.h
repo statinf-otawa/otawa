@@ -22,7 +22,6 @@
 #ifndef OTAWA_BASE_H
 #define OTAWA_BASE_H
 
-#include <stdarg.h>
 #include <elm/io.h>
 #include <elm/utility.h>
 #include <elm/string.h>
@@ -34,20 +33,21 @@
 #include <elm/type_info.h>
 
 // ELM definitions
-namespace elm {
-	namespace t {
-		typedef uint8 byte;
-		//typedef uint32 size;
-		typedef uint32 mask;
-	}	// t
-	namespace serial2 {
-		class Serializer;
-		class Unserializer;
-	}	//serial2
-}	// elm
+namespace elm { namespace serial2 {
+	class Serializer;
+	class Unserializer;
+} } // elm::serial2
 
 namespace otawa {
 using namespace elm;
+
+namespace ot {
+	typedef t::uint8 byte;
+	typedef t::uint32 mask;
+	typedef t::uint32 size;
+	// time measurement
+	typedef t::int64 time;
+}	// ot
 
 // Address class
 class Address {
@@ -147,9 +147,6 @@ public:
 	Exception(void);
 	Exception(const String& message);
 };
-
-// time measurement
-typedef signed long long time_t;
 
 } // otawa
 

@@ -29,12 +29,12 @@ namespace otawa {
  * @param x	Value to get LGL2.
  * @return	LGL2 of x.
  */
-t::size leastGreaterLog2(t::size x) {
+ot::size leastGreaterLog2(ot::size x) {
 	if(x == 0)
 		return 0;
-	t::size off = 0, mask = 0xffff, cnt = 16;
+	ot::size off = 0, mask = 0xffff, cnt = 16;
 	while(cnt != 0) {
-		t::size fmask = mask << (off + cnt);
+		ot::size fmask = mask << (off + cnt);
 		if(x & fmask)
 			off += cnt;
 		cnt >>= 1;

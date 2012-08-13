@@ -117,15 +117,15 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 				may = CACHE_ACS_MAY(lblock->bb())->get(line);
 			BasicBlock *header;
 			if (may) {
-				CATEGORY(lblock) = NOT_CLASSIFIED;
+				cache::CATEGORY(lblock) = cache::NOT_CLASSIFIED;
 			} else {
-				CATEGORY(lblock) = ALWAYS_MISS;
+				cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
 			}
 
 			if (must->contains(lblock->cacheblock())) {
-				CATEGORY(lblock) = ALWAYS_HIT;
+				cache::CATEGORY(lblock) = cache::ALWAYS_HIT;
 			} else if (may && !may->contains(lblock->cacheblock())) {
-				CATEGORY(lblock) = ALWAYS_MISS;
+				cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
 			} else if (firstmiss_level != FML_NONE) {
 				if (LOOP_HEADER(lblock->bb()))
 					header = lblock->bb();
@@ -138,25 +138,25 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 
 				if ((pers->length() > 1) && (firstmiss_level == FML_INNER))
 					bound = pers->length() - 1;
-				CATEGORY_HEADER(lblock) = NULL;
+				cache::CATEGORY_HEADER(lblock) = NULL;
 			  	for (int k = pers->length() - 1 ; (k >= bound) && (header != NULL); k--) {
 					if (pers->isPersistent(lblock->cacheblock(), k)) {
-						CATEGORY(lblock) = FIRST_MISS;
-						CATEGORY_HEADER(lblock) = header;
+						cache::CATEGORY(lblock) = cache::FIRST_MISS;
+						cache::CATEGORY_HEADER(lblock) = header;
 					} else perfect_firstmiss = false;
 					header = ENCLOSING_LOOP_HEADER(header);
 				}
 
 				if ((firstmiss_level == FML_OUTER) && (perfect_firstmiss == false))
-					CATEGORY(lblock) = ALWAYS_MISS;
+					cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
 			} /* of category condition test */
 		} else {
-			CATEGORY(lblock) = ALWAYS_MISS;
+			cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
 		}
 
 		// record stats
 		if(cstats)
-			cstats->add(CATEGORY(lblock));
+			cstats->add(cache::CATEGORY(lblock));
 	}
 
 
@@ -175,7 +175,7 @@ void CAT2Builder::setup(WorkSpace *fw) {
 void CAT2Builder::configure(const PropList &props) {
 	CFGProcessor::configure(props);
 	firstmiss_level = FIRSTMISS_LEVEL(props);
-	cstats = CATEGORY_STATS(props);
+	cstats = cache::CATEGORY_STATS(props);
 	if(cstats)
 		cstats->reset();
 }

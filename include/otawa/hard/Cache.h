@@ -106,15 +106,15 @@ public:
 	inline int tagBits(void) const { return 32 - blockBits() + rowBits(); }
 	inline int wayBits(void) const { return _info.way_bits; }
 
-	inline t::mask blockMask(void) const { return blockSize() - 1; }
-	inline t::mask setMask(void) const { return (rowCount() - 1) << blockBits(); }
-	inline t::mask tagMask(void) const { return ~(lineMask() | blockMask()); }
+	inline ot::mask blockMask(void) const { return blockSize() - 1; }
+	inline ot::mask setMask(void) const { return (rowCount() - 1) << blockBits(); }
+	inline ot::mask tagMask(void) const { return ~(lineMask() | blockMask()); }
 	
 	// Address decomposition
-	inline t::mask offset(address_t addr) const { return t::mask(addr.address()) & blockMask(); }
-	inline t::mask set(address_t addr) const { return (t::mask(addr.address()) & lineMask()) >> blockBits(); }
-	inline t::mask tag(address_t addr) const { return t::mask(addr.address()) >> (blockBits() + rowBits()); }
-	inline t::mask block(address_t addr) const { return t::mask(addr.address()) >> blockBits(); }
+	inline ot::mask offset(address_t addr) const { return ot::mask(addr.address()) & blockMask(); }
+	inline ot::mask set(address_t addr) const { return (ot::mask(addr.address()) & lineMask()) >> blockBits(); }
+	inline ot::mask tag(address_t addr) const { return ot::mask(addr.address()) >> (blockBits() + rowBits()); }
+	inline ot::mask block(address_t addr) const { return ot::mask(addr.address()) >> blockBits(); }
 	
 	// Modifiers
 	void setAccessTime(int access_time);
@@ -131,9 +131,9 @@ public:
 
 	// deprecated
 	inline int rowBits(void) const { return _info.row_bits; }
-	inline t::mask lineMask(void) const { return (rowCount() - 1) << blockBits(); }
-	inline t::mask rowMask(void) const { return (rowCount() - 1) << blockBits(); }
-	inline t::mask line(const Address& addr) const { return (t::mask(addr.address()) & lineMask()) >> blockBits(); }
+	inline ot::mask lineMask(void) const { return (rowCount() - 1) << blockBits(); }
+	inline ot::mask rowMask(void) const { return (rowCount() - 1) << blockBits(); }
+	inline ot::mask line(const Address& addr) const { return (ot::mask(addr.address()) & lineMask()) >> blockBits(); }
 	inline int rowCount(void) const { return 1 << rowBits(); }
 };
 

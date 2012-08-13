@@ -69,6 +69,21 @@ extern Identifier<category_t> CATEGORY;
 extern Identifier<BasicBlock *> CATEGORY_HEADER;
 extern Identifier<CategoryStats *> CATEGORY_STATS;
 
-} }	// otawa::cache
+}
+
+// deprecation
+typedef otawa::cache::category_t category_t;
+const category_t INVALID_CATEGORY = otawa::cache::INVALID_CATEGORY;
+const category_t ALWAYS_HIT = otawa::cache::ALWAYS_HIT;
+const category_t FIRST_HIT = otawa::cache::FIRST_HIT;
+const category_t FIRST_MISS = otawa::cache::FIRST_MISS;
+const category_t ALWAYS_MISS = otawa::cache::ALWAYS_MISS;
+const category_t NOT_CLASSIFIED = otawa::cache::NOT_CLASSIFIED;
+extern Identifier<category_t>& CATEGORY;
+extern Identifier<BasicBlock *>& CATEGORY_HEADER;
+typedef cache::CategoryStats CategoryStats;
+extern Identifier<CategoryStats *>& CATEGORY_STATS;
+
+}	// otawa::cache
 
 #endif // OTAWA_CACHE_FEATURES_H_

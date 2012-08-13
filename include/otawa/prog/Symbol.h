@@ -30,12 +30,12 @@ public:
 
 	static Identifier<Symbol *> ID;
 
-	Symbol(File& file, String name, kind_t kind, address_t address, t::size size = 0);
+	Symbol(File& file, String name, kind_t kind, address_t address, ot::size size = 0);
 	inline File& file(void) const { return _file; }
 	inline kind_t kind(void) const { return _kind; }
 	inline const String& name(void) const { return _name; }
 	inline address_t address(void) const { return _address; }
-	inline size_t size(void) const { return _size; }
+	inline ot::size size(void) const { return _size; }
 	Inst *findInst(void) const;
 	inline bool doesNotReturn(void) const { return no_return; }
 	void setNoReturn(void);

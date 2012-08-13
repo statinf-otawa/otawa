@@ -48,7 +48,7 @@ public:
 	inline int number(void) const { return ident; }
 	inline address_t address(void) const { return addr; }
 	inline BasicBlock *bb(void) const { return _bb; }
-	inline t::size size(void) const { return _size; }
+	inline ot::size size(void) const { return _size; }
 	inline bool sameCacheBlock(const LBlock *block) const { return _cacheblock == block->_cacheblock; }
 	inline LBlockSet *lblockset(void) const { return lbs; }
 	int countInsts(void);

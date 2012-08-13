@@ -511,7 +511,7 @@ public:
 	Segment(Process& process,
 		CString name,
 		address_t address,
-		t::size size,
+		ot::size size,
 		t::uint flags)
 	: otawa::Segment(name, address, size, flags), proc(process) { }
 

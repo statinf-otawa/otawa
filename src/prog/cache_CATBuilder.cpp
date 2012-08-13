@@ -280,14 +280,14 @@ void CATBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *idset, int 
 	}
 
 	//the last categorisation of the l-block
-	category_t lastcateg = CATEGORY(line);
+	category_t lastcateg = cache::CATEGORY(line);
 	if(node->kind()!=ContextTree::LOOP){
 		//if ((line->returnSTATENONCONF())&&( nonconflitdetected)){
 		if ( nonconflitdetected || continu){
-			CATEGORY(line) = ALWAYS_HIT;
+			cache::CATEGORY(line) = cache::ALWAYS_HIT;
 		}
 		else
-			CATEGORY(line) = ALWAYS_MISS;
+			cache::CATEGORY(line) = cache::ALWAYS_MISS;
 	}
 	bool dfm = false;
 	if(node->kind()== ContextTree::LOOP){
@@ -322,23 +322,23 @@ void CATBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *idset, int 
 		BasicBlock * blockheader = node->bb();
 		//if ((line->returnSTATENONCONF())&&(nonconflitdetected || continu)){
 		if ((nonconflitdetected )|| (continu && !exist)){
-			CATEGORY(line) = ALWAYS_HIT;
+			cache::CATEGORY(line) = cache::ALWAYS_HIT;
 		}
 		else
-			if(lastcateg == FIRST_HIT
+			if(lastcateg == cache::FIRST_HIT
 //			|| ((line->getNonConflictState() || nonconflict)
 			|| ((CATBuilder::NON_CONFLICT(line) || nonconflict)
 				&& inter.count() > 0
 				&& dif.count()== 1
 				&& blockheader == bb))
-					CATEGORY(line) = FIRST_HIT;
-			else if ((((lastcateg == FIRST_MISS) || (lastcateg == INVALID_CATEGORY))
+				cache::CATEGORY(line) = cache::FIRST_HIT;
+			else if ((((lastcateg == cache::FIRST_MISS) || (lastcateg == cache::INVALID_CATEGORY))
 				&&(in->contains(identif)&&(inter.count()== 1)&&(inter.contains(identif))&& (dif.count() >= 0)&&(w->count()== 1)))
 				||((inter.count() == 2)&&(dfm)&&(inter.contains(identif))))
-					CATEGORY(line) = FIRST_MISS;
+				cache::CATEGORY(line) = cache::FIRST_MISS;
 				else {
-					CATEGORY(line) = ALWAYS_MISS;
-					 if (lastcateg == FIRST_MISS){
+					cache::CATEGORY(line) = cache::ALWAYS_MISS;
+					 if (lastcateg == cache::FIRST_MISS){
 					 	LOWERED_CATEGORY(line) = node->bb();
 					 	//CATBuilder::NODE(line)->setHEADEREVOLUTION(node->bb(),true);
 					 }
@@ -393,7 +393,7 @@ BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
 					for (LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
 						if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
 							ident = lbloc->id();
-							CATEGORY(lbloc).add(INVALID_CATEGORY);
+							cache::CATEGORY(lbloc).add(cache::INVALID_CATEGORY);
 							//CATBuilder::NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);
 							set->BitSet::add(ident);
 

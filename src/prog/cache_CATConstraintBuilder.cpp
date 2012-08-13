@@ -150,11 +150,11 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 
 		/* Avoid first/last l-block */
 		if ((test != 0)&&(test != (length-1))) {
-			category_t categorie = CATEGORY(bloc);
+			category_t categorie = cache::CATEGORY(bloc);
 			Constraint *cons;
 
 			/* If ALWAYSHIT, then x_miss(i,j) = 0 */
-			if (categorie == ALWAYS_HIT){
+			if (categorie == cache::ALWAYS_HIT){
 				cons = system->newConstraint(Constraint::EQ,0);
 				cons->add(1, MISS_VAR(bloc));
 			}
@@ -163,7 +163,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 			 * and
 			 * xhit(i,j) + xmiss(i,j) = x(i)
 			 */
-			if (categorie == FIRST_HIT) {
+			if (categorie == cache::FIRST_HIT) {
 				BasicBlock *bb = bloc->bb();
 				cons = system->newConstraint(Constraint::EQ);
 				cons->addLeft(1, HIT_VAR(bloc));
@@ -189,11 +189,11 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 			 * xmiss(i,j) == 1  (?!??)
 			 */
 
-			if (categorie == FIRST_MISS){
+			if (categorie == cache::FIRST_MISS){
 				cons = system->newConstraint(Constraint::EQ,1);
 				cons->add(1, MISS_VAR(bloc));
 			}
-			if (categorie == ALWAYS_MISS){
+			if (categorie == cache::ALWAYS_MISS){
 				if (NODE(bloc)->INLOOP()){
 					//if (CATBuilder::NODE(bloc)->HASHEADEREVOLUTION()){
 					if(LOWERED_CATEGORY(bloc)) {

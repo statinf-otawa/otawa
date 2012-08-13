@@ -134,30 +134,30 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 	                MISS_VAR(lblock) = miss;
 	                
 	                // Add the constraint depending on the lblock category
-	                switch(CATEGORY(lblock)) {
-	                	case ALWAYS_HIT: {
+	                switch(cache::CATEGORY(lblock)) {
+	                	case cache::ALWAYS_HIT: {
 		                		// Add constraint: xmiss = 0
 		                		Constraint *cons2 = system->newConstraint(Constraint::EQ,0);
 	    	            		cons2->addLeft(1, MISS_VAR(lblock));
 							}
 	                		break;
-						case FIRST_HIT:
-						case NOT_CLASSIFIED: {
+						case cache::FIRST_HIT:
+						case cache::NOT_CLASSIFIED: {
 		                		// Add constraint: xmiss <= x
 		                		Constraint *cons3 = system->newConstraint(Constraint::LE);
 	    	            		cons3->addLeft(1, MISS_VAR(lblock));
 	        	        		cons3->addRight(1, VAR(lblock->bb()));
 							}
 						break;						
-	                	case ALWAYS_MISS: {
+	                	case cache::ALWAYS_MISS: {
 		                		// Add constraint: xmiss = x
 		                		Constraint *cons3 = system->newConstraint(Constraint::EQ);
 	    	            		cons3->addLeft(1, MISS_VAR(lblock));
 	        	        		cons3->addRight(1, VAR(lblock->bb()));
 							}
 	                		break;
-						case FIRST_MISS: {
-								BasicBlock *header = CATEGORY_HEADER(lblock);
+						case cache::FIRST_MISS: {
+								BasicBlock *header = cache::CATEGORY_HEADER(lblock);
 								assert(header != NULL);
 							
 								if (LINKED_BLOCKS(lblock) != NULL) {

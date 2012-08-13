@@ -26,7 +26,7 @@ public:
 	const static int WRITABLE = 0x02;	/**< Segment is writable. */
 
 	// Constructor
-	Segment(CString name, address_t address, t::size size, unsigned long flags);
+	Segment(CString name, address_t address, ot::size size, unsigned long flags);
 
 	// Accessors
 	inline CString name(void) const { return _name; }
@@ -34,7 +34,7 @@ public:
 	inline bool isExecutable(void) const { return _flags & EXECUTABLE; }
 	inline bool isWritable(void) const { return _flags & WRITABLE; }
 	inline address_t address(void) const { return _address; }
-	inline t::size size(void) const { return _size; }
+	inline ot::size size(void) const { return _size; }
 	inline address_t topAddress(void) const { return _address + t::uint32(_size); }
 	ProgItem *findItemAt(address_t addr);
 	Inst *findInstAt(address_t addr);
@@ -61,7 +61,7 @@ private:
 	unsigned long _flags;
 	CString _name;
 	Address _address;
-	t::size _size;
+	ot::size _size;
 	inhstruct::DLList items;
 	ProgItem **map;
 };
