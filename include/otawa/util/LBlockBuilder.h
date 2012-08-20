@@ -1,6 +1,6 @@
 /*
- *	$Id$
- *	Copyright (c) 2005-07, IRIT UPS <casse@irit.fr>
+ * Deprecated.
+ *	Copyright (c) 2005-12, IRIT UPS <casse@irit.fr>
  *
  *	LBlockBuilder class interface
  *	This file is part of OTAWA
@@ -22,43 +22,6 @@
 #ifndef OTAWA_UTIL_LBLOCKBUILDER_H
 #define OTAWA_UTIL_LBLOCKBUILDER_H
 
-#include <otawa/proc/BBProcessor.h>
-#include <otawa/cache/LBlockSet.h>
-#include <otawa/proc/Feature.h>
-#include <elm/genstruct/Vector.h> 
-#include <elm/genstruct/Table.h>
-
-namespace otawa {
-
-namespace hard {
-	class Cache;
-}
-
-// LBlockBuilder class
-class LBlockBuilder: public BBProcessor {
-	LBlockSet **lbsets;
-	const hard::Cache *cache;
-	HashTable<int,int> *cacheBlocks;
-	//void processLBlockSet(WorkSpace *fw, CFG *cfg, LBlockSet *lbset, const hard::Cache *cach, int *tableindex);
-	void addLBlock(
-		BasicBlock *bb,
-		Inst *inst,
-		int& index,
-		genstruct::AllocatedTable<LBlock *> *lblocks);
-
-protected:
-	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
-	virtual void cleanup(WorkSpace *fw);
-	virtual void setup(WorkSpace *fw);
-
-public:
-	LBlockBuilder(void);
-};
-
-extern Identifier<LBlock *> LBLOCK;
-// Features
-extern Feature<LBlockBuilder> COLLECTED_LBLOCKS_FEATURE;
-
-} // otawa
+#include <otawa/cache/LBlockBuilder.h>
 
 #endif // OTAWA_UTIL_LBLOCKBUILDER_H

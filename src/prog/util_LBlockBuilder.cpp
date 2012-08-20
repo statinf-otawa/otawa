@@ -1,6 +1,6 @@
 /*
- *	$Id$
- *	Copyright (c) 2005-07, IRIT UPS <casse@irit.fr>
+ *	LBlockBuilder implementation
+ *	Copyright (c) 2005-12, IRIT UPS <casse@irit.fr>
  *
  *	LBlockBuilder class implementation
  *	This file is part of OTAWA
@@ -24,6 +24,7 @@
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
+#include <otawa/hard/Memory.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/cfg.h>
 #include <otawa/ilp.h>
@@ -43,20 +44,26 @@ namespace otawa {
  * 
  * @par Required Features
  * @li @ref INVOLVED_CFGS_FEATURE
+ * @li @ref require(hard::CACHE_CONFIGURATION_FEATURE)
+ * @li @ref require(hard::MEMORY_FEATURE)
  * 
  * @par Provided Features
  * @li @ref COLLECTED_LBLOCKS_FEATURE
  */
 
+p::declare LBlockBuilder::reg = p::init("otawa::util::LBlockBuilder", Version(1, 1, 0))
+	.base(LBlockBuilder::reg)
+	.require(COLLECTED_CFG_FEATURE)
+	.require(hard::CACHE_CONFIGURATION_FEATURE)
+	.require(hard::MEMORY_FEATURE)
+	.provide(COLLECTED_LBLOCKS_FEATURE)
+	.maker<LBlockBuilder>();
+
 
 /**
  * Build a new l-block builder.
  */
-LBlockBuilder::LBlockBuilder(void)
-: BBProcessor("otawa::util::LBlockBuilder", Version(1, 1, 0)) {
-	require(COLLECTED_CFG_FEATURE);
-	require(hard::CACHE_CONFIGURATION_FEATURE);
-	provide(COLLECTED_LBLOCKS_FEATURE);
+LBlockBuilder::LBlockBuilder(AbstractRegistration& r): BBProcessor(r) {
 }
 
 
@@ -65,13 +72,16 @@ LBlockBuilder::LBlockBuilder(void)
 void LBlockBuilder::setup(WorkSpace *fw) {
 	ASSERT(fw);
 
-	// Check the cache
+	// check the cache
 	cache = 0;
 	const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(fw);
 	if(conf)
 	cache = conf->instCache();
 	if(!cache)
 		throw ProcessorException(*this, "No cache in this platform.");
+
+	// get the memory
+	mem = hard::MEMORY(fw);
 
 	// Build hash	
 	cacheBlocks = new HashTable<int, int>();
@@ -114,6 +124,13 @@ void LBlockBuilder::addLBlock(
 	genstruct::AllocatedTable<LBlock*> *lblocks
 ) {
 	
+	// test if the l-block is cacheable
+	const hard::Bank *bank = mem->get(inst->address());
+	if(!bank)
+		log << "WARNING: no memory bank for instruction at " << inst->address() << ": block considered as cached.\n";
+	else if(!bank->isCached())
+		return;
+
 	// compute the cache block ID
 	LBlockSet *lbset = lbsets[cache->line(inst->address())]; 
 	int block = cache->block(inst->address());

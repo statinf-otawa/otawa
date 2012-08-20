@@ -1,8 +1,23 @@
 /*
- *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	LBlockSet interface
+ *	Copyright (c) 2005-12, IRIT UPS.
  *
- *	otawa/cache/LBlockSet.h -- interface of LBlockSet cache.
+ *	This file is part of OTAWA
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
  */
 #ifndef OTAWA_CACHE_LBLOCKSET_H
 #define OTAWA_CACHE_LBLOCKSET_H
@@ -23,51 +38,36 @@ namespace otawa {
 // LBlockSet class
 class LBlockSet {
 	friend class CCGDFA;
-	
-	//static int counter;
-	//int cptr ;
-	int linenumber;
-	elm::genstruct::Vector<LBlock *> listelbc;
-	int _cacheBlockCount;
-
 public:
 
 	// Iterator class
 	class Iterator:  public elm::genstruct::Vector<LBlock *>::Iterator {
 	public:
-		inline Iterator(LBlockSet& bset);
+		inline Iterator(LBlockSet& lbset):
+			elm::genstruct::Vector<LBlock *>::Iterator(lbset.listelbc) { }
 	};
 	
 	// Methods
-	inline LBlockSet(int line);
-	//inline IteratorInst<LBlock *> *visit(void);
-	int add (LBlock *node);
-	int count(void);
-	int cacheBlockCount(void);
+	LBlockSet(int row);
+	int add(LBlock *node);
 	int newCacheBlockID(void);
-	LBlock *lblock(int i);
-	int line(void);
-};
+	inline int count(void) { return listelbc.length(); }
+	inline int cacheBlockCount(void) { return(_cacheBlockCount); }
+	inline LBlock *lblock(int i) { return listelbc[i]; }
+	inline int set(void) { return linenumber; }
 
+	// deprecated
+	int line(void) { return linenumber; }
+
+private:
+	int linenumber;
+	elm::genstruct::Vector<LBlock *> listelbc;
+	int _cacheBlockCount;
+};
 
 // Properties
 extern Identifier<LBlockSet **> LBLOCKS;
 extern Identifier<genstruct::AllocatedTable<LBlock* >* > BB_LBLOCKS;	 
-
-// Inlines
-inline LBlockSet::LBlockSet(int line): linenumber(line), _cacheBlockCount(0) {
-	assert(line >= 0);
-}
-	
-/*inline IteratorInst<LBlock *> *LBlockSet::visit(void) {
-	Iterator iter(*this);
-	return new IteratorObject<Iterator, LBlock *>(iter); 
-}*/
-
-// LBlockSet::Iterator inlines
-inline LBlockSet::Iterator::Iterator(LBlockSet& lbset)
-: elm::genstruct::Vector<LBlock *>::Iterator(lbset.listelbc) {
-}
 
 } //otawa
 
