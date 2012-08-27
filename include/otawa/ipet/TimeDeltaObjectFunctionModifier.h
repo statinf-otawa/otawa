@@ -15,7 +15,8 @@ namespace otawa { namespace ipet {
 // TimeDeltaObjectFunctionModifier class
 class TimeDeltaObjectFunctionModifier: public BBProcessor {
 public:
-	TimeDeltaObjectFunctionModifier(void);
+	static p::declare reg;
+	TimeDeltaObjectFunctionModifier(p::declare& r = reg);
 
 	// BBProcessor overload
 	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);

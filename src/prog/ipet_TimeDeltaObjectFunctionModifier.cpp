@@ -8,6 +8,7 @@
 #include <otawa/cfg.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet/TimeDeltaObjectFunctionModifier.h>
+#include <otawa/ipet/BasicObjectFunctionBuilder.h>
 #include <otawa/proc/ProcessorException.h>
 
 using namespace otawa::ilp;
@@ -33,16 +34,18 @@ namespace otawa { namespace ipet {
  * @li @ref ILP_SYSTEM_FEATURE
  */
 
+p::declare TimeDeltaObjectFunctionModifier::reg = p::init("otawa::ipet::TimeDeltaObjectFunctionModifier", Version(1, 0, 1))
+	.provide(EDGE_TIME_FEATURE)
+	.require(ILP_SYSTEM_FEATURE)
+	.require(OBJECT_FUNCTION_FEATURE)
+	.maker<TimeDeltaObjectFunctionModifier>();
+
 
 /**
  * Build a new basic object function builder.
  * @param props		Configuration properties.
  */
-TimeDeltaObjectFunctionModifier::TimeDeltaObjectFunctionModifier(void):
-	BBProcessor("otawa::ipet::TimeDeltaObjectFunctionModifier", Version(1, 0, 0))
-{
-	provide(EDGE_TIME_FEATURE);
-	require(ILP_SYSTEM_FEATURE);
+TimeDeltaObjectFunctionModifier::TimeDeltaObjectFunctionModifier(p::declare& r): BBProcessor(r) {
 }
 
 

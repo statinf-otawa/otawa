@@ -52,7 +52,7 @@ namespace otawa {
  */
 
 p::declare LBlockBuilder::reg = p::init("otawa::util::LBlockBuilder", Version(1, 1, 0))
-	.base(LBlockBuilder::reg)
+	.base(BBProcessor::reg)
 	.require(COLLECTED_CFG_FEATURE)
 	.require(hard::CACHE_CONFIGURATION_FEATURE)
 	.require(hard::MEMORY_FEATURE)
