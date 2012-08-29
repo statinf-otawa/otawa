@@ -213,7 +213,7 @@ void ParExeGraph::analyzeContentions() {
 	  
 					int index = 0;
 					int size = stage->numNodes();
-					node->initContenders(size);
+					node->initContenders(size);		// TODO for several call to apply, possible memory leak
 					stop = false;
 					for (int k=0 ; k<stage->numNodes() ; k++) {
 						ParExeNode *cont = stage->node(k);
