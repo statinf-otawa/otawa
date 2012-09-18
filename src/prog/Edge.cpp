@@ -122,4 +122,36 @@ void Edge::toCall(void) {
 	src->flags |= BasicBlock::FLAG_Call;
 }
 
+
+/**
+ * Get the name of a kind.
+ * @param kind	Kind to get name of.
+ * @return		Kind name.
+ */
+cstring Edge::kindName(kind_t kind) {
+	static cstring names[] = {
+		"none",
+		"taken",
+		"not taken",
+		"call",
+		"virtual",
+		"virtual call",
+		"virtual return",
+		"exception call",
+		"exception return"
+	};
+	return names[kind];
+}
+
+
+Output& operator<<(Output& out, Edge *edge) {
+	out << edge->source() << " -> ";
+	if(edge->kind() == Edge::CALL)
+		out << "cfg(" << edge->calledCFG()->label() << ")";
+	else
+		out << edge->target();
+	out << " (" << Edge::kindName(edge->kind()) << ")";
+	return out;
+}
+
 } // otawa

@@ -1,13 +1,27 @@
 /*
- *	$Id$
- *	Copyright (c) 2003, IRIT UPS.
+ *	Edge class interface
+ *	Copyright (c) 2003-12, IRIT UPS.
  *
- *	otawa/cfg/Edge.h -- interface of Edge class.
+ *	This file is part of OTAWA
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_CFG_EDGE_H
 #define OTAWA_CFG_EDGE_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/cfg/CFG.h>
 
 namespace otawa {
@@ -20,39 +34,40 @@ class Edge: public PropList {
 	friend class CFG;
 public:
 	typedef enum kind_t {
-		NONE,
-		TAKEN,
-		NOT_TAKEN,
-		CALL,
-		VIRTUAL,
-		VIRTUAL_CALL,
-		VIRTUAL_RETURN,
-		EXN_CALL,
-		EXN_RETURN
+		NONE = 0,
+		TAKEN = 1,
+		NOT_TAKEN = 2,
+		CALL = 3,
+		VIRTUAL = 4,
+		VIRTUAL_CALL = 5,
+		VIRTUAL_RETURN = 6,
+		EXN_CALL = 7,
+		EXN_RETURN = 8
 	} kind_t;
+	static cstring kindName(kind_t kind);
+
+	Edge(BasicBlock *source, BasicBlock *target, kind_t kind = TAKEN);
+	~Edge(void);
+
+	inline BasicBlock *source(void) const { return src; };
+	inline BasicBlock *target(void) const { return tgt; };
+	inline kind_t kind(void) const { return knd; };
+
+	inline CFG *calledCFG(void) const {
+		assert(knd == CALL);
+		if(!tgt)
+			return 0;
+		else
+			return ENTRY(tgt);
+	}
+
 private:
 	kind_t knd;
 	BasicBlock *src, *tgt;
 	void toCall(void);
-public:
-	Edge(BasicBlock *source, BasicBlock *target, kind_t kind = TAKEN);
-	~Edge(void);
-	inline BasicBlock *source(void) const { return src; };
-	inline BasicBlock *target(void) const { return tgt; };
-	inline kind_t kind(void) const { return knd; };
-	inline CFG *calledCFG(void) const;
 };
 
-
-// Inlines
-inline CFG *Edge::calledCFG(void) const {
-	assert(knd == CALL);
-	if(!tgt)
-		return 0;
-	else
-		return ENTRY(tgt);
-}
-
+Output& operator<<(Output& out, Edge *edge);
 
 // Deprecated
 typedef Edge::kind_t edge_kind_t;

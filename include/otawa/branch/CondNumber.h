@@ -27,14 +27,11 @@
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/cfg/BasicBlock.h>
 
+#include "features.h"
+
 namespace otawa { namespace branch {
 	
 using namespace elm;
-
-// features
-extern Identifier<int> COND_NUMBER;
-extern Identifier<int*> COND_MAX;
-extern SilentFeature NUMBERED_CONDITIONS_FEATURE;
 
 // processor
 class CondNumber : public otawa::BBProcessor {

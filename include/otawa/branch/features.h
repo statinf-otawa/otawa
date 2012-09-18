@@ -18,41 +18,41 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef BRANCH_CONSBUILDER_H_
-#define BRANCH_CONSBUILDER_H_
+#ifndef OTAWA_BRANCH_FEATURES_H_
+#define OTAWA_BRANCH_FEATURES_H_
 
-#include <otawa/cfg/features.h>
-#include <otawa/prog/WorkSpace.h>
-#include <otawa/proc/BBProcessor.h>
-#include <otawa/cfg/BasicBlock.h>
+namespace otawa {
 
-#include "features.h"
-#include "BranchBuilder.h"
+namespace ilp { class Var; }
 
-namespace otawa { namespace branch {
-	
-using namespace elm;
+namespace branch {
+
+// numbered conditions feature
+extern Identifier<int> COND_NUMBER;
+extern Identifier<int*> COND_MAX;
+extern SilentFeature NUMBERED_CONDITIONS_FEATURE;
 
 
-// OnlyConsBuilder processor
-class OnlyConsBuilder: public BBProcessor {
-public:
-	static p::declare reg;
-	OnlyConsBuilder(p::declare& r = reg);
-	virtual void processBB(otawa::WorkSpace*, CFG *cfg, BasicBlock *bb);
-	virtual void configure(const PropList &props);
-private:
-	bool _explicit;
-};
+// category feature
+typedef enum category_t {
+	ALWAYS_D,
+	ALWAYS_H,
+	FIRST_UNKNOWN,
+	NOT_CLASSIFIED
+} category_t;
 
-// ConsBuilder processor
-class ConsBuilder: public BBProcessor {
-public:
-	static p::declare reg;
-	ConsBuilder(p::declare& r = reg);
-	virtual void processBB(otawa::WorkSpace*, CFG *cfg, BasicBlock *bb);
-};
+extern Identifier<category_t> CATEGORY;
+extern Identifier<BasicBlock*> HEADER;
+extern SilentFeature CATEGORY_FEATURE;
+
+
+// branch constraints feature
+extern SilentFeature CONSTRAINTS_FEATURE;
+extern Identifier<ilp::Var*> MISSPRED_VAR;
+
+// support feature
+extern SilentFeature SUPPORT_FEATURE;
 
 } }		// otawa::branch
 
-#endif
+#endif /* OTAWA_BRANCH_FEATURES_H_ */

@@ -27,23 +27,12 @@
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/cfg/BasicBlock.h>
 
+#include "features.h"
 #include "BranchProblem.h"
 
 namespace otawa { namespace branch {
 	
 using namespace elm;
-
-// features
-typedef enum category_t {
-	ALWAYS_D,
-	ALWAYS_H,
-	FIRST_UNKNOWN,
-	NOT_CLASSIFIED
-} category_t;
-
-extern Identifier<category_t> CATEGORY;
-extern Identifier<BasicBlock*> HEADER;
-extern SilentFeature CATEGORY_FEATURE;
 
 // processor
 class BranchBuilder : public otawa::Processor {

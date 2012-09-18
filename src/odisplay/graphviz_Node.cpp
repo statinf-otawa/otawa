@@ -82,7 +82,7 @@ void GraphVizNode::printOthersAttributes(elm::io::Output& out){
 	if(_hasTitle || _hasBody || props.length() > 0){
 		out << "label=\"";
 		if(_shapeAcceptsBody){
-			out << '{' << quoteSpecials(_title);
+			out << "{ " << quoteSpecials(_title);
 			if(_hasBody){
 				out << "|\\l" << processSeparations(quoteSpecials(_body)) << "\\l";
 			}
@@ -94,7 +94,7 @@ void GraphVizNode::printOthersAttributes(elm::io::Output& out){
 		else {
 			out << quoteSpecials(_title);
 			if(_hasTitle && (_hasBody || props.length() > 0))
-				out << '\n';
+				out << "\\l";
 			if(_hasBody){
 				out << quoteSpecials(_body) << "\\l";
 			}

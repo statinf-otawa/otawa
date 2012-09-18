@@ -1,6 +1,6 @@
 /*
- *	$Id$
- *	Copyright (c) 2007, IRIT UPS <casse@irit.fr>
+ *	ConsBuilder processor interface
+ *	Copyright (c) 2011, IRIT UPS.
  *
  *	This file is part of OTAWA
  *
@@ -8,7 +8,7 @@
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
  *	(at your option) any later version.
- * 
+ *
  *	OTAWA is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,7 +18,6 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 #include <otawa/util/Dominance.h>
 #include <otawa/util/PostDominance.h>
 #include <otawa/util/HalfAbsInt.h>
@@ -39,14 +38,23 @@ namespace otawa { namespace branch {
 using namespace ilp;
 using namespace ipet;
 
-static SilentFeature::Maker<ConsBuilder> BRANCH_SUPPORT_MAKER;
+static SilentFeature::Maker<ConsBuilder> SUPPORT_MAKER;
 /**
- * This feature adds constraints required by the BHT behaviour.
+ * This feature adds to the objective function of the ILP system the raw cost of the BHT behaviour
+ * (that is the branch misprediction penalties multiplied by the number of occurences).
+ */
+SilentFeature SUPPORT_FEATURE("otawa::branch::SUPPORT_FEATURE", SUPPORT_MAKER);
+
+
+static SilentFeature::Maker<OnlyConsBuilder> CONSTRAINTS_MAKER;
+/**
+ * This feature adds to the ILP system the constraints modelling the number of misspredictions
+ * and a variable representing this number.
  *
  * @par Properties
  * @li @ref MISSPRED_VAR
  */
-SilentFeature SUPPORT_FEATURE("otawa::branch::SUPPORT_FEATURE", BRANCH_SUPPORT_MAKER);
+SilentFeature CONSTRAINTS_FEATURE("otawa::branch::CONSTRAINTS_FEATURE", CONSTRAINTS_MAKER);
 
 
 /**
@@ -63,33 +71,34 @@ Identifier<ilp::Var*> MISSPRED_VAR("otawa::branch::MISSPRED_VAR", NULL);
 
 
 /**
- * @class ConsBuilder
+ * @class OnlyConsBuilder
  * This processor add to the current ILP the constraint requires
- * to model the behaviour of the BHT.
+ * to model the behavior of the BHT.
  *
  * @par Configuration
  *
  * @par Provided Features
- * @li @ref SUPPORT_FEATURE
+ * @li @ref CONSTRAINTS_FEATURE
  *
  * @par Required Features
  * @li @ref ipet::ASSIGNED_VARS_FEATURE,
  * @li @ref LOOP_INFO_FEATURE,
  * @li @ref CATEGORY_FEATURE,
  */
-p::declare ConsBuilder::reg =
+
+p::declare OnlyConsBuilder::reg =
 		p::init("otawa::ConsBuilder", Version(1,0,0), BBProcessor::reg)
 		.require(ipet::ASSIGNED_VARS_FEATURE)
 		.require(LOOP_INFO_FEATURE)
 		.require(CATEGORY_FEATURE)
-		.provide(SUPPORT_FEATURE)
+		.provide(CONSTRAINTS_FEATURE)
 		.maker<ConsBuilder>();
 
 
-ConsBuilder::ConsBuilder(void) : BBProcessor("otawa::ConsBuilder", Version(1,0,0)) {
+OnlyConsBuilder::OnlyConsBuilder(p::declare& r) : BBProcessor(r) {
 }
 
-void ConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
+void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 
 	if (branch::COND_NUMBER(bb) != -1) {
 		int row = hard::BHT_CONFIG(ws)->line(bb->lastInst()->address());
@@ -120,13 +129,12 @@ void ConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 			case branch::ALWAYS_D:
 			
 				// get the not-taken edge
-				Tvar = NULL;                	
-            	for (BasicBlock::OutIterator outedge(bb); bb; bb++) {
+				Tvar = NULL;
+            	for (BasicBlock::OutIterator outedge(bb); outedge; outedge++)
             		if (outedge->kind() == Edge::NOT_TAKEN) {
 						ASSERT(Tvar == NULL);
 						Tvar = VAR(outedge);                			
             		}
-            	}
 
             	// x_misspred = e_not-taken
             	cons = sys->newConstraint(Constraint::EQ, 0);
@@ -218,23 +226,57 @@ void ConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 				ASSERT(false);
 				break;
 		} 
+	}
+	
+}
+
+void OnlyConsBuilder::configure(const PropList &props) {
+	BBProcessor::configure(props);
+	_explicit = ipet::EXPLICIT(props);
+}
+
+
+
+/**
+ * @class ConsBuilder
+ * This processor add to the current ILP the constraint requires
+ * to model the behaviour of the BHT.
+ *
+ * @par Configuration
+ *
+ * @par Provided Features
+ * @li @ref SUPPORT_FEATURE
+ *
+ * @par Required Features
+ * @li @ref branch::CONSTRAINTS_FEATURE,
+ */
+
+p::declare ConsBuilder::reg =
+		p::init("otawa::ConsBuilder", Version(1,0,0), BBProcessor::reg)
+		.require(CONSTRAINTS_FEATURE)
+		.provide(SUPPORT_FEATURE)
+		.maker<ConsBuilder>();
+
+
+ConsBuilder::ConsBuilder(p::declare& r) : BBProcessor(r) {
+}
+
+void ConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
+	if(branch::COND_NUMBER(bb) != -1) {
+		ilp::System *sys = ipet::SYSTEM(ws);
 	    int penalty;
 	    if (bb->lastInst()->isIndirect()) {
 	    	if (bb->lastInst()->isConditional()) {
 	    		penalty = hard::BHT_CONFIG(ws)->getCondIndirectPenalty();
 	    	} else {
 	    		penalty = hard::BHT_CONFIG(ws)->getIndirectPenalty();
-	    	}				
+	    	}
 	    } else {
 	    	penalty = hard::BHT_CONFIG(ws)->getCondPenalty();
 	    }
-		sys->addObjectFunction(penalty, misspred); 
+	    ilp::Var *misspred = MISSPRED_VAR(bb);
+		sys->addObjectFunction(penalty, misspred);
 	}
-	
-}
-
-void ConsBuilder::configure(const PropList &props) {
-	_explicit = ipet::EXPLICIT(props);
 }
                         
 } }		// otawa::branch

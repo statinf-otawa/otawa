@@ -73,10 +73,17 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 					inst->dump(buf);
 					String dis = buf.toString();
 					for(int i = 0; i < dis.length(); i++) {
-						if(dis[i] == '{'
-						|| dis[i] == '|'
-						|| dis[i] == '}')
+						switch(dis[i]) {
+						case '{':
+						case '}':
+						case '<':
+						case '>':
+						case '|':
+						case '\\':
+						case '"':
 							cout << '\\';
+							break;
+						}
 						cout << dis[i];
 					}
 
