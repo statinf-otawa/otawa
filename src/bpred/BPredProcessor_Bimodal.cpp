@@ -652,7 +652,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
  */
 void BPredProcessor::simplifyCFG(CFG* cfg, BSets& bs, int addr, elm::genstruct::Vector<BCG*> &graphs) {
 	// create the bitSet
-	elm::genstruct::Vector<int> bit_sets[cfg->countBB()+1];
+	elm::genstruct::Vector<int> *bit_sets = new elm::genstruct::Vector<int>[cfg->countBB()+1];
 	elm::genstruct::Vector<int> in_outs;
 	for(int i = 0 ; i < cfg->countBB()+1 ; ++i){
 		for(int j = 0 ; j<cfg->countBB() ; ++j ) {
@@ -733,6 +733,8 @@ void BPredProcessor::simplifyCFG(CFG* cfg, BSets& bs, int addr, elm::genstruct::
 	}
 	
 	graphs.add(g);
+
+	delete[] bit_sets;
 }
 
 /**

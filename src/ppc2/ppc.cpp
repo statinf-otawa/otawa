@@ -237,6 +237,9 @@ private:
 	ppc_decoder_t *_ppcDecoder;
 };
 
+// Pre-declaration
+class Inst;
+class Segment;
 
 /**
  * This class provides support to build a loader plug-in based on the GLISS V2
@@ -275,7 +278,7 @@ public:
 			return 4;
 #		endif
 	}
-	void decodeRegs( Inst *inst, elm::genstruct::AllocatedTable<hard::Register *> *in, elm::genstruct::AllocatedTable<hard::Register *> *out);
+	void decodeRegs(otawa::Inst *inst, elm::genstruct::AllocatedTable<hard::Register *> *in, elm::genstruct::AllocatedTable<hard::Register *> *out);
 	inline ppc_decoder_t *ppcDecoder() { return _ppcDecoder;}
 	inline void *ppcPlatform(void) const { return _ppcPlatform; }
 	void setup(void);
@@ -301,7 +304,7 @@ public:
 		throw (UnsupportedFeatureException);
 
 	// Info overload
-	virtual int opcode(Inst *inst) const {
+	virtual int opcode(otawa::Inst *inst) const {
 		ppc_inst_t *i = decode_ppc(inst->address());
 		int code = i->ident;
 		ppc_free_inst(i);
@@ -328,7 +331,7 @@ private:
 #		endif
 	}
 
-	int get_size(const Inst *inst) {
+	int get_size(const otawa::Inst *inst) {
 		ppc_inst_t *i = decode_ppc(inst->address());
 		int r = ppc_get_inst_size(i) >> 3;
 		ppc_free_inst(i);

@@ -35,7 +35,7 @@ using namespace elm::genstruct;
 // Pre-declaration
 class Processor;
 class AbstractFeature;
-class declare;
+namespace proc { class declare; }
 
 // fast initialization
 namespace p {

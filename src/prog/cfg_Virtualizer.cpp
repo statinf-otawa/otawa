@@ -224,8 +224,8 @@ BasicBlock *exit) {
 		ASSERT(!call.entry);
 		call.entry = map.get(edge->target(), 0);
 		ASSERT(call.entry);
-		Edge *edge = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
-		CALLED_CFG(edge) = cfg;
+		Edge *edge2 = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
+		CALLED_CFG(edge2) = cfg;
 	}
 
 	// Translate edges

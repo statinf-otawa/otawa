@@ -139,7 +139,7 @@ namespace otawa {
     public:
 		//GraphBBTime(const PropList& props = PropList::EMPTY);
 		static Registration<GraphBBTime<G> > reg;
-		GraphBBTime(AbstractRegistration& reg = reg);
+		GraphBBTime(AbstractRegistration& _reg = reg);
 		virtual void configure(const PropList& props);
 
 		void processWorkSpace(WorkSpace *ws);
@@ -192,8 +192,8 @@ namespace otawa {
 	}*/
 
 template <class G>
-GraphBBTime<G>::GraphBBTime(AbstractRegistration& reg)
-: BBProcessor(reg) {
+GraphBBTime<G>::GraphBBTime(AbstractRegistration& _reg)
+: BBProcessor(_reg) {
 	/*require(hard::PROCESSOR_FEATURE);
 	require(hard::MEMORY_FEATURE);
 	provide(ipet::BB_TIME_FEATURE);*/

@@ -55,7 +55,7 @@ public:
 template <class T>
 class LoaderChecker {
 public:
-	LoaderChecker(WorkSpace *ws, cstring name = "", Version& version = Version::ZERO);
+	LoaderChecker(WorkSpace *ws, cstring name = "", const Version& version = Version::ZERO);
 	inline T *operator->(void) const { return loader; }
 private:
 	T *loader;
