@@ -79,14 +79,18 @@ public:
 	class Make: public Module::Make<Library> {
 	public:
 		inline Make(const string& name): Module::Make<Library>(new Library(name))  { }
+		inline Make& lib(const string& name) { static_cast<Library *>(mod)->libname = name; return *this; }
 	};
 
 	virtual void adjust(::Configuration& config) {
 		config.libs << " -L"
-			<< config.prefix.append("lib/otawa/ilp") << " -l" << name();
+			<< config.prefix.append("lib/otawa/ilp") << " -l" << libname;
 	}
+
 protected:
-	Library(const string& name): Module(name) { }
+	Library(const string& name): Module(name) { libname = name; }
+private:
+	string libname;
 };
 
 class Solver: public Module {
@@ -161,7 +165,7 @@ public:
 		free_argument_description = "MODULES...";
 
 		// initialize the modules
-		add(Library::Make("display").doc("graph displayer library"));
+		add(Library::Make("display").doc("graph displayer library").lib("odisplay"));
 		add(Library::Make("gensim").doc("generic temporal simulator"));
 		add(Solver::Make("lp_solve4").doc("lp_solve 4.x ILP solver"));
 		add(Solver::Make("lp_solve5").doc("config_lp_solve5"));
