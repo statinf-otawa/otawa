@@ -164,3 +164,19 @@ install(DIRECTORY data/scripts DESTINATION share/Otawa/ ${EXCLUDED_FILES})
 if(OTAWA_TEST)
 	add_subdirectory(test)
 endif()
+
+
+
+# handle autodoc
+option(AUTODOC "generate auto-documentation" OFF)
+find_program(DOXYGEN doxygen)
+if((DOXYGEN AND NOT EXISTS autodoc) OR AUTODOC)
+	message(STATUS "generating autodoc...")
+	execute_process(COMMAND "${DOXYGEN}" OUTPUT_QUIET)
+	message(STATUS "autodoc done")
+endif()
+if(DOXYGEN)
+	install(DIRECTORY autodoc DESTINATION "${CMAKE_INSTALL_PREFIX}/share/GEL/")
+endif()
+unset(AUTODOC CACHE)
+

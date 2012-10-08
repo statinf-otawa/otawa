@@ -163,7 +163,7 @@ extern int fft_line;
  *
  * @par Content of functions and calls
  *
- * The @ function element content may be either @c loop elements as given
+ * The @c function element content may be either @c loop elements as given
  * above or @c call  elements.
  *
  * @code
@@ -171,6 +171,7 @@ extern int fft_line;
  * 	CONTENT
  * </call>
  * @endcode
+ *
  * This elements represents a function call inside an existing function. The
  * LOCATION gives the address of the called function. The content is the same
  * as of a @c function, that is, @c loop and @c call elements. The embedding
@@ -183,6 +184,7 @@ extern int fft_line;
  *   ...
  * </multibranch>
  * @endcode
+ *
  * This elements is used to resolve a complex control to several targets
  * (case of indirect branch found in switch compilation using tables).
  * The first LOCATION is the control instruction itself and the target child
