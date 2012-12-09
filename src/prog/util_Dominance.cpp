@@ -26,11 +26,26 @@
 #include <otawa/cfg.h>
 #include <otawa/prop/DeletableProperty.h>
 #include <otawa/cfg/features.h>
+#include <otawa/proc/BBProcessor.h>
 
 using namespace otawa::dfa;
 
 namespace otawa {
 
+class DominanceCleaner: public BBCleaner {
+public:
+	DominanceCleaner(WorkSpace *ws): BBCleaner(ws) { }
+
+protected:
+	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+		bb->removeProp(REVERSE_DOM);
+		if(LOOP_HEADER(bb)) {
+			bb->removeProp(LOOP_HEADER);
+			for(BasicBlock::InIterator edge(bb); edge; edge++)
+				bb->removeProp(BACK_EDGE);
+		}
+	}
+};
 
 /**
  * Identifier of annotation containing reverse-dominance information.
@@ -176,18 +191,18 @@ bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 /**
  * Computes the domination relation.
  */
-void Dominance::processCFG(WorkSpace *fw, CFG *cfg) {
+void Dominance::processCFG(WorkSpace *ws, CFG *cfg) {
 	assert(cfg);
 	DominanceProblem dp(cfg);
 	dfa::IterativeDFA<DominanceProblem, BitSet> engine(dp, *cfg);
 	engine.compute();
-	for (CFG::BBIterator blocks(cfg); blocks; blocks++) {
-	  BitSet *b = engine.outSet(blocks.item());
+	for (CFG::BBIterator bb(cfg); bb; bb++) {
+	  BitSet *b = engine.outSet(*bb);
 	  b = new BitSet(*b);
-	  //blocks->addDeletable<BitSet *>(REVERSE_DOM, b);
-	  blocks->addProp(new DeletableProperty<BitSet *>(REVERSE_DOM, b));
+	  REVERSE_DOM(bb) = b;
 	}
 	markLoopHeaders(cfg);
+	addCleaner(DOMINANCE_FEATURE, new DominanceCleaner(ws));
 }
 
 
@@ -246,24 +261,32 @@ bool Dominance::isBackEdge(Edge *edge) {
 }
 
 
+static SilentFeature::Maker<Dominance> DOMINANCE_MAKER;
 /**
  * This feature ensures that information about domination between nodes
  * of a CFG is vailable.
  *
+ * @par Include
+ * <otawa/util/Dominance.h>
+ *
  * @par Properties
  * @li @ref REVERSE_DOM (BasicBlock)
  */
-Feature<Dominance> DOMINANCE_FEATURE("otawa::DOMINANCE_FEATURE");
+SilentFeature DOMINANCE_FEATURE("otawa::DOMINANCE_FEATURE", DOMINANCE_MAKER);
 
 
+static SilentFeature::Maker<Dominance> LOOP_HEADERS_MAKER;
 /**
  * This feature ensures that all loop header are marked with a @ref LOOP_HEADER
  * property, and the backedges are marked with a @ref BACK_EDGE property.
+ *
+ * @par Include
+ * <otawa/cfg/features.h>
  *
  * @Properties
  * @li @ref LOOP_HEADER (BasicBlock).
  * @li @ref BACK_EDGE (Edge). 
  */
-Feature<Dominance> LOOP_HEADERS_FEATURE("LOOP_HEADERS_FEATURE");
+SilentFeature LOOP_HEADERS_FEATURE("LOOP_HEADERS_FEATURE", LOOP_HEADERS_MAKER);
 
 } // otawa

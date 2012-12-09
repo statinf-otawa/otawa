@@ -82,7 +82,7 @@ string CFG::format(const Address& addr) {
  * @param bb2	Dominated BB.
  * @return		True if bb1 dominates bb2.
  */
-bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
+/*bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 	assert(bb1);
 	assert(bb2);
 
@@ -96,7 +96,7 @@ bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
 
 	// Test with the index
 	return set->contains(INDEX(bb1));
-}
+}*/
 
 
 /**

@@ -1,20 +1,26 @@
 ====== Computing a WCET ======
 
-Although OTAWA is designed as a generic framework to develop static analyses for WCET computation, some facilities are provided to compute WCET using dedicated commands.
+Although OTAWA is designed as a generic framework to develop static analyses for WCET computation,
+some facilities are provided to compute WCET using dedicated commands.
 
-Currently, OTAWA implements two main approaches to WCET: IPET (Implicit Path Enumeration Technique) and ETS (Extended Timing Schema). Only the former method has reached a state of development mature enough to be delivered as an integrated tool. In the near future, we hope to provide an equivalent tool for the ETS approach.
+Although OTAWA does implement and implements several approaches to WCET computation,
+IPET (Implicit Path Enumeration Technique) is the more mature one. In addition, IPET seems to be the method
+that has been the most developed and that gave the most interesting and precise results.
+
+In OTAWA, there are four ways to compute a WCET:
+  * ''oipet'' command provides minimal support for IPET computation and may be used for basic computations,
+  * ''owcet'' command allows to perform computation based on script adapted to specific architecture,
+  * the Eclispe plug-in gives access to architecture scripts in more friendly graphic way inside the Eclipse IDE,
+  * by writing your own program benefiting from the facilities of the framework (that is explored in the following sections).
 
 
 
+===== ''oipet'' command =====
 
+==== First Contact ====
 
-
-
-
-
-===== ''oipet'' First Contact =====
-
-''oipet'' implements the IPET approach to compute WCETs. It may be simply called from a command line interface (shell) and only requires the path to the executable file to time.
+''oipet'' implements the IPET approach to compute WCETs. It may be simply called from a command line interface (shell)
+and only requires the path to the executable file to time.
 
 <code sh>
   $ oipet executable_path
@@ -22,40 +28,48 @@ Currently, OTAWA implements two main approaches to WCET: IPET (Implicit Path Enu
   WCET [executable_path:main] = w
 </code>
 
-This command computes the WCET of the given executable file starting at the ''main'' function considering a scalar in-order pipelined processor with five stages without any cache (as stated by the warning sentence). You may experiment this command with the binary codes delivered with OTAWA ([[:resources:program_examples]]).
+This command computes the WCET of the given executable file starting at the ''main'' function considering a scalar
+in-order pipelined processor with five stages without any cache (as stated by the warning sentence). You may experiment
+this command with the binary codes delivered with OTAWA ([[:resources:program_examples]]).
 
-To load the binary code, the OTAWA framework first retrieves the kind of the executable file. If it is supported the matching loader plugin processes the file. Currently, only the PowerPC architecture is supported but more will come depending on the needs. Note that you may develop your own architecture plugin to be used in OTAWA (see [[Extending OTAWA]]). 
+To load the binary code, the OTAWA framework first retrieves the kind of the executable file. If it is supported,
+the matching loader plugin processes the file. Currently, only PowerPC and ARM architectures are delivered by the core package
+but more are available on the OTAWA site (Sparc, TriCore, M68HCS12). Note that you may develop your own architecture plugin
+to be used in OTAWA (see the //developer manual//). 
 
-Then, the WCET is computed according to a sequence of analysis stages and the result is displayed (expressed in processor cycles). To get the accurate time //t// in seconds, consider the frequency //f// of the processor and the WCET //w// and perform the calculation below:
+Then, the WCET is computed according to a sequence of analysis stages and the result is displayed (expressed in processor cycles).
+To get the accurate time //t// in seconds, consider the frequency //f// of the processor and the WCET //w// and perform the calculation below:
 
 <m> t = w / f </m>
 
-Usually, an embedded executable contains many different tasks to time that are called from an un-ended loop implemented in the ''main'' function. In OTAWA, we consider that tasks are identified by an entry function performing the task job. To apply ''oipet'' to a particular function, called ''task_entry'', just append the function name to the command.
+Usually, an embedded executable contains many different tasks to time that are called from an un-ended loop implemented in the ''main'' function.
+In OTAWA, we consider that tasks are identified by an entry function performing the task job. To apply ''oipet'' to a particular function,
+called ''task_entry'', just append the function name to the command.
 
 <code sh>
   $ oipet executable_path task_entry
-  WARNING: there is no data cache here !
   WCET [executable_path:task_entry] = w
 </code>
 
-As one may notice watching at the OTAWA samples, a single executable is not enough. First, the host architecture of the embedded program may be different from the default scalar non-pipelined processor. Second, some information cannot be automatically extracted from the program and must be provided by the developer. They are called flow facts and concerns mainly loop bounds.
+As one may notice watching at the OTAWA samples, a single executable is not enough.
+First, the host architecture of the embedded program may be different from the default scalar non-pipelined processor.
+Second, some information cannot be automatically extracted from the program and must be provided by the developer.
+They are called flow facts and concerns mainly loop bounds.
 
 
 
 
+==== Selecting the Hardware ====
 
+Although the architecture family is provided in executable files, there are usually many different implementations
+of an ISA -- Instruction Set Architecture. For example, many different OEM and chips support the ARM instruction set
+and their time behavior is quite different among the different implementations.
 
-
-
-
-===== Selecting the Hardware =====
-
-
-Although the architecture family is provided in executable files, there are usually many different implementations of an ISA -- Instruction Set Architecture. For example, many different OEM and chips support the ARM instruction set and their time behavior is quite different among the different implementations.
-
-The hardware description is defined by two models:
+The hardware description is defined by several models:
   * the processor model describes the pipeline,
-  * the cache model describes the cache.
+  * the cache model describes the cache,
+  * the address space describes how the memory is organized,
+  * the branch prediction model describes the branch predictor configuration.
 
 Both models are expressed using XML files some of which are provided with OTAWA in the directory ''INSTALL_DIRECTORY/share/Otawa/''.
 
@@ -64,7 +78,8 @@ Both models are expressed using XML files some of which are provided with OTAWA 
 | procs/op2.xml | out-of-order superscalar processor with 4-instructions width |
 | caches/inst-64x16x1.xml | single instruction cache of 64 Kb with direct-mapped 16-bytes blocks |
 
-You may freely examine these files to figure out the simple used encoding and possibly write your own hardware models. Take a look at [[Processor Model Specification]] and [[Cache Model Specification]] for more details on the format.
+You may freely examine these files to figure out the simple used encoding and possibly write your own hardware models.
+Take a look at the //developer manual// for more details on the format.
 
 To configure the hardware model with ''oipet'', you must use the following options:
   * ''-p'' //processor_path// to select the processor model,
@@ -84,15 +99,14 @@ Conversely, there are many ways to take into account the pipeline effects on the
   * ''-t exegraph'': use the ExeGraph approach of ((X. Li, A. Roychoudhury, T. Mitra, //Modeling Out-of-Order Processors for Software Timing Analysis//, Proceedings of the 25th IEEE International Real-Time Systems Symposium (RTSS’04), 2004.)).
 
 
+==== Specifying the Flow Facts ====
 
+Currently, OTAWA has not the ability to derive automatically loop bounds from the executable. To compute a WCET,
+the user must provides them in a ''.ff'' flow fact file. This file path may be passed to ''oipet'' using option ''-f path''
+or it is silently loaded by OTAWA deriving its name by appending ''.ff'' to the executable file path.
 
-
-
-===== Specifying the Flow Facts =====
-
-Currently, OTAWA has not the ability to derive automatically loop bounds from the executable. To compute a WCET, the user must provides them in a ''.ff'' flow fact file. This file path may be passed to ''oipet'' using option ''-f path'' or it is silently loaded by OTAWA derivating its name by appending ''.ff'' to the executable file path.
-
-''.ff'' has a simple text syntax where loops are identified by their header block. As in the sample below, a maximal count of iteration must be associated with the header block.
+''.ff'' has a simple text syntax where loops are identified by their header block. As in the sample below,
+a maximal count of iteration must be associated with the header block.
 
 **fibcall.c**
 <code c>
@@ -125,9 +139,9 @@ checksum "fibcall" 0x86c6f217;
 loop 0x0005013c 29;
 </code>
 
-Building a flow fact file in OTAWA is currently a hard task: loop headers are identified by their address in the execution memory space. We apologize for the disturbance and we intend, in future versions, to provide more intuitive and more automatic way.
-
-The easier way to build a ''.ff'' file is to use the ''mkff'' utility. Called on the executable, it generates a template ''.ff'' file where the loop counts are replaced by ''?'' marks.
+Building a flow fact file in OTAWA is currently a hard task: loop headers are identified by their address in the execution memory space.
+The easier way to build a ''.ff'' file is to use the ''mkff'' utility. Called on the executable,
+it generates a template ''.ff'' file where the loop counts are replaced by ''?'' marks.
 
 <code sh>
 $ mkff executable > executable.ff
@@ -141,9 +155,13 @@ checksum "fibcall" 0x86c6f217;
 loop 0x0005013c ?;
 </code>
 
-The user has to edit by hand the generated file and to replace each ''?'' mark by the program maximal loop count. The ''checksum'' must not be changed: it is used to check consistency of the flow fact file with the executable as header addresses may change when an executable is recompiled.
+The user has to edit by hand with any text editor the generated file and to replace each ''?'' mark
+by the program maximal loop count. The ''checksum'' must not be changed: it is used to check consistency
+of the flow fact file with the executable as header addresses may change when an executable is recompiled.
 
-To help in the match of ''.ff'' loop and source loop, ''mkff'' comments the name of the function containing the loop and indents loops according to their nesting depth. If these indications are not enough, you may use ''dumpcfg'' utility to produce a representation of the CFG -- Control Flow Graph -- of the function.
+To help in the match of ''.ff'' loop and source loop, ''mkff'' comments the name of the function containing the loop
+and indents loops according to their nesting depth. If these indications are not enough,
+you may use ''dumpcfg'' utility to produce a representation of the CFG -- Control Flow Graph -- of the function.
 
 <code sh>
 $ dump -Did executable_path function_name > function_name.dot
@@ -155,9 +173,10 @@ This command produces a PostScript file that may be displayed with your preferre
 
 
 
-===== Details about the computation =====
+==== Details about the computation ====
 
-To compute a WCET, ''oipet'' performs a lot of analyses on the program according to the set options. To get the detail of the performed analyses, one may pass the ''-v'' option and get an ouput listing like below:
+To compute a WCET, ''oipet'' performs a lot of analyses on the program according to the selected options.
+To get the detail of the performed analyses, one may pass the ''-v'' option and get an ouput listing like below:
 
 <code>
   $ oipet executable_path -v
@@ -170,8 +189,78 @@ To compute a WCET, ''oipet'' performs a lot of analyses on the program according
   WCET [/home/casse/Benchs/snu-rt/fibcall/fibcall:main] = 960
 </code>
 
-When an analysis starts, a ''Starting'' line is displayed with the name and the version. Then an ''Ending'' is output when the analysis stops. The lines between start and stop output depends upon the performed analysis.
+When an analysis starts, a ''Starting'' line is displayed with the name and the version.
+Then an ''Ending'' is output when the analysis stops. The lines between start and stop output depends
+upon the performed analysis.
 
-In the sample above, the ''TrivialBBTime'' analysis displays the processed function CFG and, inside them, the processed BB -- Basic Blocks. If there is an error somewhere, it is easy to locate it on the processed program.
+In the sample above, the ''TrivialBBTime'' analysis displays the processed function CFG and, inside them,
+the processed BB -- Basic Blocks. If there is an error somewhere, it is easy to locate it on the processed program.
 
-To have details about the performed analyses, please refer to the auto-documentation in ''INSTALL_PATH/share/Otawa/autodoc'': each analyses matches a documented C++ class.
+To have details about the performed analyses, please refer to the auto-documentation in ''INSTALL_PATH/share/Otawa/autodoc'':
+each analysis matches a documented C++ class.
+
+
+
+
+
+
+===== ''owcet'' command =====
+
+''oipet'' performs very basic WCET computations based on a bound set of analyzes. In addition, you have to provide
+description of the different architecture features that may be quite complex in some cases. In the opposite, ''owcet''
+allows to use WCET computation scripts dedicated to a specific microprocessor model. These scripts comes with own set
+of hardware description files and possibly analyses supporing specific features of the microprocessor.
+Several microprocessor scripts are available on the OTAWA site, @(OTAWA_SITE) and may be freely downloaded and compiled.
+
+==== Basics of ''owcet'' ====
+
+The ''owcet'' is usually invoked with the following syntax from the command line shell:
+<code sh>
+$ owcet -s SCRIPT EXE_FILE [TASK_NAME]
+</code>
+
+Where //SCRIPT// is the name of the script. The scripts are installed in the directory ''otawa-config --scripts''.
+The script files have ''.osx'' for extension and the //SCRIPT// may be either the script name without extension, or a file path
+designing a script file. To list the available scripts, you can use ''otawa-config'':
+<code sh>
+$ otawa-config --list-scripts
+</code>
+
+The //EXE_FILE// is the ELF file containing the executable and //TASK_NAME// is an optional argument giving the name
+of the function representing the task. If //TASK_NAME// is omitted, the computation is performed for the ''main'' function.
+ 
+As for ''owcet'', flow fact information (like loop bounds) may be required to achieve the computation. ''owcet'' supports the F4
+flow fact format (as ''oipet'') but also the FFX format (based on XML) providing much more expressivity for the flow facts.
+The FFX files may be edited by hand or generated by tools like oRange (described in the following section). Whatever the used format,
+the flow facts may be passed implicitely with a file named //EXE_FILE//''.ff'' or //EXE_FILE//''.ffx'' according to the used format,
+or by passing explicitely with the option ''-f'' or ''--flowfacts'':
+<code sh>
+$ owcet -s SCRIPT EXE_FILE [TASK_NAME] -f PATH_TO_FLOWFACT_FILE
+</code>
+
+
+==== Tuning the computation ====
+
+Usually, the delivered scripts provide several configuration items: either a script represents a family of microprocessors,
+or some properties on the environment of the microprocessor (that is the board it is mount on). To list the available
+parameters, one can type the following command:
+
+<code sh>
+$ owcet -s SCRIPT EXE_FILE --list
+</code>
+
+Either one can let undefined a parameter (using the default value), or you can pass it a parameter to the computation
+with option ''-p'' or ''--param'' passing as argument a string separated by an equal symbol ''=''. On the left side, stands the
+parameter name and on the right side the parameter value:
+<code sh>
+$ owcet -s SCRIPT EXE_FILE -p PARAM1=VALUE1 -p PARAM2=VALUE2...
+</code>
+
+
+
+
+
+===== Producing the flowfacts =====
+
+
+

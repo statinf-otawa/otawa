@@ -168,6 +168,8 @@ public:
 	inline operator bool(void) const { return !isEmpty(); }
 	void print(io::Output& out) const;
 
+	Address getEnclosingFunction(void);
+
 	template <class T> inline const T& get(const Identifier<T>& id, const PropList& props) const {
 		const PropList& fprops = ContextualProperty::find(props, *this, id);
 		return id.value(fprops);

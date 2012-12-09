@@ -659,7 +659,7 @@ otawa::Inst *BranchInst::target() {
 				t::uint32 my_word, prev_word;
 				proc.get(address(), my_word);
 				proc.get(prev->address(), prev_word);
-				cerr << "DEBUG: looking for call at " << address() << ": " << io::hex(prev_word) << ", " << io::hex(my_word) << io::endl;
+				//cerr << "DEBUG: looking for call at " << address() << ": " << io::hex(prev_word) << ", " << io::hex(my_word) << io::endl;
 				if((prev_word & 0x0fffffff) == 0x01a0e00f 					// test previous opcode
 				&& (prev_word & 0xf0000000) == (my_word & 0xf0000000))		// test same condition
 					_kind |= IS_CALL;

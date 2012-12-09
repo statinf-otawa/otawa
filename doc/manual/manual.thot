@@ -6,6 +6,8 @@
 @ENCODING=utf-8
 @HTML_STYLES=../css/manual.css
 
+@OTAWA_SITE={{http://www.otawa.fr}}
+
 @include manual-install.thot
 @include manual-oipet.thot
 @include manual-appli.thot

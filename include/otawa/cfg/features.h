@@ -104,6 +104,11 @@ extern SilentFeature DELAYED_CFG_FEATURE;
 extern Identifier<bool> DELAYED_INST;
 extern Identifier<bool> DELAYED_NOP;
 
+// LOOP_HEADERS_FEATURE
+extern SilentFeature LOOP_HEADERS_FEATURE;
+extern Identifier<bool> LOOP_HEADER;
+extern Identifier<bool> BACK_EDGE;
+
 } // otawa
 
 #endif /* OTAWA_CFG_FEATURES_H_ */

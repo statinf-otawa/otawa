@@ -46,6 +46,7 @@ protected:
 	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void processCFG(WorkSpace *fw, CFG *cfg) = 0;
 	string str(const Address& address);
+	string str(const Address& base, const Address& address);
 	inline CFG *cfg(void) const { return _cfg; }
 	
 private:

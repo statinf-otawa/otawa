@@ -64,7 +64,6 @@ public:
 	inline BasicBlock *exit(void)
 		 { if(!(flags & FLAG_Scanned)) scan(); return &_exit; }
 	inline int countBB(void);
-	bool dominates(BasicBlock *bb1, BasicBlock *bb2);
 	inline bool isVirtual(void) const;
 	inline bool isInlined(void) const;
 	void numberBB(void);

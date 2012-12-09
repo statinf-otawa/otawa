@@ -9,6 +9,7 @@
 
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/proc/Feature.h>
+#include <otawa/cfg/features.h>
 
 namespace otawa {
 
@@ -24,25 +25,20 @@ public:
 	static bool dominates(BasicBlock *bb1, BasicBlock *bb2);
 	static inline bool isDominated(BasicBlock *bb1, BasicBlock *bb2);
 	static bool isLoopHeader(BasicBlock *bb);
-	static void markLoopHeaders(CFG *cfg/*,
-		elm::MutableCollection<BasicBlock *> *headers = 0*/);
 	static bool isBackEdge(Edge *edge);
 
 	// Constructor
 	Dominance(void);
-	
-	// CFGProcessor overload
+
+protected:
 	virtual void processCFG(WorkSpace *fw, CFG *cfg);
+private:
+	void markLoopHeaders(CFG *cfg);
 };
 
 // Features
-extern Feature<Dominance> DOMINANCE_FEATURE;
-extern Feature<Dominance> LOOP_HEADERS_FEATURE;
-
-// Properties
+extern SilentFeature DOMINANCE_FEATURE;
 extern Identifier<dfa::BitSet *> REVERSE_DOM;
-extern Identifier<bool> LOOP_HEADER;
-extern Identifier<bool> BACK_EDGE;
 
 } // otawa
 

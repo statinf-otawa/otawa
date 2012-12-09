@@ -778,16 +778,22 @@ void Processor::recordStat(const AbstractFeature& feature, StatCollector *collec
 
 /**
  * @fn void Processor::addCleaner(const AbstractFeature& feature, Cleaner *cleaner);
- * Add a cleaner for the given feature.
+ * Add a cleaner for the given feature. A cleaner is an object with a virtual destructor
+ * that is called when the associated feature is removed: this let the processor to release
+ * and clean up the resources it allocated to implement the provided features.
  * @param feature	Feature the cleaner apply to.
  * @param cleaner	Cleaner to add.
  */
 
 
 /**
- * @fn void Processor::track(AbstractFeature& feature, T *object);
+ * @fn T *Processor::track(AbstractFeature& feature, T *object);
  * Track the release of an allocated object with the given feature.
  * Ensure that the given object will be deleted when the feature is invalidated.
+ * It may be used as below:
+ * @code
+ *		MyClass *object = track(MY_FEATURE, new MyClass());
+ * @endcode
  * @param feature	Feature the cleaner applies to.
  * @param object	Object to delete.
  */
@@ -799,7 +805,21 @@ void Processor::recordStat(const AbstractFeature& feature, StatCollector *collec
  * given feature. When the feature is deleted, the object is fried and the identifier
  * is removed. It is used as below:
  * @code
- * 		track(MY_ID(props) = value);
+ * 		track(MY_FEATURE, MY_ID(props) = value);
+ * @endcode
+ *
+ * @param feature	Linked feature.
+ * @param ref		Reference to the identifier to remove.
+ */
+
+
+/**
+ * @fn void Processor::track(const AbstractFeature& feature, const Ref<T *, const Identifier<T *> >& ref);
+ * Track the release of an allocated object assigned to an identifier relatively to the
+ * given feature. When the feature is deleted, the object is fried and the identifier
+ * is removed. It is used as below:
+ * @code
+ * 		track(MY_FEATURE, MY_ID(props) = value);
  * @endcode
  *
  * @param feature	Linked feature.

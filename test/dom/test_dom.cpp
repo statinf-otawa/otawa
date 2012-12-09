@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 		
 		// Build dominance
 		Dominance dom;
-		dom.processCFG(fw, cfg);
+		//dom.processCFG(fw, cfg);
 		
 		// Display dominance information
 		for(CFG::BBIterator bb1(cfg); bb1; bb1++) {

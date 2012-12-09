@@ -28,6 +28,7 @@
 #include <elm/genstruct/HashTable.h>
 #include <elm/system/Plugger.h>
 #include <otawa/ilp/ILPPlugin.h>
+#include <elm/sys/Directory.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -148,17 +149,19 @@ public:
 		doc(*this, cmd, "--doc", option::description, "output the OTAWa document path", end),
 		has_so(*this, cmd, "--has-so", option::description, "exit with 0 if dynamic libraries are available, non-0 else", end),
 		help(*this, cmd, "-h", cmd, "--help", option::description, "display the help message", end),
-		ilp(*this, cmd, "--ilp", option::description, "list ILP solver plugins available", end),
+		ilp(*this, cmd, "--list-ilps", cmd, "--ilp", option::description, "list ILP solver plugins available", end),
 		libs(*this, cmd, "--libs", option::description, "output linkage C++ flags", end),
-		loader(*this, cmd, "--loader", option::description, "list loader plugins available", end),
-		modules(*this, cmd, "--modules", option::description, "list available modules", end),
+		loader(*this, cmd, "--list-loaders", cmd, "--loader", option::description, "list loader plugins available", end),
+		modules(*this, cmd, "--list-modules", cmd, "--modules", option::description, "list available modules", end),
 		prefix(*this, cmd, "--prefix", option::description, "output the prefix directory of OTAWA", end),
-		procs(*this, cmd, "--procs", option::description, "list available processor collections", end),
-		show_version(*this, cmd, "--version", option::description, "output the current version", end)
+		procs(*this, cmd, "--list-procs", cmd, "--procs", option::description, "list available processor collections", end),
+		show_version(*this, cmd, "--version", option::description, "output the current version", end),
+		scripts(*this, cmd, "--scripts", option::description, "output the scripts path", end),
+		list_scripts(*this, cmd, "--list-scripts", option::description, "output the list of available scripts", end)
 	{
 		// initialize the options
 		program = "otawa-config";
-		version = Version(2, 0, 0);
+		version = Version(2, 1, 0);
 		author = "H. Cassé <casse@irit.fr>";
 		copyright = "LGPL v2";
 		description = "Get building information about the OTAWA framework";
@@ -222,6 +225,10 @@ public:
 		if(modules)
 			for(HashTable<string, Module *>::Iterator mod(modmap); mod; mod++)
 				cout << '[' << mod->name() << "]\n" << mod->doc() << io::endl << io::endl;
+		if(scripts)
+			cout  << getScriptDir() << io::endl;
+		if(list_scripts)
+			showScripts();
 	}
 
 protected:
@@ -233,10 +240,22 @@ protected:
 	}
 
 private:
+
+	/**
+	 * Get the scripts paths.
+	 */
+	Path getScriptDir() {
+		return config.prefix.append("share/Otawa/scripts");
+	}
+
 	void add(Module *mod) {
 		modmap.put(mod->name(), mod);
 	}
 
+	/**
+	 * Show a list of plugins.
+	 * @param kind		Type of the plugin.
+	 */
 	void show(cstring kind) {
 		elm::system::Plugger plugger(
 			OTAWA_ILP_NAME,
@@ -251,6 +270,20 @@ private:
 			cout << *plugin;
 		}
 		cout << io::endl;
+	}
+
+	/**
+	 * Display the list of available scripts.
+	 */
+	void showScripts() {
+		sys::FileItem *item = sys::FileItem::get(getScriptDir());
+		sys::Directory *dir = item->toDirectory();
+		if(!dir)
+			cerr << "ERROR: script directory \"" << getScriptDir() << "\" is not a directory !\n";
+		else
+			for(sys::Directory::Iterator file(dir); file; file++)
+				if(file->path().extension() == "osx")
+					cout << file->path().basePart().namePart() << io::endl;
 	}
 
 	HashTable<string, Module *> modmap;
@@ -268,7 +301,9 @@ private:
 		modules,
 		prefix,
 		procs,
-		show_version;
+		show_version,
+		scripts,
+		list_scripts;
 };
 
 int main(int argc, char **argv) {

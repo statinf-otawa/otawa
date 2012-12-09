@@ -100,6 +100,10 @@ ContextualPath& ContextualPath::operator=(const ContextualPath& path) {
 }
 
 
+/**
+ * Print the contextual path.
+ * @param out	Stream to output to.
+ */
 void ContextualPath::print(io::Output& out) const {
 	bool first = true;
 	out << "[";
@@ -111,6 +115,21 @@ void ContextualPath::print(io::Output& out) const {
 		out << stack[i];
 	}
 	out << "]";
+}
+
+
+/**
+ * Get the address of the function enclosing immediately the current context.
+ * @return	Enclosing function address or Address::null if no function is found.
+ */
+Address ContextualPath::getEnclosingFunction(void) {
+	int i = stack.count() - 1;
+	while(i >= 0) {
+		if(stack[i].kind() == ContextualStep::FUNCTION)
+			return stack[i].address();
+		i--;
+	}
+	return Address::null;
 }
 
 
