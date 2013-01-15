@@ -43,7 +43,7 @@ public:
 	 * @param edge	Edge to get target of.
 	 * @return		Sink of the given edge.
 	 */
-	const Vertex& sinkOf(const Edge& edge);
+	const Vertex& sinkOf(Edge& edge);
 	
 	/**
 	 * Get the output degree of the vertex.
@@ -51,32 +51,43 @@ public:
 	 * @return			Out degreee.
 	 */
 	int outDegree(const Vertex& vertex) const;
-	
+
 	/**
 	 * Test if the succ vertex is successor of the ref vertex.
 	 * @param succ	Successor vertex.
 	 * @param ref	Reference vertex.
 	 * @return		True if succ is successor of ref.
 	 */
-	bool isSuccessorOf(const Vertex& succ, const Vertex& ref);
+	bool isSuccessorOf(Vertex& succ, const Vertex& ref);
 
 	/** Outing edge iterator on a node. */
-	class OutIterator: public Iterator<Edge> {
+	class Successor: public Iterator<Edge> {
 	public:
 		
 		/**
 		 * Build the iterator on the successor edge of the source.
 		 * @param source	Source node.
 		 */
-		OutIterator(const DiGraph& graph, const Vertex& source);
+		Successor(const DiGraph& graph, const Vertex& source);
 		
 		/**
 		 * Clone the given successor iterator.
 		 * @param forward	Iterator to clone.
 		 */
-		OutIterator(const OutIterator& iterator);
+		Successor(const OutIterator& iterator);
 	};
 	
+};
+
+
+/** A digraph that supports loop identification. */
+class DiGraphWithLoop: public DiGraph {
+
+	/**
+	 * Test if the vertex is a loop header.
+	 * @return		True if it is a loop header, false else.
+	 */
+	bool isLoopHeader(Vertex& vertex);
 };
 
 
@@ -91,20 +102,20 @@ public:
 class BiDiGraph: public DiGraph {
 
 	/** Entering-in edge iterator on a node. */
-	class InIterator: public Iterator<Edge> {
+	class Predecessor: public Iterator<Edge> {
 	public:
 		
 		/**
 		 * Build the iterator on the entering-in edges of the source.
 		 * @param source	Source node.
 		 */
-		InIterator(const DiGraph& graph, const Vertex& source);
+		Predecessor(const DiGraph& graph, const Vertex& source);
 		
 		/**
 		 * Clone the given predecessor iterator.
 		 * @param forward	Iterator to clone.
 		 */
-		InIterator(const InIterator& iterator);
+		Predecessor(const InIterator& iterator);
 	};
 	
 	/**

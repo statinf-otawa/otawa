@@ -33,11 +33,12 @@ namespace otawa { namespace dfa {
 #	define OTAWA_AILD(x)
 #endif
 
+// AbsIntLiteEx class
 template <class G, class T>
-class AbsIntLite {
+class AbsIntLiteEx {
 public:
 
-	inline AbsIntLite(const G& graph, T& domain): g(graph), d(domain), set(g.count()) {
+	inline AbsIntLiteEx(const G& graph, T& domain): g(graph), d(domain), set(g.count()) {
 		vals = new typename T::t[g.count()];
 	}
 
@@ -82,9 +83,7 @@ public:
 		OTAWA_AILD(cerr << "processing " << v << io::endl);
 
 		// join of predecessor
-		d.set(tmp, d.bottom());
-		for(typename G::Predecessor pred(g, v); pred; pred++)
-			d.join(tmp, vals[g.index(pred)]);
+		in(v);
 		OTAWA_AILD(cerr << "	- JOIN IN: "; d.dump(cerr, tmp); cerr << io::endl);
 
 		// update value
@@ -92,13 +91,13 @@ public:
 		OTAWA_AILD(cerr << "	- UPDATE: "; d.dump(cerr, tmp); cerr << io::endl);
 
 		// new value ?
-		if(/*d.equals(d.bottom(), vals[g.index(v)]) ||*/ !d.equals(tmp, vals[g.index(v)])) {
+		if(!d.equals(tmp, vals[g.index(v)])) {
 			OTAWA_AILD(cerr << "	- NEW VALUE\n");
 			d.set(vals[g.index(v)], tmp);
 
 			// add successors
 			for(typename G::Successor succ(g, v); succ; succ++) {
-				push(*succ);
+				push(g.sinkOf(*succ));
 				OTAWA_AILD(cerr << "	- PUTTING " << *succ << io::endl);
 			}
 		}
@@ -106,8 +105,13 @@ public:
 
 	inline const typename T::t& in(typename G::Vertex v) {
 		d.set(tmp, d.bottom());
-		for(typename G::Predecessor pred(g, v); pred; pred++)
-			d.join(tmp, vals[g.index(pred)]);
+		for(typename G::Predecessor pred(g, v); pred; pred++) {
+			d.set(t2, vals[g.index(g.sourceOf(*pred))]);
+			d.filter(*pred, t2);
+			d.join(tmp, vals[t2]);
+		}
+		if(g.isLoopHeader(v))
+			d.widen(v, tmp);
 		return tmp;
 	}
 
@@ -117,13 +121,13 @@ public:
 
 	class DomainIter: public PreIterator<DomainIter, typename T::t &> {
 	public:
-		inline DomainIter(const AbsIntLite& _ail): ail(_ail), i(-1) { }
+		inline DomainIter(const AbsIntLiteEx& _ail): ail(_ail), i(-1) { }
 		inline DomainIter(const DomainIter& iter): ail(iter.ail), i(iter.i) { }
 		inline bool ended(void) const { return i >= ail.g.count(); }
 		inline void next(void) { i++; }
 		inline typename T::t& item(void) { if(i == -1) return tmp; else return vals[i]; }
 	private:
-		const AbsIntLite& ail;
+		const AbsIntLiteEx& ail;
 		int i;
 	};
 
@@ -131,9 +135,38 @@ private:
 	const G& g;
 	T& d;
 	typename T::t *vals;
-	typename T::t tmp;
+	typename T::t tmp, t2;
 	genstruct::VectorQueue<typename G::Vertex> todo;
 	BitVector set;
+};
+
+
+// AbsIntLiteExtender class
+template <class G, class D>
+class AbsIntLiteExtender {
+public:
+	typedef typename D::t t;
+	inline AbsIntLiteExtender(D& domain): dom(domain) { }
+	inline t initial(void) { return dom.initial(); }
+	inline t bottom(void) { return dom.bottom();  }
+	inline void join(t& d, const t& s) { dom.join(d, s); }
+	inline bool equals(const t& v1, const t& v2) { return dom.equals(v1, v2); }
+	inline void set(t& d, const t& s) { dom.set(d, s); }
+	inline void dump(io::Output& out, const t& v) { dom.dump(out, v); }
+	inline void update(typename G::Vertex v, t &d) { dom.update(v, d); }
+	inline void filter(typename G::Edge e, t &d) { }
+	inline void widen(typename G::Vertex v, t &d) { }
+private:
+	D& dom;
+};
+
+// AbsIntLite class
+template <class G, class T>
+class AbsIntLite: public AbsIntLiteEx<G, AbsIntLiteExtender<G, T> > {
+public:
+	inline AbsIntLite(const G& graph, T& domain): AbsIntLiteEx<G, AbsIntLiteExtender<G, T> >(graph, e), e(domain) { }
+private:
+	AbsIntLiteExtender<G, T> e;
 };
 
 } } // otawa::dfa

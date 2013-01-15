@@ -19,9 +19,6 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_CFG_CFGADAPTER_H_
-#define OTAWA_CFG_CFGADAPTER_H_
-
 #include <otawa/cfg/CFGAdapter.h>
 
 namespace otawa {
@@ -38,6 +35,3 @@ namespace otawa {
  */
 
 }	//otawa
-
-
-#endif /* OTAWA_CFG_CFGADAPTER_H_ */

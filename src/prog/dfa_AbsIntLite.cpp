@@ -41,7 +41,9 @@ namespace otawa { namespace dfa {
  * For details on the abstract interpretation, you may define the symbol OTAWA_AIL_DEBUG
  * and process information will be printed on standard input.
  *
- * @param G		Type of processed graph (must implement concept @ref otawa::concept::DiGraphWithIndexedVertex and @ref otawa::concept::DiGraphWithEntry)
+ * @param G		Type of processed graph
+ * 				(must implement concept @ref otawa::concept::DiGraphWithIndexedVertex,
+ * 				@ref otawa::concept::DiGraphWithEntry and @ref otawa::concept::DiGraphWithLoop)
  * @param T		Type of abstract domain (must implement concept @ref otawa::concept::AbstractDomain)
  */
 

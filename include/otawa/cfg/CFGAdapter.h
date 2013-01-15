@@ -23,6 +23,7 @@
 #define OTAWA_CFG_CFGADAPTER_H_
 
 #include <otawa/cfg.h>
+#include <otawa/cfg/features.h>
 
 namespace otawa {
 
@@ -30,31 +31,39 @@ class ForwardCFGAdapter {
 public:
 
 	typedef BasicBlock *Vertex;
+	typedef otawa::Edge *Edge;
 
 	inline ForwardCFGAdapter(CFG *_cfg): cfg(_cfg) { }
 	inline int count(void) const { return cfg->countBB(); }
 	inline Vertex entry(void) const { return cfg->entry(); }
 	inline int index(Vertex v) const { return v->number(); }
+	inline Vertex sourceOf(Edge edge) const { return edge->source(); }
+	inline Vertex sinkOf(Edge edge) const { return edge->target(); }
+	inline int outDegree(Vertex vertex) const { int cnt = 0; for(Successor s(*this, vertex); s; s++) cnt++; return cnt; }
+	inline bool isSuccessorOf(Vertex succ, const Vertex& ref) { for(Successor s(*this, ref); s; s++) if(sinkOf(s) == succ) return true; return false; }
+	inline int inDegree(Vertex vertex) const { int cnt = 0; for(Predecessor s(*this, vertex); s; s++) cnt++; return cnt; }
+	inline bool isPredecessorOf(Vertex pred, const Vertex& ref) { for(Predecessor s(*this, ref); s; s++) if(sourceOf(s) == pred) return true; return false; }
+	inline bool isLoopHeader(Vertex v) const { return LOOP_HEADER(v); }
 
-	class Predecessor: public PreIterator<Predecessor, Vertex> {
+	class Predecessor: public PreIterator<Predecessor, Edge> {
 	public:
 		inline Predecessor(const ForwardCFGAdapter& g, const Vertex& v): iter(v) { }
 		inline bool ended (void) const { return iter.ended(); }
-		const Vertex item (void) const { return iter->source(); }
+		const Edge item (void) const { return iter.item(); }
 		void next(void) { iter++; }
 	private:
 		BasicBlock::InIterator iter;
 	};
 
-	class Successor: public PreIterator<Successor, Vertex> {
+	class Successor: public PreIterator<Successor, Edge> {
 	public:
 		inline Successor(const ForwardCFGAdapter& g, const Vertex& v): iter(v) { step(); }
 		inline bool ended (void) const { return iter.ended(); }
-		const Vertex item (void) const { return iter->target(); }
+		const Edge item (void) const { return iter.item(); }
 		void next(void) { iter++; step(); }
 	private:
 		inline void step(void) {
-			while(iter && iter->kind() == Edge::CALL)
+			while(iter && iter->kind() == otawa::Edge::CALL)
 				iter++;
 		}
 		BasicBlock::OutIterator iter;
@@ -75,31 +84,39 @@ class BackwardCFGAdapter {
 public:
 
 	typedef BasicBlock *Vertex;
+	typedef otawa::Edge *Edge;
 
 	inline BackwardCFGAdapter(CFG *_cfg): cfg(_cfg) { }
 	inline int count(void) const { return cfg->countBB(); }
 	inline Vertex entry(void) const { return cfg->exit(); }
 	inline int index(Vertex v) const { return v->number(); }
+	inline Vertex sourceOf(Edge edge) const { return edge->target(); }
+	inline Vertex sinkOf(Edge edge) const { return edge->source(); }
+	inline int outDegree(Vertex vertex) const { int cnt = 0; for(Successor s(*this, vertex); s; s++) cnt++; return cnt; }
+	inline bool isSuccessorOf(Vertex succ, const Vertex& ref) { for(Successor s(*this, ref); s; s++) if(sinkOf(s) == succ) return true; return false; }
+	inline int inDegree(Vertex vertex) const { int cnt = 0; for(Predecessor s(*this, vertex); s; s++) cnt++; return cnt; }
+	inline bool isPredecessorOf(const Vertex& pred, const Vertex& ref) { for(Predecessor s(*this, ref); s; s++) if(sourceOf(s) == pred) return true; return false; }
+	inline bool isLoopHeader(Vertex v) const { return LOOP_HEADER(v); }
 
-	class Successor: public PreIterator<Successor, Vertex> {
+	class Successor: public PreIterator<Successor, Edge> {
 	public:
 		inline Successor(const BackwardCFGAdapter& g, const Vertex& v): iter(v) { }
 		inline bool ended (void) const { return iter.ended(); }
-		const Vertex item (void) const { return iter->source(); }
+		const Edge item (void) const { return iter.item(); }
 		void next(void) { iter++; }
 	private:
 		BasicBlock::InIterator iter;
 	};
 
-	class Predecessor: public PreIterator<Predecessor, Vertex> {
+	class Predecessor: public PreIterator<Predecessor, Edge> {
 	public:
 		inline Predecessor(const BackwardCFGAdapter& g, const Vertex& v): iter(v) { step(); }
 		inline bool ended (void) const { return iter.ended(); }
-		const Vertex item (void) const { return iter->target(); }
+		const Edge item (void) const { return iter.item(); }
 		void next(void) { iter++; step(); }
 	private:
 		inline void step(void) {
-			while(iter && iter->kind() == Edge::CALL)
+			while(iter && iter->kind() == otawa::Edge::CALL)
 				iter++;
 		}
 		BasicBlock::OutIterator iter;
