@@ -63,12 +63,14 @@ public:
 
 		// initialization
 		d.set(vals[g.index(g.entry())], d.initial());
-		OTAWA_AILD(cerr << "INITIAL: " << g.entry() << ": " << vals[g.index(g.entry())] << io::endl);
+		OTAWA_AILD(cerr << "INITIAL: " << g.entry() << ": "; d.dump(cerr, vals[g.index(g.entry())]); cerr << io::endl);
 
 		// first step
-		for(typename G::Iterator v(g); v; v++)
+		/*for(typename G::Iterator v(g); v; v++)
 			if(v != g.entry())
-				step(v);
+				step(v);*/
+		for(typename G::Successor succ(g, g.entry()); succ; succ++)
+			push(g.sinkOf(*succ));
 
 		// loop until fixpoint
 		OTAWA_AILD(cerr << "\nINTERPRETING\n");
@@ -107,8 +109,11 @@ public:
 		d.set(tmp, d.bottom());
 		for(typename G::Predecessor pred(g, v); pred; pred++) {
 			d.set(t2, vals[g.index(g.sourceOf(*pred))]);
+			OTAWA_AILD(cerr << " - FILTER " << g.sourceOf(*pred) << "("; d.dump(cerr, t2); cerr << ") = ");
 			d.filter(*pred, t2);
-			d.join(tmp, vals[t2]);
+			OTAWA_AILD(d.dump(cerr, t2); cerr << io::endl);
+			d.join(tmp, t2);
+			OTAWA_AILD(cerr << " - JOIN for in = "; d.dump(cerr, tmp); cerr << io::endl);
 		}
 		if(g.isLoopHeader(v))
 			d.widen(v, tmp);
