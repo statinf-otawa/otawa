@@ -78,12 +78,11 @@ void TrivialInstCacheManager::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb)
 	}
 }
 
-
+static SilentFeature::Maker<TrivialInstCacheManager> maker;
 /**
  * This feature ensurers that the instruction cache has been modelled
  * in the IPET approach.
  */
-Feature<TrivialInstCacheManager>
-	INST_CACHE_SUPPORT_FEATURE("otawa::ipet::INST_CACHE_SUPPORT_FEATURE");
+SilentFeature INST_CACHE_SUPPORT_FEATURE("otawa::ipet::INST_CACHE_SUPPORT_FEATURE", maker);
 
 } } // otawa::ipet

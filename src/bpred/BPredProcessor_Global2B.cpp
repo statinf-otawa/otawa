@@ -20,7 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/ipet/BPredProcessor.h>
+#include <otawa/bpred/BPredProcessor.h>
 #include "BHGDrawer.h"
 #include "BBHGDrawer.h"
 #include "BCGDrawer.h"

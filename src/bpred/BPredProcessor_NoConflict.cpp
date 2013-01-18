@@ -21,7 +21,7 @@
  */
 
 #include <otawa/cfg.h>
-#include <otawa/ipet/BPredProcessor.h>
+#include <otawa/bpred/BPredProcessor.h>
 #include <otawa/ipet/BasicConstraintsBuilder.h> // Contraintes de base feature
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/ipet/IPET.h>

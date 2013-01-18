@@ -30,9 +30,6 @@ public:
 	TrivialInstCacheManager(void);
 };
 
-// Features
-extern Feature<TrivialInstCacheManager> INST_CACHE_SUPPORT_FEATURE; 
-
 } } // otawa::ipet
 
 #endif // OTAWA_IPET_TRIVIAL_INST_CACHE_MANAGER_H

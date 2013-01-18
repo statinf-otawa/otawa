@@ -1,10 +1,9 @@
 /*
- *	$Id$
- *	VarAssignment class interface
+ *	TimeDeltaObjectFunctionModifier class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-08, IRIT UPS.
- * 
+ *	Copyright (c) 2006-07, IRIT UPS.
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,43 +15,32 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with Foobar; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_IPET_VARASSIGNMENT_H
-#define OTAWA_IPET_VARASSIGNMENT_H
+#ifndef OTAWA_TSIM_TIME_DELTA_OBJECT_FUNCTION_MODIFIER_H
+#define OTAWA_TSIM_TIME_DELTA_OBJECT_FUNCTION_MODIFIER_H
 
+#include <assert.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/Feature.h>
 
-namespace otawa {
+namespace otawa { namespace tsim {
 
-// pre-declaration
-namespace ilp { class System; }
 
-namespace ipet {
-
-// VarAsignment class
-class VarAssignment: public BBProcessor {
-	bool _explicit, _recursive;
-	ilp::System *sys;
-	String makeNodeVar(BasicBlock *bb, CFG *cfg);
-	String makeEdgeVar(Edge *edge, CFG *cfg);
-
-protected:
-	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
-	virtual void setup(WorkSpace *ws);
-
+// TimeDeltaObjectFunctionModifier class
+class TimeDeltaObjectFunctionModifier: public BBProcessor {
 public:
-	VarAssignment(void);
-	virtual void configure(const PropList& props);
-	static Registration<VarAssignment> reg;
+	static p::declare reg;
+	TimeDeltaObjectFunctionModifier(p::declare& r = reg);
+
+	// BBProcessor overload
+	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 };
 
 // Features
-extern Identifier<String*> FORCE_NAME;
+extern Feature<TimeDeltaObjectFunctionModifier> EDGE_TIME_FEATURE;
 
-} } // otawa::ipet
+} } // otawa::tsim
 
-#endif	// OTAWA_IPET_VARASSIGNMENT_H
-
+#endif // OTAWA_TSIM_TIME_DELTA_OBJECT_FUNCTION_MODIFIER_H

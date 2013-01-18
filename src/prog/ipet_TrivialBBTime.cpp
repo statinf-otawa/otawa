@@ -62,10 +62,11 @@ void TrivialBBTime::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 Identifier<unsigned> PIPELINE_DEPTH("otawa::ipet::PIPELINE_DEPTH", 5);
 
 
+static SilentFeature::Maker<TrivialBBTime> maker;
 /**
  * This feature ensures that the execution time of each basic block has been
  * computed.
  */
-Feature<TrivialBBTime> BB_TIME_FEATURE("otawa::BB_TIME");
+SilentFeature BB_TIME_FEATURE("otawa::BB_TIME", maker);
 
 } } // otawa::ipet

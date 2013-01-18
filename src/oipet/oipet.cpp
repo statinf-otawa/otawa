@@ -31,7 +31,7 @@
 #include <elm/system/StopWatch.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
-#include <otawa/ipet/BBTimeSimulator.h>
+#include <otawa/tsim/BBTimeSimulator.h>
 #include <otawa/exegraph/LiExeGraphBBTime.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/display/CFGDrawer.h>
@@ -44,6 +44,8 @@
 #include <otawa/util/BBRatioDisplayer.h>
 #include <otawa/display/ILPSystemDisplayer.h>
 #include <otawa/stats.h>
+#include <otawa/ipet/VarAssignment.h>
+#include <otawa/tsim/Delta.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -360,7 +362,7 @@ void Command::compute(String fun) {
 	case bbtime_sim:
 	case bbtime_delta:
 		{
-			BBTimeSimulator bbts;
+			tsim::BBTimeSimulator bbts;
 			bbts.process(fw, props);
 		}
 		break;
@@ -466,8 +468,8 @@ void Command::compute(String fun) {
 
 	// Delta processing
 	if(bbtime_option == bbtime_delta) {
-		Delta::LEVELS(props) = delta;
-		Delta delta;
+		tsim::Delta::LEVELS(props) = delta;
+		tsim::Delta delta;
 		delta.process(fw, props);
 	}
 

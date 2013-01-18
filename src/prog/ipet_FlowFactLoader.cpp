@@ -244,6 +244,7 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 }
 
 
+static SilentFeature::Maker<FlowFactLoader> maker;
 /**
  * This feature ensures that flow facts information (at less the loop bounds)
  * has been put on the CFG of the current task.
@@ -253,7 +254,7 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
  * @li @ref ipet::MIN_ITERATION
  * @li @ref ipet::TOTAL_ITERATION
  */
-Feature<FlowFactLoader> FLOW_FACTS_FEATURE("otawa::ipet::FLOW_FACTS_FEATURE");
+SilentFeature FLOW_FACTS_FEATURE("otawa::ipet::FLOW_FACTS_FEATURE", maker);
 
 
 } } // otawa::ipet

@@ -45,9 +45,6 @@ private:
 	bool lookLineAt(Inst *source, BasicBlock *bb);
 };
 
-// Features
-extern Feature<FlowFactLoader> FLOW_FACTS_FEATURE;
-
 } } // otawa::ipet
 
 #endif // OTAWA_IPET_IPET_FLOW_FACT_LOADER_H

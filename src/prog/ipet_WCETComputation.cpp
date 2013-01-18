@@ -143,12 +143,13 @@ void WCETComputation::collectStats(WorkSpace *ws) {
 }
 
 
+static SilentFeature::Maker<WCETComputation> maker;
 /**
  * This feature ensures that the WCET has been computed using IPET approach.
  *
  * @par Properties
- * @li @ref ipet::WCET (FrameWork)
+ * @li @ref otawa::ipet::WCET (FrameWork)
  */
-Feature<WCETComputation> WCET_FEATURE("otawa::ipet::WCET_FEATURE");
+SilentFeature WCET_FEATURE("otawa::ipet::WCET_FEATURE", maker);
 
 } } // otawa::ipet

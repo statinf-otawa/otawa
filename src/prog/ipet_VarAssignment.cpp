@@ -187,6 +187,7 @@ String VarAssignment::makeEdgeVar(Edge *edge, CFG *cfg) {
 }
 
 
+static SilentFeature::Maker<VarAssignment> maker;
 /**
  * This feature asserts that each block and each edge has a variable
  * name asserted.
@@ -194,6 +195,6 @@ String VarAssignment::makeEdgeVar(Edge *edge, CFG *cfg) {
  * @par Properties
  * @li @ref ipet::VAR
  */
-Feature<VarAssignment> ASSIGNED_VARS_FEATURE("otawa::ipet::ASSIGNED_VARS_FEATURE");
+SilentFeature ASSIGNED_VARS_FEATURE("otawa::ipet::ASSIGNED_VARS_FEATURE", maker);
 
 } } // otawa::ipet

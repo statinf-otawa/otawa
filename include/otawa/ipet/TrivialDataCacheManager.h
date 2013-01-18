@@ -26,9 +26,6 @@ public:
 	TrivialDataCacheManager(void);
 };
 
-// Features
-extern Feature<TrivialDataCacheManager> DATA_CACHE_SUPPORT_FEATURE;
-
 } } // otawa::ipet
 
 #endif // OTAWA_IPET_TRIVIAL_DATA_CACHE_MANAGER_H

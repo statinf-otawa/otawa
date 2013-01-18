@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	ipet::FlowFactConstraintBuilder class interface
  *
  *	This file is part of OTAWA
@@ -47,9 +46,6 @@ private:
 	ilp::System *system;
 	bool _explicit;
 };
-
-// Features
-extern Feature<FlowFactConstraintBuilder> FLOW_FACTS_CONSTRAINTS_FEATURE;
 
 } } // otawa::ipet
 

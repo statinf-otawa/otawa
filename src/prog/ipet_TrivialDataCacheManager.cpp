@@ -73,14 +73,11 @@ BasicBlock *bb) {
 }
 
 
+static SilentFeature::Maker<TrivialDataCacheManager> maker;
 /**
  * This feature ensures that the first-level data cache has been taken in
  * account in the basic block timing.
- *
- * @par Properties
- * @li @ref ipet::TIME
  */
-Feature<TrivialDataCacheManager>
-	DATA_CACHE_SUPPORT_FEATURE("otawa::ipet::DATA_CACHE_SUPPORT_FEATURE");
+SilentFeature DATA_CACHE_SUPPORT_FEATURE("otawa::ipet::DATA_CACHE_SUPPORT_FEATURE", maker);
 
 } } // otawa::ipet

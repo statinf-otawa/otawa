@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	Copyright (c) 2006-07, IRIT UPS.
  *
  *	BBTimeSimulator class interface
@@ -19,8 +18,8 @@
  *	along with Foobar; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_IPET_BBTIMESIMULATOR_H
-#define OTAWA_IPET_BBTIMESIMULATOR_H
+#ifndef OTAWA_ISIM_BBTIMESIMULATOR_H
+#define OTAWA_TSIM_BBTIMESIMULATOR_H
 
 #include <otawa/cfg.h>
 #include <otawa/proc/BBProcessor.h>
@@ -32,7 +31,7 @@ namespace sim {
 	class State;
 }
 
-namespace ipet {
+namespace tsim {
 
 // BBTimeSimulator class
 class BBTimeSimulator : public BBProcessor {
@@ -48,6 +47,6 @@ private:
 	sim::State *state;
 };
 
-} }	// otawa::ipet
+} }	// otawa::tsim
 
-#endif /* OTAWA_IPET_BBTIMESIMULATOR_H */
+#endif /* OTAWA_TSIM_BBTIMESIMULATOR_H */

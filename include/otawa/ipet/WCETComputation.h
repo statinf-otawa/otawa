@@ -23,7 +23,7 @@
 #define OTAWA_IPET_WCET_COMPUTATION_H
 
 #include <otawa/proc/CFGProcessor.h>
-#include <otawa/proc/Feature.h>
+#include <otawa/ipet/features.h>
 
 namespace otawa { namespace ipet {
 
@@ -40,9 +40,6 @@ protected:
 private:
 	ilp::System *system;
 };
-
-// Features
-extern Feature<WCETComputation> WCET_FEATURE;
 
 } } // otawa::ipet
 

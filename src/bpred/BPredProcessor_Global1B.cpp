@@ -19,7 +19,7 @@
  *	along with OTAWA; if not, write to the Free Software 
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include <otawa/ipet/BPredProcessor.h>
+#include <otawa/bpred/BPredProcessor.h>
 #include "BHG.h"
 #include "BBHG.h"
 #include "BBHGDrawer.h"

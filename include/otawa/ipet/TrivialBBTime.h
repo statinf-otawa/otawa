@@ -28,9 +28,6 @@ public:
 // Configuration Properties
 extern Identifier<unsigned> PIPELINE_DEPTH;
 
-// Features
-extern Feature<TrivialBBTime> BB_TIME_FEATURE;
-
 } } // otawa::ipet
 
 #endif // OTAWA_IPET_TRIVIALBBTIME_H

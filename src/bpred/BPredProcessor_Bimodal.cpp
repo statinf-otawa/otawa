@@ -21,7 +21,7 @@
  */
 
 #include <otawa/cfg.h>
-#include <otawa/ipet/BPredProcessor.h>
+#include <otawa/bpred/BPredProcessor.h>
 #include "BCGDrawer.h"
 #include "BSets.h"
 #include "BCG.h"

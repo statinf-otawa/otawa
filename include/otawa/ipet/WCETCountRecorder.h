@@ -24,9 +24,6 @@ public:
 	WCETCountRecorder(void);
 };
 
-// Features
-extern Feature<WCETCountRecorder> WCET_COUNT_RECORDED_FEATURE;
-
 } } // otawa::ipet
 
 #endif	// OTAWA_IPET_WCET_COUNT_RECORDER_H

@@ -7,7 +7,7 @@ namespace otawa { namespace sim {
 
 
 
-BBPathDriver::BBPathDriver(ipet::BBPath& bbpath)
+BBPathDriver::BBPathDriver(tsim::BBPath& bbpath)
 : bb_iter(&bbpath), ended(false){
 
 	inst_iter = new BasicBlock::InstIter(bb_iter.item());

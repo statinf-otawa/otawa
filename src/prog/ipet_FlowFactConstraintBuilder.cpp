@@ -241,12 +241,12 @@ void FlowFactConstraintBuilder::configure(const PropList& props) {
 }
 
 
+SilentFeature::Maker<FlowFactConstraintBuilder> maker;
 /**
  * This feature asserts that constraints tied to the flow fact information
  * has been added to the ILP system.
  */
-Feature<FlowFactConstraintBuilder>
-	FLOW_FACTS_CONSTRAINTS_FEATURE("otawa::ipet::FLOW_FACTS_CONSTRAINTS_FEATURE");
+SilentFeature FLOW_FACTS_CONSTRAINTS_FEATURE("otawa::ipet::FLOW_FACTS_CONSTRAINTS_FEATURE", maker);
 
 }
 

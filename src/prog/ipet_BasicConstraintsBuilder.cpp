@@ -223,11 +223,14 @@ void BasicConstraintsBuilder::configure(const PropList &props) {
 }
 
 
+static SilentFeature::Maker<BasicConstraintsBuilder> maker;
 /**
  * This feature ensures that control constraints has been added to the
  * current ILP system.
+ *
+ * @par Properties
+ * @li otawa::ipet::CONTROL_CONSTRAINTS_FEATURE
  */
-Feature <BasicConstraintsBuilder>
-	CONTROL_CONSTRAINTS_FEATURE("otawa::CONTROL_CONSTRAINTS_FEATURE");
+SilentFeature CONTROL_CONSTRAINTS_FEATURE("otawa::CONTROL_CONSTRAINTS_FEATURE", maker);
 
 } } //otawa::ipet

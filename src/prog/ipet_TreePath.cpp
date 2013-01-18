@@ -4,9 +4,9 @@
  *
  *	src/prog/TreePath.cpp -- implementation of tree holding sequences.
  */
-#include <otawa/ipet/TreePath.h>
+#include <otawa/tsim/TreePath.h>
 
-namespace otawa { namespace ipet {
+namespace otawa { namespace tsim {
 
 /**
  * @author G. Cavaignac

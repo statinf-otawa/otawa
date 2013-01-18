@@ -25,11 +25,9 @@
 #include <otawa/ipet/BasicConstraintsBuilder.h>
 #include <otawa/ipet/BasicObjectFunctionBuilder.h>
 #include <otawa/ipet/FlowFactLoader.h>
-#include <otawa/ipet/IPET.h>
+#include <otawa/ipet/features.h>
 #include <otawa/ipet/TrivialBBTime.h>
 #include <otawa/ipet/TrivialDataCacheManager.h>
-#include <otawa/ipet/VarAssignment.h>
-#include <otawa/ipet/Delta.h>
 #include <otawa/ipet/WCETComputation.h>
 #include <otawa/cache/ccg/CCGConstraintBuilder.h>
 #include <otawa/cache/ccg/CCGBuilder.h>

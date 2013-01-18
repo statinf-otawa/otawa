@@ -41,6 +41,7 @@
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/hard/Platform.h>
 #include <elm/genstruct/quicksort.h>
+#include <otawa/ipet/features.h>
  
 using namespace elm;
 using namespace otawa;

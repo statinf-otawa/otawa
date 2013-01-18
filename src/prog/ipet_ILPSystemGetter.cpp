@@ -25,6 +25,7 @@
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/ilp/System.h>
 #include <otawa/prop/DeletableProperty.h>
+#include <otawa/ipet/features.h>
 
 namespace otawa { namespace ipet {
 
@@ -92,6 +93,7 @@ Identifier<cstring> ILP_PLUGIN_NAME("otawa::ipet::ILP_PLUGIN_NAME", "");
 Identifier<ilp::System *> SYSTEM("otawa::ipet::SYSTEM", 0);
 
 
+static SilentFeature::Maker<ILPSystemGetter> maker;
 /**
  * This feature assert that an ILP is available for IPET computation.
  * @par Properties
@@ -99,6 +101,6 @@ Identifier<ilp::System *> SYSTEM("otawa::ipet::SYSTEM", 0);
  * @par Default Processor
  * @ref @ref ILPSystemGetter
  */
-Feature<ILPSystemGetter> ILP_SYSTEM_FEATURE("otawa::ipet::ILP_SYSTEM_FEATURE");
+SilentFeature ILP_SYSTEM_FEATURE("otawa::ipet::ILP_SYSTEM_FEATURE", maker);
 
 } } // otawa::ipet

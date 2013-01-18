@@ -45,13 +45,6 @@ protected:
 	virtual void configure(const PropList &props);
 };
 
-// Identifiers
-extern Identifier<cstring> ILP_PLUGIN_NAME;
-extern Identifier<ilp::System *> SYSTEM;
-
-// Features
-extern Feature<ILPSystemGetter> ILP_SYSTEM_FEATURE;
-
 } } // otawa::ipet
 
 #endif // OTAWA_IPET_ILP_SYSTEM_GETTER

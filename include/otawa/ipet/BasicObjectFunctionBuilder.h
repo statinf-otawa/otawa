@@ -38,9 +38,6 @@ public:
 	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 };
 
-// Feature
-extern Feature<BasicObjectFunctionBuilder> OBJECT_FUNCTION_FEATURE;
-
 } } // otawa::ipet
 
 #endif // OTAWA_IPET_BASICOBJECTFUNCTIONBUILDER_H

@@ -79,6 +79,7 @@ void WCETCountRecorder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 }
 
 
+static SilentFeature::Maker<WCETCountRecorder> maker;
 /**
  * This feature asserts that WCET execution count of basic block and of edge
  * have been recorded.
@@ -86,6 +87,6 @@ void WCETCountRecorder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
  * @par Properties
  * @li @ref ipet::COUNT
  */
-Feature<WCETCountRecorder> WCET_COUNT_RECORDED_FEATURE("otawa::ipet::WCET_COUNT_RECORDED_FEATURE");
+SilentFeature WCET_COUNT_RECORDED_FEATURE("otawa::ipet::WCET_COUNT_RECORDED_FEATURE", maker);
 
 } } // otawa::ipet

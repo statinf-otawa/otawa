@@ -19,7 +19,7 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include <otawa/ipet/BBTimeSimulator.h>
+#include <otawa/tsim/BBTimeSimulator.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/sim.h>
 #include <otawa/sim/BasicBlockDriver.h>
@@ -29,13 +29,13 @@
 
 using namespace otawa::sim;
 
-namespace otawa { namespace ipet {
+namespace otawa { namespace tsim {
 
 Registration<BBTimeSimulator> BBTimeSimulator::reg(
-	"otawa::ipet::BBTimeSimulator",
+	"otawa::tsim::BBTimeSimulator",
 	Version(1, 0, 0),
 	p::base, &BBProcessor::reg,
-	p::provide, &BB_TIME_FEATURE,
+	p::provide, &ipet::BB_TIME_FEATURE,
 	p::require, &REGISTER_USAGE_FEATURE,
 	p::end
 );
@@ -59,7 +59,7 @@ void BBTimeSimulator::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb){
 	BasicBlockDriver driver(bb);
 	state->reset();
 	state->run(driver);
-	TIME(bb) = state->cycle();
+	ipet::TIME(bb) = state->cycle();
 	//elm::cout << "BB " << INDEX(bb) << ": " << state->cycle() << io::endl;
 }
 
@@ -83,4 +83,4 @@ void BBTimeSimulator::cleanup(WorkSpace *ws) {
 	state = 0;
 }
 
-} }
+} }		// otawa::tsim

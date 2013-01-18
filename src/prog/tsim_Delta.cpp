@@ -23,15 +23,16 @@
 #include <elm/genstruct/Vector.h>
 #include <elm/util/Option.h>
 #include <otawa/ipet.h>
-#include <otawa/ipet/Delta.h>
+#include <otawa/tsim/Delta.h>
 #include <otawa/ilp.h>
 #include <otawa/sim/State.h>
 #include <elm/genstruct/VectorQueue.h>
+#include <otawa/ipet/features.h>
 
 using namespace otawa::ilp;
 using namespace elm::genstruct;
 
-namespace otawa { namespace ipet {
+namespace otawa { namespace tsim {
 
 /**
  * @author G. Cavaignac
@@ -59,10 +60,10 @@ Registration<Delta> Delta::reg(
 	"otawa::ipet::Delta",
 	Version(1, 0, 0),
 	p::base, &CFGProcessor::reg,
-	p::require, &ASSIGNED_VARS_FEATURE,
-	p::require, &ILP_SYSTEM_FEATURE,
-	p::provide, &BB_TIME_FEATURE,
-	p::provide, &INTERBLOCK_SUPPORT_FEATURE,
+	p::require, &ipet::ASSIGNED_VARS_FEATURE,
+	p::require, &ipet::ILP_SYSTEM_FEATURE,
+	p::provide, &ipet::BB_TIME_FEATURE,
+	p::provide, &ipet::INTERBLOCK_SUPPORT_FEATURE,
 	p::end
 );
 
@@ -85,7 +86,7 @@ void Delta::configure(const PropList& props){
 	CFGProcessor::configure(props);
 	levels = LEVELS(props);
 	completion = SEQ_COMPLETION(props);
-	explicitNames = EXPLICIT(props);
+	explicitNames = ipet::EXPLICIT(props);
 }
 
 
@@ -129,7 +130,7 @@ void Delta::processBBPath(WorkSpace *fw, System *system, BBPath *bbpath) {
 		// Compute delta
 		if(bbpath->length() == 1) {
 			int time = bbpath->time(fw);
-			TIME(bbpath->head()) = time;
+			ipet::TIME(bbpath->head()) = time;
 			return;
 		}
 		int delta = Delta::delta(bbPath, fw);
@@ -175,7 +176,7 @@ void Delta::processBBPath(WorkSpace *fw, System *system, BBPath *bbpath) {
 void Delta::processCFG(WorkSpace* fw, CFG* cfg){
 	assert(fw);
 	assert(cfg);
-	System *system = SYSTEM(fw);
+	System *system = ipet::SYSTEM(fw);
 	//Vector<BBPath*> bbPathVector(4*cfg->bbs().count());
 	VectorQueue<BBPath*> to_process(7 /*4*cfg->bbs().count()*/);
 
@@ -324,4 +325,4 @@ Identifier<TreePath<BasicBlock*,BBPath*>*>
  */
 Feature<Delta> DELTA_SEQUENCES_FEATURE("otawa::ipet::DELTA_SEQUENCES_FEATURE");
 
-} } // otawa::ipet
+} } // otawa::tsim

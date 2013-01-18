@@ -20,8 +20,9 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/ipet/BBPath.h>
+#include <otawa/tsim/BBPath.h>
 #include <otawa/ipet.h>
+#include <otawa/tsim/Delta.h>
 #include <otawa/sim.h>
 #include <otawa/sim/BBPathDriver.h>
 #include <elm/io.h>
@@ -34,7 +35,7 @@ using namespace otawa::ilp;
 using namespace otawa::sim;
 
 
-namespace otawa { namespace ipet {
+namespace otawa { namespace tsim {
 
 /**
  * @author G. Cavaignac
@@ -180,10 +181,10 @@ MutableCollection<BasicBlock *> *BBPath::empty(void){
  * @return number of cycles
  */
 int BBPath::time(WorkSpace *fw){
-	int time = TIME(this);
+	int time = ipet::TIME(this);
 	if(time < 0){
 		time = simulate(fw);
-		TIME(this) = time;
+		ipet::TIME(this) = time;
 	}
 	return time;
 }
@@ -276,7 +277,7 @@ String BBPath::makeVarName(){
 		if(i != 0){
 			buf << '_';
 		}
-		ilp::Var *var = VAR(basicBlocks[i]);
+		ilp::Var *var = ipet::VAR(basicBlocks[i]);
 		if(var && !var->name().isEmpty()){
 			buf << var->name();
 		}
@@ -294,9 +295,9 @@ String BBPath::makeVarName(){
 ilp::Var* BBPath::getVar(System *system, bool explicit_names){
 	assert(system);
 	if(length() == 1){
-		return VAR(basicBlocks[0]);
+		return ipet::VAR(basicBlocks[0]);
 	}
-	ilp::Var *var = VAR(this);
+	ilp::Var *var = ipet::VAR(this);
 	if(!var) {
 		if(explicit_names){
 			var = system->newVar(makeVarName());
@@ -304,7 +305,7 @@ ilp::Var* BBPath::getVar(System *system, bool explicit_names){
 		else {
 			var = system->newVar();
 		}
-		VAR(this) = var;
+		ipet::VAR(this) = var;
 	}
 	return var;
 }

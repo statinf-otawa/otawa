@@ -24,7 +24,7 @@
 
 #include <assert.h>
 #include <otawa/proc/BBProcessor.h>
-#include <otawa/proc/Feature.h>
+#include <otawa/ipet/features.h>
 #include <otawa/ilp/Constraint.h>
 namespace otawa {
 
@@ -36,8 +36,6 @@ namespace ilp {
 } //ilp
 
 namespace ipet {
-
-extern Identifier<otawa::ilp::Constraint *> CALLING_CONSTRAINT;	
 
 // BasicConstraintsBuilder class
 class BasicConstraintsBuilder: public BBProcessor {
@@ -53,10 +51,6 @@ private:
 	bool _explicit;
 	void addEntryConstraint(ilp::System *system, CFG *caller, BasicBlock *bb, CFG *callee, ilp::Var *var);
 };
-
-
-// Features
-extern Feature <BasicConstraintsBuilder> CONTROL_CONSTRAINTS_FEATURE;
 
 } } // otawa::ipet
 
