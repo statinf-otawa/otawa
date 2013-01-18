@@ -34,7 +34,8 @@ namespace ilp { class System; }
 // BBRatioDisplayer class
 class BBRatioDisplayer: public BBProcessor {
 public:
-	BBRatioDisplayer(void);
+	static p::declare reg;
+	BBRatioDisplayer(AbstractRegistration& r = reg);
 	static Identifier<bool> TO_FILE;
 	static Identifier<elm::system::Path> PATH;
 	

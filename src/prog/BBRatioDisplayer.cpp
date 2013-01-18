@@ -58,14 +58,16 @@ otawa::Identifier<int> BBRatioDisplayer::SUM("", 0);
  * @li @ref otawa::BBRatioDisplay::PATH
  */
 
+p::declare BBRatioDisplayer::reg = p::init("otawa::BBRatioDisplayer", Version(1, 0, 1))
+	.require(ipet::WCET_FEATURE)
+	.require(ipet::ASSIGNED_VARS_FEATURE)
+	.maker<BBRatioDisplayer>();
 
 /**
  * Build the processor.
  */
-BBRatioDisplayer::BBRatioDisplayer(void)
-: BBProcessor("BBTimeDisplayer", Version(1, 0, 0)), path(""), to_file(false), stream(0), line(false) {
-	require(ipet::WCET_FEATURE);
-	require(ipet::ASSIGNED_VARS_FEATURE);
+BBRatioDisplayer::BBRatioDisplayer(AbstractRegistration& r)
+: BBProcessor(r), path(""), to_file(false), stream(0), line(false) {
 }
 
 

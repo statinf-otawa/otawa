@@ -1,0 +1,261 @@
+====== Script Development ======
+
+A script, in OTAWA, allows to configure a WCET computation.
+It contains :
+  * step-by-step code processor invocations,
+  * a way to let the user fine-tune the computation thanks to user parameters,
+  * description of the involved architecture,
+  * possible documentation about the computation (allowing to inform the user about
+limitations for example).
+
+The scripts are described in [[http://www.w3.org/XML/|XMl format]] and, therefore,
+easy to read and write by a human user. They are mostly the simpler way
+to extend OTAWA without the need to understand
+the internal API of the framework. In addition, scripts are easy
+to write because they use well-known formats based on XML like
+[[http://www.w3.org/TR/2006/REC-xinclude-20061115/|XInclude]]
+or [[http://www.w3.org/TR/xslt20/|XSLT]] that gives a lot of power
+in the script behavior.
+
+Scripts have basically two usage. First, they are used to configure the computation
+for a particular architecture. Instead of using the main stream computation approach,
+they allows to easily perform and automate specific analyzes to fine-tune
+a computation. Another use of the script is to provide support in OTAWA
+for a new micro-architecture: indeed, they allows to describe the components
+of an architecture or a model processor (pipeline, caches, memory space) and
+then to invoke all analyzes required to support the architecture. Obviously,
+this way to describe a micro-architecture is bound to the feature supported
+by OTAWA. For more exotic architectures, you will need to implements plugins
+described in the following sections.
+
+In addition, describing a WCET computation allows to seamlessly use it
+under the OTAWA plugin inside Eclipse. The plugin has the ability
+to understand the script and to translate the configuration
+into a user interface form adapted to Eclipse. 
+
+===== Notation =====
+
+The description of the XML files in this document merges 
+[[http://www.w3.org/XML/|XML]] textual format with
+[[http://fr.wikipedia.org/wiki/Extended_Backus-Naur_Form|EBNF]].
+
+The grammar is formed of a list of rules whose root is the first one.
+Each rule is made of:
+  * an XML comment giving the name of the rule,
+  * the matching XML element possibly containing other elements
+giving the shape of the rule (as below).
+
+<code xml>
+<!-- RULE_NAME ::= -->
+<tag> ... </tag>
+</code>
+
+This description element may contain a sequence of symbols that may be :
+  * other elements (that in turn contains also the same type of item that the rule element),
+  * identifiers in uppercase (to represent terminal symbols, see below for the list of accepted terminals),
+  * empty XML element to refer to subsequently defined rules (they are replaced in actual files
+by their definition element),
+  * EBNF symbols (described below).
+
+EBNF symbols allows to repeat elements, make them optional or select alternatives.
+They may be :
+  * ''*'' -- repeat 0 or //n// times the previous symbol,
+  * ''+'' -- repeat 1 or //n// times the previous symbol,
+  * ''?'' -- the previous symbol is optional,
+  * //sym<sub>1</sub>// ''|'' //sym<sub>2</sub>// ''|'' ... -- symbols separated by pipes are alternative, only one is selected at one time,
+  * ''('' symbols '')'' -- parentheses allows to group symbols in order to support previous operators on a group of symbols.
+
+The XML elements attributes are defined at their normal location, after the opening
+XML tag. They conform to the usual XML notation except for their content
+and their activation. An attribute definition may be followed
+by a question mark ''?'' to denote it as optional. Otherwise, it is considered
+as mandatory. The content of the attribute, between simple or double quotes,
+supports the EBNF annotations for the contained text.
+Finally, an optional attribute defined as an alternative
+may provide a default value by appending to the alternative list the string
+''; default='' //default value//.
+
+The terminal identifier have the following meaning:
+  * ''ID'' -- an XML identifier (any non-blank sequence of characters),
+  * ''INT'' -- a decimal or hexadecimal (prefixed by ''0[xX]'') integer,
+  * ''TEXT'' --  any text,
+  * ''ADDRESS'' -- an address (synonym of ''INT''),
+  * ''BOOL'' -- a boolean value (''true'' ou ''false'').
+
+
+
+
+===== Script Format =====
+
+A script is a textual XML file whose extension is usually ''.osx'' for
+Otawa Script XML. It follows the usual rule of XML and the top-level element
+is called ''otawa-script'':
+
+<code xml>
+<!-- OTAWA-SCRIPT ::= -->
+  <?xml version="1.0"?>
+  <otawa-script
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+  <!-- DESCRIPTION -->
+
+  <!-- IDENTIFICATION -->
+  
+  <!-- CONFIGURATION -->?
+  
+  <!-- PLATFORM -->?
+  
+  <!-- SCRIPT -->?
+
+</code>
+
+Notice the two namespace declarations ''xmlns:'': they are not mandatory
+but are very useful if you to use //XInclude// or //XSLT//.
+
+The script is made of 5 different parts detailed below:
+  * //DESCRIPTION// provides various information targeting the human user,
+  * //IDENTIFICATION// contains mainly identifier about the hardware (architecture, model, ABI),
+  * //CONFIGURATION// provides a list of items the user may tune,
+  * //PLATFORM// describes the hardware,
+  * //SCRIPT// details the performed computation steps.
+
+==== Script Description ====
+
+The description is made of the following items:
+<code xml>
+<!-- DESCRIPTION ::= -->
+<name> TEXT </name>
+<info> XHTML </info>?
+<path to="PATH"/>*
+</code>
+
+The ''name'' tag is mandatory and provide the name of the script
+as displayed to the human user. The ''info'' element may contain a whole
+documentation describing the script, its applications and its limitation.
+As it is intended displayed to the human user and as it may contains
+a structured documentation, it is described in
+[[http://www.w3.org/TR/xhtml1/|XHTML]]. Finally, the ''path'' is used for
+the internal work of the script inside OTAWA. The ''to'' attributes contain
+paths that are used to retrieve plugins used in the WCET computation.
+If a relative path is used, it is based on the directory containing
+the script file. 
+
+==== Script Identification ====
+
+The identification part has the following structure:
+<code xml>
+<!-- IDENTIFICATION ::= -->
+<id>
+	<arch>TEXT</arch>
+	<abi>TEXT<abi>
+	<mach>TEXT</mach>
+</id>
+</code>
+
+The ''arch'' tag allows to identify the progamming model, also called
+the ISA (Instruction Set Architecture) of the supported hardware.
+Common values include ''arm'', ''powerpc'', ''sparc'', ''x86'', etc.
+The ''abi'' element gives the Application Binary Interface with common
+values being ''eabi'', ''elf'', ''linux'', etc. Finaly, the ''mach''
+element allows to precisely identify the processor model the script
+is targetting. Only the ''arch'' element is mandatory to be able
+to check if it supports the instruction set used in the processed
+executable file.
+
+
+==== Platform Description ====
+
+The platform provide details about the hardware feature of the targeted system.
+
+<code xml>
+<!-- PLATFORM ::=>
+  <!-- PIPELINE -->?
+  <!-- CACHES -->?
+  <!-- MEMORY -->?
+</code>
+
+The items found in the //PLATFORM// may described directly in the script
+or in a separate file included by //XInclude//. In the latter case,
+the file must be prefixed by the usual XML identification line:
+
+<code xml>
+<?xml version="1.0"?>
+</xml>
+
+The example belows uses //XInclude// to get the hardware description
+from three different external files:
+
+<code xml>
+<platform>
+  <xi:include href="mpc5554/pipeline.xml"/>
+  <xi:include href="mpc5554/cache.xml"/>
+  <xi:include href="mpc5554/memory.xml"/>
+</platform>
+</code>
+
+Notice that the relative paths passed in the ''href'' attribute
+are resolved from the XML base of the document, that is, the directory
+containing the script file.
+
+Their content being very complex is described in their own parts.
+
+
+==== Configuration Description ====
+
+The configuration lists a set of items to let the human user parameterize
+the computation:
+<code xml>
+<!-- CONFIGURATION ::= -->
+  <configuration>
+    <!-- CONFIGURATION-ITEM -->*
+  </configuration>
+
+<!-- CONFIGURATION-ITEM ::= -->
+  <item
+    name="TEXT"
+    type="bool|int|string|range|enum"
+    default="TEXT"?
+    label="TEXT"?>
+    	<help> <!-- TEXT --> </help>
+  </item>
+</code>
+
+A configuration item is made of:
+  * an internal ''name'' used to identify the variable containing their value in //XSLT//,
+  * a ''label'', the name of the configuration item displayed to the user,
+  * a ''default'' value,
+  * a ''type'' that describes the type of value,
+  * an ''help'' sub-element that contains human-readable information to help the user understanding the configuration item.
+
+In addition, each type of items may have its own set for attributes and sub-elements.
+
+The ''bool'' type allows to get boolean information from the user.
+Possible values are ''true'' or ''false''. They are used to enable
+or disable specific features of the script. The example below allows
+to activate or not the use of prefetching from a flash memory:
+<code xml>
+<item name="flash_prefetch" type="bool" default="true" label="Flash Prefetch">
+	<help>MPC5554 provides flash prefetching to improve performances.
+	You may activate it or no.</help>
+</item>
+</code> 
+
+==== Script Description ====
+
+
+
+
+===== File Organization and XInclude =====
+
+
+===== Smart Scripts and XSLT =====
+
+
+===== Pipeline Description =====
+
+===== Cache Description =====
+
+===== Memory Space Description =====
+
+
