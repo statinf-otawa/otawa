@@ -90,7 +90,7 @@ private:
 	elm::system::Path path;
 	PropList props;
 	genstruct::Vector<ScriptItem *> items;
-	bool only_config;
+	bool only_config, timed;
 };
 
 // script path
@@ -99,6 +99,7 @@ extern Identifier<Pair<string, string> > PARAM;
 extern Identifier<xom::Element *> SCRIPT;
 extern Identifier<xom::Element *> PLATFORM;
 extern Identifier<bool> ONLY_CONFIG;
+extern Identifier<bool> TIME_STAT;
 
 } } // otawa::script
 

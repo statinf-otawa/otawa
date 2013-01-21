@@ -88,7 +88,8 @@ public:
 	params(*this, 'p', "param", "parameter passed to the script", "IDENTIFIER=VALUE"),
 	script(*this, 's', "script", "script used to compute WCET", "PATH", ""),
 	ilp_dump(*this, option::cmd, "-i", option::cmd, "--dump-ilp", option::help, "dump ILP system to stdandard output", option::end),
-	list(*this, option::cmd, "--list", option::help, "list configuration items", option::end)
+	list(*this, option::cmd, "--list", option::help, "list configuration items", option::end),
+	timed(*this, option::cmd, "--timed", option::cmd, "-t", option::help, "display computation", option::end)
 	{ }
 
 protected:
@@ -134,6 +135,8 @@ protected:
 		// launch the script
 		if(list)
 			script::ONLY_CONFIG(props) = true;
+		if(timed)
+			script::TIME_STAT(props) = true;
 		TASK_ENTRY(props) = entry;
 		script::PATH(props) = path;
 		script::Script scr;
@@ -156,7 +159,7 @@ protected:
 		// display the result
 		ot::time wcet = ipet::WCET(workspace());
 		if(wcet == -1)
-			cout << "ERROR: no WCET computed (see errors above).\n";
+			cerr << "ERROR: no WCET computed (see errors above).\n";
 		else
 			cout << "WCET[" << entry << "] = " << ipet::WCET(workspace()) << " cycles\n";
 
@@ -171,6 +174,7 @@ private:
 	option::StringOption script;
 	option::SwitchOption ilp_dump;
 	option::SwitchOption list;
+	option::SwitchOption timed;
 	string bin, task;
 };
 

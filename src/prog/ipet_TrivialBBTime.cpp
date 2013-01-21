@@ -66,6 +66,10 @@ static SilentFeature::Maker<TrivialBBTime> maker;
 /**
  * This feature ensures that the execution time of each basic block has been
  * computed.
+ *
+ * @par Properties
+ * @li otawa::ipet::TIME
+ * @li otawa::ipet::DELTA_TIME
  */
 SilentFeature BB_TIME_FEATURE("otawa::BB_TIME", maker);
 

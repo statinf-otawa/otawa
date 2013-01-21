@@ -203,6 +203,7 @@ private:
  * @li @ref PATH			path to the script file to load
  * @li @ref PARAM			parameter for the script interpretation
  * @li @ref ONLY_CONFIG		cause the processor to stop its work after the configuration item building (no XSLT processing)
+ * @li @ref TIME_STAT		cause the script to generate computation for each executed step
  *
  * @par Properties
  * This processor initialize the following properties before passing them
@@ -225,6 +226,7 @@ void Script::configure(const PropList &props) {
 	path = PATH(props);
 	this->props = props;
 	only_config = ONLY_CONFIG(props);
+	timed = TIME_STAT(props);
 }
 
 
@@ -309,10 +311,10 @@ void Script::work(WorkSpace *ws) {
 	}
 
 	// !!DEBUG!!
-	DEBUG(OutStream *out = elm::system::System::createFile("out.xml");
+	/*DEBUG(OutStream *out = elm::system::System::createFile("out.xml");
 	xom::Serializer serial(*out);
 	serial.write(xsl);
-	delete out);
+	delete out);*/
 
 	// perform the transformation
 	xom::XSLTransform xslt(xsl);
@@ -339,10 +341,10 @@ void Script::work(WorkSpace *ws) {
 	delete doc;
 
 	// !!DEBUG!!
-	DEBUG(OutStream *out2 = elm::system::System::createFile("out2.xml");
+	/*DEBUG(OutStream *out2 = elm::system::System::createFile("out2.xml");
 	xom::Serializer serial2(*out2);
 	serial2.write(res);
-	delete out2;)
+	delete out2;)*/
 
 	// set the script parameter
 	xom::Element *script = res->getRootElement();
@@ -406,6 +408,7 @@ void Script::work(WorkSpace *ws) {
 	makeConfig(steps, props);
 
 	// execute the script
+	sys::StopWatch sw;
 	for(int i = 0; i < steps->getChildCount(); i++) {
 		xom::Node *node = steps->getChild(i);
 		switch(node->kind()) {
@@ -422,7 +425,13 @@ void Script::work(WorkSpace *ws) {
 						PropList list = props;
 						makeConfig(step, list);
 						DynProcessor proc(name);
+						if(timed)
+							sw.start();
 						proc.process(ws, list);
+						if(timed) {
+							sw.stop();
+							cerr << "INFO: time(" << *name << ") = "<< (float(sw.delay()) / 1000) << "ms\n";
+						}
 						break;
 					}
 					Option<xom::String> require = step->getAttributeValue("require");
@@ -554,6 +563,12 @@ Identifier<xom::Element *> PLATFORM("otawa::script::PLATFORM", 0);
  * parsing the configuration items.
  */
 Identifier<bool> ONLY_CONFIG("otawa::script::ONLY_CONFIG", false);
+
+
+/**
+ * This property asks the script to time the performed steps.
+ */
+Identifier<bool> TIME_STAT("otawa::script::TIME_STAT", false);
 
 } } // otawa::script
 
