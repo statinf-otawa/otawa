@@ -150,7 +150,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 
 		/* Avoid first/last l-block */
 		if ((test != 0)&&(test != (length-1))) {
-			category_t categorie = cache::CATEGORY(bloc);
+			cache::category_t categorie = cache::CATEGORY(bloc);
 			Constraint *cons;
 
 			/* If ALWAYSHIT, then x_miss(i,j) = 0 */

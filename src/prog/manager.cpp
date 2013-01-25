@@ -152,16 +152,17 @@ void Manager::setVerbosity(const PropList& props) {
 		verbose = 0;
 }
 
+#define CSTR(x) #x
 
 /**
  * Manager builder. Install the PPC GLISS loader.
  */
 Manager::Manager(void):
 	ilp_plugger("ilp_plugin", Version(1, 0, 0),
-		buildPaths("ilp", ILP_PATHS)),
+		buildPaths("ilp", CSTR(ILP_PATHS))),
 	loader_plugger(OTAWA_LOADER_NAME, OTAWA_LOADER_VERSION,
-		buildPaths("loader", LOADER_PATHS)),
-	sim_plugger(OTAWA_SIMULATOR_NAME, OTAWA_SIMULATOR_VERSION, SIMULATOR_PATHS)
+		buildPaths("loader", CSTR(LOADER_PATHS))),
+	sim_plugger(OTAWA_SIMULATOR_NAME, OTAWA_SIMULATOR_VERSION, CSTR(SIMULATOR_PATHS))
 {
 	resetVerbosity();
 }

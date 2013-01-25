@@ -99,6 +99,7 @@ elm::genstruct::Table<AbstractRegistration *>& ProcessorPlugin::processors(void)
 	return empty;
 }
 
+#define CSTR(x) #x
 
 /**
  * Initialize the plugger.
@@ -112,7 +113,7 @@ void ProcessorPlugin::init(void) {
 	plugger.addPath(path);
 	path = MANAGER.prefixPath() / "lib/otawa/proc";
 	plugger.addPath(path);
-	path = Path(PROC_PATHS);
+	path = Path(CSTR(PROC_PATHS));
 	plugger.addPath(path);
 }
 
@@ -149,6 +150,7 @@ ProcessorPlugin *ProcessorPlugin::get(string name) {
 		}
 		cname = cname.substring(0, pos);
 	}
+	return 0;
 }
 
 

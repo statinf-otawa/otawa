@@ -280,7 +280,7 @@ void CATBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *idset, int 
 	}
 
 	//the last categorisation of the l-block
-	category_t lastcateg = cache::CATEGORY(line);
+	cache::category_t lastcateg = cache::CATEGORY(line);
 	if(node->kind()!=ContextTree::LOOP){
 		//if ((line->returnSTATENONCONF())&&( nonconflitdetected)){
 		if ( nonconflitdetected || continu){

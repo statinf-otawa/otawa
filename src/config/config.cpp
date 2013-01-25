@@ -221,7 +221,7 @@ public:
 		if(loader)
 			show("loader");
 		if(procs)
-			show("proc");
+			show("proc", true);
 		if(modules)
 			for(HashTable<string, Module *>::Iterator mod(modmap); mod; mod++)
 				cout << '[' << mod->name() << "]\n" << mod->doc() << io::endl << io::endl;
@@ -255,12 +255,45 @@ private:
 	/**
 	 * Show a list of plugins.
 	 * @param kind		Type of the plugin.
+	 * @param rec		Perform recursive research.
 	 */
-	void show(cstring kind) {
+	void show(cstring kind, bool rec = false) {
 		elm::system::Plugger plugger(
 			OTAWA_ILP_NAME,
 			OTAWA_ILP_VERSION,
 			otawa::Manager::buildPaths(kind));
+
+		// if recursive, add subdirectories
+		if(rec) {
+
+			// get the initial directories
+			Vector<sys::Directory *> paths;
+			for(sys::Plugger::PathIterator path(plugger); path; path++) {
+				sys::FileItem *item = sys::FileItem::get(*path);
+				if(item && item->toDirectory()) {
+					paths.add(item->toDirectory());
+					item->toDirectory()->use();
+				}
+			}
+			int builtin = paths.length();
+
+			// recursively build other directories
+			while(paths) {
+				bool is_builtin = builtin == paths.length();
+				builtin--;
+				sys::Directory *dir = paths.pop();
+				if(!is_builtin)
+					plugger.addPath(dir->path());
+				for(sys::Directory::Iterator child(dir); child; child++)
+					if(child->toDirectory()) {
+						paths.add(child->toDirectory());
+						child->toDirectory()->use();
+					}
+				dir->release();
+			}
+		}
+
+		// look available plugins
 		bool first = true;
 		for(elm::system::Plugger::Iterator plugin(plugger); plugin; plugin++) {
 			if(first)
