@@ -22,10 +22,10 @@ namespace sim {
 
 
 // Useful defines
-#define OTAWA_LOADER_VERSION	Version(1, 0, 0)
+#define OTAWA_LOADER_VERSION	"1.0.0"
 #define OTAWA_LOADER_HOOK		loader_plugin
 #define OTAWA_LOADER_NAME		"loader_plugin"
-
+#define OTAWA_LOADER_ID(name, version, date)	ELM_PLUGIN_ID(OTAWA_LOADER_NAME, name " V" version " (" date ") [" OTAWA_LOADER_VERSION "]")
 
 // Loader class
 class Loader: public elm::system::Plugin {
@@ -43,22 +43,6 @@ public:
 
 	void check(WorkSpace *ws, cstring name, const Version& version);
 
-	// Default platform and loader
-	/*static Loader& LOADER_Gliss_PowerPC;
-	static Loader& LOADER_Heptane_PowerPC;
-	static CString LOADER_NAME_Gliss_PowerPC;
-	static CString LOADER_NAME_Heptane;
-	static CString PLATFORM_NAME_PowerPC_Gliss;*/
-};
-
-// LoaderCheck class
-template <class T>
-class LoaderChecker {
-public:
-	LoaderChecker(WorkSpace *ws, cstring name = "", const Version& version = Version::ZERO);
-	inline T *operator->(void) const { return loader; }
-private:
-	T *loader;
 };
 
 } // otawa

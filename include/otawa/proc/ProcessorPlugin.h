@@ -33,7 +33,8 @@ namespace otawa {
 // Definitions
 #define OTAWA_PROC_HOOK		proc_plugin
 #define OTAWA_PROC_NAME		"proc_plugin"
-#define OTAWA_PROC_VERSION	Version(1, 0, 0)
+#define OTAWA_PROC_VERSION	"1.0.0"
+#define OTAWA_PROC_ID(name, version, date)	ELM_PLUGIN_ID(OTAWA_PROC_NAME, name " V" version " (" date ") [" OTAWA_PROC_VERSION "]")
 
 // ProcessorPlugin class
 class ProcessorPlugin: public elm::system::Plugin {

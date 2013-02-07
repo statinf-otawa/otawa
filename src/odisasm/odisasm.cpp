@@ -163,7 +163,7 @@ private:
 		cout << "# FUNCTION " << cfg->label() << io::endl;
 
 		// put BB in the right order
-		typedef elm::genstruct::AVLTree<BasicBlock *, Id<BasicBlock *>, BasicBlockComparator> avl_t;
+		typedef elm::genstruct::AVLTree<BasicBlock *, BasicBlockComparator> avl_t;
 		avl_t avl;
 		for(CFG::BBIterator bb(cfg); bb; bb++)
 			if(!bb->isEnd())

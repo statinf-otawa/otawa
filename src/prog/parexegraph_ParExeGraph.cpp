@@ -95,104 +95,95 @@ void ParExeGraph::propagate() {
 
 // --------------------------------------------------------------------------------------------------
 int ParExeGraph::Delta(ParExeNode *a, Resource *res) {
-    int r = res->index();
-    if (!a->e(r))
-		return(0);
+	int r = res->index();
+	if (!a->e(r))
+		return (0);
+	ParExeNode *lp = _last_prologue_node;
 
-    ParExeNode *lp = _last_prologue_node;
-  
-    int default_lp = lp->d(numResources()-1);
-    if (res->type() == Resource::STAGE)
+	int default_lp = lp->d(numResources() - 1);
+	if(res->type() == Resource::STAGE)
 		default_lp += _microprocessor->pipeline()->numStages() - ((StageResource *)(res))->stage()->index();
-    if (res->type() == Resource::QUEUE) {
-		StageResource * upper_bound = ((QueueResource *)(res))->upperBound();
+	else if(res->type() == Resource::QUEUE) {
+		StageResource * upper_bound = ((QueueResource *) (res))->upperBound();
 		int u = upper_bound->index();
-		if (lp->e(u)){
+		if(lp->e(u)) {
 			int tmp = lp->d(u) + (_microprocessor->pipeline()->numStages() - upper_bound->stage()->index());
 			if (tmp < default_lp)
 				default_lp = tmp;
 		}
-    }
+	}
 
-    int delta;
-    if (lp->e(r))
+	int delta;
+	if (lp->e(r))
 		delta = a->d(r) - lp->d(r);
-    else {
-		delta = a->d(r) - default_lp; 
-    }
+	else
+		delta = a->d(r) - default_lp;
 
-  
-    for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
+	for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources); resource; resource++) {
 		if (resource->type() == Resource::INTERNAL_CONFLICT) {
 			int s = resource->index();
-			ParExeNode * S = ((InternalConflictResource *) *resource)->node();
+			ParExeNode * S = ((InternalConflictResource *)*resource)->node();
 			if (a->e(s) && S->e(r)) {
-				if (lp->e(s)){ 
+				if (lp->e(s)) {
 					int tmp = a->d(s) - lp->d(s);
-					if (tmp > delta) {
+					if (tmp > delta)
 						delta = tmp;
-					}
 				} // end: is lp depends on S
 
 				else { //lp does not depend on S
-					for (elm::genstruct::DLList<elm::BitVector *>::Iterator mask(*(S->contendersMasksList())) ; mask ; mask++) {
+					for (elm::genstruct::DLList<elm::BitVector *>::Iterator mask(*(S->contendersMasksList())); mask; mask++) {
 						int tmp = a->d(s);
-						tmp += (((mask->countBits()+S->lateContenders())/S->stage()->width())*S->latency());
+						tmp += (((mask->countBits() + S->lateContenders()) / S->stage()->width()) * S->latency());
 						int tmp2 = 0;
-						int tmp3;
-	  
-						if (mask->countBits() == 0) { // mask is null == no early contenders
+
+						if(mask->countBits() == 0) { // mask is null == no early contenders
+							int tmp3;
 							if (!lp->e(r))
-								tmp3 = tmp + S->d(r) - /*lp->d(_latest_resource_index) - res->offset()*/default_lp;
+								tmp3 = tmp + S->d(r) - default_lp;
 							else
 								tmp3 = tmp + S->d(r) - lp->d(r);
-							if (tmp3 > delta) {
+							if (tmp3 > delta)
 								delta = tmp3;
-							}
 						}
 						else { // mask is not null
-							StringBuffer buffer;
-							for (elm::BitVector::OneIterator one(**mask) ; one ; one++) {
+
+							//StringBuffer buffer;
+							for(elm::BitVector::OneIterator one(**mask); one; one++) {
 								ParExeNode *C = S->stage()->node(one.item());
-								buffer << C->name() << "-";
+								//buffer << C->name() << "-";
 								int c = -1;
-								for (elm::genstruct::Vector<Resource *>::Iterator ic(_resources) ; ic ; ic++) {
-									if (ic->type() == Resource::INTERNAL_CONFLICT) {
-										if (((InternalConflictResource *) *ic)->node() == C) {
-											c = ((InternalConflictResource *) *ic)->index();
-										}
-									}
-								}
-								assert(c != -1);
-								assert(lp->e(c));
+								for (elm::genstruct::Vector<Resource *>::Iterator ic(_resources); ic; ic++)
+									if(ic->type() == Resource::INTERNAL_CONFLICT
+									&& ((InternalConflictResource *) *ic)->node() == C)
+										c = ((InternalConflictResource *) *ic)->index();
+								ASSERT(c != -1);
+								ASSERT(lp->e(c));
 								if (lp->d(c) > tmp2)
 									tmp2 = lp->d(c);
-	      
-							}// end: foreach one in mask
+							} // end: foreach one in mask
+
 							if (lp->e(r)) {
-								if (lp->d(r) - S->d(r) > tmp2) {
+								if (lp->d(r) - S->d(r) > tmp2)
 									tmp2 = lp->d(r) - S->d(r);
-								}
 							}
 							else {
-								int tmp4 = lp->d(numResources()-1) - S->d(r);
+								int tmp4 = lp->d(numResources() - 1) - S->d(r);
 								if (res->type() == Resource::STAGE)
-									tmp4 += _microprocessor->pipeline()->numStages() - ((StageResource *)(res))->stage()->index();
-								if (tmp4 > tmp2) {		    
-									tmp2 = /*lp->d(_latest_resource_index) + res->offset()*/default_lp - S->d(r);
-								}
+									tmp4 += _microprocessor->pipeline()->numStages() - ((StageResource *) (res))->stage()->index();
+								if (tmp4 > tmp2)
+									tmp2 = default_lp - S->d(r);
 							}
+
 							tmp2 = tmp - tmp2;
-							if (tmp2 > delta) {
+							if (tmp2 > delta)
 								delta = tmp2;
-							}
 						} // if mask not null
 					}
 				}
 			}
 		} // if resource is INTERNAL_CONFLICT
-    } // end: foreach resource
-    return(delta);
+	} // end: foreach resource
+	return (delta);
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -385,6 +376,7 @@ void ParExeNode::buildContendersMasks(){
 		elm::BitVector *mask = new elm::BitVector(_possible_contenders->size());
 		_contenders_masks_list.addLast(mask);
     }
+    cerr << "DEBUG: count ones " << _possible_contenders->countOnes() << io::endl;
     for (elm::BitVector::OneIterator one(*_possible_contenders) ; one ; one++) {
 		if (_contenders_masks_list.isEmpty()) {
 			elm::BitVector *mask = new elm::BitVector(_possible_contenders->size());

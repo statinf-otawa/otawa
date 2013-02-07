@@ -20,6 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#define ELM_STREE_DEBUG
 #include <otawa/prog/Loader.h>
 #include <otawa/hard.h>
 #include <gel/gel.h>
@@ -27,6 +28,7 @@
 #include <gel/debug_line.h>
 #include <otawa/prog/sem.h>
 #include <otawa/loader/arm.h>
+#include <elm/stree/MarkerBuilder.h>
 
 extern "C" {
 #	include <arm/grt.h>
@@ -38,6 +40,9 @@ extern "C" {
 namespace otawa {
 
 namespace arm {
+
+#define VERSION "2.0.0"
+OTAWA_LOADER_ID("arm2", VERSION, DAYDATE);
 
 /**
  * @class Info
@@ -167,14 +172,14 @@ class Process;
 class Inst: public otawa::Inst {
 public:
 
-	inline Inst(Process& process, kind_t kind, Address addr)
-		: proc(process), _kind(kind), _addr(addr), isRegsDone(false) { }
+	inline Inst(Process& process, kind_t kind, Address addr, int size)
+		: proc(process), _kind(kind), _addr(addr), isRegsDone(false), _size(size) { }
 
 	// Inst overload
 	virtual void dump(io::Output& out);
 	virtual kind_t kind() { return _kind; }
 	virtual address_t address() const { return _addr; }
-	virtual t::uint32 size() const { return 4; }
+	virtual t::uint32 size() const { return _size; }
 	virtual Process &process() { return proc; }
 
 	virtual const elm::genstruct::Table<hard::Register *>& readRegs() {
@@ -197,6 +202,7 @@ public:
 protected:
 	Process &proc;
 	kind_t _kind;
+	int _size;
 
 private:
 	void decodeRegs(void);
@@ -211,8 +217,8 @@ private:
 class BranchInst: public Inst {
 public:
 
-	inline BranchInst(Process& process, kind_t kind, Address addr)
-		: Inst(process, kind, addr), _target(0), isTargetDone(false)
+	inline BranchInst(Process& process, kind_t kind, Address addr, int size)
+		: Inst(process, kind, addr, size), _target(0), isTargetDone(false)
 		{ }
 
 	virtual otawa::Inst *target();
@@ -247,8 +253,23 @@ private:
 
 /****** Process class ******/
 
+typedef enum { NONE = 0, ARM = 1, THUMB = 2, DATA = 3 } area_t;
+
+io::Output& operator<<(io::Output& out, area_t area) {
+	switch(area) {
+	case NONE:	out << "none"; break;
+	case ARM:	out << "arm"; break;
+	case THUMB:	out << "thumb"; break;
+	case DATA:	out << "data"; break;
+	}
+	return out;
+}
+
 class Process: public otawa::Process, public arm::Info {
+	typedef elm::stree::Tree<Address::offset_t, area_t> area_tree_t;
 public:
+	static const t::uint32 IS_BL_0	= 0x08000000,
+							 IS_BL_1 = 0x04000000;
 
 	Process(Manager *manager, hard::Platform *pf, const PropList& props = PropList::EMPTY)
 	:	otawa::Process(manager, props),
@@ -309,7 +330,13 @@ public:
 	}
 
 	// Process overloads
-	virtual int instSize(void) const { return 4; }
+	virtual int instSize(void) const {
+#		ifdef ARM_THUMB
+			return 0;
+#		else
+			return 4;
+#		endif
+	}
 	virtual hard::Platform *platform(void) { return oplatform; }
 	virtual otawa::Inst *start(void) { return _start; }
 
@@ -375,22 +402,48 @@ public:
 		}
 
 		// Initialize symbols
-		gel_enum_t *iter = gel_enum_file_symbol(_file);
-		gel_enum_initpos(iter);
-		for(char *name = (char *)gel_enum_next(iter); name; name = (char *)gel_enum_next(iter)) {
-			ASSERT(name);
+#		ifdef ARM_THUMB
+			stree::MarkerBuilder<Address::offset_t, area_t> area_builder;
+			area_builder.add(0UL, (infos.entry & 0x1) ? THUMB : ARM);
+			area_builder.add(0xffffffffUL, NONE);
+#		endif
+		//gel_enum_t *iter = gel_enum_file_symbol(_file);
+		//gel_enum_initpos(iter);
+		/*for(char *name = (char *)gel_enum_next(iter); name; name = (char *)gel_enum_next(iter)) {
+			ASSERT(name);*/
+		gel_sym_iter_t iter;
+		gel_sym_t *sym;
+		for(sym = gel_sym_first(&iter, _file); sym; sym = gel_sym_next(&iter)) {
 
 			// get the symbol description
-			gel_sym_t *sym = gel_find_file_symbol(_file, name);
-			assert(sym);
+			//gel_sym_t *sym = gel_find_file_symbol(_file, name);
+			//assert(sym);
 			gel_sym_info_t infos;
 			gel_sym_infos(sym, &infos);
 
+			// handle the $a, $t or $d symbols
+#			ifdef ARM_THUMB
+				if(infos.name[0] == '$') {
+					area_t area = NONE;
+					switch(infos.name[1]) {
+					case 'a': area = ARM; break;
+					case 'd': area = DATA; break;
+					case 't': area = THUMB; break;
+					}
+					if(area != NONE) {
+						area_builder.add(Address::offset_t(infos.vaddr), area);
+						continue;
+					}
+				}
+#			endif
+
 			// compute the kind
 			Symbol::kind_t kind = Symbol::NONE;
+			t::uint32 mask = 0xffffffff;
 			switch(ELF32_ST_TYPE(infos.info)) {
 			case STT_FUNC:
 				kind = Symbol::FUNCTION;
+				mask = 0xfffffffe;
 				break;
 			case STT_NOTYPE:
 				kind = Symbol::LABEL;
@@ -404,13 +457,17 @@ public:
 
 			// Build the label if required
 			String label(infos.name);
-			Symbol *symbol = new Symbol(*file, label, kind, infos.vaddr, infos.size);
+			Symbol *symbol = new Symbol(*file, label, kind, infos.vaddr & mask, infos.size);
 			file->addSymbol(symbol);
 		}
-		gel_enum_free(iter);
+		//gel_enum_free(iter);
+#		ifdef ARM_THUMB
+			area_builder.make(area_tree);
+			area_tree.dump(cerr);
+#		endif
 
 		// Last initializations
-		_start = findInstAt((address_t)infos.entry);
+		_start = findInstAt(Address(infos.entry & 0xfffffffe));
 		return file;
 	}
 
@@ -462,10 +519,16 @@ public:
 		Inst::kind_t kind = 0;
 		otawa::Inst *result = 0;
 		kind = arm_kind(inst);
+		int size = arm_get_inst_size(inst) >> 3;
 		if(kind & Inst::IS_CONTROL)
-			result = new BranchInst(*this, kind, addr);
+			result = new BranchInst(*this, kind, addr, size);
 		else
-			result = new Inst(*this, kind, addr);
+			result = new Inst(*this, kind, addr, size);
+		char buf[256];
+		arm_disasm(buf, inst);
+		t::uint8 b0, b1;
+		get(addr, b0);
+		get(addr + 1, b1);
 		free_inst(inst);
 		return result;
 	}
@@ -479,12 +542,16 @@ public:
 		return code;
 	}
 
-	inline ::arm_inst_t *decode_raw(Address addr) const
+	inline ::arm_inst_t *decode_raw(Address addr) const {
 #		ifdef ARM_THUMB
-			{ return arm_decode_ARM(decoder(), ::arm_address_t(addr.offset())); }
+			if(isThumb(addr))
+				return arm_decode_THUMB(decoder(), ::arm_address_t(addr.offset()));
+			else
+				return arm_decode_ARM(decoder(), ::arm_address_t(addr.offset()));
 #		else
-			{ return arm_decode(decoder(), ::arm_address_t(addr.offset())); }
+			return arm_decode(decoder(), ::arm_address_t(addr.offset()));
 #		endif
+	}
 
 	inline void free_inst(arm_inst_t *inst) const { arm_free_inst(inst); }
 	virtual gel_file_t *file(void) const { return _file; }
@@ -566,6 +633,21 @@ public:
 	virtual void free(void *decoded) { free_inst((arm_inst_t *)decoded); }
 
 private:
+
+	/**
+	 * Test if the given address matches a thumb code area.
+	 * @param address	Address to test.
+	 * @return			True if the address in the thumb area, false else.
+	 */
+	bool isThumb(const Address& address) const {
+#		ifdef ARM_THUMB
+			area_t kind = area_tree.get(address.offset());
+			return kind == THUMB;
+#		else
+			return false;
+#		endif
+	}
+
 	void setup_debug(void) {
 		ASSERT(_file);
 		if(init)
@@ -585,6 +667,9 @@ private:
 	char **argv, **envp;
 	bool no_stack;
 	bool init;
+#	ifdef ARM_THUMB
+	area_tree_t area_tree;
+#	endif
 };
 
 
@@ -636,8 +721,23 @@ void Inst::decodeRegs(void) {
 
 
 arm_address_t BranchInst::decodeTargetAddress(void) {
+
+	// get the target
 	arm_inst_t *inst= proc.decode_raw(address());
 	Address target_addr = arm_target(inst);
+
+	// thumb-1 case
+#		ifdef ARM_THUMB_1
+		if(_kind & Process::IS_BL_1) {
+			arm_inst_t *pinst = proc.decode_raw(address() - 2);
+			Inst::kind_t pkind = arm_kind(pinst);
+			if(pkind & Process::IS_BL_0)
+				target_addr = arm_target(pinst) + target_addr.offset();
+			proc.free_inst(pinst);
+		}
+#		endif
+
+	// cleanup
 	proc.free_inst(inst);
 	return target_addr;
 }
@@ -659,7 +759,6 @@ otawa::Inst *BranchInst::target() {
 				t::uint32 my_word, prev_word;
 				proc.get(address(), my_word);
 				proc.get(prev->address(), prev_word);
-				//cerr << "DEBUG: looking for call at " << address() << ": " << io::hex(prev_word) << ", " << io::hex(my_word) << io::endl;
 				if((prev_word & 0x0fffffff) == 0x01a0e00f 					// test previous opcode
 				&& (prev_word & 0xf0000000) == (my_word & 0xf0000000))		// test same condition
 					_kind |= IS_CALL;
@@ -693,7 +792,7 @@ static elm::genstruct::Table<string> loader_aliases(table, 1);
 // loader definition
 class Loader: public otawa::Loader {
 public:
-	Loader(void): otawa::Loader("arm", Version(2, 0, 0), OTAWA_LOADER_VERSION, loader_aliases) {
+	Loader(void): otawa::Loader("arm", Version(VERSION), OTAWA_LOADER_VERSION, loader_aliases) {
 	}
 
 	virtual CString getName(void) const { return "arm"; }

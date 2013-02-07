@@ -369,53 +369,29 @@ namespace otawa {
  
 			}
 		}
-		//   ~ParExeNode();
-		inline ParExeStage *stage()
-		{return _pipeline_stage;}
-		inline ParExeInst *inst()
-		{return _inst;}
-		inline int latency()
-		{return _latency;}
-		inline void setDefaultLatency(int lat)
-		{ _default_latency = lat; _latency = lat;}
-		inline void restoreDefaultLatency()
-		{ _latency = _default_latency; }
-		inline void setLatency(int latency){
-			_latency = latency;
-		}
-		inline void addProducer(ParExeNode *prod) {
-			if (!_producers.contains(prod))
-				_producers.add(prod);
-		}
-		inline int numProducers()
-		{return _producers.length();}
-		inline ParExeNode *producer(int index)
-		{return _producers[index];}
-		inline void addContender(ParExeNode *cont) 
-		{_contenders.add(cont);}
+
+		inline ParExeStage *stage(void) { return _pipeline_stage; }
+		inline ParExeInst *inst(void) { return _inst; }
+		inline int latency() { return _latency; }
+		inline void setDefaultLatency(int lat) { _default_latency = lat; _latency = lat; }
+		inline void restoreDefaultLatency(void) { _latency = _default_latency; }
+		inline void setLatency(int latency) { _latency = latency; }
+		inline void addProducer(ParExeNode *prod) { if (!_producers.contains(prod)) _producers.add(prod); }
+		inline int numProducers(void) { return _producers.length(); }
+		inline ParExeNode *producer(int index) { return _producers[index]; }
+		inline void addContender(ParExeNode *cont) { _contenders.add(cont); }
 		inline elm::genstruct::DLList<elm::BitVector *>* contendersMasksList() {return &_contenders_masks_list;}
-		inline elm::String name()
-		{return _name;}
-		inline int d(int index)
-		{return (*_d)[index];} 
-		inline bool e(int index)
-		{return (*_e)[index];}
-		inline void setD(int index, int value)
-		{(*_d)[index] = value;} 
-		inline void setE(int index, bool value)
-		{(*_e)[index] = value;}
-		inline void setContentionDep(int index) 
-		{ (*_contention_dep)[index] = true; }
-		inline void initContenders(int size)
-		{_possible_contenders = new BitVector(size);}
-		inline int lateContenders()
-		{return _late_contenders;}
-		inline void setLateContenders(int num)
-		{_late_contenders = num;}
-		elm::BitVector * possibleContenders()
-			{return _possible_contenders;}
-		inline void setContender(int index)
-		{_possible_contenders->set(index);}
+		inline elm::String name(void) { return _name; }
+		inline int d(int index) { return (*_d)[index]; }
+		inline bool e(int index) { return (*_e)[index]; }
+		inline void setD(int index, int value) { (*_d)[index] = value; }
+		inline void setE(int index, bool value) { (*_e)[index] = value; }
+		inline void setContentionDep(int index)  { (*_contention_dep)[index] = true; }
+		inline void initContenders(int size) {_possible_contenders = new BitVector(size); }
+		inline int lateContenders(void) {return _late_contenders; }
+		inline void setLateContenders(int num) { _late_contenders = num; }
+		inline elm::BitVector * possibleContenders(void) { return _possible_contenders; }
+		inline void setContender(int index) { _possible_contenders->set(index); }
 		void buildContendersMasks();
 	};
 

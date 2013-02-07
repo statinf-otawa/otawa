@@ -187,7 +187,8 @@ Inst *Segment::decode(address_t address) {
  */
 void Segment::insert(ProgItem *item) {
 	ASSERTP(item->address() >= address() && item->address() < topAddress(),
-		"attempt to insert an item with out-of-bound address");
+		"attempt to insert an item at " << item->address()
+		<< " with out-of-bound address [" << address() << ", " << topAddress() << ")");
 
 	// compute map entry index
 	int index = MAP_INDEX(item->address()), init = index;
