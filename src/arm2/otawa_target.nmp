@@ -2,7 +2,7 @@
 extend B_Cond
 	otawa_target = __IADDR + 8 + (coerce(int(30), signed_immed_24) :: 0b00)
 
-extend B1_thumb
+extend B_thumb
 	otawa_target =
 		if cond == 15 then 0
 		else target
@@ -16,4 +16,9 @@ extend BLX1_thumb
 		case 0b10: __IADDR + 4 + (coerce(s32, offs) << 12)
 		case 0b11: coerce(u32, offs) << 1
 		}
+
+extend BX_thumb
+	otawa_target =
+		if rm.number == 15 then __IADDR + 4
+		else 0 endif
 

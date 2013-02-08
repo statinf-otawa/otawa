@@ -20,7 +20,6 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define ELM_STREE_DEBUG
 #include <otawa/prog/Loader.h>
 #include <otawa/hard.h>
 #include <gel/gel.h>
@@ -269,7 +268,8 @@ class Process: public otawa::Process, public arm::Info {
 	typedef elm::stree::Tree<Address::offset_t, area_t> area_tree_t;
 public:
 	static const t::uint32 IS_BL_0	= 0x08000000,
-							 IS_BL_1 = 0x04000000;
+							 IS_BL_1 = 0x04000000,
+							 IS_BX_IP = 0x02000000;
 
 	Process(Manager *manager, hard::Platform *pf, const PropList& props = PropList::EMPTY)
 	:	otawa::Process(manager, props),
@@ -463,7 +463,6 @@ public:
 		//gel_enum_free(iter);
 #		ifdef ARM_THUMB
 			area_builder.make(area_tree);
-			area_tree.dump(cerr);
 #		endif
 
 		// Last initializations
@@ -727,13 +726,35 @@ arm_address_t BranchInst::decodeTargetAddress(void) {
 	Address target_addr = arm_target(inst);
 
 	// thumb-1 case
-#		ifdef ARM_THUMB_1
+#		ifdef ARM_THUMB
 		if(_kind & Process::IS_BL_1) {
 			arm_inst_t *pinst = proc.decode_raw(address() - 2);
 			Inst::kind_t pkind = arm_kind(pinst);
 			if(pkind & Process::IS_BL_0)
 				target_addr = arm_target(pinst) + target_addr.offset();
 			proc.free_inst(pinst);
+		}
+		else if(kind() & Process::IS_BX_IP) {
+			cerr << "DEBUG: found an IS_BX_IP !\n";
+
+			// look current and previous instruction words
+			t::uint32 cur_word, pre_word;
+			proc.get(address() - 4, pre_word);
+			proc.get(address(), cur_word);
+			cerr << "DEBUG: cw=" << io::hex(cur_word) << ", pw=" << io::hex(pre_word) << io::endl;
+
+			// is it ldr ip, [pc, #k] with same condition ?
+			if(((pre_word & 0x0ffff000) == 0x059fc000)
+			&& ((pre_word & 0xf0000000) == (cur_word & 0xf0000000))) {
+				cerr << "DEBUG: good condition and opcode\n";
+				// load address from M[pc + 8 + k]
+				Address addr = address() + 4 + (pre_word & 0xfff);
+				cerr << "DEBUG: target at " << addr << io::endl;
+				t::uint32 target;
+				proc.get(addr, target);
+				target_addr = target & 0xfffffffe;
+				cerr << "DEBUG: branching to " << target_addr << io::endl;
+			}
 		}
 #		endif
 
@@ -753,6 +774,7 @@ otawa::Inst *BranchInst::target() {
 			_target = process().findInstAt(a);
 
 		// else try to scan if it is a call
+		// TODO		Seems a bit strange and bad documented
 		else if(size() == 4) {
 			otawa::Inst *prev = this->prevInst();
 			if(prev && prev->size() == 4) {

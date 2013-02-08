@@ -22,7 +22,8 @@ let IS_IMMEDIATE		= 0x40000000
 let IS_SHIFTED			= 0x20000000
 let IS_NO_DEST			= 0x10000000
 let IS_BL_0				= 0x08000000
-let IS_BL_1				= 0x04000000				
+let IS_BL_1				= 0x04000000
+let IS_BX_IP			= 0x02000000			
 
 
 // useful mode extensions
@@ -53,6 +54,7 @@ extend BX_ARM
 	otawa_kind = IS_CONTROL
 		| (if rd == 14 then IS_RETURN else 0 endif)
 		| (if cond.value == 14 then 0 else IS_COND endif)
+		| (if rd == 12 then IS_BX_IP else 0 endif)
 
 extend SWI
 	otawa_kind =
@@ -60,7 +62,7 @@ extend SWI
 		| IS_TRAP
  		| (if cond.value == 14 then 0 else IS_COND endif)
 
-extend B1_thumb
+extend B_thumb
 	otawa_kind =
 		  IS_CONTROL
 		| (if cond != 14 || cond != 15 then IS_COND else 0 endif)
