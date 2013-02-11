@@ -23,7 +23,8 @@ let IS_SHIFTED			= 0x20000000
 let IS_NO_DEST			= 0x10000000
 let IS_BL_0				= 0x08000000
 let IS_BL_1				= 0x04000000
-let IS_BX_IP			= 0x02000000			
+let IS_BX_IP			= 0x02000000
+let IS_THUMB_BX			= 0x01000000			
 
 
 // useful mode extensions
@@ -84,7 +85,7 @@ extend BLX2_thumb
 	otawa_kind = IS_CONTROL | IS_CALL
 
 extend BX_thumb
-	otawa_kind = IS_CONTROL | (if rm == 14 then IS_RETURN else 0 endif)
+	otawa_kind = IS_CONTROL | IS_THUMB_BX | (if rm == 14 then IS_RETURN else 0 endif)
 
 extend SWI_thumb
 	otawa_kind = IS_CONTROL | IS_TRAP

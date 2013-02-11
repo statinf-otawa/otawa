@@ -217,7 +217,7 @@ class BranchInst: public Inst {
 public:
 
 	inline BranchInst(Process& process, kind_t kind, Address addr, int size)
-		: Inst(process, kind, addr, size), _target(0), isTargetDone(false)
+		: Inst(process, fixKind(process, addr, kind), addr, size), _target(0), isTargetDone(false)
 		{ }
 
 	virtual otawa::Inst *target();
@@ -226,6 +226,9 @@ protected:
 	arm_address_t decodeTargetAddress(void);
 
 private:
+
+	static kind_t fixKind(Process& process, const Address& addr, kind_t kind);
+
 	otawa::Inst *_target;
 	bool isTargetDone;
 };
@@ -267,9 +270,10 @@ io::Output& operator<<(io::Output& out, area_t area) {
 class Process: public otawa::Process, public arm::Info {
 	typedef elm::stree::Tree<Address::offset_t, area_t> area_tree_t;
 public:
-	static const t::uint32 IS_BL_0	= 0x08000000,
-							 IS_BL_1 = 0x04000000,
-							 IS_BX_IP = 0x02000000;
+	static const t::uint32 IS_BL_0			= 0x08000000,
+							 IS_BL_1 		= 0x04000000,
+							 IS_BX_IP 		= 0x02000000,
+							 IS_THUMB_BX	= 0x01000000;
 
 	Process(Manager *manager, hard::Platform *pf, const PropList& props = PropList::EMPTY)
 	:	otawa::Process(manager, props),
@@ -727,6 +731,8 @@ arm_address_t BranchInst::decodeTargetAddress(void) {
 
 	// thumb-1 case
 #		ifdef ARM_THUMB
+
+		// blx/0; blx/1
 		if(_kind & Process::IS_BL_1) {
 			arm_inst_t *pinst = proc.decode_raw(address() - 2);
 			Inst::kind_t pkind = arm_kind(pinst);
@@ -734,6 +740,8 @@ arm_address_t BranchInst::decodeTargetAddress(void) {
 				target_addr = arm_target(pinst) + target_addr.offset();
 			proc.free_inst(pinst);
 		}
+
+		// ldr ip, [pc, #k]; bx ip
 		else if(kind() & Process::IS_BX_IP) {
 			cerr << "DEBUG: found an IS_BX_IP !\n";
 
@@ -761,6 +769,31 @@ arm_address_t BranchInst::decodeTargetAddress(void) {
 	// cleanup
 	proc.free_inst(inst);
 	return target_addr;
+}
+
+
+/**
+ * Fix possibly the kind of a branch instruction.
+ * @param process	Current process.
+ * @param kind		Original kind.
+ * @return			Fixed kind.
+ */
+Inst::kind_t BranchInst::fixKind(Process& process, const Address& addr, kind_t kind) {
+
+	// pop { ..., ri, ... }; bx ri
+	if(kind && Process::IS_THUMB_BX) {
+		t::uint16 pre_half, cur_half;
+		process.get(addr, cur_half);
+		process.get(addr - 2, pre_half);
+		int r = (cur_half >> 3) & 0xf;
+		if(r < 8
+		&& (pre_half & 0xff00) == 0xbc00
+		&& (pre_half & (1 << r)))
+			kind |= IS_RETURN;
+	}
+
+	// no modification
+	return kind;
 }
 
 

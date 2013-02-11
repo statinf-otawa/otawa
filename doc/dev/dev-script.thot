@@ -8,7 +8,7 @@ It contains :
   * possible documentation about the computation (allowing to inform the user about
 limitations for example).
 
-The scripts are described in [[http://www.w3.org/XML/|XMl format]] and, therefore,
+The scripts are described in [[http://www.w3.org/XML/|XML format]] and, therefore,
 easy to read and write by a human user. They are mostly the simpler way
 to extend OTAWA without the need to understand
 the internal API of the framework. In addition, scripts are easy
@@ -230,6 +230,8 @@ A configuration item is made of:
 
 In addition, each type of items may have its own set for attributes and sub-elements.
 
+=== ''bool'' type ===
+
 The ''bool'' type allows to get boolean information from the user.
 Possible values are ''true'' or ''false''. They are used to enable
 or disable specific features of the script. The example below allows
@@ -241,15 +243,202 @@ to activate or not the use of prefetching from a flash memory:
 </item>
 </code> 
 
+=== ''int'' type ===
+
+The integer type allows to get an integer configuration value from the user.
+If no default value is given, it is assumed to be 0. The argument may be expressed
+as a decimal integer or hexadecimal one prefixed by ''0x'' or ''0X''.
+An integer configuration item is used to pass any integer quantitive value
+as a number of functional units in a pipeline description, a specific address
+in the memory space or the size of any part of the architecture.
+
+In the example below, the ''intt' configuration item is isued to configure the number
+of wait states used to write in the static RAM.
+<code xml>
+<item name="ramwws" type="int" default="0" label="SRAM write wait states">
+<help>Defines the number of wait state for a SRAM write. One wait cycle delays one cycle.</help>
+</item>
+</xml>
+
+=== ''string'' type ===
+
+This configuration item type is used to pass a string to the script. If no default value
+is given, an empty string is assumed. A common usage of this type of item is to pass
+a path in the file system to a specific resource used in the computation but any use
+of a string is supported.
+
+=== ''range'' type ===
+
+A ''range'' configuration item is a bit like the ''int'' type but with bounds on the possible
+given value. The bounds are inclusive and given by two additional attributes, ''low'' and ''high''.
+The default value must be in the bounds and, if not given, the ''low'' bound is assumed as default.
+
+The code below shows the ''range'' in action to define the pre-charge time of a dynamic ram
+in the range of [2, 3].
+<code xml>
+<item name="trp" type="range" default="2" label="SDRAM precharge time" low="2" high="3">
+	<help>In cycles.</help>
+</item>
+</code>
+
+=== ''enum'' type ===
+
+The ''enum'' type allows to support the selection of value from a collection of different values.
+
+The enumerated values are declared with the syntax below:
+<code xml>
+<!-- ITEM ::= -->
+<item name="TEXT" type="enum" label="TEXT">
+	<value label="TEXT" value="INT"  default="BOOL"?/>+
+</item>
+</code>
+
+Each value is defined from a ''value'' XML element with a ''label'', to display to the user
+and an integer value that represents the value handled by the script if the enumerated value
+is selected. In addition, a ''default'' attribute may be set to indicate if the current value
+is the default one. If no ''default'' attribute is set to true, the first enumeration value
+is considered as the default.
+
+The ''range'' configuration type is useful to display a choice to the user in a textual way
+while keeping hidden the associated integer value. The example allows to select a multiplier
+implementation in order to compute for a processor delivered as an IP. 
+
+<code xml>
+	<item name="multiplier" type="enum" label="multiplier" default="m32x32">
+		<help>Multiplier implementation: defines the multiplier latency.</help>
+		<value label="iterative" value="0" default="true"/>
+		<value label="m16x16 + pipeline" value="1"/>
+		<value label="m16x16" value="2"/>
+		<value label="m32x8" value="3"/>
+		<value label="m32x16" value="4"/>
+		<value label="m32x32" value="5"/>
+	</item>
+</xml>
+
+
+
 ==== Script Description ====
 
+The script description allows to pass information
+about the script to the user. Usual common information
+concerns the target hardware, the supported mode and configuration for the hardware
+and the limitations. Often, when the target is a micro-controller, this documentation
+may contains a list of hardware registers, impacting the performances of the processor,
+with the supported values or the supported combination of values.
 
+Whatever, this description is human-readable text and not aimed to automatic processing.
+It may be plain text or [[http://www.w3.org/TR/xhtml1/|XHTML]] content as found in the ''body'' element. 
 
 
 ===== File Organization and XInclude =====
 
+Using the //XInclude// XML extension, a script can be made of several different files.
+An //XInclude// element looks like:
+<code xml>
+	<xi:include href="PATH"/>
+</code>
+
+Where //PATH// is an URL pointing to the file to include. The included file must be
+a valid XML file (prefixed by the ''<?xml ... >'' tag and the top level element
+will replaced the ''xi:include'' element so that the application processing the resulting
+XML file does not have to do any more processing.
+
+A common use of this feature is to split the script description in several files, one for the
+script, the entry point whose name is suffixed by ''.osx'' and one for each aspect of
+the hardware (pipeline, caches, memory space). The example shows a summary of the entry point
+in such an organization:
+
+<code xml>
+<?xml version="1.0"?>
+  <otawa-script
+    xmlns:xi="http://www.w3.org/2001/XInclude"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+ 
+    <info> ... </info>?
+    <name> ... </name>
+ 	<configuration> ... </configuration>
+ 	<id> ... </id>
+
+	<platform>
+		<xi:include href="mpc5554/pipeline.xml"/>
+  		<xi:include href="mpc5554/cache.xml"/>
+  		<xi:include href="mpc5554/memory.xml"/>
+	</platform>		
+
+	<script> ... </script> 
+</otawa-script>
+</code>
+
+The //PATH// attribute of ''xi:include'' element can contains any type of path,
+absolute or relative, but the latter option allows to preserve the consistency
+of the script. Indeed, the script interpreter considers that any relative path
+is relative to the directory containing the script. Therefore, if the script
+is moved in the file system tree, they will be correctly retrieved
+if the relative position of the script file and the included file is not changed.
+Such a method allows also to deliver easily a package containing a script
+without to have to fix the paths of the included file.
+
+In the example above, the script is contained in a file named ''mpc5554.osx''
+and the included files are found out from a directory named ''mpc5554'' installed
+in the same directory than the entry file ''mpc5554.osx''. It is also advised 
+to put the included file in a sub-directory and to not suffix these files
+with ''.osx'' in order to not confuse application using the ''.osx'' files
+(as the OTAWA Eclipse plugin).
+
 
 ===== Smart Scripts and XSLT =====
+
+[[http://www.w3.org/TR/xslt|XSLT]] is an XML-based language to describe templates to perform automatic transformation
+on XML files. In the OTAWA scripts, we do not use its templating system but only the interpreter
+of its algorithmic components, that is, its capacity to have variables and perform computation
+with conditional structure allowing to insert or not XML elements. This section gives
+basic commands of the //XSLT// language
+but more details can be found in the [[http://www.w3.org/TR/xslt|XSLT]] documentation.
+
+In //XSLT//, the variable are accessed by prefixing them with ''$'': an element attribute whose value is "here is my $myvar !"
+will get as value the given string with the variable reference ''$myvar'' replaced by the actual value of //myvar//.
+Basically, the available variables, when the script is processed by the //XSLT// interpreter, is made of
+the variables declared for the configuration items, named according to the ''name'' attribute ''name'' and
+whose value is the one passed by the user or, else, the default value.
+
+These variables may be used throughout the script file to provide more flexibility in the configuration of the script.
+Using the following syntax, one may change the value stored in a script element:
+<code xml>
+<element> <xsl:value-of select="XPATH expression"/> </element>
+</code>
+
+In the example below, the content of the element ''write_latency'' is replaced
+by the value computed bu the ''xsl-value-of'' element, that is, the sum of 2,
+value of variable ''trp'' and value of variable ''sdrcas''.
+<code xml>
+<otawa-script>
+	<platform>
+		<memory>
+			...
+			<bank>
+				<write_latency><xsl:value-of select="2+$trp+$sdrcas"/></write_latency>
+			</bank>
+			...
+		</meory>
+	</platform>
+</code>
+
+The [[http://www.w3.org/TR/xpath20/|XPATH]] expression (follow the link for more details)
+is very versatile and provide usually operators to perform computation:
+  * ''$''//name// to access a variable content,
+  * ''('' and '')'', parentheses,
+  * usually unary and binary operators like ''+'', ''-'', ''*'', ''/'', etc
+  * and a lot of common mathematic, textual and logic functions.
+
+To set the value of an attribute of a script element, one can use the following syntax.
+The ''xsl:value'' will be first evaluated to produce the //VALUE// and, then, 
+the ''xsl::attribute'' takes effect to add an attribute named //NAME// to ''my-element''
+with the computed //VALUE//.
+<code xml>
+<my-element> <xsl:attribute name="NAME"> <xsl:value-of select="VALUE" /> </xsl:attribute> </my-element>
+</code>
+
+//XSLT// allows to compute values but also to add conditionally XML elements. 
 
 
 ===== Pipeline Description =====
