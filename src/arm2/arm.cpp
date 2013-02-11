@@ -411,10 +411,6 @@ public:
 			area_builder.add(0UL, (infos.entry & 0x1) ? THUMB : ARM);
 			area_builder.add(0xffffffffUL, NONE);
 #		endif
-		//gel_enum_t *iter = gel_enum_file_symbol(_file);
-		//gel_enum_initpos(iter);
-		/*for(char *name = (char *)gel_enum_next(iter); name; name = (char *)gel_enum_next(iter)) {
-			ASSERT(name);*/
 		gel_sym_iter_t iter;
 		gel_sym_t *sym;
 		for(sym = gel_sym_first(&iter, _file); sym; sym = gel_sym_next(&iter)) {
@@ -435,7 +431,7 @@ public:
 					case 't': area = THUMB; break;
 					}
 					if(area != NONE) {
-						area_builder.add(Address::offset_t(infos.vaddr), area);
+						area_builder.add(Address::offset_t(infos.vaddr & 0xfffffffe), area);
 						continue;
 					}
 				}
@@ -743,25 +739,20 @@ arm_address_t BranchInst::decodeTargetAddress(void) {
 
 		// ldr ip, [pc, #k]; bx ip
 		else if(kind() & Process::IS_BX_IP) {
-			cerr << "DEBUG: found an IS_BX_IP !\n";
 
 			// look current and previous instruction words
 			t::uint32 cur_word, pre_word;
 			proc.get(address() - 4, pre_word);
 			proc.get(address(), cur_word);
-			cerr << "DEBUG: cw=" << io::hex(cur_word) << ", pw=" << io::hex(pre_word) << io::endl;
 
 			// is it ldr ip, [pc, #k] with same condition ?
 			if(((pre_word & 0x0ffff000) == 0x059fc000)
 			&& ((pre_word & 0xf0000000) == (cur_word & 0xf0000000))) {
-				cerr << "DEBUG: good condition and opcode\n";
 				// load address from M[pc + 8 + k]
 				Address addr = address() + 4 + (pre_word & 0xfff);
-				cerr << "DEBUG: target at " << addr << io::endl;
 				t::uint32 target;
 				proc.get(addr, target);
 				target_addr = target & 0xfffffffe;
-				cerr << "DEBUG: branching to " << target_addr << io::endl;
 			}
 		}
 #		endif
