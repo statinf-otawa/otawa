@@ -87,12 +87,12 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 	if (LOOP_HEADER(bb)) {
 
 		// look bounds
-		if(isVerbose())
+		if(logFor(LOG_BB))
 			log << "\t\tlooking bound for " << bb << io::endl;
 		int max = MAX_ITERATION(bb),
 			total = TOTAL_ITERATION(bb),
 			min = MIN_ITERATION(bb);
-		if(isVerbose()) {
+		if(logFor(LOG_BB)) {
 			if(max >= 0)
 				log << "\t\tmax = " << max << io::endl;
 			if(total >= 0)

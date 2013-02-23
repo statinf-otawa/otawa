@@ -70,11 +70,11 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 	// Look the _start
 	Inst *start = ws->start();
 	if(start) {
-		if(isVerbose())
+		if(logFor(LOG_CFG))
 			log << "\tprocessing entry at " << start->address() << io::endl;
 		processEntry(ws, start->address());
 	}
-	else if(isVerbose())
+	else if(logFor(LOG_CFG))
 		log << "\tno entry to process\n";
 
 	// Look the function symbols
@@ -82,11 +82,11 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 		for(File::SymIter sym(file); sym; sym++)
 			if(sym->kind() == Symbol::FUNCTION) {
 				if(IGNORE_ENTRY(sym)) {
-					if(isVerbose())
+					if(logFor(LOG_CFG))
 						log << "\tignoring function symbol \"" << sym->name() << "\"\n";
 				}
 				else {
-					if(isVerbose())
+					if(logFor(LOG_CFG))
 						log << "\tprocessing function \"" << sym->name() << " at " << sym->address() << io::endl;
 					Inst *inst = ws->findInstAt(sym->address());
 					if(inst)
@@ -234,7 +234,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 					todo.put(ti);
 					TRACE("otawa::VarTextDecoder::processEntry: put(" << target << ")");
 				}
-				if(!one && isVerbose())
+				if(!one && logFor(LOG_INST))
 					log << "WARNING: no target for branch at " << inst->address() << io::endl;
 			}
 			if(inst->isCall() && (!target || !NO_RETURN(target))) {

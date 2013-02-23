@@ -449,7 +449,7 @@ void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 	}
 
 	// process the file
-	if(isVerbose())
+	if(logFor(LOG_DEPS))
 		log << "\tloading \"" << file_path << "\"\n";
 	if(!xml)
 		loadF4(file_path);
@@ -457,7 +457,7 @@ void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
 		loadXML(file_path);
 
 	// Display warning if there is no checksum
-	if(!checksummed && isVerbose())
+	if(!checksummed && logFor(LOG_DEPS))
 		warn("no checksum: flow facts and executable file may no match !");
 }
 
@@ -467,7 +467,7 @@ void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
  * @param path	Path of the file.
  */
 void FlowFactLoader::loadF4(const string& path) throw(ProcessorException) {
-	if(isVerbose())
+	if(logFor(LOG_DEPS))
 		log << "\tloading " << path << io::endl;
 
 	// Open the file
@@ -557,63 +557,17 @@ void FlowFactLoader::onLoop(
 		int old_max = path(MAX_ITERATION, inst);
 		int new_max = max(old_max, count);
 		path.ref(MAX_ITERATION, inst) = new_max;
-		if(isVerbose())
+		if(logFor(LOG_BB))
 			log << "\t" << path << "(MAX_ITERATION," << inst->address() << ") = " << count << io::endl;
 	}
 
 	// put the total iteration
 	if(total >= 0) {
 		path.ref(TOTAL_ITERATION, inst) = total;
-		if(isVerbose())
+		if(logFor(LOG_BB))
 			log << "\t" << path << "(TOTAL_ITERATION," << inst->address() << ") = " << total << io::endl;
 	}
 
-	// no path bound
-	/*if(!path) {
-		if(count >= 0) {
-			MAX_ITERATION(inst) = count;
-			if(isVerbose())
-				log << "\tMAX_ITERATION(" << inst->address() << ") = " << count << io::endl;
-		}
-		if(total >= 0) {
-			TOTAL_ITERATION(inst) = total;
-			if(isVerbose())
-				log << "\tTOTAL_ITERATION(" << inst->address() << ") = " << total << io::endl;
-		}
-	}
-
-	// bounds with path
-	else {
-
-		// Get the contextual loop bound object
-		ContextualLoopBound *bound = CONTEXTUAL_LOOP_BOUND(inst);
-		if(!bound) {
-			bound = new ContextualLoopBound();
-			inst->addProp(new DeletableProperty<ContextualLoopBound *>(CONTEXTUAL_LOOP_BOUND, bound));
-			if(isVerbose())
-				log << "\tcreatubt contextual loop bound at " << inst->address() << io::endl;
-		}
-
-		// Set the bounds
-		if(count >= 0) {
-			bound->addMax(path, count);
-			if(isVerbose()) {
-				log << "\tmax bound " << count << " to " << inst->address() << " in ";
-				for(int i = 0; i < path.count(); i++)
-					log << path[i] << "/";
-				log << io::endl;
-			}
-		}
-		if(total >= 0) {
-			bound->addTotal(path, total);
-			if(isVerbose()) {
-				log << "\ttotal bound " << total << " to " << inst->address() << " in ";
-				for(int i = 0; i < path.count(); i++)
-					log << path[i] << "/";
-				log << io::endl;
-			}
-		}
-	}*/
 }
 
 
@@ -655,7 +609,7 @@ void FlowFactLoader::onReturn(address_t addr) {
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
 		onError(_ << "no instruction at " << addr);
-	if(isVerbose())
+	if(logFor(LOG_INST))
 		log << "\treturn at " << addr << io::endl;
 	IS_RETURN(inst) = true;
 }
@@ -1281,7 +1235,7 @@ throw(ProcessorException) {
 		warn(_ << "cannot find the source line " << file << ":" << line);
 		return Address::null;
 	}
- 	if(isVerbose())
+ 	if(logFor(LOG_DEPS))
  		log << "\t" << file << ":" << line << " is " << addresses[0].fst << io::endl;
  	return addresses[0].fst;
 }

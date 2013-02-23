@@ -27,6 +27,7 @@ static Registration<TrivialInstCacheManager> my_reg(
 );
 
 /**
+ * @class TrivialInstCacheManager
  * This processor is a trivial manager of instruction cache for IPET approach.
  * Basically, it considers that each code line blocks causes a miss.
  *

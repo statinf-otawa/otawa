@@ -56,7 +56,7 @@ ILPSystemGetter::ILPSystemGetter(void)
 void ILPSystemGetter::processWorkSpace(WorkSpace *ws) {
 	ASSERT(ws);
 	ilp::System *sys = ws->process()->manager()->newILPSystem(plugin_name);
-	if(isVerbose())
+	if(logFor(LOG_DEPS))
 		log << "\tmaking an ILP system from \""
 			<< (plugin_name ? plugin_name : "default")
 			<< "\" plugin\n";

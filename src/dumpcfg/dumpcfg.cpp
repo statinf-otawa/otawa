@@ -135,11 +135,9 @@ public:
 	option::BoolOption all_functions;
 	option::BoolOption inline_calls;
 	option::BoolOption display_assembly;
-	//option::BoolOption verbose;
 	option::BoolOption simple;
 	option::BoolOption disassemble;
 	option::BoolOption dot;
-	//option::ValueOption<string> ff;
 	option::SwitchOption source;
 	Displayer *displayer;
 

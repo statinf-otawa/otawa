@@ -30,6 +30,20 @@ namespace otawa {
 
 using namespace elm;
 
+
+// LogOption class
+class LogOption: public option::AbstractValueOption {
+public:
+	LogOption(option::Manager& man);
+	LogOption(option::Manager& man, int tag, ...);
+	inline operator Processor::log_level_t(void) const { return log_level; }
+	inline Processor::log_level_t operator*(void) const { return log_level; }
+	virtual void process(String arg);
+private:
+	Processor::log_level_t log_level;
+};
+
+
 // Application class
 class Application: public option::Manager {
 public:
@@ -59,6 +73,7 @@ private:
 	option::ListOption<string> sets;
 	option::ListOption<string> params;
 	option::ValueOption<string> ff;
+	LogOption log_level;
 	elm::system::Path path;
 	genstruct::Vector<string> entries;
 	PropList props;

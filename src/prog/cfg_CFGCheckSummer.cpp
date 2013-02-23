@@ -64,7 +64,7 @@ void CFGCheckSummer::processCFG(WorkSpace *ws, CFG *cfg) {
 			sum.put(buf, bb->size());
 		}
 	CHECKSUM(cfg) = sum.sum();
-	if(isVerbose())
+	if(logFor(LOG_PROC))
 		log << "\t\tchecksum = " << (void *)(unsigned long)CHECKSUM(cfg) << io::endl;
 }
 

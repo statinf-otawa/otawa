@@ -97,7 +97,7 @@ CodeBasicBlock *CFGBuilder::nextBB(Inst *inst) {
 	// create it
 	next_bb = new CodeBasicBlock(next_inst);
 	BB(next_inst) = next_bb;
-	if(isVerbose())
+	if(logFor(LOG_BB))
 		log << "\tfound BB at " << next_bb->address() << io::endl;
 	return next_bb;
 }
@@ -119,7 +119,7 @@ CodeBasicBlock *CFGBuilder::thisBB(Inst *inst) {
 	// at start, create it
 	bb = new CodeBasicBlock(inst);
 	BB(inst) = bb;
-	if(isVerbose())
+	if(logFor(LOG_BB))
 		log << "\tfound BB at " << bb->address() << io::endl;
 	return bb;
 }
@@ -131,7 +131,7 @@ CodeBasicBlock *CFGBuilder::thisBB(Inst *inst) {
  */
 void CFGBuilder::addSubProgram(Inst *inst) {
 	assert(inst);
-	if(isVerbose())
+	if(logFor(LOG_CFG))
 		log << "\tadd subprogram " << inst->address() << " (" << FUNCTION_LABEL(inst) << ")\n";
 	BasicBlock *bb = thisBB(inst);
 	IS_ENTRY(bb) = true;
@@ -169,7 +169,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 			}
 
 			// verbose message for non-return
-			else if(!isReturn(inst) && isVerbose())
+			else if(!isReturn(inst) && logFor(LOG_INST))
 				warn( _ << "unresolved indirect control at 0x" << inst->address()
 					<< "\n\t" << inst->address() << '\t' << inst);
 
@@ -328,7 +328,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 		CFG *cfg = new CFG(seg, entries[i]);
 		_cfgs.add(cfg);
 		ENTRY(entries[i]) = cfg;
-		if(isVerbose())
+		if(logFor(LOG_CFG))
 			log << "\tadded CFG " << cfg->label() << " at " << cfg->address() << io::endl;
 	}
 }

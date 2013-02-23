@@ -86,21 +86,21 @@ void TextDecoder::processWorkSpace(WorkSpace *fw) {
 	// Decode the text
 	Processor *decoder = fw->process()->decoder();
 	if(decoder) {
-	    if(isVerbose())
-	        log << "INFO: using loade plugin decoder.\n";
+	    if(logFor(LOG_DEPS))
+	        log << "INFO: using loader plugin decoder.\n";
 	    decoder->process(fw, *conf_props);
         }
         else {
-            if(isVerbose())
+            if(logFor(LOG_DEPS))
                 log << "INFO: no default decoder\n";
             if(!fw->process()->instSize() || follow_paths) {
-                if(isVerbose())
-		    log << "INFO: using VarTextDecoder\n";
+                if(logFor(LOG_DEPS))
+                	log << "INFO: using VarTextDecoder\n";
 		    VarTextDecoder decoder;
 		    decoder.process(fw, *conf_props);
             }
             else {
-                if(isVerbose())
+                if(logFor(LOG_DEPS))
                     log << "INFO: using FixedTextDecoder\n";
                 FixedTextDecoder decoder;
 		decoder.process(fw, *conf_props);

@@ -149,12 +149,20 @@ string CacheConfiguration::cacheName(const Cache *cache) const {
 }
 
 
+/**
+ * Look for a cache configuration to provide.
+ * The following items are looked in its configuration property list (in the list order):
+ * @li @ref CACHE_CONFIG
+ * @li @ref CACHE_CONFIG_ELEMENT (to unserialize it from the given XML element)
+ * @li @ref CACHE_CONFIG_PATH (to load it from the given path).
+ *
+ * @par Provided Features
+ * @li @ref CACHE_CONFIGURATION_FEATURE
+ */
 class CacheConfigurationProcessor: public otawa::Processor {
 public:
-	CacheConfigurationProcessor(void)
-		: Processor("otawa::CacheConfigurationProcessor", Version(1, 0, 0)) {
-			provide(CACHE_CONFIGURATION_FEATURE);
-		}
+	static p::declare reg;
+	CacheConfigurationProcessor(p::declare& r = reg): Processor(r) { }
 
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);
@@ -170,22 +178,22 @@ protected:
 	virtual void processWorkSpace(WorkSpace *ws) {
 		if(config) {
 			CACHE_CONFIGURATION(ws) = config;
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tcustom cache configuration\n";
 		}
 		else if(xml) {
 			config = CacheConfiguration::load(xml);
 			track(CACHE_CONFIGURATION_FEATURE, CACHE_CONFIGURATION(ws) = config);
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\t cache configuration from XML element\n";
 		}
 		else if(path) {
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\t cache configuration from \"" << path << "\"\n";
 			config = CacheConfiguration::load(path);
 			track(CACHE_CONFIGURATION_FEATURE, CACHE_CONFIGURATION(ws) = config);
 		}
-		else if(isVerbose())
+		else if(logFor(LOG_DEPS))
 			log << "\tno cache configuration\n";
 	}
 
@@ -194,6 +202,11 @@ private:
 	xom::Element *xml;
 	Path path;
 };
+
+
+p::declare CacheConfigurationProcessor::reg = p::init("otawa::CacheConfigurationProcessor", Version(1, 0, 0))
+	.provide(CACHE_CONFIGURATION_FEATURE)
+	.maker<CacheConfigurationProcessor>();
 
 
 static SilentFeature::Maker<CacheConfigurationProcessor> maker;

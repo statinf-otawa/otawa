@@ -129,7 +129,7 @@ protected:
 			if(!found)
 				throw elm::option::OptionException(_ << "cannot find script " << *script);
 		}
-		if(this->isVerbose())
+		if(isVerbose())
 			cerr << "INFO: using script from " << path << io::endl;
 
 		// launch the script

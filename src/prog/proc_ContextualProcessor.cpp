@@ -116,7 +116,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 			edge = calls.top().snd;
 			calls.pop();
 			this->leavingCall(ws, cfg, edge);
-			if(isVerbose())
+			if(logFor(LOG_CFG))
 				log << "\t\t[" << level << "] leaving call\n";
 			level--;
 			bb = edge->target();
@@ -153,7 +153,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 				// recursive call
 				if(MARK(bb)) {
 					avoidingRecursive(ws, cfg, edge);
-					if(isVerbose())
+					if(logFor(LOG_CFG))
 						log << "\t\t[" << level << "] avoiding recursive call from " << edge->source() << " to " << bb << io::endl;
 					bb = 0;
 				}
@@ -161,7 +161,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 				// simple call
 				else {
 					enteringCall(ws, cfg, edge);
-					if(isVerbose())
+					if(logFor(LOG_CFG))
 						log << "\t\t[" << level << "] entering call to " << bb << " from " << edge->source() << io::endl;
 					BasicBlock *ret = VIRTUAL_RETURN_BLOCK(edge->source());
 					if(!ret)
@@ -182,7 +182,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 		// process basic block
 		if(bb) {
 			processBB(ws, cfg, bb);
-			if(isVerbose())
+			if(logFor(LOG_BB))
 				log << "\t\t[" << level << "] processing " << bb << io::endl;
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				todo.push(edge);

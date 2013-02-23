@@ -68,7 +68,7 @@ void PFGBuilder::processWorkSpace(WorkSpace *ws) {
 	// finalize BB
 	for(pfg::PFG::Iterator bb(pfg); bb; bb++)
 		if(bb != &pfg->ret && bb != &pfg->unknown) {
-			if(isVerbose()) {
+			if(logFor(LOG_BB)) {
 				cerr << "\tBB at " << bb->address() << io::endl;
 			}
 			finalizeBB(bb);
@@ -101,7 +101,7 @@ void PFGBuilder::addFile(WorkSpace *ws, File *file) {
 void PFGBuilder::addFunction(WorkSpace *ws, Inst *inst) {
 	ASSERT(ws);
 	ASSERT(inst);
-	if(isVerbose())
+	if(logFor(LOG_CFG))
 		log << "\tfunction entry at " << inst->address() << " (" << FUNCTION_LABEL(inst) << ")\n";
 
 	// prepare to-do list

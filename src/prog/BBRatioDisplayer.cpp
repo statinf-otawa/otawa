@@ -87,14 +87,14 @@ void BBRatioDisplayer::setup(WorkSpace *ws) {
 	// source available ?
 	if(ws->isProvided(SOURCE_LINE_FEATURE))
 		line = true;
-	if(isVerbose())
+	if(logFor(LOG_PROC))
 		log << "\tsource/line information " << (line ? "" : "not ") << "available\n";
 
 	// prepare the output
 	if(!path && to_file)
 		path = _ << ENTRY_CFG(ws)->label() << ".ratio";
 	if(path) {
-		if(isVerbose())
+		if(logFor(LOG_PROC))
 			log << "\toutputting to " << path << io::endl;
 		try {
 			stream = elm::system::System::createFile(path);

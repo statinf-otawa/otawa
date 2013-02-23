@@ -1,6 +1,5 @@
 NOTES
 
- * ARM and Star12X plugin are not fully tested. Use them at your own risks.
+ * Star12X plugin are not fully tested. Use them at your own risks.
  * SystemC  is not automatically downloaded and installed because a user login
    is required.
- * OTAWA is based on the GLISS tool that does not yet support 64-bits OS.

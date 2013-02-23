@@ -235,14 +235,14 @@ void Script::configure(const PropList &props) {
 void Script::processWorkSpace(WorkSpace *ws) {
 	ErrorHandler *old = ProcessorPlugin::getErrorHandler();
 	try {
-		if(isVerbose())
+		if(logFor(LOG_DEPS))
 			ProcessorPlugin::setErrorHandler(this);
 		work(ws);
-		if(isVerbose())
+		if(logFor(LOG_DEPS))
 			ProcessorPlugin::setErrorHandler(old);
 	}
 	catch(elm::Exception& e) {
-		if(isVerbose())
+		if(logFor(LOG_DEPS))
 			ProcessorPlugin::setErrorHandler(old);
 		throw;
 	}
@@ -281,7 +281,7 @@ void Script::work(WorkSpace *ws) {
 			xom::Element *item = items->get(i);
 			ScriptItem *sitem = ScriptItem::parse(*item);
 			this->items.add(sitem);
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tscript parameter \"" << sitem->name << "\" found.\n";
 		}
 		delete items;
@@ -326,7 +326,7 @@ void Script::work(WorkSpace *ws) {
 			if(item->name == (*param).fst) {
 				found = true;
 				xslt.setParameter((*param).fst, item->makeParam((*param).snd));
-				if(isVerbose())
+				if(logFor(LOG_DEPS))
 					log << "\tadding argument \"" << (*param).fst << "\" to \"" << (*param).snd << "\"\n";
 			}
 		}
@@ -364,7 +364,7 @@ void Script::work(WorkSpace *ws) {
 				path = base / path;
 			}
 			ProcessorPlugin::addPath(path);
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tadding path \"" << path << "\"\n";
 		}
 	}
@@ -374,29 +374,28 @@ void Script::work(WorkSpace *ws) {
 	xom::Element *pf = script->getFirstChildElement("platform");
 	script::PLATFORM(props) = pf;
 	if(pf) {
-		if(isVerbose())
+		if(logFor(LOG_DEPS))
 			log << "\tfound platform description.\n";
 		xom::Element *proc = pf->getFirstChildElement("processor");
 		if(proc) {
 			PROCESSOR_ELEMENT(props) = proc;
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tprocessor configuration found.\n";
 		}
 		xom::Element *cache = pf->getFirstChildElement("cache-config");
 		if(cache) {
 			CACHE_CONFIG_ELEMENT(props) = cache;
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tcache configuration found.\n";
 		}
 		xom::Element *mem = pf->getFirstChildElement("memory");
 		if(mem) {
 			MEMORY_ELEMENT(props) = mem;
-			//ws->process()->platform()->loadMemory(mem);
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tmemory configuration found.\n";
 		}
 	}
-	else if(isVerbose())
+	else if(logFor(LOG_DEPS))
 		log << "\tno platform description.\n";
 
 	// scan configuration in the script
@@ -420,7 +419,7 @@ void Script::work(WorkSpace *ws) {
 				if(step->getLocalName() == "step") {
 					Option<xom::String> name = step->getAttributeValue("processor");
 					if(name) {
-						if(isVerbose())
+						if(logFor(LOG_DEPS))
 							log << "INFO: preparing to run " << *name << io::endl;
 						PropList list = props;
 						makeConfig(step, list);
@@ -436,7 +435,7 @@ void Script::work(WorkSpace *ws) {
 					}
 					Option<xom::String> require = step->getAttributeValue("require");
 					if(require) {
-						if(isVerbose())
+						if(logFor(LOG_DEPS))
 							log << "INFO: requiring " << *require << io::endl;
 						PropList list = props;
 						makeConfig(step, list);
@@ -507,7 +506,7 @@ void Script::makeConfig(xom::Element *elem, PropList& props) {
 		}
 
 		// set the property
-		if(isVerbose())
+		if(logFor(LOG_DEPS))
 			log << "\tsetting property " << *name << " with " << *value << io::endl;
 		AbstractIdentifier *id = ProcessorPlugin::getIdentifier(*name);
 		if(!id)

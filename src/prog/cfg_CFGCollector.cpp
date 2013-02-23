@@ -138,7 +138,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
 	// Entry CFG
 	cfgs->add(entry);
-	if(isVerbose())
+	if(logFor(LOG_CFG))
 		log << "\tadding " << entry->label() << io::endl;
 
 	// Added functions
@@ -147,7 +147,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 		CFG *cfg = info->findCFG(added_funs[i]);
 		if(cfg) {
 			cfgs->add(cfg);
-			if(isVerbose())
+			if(logFor(LOG_CFG))
 				log << "\tadding " << cfg->label() << io::endl;
 		}
 		else
@@ -157,7 +157,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 	// Added CFG
 	for(int i = 0; i < added_cfgs.length(); i++) {
 		cfgs->add(added_cfgs[i]);
-		if(isVerbose())
+		if(logFor(LOG_CFG))
 			log << "\tadding " << added_cfgs[i]->label() << io::endl;
 	}
 
@@ -167,7 +167,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
 	// Build it recursively
 	if(rec) {
-		if(isVerbose())
+		if(logFor(LOG_CFG))
 			log << "\tstarting recursive traversal\n";
 		for(int i = 0; i < cfgs->count(); i++) {
 			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++) {
@@ -178,14 +178,14 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 						else if(!MARK(edge->calledCFG())) {
 							cfgs->add(edge->calledCFG());
 							MARK(edge->calledCFG()) = true;
-							if(isVerbose())
+							if(logFor(LOG_CFG))
 								log << "\t\tadding " << edge->calledCFG()->label() << io::endl;
 						}
 					}
 				}
 			}
 		}
-		if(isVerbose())
+		if(logFor(LOG_CFG))
 			log << "\tending recursive traversal\n";
 	}
 }

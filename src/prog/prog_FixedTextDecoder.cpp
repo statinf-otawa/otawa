@@ -52,11 +52,11 @@ FixedTextDecoder::FixedTextDecoder(void): Processor(reg) {
 void FixedTextDecoder::processWorkSpace(WorkSpace *fw) {
 	ASSERT(fw);
 	for(Process::FileIter file(fw->process()); file; file++) {
-		if(isVerbose())
+		if(logFor(LOG_DEPS))
 			log << "\tProcessing file " << file->name() << io::endl;
 		for(File::SegIter seg(file); seg; seg++)
 			if(seg->isExecutable()) {
-				if(isVerbose())
+				if(logFor(LOG_CFG))
 					log << "\t\tProcessing segment " << seg->name() << io::endl;
 				if(seg->size() % size != 0)
 					warn(elm::_ << "segment " << seg->name() << " from file "

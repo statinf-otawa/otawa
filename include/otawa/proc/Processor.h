@@ -59,6 +59,18 @@ class Processor {
 
 public:
 
+	typedef enum log_level_t {
+		LOG_NONE = 0,
+		LOG_PROC = 1,
+		LOG_FILE = 2,
+		LOG_DEPS = LOG_FILE,
+		LOG_FUN = 3,
+		LOG_CFG = LOG_FUN,
+		LOG_BLOCK = 4,
+		LOG_BB = LOG_BLOCK,
+		LOG_INST = 5
+	} log_level_t;
+
 	// Constructors
 	Processor(void);
 	Processor(AbstractRegistration& registration);
@@ -84,6 +96,7 @@ public:
 	static Identifier<bool> RECURSIVE;
 	static Identifier<Progress *> PROGRESS;
 	static Identifier<bool> COLLECT_STATS;
+	static Identifier<log_level_t> LOG_LEVEL;
 
 	// Statistics Properties
 	static Identifier<elm::system::time_t> RUNTIME;
@@ -112,6 +125,8 @@ protected:
 	inline bool isAllocated(void) const { return flags & IS_ALLOCATED; }
 	inline bool isPrepared(void) const { return flags & IS_PREPARED; }
 	inline bool isCollectingStats(void) const { return flags & IS_COLLECTING; }
+	inline bool logFor(log_level_t tested) const { return tested <= log_level; }
+	inline log_level_t logLevel(void) const { return log_level; }
 
 	// configuration
 	void require(const AbstractFeature& feature);
@@ -151,6 +166,7 @@ private:
 	typedef elm::genstruct::SLList<clean_t> clean_list_t;
 	clean_list_t cleaners;
 	Progress *_progress;
+	log_level_t log_level;
 };
 
 

@@ -26,6 +26,85 @@
 
 namespace otawa {
 
+
+/**
+ * @class LogOption
+ * Defines a command line option supporting log level
+ * thanks to strings 'proc', 'cfg' or 'bb'.
+ */
+
+
+/**
+ * Declare a standard log option identified by "--log".
+ * If the option is not passed, revert to value @ref Processor::LOG_NONE.
+ * @param man	Used option manager.
+ */
+LogOption::LogOption(option::Manager& man)
+: option::AbstractValueOption(man,
+	option::cmd, "--log",
+	option::description, "select level of log",
+	option::arg_desc, "one of proc, deps, cfg, bb or inst",
+	option::require,
+	option::end),
+log_level(Processor::LOG_NONE)
+{ }
+
+
+/**
+ * Build a log option with the given configuration.
+ * If the option is not passed, revert to value @ref Processor::LOG_NONE.
+ * @param man	Used option manager.
+ * @param tag	First tag.
+ * @param ...	Must be a list of tags and their argument ended by option::end.
+ */
+LogOption::LogOption(option::Manager& man, int tag, ...): AbstractValueOption(man), log_level(Processor::LOG_NONE) {
+	VARARG_BEGIN(args, tag)
+		init(man, tag, args);
+	VARARG_END
+}
+
+
+/**
+ * @fn LogOption::operator Processor::log_level_t(void) const;
+ * Get the set log level.
+ * @return	Set log level.
+ */
+
+
+/**
+ * Processor::log_level_t LogOption::operator*(void) const;
+ * Get the set log level.
+ * @return	Set log level.
+ */
+
+
+/**
+ * Process the passed log level.
+ * @param arg	Passed argument.
+ * @throw option::OptionException	If the argument does not match.
+ */
+void LogOption::process(String arg) {
+	static Pair<cstring, Processor::log_level_t> ids[] = {
+		pair(cstring("proc"), Processor::LOG_PROC),
+		pair(cstring("file"), Processor::LOG_FILE),
+		pair(cstring("fun"), Processor::LOG_FUN),
+		pair(cstring("block"), Processor::LOG_BLOCK),
+		pair(cstring("inst"), Processor::LOG_INST),
+		pair(cstring(""), Processor::LOG_NONE)
+	};
+
+	// look for the log level
+	for(int i = 0; ids[i].snd; i++)
+		if(ids[i].fst == arg) {
+			log_level = ids[i].snd;
+			return;
+		}
+
+	// if not found, throw an option exception
+	throw option::OptionException(_ << "unknown log level: " << arg);
+}
+
+
 /**
  * @class Application
  * A class making easier the use of applications built on OTAWA. It automatically support for
@@ -84,10 +163,11 @@ Application::Application(
 	cstring _copyright
 ):
 	help(*this, 'h', "help", "display this help", false),
-	verbose(*this, 'v', "verbose", "verbose display of the process", false),
+	verbose(*this, 'v', "verbose", "verbose display of the process (same as --log bb)", false),
 	sets(*this, option::cmd, "--add-prop", option::description, "set a configuration property", option::arg_desc, "ID=VALUE", option::end),
 	params(*this, option::cmd, "--load-param", option::description, "add a load parameter", option::arg_desc, "ID=VALUE", option::end),
 	ff(*this, option::cmd, "--flowfacts", option::cmd, "-f", option::description, "select the flowfacts to load", option::arg_desc, "PATH", option::end),
+	log_level(*this),
 	props2(0),
 	result(0),
 	ws(0)
@@ -131,6 +211,9 @@ int Application::run(int argc, char **argv) {
 		}
 		if(verbose)
 			Processor::VERBOSE(props) = true;
+		if(*log_level)
+			Processor::LOG_LEVEL(props) = log_level;
+		cerr << "DEBUG: log_level = " << *log_level << io::endl;
 
 		// process the sets
 		bool failed = false;

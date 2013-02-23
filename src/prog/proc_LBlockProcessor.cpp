@@ -52,7 +52,7 @@ void LBlockProcessor::processWorkSpace(WorkSpace *ws) {
 
 	// process the sets
 	for(int i = 0; i < _cache->rowCount(); i++) {
-		if(isVerbose())
+		if(logFor(LOG_CFG))
 			log << "\tLBLOCKSET " << sets[i]->line() << io::endl;
 		processLBlockSet(ws, sets[i]);
 	}

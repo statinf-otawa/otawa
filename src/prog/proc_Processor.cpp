@@ -3,7 +3,7 @@
  *	Processor class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-8, IRIT UPS.
+ *	Copyright (c) 2013, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -219,6 +219,7 @@ MetaRegistration Processor::reg(
 	p::config, &Processor::VERBOSE,
 	p::config, &Processor::STATS,
 	p::config, &Processor::TIMED,
+	p::config, &Processor::LOG_LEVEL,
 	p::end
 );
 
@@ -234,7 +235,8 @@ MetaRegistration Processor::reg(
  * @li @ref Processor::LOG,
  * @li @ref Processor::VERBOSE,
  * @li @ref Processor::STATS,
- * @li @ref Processor::TIMED.
+ * @li @ref Processor::TIMED,
+ * @li @ref Processor::LOG_LEVEL.
  *
  * @p Statistics
  * The statistics are recorded in the property list passed by @ref Processor::STATS.
@@ -252,7 +254,7 @@ MetaRegistration Processor::reg(
 /**
  * Build a simple anonymous processor.
  */
-Processor::Processor(void): flags(0), stats(0) {
+Processor::Processor(void): flags(0), stats(0), log_level(LOG_NONE) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -271,7 +273,7 @@ Processor::~Processor(void) {
  * For internal use only.
  */
 Processor::Processor(AbstractRegistration& registration)
-: flags(0), stats(0) {
+: flags(0), stats(0), log_level(LOG_NONE) {
 	_reg = &registration;
 }
 
@@ -280,7 +282,7 @@ Processor::Processor(AbstractRegistration& registration)
  * For internal use only.
  */
 Processor::Processor(String name, Version version, AbstractRegistration& registration)
-: flags(0), stats(0) {
+: flags(0), stats(0), log_level(LOG_NONE) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &registration;
@@ -297,7 +299,7 @@ Processor::Processor(String name, Version version, AbstractRegistration& registr
  * @deprecated		Configuration must be passed at the process() call.
  */
 Processor::Processor(elm::String name, elm::Version version,
-const PropList& props): flags(0), stats(0) {
+const PropList& props): flags(0), stats(0), log_level(LOG_NONE) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -310,9 +312,10 @@ const PropList& props): flags(0), stats(0) {
  * Build a new processor with name and version.
  * @param name		Processor name.
  * @param version	Processor version.
+ * @deprecated
  */
 Processor::Processor(String name, Version version)
-: flags(0), stats(0) {
+: flags(0), stats(0), log_level(LOG_NONE) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -326,7 +329,7 @@ Processor::Processor(String name, Version version)
  * @param			Configuration properties.
  * @deprecated		Configuration must be passed at the process() call.
  */
-Processor::Processor(const PropList& props): flags(0), stats(0) {
+Processor::Processor(const PropList& props): flags(0), stats(0), log_level(LOG_NONE) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -351,13 +354,15 @@ void Processor::init(const PropList& props) {
 		verbose = VERBOSE(props);
 	else
 		verbose = elm::system::System::hasEnv(VERBOSE_ENV);
-	if(verbose)
+	if(verbose) {
 		flags |= IS_VERBOSE;
+		log_level = LOG_BB;
+	}
 	else
 		flags &= ~IS_VERBOSE;
 
 	// Process timing
-	if(isVerbose() || recordsStats()) {
+	if(logFor(LOG_PROC) || recordsStats()) {
 		if(TIMED(props))
 			flags |= IS_TIMED;
 		else
@@ -370,6 +375,11 @@ void Processor::init(const PropList& props) {
 	// configure statistics
 	if(COLLECT_STATS(props))
 		flags |= IS_COLLECTING;
+
+	// get the log level
+	log_level_t level = LOG_LEVEL(props);
+	if(level)
+		log_level = level;
 }
 
 
@@ -438,7 +448,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	for(FeatureIter feature(*_reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::invalidate
 		&& !_reg->uses(feature->feature())) {
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "INVALIDATED: " << feature->feature().name()
 					<< " by " << _reg->name() << io::endl;
 			fw->invalidate(feature->feature());
@@ -451,7 +461,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 		|| feature->kind() == FeatureUsage::use) {
 			if(feature->kind() == FeatureUsage::require)
 				required.add(&feature->feature());
-			if(isVerbose()) {
+			if(logFor(LOG_DEPS)) {
 				cstring kind = "USED";
 				if(feature->kind() == FeatureUsage::require)
 					kind = "REQUIRED";
@@ -478,8 +488,10 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 				<< "stopping -- this may denotes circular dependencies.");
 
 	// Pre-processing actions
-	if(isVerbose())
+	if(logFor(LOG_CFG))
 		log << "Starting " << name() << " (" << version() << ')' << io::endl;
+	else if(logFor(LOG_PROC))
+		log << "RUNNING: " << name() << " (" << version() << ')' << io::endl;
 	elm::system::StopWatch swatch;
 	if(isTimed())
 		swatch.start();
@@ -489,23 +501,25 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	processWorkSpace(fw);
 
 	// Post-processing actions
-	if(isVerbose())
+	if(logFor(LOG_CFG))
 		log << "Ending " << name();
 	if(isTimed()) {
 		swatch.stop();
 		if(recordsStats())
 			RUNTIME(*stats) = swatch.delay();
-		if(isVerbose())
-			log << " (" << ((double)swatch.delay() / 1000) << "ms)" << io::endl;
+		if(logFor(LOG_CFG))
+			log << " (" << ((double)swatch.delay() / 1000) << "ms)";
+		else if(logFor(LOG_PROC))
+			log << "INFO: time = " << ((double)swatch.delay() / 1000) << "ms";
 	}
-	if(isVerbose())
+	if(logFor(LOG_CFG))
 		log << io::endl;
 
 	// Cleanup used invalidated features
 	for(FeatureIter feature(*_reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::invalidate
 		&& _reg->uses(feature->feature())) {
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "INVALIDATED: " << feature->feature().name()
 					<< " by " << _reg->name() << io::endl;
 			fw->invalidate(feature->feature());
@@ -517,7 +531,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	// Add provided features
 	for(FeatureIter feature(*_reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::provide) {
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "PROVIDED: " << feature->feature().name()
 					<< " by " << _reg->name() << io::endl;
 			fw->provide(feature->feature(), &required);
@@ -661,6 +675,13 @@ Identifier<elm::system::time_t> Processor::RUNTIME("otawa::Processor::RUNTIME", 
  * the processor work will be displayed.
  */
 Identifier<bool> Processor::VERBOSE("otawa::Processor::VERBOSE", false);
+
+
+/**
+ * Property passed in the configuration property list of a processor
+ * to select the log level between LOG_PROC, LOG_CFG or LOG_BB.
+ */
+Identifier<Processor::log_level_t> Processor::LOG_LEVEL("otawa::Processor::LOG_LEVEL", LOG_NONE);
 
 
 /**
@@ -824,6 +845,21 @@ void Processor::recordStat(const AbstractFeature& feature, StatCollector *collec
  *
  * @param feature	Linked feature.
  * @param ref		Reference to the identifier to remove.
+ */
+
+
+/**
+ * @fn bool Processor::logFor(log_level_t tested) const;
+ * Test if the logging for the given logel is activated.
+ * @param tested	Tested log level.
+ * @return			True if the log level is activated, false else.
+ */
+
+
+/**
+ * @fn log_level_t Processor::logLevel(void) const;
+ * Get the current log level.
+ * @return	Current log level.
  */
 
 

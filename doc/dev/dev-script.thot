@@ -181,7 +181,7 @@ the file must be prefixed by the usual XML identification line:
 
 <code xml>
 <?xml version="1.0"?>
-</xml>
+</code>
 
 The example belows uses //XInclude// to get the hardware description
 from three different external files:
@@ -258,7 +258,7 @@ of wait states used to write in the static RAM.
 <item name="ramwws" type="int" default="0" label="SRAM write wait states">
 <help>Defines the number of wait state for a SRAM write. One wait cycle delays one cycle.</help>
 </item>
-</xml>
+</code>
 
 === ''string'' type ===
 
@@ -313,7 +313,7 @@ implementation in order to compute for a processor delivered as an IP.
 		<value label="m32x16" value="4"/>
 		<value label="m32x32" value="5"/>
 	</item>
-</xml>
+</code>
 
 
 
@@ -438,12 +438,179 @@ with the computed //VALUE//.
 <my-element> <xsl:attribute name="NAME"> <xsl:value-of select="VALUE" /> </xsl:attribute> </my-element>
 </code>
 
-//XSLT// allows to compute values but also to add conditionally XML elements. 
+//XSLT// allows to compute values but also to add conditionally XML elements thanks to ''xsl:if'' and ''xsl:choose''.
+The former syntax allows to keep the containted XML element if an //XPath// condition evaluates to true or to remove it:
+<code xml>
+<!-- xsl::if ::= -->
+	<xsl:if test="xpath-test"> <!-- contained elements --> </xsl:if>
+</code>
+
+The //xpath-test// is any valid //XPath// expressions evaluating to non-zero with the following operators:
+  * ''='', '!='' -- equality, inequality,
+  * ''>'', ''>='' -- greater than, greater or or equal,
+  * ''<'', ''<='' -- less than, less or equal.
+In additions, the comparisons may be combined with:
+  * ''and'' -- logical and,
+  * ''or'' -- logical or,
+  * ''not'' -- logical not.
+
+The example below shows the use of ''xsl:if''. Depending of the definition of the configuration
+item ''$virtual'', the code processor ''otawa::Virtualizer'' will be launched because
+its XML element will be maintained in the script or not, because its ''step'' element
+will be removed from the script.
+<code xml>
+<script>
+	<xsl:if test="$virtual!=0">
+		<step processor="otawa::Virtualizer"/>
+	</xsl:if>
+	<step processor="otawa::ipet::WCETComputation"/>
+</script></code>
+
+The latter form of conditional is ''xsl:choose''. It supports several test and an //otherwise// case.
+<code xml>
+<!-- xsl:choose ::= -->
+	<xsl:choose>
+  		<xsl:when test="xpath-test"> <!-- contained elements --> </xsl:when>+
+  		<xsl:otherwise> <!-- contained elements --> </xsl:when>?
+	</xsl:choose>
+</code>
+
+In this conditional structure, the ''test'' attributes are evaluated sequentially, in the order of the XML file,
+and the result, as an XML result, are the contained elements of the first test resulting to true. If all tests fail,
+the result is the elements contained in the ''xsl:otherwise'' node.
+
+The example below shows that, using the name of ''$processor_model''  variable, we can select
+precisely the size of ROM memory of the processed architecture.
+<code xml>
+	<bank>
+		<name>ON-CHIP NON-VOLATILE MEMORY</name>
+		<address>0x00000000</address>
+		<xsl:choose>
+			<xsl:when test="$processor_model='lpc2131'"><size>0x8000</size></xsl:when>
+			<xsl:when test="$processor_model='lpc2132'"><size>0x10000</size></xsl:when>
+			<xsl:when test="$processor_model='lpc2134'"><size>0x20000</size></xsl:when>
+			<xsl:when test="$processor_model='lpc2136'"><size>0x40000</size></xsl:when>
+			<xsl:when test="$processor_model='lpc2138'"><size>0x80000</size></xsl:when>
+		</xsl:choose>
+		<type>ROM</type>
+	</bank>
+</code>
+
+
 
 
 ===== Pipeline Description =====
 
+This section provides the XML format description used to represent pipeline of microprocessor.
+It is used to compute time for block of code either trivially (see otawa::ipet::TrivialBBTime analysis),
+or by simulation (see otawa::ipet::BBTimeSimulator analysis), or by execution graphs (see otawa::BasicGraphBBTime.h>).
+
+Each of these analysis uses these information in a specific way but, more often, it is insufficient
+to describe the whole complexity of an actual microprocessor pipeline. The goal of such a format
+could be to describe the whole complexity of the pipeline but there are so heterogeneous and complex features
+that the right level should be VHDL, a pipeline description complete but indadequate to infer static analysis.
+In a more realistic goal, this format provides only a big picture of the pipeline and the exotic features
+of actual processors is left to a plugin implementation.
+
+==== Top-Level ====
+
+A pipeline description can be found lonely in an XML file (in this case, the first element must be
+''<?xml ...>'' or inside another file like scripts. The top-level element must be:
+
+<code xml>
+<!-- pipeline ::= -->
+	<processor class="otawa::hard::Processor">
+		<arch>ARCH</arch>
+		<model>MODEL</model>
+		<builder>BUILDER</builder>
+		<stages> <!-- stage -->+ </stages>
+		<queues> <!-- queue -->+ </qeues>
+	</processor>
+</code>
+
+The //ARCH// gives the programming model (instruction set, registers, etc)
+supported by the pipeline. Current values includes
+''arm'', ''ppc'', ''sparc'', ''tricore'', etc. It is mainly used to check that the processor
+description supports the programming model of loaded binary program.
+
+//MODEL// and //BUILDER// are only informative data but may help to identify a pipeline description.
+//MODEL// represents the accurate model of the hardware: for example, if //ARCH// is ''arm'',
+usual models includes ''armv5t'', ''cortexa8''. The //BUILDER// item gives the name
+of the microprocessor builder like ''atmel'', ''nxp'', etc for an ''arm'' architecture.
+
+The ''stages'' elements gives the list of stages composing the pipeline that are detailed
+in the following sections. Notice this list is ordered according to the order of stages
+in the actual pipeline. The first stage must be of type ''fetch'' while the last stage must be
+of type ''commit''.
+
+The ''queues'' contains the list of queues in the pipeline. The queues represents any
+pipeline feature storing a set of instructions, that is, FIFO buffer, reorder buffer, etc.
+As a default, if there are no queue is declared between two stages, it is considered implicitly
+that there is a latch whose dimension is the width of incoming stage. Only queues that does
+not match the previous description must be put here.
+
+
+==== Stage Description ====
+
+A stage has the following syntax:
+<code xml>
+<!-- stage ::= -->
+	<stage id="ID">
+		<name>STRING</name>?
+		<width>INT</width>?
+		<latency>INT</latency>?
+		<type>fetch|lazy|commit|exec</type>?
+		contenu
+	</stage>
+</code>
+
+An ''id'' attribute is not required but it allows to link a stage with a queue.
+
+The ''name'' gives the name of the stage only used to display to a human user.
+As a default, the stage has an empty string for name.
+
+The ''width'' represents the number of instructions that are processed in parallel
+by the stage. If not given, the default is 1.
+
+The ''latency'' gives the basic latency (in cycle) of the stage in order to process as many
+instructions as its width. As a default, the latency is of 1 cycle.
+
+The ''type'' is the more interesting part of the stage as it provides insight
+on the work of the stage. Notice that the work of a stage, from the point of view OTAWA,
+is mainly its effect on the execution time. The ''type'' must be one the enumerated value below:
+  * ''fetch'' -- ever the first stage of the pipeline, it is reponsible for fetching instrucions
+from the memory. Consequently, its throughput depends not only on its own properties but also on the time
+spent to access the memory.
+  * ''lazy'' -- the simpler stage type whose only goal is to spent time in the instruction execution.
+  * ''commit'' -- the last stage where the instructions go out of the pipeline.
+  * ''exec'' -- represents the stage where an instruction is executed. It is complexe because
+(a) it is often split in different function units (see below) and (b) this stage handles the data dependencies
+between the instruction.
+
+A stage of type ''exec'' has two more elements:
+<code xml>
+<!-- exec-stage ::= -->
+	...
+	<dispatch> <!-- instruction match -->+ </dispatch>
+	<fus> <!-- fu -->+ </fus>
+</code>
+
+The ''fus'' element gives the list of functional unit (described in the 
+
+
+
+==== Function Unit Description ====
+
+==== Queue Description ====
+
+
+
+
 ===== Cache Description =====
+
+
+
+
 
 ===== Memory Space Description =====
 

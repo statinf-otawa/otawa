@@ -39,7 +39,7 @@ void CATBuilder::cleanup(WorkSpace *ws) {
 			"NC"
 	};
 
-	if(!isVerbose())
+	if(!logFor(LOG_BB))
 		return;
 
 	const CFGCollection *cfgs = INVOLVED_CFGS(ws);

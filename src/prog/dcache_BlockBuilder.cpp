@@ -42,7 +42,7 @@ void BlockBuilder::setup(WorkSpace *ws) {
 		sp = ws->process()->initialSP();
 	if(!sp)
 		throw otawa::Exception("no valid SP address");
-	if(isVerbose())
+	if(logFor(LOG_PROC))
 		log << "\tinitial SP = " << sp << io::endl;
 	colls = new BlockCollection[cache->rowCount()];
 	DATA_BLOCK_COLLECTION(ws) = colls;
@@ -80,7 +80,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		// access any ?
 		if(addr.isNull()) {
 			blocks.add(BlockAccess(aa->instruction()));
-			if(isVerbose())
+			if(logFor(LOG_INST))
 				log << "\t\t\t\t" << aa->instruction() << " access any\n";
 			continue;
 		}
@@ -94,7 +94,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		else
 			cached = bank->isCached();
 		if(!cached) {
-			if(isVerbose())
+			if(logFor(LOG_INST))
 				log << "\t\t\t\t" << aa->instruction() << " access not cached "
 					<< addr << "\n";
 			continue;
@@ -106,7 +106,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		if(last.isNull()) {
 			const Block& block = colls[set].get(set, addr);
 			blocks.add(BlockAccess(aa->instruction(), block));
-			if(isVerbose())
+			if(logFor(LOG_INST))
 				log << "\t\t\t\t" << aa->instruction() << " access " << addr
 					<< " (" << block.index() << ", " << block.set() << ")\n";
 			continue;
@@ -116,7 +116,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		last = Address(last.page(), (last.offset() - 1) & ~cache->blockMask());
 		if(last - addr >= cache->cacheSize()) {
 			blocks.add(BlockAccess(aa->instruction()));
-			if(isVerbose())
+			if(logFor(LOG_INST))
 				log << "\t\t\t\t" << aa->instruction() << " access any [" << addr << ", " << last << ")\n";
 			continue;
 		}
@@ -124,7 +124,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		// a normal range
 		int last_set = cache->line(last.offset());
 		blocks.add(BlockAccess(aa->instruction(), set, last_set));
-		if(isVerbose())
+		if(logFor(LOG_INST))
 			log << "\t\t\t\t" << aa->instruction() << " access [" << addr << ", " << last << "] (["
 				<< set << ", " << last_set << "])\n";
 	}

@@ -136,7 +136,8 @@ int ParExeGraph::Delta(ParExeNode *a, Resource *res) {
 						tmp += (((mask->countBits() + S->lateContenders()) / S->stage()->width()) * S->latency());
 						int tmp2 = 0;
 
-						if(mask->countBits() == 0) { // mask is null == no early contenders
+						// mask is null == no early contenders
+						if(mask->countBits() == 0) {
 							int tmp3;
 							if (!lp->e(r))
 								tmp3 = tmp + S->d(r) - default_lp;
@@ -145,12 +146,13 @@ int ParExeGraph::Delta(ParExeNode *a, Resource *res) {
 							if (tmp3 > delta)
 								delta = tmp3;
 						}
-						else { // mask is not null
 
-							//StringBuffer buffer;
+						// mask is not null
+						else {
+
+							// get the conflicting resource
 							for(elm::BitVector::OneIterator one(**mask); one; one++) {
 								ParExeNode *C = S->stage()->node(one.item());
-								//buffer << C->name() << "-";
 								int c = -1;
 								for (elm::genstruct::Vector<Resource *>::Iterator ic(_resources); ic; ic++)
 									if(ic->type() == Resource::INTERNAL_CONFLICT
@@ -162,6 +164,7 @@ int ParExeGraph::Delta(ParExeNode *a, Resource *res) {
 									tmp2 = lp->d(c);
 							} // end: foreach one in mask
 
+							// fix the date for the ressource
 							if (lp->e(r)) {
 								if (lp->d(r) - S->d(r) > tmp2)
 									tmp2 = lp->d(r) - S->d(r);
@@ -376,7 +379,6 @@ void ParExeNode::buildContendersMasks(){
 		elm::BitVector *mask = new elm::BitVector(_possible_contenders->size());
 		_contenders_masks_list.addLast(mask);
     }
-    cerr << "DEBUG: count ones " << _possible_contenders->countOnes() << io::endl;
     for (elm::BitVector::OneIterator one(*_possible_contenders) ; one ; one++) {
 		if (_contenders_masks_list.isEmpty()) {
 			elm::BitVector *mask = new elm::BitVector(_possible_contenders->size());
@@ -1218,8 +1220,9 @@ ParExeGraph::ParExeGraph(
  	_branch_penalty(2)
 {
 	const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION(ws);
-	if (cache && cache->instCache())
+	if (cache && cache->instCache()) {
 		_cache_line_size = cache->instCache()->blockSize();
+	}
 	else {
 		_cache_line_size = ws->process()->instSize();
 		if(!_cache_line_size)

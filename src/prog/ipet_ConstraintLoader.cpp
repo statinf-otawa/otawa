@@ -227,11 +227,11 @@ ExpNode *right) {
 		NormNode *norm = normalize(left, 1);
 		norm->append(normalize(right, -1));
 		ilp::Constraint *cons = system->newConstraint(t);
-		if(isVerbose())
+		if(logFor(LOG_BB))
 			log << '\t';
 		for(; norm; norm = norm->next()) {
 			cons->add(norm->coefficient(), norm->variable());
-			if(isVerbose()) {
+			if(logFor(LOG_BB)) {
 				log << norm->coefficient() << ' ';
 				if(norm->variable()) {
 					if(norm->variable()->name() == "")
@@ -241,7 +241,7 @@ ExpNode *right) {
 				}
 			}
 		}
-		if(isVerbose()) {
+		if(logFor(LOG_BB)) {
 			switch(t) {
 			case ilp::Constraint::EQ: log << "="; break;
 			case ilp::Constraint::GE: log << ">="; break;
@@ -354,12 +354,12 @@ void ConstraintLoader::processCFG(WorkSpace *_fw, CFG *cfg) {
 		elm::StringBuffer buffer;
 		buffer <<_fw->process()->program()->name() << ".ipet";
 		path = buffer.toString();
-		if(isVerbose())
+		if(logFor(LOG_DEPS))
 			log << "\tno file provided: trying with " << path << io::endl;
 	}
 
 	// Open the file
-	if(isVerbose())
+	if(logFor(LOG_DEPS))
 		log << "\tloading constraints from " << path << io::endl;
 	ipet_in = fopen(&path.toCString(), "r");
 	if(!ipet_in)

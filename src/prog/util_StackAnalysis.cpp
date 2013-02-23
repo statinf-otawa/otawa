@@ -594,7 +594,7 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	CFG *cfg = coll->get(0);
 
 	// perform the analysis
-	if(isVerbose())
+	if(logFor(LOG_CFG))
 		log << "FUNCTION " << cfg->label() << io::endl;
 	StackProblem prob;
 	for(int i = 0; i < inits.count(); i++)

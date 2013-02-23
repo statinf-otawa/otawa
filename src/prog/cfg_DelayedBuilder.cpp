@@ -331,12 +331,12 @@ void DelayedBuilder::buildBB(CFG *cfg) {
 
 			// contains delayed instruction
 			if(DELAYED_INST(first)) {
-				if(isVerbose())
+				if(logFor(LOG_BB))
 					log << "\t\t" << *bb << " reduced due to delayed instruction\n";
 
 				// remove delayed mono-instruction BB
 				if(bb->countInstructions() == 1) {
-					if(isVerbose())
+					if(logFor(LOG_BB))
 						log << "\t\tmono-instruction delayed BB removed: " << *bb << io::endl;
 					continue;
 				}
@@ -357,7 +357,7 @@ void DelayedBuilder::buildBB(CFG *cfg) {
 
 			// perform swallowing
 			if(ACTION(bb) == DO_SWALLOW) {
-				if(isVerbose())
+				if(logFor(LOG_BB))
 					log << "\t\t" << *bb << " extended by a delayed instruction\n";
 				size += bb->lastInst()->nextInst()->size();
 			}

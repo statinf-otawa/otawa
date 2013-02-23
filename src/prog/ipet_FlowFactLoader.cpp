@@ -105,7 +105,7 @@ bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
 			MAX_ITERATION(bb) = max;
 			if(total < 0)
 				found_loop++;
-			if(isVerbose())
+			if(logFor(LOG_BB))
 				log << "\t\t\tMAX_ITERATION(" << path << ":" << bb << ") = " << max << io::endl;
 		}
 	}
@@ -117,7 +117,7 @@ bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
 			all = false;
 		else {
 			MIN_ITERATION(bb) = min;
-			if(isVerbose())
+			if(logFor(LOG_BB))
 				log << "\t\t\tMIN_ITERATION(" << path << ":" << bb << ") = " << min << io::endl;
 		}
 	}
@@ -131,7 +131,7 @@ bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
 			TOTAL_ITERATION(bb) = total;
 			if(max < 0)
 				found_loop++;
-			if(isVerbose())
+			if(logFor(LOG_BB))
 				log << "\t\t\tTOTAL_ITERATION(" << path << ":" << bb << ") = " << total << io::endl;
 		}
 	}
@@ -152,7 +152,7 @@ void FlowFactLoader::setup(WorkSpace *ws) {
 /**
  */
 void FlowFactLoader::cleanup(WorkSpace *ws) {
-	if(isVerbose()) {
+	if(logFor(LOG_DEPS)) {
 		if(!total_loop)
 			log << "\tno loop found\n";
 		else {

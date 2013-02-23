@@ -142,7 +142,7 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 	out_path = out_path.setExtension(exts[kind]);
 
 	// Perform the output
-	if(isVerbose())
+	if(logFor(LOG_PROC))
 		cout << "\toutput " << label << " to " << out_path << io::endl;
 	OUT(cfg) = this;
 	CFGAdapter cfga(cfg);

@@ -433,12 +433,17 @@ int Memory::worstWriteAccess(void) const {
 }
 
 
+/**
+ * This processor attempts to get a memory description.
+ * It looks the following item from its configuration (in the given order):
+ * @li @ref MEMORY_OBJECT
+ * @li @ref MEMORY_ELEMENT (and unserialize from the given XML element)
+ * @li @trg MEMORY_PATH (and download from the given path).
+ */
 class MemoryProcessor: public otawa::Processor {
 public:
-	MemoryProcessor(void)
-		: Processor("otawa::MemoryProcessor", Version(1, 0, 0)) {
-			provide(MEMORY_FEATURE);
-		}
+	static p::declare reg;
+	MemoryProcessor(p::declare &r = reg): Processor(r) { }
 
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);
@@ -454,22 +459,22 @@ protected:
 	virtual void processWorkSpace(WorkSpace *ws) {
 		if(config) {
 			MEMORY(ws) = config;
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tcustom memory configuration\n";
 		}
 		else if(xml) {
 			config = Memory::load(xml);
 			track(MEMORY_FEATURE, MEMORY(ws) = config);
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tmemory configuration from XML element\n";
 		}
 		else if(path) {
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tmemory configuration from \"" << path << "\"\n";
 			config = Memory::load(path);
 			track(MEMORY_FEATURE, MEMORY(ws) = config);
 		}
-		else if(isVerbose())
+		else if(logFor(LOG_DEPS))
 			log << "\tno memory configuration\n";
 	}
 
@@ -478,6 +483,10 @@ private:
 	xom::Element *xml;
 	Path path;
 };
+
+p::declare MemoryProcessor::reg = p::init("otawa::MemoryProcessor", Version(1, 0, 0))
+	.provide(MEMORY_FEATURE)
+	.maker<MemoryProcessor>();
 
 
 static SilentFeature::Maker<MemoryProcessor> maker;

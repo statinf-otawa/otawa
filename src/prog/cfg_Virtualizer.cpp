@@ -174,7 +174,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 	virtualize(0, entry, vcfg, vcfg->entry(), vcfg->exit());
 	vcfg->addBB(vcfg->exit());
 	vcfg->numberBBs();
-	if(isVerbose())
+	if(logFor(LOG_CFG))
 		log << "\tINFO: " << vcfg->countBB() << " basic blocks." << io::endl;
 
 	track(VIRTUALIZED_CFG_FEATURE, ENTRY_CFG(fw) = vcfg);
@@ -207,7 +207,7 @@ BasicBlock *exit) {
 	elm::genstruct::HashTable<void *, BasicBlock *> map;
 	call_t call = { stack, cfg, 0 };
 	Vector<CFG *> called_cfgs;
-	if(isVerbose())
+	if(logFor(LOG_CFG))
 		log << "\tbegin inlining " << cfg->label() << io::endl;
 
 	// Translate BB
@@ -231,7 +231,7 @@ BasicBlock *exit) {
 	// Translate edges
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
-			if(isVerbose())
+			if(logFor(LOG_BB))
 				cerr << "\t\tprocessing " << *bb << io::endl;
 
 			// Resolve source
@@ -308,7 +308,7 @@ BasicBlock *exit) {
 							CALLED_CFG(edge) = cur->cfg;
 							RECURSIVE_LOOP(edge) = true;
 							VIRTUAL_RETURN_BLOCK(src) = called_exit;
-							if(isVerbose())
+							if(logFor(LOG_CFG))
 								out << "INFO: recursivity found at " << bb->address()
 									<< " to " << called->label() << io::endl;
 							break;
@@ -333,7 +333,7 @@ BasicBlock *exit) {
 			}
 		}
 
-	if(isVerbose())
+	if(logFor(LOG_CFG))
 		log << "\tend inlining " << cfg->label() << io::endl;
 }
 

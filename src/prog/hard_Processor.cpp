@@ -138,13 +138,20 @@ hard::Processor *Processor::load(xom::Element *element) throw(LoadException) {
 }
 
 
-// ProcessorProcessor class
+/**
+ * Attempt to obtain a processor pipeline description.
+ * It looks the following elements from its configuration property list (in the given order):
+ * @li @ref PROCESSOR
+ * @li @ref PROCESSOR_ELEMENT (unserialize the processor description from the given  XML element)
+ * @li @ref PROCESSOR_PATH (get the processor description from the given file)
+ *
+ * @par Provided Features
+ * @li @ref PROCESSOR_FEATURE
+ */
 class ProcessorProcessor: public otawa::Processor {
 public:
-	ProcessorProcessor(void)
-	: Processor("otawa::ProcessorProcessor", Version(1, 0, 0)) {
-		provide(PROCESSOR_FEATURE);
-	}
+	static p::declare reg;
+	ProcessorProcessor(p::declare& r = reg): Processor(r) { }
 
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);
@@ -160,23 +167,23 @@ protected:
 	virtual void processWorkSpace(WorkSpace *ws) {
 		if(config) {
 			hard::PROCESSOR(ws) = config;
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tcustom processor configuration\n";
 		}
 		else if(xml) {
 			config = hard::Processor::load(xml);
 			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = config);
 			log << "processor = " << hard::PROCESSOR(ws) << io::endl;
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tprocessor configuration from XML element\n";
 		}
 		else if(path) {
-			if(isVerbose())
+			if(logFor(LOG_DEPS))
 				log << "\tprocessor configuration from \"" << path << "\"\n";
 			config = hard::Processor::load(path);
 			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = config);
 		}
-		else if(isVerbose())
+		else if(logFor(LOG_DEPS))
 			log << "\tno processor configuration\n";
 	}
 
@@ -185,6 +192,10 @@ private:
 	xom::Element *xml;
 	Path path;
 };
+
+p::declare ProcessorProcessor::reg = p::init("otawa::ProcessorProcessor", Version(1, 0, 0))
+	.provide(PROCESSOR_FEATURE)
+	.maker<ProcessorProcessor>();
 
 
 static SilentFeature::Maker<ProcessorProcessor> maker;

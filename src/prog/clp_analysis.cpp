@@ -1959,12 +1959,12 @@ void ClpAnalysis::processWorkSpace(WorkSpace *ws) {
 	
 	ClpProblem prob(ws->process());
 #	ifdef DATA_LOADER
-		if(isVerbose())
+		if(logFor(LOG_PROC))
 			cerr << "\tmemory space [" << prob.dataMin() << ", " << prob.dataMax() << "] considered as constant !\n";
 #	endif
 	
 	// perform the analysis
-	if(isVerbose())
+	if(logFor(LOG_CFG))
 		log << "FUNCTION " << cfg->label() << io::endl;
 	for(int i = 0; i < inits.count(); i++){
 		prob.initialize(inits[i].fst, inits[i].snd);
