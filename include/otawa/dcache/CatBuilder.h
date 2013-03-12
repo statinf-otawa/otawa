@@ -1,16 +1,30 @@
 /*
- * DataCatBuilder.h
+ *	dcache::ACSBuilder class interface
  *
- *  Created on: 12 juil. 2009
- *      Author: casse
+ *	This file is part of OTAWA
+ *	Copyright (c) 2009, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#ifndef DATACATBUILDER_H_
-#define DATACATBUILDER_H_
+#ifndef OTAWA_DCACHE_CATBUILDER_H_
+#define OTAWA_DCACHE_CATBUILDER_H_
 
 #include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/dcache/BlockBuilder.h>
 #include <otawa/dcache/ACSBuilder.h>
+#include "features.h"
 
 namespace otawa { namespace dcache {
 
@@ -18,20 +32,18 @@ namespace otawa { namespace dcache {
 // CATBuilder class
 class CATBuilder: public Processor {
 public:
-	CATBuilder(void);
+	static p::declare reg;
+	CATBuilder(p::declare& r = reg);
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void configure(const PropList &props);
 	virtual void cleanup(WorkSpace *ws);
 
 private:
-	void processLBlockSet(WorkSpace *ws, const otawa::BlockCollection& coll, const hard::Cache *cache);
+	void processLBlockSet(WorkSpace *ws, const BlockCollection& coll, const hard::Cache *cache);
 	data_fmlevel_t firstmiss_level;
 	//CategoryStats *cstats;
 };
 
-// feature
-extern Feature<CATBuilder> CACHE_CATEGORY_FEATURE;
-
 } }	// otawa::dcache
 
-#endif /* DATACATBUILDER_H_ */
+#endif /* OTAWA_DCACHE_CATBUILDER_H_ */

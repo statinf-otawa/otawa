@@ -213,7 +213,6 @@ int Application::run(int argc, char **argv) {
 			Processor::VERBOSE(props) = true;
 		if(*log_level)
 			Processor::LOG_LEVEL(props) = log_level;
-		cerr << "DEBUG: log_level = " << *log_level << io::endl;
 
 		// process the sets
 		bool failed = false;

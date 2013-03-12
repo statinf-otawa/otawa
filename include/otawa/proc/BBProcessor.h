@@ -59,7 +59,7 @@ template <class T>
 class BBDeletor: public BBRemover<T> {
 public:
 	inline BBDeletor(WorkSpace *ws, Identifier<T *>& identifier)
-		: BBDeletor(ws), id(identifier) { }
+		: BBRemover<T>(ws), id(identifier) { }
 protected:
 	Identifier<T *>& id;
 	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb)

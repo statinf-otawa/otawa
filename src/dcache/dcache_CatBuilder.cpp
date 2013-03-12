@@ -1,8 +1,22 @@
 /*
- * DataCatBuilder.cpp
+ *	dcache::ACSMayBuilder class implementation
  *
- *  Created on: 12 juil. 2009
- *      Author: casse
+ *	This file is part of OTAWA
+ *	Copyright (c) 2010, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/hard/Platform.h>
@@ -11,24 +25,43 @@
 #include <otawa/dcache/CatBuilder.h>
 #include <otawa/dcache/ACSMayBuilder.h>
 #include <otawa/cache/categories.h>
+#include <otawa/dcache/features.h>
 
 namespace otawa { namespace dcache {
 
-Identifier<BasicBlock*> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
-Identifier<cache::category_t> CATEGORY("otawa::dcache::category", cache::INVALID_CATEGORY);
+/**
+ * @class CATBuilder
+ * Processor to get the categories for each block access of a data cache.
+ *
+ * @p Provided features
+ * @li @ref CATEGORY_FEATURE
+ *
+ * @p Required features
+ * @li @ref LOOP_INFO_FEATURE
+ * @li @ref MUST_ACS_FEATURE
+ *
+ * @p Configuration
+ * @li @ref FIRSTMISS_LEVEL
+ */
+
+p::declare CATBuilder::reg = p::init("otawa::dcache::CATBuilder", Version(1, 0, 0))
+	.maker<CATBuilder>()
+	.base(Processor::reg)
+	.require(DOMINANCE_FEATURE)
+	.require(LOOP_HEADERS_FEATURE)
+	.require(LOOP_INFO_FEATURE)
+	.require(MUST_ACS_FEATURE)
+	.provide(CATEGORY_FEATURE);
 
 
 /**
  */
-CATBuilder::CATBuilder(void): Processor("otawa::dcache::CATBuilder", Version(1, 0, 0)) {
-	require(DOMINANCE_FEATURE);
-	require(LOOP_HEADERS_FEATURE);
-	require(LOOP_INFO_FEATURE);
-	require(DCACHE_ACS_FEATURE);
-	provide(CACHE_CATEGORY_FEATURE);
+CATBuilder::CATBuilder(p::declare& r): Processor(r), firstmiss_level(DFML_NONE) {
 }
 
 
+/**
+ */
 void CATBuilder::cleanup(WorkSpace *ws) {
 	static cstring cat_names[] = {
 			"INV",
@@ -57,14 +90,13 @@ void CATBuilder::cleanup(WorkSpace *ws) {
 
 
 /**
- * !!TODO!!
  */
-void CATBuilder::processLBlockSet(WorkSpace *ws, const otawa::BlockCollection& coll, const hard::Cache *cache) {
+void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, const hard::Cache *cache) {
 	if(coll.count() == 0)
 		return;
 
 	// prepare problem
-	int line = coll.set();
+	int line = coll.cacheSet();
 	MUSTProblem::Domain dom(coll.count(), cache->wayCount());
 
 	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
@@ -73,7 +105,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const otawa::BlockCollection& c
 		for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++) {
 
 			// get the input domain
-			genstruct::Vector<MUSTProblem::Domain *> *ins = DCACHE_ACS_MUST(bb);
+			genstruct::Vector<ACS *> *ins = MUST_ACS(bb);
 			dom.set(*ins->get(line));
 
 			// explore the adresses
@@ -87,9 +119,9 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const otawa::BlockCollection& c
 				else if(b.block().set() == line) {
 
 					// initialization
-					MAYProblem::Domain *may = NULL;
-					if(ACS_MAY(bb) != NULL) {
-						may = ACS_MAY(bb)->get(line);
+					ACS *may = 0;
+					if(MAY_ACS(bb) != 0) {
+						may = MAY_ACS(bb)->get(line);
 						CATEGORY(b) = cache::NOT_CLASSIFIED;
 					}
 					else
@@ -154,7 +186,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const otawa::BlockCollection& c
  */
 void CATBuilder::configure(const PropList &props) {
 	Processor::configure(props);
-	firstmiss_level = DATA_FIRSTMISS_LEVEL(props);
+	firstmiss_level = FIRSTMISS_LEVEL(props);
 	//cstats = CATEGORY_STATS(props);
 	//if(cstats)
 	//	cstats->reset();
@@ -169,13 +201,43 @@ void CATBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->dataCache();
 
 	for (int i = 0; i < cache->rowCount(); i++) {
-		ASSERT(i == colls[i].set());
+		ASSERT(i == colls[i].cacheSet());
 		processLBlockSet(fw, colls[i], cache );
 	}
 }
 
+static SilentFeature::Maker<CATBuilder> maker;
+/**
+ * This features ensures that a category each data block access have received
+ * a category describing its hit/miss behavior.
+ *
+ * @p Default processor
+ * @li @ref CATBuilder
+ *
+ * @p Properties
+ * @li @ref CATEGORY
+ * @li @ref CATEGORY_HEADER
+ */
+SilentFeature CATEGORY_FEATURE("otawa::dcache::CATEGORY_FEATURE", maker);
 
-Feature<CATBuilder> CACHE_CATEGORY_FEATURE("otawa::dcache::CACHE_CATEGORY_FEATURE");
+
+/**
+ * When a cache access has a category of @ref cache::FIRST_MISS, the "first" part
+ * is relative to a particular loop whose header is given by this property.
+ *
+ * @p Hook
+ * @li @ref BlockAccess
+ */
+Identifier<BasicBlock*> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
+
+
+/**
+ * Gives the category for a data cache block access.
+ *
+ * @p Hook
+ * @li @ref BlockAccess
+ */
+Identifier<cache::category_t> CATEGORY("otawa::dcache::category", cache::INVALID_CATEGORY);
 
 
 /**

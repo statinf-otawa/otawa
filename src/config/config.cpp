@@ -175,6 +175,7 @@ public:
 		add(::Loader::Make("ppc2").doc("PowerPC architecture loader"));
 		add(::Loader::Make("arm2").doc("ARM architecture loader"));
 		add(Proc::Make("bpred").doc("branch prediction library"));
+		add(Proc::Make("dcache").doc("simple L1 data cache analysis"));
 		Module *ast = Proc::Make("ast").path("otawa").doc("Abstract Syntactic Tree library");
 		add(ast);
 		add(Proc::Make("ets").path("otawa").require(ast).doc("Extended Timing Schema library"));

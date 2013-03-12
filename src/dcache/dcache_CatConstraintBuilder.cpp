@@ -17,32 +17,79 @@
 #include <otawa/dcache/CatBuilder.h>
 #include <otawa/dcache/CatConstraintBuilder.h>
 #include <otawa/cache/categories.h>
+#include <otawa/ipet/ILPSystemGetter.h>
 
 namespace otawa { namespace dcache {
 
 using namespace otawa::cache;
 
-Identifier<ilp::Var *> HIT_VAR("otawa::dcache::HIT_VAR", 0);
+static SilentFeature::Maker<CatConstraintBuilder> maker;
+/**
+ * This feature ensures that the constraints associated with each data cache block categories
+ * has been translated to ILP constraints and that miss count variables are declared.
+ *
+ * @p Default processor
+ * @li @ref CatConstraintBuilder
+ *
+ * @p Properties
+ * @li @ref MISS_VAR
+ */
+SilentFeature CONSTRAINTS_FEATURE("otawa::dcache::CONSTRAINTS_FEATURE", maker);
+
+
+/**
+ * This property gives the variable counting the number of misses of a BlockAccess
+ *
+ * @p Hook
+ * @li @ref BlockAccess
+ */
 Identifier<ilp::Var *> MISS_VAR("otawa::dcache::MISS_VAR", 0);
 
-CatConstraintBuilder::CatConstraintBuilder(void)
-: Processor("otawa::dcache::CatConstraintBuilder", Version(1, 0, 0)), _explicit(false) {
-	require(ipet::ASSIGNED_VARS_FEATURE);
-	require(dcache::CACHE_CATEGORY_FEATURE);
-	require(DOMINANCE_FEATURE);
-	//require(ILP_SYSTEM_FEATURE);
-	provide(ipet::DATA_CACHE_SUPPORT_FEATURE);
+
+/**
+ * @class CatConstraintBuilder
+ * This processor allocates the variable to count misses of a data cache and
+ * makes the constraints for these variables.
+ *
+ * @p Provided features
+ * @li @ref ipet::DATA_CACHE_SUPPORT_FEATURE
+ *
+ * @p Required features
+ * @li @ref ipet::ASSIGNED_VARS_FEATURE
+ * @li @ref dcache::CATEGORY_FEATURE
+ * @li @ref DOMINANCE_FEATURE
+ * @li @ref ipet::ILP_SYSTEM_FEATURE
+ *
+ * @p Configuration
+ * @li @ref ipet::EXPLICIT
+ */
+
+p::declare CatConstraintBuilder::reg = p::init("otawa::dcache::CatConstraintBuilder", Version(1, 0, 0))
+	.base(Processor::reg)
+	.maker<CatConstraintBuilder>()
+	.require(ipet::ASSIGNED_VARS_FEATURE)
+	.require(dcache::CATEGORY_FEATURE)
+	.require(DOMINANCE_FEATURE)
+	.require(ipet::ILP_SYSTEM_FEATURE)
+	.provide(ipet::DATA_CACHE_SUPPORT_FEATURE);
+
+
+/**
+ */
+CatConstraintBuilder::CatConstraintBuilder(p::declare& r): Processor(r), _explicit(false) {
 }
 
+
+/**
+ */
 void CatConstraintBuilder::configure(const PropList& props) {
 	Processor::configure(props);
 	_explicit = ipet::EXPLICIT(props);
 }
 
-void CatConstraintBuilder::setup(otawa::WorkSpace *fw) {
-}
 
-
+/**
+ */
 void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(ws)->dataCache();
 	ilp::System *system = ipet::SYSTEM(ws);
@@ -94,7 +141,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
                 		break;
 					case cache::FIRST_MISS: {
 							BasicBlock *header = cache::CATEGORY_HEADER(b);
-							ASSERT(header != NULL);
+							ASSERT(header);
 
 							// Add constraint: xmiss <= sum of entry-edges of the loop
 							ilp::Constraint *cons5a = system->newConstraint(ilp::Constraint::LE);

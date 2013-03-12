@@ -1,8 +1,8 @@
 /*
- *	dcache::CatConstraintBuilder class interface
+ *	dcache plugin hook
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2009, IRIT UPS.
+ *	Copyright (c) 2013, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -18,30 +18,23 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_DCACHE_CATCONSTRAINTBUILDER_H_
-#define OTAWA_DCACHE_CATCONSTRAINTBUILDER_H_
 
-#include <otawa/proc/Processor.h>
-#include <otawa/prop/Identifier.h>
+#include <otawa/proc/ProcessorPlugin.h>
 
+using namespace elm;
+using namespace otawa;
 
-namespace otawa {
+namespace otawa { namespace dcache {
 
-namespace ilp { class Var; }
-
-namespace dcache {
-
-class CatConstraintBuilder : public otawa::Processor {
+class Plugin: public ProcessorPlugin {
 public:
-	static p::declare reg;
-	CatConstraintBuilder(p::declare& r = reg);
-protected:
-	virtual void processWorkSpace(otawa::WorkSpace *ws);
-	virtual void configure(const PropList& props);
-private:
-	bool _explicit;
+	typedef genstruct::Table<AbstractRegistration * > procs_t;
+
+	Plugin(void): ProcessorPlugin("otawa::dcache", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
+	virtual procs_t& processors(void) const { return procs_t::EMPTY; };
 };
 
-} }		// otawa::dcache
+} } // otawa::dcache
 
-#endif /* OTAWA_DCACHE_CATCONSTRAINTBUILDER_H_ */
+otawa::dcache::Plugin OTAWA_PROC_HOOK;
+otawa::dcache::Plugin& otawa_dcache = OTAWA_PROC_HOOK;

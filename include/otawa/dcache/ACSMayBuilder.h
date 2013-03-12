@@ -1,8 +1,22 @@
 /*
- * MayACSBuilder.h
+ *	dcache::ACSMayBuilder class interface
  *
- *  Created on: 14 juil. 2009
- *      Author: casse
+ *	This file is part of OTAWA
+ *	Copyright (c) 2010, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #ifndef MAYACSBUILDER_H_
@@ -12,11 +26,11 @@
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/util/HalfAbsInt.h>
+#include "features.h"
 
 namespace otawa {
 
 class BasicBlock;
-class BlockCollection;
 namespace hard { class Cache; }
 
 namespace dcache {
@@ -25,29 +39,13 @@ namespace dcache {
 class MAYProblem {
 public:
 
-	class Domain {
-		int A, size;
+	class Domain: public ACS {
 	public:
-		inline Domain(const int _size, const int _A): A (_A), size(_size) {
-			age = new int [size];
-			for (int i = 0; i < size; i++)
-				age[i] = -1;
-		}
+		inline Domain(const int _size, const int _A): ACS(_size, _A) { }
+		inline Domain(const Domain &source) : ACS(source) { }
 
-		inline ~Domain() { delete [] age; }
-
-		inline Domain(const Domain &source) : A(source.A), size(source.size) {
-			age = new int [size];
-			for (int i = 0; i < size; i++)
-				age[i] = source.age[i];
-		}
-
-		inline Domain& operator=(const Domain &src) {
-			ASSERT((A == src.A) && (size == src.size));
-			for (int i = 0; i < size ; i++)
-				age[i] = src.age[i];
-			return(*this);
-		}
+		inline Domain& operator=(const Domain &src) { ACS::operator=(src); return *this; }
+		inline Domain& operator=(const ACS& src)  { ACS::operator=(src); return *this; }
 
 		inline void glb(const Domain &dom) { ASSERT(false); }
 
@@ -58,8 +56,6 @@ public:
 					age[i] = dom.age[i];
 		}
 
-		inline int getSize(void) { return size; }
-
 		inline void addDamage(const int id, const int damage) {
 			ASSERT((id >= 0) && (id < size));
 			if (age[id] == -1)
@@ -68,17 +64,6 @@ public:
 			if (age[id] >= A)
 				age[id] = -1;
 		}
-
-		inline bool equals(const Domain &dom) const {
-			ASSERT((A == dom.A) && (size == dom.size));
-			for (int i = 0; i < size; i++)
-				if (age[i] != dom.age[i])
-					return false;
-			return true;
-		}
-
-		inline void empty() { for (int i = 0; i < size; i++) age[i] = -1; }
-		inline bool contains(const int id) { ASSERT((id < size) && (id >= 0)); return(age[id] != -1); }
 
 		inline void inject(const int id) {
 			if (contains(id))
@@ -104,29 +89,6 @@ public:
 			}
 		}
 
-		inline void print(elm::io::Output &output) const {
-			bool first = true;
-			output << "[";
-			for (int i = 0; i < size; i++) {
-				if (age[i] != -1) {
-					if (!first)
-						output << ", ";
-					output << i;
-					output << ":";
-					output << age[i];
-					first = false;
-				}
-			}
-			output << "]";
-		}
-
-		inline int getAge(int id) const { ASSERT(id < size); return(age[id]); }
-		inline void setAge(const int id, const int _age) {
-			ASSERT(id < size);
-			ASSERT((_age < A) || (_age == -1));
-			age[id] = _age;
-		}
-		int *age;
 	};
 
 private:
@@ -161,23 +123,16 @@ typedef elm::genstruct::Vector<MAYProblem::Domain*> may_acs_t;
 // ACSMayBuilder class
 class ACSMayBuilder: public otawa::Processor {
 public:
-	ACSMayBuilder(void);
+	static p::declare reg;
+	ACSMayBuilder(p::declare& r = reg);
 	virtual void processWorkSpace(otawa::WorkSpace *ws);
 	virtual void configure(const PropList &props);
 
 private:
 	void processLBlockSet(otawa::WorkSpace *ws, const BlockCollection& coll, const hard::Cache *cache);
 	bool unrolling;
-	may_acs_t *may_entry;
+	Vector<ACS *> *may_entry;
 };
-
-
-// configuration
-extern Identifier<may_acs_t *> ACS_MAY_ENTRY;
-
-// ACS_MAY_FEATURE
-extern Feature<ACSMayBuilder> ACS_MAY_FEATURE;
-extern Identifier<may_acs_t *> ACS_MAY;
 
 } } // otawa::dcache
 

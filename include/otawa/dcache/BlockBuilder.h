@@ -1,13 +1,27 @@
 /*
- * DataBlockBuilder.h
+ *	dcache::BlockBuilder class interface
  *
- *  Created on: 9 juil. 2009
- *      Author: casse
+ *	This file is part of OTAWA
+ *	Copyright (c) 2009, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef OTAWA_DCACHE_BLOCKBUILDER_H_
+#define OTAWA_DCACHE_BLOCKBUILDER_H_
 
-#ifndef DATABLOCKBUILDER_H_
-#define DATABLOCKBUILDER_H_
-
+#include "features.h"
 #include <otawa/prog/Inst.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/Feature.h>
@@ -19,103 +33,13 @@ namespace hard {
 	class Memory;
 }
 
-// Block class
-class Block {
-public:
-	inline Block(void): _set(-1), idx(-1)  { }
-	inline Block(int set, int index, const Address& address): _set(set), idx(index), addr(address) { }
-	inline Block(const Block& block): _set(block._set), idx(block.idx), addr(block.addr) { }
-	inline int set(void) const { return _set; }
-	inline int index(void) const { return idx; }
-	inline const Address& address(void) const { return addr; }
-
-	inline void print(io::Output& out) const {
-		if(_set == -1)
-			out << "ANY";
-		else
-			out << addr << " (" << idx << ", " << _set << ")";
-	}
-
-private:
-	int _set;
-	int idx;
-	Address addr;
-};
-inline io::Output& operator<<(io::Output& out, const Block& block) { block.print(out); return out; }
-
-
-// BlockCollection class
-class BlockCollection {
-public:
-	const Block& get(int set, const Address& addr) {
-		for(int i = 0; i < blocks.count(); i++)
-			if(addr == blocks[i].address())
-				return blocks[i];
-		blocks.add(Block(set, blocks.count(), addr));
-		return blocks[blocks.count() - 1];
-	}
-	inline void setSet(int set) { _set = set; }
-
-	inline int count(void) const { return blocks.count(); }
-	inline int set(void) const { return _set; }
-
-private:
-	int _set;
-	genstruct::Vector<Block> blocks;
-};
-
-
-// Data
-class BlockAccess: public PropList {
-public:
-	typedef enum kind_t {
-		ANY,
-		BLOCK,
-		RANGE
-	} kind_t;
-
-	inline BlockAccess(void): inst(0), _kind(ANY) { }
-	inline BlockAccess(Inst *instruction): inst(instruction), _kind(ANY) { }
-	inline BlockAccess(Inst *instruction, const Block& block): inst(instruction), _kind(BLOCK)
-		{ data.blk = &block; }
-	inline BlockAccess(Inst *instruction, int first, int last): inst(instruction), _kind(RANGE)
-		{ data.range.first = first; data.range.last = last; }
-	inline BlockAccess(const BlockAccess& acc): inst(acc.inst), _kind(acc._kind)
-		{ data = acc.data; }
-	inline BlockAccess& operator=(const BlockAccess& acc)
-		{ inst = acc.inst; _kind = acc._kind; data = acc.data; return *this; }
-
-	inline Inst *instruction(void) const { return inst; }
-	inline kind_t kind(void) { return _kind; }
-	inline const Block& block(void) const { ASSERT(_kind == BLOCK); return *data.blk; }
-	inline int first(void) const { ASSERT(_kind == RANGE); return data.range.first; }
-	inline int last(void) const { ASSERT(_kind == RANGE); return data.range.last; }
-
-	inline void print(io::Output& out) const {
-		out << inst << " access ";
-		switch(_kind) {
-		case ANY: out << "ANY"; break;
-		case BLOCK: out << *data.blk; break;
-		case RANGE: out << '[' << data.range.first << ", " << data.range.last << ']'; break;
-		}
-	}
-
-private:
-	Inst *inst;
-	kind_t _kind;
-	union {
-		const Block *blk;
-		struct { int first, last; } range;
-	} data;
-};
-inline io::Output& operator<<(io::Output& out, const BlockAccess& acc) { acc.print(out); return out; }
-inline io::Output& operator<<(io::Output& out, const Pair<int, BlockAccess *>& v) { return out; }
-
+namespace dcache {
 
 // BlockBuilder class
 class BlockBuilder: public BBProcessor {
 public:
-	BlockBuilder(void);
+	static p::declare reg;
+	BlockBuilder(p::declare& r = reg);
 	virtual void configure(const PropList &props);
 
 protected:
@@ -130,14 +54,6 @@ private:
 	BlockCollection *colls;
 };
 
-// features
-extern Feature<BlockBuilder> DATA_BLOCK_FEATURE;
-extern Identifier<Pair<int, BlockAccess *> > DATA_BLOCKS;
-extern Identifier<const BlockCollection *> DATA_BLOCK_COLLECTION;
+} } // otawa
 
-// configuration
-extern Identifier<Address> INITIAL_SP;;
-
-} // otawa
-
-#endif /* DATABLOCKBUILDER_H_ */
+#endif /* OTAWA_DCACHE_BLOCKBUILDER_H_ */
