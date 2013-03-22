@@ -29,6 +29,7 @@
 #include <otawa/prop/PropList.h>
 #include <otawa/prop/AbstractIdentifier.h>
 #include <otawa/prop/Ref.h>
+#include <elm/sys/Path.h>
 
 namespace otawa {
 
@@ -253,6 +254,7 @@ template <> void Identifier<unsigned long long>::fromString(PropList& props, con
 template <> void Identifier<double>::fromString(PropList& props, const string& str) const;
 template <> void Identifier<string>::fromString(PropList& props, const string& str) const;
 template <> void Identifier<Address>::fromString(PropList& props, const string& str) const;
+template <> void Identifier<elm::sys::Path>::fromString(PropList& props, const string& str) const;
 
 } // otawa
 

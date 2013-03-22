@@ -36,21 +36,25 @@ namespace otawa { namespace hard {
 // CacheConfiguration class
 class CacheConfiguration {
 	SERIALIZABLE(CacheConfiguration, FIELD(icache) & FIELD(dcache));
-	const Cache *icache, *dcache;
 public:
-	virtual ~CacheConfiguration(void) { }
 	static const CacheConfiguration NO_CACHE;
-	inline CacheConfiguration(const Cache *inst_cache = 0, const Cache *data_cache = 0)
-		: icache(inst_cache), dcache(data_cache) { }
+	static CacheConfiguration *load(elm::xom::Element *element);
+	static CacheConfiguration *load(const elm::system::Path& path);
+
+	inline CacheConfiguration(const Cache *inst_cache = 0, const Cache *data_cache = 0);
+	virtual ~CacheConfiguration(void);
+
 	inline const Cache *instCache(void) const { return icache; }
 	inline const Cache *dataCache(void) const  { return dcache; }
 	inline bool hasInstCache(void) const { return icache != 0; }
 	inline bool hasDataCache(void) const { return dcache != 0; }
 	inline bool isUnified(void) const { return icache == dcache; }
 	inline bool isHarvard(void) const { return icache != dcache; }
-	static CacheConfiguration *load(elm::xom::Element *element);
-	static CacheConfiguration *load(const elm::system::Path& path);
 	string cacheName(const Cache *cache) const;
+
+protected:
+	const Cache *icache, *dcache;
+
 };
 
 

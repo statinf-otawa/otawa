@@ -151,7 +151,7 @@ hard::Processor *Processor::load(xom::Element *element) throw(LoadException) {
 class ProcessorProcessor: public otawa::Processor {
 public:
 	static p::declare reg;
-	ProcessorProcessor(p::declare& r = reg): Processor(r) { }
+	ProcessorProcessor(p::declare& r = reg): Processor(r), xml(0), config(0) { }
 
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);

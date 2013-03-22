@@ -700,4 +700,14 @@ const Register *Platform::findReg(const string& name) const {
 	return 0;
 }
 
+
+/**
+ * Get the register, usually (depending on the ABI), devoted to contain
+ * the stack pointer.
+ * @return	SP register or null if none is defined.
+ */
+const Register *Platform::getSP(void) const {
+	return 0;
+}
+
 } } // otawa::hard

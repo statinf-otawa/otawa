@@ -27,19 +27,13 @@
 #include <otawa/ilp/Constraint.h>
 #include <elm/datastruct/Iterator.h>
 
+#include "features.h"
 
 namespace otawa {
 
 class WorkSpace;
 
 namespace ilp {
-
-typedef enum format_t {
-	DEFAULT = 0,
-	LP_SOLVE,
-	CPLEX,
-	MOSEK
-} format_t;
 
 // System class
 class System {

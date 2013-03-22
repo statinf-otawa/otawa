@@ -202,7 +202,9 @@ Processor *ProcessorPlugin::getProcessor(cstring name) {
  */
 AbstractFeature *ProcessorPlugin::getFeature(cstring name) {
 	AbstractIdentifier *id = getIdentifier(name);
-	if(IS_FEATURE(id))
+	if(!id)
+		return 0;
+	else if(IS_FEATURE(id))
 		return (AbstractFeature *)id;
 	else
 		return 0;
@@ -213,7 +215,7 @@ AbstractFeature *ProcessorPlugin::getFeature(cstring name) {
  * Find an identifier by its name possibly loading a plugin
  * to get it.
  * @param name	Name of the identifier.
- *
+ * @return		Found identifier or null.
  */
 AbstractIdentifier *ProcessorPlugin::getIdentifier(cstring name) {
 	AbstractIdentifier *id = AbstractIdentifier::find(name);

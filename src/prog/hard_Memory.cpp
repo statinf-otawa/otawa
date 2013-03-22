@@ -443,7 +443,7 @@ int Memory::worstWriteAccess(void) const {
 class MemoryProcessor: public otawa::Processor {
 public:
 	static p::declare reg;
-	MemoryProcessor(p::declare &r = reg): Processor(r) { }
+	MemoryProcessor(p::declare &r = reg): Processor(r), config(0), xml(0) { }
 
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);

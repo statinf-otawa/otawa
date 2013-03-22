@@ -116,6 +116,23 @@ CacheConfiguration *CacheConfiguration::load(const elm::system::Path& path) {
 	}
 }
 
+
+/**
+ * Build a cache configuration.
+ * @param icache	Instruction cache.
+ * @param dcache	Data cache.
+ * @note	To get an unified cache, use the same value for icache and dcache.
+ */
+inline CacheConfiguration::CacheConfiguration(const Cache *inst_cache, const Cache *data_cache): icache(inst_cache), dcache(data_cache) {
+}
+
+
+/**
+ */
+CacheConfiguration::~CacheConfiguration(void) {
+}
+
+
 /**
  * Compute name of the cache.
  * @param cache		Cache to get name for.
@@ -162,7 +179,7 @@ string CacheConfiguration::cacheName(const Cache *cache) const {
 class CacheConfigurationProcessor: public otawa::Processor {
 public:
 	static p::declare reg;
-	CacheConfigurationProcessor(p::declare& r = reg): Processor(r) { }
+	CacheConfigurationProcessor(p::declare& r = reg): Processor(r), xml(0), config(0) { }
 
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);

@@ -372,4 +372,9 @@ template <> void Identifier<Address>::fromString(PropList& props, const string& 
 	set(props, Address(page, off));
 }
 
+template <>
+void Identifier<elm::sys::Path>::fromString(PropList& props, const string& str) const {
+	set(props, sys::Path(str));
+}
+
 }	// otawa

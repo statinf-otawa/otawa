@@ -96,8 +96,8 @@ typedef struct inst {
 		struct { t::int16 a, b;  } regs;		// others
 	} args;
 
-	inst(void) { }
-	inst(opcode _op): op(_op) { }
+	inst(void): op(NOP), _d(0) { }
+	inst(opcode _op): op(_op), _d(0) { }
 	inst(opcode _op, int d): op(_op)
 		{ _d = d; }
 	inst(opcode _op, int d, int a): op(_op)
@@ -116,7 +116,7 @@ inline elm::io::Output& operator<<(elm::io::Output& out, inst i) { i.print(out);
 
 inline inst nop(void) { return inst(NOP); }
 inline inst branch(int to) { return inst(BRANCH, to); }
-inline inst trap(cond_t cond) { return inst(TRAP, cond); }
+inline inst trap(void) { return inst(TRAP); }
 inline inst cont(void) { return inst(CONT); }
 inline inst _if(int cond, int sr, int jump) { return inst(IF, cond, sr, jump); }
 inline inst load(int d, int a, int b) { return inst(LOAD, d, a, b); }

@@ -34,13 +34,14 @@ p::declare BlockBuilder::reg = p::init("otawa::dcache::BlockBuilder", Version(1,
 	.base(BBProcessor::reg)
 	.maker<BlockBuilder>()
 	.provide(DATA_BLOCK_FEATURE)
-	.require(ADDRESS_ANALYSIS_FEATURE);
+	.require(ADDRESS_ANALYSIS_FEATURE)
+	.require(hard::CACHE_CONFIGURATION_FEATURE);
 
 
 /**
  * Provide the address of the stack pointer at the start of the task.
  */
-Identifier<Address> INITIAL_SP("otawa::dcache::INITIAL_STACK", Address::null);
+Identifier<Address> INITIAL_SP("otawa::dcache::INITIAL_SP", Address::null);
 
 
 /**
@@ -256,7 +257,7 @@ void Block::print(io::Output& out) const {
 	if(_set == -1)
 		out << "ANY";
 	else
-		out << addr << " (" << idx << ", " << _set << ")";
+		out << addr << " (" << idx << " in " << _set << ")";
 }
 
 

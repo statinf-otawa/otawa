@@ -115,15 +115,6 @@ private:
 elm::io::Output& operator<<(elm::io::Output& output, const MUSTProblem::Domain& dom);
 
 
-// type of unrolling
-typedef enum data_fmlevel_t {
-		DFML_INNER = 0,
-		DFML_OUTER = 1,
-		DFML_MULTI = 2,
-		DFML_NONE
-} data_fmlevel_t;
-
-
 // ACSBuilder processor
 class ACSBuilder : public otawa::Processor {
 public:
@@ -138,10 +129,6 @@ private:
 	bool unrolling;
 	genstruct::Vector<ACS *> *must_entry;
 };
-
-// ACSBuilder configuration
-extern Identifier<data_fmlevel_t> FIRSTMISS_LEVEL;
-extern Identifier<bool> PSEUDO_UNROLLING;
 
 } }	// otawa::dcache
 

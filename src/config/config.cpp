@@ -29,6 +29,7 @@
 #include <elm/system/Plugger.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <elm/sys/Directory.h>
+#include <elm/sys/System.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -41,10 +42,36 @@ public:
 		prefix = MANAGER.prefixPath();
 		cflags << "-I" << prefix.append("include");
 		libs << "-L" << prefix.append("lib") << " -lotawa -lelm -lgel";
+		addRPath(prefix.append("lib"));
+	}
+
+	/**
+	 * Add an RPATH.
+	 * @param path	Added path.
+	 */
+	void addRPath(const elm::system::Path& path) {
+		if(!rpath.contains(path))
+			rpath.add(path);
+	}
+
+	/**
+	 * Get the RPATH value.
+	 * @return	RPATH value.
+	 */
+	string getRPath(void) {
+		StringBuffer buf;
+		for(int i = 0; i < rpath.length(); i++) {
+			if(i != 0)
+				buf << ':';
+			buf << rpath[i];
+		}
+		return buf.toString();
 	}
 
 	StringBuffer cflags, libs;
 	elm::system::Path prefix;
+private:
+	genstruct::Vector<sys::Path> rpath;
 };
 
 // Module classes
@@ -84,8 +111,9 @@ public:
 	};
 
 	virtual void adjust(::Configuration& config) {
-		config.libs << " -L"
-			<< config.prefix.append("lib/otawa/ilp") << " -l" << libname;
+		sys::Path path = config.prefix.append("lib");
+		config.libs << " -L" << path << " -l" << libname;
+		config.addRPath(path);
 	}
 
 protected:
@@ -102,8 +130,9 @@ public:
 	};
 
 	virtual void adjust(::Configuration& config) {
-		config.libs << " -u" << name() << "_plugin -L"
-			<< config.prefix.append("lib/otawa/ilp") << " -l" << name();
+		sys::Path path = config.prefix.append("lib/otawa/ilp");
+		config.libs << " -u" << name() << "_plugin " <<  path.append(sys::System::getPluginFileName(name()));
+		config.addRPath(path);
 	}
 protected:
 	Solver(const string& name): Module(name) { }
@@ -118,8 +147,9 @@ public:
 
 	Loader(const string& name): Module(name) { }
 	virtual void adjust(::Configuration& config) {
-		config.libs << " -u" << name() << "_plugin -L"
-			<< config.prefix.append("lib/otawa/loader") << " -l" << name();
+		sys::Path path = config.prefix.append("lib/otawa/loader");
+		config.libs << " -u" << name() << "_plugin " << path.append(sys::System::getPluginFileName(name()));
+		config.addRPath(path);
 	}
 };
 
@@ -133,8 +163,9 @@ public:
 
 	Proc(const string& name): Module(name) { }
 	virtual void adjust(::Configuration& config) {
-		config.libs << " -L"
-			<< config.prefix.append("lib/otawa/proc").append(_path) << " -l" << name();
+		sys::Path path = config.prefix.append("lib/otawa/proc").append(_path);
+		config.libs << " " << path.append(sys::System::getPluginFileName(name()));
+		config.addRPath(path);
 	}
 private:
 	string _path;
@@ -157,7 +188,8 @@ public:
 		procs(*this, cmd, "--list-procs", cmd, "--procs", option::description, "list available processor collections", end),
 		show_version(*this, cmd, "--version", option::description, "output the current version", end),
 		scripts(*this, cmd, "--scripts", option::description, "output the scripts path", end),
-		list_scripts(*this, cmd, "--list-scripts", option::description, "output the list of available scripts", end)
+		list_scripts(*this, cmd, "--list-scripts", option::description, "output the list of available scripts", end),
+		rpath(*this, cmd, "--rpath", cmd, "-r", option::description, "output options to control RPATH", end)
 	{
 		// initialize the options
 		program = "otawa-config";
@@ -175,7 +207,7 @@ public:
 		add(::Loader::Make("ppc2").doc("PowerPC architecture loader"));
 		add(::Loader::Make("arm2").doc("ARM architecture loader"));
 		add(Proc::Make("bpred").doc("branch prediction library"));
-		add(Proc::Make("dcache").doc("simple L1 data cache analysis"));
+		add(Proc::Make("dcache").doc("simple L1 data cache analysis").path("otawa"));
 		Module *ast = Proc::Make("ast").path("otawa").doc("Abstract Syntactic Tree library");
 		add(ast);
 		add(Proc::Make("ets").path("otawa").require(ast).doc("Extended Timing Schema library"));
@@ -230,6 +262,8 @@ public:
 			cout  << getScriptDir() << io::endl;
 		if(list_scripts)
 			showScripts();
+		if(rpath)
+			cout << "-Wl,-rpath -Wl," << config.getRPath() << io::endl;
 	}
 
 protected:
@@ -337,7 +371,8 @@ private:
 		procs,
 		show_version,
 		scripts,
-		list_scripts;
+		list_scripts,
+		rpath;
 };
 
 int main(int argc, char **argv) {

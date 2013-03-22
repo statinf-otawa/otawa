@@ -157,8 +157,8 @@ public:
 		{ setBanks(banks_table); }
 
 	// otawa::Platform overload
-	virtual bool accept(const Identification& id)
-		{ return id.abi() == "eabi" && id.architecture() == "arm"; }
+	virtual bool accept(const Identification& id) { return id.abi() == "eabi" && id.architecture() == "arm"; }
+	virtual const hard::Register *getSP(void) const { return gpr[13]; }
 };
 const Platform::Identification Platform::ID("arm-eabi-");
 

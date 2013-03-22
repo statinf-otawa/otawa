@@ -595,8 +595,65 @@ A stage of type ''exec'' has two more elements:
 	<fus> <!-- fu -->+ </fus>
 </code>
 
-The ''fus'' element gives the list of functional unit (described in the 
+The ''fus'' element gives the list of functional unit (described in the next section).
+The ''dispatch'' allows to dispatch instruction for functional unit.
+It is made of a list of ''inst'' elements:
+<code xml>
+<!-- instruction match ::= -->
+	<inst>
+		<type>masks</type>
+		<fu ref="ID"/>
+	</inst>
+</code>
 
+The ''type'' allows to select an instruction from its kind mask. The kind mask
+of the ''otawa::Inst'' class is a set of flags describing the nature of the instruction.
+Each bit is identified by mask named ''IS_''//xxx// and the ''type'' element can supports
+several of these masks separated by a pipe ''|''. To be selected, an instruction must
+match **all** the flags in the ''type''. If no flags is given, any instruction will be selected.
+The ''fu'' gives the functional unit that will receive the instruction matching the type.
+The //ID// is one of the functional unit ''id'' describing in the next section.
+
+The supported flags are:
+  * ''IS_COND'' if the instruction is conditional,
+  * ''IS_CONTROL'' if the instruction changes the PC,
+  * ''IS_CALL'' if the instruction performs a sub-program call,
+  * ''IS_RETURN'' if the instruction returns from a sub-program,
+  * ''IS_MEM'' if the instruction performs memory accesss,
+  * ''IS_LOAD'' if the instruction loads of data from memory,
+  * ''IS_STORE'' if the instruction stores data to memory,
+  * ''IS_INT'' if the instruction works on integer values,
+  * ''IS_FLOAT'' if the instruction works on float values,
+  * ''IS_ALU'' if the instruction performs arithmetic or logic operation (not address calculation),
+  * ''IS_MUL'' if the instruction performs a multiplication,
+  * ''IS_DIV'' if the instruction performs a division,
+  * ''IS_SHIFT'' if the instruction performs a shift,
+  * ''IS_TRAP'' if the instruction performs a trap (system call, exception raise, debugging, etc)
+  * ''IS_INTERN'' if the instruction has an effect on the internal work of the microprocessor,
+  * ''IS_MULTI'' if the instruction performs multiple accesses to memory,
+  * ''IS_SPECIAL'', other types of instructions not covered by the existing flags,
+  * ''IS_INDIRECT'' if the instruction performs an indirect branch,
+  * ''IS_ATOMIC'' if the instruction performs atomic access to memory (in case of parallel access to memory). 
+
+Hexadecimal numbers are also accepted as flag masks to cope with the specificities of some
+instruction sets.
+
+Below is the example of the Leon 3 dispatch element of the execution stage:
+<code xml>
+	<dispatch>
+		<inst> <type>IS_MEM</type> <fu ref="INT"/> </inst>
+		<inst> <type>IS_CONTROL</type> <fu ref="INT"/> </inst>
+		<inst> <type>IS_INT</type> <fu ref="INT"/> </inst>
+		<inst> <type>IS_FLOAT|IS_DIV</type> <fu ref="FDIV"/> </inst>
+		<inst> <type></type> <fu ref="FPU"/> </inst>
+	</dispatch>
+</code>
+
+Any memory, control or integer instruction goes in the ''INT'' functional. The first three instructions
+matches works like an disjunctive condition as they branching to the same functional unit. Otherwise,
+if the instruction is working on float and performs a division, it moves to the ''FDIV'' functional unit.
+Finally, it can be stated from the instruction set of the Leon that remaining instruction are working
+on floating-point numbers and must go to the ''FPU'' functional unit.
 
 
 ==== Function Unit Description ====

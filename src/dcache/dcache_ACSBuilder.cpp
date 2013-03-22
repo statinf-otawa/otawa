@@ -206,7 +206,10 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 		// do only the MUST
 		MUSTProblem mustProb(coll.count(), line, fw, cache, cache->wayCount());
 
+		if(logFor(LOG_FILE))
+			cerr << "\tSET " << coll.cacheSet() << io::endl;
 
+		// computation with unrolling
 		if (unrolling) {
 			UnrollingListener<MUSTProblem> mustList(fw, mustProb);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > mustFp(mustList);
@@ -217,11 +220,19 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			mustHai.solve(0, &entry_dom);
 
 
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-				for (CFG::BBIterator bb(cfg); bb; bb++)
+			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+				if(logFor(LOG_CFG))
+					log << "\t\tCFG " << *cfg << io::endl;
+				for (CFG::BBIterator bb(cfg); bb; bb++) {
 					MUST_ACS(bb)->set(line, new MUSTProblem::Domain(*mustList.results[cfg->number()][bb->number()]));
+					if(logFor(LOG_BLOCK))
+						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
+				}
+			}
 
 		}
+
+		// computation without unrolling
 		else {
 			DefaultListener<MUSTProblem> mustList(fw, mustProb);
 			DefaultFixPoint<DefaultListener<MUSTProblem> > mustFp(mustList);
@@ -233,11 +244,16 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 
 
 			// Store the resulting ACS into the properties
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
+			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+				if(logFor(LOG_CFG))
+					log << "\t\tCFG " << *cfg << io::endl;
 				for (CFG::BBIterator bb(cfg); bb; bb++) {
 					ASSERT(line == coll.cacheSet());
 					MUST_ACS(bb)->set(line, new MUSTProblem::Domain(*mustList.results[cfg->number()][bb->number()]));
+					if(logFor(LOG_BLOCK))
+						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
 				}
+			}
 		}
 	/*} else {
 		if (unrolling) {
@@ -382,7 +398,7 @@ void ACS::print(elm::io::Output &output) const {
 			if (!first)
 				output << ", ";
 			output << i;
-			output << ":";
+			output << ": ";
 			output << age[i];
 
 			first = false;

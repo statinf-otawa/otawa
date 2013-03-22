@@ -41,7 +41,7 @@ namespace otawa { namespace dcache {
  * @li @ref MUST_ACS_FEATURE
  *
  * @p Configuration
- * @li @ref FIRSTMISS_LEVEL
+ * @li @ref DATA_FIRSTMISS_LEVEL
  */
 
 p::declare CATBuilder::reg = p::init("otawa::dcache::CATBuilder", Version(1, 0, 0))
@@ -186,7 +186,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
  */
 void CATBuilder::configure(const PropList &props) {
 	Processor::configure(props);
-	firstmiss_level = FIRSTMISS_LEVEL(props);
+	firstmiss_level = DATA_FIRSTMISS_LEVEL(props);
 	//cstats = CATEGORY_STATS(props);
 	//if(cstats)
 	//	cstats->reset();

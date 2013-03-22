@@ -176,7 +176,7 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll,
  */
 void ACSMayBuilder::configure(const PropList &props) {
 	Processor::configure(props);
-	unrolling = PSEUDO_UNROLLING(props);
+	unrolling = DATA_PSEUDO_UNROLLING(props);
 	may_entry = ENTRY_MAY_ACS(props);
 }
 

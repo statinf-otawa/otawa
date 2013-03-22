@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	StackAnalysis process implementation
  *
  *	This file is part of OTAWA
@@ -34,6 +33,7 @@
 #include <otawa/util/StackAnalysis.h>
 #include <otawa/util/AccessedAddress.h>
 #include <otawa/hard/Register.h>
+#include <otawa/hard/Platform.h>
 
 using namespace elm;
 using namespace otawa;
@@ -140,13 +140,13 @@ public:
 	}
 
 	void join(const Value& val) {
-		if(_kind == val._kind && _value == val._value)
-			;
-		else if(_kind != ALL && val._kind != ALL
-		&& (_kind == NONE || val._kind == NONE))
-			set(NONE, 0);
-		else
-			set(ALL, 0);
+		if(!(_kind == val._kind && _value == val._value)) {
+			if(_kind != ALL && val._kind != ALL
+			&& (_kind == NONE || val._kind == NONE))
+				set(NONE, 0);
+			else
+				set(ALL, 0);
+		}
 	}
 
 	static const Value none, all;
@@ -597,6 +597,9 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	if(logFor(LOG_CFG))
 		log << "FUNCTION " << cfg->label() << io::endl;
 	StackProblem prob;
+	const hard::Register *sp = ws->process()->platform()->getSP();
+	if(sp)
+		prob.initialize(sp, Address::null);
 	for(int i = 0; i < inits.count(); i++)
 		prob.initialize(inits[i].fst, inits[i].snd);
 	StackListener list(ws, prob);

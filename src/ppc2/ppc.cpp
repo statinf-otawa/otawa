@@ -190,6 +190,7 @@ public:
 
 	// otawa::Platform overload
 	virtual bool accept(const Identification& id);
+	virtual const Register *getSP(void) const { return GPR_bank[1]; }
 };
 
 

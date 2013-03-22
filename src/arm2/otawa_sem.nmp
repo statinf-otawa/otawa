@@ -30,10 +30,28 @@ macro divu(d, a, b)		= "block.add"("sem::divu"(d, a, b))
 macro mod(d, a, b)		= "block.add"("sem::mod"(d, a, b))
 macro modu(d, a, b)		= "block.add"("sem::modu"(d, a, b))
 
+canon card(32) "sem::ANY_COND"
+canon card(32) "sem::EQ"
+canon card(32) "sem::NE"
+canon card(32) "sem::LT"
+canon card(32) "sem::LE"
+canon card(32) "sem::GT"
+canon card(32) "sem::GE"
+canon card(32) "sem::ULT"
+canon card(32) "sem::ULE"
+canon card(32) "sem::UGT"
+canon card(32) "sem::UGE"
+
+macro exts(v) = (coerce(int(32), v))
+macro extu(v) = (coerce(card(32), v))
+
 // ****** mode extends ******
 
 extend REG_INDEX
 	i = R(r)
+
+// mode shiftedRegister = immShift | regShift
+// result in t1
 
 extend immShift
 	otawa_sem = {
@@ -58,8 +76,44 @@ extend regShift
 	}
 
 extend rotatedImmediate
-	v = coerce(u32, v) >>> (coerce(u32, rotate) << 1)
+	v = extu(v) >>> (extu(rotate) << 1)
 
+
+// condition extension
+extend condition
+	otawa_ever = cond == 14
+	otawa_never = cond == 15
+	otawa_cond =
+		switch(cond) {
+		case 0:		"sem::EQ"
+		case 1:		"sem::NE"
+		case 2:		"sem::UGE"
+		case 3:		"sem::ULT"
+		case 8:		"sem::UGT"
+		case 9:		"sem::ULE"
+		case 10:	"sem::GE"
+		case 11:	"sem::LT"
+		case 12:	"sem::GT"
+		case 13:	"sem::LE"
+		default:	"sem::ANY_COND"
+	}
+
+
+// load-store shifted operand (produce result in t1)
+extend loadstoreSpecifiedShift
+	otawa_sem = {
+		if shiftAmt == 0 then
+			_set(t1, r.i);
+		else
+			seti(t1, shiftAmt);
+			switch(shiftKind) {
+			case LSL:	shl(t1, r.i, t1);
+			case LSR:	shr(t1, r.i, t1);
+			case ASR:	asr(t1, r.i, t1);
+			case ROR:	scratch(t1);
+			};
+		endif;
+	}
 
 // ****** instructions extends ******
 
@@ -77,15 +131,266 @@ extend ADD_imm
 		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
 	}
 
-extend ADC_shr
+extend AND_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		and(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend AND_imm
+	otawa_sem = {
+		seti(t1, shifter_operand.v);
+		and(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend B_Cond
+	otawa_sem = {
+		if !cond.otawa_never then
+			seti(t1, __IADDR + 8 + (coerce(int(30), signed_immed_24) :: 0b00));
+			if cond.otawa_ever then
+				_branch(t1);
+			else
+				_if(_CPSR, cond.otawa_cond, 1);
+				_branch(t1); 
+			endif;
+		endif;
+	}
+
+extend BIC_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		not(t1, t1);
+		and(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend BIC_imm
+	otawa_sem = {
+		seti(t1, ~shifter_operand.v);
+		and(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend BX_ARM
+	otawa_sem = {
+		if !cond.otawa_never then
+			if cond.otawa_ever then
+				_branch(rd.i);
+			else
+				_if(_CPSR, cond.otawa_cond, 1);
+				_branch(rd.i); 
+			endif;
+		endif;		
+	}
+
+extend CMN_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		neg(t1, t1);
+		cmp(_CPSR, rn.i, t1);
+	}
+
+extend CMN_imm
+	otawa_sem = {
+		seti(t1, -shifter_operand.v);
+		cmp(_CPSR, rn.i, t1);
+	}
+
+extend CMP_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		cmp(_CPSR, rn.i, t1);
+	}
+
+extend CMP_imm
+	otawa_sem = {
+		seti(t1, shifter_operand.v);
+		cmp(_CPSR, rn.i, t1);
+	}
+
+extend EOR_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		xor(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend EOR_imm
+	otawa_sem = {
+		seti(t1, shifter_operand.v);
+		xor(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend LDR_imm
+	otawa_sem = {
+		seti(t2, if setu == 0 then -offset12 else offset12 endif);
+		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
+		load(rd.i, t1, if setb then 1 else 4 endif);
+		if setpre == 0 then 	add(rn.i, t1, t2);
+		else if setw == 1 then	_set(rn.i, t1);
+		endif; endif;
+	}
+
+extend MLA
+	otawa_sem = {
+		mul(t1, rm.i, rs.i);
+		add(rd.i, t1, rn.i);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend MOV_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		_set(rd.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend MOV_imm
+	otawa_sem = {
+		seti(rd.i, shifter_operand.v);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend MUL
+	otawa_sem = {
+		mul(rd.i, rm.i, rs.i);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend MVN_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		not(rd.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend MVN_imm
+	otawa_sem = {
+		seti(rd.i, ~shifter_operand.v);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend ORR_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		or(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend ORR_imm
+	otawa_sem = {
+		seti(t1, shifter_operand.v);
+		or(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend RSB_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		sub(rd.i, t1, rn.i);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend RSB_imm
+	otawa_sem = {
+		seti(t1, shifter_operand.v);
+		sub(rd.i, t1, rn.i);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend STR_imm
+	otawa_sem = {
+		seti(t2, if setu == 0 then -offset12 else offset12 endif);
+		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
+		store(rd.i, t1, if setb then 1 else 4 endif);
+		if setpre == 0 then 	add(rn.i, t1, t2);
+		else if setw == 1 then	_set(rn.i, t1);
+		endif; endif;
+	}
+
+extend SUB_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		sub(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend SUB_imm
+	otawa_sem = {
+		seti(t1, shifter_operand.v);
+		sub(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;	
+	}
+
+extend TEQ_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		xor(t1, rn.i, t1);
+		seti(t2, 0);
+		cmp(_CPSR, t1, t2);
+	}
+
+extend TEQ_imm
+	otawa_sem = {
+		seti(t1, shifter_operand.v);
+		xor(t1, rn.i, t1);
+		seti(t2, 0);
+		cmp(_CPSR, t1, t2);
+	}
+
+extend TST_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		and(t1, rn.i, t1);
+		seti(t2, 0);
+		cmp(_CPSR, t1, t2);
+	}
+
+extend TST_imm
+	otawa_sem = {
+		seti(t1, shifter_operand.v);
+		and(t1, rn.i, t1);
+		seti(t2, 0);
+		cmp(_CPSR, t1, t2);
+	}
+
+extend SWI
+	otawa_sem = {
+		if !cond.otawa_never then
+			scratch(t1);
+			if cond.otawa_ever then
+				trap();
+			else
+				_if(_CPSR, cond.otawa_cond, 1);
+				trap(); 
+			endif;
+		endif;		
+	}
+
+// ****** unsupported ******
+extend ADC_shr, RSC_shr, SBC_shr  
 	otawa_sem = {
 		shifter_operand.otawa_sem;
 		scratch(rd.i);
 		if sets then scratch(_CPSR); endif;
 	}
 
-extend ADC_imm
+extend ADC_imm, RSC_imm, SBC_imm  
 	otawa_sem = {
 		scratch(rd.i);
 		if sets then scratch(_CPSR); endif;
 	}
+
+extend SMULL, UMULL, SMLAL, UMLAL
+	otawa_sem = {
+		scratch(rdlo.i);
+		scratch(rdhi.i);
+		if sets then scratch(_CPSR); endif;
+	}
+
+extend CLZ, BFIC
+	otawa_sem = { scratch(rd.i); }
+

@@ -1,6 +1,6 @@
 # arm2 plugin build process
 
-set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../..")
 
 set(SOURCES
 	"dcache.cpp"
@@ -18,6 +18,6 @@ target_link_libraries(dcache ${LIBELM})
 target_link_libraries(dcache otawa)
 
 # installation
-set(INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/otawa/proc)
+set(INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/otawa/proc/otawa)
 install(TARGETS dcache DESTINATION ${INSTALL_PATH})
 

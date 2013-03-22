@@ -82,7 +82,7 @@ inline io::Output& operator<< (io::Output& out, const AccessedAddress *addr) { a
 // AccessedAddresses class
 class AccessedAddresses {
 public:
-	AccessedAddresses(): _size(0) { }
+	AccessedAddresses(): _size(0), addrs(0) { }
 	inline ~AccessedAddresses(void) { clear(); }
 
 	template <class C>

@@ -21,20 +21,31 @@
 #ifndef OTAWA_DCACHE_FEATURES_H_
 #define OTAWA_DCACHE_FEATURES_H_
 
-#include <otawa/proc/Feature.h>
+#include <otawa/proc/SilentFeature.h>
 #include <otawa/cache/categories.h>
+#include <otawa/prop/PropList.h>
 
 namespace otawa {
 
 namespace ilp { class Var; }
+class Inst;
 
 namespace dcache {
+
+// type of unrolling
+typedef enum data_fmlevel_t {
+		DFML_INNER = 0,
+		DFML_OUTER = 1,
+		DFML_MULTI = 2,
+		DFML_NONE
+} data_fmlevel_t;
+
 
 // ACS class
 class ACS {
 public:
 	inline ACS(const int _size, const int _A) : A (_A), size(_size), age(new int [size])
-		{ for (int i = 0; i < size; i++) age[i] = 0; }
+		{ for (int i = 0; i < size; i++) age[i] = -1; }
 	inline ~ACS() { delete [] age; }
 
 	inline int getSize(void) { return size; }
@@ -151,6 +162,8 @@ extern Identifier<Address> INITIAL_SP;
 extern SilentFeature MUST_ACS_FEATURE;
 extern Identifier<genstruct::Vector<ACS *> *> MUST_ACS;
 extern Identifier<genstruct::Vector<ACS *> *> ENTRY_MUST_ACS;
+extern Identifier<bool> DATA_PSEUDO_UNROLLING;
+extern Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL;
 
 // categories build
 extern SilentFeature CATEGORY_FEATURE;

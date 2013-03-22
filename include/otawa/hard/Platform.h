@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	Platform class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-08, IRIT UPS.
+ *	Copyright (c) 2005-13, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -86,17 +85,10 @@ public:
 		void print(io::Output& out) const;
 	};
 
-	// Platform
+	// Constructors
 	static const Identification ANY_PLATFORM;
-
-	// Constructors	
 	Platform(const Identification& id, const PropList& props = PropList::EMPTY);
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
-
-	// Cache information
-	inline const CacheConfiguration& cache(void) const;
-	void loadCacheConfig(const elm::system::Path& path);
-	void loadCacheConfig(elm::xom::Element *element);
 
 	// Identification
 	inline const Identification& identification(void) const;
@@ -109,17 +101,19 @@ public:
 	inline int regCount(void) const { return rcnt; }
 	Register *findReg(int uniq) const;
 	const Register *findReg(const string& name) const;
+	virtual const Register *getSP(void) const;
 	
-	// Configuration Loader
+	// deprecated
+	inline const CacheConfiguration& cache(void) const;
+	void loadCacheConfig(const elm::system::Path& path);
+	void loadCacheConfig(elm::xom::Element *element);
+	inline const Memory& memory(void) const { return *_memory; }
+	void loadMemory(const elm::system::Path& path) throw(otawa::LoadException);
+	void loadMemory(elm::xom::Element *element) throw(otawa::LoadException); 
 	void loadProcessor(const elm::system::Path& path);
 	void loadProcessor(elm::xom::Element *element);
 	inline const Processor *processor(void) const { return _processor; };
 	inline const int pipelineDepth(void) const;
-
-	// Memory information
-	inline const Memory& memory(void) const { return *_memory; }
-	void loadMemory(const elm::system::Path& path) throw(otawa::LoadException);
-	void loadMemory(elm::xom::Element *element) throw(otawa::LoadException); 
 
 protected:
 	friend class otawa::Manager;

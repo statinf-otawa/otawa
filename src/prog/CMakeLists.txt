@@ -20,6 +20,7 @@ set(libotawa_SOURCES
 	"ilp_Constraint.cpp"
 	"ilp_System.cpp"
 	"ilp_ILPPlugin.cpp"
+	"ilp_Output.cpp"
 	"proc_Processor.cpp"
 	"proc_CFGProcessor.cpp"
 	"proc_ContextualProcessor.cpp"

@@ -776,12 +776,12 @@ void Value::ne(uintn_t k) {
  * @param n		Number of bits to one.
  * @return		True if one is found, false else.
  */
-static bool findField(uint32_t w, int& n) {
+/*static bool findField(uint32_t w, int& n) {
 	n = 0;
 	while(!(w & (1 << n)))
 		n++;
 	return !(w & (0xffffffff << n));
-}
+}*/
 
 
 /**
@@ -1289,7 +1289,7 @@ public:
 	ClpProblem(Process *proc)
 	:	last_max_iter(0),
 	 	specific_analysis(false),
-	 	pack(NULL),
+	 	pack(0),
 	 	_nb_inst(0),
 	 	_nb_sem_inst(0),
 	 	_nb_set(0),
@@ -1552,7 +1552,7 @@ clp::Value readFromMem(clp::uintn_t address, int size) {
 		out.copy(in);
 		Domain *state;
 		bool has_if = false;
-		clp::ClpStatePack::InstPack *ipack = NULL;
+		clp::ClpStatePack::InstPack *ipack = 0;
 		TRACEP(cerr << "\n*** update(" << bb << ") ***\n");
 		TRACEP(cerr << "s = " << in << io::endl);
 		// save the input state in the basic block, join with an existing state
@@ -1580,7 +1580,7 @@ clp::Value readFromMem(clp::uintn_t address, int size) {
 			pc = 0;
 			state = &out;
 			
-			if(specific_analysis && pack != NULL){
+			if(specific_analysis && pack){
 				ipack = pack->newPack(inst->address());
 			}
 			
@@ -1767,7 +1767,7 @@ clp::Value readFromMem(clp::uintn_t address, int size) {
 					//DEBUG: print the result of the instruction
 					TRACEI(cerr << "\t\t !!-> " << *state << io::endl);
 					
-					if (specific_analysis && pack != NULL){
+					if (specific_analysis && pack){
 						ipack->append(*state);
 					}
 					
@@ -1838,7 +1838,7 @@ clp::Value readFromMem(clp::uintn_t address, int size) {
 		clp::State output;
 		clp::State input = CLP_STATE_IN(*bb);
 		update(output, input, bb);
-		pack = NULL;
+		pack = 0;
 		specific_analysis = false;
 	}
 	
@@ -1931,7 +1931,8 @@ private:
 ClpAnalysis::ClpAnalysis(void): Processor("otawa::ClpAnalysis", Version(0, 1, 0)),
 								_nb_inst(0), _nb_sem_inst(0), _nb_set(0), 
 								_nb_top_set(0), _nb_store(0), _nb_top_store(0),
-								_nb_filters(0), _nb_top_filters(0), _nb_top_load(0) {
+								_nb_filters(0), _nb_top_filters(0), _nb_top_load(0),
+								_nb_load(0), _nb_top_store_addr(0), _nb_load_top_addr(0) {
 	require(LOOP_INFO_FEATURE);
 	require(ipet::FLOW_FACTS_FEATURE);
 	require(VIRTUALIZED_CFG_FEATURE);
