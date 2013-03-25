@@ -273,14 +273,14 @@ static StringOption flow_facts(command, 'f', "flowfacts", "Select the fow fact f
 static SwitchOption stats(command, option::cmd, "-s", option::cmd, "--stat", option::description, "dumps statistics of the computation", option::end);
 
 
-static Version my_version(1, 1, 0);
+
 /**
  * Build the command manager.
  */
 Command::Command(void):
 	Manager(
 		option::program, "oipet",
-		option::version, &my_version,
+		option::version, new Version(1, 1, 0),
 		option::author, "H. Cassé",
 		option::copyright, "Copyright (c) 2006-07, IRIT-UPS",
 		option::description, "Compute the WCET of some tasks of a binary using IPET techniques.",

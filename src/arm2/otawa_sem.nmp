@@ -322,6 +322,38 @@ extend STR_imm
 		endif; endif;
 	}
 
+extend STR_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		if setu == 0 then neg(t1, t1); endif;
+		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
+		store(rd.i, t2, if setb == 1 then 1 else 4 endif);
+		if setpre == 0 then add(rn.i, rn.i, t1);
+		else if setw == 1 then _set(rn.i, t2);
+		endif; endif;
+	}
+
+extend STRH_imm
+	otawa_sem = {
+		seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
+		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
+		store(rd.i, t1, 2);
+		if setpre == 0 then add(rn.i, rn.i, t2);
+		else if setw == 1 then _set(rn.i, t1);
+		endif; endif;
+	}
+
+extend STRH_shr
+	otawa_sem = {
+		//shifter_operand.otawa_sem;
+		if setu == 0 then neg(t1, t1); endif;
+		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
+		store(rd.i, t2, 2);
+		if setpre == 0 then add(rn.i, rn.i, t1);
+		else if setw == 1 then _set(rn.i, t2);
+		endif; endif;
+	}
+
 extend SUB_shr
 	otawa_sem = {
 		shifter_operand.otawa_sem;

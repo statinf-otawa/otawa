@@ -298,14 +298,14 @@ void TreeStatistics::print(elm::io::Output& out) {
 }
 
 
-static Version my_version(1, 0);
+
 /**
  * Initialize the command.
  */
 Command::Command(void):
 	Manager(
 		option::program, "OStat",
-		option::version, &my_version,
+		option::version, new Version(1, 0),
 		option::author, "Hugues Casse <casse@irit.fr>",
 		option::copyright, "Copyright (c) 2006, IRIT-UPS France",
 		option::description,

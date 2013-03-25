@@ -385,14 +385,14 @@ void Command::process(String arg) {
 }
 
 
-static Version my_version(1, 0);
+
 /**
  * Build the command.
  */
 Command::Command(void):
 	Manager(
 		option::program, "mkff",
-		option::version, &my_version,
+		option::version, new Version(1, 0),
 		option::author, "Hugues Cassé",
 		option::copyright, "Copyright (c) 2005-07, IRIT-UPS France",
 		option::description, "Generate a flow fact file for an application.",

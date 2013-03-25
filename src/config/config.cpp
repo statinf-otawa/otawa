@@ -172,13 +172,13 @@ private:
 };
 
 // Main class
-static Version my_version(2, 1, 0);
+
 class Config: public option::Manager {
 public:
 	Config(void):
 		Manager(
 			option::program, "otawa-config",
-			option::version, &my_version,
+			option::version, new Version(2, 1, 0),
 			option::author, "H. Cassé <casse@irit.fr>",
 			option::copyright, "LGPL v2",
 			option::description, "Get building information about the OTAWA framework",
