@@ -234,6 +234,17 @@ extend LDR_imm
 		endif; endif;
 	}
 
+extend LDR_shr
+	otawa_sem = {
+		shifter_operand.otawa_sem;
+		if setu == 0 then neg(t1, t1); endif;
+		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
+		load(rd.i, t2, if setb == 1 then 1 else 4 endif);
+		if setpre == 0 then add(rn.i, rn.i, t1);
+		else if setw == 1 then _set(rn.i, t2);
+		endif; endif;
+	}
+
 extend MLA
 	otawa_sem = {
 		mul(t1, rm.i, rs.i);

@@ -192,7 +192,6 @@ DumpCFG::DumpCFG(void):
 
 	displayer(&simple_displayer)
 {
-	free_argument_description = "[function names...]";
 }
 
 

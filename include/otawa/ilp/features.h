@@ -23,7 +23,7 @@
 
 #include <elm/sys/Path.h>
 #include <otawa/proc/SilentFeature.h>
-#include <elm/enum_info.h>
+//#include <elm/enum_info.h>
 
 namespace otawa { namespace ilp {
 

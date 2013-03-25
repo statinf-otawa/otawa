@@ -298,19 +298,22 @@ void TreeStatistics::print(elm::io::Output& out) {
 }
 
 
-
+static Version my_version(1, 0);
 /**
  * Initialize the command.
  */
-Command::Command(void) {
-	program = "OStat";
-	version = "0.1";
-	author = "Hugues Cass�";
-	copyright = "Copyright (c) 2006, IRIT-UPS France";
-	description =
-		"Compute statistics on a binary file.\n"
-		"If no function name is given, the main() function is used.";
-	free_argument_description = "file_name [function names...]";
+Command::Command(void):
+	Manager(
+		option::program, "OStat",
+		option::version, &my_version,
+		option::author, "Hugues Casse <casse@irit.fr>",
+		option::copyright, "Copyright (c) 2006, IRIT-UPS France",
+		option::description,
+			"Compute statistics on a binary file.\n"
+			"If no function name is given, the main() function is used.",
+		option::arg_desc, "file_name [function names...]",
+		option::end), info(0), fw(0)
+{
 }
 
 

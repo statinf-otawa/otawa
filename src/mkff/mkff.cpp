@@ -385,20 +385,23 @@ void Command::process(String arg) {
 }
 
 
+static Version my_version(1, 0);
 /**
  * Build the command.
  */
 Command::Command(void):
+	Manager(
+		option::program, "mkff",
+		option::version, &my_version,
+		option::author, "Hugues Cassé",
+		option::copyright, "Copyright (c) 2005-07, IRIT-UPS France",
+		option::description, "Generate a flow fact file for an application.",
+		option::arg_desc, "program [function names...]",
+		option::end),
 	fw(0),
 	ff_file(*this, 'f', "flowfacts", "select flowfact file to use", "flow fact file", ""),
 	verb(*this, 'v', "verbose", "activate the verbose mode", false)
 {
-	program = "mkff";
-	version = "1.0";
-	author = "Hugues Cassé";
-	copyright = "Copyright (c) 2005-07, IRIT-UPS France";
-	description = "Generate a flow fact file for an application.";
-	free_argument_description = "program [function names...]";
 }
 
 
