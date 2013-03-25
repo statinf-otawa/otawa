@@ -172,9 +172,18 @@ private:
 };
 
 // Main class
+static Version my_version(2, 1, 0);
 class Config: public option::Manager {
 public:
 	Config(void):
+		Manager(
+			option::program, "otawa-config",
+			option::version, &my_version,
+			option::author, "H. Cassé <casse@irit.fr>",
+			option::copyright, "LGPL v2",
+			option::description, "Get building information about the OTAWA framework",
+			option::free_arg, "MODULES...",
+			option::end),
 		cflags(*this, cmd, "--cflags", option::description, "output compilation C++ flags", end),
 		data(*this, cmd, "--data", option::description, "output the OTAWA data path", end),
 		doc(*this, cmd, "--doc", option::description, "output the OTAWa document path", end),
@@ -191,13 +200,6 @@ public:
 		list_scripts(*this, cmd, "--list-scripts", option::description, "output the list of available scripts", end),
 		rpath(*this, cmd, "--rpath", cmd, "-r", option::description, "output options to control RPATH", end)
 	{
-		// initialize the options
-		program = "otawa-config";
-		version = Version(2, 1, 0);
-		author = "H. Cassé <casse@irit.fr>";
-		copyright = "LGPL v2";
-		description = "Get building information about the OTAWA framework";
-		free_argument_description = "MODULES...";
 
 		// initialize the modules
 		add(Library::Make("display").doc("graph displayer library").lib("odisplay"));

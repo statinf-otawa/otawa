@@ -162,6 +162,14 @@ Application::Application(
 	cstring _author,
 	cstring _copyright
 ):
+	Manager(
+		option::program, &_program,
+		option::version, &_version,
+		option::description, &_description,
+		option::author, &_author,
+		option::copyright, &_copyright,
+		option::free_arg, "PROGRAM [FUNCTION ...]",
+		option::end),
 	help(*this, 'h', "help", "display this help", false),
 	verbose(*this, 'v', "verbose", "verbose display of the process (same as --log bb)", false),
 	sets(*this, option::cmd, "--add-prop", option::description, "set a configuration property", option::arg_desc, "ID=VALUE", option::end),
@@ -171,14 +179,7 @@ Application::Application(
 	props2(0),
 	result(0),
 	ws(0)
-{
-	program = _program;
-	version = _version;
-	description = _description;
-	author = _author;
-	copyright = _copyright;
-	free_argument_description = "PROGRAM [FUNCTION ...]";
-}
+{ }
 	
 
 /**
