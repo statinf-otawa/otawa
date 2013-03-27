@@ -164,7 +164,7 @@ Application::Application(
 ):
 	Manager(
 		option::program, &_program,
-		option::version, &_version,
+		option::version, new Version(_version),
 		option::description, &_description,
 		option::author, &_author,
 		option::copyright, &_copyright,

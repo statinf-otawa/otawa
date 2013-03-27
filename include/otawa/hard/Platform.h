@@ -102,6 +102,7 @@ public:
 	Register *findReg(int uniq) const;
 	const Register *findReg(const string& name) const;
 	virtual const Register *getSP(void) const;
+	virtual const Register *getPC(void) const;
 	
 	// deprecated
 	inline const CacheConfiguration& cache(void) const;

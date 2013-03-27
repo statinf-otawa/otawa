@@ -87,7 +87,8 @@ using namespace elm;
  * @li GT -- a > b
  * @li NE -- a != b
  * @li ANY_COND -- do not know anything (recall we are performing static analysis).
- * In addition, some architecture requires an unsigned comparison that may produces other conditions:
+ *
+ * In addition, unsigned comparisons are also needed:
  * @li ULT -- a < b
  * @li ULE -- a <= b
  * @li UGE -- a >= b
@@ -334,6 +335,7 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
 	case DIVU:
 	case MOD:
 	case MODU:
+	case XOR:
 		out << ' '; printArg(pf, out, inst.d());
 		out << ", "; printArg(pf, out, inst.a()); out << ", ";
 		printArg(pf, out, inst.b());

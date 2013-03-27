@@ -83,7 +83,8 @@ typedef enum cond_t {
 	ULT,
 	ULE,
 	UGE,
-	UGT
+	UGT,
+	MAX_COND
 } cond_t;
 
 
@@ -118,7 +119,7 @@ inline inst nop(void) { return inst(NOP); }
 inline inst branch(int to) { return inst(BRANCH, to); }
 inline inst trap(void) { return inst(TRAP); }
 inline inst cont(void) { return inst(CONT); }
-inline inst _if(int cond, int sr, int jump) { return inst(IF, cond, sr, jump); }
+inline inst _if(int cond, int sr, int jump) { ASSERT(cond >= 0 && cond < MAX_COND); return inst(IF, cond, sr, jump); }
 inline inst load(int d, int a, int b) { return inst(LOAD, d, a, b); }
 inline inst store(int d, int a, int b) { return inst(STORE, d, a, b); }
 inline inst scratch(int d) { return inst(SCRATCH, d); }

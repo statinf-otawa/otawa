@@ -710,4 +710,13 @@ const Register *Platform::getSP(void) const {
 	return 0;
 }
 
+
+/**
+ * Get the register containing the Program Counter.
+ * @return	PC register or null.
+ */
+const Register *Platform::getPC(void) const {
+	return 0;
+}
+
 } } // otawa::hard

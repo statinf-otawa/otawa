@@ -181,7 +181,7 @@ extend LDMIA_thumb
 extend POP_thumb
 	otawa_kind =
 		  IS_MEM | IS_LOAD | IS_MULTI | IS_INT
-		| (if R then IS_CONTROL | IS_RETURN else 0 endif)
+		| (if P then IS_CONTROL | IS_RETURN else 0 endif)
 
 extend PUSH_thumb, STMIA_thumb
 	otawa_kind = IS_MEM | IS_STORE | IS_MULTI | IS_INT 

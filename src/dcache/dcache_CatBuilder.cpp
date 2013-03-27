@@ -119,13 +119,10 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 				else if(b.block().set() == line) {
 
 					// initialization
+					CATEGORY(b) = cache::NOT_CLASSIFIED;
 					ACS *may = 0;
 					if(MAY_ACS(bb) != 0) {
 						may = MAY_ACS(bb)->get(line);
-						CATEGORY(b) = cache::NOT_CLASSIFIED;
-					}
-					else
-						CATEGORY(b) = cache::ALWAYS_MISS;
 
 					// in MUST
 					if(dom.contains(b.block().index()))
