@@ -66,7 +66,7 @@ public:
 	inline void remove(void) const { props().removeProp(id()); }
 	inline T& ref(void) const { return id().ref(props()); }
 
-	inline T& operator&(void) const { return ref(); }
+	inline T& operator*(void) const { return ref(); }
 	inline const Ref<T, I>& operator=(const T& value) const { id().set(props(), value); return *this; }
 	inline Ref<T, I>& operator=(const Ref<T, I>& value) { id().set(props(), value.get()); return *this; }
 	inline Ref<T, I>& operator+=(const T& v) { ref() +=  v; return *this; }
@@ -79,10 +79,10 @@ public:
 	inline Ref<T, I>& operator^=(const T& v) const { ref() ^=  v; return *this; }
 	inline Ref<T, I>& operator<<=(const T& v) const { ref() <<=  v; return *this; }
 	inline Ref<T, I>& operator>>=(const T& v) const { ref() >>=  v; return *this; }
-	inline Ref<T, I>& operator++(void) const { ref()++; }
-	inline Ref<T, I>& operator--(void) const { ref()--; }
-	inline Ref<T, I>& operator++(int) const { ref()++; }
-	inline Ref<T, I>& operator--(int) const { ref()--; }
+	inline Ref<T, I>& operator++(void) const { ref()++; return *this; }
+	inline Ref<T, I>& operator--(void) const { ref()--; return *this; }
+	inline Ref<T, I>& operator++(int) const { ref()++; return *this; }
+	inline Ref<T, I>& operator--(int) const { ref()--; return *this; }
 };
 
 // output

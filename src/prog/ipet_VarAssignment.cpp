@@ -48,7 +48,7 @@ Registration<VarAssignment> VarAssignment::reg(
  *
  * Force the ilp variable name of an edge or basic block
  */
-Identifier<String* > FORCE_NAME("otawa::FORCE_NAME", NULL);
+Identifier<String* > FORCE_NAME("otawa::FORCE_NAME", 0);
 
 
 /**
@@ -80,7 +80,7 @@ void VarAssignment::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		String name = "";
 		if(_explicit) {
 		        if (FORCE_NAME(bb)) {
-		                name = *FORCE_NAME(bb);
+		                name = **FORCE_NAME(bb);
 		        } else {
 			        name = makeNodeVar(bb, cfg);
                         }
@@ -94,7 +94,7 @@ void VarAssignment::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 			String name = "";
 			if(_explicit) {
 			        if (FORCE_NAME(edge)) {
-			              name = *FORCE_NAME(edge);
+			              name = **FORCE_NAME(edge);
                                 } else {
 				      name = makeEdgeVar(edge, cfg);
                                 }

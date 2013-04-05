@@ -180,7 +180,7 @@ inline void FirstUnrollingFixPoint<Listener>::markEdge(PropList *e, const Domain
 		if (STATE(e) == NULL)
 			STATE(e) = new Domain(bottom());
 			
-		prob.lub(*STATE(e), s);
+		prob.lub(**STATE(e), s);
 	}
 	
 template < class Listener >	

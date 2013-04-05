@@ -162,7 +162,7 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 							
 								if (LINKED_BLOCKS(lblock) != NULL) {
 									/* linked l-blocks first-miss */
-									genstruct::Vector<LBlock *> &linked = *LINKED_BLOCKS(lblock);								
+									genstruct::Vector<LBlock *> &linked = **LINKED_BLOCKS(lblock);
 									/* We add constraints only once per group */
 									if (linked[linked.length() - 1] == *lblock) {
 							

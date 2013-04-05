@@ -63,10 +63,10 @@ LoopReductor::LoopReductor(bool _reduce_loops) : Processor((_reduce_loops ? "ota
 	}
 }
 
-Identifier<BasicBlock*> LoopReductor::DUPLICATE_OF("otawa::LoopReductor::DUPLICATE_OF", NULL);
+Identifier<BasicBlock*> LoopReductor::DUPLICATE_OF("otawa::LoopReductor::DUPLICATE_OF", 0);
 Identifier<bool> LoopReductor::MARK("otawa::LoopReductor::MARK", false);
 
-Identifier<dfa::BitSet*> LoopReductor::IN_LOOPS("otawa::LoopReductor::IN_LOOPS", NULL);
+Identifier<dfa::BitSet*> LoopReductor::IN_LOOPS("otawa::LoopReductor::IN_LOOPS", 0);
 
 void LoopReductor::processWorkSpace(otawa::WorkSpace *fw) {
 
@@ -170,7 +170,7 @@ void LoopReductor::depthFirstSearch(BasicBlock *bb, Vector<BasicBlock*> *ancesto
 					}
 				}
 				/* GRUIIIIIIIIIK !!! pas performant, mais bon.. */
-				for (dfa::BitSet::Iterator bit(*IN_LOOPS(edge->target())); bit; bit++) {
+				for (dfa::BitSet::Iterator bit(**IN_LOOPS(edge->target())); bit; bit++) {
 					bool inloop = false;
 					for (Vector<BasicBlock*>::Iterator member(*ancestors); member; member++) {
 						if (member->number() == *bit)
@@ -258,8 +258,8 @@ void LoopReductor::reduce(VirtualCFG *vcfg, CFG *cfg) {
 			for (BasicBlock::InIterator edge(bb); edge; edge++) {
 
 				/* compute loops entered by the edge */
-				dfa::BitSet enteredLoops(*IN_LOOPS(bb));
-				enteredLoops.remove(*IN_LOOPS(edge->source()));
+				dfa::BitSet enteredLoops(**IN_LOOPS(bb));
+				enteredLoops.remove(**IN_LOOPS(edge->source()));
 
 				/* The edge is a regular entry if it enters one loop, and edge->target() == loop header */
 				if (!((enteredLoops.count() == 0) || ((enteredLoops.count() == 1) && (enteredLoops.contains(bb->number()))))) {
@@ -270,7 +270,7 @@ void LoopReductor::reduce(VirtualCFG *vcfg, CFG *cfg) {
 						INDEX(duplicate) = idx;
 						idx++;
 						vcfg->addBB(duplicate);
-						IN_LOOPS(duplicate) = new dfa::BitSet(*IN_LOOPS(edge->source()));
+						IN_LOOPS(duplicate) = new dfa::BitSet(**IN_LOOPS(edge->source()));
 						for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
 							if (DUPLICATE_OF(outedge->target())) {
 								new Edge(duplicate, DUPLICATE_OF(outedge->target()), outedge->kind());

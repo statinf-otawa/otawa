@@ -151,6 +151,23 @@ void GraphVizGraph::printGraphData(Output& out){
 void GraphVizGraph::display(void) throw(DisplayException) {
 	String file = display::OUTPUT_PATH(this);
 	
+	// case of RAW dot
+	if(OUTPUT_KIND(this) == OUTPUT_RAW_DOT) {
+		io::OutStream *out_stream = &io::out;
+		if(file)
+			try {
+				out_stream = sys::System::createFile(file);
+			}
+			catch(sys::SystemException& e) {
+				throw DisplayException(_ << " creating \"" << file << "\": " << e.message());
+			}
+		io::Output output(*out_stream);
+		printGraphData(output);
+		if(file)
+			delete out_stream;
+		return;
+	}
+
 	// Select the command
 	CString command;	
 	switch(GRAPHVIZ_LAYOUT(this)){
@@ -203,8 +220,10 @@ void GraphVizGraph::display(void) throw(DisplayException) {
 	builder.addArgument(param_type);
 	
 	// Add the output
-	builder.addArgument("-o");
-	builder.addArgument(&file);
+	if(file) {
+		builder.addArgument("-o");
+		builder.addArgument(&file);
+	}
 	
 	// Redirect IO
 	Pair<PipeInStream *, PipeOutStream *> pipe = System::pipe();
@@ -219,6 +238,8 @@ void GraphVizGraph::display(void) throw(DisplayException) {
 	delete pipe.fst;
 	delete pipe.snd;
 	proc->wait();
+	if(proc->returnCode())
+		throw DisplayException(_ << "failure of dot call: " << proc->returnCode());
 	delete proc;
 }
 

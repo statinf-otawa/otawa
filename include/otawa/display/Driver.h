@@ -38,7 +38,8 @@ typedef enum kind_t {
 	OUTPUT_GIF,
 	OUTPUT_JPG,
 	OUTPUT_SVG,
-	OUTPUT_DOT
+	OUTPUT_DOT,
+	OUTPUT_RAW_DOT
 } kind_t;
 
 

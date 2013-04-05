@@ -303,7 +303,7 @@ void Application::prepare(PropList& props) {
 void Application::work(PropList &props) throw(elm::Exception) {
 	for(int i = 0; i < entries.count(); i++) {
 		props2 = new PropList(props);
-		ASSERT(props2 != NULL);
+		ASSERT(props2);
 		TASK_ENTRY(props2) = entries[i].toCString();
 		work(entries[i], *props2);
 		delete props2;

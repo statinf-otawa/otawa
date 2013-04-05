@@ -159,7 +159,7 @@ inline void WideningFixPoint<Listener>::markEdge(PropList *e, const Domain &s) {
 		prob.lub(*STATE(e), s);
 		prob.lub(tmp, s);
 		ASSERT(prob.equals(tmp,s)); */ 
-		prob.assign(*STATE(e), s);
+		prob.assign(**STATE(e), s);
 		
 	}
 	

@@ -46,11 +46,11 @@ SilentFeature PST_FEATURE("otawa:PST_FEATURE", PST_MAKER);
 // Private Properties
 Identifier<int> PSTBuilder::PST_DFSNUM("", -1 );
 Identifier<int> PSTBuilder::PST_HI("", -1 );
-Identifier<PSTBuilder::BracketSet*> PSTBuilder::PST_BSET("", NULL );
+Identifier<PSTBuilder::BracketSet*> PSTBuilder::PST_BSET("", 0 );
 	
-Identifier<CEClass*> PSTBuilder::PST_CLASS("", NULL );
+Identifier<CEClass*> PSTBuilder::PST_CLASS("", 0 );
 Identifier<int> PSTBuilder::PST_RECENTSIZE("", 0 );
-Identifier<CEClass*> PSTBuilder::PST_RECENTCLASS("", NULL );	
+Identifier<CEClass*> PSTBuilder::PST_RECENTCLASS("", 0 );
 
 Identifier<bool> PSTBuilder::PST_IS_CAPPING("", false );
 Identifier<bool> PSTBuilder::DFS_IS_BACKEDGE("", true );
@@ -64,12 +64,12 @@ Identifier<bool> PSTBuilder::DFS_IS_BACKEDGE("", true );
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<BasicBlock*> FROM_BB("otawa::FROM_BB", NULL );
+Identifier<BasicBlock*> FROM_BB("otawa::FROM_BB", 0 );
 
 /**
  * This property is like @li @ref otawa::FROM_BB but for edges
  */
-Identifier<Edge*> FROM_EDGE("otawa::FROM_EDGE", NULL );
+Identifier<Edge*> FROM_EDGE("otawa::FROM_EDGE", 0 );
 
 /**
  * This property points to the Program Structure Tree of the CFG.
@@ -78,7 +78,7 @@ Identifier<Edge*> FROM_EDGE("otawa::FROM_EDGE", NULL );
  * @li @ref CFG
  */
 
-Identifier<PSTree *> PROGRAM_STRUCTURE_TREE("otawa::PROGRAM_STRUCTURE_TREE", NULL ); 
+Identifier<PSTree *> PROGRAM_STRUCTURE_TREE("otawa::PROGRAM_STRUCTURE_TREE", 0 );
 /**
  * @class PSTBuilder
  *
@@ -102,7 +102,7 @@ Identifier<PSTree *> PROGRAM_STRUCTURE_TREE("otawa::PROGRAM_STRUCTURE_TREE", NUL
  * none
  */
 
-PSTBuilder::PSTBuilder(void) : CFGProcessor("otawa::PSTBuilder", Version(1, 0, 0)), pst(NULL) {
+PSTBuilder::PSTBuilder(void) : CFGProcessor("otawa::PSTBuilder", Version(1, 0, 0)), pst(0) {
 	require(COLLECTED_CFG_FEATURE);
 	provide(PST_FEATURE);
 }
@@ -150,15 +150,15 @@ int PSTBuilder::displayTree(PSTree *node, int col, bool ending) {
 				cout << "  ";
 			cout << (ending ? " \\" : " |"); 
 			cout << "-Region: " << node->data()->getEntry()->source()->number() << "->" << node->data()->getEntry()->target()->number();
-			if (node->data()->getExit() != NULL) {
+			if (node->data()->getExit()) {
 				cout << " to " << node->data()->getExit()->source()->number() << "->" << node->data()->getExit()->target()->number() ;
 			} else cout << " to ???";		
 			cout << " " << ((node->data()->isFirst()) ? "FIRST" : "");
 			cout << "\n";
 		
 		}	
-	for (PSTree *child = node->children(); child != NULL; child = child->sibling()) {
-		total += displayTree(child, col+1, (child->sibling() == NULL));
+	for (PSTree *child = node->children(); child; child = child->sibling()) {
+		total += displayTree(child, col+1, (!child->sibling()));
 	}
 	return(total);
 }
@@ -189,7 +189,7 @@ void PSTBuilder::buildTree(CFG *cfg, BasicBlock *bb, PSTree *subtree) {
 			PSTree *newSubtree = subtree;
 			/* If the edge isn't cycle-equivalent to any other edge ((first && last) = true)), 
 			 * then it doesn't define a region. */
-			if ((cl != NULL) && (!cl->isFirst() || !cl->isLast())) {
+			if (cl && (!cl->isFirst() || !cl->isLast())) {
 				
 				// We enter a sequence of region(s)
 				if (cl->isFirst()) {
@@ -278,7 +278,7 @@ void PSTBuilder::assignClasses(CFG *cfg) {
 				hi0 = PST_DFSNUM(inedge->source());			
 
 		/* hi1 = min { c.hi | c is a child of n } */
-		BasicBlock *hichild = NULL;
+		BasicBlock *hichild = 0;
 		
 		for (BasicBlock::OutIterator outedge(n); outedge; outedge++)
 			if ((outedge->kind() != Edge::CALL) && !DFS_IS_BACKEDGE(*outedge) && (PST_HI(outedge->target()) < i) && (PST_HI(outedge->target()) < hi1) && (PST_DFSNUM(outedge->target()) > i)) {
@@ -292,7 +292,7 @@ void PSTBuilder::assignClasses(CFG *cfg) {
 				hichild = inedge->source();
 			}					
 			
-		ASSERT((hichild != NULL) || (hi1 == cfg->countBB()));
+		ASSERT(hichild || (hi1 == cfg->countBB()));
 		/* cout << "hi1 is " << hi1 << "\n"; */
 		
 		PST_HI(n) = (hi0 > hi1) ? hi1 : hi0; 
@@ -300,7 +300,7 @@ void PSTBuilder::assignClasses(CFG *cfg) {
 		/* cout << "n.hi is " << PST_HI(n) << "\n"; */
 		
 		/* hi2 = min {c.hi | c is a child of n and c.hi != hi1 */
-		if (hichild != NULL) {		
+		if (hichild) {
 			for (BasicBlock::OutIterator outedge(n); outedge; outedge++)
 				if ((outedge->kind() != Edge::CALL) && (PST_HI(outedge->target()) < i) && !DFS_IS_BACKEDGE(*outedge) && (PST_HI(outedge->target()) < hi2) && 
 					(PST_DFSNUM(outedge->target()) > i) && (outedge->target() != hichild)) {
@@ -322,7 +322,7 @@ void PSTBuilder::assignClasses(CFG *cfg) {
 		for (BasicBlock::OutIterator outedge(n); outedge; outedge++)
 			if ((outedge->kind() != Edge::CALL) && !DFS_IS_BACKEDGE(*outedge) && (PST_DFSNUM(outedge->target()) > i)) {
 				// cout << "Merging bracket-list for child: " << outedge->target() << "\n";
-				for (BracketSet::Iterator iter(*PST_BSET(outedge->target())); iter; iter++)
+				for (BracketSet::Iterator iter(**PST_BSET(outedge->target())); iter; iter++)
 					PST_BSET(n)->addLast(*iter);
 			}
 				
@@ -330,13 +330,13 @@ void PSTBuilder::assignClasses(CFG *cfg) {
 		for (BasicBlock::InIterator inedge(n); inedge; inedge++)
 			if (!DFS_IS_BACKEDGE(*inedge) && (PST_DFSNUM(inedge->source()) > i)) {
 				//cout << "Merging bracket-list for child: " << inedge->source() << "\n";
-				for (BracketSet::Iterator iter(*PST_BSET(inedge->source())); iter; iter++)
+				for (BracketSet::Iterator iter(**PST_BSET(inedge->source())); iter; iter++)
 					PST_BSET(n)->addLast(*iter);
 			}
 		
 		/* Remove from set the backedges (including capping backedges) going to current bb */
 		genstruct::Vector<Edge*> todel;
-		for (BracketSet::Iterator bracket(*PST_BSET(n)); bracket; bracket++) {
+		for (BracketSet::Iterator bracket(**PST_BSET(n)); bracket; bracket++) {
 			//cout << "Considering edge: " << bracket->source() << " to " << bracket->target() << " for deletion\n";
 			if (((bracket->source() == n) && (PST_DFSNUM(bracket->target()) > i)) ||
 				((bracket->target() == n) && (PST_DFSNUM(bracket->source()) > i))) {
@@ -378,22 +378,22 @@ void PSTBuilder::assignClasses(CFG *cfg) {
 		if (i != 0) {
 			
 			/* Detect parent edge, i.e the tree edge with dfsnum < i  */
-			Edge *edge = NULL;
+			Edge *edge = 0;
 			for (BasicBlock::OutIterator outedge(n); outedge; outedge++)
 				if ((outedge->kind() != Edge::CALL) && !DFS_IS_BACKEDGE(*outedge) && (PST_DFSNUM(outedge->target()) < i)) {
-					ASSERT(edge == NULL);
+					ASSERT(edge);
 					edge = *outedge;
 				} 
 				
 			for (BasicBlock::InIterator inedge(n); inedge; inedge++)
 				if (!DFS_IS_BACKEDGE(*inedge) && (PST_DFSNUM(inedge->source()) < i)) {
-					ASSERT(edge == NULL);
+					ASSERT(!edge);
 					edge = *inedge;
 				}	
-			ASSERT(edge != NULL);
+			ASSERT(edge);
 			
 			Edge *topBracket = PST_BSET(n)->last();
-			ASSERT(topBracket != NULL);
+			ASSERT(topBracket);
 			int currentSize = PST_BSET(n)->count();
 			if (PST_RECENTSIZE(topBracket) != currentSize) {
 				PST_RECENTSIZE(topBracket) = currentSize;
@@ -427,7 +427,7 @@ VirtualCFG *PSTBuilder::getVCFG(PSTree *tree, HashTable<BasicBlock*, BasicBlock*
 	SESERegion *region = tree->data();
 	CFG *cfg = region->getCFG();
 	VirtualCFG *vcfg = new VirtualCFG(false);
-	BasicBlock *entrySucc = NULL, *exitPred = NULL;
+	BasicBlock *entrySucc = 0, *exitPred = 0;
 	dfa::BitSet doneList(cfg->countBB());
 	dfa::BitSet thisregion(cfg->countBB());
 	genstruct::Vector<BasicBlock*> workList,mybbs;
@@ -471,8 +471,8 @@ VirtualCFG *PSTBuilder::getVCFG(PSTree *tree, HashTable<BasicBlock*, BasicBlock*
 			map.put(current, vbb);
 		}
 	}	
-	entrySucc = map.get(region->getEntry()->target(), NULL);
-	exitPred = map.get(region->getExit()->source(), NULL);
+	entrySucc = map.get(region->getEntry()->target(), 0);
+	exitPred = map.get(region->getExit()->source(), 0);
 
 	
 	/* Now, make the edges */
@@ -486,7 +486,7 @@ VirtualCFG *PSTBuilder::getVCFG(PSTree *tree, HashTable<BasicBlock*, BasicBlock*
 	}
 	for (genstruct::Vector<BasicBlock*>::Iterator bb(mybbs); bb; bb++) {
 		if (thisregion.contains(bb->number())) {
-			BasicBlock *vbb = map.get(bb, NULL);
+			BasicBlock *vbb = map.get(bb, 0);
 			ASSERT(vbb);	
 			for (BasicBlock::OutIterator outedge(*bb); outedge && (*outedge != region->getExit()); outedge++) {
 				if (outedge->kind() == Edge::CALL) {
@@ -495,7 +495,7 @@ VirtualCFG *PSTBuilder::getVCFG(PSTree *tree, HashTable<BasicBlock*, BasicBlock*
 					FROM_EDGE(newedge) = outedge;				
 				} else {
 					if (thisregion.contains(outedge->target()->number())) {
-						BasicBlock *vtarget = map.get(outedge->target(), NULL);
+						BasicBlock *vtarget = map.get(outedge->target(), 0);
 						ASSERT(vtarget);
 						Edge *newedge = new Edge(vbb, vtarget, outedge->kind());
 						FROM_EDGE(newedge) = outedge;

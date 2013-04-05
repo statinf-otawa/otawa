@@ -18,6 +18,9 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+//#define HAI_DEBUG
+
 #include <elm/assert.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/util/HalfAbsInt.h>
@@ -28,6 +31,9 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/dcache/ACSBuilder.h>
 #include <otawa/dcache/BlockBuilder.h>
+#include <otawa/dcache/MUSTPERS.h>
+
+#define MUST_DEBUG(x)	//cerr << x << io::endl
 
 namespace otawa { namespace dcache {
 
@@ -70,6 +76,7 @@ void MUSTProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
 	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
 	for(int i = 0; i < accesses.fst; i++) {
 		BlockAccess& acc = accesses.snd[i];
+		MUST_DEBUG("\t\t\tupdating with " << acc);
 		switch(acc.kind()) {
 		case BlockAccess::RANGE:
 			if(acc.first() < acc.last()) {
@@ -141,7 +148,7 @@ Identifier<Vector<ACS *>* > ENTRY_MUST_ACS("otawa::dcache::ENTRY_MUST_ACS", 0);
  * for the cache analysis of @ref ACSBuilder. This option allows to get more precise
  * results but induces more computation time.
  */
-Identifier<bool> DATA_PSEUDO_UNROLLING("otawa::dcache::PSEUDO_UNROLLING", true);
+Identifier<bool> DATA_PSEUDO_UNROLLING("otawa::dcache::PSEUDO_UNROLLING", false);
 
 
 /**
@@ -199,22 +206,20 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 	 * Now that the first/last lblock are detected, execute the analysis.
 	 */
 
-#ifdef DEBUG
-	cout << "[TRACE] Doing line " << line << "\n";
-#endif
-	//if (level == FML_NONE) {
+	if(logFor(LOG_FILE))
+		log << "\tSET " << coll.cacheSet() << io::endl;
+
+	// without persistence
+	if (level == DFML_NONE) {
 		// do only the MUST
 		MUSTProblem mustProb(coll.count(), line, fw, cache, cache->wayCount());
-
-		if(logFor(LOG_FILE))
-			cerr << "\tSET " << coll.cacheSet() << io::endl;
 
 		// computation with unrolling
 		if (unrolling) {
 			UnrollingListener<MUSTProblem> mustList(fw, mustProb);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > mustFp(mustList);
 			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > > mustHai(mustFp, *fw);
-			MUSTProblem::Domain entry_dom(coll.count(), cache->wayCount());
+			MUSTProblem::Domain entry_dom = mustProb.bottom();
 			if(must_entry)
 				entry_dom = *must_entry->get(line);
 			mustHai.solve(0, &entry_dom);
@@ -224,9 +229,11 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
 				for (CFG::BBIterator bb(cfg); bb; bb++) {
-					MUST_ACS(bb)->set(line, new MUSTProblem::Domain(*mustList.results[cfg->number()][bb->number()]));
-					if(logFor(LOG_BLOCK))
+					MUST_ACS(bb)->set(line, new ACS(*mustList.results[cfg->number()][bb->number()]));
+					if(logFor(LOG_BLOCK)) {
 						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
+						//log << "\t\t\t" << *bb << ": " << *mustList.results[cfg->number()][bb->number()] << io::endl;
+					}
 				}
 			}
 
@@ -237,11 +244,15 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			DefaultListener<MUSTProblem> mustList(fw, mustProb);
 			DefaultFixPoint<DefaultListener<MUSTProblem> > mustFp(mustList);
 			util::HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTProblem> > > mustHai(mustFp, *fw);
-			MUSTProblem::Domain entry_dom(coll.count(), cache->wayCount());
-			if(must_entry)
+			MUSTProblem::Domain entry_dom  = mustProb.entry();
+			if(must_entry) {
 				entry_dom = *must_entry->get(line);
+				if(logFor(LOG_CFG))
+					log << "\t\tusing user entry: " << *must_entry->get(line) << io::endl;
+			}
+			if(logFor(LOG_CFG))
+				log << "\t\tentry = " << entry_dom << io::endl;
 			mustHai.solve(0, &entry_dom);
-
 
 			// Store the resulting ACS into the properties
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
@@ -249,49 +260,76 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 					log << "\t\tCFG " << *cfg << io::endl;
 				for (CFG::BBIterator bb(cfg); bb; bb++) {
 					ASSERT(line == coll.cacheSet());
-					MUST_ACS(bb)->set(line, new MUSTProblem::Domain(*mustList.results[cfg->number()][bb->number()]));
+					MUST_ACS(bb)->set(line, new ACS(*mustList.results[cfg->number()][bb->number()]));
 					if(logFor(LOG_BLOCK))
 						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
 				}
 			}
 		}
-	/*} else {
+
+	// with persistence
+	}
+	else {
+
+		// with unrolling
 		if (unrolling) {
 			// Do combined MUST/PERS analysis
-			MUSTPERS mustpers(lbset->cacheBlockCount(), lbset, fw, cache, cache->wayCount());
+			MUSTPERS mustpers(coll.count(), &coll, fw, cache, cache->wayCount());
 			UnrollingListener<MUSTPERS> mustpersList( fw, mustpers);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > mustpersFp(mustpersList);
 			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
 			mustHai.solve();
 
 			// Store.
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
+			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+				if(logFor(LOG_CFG))
+					log << "\t\tCFG " << *cfg << io::endl;
 				for (CFG::BBIterator bb(cfg); bb; bb++) {
-					MUSTProblem::Domain &must= mustpersList.results[cfg->number()][bb->number()]->getMust();
-					PERSProblem::Domain &pers= mustpersList.results[cfg->number()][bb->number()]->getPers();
-					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(must));
-					CACHE_ACS_PERS(bb)->add(new PERSProblem::Domain(pers));
-
+					MUSTProblem::Domain &must = mustpersList.results[cfg->number()][bb->number()]->getMust();
+					PERSProblem::Domain &pers = mustpersList.results[cfg->number()][bb->number()]->getPers();
+					MUST_ACS(bb)->set(line, new ACS(must));
+					if(logFor(LOG_BLOCK))
+						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
+					PERS_ACS(bb)->set(line, new ACS(pers.getWhole()));
+					acs_stack_t& stack = LEVEL_PERS_ACS(bb)->item(line);
+					int len = pers.length();
+					stack.allocate(len);
+					for(int i = 0; i < len; i++)
+						stack[i] = new ACS(pers.getItem(i));
 				}
-		} else {
+			}
+		}
+
+		// without unrolling
+		else {
 
 			// Do combined MUST/PERS analysis
-			MUSTPERS mustpers(lbset->cacheBlockCount(), lbset, fw, cache, cache->wayCount());
+			MUSTPERS mustpers(coll.count(), &coll, fw, cache, cache->wayCount());
 			DefaultListener<MUSTPERS> mustpersList( fw, mustpers);
 			DefaultFixPoint<DefaultListener<MUSTPERS> > mustpersFp(mustpersList);
 			util::HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
 			mustHai.solve();
 
 			// Store.
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
+			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+				if(logFor(LOG_CFG))
+					log << "\t\tCFG " << *cfg << io::endl;
 				for (CFG::BBIterator bb(cfg); bb; bb++) {
 					MUSTProblem::Domain &must= mustpersList.results[cfg->number()][bb->number()]->getMust();
 					PERSProblem::Domain &pers= mustpersList.results[cfg->number()][bb->number()]->getPers();
-					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(must));
-					CACHE_ACS_PERS(bb)->add(new PERSProblem::Domain(pers));
+					MUST_ACS(bb)->set(line, new ACS(must));
+					if(logFor(LOG_BLOCK))
+						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
+					PERS_ACS(bb)->set(line, new ACS(pers.getWhole()));
+					acs_stack_t& stack = LEVEL_PERS_ACS(bb)->item(line);
+					int len = pers.length();
+					stack.allocate(len);
+					for(int i = 0; i < len; i++)
+						stack[i] = new ACS(pers.getItem(i));
+				}
 			}
 		}
-	}*/
+	}
 }
 
 
@@ -316,13 +354,22 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 	// prepare the template of the final vector
 	typedef genstruct::Vector<ACS *> acs_result_t;
 	acs_result_t temp(cache->rowCount());
-	for(int i = 0; i < cache->rowCount(); i++)
+	typedef acs_stack_table_t level_acs_t;
+	level_acs_t level_temp(cache->rowCount());
+	for(int i = 0; i < cache->rowCount(); i++) {
 		temp.add(0);
+		level_temp.add(0);
+	}
 
 	// Build the vectors for receiving the ACS...
 	for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-		for (CFG::BBIterator bb(cfg); bb; bb++)
+		for (CFG::BBIterator bb(cfg); bb; bb++) {
 			MUST_ACS(bb) = new acs_result_t(temp);
+			if(level != DFML_NONE) {
+				PERS_ACS(bb) = new acs_result_t(temp);
+				LEVEL_PERS_ACS(bb) = new acs_stack_table_t(level_temp);
+			}
+		}
 
 	// process block collections
 	const BlockCollection *colls = DATA_BLOCK_COLLECTION(fw);
@@ -429,5 +476,486 @@ void ACS::print(elm::io::Output &output) const {
  * Set the ages of the given ACS to the current one.
  * @param acs	ACS to set.
  */
+
+
+/**
+ * @class PERSProblem
+ *
+ * Problem for computing the PERS ACS of L-blocks.
+ * This implements Ferdinand's Persistence analysis.
+ */
+
+
+
+PERSProblem::PERSProblem(const int _size, const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A)
+:	callstate(_size, _A),
+	lbset(_lbset),
+	fw(_fw),
+	cache(_cache),
+	bot(_size, _A),
+	ent(_size, _A),
+	line(lbset->cacheSet()),
+	cfg(0)
+{
+		bot.setToBottom();
+		ent.empty();
+#ifdef PERFTEST
+		bot.enterContext();
+		ent.enterContext();
+#endif
+
+}
+
+PERSProblem::~PERSProblem() {
+
+}
+const PERSProblem::Domain& PERSProblem::bottom(void) const {
+		return bot;
+}
+
+const PERSProblem::Domain& PERSProblem::entry(void) const {
+		return ent;
+}
+
+void PERSProblem::update(Domain& out, const Domain& in, BasicBlock* bb)  {
+		cerr << "FATAL: PERSProblem is not to be used directly, use MUSTPERS instead.\n";
+		ASSERT(false);
+}
+
+
+elm::io::Output& operator<<(elm::io::Output& output, const PERSProblem::Domain& dom) {
+	dom.print(output);
+	return output;
+}
+
+
+/**
+ * Consider that an unknown access is performed and, therefore,
+ * all blocks must be aged.
+ */
+void PERSProblem::Item::ageAll(void) {
+	for (int i = 0; i < size; i++)
+		if (age[i] >= 0 && age[i] < A)
+			age[i]++;
+}
+
+
+/**
+ * Consider that an unknown access is performed and, therefore,
+ * all blocks must be aged.
+ */
+void PERSProblem::Domain::ageAll(void) {
+	whole.ageAll();
+	for(int i = 0; i < data.count(); i++)
+		data[i]->ageAll();
+}
+
+
+/**
+ * @class MUSTPER
+ * Describes the ACS used in combined MUST-persistence problem.
+ * This combination slightly improve the speed of the analysis but also allows to work-around
+ * a bug of the original persistence analysis.
+ */
+
+
+/**
+ * @class MUSTPERS::Domain
+ * ACS of the MUSTPERS problem.
+ */
+
+
+/**
+ * Print the MUSTPERS ACS.
+ * @param output	Stream to output to.
+ */
+void MUSTPERS::Domain::print(elm::io::Output &output) const {
+	output << "PERS=[ ";
+	pers.print(output);
+	output << "] MUST=[ ";
+	must.print(output);
+	output << "]";
+}
+
+
+MUSTPERS::MUSTPERS(const int _size, const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A)
+:	mustProb(_size, _lbset->count(), _fw, _cache, _A),
+	persProb(_size, _lbset, _fw, _cache, _A),
+	bot(_size, _A),
+	ent(_size, _A),
+	set(_lbset->cacheSet())
+{
+
+		persProb.assign(bot.pers, persProb.bottom());
+		mustProb.assign(bot.must, mustProb.bottom());
+
+		persProb.assign(ent.pers, persProb.entry());
+		mustProb.assign(ent.must, mustProb.entry());
+}
+
+
+const MUSTPERS::Domain& MUSTPERS::bottom(void) const {
+		return bot;
+}
+const MUSTPERS::Domain& MUSTPERS::entry(void) const {
+		return ent;
+}
+
+void MUSTPERS::update(Domain& out, const Domain& in, BasicBlock* bb) {
+	assign(out, in);
+	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
+	for(int i = 0; i < accesses.fst; i++) {
+		BlockAccess& acc = accesses.snd[i];
+		MUST_DEBUG("\t\t\tupdating with " << acc);
+		switch(acc.kind()) {
+		case BlockAccess::RANGE:
+			if(acc.first() < acc.last()) {
+				if(set < acc.first() || set > acc.last())
+					break;
+			}
+			else if( acc.first() < set || set < acc.last())
+				break;
+				/* no break */
+		case BlockAccess::ANY:
+			out.ageAll();
+			break;
+		case BlockAccess::BLOCK:
+			if(acc.block().set() == set)
+				out.inject(acc.block().index());
+			break;
+		}
+	}
+}
+
+elm::io::Output& operator<<(elm::io::Output& output, const MUSTPERS::Domain& dom) {
+	dom.print(output);
+	return(output);
+}
+
+
+/**
+ * @class PERSProblem
+ * Problem for the data cache persistence analysis.
+ */
+
+
+/**
+ * @class PERSProblem::Item
+ * ACS for the multi-level data cache pêrsistence analysis. Items are composed on each level.
+ */
+
+
+/**
+ * Perform join on persistent ACS.
+ * @param	dom		Domain to join with.
+ */
+void PERSProblem::Item::lub(const PERSProblem::Item &dom) {
+	ASSERT((A == dom.A) && (size == dom.size));
+	for (int i = 0; i < size; i++)
+		if ((age[i] == -1) || ((age[i] < dom.age[i]) && (dom.age[i] != -1)) )
+			age[i] = dom.age[i];
+}
+
+
+/**
+ * Test if two ACS are equals.
+ * @param dom	ACS to test with.
+ * @return		True if they are equals, false else.
+ */
+bool PERSProblem::Item::equals(const Item &dom) const {
+	ASSERT((A == dom.A) && (size == dom.size));
+	for (int i = 0; i < size; i++)
+		if (age[i] != dom.age[i])
+			return false;
+	return true;
+}
+
+
+/**
+ * Consider that an access to the designed block is performed.
+ * @param must		Must ACS (useful to work around a bug in the initial persistent ACS implementation).
+ * @param id		Identifier of the injected block.
+ */
+void PERSProblem::Item::inject(MUSTProblem::Domain *must, const int id) {
+	if (must->contains(id)) {
+		for (int i = 0; i < size; i++)
+			if ((age[i] < age[id]) && (age[i] != -1) && (age[i] != A))
+				age[i]++;
+		age[id] = 0;
+	}
+	else
+		for (int i = 0; i < size; i++)
+			if ((age[i] != -1) && (age[i] != A))
+				age[i]++;
+	age[id] = 0;
+}
+
+
+/**
+ * Change the age of the designed block considering the given damage to the ACS.
+ * @param id		Block identifier.
+ * @param damage	Number of aging to apply.
+ */
+void PERSProblem::Item::addDamage(const int id, int damage) {
+	ASSERT((id >= 0) && (id < size));
+	if (age[id] == -1)
+		return;
+	age[id] += damage;
+	if (age[id] > A)
+		age[id] = A;
+}
+
+
+/**
+ * Assignement of persistence analysis ACS.
+ * @param src	Assigning domain.
+ * @return		Assigned domain.
+ */
+PERSProblem::Domain& PERSProblem::Domain::operator=(const Domain &src) {
+	if (src.isBottom)
+		setToBottom();
+	else {
+		whole = src.whole;
+		isBottom = false;
+
+		// assign ACS whose place is already available
+		int sdl = src.data.length();
+		int dl = data.length();
+		int minl = (sdl > dl) ? dl : sdl;
+		for (int i = 0; i < minl; i++)
+			*data[i] = *src.data[i];
+
+		// extend the vector and add the missing ACS
+		// TODO	if the target size is smaller that the source one, some ACS needs to be deleted before the vector size reduction
+		data.setLength((sdl > dl) ? dl : sdl);
+		for (int i = dl; i < sdl; i++)
+			data.add(new Item(*src.data[i]));
+	}
+	return *this;
+}
+
+
+/**
+ * Compute the join of the current value with the given one
+ * and the result is left in the current ACS.
+ * @param dom	ACS to join with.
+ */
+void PERSProblem::Domain::lub(const Domain &dom) {
+
+	// 1. lub(anything, bottom) == anything
+	if(dom.isBottom)
+		return;
+	if(isBottom) {
+		for (int i = 0; i < dom.data.length(); i++)
+			data.add(new Item(*dom.data[i]));
+		whole = dom.whole;
+		isBottom = false;
+		return;
+	}
+
+	 // 2. lub(dom1,dom2) where dom1 and dom2 has the same size, do the LUB of each corresponding item.
+	 // 3. lub(dom1,dom2) where dom1 has less items than dom2: we discard  items of dom2 (starting from outer-most loop)
+	// until it has the same size as dom1, then apply rule 2.
+	int dl = data.length();
+	int ddl = dom.data.length();
+	int length = (dl < ddl) ? dl : ddl;
+	for (int i = dl - 1, j = ddl - 1, k = 0; k < length; i--, j--, k++)
+		data[i]->lub(*dom.data[j]);
+	for (int i = 0; i < dl - length; i++)
+		data.remove(0);
+	whole.lub(dom.whole);
+}
+
+
+
+
+/**
+ * Special LUB: do the lub of each Item in current domain with
+ * item passed as parameter. Used for the partial analysis
+ */
+void PERSProblem::Domain::lub(const Item &item) {
+	 for (int i = 0; i < data.length(); i++)
+	 	data[i]->lub(item);
+	 whole.lub(item);
+}
+
+
+/**
+ * Test if two ACS are equals.
+ * @param dom	ACS to compare with.
+ * @return		True if they are equal, false else.
+ */
+bool PERSProblem::Domain::equals(const Domain &dom) const {
+	ASSERT(!isBottom && !dom.isBottom);
+	for (int i = 0; i < dom.data.length(); i++)
+		if (!data[i]->equals(*dom.data[i]))
+			return false;
+	return (whole.equals(dom.whole) && (isBottom == dom.isBottom));
+}
+
+
+/**
+ * Empty the domain.
+ */
+void PERSProblem::Domain::empty(void) {
+	for (int i = 0; i < data.length(); i++)
+		delete data[i];
+	data.clear();
+	whole.empty();
+	isBottom = false;
+}
+
+
+/**
+ * Set the bottom value in the ACS.
+ */
+void PERSProblem::Domain::setToBottom(void) {
+	for (int i = 0; i < data.length(); i++)
+		delete data[i];
+	data.clear();
+	whole.empty();
+	isBottom = true;
+}
+
+
+/**
+ * Consider that the designed block is accessed.
+ * @param must	Must ACS (useful to work-around a bug in the original persistence analysis).
+ * @param id	Identity of the accessed block.
+ */
+void PERSProblem::Domain::inject(MUSTProblem::Domain *must, const int id) {
+	ASSERT(!isBottom);
+	for (int i = 0; i < data.length(); i++)
+		data[i]->inject(must, id);
+	whole.inject(must, id);
+}
+
+
+/**
+ * In partial analysis, add age damage to the given block.
+ * @param id		Identity of the aged block.
+ * @param damage	Damage value.
+ */
+void PERSProblem::Domain::addDamage(const int id, int damage) {
+	ASSERT(!isBottom);
+	for (int n = 0; n < data.length(); n++)
+		data[n]->addDamage(id, damage);
+	whole.addDamage(id, damage);
+}
+
+
+/**
+ * Refresh a block to the given age (if required).
+ * @param id		Refreshed block.
+ * @param newage	Maximal new age of the block.
+ */
+void PERSProblem::Domain::refresh(const int id, int newage) {
+	ASSERT(!isBottom);
+	for (int n = 0; n < data.length(); n++)
+		data[n]->refresh(id, newage);
+	whole.refresh(id, newage);
+}
+
+
+/**
+ * Display the ACS.
+ * @param output	Stream to output to.
+ */
+void PERSProblem::Domain::print(elm::io::Output &output) const {
+	bool first = true;
+	if (isBottom) {
+		output << "BOTTOM";
+		return;
+	}
+	output << "(W=";
+	whole.print(output);
+	output << ", ";
+	for (int i = 0; i < data.length(); i++) {
+		if (!first)
+			output << "|";
+		data[i]->print(output);
+		first = false;
+	}
+	output << ")";
+}
+
+
+/**
+ * Called when a loop context is entered to add a level.
+ */
+void PERSProblem::Domain::enterContext(void) {
+	ASSERT(!isBottom);
+	Item item(whole.getSize(), whole.getA());
+	item.empty();
+	data.push(new Item(item));
+
+}
+
+
+/**
+ * Called when a loop context is left to remove the top-level.
+ */
+void PERSProblem::Domain::leaveContext(void) {
+	ASSERT(!isBottom);
+	Item *ptr = data.pop();
+	delete ptr;
+}
+
+
+static SilentFeature::Maker<ACSBuilder> maker;
+/**
+ * Feature ensuring that the persistence analysis has been performed.
+ *
+ * @p Configuration
+ * @li @ref DATA_PSEUDO_UNROLLING
+ * @li @ref DATA_FIRSTMISS_LEVEL
+ * @li @ref ENTRY_PERS_ACS
+ *
+ * @p Properties
+ * @li @ref PERS_ACS
+ * @li @ref LEVEL_PERS_ACS
+ * @ingroup dcache
+ */
+SilentFeature PERS_ACS_FATURE("otawa::dcache::PERS_ACS_FATURE", maker);
+
+
+/**
+ * This identifier gives an array of ACS for the persistence analysis.
+ * The array contains as many ACS as set in the analyzed cache, one
+ * for each set. The blocks in the ACS have an age between -1 (not loaded in the cache)
+ * and the associativity of the cache (loaded but also wiped out).
+ *
+ * @p Feature
+ * @li @ref PERS_ACS_FEATURE
+ *
+ * @p Hooks
+ * @li @ref BasicBlock
+ *
+ * @ingroup dcache
+ */
+Identifier<genstruct::Vector<ACS *> *> PERS_ACS("otawa::dcache::PERS_ACS", 0);
+
+
+/**
+ * This configuration property allows to provide an non-empty ACS
+ * for the persistence analysis.
+ *
+ * @p Feature
+ * @li @ref PERS_ACS_FEATURE
+ *
+ * @ingroup dcache
+ */
+Identifier<genstruct::Vector<ACS *> *> ENTRY_PERS_ACS("otawa::dcache::ENTRY_PERS_ACS", 0);
+
+
+/**
+ * This identifier allows to get an array on a stack of ACS,
+ * one entry for each set of the analyzed cache. Each stack item in the stack
+ * represent the persistent analysis ACS of the loops embedding the basic block this
+ * property is hooked to.
+ *
+ * @ingroup dcache
+ */
+Identifier<acs_stack_table_t *> LEVEL_PERS_ACS("otawa::dcache::LEVEL_PERS_ACS", 0);
 
 } }	// otawa::dcache

@@ -176,7 +176,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 
 				/* add exit edges destinations to the worklist */
 
-				for (genstruct::Vector<Edge*>::Iterator exitedge(*EXIT_LIST(current)); exitedge; exitedge++) {
+				for (genstruct::Vector<Edge*>::Iterator exitedge(**EXIT_LIST(current)); exitedge; exitedge++) {
 					if (!doneList.contains(exitedge->target())) {
 						workList.put(exitedge->target());
 						doneList.add(exitedge->target());

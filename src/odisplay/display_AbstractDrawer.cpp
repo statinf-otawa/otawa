@@ -111,7 +111,7 @@ AbstractDrawer::AbstractDrawer(void):
  * Build a drawer with the given driver.
  * @param driver	Driver to use.
  */
-AbstractDrawer::AbstractDrawer(Driver& driver) {
+AbstractDrawer::AbstractDrawer(Driver& driver): kind(OUTPUT_DOT) {
 	graph = driver.newGraph();
 	ASSERT(graph);
 }
@@ -136,12 +136,10 @@ void AbstractDrawer::draw(void) {
 		OUTPUT_KIND(graph) = kind;
 	
 	// Setup the vertices and edges
-	for(FragTable<Vertex *>::Iterator vertex(vertices); vertex; vertex++) {
+	for(FragTable<Vertex *>::Iterator vertex(vertices); vertex; vertex++)
 		vertex->setup();
-        }
-	for(FragTable<Edge *>::Iterator edge(edges); edge; edge++) {
+	for(FragTable<Edge *>::Iterator edge(edges); edge; edge++)
 		edge->setup();
-        }
 	
 	// Draw
 	graph->display();

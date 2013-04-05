@@ -41,19 +41,6 @@ typedef enum graphviz_layout_t {
 extern Identifier<int> GRAPHVIZ_LAYOUT;
 
 
-// Output property
-/*typedef enum graphviz_output_t {
-	OUTPUT_TEXT,
-	OUTPUT_PS,
-	OUTPUT_PNG,
-	OUTPUT_SVG
-} graphviz_output_t;
-extern Identifier<int> GRAPHVIZ_OUTPUT;*/
-
-
-// File property
-//extern Identifier<elm::CString> GRAPHVIZ_FILE;
-
 } } // otawa::display
 
 #endif // OTAWA_DISPLAY_GRAPHVIZ_H

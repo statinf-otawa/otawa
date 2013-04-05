@@ -117,7 +117,7 @@ void WideningListener<Problem>::blockInterpreted(const WideningFixPoint<Widening
 		prob.lub(*results[cfgnumber][bbnumber], in);
 		
 		if (BB_OUT_STATE(bb) != NULL)
-			prob.lub(*BB_OUT_STATE(bb), out);
+			prob.lub(**BB_OUT_STATE(bb), out);
 
 		if (store_out)
 		  prob.lub(*results_out[cfgnumber][bbnumber], out);

@@ -26,6 +26,7 @@
 #include <otawa/dcache/ACSMayBuilder.h>
 #include <otawa/cache/categories.h>
 #include <otawa/dcache/features.h>
+#include <otawa/dcache/MUSTPERS.h>
 
 namespace otawa { namespace dcache {
 
@@ -97,7 +98,8 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 
 	// prepare problem
 	int line = coll.cacheSet();
-	MUSTProblem::Domain dom(coll.count(), cache->wayCount());
+	MUSTPERS::Domain dom(coll.count(), cache->wayCount());
+	acs_stack_t empty_stack;
 
 	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
 	ASSERT(cfgs);
@@ -105,8 +107,21 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 		for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++) {
 
 			// get the input domain
-			genstruct::Vector<ACS *> *ins = MUST_ACS(bb);
-			dom.set(*ins->get(line));
+			acs_table_t *ins = MUST_ACS(bb);
+			dom.setMust(*ins->get(line));
+			acs_table_t *pers = PERS_ACS(bb);
+			bool has_pers = pers;
+			if(!has_pers)
+				dom.getPers().empty();
+			else {
+				acs_stack_t *stack;
+				acs_stack_table_t *stack_table = LEVEL_PERS_ACS(bb);
+				if(stack_table)
+					stack = &stack_table->item(line);
+				else
+					stack = &empty_stack;
+				dom.getPers().set(*pers->get(line), *stack);
+			}
 
 			// explore the adresses
 			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
@@ -121,13 +136,42 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					// initialization
 					CATEGORY(b) = cache::NOT_CLASSIFIED;
 					ACS *may = 0;
-					if(MAY_ACS(bb) != 0) {
+					if(MAY_ACS(bb) != 0)
 						may = MAY_ACS(bb)->get(line);
 
-					// in MUST
-					if(dom.contains(b.block().index()))
+					// in MUST ?
+					if(dom.getMust().contains(b.block().index())) {
 						CATEGORY(b) = cache::ALWAYS_HIT;
-					else if(may && !may->contains(b.block().index()))
+						continue;
+					}
+
+					// persistent ?
+					if(has_pers) {
+
+						// find the initial header
+						BasicBlock *header;
+						if (LOOP_HEADER(bb))
+							header = bb;
+					  	else
+					  		header = ENCLOSING_LOOP_HEADER(bb);
+
+						// look in the different levels
+						for(int k = dom.getPers().length() - 1; k >= 0 && header; k--) {
+							if(dom.getPers().isPersistent(b.block().index(), k)) {
+								CATEGORY(b) = FIRST_MISS;
+								CATEGORY_HEADER(b) = header;
+								break;
+							}
+							header = ENCLOSING_LOOP_HEADER(header);
+						}
+
+						// done ?
+						if(CATEGORY_HEADER(b))
+							continue;
+					}
+
+					// out of MAY ?
+					if(may && !may->contains(b.block().index()))
 						CATEGORY(b) = cache::ALWAYS_MISS;
 
 					// update state
@@ -160,22 +204,6 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 			}
 		}
 
-	// Use the results to set the categorization
-	/*for (LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
-		if ((lblock->id() == 0) || (lblock->id() == lbset->count() - 1))
-			continue;
-
-		if (LBLOCK_ISFIRST(lblock)) {
-		} else {
-			CATEGORY(lblock) = ALWAYS_MISS;
-		}
-
-		// record stats
-		if(cstats)
-			cstats->add(CATEGORY(lblock));
-	}
-
-*/
 }
 
 

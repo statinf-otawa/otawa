@@ -36,59 +36,37 @@ namespace otawa {
 
 template <class Listener>
 class DefaultFixPoint {
-	
-	// Types
-	public:
+public:
 	typedef typename Listener::Problem Problem;
 	typedef typename Problem::Domain Domain;
-		
-	private:	
-	
 
-	 
-	// Fields
+private:
 	static Identifier<Domain*> STATE;	
 	Problem& prob;
 	Listener  &list;
 	util::HalfAbsInt<DefaultFixPoint> *ai;
 	
-	public:
-	// FixPointState class
+public:
 	class FixPointState {
 		public:
 		Domain headerState;
-		inline FixPointState(const Domain &bottom): headerState(bottom){
-		}
+		inline FixPointState(const Domain &bottom): headerState(bottom) { }
 	};
 	
-	inline FixPointState *newState(void) {
-		return(new FixPointState(bottom()));
-	}
+	inline DefaultFixPoint(Listener & _list) :prob(_list.getProb()),list(_list),ai(NULL) { }
+	inline ~DefaultFixPoint() { }
 
-	
-	inline DefaultFixPoint(Listener & _list)
-	:prob(_list.getProb()),list(_list),ai(NULL)
-	{
-	}	
-	// Destructor
-	inline ~DefaultFixPoint() {
-	}
-	
-	// Accessors
-	
-	// Mutators 
+	inline FixPointState *newState(void) { return(new FixPointState(bottom())); }
 	inline void init(util::HalfAbsInt<DefaultFixPoint> *_ai);
-	
-	// FixPoint function
 	void fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const;
 	
-	// Edge marking functions
+	// edge marking functions
 	inline void markEdge(PropList *e, const Domain &s);
 	inline void unmarkEdge(PropList *e);
 	inline void updateEdge(Edge *edge, Domain &dom);
 	inline Domain *getMark(PropList *e);
 	
-	// Problem wrapper functions
+	// problem wrapper functions
 	inline const Domain& bottom(void) const;
 	inline const Domain& entry(void) const;
 	inline void lub(Domain &a, const Domain &b) const;
@@ -118,12 +96,11 @@ void DefaultFixPoint<Listener >::fixPoint(BasicBlock *bb, bool &fixpoint, Domain
 		fixpoint = false;
 		
 		
-		if (firstTime) {
+		if (firstTime)
 			assign(newHeaderState, ai->entryEdgeUnion(bb));
-		} else {
+		else {
 			assign(newHeaderState, ai->entryEdgeUnion(bb));
 			prob.lub(newHeaderState, ai->backEdgeUnion(bb));
-			
 			if (prob.equals(newHeaderState, fpstate->headerState))
 				fixpoint = true;
 		}
@@ -134,64 +111,55 @@ void DefaultFixPoint<Listener >::fixPoint(BasicBlock *bb, bool &fixpoint, Domain
 	
 template < class Listener >	
 inline void DefaultFixPoint<Listener>::markEdge(PropList *e, const Domain &s) {
-	
-		Domain tmp(bottom());
-		/*
-		 * Because this FixPoint unrolls the first iteration of each loop, 
-		 * the loop-exit-edges will be marked at least 2 times 
-		 * (one time for 1st iteration, and one time for others iterations),
-		 * so when we mark the edges for the 2nd time we need to merge (lub)
-		 * with the existing value from the 1st iteration, instead of overwriting it.
-		 */
-		if (STATE(e) == NULL)
-			STATE(e) = new Domain(bottom());
-		
-/*		prob.lub(tmp, *STATE(e)); */ 
-		prob.lub(*STATE(e), s);
-		prob.lub(tmp, s);
-		ASSERT(prob.equals(tmp,s));
-		
-	}
+	Domain tmp(bottom());
+	/*
+	 * Because this FixPoint unrolls the first iteration of each loop,
+	 * the loop-exit-edges will be marked at least 2 times
+	 * (one time for 1st iteration, and one time for others iterations),
+	 * so when we mark the edges for the 2nd time we need to merge (lub)
+	 * with the existing value from the 1st iteration, instead of overwriting it.
+	 */
+	if (STATE(e) == NULL)
+		STATE(e) = new Domain(bottom());
+	prob.lub(**STATE(e), s);
+	prob.lub(tmp, s);
+	ASSERT(prob.equals(tmp,s));
+}
 	
 template < class Listener >	
 inline void DefaultFixPoint<Listener >::unmarkEdge(PropList *e) {
-		delete STATE(e);
-		STATE(e) = NULL;
+	delete STATE(e);
+	STATE(e) = NULL;
 }
 
 template < class Listener >		
 inline typename DefaultFixPoint<Listener>::Domain *DefaultFixPoint<Listener >::getMark(PropList *e) {
-		return(STATE(e));
+	return(STATE(e));
 }
-	
-	
-	/*
-	 * Wrappers for the Problem methods and types
-	 */
-	 
+
 template < class Listener >	
 inline const typename DefaultFixPoint<Listener>::Domain& DefaultFixPoint<Listener >::bottom(void) const {
-		return(prob.bottom());
+	return(prob.bottom());
 }
 
 template < class Listener >		
 inline const typename DefaultFixPoint<Listener>::Domain& DefaultFixPoint<Listener >::entry(void) const {
-		return(prob.entry());
+	return(prob.entry());
 }
 
 template < class Listener >	
 inline void DefaultFixPoint<Listener >::lub(typename Problem::Domain &a, const typename Problem::Domain &b) const {
-		prob.lub(a,b);
+	prob.lub(a,b);
 }
 
 template < class Listener >		
 inline void DefaultFixPoint<Listener >::assign(typename Problem::Domain &a, const typename Problem::Domain &b) const {
-		prob.assign(a,b);
+	prob.assign(a,b);
 }
 
 template < class Listener >		
 inline bool DefaultFixPoint<Listener >::equals(const typename Problem::Domain &a, const typename Problem::Domain &b) const {
-		return (prob.equals(a,b));
+	return (prob.equals(a,b));
 }
 
 template < class Listener > 
@@ -201,30 +169,30 @@ inline void DefaultFixPoint<Listener>::updateEdge(Edge *edge, Domain &dom) {
 
 template < class Listener >	
 inline void DefaultFixPoint<Listener>::update(Domain &out, const typename Problem::Domain &in, BasicBlock* bb)  {
-		prob.update(out,in,bb);
+	prob.update(out,in,bb);
 }
 	
 template < class Listener >	
 inline void DefaultFixPoint<Listener>::blockInterpreted(BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
-		list.blockInterpreted(this, bb, in, out, cur_cfg, callStack);
+	list.blockInterpreted(this, bb, in, out, cur_cfg, callStack);
 }
 
 template < class Listener >	
 inline void DefaultFixPoint<Listener >::fixPointReached(BasicBlock* bb) const {
-		list.fixPointReached(this, bb);
+	list.fixPointReached(this, bb);
 }
 	
 template < class Listener >	
 inline void DefaultFixPoint<Listener >::enterContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const {
-		prob.enterContext(dom, bb, ctx);
+	prob.enterContext(dom, bb, ctx);
 }
 	
 template < class Listener >	
 inline void DefaultFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const {
-		prob.leaveContext(dom, bb, ctx);
+	prob.leaveContext(dom, bb, ctx);
 }
 	
 	
-}
+}	// otawa
 
 #endif /*UTIL_FIRSTUNROLLINGFIXPOINT_H_*/

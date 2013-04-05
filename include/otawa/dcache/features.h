@@ -44,11 +44,12 @@ typedef enum data_fmlevel_t {
 // ACS class
 class ACS {
 public:
-	inline ACS(const int _size, const int _A) : A (_A), size(_size), age(new int [size])
-		{ for (int i = 0; i < size; i++) age[i] = -1; }
+	inline ACS(const int _size, const int _A, int init = -1) : A (_A), size(_size), age(new int [size])
+		{ for (int i = 0; i < size; i++) age[i] = init; }
 	inline ~ACS() { delete [] age; }
 
-	inline int getSize(void) { return size; }
+	inline int getSize(void) const { return size; }
+	inline int getA(void) const { return A; }
 
 	inline ACS(const ACS &source) : A(source.A), size(source.size), age(new int [size])
 		{ for (int i = 0; i < size; i++) age[i] = source.age[i]; }
@@ -152,6 +153,12 @@ private:
 inline io::Output& operator<<(io::Output& out, const BlockAccess& acc) { acc.print(out); return out; }
 inline io::Output& operator<<(io::Output& out, const Pair<int, BlockAccess *>& v) { return out; }
 
+// useful typedefs
+typedef genstruct::AllocatedTable<ACS *> acs_stack_t;
+typedef genstruct::Vector<ACS *> acs_table_t;
+typedef genstruct::Vector<acs_stack_t> acs_stack_table_t;
+
+
 // block analysis
 extern SilentFeature DATA_BLOCK_FEATURE;
 extern Identifier<Pair<int, BlockAccess *> > DATA_BLOCKS;
@@ -160,8 +167,12 @@ extern Identifier<Address> INITIAL_SP;
 
 // MUST analysis
 extern SilentFeature MUST_ACS_FEATURE;
-extern Identifier<genstruct::Vector<ACS *> *> MUST_ACS;
-extern Identifier<genstruct::Vector<ACS *> *> ENTRY_MUST_ACS;
+extern SilentFeature PERS_ACS_FEATURE;
+extern Identifier<acs_table_t *> MUST_ACS;
+extern Identifier<acs_table_t *> ENTRY_MUST_ACS;
+extern Identifier<acs_table_t *> PERS_ACS;
+extern Identifier<acs_table_t *> ENTRY_PERS_ACS;
+extern Identifier<acs_stack_table_t *> LEVEL_PERS_ACS;
 extern Identifier<bool> DATA_PSEUDO_UNROLLING;
 extern Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL;
 

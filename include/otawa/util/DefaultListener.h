@@ -21,8 +21,8 @@
  *	02110-1301  USA
  */
 
-#ifndef UTIL_DEFAULTLISTENER_H_
-#define UTIL_DEFAULTLISTENER_H_
+#ifndef OTAWA_UTIL_DEFAULTLISTENER_H_
+#define OTAWA_UTIL_DEFAULTLISTENER_H_
 
 #include <otawa/util/DefaultFixPoint.h>
 #include <otawa/cfg/CFG.h>
@@ -34,15 +34,10 @@
 
 namespace otawa {
 
-
-
 template <class P>
 class DefaultListener {
+public:
 
-  public:
-  
-
-  	
 	typedef P Problem;
 	
 	static Identifier<typename Problem::Domain*> BB_OUT_STATE; 
@@ -50,7 +45,7 @@ class DefaultListener {
 	typename Problem::Domain ***results;
 	typename Problem::Domain ***results_out;
 	
- DefaultListener(WorkSpace *_fw, Problem& _prob, bool _store_out = false) : fw(_fw), prob(_prob), store_out(_store_out) {
+	DefaultListener(WorkSpace *_fw, Problem& _prob, bool _store_out = false) : fw(_fw), prob(_prob), store_out(_store_out) {
 		const CFGCollection *col = INVOLVED_CFGS(fw);
 		results = new typename Problem::Domain**[col->count()];
 		if (store_out)
@@ -94,11 +89,10 @@ class DefaultListener {
 		return(prob);
 	}
 			
-  private:	
+private:
 	WorkSpace *fw;
 	Problem& prob;	
 	bool store_out;
- 
 			
 };
 
@@ -117,12 +111,12 @@ void DefaultListener<Problem>::blockInterpreted(const DefaultFixPoint<DefaultLis
 		prob.lub(*results[cfgnumber][bbnumber], in);
 		
 		if (BB_OUT_STATE(bb) != NULL)
-			prob.lub(*BB_OUT_STATE(bb), out);
+			prob.lub(**BB_OUT_STATE(bb), out);
 
 		if (store_out)
 		  prob.lub(*results_out[cfgnumber][bbnumber], out);
-#ifdef HAI_DEBUG
-		cout << "INFO: " << bb << "\n\tIN = " << in << "\n\tOUT= " << out << "\n";
+#ifdef HAI_LISTENER_DEBUG
+		cerr << "INFO: " << bb << "\n\tIN = " << in << "\n\tOUT= " << out << "\n";
 #endif		
 }
 
@@ -130,6 +124,6 @@ template <class Problem >
 void DefaultListener<Problem>::fixPointReached(const DefaultFixPoint<DefaultListener> *fp, BasicBlock*bb ) {
 }
 	
-}
+}	// otawa
 
-#endif 
+#endif 	// OTAWA_UTIL_DEFAULTLISTENER_H_

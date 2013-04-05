@@ -36,8 +36,9 @@ class MUSTProblem {
 public:
 	class Domain: public ACS {
 	public:
-		inline Domain(const int _size, const int _A): ACS(_size, _A) { }
-		inline Domain(const Domain &source) : ACS(source) { }
+		inline Domain(const int _size, const int _A): ACS(_size, _A, 0) { }
+		inline Domain(const Domain &source): ACS(source) { }
+		inline Domain(const ACS& source): ACS(source) { }
 		inline Domain& operator=(const ACS& d) { ACS::operator=(d); return *this; }
 
 		inline void glb(const Domain &dom) {
