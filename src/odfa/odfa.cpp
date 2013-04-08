@@ -40,6 +40,30 @@ Identifier<bool> AFTER("", false);
 Identifier<bool> SEM("", false);
 Identifier<bool> FILTER("", false);
 
+/**
+ * @defgroup odfa odfa Command
+ *
+ * ODFA allows to launch data flow analysis in a stand-alone way
+ * and to display the results. For the time being, only the CLP analysis
+ * is supported but more will be added later.
+ *
+ * @par SYNTAX
+ * @code
+ * $ odfa binary_file function1 function2 ...
+ * @endcode
+ *
+ * The following options are provided:
+ * @li -c, --clp -- perform CLP analysis,
+ * @li --before -- display the data values before the basic blocks,
+ * @li --after -- display the data values after the basic blocks,
+ * @li -s, --sem -- display semantics instructions,
+ * @li -F, --filter -- display filters (for the CLP analysis),
+ * @li -S, --stats -- display statistics of the analysis,
+ * @li -C, --cfg -- dump the CFG in .dot format (including data values),
+ * @li -r, --reg REGISTER=VALUE -- add an initialization register.
+ *
+ */
+
 
 // CLPCFGOutput class
 class CLPCFGOutput: public display::CFGOutput {
