@@ -43,6 +43,7 @@ namespace otawa { namespace dcache {
  *
  * @p Configuration
  * @li @ref DATA_FIRSTMISS_LEVEL
+ * @ingroup dcache
  */
 
 p::declare CATBuilder::reg = p::init("otawa::dcache::CATBuilder", Version(1, 0, 0))
@@ -98,7 +99,8 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 
 	// prepare problem
 	int line = coll.cacheSet();
-	MUSTPERS::Domain dom(coll.count(), cache->wayCount());
+	MUSTPERS prob(&coll, ws, cache);
+	MUSTPERS::Domain dom = prob.bottom();
 	acs_stack_t empty_stack;
 
 	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
@@ -108,11 +110,11 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 
 			// get the input domain
 			acs_table_t *ins = MUST_ACS(bb);
-			dom.setMust(*ins->get(line));
+			prob.setMust(dom, *ins->get(line));
 			acs_table_t *pers = PERS_ACS(bb);
 			bool has_pers = pers;
 			if(!has_pers)
-				dom.getPers().empty();
+				prob.emptyPers(dom);
 			else {
 				acs_stack_t *stack;
 				acs_stack_table_t *stack_table = LEVEL_PERS_ACS(bb);
@@ -120,7 +122,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					stack = &stack_table->item(line);
 				else
 					stack = &empty_stack;
-				dom.getPers().set(*pers->get(line), *stack);
+				prob.setPers(dom, *pers->get(line), *stack);
 			}
 
 			// explore the adresses
@@ -129,24 +131,23 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 				BlockAccess& b = ab.snd[j];
 				if(b.kind() != BlockAccess::BLOCK) {
 					CATEGORY(b) = cache::NOT_CLASSIFIED;
-					dom.ageAll();
+					prob.ageAll(dom);
 				}
 				else if(b.block().set() == line) {
 
 					// initialization
+					bool done = false;
 					CATEGORY(b) = cache::NOT_CLASSIFIED;
 					ACS *may = 0;
 					if(MAY_ACS(bb) != 0)
 						may = MAY_ACS(bb)->get(line);
 
 					// in MUST ?
-					if(dom.getMust().contains(b.block().index())) {
+					if(dom.getMust().contains(b.block().index()))
 						CATEGORY(b) = cache::ALWAYS_HIT;
-						continue;
-					}
 
 					// persistent ?
-					if(has_pers) {
+					else if(has_pers) {
 
 						// find the initial header
 						BasicBlock *header;
@@ -160,46 +161,19 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 							if(dom.getPers().isPersistent(b.block().index(), k)) {
 								CATEGORY(b) = FIRST_MISS;
 								CATEGORY_HEADER(b) = header;
+								done = true;
 								break;
 							}
 							header = ENCLOSING_LOOP_HEADER(header);
 						}
-
-						// done ?
-						if(CATEGORY_HEADER(b))
-							continue;
 					}
 
 					// out of MAY ?
-					if(may && !may->contains(b.block().index()))
+					if(!done && may && !may->contains(b.block().index()))
 						CATEGORY(b) = cache::ALWAYS_MISS;
 
 					// update state
-					dom.inject(b.block().index());
-					/*else if (firstmiss_level != FML_NONE) {
-						if (LOOP_HEADER(lblock->bb()))
-							header = lblock->bb();
-					  	else header = ENCLOSING_LOOP_HEADER(lblock->bb());
-
-					  	int bound;
-					  	bool perfect_firstmiss = true;
-						PERSProblem::Domain *pers = CACHE_ACS_PERS(lblock->bb())->get(line);
-						bound = 0;
-
-						if ((pers->length() > 1) && (firstmiss_level == FML_INNER))
-							bound = pers->length() - 1;
-						CATEGORY_HEADER(lblock) = NULL;
-					  	for (int k = pers->length() - 1 ; (k >= bound) && (header != NULL); k--) {
-							if (pers->isPersistent(lblock->cacheblock(), k)) {
-								CATEGORY(lblock) = FIRST_MISS;
-								CATEGORY_HEADER(lblock) = header;
-							} else perfect_firstmiss = false;
-							header = ENCLOSING_LOOP_HEADER(header);
-						}
-
-						if ((firstmiss_level == FML_OUTER) && (perfect_firstmiss == false))
-							CATEGORY(lblock) = ALWAYS_MISS;
-					}*/
+					prob.inject(dom, b.block().index());
 				}
 			}
 		}
@@ -242,6 +216,7 @@ static SilentFeature::Maker<CATBuilder> maker;
  * @p Properties
  * @li @ref CATEGORY
  * @li @ref CATEGORY_HEADER
+ * @ingroup dcache
  */
 SilentFeature CATEGORY_FEATURE("otawa::dcache::CATEGORY_FEATURE", maker);
 
@@ -252,6 +227,7 @@ SilentFeature CATEGORY_FEATURE("otawa::dcache::CATEGORY_FEATURE", maker);
  *
  * @p Hook
  * @li @ref BlockAccess
+ * @ingroup dcache
  */
 Identifier<BasicBlock*> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
 
@@ -261,6 +237,7 @@ Identifier<BasicBlock*> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
  *
  * @p Hook
  * @li @ref BlockAccess
+ * @ingroup dcache
  */
 Identifier<cache::category_t> CATEGORY("otawa::dcache::category", cache::INVALID_CATEGORY);
 
@@ -270,6 +247,7 @@ Identifier<cache::category_t> CATEGORY("otawa::dcache::category", cache::INVALID
  * This class is used to store statistics about the categories about cache
  * accesses. It it provided by cache category builders.
  * @see CATBuilder, CAT2Builder
+ * @ingroup dcache
  */
 
 /**

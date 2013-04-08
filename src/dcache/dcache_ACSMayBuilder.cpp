@@ -82,6 +82,7 @@ static SilentFeature::Maker<ACSMayBuilder> maker;
  *
  * @p Configuration
  * @li @ref ENTRY_MAY_ACS
+ * @ingroup dcache
  */
 SilentFeature ACS_MAY_FEATURE("otawa::dcache::ACS_MAY_FEATURE", maker);
 
@@ -91,6 +92,7 @@ SilentFeature ACS_MAY_FEATURE("otawa::dcache::ACS_MAY_FEATURE", maker);
  *
  * @p Hook
  * @li @ref BasicBlock
+ * @ingroup dcache
  */
 Identifier<Vector<ACS *> *> MAY_ACS("otawa::dcache::MAY_ACS", 0);
 
@@ -98,6 +100,7 @@ Identifier<Vector<ACS *> *> MAY_ACS("otawa::dcache::MAY_ACS", 0);
 /**
  * Configuration property giving the ACS at the startup of the task.
  * The vector contains one ACS for each cache set.
+ * @ingroup dcache
  */
 Identifier<Vector<ACS *> *> ENTRY_MAY_ACS("otawa::dcache::ENTRY_MAY_ACS", 0);
 
@@ -115,6 +118,7 @@ Identifier<Vector<ACS *> *> ENTRY_MAY_ACS("otawa::dcache::ENTRY_MAY_ACS", 0);
  *
  * @p Configuration
  * @li @ref ENTRY_MAY_ACS
+ * @ingroup dcache
  */
 
 p::declare ACSMayBuilder::reg = p::init("otawa::dcache::ACSMayBuilder", Version(1, 0, 0))

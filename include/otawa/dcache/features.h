@@ -73,6 +73,9 @@ public:
 	inline void set(const ACS& dom)
 		{ ASSERT(A == dom.A); ASSERT(size == dom.size); for(int i = 0; i < size; i++) age[i] = dom.age[i]; }
 
+	inline const int& operator[](int i) const { return age[i]; }
+	inline int& operator[](int i) { return age[i]; }
+
 protected:
 	int A, size;
 	int *age;
@@ -117,34 +120,42 @@ private:
 // Data
 class BlockAccess: public PropList {
 public:
+	typedef enum action_t {
+		NONE = 0,
+		LOAD = 1,
+		STORE = 2,
+		PURGE = 3
+	} action_t;
 	typedef enum kind_t {
-		ANY,
-		BLOCK,
-		RANGE
+		ANY = 0,
+		BLOCK = 1,
+		RANGE = 2
 	} kind_t;
 
-	inline BlockAccess(void): inst(0), _kind(ANY) { }
-	inline BlockAccess(Inst *instruction): inst(instruction), _kind(ANY) { }
-	inline BlockAccess(Inst *instruction, const Block& block): inst(instruction), _kind(BLOCK)
+	inline BlockAccess(void): inst(0), _kind(ANY), _action(NONE) { }
+	inline BlockAccess(Inst *instruction, action_t action): inst(instruction), _kind(ANY), _action(action) { }
+	inline BlockAccess(Inst *instruction, action_t action, const Block& block): inst(instruction), _kind(BLOCK), _action(action)
 		{ data.blk = &block; }
-	inline BlockAccess(Inst *instruction, int first, int last): inst(instruction), _kind(RANGE)
+	inline BlockAccess(Inst *instruction, action_t action, int first, int last): inst(instruction), _kind(RANGE), _action(action)
 		{ data.range.first = first; data.range.last = last; }
-	inline BlockAccess(const BlockAccess& acc): inst(acc.inst), _kind(acc._kind)
+	inline BlockAccess(const BlockAccess& acc): inst(acc.inst), _kind(acc._kind), _action(acc._action)
 		{ data = acc.data; }
 	inline BlockAccess& operator=(const BlockAccess& acc)
-		{ inst = acc.inst; _kind = acc._kind; data = acc.data; return *this; }
+		{ inst = acc.inst; _kind = acc._kind; _action = acc._action; data = acc.data; return *this; }
 
 	inline Inst *instruction(void) const { return inst; }
-	inline kind_t kind(void) { return _kind; }
+	inline kind_t kind(void) const { return kind_t(_kind); }
+	inline action_t action(void) const { return action_t(_action); }
 	inline const Block& block(void) const { ASSERT(_kind == BLOCK); return *data.blk; }
 	inline int first(void) const { ASSERT(_kind == RANGE); return data.range.first; }
 	inline int last(void) const { ASSERT(_kind == RANGE); return data.range.last; }
+	inline bool inRange(int set) const { if(first() < last()) return first() <= set && set <= last(); else return set <= first() || last() <= set; }
 
 	void print(io::Output& out) const;
 
 private:
 	Inst *inst;
-	kind_t _kind;
+	t::uint8 _kind, _action;
 	union {
 		const Block *blk;
 		struct { int first, last; } range;

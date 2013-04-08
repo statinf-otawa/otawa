@@ -29,6 +29,7 @@ namespace otawa { namespace dcache {
  *
  * @p Configuration
  * @li @ref INITIAL_SP
+ * @ingroup dcache
  */
 p::declare BlockBuilder::reg = p::init("otawa::dcache::BlockBuilder", Version(1, 0, 0))
 	.base(BBProcessor::reg)
@@ -108,9 +109,12 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 			ASSERT(false);
 		}
 
+		// type of action
+		BlockAccess::action_t action = aa->isStore() ? BlockAccess::LOAD : BlockAccess::STORE;
+
 		// access any ?
 		if(addr.isNull()) {
-			blocks.add(BlockAccess(aa->instruction()));
+			blocks.add(BlockAccess(aa->instruction(), action));
 			if(logFor(LOG_INST))
 				log << "\t\t\t\t" << aa->instruction() << " access any\n";
 			continue;
@@ -136,7 +140,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		int set = cache->line(addr.offset());
 		if(last.isNull()) {
 			const Block& block = colls[set].get(set, addr);
-			blocks.add(BlockAccess(aa->instruction(), block));
+			blocks.add(BlockAccess(aa->instruction(), action, block));
 			if(logFor(LOG_INST))
 				log << "\t\t\t\t" << aa->instruction() << " access " << addr
 					<< " (" << block.index() << ", " << block.set() << ")\n";
@@ -146,7 +150,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		// range over the full cache ?
 		last = Address(last.page(), (last.offset() - 1) & ~cache->blockMask());
 		if(last - addr >= cache->cacheSize()) {
-			blocks.add(BlockAccess(aa->instruction()));
+			blocks.add(BlockAccess(aa->instruction(), action));
 			if(logFor(LOG_INST))
 				log << "\t\t\t\t" << aa->instruction() << " access any [" << addr << ", " << last << ")\n";
 			continue;
@@ -154,7 +158,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 		// a normal range
 		int last_set = cache->line(last.offset());
-		blocks.add(BlockAccess(aa->instruction(), set, last_set));
+		blocks.add(BlockAccess(aa->instruction(), action, set, last_set));
 		if(logFor(LOG_INST))
 			log << "\t\t\t\t" << aa->instruction() << " access [" << addr << ", " << last << "] (["
 				<< set << ", " << last_set << "])\n";
@@ -182,6 +186,7 @@ static SilentFeature::Maker<BlockBuilder> maker;
  * @p Properties
  * @li @ref DATA_BLOCK_COLLECTION
  * @li @ref DATA_BLOCKS
+ * @ingroup dcache
  */
 SilentFeature DATA_BLOCK_FEATURE("otawa::dcache::DATA_BLOCK_FEATURE", maker);
 
@@ -192,6 +197,7 @@ SilentFeature DATA_BLOCK_FEATURE("otawa::dcache::DATA_BLOCK_FEATURE", maker);
  *
  * @p Hooks
  * @li @ref	WorkSpace
+ * @ingroup dcache
  */
 Identifier<const BlockCollection *> DATA_BLOCK_COLLECTION("otawa::dcache::DATA_BLOCK_COLLECTION", 0);
 
@@ -202,6 +208,7 @@ Identifier<const BlockCollection *> DATA_BLOCK_COLLECTION("otawa::dcache::DATA_B
  *
  * @p Hooks
  * @li @ref BasicBlock
+ * @ingroup dcache
  */
 Identifier<Pair<int, BlockAccess *> > DATA_BLOCKS("otawa::dcache::DATA_BLOCKS", pair(0, (BlockAccess *)0));
 
@@ -209,6 +216,7 @@ Identifier<Pair<int, BlockAccess *> > DATA_BLOCKS("otawa::dcache::DATA_BLOCKS", 
 /**
  * @class Block
  * Represents a single block used by the data cache.
+ * @ingroup dcache
  */
 
 /**
@@ -265,6 +273,7 @@ void Block::print(io::Output& out) const {
  * @class BlockCollection
  * A block collections stores the list of data blocks used in a task
  * for a specific line.
+ * @ingroup dcache
  */
 
 
@@ -303,11 +312,19 @@ const Block& BlockCollection::get(int set, const Address& addr) {
 
 /**
  * @class BlockAccess
- * A block access represents a data memory of an instruction.
+ * A block access represents a data memory access of an instruction.
+ *
+ * The action is defined by BlockAccess::action_t that may be:
+ * @li @ref NONE -- invalid action (only for convenience),
+ * @li @ref READ -- read of cache,
+ * @li @ref WRITE -- write of cache,
+ * @li @ref PURGE -- target block are purged (possibly written back to memory).
+ *
  * Possible kinds of data accesses include:
  * @li ANY		Most imprecised access: one memory accessed is performed but the address is unknown.
  * @li BLOCK	A single block is accessed (given by @ref block() method).
  * @li RANGE	A range of block may be accessed (between @ref first() and @ref last() methods addresses).
+ * @ingroup dcache
  */
 
 /**
@@ -316,24 +333,27 @@ const Block& BlockCollection::get(int set, const Address& addr) {
  */
 
 /**
- * @fn BlockAccess::BlockAccess(Inst *instruction);
+ * @fn BlockAccess::BlockAccess(Inst *instruction, action_t action);
  * Build a block access of type ANY.
  * @param instruction	Instruction performing the access.
+ * @param action		Type of action.
  */
 
 /**
  * @fn BlockAccess::BlockAccess(Inst *instruction, const Block& block);
  * Build a block access to a single block.
  * @param instruction	Instruction performing the access.
+ * @param action		Type of action.
  * @param block			Accessed block.
  */
 
 /**
- * @fn BlockAccess::BlockAccess(Inst *instruction, int first, int last);
+ * @fn BlockAccess::BlockAccess(Inst *instruction, action_t action, int first, int last);
  * Build a block access of type range. Notice the address of first block may be
  * greater than the address of the second block, meaning that the accessed addresses
  * ranges across the address modulo by 0.
  * @param instruction	Instruction performing the access.
+ * @param action		Type of action.
  * @param first			First accessed block.
  * @param last			Last access block.
  */
@@ -363,6 +383,13 @@ const Block& BlockCollection::get(int set, const Address& addr) {
  * @return	Access kind.
  */
 
+
+/**
+ * @fn action_t BlockAccess::action(void) const;
+ * Get the performed action.
+ * @return	Performed action.
+ */
+
 /**
  * @fn const Block& BlockAccess::block(void) const;
  * Only for kind BLOCK, get the accessed block.
@@ -384,11 +411,19 @@ const Block& BlockCollection::get(int set, const Address& addr) {
 /**
  */
 void BlockAccess::print(io::Output& out) const {
-	out << inst << " access ";
+	static cstring action_names[] = {
+		"none",		// NONE = 0
+		"load",		// READ = 1
+		"store",	// WRITE = 2
+		"purge"		// PURGE = 3
+	};
+	ASSERTP(_action <= PURGE, "invalid block access action: " << _action);
+	out << inst << ' ' << action_names[_action] << ' ';
 	switch(_kind) {
 	case ANY: out << "ANY"; break;
 	case BLOCK: out << *data.blk; break;
 	case RANGE: out << '[' << data.range.first << ", " << data.range.last << ']'; break;
+	default:	ASSERTP(false, "invalid block access kind: " << _kind);
 	}
 }
 

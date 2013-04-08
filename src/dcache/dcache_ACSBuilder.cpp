@@ -41,6 +41,7 @@ namespace otawa { namespace dcache {
  * @class MUSTProblem
  * The MUST problem provides the abstract interpretation of L1 data cache
  * for the MUST case. It implements the concept @ref AbstractDomain.
+ * @ingroup dcache
  */
 
 /**
@@ -57,7 +58,8 @@ MUSTProblem::MUSTProblem(int _size, int _set, WorkSpace *_fw, const hard::Cache 
 	cache(_cache),
 	bot(_size, _A),
 	ent(_size, _A),
-	callstate(_size, _A)
+	callstate(_size, _A),
+	size(_size)
 { ent.empty(); }
 
 
@@ -69,6 +71,31 @@ const MUSTProblem::Domain& MUSTProblem::bottom(void) const { return bot; }
  */
 const MUSTProblem::Domain& MUSTProblem::entry(void) const { return ent; }
 
+
+/**
+ * Perform a purge according to the given block access.
+ * @param out	In-out domain.
+ * @param acc	Purging block access.
+ */
+void MUSTProblem::purge(Domain& out, BlockAccess& acc) {
+	ASSERT(acc.action() == BlockAccess::PURGE);
+	ASSERT(acc.kind() <= BlockAccess::RANGE);
+
+	switch(acc.kind()) {
+	case BlockAccess::RANGE:
+		if(!acc.inRange(set))
+			break;
+		// no break
+	case BlockAccess::ANY:
+		out.empty();
+		break;
+	case BlockAccess::BLOCK:
+		if(set == acc.block().set())
+			out[acc.block().index()] = -1;
+		break;
+	}
+}
+
 /**
  */
 void MUSTProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
@@ -76,22 +103,34 @@ void MUSTProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
 	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
 	for(int i = 0; i < accesses.fst; i++) {
 		BlockAccess& acc = accesses.snd[i];
+		ASSERT(acc.action() <= BlockAccess::PURGE);
+		ASSERT(acc.kind() <= BlockAccess::RANGE);
 		MUST_DEBUG("\t\t\tupdating with " << acc);
-		switch(acc.kind()) {
-		case BlockAccess::RANGE:
-			if(acc.first() < acc.last()) {
-				if(set < acc.first() || set > acc.last())
+		switch(acc.action()) {
+
+		case BlockAccess::LOAD:
+		case BlockAccess::STORE:
+			switch(acc.kind()) {
+			case BlockAccess::RANGE:
+				if(acc.first() < acc.last()) {
+					if(set < acc.first() || set > acc.last())
+						break;
+				}
+				else if( acc.first() < set || set < acc.last())
 					break;
-			}
-			else if( acc.first() < set || set < acc.last())
+					/* no break */
+			case BlockAccess::ANY:
+				out.ageAll();
 				break;
-				/* no break */
-		case BlockAccess::ANY:
-			out.ageAll();
+			case BlockAccess::BLOCK:
+				if(acc.block().set() == set)
+					out.inject(acc.block().index());
+				break;
+			}
 			break;
-		case BlockAccess::BLOCK:
-			if(acc.block().set() == set)
-				out.inject(acc.block().index());
+
+		case BlockAccess::PURGE:
+			purge(out, acc);
 			break;
 		}
 	}
@@ -118,6 +157,7 @@ SilentFeature::Maker<ACSBuilder> _maker;
  *
  * @p Configuration
  * @li @ref ENTRY_MUST_ACS
+ * @ingroup dcache
  */
 SilentFeature MUST_ACS_FEATURE("otawa::dcache::MUST_ACS_FEATURE", _maker);
 
@@ -131,6 +171,7 @@ SilentFeature MUST_ACS_FEATURE("otawa::dcache::MUST_ACS_FEATURE", _maker);
  *
  * @p Feature
  * @li @ref MUST_ACS_FEATURE
+ * @ingroup dcache
  */
 Identifier<genstruct::Vector<ACS *>* > MUST_ACS("otawa::dcache::MUST_ACS", 0);
 
@@ -139,6 +180,7 @@ Identifier<genstruct::Vector<ACS *>* > MUST_ACS("otawa::dcache::MUST_ACS", 0);
  * This configuration property is shared by all processor implementing the
  * @ref MUST_ACS_FEATURE. It allows to provide an initial ACS value
  * at the entry of the task. If not defined, the T (top) value is assumed.
+ * @ingroup dcache
  */
 Identifier<Vector<ACS *>* > ENTRY_MUST_ACS("otawa::dcache::ENTRY_MUST_ACS", 0);
 
@@ -147,16 +189,18 @@ Identifier<Vector<ACS *>* > ENTRY_MUST_ACS("otawa::dcache::ENTRY_MUST_ACS", 0);
  * This configuration property activates, if set to true (default), the pseudo-unrolling
  * for the cache analysis of @ref ACSBuilder. This option allows to get more precise
  * results but induces more computation time.
+ * @ingroup dcache
  */
 Identifier<bool> DATA_PSEUDO_UNROLLING("otawa::dcache::PSEUDO_UNROLLING", false);
 
 
 /**
  * According to its value, select the way the first-miss analysis is performed:
- * @li	DFML_INNER -- analysis of inner loop (average precision but costly in time),
-		DFML_OUTER -- analysis of outer loop (very few precise)
-		DFML_MULTI -- analysis of all loop level (very precise but costly)
-		DFML_NONE -- no first miss analysis.
+ * @liDFML_INNER -- analysis of inner loop (average precision but costly in time),
+ * @li DFML_OUTER -- analysis of outer loop (very few precise)
+ * @li DFML_MULTI -- analysis of all loop level (very precise but costly)
+ * @li DFML_NONE -- no first miss analysis.
+ * @ingroup dcache
  */
 Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL("otawa::dcache::FIRSTMISS_LEVEL", DFML_MULTI);
 
@@ -176,6 +220,7 @@ Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL("otawa::dcache::FIRSTMISS_LEVEL"
  * @p configuration
  * @li @ref DATA_FIRSTMISS_LEVEL
  * @li @ref DATA_PSEUDO_UNROLLING
+ * @ingroup dcache
  */
 
 p::declare ACSBuilder::reg = p::init("otawa::DataACSBuilder", Version(1, 0, 0))
@@ -274,7 +319,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 		// with unrolling
 		if (unrolling) {
 			// Do combined MUST/PERS analysis
-			MUSTPERS mustpers(coll.count(), &coll, fw, cache, cache->wayCount());
+			MUSTPERS mustpers(&coll, fw, cache);
 			UnrollingListener<MUSTPERS> mustpersList( fw, mustpers);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > mustpersFp(mustpersList);
 			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
@@ -304,7 +349,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 		else {
 
 			// Do combined MUST/PERS analysis
-			MUSTPERS mustpers(coll.count(), &coll, fw, cache, cache->wayCount());
+			MUSTPERS mustpers(&coll, fw, cache);
 			DefaultListener<MUSTPERS> mustpersList( fw, mustpers);
 			DefaultFixPoint<DefaultListener<MUSTPERS> > mustpersFp(mustpersList);
 			util::HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
@@ -387,6 +432,7 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
  * Representation of an Abstract Cache State where each data cache block
  * is represented by its age. The initial state is the unknown one, that
  * is when each block has an age of -1 (unknown age).
+ * @ingroup dcache
  */
 
 /**
@@ -483,6 +529,7 @@ void ACS::print(elm::io::Output &output) const {
  *
  * Problem for computing the PERS ACS of L-blocks.
  * This implements Ferdinand's Persistence analysis.
+ * @ingroup dcache
  */
 
 
@@ -523,6 +570,45 @@ void PERSProblem::update(Domain& out, const Domain& in, BasicBlock* bb)  {
 }
 
 
+/**
+ * Apply the given purge action to the given item.
+ * @param item	Item to work on.
+ * @param acc	Purge action to perform.
+ */
+void PERSProblem::purge(Item& item, BlockAccess& acc) {
+	ASSERT(acc.action() == BlockAccess::PURGE);
+	ASSERT(acc.kind() <= BlockAccess::RANGE);
+	switch(acc.kind()) {
+	case BlockAccess::RANGE:
+		if(!acc.inRange(line))
+			break;
+		// no break
+	case BlockAccess::ANY:
+		for(int i = 0; i < item.getSize(); i++)
+			if(item[i] != -1)
+				item[i] = item.getA();
+		break;
+	case BlockAccess::BLOCK:
+		if(acc.block().set() == line) {
+			if(item[acc.block().set()] != -1)
+				item[acc.block().set()] = item.getA();
+		}
+	}
+}
+
+
+/**
+ * Apply the given purge action to the given domain.
+ * @param domain	Domain to work on.
+ * @param acc		Purge action to perform.
+ */
+void PERSProblem::purge(Domain& domain, BlockAccess& acc) {
+	purge(domain.getWhole(), acc);
+	for(int i = 0; i < domain.length(); i++)
+		purge(domain.getItem(i), acc);
+}
+
+
 elm::io::Output& operator<<(elm::io::Output& output, const PERSProblem::Domain& dom) {
 	dom.print(output);
 	return output;
@@ -556,6 +642,7 @@ void PERSProblem::Domain::ageAll(void) {
  * Describes the ACS used in combined MUST-persistence problem.
  * This combination slightly improve the speed of the analysis but also allows to work-around
  * a bug of the original persistence analysis.
+ * @ingroup dcache
  */
 
 
@@ -569,20 +656,20 @@ void PERSProblem::Domain::ageAll(void) {
  * Print the MUSTPERS ACS.
  * @param output	Stream to output to.
  */
-void MUSTPERS::Domain::print(elm::io::Output &output) const {
+void MUSTPERS::print(elm::io::Output &output, const Domain& d) const {
 	output << "PERS=[ ";
-	pers.print(output);
+	d.pers.print(output);
 	output << "] MUST=[ ";
-	must.print(output);
+	d.must.print(output);
 	output << "]";
 }
 
 
-MUSTPERS::MUSTPERS(const int _size, const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A)
-:	mustProb(_size, _lbset->count(), _fw, _cache, _A),
-	persProb(_size, _lbset, _fw, _cache, _A),
-	bot(_size, _A),
-	ent(_size, _A),
+MUSTPERS::MUSTPERS(const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache)
+:	mustProb(_lbset->count(), _lbset->count(), _fw, _cache, _cache->wayCount()),
+	persProb(_lbset->count(), _lbset, _fw, _cache, _cache->wayCount()),
+	bot(_lbset->count(),  _cache->wayCount()),
+	ent(_lbset->count(),  _cache->wayCount()),
 	set(_lbset->cacheSet())
 {
 
@@ -607,28 +694,43 @@ void MUSTPERS::update(Domain& out, const Domain& in, BasicBlock* bb) {
 	for(int i = 0; i < accesses.fst; i++) {
 		BlockAccess& acc = accesses.snd[i];
 		MUST_DEBUG("\t\t\tupdating with " << acc);
-		switch(acc.kind()) {
-		case BlockAccess::RANGE:
-			if(acc.first() < acc.last()) {
-				if(set < acc.first() || set > acc.last())
+		switch(acc.action()) {
+
+		case BlockAccess::LOAD:
+		case BlockAccess::STORE:
+			switch(acc.kind()) {
+			case BlockAccess::RANGE:
+				if(acc.first() < acc.last()) {
+					if(set < acc.first() || set > acc.last())
+						break;
+				}
+				else if( acc.first() < set || set < acc.last())
 					break;
-			}
-			else if( acc.first() < set || set < acc.last())
+					/* no break */
+			case BlockAccess::ANY:
+				ageAll(out);
 				break;
-				/* no break */
-		case BlockAccess::ANY:
-			out.ageAll();
+			case BlockAccess::BLOCK:
+				if(acc.block().set() == set)
+					inject(out, acc.block().index());
+				break;
+			}
 			break;
-		case BlockAccess::BLOCK:
-			if(acc.block().set() == set)
-				out.inject(acc.block().index());
+
+		case BlockAccess::PURGE:
+			mustProb.purge(out.must, acc);
+			persProb.purge(out.pers, acc);
 			break;
+
+		default:
+			ASSERTP(false, "bad block access action: " << acc.kind());
 		}
+
 	}
 }
 
-elm::io::Output& operator<<(elm::io::Output& output, const MUSTPERS::Domain& dom) {
-	dom.print(output);
+elm::io::Output& operator<<(elm::io::Output& output, const Pair<const MUSTPERS&, const MUSTPERS::Domain>& dom) {
+	dom.fst.print(output, dom.snd);
 	return(output);
 }
 
@@ -636,6 +738,7 @@ elm::io::Output& operator<<(elm::io::Output& output, const MUSTPERS::Domain& dom
 /**
  * @class PERSProblem
  * Problem for the data cache persistence analysis.
+ * @ingroup dcache
  */
 
 

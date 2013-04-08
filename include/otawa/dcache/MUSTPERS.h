@@ -42,38 +42,33 @@ public:
 		inline Domain(const int _size, const int _A)
 			: pers(PERSProblem::Domain(_size, _A)), must(MUSTProblem::Domain(_size, _A)) { }
 		inline Domain(const Domain &source) : pers(source.pers), must(source.must) { }
-		inline Domain& operator=(const Domain &src)
-			{ pers = src.pers; must = src.must; return *this; }
 		inline MUSTProblem::Domain& getMust(void) { return must; }
 		inline PERSProblem::Domain& getPers(void) { return pers; }
-		inline void setMust(const MUSTProblem::Domain& acs) { must = acs; }
-		inline void setPers(const PERSProblem::Item& acs) { pers.getWhole() = acs; }
-		inline void lub(const Domain &dom) { pers.lub(dom.pers); must.lub(dom.must); }
-		inline int getSize(void) { return must.getSize(); }
-		inline bool equals(const Domain &dom) const { return (pers.equals(dom.pers) && must.equals(dom.must)); }
-		inline void empty(void) { must.empty(); pers.empty(); }
-		inline bool mustContains(const int id) { return(must.contains(id)); }
-		inline bool persContains(const int id, const int index) { return(pers.contains(id, index)); }
-		inline bool isWiped(const int id, const int index) { return(pers.isWiped(id, index)); }
-		inline bool isPersistent(const int id, const int index) { return(pers.isPersistent(id, index)); }
-		inline void inject(const int id) { pers.inject(&must, id); must.inject(id); }
-		void print(elm::io::Output &output) const;
-		inline void ageAll(void) { must.ageAll(); pers.ageAll(); }
-
 	private:
 		PERSProblem::Domain pers;
 		MUSTProblem::Domain must;
 	};
 
 public:
-	MUSTPERS(const int _size, const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A);
+	MUSTPERS(const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache);
+	inline void setMust(Domain& d, const ACS& acs) const { mustProb.assign(d.must, acs); }
+	inline void emptyPers(Domain& d) const { d.pers.empty(); }
+	inline void setPers(Domain& d, const ACS& acs, const acs_stack_t& s) { d.pers.set(acs, s); }
+
+	// abstract interpretation
 	const Domain& bottom(void) const;
 	const Domain& entry(void) const;
-	inline void lub(Domain &a, const Domain &b) const { a.lub(b); }
-	inline void assign(Domain &a, const Domain &b) const { a = b; }
-	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
-	
+	inline void lub(Domain &a, const Domain &b) const
+		{ mustProb.lub(a.must, b.must); persProb.lub(a.pers, b.pers); }
+	inline void assign(Domain &a, const Domain &b) const //{ a = b; }
+		{ persProb.assign(a.pers, b.pers); mustProb.assign(a.must, b.must); }
+	inline bool equals(const Domain &a, const Domain &b) const //{ return (a.equals(b)); }
+		{ return (persProb.equals(a.pers, b.pers) && mustProb.equals(a.must, b.must)); };
+	void print(elm::io::Output &output, const Domain& d) const;
+
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	inline void ageAll(Domain& d) const { d.must.ageAll(); d.pers.ageAll();  }
+	inline void inject(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.inject(id); }
 	
 	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
 		persProb.enterContext(dom.pers, header, ctx);
@@ -83,7 +78,6 @@ public:
 	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
 		persProb.leaveContext(dom.pers, header, ctx);
 		mustProb.leaveContext(dom.must, header, ctx);
-
 	}		
 
 private:
@@ -94,7 +88,7 @@ private:
 	PERSProblem persProb;
 };
 
-elm::io::Output& operator<<(elm::io::Output& output, const MUSTPERS::Domain& dom);
+elm::io::Output& operator<<(elm::io::Output& output, const Pair<const MUSTPERS&, const MUSTPERS::Domain>& dom);
 
 } }	// otawa::dcache
 

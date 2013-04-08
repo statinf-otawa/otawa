@@ -33,6 +33,7 @@ static SilentFeature::Maker<CatConstraintBuilder> maker;
  *
  * @p Properties
  * @li @ref MISS_VAR
+ * @ingroup dcache
  */
 SilentFeature CONSTRAINTS_FEATURE("otawa::dcache::CONSTRAINTS_FEATURE", maker);
 
@@ -42,6 +43,7 @@ SilentFeature CONSTRAINTS_FEATURE("otawa::dcache::CONSTRAINTS_FEATURE", maker);
  *
  * @p Hook
  * @li @ref BlockAccess
+ * @ingroup dcache
  */
 Identifier<ilp::Var *> MISS_VAR("otawa::dcache::MISS_VAR", 0);
 
@@ -62,6 +64,7 @@ Identifier<ilp::Var *> MISS_VAR("otawa::dcache::MISS_VAR", 0);
  *
  * @p Configuration
  * @li @ref ipet::EXPLICIT
+ * @ingroup dcache
  */
 
 p::declare CatConstraintBuilder::reg = p::init("otawa::dcache::CatConstraintBuilder", Version(1, 0, 0))
