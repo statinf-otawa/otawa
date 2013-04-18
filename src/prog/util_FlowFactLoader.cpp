@@ -724,7 +724,8 @@ void FlowFactLoader::onMultiBranch(
 
 	// List of targets
 	for(int i = 0; i < targets.length(); i++)
-		BRANCH_TARGET(inst).add(targets[i]);
+		if(targets[i])
+			BRANCH_TARGET(inst).add(targets[i]);
 }
 
 
@@ -744,7 +745,8 @@ void FlowFactLoader::onMultiCall(
 
 	// List of targets
 	for(int i = 0; i < targets.length(); i++)
-		CALL_TARGET(inst).add(targets[i]);
+		if(targets[i])
+			CALL_TARGET(inst).add(targets[i]);
 }
 
 
@@ -900,7 +902,7 @@ void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath)
 		if(target.isNull())
 			onWarning(_ << "target of multicall ignored at " << xline(items->get(i)));
 		else
-			targets.add();
+			targets.add(target);
 	}
 	delete items;
 	this->onMultiCall(control, targets);

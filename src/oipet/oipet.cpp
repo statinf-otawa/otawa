@@ -284,7 +284,7 @@ Command::Command(void):
 		option::author, "H. Cassé",
 		option::copyright, "Copyright (c) 2006-07, IRIT-UPS",
 		option::description, "Compute the WCET of some tasks of a binary using IPET techniques.",
-		option::arg_desc, "binary_file function1 function2 ...",
+		option::free_arg, "binary_file function1 function2 ...",
 		option::end), fw(0)
 {
 }
