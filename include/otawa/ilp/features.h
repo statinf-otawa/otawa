@@ -44,8 +44,6 @@ extern Identifier<elm::io::OutStream *> OUTPUT;
 
 }	// otawa::ilp
 
-/*namespace elm {
-	template <> struct type_info<otawa::ilp::format_t>: enum_info<otawa::ilp::format_t> { };
-} // elm*/
+namespace elm { template <> struct type_info<otawa::ilp::format_t>: enum_info<otawa::ilp::format_t> { }; } // elm
 
 #endif /* FEATURES_H_ */

@@ -130,7 +130,7 @@ void Output::cleanup(WorkSpace *ws) {
 
 }	// otawa
 
-/*namespace elm {
+namespace elm {
 	template <> cstring enum_info<otawa::ilp::format_t>::name(void) { return "otawa::ilp::format_t"; }
 	template <> enum_info<otawa::ilp::format_t>::value_t enum_info<otawa::ilp::format_t>::values[] = {
 		value("LP_SOLVE", otawa::ilp::LP_SOLVE),
@@ -138,4 +138,4 @@ void Output::cleanup(WorkSpace *ws) {
 		value("MOSEK", otawa::ilp::MOSEK),
 		last()
 	};
-}*/
+}

@@ -168,15 +168,12 @@ endif()
 
 
 # handle autodoc
-option(AUTODOC "generate auto-documentation" OFF)
-find_program(DOXYGEN doxygen)
-if((DOXYGEN AND NOT EXISTS autodoc) OR AUTODOC)
-	message(STATUS "generating autodoc...")
-	execute_process(COMMAND "${DOXYGEN}" OUTPUT_QUIET)
-	message(STATUS "autodoc done")
-endif()
 if(DOXYGEN)
-	install(DIRECTORY autodoc DESTINATION "${CMAKE_INSTALL_PREFIX}/share/GEL/")
+add_custom_target("make-autodoc" ALL DEPENDS "autodoc")
+add_custom_command(
+	OUTPUT "autodoc"
+	DEPENDS "Doxyfile"
+	COMMAND "${DOXYGEN}"	
+)
+install(DIRECTORY autodoc DESTINATION "${CMAKE_INSTALL_PREFIX}/share/Otawa/")
 endif()
-unset(AUTODOC CACHE)
-

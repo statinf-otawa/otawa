@@ -243,7 +243,8 @@ template <> void Identifier<elm::String>::scan(PropList& props, VarArg& args) co
 
 // GenericIdentifier<T>::fromString
 template <class T> inline void Identifier<T>::fromString(PropList& props, const string& str) const
-	{ throw io::IOException("type not supported for Identifier::fromString() call"); }
+	{ T v; StringInput in(str); in >> v; set(props, v); }
+//	{ throw io::IOException("type not supported for Identifier::fromString() call"); }
 template <> void Identifier<bool>::fromString(PropList& props, const string& str) const;
 template <> void Identifier<int>::fromString(PropList& props, const string& str) const;
 template <> void Identifier<unsigned int>::fromString(PropList& props, const string& str) const;
