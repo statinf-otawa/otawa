@@ -334,7 +334,7 @@ void BasicBlock::print(io::Output& out) const {
  * @param inst	First instruction of the basic block. The basic block
  * lay from this instruction to the next basic block head or end of code.
  */
-CodeBasicBlock::CodeBasicBlock(Inst *inst, size_t size) {
+  CodeBasicBlock::CodeBasicBlock(Inst *inst, t::size size) {
 	ASSERT(inst);
 
 	// initialize

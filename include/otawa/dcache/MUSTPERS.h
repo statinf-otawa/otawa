@@ -88,7 +88,7 @@ private:
 	PERSProblem persProb;
 };
 
-elm::io::Output& operator<<(elm::io::Output& output, const Pair<const MUSTPERS&, const MUSTPERS::Domain>& dom);
+//elm::io::Output& operator<<(elm::io::Output& output, const Pair<const MUSTPERS&, const MUSTPERS::Domain>& dom);
 
 } }	// otawa::dcache
 
