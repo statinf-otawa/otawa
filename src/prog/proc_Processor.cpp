@@ -498,7 +498,13 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	setup(fw);
 
 	// Launch the work
-	processWorkSpace(fw);
+	try {
+		processWorkSpace(fw);
+	}
+	catch(ProcessorException& e) {
+		cleanup(fw);
+		throw e;
+	}
 
 	// Post-processing actions
 	if(logFor(LOG_CFG))

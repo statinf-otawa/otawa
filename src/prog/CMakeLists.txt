@@ -11,6 +11,7 @@ set(libotawa_SOURCES
 	"BasicBlock.cpp"
 	"CFGInfo.cpp"
 	"CFG.cpp"
+	"cfg_io.cpp"
 	"Edge.cpp"
 	"PCGBlock.cpp"
 	"PCGBuilder.cpp"

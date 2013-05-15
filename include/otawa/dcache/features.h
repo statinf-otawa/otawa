@@ -24,6 +24,7 @@
 #include <otawa/proc/SilentFeature.h>
 #include <otawa/cache/categories.h>
 #include <otawa/prop/PropList.h>
+#include <otawa/dfa/BitSet.h>
 
 namespace otawa {
 
@@ -105,7 +106,8 @@ inline io::Output& operator<<(io::Output& out, const Block& block) { block.print
 // BlockCollection class
 class BlockCollection {
 public:
-	const Block& get(int set, const Address& addr);
+	inline const Block& operator[](int i) const { return blocks[i]; }
+	const Block& obtain(const Address& addr);
 	inline void setSet(int set) { _set = set; }
 
 	inline int count(void) const { return blocks.count(); }
@@ -136,7 +138,7 @@ public:
 	inline BlockAccess(Inst *instruction, action_t action): inst(instruction), _kind(ANY), _action(action) { }
 	inline BlockAccess(Inst *instruction, action_t action, const Block& block): inst(instruction), _kind(BLOCK), _action(action)
 		{ data.blk = &block; }
-	inline BlockAccess(Inst *instruction, action_t action, int first, int last): inst(instruction), _kind(RANGE), _action(action)
+	inline BlockAccess(Inst *instruction, action_t action, Address::offset_t first, Address::offset_t last): inst(instruction), _kind(RANGE), _action(action)
 		{ data.range.first = first; data.range.last = last; }
 	inline BlockAccess(const BlockAccess& acc): inst(acc.inst), _kind(acc._kind), _action(acc._action)
 		{ data = acc.data; }
@@ -147,9 +149,9 @@ public:
 	inline kind_t kind(void) const { return kind_t(_kind); }
 	inline action_t action(void) const { return action_t(_action); }
 	inline const Block& block(void) const { ASSERT(_kind == BLOCK); return *data.blk; }
-	inline int first(void) const { ASSERT(_kind == RANGE); return data.range.first; }
-	inline int last(void) const { ASSERT(_kind == RANGE); return data.range.last; }
-	inline bool inRange(int set) const { if(first() < last()) return first() <= set && set <= last(); else return set <= first() || last() <= set; }
+	inline Address::offset_t first(void) const { ASSERT(_kind == RANGE); return data.range.first; }
+	inline Address::offset_t last(void) const { ASSERT(_kind == RANGE); return data.range.last; }
+	inline bool inRange(Address::offset_t block) const { if(first() < last()) return first() <= block && block <= last(); else return block <= first() || last() <= block; }
 
 	void print(io::Output& out) const;
 
@@ -158,11 +160,46 @@ private:
 	t::uint8 _kind, _action;
 	union {
 		const Block *blk;
-		struct { int first, last; } range;
+		struct { Address::offset_t first, last; } range;
 	} data;
 };
 inline io::Output& operator<<(io::Output& out, const BlockAccess& acc) { acc.print(out); return out; }
 inline io::Output& operator<<(io::Output& out, const Pair<int, BlockAccess *>& v) { return out; }
+
+// DirtyManager class
+class DirtyManager {
+public:
+
+	typedef struct t {
+		friend class DirtyManager;
+	public:
+		inline t(void) { }
+		inline t(int s): _may(s), _must(s) { }
+		inline t(const t& i): _may(i._may), _must(i._must) { }
+		inline const dfa::BitSet& may(void) const { return _may; }
+		inline const dfa::BitSet& must(void) const { return _must; }
+		void print(io::Output& out) const;
+	private:
+		inline dfa::BitSet& may(void) { return _may; }
+		inline dfa::BitSet& must(void) { return _must; }
+		dfa::BitSet _may, _must;
+	} t;
+
+	DirtyManager(const BlockCollection& coll);
+	bool mayBeDirty(const t& value, int block) const;
+	bool mustBeDirty(const t& value, int block) const;
+	const t& bottom(void) const;
+	const t& top(void) const;
+	void set(t& d, const t& s) const;
+	void update(t& d, const BlockAccess& acc);
+	void join(t& d, const t& s) const;
+	bool equals(const t& s1, const t& s2) const;
+
+private:
+	t bot, _top;
+	const BlockCollection& _coll;
+};
+inline io::Output& operator<<(io::Output& out, const DirtyManager::t& v) { v.print(out); return out; }
 
 // useful typedefs
 typedef genstruct::AllocatedTable<ACS *> acs_stack_t;
@@ -200,6 +237,10 @@ extern Identifier<ilp::Var *> MISS_VAR;
 extern Identifier<Vector<ACS *> *> ENTRY_MAY_ACS;
 extern SilentFeature ACS_MAY_FEATURE;
 extern Identifier<Vector<ACS *> *> MAY_ACS;
+
+// Dirty analysis
+extern SilentFeature DIRTY_FEATURE;
+extern Identifier<AllocatedTable<DirtyManager::t> > DIRTY;
 
 } }		// otawa::dcache
 

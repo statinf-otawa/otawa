@@ -125,7 +125,7 @@ Segment::~Segment(void) {
  * @param addr	Address to find an instruction for.
  * @return		Found instruction or null.
  */
-Inst *Segment::findInstAt(address_t addr) {
+Inst *Segment::findInstAt(const Address& addr) {
 	ProgItem *item = findItemAt(addr);
 	if(!item) {
 		Inst *inst = decode(addr);
@@ -147,7 +147,7 @@ Inst *Segment::findInstAt(address_t addr) {
  * @param addr	Address to find an instruction for.
  * @return		Found item or null.
  */
-ProgItem *Segment::findItemAt(address_t addr) {
+ProgItem *Segment::findItemAt(const Address& addr) {
 	//cerr << "findItemAt(" << addr << ")\n";
 	if(address().page() != addr.page()
 	|| addr < address()

@@ -110,7 +110,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		}
 
 		// type of action
-		BlockAccess::action_t action = aa->isStore() ? BlockAccess::LOAD : BlockAccess::STORE;
+		BlockAccess::action_t action = aa->isStore() ? BlockAccess::STORE : BlockAccess::LOAD;
 
 		// access any ?
 		if(addr.isNull()) {
@@ -139,7 +139,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		addr = Address(addr.page(), addr.offset() & ~cache->blockMask());
 		int set = cache->line(addr.offset());
 		if(last.isNull()) {
-			const Block& block = colls[set].get(set, addr);
+			const Block& block = colls[set].obtain(addr);
 			blocks.add(BlockAccess(aa->instruction(), action, block));
 			if(logFor(LOG_INST))
 				log << "\t\t\t\t" << aa->instruction() << " access " << addr
@@ -279,15 +279,14 @@ void Block::print(io::Output& out) const {
 
 /**
  * Obtain a block matching the given address.
- * @param set	Set of the block.
  * @param addr	Address of the looked block.
  * @return		Matching block (possibly created).
  */
-const Block& BlockCollection::get(int set, const Address& addr) {
+const Block& BlockCollection::obtain(const Address& addr) {
 	for(int i = 0; i < blocks.count(); i++)
 		if(addr == blocks[i].address())
 			return blocks[i];
-	blocks.add(Block(set, blocks.count(), addr));
+	blocks.add(Block(_set, blocks.count(), addr));
 	return blocks[blocks.count() - 1];
 }
 
@@ -348,14 +347,14 @@ const Block& BlockCollection::get(int set, const Address& addr) {
  */
 
 /**
- * @fn BlockAccess::BlockAccess(Inst *instruction, action_t action, int first, int last);
+ * @fn BlockAccess::BlockAccess(Inst *instruction, action_t action, Address::offset_t first, Address::offset_t last);
  * Build a block access of type range. Notice the address of first block may be
  * greater than the address of the second block, meaning that the accessed addresses
  * ranges across the address modulo by 0.
  * @param instruction	Instruction performing the access.
  * @param action		Type of action.
- * @param first			First accessed block.
- * @param last			Last access block.
+ * @param first			First accessed block (must a cache block boundary address).
+ * @param last			Last access block (must a cache block boundary address).
  */
 
 /**
@@ -397,15 +396,23 @@ const Block& BlockCollection::get(int set, const Address& addr) {
  */
 
 /**
- * @fn int BlockAccess::first(void) const;
+ * @fn Address::offset_t BlockAccess::first(void) const;
  * Only for the RANGE kind, get the first accessed block.
  * @return	First accessed block.
  */
 
 /**
- * @fn int BlockAccess::last(void) const
+ * @fn Address::offset_t BlockAccess::last(void) const
  * Only for the RANGE kind, get the last accessed block.
  * @return	Last accessed block.
+ */
+
+
+/**
+ * @fn bool BlockAccess::inRange(Address::offset_t block) const;
+ * Test if the given block is the range of the given access.
+ * @param block		Address of the cache block.
+ * @return			True if it is in the range, false else.
  */
 
 /**

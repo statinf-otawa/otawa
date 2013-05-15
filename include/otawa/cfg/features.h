@@ -109,6 +109,11 @@ extern SilentFeature LOOP_HEADERS_FEATURE;
 extern Identifier<bool> LOOP_HEADER;
 extern Identifier<bool> BACK_EDGE;
 
+// CFG I/O service
+class CFGSaver;
+class CFGLoader;
+extern Identifier<sys::Path> CFG_IO_PATH;
+
 } // otawa
 
 #endif /* OTAWA_CFG_FEATURES_H_ */

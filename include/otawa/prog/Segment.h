@@ -36,8 +36,9 @@ public:
 	inline address_t address(void) const { return _address; }
 	inline ot::size size(void) const { return _size; }
 	inline address_t topAddress(void) const { return _address + t::uint32(_size); }
-	ProgItem *findItemAt(address_t addr);
-	Inst *findInstAt(address_t addr);
+	ProgItem *findItemAt(const Address& addr);
+	Inst *findInstAt(const Address& addr);
+	inline bool contains(const Address& addr) const { return address() <= addr && addr < topAddress(); }
 
 	// ItemIter class	
 	class ItemIter: public PreIterator<ItemIter, ProgItem *> {

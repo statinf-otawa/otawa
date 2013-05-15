@@ -48,7 +48,7 @@ class BasicBlock: public PropList {
 	friend class Edge;
 protected:
 	Inst *first;
-	size_t _size;
+	t::size _size;
 	static const unsigned long FLAG_Call = 0x01;
 	static const unsigned long FLAG_Unknown = 0x02;
 	static const unsigned long FLAG_Return = 0x04;
@@ -149,9 +149,9 @@ inline Output& operator<<(Output& out, BasicBlock *bb) { bb->print(out); return 
 class CodeBasicBlock: public BasicBlock {
 	friend class CFGInfo;
 public:
-	CodeBasicBlock(Inst *head, size_t size = 0);
-	inline void set(Inst *_first, size_t size) { first = _first; _size = size; }
-	inline void setSize(size_t size) { _size = size; }
+	CodeBasicBlock(Inst *head, t::size size = 0);
+	inline void set(Inst *_first, t::size size) { first = _first; _size = size; }
+	inline void setSize(t::size size) { _size = size; }
 	inline void setFirst(Inst *_first) { first = _first; }
 	inline void setReturn(void) { flags |= FLAG_Return; flags &= ~ FLAG_Call; }
 	inline void setCall(void) { flags |= FLAG_Call; flags &= ~ FLAG_Return; }

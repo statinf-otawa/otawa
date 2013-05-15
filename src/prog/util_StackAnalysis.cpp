@@ -349,11 +349,25 @@ public:
 		}
 	}
 
-	const Value& get(const Value& addr) const {
+	Value fromImage(const Address& addr, Process *proc, int size) const {
+		switch(size) {
+		case 1: { t::uint8 v; proc->get(addr, v); return Value(CST, v); }
+		case 2: { t::uint16 v; proc->get(addr, v); return Value(CST, v); }
+		case 4: { t::uint32 v; proc->get(addr, v); return Value(CST, v); }
+		}
+		return first.val;
+	}
+
+	Value get(const Value& addr, Process *proc, int size) const {
 		Node * cur;
 		for(cur = first.next; cur && cur->addr < addr; cur = cur->next) ;
 		if(cur && cur->addr == addr)
 			return cur->val;
+		if(addr.kind() == CST)
+			for(Process::FileIter file(proc); file; file++)
+				for(File::SegIter seg(file); seg; seg++)
+					if(seg->contains(addr.value()))
+						return fromImage(addr.value(), proc, size);
 		return first.val;
 	}
 
@@ -376,7 +390,7 @@ public:
 	typedef StackProblem Problem;
 	Problem& getProb(void) { return *this; }
 
-	StackProblem(void) {
+	StackProblem(Process *_proc): proc(_proc) {
 		//stack::Value v(stack::SP, 0);
 		//set(_init, 1, v);
 	}
@@ -398,12 +412,12 @@ public:
 	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
 	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
 
-	const stack::Value& get(const stack::State& state, int i) {
+	stack::Value get(const stack::State& state, int i) {
 		if(i <  0)
 			return tmp[-i];
 		else {
 			stack::Value addr(stack::REG, i);
-			return state.get(addr);
+			return state.get(addr, proc, 0);
 		}
 	}
 
@@ -468,7 +482,7 @@ public:
 					case sem::LOAD: {
 							stack::Value addr = get(*state, i.a());
 							addAddress(inst, false, addr);
-							set(*state, i.d(), state->get(addr));
+							set(*state, i.d(), state->get(addr, proc, i.b()));
 						} break;
 					case sem::STORE: {
 							stack::Value addr = get(*state, i.a());
@@ -549,6 +563,7 @@ private:
 	sem::Block b;
 	genstruct::Vector<Pair<int, Domain *> > todo;
 	genstruct::Vector<AccessedAddress *> addrs;
+	Process *proc;
 };
 
 
@@ -596,7 +611,7 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	// perform the analysis
 	if(logFor(LOG_CFG))
 		log << "FUNCTION " << cfg->label() << io::endl;
-	StackProblem prob;
+	StackProblem prob(ws->process());
 	const hard::Register *sp = ws->process()->platform()->getSP();
 	if(sp)
 		prob.initialize(sp, Address::null);
