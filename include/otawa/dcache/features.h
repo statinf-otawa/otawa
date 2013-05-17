@@ -179,6 +179,8 @@ public:
 		inline const dfa::BitSet& may(void) const { return _may; }
 		inline const dfa::BitSet& must(void) const { return _must; }
 		void print(io::Output& out) const;
+		inline bool mayBeDirty(int b) const { return _may.contains(b); }
+		inline bool mustBeDirty(int b) const { return _must.contains(b); }
 	private:
 		inline dfa::BitSet& may(void) { return _may; }
 		inline dfa::BitSet& must(void) { return _must; }

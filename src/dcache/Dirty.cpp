@@ -177,7 +177,8 @@ bool DirtyManager::equals(const t& s1, const t& s2) const {
  */
 void DirtyManager::update(t& d, const BlockAccess& acc) {
 	switch(acc.action()) {
-	case BlockAccess::LOAD: break;
+	case BlockAccess::LOAD:
+		break;
 
 	case BlockAccess::STORE:
 		switch(acc.kind()) {
@@ -294,7 +295,7 @@ public:
 	typedef DirtyManager::t Domain;
 	Problem(const BlockCollection& coll): man(coll) { }
 	inline const Domain& bottom(void) const { return man.bottom(); }
-	inline const Domain& entry(void) const { return man.top(); }
+	inline const Domain& entry(void) const { return man.bottom(); }	/* very ugly and unsound, should be fixed */
 	inline void lub(Domain &a, const Domain &b) const { man.join(a, b); }
 	inline void assign(Domain &a, const Domain &b) const { man.set(a, b); }
 	inline bool equals(const Domain &a, const Domain &b) const { return man.equals(a, b); }
