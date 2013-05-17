@@ -78,8 +78,8 @@ const MUSTProblem::Domain& MUSTProblem::entry(void) const { return ent; }
  * @param acc	Purging block access.
  */
 void MUSTProblem::purge(Domain& out, BlockAccess& acc) {
-	ASSERT(acc.action() == BlockAccess::PURGE);
-	ASSERT(acc.kind() <= BlockAccess::RANGE);
+  ASSERT(acc.action() == BlockAccess::PURGE);
+  //ASSERT(acc.kind() <= BlockAccess::RANGE);
 
 	switch(acc.kind()) {
 	case BlockAccess::RANGE:
@@ -729,10 +729,10 @@ void MUSTPERS::update(Domain& out, const Domain& in, BasicBlock* bb) {
 	}
 }
 
-elm::io::Output& operator<<(elm::io::Output& output, const Pair<const MUSTPERS&, const MUSTPERS::Domain>& dom) {
+    /*elm::io::Output& operator<<(elm::io::Output& output, const Pair<const MUSTPERS&, const MUSTPERS::Domain>& dom) {
 	dom.fst.print(output, dom.snd);
 	return(output);
-}
+	}*/
 
 
 /**
