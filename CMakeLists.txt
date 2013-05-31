@@ -147,7 +147,6 @@ endif()
 
 # add subdirectories
 add_subdirectory(src)
-add_subdirectory(bin)
 add_subdirectory(doc)
 add_subdirectory(include)
 

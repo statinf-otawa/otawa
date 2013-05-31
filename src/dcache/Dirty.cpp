@@ -367,9 +367,9 @@ protected:
 		for(CFGCollection::Iterator cfg(otawa::INVOLVED_CFGS(ws)); cfg; cfg++)
 			for(CFG::BBIterator bb(cfg); bb; bb++) {
 				(*DIRTY(bb))[coll.cacheSet()] = *listener.results[cfg->number()][bb->number()];
-				cerr << "DEBUG: " << cfg->number() << ":" << bb->number()
-					 << ": " << *listener.results[cfg->number()][bb->number()]
-					 << ": " << (*DIRTY(bb))[coll.cacheSet()] << io::endl;
+				//cerr << "DEBUG: " << cfg->number() << ":" << bb->number()
+				//	 << ": " << *listener.results[cfg->number()][bb->number()]
+				//	 << ": " << (*DIRTY(bb))[coll.cacheSet()] << io::endl;
 			}
 	}
 };

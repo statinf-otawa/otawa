@@ -188,17 +188,17 @@ set(libotawa_SOURCES
 include_directories(".")
 
 # generated sources by flex and bison
-if(WIN32)
-	BISON_FILE("ipet_parser.yy")
-	list(APPEND libotawa_SOURCES ${OUTFILE})
-	FLEX_FILE("ipet_lexer.ll")
-	list(APPEND libotawa_SOURCES lex.${PREFIX}.c lex.${PREFIX}.h)
+#if(WIN32)
+#	BISON_FILE("ipet_parser.yy")
+#	list(APPEND libotawa_SOURCES ${OUTFILE})
+#	FLEX_FILE("ipet_lexer.ll")
+#	list(APPEND libotawa_SOURCES lex.${PREFIX}.c lex.${PREFIX}.h)
 
-	BISON_FILE("util_fft_parser.yy")
-	list(APPEND libotawa_SOURCES ${OUTFILE})
-	FLEX_FILE("util_fft_lexer.ll")
-	list(APPEND libotawa_SOURCES lex.${PREFIX}.c lex.${PREFIX}.h)
-elseif(UNIX)
+#	BISON_FILE("util_fft_parser.yy")
+#	list(APPEND libotawa_SOURCES ${OUTFILE})
+#	FLEX_FILE("util_fft_lexer.ll")
+#	list(APPEND libotawa_SOURCES lex.${PREFIX}.c lex.${PREFIX}.h)
+#elseif(UNIX)
 	BISON_TARGET(ipet_parser ipet_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.cpp COMPILE_FLAGS --defines=ipet_parser.h)
 	FLEX_TARGET(ipet_lexer ipet_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/ipet_lexer.cc)
 	ADD_FLEX_BISON_DEPENDENCY(ipet_lexer ipet_parser)
@@ -210,7 +210,7 @@ elseif(UNIX)
 		${FLEX_ipet_lexer_OUTPUTS}
 		${BISON_util_fft_parser_OUTPUTS}
 		${FLEX_util_fft_lexer_OUTPUTS})
-endif()
+#endif()
 
 # build
 add_library(otawa SHARED ${libotawa_SOURCES})
