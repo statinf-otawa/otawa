@@ -120,12 +120,15 @@ public:
 		StringBuffer buf;
 		buf << '"';
 		int p = value.indexOf('"');
+		int last_p = -1;
 		while(p >= 0) {
-			buf << value.substring(0, p);
+			if (p > 0)
+				buf << value.substring(last_p + 1, p - 1);
 			buf << "&quot;";
+			last_p = p;
 			p = value.indexOf('"', p + 1);
 		}
-		buf << p;
+		buf << value.substring(last_p + 1);
 		buf << '"';
 		return buf.toString();
 	}
