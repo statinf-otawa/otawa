@@ -10,6 +10,19 @@ canon card(32) "_GT"
 canon card(32) "_GE"
 canon card(32) "_ANY_COND"
 
+let NO_TYPE = 0
+let INT8 = 1
+let INT16 = 2
+let INT32 = 3
+let INT64 = 4
+let UINT8 = 5
+let UINT16 = 6
+let UINT32 = 7
+let UINT64 = 8
+let FLOAT32 = 9
+let FLOAT64 = 10
+
+
 var i[1, card(32)]
 
 let t1				= -1
@@ -17,6 +30,7 @@ let t2				= -2
 let t3				= -3
 macro CR(i)			= "_CR"(i)
 macro R(i)			= "_GPR"(i)
+macro FR(i)			= "_FPR"(i)
 macro _XER			= "_XER"
 macro _LR			= "_LR"
 macro _CTR			= "_CTR"
@@ -117,31 +131,40 @@ extend cmp_log_imm
 
 // integer load
 extend lb_zero
-	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; load(R(rd), t1, 1); }
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; load(R(rd), t1, UINT8); }
 extend lb_zero_indexed
-	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, 1); }
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, UINT8); }
 extend lb_zero_update
-	otawa_sem = { _add(t1, R(ra), d); load(R(rd), t1, 1); set(R(ra), t1); }
+	otawa_sem = { _add(t1, R(ra), d); load(R(rd), t1, UINT8); set(R(ra), t1); }
 extend lb_zero_update_indexed
-	otawa_sem = { _add(t1, R(ra), rb.sem); load(R(rd), t1, 1); set(R(ra), t1); }
+	otawa_sem = { _add(t1, R(ra), rb.sem); load(R(rd), t1, UINT8); set(R(ra), t1); }
 
-extend lhw_zero, lhw_alg
-	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; load(R(rd), t1, 2); }
-extend lhw_zero_indexed, lhw_alg_indexed
-	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, 2); }
-extend lhw_zero_update, lhw_alg_update
-	otawa_sem = { _add(t1, R(ra), d); load(R(rd), t1, 2); set(R(ra), t1); }
-extend lhw_zero_update_indexed, lhw_alg_update_indexed
-	otawa_sem = { _add(t1, R(ra), rb.sem); load(R(rd), t1, 2); set(R(ra), t1); }
+extend lhw_zero
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; load(R(rd), t1, UINT16); }
+extend lhw_zero_indexed
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, UINT16); }
+extend lhw_zero_update
+	otawa_sem = { _add(t1, R(ra), d); load(R(rd), t1, UINT16); set(R(ra), t1); }
+extend lhw_zero_update_indexed
+	otawa_sem = { _add(t1, R(ra), rb.sem); load(R(rd), t1, UINT16); set(R(ra), t1); }
+
+extend lhw_alg
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; load(R(rd), t1, INT16); }
+extend lhw_alg_indexed
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, INT16); }
+extend lhw_alg_update
+	otawa_sem = { _add(t1, R(ra), d); load(R(rd), t1, INT16); set(R(ra), t1); }
+extend lhw_alg_update_indexed
+	otawa_sem = { _add(t1, R(ra), rb.sem); load(R(rd), t1, INT16); set(R(ra), t1); }
 
 extend lw_zero
-	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; load(R(rd), t1, 4); }
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; load(R(rd), t1, INT32); }
 extend lw_zero_indexed, lwarx
-	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, 4); }
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, INT32); }
 extend lw_zero_update
-	otawa_sem = { _add(t1, R(ra), d); load(R(rd), t1, 4); set(R(ra), t1); }
+	otawa_sem = { _add(t1, R(ra), d); load(R(rd), t1, INT32); set(R(ra), t1); }
 extend lw_zero_update_indexed
-	otawa_sem = { _add(t1, R(ra), rb.sem); load(R(rd), t1, 4); set(R(ra), t1); }
+	otawa_sem = { _add(t1, R(ra), rb.sem); load(R(rd), t1, INT32); set(R(ra), t1); }
 
 extend lhw_br_index
 	otawa_sem = { scratch(R(rd)); }
@@ -151,7 +174,7 @@ extend lw_br_index
 extend int_load_multiple
 	otawa_rec = {
 		if i < 32 then
-			load(R(i), t1, 4);
+			load(R(i), t1, INT32);
 			_add(t1, t1, t2);
 			i = i + 1;
 			otawa_rec;
@@ -200,33 +223,54 @@ extend lstw_imm
 	}
 
 
+// float load
+extend ufp_l_single
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; load(FR(frd), t1, FLOAT32); }
+extend ufp_l_single_indexed
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(FR(frd), t1, FLOAT32); }
+extend ufp_l_single_update
+	// TODO	false in other load + offset + update
+	otawa_sem = { seti(t1, d); _add(t1, t1, R(ra)); load(FR(frd), t1, FLOAT32); set(R(ra), t1); }
+extend ufp_l_single_update_indexed
+	otawa_sem = { _add(t1, R(ra), rb.sem); load(FR(frd), t1, FLOAT32); set(R(ra), t1); }
+
+extend ufp_l_double
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; load(FR(frd), t1, FLOAT64); }
+extend ufp_l_double_indexed
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(FR(frd), t1, FLOAT64); }
+extend ufp_l_double_update
+	otawa_sem = { seti(t1, d); _add(t1, t1, R(ra)); load(FR(frd), t1, FLOAT64); set(R(ra), t1); }
+extend ufp_l_double_update_indexed
+	otawa_sem = { _add(t1, R(ra), rb.sem); load(FR(frd), t1, FLOAT64); set(R(ra), t1); }
+
+
 // integer store
 extend st_byte
-	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; store(R(rs), t1, 1); }
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; store(R(rs), t1, INT8); }
 extend st_byte_indexed
-	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, 1); }
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, INT8); }
 extend st_byte_update
-	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); store(R(rs), t1, 1); set(R(ra), t1); }
+	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); store(R(rs), t1, INT8); set(R(ra), t1); }
 extend st_byte_update_indexed
-	otawa_sem = { _add(t1, R(ra), rb.sem); store(R(rs), t1, 1); set(R(ra), t1); }
+	otawa_sem = { _add(t1, R(ra), rb.sem); store(R(rs), t1, INT8); set(R(ra), t1); }
 
 extend st_half_word
-	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; store(R(rs), t1, 2); }
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; store(R(rs), t1, INT16); }
 extend st_half_word_indexed
-	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, 2); }
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, INT16); }
 extend st_half_word_update
-	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); store(R(rs), t1, 2); set(R(ra), t1); }
+	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); store(R(rs), t1, INT16); set(R(ra), t1); }
 extend st_half_word_update_indexed
-	otawa_sem = { _add(t1, R(ra), rb.sem); store(R(rs), t1, 2); set(R(ra), t1); }
+	otawa_sem = { _add(t1, R(ra), rb.sem); store(R(rs), t1, INT16); set(R(ra), t1); }
 
 extend st_word
-	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; store(R(rs), t1, 4); }
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; store(R(rs), t1, INT32); }
 extend st_word_indexed, stw_br_index
-	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, 4); }
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; store(R(rs), t1, INT32); }
 extend st_word_update
-	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); store(R(rs), t1, 4); set(R(ra), t1); }
+	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); store(R(rs), t1, INT32); set(R(ra), t1); }
 extend st_word_update_indexed
-	otawa_sem = { _add(t1, R(ra), rb.sem); store(R(rs), t1, 4); set(R(ra), t1); }
+	otawa_sem = { _add(t1, R(ra), rb.sem); store(R(rs), t1, INT32); set(R(ra), t1); }
 
 extend sthw_br_index
 	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; scratch(t2); store(t2, t1, 2); }
@@ -283,6 +327,26 @@ extend int_store_multiple
 		i = rs;
 		otawa_rec;
 	}
+
+
+// float store
+extend ufp_st_single
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; store(FR(frs), t1, FLOAT32); }
+extend ufp_st_single_indexed
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; store(FR(frs), t1, FLOAT32); }
+extend ufp_st_single_update
+	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); store(FR(frs), t1, FLOAT32); set(R(ra), t1); }
+extend ufp_st_single_update_indexed
+	otawa_sem = { _add(t1, R(ra), rb.sem); store(FR(frs), t1, FLOAT32); set(R(ra), t1); }
+
+extend ufp_st_double
+	otawa_sem = { if ra.is_zero then seti(t1, d); else seti(t1, d); _add(t1, ra.sem, t1); endif; store(FR(frs), t1, FLOAT64); }
+extend ufp_st_double_indexed
+	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; store(FR(frs), t1, FLOAT64); }
+extend ufp_st_double_update
+	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); store(FR(frs), t1, FLOAT64); set(R(ra), t1); }
+extend ufp_st_double_update_indexed
+	otawa_sem = { _add(t1, R(ra), rb.sem); store(FR(frs), t1, FLOAT64); set(R(ra), t1); }
 
 
 // ****** ALU ******
@@ -601,3 +665,46 @@ extend srw
 	otawa_sem = { shr(R(ra), rs.sem, rb.sem); }
 extend srw_cr_update
 	otawa_sem = { shr(R(ra), rs.sem, rb.sem); seti(t1, 0); _cmp(CR(7), R(ra), t1); }
+
+	
+// ****** float unit *****
+
+extend 	ufp_add_double, ufp_add_dbl_cr_update, ufp_add_single, ufp_add_sgl_cr_update,
+		ufp_sub_double, ufp_sub_dbl_cr_update, ufp_sub_single, ufp_sub_sgl_cr_update,
+		ufp_mult_double, ufp_mult_dbl_cr_update, ufp_mult_single, ufp_mult_sgl_cr_update,
+		ufp_div_double, ufp_div_dbl_cr_update, ufp_div_single, ufp_div_sgl_cr_update,
+		ufp_mult_add_dbl, ufp_mult_addd_cr_upd, ufp_mult_add_sgl, ufp_mult_adds_cr_upd,
+		ufp_mult_nadd_dbl, ufp_mult_naddd_cr_upd, ufp_mult_nadd_sgl, ufp_mult_nadds_cr_upd,
+		ufp_mult_sub_dbl, ufp_mult_subd_cr_upd, ufp_mult_sub_sgl, ufp_mult_subs_cr_upd,
+		ufp_mult_nsub_dbl, ufp_mult_nsubd_cr_upd, ufp_mult_nsub_sgl, ufp_mult_nsubs_cr_upd
+	otawa_sem = { scratch(FR(frd)); }
+
+extend ufp_cmp_ord, ufp_cmp_unord
+	otawa_sem = { scratch(CR(7 - crfd)); }
+ 
+extend	ufp_mr
+	otawa_sem = { set(FR(frd), FR(frb)); }
+extend	ufp_mr_cr_update
+	otawa_sem = { set(FR(frd), FR(frb)); scratch(CR(6)); }
+extend	ufp_neg_normal, ufp_abs, ufp_nabs, ufp_rsp,
+		ufp_ctiw, ufp_ctiwz
+	otawa_sem = { scratch(FR(frd)); }
+extend	ufp_neg_cr_update, ufp_abs_cr_update, ufp_nabs_cr_update, ufp_rsp_cr_update,
+		ufp_ctiw_cr_update, ufp_ctiwz_cr_update
+	otawa_sem = { scratch(FR(frd)); scratch(CR(6)); }
+extend	ufp_mov_cr_fs
+	otawa_sem = { scratch(CR(7 - crfd)); }
+extend ufp_movf_fs
+	otawa_sem = { scratch(FR(frd)); }
+extend ufp_movf_fsx
+	otawa_sem = { scratch(FR(frd)); scratch(CR(6)); }
+extend ufp_movt_fsb0, ufp_movt_fsb1, ufp_movt_fsf, ufp_movt_fsfi
+	otawa_sem = { }
+extend ufp_movt_fsb0x, ufp_movt_fsb1x, ufp_movt_fsfx, ufp_movt_fsfix
+	otawa_sem = { scratch(CR(6)); }
+
+
+
+	
+	
+	

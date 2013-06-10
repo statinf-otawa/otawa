@@ -88,13 +88,28 @@ typedef enum cond_t {
 } cond_t;
 
 
+// types for load and store
+typedef enum type_t {
+	NO_TYPE = 0,
+	INT8 = 1,
+	INT16 = 2,
+	INT32 = 3,
+	INT64 = 4,
+	UINT8 = 5,
+	UINT16 = 6,
+	UINT32 = 7,
+	UINT64 = 8,
+	FLOAT32 = 9,
+	FLOAT64 = 10
+} type_t;
+
 // inst type
 typedef struct inst {
 	t::uint16 op;
 	t::int16 _d;
 	union {
-		t::uint32 cst;							// set, seti, setp
-		struct { t::int16 a, b;  } regs;		// others
+		t::uint32 cst;								// set, seti, setp
+		struct { t::int16 a, b;  } regs;			// others
 	} args;
 
 	inst(void): op(NOP), _d(0) { }
@@ -110,6 +125,7 @@ typedef struct inst {
 	inline t::int16 a(void) const { return args.regs.a; }
 	inline t::int16 b(void) const { return args.regs.b; }
 	inline t::uint32 cst(void) const { return args.cst; }
+	inline type_t type(void) const { return type_t(args.regs.b); }
 
 	void print(elm::io::Output& out) const;
 } inst;
@@ -121,7 +137,9 @@ inline inst trap(void) { return inst(TRAP); }
 inline inst cont(void) { return inst(CONT); }
 inline inst _if(int cond, int sr, int jump) { ASSERT(cond >= 0 && cond < MAX_COND); return inst(IF, cond, sr, jump); }
 inline inst load(int d, int a, int b) { return inst(LOAD, d, a, b); }
+inline inst load(int d, int a, type_t b) { return inst(LOAD, d, a, b); }
 inline inst store(int d, int a, int b) { return inst(STORE, d, a, b); }
+inline inst store(int d, int a, type_t b) { return inst(STORE, d, a, b); }
 inline inst scratch(int d) { return inst(SCRATCH, d); }
 inline inst set(int d, int a) { return inst(SET, d, a); }
 inline inst seti(int d, unsigned long cst) { inst i(SETI, d); i.args.cst = cst; return i; }

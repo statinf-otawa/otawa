@@ -1082,7 +1082,7 @@ throw(ProcessorException) {
 
 	// it is an error
 	throw ProcessorException(*this,
-		_ << "no location in loop at " << xline(element));
+		_ << "no location at " << xline(element));
 }
 
 

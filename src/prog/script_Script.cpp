@@ -123,7 +123,7 @@ public:
 		int last_p = -1;
 		while(p >= 0) {
 			if (p > 0)
-				buf << value.substring(last_p + 1, p - 1);
+				buf << value.substring(last_p + 1, p - last_p - 1);
 			buf << "&quot;";
 			last_p = p;
 			p = value.indexOf('"', p + 1);

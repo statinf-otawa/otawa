@@ -141,6 +141,7 @@ static const elm::genstruct::Table<const RegBank *> banks_table(banks, 4);
 
 // semantics functions
 #define _GPR(n)			GPR_bank[n]->platformNumber()
+#define _FPR(n)			FPR_bank[n]->platformNumber()
 #define _CR(n)			CR_bank[n]->platformNumber()
 #define _XER			XER_reg.platformNumber()
 #define _LR				LR_reg.platformNumber()
