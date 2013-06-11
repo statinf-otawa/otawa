@@ -202,14 +202,14 @@ int Application::run(int argc, char **argv) {
 		
 		// process arguments
 		parse(argc, argv);
-		if(!path)
-			throw option::OptionException("no PROGRAM given");
-		if(!entries)
-			entries.add("main");
 		if(help) {
 			displayHelp();
 			return 1;
 		}
+		if(!path)
+			throw option::OptionException("no PROGRAM given");
+		if(!entries)
+			entries.add("main");
 		if(verbose)
 			Processor::VERBOSE(props) = true;
 		if(*log_level)
