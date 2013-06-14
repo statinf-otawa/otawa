@@ -29,7 +29,8 @@
 using namespace otawa;
 
 /**
- * @defgroup owcet owcet Command
+ * @addtogroup commands
+ * @section owcet owcet Command
  *
  * owcet command allows to compute WCET of an application using a script
  * provided for a particular architecture implementation. It provide full power

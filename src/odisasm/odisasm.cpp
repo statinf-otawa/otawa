@@ -30,7 +30,8 @@
 #include <otawa/prog/sem.h>
 
 /**
- * @defgroup odisasm odisasm Command
+ * @addtogroup commands
+ * @section odisasm odisasm Command
  *
  * ODisasm disassemble a binary program and display information provided
  * by the instruction loader, that is,

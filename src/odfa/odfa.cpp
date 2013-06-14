@@ -41,7 +41,8 @@ Identifier<bool> SEM("", false);
 Identifier<bool> FILTER("", false);
 
 /**
- * @defgroup odfa odfa Command
+ * @addtogroup commands
+ * @section odfa odfa Command
  *
  * ODFA allows to launch data flow analysis in a stand-alone way
  * and to display the results. For the time being, only the CLP analysis

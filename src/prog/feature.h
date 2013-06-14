@@ -52,6 +52,7 @@
  * or external tool.
  * @li @ref graph -- module providing classes to handle graphs.
  * @li @ref display -- module providing facilities to display graphs.
+ * @li @ref application -- module helping to write command line applications.
  * 
  * In addition, some utilities are provided:
  * @li @ref dumpcfg -- outputs CFG with different format (textual, .dot).

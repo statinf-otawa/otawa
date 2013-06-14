@@ -41,7 +41,8 @@ using namespace otawa::display;
 
 
 /**
- * @defgroup opcg opcg Command
+ * @addtogroup commands
+ * @section opcg opcg Command
  * 
  * opcg is a simple OTAWA tool to display the Program Call Graph (PCG) of
  * a binary program.

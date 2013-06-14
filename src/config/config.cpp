@@ -35,6 +35,35 @@ using namespace elm;
 using namespace elm::option;
 using namespace otawa;
 
+/**
+ * @addtogroup commands
+ * @section otawa-config otawa-config Command
+ *
+ * This command provides useful information to compile an OTAWA application or a plugin.
+ *
+ * @par Syntax
+ * @code
+ * > otawa-config [OPTIONS] MODULES...
+ * @endcode
+ *
+ * The following options are available:
+ * @li --cflags -- output compilation C++ flags
+ * @li --data -- output the OTAWA data path
+ * @li--doc -- output the OTAWA documentation path
+ * @li --has-so -- exit with 0 return code if dynamic libraries are available, non-0 else
+ * @li -h, --help -- display the help message
+ * @li --list-ilps, --ilp -- list ILP solver plugins available
+ * @li --libs -- output linkage C++ flags
+ * @li --list-loaders, --loader list loader plugins available
+ * @li --modules, --list-modules list available modules
+ * @li --prefix	output the prefix directory of OTAWA
+ * @li --procs, --list-procs -- list available processor collections
+ * @li --version -- output the current version
+ * @li --scripts -- output the scripts path
+ * @li --list-scripts -- output the list of available scripts
+ * @li -r, --rpath -- output options to control RPATH on OS supporting it.
+ */
+
 // Configuration class
 class Configuration {
 public:

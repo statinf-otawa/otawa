@@ -18,7 +18,8 @@ using namespace elm::genstruct;
 
 
 /**
- * @defgroup ostat ostat Command
+ * @addtogroup commands
+ * @section ostat ostat Command
  * 
  * OStat displays some statistics - average, maximum - about a binary file:
  * @li basic block count,

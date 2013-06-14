@@ -26,11 +26,91 @@
 
 namespace otawa {
 
+/**
+ * @defgroup commands Commands
+ *
+ * This page provide documentation about the commands provided by OTAWA:
+ * @li @ref dumpcfg
+ * @li @ref mkff
+ * @li @ref odec
+ * @li @ref odfa
+ * @li @ref odisasm
+ * @li @ref oipet (deprecated)
+ * @li @ref opcg
+ * @li @ref ostat
+ * @li @ref otawa-config
+ * @li @ref owcet
+ */
+
+/**
+ * @defgroup application Application Writing
+ *
+ * OTAWA may be used from an graphical user interface like Eclipse
+ * or from the command line. In the latter case, you can either use
+ * the existing commands (@ref dumpcfg, @ref owcet, etc) but you can also
+ * write your own commands adapted to a specific process not already provided
+ * by OTAWA.
+ *
+ * Although the usual way to write a command with a @c main function works,
+ * you can save a tedious task of handling parameters, opening the executable, processing
+ * error by using the @ref otawa::app::Application class.
+ *
+ * Just define your own class inheriting and specializing app::Application like below
+ * and you do neither need to declare the @c main function yourself thanks to the @c OTAWA_RUN macro.
+ *
+ * @code
+ * #include <otawa/app/Application.h>
+ * using namespace otawa;
+ *
+ * class MyCommand: public Application {
+ * public:
+ * 	MyCommand(void): Application("my-command", Version(1, 0, 2)) { }
+ * protected:
+ *	void work(PropList &props) throw(elm::Exception) {
+ *		// do_something useful on the opened workspace
+ *	}
+ * };
+ * OTAWA_RUN(MyApp)
+ * @endcode
+ *
+ * Basically, the produced command takes as first argument the executable and as other free arguments
+ * the function names to process. If no other free argument is provided, the command is applied on
+ * the @c main function of the executable. For each function name, a call to @c work() method
+ * is performed, the passed property list is initialized accordingly and a workspace ready to use
+ * is created. To get it, just call the @ref Application::workspace() method. You can now perform
+ * any required analysis.
+ *
+ * In addition, the @ref app::Application class provides standards options like:
+ * @li --add-prop ID=VALUE – set a configuration property (passed to manager and other processors),
+ * @li -f|--flowfacts PATH – select a flow fact file to load
+ * @li -h|--help – option help display,
+ * @li --load-param ID=VALUE – add a load parameter (passed to the manager load command)
+ * @li --log one of proc, deps, cfg, bb or inst -- select level of log
+ * @li -v|--verbose – verbose mode activation.
+ *
+ * In addition, you can also defines your own options using the @ref elm::option classes:
+ * @code
+ * using namespace elm;
+ * class MyCommand: public app::Application {
+ * public:
+ * 	MyCommand(void): app::Application("my-command", Version(1, 0, 2)),
+ * 		option1(*this),
+ * 		option2(*this), ... { }
+ * private:
+ *	option::SwitchOption option1;
+ *	option::ValueOption<int> option2;
+ *	...
+ * };
+ * @endcode
+ *
+ * Finally, just compile your OTAWA application and it is ready to run and to process an executable.
+ */
 
 /**
  * @class LogOption
  * Defines a command line option supporting log level
  * thanks to strings 'proc', 'cfg' or 'bb'.
+ * @ingroup application
  */
 
 
@@ -144,6 +224,7 @@ void LogOption::process(String arg) {
  * OTAWA_RUN(MyApp)
  * @endcode
  * 
+ * @ingroup application
  */
 
 

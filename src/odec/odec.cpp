@@ -25,6 +25,22 @@
 using namespace elm;
 using namespace otawa;
 
+/**
+ * @addtogroup commands
+ * @section odec	odec Command
+ *
+ * This command is an helper to implement a new loader plugin. Program decoding
+ * is a complex and time-consuming task implemented by @ref otawa::TextDecoder analyzer.
+ * It uses the decoding ability of the loader to follow execution paths of the program.
+ * Because of the complexity of this work, a lot of inconsistencies are silently
+ * ignored by the decoder but these issues could be good indications about
+ * something wrongly done by the implemented loader.
+ *
+ * As it should to costly to support verbosity switch in the decoder, this command
+ * proceed as the decoder but provides as much information on the process impossible.
+ * This makes easier the understanding and the retrieval of an error from a loader.
+ */
+
 // Simple marker
 static Identifier<bool> MARKER("", false);
 
