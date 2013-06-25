@@ -36,14 +36,15 @@ namespace hard { class Platform; }
 namespace sem {
 
 // type of instruction
+// NOTE:	a, b, d, cond, sr, jump, type, addr, reg are field of "inst" class
 typedef enum opcode {
 	NOP = 0,
 	BRANCH,		// perform a branch on content of register a
 	TRAP,		// perform a trap
-	CONT,		// continue in sequence with next instruction
-	IF,			// continue if condition a is meet in register b, else jump c instructions
-	LOAD,		// d <- MEMb(a)
-	STORE,		// MEMb(a) <- d
+	CONT,		// stop the execution of the block
+	IF,			// continue if condition cond is meet in register sr, else skip "jump" instructions
+	LOAD,		// reg <- MEM_type(addr)
+	STORE,		// MEM_type(addr) <- reg
 	SCRATCH,	// d <- T
 	SET,		// d <- a
 	SETI,		// d <- cst
@@ -100,7 +101,8 @@ typedef enum type_t {
 	UINT32 = 7,
 	UINT64 = 8,
 	FLOAT32 = 9,
-	FLOAT64 = 10
+	FLOAT64 = 10,
+	MAX_TYPE = 11
 } type_t;
 
 // inst type
@@ -124,8 +126,19 @@ typedef struct inst {
 	inline t::int16 d(void) const { return _d; }
 	inline t::int16 a(void) const { return args.regs.a; }
 	inline t::int16 b(void) const { return args.regs.b; }
+
+	// seti/setp instruction
 	inline t::uint32 cst(void) const { return args.cst; }
-	inline type_t type(void) const { return type_t(args.regs.b); }
+
+	// load/store instruction
+	inline t::int16 reg(void) const { return d(); }
+	inline t::int16 addr(void) const { return a(); }
+	inline type_t type(void) const { return type_t(b()); }
+
+	// "if" instruction
+	inline cond_t cond(void) const { return cond_t(d()); }
+	inline t::int16 sr(void) const { return a(); }
+	inline t::uint16 jump(void) const { return b(); }
 
 	void print(elm::io::Output& out) const;
 } inst;
@@ -191,6 +204,12 @@ public:
 private:
 	const hard::Platform *pf;
 };
+
+// useful functions
+cond_t invert(cond_t cond);
+int size(type_t type);
+io::Output& operator<<(io::Output& out, type_t type);
+io::Output& operator<<(io::Output& out, cond_t cond);
 
 } }	// otawa::sem
 

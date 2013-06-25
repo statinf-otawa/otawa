@@ -193,24 +193,6 @@ static void printArg(const hard::Platform *pf, io::Output& out, signed short arg
 	out << '?' << arg;
 }
 
-static cstring cond_names[] = {
-	"none",		// NO_COND = 0,
-	"eq",		// EQ,
-	"lt",		// LT,
-	"le",		// LE,
-	"ge",		// GE,
-	"gt",		// GT,
-	"",
-	"",
-	"any",		// ANY_COND = 8
-	"ne",		// NE,
-	"ult",		// ULT,
-	"ule",		// ULE,
-	"uge",		// UGE,
-	"ugt"		// UGT
-};
-
-
 /**
  * @class inst
  * This structure class represents an instruction in the semantics representation of machine instruction.
@@ -299,7 +281,7 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
 	case STORE:
 		out << ' '; printArg(pf, out, inst.d());
 		out << ", "; printArg(pf, out, inst.a());
-		out << ", " << inst.b();
+		out << ", " << inst.type();
 		break;
 	case SCRATCH:
 		out << ' '; printArg(pf, out, inst.d());
@@ -316,9 +298,9 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
 		out << ", 0x" << io::hex(inst.cst()) << " (" << inst.cst() << ")";
 		break;
 	case IF:
-		out << ' ' << cond_names[inst.d()];
-		out << ", "; printArg(pf, out, inst.a());
-		out << ", " << inst.b();
+		out << ' ' << inst.cond();
+		out << ", "; printArg(pf, out, inst.sr());
+		out << ", " << inst.jump();
 		break;
 	case CMP:
 	case CMPU:
@@ -344,6 +326,97 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
 		out << ' ' << inst.d() << ", " << inst.cst();
 		break;
 	}
+}
+
+
+/**
+ * Invert the given condition.
+ * @param cond	Condition to invert.
+ * @return		Inverted condition.
+ */
+cond_t invert(cond_t cond) {
+	static cond_t invs[] = {
+		NO_COND,	// NO_COND = 0,
+		NE,			// EQ,
+		GE,			// LT,
+		GT,			// LE,
+		LT,			// GE,
+		LE,			// GT,
+		NO_COND,
+		NO_COND,
+		ANY_COND,	// ANY_COND = 8,
+		EQ,			// NE,
+		UGE,		// ULT,
+		UGT,		// ULE,
+		ULT,		// UGE,
+		ULE			// UGT,
+	};
+	ASSERT(cond < MAX_COND);
+	return invs[cond];
+}
+
+
+/**
+ * Get the size of the given type.
+ * @param type	Type to get size for.
+ * @return		Size in bytes.
+ */
+int size(type_t type) {
+	static int sizes[] = {
+			0,		// NO_TYPE = 0,
+			1,		// INT8 = 1,
+			2,		// INT16 = 2,
+			4,		// INT32 = 3,
+			8,		// INT64 = 4,
+			1,		// UINT8 = 5,
+			2,		// UINT16 = 6,
+			4,		// UINT32 = 7,
+			8,		// UINT64 = 8,
+			4,		// FLOAT32 = 9,
+			8		// FLOAT64 = 10
+	};
+	return sizes[type];
+}
+
+io::Output& operator<<(io::Output& out, type_t type) {
+	static cstring labels[] = {
+			"no-type",	// NO_TYPE = 0,
+			"int8",		// INT8 = 1,
+			"int16",	// INT16 = 2,
+			"int32",	// INT32 = 3,
+			"int64",	// INT64 = 4,
+			"uint8",	// UINT8 = 5,
+			"uint16",	// UINT16 = 6,
+			"uint32",	// UINT32 = 7,
+			"uint64",	// UINT64 = 8,
+			"float32",	// FLOAT32 = 9,
+			"float64"	// FLOAT64 = 10
+	};
+	ASSERT(type < MAX_TYPE);
+	out << labels[type];
+	return out;
+}
+
+io::Output& operator<<(io::Output& out, cond_t cond) {
+	static cstring labels[] = {
+		"none",		// NO_COND = 0,
+		"eq",		// EQ,
+		"lt",		// LT,
+		"le",		// LE,
+		"ge",		// GE,
+		"gt",		// GT,
+		"",
+		"",
+		"any",		// ANY_COND = 8
+		"ne",		// NE,
+		"ult",		// ULT,
+		"ule",		// ULE,
+		"uge",		// UGE,
+		"ugt"		// UGT
+	};
+	ASSERT(cond < MAX_COND);
+	out << labels[cond];
+	return out;
 }
 
 } }	// otawa::sem

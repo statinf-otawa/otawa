@@ -31,6 +31,18 @@ macro divu(d, a, b)		= "block.add"("sem::divu"(d, a, b))
 macro mod(d, a, b)		= "block.add"("sem::mod"(d, a, b))
 macro modu(d, a, b)		= "block.add"("sem::modu"(d, a, b))
 
+let NO_TYPE = 0
+let INT8 = 1
+let INT16 = 2
+let INT32 = 3
+let INT64 = 4
+let UINT8 = 5
+let UINT16 = 6
+let UINT32 = 7
+let UINT64 = 8
+let FLOAT32 = 9
+let FLOAT64 = 10
+
 type word = card(32)
 
 canon word "_GPR"(word)
@@ -323,7 +335,7 @@ extend LDM
 	otawa_sem_rec = {
 		if ii <= 15 then
 			if reglist<ii..ii> == 1 then
-				load(R(ii), t1, 4);
+				load(R(ii), t1, UINT32);
 				add(t1, t1, t2);
 			endif;
 			ii = ii + 1;
@@ -336,7 +348,7 @@ extend LDR_imm
 		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 		seti(t2, if setu == 0 then -offset12 else offset12 endif);
 		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
-		load(rd.i, t1, if setb then 1 else 4 endif);
+		load(rd.i, t1, if setb then UINT8 else UINT32 endif);
 		if setpre == 0 then 	add(rn.i, t1, t2);
 		else if setw == 1 then	_set(rn.i, t1);
 		endif; endif;
@@ -348,7 +360,7 @@ extend LDR_shr
 		shifter_operand.otawa_sem;
 		if setu == 0 then neg(t1, t1); endif;
 		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
-		load(rd.i, t2, if setb == 1 then 1 else 4 endif);
+		load(rd.i, t2, if setb == 1 then UINT8 else UINT32 endif);
 		if setpre == 0 then add(rn.i, rn.i, t1);
 		else if setw == 1 then _set(rn.i, t2);
 		endif; endif;
@@ -359,7 +371,7 @@ extend LDRH_imm
 		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 		seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
 		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
-		load(rd.i, t1, 2);
+		load(rd.i, t1, UINT16);
 		if setpre == 0 then add(rn.i, rn.i, t2);
 		else if setw == 1 then _set(rn.i, t1);
 		endif; endif;
@@ -370,7 +382,7 @@ extend LDRH_shr
 		if rn.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
 		if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
 		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
-		load(rd.i, t2, 2);
+		load(rd.i, t2, UINT16);
 		if setpre == 0 then add(rn.i, rn.i, t1);
 		else if setw == 1 then _set(rn.i, t2);
 		endif; endif;
@@ -381,7 +393,7 @@ extend LDRSB_imm
 		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 		seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
 		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
-		load(rd.i, t1, 1);
+		load(rd.i, t1, INT8);
 		if setpre == 0 then add(rn.i, rn.i, t2);
 		else if setw == 1 then _set(rn.i, t1);
 		endif; endif;
@@ -392,7 +404,7 @@ extend LDRSB_shr
 		if rn.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
 		if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
 		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
-		load(rd.i, t2, 1);
+		load(rd.i, t2, INT8);
 		if setpre == 0 then add(rn.i, rn.i, t1);
 		else if setw == 1 then _set(rn.i, t2);
 		endif; endif;
@@ -403,7 +415,7 @@ extend LDRSH_imm
 		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 		seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
 		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
-		load(rd.i, t1, 2);
+		load(rd.i, t1, INT16);
 		if setpre == 0 then add(rn.i, rn.i, t2);
 		else if setw == 1 then _set(rn.i, t1);
 		endif; endif;
@@ -414,7 +426,7 @@ extend LDRSH_shr
 		if rn.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
 		if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
 		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
-		load(rd.i, t2, 2);
+		load(rd.i, t2, INT16);
 		if setpre == 0 then add(rn.i, rn.i, t1);
 		else if setw == 1 then _set(rn.i, t2);
 		endif; endif;
@@ -783,7 +795,7 @@ extend LDMIA_thumb
 	otawa_sem_rec = {
 		if ii < 8 then
 			if llist<ii..ii> == 1 then
-				load(R(ii), t1, 4);
+				load(R(ii), t1, UINT32);
 				add(t1, t1, t2);
 			endif;
 			ii = ii + 1;
@@ -792,34 +804,34 @@ extend LDMIA_thumb
 	}
 
 extend LDR_imm_thumb
-	otawa_sem = { seti(t1, imm * 4); add(t1, rn.i, t1); load(rd.i, t1, 4); }
+	otawa_sem = { seti(t1, imm * 4); add(t1, rn.i, t1); load(rd.i, t1, UINT32); }
 
 extend LDR_shr_thumb
-	otawa_sem = { add(t1, rn.i, rm.i); load(rd.i, t1, 4); }
+	otawa_sem = { add(t1, rn.i, rm.i); load(rd.i, t1, UINT32); }
 
 extend LDR_imm2_thumb
-	otawa_sem = { seti(t1, __IADDR + 8 + imm * 4); load(rd.i, t1, 4); }
+	otawa_sem = { seti(t1, __IADDR + 8 + imm * 4); load(rd.i, t1, UINT32); }
 
 extend LDR_imm3_thumb
-	otawa_sem = { seti(t1, exts(imm) * 4); add(t1, R(13), t1); load(rd.i, t1, 4); }
+	otawa_sem = { seti(t1, exts(imm) * 4); add(t1, R(13), t1); load(rd.i, t1, UINT32); }
 
 extend LDRB_imm_thumb
-	otawa_sem = { seti(t1, imm); add(t1, rn.i, t1); load(rd.i, t1, 1); }
+	otawa_sem = { seti(t1, imm); add(t1, rn.i, t1); load(rd.i, t1, UINT8); }
 
 extend LDRB_shr_thumb
-	otawa_sem = { add(t1, rn.i, rm.i); load(rd.i, t1, 1); }
+	otawa_sem = { add(t1, rn.i, rm.i); load(rd.i, t1, UINT8); }
 
 extend LDRH_imm_thumb
-	otawa_sem = { seti(t1, imm * 2); add(t1, rn.i, t1); load(rd.i, t1, 2); }
+	otawa_sem = { seti(t1, imm * 2); add(t1, rn.i, t1); load(rd.i, t1, UINT16); }
 
 extend LDRH_shr_thumb
-	otawa_sem = { add(t1, rn.i, rm.i); load(rd.i, t1, 2); }
+	otawa_sem = { add(t1, rn.i, rm.i); load(rd.i, t1, UINT16); }
 
 extend LDRSB_thumb
-	otawa_sem = { add(t1, rn.i, rm.i); load(rd.i, t1, 1); }
+	otawa_sem = { add(t1, rn.i, rm.i); load(rd.i, t1, INT8); }
 	
 extend  LDRSH_thumb
-	otawa_sem = { add(t1, rn.i, rm.i); load(rd.i, t1, 2); }
+	otawa_sem = { add(t1, rn.i, rm.i); load(rd.i, t1, INT16); }
 
 extend LSL_imm_thumb
 	otawa_sem = { seti(t1, imm); shl(rd.i, rm.i, t1); scratch(_CPSR); }
@@ -860,7 +872,7 @@ extend POP_thumb
 		seti(t2, 4);
 		otawa_sem_rec;
 		if P == 1 then
-			load(t1, R(13), 4);
+			load(t1, R(13), UINT32);
 			add(R(13), R(13), t2);
 			_branch(t1);
 		endif;
@@ -868,7 +880,7 @@ extend POP_thumb
 	otawa_sem_rec = {
 		if ii < 8 then
 			if llist<ii..ii> == 1 then
-				load(R(ii), R(13), 4);
+				load(R(ii), R(13), UINT32);
 				add(R(13), R(13), t2);
 			endif;
 			ii = ii + 1;

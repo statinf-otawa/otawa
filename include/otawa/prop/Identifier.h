@@ -106,10 +106,10 @@ public:
 	virtual void printFormatted(io::Output& out, const Property *prop) const
 		{ out << (!prop ? def : get(*prop)); }
 	virtual const Type& type(void) const { return otawa::type<T>(); }
-	virtual void scan(PropList& props, VarArg& args) const;
+	//virtual void scan(PropList& props, VarArg& args) const;
 	virtual void fromString(PropList& props, const string& str) const;
-	virtual bool equals(const Property *prop1, const Property *prop2) const
-		{ return prop1->id() == prop2->id() && Equiv<T>::equals(get(prop1), get(prop2)); }
+	/*virtual bool equals(const Property *prop1, const Property *prop2) const
+		{ return prop1->id() == prop2->id() && Equiv<T>::equals(get(prop1), get(prop2)); }*/
 	virtual Property *copy(Property& prop) const
 		{ return GenericProperty<T>::make(this, get(&prop)); }
 
@@ -230,7 +230,7 @@ inline void Identifier<T>::__simple::scan(const Identifier<T>& id, PropList& pro
 	id.set(props, ptr);
 }
 
-template <class T>
+/*template <class T>
 void Identifier<T>::scan(PropList& props, VarArg& args) const {
 	_if<type_info<T>::is_scalar || type_info<T>::is_ptr, __simple, __class>
 	::_::scan(*this, props, args);
@@ -238,7 +238,7 @@ void Identifier<T>::scan(PropList& props, VarArg& args) const {
 
 template <> void Identifier<elm::CString>::scan(PropList& props, VarArg& args) const;
 template <> void Identifier<cstring>::scan(PropList& props, VarArg& args) const;
-template <> void Identifier<elm::String>::scan(PropList& props, VarArg& args) const;
+template <> void Identifier<elm::String>::scan(PropList& props, VarArg& args) const;*/
 
 
 // GenericIdentifier<T>::fromString
