@@ -37,21 +37,21 @@ using namespace elm;
 /**
  */
 AddressOption::AddressOption(option::Manager &manager, char short_name, cstring description, Address def)
-: option::StandardOption(manager, short_name, description), addr(def)  {
+: option::AbstractValueOption(Make(manager).cmd(_ << '-' << short_name).description(description)), addr(def)  {
 }
 
 
 /**
  */
 AddressOption::AddressOption(option::Manager &manager, cstring long_name, cstring description, Address def)
-: option::StandardOption(manager, long_name, description), addr(def) {
+: option::AbstractValueOption(Make(manager).cmd(long_name).description(description)), addr(def) {
 }
 
 
 /**
  */
 AddressOption::AddressOption(option::Manager &manager, char short_name, cstring long_name, cstring description, Address def)
-: option::StandardOption(manager, short_name, long_name, description), addr(def) {
+: option::AbstractValueOption(Make(manager).cmd(_ << '-' << short_name).cmd(long_name).description(description)), addr(def) {
 }
 
 

@@ -23,20 +23,22 @@
 #define OTAWA_APP_ADDRESSOPTION_H_
 
 #include <otawa/base.h>
-#include <elm/option/StandardOption.h>
+#include <elm/option/ValueOption.h>
 
 namespace otawa {
 
 using namespace elm;
 
 // AddressOption class
-class AddressOption: public option::StandardOption {
+class AddressOption: public option::AbstractValueOption {
 public:
 	AddressOption(option::Manager &manager, char short_name, cstring description, Address def = Address::null);
 	AddressOption(option::Manager &manager, cstring long_name, cstring description, Address def = Address::null);
 	AddressOption(option::Manager &manager, char short_name, cstring long_name, cstring description, Address def = Address::null);
+	AddressOption(const Make& make, Address def = Address::null): option::AbstractValueOption(make), addr(def) { }
 
 	inline Address address(void) const { return addr; }
+	inline Address operator*(void) const { return addr; }
 
 	// option::Option overload
 	virtual option::usage_t usage(void);

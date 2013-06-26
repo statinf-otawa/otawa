@@ -1529,16 +1529,18 @@ public:
 /**
  * Read a value from the memory.
  * @param address	Address to read.
- * @param size		Size of the data.
+ * @param type		Type of the data.
  * @return			Read data value.
  */
-clp::Value readFromMem(clp::uintn_t address, int size) {
-	// TODO: need to be improved to support sign of values
-	switch(size) {
-	case 1: 	{ t::int8 d; _process->get(address, d); return clp::Value(d); }
-	case 2: 	{ t::int16 d; _process->get(address, d); return clp::Value(d); }
-	case 4: 	{ t::uint32 d; _process->get(address, d); return clp::Value(d); }
-	default:	ASSERTP(false, "illegal data size: " << size); return clp::Value::all;
+clp::Value readFromMem(clp::uintn_t address, sem::type_t type) {
+	switch(type) {
+	case sem::INT8: 	{ t::int8 d; _process->get(address, d); return clp::Value(d); }
+	case sem::INT16: 	{ t::int16 d; _process->get(address, d); return clp::Value(d); }
+	case sem::INT32: 	{ t::int32 d; _process->get(address, d); return clp::Value(d); }
+	case sem::UINT8: 	{ t::uint8 d; _process->get(address, d); return clp::Value(d); }
+	case sem::UINT16: 	{ t::uint16 d; _process->get(address, d); return clp::Value(d); }
+	case sem::UINT32: 	{ t::uint32 d; _process->get(address, d); return clp::Value(d); }
+	default:			return clp::Value::all;
 	}
 }
 	
@@ -1651,7 +1653,7 @@ clp::Value readFromMem(clp::uintn_t address, int size) {
 										 << ", problem = " << (void *)this << io::endl;
 									if(*_data_min <= (clp::uintn_t)addrclp.start()
 									&& (clp::uintn_t)addrclp.start() < *_data_max) {
-										clp::Value r = readFromMem(addrclp.lower(), i.b());
+										clp::Value r = readFromMem(addrclp.lower(), i.type());
 										cerr << " -> loading data from process: " << r << io::endl;
 										set(*state, i.d(), r);
 									}
@@ -1934,7 +1936,7 @@ ClpAnalysis::ClpAnalysis(void): Processor("otawa::ClpAnalysis", Version(0, 1, 0)
 								_nb_filters(0), _nb_top_filters(0), _nb_top_load(0),
 								_nb_load(0), _nb_top_store_addr(0), _nb_load_top_addr(0) {
 	require(LOOP_INFO_FEATURE);
-	require(ipet::FLOW_FACTS_FEATURE);
+	//require(ipet::FLOW_FACTS_FEATURE);
 	require(VIRTUALIZED_CFG_FEATURE);
 	provide(CLP_ANALYSIS_FEATURE);
 }
