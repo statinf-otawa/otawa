@@ -220,13 +220,13 @@ void DelayedBuilder::fix(Edge *oedge, Edge *nedge) {
 		if(!nreturn) {
 			BasicBlock::OutIterator edge(oreturn);
 			if(!edge)
-				throw otawa::Exception(_ << "delayed mono-instruction BB without successor at " << oreturn);
+				throw otawa::Exception(_ << "delayed mono-instruction BB without successor at " << oreturn->address() << ": " << oreturn);
 			if(edge->kind() == Edge::NOT_TAKEN) {
 				nreturn = map.get(edge->target());
 				edge++;
 			}
 			if(edge)
-				throw otawa::Exception(_ << "branch in delayed instruction unsupported at " << oreturn->firstInst());
+				throw otawa::Exception(_ << "branch in delayed instruction unsupported at " << oreturn->address() << ": " << oreturn->firstInst());
 		}
 
 		// reset virtual return block
@@ -326,7 +326,7 @@ void DelayedBuilder::buildBB(CFG *cfg) {
 		}
 		else {
 			Inst *first = bb->firstInst();
-			size_t size = bb->size();
+			ot::size size = bb->size();
 			ASSERT(first);
 
 			// contains delayed instruction
@@ -433,7 +433,7 @@ void DelayedBuilder::buildEdges(CFG *cfg) {
 					insert(edge, ibb);
 				}
 			}
-
+			break;
 		}
 	}
 }

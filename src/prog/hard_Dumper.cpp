@@ -50,9 +50,11 @@ void Dumper::processWorkSpace(WorkSpace *ws) {
 
 	// display memory
 	out << "MEMORY\n";
-	const hard::Memory& mem = pf.memory();
-	for(int i = 0; i < mem.banks().count(); i++) {
-		const Bank& bank = *mem.banks()[i];
+	const hard::Memory *mem = hard::MEMORY(ws);
+	if(!mem)
+		mem = &pf.memory();
+	for(int i = 0; i < mem->banks().count(); i++) {
+		const Bank& bank = *mem->banks()[i];
 		out << "\tBANK " << bank.name() << io::endl;
 		out << "\t\ttype = ";
 		switch(bank.type()) {

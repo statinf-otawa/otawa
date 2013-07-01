@@ -71,8 +71,8 @@ Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::VIRTUAL_RETURN_BLOCK", NULL
 
 
 /**
- * A property with this identifier is hooked at the edge performing a virtual
- * call when inling is used. The associated value is the CFG of the called
+ * A property with this identifier is hooked to the edges performing virtual
+ * calls and virtual returns when inlining is used. The associated value is the CFG of the called
  * function.
  *
  * @par Hooks

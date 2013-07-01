@@ -82,12 +82,16 @@ void CFGChecker::setup(WorkSpace *ws) {
 /**
  */
 void CFGChecker::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-	if(bb->isTargetUnknown()) {
+	if(bb->isExit())
+		return;
+	BasicBlock::OutIterator out(bb);
+	if(!out) {
 		failed = true;
-		Inst *last;
-		for(BasicBlock::InstIter inst(bb); inst; inst++)
-			last = inst;
-		warn(_ << "instruction at " << cfg->format(last->address()) << " (" << last->address() << ") contains unresolved branches.");
+		Inst *control = bb->controlInst();
+		if(control->isControl() && !control->target())
+			warn(_ << "instruction at " << cfg->format(control->address()) << " (" << control->address() << ") contains unresolved branches.");
+		else
+			warn(_ << "disconnected CFG at " << bb << " (" << cfg->format(bb->address()) << ")\n");
 	}
 }
 

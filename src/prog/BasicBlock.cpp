@@ -90,7 +90,7 @@ BasicBlock *BasicBlock::getNotTaken(void) {
  * @deprecated{Use @ref Edge class instead.}
  */
 void BasicBlock::setTaken(BasicBlock *bb) {
-	assert(bb);
+	ASSERT(bb);
 	new Edge(this, bb, EDGE_Taken);
 }
 
@@ -102,7 +102,7 @@ void BasicBlock::setTaken(BasicBlock *bb) {
  * @deprecated{Use @ref Edge class instead.}
  */
 void BasicBlock::setNotTaken(BasicBlock *bb) {
-	assert(bb);
+	ASSERT(bb);
 	new Edge(this, bb, EDGE_NotTaken);
 }
 
