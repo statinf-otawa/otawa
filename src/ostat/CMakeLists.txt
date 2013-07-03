@@ -8,3 +8,5 @@ add_executable(ostat ${ostat_SOURCES})
 
 target_link_libraries(ostat ${LIBELM})
 target_link_libraries(ostat otawa)
+
+install(TARGETS ostat DESTINATION bin)

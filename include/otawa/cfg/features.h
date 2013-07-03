@@ -88,9 +88,12 @@ extern Identifier<Edge *> FROM_EDGE;
 extern Identifier<PSTree *> PROGRAM_STRUCTURE_TREE;
 
 // VIRTUALIZED_CFG_FEATURE
+extern Identifier<bool> DONT_INLINE;
 extern SilentFeature VIRTUALIZED_CFG_FEATURE;
 extern Identifier<bool> VIRTUAL_INLINING;
 extern Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK;
+extern Identifier<CFG *> CALLED_CFG;
+extern Identifier<bool> RECURSIVE_LOOP;
 
 // CFG_CHECKSUM_FEATURE
 extern SilentFeature CFG_CHECKSUM_FEATURE;

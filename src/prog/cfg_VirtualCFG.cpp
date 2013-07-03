@@ -25,6 +25,7 @@
 #include <otawa/cfg.h>
 #include <otawa/cfg/VirtualCFG.h>
 #include <otawa/cfg/VirtualBasicBlock.h>
+#include <otawa/cfg/features.h>
 
 namespace otawa {
 

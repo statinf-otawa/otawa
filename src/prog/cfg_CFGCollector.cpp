@@ -203,8 +203,9 @@ CFGCollector::CFGCollector(void)
 
 void CFGCollector::cleanup(WorkSpace *ws) {
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
-	for (CFGCollection::Iterator iter(*coll); iter; iter++)
-		MARK(iter) = false;
+	if(coll)
+		for (CFGCollection::Iterator iter(*coll); iter; iter++)
+			MARK(iter) = false;
 }
 
 
