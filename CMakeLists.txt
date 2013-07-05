@@ -157,6 +157,7 @@ install(DIRECTORY data/caches DESTINATION share/Otawa/ ${EXCLUDED_FILES})
 install(DIRECTORY data/makefiles DESTINATION share/Otawa/ ${EXCLUDED_FILES})
 install(DIRECTORY data/procs DESTINATION share/Otawa/ ${EXCLUDED_FILES})
 install(DIRECTORY data/scripts DESTINATION share/Otawa/ ${EXCLUDED_FILES})
+install(DIRECTORY data/dtd DESTINATION share/Otawa/ ${EXCLUDED_FILES})
 
 
 # testing

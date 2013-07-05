@@ -32,6 +32,7 @@
 #include <otawa/cfg/Virtualizer.h>
 #include <otawa/cfg/CFGBuilder.h>
 #include <otawa/util/FlowFactLoader.h>
+#include <otawa/proc/DynProcessor.h>
 
 #include "SimpleDisplayer.h"
 #include "DisassemblerDisplayer.h"
@@ -112,6 +113,9 @@ using namespace otawa;
  * @li -D (dot output): the CFG is output as a DOT graph description.
  * @image html dot.png
  *
+ * @li -X or --xml (XML output): output a CFG as an XML file satisfying the DTD
+ * from $(OTAWA_HOME/share/Otawa/data/cfg.dtd .
+ *
  * dumpcfg accepts other options like:
  * @li -a -- dump all functions.
  * @li -d -- disassemble the machine code contained in each basic block,
@@ -140,6 +144,7 @@ public:
 	option::BoolOption disassemble;
 	option::BoolOption dot;
 	option::SwitchOption source;
+	option::SwitchOption xml;
 	Displayer *displayer;
 
 protected:
@@ -162,8 +167,6 @@ void DumpCFG::prepare(PropList &props) {
 		displayer = &disassembler_displayer;
 	else if(dot)
 		displayer = &dot_displayer;
-	//if(ff)
-	//	FLOW_FACTS_PATH(props) = Path(ff);
 }
 
 
@@ -188,8 +191,8 @@ DumpCFG::DumpCFG(void):
 	simple(*this, 'S', "simple", "Select simple output (default).", false),
 	disassemble(*this, 'L', "list", "Select listing output.", false),
 	dot(*this, 'D', "dot", "Select DOT output.", false),
-	//ff(*this, option::cmd, "-f", option::cmd, "--flowfacts", option::description, "flowfacts to use", option::arg_desc, "PATH", option::end),
 	source(*this, option::short_cmd, 's', option::cmd, "--source", option::description, "enable source debugging information output", option::def, false, option::end),
+	xml(option::SwitchOption::Make(*this).cmd("-x").cmd("--xml").description("output the CFG as an XML file")),
 
 	displayer(&simple_displayer)
 {
@@ -217,45 +220,54 @@ void DumpCFG::dump(CFG *cfg) {
 	displayer->display_assembly = display_assembly;
 	displayer->source_info = source;
 
-	// Dump the CFG
-	displayer->onProgramBegin(my_ws);
-	displayer->onCFGBegin(cfg);
-	for(CFG::BBIterator bb(vcfg); bb; bb++) {
-
-		// Looking for start of inline
-		for(BasicBlock::InIterator edge(bb); edge; edge++)
-			if(edge->kind() == Edge::VIRTUAL_CALL) {
-				if(current_inline)
-					displayer->onInlineEnd(current_inline);
-				current_inline = CALLED_CFG(edge);
-				displayer->onInlineBegin(current_inline);
-			}
-
-		// BB begin
-		int index = bb->number();
-		displayer->onBBBegin(bb, index);
-
-		// Look out edges
-		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-			int target_index = -1;
-			if(edge->target() && edge->kind() != Edge::CALL) {
-				target_index = edge->target()->number();
-				displayer->onEdge(0, bb, index, edge->kind(), edge->target(),
-					target_index);
-			} else {
-				displayer->onCall(edge);
-			}
-		}
-
-		// BB end
-		displayer->onBBEnd(bb, index);
+	// XML case (will become the generic case)
+	if(xml) {
+		//XMLDisplayer dis;
+		DynProcessor dis("otawa::cfgio::Output");
+		dis.process(my_ws);
 	}
 
-	// Perform end
-	if(current_inline)
-		displayer->onInlineEnd(current_inline);
-	displayer->onCFGEnd(cfg);
-	displayer->onProgramEnd(my_ws);
+	// Dump the CFG
+	else {
+		displayer->onProgramBegin(my_ws);
+		displayer->onCFGBegin(cfg);
+		for(CFG::BBIterator bb(vcfg); bb; bb++) {
+
+			// Looking for start of inline
+			for(BasicBlock::InIterator edge(bb); edge; edge++)
+				if(edge->kind() == Edge::VIRTUAL_CALL) {
+					if(current_inline)
+						displayer->onInlineEnd(current_inline);
+					current_inline = CALLED_CFG(edge);
+					displayer->onInlineBegin(current_inline);
+				}
+
+			// BB begin
+			int index = bb->number();
+			displayer->onBBBegin(bb, index);
+
+			// Look out edges
+			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+				int target_index = -1;
+				if(edge->target() && edge->kind() != Edge::CALL) {
+					target_index = edge->target()->number();
+					displayer->onEdge(0, bb, index, edge->kind(), edge->target(),
+						target_index);
+				} else {
+					displayer->onCall(edge);
+				}
+			}
+
+			// BB end
+			displayer->onBBEnd(bb, index);
+		}
+
+		// Perform end
+		if(current_inline)
+			displayer->onInlineEnd(current_inline);
+		displayer->onCFGEnd(cfg);
+		displayer->onProgramEnd(my_ws);
+	}
 }
 
 
