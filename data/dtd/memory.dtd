@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT memory	(banks?)>
+
+<!ELEMENT banks			(bank+)>
+<!ELEMENT bank			((name|address|size|type|latency|write_latency|cached|on_chip|writable)+)>
+<!ELEMENT name			(#PCDATA)>
+<!ELEMENT address		(#PCDATA)>	<!-- address -->
+<!ELEMENT size			(#PCDATA)>	<!-- integer -->
+<!ELEMENT type			(#PCDATA)>	<!-- one of DRAM, SPM, ROM, IO -->
+<!ELEMENT latency		(#PCDATA)>	<!-- integer -->
+<!ELEMENT write_latency (#PCDATA)>	<!-- integer -->
+<!ELEMENT cached		(#PCDATA)>	<!-- boolean -->
+<!ELEMENT on_chip		(#PCDATA)>	<!-- boolean -->
+<!ELEMENT writable		(#PCDATA)>	<!-- boolean --> 
