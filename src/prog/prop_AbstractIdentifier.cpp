@@ -221,18 +221,6 @@ const Type& AbstractIdentifier::type(void) const {
 
 
 /**
- * Read the value of an identifier from the given variable arguments and
- * create the matching property in the given property list.
- * @param props	Property list to create property in.
- * @param args	Variable arguments to read identifier value from.
- * @warning		It is an error to call this method on a non-typed identifier.
- */
-void AbstractIdentifier::scan(PropList& props, VarArg& args) const {
-	ASSERTP(0, "scan() not available for identifier " << name());
-}
-
-
-/**
  * Get value of an identifier from a string and store it in the given
  * property list.
  * @param props	Property list to store result into.
@@ -352,9 +340,10 @@ Property *AbstractIdentifier::copy(Property& prop) const {
 /**
  * Serialize the workspace to the current serializer.
  * In the default implementation, do nothing.
+ * @param prop			Property containing the value to serialize.
  * @param serializer	Serializer to serialize to.
  */
-void AbstractIdentifier::serialize(elm::serial2::Serializer& serializer) {
+void AbstractIdentifier::serialize(Property *prop, elm::serial2::Serializer& serializer) {
 }
 
 
@@ -362,8 +351,11 @@ void AbstractIdentifier::serialize(elm::serial2::Serializer& serializer) {
  * Unserialize the workspace to the current unserializer.
  * In the default implementation, do nothing.
  * @param unserializer	Unserializer to unserialize to.
+ * @return				Property result of unserialization, null if the property cannot be unserialized.
+ *
  */
-void AbstractIdentifier::unserialize(elm::serial2::Unserializer& unserializer) {
+Property * AbstractIdentifier::unserialize(elm::serial2::Unserializer& unserializer) {
+	return 0;
 }
 
 } // otawa

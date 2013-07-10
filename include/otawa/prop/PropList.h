@@ -64,16 +64,12 @@ public:
 // PropList class
 class PropList {
 	mutable Property *head;
-	void init(const AbstractIdentifier *id, elm::VarArg& args);
+	//void init(const AbstractIdentifier *id, elm::VarArg& args);
 public:
 	static const PropList EMPTY;
 	inline PropList(const PropList& props): head(0) { addProps(props); };
 	inline PropList(void): head(0) { };
 	virtual ~PropList(void) { clearProps(); };
-
-	// Variable argument constructors
-	PropList(const AbstractIdentifier *id, ...);
-	PropList(const AbstractIdentifier *id, elm::VarArg& args);
 
 	// Property access
 	Property *getProp(const AbstractIdentifier *id) const;

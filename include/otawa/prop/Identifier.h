@@ -106,10 +106,7 @@ public:
 	virtual void printFormatted(io::Output& out, const Property *prop) const
 		{ out << (!prop ? def : get(*prop)); }
 	virtual const Type& type(void) const { return otawa::type<T>(); }
-	//virtual void scan(PropList& props, VarArg& args) const;
 	virtual void fromString(PropList& props, const string& str) const;
-	/*virtual bool equals(const Property *prop1, const Property *prop2) const
-		{ return prop1->id() == prop2->id() && Equiv<T>::equals(get(prop1), get(prop2)); }*/
 	virtual Property *copy(Property& prop) const
 		{ return GenericProperty<T>::make(this, get(&prop)); }
 

@@ -303,38 +303,12 @@ const AbstractIdentifier END("end");
  * @param id	First identifier.
  * @param args	Variable arguments.
  */
-void PropList::init(const AbstractIdentifier *id, elm::VarArg& args) {
+/*void PropList::init(const AbstractIdentifier *id, elm::VarArg& args) {
 	while(id != &END) {
 		id->scan(*this, args);
 		id = args.next<const AbstractIdentifier *>();
 	}
-}
-
-
-/**
- * Property list constructor using a sequence of (identifier, value) pairs
- * passed as variable arguments. This list must be ended by an @ref otawa::END
- * identifier.
- * @param id	First identifier.
- * @param ...	Remaining of the sequence.
- */
-PropList::PropList(const AbstractIdentifier *id, ...): head(0) {
-	VARARG_BEGIN(args, id)
-		init(id, args);
-	VARARG_END
-}
-
-
-/**
- * Property list constructor using a sequence of (identifier, value) pairs
- * passed as variable arguments. This list must be ended by an @ref otawa::END
- * identifier.
- * @param id	First identifier.
- * @param args	Remaining of the sequence.
- */
-PropList::PropList(const AbstractIdentifier *id, elm::VarArg& args): head(0) {
-	init(id, args);
-}
+}*/
 
 
 /**

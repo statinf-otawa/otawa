@@ -49,7 +49,6 @@ public:
 	inline void printFormatted(elm::io::Output& output, const Property& prop) const { printFormatted(output, &prop); }
 
 	virtual const Type& type(void) const;
-	virtual void scan(PropList& props, VarArg& args) const;
 	virtual void fromString(PropList& props, const string& str) const;
 
 	virtual bool equals(const Property *prop1, const Property *prop2) const;
@@ -57,8 +56,8 @@ public:
 	inline Property *copy(Property *prop) const { return copy(*prop); }
 
 	// serialization
-	virtual void serialize(elm::serial2::Serializer& serializer);
-	virtual void unserialize(elm::serial2::Unserializer& unserializer);
+	virtual void serialize(Property *prop, elm::serial2::Serializer& serializer);
+	virtual Property *unserialize(elm::serial2::Unserializer& unserializer);
 
 protected:
 	void initProps(Property *prop, VarArg& args);
