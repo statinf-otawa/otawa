@@ -41,6 +41,7 @@ protected:
 private:
 	string id(CFG *cfg);
 	string id(BasicBlock *bb);
+	void processProps(xom::Element *parent, PropList& props);
 	xom::Element *root, *cfg_node;
 	int last_bb;
 	genstruct::Vector<Edge *> edges;
