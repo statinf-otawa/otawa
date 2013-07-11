@@ -618,7 +618,7 @@ namespace se{
 	 * Build a filter and install them on the current BB.
 	 * @param _bb	BB to work on.
 	 */
-	FilterBuilder::FilterBuilder(BasicBlock *_bb, ClpProblem& problem)
+	FilterBuilder::FilterBuilder(BasicBlock *_bb, clp::ClpProblem& problem)
 	: bb(_bb), pack(bb, clp::ClpStatePack::Context(problem)) {
 		getFilters();
 	}

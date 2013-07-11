@@ -29,9 +29,10 @@
 
 namespace otawa {
 
+namespace clp {
+
 class ClpProblem;
 
-namespace clp {
 
 /** A pack of CLP states inside a BasicBlock.
 *	Use it to retreive the state of a specific instruction or semantic

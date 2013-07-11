@@ -27,15 +27,16 @@
 #include <otawa/proc/Processor.h>
 #include <otawa/data/clp/ClpState.h>
 
-namespace otawa {
+namespace otawa { namespace clp {
 
-class ClpAnalysis: public Processor {
+class Analysis: public Processor {
 public:
 	typedef Pair<const hard::Register *, Address> init_t;
 	/** Initial state of the analysis */
 	static Identifier<init_t> INITIAL;
+	static p::declare reg;
 	
-	ClpAnalysis(void);
+	Analysis(p::declare& r = reg);
 	virtual void configure(const PropList &props);
 	
 	/** @return the number of machine instructions analysed. */
@@ -80,11 +81,6 @@ private:
 	clp::STAT_UINT _nb_top_filters;
 };
 
-extern Feature<ClpAnalysis> CLP_ANALYSIS_FEATURE;
-
-extern Identifier<clp::State> CLP_STATE_IN;
-extern Identifier<clp::State> CLP_STATE_OUT;
-
-}	// otawa
+} }	// otawa::clp
 
 #endif /* OTAWA_DATA_CLP_ANALYSIS_H_ */

@@ -71,9 +71,9 @@ public:
 	// InstIterator class
 	class InstIter: public PreIterator<InstIter, Inst *> {
 	public:
+		inline InstIter(void): inst(0) { }
 		inline InstIter(const BasicBlock *bb)
-			{ ASSERT(bb); if(bb->isEnd()) inst = 0;
-			else { inst = bb->firstInst(); top = bb->topAddress(); } }
+			{ ASSERT(bb); if(bb->isEnd()) inst = 0; else { inst = bb->firstInst(); top = bb->topAddress(); } }
 		inline InstIter(const InstIter& iter): inst(iter.inst) { }
 		inline bool ended(void) const { return !inst; }
 		inline Inst *item(void) const { return inst; }

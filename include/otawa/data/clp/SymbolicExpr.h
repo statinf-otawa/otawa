@@ -583,7 +583,7 @@ namespace se{
 	
 	class FilterBuilder {
 	public:
-		FilterBuilder(BasicBlock *_bb, ClpProblem& problem);
+		FilterBuilder(BasicBlock *_bb, clp::ClpProblem& problem);
 	private:
 		void getFilters(void);
 		void iterateBranchPaths(Inst *inst, const Vector<Inst *>& insts);

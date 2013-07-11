@@ -9,6 +9,7 @@ set(SOURCES
 	"dcache_BlockBuilder.cpp"
 	"dcache_CatBuilder.cpp"
 	"dcache_CatConstraintBuilder.cpp"
+	"dcache_CLPBlockBuilder.cpp"
 	"Dirty.cpp"
 )
 

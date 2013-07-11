@@ -30,6 +30,7 @@
 #include <otawa/prog/sem.h>
 #include <otawa/data/clp/SymbolicExpr.h>
 #include <otawa/display/CFGOutput.h>
+#include <otawa/data/clp/features.h>
 
 using namespace elm;
 using namespace otawa;
@@ -69,7 +70,7 @@ Identifier<bool> FILTER("", false);
 // CLPCFGOutput class
 class CLPCFGOutput: public display::CFGOutput {
 public:
-	CLPCFGOutput() { }
+	CLPCFGOutput(void): before(false), after(false), filter(false), sem(false) { }
 
 protected:
 	virtual void genBBInfo(CFG *cfg, BasicBlock *bb, Output& out) {
@@ -77,14 +78,14 @@ protected:
 		// display state before
 		if(before) {
 			out << "----\nbefore:";
-	 		clp::State state = CLP_STATE_IN(bb);
+	 		clp::State state = clp::STATE_IN(bb);
 	 		state.print(out, workspace()->process()->platform());
 		}
 
 		// display state after
 		if(after) {
 			out << "----\nafter:";
-	 		clp::State state = CLP_STATE_OUT(bb);
+	 		clp::State state = clp::STATE_OUT(bb);
 	 		state.print(out, workspace()->process()->platform());
 		}
 
@@ -127,8 +128,8 @@ private:
 // Generic textual displayer
 class TextualDisplayer: public BBProcessor {
 public:
-	TextualDisplayer(void) { }
- 	TextualDisplayer(AbstractRegistration& reg): BBProcessor(reg) { }
+	TextualDisplayer(void): after(false), before(false), sem(false), filter(false) { }
+ 	TextualDisplayer(AbstractRegistration& reg): BBProcessor(reg), after(false), before(false), sem(false), filter(false)  { }
 
 protected:
 
@@ -226,13 +227,13 @@ class CLPDisplayer: public TextualDisplayer {
 protected:
 
  	virtual void displayBefore(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
- 		clp::State state = CLP_STATE_IN(bb);
+ 		clp::State state = clp::STATE_IN(bb);
  		state.print(out, ws->process()->platform());
  		out<< io::endl;
  	}
 
  	virtual void displayAfter(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
- 		clp::State state = CLP_STATE_OUT(bb);
+ 		clp::State state = clp::STATE_OUT(bb);
  		state.print(out, ws->process()->platform());
  		out<< io::endl;
  	}
@@ -305,7 +306,7 @@ private:
 
 		// perform the analysis
 		require(otawa::VIRTUALIZED_CFG_FEATURE);
-		ClpAnalysis clpa;
+		clp::Analysis clpa;
 		clpa.process(workspace(), props);
 
 		// display the CFG
@@ -363,7 +364,7 @@ private:
 			case hard::Register::INT:
 				t::uint32 v;
 				in >> v;
-				ClpAnalysis::INITIAL(props) = pair(reg, Address(v));
+				clp::Analysis::INITIAL(props) = pair(reg, Address(v));
 				break;
 			default:
 				throw option::OptionException(_ << "unsupported register kind for initialization: " << s);
