@@ -42,12 +42,13 @@ public:
 
 protected:
 	virtual void setup(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 
 private:
 	const hard::Cache *cache;
 	const hard::Memory *mem;
-	genstruct::Vector<BlockAccess> blocks;
+	genstruct::Vector<BlockAccess> accs;
 	BlockCollection *colls;
 	clp::Manager *man;
 };

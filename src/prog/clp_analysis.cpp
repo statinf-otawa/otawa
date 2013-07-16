@@ -19,7 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define HAI_DEBUG
+//#define HAI_DEBUG
 #include <math.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/prog/sem.h>
@@ -43,6 +43,7 @@
 #include <elm/genstruct/quicksort.h>
 #include <otawa/ipet/features.h>
 #include <otawa/data/clp/features.h>
+#include <otawa/hard/Memory.h>
  
 using namespace elm;
 using namespace otawa;
@@ -59,12 +60,12 @@ using namespace otawa::util;
 // Debug output for instructions in the update function
 #define TRACEI(t)	//t
 // Debug output with only the values handled by an instruction
-#define TRACESI(t)	t
+#define TRACESI(t)	//t
 // Debug output with alarm of creation of T
-#define TRACEA(t)	t
+#define TRACEA(t)	//t
 // Debug only the join function
 #define TRACEJ(t)	//t
-#define STATE_MULTILINE
+//#define STATE_MULTILINE
 
 // enable to load data from segments when load results with T
 #define DATA_LOADER
@@ -250,12 +251,12 @@ void Value::print(io::Output& out) const {
 	if (_kind == ALL)
 		out << 'T';
 	else if (_kind == NONE)
-		out << 'N';
+		out << '_';
 	else if ((_delta == 0) && (_mtimes ==  0))
 		out << "k(0x" << io::hex(_lower) << ')';
 		//out << "k(" << _lower << ')';
 	else
-		out << "(0x" << io::hex(_lower) << ", 0x" << io::hex(_delta) << \
+		out << "(0x" << io::hex(_lower) << ", " << _delta << \
 			", 0x" << io::hex(_mtimes) << ')';
 		//out << '(' << _lower << ", " << _delta << ", " << _mtimes << ')';
 }
@@ -325,6 +326,13 @@ void Value::_or(const Value& val) {
 			*this = all;*/
 	}
 }
+
+
+/**
+ * @fn bool isTop(void) const;
+ * Test if the value is top, that is, any value.
+ * @return	True if it is top, false else.
+ */
 
 
 /**
@@ -669,47 +677,71 @@ void Value::ge(intn_t k) {
 }
 
 
+/*
+ * LE logic
+ * ========
+ *
+ * ASSUMPTION: used algorithms does not wrap!
+ * Without such an assumption, filter becomes inefficient.
+ * LEMMA: restrict (l, d, n) to non-wrapping part.
+ * 		if d >= 0,	(l, d, (+inf - l) / d)
+ * 		else		(l, d, (-inf - l) / d)
+ *
+ * 3 cases
+ * 		)####----(		{ x <= k }
+ * 		)-----##-(		case a
+ * 		)--####--(		case b
+ * 		)-##-----(		case c
+ * 	case a: _ 								(no intersection)
+ * 	case c: (b, l, n)						(identity)
+ * 	case b: (l, d, (k - l)/d) 	if d >= 0	(forward intersection)
+ *			(l + ds, d, d - ks	if d < 0	(backward intersection)
+ *			with s = (l - k + d + 1) / d
+ */
+
 /**
  * Filter the current value with signed values lesser than k.
  * @param k		Threshold.
  */
 void Value::le(intn_t k) {
 
-	// top and none cases
+	// simple cases
 	if(*this == all || *this == none)
 		return;
-
-	// case of constant
 	if(isConst()) {
 		if(k < _lower)
 			*this = none;
 		return;
 	}
 
-	// d >= 0 => inter((b, d, n), (k, 1, inf+ - k)
-	if(_delta < 0) {
-		inter(Value(VAL, MINn, 1, k - MINn));
-		return;
+	// not so simple
+	else {
+
+		// wrap fix
+		if(swrap()) {
+			if(_delta >= 0)
+				_mtimes = (uintn_t(MAXn) - _lower) / _delta;
+			else
+				_mtimes = (uintn_t(MINn) + _lower) / (-_delta);
+		}
+
+		// apply le
+		if(start() > k)		// case a
+			*this = none;
+		else if(stop() < k)	// case c
+			return;
+		else {				// case b
+			if(_delta >= 0)
+				_mtimes = (k - _lower) / _delta;
+			else {
+				intn_t s = (_lower - k - _delta - 1) / (-_delta);
+				ASSERT(s >= 0);
+				_lower = _lower + _delta * s;
+				_mtimes -= s;
+			}
+
+		}
 	}
-
-	// d < 0 !!!
-	// if wrapping, change the current value for no wrapping
-	if(swrap())
-		_mtimes = (k - MINn) / (-_delta);
-
-	// b <= k -> _
-	if(_lower >= k) {
-		*this = none;
-		return;
-	}
-
-	// b + dn >= k -> (b, d, n)
-	if(_lower + _delta * _mtimes <= k)
-		return;
-
-	// _ -> (b, d, (k - b) / d
-	else
-		_mtimes = (k - _lower) / _delta;
 }
 
 
@@ -1470,6 +1502,7 @@ public:
 			Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(source);
 
 			// if not taken, invert conditions
+			// TODO Fixme! Generate two sets of predicates!
 			bool to_free = false;
 			if(edge->kind() != Edge::TAKEN) {
 				to_free = true;
@@ -1611,6 +1644,7 @@ public:
 			TRACESI(cerr << "\t\tcont\n");
 			break;
 		case sem::IF:
+			TRACESI(cerr << "\t\t\tif(" << i.sr() << ", " << i.cond() << ", " << i.jump() << ")\n");
 			todo.push(pair(pc + i.b() + 1, new Domain(*state)));
 			has_if = true;
 			break;
@@ -1648,18 +1682,18 @@ public:
 					// if the value loaded is T, load from the process
 					if(get(*state, i.d()) == Value::all
 					&& addrclp.isConst()) {
-						cerr << "\t\t\tlooking in memory for " << addrclp
+						/*cerr << "\t\t\tlooking in memory for " << addrclp
 							 << " in [" << _data_min << ", " << _data_max << "] "
-							 << ", problem = " << (void *)this << io::endl;
+							 << ", problem = " << (void *)this << io::endl;*/
 						if(*_data_min <= (uintn_t)addrclp.start()
 						&& (uintn_t)addrclp.start() < *_data_max) {
 							Value r = readFromMem(addrclp.lower(), i.type());
-							cerr << " -> loading data from process: " << r << io::endl;
+							//cerr << " -> loading data from process: " << r << io::endl;
 							set(*state, i.d(), r);
 						}
 					}
-					if ((get(*state, i.d()) == Value::all) && *_data_min != 0)
-						cerr << '\n';
+					/*if ((get(*state, i.d()) == Value::all) && *_data_min != 0)
+						cerr << '\n';*/
 				#endif
 				if(get(*state, i.d()) == Value::all)
 						_nb_top_load++;
@@ -1692,8 +1726,17 @@ public:
 				}
 			} break;
 		case sem::SETP:
+			set(*state, i.d(), Value::all);
+			TRACESI(cerr << "\t\t\tsetp(" << i.d() << ", " << i.cst() << ") = T\n");
+			break;
 		case sem::CMP:
+			set(*state, i.d(), Value::all);
+			TRACESI(cerr << "\t\t\tcmp(" << i.d() << ", " << i.a() << ", " << i.b() << ") = T\n");
+			break;
 		case sem::CMPU:
+			set(*state, i.d(), Value::all);
+			TRACESI(cerr << "\t\t\tcmpu(" << i.d() << ", " << i.a() << ", " << i.b() << ") = T\n");
+			break;
 		case sem::SCRATCH:
 			set(*state, i.d(), Value::all);
 			TRACESI(cerr << "\t\t\tscratch(" << i.d() << ")\n");
@@ -2030,17 +2073,24 @@ private:
 
 p::declare Analysis::reg = p::init("otawa::ClpAnalysis", Version(0, 1, 0))
 	.maker<Analysis>()
-	.require(LOOP_INFO_FEATURE)
 	.require(VIRTUALIZED_CFG_FEATURE)
+	.require(LOOP_INFO_FEATURE)
 	.provide(clp::FEATURE);
 
-Analysis::Analysis(p::declare& r): Processor(r),
+Analysis::Analysis(p::declare& r): Processor(r), mem(0),
 								_nb_inst(0), _nb_sem_inst(0), _nb_set(0), 
 								_nb_top_set(0), _nb_store(0), _nb_top_store(0),
 								_nb_filters(0), _nb_top_filters(0), _nb_top_load(0),
 								_nb_load(0), _nb_top_store_addr(0), _nb_load_top_addr(0) {
 }
- 
+
+
+/**
+ */
+void Analysis::setup(WorkSpace *ws) {
+	mem = hard::MEMORY(ws);
+}
+
  
 /**
  * Perform the analysis by processing the workspace
@@ -2066,16 +2116,49 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 			cerr << "\tmemory space [" << prob.dataMin() << ", " << prob.dataMax() << "] considered as constant !\n";
 #	endif
 	
-	// perform the analysis
+	// initialize state with initial register values
 	if(logFor(LOG_CFG))
 		log << "FUNCTION " << cfg->label() << io::endl;
-	for(int i = 0; i < inits.count(); i++){
+	for(int i = 0; i < inits.count(); i++)
 		prob.initialize(inits[i].fst, inits[i].snd);
+
+	// look for a stack value
+	const hard::Register *sp = ws->process()->platform()->getSP();
+	if(!sp)
+		log << "WARNING: no stack pointer in the architecture.\n";
+	else {
+		Value v = prob.entry().get(Value(REG, sp->platformNumber()));
+		if(v.isTop()) {
+			bool found = false;
+			if(mem) {
+				log << "WARNING: no initial for stack pointer: looking in memory.\n";
+				Address addr;
+				const genstruct::Table< const hard::Bank * > &banks = mem->banks();
+				for(int i = 0; i < banks.count(); i++)
+					if(banks[i]->isWritable() && (!addr || banks[i]->address() > addr))
+						addr = banks[i]->topAddress();
+				if(!addr) {
+					log << "WARNING: no writable memory: reverting to loader stack address.\n";
+					addr = ws->process()->defaultStack();
+				}
+				if(addr) {
+					log << "WARNING: setting stack at " << addr << io::endl;
+					prob.initialize(sp, addr.offset());
+					found = true;
+				}
+			}
+			if(!found)
+				log << "WARNING: no value for the initial stack pointer\n";
+		}
 	}
+
+	// perform analysius
 	ClpListener list(ws, prob);
 	ClpFP fp(list);
 	ClpAI cai(fp, *ws);
 	cai.solve(cfg);
+
+	// process stats
 	_nb_inst = prob.get_nb_inst();
 	_nb_sem_inst = prob.get_nb_sem_inst();
 	_nb_set = prob.get_nb_set();
@@ -2357,13 +2440,14 @@ Manager::Manager(WorkSpace *ws) {
  * Start the interpretation of a basic block.
  * @param bb	Basic block to interpret.
  */
-void Manager::start(BasicBlock *bb) {
+Manager::step_t Manager::start(BasicBlock *bb) {
 	mi = BasicBlock::InstIter(bb);
 	s = STATE_IN(bb);
 	cs = &s;
 	p->prepare(mi);
 	p->update(cs);
 	i = 0;
+	return NEW_INST | NEW_PATH | NEW_SEM;
 }
 
 
@@ -2378,7 +2462,7 @@ void Manager::start(BasicBlock *bb) {
  */
 Manager::step_t Manager::next(void) {
 	step_t r = NEW_SEM;
-	if(p->isPathEnded()) {
+	while(p->isPathEnded()) {
 		if(cs != &s) {
 			p->lub(s, *cs);
 			delete cs;
@@ -2397,7 +2481,7 @@ Manager::step_t Manager::next(void) {
 	}
 	i = p->getPC();
 	p->update(cs);
-	return true;
+	return r;
 }
 
 
@@ -2415,7 +2499,7 @@ sem::inst Manager::sem(void) {
  * @return	Current machine instruction.
  */
 Inst *Manager::inst(void) {
-	return mi;
+	return *mi;
 }
 
 

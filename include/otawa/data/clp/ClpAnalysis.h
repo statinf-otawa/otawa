@@ -27,7 +27,11 @@
 #include <otawa/proc/Processor.h>
 #include <otawa/data/clp/ClpState.h>
 
-namespace otawa { namespace clp {
+namespace otawa {
+
+namespace hard { class Memory; }
+
+namespace clp {
 
 class Analysis: public Processor {
 public:
@@ -65,9 +69,11 @@ public:
 	inline clp::STAT_UINT get_nb_top_load(void) const { return _nb_top_load; }
 	
 protected:
+	virtual void setup(WorkSpace *ws);
 	virtual void processWorkSpace(WorkSpace *ws);
 	genstruct::Vector<init_t> inits;
 private:
+	const hard::Memory *mem;
 	clp::STAT_UINT _nb_inst, _nb_sem_inst;
 	clp::STAT_UINT _nb_set;
 	clp::STAT_UINT _nb_top_set;

@@ -55,7 +55,7 @@ p::declare CLPBlockBuilder::reg = p::init("otawa::dcache::BlockBuilder", Version
 
 /**
  */
-CLPBlockBuilder::CLPBlockBuilder(p::declare& r): BBProcessor(r), mem(0), cache(0), colls(0) {
+CLPBlockBuilder::CLPBlockBuilder(p::declare& r): BBProcessor(r), mem(0), cache(0), colls(0), man(0) {
 }
 
 
@@ -78,105 +78,106 @@ void CLPBlockBuilder::setup(WorkSpace *ws) {
 	DATA_BLOCK_COLLECTION(ws) = colls;
 	for(int i = 0; i < cache->rowCount(); i++)
 		colls[i].setSet(i);
+
+	// allocate the manager
+	man = new clp::Manager(ws);
+}
+
+
+/**
+ */
+void CLPBlockBuilder::cleanup(WorkSpace *ws) {
+	if(man)
+		delete man;
 }
 
 
 /**
  */
 void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-
-	// for each machine instruction
-
-		// for each execution path
-
-
-	/*AccessedAddresses *addrs = ADDRESSES(bb);
-	if(!addrs)
+	if(bb->isEnd())
 		return;
+	clp::Manager::step_t step = man->start(bb);
+	genstruct::Vector<Pair<clp::Value, BlockAccess::action_t> > addrs;
+	while(step) {
 
-	// compute block accessed
-	for(int i = 0; i < addrs->size(); i++) {
-		Address last;
-		AccessedAddress *aa = addrs->get(i);
-
-		Address addr;
-		switch(aa->kind()) {
-		case AccessedAddress::ANY:
+		// scan the instruction
+		sem::inst i = man->sem();
+		BlockAccess::action_t action = BlockAccess::NONE;
+		switch(i.op) {
+		case sem::LOAD:
+			action = BlockAccess::LOAD;
 			break;
-		case AccessedAddress::SP:
-			addr = sp + t::uint32(((SPAddress *)aa)->offset());
+		case sem::STORE:
+			action = BlockAccess::STORE;
 			break;
-		case AccessedAddress::ABS:
-			addr = ((AbsAddress *)aa)->address();
-			break;
-		default:
-			ASSERT(false);
 		}
 
-		// type of action
-		BlockAccess::action_t action = aa->isStore() ? BlockAccess::STORE : BlockAccess::LOAD;
-
-		// access any ?
-		if(addr.isNull()) {
-			blocks.add(BlockAccess(aa->instruction(), action));
+		// add the access
+		if(action) {
+			clp::Value addr = man->state()->get(clp::Value(clp::REG, i.addr()));
+			while(addrs.length() <= man->ipc())
+				addrs.push(pair(clp::Value::none, BlockAccess::NONE));
+			addr.join(addrs[man->ipc()].fst);
+			addrs[man->ipc()] = pair(addr, action);
 			if(logFor(LOG_INST))
-				log << "\t\t\t\t" << aa->instruction() << " access any\n";
-			continue;
+				log << "\t\t\t" << man->inst()->address() << ": " << man->ipc() << ": " << addrs[man->ipc()] << io::endl;
 		}
 
-		// is cached ?
-		bool cached = false;
-		const hard::Bank *bank = mem->get(addr);
-		if(!bank)
-			throw otawa::Exception(_ << "no memory bank for address " << addr
-					<< " accessed from " << aa->instruction()->address());
-		else
-			cached = bank->isCached();
-		if(!cached) {
-			if(logFor(LOG_INST))
-				log << "\t\t\t\t" << aa->instruction() << " access not cached "
-					<< addr << "\n";
-			continue;
+		// next step
+		Inst *inst = man->inst();
+		step = man->next();
+		if(addrs && (!step || clp::Manager::newInst(step))) {
+			for(int i = 0; i < addrs.length(); i++) {
+				Pair<clp::Value, BlockAccess::action_t> p = addrs[i];
+				if(p.snd) {
+					if(p.fst == clp::Value::all)
+						accs.add(BlockAccess(inst, p.snd));
+					else if(p.fst.isConst()) {
+						clp::uintn_t l = p.fst.lower();
+						const hard::Bank *bank = mem->get(l);
+						if(!bank)
+							throw otawa::Exception(_ << "no memory bank for address " << Address(l)
+									<< " accessed from " << man->inst()->address());
+						Block block = colls[cache->set(l)].obtain(l);
+						accs.add(BlockAccess(inst, p.snd, block));
+					}
+					else {
+						bool over;
+						t::uint32 m = elm::mult(abs(p.fst.delta()), p.fst.mtimes(), over);
+						// (l % b) + d * n > (R - 1)b		/ R = row count, b = block size
+						if(over || m >= (cache->rowCount() - 1) * cache->blockSize() - cache->offset(p.fst.lower()))
+							accs.add(BlockAccess(inst, p.snd));
+						else {
+							clp::uintn_t l = p.fst.start(), h = p.fst.stop();
+							const hard::Bank *bank = mem->get(l);
+							if(!bank)
+								throw otawa::Exception(_ << "no memory bank for address " << Address(l)
+										<< " accessed from " << man->inst()->address());
+							else if(cache->block(l) == cache->block(h)) {
+								Block block = colls[cache->set(l)].obtain(l);
+								accs.add(BlockAccess(inst, p.snd, block));
+							}
+							else
+								accs.add(BlockAccess(inst, p.snd, cache->set(l), cache->set(h)));
+						}
+					}
+				}
+			}
+			addrs.clear();
 		}
 
-		// create the block access if any
-		addr = Address(addr.page(), addr.offset() & ~cache->blockMask());
-		int set = cache->line(addr.offset());
-		if(last.isNull()) {
-			const Block& block = colls[set].obtain(addr);
-			blocks.add(BlockAccess(aa->instruction(), action, block));
-			if(logFor(LOG_INST))
-				log << "\t\t\t\t" << aa->instruction() << " access " << addr
-					<< " (" << block.index() << ", " << block.set() << ")\n";
-			continue;
-		}
-
-		// range over the full cache ?
-		last = Address(last.page(), (last.offset() - 1) & ~cache->blockMask());
-		if(last - addr >= cache->cacheSize()) {
-			blocks.add(BlockAccess(aa->instruction(), action));
-			if(logFor(LOG_INST))
-				log << "\t\t\t\t" << aa->instruction() << " access any [" << addr << ", " << last << ")\n";
-			continue;
-		}
-
-		// a normal range
-		int last_set = cache->line(last.offset());
-		blocks.add(BlockAccess(aa->instruction(), action, set, last_set));
-		if(logFor(LOG_INST))
-			log << "\t\t\t\t" << aa->instruction() << " access [" << addr << ", " << last << "] (["
-				<< set << ", " << last_set << "])\n";
 	}
 
-	// create the block access
-	BlockAccess *accs = 0;
-	if(blocks) {
-		accs = new BlockAccess[blocks.count()];
-		for(int i = 0; i < blocks.count(); i++)
-			accs[i] = blocks[i];
+	// record the accesses
+	BlockAccess *tab = new BlockAccess[accs.length()];
+	for(int i = 0; i < accs.count(); i++) {
+		tab[i] = accs[i];
+		if(logFor(LOG_BB))
+			log << "\t\t\t" << tab[i] << io::endl;
 	}
-	DATA_BLOCKS(bb) = pair(blocks.count(), accs);
-	blocks.clear();*/
+	DATA_BLOCKS(bb) = pair(accs.count(), tab);
+	accs.clear();
 }
 
 } }	// otawa::dcache

@@ -96,15 +96,19 @@ typedef enum {
 			return *this;
 		}
 		
+		inline bool isTop(void) const { return _kind == ALL; }
+
 		inline bool operator==(const Value& val) const {
 			return (
 						(_kind == val._kind &&
 						 _lower == val._lower &&
 						 _delta == val._delta &&
-						 _mtimes == val._mtimes) ||
+						 _mtimes == val._mtimes)
+						 /* WARNING: keep in order to verify it does not break something else
+						  ||
 						( (_delta == 1 || _delta == -1) &&
 						  (val._delta == 1 || val._delta == -1) &&
-						 _mtimes == UMAXn && val._mtimes == UMAXn)
+						 _mtimes == UMAXn && val._mtimes == UMAXn)*/
 					);
 		}
 		inline bool operator!=(const Value& val) const {
@@ -119,6 +123,7 @@ typedef enum {
 		
 		inline kind_t kind(void) const { return _kind; }
 		inline intn_t lower(void) const { return _lower; }
+		inline intn_t upper(void) const { return _lower + _delta * _mtimes; }
 		inline intn_t delta(void) const { return _delta; }
 		inline uintn_t mtimes(void) const { return _mtimes; }
 		
@@ -131,6 +136,7 @@ typedef enum {
 			else
 				return _lower;
 		}
+
 		/** @return the "stop" of the CLP, i.e. the upper bound if delta >= 0,
 		*	lower else.
 		*/
@@ -238,10 +244,8 @@ typedef enum {
 		uintn_t _mtimes;
 	};
 
-	inline elm::io::Output& operator<<(elm::io::Output& out, const otawa::clp::Value &val) {
-	val.print(out);
-	return out;
-}
+	inline elm::io::Output& operator<<(elm::io::Output& out, const otawa::clp::Value &val)
+		{ val.print(out); return out; }
 	
 }	// clp
 

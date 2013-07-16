@@ -25,6 +25,23 @@
 using namespace elm;
 using namespace otawa;
 
+inline clp::Value val(clp::intn_t l, clp::intn_t d, clp::intn_t n) { return clp::Value(clp::VAL, l, d, n); }
+clp::Value none = clp::Value::none;
+clp::Value all = clp::Value::all;
+typedef clp::Value value;
+const clp::intn_t inf = clp::MAXn;
+const clp::intn_t ninf = clp::MINn;
+
+inline bool test_le(value v, clp::intn_t k, value w) {
+	value b = v;
+	v.le(k);
+	if(v != w)
+		cerr << "\tbefore  : " << b << io::endl  
+			 << "\tobtained: " << v << io::endl
+			 << "\twaited  : " << w << io::endl; 
+	return v == w;
+}
+
 int main(void) {
 	CHECK_BEGIN("CLP Value")
 
@@ -113,31 +130,31 @@ int main(void) {
 	// le tests
 	{
 		// T and _
-		clp::Value v = clp::Value::all;
-		v.le(10);
-		CHECK(v == clp::Value::all);
-		v = clp::Value::none;
-		v.le(10);
-		CHECK(v == clp::Value::none);
+		CHECK(test_le(all, 10, all));
+		CHECK(test_le(none, 10, none));
 
 		// constant
-		v = clp::Value(clp::VAL, 5, 0, 0);
-		v.le(10);
-		CHECK(v == clp::Value(clp::VAL, 5, 0, 0));
-		v = clp::Value(clp::VAL, 15, 0, 0);
-		v.le(10);
-		CHECK(v == clp::Value::none);
+		CHECK(test_le(val(5, 0, 0), 10, val(5, 0, 0)));
+		CHECK(test_le(val(5, 0, 0), 0, none));
 
-		// negative delta
-		v = clp::Value(clp::VAL, 25, -1, 10);
-		v.le(10);
-		CHECK_EQUAL(v, clp::Value::none);
-		v = clp::Value(clp::VAL, 5, -1, 10);
-		v.le(10);
-		CHECK_EQUAL(v, clp::Value(clp::VAL, -5, 1, 10));
-		v = clp::Value(clp::VAL, 15, -1, 10);
-		v.le(10);
-		CHECK_EQUAL(v, clp::Value(clp::VAL, 5, 1, 5));
+		// without wrap
+		CHECK(test_le(val(16, 4, 4), 10, none));				// case a (positive)
+		CHECK(test_le(val(32, -4, 4), 10, none));				// case a (negative)
+		CHECK(test_le(val(16, 4, 4), 100, val(16, 4, 4)));		// case c (positive)
+		CHECK(test_le(val(32, -4, 4), 100, val(32, -4, 4)));	// case c (negative)
+		CHECK(test_le(val(16, 4, 4), 32, val(16, 4, 4)));		// case b (positive)
+		CHECK(test_le(val(32, -4, 4), 32, val(32, -4, 4)));		// case b (negative)
+		CHECK(test_le(val(16, 4, 4), 31, val(16, 4, 3)));		// case b (positive)
+		CHECK(test_le(val(32, -4, 4), 31, val(28, -4, 3)));		// case b (negative)
+		
+		// with wrap
+		CHECK(test_le(val(16, 4, inf), 10, none));				// case a (only positive)
+		CHECK(test_le(val(-32, -4, inf), 0, val(-32, -4, (ninf + 32) / -4)));	// case c (only negative)
+		CHECK(test_le(val(-32, 4, inf * 2), 0, val(-32, 4, 8)));		// case b (positive)
+		CHECK(test_le(val(32, -4, inf * 2), 0, val(0, -4, clp::uintn_t(ninf) / 4)));	// case b (negative)
+		
+		// specific
+		CHECK(test_le(val(0, 1, 0xffffffff), 0xff, val(0, 1, 0xff)));
 	}
 
 	// geu tests

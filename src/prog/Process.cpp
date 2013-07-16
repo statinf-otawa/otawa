@@ -250,12 +250,21 @@ Inst *Process::findInstAt(const string& label) {
  * Load the program file
  */
 File *Process::loadProgram(elm::CString path) {
-	assert(!prog);
+	ASSERT(!prog);
 	File *file = loadFile(path);
 	ASSERT(file);
 	if(file)
 		prog = file;
 	return file;
+}
+
+
+/**
+ * Get a default address for the stack top.
+ * @return	Default address of stack top.
+ */
+Address Process::defaultStack(void) const {
+	return 0x80000000;
 }
 
 
@@ -290,7 +299,7 @@ sim::Simulator *Process::simulator(void) {
  * 				and will released it at deletion time.
  */
 void Process::addFile(File *file) {
-	assert(file);
+	ASSERT(file);
 	if(!files)
 		prog = file;
 	files.add(file);

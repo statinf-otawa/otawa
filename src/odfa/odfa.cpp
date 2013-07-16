@@ -77,21 +77,21 @@ protected:
 
 		// display state before
 		if(before) {
-			out << "----\nbefore:";
+			out << "\n---\nbefore:";
 	 		clp::State state = clp::STATE_IN(bb);
 	 		state.print(out, workspace()->process()->platform());
 		}
 
 		// display state after
 		if(after) {
-			out << "----\nafter:";
+			out << "\n---\nafter:";
 	 		clp::State state = clp::STATE_OUT(bb);
 	 		state.print(out, workspace()->process()->platform());
 		}
 
 		// display filters
 		if(filter) {
-			out << "----\nfilters:";
+			out << "\n---\nfilters:";
 			Vector<se::SECmp *> reg_filters = se::REG_FILTERS(bb);
 			Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(bb);
 			if(reg_filters.length() != 0 || addr_filters.length() != 0) {

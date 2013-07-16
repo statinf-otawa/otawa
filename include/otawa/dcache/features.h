@@ -135,11 +135,11 @@ public:
 	} kind_t;
 
 	inline BlockAccess(void): inst(0), _kind(ANY), _action(NONE) { }
-	inline BlockAccess(Inst *instruction, action_t action): inst(instruction), _kind(ANY), _action(action) { }
+	inline BlockAccess(Inst *instruction, action_t action): inst(instruction), _kind(ANY), _action(action) { ASSERT(instruction); }
 	inline BlockAccess(Inst *instruction, action_t action, const Block& block): inst(instruction), _kind(BLOCK), _action(action)
-		{ data.blk = &block; }
+		{ ASSERT(instruction); data.blk = &block; }
 	inline BlockAccess(Inst *instruction, action_t action, Address::offset_t first, Address::offset_t last): inst(instruction), _kind(RANGE), _action(action)
-		{ data.range.first = first; data.range.last = last; }
+		{ ASSERT(instruction); data.range.first = first; data.range.last = last; }
 	inline BlockAccess(const BlockAccess& acc): inst(acc.inst), _kind(acc._kind), _action(acc._action)
 		{ data = acc.data; }
 	inline BlockAccess& operator=(const BlockAccess& acc)
@@ -165,6 +165,7 @@ private:
 };
 inline io::Output& operator<<(io::Output& out, const BlockAccess& acc) { acc.print(out); return out; }
 inline io::Output& operator<<(io::Output& out, const Pair<int, BlockAccess *>& v) { return out; }
+io::Output& operator<< (io::Output& out, BlockAccess::action_t action);
 
 // DirtyManager class
 class DirtyManager {

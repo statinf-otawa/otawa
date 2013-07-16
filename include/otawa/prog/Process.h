@@ -196,6 +196,9 @@ public:
 	File *loadProgram(elm::CString path);
 	virtual File *loadFile(elm::CString path) = 0;
 	
+	// loader 1.2.0
+	virtual Address defaultStack(void) const;
+
 	// FileIterator 
 	class FileIter: public Vector<File *>::Iterator {
 	public:

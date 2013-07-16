@@ -432,20 +432,25 @@ const Block& BlockCollection::obtain(const Address& addr) {
 /**
  */
 void BlockAccess::print(io::Output& out) const {
+	ASSERTP(_action <= PURGE, "invalid block access action: " << _action);
+	out << inst->address() << " (" << inst << "): " << action_t(_action) << ' ';
+	switch(_kind) {
+	case ANY: 	out << "ANY"; break;
+	case BLOCK: out << *data.blk; break;
+	case RANGE: out << '[' << data.range.first << ", " << data.range.last << ']'; break;
+	default:	ASSERTP(false, "invalid block access kind: " << _kind); break;
+	}
+}
+
+io::Output& operator<<(io::Output& out, BlockAccess::action_t action) {
 	static cstring action_names[] = {
 		"none",		// NONE = 0
 		"load",		// READ = 1
 		"store",	// WRITE = 2
 		"purge"		// PURGE = 3
 	};
-	ASSERTP(_action <= PURGE, "invalid block access action: " << _action);
-	out << inst << ' ' << action_names[_action] << ' ';
-	switch(_kind) {
-	case ANY: out << "ANY"; break;
-	case BLOCK: out << *data.blk; break;
-	case RANGE: out << '[' << data.range.first << ", " << data.range.last << ']'; break;
-	default:	ASSERTP(false, "invalid block access kind: " << _kind);
-	}
+	out << action_names[action];
+	return out;
 }
 
 } }	// otawa::dcache

@@ -33,6 +33,8 @@ namespace hard {
 	class Memory;
 }
 
+namespace clp { class Manager; }
+
 namespace dcache {
 
 // BlockBuilder class
@@ -52,6 +54,7 @@ private:
 	genstruct::Vector<BlockAccess> blocks;
 	Address sp;
 	BlockCollection *colls;
+	clp::Manager *man;
 };
 
 } } // otawa
