@@ -83,7 +83,7 @@ void BlockBuilder::setup(WorkSpace *ws) {
 		throw otawa::Exception("unsupported replacement policy in data cache !");
 	mem = &ws->process()->platform()->memory();
 	if(!sp)
-		sp = ws->process()->initialSP();
+		sp = ws->process()->defaultStack();
 	if(!sp)
 		throw otawa::Exception("no valid SP address");
 	if(logFor(LOG_PROC))
