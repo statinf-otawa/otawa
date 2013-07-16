@@ -41,7 +41,7 @@ static SilentFeature::Maker<PSTBuilder> PST_MAKER;
  * @li @ref otawa::PROGRAM_STRUCTURE_TREE
  * 
  */
-SilentFeature PST_FEATURE("otawa:PST_FEATURE", PST_MAKER);
+SilentFeature PST_FEATURE("otawa::PST_FEATURE", PST_MAKER);
 
 // Private Properties
 Identifier<int> PSTBuilder::PST_DFSNUM("", -1 );

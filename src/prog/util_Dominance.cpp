@@ -287,6 +287,6 @@ static SilentFeature::Maker<Dominance> LOOP_HEADERS_MAKER;
  * @li @ref LOOP_HEADER (BasicBlock).
  * @li @ref BACK_EDGE (Edge). 
  */
-SilentFeature LOOP_HEADERS_FEATURE("LOOP_HEADERS_FEATURE", LOOP_HEADERS_MAKER);
+SilentFeature LOOP_HEADERS_FEATURE("otawa::LOOP_HEADERS_FEATURE", LOOP_HEADERS_MAKER);
 
 } // otawa

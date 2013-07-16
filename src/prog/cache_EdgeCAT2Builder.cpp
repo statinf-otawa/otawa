@@ -173,7 +173,7 @@ void EdgeCAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
 	}	
 }
 
-  Feature<EdgeCAT2Builder> ICACHE_EDGE_CATEGORY2_FEATURE("otawa::icache_edge_category2");
+  Feature<EdgeCAT2Builder> ICACHE_EDGE_CATEGORY2_FEATURE("otawa::ICACHE_EDGE_CATEGORY2_FEATURE");
   Identifier<Vector<category_t> *> CATEGORY_EDGE("otawa::cactegory_edge",  NULL );
   Identifier<Vector<BasicBlock*> *> CATEGORY_EDGE_HEADER("otawa::category_edge_header", NULL);
 

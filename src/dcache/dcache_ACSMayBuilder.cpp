@@ -84,7 +84,7 @@ static SilentFeature::Maker<ACSMayBuilder> maker;
  * @li @ref ENTRY_MAY_ACS
  * @ingroup dcache
  */
-SilentFeature ACS_MAY_FEATURE("otawa::dcache::ACS_MAY_FEATURE", maker);
+SilentFeature MAY_ACS_FEATURE("otawa::dcache::MAY_ACS_FEATURE", maker);
 
 
 /**
@@ -128,7 +128,7 @@ p::declare ACSMayBuilder::reg = p::init("otawa::dcache::ACSMayBuilder", Version(
 	.require(LOOP_HEADERS_FEATURE)
 	.require(LOOP_INFO_FEATURE)
 	.require(DATA_BLOCK_FEATURE)
-	.provide(ACS_MAY_FEATURE);
+	.provide(MAY_ACS_FEATURE);
 
 
 /**

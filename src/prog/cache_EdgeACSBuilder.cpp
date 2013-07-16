@@ -38,7 +38,7 @@ namespace otawa {
  * @par Properties
  * @li @ref CACHE_ACS
  */
-Feature<EdgeACSBuilder> ICACHE_EDGE_ACS_FEATURE("otawa.cache.edgeacsfeature");
+Feature<EdgeACSBuilder> ICACHE_EDGE_ACS_FEATURE("otawa::ICACHE_EDGE_ACS_FEATURE");
 
 /**
  * This property represents the "must" Abstract Cache State of a basic block.

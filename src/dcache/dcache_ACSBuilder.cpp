@@ -1019,7 +1019,7 @@ static SilentFeature::Maker<ACSBuilder> maker;
  * @li @ref LEVEL_PERS_ACS
  * @ingroup dcache
  */
-SilentFeature PERS_ACS_FATURE("otawa::dcache::PERS_ACS_FATURE", maker);
+SilentFeature PERS_ACS_FEATURE("otawa::dcache::PERS_ACS_FEATURE", maker);
 
 
 /**

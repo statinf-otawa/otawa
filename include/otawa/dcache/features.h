@@ -238,7 +238,7 @@ extern Identifier<ilp::Var *> MISS_VAR;
 
 // MAY analysis
 extern Identifier<Vector<ACS *> *> ENTRY_MAY_ACS;
-extern SilentFeature ACS_MAY_FEATURE;
+extern SilentFeature MAY_ACS_FEATURE;
 extern Identifier<Vector<ACS *> *> MAY_ACS;
 
 // Dirty analysis

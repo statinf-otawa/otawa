@@ -71,6 +71,6 @@ static SilentFeature::Maker<TrivialBBTime> maker;
  * @li otawa::ipet::TIME
  * @li otawa::ipet::DELTA_TIME
  */
-SilentFeature BB_TIME_FEATURE("otawa::BB_TIME", maker);
+SilentFeature BB_TIME_FEATURE("otawa::ipet::BB_TIME_FEATURE", maker);
 
 } } // otawa::ipet

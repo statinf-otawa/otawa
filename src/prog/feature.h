@@ -193,60 +193,103 @@
  * 
  * Includes @ref otawa/cfg/features.h
  *
+ * @li @ref otawa::CFG_CHECKSUM_FEATURE
  * @li @ref otawa::CFG_INFO_FEATURE
+ * @li @ref otawa::CHECKED_CFG_FEATURE
  * @li @ref otawa::COLLECTED_CFG_FEATURE
  * @li @ref otawa::CONTEXT_TREE_FEATURE
+ * @li @ref otawa::DEAD_CODE_ANALYSIS_FEATURE
+ * @li @ref otawa::DELAYED_CFG_FEATURE
  * @li @ref otawa::DOMINANCE_FEATURE
  * @li @ref otawa::LOOP_HEADERS_FEATURE
  * @li @ref otawa::LOOP_INFO_FEATURE
  * @li @ref otawa::NORMALIZED_CFGS_FEATURE
  * @li @ref otawa::PCG_FEATURE
+ * @li @ref otawa::POSTDOMINANCE_FEATURE
+ * @li @ref otawa::PST_FEATURE
+ * @li @ref otawa::REDUCED_LOOPS_FEATURE
  * @li @ref otawa::UNROLLED_LOOPS_FEATURE
  * @li @ref otawa::VIRTUALIZED_CFG_FEATURE
  * 
  * @par IPET Features
  * 
+ * @li @ref otawa::ipet::ASSIGNED_VARS_FEATURE
+ * @li @ref otawa::ipet::BB_TIME_FEATURE
  * @li @ref otawa::ipet::CONTROL_CONSTRAINTS_FEATURE
+ * @li @ref otawa::ipet::DATA_CACHE_SUPPORT_FEATURE
+ * @li @ref otawa::ipet::DELTA_SEQUENCES_FEATURE
  * @li @ref otawa::ipet::FLOW_FACTS_CONSTRAINTS_FEATURE
+ * @li @ref otawa::ipet::FLOW_FACTS_FEATURE
  * @li @ref otawa::ipet::ILP_SYSTEM_FEATURE
+ * @li @ref otawa::ipet::INST_CACHE_SUPPORT_FEATURE
+ * @li @ref otawa::ipet::INTERBLOCK_SUPPORT_FEATURE
  * @li @ref otawa::ipet::OBJECT_FUNCTION_FEATURE
  * @li @ref otawa::ipet::WCET_COUNT_RECORDED_FEATURE
  * @li @ref otawa::ipet::WCET_FEATURE
  * 
- * @par Pipeline timings features
- * 
- * @li @ref otawa::ipet::ASSIGNED_VARS_FEATURE
- * @li @ref otawa::ipet::BB_TIME_FEATURE
- * @li @ref otawa::ipet::DELTA_SEQUENCES_FEATURE
- * @li @ref otawa::ipet::EDGE_TIME_FEATURE
- * @li @ref otawa::ipet::FLOW_FACTS_FEATURE
- * @li @ref otawa::ipet::INTERBLOCK_SUPPORT_FEATURE
- * 
- * @par Cache specific features
+ * @par ILP Features
+ *
+ * @li @ref otawa::ilp::OUTPUT_FEATURE
+ *
+ * @par Instruction Cache features
  * 
  * @li @ref otawa::CCG_FEATURE
  * @li @ref otawa::COLLECTED_LBLOCKS_FEATURE
- * @li @ref otawa::DATA_CACHE_SUPPORT_FEATURE
  * @li @ref otawa::ICACHE_ACS_FEATURE
  * @li @ref otawa::ICACHE_ACS_MAY_FEATURE
  * @li @ref otawa::ICACHE_CATEGORY_FEATURE
  * @li @ref otawa::ICACHE_CATEGORY2_FEATURE
+ * @li @ref otawa::ICACHE_EDGE_ACS_FEATURE
+ * @li @ref otawa::ICACHE_EDGE_CATEGORY2_FEATURE
  * @li @ref otawa::ICACHE_FIRSTLAST_FEATURE
- * @li @ref otawa::INST_CACHE_SUPPORT_FEATURE
  * 
- * @par Loader Features
+ * @par Process Features
  * 
  * @li @ref otawa::CONTROL_DECODING_FEATURE
+ * @li @ref otawa::DECODED_TEXT
+ * @li @ref otawa::DELAYED_FEATURE
  * @li @ref otawa::FLOAT_MEMORY_ACCESS_FEATURE
  * @li @ref otawa::MEMORY_ACCESS_FEATURE
  * @li @ref otawa::REGISTER_USAGE_FEATURE
  * @li @ref otawa::SOURCE_LINE_FEATURE
- * @li @ref otawa::STACK_USAGE_FEATURE
  *
  * @par Hardware Configuration Features
  *
+ * @li @ref otawa::hard::BHT_FEATURE
  * @li @ref otawa::hard::CACHE_CONFIGURATION_FEATURE
  * @li @ref otawa::hard::MEMORY_FEATURE
  * @li @ref otawa::hard::PROCESSOR_FEATURE
+ *
+ *
+ * @par Data Cache Features (module dcache)
+ *
+ * Include @ref otawa/dcache/features.h
+ *
+ * @li @ref otawa::dcache::CATEGORY_FEATURE
+ * @li @ref otawa::dcache::CONSTRAINTS_FEATURE
+ * @li @ref otawa::dcache::DATA_BLOCK_FEATURE
+ * @li @ref otawa::dcache::DIRTY_FEATURE
+ * @li @ref otawa::dcache::MAY_ACS_FEATURE
+ * @li @ref otawa::dcache::MUST_ACS_FEATURE
+ * @li @ref otawa::dcache::PERS_ACS_FATURE
+ *
+ * @par Branch Features (module branch)
+ *
+ * @li @ref otawa::branch::CATEGORY_FEATURE
+ * @li @ref otawa::branch::CONSTRAINTS_FEATURE
+ * @li @ref otawa::branch::NUMBERED_CONDITIONS_FEATURE
+ * @li @ref otawa::branch::SUPPORT_FEATURE
+ *
+ * @par Data Flow Features
+ *
+ * @li @ref otawa::ADDRESS_ANALYSIS_FEATURE
+ * @li @ref otawa::clp::FEATURE
+ * @li @ref otawa::STACK_ANALYSIS_FEATURE
+ *
+ * @par Flow Facts Features
+ *
+ * @li @ref otawa::FLOW_FACTS_FEATURE
+ * @li @ref otawa::MKFF_PRESERVATION_FEATURE
  */
+
 

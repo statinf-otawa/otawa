@@ -806,7 +806,7 @@ Feature<NoProcessor> REGISTER_USAGE_FEATURE("otawa::REGISTER_USAGE_FEATURE");
  * @par Provided Methods
  * @li @ref Inst::target()
  */
-Feature<NoProcessor> CONTROL_DECODING_FEATURE("otawa::CONTROL_DECODING");
+Feature<NoProcessor> CONTROL_DECODING_FEATURE("otawa::CONTROL_DECODING_FEATURE");
 
 
 /**

@@ -231,6 +231,6 @@ static SilentFeature::Maker<BasicConstraintsBuilder> maker;
  * @par Properties
  * @li otawa::ipet::CONTROL_CONSTRAINTS_FEATURE
  */
-SilentFeature CONTROL_CONSTRAINTS_FEATURE("otawa::CONTROL_CONSTRAINTS_FEATURE", maker);
+SilentFeature CONTROL_CONSTRAINTS_FEATURE("otawa::ipet::CONTROL_CONSTRAINTS_FEATURE", maker);
 
 } } //otawa::ipet

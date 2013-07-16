@@ -96,7 +96,7 @@ static SilentFeature::Maker<BasicObjectFunctionBuilder> maker;
  * This feature ensures that the object function of the ILP system to solve
  * has been built.
  */
-SilentFeature OBJECT_FUNCTION_FEATURE("ipet::OBJECT_FUNCTION_FEATURE", maker);
+SilentFeature OBJECT_FUNCTION_FEATURE("otawa::ipet::OBJECT_FUNCTION_FEATURE", maker);
 
 
 } } // otawa::ipet
