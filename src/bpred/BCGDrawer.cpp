@@ -28,7 +28,7 @@
 
 using namespace elm::genstruct;
 
-namespace otawa { namespace display {
+namespace otawa { namespace bpred {
 
 
 /**
@@ -43,7 +43,7 @@ namespace otawa { namespace display {
  * @param bcg BCG to print
  * @param graph configured Graph in which one wish to create the nodes and the edges
  */
-BCGDrawer::BCGDrawer(BCG *bcg, Graph *graph): _graph(graph), _made(false){
+BCGDrawer::BCGDrawer(BCG *bcg, display::Graph *graph): _graph(graph), _made(false){
 	_bcg = bcg;
 }
 
@@ -55,7 +55,7 @@ BCGDrawer::BCGDrawer(BCG *bcg, Graph *graph): _graph(graph), _made(false){
  * (the Graph itself, Nodes, and Edges)
  * @param driver Driver to use to create the graph. The default is graphviz_driver
  */
-BCGDrawer::BCGDrawer(BCG *bcg, const PropList& props, Driver& driver): _made(false){
+BCGDrawer::BCGDrawer(BCG *bcg, const PropList& props, display::Driver& driver): _made(false){
 	PropList general, nodes, edges;
 	general.addProps(props);
 	nodes.addProps(props);
@@ -81,15 +81,15 @@ void BCGDrawer::make(){
 	assert(_graph);
 	
 	// Construct the Graph
-	HashTable<void*, Node*> map;
+	HashTable<void*, display::Node*> map;
 	for(BCG::Iterator bb(_bcg); bb; bb++){
-		Node *node = _graph->newNode();
+		display::Node *node = _graph->newNode();
 		map.put(*bb, node);
 		onNode(*bb, node);
 	}
 
 	for(BCG::Iterator bb(_bcg); bb; bb++){
-		Node *node = map.get(*bb);
+		display::Node *node = map.get(*bb);
 		for(BCG::OutIterator succ(bb); succ; succ++){
 			BCGEdge* edge = succ;
 			display::Edge *display_edge;
@@ -119,10 +119,10 @@ void BCGDrawer::display(void){
  * @param edges PropList for the default properties of edges
  */
 void BCGDrawer::onInit(PropList& graph, PropList& nodes, PropList& edges){
-	SHAPE(nodes) = ShapeStyle::SHAPE_MRECORD;
-	FONT_SIZE(nodes) = 12;
-	FONT_SIZE(edges) = 12;
-	EXCLUDE(nodes).add(&INDEX);
+	display::SHAPE(nodes) = display::ShapeStyle::SHAPE_MRECORD;
+	display::FONT_SIZE(nodes) = 12;
+	display::FONT_SIZE(edges) = 12;
+	display::EXCLUDE(nodes).add(&INDEX);
 }
 
 
@@ -133,12 +133,12 @@ void BCGDrawer::onInit(PropList& graph, PropList& nodes, PropList& edges){
  * @param node Node made. One can give some properties to it
  */
 void BCGDrawer::onNode(BCGNode *bb, otawa::display::Node *node){
-	SHAPE(node) = ShapeStyle::SHAPE_MRECORD;
+	display::SHAPE(node) = display::ShapeStyle::SHAPE_MRECORD;
 
 	// make title
 	StringBuffer title;
 	title << bb->getCorrespondingBBNumber() ;
-	TITLE(node) = title.toString();
+	display::TITLE(node) = title.toString();
 	StringBuffer body;
 	if( bb->isEntry() || bb->isExit() ) {
 		if(bb->isEntry()) body << "ENTRY ";
@@ -154,7 +154,7 @@ void BCGDrawer::onNode(BCGNode *bb, otawa::display::Node *node){
 			}
 		}
 	}
-	BODY(node) = body.toString();
+	display::BODY(node) = body.toString();
 }
 
 
@@ -167,10 +167,10 @@ void BCGDrawer::onNode(BCGNode *bb, otawa::display::Node *node){
 void BCGDrawer::onEdge(BCGEdge *bcg_edge, otawa::display::Edge *display_edge){
 
 	if(bcg_edge->isTaken()) {
-		LABEL(display_edge) = "T";
+		display::LABEL(display_edge) = "T";
 	}
 	else {
-		LABEL(display_edge) = "NT";
+		display::LABEL(display_edge) = "NT";
 	}
 
 }
@@ -192,8 +192,8 @@ void BCGDrawer::onEnd(otawa::display::Graph *graph){
 void BCGDrawer::onCall(BCG *bcg, display::Node *node) {
 	StringBuffer bf;
 	bf << "classe @" << bcg->getClass(); 
-	TITLE(node) = bf.toString();
+	display::TITLE(node) = bf.toString();
 }
 
-} }
+} }	// otawa::bpred
 

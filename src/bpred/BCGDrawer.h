@@ -25,12 +25,12 @@
 #include <otawa/display/Driver.h>
 #include <otawa/display/graphviz.h>
 
-namespace otawa { namespace display {
+namespace otawa { namespace bpred {
 
 class BCGDrawer {
 protected:
 	BCG *_bcg;
-	Graph *_graph;
+	display::Graph *_graph;
 	bool _made;
 	virtual void onInit(PropList& graph, PropList& nodes, PropList& edges);
 	virtual void onNode(BCGNode *bb, otawa::display::Node *node);
@@ -40,11 +40,11 @@ protected:
 	virtual void make();
 	
 public:
-	BCGDrawer(BCG *bcg, Graph *graph);
-	BCGDrawer(BCG *bcg, const PropList& props = PropList::EMPTY, Driver& driver = graphviz_driver);
+	BCGDrawer(BCG *bcg, display::Graph *graph);
+	BCGDrawer(BCG *bcg, const PropList& props = PropList::EMPTY, display::Driver& driver = display::graphviz_driver);
 	virtual void display();
 };
 
-} } // otawa::display
+} } // otawa::bpred
 
 #endif /*BCGDRAWER_H_*/

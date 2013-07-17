@@ -26,6 +26,8 @@
 #include <elm/genstruct/Vector.h>
 #include <otawa/otawa.h>
 
+namespace otawa { namespace bpred {
+
 class BSets
 {
 private:
@@ -50,4 +52,7 @@ public:
 inline int BSets::nb_addr() {
 	return this->v_idsets./*size*/length();
 }
+
+} }		// otawa::bpred
+
 #endif /*BSETS_H_*/

@@ -33,7 +33,7 @@
 #include <otawa/ipet/ILPSystemGetter.h>
 
 namespace otawa {
-namespace ipet {
+namespace bpred {
 
 
 using namespace otawa::ilp;
@@ -96,7 +96,7 @@ using namespace elm::genstruct;
  */
 void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstruct::Vector<BCG*> &graphs ,	HashTable<String ,Var*>& ht_vars) {
 	// Recuperation de l'ensemble des contraintes
-	System *system = SYSTEM(fw);
+	System *system = ipet::SYSTEM(fw);
 	assert(system);
 
 	HashTable<BasicBlock*,elm::genstruct::Vector<BCGNode*> > classes_of_BB;
@@ -688,7 +688,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstr
  */
 void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstruct::Vector<BCG*> &graphs ,	HashTable<String ,Var*>& ht_vars) {
 	// Recuperation de l'ensemble des contraintes
-	System *system = SYSTEM(fw);
+	System *system = ipet::SYSTEM(fw);
 	assert(system);
 
 	HashTable<BasicBlock*,elm::genstruct::Vector<BCGNode*> > classes_of_BB;
@@ -1258,7 +1258,7 @@ void BPredProcessor::generateBCGs(elm::genstruct::Vector<BCG*>& bcgs, BHG& bhg) 
 				buf << "bcg_H" << BitSet_to_String(h) << ".ps";
 				String filename = buf.toString();
 				otawa::display::OUTPUT_PATH(props) = filename.toCString();
-				display::BCGDrawer drawer(bcgs.top(), props);
+				BCGDrawer drawer(bcgs.top(), props);
 				drawer.display();
 			}
 		}
@@ -1434,7 +1434,7 @@ void BPredProcessor::processCFG__Global2B(WorkSpace *ws,CFG* cfg) {
 		buf << "bhg.ps";
 		String filename = buf.toString();
 		otawa::display::OUTPUT_PATH(props) = filename.toCString();
-		display::BHGDrawer drawer(&bhg, props);
+		BHGDrawer drawer(&bhg, props);
 		drawer.display();
 	}
 
@@ -1467,7 +1467,7 @@ void BPredProcessor::processCFG__Global2B(WorkSpace *ws,CFG* cfg) {
 			buf << "bbhg.ps";
 			String filename = buf.toString();
 			otawa::display::OUTPUT_PATH(props) = filename.toCString();
-			display::BBHGDrawer drawer(&bbhg, props);
+			BBHGDrawer drawer(&bbhg, props);
 			drawer.display();
 		} 
 		

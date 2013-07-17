@@ -4,6 +4,7 @@
 using namespace elm;
 using namespace otawa;
 
+namespace otawa { namespace bpred {
 
 BSets::BSets(){
 }
@@ -98,3 +99,6 @@ void BSets::get_all_addr(elm::genstruct::Vector<int>& lst_addr) {
 		lst_addr.add(this->v_idsets[i].addr);
 	}
 }
+
+} }		// otawa::bpred
+

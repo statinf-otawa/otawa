@@ -34,7 +34,7 @@
 
 
 namespace otawa {
-namespace ipet {
+namespace bpred {
 
 using namespace otawa::ilp;
 using namespace elm;
@@ -95,7 +95,7 @@ using namespace elm::genstruct;
  */
 void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, elm::genstruct::Vector<BCG*> &bcgs,elm::genstruct::HashTable<String ,ilp::Var*>& ht_vars ) {
 	// Recuperation de l'ensemble des contraintes
-	System *system = SYSTEM(fw);
+	System *system = ipet::SYSTEM(fw);
 	assert(system);
 
 	// creation des classes d'appartenance des branchements A PARTIR DU BHG (indirectement depuis les BCG)
@@ -510,7 +510,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
  */
 void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg,HashTable<String ,Var*>& ht_vars) {
 	// Recuperation de l'ensemble des contraintes
-	System *system = SYSTEM(fw);
+	System *system = ipet::SYSTEM(fw);
 	assert(system);
 
 	
@@ -829,7 +829,7 @@ void BPredProcessor::processCFG__Global1B(WorkSpace *ws,CFG* cfg) {
 		buf << "bbhg.ps";
 		String filename = buf.toString();
 		otawa::display::OUTPUT_PATH(props) = filename.toCString();
-		display::BBHGDrawer drawer(&bbhg, props);
+		BBHGDrawer drawer(&bbhg, props);
 		drawer.display();
 	}
 	HashTable<String ,Var*> ht_vars;
@@ -842,7 +842,7 @@ void BPredProcessor::processCFG__Global1B(WorkSpace *ws,CFG* cfg) {
 		buf << "bhg.ps";
 		String filename = buf.toString();
 		otawa::display::OUTPUT_PATH(props) = filename.toCString();
-		display::BHGDrawer drawer(&bhg, props);
+		BHGDrawer drawer(&bhg, props);
 		drawer.display();
 	}
 	

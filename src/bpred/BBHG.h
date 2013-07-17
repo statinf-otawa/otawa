@@ -27,6 +27,8 @@
 #include <otawa/otawa.h>
 #include <otawa/cfg.h>
 
+namespace otawa { namespace bpred {
+
 class BBHGNode;
 class BBHGEdge;
 
@@ -86,4 +88,7 @@ public:
 	bool equals(const BBHGNode& b);
 	void setExit(bool isExit, bool withT = false, bool withNT = false);
 };
+
+} }		// otawa::bpred
+
 #endif /*BBHG_H_*/

@@ -26,6 +26,8 @@
 #include <otawa/otawa.h>
 #include <otawa/dfa/BitSet.h>
 
+namespace otawa { namespace bpred {
+
 class BCGNode;
 class BCGEdge;
 
@@ -82,7 +84,7 @@ public:
 
 };
 
-
+} }		// otawa::bpred
 
 #endif /*BCG_H_*/
 

@@ -28,6 +28,8 @@
 #include <otawa/dfa/BitSet.h>
 #include <otawa/otawa.h>
 
+namespace otawa { namespace bpred {
+
 class BHGNode;
 class BHGEdge;
 
@@ -84,5 +86,6 @@ public:
 	void setExit(bool withT = false, bool withNT = false);
 };
 
+} }		// otawa::bpred
 
 #endif /*BHG_H_*/

@@ -28,36 +28,36 @@
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/ipet/BasicConstraintsBuilder.h>
 #include <otawa/ipet/IPET.h>
+#include <otawa/bpred/features.h>
 
 
 #define CLAIRE_INFOS 0
 
 
+namespace otawa { namespace bpred {
 
 class BSets;
-
 class BCG;
-
 class BHG;
 class BHGEdge;
 class BHGNode;
-
 class BBHG;
 class BBHGNode;
 
-namespace otawa {
-namespace ipet {
-
 class BPredProcessor: public CFGProcessor {
 public:
-	enum Methods { 	NO_CONFLICT_2BITS_COUNTER=0, 
-					BI_MODAL=1,
-					GLOBAL_2B=2,
-					GLOBAL_1B=3};
-private:;
+	static p::declare reg;
+	String getStats(void);
+	BPredProcessor(p::declare& r = reg);
+	~BPredProcessor(void);
+
+protected:
+	virtual void configure(const PropList &props);
+
+private:
 	unsigned int BHT;
 	bool dumpBCG,dumpBHG,dumpBBHG;
-	Methods method;
+	method_t method;
 	unsigned int BHG_history_size;
 	bool withStats,withMitra;
 	elm::genstruct::Vector<int> stat_addr,stat_nbbr;
@@ -72,9 +72,9 @@ private:;
 	// GENERAL
 	BasicBlock* getBB(int id,CFG* cfg);
 	virtual void processCFG(WorkSpace *ws,CFG* cfg);
-	inline String bin_to_str(int i);
-	inline int getBit(int v,int n);
-	inline void setBit(int&v, int n);
+	String bin_to_str(int i);
+	inline int getBit(int v,int n) { return ((v & 1 << n)>0)?1:0; }
+	inline void setBit(int&v, int n) { 	v |= (1<<n); }
 	String BitSet_to_String(const dfa::BitSet& bs);
 	dfa::BitSet lshift_BitSet(dfa::BitSet bs,int dec,bool val_in=false);
 	void setMitraInit(const char* binary_histo);
@@ -118,66 +118,8 @@ private:;
 						int 				visited[]);
 	void simplifyCFG(CFG* cfg, BSets& bs, int addr, elm::genstruct::Vector<BCG*> &graphs);
 	void processCFG__Bimodal(WorkSpace *ws,CFG* cfg);
-
-
-
-
-public:
-	String getStats();
-	BPredProcessor();
-	~BPredProcessor();
-	void configure(const PropList &props);
 };
 
-inline String BPredProcessor::bin_to_str(int i) {
-	switch(i){
-	case 0:
-		return String("00");
-		break;
-	case 1:
-		return String("01");
-		break;
-	case 2:
-		return String("10");
-		break;
-	case 3:
-		return String("11");
-		break;
-	default:
-		return String("#ERROR: bin_to_str#");
-	}
-}
-	
-inline int BPredProcessor::getBit(int v,int n) {
-	return ((v & 1 << n)>0)?1:0;
-}
-
-
-inline void BPredProcessor::setBit(int& v, int n) {
-	v |= (1<<n);
-}
-
-
-extern Feature<BPredProcessor> BRANCH_PREDICTION_FEATURE;
-
-
-// Configuration Properties
-extern Identifier<BPredProcessor::Methods> BP__METHOD;
-extern Identifier<int> 			BP__BHT_SIZE;
-extern Identifier<int> 			BP__HISTORY_SIZE;
-extern Identifier<bool> 		BP__DUMP_BCG; 
-extern Identifier<bool>			BP__DUMP_BHG; 
-extern Identifier<bool> 		BP__DUMP_BBHG;
-extern Identifier<bool> 		BP__WITH_MITRA;
-extern Identifier<bool> 		BP__WITH_STATS;
-extern Identifier<const char*> 	BP__INIT_HISTORY_BINARYVALUE;
-extern Identifier<bool> 		BP__EXPLICIT_MODE;
-
-
-} // ::ipet
-} // ::otawa
-
-
-
+} } // otawa::bpred
 
 #endif /* OTAWA_IPET_BRANCHINSPECTION_ */

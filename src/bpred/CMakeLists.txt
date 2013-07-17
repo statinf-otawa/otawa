@@ -1,4 +1,4 @@
-set(CMAKE_INSTALL_RPATH "\\$ORIGIN")
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../..")
 
 set(bpred_SOURCES
 	  "BBHG.cpp"
@@ -25,7 +25,9 @@ set(bpred_SOURCES
 # BBHG.h
 
 add_library(bpred MODULE ${bpred_SOURCES})
-install(TARGETS bpred DESTINATION lib)
+set_property(TARGET bpred PROPERTY PREFIX "")
+set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
+install(TARGETS bpred DESTINATION lib/otawa/proc/otawa)
 target_link_libraries(bpred ${LIBELM})
 target_link_libraries(bpred otawa)
 target_link_libraries(bpred odisplay)

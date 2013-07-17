@@ -33,7 +33,7 @@
 
 
 namespace otawa {
-namespace ipet {
+namespace bpred {
 
 
 using namespace otawa::ilp;
@@ -106,7 +106,7 @@ int countBranches(CFG *cfg) {
  * @return A String containing the stats.
  */
 String BPredProcessor::genStats(WorkSpace *fw,CFG *cfg) {
-	System *system = SYSTEM(fw);
+	System *system = ipet::SYSTEM(fw);
 	int nb_cons = system->countConstraints();
 	int nb_vars = system->countVars();
 	io::BlockOutStream bf;

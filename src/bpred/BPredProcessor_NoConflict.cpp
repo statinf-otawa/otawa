@@ -29,8 +29,7 @@
 using namespace otawa::ilp;
 using namespace elm;
 
-namespace otawa {
-namespace ipet {
+namespace otawa { namespace bpred {
 
 /////// CREATION DE CONTRAINTES ET VARIABLES
 #define NEW_BASIC_CONSTRAINT(cons_name) Constraint *cons_name = system->newConstraint(Constraint::EQ); \
@@ -56,12 +55,12 @@ namespace ipet {
  */
 void BPredProcessor::CS__NoConflict_2bCounter(WorkSpace* fw,BasicBlock* bb) {
 	// Recuperation de l'ensemble des contraintes
-	System *system = SYSTEM(fw);
-	assert(system);
+	System *system = ipet::SYSTEM(fw);
+	ASSERT(system);
 
 	// Recuperation de la variable associee au BB
 	Var *Xi = ipet::VAR(bb);
-	assert(Xi);
+	ASSERT(Xi);
 	
 	// Creation des nouvelles contraintes
 		// BLOC

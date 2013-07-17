@@ -25,6 +25,7 @@
 using namespace otawa;
 using namespace elm;
 
+namespace otawa { namespace bpred {
 
 /// BBHGEdge
 BBHGEdge::BBHGEdge(BBHGNode *source, BBHGNode *target, bool taken, bool from_branch) :
@@ -133,3 +134,6 @@ void BBHG::add(BBHGNode *node) {
 int BBHG::getClass() {
 	return this->m_history_size;
 }
+
+} }		// otawa::bpred
+

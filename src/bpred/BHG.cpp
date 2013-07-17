@@ -24,6 +24,8 @@
 //#include <iostream>
 using namespace otawa;
 
+namespace otawa { namespace bpred {
+
 /// BHGEdge
 BHGEdge::BHGEdge(BHGNode *source, BHGNode *target, bool taken) :
 				GenGraph<BHGNode,BHGEdge>::GenEdge(source,target) {
@@ -125,3 +127,5 @@ void BHG::add(BHGNode *node) {
 int BHG::getClass() {
 	return this->m_history_size;
 }
+
+} }		// otawa::bpred

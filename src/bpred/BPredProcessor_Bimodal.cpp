@@ -35,7 +35,7 @@ using namespace elm;
 using namespace elm::genstruct;
 
 namespace otawa {
-namespace ipet {
+namespace bpred {
 
 
 /////// CREATION DE CONTRAINTES ET VARIABLES
@@ -113,7 +113,7 @@ BasicBlock* BPredProcessor::getBB(int id,CFG* cfg) {
  */
 void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstruct::Vector<BCG*> &graphs ) {
 	// Recuperation de l'ensemble des contraintes
-	System *system = SYSTEM(fw);
+	System *system = ipet::SYSTEM(fw);
 	assert(system);
 	HashTable<String ,Var*> ht_vars;
 
@@ -883,7 +883,7 @@ void BPredProcessor::processCFG__Bimodal(WorkSpace *fw, CFG *cfg) {
 			buf << "bcg_@" << l_addr[a] << ".ps";
 			String filename = buf.toString();
 			otawa::display::OUTPUT_PATH(props) = filename.toCString();
-			display::BCGDrawer drawer(bcgs[a], props);
+			BCGDrawer drawer(bcgs[a], props);
 			drawer.display();
 		}
 

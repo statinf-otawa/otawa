@@ -22,6 +22,8 @@
 #include "BCG.h"
 using namespace otawa;
 
+namespace otawa { namespace bpred {
+
 /// BCGEdge
 BCGEdge::BCGEdge(BCGNode *source, BCGNode *target, bool taken) :
 				GenGraph<BCGNode,BCGEdge>::GenEdge(source,target) {
@@ -114,3 +116,5 @@ int BCG::getClass() {
 otawa::dfa::BitSet& BCG::getHistory() {
 	return *(this->m_history);
 }
+
+} }		// otawa::bpred
