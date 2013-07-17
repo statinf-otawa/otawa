@@ -31,6 +31,7 @@
 
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/ipet/FlowFactConstraintBuilder.h>
+#include <otawa/proc/ProcessorPlugin.h>
 
 
 namespace otawa {
@@ -333,5 +334,16 @@ String BPredProcessor::bin_to_str(int i) {
 	}
 }
 
+// Plugin declaration
+class Plugin: public ProcessorPlugin {
+public:
+	typedef genstruct::Table<AbstractRegistration * > procs_t;
 
-} } // otawa::ipet
+	Plugin(void): ProcessorPlugin("otawa::bpred", Version(1, 1, 0), OTAWA_PROC_VERSION) { }
+	virtual procs_t& processors(void) const { return procs_t::EMPTY; };
+};
+
+} } // otawa::bpred
+
+otawa::bpred::Plugin OTAWA_PROC_HOOK;
+otawa::bpred::Plugin& otawa_bpred = OTAWA_PROC_HOOK;

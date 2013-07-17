@@ -1066,6 +1066,5 @@ void BPredProcessor::processCFG__Global1B(WorkSpace *ws,CFG* cfg) {
 #endif
 }
 
-} // ::ipet
-} // ::otawa
+} } // otawa::bpred
 
