@@ -1,22 +1,36 @@
 /*
- *	$Id$
- *	Copyright (c) 2005, IRIT-UPS.
+ *	ASTLoader class implementation
  *
- *	otawa/src/ast_ASTLoader.cpp -- implementation for ASTLoader class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <otawa/ast.h>
 #include <otawa/ast/ASTLoader.h>
 #include <elm/debug.h>
+#include <otawa/ast/features.h>
 
 using namespace elm;
 
 extern FILE *ast_in;
 
-namespace otawa {
+namespace otawa { namespace ast {
 
 /**
  * @class ASTLoader
@@ -24,21 +38,46 @@ namespace otawa {
  * Heptane format (see doc/ directory for more details). The file containing
  * the AST description may be passed directly using @ref ID_ASTFile configuration
  * identifier or is built from executable path by appending ".ast" extension.
+ *
+ * @ingroup ast
  */
 
+
+p::declare ASTLoader::reg = p::init("otawa::ast::ASTLoader", Version(1, 2, 0))
+	.provide(FEATURE)
+	.maker<ASTLoader>();
 
 /**
  * Build a new AST loader.
  */
-ASTLoader::ASTLoader(void): ws(0), file(0) {
+ASTLoader::ASTLoader(p::declare& r): Processor(r), ws(0), file(0) {
 }
+
+
+static SilentFeature::Maker<ASTLoader> maker;
+/**
+ * This feature ensures that the AST structure of the binary has been loaded.
+ *
+ * @p Configuration
+ * @li @ref PATH
+ *
+ * @p Properties
+ * @li @ref FUN
+ * @li @ref INFO
+ */
+SilentFeature FEATURE("otawa::ast::FEATURE", maker);
 
 
 /**
  * This identifier may be passed for specifying the path a file for loading
  * the AST.
+ *
+ * @p Feature
+ * @li @ref otawa::ast::FEATURE
+ *
+ * @ingroup ast
  */
-Identifier<String> ASTLoader::PATH("otawa::path", "");
+Identifier<String> PATH("otawa::ast::PATH", "");
 
 
 /**
@@ -61,13 +100,13 @@ void ASTLoader::onError(const char *fmt, ...) {
 /**
  */
 void ASTLoader::processWorkSpace(WorkSpace *ws) {
-	assert(ws);
+	ASSERT(ws);
 	this->ws= ws;
 	
 	// Get a valid path
 	if(!path) {
 		file = ws->process()->program();
-		assert(file);
+		ASSERT(file);
 		elm::StringBuffer buffer;
 		buffer << file->name() << ".ast";
 		path = buffer.toString();
@@ -84,7 +123,7 @@ void ASTLoader::processWorkSpace(WorkSpace *ws) {
 	try {
 		ast_parse(this);
 	}
-	catch(LoadException e) {
+	catch(LoadException& e) {
 		onError(&e.message());
 	}
 	
@@ -127,7 +166,7 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 	}
 	
 	// Find AST info
-	ASTInfo *info = ws->getASTInfo();
+	ASTInfo *info = ASTInfo::getInfo(ws);
 	
 	// Build the matching sequence
 	AST *ast = 0;
@@ -183,7 +222,7 @@ address_t ASTLoader::findLabel(elm::String raw_label) {
 	// Retrieve the file
 	if(!file)
 		file = ws->process()->program();
-	assert(file);
+	ASSERT(file);
 	
 	// Compute entry
 	String label = raw_label.substring(1, raw_label.length() - 1);
@@ -195,4 +234,4 @@ address_t ASTLoader::findLabel(elm::String raw_label) {
 	return addr;
 }
 
-} // otawa
+} } // otawa::ast

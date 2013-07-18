@@ -12,6 +12,8 @@
 
 namespace otawa { namespace ets {
 
+using namespace ast;
+
 class CacheMissComputation: public ASTProcessor {
 	public:
 	// ASTProcessor overload

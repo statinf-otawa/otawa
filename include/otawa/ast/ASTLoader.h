@@ -1,8 +1,22 @@
 /*
- *	$Id$
- *	Copyright (c) 2005, IRIT-UPS.
+ *	ASTLoader class interface
  *
- *	otawa/ast/ASTLoader.h -- interface for ASTLoader class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_AST_AST_LOADER_H
 #define OTAWA_AST_AWT_LOADER_H
@@ -12,13 +26,13 @@
 
 // Externals
 namespace otawa {
-	class ASTLoader;
+	namespace ast { class ASTLoader; }
 	class File;
 }
-int ast_parse(otawa::ASTLoader *loader);
-void ast_error(otawa::ASTLoader *loader, const char *msg);
+int ast_parse(otawa::ast::ASTLoader *loader);
+void ast_error(otawa::ast::ASTLoader *loader, const char *msg);
 
-namespace otawa {
+namespace otawa { namespace ast {
 
 // ASTLoader class
 class ASTLoader: public Processor {
@@ -34,16 +48,16 @@ class ASTLoader: public Processor {
 	AST *makeBlock(elm::CString entry, elm::CString exit);
 	address_t findLabel(elm::String raw_label);
 public:
-	static Identifier<String> PATH;
+	static p::declare reg;
 	
 	// Constructors
-	ASTLoader(void);
+	ASTLoader(p::declare& r = reg);
 	
 	// Processor overload
 	virtual void configure(PropList& props);
 	virtual void processWorkSpace(WorkSpace *ws);
 };
 
-} // otawa
+} } // otawa::ast
 
 #endif // OTAWA_AST_AST_LOADER_H

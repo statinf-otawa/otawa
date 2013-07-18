@@ -41,8 +41,10 @@ using namespace elm::genstruct;
 // Classes
 class AbstractFeature;
 class FeatureDependency;
-class AST;
-class ASTInfo;
+namespace ast {
+	class AST;
+	class ASTInfo;
+}
 class CFG;
 class CFGInfo;
 class File;
@@ -82,7 +84,7 @@ public:
 	CFG *getStartCFG(void);
 
 	// AST Management
-	ASTInfo *getASTInfo(void);
+	ast::ASTInfo *getASTInfo(void);
 
 	// ILP support
 	ilp::System *newILPSystem(bool max = true);

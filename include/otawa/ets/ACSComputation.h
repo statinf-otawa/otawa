@@ -15,6 +15,8 @@
 
 namespace otawa { namespace ets {
 
+using namespace ast;
+
 // ACSComputation class	
 class ACSComputation: public ASTProcessor {
 	public :

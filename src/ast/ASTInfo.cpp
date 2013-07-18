@@ -1,26 +1,50 @@
 /*
- *	$Id$
- *	Copyright (c) 2003, Institut de Recherche en Informatique de Toulouse.
+ *	ASTInfo class implementation
  *
- *	src/prog/ASTInfo.cpp -- implementation for ASTInfo class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003-08, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 #include <otawa/ast/ASTInfo.h>
 #include <otawa/prop/DeletableProperty.h>
+#include <otawa/ast/features.h>
 
-namespace otawa {
+namespace otawa { namespace ast {
 
 /**
  * @class ASTInfo
  * This class stores all the function known for the current framework. It provides list access
  * name mapped access.
+ *
+ * @ingroup ast
  */
 
 
 /**
  * Identifier of the property storing the AST information on the framework object.
+ *
+ * @p Hook
+ * @li @ref WorkSpace
+ *
+ * @p Feature
+ * @li @ref otawa::ast::FEATURE
+ *
+ * @ingroup ast
  */
-Identifier<ASTInfo *> ASTInfo::ID("otawa::ASTInfo::id", 0);
+Identifier<ASTInfo *> INFO("otawa::ast::INFO", 0);
 
 
 /**
@@ -28,7 +52,7 @@ Identifier<ASTInfo *> ASTInfo::ID("otawa::ASTInfo::id", 0);
  * @param ws	Workspace to link to.
  */
 ASTInfo::ASTInfo(WorkSpace *ws) {
-	ws->addProp(new DeletableProperty<ASTInfo *>(ID, this));
+	ws->addProp(new DeletableProperty<ASTInfo *>(INFO, this));
 }
 
 /**
@@ -76,7 +100,7 @@ void ASTInfo::add(FunAST *fun) {
 FunAST *ASTInfo::getFunction(Inst *inst) {
 
 	// Look in the instruction
-	FunAST *fun = FunAST::ID(inst);
+	FunAST *fun = FUN(inst);
 
 	// Create it else
 	if(!fun)
@@ -96,7 +120,7 @@ FunAST *ASTInfo::getFunction(Inst *inst) {
 ASTInfo *ASTInfo::getInfo(WorkSpace *ws) {
 
 	// Look in the process
-	elm::Option<ASTInfo *> result = ID.get(ws);
+	elm::Option<ASTInfo *> result = INFO.get(ws);
 	if(result)
 		return *result;
 
@@ -112,4 +136,4 @@ ASTInfo::~ASTInfo(void) {
 		delete funs[i];
 }
 
-} // otawa
+} } // otawa::ast

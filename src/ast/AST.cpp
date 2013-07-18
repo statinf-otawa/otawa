@@ -1,18 +1,47 @@
 /*
- *	$Id$
- *	Copyright (c) 2003, Institut de Recherche en Informatique de Toulouse.
+ *	AST class implementation
  *
- *	otaw/ast/AST.cpp -- implementation for AST class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2003, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 #include <otawa/ast/AST.h>
+#include <otawa/proc/ProcessorPlugin.h>
 
 /*
  * !!IMPROVEMENT!!
- * An AST type UNDEFINED may be added for qualifyingnot-available function body or AST part.
+ * An AST type UNDEFINED may be added for qualifying not-available function body or AST part.
  */
 
-namespace otawa {
+/**
+ * @defgroup ast Abstract Syntactic Tree
+ *
+ * This module provides facilities to handle an executable
+ * as an AST (Abstract Syntactic Tree). This allows to implements
+ * ETS (Extending Timing Schema) approach to compute the WCET as in:
+ *
+ * S.S. LIM, Y.H. BAE, G.T. JANG, S.L. MIN, C.Y. PARK, H. SHIN, H., C.S. KIM, C. S.
+ * An accurate worst case timing analysis for RISC processors.
+ * IEEE transactions on software engineering, 21(7), 593-604, 1995.
+ *
+ * The AST is loaded from an external file (usually generated from source files)
+ * in the same format the Heptane tool (http://www.irisa.fr/alf/index.php?option=com_content&view=article&id=29&Itemid=0).
+ */
+
+namespace otawa { namespace ast {
 	
 /**
  * NOP AST class.
@@ -48,6 +77,8 @@ static UndefAST undef_inst;
 /**
  * @class AST
  * This is the base class for the representation of programs as Abstract Syntax Trees.
+ *
+ * @ingroup ast
  */
 
 
@@ -140,4 +171,15 @@ int AST::countInstructions(void) const {
 	return 1;
 }
 
-} // otawa
+class Plugin: public ProcessorPlugin {
+public:
+	typedef genstruct::Table<AbstractRegistration * > procs_t;
+
+	Plugin(void): ProcessorPlugin("otawa::ast", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
+	virtual procs_t& processors(void) const { return procs_t::EMPTY; };
+};
+
+} }		// otawa::ast
+
+otawa::ast::Plugin OTAWA_PROC_HOOK;
+otawa::ast::Plugin& otawa_ast = OTAWA_PROC_HOOK;

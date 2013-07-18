@@ -12,6 +12,8 @@
 
 namespace otawa { namespace ets {
 
+using namespace ast;
+
 // FlowFactLoader class	
 class FlowFactLoader: public ASTProcessor {
 public:

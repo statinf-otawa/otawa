@@ -95,7 +95,7 @@ int WCETComputation::computation(WorkSpace *ws, AST *ast) {
 					throw ProcessorException(*this, _ << "no loop bound at : "
 						<< LABEL(ast->toWhile()->condition()->first())
 						<< " ("
-						<< (void *)(int)ast->toWhile()->condition()->first()->address()
+						<< ast->toWhile()->condition()->first()->address()
 						<< ")");
 				}
 				wcet=N*(computation(ws, ast->toWhile()->condition())

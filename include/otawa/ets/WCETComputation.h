@@ -11,7 +11,8 @@
 #include <otawa/ast/ASTProcessor.h>
 
 namespace otawa { namespace ets {
-	
+
+using namespace ast;
 	
 // WCETComputation class
 class WCETComputation: public ASTProcessor {

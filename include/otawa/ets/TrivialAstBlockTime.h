@@ -13,6 +13,8 @@
 
 namespace otawa { namespace ets {
 
+using namespace ast;
+
 // TrivialAstBlockTime class	
 class TrivialAstBlockTime: public ASTProcessor {
 public:	

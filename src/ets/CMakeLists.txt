@@ -19,5 +19,5 @@ add_library(ets MODULE ${ets_la_SOURCES})
 install(TARGETS ets DESTINATION lib)
 
 target_link_libraries(ets ${LIBELM})
-target_link_libraries(ets libotawa)
+target_link_libraries(ets otawa)
 target_link_libraries(ets ast)

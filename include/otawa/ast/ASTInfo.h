@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	ASTInfo class interface
  *
  *	This file is part of OTAWA
@@ -29,20 +28,18 @@
 // Extern
 int heptane_parse(void);
 
-namespace otawa {
+namespace otawa { namespace ast {
 
 // ASTInfo class
 class ASTInfo: public PropList {
 public:
 	~ASTInfo(void);
-	static Identifier<ASTInfo *> ID;
 	static ASTInfo *getInfo(WorkSpace *ws);
 	FunAST *getFunction(Inst *inst);
 
 	class Iterator: public elm::genstruct::Vector<FunAST *>::Iterator {
 	public:
-		inline Iterator(ASTInfo *info): 
-			elm::genstruct::Vector<FunAST *>::Iterator(info->funs) { }
+		inline Iterator(ASTInfo *info):  elm::genstruct::Vector<FunAST *>::Iterator(info->funs) { }
 	};
 	
 	void add(FunAST *fun);
@@ -58,6 +55,6 @@ private:
 	ASTInfo(WorkSpace *ws);
 };
 	
-} // otawa
+} } // otawa::ast
 
 #endif // OTAWA_AST_AST_INFO_H

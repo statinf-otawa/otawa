@@ -1,8 +1,22 @@
 /*
- *	$Id$
+ *	Parser for Heptane AST file
+ *
+ *	This file is part of OTAWA
  *	Copyright (c) 2003, IRIT UPS.
  *
- *	src/heptane/parser.yy -- parser for Heptane AST file.
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 %{
 
@@ -14,11 +28,12 @@
 
 using namespace elm;
 using namespace otawa;
+using namespace otawa::ast;
 
 // Proto
 #define size_t unsigned long
 int ast_lex(void);
-void ast_error(otawa::ASTLoader *loader, const char *msg);
+void ast_error(otawa::ast::ASTLoader *loader, const char *msg);
 
 %}
 
@@ -26,11 +41,11 @@ void ast_error(otawa::ASTLoader *loader, const char *msg);
 %locations
 %defines
 %error-verbose
-%parse-param {otawa::ASTLoader *loader}
+%parse-param {otawa::ast::ASTLoader *loader}
 
 %union {
 	char *str;
-	otawa::AST *ast;
+	otawa::ast::AST *ast;
 }
 
 %token ERROR
@@ -59,7 +74,7 @@ defs:
 def:
 	NAME '=' ast
 		{ 
-			ASTInfo *info = loader->ws->getASTInfo();
+			ast::ASTInfo *info = ASTInfo::getInfo(loader->ws);
 			address_t addr = loader->file->findLabel($1 + 1);
 			if(!addr)
 				throw LoadException(_ << "Cannot resolve label \"" << $1 << "\".");
@@ -149,6 +164,6 @@ args:
 %%
 
 // Handle error
-void ast_error(otawa::ASTLoader *loader, const char *msg) {
+void ast_error(otawa::ast::ASTLoader *loader, const char *msg) {
 	loader->onError("%s:%d: syntax error: %s", &loader->path, 0, msg);
 }

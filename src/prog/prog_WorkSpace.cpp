@@ -178,7 +178,7 @@ CFG *WorkSpace::getStartCFG(void) {
 /**
  * Get the AST of the project.
  */
-ASTInfo *WorkSpace::getASTInfo(void) {
+ast::ASTInfo *WorkSpace::getASTInfo(void) {
 	DEPRECATED
 	return 0;
 }
