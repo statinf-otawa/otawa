@@ -376,17 +376,17 @@ void Value::widening(const Value& val) {
 
 	/* widen(ALL, *) = ALL */
 	else if (_kind == ALL || val._kind == ALL)
-		set(ALL, 0, 1, UMAXn);
+		*this = all;
+		//set(ALL, 0, 1, UMAXn);
 
 	/* this == val = val */
 	else if (*this == val)
 		return;
 
-	// widen((k, 0, 0), (k', 0, 0)) = (min(k, k'), |k - k'|, 1)
+	// widen((k, 0, 0), (k', 0, 0)) = (k, k' - k, 1)
 	else if (isConst() && val.isConst()) {
-		_lower = min(_lower, val._lower);
-		_delta = elm::abs(_lower - val._lower);
-		_mtimes = 1;
+		_delta = val._lower - _lower;
+		_mtimes = clp::UMAXn;
 	}
 
 	// when d != d' /\ d != -d', widen((k, d, -), (k', d', -)) = T

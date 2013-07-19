@@ -144,7 +144,7 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 					}
 					else {
 						bool over;
-						t::uint32 m = elm::mult(abs(p.fst.delta()), p.fst.mtimes(), over);
+						t::uint32 m = elm::mult(elm::abs(p.fst.delta()), p.fst.mtimes(), over);
 						// (l % b) + d * n > (R - 1)b		/ R = row count, b = block size
 						if(over || m >= (cache->rowCount() - 1) * cache->blockSize() - cache->offset(p.fst.lower()))
 							accs.add(BlockAccess(inst, p.snd));
