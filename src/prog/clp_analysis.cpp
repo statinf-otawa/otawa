@@ -19,7 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-//#define HAI_DEBUG
+#define HAI_DEBUG
 #include <math.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/prog/sem.h>
@@ -54,7 +54,7 @@ using namespace otawa::util;
 // Debug output for the domain
 #define TRACED(t)	//t
 // Debug output for the problem
-#define TRACEP(t)	//t
+#define TRACEP(t)	t
 // Debug output for Update function 
 #define TRACEU(t)	//t
 // Debug output for instructions in the update function
@@ -480,6 +480,12 @@ void Value::inter(const Value& val) {
 		// do nothing
 		return;
 	}
+	if(isTop()) {
+		*this = val;
+		return;
+	}
+	else if(val.isTop())
+		return;
 	
 	// 2.2. cst n cst
 	if (isConst() && val.isConst()){
@@ -489,6 +495,7 @@ void Value::inter(const Value& val) {
 			set(NONE, 0, 0, 0);
 		return ;
 	}
+
 	// 2.3. cst n clp || clp n cst
 	if (isConst()) {
 		if ( ((sta1 >= sta2) && ((sta1 - sta2) % d2 == 0) && (u1 <= u2)) ||
@@ -498,14 +505,15 @@ void Value::inter(const Value& val) {
 			set(NONE, 0, 0, 0);
 		return ;
 	}
-	if (val.isConst()){
-		if ( ((sta2 >= sta1) && ((sta2 - sta1) % d1 == 0) && (u2 <= u1)) ||
-		     (*this == all))
+	if (val.isConst()) {
+		if((val.lower() - lower()) % delta() == 0
+		&& (val.lower() - lower()) / delta() <= mtimes())
 			set(VAL, sta2, 0, 0);
 		else
 			set(NONE, 0, 0, 0);
 		return;
 	}
+
 	// 2.4. not overlapping intervals
 	uintn_t l2test = (sta2 - sta1) / elm::abs(d1), m2test = (sto2 - sta1) / elm::abs(d1),
 			l1test = (sta1 - sta2) / elm::abs(d2), m1test = (sto1 - sta2) / elm::abs(d2);
@@ -1533,12 +1541,12 @@ public:
 				Value rval = filter->a()->val();
 				Value r = Value(REG, rval.lower(), 0, 0);
 				Value v = dom.get(r);
-				TRACEP(v.print(cerr));
+				TRACEP(cerr << v);
 				TRACEP(cerr << " -> ");
 				applyFilter(v, filter->op(), filter->b()->val());
-				TRACEP(v.print(cerr));
-				TRACEP(cerr << '\n');
+				TRACEP(cerr << v << io::endl);
 				dom.set(r, v);
+				TRACEP(cerr << "d = " << dom << io::endl);
 				_nb_filters++;
 				if (filter->b()->val() == Value::all)
 					_nb_top_filters++;
