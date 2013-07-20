@@ -123,7 +123,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
                 MISS_VAR(b) = miss;
 
                 // Add the constraint depending on the block access category
-                switch(cache::CATEGORY(b)) {
+                switch(dcache::CATEGORY(b)) {
                 	case cache::ALWAYS_HIT: { // Add constraint: xmiss = 0
 	                		ilp::Constraint *cons2 = system->newConstraint(ilp::Constraint::EQ,0);
     	            		cons2->addLeft(1, miss);
@@ -143,7 +143,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 						}
                 		break;
 					case cache::FIRST_MISS: {
-							BasicBlock *header = cache::CATEGORY_HEADER(b);
+							BasicBlock *header = dcache::CATEGORY_HEADER(b);
 							ASSERT(header);
 
 							// Add constraint: xmiss <= sum of entry-edges of the loop

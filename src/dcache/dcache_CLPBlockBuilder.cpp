@@ -45,7 +45,7 @@ namespace otawa { namespace dcache {
  * @li @ref INITIAL_SP
  * @ingroup dcache
  */
-p::declare CLPBlockBuilder::reg = p::init("otawa::dcache::BlockBuilder", Version(1, 0, 0))
+p::declare CLPBlockBuilder::reg = p::init("otawa::dcache::CLPBlockBuilder", Version(1, 0, 0))
 	.base(BBProcessor::reg)
 	.maker<CLPBlockBuilder>()
 	.provide(DATA_BLOCK_FEATURE)

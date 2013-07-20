@@ -63,7 +63,7 @@ p::declare LBlockBuilder::reg = p::init("otawa::util::LBlockBuilder", Version(1,
 /**
  * Build a new l-block builder.
  */
-LBlockBuilder::LBlockBuilder(AbstractRegistration& r): BBProcessor(r) {
+LBlockBuilder::LBlockBuilder(AbstractRegistration& r): BBProcessor(r), lbsets(0) {
 }
 
 
@@ -84,7 +84,7 @@ void LBlockBuilder::setup(WorkSpace *fw) {
 	mem = hard::MEMORY(fw);
 
 	// Build hash	
-	cacheBlocks = new HashTable<int, int>();
+	cacheBlocks = new HashTable<ot::mask, int>();
 	
 	// Build the l-block sets
 	lbsets = new LBlockSet *[cache->rowCount()];
@@ -113,27 +113,22 @@ void LBlockBuilder::cleanup(WorkSpace *fw) {
 /**
  * Add an lblock to the lblock lists.
  * @param bb		Basic block containing the l-block.
- * @param inst		First instruction of the l-block.
+ * @param addr		Address of the l-block.
  * @param index		Index in the BB lblock table.
  * @paramlblocks	BB lblock table.
  */
-void LBlockBuilder::addLBlock(
-	BasicBlock *bb,
-	Inst *inst,
-	int& index,
-	genstruct::AllocatedTable<LBlock*> *lblocks
-) {
+void LBlockBuilder::addLBlock(BasicBlock *bb, Address addr, int& index, genstruct::AllocatedTable<LBlock*> *lblocks) {
 	
 	// test if the l-block is cacheable
-	const hard::Bank *bank = mem->get(inst->address());
+	const hard::Bank *bank = mem->get(addr);
 	if(!bank)
-		log << "WARNING: no memory bank for instruction at " << inst->address() << ": block considered as cached.\n";
+		log << "WARNING: no memory bank for code at " << addr << ": block considered as cached.\n";
 	else if(!bank->isCached())
 		return;
 
 	// compute the cache block ID
-	LBlockSet *lbset = lbsets[cache->line(inst->address())]; 
-	int block = cache->block(inst->address());
+	LBlockSet *lbset = lbsets[cache->line(addr)];
+	ot::mask block = cache->block(addr);
 	int cbid = cacheBlocks->get(block, -1);
 	if(cbid == -1) {
     	cbid = lbset->newCacheBlockID();
@@ -141,20 +136,13 @@ void LBlockBuilder::addLBlock(
     }
 	
 	// Compute the size
-	Address top = (inst->address() + cache->blockMask()) & ~cache->blockMask();
+	Address top = (addr + cache->blockMask()) & ~cache->blockMask();
 	if(top > bb->address() + bb->size())
 		top = bb->address() + bb->size();
 	
 	// Build the lblock
-	LBlock *lblock = new LBlock(
-			lbset,
-			inst->address(),
-			bb,
-			top - inst->address(),
-			cbid
-		);
+	LBlock *lblock = new LBlock(lbset, addr, bb, top - addr, cbid);
 	lblocks->set(index, lblock); 											
-	LBLOCK(inst) = lblock;
 	index++;
 }
 
@@ -180,14 +168,12 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 		
 	// Traverse instruction
 	int index = 0;
-	int block = -1;
-	for(BasicBlock::InstIter inst(bb); inst; inst++) {
-		int new_block = cache->block(inst->address());
-		if(!inst->isPseudo() && new_block != block) {
-			addLBlock(bb, inst, index, lblocks);
-			block = new_block;
-		}
+	Address addr = bb->address();
+	while(addr < bb->topAddress()) {
+		addLBlock(bb, addr, index, lblocks);
+		addr = (addr.offset() + cache->blockSize()) & ~cache->blockMask();
 	}
+
 	ASSERT(index == num_lblocks);
 }
 
@@ -198,7 +184,7 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
  * @par Hooks
  * @li @ref Inst
  */
-Identifier<LBlock *> LBLOCK("otawa::LBLOCK");
+//Identifier<LBlock *> LBLOCK("otawa::LBLOCK");
 
 /**
  * This feature ensures that the L-blocks of the current task has been

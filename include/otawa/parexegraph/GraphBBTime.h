@@ -38,6 +38,40 @@ namespace otawa {
     extern Identifier<String> GRAPHS_OUTPUT_DIRECTORY;
     extern Identifier<int> TIME;
 
+    class LBlockManager {
+    public:
+
+    	LBlockManager(void): bb(0), lbs(0), i(0) { }
+
+    	category_t next(BasicBlock *ibb, Inst *inst) {
+
+    		// perform initialization for a new bb
+    		if(ibb != bb) {
+    			bb = ibb;
+    			lbs = BB_LBLOCKS(bb);
+    			i = 0;
+    		}
+
+    		// is it a l-block bound?
+    		if(i >= lbs->count() && lbs->get(i)->address() == inst->address()) {
+    			category_t cat = CATEGORY(lbs->get(i));
+    			if(cat == FIRST_MISS)
+    				hd = cache::CATEGORY_HEADER(lbs->get(i));
+    			return cat;
+    		}
+    		else
+    			return otawa::INVALID_CATEGORY;
+    	}
+
+    	inline BasicBlock *header(void) const { return hd; }
+
+    private:
+    	BasicBlock *bb;
+    	genstruct::AllocatedTable<LBlock*> *lbs;
+    	BasicBlock *hd;
+    	int i;
+    };
+
  
 	/*      extern Feature<GraphBBTime> ICACHE_ACCURATE_PENALTIES_FEATURE; */
 
@@ -336,10 +370,11 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		elm::genstruct::SLList<TimingContext *> * to_add = new elm::genstruct::SLList<TimingContext *>();
 
 		// process NOT_CLASSIFIED lblocks
+		LBlockManager lbm;
 		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
-			LBlock *lb = LBLOCK(inst->inst());
-			if (lb){
-				if (cache::CATEGORY(lb) == cache::NOT_CLASSIFIED){
+			category_t cat = lbm.next(inst->basicBlock(), inst->inst());
+			if (cat != otawa::INVALID_CATEGORY){
+				if (cat == cache::NOT_CLASSIFIED){
 					if (list->isEmpty()){
 						TimingContext *tctxt = new TimingContext();
 						NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
@@ -380,11 +415,12 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		// process FIRST_MISS lblocks
 
 		// find FIRST_MISS headers
+		LBlockManager lbm;
 		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
-			LBlock *lb = LBLOCK(inst->inst());
-			if (lb){
-				if (cache::CATEGORY(lb) == cache::FIRST_MISS){
-					BasicBlock *header = cache::CATEGORY_HEADER(lb);
+			category_t cat = lbm.next(inst->basicBlock(), inst->inst());
+			if (cat != otawa::INVALID_CATEGORY){
+				if (cat == cache::FIRST_MISS){
+					BasicBlock *header = lbm.header();
 					//		elm::cout << "found header b" << header->number() << "\n";
 					if (header0 == NULL){
 						header0 = header;
@@ -428,10 +464,11 @@ void GraphBBTime<G>::configure(const PropList& props) {
 				tctxt_first->setType(CachePenalty::MISS); 
 				list->addLast(tctxt_first);
 
+				LBlockManager lbm;
 				for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
-					LBlock *lb = LBLOCK(inst->inst());
-					if (lb){
-						if (cache::CATEGORY(lb) == cache::FIRST_MISS){ // must be with header0
+					cache::category_t cat = lbm.next(inst->basicBlock(), inst->inst());
+					if (cat != cache::INVALID_CATEGORY){
+						if (cat == cache::FIRST_MISS){ // must be with header0
 							NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 							tctxt_first->addNodeLatency(nl);
 						}
@@ -452,11 +489,12 @@ void GraphBBTime<G>::configure(const PropList& props) {
 				TimingContext *tctxt_first_others = new TimingContext(header0, header1);
 				tctxt_first_others->setType(CachePenalty::x_HIT);
 				list->addLast(tctxt_first_others);
+				LBlockManager lbm;
 				for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
-					LBlock *lb = LBLOCK(inst->inst());
-					if (lb){
-						if (cache::CATEGORY(lb) == cache::FIRST_MISS){
-							BasicBlock *header = cache::CATEGORY_HEADER(lb);
+					cache::category_t cat = lbm.next(inst->basicBlock(), inst->inst());
+					if (cat != cache::INVALID_CATEGORY){
+						if (cat == cache::FIRST_MISS){
+							BasicBlock *header = lbm.header();
 							NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 							tctxt_first_first->addNodeLatency(nl);
 							nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
@@ -477,11 +515,11 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 	template <class G>
 		void GraphBBTime<G>::computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq){
-  
+		LBlockManager lbm;
 		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
-			LBlock *lb = LBLOCK(inst->inst());
-			if (lb){
-				if (cache::CATEGORY(lb) == cache::ALWAYS_MISS) {
+			cache::category_t cat = lbm.next(inst->basicBlock(), inst->inst());
+			if (cat != cache::INVALID_CATEGORY){
+				if (cat == cache::ALWAYS_MISS) {
 					NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 					dtctxt->addNodeLatency(nl);
 				}
@@ -535,12 +573,13 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		if (_do_consider_icache){
 
 			// verbosity
-			if(isVerbose())
+			if(isVerbose()) {
+				LBlockManager lbm;
 				for (ParExeSequence::InstIterator inst(sequence) ; inst ; inst++)  {
-					LBlock *lb = LBLOCK(inst->inst());
-					if (lb){
+					cache::category_t cat = lbm.next(inst->basicBlock(), inst->inst());
+					if (cat != cache::INVALID_CATEGORY){
 						log << "\t\t\tcategory of I" << inst->index() << " is ";
-						switch(cache::CATEGORY(lb)){
+						switch(cat){
 						case cache::ALWAYS_HIT:
 							log << "ALWAYS_HIT\n";
 							break;
@@ -548,7 +587,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 							log << "ALWAYS_MISS\n";
 							break;
 						case cache::FIRST_MISS:
-							log << "FIRST_MISS (with header b" << cache::CATEGORY_HEADER(lb)->number() << ")\n";
+							log << "FIRST_MISS (with header b" << lbm.header()->number() << ")\n";
 							break;
 						case cache::NOT_CLASSIFIED:
 							log << "NOT_CLASSIFIED\n";
@@ -559,6 +598,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 						}
 					}
 				}
+			}
 
 			// set constant latencies (ALWAYS_MISS in the cache)
 			TimingContext default_timing_context;
