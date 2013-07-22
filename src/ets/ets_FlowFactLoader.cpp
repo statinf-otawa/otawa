@@ -1,11 +1,24 @@
 /*
- *	$Id$
+ *	ets::FlowFactLoader class implementation
+ *
+ *	This file is part of OTAWA
  *	Copyright (c) 2005, IRIT UPS.
  *
- *	src/ets_FlowFactLoader.cpp -- FlowFactLoader class implementation.
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#include <otawa/ets/ETS.h>
+#include <otawa/ets/features.h>
 #include <otawa/ast.h>
 #include <otawa/ets/FlowFactLoader.h>
 #include <otawa/util/FlowFactLoader.h>
@@ -17,13 +30,26 @@ namespace otawa { namespace ets {
 	
 /**
  * @class FlowFactLoader
- * This processor allows using extern flow facts in ETS. 
+ * This processor allows using extern flow facts in ETS.
+ *
+ * @p Provided Features
+ * @li @ref FLOWFACT_FEATURE
+ *
+ * @p Required Features
+ * @li @ref otawa::FLOW_FACTS_FEATURE
  */
+
+
+p::declare& FlowFactLoader::reg = p::init("otawa::ets::FlowFactLoader", Version(1, 2, 0))
+	.base(ASTProcessor::reg)
+	.maker<FlowFactLoader>()
+	.provide(FLOWFACT_FEATURE)
+	.require(FLOW_FACTS_FEATURE);
 
 
 /**
  */
-FlowFactLoader::FlowFactLoader(void) {
+FlowFactLoader::FlowFactLoader(p::declare& r): ASTProcessor(r) {
 	require(otawa::FLOW_FACTS_FEATURE);
 }
 
@@ -99,7 +125,7 @@ void FlowFactLoader::processAST(WorkSpace *ws, AST *ast){
 			break;
 		}
 		default:
-			;
+			break;
 	}
 }
 

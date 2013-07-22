@@ -1,4 +1,4 @@
-set(CMAKE_INSTALL_RPATH "\\$ORIGIN")
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN:\\$ORIGIN/../../..")
 
 set(ets_la_SOURCES
 	"ets_AbstractCacheState.cpp"
@@ -16,7 +16,9 @@ include_directories(".")
 
 	
 add_library(ets MODULE ${ets_la_SOURCES})
-install(TARGETS ets DESTINATION lib)
+set_property(TARGET ets PROPERTY PREFIX "")
+set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
+install(TARGETS ets DESTINATION lib/otawa/proc/otawa)
 
 target_link_libraries(ets ${LIBELM})
 target_link_libraries(ets otawa)

@@ -1,11 +1,24 @@
 /*
- *	$$
+ *	CacheFirstMissComputation class implementation
+ *
+ *	This file is part of OTAWA
  *	Copyright (c) 2005, IRIT UPS.
  *
- *	src/ets_CacheFirstMissComputation.cpp -- CacheFirstMissComputation class implementation.
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#include <otawa/ets/ETS.h>
+#include <otawa/ets/features.h>
 #include <otawa/ast.h>
 #include <otawa/ets/CacheFirstMissComputation.h>
 #include <elm/debug.h>
@@ -18,8 +31,27 @@ namespace otawa { namespace ets {
 /**
  * @class CacheFirstMissComputation
  * This processor is used for computing the First Misses accesses after the cache simulating.
+ *
+ * @p Provided Features
+ * @li @ref CACHE_FIRST_MISS_FEATURE
+ *
+ * @p Required Features
+ * @li @ref ACS_FEATURE
  */
- 
+
+p::declare CacheFirstMissComputation::reg = p::init("otawa::ets::CacheFirstMissComputation", Version(1, 2, 0))
+	.base(ASTProcessor::reg)
+	.maker<CacheFirstMissComputation>()
+	.require(ACS_FEATURE)
+	.provide(CACHE_FIRST_MISS_FEATURE);
+
+
+/**
+ */
+CacheFirstMissComputation::CacheFirstMissComputation(p::declare& r): ASTProcessor(r) {
+}
+
+
 /**
  * @fn void CacheFirstMissComputation::processAST(FrameWork *ws, AST *ast);
  * Get the number of First Miss of ast with the recursive function: CacheFirstMissComputation::computation(FrameWork *ws, AST *ast).

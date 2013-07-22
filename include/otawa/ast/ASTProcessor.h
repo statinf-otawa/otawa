@@ -33,10 +33,9 @@ class ASTProcessor: public FunProcessor {
 public:
 	ASTProcessor(p::declare& r = FunProcessor::reg);
 	~ASTProcessor(void);
-	
+
+protected:
 	virtual void processAST(WorkSpace *ws, AST *ast)=0 ;
-	
-	// FUNProcessor overload
 	virtual void processFun(WorkSpace *ws, FunAST *fa);
 };
 

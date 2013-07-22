@@ -1,11 +1,24 @@
 /*
- *	$$
+ *	CacheHitComputation class implementation
+ *
+ *	This file is part of OTAWA
  *	Copyright (c) 2005, IRIT UPS.
  *
- *	src/ets_CacheHitComputation.cpp -- CacheHitComputation class implementation.
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#include <otawa/ets/ETS.h>
+#include <otawa/ets/features.h>
 #include <otawa/ast.h>
 #include <otawa/ets/CacheHitComputation.h>
 #include <elm/debug.h>
@@ -18,8 +31,27 @@ namespace otawa { namespace ets {
 /**
  * @class CacheHitComputation
  * This processor is used for computing the Hit accesses after the cache simulating.
+ *
+ * @p Provided Features
+ * @li @ref CACHE_HIT_FEATURE
+ *
+ * @p Required Features
+ * @li @ref ACS_FEATURE
  */
- 
+
+p::declare CacheHitComputation::reg = p::init("otawa::ets::CacheHitComputation", Version(1, 2, 0))
+	.base(ASTProcessor::reg)
+	.maker<CacheHitComputation>()
+	.require(ACS_FEATURE)
+	.provide(CACHE_HIT_FEATURE);
+
+
+/**
+ */
+CacheHitComputation::CacheHitComputation(p::declare& r): ASTProcessor(r) {
+}
+
+
 /**
  * @fn void CacheHitComputation::processAST(FrameWork *ws, AST *ast);
  * Get the number of Hit of ast with the recursive function: CacheHitComputation::computation(FrameWork *ws, AST *ast).

@@ -1,11 +1,24 @@
 /*
- *	$Id$
+ *	WCETComputation class implementation
+ *
+ *	This file is part of OTAWA
  *	Copyright (c) 2005, IRIT UPS.
  *
- *	src/ets_WCETComputation.cpp -- WCETComputation class implementation.
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#include <otawa/ets/ETS.h>
+#include <otawa/ets/features.h>
 #include <otawa/ast.h>
 #include <otawa/ets/WCETComputation.h>
 #include <elm/debug.h>
@@ -22,16 +35,35 @@ namespace otawa { namespace ets {
 /**
  * @class WCETComputation
  * This processor is used for computing the WCET with the Extended Timing Schema.
+ *
+ * @p Provided Features
+ * @li @ref WCET_FEATURE
+ *
+ * @p Required Features
+ * @li @ref FLOWFACT_FEATURE
+ * @li @ref BLOCK_TIME_FEATURE
  */
- 
+
+p::declare& WCETComputation::reg = p::init("otawa::ets::WCETComputation", Version(1, 2, 0))
+	.base(ASTProcessor::reg)
+	.maker<WCETComputation>()
+	.require(FLOWFACT_FEATURE)
+	.require(BLOCK_TIME_FEATURE)
+	.provide(WCET_FEATURE);
+
+
+/**
+ */
+WCETComputation::WCETComputation(p::declare& r): ASTProcessor(r) {
+}
+
 /**
  * Get the WCET of ast with the recursive function: WCETComputation::computation(FrameWork *ws, AST *ast).
  * @param ws	Container framework.
  * @param ast	AST to process.
  */	
 void WCETComputation::processAST(WorkSpace *ws, AST *ast) {
-	assert(ast);
-	/*int tmp=*/ computation(ws, ast);
+	ASSERT(ast);
 }
 
 
@@ -45,7 +77,7 @@ void WCETComputation::processAST(WorkSpace *ws, AST *ast) {
  * @exception	io::IOException if one number of iteration of loop or one WCET of function cannot be found.
  */
 int WCETComputation::computation(WorkSpace *ws, AST *ast) {
-		assert(ast);
+		ASSERT(ast);
 		int ELSE, THEN, wcet, N;
 		switch(ast->kind()) {
 			case AST_Call:{

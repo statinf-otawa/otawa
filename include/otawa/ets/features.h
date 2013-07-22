@@ -1,5 +1,5 @@
 /*
- *	WCETComputation class interface
+ *	ETS module
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005, IRIT UPS.
@@ -18,26 +18,38 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_ETS_WCET_COMPUTATION_H
-#define OTAWA_ETS_WCET_COMPUTATION_H
+#ifndef OTAWA_ETS_ETS_H
+#define OTAWA_ETS_ETS_H
 
-#include <otawa/ast/ASTProcessor.h>
+#include <otawa/prop/Identifier.h>
+#include <otawa/proc/SilentFeature.h>
 
 namespace otawa { namespace ets {
 
-using namespace ast;
-	
-// WCETComputation class
-class WCETComputation: public ASTProcessor {
-public:
-	static p::declare& reg;
-	WCETComputation(p::declare& r = reg);
+// Classes
+class AbstractCacheState;
 
-protected:
-	void processAST(WorkSpace *fw, AST *ast);
-	int computation(WorkSpace *fw, AST *ast);
-};
+// features
+extern SilentFeature ACS_FEATURE;
+extern Identifier<AbstractCacheState *> ACS;
 
+extern SilentFeature CACHE_FIRST_MISS_FEATURE;
+extern Identifier<int> FIRST_MISSES;
+
+extern SilentFeature CACHE_HIT_FEATURE;
+extern Identifier<int> HITS;
+
+extern SilentFeature CACHE_MISS_FEATURE;
+extern Identifier<int> MISSES;
+
+extern SilentFeature FLOWFACT_FEATURE;
+extern Identifier<int> LOOP_COUNT;
+
+extern SilentFeature BLOCK_TIME_FEATURE;
+extern SilentFeature WCET_FEATURE;
+extern Identifier<int> WCET;
+extern Identifier<int> CONFLICTS;
+		
 } } // otawa::ets
 
-#endif	// OTAWA_ETS_WCET_COMPUTATION_H
+#endif	// OTAWA_ETS_ETS_H

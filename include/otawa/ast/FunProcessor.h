@@ -32,9 +32,9 @@ public:
 	static p::declare reg;
 	FunProcessor(p::declare& r = reg);
 	~FunProcessor(void);
-	virtual void processFun(WorkSpace *ws, FunAST *fa) = 0;
 
-	// Processor overload
+protected:
+	virtual void processFun(WorkSpace *ws, FunAST *fa) = 0;
 	virtual void processWorkSpace(WorkSpace *ws);
 };
 

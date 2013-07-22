@@ -1,12 +1,25 @@
 /*
- *	$Id$
+ *	TrivialASTBlockTime class implementation
+ *
+ *	This file is part of OTAWA
  *	Copyright (c) 2005, IRIT UPS.
  *
- *  src/ets_TrivialAstBlockTime.cpp -- TrivialAstBlockTime class implementation.
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 #include <otawa/ets/TrivialAstBlockTime.h>
-#include <otawa/ets/ETS.h>
+#include <otawa/ets/features.h>
 #include <otawa/ast.h>
 
 //#define TABT_OUT(txt) txt	//with debuging
@@ -19,7 +32,23 @@ namespace otawa { namespace ets {
  * This processor is used for computing execution of ast blocks in a trivial
  * way, that is, the multiplication of ast block instruction count by the
  * pipeline depth.
+ *
+ * @p Provided Features
+ * @li @ref BLOCK_TIME_FEATURE
  */
+
+
+p::declare TrivialAstBlockTime::reg = p::init("otawa::ets::TrivialAstBlockTime", Version(1, 2, 0))
+	.base(ASTProcessor::reg)
+	.maker<TrivialAstBlockTime>()
+	.provide(BLOCK_TIME_FEATURE);
+
+
+/**
+ */
+TrivialAstBlockTime::TrivialAstBlockTime(p::declare& r): ASTProcessor(r), dep(0) {
+}
+
 
 /**
  * @fn TrivialAstBlockTime::TrivialAstBlockTime(int depth);
@@ -27,11 +56,21 @@ namespace otawa { namespace ets {
  * @param depth	Depth of the pipeline.
  */
 
+
 /**
  * @fn int TrivialAstBlockTime::depth(void) const;
  * Get the depth of the pipeline.
  * @return	Pipeline depth.
  */
+
+
+/**
+ */
+void TrivialAstBlockTime::configure(PropList& props) {
+	ASTProcessor::configure(props);
+	dep = DEPTH(props);
+}
+
 
 /**
  * Edit the WCET of the ast blocks to ETS::ID_WCET.

@@ -1,14 +1,28 @@
 /*
- *	$$
+ *	ACSComputation class implementation
+ *
+ *	This file is part of OTAWA
  *	Copyright (c) 2005, IRIT UPS.
  *
- *	src/ets_ACSComputation.cpp -- ACSComputation class implementation.
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
-#include <otawa/ets/ETS.h>
+#include <otawa/ets/features.h>
 #include <otawa/ast.h>
 #include <otawa/ets/ACSComputation.h>
 #include <otawa/instruction.h>
+#include <otawa/hard/CacheConfiguration.h>
 
 //#define AC_OUT(txt) txt	//with debuging
 #define AC_OUT(txt)	//without debuging
@@ -24,9 +38,29 @@ using namespace ast;
  * 	- One level, 
  * 	- Direct mapped, FullyAssociative and SetAssociative, 
  * 	- None and LRU.<br><br>
- * @remarks For each node I have adapted the Muller's Algorithme to calculate Cache States:
+ * @remarks For each node I have adapted the Muller's Algorithm to calculate Cache States.
+ *
+ * @p Provided Features
+ * @li @ref ACS_FEATURE
+ *
+ * @p Required Features
+ * @li @ref hard::CACHE_CONFIGURATION_FEATURE
  */
- 
+
+
+p::declare ACSComputation::reg = p::init("otawa::ets::ACSComputation", Version(1, 2, 0))
+	.base(ASTProcessor::reg)
+	.maker<ACSComputation>()
+	.require(hard::CACHE_CONFIGURATION_FEATURE)
+	.provide(ACS_FEATURE);
+
+
+/**
+ */
+ACSComputation::ACSComputation(p::declare& r): ASTProcessor(r) {
+}
+
+
 /** 
  * @var ACSComputation::cache_line_length;
  * It is the length of the current cache line, that is to say the number of l-blocks in this line.
@@ -36,6 +70,27 @@ using namespace ast;
  * @var ACSComputation::cache_size;
  * It is the cache size, that is to say the number of cache lines.
  */
+
+
+/**
+ */
+void ACSComputation::processWorkSpace(WorkSpace *ws) {
+	const hard::CacheConfiguration& caches = hard::CACHE_CONFIGURATION(ws);
+	if(!caches.hasInstCache())
+		throw ProcessorException(*this, "no instruction cache");
+	if(caches.isUnified())
+		throw ProcessorException(*this, "unified cache unsupported");
+	cache_size = caches.instCache()->rowCount();
+	cache_line_length = 0;
+	ASTProcessor::processWorkSpace(ws);
+}
+
+
+/**
+ */
+ACSComputation::~ACSComputation(void) {
+}
+
 
 /**
  * @fn void ACSComputation::processAST(FrameWork *ws, AST *ast);
@@ -83,6 +138,7 @@ void ACSComputation::initialization(WorkSpace *ws, AST *ast, AbstractCacheState 
 				AST *fun_ast = (*fun_res)->ast();
 				initialization(ws, fun_ast, acs);
 			}
+			break;
 		}
 		case AST_Block: {
 			address_t last = ast->toBlock()->block()->address() + ast->toBlock()->size();
@@ -129,7 +185,7 @@ void ACSComputation::initialization(WorkSpace *ws, AST *ast, AbstractCacheState 
 			initialization(ws, ast->toDoWhile()->condition(), acs);
 			break;
 		default :
-			;
+			break;
 	}
 }
 
