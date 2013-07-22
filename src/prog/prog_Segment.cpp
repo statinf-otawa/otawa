@@ -27,7 +27,7 @@
 // Configuration of the instruction map
 #define MAP_BITS	6
 #define MAP_MASK	((1 << MAP_BITS) - 1)
-#define MAP_SIZE(s)	(((s) + MAP_MASK - 1) >> MAP_BITS)
+#define MAP_SIZE(s)	(((s) + MAP_MASK) >> MAP_BITS)
 #define MAP_INDEX(a) (((a) - address()) >> MAP_BITS)
 #define MAP_BASE(i)	 address_t(address() + ((i) << MAP_BITS))
 

@@ -164,7 +164,7 @@ private:
 				else
 					cerr << "ERROR: unconsistant binary: no code segment at " << address << "  target of branch at " << source->address() << io::endl;
 			}
-			if(inst->isUnknown()) {
+			else if(inst->isUnknown()) {
 				cerr << "ERROR: ERROR: unknown instruction at " << address << ": ";
 				writeBytes(cerr, address, 4);
 				cerr << io::endl;
