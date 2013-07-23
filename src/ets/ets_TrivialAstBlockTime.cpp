@@ -35,6 +35,11 @@ namespace otawa { namespace ets {
  *
  * @p Provided Features
  * @li @ref BLOCK_TIME_FEATURE
+ *
+ * @p Configuration
+ * @li @ref DEPTH
+ *
+ * @ingroup ets
  */
 
 
@@ -118,5 +123,13 @@ void TrivialAstBlockTime::processAST(WorkSpace *ws, AST *ast) {
 				;
 	}
 }
+
+
+/**
+ * Depth of the pipeline for the code processor @ref TrivialAstBlockTime.
+ *
+ * @ingroup ets
+ */
+Identifier<int> DEPTH("otawa::ets::DEPTH", 5);
 
 } } // otawa::ets
