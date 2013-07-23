@@ -41,7 +41,7 @@ namespace otawa { namespace ets {
 
 p::declare CacheMissComputation::reg = p::init("otawa::ets::CacheMissComputation", Version(1, 2, 0))
 	.base(ASTProcessor::reg)
-	.maker<CacheHitComputation>()
+	.maker<CacheMissComputation>()
 	.require(ACS_FEATURE)
 	.provide(CACHE_MISS_FEATURE);
 

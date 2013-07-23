@@ -40,17 +40,16 @@ namespace otawa { namespace ets {
  */
 
 
-p::declare& FlowFactLoader::reg = p::init("otawa::ets::FlowFactLoader", Version(1, 2, 0))
+p::declare FlowFactLoader::reg = p::init("otawa::ets::FlowFactLoader", Version(1, 2, 0))
 	.base(ASTProcessor::reg)
 	.maker<FlowFactLoader>()
 	.provide(FLOWFACT_FEATURE)
-	.require(FLOW_FACTS_FEATURE);
+	.require(otawa::FLOW_FACTS_FEATURE);
 
 
 /**
  */
 FlowFactLoader::FlowFactLoader(p::declare& r): ASTProcessor(r) {
-	require(otawa::FLOW_FACTS_FEATURE);
 }
 
 

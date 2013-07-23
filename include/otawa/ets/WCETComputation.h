@@ -30,7 +30,7 @@ using namespace ast;
 // WCETComputation class
 class WCETComputation: public ASTProcessor {
 public:
-	static p::declare& reg;
+	static p::declare reg;
 	WCETComputation(p::declare& r = reg);
 
 protected:

@@ -30,7 +30,7 @@ using namespace ast;
 // FlowFactLoader class	
 class FlowFactLoader: public ASTProcessor {
 public:
-	static p::declare& reg;
+	static p::declare reg;
 	FlowFactLoader(p::declare& r = reg);
 
 protected:

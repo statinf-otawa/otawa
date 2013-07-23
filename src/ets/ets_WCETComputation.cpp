@@ -44,7 +44,7 @@ namespace otawa { namespace ets {
  * @li @ref BLOCK_TIME_FEATURE
  */
 
-p::declare& WCETComputation::reg = p::init("otawa::ets::WCETComputation", Version(1, 2, 0))
+p::declare WCETComputation::reg = p::init("otawa::ets::WCETComputation", Version(1, 2, 0))
 	.base(ASTProcessor::reg)
 	.maker<WCETComputation>()
 	.require(FLOWFACT_FEATURE)

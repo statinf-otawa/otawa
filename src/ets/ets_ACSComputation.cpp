@@ -75,12 +75,12 @@ ACSComputation::ACSComputation(p::declare& r): ASTProcessor(r) {
 /**
  */
 void ACSComputation::processWorkSpace(WorkSpace *ws) {
-	const hard::CacheConfiguration& caches = hard::CACHE_CONFIGURATION(ws);
-	if(!caches.hasInstCache())
+	const hard::CacheConfiguration *caches = hard::CACHE_CONFIGURATION(ws);
+	if(!caches->hasInstCache())
 		throw ProcessorException(*this, "no instruction cache");
-	if(caches.isUnified())
+	if(caches->isUnified())
 		throw ProcessorException(*this, "unified cache unsupported");
-	cache_size = caches.instCache()->rowCount();
+	cache_size = caches->instCache()->rowCount();
 	cache_line_length = 0;
 	ASTProcessor::processWorkSpace(ws);
 }
