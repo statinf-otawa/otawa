@@ -543,7 +543,8 @@ Process::Process(Manager *manager, hard::Platform *platform, const PropList& pro
 	init(false),
 	map(0),
 	no_stack(true),
-	vle_enabled(otawa::ppc::VLE_ENABLED(props))
+	vle_enabled(otawa::ppc::VLE_ENABLED(props)),
+	_gelFile(0)
 {
 	ASSERTP(manager, "manager required");
 	ASSERTP(platform, "platform required");
@@ -750,7 +751,7 @@ File *Process::loadFile(elm::CString path) {
 
 		// get the symbol description
 		gel_sym_t *sym = gel_find_file_symbol(_gelFile, name);
-		assert(sym);
+		ASSERT(sym);
 		gel_sym_info_t infos;
 		gel_sym_infos(sym, &infos);
 
@@ -918,7 +919,7 @@ static void translate_gliss_reg_info(otawa_ppc_reg_t reg_info, elm::genstruct::V
 	uint16_t reg_num_lo 	= (is_range) ? ((reg_info & 0x0000FF00) >> 8) : (reg_info & 0x0000FFFF);
 	uint16_t reg_num_up 	= (is_range) ? (reg_info & 0x000000FF) : reg_num_lo;
 	int reg_count 		= reg_num_up - reg_num_lo + 1;
-	assert(reg_count > 0);
+	ASSERT(reg_count > 0);
 
 	const hard::RegBank *reg_bank = 0;
 	hard::Register *reg_no_bank = 0;

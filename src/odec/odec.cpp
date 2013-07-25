@@ -163,13 +163,19 @@ private:
 					cerr << "ERROR: unconsistant binary: no code segment at " << address << " after instruction at " << source->address() << io::endl;
 				else
 					cerr << "ERROR: unconsistant binary: no code segment at " << address << "  target of branch at " << source->address() << io::endl;
+				return 0;
 			}
 			else if(inst->isUnknown()) {
 				cerr << "ERROR: ERROR: unknown instruction at " << address << ": ";
-				writeBytes(cerr, address, 4);
+				int cnt = ws->process()->instSize();
+				if(!cnt)
+					cnt = 4;
+				writeBytes(cerr, address, cnt);
 				cerr << io::endl;
+				return 0;
 			}
-			return inst;
+			else
+				return inst;
 		}
 		catch(otawa::DecodingException& e) {
 			cerr << "ERROR: " << e.message()<< io::endl;
