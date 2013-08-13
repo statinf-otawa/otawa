@@ -119,11 +119,11 @@ template <class Problem, class Set, class Iter>
 inline IterativeDFA<Problem, Set, Iter>::~IterativeDFA(void) {
 	for(int i = 0; i < cnt; i++) {
 		if(ins[i])
-			delete ins[i];
+			prob.free(ins[i]);
 		if(outs[i])
-			delete outs[i];
-		delete gens[i];
-		delete kills[i];
+			prob.free(outs[i]);
+		prob.free(gens[i]);
+		prob.free(kills[i]);
 	}
 	delete [] ins;
 	delete [] outs;
@@ -163,14 +163,12 @@ inline Set *IterativeDFA<Problem, Set, Iter>::killSet(BasicBlock *bb) {
 // IterativeDFA::compute() inline
 template <class Problem, class Set, class Iter>
 inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
-	//bool changed = true;
 
 	// initialization
 	VectorQueue<BasicBlock *> todo;
 	BitVector present(_cfg.countBB());
 	Set *comp = prob.empty(), *ex;
-	for(CFG::BBIterator bb(&_cfg); bb; bb++)
-		/*if(bb != Iter::entry(_cfg))*/ {
+	for(CFG::BBIterator bb(&_cfg); bb; bb++) {
 			OTAWA_IDFA_TRACE("DFA: push BB" << bb->number());
 			todo.put(bb);
 			present.set(bb->number());
@@ -189,7 +187,7 @@ inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 		for(Iter pred(bb); pred; pred++) {
 			BasicBlock *bb_pred = pred;
 			int pred_idx = bb_pred->number();
-			assert(pred_idx >= 0);
+			ASSERT(pred_idx >= 0);
 			prob.merge(ins[idx], outs[pred_idx]);
 		}
 

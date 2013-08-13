@@ -284,7 +284,7 @@ void TreeStatistics::print(elm::io::Output& out) {
 	
 	// Print content
 	if(!overall_option)
-		for(HashTable<void *, CFGStatistics *>::ItemIterator stat(stats); stat; stat++) {
+		for(HashTable<void *, CFGStatistics *>::Iterator stat(stats); stat; stat++) {
 			stat->print(out);
 			if(!short_option)
 				out << "\n";

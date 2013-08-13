@@ -235,7 +235,7 @@ void System::dump(format_t fmt, elm::io::OutStream& out) {
 				
 			/* dump the integer variable definition */
 			
-			for (HashTable<Var*, String*>::ItemIterator item(rename); item; item++) {	
+			for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
 				String *str = *item;				
 				output << " ";
 				output << *str;
@@ -347,7 +347,7 @@ case MOSEK:
 			output << "[variables]\n";	
 			/* dump the integer variable definition */
 			
-			for (HashTable<Var*, String*>::ItemIterator item(rename); item; item++) {	
+			for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
 				String *str = *item;				
 				output << " ";
 				output << *str;	
@@ -360,7 +360,7 @@ case MOSEK:
 				
 			/* dump the integer variable definition */
 			
-			for (HashTable<Var*, String*>::ItemIterator item(rename); item; item++) {	
+			for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
 				String *str = *item;				
 				output << " ";
 				output << *str;

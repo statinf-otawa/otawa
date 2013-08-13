@@ -610,7 +610,7 @@ bool System::solve(WorkSpace *ws) {
 			result = true;
 
 			// Record variables values
-			for(elm::genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
+			for(elm::genstruct::HashTable<ilp::Var *, Var *>::Iterator var(vars);
 			var; var++)
 				var->setValue((double)lp->best_solution[lp->rows + var->column()]);
 
@@ -671,7 +671,7 @@ void System::exportLP(io::Output& out) {
 	}
 	
 	// Output int constraints
-	for(genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
+	for(genstruct::HashTable<ilp::Var *, Var *>::Iterator var(vars);
 	var; var++)
 		out << "int " << var->makeVarName() << ";\n";
 }
@@ -681,7 +681,7 @@ void System::exportLP(io::Output& out) {
  */
 void System::dumpSolution(io::Output& out) {
 	out << "/* IPET solution */\n";
-	for(genstruct::HashTable<ilp::Var *, Var *>::ItemIterator var(vars);
+	for(genstruct::HashTable<ilp::Var *, Var *>::Iterator var(vars);
 	var; var++)
 		out << var->makeVarName() << " = "
 			<< (int)var->value() << io::endl;

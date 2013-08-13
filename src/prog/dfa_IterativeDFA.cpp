@@ -97,7 +97,7 @@ namespace otawa { namespace dfa {
  * @ref otawa::dfa::BitSet class. 
  * 
  * @param Problem	DFA problem to solve. It must implements the concept
- * 					@ref otawa::dfa::IterativeDFAProblem.
+ * 					@ref otawa::concept::IterativeDFAProblem.
  * @param Set		Type of set used to implements the problem (depends on
  *					the problem).
  * @param Iter		Kind of iterator to get predecessor sets of the current

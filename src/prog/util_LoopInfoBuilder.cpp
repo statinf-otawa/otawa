@@ -296,6 +296,8 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 
         	if (bit) {
         		ENCLOSING_LOOP_HEADER(bb) = prob.get(*bit);
+        		if(logFor(LOG_BLOCK))
+        			cerr << "\t\t\tloop of " << *bb << " is " << ENCLOSING_LOOP_HEADER(bb) << io::endl;
         	}
 
         }

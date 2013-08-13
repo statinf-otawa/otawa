@@ -125,7 +125,7 @@ WorkSpace::~WorkSpace(void) {
 
 	// clean-up
 	Vector<const AbstractFeature *> deps;
-	for(feat_map_t::ItemIterator dep(featMap); dep; dep++)
+	for(feat_map_t::Iterator dep(featMap); dep; dep++)
 		deps.add(dep->getFeature());
 	for(int i = 0; i < deps.length(); i++)
 		if(isProvided(*deps[i]))

@@ -68,10 +68,10 @@ public:
 	inline void removeSymbol(Symbol *sym) { syms.remove(sym->name()); }
 	address_t findLabel(const String& label);
 	Symbol *findSymbol(String name);
-	class SymIter: public syms_t::ItemIterator {
+	class SymIter: public syms_t::Iterator {
 	public:
-		inline SymIter(const File *file): syms_t::ItemIterator(file->syms) { }
-		inline SymIter(const SymIter& iter): syms_t::ItemIterator(iter) { }
+		inline SymIter(const File *file): syms_t::Iterator(file->syms) { }
+		inline SymIter(const SymIter& iter): syms_t::Iterator(iter) { }
 	};
 
 	// Deprecated

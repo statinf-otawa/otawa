@@ -36,9 +36,9 @@ public:
 	static const AbstractRegistration *find(CString name);
 
 	// Iter class
-	class Iter: public htab_t::ItemIterator {
+	class Iter: public htab_t::Iterator {
 	public:
-		inline Iter(void): htab_t::ItemIterator(_.procs) { }
+		inline Iter(void): htab_t::Iterator(_.procs) { }
 	};
 
 private:
