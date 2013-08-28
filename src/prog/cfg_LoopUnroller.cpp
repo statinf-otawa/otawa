@@ -44,12 +44,21 @@ namespace otawa {
 
 static SilentFeature::Maker<LoopUnroller> UNROLLED_LOOPS_MAKER;
 /**
+ * This feature that the loops have been unrolled at least once.
+ *
+ * @ingroup cfg
  */
 SilentFeature UNROLLED_LOOPS_FEATURE ("otawa::UNROLLED_LOOPS_FEATURE", UNROLLED_LOOPS_MAKER);
 
 /**
+ * Put on the header ex-header of a loop, this property gives the BB of the unrolled loop.
+ *
+ * @par Hooks
+ * @li @ref BasicBlock
+ *
+ * @ingroup cfg
  */
-Identifier<BasicBlock*> UNROLLED_FROM("otawa::UNROLLED_FROM", NULL);
+Identifier<BasicBlock*> UNROLLED_FROM("otawa::UNROLLED_FROM", 0);
 
 
 /**
@@ -73,6 +82,8 @@ Identifier<BasicBlock*> UNROLLED_FROM("otawa::UNROLLED_FROM", NULL);
  *
  * @par Statistics
  * none
+ *
+ * @ingroup cfg
  */
 
 LoopUnroller::LoopUnroller(void) : Processor("otawa::LoopUnroller", Version(1, 0, 0)), coll(new CFGCollection()) {
@@ -99,7 +110,6 @@ void LoopUnroller::processWorkSpace(otawa::WorkSpace *fw) {
 		coll->add(vcfg);
 		INDEX(vcfg) = cfgidx;
 		vcfg->addBB(vcfg->entry());
-
 	}
 
 
@@ -118,7 +128,7 @@ void LoopUnroller::processWorkSpace(otawa::WorkSpace *fw) {
 		/* !!GRUIK!! Ca serait bien d'avoir une classe VCFGCollection */
 		VirtualCFG *casted_vcfg = static_cast<otawa::VirtualCFG*>((otawa::CFG*)vcfg);
 
-		unroll((otawa::CFG*) cfg, NULL, casted_vcfg);
+		unroll((otawa::CFG*) cfg, 0, casted_vcfg);
 		if (ENTRY_CFG(fw) == cfg)
 			ENTRY_CFG(fw) = vcfg;
 
@@ -156,9 +166,9 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 
 	for (int i = start; ((i < 2) && header) || (i < 1); i++) {
 		doneList.clear();
-		assert(workList.isEmpty());
-		assert(loopList.isEmpty());
-		assert(doneList.isEmpty());
+		ASSERT(workList.isEmpty());
+		ASSERT(loopList.isEmpty());
+		ASSERT(doneList.isEmpty());
 
 		workList.put(header ? header : cfg->entry());
 		doneList.add(header ? header : cfg->entry());
@@ -183,7 +193,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 					}
 				}
 			} else {
-				VirtualBasicBlock *new_bb = NULL;
+				VirtualBasicBlock *new_bb = 0;
 				if ((!current->isEntry()) && (!current->isExit())) {
 					/* Duplicate the current basic block */
 
@@ -248,7 +258,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 						}
 					}
 					if (LOOP_EXIT_EDGE(outedge)) {
-						assert(new_bb);
+						ASSERT(new_bb);
 						/* Connect exit edge */
 						VirtualBasicBlock *vdst = map.get(outedge->target());
 						new Edge(new_bb, vdst, outedge->kind());
@@ -260,9 +270,9 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 
 		while (!virtualCallList.isEmpty()) {
 			BasicBlock *vcall = virtualCallList.get();
-			BasicBlock *vreturn = map.get(VIRTUAL_RETURN_BLOCK(vcall), NULL);
+			BasicBlock *vreturn = map.get(VIRTUAL_RETURN_BLOCK(vcall), 0);
 
-			ASSERT(vreturn != NULL);
+			ASSERT(vreturn != 0);
 			VIRTUAL_RETURN_BLOCK(vcall) = vreturn;
 
 		}
@@ -285,14 +295,15 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 				if (outedge->target() == cfg->exit())
 					continue;
 
-				VirtualBasicBlock *vsrc = map.get(*bb, NULL);
-				VirtualBasicBlock *vdst = map.get(outedge->target(), NULL);
+				VirtualBasicBlock *vsrc = map.get(*bb, 0);
+				VirtualBasicBlock *vdst = map.get(outedge->target(), 0);
 
 				if (outedge->kind() == Edge::CALL) {
 					CFG *called_cfg = outedge->calledCFG();
 					int called_idx = INDEX(called_cfg);
 					CFG *called_vcfg = coll->get(called_idx);
-					new Edge(vsrc, called_vcfg->entry(), Edge::CALL);
+					Edge *vedge = new Edge(vsrc, called_vcfg->entry(), Edge::CALL);
+					CALLED_BY(called_vcfg).add(vedge);
 					ENTRY(called_vcfg->entry()) = called_vcfg;
 					CALLED_CFG(outedge) = called_vcfg; /* XXX:  ??!? */
 

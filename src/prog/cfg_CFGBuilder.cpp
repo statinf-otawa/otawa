@@ -54,6 +54,8 @@ static Identifier<CodeBasicBlock *> BB("", 0);
  *
  * @par Required Features
  * @li @ref DECODED_TEXT
+ *
+ * @ingroup cfg
  */
 
 
@@ -406,6 +408,8 @@ static SilentFeature::Maker<CFGBuilder> CFG_INFO_MAKER;
  *
  * @Properties
  * @li @ref CFGInfo::ID (FrameWork)
+ *
+ * @ingroup cfg
  */
 SilentFeature CFG_INFO_FEATURE("otawa::CFG_INFO_FEATURE", CFG_INFO_MAKER);
 

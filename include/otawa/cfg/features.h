@@ -67,8 +67,10 @@ extern Identifier<pfg::PFG *> PFG;
 extern Identifier<pfg::BB *> PFG_BB;
 
 // COLLECTED_CFG_FEATURE
+extern Identifier<CFG *> ENTRY_CFG;
 extern SilentFeature COLLECTED_CFG_FEATURE;
 extern Identifier<const CFGCollection *> INVOLVED_CFGS;
+extern Identifier<Edge *> CALLED_BY;
 
 // CFGInfoFeature
 extern SilentFeature CFG_INFO_FEATURE;

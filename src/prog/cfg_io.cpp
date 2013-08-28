@@ -53,45 +53,9 @@ static inline void set(xom::Element *elt, xom::String att, const string& value) 
 
 
 /**
- * @defgroup cfg	CFG (Control Flow Graph)
- *
- * This module allows to represents program as a Control Flow Graph (CFG).
- * The CFG is graph representation of the execution path of the program where
- * nodes, @ref BasicBlock, represents blocks of sequential instructions
- * and edges, @ref Edge, the control flow transitions between blocks.
- *
- * @par Input / Output in XML
- * This modules provides two code processors allowing to perform input / output
- * on CFG. @ref CFGSaver save the CFG of the current task to a file while
- * @ref CFGLoader allows to load it back.
- *
- * Both processors uses the same XML format defined below:
- * @code
- * <?xml version="1.0" ?>
- * <otawa-workspace>
- *
- * 		<cfg id="ID" entry="ID" exit="ID">
- * 			<bb id="ID" address="ADDRESS"? size="INT"?/>*
- * 			<edge kind="KIND" source="ID" target="ID"? cfg="ID"?/>*
- *		</cfg>*
- *
- * </otawa-workspace>
- * @endcode
- *
- * The OTAWA workspace is viewed, in the CFG representation, as a set of CFG
- * that, in turn, is made of several basic blocks linked by edges. Each CFG and BB
- * is identified with the attribute "id", any textual unique value, allowing
- * to reference them.
- *
- * The cfg element must reference two specific BB (using the unique "id"), an entry BB
- * and an exit BB. The BB is defined by its address and its size (in bytes).
- * The edges are defined by their kind, the source BB and, depending on the type,
- * the target BB or the called CFG (@ref Edge::CALL). The latter attribute "cfg"
- * must give the identifier of an existing CFG.
- */
-
-/**
  * This property allows to configure the file used by @ref CFGLoader and @ref CFGSaver.
+ *
+ * @ingroup cfg
  */
 Identifier<sys::Path> CFG_IO_PATH("otawa::CFG_IO_PATH");
 

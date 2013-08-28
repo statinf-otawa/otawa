@@ -94,7 +94,8 @@ void CondNumber::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 		if (last->isConditional() || last->isIndirect()) {
 
 			int row = hard::BHT_CONFIG(ws)->line(last->address());
-			cout << "conditionnal: " << bb->number() << " (row " << row << ")\n";			
+			if(logFor(Processor::LOG_BB))
+				log << "\t\t\tconditional: " << bb->number() << " (row " << row << ")\n";
 			COND_NUMBER(bb) = current_index[row];
 			current_index[row]++;
 		}

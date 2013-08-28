@@ -27,6 +27,7 @@ set(libotawa_SOURCES
 	"proc_ContextualProcessor.cpp"
 	"proc_DynFeature.cpp"
 	"proc_DynProcessor.cpp"
+	"proc_EdgeProcessor.cpp"
 	"proc_Feature.cpp"
 	"proc_FeatureRequirer.cpp"
 	"proc_LBlockProcessor.cpp"

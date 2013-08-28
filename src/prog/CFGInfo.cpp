@@ -44,11 +44,19 @@ namespace otawa {
 /**
  * @class CFGInfo
  * This allows storing all CFG available in a workspace.
+ *
+ * @ingroup cfg
  */
 
 
 /**
+ * This property allows to get the CFG information from the current CFG is member of.
+ *
+ * @par Hooks
+ * @li @ref CFG
+ *
  * @see CFG_INFO
+ * @ingroup cfg
  */
 Identifier<CFGInfo *>& CFGInfo::ID = CFG_INFO;
 
@@ -171,6 +179,8 @@ void CFGInfo::add(BasicBlock *bb) {
  *
  * @par Hooks
  * @ref @ref WorkSpace
+ *
+ * @ingroup cfg
  */
 Identifier<CFGInfo *> CFG_INFO("otawa::CFG_INFO", 0);
 

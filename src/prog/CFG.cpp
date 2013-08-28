@@ -20,7 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/debug.h>
 #include <otawa/cfg.h>
 #include <elm/debug.h>
@@ -34,7 +34,233 @@ using namespace elm::genstruct;
 namespace otawa {
 
 /**
+ * @defgroup cfg	CFG (Control Flow Graph)
+ *
+ * This module allows to represents program as a Control Flow Graph (CFG).
+ * The CFG is graph representation of the execution path of the program where
+ * nodes, @ref BasicBlock, represents blocks of sequential instructions
+ * and edges, @ref Edge, the control flow transitions between blocks.
+ *
+ * @section cfg-using Using the CFG
+ *
+ * Most analyses only read the CFG structure and either use the properties of the CFG,
+ * or creates new properties. They only need to understand the structure of the CFG.
+ *
+ * Most classes, features and identifier are accessible in the header file:
+ * @code
+ * #include <otawa/cfg/features.h>
+ * @endcode
+ *
+ * A CFG is made mainly of 3 classes:
+ * @li @ref CFG -- the CFG itself providing entry and exit virtual nodes and the list of BB,
+ * @li @ref BasicBlock -- a BB in the CFG with an address, a size, list of input edges and list of output edges,
+ * @li @ref Edge -- an edge in the CFG linking a source BB with a target BB.
+ *
+ * These classes are subclasses of @ref PropList and therefore support properties.
+ *
+ * To visit a CFG, one has to start from either the entry, or the exit BB (that are not virtual blocks
+ * and does not match any code in the program) and follows the edges (be aware that a CFG may contain
+ * loops !). To get the outputting edges of a BB, the following code based on the iterator @ref BasicBlock::OutIterator
+ * may apply:
+ * @code
+ * for(BasicBlock::OutIterator edge(bb); edge; edge++)
+ * 		process(edge);
+ * @endcode
+ *
+ * Another way to work CFG is to make the analysis class to inherit from one of the following standard
+ * processors:
+ * @li @ref CFGProcessor -- call method @ref CFGProcessor::processCFG() for each CFG in the task,
+ * @li @ref BBProcessor -- call method @ref BBProcessor::processBB() for each BB of the CFGs of the task,
+ * @li @ref EdgeProcessor -- call method @ref EdgeProcessor::processEdge() for each edge of the CFGs of the task.
+ *
+ * They will avoid the hassle work of traversing the different CFGs of the task and BB and edges inside the CFGs.
+ *
+ * As an example, the following analysis outputs the CFG and disassemble the instructions in the BB.
+ * @code
+ * class Disassembler: public BBProcessor {
+ * protected:
+ * 	virtual void processCFG(WorkSpace *ws, CFG *cfg) {
+ * 		cout << "CFG " << cfg->label() << io::endl;
+ * 		BBProcessor::processCFG(ws, cfg);
+ * 	}
+ *
+ * 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+ * 		if(bb->isEnd())
+ * 			return;
+ *		cout << "\t" << bb << io::endl;
+ *		for(BasicBlock::InstIterator inst(bb); inst; inst++)
+ *			cout << "\t\t" << inst->address() << "\t" << *inst << io::endl;
+ * 	}
+ * };
+ * @endcode
+ *
+ * The traversal of the graph following edges requires the understanding of the kind of the edges:
+ * @li  @ref Edge::NONE -- unused kind,
+ * @li  @ref Edge::TAKEN -- represents a branch instruction that is taken (conditional or not),
+ * @li  @ref Edge::NOT_TAKEN -- represents a branch instruction that is not-taken (only conditional),
+ * @li  @ref Edge::CALL -- represents a sub-program (do not use the Edge::target() but Edge::calledCFG() to get the called CFG),
+ * @li  @ref Edge::VIRTUAL -- one of special edges starting from the entry BB or leading to the exit BB,
+ * @li  @ref Edge::VIRTUAL_CALL -- represents a sub-program call whose CFG has been inlined,
+ * @li  @ref Edge::VIRTUAL_RETURN -- represents a sub-program return whose CFG has been inlined,
+ * @li  @ref Edge::EXN_CALL -- represents an exception call whose CFG has been inlined,
+ * @li  @ref Edge::EXN_RETURN represents an exception return whose CFG has been inlined,
+ *
+ * Notice that you shouldn't use the Edge::target() method for an edge of type Edge::CALL but instead
+ * the Edge::calledCFG() that gives the CFG of the called sub-program.
+ *
+ * One may also observe that the CFG representation fully supports transformations like inlining
+ * of called sub-program or the representation of a possible exception raise. As shown in the section
+ * on the transformation of CFG, these transformations does not duplicate code or changes the original
+ * program. Only the representation is modified and aims at improving the precision in some particular
+ * cases. Whatevern the @ref Edge::VIRTUAL_CALL, @ref Edge::VIRTUAL_RETURN, @ref Edge::EXN_CALL and
+ * @ref Edge::EXN_RETURN provides more information on the transformed CFG:
+ * @li @ref CALLED_CFG -- put on virtual call and return edges, gives the original global CFG,
+ * @li @ref RECURSIVE_LOOP -- put on the edge representing the recursive call of an inlined sub-program,
+ * @li @ref VIRTUAL_RETURN_BLOCK -- put on the block performing the sub-program call, gives the basic block the sub-program returns to (useful to skip an inlined CFG).
+ *
+ * Finally, a CFG may be called at different points in the other CFGs of the program, the properties
+ * @ref CALLED_BY hooked to the CFG allows to get the matching calling edges:
+ * @code
+ * for(Identifier<Edge *>::Getter edge(cfg, CALLED_BY); edge; edge++)
+ * 		processCaller(cfg, edge);
+ * @endcode
+ *
+ *
+ * @section cfg-build Building the CFGs
+ *
+ * Once a program is loaded, OTAWA has only two information item on the structure of the program:
+ * the block of bytes representing the program and the startup address of the program.
+ * In addition, according to the option of linkage, other symbols may be available like
+ * the entry points of the functions composing the program.
+ *
+ * From this, OTAWA must decode the instructions from these entry points and follows all execution
+ * paths until fully decoding the program. This first phase is performed the @ref CFGBuilder analysis
+ * that produces as an output, a @ref CFGInfo, the collection of all CFGs (one by function) of the
+ * program. This phase is relatively complex and may fail because of:
+ * @li errors in decoding the instructions (in this case, the error is signaled to the user and the execution path is aborted),
+ * @li unresolved branches (mainly because of computed branch target as found in function pointer call or in some switch compilation schemes).
+ *
+ * For the latter case, you can help @ref CFGBuilder by providing information on the possible branches
+ * using the properties below:
+ * @li @ref IS_RETURN -- consider the marked instruction as a return,
+ * @li @ref NO_RETURN -- mark the function as not returning,
+ * @li @ref NO_CALL -- avoid to involve in the CFGs the function whose first instruction is marked,
+ * @li @ref IGNORE_CONTROL -- ignore the control effect of the marked instruction,
+ * @li @ref IGNORE_SEQ -- only on a conditional branching instruction, ignore the sequential path,
+ * @li @ref BRANCH_TARGET -- gives the target(s) of an indirect branch instruction,
+ * @li @ref CALL_TARGET -- gives the target(s) of an indirect call instruction.
+ *
+ * This properties are usually set by the @ref FlowFactLoader from textual or XML files. Once may also observe
+ * that this properties allows also to change artificially the control flow according to the needs of a user.
+ * For example, one can avoid the "printf" function to be called by putting a property @ref NO_CALL on its entry
+ * instruction.
+ *
+ * Once the global CFGs of the program are built, the user is usually interested only in a subset
+ * of CFGS corresponding to the task the WCET is computed for. This subset is gathered by the
+ * @ref CFGCollector analysis from one of the following properties:
+ * @li @ref TASK_ENTRY (in the configuration properties)
+ * @li @ref ENTRY_CFG (in the configuration properties or on the workspace)
+ * @li @ref CFGCollector::ADDED_CFG -- CFG to add to the collection,
+ * @li @ref CFGCollection::ADD_FUNCTION -- function to add to the collection.
+ *
+ * As a result, the @ref INVOLVED_CFGS (type @ref CFGCollection) hooked to the workspace provides
+ * this list of functions that is used by the following analyses to perform the WCET computation.
+ * Notices that the first CFG of the collection is the entry point of the task. Remark also that
+ * the obtained CFG are a copy of the original CFG of the global decoding of the program: this means
+ * that you add as many properties to the collected CFG without impacting the CFGs of the global
+ * analysis.
+ *
+ *
+ * @section cfg-loop Loops in the CFGs
+ *
+ * Loops are a common shared issue when handling CFG. OTAWA provides several way to cope with
+ * loops. First two features allows to identify loops: @ref LOOP_HEADERS_FEATURE and @ref LOOP_INFO_FEATURE.
+ *
+ * The @ref LOOP_HEADERS_FEATURE allows to identify the loops in the CFG. Basically, it finds the
+ * back-edges (edges causing the looping) and, from these, the header of the loops. Each loop
+ * is defined by its header basic block that is the first basic block traversed when entering
+ * a loop. An header basic block is the header of only one loop and is a good way to identify the loop.
+ * The following properties are set:
+ * @li @ref LOOP_HEADER -- evaluates to true when the hooked basic block is a loop header,
+ * @li @ref BACK_EDGE -- evaluates to true on a back-edge (the target of the edge is the loop header).
+ *
+ * This feature is implemented by the @ref Dominance analysis or @ref SpanningTreeBuilder.
+ *
+ * If @ref LOOP_HEADERS_FEATURE provides minimal information on a loop, @ref LOOP_INFO_FEATURE
+ * allows to get full details sometimes for some analyses. The following properties are set:
+ * @li @ref ENCLOSING_LOOP_HEADER -- gives the header of the loop enclosing the linked BB,
+ * @li @ref LOOP_EXIT_EDGE -- on an edge, informs it is an exit edgen,
+ * @li @ref EXIT_LIST -- put on the loop header, get the list of edges exiting the loop.
+ *
+ * As shown above, the loop handled by OTAWA supports only one entry point and header.
+ * This is a classic definition of so-called "regular" loops. Even if this is the most common
+ * loop found, some programs exhibit "irregular" loops (at least, two possible entry point).
+ * A usual way to support such a loop is to choose one entry point and to duplicate the code
+ * of the other entry points: this may be done in OTAWA using the analysis @ref LoopReductor.
+ *
+ *
+ * @section cfg-transform Transforming the CFG
+ *
+ * CFGs in OTAWA are designed to be light representation of the program, that is, they support
+ * duplication with a minimal cost in term of memory footprint. This means, for example,
+ * that the precision of the computed WCET may be improved by duplicating some parts of the CFG
+ * to cope more precisely with the context of the code. Several OTAWA code processors
+ * provide such transformations.
+ *
+ * The @ref Virtualizer allows to inline the called function at the location they are called.
+ * Therefore, if a function is called at several locations, this allows to duplicate the BB
+ * and the edges representing the function and, instead to melt the context information,
+ * to have a context as precise as possible. Yet, such a transformation may be costly in terms
+ * of number of BB and must be used carefully. To prevent such a size explosion,
+ * you can mark a CFG as @ref DONT_INLINE to prevent the inlining.
+ *
+ * Unrolling loops is another way to improve precision. As many loop body have a different
+ * behavior between the first iteration and the other one (cache load, etc), it may be interesting
+ * to unroll loops once. This may be performed using the code processor @ref LoopUnroller.
+ *
+ * Finally, some transformations are required by a particular architecture. This is the case
+ * of instruction sets with delayed branches. Delayed branches executes the instruction following
+ * the branch instruction before performing actually the control flow change. As an outcome,
+ * the instruction following a branch is really part of the basic block the branch is contained in.
+ * This policy is different from the usual way OTAWA builds CFGs and a transformation must be done
+ * to fix the basic blocks: this is performed by @ref DelayedBuilder.
+ *
+ *
+ * @section cfg-io Input / Output in XML
+ * This modules provides two code processors allowing to perform input / output
+ * on CFG. @ref CFGSaver save the CFG of the current task to a file while
+ * @ref CFGLoader allows to load it back.
+ *
+ * Both processors uses the same XML format defined below:
+ * @code
+ * <?xml version="1.0" ?>
+ * <otawa-workspace>
+ *
+ * 		<cfg id="ID" entry="ID" exit="ID">
+ * 			<bb id="ID" address="ADDRESS"? size="INT"?/>*
+ * 			<edge kind="KIND" source="ID" target="ID"? cfg="ID"?/>*
+ *		</cfg>*
+ *
+ * </otawa-workspace>
+ * @endcode
+ *
+ * The OTAWA workspace is viewed, in the CFG representation, as a set of CFG
+ * that, in turn, is made of several basic blocks linked by edges. Each CFG and BB
+ * is identified with the attribute "id", any textual unique value, allowing
+ * to reference them.
+ *
+ * The cfg element must reference two specific BB (using the unique "id"), an entry BB
+ * and an exit BB. The BB is defined by its address and its size (in bytes).
+ * The edges are defined by their kind, the source BB and, depending on the type,
+ * the target BB or the called CFG (@ref Edge::CALL). The latter attribute "cfg"
+ * must give the identifier of an existing CFG.
+ */
+
+
+/**
  * Identifier used for storing and retrieving the CFG on its entry BB.
+ *
+ * @ingroup cfg
  */
 Identifier<CFG *> ENTRY("otawa::ENTRY", 0);
 
@@ -46,6 +272,8 @@ Identifier<CFG *> ENTRY("otawa::ENTRY", 0);
  * @par Hooks
  * @li @ref BasicBlock
  * @li @ref CFG
+ *
+ * @ingroup cfg
  */
 Identifier<int> INDEX("otawa::INDEX", -1);
 
@@ -54,6 +282,8 @@ Identifier<int> INDEX("otawa::INDEX", -1);
  * @class CFG
  * Control Flow Graph representation. Its entry basic block is given and
  * the graph is built using following taken and not-taken properties of the block.
+ *
+ * @ingroup cfg
  */
 
 
@@ -74,29 +304,6 @@ string CFG::format(const Address& addr) {
 			return _ << lab << " - 0x" << io::hex(-off);
 	}
 }
-
-
-/**
- * Test if the first BB dominates the second one.
- * @param bb1	Dominator BB.
- * @param bb2	Dominated BB.
- * @return		True if bb1 dominates bb2.
- */
-/*bool CFG::dominates(BasicBlock *bb1, BasicBlock *bb2) {
-	assert(bb1);
-	assert(bb2);
-
-	// Look for reverse-dominating annotation
-	dfa::BitSet *set = REVERSE_DOM(bb2);
-	if(!set) {
-		Dominance dom;
-		dom.processCFG(0, this);
-		set = REVERSE_DOM(bb2);
-	}
-
-	// Test with the index
-	return set->contains(INDEX(bb1));
-}*/
 
 
 /**

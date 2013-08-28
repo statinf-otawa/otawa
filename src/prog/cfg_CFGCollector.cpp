@@ -35,6 +35,8 @@ static Identifier<bool> MARK("", false);
  * @class CFGCollection <otawa/cfg.h>
  * Contains a collection of CFGs (used with @ref INVOLVED_CFGS property).
  * @see otawa::CFGCollector, otawa::INVOLVED_CFGS
+ *
+ * @ingroup cfg
  */
 
 
@@ -111,6 +113,8 @@ private:
  *
  * @par Required Features
  * @li @ref CFG_INFO_FEATURE
+ *
+ * @ingroup cfg
  */
 
 
@@ -177,6 +181,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 							log << "\t\tunknown function call at " << bb->address() << ":" << bb->topAddress() << io::endl;
 						else if(!MARK(edge->calledCFG())) {
 							cfgs->add(edge->calledCFG());
+							CALLED_BY(edge->calledCFG()).add(edge);
 							MARK(edge->calledCFG()) = true;
 							if(logFor(LOG_CFG))
 								log << "\t\tadding " << edge->calledCFG()->label() << io::endl;
@@ -245,9 +250,22 @@ void CFGCollection::add(CFG *cfg) {
  * on the framework.
  *
  * @par Hooks
- * FrameWork
+ * @li @ref WorkSpace
+ *
+ * @ingroup cfg
  */
 Identifier<const CFGCollection *> INVOLVED_CFGS("otawa::INVOLVED_CFGS", 0);
+
+
+/**
+ * This properties are put on a CFG to get the list of edges calling it.
+ *
+ * @par Hooks
+ * @li @ref CFG
+ *
+ * @ingroup cfg
+ */
+Identifier<Edge *> CALLED_BY("otawa::CALLED_BY", 0);
 
 
 static SilentFeature::Maker<CFGCollector> COLLECTED_CFG_MAKER;
@@ -259,6 +277,9 @@ static SilentFeature::Maker<CFGCollector> COLLECTED_CFG_MAKER;
  * @ref ENTRY_CFG (@ref WorkSpace).
  * @ref INVOLVED_CFGS (@ref WorkSpace).
  * @ref INDEX (@ref CFG)
+ * @ref CALLED_BY (@ref CFG)
+ *
+ * @ingroup cfg
  */
 SilentFeature COLLECTED_CFG_FEATURE("otawa::COLLECTED_CFG_FEATURE", COLLECTED_CFG_MAKER);
 
@@ -266,6 +287,8 @@ SilentFeature COLLECTED_CFG_FEATURE("otawa::COLLECTED_CFG_FEATURE", COLLECTED_CF
 /**
  * This configuration property allows to add unlinked CFG to the used CFG
  * collection.
+ *
+ * @ingroup cfg
  */
 Identifier<CFG *> CFGCollector::ADDED_CFG("otawa::CFGCollector::ADDED_CFG", 0);
 
@@ -273,6 +296,8 @@ Identifier<CFG *> CFGCollector::ADDED_CFG("otawa::CFGCollector::ADDED_CFG", 0);
 /**
  * This configuration property allows to add unlinked functions to the used CFG
  * collection.
+ *
+ * @ingroup cfg
  */
 Identifier<CString> CFGCollector::ADDED_FUNCTION("otawa::CFGCollector::ADDED_FUNCTION", 0);
 

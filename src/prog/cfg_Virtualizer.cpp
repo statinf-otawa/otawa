@@ -67,7 +67,7 @@ SilentFeature VIRTUALIZED_CFG_FEATURE("otawa::VIRTUALIZED_CFG_FEATURE", VIRTUALI
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::VIRTUAL_RETURN_BLOCK", NULL);
+Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::VIRTUAL_RETURN_BLOCK", 0);
 
 
 /**
@@ -78,9 +78,7 @@ Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::VIRTUAL_RETURN_BLOCK", NULL
  * @par Hooks
  * @li @ref Edge
  */
-Identifier<CFG *> CALLED_CFG("otawa::CALLED_CFG", 0,
-	make(DEF_BY, (const AbstractFeature *)&VIRTUALIZED_CFG_FEATURE),
-	0);
+Identifier<CFG *> CALLED_CFG("otawa::CALLED_CFG", 0);
 
 
 /**
@@ -110,6 +108,7 @@ Identifier<bool> RECURSIVE_LOOP("otawa::RECURSIVE_LOOP", false);
  *
  * @par Provided features
  * @li @ref VIRTUALIZED_CFG_FEATURE
+ * @li @ref COLLECTED_CFG_FEATURE
  *
  * @par Statistics
  * none
@@ -140,51 +139,44 @@ Virtualizer::Virtualizer(void): Processor(reg) {
 }
 
 // Registration
-Registration<Virtualizer> Virtualizer::reg(
-	"otawa::Virtualizer",
-	Version(1, 1, 0),
-	p::use, &COLLECTED_CFG_FEATURE,
-	p::invalidate, &COLLECTED_CFG_FEATURE,
-	p::provide, &VIRTUALIZED_CFG_FEATURE,
-	p::end
-);
+p::declare Virtualizer::reg = p::init("otawa::Virtualizer", Version(1, 2, 0))
+	.use(COLLECTED_CFG_FEATURE)
+	.invalidate(COLLECTED_CFG_FEATURE)
+	.provide(VIRTUALIZED_CFG_FEATURE)
+	.provide(COLLECTED_CFG_FEATURE);
 
 
+/**
+ */
 void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 
+	// get the entry CFG
 	const CFGCollection *coll = INVOLVED_CFGS(fw);
-	VirtualCFG *vcfg = new VirtualCFG(false);
-       /* if (!entry)
-        	entry = ENTRY_CFG(fw);
-        if(!entry) {
-                CFGInfo *info = fw->getCFGInfo();
-                CString name = TASK_ENTRY(fw);
-                entry = info->findCFG(name);
-        }
-        if(!entry)
-                throw ProcessorException(*this, "cannot find task entry point.");*/
 	entry = coll->get(0);
 
-	vcfg->addProps(*entry);
-	vcfg->entry()->addProps(*entry->entry());
-	vcfg->exit()->addProps(*entry->exit());
-
+	// virtualize the entry CFG
 	virtual_inlining = VIRTUAL_INLINING(fw);
-	vcfg->addBB(vcfg->entry());
-	virtualize(0, entry, vcfg, vcfg->entry(), vcfg->exit());
-	vcfg->addBB(vcfg->exit());
-	vcfg->numberBBs();
+	VirtualCFG *vcfg = virtualizeCFG(0, entry);
 	if(logFor(LOG_CFG))
 		log << "\tINFO: " << vcfg->countBB() << " basic blocks." << io::endl;
 
+	// track for cleanup
 	track(VIRTUALIZED_CFG_FEATURE, ENTRY_CFG(fw) = vcfg);
 }
 
+
+/**
+ */
 void Virtualizer::configure(const PropList &props) {
 	entry = ENTRY_CFG(props);
 	Processor::configure(props);
 }
 
+
+/**
+ * Test if inlining has been activated.
+ * @return	True if inlining is activated, false else.
+ */
 bool Virtualizer::isInlined() {
 	return(virtual_inlining);
 }
@@ -198,10 +190,9 @@ bool Virtualizer::isInlined() {
  */
 void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, BasicBlock *entry,
 BasicBlock *exit) {
-	assert(cfg);
-	assert(entry);
-	assert(exit);
-	//cout << "Virtualizing " << cfg->label() << "(" << cfg->address() << ")\n";
+	ASSERT(cfg);
+	ASSERT(entry);
+	ASSERT(exit);
 
 	// Prepare data
 	elm::genstruct::HashTable<void *, BasicBlock *> map;
@@ -220,57 +211,43 @@ BasicBlock *exit) {
 
 	// Find local entry
 	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++) {
-		ASSERT(edge->kind() == Edge::VIRTUAL);
-		ASSERT(!call.entry);
 		call.entry = map.get(edge->target(), 0);
-		ASSERT(call.entry);
-		Edge *edge2 = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
-		CALLED_CFG(edge2) = cfg;
+		Edge *vedge = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
+		CALLED_CFG(vedge) = cfg;
 	}
 
 	// Translate edges
 	for(CFG::BBIterator bb(cfg); bb; bb++)
-		if(!bb->isEntry() && !bb->isExit()) {
+		if(!bb->isEnd()) {
 			if(logFor(LOG_BB))
 				cerr << "\t\tprocessing " << *bb << io::endl;
 
 			// Resolve source
 			BasicBlock *src = map.get(bb, 0);
-			assert(src);
+			ASSERT(src);
 
-			BasicBlock *called_exit = 0;
+			// process call edges
 			if(isInlined())
 				for(BasicBlock::OutIterator edge(bb); edge; edge++)
 					if(edge->kind() == Edge::CALL && edge->calledCFG()) {
-						if (DONT_INLINE(edge->calledCFG()))  {
-							if ((cfgMap.get(edge->calledCFG(), 0) == 0)) {
-								VirtualCFG *vcalled = new VirtualCFG(false);
-								cfgMap.put(edge->calledCFG(), vcalled);
-								vcalled->addProps(*edge->calledCFG());
-								ENTRY(vcalled->entry()) = vcalled;
-								vcalled->entry()->addProps(*edge->calledCFG()->entry());
-								vcalled->exit()->addProps(*edge->calledCFG()->exit());
-								vcalled->addBB(vcalled->entry());
-								virtualize(&call, edge->calledCFG(), vcalled, vcalled->entry(), vcalled->exit());
-								vcalled->addBB(vcalled->exit());
-								vcalled->numberBB();
-							}
+						if(DONT_INLINE(edge->calledCFG()))  {
+							if(!cfgMap.exists(edge->calledCFG()))
+								virtualizeCFG(&call, edge->calledCFG());
 						}
 						else
 							called_cfgs.add(edge->calledCFG());
 					}
 
-			// Look edges
+			// generate the edges
+			BasicBlock *called_exit = 0;
 			bool fix_exit = false;
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL) {
-					if(!isInlined()) {
-						new Edge(src, edge->target(), Edge::CALL);
-					}
-					if (isInlined() && edge->calledCFG() && DONT_INLINE(edge->calledCFG())) {
+					if(!isInlined() || (edge->calledCFG() && DONT_INLINE(edge->calledCFG()))) {
 						VirtualCFG *vcalled = cfgMap.get(edge->calledCFG(), 0);
-						ASSERT(vcalled != 0);
-						new Edge(src, vcalled->entry(), Edge::CALL);
+						ASSERT(vcalled);
+						Edge *vedge = new Edge(src, vcalled->entry(), Edge::CALL);
+						CALLED_BY(vedge->calledCFG()).add(vedge);
 					}
 				}
 				else if(edge->target()) {
@@ -335,6 +312,41 @@ BasicBlock *exit) {
 
 	if(logFor(LOG_CFG))
 		log << "\tend inlining " << cfg->label() << io::endl;
+}
+
+
+/**
+ * Virtualize a CFG and add it to the cfg map.
+ * @param call	Call string.
+ * @param cfg	CFG to virtualize.
+ */
+VirtualCFG *Virtualizer::virtualizeCFG(struct call_t *call, CFG *cfg) {
+	VirtualCFG *vcalled = new VirtualCFG(false);
+	cfgMap.put(cfg, vcalled);
+	ENTRY(vcalled->entry()) = vcalled;
+	vcalled->addBB(vcalled->entry());
+	virtualize(call, cfg, vcalled, vcalled->entry(), vcalled->exit());
+	vcalled->addBB(vcalled->exit());
+	vcalled->numberBB();
+	return vcalled;
+}
+
+
+
+/**
+ */
+void Virtualizer::cleanup(WorkSpace *ws) {
+
+	// allocate the collection
+	CFGCollection *coll = new CFGCollection();
+	track(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = coll);
+
+	// fill the collection
+	CFG *entry_vcfg = cfgMap.get(entry, 0);
+	coll->add(entry_vcfg);
+	for(genstruct::HashTable<void *, VirtualCFG *>::Iterator vcfg(cfgMap); vcfg; vcfg++)
+		if(*vcfg != entry_vcfg)
+			coll->add(*vcfg);
 }
 
 

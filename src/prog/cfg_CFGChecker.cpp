@@ -31,6 +31,8 @@ namespace otawa {
 /**
  * In configuration of @ref otawa::CFGChecker . Inform the CFG checker
  * that it must not issue an exception when an error is found: only a warning.
+ *
+ * @ingroup cfg
  */
 Identifier<bool> CFGChecker::NO_EXCEPTION("otawa::CFGChecker::NO_EXCEPTION", false);
 
@@ -47,6 +49,8 @@ Identifier<bool> CFGChecker::NO_EXCEPTION("otawa::CFGChecker::NO_EXCEPTION", fal
  *
  * @par Configuration
  * @li @ref otawa::CFGChecker::NO_EXCEPTION
+ *
+ * @ingroup cfg
  */
 
 Registration<CFGChecker> CFGChecker::reg(
@@ -60,7 +64,7 @@ Registration<CFGChecker> CFGChecker::reg(
 
 /**
  */
-CFGChecker::CFGChecker(void): BBProcessor(reg) {
+CFGChecker::CFGChecker(void): BBProcessor(reg), failed(false), no_exn(false) {
 }
 
 
@@ -116,6 +120,7 @@ void CFGChecker::cleanup(WorkSpace *ws) {
 }
 
 
+static SilentFeature::Maker<CFGChecker> maker;
 /**
  * This feature ensures that
  * @li	there exists at least one path from the entry to the exit,
@@ -123,8 +128,9 @@ void CFGChecker::cleanup(WorkSpace *ws) {
  *
  * @p Default Processor
  * @li @ref CFGChecker
+ *
+ * @ingroup cfg
  */
-static SilentFeature::Maker<CFGChecker> maker;
 SilentFeature CHECKED_CFG_FEATURE("otawa::CHECKED_CFG_FEATURE", maker);
 
 }	// otawa

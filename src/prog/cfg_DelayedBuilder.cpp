@@ -46,6 +46,8 @@ static SilentFeature::Maker<DelayedBuilder> maker;
  * @par Properties
  * @li @ref otawa::DELAYED_INST
  * @li @ref otawa::DELAYED_NOP
+ *
+ * @ingroup cfg
  */
 SilentFeature DELAYED_CFG_FEATURE("otawa::DELAYED_CFG_FEATURE", maker);
 
@@ -59,6 +61,7 @@ SilentFeature DELAYED_CFG_FEATURE("otawa::DELAYED_CFG_FEATURE", maker);
  * @par Hooks
  * @li @ref otawa::Inst
  *
+ * @ingroup cfg
  */
 Identifier<bool> DELAYED_INST("otawa::DELAYED_INST", false);
 
@@ -72,6 +75,7 @@ Identifier<bool> DELAYED_INST("otawa::DELAYED_INST", false);
  * @par Hooks
  * @li @ref otawa::Inst
  *
+ * @ingroup cfg
  */
 Identifier<bool> DELAYED_NOP("otawa::DELAYED_NOP", false);
 
@@ -121,6 +125,8 @@ BasicBlock *DelayedBuilder::makeNOp(BasicBlock *bb) {
  * @par Provided Features
  * @li @ref COLLECTED_CFG_FEATURE
  * @li @ref DELAYED_CFG_FEATURE
+ *
+ * @ingroup cfg
  */
 
 Registration<DelayedBuilder> DelayedBuilder::reg(
@@ -257,7 +263,9 @@ void DelayedBuilder::cloneEdge(Edge *edge, BasicBlock *source, Edge::kind_t kind
 			target = 0;
 		else
 			target = cfg_map.get(edge->calledCFG(), 0)->entry();
-		new Edge(source, target, Edge::CALL);
+		Edge *vedge = new Edge(source, target, Edge::CALL);
+		if(target)
+			CALLED_BY(target->cfg()).add(vedge);
 	}
 	else {
 		// target BB of a delayed BB with multiple entries
@@ -288,7 +296,9 @@ void DelayedBuilder::insert(Edge *edge, BasicBlock *ibb) {
 		else
 			target = cfg_map.get(edge->calledCFG(), 0)->entry();
 		new Edge(source, ibb, Edge::TAKEN);
-		new Edge(ibb, target, Edge::CALL);
+		Edge *vedge = new Edge(ibb, target, Edge::CALL);
+		if(target)
+			CALLED_BY(target->cfg()).add(vedge);
 	}
 
 	// other cases

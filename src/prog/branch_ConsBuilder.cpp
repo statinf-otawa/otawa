@@ -102,7 +102,8 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 
 	if (branch::COND_NUMBER(bb) != -1) {
 		int row = hard::BHT_CONFIG(ws)->line(bb->lastInst()->address());
-		cout << "Process jump on bb " << bb->number() << " on row " << row << "\n";
+		if(logFor(LOG_BLOCK))
+			log << "\t\t\tprocess jump on bb " << bb->number() << " on row " << row << "\n";
 		branch::category_t cat = branch::CATEGORY(bb);
 		BasicBlock *cat_header = branch::HEADER(bb);
 		ilp::System *sys = ipet::SYSTEM(ws);

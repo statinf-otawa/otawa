@@ -52,6 +52,8 @@ namespace otawa {
  *
  * @par Statistics
  * none
+ *
+ * @ingroup cfg
  */
 
 LoopReductor::LoopReductor(bool _reduce_loops) : Processor((_reduce_loops ? "otawa::LoopReductor" : "otawa::SpanningTreeBuilder"), Version(1, 0, 0)), reduce_loops(_reduce_loops) {

@@ -21,8 +21,8 @@
  *	02110-1301  USA
  */
 
-#ifndef CFG_VIRTUALIZER_H_
-#define CFG_VIRTUALIZER_H_
+#ifndef OTAWA_CFG_VIRTUALIZER_H_
+#define OTAWA_CFG_VIRTUALIZER_H_
 
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Feature.h>
@@ -37,27 +37,30 @@
 
 namespace otawa {
 
+class CFGCollection;
 
 // Virtualizer class
 class Virtualizer: public Processor {
 
 public:
 	Virtualizer(void);
-	static Registration<Virtualizer> reg;
+	static p::declare reg;
 
-	virtual void processWorkSpace(WorkSpace*);
 	virtual void configure(const PropList& props);
 
+protected:
+	virtual void processWorkSpace(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
 
 private:
 	void virtualize(struct call_t*, CFG *cfg, VirtualCFG *vcfg, BasicBlock *entry, BasicBlock *exit);
-	bool isInlined();
+	VirtualCFG *virtualizeCFG(struct call_t *call, CFG *cfg);
+	bool isInlined(void);
 	bool virtual_inlining;
 	CFG *entry;
 	elm::genstruct::HashTable<void *, VirtualCFG *> cfgMap;
 };
 
-}
+}	// otawa
 
-
-#endif
+#endif	// OTAWA_CFG_VIRTUALIZER_H_

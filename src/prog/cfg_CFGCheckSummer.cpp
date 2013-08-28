@@ -42,6 +42,8 @@ namespace otawa {
  *
  * @par Provided Features
  * @li @ref CFG_CHECKSUM_FEATURE
+ *
+ * @ingroup cfg
  */
 
 
@@ -76,6 +78,8 @@ static SilentFeature::Maker<CFGCheckSummer> maker;
  *
  * @par Properties
  * @li @ref CHECKSUM
+ *
+ * @ingroup cfg
  */
 SilentFeature CFG_CHECKSUM_FEATURE("otawa::CFG_CHECKSUM_FEATURE", maker);
 
@@ -83,6 +87,8 @@ SilentFeature CFG_CHECKSUM_FEATURE("otawa::CFG_CHECKSUM_FEATURE", maker);
 /**
  * This property hooked on a CFG provides a checksum build
  * on the instruction of the CFG.
+ *
+ * @ingroup cfg
  */
 Identifier<unsigned long > CHECKSUM("otawa::CHECKSUM", 0);
 
