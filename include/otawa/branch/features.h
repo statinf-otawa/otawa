@@ -21,6 +21,8 @@
 #ifndef OTAWA_BRANCH_FEATURES_H_
 #define OTAWA_BRANCH_FEATURES_H_
 
+#include <elm/io.h>
+
 namespace otawa {
 
 namespace ilp { class Var; }
@@ -35,12 +37,16 @@ extern SilentFeature NUMBERED_CONDITIONS_FEATURE;
 
 // category feature
 typedef enum category_t {
-	ALWAYS_D,
-	ALWAYS_H,
-	FIRST_UNKNOWN,
-	NOT_CLASSIFIED
+	UNDEF = 0,
+	ALWAYS_D = 1,
+	ALWAYS_H = 2,
+	FIRST_UNKNOWN = 3,
+	NOT_CLASSIFIED = 4,
+	MAX = 5
 } category_t;
+Output& operator<<(Output& out, category_t cat);
 
+// category feature
 extern Identifier<category_t> CATEGORY;
 extern Identifier<BasicBlock*> HEADER;
 extern SilentFeature CATEGORY_FEATURE;

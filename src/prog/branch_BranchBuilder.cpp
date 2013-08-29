@@ -77,6 +77,21 @@ SilentFeature CATEGORY_FEATURE("otawa::branch::CATEGORY_FEATURE", BRANCH_CAT_MAK
 
 
 /**
+ */
+Output& operator<<(Output& out, category_t cat) {
+	static cstring labels[] = {
+		"undef",			// UNDEF = 0
+		"always-D",			// ALWAYS_D = 1,
+		"always-H",			// ALWAYS_H = 2,
+		"first-unknown",	// FIRST_UNKNOWN = 3,
+		"not-classified"	// NOT_CLASSIFIED = 4
+	};
+	ASSERTP(cat < MAX, "bad branch category");
+	out << labels[cat];
+	return out;
+}
+
+/**
  * @class BranchBuilder
  * Compute the categories for branch prediction.
  *
