@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	This is the Abstract Cache State builder.
+ *	ACSMayBuilder class interface
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
@@ -20,42 +19,32 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
-#ifndef CACHE_ACSMAYBUILDER_H_
-#define CACHE_ACSMAYBUILDER_H_
+#ifndef OTAWA_CACHE_ACSMAYBUILDER_H_
+#define OTAWA_CACHE_ACSMAYBUILDER_H_
 
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/cache/LBlockSet.h>
-#include <otawa/cache/cat2/MAYProblem.h>
 #include <elm/genstruct/Vector.h>
+#include "features.h"
 
 namespace otawa {
 	
 using namespace elm;
 
-	
-extern Identifier<genstruct::Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY;
-extern Identifier<genstruct::Vector<MAYProblem::Domain*>*> CACHE_ACS_MAY_ENTRY;
-
-class ACSMayBuilder : public otawa::Processor {
-
-	void processLBlockSet(otawa::WorkSpace*, LBlockSet *, const hard::Cache *);	
-	
-	bool unrolling;
-	genstruct::Vector<MAYProblem::Domain *> *may_entry;
-	
-	public:
+class ACSMayBuilder: public otawa::Processor {
+public:
 	ACSMayBuilder(void);
 	virtual void processWorkSpace(otawa::WorkSpace*);
 	virtual void configure(const PropList &props);
-	
-	
-	
+
+private:
+	void processLBlockSet(otawa::WorkSpace*, LBlockSet *, const hard::Cache *);
+	bool unrolling;
+	genstruct::Vector<MAYProblem::Domain *> *may_entry;
 };
 
-extern Feature<ACSMayBuilder> ICACHE_ACS_MAY_FEATURE;
+}	// otawa
 
-}
-
-#endif /*CACHE_ACSMAYBUILDER_H_*/
+#endif /* OTAWA_CACHE_ACSMAYBUILDER_H_*/

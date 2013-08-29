@@ -20,54 +20,35 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
-#ifndef CACHE_ACSBUILDER_H_
-#define CACHE_ACSBUILDER_H_
+#ifndef OTAWA_CACHE_ACSBUILDER_H_
+#define OTAWA_CACHE_ACSBUILDER_H_
 
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/cache/LBlockSet.h>
-#include <otawa/cache/cat2/MUSTProblem.h>
-#include <otawa/cache/cat2/PERSProblem.h>
 #include <elm/genstruct/Vector.h>
+#include "features.h"
 
 namespace otawa {
 	
 using namespace elm;
 
 
-typedef enum fmlevel_t {
-		FML_INNER = 0,
-		FML_OUTER = 1,
-		FML_MULTI = 2,
-		FML_NONE
-} fmlevel_t;
-	
-extern Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST;
-extern Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS;
-extern Identifier<fmlevel_t> FIRSTMISS_LEVEL;
-extern Identifier<bool> PSEUDO_UNROLLING;
-extern Identifier<genstruct::Vector<MUSTProblem::Domain*>*> CACHE_ACS_MUST_ENTRY;
-
 class ACSBuilder : public otawa::Processor {
-
-	void processLBlockSet(otawa::WorkSpace*, LBlockSet *, const hard::Cache *);	
-	fmlevel_t level;
-	
-	bool unrolling;
-	genstruct::Vector<MUSTProblem::Domain *> *must_entry;
-	
-	public:
+public:
 	ACSBuilder(void);
 	virtual void processWorkSpace(otawa::WorkSpace*);
 	virtual void configure(const PropList &props);
-	
-	
+
+private:
+	void processLBlockSet(otawa::WorkSpace*, LBlockSet *, const hard::Cache *);	
+	fmlevel_t level;
+	bool unrolling;
+	genstruct::Vector<MUSTProblem::Domain *> *must_entry;
 	
 };
 
-extern Feature<ACSBuilder> ICACHE_ACS_FEATURE;
-
 }
 
-#endif /*CACHE_ACSBUILDER_H_*/
+#endif /* OTAWA_CACHE_ACSBUILDER_H_*/

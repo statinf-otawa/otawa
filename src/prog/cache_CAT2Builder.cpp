@@ -1,5 +1,4 @@
 /*
- *	$Id $
  *	CAT2Builder processor implementation
  *
  *	This file is part of OTAWA
@@ -194,10 +193,21 @@ void CAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
 }
 
 
+static SilentFeature::Maker<CAT2Builder> cat_maker;
 /**
- * !!TODO!!
+ * This feature ensures that the categories for instruction cache according to the following
+ * method has been computed:
+ *
+ * C. Ballabriga, H. Cassé. Improving the First-Miss Computation in Set-Associative Instruction Caches.
+ * Euromicro Conference on Real-Time Systems (ECRTS 2008), IEEE, p. 341-350, 2008.
+ *
+ * @par Properties
+ * @li @ref CATEGORY
+ * @li @ref  CATEGORY_HEADER
+ *
+ * @par Processors
+ * @li @ref CAT2Builder (default)
  */
-Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE("otawa::ICACHE_CATEGORY2_FEATURE");
+SilentFeature ICACHE_CATEGORY2_FEATURE("otawa::ICACHE_CATEGORY2_FEATURE", cat_maker);
 
-
-}
+}	// otawa

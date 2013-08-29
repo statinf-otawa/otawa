@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	exegraph module implementation
+ *	CAT2NCBuilder class interface
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
@@ -21,8 +20,8 @@
  *	02110-1301  USA
  */
 
-#ifndef CACHE_CAT2NCBUILDER_H_
-#define CACHE_CAT2NCBUILDER_H_
+#ifndef OTAWA_CACHE_CAT2NCBUILDER_H_
+#define OTAWA_CACHE_CAT2NCBUILDER_H_
 
 #include <otawa/cache/cat2/CAT2Builder.h>
 
@@ -30,11 +29,10 @@ namespace otawa {
 
 class CAT2NCBuilder: public CAT2Builder {
 public:
-	CAT2NCBuilder(void);
-	static Registration<CAT2NCBuilder> reg;
+	static p::declare reg;
+	CAT2NCBuilder(p::declare& r = reg);
 };
 
 }	// otawa
 
-
-#endif /*CACHE_CAT2NCBUILDER_H_*/
+#endif /* OTAWA_CACHE_CAT2NCBUILDER_H_*/

@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	
+ *	CAT2ConstraintBuilder class interface
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
@@ -20,26 +19,27 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
-#ifndef CACHE_CAT2CONSTRAINTBUILDER_H_
-#define CACHE_CAT2CONSTRAINTBUILDER_H_
+#ifndef OTAWA_CACHE_CAT2CONSTRAINTBUILDER_H_
+#define OTAWA_CACHE_CAT2CONSTRAINTBUILDER_H_
 
 #include <otawa/proc/Processor.h>
 #include <otawa/prop/Identifier.h>
+
 namespace otawa {
 	
-extern Identifier<ilp::Var *> HIT_VAR;
-extern Identifier<ilp::Var *> MISS_VAR;
-
-class CAT2ConstraintBuilder : public otawa::Processor {
-	bool _explicit;
-	public:
-	CAT2ConstraintBuilder(void);
-	virtual void processWorkSpace(otawa::WorkSpace*);
+class CAT2ConstraintBuilder: public otawa::Processor {
+public:
+	static p::declare reg;
+	CAT2ConstraintBuilder(p::declare& r = reg);
 	virtual void configure(const PropList& props);
-	virtual void setup(otawa::WorkSpace*);
 	virtual void collectStats(WorkSpace *ws);
+protected:
+	virtual void setup(otawa::WorkSpace*);
+	virtual void processWorkSpace(otawa::WorkSpace*);
+private:
+	bool _explicit;
 };
 
-}
+}	// otawa
 
-#endif /*CACHE_CAT2CONSTRAINTBUILDER_H_*/
+#endif /* OTAWA_CACHE_CAT2CONSTRAINTBUILDER_H_*/

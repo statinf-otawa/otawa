@@ -55,8 +55,11 @@ EdgeProcessor::EdgeProcessor(cstring name, const Version& version, AbstractRegis
  */
 void EdgeProcessor::processCFG(WorkSpace *ws, CFG *cfg) {
 	for(CFG::BBIterator bb(cfg); bb; bb++)
-		for(BasicBlock::OutIterator edge(bb); edge; edge++)
+		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+			if(logFor(Processor::LOG_BLOCK))
+				cerr << "\t\t" << *edge << io::endl;
 			processEdge(ws, cfg, edge);
+		}
 }
 
 

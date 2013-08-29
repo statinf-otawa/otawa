@@ -36,23 +36,19 @@ namespace otawa {
 
 /**
  */
-CAT2NCBuilder::CAT2NCBuilder(void): CAT2Builder(reg) {
+CAT2NCBuilder::CAT2NCBuilder(p::declare& r): CAT2Builder(r) {
 }
 
-Registration<CAT2NCBuilder> CAT2NCBuilder::reg(
-	"otawa::CAT2NCBuilder",
-	Version(1, 0, 1),
-	p::base, &CAT2Builder::reg,
-	p::require, &DOMINANCE_FEATURE,
-	p::require, &LOOP_HEADERS_FEATURE,
-	p::require, &LOOP_INFO_FEATURE,
-	p::require, &COLLECTED_LBLOCKS_FEATURE,
-	p::require, &ICACHE_ACS_FEATURE,
-	p::require, &ICACHE_ACS_MAY_FEATURE,
-	p::require, &ICACHE_FIRSTLAST_FEATURE,
-	p::provide, &ICACHE_CATEGORY_FEATURE,
-	p::end
-);
-
+p::declare CAT2NCBuilder::reg = p::init("otawa::CAT2NCBuilder", Version(1, 0, 1))
+	.maker<CAT2NCBuilder>()
+	.base(CAT2Builder::reg)
+	.require(DOMINANCE_FEATURE)
+	.require(LOOP_HEADERS_FEATURE)
+	.require(LOOP_INFO_FEATURE)
+	.require(COLLECTED_LBLOCKS_FEATURE)
+	.require(ICACHE_ACS_FEATURE)
+	.require(ICACHE_ACS_MAY_FEATURE)
+	.require(ICACHE_FIRSTLAST_FEATURE)
+	.provide(ICACHE_CATEGORY_FEATURE);
 
 }	// otawa

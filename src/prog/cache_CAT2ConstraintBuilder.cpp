@@ -46,20 +46,57 @@ namespace otawa {
 	
 using namespace cache;
 
+
+/**
+ * Property giving the variable counting the number of hits.
+ *
+ * @par Hook
+ * @li @ref LBlock
+ *
+ * @p Feature
+ * @li @ref ICACHE_CONSTRAINT2_FEATURE
+ */
 Identifier<ilp::Var *> HIT_VAR("otawa::HIT_VAR", 0);
+
+
+
+/**
+ * Property giving the variable counting the number of misses.
+ *
+ * @par Hook
+ * @li @ref LBlock
+ *
+ * @p Feature
+ * @li @ref ICACHE_CONSTRAINT2_FEATURE
+ */
 Identifier<ilp::Var *> MISS_VAR("otawa::MISS_VAR", 0);
 
 
+static SilentFeature::Maker<CAT2ConstraintBuilder> maker;
+/**
+ * Ensures that the constraints for cache analysis by categories 2 has been built.
+ *
+ * @par Properties
+ * @li @ref HIT_VAR
+ * @li @ref MISS_VAR
+ *
+ * @par Processors
+ * @li @ref CAT2ConstraintBuilder
+ */
+SilentFeature ICACHE_CONSTRAINT2_FEATURE("otawa::ICACHE_CONSTRAINT2_FEATURE", maker);
+
+
 // registration
-static Registration<CAT2ConstraintBuilder> reg("otawa::CAT2ConstraintBuilder", Version(1, 0, 0),
-	p::require, &ASSIGNED_VARS_FEATURE,
-	p::require, &ICACHE_CATEGORY2_FEATURE,
-	p::require, &DOMINANCE_FEATURE,
-	p::require, &COLLECTED_LBLOCKS_FEATURE,
-	p::require, &ipet::OBJECT_FUNCTION_FEATURE,
-	p::require, &hard::CACHE_CONFIGURATION_FEATURE,
-	p::provide, &INST_CACHE_SUPPORT_FEATURE,
-	p::end);
+p::declare CAT2ConstraintBuilder::reg = p::init("otawa::CAT2ConstraintBuilder", Version(1, 0, 0))
+	.maker<CAT2ConstraintBuilder>()
+	.require(ASSIGNED_VARS_FEATURE)
+	.require(ICACHE_CATEGORY2_FEATURE)
+	.require(DOMINANCE_FEATURE)
+	.require(COLLECTED_LBLOCKS_FEATURE)
+	.require(ipet::OBJECT_FUNCTION_FEATURE)
+	.require(hard::CACHE_CONFIGURATION_FEATURE)
+	.provide(INST_CACHE_SUPPORT_FEATURE)
+	.provide(ICACHE_CONSTRAINT2_FEATURE);
 
 
 /**
@@ -94,7 +131,7 @@ static Registration<CAT2ConstraintBuilder> reg("otawa::CAT2ConstraintBuilder", V
  * @par Statistics
  * none
  */
-CAT2ConstraintBuilder::CAT2ConstraintBuilder(void) : Processor(::reg), _explicit(false) {
+CAT2ConstraintBuilder::CAT2ConstraintBuilder(p::declare& r) : Processor(r), _explicit(false) {
 }
 
 void CAT2ConstraintBuilder::configure(const PropList& props) {

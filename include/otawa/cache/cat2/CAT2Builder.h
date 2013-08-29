@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	CAT2Builder processor interface
  *
  *	This file is part of OTAWA
@@ -21,8 +20,8 @@
  *	02110-1301  USA
  */
 
-#ifndef CACHE_CAT2BUILDER_H_
-#define CACHE_CAT2BUILDER_H_
+#ifndef OTAWA_CACHE_CAT2BUILDER_H_
+#define OTAWA_CACHE_CAT2BUILDER_H_
 
 #include <otawa/prop/Identifier.h>
 #include <otawa/hard/Cache.h>
@@ -50,10 +49,7 @@ private:
 	cache::CategoryStats *cstats;
 };
 
-// feature
-extern Feature<CAT2Builder> ICACHE_CATEGORY2_FEATURE;
-
 }  // otawa
 
 
-#endif /*CACHE_CAT2BUILDER_H_*/
+#endif /* OTAWA_CACHE_CAT2BUILDER_H_*/
