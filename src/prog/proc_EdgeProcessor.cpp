@@ -67,8 +67,23 @@ void EdgeProcessor::processCFG(WorkSpace *ws, CFG *cfg) {
  */
 void EdgeProcessor::cleanupCFG(WorkSpace *ws, CFG *cfg) {
 	for(CFG::BBIterator bb(cfg); bb; bb++)
-		for(BasicBlock::OutIterator edge(bb); edge; edge++)
-			cleanupEdge(ws, cfg, edge);
+		cleanupBB(ws, cfg, bb);
+}
+
+
+/**
+ * When the function @ref doCleanup() is called,
+ * this function is called for each basic block of the task.
+ * As a default do nothing.
+ * @warning If you override the @ref cleanupCFG() function, do not forget to perform
+ * a call to the CFGProcessor original version.
+ * @param ws	Current workspace.
+ * @param cfg	Current CFG.
+ * @param bb	Current BB.
+ */
+void EdgeProcessor::cleanupBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+	for(BasicBlock::OutIterator edge(bb); edge; edge++)
+		cleanupEdge(ws, cfg, edge);
 }
 
 
