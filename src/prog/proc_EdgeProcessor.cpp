@@ -64,6 +64,29 @@ void EdgeProcessor::processCFG(WorkSpace *ws, CFG *cfg) {
 
 
 /**
+ */
+void EdgeProcessor::cleanupCFG(WorkSpace *ws, CFG *cfg) {
+	for(CFG::BBIterator bb(cfg); bb; bb++)
+		for(BasicBlock::OutIterator edge(bb); edge; edge++)
+			cleanupEdge(ws, cfg, edge);
+}
+
+
+/**
+ * When the function @ref doCleanup() is called,
+ * this function is called for each edge of the task.
+ * As a default do nothing.
+ * @warning If you override the @ref cleanupCFG() function, do not forget to perform
+ * a call to the CFGProcessor original version.
+ * @param ws	Current workspace.
+ * @param cfg	Current CFG.
+ * @param edge	Current edge.
+ */
+void EdgeProcessor::cleanupEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
+}
+
+
+/**
  * @fn void EdgeProcessor::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge);
  * This function is called once for each edge and must be overridden by the subclass.
  * @param ws	Current workspace.

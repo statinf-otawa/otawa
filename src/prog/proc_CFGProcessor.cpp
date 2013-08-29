@@ -100,6 +100,28 @@ void CFGProcessor::processWorkSpace(WorkSpace *fw) {
 
 
 /**
+ * This function may be overridden by a subclass to provide custom cleanup
+ * for a CFG. It is called for each CFG of the task when @ref doCleanUp() is called.
+ * As a default, do nothing.
+ * @param ws	Current workspace.
+ * @param cfg	Current CFG.
+ */
+void CFGProcessor::cleanupCFG(WorkSpace *ws, CFG *cfg) {
+}
+
+
+/**
+ * Trigger associated with CFG. For each CFG, perform a call to
+ * @ref cleanupCFG() that may be customized by a subclass.
+ */
+void CFGProcessor::doCleanUp(void) {
+	const CFGCollection *coll = INVOLVED_CFGS(workspace());
+	for(int i = 0; i < coll->count(); i++)
+		cleanupCFG(workspace(), coll->get(i));
+}
+
+
+/**
  * This property may be used to pass the entry CFG to a CFG processor or
  * is used by the CFG processor to record in the framework the entry CFG
  * of the currently processed task.

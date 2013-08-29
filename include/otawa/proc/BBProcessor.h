@@ -72,6 +72,8 @@ class BBProcessor: public CFGProcessor {
 protected:
 	virtual void processCFG(WorkSpace *ws, CFG *cfg);
 	virtual void processBB(WorkSpace *ws, CFG *cfd, BasicBlock *bb) = 0;
+	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
+	virtual void cleanupBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 	
 public:
 	BBProcessor(void);

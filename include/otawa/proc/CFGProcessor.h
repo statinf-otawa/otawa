@@ -43,8 +43,14 @@ public:
 	static MetaRegistration reg;
 
 protected:
+
+	// to customize
 	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void processCFG(WorkSpace *fw, CFG *cfg) = 0;
+	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
+
+	// useful
+	void doCleanUp(void);
 	string str(const Address& address);
 	string str(const Address& base, const Address& address);
 	inline CFG *cfg(void) const { return _cfg; }

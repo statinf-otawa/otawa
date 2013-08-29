@@ -76,6 +76,28 @@ void BBProcessor::processCFG(WorkSpace *fw, CFG *cfg) {
 
 
 /**
+ */
+void BBProcessor::cleanupCFG(WorkSpace *ws, CFG *cfg) {
+	for(CFG::BBIterator bb(cfg); bb; bb++)
+		cleanupBB(ws, cfg, bb);
+}
+
+
+/**
+ * When the function @ref doCleanup() is called,
+ * this function is called for each basic block of the task.
+ * As a default do nothing.
+ * @warning If you override the @ref cleanupCFG() function, do not forget to perform
+ * a call to the CFGProcessor original version.
+ * @param ws	Current workspace.
+ * @param cfg	Current CFG.
+ * @param bb	Current BB.
+ */
+void BBProcessor::cleanupBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+}
+
+
+/**
  * @class BBCleaner
  * Efficient implementation of a cleaner for properties found on a basic block.
  * To instantiate it, juste overload the process() methods

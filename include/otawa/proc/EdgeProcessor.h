@@ -36,6 +36,8 @@ public:
 protected:
 	virtual void processCFG(WorkSpace *ws, CFG *cfg);
 	virtual void processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) = 0;
+	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
+	virtual void cleanupEdge(WorkSpace *ws, CFG *cfg, Edge *edge);
 };
 
 }	// otawa
