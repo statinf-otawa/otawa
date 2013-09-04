@@ -146,13 +146,32 @@ public:
 	virtual bool isFinal(void) const { return true; }
 };
 
+
+// AbstractMake class
+class AbstractMaker {
+public:
+	virtual ~AbstractMaker(void) { }
+	virtual Processor *make(void) const = 0;
+};
+
+
+// Make class
+template <class C>
+class Maker: public AbstractMaker {
+public:
+	virtual Processor *make(void) const { return new C(); }
+};
+
+// useful
+extern AbstractMaker *null_maker, *no_maker;
+
 namespace p {
 
 // make class
 class init {
 	friend class declare;
 
-	class AbstractMaker {
+	/*class AbstractMaker {
 	public:
 		virtual ~AbstractMaker(void) { }
 		virtual Processor *make(void) = 0;
@@ -161,7 +180,7 @@ class init {
 	template <class T> class Maker: public AbstractMaker {
 	public:
 		virtual Processor *make(void) { return new T(); }
-	};
+	};*/
 
 public:
 	inline init(string name, Version version)
@@ -198,7 +217,7 @@ public:
 	virtual Processor *make(void) const;
 	virtual bool isFinal(void) const;
 private:
-	init::AbstractMaker *_maker;
+	AbstractMaker *_maker;
 };
 
 

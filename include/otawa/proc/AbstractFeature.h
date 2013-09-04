@@ -37,13 +37,28 @@ class AbstractFeature: public Identifier<Processor *> {
 public:
 	static AbstractFeature& null;
 
-	AbstractFeature(CString name = "");
+	AbstractFeature(cstring name = "");
 	virtual ~AbstractFeature(void);
 	virtual void process(WorkSpace *fw,
 		const PropList& props = PropList::EMPTY) const = 0;
 	virtual void check(WorkSpace *fw) const = 0;
 	virtual void clean(WorkSpace *ws) const = 0;
 };
+
+
+// feature class
+namespace p {
+	class feature: public AbstractFeature {
+	public:
+		feature(cstring name, AbstractMaker *maker);
+		~feature(void);
+		virtual void process(WorkSpace *ws, const PropList& props) const;
+		virtual void check(WorkSpace *fw) const;
+		virtual void clean(WorkSpace *ws) const;
+	private:
+		AbstractMaker *_maker;
+	};
+}
 
 } // otawa
 

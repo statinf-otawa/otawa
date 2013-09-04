@@ -85,6 +85,65 @@ AbstractFeature& AbstractFeature::null = _null;
  */
 
 
+namespace p {
+
+/**
+ * @class feature
+ * Shortcut to create a feature with a maker (without the mess of @ref SilentFeature).
+ *
+ * Such a feature must be declared in a header file by
+ * @code
+ * extern p::feature MY_FEATURE;
+ * @endcode
+ *
+ * And defined by:
+ * @code
+ * p::feature MY_FEATURE("MY_FEATURE", new Maker<MyDefaultProcessor>());
+ * @endcode
+ */
+
+
+/**
+ * Build the feature.
+ * @param name		Feature name.
+ * @param maker		Maker to build the default processor.
+ * @notice			This class is responsible for freeing the maker passed in parameter.
+ */
+feature::feature(cstring name, AbstractMaker *maker): AbstractFeature(name), _maker(maker) {
+}
+
+
+/**
+ */
+feature::~feature(void) {
+	if(_maker != null_maker && _maker != no_maker)
+		delete _maker;
+}
+
+
+/**
+ */
+void feature::process(WorkSpace *ws, const PropList& props) const {
+	Processor *p = _maker->make();
+	p->process(ws, props);
+	delete p;
+}
+
+
+/**
+ */
+void feature::check(WorkSpace *fw) const {
+}
+
+
+/**
+ */
+void feature::clean(WorkSpace *ws) const {
+}
+
+}	// p
+
+
 /**
  * @class Feature
  * A feature is a set of facilities, usually provided using properties,

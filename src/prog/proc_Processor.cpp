@@ -472,6 +472,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 				fw->require(feature->feature(), props);
 			}
 			catch(NoProcessorException& e) {
+				log << "ERROR: no processor to implement " << feature->feature().name() << io::endl;
 				throw UnavailableFeatureException(this, feature->feature());
 			}
 		}

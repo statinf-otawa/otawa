@@ -89,6 +89,7 @@ namespace otawa {
     typedef enum pipeline_stage_category_t {FETCH, DECODE, EXECUTE, COMMIT, DELAY, FU} pipeline_stage_category_t;
   
   private:
+    const hard::PipelineUnit *_unit;
     pipeline_stage_category_t _category;
     int _latency;
     int _width;
@@ -101,53 +102,34 @@ namespace otawa {
     elm::genstruct::Vector<ParExePipeline *> _fus;
     elm::genstruct::Vector<ParExeNode *> _nodes;
   public:
-    inline ParExeStage(pipeline_stage_category_t category, int latency, int width, order_t policy, ParExeQueue *sq, ParExeQueue *dq, elm::String name, int index=0);
+    inline ParExeStage(pipeline_stage_category_t category, int latency, int width, order_t policy, ParExeQueue *sq, ParExeQueue *dq, elm::String name, int index=0, const hard::PipelineUnit *unit = 0);
 
 	inline void addNode(ParExeNode * node)
 		{ _nodes.add(node); }
 	inline void removeNode(ParExeNode *node)
 		{ _nodes.remove(node); }
 
-    inline order_t orderPolicy(void)
-      {return _order_policy;}
-    inline int width(void) const
-      {return _width;}
-    inline elm::String name(void) 
-      {return _name;}
-    inline int index()
-    {return _index;}
-    inline pipeline_stage_category_t category(void)
-      {return _category;}
-    inline ParExeQueue * sourceQueue(void)
-      {return _source_queue;}
-    inline ParExeQueue * destinationQueue(void)
-      {return _destination_queue;}
-     inline int latency(void)
-      {return _latency;}
-    inline bool isFuStage(void)
-      {return (_category == FU);}
-    inline void addFunctionalUnit(bool pipelined, int latency, int width, elm::String name);
-    inline int numFus()
-		{return _fus.length();}
-    inline ParExePipeline *fu(int index)
-		{return _fus[index];}
-    inline ParExeNode* firstNode(void)
-      {return _nodes[0];}
-    inline ParExeNode* lastNode(void)
-      {return _nodes[_nodes.length()-1];}
-    inline bool hasNodes(void)
-      {return (_nodes.length() != 0);}
-    inline void deleteNodes(void)
-      {if (_nodes.length() != 0) _nodes.clear();}
-    inline int numNodes(void)
-      {return _nodes.length();}
-    inline ParExeNode * node(int index) {
-      if (index >= _nodes.length())
-      	return NULL;
-      return _nodes[index];
-    }
-     inline void addBinding(Inst::kind_t kind, ParExePipeline *fu)
-      {_bindings.add(pair(kind, fu));}
+	inline const hard::PipelineUnit *unit(void) const { return _unit; }
+	inline order_t orderPolicy(void) {return _order_policy;}
+	inline int width(void) const {return _width;}
+	inline elm::String name(void)  {return _name;}
+	inline int index(void) {return _index;}
+	inline pipeline_stage_category_t category(void) {return _category;}
+	inline ParExeQueue * sourceQueue(void) {return _source_queue;}
+	inline ParExeQueue * destinationQueue(void) {return _destination_queue;}
+	inline int latency(void) {return _latency;}
+	inline bool isFuStage(void) {return (_category == FU);}
+	inline void addFunctionalUnit(bool pipelined, int latency, int width, elm::String name, const hard::PipelineUnit *unit);
+	inline int numFus(void) {return _fus.length();}
+	inline ParExePipeline *fu(int index) {return _fus[index];}
+	inline ParExeNode* firstNode(void) {return _nodes[0];}
+	inline ParExeNode* lastNode(void) {return _nodes[_nodes.length()-1];}
+	inline bool hasNodes(void) {return (_nodes.length() != 0);}
+	inline void deleteNodes(void) {if (_nodes.length() != 0) _nodes.clear();}
+	inline int numNodes(void) {return _nodes.length();}
+	inline ParExeNode * node(int index)
+		{ if (index >= _nodes.length()) return NULL; else return _nodes[index]; }
+	inline void addBinding(Inst::kind_t kind, ParExePipeline *fu) {_bindings.add(pair(kind, fu));}
 
      inline ParExePipeline *findFU(Inst::kind_t kind) {
 		for(int i = 0; i < _bindings.length(); i++) {
@@ -266,31 +248,31 @@ namespace otawa {
 
 
  
-  inline ParExeStage::ParExeStage(pipeline_stage_category_t category, int latency, int width, order_t policy, ParExeQueue *sq, ParExeQueue *dq, elm::String name, int index)
-  : _category(category), _latency(latency), _width(width), _order_policy(policy),
+  inline ParExeStage::ParExeStage(pipeline_stage_category_t category, int latency, int width, order_t policy, ParExeQueue *sq, ParExeQueue *dq, elm::String name, int index, const hard::PipelineUnit *unit)
+  : _unit(unit), _category(category), _latency(latency), _width(width), _order_policy(policy),
     _source_queue(sq), _destination_queue(dq), _name(name), _index(index) {}
 
-  inline void ParExeStage::addFunctionalUnit(bool pipelined, int latency, int width, elm::String name) {
+  inline void ParExeStage::addFunctionalUnit(bool pipelined, int latency, int width, elm::String name, const hard::PipelineUnit *unit) {
 	  ParExePipeline *fu = new ParExePipeline();
 	  if ( !pipelined) {
-		  ParExeStage * stage = new ParExeStage(FU, latency, width, _order_policy, _source_queue, _destination_queue, name);
+		  ParExeStage * stage = new ParExeStage(FU, latency, width, _order_policy, _source_queue, _destination_queue, name, 0, unit);
 		  fu->addStage(stage);
 	  }
 	  else {
 		  ParExeStage * stage;
 
 		  // first_stage
-		  stage = new ParExeStage(FU, 1, width, _order_policy, _source_queue, NULL, name + "1");
+		  stage = new ParExeStage(FU, 1, width, _order_policy, _source_queue, NULL, name + "1", 0, unit);
 		  fu->addStage(stage);
 
 		  // intermediate stages
 		  for (int i=2 ; i<latency ; i++) {
-			  stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, NULL, _ << name << i);
+			  stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, NULL, _ << name << i, 0, unit);
 			  fu->addStage(stage);
 		  }
 
 		  // last stage
-		  stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, _destination_queue, _ << name << latency);
+		  stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, _destination_queue, _ << name << latency, 0, unit);
 		  fu->addStage(stage);
 	  }
 	  _fus.add(fu);

@@ -285,6 +285,7 @@ VALUE(otawa::hard::Stage::COMMIT),
 VALUE(otawa::hard::Stage::DECOMP)
 ENUM_END
 
+SERIALIZE(otawa::hard::PipelineUnit);
 SERIALIZE(otawa::hard::FunctionalUnit);
 SERIALIZE(otawa::hard::Dispatch);
 SERIALIZE(otawa::hard::Stage);

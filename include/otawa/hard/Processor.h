@@ -33,24 +33,33 @@
 
 namespace otawa { namespace hard {
 
+using namespace elm;
 using namespace elm::genstruct;
 class ProcessorBuilder;
 
-// FunctionalUnit class
-class FunctionalUnit {
-	friend class FunctionalUnitBuilder;
-	SERIALIZABLE(otawa::hard::FunctionalUnit,
-		FIELD(name) & FIELD(latency) & FIELD(width) & FIELD(pipelined));
-	elm::String name;
-	int latency;
-	int width;
-	bool pipelined;
+// PipelineUnit class
+class PipelineUnit {
+	SERIALIZABLE(otawa::hard::PipelineUnit, FIELD(name) & FIELD(latency) & FIELD(width));
 public:
-	inline FunctionalUnit(void): latency(1), width(1), pipelined(false) { };
-	virtual ~FunctionalUnit(void) { }
+	inline PipelineUnit(void): latency(1), width(1) { };
+	virtual ~PipelineUnit(void) { }
 	inline elm::String getName(void) const { return name; };
 	inline int getLatency(void) const { return latency; };
 	inline int getWidth(void) const { return width; };
+protected:
+	string name;
+	int latency;
+	int width;
+};
+
+// FunctionalUnit class
+class FunctionalUnit: public PipelineUnit {
+	friend class FunctionalUnitBuilder;
+	SERIALIZABLE(otawa::hard::FunctionalUnit, BASE(otawa::hard::PipelineUnit) & FIELD(pipelined));
+	bool pipelined;
+public:
+	inline FunctionalUnit(void): pipelined(false) { };
+	virtual ~FunctionalUnit(void) { }
 	inline bool isPipelined(void) const { return pipelined; };	
 };
 
@@ -71,10 +80,9 @@ public:
 };
 
 // Stage class
-class Stage {
+class Stage: public PipelineUnit {
 	friend class StageBuilder;
-	SERIALIZABLE(otawa::hard::Stage, FIELD(type) & FIELD(name) & FIELD(width)
-		& FIELD(latency) & FIELD(fus) & FIELD(dispatch) & FIELD(ordered));
+	SERIALIZABLE(otawa::hard::Stage, BASE(otawa::hard::PipelineUnit) & FIELD(type) & FIELD(fus) & FIELD(dispatch) & FIELD(ordered));
 public:
 	typedef enum type_t {
 		NONE = 0,
@@ -86,19 +94,13 @@ public:
 	} type_t;
 private:
 	type_t type;
-	elm::String name;
-	int width;
-	int latency;
 	AllocatedTable<FunctionalUnit *> fus;
 	AllocatedTable<Dispatch *> dispatch;
 	bool ordered;
 public:
-	inline Stage(type_t _type = NONE): type(_type), width(1), latency(1), ordered(false) { };
+	inline Stage(type_t _type = NONE): type(_type), ordered(false) { };
 	virtual ~Stage(void) { }
 	inline type_t getType(void) const { return type; };
-	inline elm::String getName(void) const { return name; };
-	inline int getWidth(void) const { return width; };
-	inline int getLatency(void) const { return latency; };
 	inline const Table<FunctionalUnit *>& getFUs(void) const { return fus; }
 	inline const Table<Dispatch *>& getDispatch(void) const { return dispatch; }
 	inline bool isOrdered(void) const { return ordered; }

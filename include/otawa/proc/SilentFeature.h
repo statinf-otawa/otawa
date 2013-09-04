@@ -32,12 +32,6 @@ using namespace elm;
 class SilentFeature: public AbstractFeature {
 public:
 
-	class AbstractMaker {
-	public:
-		virtual ~AbstractMaker(void) { }
-		virtual Processor *make(void) const = 0;
-	};
-
 	template <class C>
 	class Maker: public AbstractMaker {
 	public:

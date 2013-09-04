@@ -391,4 +391,18 @@ bool declare::isFinal(void) const {
 
 }	// p
 
+static Maker<NullProcessor> null_inst;
+static Maker<NoProcessor> no_inst;
+
+/**
+ * Special maker for a null processor.
+ */
+AbstractMaker *null_maker = &null_inst;
+
+
+/**
+ * Special maker for "no processor available".
+ */
+AbstractMaker *no_maker = &no_inst;
+
 } // otawa

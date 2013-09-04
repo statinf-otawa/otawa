@@ -77,7 +77,7 @@ extern SilentFeature DATA_CACHE_SUPPORT_FEATURE;
 
 extern SilentFeature INST_CACHE_SUPPORT_FEATURE;
 
-extern SilentFeature WCET_COUNT_RECORDED_FEATURE;
+extern p::feature WCET_COUNT_RECORDED_FEATURE;
 
 } }	// otawa::ipet
 

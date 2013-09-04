@@ -70,7 +70,7 @@ using namespace otawa;
       }
       
       // Create the stage
-      ParExeStage *stage = new ParExeStage(category, latency, hstage->getWidth(), policy, source_queue, destination_queue, hstage->getName(), _pipeline.numStages());
+      ParExeStage *stage = new ParExeStage(category, latency, hstage->getWidth(), policy, source_queue, destination_queue, hstage->getName(), _pipeline.numStages(), hstage);
       _pipeline.addStage(stage);
       
       if (category == ParExeStage::FETCH)
@@ -83,7 +83,7 @@ using namespace otawa;
 	const Table<hard::FunctionalUnit *>& fus = hstage->getFUs();
 	for(int j = 0; j < fus.count(); j++) {
 	  hard::FunctionalUnit *fu = fus[j];
-	  stage->addFunctionalUnit(fu->isPipelined(), fu->getLatency(), fu->getWidth(), fu->getName());
+	  stage->addFunctionalUnit(fu->isPipelined(), fu->getLatency(), fu->getWidth(), fu->getName(), fu);
 	}
 	
 	// Build the bindings
