@@ -28,12 +28,18 @@ namespace otawa { namespace ilp {
 
 using namespace elm;
 
+class Alias;
+class Expression;
+class System;
+
 // Var class
 class Var {
 public:
 	virtual ~Var(void);
 	inline elm::String& name(void) { return _name; }
 	virtual void print(io::Output& out);
+	virtual Alias *toAlias(void);
+	virtual double eval(System *sys);
 
 protected:
 	inline Var(void) { }
@@ -44,16 +50,23 @@ private:
 	string _name;
 };
 
-// Output
-inline io::Output& operator<<(io::Output& out, Var *var) {
-	out << "ilp::Var("; var->print(out); out << ')';
-	return out;
-}
 
-inline io::Output& operator<<(io::Output& out, Var& var) {
-	out << "ilp::Var("; var.print(out); out << ')';
-	return out;	
-}
+// Alias class
+class Alias: public Var {
+public:
+	Alias(Expression *expr);
+	Alias(string name, Expression *expr);
+	virtual ~Alias(void);
+	virtual Alias *toAlias(void);
+	virtual double eval(System *sys);
+	inline const Expression *expression(void) const { return _expr; }
+private:
+	Expression *_expr;
+};
+
+// Output
+inline io::Output& operator<<(io::Output& out, Var *var) { var->print(out); return out; }
+inline io::Output& operator<<(io::Output& out, Var& var) { var.print(out); return out; }
 
 } } // otawa::ilp
 

@@ -20,6 +20,8 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <otawa/ilp/Var.h>
+#include <otawa/ilp/Expression.h>
+#include <otawa/ilp/System.h>
 
 namespace otawa { namespace ilp {
 
@@ -75,5 +77,79 @@ void Var::print(io::Output& out) {
 	else
 		out << '_' << (void *)this;
 }
+
+
+/**
+ * If the variable is an alias, return it.
+ * @return	Alias object if it is alias, null else.
+ */
+Alias *Var::toAlias(void) {
+	return 0;
+}
+
+
+/**
+ * Evaluate the variable in the given system.
+ * @param sys	Resolved system to look in.
+ * @return		Value of the variable.
+ */
+double Var::eval(System *sys) {
+	return sys->valueOf(this);
+}
+
+
+/**
+ * @class Alias
+ * An alias is a specific variable that represents an expressions.
+ * This allows to reduce the number of true variable and to replace any variable
+ * by any possible expression.
+ *
+ * @ingroup ilp
+ */
+
+
+/**
+ * Build an anonymous alias variable.
+ * @param expr	Expression of the alias (this object is responsible for freeing it).
+ */
+Alias::Alias(Expression *expr): _expr(expr) {
+}
+
+
+/**
+ * Build a named alias variable.
+ * @param name	Name of the variable.
+ * @param expr	Expression of the alias (this object is responsible for freeing it).
+ */
+Alias::Alias(string name, Expression *expr): Var(name), _expr(expr) {
+}
+
+
+/**
+ */
+Alias::~Alias(void) {
+	delete _expr;
+}
+
+
+/**
+ */
+Alias *Alias::toAlias(void) {
+	return this;
+}
+
+
+/**
+ */
+double Alias::eval(System *sys) {
+	return _expr->eval(sys);
+}
+
+
+/**
+ * @fn const Expression *expression(void) const;
+ * Get the expression of the alias.
+ * @return	Alias expression.
+ */
 
 } } // otawa::ilp

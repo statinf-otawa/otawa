@@ -140,6 +140,7 @@ Virtualizer::Virtualizer(void): Processor(reg) {
 
 // Registration
 p::declare Virtualizer::reg = p::init("otawa::Virtualizer", Version(1, 2, 0))
+	.maker<Virtualizer>()
 	.use(COLLECTED_CFG_FEATURE)
 	.invalidate(COLLECTED_CFG_FEATURE)
 	.provide(VIRTUALIZED_CFG_FEATURE)

@@ -53,9 +53,6 @@ private:
 	void addLBlock(BasicBlock *bb, Address addr, int& index, genstruct::AllocatedTable<LBlock *> *lblocks);
 };
 
-// properties
-//extern Identifier<LBlock *> LBLOCK;
-
 // Features
 extern Feature<LBlockBuilder> COLLECTED_LBLOCKS_FEATURE;
 

@@ -25,13 +25,14 @@
 #include <otawa/ilp/Var.h>
 #include <elm/datastruct/Iterator.h>
 #include <elm/utility.h>
+#include "Expression.h"
 
 namespace otawa { namespace ilp {
 	
 // Constraint class
 class Constraint {
 public:
-	typedef elm::Pair<ilp::Var*,double> Term;
+	typedef otawa::ilp::Term Term;
 	typedef enum comparator_t {
 		LT = -2,
 		LE = -1,

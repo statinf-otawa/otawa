@@ -11,15 +11,17 @@ namespace otawa { namespace ilp {
 
 /**
  * @class Constraint
- * This class is used for representing constraints in an ILP system with the
+ * This class is used to represent constraints in an ILP system with the
  * following form:
- * <quote><code>
+ * @code
  * 	c1*x1 + c2*x2 + ... + cn*xn (=|<|>|<=|>=) k
- * </code></quote>
- * c1, c2, ..., cn are called coefficients.<br>
- * x1, x2, ..., xn are called variables.<br>
- * c1*x1, c2*x2, ..., cn*xn are called factors.<br>
- * k is called the constant part.
+ * @endcode
+ * @li c1, c2, ..., cn are the coefficients of terms.<br>
+ * @li x1, x2, ..., xn are the variables of terms.<br>
+ * @li c1*x1, c2*x2, ..., cn*xn are called the terms.<br>
+ * @li k is the constant part.
+ *
+ * @ingroup ilp
  */
 
 /**
@@ -39,7 +41,8 @@ namespace otawa { namespace ilp {
 
 /**
  * @fn void Constraint::add(double coef, Var *var = 0);
- * Add a factor to the constraint.
+ * Add a term to the constraint to the left part of constraint. If var is null,
+ * sum the coefficient to the right part of the constraint.
  * @param coef	Coefficient of the factor.
  * @param var	Variable of the factor. When null, modify the constant.
  */

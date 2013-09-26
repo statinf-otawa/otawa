@@ -18,7 +18,7 @@ set(ast_la_SOURCES
 
 include_directories(".")
 
-BISON_TARGET(ast_parser ast_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ast_parser.cpp COMPILE_FLAGS --defines=ast_parser.h)
+BISON_TARGET(ast_parser ast_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ast_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/ast_parser.h)
 FLEX_TARGET(ast_lexer ast_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/ast_lexer.cc)
 ADD_FLEX_BISON_DEPENDENCY(ast_lexer ast_parser)
 list(APPEND ast_la_SOURCES

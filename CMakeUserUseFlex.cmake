@@ -30,8 +30,6 @@
 # where  <FlexTarget>  and <BisonTarget>  are  the  first parameters  of
 # respectively FLEX_TARGET and BISON_TARGET macros.
 #
-#	coucou
-#
 #  ====================================================================
 #  Example:
 #
@@ -39,7 +37,7 @@
 #   find_package(FLEX)
 #
 #   BISON_TARGET(MyParser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp)
-#   FLEX_TARGET(MyScanner lexer.l  ${CMAKE_CURRENT_BINARY_DIR}/lexer.cpp)
+#   FLEX_TARGET(MyScanner lexer.l  ${CMAKE_CURRENT_BIANRY_DIR}/lexer.cpp)
 #   ADD_FLEX_BISON_DEPENDENCY(MyScanner MyParser)
 #
 #   include_directories(${CMAKE_CURRENT_BINARY_DIR})
@@ -53,16 +51,45 @@
 #=============================================================================
 # Copyright 2009 Kitware, Inc.
 # Copyright 2006 Tristan Carel
+# Modified 2010 by Jon Siwek, backporting for CMake 2.6 compat
 #
-# Distributed under the OSI-approved BSD License (the "License");
-# see accompanying file Copyright.txt for details.
+# Distributed under the OSI-approved BSD License (the "License"):
+# CMake - Cross Platform Makefile Generator
+# Copyright 2000-2009 Kitware, Inc., Insight Software Consortium
+# All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# * Redistributions of source code must retain the above copyright
+#   notice, this list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the distribution.
+#
+# * Neither the names of Kitware, Inc., the Insight Software Consortium,
+#   nor the names of their contributors may be used to endorse or promote
+#   products derived from this software without specific prior written
+#   permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # This software is distributed WITHOUT ANY WARRANTY; without even the
 # implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 # See the License for more information.
 #=============================================================================
-# (To distribute this file outside of CMake, substitute the full
-#  License text for the above reference.)
 
 FIND_PROGRAM(FLEX_EXECUTABLE flex DOC "path to the flex executable")
 MARK_AS_ADVANCED(FLEX_EXECUTABLE)
@@ -109,14 +136,12 @@ IF(FLEX_EXECUTABLE)
       ENDIF()
     ENDIF()
 
-    ADD_CUSTOM_COMMAND(
-   		OUTPUT ${Output}
-      	DEPENDS ${Input}
-      	COMMENT "[FLEX][${Name}] Building scanner with flex ${FLEX_VERSION}"
-      	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      	COMMAND ${FLEX_EXECUTABLE} ARGS ${FLEX_EXECUTABLE_opts} ${Input} #-o${Output}
-      	COMMAND mv ARGS lex.yy.c ${Output}   
-    )
+    ADD_CUSTOM_COMMAND(OUTPUT ${Output}
+      COMMAND ${FLEX_EXECUTABLE}
+      ARGS ${FLEX_EXECUTABLE_opts} -t ${Input} > ${Output}
+      DEPENDS ${Input}
+      COMMENT "[FLEX][${Name}] Building scanner with flex ${FLEX_VERSION}"
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
     SET(FLEX_${Name}_DEFINED TRUE)
     SET(FLEX_${Name}_OUTPUTS ${Output})
@@ -147,9 +172,9 @@ IF(FLEX_EXECUTABLE)
 
 ENDIF(FLEX_EXECUTABLE)
 
-#INCLUDE(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)
-find_package(PackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(FLEX REQUIRED_VARS FLEX_EXECUTABLE
-                                       VERSION_VAR FLEX_VERSION)
+INCLUDE(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(FLEX FLEX_EXECUTABLE
+                                       FLEX_VERSION)
 
 # FindFLEX.cmake ends here
+

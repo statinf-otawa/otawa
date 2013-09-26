@@ -555,6 +555,8 @@ void FlowFactLoader::onLoop(
 	// put the max iteration
 	if(count >= 0) {
 		int old_max = path(MAX_ITERATION, inst);
+		cerr << "DEBUG: inst = " << inst << io::endl;
+		cerr << "DEBUG: old_max = " << old_max << io::endl;
 		int new_max = max(old_max, count);
 		path.ref(MAX_ITERATION, inst) = new_max;
 		if(logFor(LOG_BB))

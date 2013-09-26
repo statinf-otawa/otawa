@@ -17,11 +17,13 @@ set(libotawa_SOURCES
 	"PCGBuilder.cpp"
 	"app_Application.cpp"
 	"app_AddressOption.cpp"
-	"ilp_Var.cpp"
 	"ilp_Constraint.cpp"
-	"ilp_System.cpp"
+	"ilp_Expression.cpp"
 	"ilp_ILPPlugin.cpp"
+	"ilp_impl.cpp"
 	"ilp_Output.cpp"
+	"ilp_System.cpp"
+	"ilp_Var.cpp"
 	"proc_Processor.cpp"
 	"proc_CFGProcessor.cpp"
 	"proc_ContextualProcessor.cpp"
@@ -200,10 +202,10 @@ include_directories(".")
 #	FLEX_FILE("util_fft_lexer.ll")
 #	list(APPEND libotawa_SOURCES lex.${PREFIX}.c lex.${PREFIX}.h)
 #elseif(UNIX)
-	BISON_TARGET(ipet_parser ipet_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.cpp COMPILE_FLAGS --defines=ipet_parser.h)
+	BISON_TARGET(ipet_parser ipet_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.h)
 	FLEX_TARGET(ipet_lexer ipet_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/ipet_lexer.cc)
 	ADD_FLEX_BISON_DEPENDENCY(ipet_lexer ipet_parser)
-	BISON_TARGET(util_fft_parser util_fft_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/util_fft_parser.cpp COMPILE_FLAGS --defines=util_fft_parser.h)
+	BISON_TARGET(util_fft_parser util_fft_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/util_fft_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/util_fft_parser.h)
 	FLEX_TARGET(util_fft_lexer util_fft_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/util_fft_lexer.cc)
 	ADD_FLEX_BISON_DEPENDENCY(util_fft_lexer util_fft_parser)
 	list(APPEND libotawa_SOURCES

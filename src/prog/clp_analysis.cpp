@@ -60,12 +60,15 @@ using namespace otawa::util;
 // Debug output for instructions in the update function
 #define TRACEI(t)	//t
 // Debug output with only the values handled by an instruction
-#define TRACESI(t)	//t
+#define TRACESI(t)	t
 // Debug output with alarm of creation of T
 #define TRACEA(t)	//t
 // Debug only the join function
 #define TRACEJ(t)	//t
 //#define STATE_MULTILINE
+
+// alarm for "store to T"
+#define ALARM_STORE(t)	t
 
 // enable to load data from segments when load results with T
 #define DATA_LOADER
@@ -1207,6 +1210,7 @@ void State::join(const State& state) {
 */
 void State::widening(const State& state, int loopBound) {
 	TRACED(cerr << "widening(" << loopBound << "\n\t");
+	cerr << "widening(" << loopBound << "\n\t";
 	TRACED(print(cerr); cerr << ",\n\t";  state.print(cerr); cerr << "\n\t) = ");
 	
 	// test none states
@@ -1661,7 +1665,6 @@ public:
 				_nb_load++;
 				Value addrclp = get(*state, i.a());
 				TRACESI(cerr << "\t\t\tload(" << i.d() << ", " << addrclp << ") = ");
-				//int bitsize = i.b() * 8;
 				if (addrclp == Value::all){
 					set(*state, i.d(), addrclp);
 					_nb_load_top_addr++;
@@ -1706,14 +1709,15 @@ public:
 				if(get(*state, i.d()) == Value::all)
 						_nb_top_load++;
 			} break;
+
 		case sem::STORE: {
 				Value addrclp = get(*state, i.a());
-				//int bitsize = i.b() * 8;
 				TRACESI(cerr << "\t\t\tstore(" << get(*state, i.d()) << ", " << addrclp << ")\n");
 				if (addrclp == Value::all){
 					state->set(addrclp, get(*state, i.d()));
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
+					ALARM_STORE(cerr << "ALARM: " << i << " store to T\n");
 				} else if (addrclp.mtimes() < 42){
 					// unroll the clp (only if less than 42 values)
 					for(unsigned int m = 0; m <= addrclp.mtimes(); m++){
@@ -1724,10 +1728,7 @@ public:
 							_nb_top_store++;
 					}
 				} else {
-					TRACEU(cerr << "Warning: STORE to ");
-					TRACEU(addrclp.print(cerr));
-					TRACEU(cerr << " : too many values, set memory");
-					TRACEU(cerr << " to T.\n");
+					ALARM_STORE(cerr << "ALARM: " << i << " store to T because of too many values.\n");
 					state->set(Value::all, get(*state, i.d()));
 					_nb_store++; _nb_top_store++;
 					_nb_top_store_addr++;
