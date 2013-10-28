@@ -13,6 +13,7 @@ add_subdirectory(checksum)
 add_subdirectory(clp)
 add_subdirectory(dom)
 add_subdirectory(hard)
+add_subdirectory(slook)
 
 
 # to be checked

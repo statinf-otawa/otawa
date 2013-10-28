@@ -52,6 +52,7 @@ private:
 
 // GenericIdentifier<Symbol_t *>::print Specialization
 inline io::Output& operator<<(io::Output& out, Symbol *sym) { sym->print(out); return out; }
+io::Output& operator<<(io::Output& out, Symbol::kind_t k);
 
 } // otawa
 

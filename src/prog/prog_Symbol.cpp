@@ -118,6 +118,18 @@ void Symbol::print(elm::io::Output& out) const {
 }
 
 
+io::Output& operator<<(io::Output& out, Symbol::kind_t k) {
+	static cstring labels[] = {
+		"NONE",
+		"FUNCTION",
+		"LABEL",
+		"DATA"
+	};
+	out << labels[k];
+	return out;
+}
+
+
 /**
  * This property is used to attach a symbol to an instruction.
  *

@@ -40,7 +40,7 @@ include(CMakeUserUseFlex.cmake RESULT_VARIABLE FLEX)
 endif(WIN32)
 
 add_definitions(-DILP_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/ilp\")
-add_definitions(-DLOADER_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/loader\")
+add_definitions(-DLOADER_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/loader:${CMAKE_INSTALL_PREFIX}/lib/otawa/loader\")
 add_definitions(-DSIMULATOR_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/sim\")
 add_definitions(-DPROC_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/proc\")
 add_definitions(-DHAS_RELOCATION)

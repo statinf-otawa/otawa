@@ -31,6 +31,7 @@
 #include <elm/genstruct/DAGNode.h>
 #include <otawa/proc/Feature.h>
 #include <elm/deprecated.h>
+#include <elm/stree/SegmentBuilder.h>
 
 using namespace elm;
 
@@ -134,7 +135,7 @@ void SimState::setSP(const Address& addr) {
  * @param program	The program file creating this process.
  */
 Process::Process(Manager *manager, const PropList& props, File *program)
-: prog(0), man(manager) {
+: prog(0), man(manager), smap(0) {
 	addProps(props);
 	if(prog)
 		addFile(prog);
@@ -311,6 +312,8 @@ void Process::addFile(File *file) {
 Process::~Process(void) {
 	for(FileIter file(this); file; file++)
 		delete file;
+	if(smap)
+		delete smap;
 }
 
 
@@ -415,6 +418,31 @@ Symbol *Process::findSymbol(const String& name) {
 	}
 	return result;
 }
+
+
+/**
+ * Find a symbol by its address.
+ * @param address	Address of the looked symbol.
+ * @return			Found symbol or null.
+ */
+Symbol *Process::findSymbolAt(const Address& address) {
+	if(!smap) {
+		stree::SegmentBuilder<Address::offset_t, Symbol *> builder(0);
+		for(Process::FileIter file(this); file; file++)
+			for(File::SymIter sym(file); sym; sym++)
+				if(sym->size())
+					switch(sym->kind()) {
+					case Symbol::DATA:
+					case Symbol::FUNCTION:
+						builder.add(sym->address().offset(), sym->address().offset() + sym->size(), *sym);
+						break;
+					}
+		smap = new stree::Tree<Address::offset_t, Symbol *>();
+		builder.make(*smap);
+	}
+	return smap->get(address.offset(), 0);
+}
+
 
 
 /**

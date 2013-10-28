@@ -122,6 +122,8 @@ void CFGSaver::processCFG(WorkSpace *ws, CFG *cfg) {
 }
 
 void CFGSaver::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+	if(bb->isEnd())
+		return;
 
 	// generate the BB element
 	xom::Element *bb_elt = new xom::Element(BB_TAG);
@@ -133,6 +135,8 @@ void CFGSaver::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 	// generate the outing edges
 	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+		if(edge->kind() != Edge::CALL && edge->target()->isExit())
+			continue;
 		xom::Element *edge_elt = new xom::Element(EDGE_TAG);
 		set(edge_elt, KIND_ATT, Edge::kindName(edge->kind()));
 		set(edge_elt, SOURCE_ATT, id(edge->source()));

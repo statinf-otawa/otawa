@@ -29,6 +29,7 @@
 #include <otawa/instruction.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prog/features.h>
+#include <elm/stree/Tree.h>
 
 namespace elm { namespace xom {
 	class Element;
@@ -131,18 +132,6 @@ private:
 
 // Process class
 class Process: public PropList, public Lock {
-	Vector<File *> files;
-	Vector<AbstractFeature *> provided;
-	File *prog;
-	Manager *man;
-	void link(WorkSpace *ws);
-	void unlink(WorkSpace *ws);
-
-protected:
-	friend class WorkSpace;
-	void addFile(File *file);
-	void provide(AbstractFeature& feature);
-
 public:
 	Process(Manager *manager, const PropList& props = EMPTY, File *program = 0);
 	virtual ~Process(void);
@@ -160,6 +149,7 @@ public:
 	virtual Processor *decoder(void);
 	virtual Loader *loader(void) const;
 	Symbol *findSymbol(const string& name);
+	Symbol *findSymbolAt(const Address& address);
 	virtual Address initialSP(void) const;
 	virtual Inst *newNOp(Address addr = Address::null);
 	virtual void deleteNop(Inst *inst);
@@ -208,6 +198,19 @@ public:
 			: Vector<File *>::Iterator(iter) { }
 	};
 
+protected:
+	friend class WorkSpace;
+	void addFile(File *file);
+	void provide(AbstractFeature& feature);
+
+private:
+	void link(WorkSpace *ws);
+	void unlink(WorkSpace *ws);
+	Vector<File *> files;
+	Vector<AbstractFeature *> provided;
+	File *prog;
+	Manager *man;
+	stree::Tree<Address::offset_t, Symbol *> *smap;
 };
 
 
