@@ -67,9 +67,6 @@ using namespace otawa::util;
 #define TRACEJ(t)	//t
 //#define STATE_MULTILINE
 
-// alarm for "store to T"
-#define ALARM_STORE(t)	t
-
 // enable to load data from segments when load results with T
 #define DATA_LOADER
 
@@ -1016,6 +1013,28 @@ void State::clear(void) {
 	first.next = 0;
 }
 
+
+/**
+ * Set to T the memories on the given area.
+ * @param base	Base address of the area.
+ * @param size	Size of the area.
+ */
+void State::clear(t::uint32 base, t::uint32 size) {
+	if(first.val == Value::none)
+		return;
+	for(Node *prev = &first, *cur = first.getNext(), *next; cur; cur = next) {
+		next = cur->getNext();
+		if(base <= cur->getAddress() && cur->getAddress() < base + size) {
+			prev->next = 0;
+			delete cur;
+		}
+		else {
+			prev->next = cur;
+			prev = cur;
+		}
+	}
+}
+
 /**
  * Define a value into a register or the memory
  * @param addr a value of kind REG for a register, VAL for the memory.
@@ -1713,25 +1732,45 @@ public:
 		case sem::STORE: {
 				Value addrclp = get(*state, i.a());
 				TRACESI(cerr << "\t\t\tstore(" << get(*state, i.d()) << ", " << addrclp << ")\n");
-				if (addrclp == Value::all){
+
+				// store at T
+				if (addrclp == Value::all) {
 					state->set(addrclp, get(*state, i.d()));
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
-					ALARM_STORE(cerr << "ALARM: " << i << " store to T\n");
-				} else if (addrclp.mtimes() < 42){
-					// unroll the clp (only if less than 42 values)
+					cerr << "WARNING: " << i << " store to T\n";
+				}
+
+				// store all on the area (too many addresses)
+				else if (addrclp.mtimes() >= 42) {
+					_nb_store++;
+					_nb_top_store ++;
+					if(addrclp.mtimes() < UMAXn) {
+						state->set(Value::all, get(*state, i.d()));
+						state->clear(addrclp.start(), abs(addrclp.delta()) * addrclp.mtimes());
+					}
+					else {
+						Symbol *sym = this->_process->findSymbolAt(addrclp.lower());
+						if(!sym) {
+							_nb_top_store_addr++;
+							cerr << "WARNING: " << i << " store to T (unbounded address)\n";
+						}
+						else {
+							state->clear(sym->address().offset(), sym->size());
+							//cerr << "DEBUG: store to " << addrclp << " resolved as " << sym << io::endl;
+						}
+					}
+				}
+
+				// simple store
+				else {
+					_nb_store++;
+					if (get(*state, i.d()) == Value::all)
+						_nb_top_store++;
 					for(unsigned int m = 0; m <= addrclp.mtimes(); m++){
 						Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
 						state->set(addr, get(*state, i.d()));
-						_nb_store++;
-						if (get(*state, i.d()) == Value::all)
-							_nb_top_store++;
 					}
-				} else {
-					ALARM_STORE(cerr << "ALARM: " << i << " store to T because of too many values.\n");
-					state->set(Value::all, get(*state, i.d()));
-					_nb_store++; _nb_top_store++;
-					_nb_top_store_addr++;
 				}
 			} break;
 		case sem::SETP:

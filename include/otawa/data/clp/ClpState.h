@@ -76,6 +76,7 @@ namespace clp {
 		void copy(const State& state);
 		void clear(void);
 		void set(const Value& addr, const Value& val);
+		void clear(t::uint32 base, t::uint32 size);
 		bool equals(const State& state) const;
 		void join(const State& state);
 		void widening(const State& state, int loopBound);
