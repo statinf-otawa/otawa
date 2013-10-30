@@ -1,9 +1,0 @@
-lexer.cc
-Makefile
-Makefile.in
-oshell
-parser.cc
-parser.h
-.deps
-parser.tab.cc
-.libs
