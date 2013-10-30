@@ -195,7 +195,7 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 	                		break;
 						case cache::FIRST_MISS: {
 								BasicBlock *header = cache::CATEGORY_HEADER(lblock);
-								assert(header != NULL);
+								ASSERT(header != NULL);
 							
 								if (LINKED_BLOCKS(lblock) != NULL) {
 									/* linked l-blocks first-miss */

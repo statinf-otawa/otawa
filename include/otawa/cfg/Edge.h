@@ -54,7 +54,7 @@ public:
 	inline kind_t kind(void) const { return knd; };
 
 	inline CFG *calledCFG(void) const {
-		assert(knd == CALL);
+		ASSERT(knd == CALL);
 		if(!tgt)
 			return 0;
 		else

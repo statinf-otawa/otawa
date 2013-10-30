@@ -88,7 +88,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	// Initialization
 	//CFG *entry_cfg = ENTRY_CFG(fw);
 	System *system = SYSTEM(fw);
-	assert (system);
+	ASSERT (system);
 	const hard::Cache *cach = hard::CACHE_CONFIGURATION(fw)->instCache();
 	int dec = cach->blockBits();
 
@@ -100,7 +100,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 
 			// Link BB variable
 			ilp::Var *bbvar = VAR(lblock->bb());
-			assert(bbvar);
+			ASSERT(bbvar);
 			BB_VAR(lblock) = bbvar;
 
 			// Create x_hit variable
@@ -327,7 +327,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 /**
  */
 void CCGConstraintBuilder::processWorkSpace(WorkSpace *fw) {
-	assert(fw);
+	ASSERT(fw);
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 	if(!cache)
@@ -387,7 +387,7 @@ void CCGConstraintBuilder::addConstraintHeader(
 						cons32->addRight(1, VAR(preheader));
 						set = true;
 					}
-					assert(set);
+					ASSERT(set);
 				}
 				else
 					delete cons32;

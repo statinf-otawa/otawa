@@ -22,7 +22,7 @@
 #ifndef OTAWA_HARD_REGISTER_H
 #define OTAWA_HARD_REGISTER_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/string.h>
 #include <elm/genstruct/Table.h>
 #include <elm/io.h>

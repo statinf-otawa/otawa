@@ -22,7 +22,7 @@
 #ifndef OTAWA_GRAPH_GRAPH_H
 #define OTAWA_GRAPH_GRAPH_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/PreIterator.h>
 #include <elm/genstruct/FragTable.h>
 #include <elm/util/BitVector.h>
@@ -220,7 +220,7 @@ inline bool Node::isSuccOf(const Node *node) {
 
 // Node::Successor inlines
 inline Node::Successor::Successor(const Node *node): _edge(node->outs) {
-	assert(node);
+	ASSERT(node);
 }
 
 inline bool Node::Successor::ended(void) const {
@@ -246,7 +246,7 @@ inline void Node::Predecessor::next(void) {
 }
 
 inline Node::Predecessor::Predecessor(const Node *node): _edge(node->ins) {
-	assert(node);
+	ASSERT(node);
 }
 
 inline bool Node::Predecessor::ended(void) const {

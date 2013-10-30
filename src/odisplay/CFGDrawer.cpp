@@ -63,8 +63,8 @@ void CFGDrawer::make(){
 	if(_made){
 		return;
 	}
-	assert(_cfg);
-	assert(_graph);
+	ASSERT(_cfg);
+	ASSERT(_graph);
 
 	// Construct the Graph
 	HashTable<void*, Node*> map;

@@ -22,7 +22,7 @@
 #ifndef __EXEGRAPH_H__
 #define __EXEGRAPH_H__
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/graph/GenGraph.h>
 #include "Microprocessor.h"

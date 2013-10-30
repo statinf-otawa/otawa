@@ -359,7 +359,7 @@ void __unserialize(Unserializer& s, otawa::hard::Dispatch::type_t& v) {
 }
 
 void __serialize(Serializer& s, otawa::hard::Dispatch::type_t v) {
-	assert(0);
+	ASSERT(0);
 }
 
 } } // elm::serial2

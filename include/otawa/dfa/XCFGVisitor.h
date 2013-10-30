@@ -7,7 +7,7 @@
 #ifndef OTAWA_DFA_XCFG_VISITOR_H
 #define OTAWA_DFA_XCFG_VISITOR_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <elm/genstruct/FragTable.h>

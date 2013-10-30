@@ -45,7 +45,7 @@ using namespace elm::genstruct;
 										assert(cons_name);
 
 #define NEW_SPECIAL_CONSTRAINT(cons_name,op,val) 	Constraint *cons_name = system->newConstraint(Constraint::op, val); \
-													assert(cons_name);
+													ASSERT(cons_name);
 
 #define NEW_VAR_FROM_BUFF(var_name,buff_expr)	{ \
 													StringBuffer sb##var_name; \
@@ -53,12 +53,12 @@ using namespace elm::genstruct;
 													String s##var_name = sb##var_name.toString(); \
 													if(ht_vars.exists(s##var_name)) { \
 														var_name = ht_vars.get(s##var_name); \
-														assert(var_name); \
+														ASSERT(var_name); \
 													} \
 													else { \
 														if(this->explicit_mode) var_name = system->newVar(s##var_name); \
 														else var_name = system->newVar(String("")); \
-														assert(var_name); \
+														ASSERT(var_name); \
 														ht_vars.put(s##var_name,var_name); \
 													} \
 												}
@@ -96,7 +96,7 @@ using namespace elm::genstruct;
 void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, elm::genstruct::Vector<BCG*> &bcgs,elm::genstruct::HashTable<String ,ilp::Var*>& ht_vars ) {
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
-	assert(system);
+	ASSERT(system);
 
 	// creation des classes d'appartenance des branchements A PARTIR DU BHG (indirectement depuis les BCG)
 	HashTable<BasicBlock*,elm::genstruct::Vector<BCGNode*> > BB_classes;
@@ -126,7 +126,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	
 	for(CFG::BBIterator bb(cfg);bb;bb++) {
 		Var *Xb=ipet::VAR(bb);
-		assert(Xb);
+		ASSERT(Xb);
 
 		if(BB_classes.exists(bb)) {
 			elm::genstruct::Vector<BCGNode*> v = BB_classes.get(bb);
@@ -247,7 +247,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 #if C22_1b>0
 	for(CFG::BBIterator bb(cfg);bb;bb++) {
 		Var *Xb=ipet::VAR(bb);
-		assert(Xb);
+		ASSERT(Xb);
 		if(BB_classes.exists(bb)) {
 			elm::genstruct::Vector<BCGNode*> v = BB_classes.get(bb);
 			
@@ -294,7 +294,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 		
 		for(BCG::Iterator n(bcgs[ig]);n;n++) {
 			Var *Xb=ipet::VAR(getBB(n->getCorrespondingBBNumber(),cfg));
-			assert(Xb);
+			ASSERT(Xb);
 			if(n->isEntry()) {
 				Var *XbApiStart;
 				NEW_VAR_FROM_BUFF(XbApiStart,Xb->name() << "A" << BitSet_to_String(n->getHistory()) << "start");
@@ -317,7 +317,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	for(CFG::BBIterator bb(cfg);bb;bb++) {
 		if(!BB_classes.exists(bb)) {
 			Var *Xb=ipet::VAR(bb);
-			assert(Xb);
+			ASSERT(Xb);
 			elm::genstruct::Vector<BBHGNode*> v = BB_classes_BBHG.get(bb);
 			for(int i=0;i<v.length();i++) {
 				for(BasicBlock::OutIterator edge(bb);edge;edge++) {
@@ -346,7 +346,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 		if(BB_classes.exists(bb)) {
 			elm::genstruct::Vector<BCGNode*> v = BB_classes.get(bb);
 			Var *Xb=ipet::VAR(bb);
-			assert(Xb);
+			ASSERT(Xb);
 			for(int i = 0 ; i < v.length() ; i++ ) {
 				NEW_SPECIAL_CONSTRAINT(P21,LE,0);
 				NEW_SPECIAL_CONSTRAINT(P22,LE,0);
@@ -477,7 +477,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	for(CFG::BBIterator bb(cfg);bb;bb++) {
 		if(BB_classes_BBHG.exists(bb)) {
 			Var *Xb=ipet::VAR(bb);
-			assert(Xb);
+			ASSERT(Xb);
 			
 		
 			elm::genstruct::Vector<BBHGNode*> v=BB_classes_BBHG.get(bb);
@@ -511,7 +511,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg,HashTable<String ,Var*>& ht_vars) {
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
-	assert(system);
+	ASSERT(system);
 
 	
 	HashTable<BasicBlock*, elm::genstruct::Vector<BBHGNode*> > BB_classes;
@@ -533,7 +533,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg,Hash
 	for(CFG::BBIterator bb(cfg);bb;bb++) {
 		NEW_SPECIAL_CONSTRAINT(H1,EQ,0);
 		Var *Xb=ipet::VAR(bb);
-		assert(Xb);
+		ASSERT(Xb);
 		
 		H1->addLeft(1,Xb);
 		
@@ -562,7 +562,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg,Hash
 
 		if(BB_classes.exists(bb)) {
 			Var *Xb=ipet::VAR(bb);
-			assert(Xb);
+			ASSERT(Xb);
 
 			elm::genstruct::Vector<BBHGNode*> v=BB_classes.get(bb);
 	
@@ -581,7 +581,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg,Hash
 				for(BBHG::InIterator p(v[i]);p;p++) {
 
 					Var *Xp=ipet::VAR(p->source()->getCorrespondingBB());
-					assert(Xp);
+					ASSERT(Xp);
 					
 					Var *XpApi;
 					NEW_VAR_FROM_BUFF(XpApi,"e" << p->source()->getCorrespondingBB()->number() << "_" << bb->number() << "A" << BitSet_to_String(p->source()->getHistory()));
@@ -603,7 +603,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg,Hash
 	for(CFG::BBIterator bb(cfg);bb;bb++) {
 		if(BB_classes.exists(bb)) {
 			Var *Xb=ipet::VAR(bb);
-			assert(Xb);
+			ASSERT(Xb);
 
 			elm::genstruct::Vector<BBHGNode*> v=BB_classes.get(bb);
 	
@@ -619,7 +619,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg,Hash
 				}
 				for(BBHG::OutIterator s(v[i]);s;s++) {
 					Var *Xs=ipet::VAR(s->target()->getCorrespondingBB());
-					assert(Xs);
+					ASSERT(Xs);
 					
 					Var *XsApi;
 					NEW_VAR_FROM_BUFF(XsApi,"e" << bb->number() << "_" << s->target()->getCorrespondingBB()->number() << "A" << BitSet_to_String(v[i]->getHistory()));
@@ -654,7 +654,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg,Hash
 		for(BasicBlock::OutIterator edge(bb);edge;edge++) {
 			NEW_SPECIAL_CONSTRAINT(H2,EQ,0);
 			Var *eb_s=ipet::VAR(edge);
-			assert(eb_s);
+			ASSERT(eb_s);
 			H2->addLeft(1,eb_s);
 			
 			

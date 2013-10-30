@@ -99,7 +99,7 @@ void Graph::add(Node *node) {
  * @param node	Node to remove.
  */
 void Graph::remove(Node *node) {
-	assert(node->graph() == this);
+	ASSERT(node->graph() == this);
 	
 	// Remove from the vector
 	nodes.removeAt(node->idx);
@@ -122,7 +122,7 @@ void Graph::remove(graph::Edge *edge) {
 	// Remove edge from successor list
 	graph::Edge *prev = 0;
 	for(graph::Edge *cur = edge->src->outs; cur != edge; prev = cur, cur = cur->sedges)
-		assert(cur);
+		ASSERT(cur);
 	if(prev)
 		prev->sedges = edge->sedges;
 	else
@@ -131,7 +131,7 @@ void Graph::remove(graph::Edge *edge) {
 	// Remove edge from predecessor list
 	prev = 0;
 	for(graph::Edge *cur = edge->tgt->ins; cur != edge; prev = cur, cur = cur->tedges)
-		assert(cur);
+		ASSERT(cur);
 	if(prev)
 		prev->tedges = edge->tedges;
 	else

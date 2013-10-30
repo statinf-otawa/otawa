@@ -355,7 +355,7 @@ otawa::Inst *Process::decode(address_t addr) {
 	else {
 
 		// Compute the kind
-		assert(iss_table[inst->ident].category <= 26);
+		ASSERT(iss_table[inst->ident].category <= 26);
 		Inst::kind_t kind = kinds[iss_table[inst->ident].category];
 
 		// Build the instruction
@@ -456,23 +456,23 @@ address_t BranchInst::decodeTargetAddress(void) {
 	switch(inst->ident) {
 	case ID_BL_:
 	case ID_B_:
-		assert(inst->instrinput[0].type == PARAM_INT24_T);
+		ASSERT(inst->instrinput[0].type == PARAM_INT24_T);
 		target_addr = address() + (inst->instrinput[0].val.Int24 << 2);
 		break;
 	case ID_BLA_:
 	case ID_BA_:
-		assert(inst->instrinput[0].type == PARAM_INT24_T);
+		ASSERT(inst->instrinput[0].type == PARAM_INT24_T);
 		target_addr = (address_t)(inst->instrinput[0].val.Int24 << 2);
 		break;
 	case ID_BCL_:
 	case ID_BC_:
 		//_kind |= IS_COND;
-		assert(inst->instrinput[2].type == PARAM_INT14_T);
+		ASSERT(inst->instrinput[2].type == PARAM_INT14_T);
 		target_addr = address() + (inst->instrinput[2].val.Int14 << 2);
 		break;
 	case ID_BCLA_:
 	case ID_BCA_:
-		assert(inst->instrinput[2].type == PARAM_INT14_T);
+		ASSERT(inst->instrinput[2].type == PARAM_INT14_T);
 		target_addr = (address_t)(inst->instrinput[2].val.Int14 << 2);
 		break;
 	case ID_BCCTR_:
@@ -650,7 +650,7 @@ public:
 		case TO_BANK:
 			return ids[param->type].data.bank->get(param->val.uint8);
 		default:
-			assert(0);
+			ASSERT(0);
 			return 0;
 		}
 	}
@@ -736,11 +736,11 @@ void Process::decodeRegs(
 	case ID_CRANDC_CRB_CRB_CRB: case ID_CRORC_CRB_CRB_CRB:
 		RTRACE(cout << "set " << i << io::endl);
 		tab->set(j++, Platform::CR_bank[(31 - inst->instrinput[2].val.uint8) / 4]);
-		assert(tab->get(j - 1));
+		ASSERT(tab->get(j - 1));
 	case ID_MCRF_CRF_CRF:
 		RTRACE(cout << "set " << i << io::endl);
 		tab->set(j++, Platform::CR_bank[(31 - inst->instrinput[1].val.uint8) / 4]);
-		assert(tab->get(j - 1));
+		ASSERT(tab->get(j - 1));
 		break;
 	}
 
@@ -786,7 +786,7 @@ void Process::decodeRegs(
 	case ID_MCRXR_CRF: case ID_MCRFS_CRF_CRF:
 		RTRACE(cout << "set " << i << io::endl);
 		tab->set(j++, Platform::CR_bank[(31 - inst->instrinput[0].val.uint8) / 4]);
-		assert(tab->get(j - 1));
+		ASSERT(tab->get(j - 1));
 		break;
 	case ID_CRAND_CRB_CRB_CRB: case ID_CROR_CRB_CRB_CRB:
 	case ID_CRXOR_CRB_CRB_CRB: case ID_CRNAND_CRB_CRB_CRB:
@@ -795,10 +795,10 @@ void Process::decodeRegs(
 	case ID_MCRF_CRF_CRF:
 		RTRACE(cout << "set " << i << io::endl);
 		tab->set(j++, Platform::CR_bank[(31 - inst->instrinput[0].val.uint8) / 4]);
-		assert(tab->get(j - 1));
+		ASSERT(tab->get(j - 1));
 		break;
 	}
-	assert(j == cnt);
+	ASSERT(j == cnt);
 
 	// Free instruction
 	iss_free(inst);

@@ -7,7 +7,7 @@
 #ifndef OTAWA_CACHE_CCGCONSTRAINTBUILDER_H
 #define OTAWA_CACHE_CCGCONSTRAINTBUILDER_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/hard/Cache.h>
 

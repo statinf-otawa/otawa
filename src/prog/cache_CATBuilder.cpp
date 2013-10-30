@@ -72,8 +72,8 @@ Identifier<BasicBlock *> LOWERED_CATEGORY("otawa::LOWERED_CATEGORY", 0);
 /**
  */
 void CATBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
-	assert(fw);
-	assert(lbset);
+	ASSERT(fw);
+	ASSERT(lbset);
 
 	// Compute Abstract Cache States
 	const hard::Cache *cach = hard::CACHE_CONFIGURATION(fw)->instCache();
@@ -94,7 +94,7 @@ void CATBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 
 	// Build categories
 	ContextTree *ct = CONTEXT_TREE(fw);
-	assert(ct);
+	ASSERT(ct);
 	/*for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++)
 		CATBuilder::NODE(lblock) += new CATNode(lblock);*/
 	/*BitSet *virtuel =*/ buildLBLOCKSET(lbset, ct);
@@ -110,7 +110,7 @@ void CATBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 /**
  */
 void CATBuilder::processWorkSpace(WorkSpace *fw) {
-	assert(fw);
+	ASSERT(fw);
 
 	// Check the cache
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();

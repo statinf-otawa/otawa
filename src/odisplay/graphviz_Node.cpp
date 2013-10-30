@@ -163,7 +163,7 @@ bool GraphVizNode::printAttribute(elm::io::Output &out, const PropList::Iter& pr
 				out << "diamond";
 				break;
 			default:
-				assert(false);
+				ASSERT(false);
 		}
 		return true;
 	}

@@ -192,7 +192,7 @@ bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
  * Computes the domination relation.
  */
 void Dominance::processCFG(WorkSpace *ws, CFG *cfg) {
-	assert(cfg);
+	ASSERT(cfg);
 	DominanceProblem dp(cfg);
 	dfa::IterativeDFA<DominanceProblem, BitSet> engine(dp, *cfg);
 	engine.compute();
@@ -213,7 +213,7 @@ void Dominance::processCFG(WorkSpace *ws, CFG *cfg) {
  */
 void Dominance::markLoopHeaders(CFG *cfg/*,
 elm::MutableCollection<BasicBlock *> *headers*/) {
-	assert(cfg);
+	ASSERT(cfg);
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
 		for(BasicBlock::OutIterator edge(bb); edge; edge++)
 			if(edge->target()

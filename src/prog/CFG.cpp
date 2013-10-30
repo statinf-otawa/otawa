@@ -317,7 +317,7 @@ CFG::CFG(Segment *seg, BasicBlock *entry):
 	_seg(seg),
 	ent(entry)
 {
-	assert(seg && entry);
+	ASSERT(seg && entry);
 
 	// Get label
 	BasicBlock::InstIter inst(entry);

@@ -111,7 +111,7 @@ void FunCursor::outputAST(Output& out, AST *ast, int ind) {
 		outputAST(out, ast->toFor()->body(), ind);
 		break;
 	default:
-		assert(0);
+		ASSERT(0);
 	}
 }
 
@@ -179,7 +179,7 @@ void FunCursor::countAST(Output& out, AST *ast, int ind) {
 		countAST(out, ast->toFor()->body(), ind);
 		break;
 	default:
-		assert(0);
+		ASSERT(0);
 	}
 }
 

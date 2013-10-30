@@ -129,7 +129,7 @@ void VarAssignment::configure(const PropList& props) {
  * @return		Basic block variable name.
  */
 String VarAssignment::makeNodeVar(BasicBlock *bb, CFG *cfg) {
-	assert(bb);
+	ASSERT(bb);
 	StringBuffer buf;
 	buf << "x";
 	int num = bb->number();
@@ -151,7 +151,7 @@ String VarAssignment::makeNodeVar(BasicBlock *bb, CFG *cfg) {
  * @return		Basic block variable name.
  */
 String VarAssignment::makeEdgeVar(Edge *edge, CFG *cfg) {
-	assert(edge);
+	ASSERT(edge);
 	StringBuffer buf;
 	buf << "e";
 

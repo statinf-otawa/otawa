@@ -73,7 +73,7 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 	_cfg(cfg),
 	_parent(parent)
 {
-	assert(cfg);
+	ASSERT(cfg);
 	TRACE("Computing " << cfg->label());
 	
 	/*
@@ -127,8 +127,8 @@ ContextTree::ContextTree(BasicBlock *bb, CFG *cfg, ContextTree *parent):
 	_cfg(cfg),
 	_parent(parent)
 {
-	assert(bb);
-	assert(parent);
+	ASSERT(bb);
+	ASSERT(parent);
 }
 
 

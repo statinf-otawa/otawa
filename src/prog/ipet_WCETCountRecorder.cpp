@@ -5,7 +5,7 @@
  *	WCETCountRecorder class implementation.
  */
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/ipet/WCETCountRecorder.h>
 #include <otawa/ipet/WCETComputation.h>
 #include <otawa/ipet/IPET.h>
@@ -42,18 +42,18 @@ WCETCountRecorder::WCETCountRecorder(void)
 /**
  */
 void WCETCountRecorder::setup(WorkSpace *fw) {
-	assert(fw);
-	assert(!system);
+	ASSERT(fw);
+	ASSERT(!system);
 	system = SYSTEM(fw);
-	assert(system);
+	ASSERT(system);
 }
 
 
 /**
  */
 void WCETCountRecorder::cleanup(WorkSpace *fw) {
-	assert(fw);
-	assert(system);
+	ASSERT(fw);
+	ASSERT(system);
 	system = 0;
 }
 
@@ -61,9 +61,9 @@ void WCETCountRecorder::cleanup(WorkSpace *fw) {
 /**
  */
 void WCETCountRecorder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
-	assert(fw);
-	assert(cfg);
-	assert(bb);
+	ASSERT(fw);
+	ASSERT(cfg);
+	ASSERT(bb);
 
 	// Record BB var count
 	ilp::Var *var = VAR(bb);

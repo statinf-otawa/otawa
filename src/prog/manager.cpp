@@ -445,7 +445,7 @@ WorkSpace *Manager::loadXML(
  * @throws	LoadException	Error during load.
  */
 WorkSpace *Manager::load(xom::Element *elem, const PropList& props) {
-	assert(elem);
+	ASSERT(elem);
 	xom::Element *bin = elem->getFirstChildElement("binary");
 	if(!bin) {
 		resetVerbosity();

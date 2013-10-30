@@ -77,8 +77,8 @@ void BCGDrawer::make(){
 	if(_made){
 		return;
 	}
-	assert(_bcg);
-	assert(_graph);
+	ASSERT(_bcg);
+	ASSERT(_graph);
 	
 	// Construct the Graph
 	HashTable<void*, display::Node*> map;

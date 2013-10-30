@@ -7,7 +7,7 @@
 #ifndef OTAWA_HARD_PURECACHE_H
 #define OTAWA_HARD_PURECACHE_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/io.h>
 #include <elm/serial2/macros.h>
 #include <elm/genstruct/Vector.h>

@@ -76,8 +76,8 @@ void BHGDrawer::make(){
 	if(_made){
 		return;
 	}
-	assert(_bhg);
-	assert(_graph);
+	ASSERT(_bhg);
+	ASSERT(_graph);
 
 
 	// Construct the Graph

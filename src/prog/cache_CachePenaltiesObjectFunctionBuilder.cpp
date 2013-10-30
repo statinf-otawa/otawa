@@ -89,7 +89,7 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 			
 			// only one header: add to objective function: t_miss * x_(h, j)
 			if (!cache_penalty->header(1)){
-				assert(cache_penalty->header(0));
+				ASSERT(cache_penalty->header(0));
 				for (BasicBlock::InIterator h_edge(cache_penalty->header(0)) ; h_edge ; h_edge++)
 					if (!Dominance::isBackEdge(h_edge))
 						system->addObjectFunction(cache_penalty->penalty(CachePenalty::MISS), VAR(h_edge));

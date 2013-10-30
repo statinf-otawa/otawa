@@ -55,7 +55,7 @@ namespace otawa { namespace tsim {
  */
 BBPath::BBPath(BasicBlock *start)
 : _length(1), basicBlocks(1)/*, ending_state(0)*/{
-	assert(start);
+	ASSERT(start);
 	basicBlocks.add(start);
 }
 
@@ -67,7 +67,7 @@ BBPath::BBPath(BasicBlock *start)
  */
 BBPath::BBPath(Vector<BasicBlock*> *path)
 : _length(path->length()), basicBlocks(_length)/*, ending_state(0)*/{
-	assert(path);
+	ASSERT(path);
 	int l = path->length();
 	for(int i = 0 ; i < l ; i++){
 		basicBlocks.add(path->get(i));
@@ -111,7 +111,7 @@ BBPath *BBPath::getBBPath(BasicBlock *start){
  * @return BBPath corresponding to the given path
  */
 BBPath *BBPath::getBBPath(Vector<BasicBlock*> *path_vector){
-	assert(path_vector);
+	ASSERT(path_vector);
 	BasicBlock *bb = path_vector->get(0);
 	BBPath *bbpath;
 	TreePath<BasicBlock*,BBPath*> *tree = Delta::TREE(bb);
@@ -237,7 +237,7 @@ int BBPath::instructions_simulated = 0;
  * @return simulator state at the end of the sequence
  *
 State* BBPath::getEndingState(FrameWork *fw){
-	assert(false);
+	ASSERT(false);
 	return 0;
 //	bool simulator_state_is_clonable = true;
 //	if(!ending_state || fw != last_framework_used){
@@ -293,7 +293,7 @@ String BBPath::makeVarName(){
  * @return Var corresponding to this sequence
  */
 ilp::Var* BBPath::getVar(System *system, bool explicit_names){
-	assert(system);
+	ASSERT(system);
 	if(length() == 1){
 		return ipet::VAR(basicBlocks[0]);
 	}
@@ -317,9 +317,9 @@ ilp::Var* BBPath::getVar(System *system, bool explicit_names){
  * @return sub-path of current path, from <code>begin</code> to <code>end</code> indexes
  */
 BBPath* BBPath::sub(int begin, int end){
-	assert(begin > 0);
-	assert(end <= length());
-	assert(begin <= end);
+	ASSERT(begin > 0);
+	ASSERT(end <= length());
+	ASSERT(begin <= end);
 	Vector<BasicBlock*> bbs(end-begin+1);
 	for(int i = begin-1 ; i < end ; i++) {
 		bbs.add(basicBlocks[i]);

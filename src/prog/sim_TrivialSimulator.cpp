@@ -105,7 +105,7 @@ State *TrivialSimulator::instantiate(WorkSpace *fw, const PropList& props) {
 	if(USE_CONTROL(props))
 		throw Exception(*this, "USE_CONTROL property not supported");
 	int time = INSTRUCTION_TIME(props);
-	assert(time > 0);
+	ASSERT(time > 0);
 	return new TrivialState(fw, time);
 }
 

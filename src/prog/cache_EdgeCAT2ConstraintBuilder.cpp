@@ -150,7 +150,7 @@ void EdgeCAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
                 		break;
 					case FIRST_MISS: {
 							BasicBlock *header = CATEGORY_EDGE_HEADER(lblock)->get(i);
-							assert(header != NULL);
+							ASSERT(header != NULL);
 							/* standard first-miss */
 							/* Add constraint: xmiss <= sum of entry-edges of the loop */
 					 		Constraint *cons5a = system->newConstraint(Constraint::LE);

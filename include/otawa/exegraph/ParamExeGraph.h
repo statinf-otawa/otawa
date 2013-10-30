@@ -487,7 +487,7 @@ class ParamExeGraph : public ExeGraph<ParamExeNode> {
 	   }
 	 }
        }
-       assert(upper_bound);
+       ASSERT(upper_bound);
        QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, 
 							_last_stage_index - _empty_i, upper_bound, upper_bound_offset);
        _resources.add(new_resource);

@@ -21,7 +21,7 @@
 #ifndef OTAWA_TSIM_TIME_DELTA_OBJECT_FUNCTION_MODIFIER_H
 #define OTAWA_TSIM_TIME_DELTA_OBJECT_FUNCTION_MODIFIER_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/Feature.h>
 

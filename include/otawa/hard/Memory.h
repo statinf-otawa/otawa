@@ -22,7 +22,7 @@
 #ifndef OTAWA_HARD_MEMORY_H
 #define OTAWA_HARD_MEMORY_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/genstruct/Table.h>
 #include <elm/string.h>
 #include <otawa/base.h>

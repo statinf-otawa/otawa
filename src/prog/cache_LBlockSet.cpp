@@ -67,7 +67,7 @@ int LBlockSet::add(LBlock *node){
  * @param line	Cache row of the l-block set.
  */
 LBlockSet::LBlockSet(int line): linenumber(line), _cacheBlockCount(0) {
-	assert(line >= 0);
+	ASSERT(line >= 0);
 }
 
 

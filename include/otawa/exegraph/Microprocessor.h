@@ -227,7 +227,7 @@ class PipelineStage {
       }
     }
     cerr << "Unsupported instruction kind : " << io::hex(kind) << io::endl;
-    assert(0);
+    ASSERT(0);
   }
   class ExeNodeIterator: public elm::genstruct::Vector<N *>::Iterator {
   public:
@@ -395,7 +395,7 @@ Microprocessor<N>::Microprocessor(const hard::Processor *proc)
 	_operand_reading_stage(0),
 	_operand_producing_stage(0)
 {
-	assert(proc);
+	ASSERT(proc);
 	
 	// Create queues
 	Vector<Queue<N> *> queues;
@@ -440,7 +440,7 @@ Microprocessor<N>::Microprocessor(const hard::Processor *proc)
 			info.stage_category = PipelineStage<N>::COMMIT;
 			break;
  		default:
- 			assert(0);
+ 			ASSERT(0);
 		}
 
 		// Link the stages
@@ -484,7 +484,7 @@ Microprocessor<N>::Microprocessor(const hard::Processor *proc)
 						stage->addBinding(dispatch[j]->getType(), stage->getFUs()[k]);
 						found = true;
 					}
-				assert(found);
+				ASSERT(found);
 			}
 		}
 	}

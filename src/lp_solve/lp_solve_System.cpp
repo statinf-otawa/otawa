@@ -5,7 +5,7 @@
  *	src/lp_solve/LPSolveSystem.cpp -- LPSolveSystem class definition.
  */
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <stdio.h>
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
@@ -54,7 +54,7 @@ System::System(bool max): conss(0), cols(0), rows(0) {
  * @return	Mathcing lp_solve variable or null.
  */
 Var *System::findVar(ilp::Var *var) {
-	assert(var);
+	ASSERT(var);
 	return vars.get(var, 0);
 }
 
@@ -130,9 +130,9 @@ void System::addObjectFunction(double coef, ilp::Var *var) {
 
 // Overload
 double System::valueOf(ilp::Var *var) {
-	assert(var);
+	ASSERT(var);
 	Var *lvar = getVar(var);
-	assert(lvar);
+	ASSERT(lvar);
 	return lvar->value();
 }
 

@@ -533,7 +533,7 @@ namespace se{
 		
 		// replace other registers
 		for (int i=0; i < used_reg.length(); i++){
-			assert(used_reg[i].isConst());
+			ASSERT(used_reg[i].isConst());
 			if(used_reg[i].lower() != reg.lower()){
 				// get the actual value of used_reg[i]
 				clp::Value clpval = state.get(clp::Value(clp::REG, used_reg[i].lower()));
@@ -547,7 +547,7 @@ namespace se{
 		
 		// replace other memory refs
 		for (int i=0; i < used_addr.length(); i++){
-			assert(used_addr[i].isConst());
+			ASSERT(used_addr[i].isConst());
 			// get the actual value of used_addr[i] 
 			clp::Value clpval = state.get(used_addr[i]);
 			SEConst *val = new SEConst(clpval);
@@ -590,7 +590,7 @@ namespace se{
 		
 		// replace other memory refs
 		for (int i=0; i < used_addr.length(); i++){
-			assert(used_addr[i].isConst());
+			ASSERT(used_addr[i].isConst());
 			if (used_addr[i] != addr){
 				// get the actual value of used_addr[i] 
 				clp::Value clpval = state.get(used_addr[i]);

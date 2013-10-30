@@ -5,7 +5,7 @@
  *	src/lp_solve/lp_solve_Constraint.cpp -- lp_solve::Constraint class definition.
  */
 
-#include <assert.h>
+#include <ASSERT.h>
 #include "System.h"
 #include "Constraint.h"
 
@@ -39,13 +39,13 @@ Constraint::~Constraint(void) {
 
 // Overload
 double Constraint::coefficient(ilp::Var *var) const {
-	assert(var);
+	ASSERT(var);
 	Var *lvar = sys->getVar(var);
-	assert(lvar);
+	ASSERT(lvar);
 	for(Factor *fact = facts; fact; fact = fact->next())
 		if(fact->variable() == lvar)
 			return fact->coefficient();
-	assert(false);
+	ASSERT(false);
 }
 
 // Overload
@@ -80,7 +80,7 @@ void Constraint::add(double coef, ilp::Var *var) {
  * @param row	Row to fill.
  */
 void Constraint::fillRow(double *row) {
-	assert(row);
+	ASSERT(row);
 	for(Factor *fact = facts; fact; fact = fact->next())
 		row[fact->variable()->column()] = fact->coefficient();
 }
@@ -91,7 +91,7 @@ void Constraint::fillRow(double *row) {
  * @param row	Row to reset.
  */
 void Constraint::resetRow(double *row) {
-	assert(row);
+	ASSERT(row);
 	for(Factor *fact = facts; fact; fact = fact->next())
 		row[fact->variable()->column()] = 0;
 }

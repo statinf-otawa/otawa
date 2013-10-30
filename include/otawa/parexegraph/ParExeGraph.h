@@ -409,7 +409,7 @@ namespace otawa {
 	public:
 		inline ParExeEdge(ParExeNode *source, ParExeNode *target, edge_type_t type, int latency=0)
 			: ParExeGraph::GenEdge(source, target), _type(type), _latency(latency) {
-			assert(source!=target);
+			ASSERT(source!=target);
 			elm::StringBuffer _buffer;
 			_buffer << ParExeGraph::GenEdge::source()->name() << "->" ;         
 			_buffer << ParExeGraph::GenEdge::target()->name();

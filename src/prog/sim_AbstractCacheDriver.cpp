@@ -70,8 +70,8 @@ CacheDriver *AbstractCacheDriver::lookup(const hard::Cache *cache) {
  */
 AbstractCacheDriver::AbstractCacheDriver(const hard::Cache *cache)
 : _cache(cache), lines(new tag_t[cache->blockCount()]) {
-	assert(cache);
-	assert(lines);
+	ASSERT(cache);
+	ASSERT(lines);
 }
 
 
@@ -164,7 +164,7 @@ void DirectMappedCacheDriver::replace(tag_t tag, int num, tag_t *line) {
  */
 DirectMappedCacheDriver::DirectMappedCacheDriver(const hard::Cache *cache)
 : AbstractCacheDriver(cache) {
-	assert(cache->wayCount() == 1);
+	ASSERT(cache->wayCount() == 1);
 }
 
 

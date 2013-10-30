@@ -21,7 +21,7 @@
 #ifndef OTAWA_ETS_TRIVIALASTBLOCKTIME_H
 #define OTAWA_ETS_TRIVIALASTBLOCKTIME_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/ast/ASTProcessor.h>
 
 namespace otawa { namespace ets {

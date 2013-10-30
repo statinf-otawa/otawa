@@ -5,7 +5,7 @@
  * prog/util_Edge.cpp -- Edge class implementation.
  */
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/util/Graph.h>
 #include <elm/io.h>
 

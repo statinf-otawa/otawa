@@ -7,7 +7,7 @@
 #ifndef OTAWA_PROG_PROG_ITEM_H
 #define OTAWA_PROG_PROG_ITEM_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/string.h>
 #include <elm/inhstruct/DLList.h>
 #include <otawa/base.h>

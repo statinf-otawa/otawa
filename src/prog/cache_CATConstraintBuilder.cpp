@@ -94,14 +94,14 @@ CATConstraintBuilder::CATConstraintBuilder(void)
 void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 
 	ilp::System *system = SYSTEM(fw);
-	assert (system);
+	ASSERT (system);
 
 	// cache configuration
 	const hard::Cache *cach = hard::CACHE_CONFIGURATION(fw)->instCache();
 
 	// LBlock initialization
 	ContextTree *ct = CONTEXT_TREE(fw);
-	assert(ct);
+	ASSERT(ct);
 	for(LBlockSet::Iterator lblock(*id); lblock; lblock++)
 		NODE(lblock).add(new CATNode(lblock));
 	buildLBLOCKSET(id, ct);
@@ -249,7 +249,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 
 
 void CATConstraintBuilder::processWorkSpace(WorkSpace *fw) {
-	assert(fw);
+	ASSERT(fw);
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 

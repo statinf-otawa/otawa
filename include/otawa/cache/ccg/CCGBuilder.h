@@ -7,7 +7,7 @@
 #ifndef OTAWA_CACHE_CCGBUILDER_H
 #define OTAWA_CACHE_CCGBUILDER_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/genstruct/Table.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Feature.h>

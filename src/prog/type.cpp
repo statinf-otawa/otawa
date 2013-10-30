@@ -5,7 +5,7 @@
  *	type.h -- type class implementation.
  */
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/string.h>
 #include <otawa/type.h>
  
@@ -121,7 +121,7 @@ elm::CString _base_displays[] = {
  * @return		Matching base type value.
  */
 const BaseType& Type::getBaseType(base_t type) {
-	assert(type >= 0 && type < BASE_TOP);
+	ASSERT(type >= 0 && type < BASE_TOP);
 	return *_base_types[type];
 };
 

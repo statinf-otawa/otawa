@@ -69,7 +69,7 @@ void GraphVizItem::printOthersAttributes(elm::io::Output& out){
 bool GraphVizItem::printAttribute(elm::io::Output &out, const PropList::Iter& prop){
 	if(prop == DEFAULT){
 		AbstractIdentifier *id = INCLUDE(prop);
-		assert(id == &INCLUDE || id == &EXCLUDE);
+		ASSERT(id == &INCLUDE || id == &EXCLUDE);
 		if(id == &INCLUDE)
 			_defaultInclude = true;
 		else if(id == &EXCLUDE)

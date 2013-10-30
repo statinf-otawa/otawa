@@ -8,7 +8,7 @@
 #define OTAWA_CACHE_CATCONSTRAINTBUILDER_H
 
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Feature.h>
 

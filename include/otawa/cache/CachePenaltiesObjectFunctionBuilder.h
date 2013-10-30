@@ -7,7 +7,7 @@
 #ifndef OTAWA_IPET_CACHEPENALTIES_OBJECTFUNCTIONBUILDER_H
 #define OTAWA_IPET_CACHEPENALTIES_OBJECTFUNCTIONBUILDER_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/cache/cat2/CachePenalty.h>

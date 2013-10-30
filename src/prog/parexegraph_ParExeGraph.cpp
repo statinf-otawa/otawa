@@ -382,10 +382,10 @@ void ParExeNode::buildContendersMasks(){
     for (elm::BitVector::OneIterator one(*_possible_contenders) ; one ; one++) {
 		if (_contenders_masks_list.isEmpty()) {
 			elm::BitVector *mask = new elm::BitVector(_possible_contenders->size());
-			assert(mask->size() == _possible_contenders->size());
+			ASSERT(mask->size() == _possible_contenders->size());
 			_contenders_masks_list.addLast(mask);
 			mask = new elm::BitVector(_possible_contenders->size());
-			assert(mask->size() == _possible_contenders->size());
+			ASSERT(mask->size() == _possible_contenders->size());
 			mask->set(one.item());
 			_contenders_masks_list.addLast(mask);
 		}
@@ -393,9 +393,9 @@ void ParExeNode::buildContendersMasks(){
 			elm::genstruct::DLList<elm::BitVector *> new_masks;
 			for (elm::genstruct::DLList<elm::BitVector *>::Iterator mask(_contenders_masks_list) ;
 				 mask ; mask++) {
-				assert(mask->size() == _possible_contenders->size());
+				ASSERT(mask->size() == _possible_contenders->size());
 				elm::BitVector *new_mask = new elm::BitVector(**mask);
-				assert(new_mask->size() == _possible_contenders->size());
+				ASSERT(new_mask->size() == _possible_contenders->size());
 				new_mask->set(one.item());
 				new_masks.addLast(new_mask);
 			}
@@ -485,7 +485,7 @@ void ParExeGraph::createResources(){
 					}
 				}
 			}
-			assert(upper_bound);
+			ASSERT(upper_bound);
 
 			// build the queue resource
 			QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound);
@@ -917,7 +917,7 @@ void ParExeGraph::addEdgesForQueues(){
 			int size = queue->size();
 			prod_stage = queue->fillingStage();
 			for (int i=0 ; i<stage->numNodes() - size ; i++) {
-				assert(i+size < prod_stage->numNodes());
+				ASSERT(i+size < prod_stage->numNodes());
 				new ParExeEdge(stage->node(i), prod_stage->node(i + size), ParExeEdge::SLASHED);
 			}
 		}

@@ -22,7 +22,7 @@
 #ifndef OTAWA_IPET_BASIC_CONSTRAINTS_BUILDER_H
 #define OTAWA_IPET_BASIC_CONSTRAINTS_BUILDER_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/ipet/features.h>
 #include <otawa/ilp/Constraint.h>

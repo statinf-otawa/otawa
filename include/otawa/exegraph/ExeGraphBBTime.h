@@ -23,7 +23,7 @@
 #ifndef EXECUTIONGRAPH_BBTIME_H
 #define EXECUTIONGRAPH_BBTIME_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/proc/BBProcessor.h>
 #include "ExeGraph.h"
 #include <elm/genstruct/DLList.h>

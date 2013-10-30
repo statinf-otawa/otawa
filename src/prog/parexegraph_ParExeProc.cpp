@@ -26,7 +26,7 @@
 using namespace otawa;
 
  ParExeProc::ParExeProc(const hard::Processor *proc) {
-    assert(proc);
+	 ASSERT(proc);
 
     // Create queues
     const Table<hard::Queue *>& oqueues = proc->getQueues(); 
@@ -57,7 +57,7 @@ using namespace otawa;
 	category = ParExeStage::COMMIT;
 	break;
       default:
-	assert(0);
+    	  ASSERT(0);
       }
       // Link the stages
       ParExeQueue *source_queue = NULL;
@@ -95,7 +95,7 @@ using namespace otawa;
 		stage->addBinding(dispatch[j]->getType(), stage->fu(k));
 	      found = true;
 	    }
-	  assert(found);
+	  ASSERT(found);
 	}
       }
     }

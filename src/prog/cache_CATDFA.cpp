@@ -5,7 +5,7 @@
  *	otawa/include/otawa/util/DFA.h -- DFA class implementation.
  */
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/cache/categorisation/CATDFA.h>
 #include <otawa/cfg.h>
 #include <otawa/instruction.h>

@@ -22,7 +22,7 @@
 #ifndef OTAWA_CACHE_LBLOCKSET_H
 #define OTAWA_CACHE_LBLOCKSET_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/properties.h>
 #include <otawa/instruction.h>
 #include <elm/genstruct/Vector.h>

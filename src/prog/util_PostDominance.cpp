@@ -141,7 +141,7 @@ bool PostDominance::postDominates(BasicBlock *bb1, BasicBlock *bb2) {
  * Computes the postdomination relation.
  */
 void PostDominance::processCFG(WorkSpace *fw, CFG *cfg) {
-	assert(cfg);
+	ASSERT(cfg);
 	PostDominanceProblem dp(cfg);
 	dfa::IterativeDFA<PostDominanceProblem, BitSet, Successor> engine(dp, *cfg);
 	engine.compute();

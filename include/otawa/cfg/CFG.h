@@ -22,7 +22,7 @@
 #ifndef OTAWA_CFG_CFG_H
 #define OTAWA_CFG_CFG_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/genstruct/FragTable.h>
 #include <otawa/cfg/BasicBlock.h>
 

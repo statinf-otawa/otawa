@@ -5,7 +5,7 @@
  *	CFGNormalizer class implementation
  */
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/util/CFGNormalizer.h>
 #include <otawa/cfg.h>
 #include <elm/genstruct/Vector.h>

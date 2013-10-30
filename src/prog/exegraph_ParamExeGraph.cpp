@@ -98,8 +98,8 @@ int ParamExeGraph::Delta(ParamExeNode *a, Resource *res) {
 		  c = ((InternalConflictResource *) *ic)->index();
 		}
 	      }
-	      assert(c != -1);
-	      assert(lp->e(c));
+	      ASSERT(c != -1);
+	      ASSERT(lp->e(c));
 	      if (lp->d(c) > tmp2)
 		tmp2 = lp->d(c);
 
@@ -203,7 +203,7 @@ void ParamExeGraph::analyzeContentions() {
 
   for(Microprocessor<ParamExeNode>::PipelineIterator st(_microprocessor); st; st++){
     if (st->orderPolicy() == PipelineStage<ParamExeNode>::OUT_OF_ORDER) {
-      assert(st->usesFunctionalUnits());
+    	ASSERT(st->usesFunctionalUnits());
       for(FunctionalUnitIterator fu(st); fu; fu++) {
 	PipelineStage<ParamExeNode>* stage = fu->firstStage();
 	for (StageNodeIterator node(stage) ; node ; node++) {
@@ -283,10 +283,10 @@ void ParamExeNode::buildContendersMasks(){
   for (elm::BitVector::OneIterator one(*_possible_contenders) ; one ; one++) {
     if (_contenders_masks_list.isEmpty()) {
       elm::BitVector *mask = new elm::BitVector(_possible_contenders->size());
-      assert(mask->size() == _possible_contenders->size());
+      ASSERT(mask->size() == _possible_contenders->size());
       _contenders_masks_list.addLast(mask);
       mask = new elm::BitVector(_possible_contenders->size());
-      assert(mask->size() == _possible_contenders->size());
+      ASSERT(mask->size() == _possible_contenders->size());
       mask->set(one.item());
       _contenders_masks_list.addLast(mask);
     }
@@ -294,9 +294,9 @@ void ParamExeNode::buildContendersMasks(){
       elm::genstruct::SLList<elm::BitVector *> new_masks;
       for (elm::genstruct::SLList<elm::BitVector *>::Iterator mask(_contenders_masks_list) ; 
 	   mask ; mask++) {
-	assert(mask->size() == _possible_contenders->size());
+    	  ASSERT(mask->size() == _possible_contenders->size());
 	elm::BitVector *new_mask = new elm::BitVector(**mask);
-	assert(new_mask->size() == _possible_contenders->size());
+	ASSERT(new_mask->size() == _possible_contenders->size());
 	new_mask->set(one.item());
 	new_masks.addLast(new_mask);
       }

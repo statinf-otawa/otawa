@@ -43,10 +43,10 @@ using namespace elm::genstruct;
 
 /////// CREATION DE CONTRAINTES ET VARIABLES
 #define NEW_BASIC_CONSTRAINT(cons_name) Constraint *cons_name = system->newConstraint(Constraint::EQ); \
-										assert(cons_name);
+		ASSERT(cons_name);
 
 #define NEW_SPECIAL_CONSTRAINT(cons_name,op,val) 	Constraint *cons_name = system->newConstraint(Constraint::op, val); \
-													assert(cons_name);
+		ASSERT(cons_name);
 
 #define NEW_VAR_FROM_BUFF(var_name,buff_expr)	{ \
 													StringBuffer sb##var_name; \
@@ -54,12 +54,12 @@ using namespace elm::genstruct;
 													String s##var_name = sb##var_name.toString(); \
 													if(ht_vars.exists(s##var_name)) { \
 														var_name = ht_vars.get(s##var_name); \
-														assert(var_name); \
+														ASSERT(var_name); \
 													} \
 													else { \
 														if(this->explicit_mode) var_name = system->newVar(s##var_name); \
 														else var_name = system->newVar(String("")); \
-														assert(var_name); \
+														ASSERT(var_name); \
 														ht_vars.put(s##var_name,var_name); \
 													} \
 												}
@@ -97,7 +97,7 @@ using namespace elm::genstruct;
 void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstruct::Vector<BCG*> &graphs ,	HashTable<String ,Var*>& ht_vars) {
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
-	assert(system);
+	ASSERT(system);
 
 	HashTable<BasicBlock*,elm::genstruct::Vector<BCGNode*> > classes_of_BB;
 
@@ -131,9 +131,9 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstr
 		for(BCG::Iterator n(bcg);n;n++) {
 			// Recuperation de la variable associee au BB
 			BasicBlock* bb = getBB(n->getCorrespondingBBNumber(),cfg);
-			assert(bb);
+			ASSERT(bb);
 			Var *Xi = ipet::VAR(bb);
-			assert(Xi);
+			ASSERT(Xi);
 
 			if(n->isEntry()) {
 				Var *C00s, *C01s, *C10s, *C11s;
@@ -169,7 +169,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstr
 	for(CFG::BBIterator bb(cfg);bb;bb++) {
 		// Recuperation de la variable associee au BB
 		Var *Xi = ipet::VAR(bb);
-		assert(Xi);
+		ASSERT(Xi);
 
 #if G_1 > 0
 		{
@@ -224,7 +224,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstr
 					for(BasicBlock::OutIterator edge(bb); edge ; edge++) {
 						if(edge->kind() == t ) {
 							eb = ipet::VAR(edge);
-							assert(edge);
+							ASSERT(edge);
 							break;
 						}
 					}
@@ -297,7 +297,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstr
 								Var *C00,*C01,*C10,*C11;
 								BasicBlock* bb_pred=getBB(p->source()->getCorrespondingBBNumber(), cfg);
 								Var *Xj = ipet::VAR( bb_pred);
-								assert(Xj);
+								ASSERT(Xj);
 								NEW_VAR_FROM_BUFF(C00,Xj->name() << "A" << BitSet_to_String(br->getHistory()) << "C00S" << br->getCorrespondingBBNumber());
 								NEW_VAR_FROM_BUFF(C01,Xj->name() << "A" << BitSet_to_String(br->getHistory()) << "C01S" << br->getCorrespondingBBNumber());
 								NEW_VAR_FROM_BUFF(C10,Xj->name() << "A" << BitSet_to_String(br->getHistory()) << "C10S" << br->getCorrespondingBBNumber());
@@ -501,7 +501,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstr
 								
 								BasicBlock* bb_pred=getBB(p->source()->getCorrespondingBBNumber(), cfg);
 								Var *Xj = ipet::VAR( bb_pred);
-								assert(Xj);
+								ASSERT(Xj);
 								
 								p->source()->isSuccessor(br,withT,withNT);
 								if(withT) {
@@ -689,7 +689,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstr
 void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstruct::Vector<BCG*> &graphs ,	HashTable<String ,Var*>& ht_vars) {
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
-	assert(system);
+	ASSERT(system);
 
 	HashTable<BasicBlock*,elm::genstruct::Vector<BCGNode*> > classes_of_BB;
 
@@ -713,7 +713,7 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 	for(CFG::BBIterator bb(cfg);bb;bb++) {
 		if(classes_of_BB.exists(bb)) {
 			Var *Xi = ipet::VAR(bb);
-			assert(Xi);
+			ASSERT(Xi);
 			
 	
 			NEW_SPECIAL_CONSTRAINT(H11,EQ,0);
@@ -749,7 +749,7 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 	for(CFG::BBIterator bb(cfg);bb;bb++) {
 		if(BB_classes.exists(bb)) {
 			Var *Xi = ipet::VAR(bb);
-			assert(Xi);
+			ASSERT(Xi);
 			
 	
 			for(BasicBlock::OutIterator edge(bb);edge;edge++) {
@@ -788,7 +788,7 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 	
 	for(BHG::Iterator node(bhg) ; node ; node++ ) {
 		Var *Xi = ipet::VAR( node->getCorrespondingBB());
-		assert(Xi);
+		ASSERT(Xi);
 
 		/////////
 		// H4.1:
@@ -802,7 +802,7 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 //			
 //			for(BHG::Predecessor p(node);p;p++) {
 //				Var *Xj = ipet::VAR( p->getCorrespondingBB());
-//				assert(Xj);
+//				ASSERT(Xj);
 //				
 //					Var* XsbApi;
 //					NEW_VAR_FROM_BUFF(XsbApi,Xj->name() << "A" << BitSet_to_String(p->getHistory()));
@@ -823,7 +823,7 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 			
 			for(BHG::InIterator p(node);p;p++) {
 				Var *Xj = ipet::VAR( p->source()->getCorrespondingBB());
-				assert(Xj);
+				ASSERT(Xj);
 					int d = (p->isTaken())?1:0;
 					Var* XsbApi;
 					NEW_VAR_FROM_BUFF(XsbApi,Xj->name() << "A" << BitSet_to_String(p->source()->getHistory()) << "D" << d);
@@ -850,7 +850,7 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 			
 			for(BHG::OutIterator s(node);s;s++) {
 				Var *Xj = ipet::VAR( s->target()->getCorrespondingBB());
-				assert(Xj);
+				ASSERT(Xj);
 				int d = (s->isTaken())?1:0;
 				
 				Var* XsbApi;

@@ -30,7 +30,7 @@ public:
 
 // BasicBlockDriver inlines
 inline BasicBlockDriver::BasicBlockDriver(BasicBlock *bb): inst(bb) {
-	assert(bb);
+	ASSERT(bb);
 }
 
 } } // otawa::sim

@@ -7,7 +7,7 @@
 #ifndef OTAWA_EXP_NODE_H
 #define OTAWA_EXP_NODE_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/ilp.h>
 
 namespace otawa {
@@ -62,12 +62,12 @@ inline ExpNode::ExpNode(double cst): knd(CST) {
 }
 
 inline ExpNode::ExpNode(kind_t kind, ExpNode *arg): knd(kind) {
-	assert(knd == POS || knd == NEG);
+	ASSERT(knd == POS || knd == NEG);
 	args.una = arg;
 }
 
 inline ExpNode::ExpNode(kind_t kind, ExpNode *arg1, ExpNode *arg2): knd(kind) {
-	assert(knd >= ADD);
+	ASSERT(knd >= ADD);
 	args.bin.arg1 = arg1;
 	args.bin.arg2 = arg2;
 }
@@ -77,27 +77,27 @@ inline ExpNode::kind_t ExpNode::kind(void) const {
 }
 	
 inline ilp::Var *ExpNode::var(void) const {
-	assert(knd == VAR);
+	ASSERT(knd == VAR);
 	return args.var;
 }
 
 inline double ExpNode::cst(void) const {
-	assert(knd == CST);
+	ASSERT(knd == CST);
 	return args.cst;
 }
 
 inline ExpNode *ExpNode::arg(void) const {
-	assert(knd == POS || knd == NEG);
+	ASSERT(knd == POS || knd == NEG);
 	return args.una;
 }
 
 inline ExpNode *ExpNode::arg1(void) const {
-	assert(knd >= ADD);
+	ASSERT(knd >= ADD);
 	return args.bin.arg1;
 }
 
 inline ExpNode *ExpNode::arg2(void) const {
-	assert(knd >= ADD);
+	ASSERT(knd >= ADD);
 	return args.bin.arg2;
 }
 

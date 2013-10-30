@@ -135,8 +135,8 @@ int size):
 	_bank(0),
 	pfnum(-1)
 {
-	assert(kind != NONE);
-	assert(size > 0);
+	ASSERT(kind != NONE);
+	ASSERT(size > 0);
 }
 
 

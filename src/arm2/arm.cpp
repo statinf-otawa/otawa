@@ -392,7 +392,7 @@ public:
 		for (int i = 0; i < infos.sectnum; i++) {
 			gel_sect_info_t infos;
 			gel_sect_t *sect = gel_getsectbyidx(_file, i);
-			assert(sect);
+			ASSERT(sect);
 			gel_sect_infos(sect, &infos);
 			if(infos.vaddr != 0 && infos.size != 0) {
 				int flags = 0;

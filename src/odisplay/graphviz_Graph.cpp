@@ -99,15 +99,15 @@ Edge *GraphVizGraph::newEdge(
 	const PropList& style,
 	const PropList& props)
 {
-	assert(source);
-	assert(target);
+	ASSERT(source);
+	ASSERT(target);
 	GraphVizNode *src;
 	GraphVizNode *dest;
 	GraphVizEdge *edge;
 	src = dynamic_cast<GraphVizNode*>(source);
 	dest = dynamic_cast<GraphVizNode*>(target);
-	assert(src);
-	assert(dest);
+	ASSERT(src);
+	ASSERT(dest);
 	edge = new GraphVizEdge(src, dest);
 	edge->addProps(_default_edge_style);
 	edge->addProps(style);

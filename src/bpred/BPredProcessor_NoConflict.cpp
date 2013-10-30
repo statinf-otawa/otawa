@@ -33,17 +33,17 @@ namespace otawa { namespace bpred {
 
 /////// CREATION DE CONTRAINTES ET VARIABLES
 #define NEW_BASIC_CONSTRAINT(cons_name) Constraint *cons_name = system->newConstraint(Constraint::EQ); \
-										assert(cons_name);
+		ASSERT(cons_name);
 
 #define NEW_SPECIAL_CONSTRAINT(cons_name,op,val) 	Constraint *cons_name = system->newConstraint(Constraint::op, val); \
-													assert(cons_name);
+		ASSERT(cons_name);
 
 #define NEW_VAR_FROM_BUFF(var_name,buff_expr)	{StringBuffer sb##var_name; \
 												sb##var_name << buff_expr; \
 												String s##var_name = sb##var_name.toString(); \
 												if(this->explicit_mode) var_name = system->newVar(s##var_name); \
 												else var_name = system->newVar(String("")); \
-												assert(var_name);}
+												ASSERT(var_name);}
 ////////////////////////////////////////////
 
 
@@ -114,7 +114,7 @@ void BPredProcessor::CS__NoConflict_2bCounter(WorkSpace* fw,BasicBlock* bb) {
 				}
 				else if(edge->kind() == Edge::NOT_TAKEN) {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
 					EdgeNT = ipet::VAR(edge);
-					assert(EdgeNT);
+					ASSERT(EdgeNT);
 					//					NEW_VAR_FROM_BUFF(EdgeNT, 	"e" << bb->number() << "_" << edge->target()->number());
 				}
 			}

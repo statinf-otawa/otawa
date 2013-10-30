@@ -454,7 +454,7 @@ void FFOutput::processCFG(WorkSpace *ws, CFG *cfg) {
  * @param ctree	Function context tree node.
  */
 void FFOutput::scanFun(ContextTree *ctree) {
-	assert(ctree);
+	ASSERT(ctree);
 	
 	// Display header
 	if(checkLoop(ctree)) {
@@ -483,7 +483,7 @@ void FFOutput::scanFun(ContextTree *ctree) {
  * @param indent	Current indentation.
  */
 void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
-	assert(ctree);
+	ASSERT(ctree);
 	
 	for(ContextTree::ChildrenIterator child(ctree); child; child++) {
 		ASSERT(child->kind() != ContextTree::FUNCTION);

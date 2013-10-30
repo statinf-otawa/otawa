@@ -19,7 +19,7 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/util/Option.h>
 #include <otawa/ipet.h>
@@ -174,8 +174,8 @@ void Delta::processBBPath(WorkSpace *fw, System *system, BBPath *bbpath) {
  * @see CFGProcessor::processCFG()
  */
 void Delta::processCFG(WorkSpace* fw, CFG* cfg){
-	assert(fw);
-	assert(cfg);
+	ASSERT(fw);
+	ASSERT(cfg);
 	System *system = ipet::SYSTEM(fw);
 	//Vector<BBPath*> bbPathVector(4*cfg->bbs().count());
 	VectorQueue<BBPath*> to_process(7 /*4*cfg->bbs().count()*/);
@@ -240,7 +240,7 @@ void Delta::processCFG(WorkSpace* fw, CFG* cfg){
  * @param bbp BBPath we want to calculate the delta
  */
 int Delta::delta(BBPath &bbp, WorkSpace *fw){
-	assert(fw);
+	ASSERT(fw);
 
 	if(bbp.length() <= 1)
 		return 0;

@@ -22,7 +22,7 @@
 #ifndef OTAWA_CONTEXT_TREE_H
 #define OTAWA_CONTEXT_TREE_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/properties.h>
 #include <otawa/proc/CFGProcessor.h>
@@ -150,7 +150,7 @@ inline CFG *ContextTree::cfg(void) const {
 // ContextTree::ChildrenIterator class
 inline ContextTree::ChildrenIterator::ChildrenIterator(ContextTree *tree)
 : elm::genstruct::Vector<ContextTree *>::Iterator(tree->_children) {
-	assert(tree);
+	ASSERT(tree);
 };
 
 // Output

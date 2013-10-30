@@ -98,7 +98,7 @@ inline Constraint::Factor& Constraint::Factor::operator-=(double value) {
 inline Constraint::Constraint(System *system, ilp::Constraint::comparator_t comp,
 double constant, Constraint *next): sys(system), nxt(next), facts(0),
 cst(constant),  cmp(comp) {
-	assert(sys);
+	ASSERT(sys);
 }
 
 inline double Constraint::constant(void) const {

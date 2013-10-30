@@ -107,7 +107,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 	bool used;
 	CFG *called = 0;
 	System *system = SYSTEM(fw);
-	assert(system);
+	ASSERT(system);
 	Var *bbv = VAR( bb);
 
 	// Input constraint
@@ -186,7 +186,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 /**
  */
 void BasicConstraintsBuilder::processWorkSpace(WorkSpace *fw) {
-	assert(fw);
+	ASSERT(fw);
 
 	// Call the orignal processing
 	BBProcessor::processWorkSpace(fw);

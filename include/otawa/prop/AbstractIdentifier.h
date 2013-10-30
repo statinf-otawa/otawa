@@ -19,7 +19,7 @@
 #ifndef OTAWA_PROP_ABSTRACT_IDENTIFIER_H
 #define OTAWA_PROP_ABSTRACT_IDENTIFIER_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/string.h>
 #include <elm/io.h>
 #include <elm/util/VarArg.h>

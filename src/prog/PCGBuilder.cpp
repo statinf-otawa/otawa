@@ -5,7 +5,7 @@
  *	src/prog/PCGBuilder.cpp -- implementation of PCGBuilder class.
  */
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/PreIterator.h>
 #include <otawa/manager.h>
 #include <otawa/cfg/Edge.h>
@@ -30,7 +30,7 @@ namespace otawa {
  */
 PCG* PCGBuilder::buildPCG(CFG *cfg)
 {
-	assert(cfg);
+	ASSERT(cfg);
 	PCG *pcg=new PCG(cfg);
 	processCFG(cfg,pcg,NULL, 0);
 
@@ -140,7 +140,7 @@ PCGBuilder::PCGBuilder(void):Processor("PCGBuilder", Version(1, 0, 0)){
  */
 void PCGBuilder::processWorkSpace(WorkSpace *fw) {
 	CFG *cfg = ENTRY_CFG(fw);
-	assert(cfg);
+	ASSERT(cfg);
 	PCG::ID(fw) = buildPCG(cfg);
 }
 
@@ -167,7 +167,7 @@ Identifier<PCG *> PCG::ID("otawa::PCG::ID", 0);
 
 /*void PCGBuilder::processCFG(CFG* cfg) old
 {	//cette version n'est pas bonne car le parcous du cfg n'est pas bien implementé on saute des bb utils
-	assert(cfg);
+	ASSERT(cfg);
 	int count=0;
 	int countbbisEntryCFG=0;
 	PCG *pcg=new PCG(cfg);

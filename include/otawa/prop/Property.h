@@ -7,7 +7,7 @@
 #ifndef OTAWA_PROP_PROPERTY_H
 #define OTAWA_PROP_PROPERTY_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/string.h>
 #include <elm/utility.h>
 #include <elm/io.h>

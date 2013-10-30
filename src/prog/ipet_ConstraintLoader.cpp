@@ -267,7 +267,7 @@ ExpNode *right) {
  * @return		Normalized expression.
  */
 NormNode *ConstraintLoader::normalize(ExpNode *node, double mult) {
-	assert(node);
+	ASSERT(node);
 	NormNode *arg1, *arg2;
 
 	switch(node->kind()) {
@@ -324,7 +324,7 @@ NormNode *ConstraintLoader::normalize(ExpNode *node, double mult) {
 
 	// Too bad !
 	default:
-		assert(0);
+		ASSERT(0);
 	}
 }
 
@@ -347,7 +347,7 @@ void ConstraintLoader::processCFG(WorkSpace *_fw, CFG *cfg) {
 	// Initialization
 	fw = _fw;
 	system = ipet::SYSTEM(_fw);
-	assert(system);
+	ASSERT(system);
 
 	// Select the file
 	if(!path) {

@@ -37,7 +37,7 @@ bool GraphVizGraphElement::printAttribute(elm::io::Output &out, const PropList::
 				out << "bold";
 				break;
 			default:
-				assert(false);
+				ASSERT(false);
 		}
 		return true;
 	}

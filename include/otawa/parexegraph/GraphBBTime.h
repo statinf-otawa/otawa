@@ -322,7 +322,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
  
 	template <class G>
 		elm::genstruct::SLList<PathContext *> * GraphBBTime<G>::buildListOfPathContexts(BasicBlock *bb, int depth){
-		assert(depth > 0);
+		ASSERT(depth > 0);
 		elm::genstruct::SLList<PathContext *> * context_list = new elm::genstruct::SLList<PathContext *>();
 		PathContext * ctxt = new PathContext(bb);
   

@@ -22,7 +22,7 @@
 #ifndef OTAWA_UTIL_ITERATIVE_DFA_H
 #define OTAWA_UTIL_ITERATIVE_DFA_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <elm/genstruct/VectorQueue.h>
 #include <elm/util/BitVector.h>
 #include <otawa/cfg.h>

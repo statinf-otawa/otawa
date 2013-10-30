@@ -81,7 +81,7 @@ void CFGProcessor::processWorkSpace(WorkSpace *fw) {
 
 	// Get the CFG collection
 	const CFGCollection *cfgs = INVOLVED_CFGS(fw);
-	assert(cfgs);
+	ASSERT(cfgs);
 
 	// Visit CFG
 	int count = 0;

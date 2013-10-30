@@ -21,7 +21,7 @@ namespace otawa {
  */
 IfAST::IfAST(AST *condition, AST *then_part)
 : cond(condition), tpart(then_part), epart(&NOP) {
-	assert(condition && then_part);
+	ASSERT(condition && then_part);
 }
 
 
@@ -33,7 +33,7 @@ IfAST::IfAST(AST *condition, AST *then_part)
  */
 IfAST::IfAST(AST *condition, AST *then_part,
 AST *else_part) : cond(condition), tpart(then_part), epart(else_part) {
-	assert(condition && then_part && else_part);
+	ASSERT(condition && then_part && else_part);
 }
 
 

@@ -72,7 +72,7 @@ CFGBuilder::CFGBuilder(void)
 /**
  */
 void CFGBuilder::processWorkSpace(WorkSpace *fw) {
-	assert(fw);
+	ASSERT(fw);
 	buildAll(fw);
 }
 
@@ -132,7 +132,7 @@ CodeBasicBlock *CFGBuilder::thisBB(Inst *inst) {
  * @param inst	Subprogram startup.
  */
 void CFGBuilder::addSubProgram(Inst *inst) {
-	assert(inst);
+	ASSERT(inst);
 	if(logFor(LOG_CFG))
 		log << "\tadd subprogram " << inst->address() << " (" << FUNCTION_LABEL(inst) << ")\n";
 	BasicBlock *bb = thisBB(inst);
@@ -145,7 +145,7 @@ void CFGBuilder::addSubProgram(Inst *inst) {
  * @param code	Code to build the CFG for.
  */
 void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
-	assert(seg);
+	ASSERT(seg);
 
 	// Add the initial basic block
 	Segment::ItemIter item(seg);
@@ -342,7 +342,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
  * @param file	Added file.
  */
 void CFGBuilder::addFile(WorkSpace *ws, File *file) {
-	assert(file);
+	ASSERT(file);
 
 	// Scan file symbols
 	for(File::SymIter sym(file); sym; sym++)
@@ -372,7 +372,7 @@ void CFGBuilder::addFile(WorkSpace *ws, File *file) {
  * @param fw	Current framework.
  */
 void CFGBuilder::buildAll(WorkSpace *fw) {
-	assert(fw);
+	ASSERT(fw);
 	_cfgs.clear();
 
 	// create CFG info

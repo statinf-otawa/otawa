@@ -48,9 +48,9 @@ TrivialDataCacheManager::TrivialDataCacheManager(void)
  */
 void TrivialDataCacheManager::processBB(WorkSpace *framework, CFG *cfg,
 BasicBlock *bb) {
-	assert(framework);
-	assert(cfg);
-	assert(bb);
+	ASSERT(framework);
+	ASSERT(cfg);
+	ASSERT(bb);
 
 	// Check configuration
 	if(framework != fw)

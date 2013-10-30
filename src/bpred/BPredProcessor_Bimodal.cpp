@@ -40,10 +40,10 @@ namespace bpred {
 
 /////// CREATION DE CONTRAINTES ET VARIABLES
 #define NEW_BASIC_CONSTRAINT(cons_name) Constraint *cons_name = system->newConstraint(Constraint::EQ); \
-										assert(cons_name);
+										ASSERT(cons_name);
 
 #define NEW_SPECIAL_CONSTRAINT(cons_name,op,val) 	Constraint *cons_name = system->newConstraint(Constraint::op, val); \
-													assert(cons_name);
+													ASSERT(cons_name);
 
 #define NEW_VAR_FROM_BUFF(var_name,buff_expr)	{ \
 													StringBuffer sb##var_name; \
@@ -51,12 +51,12 @@ namespace bpred {
 													String s##var_name = sb##var_name.toString(); \
 													if(ht_vars.exists(s##var_name)) { \
 														var_name = ht_vars.get(s##var_name); \
-														assert(var_name); \
+														ASSERT(var_name); \
 													} \
 													else { \
 														if(this->explicit_mode) var_name = system->newVar(s##var_name); \
 														else var_name = system->newVar(String("")); \
-														assert(var_name); \
+														ASSERT(var_name); \
 														ht_vars.put(s##var_name,var_name); \
 													} \
 												}
@@ -114,7 +114,7 @@ BasicBlock* BPredProcessor::getBB(int id,CFG* cfg) {
 void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstruct::Vector<BCG*> &graphs ) {
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
-	assert(system);
+	ASSERT(system);
 	HashTable<String ,Var*> ht_vars;
 
 	elm::genstruct::Vector<int> l_addr;
@@ -143,9 +143,9 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 		for(int b=0; b<l_bb.length();++b) {
 			// Recuperation de la variable associee au BB
 			BasicBlock* bb = getBB(l_bb[b],cfg);
-			assert(bb);
+			ASSERT(bb);
 			Var *Xi = ipet::VAR( bb);
-			assert(Xi);
+			ASSERT(Xi);
 			BCGNode *n = getBCGNode(l_bb[b],bcg);
 			if(n->isEntry()) {
 				Var *C00s, *C01s, *C10s, *C11s;
@@ -185,7 +185,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 			// on recupere le BB correspondant depuis le cfg
 			BasicBlock* bb=getBB(br->getCorrespondingBBNumber(), cfg);
 			Var *Xi = ipet::VAR(bb);
-			assert(Xi);
+			ASSERT(Xi);
 			
 #if C_21>0
 			//////////////////////////////////////////
@@ -202,7 +202,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				for(BasicBlock::OutIterator edge(bb); edge ; edge++) {
 					if(edge->kind() == t ) {
 						eb = ipet::VAR(edge);
-						assert(edge);
+						ASSERT(edge);
 						break;
 					}
 				}
@@ -262,7 +262,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 						Var *C00,*C01,*C10,*C11;
 						BasicBlock* bb_pred=getBB(p->source()->getCorrespondingBBNumber(), cfg);
 						Var *Xj = ipet::VAR( bb_pred);
-						assert(Xj);
+						ASSERT(Xj);
 						NEW_VAR_FROM_BUFF(C00,Xj->name() << "A" << bcg->getClass() << "C00S" << br->getCorrespondingBBNumber());
 						NEW_VAR_FROM_BUFF(C01,Xj->name() << "A" << bcg->getClass() << "C01S" << br->getCorrespondingBBNumber());
 						NEW_VAR_FROM_BUFF(C10,Xj->name() << "A" << bcg->getClass() << "C10S" << br->getCorrespondingBBNumber());
@@ -467,7 +467,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 						
 						BasicBlock* bb_pred=getBB(p->source()->getCorrespondingBBNumber(), cfg);
 						Var *Xj = ipet::VAR( bb_pred);
-						assert(Xj);
+						ASSERT(Xj);
 						
 						p->source()->isSuccessor(br,withT,withNT);
 						if(withT) {

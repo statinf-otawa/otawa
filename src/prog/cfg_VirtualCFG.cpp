@@ -99,9 +99,9 @@ void VirtualCFG::numberBBs(void) {
  */
 void VirtualCFG::virtualize(struct call_t *stack, CFG *cfg, BasicBlock *entry,
 BasicBlock *exit) {
-	assert(cfg);
-	assert(entry);
-	assert(exit);
+	ASSERT(cfg);
+	ASSERT(entry);
+	ASSERT(exit);
 	DEPRECATED
 	//cout << "Virtualizing " << cfg->label() << "(" << cfg->address() << ")\n";
 
@@ -119,9 +119,9 @@ BasicBlock *exit) {
 
 	// Find local entry
 	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++) {
-		assert(!call.entry);
+		ASSERT(!call.entry);
 		call.entry = map.get(edge->target(), 0);
-		assert(call.entry);
+		ASSERT(call.entry);
 		Edge *edge2 = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
 		CALLED_CFG(edge2) = cfg;
 	}
@@ -129,11 +129,11 @@ BasicBlock *exit) {
 	// Translate edges
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		if(!bb->isEntry() && !bb->isExit()) {
-			//assert(!bb->isVirtual());
+			//ASSERT(!bb->isVirtual());
 
 			// Resolve source
 			BasicBlock *src = map.get(bb, 0);
-			assert(src);
+			ASSERT(src);
 
 			// Is there a call ?
 			CFG *called = 0;
@@ -160,7 +160,7 @@ BasicBlock *exit) {
 					}
 					else {
 						BasicBlock *tgt = map.get(edge->target(), 0);
-						assert(tgt);
+						ASSERT(tgt);
 						if(called /*&& edge->kind() == Edge::NOT_TAKEN*/)
 							called_exit = tgt;
 						else
@@ -179,7 +179,7 @@ BasicBlock *exit) {
 						break;
 					}
 				if(called) {
-					assert(called_exit);
+					ASSERT(called_exit);
 					//cout << "CALL " << bb->address() << " -> " << called_exit->address() << "\n";
 					virtualize(&call, called, src, called_exit);
 				}
@@ -215,7 +215,7 @@ void VirtualCFG::scan(void) {
  */
 VirtualCFG::VirtualCFG(CFG *cfg, bool inlined)
 : _cfg(cfg) {
-	assert(cfg);
+	ASSERT(cfg);
 	flags |= FLAG_Virtual;
 	if(inlined)
 		flags |= FLAG_Inlined;

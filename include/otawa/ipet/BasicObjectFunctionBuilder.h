@@ -21,7 +21,7 @@
 #ifndef OTAWA_IPET_BASICOBJECTFUNCTIONBUILDER_H
 #define OTAWA_IPET_BASICOBJECTFUNCTIONBUILDER_H
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/Feature.h>
 

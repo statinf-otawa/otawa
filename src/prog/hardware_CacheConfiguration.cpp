@@ -5,7 +5,7 @@
  *	prog/hardware_CacheConfiguration.h -- CacheConfiguration class implementation.
  */
 
-#include <assert.h>
+#include <elm/assert.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <elm/serial2/XOMUnserializer.h>
 #include <otawa/manager.h>

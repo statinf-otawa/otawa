@@ -7,7 +7,7 @@
 #ifndef OTAWA_DFA_XITERATIVEDFA_H
 #define OTAWA_DFA_XITERATIVEDFA_H
 
-#include <assert.h>
+#include <elm/assert.h>
 
 namespace otawa { namespace dfa {
 
@@ -66,7 +66,7 @@ inline XIterativeDFA<V>::~XIterativeDFA(void) {
 
 template <class V>
 inline void XIterativeDFA<V>::nextPred(int pred) {
-	assert(pred < size);
+	ASSERT(pred < size);
 	new_out->join(outs[pred]);
 }
 

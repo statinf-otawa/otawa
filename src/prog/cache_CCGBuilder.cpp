@@ -80,8 +80,8 @@ Identifier<bool> CCGBuilder::NON_CONFLICT("otawa::CCG::NON_CONFLICT", false);
 /**
  */
 void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
-	assert(fw);
-	assert(lbset);
+	ASSERT(fw);
+	ASSERT(lbset);
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 
 	// Create the CCG
@@ -143,7 +143,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		for (CFG::BBIterator bb(*cfg); bb; bb++) {
 			if ((cfg != ENTRY_CFG(fw)) || (!bb->isEntry() && !bb->isExit())) {
 				dfa::BitSet *info = IN(bb);
-				assert(info);
+				ASSERT(info);
 				bool test = false;
 				bool visit;
 				for(BasicBlock::InstIter inst(bb); inst; inst++) {
@@ -205,7 +205,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 /**
  */
 void CCGBuilder::processWorkSpace(WorkSpace *fw) {
-	assert(fw);
+	ASSERT(fw);
 
 	// Check the cache
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
@@ -214,7 +214,7 @@ void CCGBuilder::processWorkSpace(WorkSpace *fw) {
 
 	// Process the l-block sets
 	LBlockSet **lbsets = LBLOCKS(fw);
-	assert(lbsets);
+	ASSERT(lbsets);
 	for(int i = 0; i < cache->rowCount(); i++)
 		processLBlockSet(fw, lbsets[i]);
 }

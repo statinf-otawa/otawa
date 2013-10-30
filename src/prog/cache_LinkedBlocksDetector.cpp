@@ -172,7 +172,7 @@ void LinkedBlocksDetector::recordBlocks(Vector<LBlock*> *equiv) {
 		return;
 	genstruct::Vector<LBlock*> *copy = new genstruct::Vector<LBlock*>(*equiv);
 	for (genstruct::Vector<LBlock*>::Iterator lblock(*equiv); lblock; lblock++) {
-		assert(cache::CATEGORY(lblock) == cache::FIRST_MISS);
+		ASSERT(cache::CATEGORY(lblock) == cache::FIRST_MISS);
 		LINKED_BLOCKS(lblock) = copy;
 	}
 	if(cstats)

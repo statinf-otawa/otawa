@@ -225,7 +225,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg)
 							int old_count = ipet::LOOP_COUNT(new_bb);
 							new_bb->removeAllProp(&ipet::LOOP_COUNT);
 							ipet::LOOP_COUNT(new_bb) = old_count - (1 - start);
-							assert(ipet::LOOP_COUNT(new_bb) >= 0);
+							ASSERT(ipet::LOOP_COUNT(new_bb) >= 0);
 
 						}
 

@@ -256,13 +256,13 @@ File *Process::loadFile(elm::CString path) {
 
     // Build segments
     gel_file_t *gel_file = (gel_file_t *)gelFile();
-    assert(file);
+    ASSERT(file);
     gel_file_info_t infos;
 	gel_file_infos(gel_file, &infos);
     for(int i = 0; i < infos.sectnum; i++) {
     	gel_sect_info_t infos;
     	gel_sect_t *sect = gel_getsectbyidx(gel_file, i);
-    	assert(sect);
+    	ASSERT(sect);
     	gel_sect_infos(sect, &infos);
     	if(infos.flags & SHF_EXECINSTR) {
     		Segment *seg = new Segment(*this, infos.name, infos.vaddr, infos.size);
@@ -275,11 +275,11 @@ File *Process::loadFile(elm::CString path) {
 	gel_enum_initpos(iter);
 	for(char *name = (char *)gel_enum_next(iter); name;
 	name = (char *)gel_enum_next(iter)) {
-		assert(name);
+		ASSERT(name);
 		address_t addr = 0;
 		Symbol::kind_t kind;
 		gel_sym_t *sym = gel_find_file_symbol(gel_file, name);
-		assert(sym);
+		ASSERT(sym);
 		gel_sym_info_t infos;
 		gel_sym_infos(sym, &infos);
 		switch(ELF32_ST_TYPE(infos.info)) {

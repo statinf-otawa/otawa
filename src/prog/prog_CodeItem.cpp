@@ -75,7 +75,7 @@ CodeItem::CodeItem(
 {
 	for(int i = 0; i < MAP_SIZE(size); i++)
 		map[i] = 0;
-	assert(!insts.isEmpty());
+	ASSERT(!insts.isEmpty());
 	for(Inst *inst = first(); !inst->atEnd(); inst = inst->next()) {
 		int index = MAP_INDEX((inst->address()));
 		if(!map[index])
