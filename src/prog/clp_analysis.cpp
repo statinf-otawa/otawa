@@ -1391,8 +1391,7 @@ public:
 	Problem& getProb(void) { return *this; }
 	
 	ClpProblem(Process *proc)
-	:	last_max_iter(0),
-	 	specific_analysis(false),
+	:	specific_analysis(false),
 	 	pack(0),
 	 	_nb_inst(0),
 	 	_nb_sem_inst(0),
@@ -1506,11 +1505,11 @@ public:
 	 * This will be used to perform the junction between to iteration of
 	 * a loop.
 	*/
-	inline void widening(Domain &a, Domain b) const{
+	inline void widening(BasicBlock *bb, Domain &a, Domain b) const{
 		TRACEA(Domain di = a);
 		TRACEP(cerr << "*** widening ****\n");
 		TRACEP(cerr << "s1 = " << a << "\ns2 = " << b << ") = ");
-		a.widening(b, last_max_iter);
+		a.widening(b, MAX_ITERATION(bb));
 		TRACEA(checkWideningAlarm(a, di, b));
 		TRACEP(cerr << a << io::endl);
 	}
@@ -1920,15 +1919,6 @@ public:
 		if(!specific_analysis){
 				clp::STATE_IN(bb) = in;
 		}
-		if (LOOP_HEADER(bb)){
-			TRACEU(cerr << "\tThis BB is a loop header.\n");
-			if (MAX_ITERATION.exists(bb)){
-				last_max_iter = MAX_ITERATION(bb);
-				TRACEU(cerr << "\tFlow facts available: max iter=" << last_max_iter << '\n');
-			} else {
-				last_max_iter = -1;
-			}
-		}
 		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
 			
@@ -2053,8 +2043,6 @@ private:
 	genstruct::Vector<Pair<int, Domain *> > todo;
 	int pc;
 	bool has_if;
-	
-	int last_max_iter;
 	
 	/* attribute for specific analysis / packing */
 	bool specific_analysis;

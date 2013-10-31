@@ -129,7 +129,7 @@ void WideningFixPoint<Listener >::fixPoint(BasicBlock *bb, bool &fixpoint, Domai
 		else {
 			assign(newHeaderState, fpstate->headerState);
 			HAIW_TRACE("before widening, state + 1: " << newHeaderState << io::endl);
-			prob.widening(newHeaderState, ai->backEdgeUnion(bb));
+			prob.widening(bb, newHeaderState, ai->backEdgeUnion(bb));
 
 			
 			if (prob.equals(newHeaderState, fpstate->headerState))
