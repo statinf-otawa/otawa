@@ -147,13 +147,13 @@ class MUSTPERS {
 	
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
 	
-	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+	inline void enterContext(Domain &dom, BasicBlock *header, hai_context_t ctx) {
 		persProb.enterContext(dom.pers, header, ctx);
 		mustProb.enterContext(dom.must, header, ctx);
 		
 	}
 
-	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+	inline void leaveContext(Domain &dom, BasicBlock *header, hai_context_t ctx) {
 		persProb.leaveContext(dom.pers, header, ctx);
 		mustProb.leaveContext(dom.must, header, ctx);
 

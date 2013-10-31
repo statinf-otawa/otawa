@@ -43,7 +43,6 @@
 using namespace otawa;
 using namespace otawa::ilp;
 using namespace otawa::ipet;
-using namespace otawa::util;
 using namespace elm;
 
 
@@ -131,7 +130,7 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard
 	if (unrolling) {
 		UnrollingListener<MAYProblem> mayList(fw, mayProb);
 		FirstUnrollingFixPoint<UnrollingListener<MAYProblem> > mayFp(mayList);
-		util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MAYProblem> > > mayHai(mayFp, *fw);
+		HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MAYProblem> > > mayHai(mayFp, *fw);
 		mayHai.solve(NULL, may_entry ? may_entry->get(line) : NULL);
 		for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 			for (CFG::BBIterator bb(cfg); bb; bb++)
@@ -140,7 +139,7 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard
 	} else {
 		DefaultListener<MAYProblem> mayList(fw, mayProb);
 		DefaultFixPoint<DefaultListener<MAYProblem> > mayFp(mayList);
-		util::HalfAbsInt<DefaultFixPoint<DefaultListener<MAYProblem> > > mayHai(mayFp, *fw);
+		HalfAbsInt<DefaultFixPoint<DefaultListener<MAYProblem> > > mayHai(mayFp, *fw);
 		mayHai.solve(NULL, may_entry ? may_entry->get(line) : NULL);
 		/* Store the resulting ACS into the properties */
 		for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)

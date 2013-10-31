@@ -38,7 +38,7 @@
 #	define HAIW_TRACE(t)
 #endif
 
-namespace otawa {
+namespace otawa { namespace dfa { namespace hai {
 
 template <class Listener>
 class WideningFixPoint {
@@ -56,7 +56,7 @@ class WideningFixPoint {
 	static Identifier<Domain*> STATE;	
 	Problem& prob;
 	Listener  &list;
-	util::HalfAbsInt<WideningFixPoint> *ai;
+	HalfAbsInt<WideningFixPoint> *ai;
 	
 	public:
 	// FixPointState class
@@ -83,7 +83,7 @@ class WideningFixPoint {
 	// Accessors
 	
 	// Mutators 
-	inline void init(util::HalfAbsInt<WideningFixPoint> *_ai);
+	inline void init(HalfAbsInt<WideningFixPoint> *_ai);
 	
 	// FixPoint function
 	void fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const;
@@ -103,15 +103,15 @@ class WideningFixPoint {
 	inline void update(Domain &out, const Domain &in, BasicBlock* bb);
 	inline void blockInterpreted(BasicBlock* bb, const Domain& in, const Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
 	inline void fixPointReached(BasicBlock* bb) const;
-	inline void enterContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const;
-	inline void leaveContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const;
+	inline void enterContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const;
+	inline void leaveContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const;
 	
 };
 	
 template < class Listener > Identifier<typename Listener::Problem::Domain*> WideningFixPoint<Listener >::STATE("", 0);
 
 template < class Listener >	
-inline void WideningFixPoint<Listener >::init(util::HalfAbsInt<WideningFixPoint> *_ai) {
+inline void WideningFixPoint<Listener >::init(HalfAbsInt<WideningFixPoint> *_ai) {
 		ai = _ai;
 }
 
@@ -220,12 +220,12 @@ inline void WideningFixPoint<Listener >::fixPointReached(BasicBlock* bb) const {
 }
 	
 template < class Listener >	
-inline void WideningFixPoint<Listener >::enterContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const {
+inline void WideningFixPoint<Listener >::enterContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const {
 		prob.enterContext(dom, bb, ctx);
 }
 	
 template < class Listener >	
-inline void WideningFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const {
+inline void WideningFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const {
 		prob.leaveContext(dom, bb, ctx);
 }
 
@@ -235,6 +235,6 @@ inline void WideningFixPoint<Listener>::updateEdge(Edge *edge, Domain &dom) {
 }
 	
 	
-}
+} } } // otawa::dfa::hai
 
 #endif /*OTAWA_DFA_HAI_FIRSTUNROLLINGFIXPOINT_H_*/

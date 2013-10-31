@@ -33,7 +33,7 @@
 #include <otawa/prop/Identifier.h>
 #include <elm/genstruct/Vector.h>
 
-namespace otawa {
+namespace otawa { namespace dfa { namespace hai {
 
 
 template <class P>
@@ -114,6 +114,6 @@ template <class Problem >
 void UnrollingListener<Problem>::fixPointReached(const FirstUnrollingFixPoint<UnrollingListener> *fp, BasicBlock*bb ) {
 }
 	
-}
+} } }	// otawa::dfa::hai
 
 #endif 	// OTAWA_DFA_HAI

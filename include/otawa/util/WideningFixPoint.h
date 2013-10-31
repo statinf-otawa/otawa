@@ -26,4 +26,6 @@
 
 #include <otawa/dfa/hai/WideningFixPoint.h>
 
+namespace otawa { using namespace dfa::hai; }
+
 #endif /*OTAWA_UTIL_DEFAULTFIXPOINT_H_*/

@@ -1,6 +1,4 @@
 /*
- *	$Id$
- *	
  *	This file is part of OTAWA
  *	Copyright (c) 2006-11, IRIT UPS.
  *	
@@ -28,9 +26,9 @@
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/util/LoopInfoBuilder.h>
 #include <otawa/cfg/Virtualizer.h>
-#include <otawa/util/HalfAbsInt.h>
-#include <otawa/util/WideningListener.h>
-#include <otawa/util/WideningFixPoint.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
+#include <otawa/dfa/hai/WideningListener.h>
+#include <otawa/dfa/hai/WideningFixPoint.h>
 #include <otawa/data/clp/ClpValue.h>
 #include <otawa/data/clp/ClpState.h>
 #include <otawa/data/clp/ClpAnalysis.h>
@@ -47,7 +45,6 @@
  
 using namespace elm;
 using namespace otawa;
-using namespace otawa::util;
 
 // Debug output for the state
 #define TRACES(t)	//t
@@ -1630,8 +1627,8 @@ public:
 		return a.equals(b);
 	}
 	
-	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, BasicBlock *header, hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, BasicBlock *header, hai_context_t ctx) { }
 
 
 	/**

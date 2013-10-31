@@ -25,7 +25,6 @@
 using namespace otawa;
 using namespace otawa::ilp;
 using namespace otawa::ipet;
-using namespace otawa::util;
 using namespace elm;
 
 ENUM(otawa::fmlevel_t)
@@ -175,7 +174,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 		if (unrolling) {
 			UnrollingListener<MUSTProblem> mustList(fw, mustProb);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > mustFp(mustList);
-			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > > mustHai(mustFp, *fw);
+			HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > > mustHai(mustFp, *fw);
 			mustHai.solve(NULL, must_entry ? must_entry->get(line) : NULL);
 
 
@@ -186,7 +185,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 		} else {
 			DefaultListener<MUSTProblem> mustList(fw, mustProb);
 			DefaultFixPoint<DefaultListener<MUSTProblem> > mustFp(mustList);
-			util::HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTProblem> > > mustHai(mustFp, *fw);
+			HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTProblem> > > mustHai(mustFp, *fw);
 			mustHai.solve(NULL, must_entry ? must_entry->get(line) : NULL);
 
 
@@ -201,7 +200,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			MUSTPERS mustpers(lbset->cacheBlockCount(), lbset, fw, cache, cache->wayCount());
 			UnrollingListener<MUSTPERS> mustpersList( fw, mustpers);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > mustpersFp(mustpersList);
-			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
+			HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
 			mustHai.solve();
 
 			/* Store. */
@@ -219,7 +218,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			MUSTPERS mustpers(lbset->cacheBlockCount(), lbset, fw, cache, cache->wayCount());
 			DefaultListener<MUSTPERS> mustpersList( fw, mustpers);
 			DefaultFixPoint<DefaultListener<MUSTPERS> > mustpersFp(mustpersList);
-			util::HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
+			HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
 			mustHai.solve();
 
 			/* Store. */

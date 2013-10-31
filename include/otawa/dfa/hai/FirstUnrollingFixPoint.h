@@ -32,7 +32,7 @@
 #include <elm/genstruct/Vector.h>
 
 
-namespace otawa {
+namespace otawa { namespace dfa { namespace hai {
 
 template <class Listener>
 class FirstUnrollingFixPoint {
@@ -48,7 +48,7 @@ protected:
 	static Identifier<Domain*> STATE;	
 	Problem& prob;
 	Listener  &list;
-	util::HalfAbsInt<FirstUnrollingFixPoint> *ai;
+	HalfAbsInt<FirstUnrollingFixPoint> *ai;
 	
 public:
 	// FixPointState class
@@ -79,7 +79,7 @@ public:
 	inline int getIter(BasicBlock *bb) const;
 	
 	// Mutators 
-	inline void init(util::HalfAbsInt<FirstUnrollingFixPoint> *_ai);
+	inline void init(HalfAbsInt<FirstUnrollingFixPoint> *_ai);
 	
 	// FixPoint function
 	void fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const;
@@ -99,15 +99,15 @@ public:
 	inline void update(Domain &out, const Domain &in, BasicBlock* bb);
 	inline void blockInterpreted(BasicBlock* bb, const Domain& in, const Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
 	inline void fixPointReached(BasicBlock* bb) const;
-	inline void enterContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const;
-	inline void leaveContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const;
+	inline void enterContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const;
+	inline void leaveContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const;
 	
 };
 
 template <class Listener> Identifier<typename Listener::Problem::Domain*> FirstUnrollingFixPoint<Listener>::STATE("", 0);
 	
 template < class Listener >	
-inline void FirstUnrollingFixPoint<Listener >::init(util::HalfAbsInt<FirstUnrollingFixPoint> *_ai) {
+inline void FirstUnrollingFixPoint<Listener >::init(HalfAbsInt<FirstUnrollingFixPoint> *_ai) {
 		ai = _ai;
 }
 
@@ -240,12 +240,12 @@ inline void FirstUnrollingFixPoint<Listener >::fixPointReached(BasicBlock* bb) c
 }
 	
 template < class Listener >	
-inline void FirstUnrollingFixPoint<Listener >::enterContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const {
+inline void FirstUnrollingFixPoint<Listener >::enterContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const {
 		prob.enterContext(dom, bb, ctx);
 }
 	
 template < class Listener >	
-inline void FirstUnrollingFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const {
+inline void FirstUnrollingFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const {
 		prob.leaveContext(dom, bb, ctx);
 }
 
@@ -254,6 +254,6 @@ inline void FirstUnrollingFixPoint<Listener>::updateEdge(Edge *edge, Domain &dom
 }
 	
 	
-}
+} } }	// otawa::dfa::hai
 
 #endif /*OTAWA_DFA_HAI_FIRSTUNROLLINGFIXPOINT_H_*/

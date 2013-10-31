@@ -26,4 +26,6 @@
 
 #include <otawa/dfa/hai/DefaultFixPoint.h>
 
+namespace otawa { using namespace dfa::hai; }
+
 #endif /*OTAWA_UTIL_FIRSTUNROLLINGFIXPOINT_H_*/

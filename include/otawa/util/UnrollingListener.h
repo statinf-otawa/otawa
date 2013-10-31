@@ -26,4 +26,7 @@
 
 #include <otawa/dfa/hai/UnrollingListener.h>
 
+namespace otawa { using namespace dfa::hai; }
+
+
 #endif 	// OTAWA_UTIL_UNROLLINGLISTENER_H_

@@ -32,7 +32,7 @@
 #include <otawa/prop/PropList.h>
 #include <elm/genstruct/Vector.h>
 
-namespace otawa {
+namespace otawa { namespace dfa { namespace hai {
 
 
 
@@ -130,6 +130,6 @@ template <class Problem >
 void WideningListener<Problem>::fixPointReached(const WideningFixPoint<WideningListener> *fp, BasicBlock*bb ) {
 }
 	
-}
+} } }	// otawa::dfa::hai
 
 #endif // OTAWA_DFA_HAI

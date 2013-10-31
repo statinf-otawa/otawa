@@ -26,4 +26,6 @@
 
 #include <otawa/dfa/hai/DefaultListener.h>
 
+namespace otawa { using namespace dfa::hai; }
+
 #endif 	// OTAWA_UTIL_DEFAULTLISTENER_H_

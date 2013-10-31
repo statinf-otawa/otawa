@@ -23,6 +23,36 @@
 #define OTAWA_UTIL_HALFABSINT_H
 
 #include <otawa/dfa/hai/HalfAbsInt.h>
+#include <otawa/util/DefaultListener.h>
+#include <otawa/util/DefaultFixPoint.h>
+
+namespace otawa {
+
+using namespace dfa::hai;
+
+namespace util { using namespace dfa::hai; }
+
+// backward compatibility declaration
+/*template <class F>
+class HalfAbsInt: public dfa::hai::HalfAbsInt<F> {
+public:
+	inline HalfAbsInt(F& _fp, WorkSpace& _fw):
+		dfa::hai::HalfAbsInt<F>(_fp, _fw) { }
+};
+
+typedef dfa::hai::hai_context_t hai_context_t;
+enum util_context_t {
+	CTX_LOOP = dfa::hai::CTX_LOOP,
+	CTX_FUNC = dfa::hai::CTX_FUNC
+};
+inline bool operator==(hai_context_t v1, util_context_t v2) { return v1 == hai_context_t(v2); }
+inline bool operator!=(hai_context_t v1, util_context_t v2) { return v1 != hai_context_t(v2); }
+inline bool operator==(util_context_t v1, hai_context_t v2) { return v2 == hai_context_t(v1); }
+inline bool operator!=(util_context_t v1, hai_context_t v2) { return v2 != hai_context_t(v1); }
+
+} // util*/
+
+} // otawa
 
 #endif // OTAWA_UTIL_HALFABSINT_H
 

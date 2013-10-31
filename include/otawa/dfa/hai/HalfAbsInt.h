@@ -45,7 +45,7 @@
 #	define HAI_TRACE(x) cerr << x << io::endl
 #endif
 
-namespace otawa { namespace util {
+namespace otawa { namespace dfa { namespace hai {
 
 typedef enum hai_context_t {
 	CTX_LOOP = 0,
@@ -508,7 +508,7 @@ inline bool HalfAbsInt<FixPoint>::isEdgeDone(Edge *edge) {
 }
 
 
-} } // end of namespace otawa::util
+} } } // otawa::dfa:hai
 
 #endif // OTAWA_DFA_HAI_HALFABSINT_H
 

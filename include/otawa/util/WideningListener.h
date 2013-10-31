@@ -26,4 +26,6 @@
 
 #include <otawa/dfa/hai/WideningListener.h>
 
+namespace otawa { using namespace df::hai; }
+
 #endif 	// OTAWA_UTIL_WIDENINGLISTENER_H_
