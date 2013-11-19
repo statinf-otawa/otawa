@@ -104,10 +104,14 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 	ASSERT(cfgs);
 	for(int i = 0; i < cfgs->count(); i++) {
 		CFG *cfg = cfgs->get(i);
+		if(logFor(LOG_CFG))
+			log << "\tprocess CFG " << cfg->label() << io::endl;
 
 		// traverse basic blocks
 		for(CFG::BBIterator bb(cfg); bb; bb++) {
-			cerr << "\tBB " << bb->number() << " (" << bb->address() << ")\n";
+			if(logFor(LOG_BB))
+				log << "\t\tprocess BB " << bb->number()
+					<< " (" << fmt::address(bb->address()) << ")\n";
 
 			// traverse blocks accesses
 			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
