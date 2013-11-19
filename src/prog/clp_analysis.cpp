@@ -54,7 +54,7 @@ using namespace otawa::util;
 // Debug output for the domain
 #define TRACED(t)	//t
 // Debug output for the problem
-#define TRACEP(t)	t
+#define TRACEP(t)	//t
 // Debug output for Update function 
 #define TRACEU(t)	//t
 // Debug output for instructions in the update function
@@ -65,10 +65,12 @@ using namespace otawa::util;
 #define TRACEA(t)	//t
 // Debug only the join function
 #define TRACEJ(t)	//t
+// Debug only, alarm on store to T
+#define ALARM_STORE_TOP(t)	//t
 //#define STATE_MULTILINE
 
 // alarm for "store to T"
-#define ALARM_STORE(t)	t
+#define ALARM_STORE(t)	//t
 
 // enable to load data from segments when load results with T
 #define DATA_LOADER
@@ -1714,6 +1716,7 @@ public:
 				Value addrclp = get(*state, i.a());
 				TRACESI(cerr << "\t\t\tstore(" << get(*state, i.d()) << ", " << addrclp << ")\n");
 				if (addrclp == Value::all){
+					ALARM_STORE_TOP(cerr << "WARNING: store to T from R" << i.a());
 					state->set(addrclp, get(*state, i.d()));
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
@@ -1728,6 +1731,7 @@ public:
 							_nb_top_store++;
 					}
 				} else {
+					ALARM_STORE_TOP(cerr << "Warning: STORE to " << addrclp << ": too many values, set memory to T.\n");
 					ALARM_STORE(cerr << "ALARM: " << i << " store to T because of too many values.\n");
 					state->set(Value::all, get(*state, i.d()));
 					_nb_store++; _nb_top_store++;
