@@ -123,8 +123,11 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Address addr, int& index, genstruc
 	const hard::Bank *bank = mem->get(addr);
 	if(!bank)
 		log << "WARNING: no memory bank for code at " << addr << ": block considered as cached.\n";
-	else if(!bank->isCached())
+	else if(!bank->isCached()) {
+		if(isVerbose())
+			log << "INFO: block " << addr << "not cached.\n";
 		return;
+	}
 
 	// compute the cache block ID
 	LBlockSet *lbset = lbsets[cache->line(addr)];
@@ -142,7 +145,9 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Address addr, int& index, genstruc
 	
 	// Build the lblock
 	LBlock *lblock = new LBlock(lbset, addr, bb, top - addr, cbid);
-	lblocks->set(index, lblock); 											
+	lblocks->set(index, lblock);
+	if(isVerbose())
+		log << "\t\t\t\tblock at " << addr << io::endl;
 	index++;
 }
 
