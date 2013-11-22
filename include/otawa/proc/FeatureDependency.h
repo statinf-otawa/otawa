@@ -33,61 +33,38 @@ using namespace elm;
 	
 // FeatureDependency class
 class FeatureDependency: public elm::CleanList {
+public:
+	
+	// constructors
+	FeatureDependency(const AbstractFeature *_feature);
+	~FeatureDependency(void);
+	void addChild(FeatureDependency *fdep);
+	void removeChild(FeatureDependency *fdep);
+	void setInvalidated(bool inv);
+
+	// accessors
+	inline bool isInUse(void) const { return (refcount > 0); }
+	inline bool isInvalidated() const {	return invalidated; }
+	inline const AbstractFeature *getFeature(void) const { return feature; }
+
+	// Iterator on dependencies
+	class Children: public PreIterator<Children, FeatureDependency *> {
+	public:
+		inline Children(FeatureDependency *dep): iter(*dep->graph) { }
+		inline Children(const Children& i): iter(i.iter) { }
+		inline bool ended(void) const { return iter.ended(); }
+		inline void next(void) { iter.next(); }
+		inline FeatureDependency *item(void) const { return (*iter)->useValue(); }
+	private:
+		genstruct::DAGNode<FeatureDependency *>::Iterator iter;
+	};
+
+private:
 	int refcount;
 	bool invalidated;
 	const AbstractFeature *feature;
-	
-public:
 	genstruct::DAGNode<FeatureDependency*> *graph;
-	
-	inline FeatureDependency(const AbstractFeature *_feature);
-	inline ~FeatureDependency();
-	inline void addChild(FeatureDependency *fdep);
-	inline void removeChild(FeatureDependency *fdep);
-	inline bool isInUse();
-	inline bool isInvalidated();
-	inline void setInvalidated(bool inv);
-	inline const AbstractFeature *getFeature() const;
 };
-
-inline FeatureDependency::FeatureDependency(const AbstractFeature *_feature)
-	: refcount(0), invalidated(false), feature(_feature), graph(new genstruct::DAGNode<FeatureDependency*>(this))
-	{ }
-
-inline FeatureDependency::~FeatureDependency() {
-	delete graph;
-}
-
-inline const AbstractFeature *FeatureDependency::getFeature() const {
-	return feature;
-}
-
-inline void FeatureDependency::addChild(FeatureDependency *fdep)  {	
-	graph->addChild(fdep->graph);
-	fdep->refcount++;
-}
-
-inline void FeatureDependency::removeChild(FeatureDependency *fdep)  {
-	fdep->refcount--;
-	graph->removeChild(fdep->graph);
-	ASSERT(fdep->refcount >= 0);
-	if (fdep->refcount == 0) {
-		delete fdep;
-	}
-}
-inline bool FeatureDependency::isInUse() {
-	return (refcount > 0);
-}
-
-inline bool FeatureDependency::isInvalidated() {
-	return invalidated;
-}
-
-inline void FeatureDependency::setInvalidated(bool inv) {
-	invalidated = inv;
-	if (invalidated && (refcount == 0))
-		delete this;
-}
 
 } // otawa
 

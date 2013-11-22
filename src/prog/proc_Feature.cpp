@@ -22,6 +22,7 @@
 
 #include <otawa/proc/Feature.h>
 #include <otawa/proc/SilentFeature.h>
+#include <otawa/proc/FeatureDependency.h>
 
 namespace otawa {
 
@@ -246,5 +247,85 @@ void SilentFeature::process(WorkSpace *fw, const PropList& props) const {
  * The arguments describes the feature owning the current
  */
 Identifier<const AbstractFeature *> DEF_BY("otawa::DEF_BY", 0);
+
+
+/**
+ * @class FeatureDependency
+ * A feature dependency represents the dependencies used to implement a feature and is a node
+ * of the dependency graph. A feature dependency can be invalidated and, in this case, it will
+ * also remove the dependencies that requires it.
+ */
+
+
+/**
+ * Build a dependency for the given feature.
+ * @param _feature	Feature this dependency represents.
+ */
+FeatureDependency::FeatureDependency(const AbstractFeature *_feature)
+: refcount(0), invalidated(false), feature(_feature), graph(new genstruct::DAGNode<FeatureDependency*>(this))
+{ }
+
+
+/**
+ */
+FeatureDependency::~FeatureDependency() {
+	delete graph;
+}
+
+
+/**
+ * Create a dependency from the current feature to the given one.
+ * @param fdep	Dependency that will depend on the current feature.
+ */
+void FeatureDependency::addChild(FeatureDependency *fdep)  {
+	graph->addChild(fdep->graph);
+	fdep->refcount++;
+}
+
+
+/**
+ * Remove the dependency of a feature on the current feature.
+ * @param fdep	Removed dependency.
+ */
+void FeatureDependency::removeChild(FeatureDependency *fdep)  {
+	fdep->refcount--;
+	graph->removeChild(fdep->graph);
+	ASSERT(fdep->refcount >= 0);
+	if (fdep->refcount == 0) {
+		delete fdep;
+	}
+}
+
+
+/**
+ * Mark this feature as invalidated. As soon there will be no more
+ * dependency, it will be deleted.
+ */
+void FeatureDependency::setInvalidated(bool inv) {
+	invalidated = inv;
+	if (invalidated && (refcount == 0))
+		delete this;
+}
+
+
+/**
+ * @fn bool FeatureDependency::isInUse(void) const;
+ * Test if the current dependency is in use.
+ * @return	True if it is still used, false else.
+ */
+
+
+/**
+ * @fn bool FeatureDependency::isInvalidated() const;
+ * Test if the current feature is invalidated.
+ * @return True if it is invalidated, false else.
+ */
+
+
+/**
+ * @fn const AbstractFeature *FeatureDependency::getFeature(void) const;
+ * Get the feature supported by this dependency.
+ * @return	Feature ported by this dependency.
+ */
 
 } // otawa

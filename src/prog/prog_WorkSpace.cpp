@@ -304,17 +304,14 @@ void WorkSpace::provide(const AbstractFeature& feature, const Vector<const Abstr
  */
 void WorkSpace::invalidate(const AbstractFeature& feature) {
 	if (isProvided(feature)) {
-		for (genstruct::DAGNode<FeatureDependency *>::Iterator iter(*getDependency(&feature)->graph); iter; iter++) {
-			DAGNode<FeatureDependency *> *childNode = *iter;
-			FeatureDependency *childDep = childNode->useValue();
-			invalidate(*childDep->getFeature());
-			getDependency(&feature)->removeChild(childDep);
+		for(FeatureDependency::Children iter(getDependency(&feature)); iter; iter++) {
+			invalidate(*iter->getFeature());
+			getDependency(&feature)->removeChild(iter);
 		}
 		delFeatDep(&feature);
 		remove(feature);
 	}
 }
-
 
 
 /**
