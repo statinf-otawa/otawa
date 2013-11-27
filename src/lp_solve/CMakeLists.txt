@@ -1,5 +1,5 @@
-
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
+set(CMAKE_MACOSX_RPATH true)
 
 set (lp_solve_SOURCES
 	"lp_solve_System.cpp"

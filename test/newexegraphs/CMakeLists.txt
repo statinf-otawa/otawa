@@ -38,3 +38,7 @@ target_link_libraries(newexegraphs ${LIBELM})
 target_link_libraries(newexegraphs ${LIBOTAWA})
 
 #install(TARGETS owcet DESTINATION bin)
+
+if(APPLE)
+	set_target_properties(newexegraphs PROPERTIES INSTALL_RPATH "../lib/@executable_path")
+endif()
