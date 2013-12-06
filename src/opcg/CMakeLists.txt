@@ -12,3 +12,7 @@ target_link_libraries(opcg otawa)
 target_link_libraries(opcg odisplay)
 
 install(TARGETS opcg DESTINATION bin)
+
+if(APPLE)
+	set_target_properties(opcg PROPERTIES INSTALL_RPATH "@executable_path/../lib")
+endif()

@@ -81,7 +81,12 @@ void BlockBuilder::setup(WorkSpace *ws) {
 		throw otawa::Exception("no data cache !");
 	if(cache->replacementPolicy() != hard::Cache::LRU)
 		throw otawa::Exception("unsupported replacement policy in data cache !");
-	mem = &ws->process()->platform()->memory();
+	mem = hard::MEMORY(ws);
+	if(!mem) {
+		if(isVerbose())
+			log << "INFO: no workspace memory. Using default memory.\n";
+		mem = &ws->platform()->memory();
+	}
 	if(!sp)
 		sp = ws->process()->defaultStack();
 	if(!sp)
@@ -137,9 +142,13 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		// is cached ?
 		bool cached = false;
 		const hard::Bank *bank = mem->get(addr);
-		if(!bank)
+		if(!bank) {
+			const genstruct::Table<const hard::Bank *>& banks = mem->banks();
+			for(int i = 0; i < banks.count(); i++)
+				log << "INFO: " << banks[i]->address() << " " << banks[i]->size() << io::endl;
 			throw otawa::Exception(_ << "no memory bank for address " << addr
 					<< " accessed from " << aa->instruction()->address());
+		}
 		else
 			cached = bank->isCached();
 		if(!cached) {

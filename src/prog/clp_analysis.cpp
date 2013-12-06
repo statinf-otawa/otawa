@@ -51,7 +51,7 @@ using namespace otawa;
 // Debug output for the domain
 #define TRACED(t)	//t
 // Debug output for the problem
-#define TRACEP(t)	t
+#define TRACEP(t)	//t
 // Debug output for Update function 
 #define TRACEU(t)	//t
 // Debug output for instructions in the update function
@@ -62,6 +62,8 @@ using namespace otawa;
 #define TRACEA(t)	//t
 // Debug only the join function
 #define TRACEJ(t)	//t
+// Debug only, alarm on store to T
+#define ALARM_STORE_TOP(t)	//t
 //#define STATE_MULTILINE
 
 // enable to load data from segments when load results with T
@@ -1734,7 +1736,7 @@ public:
 					state->set(addrclp, get(*state, i.d()));
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
-					cerr << "WARNING: " << i << " store to T\n";
+					ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T\n");
 				}
 
 				// store all on the area (too many addresses)
@@ -1743,13 +1745,13 @@ public:
 					_nb_top_store ++;
 					if(addrclp.mtimes() < UMAXn) {
 						state->set(Value::all, get(*state, i.d()));
-						state->clear(addrclp.start(), abs(addrclp.delta()) * addrclp.mtimes());
+						state->clear(addrclp.start(), elm::abs(addrclp.delta()) * addrclp.mtimes());
 					}
 					else {
 						Symbol *sym = this->_process->findSymbolAt(addrclp.lower());
 						if(!sym) {
 							_nb_top_store_addr++;
-							cerr << "WARNING: " << i << " store to T (unbounded address)\n";
+							ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T (unbounded address)\n");
 						}
 						else {
 							state->clear(sym->address().offset(), sym->size());

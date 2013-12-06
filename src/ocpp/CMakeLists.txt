@@ -1,4 +1,5 @@
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../lib")
+set(CMAKE_MACOSX_RPATH true)
 
 set(ocpp_SOURCES
 	"Unmangler.cpp"

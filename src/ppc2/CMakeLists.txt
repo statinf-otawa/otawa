@@ -5,6 +5,7 @@ set(GLISS_LIB 		"${PROC_PREFIX}/src/lib${PROC}.a")
 set(ELF_NUM			"20")
 
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
+set(CMAKE_MACOSX_RPATH true)
 
 if(MINGW OR UNIX)
 	include_directories(${CMAKE_SOURCE_DIR}/../ppc2/include)
