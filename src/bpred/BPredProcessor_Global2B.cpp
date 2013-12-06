@@ -31,6 +31,7 @@
 #include <otawa/ipet/BasicConstraintsBuilder.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/ILPSystemGetter.h>
+#include <otawa/ilp/System.h>
 
 namespace otawa {
 namespace bpred {

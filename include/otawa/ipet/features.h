@@ -25,7 +25,6 @@
 #include <otawa/proc/Feature.h>
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/prog/WorkSpace.h>
-#include <otawa/ilp.h>
 
 namespace otawa {
 

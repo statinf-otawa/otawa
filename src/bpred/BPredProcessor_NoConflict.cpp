@@ -25,6 +25,7 @@
 #include <otawa/ipet/BasicConstraintsBuilder.h> // Contraintes de base feature
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/ipet/IPET.h>
+#include <otawa/ilp/System.h>
 
 using namespace otawa::ilp;
 using namespace elm;

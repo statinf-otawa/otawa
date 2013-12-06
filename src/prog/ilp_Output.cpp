@@ -23,6 +23,7 @@
 #include <otawa/ipet/features.h>
 #include <elm/sys/System.h>
 #include <elm/serial2/serial.h>
+#include <otawa/ilp/System.h>
 
 namespace otawa { namespace ilp {
 

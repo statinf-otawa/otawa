@@ -29,6 +29,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <elm/genstruct/HashTable.h>
+#include <otawa/ilp/System.h>
 
 using namespace otawa::ilp;
 using namespace elm;

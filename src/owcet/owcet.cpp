@@ -25,6 +25,7 @@
 #include <otawa/script/Script.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/util/FlowFactLoader.h>
+#include <otawa/ilp/System.h>
 
 using namespace otawa;
 

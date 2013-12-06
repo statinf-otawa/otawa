@@ -25,6 +25,7 @@
 #include <otawa/ilp/Var.h>
 #include <otawa/cfg.h>
 #include <otawa/proc/Registry.h>
+#include <otawa/ilp/System.h>
 
 using namespace elm;
 using namespace otawa::ilp;

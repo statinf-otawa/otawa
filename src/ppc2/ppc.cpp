@@ -691,10 +691,10 @@ File *Process::loadFile(elm::CString path) {
 
 	// build the environment
 	gel_env_t genv = *gel_default_env();
-	/*genv.argv = argv;
+	genv.argv = argv;
 	genv.envp = envp;
 	if(no_stack)
-		genv.flags = GEL_ENV_NO_STACK;*/
+		genv.flags = GEL_ENV_NO_STACK;
 
 	// build the GEL image
 	LTRACE;

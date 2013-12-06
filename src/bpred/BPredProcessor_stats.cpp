@@ -29,6 +29,7 @@
 #include <otawa/ilp/Constraint.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/VarAssignment.h>
+#include <otawa/ilp/System.h>
 
 
 
