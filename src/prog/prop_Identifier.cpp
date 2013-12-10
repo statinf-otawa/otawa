@@ -363,12 +363,12 @@ template <> void Identifier<Address>::fromString(PropList& props, const string& 
 	if(pos >= 0) {
 		io::BlockInStream stream(buf.substring(0, pos));
 		io::Input in(stream);
-		page = in.scanLong();
+		page = in.scanULong();
 		buf = buf.substring(pos + 1);
 	}
 	io::BlockInStream stream(str);
 	io::Input in(stream);
-	Address::offset_t off = in.scanLong();
+	Address::offset_t off = in.scanULong();
 	set(props, Address(page, off));
 }
 
