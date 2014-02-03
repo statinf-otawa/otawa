@@ -18,6 +18,8 @@ namespace otawa {
  *
  * To fit with the OTAWA low-level abstraction architecture, this class is only
  * an empty interface implemented by the program loader.
+ *
+ * @ingroup prog
  */
 
 

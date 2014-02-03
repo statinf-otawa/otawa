@@ -114,6 +114,8 @@ LoadException::LoadException(const String& message)
  * @class Manager
  * The manager class providesfacilities for storing, grouping and retrieving shared
  * resources like loaders and platforms.
+ *
+ * @ingroup prog
  */
 
 

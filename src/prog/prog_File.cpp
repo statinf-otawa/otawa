@@ -15,6 +15,7 @@ namespace otawa {
  * @class File
  * This class represents a file involved in the building of a process. A file
  * usually matches a program file on the system file system.
+ * @ingroup prog
  */
 
 

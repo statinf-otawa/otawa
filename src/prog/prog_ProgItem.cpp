@@ -25,6 +25,7 @@ namespace otawa {
 /**
  * @class ProgItem
  * Base class of the components of a program file segment.
+ * @ingroup prog
  */
 
 

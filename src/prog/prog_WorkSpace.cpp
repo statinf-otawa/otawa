@@ -43,6 +43,32 @@
 /**
  * @defgroup prog	Program Representation
  *
+ * @dot
+ * digraph {
+ * 	node [shape = record, fontsize=10 ];
+ * 	edge [ arrowhead = vee, fontsize=8 ];
+ *	rankdir=TB;
+ *
+ *	Manager -> WorkSpace [ label="<<create>>",style=dashed  ];
+ *  WorkSpace -> Process [ label="process", headlabel="1" ];
+ *  File -> Process [ arrowhead = diamond, label="files", taillabel="1..*" ];
+ *  Process -> File [ label="program", headlabel="1" ];
+ *  Segment -> File [ arrowhead = diamond, label="segments", taillabel="1..*" ];
+ *  CodeItem -> Segment [ arrowhead = diamond, label="items", taillabel="0..*" ];
+ *  Symbol -> File[ arrowhead = diamond, label="symbols", taillabel="0..*" ];
+ *  Inst -> CodeItem [ arrowhead = empty ];
+ *
+ *  Manager [ label="{Manager||}", URL="@ref otawa::Manager", root=true ]
+ *  WorkSpace [ label="{WorkSpace||}", URL="@ref otawa::WorkSpace" ]
+ *  Process [ label="{Process||}", URL="@ref otawa::Process" ]
+ *  File [ label="{File||}", URL="@ref otawa::File" ]
+ *  Segment [ label="{Segment||}", URL="@ref otawa::Segment" ]
+ *  CodeItem [ label="{CodeItem||}", URL="@ref otawa::CodeItem" ]
+ *  Inst [ label="{Inst||}", URL="@ref otawa::Inst" ]
+ *  Symbol [ label="{Symbol||}", URL="@ref otawa::Symbol" ]
+ * }
+ * @enddot
+ *
  * The program representation module of OTAWA is the main module providing all details
  * about the processed program. It provides a representation built from the program
  * binary form (@ref Process) and provides a workspace to perform analyses (@ref WorkSpace).

@@ -737,6 +737,8 @@ File *Process::loadFile(elm::CString path) {
 				flags |= Segment::WRITABLE;
 			if(infos.flags & SHF_EXECINSTR)
 				flags |= Segment::EXECUTABLE;
+			if(infos.type == SHT_PROGBITS)
+				flags |= Segment::INITIALIZED;
 			Segment *seg = new Segment(*this, infos.name, infos.vaddr, infos.size, flags);
 			file->addSegment(seg);
 		}

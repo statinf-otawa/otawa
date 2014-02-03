@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	Process class interface
+ *	otawa::Segment -- program segment class implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-7, IRIT UPS.
@@ -35,11 +34,12 @@ namespace otawa {
 
 /**
  * @class Segment
- * @par In usual file format like ELF, COFF and so on, the program file is
+ * In usual file format like ELF, COFF and so on, the program file is
  * divided in segment according platform needs or memory propertes.
  * @par Usually, we find a ".text" segment containing program code,
  * ".data" containing initialized data, ".bss" containing uninitialized data,
  * ".rodata" containing read-only data. Yet, more segments may be available.
+ * @ingroup prog
  */
 
 
@@ -49,12 +49,13 @@ namespace otawa {
  * @param address	Segment address in the process memory space.
  * @param size		Segment size (in bytes).
  * @param flags		As returned by the @ref flags() accessor.
+ * 					A combination of @ref WRITABLE, @ref EXECUTABLE and @ref INITIALIZED .
  */
 Segment::Segment(
 	CString name,
 	address_t address,
 	ot::size size,
-	unsigned long flags)
+	flags_t flags)
 :	_flags(flags),
 	_name(name),
 	_address(address),
@@ -103,7 +104,7 @@ Segment::~Segment(void) {
 /**
  * @fn int Segment::flags(void);
  * Get flag information about the segment. This flags are composed by OR'ing the constants
- * EXECUTABLE and WRITABLE.
+ * @ref EXECUTABLE, @ref WRITABLE and @ref INITIALIZED .
  * @return Flags value.
  */
 
@@ -117,6 +118,31 @@ Segment::~Segment(void) {
  * @fn bool Segment::isWritable(void) const;
  * Test if the segment is writable.
  * @return	True if the segment is writable, false else.
+ */
+
+
+/**
+ * @fn bool Segment::isInitialized(void) const;
+ * Test if the segment is initialized.
+ * @return	True if the segment is initialized, false else.
+ */
+
+
+/**
+ * @var Segment::EXECUTABLE;
+ * Segment flags denoting an executable segment.
+ */
+
+
+/**
+ * @var Segment::WRITABLE;
+ * Segment flags denoting a writable segment.
+ */
+
+
+/**
+ * @var Segment::INITIALIZED;
+ * Segment flags denoting an initialzied segment.
  */
 
 

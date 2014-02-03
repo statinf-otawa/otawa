@@ -400,6 +400,8 @@ public:
 					flags |= Segment::EXECUTABLE;
 				if(infos.flags & SHF_WRITE)
 					flags |= Segment::WRITABLE;
+				if(infos.type == SHT_PROGBITS)
+					flags |= Segment::INITIALIZED;
 				Segment *seg = new Segment(*this, infos.name, infos.vaddr, infos.size, flags);
 				file->addSegment(seg);
 			}

@@ -125,6 +125,8 @@ void SimState::setSP(const Address& addr) {
  * program and its implementation on the platform. A process may be formed
  * by many files in case of shared object for example. A process provides the
  * information needed for simulating, analyzing or transforming a program.
+ *
+ * @ingroup prog
  */
 
 
