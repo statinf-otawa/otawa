@@ -249,7 +249,7 @@ extern int fft_line;
  * Force to ignore the control effect of the addressed instruction.
  *
  * @li <b><tt>ignoreseq ADDRESS ;</tt></b> @n
- * Force the target instruction to be considered to be considered as an unconditional branch.
+ * Force the target instruction to be considered as an unconditional branch.
  * Can only be put on a conditional branch instruction.
  *
  * @li <b><tt>multibranch ADDRESS to ADDRESS, ADDRESS, ... ;</tt></b> @n
@@ -555,8 +555,8 @@ void FlowFactLoader::onLoop(
 	// put the max iteration
 	if(count >= 0) {
 		int old_max = path(MAX_ITERATION, inst);
-		cerr << "DEBUG: inst = " << inst << io::endl;
-		cerr << "DEBUG: old_max = " << old_max << io::endl;
+		//cerr << "DEBUG: inst = " << inst << io::endl;
+		//cerr << "DEBUG: old_max = " << old_max << io::endl;
 		int new_max = max(old_max, count);
 		path.ref(MAX_ITERATION, inst) = new_max;
 		if(logFor(LOG_BB))
