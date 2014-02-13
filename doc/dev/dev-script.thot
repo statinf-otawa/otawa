@@ -560,7 +560,6 @@ A stage has the following syntax:
 		<width>INT</width>?
 		<latency>INT</latency>?
 		<type>fetch|lazy|commit|exec</type>?
-		contenu
 	</stage>
 </code>
 
@@ -649,23 +648,145 @@ Below is the example of the Leon 3 dispatch element of the execution stage:
 	</dispatch>
 </code>
 
-Any memory, control or integer instruction goes in the ''INT'' functional. The first three instructions
+Any memory, control or integer instruction goes in the ''INT'' functional unit. The first three instructions
 matches works like an disjunctive condition as they branching to the same functional unit. Otherwise,
 if the instruction is working on float and performs a division, it moves to the ''FDIV'' functional unit.
 Finally, it can be stated from the instruction set of the Leon that remaining instruction are working
 on floating-point numbers and must go to the ''FPU'' functional unit.
 
 
-==== Function Unit Description ====
+==== Functional Unit Description ====
+
+A functional unit is like a stage but dedicated to the execution / work of an instruction.
+The syntax of functional units is given below:
+
+<code xml>
+<!-- fu ::= -->
+	<name>STRING</name>?
+	<width>INT</width>?
+	<latency>INT</latency>?
+	<pipelined>BOOL</pipelined>	
+</code>
+
+The ''name'' allows to associatve the functional unit with a name and is only used foer human user convenience,
+or with the ''dispatch'' element described in the previous section.
+
+The ''width'' defines the number of functional unit existing, that is, the number of instruction that may be executed
+in the current functional unit. Its value is 1 instruction as a default.
+
+The ''latency'' describes how many cycles is required for an instruction to traverse the functional unit.
+Its value is 1 cycle as a default.
+
+Finally,''pipelined'' express a fact that a multiple-cycle functional unit is not blocked until the end
+of the instruction: at each cycle, it can accept another instruction. Considered false as default.
+
+Below is an example of a multiple ALU functional unit in a superscalar microprocessor:
+<code xml>
+<fu>
+	<name>ALU</name>
+	<width>4</width>
+	<latency>1</latency>
+</fu>
+</code> 
+
+The coming example is a multiplication of 4-cycles supporting pipelining of operations:
+<code xml>
+<fu>
+	<name>MUL</name>
+	<latency>4</latency>
+	<pipelined>true</pipelined>
+</fu>
+</code>
+
+The final example represents a floating-point division functional unit of 10-cyles
+but that does not support pipelinging ((Notice that the ''pipelined'' is not required)):
+<code xml>
+<fu>
+	<name>FDIV</name>
+	<latency>10</latency>
+	<pipelined>false</false>
+</fu>
+</code>
+
 
 ==== Queue Description ====
 
+A queue is a small data structure containing and buffering instruction between stages.
+The syntax of queues is:
+<code xml>
+<!-- queue ::= -->
+<queue>
+	<name>STRING</name>?
+	<size>INT</size>
+	<input ref="ID"/>
+	<output ref="ID"/>
+	<intern>  <stage ref="ID"/>+ </intern>?
+</queue>
+</code>
 
+The ''name'' element allows to associate a human-readable identifier with a queue.
+
+The ''size'' gives the maximum number of instructions the queue can contain.
+
+The ''ref'' attribute of ''input'' element represents the stage that deposits instructions
+in the queue.
+
+The ''ref'' attribute of ''output'' element represents the stage that extract instructions
+from the queue.
+
+The ''intern'' element is only used in the case of queues implementing a re-order buffer.
+In this case, an instruction can only be extracted if it has been processed
+by one or several calculation stages (usually execution stages). The list of ''stage''
+elements gives the list of stages that will validate an instruction (that is, execute it).
+
+Below is the example of simple FIFO queue between a fetch stage and a decode stage:
+<code xml>
+<queue>
+	<name>FETCH_QUEUE</name>
+	<size>8</size>
+	<input ref="FI"/>
+	<output ref="DI"/>
+</queue>
+</code>
+ 
+In this second example, a reorder buffer stores instructions until
+they have been executed by the ''EX'' stage:
+<code xml>
+<queue>
+	<name>ROB_QUEUE</name>
+	<size>16</size>
+	<input ref="DI"/>
+	<intern>
+		<stage ref="EX"/>
+	</intern>
+	<ouput ref="CM"/>
+</queue>
+</code>
 
 
 ===== Cache Description =====
 
+A cache is a small fast memory that allows to store and access fastly little block of bytes of the main memory.
+Caches are an important feature to speed up processor execution by allowing to avoid long-time access
+to the main memory.
 
+From the point of view of caches, the main memory is divided in blocks of same size
+and the cache is divided in sets. Based on its address, each memory block is assigned to a cache set that, in turn,
+may contrain one (direct-mapped cache) or several blocks (associative cache).
+
+To be compliant with the binary encoding of address, the block size, the set number and the cache size are power of 2.
+
+
+There are a lot of different way to configure the caches:
+  * they may be split between instruction and date or unified,
+  * they have different configurations for block size, set size, cache size,
+  * there are different levels of cache from L1 (close to the core) to L2, L3 (close to the main memory),
+  * there are different way to manage blocks stored in a set (replacement policy, write-through or write-back save model, etc).
+
+OTAWA try to provide a consistent and versatile representation of caches as below:
+<code xml>
+<!-- CACHES ::= -->
+</code>
 
 
 

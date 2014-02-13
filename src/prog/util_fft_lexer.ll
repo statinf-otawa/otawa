@@ -39,7 +39,7 @@ DEC	[1-9][0-9]*
 OCT	0[0-7]*
 HEX	0[xX][0-9a-fA-F]+
 BIN 0[bB][0-1]+
-SYM [?;,+-/:]
+SYM [?;,+-/:@]
 
 %x ECOM
 %x TCOM

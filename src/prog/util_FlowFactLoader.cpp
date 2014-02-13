@@ -222,9 +222,9 @@ extern int fft_line;
  * Declare that the loop whose header start at the
  * given address has the given maximal bound.
  *
- * @li <b><tt>loop ADDRESS ... in ADDRESS1 / ADDRESS2 / ...;</tt></b> @n
+ * @li <b><tt>loop ADDRESS ... in STEP1 / STEP2 / ...;</tt></b> @n
  * Same as above but limit the loop bound to the given calling context.
- * ADDRESS1 is the address of the function calling the loop, ADDRESS2 is the
+ * STEP1 is the address of the function calling the loop, STEP2 is the
  * address of the function calling the former one and so on. It is not
  * required to go back to the task entry point. In the latter case, the bound
  * will be applied to any call context whose prefix matches the given one.
@@ -279,6 +279,10 @@ extern int fft_line;
  * FUNCTION_ADDRESS may have one of the following form:
  * @li INTEGER: integer address,
  * @li STRING: double-quoted string that must match a program label,
+ *
+ * STEP may have one of the following form:
+ * @li ADDRESS: simple address of a function,
+ * @li @ ADDRESS: address of instruction calling the previous function.
  *
  * ADDRESS may have one of the following form:
  * @li INTEGER: integer address,
