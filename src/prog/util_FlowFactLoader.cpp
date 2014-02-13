@@ -249,7 +249,7 @@ extern int fft_line;
  * Force to ignore the control effect of the addressed instruction.
  *
  * @li <b><tt>ignoreseq ADDRESS ;</tt></b> @n
- * Force the target instruction to be considered to be considered as an unconditional branch.
+ * Force the target instruction to be considered as an unconditional branch.
  * Can only be put on a conditional branch instruction.
  *
  * @li <b><tt>multibranch ADDRESS to ADDRESS, ADDRESS, ... ;</tt></b> @n
@@ -364,29 +364,22 @@ extern int fft_line;
  * @author H. Cassé <casse@irit.fr>
  */
 
+p::declare FlowFactLoader::reg = p::init("otawa::util::FlowFactLoader", Version(1, 1, 0))
+	.maker<FlowFactLoader>()
+	.provide(FLOW_FACTS_FEATURE)
+	.provide(MKFF_PRESERVATION_FEATURE);
+
 
 /**
  * Build a flow fact loader for the given executable file.
  */
-FlowFactLoader::FlowFactLoader(void):
-	Processor("otawa::util::FlowFactLoader", Version(1, 0, 0)),
-	checksummed(false)
+FlowFactLoader::FlowFactLoader(p::declare& r):
+	Processor(r),
+	checksummed(false),
+	_fw(0),
+	lines_available(false),
+	mandatory(false)
 {
-	provide(FLOW_FACTS_FEATURE);
-	provide(MKFF_PRESERVATION_FEATURE);
-}
-
-
-/**
- * Constructor for inheritance.
- * @param name		Name of the processor.
- * @param version	Version of the processor.
- */
-FlowFactLoader::FlowFactLoader(const string& name, const Version& version):
-	Processor(name, version), checksummed(false)
-{
-	provide(FLOW_FACTS_FEATURE);
-	provide(MKFF_PRESERVATION_FEATURE);
 }
 
 
@@ -559,8 +552,8 @@ void FlowFactLoader::onLoop(
 	// put the max iteration
 	if(count >= 0) {
 		int old_max = path(MAX_ITERATION, inst);
-		cerr << "DEBUG: inst = " << inst << io::endl;
-		cerr << "DEBUG: old_max = " << old_max << io::endl;
+		//cerr << "DEBUG: inst = " << inst << io::endl;
+		//cerr << "DEBUG: old_max = " << old_max << io::endl;
 		int new_max = max(old_max, count);
 		path.ref(MAX_ITERATION, inst) = new_max;
 		if(logFor(LOG_BB))

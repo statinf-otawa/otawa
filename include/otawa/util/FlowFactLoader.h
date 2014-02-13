@@ -54,7 +54,8 @@ class FlowFactLoader: public Processor {
 	friend int ::util_fft_parse(FlowFactLoader *loader);
 	friend void ::util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 public:
-	FlowFactLoader(void);
+	static p::declare reg;
+	FlowFactLoader(p::declare& r = reg);
 
 protected:
 	inline WorkSpace *workSpace(void) const { return _fw; }
@@ -87,8 +88,6 @@ protected:
 
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void configure (const PropList &props);
-
-	FlowFactLoader(const string& name, const Version& version);
 
 private:
 	WorkSpace *_fw;

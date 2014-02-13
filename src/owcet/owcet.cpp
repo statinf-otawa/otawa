@@ -161,7 +161,7 @@ protected:
 		// display the result
 		ot::time wcet = ipet::WCET(workspace());
 		if(wcet == -1)
-			cerr << "ERROR: no WCET computed (see errors above).\n";
+			throw otawa::Exception("no WCET computed (see errors above).");
 		else
 			cout << "WCET[" << entry << "] = " << ipet::WCET(workspace()) << " cycles\n";
 
@@ -182,5 +182,5 @@ private:
 
 int main(int argc, char **argv) {
 	OWCET owcet;
-	owcet.run(argc, argv);
+	return owcet.run(argc, argv);
 }
