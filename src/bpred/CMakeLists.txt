@@ -25,7 +25,7 @@ set(bpred_SOURCES
 
 # BBHG.h
 
-add_library(bpred MODULE ${bpred_SOURCES})
+add_library(bpred SHARED ${bpred_SOURCES})
 set_property(TARGET bpred PROPERTY PREFIX "")
 set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 install(TARGETS bpred DESTINATION lib/otawa/proc/otawa)
