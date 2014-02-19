@@ -255,9 +255,8 @@ private:
 // QuestFlowFactLoader class
 class QuestFlowFactLoader: public FlowFactLoader {
 public:
-	QuestFlowFactLoader(void)
-		: FlowFactLoader("QuestFlowFactLoader", Version(1, 0, 0)),
-		check_summed(false) { }
+	static p::declare reg;
+	QuestFlowFactLoader(void): FlowFactLoader(reg), check_summed(false) { }
 
 	inline bool checkSummed(void) const { return check_summed; }
 	
@@ -294,6 +293,10 @@ private:
 	
 	bool check_summed;
 };
+
+
+p::declare QuestFlowFactLoader::reg = p::init("QuestFlowFactLoader", Version(1, 0, 0))
+	.maker<FlowFactLoader>();
 
 
 // Command class

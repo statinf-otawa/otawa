@@ -419,4 +419,28 @@ io::Output& operator<<(io::Output& out, cond_t cond) {
 	return out;
 }
 
+
+/**
+ * @class PathIter
+ * This iterator allows easily to traverse all executions path of a block
+ * of semantics instructions. As it may consume resources, it is delivered
+ * to support iteration on multiple blocks sequentially.
+ */
+
+
+/**
+ * @fn bool PathIter::pathEnd(void) const;
+ * Test if the current instruction is a path end.
+ * @return	True if it is a path end, false else.
+ */
+
+
+/**
+ * @fn bool PathIter::isCond(void) const;
+ * Test if the current instruction is a conditional, that means that
+ * two different paths will be created from this point.
+ * @return	True if it is a condition, false else.
+ */
+
+
 } }	// otawa::sem
