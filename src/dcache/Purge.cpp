@@ -42,7 +42,7 @@ protected:
 		// get the cache
 		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(ws);
 		ASSERT(conf);
-		cache =conf->dataCache();
+		cache = conf->dataCache();
 		ASSERT(cache);
 
 		// get the block collection
@@ -51,7 +51,8 @@ protected:
 
 		// process the sets
 		for(int set = 0; set < cache->setCount(); set++)
-			processSet(ws, colls[set]);
+			if(colls[set].count())
+				processSet(ws, colls[set]);
 	}
 
 private:
@@ -62,17 +63,14 @@ private:
 		:	coll(_coll),
 		 	dman(_coll),
 			must_prob(coll.count(), coll.cacheSet(), ws, cache, cache->wayCount()),
-			must_dom(must_prob.bottom()),
+			must_dom(coll.count(), cache->wayCount()),
 			may_prob(_coll, ws, cache),
-			may_dom(may_prob.bottom()) { }
+			may_dom(coll.count(), cache->wayCount()) { }
 
 		void start(BasicBlock *bb) {
 			const AllocatedTable<DirtyManager::t>& dstates = DIRTY(bb);
-			DirtyManager::t dstate = dstates[coll.cacheSet()];
+			dstate = dstates[coll.cacheSet()];
 			acs_table_t *musts = MUST_ACS(bb);
-			//acs_table_t *perss = PERS_ACS(bb);
-			//mp_prob.setMust(mp_dom, *(musts->item(coll.cacheSet())));
-			//mp_prob.setPers(mp_dom, *(perss->item(coll.cacheSet())), acs_stack_t::EMPTY);
 			must_dom = *(musts->item(coll.cacheSet()));
 			acs_table_t *mays = MAY_ACS(bb);
 			may_dom = *(mays->item(coll.cacheSet()));
@@ -99,6 +97,8 @@ private:
 	 * @param coll	Current block collection.
 	 */
 	void processSet(WorkSpace *ws, const BlockCollection& coll) {
+		if(logFor(LOG_FILE))
+			log << "\tset " << coll.cacheSet() << io::endl;
 		const CFGCollection *cfgs = otawa::INVOLVED_CFGS(ws);
 		State state(ws, cache, coll);
 		for(int i = 0; i < cfgs->count(); i++)
@@ -114,6 +114,8 @@ private:
 	 */
 	void processBB(int set, BasicBlock *bb, State& state) {
 		state.start(bb);
+		if(logFor(LOG_BLOCK))
+			log << "\t\t" << bb << io::endl;
 		Pair<int, BlockAccess *> accs = DATA_BLOCKS(bb);
 		for(int acc = 0; acc < accs.fst; acc++) {
 			processAccess(accs.snd[acc], set, state);
@@ -143,6 +145,10 @@ private:
 				return;
 			break;
 		}
+
+		// log
+		if(logFor(LOG_INST))
+			log << "\t\t\t" << access << io::endl;
 
 		// look for the category
 		purge_t purge = INV_PURGE;
@@ -204,7 +210,7 @@ private:
 	 */
 	bool mayPurge(const BlockAccess& access, State& state) {
 		for(int i = 0; i < state.coll.count(); i++)
-			if((access.isAny() || !access.inRange(state.coll[i].index()))
+			if((access.isAny() || !access.in(state.coll[i]))
 			&& state.may_dom.getAge(i) == cache->blockCount() - 1
 			&& state.dstate.mayBeDirty(i))
 				return true;
@@ -221,6 +227,7 @@ p::declare PurgeAnalysis::reg = p::init("otawa::dcache::PurgeAnalysis", Version(
 	.require(MAY_ACS_FEATURE)
 	.require(DATA_BLOCK_FEATURE)
 	.require(DIRTY_FEATURE)
+	.require(CATEGORY_FEATURE)
 	.provide(PURGE_FEATURE);
 
 p::feature PURGE_FEATURE("otawa::dcache::PURGE_FEATURE", new Maker<PurgeAnalysis>());

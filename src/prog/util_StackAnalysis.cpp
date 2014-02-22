@@ -444,6 +444,7 @@ public:
 			break;
 		case stack::REG:
 			ASSERT(false);
+			break;
 		}
 	}
 
@@ -588,12 +589,16 @@ private:
  * @li @ref otawa::VIRTUALIZED_CFG_FEATURE
  * @li @ref otawa::LOOP_INFO_FEATURE
  */
-StackAnalysis::StackAnalysis(void): Processor("otawa::StackAnalysis", Version(0, 1, 0)) {
-	require(LOOP_INFO_FEATURE);
-	require(VIRTUALIZED_CFG_FEATURE);
-	provide(STACK_ANALYSIS_FEATURE);
-	provide(ADDRESS_ANALYSIS_FEATURE);
+StackAnalysis::StackAnalysis(p::declare& r): Processor(r) {
 }
+
+
+p::declare StackAnalysis::reg = p::init("otawa::StackAnalysis", Version(1, 0, 0))
+	.maker<StackAnalysis>()
+	.require(LOOP_INFO_FEATURE)
+	.require(VIRTUALIZED_CFG_FEATURE)
+	.provide(STACK_ANALYSIS_FEATURE)
+	.provide(ADDRESS_ANALYSIS_FEATURE);
 
 
 /**

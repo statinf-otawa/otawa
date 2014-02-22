@@ -36,7 +36,8 @@ public:
 	typedef Pair<const hard::Register *, Address> init_t;
 	static Identifier<init_t> INITIAL;
 
-	StackAnalysis(void);
+	static p::declare reg;
+	StackAnalysis(p::declare& r = reg);
 	virtual void configure(const PropList &props);
 
 protected:
