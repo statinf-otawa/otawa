@@ -25,6 +25,7 @@
 #include <otawa/cache/categories.h>
 #include <otawa/prop/PropList.h>
 #include <otawa/dfa/BitSet.h>
+#include <otawa/hard/Cache.h>
 
 namespace otawa {
 
@@ -147,11 +148,14 @@ public:
 
 	inline Inst *instruction(void) const { return inst; }
 	inline kind_t kind(void) const { return kind_t(_kind); }
+	inline bool isAny(void) const { return _kind == ANY; }
 	inline action_t action(void) const { return action_t(_action); }
 	inline const Block& block(void) const { ASSERT(_kind == BLOCK); return *data.blk; }
 	inline Address::offset_t first(void) const { ASSERT(_kind == RANGE); return data.range.first; }
 	inline Address::offset_t last(void) const { ASSERT(_kind == RANGE); return data.range.last; }
 	inline bool inRange(Address::offset_t block) const { if(first() < last()) return first() <= block && block <= last(); else return block <= first() || last() <= block; }
+	bool inSet(int set, const hard::Cache *cache) const;
+	bool in(const Block& block) const;
 
 	void print(io::Output& out) const;
 
@@ -244,6 +248,17 @@ extern Identifier<Vector<ACS *> *> MAY_ACS;
 // Dirty analysis
 extern SilentFeature DIRTY_FEATURE;
 extern Identifier<AllocatedTable<DirtyManager::t> > DIRTY;
+
+// Purge analysis
+typedef enum {
+	INV_PURGE = 0,
+	NO_PURGE = 1,
+	PERS_PURGE = 2,
+	MAY_PURGE = 3,
+	MUST_PURGE = 4
+} purge_t;
+extern p::feature PURGE_FEATURE;
+extern Identifier<purge_t> PURGE;
 
 } }		// otawa::dcache
 

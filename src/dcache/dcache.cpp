@@ -20,11 +20,57 @@
  */
 
 #include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/dcache/features.h>
 
 using namespace elm;
 using namespace otawa;
 
 namespace otawa { namespace dcache {
+
+
+/**
+ * Test if the given set concerns the range access.
+ * @param set	Set to test for.
+ * @param cache	Current cache (to get set information).
+ * @return		True if the set contains a block of the range, false else.
+ */
+bool BlockAccess::inSet(int set, const hard::Cache *cache) const {
+
+	// range over the whole cache
+	if(first() < last()) {
+		if(cache->tag(last()) - cache->tag(first())  >= cache->setCount())
+			return true;
+	}
+	else if(cache->tag(first()) + cache->setCount() - cache->tag(last()) >= cache->setCount())
+		return true;
+
+	// computes sets
+	if(cache->set(first()) < cache->set(last()))
+		return cache->set(first()) <= set && set <= cache->set(last());
+	else
+		return set <= cache->set(first()) || cache->set(last()) <= set;
+}
+
+
+/**
+ * Test if the given block may be concerned by the current access.
+ * @param block		Block to test.
+ * @return			True if it concerned, false else.
+ */
+bool BlockAccess::in(const Block& block) const {
+	switch(kind()) {
+	case ANY:
+		return true;
+	case BLOCK:
+		return data.blk->index() == block.index();
+	case RANGE:
+		if(first() <= last())
+			return Address(first()) <= block.address() && block.address() <= Address(last());
+		else
+			return block.address() <= Address(first()) || Address(last()) <= block.address();
+	}
+}
+
 
 /**
  * @defgroup dcache Data Cache

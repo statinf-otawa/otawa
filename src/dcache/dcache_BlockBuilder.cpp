@@ -61,7 +61,7 @@ Identifier<Address> INITIAL_SP("otawa::dcache::INITIAL_SP", Address::null);
 
 /**
  */
-BlockBuilder::BlockBuilder(p::declare& r): BBProcessor(r), mem(0), cache(0), colls(0) {
+BlockBuilder::BlockBuilder(p::declare& r): BBProcessor(r), mem(0), cache(0), colls(0), man(0) {
 }
 
 
@@ -126,6 +126,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 			break;
 		default:
 			ASSERT(false);
+			break;
 		}
 
 		// type of action

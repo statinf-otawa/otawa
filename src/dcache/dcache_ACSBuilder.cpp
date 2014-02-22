@@ -77,7 +77,7 @@ const MUSTProblem::Domain& MUSTProblem::entry(void) const { return ent; }
  * @param out	In-out domain.
  * @param acc	Purging block access.
  */
-void MUSTProblem::purge(Domain& out, BlockAccess& acc) {
+void MUSTProblem::purge(Domain& out, const BlockAccess& acc) {
   ASSERT(acc.action() == BlockAccess::PURGE);
   //ASSERT(acc.kind() <= BlockAccess::RANGE);
 
@@ -96,6 +96,44 @@ void MUSTProblem::purge(Domain& out, BlockAccess& acc) {
 	}
 }
 
+
+/**
+ * Update for an access.
+ */
+void MUSTProblem::update(Domain& s, const BlockAccess& access) {
+	ASSERT(access.action() <= BlockAccess::PURGE);
+	ASSERT(access.kind() <= BlockAccess::RANGE);
+	MUST_DEBUG("\t\t\tupdating with " << acc);
+	switch(access.action()) {
+
+	case BlockAccess::LOAD:
+	case BlockAccess::STORE:
+		switch(access.kind()) {
+		case BlockAccess::RANGE:
+			if(access.first() < access.last()) {
+				if(set < access.first() || set > access.last())
+					break;
+			}
+			else if( access.first() < set || set < access.last())
+				break;
+				/* no break */
+		case BlockAccess::ANY:
+			s.ageAll();
+			break;
+		case BlockAccess::BLOCK:
+			if(access.block().set() == set)
+				s.inject(access.block().index());
+			break;
+		}
+		break;
+
+	case BlockAccess::PURGE:
+		purge(s, access);
+		break;
+	}
+
+}
+
 /**
  */
 void MUSTProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
@@ -103,36 +141,7 @@ void MUSTProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
 	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
 	for(int i = 0; i < accesses.fst; i++) {
 		BlockAccess& acc = accesses.snd[i];
-		ASSERT(acc.action() <= BlockAccess::PURGE);
-		ASSERT(acc.kind() <= BlockAccess::RANGE);
-		MUST_DEBUG("\t\t\tupdating with " << acc);
-		switch(acc.action()) {
-
-		case BlockAccess::LOAD:
-		case BlockAccess::STORE:
-			switch(acc.kind()) {
-			case BlockAccess::RANGE:
-				if(acc.first() < acc.last()) {
-					if(set < acc.first() || set > acc.last())
-						break;
-				}
-				else if( acc.first() < set || set < acc.last())
-					break;
-					/* no break */
-			case BlockAccess::ANY:
-				out.ageAll();
-				break;
-			case BlockAccess::BLOCK:
-				if(acc.block().set() == set)
-					out.inject(acc.block().index());
-				break;
-			}
-			break;
-
-		case BlockAccess::PURGE:
-			purge(out, acc);
-			break;
-		}
+		update(out, acc);
 	}
 }
 
@@ -391,7 +400,6 @@ void ACSBuilder::configure(const PropList &props) {
 /**
  */
 void ACSBuilder::processWorkSpace(WorkSpace *fw) {
-	//int i;
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->dataCache();
 
 	DATA_FIRSTMISS_LEVEL(fw) = level;
@@ -575,7 +583,7 @@ void PERSProblem::update(Domain& out, const Domain& in, BasicBlock* bb)  {
  * @param item	Item to work on.
  * @param acc	Purge action to perform.
  */
-void PERSProblem::purge(Item& item, BlockAccess& acc) {
+void PERSProblem::purge(Item& item, const BlockAccess& acc) {
 	ASSERT(acc.action() == BlockAccess::PURGE);
 	ASSERT(acc.kind() <= BlockAccess::RANGE);
 	switch(acc.kind()) {
@@ -593,6 +601,7 @@ void PERSProblem::purge(Item& item, BlockAccess& acc) {
 			if(item[acc.block().set()] != -1)
 				item[acc.block().set()] = item.getA();
 		}
+		break;
 	}
 }
 
@@ -602,7 +611,7 @@ void PERSProblem::purge(Item& item, BlockAccess& acc) {
  * @param domain	Domain to work on.
  * @param acc		Purge action to perform.
  */
-void PERSProblem::purge(Domain& domain, BlockAccess& acc) {
+void PERSProblem::purge(Domain& domain, const BlockAccess& acc) {
 	purge(domain.getWhole(), acc);
 	for(int i = 0; i < domain.length(); i++)
 		purge(domain.getItem(i), acc);
@@ -666,7 +675,7 @@ void MUSTPERS::print(elm::io::Output &output, const Domain& d) const {
 
 
 MUSTPERS::MUSTPERS(const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache)
-:	mustProb(_lbset->count(), _lbset->count(), _fw, _cache, _cache->wayCount()),
+:	mustProb(_lbset->count(), _lbset->cacheSet(), _fw, _cache, _cache->wayCount()),
 	persProb(_lbset->count(), _lbset, _fw, _cache, _cache->wayCount()),
 	bot(_lbset->count(),  _cache->wayCount()),
 	ent(_lbset->count(),  _cache->wayCount()),
@@ -688,51 +697,59 @@ const MUSTPERS::Domain& MUSTPERS::entry(void) const {
 		return ent;
 }
 
+
+/**
+ * Update according to the given access.
+ * @param s			Domain to udpate.
+ * @param access	Access to apply.
+ */
+void MUSTPERS::update(Domain& s, const BlockAccess& access) {
+	MUST_DEBUG("\t\t\tupdating with " << acc);
+	switch(access.action()) {
+
+	case BlockAccess::LOAD:
+	case BlockAccess::STORE:
+		switch(access.kind()) {
+		case BlockAccess::RANGE:
+			if(access.first() < access.last()) {
+				if(set < access.first() || set > access.last())
+					break;
+			}
+			else if(access.first() < set || set < access.last())
+				break;
+				/* no break */
+		case BlockAccess::ANY:
+			ageAll(s);
+			break;
+		case BlockAccess::BLOCK:
+			if(access.block().set() == set)
+				inject(s, access.block().index());
+			break;
+		}
+		break;
+
+	case BlockAccess::PURGE:
+		mustProb.purge(s.must, access);
+		persProb.purge(s.pers, access);
+		break;
+
+	default:
+		ASSERTP(false, "bad block access action: " << access.kind());
+		break;
+	}
+}
+
+
+/**
+ */
 void MUSTPERS::update(Domain& out, const Domain& in, BasicBlock* bb) {
 	assign(out, in);
 	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
 	for(int i = 0; i < accesses.fst; i++) {
 		BlockAccess& acc = accesses.snd[i];
-		MUST_DEBUG("\t\t\tupdating with " << acc);
-		switch(acc.action()) {
-
-		case BlockAccess::LOAD:
-		case BlockAccess::STORE:
-			switch(acc.kind()) {
-			case BlockAccess::RANGE:
-				if(acc.first() < acc.last()) {
-					if(set < acc.first() || set > acc.last())
-						break;
-				}
-				else if( acc.first() < set || set < acc.last())
-					break;
-					/* no break */
-			case BlockAccess::ANY:
-				ageAll(out);
-				break;
-			case BlockAccess::BLOCK:
-				if(acc.block().set() == set)
-					inject(out, acc.block().index());
-				break;
-			}
-			break;
-
-		case BlockAccess::PURGE:
-			mustProb.purge(out.must, acc);
-			persProb.purge(out.pers, acc);
-			break;
-
-		default:
-			ASSERTP(false, "bad block access action: " << acc.kind());
-		}
-
+		update(out, acc);
 	}
 }
-
-    /*elm::io::Output& operator<<(elm::io::Output& output, const Pair<const MUSTPERS&, const MUSTPERS::Domain>& dom) {
-	dom.fst.print(output, dom.snd);
-	return(output);
-	}*/
 
 
 /**

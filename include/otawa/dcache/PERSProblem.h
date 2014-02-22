@@ -81,7 +81,7 @@ public:
 		void print(elm::io::Output &output) const;
 		void enterContext(void);
 		void leaveContext(void);
-		inline int length() { ASSERT(!isBottom); return data.length(); }
+		inline int length(void) const { ASSERT(!isBottom); return data.length(); }
 		inline Item& getItem(const int idx) const { ASSERT(!isBottom); return(*data.get(idx)); }
 		void ageAll(void);
 		inline void setNotBottom(void) { isBottom = false; }
@@ -117,8 +117,9 @@ public:
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
-	void purge(Item& item, BlockAccess& acc);
-	void purge(Domain& domain, BlockAccess& acc);
+	void update(Domain& s, const BlockAccess& access);
+	void purge(Item& item, const BlockAccess& acc);
+	void purge(Domain& domain, const BlockAccess& acc);
 	
 	inline void enterContext(Domain& dom, BasicBlock *header, util::hai_context_t ctx) {
 #ifndef PERFTEST

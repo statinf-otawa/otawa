@@ -12,6 +12,7 @@ set(SOURCES
 	"dcache_CatConstraintBuilder.cpp"
 	"dcache_CLPBlockBuilder.cpp"
 	"Dirty.cpp"
+	"Purge.cpp"
 )
 
 add_library(dcache SHARED ${SOURCES})

@@ -67,6 +67,7 @@ public:
 	void print(elm::io::Output &output, const Domain& d) const;
 
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	void update(Domain& s, const BlockAccess& access);
 	inline void ageAll(Domain& d) const { d.must.ageAll(); d.pers.ageAll();  }
 	inline void inject(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.inject(id); }
 	

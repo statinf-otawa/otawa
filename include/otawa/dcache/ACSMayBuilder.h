@@ -111,6 +111,7 @@ public:
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	void update(Domain& s, const BlockAccess& access);
 	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
 	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
 };

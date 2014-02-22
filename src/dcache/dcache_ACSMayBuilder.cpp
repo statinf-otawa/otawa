@@ -46,21 +46,36 @@ const MAYProblem::Domain& MAYProblem::entry(void) const {
 }
 
 
+/**
+ * Update the state according to the given block access.
+ * @param s			State to update.
+ * @param access	Cache access.
+ */
+void MAYProblem::update(Domain& s, const BlockAccess& access) {
+	switch(access.kind()) {
+	case BlockAccess::RANGE:
+	case BlockAccess::ANY:
+		break;
+	case BlockAccess::BLOCK:
+		if(access.block().set() == line)
+			s.inject(access.block().index());
+		break;
+	}
+}
+
+
+/**
+ * Produces the output MAY cache state with the execution of given BB.
+ * @param out	Output state.
+ * @param in	Input state.
+ * @param bb	BB to to analyze.
+ */
 void MAYProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
     assign(out, in);
 	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
 	for(int i = 0; i < accesses.fst; i++) {
 		BlockAccess& acc = accesses.snd[i];
-		switch(acc.kind()) {
-		case BlockAccess::RANGE:
-		case BlockAccess::ANY:
-			// !!TODO!! valid this with Clément
-			break;
-		case BlockAccess::BLOCK:
-			if(acc.block().set() == line)
-				out.inject(acc.block().index());
-			break;
-		}
+		update(out, acc);
 	}
 }
 
