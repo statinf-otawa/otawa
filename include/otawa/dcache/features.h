@@ -257,6 +257,7 @@ typedef enum {
 	MAY_PURGE = 3,
 	MUST_PURGE = 4
 } purge_t;
+io::Output& operator<<(io::Output& out, purge_t purge);
 extern p::feature PURGE_FEATURE;
 extern Identifier<purge_t> PURGE;
 

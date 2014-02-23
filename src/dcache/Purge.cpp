@@ -30,6 +30,17 @@
 
 namespace otawa { namespace dcache {
 
+io::Output& operator<<(io::Output& out, purge_t purge) {
+	switch(purge) {
+	case INV_PURGE:		out << "inv"; break;
+	case NO_PURGE:		out << "no"; break;
+	case PERS_PURGE:	out << "pers"; break;
+	case MAY_PURGE:		out << "may"; break;
+	case MUST_PURGE:	out << "must"; break;
+	}
+	return out;
+}
+
 class PurgeAnalysis: public Processor {
 public:
 	static p::declare reg;
@@ -148,14 +159,14 @@ private:
 
 		// log
 		if(logFor(LOG_INST))
-			log << "\t\t\t" << access << io::endl;
+			log << "\t\t\t" << access << " as ";
 
 		// look for the category
 		purge_t purge = INV_PURGE;
 		switch(dcache::CATEGORY(access)) {
 		case ALWAYS_HIT:
 			purge = NO_PURGE;
-			return;
+			break;
 		case FIRST_MISS:
 			if(mayPurge(access, state))
 				purge = PERS_PURGE;
@@ -183,8 +194,11 @@ private:
 		}
 
 		// apply it
-		if(purge >= PURGE(access))
+		if(purge >= PURGE(access)) {
 			PURGE(access) = purge;
+			if(logFor(LOG_INST))
+				cerr << purge << io::endl;
+		}
 	}
 
 	/**
