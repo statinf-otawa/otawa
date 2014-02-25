@@ -207,6 +207,14 @@ namespace otawa { namespace hard {
 
 
 /**
+ * @fn Address Cache::round(Address addr) const;
+ * Round the given address to the address of the container cache block.
+ * @param addr	Address to round.
+ * @return		Round address.
+ */
+
+
+/**
  * Set the access time.
  * @param access_time	Access time in processor cycles.
  */

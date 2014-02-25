@@ -111,10 +111,12 @@ public:
 	inline ot::mask tagMask(void) const { return ~(lineMask() | blockMask()); }
 	
 	// Address decomposition
-	inline ot::mask offset(address_t addr) const { return ot::mask(addr.address()) & blockMask(); }
-	inline ot::mask set(address_t addr) const { return (ot::mask(addr.address()) & lineMask()) >> blockBits(); }
-	inline ot::mask tag(address_t addr) const { return ot::mask(addr.address()) >> (blockBits() + rowBits()); }
-	inline ot::mask block(address_t addr) const { return ot::mask(addr.address()) >> blockBits(); }
+	inline ot::mask offset(Address addr) const { return ot::mask(addr.address()) & blockMask(); }
+	inline ot::mask set(Address addr) const { return (ot::mask(addr.address()) & lineMask()) >> blockBits(); }
+	inline ot::mask tag(Address addr) const { return ot::mask(addr.address()) >> (blockBits() + rowBits()); }
+	inline ot::mask block(Address addr) const { return ot::mask(addr.address()) >> blockBits(); }
+	inline Address round(Address addr) const
+		{ if(addr.isNull()) return addr; else return Address(addr.page(), addr.offset() & ~(blockSize() - 1)); }
 	
 	// Modifiers
 	void setAccessTime(int access_time);
