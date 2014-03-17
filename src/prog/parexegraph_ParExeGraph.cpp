@@ -733,7 +733,7 @@ void ParExeGraph::addEdgesForFetch(){
 
     // traverse all fetch nodes
     ParExeNode * first_cache_line_node = fetch_stage->firstNode();
-    address_t current_cache_line = fetch_stage->firstNode()->inst()->inst()->address().address() /  _cache_line_size;
+    address_t current_cache_line = fetch_stage->firstNode()->inst()->inst()->address().offset() /  _cache_line_size;
     for(int i=0 ; i<fetch_stage->numNodes()-1 ; i++) {
 		ParExeNode *node = fetch_stage->node(i);
 		ParExeNode *next = fetch_stage->node(i+1);
@@ -752,7 +752,7 @@ void ParExeGraph::addEdgesForFetch(){
 
 		// new cache line?
 		//if (cache)         FIXME !!!!!!!!!!!!!!!
-		address_t cache_line = next->inst()->inst()->address().address() /  _cache_line_size;
+		address_t cache_line = next->inst()->inst()->address().offset() /  _cache_line_size;
 		if ( cache_line != current_cache_line){
 			new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID);
 			new ParExeEdge(node, next, ParExeEdge::SOLID);
@@ -1071,7 +1071,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
     		dotFile << bb << "\\l";
     	}
     	dotFile << "I" << inst->index() << ": ";
-		dotFile << "0x" << fmt::address(inst->inst()->address()) << ":  "; 
+		dotFile << "0x" << ot::address(inst->inst()->address()) << ":  ";
 		escape(dotFile, elm::_ << inst->inst());
 		dotFile << "\\l";
     }

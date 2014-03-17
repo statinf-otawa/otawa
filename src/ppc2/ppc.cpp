@@ -218,7 +218,7 @@ public:
 
 		Address addr = oinst->address();
 		ppc_inst_t *inst;
-		_ppcState->NIA = addr.address();
+		_ppcState->NIA = addr.offset();
 		inst = ppc_decode(_ppcDecoder, _ppcState->NIA);
 		ppc_execute(_ppcState, inst);
 		ppc_free_inst(inst);
@@ -796,7 +796,7 @@ File *Process::loadFile(elm::CString path) {
 // Memory read
 #define GET(t, s) \
 	void Process::get(Address at, t& val) { \
-			val = ppc_mem_read##s(_ppcMemory, at.address()); \
+			val = ppc_mem_read##s(_ppcMemory, at.offset()); \
 			/*cerr << "val = " << (void *)(int)val << " at " << at << io::endl;*/ \
 	}
 GET(t::int8, 8);
@@ -814,7 +814,7 @@ GET(Address, 32);
  */
 void Process::get(Address at, string& str) {
 	Address base = at;
-	while(!ppc_mem_read8(_ppcMemory, at.address()))
+	while(!ppc_mem_read8(_ppcMemory, at.offset()))
 		at = at + 1;
 	int len = at - base;
 	char buf[len];
@@ -826,7 +826,7 @@ void Process::get(Address at, string& str) {
 /**
  */
 void Process::get(Address at, char *buf, int size)
-	{ ppc_mem_read(_ppcMemory, at.address(), buf, size); }
+	{ ppc_mem_read(_ppcMemory, at.offset(), buf, size); }
 
 
 /**

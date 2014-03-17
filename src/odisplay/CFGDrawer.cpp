@@ -154,7 +154,7 @@ void CFGDrawer::onNode(otawa::BasicBlock *bb, otawa::display::Node *node){
 			body << label << ":\n";
 		}*/
 
-		body << "0x" << fmt::address(inst->address()) << ":  ";
+		body << "0x" << ot::address(inst->address()) << ":  ";
 		inst->dump(body);
 	}
 	if(body.length() > 0)

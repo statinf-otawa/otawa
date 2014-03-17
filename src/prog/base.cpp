@@ -40,8 +40,26 @@ Exception::Exception(void): MessageException("") {
  * Build a simple exception with the given message.
  * @param message	Message of the exception.
  */
-Exception::Exception(const string& message): MessageException(message) {
-	//cerr << "otawa::Exception::Exception(\"" << message << "\")\n";
+Exception::Exception(string message): MessageException(message) {
+}
+
+
+/**
+ * Build OTAWA exception from another exception.
+ * @param exn	Exception to build from.
+ */
+Exception::Exception(elm::Exception& exn): MessageException(exn.message()) {
+}
+
+
+/**
+ * Build OTAWA exception from a message and another exception.
+ * Message and exception message are joined separated by a ":".
+ * @param message	Exception message.
+ * @param exn		Exception to join with.
+ */
+Exception::Exception(string message, elm::Exception& exn)
+: MessageException(_ << message << ": " << exn.message()) {
 }
 
 
@@ -173,14 +191,103 @@ elm::io::Output& operator<<(elm::io::Output& out, Address addr) {
 	else {
 		if(addr.page())
 			out << addr.page() << ':';
-		out << fmt::address(addr.offset());
+		out << ot::address(addr.offset());
 	}
 	return out;
 }
+
 
 /**
  * @typedef signed long long time_t;
  * This type represents timing in OTAWA, in processor cycles.
  */
+
+
+namespace ot {
+
+/**
+ * Build a format to display addresses.
+ * @param addr	Address to display.
+ * @return		Format to display the address.
+ */
+elm::io::IntFormat address(Address addr) {
+	return elm::io::right(elm::io::width(8, elm::io::pad('0',
+		elm::io::hex(addr.offset()))));
+}
+
+}	// ot
+
+
+/**
+ * @class MemArea
+ * Utility class representing an area in the memory defined by a base address
+ * and a size.
+ */
+
+
+/**
+ * Test if the current mem area includes (not strictly) the given one.
+ * @param a		Memory area tested for inclusion.
+ * @return		True if the current memory area contains the a memory area.
+ */
+bool MemArea::includes(const MemArea& a) const {
+	return address() <= a.address() && a.topAddress() <= topAddress();
+}
+
+
+/**
+ * Test if the current memory area meets at least one byte
+ * of the given one.
+ * @param a		Memory area to test.
+ * @return		True if there is, at least, one byte in common between both memory areas.
+ */
+bool MemArea::meets(const MemArea& a) const {
+	return	(address() <= a.address() && a.address() < topAddress())
+		||	(a.address() <= address() && address() < a.topAddress());
+}
+
+
+/**
+ * Build the intersection of both memory areas.
+ * @param a		Memory area to meet with.
+ * @return		Result of meet.
+ */
+MemArea MemArea::meet(const MemArea& a) const {
+	Address low = max(address(), a.address());
+	Address high = min(topAddress(), a.topAddress());
+	if(low < high)
+		return MemArea(low, high);
+	else
+		return null;
+}
+
+
+/**
+ * Build a memory area that is the inclusive join of both memory areas.
+ * @param a		Memory area to join with.
+ * @return		Result of inclusive join.
+ */
+MemArea MemArea::join(const MemArea& a) const {
+	return MemArea(min(address(), a.address()), max(topAddress(), a.topAddress()));
+}
+
+
+/**
+ * Null memory area.
+ */
+MemArea MemArea::null;
+
+
+/**
+ */
+io::Output& operator<<(io::Output& out, const MemArea& a) {
+	if(a.isNull())
+		out << "<null area>";
+	else
+		out << a.address() << ":" << a.topAddress();
+	return out;
+}
+
+
 }	// otawa
 

@@ -32,7 +32,7 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 		else {
 			if(display_assembly)
 				cout << "{";
-			cout << "BB " << index << " (" << fmt::address(bb->address()) << ")";
+			cout << "BB " << index << " (" << ot::address(bb->address()) << ")";
 			if(display_assembly) {
 				cout << " | ";
 				bool first = true;
@@ -68,7 +68,7 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 					}
 
 					// Display the instruction
-					cout << fmt::address(inst->address()) << "    ";
+					cout << ot::address(inst->address()) << "    ";
 					StringBuffer buf;
 					inst->dump(buf);
 					String dis = buf.toString();

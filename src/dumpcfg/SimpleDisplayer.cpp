@@ -34,8 +34,8 @@ void SimpleDisplayer::onCall(Edge *edge) {
 void SimpleDisplayer::onBBBegin(BasicBlock *bb, int index) {
 	if(!bb->isEntry() && !bb->isExit())
 		cout << index - 1
-			 << ' ' << fmt::address(bb->address())
-			 << ' ' << fmt::address(bb->address() + bb->getBlockSize() - 4);
+			 << ' ' << ot::address(bb->address())
+			 << ' ' << ot::address(bb->address() + bb->getBlockSize() - 4);
 }
 
 

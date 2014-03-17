@@ -504,7 +504,7 @@ void ParamExeGraph::dump(elm::io::Output& dotFile) {
 
   dotFile << "\"code\" [shape=record, label= \"";
   for (InstIterator inst(_sequence) ; inst ; inst++) {
-    dotFile << "0x" << fmt::address(inst->inst()->address()) << ":  "; 
+    dotFile << "0x" << ot::address(inst->inst()->address()) << ":  ";
     inst->inst()->dump(dotFile);
     dotFile << "\\" << "n" ;
   }
@@ -607,7 +607,7 @@ void ParamExeGraph::dumpSimple(elm::io::Output& dotFile) {
 
   dotFile << "\"legend\" [shape=record, label= \"";
   for (InstIterator inst(_sequence) ; inst ; inst++) {
-    dotFile << "0x" << fmt::address(inst->inst()->address()) << ":  "; 
+    dotFile << "0x" << ot::address(inst->inst()->address()) << ":  ";
     inst->inst()->dump(dotFile);
     dotFile << "\\" << "n" ;
   }

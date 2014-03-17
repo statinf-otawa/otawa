@@ -111,7 +111,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 		for(CFG::BBIterator bb(cfg); bb; bb++) {
 			if(logFor(LOG_BB))
 				log << "\t\tprocess BB " << bb->number()
-					<< " (" << fmt::address(bb->address()) << ")\n";
+					<< " (" << ot::address(bb->address()) << ")\n";
 
 			// traverse blocks accesses
 			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);

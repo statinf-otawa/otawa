@@ -125,19 +125,19 @@ inline ot::mask PureCache::tagMask(void) const {
 }
 	
 inline ot::mask PureCache::offset(address_t addr) const {
-	return ((ot::mask)addr.address()) & blockMask();
+	return ((ot::mask)addr.offset()) & blockMask();
 }
 
 inline ot::mask PureCache::line(address_t addr) const {
-	return (((ot::mask)addr.address()) & lineMask()) >> blockBits();
+	return (((ot::mask)addr.offset()) & lineMask()) >> blockBits();
 }
 
 inline ot::mask PureCache::tag(address_t addr) const {
-	return ((ot::mask)addr.address()) >> (blockBits() + rowBits());
+	return ((ot::mask)addr.offset()) >> (blockBits() + rowBits());
 }
 
 inline ot::mask PureCache::block(address_t addr) const {
-	return ((ot::mask)addr.address()) >> blockBits();
+	return ((ot::mask)addr.offset()) >> blockBits();
 }
 
 

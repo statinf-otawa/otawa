@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	Base declaration interface.
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-07, IRIT UPS.
+ *	Copyright (c) 2003, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -45,7 +44,6 @@ namespace ot {
 	typedef t::uint8 byte;
 	typedef t::uint32 mask;
 	typedef t::uint32 size;
-	// time measurement
 	typedef t::int64 time;
 }	// ot
 
@@ -60,10 +58,8 @@ public:
 	// Constructors
 	inline Address(void): pg(null_page), off(0) { }
 	inline Address(offset_t offset): pg(0), off(offset) { }
-	inline Address(page_t page, offset_t offset)
-		: pg(page), off(offset) { }
-	inline Address(const Address& address)
-		: pg(address.pg), off(address.off) { }
+	inline Address(page_t page, offset_t offset): pg(page), off(offset) { }
+	inline Address(const Address& address): pg(address.pg), off(address.off) { }
 
 	// Accessors
 	inline page_t page(void) const { return pg; }
@@ -73,43 +69,25 @@ public:
 	inline operator offset_t(void) const { return offset(); }
 
 	// Assignment
-	inline Address& operator=(const Address& address)
-		{ pg = address.pg; off = address.off; return *this; }
-	inline Address& operator=(offset_t offset)
-		{ pg = 0; off = offset; return *this; }
-	inline Address& operator+=(int offset)
-		{ ASSERT(!offset || !isNull()); off += offset; return *this; }
-	inline Address& operator+=(t::uint32 offset)
-		{ ASSERT(!offset || !isNull()); off += offset; return *this; }
-	inline Address& operator-=(int offset)
-		{ ASSERT(!offset || !isNull()); off -= offset; return *this; }
-	inline Address& operator-=(t::uint32 offset)
-		{ ASSERT(!offset || !isNull()); off -= offset; return *this; }
+	inline Address& operator=(const Address& address) { pg = address.pg; off = address.off; return *this; }
+	inline Address& operator=(offset_t offset) { pg = 0; off = offset; return *this; }
+	inline Address& operator+=(int offset) { ASSERT(!offset || !isNull()); off += offset; return *this; }
+	inline Address& operator+=(t::uint32 offset) { ASSERT(!offset || !isNull()); off += offset; return *this; }
+	inline Address& operator-=(int offset) { ASSERT(!offset || !isNull()); off -= offset; return *this; }
+	inline Address& operator-=(t::uint32 offset) { ASSERT(!offset || !isNull()); off -= offset; return *this; }
 
 	// Operations
-	inline Address operator+(t::int32 offset) const
-		{ ASSERT(!offset || !isNull()); return Address(pg, off + offset); }
-	inline Address operator+(t::uint32 offset) const
-		{ ASSERT(!offset || !isNull()); return Address(pg, off + offset); }
-	inline Address operator-(t::int32 offset) const
-		{ ASSERT(!offset || !isNull()); return Address(pg, off - offset); }
-	inline Address operator-(t::uint32 offset) const
-		{ ASSERT(!offset || !isNull()); return Address(pg, off - offset); }
-	inline offset_t operator-(const Address& address) const {
-		ASSERT(!isNull() && !address.isNull());
-		ASSERT(pg == address.pg);
-		return off - address.off;
-	}
+	inline Address operator+(t::int32 offset) const { ASSERT(!offset || !isNull()); return Address(pg, off + offset); }
+	inline Address operator+(t::uint32 offset) const { ASSERT(!offset || !isNull()); return Address(pg, off + offset); }
+	inline Address operator-(t::int32 offset) const { ASSERT(!offset || !isNull()); return Address(pg, off - offset); }
+	inline Address operator-(t::uint32 offset) const { ASSERT(!offset || !isNull()); return Address(pg, off - offset); }
+	inline offset_t operator-(const Address& address) const
+		{ ASSERT(!isNull() && !address.isNull()); ASSERT(pg == address.pg); return off - address.off; }
 
 	// Comparisons
-	inline bool equals(const Address& address) const
-		{ return pg == address.pg && off == address.off; }
-	inline int compare(const Address& address) const {
-		ASSERT(pg == address.pg);
-		if(off < address.off) return -1;
-		else if(off > address.off) return 1;
-		else return 0;
-	}
+	inline bool equals(const Address& address) const { return pg == address.pg && off == address.off; }
+	inline int compare(const Address& address) const
+		{ ASSERT(pg == address.pg); if(off < address.off) return -1; else if(off > address.off) return 1; else return 0; }
 	inline bool operator==(const Address& addr) const { return equals(addr); }
 	inline bool operator!=(const Address& addr) const { return !equals(addr); }
 	inline bool operator<(const Address& addr) const { ASSERT(pg == addr.pg); return off < addr.off; }
@@ -117,35 +95,75 @@ public:
 	inline bool operator>(const Address& addr) const { ASSERT(pg == addr.pg); return off > addr.off; }
 	inline bool operator>=(const Address& addr) const { ASSERT(pg == addr.pg); return off >= addr.off; }
 
-
-	// Deprecated
-	inline offset_t address(void) const { return off; }
-
 private:
 	page_t pg;
 	offset_t off;
 };
+
 typedef Address address_t;
-
-
-// Format
-namespace fmt {
-	inline elm::io::IntFormat address(address_t addr) {
-		return elm::io::right(elm::io::width(8, elm::io::pad('0',
-			elm::io::hex(addr.offset()))));
-	}
-}
-
-
-// Address display
+namespace ot { elm::io::IntFormat address(Address addr); }
 elm::io::Output& operator<<(elm::io::Output& out, Address addr);
+inline Address max(const Address& a1, const Address& a2) { if(a1 < a2) return a2; else return a1; }
+inline Address min(const Address& a1, const Address& a2) { if(a1 < a2) return a1; else return a2; }
+
+
+// MemArea class
+class MemArea {
+public:
+	static MemArea null;
+
+	inline MemArea(void): _size(0) { }
+	inline MemArea(const MemArea& a): _base(a._base), _size(a._size) { }
+	inline MemArea(const Address& base, ot::size size): _base(base), _size(size) { }
+	inline MemArea(const Address& base, const Address& top): _base(base), _size(top - base) { }
+
+	inline Address address(void) const { return _base; }
+	inline ot::size size(void) const { return _size; }
+	inline Address topAddress(void) const { return _base + _size; }
+
+	inline bool isNull(void) const { return _base.isNull(); }
+	inline bool isEmpty(void) const { return !_size; }
+	inline bool contains(const Address& addr) const { return _base <= addr && addr < topAddress(); }
+
+	inline bool equals(const MemArea& a) const { return _base == a._base && _size == a._size; }
+	bool includes(const MemArea& a) const;
+	bool meets(const MemArea& a) const;
+	MemArea meet(const MemArea& a) const;
+	MemArea join(const MemArea& a) const;
+
+	inline void set(const MemArea& a) { _base = a._base; _size = a._size; }
+	inline void move(const Address& base) { _base = base; }
+	inline void moveTop(const Address& top) { _base = top - _size; }
+	inline void resize(const ot::size size) { _size = size; }
+
+	inline operator bool(void) const { return isEmpty(); }
+	inline bool operator==(const MemArea& a) const { return equals(a); }
+	inline bool operator!=(const MemArea& a) const { return !equals(a); }
+	inline bool operator>=(const MemArea& a) const { return includes(a); }
+	inline bool operator>(const MemArea& a) const { return includes(a) && !equals(a); }
+	inline bool operator<(const MemArea& a) const { return a.includes(*this); }
+	inline bool operator<=(const MemArea& a) const { return a.includes(*this) && !equals(a); }
+
+	inline MemArea operator&(const MemArea& a) const { return meet(a); }
+	inline MemArea operator+(const MemArea& a) const { return join(a); }
+	inline MemArea operator=(const MemArea& a) { set(a); return *this; }
+	inline void operator&=(const MemArea& a) { set(meet(a)); }
+	inline void operator+=(const MemArea& a) { set(join(a)); }
+
+private:
+	Address _base;
+	ot::size _size;
+};
+io::Output& operator<<(io::Output& out, const MemArea& a);
 
 
 // Exception class
 class Exception: public elm::MessageException {
 public:
 	Exception(void);
-	Exception(const String& message);
+	Exception(string message);
+	Exception(elm::Exception& exn);
+	Exception(string message, elm::Exception& exn);
 };
 
 } // otawa
@@ -155,10 +173,8 @@ namespace elm {
 	template <>
 	class HashKey<otawa::Address> {
 	public:
-		static inline unsigned long hash (const otawa::Address &key)
-			{ return key.page() + key.offset(); }
-		static inline bool equals (const otawa::Address &key1, const otawa::Address &key2)
-			{ return key1 == key2; }
+		static inline unsigned long hash (const otawa::Address &key) { return key.page() + key.offset(); }
+		static inline bool equals (const otawa::Address &key1, const otawa::Address &key2) { return key1 == key2; }
 	};
 } // elm
 

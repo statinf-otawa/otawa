@@ -202,7 +202,7 @@ void CFGOutput::genBBLabel(CFG *cfg, BasicBlock *bb, Output& out) {
 			out << *label << ":\n";
 
 		// display the instruction
-		out << "0x" << fmt::address(inst->address()) << ":  ";
+		out << "0x" << ot::address(inst->address()) << ":  ";
 		inst->dump(out);
 		out << "\n";
 	}
