@@ -1,11 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
-
 project("otawa")
 set(PACKAGE "otawa")
 
 # debugging activated
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g3")
-
 set(VERSION "0.9.1")
 
 # gcc based compiler lack of support by cmake (opposed to VS)
@@ -15,7 +13,6 @@ if (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
   set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wl,--kill-at -Wl,--add-stdcall-alias")
 endif (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
 
-#set(HAS_RELOCATION on)
 
 # build configuration file
 configure_file (
@@ -47,15 +44,77 @@ add_definitions(-DHAS_RELOCATION)
 add_definitions(-DOTAWA_CMAKE)
 
 # looking for ARM loader
-set(ARM_PATH "${CMAKE_SOURCE_DIR}/../arm" CACHE PATH "path to GLISS ARM path")
+set(ARM_PATH "${CMAKE_SOURCE_DIR}/../armv5t" CACHE PATH "path to GLISS ARM path")
 if(EXISTS "${ARM_PATH}")
-	find_library(ARM_LIB emul PATHS "${ARM_PATH}/lib" NO_DEFAULT_PATH)
+	if(MINGW_LINUX)
+		set(path "${ARM_PATH}/src/libarm.a")
+		if(NOT EXISTS ${path})
+			set(path ARM_LIB-NOTFOUND)
+		endif()
+		set(ARM_LIB "${path}" CACHE PATH "path to ARM library")
+	else()
+		find_library(ARM_LIB arm NAMES libarm.a PATHS "${ARM_PATH}/src" NO_DEFAULT_PATH)
+	endif()
 endif()
 if(ARM_LIB)
 	message(STATUS "ARM library found at ${ARM_LIB}")
 else()
 	message(STATUS "ARM library not found")
 endif()
+
+
+# looking for PPC loader
+set(PPC_PATH "${CMAKE_SOURCE_DIR}/../ppc2" CACHE PATH "path to GLISS PPC path")
+if(EXISTS "${PPC_PATH}")
+	if(MINGW_LINUX)
+		set(path "${PPC_PATH}/src/libppc.a")
+		if(NOT EXISTS ${path})
+			set(path PPC_LIB-NOTFOUND)
+		endif()
+		set(PPC_LIB "${path}" CACHE PATH "path to PPC library")
+	else()
+		find_library(PPC_LIB ppc PATHS "${PPC_PATH}/src" NO_DEFAULT_PATH)
+	endif()
+endif()
+if(PPC_LIB)
+	message(STATUS "PPC library found at ${PPC_LIB}")
+else()
+	message(STATUS "PPC library not found")
+endif()
+
+
+# look for lp_solve5
+set(LP_SOLVE5_PATH "${CMAKE_SOURCE_DIR}/../lp_solve5" CACHE PATH "path to lp_solve5 path")
+if(EXISTS "${LP_SOLVE5_PATH}")
+	if(MINGW_LINUX)
+		set(path "${LP_SOLVE5_PATH}/lpsolve55/liblpsolve55.a")
+		if(NOT EXISTS ${path})
+			set(path LP_SOLVE5_LIB-NOTFOUND)
+		endif()
+		set(LP_SOLVE5_LIB "${path}" CACHE PATH "path to lp_solve5 library")
+	else()
+		find_library(LP_SOLVE5_LIB lpsolve55 PATHS "${LP_SOLVE5_PATH}/lpsolve55" NO_DEFAULT_PATH)
+	endif()
+endif()
+if(LP_SOLVE5_LIB)
+	message(STATUS "lp_solve5 library found at ${LP_SOLVE5_LIB}")
+else()
+	message(STATUS "lp_solve5 library not found")
+endif()
+
+#if(UNIX OR APPLE OR MINGW_LINUX)
+#	set(LP_SOLVE5_PATH ${CMAKE_SOURCE_DIR}/../lp_solve5)
+#	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH}/lpsolve55 NO_DEFAULT_PATH)
+#elseif(WIN32)
+#	set(LP_SOLVE5_PATH "${CMAKE_SOURCE_DIR}/../lp_solve5")
+#	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH})
+#endif()
+#if(LP_SOLVE5)
+#	set(LP_SOLVE5_INCLUDE ${LP_SOLVE5_PATH})
+#endif()
+
+
+
 
 # ==== for Date ====
 if(WIN32)
@@ -114,10 +173,9 @@ endif(DOXYGEN AND WIN32)
 # linking is hardcoded, but libraries will be searched for
 # in all directories in PATH
 if(MINGW_LINUX)
-	set(LIBELM ${otawa_SOURCE_DIR}/../site/bin/libelm.dll)
-	set(LIBGEL ${otawa_SOURCE_DIR}/../site/bin/libgel.dll)
-	set(LIBGEL_DWARF ${otawa_SOURCE_DIR}/../site/bin/libgel_dwarf.dll)
-	message(STATUS "DEBUG: MINGW_LINUX: ${LIBELM}")
+	set(LIBELM ${otawa_SOURCE_DIR}/../elm/src/libelm.dll)
+	set(LIBGEL ${otawa_SOURCE_DIR}/../gel/src/libgel.dll)
+	set(LIBGEL_DWARF ${otawa_SOURCE_DIR}/../gel/src/libgel_dwarf.dll)
 elseif(WIN32)
 	find_library(LIBELM elm PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../elm/src)
 	find_library(LIBGEL gel PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
@@ -126,22 +184,6 @@ else()
 	find_library(LIBELM elm PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../elm/src)
 	find_library(LIBGEL gel PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
 	find_library(LIBGEL_DWARF gel_dwarf PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
-endif()
-
-
-# look for lp_solve5
-if(MINGW_LINUX OR MINGW_WIN)
-	set(LP_SOLVE5_INCLUDE "${CMAKE_SOURCE_DIR}/../libotawa/include" CACHE PATH "path to lp_solve5 include")
-	set(LP_SOLVE5 "${CMAKE_SOURCE_DIR}/../libotawa/bin/lpsolve55.dll" CACHE FILEPATH "path to lp_solve5 library")
-elseif(UNIX OR APPLE)
-	set(LP_SOLVE5_PATH ${CMAKE_SOURCE_DIR}/../lp_solve5)
-	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH}/lpsolve55 NO_DEFAULT_PATH)
-elseif(WIN32)
-	set(LP_SOLVE5_PATH "${CMAKE_SOURCE_DIR}/../lp_solve5")
-	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH})
-endif()
-if(LP_SOLVE5)
-	set(LP_SOLVE5_INCLUDE ${LP_SOLVE5_PATH})
 endif()
 
 

@@ -34,34 +34,25 @@ add_subdirectory(odisplay)
 add_subdirectory(dcache)
 
 
-# arm check
-if(EXISTS "${CMAKE_SOURCE_DIR}/../armv5t/arm.irg")
+# loader plugins
+if(ARM_LIB)
 	add_subdirectory(arm2)
-elseif(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/../../arm/lib/libemul.a")
-	add_subdirectory(arm)
+endif()
+if(PPC_LIB)
+	add_subdirectory(ppc2)
 endif()
 
 
-# ILP Plugins
+# ILP plugins
 if(HAS_LP_SOLVE)
-add_subdirectory(lp_solve)
-endif(HAS_LP_SOLVE)
-
-if(LP_SOLVE5)
-add_subdirectory(lp_solve5)
-endif(LP_SOLVE5)
-
-
-# Loader selection
-if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/../../ppc2")
-add_subdirectory(ppc2)
-#message(STATUS "${CMAKE_CURRENT_BINARY_DIR}/../../ppc2")
-elseif()
-add_subdirectory(ppc)
+	add_subdirectory(lp_solve)
+endif()
+if(LP_SOLVE5_LIB)
+	add_subdirectory(lp_solve5)
 endif()
 
 
-# Tools
+# tools
 add_subdirectory(config)
 add_subdirectory(dumpcfg)
 add_subdirectory(mkff)
@@ -72,8 +63,8 @@ add_subdirectory(odisasm)
 add_subdirectory(owcet)
 
 
-# Dependent tools
+# dependent tools
 add_subdirectory(bpred)
 if(LP_SOLVE5)
-add_subdirectory(oipet)
+	add_subdirectory(oipet)
 endif()
