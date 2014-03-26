@@ -59,8 +59,8 @@ private:
 	void fix(Edge *oedge, Edge *nedge);
 	void cloneEdge(Edge *edge, BasicBlock *source, Edge::kind_t kind);
 	void insert(Edge *edge, BasicBlock *ibb);
-	BasicBlock *makeBB(Inst *inst);
-	BasicBlock *makeNOp(BasicBlock *bb);
+	BasicBlock *makeBB(Inst *inst, int n = 1);
+	BasicBlock *makeNOp(BasicBlock *bb, int n = 1);
 	void buildBB(CFG *cfg);
 	void buildEdges(CFG *cfg);
 

@@ -224,7 +224,7 @@ public:
 		ppc_free_inst(inst);
 		if (_ppcState->NIA == oinst->topAddress()) {
 			Inst *next = oinst->nextInst();
-			while (next && next->isPseudo())
+			while (next /*&& next->isPseudo()*/)
 				next = next->nextInst();
 			if(next && next->address() == Address(_ppcState->NIA))
 				return next;

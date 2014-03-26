@@ -292,18 +292,13 @@ void CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , ContextTree *root)
 		for(ContextTree::BBIterator bb(root); bb; bb++){
 			if ((!bb->isEntry())&&(!bb->isExit())){ /* XXX */
 			for(BasicBlock::InstIter inst(bb); inst; inst++) {
-				 PseudoInst *pseudo = inst->toPseudo();
-				if(!pseudo){
-					address_t adlbloc = inst->address();
-					for (LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
-						if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
-							ident = lbloc->id();
-							NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);
-						}
+				address_t adlbloc = inst->address();
+				for (LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
+					if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
+						ident = lbloc->id();
+						NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);
 					}
 				}
-				else if(pseudo->id() == &bb->ID)
-					break;
 			}
 		}
 	}

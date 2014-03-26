@@ -103,8 +103,6 @@ private:
 typedef Address address_t;
 namespace ot { elm::io::IntFormat address(Address addr); }
 elm::io::Output& operator<<(elm::io::Output& out, Address addr);
-inline Address max(const Address& a1, const Address& a2) { if(a1 < a2) return a2; else return a1; }
-inline Address min(const Address& a1, const Address& a2) { if(a1 < a2) return a1; else return a2; }
 
 
 // MemArea class
@@ -176,6 +174,7 @@ namespace elm {
 		static inline unsigned long hash (const otawa::Address &key) { return key.page() + key.offset(); }
 		static inline bool equals (const otawa::Address &key1, const otawa::Address &key2) { return key1 == key2; }
 	};
+
 } // elm
 
 #endif	// OTAWA_BASE_H

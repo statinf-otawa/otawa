@@ -136,14 +136,15 @@ void Statistics::addBB(BasicBlock *bb) {
 	bb_cnt++;
 	
 	// Count instructions
-	for(BasicBlock::InstIter inst(bb); inst; inst++)
-		if(!inst->isPseudo()) {
+	for(BasicBlock::InstIter inst(bb); inst; inst++) {
+		//if(!inst->isPseudo()) {
 			insts++;
 			if(inst->isMem())
 				mems++;
 			if(inst->isControl())
 				bras++;
-		}
+		//}
+	}
 	
 	// Record computations
 	if(insts > inst_max)

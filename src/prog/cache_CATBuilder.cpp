@@ -188,19 +188,14 @@ void CATBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S ,int dec){
 		 */
 		for(ContextTree::BBIterator bk(S); bk; bk++){
 			for(BasicBlock::InstIter inst(bk); inst; inst++) {
-				 PseudoInst *pseudo = inst->toPseudo();
-				if(!pseudo){
-					address_t adlbloc = inst->address();
-					for (LBlockSet::Iterator lbloc(*lineset); lbloc; lbloc++){
-						if ((adlbloc == (lbloc->address()))&&(bk == lbloc->bb())){
-							ident = lbloc->id();
-							cachelin = lineset->lblock(ident);
-							worst(cachelin ,S , lineset,dec);
-						}
+				address_t adlbloc = inst->address();
+				for (LBlockSet::Iterator lbloc(*lineset); lbloc; lbloc++){
+					if ((adlbloc == (lbloc->address()))&&(bk == lbloc->bb())){
+						ident = lbloc->id();
+						cachelin = lineset->lblock(ident);
+						worst(cachelin ,S , lineset,dec);
 					}
 				}
-				else if(pseudo->id() == &bk->ID)
-					break;
 			}
 		}
 
@@ -387,24 +382,19 @@ BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
 		for(ContextTree::BBIterator bb(root); bb; bb++){
 			if ((!bb->isEntry())&&(!bb->isExit())){ /* XXX */
 			for(BasicBlock::InstIter inst(bb); inst; inst++) {
-				 PseudoInst *pseudo = inst->toPseudo();
-				if(!pseudo){
-					address_t adlbloc = inst->address();
-					for (LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
-						if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
-							ident = lbloc->id();
-							cache::CATEGORY(lbloc).add(cache::INVALID_CATEGORY);
-							//CATBuilder::NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);
-							set->BitSet::add(ident);
+				address_t adlbloc = inst->address();
+				for (LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
+					if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
+						ident = lbloc->id();
+						cache::CATEGORY(lbloc).add(cache::INVALID_CATEGORY);
+						//CATBuilder::NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);
+						set->BitSet::add(ident);
 
-						}
 					}
 				}
-				else if(pseudo->id() == &bb->ID)
-					break;
 			}
 		}
-		}
+	}
 
 	/*
 	 * For loops, annotate the loop-header with the set of all l-blocks in the loop

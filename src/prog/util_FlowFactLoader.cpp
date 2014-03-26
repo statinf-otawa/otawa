@@ -552,8 +552,6 @@ void FlowFactLoader::onLoop(
 	// put the max iteration
 	if(count >= 0) {
 		int old_max = path(MAX_ITERATION, inst);
-		//cerr << "DEBUG: inst = " << inst << io::endl;
-		//cerr << "DEBUG: old_max = " << old_max << io::endl;
 		int new_max = max(old_max, count);
 		path.ref(MAX_ITERATION, inst) = new_max;
 		if(logFor(LOG_BB))
@@ -1106,6 +1104,7 @@ throw(ProcessorException) {
 	catch(io::IOException& e) {
 		throw ProcessorException(*this, _ << "bad formatted address(" << e.message() << ") at " << xline(element));
 	}
+	return none;
 }
 
 
@@ -1124,6 +1123,7 @@ throw(ProcessorException) {
 	catch(io::IOException& e) {
 		throw ProcessorException(*this, _ << "bad formatted address(" << e.message() << ") at " << xline(element));
 	}
+	return none;
 }
 
 
@@ -1147,9 +1147,10 @@ throw (ProcessorException) {
 		in >> res;
 		return res;
 	}
-	catch(io::IOException e) {
+	catch(io::IOException& e) {
 		throw ProcessorException(*this, _ << "bad formatted bound at " << xline(element));
 	}
+	return none;
 }
 
 

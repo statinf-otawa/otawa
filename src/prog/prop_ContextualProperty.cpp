@@ -192,10 +192,9 @@ const PropList& ContextualProperty::findProps(
 	}
 
 	// find the identifier
-	for(int i = stack.count() - 1; i >= 0; i--) {
+	for(int i = stack.count() - 1; i >= 0; i--)
 		if(stack[i]->hasProp(id))
 			return *stack[i];
-	}
 	return props;
 }
 

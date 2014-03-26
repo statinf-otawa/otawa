@@ -162,7 +162,6 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 			// found BB starting on target instruction
 			Inst *target = inst->target();
 			if(target) {
-				ASSERT(!target->isPseudo());
 				BasicBlock *bb = thisBB(target);
 				ASSERT(bb);
 				if(inst->isCall())

@@ -136,7 +136,6 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	length = lbset->count();
 	//Inst *inst;
 	address_t adinst;
-	PseudoInst *pseudo;
 	LBlock *aux;
 
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
@@ -148,34 +147,29 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				bool visit;
 				for(BasicBlock::InstIter inst(bb); inst; inst++) {
 					visit = false;
-					pseudo = inst->toPseudo();
-					if(!pseudo){
-						adinst = inst->address();
-						for (LBlockSet::Iterator lbloc(*lbset); lbloc; lbloc++){
-							address_t address = lbloc->address();
-							// the first lblock in the BB it's a conflict
-							if(adinst == address && !test && bb == lbloc->bb()) {
-								for (int i = 0; i< length; i++)
-									if (info->contains(i)) {
-										LBlock *lblock = lbset->lblock(i);
-										CCGNode *node = CCG::NODE(lblock);
-										new CCGEdge (node, CCG::NODE(lbloc));
-									}
-								aux = lbloc;
-								test = true;
-								visit = true;
-								break;
-							}
+					adinst = inst->address();
+					for (LBlockSet::Iterator lbloc(*lbset); lbloc; lbloc++){
+						address_t address = lbloc->address();
+						// the first lblock in the BB it's a conflict
+						if(adinst == address && !test && bb == lbloc->bb()) {
+							for (int i = 0; i< length; i++)
+								if (info->contains(i)) {
+									LBlock *lblock = lbset->lblock(i);
+									CCGNode *node = CCG::NODE(lblock);
+									new CCGEdge (node, CCG::NODE(lbloc));
+								}
+							aux = lbloc;
+							test = true;
+							visit = true;
+							break;
+						}
 
-							if(adinst == address && !visit && bb == lbloc->bb()) {
-								new CCGEdge(CCG::NODE(aux), CCG::NODE(lbloc));
-								aux = lbloc;
-								break;
-							}
+						if(adinst == address && !visit && bb == lbloc->bb()) {
+							new CCGEdge(CCG::NODE(aux), CCG::NODE(lbloc));
+							aux = lbloc;
+							break;
 						}
 					}
-					else if(pseudo->id() == &bb->ID)
-						break;
 				}
 			}
 		}
