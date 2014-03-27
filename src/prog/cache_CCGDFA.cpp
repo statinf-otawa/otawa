@@ -41,20 +41,14 @@ CCGDomain *CCGProblem::gen(CFG *cfg, BasicBlock *bb) {
 	}
 	else {	
 		address_t adlbloc;
-	    PseudoInst *pseudo;
 	    int identif = 0;	    
 		for(BasicBlock::InstIter inst(bb); inst; inst++) {
-			pseudo = inst->toPseudo();			
-			if(!pseudo){
-				adlbloc = inst->address();				
-				for (LBlockSet::Iterator lbloc(*ccggraph); lbloc; lbloc++) {
-					address_t address = lbloc->address();
-					if(adlbloc == address && lbloc->bb()== bb)
-						identif = lbloc->id();
-				}
+			adlbloc = inst->address();
+			for (LBlockSet::Iterator lbloc(*ccggraph); lbloc; lbloc++) {
+				address_t address = lbloc->address();
+				if(adlbloc == address && lbloc->bb()== bb)
+					identif = lbloc->id();
 			}
-			else if(pseudo->id() == &bb->ID)
-				break;
 		}
 	
 		if(identif != 0)
@@ -71,40 +65,35 @@ CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
 	bool testnotconflit = false;
 	bool visit = false;
 	address_t adlbloc;
-   PseudoInst *pseudo;
     int identif1 = 0 , identnonconf = 0 , identif2 = 0;
     
 	for(BasicBlock::InstIter inst(bb); inst; inst++) {
 		visit = false;
 		int dec = cach->blockBits();
-		
-		pseudo = inst->toPseudo();
-		if(!pseudo) {
-			adlbloc = inst->address();
-			if (!testnotconflit) {
-				
-				// lblocks iteration
-				for (LBlockSet::Iterator lbloc(*ccggraph); lbloc; lbloc++) {
-					if (adlbloc == lbloc->address() && bb == lbloc->bb()) {
-						testnotconflit = true; 
-						identif1 = lbloc->id();					
-						unsigned long tag = ((unsigned long)adlbloc) >> dec;
-						for(LBlockSet::Iterator lbloc1(*ccggraph); lbloc1; lbloc1++) {
-							unsigned long taglblock = ((unsigned long)lbloc1->address()) >> dec;
-							address_t faddress = lbloc1->address();
-							if(adlbloc != lbloc1->address() && tag == taglblock
-							&& bb != lbloc1->bb()) {
-								identnonconf = lbloc1->id();
-								/*LBlock *ccgnode =*/ ccggraph->lblock(identif1); 
-								break;
-							}
+		adlbloc = inst->address();
+		if (!testnotconflit) {
+
+			// lblocks iteration
+			for (LBlockSet::Iterator lbloc(*ccggraph); lbloc; lbloc++) {
+				if (adlbloc == lbloc->address() && bb == lbloc->bb()) {
+					testnotconflit = true;
+					identif1 = lbloc->id();
+					unsigned long tag = ((unsigned long)adlbloc) >> dec;
+					for(LBlockSet::Iterator lbloc1(*ccggraph); lbloc1; lbloc1++) {
+						unsigned long taglblock = ((unsigned long)lbloc1->address()) >> dec;
+						address_t faddress = lbloc1->address();
+						if(adlbloc != lbloc1->address() && tag == taglblock
+						&& bb != lbloc1->bb()) {
+							identnonconf = lbloc1->id();
+							/*LBlock *ccgnode =*/ ccggraph->lblock(identif1);
+							break;
 						}
-						break;
 					}
-				
+					break;
 				}
-				visit = true; 
+
 			}
+			visit = true;
 							
 			if (!visit) {
 				for (LBlockSet::Iterator lbloc(*ccggraph); lbloc; lbloc++) {
@@ -116,9 +105,6 @@ CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
 			}
 				
 		}
-		
-		else if(pseudo->id() == &bb->ID)
-			break;
 	}
 	
 	// the bit vector of kill

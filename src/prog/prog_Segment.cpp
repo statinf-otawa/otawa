@@ -159,12 +159,8 @@ Inst *Segment::findInstAt(const Address& addr) {
 			insert(inst);
 		return inst;
 	}
-	else {
-		Inst *inst = item->toInst();
-		while(inst && inst->isPseudo())
-			inst = inst->nextInst();
-		return inst;
-	}
+	else
+		return item->toInst();
 }
 
 

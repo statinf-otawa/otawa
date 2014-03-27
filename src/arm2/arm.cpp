@@ -600,26 +600,26 @@ public:
 	}
 
 	virtual void get(Address at, t::int8& val)
-		{ val = arm_mem_read8(_memory, at.address()); }
+		{ val = arm_mem_read8(_memory, at.offset()); }
 	virtual void get(Address at, t::uint8& val)
-		{ val = arm_mem_read8(_memory, at.address()); }
+		{ val = arm_mem_read8(_memory, at.offset()); }
 	virtual void get(Address at, t::int16& val)
-		{ val = arm_mem_read16(_memory, at.address()); }
+		{ val = arm_mem_read16(_memory, at.offset()); }
 	virtual void get(Address at, t::uint16& val)
-		{ val = arm_mem_read16(_memory, at.address()); }
+		{ val = arm_mem_read16(_memory, at.offset()); }
 	virtual void get(Address at, t::int32& val)
-		{ val = arm_mem_read32(_memory, at.address()); }
+		{ val = arm_mem_read32(_memory, at.offset()); }
 	virtual void get(Address at, t::uint32& val)
-		{ val = arm_mem_read32(_memory, at.address()); }
+		{ val = arm_mem_read32(_memory, at.offset()); }
 	virtual void get(Address at, t::int64& val)
-		{ val = arm_mem_read64(_memory, at.address()); }
+		{ val = arm_mem_read64(_memory, at.offset()); }
 	virtual void get(Address at, t::uint64& val)
-		{ val = arm_mem_read64(_memory, at.address()); }
+		{ val = arm_mem_read64(_memory, at.offset()); }
 	virtual void get(Address at, Address& val)
-		{ val = arm_mem_read32(_memory, at.address()); }
+		{ val = arm_mem_read32(_memory, at.offset()); }
 	virtual void get(Address at, string& str) {
 		Address base = at;
-		while(!arm_mem_read8(_memory, at.address()))
+		while(!arm_mem_read8(_memory, at.offset()))
 			at = at + 1;
 		int len = at - base;
 		char buf[len];
@@ -627,7 +627,7 @@ public:
 		str = String(buf, len);
 	}
 	virtual void get(Address at, char *buf, int size)
-		{ arm_mem_read(_memory, at.address(), buf, size); }
+		{ arm_mem_read(_memory, at.offset(), buf, size); }
 
 	// otawa::arm::Info overload
 	virtual void *decode(otawa::Inst *inst) { return decode_raw(inst->address()); }

@@ -482,10 +482,10 @@ class ExeInst {
 		 new ExeEdge(previous, node, ExeEdge::SOLID);
 	       }
 	       else {
-		 if (node->inst()->inst()->address().address() != previous->inst()->inst()->address().address() + 4)
+		 if (node->inst()->inst()->address().offset() != previous->inst()->inst()->address().offset() + 4)
 		   new ExeEdge(previous, node, ExeEdge::SOLID);
 		 else {
-		   if (node->inst()->inst()->address().address() % (stage->width()*4) == 0) 
+		   if (node->inst()->inst()->address().offset() % (stage->width()*4) == 0)
 		     new ExeEdge(previous, node, ExeEdge::SOLID);
 		   else
 		     new ExeEdge(previous, node, ExeEdge::SLASHED);

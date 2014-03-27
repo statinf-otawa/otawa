@@ -83,17 +83,33 @@ Identifier<bool> DELAYED_NOP("otawa::DELAYED_NOP", false);
 /**
  * Build a single BB containing the instruction following the given BB.
  * @param bb	Original BB.
+ * @param n		Number of instructions.
  * @return		Built basic block.
  */
-BasicBlock *DelayedBuilder::makeBB(Inst *inst) {
+BasicBlock *DelayedBuilder::makeBB(Inst *inst, int n) {
+
+	// compute size
+	int size = 0;
+	for(Inst *i = inst; n; n--, i = i->nextInst())
+		size += inst->size();
+
+	// create the block
 	CodeBasicBlock *rbb = new CodeBasicBlock(inst);
-	rbb->setSize(inst->size());
+	rbb->setSize(size);
 	vcfg->addBB(rbb);
 	return rbb;
 }
 
 
-BasicBlock *DelayedBuilder::makeNOp(BasicBlock *bb) {
+/**
+ * Build a block made of NOPs.
+ * @param bb	Replaced basic block.
+ * @param n		Number of NOPs.
+ * @return		Built basic block.
+ */
+BasicBlock *DelayedBuilder::makeNOp(BasicBlock *bb, int n) {
+	// TODO n > 1 is not supported! Need NOPs with real addresses and real linkage.
+	ASSERT(n == 1);
 	Inst *nop = workspace()->process()->newNOp(bb->lastInst()->nextInst()->address());
 	CodeBasicBlock *rbb = new CodeBasicBlock(nop);
 	rbb->setSize(nop->size());

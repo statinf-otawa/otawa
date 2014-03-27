@@ -22,6 +22,7 @@
 #ifndef OTAWA_PROG_FEATURES_H_
 #define OTAWA_PROG_FEATURES_H_
 
+#include <otawa/proc/Feature.h>
 #include <otawa/proc/SilentFeature.h>
 
 namespace otawa {

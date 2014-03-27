@@ -277,24 +277,6 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
 
 
 /**
- * Test if the instruction is a pseudo-instruction.
- * @return True if it is a pseudo-instruction.
- */
-bool Inst::isPseudo(void) {
-	return false;
-}
-
-
-/**
- * Get the representation of this pseudo-instruction.
- * @return Pseudo-instruction representation or null.
- */
-PseudoInst *Inst::toPseudo(void) {
-	return 0;
-}
-
-
-/**
  * @fn Inst *Inst::next(void) const;
  * Get the next instruction.
  * @return Next instruction.
@@ -389,56 +371,23 @@ void Inst::semInsts(sem::Block& block) {
 
 
 /**
- * @class PseudoInst
- * Pseudo-instruction does not represents realinstruction but markers that
- * may be inserted in the code by various code processors. It is used,
- * for example, for marking basic block limits.
- * @par
- * A pseudo instruction is associated with an identifier like the property
- * identifier allowing different code processor to have their own pseudo-instructions.
+ * For a branch instruction, returns the type of management for delay slots.
+ * As a default, consider there is no delay slots.
+ * @return	Type of management of delay slots.
+ * @note 	Branches without delay slots does not need to overload this method.
  */
-
-
-/**
- * @fn PseudoInst::PseudoInst(const Identifier *id);
- * Builder of a pseudo-instruction.
- * @param id	Identifier of the pseudo-instruction.
- */
-
-
-/**
- * @fn const Identifier *PseudoInst::id(void) const;
- * Get the identifier of this pseudo-instruction.
- * @return	Pseudo-instruction identifier.
- */
-
-
-/**
- * Compute the address of this pseudo-instruction.
- */
-address_t PseudoInst::address(void) const {
-
-	// Look forward
-	for(Inst *inst = nextInst(); inst; inst = inst->nextInst())
-		if(!inst->isPseudo())
-			return inst->address();
-
-	// Look backward
-	for(Inst *inst = prevInst(); inst; inst = inst->prevInst())
-		if(!inst->isPseudo())
-			return inst->address() + inst->size();
-
-	// None found
-	return 0;
+delayed_t Inst::delayType(void) {
+	return DELAYED_None;
 }
 
 
 /**
- * Dump the pseudo-instruction.
- * @param out	Output to perform the dump on.
+ * For a branch instruction, returns the number of delayed instructions.
+ * As a default, return 0.
+ * @return	Number of delayed instructions.
  */
-void PseudoInst::dump(io::Output& out) {
-	out << "pseudo <" << (void *)_id << '>';
+int Inst::delaySlots(void) {
+	return 0;
 }
 
 

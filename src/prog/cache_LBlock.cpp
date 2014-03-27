@@ -70,18 +70,10 @@ LBlock::~LBlock(void) {
 int LBlock::countInsts(void) {
 	int cnt = 0;
 	
-	if(_bb != 0){
-		PseudoInst *pseudo;
-		for(BasicBlock::InstIter instr(_bb); instr; instr++) {
-			pseudo = instr->toPseudo();
-			if(!pseudo){
-				if(instr->address() >= addr && instr->address() < addr + _size)
-					cnt++;
-			}
-			else if(pseudo->id() == &_bb->ID)
-				break;	
-		}	
-	}
+	if(_bb != 0)
+		for(BasicBlock::InstIter instr(_bb); instr; instr++)
+			if(instr->address() >= addr && instr->address() < addr + _size)
+				cnt++;
 	
 	return cnt;	
 }

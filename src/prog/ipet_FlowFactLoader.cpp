@@ -52,7 +52,15 @@ namespace otawa { namespace ipet {
  * Build a new flow fact loader.
  */
 FlowFactLoader::FlowFactLoader(void)
-:	ContextualProcessor("otawa::ipet::FlowFactLoader", Version(1, 1, 0)) {
+:	ContextualProcessor("otawa::ipet::FlowFactLoader", Version(1, 1, 0)),
+ 	lines_available(false),
+ 	total(0),
+ 	total_loop(0),
+ 	line_loop(0),
+ 	min(0),
+ 	found_loop(0),
+ 	max(0)
+{
 	require(LOOP_HEADERS_FEATURE);
 	require(otawa::FLOW_FACTS_FEATURE);
 	provide(otawa::ipet::FLOW_FACTS_FEATURE);

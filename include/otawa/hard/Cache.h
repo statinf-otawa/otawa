@@ -111,10 +111,10 @@ public:
 	inline ot::mask tagMask(void) const { return ~(lineMask() | blockMask()); }
 	
 	// Address decomposition
-	inline ot::mask offset(Address addr) const { return ot::mask(addr.address()) & blockMask(); }
-	inline ot::mask set(Address addr) const { return (ot::mask(addr.address()) & lineMask()) >> blockBits(); }
-	inline ot::mask tag(Address addr) const { return ot::mask(addr.address()) >> (blockBits() + rowBits()); }
-	inline ot::mask block(Address addr) const { return ot::mask(addr.address()) >> blockBits(); }
+	inline ot::mask offset(Address addr) const { return ot::mask(addr.offset()) & blockMask(); }
+	inline ot::mask set(Address addr) const { return (ot::mask(addr.offset()) & lineMask()) >> blockBits(); }
+	inline ot::mask tag(Address addr) const { return ot::mask(addr.offset()) >> (blockBits() + rowBits()); }
+	inline ot::mask block(Address addr) const { return ot::mask(addr.offset()) >> blockBits(); }
 	inline Address round(Address addr) const
 		{ if(addr.isNull()) return addr; else return Address(addr.page(), addr.offset() & ~(blockSize() - 1)); }
 	
@@ -135,7 +135,7 @@ public:
 	inline int rowBits(void) const { return _info.row_bits; }
 	inline ot::mask lineMask(void) const { return (rowCount() - 1) << blockBits(); }
 	inline ot::mask rowMask(void) const { return (rowCount() - 1) << blockBits(); }
-	inline ot::mask line(const Address& addr) const { return (ot::mask(addr.address()) & lineMask()) >> blockBits(); }
+	inline ot::mask line(const Address& addr) const { return (ot::mask(addr.offset()) & lineMask()) >> blockBits(); }
 	inline int rowCount(void) const { return 1 << rowBits(); }
 };
 

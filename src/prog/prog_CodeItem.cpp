@@ -99,7 +99,7 @@ otawa::Inst *CodeItem::findByAddress(address_t addr) {
 	Inst *inst = map[MAP_INDEX(addr)];
 	if(inst)
 		while(!inst->atEnd() && inst->address() <= addr) {
-			if(!inst->isPseudo() && inst->address() == addr)
+			if(inst->address() == addr)
 				return inst;
 			inst = inst->next();
 		}
