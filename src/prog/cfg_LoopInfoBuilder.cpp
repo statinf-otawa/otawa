@@ -21,7 +21,7 @@
  */
 
 //#define OTAWA_IDFA_DEBUG
-#include <otawa/util/LoopInfoBuilder.h>
+#include <otawa/cfg/features.h>
 #include <otawa/util/Dominance.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/genstruct/SortedSLList.h>
@@ -34,6 +34,37 @@ using namespace otawa;
 using namespace otawa::dfa;
 
 namespace otawa {
+
+
+/**
+ * This processor produces loop informations:
+ * For each basic block, provides the loop which the basicblock belongs to.
+ * For each edge exiting from a loop, provides the header of the exited loop.
+ *
+ * @par Configuration
+ * none
+ *
+ * @par Required Features
+ * @li @ref DOMINANCE_FEATURE
+ * @li @ref LOOP_HEADERS_FEATURE
+ *
+ * @par Provided Features
+ * @li @ref LOOP_INFO_FEATURE
+ *
+ * @par Statistics
+ * none
+ */
+class LoopInfoBuilder: public CFGProcessor {
+public:
+        LoopInfoBuilder(void);
+        virtual void processCFG(otawa::WorkSpace*, otawa::CFG*);
+
+private:
+		/**
+		 * Builds the EXIT_LIST property for all the loop headers.
+		 */
+		void buildLoopExitList(otawa::CFG* cfg);
+};
 
 
 /**
@@ -67,7 +98,7 @@ namespace otawa {
  * @li @ref LOOP_EXIT_EDGE (@ref Edge)
  * @li @ref EXIT_LIST (@ref BasicBlock)
  */
-Feature<LoopInfoBuilder> LOOP_INFO_FEATURE("otawa::LOOP_INFO_FEATURE");
+p::feature LOOP_INFO_FEATURE("otawa::LOOP_INFO_FEATURE", new Maker<LoopInfoBuilder>());
 
 /**
  * Defined for any BasicBlock that is part of a loop.
@@ -98,26 +129,6 @@ Identifier<BasicBlock*> LOOP_EXIT_EDGE("otawa::LOOP_EXIT_EDGE", 0);
  */
 Identifier<elm::genstruct::Vector<Edge*>*> EXIT_LIST("otawa::EXIT_LIST", 0);
 
-
-/**
- * @class LoopInfoBuilder
- * This processor produces loop informations:
- * For each basic block, provides the loop which the basicblock belongs to.
- * For each edge exiting from a loop, provides the header of the exited loop.
- *
- * @par Configuration
- * none
- *
- * @par Required Features
- * @li @ref DOMINANCE_FEATURE
- * @li @ref LOOP_HEADERS_FEATURE
- *
- * @par Provided Features
- * @li @ref LOOP_INFO_FEATURE
- *
- * @par Statistics
- * none
- */
 
 // LoopInfoProblem class
 class LoopInfoProblem {

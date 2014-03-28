@@ -2,10 +2,97 @@
 #include <elm/string.h>
 #include <otawa/parexegraph/ParExeGraph.h>
 
-using namespace  otawa;
+namespace otawa {
 
-// --------------------------------------------------------------------------------------------------
+/**
+ * @defgroup peg Parametric Execution Graph
+ *
+ * Parametric Execution Graph, or parexegraph, is a way to compute execution of code blocks. A parexegraph
+ * is a graph whose nodes represents the crossing of an instruction in the microprocessor stage
+ * and the edges the time constraints of this crossing.
+ *
+ * @section Principles
+ * This graph is built for a sequence of instructions, whose the execution time is required, and a prefix sequence
+ * to take into account the overlapping effect of the pipeline. Depending on the actual microprocessor, the longer
+ * is the prefix sequencer, better are the obtained result. The cost of the sequence is obtained after assigning to each
+ * node the last starting date and computing the difference between the last stage of the last instruction of the sequence
+ * and the last stage of the last instruction of the prefix sequence. The date assignment to each node is performed under
+ * the constraint of contention in the use of resources of the microprocessor (stage parallelism, queues, functional units, etc).
+ * Below is an example of such a parametric execution graph:
+ *
+ * @image html parexegraph-sample.png
+ *
+ * As a basis, the pipeline microprocessor is taken from the platform processor description (possibly coming
+ * from an external XML file or specially built). As the model used to describe microprocessor is relatively simple
+ * and does not allow to describe any type of microprocessor, the use of parexegraph may require to customize the way
+ * the graph is built.
+ *
+ * @section Customization
+ *
+ * Basically, an execution graph is represented by a @ref ParExeGraph class whose provide also the computation
+ * of the cost of a sequence. To compute the cost fore each block a program, for example basic block, a dedicated
+ * processor like @ref GraphBBTime has to be invoked. As the execution graphs needs to be customized, this analyzer
+ * takes a generic parameter defining the actual execution graph to use. To perform the computation in the standard way,
+ * you have either to implemened @ref GraphBBTime with @ref ParExeGraph as the parametric argument:
+ * @code
+ * GraphBBTime<ParExeGraph> bbtime;
+ * bbtime.process();
+ * @endcode
+ *
+ * Or to use an analyzer as @ref BasicGraphBBTime that already provides such an implementation.
+ *
+ * Yet, if your hardware does not fits the standard OTAWA processor model, you may to customize the way the graphs are built.
+ *
+ * First, build a model as close as possible in the processor model of OTAWA and use a way to pass it to pass it to the WCET
+ * building system. This may be done using the configuration properties (@ref PROCESSOR_PATH, @ref PROCESSOR_ELEMENT or @ref PROCESSOR)
+ * or using an OTAWA script (in the platform section).
+ *
+ * Then, you provide your own parametric execution graph implementation by overloading the @ref ParExeGraph class
+ * and pass as parametric argument to @ref GraphBBTime. To build the graph, the function @ref ParExeGraph::build() is called
+ * that, in turn, calls the following methods:
+ * @li void ParExeGraph::createNodes(void) -- creates the nodes of the graph,
+ * @li void ParExeGraph::addEdgesForPipelineOrder(void) -- add edges to follow stage pipeline order,
+ * @li void ParExeGraph::addEdgesForFetch(void) -- add edges to support fetching effects (according to the instruction cache as a default),
+ * @li void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> *list_of_stages) -- add edges to represent program order,
+ * @li void ParExeGraph::addEdgesForMemoryOrder(void) -- add edges to support memory access order,
+ * @li void ParExeGraph::addEdgesForDataDependencies(void) -- add edges for data dependencies,
+ * @li void ParExeGraph::addEdgesForQueues(void) -- add edges to represent access to queues.
+ *
+ * All these methods are virtual and can be overridden to implements the specific behaviour of your hardware.
+ *
+ * @section Structure
+ *
+ * A parametric execution graph, @ref ParExeGraph, is made of nodes, @ref ParExeNode, and of edges, @ref ParExeEdge linking two nodes.
+ * An edge may be solid, @ref ParExeEdge::SLASHED, representing a possible startup at the same time, or @ref ParExeEdge::SOLID,
+ * representing a sequence in the startup (at least one cycle). The time passed in a node or on a edge may be customized.
+ * A node is the join of an instruction, @ref ParExeInst, executed on a particular pipeline stage, @par ParExeStage.
+ *
+ * Basically,the parametric execution graph is generated from a processor description, @ref ParExeProc, whose most interesting
+ * paer is the @ref ParExePipeline that contains two collections:
+ * @li a collection of queues, @ref ParExeQueue, representing the queues inside the processor,
+ * @li a list of stages, @ref ParExeStage, representing the stages in order in the pipeline.
+ *
+ * In turn, if the @ref ParExeStage is an execution stage, it is composed of @ref ParExePipeline that contains
+ * functional units represented by @ref ParExeStage.
+ *
+ * To build the graph, a user has to pass @ref ParExeSequence, made of @ref ParExeInst, that represents, in order,
+ * the concatenation of prefix and processed sequences. The @ref ParExeInst are marked according to their
+ * ownership to the prefix or the processed sequence (type @ref ParExeInst::code_part_t).
+ */
 
+
+/**
+ * @class ParExeGraph
+ * Representation of a parametric execution graph (@ref peg).
+ * @ingroup peg
+ */
+
+/**
+ * Compute the cost, in cycles, of the current graph. The cost is the difference between
+ * the execution in the commit stage of the last instruction of the considered instruction
+ * and of the last prefix instruction.
+ * @return	Cost for the current graph.
+ */
 int ParExeGraph::analyze() {
 
 	clearDelays();
@@ -702,13 +789,14 @@ void ParExeGraph::findDataDependencies() {
 
 }
 
-// ----------------------------------------------------------------
-void ParExeGraph::addEdgesForPipelineOrder(){
-    for (InstIterator inst(_sequence) ; inst ; inst++)  {
-		for (int i=0 ; i<inst->numNodes()-1 ; i++){
+
+/**
+ * Called to add edges representing the order of stages traversed by an instruction.
+ */
+void ParExeGraph::addEdgesForPipelineOrder(void) {
+    for (InstIterator inst(_sequence) ; inst ; inst++)
+		for (int i=0 ; i<inst->numNodes()-1 ; i++)
 			new ParExeEdge(inst->node(i), inst->node(i+1), ParExeEdge::SOLID);
-		}
-    }
 }
 
 
@@ -763,8 +851,14 @@ void ParExeGraph::addEdgesForFetch(){
     }
 }
 
-// ----------------------------------------------------------------
-void ParExeGraph::addEdgesForFetchWithDecomp(){
+
+/**
+ * This function add edges for the fetch stage. This function is only valid
+ * if there is not instruction cache. Basically, it adds slashed edges between each
+ * instruction except if an instruction in the sequence is the target of the branch
+ * of the previous instruction. In this case, it adds a solid edge.
+ */
+void ParExeGraph::addEdgesForFetchWithDecomp(void) {
     ParExeStage *fetch_stage = _microprocessor->fetchStage();
     ParExeNode * first_cache_line_node = fetch_stage->firstNode();
     address_t current_cache_line = (address_t) fetch_stage->firstNode()->inst()->inst()->address() /  _cache_line_size;
@@ -796,8 +890,13 @@ void ParExeGraph::addEdgesForFetchWithDecomp(){
     }
 }
 
-// ----------------------------------------------------------------
 
+/**
+ * This function is called to add edges between the nodes to order the stage execution
+ * of instruction according to the program order.
+ * @param list_of_stages	List of stages to build the edges for
+ * 							(if an empty pointer is passed, one is created containing the in-order stages).
+ */
 void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> *list_of_stages){
 
     elm::genstruct::SLList<ParExeStage *> *list;
@@ -847,9 +946,11 @@ void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> 
 }
 
 
-// ----------------------------------------------------------------
-
-void ParExeGraph::addEdgesForMemoryOrder(){
+/**
+ * Called to add edges to represent contention to access memory, basically, between FUs
+ * of instructions performing memory access.
+ */
+void ParExeGraph::addEdgesForMemoryOrder(void) {
 
     ParExeStage *stage = _microprocessor->execStage();
     for (int i=0 ; i<stage->numFus() ; i++) {
@@ -887,11 +988,11 @@ void ParExeGraph::addEdgesForMemoryOrder(){
 // ----------------------------------------------------------------
 
 /**
- * Add edges for data dependencies, that is, if an instruction (a)
+ * Called to add edges for data dependencies, that is, if an instruction (a)
  * produces content of a register and instruction (b) uses this register value
  * create a solid edge between their execute stages.
  */
-void ParExeGraph::addEdgesForDataDependencies(){
+void ParExeGraph::addEdgesForDataDependencies(void){
     ParExeStage *exec_stage = _microprocessor->execStage();
     for (int j=0 ; j<exec_stage->numFus() ; j++) {
 		ParExeStage *fu_stage = exec_stage->fu(j)->firstStage();
@@ -905,9 +1006,12 @@ void ParExeGraph::addEdgesForDataDependencies(){
     }
 }
 
-// ----------------------------------------------------------------
 
-void ParExeGraph::addEdgesForQueues(){
+/**
+ * Called to add edges representing contention on the different
+ * queues of the microprocessor.
+ */
+void ParExeGraph::addEdgesForQueues(void){
 
     // build edges for queues with limited capacity */
     for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
@@ -1217,7 +1321,8 @@ ParExeGraph::ParExeGraph(
  	_first_bb_node(NULL),
  	_last_prologue_node(NULL),
  	_last_node(NULL),
- 	_branch_penalty(2)
+ 	_branch_penalty(2),
+ 	_capacity(0)
 {
 	const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION(ws);
 	if (cache && cache->instCache()) {
@@ -1243,5 +1348,45 @@ ParExeGraph::ParExeGraph(
 
 void ParExeGraph::display(elm::io::Output&) {
 }
+
+/**
+ * @class ParExeEdge
+ * An edge in a @ref ParExeGraph.
+ * @ingroup peg
+ * @see peg
+ */
+
+
+/**
+ * @class ParExeException
+ * Exception thrown if there is an error during the build and the computation of @par ExeGraph.
+ * @ingroup peg
+ * @see peg
+ */
+
+
+/**
+ * @class ParExeInst
+ * Instruction as presented in the @ref ParExeGraph.
+ * @ingroup peg
+ * @see peg
+ */
+
+/**
+ * @class ParExeNode
+ * A node of the @ref ParExeGraph, that represents the crossing
+ * of an instruction inside a microprocessor stage.
+ * @ingroup peg
+ * @see peg
+ */
+
+/**
+ * @class ParExeSequence
+ * A sequence of @ref ParExeInstruction for which a @ref ParExeGraph will be built.
+ * @ingroup peg
+ * @see peg
+ */
+
+}	// otawa
 
 

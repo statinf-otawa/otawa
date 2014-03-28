@@ -23,7 +23,7 @@
 
 #include <otawa/parexegraph/ParExeProc.h>
 
-using namespace otawa;
+namespace otawa {
 
  ParExeProc::ParExeProc(const hard::Processor *proc) {
 	 ASSERT(proc);
@@ -58,6 +58,7 @@ using namespace otawa;
 	break;
       default:
     	  ASSERT(0);
+    	  break;
       }
       // Link the stages
       ParExeQueue *source_queue = NULL;
@@ -104,6 +105,8 @@ using namespace otawa;
 /**
  * @class ParExeQueue
  * Representation of a hardware instruction queue to be used to build a ParExeGraph.
+ * @ingroup peg
+ * @see peg
  */
 
 /**
@@ -148,6 +151,8 @@ using namespace otawa;
 /**
  * @class ParExeStage
  * Representation of a pipeline stage to be used to build a ParExeGraph.
+ * @ingroup peg
+ * @see peg
  */
 
 /**
@@ -284,6 +289,8 @@ using namespace otawa;
 /**
  * @class ParExePipeline
  * Representation of a pipeline (list of stages).
+ * @ingroup peg
+ * @see peg
  */
 
 /**
@@ -315,6 +322,8 @@ using namespace otawa;
 /**
  * @class ParExeProc
  * Représentation of a processor (to be used to build a ParExeGraph). A processor is a pipeline, with a number of stages, among which a fetch stage and an execution stage, and a set of instruction queues.
+ * @ingroup peg
+ * @see peg
  */
 
 /**
@@ -374,3 +383,5 @@ using namespace otawa;
  * @class ParExeProc::QueueIterator
  * Iterator for the instruction queues.
  */
+
+}	// otawa

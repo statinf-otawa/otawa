@@ -39,13 +39,28 @@ Identifier<String> GRAPHS_OUTPUT_DIRECTORY("otawa::GRAPHS_OUTPUT_DIRECTORY","");
 
   
 /**
- * @class ExecutionGraphBBTime
+ * @class GraphBBTime
+ *
  * This basic block processor computes the basic block execution time using
  * the execution graph method described in the following papers:
- * @li X. Par, A. Roychoudhury, A., T. Mitra, "Modeling Out-of-Order Processors
- * for Software Timing Analysis", Proceedings of the 25th IEEE International
- * Real-Time Systems Symposium (RTSS'04), 2004.
- * @li
+ *
+ * <p>
+ * Christine Rochange, Pascal Sainrat. <i>A Context-Parameterized Model
+ * for Static Analysis of Execution Times.</i>
+ * Transactions on High-Performance Embedded Architecture and Compilation, Springer,
+ * Vol. 2 N. 3, p. 109-128, 2009.
+ * </p>
+ *
+ * @par Provided Features
+ * @li @ref ipet::BB_TIME_FEATURE
+ *
+ * @par Required Features
+ * @li @ref hard::PROCESSOR_FEATURE,
+ * @li @ref hard::MEMORY_FEATURE,
+ *
+ * @par Configuration
+ * @li @ref GRAPHS_OUTPUT_DIRECTORY -- if given, gets the path of an existing directory
+ * where the execution graphs will be stored in (mainly used for debugging purpose).
  */
 
 
@@ -153,6 +168,23 @@ Identifier<String> GRAPHS_OUTPUT_DIRECTORY("otawa::GRAPHS_OUTPUT_DIRECTORY","");
  * Basic implementation of a parametric exegraph based a GraphBBTime
  * with a ParExeGraph. Supports the basic pipeline description of OTAWA
  * with L1 instruction cache with persistence.
+ */
+
+
+/**
+ * @fn void GraphBBTime<G>::outputGraph(G* graph, int bb_number, int context_index, int case_index, const string& info);
+ * Output the given graph in the directory configured by @ref GRAPHS_OUTPUT_DIRECTORY. The name of the file is formed
+ * by the concatenation of:
+ *
+ * <pre>
+ * "b" bb_number "-ctxt" context_index "-case" case_index ".dot";
+ * 	</pre>
+ *
+ * @param graph				Graph to output.
+ * @param bb_number			Basic number.
+ * @param context_index		Index of the context.
+ * @param case_index		Index of case.
+ * @param info				Information to display in the graph.
  */
 
 

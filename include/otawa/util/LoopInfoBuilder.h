@@ -22,42 +22,7 @@
 #ifndef OTAWA_LOOP_INFO_BUILDER_H
 #define OTAWA_LOOP_INFO_BUILDER_H
 
-#include <elm/genstruct/Vector.h>
-#include <elm/genstruct/SortedSLList.h>
-#include <otawa/util/Dominance.h>
-#include <otawa/prop/Identifier.h>
-#include <otawa/cfg/CFG.h>
-#include <otawa/cfg/BasicBlock.h>
-#include <otawa/proc/Feature.h>
-#include <otawa/dfa/IterativeDFA.h>
-#include <otawa/dfa/BitSet.h>
-#include <otawa/proc/CFGProcessor.h>
-#include <otawa/dfa/BitSet.h>
+#include <otawa/cfg/features.h>
 
-namespace otawa {
+#endif	// OTAWA_LOOP_INFO_BUILDER_H
 
-
-
-extern Identifier<BasicBlock*> ENCLOSING_LOOP_HEADER;
-extern Identifier<BasicBlock*> LOOP_EXIT_EDGE;
-extern Identifier<elm::genstruct::Vector<Edge*> *> EXIT_LIST;
-
-
-// LoopInfoBuilder class
-class LoopInfoBuilder: public CFGProcessor {
-public:
-        LoopInfoBuilder(void);
-        virtual void processCFG(otawa::WorkSpace*, otawa::CFG*);
-        
-private:
-		/**
-		 * Builds the EXIT_LIST property for all the loop headers.
-		 */
-		void buildLoopExitList(otawa::CFG* cfg);
-};
-
-extern Feature<LoopInfoBuilder> LOOP_INFO_FEATURE;
-
-}	// otawa
-
-#endif	// OTAWA_LOOP_INFO_H

@@ -235,18 +235,19 @@ namespace otawa {
 		~ParExeGraph();
 		inline void setFetchSize(int size) { _cache_line_size = size; }
 		inline void setBranchPenalty(int penalty) { _branch_penalty = penalty; }
+		inline ParExeSequence *getSequence(void) const { return _sequence; }
       
 		// graph building
 		virtual void build(bool compressed_code=false);
-		virtual void createNodes();
-		virtual void findDataDependencies();
-		virtual void addEdgesForPipelineOrder();
-		virtual void addEdgesForFetch();
-		virtual void addEdgesForFetchWithDecomp();
+		virtual void createNodes(void);
+		virtual void findDataDependencies(void);
+		virtual void addEdgesForPipelineOrder(void);
+		virtual void addEdgesForFetch(void);
+		virtual void addEdgesForFetchWithDecomp(void);
 		virtual void addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> *list_of_stages = NULL);
-		virtual void addEdgesForMemoryOrder();
-		virtual void addEdgesForDataDependencies();
-		virtual void addEdgesForQueues();
+		virtual void addEdgesForMemoryOrder(void);
+		virtual void addEdgesForDataDependencies(void);
+		virtual void addEdgesForQueues(void);
 
 		// time computation
 		void findContendingNodes();
