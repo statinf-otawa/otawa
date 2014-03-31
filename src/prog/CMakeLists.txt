@@ -71,6 +71,7 @@ set(libotawa_SOURCES
 	"dfa_hai_WideningFixPoint.cpp"
 	"dfa_hai_WideningListener.cpp"
 	"dfa_IterativeDFA.cpp"
+	"dfa_State.cpp"
 	"dfa_XCFGVisitor.cpp"
 	"dfa_XIterativeDFA.cpp"
 	"cfg_CFGAdapter.cpp"
