@@ -305,6 +305,9 @@ private:
 		FILTER(props) = filter;
 
 		// perform the analysis
+		if(workspace()->isProvided(DELAYED_FEATURE)
+		|| workspace()->isProvided(DELAYED2_FEATURE))
+			require(DELAYED_CFG_FEATURE);
 		require(otawa::VIRTUALIZED_CFG_FEATURE);
 		clp::Analysis clpa;
 		clpa.process(workspace(), props);
