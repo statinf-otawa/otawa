@@ -38,6 +38,20 @@ using namespace elm;
 namespace otawa {
 
 /**
+ * This feature is put on processes by the loader to inform that the
+ * control instruction of the current instruction contains delayed branches
+ *
+ * @par Provider
+ * @li program loader
+ *
+ * @par Properties
+ * @li @ref otawa::DELAYED
+ *
+ */
+Feature<NoProcessor> DELAYED_FEATURE("otawa::DELAYED_FEATURE");
+
+
+/**
  * @class class SimState
  * This abstract must be used to encapsulate the state of processor functional
  * simulator.
@@ -1026,21 +1040,6 @@ void Identifier<delayed_t>::print (elm::io::Output &out, const Property *prop) c
 
 
 
-
-/**
- * This feature is put on processes by the loader to inform that the
- * control instruction of the current instruction contains delayed branches
- *
- * @par Provider
- * @li program loader
- *
- * @par Properties
- * @li @ref otawa::DELAYED
- *
- */
-Feature<NoProcessor> DELAYED_FEATURE("otawa::DELAYED_FEATURE");
-
-
 /* Nop instruction */
 class NopInst: public Inst {
 public:
@@ -1090,5 +1089,57 @@ int Process::maxTemp(void) const {
 	return 16;
 }
 
+
+/**
+ * @class DelayedInfo
+ * Provide information on delayed branches.
+ */
+
+
+/**
+ */
+DelayedInfo::~DelayedInfo(void) {
+}
+
+
+/**
+ * @fn delayed_t DelayedInfo::type(Inst *inst);
+ * Get the type of the delayed control instruction.
+ * @param inst	Branch instruction.
+ * @return		Type of the delayed instruction (one of DELAYED_None, DELAYED_Taken or DELAYED_Always.
+ */
+
+
+/**
+ * Get the count of instructions before the delayed branch becomes effective.
+ * @param inst	Delayed control instruction (as a default, 1).
+ * @return		Count of instructions.
+ */
+int DelayedInfo::count(Inst *inst) {
+	return 1;
+}
+
+
+/**
+ * This Process feature informs that the actual architecture
+ * supports delayed branch.
+ *
+ * @par Properties
+ * @li @ref DELAYED_INFO
+ */
+Feature<NoProcessor> DELAYED2_FEATURE("otawa::DELAYED2_FEATURE");
+
+
+/**
+ * This property provides access to delayed branch information
+ * of the current program.
+ *
+ * @par Hooks
+ * @li @ref WorkSpace
+ *
+ * @par Features
+ * @li @ref DELAYED2_FEATURE
+ */
+Identifier<DelayedInfo *> DELAYED_INFO("otawa::DELAYED_INFO", 0);
 
 } // otawa

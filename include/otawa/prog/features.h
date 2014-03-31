@@ -34,6 +34,17 @@ typedef enum delayed_t {
 	DELAYED_Taken = 2
 } delayed_t;
 
+// DelayedInfo class
+class DelayedInfo {
+public:
+	virtual ~DelayedInfo(void);
+	virtual delayed_t type(Inst *inst) = 0;
+	virtual int count(Inst *inst);
+};
+extern Feature<NoProcessor> DELAYED2_FEATURE;
+extern Identifier<DelayedInfo *> DELAYED_INFO;
+
+
 // Process information
 extern Identifier<Address> ARGV_ADDRESS;
 extern Identifier<Address> ENVP_ADDRESS;

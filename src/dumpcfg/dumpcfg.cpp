@@ -33,6 +33,7 @@
 #include <otawa/cfg/CFGBuilder.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/proc/DynProcessor.h>
+#include <otawa/prog/features.h>
 
 #include "SimpleDisplayer.h"
 #include "DisassemblerDisplayer.h"
@@ -148,12 +149,12 @@ public:
 	Displayer *displayer;
 
 protected:
-	virtual void work(const string& entry, PropList &props) throw(elm::Exception) { dump(entry); }
+	virtual void work(const string& entry, PropList &props) throw(elm::Exception) { dump(entry, props); }
 	virtual void prepare(PropList &props);
 
 private:
-	void dump(CFG *cfg);
-	void dump(const string& name);
+	void dump(CFG *cfg, PropList& props);
+	void dump(const string& name, PropList& props);
 
 };
 
@@ -203,15 +204,21 @@ DumpCFG::DumpCFG(void):
  * Dump the CFG.
  * @param cfg	CFG to dump.
  */
-void DumpCFG::dump(CFG *cfg) {
+void DumpCFG::dump(CFG *cfg, PropList& props) {
 	CFG *current_inline = 0;
 	WorkSpace *my_ws = new WorkSpace(workspace());
-
-	// Get the virtual CFG
-	//workspace()->invalidate(COLLECTED_CFG_FEATURE);
 	ENTRY_CFG(my_ws) = cfg;
+
+	// if required, build the delayed
+	if(workspace()->isProvided(DELAYED_FEATURE)
+	|| workspace()->isProvided(DELAYED2_FEATURE))
+		my_ws->require(DELAYED_CFG_FEATURE, props);
+
+	// if required, virtualize
 	if(inline_calls)
-		my_ws->require(VIRTUALIZED_CFG_FEATURE);
+		my_ws->require(VIRTUALIZED_CFG_FEATURE, props);
+
+	// get the CFG
 	my_ws->require(COLLECTED_CFG_FEATURE);
 	const CFGCollection *coll = INVOLVED_CFGS(my_ws);
 	CFG *vcfg = (*coll)[0];
@@ -230,7 +237,7 @@ void DumpCFG::dump(CFG *cfg) {
 	// Dump the CFG
 	else {
 		displayer->onProgramBegin(my_ws);
-		displayer->onCFGBegin(cfg);
+		displayer->onCFGBegin(vcfg);
 		for(CFG::BBIterator bb(vcfg); bb; bb++) {
 
 			// Looking for start of inline
@@ -265,7 +272,7 @@ void DumpCFG::dump(CFG *cfg) {
 		// Perform end
 		if(current_inline)
 			displayer->onInlineEnd(current_inline);
-		displayer->onCFGEnd(cfg);
+		displayer->onCFGEnd(vcfg);
 		displayer->onProgramEnd(my_ws);
 	}
 }
@@ -275,14 +282,14 @@ void DumpCFG::dump(CFG *cfg) {
  * Process the given CFG, that is, build the sorted list of BB in the CFG and then display it.
  * @param name	Name of the function to process.
  */
-void DumpCFG::dump(const string& name) {
+void DumpCFG::dump(const string& name, PropList& props) {
 	require(CFG_INFO_FEATURE);
 	CFGInfo *info = CFGInfo::ID(workspace());
 	ASSERT(info);
 	CFG *cfg = info->findCFG(name);
 	if(!cfg)
 		throw elm::MessageException(_ << "cannot find function named \"" << name << '"');
-	dump(cfg);
+	dump(cfg, props);
 }
 
 

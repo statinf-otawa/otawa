@@ -30,9 +30,7 @@ For any problem or question, you may ask the OTAWA developers from the site [[ht
 
 @include dev-script.thot
 @include dev-loader.thot
-
-
-====== Analyzer Development ======
+@include dev-ana.thot
 
 
 ====== ILP Solver Development ======

@@ -29,6 +29,7 @@
 
 namespace otawa {
 
+class DelayedCleaner;
 class Inst;
 class Process;
 class VirtualCFG;
@@ -45,30 +46,27 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 
 private:
-	class Cleaner: public otawa::Cleaner {
-	public:
-		inline Cleaner(Process *process): proc(process) { }
-		virtual ~Cleaner(void);
-		inline void addNOP(Inst *inst) { nops.add(inst); }
-	private:
-		Process *proc;
-		genstruct::SLList<Inst *> nops;
-	};
-
 	typedef genstruct::HashTable<BasicBlock *, BasicBlock *> map_t;
 	void fix(Edge *oedge, Edge *nedge);
 	void cloneEdge(Edge *edge, BasicBlock *source, Edge::kind_t kind);
 	void insert(Edge *edge, BasicBlock *ibb);
 	BasicBlock *makeBB(Inst *inst, int n = 1);
-	BasicBlock *makeNOp(BasicBlock *bb, int n = 1);
+	BasicBlock *makeNOp(Inst *inst, int n = 1);
 	void buildBB(CFG *cfg);
 	void buildEdges(CFG *cfg);
+	delayed_t type(Inst *inst);
+	int count(Inst *inst);
+	ot::size size(Inst *inst, int n = 1);
+	Inst *next(Inst *inst, int n = 1);
+	Edge *makeEdge(BasicBlock *src, BasicBlock *tgt, Edge::kind_t kind);
+	void mark(CFG *cfg);
 
 	CFGCollection *coll;
-	Cleaner *cleaner;
+	DelayedCleaner *cleaner;
 	genstruct::HashTable<CFG *, VirtualCFG *> cfg_map;
 	map_t map;
 	VirtualCFG *vcfg;
+	DelayedInfo *info;
 };
 
 } // otawa

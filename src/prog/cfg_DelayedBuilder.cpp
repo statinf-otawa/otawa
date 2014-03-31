@@ -26,6 +26,45 @@
 
 namespace otawa {
 
+Identifier<int> TO_DELAY("", 0);
+
+// Tools
+class NOPInst: public Inst {
+public:
+	inline NOPInst(void): _size(0) { }
+	inline NOPInst(Address addr, ot::size size): _addr(addr), _size(size) { }
+	void append(inhstruct::DLList& list) {list.addLast(this); }
+	virtual void dump(io::Output &out) { out << "<delayed-nop>"; }
+	virtual kind_t kind(void) { return IS_ALU | IS_INT; }
+	virtual Address address (void) const { return _addr; }
+	virtual t::uint32 size(void) const { return _size; }
+private:
+	Address _addr;
+	ot::size _size;
+};
+
+
+class DelayedCleaner: public elm::Cleaner {
+public:
+
+	inhstruct::DLList *allocList(void) {
+		lists.add(inhstruct::DLList());
+		return &lists[lists.count() - 1];
+	}
+
+	NOPInst *allocNop(Address addr, ot::size size) {
+		nops.add(NOPInst(addr, size));
+		NOPInst *nop = &nops[nops.count() - 1];
+		DELAYED_NOP(nop) = true;
+		return nop;
+	}
+
+private:
+	genstruct::FragTable<inhstruct::DLList> lists;
+	genstruct::FragTable<NOPInst> nops;
+};
+
+
 typedef enum action_t {
 	DO_NOTHING = 0,
 	DO_SWALLOW,
@@ -53,7 +92,7 @@ SilentFeature DELAYED_CFG_FEATURE("otawa::DELAYED_CFG_FEATURE", maker);
 
 
 /**
- * This property is true on instructions part of a branch delay.
+ * This property is set on instruction of a delayed branch.
  *
  * @par Features
  * @li @ref otawa::DELAYED_CFG_FEATURE
@@ -67,7 +106,7 @@ Identifier<bool> DELAYED_INST("otawa::DELAYED_INST", false);
 
 
 /**
- * This property is true on NOP instructions inserted due to branch delay.
+ * This property is true on NOP instructions insserted due to branch delay.
  *
  * @par Features
  * @li @ref otawa::DELAYED_CFG_FEATURE
@@ -81,38 +120,48 @@ Identifier<bool> DELAYED_NOP("otawa::DELAYED_NOP", false);
 
 
 /**
- * Build a single BB containing the instruction following the given BB.
- * @param bb	Original BB.
- * @param n		Number of instructions.
+ * Build a single BB containing the instruction following the given instruction.
+ * @param inst	Starting instruction.
+ * @param n		Number of instruction to delay.
  * @return		Built basic block.
  */
 BasicBlock *DelayedBuilder::makeBB(Inst *inst, int n) {
-
-	// compute size
-	int size = 0;
-	for(Inst *i = inst; n; n--, i = i->nextInst())
-		size += inst->size();
-
-	// create the block
 	CodeBasicBlock *rbb = new CodeBasicBlock(inst);
-	rbb->setSize(size);
+	rbb->setSize(size(inst, n));
 	vcfg->addBB(rbb);
 	return rbb;
 }
 
 
 /**
- * Build a block made of NOPs.
- * @param bb	Replaced basic block.
+ * Build a block made of NOPs matching the given instructions.
+ * @param inst	Instruction to start from.
  * @param n		Number of NOPs.
  * @return		Built basic block.
  */
-BasicBlock *DelayedBuilder::makeNOp(BasicBlock *bb, int n) {
-	// TODO n > 1 is not supported! Need NOPs with real addresses and real linkage.
-	ASSERT(n == 1);
-	Inst *nop = workspace()->process()->newNOp(bb->lastInst()->nextInst()->address());
-	CodeBasicBlock *rbb = new CodeBasicBlock(nop);
-	rbb->setSize(nop->size());
+BasicBlock *DelayedBuilder::makeNOp(Inst *inst, int n) {
+
+	// build the list of instructions
+	Inst *first = 0;
+	ot::size size = 0;
+	inhstruct::DLList *list = cleaner->allocList();
+	for(; n; n--) {
+
+		// make the new nop
+		NOPInst *nop = cleaner->allocNop(inst->address(), inst->size());
+		nop->append(*list);
+
+		// go to next instruction
+		if(!inst->nextInst())
+			inst = workspace()->process()->findInstAt(inst->address());
+		else
+			inst = inst->nextInst();
+	}
+
+	// build the block itself
+	//Inst *nop = workspace()->process()->newNOp(bb->lastInst()->nextInst()->address());
+	CodeBasicBlock *rbb = new CodeBasicBlock(first);
+	rbb->setSize(size);
 	vcfg->addBB(rbb);
 	return rbb;
 }
@@ -159,15 +208,25 @@ Registration<DelayedBuilder> DelayedBuilder::reg(
 
 /**
  */
-DelayedBuilder::DelayedBuilder(void): CFGProcessor(reg) {
+DelayedBuilder::DelayedBuilder(void): CFGProcessor(reg), coll(0), cleaner(0), info(0), vcfg(0) {
 }
 
 
 /**
  */
 void DelayedBuilder::setup(WorkSpace *ws) {
+
+	// initialization
 	coll = new CFGCollection();
-	cleaner = new Cleaner(ws->process());
+	cleaner = new DelayedCleaner();
+
+	// look for DELAYED2 support
+	if(workspace()->isProvided(DELAYED2_FEATURE)) {
+		info = DELAYED_INFO(workspace()->process());
+		ASSERT(info);
+	}
+	else
+		info = 0;
 }
 
 
@@ -190,39 +249,56 @@ void DelayedBuilder::cleanup(WorkSpace *ws) {
 
 
 /**
+ * Mark the instructions with actions.
+ * @param cfg	CFG to mark.
  */
-void DelayedBuilder::processWorkSpace(WorkSpace *ws) {
-
-	// mark instructions
-	const CFGCollection *coll = INVOLVED_CFGS(ws);
-	for(CFGCollection::Iterator cfg(coll); cfg; cfg++) {
-
-		// create the virtual CFG
-		VirtualCFG *vcfg = new VirtualCFG(false);
-		this->coll->add(vcfg);
-		cfg_map.put(cfg, vcfg);
-
-		// scan the blocks for delayed branches
-		for(CFG::BBIterator bb(cfg); bb; bb++) {
-			Inst *last = bb->lastInst();
-			if(last) {
-				switch(DELAYED(last)) {
-				case DELAYED_None:
-					break;
-				case DELAYED_Always:
-					DELAYED_INST(last->nextInst()) = true;
-					ACTION(bb) = DO_SWALLOW;
-					break;
-				case DELAYED_Taken:
-					DELAYED_INST(last->nextInst()) = true;
-					ACTION(bb) = DO_INSERT;
-					break;
-				}
+void DelayedBuilder::mark(CFG *cfg) {
+	for(CFG::BBIterator bb(cfg); bb; bb++) {
+		Inst *control = bb->controlInst();
+		if(control) {
+			switch(type(control)) {
+			case DELAYED_None:
+				break;
+			case DELAYED_Always:
+				TO_DELAY(next(control)) = count(control);
+				ACTION(bb) = DO_SWALLOW;
+				break;
+			case DELAYED_Taken:
+				TO_DELAY(next(control)) = count(control);
+				ACTION(bb) = DO_INSERT;
+				break;
 			}
 		}
 	}
+}
 
-	// usual CFG processing
+
+/**
+ */
+void DelayedBuilder::processWorkSpace(WorkSpace *ws) {
+	const CFGCollection *coll = INVOLVED_CFGS(ws);
+
+	// phase 1: mark and create CFG and BB
+	for(CFGCollection::Iterator cfg(coll); cfg; cfg++) {
+
+		// mark the instructions
+		mark(cfg);
+
+		// build CFG
+		vcfg = new VirtualCFG(false);
+		this->coll->add(vcfg);
+		cfg_map.put(cfg, vcfg);
+	}
+
+	// phase 2: build the BB
+	for(CFGCollection::Iterator cfg(coll); cfg; cfg++) {
+		vcfg = cfg_map.get(cfg, 0);
+		ASSERT(vcfg);
+		vcfg->addBB(vcfg->entry());
+		buildBB(cfg);
+	}
+
+	// phase 2: create edges
 	CFGProcessor::processWorkSpace(ws);
 }
 
@@ -273,13 +349,15 @@ void DelayedBuilder::fix(Edge *oedge, Edge *nedge) {
  * @param kind		Kind of the created edge.
  */
 void DelayedBuilder::cloneEdge(Edge *edge, BasicBlock *source, Edge::kind_t kind) {
+	if(logFor(LOG_INST))
+		cerr << "\t\t\t" << edge << io::endl;
 	if(edge->kind() == Edge::CALL) {
 		BasicBlock *target;
 		if(edge->target() == 0)
 			target = 0;
 		else
 			target = cfg_map.get(edge->calledCFG(), 0)->entry();
-		Edge *vedge = new Edge(source, target, Edge::CALL);
+		Edge *vedge = makeEdge(source, target, Edge::CALL);
 		if(target)
 			CALLED_BY(target->cfg()).add(vedge);
 	}
@@ -289,7 +367,7 @@ void DelayedBuilder::cloneEdge(Edge *edge, BasicBlock *source, Edge::kind_t kind
 		if(!target)
 			target = map.get(edge->target(), 0);
 		ASSERT(target);
-		fix(edge, new Edge(source, target, kind));
+		fix(edge, makeEdge(source, target, kind));
 	}
 }
 
@@ -311,8 +389,8 @@ void DelayedBuilder::insert(Edge *edge, BasicBlock *ibb) {
 			target = 0;
 		else
 			target = cfg_map.get(edge->calledCFG(), 0)->entry();
-		new Edge(source, ibb, Edge::TAKEN);
-		Edge *vedge = new Edge(ibb, target, Edge::CALL);
+		makeEdge(source, ibb, Edge::TAKEN);
+		Edge *vedge = makeEdge(ibb, target, Edge::CALL);
 		if(target)
 			CALLED_BY(target->cfg()).add(vedge);
 	}
@@ -327,8 +405,8 @@ void DelayedBuilder::insert(Edge *edge, BasicBlock *ibb) {
 			target = map.get(edge->target(), 0);
 
 		// make edges
-		fix(edge, new Edge(source, ibb, edge->kind()));
-		new Edge(ibb, target, Edge::NOT_TAKEN);
+		fix(edge, makeEdge(source, ibb, edge->kind()));
+		makeEdge(ibb, target, Edge::NOT_TAKEN);
 	}
 }
 
@@ -342,6 +420,8 @@ void DelayedBuilder::buildBB(CFG *cfg) {
 	// build the basic blocks
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
 		BasicBlock *vbb = 0, *delayed = 0;
+
+		// case of ends
 		if(bb->isEnd()) {
 			if(bb->isEntry())
 				vbb = vcfg->entry();
@@ -350,20 +430,23 @@ void DelayedBuilder::buildBB(CFG *cfg) {
 				vbb = vcfg->exit();
 			}
 		}
+
+		// other basic blocks
 		else {
 			Inst *first = bb->firstInst();
 			ot::size size = bb->size();
 			ASSERT(first);
 
-			// contains delayed instruction
-			if(DELAYED_INST(first)) {
+			// start of BB is delayed instructions?
+			int dcnt = TO_DELAY(first);
+			if(dcnt) {
 				if(logFor(LOG_BB))
-					log << "\t\t" << *bb << " reduced due to delayed instruction\n";
+					log << "\t\t" << *bb << " reduced due to " << dcnt << " delayed instruction\n";
 
 				// remove delayed mono-instruction BB
-				if(bb->countInstructions() == 1) {
+				if(bb->countInstructions() <= dcnt) {
 					if(logFor(LOG_BB))
-						log << "\t\tmono-instruction delayed BB removed: " << *bb << io::endl;
+						log << "\t\too small delayed BB removed: " << *bb << io::endl;
 					continue;
 				}
 
@@ -371,21 +454,23 @@ void DelayedBuilder::buildBB(CFG *cfg) {
 				for(BasicBlock::InIterator edge(bb); edge; edge++)
 					if(edge->kind() != Edge::NOT_TAKEN
 					&& edge->kind() != Edge::VIRTUAL_RETURN) {
-						delayed = makeBB(first);
+						delayed = makeBB(first, dcnt);
 						DELAYED_TARGET(bb) = delayed;
 						break;
 					}
 
 				// reduce delayed BB
-				size -= first->size();
-				first = first->nextInst();
+				size -= this->size(first, dcnt);
+				first = next(first, dcnt);
 			}
 
 			// perform swallowing
 			if(ACTION(bb) == DO_SWALLOW) {
+				int ecnt = count(bb->controlInst());
+				ot::size esize = this->size(bb->controlInst(), ecnt);
 				if(logFor(LOG_BB))
-					log << "\t\t" << *bb << " extended by a delayed instruction\n";
-				size += bb->lastInst()->nextInst()->size();
+					log << "\t\t" << *bb << " extended by " << ecnt << " delayed instruction(s) (" << esize << " bytes)\n";
+				size += esize;
 			}
 
 			// create block
@@ -395,9 +480,13 @@ void DelayedBuilder::buildBB(CFG *cfg) {
 			vbb = cbb;
 
 			// delayed edge
-			if(delayed)
-				new Edge(delayed, vbb, Edge::NOT_TAKEN);
+			if(delayed) {
+				ASSERT(delayed->cfg() == vbb->cfg() && delayed->cfg() == vcfg);
+				makeEdge(delayed, vbb, Edge::NOT_TAKEN);
+			}
 		}
+
+		// record the new BB
 		map.put(bb, vbb);
 	}
 }
@@ -408,7 +497,11 @@ void DelayedBuilder::buildBB(CFG *cfg) {
  * @param cfg	Current CFG.
  */
 void DelayedBuilder::buildEdges(CFG *cfg) {
+	if(logFor(LOG_CFG))
+		cerr << "\tbuild edges for " << cfg << io::endl;
 	for(CFG::BBIterator bb(cfg); bb; bb++) {
+		if(logFor(LOG_BB))
+			cerr << "\t\t" << *bb << io::endl;
 		BasicBlock *vbb = map.get(bb, 0);
 		if(!vbb)
 			continue;
@@ -424,12 +517,20 @@ void DelayedBuilder::buildEdges(CFG *cfg) {
 		// just swallowing
 		case DO_SWALLOW:
 			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-				if(map.get(edge->target(), 0))
-					cloneEdge(edge, vbb, edge->kind());
-				else
-					// relink successors of removed mono-instruction BB
-					for(BasicBlock::OutIterator out(edge->target()); out; out++)
-						cloneEdge(out, vbb, edge->kind());
+				if(edge->kind() == Edge::CALL) {
+					CFG *ccfg = cfg_map.get(edge->calledCFG(), 0);
+					ASSERT(ccfg);
+					new Edge(vbb, ccfg->firstBB(), Edge::CALL);
+					ENTRY(ccfg->firstBB()) = ccfg;
+				}
+				else {
+					if(map.get(edge->target(), 0))
+						cloneEdge(edge, vbb, edge->kind());
+					else
+						// relink successors of removed mono-instruction BB
+						for(BasicBlock::OutIterator out(edge->target()); out; out++)
+							cloneEdge(out, vbb, edge->kind());
+				}
 			}
 			break;
 
@@ -439,13 +540,13 @@ void DelayedBuilder::buildEdges(CFG *cfg) {
 
 				// not taken
 				if(edge->kind() == Edge::NOT_TAKEN || edge->kind() == Edge::VIRTUAL_RETURN) {
-					BasicBlock *nop = makeNOp(bb);
-					new Edge(vbb, nop, edge->kind());
+					BasicBlock *nop = makeNOp(bb->first);
+					makeEdge(vbb, nop, edge->kind());
 					BasicBlock *vtarget = map.get(edge->target(), 0);
 
 					// simple not-taken edge
 					if(vtarget)
-						new Edge(nop, vtarget, Edge::NOT_TAKEN);
+						makeEdge(nop, vtarget, Edge::NOT_TAKEN);
 
 					// relink successors of removed mono-instruction BB
 					else
@@ -471,20 +572,89 @@ void DelayedBuilder::buildEdges(CFG *cfg) {
 void DelayedBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 	vcfg = cfg_map.get(cfg, 0);
 	ASSERT(vcfg);
-	vcfg->addBB(vcfg->entry());
-	buildBB(cfg);
 	buildEdges(cfg);
 	vcfg->addBB(vcfg->exit());
 	vcfg->numberBBs();
-	map.clear();
 }
 
 
 /**
+ * Define the type of delayed branch.
+ * @param inst	Branch instruction.
+ * @return		Type of delayed branch.
  */
-DelayedBuilder::Cleaner::~Cleaner(void) {
-	for(genstruct::SLList<Inst *>::Iterator inst(nops); inst; inst++)
-		proc->deleteNop(inst);
+delayed_t DelayedBuilder::type(Inst *inst) {
+	if(!info)
+		return DELAYED(inst);
+	else
+		return info->type(inst);
+}
+
+
+/**
+ * Define the count of instructions before the given delayed branch be effective.
+ * @param inst	Delayed branch.
+ * @return		Count of instructions.
+ */
+int DelayedBuilder::count(Inst *inst) {
+	if(!info)
+		return 1;
+	else
+		return info->count(inst);
+}
+
+
+/**
+ * Compute the size of the delayed instruction.
+ * @param inst	First instruction.
+ * @param n		Number of instructions in the delayed part.
+ * @return		Size of the delayed instructions.
+ */
+ot::size DelayedBuilder::size(Inst *inst, int n) {
+	ot::size size = 0;
+	for(; n; n--) {
+		size += inst->size();
+		if(inst->nextInst() && inst->nextInst()->address() == inst->topAddress())
+			inst = inst->nextInst();
+		else {
+			inst = workspace()->process()->findInstAt(inst->topAddress());
+			if(!inst)
+				throw ProcessorException(*this, _ << " cannot fetch instruction from " << inst->topAddress());
+		}
+	}
+	return size;
+}
+
+
+/**
+ * Get the instruction following the n next instruction.
+ * @param inst	Instruction to start from.
+ * @param n		Instruction to skip.
+ * @return		Next instruction.
+ */
+Inst *DelayedBuilder::next(Inst *inst, int n) {
+	for(; n; n--) {
+		if(inst->nextInst() && inst->nextInst()->address() == inst->topAddress())
+			inst = inst->nextInst();
+		else {
+			inst = workspace()->process()->findInstAt(inst->topAddress());
+			if(!inst)
+				throw ProcessorException(*this, _ << " cannot fetch instruction from " << inst->topAddress());
+		}
+	}
+	return inst;
+}
+
+
+/**
+ * Build a new virtual edge.
+ * @param src	Source BB.
+ * @param tgt	Target BB.
+ * @param kind	Kind of the edge.
+ */
+Edge *DelayedBuilder::makeEdge(BasicBlock *src, BasicBlock *tgt, Edge::kind_t kind) {
+	ASSERT(src->cfg() == vcfg && tgt->cfg() == vcfg);
+	return new Edge(src, tgt, kind);
 }
 
 } // otawa
