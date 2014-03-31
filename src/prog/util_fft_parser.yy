@@ -20,6 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 %{
+#include <stdio.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>

@@ -367,7 +367,7 @@ private:
 			case hard::Register::INT:
 				t::uint32 v;
 				in >> v;
-				clp::Analysis::INITIAL(props) = pair(reg, Address(v));
+				clp::Analysis::INITIAL(props).add( pair(reg, Address(v)) );
 				break;
 			default:
 				throw option::OptionException(_ << "unsupported register kind for initialization: " << s);

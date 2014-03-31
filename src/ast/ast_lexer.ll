@@ -22,6 +22,7 @@
 
 #include <string.h>
 #include <otawa/ast.h>
+#include <otawa/ast/ASTLoader.h>
 
 #	include "ast_parser.h"
 
