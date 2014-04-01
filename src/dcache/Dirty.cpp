@@ -251,7 +251,7 @@ void DirtyManager::update(t& d, const BlockAccess& acc) {
 
 
 /**
- * Jion two dirty states.
+ * Join two dirty states.
  * @param d		First and target dirty state.
  * @param s		Second dirty state.
  */
