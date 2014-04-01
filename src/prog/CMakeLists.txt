@@ -188,6 +188,7 @@ set(libotawa_SOURCES
 	"util_StackAnalysis.cpp"
 	"clp_analysis.cpp"
 	"clp_symbolic_expr.cpp"
+	"ai.cpp"
 	)
 
 include_directories(".")

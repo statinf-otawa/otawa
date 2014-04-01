@@ -34,6 +34,7 @@
 #include <otawa/util/AccessedAddress.h>
 #include <otawa/hard/Register.h>
 #include <otawa/hard/Platform.h>
+#include <otawa/dfa/State.h>
 
 using namespace elm;
 using namespace otawa;
@@ -52,6 +53,7 @@ namespace otawa {
  * The argument is a pair of register and its initial value as an address.
  * A null address express the fact that the register is initialized with the default
  * stack pointer address.
+ * @deprecated
  */
 Identifier<StackAnalysis::init_t> StackAnalysis::INITIAL(
 		"otawa::StackAnalysis::INITIAL",

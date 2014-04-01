@@ -30,17 +30,6 @@ namespace otawa { namespace ipet {
 
 /**
  */
-WCETCountRecorder::WCETCountRecorder(void)
-:	BBProcessor("otawa::ipet::WCETCountRecorder", Version(1, 0,0)),
-	system(0)
-{
-	require(WCET_FEATURE);
-	provide(WCET_COUNT_RECORDED_FEATURE);
-}
-
-
-/**
- */
 void WCETCountRecorder::setup(WorkSpace *fw) {
 	ASSERT(fw);
 	ASSERT(!system);
@@ -77,6 +66,21 @@ void WCETCountRecorder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 			COUNT(edge) = (int)system->valueOf(var);
 	}
 }
+
+
+/**
+ */
+WCETCountRecorder::WCETCountRecorder(p::declare& r): BBProcessor(r), system(0) {
+}
+
+
+/**
+ */
+p::declare WCETCountRecorder::reg = p::init("otawa::ipet::WCETCountRecorder", Version(1, 0, 1))
+	.base(BBProcessor::reg)
+	.maker<WCETCountRecorder>()
+	.require(WCET_FEATURE)
+	.provide(WCET_COUNT_RECORDED_FEATURE);
 
 
 /**

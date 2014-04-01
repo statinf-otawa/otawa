@@ -15,13 +15,15 @@ namespace otawa { namespace ipet {
 
 // WCETCountRecorder class
 class WCETCountRecorder: public BBProcessor {
-	ilp::System *system;
+public:
+	static p::declare reg;
+	WCETCountRecorder(p::declare& r = reg);
 protected:
 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 	virtual void setup(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
-public:
-	WCETCountRecorder(void);
+private:
+	ilp::System *system;
 };
 
 } } // otawa::ipet

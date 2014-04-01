@@ -29,3 +29,5 @@ install(TARGETS odisplay DESTINATION ${LIBDIR})
 
 target_link_libraries(odisplay otawa)
 target_link_libraries(odisplay ${LIBELM})
+
+install(FILES display.eld DESTINATION "${LIBDIR}/otawa/proc/otawa")

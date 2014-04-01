@@ -21,6 +21,7 @@
  */
 
 #include <otawa/display/display.h>
+#include <otawa/proc/ProcessorPlugin.h>
 
 using namespace elm;
 
@@ -166,5 +167,11 @@ Color::Color(String name) {
  * Style to draw text in the shape.
  */
 
+class Plugin: public otawa::ProcessorPlugin {
+public:
+	Plugin(void): ProcessorPlugin("otawa::display", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
+};
+
 } } // otawa::display
 
+otawa::display::Plugin OTAWA_PROC_HOOK ;

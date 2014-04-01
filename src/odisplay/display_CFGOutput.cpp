@@ -108,14 +108,14 @@ CFGOutput::CFGOutput(AbstractRegistration& _reg): CFGProcessor(_reg) {
 /**
  * Configuration identifier of @ref CFGOutput for the kind of generated file.
  */
-Identifier<display::kind_t> CFGOutput::KIND("otawa::CFGOutput::KIND", OUTPUT_PS);
+Identifier<display::kind_t> CFGOutput::KIND("otawa::display::CFGOutput::KIND", OUTPUT_DOT);
 
 
 /**
  * Configuration identifier of @ref CFGOutput for the directory path where to
  * create the output file.
  */
-Identifier<string> CFGOutput::PATH("otawa::CFGOutput::PATH", ".");
+Identifier<string> CFGOutput::PATH("otawa::display::CFGOutput::PATH", ".");
 
 
 /**
