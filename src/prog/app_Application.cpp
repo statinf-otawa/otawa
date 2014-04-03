@@ -81,12 +81,12 @@ namespace otawa {
  * any required analysis.
  *
  * In addition, the @ref app::Application class provides standards options like:
- * @li --add-prop ID=VALUE – set a configuration property (passed to manager and other processors),
- * @li -f|--flowfacts PATH – select a flow fact file to load
- * @li -h|--help – option help display,
- * @li --load-param ID=VALUE – add a load parameter (passed to the manager load command)
+ * @li --add-prop ID=VALUE -- set a configuration property (passed to manager and other processors),
+ * @li -f|--flowfacts PATH -- select a flow fact file to load
+ * @li -h|--help -- option help display,
+ * @li --load-param ID=VALUE -- add a load parameter (passed to the manager load command)
  * @li --log one of proc, deps, cfg, bb or inst -- select level of log
- * @li -v|--verbose – verbose mode activation.
+ * @li -v|--verbose -- verbose mode activation.
  *
  * In addition, you can also defines your own options using the @ref elm::option classes:
  * @code
@@ -167,8 +167,11 @@ void LogOption::process(String arg) {
 	static Pair<cstring, Processor::log_level_t> ids[] = {
 		pair(cstring("proc"), Processor::LOG_PROC),
 		pair(cstring("file"), Processor::LOG_FILE),
+		pair(cstring("deps"), Processor::LOG_FILE),
 		pair(cstring("fun"), Processor::LOG_FUN),
+		pair(cstring("cfg"), Processor::LOG_FUN),
 		pair(cstring("block"), Processor::LOG_BLOCK),
+		pair(cstring("bb"), Processor::LOG_BLOCK),
 		pair(cstring("inst"), Processor::LOG_INST),
 		pair(cstring(""), Processor::LOG_NONE)
 	};

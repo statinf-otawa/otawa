@@ -66,10 +66,11 @@ public:
 		}
 
 		inline void inject(const int id) {
-			if (contains(id))
+			if (contains(id)) {
 				for (int i = 0; i < size; i++)
 					if ((age[i] <= age[id]) && (age[i] != -1))
 						age[i]++;
+			}
 			else
 				for (int i = 0; i < size; i++) {
 					if (age[i] != -1)

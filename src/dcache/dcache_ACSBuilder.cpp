@@ -504,8 +504,8 @@ void ACS::print(elm::io::Output &output) const {
 
 			first = false;
 		}
-		output << "]";
 	}
+	output << "]";
 }
 
 
@@ -761,7 +761,7 @@ void MUSTPERS::update(Domain& out, const Domain& in, BasicBlock* bb) {
 
 /**
  * @class PERSProblem::Item
- * ACS for the multi-level data cache pêrsistence analysis. Items are composed on each level.
+ * ACS for the multi-level data cache persistence analysis. Items are composed on each level.
  */
 
 
