@@ -134,7 +134,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 			miss = system->newVar();
 		else {
 			StringBuffer buf1;
-			buf1 << "xmiss_" << lblock->address();
+			buf1 << "xmiss_bb" << bb->number() << "_i" << lblock->address();
 			String name1 = buf1.toString();
 			miss = system->newVar(name1);
 		}

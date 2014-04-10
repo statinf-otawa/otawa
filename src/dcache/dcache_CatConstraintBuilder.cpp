@@ -123,7 +123,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
                 if(!_explicit)
                         miss = system->newVar();
                 else
-                        miss = system->newVar(_ << "XMISS_DATA_" << b.instruction()->address() << "_" << j);
+                        miss = system->newVar(_ << "XMISS_DATA_bb" << bb->number() << "_i" << b.instruction()->address() << "_" << j);
                 MISS_VAR(b) = miss;
 
                 // Add the constraint depending on the block access category
