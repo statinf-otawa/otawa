@@ -340,7 +340,8 @@ int Application::run(int argc, char **argv) {
 
 		// if required, load the flowfacts
 		if(ff) {
-			otawa::FLOW_FACTS_PATH(props) = Path(ff);
+			for(int i = 0; i < ff.count(); i++)
+				otawa::FLOW_FACTS_PATH(props).add(Path(ff[i]));
 			ws->require(FLOW_FACTS_FEATURE, props);
 		}
 

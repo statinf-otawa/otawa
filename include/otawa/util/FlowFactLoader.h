@@ -92,12 +92,14 @@ protected:
 private:
 	WorkSpace *_fw;
 	bool checksummed;
-	string path;
+	genstruct::Vector<Path> paths;
+	Path current;
 	bool mandatory;
 	void loadF4(const string& path) throw(ProcessorException);
 	bool lines_available;
 
 	// XML support
+	void load(WorkSpace *ws, const Path& path);
 	void loadXML(const string& path) throw(ProcessorException);
 	void scanXLoop(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXFun(xom::Element *element, ContextualPath& path) throw(ProcessorException);

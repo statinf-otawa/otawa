@@ -63,6 +63,7 @@ set(libotawa_SOURCES
 	"ipet_WCETComputation.cpp"
 	"ipet_WCETCountRecorder.cpp"
 	"dfa_AbsIntLite.cpp"
+	"dfa_FastState.cpp"
 	"dfa_hai_DefaultFixPoint.cpp"
 	"dfa_hai_DefaultListener.cpp"
 	"dfa_hai_FirstUnrollingFixPoint.cpp"

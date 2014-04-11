@@ -300,10 +300,8 @@ public:
 	}
 
 	void set(vertex_t v, t s) {
-		for(typename G::Successor e(_graph, v); e; e++) {
-			_dom.dump(cerr, s);
+		for(typename G::Successor e(_graph, v); e; e++)
 			map.put(*e, s);
-		}
 	}
 
 	inline void set(edge_t e, t s) { map.put(e, s); }

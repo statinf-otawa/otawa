@@ -364,7 +364,7 @@ extern int fft_line;
  * @author H. Cassé <casse@irit.fr>
  */
 
-p::declare FlowFactLoader::reg = p::init("otawa::util::FlowFactLoader", Version(1, 1, 0))
+p::declare FlowFactLoader::reg = p::init("otawa::util::FlowFactLoader", Version(1, 2, 0))
 	.maker<FlowFactLoader>()
 	.provide(FLOW_FACTS_FEATURE)
 	.provide(MKFF_PRESERVATION_FEATURE);
@@ -387,75 +387,88 @@ FlowFactLoader::FlowFactLoader(p::declare& r):
  */
 void FlowFactLoader::configure (const PropList &props) {
 	Processor::configure(props);
-	path = FLOW_FACTS_PATH(props);
+	for(Identifier<Path>::Getter path(props, FLOW_FACTS_PATH); path; path++)
+		paths.add(*path);
 	mandatory = FLOW_FACTS_MANDATORY(props);
 }
 
 
 /**
+ * Load flow facts from the given file.
+ * @param ws	Current workspace.
+ * @param path	Path to the file to load flow facts from.
  */
-void FlowFactLoader::processWorkSpace(WorkSpace *fw) {
-	_fw = fw;
-	bool xml = false;
+void FlowFactLoader::load(WorkSpace *ws, const Path& path) {
+	if(logFor(LOG_DEPS))
+		log << "\tloading \"" << path << "\"\n";
+	current = path;
+
+	// load the file
+	if(path.extension() == "ffx" || path.extension() == "xml")
+		loadXML(path);
+	else {
+		if(path.extension() != "ff")
+			log << "WARNING: no known extension to " << path << ": assuming F4 format.\n";
+		loadF4(path);
+	}
+
+	// display warning if there is no checksum
+	if(!checksummed && logFor(LOG_DEPS))
+		warn("no checksum: flow facts and executable file may no match !");
+}
+
+
+/**
+ */
+void FlowFactLoader::processWorkSpace(WorkSpace *ws) {
+	_fw = ws;
 
 	// lines available ?
-	lines_available = fw->isProvided(SOURCE_LINE_FEATURE);
+	lines_available = ws->isProvided(SOURCE_LINE_FEATURE);
 
 	// Build the F4 file path
-	elm::system::Path file_path = path;
-	if(file_path) {
-		if(file_path.extension() == "ffx")
-			xml = true;
-	}
+	if(paths)
+		for(int i = 0; i < paths.length(); i++)
+			load(ws, paths[i]);
 	else {
 		bool done = false;
+		Path path;
 
 		// replace suffix with "ff"
 		if(!done) {
-			file_path = fw->process()->program()->name();
-			file_path = file_path.setExtension("ff");
-			done = file_path.isReadable();
+			path = ws->process()->program()->name();
+			path = path.setExtension("ff");
+			done = path.isReadable();
 		}
 
 		// add suffix ".ff"
 		if(!done) {
-			file_path = fw->process()->program()->name() + ".ff";
-			done = file_path.isReadable();
+			path = ws->process()->program()->name() + ".ff";
+			done = path.isReadable();
 		}
 
 		// replace suffix with ".ffx"
 		if(!done) {
-			xml = true;
-			file_path = fw->process()->program()->name();
-			file_path = file_path.setExtension("ffx");
-			done = file_path.isReadable();
+			path = ws->process()->program()->name();
+			path = path.setExtension("ffx");
+			done = path.isReadable();
 		}
 
 		// add suffix ".ffx"
 		if(!done) {
-			xml = true;
-			file_path = fw->process()->program()->name() + ".ffx";
-			done = file_path.isReadable();
+			path = ws->process()->program()->name() + ".ffx";
+			done = path.isReadable();
 		}
 
 		// Something found
-		if(!done) {
-			warn(_ << "no flow fact file for " << fw->process()->program()->name());
+		if(done)
+			load(ws, path);
+		else {
+			warn(_ << "no flow fact file for " << ws->process()->program()->name());
 			return;
 		}
 	}
 
-	// process the file
-	if(logFor(LOG_DEPS))
-		log << "\tloading \"" << file_path << "\"\n";
-	if(!xml)
-		loadF4(file_path);
-	else
-		loadXML(file_path);
-
-	// Display warning if there is no checksum
-	if(!checksummed && logFor(LOG_DEPS))
-		warn("no checksum: flow facts and executable file may no match !");
 }
 
 
@@ -498,7 +511,7 @@ void FlowFactLoader::loadF4(const string& path) throw(ProcessorException) {
  */
 void FlowFactLoader::onError(const string& message) {
 	throw ProcessorException(*this,
-		_ << path << ": " << fft_line << ": " << message);
+		_ << current << ": " << fft_line << ": " << message);
 }
 
 
@@ -507,7 +520,7 @@ void FlowFactLoader::onError(const string& message) {
  * @param fmt	Message.
  */
 void FlowFactLoader::onWarning(const string& message) {
-	warn(_ << path << ": " << fft_line << ": " << message);
+	warn(_ << current << ": " << fft_line << ": " << message);
 }
 
 
@@ -1245,7 +1258,8 @@ throw(ProcessorException) {
 
 /**
  * This property may be used in the configuration of a code processor
- * to pass the path of an F4 file containing flow facts.
+ * to pass the path of an flow fact file containing flow facts.
+ * Several properties with this identifier may be passed.
  * @ingroup ff
  */
 Identifier<Path> FLOW_FACTS_PATH("otawa::FLOW_FACTS_PATH", "");

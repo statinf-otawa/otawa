@@ -72,7 +72,7 @@ private:
 	option::BoolOption help, verbose;
 	option::ListOption<string> sets;
 	option::ListOption<string> params;
-	option::ValueOption<string> ff;
+	option::ListOption<string> ff;
 	LogOption log_level;
 	elm::system::Path path;
 	genstruct::Vector<string> entries;
