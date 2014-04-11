@@ -19,7 +19,7 @@ namespace otawa { namespace ilp {
 
 
 /**
- * @fn Constraint *Sytem::newConstraint(Constraint::comparator_t comp, double constant = 0);
+ * @fn Constraint *System::newConstraint(Constraint::comparator_t comp, double constant = 0);
  * Build a new constraint that may be initialized by the user. As the ILP system
  * manage the memory of the constraint, the constraint must never be deleted
  * by the user.
