@@ -21,8 +21,8 @@
  *	02110-1301  USA
  */
 
-#ifndef OTAWA_DFA_HAI_DEFAULTLISTENER_H_
-#define OTAWA_DFA_HAI_DEFAULTLISTENER_H_
+#ifndef OTAWA_DFA_HAI_WIDENINGLISTENER_H_
+#define OTAWA_DFA_HAI_WIDENINGLISTENER_H_
 
 #include <otawa/util/WideningFixPoint.h>
 #include <otawa/cfg/CFG.h>
@@ -132,4 +132,4 @@ void WideningListener<Problem>::fixPointReached(const WideningFixPoint<WideningL
 	
 } } }	// otawa::dfa::hai
 
-#endif // OTAWA_DFA_HAI
+#endif // OTAWA_DFA_HAI_WIDENINGLISTENER_H_

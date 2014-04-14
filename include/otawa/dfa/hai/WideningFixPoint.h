@@ -21,8 +21,8 @@
  *	02110-1301  USA
  */
 
-#ifndef OTAWA_DFA_HAI_DEFAULTFIXPOINT_H_
-#define OTAWA_DFA_HAI_DEFAULTFIXPOINT_H_
+#ifndef OTAWA_DFA_HAI_WIDENINGFIXPOINT_H_
+#define OTAWA_DFA_HAI_WIDENINGFIXPOINT_H_
 
 
 #include "HalfAbsInt.h"
@@ -237,4 +237,4 @@ inline void WideningFixPoint<Listener>::updateEdge(Edge *edge, Domain &dom) {
 	
 } } } // otawa::dfa::hai
 
-#endif /*OTAWA_DFA_HAI_FIRSTUNROLLINGFIXPOINT_H_*/
+#endif /*OTAWA_DFA_HAI_WIDENINGFIXPOINT_H_*/
