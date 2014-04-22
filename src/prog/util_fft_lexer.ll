@@ -22,7 +22,8 @@
  */
 #include <stdlib.h>
 #include <otawa/util/FlowFactLoader.h>
-#	include "util_fft_parser.h"
+#include <otawa/dfa/State.h>
+#include "util_fft_parser.h"
 
 elm::StringBuffer buf;
 namespace otawa {
@@ -39,7 +40,7 @@ DEC	[1-9][0-9]*
 OCT	0[0-7]*
 HEX	0[xX][0-9a-fA-F]+
 BIN 0[bB][0-1]+
-SYM [?;,+-/:@]
+SYM [?;,+-/:@=\[\]()]
 
 %x ECOM
 %x TCOM
@@ -53,7 +54,9 @@ SYM [?;,+-/:@]
 "/*"		BEGIN(TCOM);
 
 {SYM}			return *yytext;
+".."			return DOT_DOT;
 
+"access"		return KW_ACCESS;
 "call"			return KW_CALL;
 "checksum"		return CHECKSUM;
 "control"		return KW_CONTROL;
@@ -62,8 +65,13 @@ SYM [?;,+-/:@]
 "ignorecontrol"	return KW_IGNORECONTROL;
 "ignoreseq"		return KW_IGNORESEQ;
 "in"			return KW_IN;
+"int8"			util_fft_lval.type = &otawa::Type::int8_type; return TYPE;
+"int16"			util_fft_lval.type = &otawa::Type::int16_type; return TYPE;
+"int32"			util_fft_lval.type = &otawa::Type::int32_type; return TYPE;
+"int64"			util_fft_lval.type = &otawa::Type::int64_type; return TYPE;
 "loop"			return LOOP;
 "max"			return KW_MAX;
+"memory"		return KW_MEMORY;
 "multibranch"	return KW_MULTIBRANCH;
 "multicall"		return KW_MULTICALL;
 "nocall"		return KW_NOCALL;
@@ -74,6 +82,10 @@ SYM [?;,+-/:@]
 "seq"			return KW_SEQ;
 "to"			return KW_TO;
 "total"			return KW_TOTAL;
+"uint8"			util_fft_lval.type = &otawa::Type::uint8_type; return TYPE;
+"uint16"		util_fft_lval.type = &otawa::Type::uint16_type; return TYPE;
+"uint32"		util_fft_lval.type = &otawa::Type::uint32_type; return TYPE;
+"uint64"		util_fft_lval.type = &otawa::Type::uint64_type; return TYPE;
 
 \"			BEGIN(STR);
 {DEC}		util_fft_lval._int = strtol(yytext, 0, 10); return INTEGER;

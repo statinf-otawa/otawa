@@ -33,6 +33,7 @@
 #include <elm/system/Path.h>
 #include <otawa/prop/DeletableProperty.h>
 #include <otawa/prog/File.h>
+#include <otawa/hard/Platform.h>
 
 // Externals
 extern FILE *util_fft_in;
@@ -53,6 +54,22 @@ extern int fft_line;
  *
  * During the work of OTAWA, the load of this file is performed using a special
  * code processor: @ref otawa::util::FlowFactLoader.
+ *
+ * Flow facts are usually hooked as properties to the program part
+ * they apply to. Below is the list of properties set as flow facts.
+ * @li @ref ACCESS_RANGE
+ * @li @ref BRANCH_TARGET
+ * @li @ref CALL_TARGET
+ * @li @ref IGNORE_CONTROL
+ * @li @ref IGNORE_ENTRY
+ * @li @ref IGNORE_SEQ
+ * @li @ref IS_RETURN
+ * @li @ref MAX_ITERATION
+ * @li @ref MIN_ITERATION
+ * @li @ref NO_CALL
+ * @li @ref NO_RETURN
+ * @li @ref TOTAL_ITERATION
+ * @li @ref PRESERVED
  */
 
 /**
@@ -201,6 +218,49 @@ extern int fft_line;
  * The first LOCATION is the call instruction itself and the target child
  * elements locations represents the different possible targets.
  *
+ * @par Extension
+ *
+ * Top-level element support also the following extension elements
+ * (not included in the FFX format):
+ *
+ * @code
+ * <memory-access LOCATION>
+ * 		<low LOCATION>
+ * 		<high LOCATION>
+ * </memory-access>
+ * @endcode
+ * Allow to bound the accessed addresses of a memory instruction.
+ * Mainly useful to help data cache canalysis.
+ *
+ * @code
+ * <set-ref name="TEXT"> VALUE </set-ref>
+ * @endcode
+ * Set the value of a register. <i>name</i> is the name of the register.
+ *
+ * @code
+ * <set-mem type="TEXT" LOCATION> VALUE </set-mem>
+ * @endcode
+ * Set the value of a kind of memory. The LOCATION attributes gives
+ * the address of the accessed memory and <i>type</i> defines the type of data
+ * among <b>int8</b>, <b>int16</b>, <b>int32</b>, <b>int64</b>, <b>uint8</b>, <b>uint16</b>,
+ * <b>uint32</b> and <b>uint64</b>.
+ *
+ * <b><i>VALUE</i></b> may be one of:
+ * @code
+ * 	<value LOCATION/>
+ * @endcode
+ * Declare a simple integer value or an address.
+ *
+ * @code
+ * 	<low LOCATION/>
+ * 	<high LOCATION/>
+ * @endcode
+ * A range of integer or of addresses.
+ * @code
+ * 	<value LOCATION step="INTEGER" count="INTEGER"/>
+ * @endcode
+ * Declare a CLP (b, d, n) of base the location attributes, step and count
+ * and denotes the set { b + k d / 0 <= j <= n }.
  */
 
 /**
@@ -215,6 +275,10 @@ extern int fft_line;
  * F4 is a simple plain text format. It may contain comments a-la C++, that is, one
  * line comments prefixed by "//" or enclosed comments between "/ *" and "* /"."
  * Spaces and line format are not meaningful for other commands.
+ * In the following description, upper case words represents variable part
+ * of the command, i.e. sub-rules of grammar. If such a token is prefixed
+ * by a name followed by ":", this name is used to identify the token
+ * in subsequent description.
  *
  * @par Directives
  *
@@ -340,6 +404,26 @@ extern int fft_line;
  * @li "recursive ADDRESS max COUNT min COUNT ;"
  * @li "entry ADDRESS ;"
  * @li "entry NAME ;"
+ *
+ * @par Extensions
+ * Flow fact files are very useful file to allow user to give more detail
+ * on the behaviour of a program. This section presents some extensions that remain experimental.
+ *
+ * @li <b><tt>memory access <i>iaddr: ADDRESS</i> .. <i>lo: ADDRESS</i> .. <i>hi: ADDRESS</i> ;</tt></b> @n
+ * Definition of the range <i>lo</i> to <i>hi</i> (exclusive) for the memory instruction at address <i>iaddr</i>.
+ *
+ * @li <b><tt>reg <i>NAME</i> = <i>DATA</i> ;</tt></b>
+ * Allows to assign a value to a register. This value may be a simple integer or an address.
+ *
+ * @li <b><tt>mem [<i>TYPE</i>] <i>ADDRESS</i> = <i>DATA</i> ;<tt></b>
+ * Assign a value in memory.<i>TYPE</i> may be one <tt>int8</tt>, <tt>uint8</tt>, <tt>int816</tt>, <tt>uint16</tt>,
+ * <tt>int32</tt>, <tt>uint32</tt>, <tt>int64</tt>, <tt>uint64</tt>, <tt>float32</tt> or <tt>float64</tt>.
+ * <i>DATA</i> supports several forms described below.
+ *
+ * <i>DATA</i> a bit complex but allows a lot of flexibility:
+ * @li <b><i>ADDRESS</i></b> -- the easier form, a simple integer or an address,
+ * @li <b>[ <i>ADDRESS</i> .. <i>ADDRESS</i> ]</b> -- an integer or address interval,
+ * @li <b>( <i>ADDRESS</i>, <i>INTEGER<i>, <i>INTEGER</i> )</b> -- a CLP triple (b, d, n) representing the integer set { b + k d / 0 <= k <= n }.
  */
 
 /**
@@ -347,6 +431,9 @@ extern int fft_line;
  * This class is an abstract class to monitor the load of flow facts. To get
  * simple access to the flow fact files, a new class must be inherited from
  * this class and this class must implement the virtual "onXXX" methods.
+ *
+ * @par Required Features
+ * @li @ref dfa::INITIAL_STATE_FEATURE
  *
  * @par Provided features
  * @li @ref otawa::FLOW_FACTS_FEATURE
@@ -364,8 +451,9 @@ extern int fft_line;
  * @author H. Cassé <casse@irit.fr>
  */
 
-p::declare FlowFactLoader::reg = p::init("otawa::util::FlowFactLoader", Version(1, 2, 0))
+p::declare FlowFactLoader::reg = p::init("otawa::util::FlowFactLoader", Version(1, 3, 0))
 	.maker<FlowFactLoader>()
+	.require(dfa::INITIAL_STATE_FEATURE)
 	.provide(FLOW_FACTS_FEATURE)
 	.provide(MKFF_PRESERVATION_FEATURE);
 
@@ -390,6 +478,13 @@ void FlowFactLoader::configure (const PropList &props) {
 	for(Identifier<Path>::Getter path(props, FLOW_FACTS_PATH); path; path++)
 		paths.add(*path);
 	mandatory = FLOW_FACTS_MANDATORY(props);
+}
+
+
+/**
+ */
+void FlowFactLoader::setup(WorkSpace *ws) {
+	state = dfa::INITIAL_STATE(ws);
 }
 
 
@@ -579,6 +674,54 @@ void FlowFactLoader::onLoop(
 	}
 
 }
+
+
+/**
+ * Load a memory range instruction.
+ * @param iaddr		Instruction address.
+ * @param lo		Low address (inclusive).
+ * @param hi		High address (exclusive).
+ * @param path		Current context.
+ */
+void FlowFactLoader::onMemoryAccess(Address iaddr, Address lo, Address hi, const ContextualPath& path) {
+
+	// find the instruction
+	Inst *inst = _fw->process()->findInstAt(iaddr);
+	if(!inst)
+		onError(_ << "unmarked memory access because instruction at " << iaddr << " not found");
+
+	// put the property
+	path.ref(ACCESS_RANGE, inst) = pair(lo, hi);
+}
+
+
+/**
+ * Called when a register set is found.
+ * @param name		Name of the register.
+ * @param value		Value to set.
+ */
+void FlowFactLoader::onRegSet(string name, const dfa::Value& value) {
+
+	// find register
+	const hard::Register *reg = workSpace()->process()->platform()->findReg(name);
+	if(!reg)
+		onError(_ << "no register named " << name);
+
+	// set the value
+	state->set(reg, value);
+}
+
+
+/**
+ * Called to set a memory initialization.
+ * @param addr		Address to initialize.
+ * @param type		Type in memory.
+ * @param value		Value to set.
+ */
+void FlowFactLoader::onMemSet(Address addr, const Type *type, const dfa::Value& value) {
+	state->record(dfa::MemCell(addr, type, value));
+}
+
 
 
  /**
@@ -862,6 +1005,12 @@ throw(ProcessorException) {
 				scanMultiBranch(element, cpath);
 			else if(name == "multicall")
 				scanMultiCall(element, cpath);
+			else if(name == "mem-access")
+				scanMemAccess(element);
+			else if(name == "mem-set")
+				scanMemSet(element);
+			else if(name == "reg-set")
+				scanRegSet(element);
 			else
 				warn(_ << "garbage at \"" << xline(child) << "\"");
 		}
@@ -916,6 +1065,132 @@ void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath)
 	}
 	delete items;
 	this->onMultiCall(control, targets);
+}
+
+
+/**
+ * Scan a value in the given element.
+ * @param element	Element to scan value in.
+ */
+dfa::Value FlowFactLoader::scanValue(xom::Element *element) {
+
+	// look for value element
+	xom::Element *velem = element->getFirstChildElement("value");
+	if(velem) {
+
+		// get the initial address
+		ContextualPath c;
+		Address addr = this->scanAddress(velem, c);
+
+		// look for step and count
+		Option<long> step = scanInt(velem, "step");
+		Option<long> count = scanInt(velem, "count");
+		if(!step || !count)
+			return dfa::Value(addr.offset());
+		else
+			return dfa::Value(addr.offset(), *step, *count);
+	}
+
+	// scan for high and low
+	xom::Element *helem = element->getFirstChildElement("high");
+	xom::Element *lelem = element->getFirstChildElement("low");
+	if(helem && lelem) {
+		ContextualPath c;
+		Address haddr = scanAddress(helem, c);
+		Address laddr = scanAddress(lelem, c);
+		return dfa::Value(laddr.offset(), haddr.offset());
+	}
+
+	// unknown value
+	onError(_ << "unknown value at " << xline(element));
+	return dfa::Value();
+}
+
+
+/**
+ * Scan for a memory access instruction.
+ * @param element	Element to look in.
+ */
+void FlowFactLoader::scanMemAccess(xom::Element *element) {
+
+	// look for high and low
+	xom::Element *helem = element->getFirstChildElement("high");
+	xom::Element *lelem = element->getFirstChildElement("low");
+	if(!helem || !lelem)
+		onError(_ << "malformed mem-acess at " << xline(element));
+
+	// build the memory access
+	ContextualPath c;
+	Address eaddr = scanAddress(element, c);
+	Address haddr = scanAddress(helem, c);
+	Address laddr = scanAddress(lelem, c);
+	this->onMemoryAccess(eaddr, laddr, haddr, c);
+}
+
+
+/**
+ * Load a register set instruction.
+ * @param element	Element to get information from.
+ */
+void FlowFactLoader::scanRegSet(xom::Element *element) {
+
+	// get the name
+	Option<xom::String> name = element->getAttributeValue("name");
+	if(!name)
+		onError(_ << "name attribute required at " << xline(element));
+
+	// get the value
+	dfa::Value val = scanValue(element);
+
+	// perform the instruction
+	onRegSet(*name, val);
+}
+
+
+/**
+ * Load a memory set.
+ * @param element	Element to get information from.
+ */
+void FlowFactLoader::scanMemSet(xom::Element *element) {
+
+	// list of known types
+	static struct {
+		cstring id;
+		const Type *type;
+	} map[] = {
+		{ "int8", 	&Type::int8_type },
+		{ "int16", 	&Type::int16_type },
+		{ "int32", 	&Type::int32_type },
+		{ "int64", 	&Type::int64_type },
+		{ "uint8", 	&Type::uint8_type },
+		{ "uint16", &Type::uint16_type },
+		{ "uint32", &Type::uint32_type },
+		{ "uint64",	&Type::uint64_type },
+		{ "", 0 }
+	};
+
+	// get the type
+	Option<xom::String> name = element->getAttributeValue("type");
+	if(!name)
+		onError(_ << "a type attribute is required at " << xline(element));
+	const Type *type = 0;
+	for(int i = 0; map[i].type; i++)
+		if(*name == map[i].id) {
+			type = map[i].type;
+			break;
+		}
+	if(!type)
+		onError(_ << "unknown type " << *name << " at " << xline(element));
+
+	// get the address
+	ContextualPath c;
+	Address addr = this->scanAddress(element, c);
+
+	// get the value
+	dfa::Value val = scanValue(element);
+
+	// perform the instruction
+	onMemSet(addr, type, val);
 }
 
 
@@ -1439,8 +1714,22 @@ Identifier<int> TOTAL_ITERATION("otawa::TOTAL_ITERATION", -1);
  *
  * @par Hooks
  * @li @ref Symbol
+ * @ingroup ff
  */
 Identifier<bool> IGNORE_ENTRY("otawa::IGNORE_ENTRY", false);
 
+
+/**
+ * Put on a memory access instruction, provides a range
+ * of possible accesses.
+ *
+ * @par Features
+ * @li @ref FLOW_FACTS_FEATURE
+ *
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier<Pair<Address, Address> > ACCESS_RANGE("otawa::ACCESS_RANGE");
 
 } // otawa

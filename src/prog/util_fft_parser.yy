@@ -25,6 +25,7 @@
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/prop/ContextualProperty.h>
+#include <otawa/dfa/State.h>
 using namespace elm::genstruct;
 int util_fft_lex(void);
 void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
@@ -49,12 +50,16 @@ static void reset_counts(void) {
 	int _int;
 	elm::String *_str;
 	otawa::Address *addr;
+	const otawa::Type *type;
+	otawa::dfa::Value *value;
 }
 
 %token <_int> INTEGER
 %token <_str> STRING;
 %token BAD_TOKEN
 %token CHECKSUM
+%token DOT_DOT
+%token KW_ACCESS
 %token KW_CALL
 %token KW_CONTROL
 %token KW_ENTRY
@@ -63,18 +68,23 @@ static void reset_counts(void) {
 %token KW_IGNORESEQ
 %token KW_IN
 %token KW_MAX
+%token KW_MEMORY
 %token KW_MULTIBRANCH
 %token KW_MULTICALL
 %token KW_NO
 %token KW_NOCALL
 %token KW_PRESERVE
+%token KW_REG
 %token KW_SEQ
 %token KW_TO
 %token KW_TOTAL
 %token LOOP
 %token NORETURN
 %token RETURN
+%token TYPE
 %type<addr> full_address id_or_address
+%type<type> TYPE
+%type<value> value
 
 %%
 
@@ -132,6 +142,18 @@ command:
 		{ loader->onPreserve(*$2); delete $2; }
 |	KW_IGNORE KW_ENTRY STRING ';'
 		{ loader->onIgnoreEntry(*$3); delete $3; }
+|	KW_MEMORY KW_ACCESS full_address full_address DOT_DOT full_address opt_in ';'
+		{
+			loader->onMemoryAccess(*$3, *$4, *$6, path);
+			path.clear();
+			delete $3;
+			delete $4;
+			delete $6;
+		}
+|	KW_REG STRING '=' value ';'
+		{ loader->onRegSet(*$2, *$4); delete $2; delete $4; }
+|	KW_MEMORY TYPE full_address '=' value ';'
+		{ loader->onMemSet(*$3, $2, *$5); delete $3; delete $5; }
 ;
 
 counts:
@@ -216,6 +238,15 @@ path:
 		{  }
 |	step '/' path
 		{ }
+;
+
+value:
+	full_address
+		{ $$ = new otawa::dfa::Value($1->offset()); delete $1; }
+|	'[' full_address DOT_DOT full_address ']'
+		{ $$ = new otawa::dfa::Value($2->offset(), $4->offset()); delete $2; delete $4; }
+|	'(' full_address ',' INTEGER ',' INTEGER ')'
+		{ $$ = new otawa::dfa::Value($2->offset(), $4, $6); delete $2; }
 ;
 
 %%

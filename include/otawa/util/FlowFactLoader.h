@@ -32,6 +32,7 @@
 #include <elm/genstruct/Vector.h>
 #include <otawa/prop/ContextualProperty.h>
 #include <elm/types.h>
+#include <otawa/dfa/State.h>
 
 // Externals
 namespace otawa  { class FlowFactLoader; }
@@ -86,8 +87,13 @@ protected:
 	virtual void onUnknownMultiBranch(Address control);
 	virtual void onUnknownMultiCall(Address control);
 
+	virtual void onMemoryAccess(Address iaddr, Address lo, Address hi, const ContextualPath& path);
+	virtual void onRegSet(string name, const dfa::Value& value);
+	virtual void onMemSet(Address addr, const Type *type, const dfa::Value& value);
+
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void configure (const PropList &props);
+	virtual void setup(WorkSpace *ws);
 
 private:
 	WorkSpace *_fw;
@@ -95,8 +101,11 @@ private:
 	genstruct::Vector<Path> paths;
 	Path current;
 	bool mandatory;
-	void loadF4(const string& path) throw(ProcessorException);
 	bool lines_available;
+	dfa::State *state;
+
+	// F4 support
+	void loadF4(const string& path) throw(ProcessorException);
 
 	// XML support
 	void load(WorkSpace *ws, const Path& path);
@@ -115,6 +124,10 @@ private:
 	void scanIgnoreEntry(xom::Element *element);
 	void scanMultiBranch(xom::Element *element, ContextualPath& cpath);
 	void scanMultiCall(xom::Element *element, ContextualPath& cpath);
+	dfa::Value scanValue(xom::Element *element);
+	void scanMemAccess(xom::Element *element);
+	void scanRegSet(xom::Element *element);
+	void scanMemSet(xom::Element *element);
 };
 
 // Properties
@@ -138,6 +151,7 @@ extern Identifier<Address> BRANCH_TARGET;
 extern Identifier<bool> PRESERVED;
 extern Identifier<bool> IGNORE_ENTRY;
 extern Identifier<Address> CALL_TARGET;
+extern Identifier<Pair<Address, Address> > ACCESS_RANGE;
 
 } // otawa
 
