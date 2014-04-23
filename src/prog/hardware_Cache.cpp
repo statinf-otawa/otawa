@@ -24,6 +24,25 @@ namespace otawa { namespace hard {
 
 
 /**
+ */
+Cache::Cache(void) {
+}
+
+
+/**
+ */
+Cache::Cache(const Cache& cache, const Cache *next): _info(cache._info), _next(next) {
+
+}
+
+
+/**
+ */
+Cache::~Cache(void) {
+}
+
+
+/**
  * @fn Cache::Cache(const info_t& info, const Cache *next);
  * Build a new cache with the given information.
  * @param info	Information about the cache.

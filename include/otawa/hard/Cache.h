@@ -61,6 +61,11 @@ public:
 		int write_port_size;
 	} info_t;
 
+	typedef t::uint32 block_t;
+	typedef t::uint32 set_t;
+	typedef t::uint32 tag_t;
+	typedef t::uint32 offset_t;
+
 private:
 	SERIALIZABLE(Cache,
 		field("access_time", _info.access_time, 1) &
@@ -79,14 +84,15 @@ private:
 	const Cache *_next;
 
 public:
-	inline Cache(void) { }
-	inline Cache(const Cache& cache, const Cache *next = 0): _info(cache._info), _next(next) { }
-	virtual ~Cache(void) { }
+
+	Cache(void);
+	Cache(const Cache& cache, const Cache *next = 0);
+	virtual ~Cache(void);
 	
 	// Simple accessors
 	inline const Cache *nextLevel(void) const  { return _next; }
-	inline size_t cacheSize(void) const { return 1 << (blockBits() + rowBits() + wayBits()); }
-	inline size_t blockSize(void) const { return 1 << blockBits(); }
+	inline ot::size cacheSize(void) const { return 1 << (blockBits() + rowBits() + wayBits()); }
+	inline ot::size blockSize(void) const { return 1 << blockBits(); }
 
 	inline int wayCount(void) const { return 1 << wayBits(); }
 	inline int setCount(void) const { return 1 << rowBits(); }
@@ -111,10 +117,10 @@ public:
 	inline ot::mask tagMask(void) const { return ~(lineMask() | blockMask()); }
 	
 	// Address decomposition
-	inline ot::mask offset(Address addr) const { return ot::mask(addr.offset()) & blockMask(); }
-	inline ot::mask set(Address addr) const { return (ot::mask(addr.offset()) & lineMask()) >> blockBits(); }
-	inline ot::mask tag(Address addr) const { return ot::mask(addr.offset()) >> (blockBits() + rowBits()); }
-	inline ot::mask block(Address addr) const { return ot::mask(addr.offset()) >> blockBits(); }
+	inline offset_t offset(Address addr) const { return ot::mask(addr.offset()) & blockMask(); }
+	inline set_t set(Address addr) const { return (ot::mask(addr.offset()) & lineMask()) >> blockBits(); }
+	inline tag_t tag(Address addr) const { return ot::mask(addr.offset()) >> (blockBits() + rowBits()); }
+	inline block_t block(Address addr) const { return ot::mask(addr.offset()) >> blockBits(); }
 	inline Address round(Address addr) const
 		{ if(addr.isNull()) return addr; else return Address(addr.page(), addr.offset() & ~(blockSize() - 1)); }
 	

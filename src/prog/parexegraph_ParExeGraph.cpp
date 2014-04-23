@@ -953,33 +953,45 @@ void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> 
 void ParExeGraph::addEdgesForMemoryOrder(void) {
 
     ParExeStage *stage = _microprocessor->execStage();
+
+    // looking in turn each FU
     for (int i=0 ; i<stage->numFus() ; i++) {
 		ParExeStage *fu_stage = stage->fu(i)->firstStage();
 		ParExeNode * previous_load = NULL;
 		ParExeNode * previous_store = NULL;
+
+		// look for each node of this FU
 		for (int j=0 ; j<fu_stage->numNodes() ; j++){
 			ParExeNode *node = fu_stage->node(j);
+
+			// found a load instruction
 			if (node->inst()->inst()->isLoad()) {
-				if (previous_store) {// memory access are executed in order  
+
+				// if any, dependency on previous store
+				if(previous_store)
 					new ParExeEdge(previous_store, node, ParExeEdge::SOLID);
-				}
-				for (InstNodeIterator last_node(node->inst()); last_node ; last_node++){
+
+				// current node becomes the new previous load
+				for (InstNodeIterator last_node(node->inst()); last_node ; last_node++)
 					if (last_node->stage()->category() == ParExeStage::FU)
 						previous_load = last_node;
-				}
 			}
+
+			// found a store instruction
 			if (node->inst()->inst()->isStore()) {
-				if (previous_store) {// memory access are executed in order
+
+				// if any, dependency on previous store
+				if (previous_store)
 					new ParExeEdge(previous_store, node, ParExeEdge::SOLID);
-				}
-				if (previous_load) {// memory access are executed in order
+
+				// if any, dependency on previous load
+				if (previous_load)
 					new ParExeEdge(previous_load, node, ParExeEdge::SOLID);
-				}
-				for (InstNodeIterator last_node(node->inst()); last_node ; last_node++){
-					if (last_node->stage()->category() == ParExeStage::FU){
+
+				// current node becomes the new previous store
+				for (InstNodeIterator last_node(node->inst()); last_node ; last_node++)
+					if (last_node->stage()->category() == ParExeStage::FU)
 						previous_store = last_node;
-					}
-				}
 			}
 		}
     }

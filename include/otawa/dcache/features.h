@@ -164,7 +164,7 @@ private:
 	t::uint8 _kind, _action;
 	union {
 		const Block *blk;
-		struct { Address::offset_t first, last; } range;
+		struct { hard::Cache::block_t first, last; } range;
 	} data;
 };
 inline io::Output& operator<<(io::Output& out, const BlockAccess& acc) { acc.print(out); return out; }
@@ -260,6 +260,9 @@ typedef enum {
 io::Output& operator<<(io::Output& out, purge_t purge);
 extern p::feature PURGE_FEATURE;
 extern Identifier<purge_t> PURGE;
+
+// WCET builder
+extern p::feature WCET_FUNCTION_FEATURE;
 
 } }		// otawa::dcache
 

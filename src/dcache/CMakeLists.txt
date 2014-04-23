@@ -11,6 +11,7 @@ set(SOURCES
 	"dcache_CatBuilder.cpp"
 	"dcache_CatConstraintBuilder.cpp"
 	"dcache_CLPBlockBuilder.cpp"
+	"dcache_WCETFunctionBuilder.cpp"
 	"Dirty.cpp"
 	"Purge.cpp"
 )
