@@ -30,32 +30,40 @@ class PathIter: public PreIterator<PathIter, sem::inst> {
 public:
 
 	inline void start(Inst *inst) {
-		b.clear();
+		bb.clear();
 		_inst = inst;
-		inst->semInsts(b);
+		inst->semInsts(bb);
 		todo.clear();
 		pc = 0;
-		b.add(sem::cont());
+		bb.add(sem::cont());
 	}
 
-	inline bool pathEnd(void) const { return b[pc].op == sem::CONT; }
-	inline bool isCond(void) const { return b[pc].op == sem::IF; }
+	inline bool pathEnd(void) const { return bb[pc].op == sem::CONT; }
+	inline bool isCond(void) const { return bb[pc].op == sem::IF; }
 
 	inline bool ended(void) const { return pathEnd() && !todo; }
-	inline sem::inst item(void) const { return b[pc]; }
+	inline sem::inst item(void) const { return bb[pc]; }
 	inline void next(void) {
 		if(pathEnd())
 			pc = todo.pop();
 		else {
 			if(isCond())
-				todo.push(pc + b[pc].jump());
+				todo.push(pc + bb[pc].jump());
 			pc++;
 		}
 	}
+	
+	inline opcode op(void) const { return opcode(item().op); }
+	inline t::int16 d(void) const { return item().d(); }
+	inline t::int16 a(void) const { return item().a(); }
+	inline t::int16 b(void) const { return item().b(); }
+	inline t::uint32 cst(void) const { return item().cst(); }
+	inline t::uint32 reg(void) const { return item().reg(); }
+	inline t::uint32 addr(void) const { return item().addr(); }
 
 private:
 	Inst *_inst;
-	sem::Block b;
+	sem::Block bb;
 	genstruct::Vector<int> todo;
 	int pc;
 };
