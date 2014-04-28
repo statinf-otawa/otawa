@@ -31,7 +31,7 @@ static sem_fun_t sem_funs[] = {
 /**
  * Get the OTAWA semantics of the instruction.
  * @param inst		Current GLISS instruction.
- * @param block		Block to write semantics instructions in.
+ * @param block		Block to write semantic instructions in.
  */
 static void $(proc)_sem($(proc)_inst_t *inst, otawa::sem::Block& block) {
 	sem_funs[inst->ident](inst, block);

@@ -38,7 +38,7 @@
  * @li instruction kinds,
  * @li branch target (for control instructions),
  * @li read and written registers,
- * @li semantics instructions (when available).
+ * @li semantic instructions (when available).
  *
  * This command is particularly useful when a loader is written.
  * It allows to examine the information provided by the loader from

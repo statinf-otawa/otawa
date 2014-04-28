@@ -57,7 +57,7 @@
  * In addition, some utilities are provided:
  * @li @ref dumpcfg -- outputs CFG with different format (textual, .dot).
  * @li @ref odfa -- performs and outputs data flow analysis.
- * @li @ref odisasm -- disassembling of the program in machine code and in semantics instructions.
+ * @li @ref odisasm -- disassembling of the program in machine code and in semantic instructions.
  * @li @ref oipet -- computes WCET according to different alternativs of the IPET approach.
  * @li @ref opcg -- outputs the Program Call Graph (PCG).
  * @li @ref ostat -- computes some statistics about instructions of a program.

@@ -28,7 +28,7 @@
 using namespace elm;
 
 /**
- * @defgroup sem Semantics Instructions
+ * @defgroup sem Semantic Instructions
  *
  * OTAWA provides an abstraction layer between the actual binary program and static analyses.
  * This abstraction is composed of generic information about the processed instruction:
@@ -49,7 +49,7 @@ using namespace elm;
  *
  * @section sem-set-comp Computation Instructions
  *
- * Basically, our semantics instructions have three operands and works with registers.
+ * Basically, our semantic instructions have three operands and works with registers.
  * The first operand d is the target registers to store the result and next ones represents source operands (a and b).
  * The following arithmetics operations exists:
  * @li CMP -- comparison
@@ -131,7 +131,7 @@ using namespace elm;
  * abstract interpretation (bottom value, initial value, update, join, etc).
  * In the case of the value, you have also to provide function to perform
  * abstract interpretation but also functions to interpret the different
- * semantics instructions.
+ * semantic instructions.
  *
  * A specific processing is devoted to SPEC instructions. A convenient analysis
  * must let its user to specialize it in order to support these instructions.
@@ -225,7 +225,7 @@ void inst::print(io::Output& out) const {
 
 /**
  * @class Block
- * A block represents a sequence of semantics instructions @ref inst.
+ * A block represents a sequence of semantic instructions @ref inst.
  */
 
 /**
@@ -240,7 +240,7 @@ void Block::print(elm::io::Output& out) const {
 
 /**
  * @class Printer
- * Printer class for semantics instructions (resolve the generic register value
+ * Printer class for semantic instructions (resolve the generic register value
  * to the their real platform name).
  */
 
@@ -422,8 +422,8 @@ io::Output& operator<<(io::Output& out, cond_t cond) {
 
 /**
  * @class PathIter
- * This iterator allows easily to traverse all executions path of a block
- * of semantics instructions. As it may consume resources, it is delivered
+ * This iterator allows easily to traverse all execution paths of a block
+ * of semantic instructions. As it may consume resources, it is delivered
  * to support iteration on multiple blocks sequentially.
  */
 

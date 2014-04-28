@@ -415,7 +415,8 @@ INPUT                  = include/otawa/ \
                     	 src/config/config.cpp \
                     	 src/odec/odec.cpp \
                     	 src/ast/ \
-                    	 src/ets/
+                    	 src/ets/ \
+                         src/etime
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 

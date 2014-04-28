@@ -3,6 +3,8 @@ set(CMAKE_MACOSX_RPATH true)
 
 set(PLUGIN etime)
 set(SOURCES
+    "StandardEventBuilder.cpp"
+    "EdgeTimeBuilder.cpp"
 	"hook.cpp"
 )
 

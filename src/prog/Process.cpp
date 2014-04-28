@@ -973,7 +973,7 @@ SilentFeature SEMANTICS_INFO_EXTENDED("otawa::SEMANTICS_INFO_EXTENDED", mem_make
 
 /**
  * This feature is present when the loader provides implementation
- * of floating-point semantics instructions.
+ * of floating-point semantic instructions.
  *
  * @note This is a future feature as, currently, no floating-point instruction exists.
  *

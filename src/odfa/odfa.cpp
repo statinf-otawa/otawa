@@ -58,7 +58,7 @@ Identifier<bool> FILTER("", false);
  * @li -c, --clp -- perform CLP analysis,
  * @li --before -- display the data values before the basic blocks,
  * @li --after -- display the data values after the basic blocks,
- * @li -s, --sem -- display semantics instructions,
+ * @li -s, --sem -- display semantic instructions,
  * @li -F, --filter -- display filters (for the CLP analysis),
  * @li -S, --stats -- display statistics of the analysis,
  * @li -C, --cfg -- dump the CFG in .dot format (including data values),
@@ -181,7 +181,7 @@ protected:
 					out << " (" << inst->target()->address() << ")";
 				out << io::endl;
 
-				// disassemble semantics instructions
+				// disassemble semantic instructions
 				if(sem) {
 					sem::Block block;
 					inst->semInsts(block);
@@ -254,7 +254,7 @@ public:
 	list(*this, option::cmd, "-l", option::cmd, "--list", option::help, "display the list of registers", option::end),
 	before(*this, option::cmd, "--before", option::help, "display state before the BB", option::end),
 	after(*this, option::cmd, "--after", option::help, "display state after the BB", option::end),
-	sem(*this, option::cmd, "-s", option::cmd, "--sem", option::help, "display semantics instructions", option::end),
+	sem(*this, option::cmd, "-s", option::cmd, "--sem", option::help, "display semantic instructions", option::end),
 	filter(*this, option::cmd, "-F", option::cmd, "--filter", option::help, "display filters", option::end),
 	inits(*this, option::cmd, "-r", option::cmd, "--reg", option::help, "add an initialization register", option::arg_desc, "REGISTER=VALUE", option::end),
 	stats(*this, option::cmd, "-S", option::cmd, "--stats", option::help, "display statistics of the analysis", option::end),
@@ -326,7 +326,7 @@ private:
 		// display the statistics
 		if(stats) {
 			cerr << "machine instructions: " << clpa.get_nb_inst() << io::endl;
-			cerr << "semantics instructions: " << clpa.get_nb_sem_inst() << io::endl;
+			cerr << "semantic instructions: " << clpa.get_nb_sem_inst() << io::endl;
 			cerr << "sets: " << clpa.get_nb_set() << io::endl;
 			cerr << "sets to T: " << clpa.get_nb_top_set() << io::endl;
 			cerr << "stores: " << clpa.get_nb_store() << io::endl;
