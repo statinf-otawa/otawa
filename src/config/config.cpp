@@ -64,6 +64,12 @@ using namespace otawa;
  * @li -r, --rpath -- output options to control RPATH on OS supporting it.
  */
 
+#if defined(WIN32) || defined(WIN64)
+#	define	LIB_DIR		"bin"
+#else
+#	define	LIB_DIR		"lib"
+#endif
+
 // Configuration class
 class Configuration {
 public:

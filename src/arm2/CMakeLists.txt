@@ -14,12 +14,14 @@ include_directories(${PROC_PREFIX}/include)
 set(OTAWA_KIND 			"${CMAKE_CURRENT_BINARY_DIR}/otawa_kind.h")
 set(OTAWA_TARGET 		"${CMAKE_CURRENT_BINARY_DIR}/otawa_target.h")
 set(OTAWA_SEM 			"${CMAKE_CURRENT_BINARY_DIR}/otawa_sem.h")
+set(OTAWA_MULTI 		"${CMAKE_CURRENT_BINARY_DIR}/otawa_multi.h")
 
 set(SOURCES
 	"${PROC}.cpp"
 	${OTAWA_KIND}
 	${OTAWA_TARGET}
 	${OTAWA_SEM}
+	${OTAWA_MULTI}
 )
 
 set(IRG			"${PROC_PREFIX}/${PROC}.irg")
@@ -43,6 +45,12 @@ add_custom_command(
 	OUTPUT ${OTAWA_SEM} DEPENDS "otawa_sem.tpl" "otawa_sem.nmp" ${IRG}
 	COMMAND ${GLISS_ATTR}
 	ARGS ${IRG} -o ${OTAWA_SEM} -a otawa_sem -p -t "otawa_sem.tpl" -d ";" -e otawa_sem.nmp
+	VERBATIM
+)
+add_custom_command(
+	OUTPUT ${OTAWA_MULTI} DEPENDS "otawa_multi.tpl" "otawa_multi.nmp" ${IRG}
+	COMMAND ${GLISS_ATTR}
+	ARGS ${IRG} -o ${OTAWA_MULTI} -a otawa_multi -f -t "otawa_multi.tpl" -d "return 0;" -e otawa_multi.nmp
 	VERBATIM
 )
 

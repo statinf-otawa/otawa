@@ -77,6 +77,7 @@ namespace arm2 {
 
 #include "otawa_kind.h"
 #include "otawa_target.h"
+#include "otawa_multi.h"
 
 
 /****** Platform definition ******/
@@ -172,7 +173,8 @@ class Inst: public otawa::Inst {
 public:
 
 	inline Inst(Process& process, kind_t kind, Address addr, int size)
-		: proc(process), _kind(kind), _addr(addr), isRegsDone(false), _size(size) { }
+		: proc(process), _kind(kind), _addr(addr), isRegsDone(false), _size(size) {
+		}
 
 	// Inst overload
 	virtual void dump(io::Output& out);
@@ -282,7 +284,8 @@ public:
 		_memory(0),
 		init(false),
 		map(0),
-		no_stack(true)
+		no_stack(true),
+		_file(0)
 	{
 		ASSERTP(manager, "manager required");
 		ASSERTP(pf, "platform required");
@@ -525,6 +528,9 @@ public:
 			result = new BranchInst(*this, kind, addr, size);
 		else
 			result = new Inst(*this, kind, addr, size);
+		int multi = arm_multi(inst);
+		if(multi)
+			otawa::arm::NUM_REGS_LOAD_STORE(result) = multi;
 		char buf[256];
 		arm_disasm(buf, inst);
 		t::uint8 b0, b1;
