@@ -25,7 +25,7 @@
 #define _RESOURCE_H_
 
 #include <otawa/parexegraph/ParExeProc.h>
-#include <otawa/parexegraph/ParExeGraph.h>
+//#include <otawa/parexegraph/ParExeGraph.h>
 #include <otawa/hard/Register.h>
 
 namespace otawa { 

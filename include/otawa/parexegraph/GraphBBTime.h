@@ -53,10 +53,11 @@ namespace otawa {
     		}
 
     		// is it a l-block bound?
-    		if(i >= lbs->count() && lbs->get(i)->address() == inst->address()) {
+    		if(i < lbs->count() && lbs->get(i)->address() == inst->address()) {
     			category_t cat = CATEGORY(lbs->get(i));
     			if(cat == FIRST_MISS)
     				hd = cache::CATEGORY_HEADER(lbs->get(i));
+    			i++;
     			return cat;
     		}
     		else
