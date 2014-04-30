@@ -47,6 +47,7 @@ private:
 	void processLBlockSet(otawa::CFG*, LBlockSet *, const hard::Cache *);
 	fmlevel_t firstmiss_level;
 	cache::CategoryStats *cstats;
+	int ah_cnt, am_cnt, pers_cnt, nc_cnt;
 };
 
 }  // otawa

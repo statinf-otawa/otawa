@@ -53,7 +53,7 @@ CAT2Builder::CAT2Builder(AbstractRegistration& registration): CFGProcessor(regis
 
 Registration<CAT2Builder> CAT2Builder::reg(
 	"otawa::CAT2Builder",
-	Version(1, 0, 0),
+	Version(1, 1, 0),
 	p::require, &DOMINANCE_FEATURE,
 	p::require, &LOOP_HEADERS_FEATURE,
 	p::require, &LOOP_INFO_FEATURE,
@@ -103,57 +103,89 @@ Registration<CAT2Builder> CAT2Builder::reg(
  */
 void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard::Cache *cache) {
 	int line = lbset->line();
+	if(logFor(LOG_CFG) && lbset->count() > 2)
+		log << "\tSET " << lbset->set() << io::endl;
 
-	// Use the results to set the categorization
+	// use the results to set the categorization
 	for (LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
 		if ((lblock->id() == 0) || (lblock->id() == lbset->count() - 1))
 			continue;
 
+		// prepare data
+		BasicBlock *pers_header = 0;
+		category_t cat = cache::NOT_CLASSIFIED;
+
+		// case of first l-block of a BB
 		if (LBLOCK_ISFIRST(lblock)) {
+
+			// gather information
 			MUSTProblem::Domain *must = CACHE_ACS_MUST(lblock->bb())->get(line);
 			MAYProblem::Domain *may = NULL;
 			if (CACHE_ACS_MAY(lblock->bb()) != NULL)
 				may = CACHE_ACS_MAY(lblock->bb())->get(line);
-			BasicBlock *header;
-			if (may) {
-				cache::CATEGORY(lblock) = cache::NOT_CLASSIFIED;
-			} else {
-				cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
-			}
 
-			if (must->contains(lblock->cacheblock())) {
-				cache::CATEGORY(lblock) = cache::ALWAYS_HIT;
-			} else if (may && !may->contains(lblock->cacheblock())) {
-				cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
-			} else if (firstmiss_level != FML_NONE) {
+			// may processing
+			if(!may)
+				cat = cache::ALWAYS_MISS;
+
+			// must && may processing
+			if(must->contains(lblock->cacheblock()))
+				cat = cache::ALWAYS_HIT;
+			else if (may && !may->contains(lblock->cacheblock()))
+				cat = cache::ALWAYS_MISS;
+
+			// persistence
+			else if (firstmiss_level != FML_NONE) {
+
+				// gather information
+				BasicBlock *header;
 				if (LOOP_HEADER(lblock->bb()))
 					header = lblock->bb();
-			  	else header = ENCLOSING_LOOP_HEADER(lblock->bb());
+			  	else
+			  		header = ENCLOSING_LOOP_HEADER(lblock->bb());
 
 			  	int bound;
 			  	bool perfect_firstmiss = true;
 				PERSProblem::Domain *pers = CACHE_ACS_PERS(lblock->bb())->get(line);
 				bound = 0;
-
 				if ((pers->length() > 1) && (firstmiss_level == FML_INNER))
 					bound = pers->length() - 1;
-				cache::CATEGORY_HEADER(lblock) = NULL;
+
+				// traverse the levels
 			  	for (int k = pers->length() - 1 ; (k >= bound) && (header != NULL); k--) {
-					if (pers->isPersistent(lblock->cacheblock(), k)) {
-						cache::CATEGORY(lblock) = cache::FIRST_MISS;
-						cache::CATEGORY_HEADER(lblock) = header;
-					} else perfect_firstmiss = false;
+					if(pers->isPersistent(lblock->cacheblock(), k)) {
+						cat = cache::FIRST_MISS;
+						pers_header = header;
+					}
+					else
+						perfect_firstmiss = false;
 					header = ENCLOSING_LOOP_HEADER(header);
 				}
-
+			  	//
 				if ((firstmiss_level == FML_OUTER) && (perfect_firstmiss == false))
-					cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
-			} /* of category condition test */
-		} else {
-			cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
+					cat = cache::ALWAYS_MISS;
+			}
 		}
 
-		// record stats
+		else
+			cat = cache::ALWAYS_MISS;
+
+		// record category
+		cache::CATEGORY(lblock) = cache::ALWAYS_HIT;
+		if(pers_header)
+			cache::CATEGORY_HEADER(lblock) = pers_header;
+		if(logFor(LOG_BB)) {
+			log << "\t\t" << lblock->address() << ": " << cat;
+			if(pers_header)
+				log << " (" << pers_header << ")";
+			log << "\n";
+		}
+		switch(cat) {
+		case cache::ALWAYS_HIT: ah_cnt++; break;
+		case cache::ALWAYS_MISS: am_cnt++; break;
+		case cache::FIRST_MISS: pers_cnt++; break;
+		case cache::NOT_CLASSIFIED: nc_cnt++; break;
+		}
 		if(cstats)
 			cstats->add(cache::CATEGORY(lblock));
 	}
@@ -183,13 +215,30 @@ void CAT2Builder::configure(const PropList &props) {
 /**
  */
 void CAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
-	//int i;
+
+	// initialization
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
+	ah_cnt = 0;
+	am_cnt = 0;
+	pers_cnt = 0;
+	nc_cnt = 0;
 
-	for (int i = 0; i < cache->rowCount(); i++) {
+	// process each set
+	for (int i = 0; i < cache->rowCount(); i++)
 		processLBlockSet(cfg, lbsets[i], cache );
+
+	// display statistics
+	if(isVerbose()) {
+		int total = ah_cnt + am_cnt + pers_cnt + nc_cnt;
+		log << "\ttotal = " << total << "\n";
+		if(total)
+			log << "\tAH = " << ah_cnt << " (" << (ah_cnt * 100 / total) << "%)\n"
+				<< "\tAM = " << am_cnt << " (" << (am_cnt * 100 / total) << "%)\n"
+				<< "\tPERS = " << pers_cnt << " (" << (pers_cnt * 100 / total) << "%)\n"
+				<< "\tNC = " << nc_cnt << " (" << (nc_cnt * 100 / total) << "%)\n";
 	}
+
 }
 
 
