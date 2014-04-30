@@ -49,9 +49,10 @@ public:
  */
 
 
-p::declare reg = p::init("otawa::etime::EdgeTimeBuilder", Version(1, 0, 0))
+p::declare EdgeTimeBuilder::reg = p::init("otawa::etime::EdgeTimeBuilder", Version(1, 0, 0))
 	.base(GraphBBTime<ParExeGraph>::reg)
 	.maker<EdgeTimeBuilder>();
+
 
 /**
  */
