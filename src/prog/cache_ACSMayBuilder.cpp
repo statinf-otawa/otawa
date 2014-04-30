@@ -105,13 +105,17 @@ SilentFeature ICACHE_ACS_MAY_FEATURE("otawa::ICACHE_ACS_MAY_FEATURE", may_maker)
  * none
  */
 
-ACSMayBuilder::ACSMayBuilder(void) : Processor("otawa::ACSMayBuilder", Version(1, 0, 0)) {
-	require(DOMINANCE_FEATURE);
-	require(LOOP_HEADERS_FEATURE);
-	require(LOOP_INFO_FEATURE);
-	require(COLLECTED_LBLOCKS_FEATURE);
-	require(ICACHE_FIRSTLAST_FEATURE);
-	provide(ICACHE_ACS_MAY_FEATURE);
+p::declare ACSMayBuilder::reg = p::init("otawa::ACSMayBuilder", Version(1, 0, 0))
+	.maker<ACSMayBuilder>()
+	.require(DOMINANCE_FEATURE)
+	.require(LOOP_HEADERS_FEATURE)
+	.require(LOOP_INFO_FEATURE)
+	.require(COLLECTED_LBLOCKS_FEATURE)
+	.require(ICACHE_FIRSTLAST_FEATURE)
+	.provide(ICACHE_ACS_MAY_FEATURE);
+
+
+ACSMayBuilder::ACSMayBuilder(p::declare& r): Processor(r) {
 }
 
 

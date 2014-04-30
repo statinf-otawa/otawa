@@ -319,15 +319,95 @@ implementation in order to compute for a processor delivered as an IP.
 
 ==== Script Description ====
 
-The script description allows to pass information
-about the script to the user. Usual common information
-concerns the target hardware, the supported mode and configuration for the hardware
-and the limitations. Often, when the target is a micro-controller, this documentation
-may contains a list of hardware registers, impacting the performances of the processor,
-with the supported values or the supported combination of values.
 
-Whatever, this description is human-readable text and not aimed to automatic processing.
-It may be plain text or [[http://www.w3.org/TR/xhtml1/|XHTML]] content as found in the ''body'' element. 
+This element describes the script itself, that is, the analyzes to apply to get the WCET.
+In fact, the script works directly on the code processor structure of OTAWA that is composed:
+  * code processors that implements simple analyzes or may transform the program representation,
+  * features are required or provided by code processors and represent information retrieved by the analyzes,
+  * properties that are annotations representing results of analyzes, hooked to the program representation and grouped in features.
+
+Code processors, features and properties are documented in the [[http://www.irit.fr/recherches/ARCHI/MARCH/OTAWA//autodoc/group__features.html|automatic documentation of OTAWA]].
+
+In OTAWA, computing the WCET is invoking either the code processor computing the WCET, or requiring the feature provided by this code processor.
+In turn, this processor may require other features that will be achieved by other code processors and so on.
+The rule is that if an already-provided feature is required, it is used as is. If it is not provided,
+the default processor associated to the feature is invoked.
+
+It comes out that the order of feature requirements
+or code processor invocations matters! To substitute an analysis //A// to the default analyses //B//  of a feature //F//,
+the //A// analysis must be invoked first to let it providing the feature //F//. When a code processor will require
+the feature //F//, it will use the feature provided by //A// as it is already available.
+
+Yet, one may observe that, thanks to the default processor associated with a feature, it is not mandatory
+to provided the whole chain f analyzes to perform the WCET computation. Instead, the script writer
+has only to focus only on the particular analyzes of its script.
+
+The script part has the syntax below and is made of a sequence of steps, possibly with configuration
+items that apply to all steps:
+<code xml>
+<!-- SCRIPT ::= -->
+    <script>
+    	<!-- CONFIG -->*
+    	<!-- STEP -->+
+    </script>
+</code>
+
+A step may invoke a code processor (attribute ''processor'')
+or require a feature (attribute ''feature''). If a step contains configuration items,
+they are only applied to this step and to code processors automatically invoked from
+this step.
+<code xml>
+<!-- STEP ::= -->
+    <step processor="C++PATH"? require="C++PATH"?>
+        <!-- CONFIG -->*
+    </step>
+</code>
+
+The //C++PATH// used to identify a processor or a feature (but also a property)
+is the full-qualified path of the object in the C++ implementation of OTAWA. For example,
+if a code processor implementing class is ''MyAnalysis'' that is contained in namespace
+''my'' and ''otawa'', the matching //C++PATH// is ''otawa::my::MyAnalysis''.
+
+The configuration items allows to provide important parameters or to tune the behavior
+of the analysis. They matches exactly the properties in OTAWA but only some properties
+provide a converter from XML text to C++ values. The syntax is below:
+<code xml>
+<!-- CONFIG ::= -->
+    <config name="C++PATH" value="TEXT"/>
+</code>
+
+The matching property identifier is retrieved from its //C++PATH// and its ''value''
+is converted according to the type of the identifier and pushed in the property list
+used to configure the code processor.
+
+Below is a small example for the //LPC2138// microprocessor: 
+<code xml>
+<script>
+    <step require="otawa::VIRTUALIZED_CFG_FEATURE"/>
+    <step processor="otawa::lpc2138::CATMAMBuilder"/>
+    <step processor="otawa::lpc2138::ARM7ParamExeGraphBBTime">
+	    <config name="otawa::lpc2138::FLASH_MISS" value="56"/>
+    </step>
+    <step require="otawa::ipet::WCET_FEATURE"/>
+</script>
+</code>
+
+This script requires first the feature ''otawa::VIRTUALIZED_CFG_FEATURE'' ensures that
+all functions calls have been inlined. In fact, this requirement will cause the invocation
+of several analyses like the flow fact loader, program text decoder, CFG building, etc.
+
+The the ''otawa::lpc2138::CATMAMBuilder'' analyzes the prefetcher of the LPC2138 flash memory
+and computes the execution of the blocks with ''otawa::lpc2138::ARM7ParamExeGraphBBTime''.
+In this step, a configuration parameter is passed to configure the time for a memory flash miss.
+As will be presented below, the value is rarely a constant: it may be derived from
+the configuration variables.
+
+Finally, the WCET computation is required, ''otawa::ipet::WCET_FEATURE'', that will
+build the ILP system, flowfact constraints but will re-use the block timings already
+provided by ''otawa::lpc2138::ARM7ParamExeGraphBBTime'' without invoking the default
+computation of block timings.
+
+
 
 
 ===== File Organization and XInclude =====

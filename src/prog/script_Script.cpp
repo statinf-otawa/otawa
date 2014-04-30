@@ -152,6 +152,35 @@ public:
 };
 
 
+class EnumItem: public ScriptItem {
+public:
+	EnumItem(xom::Element& elt): ScriptItem(T_ENUM, elt) {
+
+		// look for default value
+		xom::Elements *elems = elt.getChildElements("value");
+		for(int i = 0; i < elems->size(); i++) {
+			xom::Element *elem = elems->get(i);
+			xom::Attribute *attr = elem->getAttribute("default");
+			if(attr && attr->getValue() == "true") {
+				attr = elem->getAttribute("value");
+				if(attr)
+					deflt = attr->getValue();
+				break;
+			}
+		}
+
+		// if no value found, this is the first
+		if(!deflt && elems->size() > 0) {
+			xom::Element *elem = elems->get(0);
+			xom::Attribute *attr = elem->getAttribute("value");
+			if(attr)
+				deflt = attr->getValue();
+		}
+		delete elems;
+	}
+};
+
+
 /**
  * Parse an XML element to build the matching script item.
  * @param elt	Element to parse.
@@ -166,6 +195,8 @@ ScriptItem *ScriptItem::parse(xom::Element& elt) {
 		return new StringItem(elt);
 	else if(*v == "bool")
 		return new BoolItem(elt);
+	else if(*v == "enum")
+		return new EnumItem(elt);
 	else {
 		for(int i = 0; i < T_MAX; i++)
 			if(*v == type_labels[i])

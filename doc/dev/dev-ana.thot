@@ -191,7 +191,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 set(PLUGIN		"stat")			# plugin name
 set(NAMESPACE	"useful")		# namespace
 set(MODULES				)		# used modules (to pass to otawa-config=
-set(SOURCES 	stat.coo)		# sources of the plugin
+set(SOURCES 	stat.cpp)		# sources of the plugin
 
 # script (2)
 project(${PLUGIN})

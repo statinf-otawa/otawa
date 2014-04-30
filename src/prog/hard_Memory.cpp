@@ -367,6 +367,7 @@ Memory *Memory::load(elm::xom::Element *element) throw(LoadException) {
 		delete conf;
 		throw LoadException(_ << "cannot load the memory configuration:" << exn.message());
 	}
+	return 0;
 }
 
 
@@ -386,6 +387,7 @@ Memory *Memory::load(const elm::system::Path& path) throw(LoadException) {
 		delete conf;
 		throw LoadException(_ << "cannot load the memory configuration from \"" << path << "\": " << exn.message());
 	}
+	return 0;
 }
 
 
@@ -457,6 +459,8 @@ public:
 
 protected:
 	virtual void processWorkSpace(WorkSpace *ws) {
+
+		// find the memory configuration
 		if(config) {
 			MEMORY(ws) = config;
 			if(logFor(LOG_DEPS))
@@ -474,8 +478,17 @@ protected:
 			config = Memory::load(path);
 			track(MEMORY_FEATURE, MEMORY(ws) = config);
 		}
-		else if(logFor(LOG_DEPS))
+		else if(logFor(LOG_DEPS)) {
+			config = 0;
 			log << "\tno memory configuration\n";
+		}
+
+		// verbose display
+		if(isVerbose() && config)
+			for(int i = 0; i < config->banks().count(); i++)
+				log << "\t\t" << config->banks()[i]->type() << "\t"
+					<< config->banks()[i]->address() << "-"
+					<< (config->banks()[i]->topAddress() - 1) << io::endl;
 	}
 
 private:
