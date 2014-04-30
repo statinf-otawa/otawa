@@ -21,7 +21,7 @@
 
 #include <otawa/etime/EdgeTimeBuilder.h>
 #include <elm/avl/Set.h>
-#include "features.h"
+#include <otawa/etime/features.h>
 
 namespace otawa { namespace etime {
 
