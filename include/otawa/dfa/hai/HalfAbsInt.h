@@ -38,7 +38,7 @@
 #include <otawa/prog/WorkSpace.h>
 
 
-
+// debugging
 #if defined(NDEBUG) || !defined(HAI_DEBUG)
 #	define HAI_TRACE(x)
 #else
@@ -47,24 +47,23 @@
 
 namespace otawa { namespace dfa { namespace hai {
 
+// context definition
 typedef enum hai_context_t {
 	CTX_LOOP = 0,
 	CTX_FUNC = 1
 } hai_context_t;
 
-
-
-
+// configuration
 extern Identifier<bool> FIXED;
 extern Identifier<bool> FIRST_ITER;
 extern Identifier<bool> HAI_DONT_ENTER;
 extern Identifier<BasicBlock*> HAI_BYPASS_SOURCE;
 extern Identifier<BasicBlock*> HAI_BYPASS_TARGET;
 
+// abstract interpretater
 template <class FixPoint>
 class HalfAbsInt {
-
-  private:
+private:
 	FixPoint& fp;
 	WorkSpace &fw;
 	CFG& entry_cfg;
@@ -88,7 +87,7 @@ class HalfAbsInt {
 	void outputProcessing();
 	void addSuccessors();
 
-  public:
+public:
   	inline typename FixPoint::FixPointState *getFixPointState(BasicBlock *bb);
 	int solve(otawa::CFG *main_cfg = 0,
 		typename FixPoint::Domain *entdom = 0, BasicBlock *start_bb = 0);
@@ -96,8 +95,6 @@ class HalfAbsInt {
 	inline ~HalfAbsInt(void);
 	inline typename FixPoint::Domain backEdgeUnion(BasicBlock *bb);
 	inline typename FixPoint::Domain entryEdgeUnion(BasicBlock *bb);
-
-
 };
 
 template <class FixPoint>
@@ -127,6 +124,17 @@ inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, WorkSpace& _fw)
 template <class FixPoint>
 inline HalfAbsInt<FixPoint>::~HalfAbsInt(void) {
 	delete workList;
+
+	// clean remaining states
+	genstruct::Vector<CFG *> cfgs;
+	cfgs.add(&entry_cfg);
+	for(int i = 0; i < cfgs.count(); i++)
+		for(CFG::BBIterator bb(cfgs[i]); bb; bb++)
+			for(BasicBlock::OutIterator out(bb); out; out++) {
+				this->fp.unmarkEdge(*out);
+				if(out->kind() == Edge::CALL && !cfgs.contains(out->calledCFG()))
+					cfgs.add(out->calledCFG());
+			}
 }
 
 

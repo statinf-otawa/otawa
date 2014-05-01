@@ -36,61 +36,42 @@ namespace otawa { namespace dfa { namespace hai {
 
 template <class Listener>
 class FirstUnrollingFixPoint {
-	
-// Types
 public:
 	typedef typename Listener::Problem Problem;
 	typedef typename Problem::Domain Domain;
 		
 
 protected:
-	// Fields
 	static Identifier<Domain*> STATE;	
 	Problem& prob;
 	Listener  &list;
 	HalfAbsInt<FirstUnrollingFixPoint> *ai;
 	
 public:
-	// FixPointState class
+
 	class FixPointState {
 		public:
 		Domain headerState;
 		Domain firstIterState;
 		int numIter;
-		inline FixPointState(const Domain &bottom): headerState(bottom), firstIterState(bottom) {
-			numIter = 0;
-		}
+		inline FixPointState(const Domain &bottom): headerState(bottom), firstIterState(bottom) { numIter = 0; }
 	};
 	
-	inline FixPointState *newState(void) {
-		return(new FixPointState(bottom()));
-	}
+	inline FixPointState *newState(void) { return(new FixPointState(bottom())); }
+	inline FirstUnrollingFixPoint(Listener & _list):prob(_list.getProb()), list(_list) ,ai(0) { }
+	inline ~FirstUnrollingFixPoint(void) { }
 
-	
-	inline FirstUnrollingFixPoint(Listener & _list)
-	:prob(_list.getProb()), list(_list) ,ai(0)
-	{
-	}	
-	// Destructor
-	inline ~FirstUnrollingFixPoint() {
-	}
-	
-	// Accessors
-	inline int getIter(BasicBlock *bb) const;
-	
-	// Mutators 
-	inline void init(HalfAbsInt<FirstUnrollingFixPoint> *_ai);
-	
-	// FixPoint function
+	inline int getIter(BasicBlock *bb) const { return(ai->getFixPointState(bb)->numIter); }
+	inline void init(HalfAbsInt<FirstUnrollingFixPoint> *_ai) { ai = _ai; }
 	void fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const;
 	
-	// Edge marking functions
+	// edge marking functions
 	inline void markEdge(PropList *e, const Domain &s);
 	inline void unmarkEdge(PropList *e);
 	inline Domain *getMark(PropList *e);
 	inline void updateEdge(Edge *edge, Domain &dom);
 	
-	// Problem wrapper functions
+	// problem wrapper functions
 	inline const Domain& bottom(void) const;
 	inline const Domain& entry(void) const;
 	inline void lub(Domain &a, const Domain &b) const;
@@ -101,71 +82,52 @@ public:
 	inline void fixPointReached(BasicBlock* bb) const;
 	inline void enterContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const;
 	inline void leaveContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const;
-	
 };
 
-template <class Listener> Identifier<typename Listener::Problem::Domain*> FirstUnrollingFixPoint<Listener>::STATE("", 0);
-	
-template < class Listener >	
-inline void FirstUnrollingFixPoint<Listener >::init(HalfAbsInt<FirstUnrollingFixPoint> *_ai) {
-		ai = _ai;
-}
-
-template < class Listener >	
-inline int FirstUnrollingFixPoint<Listener>::getIter(BasicBlock *bb) const {
-		return(ai->getFixPointState(bb)->numIter);
-}
+template <class Listener>
+Identifier<typename Listener::Problem::Domain*> FirstUnrollingFixPoint<Listener>::STATE("", 0);
 	
 template < class Listener >	
 void FirstUnrollingFixPoint<Listener >::fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const {
-		
-		FixPointState *fpstate = ai->getFixPointState(bb);
-		Domain newHeaderState(bottom());
-		fixpoint = false;
-		
-				
-		/*
- 		* The fixPoint() method actions depends on the current iteration.
- 		*/
-		switch(fpstate->numIter) {
-			case 0:
-				/* We never did any iteration, we begin the first:
-				 * Use for IN the union of entry edges. Fixpoint is always false.
-				 */
-				assign(newHeaderState, ai->entryEdgeUnion(bb));
-				break;
-			case 1:
-				/* We finished the first iteration, we begin the 2nd:
-				 * Use for IN the union of back edges. Fixpoint may be reached at this point
-				 * but even if it is, we still want to do another iteration anyway.
-				 */
-				assign(newHeaderState, ai->backEdgeUnion(bb));
-				assign(fpstate->firstIterState, newHeaderState);
-				
-				break;				
-			default:
-				/* We finished the 2..n^th iteration:
-				 * Use for IN the union of back edges + the union of entry edges 
-				 * of the first iteration.
-				 * Test for fixpoint.
-				 */
-				
-				assign(newHeaderState, ai->backEdgeUnion(bb));
-				prob.lub(newHeaderState, fpstate->firstIterState);
-				
-				if (prob.equals(newHeaderState, fpstate->headerState))
-					fixpoint = true;
-				
-				break;
-		}
-		fpstate->numIter ++;
-		
-		/* Store the new loop header state in the FixPointState */
-		assign(fpstate->headerState, newHeaderState);
-		
-		/* Pass the new loop header state to the caller (HalfAbsInt) */
-		assign(in, newHeaderState);
+	FixPointState *fpstate = ai->getFixPointState(bb);
+	Domain newHeaderState(bottom());
+	fixpoint = false;
+
+	switch(fpstate->numIter) {
+
+	// We never did any iteration, we begin the first:
+	// Use for IN the union of entry edges. Fixpoint is always false.
+	case 0:
+		assign(newHeaderState, ai->entryEdgeUnion(bb));
+		break;
+
+	// We finished the first iteration, we begin the 2nd:
+	// Use for IN the union of back edges. Fixpoint may be reached at this point
+	// but even if it is, we still want to do another iteration anyway.
+	case 1:
+		assign(newHeaderState, ai->backEdgeUnion(bb));
+		assign(fpstate->firstIterState, newHeaderState);
+		break;
+
+	// We finished the 2..n^th iteration:
+	// Use for IN the union of back edges + the union of entry edges
+	// of the first iteration.
+	// Test for fixpoint.
+	default:
+		assign(newHeaderState, ai->backEdgeUnion(bb));
+		prob.lub(newHeaderState, fpstate->firstIterState);
+		if (prob.equals(newHeaderState, fpstate->headerState))
+			fixpoint = true;
+		break;
 	}
+	fpstate->numIter ++;
+
+	// Store the new loop header state in the FixPointState
+	assign(fpstate->headerState, newHeaderState);
+
+	// Pass the new loop header state to the caller (HalfAbsInt)
+	assign(in, newHeaderState);
+}
 	
 template < class Listener >	
 inline void FirstUnrollingFixPoint<Listener>::markEdge(PropList *e, const Domain &s) {

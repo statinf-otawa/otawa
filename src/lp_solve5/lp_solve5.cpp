@@ -621,8 +621,39 @@ bool System::solve(WorkSpace *ws) {
 		}
 		
 		// !!DEBUG!!
-		else
-			cerr << "\tfailed due to " << fail << io::endl;
+		else {
+
+			// messages
+#			define ERRORM(x)	{ x, #x }
+			static struct {
+				int code;
+				cstring msg;
+			} msgs[] = {
+				ERRORM(UNKNOWNERROR),
+				ERRORM(DATAIGNORED),
+				ERRORM(NOBFP),
+				ERRORM(NOMEMORY),
+				ERRORM(NOTRUN),
+				ERRORM(OPTIMAL),
+				ERRORM(SUBOPTIMAL),
+				ERRORM(INFEASIBLE),
+				ERRORM(UNBOUNDED),
+				ERRORM(DEGENERATE),
+				ERRORM(NUMFAILURE),
+				ERRORM(USERABORT),
+				ERRORM(TIMEOUT),
+				ERRORM(RUNNING),
+				ERRORM(PRESOLVED),
+				{ 0, "" }
+			};
+
+			// display message
+			int i;
+			for(int i = 0; msgs[i].msg; i++)
+				if(msgs[i].code == fail)
+					break;
+			cerr << "ERROR: failed due to " << fail << " (" << msgs[i].msg << ")\n";
+		}
 	}
 
 	// Clean up

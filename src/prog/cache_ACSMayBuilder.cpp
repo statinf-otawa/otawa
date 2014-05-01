@@ -120,17 +120,12 @@ ACSMayBuilder::ACSMayBuilder(p::declare& r): Processor(r) {
 
 
 void ACSMayBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::Cache *cache) {
-
 	int line = lbset->line();
-	/*
-	 * Solve the problem for the current cache line:
-	 * Now that the first/last lblock are detected, execute the analysis.
-	 */
-
-#ifdef DEBUG
-	cout << "[TRACE] Doing line " << line << "\n";
-#endif
+	if(logFor(LOG_CFG) && lbset->count() > 2)
+		log << "\tSET " << line << io::endl;
 	MAYProblem mayProb(lbset->cacheBlockCount(), lbset, fw, cache, cache->wayCount());
+
+	// analysis with unrolling
 	if (unrolling) {
 		UnrollingListener<MAYProblem> mayList(fw, mayProb);
 		FirstUnrollingFixPoint<UnrollingListener<MAYProblem> > mayFp(mayList);
@@ -139,8 +134,10 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard
 		for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 			for (CFG::BBIterator bb(cfg); bb; bb++)
 				CACHE_ACS_MAY(bb)->add(new MAYProblem::Domain(*mayList.results[cfg->number()][bb->number()]));
+	}
 
-	} else {
+	// analysis without unrolling
+	else {
 		DefaultListener<MAYProblem> mayList(fw, mayProb);
 		DefaultFixPoint<DefaultListener<MAYProblem> > mayFp(mayList);
 		HalfAbsInt<DefaultFixPoint<DefaultListener<MAYProblem> > > mayHai(mayFp, *fw);
@@ -159,7 +156,6 @@ void ACSMayBuilder::configure(const PropList &props) {
 }
 
 void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
-	//int i;
 
 	// Build the vectors for receiving the ACS...
 	for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
