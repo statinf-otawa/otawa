@@ -373,6 +373,7 @@ void Script::work(WorkSpace *ws) {
 	delete empty;
 	delete xsl;
 	delete doc;
+	res->setBaseURI(path.toString().toCString());
 
 	// !!DEBUG!!
 	/*DEBUG(OutStream *out2 = elm::system::System::createFile("out2.xml");
