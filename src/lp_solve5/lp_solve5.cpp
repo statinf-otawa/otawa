@@ -649,7 +649,7 @@ bool System::solve(WorkSpace *ws) {
 
 			// display message
 			int i;
-			for(int i = 0; msgs[i].msg; i++)
+			for(i = 0; msgs[i].msg; i++)
 				if(msgs[i].code == fail)
 					break;
 			cerr << "ERROR: failed due to " << fail << " (" << msgs[i].msg << ")\n";

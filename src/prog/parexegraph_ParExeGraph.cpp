@@ -859,35 +859,27 @@ void ParExeGraph::addEdgesForFetch(){
  * of the previous instruction. In this case, it adds a solid edge.
  */
 void ParExeGraph::addEdgesForFetchWithDecomp(void) {
-    ParExeStage *fetch_stage = _microprocessor->fetchStage();
-    ParExeNode * first_cache_line_node = fetch_stage->firstNode();
-    address_t current_cache_line = (address_t) fetch_stage->firstNode()->inst()->inst()->address() /  _cache_line_size;
-    for (int i=0 ; i<fetch_stage->numNodes()-1 ; i++) {
-		ParExeNode *node = fetch_stage->node(i);
-		ParExeNode *next = fetch_stage->node(i+1);
-		// taken banch ?
-		address_t addr_node, addr_next;
-		addr_node = node->inst()->inst()->address();
-		addr_next = next->inst()->inst()->address();
-		if ((addr_node != addr_next) && (addr_node + 4/*instruction size: to be FIXED !!! */ != addr_next)){
-			ParExeEdge * edge = new ParExeEdge(node, next, ParExeEdge::SOLID);
-			edge->setLatency(2); // taken branch penalty when no branch prediction is enabled
-			edge = new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID);
-			edge->setLatency(2); 
-		}
-		else 
-			new ParExeEdge(node, next, ParExeEdge::SLASHED);
-		// new cache line?
-		//if (cache)         FIXME !!!!!!!!!!!!!!!
-		address_t cache_line = addr_next / _cache_line_size;
-		if ( cache_line != current_cache_line){
-			new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID);
-			new ParExeEdge(node, next, ParExeEdge::SOLID);
-			first_cache_line_node = next;
-			current_cache_line = cache_line;
-		}
-		//  }	
-    }
+
+
+	// add edges for program order
+	elm::genstruct::SLList<ParExeStage *> list;
+	list.add(_microprocessor->fetchStage());
+	addEdgesForProgramOrder(&list);
+
+	// do not forget the branch solid edge
+	ParExeNode *branch = 0;
+	for(ParExeStage::NodeIterator node(_microprocessor->fetchStage()); node; node++) {
+
+		// previously a branch
+		if(branch && branch->inst()->inst()->topAddress() != node->inst()->inst()->address())
+			new ParExeEdge(branch, node, ParExeEdge::SOLID, _branch_penalty);
+
+		// is it a branch?
+		if(node->inst()->inst()->isControl())
+			branch = node;
+		else
+			branch = 0;
+	}
 }
 
 
