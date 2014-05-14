@@ -252,8 +252,7 @@ Identifier<const AbstractFeature *> DEF_BY("otawa::DEF_BY", 0);
 /**
  * @class FeatureDependency
  * A feature dependency represents the dependencies used to implement a feature and is a node
- * of the dependency graph. A feature dependency can be invalidated and, in this case, it will
- * also remove the dependencies that requires it.
+ * of the dependency graph.
  */
 
 
@@ -262,64 +261,43 @@ Identifier<const AbstractFeature *> DEF_BY("otawa::DEF_BY", 0);
  * @param _feature	Feature this dependency represents.
  */
 FeatureDependency::FeatureDependency(const AbstractFeature *_feature)
-: refcount(0), invalidated(false), feature(_feature), graph(new genstruct::DAGNode<FeatureDependency*>(this))
-{ }
+: feature(_feature) {
+	//cerr << "DEBUG: new = " << (void *)this << " (graph = " << (void *)graph << ") (" << feature->name() << ")\n";
+}
 
 
 /**
  */
-FeatureDependency::~FeatureDependency() {
-	delete graph;
+FeatureDependency::~FeatureDependency(void) {
+	//cerr << "DEBUG: delete = " << (void *)this << " (graph = " << (void *)graph << ") (" << feature->name() << ")\n";
+	ASSERT(children.isEmpty());
+	for(list_t::Iterator parent(parents); parent; parent++)
+		parent->children.remove(this);
 }
 
 
 /**
  * Create a dependency from the current feature to the given one.
- * @param fdep	Dependency that will depend on the current feature.
+ * @param to	Feature which the current feature depends to.
  */
-void FeatureDependency::addChild(FeatureDependency *fdep)  {
-	graph->addChild(fdep->graph);
-	fdep->refcount++;
+void FeatureDependency::add(FeatureDependency *to) {
+	to->children.add(this);
+	parents.add(to);
+	//cerr << "DEBUG: add dep from " << child->feature->name() << " to " << feature->name() << " (count = " << refcount << ")\n";
+	//cerr << "DEBUG: 	(add child " << (void *)child->graph << " to " << (void *)graph << ")\n";
 }
 
 
 /**
- * Remove the dependency of a feature on the current feature.
- * @param fdep	Removed dependency.
+ * Remove the dependency of the current feature from the given one.
+ * @param from	Feature to remove depedency from.
  */
-void FeatureDependency::removeChild(FeatureDependency *fdep)  {
-	fdep->refcount--;
-	graph->removeChild(fdep->graph);
-	ASSERT(fdep->refcount >= 0);
-	if (fdep->refcount == 0) {
-		delete fdep;
-	}
+void FeatureDependency::remove(FeatureDependency *from)  {
+	from->children.remove(this);
+	parents.remove(from);
+	//cerr << "DEBUG: remove dep from " << child->feature->name() << " to " << feature->name() << " (count = " << refcount << ")\n";
+	//cerr << "DEBUG: 	(remove child " << (void *)child->graph << " to " << (void *)graph << ")\n";
 }
-
-
-/**
- * Mark this feature as invalidated. As soon there will be no more
- * dependency, it will be deleted.
- */
-void FeatureDependency::setInvalidated(bool inv) {
-	invalidated = inv;
-	if (invalidated && (refcount == 0))
-		delete this;
-}
-
-
-/**
- * @fn bool FeatureDependency::isInUse(void) const;
- * Test if the current dependency is in use.
- * @return	True if it is still used, false else.
- */
-
-
-/**
- * @fn bool FeatureDependency::isInvalidated() const;
- * Test if the current feature is invalidated.
- * @return True if it is invalidated, false else.
- */
 
 
 /**

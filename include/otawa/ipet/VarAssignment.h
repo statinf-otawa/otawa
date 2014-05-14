@@ -42,6 +42,7 @@ class VarAssignment: public BBProcessor {
 protected:
 	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
 	virtual void setup(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
 
 public:
 	VarAssignment(void);

@@ -268,10 +268,7 @@ xom::Element *WorkSpace::config(void) {
  * @param feature	Provided feature.
  */
 FeatureDependency* WorkSpace::getDependency(const AbstractFeature* feature) {
-	FeatureDependency *result = featMap.get(feature, NULL);
-	ASSERT(result != NULL);
-	ASSERT(!result->isInvalidated());
-	return(result);
+	return featMap.get(feature, NULL);
 }
 
 /**
@@ -289,10 +286,10 @@ FeatureDependency* WorkSpace::getDependency(const AbstractFeature* feature) {
  * @param feature	Provided feature.
  */
  void WorkSpace::delFeatDep(const AbstractFeature* feature) {
- 	FeatureDependency *old = featMap.get(feature, NULL);
- 	ASSERT(old);
+ 	FeatureDependency *dep = featMap.get(feature, NULL);
+ 	ASSERT(dep);
  	featMap.remove(feature);
- 	old->setInvalidated(true);
+ 	delete dep;
 }
 
 /**
@@ -300,7 +297,6 @@ FeatureDependency* WorkSpace::getDependency(const AbstractFeature* feature) {
  * @param feature	Provided feature.
  */
 bool WorkSpace::hasFeatDep(const AbstractFeature* feature) {
-	ASSERT(!featMap.exists(feature) || !featMap.get(feature, NULL)->isInvalidated());
 	return (featMap.exists(feature));
 }
 
@@ -316,26 +312,40 @@ void WorkSpace::provide(const AbstractFeature& feature, const Vector<const Abstr
 	// record the providing of the feature
 	ASSERT(!hasFeatDep(&feature));
 	newFeatDep(&feature);
+	FeatureDependency *pdep = getDependency(&feature);
+	ASSERT(pdep);
 
 	// add dependencies
-	if (required != NULL)
-		for (int j = 0; j < required->count(); j++)
-			if(required->get(j) != &feature && isProvided(*required->get(j)))
-				getDependency(required->get(j))->addChild(getDependency(&feature));
+	if(required != NULL)
+		for(int j = 0; j < required->count(); j++) {
+			const AbstractFeature *rfeature = required->get(j);
+			ASSERT(rfeature != &feature && isProvided(*required->get(j)))
+			pdep->add(getDependency(required->get(j)));
+		}
 }
 
 /**
- * Invalidate a feature (removing its dependancies)
+ * Invalidate a feature (removing its dependencies)
  * @param feature	Provided feature.
  */
 void WorkSpace::invalidate(const AbstractFeature& feature) {
+	//cerr << "DEBUG: invalidate " << feature.name() << "\n";
 	if (isProvided(feature)) {
-		for(FeatureDependency::Children iter(getDependency(&feature)); iter; iter++) {
-			invalidate(*iter->getFeature());
-			getDependency(&feature)->removeChild(iter);
-		}
+		FeatureDependency *fdep = getDependency(&feature);
+
+		// get dependents
+		genstruct::Vector<FeatureDependency *> to_inv;
+		for(FeatureDependency::Dependent dep(fdep); dep; dep++)
+			to_inv.add(dep);
+
+		// invalidate them
+		for(int i = 0; i < to_inv.count(); i++)
+			invalidate(*to_inv[i]->getFeature());
+
+		//cerr << "DEBUG: end of dependency removal of " << feature.name() << io::endl;
 		delFeatDep(&feature);
 		remove(feature);
+		//cerr << "DEBUG: removed " << feature.name() << io::endl;
 	}
 }
 

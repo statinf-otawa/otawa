@@ -52,6 +52,30 @@ Registration<VarAssignment> VarAssignment::reg(
 Identifier<String* > FORCE_NAME("otawa::FORCE_NAME", 0);
 
 
+class Cleaner: public BBCleaner {
+public:
+	Cleaner(WorkSpace *ws): BBCleaner(ws) { }
+protected:
+	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+		//cerr << "DEBUG: cleaning " << bb << io::endl;
+
+		// remove BB var
+		ilp::Var *v = VAR(bb);
+		if(v)
+			delete v;
+		bb->removeProp(VAR);
+
+		// remove BB of edges
+		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+			ilp::Var *v = VAR(edge);
+			if(v)
+				delete v;
+			edge->removeProp(VAR);
+		}
+	}
+};
+
+
 /**
  * @class VarAssignment
  * This processor ensures that each basic block and each edge of the CFG
@@ -100,10 +124,17 @@ void VarAssignment::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 				      name = makeEdgeVar(edge, cfg);
                                 }
                         }
-			VAR(edge) =sys-> newVar(name);
+			VAR(edge) = sys->newVar(name);
 		}
 	}
+
 }
+
+void VarAssignment::cleanup(WorkSpace *ws) {
+	Cleaner *c = new Cleaner(ws);
+	addCleaner(ASSIGNED_VARS_FEATURE, c);
+}
+
 
 
 /**

@@ -24,46 +24,38 @@
 
 #include <elm/string.h>
 #include <elm/util/Cleaner.h>
-#include <elm/genstruct/DAGNode.h>
+#include <elm/genstruct/SLList.h>
 #include <otawa/proc/AbstractFeature.h>
 
 namespace otawa {
 	
 using namespace elm;
-	
+
 // FeatureDependency class
 class FeatureDependency: public elm::CleanList {
+	typedef genstruct::SLList<FeatureDependency *> list_t;
 public:
 	
 	// constructors
 	FeatureDependency(const AbstractFeature *_feature);
 	~FeatureDependency(void);
-	void addChild(FeatureDependency *fdep);
-	void removeChild(FeatureDependency *fdep);
-	void setInvalidated(bool inv);
+	void add(FeatureDependency *to);
+	void remove(FeatureDependency *from);
 
 	// accessors
-	inline bool isInUse(void) const { return (refcount > 0); }
-	inline bool isInvalidated() const {	return invalidated; }
 	inline const AbstractFeature *getFeature(void) const { return feature; }
 
 	// Iterator on dependencies
-	class Children: public PreIterator<Children, FeatureDependency *> {
+	class Dependent: public list_t::Iterator {
 	public:
-		inline Children(FeatureDependency *dep): iter(*dep->graph) { }
-		inline Children(const Children& i): iter(i.iter) { }
-		inline bool ended(void) const { return iter.ended(); }
-		inline void next(void) { iter.next(); }
-		inline FeatureDependency *item(void) const { return (*iter)->useValue(); }
-	private:
-		genstruct::DAGNode<FeatureDependency *>::Iterator iter;
+		inline Dependent(FeatureDependency *d): list_t::Iterator(d->children) { }
+		inline Dependent(const Dependent& i): list_t::Iterator(i) { }
 	};
 
 private:
-	int refcount;
-	bool invalidated;
 	const AbstractFeature *feature;
-	genstruct::DAGNode<FeatureDependency*> *graph;
+	list_t parents;
+	list_t children;
 };
 
 } // otawa
