@@ -48,13 +48,20 @@ class StatCollector;
 class Processor {
 
 	template <class T>
-	class Deletor: public elm::Cleaner {
+	class Remover: public elm::Cleaner {
 	public:
-		inline Deletor(const Ref<T *, Identifier<T *> >& ref): _ref(ref.props(), ref.id()) { }
-		inline Deletor(const Ref<T *, const Identifier<T *> >& ref): _ref(ref) { }
-		virtual ~Deletor(void) { delete _ref.get(); _ref.remove(); }
-	private:
-		Ref<T *, const Identifier<T *> > _ref;
+		inline Remover(const Ref<T, Identifier<T> >& ref): _ref(ref.props(), ref.id()) { }
+		virtual void clean(void) { _ref.remove(); }
+	protected:
+		inline const Ref<T, Identifier<T> >& ref(void) const { return _ref; }
+		Ref<T, Identifier<T> > _ref;
+	};
+
+	template <class T>
+	class Deletor: public Remover<T *> {
+	public:
+		inline Deletor(const Ref<T *, Identifier<T *> >& ref): Remover<T *>(ref) { }
+		virtual void clean(void) { delete Remover<T *>::ref().get(); Remover<T *>::clean(); }
 	};
 
 public:
@@ -137,16 +144,17 @@ protected:
 	// utilities
 	void warn(const String& message);
 	inline WorkSpace *workspace(void) const { return ws; }
-	inline void addCleaner(const AbstractFeature& feature, Cleaner *cleaner)
-		{ cleaners.add(clean_t(&feature, cleaner)); }
-	template <class T> T *track(const AbstractFeature& feature, T *object)
-		{ addCleaner(feature, new elm::Deletor<T>(object)); return object; }
-	template <class T> void track(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
-		{ addCleaner(feature, new Deletor<T>(ref)); }
-	template <class T> void track(const AbstractFeature& feature, const Ref<T *, const Identifier<T *> >& ref)
-		{ addCleaner(feature, new Deletor<T>(ref)); }
 	inline Progress& progress(void) { return *_progress; }
 	void recordStat(const AbstractFeature& feature, StatCollector *collector);
+
+	// cleanup
+	inline void addCleaner(const AbstractFeature& feature, Cleaner *cleaner)
+		{ cleaners.add(clean_t(&feature, cleaner)); }
+	template <class T> void addRemover(const AbstractFeature& feature, const Ref<T, Identifier<T> >& ref)
+		{ addCleaner(feature, new Remover<T>(ref)); }
+	template <class T> void addDeletor(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
+		{ addCleaner(feature, new Deletor<T>(ref)); }
+
 
 	// Methods for customizing
 	virtual void prepare(WorkSpace *ws);
@@ -157,6 +165,12 @@ protected:
 
 	// Deprecated
 	virtual void processFrameWork(WorkSpace *fw);
+	template <class T> T *track(const AbstractFeature& feature, T *object)
+		{ addCleaner(feature, new elm::Deletor<T>(object)); return object; }
+	template <class T> void track(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
+		{ addCleaner(feature, new Deletor<T>(ref)); }
+	template <class T> void track(const AbstractFeature& feature, const Ref<T *, const Identifier<T *> >& ref)
+		{ addCleaner(feature, new Deletor<T>(ref)); }
 
 private:
 	void init(const PropList& props);

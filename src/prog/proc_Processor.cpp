@@ -254,7 +254,7 @@ MetaRegistration Processor::reg(
 /**
  * Build a simple anonymous processor.
  */
-Processor::Processor(void): flags(0), stats(0), log_level(LOG_NONE) {
+Processor::Processor(void): flags(0), stats(0), log_level(LOG_NONE), ws(0) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -273,7 +273,7 @@ Processor::~Processor(void) {
  * For internal use only.
  */
 Processor::Processor(AbstractRegistration& registration)
-: flags(0), stats(0), log_level(LOG_NONE) {
+: flags(0), stats(0), log_level(LOG_NONE), ws(0) {
 	_reg = &registration;
 }
 
@@ -282,7 +282,7 @@ Processor::Processor(AbstractRegistration& registration)
  * For internal use only.
  */
 Processor::Processor(String name, Version version, AbstractRegistration& registration)
-: flags(0), stats(0), log_level(LOG_NONE) {
+: flags(0), stats(0), log_level(LOG_NONE), ws(0) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &registration;
@@ -315,7 +315,7 @@ const PropList& props): flags(0), stats(0), log_level(LOG_NONE) {
  * @deprecated
  */
 Processor::Processor(String name, Version version)
-: flags(0), stats(0), log_level(LOG_NONE) {
+: flags(0), stats(0), log_level(LOG_NONE), ws(0) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -549,6 +549,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 		FeatureDependency *dep = ws->getDependency((*clean).fst);
 		ASSERTP(dep, "cleanup invoked for a not provided feature: " + (*clean).fst->name());
 		dep->elm::CleanList::add((*clean).snd);
+		cerr << "DEBUG: add cleaner " << (void *)(*clean).snd << " for " << dep->getFeature()->name() << " in " << this->name() << io::endl;
 	}
 
 	// record statistics

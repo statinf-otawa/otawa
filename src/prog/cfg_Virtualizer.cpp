@@ -160,9 +160,6 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 	VirtualCFG *vcfg = virtualizeCFG(0, entry);
 	if(logFor(LOG_CFG))
 		log << "\tINFO: " << vcfg->countBB() << " basic blocks." << io::endl;
-
-	// track for cleanup
-	track(VIRTUALIZED_CFG_FEATURE, ENTRY_CFG(fw) = vcfg);
 }
 
 
@@ -340,10 +337,14 @@ void Virtualizer::cleanup(WorkSpace *ws) {
 
 	// allocate the collection
 	CFGCollection *coll = new CFGCollection();
-	track(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = coll);
+	addDeletor(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = coll);
+
+
+	// get entry CFG
+	CFG *entry_vcfg = cfgMap.get(entry, 0);
+	addRemover(VIRTUALIZED_CFG_FEATURE, ENTRY_CFG(ws) = entry_vcfg);
 
 	// fill the collection
-	CFG *entry_vcfg = cfgMap.get(entry, 0);
 	coll->add(entry_vcfg);
 	for(genstruct::HashTable<void *, VirtualCFG *>::Iterator vcfg(cfgMap); vcfg; vcfg++)
 		if(*vcfg != entry_vcfg)

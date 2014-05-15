@@ -639,7 +639,6 @@ void FlowFactLoader::onIgnoreEntry(string name) {
 	onWarning(_ << "symbol \"" << name << "\" cannot be found.");
 }
 
-
 /**
  * This method is called when a loop is found.
  * @param addr	Address of the header of the loop.
@@ -659,9 +658,10 @@ void FlowFactLoader::onLoop(
 
 	// put the max iteration
 	if(count >= 0) {
-		int old_max = path(MAX_ITERATION, inst);
-		int new_max = max(old_max, count);
-		path.ref(MAX_ITERATION, inst) = new_max;
+		int max = path(MAX_ITERATION, inst);
+		if(max < count)
+			max = count;
+		path.ref(MAX_ITERATION, inst) = max;
 		if(logFor(LOG_BB))
 			log << "\t" << path << "(MAX_ITERATION," << inst->address() << ") = " << count << io::endl;
 	}
