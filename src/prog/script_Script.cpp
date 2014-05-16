@@ -37,6 +37,7 @@
 #include <otawa/prog/Manager.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/proc/DynFeature.h>
+#include <otawa/util/FlowFactLoader.h>
 
 using namespace elm;
 
@@ -405,7 +406,7 @@ void Script::work(WorkSpace *ws) {
 	}
 	delete elems;
 
-	// scant the platform
+	// scan the platform
 	xom::Element *pf = script->getFirstChildElement("platform");
 	script::PLATFORM(props) = pf;
 	if(pf) {
@@ -432,6 +433,11 @@ void Script::work(WorkSpace *ws) {
 	}
 	else if(logFor(LOG_DEPS))
 		log << "\tno platform description.\n";
+
+	// scan flowfacts
+	xom::Elements *ffs = script->getChildElements("flowfacts");
+	for (int i = 0; i < ffs->size(); ++i)
+		FLOW_FACTS_NODES.add(props, ffs->get(i));
 
 	// scan configuration in the script
 	if(script->getLocalName() != "otawa-script")

@@ -477,6 +477,9 @@ void FlowFactLoader::configure (const PropList &props) {
 	Processor::configure(props);
 	for(Identifier<Path>::Getter path(props, FLOW_FACTS_PATH); path; path++)
 		paths.add(*path);
+	for(Identifier<xom::Element *>::Getter node(props, FLOW_FACTS_NODES); node; node++)
+		nodes.add(*node);
+
 	mandatory = FLOW_FACTS_MANDATORY(props);
 }
 
@@ -560,10 +563,14 @@ void FlowFactLoader::processWorkSpace(WorkSpace *ws) {
 			load(ws, path);
 		else {
 			warn(_ << "no flow fact file for " << ws->process()->program()->name());
-			return;
 		}
 	}
 
+	if(nodes)
+		for(int i = 0; i < nodes.length(); i++) {
+			ContextualPath cpath;
+			scanXBody(nodes[i], cpath);
+		}
 }
 
 
@@ -1538,6 +1545,15 @@ throw(ProcessorException) {
  * @ingroup ff
  */
 Identifier<Path> FLOW_FACTS_PATH("otawa::FLOW_FACTS_PATH", "");
+
+
+/**
+ * This property may be used in the configuration of a code processor
+ * to directly pass an xml element containing flow facts in @ref ffx format.
+ * Several properties with this identifier may be passed.
+ * @ingroup ff
+ */
+Identifier<xom::Element *> FLOW_FACTS_NODES("otawa::FLOW_FACTS_NODES");
 
 
 /**

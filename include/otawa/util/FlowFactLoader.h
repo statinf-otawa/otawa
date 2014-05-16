@@ -99,6 +99,7 @@ private:
 	WorkSpace *_fw;
 	bool checksummed;
 	genstruct::Vector<Path> paths;
+	genstruct::Vector<xom::Element *> nodes;
 	Path current;
 	bool mandatory;
 	bool lines_available;
@@ -132,6 +133,7 @@ private:
 
 // Properties
 extern Identifier<Path> FLOW_FACTS_PATH;
+extern Identifier<xom::Element *> FLOW_FACTS_NODES;
 extern Identifier<bool> FLOW_FACTS_MANDATORY;
 
 // Features
