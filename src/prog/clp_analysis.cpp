@@ -1753,10 +1753,8 @@ public:
 							_nb_top_store_addr++;
 							ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T (unbounded address)\n");
 						}
-						else {
+						else
 							state->clear(sym->address().offset(), sym->size());
-							//cerr << "DEBUG: store to " << addrclp << " resolved as " << sym << io::endl;
-						}
 					}
 				}
 
@@ -1854,7 +1852,6 @@ public:
 				set(*state, i.d(), Value::all);
 			} break;
 		}
-		//DEBUG: print the result of the instruction
 		TRACEI(cerr << "\t\t !!-> " << *state << io::endl);
 
 		pc++;

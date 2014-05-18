@@ -57,7 +57,6 @@ public:
 	Cleaner(WorkSpace *ws): BBCleaner(ws) { }
 protected:
 	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-		//cerr << "DEBUG: cleaning " << bb << io::endl;
 
 		// remove BB var
 		ilp::Var *v = VAR(bb);

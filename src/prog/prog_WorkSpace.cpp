@@ -329,7 +329,6 @@ void WorkSpace::provide(const AbstractFeature& feature, const Vector<const Abstr
  * @param feature	Provided feature.
  */
 void WorkSpace::invalidate(const AbstractFeature& feature) {
-	//cerr << "DEBUG: invalidate " << feature.name() << "\n";
 	if (isProvided(feature)) {
 		FeatureDependency *fdep = getDependency(&feature);
 
@@ -342,10 +341,8 @@ void WorkSpace::invalidate(const AbstractFeature& feature) {
 		for(int i = 0; i < to_inv.count(); i++)
 			invalidate(*to_inv[i]->getFeature());
 
-		//cerr << "DEBUG: end of dependency removal of " << feature.name() << io::endl;
 		delFeatDep(&feature);
 		remove(feature);
-		//cerr << "DEBUG: removed " << feature.name() << io::endl;
 	}
 }
 

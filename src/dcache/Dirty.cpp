@@ -163,9 +163,6 @@ void DirtyManager::set(t& d, const t& s) const {
  * @return		True if they are equal, false else.
  */
 bool DirtyManager::equals(const t& s1, const t& s2) const {
-	//cerr << "DEBUG: " << s1 << " == " << s2 << io::endl;
-	//cerr << "DEBUG: must = " << s1.must().equals(s2.must()) << io::endl;
-	//cerr << "DEBUG: may = " << s1.may().equals(s2.may()) << io::endl;
 	return s1.must().equals(s2.must()) && s1.may().equals(s2.may());
 }
 
@@ -365,12 +362,8 @@ protected:
 
 		// put the results
 		for(CFGCollection::Iterator cfg(otawa::INVOLVED_CFGS(ws)); cfg; cfg++)
-			for(CFG::BBIterator bb(cfg); bb; bb++) {
+			for(CFG::BBIterator bb(cfg); bb; bb++)
 				(*DIRTY(bb))[coll.cacheSet()] = *listener.results[cfg->number()][bb->number()];
-				//cerr << "DEBUG: " << cfg->number() << ":" << bb->number()
-				//	 << ": " << *listener.results[cfg->number()][bb->number()]
-				//	 << ": " << (*DIRTY(bb))[coll.cacheSet()] << io::endl;
-			}
 	}
 };
 

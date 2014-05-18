@@ -40,6 +40,7 @@ namespace otawa {
 class ProcessorPlugin: public elm::system::Plugin {
 public:
 	ProcessorPlugin(cstring name, const elm::Version& version, const elm::Version& plugger_version);
+	~ProcessorPlugin(void);
 	virtual elm::genstruct::Table<AbstractRegistration *>& processors(void) const;
 
 	static void addPath(const elm::system::Path& path);

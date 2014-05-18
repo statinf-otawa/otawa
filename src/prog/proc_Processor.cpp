@@ -549,7 +549,6 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 		FeatureDependency *dep = ws->getDependency((*clean).fst);
 		ASSERTP(dep, "cleanup invoked for a not provided feature: " + (*clean).fst->name());
 		dep->elm::CleanList::add((*clean).snd);
-		cerr << "DEBUG: add cleaner " << (void *)(*clean).snd << " for " << dep->getFeature()->name() << " in " << this->name() << io::endl;
 	}
 
 	// record statistics
