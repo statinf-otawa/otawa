@@ -342,7 +342,6 @@ p::declare InitialStateBuilder::reg = p::init("otawa::dfa::InitialStateBuilder",
  * @p Configuration
  * @li @ref REG_INIT
  * @li @ref MEM_INIT
- * @li @ref INITIAL_FILE
  *
  * @p Attributes
  * @li @ref INITIAL_STATE

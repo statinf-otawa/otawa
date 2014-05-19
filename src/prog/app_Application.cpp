@@ -346,7 +346,7 @@ int Application::run(int argc, char **argv) {
 			for(int i = 0; i < ff.count(); i++)
 				otawa::FLOW_FACTS_PATH(props).add(Path(ff[i]));
 			// Delay loading of flowfacts in order to
-			// to let scripts hook flowfacts nodes.
+			// let scripts hook flowfacts nodes.
 			//ws->require(FLOW_FACTS_FEATURE, props);
 		}
 
