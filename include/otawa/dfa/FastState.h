@@ -184,7 +184,6 @@ public:
 	t store(t s, address_t a, address_t b, ot::size off, value_t v) {
 		ASSERT(a < b);
 		ASSERT(off > 0);
-		//cerr << "DEBUG:\t\tstore to [" << io::hex(a) << "-" << io::hex(b) << "/" << off << "]\n";
 
 		// special cases
 		if(s == bot)
@@ -225,7 +224,6 @@ public:
 		// finalize the new state
 		*pn = cur;
 		s = new(allocator) state_t(s->regs, mem);
-		//cerr << "DEBUG:\t\t"; print(cerr, s);
 		return s;
 	}
 

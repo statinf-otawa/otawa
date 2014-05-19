@@ -91,6 +91,13 @@ ProcessorPlugin::ProcessorPlugin(
 
 
 /**
+ */
+ProcessorPlugin::~ProcessorPlugin(void) {
+}
+
+
+
+/**
  * This method must return the table of all processor available in the plugin.
  * @return	Table of available processors.
  */

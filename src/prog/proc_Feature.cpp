@@ -262,14 +262,12 @@ Identifier<const AbstractFeature *> DEF_BY("otawa::DEF_BY", 0);
  */
 FeatureDependency::FeatureDependency(const AbstractFeature *_feature)
 : feature(_feature) {
-	//cerr << "DEBUG: new = " << (void *)this << " (graph = " << (void *)graph << ") (" << feature->name() << ")\n";
 }
 
 
 /**
  */
 FeatureDependency::~FeatureDependency(void) {
-	//cerr << "DEBUG: delete = " << (void *)this << " (graph = " << (void *)graph << ") (" << feature->name() << ")\n";
 	ASSERT(children.isEmpty());
 	for(list_t::Iterator parent(parents); parent; parent++)
 		parent->children.remove(this);
@@ -283,8 +281,6 @@ FeatureDependency::~FeatureDependency(void) {
 void FeatureDependency::add(FeatureDependency *to) {
 	to->children.add(this);
 	parents.add(to);
-	//cerr << "DEBUG: add dep from " << child->feature->name() << " to " << feature->name() << " (count = " << refcount << ")\n";
-	//cerr << "DEBUG: 	(add child " << (void *)child->graph << " to " << (void *)graph << ")\n";
 }
 
 
@@ -295,8 +291,6 @@ void FeatureDependency::add(FeatureDependency *to) {
 void FeatureDependency::remove(FeatureDependency *from)  {
 	from->children.remove(this);
 	parents.remove(from);
-	//cerr << "DEBUG: remove dep from " << child->feature->name() << " to " << feature->name() << " (count = " << refcount << ")\n";
-	//cerr << "DEBUG: 	(remove child " << (void *)child->graph << " to " << (void *)graph << ")\n";
 }
 
 

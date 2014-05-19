@@ -1,0 +1,42 @@
+====== Installing OTAWA ======
+
+===== Dependencies =====
+
+Tools:
+  * Bison
+  * CMake
+  * Flex
+  * G++
+  * LibXML2
+  * LibXSLT
+
+Optional tool:
+  * Doxygen
+  * Thot
+
+Internal dependencies (that must be compiled at the same level than OTAWA directory):
+  * GEL
+  * ELM (compiled with XOM extension)
+
+Optional dependencies:
+  * ppc2 (with gliss2)
+  * armv5t (with gliss2)
+  * lp_solve
+
+
+===== Installation ======
+
+To configure the make file, type:
+<code sh>
+cmake . -DCMAKE_INSTALL_PREFIX=path_to_install_to
+</code>
+
+To compile OTAWA, just:
+<code sh>
+make all
+</code>
+
+To install it:
+<code sh>
+make install
+</code>
