@@ -124,7 +124,7 @@ extern int fft_line;
  * the line of the designed program part. Yet, according to the way the code
  * is written (many source constructor on one line or use of macros) and
  * to the performed optimization, this method may be imprecise as a	a source line
- * may match differents parts in the code.
+ * may match different parts in the code.
  *
  * In the remaining of the document, the location defines above are identified
  * by the keyword @c LOCATION in the element attributes.
@@ -224,21 +224,21 @@ extern int fft_line;
  * (not included in the FFX format):
  *
  * @code
- * <memory-access LOCATION>
- * 		<low LOCATION>
- * 		<high LOCATION>
- * </memory-access>
+ * <mem-access LOCATION>
+ * 		<low LOCATION />
+ * 		<high LOCATION />
+ * </mem-access>
  * @endcode
  * Allow to bound the accessed addresses of a memory instruction.
  * Mainly useful to help data cache canalysis.
  *
  * @code
- * <set-ref name="TEXT"> VALUE </set-ref>
+ * <reg-set name="TEXT"> VALUE </reg-set>
  * @endcode
  * Set the value of a register. <i>name</i> is the name of the register.
  *
  * @code
- * <set-mem type="TEXT" LOCATION> VALUE </set-mem>
+ * <mem-set type="TEXT" LOCATION> VALUE </mem-set>
  * @endcode
  * Set the value of a kind of memory. The LOCATION attributes gives
  * the address of the accessed memory and <i>type</i> defines the type of data
