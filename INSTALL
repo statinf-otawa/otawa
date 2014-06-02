@@ -12,6 +12,7 @@ Tools:
 
 Optional tool:
   * Doxygen
+  * GraphViz
   * Thot
 
 Internal dependencies (that must be compiled at the same level than OTAWA directory):

@@ -183,11 +183,16 @@
  */
 
 /**
- * @defgroup features Available Features
+ * @defgroup features Available Features and Processors
  * 
- * @par Program Features
+ * This page provides quick access to analyzes proposed by OTAWA core.
+ * It contains mainly common features and sometimes, when no feature is provided,
+ * processor for specific facilities (marked as processors).
+ *
+ * @par Flow Fact Features
  * 
  * @li @ref otawa::FLOW_FACTS_FEATURE
+ * @li @ref otawa::MKFF_PRESERVATION_FEATURE
  * 
  * @par CFG Features
  * 
@@ -227,8 +232,10 @@
  * @li @ref otawa::ipet::WCET_COUNT_RECORDED_FEATURE
  * @li @ref otawa::ipet::WCET_FEATURE
  * 
- * @par ILP Features
+ * @par Output Features
  *
+ * @li @ref otawa::display::CFGOutput (processor)
+ * @li @ref otawa::display::ILPSystemDisplayer (processor)
  * @li @ref otawa::ilp::OUTPUT_FEATURE
  *
  * @par Instruction Cache features
@@ -285,11 +292,6 @@
  * @li @ref otawa::ADDRESS_ANALYSIS_FEATURE
  * @li @ref otawa::clp::FEATURE
  * @li @ref otawa::STACK_ANALYSIS_FEATURE
- *
- * @par Flow Facts Features
- *
- * @li @ref otawa::FLOW_FACTS_FEATURE
- * @li @ref otawa::MKFF_PRESERVATION_FEATURE
  */
 
 

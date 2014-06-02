@@ -100,7 +100,7 @@ p::declare CFGOutput::reg =
 /**
  * Build the processor.
  */
-CFGOutput::CFGOutput(AbstractRegistration& _reg): CFGProcessor(_reg) {
+CFGOutput::CFGOutput(AbstractRegistration& _reg): CFGProcessor(_reg), kind(OUTPUT_DOT) {
 
 }
 
