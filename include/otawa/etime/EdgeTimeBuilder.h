@@ -62,6 +62,7 @@ private:
 	bool _explicit;
 	genstruct::HashTable<Event *, EventCollector *> events;
 	EventCollector *get(Event *event);
+	void genForOneCost(ot::time cost, Edge *edge, event_list_t& events);
 };
 
 } }	// otawa::etime

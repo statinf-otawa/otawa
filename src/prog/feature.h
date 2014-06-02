@@ -246,9 +246,11 @@
  * @li @ref otawa::ICACHE_ACS_MAY_FEATURE
  * @li @ref otawa::ICACHE_CATEGORY_FEATURE
  * @li @ref otawa::ICACHE_CATEGORY2_FEATURE
+ * @li @ref otawa::ICACHE_CONSTRAINT2_FEATURE;
  * @li @ref otawa::ICACHE_EDGE_ACS_FEATURE
  * @li @ref otawa::ICACHE_EDGE_CATEGORY2_FEATURE
  * @li @ref otawa::ICACHE_FIRSTLAST_FEATURE
+ * @li @ref otawa::ICACHE_ONLY_CONSTRAINT2_FEATURE
  * 
  * @par Process Features
  * 

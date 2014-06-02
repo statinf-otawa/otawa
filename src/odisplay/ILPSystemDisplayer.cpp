@@ -174,10 +174,29 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 	}
 	cout << "\n\t\t\t</p>\n";
 
-	// display constraints
+	// collect constraints
 	cout << "\t\t<h1><a name=\"__constraints\">Constraints</a></h1>\n";
-	for(ilp::System::ConstIterator cons(system); cons; cons++)
-		displayCons(cons);
+	typedef genstruct::FragTable<ilp::Constraint *> cons_store_t;
+	genstruct::HashTable<string, cons_store_t *> cons_map;
+	for(ilp::System::ConstIterator cons(system); cons; cons++) {
+		string lab = cons->label();
+		cons_store_t *store = cons_map.get(lab, 0);
+		if(!store) {
+			store = new cons_store_t;
+			cons_map.put(lab, store);
+		}
+		store->add(cons);
+	}
+
+	// display constraints
+	for(genstruct::HashTable<string, cons_store_t *>::PairIterator store(cons_map); store; store++) {
+		const string& label = (*store).fst;
+		if(label)
+			cout << "\t\t\t\t<h2>" << label << "</h2>\n";
+		for(cons_store_t::Iterator cons(*(*store).snd); cons; cons++)
+			displayCons(*cons);
+		delete (*store).snd;
+	}
 
 	// display variables
 	cout << "\t\t<h1><a name=\"__variables\">Variables</a></h1>\n";
@@ -186,7 +205,7 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 		cout << "\t\t\t\t<p>value = " << system->valueOf((*var).fst) << "</p>\n";
 		ASSERT((*var).snd);
 		for(int i = 0; i < (*var).snd->length(); i++)
-			displayCons((*var).snd->item(i));
+			displayCons((*var).snd->item(i), true);
 	}
 
 	// display content
@@ -203,19 +222,16 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 
 /**
  * Display a constraint.
- * @param cons	Constraint to display.
+ * @param cons			Constraint to display.
+ * @param with_label	Display label or not.
  */
-void ILPSystemDisplayer::displayCons(ilp::Constraint *cons) {
+void ILPSystemDisplayer::displayCons(ilp::Constraint *cons, bool with_label) {
 	static cstring symbols[] = { "&lt;", "&lt;=", "=", "&gt;=", "&gt;" };
 	bool first = true;
 	cout << "\t\t\t<p>\n";
 
-	// display comment
-	const string& label = cons->label();
-	if(label)
-		cout << "\t\t\t\t<b>" << label << "</b><br/>\n";
-
 	// before the comparator
+	bool one = false;
 	cout << "\t\t\t\t";
 	for(ilp::Constraint::TermIterator term(cons); term; term++)
 		if((*term).snd >= 0) {
@@ -226,7 +242,10 @@ void ILPSystemDisplayer::displayCons(ilp::Constraint *cons) {
 			if((*term).snd != 1)
 				cout << (*term).snd;
 			displayVar((*term).fst);
+			one = true;
 		}
+	if(!one)
+		cout << "0";
 
 	// the comparator
 	cout << ' ' << symbols[cons->comparator() - ilp::Constraint::LT] << ' ';
@@ -236,6 +255,7 @@ void ILPSystemDisplayer::displayCons(ilp::Constraint *cons) {
 		first = true;
 
 	// after the comparator
+	one = false;
 	for(ilp::Constraint::TermIterator term(cons); term; term++)
 		if((*term).snd < 0) {
 			if(first)
@@ -245,7 +265,17 @@ void ILPSystemDisplayer::displayCons(ilp::Constraint *cons) {
 			if((*term).snd != -1)
 				cout << -(*term).snd;
 			displayVar((*term).fst);
+			one = true;
 		}
+	if(!cons->constant() && !one)
+		cout << "0";
+
+	// display label
+	if(with_label) {
+		const string& lab = cons->label();
+		if(lab)
+			cout << "\t\t\t\t&nbsp;(" << lab << ")\n";
+	}
 	cout << "\t\t\t</p>\n";
 }
 

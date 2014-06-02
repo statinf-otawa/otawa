@@ -392,12 +392,12 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 	if(events.count() >= 32)
 		throw ProcessorException(*this, _ << "too many events on edge " << edge);
 	if(logFor(LOG_BB))
-		log << "\t\t\tevents = " << events.count() << io::endl;
+		log << "\t\t\t\tevents = " << events.count() << io::endl;
 
 	// simple trivial case
 	if(events.isEmpty()) {
 		ot::time cost = graph->analyze();
-		sys->addObjectFunction(cost, ipet::VAR(edge));
+		this->genForOneCost(cost, edge, events);
 		delete graph;
 		return;
 	}
@@ -438,11 +438,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 
 	// trivial case: 1 time
 	if(confs.length() == 1) {
-
-		// add to the objective function
-		sys->addObjectFunction(confs[0].time(), ipet::VAR(edge));
-
-		// TODO add the edge variable to the event constraints
+		genForOneCost(confs[0].time(), edge, all_events);
 		return;
 	}
 
@@ -484,15 +480,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 	if(com) {
 		if(isVerbose())
 			log << "\t\t\t\ttoo complex: " << io::hex(com) << io::endl;
-
-		// add to the objective function
-		sys->addObjectFunction(hts_time, ipet::VAR(edge));
-
-		// add the edge variable to the event constraints
-		for(event_list_t::Iterator event(events); event; event++) {
-			get((*event).fst)->contribute(EventCollector::make((*event).snd, true), 0);
-			get((*event).fst)->contribute(EventCollector::make((*event).snd, false), 0);
-		}
+		genForOneCost(hts_time, edge, all_events);
 		return;
 	}
 
@@ -549,6 +537,40 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 		case NEVER:		get((*event).fst)->contribute(EventCollector::make((*event).snd, false), x_hts); break;
 		default:		break;
 		}
+}
+
+
+/**
+ * Generate the constraints when only one cost is considered for the edge.
+ * @param cost		Edge cost.
+ * @param edge		Current edge.
+ * @param events	List of edge events.
+ */
+void EdgeTimeBuilder::genForOneCost(ot::time cost, Edge *edge, event_list_t& events) {
+	ilp::Var *var = ipet::VAR(edge);
+	ASSERT(var);
+
+	// logging
+	if(logFor(LOG_BB))
+		log << "\t\t\t\tcost = " << cost << io::endl;
+
+	// add to the objective function
+	sys->addObjectFunction(cost, var);
+
+	// add the edge variable to the event constraints
+	for(event_list_t::Iterator event(events); event; event++)
+		switch((*event).fst->occurrence()) {
+		case ALWAYS:
+			get((*event).fst)->contribute(EventCollector::make((*event).snd, true), var);
+			break;
+		case NEVER:
+			get((*event).fst)->contribute(EventCollector::make((*event).snd, false), var);
+			break;
+		case SOMETIMES:
+			get((*event).fst)->contribute(EventCollector::make((*event).snd, true), 0);
+			get((*event).fst)->contribute(EventCollector::make((*event).snd, false), 0);
+			break;
+	}
 }
 
 

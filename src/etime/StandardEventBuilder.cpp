@@ -107,7 +107,7 @@ void StandardEventBuilder::setup(WorkSpace *ws) {
 	bank = mem->banks()[0];
 
 	// look if instruction cacheL1 is available
-	has_il1 = ws->isProvided(ICACHE_CONSTRAINT2_FEATURE);
+	has_il1 = ws->isProvided(ICACHE_ONLY_CONSTRAINT2_FEATURE);
 }
 
 

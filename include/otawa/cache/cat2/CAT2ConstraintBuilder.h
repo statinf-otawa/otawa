@@ -26,18 +26,26 @@
 #include <otawa/prop/Identifier.h>
 
 namespace otawa {
-	
-class CAT2ConstraintBuilder: public otawa::Processor {
+
+class CAT2OnlyConstraintBuilder: public otawa::Processor {
 public:
 	static p::declare reg;
-	CAT2ConstraintBuilder(p::declare& r = reg);
+	CAT2OnlyConstraintBuilder(p::declare& r = reg);
 	virtual void configure(const PropList& props);
 	virtual void collectStats(WorkSpace *ws);
 protected:
-	virtual void setup(otawa::WorkSpace*);
 	virtual void processWorkSpace(otawa::WorkSpace*);
-private:
 	bool _explicit;
+	bool no_obj;
+};
+
+
+class CAT2ConstraintBuilder: public CAT2OnlyConstraintBuilder {
+public:
+	static p::declare reg;
+	CAT2ConstraintBuilder(p::declare& r = reg);
+protected:
+	virtual void processWorkSpace(otawa::WorkSpace*);
 };
 
 }	// otawa
