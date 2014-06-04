@@ -31,13 +31,14 @@ namespace otawa { namespace etime {
 
 class MissEvent: public Event {
 public:
-	MissEvent(Inst *inst, category_t c, ilp::Var *v, ot::time cost): Event(inst), cat(c), var(v), _cost(cost) {	}
+	MissEvent(Inst *inst, ot::time cost, category_t cat, ilp::Var *var)
+		: Event(inst), _cat(cat), _cost(cost), _var(var) {	}
 
 	virtual kind_t kind(void) const { return FETCH; }
 	virtual ot::time cost(void) const { return _cost; }
 
 	virtual occurrence_t occurrence(void) const {
-		switch(cat) {
+		switch(_cat) {
 		case ALWAYS_HIT:		return NEVER;
 		case FIRST_HIT:			return SOMETIMES;
 		case FIRST_MISS:		return SOMETIMES;
@@ -49,13 +50,18 @@ public:
 
 	virtual cstring name(void) const { return "L1 instruction cache"; }
 
-	virtual void overestimate(ilp::Constraint *cons) { cons->add(1, var); }
+	virtual bool isOverestimating(bool on) {
+		return on;	// only when on = true!
+	}
 
-	virtual void underestimate(ilp::Constraint *cons) { }
+	virtual void overestimate(ilp::Constraint *cons, bool on) {
+		if(on)
+			cons->addLeft(1, _var);
+	}
 
 private:
-	category_t cat;
-	ilp::Var *var;
+	category_t _cat;
+	ilp::Var *_var;
 	ot::time _cost;
 };
 
@@ -71,6 +77,9 @@ private:
  * @li @ref otawa::COLLECTED_CFG_FEATURE
  * @li @ref otawa::hard::PROCESSOR_FEATURE
  * @li @ref otawa::hard::MEMORY_FEATURE
+ *
+ * @par Optional
+ * @li @ref ICACHE_CONSTRAINT2_FEATURE (to get L1 instruction cache events)
  *
  * @ingroup etime
  */
@@ -90,7 +99,7 @@ void StandardEventBuilder::setup(WorkSpace *ws) {
 	proc = hard::PROCESSOR(ws);
 	ASSERT(proc);
 	if(logFor(Processor::LOG_DEPS))
-		log << "\rprocessor = " << proc->getModel() << " (" << proc->getBuilder() << ")\n";
+		log << "\tprocessor = " << proc->getModel() << " (" << proc->getBuilder() << ")\n";
 
 	// look for memory
 	mem = hard::MEMORY(ws);
@@ -98,9 +107,7 @@ void StandardEventBuilder::setup(WorkSpace *ws) {
 	bank = mem->banks()[0];
 
 	// look if instruction cacheL1 is available
-	has_il1 = ws->isProvided(ICACHE_CONSTRAINT2_FEATURE);
-	if(has_il1 && !ws->isProvided(otawa::ICACHE_CONSTRAINT2_FEATURE))
-		log << "WARNING: etime::StandardEventBuilder does not provide constraints for ICACHE_CONSTRAINT2_FEATURE: possibly sub-specified WCET!";
+	has_il1 = ws->isProvided(ICACHE_ONLY_CONSTRAINT2_FEATURE);
 }
 
 
@@ -130,7 +137,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 			}
 
 			// create the event
-			Event *event = new MissEvent(*inst, CATEGORY(blocks[i]), MISS_VAR(blocks[i]), bank->latency());
+			Event *event = new MissEvent(*inst, bank->latency(), CATEGORY(blocks[i]), MISS_VAR(blocks[i]));
 			EVENT(bb).add(event);
 		}
 	}

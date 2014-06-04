@@ -71,9 +71,8 @@ public:
 	virtual const hard::FunctionalUnit *fu(void) const;
 
 	// ILP contribution
-	virtual void contribute(ilp::System *sys);
-	virtual void overestimate(ilp::Constraint *cons);
-	virtual void underestimate(ilp::Constraint *cons);
+	virtual bool isOverestimating(bool on);
+	virtual void overestimate(ilp::Constraint *cons, bool on);
 
 private:
 	Inst *_inst;

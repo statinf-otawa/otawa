@@ -51,7 +51,6 @@ void Identifier<fmlevel_t>::fromString (PropList &props, const string &str) cons
 }
 
 
-static SilentFeature::Maker<ACSBuilder> acs_maker;
 /**
  *
  * This feature represents the availability of Abstract Cache State informations.
@@ -62,7 +61,7 @@ static SilentFeature::Maker<ACSBuilder> acs_maker;
  * @par Processors
  * @li @ref ACSBuilder (default)
  */
-SilentFeature ICACHE_ACS_FEATURE("otawa::ICACHE_ACS_FEATURE", acs_maker);
+p::feature ICACHE_ACS_FEATURE("otawa::ICACHE_ACS_FEATURE", new Maker<ACSBuilder>());
 
 /**
  * This property represents the "must" Abstract Cache State of a basic block.

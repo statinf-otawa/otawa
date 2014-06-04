@@ -584,22 +584,14 @@ public:
 			return;
 		gel_line_iter_t iter;
 		gel_location_t loc, ploc = { 0, 0, 0, 0 };
-		for (loc = gel_first_line(&iter, map); loc.file; loc = gel_next_line(&iter))
-		{
+		// TODO		Not very performant but it works.
+		for (loc = gel_first_line(&iter, map); loc.file; loc = gel_next_line(&iter)) {
 			cstring lfile = loc.file;
-			//cerr << loc.file << ":" << loc.line << ", " << loc.low_addr << "-" << loc.high_addr << io::endl;
-			if (file == loc.file || lfile.endsWith(file))
-			{
+			if (file == loc.file || lfile.endsWith(file)) {
 				if (line == loc.line)
-				{
-					//cerr << "added (1) " << loc.file << ":" << loc.line << " -> " << loc.low_addr << io::endl;
 					addresses.add(pair(Address(loc.low_addr), Address(loc.high_addr)));
-				}
 				else if(loc.file == ploc.file && line > ploc.line && line < loc.line)
-				{
-					//cerr << "added (2) " << ploc.file << ":" << ploc.line << " -> " << ploc.low_addr << io::endl;
 					addresses.add(pair(Address(ploc.low_addr), Address(ploc.high_addr)));
-				}
 			}
 			ploc = loc;
 		}

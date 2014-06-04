@@ -50,7 +50,6 @@ using namespace elm;
 
 namespace otawa {
 
-static SilentFeature::Maker<ACSMayBuilder> may_maker;
 /**
  *
  * This feature represents the availability of MAY Abstract Cache State informations.
@@ -61,7 +60,7 @@ static SilentFeature::Maker<ACSMayBuilder> may_maker;
  * @par Processors
  * @li @ref ACSMayBuilder
  */
-SilentFeature ICACHE_ACS_MAY_FEATURE("otawa::ICACHE_ACS_MAY_FEATURE", may_maker);
+p::feature ICACHE_ACS_MAY_FEATURE("otawa::ICACHE_ACS_MAY_FEATURE", new Maker<ACSMayBuilder>());
 
 /**
  * This property represents the "may" Abstract Cache State of a basic block.

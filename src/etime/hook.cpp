@@ -153,37 +153,37 @@ const hard::FunctionalUnit *Event::fu(void) const {
 
 
 /**
- * This method may be called to let the event add its own constraint
- * to the given ILP system.
- * @param sys	ILP system to contribute to.
- */
-void Event::contribute(ilp::System *sys) {
-}
-
-
-/**
- * This method may be called to let the event add an overestimation
- * of its occurrences to the right of the constraint.
- * @param cons	Constraint to add occurrences to.
- */
-void Event::overestimate(ilp::Constraint *cons) {
-}
-
-
-/**
- * This method may be called to let the event add an underestimation
- * of its occurrences to the right of the constraint.
- * @param cons	Constraint to add occurrences to.
- */
-void Event::underestimate(ilp::Constraint *cons) {
-}
-
-
-/**
  * @fn ot::time Event::cost(void) const;
  * Get the cost in cycles of the occurrence of the event.
  * @return	Cost of the event (in cycles).
  */
+
+
+/**
+ * Ask for support of overestimation for the event when activated (on is true)
+ * or desactivated (on is false).
+ *
+ * May be overridden according to the actual event. As a default, return false.
+ * @param on	Test for event activated, or not activated.
+ * @return		True if the event provides support for the activation.
+ */
+bool Event::isOverestimating(bool on) {
+	return false;
+}
+
+
+/**
+ * Add an overestimation of the event at the left of the given constraint.
+ *
+ * May be overridden to provide specific behavior for the actual event.
+ * As a default, do nothing.
+ *
+ * @param cons	Constraint to add overestimation to.
+ * @param on	Add overestimation when the event is triggered (true) or not triggered (false).
+ */
+void Event::overestimate(ilp::Constraint *cons, bool on) {
+
+}
 
 
 class Plugin: public ProcessorPlugin {

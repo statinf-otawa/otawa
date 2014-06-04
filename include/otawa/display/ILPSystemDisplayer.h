@@ -61,7 +61,7 @@ public:
 	static Identifier<ILPSystemAddon *> ADDON;
 
 	// Only for add-ons
-	void displayCons(ilp::Constraint *cons);
+	void displayCons(ilp::Constraint *cons, bool with_label = false);
 	void displayVar(ilp::Var *var);
 	string nameOf(ilp::Var *var);
 
