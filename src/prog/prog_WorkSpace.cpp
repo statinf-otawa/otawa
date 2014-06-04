@@ -316,12 +316,14 @@ void WorkSpace::provide(const AbstractFeature& feature, const Vector<const Abstr
 	ASSERT(pdep);
 
 	// add dependencies
-	if(required != NULL)
+	if(required != NULL) {
+		ASSERTP(!required->contains(&feature), feature.name() << " provided and required!");
 		for(int j = 0; j < required->count(); j++) {
 			const AbstractFeature *rfeature = required->get(j);
-			ASSERT(rfeature != &feature && isProvided(*required->get(j)))
-			pdep->add(getDependency(required->get(j)));
+			ASSERTP(isProvided(*rfeature), rfeature->name() << " is not provided as it should be !");
+			pdep->add(getDependency(rfeature));
 		}
+	}
 }
 
 /**
