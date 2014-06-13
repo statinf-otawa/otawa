@@ -226,12 +226,99 @@ elm::io::IntFormat address(Address addr) {
 
 
 /**
+ * @fn MemArea::MemArea(void);
+ * Build a null mem area.
+ */
+
+
+/**
+ * MemArea::MemArea(const MemArea& a);
+ * Copy an existing mem area.
+ * @param a		Area to copy.
+ */
+
+
+/**
+ * MemArea::MemArea(const Address& base, ot::size size);
+ * Build a memory area.
+ * @param base	Base address of the area.
+ * @param size	Size of the area (in bytes).
+ */
+
+
+/**
+ * @fn MemArea::MemArea(const Address& base, const Address& top);
+ * Build a memory area.
+ * @param base	Base address of the area.
+ * @param top	Top address, that is, address of the first byte past the area.
+ */
+
+
+/**
+ * @fn Address MemArea::address(void) const;
+ * Get the base address of the area.
+ * @return		Base address.
+ */
+
+
+/**
+ * @fn ot::size MemArea::size(void) const;
+ * Get the size of the area.
+ * @return		Area size (in bytes).
+ */
+
+
+/**
+ * @fn Address MemArea::topAddress(void) const;
+ * Get the top address of the area, that is, the address of the first byte after the area.
+ * @return		Area top address.
+ */
+
+
+/**
+ * @fn Address MemArea::lastAddress(void) const;
+ * Get the last address of the area, that is, the address of the last byte in the area.
+ * @return		Area last address.
+ */
+
+
+/**
+ * @fn bool MemArea::isNull(void) const;
+ * Test if the area is null.
+ * @return	True if the area is null, false else.
+ */
+
+
+/**
+ * @fn bool MemArea::isEmpty(void) const;
+ * Test whether the area is empty, that is, whether the size is null.
+ * @return	True if the size is null, false else.
+ */
+
+
+/**
+ * @fn bool MemArea::contains(const Address& addr) const;
+ * Test whether the area contains the given address.
+ * @param addr	Address to test.
+ * @return		True if the address is in the area, false else.
+ */
+
+
+/**
+ * @fn bool MemArea::equals(const MemArea& a) const;
+ * Test wether the current area and the given one are equal.
+ * @param a		Area to test equality for.
+ * @return		True if both areas are equal, false else.
+ */
+
+
+/**
  * Test if the current mem area includes (not strictly) the given one.
  * @param a		Memory area tested for inclusion.
  * @return		True if the current memory area contains the a memory area.
  */
 bool MemArea::includes(const MemArea& a) const {
-	return address() <= a.address() && a.topAddress() <= topAddress();
+	return address() <= a.address() && a.lastAddress() <= lastAddress();
 }
 
 
@@ -242,8 +329,8 @@ bool MemArea::includes(const MemArea& a) const {
  * @return		True if there is, at least, one byte in common between both memory areas.
  */
 bool MemArea::meets(const MemArea& a) const {
-	return	(address() <= a.address() && a.address() < topAddress())
-		||	(a.address() <= address() && address() < a.topAddress());
+	return	(address() <= a.address() && a.address() <= lastAddress())
+		||	(a.address() <= address() && address() <= a.lastAddress());
 }
 
 
@@ -254,9 +341,9 @@ bool MemArea::meets(const MemArea& a) const {
  */
 MemArea MemArea::meet(const MemArea& a) const {
 	Address low = max(address(), a.address());
-	Address high = min(topAddress(), a.topAddress());
-	if(low < high)
-		return MemArea(low, high);
+	Address high = min(lastAddress(), a.lastAddress());
+	if(low <= high)
+		return MemArea(low, ot::size(high - low + 1));
 	else
 		return null;
 }
@@ -268,7 +355,8 @@ MemArea MemArea::meet(const MemArea& a) const {
  * @return		Result of inclusive join.
  */
 MemArea MemArea::join(const MemArea& a) const {
-	return MemArea(min(address(), a.address()), max(topAddress(), a.topAddress()));
+	Address base = min(address(), a.address());
+	return MemArea(base, ot::size(max(lastAddress(), a.lastAddress()) - base + 1));
 }
 
 

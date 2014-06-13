@@ -118,10 +118,11 @@ public:
 	inline Address address(void) const { return _base; }
 	inline ot::size size(void) const { return _size; }
 	inline Address topAddress(void) const { return _base + _size; }
+	inline Address lastAddress(void) const { return _base + (_size - 1); }
 
 	inline bool isNull(void) const { return _base.isNull(); }
 	inline bool isEmpty(void) const { return !_size; }
-	inline bool contains(const Address& addr) const { return _base <= addr && addr < topAddress(); }
+	inline bool contains(const Address& addr) const { return _base <= addr && addr <= lastAddress(); }
 
 	inline bool equals(const MemArea& a) const { return _base == a._base && _size == a._size; }
 	bool includes(const MemArea& a) const;
