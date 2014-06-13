@@ -74,7 +74,8 @@ p::declare CatConstraintBuilder::reg = p::init("otawa::dcache::CatConstraintBuil
 	.require(dcache::CATEGORY_FEATURE)
 	.require(DOMINANCE_FEATURE)
 	.require(ipet::ILP_SYSTEM_FEATURE)
-	.provide(ipet::DATA_CACHE_SUPPORT_FEATURE);
+	.provide(ipet::DATA_CACHE_SUPPORT_FEATURE)
+	.provide(dcache::CONSTRAINTS_FEATURE);
 
 
 /**
