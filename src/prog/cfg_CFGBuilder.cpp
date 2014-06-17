@@ -248,7 +248,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 		}
 
 		// end of block
-		if(IS_RETURN(inst)) {
+		if(IS_RETURN(inst) || (inst->target() && NO_RETURN(inst->target()))) {
 			bb->setSize(inst->topAddress() - bb->address());
 			info->add(bb);
 			bb->flags |= BasicBlock::FLAG_Return;
