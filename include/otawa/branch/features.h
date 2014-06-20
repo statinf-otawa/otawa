@@ -25,6 +25,8 @@
 
 namespace otawa {
 
+using namespace elm;
+
 namespace ilp { class Var; }
 
 namespace branch {
@@ -44,7 +46,7 @@ typedef enum category_t {
 	NOT_CLASSIFIED = 4,
 	MAX = 5
 } category_t;
-Output& operator<<(Output& out, category_t cat);
+io::Output& operator<<(io::Output& out, category_t cat);
 
 // category feature
 extern Identifier<category_t> CATEGORY;

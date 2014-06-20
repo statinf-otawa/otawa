@@ -43,7 +43,7 @@ namespace otawa { namespace branch {
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<category_t> CATEGORY("otawa::branch::CATEGORY", NOT_CLASSIFIED);
+Identifier<category_t> CATEGORY("otawa::branch::CATEGORY", branch::NOT_CLASSIFIED);
 
 
 /**
@@ -153,8 +153,8 @@ void BranchBuilder::categorize(BasicBlock *bb, BranchProblem::Domain *dom, Basic
 		  }
 	}
 													
-				
-	//cout << "cat result: " << cat << "\n";
+	if(logFor(LOG_BB))
+		log << "\t\tcat result: " << cat << "\n";
 	
 }
 
@@ -175,22 +175,24 @@ void BranchBuilder::processWorkSpace(WorkSpace* ws) {
 		hai.solve();
 	
 		for (CFGCollection::Iterator cfg(*INVOLVED_CFGS(ws)); cfg; cfg++) {
-		  for (CFG::BBIterator bb(*cfg); bb; bb++) {
-		    if ((COND_NUMBER(bb) != -1) && (hard::BHT_CONFIG(ws)->line(bb->lastInst()->address()) == row)) {
-		    	//cout << "Categorize jump on bb " << bb->number() << " on row " << row << "\n";
-		      BasicBlock *header = NULL;
-		      category_t cat = NOT_CLASSIFIED;
-		      BranchProblem::Domain *dom = list.results[cfg->number()][bb->number()];
-		      
-		      categorize(bb, dom, header, cat);
-		      
-		      CATEGORY(bb) = cat;
-		      HEADER(bb) = header;
-		      
-		    }
-		  }
-        }
-     }
+			for (CFG::BBIterator bb(*cfg); bb; bb++) {
+				if ((COND_NUMBER(bb) != -1) && (hard::BHT_CONFIG(ws)->line(bb->lastInst()->address()) == row)) {
+
+					if(logFor(LOG_BB))
+						log << "\tcategorize jump on bb " << bb->number() << " on row " << row << "\n";
+					BasicBlock *header = NULL;
+					category_t cat = NOT_CLASSIFIED;
+					BranchProblem::Domain *dom = list.results[cfg->number()][bb->number()];
+
+					categorize(bb, dom, header, cat);
+
+					CATEGORY(bb) = cat;
+					HEADER(bb) = header;
+
+				}
+			}
+		}
+	}
 }
 
 } }		// otawa::branch

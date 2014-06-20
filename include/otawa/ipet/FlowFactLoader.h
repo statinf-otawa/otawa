@@ -26,7 +26,8 @@ namespace ipet {
 // FlowFactLoader class
 class FlowFactLoader: public ContextualProcessor {
 public:
-	FlowFactLoader(void);
+	static p::declare reg;
+	FlowFactLoader(p::declare& r = reg);
 
 protected:
 	virtual void setup(WorkSpace *ws);

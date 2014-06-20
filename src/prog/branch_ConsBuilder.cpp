@@ -99,6 +99,10 @@ OnlyConsBuilder::OnlyConsBuilder(p::declare& r) : BBProcessor(r) {
 }
 
 void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
+	static string 	ad_msg = "always-D branch prediction constraint",
+					ah_msg = "always-H branch prediction constraint",
+					fu_msg = "first-unknown branch prediction constraint",
+					nc_msg = "not-classified branch prediction constraint";
 
 	if (branch::COND_NUMBER(bb) != -1) {
 		int row = hard::BHT_CONFIG(ws)->line(bb->lastInst()->address());
@@ -117,7 +121,7 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
                 misspred = sys->newVar();
         else {
                 StringBuffer buf1;
-                buf1 << "xmisspred_" << bb->number() << "\n";
+                buf1 << "x_mpred_" << bb->number() << "\n";
                 String name1 = buf1.toString();
                 misspred = sys->newVar(name1);
         }
@@ -138,7 +142,7 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
             		}
 
             	// x_misspred = e_not-taken
-            	cons = sys->newConstraint(Constraint::EQ, 0);
+            	cons = sys->newConstraint(ad_msg, Constraint::EQ, 0);
             	cons->addLeft(1, misspred);
                 cons->addRight(1, Tvar); 
 				break;
@@ -161,17 +165,17 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
             	}
             	
 				// x_misspred <= 2 * e_taken + 2
-				cons = sys->newConstraint(Constraint::LE, 2);
+				cons = sys->newConstraint(ah_msg, Constraint::LE, 2);
 				cons->addLeft(1, misspred);	
 				cons->addRight(2, Tvar);
 				
 				// misspred <= 2 * e_not-taken + 2
-				cons = sys->newConstraint(Constraint::LE, 2);
+				cons = sys->newConstraint(ah_msg, Constraint::LE, 2);
 				cons->addLeft(1, misspred);	
 				cons->addRight(2, NTvar);
 
 				// x_misspred <= x_bb
-				cons = sys->newConstraint(Constraint::LE, 0);	
+				cons = sys->newConstraint(ah_msg, Constraint::LE, 0);
                 cons->addLeft(1, misspred);
                 cons->addRight(1, bbvar); 		
 				break;
@@ -192,7 +196,7 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
             		}            		
             	}
             	/* misspred <= 2*taken + 2*(sum of entry-edges) */ 				
-				cons = sys->newConstraint(Constraint::LE, 0);
+				cons = sys->newConstraint(fu_msg, Constraint::LE, 0);
 				cons->addLeft(1, misspred);	
 				cons->addRight(2, Tvar);
 				for (BasicBlock::InIterator inedge(cat_header); inedge; inedge++)
@@ -200,7 +204,7 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 						cons->addRight(2, VAR(inedge));
 				
             	/* misspred <= 2*not-taken + 2*(sum of entry-edges) */ 								
-				cons = sys->newConstraint(Constraint::LE, 0);
+				cons = sys->newConstraint(fu_msg, Constraint::LE, 0);
 				cons->addLeft(1, misspred);	
 				cons->addRight(2, NTvar);
 				for (BasicBlock::InIterator inedge(cat_header); inedge; inedge++)
@@ -208,7 +212,7 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 						cons->addRight(2, VAR(inedge));
 				
 				/* misspred <= bbvar */			
-				cons = sys->newConstraint(Constraint::LE, 0);	
+				cons = sys->newConstraint(fu_msg, Constraint::LE, 0);
                 cons->addLeft(1, misspred);
                 cons->addRight(1, bbvar);	
                 			
@@ -217,7 +221,7 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 			case branch::NOT_CLASSIFIED:
 			
 				/* misspred <= bbvar */
-				cons = sys->newConstraint(Constraint::LE, 0);	
+				cons = sys->newConstraint(nc_msg, Constraint::LE, 0);
                 cons->addLeft(1, misspred);
                 cons->addRight(1, bbvar);
                 				

@@ -47,13 +47,14 @@ class BasicBlock: public PropList {
 	friend class VirtualCFG;
 	friend class Edge;
 protected:
-	static const unsigned long FLAG_Call = 0x01;
-	static const unsigned long FLAG_Unknown = 0x02;
-	static const unsigned long FLAG_Return = 0x04;
-	static const unsigned long FLAG_Entry = 0x08;
-	static const unsigned long FLAG_Exit = 0x10;
-	static const unsigned long FLAG_Virtual = 0x20;
-	static const unsigned long FLAG_Cond = 0x40;
+	static const unsigned long
+		FLAG_Call = 0x01,
+		FLAG_Unknown = 0x02,
+		FLAG_Return = 0x04,
+		FLAG_Entry = 0x08,
+		FLAG_Exit = 0x10,
+		FLAG_Virtual = 0x20,
+		FLAG_Cond = 0x40;
 
 	// EdgeIterator class
 	class EdgeIterator: public elm::genstruct::SLList<Edge *>::Iterator  {

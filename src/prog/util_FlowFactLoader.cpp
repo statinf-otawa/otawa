@@ -1043,7 +1043,7 @@ void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpat
 		if(target.isNull())
 			onWarning(_ << "target of multibranch ignored at " << xline(items->get(i)));
 		else
-			targets.add();
+			targets.add(target);
 	}
 	delete items;
 	this->onMultiBranch(control, targets);
