@@ -699,6 +699,8 @@ void FlowFactLoader::onMemoryAccess(Address iaddr, Address lo, Address hi, const
 
 	// put the property
 	path.ref(ACCESS_RANGE, inst) = pair(lo, hi);
+	if(logFor(LOG_BB))
+		log << "\t" << path << "(MEMORY_ACCESS," << iaddr << ") = [" << lo << ", " << hi << "]" << io::endl;
 }
 
 
