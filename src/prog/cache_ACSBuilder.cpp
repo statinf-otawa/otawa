@@ -143,14 +143,18 @@ Identifier<fmlevel_t> FIRSTMISS_LEVEL("otawa::FIRSTMISS_LEVEL", FML_MULTI);
  * none
  */
 
-ACSBuilder::ACSBuilder(void) : Processor("otawa::ACSBuilder", Version(1, 0, 0)) {
-	require(DOMINANCE_FEATURE);
-	require(LOOP_HEADERS_FEATURE);
-	require(LOOP_INFO_FEATURE);
-	require(COLLECTED_LBLOCKS_FEATURE);
-	require(ICACHE_FIRSTLAST_FEATURE);
-	provide(ICACHE_ACS_FEATURE);
-	require(hard::CACHE_CONFIGURATION_FEATURE);
+p::declare ACSBuilder::reg = p::init("otawa::ACSBuilder", Version(1, 1, 0))
+	.base(Processor::reg)
+	.maker<ACSBuilder>()
+	.require(DOMINANCE_FEATURE)
+	.require(LOOP_HEADERS_FEATURE)
+	.require(LOOP_INFO_FEATURE)
+	.require(COLLECTED_LBLOCKS_FEATURE)
+	.require(ICACHE_FIRSTLAST_FEATURE)
+	.provide(ICACHE_ACS_FEATURE)
+	.require(hard::CACHE_CONFIGURATION_FEATURE);
+
+ACSBuilder::ACSBuilder(p::declare& r) : Processor(r), must_entry(0), level(FML_NONE), unrolling(false) {
 }
 
 
