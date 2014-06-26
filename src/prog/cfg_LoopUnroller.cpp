@@ -86,21 +86,22 @@ Identifier<BasicBlock*> UNROLLED_FROM("otawa::UNROLLED_FROM", 0);
  * @ingroup cfg
  */
 
-LoopUnroller::LoopUnroller(void) : Processor("otawa::LoopUnroller", Version(1, 0, 0)), coll(new CFGCollection()) {
-	require(DOMINANCE_FEATURE);
-	require(LOOP_HEADERS_FEATURE);
-	require(LOOP_INFO_FEATURE);
-	require(COLLECTED_CFG_FEATURE);
+p::declare LoopUnroller::reg = p::init("otawa::LoopUnroller", Version(1, 1, 0))
+	.base(Processor::reg)
+	.maker<LoopUnroller>()
+	.use(DOMINANCE_FEATURE)
+	.use(LOOP_HEADERS_FEATURE)
+	.use(LOOP_INFO_FEATURE)
+	.use(COLLECTED_CFG_FEATURE)
+	.invalidate(COLLECTED_CFG_FEATURE)
+	.provide(COLLECTED_CFG_FEATURE)
+	.provide(UNROLLED_LOOPS_FEATURE);
 
-	invalidate(COLLECTED_CFG_FEATURE);
 
-	provide(COLLECTED_CFG_FEATURE);
-	provide(UNROLLED_LOOPS_FEATURE);
-	idx = 0;
+LoopUnroller::LoopUnroller(p::declare& r): Processor(r), coll(new CFGCollection()), idx(0) {
 }
 
 void LoopUnroller::processWorkSpace(otawa::WorkSpace *fw) {
-
 	int cfgidx = 0;
 	const CFGCollection *orig_coll = INVOLVED_CFGS(fw);
 
@@ -135,7 +136,14 @@ void LoopUnroller::processWorkSpace(otawa::WorkSpace *fw) {
 		casted_vcfg->addBB(vcfg->exit());
 		INDEX(vcfg->exit()) = idx;
 	}
-	INVOLVED_CFGS(fw) = coll;
+}
+
+
+/**
+ */
+void LoopUnroller::cleanup(WorkSpace *ws) {
+	INVOLVED_CFGS(ws) = coll;
+	ENTRY_CFG(ws) = coll->get(0);
 }
 
 
