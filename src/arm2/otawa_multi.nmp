@@ -1,4 +1,4 @@
 
 
 extend LDM, STM
-	otawa_multi = "elm::ones"(reglist) 
+	otawa_multi = reglist 

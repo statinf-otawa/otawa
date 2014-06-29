@@ -17,7 +17,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#define HAI_DEBUG
+//#define HAI_DEBUG
 #include <math.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/prog/sem.h>
@@ -57,7 +57,7 @@ using namespace otawa;
 // Debug output for instructions in the update function
 #define TRACEI(t)	//t
 // Debug output with only the values handled by an instruction
-#define TRACESI(t)	t
+#define TRACESI(t)	//t
 // Debug output with alarm of creation of T
 #define TRACEA(t)	//t
 // Debug only the join function

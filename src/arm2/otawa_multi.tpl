@@ -8,16 +8,14 @@
 extern "C" {
 #endif
 
-typedef int (*multi_fun_t)($(proc)_inst_t *inst);
+typedef t::uint16 (*multi_fun_t)($(proc)_inst_t *inst);
 
-
-
-static int otawa_multi_UNKNOWN($(proc)_inst_t *inst) {
+static t::uint16 otawa_multi_UNKNOWN($(proc)_inst_t *inst) {
         return 0;
 }
 
 $(foreach instructions)
-static int otawa_multi_$(IDENT)($(proc)_inst_t *inst) {
+static t::uint16 otawa_multi_$(IDENT)($(proc)_inst_t *inst) {
 $(otawa_multi)
 };
 
@@ -36,8 +34,8 @@ static multi_fun_t $(proc)_multi_table[] = {
  * Get the multiple-register count of the instruction.
  * @return multiple-register count.
  */
-int $(proc)_multi($(proc)_inst_t *inst) {
-        return $(proc)_multi_table[inst->ident](inst);
+t::uint16 $(proc)_multi($(proc)_inst_t *inst) {
+	return $(proc)_multi_table[inst->ident](inst);
 }
 
 #ifdef __cplusplus

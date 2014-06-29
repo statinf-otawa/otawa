@@ -41,8 +41,11 @@ extern Identifier <bool> IS_PC_RELATIVE;
 // ARM information
 class Info {
 public:
+	static Identifier <Info *> ID;
+	virtual ~Info(void);
 	virtual void *decode(Inst *inst) = 0;
 	virtual void free(void *decoded) = 0;
+	virtual t::uint16 multiMask(Inst *inst) = 0;
 };
 
 } } // otawa::arm

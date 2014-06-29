@@ -40,7 +40,7 @@ namespace otawa {
 
 namespace arm {
 
-#define VERSION "2.0.0"
+#define VERSION "2.1.0"
 OTAWA_LOADER_ID("arm2", VERSION, DAYDATE);
 
 /**
@@ -62,6 +62,16 @@ OTAWA_LOADER_ID("arm2", VERSION, DAYDATE);
  * @paramd decoded	Result of decode.
  */
 
+
+/**
+ * t::uint16 Info::multiMask(Inst *inst);
+ * For a multiple register memory instruction,
+ * get the mask of processed register (1 bit per register).
+ * @param inst	Concerned instruction.
+ * @return		Mask of processed registers.
+ */
+
+
 /**
  * Identifier used to retrieve ARM specific information.
  * Must be accessed dynamically because ARM loader is a plugin !
@@ -69,7 +79,13 @@ OTAWA_LOADER_ID("arm2", VERSION, DAYDATE);
  * @par Hooks
  * @li Process from ARM loader.
  */
-Identifier<arm::Info *> INFO("otawa::arm::INFO", 0);
+Identifier <Info *> Info::ID("otawa::arm::Info::ID", 0);
+
+
+/**
+ */
+Info::~Info(void) {
+}
 
 }
 
@@ -326,7 +342,7 @@ public:
 		provide(CONTROL_DECODING_FEATURE);
 		provide(REGISTER_USAGE_FEATURE);
 		provide(MEMORY_ACCESSES);
-		arm::INFO(this) = this;
+		Info::ID(this) = this;
 	}
 
 	virtual ~Process() {
@@ -528,9 +544,9 @@ public:
 			result = new BranchInst(*this, kind, addr, size);
 		else
 			result = new Inst(*this, kind, addr, size);
-		int multi = arm_multi(inst);
+		t::uint16 multi = arm_multi(inst);
 		if(multi)
-			otawa::arm::NUM_REGS_LOAD_STORE(result) = multi;
+			otawa::arm::NUM_REGS_LOAD_STORE(result) = elm::ones(multi);
 		char buf[256];
 		arm_disasm(buf, inst);
 		t::uint8 b0, b1;
@@ -629,7 +645,14 @@ public:
 
 	// otawa::arm::Info overload
 	virtual void *decode(otawa::Inst *inst) { return decode_raw(inst->address()); }
-	virtual void free(void *decoded) { free_inst((arm_inst_t *)decoded); }
+	virtual void free(void *decoded) { free_inst(static_cast<arm_inst_t *>(decoded)); }
+
+	virtual t::uint16 multiMask(otawa::Inst *inst) {
+		arm_inst_t *i = decode_raw(inst->address());
+		t::uint16 r = arm_multi(i);
+		free_inst(i);
+		return r;
+	}
 
 private:
 

@@ -151,9 +151,9 @@ namespace otawa {
 		OutStream *_output_stream;
 		elm::io::Output *_output;
 		String _graphs_dir_name;
-		bool _do_output_graphs;
 
     protected:
+		bool _do_output_graphs;
 		bool _do_consider_icache;
 		const hard::Memory *mem;
 		const hard::Cache *icache;
