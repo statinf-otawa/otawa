@@ -750,13 +750,18 @@ namespace se{
 			case sem::IF:	// If inst is a if:
 				// create a new symbexpr
 				op_t log_op;
-				switch(i.d()){
-					case sem::LE: log_op = LE; break;
-					case sem::LT: log_op = LT; break;
-					case sem::GE: log_op = GE; break;
-					case sem::GT: log_op = GT; break;
-					case sem::EQ: log_op = EQ; break;
-					case sem::NE: log_op = NE; break;
+				switch(i.cond()){
+					case sem::LE: 	log_op = LE; break;
+					case sem::LT: 	log_op = LT; break;
+					case sem::GE: 	log_op = GE; break;
+					case sem::GT: 	log_op = GT; break;
+					case sem::EQ: 	log_op = EQ; break;
+					case sem::NE:	log_op = NE; break;
+					case sem::ULE: 	log_op = ULE; break;
+					case sem::ULT: 	log_op = ULT; break;
+					case sem::UGE: 	log_op = UGE; break;
+					case sem::UGT: 	log_op = UGT; break;
+					default:		ASSERTP(false, "unsupported condition " << i.cond() << " at " << cur_inst->address()); break;
 				}
 				se = new SECmp(log_op, new SEReg(i.a()));
 				break;
