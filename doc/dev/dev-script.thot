@@ -847,7 +847,7 @@ they have been executed by the ''EX'' stage:
 ===== Cache Description =====
 
 A cache is a small fast memory that allows to store and access fastly little block of bytes of the main memory.
-Caches are an important feature to speed up processor execution by allowing to avoid long-time access
+Caches are a main feature feature to speed up processor execution by allowing to avoid long-time access
 to the main memory.
 
 From the point of view of caches, the main memory is divided in blocks of same size
@@ -858,16 +858,168 @@ To be compliant with the binary encoding of address, the block size, the set num
 
 
 There are a lot of different way to configure the caches:
-  * they may be split between instruction and date or unified,
+  * they may be split between instruction and data or unified,
   * they have different configurations for block size, set size, cache size,
   * there are different levels of cache from L1 (close to the core) to L2, L3 (close to the main memory),
-  * there are different way to manage blocks stored in a set (replacement policy, write-through or write-back save model, etc).
+  * there are different wayq to manage blocks stored in a set (replacement policy, write-through or write-back save model, etc).
+
+==== Cache Configuration Level ====
 
 OTAWA try to provide a consistent and versatile representation of caches as below:
 <code xml>
 <!-- CACHES ::= -->
+<cache-config>
+	(<icache ref="ID"/> | <icache> CACHE </icache>)
+	(<dcache ref="ID"/> | <dcache> CACHE </dcache>)
+	(<cache id="ID"/> | <cache> CACHE </cache>)*
+<cache-config>
 </code>
 
+A cache configuration may:
+  * have without cache -- ''cache-config''  is empty,
+  * contain only instruction cache -- ''cache-config'' contains only an ''icache'' element,
+  * be split (Harvard architecture) -- ''cache-config'' contains an element ''icache'' and an element ''dcache'',
+  * or unified -- ''cache-config'' contains only an element named ''cache''.
+
+This describes only the first level of cache, L1. If there is an L2 cache, its description is provided inside the L1 cache
+element called ''next''. If the L2 is unified while the L1 is split, the first ''next'' element contains
+the L2 unified cache description and with an ''id'' attribute while the second ''next'' element
+is ampty but provides a ''ref'' attribute that design the identifier of the first ''next'' element.
+Of course, the scheme may repeated as far as needed.
+
+
+==== Cache elements ====
+
+The content of a cache element, //CACHE//, is defined below:
+<code xml>
+<!-- CACHE ::= -->
+	<on_chip>BOOL</on_chip>?								<!-- default: true -->
+	<block_bits>INT</block_bits>
+	<row_bits>INT</row_bits>
+	<way_bits>INT<way_bits>
+	(<next ref="ID"/> | <next> CACHE </next>)?
+  	<replace>NONE|OTHER||LRU|RANDOM|FIFO|PLRU</replace>?	<!-- default: LRU -->
+ 	<write>WRITE_THROUGH|WRITE_BACK</write>?				<!-- default: WRITE_THROUGH --> 
+	<allocate>BOOL</allocate>?								<!-- default: true -->
+</code>
+
+
+If ''on_chip'' is true, the cache is contained in the core chip, else it is out of the chip
+and needs an access to the bus.
+
+''block_bits'' defines the size of the cache blocks: if its value is //N//, the block size is
+2^//B// and means that the //B// less significant bits of the addresses design the accessed
+byte in the block.
+
+''row_bits''((This name is relatively old and misleading.)) value, //S//, determines
+the number of sets in the cache, that is, 2^//S//. In the address, the bits selecting
+the set ranges from //B// to //B// + //S// - 1.
+
+Finally, the ''way_bits'' //A// determines the number of blocks in each set, that is, 2^//A//.
+As any block may go any way of a set, there is no matching in the address.
+In the end, the cache size in bytes is 2^(//B// + //S// + //A//).
+
+The ''next'' element allows to link the current cache at level L//i// to a cache at level L//i+1//.
+The cache at level L//i+1// may either be described in the ''next'' element or just contain
+a reference to an element describing this cache.
+
+The following elements are used to describe the policy of use of the blocks stored in a set.
+As a set contains several blocks in an unordered way, a policy must be applied to know
+which block to wipe out when a new cache block needs to be loaded. Notice that this element
+can be ignored if the number of way, //A//, is equal to 0 as the set contains only one block.
+
+''replace'' describes the replacement policy that may be:
+  * ''NONE'' -- null value (usually unused in this format),
+  * ''OTHER'' -- unknown policy,
+  * ''LRU'' (Least Recently Used) -- the replaced block is the least recently used,
+  * ''RANDOM'' -- the replaced block is selected randomly,
+  * ''FIFO'' (First-In First-Out) -- also called Round-Robin, blocks are organized as a queue and the last block is replaced,
+  * ''PLRU'' (Pseudo-LRU) -- this policy mimics [[http://en.wikipedia.org/wiki/PLRU|LRU]] but with a lower hardware cost.
+
+It's likely that this list be extended in the future.
+
+''write'' and ''allocate'' elements are only used with data or unified caches.
+''write'' describes the write policy of the cache (when a block is modified):
+  * ''WRITE_THROUGH'' -- means that a write to block is immediately propagated to the main memory
+to avoid to write-back the block when it is wiped out; if the ''allocate'' element is set to true,
+a write-through is performed but, if the block is not already in the cache, it is allocated and loaded.
+  * ''WRITE_BACK'' -- means that a write to a block is just performed in the cache and the memory
+modification will be propagated to the main memory only when the block is wiped out;
+if the block is not in the cache, it is loaded; ''allocate'' element is not used.
+
+
+==== Examples ===
+
+Below is a simple configuration of an architecture with only one instruction cache
+(block of 16 bytes, 4-way associative, 128 sets, 8 Kb size):
+
+<code xml>
+<cache-config>
+	<icache>
+		<block_bits>4</block_bits>
+		<row_bits>7</row_bits>
+		<way_bits>2</way_bits>
+		<replace>LRU</replace>
+	</icache>
+</cache-config>
+</code>
+
+Below is the cache structure of the ARM9, that is, split with random replacement policy
+(64 ways, 32 b per block, 15Kb size):
+
+<code xml>
+<cache-config>
+	<icache>
+		<block_bits>6</block_bits>
+		<row_bits>3</row_bits>
+		<way_bits>5</way_bits>
+		<replace>RANDOM</replace>
+	</icache>
+	<dcache>
+		<block_bits>6</block_bits>
+		<row_bits>3</row_bits>
+		<way_bits>5</way_bits>
+		<replace>RANDOM</replace>
+	</dcache>
+</cache-config>
+</code>
+
+This example represents a unified cache of 16 Kb:
+
+<code xml>
+<cache-config>
+	<cache>
+		<block_bits>5</block_bits>
+		<row_bits>3</row_bits>
+		<way_bits>6</way_bits>
+		<replace>PLRU</replace>
+	</cache>
+</cache-config>
+</code>
+
+Finally, the example shows an example of split L1 cache (16 Kb) and unified L2 (256 Kb):
+<code xml>
+<cache-config>
+	<icache>
+		<block_bits>5</block_bits>
+		<row_bits>9</row_bits>
+		<way_bits>2</way_bits>
+		<replace>RANDOM</replace>
+		<next id="M2">
+			<block_bits>6</block_bits>
+			<row_bits>8</row_bits>
+			<way_bits>4</way_bits>
+			<replace>RANDOM</replace>
+		</next>
+	</icache>
+	<dcache>
+		<block_bits>5</block_bits>
+		<row_bits>9</row_bits>
+		<way_bits>2</way_bits>
+		<replace>RANDOM</replace>
+		<next ref="L2"/>
+	</dcache>
+</code>
 
 
 ===== Memory Space Description =====
