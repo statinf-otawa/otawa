@@ -26,6 +26,8 @@
 
 namespace otawa { namespace etime {
 
+Identifier<bool> PREDUMP("otawa::etime::PREDUMP", false);
+
 /**
  * Convert an event mask to a string.
  * @param mask		Event mask.
@@ -297,6 +299,7 @@ EdgeTimeBuilder::EdgeTimeBuilder(p::declare& r)
 void EdgeTimeBuilder::configure(const PropList& props) {
 	GraphBBTime<ParExeGraph>::configure(props);
 	_explicit = ipet::EXPLICIT(props);
+	predump = PREDUMP(props);
 }
 
 
@@ -410,7 +413,11 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 		Event *evt = (*event).fst;
 
 		// find the instruction
-		while(inst->inst() != evt->inst()) {
+		while(inst->codePart() != otawa::BODY && (*event).snd != IN_BLOCK) {
+			inst++;
+			ASSERT(inst);
+		}
+		while(inst->inst() != evt->inst() && inst->codePart()) {
 			inst++;
 			ASSERT(inst);
 		}
@@ -455,6 +462,10 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 				else
 					rollback(events[i].fst, insts[i]);
 			}
+
+		// predump implementation
+		if(_do_output_graphs && predump)
+			outputGraph(graph, 666, 666, 666, _ << source << " -> " << target);
 
 		// compute and store the new value
 		ot::time cost = graph->analyze();

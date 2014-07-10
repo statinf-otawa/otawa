@@ -34,9 +34,10 @@ class EdgeTimeBuilder: public GraphBBTime<ParExeGraph> {
 public:
 	static p::declare reg;
 	EdgeTimeBuilder(p::declare& r = reg);
-	virtual void configure(const PropList& props);
 	typedef enum { IN_PREFIX = 0, IN_EDGE = 1, IN_BLOCK = 2, IN_SIZE = 3 } place_t;
+
 protected:
+	virtual void configure(const PropList& props);
 
 	// BBProcessor overload
 	virtual void setup(WorkSpace *ws);
@@ -80,6 +81,7 @@ private:
 	BasicBlock *source, *target;
 	ParExeSequence *seq;
 	ParExeGraph *graph;
+	bool predump;
 };
 
 } }	// otawa::etime
