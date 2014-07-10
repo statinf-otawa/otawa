@@ -54,6 +54,12 @@ typedef enum {
 	ALWAYS = 2
 } occurrence_t;
 
+typedef enum type_t {
+	EDGE,
+	BLOCK
+} type_t;
+
+
 // Event class
 class Event: public PropList {
 public:
@@ -65,6 +71,7 @@ public:
 	// accessors
 	virtual kind_t kind(void) const = 0;
 	virtual ot::time cost(void) const = 0;
+	virtual type_t type(void) const = 0;
 	virtual occurrence_t occurrence(void) const;
 	virtual cstring name(void) const;
 	virtual const hard::Stage *stage(void) const;

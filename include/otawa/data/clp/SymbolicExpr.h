@@ -80,6 +80,7 @@ namespace se{
 		*/
 		SymbExpr(op_t op=NONE, SymbExpr *a=NULL, SymbExpr *b=NULL, V val=0, SymbExpr *parent=NULL):
 			_op(op), _a(a), _b(b), _val(val), _parent(parent) {
+			ASSERT(_op >= NONE && _op <= OR);
 			if(_a != NULL)
 				_a->set_parent(this);
 			if(_b != NULL)
@@ -91,6 +92,7 @@ namespace se{
 		*/
 		SymbExpr(const SymbExpr &expr):
 			_op(expr._op), _val(expr._val), _parent(expr._parent) {
+			ASSERT(_op >= NONE && _op <= OR);
 			set_a(expr._a); // to copy expr._a
 			set_b(expr._b); // to copy expr._b
 		}

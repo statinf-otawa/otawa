@@ -169,10 +169,12 @@ executable file.
 The platform provide details about the hardware feature of the targeted system.
 
 <code xml>
-<!-- PLATFORM ::=>
-  <!-- PIPELINE -->?
-  <!-- CACHES -->?
-  <!-- MEMORY -->?
+<!-- PLATFORM :: -->
+<platform>
+	<!-- PIPELINE -->?
+	<!-- CACHES -->?
+	<!-- MEMORY -->?
+</platform>
 </code>
 
 The items found in the //PLATFORM// may described directly in the script
@@ -893,7 +895,6 @@ Of course, the scheme may repeated as far as needed.
 The content of a cache element, //CACHE//, is defined below:
 <code xml>
 <!-- CACHE ::= -->
-	<on_chip>BOOL</on_chip>?								<!-- default: true -->
 	<block_bits>INT</block_bits>
 	<row_bits>INT</row_bits>
 	<way_bits>INT<way_bits>
@@ -903,9 +904,6 @@ The content of a cache element, //CACHE//, is defined below:
 	<allocate>BOOL</allocate>?								<!-- default: true -->
 </code>
 
-
-If ''on_chip'' is true, the cache is contained in the core chip, else it is out of the chip
-and needs an access to the bus.
 
 ''block_bits'' defines the size of the cache blocks: if its value is //N//, the block size is
 2^//B// and means that the //B// less significant bits of the addresses design the accessed
@@ -948,7 +946,7 @@ modification will be propagated to the main memory only when the block is wiped 
 if the block is not in the cache, it is loaded; ''allocate'' element is not used.
 
 
-==== Examples ===
+==== Examples ====
 
 Below is a simple configuration of an architecture with only one instruction cache
 (block of 16 bytes, 4-way associative, 128 sets, 8 Kb size):
@@ -1023,5 +1021,85 @@ Finally, the example shows an example of split L1 cache (16 Kb) and unified L2 (
 
 
 ===== Memory Space Description =====
+
+The memory space description defines properties of the different areas
+of the address space. So, a ''bank'' element is mainly a memory area described
+by its base address and its size.
+
+OTAWA allows to represent
+addresses over different address spaces. An address is made of two components:
+  * page --identification of the address space on 32-bits,
+  * offset -- identification of a byte in an address space on 32-bits.
+
+One must observe that the address space (-1) or 0xffffffff is used to represent the null address,
+that is, the abstract value representing no address. 
+
+<code xml>
+<!-- ADDRESS ::= -->
+	INT
+	| (<page>INT</page>?</page> <offset>INT</offset>)
+</code>
+
+If the ''page'' element is not given, the default address space (e.g. page) is 0.
+
+
+==== Memory Element ====
+
+<code xml>
+<!-- MEMORY ::= -->
+	<memory>
+		<banks>
+			BANK*
+		</banks>
+	</memory>
+</code>
+
+A memory is just a collection of memory areas that are called banks.
+
+
+==== Bank Element ====
+
+<code xml>
+<!-- BANK ::= -->
+	<bank>
+		<name>TEXT</name>
+	  	<address>ADDRESS</address>
+	  	<size>INT</size>
+	  	<type>DRAM|SPM|ROM|IO</type>
+	  	<latency>INT</latency>?
+	  	<write_latency>INT</write_latency>?
+		<cached>BOOL</cached>		<!-- default: false -->
+	  	<writable>BOOL</writable>	<!-- default: true -->
+	</bank>
+</code>
+
+''name'' assign a name to a memory area and exists only for human user interaction.
+
+''address'' defines the base address of the memory area.
+
+''size'' defines the memory area size in bytes. As the representation of this value is on 32-bits
+and as the 0 value does not mean anything for size, 0 size represents a full coverage of the address space,
+that is, a memory of size 2^32.
+
+The ''type'' gives hints on the nature of the memory. Possible values may be:
+  * DRAM -- usual dynamic RAM,
+  * SPM -- on-chip static RAM (usually accessed in 1 cycle),
+  * ROM -- read-only memory (EEPROM or anything else) but also NAND flash memory with random access,
+  * IO -- represents input/output register of peripherals (access time is usually high).
+
+The ''latency'' defines the number of cycle to access the memory space to read a data item.
+If there is no ''write_latency'', this defines also the time in cycle to write a data item.
+
+The ''write_latency'' element provides the write time in cycles.
+
+''cached'' allows to know if the memory area is accessed through the cache or directly.
+IO memory areas are often not cached.
+
+With the ''writable'' element, one can know if a memory area is writable or not:
+ROM are often considered as not writable using the classic load / store instruction of a microprocessor.
+For example, flash memories are readable word by word but are written block by block through
+dedicated IO registers.
+
+
 
 

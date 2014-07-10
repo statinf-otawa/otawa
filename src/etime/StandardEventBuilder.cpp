@@ -25,6 +25,7 @@
 #include <otawa/cache/cat2/features.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/hard/Memory.h>
+#include <otawa/hard/BHT.h>
 
 namespace otawa { namespace etime {
 
@@ -36,6 +37,7 @@ public:
 
 	virtual kind_t kind(void) const { return FETCH; }
 	virtual ot::time cost(void) const { return _cost; }
+	virtual type_t type(void) const { return BLOCK; }
 
 	virtual occurrence_t occurrence(void) const {
 		switch(_cat) {
@@ -66,6 +68,30 @@ private:
 };
 
 
+class BranchPredictionEvent: public Event {
+public:
+	BranchPredictionEvent(Inst *inst, ot::time cost, occurrence_t occ, ilp::Var *var)
+		: Event(inst), _var(var), _cost(cost), _occ(occ) { }
+
+	virtual kind_t kind(void) const { return BRANCH; }
+	virtual ot::time cost(void) const { return _cost; }
+	virtual type_t type(void) const { return EDGE; }
+	virtual occurrence_t occurence(void) const { return _occ; }
+	virtual cstring name(void) const { return "branch prediction"; }
+	virtual bool isOverestimating(bool on) { return on; }
+
+	virtual void overestimate(ilp::Constraint *cons, bool on) {
+		if(on)
+			cons->addLeft(1, _var);
+	}
+
+private:
+	ilp::Var *_var;
+	ot::time _cost;
+	occurrence_t _occ;
+};
+
+
 /**
  * @class StandardEventBuilder
  * Build standard events.
@@ -79,7 +105,8 @@ private:
  * @li @ref otawa::hard::MEMORY_FEATURE
  *
  * @par Optional
- * @li @ref ICACHE_CONSTRAINT2_FEATURE (to get L1 instruction cache events)
+ * @li @ref otawa::ICACHE_CONSTRAINT2_FEATURE (to get L1 instruction cache events)
+ * @li @ref otawa::branch::CONSTRAINTS_FEATURE
  *
  * @ingroup etime
  */
@@ -87,7 +114,14 @@ private:
 
 /**
  */
-StandardEventBuilder::StandardEventBuilder(p::declare& r): BBProcessor(r), proc(0), mem(0) {
+StandardEventBuilder::StandardEventBuilder(p::declare& r)
+: BBProcessor(r), mem(0), has_il1(false), has_branch(false) {
+}
+
+
+void StandardEventBuilder::configure(const PropList& props) {
+	BBProcessor::configure(props);
+	_explicit = ipet::EXPLICIT(props);
 }
 
 
@@ -95,19 +129,22 @@ StandardEventBuilder::StandardEventBuilder(p::declare& r): BBProcessor(r), proc(
  */
 void StandardEventBuilder::setup(WorkSpace *ws) {
 
-	// look for processor
-	proc = hard::PROCESSOR(ws);
-	ASSERT(proc);
-	if(logFor(Processor::LOG_DEPS))
-		log << "\tprocessor = " << proc->getModel() << " (" << proc->getBuilder() << ")\n";
-
 	// look for memory
 	mem = hard::MEMORY(ws);
-	ASSERT(mem);
-	bank = mem->banks()[0];
+	if(mem)
+		bank = mem->banks()[0];
+	else
+		bank = 0;
 
 	// look if instruction cacheL1 is available
 	has_il1 = ws->isProvided(ICACHE_ONLY_CONSTRAINT2_FEATURE);
+
+	// look if branch prediction is available
+	has_branch = ws->isProvided(branch::CONSTRAINTS_FEATURE);
+	if(has_branch) {
+		bht = hard::BHT_CONFIG(ws);
+		ASSERT(bht);
+	}
 }
 
 
@@ -138,17 +175,69 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 			// create the event
 			Event *event = new MissEvent(*inst, bank->latency(), CATEGORY(blocks[i]), MISS_VAR(blocks[i]));
+			if(logFor(LOG_BB))
+				log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
 			EVENT(bb).add(event);
 		}
 	}
+
+	// process branch prediction
+	if(has_branch) {
+		Inst *binst = bb->controlInst();
+		if(binst && binst->isConditional()) {
+			switch(branch::CATEGORY(bb)) {
+
+			// simple case of default prediction
+			case branch::ALWAYS_D:
+				for(BasicBlock::OutIterator out(bb); out; out++) {
+					occurrence_t occ;
+					if(out->kind() == Edge::NOT_TAKEN)
+						occ = ALWAYS;
+					else
+						occ = NEVER;
+					Event *event = new BranchPredictionEvent(out->target()->firstInst(), bht->getCondPenalty(), occ, 0);
+					if(logFor(LOG_BB))
+						log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
+					EVENT(*out).add(event);
+				}
+				break;
+
+			// complex case with good/miss-prediction
+			case branch::ALWAYS_H:
+			case branch::FIRST_UNKNOWN:
+			case branch::NOT_CLASSIFIED:
+				{
+					// x^MP_i = \sum{(i, j) in N} x^MP_(i,j)
+					static string msg = "branch prediction relation to edges";
+					ilp::System *sys = ipet::SYSTEM(ws);
+					ilp::Constraint *c = sys->newConstraint(msg, ilp::Constraint::EQ);
+					c->addLeft(1, branch::MISSPRED_VAR(bb));
+					for(BasicBlock::OutIterator out(bb); out; out++) {
+						string name;
+						if(_explicit)
+							name = _ << "x_mp_" << out->source()->number() << "_" << out->target()->number();
+						ilp::Var *var = sys->newVar(name);
+						Event *event = new BranchPredictionEvent(out->target()->firstInst(), bht->getCondPenalty(), SOMETIMES, var);
+						if(logFor(LOG_BB))
+							log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
+						EVENT(*out).add(event);
+						c->addRight(1, var);
+					}
+				}
+				break;
+			}
+		}
+	}
+
 }
 
 p::declare StandardEventBuilder::reg = p::init("otawa::etime::StandardEventBuilder", Version(1, 0, 0))
 	.base(BBProcessor::reg)
 	.maker<StandardEventBuilder>()
 	.provide(STANDARD_EVENTS_FEATURE)
-	.require(hard::PROCESSOR_FEATURE)
-	.require(hard::MEMORY_FEATURE);
-
+	.require(ipet::ILP_SYSTEM_FEATURE)
+	.require(hard::MEMORY_FEATURE)
+	.require(hard::CACHE_CONFIGURATION_FEATURE)
+	.require(hard::BHT_FEATURE);
 
 } } // otawa::etime

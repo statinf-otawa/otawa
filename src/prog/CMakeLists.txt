@@ -35,6 +35,7 @@ set(libotawa_SOURCES
 	"proc_FeatureRequirer.cpp"
 	"proc_LBlockProcessor.cpp"
 	"proc_BBProcessor.cpp"
+	"proc_Monitor.cpp"
 	"proc_ParamFeature.cpp"
 	"proc_ParamProcessor.cpp"
 	"proc_ProcessorException.cpp"

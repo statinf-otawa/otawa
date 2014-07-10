@@ -47,15 +47,14 @@ namespace otawa {
 using namespace cache;
 
 
-// BB hit collector
-class HitCollector: public BBStatCollector {
+class CacheCollector: public BBStatCollector {
 public:
-	HitCollector(WorkSpace *ws): BBStatCollector(ws) {
+	CacheCollector(WorkSpace *ws, cstring name): BBStatCollector(ws), _name(name) {
 		system = SYSTEM(ws);
 		ASSERT(system);
 	}
 
-	virtual cstring name(void) const { return "Hit Number"; }
+	virtual cstring name(void) const { return _name; }
 	virtual cstring unit(void) const { return "cache access"; }
 	virtual bool isEnum(void) const { return false; }
 	virtual const cstring valueName(int value) { return ""; }
@@ -68,7 +67,31 @@ public:
 		return lbs->count() * int(system->valueOf(var));
 	}
 
-	int count(BasicBlock *bb) {
+	virtual int mergeContext(int v1, int v2) { return v1 + v2; }
+	virtual int mergeAgreg(int v1, int v2) { return v1 + v2; }
+
+	void collect(Collector& collector, BasicBlock *bb) {
+		if(bb->isEnd())
+			return;
+		collector.collect(bb->address(), bb->size(), count(bb));
+	}
+
+protected:
+	virtual int count(BasicBlock *bb) = 0;
+	ilp::System *system;
+
+private:
+	cstring _name, _unit;
+};
+
+
+// BB hit collector
+class HitCollector: public CacheCollector {
+public:
+	HitCollector(WorkSpace *ws): CacheCollector(ws, "L1 Instruction Cache Hit Number") { }
+
+protected:
+	virtual int count(BasicBlock *bb) {
 		int sum = 0;
 		genstruct::AllocatedTable<LBlock *>* lbs = BB_LBLOCKS(bb);
 		ASSERT(lbs);
@@ -81,43 +104,15 @@ public:
 		}
 		return sum;
 	}
-
-	virtual int mergeContext(int v1, int v2) { return v1 + v2; }
-	virtual int mergeAgreg(int v1, int v2) { return v1 + v2; }
-
-	void collect(Collector& collector, BasicBlock *bb) {
-		if(bb->isEnd())
-			return;
-		collector.collect(bb->address(), bb->size(), count(bb));
-	}
-
-private:
-	ilp::System *system;
 };
 
 
 // BB miss collector
-class MissCollector: public BBStatCollector {
+class MissCollector: public CacheCollector {
 public:
-	MissCollector(WorkSpace *ws): BBStatCollector(ws) {
-		system = SYSTEM(ws);
-		ASSERT(system);
-	}
-
-	virtual cstring name(void) const { return "Miss Number"; }
-	virtual cstring unit(void) const { return "cache access"; }
-	virtual bool isEnum(void) const { return false; }
-	virtual const cstring valueName(int value) { return ""; }
-
-	virtual int total(BasicBlock *bb) {
-		genstruct::AllocatedTable<LBlock *>* lbs = BB_LBLOCKS(bb);
-		ASSERT(lbs);
-		ilp::Var *var = ipet::VAR(bb);
-		ASSERT(var);
-		return lbs->count() * int(system->valueOf(var));
-	}
-
-	int count(BasicBlock *bb) {
+	MissCollector(WorkSpace *ws): CacheCollector(ws, "L1 Instruction Cache Miss Number") { }
+protected:
+	virtual int count(BasicBlock *bb) {
 		int sum = 0;
 		genstruct::AllocatedTable<LBlock *>* lbs = BB_LBLOCKS(bb);
 		ASSERT(lbs);
@@ -130,18 +125,25 @@ public:
 		}
 		return sum;
 	}
+};
 
-	virtual int mergeContext(int v1, int v2) { return v1 + v2; }
-	virtual int mergeAgreg(int v1, int v2) { return v1 + v2; }
 
-	void collect(Collector& collector, BasicBlock *bb) {
-		if(bb->isEnd())
-			return;
-		collector.collect(bb->address(), bb->size(), count(bb));
+class NCCollector: public CacheCollector {
+public:
+	NCCollector(WorkSpace *ws): CacheCollector(ws, "L1 Instruction Cache NC Number") { }
+protected:
+	virtual int count(BasicBlock *bb) {
+		int sum = 0;
+		genstruct::AllocatedTable<LBlock *>* lbs = BB_LBLOCKS(bb);
+		ASSERT(lbs);
+		ilp::Var *xi = VAR(bb);
+		ASSERT(xi);
+		int xiv = int(system->valueOf(xi));
+		for(int i = 0; i < lbs->count(); i++)
+			if(otawa::CATEGORY(lbs->get(i)) == otawa::NOT_CLASSIFIED)
+				sum += xiv;
+		return sum;
 	}
-
-private:
-	ilp::System *system;
 };
 
 
@@ -249,6 +251,7 @@ void CAT2OnlyConstraintBuilder::configure(const PropList& props) {
 void CAT2OnlyConstraintBuilder::collectStats(WorkSpace *ws) {
 	recordStat(INST_CACHE_SUPPORT_FEATURE, new HitCollector(ws));
 	recordStat(INST_CACHE_SUPPORT_FEATURE, new MissCollector(ws));
+	recordStat(INST_CACHE_SUPPORT_FEATURE, new NCCollector(ws));
 }
 
 

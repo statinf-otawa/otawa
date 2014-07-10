@@ -35,7 +35,7 @@ public:
 	static p::declare reg;
 	EdgeTimeBuilder(p::declare& r = reg);
 	virtual void configure(const PropList& props);
-	typedef enum { IN_PREFIX = 0, IN_BLOCK = 1, IN_SIZE = 2 } place_t;
+	typedef enum { IN_PREFIX = 0, IN_EDGE = 1, IN_BLOCK = 2, IN_SIZE = 3 } place_t;
 protected:
 
 	// BBProcessor overload
@@ -50,19 +50,36 @@ protected:
 	// services
 	typedef Pair<Event *, place_t> event_t;
 	typedef genstruct::Vector<event_t> event_list_t;
-	int splitConfs(genstruct::Vector<ConfigSet>& confs);
-	void sortEvents(event_list_t& events, BasicBlock *bb, place_t place);
+	int splitConfs(genstruct::Vector<ConfigSet>& confs, const event_list_t& events);
+	void sortEvents(event_list_t& events, BasicBlock *bb, place_t place, Edge *edge = 0);
 	void displayConfs(const genstruct::Vector<ConfigSet>& confs, const event_list_t& events);
 
 private:
+
+	class EventComparator {
+	public:
+		static int compare (const event_t& e1, const event_t& e2)
+			{ return e1.fst->inst()->address().compare(e2.fst->inst()->address()); }
+	};
+
 	void processEdge(WorkSpace *ws, CFG *cfg, Edge *edge);
 	void apply(Event *event, ParExeInst *inst);
 	void rollback(Event *event, ParExeInst *inst);
-	ilp::System *sys;
-	bool _explicit;
-	genstruct::HashTable<Event *, EventCollector *> events;
 	EventCollector *get(Event *event);
 	void genForOneCost(ot::time cost, Edge *edge, event_list_t& events);
+	ParExeNode *getBranchNode(void);
+
+	// ILP state
+	bool _explicit;
+	ilp::System *sys;
+	genstruct::HashTable<Event *, EventCollector *> events;
+
+	// graph
+	ParExeNode *bnode;
+	ParExeEdge *bedge;
+	BasicBlock *source, *target;
+	ParExeSequence *seq;
+	ParExeGraph *graph;
 };
 
 } }	// otawa::etime

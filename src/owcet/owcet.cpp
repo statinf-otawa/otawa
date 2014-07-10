@@ -26,6 +26,8 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/ilp/System.h>
+#include <otawa/stats/StatInfo.h>
+#include <otawa/cfg/features.h>
 
 using namespace otawa;
 
@@ -78,6 +80,20 @@ using namespace otawa;
  * about the commande @tt .ff files. You may also use XML format called @tt .ffx (see @ref ffx).
  */
 
+class Summer: public StatCollector::Collector {
+public:
+	Summer(void): s(0) { }
+	inline int sum(void) const { return s; }
+	virtual void enter(const ContextualStep &step) { }
+	virtual void leave(void) { }
+	virtual void collect (const Address &address, t::uint32 size, int value) {
+		s += value;
+	}
+private:
+	int s;
+};
+
+
 class OWCET: public Application {
 public:
 	OWCET(void): Application(
@@ -91,11 +107,16 @@ public:
 	script(*this, 's', "script", "script used to compute WCET", "PATH", ""),
 	ilp_dump(*this, option::cmd, "-i", option::cmd, "--dump-ilp", option::help, "dump ILP system to stdandard output", option::end),
 	list(*this, option::cmd, "--list", option::help, "list configuration items", option::end),
-	timed(*this, option::cmd, "--timed", option::cmd, "-t", option::help, "display computation", option::end)
+	timed(*this, option::cmd, "--timed", option::cmd, "-t", option::help, "display computation", option::end),
+	display_stats(*this, option::cmd, "-S", option::cmd, "--stats", option::help, "display statistics", option::end)
 	{ }
 
 protected:
 	virtual void work (const string &entry, PropList &props) throw(elm::Exception) {
+
+		// set statistics option
+		if(display_stats)
+			Processor::COLLECT_STATS(props) = true;
 
 		// any script
 		if(!script)
@@ -165,9 +186,35 @@ protected:
 		else
 			cout << "WCET[" << entry << "] = " << ipet::WCET(workspace()) << " cycles\n";
 
+		// ILP dump
 		if(ilp_dump) {
 			ilp::System *sys = ipet::SYSTEM(workspace());
 			sys->dump(out);
+		}
+
+		// display statistics
+		if(display_stats) {
+			bool found = false;
+
+			// traverse all stats
+			for(StatInfo::Iter stat(workspace()); stat; stat++) {
+				found = true;
+				Summer s;
+				stat->collect(s);
+				int t = stat->total();
+				cerr << stat->name() << ": " << s.sum()
+					 << " / " << t << ' ' << stat->unit()
+					 << " (" << (float(s.sum()) / t * 100) << "%)\n";
+			}
+
+			// no state message
+			if(!found)
+				cerr << "No statistics to display.\n";
+
+			//StatInfo *info = StatInfo::ID(workspace());
+			//if(!info)
+			//else {
+			//const CFGCollection *coll = otawa::INVOLVED_CFGS(workspace());
 		}
 	}
 
@@ -178,6 +225,7 @@ private:
 	option::SwitchOption list;
 	option::SwitchOption timed;
 	string bin, task;
+	option::SwitchOption display_stats;
 };
 
 int main(int argc, char **argv) {

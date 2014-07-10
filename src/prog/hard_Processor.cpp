@@ -173,7 +173,6 @@ protected:
 		else if(xml) {
 			config = hard::Processor::load(xml);
 			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = config);
-			log << "processor = " << hard::PROCESSOR(ws) << io::endl;
 			if(logFor(LOG_DEPS))
 				log << "\tprocessor configuration from XML element\n";
 		}

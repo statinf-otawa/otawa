@@ -155,7 +155,7 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 								throw otawa::Exception(_ << "no memory bank for address " << Address(l)
 										<< " accessed from " << man->inst()->address());
 							else if(cache->block(l) == cache->block(h)) {
-								Block block = colls[cache->set(l)].obtain(l);
+								const Block& block = colls[cache->set(l)].obtain(l);
 								accs.add(BlockAccess(inst, p.snd, block));
 							}
 							else

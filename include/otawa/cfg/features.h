@@ -24,6 +24,7 @@
 
 #include <otawa/proc/SilentFeature.h>
 #include <elm/genstruct/FragTable.h>
+#include <otawa/cfg/CFG.h>
 
 namespace elm { namespace genstruct { template <class T> class Tree; } }
 
@@ -56,6 +57,19 @@ public:
 			: elm::genstruct::FragTable<CFG *>::Iterator(cfgs->cfgs) { }
 		inline Iterator(const CFGCollection& cfgs)
 			: elm::genstruct::FragTable<CFG *>::Iterator(cfgs.cfgs) { }
+	};
+
+	class BBIterator: public PreIterator<BBIterator, BasicBlock *> {
+	public:
+		inline BBIterator(const CFGCollection *cfgs): cfg(cfgs), bb(*cfg) { }
+		inline BBIterator(const BBIterator& i): cfg(i.cfg), bb(i.bb) { }
+		inline BBIterator& operator=(const BBIterator& i) { cfg = i.cfg; bb = i.bb; return *this; }
+		inline bool ended(void) const { return bb.ended(); }
+		inline BasicBlock *item(void) const { return *bb; }
+		inline void next(void) { bb++; if(!bb) { cfg++; if(cfg) bb = CFG::BBIterator(*cfg); } }
+	private:
+		Iterator cfg;
+		CFG::BBIterator bb;
 	};
 
 	void add(CFG *cfg);
