@@ -211,7 +211,7 @@ public:
 	 * @param sys	System to create constraints in.
 	 */
 	void make(ilp::System *sys) {
-		cerr << "DEBUG: making constraint for " << evt->inst()->address() << "\t" << evt->name() << "(type = " << int(evt->type()) << ")\n";
+		//cerr << "DEBUG: making constraint for " << evt->inst()->address() << "\t" << evt->name() << "(type = " << int(evt->type()) << ")\n";
 		int s = PREFIX_OFF ;
 		if(evt->type() == EDGE)
 			s = BLOCK_OFF;
@@ -295,7 +295,7 @@ EdgeTimeBuilder::EdgeTimeBuilder(p::declare& r)
 
 
 void EdgeTimeBuilder::configure(const PropList& props) {
-	BBProcessor::configure(props);
+	GraphBBTime<ParExeGraph>::configure(props);
 	_explicit = ipet::EXPLICIT(props);
 }
 
@@ -458,6 +458,10 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 
 		// compute and store the new value
 		ot::time cost = graph->analyze();
+
+		// dump it if needed
+		if(_do_output_graphs)
+			outputGraph(graph, target->number(), source->number(), mask, _ << source << " -> " << target << " (cost = " << cost << ")");
 
 		// add the new time
 		bool done = false;
