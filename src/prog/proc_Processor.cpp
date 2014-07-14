@@ -444,7 +444,13 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	ws = fw;
 	configure(props);
 
-	// Remove non-used invalidated features
+	// build the list of required features
+	Vector<const AbstractFeature *> required;
+	for(FeatureIter fuse(*_reg); fuse; fuse++)
+		if(fuse->kind() == FeatureUsage::require && !required.contains(&fuse->feature()))
+			required.add(&fuse->feature());
+
+	// remove non-used invalidated features
 	for(FeatureIter feature(*_reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::invalidate
 		&& !_reg->uses(feature->feature())) {
@@ -452,15 +458,13 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 				log << "INVALIDATED: " << feature->feature().name()
 					<< " by " << _reg->name() << io::endl;
 			fw->invalidate(feature->feature());
+			required.remove(&feature->feature());
 		}
 
 	// Get used feature
-	Vector<const AbstractFeature *> required;
 	for(FeatureIter feature(*_reg); !ws->isCancelled() && feature; feature++)
 		if(feature->kind() == FeatureUsage::require
 		|| feature->kind() == FeatureUsage::use) {
-			if(feature->kind() == FeatureUsage::require)
-				required.add(&feature->feature());
 			if(logFor(LOG_DEPS)) {
 				cstring kind = "USED";
 				if(feature->kind() == FeatureUsage::require)
@@ -488,7 +492,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 				<< " is not provided after one cycle of requirements:\n"
 				<< "stopping -- this may denotes circular dependencies.");
 
-	// Pre-processing actions
+	// pre-processing actions
 	if(logFor(LOG_CFG))
 		log << "Starting " << name() << " (" << version() << ')' << io::endl;
 	else if(logFor(LOG_PROC))
@@ -522,7 +526,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	if(logFor(LOG_CFG))
 		log << io::endl;
 
-	// Cleanup used invalidated features
+	// cleanup used invalidated features
 	for(FeatureIter feature(*_reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::invalidate
 		&& _reg->uses(feature->feature())) {
@@ -530,12 +534,13 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 				log << "INVALIDATED: " << feature->feature().name()
 					<< " by " << _reg->name() << io::endl;
 			fw->invalidate(feature->feature());
+			required.remove(&feature->feature());
 		}
 
 	// perform cleanup
 	cleanup(fw);
 
-	// Add provided features
+	// add provided features
 	for(FeatureIter feature(*_reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::provide) {
 			if(logFor(LOG_DEPS))
@@ -544,7 +549,7 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 			fw->provide(feature->feature(), &required);
 		}
 
-	// Put the cleaners
+	// put the cleaners
 	for(clean_list_t::Iterator clean(cleaners); clean; clean++) {
 		FeatureDependency *dep = ws->getDependency((*clean).fst);
 		ASSERTP(dep, "cleanup invoked for a not provided feature: " + (*clean).fst->name());
@@ -952,6 +957,7 @@ String UnavailableFeatureException::message(void) {
 // Null progress implementation
 class NullProgress: public Progress {
 public:
+	virtual ~NullProgress(void) { }
 	virtual void start(const Processor& processor, mode_t mode, int max = 0) { }
 	virtual void stop(void) { }
 	virtual void report(string info, int level) { }

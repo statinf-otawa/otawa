@@ -40,7 +40,7 @@ typedef enum fmlevel_t {
 extern Identifier<fmlevel_t> FIRSTMISS_LEVEL;
 extern Identifier<bool> PSEUDO_UNROLLING;
 extern Identifier<genstruct::Vector<MUSTProblem::Domain*>*> CACHE_ACS_MUST_ENTRY;
-extern SilentFeature ICACHE_ACS_FEATURE;
+extern p::feature ICACHE_ACS_FEATURE;
 extern Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST;
 extern Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS;
 
@@ -48,15 +48,15 @@ extern Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS;
 // MAY ACS feature
 extern Identifier<genstruct::Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY;
 extern Identifier<genstruct::Vector<MAYProblem::Domain*>*> CACHE_ACS_MAY_ENTRY;
-extern SilentFeature ICACHE_ACS_MAY_FEATURE;
+extern p::feature ICACHE_ACS_MAY_FEATURE;
 
 
 // category feature
 extern SilentFeature ICACHE_CATEGORY2_FEATURE;
 
-// constraint feature
-extern SilentFeature ICACHE_CONSTRAINT2_FEATURE;
-extern Identifier<ilp::Var *> HIT_VAR;
+// constraint feature2
+extern p::feature ICACHE_ONLY_CONSTRAINT2_FEATURE;
+extern p::feature ICACHE_CONSTRAINT2_FEATURE;
 extern Identifier<ilp::Var *> MISS_VAR;
 
 }	// otawa

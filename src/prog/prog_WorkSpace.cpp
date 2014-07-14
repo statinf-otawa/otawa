@@ -166,9 +166,64 @@ WorkSpace::~WorkSpace(void) {
 
 
 /**
+ * Format an address to make it human-readable.
+ * First look for debugging information, else try to build the form label + offset
+ * else fall back to address itself.
+ * @param addr			Address to display.
+ * @param with_address	Set to true to ever display the address.
+ * @return				Formatted string.
+ */
+string WorkSpace::format(Address addr, bool with_address) {
+	static string null_str = "<null>";
+	StringBuffer buf;
+	bool done = false;
+
+	// null case
+	if(addr.isNull())
+		return null_str;
+
+	// look in the debugging information
+	Option<Pair<cstring, int> > line = process()->getSourceLine(addr);
+	if(line) {
+		done = true;
+		buf << (*line).fst << ':' << (*line).snd;
+	}
+
+	// find the closer function symbol
+	if(!done) {
+		Inst *inst = findInstAt(addr);
+		while(inst && !done) {
+			for(Identifier<Symbol *>::Getter sym(inst, Symbol::ID); sym; sym++)
+				/*if(sym->kind() == Symbol::FUNCTION)*/ {
+					done = true;
+					buf << '"' << sym->name() << '"';
+					if(addr != inst->address())
+						buf << " + 0x" << io::hex(addr - inst->address());
+				}
+			inst = inst->prevInst();
+		}
+	}
+
+	// fall back to simple address
+	if(!done) {
+		buf << addr;
+		with_address = false;
+	}
+
+	// if required, display the address
+	if(with_address)
+		buf << " (" << addr << ')';
+	return buf.toString();
+}
+
+
+
+/**
  * Get the CFG of the project. If it does not exists, built it.
+ * @deprecated
  */
 CFGInfo *WorkSpace::getCFGInfo(void) {
+	DEPRECATED;
 
 	// Already built ?
 	CFGInfo *info = CFGInfo::ID(this);
@@ -185,8 +240,10 @@ CFGInfo *WorkSpace::getCFGInfo(void) {
 /**
  * Get the entry CFG of the program.
  * @return Entry CFG if any or null.
+ * @deprecated
  */
 CFG *WorkSpace::getStartCFG(void) {
+	DEPRECATED;
 
 	// Find the entry
 	Inst *_start = start();
@@ -203,6 +260,7 @@ CFG *WorkSpace::getStartCFG(void) {
 
 /**
  * Get the AST of the project.
+ * @deprecated
  */
 ast::ASTInfo *WorkSpace::getASTInfo(void) {
 	DEPRECATED
@@ -211,6 +269,7 @@ ast::ASTInfo *WorkSpace::getASTInfo(void) {
 
 
 /**
+ * @deprecated
  */
 const hard::CacheConfiguration& WorkSpace::cache(void) {
 	DEPRECATED;
@@ -222,8 +281,10 @@ const hard::CacheConfiguration& WorkSpace::cache(void) {
  * Build an ILP system with the default ILP engine.
  * @param max	True for a maximized system, false for a minimized.
  * @return		ILP system ready to use, NULL fi there is no support for ILP.
+ * @deprecated
  */
 ilp::System *WorkSpace::newILPSystem(bool max) {
+	DEPRECATED;
 	return manager()->newILPSystem();
 }
 
@@ -316,12 +377,14 @@ void WorkSpace::provide(const AbstractFeature& feature, const Vector<const Abstr
 	ASSERT(pdep);
 
 	// add dependencies
-	if(required != NULL)
+	if(required != NULL) {
+		ASSERTP(!required->contains(&feature), feature.name() << " provided and required!");
 		for(int j = 0; j < required->count(); j++) {
 			const AbstractFeature *rfeature = required->get(j);
-			ASSERT(rfeature != &feature && isProvided(*required->get(j)))
-			pdep->add(getDependency(required->get(j)));
+			ASSERTP(isProvided(*rfeature), rfeature->name() << " is not provided as it should be !");
+			pdep->add(getDependency(rfeature));
 		}
+	}
 }
 
 /**

@@ -22,16 +22,17 @@
 #define OTAWA_ETIME_STANDARDEVENTBUILDER_CPP_
 
 #include <otawa/proc/BBProcessor.h>
+#include <otawa/branch/features.h>
 #include "features.h"
 
 namespace otawa {
 
 // pre-declarations
 namespace hard {
-	class Processor;
+	class Bank;
+	class BHT;
 	class CacheConfiguration;
 	class Memory;
-	class Bank;
 }
 
 namespace etime {
@@ -42,15 +43,18 @@ public:
 	StandardEventBuilder(p::declare& r = reg);
 
 protected:
+	virtual void configure(const PropList& props);
 	virtual void setup(WorkSpace *ws);
 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 
 private:
-	const hard::Processor *proc;
 	const hard::Memory *mem;
 	const hard::CacheConfiguration *cconf;
+	const hard::BHT *bht;
 	bool has_il1;
+	bool has_branch;
 	const hard::Bank *bank;
+	bool _explicit;
 };
 
 } }	// otawa::etime

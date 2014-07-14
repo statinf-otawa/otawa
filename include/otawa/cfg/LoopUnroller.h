@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	LoopUnroller processor interface
  *
  *	This file is part of OTAWA
@@ -21,8 +20,8 @@
  *	02110-1301  USA
  */
  
-#ifndef CFG_LOOPUNROLLER_H_
-#define CFG_LOOPUNROLLER_H_
+#ifndef OTAWA_CFG_LOOPUNROLLER_H_
+#define OTAWA_CFG_LOOPUNROLLER_H_
 
 #include <otawa/proc/Processor.h>
 #include <otawa/cfg/VirtualCFG.h>
@@ -30,24 +29,28 @@
 #include <otawa/cfg/VirtualBasicBlock.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/proc/Feature.h>
-namespace otawa {
 
+namespace otawa {
 
 // LoopUnroller class
 class LoopUnroller: public Processor {
+public:
+	static p::declare reg;
+	LoopUnroller(p::declare& r = reg);
 
-	public:
-	LoopUnroller(void);
-	virtual void processWorkSpace(WorkSpace*);
-	
-	
-	private:	
-	elm::genstruct::HashTable<void *, VirtualBasicBlock *> map;		
+protected:
+	virtual void processWorkSpace(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
+
+private:
 	void unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg);
+
+	elm::genstruct::HashTable<void *, VirtualBasicBlock *> map;		
 	CFGCollection *coll;
 	int idx;
 };
 
-}
+}	// otawa
 
-#endif 
+#endif 	// OTAWA_CFG_LOOPUNROLLER_H_
+

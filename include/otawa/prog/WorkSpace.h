@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	WorkSpace class interface
  *
  *	This file is part of OTAWA
@@ -77,17 +76,7 @@ public:
 	virtual Manager *manager(void) { return proc->manager(); };
 	virtual Inst *start(void) { return proc->start(); };
 	virtual Inst *findInstAt(address_t addr) { return proc->findInstAt(addr); };
-	virtual const hard::CacheConfiguration& cache(void);
-
-	// CFG Management
-	CFGInfo *getCFGInfo(void);
-	CFG *getStartCFG(void);
-
-	// AST Management
-	ast::ASTInfo *getASTInfo(void);
-
-	// ILP support
-	ilp::System *newILPSystem(bool max = true);
+	string format(Address addr, bool with_address = true);
 
 	// Configuration services
 	elm::xom::Element *config(void);
@@ -99,8 +88,6 @@ public:
 	bool isProvided(const AbstractFeature& feature);
 	void remove(const AbstractFeature& feature);
 	void invalidate(const AbstractFeature& feature);
-
-	// Feature dependency graph management
 	FeatureDependency* getDependency(const AbstractFeature* feature);
 
 	// cancellation management
@@ -111,6 +98,13 @@ public:
 	// serialization
 	virtual void serialize(elm::serial2::Serializer& serializer);
 	virtual void unserialize(elm::serial2::Unserializer& unserializer);
+
+	// deprecated
+	ast::ASTInfo *getASTInfo(void);
+	ilp::System *newILPSystem(bool max = true);
+	CFGInfo *getCFGInfo(void);
+	CFG *getStartCFG(void);
+	virtual const hard::CacheConfiguration& cache(void);
 
 private:
 	void newFeatDep(const AbstractFeature* feature);

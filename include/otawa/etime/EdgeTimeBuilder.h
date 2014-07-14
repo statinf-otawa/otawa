@@ -21,23 +21,67 @@
 #ifndef OTAWA_ETIME_EDGETIMEBUILDER_H_
 #define OTAWA_ETIME_EDGETIMEBUILDER_H_
 
+#include <elm/genstruct/HashTable.h>
 #include <otawa/parexegraph/GraphBBTime.h>
 #include "features.h"
 
 namespace otawa { namespace etime {
 
+class ConfigSet;
+class EventCollector;
+
 class EdgeTimeBuilder: public GraphBBTime<ParExeGraph> {
 public:
 	static p::declare reg;
 	EdgeTimeBuilder(p::declare& r = reg);
+	typedef enum { IN_PREFIX = 0, IN_EDGE = 1, IN_BLOCK = 2, IN_SIZE = 3 } place_t;
+
 protected:
+	virtual void configure(const PropList& props);
+
+	// BBProcessor overload
+	virtual void setup(WorkSpace *ws);
 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+	virtual void cleanup(WorkSpace *ws);
+
+	// to customize
 	virtual ParExeGraph *make(ParExeSequence *seq);
 	virtual void clean(ParExeGraph *graph);
+
+	// services
+	typedef Pair<Event *, place_t> event_t;
+	typedef genstruct::Vector<event_t> event_list_t;
+	int splitConfs(genstruct::Vector<ConfigSet>& confs, const event_list_t& events);
+	void sortEvents(event_list_t& events, BasicBlock *bb, place_t place, Edge *edge = 0);
+	void displayConfs(const genstruct::Vector<ConfigSet>& confs, const event_list_t& events);
+
 private:
+
+	class EventComparator {
+	public:
+		static int compare (const event_t& e1, const event_t& e2)
+			{ return e1.fst->inst()->address().compare(e2.fst->inst()->address()); }
+	};
+
 	void processEdge(WorkSpace *ws, CFG *cfg, Edge *edge);
 	void apply(Event *event, ParExeInst *inst);
 	void rollback(Event *event, ParExeInst *inst);
+	EventCollector *get(Event *event);
+	void genForOneCost(ot::time cost, Edge *edge, event_list_t& events);
+	ParExeNode *getBranchNode(void);
+
+	// ILP state
+	bool _explicit;
+	ilp::System *sys;
+	genstruct::HashTable<Event *, EventCollector *> events;
+
+	// graph
+	ParExeNode *bnode;
+	ParExeEdge *bedge;
+	BasicBlock *source, *target;
+	ParExeSequence *seq;
+	ParExeGraph *graph;
+	bool predump;
 };
 
 } }	// otawa::etime

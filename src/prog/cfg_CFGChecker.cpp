@@ -86,17 +86,47 @@ void CFGChecker::setup(WorkSpace *ws) {
 /**
  */
 void CFGChecker::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-	if(bb->isExit())
-		return;
-	BasicBlock::OutIterator out(bb);
-	if(!out) {
+
+	// look for resolved indirect branch
+	if(bb->isTargetUnknown()) {
 		failed = true;
-		Inst *control = bb->controlInst();
-		if(control->isControl() && !control->target())
-			warn(_ << "instruction at " << cfg->format(control->address()) << " (" << control->address() << ") contains unresolved branches.");
-		else
-			warn(_ << "disconnected CFG at " << bb << " (" << cfg->format(bb->address()) << ")\n");
+		warn(_ << bb << " contains an unresolved indirect branch (" << ws->format(bb->controlInst()->address()) << ")");
 	}
+
+	// look predecessors
+	if(!bb->isEntry()) {
+		BasicBlock::InIterator in(bb);
+		if(!in) {
+			failed = true;
+			warn(_ << bb << " has no predecessor: disconnected CFG (" << ws->format(bb->address()) << ")");
+		}
+	}
+
+	// look successors
+	if(!bb->isExit()) {
+		BasicBlock::OutIterator out(bb);
+		if(!out) {
+			failed = true;
+			warn(_ << bb << " has no successor: disconnected CFG (" << ws->format(bb->lastInst()->address()) << ")");
+		}
+	}
+
+	// look for resolved indirect branch
+
+
+	// look for unresolved target
+	/*Inst *control = bb->controlInst();
+	if(!bb->isEntry() && control->isControl() && !control->target() &&!control->isReturn()) {
+		failed = true;
+		warn(_ << "instruction at " << ws->format(control->address()) << " contains unresolved branches.");
+	}*/
+
+	// dead-end test
+	/*if(!failed && !out) {
+		failed = true;
+		warn(_ << "disconnected CFG at " << bb << " (" << cfg->format(bb->address()) << ")\n");
+	}*/
+
 }
 
 

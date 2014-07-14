@@ -151,9 +151,8 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 				if ((firstmiss_level == FML_OUTER) && (perfect_firstmiss == false))
 					cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
 			} /* of category condition test */
-		} else {
+		} else
 			cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
-		}
 
 		// record stats
 		total_cnt++;

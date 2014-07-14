@@ -76,8 +76,8 @@ public:
 	Configuration(void) {
 		prefix = MANAGER.prefixPath();
 		cflags << "-I" << prefix.append("include");
-		libs << "-L" << prefix.append("lib") << " -lotawa -lelm -lgel";
-		addRPath(prefix.append("lib"));
+		libs << "-L" << prefix.append(LIB_DIR) << " -lotawa -lelm -lgel";
+		addRPath(prefix.append(LIB_DIR));
 	}
 
 	/**

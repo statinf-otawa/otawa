@@ -51,7 +51,6 @@ void Identifier<fmlevel_t>::fromString (PropList &props, const string &str) cons
 }
 
 
-static SilentFeature::Maker<ACSBuilder> acs_maker;
 /**
  *
  * This feature represents the availability of Abstract Cache State informations.
@@ -62,7 +61,7 @@ static SilentFeature::Maker<ACSBuilder> acs_maker;
  * @par Processors
  * @li @ref ACSBuilder (default)
  */
-SilentFeature ICACHE_ACS_FEATURE("otawa::ICACHE_ACS_FEATURE", acs_maker);
+p::feature ICACHE_ACS_FEATURE("otawa::ICACHE_ACS_FEATURE", new Maker<ACSBuilder>());
 
 /**
  * This property represents the "must" Abstract Cache State of a basic block.
@@ -144,14 +143,18 @@ Identifier<fmlevel_t> FIRSTMISS_LEVEL("otawa::FIRSTMISS_LEVEL", FML_MULTI);
  * none
  */
 
-ACSBuilder::ACSBuilder(void) : Processor("otawa::ACSBuilder", Version(1, 0, 0)) {
-	require(DOMINANCE_FEATURE);
-	require(LOOP_HEADERS_FEATURE);
-	require(LOOP_INFO_FEATURE);
-	require(COLLECTED_LBLOCKS_FEATURE);
-	require(ICACHE_FIRSTLAST_FEATURE);
-	provide(ICACHE_ACS_FEATURE);
-	require(hard::CACHE_CONFIGURATION_FEATURE);
+p::declare ACSBuilder::reg = p::init("otawa::ACSBuilder", Version(1, 1, 0))
+	.base(Processor::reg)
+	.maker<ACSBuilder>()
+	.require(DOMINANCE_FEATURE)
+	.require(LOOP_HEADERS_FEATURE)
+	.require(LOOP_INFO_FEATURE)
+	.require(COLLECTED_LBLOCKS_FEATURE)
+	.require(ICACHE_FIRSTLAST_FEATURE)
+	.provide(ICACHE_ACS_FEATURE)
+	.require(hard::CACHE_CONFIGURATION_FEATURE);
+
+ACSBuilder::ACSBuilder(p::declare& r) : Processor(r), must_entry(0), level(FML_NONE), unrolling(false) {
 }
 
 

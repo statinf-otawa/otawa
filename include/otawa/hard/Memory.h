@@ -109,13 +109,8 @@ private:
 		field("write_latency", _write_latency));
 public:
 	static Bank full;
-	Bank(void): _name("no name"), _size(0), _type(NONE), _latency(10),
-		_power(0), _block_bits(0), _cached(true), _on_chip(true),
-		_writable(true), _port_num(1), _bus(0) { }
-	Bank(cstring name, Address address, size_t size):
-		_name(name), _address(address), _size(size), _type(NONE), _latency(10),
-		_power(0), _block_bits(0), _cached(true), _on_chip(true),
-		_writable(true), _port_num(1), _bus(0) { }
+	Bank(void);
+	Bank(cstring name, Address address, size_t size);
 	
 	inline const string& name(void) const { return _name; }
 	inline const Address& address(void) const { return _address; }

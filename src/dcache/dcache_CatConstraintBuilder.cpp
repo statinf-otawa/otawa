@@ -1,8 +1,22 @@
 /*
- * DataCatConstraintBuilder.cpp
+ *	dcache::CatConstraintBuilder class interface
  *
- *  Created on: 12 juil. 2009
- *      Author: casse
+ *	This file is part of OTAWA
+ *	Copyright (c) 2014, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/ilp.h>
@@ -18,10 +32,114 @@
 #include <otawa/dcache/CatConstraintBuilder.h>
 #include <otawa/cache/categories.h>
 #include <otawa/ipet/ILPSystemGetter.h>
+#include <otawa/stats/BBStatCollector.h>
 
 namespace otawa { namespace dcache {
 
 using namespace otawa::cache;
+
+
+class StatCollector: public BBStatCollector {
+public:
+	StatCollector(WorkSpace *ws, cstring name, cstring unit)
+	: BBStatCollector(ws), _name(name), _unit(unit) {
+		system = ipet::SYSTEM(ws);
+		ASSERT(system);
+	}
+
+	virtual cstring name(void) const { return _name; }
+	virtual cstring unit(void) const { return _unit; }
+	virtual bool isEnum(void) const { return false; }
+	virtual const cstring valueName(int value) { return ""; }
+
+	virtual int total(BasicBlock *bb) {
+		Pair<int, BlockAccess *> dbs = dcache::DATA_BLOCKS(bb);
+		ilp::Var *var = ipet::VAR(bb);
+		ASSERT(var);
+		return dbs.fst * int(system->valueOf(var));
+	}
+
+	void collect(Collector& collector, BasicBlock *bb) {
+		if(bb->isEnd())
+			return;
+		collector.collect(bb->address(), bb->size(), count(bb));
+	}
+
+	virtual int mergeContext(int v1, int v2) { return v1 + v2; }
+	virtual int mergeAgreg(int v1, int v2) { return v1 + v2; }
+
+protected:
+	virtual int count(BasicBlock *bb) = 0;
+
+	ilp::System *system;
+private:
+	cstring _name, _unit;
+};
+
+
+// BB hit collector
+class HitCollector: public StatCollector {
+public:
+	HitCollector(WorkSpace *ws): StatCollector(ws, "L1 Data Cache Hit Number", "cache access")  { }
+
+protected:
+	virtual int count(BasicBlock *bb) {
+		int sum = 0;
+		Pair<int, BlockAccess *> dbs = dcache::DATA_BLOCKS(bb);
+		for(int i = 0; i < dbs.fst; i++) {
+			ilp::Var *bb_var = ipet::VAR(bb);
+			ASSERT(bb_var);
+			ilp::Var *var = dcache::MISS_VAR(dbs.snd[i]);
+			ASSERT(var);
+			sum +=  int(system->valueOf(bb_var))  - int(system->valueOf(var));
+		}
+		return sum;
+	}
+};
+
+
+// BB miss collector
+class MissCollector: public StatCollector {
+public:
+	MissCollector(WorkSpace *ws): StatCollector(ws, "L1 Data Cache Miss Number", "cache accesses") { }
+
+protected:
+	virtual int count(BasicBlock *bb) {
+		int sum = 0;
+		Pair<int, BlockAccess *> dbs = dcache::DATA_BLOCKS(bb);
+		for(int i = 0; i < dbs.fst; i++) {
+			ilp::Var *bb_var = ipet::VAR(bb);
+			ASSERT(bb_var);
+			ilp::Var *var = MISS_VAR(dbs.snd[i]);
+			ASSERT(var);
+			sum +=  int(system->valueOf(var));
+		}
+		return sum;
+	}
+};
+
+
+class NCCollector: public StatCollector {
+public:
+	NCCollector(WorkSpace *ws): StatCollector(ws, "L1 Data Cache NC Number", "cache access") { }
+
+
+protected:
+	virtual int count(BasicBlock *bb) {
+		int sum = 0;
+		Pair<int, BlockAccess *> dbs = dcache::DATA_BLOCKS(bb);
+		ilp::Var *xi = ipet::VAR(bb);
+		ASSERT(xi);
+		int xiv = int(system->valueOf(xi));
+		for(int i = 0; i < dbs.fst; i++)
+			if(dcache::CATEGORY(dbs.snd[i]) == otawa::NOT_CLASSIFIED)
+				sum += xiv;
+		return sum;
+	}
+};
+
+
+
 
 static SilentFeature::Maker<CatConstraintBuilder> maker;
 /**
@@ -74,7 +192,8 @@ p::declare CatConstraintBuilder::reg = p::init("otawa::dcache::CatConstraintBuil
 	.require(dcache::CATEGORY_FEATURE)
 	.require(DOMINANCE_FEATURE)
 	.require(ipet::ILP_SYSTEM_FEATURE)
-	.provide(ipet::DATA_CACHE_SUPPORT_FEATURE);
+	.provide(ipet::DATA_CACHE_SUPPORT_FEATURE)
+	.provide(dcache::CONSTRAINTS_FEATURE);
 
 
 /**
@@ -123,7 +242,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
                 if(!_explicit)
                         miss = system->newVar();
                 else
-                        miss = system->newVar(_ << "XMISS_DATA_bb" << bb->number() << "_i" << b.instruction()->address() << "_" << j);
+                        miss = system->newVar(_ << "xm_data_bb" << bb->number() << "_i" << b.instruction()->address() << "_" << j);
                 MISS_VAR(b) = miss;
 
                 // Add the constraint depending on the block access category
@@ -172,6 +291,14 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 			}
 		}
 	}
+}
+
+/**
+ */
+void CatConstraintBuilder::collectStats(WorkSpace *ws) {
+	recordStat(CONSTRAINTS_FEATURE, new HitCollector(ws));
+	recordStat(CONSTRAINTS_FEATURE, new MissCollector(ws));
+	recordStat(CONSTRAINTS_FEATURE, new NCCollector(ws));
 }
 
 } }		// otawa::dcache

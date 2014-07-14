@@ -38,6 +38,7 @@ public:
 protected:
 	virtual void processWorkSpace(otawa::WorkSpace *ws);
 	virtual void configure(const PropList& props);
+	void collectStats(WorkSpace *ws);
 private:
 	bool _explicit;
 };

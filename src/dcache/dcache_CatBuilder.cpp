@@ -102,11 +102,18 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 	MUSTPERS prob(&coll, ws, cache);
 	MUSTPERS::Domain dom = prob.bottom();
 	acs_stack_t empty_stack;
+	if(logFor(LOG_FUN))
+		log << "\tSET " << line << io::endl;
 
 	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
 	ASSERT(cfgs);
-	for(int i = 0; i < cfgs->count(); i++)
+	for(int i = 0; i < cfgs->count(); i++) {
+		if(logFor(LOG_BB))
+			log << "\t\tCFG " << cfgs->get(i) << io::endl;
+
 		for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++) {
+			if(logFor(LOG_BB))
+				log << "\t\t\t" << *bb << io::endl;
 
 			// get the input domain
 			acs_table_t *ins = MUST_ACS(bb);
@@ -177,7 +184,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 				}
 			}
 		}
-
+	}
 }
 
 

@@ -57,7 +57,7 @@ public:
 	
 	class Domain {
 	public:
-		inline Domain(const int _size, const int _A): whole(_size, _A), isBottom(true)  { }
+		inline Domain(const int _size, const int _A): whole(_size, _A), isBottom(true) { }
 		inline Domain(const Domain &source): isBottom(source.isBottom), whole(source.whole)
 			{ for (int i = 0; i < source.data.length(); i++) data.add(new Item(*source.data[i])); }
 		inline ~Domain(void) { for (int i = 0; i < data.length(); i++) delete data[i]; }

@@ -302,16 +302,24 @@ void Block::print(io::Output& out) const {
 
 
 /**
+ */
+BlockCollection::~BlockCollection(void) {
+	for(int i = 0; i < blocks.count(); i++)
+		delete blocks[i];
+}
+
+/**
  * Obtain a block matching the given address.
  * @param addr	Address of the looked block.
  * @return		Matching block (possibly created).
  */
 const Block& BlockCollection::obtain(const Address& addr) {
+	ASSERT(!addr.isNull());
 	for(int i = 0; i < blocks.count(); i++)
-		if(addr == blocks[i].address())
-			return blocks[i];
-	blocks.add(Block(_set, blocks.count(), addr));
-	return blocks[blocks.count() - 1];
+		if(addr == blocks[i]->address())
+			return *blocks[i];
+	blocks.add(new Block(_set, blocks.count(), addr));
+	return *blocks.top();
 }
 
 /**

@@ -103,7 +103,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 
 		// Generate the constraint
 		if(max < 0 && total < 0) {
-			warn(_ << "no flow fact constraint for loop at " << bb->address());
+			warn(_ << "no flow fact constraint for loop at " << bb->address() << " (" << ws->format(bb->address()) << ')');
 			return;
 		}
 

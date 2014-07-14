@@ -88,8 +88,8 @@ inline io::Output& operator<<(io::Output& out, const ACS& acs) { acs.print(out);
 // Block class
 class Block {
 public:
-	inline Block(void): _set(-1), idx(-1)  { }
-	inline Block(int set, int index, const Address& address): _set(set), idx(index), addr(address) { }
+	inline Block(void): _set(-1), idx(-1) { }
+	inline Block(int set, int index, const Address& address): _set(set), idx(index), addr(address) { ASSERT(!address.isNull()); }
 	inline Block(const Block& block): _set(block._set), idx(block.idx), addr(block.addr) { }
 	inline int set(void) const { return _set; }
 	inline int index(void) const { return idx; }
@@ -107,7 +107,8 @@ inline io::Output& operator<<(io::Output& out, const Block& block) { block.print
 // BlockCollection class
 class BlockCollection {
 public:
-	inline const Block& operator[](int i) const { return blocks[i]; }
+	~BlockCollection(void);
+	inline const Block& operator[](int i) const { return *blocks[i]; }
 	const Block& obtain(const Address& addr);
 	inline void setSet(int set) { _set = set; }
 
@@ -116,7 +117,7 @@ public:
 
 private:
 	int _set;
-	genstruct::Vector<Block> blocks;
+	genstruct::Vector<Block *> blocks;
 };
 
 

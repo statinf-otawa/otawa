@@ -37,7 +37,8 @@ using namespace elm;
 
 class ACSBuilder : public otawa::Processor {
 public:
-	ACSBuilder(void);
+	static p::declare reg;
+	ACSBuilder(p::declare& r = reg);
 	virtual void processWorkSpace(otawa::WorkSpace*);
 	virtual void configure(const PropList &props);
 

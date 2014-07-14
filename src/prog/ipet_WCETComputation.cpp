@@ -38,15 +38,6 @@ using namespace otawa::ilp;
 namespace otawa { namespace ipet {
 
 // Registration
-/*Registration<WCETComputation> WCETComputation::reg(
-	"otawa::ipet::WCETComputation",
-	Version(1, 0, 0),
-	p::require, &CONTROL_CONSTRAINTS_FEATURE,
-	p::require, &OBJECT_FUNCTION_FEATURE,
-	p::require, &FLOW_FACTS_CONSTRAINTS_FEATURE,
-	p::provide, &WCET_FEATURE,
-	p::end
-);*/
 p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Version(1, 0, 0))
 	.require(CONTROL_CONSTRAINTS_FEATURE)
 	.require(OBJECT_FUNCTION_FEATURE)

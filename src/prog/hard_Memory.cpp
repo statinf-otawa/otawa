@@ -152,6 +152,38 @@ namespace otawa { namespace hard {
  */
 
 
+Bank::Bank(void):
+	_name("no name"),
+	_size(0),
+	_type(NONE),
+	_latency(10),
+	_power(0),
+	_write_latency(0),
+	_block_bits(0),
+	_cached(true),
+	_on_chip(true),
+	_writable(true),
+	_port_num(1),
+	_bus(0)
+{ }
+
+Bank::Bank(cstring name, Address address, size_t size):
+	_name(name),
+	_address(address),
+	_size(size),
+	_type(NONE),
+	_latency(10),
+	_power(0),
+	_write_latency(10),
+	_block_bits(0),
+	_cached(true),
+	_on_chip(true),
+	_writable(true),
+	_port_num(1),
+	_bus(0)
+{ }
+
+
 /**
  * The full covering all page one memory.
  */

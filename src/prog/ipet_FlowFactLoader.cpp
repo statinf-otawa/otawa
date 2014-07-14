@@ -47,12 +47,19 @@ namespace otawa { namespace ipet {
  * @li @ref ipet::FLOW_FACTS_FEATURE
  */
 
+p::declare FlowFactLoader::reg = p::init("otawa::ipet::FlowFactLoader", Version(1, 1, 1))
+	.base(ContextualProcessor::reg)
+	.maker<FlowFactLoader>()
+	.require(LOOP_HEADERS_FEATURE)
+	.require(otawa::FLOW_FACTS_FEATURE)
+	.provide(otawa::ipet::FLOW_FACTS_FEATURE);
+
 
 /**
  * Build a new flow fact loader.
  */
-FlowFactLoader::FlowFactLoader(void)
-:	ContextualProcessor("otawa::ipet::FlowFactLoader", Version(1, 1, 0)),
+FlowFactLoader::FlowFactLoader(p::declare& r)
+:	ContextualProcessor(r),
  	lines_available(false),
  	total(0),
  	total_loop(0),
@@ -61,9 +68,6 @@ FlowFactLoader::FlowFactLoader(void)
  	found_loop(0),
  	max(0)
 {
-	require(LOOP_HEADERS_FEATURE);
-	require(otawa::FLOW_FACTS_FEATURE);
-	provide(otawa::ipet::FLOW_FACTS_FEATURE);
 }
 
 
@@ -99,7 +103,7 @@ void FlowFactLoader::leavingCall(WorkSpace *ws, CFG *cfg, BasicBlock *to) {
  * Transfer flow information from the given source instruction to the given BB.
  * @param source	Source instruction.
  * @param bb		Target BB.
- * @return			True if some loop bound informatio has been found, false else.
+ * @return			True if some loop bound information has been found, false else.
  */
 bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
 	bool all = true;
