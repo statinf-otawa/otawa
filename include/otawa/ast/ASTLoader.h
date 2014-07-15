@@ -19,7 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_AST_AST_LOADER_H
-#define OTAWA_AST_AWT_LOADER_H
+#define OTAWA_AST_AST_LOADER_H
 
 #include <elm/genstruct/Vector.h>
 #include <otawa/proc/Processor.h>

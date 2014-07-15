@@ -18,7 +18,7 @@
  *	along with Foobar; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_ISIM_BBTIMESIMULATOR_H
+#ifndef OTAWA_TSIM_BBTIMESIMULATOR_H
 #define OTAWA_TSIM_BBTIMESIMULATOR_H
 
 #include <otawa/cfg.h>
