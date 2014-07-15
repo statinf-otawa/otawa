@@ -43,29 +43,29 @@ class LBlockSet;
 class LBlock: public elm::inhstruct::DLNode, public PropList {
 	friend class LBlockSet;
 public:
-	LBlock(LBlockSet *graphe, address_t head, BasicBlock *bb, t::uint32 size, int _cacheblock);
-	
-	inline int number(void) const { return ident; }
-	inline address_t address(void) const { return addr; }
+	LBlock(LBlockSet *set, BasicBlock *bb, Inst *inst, t::uint32 size);
+	inline int index(void) const { return idx; }
+	inline Address address(void) const { return _inst->address(); }
 	inline BasicBlock *bb(void) const { return _bb; }
 	inline ot::size size(void) const { return _size; }
-	inline bool sameCacheBlock(const LBlock *block) const { return _cacheblock == block->_cacheblock; }
+	//inline bool sameCacheBlock(const LBlock *block) const { return cacheBlock() == block->cacheBlock(); }
 	inline LBlockSet *lblockset(void) const { return lbs; }
 	int countInsts(void);
-
+	int cacheBlock(void) const;
+	inline Inst *instruction(void) const { return _inst; }
+	
 	// deprecated
-	inline int id(void) { return ident; }
-	inline int cacheblock(void) { return _cacheblock; }
+	inline int number(void) const { return idx; }
+	inline int id(void) { return idx; }
+	inline int cacheblock(void) const { return idx - 1; }
 
 private:
 	~LBlock(void);
-
 	LBlockSet *lbs;
-	address_t addr;
+	Inst *_inst;
 	t::uint32 _size;
-	int ident;
-	int _cacheblock;
 	BasicBlock *_bb;
+	int idx;
 };
 
 Output& operator<<(Output& out, const LBlock *block);

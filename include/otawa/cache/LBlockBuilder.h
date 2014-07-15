@@ -49,8 +49,8 @@ private:
 	LBlockSet **lbsets;
 	const hard::Cache *cache;
 	const hard::Memory *mem;
-	HashTable<ot::mask, int> *cacheBlocks;
-	void addLBlock(BasicBlock *bb, Address addr, int& index, genstruct::AllocatedTable<LBlock *> *lblocks);
+	//HashTable<ot::mask, int> *cacheBlocks;
+	void addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct::AllocatedTable<LBlock *> *lblocks);
 };
 
 // Features
