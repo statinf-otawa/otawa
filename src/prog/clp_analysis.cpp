@@ -1228,7 +1228,6 @@ void State::join(const State& state) {
 */
 void State::widening(const State& state, int loopBound) {
 	TRACED(cerr << "widening(" << loopBound << "\n\t");
-	cerr << "widening(" << loopBound << "\n\t";
 	TRACED(print(cerr); cerr << ",\n\t";  state.print(cerr); cerr << "\n\t) = ");
 	
 	// test none states

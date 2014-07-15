@@ -23,12 +23,13 @@
 
 #include <elm/genstruct/HashTable.h>
 #include <otawa/parexegraph/GraphBBTime.h>
+#include <otawa/etime/EventCollector.h>
+#include <otawa/etime/Config.h>
 #include "features.h"
 
 namespace otawa { namespace etime {
 
 class ConfigSet;
-class EventCollector;
 
 class EdgeTimeBuilder: public GraphBBTime<ParExeGraph> {
 public:
@@ -45,15 +46,21 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 
 	// to customize
-	virtual ParExeGraph *make(ParExeSequence *seq);
-	virtual void clean(ParExeGraph *graph);
-
-	// services
 	typedef Pair<Event *, place_t> event_t;
 	typedef genstruct::Vector<event_t> event_list_t;
-	int splitConfs(genstruct::Vector<ConfigSet>& confs, const event_list_t& events);
-	void sortEvents(event_list_t& events, BasicBlock *bb, place_t place, Edge *edge = 0);
-	void displayConfs(const genstruct::Vector<ConfigSet>& confs, const event_list_t& events);
+	typedef genstruct::Vector<ConfigSet> config_list_t;
+	virtual ParExeGraph *make(ParExeSequence *seq);
+	virtual void clean(ParExeGraph *graph);
+	void processTimes(const config_list_t& confs);
+	void applyStrictSplit(const config_list_t& confs);
+	void applyFloppySplit(const config_list_t& confs);
+	void applyWeightedSplit(const config_list_t& confs);
+
+	// services
+	static EventCollector::case_t make(const Event *e, EdgeTimeBuilder::place_t place, bool on);
+	void contributeConst(void);
+	void contributeSplit(const config_list_t& confs, t::uint32 pos, t::uint32 neg, t::uint32 com, ot::time lts_time, ot::time hts_time);
+	void makeSplit(const config_list_t& confs, int p, ConfigSet& hts, ot::time& lts_time, ot::time& hts_time);
 
 private:
 
@@ -63,17 +70,19 @@ private:
 			{ return e1.fst->inst()->address().compare(e2.fst->inst()->address()); }
 	};
 
-	void processEdge(WorkSpace *ws, CFG *cfg, Edge *edge);
+	void processEdge(WorkSpace *ws, CFG *cfg);
 	void apply(Event *event, ParExeInst *inst);
 	void rollback(Event *event, ParExeInst *inst);
 	EventCollector *get(Event *event);
 	void genForOneCost(ot::time cost, Edge *edge, event_list_t& events);
 	ParExeNode *getBranchNode(void);
+	int splitConfs(const config_list_t& confs, const event_list_t& events, bool& lower);
+	void sortEvents(event_list_t& events, BasicBlock *bb, place_t place, Edge *edge = 0);
+	void displayConfs(const genstruct::Vector<ConfigSet>& confs, const event_list_t& events);
 
 	// ILP state
 	bool _explicit;
 	ilp::System *sys;
-	genstruct::HashTable<Event *, EventCollector *> events;
 
 	// graph
 	ParExeNode *bnode;
@@ -82,6 +91,12 @@ private:
 	ParExeSequence *seq;
 	ParExeGraph *graph;
 	bool predump;
+
+	// events
+	Edge *edge;
+	genstruct::Vector<event_t> all_events;
+	event_list_t events;
+	genstruct::HashTable<Event *, EventCollector *> colls;
 };
 
 } }	// otawa::etime

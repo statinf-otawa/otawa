@@ -23,10 +23,155 @@
 #include <elm/avl/Set.h>
 #include <otawa/etime/features.h>
 #include <elm/genstruct/quicksort.h>
+#include <otawa/etime/Config.h>
+#include <otawa/etime/EventCollector.h>
 
 namespace otawa { namespace etime {
 
 Identifier<bool> PREDUMP("otawa::etime::PREDUMP", false);
+
+
+io::Output& operator<<(io::Output& out, EdgeTimeBuilder::place_t p) {
+	static cstring msgs[] = {
+			"in prefix",
+			"in edge",
+			"in block"
+	};
+	ASSERT(p >= EdgeTimeBuilder::IN_PREFIX && p < EdgeTimeBuilder::IN_SIZE);
+	out << msgs[p];
+	return out;
+}
+
+
+/**
+ * @class Config
+ * Represents a configuration for computing cost of a BB.
+ * Each bits represents the state of an event:
+ * @li 0	event not activated
+ * @li 1	event activated
+ */
+
+
+/**
+ * Convert config to string.
+ * @param n		Number of bits in the configuration.
+ * @return		String display of the configuration.
+ */
+string Config::toString(int n) {
+	StringBuffer buf;
+	for(int i = 0; i < n; i++)
+		buf << (bit(i) ? "+" : "-");
+	return buf.toString();
+}
+
+
+/**
+ * @class ConfigSet
+ * Set of configurations with the same or with a maximum of time.
+ */
+
+
+
+/**
+ * TODO
+ */
+t::uint32 ConfigSet::posConst(void) const {
+	t::uint32 r = 0xffffffff;
+	for(int i = 0; i < confs.length(); i++)
+		r &= confs[i].bits();
+	return r;
+}
+
+
+/**
+ * TODO
+ */
+t::uint32 ConfigSet::negConst(void) const {
+	t::uint32 r = 0;
+	for(int i = 0; i < confs.length(); i++)
+		r |= confs[i].bits();
+	return ~r;
+}
+
+
+/**
+ * TODO
+ */
+t::uint32 ConfigSet::unused(t::uint32 neg, t::uint32 pos, int n) const {
+	t::uint32 mask = neg | pos;
+	t::uint32 r = 0;
+	for(int i = 0; i < n; i++)
+		if(!(mask & (1 << i))) {
+			genstruct::Vector<t::uint32> nconf, pconf;
+			for(int j = 0; j < confs.length(); j++) {
+				t::uint32 c = confs[j].bits();
+				if(c & (1 << i)) {
+					c &= ~(1 << i);
+					if(nconf.contains(c))
+						nconf.remove(c & ~(1 << i));
+					else
+						pconf.add(c & ~(1 << i));
+				}
+				else {
+					if(pconf.contains(c))
+						pconf.remove(c);
+					else
+						nconf.add(c);
+				}
+			}
+			if(!pconf && !nconf) {
+				r |= 1 << i;
+			}
+		}
+	return r;
+}
+
+
+/**
+ * TODO
+ */
+t::uint32 ConfigSet::complex(t::uint32 neg, t::uint32 pos, t::uint32 unused, int n) const {
+	return ((1 << n) - 1) & ~neg & ~pos & ~unused;
+}
+
+
+/**
+ * TODO
+ */
+void ConfigSet::scan(t::uint32& pos, t::uint32& neg, t::uint32& unus, t::uint32& comp, int n) const {
+	pos = posConst();
+	neg = negConst();
+	unus = unused(neg, pos, n);
+	comp = complex(neg, pos, unus, n);
+}
+
+
+/**
+ * Test if the configuration set is feasible.
+ */
+bool ConfigSet::isFeasible(int n) {
+	t::uint32 pos, neg, unus, comp;
+	scan(neg, pos, unus, comp, n);
+	return !comp;
+}
+
+
+/**
+ * TODO
+ */
+void ConfigSet::dump(io::Output& out, int n) {
+	bool fst = true;
+	out << "{ ";
+	for(int i = 0; i < confs.length(); i++) {
+		if(fst)
+			fst = false;
+		else
+			out << ", ";
+		out << confs[i].toString(n);
+	}
+	out << " }";
+}
+
 
 /**
  * Convert an event mask to a string.
@@ -43,223 +188,79 @@ string maskToString(t::uint32 mask, int len) {
 
 
 /**
- * Represents a configuration for computing cost of a BB.
- * Each bits represents the state of an event:
- * @li 0	event not activated
- * @li 1	event activated
- */
-class Config {
-public:
-	inline Config(void): b(0) { }
-	inline Config(t::uint32 bits): b(bits) { }
-	inline Config(const Config& conf): b(conf.b) { }
-	inline t::uint32 bits(void) const { return b; }
-	inline void set(int n) { b |= 1 << n; }
-	inline void clear(int n) { b &= ~(1 << n); }
-	inline bool bit(int n) { return b & (1 << n); }
-
-	string toString(int n) {
-		StringBuffer buf;
-		for(int i = 0; i < n; i++)
-			buf << (bit(i) ? "+" : "-");
-		return buf.toString();
-	}
-
-private:
-	t::uint32 b;
-};
-
-
-/**
- * Set of configurations with the same or with a maximum of time.
- */
-class ConfigSet {
-public:
-	ConfigSet(void): t(0) { }
-	ConfigSet(ot::time time): t(time) { }
-	ConfigSet(const ConfigSet& set): t(set.t), confs(set.confs) { }
-	inline ot::time time(void) const { return t; }
-	inline int count(void) const { return confs.length(); }
-	inline void add(Config conf) { confs.add(conf); }
-	inline void add(ConfigSet& set) { t = max(t, set.time()); confs.addAll(set.confs); }
-
-	inline void push(ConfigSet& set) { t = max(t, set.time()); confs.addAll(set.confs); }
-	inline void pop(ConfigSet& set) { for(int i = 0; i < set.confs.length(); i++) confs.pop(); }
-
-	t::uint32 posConst(void) const {
-		t::uint32 r = 0xffffffff;
-		for(int i = 0; i < confs.length(); i++)
-			r &= confs[i].bits();
-		return r;
-	}
-
-	t::uint32 negConst(void) const {
-		t::uint32 r = 0;
-		for(int i = 0; i < confs.length(); i++)
-			r |= confs[i].bits();
-		return ~r;
-	}
-
-	t::uint32 unused(t::uint32 neg, t::uint32 pos, int n) const {
-		t::uint32 mask = neg | pos;
-		t::uint32 r = 0;
-		for(int i = 0; i < n; i++)
-			if(!(mask & (1 << i))) {
-				genstruct::Vector<t::uint32> nconf, pconf;
-				for(int j = 0; j < confs.length(); j++) {
-					t::uint32 c = confs[j].bits();
-					if(c & (1 << i)) {
-						c &= ~(1 << i);
-						if(nconf.contains(c))
-							nconf.remove(c & ~(1 << i));
-						else
-							pconf.add(c & ~(1 << i));
-					}
-					else {
-						if(pconf.contains(c))
-							pconf.remove(c);
-						else
-							nconf.add(c);
-					}
-				}
-				if(!pconf && !nconf) {
-					r |= 1 << i;
-				}
-			}
-		return r;
-	}
-
-	t::uint32 complex(t::uint32 neg, t::uint32 pos, t::uint32 unused, int n) const {
-		return ((1 << n) - 1) & ~neg & ~pos & ~unused;
-	}
-
-	void scan(t::uint32& pos, t::uint32& neg, t::uint32& unus, t::uint32& comp, int n) const {
-		pos = posConst();
-		neg = negConst();
-		unus = unused(neg, pos, n);
-		comp = complex(neg, pos, unus, n);
-	}
-
-	/**
-	 * Test if the configuration set is feasible.
-	 */
-	bool isFeasible(int n) {
-		t::uint32 pos, neg, unus, comp;
-		scan(neg, pos, unus, comp, n);
-		return !comp;
-	}
-
-	void dump(io::Output& out, int n) {
-		bool fst = true;
-		out << "{ ";
-		for(int i = 0; i < confs.length(); i++) {
-			if(fst)
-				fst = false;
-			else
-				out << ", ";
-			out << confs[i].toString(n);
-		}
-		out << " }";
-	}
-
-	class Iter: public genstruct::Vector<Config>::Iterator {
-	public:
-		inline Iter(const ConfigSet& set): genstruct::Vector<Config>::Iterator(set.confs) { }
-	};
-
-private:
-	ot::time t;
-	genstruct::Vector<Config> confs;
-};
-
-
-/**
+ * @class EventCollector
  * Collects variables linking events with blocks in ILP.
  */
-class EventCollector {
-public:
 
-	EventCollector(Event *event): evt(event), imprec(0) { }
 
-	/**
-	 * Case for the variable between place (prefix/block) and activation of the event (on/off).
-	 */
-	typedef enum {
-		PREFIX_OFF = 0,
-		PREFIX_ON = 1,
-		BLOCK_OFF = 2,
-		BLOCK_ON = 3,
-		SIZE = 4
-	} case_t;
+/**
+ * @enum case_t;
+ * Case for the variable between place (prefix/block) and activation of the event (on/off).
+ */
 
-	inline Event *event(void) const { return evt; }
 
-	/**
-	 * Add a variable contribution.
-	 * @param c		Case of contribution.
-	 * @param var	Variable of contribution (null for blurred contribution driving to estimation).
-	 */
-	void contribute(case_t c, ilp::Var *var) {
-		if(!var)
-			imprec |= 1 << c;
-		else
-			vars[c].add(var);
-	}
+/**
+ * Add a variable contribution.
+ * @param c		Case of contribution.
+ * @param var	Variable of contribution (null for blurred contribution driving to estimation).
+ */
+void EventCollector::contribute(case_t c, ilp::Var *var) {
+	if(!var)
+		imprec |= 1 << c;
+	else
+		vars[c].add(var);
+}
 
-	/**
-	 * Make the variable and constraint for the current event.
-	 * According to the variable list and the provided overestimation,
-	 * may generate zero, one or several constraints.
-	 * @param sys	System to create constraints in.
-	 */
-	void make(ilp::System *sys) {
-		//cerr << "DEBUG: making constraint for " << evt->inst()->address() << "\t" << evt->name() << "(type = " << int(evt->type()) << ")\n";
-		int s = PREFIX_OFF ;
-		if(evt->type() == EDGE)
-			s = BLOCK_OFF;
-		for(int c = s; c < SIZE; ++c) {
-			if(vars[c] && evt->isOverestimating(isOn(case_t(c)))) {
-				ilp::Constraint *cons = sys->newConstraint(
-					"event constraint",
-					/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
-				evt->overestimate(cons, isOn(case_t(c)));
-				for(genstruct::SLList<ilp::Var *>::Iterator v(vars[c]); v; v++)
-					cons->addRight(1, *v);
-			}
+
+/**
+ * Make the variable and constraint for the current event.
+ * According to the variable list and the provided overestimation,
+ * may generate zero, one or several constraints.
+ * @param sys	System to create constraints in.
+ */
+void EventCollector::make(ilp::System *sys) {
+	//cerr << "DEBUG: making constraint for " << evt->inst()->address() << "\t" << evt->name() << "(type = " << int(evt->type()) << ")\n";
+	int s = PREFIX_OFF ;
+	if(evt->type() == EDGE)
+		s = BLOCK_OFF;
+	for(int c = s; c < SIZE; ++c) {
+		if(vars[c] && evt->isEstimating(isOn(case_t(c)))) {
+			ilp::Constraint *cons = sys->newConstraint(
+				/*"event constraint"*/evt->name() ,
+				/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
+			evt->estimate(cons, isOn(case_t(c)));
+			for(genstruct::SLList<ilp::Var *>::Iterator v(vars[c]); v; v++)
+				cons->addRight(1, *v);
 		}
 	}
+}
 
-	/**
-	 * Test if the event is on or off.
-	 * @param c		Case to test.
-	 * @return		True if on, false if off.
-	 */
-	inline bool isOn(case_t c) {
-		static bool ons[SIZE] = { false, true, false, true };
-		return ons[c];
-	}
 
-	/**
-	 * Build an event selector case.
-	 */
-	static case_t make(const Event *e, EdgeTimeBuilder::place_t place, bool on) {
-		if(e->type() == EDGE)
-			return on ? BLOCK_ON : BLOCK_OFF;
-		else
-			switch(place) {
-			case EdgeTimeBuilder::IN_PREFIX:	return on ? PREFIX_ON : PREFIX_OFF;
-			case EdgeTimeBuilder::IN_BLOCK:		return on ? BLOCK_ON : BLOCK_OFF;
-			case EdgeTimeBuilder::IN_EDGE:		return on ? BLOCK_ON : BLOCK_OFF;
-			default:							ASSERT(false); return PREFIX_ON;
-			}
-	}
+/**
+ * Test if the event is on or off.
+ * @param c		Case to test.
+ * @return		True if on, false if off.
+ */
+inline bool EventCollector::isOn(case_t c) {
+	static bool ons[SIZE] = { false, true, false, true };
+	return ons[c];
+}
 
-private:
 
-	t::uint32 imprec;
-	Event *evt;
-	genstruct::SLList<ilp::Var *> vars[SIZE];
-};
+/**
+ * Build an event selector case.
+ */
+EventCollector::case_t EdgeTimeBuilder::make(const Event *e, EdgeTimeBuilder::place_t place, bool on) {
+	if(e->type() == EDGE)
+		return on ? EventCollector::BLOCK_ON : EventCollector::BLOCK_OFF;
+	else
+		switch(place) {
+		case EdgeTimeBuilder::IN_PREFIX:	return on ? EventCollector::PREFIX_ON : EventCollector::PREFIX_OFF;
+		case EdgeTimeBuilder::IN_BLOCK:		return on ? EventCollector::BLOCK_ON : EventCollector::BLOCK_OFF;
+		case EdgeTimeBuilder::IN_EDGE:		return on ? EventCollector::BLOCK_ON : EventCollector::BLOCK_OFF;
+		default:							ASSERT(false); return EventCollector::PREFIX_ON;
+		}
+}
 
 
 /**
@@ -285,6 +286,7 @@ p::declare EdgeTimeBuilder::reg = p::init("otawa::etime::EdgeTimeBuilder", Versi
 	.require(ipet::ASSIGNED_VARS_FEATURE)
 	.require(ipet::ILP_SYSTEM_FEATURE)
 	.require(STANDARD_EVENTS_FEATURE)
+	.require(WEIGHT_FEATURE)
 	.provide(ipet::OBJECT_FUNCTION_FEATURE)
 	.provide(EDGE_TIME_FEATURE);
 
@@ -313,7 +315,7 @@ void EdgeTimeBuilder::setup(WorkSpace *ws) {
 /**
  */
 void EdgeTimeBuilder::cleanup(WorkSpace *ws) {
-	for(genstruct::HashTable<Event *, EventCollector *>::Iterator coll(events); coll; coll++) {
+	for(genstruct::HashTable<Event *, EventCollector *>::Iterator coll(colls); coll; coll++) {
 		coll->make(sys);
 		delete *coll;
 	}
@@ -326,8 +328,10 @@ void EdgeTimeBuilder::cleanup(WorkSpace *ws) {
 void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	if(bb->isEnd())
 		return;
-	for(BasicBlock::InIterator edge(bb); edge; edge++)
-		processEdge(ws, cfg, edge);
+	for(BasicBlock::InIterator in(bb); in; in++) {
+		edge = in;
+		processEdge(ws, cfg);
+	}
 }
 
 
@@ -357,7 +361,7 @@ void EdgeTimeBuilder::clean(ParExeGraph *graph) {
 
 /**
  */
-void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
+void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	if(logFor(Processor::LOG_BLOCK))
 		log << "\t\t\t" << edge << io::endl;
 
@@ -399,13 +403,13 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 	graph = make(seq);
 
 	// collect and sort events
-	genstruct::Vector<event_t> all_events;
+	all_events.clear();
 	if(source)
 		sortEvents(all_events, source, IN_PREFIX);
 	sortEvents(all_events, target, IN_BLOCK, edge);
 
 	// applying static events (always, never)
-	event_list_t events;
+	events.clear();
 	genstruct::Vector<ParExeInst *> insts;
 	event_list_t always_events;
 	ParExeSequence::InstIterator inst(seq);
@@ -413,11 +417,11 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 		Event *evt = (*event).fst;
 
 		// find the instruction
-		while(inst->codePart() != otawa::BODY && (*event).snd != IN_BLOCK) {
+		while((*event).snd != IN_PREFIX && inst->codePart() != otawa::BODY) {
 			inst++;
 			ASSERT(inst);
 		}
-		while(inst->inst() != evt->inst() && inst->codePart()) {
+		while(inst->inst() != evt->inst()) {
 			inst++;
 			ASSERT(inst);
 		}
@@ -427,7 +431,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 		case NEVER:			continue;
 		case SOMETIMES:		events.add(*event); insts.add(*inst); break;
 		case ALWAYS:		apply(evt, inst); always_events.add(*event); break;
-		default:		ASSERT(0); break;
+		default:			ASSERT(0); break;
 		}
 	}
 
@@ -438,7 +442,8 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 	if(logFor(LOG_BB)) {
 		log << "\t\t\t\tevents = " << events.count() << io::endl;
 		for(int i = 0; i < events.count(); i++)
-			log << "\t\t\t\t" << events[i].fst->inst()->address() << "\t" << events[i].fst->name() << io::endl;
+			log << "\t\t\t\t" << events[i].fst->inst()->address() << "\t" << events[i].fst->name()
+				<< " " << events[i].snd << io::endl;
 	}
 
 	// simple trivial case
@@ -484,7 +489,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 			}
 		if(!done) {
 			confs.add(ConfigSet(cost));
-			confs[confs.length() - 1].add(mask);
+			confs[confs.length() - 1].add(Config(mask));
 		}
 	}
 	if(isVerbose())
@@ -497,106 +502,8 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg, Edge *edge) {
 		return;
 	}
 
-	// split in sets LTS and HTS
-	int p = splitConfs(confs, events);
-	if(p < 0) {
-		genForOneCost(confs.top().time(), edge, all_events);
-		return;
-	}
-
-	// build the lower set
-	ot::time lts_time = confs[p - 1].time();
-	ot::time hts_time = confs.top().time();
-	ConfigSet hts(hts_time);
-	for(int i = p; i < confs.length(); i++)
-		hts.add(confs[i]);
-	if(isVerbose()) {
-		log << "\t\t\t\t" << "LTS time = " << lts_time << ", HTS time = " << hts_time << " for { ";
-		bool fst = true;
-		for(ConfigSet::Iter conf(hts); conf; conf++) {
-			if(fst)
-				fst = false;
-			else
-				log << ", ";
-			log << (*conf).toString(events.length());
-		}
-		log << " }\n";
-	}
-
-	// prepare the constraints
-	t::uint32 pos = hts.posConst();
-	t::uint32 neg = hts.negConst();
-	t::uint32 unu = hts.unused(neg, pos, events.length());
-	t::uint32 com = hts.complex(neg, pos, unu, events.length());
-	if(isVerbose())
-		log << "\t\t\t\t"
-			<< "pos = " << maskToString(pos, events.length())
-			<< ", neg = " << maskToString(neg, events.length())
-			<< ", unused = " << maskToString(unu, events.length())
-			<< ", complex = " << maskToString(com, events.length())
-			<< io::endl;
-
-	// too complex case
-	if(com) {
-		if(isVerbose())
-			log << "\t\t\t\ttoo complex: " << io::hex(com) << io::endl;
-		genForOneCost(hts_time, edge, all_events);
-		return;
-	}
-
-	// new LTS variable
-	string hts_name;
-	if(_explicit) {
-		StringBuffer buf;
-		buf << "e_";
-		if(source)
-			buf << source->number() << "_";
-		buf << target->number() << "_" << target->cfg()->label() << "_hts";
-		hts_name = buf.toString();
-	}
-	ilp::Var *x_hts = sys->newVar(hts_name);
-
-	// wcet += time_lts x_edge + (time_hts - time_lts) x_hts
-	ilp::Var *x_edge = ipet::VAR(edge);
-	sys->addObjectFunction(lts_time, x_edge);
-	sys->addObjectFunction(hts_time - lts_time, x_hts);
-
-	// 0 <= x_hts <= x_edge
-	ilp::Constraint *cons = sys->newConstraint("0 <= x_hts", ilp::Constraint::LE);
-	cons->addRight(1, x_hts);
-	cons = sys->newConstraint("x_hts <= x_edge", ilp::Constraint::LE);
-	cons->addLeft(1, x_hts);
-	cons->addRight(1, x_edge);
-
-	// NOTATION
-	// C^e_p -- constraint of event e for position p (p in {prefix, block})
-	// unprecise(C^e_p) in B (T if C^e_p unprecise e.g. use of <=, _ else and as a default)
-
-	// foreach e in events do
-	for(int i = 0; i < events.count(); i++) {
-
-		// if e in pos_events then C^e_p += x_hts / p = prefix if e in prefix, block
-		if(pos & (1 << i))
-			get(events[i].fst)->contribute(EventCollector::make(events[i].fst, events[i].snd, true), x_hts);
-
-		// else if e in neg_events then C^e_p += x_edge - x_hts / p = prefix if e in prefix, block
-		else if(neg & (1 << i))
-			get(events[i].fst)->contribute(EventCollector::make(events[i].fst, events[i].snd, false), x_hts);
-
-		// else unprecise(C^e_p) = T / p = prefix if e in prefix, block
-		else {
-			get(events[i].fst)->contribute(EventCollector::make(events[i].fst, events[i].snd, true), 0);
-			get(events[i].fst)->contribute(EventCollector::make(events[i].fst, events[i].snd, false), 0);
-		}
-	}
-
-	// foreach e in always(e) do C^e_p += x_edge
-	for(event_list_t::Iterator event(all_events); event; event++)
-		switch((*event).fst->occurrence()) {
-		case ALWAYS:	get((*event).fst)->contribute(EventCollector::make((*event).fst, (*event).snd, true), x_hts); break;
-		case NEVER:		get((*event).fst)->contribute(EventCollector::make((*event).fst, (*event).snd, false), x_hts); break;
-		default:		break;
-		}
+	// generate constraints
+	processTimes(confs);
 }
 
 
@@ -617,20 +524,15 @@ void EdgeTimeBuilder::genForOneCost(ot::time cost, Edge *edge, event_list_t& eve
 	// add to the objective function
 	sys->addObjectFunction(cost, var);
 
-	// add the edge variable to the event constraints
+	// generate constant contrubtion
+	contributeConst();
+
+	// generate variable contribution
 	for(event_list_t::Iterator event(events); event; event++)
-		switch((*event).fst->occurrence()) {
-		case ALWAYS:
-			get((*event).fst)->contribute(EventCollector::make((*event).fst, (*event).snd, true), var);
-			break;
-		case NEVER:
-			get((*event).fst)->contribute(EventCollector::make((*event).fst, (*event).snd, false), var);
-			break;
-		case SOMETIMES:
-			get((*event).fst)->contribute(EventCollector::make((*event).fst, (*event).snd, true), 0);
-			get((*event).fst)->contribute(EventCollector::make((*event).fst, (*event).snd, false), 0);
-			break;
-	}
+		if((*event).fst->occurrence() == SOMETIMES) {
+			get((*event).fst)->contribute(make((*event).fst, (*event).snd, true), 0);
+			get((*event).fst)->contribute(make((*event).fst, (*event).snd, false), 0);
+		}
 }
 
 
@@ -641,10 +543,10 @@ void EdgeTimeBuilder::genForOneCost(ot::time cost, Edge *edge, event_list_t& eve
  * @return			Matching collector (never null).
  */
 EventCollector *EdgeTimeBuilder::get(Event *event) {
-	EventCollector *coll = events.get(event, 0);
+	EventCollector *coll = colls.get(event, 0);
 	if(!coll) {
 		coll = new EventCollector(event);
-		events.put(event, coll);
+		colls.put(event, coll);
 	}
 	return coll;
 }
@@ -678,7 +580,7 @@ void EdgeTimeBuilder::sortEvents(event_list_t& events, BasicBlock *bb, place_t p
  * @param events	List of events.
  * @return			Position of partition in confs.
  */
-int EdgeTimeBuilder::splitConfs(genstruct::Vector<ConfigSet>& confs, const event_list_t& events) {
+int EdgeTimeBuilder::splitConfs(const config_list_t& confs, const event_list_t& events, bool& lower) {
 	static const float	sep_factor = 1,			// TODO: put them in configuration
 						span_factor = 1;
 
@@ -806,6 +708,348 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 		break;
 	}
 
+}
+
+
+/**
+ * Process the computed time and generate associated objective functions and constraints.
+ */
+void EdgeTimeBuilder::processTimes(const config_list_t& confs) {
+	//applyStrictSplit(confs);
+	//applyFloppySplit(confs);
+	this->applyWeightedSplit(confs);
+}
+
+
+/**
+ * Application of two time approach, LTS and HTS time.
+ * To perform the split, an evaluation function is maximized according the two sets so that:
+ * @li difference of time in LTS is the lowest,
+ * @li difference of time between HTS and LTS is the biggest.
+ * @li a feasible HTS is also a good point,
+ */
+void EdgeTimeBuilder::applyFloppySplit(const config_list_t& confs) {
+	static const float	sep_factor = 1,			// TODO: put them in configuration
+						span_factor = 1;
+
+	// initialization
+	int p = 1, best_p = -1;
+	float best_cost = type_info<float>::min;
+	int min_low = confs[0].time(), max_low = confs[0].time(), cnt_low = confs[0].count();
+	int min_high = confs[1].time(), max_high = confs[confs.length() - 1].time();
+	int cnt_high = 0;
+	for(int i = 1; i < confs.length(); i++)
+		cnt_high += confs[i].count();
+
+	// set of configurations
+	ConfigSet set;
+	for(int i = confs.length() - 1; i >= 0; i--)
+		set.push(confs[i]);
+
+	// computation
+	for(p = 1; p < confs.length(); p++) {
+
+		// update set and values
+		set.pop(confs[p - 1]);
+		min_high = confs[p - 1].time();
+		max_low = confs[p].time();
+
+		// select the best split
+		bool feasible = set.isFeasible(events.length());
+		float cost =
+			sep_factor * (min_high - max_low)
+			- span_factor * (max_low - min_low)
+			+-int(feasible) * (min_high - max_low);
+		cerr << "\t\t\t p = " << p << " -> " << cost << io::endl;
+		//log << "DEBUG: p = " << p << ", cost = " << cost << ", Ml = " << max_low << ", mh = " << min_high << ", ml = " << min_low << ", f = " << set.isFeasible(events.length()) << io::endl;
+		if(cost > best_cost) {
+			best_p = p;
+			best_cost = cost;
+		}
+
+	}
+
+	// consider all together
+	if(best_p < 0) {
+		genForOneCost(confs.top().time(), edge, all_events);
+		return;
+	}
+
+	// look in the split
+	ConfigSet hts;
+	ot::time lts_time, hts_time;
+	makeSplit(confs, best_p, hts, lts_time, hts_time);
+	t::uint32 pos, neg, unu, com;
+	hts.scan(pos, neg, unu, com, events.length());
+	if(isVerbose())
+		log << "\t\t\t\t"
+			<< "pos = " << maskToString(pos, events.length())
+			<< ", neg = " << maskToString(neg, events.length())
+			<< ", unused = " << maskToString(unu, events.length())
+			<< ", complex = " << maskToString(com, events.length())
+			<< io::endl;
+
+	// contribute
+	contributeSplit(confs, pos, neg, 0, lts_time, hts_time);
+}
+
+
+/**
+ * Performing split by computing an heuristic based on weights of BB
+ * and events.
+ * @param confs		List of configurations.
+ */
+void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
+
+	// initialization
+	int best_p = 0;
+	ot::time best_cost = type_info<ot::time>::max;
+
+	// set of configurations
+	ConfigSet set;
+	for(int i = confs.length() - 1; i >= 0; i--)
+		set.push(confs[i]);
+
+	// computation
+	for(int p = 1; p < confs.length(); p++) {
+
+		// update set and values
+		set.pop(confs[p - 1]);
+
+		// scan the set of values
+		t::uint32 pos, neg, unu, com;
+		set.scan(pos, neg, unu, com, events.length());
+
+		// x^c_hts = sum{e in E_i /\ (\E c in HTS /\ e in c) /\ (\E c in HTS /\ e not in c)} w_e
+		ot::time x_hts = 0;
+		for(int i= 0; i < events.length(); i++)
+			if(com & (1 << i))
+				x_hts += events[i].fst->weight();
+
+		// x^p_hts = max{e in E_i /\ (\A c in HTS -> e in c)} w_e
+		for(int i= 0; i < events.length(); i++)
+			if(pos & (1 << i))
+				x_hts = max(x_hts, ot::time(events[i].fst->weight()));
+		// x_hts = max(x^c_hts, x^p_hts)
+
+		// cost = x_hts t_hts + (x_i - x_hts) t_lts
+		ot::time cost = x_hts * confs.top().time() + (WEIGHT(edge->target()) - x_hts) * confs[p - 1].time();
+		cerr << "\t\t\t p = " << p << ", cost = " << cost << io::endl;
+
+		// look for best cost
+		if(cost < best_cost) {
+			best_p = p;
+			best_cost = cost;
+		}
+	}
+	cerr << "\t\t\tbest_p = " << best_p << io::endl;
+
+	// look in the split
+	ConfigSet hts;
+	ot::time lts_time, hts_time;
+	makeSplit(confs, best_p, hts, lts_time, hts_time);
+	t::uint32 pos, neg, unu, com;
+	hts.scan(pos, neg, unu, com, events.length());
+	if(isVerbose())
+		log << "\t\t\t\t"
+			<< "pos = " << maskToString(pos, events.length())
+			<< ", neg = " << maskToString(neg, events.length())
+			<< ", unused = " << maskToString(unu, events.length())
+			<< ", complex = " << maskToString(com, events.length())
+			<< io::endl;
+
+	// contribute
+	contributeSplit(confs, pos, neg, com, lts_time, hts_time);
+}
+
+
+/**
+ * Application of two time approach, LTS and HTS time.
+ * To perform the split, an evaluation function is maximized according the two sets so that:
+ * @li the HTS is feasible,
+ * @li difference of time in LTS is the lowest,
+ * @li difference of time between HTS and LTS is the biggest.
+ */
+void EdgeTimeBuilder::applyStrictSplit(const config_list_t& confs) {
+	static const float	sep_factor = 1,			// TODO: put them in configuration
+						span_factor = 1;
+
+	// initialization
+	int p = 1, best_p = -1;
+	float best_cost = type_info<float>::min;
+	int min_low = confs[0].time(), max_low = confs[0].time(), cnt_low = confs[0].count();
+	int min_high = confs[1].time(), max_high = confs[confs.length() - 1].time();
+	int cnt_high = 0;
+	for(int i = 1; i < confs.length(); i++)
+		cnt_high += confs[i].count();
+
+	// set of configurations
+	ConfigSet set;
+	for(int i = confs.length() - 1; i >= 0; i--)
+		set.push(confs[i]);
+	//cerr << "DEBUG: init = " << set.isFeasible(events.length()) << io::endl;
+
+	// computation
+	for(p = 1; p < confs.length(); p++) {
+
+		// update set and values
+		set.pop(confs[p - 1]);
+		min_high = confs[p - 1].time();
+		max_low = confs[p].time();
+
+		// select the best split
+		float cost = sep_factor * (min_high - max_low) - span_factor * (max_low - min_low);
+		//log << "DEBUG: p = " << p << ", cost = " << cost << ", Ml = " << max_low << ", mh = " << min_high << ", ml = " << min_low << ", f = " << set.isFeasible(events.length()) << io::endl;
+		if(cost > best_cost && set.isFeasible(events.length())) {
+			best_p = p;
+			best_cost = cost;
+		}
+
+	}
+
+	// consider all together
+	if(best_p < 0) {
+		genForOneCost(confs.top().time(), edge, all_events);
+		return;
+	}
+
+	// look in the split
+	ConfigSet hts;
+	ot::time lts_time, hts_time;
+	makeSplit(confs, best_p, hts, lts_time, hts_time);
+	t::uint32 pos, neg, unu, com;
+	hts.scan(pos, neg, unu, com, events.length());
+	if(isVerbose())
+		log << "\t\t\t\t"
+			<< "pos = " << maskToString(pos, events.length())
+			<< ", neg = " << maskToString(neg, events.length())
+			<< ", unused = " << maskToString(unu, events.length())
+			<< ", complex = " << maskToString(com, events.length())
+			<< io::endl;
+
+	// too complex case
+	if(com) {
+		if(isVerbose())
+			log << "\t\t\t\ttoo complex: " << io::hex(com) << io::endl;
+		genForOneCost(hts_time, edge, all_events);
+		return;
+	}
+
+	// contribute
+	contributeSplit(confs, pos, neg, 0, lts_time, hts_time);
+}
+
+
+/**
+ * Build the set after split.
+ * @param confs		Current configuration.
+ * @param p			Split position.
+ * @param hts		HTS result set.
+ * @param lts_time	LTS time.
+ * @param hts_time	HTS time.
+ */
+void EdgeTimeBuilder::makeSplit(const config_list_t& confs, int p, ConfigSet& hts, ot::time& lts_time, ot::time& hts_time) {
+	lts_time = confs[p - 1].time();
+	hts_time = confs.top().time();
+	hts = ConfigSet(hts_time);
+	for(int i = p; i < confs.length(); i++)
+		hts.add(confs[i]);
+	if(isVerbose()) {
+		log << "\t\t\t\t" << "LTS time = " << lts_time << ", HTS time = " << hts_time << " for { ";
+		bool fst = true;
+		for(ConfigSet::Iter conf(hts); conf; conf++) {
+			if(fst)
+				fst = false;
+			else
+				log << ", ";
+			log << (*conf).toString(events.length());
+		}
+		log << " }\n";
+	}
+}
+
+/**
+ * Contribute to WCET estimation in split way, x_HTS and x_LTS,
+ * with two sets of times.
+ * @param confs		Time configuration.
+ * @param p			Position of split.
+ */
+void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos, t::uint32 neg, t::uint32 com, ot::time lts_time, ot::time hts_time) {
+
+	// new HTS variable
+	string hts_name;
+	if(_explicit) {
+		StringBuffer buf;
+		buf << "e_";
+		if(source)
+			buf << source->number() << "_";
+		buf << target->number() << "_" << target->cfg()->label() << "_hts";
+		hts_name = buf.toString();
+	}
+	ilp::Var *x_hts = sys->newVar(hts_name);
+
+	// wcet += time_lts x_edge + (time_hts - time_lts) x_hts
+	ilp::Var *x_edge = ipet::VAR(edge);
+	sys->addObjectFunction(lts_time, x_edge);
+	sys->addObjectFunction(hts_time - lts_time, x_hts);
+
+	// 0 <= x_hts <= x_edge
+	ilp::Constraint *cons = sys->newConstraint("0 <= x_hts", ilp::Constraint::LE);
+	cons->addRight(1, x_hts);
+	cons = sys->newConstraint("x_hts <= x_edge", ilp::Constraint::LE);
+	cons->addLeft(1, x_hts);
+	cons->addRight(1, x_edge);
+
+	// NOTATION
+	// C^e_p -- constraint of event e for position p (p in {prefix, block})
+	// unprecise(C^e_p) in B (T if C^e_p unprecise e.g. use of <=, _ else and as a default)
+
+	// foreach e in events do
+	for(int i = 0; i < events.count(); i++) {
+
+		// if e in pos_events then C^e_p += x_hts / p = prefix if e in prefix, block
+		if(pos & (1 << i))
+			get(events[i].fst)->contribute(make(events[i].fst, events[i].snd, true), x_hts);
+
+		// else if e in neg_events then C^e_p += x_edge - x_hts / p = prefix if e in prefix, block
+		else if(neg & (1 << i))
+			get(events[i].fst)->contribute(make(events[i].fst, events[i].snd, false), x_hts);
+
+		// else unprecise(C^e_p) = T / p = prefix if e in prefix, block
+		else {
+			get(events[i].fst)->contribute(make(events[i].fst, events[i].snd, true), 0);
+			get(events[i].fst)->contribute(make(events[i].fst, events[i].snd, false), 0);
+		}
+	}
+
+	// generate constant contribution
+	contributeConst();
+
+	// special contribution with com
+	if(com) {
+		// sum{e in com} x_e >= x_hts
+		static string msg = "complex constraint for times";
+		ilp::Constraint *c = sys->newConstraint(msg, ilp::Constraint::GE, 0);
+		for(int i = 0; i < events.length(); i++)
+			if(com & (1 << i))
+				events[i].fst->estimate(c, true);
+		c->addRight(1, x_hts);
+	}
+}
+
+
+/**
+ * Generate contribution for constant events.
+ */
+void EdgeTimeBuilder::contributeConst(void) {
+
+	// foreach e in always(e) do C^e_p += x_edge
+	for(event_list_t::Iterator event(all_events); event; event++)
+		switch((*event).fst->occurrence()) {
+		case ALWAYS:	get((*event).fst)->contribute(make((*event).fst, (*event).snd, true), ipet::VAR(edge)); break;
+		case NEVER:		get((*event).fst)->contribute(make((*event).fst, (*event).snd, false), ipet::VAR(edge)); break;
+		default:		break;
+		}
 }
 
 

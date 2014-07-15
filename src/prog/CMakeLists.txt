@@ -91,6 +91,7 @@ set(libotawa_SOURCES
 	"cfg_SubCFGBuilder.cpp"
 	"cfg_Virtualizer.cpp"
 	"cfg_VirtualCFG.cpp"
+	"cfg_Weighter.cpp"
 	"cfg_CFGBuilder.cpp"
 	"tsim_Delta.cpp"
 	"tsim_TimeDeltaObjectFunctionModifier.cpp"

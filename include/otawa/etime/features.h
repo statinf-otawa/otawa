@@ -77,9 +77,12 @@ public:
 	virtual const hard::Stage *stage(void) const;
 	virtual const hard::FunctionalUnit *fu(void) const;
 
+	// heuristic contribution
+	virtual int weight(void) const;
+
 	// ILP contribution
-	virtual bool isOverestimating(bool on);
-	virtual void overestimate(ilp::Constraint *cons, bool on);
+	virtual bool isEstimating(bool on);
+	virtual void estimate(ilp::Constraint *cons, bool on);
 
 private:
 	Inst *_inst;

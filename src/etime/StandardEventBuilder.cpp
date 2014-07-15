@@ -32,15 +32,15 @@ namespace otawa { namespace etime {
 
 class MissEvent: public Event {
 public:
-	MissEvent(Inst *inst, ot::time cost, category_t cat, ilp::Var *var)
-		: Event(inst), _cat(cat), _cost(cost), _var(var) {	}
+	MissEvent(Inst *inst, ot::time cost, LBlock *lb)
+		: Event(inst), _cost(cost), _lb(lb) {	}
 
 	virtual kind_t kind(void) const { return FETCH; }
 	virtual ot::time cost(void) const { return _cost; }
 	virtual type_t type(void) const { return BLOCK; }
 
 	virtual occurrence_t occurrence(void) const {
-		switch(_cat) {
+		switch(otawa::CATEGORY(_lb)) {
 		case ALWAYS_HIT:		return NEVER;
 		case FIRST_HIT:			return SOMETIMES;
 		case FIRST_MISS:		return SOMETIMES;
@@ -52,43 +52,67 @@ public:
 
 	virtual cstring name(void) const { return "L1 instruction cache"; }
 
-	virtual bool isOverestimating(bool on) {
+	virtual int weight(void) const {
+		switch(otawa::CATEGORY(_lb)) {
+		case ALWAYS_HIT:		return 0;
+		case FIRST_HIT:
+		case ALWAYS_MISS:
+		case NOT_CLASSIFIED:	return WEIGHT(_lb->bb());
+		case FIRST_MISS:		{
+									BasicBlock *parent = otawa::ENCLOSING_LOOP_HEADER(_lb);
+									if(!parent)
+										return 1;
+									else
+										return WEIGHT(parent);
+								}
+		default:				ASSERT(0); return SOMETIMES;
+		}
+	}
+
+	virtual bool isEstimating(bool on) {
 		return on;	// only when on = true!
 	}
 
-	virtual void overestimate(ilp::Constraint *cons, bool on) {
+	virtual void estimate(ilp::Constraint *cons, bool on) {
 		if(on)
-			cons->addLeft(1, _var);
+			cons->addLeft(1, otawa::MISS_VAR(_lb));
 	}
 
 private:
-	category_t _cat;
-	ilp::Var *_var;
+	LBlock *_lb;
 	ot::time _cost;
 };
 
 
 class BranchPredictionEvent: public Event {
 public:
-	BranchPredictionEvent(Inst *inst, ot::time cost, occurrence_t occ, ilp::Var *var)
-		: Event(inst), _var(var), _cost(cost), _occ(occ) { }
+	BranchPredictionEvent(Inst *inst, ot::time cost, occurrence_t occ, ilp::Var *var, BasicBlock *wbb)
+		: Event(inst), _var(var), _cost(cost), _occ(occ), _wbb(wbb) { }
 
 	virtual kind_t kind(void) const { return BRANCH; }
 	virtual ot::time cost(void) const { return _cost; }
 	virtual type_t type(void) const { return EDGE; }
 	virtual occurrence_t occurence(void) const { return _occ; }
 	virtual cstring name(void) const { return "branch prediction"; }
-	virtual bool isOverestimating(bool on) { return on; }
+	virtual bool isEstimating(bool on) { return on; }
 
-	virtual void overestimate(ilp::Constraint *cons, bool on) {
+	virtual void estimate(ilp::Constraint *cons, bool on) {
 		if(on)
 			cons->addLeft(1, _var);
+	}
+
+	virtual int weight(void) const {
+		if(!_wbb)
+			return 1;
+		else
+			return WEIGHT(_wbb);
 	}
 
 private:
 	ilp::Var *_var;
 	ot::time _cost;
 	occurrence_t _occ;
+	BasicBlock *_wbb;
 };
 
 
@@ -174,7 +198,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 			}
 
 			// create the event
-			Event *event = new MissEvent(*inst, bank->latency(), CATEGORY(blocks[i]), MISS_VAR(blocks[i]));
+			Event *event = new MissEvent(*inst, bank->latency(), blocks[i]);
 			if(logFor(LOG_BB))
 				log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
 			EVENT(bb).add(event);
@@ -195,7 +219,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 						occ = ALWAYS;
 					else
 						occ = NEVER;
-					Event *event = new BranchPredictionEvent(out->target()->firstInst(), bht->getCondPenalty(), occ, 0);
+					Event *event = new BranchPredictionEvent(out->target()->firstInst(), bht->getCondPenalty(), occ, 0, bb);
 					if(logFor(LOG_BB))
 						log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
 					EVENT(*out).add(event);
@@ -203,33 +227,39 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 				break;
 
 			// complex case with good/miss-prediction
+			case branch::FIRST_UNKNOWN:		handleVariableBranchPred(bb, ENCLOSING_LOOP_HEADER(branch::HEADER(bb))); break;
 			case branch::ALWAYS_H:
-			case branch::FIRST_UNKNOWN:
-			case branch::NOT_CLASSIFIED:
-				{
-					// x^MP_i = \sum{(i, j) in N} x^MP_(i,j)
-					static string msg = "branch prediction relation to edges";
-					ilp::System *sys = ipet::SYSTEM(ws);
-					ilp::Constraint *c = sys->newConstraint(msg, ilp::Constraint::EQ);
-					c->addLeft(1, branch::MISSPRED_VAR(bb));
-					for(BasicBlock::OutIterator out(bb); out; out++) {
-						string name;
-						if(_explicit)
-							name = _ << "x_mp_" << out->source()->number() << "_" << out->target()->number();
-						ilp::Var *var = sys->newVar(name);
-						Event *event = new BranchPredictionEvent(out->target()->firstInst(), bht->getCondPenalty(), SOMETIMES, var);
-						if(logFor(LOG_BB))
-							log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
-						EVENT(*out).add(event);
-						c->addRight(1, var);
-					}
-				}
-				break;
+			case branch::NOT_CLASSIFIED:	handleVariableBranchPred(bb, bb); break;
 			}
 		}
 	}
 
 }
+
+
+
+void StandardEventBuilder::handleVariableBranchPred(BasicBlock *bb, BasicBlock *wbb) {
+
+	// x^MP_i = \sum{(i, j) in N} x^MP_(i,j)
+	static string msg = "branch prediction relation to edges";
+	ilp::System *sys = ipet::SYSTEM(workspace());
+	ilp::Constraint *c = sys->newConstraint(msg, ilp::Constraint::EQ);
+	c->addLeft(1, branch::MISSPRED_VAR(bb));
+
+	// traverse the successors
+	for(BasicBlock::OutIterator out(bb); out; out++) {
+		string name;
+		if(_explicit)
+			name = _ << "x_mp_" << out->source()->number() << "_" << out->target()->number();
+		ilp::Var *var = sys->newVar(name);
+		Event *event = new BranchPredictionEvent(out->target()->firstInst(), bht->getCondPenalty(), SOMETIMES, var, wbb);
+		if(logFor(LOG_BB))
+			log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
+		EVENT(*out).add(event);
+		c->addRight(1, var);
+	}
+}
+
 
 p::declare StandardEventBuilder::reg = p::init("otawa::etime::StandardEventBuilder", Version(1, 0, 0))
 	.base(BBProcessor::reg)

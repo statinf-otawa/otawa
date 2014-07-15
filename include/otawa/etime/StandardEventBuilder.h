@@ -48,6 +48,8 @@ protected:
 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 
 private:
+	void handleVariableBranchPred(BasicBlock *bb, BasicBlock *wbb);
+
 	const hard::Memory *mem;
 	const hard::CacheConfiguration *cconf;
 	const hard::BHT *bht;

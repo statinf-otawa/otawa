@@ -167,13 +167,26 @@ const hard::FunctionalUnit *Event::fu(void) const {
  * @param on	Test for event activated, or not activated.
  * @return		True if the event provides support for the activation.
  */
-bool Event::isOverestimating(bool on) {
+bool Event::isEstimating(bool on) {
 	return false;
 }
 
 
 /**
- * Add an overestimation of the event at the left of the given constraint.
+ * Weight is a coarse-grain estimation of the number of times an event arises.
+ * As a default returns 1 but may be customized to get more precise weight estimation.
+ * This result bwill be used by heuristic approach to assess the impact of this event.
+ * @return	Weight of the event.
+ */
+int Event::weight(void) const {
+	return 1;
+}
+
+
+/**
+ * Add an estimation of the event at the left of the given constraint.
+ * If the event is considered on, it should an overestimation.
+ * If the event is considered off, it should be an underestimation.
  *
  * May be overridden to provide specific behavior for the actual event.
  * As a default, do nothing.
@@ -181,8 +194,7 @@ bool Event::isOverestimating(bool on) {
  * @param cons	Constraint to add overestimation to.
  * @param on	Add overestimation when the event is triggered (true) or not triggered (false).
  */
-void Event::overestimate(ilp::Constraint *cons, bool on) {
-
+void Event::estimate(ilp::Constraint *cons, bool on) {
 }
 
 

@@ -139,6 +139,10 @@ class CFGSaver;
 class CFGLoader;
 extern Identifier<sys::Path> CFG_IO_PATH;
 
+// WEIGHT_FEATURE
+extern Identifier<int> WEIGHT;
+extern p::feature WEIGHT_FEATURE;
+
 } // otawa
 
 #endif /* OTAWA_CFG_FEATURES_H_ */
