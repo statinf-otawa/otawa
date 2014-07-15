@@ -147,21 +147,24 @@ private:
 
 // Var class
 class Var {
-	ilp::Var *var;
-	int col;
-	double val;
 public:
-	inline Var(ilp::Var *variable, int column);
-	inline ilp::Var *variable(void) const;
-	inline int column(void) const;
-	inline double value(void) const;
-	inline void setValue(double value);
+	inline Var(ilp::Var *variable, int column): var(variable), col(column), val(0) { }
+	inline ilp::Var *variable(void) const { return var; }
+	inline int column(void) const { return col; }
+	inline double value(void) const { return val; }
+	inline void setValue(double value) { val = value; }
+
 	string makeVarName(void) const {
 		if(var->name())
 			return var->name();
 		else
 			return _ << '_' << col;
 	}
+
+private:
+	ilp::Var *var;
+	int col;
+	double val;
 };
 
 
@@ -224,8 +227,8 @@ private:
 		}
 	};	
 	
-
-	elm::genstruct::HashTable<ilp::Var *, Var *> vars;
+	typedef elm::genstruct::HashTable<ilp::Var *, Var *> var_map_t;
+	var_map_t vars;
 	Constraint *conss;
 	Constraint *ofun;
 	int cols, rows;
@@ -310,29 +313,6 @@ elm::datastruct::IteratorInst<ilp::Constraint::Term> *Constraint::terms(void) {
 inline Constraint *Constraint::next(void) const {
 	return nxt;
 }
-
-// System::Var Inlines
-inline Var::Var(ilp::Var *variable, int column): var(variable) {
-	col = column;
-	val = 0;
-}
-
-inline ilp::Var *Var::variable(void) const {
-	return var;
-}
-
-inline int Var::column(void) const {
-	return col;
-}
-
-inline double Var::value(void) const {
-	return val;
-}
-
-inline void Var::setValue(double value) {
-	val = value;
-}
-
 
 /**
  * Free all ressources.
@@ -562,14 +542,22 @@ bool System::solve(WorkSpace *ws) {
 	static short comps[] = { LE, LE, EQ, GE, GE };
 	static double corr[] = { -1, 0, 0, 0, +1 };
 	
-	// Allocate and initialize the lp_solve data structure
+	// allocate and initialize the lp_solve data structure
 	lprec *lp = make_lp(0, cols);
 	set_verbose(lp, IMPORTANT);
 	REAL row[cols + 1];
-	for(int i = 1; i <= cols; i++) {
+	for(int i = 1; i <= cols; i++)
 		row[i] = 0;
-		set_int(lp, i, TRUE);
-	}
+		//set_int(lp, i, TRUE);
+
+	// set the type of variable
+	for(var_map_t::Iterator var(vars); var; var++)
+		switch(var->variable()->type()) {
+		case ilp::Var::INT:		set_int(lp, var->column(), TRUE); break;
+		case ilp::Var::BIN:		set_binary(lp, var->column(), TRUE); break;
+		case ilp::Var::FLOAT:	break;
+		default:				ASSERT(false); break;
+		}
 	
 	// Build the object function
 	ofun->fillRow(row);

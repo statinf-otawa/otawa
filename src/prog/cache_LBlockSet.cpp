@@ -66,7 +66,7 @@ int LBlockSet::add(LBlock *node){
  * Build a l-block set.
  * @param line	Cache row of the l-block set.
  */
-LBlockSet::LBlockSet(int line): linenumber(line), _cacheBlockCount(0) {
+LBlockSet::LBlockSet(int line, const hard::Cache *cache): linenumber(line), /*_cacheBlockCount(0),*/ _cache(cache) {
 	ASSERT(line >= 0);
 }
 
@@ -76,10 +76,10 @@ LBlockSet::LBlockSet(int line): linenumber(line), _cacheBlockCount(0) {
  * Used internally to build l-blocks.
  * @return	New l-block number.
  */
-int LBlockSet::newCacheBlockID(void) {
+/*int LBlockSet::newCacheBlockID(void) {
 	_cacheBlockCount++;
 	return(_cacheBlockCount-1);
-}
+}*/
 
 
 /**

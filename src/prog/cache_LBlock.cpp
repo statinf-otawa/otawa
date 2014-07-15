@@ -39,13 +39,22 @@ namespace otawa {
 /**
  * Build a new LBlock.
  * @param lbset		L-block set which owns this l-block.
- * @param address	Address of the l-block.
+ * @param inst		Instruction it starts with.
  * @param bb		Basic block containing this l-block.
  * @param size		Size of the l-block.
  */
-LBlock::LBlock(LBlockSet *lbset, address_t address, BasicBlock *bb, t::uint32 size, int cacheblock)
-: lbs(lbset), addr(address), _size(size), _cacheblock(cacheblock), _bb(bb) {
-	ident = lbset->LBlockSet::add(this);
+LBlock::LBlock(LBlockSet *lbset, BasicBlock *bb, Inst *inst, t::uint32 size)
+: lbs(lbset), _inst(inst), _size(size), _bb(bb) {
+	idx = lbset->LBlockSet::add(this);
+}
+
+
+/**
+ * Compute the cache block of this L-block.
+ * @return	Cache block.
+ */
+int LBlock::cacheBlock(void) const {
+	return lbs->cache()->tag(_inst->address());
 }
 
 
@@ -69,6 +78,7 @@ LBlock::~LBlock(void) {
  */
 int LBlock::countInsts(void) {
 	int cnt = 0;
+	Address addr = _inst->address();
 	
 	if(_bb != 0)
 		for(BasicBlock::InstIter instr(_bb); instr; instr++)

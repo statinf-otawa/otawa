@@ -63,7 +63,7 @@ p::declare LBlockBuilder::reg = p::init("otawa::util::LBlockBuilder", Version(1,
 /**
  * Build a new l-block builder.
  */
-LBlockBuilder::LBlockBuilder(AbstractRegistration& r): BBProcessor(r), lbsets(0) {
+LBlockBuilder::LBlockBuilder(AbstractRegistration& r): BBProcessor(r), lbsets(0), cache(0) {
 }
 
 
@@ -84,14 +84,14 @@ void LBlockBuilder::setup(WorkSpace *fw) {
 	mem = hard::MEMORY(fw);
 
 	// Build hash	
-	cacheBlocks = new HashTable<ot::mask, int>();
+	//cacheBlocks = new HashTable<ot::mask, int>();
 	
 	// Build the l-block sets
 	lbsets = new LBlockSet *[cache->rowCount()];
 	LBLOCKS(fw) = lbsets;
 	for(int i = 0; i < cache->rowCount(); i++) {
-		lbsets[i] = new LBlockSet(i);
-		new LBlock(lbsets[i], 0, 0, 0, -1);
+		lbsets[i] = new LBlockSet(i, cache);
+		new LBlock(lbsets[i], 0, 0, 0);
 	}
 }
 
@@ -103,23 +103,24 @@ void LBlockBuilder::cleanup(WorkSpace *fw) {
 	
 	// Add end blocks
 	for(int i = 0; i < cache->rowCount(); i++)
-		new LBlock(lbsets[i], 0, 0, 0, -1);
+		new LBlock(lbsets[i], 0, 0, 0);
 	
 	// Remove hash
-	delete cacheBlocks;
+	//delete cacheBlocks;
 }
 
 
 /**
  * Add an lblock to the lblock lists.
  * @param bb		Basic block containing the l-block.
- * @param addr		Address of the l-block.
+ * @param inst		Starting instruction of L-Block to create..
  * @param index		Index in the BB lblock table.
  * @paramlblocks	BB lblock table.
  */
-void LBlockBuilder::addLBlock(BasicBlock *bb, Address addr, int& index, genstruct::AllocatedTable<LBlock*> *lblocks) {
+void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct::AllocatedTable<LBlock*> *lblocks) {
 	
 	// test if the l-block is cacheable
+	Address addr = inst->address();
 	const hard::Bank *bank = mem->get(addr);
 	if(!bank)
 		log << "WARNING: no memory bank for code at " << addr << ": block considered as cached.\n";
@@ -130,13 +131,13 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Address addr, int& index, genstruc
 	}
 
 	// compute the cache block ID
-	LBlockSet *lbset = lbsets[cache->line(addr)];
-	ot::mask block = cache->block(addr);
+	LBlockSet *lbset = lbsets[cache->set(addr)];
+	/*ot::mask block = cache->block(addr);
 	int cbid = cacheBlocks->get(block, -1);
 	if(cbid == -1) {
     	cbid = lbset->newCacheBlockID();
     	cacheBlocks->put(block, cbid);
-    }
+    }*/
 	
 	// Compute the size
 	Address top = (addr + cache->blockMask()) & ~cache->blockMask();
@@ -144,7 +145,7 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Address addr, int& index, genstruc
 		top = bb->address() + bb->size();
 	
 	// Build the lblock
-	LBlock *lblock = new LBlock(lbset, addr, bb, top - addr, cbid);
+	LBlock *lblock = new LBlock(lbset, bb, inst, top - addr /*, cbid*/);
 	lblocks->set(index, lblock);
 	if(isVerbose())
 		log << "\t\t\t\tblock at " << addr << io::endl;
@@ -167,15 +168,14 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 	int num_lblocks =
 		((bb->address() + bb->size() + cache->blockMask()) >> cache->blockBits())
 		- (bb->address() >> cache->blockBits());
-	genstruct::AllocatedTable<LBlock*> *lblocks =
-		new genstruct::AllocatedTable<LBlock*>(num_lblocks);
+	genstruct::AllocatedTable<LBlock*> *lblocks = new genstruct::AllocatedTable<LBlock*>(num_lblocks);
 	BB_LBLOCKS(bb) = lblocks;
 		
 	// Traverse instruction
 	int index = 0;
 	Address addr = bb->address();
 	while(addr < bb->topAddress()) {
-		addLBlock(bb, addr, index, lblocks);
+		addLBlock(bb, fw->findInstAt(addr), index, lblocks);
 		addr = (addr.offset() + cache->blockSize()) & ~cache->blockMask();
 	}
 

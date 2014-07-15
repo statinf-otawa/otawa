@@ -35,21 +35,31 @@ class System;
 // Var class
 class Var {
 public:
+	typedef enum {
+		NO_TYPE = 0,
+		INT = 1,
+		BIN = 2,
+		FLOAT = 3
+	} type_t;
+
 	virtual ~Var(void);
-	inline elm::String& name(void) { return _name; }
+	inline const string& name(void) const { return _name; }
+	inline type_t type(void) const { return _type; }
 	virtual void print(io::Output& out);
 	virtual Alias *toAlias(void);
 	virtual double eval(System *sys);
 
 protected:
-	inline Var(void) { }
-	inline Var(cstring name): _name(name) { }
-	inline Var(const string& name): _name(name) { }
+	inline Var(type_t type = INT): _type(type) { }
+	inline Var(cstring name, type_t type = INT): _name(name), _type(type) { }
+	inline Var(const string& name, type_t type = INT): _name(name), _type(type) { }
 
 private:
 	string _name;
+	type_t _type;
 };
 
+io::Output operator<<(io::Output& out, Var::type_t type);
 
 // Alias class
 class Alias: public Var {

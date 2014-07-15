@@ -35,22 +35,26 @@ namespace otawa { namespace ilp {
 
 
 /**
- * @fn Var::Var(void);
+ * @fn Var::Var(type_t type);
  * Build an anonymous variable.
+ * @param type	Type of the variable (default @ref INT).
  */
 
 
 /**
- * @fn Var::Var(cstring *name);
+ * @fn Var::Var(cstring *name, type_t type);
  * Build a variable with the given name.
  * @param name	Name of the variable.
+ * @param type	Type of the variable (default @ref INT).
+ * @deprecated
  */
 
 
 /**
- * @fn Var::Var(const string& name);
+ * @fn Var::Var(const string& name, type_t type);
  * Build a variable with the given name.
  * @param name	Name of the variable.
+ * @param type	Type of the variable (default @ref INT).
  */
 
 
@@ -58,6 +62,13 @@ namespace otawa { namespace ilp {
  * @fn String& Var::name(void);
  * Get the name of the variable if any. Return an empty string if there is none.
  * @return	Variable name.
+ */
+
+
+/**
+ * @fn type_t Var::type(void) const;
+ * Get the type of the variable.
+ * @return	Variable type.
  */
 
 
@@ -95,6 +106,51 @@ Alias *Var::toAlias(void) {
  */
 double Var::eval(System *sys) {
 	return sys->valueOf(this);
+}
+
+
+/**
+ * @enum Var::type_t
+ * Type of an ILP variable.
+ */
+
+
+/**
+ * @var Var::type_t Var::NO_TYPE;
+ * Null value for ILP variable type.
+ */
+
+
+/**
+ * @var Var::type_t Var::INT;
+ * Integer (default) type for ILP variable.
+ */
+
+
+/**
+ * @var Var::type_t Var::BIN;
+ * Binary type (0 or 1) for ILP variable.
+ */
+
+
+/**
+ * @var Var::type_t Var::FLOAT;
+ * Real type for ILP variable.
+ */
+
+
+/**
+ */
+io::Output operator<<(io::Output& out, Var::type_t type) {
+	cstring msgs[] = {
+		"null",
+		"int",
+		"bin",
+		"float"
+	};
+	ASSERT(type >= 0 && type <= Var::FLOAT);
+	out << msgs[type];
+	return out;
 }
 
 
