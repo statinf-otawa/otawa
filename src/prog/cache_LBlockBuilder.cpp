@@ -170,15 +170,15 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 		- (bb->address() >> cache->blockBits());
 	genstruct::AllocatedTable<LBlock*> *lblocks = new genstruct::AllocatedTable<LBlock*>(num_lblocks);
 	BB_LBLOCKS(bb) = lblocks;
-		
+
 	// Traverse instruction
 	int index = 0;
-	Address addr = bb->address();
-	while(addr < bb->topAddress()) {
-		addLBlock(bb, fw->findInstAt(addr), index, lblocks);
-		addr = (addr.offset() + cache->blockSize()) & ~cache->blockMask();
-	}
-
+	hard::Cache::set_t set = cache->set(bb->firstInst()->address()) - 1;
+	for(BasicBlock::InstIterator inst(bb); inst; inst++)
+		if(set != cache->set(inst->address())) {
+			set = cache->set(inst->address());
+			addLBlock(bb, inst, index, lblocks);
+		}
 	ASSERT(index == num_lblocks);
 }
 
