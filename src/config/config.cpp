@@ -30,6 +30,9 @@
 #include <otawa/ilp/ILPPlugin.h>
 #include <elm/sys/Directory.h>
 #include <elm/sys/System.h>
+#include <elm/ini.h>
+#include <otawa/proc/ProcessorPlugin.h>
+#include <elm/util/AutoDestructor.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -62,6 +65,8 @@ using namespace otawa;
  * @li --scripts -- output the scripts path
  * @li --list-scripts -- output the list of available scripts
  * @li -r, --rpath -- output options to control RPATH on OS supporting it.
+ * @li -p, --plugin ELD_FILE -- ouput linkage options for a plugin for the given ELD file.
+ * @li -i, --install -- output the directory where installing a plugin.
  */
 
 #if defined(WIN32) || defined(WIN64)
@@ -233,7 +238,9 @@ public:
 		show_version(*this, cmd, "--version", option::description, "output the current version", end),
 		scripts(*this, cmd, "--scripts", option::description, "output the scripts path", end),
 		list_scripts(*this, cmd, "--list-scripts", option::description, "output the list of available scripts", end),
-		rpath(*this, cmd, "--rpath", cmd, "-r", option::description, "output options to control RPATH", end)
+		rpath(*this, cmd, "--rpath", cmd, "-r", option::description, "output options to control RPATH", end),
+		install(SwitchOption::Make(*this).cmd("-i").cmd("--install").description("Output path of plugin directory")),
+		eld(ValueOption<string>::Make(*this).cmd("-p").cmd("--plugin").argDescription("ELD_FILE").description("ELD file to generate linkage options"))
 	{
 
 		// initialize the modules
@@ -276,6 +283,10 @@ public:
 		for(int i = 0; i < cmods.length(); i++)
 			cmods[i]->adjust(config);
 
+		// load the ELD
+		if(eld)
+			adjustELD(config);
+
 		// do the display
 		if(prefix)
 			cout << config.prefix << io::endl;
@@ -302,6 +313,8 @@ public:
 			showScripts();
 		if(rpath)
 			cout << "-Wl,-rpath -Wl," << config.getRPath() << io::endl;
+		if(install)
+			cout << (MANAGER.prefixPath() / "lib/otawa/proc") << io::endl;
 	}
 
 protected:
@@ -313,6 +326,34 @@ protected:
 	}
 
 private:
+
+	/**
+	 * Adjust the configuration according to the ELD file.
+	 * @param config	Configuration to adjust.
+	 */
+	void adjustELD(::Configuration& config) throw(option::OptionException) {
+		try {
+
+			// get the list of dependencies
+			AutoDestructor<ini::File> file(ini::File::load(*eld));
+			ini::Section *sect = file->get("elm-plugin");
+			if(!sect)
+				throw option::OptionException(_ << "no eld-plugin section in " << *eld);
+			genstruct::Vector<string> plugins;
+			sect->getList("deps", plugins);
+
+			// get the required plugins
+			for(int i = 0; i < plugins.length(); i++) {
+				ProcessorPlugin *plugin = ProcessorPlugin::get(plugins[i]);
+				if(!plugin)
+					throw option::OptionException(_ << "cannot find the plugin " << plugins[i]);
+				config.libs << ' ' << plugin->path();
+			}
+		}
+		catch(ini::Exception& e) {
+			throw option::OptionException(e.message());
+		}
+	}
 
 	/**
 	 * Get the scripts paths.
@@ -395,6 +436,7 @@ private:
 	HashTable<string, Module *> modmap;
 	genstruct::Vector<Module *> mods;
 	::Configuration config;
+	option::ValueOption<string> eld;
 	SwitchOption
 		cflags,
 		data,
@@ -410,7 +452,8 @@ private:
 		show_version,
 		scripts,
 		list_scripts,
-		rpath;
+		rpath,
+		install;
 };
 
 int main(int argc, char **argv) {
