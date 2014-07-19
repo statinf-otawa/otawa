@@ -28,7 +28,7 @@ set(bpred_SOURCES
 add_library(bpred SHARED ${bpred_SOURCES})
 set_property(TARGET bpred PROPERTY PREFIX "")
 set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
-install(TARGETS bpred DESTINATION lib/otawa/proc/otawa)
 target_link_libraries(bpred ${LIBELM})
 target_link_libraries(bpred otawa)
 target_link_libraries(bpred odisplay)
+install(TARGETS bpred DESTINATION "${PROCDIR}/otawa")

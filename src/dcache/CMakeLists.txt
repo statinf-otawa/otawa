@@ -23,6 +23,5 @@ target_link_libraries(dcache ${LIBELM})
 target_link_libraries(dcache otawa)
 
 # installation
-set(INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/otawa/proc/otawa)
-install(TARGETS dcache DESTINATION ${INSTALL_PATH})
+install(TARGETS dcache DESTINATION "${PROCDIR}/otawa")
 

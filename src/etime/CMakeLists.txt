@@ -14,5 +14,6 @@ include_directories("../../include")
 add_library(${PLUGIN} SHARED ${SOURCES})
 set_property(TARGET ${PLUGIN} PROPERTY PREFIX "")
 set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
-install(TARGETS ${PLUGIN} DESTINATION ${LIBDIR}/otawa/proc/otawa)
 target_link_libraries(${PLUGIN} otawa)
+
+install(TARGETS ${PLUGIN} DESTINATION "${PROCDIR}/otawa")

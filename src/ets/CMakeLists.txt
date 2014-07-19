@@ -19,8 +19,10 @@ include_directories(".")
 add_library(ets SHARED ${ets_la_SOURCES})
 set_property(TARGET ets PROPERTY PREFIX "")
 set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
-install(TARGETS ets DESTINATION lib/otawa/proc/otawa)
 
 target_link_libraries(ets ${LIBELM})
 target_link_libraries(ets otawa)
 target_link_libraries(ets ast)
+
+install(TARGETS ets DESTINATION "${PROCDIR}/otawa")
+install(FILES ets.eld DESTINATION "${PROCDIR}/otawa")

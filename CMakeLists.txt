@@ -20,13 +20,18 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/config.h"
 )
 
+
+# install directories
 if(MINGW_LINUX OR WIN32)
 	set(LIBDIR "bin")
 else()
 	set(LIBDIR "lib")
 endif()
+set(PLUGDIR      "${CMAKE_INSTALL_PREFIX}/lib/otawa")
+set(PROCDIR      "${PLUGDIR}/proc")
+set(LOADERDIR    "${PLUGDIR}/loader")
+set(ILPDIR       "${PLUGDIR}/ilp")
 
-#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_DIR}/lib)
 
 # adding Flex and Bison support
 # the version of flex included with msys is bugged, 

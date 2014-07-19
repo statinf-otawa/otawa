@@ -1,11 +1,9 @@
 # ppc2 plugin build
 set(PROC 			"ppc")
+set(ELF_NUM			"20")
 set(PROC_PREFIX 	"${CMAKE_SOURCE_DIR}/../ppc2/")
 set(GLISS_LIB 		"${PROC_PREFIX}/src/lib${PROC}.a")
-set(ELF_NUM			"20")
-
-set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
-set(CMAKE_MACOSX_RPATH true)
+set(PPC_IRG		    "${CMAKE_SOURCE_DIR}/../ppc2/ppc.irg")
 
 if(MINGW OR UNIX)
 	include_directories(${CMAKE_SOURCE_DIR}/../ppc2/include)
@@ -14,11 +12,15 @@ else()
 	message(FATAL_ERROR "unsupported OS")
 endif()
 
-set(OTAWA_KIND 		"${PROJECT_BINARY_DIR}/src/ppc2/otawa_kind.h")
-set(OTAWA_PRED 		"${PROJECT_BINARY_DIR}/src/ppc2/otawa_pred.h")
-set(OTAWA_TARGET 	"${PROJECT_BINARY_DIR}/src/ppc2/otawa_target.h")
-set(OTAWA_USED_REGS "${PROJECT_BINARY_DIR}/src/ppc2/otawa_used_regs.h")
-set(OTAWA_SEM		"${PROJECT_BINARY_DIR}/src/ppc2/otawa_sem.h")
+
+# sources
+set(GLISS_ATTR	"${CMAKE_SOURCE_DIR}/../gliss2/gep/gliss-attr")
+include("../../data/cmake/Otawa.cmake")
+MAKE_GLISS_FUNCTION(OTAWA_KIND       "otawa_kind"      "otawa_kind.nmp"      "${PPC_IRG}"    "return 0;")
+MAKE_GLISS_FUNCTION(OTAWA_TARGET     "otawa_target"    "otawa_target.nmp"    "${PPC_IRG}"    "return 0;")
+MAKE_GLISS_PROCEDURE(OTAWA_SEM       "otawa_sem"       "otawa_sem.nmp"       "${PPC_IRG}"    ";")
+MAKE_GLISS_FUNCTION(OTAWA_PRED       "otawa_pred"      "otawa_pred.nmp"      "${PPC_IRG}"    "return 0;")
+MAKE_GLISS_FUNCTION(OTAWA_USED_REGS  "otawa_used_regs" "otawa_used_regs.nmp" "${PPC_IRG}"    "return 0;")
 
 set(ppc2_SOURCES
 	"ppc.cpp"
@@ -29,41 +31,8 @@ set(ppc2_SOURCES
 	${OTAWA_SEM}
 )
 
-# GLISS derived sources
-set(PPC_IRG		"${CMAKE_SOURCE_DIR}/../ppc2/ppc.irg")
-set(GLISS_ATTR	"${CMAKE_SOURCE_DIR}/../gliss2/gep/gliss-attr")
-add_custom_command(
-	OUTPUT		${OTAWA_KIND}
-	DEPENDS 	"kind.tpl" "otawa_kind.nmp" ${PPC_IRG}
-	COMMAND 	${GLISS_ATTR}
-	ARGS 		${PPC_IRG} -o ${OTAWA_KIND} -a otawa_kind -f -t "kind.tpl" -d "return 0;" -e otawa_kind.nmp
-	VERBATIM 
-)
-add_custom_command(
-	OUTPUT		${OTAWA_PRED} DEPENDS "pred.tpl" "otawa_pred.nmp" ${PPC_IRG}
-	COMMAND		${GLISS_ATTR}
-	ARGS		${PPC_IRG} -o ${OTAWA_PRED} -a otawa_pred -f -t "pred.tpl" -e otawa_pred.nmp -d "return -1;"
-	VERBATIM
-)
-add_custom_command(
-	OUTPUT		${OTAWA_TARGET} DEPENDS "target.tpl" "otawa_target.nmp" ${PPC_IRG}
-	COMMAND		${GLISS_ATTR}
-	ARGS		${PPC_IRG} -o ${OTAWA_TARGET} -a otawa_target -f -t "target.tpl" -d "return 0;" -e otawa_target.nmp
-	VERBATIM
-)
-add_custom_command(
-	OUTPUT 		${OTAWA_USED_REGS} DEPENDS "used_regs.tpl" "otawa_used_regs.nmp" ${PPC_IRG}
-	COMMAND		${GLISS_ATTR}
-	ARGS 		${PPC_IRG} -o ${OTAWA_USED_REGS} -a otawa_used_regs -f -t "used_regs.tpl" -d "tmp_var[0] = END_REG; return 0;" -e otawa_used_regs.nmp
-	VERBATIM 
-)
-add_custom_command(
-	OUTPUT 		${OTAWA_SEM}
-	DEPENDS		"otawa_sem.tpl" "otawa_sem.nmp" "otawa_sem.nmp" ${PPC_IRG}
-	COMMAND		${GLISS_ATTR}
-	ARGS		${PPC_IRG} -o ${OTAWA_SEM} -a otawa_sem -p -t "otawa_sem.tpl" -d ";" -e otawa_sem.nmp
-	VERBATIM
-)
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
+set(CMAKE_MACOSX_RPATH true)
 
 
 # build the library
@@ -75,15 +44,6 @@ target_link_libraries(ppc2 otawa)
 target_link_libraries(ppc2 ${LIBPPC2})
 
 # installation
-set(INSTALL_PATH ${CMAKE_INSTALL_PREFIX}/lib/otawa/loader)
-install(TARGETS ppc2 DESTINATION ${INSTALL_PATH})
-if(WIN32)
-	file(WRITE elf_${ELF_NUM}.link "${PROC}2.dll")
-	install(FILES elf_${ELF_NUM}.link DESTINATION ${INSTALL_PATH})
-elseif(UNIX OR APPLE)
-	add_custom_command(OUTPUT elf_${ELF_NUM}${SUFFIX} COMMAND rm -rf elf_${ELF_NUM}${SUFFIX} COMMAND ln -s ${PROC}2${SUFFIX} elf_${ELF_NUM}${SUFFIX})
-	add_custom_target(ELF${ELF_NUM} ALL DEPENDS elf_${ELF_NUM}${SUFFIX})
-	install(FILES elf_${ELF_NUM}${SUFFIX} DESTINATION ${INSTALL_PATH})
-endif()
-install(FILES ppc-config.xml DESTINATION ${INSTALL_PATH})
+install(TARGETS ppc2 DESTINATION "${LOADERDIR}")
+install(FILES elf_20.eld ppc-config.xml DESTINATION "${LOADERDIR}")
 
