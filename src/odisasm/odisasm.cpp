@@ -54,6 +54,7 @@
  * @li -k, --kind: display kind of instructions,
  * @li -s, --semantics:	display translation of instruction into semantics language,
  * @li -t, --target: display target of control instructions
+ * @li -b, --byres: display bytes of instructions
  *
  * @par Example
  * @code
@@ -138,7 +139,9 @@ public:
 	regs(*this, option::cmd, "-r", option::cmd, "--regs", option::help, "display register information", option::end),
 	kind(*this, option::cmd, "-k", option::cmd, "--kind", option::help, "display kind of instructions", option::end),
 	sem(*this, option::cmd, "-s", option::cmd, "--semantics", option::help, "display translation of instruction in semantics language", option::end),
-	target(*this, option::cmd, "-t", option::cmd, "--target", option::help, "display target of control instructions", option::end)
+	target(*this, option::cmd, "-t", option::cmd, "--target", option::help, "display target of control instructions", option::end),
+	bytes(option::SwitchOption::Make(this).cmd("-b").cmd("--byes").description("display bytes composing the instrucion")),
+	max_size(0)
 	{ }
 
 	virtual void work (const string &entry, PropList &props) throw (elm::Exception) {
@@ -188,8 +191,26 @@ private:
 		for(Identifier<String>::Getter label(inst, LABEL); label; label++)
 			cout << '\t' << *label << ":\n";
 
+		// display the address
+		cout << inst->address();
+
+		// display bytes of instruciton (if required)
+		if(bytes) {
+			cout << '\t';
+			for(int i = 0; i < inst->size(); i++) {
+				t::uint8 b;
+				workspace()->process()->get(inst->address() + i, b);
+				cout << io::hex(b).pad('0').width(2);
+			}
+			if(inst->size() > max_size)
+				max_size = inst->size();
+			else
+				for(int i = inst->size(); i < max_size; i++)
+					cout << "  ";
+		}
+
 		// disassemble instruction
-		cout << inst->address() << "\t" << inst << io::endl;
+		cout << "\t" << inst << io::endl;
 
 		// display kind if required
 		if(kind) {
@@ -246,7 +267,8 @@ private:
 		}
 	}
 
-	option::SwitchOption regs, kind, sem, target;
+	option::SwitchOption regs, kind, sem, target, bytes;
+	int max_size;
 };
 
 int main(int argc, char **argv) {
