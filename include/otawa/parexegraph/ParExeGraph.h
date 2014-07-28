@@ -248,6 +248,7 @@ namespace otawa {
 		virtual void addEdgesForMemoryOrder(void);
 		virtual void addEdgesForDataDependencies(void);
 		virtual void addEdgesForQueues(void);
+		virtual ParExePipeline *pipeline(ParExeStage *stage, ParExeInst *inst);
 
 		// time computation
 		void findContendingNodes();
@@ -408,24 +409,12 @@ namespace otawa {
 		elm::String _name;
 		int _latency;
 	public:
-		inline ParExeEdge(ParExeNode *source, ParExeNode *target, edge_type_t type, int latency=0)
-			: ParExeGraph::GenEdge(source, target), _type(type), _latency(latency) {
-			ASSERT(source!=target);
-			elm::StringBuffer _buffer;
-			_buffer << ParExeGraph::GenEdge::source()->name() << "->" ;         
-			_buffer << ParExeGraph::GenEdge::target()->name();
-			_name = _buffer.toString();
-		}
-		//~ParExeEdge();
-		inline int latency()
-		{return _latency;}
-		inline void setLatency(int latency)
-		{_latency=latency;}
-		inline edge_type_t type(void) 
-		{return _type;}
-		inline elm::String name()
-		{return _name;}
-
+		inline ParExeEdge(ParExeNode *source, ParExeNode *target, edge_type_t type, int latency = 0, const string& name = "")
+			: ParExeGraph::GenEdge(source, target), _type(type), _latency(latency), _name(name) { ASSERT(source != target); }
+		inline int latency(void) const{return _latency;}
+		inline void setLatency(int latency) {_latency = latency;}
+		inline edge_type_t type(void) const {return _type;}
+		inline const elm::string& name(void) const {return _name;}
 	};
 
 

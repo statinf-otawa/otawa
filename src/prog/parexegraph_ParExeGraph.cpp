@@ -677,6 +677,10 @@ void ParExeGraph::build(bool compressed_cod) {
 
 // ----------------------------------------------------------------
 
+ParExePipeline *ParExeGraph::pipeline(ParExeStage *stage, ParExeInst *inst) {
+	return stage->findFU(inst->inst()->kind());;
+}
+
 void ParExeGraph::createNodes() {
 
     // consider every instruction
@@ -703,7 +707,7 @@ void ParExeGraph::createNodes() {
 			}
 			else {
 				// add FU nodes
-				ParExePipeline *fu = stage->findFU(inst->inst()->kind());
+				ParExePipeline *fu = pipeline(stage, inst);
 				if(!fu)
 					throw ParExeException(elm::_ << "cannot find FU for instruction " << inst->inst()->address() << " " << inst->inst());
 				int index = 0;
@@ -921,13 +925,13 @@ void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> 
 			ParExeNode *node = stage->node(i);
 			ParExeNode *next = stage->node(i+1);
 			if (stage->width() == 1){
-				new ParExeEdge(node, next, ParExeEdge::SOLID);
+				new ParExeEdge(node, next, ParExeEdge::SOLID, 0, stage->name());
 			}
 			else {
-				new ParExeEdge(node, next, ParExeEdge::SLASHED);
+				new ParExeEdge(node, next, ParExeEdge::SLASHED, 0, stage->name());
 				if (count == stage->width()){
 					ParExeNode *previous = stage->node(prev);
-					new ParExeEdge(previous,next,ParExeEdge::SOLID);
+					new ParExeEdge(previous,next,ParExeEdge::SOLID, 0, stage->name());
 					prev++;
 				}
 				else 
@@ -943,6 +947,7 @@ void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> 
  * of instructions performing memory access.
  */
 void ParExeGraph::addEdgesForMemoryOrder(void) {
+	static string msg = "memory order";
 
     ParExeStage *stage = _microprocessor->execStage();
 
@@ -961,7 +966,7 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
 
 				// if any, dependency on previous store
 				if(previous_store)
-					new ParExeEdge(previous_store, node, ParExeEdge::SOLID);
+					new ParExeEdge(previous_store, node, ParExeEdge::SOLID, 0, msg);
 
 				// current node becomes the new previous load
 				for (InstNodeIterator last_node(node->inst()); last_node ; last_node++)
@@ -974,11 +979,11 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
 
 				// if any, dependency on previous store
 				if (previous_store)
-					new ParExeEdge(previous_store, node, ParExeEdge::SOLID);
+					new ParExeEdge(previous_store, node, ParExeEdge::SOLID, 0, msg);
 
 				// if any, dependency on previous load
 				if (previous_load)
-					new ParExeEdge(previous_load, node, ParExeEdge::SOLID);
+					new ParExeEdge(previous_load, node, ParExeEdge::SOLID, 0, msg);
 
 				// current node becomes the new previous store
 				for (InstNodeIterator last_node(node->inst()); last_node ; last_node++)
@@ -1026,7 +1031,7 @@ void ParExeGraph::addEdgesForQueues(void){
 			prod_stage = queue->fillingStage();
 			for (int i=0 ; i<stage->numNodes() - size ; i++) {
 				ASSERT(i+size < prod_stage->numNodes());
-				new ParExeEdge(stage->node(i), prod_stage->node(i + size), ParExeEdge::SLASHED);
+				new ParExeEdge(stage->node(i), prod_stage->node(i + size), ParExeEdge::SLASHED, 0, queue->name());
 			}
 		}
     }
@@ -1129,6 +1134,28 @@ static void escape(io::Output& out, const string& str) {
 	}
 }
 
+
+/**
+ * Escape special characters in the given string.
+ * @param s		String to escape characters for.
+ * @return		Escaped string.
+ */
+string escape(const string& s) {
+	StringBuffer buf;
+	for(int i = 0; i < s.length(); i++)
+		switch(s[i]) {
+		case '<':
+		case '>':
+		case '\\':
+		case '{':
+		case '}':	buf << '\\';
+		/* no break */
+		default:	buf << s[i]; break;
+		}
+	return buf.toString();
+}
+
+
 // ---------------------------------------
 void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
     int i=0;
@@ -1138,7 +1165,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 
     // dipsplay information if any
     if(info)
-    	dotFile << "\"info\" [shape=record, label=\"{" << info << "}\"];\n";
+    	dotFile << "\"info\" [shape=record, label=\"{" << escape(info) << "}\"];\n";
 
     // display ressources
     dotFile << "\"legend\" [shape=record, label= \"{ ";
@@ -1258,9 +1285,19 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 					dumpAttrBegin(dotFile, first);
 
 					// latency if any
-					if(next.edge()->latency()) {
+					if(next.edge()->latency() || next.edge()->name()) {
 						dumpAttr(dotFile, first);
-						dotFile << "label=\"" << next.edge()->latency() << "\"";
+						dotFile << "label=\"";
+						if(next.edge()->name())
+							dotFile << escape(next.edge()->name());
+						if(next.edge()->latency()) {
+							if(next.edge()->name())
+								dotFile << " (";
+							dotFile << next.edge()->latency();
+							if(next.edge()->name())
+								dotFile << ')';
+						}
+						dotFile << "\"";
 					}
 
 					// edge style
