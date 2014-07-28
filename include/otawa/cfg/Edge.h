@@ -67,7 +67,7 @@ private:
 	void toCall(void);
 };
 
-Output& operator<<(Output& out, Edge *edge);
+Output& operator<<(Output& out, const Edge *edge);
 
 // Deprecated
 typedef Edge::kind_t edge_kind_t;
