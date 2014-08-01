@@ -45,18 +45,21 @@ typedef struct call_t {
 } call_t;
 
 
-static SilentFeature::Maker<Virtualizer> VIRTUALIZED_CFG_MAKER;
 /**
  * This features only show that the CFG has been virtualized. This may implies
  * a lot of transformation like function call inlining or loop unrolling.
+ *
+ * @par Header
+ * <otawa/cfg/features.h>
  *
  * @par Properties
  * @li @ref CALLED_CFG
  * @li @ref RECURSIVE_LOOP
  * @li @ref VIRTUAL_RETURN_BLOCK
+ * @li @ref RETURN_OF
  *
  */
-SilentFeature VIRTUALIZED_CFG_FEATURE("otawa::VIRTUALIZED_CFG_FEATURE", VIRTUALIZED_CFG_MAKER);
+p::feature VIRTUALIZED_CFG_FEATURE("otawa::VIRTUALIZED_CFG_FEATURE", new Maker<Virtualizer>());
 
 
 /**
@@ -66,6 +69,9 @@ SilentFeature VIRTUALIZED_CFG_FEATURE("otawa::VIRTUALIZED_CFG_FEATURE", VIRTUALI
  *
  * @par Hooks
  * @li @ref BasicBlock
+ *
+ * @par Features
+ * @li @ref VIRTUALIZED_CFG_FEATURE
  */
 Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::VIRTUAL_RETURN_BLOCK", 0);
 
@@ -77,6 +83,9 @@ Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::VIRTUAL_RETURN_BLOCK", 0);
  *
  * @par Hooks
  * @li @ref Edge
+ *
+ * @par Features
+ * @li @ref VIRTUALIZED_CFG_FEATURE
  */
 Identifier<CFG *> CALLED_CFG("otawa::CALLED_CFG", 0);
 
@@ -87,8 +96,24 @@ Identifier<CFG *> CALLED_CFG("otawa::CALLED_CFG", 0);
  *
  * @par Hooks
  * @li @ref Edge
+ *
+ * @par Features
+ * @li @ref VIRTUALIZED_CFG_FEATURE
  */
 Identifier<bool> RECURSIVE_LOOP("otawa::RECURSIVE_LOOP", false);
+
+
+/**
+ * This property is put on a returning basic block and provides
+ * the matching entry block of the function.
+ *
+ * @par Hooks
+ * @li @ref BasicBlock
+ *
+ * @par Features
+ * @li @ref VIRTUALIZED_CFG_FEATURE
+ */
+Identifier<BasicBlock *> RETURN_OF("otawa::RETURN_OF", 0);
 
 
 /**
@@ -183,11 +208,11 @@ bool Virtualizer::isInlined() {
 /**
  * Build the virtual CFG.
  * @param stack		Stack to previous calls.
- * @param cfg		CFG to develop.
- * @param ret		Basic block for returning.
+ * @param cfg		CFG to inline into.
+ * @param entry		Basic block performing the call.
+ * @param exit		Basic block after the return.
  */
-void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, BasicBlock *entry,
-BasicBlock *exit) {
+void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, BasicBlock *entry, BasicBlock *exit) {
 	ASSERT(cfg);
 	ASSERT(entry);
 	ASSERT(exit);
@@ -253,6 +278,7 @@ BasicBlock *exit) {
 						called_exit = exit;
 						if(!called_cfgs) {
 							Edge *edge = new Edge(src, exit, Edge::VIRTUAL_RETURN);
+							RETURN_OF(src) = call.entry;
 							CALLED_CFG(edge) = cfg;
 						}
 						else // shared return edge will be added afterwards
