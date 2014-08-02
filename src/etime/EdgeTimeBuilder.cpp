@@ -460,13 +460,15 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	for(t::uint32 mask = 0; mask < 1 << events.count(); mask++) {
 
 		// adjust the graph
-		for(int i = 0; i < events.count(); i++)
+		for(int i = 0; i < events.count(); i++) {
 			if((prev & (1 << i)) != (mask & (1 << i))) {
 				if(mask & (1 << i))
 					apply(events[i].fst, insts[i]);
 				else
 					rollback(events[i].fst, insts[i]);
 			}
+		}
+		prev = mask;
 
 		// predump implementation
 		if(_do_output_graphs && predump)
@@ -665,6 +667,8 @@ ParExeNode *EdgeTimeBuilder::getBranchNode(void) {
  * @param inst		Instruction to apply to.
  */
 void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
+	static string pred_msg = "pred";
+	//cerr << "DEBUG: apply " << event->name() << io::endl;
 
 	switch(event->kind()) {
 
@@ -673,7 +677,7 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 		break;
 
 	case BRANCH:
-		bedge =  new ParExeEdge(getBranchNode(), inst->fetchNode(), ParExeEdge::SOLID);
+		bedge =  new ParExeEdge(getBranchNode(), inst->fetchNode(), ParExeEdge::SOLID, 0, pred_msg);
 		bedge->setLatency(event->cost());
 		break;
 
@@ -690,6 +694,7 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
  * @param inst		Instruction to apply to.
  */
 void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
+	//cerr << "DEBUG: rollback " << event->name() << io::endl;
 
 	switch(event->kind()) {
 
@@ -699,7 +704,8 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 	case BRANCH:
 		ASSERT(bedge);
-		delete bedge;
+		cerr << "DEBUG: rollbacking " << (void *)bedge << io::endl;
+		graph->remove(bedge);
 		bedge = 0;
 		break;
 

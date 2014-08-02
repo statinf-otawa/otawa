@@ -820,7 +820,8 @@ void ParExeGraph::addEdgesForPipelineOrder(void) {
  * @li 0x1010	fetch
  * @li 0x1014
  */
-void ParExeGraph::addEdgesForFetch(){
+void ParExeGraph::addEdgesForFetch(void) {
+	static string cache_trans_msg = "cache", cache_inter_msg = "line", branch_msg = "branch";
     ParExeStage *fetch_stage = _microprocessor->fetchStage();
 
     // traverse all fetch nodes
@@ -833,21 +834,21 @@ void ParExeGraph::addEdgesForFetch(){
 		// taken banch ?
 		if (node->inst()->inst()->topAddress() != next->inst()->inst()->address()){
 			// fixed by casse: topAddress() is address() + size()
-			ParExeEdge * edge = new ParExeEdge(node, next, ParExeEdge::SOLID);
+			ParExeEdge * edge = new ParExeEdge(node, next, ParExeEdge::SOLID, 0, branch_msg);
 			edge->setLatency(_branch_penalty); // taken branch penalty when no branch prediction is enabled
-			edge = new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID);
+			edge = new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID, cache_inter_msg);
 			edge->setLatency(_branch_penalty);
 		}
-		else {
+		else
 			new ParExeEdge(node, next, ParExeEdge::SLASHED);
-		}
 
 		// new cache line?
 		//if (cache)         FIXME !!!!!!!!!!!!!!!
 		address_t cache_line = next->inst()->inst()->address().offset() /  _cache_line_size;
 		if ( cache_line != current_cache_line){
-			new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID);
-			new ParExeEdge(node, next, ParExeEdge::SOLID);
+			new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID, 0, cache_trans_msg);
+			if(first_cache_line_node != node)
+				new ParExeEdge(node, next, ParExeEdge::SOLID, 0, cache_inter_msg);
 			first_cache_line_node = next;
 			current_cache_line = cache_line;
 		}

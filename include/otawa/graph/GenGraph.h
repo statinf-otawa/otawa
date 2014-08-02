@@ -93,6 +93,7 @@ public:
 	inline void remove(GenNode *node) { graph::Graph::remove(node); }
 	template <template <class _> class C> void removeAll(const C<N *> &items)
 		{ graph::Graph::removeAll(items); }
+	inline void remove(GenEdge *edge) { graph::Graph::remove(edge); }
 
 	// DiGraph concept
 	inline N *sinkOf(E *edge) const { return Graph::sinkOf(edge); }
