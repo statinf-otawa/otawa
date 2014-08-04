@@ -46,6 +46,7 @@
 #include <otawa/stats.h>
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/tsim/Delta.h>
+#include <otawa/proc/DynProcessor.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -425,11 +426,11 @@ void Command::compute(String fun) {
 			lbb.process(fw, props);
 
 			// build ccg graph
-			CCGBuilder ccgbuilder;
+			DynProcessor ccgbuilder("otawa::ccg::Builder");
 			ccgbuilder.process(fw, props);
 
 			// Build ccg contraint
-			CCGConstraintBuilder decomp;
+			DynProcessor decomp("otawa::ccg::ConstraintBuilder");
 			decomp.process(fw, props);
 		}
 		break;

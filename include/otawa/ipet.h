@@ -29,8 +29,6 @@
 #include <otawa/ipet/TrivialBBTime.h>
 #include <otawa/ipet/TrivialDataCacheManager.h>
 #include <otawa/ipet/WCETComputation.h>
-#include <otawa/cache/ccg/CCGConstraintBuilder.h>
-#include <otawa/cache/ccg/CCGBuilder.h>
 #include <otawa/cache/categorisation/CATConstraintBuilder.h>
 #include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/cache/cat2/CAT2ConstraintBuilder.h>

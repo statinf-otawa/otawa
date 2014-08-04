@@ -1,11 +1,25 @@
 /*
- *	$Id$
- *	Copyright (c) 2005-06, IRIT UPS.
+ *	CCGBuilder class implementation
  *
- *	CCGConstraintsBuilder class implementation
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <elm/io.h>
-#include <otawa/cache/ccg/CCGBuilder.h>
+#include <otawa/ccg/Builder.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/dfa/XIterativeDFA.h>
 #include <otawa/dfa/XCFGVisitor.h>
@@ -17,40 +31,42 @@
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/prop/DeletableProperty.h>
+#include <otawa/ccg/DFA.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
 using namespace elm::genstruct;
-using namespace otawa::ipet;
 
-namespace otawa {
+namespace otawa { namespace ccg {
 
 // DFA Properties
 static Identifier<dfa::BitSet *> IN("", 0);
 
 
 /**
- * @class CCGBuilder
+ * @class Builder
  * This processor builds the Cache Conflict Graph of the current task.
  * An instruction cache is required to make it work.
  *
  * @par Provided Feature
- * @ref @li CCG_FEATURE
+ * @ref @li FEATURE
  *
  * @par Required Feature
  * @ref @li COLLECTED_LBLOCKS_FEATURE
  */
 
+p::declare Builder::reg = p::init("Builder", Version(1, 1, 0))
+	.base(CFGProcessor::reg)
+	.maker<Builder>()
+	.provide(FEATURE)
+	.require(COLLECTED_LBLOCKS_FEATURE)
+	.require(COLLECTED_CFG_FEATURE);
+
 
 /**
- * Create a new CCGBuilder.
+ * Create a new Builder.
  */
-CCGBuilder::CCGBuilder(void):
-	Processor("CCGBuilder", Version(1, 0, 0))
-{
-	provide(CCG_FEATURE);
-	require(COLLECTED_LBLOCKS_FEATURE);
-	require(COLLECTED_CFG_FEATURE);
+Builder::Builder(p::declare& r): Processor(r) {
 }
 
 
@@ -60,7 +76,7 @@ CCGBuilder::CCGBuilder(void):
  * @par Hooks
  * @li @ref FrameWork
  */
-Identifier<CCGCollection *> CCG::GRAPHS("otawa::CCG::GRAPHS", 0);
+Identifier<Collection *> Graph::GRAPHS("otawa::ccg:Graph::GRAPHS", 0);
 
 
 /**
@@ -69,48 +85,48 @@ Identifier<CCGCollection *> CCG::GRAPHS("otawa::CCG::GRAPHS", 0);
  * @par Hooks
  * @li @ref LBlock
  */
-Identifier<CCGNode *> CCG::NODE("otawa::CCG::NODE", 0);
+Identifier<Node *> Graph::NODE("otawa::ccg::Graph::NODE", 0);
 
 
 /**
  */
-Identifier<bool> CCGBuilder::NON_CONFLICT("otawa::CCG::NON_CONFLICT", false);
+Identifier<bool> Builder::NON_CONFLICT("otawa::ccg::Builder::NON_CONFLICT", false);
 
 
 /**
  */
-void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
+void Builder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	ASSERT(fw);
 	ASSERT(lbset);
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 
 	// Create the CCG
-	CCGCollection *ccgs = CCG::GRAPHS(fw);
+	Collection *ccgs = Graph::GRAPHS(fw);
 	if(!ccgs) {
-		ccgs = new CCGCollection(cache->rowCount());
-		fw->addProp(new DeletableProperty<CCGCollection *>(CCG::GRAPHS, ccgs));
+		ccgs = new Collection(cache->rowCount());
+		fw->addProp(new DeletableProperty<Collection *>(Graph::GRAPHS, ccgs));
 	}
-	CCG *ccg = new CCG;
+	Graph *ccg = new Graph;
 	ccgs->ccgs[lbset->line()] = ccg;
 
 	// Initialization
 	for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
-		CCGNode *node = new CCGNode(lblock);
+		Node *node = new Node(lblock);
 		ccg->add(node);
-		CCG::NODE(lblock) = node;
+		Graph::NODE(lblock) = node;
 	}
 
 	// Run the DFA
-	CCGProblem prob(lbset, lbset->count(), cache, fw);
+	Problem prob(lbset, lbset->count(), cache, fw);
 	const CFGCollection *coll = INVOLVED_CFGS(fw);
-	dfa::XCFGVisitor<CCGProblem> visitor(*coll, prob);
-	dfa::XIterativeDFA<dfa::XCFGVisitor<CCGProblem> > engine(visitor);
+	dfa::XCFGVisitor<Problem> visitor(*coll, prob);
+	dfa::XIterativeDFA<dfa::XCFGVisitor<Problem> > engine(visitor);
 	engine.process();
 
 	// Add the annotations from the DFA result
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
 		for (CFG::BBIterator block(*cfg); block; block++) {
-			dfa::XCFGVisitor<CCGProblem>::key_t pair(*cfg, *block);
+			dfa::XCFGVisitor<Problem>::key_t pair(*cfg, *block);
 			dfa::BitSet *bitset = engine.in(pair);
 			block->addProp(new DeletableProperty<dfa::BitSet *>(IN, new dfa::BitSet(*bitset)));
 		}
@@ -134,7 +150,6 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 
 	// Building the ccg edges using DFA
 	length = lbset->count();
-	//Inst *inst;
 	address_t adinst;
 	LBlock *aux;
 
@@ -155,8 +170,8 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 							for (int i = 0; i< length; i++)
 								if (info->contains(i)) {
 									LBlock *lblock = lbset->lblock(i);
-									CCGNode *node = CCG::NODE(lblock);
-									new CCGEdge (node, CCG::NODE(lbloc));
+									Node *node = Graph::NODE(lblock);
+									new Edge (node, Graph::NODE(lbloc));
 								}
 							aux = lbloc;
 							test = true;
@@ -165,7 +180,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 						}
 
 						if(adinst == address && !visit && bb == lbloc->bb()) {
-							new CCGEdge(CCG::NODE(aux), CCG::NODE(lbloc));
+							new Edge(Graph::NODE(aux), Graph::NODE(lbloc));
 							aux = lbloc;
 							break;
 						}
@@ -182,12 +197,12 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	for (int i = 0; i< length; i++)
 		if (info->contains(i)) {
 			LBlock *ccgnode1 = lbset->lblock(i);
-			new CCGEdge(CCG::NODE(ccgnode1), CCG::NODE(end));
+			new Edge(Graph::NODE(ccgnode1), Graph::NODE(end));
 		}
 
 	// Build edge from 'S' till 'end'
 	LBlock *s = lbset->lblock(0);
-	new CCGEdge(CCG::NODE(s), CCG::NODE(end));
+	new Edge(Graph::NODE(s), Graph::NODE(end));
 
 	// Cleanup the DFA annotations
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++)
@@ -198,7 +213,7 @@ void CCGBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 
 /**
  */
-void CCGBuilder::processWorkSpace(WorkSpace *fw) {
+void Builder::processWorkSpace(WorkSpace *fw) {
 	ASSERT(fw);
 
 	// Check the cache
@@ -219,9 +234,9 @@ void CCGBuilder::processWorkSpace(WorkSpace *fw) {
  * accessed by @ref CCG::GRAPHS put on the framework.
  *
  * @par Properties
- * @li @ref CCG::GRAPHS (Framework)
- * @li @ref CCG::NODE (LBlock)
+ * @li @ref Graph::GRAPHS (Framework)
+ * @li @ref Graph::NODE (LBlock)
  */
-Feature<CCGBuilder> CCG_FEATURE("otawa::CCG_FEATURE");
+p::feature FEATURE("otawa::ccg::FEATURE", new Maker<Builder>());
 
-} //otawa
+} }	//otawa::ccg

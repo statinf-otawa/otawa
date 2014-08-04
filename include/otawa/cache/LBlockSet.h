@@ -29,7 +29,6 @@
 #include <elm/genstruct/Table.h>
 #include <otawa/cache/LBlock.h>
 #include <elm/PreIterator.h>
-#include <otawa/cache/ccg/CCGDFA.h>
 
 using namespace elm;
 

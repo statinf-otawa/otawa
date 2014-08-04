@@ -28,7 +28,7 @@
 #include <elm/inhstruct/DLList.h>
 #include <elm/PreIterator.h>
 #include <otawa/instruction.h>
-#include <otawa/cache/ccg/CCGNode.h>
+#include <otawa/ccg/Node.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/ilp/Var.h>
 #include <otawa/cache/categorisation/CATNode.h>

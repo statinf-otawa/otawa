@@ -1,18 +1,31 @@
-	/*
- *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+/*
+ *	CCGDFA class implementation
  *
- *	otawa/include/otawa/util/DFA.h -- DFA class implementation.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 #include <elm/assert.h>
-#include <otawa/cache/ccg/CCGDFA.h>
+#include <otawa/ccg/DFA.h>
 #include <otawa/cfg.h>
 #include <otawa/instruction.h>
-#include <otawa/cache/ccg/CCGConstraintBuilder.h>
+#include <otawa/ccg/ConstraintBuilder.h>
 #include <otawa/cache/LBlockSet.h>
 #include <elm/genstruct/HashTable.h>
-#include <otawa/cache/ccg/CCGBuilder.h>
+#include <otawa/ccg/Builder.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/prog/WorkSpace.h>
@@ -22,19 +35,19 @@ using namespace otawa::ilp;
 using namespace elm::genstruct;
 using namespace otawa::ipet;
 
-namespace otawa {
+namespace otawa { namespace ccg {
 
 
 /**
  */
-int CCGProblem::vars = 0;
+int Problem::vars = 0;
 
 
 /**
  */
-CCGDomain *CCGProblem::gen(CFG *cfg, BasicBlock *bb) {
+Domain *Problem::gen(CFG *cfg, BasicBlock *bb) {
 	/*int length =*/ ccggraph->count();
-	CCGDomain *bitset = empty();
+	Domain *bitset = empty();
 	if(bb->isEntry() && (cfg == ENTRY_CFG(fw))) {
 		bitset->add(0);
 		return bitset;
@@ -60,8 +73,7 @@ CCGDomain *CCGProblem::gen(CFG *cfg, BasicBlock *bb) {
 
 /**
  */
-CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
-	//Inst *inst;
+Domain *Problem::preserve(CFG *cfg, BasicBlock *bb) {
 	bool testnotconflit = false;
 	bool visit = false;
 	address_t adlbloc;
@@ -109,7 +121,7 @@ CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
 	
 	// the bit vector of kill
 	/*int length =*/ ccggraph->count();
-	CCGDomain *kill;
+	Domain *kill;
 	kill = empty();
 	if(identif1 == 0)  {
 		kill->fill();
@@ -119,5 +131,5 @@ CCGDomain *CCGProblem::preserve(CFG *cfg, BasicBlock *bb) {
 
 
 
-}// otawa
+} }	// otawa::ccg
 

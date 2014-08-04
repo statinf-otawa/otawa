@@ -26,6 +26,8 @@
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/hard/Memory.h>
 #include <otawa/hard/BHT.h>
+#include <otawa/ilp.h>
+#include <otawa/ipet.h>
 
 namespace otawa { namespace etime {
 

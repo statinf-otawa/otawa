@@ -1,16 +1,30 @@
 /*
- *	$Id$
- *	Copyright (c) 2005-07, IRIT UPS.
+ *	CCGConstraintBuilder class implementation
  *
- *	CCGConstraintsBuilder class implementation
+ *	This file is part of OTAWA
+ *	Copyright (c) 2006, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <elm/io.h>
-#include <otawa/cache/ccg/CCGConstraintBuilder.h>
+#include <otawa/ccg/ConstraintBuilder.h>
 #include <otawa/cfg.h>
 #include <otawa/instruction.h>
-#include <otawa/cache/ccg/CCGNode.h>
+#include <otawa/ccg/Node.h>
 #include <otawa/cache/LBlockSet.h>
-#include <otawa/cache/ccg/CCGDFA.h>
+#include <otawa/ccg/DFA.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet/IPET.h>
 #include <elm/genstruct/HashTable.h>
@@ -19,7 +33,7 @@
 #include <otawa/cfg.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
-#include <otawa/cache/ccg/CCGBuilder.h>
+#include <otawa/ccg/Builder.h>
 #include <otawa/ipet.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/ipet/TrivialInstCacheManager.h>
@@ -29,18 +43,16 @@ using namespace otawa;
 using namespace elm::genstruct;
 using namespace otawa::ipet;
 
-namespace otawa {
-
-namespace ipet {
+namespace otawa { namespace ccg {
 
 /* Properties */
-static Identifier<ilp::Var *> BB_VAR("otawa::ipet::BB_VAR", 0);
-static Identifier<ilp::Var *> HIT_VAR("otawa::ipet::HIT_VAR", 0);
-static Identifier<ilp::Var *> MISS_VAR("otawa::ipet::MISS_VAR", 0);
+static Identifier<ilp::Var *> BB_VAR("otawa::ccg::BB_VAR", 0);
+static Identifier<ilp::Var *> HIT_VAR("otawa::ccg::HIT_VAR", 0);
+static Identifier<ilp::Var *> MISS_VAR("otawa::ccg::MISS_VAR", 0);
 
 
 /**
- * @class CCGConstraintBuilder
+ * @class ConstraintBuilder
  * This processor allows handling timing effects of the instruction cache in
  * the IPET approach. Based on the Cache Conflict Graph of the task,
  * it generates constraints and improve the objective function of the ILP system
@@ -50,32 +62,33 @@ static Identifier<ilp::Var *> MISS_VAR("otawa::ipet::MISS_VAR", 0);
  * @li @ref ICACHE_SUPPORT_FEATURE
  *
  * @par Required Features
- * @li @ref CCG_FEATURE
+ * @li @ref FEATURE
  * @li @ref COLLECTED_LBLOCKS_FEATURE
  * @li @ref ASSIGNED_VARS_FEATURE
  * @li @ref CONTEXT_TREE_FEATURE
  * @li @ref ILP_SYSTEM_FEATURE
  */
 
+p::declare ConstraintBuilder::reg = p::init("otawa::ccg::ConstrainterBuilder", Version(1, 1, 0))
+	.maker<ConstraintBuilder>()
+	.require(FEATURE)
+	.require(ASSIGNED_VARS_FEATURE)
+	.require(COLLECTED_LBLOCKS_FEATURE)
+	.require(CONTEXT_TREE_FEATURE)
+	.require(ILP_SYSTEM_FEATURE)
+	.provide(INST_CACHE_SUPPORT_FEATURE);
+
+
 /**
  * Constructor.
  */
-CCGConstraintBuilder::CCGConstraintBuilder(void):
-	Processor("otawa::ipet::CCGConstrainterBuilder", Version(1, 0, 0)),
-	_explicit(false)
-{
-	require(CCG_FEATURE);
-	require(ASSIGNED_VARS_FEATURE);
-	require(COLLECTED_LBLOCKS_FEATURE);
-	require(CONTEXT_TREE_FEATURE);
-	require(ILP_SYSTEM_FEATURE);
-	provide(INST_CACHE_SUPPORT_FEATURE);
+ConstraintBuilder::ConstraintBuilder(p::declare& r): Processor(r), _explicit(false) {
 }
 
 
 /**
  */
-void CCGConstraintBuilder::configure(const PropList& props) {
+void ConstraintBuilder::configure(const PropList& props) {
 	Processor::configure(props);
 	_explicit = EXPLICIT(props);
 }
@@ -83,7 +96,7 @@ void CCGConstraintBuilder::configure(const PropList& props) {
 
 /**
  */
-void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
+void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 
 	// Initialization
 	//CFG *entry_cfg = ENTRY_CFG(fw);
@@ -129,8 +142,8 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		}
 
 		// Put variables on edges
-		for(CCG::OutIterator edge(CCG::NODE(lblock)); edge; edge++) {
-			CCGNode *succ = edge->target();
+		for(Graph::OutIterator edge(Graph::NODE(lblock)); edge; edge++) {
+			Node *succ = edge->target();
 			String name;
 			if(_explicit) {
 				StringBuffer buf;
@@ -166,7 +179,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		if (lbloc->id() == 0) {
 			// !!CONS!!
 			Constraint *cons18 = system->newConstraint(Constraint::EQ,1);
-			for(CCG::OutIterator edge(CCG::NODE(lbloc)); edge; edge++)
+			for(Graph::OutIterator edge(Graph::NODE(lbloc)); edge; edge++)
 				cons18->add(1, VAR(edge));
 		}
 
@@ -198,10 +211,10 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			Constraint *cons17 = system->newConstraint(Constraint::EQ);
 			cons17->addLeft(1, BB_VAR(lbloc));
 
-			for(GenGraph<CCGNode,CCGEdge>::OutIterator edge(CCG::NODE(lbloc));
+			for(GenGraph<Node, Edge>::OutIterator edge(Graph::NODE(lbloc));
 			edge; edge++) {
 				cons17->addRight(1, VAR(edge));
-				CCGNode *target = edge->target();
+				Node *target = edge->target();
 				if (target->lblock()->id() == lbset->count() - 1)
 					findend = true;
 
@@ -222,11 +235,11 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			used = false;
 			bool finds = false;
 			ilp::Var * psi;
-			for(GenGraph<CCGNode,CCGEdge>::InIterator inedge(CCG::NODE(lbloc));
+			for(GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(lbloc));
 			inedge; inedge++) {
 
 				cons->addRight(1, VAR(inedge));
-				CCGNode *source = inedge->source();
+				Node *source = inedge->source();
 				if (source->lblock()->id() == 0){
 					 finds = true;
 					 psi = VAR(inedge);
@@ -261,7 +274,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				cons->addLeft(1, HIT_VAR(lbloc));
 
 				unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-				for(CCG::InIterator inedge(CCG::NODE(lbloc)); inedge; inedge++)
+				for(Graph::InIterator inedge(Graph::NODE(lbloc)); inedge; inedge++)
 				{
 					unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address()) >> dec;
 					if(inedge->source()->lblock()->id() != 0
@@ -280,7 +293,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		 		cons2 = system->newConstraint(Constraint::EQ);
 		 		cons2->addLeft(1, HIT_VAR(lbloc));
 	//	 		unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-		 		for(GenGraph<CCGNode,CCGEdge>::InIterator inedge(CCG::NODE(lbloc));
+		 		for(GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(lbloc));
 		 		inedge; inedge++) {
 		 			// cout << "examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " avec predecesseur : " << inedge->lblock()->id() << "\n";
 //		 			unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
@@ -296,11 +309,11 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		// building the (16)
 //		if(lbloc->getNonConflictState() && !findlooplb){
                 // xihit = sum p(uv, ij) / cache_block(uv) = cache_block(ij)
-		else if(CCGBuilder::NON_CONFLICT(lbloc)) {
+		else if(Builder::NON_CONFLICT(lbloc)) {
 			cons = system->newConstraint(Constraint::EQ);
 			cons->addLeft(1, HIT_VAR(lbloc));
 			unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-			for(CCG::InIterator inedge(CCG::NODE(lbloc)); inedge; inedge++) {
+			for(Graph::InIterator inedge(Graph::NODE(lbloc)); inedge; inedge++) {
 				unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address()) >> 3;
 				if(inedge->source()->lblock()->id() != 0
 					&& inedge->source()->lblock()->id() != lbset->count() - 1) {
@@ -326,7 +339,7 @@ void CCGConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 
 /**
  */
-void CCGConstraintBuilder::processWorkSpace(WorkSpace *fw) {
+void ConstraintBuilder::processWorkSpace(WorkSpace *fw) {
 	ASSERT(fw);
 	LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
@@ -338,7 +351,7 @@ void CCGConstraintBuilder::processWorkSpace(WorkSpace *fw) {
 
 /**
  */
-void CCGConstraintBuilder::addConstraintHeader(
+void ConstraintBuilder::addConstraintHeader(
 	ilp::System *system,
 	LBlockSet *graph,
 	ContextTree *cont,
@@ -357,9 +370,9 @@ void CCGConstraintBuilder::addConstraintHeader(
 				BasicBlock *header = cont->bb();
 				bool used = false;
 				Constraint *cons32 = system->newConstraint(Constraint::LE);
-				for(GenGraph<CCGNode,CCGEdge>::InIterator inedge(CCG::NODE(boc));
+				for(GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(boc));
 				inedge; inedge++) {
-					CCGNode *source = inedge->source();
+					Node *source = inedge->source();
 					if(source->lblock()->id() != 0
 					&& source->lblock()->id() !=  size-1) {
 						BasicBlock *bblock = source->lblock()->bb();
@@ -397,23 +410,4 @@ void CCGConstraintBuilder::addConstraintHeader(
 	}
 }
 
-} } //otawa::ipet
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+} } //otawa::ccg
