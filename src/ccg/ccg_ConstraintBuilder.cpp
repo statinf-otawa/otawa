@@ -48,7 +48,37 @@ namespace otawa { namespace ccg {
 /* Properties */
 static Identifier<ilp::Var *> BB_VAR("otawa::ccg::BB_VAR", 0);
 static Identifier<ilp::Var *> HIT_VAR("otawa::ccg::HIT_VAR", 0);
-static Identifier<ilp::Var *> MISS_VAR("otawa::ccg::MISS_VAR", 0);
+
+
+/**
+ * Gives the variable counting the number of misses.
+ *
+ * @par Features
+ * @li @ref CONSTRAINT_FEATURE
+ *
+ * @par Hooks
+ * @li @ref LBlock
+ *
+ * @ingroup ccg
+ */
+Identifier<ilp::Var *> MISS_VAR("otawa::ccg::MISS_VAR", 0);
+
+
+/**
+ * This feature ensures that the CCG has been translated in the form of ILP constraints.
+ *
+ * @par Properties
+ * @li @ref MISS_VAR
+ *
+ * @par Default Processor
+ * @li @ref ConstraintBuilder
+ *
+ * @par Plugin
+ * @li @ref ccg
+ *
+ * @ingroup ccg
+ */
+p::feature CONSTRAINT_FEATURE("otawa::ccg::CONSTRAINT_FEATURE", new Maker<ConstraintBuilder>());
 
 
 /**
@@ -67,6 +97,8 @@ static Identifier<ilp::Var *> MISS_VAR("otawa::ccg::MISS_VAR", 0);
  * @li @ref ASSIGNED_VARS_FEATURE
  * @li @ref CONTEXT_TREE_FEATURE
  * @li @ref ILP_SYSTEM_FEATURE
+ *
+ * @ingroup ccg
  */
 
 p::declare ConstraintBuilder::reg = p::init("otawa::ccg::ConstrainterBuilder", Version(1, 1, 0))

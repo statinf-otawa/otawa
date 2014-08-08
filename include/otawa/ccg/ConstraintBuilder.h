@@ -24,6 +24,7 @@
 #include <elm/assert.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/hard/Cache.h>
+#include <otawa/ccg/features.h>
 
 namespace otawa {
 

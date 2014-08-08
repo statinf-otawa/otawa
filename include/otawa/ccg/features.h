@@ -1,8 +1,8 @@
 /*
- *	CCEdge class implementation
+ *	features for CCG plugin
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2006, IRIT UPS.
+ *	Copyright (c) 2014, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -18,35 +18,38 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include <include/otawa/cfg.h>
-#include <otawa/ccg/Edge.h>
-#include <otawa/ccg/Node.h>
+#ifndef OTAWA_CCG_FEATURES_H_
+#define OTAWA_CCG_FEATURES_H_
 
-namespace otawa { namespace ccg {
+#include <otawa/util/GenGraph.h>
+#include <otawa/proc/Feature.h>
 
-/**
- * @class Edge
- * This class represents edges in the CCG representation.
- * They allow hooking annotations.
+namespace otawa {
 
- * @par Plugin
- * @li @ref ccg
- *
- * @ingroup ccg
- */
- 
-/**
- * Build a new CCG edge.
- */
-Edge::Edge(Node *source, Node *target) :
-	GenGraph<Node, Edge>::GenEdge(source,target)
-{
-}
+namespace ilp { class Var; }
 
-/**
- * Delete an edge.
- */
-Edge::~Edge(void) {
-}
+namespace ccg {
 
-} }	// otawa::ccg
+class Node;
+class Edge;
+class Collection;
+
+// Graph class
+class Graph: public GenGraph<Node, Edge> {
+public:
+
+	// Properties
+	static Identifier<Node *> NODE;
+	static Identifier<Collection *> GRAPHS;
+};
+
+// CCG feature
+extern p::feature FEATURE;
+
+// constraint feature
+extern Identifier<ilp::Var *> MISS_VAR;
+extern p::feature CONSTRAINT_FEATURE;
+
+} }		// otawa::ccg
+
+#endif /* OTAWA_CCG_FEATURES_H_ */

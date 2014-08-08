@@ -25,6 +25,16 @@
 
 namespace otawa { namespace ccg {
 
+/**
+ * @class Node
+ * Node of a CCG (Cache Conflict Graph).
+ *
+ * @par Plugin
+ * @li @ref ccg
+ *
+ * @ingroup ccg
+ */
+
 Node::Node(LBlock *node){
 		lbl = node;
  } 

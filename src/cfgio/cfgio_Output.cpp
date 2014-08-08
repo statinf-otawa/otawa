@@ -34,7 +34,7 @@ p::declare Output::reg = p::init("otawa::cfgio::Output", Version(1, 0, 0))
 
 
 /**
- * @defgroup cfg	CFG Input / Output
+ * @defgroup cfgio	CFG Input / Output
  *
  * This plugin is responsible to perform input / output of the CFG collection.
  * This allows external work on the CFG provided by OTAWA. As a default, XML is provided

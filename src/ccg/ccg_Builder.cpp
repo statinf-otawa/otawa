@@ -53,6 +53,11 @@ static Identifier<dfa::BitSet *> IN("", 0);
  *
  * @par Required Feature
  * @ref @li COLLECTED_LBLOCKS_FEATURE
+ *
+ * @par Plugin
+ * @li @ref ccg
+ *
+ * @ingroup ccg
  */
 
 p::declare Builder::reg = p::init("Builder", Version(1, 1, 0))
@@ -236,6 +241,8 @@ void Builder::processWorkSpace(WorkSpace *fw) {
  * @par Properties
  * @li @ref Graph::GRAPHS (Framework)
  * @li @ref Graph::NODE (LBlock)
+ *
+ * @ingroup ccg
  */
 p::feature FEATURE("otawa::ccg::FEATURE", new Maker<Builder>());
 

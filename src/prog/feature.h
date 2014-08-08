@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+
 /**
  * @mainpage
  *
@@ -61,6 +62,25 @@
  * @li @ref opcg -- outputs the Program Call Graph (PCG).
  * @li @ref ostat -- computes some statistics about instructions of a program.
  * @li @ref owcet -- computes the WCET based on the scripts.
+ *
+ * To extend OTAWA facilities, some analyzes are packaged in plugins.
+ * Some plugins are devoted to load and to decode binaries:
+ * @li arm2 -- loader for ARM v5 (+ thumb) instruction set.
+ * @li ppc2 -- loader for PowerPC (including VLE extension) instruction set.
+ *
+ * Other plugins allows to plug ILP solver:
+ * @li lp_solve5 -- lp_solve library.
+ *
+ * Finally, some provide specific analyzes:
+ * @li ast (@ref ast) -- provide program representation as Abstract Syntactic Trees.
+ * @li bpred (@ref bpred) -- branch prediction based on state graphs.
+ * @li ccg -- direct-mapped instruction cache analysis based on state graphs.
+ * @li cfgio (@ref cfgio) -- input/output of CFGs.
+ * @li dcache (@ref dcache) -- basic LRU data cache analysis.
+ * @li etime (@ref etime) -- time determination by block based on parametric execution graph by time set split.
+ * @li ets (@ref ets) -- very basic implementation of Extended Timing Schema.
+ * @li display (@ref display) -- various display facilities for CFG.
+ *
  *
  * @section howto How to read the API ?
  *

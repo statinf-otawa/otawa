@@ -24,8 +24,7 @@
 #include <elm/assert.h>
 #include <elm/genstruct/Table.h>
 #include <otawa/proc/Processor.h>
-#include <otawa/proc/Feature.h>
-#include <otawa/util/GenGraph.h>
+#include <otawa/ccg/features.h>
 
 namespace otawa {
 
@@ -37,20 +36,6 @@ class CFG;
 class LBlockSet;
 
 namespace ccg {
-
-class Node;
-class Edge;
-class Collection;
-
-// Graph class
-class Graph: public GenGraph<Node, Edge> {
-public:
-	
-	// Properties
-	static Identifier<Node *> NODE;
-	static Identifier<Collection *> GRAPHS;
-};
-
 
 // Collection class
 class Collection {
@@ -80,9 +65,6 @@ public:
 private:
 	void processLBlockSet(WorkSpace *fw, LBlockSet *lbset);
 };
-
-// Features
-extern p::feature FEATURE;
 
 } }	// otawa::ccg
 
