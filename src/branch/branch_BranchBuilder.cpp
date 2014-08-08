@@ -42,6 +42,8 @@ namespace otawa { namespace branch {
  * @li @ref CATEGORY_FEATURE
  * @par Hooks
  * @li @ref BasicBlock
+ *
+ * @ingroup branch
  */
 Identifier<category_t> CATEGORY("otawa::branch::CATEGORY", branch::NOT_CLASSIFIED);
 
@@ -55,11 +57,12 @@ Identifier<category_t> CATEGORY("otawa::branch::CATEGORY", branch::NOT_CLASSIFIE
  * @li @ref CATEGORY_FEATURE
  * @par Hooks
  * @li @ref BasicBlock
+ *
+ * @ingroup branch
  */
 Identifier<BasicBlock*> HEADER("otawa::branch::HEADER", NULL);
 
 
-static SilentFeature::Maker<BranchBuilder> BRANCH_CAT_MAKER;
 /**
  * This category assigns to each branch a category according to its branch prediction  behavior.
  * The following branch prediction categories are supported:
@@ -72,8 +75,10 @@ static SilentFeature::Maker<BranchBuilder> BRANCH_CAT_MAKER;
  * @li @ref CATEGORY
  * @li @ref HEADER
  *
+ *
+ * @ingroup branch
  */
-SilentFeature CATEGORY_FEATURE("otawa::branch::CATEGORY_FEATURE", BRANCH_CAT_MAKER);
+p::feature CATEGORY_FEATURE("otawa::branch::CATEGORY_FEATURE", new Maker<BranchBuilder>());
 
 
 /**
@@ -105,6 +110,8 @@ Output& operator<<(Output& out, category_t cat) {
  * @li @ref LOOP_INFO_FEATURE,
  * @li @ref DOMINANCE_FEATURE,
  * @li @ref NUMBERED_CONDITIONS_FEATURE,
+ *
+ * @ingroup branch
  */
 p::declare BranchBuilder::reg =
 	p::init("otawa::branch::BranchBuilder", Version(1,0,0))

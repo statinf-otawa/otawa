@@ -38,23 +38,25 @@ namespace otawa { namespace branch {
 using namespace ilp;
 using namespace ipet;
 
-static SilentFeature::Maker<ConsBuilder> SUPPORT_MAKER;
 /**
  * This feature adds to the objective function of the ILP system the raw cost of the BHT behaviour
  * (that is the branch misprediction penalties multiplied by the number of occurences).
+ *
+ * @ingroup branch
  */
-SilentFeature SUPPORT_FEATURE("otawa::branch::SUPPORT_FEATURE", SUPPORT_MAKER);
+p::feature SUPPORT_FEATURE("otawa::branch::SUPPORT_FEATURE", new Maker<ConsBuilder>());
 
 
-static SilentFeature::Maker<OnlyConsBuilder> CONSTRAINTS_MAKER;
 /**
  * This feature adds to the ILP system the constraints modelling the number of misspredictions
  * and a variable representing this number.
  *
  * @par Properties
  * @li @ref MISSPRED_VAR
+ *
+ * @ingroup branch
  */
-SilentFeature CONSTRAINTS_FEATURE("otawa::branch::CONSTRAINTS_FEATURE", CONSTRAINTS_MAKER);
+p::feature CONSTRAINTS_FEATURE("otawa::branch::CONSTRAINTS_FEATURE", new Maker<OnlyConsBuilder>);
 
 
 /**
@@ -66,6 +68,8 @@ SilentFeature CONSTRAINTS_FEATURE("otawa::branch::CONSTRAINTS_FEATURE", CONSTRAI
  *
  * @par Hook
  * @li @ref BasicBlock
+ *
+ * @ingroup branch
  */
 Identifier<ilp::Var*> MISSPRED_VAR("otawa::branch::MISSPRED_VAR", NULL);
 
@@ -84,6 +88,8 @@ Identifier<ilp::Var*> MISSPRED_VAR("otawa::branch::MISSPRED_VAR", NULL);
  * @li @ref ipet::ASSIGNED_VARS_FEATURE,
  * @li @ref LOOP_INFO_FEATURE,
  * @li @ref CATEGORY_FEATURE,
+ *
+ * @ingroup branch
  */
 
 p::declare OnlyConsBuilder::reg =
@@ -254,6 +260,8 @@ void OnlyConsBuilder::configure(const PropList &props) {
  *
  * @par Required Features
  * @li @ref branch::CONSTRAINTS_FEATURE,
+ *
+ * @ingroup branch
  */
 
 p::declare ConsBuilder::reg =

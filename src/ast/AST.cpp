@@ -27,7 +27,7 @@
  */
 
 /**
- * @defgroup ast Abstract Syntactic Tree
+ * @defgroup ast AST Plugin
  *
  * This module provides facilities to handle an executable
  * as an AST (Abstract Syntactic Tree). This allows to implements
@@ -38,7 +38,11 @@
  * IEEE transactions on software engineering, 21(7), 593-604, 1995.
  *
  * The AST is loaded from an external file (usually generated from source files)
- * in the same format the Heptane tool (http://www.irisa.fr/alf/index.php?option=com_content&view=article&id=29&Itemid=0).
+ * in the same format as Heptane tool (http://www.irisa.fr/alf/index.php?option=com_content&view=article&id=29&Itemid=0).
+ *
+ * @par Plugin Information
+ * @li name: otawa/ast
+ * @li header: <otawa/ast/features.h>
  */
 
 namespace otawa { namespace ast {

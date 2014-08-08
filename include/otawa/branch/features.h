@@ -34,7 +34,7 @@ namespace branch {
 // numbered conditions feature
 extern Identifier<int> COND_NUMBER;
 extern Identifier<int*> COND_MAX;
-extern SilentFeature NUMBERED_CONDITIONS_FEATURE;
+extern p::feature NUMBERED_CONDITIONS_FEATURE;
 
 
 // category feature
@@ -51,15 +51,15 @@ io::Output& operator<<(io::Output& out, category_t cat);
 // category feature
 extern Identifier<category_t> CATEGORY;
 extern Identifier<BasicBlock*> HEADER;
-extern SilentFeature CATEGORY_FEATURE;
+extern p::feature CATEGORY_FEATURE;
 
 
 // branch constraints feature
-extern SilentFeature CONSTRAINTS_FEATURE;
+extern p::feature CONSTRAINTS_FEATURE;
 extern Identifier<ilp::Var*> MISSPRED_VAR;
 
 // support feature
-extern SilentFeature SUPPORT_FEATURE;
+extern p::feature SUPPORT_FEATURE;
 
 } }		// otawa::branch
 

@@ -42,11 +42,7 @@ using namespace elm;
 
 
 /**
- * @defgroup bpred bpred Module
- *
- * @code
- * #include <otawa/bpred/features.h>
- * @endcode
+ * @defgroup bpred bpred Plugin
  *
  * This module implements a branch prediction analysis based on:
  *
@@ -60,6 +56,10 @@ using namespace elm;
  * To invoke it, just require the feature @ref otawa::bpred::BRANCH_PREDICTION_FEATURE.
  * To configure the computation, pass properties to the configuration property list:
  * @ref otawa::bpred::METHOD, @ref otawa::bpred::BHT_SIZE, @ref otawa::bpred::HISTORY_SIZE .
+ *
+ * @par Plugin Information
+ * @li name: otawa/bpred
+ * @li header: <otawa/bpred/features.h>
  */
 
 static SilentFeature::Maker<BPredProcessor> maker;

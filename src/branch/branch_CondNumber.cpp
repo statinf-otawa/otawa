@@ -29,15 +29,16 @@
 
 namespace otawa { namespace branch {
 
-static SilentFeature::Maker<CondNumber> NUMBERED_CONDITIONS_MAKER;
 /**
  * This feature assign numbers to branch present in a workspace for next processing.
  *
  * @par Properties
  * @li @ref COND_NUMBER
  * @li @ref COND_MAX
+ *
+ * @ingroup branch
  */
-SilentFeature NUMBERED_CONDITIONS_FEATURE("otawa::branch::NUMBERED_CONDITIONS_FEATURE", NUMBERED_CONDITIONS_MAKER);
+p::feature NUMBERED_CONDITIONS_FEATURE("otawa::branch::NUMBERED_CONDITIONS_FEATURE", new Maker<CondNumber>());
 
 /**
  * Property giving the number of the control in its BHT set.
@@ -47,6 +48,8 @@ SilentFeature NUMBERED_CONDITIONS_FEATURE("otawa::branch::NUMBERED_CONDITIONS_FE
  *
  * @par Hook
  * @li @ref BasicBlock
+ *
+ * @ingroup branch
  */
 Identifier<int> COND_NUMBER("otawa::branch::COND_NUMBER", -1);
 
@@ -59,6 +62,8 @@ Identifier<int> COND_NUMBER("otawa::branch::COND_NUMBER", -1);
  *
  * @par Hook
  * @li @ref WorkSpace
+ *
+ * @ingroup branch
  */
 Identifier<int *> COND_MAX("otawa::branch::COND_MAX", NULL);
 
@@ -75,6 +80,8 @@ Identifier<int *> COND_MAX("otawa::branch::COND_MAX", NULL);
  * @par Required Features
  * @li @ref COLLECTED_CFG_FEATUR
  *
+ *
+ * @ingroup branch
  */
 p::declare CondNumber::reg =
 		p::init("otawa::branch::CondNumber", Version(1,0,0), BBProcessor::reg)

@@ -17,3 +17,4 @@ set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 target_link_libraries(${PLUGIN} otawa)
 
 install(TARGETS ${PLUGIN} DESTINATION "${PROCDIR}/otawa")
+install(FILES etime.eld DESTINATION "${PROCDIR}/otawa")

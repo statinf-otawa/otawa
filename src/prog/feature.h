@@ -30,6 +30,26 @@
  * or to the command line user. If your goal is only to compute WCET from the Eclipse environment,
  * refer instead to the OTAWA Eclipse plugin manual.
  *
+ * @section reading Reading this Document
+ *
+ * This document contains the automatic documentation of classes composing OTAWA, that is
+ * several tenth of classes. Hence, reading documentation of each in turn is definitively the
+ * preferred way to use it. If your goal is to learn programming OTAWA, take first a look
+ * to the OTAWA Manual available in OTAWA_HOME/share/Otawa/doc/manual/manual.html.
+ * If you aim to extend your knowledge of OTAWA classes or to look for an available facility,
+ * continue your reading.
+ *
+ * This document is automatically generated from the automatic documentation of OTAWA classes
+ * by the Doxygen utility. This means that all classes, types, functions are documented
+ * and may be easily retrieved. For OTAWA concepts, like code processor, identifier and features,
+ * you have to fetch the module documentation whose the outline is given below.
+ *
+ * If you look for an existing analysis, the good entry point should be the list of features,
+ * @ref features. For other facilities, consult the module list in the left sub-frame.
+ * In addition, below is a list of standard plugin of OTAWA. To get documentation of a specific
+ * class, we advise to use the alphabetic of classes from the menu Classes > Class Index.
+ *
+ *
  * @section content Content
  *
  * OTAWA is logically split in different module representing different layers and usage of the
@@ -74,7 +94,7 @@
  * Finally, some provide specific analyzes:
  * @li ast (@ref ast) -- provide program representation as Abstract Syntactic Trees.
  * @li bpred (@ref bpred) -- branch prediction based on state graphs.
- * @li ccg -- direct-mapped instruction cache analysis based on state graphs.
+ * @li ccg (@ref ccg) -- direct-mapped instruction cache analysis based on state graphs.
  * @li cfgio (@ref cfgio) -- input/output of CFGs.
  * @li dcache (@ref dcache) -- basic LRU data cache analysis.
  * @li etime (@ref etime) -- time determination by block based on parametric execution graph by time set split.

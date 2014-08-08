@@ -54,7 +54,6 @@ ASTLoader::ASTLoader(p::declare& r): Processor(r), ws(0), file(0) {
 }
 
 
-static SilentFeature::Maker<ASTLoader> maker;
 /**
  * This feature ensures that the AST structure of the binary has been loaded.
  *
@@ -64,8 +63,10 @@ static SilentFeature::Maker<ASTLoader> maker;
  * @p Properties
  * @li @ref FUN
  * @li @ref INFO
+ *
+ * @ingroup ast
  */
-SilentFeature FEATURE("otawa::ast::FEATURE", maker);
+p::feature FEATURE("otawa::ast::FEATURE", new Maker<ASTLoader>());
 
 
 /**

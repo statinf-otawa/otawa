@@ -26,6 +26,7 @@ include_directories("../../gel/include")
 # subdirectories
 add_subdirectory(prog)
 add_subdirectory(ast)
+add_subdirectory(branch)
 add_subdirectory(ccg)
 add_subdirectory(cfgio)
 add_subdirectory(etime)

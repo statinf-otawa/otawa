@@ -26,7 +26,7 @@
 namespace otawa { namespace ast {
 
 extern Identifier<String> PATH;
-extern SilentFeature FEATURE;
+extern p::feature FEATURE;
 extern Identifier<FunAST *> FUN;
 extern Identifier<ASTInfo *> INFO;
 
