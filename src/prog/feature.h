@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	Feature documentation
  *
  *	This file is part of OTAWA
@@ -180,7 +179,84 @@
  * @li the list of required features,
  * @li the list of configuration properties (i.e. annotations).
  *
+ * @section develop-otawa Developing with OTAWA
+ *
+ * Whatever the type of program using OTAWA, the command @ref otawa-config is the right entry
+ * point to obtain compilation flags, libraries to link with and installation information.
+ * OTAWA is not focused on a particular building (autotools, CMake, etc) while it provides
+ * the ability to call @ref otawa-config.
+ *
+ * @subsection developing-basic Basic Options
+ *
+ * See @ref application for helper classes to write command line applications.
+ *
+ * OTAWA provides an API in C++: to compile a C++ source, just use the @c --cflags option:
+ * @code
+ * otawa-config --cflags
+ * @endcode
+ *
+ * To link your application, get the options with @c --libs:
+ * @code
+ * otawa-config --libs
+ * @endcode
+ *
+ * To run the obtained program, ensure that the @c lib directory of OTAWA is found on the system.
+ * For Unixes, add this directory to the @c $LD_LIBRARY_PATH, it may be obtained by using
+ * option @c --prefix and appending @c /lib. On Unixes supporting ELF format,
+ * you may also use the @c --rpath option to get
+ * this directory linked in the executable (on Unixes only):
+ * @code
+ * otawa-config --libs --rpath
+ * @endcode
+ *
+ * On Windows OSes, such facilities do not exist: one solution is to add the OTAWA @c bin directory
+ * to the @c @PATH@ system variable; another one is to copy your executable in the @c bin directory
+ * of OTAWA.
+ *
+ * Whatever your compilation option, you may also obtain the installation directory of OTAWA
+ * with @c --prefix option:
+ * @code
+ * otawa-config --prefix
+ * @endcode
+ *
+ *
+ * @subsection develop-use-plugin Using a Plugin
+ *
+ * OTAWA framework is based on plugins. They are two ways to use identifier, features and processors
+ * provided by a plugin: (a) using the DynXXX classes (@ref DynIdentifier, @ref DynFeature or
+ * @ref DynProcessor) or (b) by linking dynamically with a plugin binary. The latter form is preferred
+ * as soon as you have to use non-inlined method of classes provided by the plugin.
+ *
+ * To perform the linkage, @ref otawa-config may help also by adding to the command line the list
+ * of required plugins (do not forget to give the whole path with components separated by slashes):
+ * @code
+ * otawa-config --libs path1/plugin1 path2/plugin2 ...
+ * @endcode
+ *
+ * If the @c --rpath option is also given, the path of used plugins is appended to the
+ * RPATH list of directories.
+ *
+ *
+ * @subsection develop-write-plugin Plugin Writing
+ *
+ * Maybe, the more easy way to extend OTAWA is to write new analyzes and to package them
+ * in a package and then to invoke analyzes from a script.
+ *
+ * To link the plugin, @ref otaw-config may help also either using the list of plugin,
+ * or using the plugin description file @c .eld that contains a @c deps entry as in the example below
+ * (file is named @c myplugin.elf ):
+ * @code
+ * [elm-plugin]
+ * name=myplugin
+ * deps=path1/plugin1;path2/plugin2;...
+ * @endcode
+ *
+ * To get the right option for linking the plugin, this file may be used with @c -p option as below:
+ * @code
+ * otawa-config --libs -p myplugin.eld
+ * @endcode
  */
+
 
 /**
  * @defgroup features Available Features and Processors

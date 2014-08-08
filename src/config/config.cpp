@@ -283,6 +283,13 @@ public:
 		for(int i = 0; i < cmods.length(); i++)
 			cmods[i]->adjust(config);
 
+		// perform adjustment according to the plugins
+		for(int i = 0; i < plugs.length(); i++) {
+			Path path = plugs[i]->path();
+			config.libs << ' ' << path;
+			config.addRPath(path.parent());
+		}
+
 		// load the ELD
 		if(eld)
 			adjustELD(config);
@@ -319,10 +326,19 @@ public:
 
 protected:
 	virtual void process(string arg) {
+
+		// add module information
 		if(modmap.exists(arg))
 			mods.add(modmap.get(arg, 0));
-		else
-			throw OptionException(_ << " module " << arg << " is unknown !");
+
+		// look for a matching plugin
+		else {
+			ProcessorPlugin *plugin = ProcessorPlugin::get(arg);
+			if(plugin)
+				plugs.add(plugin);
+			else
+				throw OptionException(_ << " plugin " << arg << " cannot be found!");
+		}
 	}
 
 private:
@@ -435,6 +451,7 @@ private:
 
 	HashTable<string, Module *> modmap;
 	genstruct::Vector<Module *> mods;
+	genstruct::Vector<ProcessorPlugin *> plugs;
 	::Configuration config;
 	option::ValueOption<string> eld;
 	SwitchOption
