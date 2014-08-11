@@ -6,20 +6,19 @@
  */
 
 #include <elm/assert.h>
-#include <otawa/cache/categorisation/CATDFA.h>
+#include <otawa/cat/CATDFA.h>
 #include <otawa/cfg.h>
 #include <otawa/instruction.h>
-#include <otawa/cache/categorisation/CATConstraintBuilder.h>
+#include <otawa/cat/CATConstraintBuilder.h>
 #include <otawa/cache/LBlockSet.h>
 #include <elm/genstruct/HashTable.h>
-#include <otawa/cache/categorisation/CATBuilder.h>
+#include <otawa/cat/CATBuilder.h>
 
 using namespace otawa::ilp;
 using namespace elm::genstruct;
 using namespace otawa::ipet;
 
-namespace otawa {
-
+namespace otawa { namespace cat {
 
 /**
  */
@@ -80,7 +79,7 @@ CATDomain *CATProblem::preserve(CFG *cfg, BasicBlock *bb) {
 							// the state of the first lblock in BB become nonconflict
 							LBlock *ccgnode = lines->lblock(identif1);
 							//								ccgnode->setNonConflictState(true);
-							CATBuilder::NON_CONFLICT(ccgnode) = true;
+							cat::CATBuilder::NON_CONFLICT(ccgnode) = true;
 							break;
 						}// end Sde if
 					}//end Sde for of lbloc
@@ -120,4 +119,4 @@ CATDomain *CATProblem::preserve(CFG *cfg, BasicBlock *bb) {
 
 
 
-}// otawa
+} } // otawa::cat

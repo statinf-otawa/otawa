@@ -26,7 +26,7 @@
 #include <otawa/prop/Identifier.h>
 #include <otawa/cfg.h>
 #include <otawa/util/LBlockBuilder.h>
-#include <otawa/cache/categorisation/CATBuilder.h>
+//#include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/hard/Memory.h>
 #include <otawa/parexegraph/ParExeGraph.h>
 #include <elm/io/OutFileStream.h>

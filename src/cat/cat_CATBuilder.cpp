@@ -20,7 +20,7 @@
  *	02110-1301  USA
  */
 #include <elm/io.h>
-#include <otawa/cache/categorisation/CATBuilder.h>
+#include <otawa/cat/CATBuilder.h>
 #include <otawa/cache/LBlock.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/cfg.h>
@@ -29,7 +29,7 @@
 #include <otawa/hard/Platform.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/dfa/XCFGVisitor.h>
-#include <otawa/cache/categorisation/CATDFA.h>
+#include <otawa/cat/CATDFA.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/prop/DeletableProperty.h>
@@ -40,13 +40,16 @@ using namespace otawa::ilp;
 using namespace otawa::ipet;
 using namespace otawa::dfa;
 
-namespace otawa {
+namespace otawa { namespace cat {
 
+using namespace otawa;
 using namespace cache;
 
 /**
+ * Does anybody know anything about this?
+ * @ingroup cat
  */
-Identifier<bool> CATBuilder::NON_CONFLICT("otawa::CATBuilder::NON_CONFLICT", false);
+Identifier<bool> CATBuilder::NON_CONFLICT("otawa::cat::CATBuilder::NON_CONFLICT", false);
 
 
 /**
@@ -58,15 +61,17 @@ static Identifier<BitSet *> IN("", 0);
 /**
  * Private property.
  */
-static Identifier<BitSet *> SET("otawa::SET", 0);
+static Identifier<BitSet *> SET("", 0);
 
 
 /**
  * This property is set for L-Block categories that has been lowered, that is,
  * they was classified as first-miss but lowered to always-miss due to effect
  * of a surrounding loop (whose header basic block is stored).
+ *
+ * @ingroup cat
  */
-Identifier<BasicBlock *> LOWERED_CATEGORY("otawa::LOWERED_CATEGORY", 0);
+Identifier<BasicBlock *> LOWERED_CATEGORY("otawa::cat::LOWERED_CATEGORY", 0);
 
 
 /**
@@ -132,6 +137,7 @@ void CATBuilder::processWorkSpace(WorkSpace *fw) {
 
 
 /**
+ * @class CATBuilder
  * Create a new CATBuilder processor.
  *
  * @par Provided Feature
@@ -140,12 +146,16 @@ void CATBuilder::processWorkSpace(WorkSpace *fw) {
  * @par Required Features
  * @li @ref CONTEXT_TREE_FEATURE
  * @li @ref COLLECTED_LBLOCKS_FEATURE
+ *
+ * @ingroup cat
  */
-CATBuilder::CATBuilder(void)
-: Processor("CATBuilder", Version(1, 0, 0)) {
-	require(CONTEXT_TREE_FEATURE);
-	require(COLLECTED_LBLOCKS_FEATURE);
-	provide(ICACHE_CATEGORY_FEATURE);
+
+p::declare CATBuilder::reg = p::init("otawa::cat::CATBuilder", Version(1, 0, 0))
+	.require(CONTEXT_TREE_FEATURE)
+	.require(COLLECTED_LBLOCKS_FEATURE)
+	.provide(ICACHE_CATEGORY_FEATURE);
+
+CATBuilder::CATBuilder(p::declare& r): Processor(r) {
 }
 
 
@@ -405,18 +415,7 @@ BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
 	return set;
 }
 
-
-/**
- * This feature asserts that a category is assigned at each l-block involved
- * in the current task.
- *
- * @par Properties
- * @li @ref CATEGORY (@ref LBlock).
- * @li @ref LOWERED_CATEGORY (@ref LBlock)
- */
-Feature<CATBuilder> ICACHE_CATEGORY_FEATURE("otawa::ICACHE_CATEGORY_FEATURE");
-
-} // otawa
+} } // otawa::cat
 
 
 

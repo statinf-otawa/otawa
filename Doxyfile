@@ -399,7 +399,7 @@ WARN_LOGFILE = doxygen.err
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT = include/otawa/ src/prog/ src/odisplay/ src/bpred/BPredProcessor.cpp src/dumpcfg/dumpcfg.cpp src/oipet/oipet.cpp src/opcg/opcg.cpp src/ostat/ostat.cpp src/owcet/owcet.cpp src/mkff/mkff.cpp src/odisasm/odisasm.cpp src/odfa/odfa.cpp src/dcache/ src/config/config.cpp src/odec/odec.cpp src/ast/ src/ets/ src/etime src/cfgio src/ccg src/branch 
+INPUT = include/otawa/ src/prog/ src/odisplay/ src/bpred/BPredProcessor.cpp src/dumpcfg/dumpcfg.cpp src/oipet/oipet.cpp src/opcg/opcg.cpp src/ostat/ostat.cpp src/owcet/owcet.cpp src/mkff/mkff.cpp src/odisasm/odisasm.cpp src/odfa/odfa.cpp src/dcache/ src/config/config.cpp src/odec/odec.cpp src/ast/ src/ets/ src/etime src/cfgio src/ccg src/branch src/cat 
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 

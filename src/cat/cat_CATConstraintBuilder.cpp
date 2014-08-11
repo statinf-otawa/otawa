@@ -1,16 +1,31 @@
 /*
- *	$Id$
- *	Copyright (c) 2005-07, IRIT UPS.
+ *	CATConstraintBuilder class interface
+ *	Copyright (c) 2006, IRIT UPS.
  *
- *	CATConstraintsBuilder class implementation
+ *	This file is part of OTAWA
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
  */
-#include <stdio.h>
+
 #include <elm/io.h>
-#include <otawa/cache/categorisation/CATConstraintBuilder.h>
+#include <otawa/cat/CATConstraintBuilder.h>
 #include <otawa/instruction.h>
-#include <otawa/cache/categorisation/CATNode.h>
+#include <otawa/cat/CATNode.h>
 #include <otawa/cfg/CFGCollector.h>
-#include <otawa/cache/categorisation/CATDFA.h>
+#include <otawa/cat/CATDFA.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet.h>
@@ -20,7 +35,7 @@
 #include <otawa/util/Dominance.h>
 #include <otawa/cfg.h>
 #include <otawa/hard/CacheConfiguration.h>
-#include <otawa/cache/categorisation/CATBuilder.h>
+#include <otawa/cat/CATBuilder.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/dfa/XIterativeDFA.h>
 #include <otawa/dfa/XCFGVisitor.h>
@@ -33,28 +48,32 @@ using namespace elm::genstruct;
 using namespace otawa::ipet;
 
 
-namespace otawa { namespace ipet {
+namespace otawa { namespace cat {
 
 using namespace otawa::cache;
 
 /**
+ * @ingroup cat
  */
-Identifier<ilp::Var *> HIT_VAR("otawa::ipet::HIT_VAR_", 0);
+Identifier<ilp::Var *> HIT_VAR("otawa::cat::HIT_VAR_", 0);
 
 
 /**
+ * @ingroup cat
  */
-Identifier<ilp::Var *> MISS_VAR("otawa::ipet::MISS_VAR_");
+Identifier<ilp::Var *> MISS_VAR("otawa::cat::MISS_VAR_");
 
 
 /**
+ * @ingroup cat
  */
-Identifier<ilp::Var *> BB_VAR("otawa::ipet::BB_VAR_");
+Identifier<ilp::Var *> BB_VAR("otawa::cat::BB_VAR_");
 
 
 /**
+ * @ingroup cat
  */
-Identifier<CATNode *> NODE("otawa::ipet::NODE", 0);
+Identifier<CATNode *> NODE("otawa::cat::NODE", 0);
 
 
 /**
@@ -71,21 +90,22 @@ Identifier<CATNode *> NODE("otawa::ipet::NODE", 0);
  * @li @ref ICACHE_CATEGORY_FEATURE
  * @li @ref COLLECTED_LBLOCKS_FEATURE
  * @li @ref ILP_SYSTEM_FEATURE
+ *
+ * @ingroup cat
  */
+
+p::declare CATConstraintBuilder::reg = p::init("otawa::cat::CATConstraintBuilder", Version(1, 0, 0))
+	.require(CONTEXT_TREE_FEATURE)
+	.require(COLLECTED_LBLOCKS_FEATURE)
+	.require(cat::ICACHE_CATEGORY_FEATURE)
+	.require(ASSIGNED_VARS_FEATURE)
+	.require(ILP_SYSTEM_FEATURE)
+	.provide(INST_CACHE_SUPPORT_FEATURE);
 
 /**
  * Build a builder of constraints based on instruction cache access categories.
  */
-CATConstraintBuilder::CATConstraintBuilder(void)
-:	Processor("otawa.ipet.CATConstraintBuilder", Version(1, 0, 0)),
-	_explicit(false)
-{
-	require(CONTEXT_TREE_FEATURE);
-	require(COLLECTED_LBLOCKS_FEATURE);
-	require(ICACHE_CATEGORY_FEATURE);
-	require(ASSIGNED_VARS_FEATURE);
-	require(ILP_SYSTEM_FEATURE);
-	provide(INST_CACHE_SUPPORT_FEATURE);
+CATConstraintBuilder::CATConstraintBuilder(p::declare& r): Processor(r), _explicit(false) {
 }
 
 
@@ -196,7 +216,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 			if (categorie == cache::ALWAYS_MISS){
 				if (NODE(bloc)->INLOOP()){
 					//if (CATBuilder::NODE(bloc)->HASHEADEREVOLUTION()){
-					if(LOWERED_CATEGORY(bloc)) {
+					if(cat::LOWERED_CATEGORY(bloc)) {
 						/* If lblock in loop / lblock has HEADEREVOLUTION:
 						 * x_miss(i,j) <= x_loop_header (??)
 						 * x_miss(i,j) <= sum x_edge (for all incoming non-back-edges of the header of the loop containing the current lblock)
@@ -204,7 +224,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 						Constraint *cons32 = system->newConstraint(Constraint::LE);
 						cons32->addLeft(1, MISS_VAR(bloc));
 						//ilp::Var *x = (ilp::Var *)CATBuilder::NODE(bloc)->HEADEREVOLUTION()->use<Var *>(VAR);
-						ilp::Var *x = VAR(LOWERED_CATEGORY(bloc));
+						ilp::Var *x = VAR(cat::LOWERED_CATEGORY(bloc));
 					//cout << bloc->use<CATNode *>(CATBuilder::ID_Node)->HEADEREVOLUTION();
 						cons32->addRight(1, x);
 				//}
@@ -312,7 +332,7 @@ void CATConstraintBuilder::configure(const PropList& props) {
 	_explicit = EXPLICIT(props);
 }
 
-} } // otawa::ipet
+} } // otawa::cat
 
 
 

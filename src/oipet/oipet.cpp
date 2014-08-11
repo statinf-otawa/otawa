@@ -438,11 +438,11 @@ void Command::compute(String fun) {
 	case icache_cat:
 		{
 			// build Cat lblocks
-			CATBuilder catbuilder;
+			DynProcessor catbuilder("otawa::cat::CATBuilder");
 			catbuilder.process(fw, props);
 
 			// Build CAT contraint
-			CATConstraintBuilder decomp;
+			DynProcessor decomp("otawa::cat::CATConstraintBuilder");
 			decomp.process(fw, props);
 		}
 		break;

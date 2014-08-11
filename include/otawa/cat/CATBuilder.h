@@ -1,8 +1,8 @@
 /*
- *	dcache::ACSBuilder class interface
+ *	CATBuilder class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2009, IRIT UPS.
+ *	Copyright (c) 2006, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -18,32 +18,42 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_DCACHE_CATBUILDER_H_
-#define OTAWA_DCACHE_CATBUILDER_H_
+#ifndef OTAWA_CAT_CATBUILDER_H
+#define OTAWA_CAT_CATBUILDER_H
 
-//#include <otawa/cache/categorisation/CATBuilder.h>
-#include <otawa/dcache/BlockBuilder.h>
-#include <otawa/dcache/ACSBuilder.h>
-#include "features.h"
+#include <elm/assert.h>
+#include <otawa/proc/CFGProcessor.h>
+#include <otawa/proc/Feature.h>
 
-namespace otawa { namespace dcache {
+namespace otawa {
 
+// Extern classes
+namespace dfa { class BitSet; }
+
+class CFG;
+class ContextTree;
+class LBlock;
+class LBlockSet;
+
+namespace cat {
 
 // CATBuilder class
 class CATBuilder: public Processor {
 public:
+	static Identifier<bool> NON_CONFLICT;
 	static p::declare reg;
 	CATBuilder(p::declare& r = reg);
-	virtual void processWorkSpace(WorkSpace *ws);
-	virtual void configure(const PropList &props);
-	virtual void cleanup(WorkSpace *ws);
-
+	virtual void processWorkSpace(WorkSpace *fw );
 private:
-	void processLBlockSet(WorkSpace *ws, const BlockCollection& coll, const hard::Cache *cache);
-	data_fmlevel_t firstmiss_level;
-	//CategoryStats *cstats;
+	dfa::BitSet *buildLBLOCKSET(LBlockSet *lcache, ContextTree *root);
+	void processLBlockSet(WorkSpace *fw, LBlockSet *lbset);
+	void setCATEGORISATION(LBlockSet *lineset, ContextTree *S, int dec);
+	void worst(LBlock *line, ContextTree *S, LBlockSet *cacheline, int dec);
 };
 
-} }	// otawa::dcache
+// Properties
+extern Identifier<BasicBlock *> LOWERED_CATEGORY;
 
-#endif /* OTAWA_DCACHE_CATBUILDER_H_ */
+} }		// otawa::cat
+
+#endif // OTAWA_CAT_CATBUILDER_H

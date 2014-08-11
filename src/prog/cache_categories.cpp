@@ -87,6 +87,17 @@ Identifier<CategoryStats *> CATEGORY_STATS("otawa::CATEGORY_STATS", 0);
 
 
 /**
+ * This feature asserts that a category is assigned at each l-block involved
+ * in the current task.
+ *
+ * @par Properties
+ * @li @ref CATEGORY (@ref LBlock).
+ * @li @ref CATEGORY_HEADER
+ */
+p::feature ICACHE_CATEGORY_FEATURE("otawa::ICACHE_CATEGORY_FEATURE", new Maker<NoProcessor>());
+
+
+/**
  * This property stores the instruction cache access category of L-Blocks.
  * This value may be :
  * @li ALWAYS_HIT : accesses to this l-block produces always a cache hit,

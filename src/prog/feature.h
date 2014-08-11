@@ -94,6 +94,7 @@
  * Finally, some provide specific analyzes:
  * @li ast (@ref ast) -- provide program representation as Abstract Syntactic Trees.
  * @li bpred (@ref bpred) -- branch prediction based on state graphs.
+ * @li cat (@ref cat) -- LRU instuction cache analysis by categorisation.
  * @li ccg (@ref ccg) -- direct-mapped instruction cache analysis based on state graphs.
  * @li cfgio (@ref cfgio) -- input/output of CFGs.
  * @li dcache (@ref dcache) -- basic LRU data cache analysis.

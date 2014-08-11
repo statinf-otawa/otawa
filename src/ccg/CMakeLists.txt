@@ -14,7 +14,7 @@ include_directories(".")
 include_directories("../../include")
 
 add_library(ccg SHARED ${ccg_SOURCES})
-set_property(TARGET ast PROPERTY PREFIX "")
+set_property(TARGET ccg PROPERTY PREFIX "")
 set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 target_link_libraries(ccg otawa)
 install(TARGETS ccg DESTINATION "${PROCDIR}/otawa")

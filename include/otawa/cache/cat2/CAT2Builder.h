@@ -27,7 +27,7 @@
 #include <otawa/hard/Cache.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/proc/CFGProcessor.h>
-#include <otawa/cache/categorisation/CATBuilder.h>
+//#include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/cache/cat2/ACSBuilder.h>
 #include <otawa/cache/categories.h>
 

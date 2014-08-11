@@ -24,6 +24,7 @@
 
 #include <elm/assert.h>
 #include <otawa/prop/Identifier.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa {
 
@@ -68,6 +69,7 @@ io::Output& operator<<(io::Output& out, const CategoryStats& stats);
 extern Identifier<category_t> CATEGORY;
 extern Identifier<BasicBlock *> CATEGORY_HEADER;
 extern Identifier<CategoryStats *> CATEGORY_STATS;
+extern p::feature ICACHE_CATEGORY_FEATURE;
 
 }
 

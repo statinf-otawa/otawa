@@ -31,7 +31,7 @@
 #include <otawa/ccg/Node.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/ilp/Var.h>
-#include <otawa/cache/categorisation/CATNode.h>
+//#include <otawa/cache/categorisation/CATNode.h>
 #include <otawa/hard/Cache.h>
 
 namespace otawa {
