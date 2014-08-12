@@ -51,7 +51,6 @@ set(libotawa_SOURCES
 	"ipet_BasicConstraintsBuilder.cpp"
 	"ipet_BasicObjectFunctionBuilder.cpp"
 	"ipet_ConstraintLoader.cpp"
-#	"ipet_parser.yy"
 	"ipet_FlowFactLoader.cpp"
 	"ipet_FlowFactConstraintBuilder.cpp"
 	"ipet_ILPSystemGetter.cpp"
@@ -96,8 +95,6 @@ set(libotawa_SOURCES
 	"tsim_Delta.cpp"
 	"tsim_TimeDeltaObjectFunctionModifier.cpp"
 	"util_FlowFactLoader.cpp"
-#	"util_fft_parser.yy"
-#	"util_fft_lexer.ll"
 	"util_CFGNormalizer.cpp"
 	"util_MemBlockMap.cpp"
 	"util_Dominance.cpp"
@@ -183,36 +180,23 @@ set(libotawa_SOURCES
 
 include_directories(".")
 
-# generated sources by flex and bison
-#if(WIN32)
-#	BISON_FILE("ipet_parser.yy")
-#	list(APPEND libotawa_SOURCES ${OUTFILE})
-#	FLEX_FILE("ipet_lexer.ll")
-#	list(APPEND libotawa_SOURCES lex.${PREFIX}.c lex.${PREFIX}.h)
-
-#	BISON_FILE("util_fft_parser.yy")
-#	list(APPEND libotawa_SOURCES ${OUTFILE})
-#	FLEX_FILE("util_fft_lexer.ll")
-#	list(APPEND libotawa_SOURCES lex.${PREFIX}.c lex.${PREFIX}.h)
-#elseif(UNIX)
-	BISON_TARGET(ipet_parser ipet_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.h)
-	FLEX_TARGET(ipet_lexer ipet_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/ipet_lexer.cc)
-	ADD_FLEX_BISON_DEPENDENCY(ipet_lexer ipet_parser)
-	BISON_TARGET(util_fft_parser util_fft_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/util_fft_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/util_fft_parser.h)
-	FLEX_TARGET(util_fft_lexer util_fft_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/util_fft_lexer.cc)
-	ADD_FLEX_BISON_DEPENDENCY(util_fft_lexer util_fft_parser)
-	list(APPEND libotawa_SOURCES
-		${BISON_ipet_parser_OUTPUTS}
-		${FLEX_ipet_lexer_OUTPUTS}
-		${BISON_util_fft_parser_OUTPUTS}
-		${FLEX_util_fft_lexer_OUTPUTS})
-#endif()
+BISON_TARGET(ipet_parser ipet_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.h)
+FLEX_TARGET(ipet_lexer ipet_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/ipet_lexer.cc)
+ADD_FLEX_BISON_DEPENDENCY(ipet_lexer ipet_parser)
+BISON_TARGET(util_fft_parser util_fft_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/util_fft_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/util_fft_parser.h)
+FLEX_TARGET(util_fft_lexer util_fft_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/util_fft_lexer.cc)
+ADD_FLEX_BISON_DEPENDENCY(util_fft_lexer util_fft_parser)
+list(APPEND libotawa_SOURCES
+	${BISON_ipet_parser_OUTPUTS}
+	${FLEX_ipet_lexer_OUTPUTS}
+	${BISON_util_fft_parser_OUTPUTS}
+	${FLEX_util_fft_lexer_OUTPUTS})
 
 # build
 add_library(otawa SHARED ${libotawa_SOURCES})
-target_link_libraries(otawa ${LIBELM})
-target_link_libraries(otawa ${LIBGEL})
-target_link_libraries(otawa ${LIBGEL_DWARF})
+target_link_libraries(otawa "${LIBELM}")
+target_link_libraries(otawa "${LIBGEL}")
+target_link_libraries(otawa "${LIBGEL_DWARF}")
 
 # installation
 install(TARGETS otawa DESTINATION ${LIBDIR})
