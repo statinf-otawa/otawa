@@ -13,7 +13,7 @@ include_directories(".")
 include_directories("../../include")
 
 add_library(branch SHARED ${branch_SOURCES})
-set_property(TARGET ast PROPERTY PREFIX "")
+set_property(TARGET branch PROPERTY PREFIX "")
 set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 target_link_libraries(branch otawa)
 install(TARGETS branch DESTINATION "${PROCDIR}/otawa")
