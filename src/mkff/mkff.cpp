@@ -277,6 +277,10 @@ protected:
 		FlowFactLoader::onMultiBranch(control, target);
 		record(control);
 	}
+	virtual void onMultiCall(Address control, const Vector< Address > &target) {
+		FlowFactLoader::onMultiCall(control, target);
+		record(control);
+	}
 	virtual void onReturn(address_t addr) {
 		FlowFactLoader::onReturn(addr);
 		record(addr);
@@ -572,7 +576,11 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 				if(!inst->target()) {
 					if(BRANCH_TARGET(inst).get().isNull()) {
 						prepare(ws, cfg);
-						out << "multibranch " << addressOf(cfg, inst->address())
+						if(inst->isCall())
+							out << "multicall ";
+						else
+							out << "multibranch ";
+						out << addressOf(cfg, inst->address())
 							<< " to ?;";
 						out << "\t// (" << inst->address() << ") ";
 						if(inst->isCall())
