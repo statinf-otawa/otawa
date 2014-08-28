@@ -745,16 +745,15 @@ File *Process::loadFile(elm::CString path) {
 
 	// Initialize symbols
 	LTRACE;
-	gel_enum_t *iter = gel_enum_file_symbol(_gelFile);
-	gel_enum_initpos(iter);
-	for(char *name = (char *)gel_enum_next(iter); name; name = (char *)gel_enum_next(iter)) {
-		ASSERT(name);
+	gel_sym_iter_t iter;
+	gel_sym_t *sym;
+	for(sym = gel_sym_first(&iter, _gelFile); sym; sym = gel_sym_next(&iter)) {
 
-		// get the symbol description
-		gel_sym_t *sym = gel_find_file_symbol(_gelFile, name);
-		ASSERT(sym);
+		/* get information */
 		gel_sym_info_t infos;
 		gel_sym_infos(sym, &infos);
+		if(cstring(infos.name) == "")
+			continue;
 
 		// compute the kind
 		Symbol::kind_t kind = Symbol::NONE;
@@ -781,7 +780,6 @@ File *Process::loadFile(elm::CString path) {
 		file->addSymbol(symbol);
 		TRACE("function " << label << " at " << addr);
 	}
-	gel_enum_free(iter);
 
 	// Last initializations
 	LTRACE;
