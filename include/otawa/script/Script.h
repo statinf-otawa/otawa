@@ -57,6 +57,7 @@ public:
 	string deflt;
 	string label;
 	string help;
+	bool multi;
 
 protected:
 	ScriptItem(type_t t, xom::Element& elt);
