@@ -107,6 +107,19 @@ WCETComputation::WCETComputation(void): Processor(reg) {
 }
 
 
+// !!DEBUG!!
+Identifier<string> MULTI("otawa::MULTI", "");
+
+
+/**
+ */
+void WCETComputation::configure(const PropList& props) {
+	Processor::configure(props);
+	cerr << "DEBUG: multiple values\n";
+	for(Identifier<string>::Getter v(props, MULTI); v; v++)
+		cerr << "DEBUG: value = " << *v << io::endl;
+}
+
 /**
  */
 void WCETComputation::processWorkSpace(WorkSpace *fw) {

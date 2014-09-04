@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	"Half" abstract interpretation class interface.
+ *	HalfAbsInt class interface.
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
@@ -163,11 +162,18 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	}
 
 	// call return case, merge return-state for all functions called from this node
-	else if (!next_edge && !call_edges.isEmpty())
+	else if (!next_edge && !call_edges.isEmpty()) {
+
+		// join return edges of functions
 		for (elm::genstruct::Vector<Edge*>::Iterator iter(call_edges); iter; iter++) {
 			fp.lub(in, *fp.getMark(*iter));
 			fp.unmarkEdge(*iter);
 		}
+
+		// cleanup entry edges
+		for(BasicBlock::InIterator in(current); in; in++)
+			fp.unmarkEdge(*in);
+	}
 
 	// loop header case: launch fixPoint()
 	else if(LOOP_HEADER(current)) {
@@ -235,8 +241,8 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			ASSERT(edgeState);
 			fp.updateEdge(*inedge, *edgeState);
 			fp.lub(in, *edgeState);
-			fp.unmarkEdge(*inedge);
-
+			if(!next_edge)
+				fp.unmarkEdge(*inedge);
             //HAI_TRACE("unmarking in-edge " << inedge->source() << " -> " << inedge->target());
 
 		}
@@ -275,12 +281,18 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 
 	// Exit from function: pop callstack, mark edge with return state for the caller
 	else if (current->isExit() && (callStack->length() > 0)) {
+
+		// apply current block
 		HAI_TRACE("\t\tupdating exit block while returning from call at " << current);
        	fp.update(out, in, current);
+
+       	// restore previous context
        	Edge *edge = callStack->pop();
        	cur_cfg = cfgStack->pop();
        	HAI_TRACE("\t\treturning to CFG " << cur_cfg->label());
 		fp.leaveContext(out, cur_cfg->entry(), CTX_FUNC);
+
+		// record function output state
        	fp.markEdge(edge, out);
        	workList->push(edge->source());
 	}
@@ -297,9 +309,12 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 				fp.markEdge(func_entry, out);
 		    }
 		}
-		/* In all cases, add next entry point to worklist. */
+
+		// save current context
         callStack->push(next_edge);
         cfgStack->push(cur_cfg);
+
+        // setup new context
         cur_cfg = next_edge->calledCFG();
         HAI_TRACE("\tcalling CFG " << cur_cfg->label());
         workList->push(cur_cfg->entry());

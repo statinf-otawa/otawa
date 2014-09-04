@@ -2,6 +2,7 @@ set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../..")
 set(CMAKE_MACOSX_RPATH true)
 
 set(cfgio_la_SOURCES
+    "cfgio_Input.cpp"
 	"cfgio_Output.cpp")
 
 include_directories("../../include")

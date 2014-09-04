@@ -1,5 +1,5 @@
 /*
- *	XMLDisplayer class implementation
+ *	cfgio::Output class implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2013, IRIT UPS.
