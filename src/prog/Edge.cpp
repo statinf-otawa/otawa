@@ -143,14 +143,22 @@ cstring Edge::kindName(kind_t kind) {
 	return names[kind];
 }
 
-
-Output& operator<<(Output& out, const Edge *edge) {
+static void print(Output& out, const Edge *edge) {
 	out << edge->source() << " -> ";
 	if(edge->kind() == Edge::CALL)
 		out << "cfg(" << edge->calledCFG()->label() << ")";
 	else
 		out << edge->target();
 	out << " (" << Edge::kindName(edge->kind()) << ")";
+}
+
+Output& operator<<(Output& out, const Edge *edge) {
+	print(out, edge);
+	return out;
+}
+
+Output& operator<<(Output& out, Edge *edge) {
+	print(out, edge);
 	return out;
 }
 

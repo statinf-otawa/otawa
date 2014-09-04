@@ -1,16 +1,32 @@
 /*
- * $Id$
- * Copyright (c) 2006, IRIT-UPS
+ *	ostat command
  *
- * ostat.cpp -- ostat main entry
+ *	This file is part of OTAWA
+ *	Copyright (c) 2010, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
  
 #include <otawa/otawa.h>
+#include <otawa/app/Application.h>
 #include <otawa/cfg.h>
 #include <elm/options.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/genstruct/VectorQueue.h>
+#include <otawa/cfg/features.h>
 
 using namespace otawa;
 using namespace elm;
@@ -52,51 +68,16 @@ using namespace elm::genstruct;
  * @endcode
  */
 
-// Command class
-class Statistics;
-class Command: public option::Manager {
-	String file;
-	otawa::Manager manager;
-	WorkSpace *fw;
-	CFGInfo *info;
-	genstruct::Vector<String> funs;
-	genstruct::Vector<Statistics *> stats;
-public:
-	Command(void);
-	~Command(void);
-	void run(int argc, char **argv);
-	
-	// Manager overload
-	virtual void process(String arg);
-};
-
-
-/* Options */
-static Command command;
-static option::BoolOption tree_option(command, 't', "tree",
-	"scan the whole calling tree.", false);
-static option::BoolOption short_option(command, 's', "short",
-	"perform short display.", false);
-static option::BoolOption overall_option(command, 'o', "overall",
-	"display only overall statistics.", false);
-
-
 // Statistics class
 class Statistics {
-protected:
-	long long bb_cnt;
-	long long inst_cnt;
-	long long inst_max;
-	long long mem_cnt;
-	long long mem_max;
-	long long bra_cnt;
-	long long bra_max;
 public:
-	Statistics(void);
+	Statistics(void)
+		: bb_cnt(0), inst_cnt(0), inst_max(0), mem_cnt(0), mem_max(0), bra_cnt(0), bra_max(0)
+		{ }
+
 	virtual ~Statistics(void) { }
-	void addBB(BasicBlock *bb);
+
 	inline long long bbCount(void) const { return bb_cnt; };
-	virtual void print(elm::io::Output& out = cout);
 	
 	inline int instCount(void) const { return inst_cnt; };
 	inline double averageInstCount(void) const { return (double)inst_cnt / bb_cnt; };
@@ -111,68 +92,48 @@ public:
 	inline double averageBranchCount(void) const { return (double)bra_cnt / bb_cnt; };
 	inline long long maxBranchCount(void) const { return bra_max; };
 	inline double branchRatio(void) const { return (double)bra_cnt * 100 / inst_cnt; }
-};
 
+	void addBB(BasicBlock *bb) {
 
-/**
- * Print the statistics.
- * @param out	Output to use (default cout).
- */
-Statistics::Statistics(void): bb_cnt(0), inst_cnt(0), inst_max(0), mem_cnt(0),
-mem_max(0), bra_cnt(0), bra_max(0) {
-}
+		// do not process virtual
+		if(bb->isEnd())
+			return;
 
+		// initialize statistics
+		long long insts = 0;
+		long long mems = 0;
+		long long bras = 0;
+		bb_cnt++;
 
-void Statistics::addBB(BasicBlock *bb) {
-	
-	// do not process virtual
-	if(bb->isEnd())
-		return;
-	
-	// initialize statistics
-	long long insts = 0;
-	long long mems = 0;
-	long long bras = 0;
-	bb_cnt++;
-	
-	// Count instructions
-	for(BasicBlock::InstIter inst(bb); inst; inst++) {
-		//if(!inst->isPseudo()) {
-			insts++;
-			if(inst->isMem())
-				mems++;
-			if(inst->isControl())
-				bras++;
-		//}
+		// Count instructions
+		for(BasicBlock::InstIter inst(bb); inst; inst++) {
+			//if(!inst->isPseudo()) {
+				insts++;
+				if(inst->isMem())
+					mems++;
+				if(inst->isControl())
+					bras++;
+			//}
+		}
+
+		// Record computations
+		if(insts > inst_max)
+			inst_max = insts;
+		if(mems > mem_max)
+			mem_max = mems;
+		if(bras > bra_max)
+			bra_max = bras;
+		inst_cnt += insts;
+		mem_cnt += mems;
+		bra_cnt += bras;
 	}
-	
-	// Record computations
-	if(insts > inst_max)
-		inst_max = insts;
-	if(mems > mem_max)
-		mem_max = mems;
-	if(bras > bra_max)
-		bra_max = bras;
-	inst_cnt += insts;
-	mem_cnt += mems;
-	bra_cnt += bras;
-}
 
-
-void Statistics::print(elm::io::Output& out) {
-	if(short_option) {
-		out << bbCount() << '\t'
-			<< instCount() << ','
-			<< averageInstCount() << ','
-			<< maxInstCount() << '\t'
-			<< memAccessCount() << ','
-			<< averageMemAccessCount() << ','
-			<< maxMemAccessCount() << '\t'
-			<< branchCount() << ','
-			<< averageBranchCount() << ','
-			<< maxBranchCount() << '\n';
-	}
-	else {
+	/**
+	 * Print the statistics.
+	 * @param out	Output to use (default cout).
+	 */
+	void print(io::Output& out = cout) {
+		printLabel(out);
 		out << "BB count = " << bbCount() << "\n";
 		out << "type = total count, average/bb, max/bb, ratio\n";
 		out << "instructions = "
@@ -190,210 +151,164 @@ void Statistics::print(elm::io::Output& out) {
 			 << maxBranchCount() << ", "
 			 << branchRatio() << "%\n";
 	}
-}
+
+	/**
+	 * Print the statistics in short form.
+	 * @param out	Output to use (default cout).
+	 */
+	void printShort(io::Output& out = cout) {
+		out << bbCount() << '\t'
+			<< instCount() << ','
+			<< averageInstCount() << ','
+			<< maxInstCount() << '\t'
+			<< memAccessCount() << ','
+			<< averageMemAccessCount() << ','
+			<< maxMemAccessCount() << '\t'
+			<< branchCount() << ','
+			<< averageBranchCount() << ','
+			<< maxBranchCount() << '\t';
+		printShortLabel(out);
+		out << '\n';
+	}
+
+	/**
+	 * Print the header lines.
+	 * @param out	Where to output to.
+	 */
+	void printHeader(io::Output& out = cout) {
+		out << "bb   \tinst       \tmem        \tbranch     \n";
+		out << "count\tcnt,avg,max\tcnt,avg,max\tcnt,avg,max\n";
+	}
+
+protected:
+	virtual void printLabel(io::Output& out = cout) { }
+	virtual void printShortLabel(io::Output& out = cout) { }
+
+	long long bb_cnt;
+	long long inst_cnt;
+	long long inst_max;
+	long long mem_cnt;
+	long long mem_max;
+	long long bra_cnt;
+	long long bra_max;
+};
 
 
 // CFGStatistics class
 class CFGStatistics: public Statistics {
-	CFG *_cfg;
 public:
-	CFGStatistics(CFG *cfg);
-	virtual ~CFGStatistics(void) { }
-	inline CFG *cfg(void) { return _cfg; };
-	virtual void print(elm::io::Output& out = cout);
-};
-
-
-/**
- * Initialize a statistics for a CFG.
- */
-CFGStatistics::CFGStatistics(CFG *cfg): _cfg(cfg) {
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-		addBB(bb);
-};
-
-
-/**
- * Initialize the statistics.
- */
-/**
- * Count a new basic block.
- */
-/**
- */
-void CFGStatistics::print(elm::io::Output& out) {
-	if(short_option)
-		out << _cfg->label() << '\t';
-	else
-		out << "FUNCTION " << _cfg->label() << "\n";
-	Statistics::print(out);
-}
-
-
-// TreeStatistics class
-class TreeStatistics: public Statistics {
-	HashTable<void *, CFGStatistics *> stats;
-	VectorQueue<CFG *> todo;
-public:
-	TreeStatistics(CFG *cfg);
-	virtual ~TreeStatistics(void) { }
-	virtual void print(elm::io::Output& out = cout);
-};
-
-
-/**
- * Build a new tree statistics and collect statistics for sub-functions.
- * @param cfg	Root CFG of the CFG tree to explore.
- */
-TreeStatistics::TreeStatistics(CFG *cfg) {
-	todo.put(cfg);
-	while(!todo.isEmpty()) {
-		
-		// Compute stats for the head CFG
-		CFG *cfg = todo.get();
-		CFGStatistics *stat = new CFGStatistics(cfg);
-		stats.put(cfg, stat);
-
-		// Collect global statistics
-		bb_cnt += stat->bbCount();
-		inst_cnt += stat->instCount();
-		if(stat->maxInstCount() > inst_max)
-			inst_max = stat->maxInstCount();
-		mem_cnt += stat->memAccessCount();
-		if(stat->maxMemAccessCount() > mem_max)
-			mem_max = stat->maxMemAccessCount();
-		bra_cnt += stat->branchCount();
-		if(stat->maxBranchCount() > bra_max)
-			bra_max = stat->maxBranchCount();
-		
-		// Look for called CFG
+	CFGStatistics(CFG *cfg): _cfg(cfg) {
 		for(CFG::BBIterator bb(cfg); bb; bb++)
-			for(BasicBlock::OutIterator edge(bb); edge; edge++)
-				if(edge->kind() == Edge::CALL
-				&& edge->calledCFG()
-				&& !stats.hasKey(edge->calledCFG())) {
-					todo.put(edge->calledCFG());
-					stats.put(edge->calledCFG(), 0);
-				}
+			addBB(bb);
 	}
-}
+	inline CFG *cfg(void) { return _cfg; };
+
+protected:
+	virtual void printLabel(io::Output& out = cout) { out << "FUNCTION " << _cfg->label() << "\n"; }
+	virtual void printShortLabel(io::Output& out = cout) { out << _cfg->label(); }
+
+private:
+	CFG *_cfg;
+};
 
 
-/**
- */
-void TreeStatistics::print(elm::io::Output& out) {
-	
-	// Print content
-	if(!overall_option)
-		for(HashTable<void *, CFGStatistics *>::Iterator stat(stats); stat; stat++) {
-			stat->print(out);
-			if(!short_option)
-				out << "\n";
+// StatAccumulator class
+class StatAccumulator: public Statistics {
+public:
+	void add(Statistics& stat) {
+		bb_cnt += stat.bbCount();
+		inst_cnt += stat.instCount();
+		inst_max = max(inst_max, stat.maxInstCount());
+		mem_cnt += stat.memAccessCount();
+		mem_max = max(mem_max, stat.maxMemAccessCount());
+		bra_cnt += stat.branchCount();
+		bra_max = max(bra_max, stat.maxBranchCount());
+	}
+
+protected:
+	virtual void printLabel(io::Output& out = cout) { out << "TOTAL\n"; }
+	virtual void printShortLabel(io::Output& out = cout) { out << "TOTAL"; }
+};
+
+
+// Command class
+class Command: public Application {
+	WorkSpace *fw;
+	CFGInfo *info;
+public:
+	Command(void):
+		Application(
+			"ostat",
+			Version(1, 0, 1),
+			"Compute statistics on a binary file.\nIf no function name is given, the main() function is used.",
+			"Hugues Casse <casse@irit.fr>",
+			"Copyright (c) 2006, IRIT-UPS France"),
+		tree_option(option::SwitchOption::Make(*this).cmd("-t").cmd("--tree").description("Scan the whole calling tree.")),
+		short_option(option::SwitchOption::Make(*this).cmd("-s").cmd("--short").description("Perform short display.")),
+		overall_option(option::SwitchOption::Make(*this).cmd("-o").cmd("--overall").description("Display only overall statistics."))
+	{ }
+
+	virtual void work(const string &entry, PropList &props) throw (elm::Exception) {
+		require(COLLECTED_CFG_FEATURE);
+		const CFGCollection *coll = otawa::INVOLVED_CFGS(workspace());
+		collect(coll->get(0));
+		if(*tree_option)
+			for(int i = 1; i < coll->count(); i++)
+				collect(coll->get(i));
+	}
+
+	virtual void work(PropList &props) throw (elm::Exception) {
+		Application::work(props);
+		StatAccumulator accu;
+
+		// print header if needed
+		if(*short_option)
+			accu.printHeader();
+
+		// display the statistics
+		bool fst = true;
+		for(genstruct::HashTable<Address, Statistics *>::Iterator it(stats); it; it++) {
+
+			// accumulate if needed
+			if(*overall_option)
+				accu.add(**it);
+
+			// blank line
+			if(!*short_option && !fst)
+				cout << '\n';
+			else
+				fst = false;
+
+			// display the statistics
+			if(*short_option)
+				it->printShort();
+			else
+				it->print();
 		}
-	
-	// Print total
-	if(short_option)
-		out << "TOTAL\t";
-	else
-		out << "TOTAL\n";
-	Statistics::print(out);
-}
 
-
-
-/**
- * Initialize the command.
- */
-Command::Command(void):
-	Manager(
-		option::program, "OStat",
-		option::version, new Version(1, 0),
-		option::author, "Hugues Casse <casse@irit.fr>",
-		option::copyright, "Copyright (c) 2006, IRIT-UPS France",
-		option::description,
-			"Compute statistics on a binary file.\n"
-			"If no function name is given, the main() function is used.",
-		option::arg_desc, "file_name [function names...]",
-		option::end), info(0), fw(0)
-{
-}
-
-
-/**
- * Cleanup.
- */
-Command::~Command(void) {
-}
-
-
-/**
- * Process a free argument.
- * @param arg	Free argument.
- */
-void Command::process(String arg) {
-	if(! file)
-		file = arg;
-	else
-		funs.add(arg);
-}
-
-
-/**
- * run the program.
- */
-void Command::run(int argc, char **argv) {
-	parse(argc, argv);
-	
-	// Check file presence
-	if(!file) {
-		displayHelp();
-		throw option::OptionException("no binary file given");
-	}
-	
-	// Add main if no argument
-	if(!funs)
-		funs.add("main");
-	
-	// Load the file
-	PropList props;
-//	LOADER(props) = &Loader::LOADER_Gliss_PowerPC;
-	fw = manager.load(file.toCString(), props);
-	info = fw->getCFGInfo();
-
-	// Process arguments
-	for(int i = 0; i < funs.length(); i++) {
-		CFG *cfg = info->findCFG(funs[i]);
-		if(!cfg) {
-			cerr << "ERROR: \"" << file
-				 << "\" does not contain a function named \"" << funs[i]
-				 << "\".\n";
-			throw option::OptionException(_ << "\"" << file
-				<< "\" does not contain a function named \"" << funs[i] << "\"");
+		// display the total if needed
+		if(*overall_option) {
+			if(*short_option)
+				accu.printShort();
+			else {
+				cout << '\n';
+				accu.print();
+			}
 		}
-		if(tree_option)
-			stats.add(new TreeStatistics(cfg));
-		else
-			stats.add(new CFGStatistics(cfg));
 	}
-	
-	// Display statistics
-	for(int i = 0; i < stats.length(); i++)
-		stats[i]->print();
-}
 
+private:
 
-/* Startup */
-int main(int argc, char **argv) {
-	try {
-		command.run(argc, argv);
+	void collect(CFG *cfg) {
+		Statistics *s = stats.get(cfg->address(), 0);
+		if(s)
+			return;
+		s = new CFGStatistics(cfg);
+		stats.put(cfg->address(), s);
 	}
-	catch(option::OptionException& e) {
-		cerr << "ERROR: " << e.message() << io::endl;
-		command.displayHelp();
-		return 1;
-	}
-	catch(elm::Exception& e) {
-		cerr << "ERROR: " << e.message() << io::endl;
-		return 2;
-	}
-}
+
+	option::SwitchOption tree_option, short_option, overall_option;
+	genstruct::HashTable<Address, Statistics *> stats;
+};
+
+OTAWA_RUN(Command)

@@ -68,6 +68,7 @@ private:
 };
 
 Output& operator<<(Output& out, const Edge *edge);
+Output& operator<<(Output& out, Edge *edge);
 
 // Deprecated
 typedef Edge::kind_t edge_kind_t;
