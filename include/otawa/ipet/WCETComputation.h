@@ -34,7 +34,6 @@ public:
 	static p::declare reg;
 
 protected:
-	virtual void configure(const PropList& props);
 	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void collectStats(WorkSpace *ws);
 
