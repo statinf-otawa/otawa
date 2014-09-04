@@ -375,12 +375,14 @@ of the analysis. They matches exactly the properties in OTAWA but only some prop
 provide a converter from XML text to C++ values. The syntax is below:
 <code xml>
 <!-- CONFIG ::= -->
-    <config name="C++PATH" value="TEXT"/>
+    <config name="C++PATH" value="TEXT" add="yes|true|no|false"?/>
 </code>
 
 The matching property identifier is retrieved from its //C++PATH// and its ''value''
 is converted according to the type of the identifier and pushed in the property list
-used to configure the code processor.
+used to configure the code processor. If the ''add'' attribute is to ''yes'' or ''true'',
+the value is added to the property list such that several values with the same identifier
+can be added to the configuration property list. 
 
 Below is a small example for the //LPC2138// microprocessor: 
 <code xml>

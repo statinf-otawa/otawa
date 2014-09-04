@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	PropList class interface
  *
  *	This file is part of OTAWA
@@ -25,7 +24,6 @@
 #include <elm/utility.h>
 #include <elm/PreIterator.h>
 #include <elm/util/VarArg.h>
-//#include <otawa/base.h>
 
 namespace elm { template <class T> class Initializer; }
 
@@ -64,18 +62,19 @@ public:
 // PropList class
 class PropList {
 	mutable Property *head;
-	//void init(const AbstractIdentifier *id, elm::VarArg& args);
 public:
 	static const PropList EMPTY;
 	inline PropList(const PropList& props): head(0) { addProps(props); };
 	inline PropList(void): head(0) { };
-	virtual ~PropList(void) { clearProps(); };
+	inline ~PropList(void) { clearProps(); };
 
 	// Property access
 	Property *getProp(const AbstractIdentifier *id) const;
 	void setProp(Property *prop);
 	void removeProp(const AbstractIdentifier *id);
 	inline void removeProp(const AbstractIdentifier& id) { removeProp(&id); }
+	Property *extractProp(const AbstractIdentifier *id);
+	inline Property *extractProp(const AbstractIdentifier& id) { return extractProp(&id); }
 	inline void setProp(const AbstractIdentifier *id) { setProp(new Property(id)); };
 	void addProp(Property *prop);
 	void removeAllProp(const AbstractIdentifier *id);

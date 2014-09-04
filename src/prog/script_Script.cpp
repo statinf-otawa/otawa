@@ -45,6 +45,57 @@ using namespace elm;
 
 namespace otawa { namespace script {
 
+/**
+ * @defgroup script Scripts
+ *
+ * Writing a chain of analyzes for a specific microprocessor target is a hard path
+ * made of the setup of a WCET computation method, analyzes of the target hardware
+ * and analyzes of non-standard facilities of the hardware.
+ *
+ * This work may be relieved using scripts: a script is an XML files that includes:
+ * * an XHTML documentation of the supported hardware,
+ * * parameters definition that may be set externally to control the behavior of the script,
+ * * description of involved hardware (pipeline, caches, memory, etc),
+ * * analyzes involved on the computation of WCET possibly tuned by the effective parameters.
+ *
+ * All parts of the script are fully dynamic using the [XSLT](http://www.w3.org/standards/xml/transformation)
+ * language to generate the hardware description and the performed analyzes. More information
+ * may be found on this format in the developer manual of OTAWA. Below is a simple example of script:
+ *
+ * ~~~{.xml}
+ * <?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
+ * <otawa-script xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+ * <name>Trivial WCET computation</name>
+ *
+ * <info>
+ * This script may be used to compute trivial WCET (not realistic)
+ * with scalar pipelined processors. In the extreme case, it may give
+ * a rough overestimation of the real WCET.
+ * </info>
+ *
+ * <configuration>
+ *	<item name="virtual" type="bool" default="false" label="function call virtualization">
+ *		<help>Cause the function call to be replaced by inlining the function body.
+ *		Improve the precision of the WCET but may augment the computation time.</help>
+ *	</item>
+ *	<item name="stages" type="int" default="5" label="number of stages">
+ *		<help>Number of stages in the pipeline.</help>
+ *	</item>
+ * </configuration>
+ *
+ * <script>
+ *	<xsl:if test="$virtual!=0">
+ *		<step processor="otawa::Virtualizer"/>
+ *	</xsl:if>
+ *	<step processor="otawa::ipet::WCETComputation">
+ *		<!--config name="otawa::Processor::VERBOSE" value="true"/-->
+ *		<config name="otawa::ipet::PIPELINE_DEPTH" value="{$stages}"/>
+ *	</step>
+ * </script>
+ * </otawa-script>
+ * ~~~
+ */
+
 class ParseError: public otawa::Exception {
 public:
 	inline ParseError(const string& msg): otawa::Exception(msg) { }
@@ -69,6 +120,7 @@ cstring ScriptItem::type_labels[] = {
  * @class ScriptItem
  * These objects represents the item of the configuration
  * of a script.
+ * @ingroup script
  */
 
 
@@ -246,6 +298,7 @@ private:
  * @li @ref SCRIPT		reference on the script XML
  * @li @ref CONFIG		reference on the configuration part of the XML
  *
+ * @ingroup script
  */
 
 /**
@@ -545,6 +598,12 @@ void Script::makeConfig(xom::Element *elem, PropList& props) {
 			onWarning(elem, "\"value\" attribute required");
 			continue;
 		}
+		bool add = false;
+		Option<xom::String> add_value = config->getAttributeValue("add");
+		if(add_value == "yes" || add_value == "true")
+			add = true;
+		else if(add_value != "no" && add_value != "false")
+			onWarning(elem, "add attribute accepts only values from yes/true, no/false! Considered false!");
 
 		// set the property
 		if(logFor(LOG_DEPS))
@@ -553,7 +612,13 @@ void Script::makeConfig(xom::Element *elem, PropList& props) {
 		if(!id)
 			throw Exception(_ << "can not find identifier " << *name);
 		try {
-			id->fromString(props, *value);
+			if(!add)
+				id->fromString(props, *value);
+			else {
+				PropList p;
+				id->fromString(p, *value);
+				props.addProp(p.extractProp(id));
+			}
 		}
 		catch(elm::Exception& e) {
 			onError(config, _ << "bad formatted value: " << e.message());
@@ -572,6 +637,7 @@ void Script::onError(error_level_t level, const string &message) {
 
 /**
  * This identifier configures the @ref Script to use the given path.
+ * @ingroup script
  */
 Identifier<elm::system::Path> PATH("otawa::script::PATH", "");
 
@@ -580,6 +646,7 @@ Identifier<elm::system::Path> PATH("otawa::script::PATH", "");
  * This identifier configures the @ref Script to use the argument (identifier, value)
  * as a parameter. There is usually several parameter that may be accumulated with
  * PARAM(props).add(pair(identifier, value)) .
+ * @ingroup script
  */
 Identifier<Pair<string, string> > PARAM("otawa::script::PARAM", pair(string(""), string("")));
 
@@ -587,6 +654,7 @@ Identifier<Pair<string, string> > PARAM("otawa::script::PARAM", pair(string(""),
 /**
  * Put by the @ref Script intrepreter in the configuration properties launching the processor.
  * XML node representing the script.
+ * @ingroup script
  */
 Identifier<xom::Element *> SCRIPT("otawa::script::SCRIPT", 0);
 
@@ -594,6 +662,7 @@ Identifier<xom::Element *> SCRIPT("otawa::script::SCRIPT", 0);
 /**
  * Put by the @ref Script intrepreter in the configuration properties launching the processor.
  * XML node representing the configuration part of the script.
+ * @ingroup script
  */
 Identifier<xom::Element *> PLATFORM("otawa::script::PLATFORM", 0);
 
@@ -601,12 +670,14 @@ Identifier<xom::Element *> PLATFORM("otawa::script::PLATFORM", 0);
 /**
  * This property informs the script to stop its work just after
  * parsing the configuration items.
+ * @ingroup script
  */
 Identifier<bool> ONLY_CONFIG("otawa::script::ONLY_CONFIG", false);
 
 
 /**
  * This property asks the script to time the performed steps.
+ * @ingroup script
  */
 Identifier<bool> TIME_STAT("otawa::script::TIME_STAT", false);
 
