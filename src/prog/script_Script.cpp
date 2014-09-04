@@ -600,10 +600,12 @@ void Script::makeConfig(xom::Element *elem, PropList& props) {
 		}
 		bool add = false;
 		Option<xom::String> add_value = config->getAttributeValue("add");
-		if(add_value == "yes" || add_value == "true")
-			add = true;
-		else if(add_value != "no" && add_value != "false")
-			onWarning(elem, "add attribute accepts only values from yes/true, no/false! Considered false!");
+		if (add_value) {
+			if(add_value == "yes" || add_value == "true")
+				add = true;
+			else if(add_value != "no" && add_value != "false")
+				onWarning(elem, "add attribute accepts only values from yes/true, no/false! Considered false!");
+		}
 
 		// set the property
 		if(logFor(LOG_DEPS))
