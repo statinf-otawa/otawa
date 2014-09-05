@@ -392,13 +392,31 @@ void Script::work(WorkSpace *ws) {
 	doc->removeChild(oroot);
 	temp->appendChild(oroot);
 
+	// prepare the work document
+	xom::Element *empty_root = new xom::Element("empty");
+	xom::Document *empty = new xom::Document(empty_root);
+
 	// build the parameter declaration
 	for(ItemIter item(*this); item; item++) {
-		xom::Element *param = new xom::Element("xsl:param", XSL_URI);
-		root->appendChild(param);
-		param->addAttribute(new xom::Attribute("xsl:name", XSL_URI, item->name.toCString()));
-		if(item->deflt)
-			param->addAttribute(new xom::Attribute("xsl:select", XSL_URI, item->makeParam(item->deflt).toCString()));
+
+		// single parameter
+		if(!item->multi) {
+			xom::Element *param = new xom::Element("xsl:param", XSL_URI);
+			root->appendChild(param);
+			param->addAttribute(new xom::Attribute("xsl:name", XSL_URI, item->name.toCString()));
+			if(item->deflt)
+				param->addAttribute(new xom::Attribute("xsl:select", XSL_URI, item->makeParam(item->deflt).toCString()));
+		}
+
+		// multi-parameter
+		else
+			for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param; param++)
+				if((*param).fst == item->name) {
+					cerr << "DEBUG: setting " << (*param).fst << " to " << (*param).snd << io::endl;
+					xom::Element *param_elt = new xom::Element(item->name.toCString());
+					empty_root->appendChild(param_elt);
+					param_elt->addAttribute(new xom::Attribute("value", item->makeParam((*param).snd).toCString()));
+				}
 	}
 
 	// !!DEBUG!!
@@ -414,7 +432,7 @@ void Script::work(WorkSpace *ws) {
 	for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param; param++) {
 		bool found = false;
 		for(ItemIter item(*this); item; item++) {
-			if(item->name == (*param).fst) {
+			if(!item->multi && item->name == (*param).fst) {
 				found = true;
 				xslt.setParameter((*param).fst, item->makeParam((*param).snd));
 				if(logFor(LOG_DEPS))
@@ -424,8 +442,6 @@ void Script::work(WorkSpace *ws) {
 		if(!found)
 			warn(_ << "unknown configuration parameter: " << (*param).fst);
 	}
-	xom::Element *empty_root = new xom::Element("empty");
-	xom::Document *empty = new xom::Document(empty_root);
 	xom::Document *res = xslt.transformDocument(empty);
 	delete empty;
 	delete xsl;
