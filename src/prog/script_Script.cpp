@@ -139,7 +139,7 @@ string ScriptItem::makeParam(const string& value) {
 /**
  * Protected constructor.
  */
-ScriptItem::ScriptItem(type_t t, xom::Element& elt):	type(t) {
+ScriptItem::ScriptItem(type_t t, xom::Element& elt): type(t), multi(false) {
 
 	// parse items
 	Option<xom::String> v = elt.getAttributeValue("name");
