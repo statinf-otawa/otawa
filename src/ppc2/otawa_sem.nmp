@@ -98,15 +98,15 @@ macro test_cond_and_ctr(step) = \
 extend branch_cond_lr
 	otawa_sem = { test_cond_and_ctr(2); set(t1, _LR); branch(t1); }
 extend branch_cond_lr_link
-	otawa_sem = { set(_LR, __IADDR + 4); test_cond_and_ctr(2); set(t1, _LR); branch(t1); }
+	otawa_sem = { seti(_LR, __IADDR + 4); test_cond_and_ctr(2); set(t1, _LR); branch(t1); }
 extend branch_cond_ctr
 	otawa_sem = { if !BO<4..4> then test_cond(2); endif; set(t1, _CTR); branch(t1); }
 extend branch_cond_ctr_link
-	otawa_sem = { set(_LR, __IADDR + 4); if !BO<4..4> then test_cond(2); endif; set(t1, _CTR); branch(t1); }
+	otawa_sem = { seti(_LR, __IADDR + 4); if !BO<4..4> then test_cond(2); endif; set(t1, _CTR); branch(t1); }
 extend bran_cond_link_abs
-	otawa_sem = { set(_LR, __IADDR + 4); test_cond_and_ctr(2); seti(t1, BD << 2); branch(t1); }
+	otawa_sem = { seti(_LR, __IADDR + 4); test_cond_and_ctr(2); seti(t1, BD << 2); branch(t1); }
 extend bran_cond_link
-	otawa_sem = { set(_LR, __IADDR + 4); test_cond_and_ctr(2); seti(t1, __IADDR + (BD << 2)); branch(t1); }
+	otawa_sem = { seti(_LR, __IADDR + 4); test_cond_and_ctr(2); seti(t1, __IADDR + (BD << 2)); branch(t1); }
 extend bran_cond_abs
 	otawa_sem = { test_cond_and_ctr(2); seti(t1, BD << 2); branch(t1); }
 extend bran_cond_rel
