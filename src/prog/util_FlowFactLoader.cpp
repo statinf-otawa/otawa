@@ -886,8 +886,16 @@ void FlowFactLoader::onMultiBranch(
 
 	// List of targets
 	for(int i = 0; i < targets.length(); i++)
-		if(targets[i])
-			BRANCH_TARGET(inst).add(targets[i]);
+		if(targets[i]) {
+			bool found = false;
+			for(Identifier<Address>::Getter target(inst, BRANCH_TARGET); target; target++)
+				if (target.item() == targets[i]) {
+					found = true;
+					break;
+				}
+			if (!found)
+				BRANCH_TARGET(inst).add(targets[i]);
+		}
 }
 
 
@@ -907,8 +915,16 @@ void FlowFactLoader::onMultiCall(
 
 	// List of targets
 	for(int i = 0; i < targets.length(); i++)
-		if(targets[i])
-			CALL_TARGET(inst).add(targets[i]);
+		if(targets[i]) {
+			bool found = false;
+			for(Identifier<Address>::Getter target(inst, CALL_TARGET); target; target++)
+				if (target.item() == targets[i]) {
+					found = true;
+					break;
+				}
+			if (!found)
+				CALL_TARGET(inst).add(targets[i]);
+		}
 }
 
 
@@ -1033,22 +1049,32 @@ throw(ProcessorException) {
  * @param cpath		contextual path
  */
 void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpath) {
-	Address control = scanAddress(element, cpath);
-	if(control.isNull()) {
+	MemArea control_area = scanAddress(element, cpath);
+	if(control_area.isNull()) {
 		onWarning(_ << "multibranch ignored at " << xline(element));
 		return;
 	}
+
+	Address control = control_area.address();
+	while (!workSpace()->process()->findInstAt(control)->isBranch()
+			&& control <= control_area.lastAddress())
+		control += 4;
+	if (control > control_area.lastAddress()) {
+		onWarning(_ << "multibranch ignored at " << xline(element) << " ... no branch found");
+		return;
+	}
+
 	genstruct::Vector<Address> targets;
 	xom::Elements *items = element->getChildElements("target");
 	for(int i = 0; i < items->size(); i++) {
-		Address target = scanAddress(items->get(i), cpath);
-		if(target.isNull())
+		MemArea target_area = scanAddress(items->get(i), cpath);
+		if(target_area.isNull())
 			onWarning(_ << "target of multibranch ignored at " << xline(items->get(i)));
 		else
-			targets.add(target);
+			targets.add(target_area);
 	}
 	delete items;
-	this->onMultiBranch(control, targets);
+	this->onMultiCall(control, targets);
 }
 
 
@@ -1058,19 +1084,29 @@ void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpat
  * @param cpath		contextual path
  */
 void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath) {
-	Address control = scanAddress(element, cpath);
-	if(control.isNull()) {
+	MemArea control_area = scanAddress(element, cpath);
+	if(control_area.isNull()) {
 		onWarning(_ << "multicall ignored at " << xline(element));
 		return;
 	}
+
+	Address control = control_area.address();
+	while (!workSpace()->process()->findInstAt(control)->isCall()
+			&& control <= control_area.lastAddress())
+		control += 4;
+	if (control > control_area.lastAddress()) {
+		onWarning(_ << "multicall ignored at " << xline(element) << " ... no call found");
+		return;
+	}
+
 	genstruct::Vector<Address> targets;
 	xom::Elements *items = element->getChildElements("target");
 	for(int i = 0; i < items->size(); i++) {
-		Address target = scanAddress(items->get(i), cpath);
-		if(target.isNull())
+		MemArea target_area = scanAddress(items->get(i), cpath);
+		if(target_area.isNull())
 			onWarning(_ << "target of multicall ignored at " << xline(items->get(i)));
 		else
-			targets.add(target);
+			targets.add(target_area);
 	}
 	delete items;
 	this->onMultiCall(control, targets);
@@ -1223,7 +1259,7 @@ throw(ProcessorException) {
 
 	// or an address
 	else {
-		addr = scanAddress(element, path);
+		addr = scanAddress(element, path).address();
 		if(addr.isNull()) {
 			onWarning(_ << "ignoring this function whose address cannot be found: "<< xline(element));
 			return;
@@ -1337,22 +1373,22 @@ throw(ProcessorException) {
  * @param path		Context path.
  * @return			Address of the element or null if there is an error.
  */
-Address FlowFactLoader::scanAddress(xom::Element *element, ContextualPath& path)
+MemArea FlowFactLoader::scanAddress(xom::Element *element, ContextualPath& path)
 throw(ProcessorException) {
 
 	// look "address" attribute
 	Option<unsigned long> res = scanUInt(element, "address");
 	if(res)
-		return *res;
+		return MemArea(*res, 4);
 
 	// look for "name" and "offset
 	Option<xom::String> val = element->getAttributeValue("label");
 	if(val) {
 		Address addr = addressOf(*val);
 		if(addr.isNull())
-			return Address::null;
+			return MemArea::null;
 		Option<long> offset = scanInt(element, "offset");
-		return addr + (int)(offset ? *offset : 0);
+		return MemArea(addr + (int)(offset ? *offset : 0), 4);
 	}
 
 	// look for lonely offset
@@ -1361,7 +1397,7 @@ throw(ProcessorException) {
 		if(!path)
 			throw ProcessorException(*this,
 				_ << "'offset' out of addressed element at " << xline(element));
-		return path[path.count() - 1].address() + (int)*offset;
+		return MemArea(path[path.count() - 1].address() + (int)*offset, 4);
 	}
 
 	// look for source and line
@@ -1524,19 +1560,26 @@ string FlowFactLoader::xline(xom::Node *element) {
  * @return		Matching first address.
  * @throw ProcessorException	If the file/line cannot be resolved to an address.
  */
-Address FlowFactLoader::addressOf(const string& file, int line)
+MemArea FlowFactLoader::addressOf(const string& file, int line)
 throw(ProcessorException) {
 	if(!lines_available)
 		onError("the current loader does not provide source line information");
+
 	Vector<Pair<Address, Address> > addresses;
  	workSpace()->process()->getAddresses(file.toCString(), line, addresses);
  	if(!addresses) {
 		warn(_ << "cannot find the source line " << file << ":" << line);
-		return Address::null;
+		return MemArea::null;
 	}
- 	if(logFor(LOG_DEPS))
- 		log << "\t" << file << ":" << line << " is " << addresses[0].fst << io::endl;
- 	return addresses[0].fst;
+
+ 	MemArea area(addresses[0].fst, addresses[0].snd);
+ 	for (int i = 1; i < addresses.length(); ++i)
+ 		area.join(MemArea(addresses[i].fst, addresses[i].snd));
+
+	if (logFor(LOG_DEPS))
+		log << "\t" << file << ":" << line << " is " << area << io::endl;
+
+ 	return area;
 }
 
 
