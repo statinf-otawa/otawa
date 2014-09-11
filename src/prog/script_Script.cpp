@@ -412,7 +412,7 @@ void Script::work(WorkSpace *ws) {
 		else
 			for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param; param++)
 				if((*param).fst == item->name) {
-					cerr << "DEBUG: setting " << (*param).fst << " to " << (*param).snd << io::endl;
+					DEBUG(cerr << "DEBUG: setting " << (*param).fst << " to " << (*param).snd << io::endl;)
 					xom::Element *param_elt = new xom::Element(item->name.toCString());
 					empty_root->appendChild(param_elt);
 					param_elt->addAttribute(new xom::Attribute("value", item->makeParam((*param).snd).toCString()));
@@ -432,8 +432,10 @@ void Script::work(WorkSpace *ws) {
 	for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param; param++) {
 		bool found = false;
 		for(ItemIter item(*this); item; item++) {
-			if(!item->multi && item->name == (*param).fst) {
+			if(item->name == (*param).fst) {
 				found = true;
+				if(item->multi)
+					continue;
 				xslt.setParameter((*param).fst, item->makeParam((*param).snd));
 				if(logFor(LOG_DEPS))
 					log << "\tadding argument \"" << (*param).fst << "\" to \"" << (*param).snd << "\"\n";
