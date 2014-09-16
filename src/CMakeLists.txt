@@ -70,6 +70,6 @@ add_subdirectory(owcet)
 
 # dependent tools
 add_subdirectory(bpred)
-if(LP_SOLVE5)
+if(HAS_LP_SOLVE OR LP_SOLVE5_LIB)
 	add_subdirectory(oipet)
 endif()
