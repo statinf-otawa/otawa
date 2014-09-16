@@ -47,6 +47,9 @@ namespace ot {
 	typedef t::int64 time;
 }	// ot
 
+// MemArea
+class MemArea;
+
 // Address class
 class Address {
 public:
@@ -60,6 +63,7 @@ public:
 	inline Address(offset_t offset): pg(0), off(offset) { }
 	inline Address(page_t page, offset_t offset): pg(page), off(offset) { }
 	inline Address(const Address& address): pg(address.pg), off(address.off) { }
+	inline Address(const MemArea& mem_area);
 
 	// Accessors
 	inline page_t page(void) const { return pg; }
@@ -154,6 +158,10 @@ private:
 	ot::size _size;
 };
 io::Output& operator<<(io::Output& out, const MemArea& a);
+
+
+// Address inlines
+Address::Address(const MemArea& mem_area): pg(mem_area.address().pg), off(mem_area.address().off) { }
 
 
 // Exception class

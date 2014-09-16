@@ -628,7 +628,7 @@ void FlowFactLoader::onWarning(const string& message) {
 
 /**
  * Called when an "ignore entry" command is found. This ensures that
- * the symbol is not considered as a code entry during deconding phase.
+ * the symbol is not considered as a code entry during decoding phase.
  * @param name	Name of the symbol.
  */
 void FlowFactLoader::onIgnoreEntry(string name) {
@@ -1074,7 +1074,7 @@ void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpat
 			targets.add(target_area);
 	}
 	delete items;
-	this->onMultiCall(control, targets);
+	this->onMultiBranch(control, targets);
 }
 
 

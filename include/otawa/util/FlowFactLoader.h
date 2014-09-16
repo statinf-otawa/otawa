@@ -62,7 +62,7 @@ protected:
 	inline WorkSpace *workSpace(void) const { return _fw; }
 
 	Address addressOf(const string& label);
-	Address addressOf(const string& file, int line) throw(ProcessorException);
+	MemArea addressOf(const string& file, int line) throw(ProcessorException);
 	void onError(const string& message);
 	void onWarning(const string& message);
 
@@ -114,7 +114,7 @@ private:
 	void scanXLoop(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXFun(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXConditional(xom::Element *element, ContextualPath& path) throw(ProcessorException);
-	Address scanAddress(xom::Element *element, ContextualPath& path) throw(ProcessorException);
+	MemArea scanAddress(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	Option<long> scanInt(xom::Element *element, cstring name) throw(ProcessorException);
 	Option<unsigned long> scanUInt(xom::Element *element, cstring name) throw(ProcessorException);
 	Option<long> scanBound(xom::Element *element, cstring name) throw(ProcessorException);
