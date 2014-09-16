@@ -425,7 +425,7 @@ private:
 	T *ref;
 };
 
-typedef typename Element::Make make;
+typedef Element::Make make;
 
 class GC {
 public:
