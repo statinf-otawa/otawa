@@ -135,7 +135,7 @@ public:
 		"odisasm",
 		Version(1, 0, 0),
 		"Disassemble instruction to OTAWA instruction description",
-		"H. Cassé <casse@irit.fr>"),
+		"H. Cass�� <casse@irit.fr>"),
 	regs(*this, option::cmd, "-r", option::cmd, "--regs", option::help, "display register information", option::end),
 	kind(*this, option::cmd, "-k", option::cmd, "--kind", option::help, "display kind of instructions", option::end),
 	sem(*this, option::cmd, "-s", option::cmd, "--semantics", option::help, "display translation of instruction in semantics language", option::end),
@@ -240,7 +240,7 @@ private:
 			genstruct::SortedSLList<string> srr;
 			const elm::genstruct::Table<hard::Register * >& rr = inst->readRegs();
 			for(int i = 0; i < rr.count(); i++)
-				srr.add(rr[i]->name());
+				srr.add(_ << rr[i]->name() << " (" << rr[i]->platformNumber() << ")");
 			cout << "\tread regs = ";
 			for(genstruct::SortedSLList<string>::Iterator r(srr); r; r++)
 				cout << *r << " ";
@@ -250,7 +250,7 @@ private:
 			genstruct::SortedSLList<string> swr;
 			const elm::genstruct::Table<hard::Register * >& wr = inst->writtenRegs();
 			for(int i = 0; i < wr.count(); i++)
-				swr.add(wr[i]->name());
+				srr.add(_ << wr[i]->name() << " (" << wr[i]->platformNumber() << ")");
 			cout << "\twritten regs = ";
 			for(genstruct::SortedSLList<string>::Iterator r(swr); r; r++)
 				cout << *r << " ";
