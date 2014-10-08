@@ -118,6 +118,13 @@ extern int fft_line;
  * and remains valid after linkage.
  *
  * @code
+ * <element symbol="SYMBOL" size="SIZE"/>
+ * @endcode
+ * This form provides a way to define a memory area in a single step.
+ * The defined memory area begins by the address of @c symbol and its size is
+ * @c size of it is defined or the size of the @c symbol.
+ *
+ * @code
  * <element source="SOURCE_FILE" line="LINE"/>
  * @endcode
  * This is the most advanced to locate code using the source file name and
@@ -229,8 +236,15 @@ extern int fft_line;
  * 		<high LOCATION />
  * </mem-access>
  * @endcode
+ * @code
+ * <mem-access LOCATION>
+ *  	<area LOCATION />
+ *  	...
+ * </mem-access>
+ * @endcode
  * Allow to bound the accessed addresses of a memory instruction.
- * Mainly useful to help data cache canalysis.
+ * When multiple areas are defined, they are joined to a single continuous area!
+ * Mainly useful to help data cache analysis.
  *
  * @code
  * <reg-set name="TEXT"> VALUE </reg-set>
@@ -1157,18 +1171,33 @@ dfa::Value FlowFactLoader::scanValue(xom::Element *element) {
  * @param element	Element to look in.
  */
 void FlowFactLoader::scanMemAccess(xom::Element *element) {
+	Address eaddr, haddr, laddr;
+
+	// look for area
+	xom::Elements *areas = element->getChildElements("area");
 
 	// look for high and low
 	xom::Element *helem = element->getFirstChildElement("high");
 	xom::Element *lelem = element->getFirstChildElement("low");
-	if(!helem || !lelem)
+
+	if(areas->size() <= 0 && (!helem || !lelem))
 		onError(_ << "malformed mem-acess at " << xline(element));
 
 	// build the memory access
 	ContextualPath c;
-	Address eaddr = scanAddress(element, c);
-	Address haddr = scanAddress(helem, c);
-	Address laddr = scanAddress(lelem, c);
+	if (areas->size() > 0) {
+		// use only area(s) by joining them if needed
+		MemArea area = scanAddress(areas->get(0), c);
+		for (int i = 1; i < areas->size(); ++i)
+			area.join(scanAddress(areas->get(i), c));
+		haddr = area.topAddress();
+		laddr = area.address();
+	} else {
+		// use only high and low
+		haddr = Address(scanAddress(helem, c));
+		laddr = Address(scanAddress(lelem, c));
+	}
+	eaddr = Address(scanAddress(element, c));
 	this->onMemoryAccess(eaddr, laddr, haddr, c);
 }
 
@@ -1375,6 +1404,16 @@ throw(ProcessorException) {
  */
 MemArea FlowFactLoader::scanAddress(xom::Element *element, ContextualPath& path)
 throw(ProcessorException) {
+
+	// look for "symbol" attribute
+	Option<xom::String> sym = element->getAttributeValue("symbol");
+	if (sym) {
+		Symbol *symbol = _fw->process()->findSymbol(*sym);
+		if (!symbol)
+			return MemArea::null;
+		Option<long> size = scanInt(element, "size");
+		return MemArea(symbol->address(), size ? *size : symbol->size());
+	}
 
 	// look "address" attribute
 	Option<unsigned long> res = scanUInt(element, "address");
