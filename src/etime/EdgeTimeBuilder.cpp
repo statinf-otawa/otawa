@@ -285,8 +285,8 @@ p::declare EdgeTimeBuilder::reg = p::init("otawa::etime::EdgeTimeBuilder", Versi
 	.maker<EdgeTimeBuilder>()
 	.require(ipet::ASSIGNED_VARS_FEATURE)
 	.require(ipet::ILP_SYSTEM_FEATURE)
-	.require(STANDARD_EVENTS_FEATURE)
 	.require(WEIGHT_FEATURE)
+	.require(EVENTS_FEATURE)
 	.provide(ipet::OBJECT_FUNCTION_FEATURE)
 	.provide(EDGE_TIME_FEATURE);
 
@@ -401,6 +401,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	// build the graph
 	PropList props;
 	graph = make(seq);
+	ASSERTP(graph->firstNode(), "no first node found: empty execution graph");
 
 	// collect and sort events
 	all_events.clear();
@@ -676,6 +677,14 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 		inst->fetchNode()->setLatency(inst->fetchNode()->latency() + event->cost());
 		break;
 
+	case MEM:
+		for(ParExeInst::NodeIterator node(inst); node; node++)
+			if(node->stage()->unit()->isMem()) {
+				node->setLatency(node->latency() + event->cost() - 1);
+				break;
+			}
+		break;
+
 	case BRANCH:
 		bedge =  new ParExeEdge(getBranchNode(), inst->fetchNode(), ParExeEdge::SOLID, 0, pred_msg);
 		bedge->setLatency(event->cost());
@@ -700,6 +709,14 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 	case FETCH:
 		inst->fetchNode()->setLatency(inst->fetchNode()->latency() - event->cost());
+		break;
+
+	case MEM:
+		for(ParExeInst::NodeIterator node(inst); node; node++)
+			if(node->stage()->unit()->isMem()) {
+				node->setLatency(node->latency() - event->cost() + 1);
+				break;
+			}
 		break;
 
 	case BRANCH:
@@ -839,8 +856,11 @@ void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
 		// x_hts = max(x^c_hts, x^p_hts)
 
 		// cost = x_hts t_hts + (x_i - x_hts) t_lts
-		ot::time cost = x_hts * confs.top().time() + (WEIGHT(edge->target()) - x_hts) * confs[p - 1].time();
-		cerr << "\t\t\t p = " << p << ", cost = " << cost << io::endl;
+		int weight = WEIGHT(edge->target());
+		if(x_hts > weight)
+			x_hts = weight;
+		ot::time cost = x_hts * confs.top().time() + (weight - x_hts) * confs[p - 1].time();
+		cerr << "\t\t\t p = " << p << ", cost = " << cost << " (" << x_hts << "/" << weight << ")\n";
 
 		// look for best cost
 		if(cost < best_cost) {

@@ -60,6 +60,20 @@ p::feature STANDARD_EVENTS_FEATURE("otawa::etime::STANDARD_EVENTS_FEATURE", new 
 
 
 /**
+ * This feature ensures that all timing events on pipeline has been recorded.
+ *
+ * @par Properties
+ *  @li @ref EVENT
+ *
+ * @par Default Processor
+ * @li @ref StandardEventBuilder
+ *
+ * @ingroup etime
+ */
+p::feature EVENTS_FEATURE("otawa::etime::EVENTS_FEATURE", new Maker<StandardEventBuilder>());
+
+
+/**
  * Allows to hook an event to a basic block.
  *
  * @par Feature

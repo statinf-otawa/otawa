@@ -90,6 +90,7 @@ private:
 
 // event feature
 extern p::feature STANDARD_EVENTS_FEATURE;
+extern p::feature EVENTS_FEATURE;
 extern Identifier<Event *> EVENT;
 
 // configuration feature

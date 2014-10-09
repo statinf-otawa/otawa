@@ -39,19 +39,21 @@ class ProcessorBuilder;
 
 // PipelineUnit class
 class PipelineUnit {
-	SERIALIZABLE(otawa::hard::PipelineUnit, FIELD(name) & FIELD(latency) & FIELD(width) & FIELD(branch));
+	SERIALIZABLE(otawa::hard::PipelineUnit, FIELD(name) & FIELD(latency) & FIELD(width) & FIELD(branch) & FIELD(mem));
 public:
-	inline PipelineUnit(void): latency(1), width(1), branch(false) { };
+	inline PipelineUnit(void): latency(1), width(1), branch(false), mem(false) { };
 	virtual ~PipelineUnit(void) { }
 	inline elm::String getName(void) const { return name; };
 	inline int getLatency(void) const { return latency; };
 	inline int getWidth(void) const { return width; };
 	inline bool isBranch(void) const { return branch; }
+	inline bool isMem(void) const { return mem; }
 protected:
 	string name;
 	int latency;
 	int width;
 	bool branch;
+	bool mem;
 };
 
 // FunctionalUnit class

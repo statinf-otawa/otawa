@@ -1,3 +1,3 @@
 [elm-plugin]
 name=etime
-deps=otawa/branch
+deps=otawa/branch;otawa/dcache

@@ -49,11 +49,12 @@ protected:
 
 private:
 	void handleVariableBranchPred(BasicBlock *bb, BasicBlock *wbb);
+	ot::time costOf(Address addr, bool write = false);
 
 	const hard::Memory *mem;
 	const hard::CacheConfiguration *cconf;
 	const hard::BHT *bht;
-	bool has_il1;
+	bool has_il1, has_dl1;
 	bool has_branch;
 	const hard::Bank *bank;
 	bool _explicit;
