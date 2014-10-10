@@ -1544,6 +1544,8 @@ throw(ProcessorException) {
 				scanXCall(element, path);
 			else if(name == "conditional")
 				scanXConditional(element, path);
+			else if(name == "function")
+				this->scanXFun(element, path);
 		}
 	}
 }
