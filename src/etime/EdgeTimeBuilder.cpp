@@ -408,6 +408,11 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	if(source)
 		sortEvents(all_events, source, IN_PREFIX);
 	sortEvents(all_events, target, IN_BLOCK, edge);
+	if(logFor(LOG_BB))
+		for(genstruct::Vector<event_t>::Iterator e(all_events); e; e++)
+			cerr << "\t\t\t\t" << (*e).fst->inst()->address() << " -> "
+				 << (*e).fst->name() << " (" << (*e).fst->detail() << ") in "
+				 << (*e).snd << io::endl;
 
 	// applying static events (always, never)
 	events.clear();
@@ -441,7 +446,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	if(events.count() >= 32)
 		throw ProcessorException(*this, _ << "too many events on edge " << edge);
 	if(logFor(LOG_BB)) {
-		log << "\t\t\t\tevents = " << events.count() << io::endl;
+		log << "\t\t\t\tdynamic events = " << events.count() << io::endl;
 		for(int i = 0; i < events.count(); i++)
 			log << "\t\t\t\t" << events[i].fst->inst()->address() << "\t" << events[i].fst->name()
 				<< " " << events[i].snd << io::endl;

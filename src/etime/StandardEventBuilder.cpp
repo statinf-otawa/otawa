@@ -55,6 +55,8 @@ public:
 
 	virtual cstring name(void) const { return "L1 instruction cache"; }
 
+	virtual string detail(void) const { return _ << *otawa::CATEGORY(_lb); }
+
 	virtual int weight(void) const {
 		switch(otawa::CATEGORY(_lb)) {
 		case ALWAYS_HIT:		return 0;
@@ -97,6 +99,7 @@ public:
 	virtual type_t type(void) const { return EDGE; }
 	virtual occurrence_t occurence(void) const { return _occ; }
 	virtual cstring name(void) const { return "branch prediction"; }
+	virtual string detail(void) const { return ""; }
 	virtual bool isEstimating(bool on) { return on; }
 
 	virtual void estimate(ilp::Constraint *cons, bool on) {
@@ -139,6 +142,7 @@ public:
 	}
 
 	virtual cstring name(void) const { return "L1 data cache"; }
+	virtual string detail(void) const { return _ << *dcache::CATEGORY(_acc); }
 
 	virtual int weight(void) const {
 		switch(dcache::CATEGORY(_acc)) {

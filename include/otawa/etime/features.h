@@ -74,6 +74,7 @@ public:
 	virtual type_t type(void) const = 0;
 	virtual occurrence_t occurrence(void) const;
 	virtual cstring name(void) const;
+	virtual string detail(void) const = 0;
 	virtual const hard::Stage *stage(void) const;
 	virtual const hard::FunctionalUnit *fu(void) const;
 
