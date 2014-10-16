@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
@@ -11,7 +12,6 @@
 #include <otawa/util/LoopInfoBuilder.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
-
 #include <otawa/cache/cat2/MUSTProblem.h>
 #include <otawa/cache/FirstLastBuilder.h>
 #include <otawa/cache/cat2/PERSProblem.h>

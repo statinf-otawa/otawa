@@ -49,9 +49,8 @@ public:
 	// Methods
 	LBlockSet(int row, const hard::Cache *cache);
 	int add(LBlock *node);
-	//int newCacheBlockID(void);
 	inline int count(void) { return listelbc.length(); }
-	inline int cacheBlockCount(void) { return listelbc.length() - 2; }
+	inline int cacheBlockCount(void) { return listelbc.length(); }
 	inline LBlock *lblock(int i) { return listelbc[i]; }
 	inline int set(void) { return linenumber; }
 	inline const hard::Cache *cache(void) const { return _cache; }
@@ -62,7 +61,7 @@ public:
 private:
 	int linenumber;
 	elm::genstruct::Vector<LBlock *> listelbc;
-	//int _cacheBlockCount;
+	int cblock_count;
 	const hard::Cache *_cache;
 };
 

@@ -43,7 +43,7 @@ class LBlockSet;
 class LBlock: public elm::inhstruct::DLNode, public PropList {
 	friend class LBlockSet;
 public:
-	LBlock(LBlockSet *set, BasicBlock *bb, Inst *inst, t::uint32 size);
+	LBlock(LBlockSet *set, BasicBlock *bb, Inst *inst, t::uint32 size, int cache_index);
 	inline int index(void) const { return idx; }
 	inline Address address(void) const { return _inst->address(); }
 	inline BasicBlock *bb(void) const { return _bb; }
@@ -51,13 +51,13 @@ public:
 	//inline bool sameCacheBlock(const LBlock *block) const { return cacheBlock() == block->cacheBlock(); }
 	inline LBlockSet *lblockset(void) const { return lbs; }
 	int countInsts(void);
-	int cacheBlock(void) const;
+	inline int cacheBlock(void) const { return cid - 1; }
 	inline Inst *instruction(void) const { return _inst; }
 	
 	// deprecated
 	inline int number(void) const { return idx; }
 	inline int id(void) { return idx; }
-	inline int cacheblock(void) const { return idx - 1; }
+	inline int cacheblock(void) const { return cid; }
 
 private:
 	~LBlock(void);
@@ -65,7 +65,7 @@ private:
 	Inst *_inst;
 	t::uint32 _size;
 	BasicBlock *_bb;
-	int idx;
+	int idx, cid;
 };
 
 Output& operator<<(Output& out, const LBlock *block);

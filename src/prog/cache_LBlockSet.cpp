@@ -53,11 +53,13 @@ Identifier<genstruct::AllocatedTable<LBlock* >* > BB_LBLOCKS("otawa::BB_LBLOCKS"
 
 /**
  * Add a new l-block.
- * @param node	l-block to add.
+ * @param lblock	l-block to add.
  */
-int LBlockSet::add(LBlock *node){
+int LBlockSet::add(LBlock *lblock){
 	int id = listelbc.length();
-	listelbc.add(node);
+	listelbc.add(lblock);
+	if(lblock->cacheBlock() >= cblock_count)
+		cblock_count = lblock->cacheBlock() + 1;
 	return id;
 }
 
@@ -66,7 +68,7 @@ int LBlockSet::add(LBlock *node){
  * Build a l-block set.
  * @param line	Cache row of the l-block set.
  */
-LBlockSet::LBlockSet(int line, const hard::Cache *cache): linenumber(line), /*_cacheBlockCount(0),*/ _cache(cache) {
+LBlockSet::LBlockSet(int line, const hard::Cache *cache): linenumber(line), cblock_count(0), _cache(cache) {
 	ASSERT(line >= 0);
 }
 

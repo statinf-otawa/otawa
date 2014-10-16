@@ -83,15 +83,13 @@ void LBlockBuilder::setup(WorkSpace *fw) {
 	// get the memory
 	mem = hard::MEMORY(fw);
 
-	// Build hash	
-	//cacheBlocks = new HashTable<ot::mask, int>();
-	
 	// Build the l-block sets
 	lbsets = new LBlockSet *[cache->rowCount()];
 	LBLOCKS(fw) = lbsets;
 	for(int i = 0; i < cache->rowCount(); i++) {
 		lbsets[i] = new LBlockSet(i, cache);
-		new LBlock(lbsets[i], 0, 0, 0);
+		new LBlock(lbsets[i], 0, 0, 0, 0);
+		ASSERT(lbsets[i]->cacheBlockCount() == 1);
 	}
 }
 
@@ -103,10 +101,7 @@ void LBlockBuilder::cleanup(WorkSpace *fw) {
 	
 	// Add end blocks
 	for(int i = 0; i < cache->rowCount(); i++)
-		new LBlock(lbsets[i], 0, 0, 0);
-	
-	// Remove hash
-	//delete cacheBlocks;
+		new LBlock(lbsets[i], 0, 0, 0, lbsets[i]->cacheBlockCount());
 }
 
 
@@ -132,12 +127,13 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct:
 
 	// compute the cache block ID
 	LBlockSet *lbset = lbsets[cache->set(addr)];
-	/*ot::mask block = cache->block(addr);
-	int cbid = cacheBlocks->get(block, -1);
-	if(cbid == -1) {
-    	cbid = lbset->newCacheBlockID();
-    	cacheBlocks->put(block, cbid);
-    }*/
+	ot::mask block = cache->block(inst->address());
+	int cid = block_map.get(block, -1);
+	if(cid < 0) {
+		int set = cache->set(inst->address());
+		cid = lbset->cacheBlockCount();
+		block_map.put(block, cid);
+	}
 	
 	// Compute the size
 	Address top = (addr + cache->blockMask()) & ~cache->blockMask();
@@ -145,10 +141,12 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct:
 		top = bb->address() + bb->size();
 	
 	// Build the lblock
-	LBlock *lblock = new LBlock(lbset, bb, inst, top - addr /*, cbid*/);
+	LBlock *lblock = new LBlock(lbset, bb, inst, top - addr, cid);
 	lblocks->set(index, lblock);
 	if(isVerbose())
-		log << "\t\t\t\tblock at " << addr << io::endl;
+		log << "\t\t\t\tblock at " << addr
+			<< " (cache block " << cache->round(inst->address())
+			<< ", cid = " << cid << ")\n";
 	index++;
 }
 

@@ -49,7 +49,7 @@ private:
 	LBlockSet **lbsets;
 	const hard::Cache *cache;
 	const hard::Memory *mem;
-	//HashTable<ot::mask, int> *cacheBlocks;
+	genstruct::HashTable<ot::mask, int> block_map;
 	void addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct::AllocatedTable<LBlock *> *lblocks);
 };
 
