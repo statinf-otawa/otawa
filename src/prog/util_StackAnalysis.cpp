@@ -30,8 +30,8 @@
 #include <otawa/util/LoopInfoBuilder.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/cfg/Virtualizer.h>
-#include <otawa/util/StackAnalysis.h>
-#include <otawa/util/AccessedAddress.h>
+#include <otawa/stack/StackAnalysis.h>
+#include <otawa/stack/AccessedAddress.h>
 #include <otawa/hard/Register.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/dfa/State.h>

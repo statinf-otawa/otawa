@@ -26,7 +26,7 @@
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/prog/Process.h>
 #include <otawa/dcache/BlockBuilder.h>
-#include <otawa/util/AccessedAddress.h>
+#include <otawa/stack/AccessedAddress.h>
 
 namespace otawa { namespace dcache {
 

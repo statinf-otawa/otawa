@@ -1,6 +1,6 @@
 /*
  *	$Id$
- *	AccessAddress and AccessesAddresses classes interface
+ *	StackAnalysis process interface
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2009, IRIT UPS.
@@ -20,11 +20,33 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
-#ifndef OTAWA_UTIL_ACCESSEDADDRESS_H_
-#define OTAWA_UTIL_ACCESSEDADDRESS_H_
 
-#include <otawa/stack/AccessedAddress.h>
-#warning "Deprecated header: use otawa/data/stack/AccessedAddress.h"
+#ifndef OTAWA_STACK_STACKANALYSIS_H_
+#define OTAWA_STACK_STACKANALYSIS_H_
 
-#endif /* OTAWA_UTIL_ACCESSEDADDRESS_H_ */
+#include <otawa/proc/Processor.h>
 
+namespace otawa {
+
+namespace hard { class Register; }
+
+// StackAnalysis class
+class StackAnalysis: public Processor {
+public:
+	typedef Pair<const hard::Register *, Address> init_t;
+	static Identifier<init_t> INITIAL;
+
+	static p::declare reg;
+	StackAnalysis(p::declare& r = reg);
+	virtual void configure(const PropList &props);
+
+protected:
+	virtual void processWorkSpace(WorkSpace *ws);
+	genstruct::Vector<init_t> inits;
+};
+
+extern Feature<StackAnalysis> STACK_ANALYSIS_FEATURE;
+
+}	// otawa
+
+#endif /* OTAWA_STACK_STACKANALYSIS_H_ */

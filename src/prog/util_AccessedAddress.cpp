@@ -6,7 +6,7 @@
  */
 
 #include <otawa/prog/Inst.h>
-#include <otawa/util/AccessedAddress.h>
+#include <otawa/stack/AccessedAddress.h>
 
 namespace otawa {
 

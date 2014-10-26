@@ -24,29 +24,7 @@
 #ifndef OTAWA_UTIL_STACKANALYSIS_H_
 #define OTAWA_UTIL_STACKANALYSIS_H_
 
-#include <otawa/proc/Processor.h>
-
-namespace otawa {
-
-namespace hard { class Register; }
-
-// StackAnalysis class
-class StackAnalysis: public Processor {
-public:
-	typedef Pair<const hard::Register *, Address> init_t;
-	static Identifier<init_t> INITIAL;
-
-	static p::declare reg;
-	StackAnalysis(p::declare& r = reg);
-	virtual void configure(const PropList &props);
-
-protected:
-	virtual void processWorkSpace(WorkSpace *ws);
-	genstruct::Vector<init_t> inits;
-};
-
-extern Feature<StackAnalysis> STACK_ANALYSIS_FEATURE;
-
-}	// otawa
+#include <otawa/stack/StackAnalysis.h>
+#warning "Deprecated header. Use otawa/stack/StackAnalysis.h instead."
 
 #endif /* OTAWA_UTIL_STACKANALYSIS_H_ */
