@@ -117,8 +117,9 @@ void DotDisplayer::displayLabel(BasicBlock *bb, int index) {
 void DotDisplayer::onCall(Edge *edge) {
   BasicBlock *bb = edge->source();
   CFG *called = edge->calledCFG();
-  cout << "\t\"" << (void*) edge << LABEL(called) << "\" [label=\"" << LABEL(called) << "\"]\n";
-  cout << "\t\"" << bb->number() << "\" -> \"" << (void*) edge << LABEL(called) << "\" [label=\"call\", style=dashed, weight=1]\n";
+  string label = called->label();
+  cout << "\t\"" << label << "\" [label=\"" << label << "\"]\n";
+  cout << "\t\"" << bb->number() << "\" -> \"" << label << "\" [label=\"call\", style=dashed, weight=1]\n";
 }
 
 
@@ -154,7 +155,12 @@ edge_kind_t kind, BasicBlock *target, int target_index) {
 	if(target_index >= 0) {
 		int weight = 1;
 		cout << "\t\"" << source_index
-			 << "\" -> \"" << target_index << "\" [";
+			 << "\" -> \"";
+		//if(kind == Edge::CALL)
+		//	cout << target->cfg()->label();
+		//else
+			cout << target_index;
+		cout << "\" [";
 		switch(kind) {
 		case Edge::VIRTUAL:
 			cout << "style=dashed, ";
