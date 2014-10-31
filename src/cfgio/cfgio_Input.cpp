@@ -623,6 +623,10 @@ p::declare Input::reg = p::init("otawa::cfgio::Input", Version(1, 0, 0))
 	.require(otawa::DECODED_TEXT)
 	.provide(otawa::COLLECTED_CFG_FEATURE);
 
+/**
+ *
+ * @ingroup cfgio
+ */
 Identifier<Path> FROM("otawa::cfgio::FROM");
 
 } }	// otawa::cfgio
