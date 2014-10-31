@@ -265,7 +265,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 			if(target && (!inst->isCall() || !NO_CALL(target))) {
 				BasicBlock *target_bb = thisBB(target);
 				ASSERT(target_bb);
-				new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
+				Edge *edge = new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
 			}
 
 			// look for target properties
@@ -275,8 +275,6 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 				// look for simple branches
 				for(Identifier<Address>::Getter addr(inst, BRANCH_TARGET); addr; addr++) {
 					target = ws->findInstAt(addr);
-					//if(!target_bb)
-					//	throw ProcessorException(*this, _ << "BRANCH_TARGET property at " << inst->address() << " to " << *addr << " is not valid.");
 					if(target) {
 						BasicBlock *target_bb = thisBB(target);
 						ASSERT(target_bb);

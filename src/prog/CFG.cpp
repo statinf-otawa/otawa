@@ -475,10 +475,10 @@ void CFG::scan(void) {
 			else {
 				ASSERT(edge->target());
 				BasicBlock *vtarget = map.get(edge->target(), 0);
-				if(vtarget)	// simple branch
+				if(vtarget)
 					new Edge(vbb, vtarget, edge->kind());
 				else {		// calling jump to a function
-					new Edge(vbb, edge->target(), Edge::CALL);
+					Edge *nedge = new Edge(vbb, edge->target(), Edge::CALL);
 					vbb->flags |= BasicBlock::FLAG_Call;
 					new Edge(vbb, &_exit, Edge::VIRTUAL);
 				}

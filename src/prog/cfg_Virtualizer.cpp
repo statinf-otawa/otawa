@@ -160,7 +160,7 @@ Identifier<bool> DONT_INLINE("otawa::DONT_INLINE", false);
 
 /**
  */
-Virtualizer::Virtualizer(void): Processor(reg) {
+Virtualizer::Virtualizer(void): Processor(reg), entry(0), virtual_inlining(false) {
 }
 
 // Registration
@@ -251,7 +251,7 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 
 			// process call edges
 			if(isInlined())
-				for(BasicBlock::OutIterator edge(bb); edge; edge++)
+				for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 					if(edge->kind() == Edge::CALL && edge->calledCFG()) {
 						if(DONT_INLINE(edge->calledCFG()))  {
 							if(!cfgMap.exists(edge->calledCFG()))
@@ -260,6 +260,7 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 						else
 							called_cfgs.add(edge->calledCFG());
 					}
+				}
 
 			// generate the edges
 			BasicBlock *called_exit = 0;
@@ -287,7 +288,7 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 					else {
 						BasicBlock *tgt = map.get(edge->target(), 0);
 						ASSERT(tgt);
-						if(called_cfgs)
+						if(edge->kind() == Edge::NOT_TAKEN && called_cfgs)
 							called_exit = tgt;
 						else
 							new Edge(src, tgt, edge->kind());
@@ -321,11 +322,10 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 						VIRTUAL_RETURN_BLOCK(src) = called_exit;
 						virtualize(&call, called, vcfg, src, called_exit);
 						if(fix_exit)
-							for(BasicBlock::InIterator vin(called_exit); vin; vin++) {
+							for(BasicBlock::InIterator vin(called_exit); vin; vin++)
 								for(Identifier<CFG *>::Getter found(vin, CALLED_CFG); found; found++)
 									if(*called == *found)
 										CALLED_CFG(vin).add(cfg);
-							}
 					}
 				}
 
