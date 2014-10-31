@@ -32,7 +32,7 @@ using namespace elm;
 
 #define QUEUE_SIZE	512
 
-#define TRACE(m)	//cerr << m << io::endl;
+#define TRACE(m)	// cerr << m << io::endl;
 
 namespace otawa {
 
@@ -95,6 +95,14 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 						warn(elm::_ << "bad function symbol \"" << sym->name()
 							   << "\" no code segment at " << sym->address());
 				}
+			}
+
+	// cleanup MARKER
+	for(Process::FileIter file(ws->process()); file; file++)
+		for(File::SegIter seg(file); seg; seg++)
+			for(Segment::ItemIter item(seg); item; item++) {
+				TRACE("DEBUG: cleaning " << item->address());
+				item->removeAllProp(&MARKER);
 			}
 }
 
@@ -201,8 +209,11 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 		}
 		bool marker_found = MARKER(inst);
 		MARKER(first_inst) = true;
-		if(marker_found)
+		TRACE("otawa::VarTextDecoder::processEntry: setting marker at " << first_inst->address());
+		if(marker_found) {
+			TRACE("otawa::VarTextDecoder::processEntry: marker found");
 			continue;
+		}
 
 		// Record target and next
 		if(inst->isConditional()) {
@@ -229,8 +240,15 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 				todo.put(target);
 			}
 			else if(!target) {
+				TRACE("otawa::VarTextDecoder::processEntry: indirect branch at " << inst->address());
 				bool one = false;
-				for(Identifier<Address>::Getter target(inst, BRANCH_TARGET); target; target++) {
+				Identifier<Address> *id;
+				if(inst->isCall())
+					id = &CALL_TARGET;
+				else
+					id = &BRANCH_TARGET;
+				for(Identifier<Address>::Getter target(inst, *id); target; target++) {
+					TRACE("otawa::VarTextDecoder::processEntry: indirect branch to " << *target);
 					one = true;
 					Inst *ti = getInst(ws, target, inst);
 					if(!ti) {
