@@ -286,6 +286,7 @@ public:
 		// perform adjustment according to the plugins
 		for(int i = 0; i < plugs.length(); i++) {
 			Path path = plugs[i]->path();
+			cerr << "DEBUG: [" << path << "]\n";
 			config.libs << ' ' << path;
 			config.addRPath(path.parent());
 		}
@@ -296,15 +297,13 @@ public:
 
 		// do the display
 		if(prefix)
-			cout << config.prefix << io::endl;
+			cout << config.prefix;
 		if(cflags)
-			cout << config.cflags.toString() << io::endl;
-		if(libs)
-			cout << config.libs.toString() << io::endl;
+			cout << config.cflags.toString();
 		if(data)
-			cout << config.prefix.append("share/Otawa") << io::endl;
+			cout << config.prefix.append("share/Otawa");
 		if(doc)
-			cout << config.prefix.append("share/Otawa/autodoc/index.html") << io::endl;
+			cout << config.prefix.append("share/Otawa/autodoc/index.html");
 		if(ilp)
 			show("ilp");
 		if(loader)
@@ -315,13 +314,16 @@ public:
 			for(HashTable<string, Module *>::Iterator mod(modmap); mod; mod++)
 				cout << '[' << mod->name() << "]\n" << mod->doc() << io::endl << io::endl;
 		if(scripts)
-			cout  << getScriptDir() << io::endl;
+			cout  << getScriptDir();
 		if(list_scripts)
 			showScripts();
 		if(rpath)
-			cout << "-Wl,-rpath -Wl," << config.getRPath() << io::endl;
+			cout << "-Wl,-rpath -Wl," << config.getRPath() << ' ';
+		if(libs)
+			cout << config.libs.toString();
 		if(install)
-			cout << (MANAGER.prefixPath() / "lib/otawa/proc") << io::endl;
+			cout << (MANAGER.prefixPath() / "lib/otawa/proc");
+		cout << endl;
 	}
 
 protected:
