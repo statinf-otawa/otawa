@@ -192,11 +192,10 @@ extern int fft_line;
  *
  * @code
  * <call LOCATION>
- * 	CONTENT
+ * 	 CONTENT
  * </call>
  * @endcode
- *
- * This elements represents a function call inside an existing function. The
+ * This element represents a function call inside an existing function. The
  * LOCATION gives the address of the called function. The content is the same
  * as of a @c function, that is, @c loop and @c call elements. The embedding
  * of calls allows to build function call contexts to make the loop bounds
@@ -208,8 +207,7 @@ extern int fft_line;
  *   ...
  * </multibranch>
  * @endcode
- *
- * This elements is used to resolve a complex control to several targets
+ * This element is used to resolve a complex control to several targets
  * (case of indirect branch found in switch compilation using tables).
  * The first LOCATION is the control instruction itself and the target child
  * elements locations represents the different possible targets.
@@ -220,10 +218,22 @@ extern int fft_line;
  *   ...
  * </multicall>
  * @endcode
- * This elements is used to resolve a complex control to several targets
+ * This element is used to resolve a complex control to several targets
  * (case of function pointer calls).
  * The first LOCATION is the call instruction itself and the target child
  * elements locations represents the different possible targets.
+ *
+ * @code
+ * <ignorecontrol LOCATION/>
+ * @endcode
+ * This element is used to ignore the control effect of the instruction at LOCATION.
+ *
+ * @code
+ * <ignoreseq LOCATION/>
+ * @endcode
+ * This element is used to force instruction at LOCATION to be considered
+ * as an unconditional branch.
+ * Can only be put on a conditional branch instruction.
  *
  * @par Extension
  *
@@ -1044,6 +1054,10 @@ throw(ProcessorException) {
 				scanMultiBranch(element, cpath);
 			else if(name == "multicall")
 				scanMultiCall(element, cpath);
+			else if(name == "ignorecontrol")
+				scanIgnoreControl(element, cpath);
+			else if(name == "ignoreseq")
+				scanIgnoreSeq(element, cpath);
 			else if(name == "mem-access")
 				scanMemAccess(element);
 			else if(name == "mem-set")
@@ -1063,17 +1077,17 @@ throw(ProcessorException) {
  * @param cpath		contextual path
  */
 void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpath) {
-	MemArea control_area = scanAddress(element, cpath);
-	if(control_area.isNull()) {
-		onWarning(_ << "multibranch ignored at " << xline(element));
+	MemArea mem_area = scanAddress(element, cpath);
+	if(mem_area.isNull()) {
+		onWarning(_ << "multibranch ignored at " << xline(element) << " ... address cannot be determined");
 		return;
 	}
 
-	Address control = control_area.address();
-	while (!workSpace()->process()->findInstAt(control)->isBranch()
-			&& control <= control_area.lastAddress())
-		control += 4;
-	if (control > control_area.lastAddress()) {
+	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
+	while (inst && !inst->isBranch()
+			&& inst->address() <= mem_area.lastAddress())
+		inst = workSpace()->process()->findInstAt(inst->topAddress());
+	if (!inst || inst->address() > mem_area.lastAddress()) {
 		onWarning(_ << "multibranch ignored at " << xline(element) << " ... no branch found");
 		return;
 	}
@@ -1088,7 +1102,7 @@ void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpat
 			targets.add(target_area);
 	}
 	delete items;
-	this->onMultiBranch(control, targets);
+	this->onMultiBranch(inst->address(), targets);
 }
 
 
@@ -1098,17 +1112,17 @@ void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpat
  * @param cpath		contextual path
  */
 void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath) {
-	MemArea control_area = scanAddress(element, cpath);
-	if(control_area.isNull()) {
-		onWarning(_ << "multicall ignored at " << xline(element));
+	MemArea mem_area = scanAddress(element, cpath);
+	if(mem_area.isNull()) {
+		onWarning(_ << "multicall ignored at " << xline(element) << " ... address cannot be determined");
 		return;
 	}
 
-	Address control = control_area.address();
-	while (!workSpace()->process()->findInstAt(control)->isCall()
-			&& control <= control_area.lastAddress())
-		control += 4;
-	if (control > control_area.lastAddress()) {
+	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
+	while (inst && !inst->isCall()
+			&& inst->address() <= mem_area.lastAddress())
+		inst = workSpace()->process()->findInstAt(inst->topAddress());
+	if (!inst || inst->address() > mem_area.lastAddress()) {
 		onWarning(_ << "multicall ignored at " << xline(element) << " ... no call found");
 		return;
 	}
@@ -1123,7 +1137,57 @@ void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath)
 			targets.add(target_area);
 	}
 	delete items;
-	this->onMultiCall(control, targets);
+	this->onMultiCall(inst->address(), targets);
+}
+
+
+/**
+ * Scan a ignorecontrol XML element.
+ * @param element	ignorecontrol element
+ * @param cpath		contextual path
+ */
+void FlowFactLoader::scanIgnoreControl(xom::Element *element, ContextualPath& cpath) {
+	MemArea mem_area = scanAddress(element, cpath);
+	if(mem_area.isNull()) {
+		onWarning(_ << "ignorecontrol ignored at " << xline(element) << " ... address cannot be determined");
+		return;
+	}
+
+	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
+	while (inst && !inst->isControl()
+			&& inst->address() <= mem_area.lastAddress())
+		inst = workSpace()->process()->findInstAt(inst->topAddress());
+	if (!inst || inst->address() > mem_area.lastAddress()) {
+		onWarning(_ << "ignorecontrol ignored at " << xline(element) << " ... no control found");
+		return;
+	}
+
+	this->onIgnoreControl(inst->address());
+}
+
+
+/**
+ * Scan a ignoreseq XML element.
+ * @param element	ignoreseq element
+ * @param cpath		contextual path
+ */
+void FlowFactLoader::scanIgnoreSeq(xom::Element *element, ContextualPath& cpath) {
+	MemArea mem_area = scanAddress(element, cpath);
+	if(mem_area.isNull()) {
+		onWarning(_ << "ignoreseq ignored at " << xline(element) << " ... address cannot be determined");
+		return;
+	}
+
+	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
+	while (inst && !inst->isControl()
+			&& inst->address() <= mem_area.lastAddress())
+		inst = workSpace()->process()->findInstAt(inst->topAddress());
+	if (!inst || inst->address() > mem_area.lastAddress()) {
+		onWarning(_ << "ignoreseq ignored at " << xline(element) << " ... no control found");
+		return;
+	}
+
+	this->onIgnoreSeq(inst->address());
 }
 
 

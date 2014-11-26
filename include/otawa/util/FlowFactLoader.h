@@ -125,6 +125,8 @@ private:
 	void scanIgnoreEntry(xom::Element *element);
 	void scanMultiBranch(xom::Element *element, ContextualPath& cpath);
 	void scanMultiCall(xom::Element *element, ContextualPath& cpath);
+	void scanIgnoreControl(xom::Element *element, ContextualPath& cpath);
+	void scanIgnoreSeq(xom::Element *element, ContextualPath& cpath);
 	dfa::Value scanValue(xom::Element *element);
 	void scanMemAccess(xom::Element *element);
 	void scanRegSet(xom::Element *element);
