@@ -899,7 +899,7 @@ The content of a cache element, //CACHE//, is defined below:
 <!-- CACHE ::= -->
 	<block_bits>INT</block_bits>
 	<row_bits>INT</row_bits>
-	<way_bits>INT<way_bits>
+	<set_bits>INT<set_bits>
 	(<next ref="ID"/> | <next> CACHE </next>)?
   	<replace>NONE|OTHER||LRU|RANDOM|FIFO|PLRU</replace>?	<!-- default: LRU -->
  	<write>WRITE_THROUGH|WRITE_BACK</write>?				<!-- default: WRITE_THROUGH --> 
@@ -915,7 +915,7 @@ byte in the block.
 the number of sets in the cache, that is, 2^//S//. In the address, the bits selecting
 the set ranges from //B// to //B// + //S// - 1.
 
-Finally, the ''way_bits'' //A// determines the number of blocks in each set, that is, 2^//A//.
+Finally, the ''set_bits'' //A// determines the number of blocks in each set, that is, 2^//A//.
 As any block may go any way of a set, there is no matching in the address.
 In the end, the cache size in bytes is 2^(//B// + //S// + //A//).
 

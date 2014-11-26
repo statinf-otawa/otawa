@@ -5,9 +5,9 @@
  *	prog/util_BitSet.h -- BitSet class implementation.
  */
 
-#include <otawa/util/BitSet.h>
+#include <otawa/dfa/BitSet.h>
 
-namespace otawa {
+namespace otawa { namespace dfa {
 
 /**
  * @class BitSet otawa/util/BitSet.h
@@ -282,4 +282,8 @@ namespace otawa {
  * @param set	Set to iterate on items of.
  */
 
-} // otawa
+#ifdef OTAWA_BITSET_SIZE
+int BitSet::__used_size = 0, BitSet::__max_size = 0, BitSet::__total_size = 0;
+#endif
+
+} }	// otawa::dfa
