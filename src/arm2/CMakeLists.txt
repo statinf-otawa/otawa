@@ -24,6 +24,9 @@ set(SOURCES
 
 include_directories(${PROC_PREFIX}/include)
 
+if(ARM_SIM)
+	add_definitions(-DARM_SIM)
+endif()
 
 # module definition
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
