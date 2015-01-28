@@ -2,9 +2,9 @@ set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../..")
 set(CMAKE_MACOSX_RPATH true)
 
 set(branch_SOURCES
-#    dynbranch_DynamicBranching.cpp
-#    dynbranch_GlobalAnalysisFeature.cpp
-#    dynbranch_GlobalAnalysisProblem.cpp
+    dynbranch_DynamicBranching.cpp
+    dynbranch_GlobalAnalysis.cpp
+    dynbranch_GlobalAnalysisProblem.cpp
     dynbranch_hook.cpp
     dynbranch_MemType.cpp
     dynbranch_PotentialValue.cpp
