@@ -40,6 +40,11 @@ namespace otawa {
 
 namespace arm {
 
+/*
+ * Configuration
+ * * ARM_SIM -- integrate functional simulator in ARM plugin.
+ */
+
 #define VERSION "2.1.0"
 OTAWA_LOADER_ID("arm2", VERSION, DAYDATE);
 
@@ -98,6 +103,83 @@ namespace arm2 {
 
 /****** Platform definition ******/
 
+#ifdef ARM_SIM
+#	ifndef ARM_MEM_SPY
+#		error "To support simulation, ARMv5T must be compiled with option WITH_MEM_SPY."
+#	endif
+class SimState: public otawa::SimState {
+public:
+	SimState(Process *process, arm_platform_t *platform, arm_decoder_t *_decoder)
+	:	otawa::SimState(process), decoder(_decoder) {
+		state = arm_new_state(platform);
+		arm_mem_set_spy(arm_get_memory(platform, 0), spy, this);
+	}
+
+	virtual ~SimState(void) {
+		arm_delete_state(state);
+	}
+
+	virtual Inst *execute(Inst *inst) {
+		dr = dw = false;
+		arm_inst_t *_inst = arm_decode(decoder, inst->address().offset());
+		arm_execute(state, _inst);
+		arm_free_inst(_inst);
+	}
+
+	// register access
+	virtual void setSP(const Address& addr) {
+		state->GPR[15] = addr.offset();
+	}
+
+	// memory accesses
+	virtual Address lowerRead(void) {
+		return lr;
+	}
+
+	virtual Address upperRead(void) {
+		return ur;
+	}
+
+	virtual Address lowerWrite(void) {
+		return lw;
+	}
+
+	virtual Address upperWrite(void) {
+		return uw;
+	}
+
+private:
+	arm_state_t *state;
+	arm_decoder_t *decoder;
+	bool dr, dw;
+	arm_address_t lr, ur, lw, uw;
+
+	static void spy(arm_memory_t *mem, arm_address_t addr, arm_size_t size, arm_access_t access, void *data) {
+		SimState *ss = static_cast<SimState *>(data);
+		if(access == arm_access_read) {
+			if(!ss->dr) {
+				ss->lr = ss->ur = addr;
+				ss->dr = true;
+			}
+			else if(addr < ss->lr)
+				ss->lr = addr;
+			else if(addr > ss->ur)
+				ss->ur = addr;
+		}
+		else {
+			if(!ss->dw) {
+				ss->lw = ss->uw = addr;
+				ss->dw = true;
+			}
+			else if(addr < ss->lw)
+				ss->lw = addr;
+			else if(addr > ss->uw)
+				ss->uw = addr;
+		}
+	}
+};
+#endif
+
 // registers
 static hard::PlainBank gpr("GPR", hard::Register::INT, 32, "r%d", 16);
 static hard::Register sr("sr", hard::Register::BITS, 32);
@@ -138,26 +220,6 @@ static RegisterDecoder register_decoder;
 #define _LOAD(d, a, b)	sem::load(d, a, b)
 #define _STORE(d, a, b)	sem::store(d, a, b)
 #define _SCRATCH(d)		sem::scratch(d)
-/*macro _set(d, a)			= "_SET"(d, a)*/
-//#define _SETI(d, a)		sem::seti(d, a)
-//#define _CMP(d, a, b)	sem::cmp(d, a, b)
-/*macro cmpu(d, a, b)		= "_CMPU"(d, a, b)*/
-//#define _ADD(d, a, b)	sem::add(d, a, b)
-/*macro sub(d, a, b)		= "_SUB"(d, a, b)*/
-//#define _SHL(d, a, b)	sem::shl(d, a, b)
-//#define _SHR(d, a, b)	sem::shr(d, a, b)
-//#define _ASR(d, a, b)	sem::asr(d, a, b)
-/*macro neg(d, a)			= "_NEG"(d, a)
-macro not(d, a)			= "_NOT"(d, a)
-macro and(d, a, b)		= "_AND"(d, a, b)
-macro or(d, a, b)		= "_AOR"(d, a, b)
-macro xor(d, a, b)		= "_XOR"(d, a, b)
-macro mul(d, a, b)		= "_MUL"(d, a, b)
-macro mulu(d, a, b)		= "_MULU"(d, a, b)
-macro div(d, a, b)		= "_DIV"(d, a, b)
-macro divu(d, a, b)		= "_DIVU"(d, a, b)
-macro mod(d, a, b)		= "_MOD"(d, a, b)
-macro modu(d, a, b)		= "_MODU"(d, a, b)*/
 
 #include "otawa_sem.h"
 
@@ -362,6 +424,12 @@ public:
 	}
 	virtual hard::Platform *platform(void) { return oplatform; }
 	virtual otawa::Inst *start(void) { return _start; }
+
+#	ifdef ARM_SIM
+		virtual SimState *newState(void) {
+			return new SimState(this, _platform, _decoder);
+		}
+#	endif
 
 	virtual File *loadFile(elm::CString path) {
 

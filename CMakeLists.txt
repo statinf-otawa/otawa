@@ -50,6 +50,7 @@ add_definitions(-DOTAWA_CMAKE)
 
 # looking for ARM loader
 set(ARM_PATH "${CMAKE_SOURCE_DIR}/../armv5t" CACHE PATH "path to GLISS ARM path")
+set(ARM_SIM OFF CACHE BOOL "Compile in the ARM functional simulator")
 if(EXISTS "${ARM_PATH}")
 	if(MINGW_LINUX)
 		set(path "${ARM_PATH}/src/libarm.a")
