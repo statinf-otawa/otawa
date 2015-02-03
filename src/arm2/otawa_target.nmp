@@ -8,15 +8,6 @@ extend B_thumb
 		else target
 		endif
 
-extend BLX1_thumb
-	otawa_target =
-		switch(H) {
-		case 0b00: target
-		case 0b01: (coerce(u32, offs) << 1) & 0xfffffffc
-		case 0b10: __IADDR + 4 + (coerce(s32, offs) << 12)
-		case 0b11: coerce(u32, offs) << 1
-		}
-
 extend BX_thumb
 	otawa_target =
 		if rm.number == 15 then __IADDR + 4

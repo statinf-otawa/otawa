@@ -72,18 +72,6 @@ extend B_thumb
 extend BKPT_thumb
 	otawa_kind = IS_CONTROL | IS_TRAP 
 
-extend BLX1_thumb
-	otawa_kind =
-		switch(H) {
-		case 0b00: IS_CONTROL
-		case 0b01: IS_BL_1 | IS_CONTROL | IS_CALL | (if offs == 0 then IS_RETURN else 0 endif)
-		case 0b10: IS_BL_0 | IS_ALU
-		case 0b11: IS_BL_1 | IS_CONTROL | IS_CALL | (if offs == 0 then IS_RETURN else 0 endif) 
-		}
-
-extend BLX2_thumb
-	otawa_kind = IS_CONTROL | IS_CALL
-
 extend BX_thumb
 	otawa_kind = IS_CONTROL | IS_THUMB_BX | (if rm == 14 then IS_RETURN else 0 endif)
 

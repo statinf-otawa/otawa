@@ -740,29 +740,6 @@ extend BIC_thumb
 		scratch(_CPSR);
 	}
 
-extend BLX1_thumb
-	otawa_sem = {
-		switch(H) {
-		case 0b00:
-			_branch(__IADDR + 4 + exts(offs) << 1); 
-		case 0b01:
-			seti(t1, exts(offs) << 1);
-			add(t1, t1, R(14));
-			_branch(t1);
-			seti(R(14), __IADDR + 2);
-		case 0b10:
-			seti(R(14), __IADDR + 4 + exts(offs) << 12);
-		case 0b11:
-			seti(t1, exts(offs) << 1);
-			add(t1, R(14), t1);
-			_branch(t1);
-			seti(R(14), __IADDR + 2);
-		};
-	}
-
-extend BLX2_thumb
-	otawa_sem = { seti(R(14), __IADDR + 2); _branch(rm.i); }
-
 extend BX_thumb
 	otawa_sem = { _branch(rm.i); }
 
