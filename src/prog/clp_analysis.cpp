@@ -2102,7 +2102,7 @@ private:
  * @ingroup clp
  */
 
-p::declare Analysis::reg = p::init("otawa::ClpAnalysis", Version(0, 1, 0))
+p::declare Analysis::reg = p::init("otawa::clp::Analysis", Version(0, 1, 0))
 	.maker<Analysis>()
 	.require(VIRTUALIZED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)

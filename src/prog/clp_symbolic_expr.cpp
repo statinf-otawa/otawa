@@ -767,6 +767,16 @@ namespace se{
 					se = new SECmp(log_op, new SEReg(i.a()));
 				break;
 
+			case sem::SET:
+				if(se) {
+					SEReg *rd = new SEReg(i.d());
+					SEReg *rs = new SEReg(i.a());
+					se->replace(rd, rs);
+					delete rd;
+					delete rs;
+				}
+				break;
+
 			// If inst is another instruction: replace
 			case sem::LOAD:
 				if (se){
@@ -776,6 +786,7 @@ namespace se{
 					clp::Value val = state.get(clp::Value(clp::REG, i.a()));
 					if (val != clp::Value::all){
 						if(!val.isConst()){
+							cerr << "WARNING: unconst address: " << val << endl;
 							// if val is a set, we cannot insert the memory
 							// reference in the filter
 							// TODO: maybe we should 'fork' the filter?
@@ -914,8 +925,10 @@ namespace se{
 					}
 				}
 			} // end if(se)
+
 			TRACEGF(tmpout = tmpout << '\n');
-			TRACEGF(out = tmpout << out);
+			TRACEGF(cerr << "filter: " << tmpout);
+			TRACEGF(cerr << "{ "; if(se) se->print(cerr, 0); cerr << " }" << endl);
 		} // end for (semantic instructions)
 
 		// return current se
