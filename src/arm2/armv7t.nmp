@@ -1,1 +1,28 @@
 let ARMV7T = 1
+
+let NO_KIND		= 0x00000000
+let IS_COND		= 0x00000001
+let IS_CONTROL	= 0x00000002
+let IS_CALL		= 0x00000004	// save PC before branching
+let IS_RETURN	= 0x00000008
+let IS_MEM		= 0x00000010
+let IS_LOAD		= 0x00000020
+let IS_STORE	= 0x00000040
+let IS_INT		= 0x00000080
+let IS_FLOAT	= 0x00000100
+let IS_ALU		= 0x00000200	// basic arithmetic operations (like "+", "-")
+let IS_MUL		= 0x00000400
+let IS_DIV		= 0x00000800
+let IS_SHIFT	= 0x00001000
+let IS_TRAP		= 0x00002000
+let IS_INTERN	= 0x00004000
+let IS_MULTI	= 0x00008000
+let IS_SPECIAL	= 0x00010000
+
+extend B_thumb_T2
+	otawa_kind = IS_CONTROL
+	otawa_target = target
+
+extend BLX_T2
+	otawa_kind = IS_CONTROL | IS_CALL
+	otawa_target = target
