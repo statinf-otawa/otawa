@@ -51,6 +51,11 @@ extend B_Cond
 		| (if setl then IS_CALL else 0 endif)
 		| (if cond.value == 14 then 0 else IS_COND endif)
 
+extend B_T3
+	otawa_kind = IS_CONTROL
+		| (if cond.value == 14 then 0 else IS_COND endif)
+
+
 extend BX_ARM
 	otawa_kind = IS_CONTROL
 		| (if rd == 14 then IS_RETURN else 0 endif)

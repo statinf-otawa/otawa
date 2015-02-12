@@ -13,3 +13,5 @@ extend BX_thumb
 		if rm.number == 15 then __IADDR + 4
 		else 0 endif
 
+extend B_T3
+	otawa_target = target
