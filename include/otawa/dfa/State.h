@@ -89,7 +89,7 @@ public:
 
 	typedef t::uint32 address_t;
 	State(Process& process);
-	inline Process& process(void) { return proc; }
+	inline Process& process(void) const { return proc; }
 
 	// accessing registers
 	void set(const hard::Register *reg, Value value);
@@ -109,7 +109,7 @@ public:
 	};
 
 	// accessing initialized memory
-	inline bool isInitialized(Address addr) { return mem.get(addr.offset(), false); }
+	inline bool isInitialized(Address addr) const { return mem.get(addr.offset(), false); }
 	inline void get(const Address& a, t::uint8 &v) const { proc.get(a, v); }
 	inline void get(const Address& a, t::uint16 &v) const { proc.get(a, v); }
 	inline void get(const Address& a, t::uint32 &v) const { proc.get(a, v); }

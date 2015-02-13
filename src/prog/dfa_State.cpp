@@ -198,7 +198,7 @@ Value State::get(const hard::Register *reg) const {
 
 
 /**
- * @fn bool State::isInitialized(Address addr);
+ * @fn bool State::isInitialized(Address addr) const;
  * Test if the current state contains initialized data.
  * @param addr	Address to test.
  * @return		True if the data is initialized, false else.
