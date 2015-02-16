@@ -1,10 +1,10 @@
 
 extend B_Cond
-	otawa_target = __IADDR + 8 + (coerce(int(30), signed_immed_24) :: 0b00)
+	otawa_target = target
 
 extend B_thumb
 	otawa_target =
-		if cond == 15 then 0
+		if cond == 0b1111 then 0
 		else target
 		endif
 

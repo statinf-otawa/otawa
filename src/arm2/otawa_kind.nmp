@@ -48,7 +48,7 @@ extend REG_LIST
 
 extend B_Cond
 	otawa_kind = IS_CONTROL
-		| (if setl then IS_CALL else 0 endif)
+		| (if setl || cond.value == 0b1111 then IS_CALL else 0 endif)
 		| (if cond.value == 14 then 0 else IS_COND endif)
 
 extend B_T3
