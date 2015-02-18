@@ -44,6 +44,7 @@ extend rotatedImmediate
 extend REG_LIST
 	has_pc = r & (1 << 15)
 
+
 // ****** branch instructions extensions ******
 
 extend B_Cond
@@ -60,7 +61,10 @@ extend B_T3
 			| (if cond.value == 14 then 0 else IS_COND endif)
 		endif
 
-
+//extend B_T4
+//	otawa_kind =
+//		IS_CONTROL
+		
 extend BX_ARM
 	otawa_kind = IS_CONTROL
 		| (if rd == 14 then IS_RETURN else 0 endif)
@@ -78,6 +82,9 @@ extend B_thumb
 		  IS_CONTROL
 		| (if cond != 14 || cond != 15 then IS_COND else 0 endif)
 		| (if cond == 15 then IS_TRAP else 0 endif)
+		
+extend BL_immediate_T1
+	otawa_kind = IS_CONTROL | IS_CALL
 
 extend BKPT_thumb
 	otawa_kind = IS_CONTROL | IS_TRAP 
@@ -87,6 +94,9 @@ extend BX_thumb
 
 extend SWI_thumb
 	otawa_kind = IS_CONTROL | IS_TRAP
+
+//extend TBB_TBH
+//	otawa_kind = IS_CONTROL | IS_MEM | IS_LOAD
 
 
 // ****** ALU instructions extenions ******
@@ -224,7 +234,6 @@ extend LDR_imm_thumb, LDR_shr_thumb, LDR_imm2_thumb, LDR_imm3_thumb,
 LDRB_imm_thumb, LDRB_shr_thumb, LDRH_imm_thumb, LDRH_shr_thumb,
 LDRSB_thumb, LDRSH_thumb
 	otawa_kind = IS_MEM | IS_LOAD | IS_INT 
-
 
  
 // ****** special instructions extensions ******
