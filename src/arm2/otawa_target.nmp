@@ -15,3 +15,9 @@ extend BX_thumb
 
 extend B_T3
 	otawa_target = target
+
+extend B_T4
+	otawa_target = target
+	
+extend BL_immediate_T1
+	otawa_target = addr
