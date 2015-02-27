@@ -1,4 +1,3 @@
-
 extend B_Cond
 	otawa_target = target
 

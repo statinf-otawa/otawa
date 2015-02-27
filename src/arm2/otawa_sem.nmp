@@ -112,9 +112,9 @@ extend immShift
 extend regShift
 	otawa_sem = {
 		switch(shiftKind) {
-		case LSL: shl(t1, r.i, R(shiftAmt));
-		case LSR: shr(t1, r.i, R(shiftAmt));
-		case ASR: asr(t1, r.i, R(shiftAmt));
+		case LSL: shl(t1, r.i, shiftAmt.i);
+		case LSR: shr(t1, r.i, shiftAmt.i);
+		case ASR: asr(t1, r.i, shiftAmt.i);
 		case ROR: scratch(t1); 
 		};
 	}

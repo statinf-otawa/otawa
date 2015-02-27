@@ -197,7 +197,7 @@ public:
 			map[i] = 0;
 
 		// initialize it
-		map[ARM_REG_UCPSR] = &sr;
+		map[ARM_REG_APSR] = &sr;
 		for(int i = 0; i < 16; i++)
 			map[ARM_REG_GPR(i)] = gpr[i];
 	}
