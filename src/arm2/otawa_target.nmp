@@ -21,3 +21,6 @@ extend B_T4
 	
 extend BL_immediate_T1
 	otawa_target = addr
+	
+extend CBNZ_CBZ_thumb
+	otawa_target = target
