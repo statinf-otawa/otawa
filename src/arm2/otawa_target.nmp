@@ -11,6 +11,9 @@ extend BX_thumb
 	otawa_target =
 		if rm.number == 15 then __IADDR + 4
 		else 0 endif
+		
+extend BLX_immediate_T2
+	otawa_target = targetAddress
 
 extend B_T3
 	otawa_target = target
@@ -18,6 +21,11 @@ extend B_T3
 extend B_T4
 	otawa_target = target
 	
+extend LDR_immediate_T3, LDR_immediate_T4
+	otawa_target = 
+		if Rn.number == 15 then data
+		else 0 endif
+		
 extend BL_immediate_T1
 	otawa_target = addr
 	

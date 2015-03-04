@@ -66,7 +66,10 @@ extend B_T3
 extend B_T4
 	otawa_kind =
 		IS_CONTROL
-		
+
+extend BLX_immediate_T2
+	otawa_kind = IS_CONTROL | IS_CALL
+
 extend BX_ARM
 	otawa_kind = IS_CONTROL
 		| (if rd.number == 14 then IS_RETURN else 0 endif)
@@ -212,6 +215,14 @@ extend LDR_imm, LDR_shr
  		| (if cond.value == 14 then 0 else IS_COND endif)
  		| (if rd.number == 15 then IS_CONTROL else 0 endif)
  		| (if rd.number == 15 && rn.number == 13 then IS_RETURN else 0 endif) 
+
+extend LDR_immediate_T3, LDR_immediate_T4
+ 	otawa_kind =
+ 		  IS_MEM
+ 		| IS_INT
+ 		| IS_LOAD
+ 		| (if Rt.number == 15 then IS_CONTROL else 0 endif)
+ 		| (if Rt.number == 15 && Rn.number == 13 then IS_RETURN else 0 endif) 
 
 extend STR_imm, STR_shr
  	otawa_kind =
