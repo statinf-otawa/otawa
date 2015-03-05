@@ -1,28 +1,82 @@
+include "defs.nmp"
+include "defs2.nmp"
+
 let ARMV7T = 1
 
-let NO_KIND		= 0x00000000
-let IS_COND		= 0x00000001
-let IS_CONTROL	= 0x00000002
-let IS_CALL		= 0x00000004	// save PC before branching
-let IS_RETURN	= 0x00000008
-let IS_MEM		= 0x00000010
-let IS_LOAD		= 0x00000020
-let IS_STORE	= 0x00000040
-let IS_INT		= 0x00000080
-let IS_FLOAT	= 0x00000100
-let IS_ALU		= 0x00000200	// basic arithmetic operations (like "+", "-")
-let IS_MUL		= 0x00000400
-let IS_DIV		= 0x00000800
-let IS_SHIFT	= 0x00001000
-let IS_TRAP		= 0x00002000
-let IS_INTERN	= 0x00004000
-let IS_MULTI	= 0x00008000
-let IS_SPECIAL	= 0x00010000
+extend B_T3
+	otawa_kind =
+		if cond.value<3..1> == 0b111
+		then 0
+		else
+			IS_CONTROL
+			| (if cond.value == 14 then 0 else IS_COND endif)
+		endif
+	otawa_target = target
 
-extend B_thumb_T2
+extend B_T4
 	otawa_kind = IS_CONTROL
 	otawa_target = target
 
-extend BLX_T2
+extend BL_immediate_T1
 	otawa_kind = IS_CONTROL | IS_CALL
-	otawa_target = target
+	otawa_target = addr	
+
+extend BLX_immediate_T2
+	otawa_kind = IS_CONTROL | IS_CALL
+	otawa_target = targetAddress
+
+extend TBB_TBH
+	otawa_kind = IS_CONTROL | IS_MEM | IS_LOAD
+
+extend LDR_immediate_T3, LDR_immediate_T4
+ 	otawa_kind =
+ 		  IS_MEM
+ 		| IS_INT
+ 		| IS_LOAD
+ 		| (if Rt.number == 15 then IS_CONTROL else 0 endif)
+ 		| (if Rt.number == 15 && Rn.number == 13 then IS_RETURN else 0 endif) 
+	otawa_target = 
+		if Rn.number == 15 then data
+		else 0 endif
+	
+extend LDM_T2
+	otawa_kind = IS_MEM | IS_LOAD | IS_MULTI | IS_INT
+		| (if register_list.has_pc then IS_CONTROL else 0 endif)
+		| (if Rn.number == 13 && register_list.has_pc then IS_CONTROL | IS_RETURN else 0 endif)
+	otawa_sem = {
+		if Rn.use_pc || register_list<15..15> == 1 then seti(R(15), __IADDR + 8); endif;
+		cnt = 0;
+		ii = 0;
+		otawa_sem_cnt;
+		seti(t2, 4);
+		// addr_mode = MULT_IA 
+		_set(t1, Rn.i);
+		seti(t3, cnt * 4); add(t3, t1, t3);
+		ii = 0;
+		otawa_sem_rec;
+		if W == 1 then _set(Rn.i, t3); endif;
+		if register_list<15..15> == 1 then _branch(R(15)); endif;
+	}
+	otawa_sem_cnt = {
+		if ii <= 15 then
+			if register_list<ii..ii> == 1 then cnt = cnt + 1; endif;
+			ii = ii + 1;
+			otawa_sem_cnt;
+		endif;
+	}
+	otawa_sem_rec = {
+		if ii <= 15 then
+			if register_list<ii..ii> == 1 then
+				load(R(ii), t1, UINT32);
+				add(t1, t1, t2);
+			endif;
+			ii = ii + 1;
+			otawa_sem_rec;
+		endif;
+	}
+	otawa_multi = register_list
+
+extend STMDB_T1
+	otawa_kind = IS_MEM | IS_STORE | IS_MULTI | IS_INT
+	otawa_multi = register_list
+	

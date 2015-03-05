@@ -1,3 +1,6 @@
+include "defs.nmp"
+include "defs2.nmp"
+
 extend BLX1_thumb
 	otawa_kind =
 		switch(H) {
