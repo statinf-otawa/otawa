@@ -530,7 +530,7 @@ extend ADD_reg1_thumb
 	otawa_sem = { add(rd.i, rm.i, rn.i); scratch(_CPSR); }
 
 extend ADD_reg2_thumb
-	otawa_sem = { add(rd.i, if H == 1 then rd.hi else rd.i endif, rm.i); }
+	otawa_sem = { add(rd.i, rd.i, rm.i); }
 
 extend AND_thumb
 	otawa_sem = { and(rd.i, rd.i, rm.i); scratch(_CPSR); }
