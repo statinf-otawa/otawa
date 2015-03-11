@@ -24,7 +24,7 @@
 #include <elm/genstruct/Vector.h>
 #include <otawa/otawa.h>
 #include <elm/assert.h>
-#include <otawa/cfg/CFGBuilder.h>
+//#include <otawa/cfg/CFGBuilder.h>
 #include <otawa/pcg/PCG.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/display/display.h>

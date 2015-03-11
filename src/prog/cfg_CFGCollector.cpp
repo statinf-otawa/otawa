@@ -23,7 +23,7 @@
 #include <elm/assert.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg.h>
-#include <otawa/cfg/CFGBuilder.h>
+//#include <otawa/cfg/CFGBuilder.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/prog/Manager.h>
 

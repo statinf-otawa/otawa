@@ -42,12 +42,13 @@ public:
 private:
 	CodeBasicBlock *nextBB(Inst *inst);
 	CodeBasicBlock *thisBB(Inst *inst);
-	void addSubProgram(Inst *inst);
+	void addSubProgram(Segment *seg, Inst *inst);
 	void buildCFG(WorkSpace *ws, Segment *seg);
 	void addFile(WorkSpace *ws, File *file);
-	void buildAll(WorkSpace *fw);
+	//void buildAll(WorkSpace *fw);
+	void addCFG(Segment *seg, BasicBlock *bb);
 
-	genstruct::Vector<CFG *> _cfgs;
+	//genstruct::Vector<CFG *> _cfgs;
 	CFGInfo *info;
 };
 

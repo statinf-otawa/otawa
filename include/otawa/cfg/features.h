@@ -87,7 +87,7 @@ extern Identifier<const CFGCollection *> INVOLVED_CFGS;
 extern Identifier<Edge *> CALLED_BY;
 
 // CFGInfoFeature
-extern SilentFeature CFG_INFO_FEATURE;
+extern p::feature CFG_INFO_FEATURE;
 extern Identifier<CFGInfo *> CFG_INFO;
 
 // REDUCED_LOOPS_FEATURE
