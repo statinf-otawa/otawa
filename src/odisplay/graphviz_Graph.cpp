@@ -226,7 +226,7 @@ void GraphVizGraph::display(void) throw(DisplayException) {
 	}
 	
 	// Redirect IO
-	Pair<PipeInStream *, PipeOutStream *> pipe = System::pipe();
+	Pair<SystemInStream *, SystemOutStream *> pipe = System::pipe();
 	builder.setInput(pipe.fst);
 	Process *proc = builder.run();
 	
