@@ -19,6 +19,11 @@
  *	along with OTAWA; if not, write to the Free Software 
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+#include <elm/genstruct/Vector.h>
+
+using namespace elm;
+
 namespace otawa { namespace concept {
 
 /**
@@ -353,5 +358,202 @@ public:
 };
 
 }	// dfa
+
+
+namespace ai {
+
+/**
+ * Graph concept for ai module.
+ * @ingroup ai
+ */
+class Graph {
+public:
+
+	/**
+	 * Graph vertex type.
+	 */
+	typedef void *vertex_t;
+
+	/**
+	 * Graph edge type.
+	 */
+	typedef void *edge_t;
+
+	/**
+	 * Get the entry vertex.
+	 * @return	Entry vertex.
+	 */
+	vertex_t entry(void) const;
+
+	/**
+	 * Get the exit vertex.
+	 * @return	Exit vertex.
+	 */
+	vertex_t exit(void) const;
+
+	/**
+	 * Get the sink vertex of the given edge.
+	 * @param e		Edge to look to.
+	 * @return		Sink node.
+	 */
+	vertex_t sinkOf(edge_t e) const;
+
+	/**
+	 * Get the source vertex of the given edge.
+	 * @param e		Edge to look to.
+	 * @return		Source node.
+	 */
+	vertex_t sourceOf(edge_t e) const;
+
+	/**
+	 * Iterator on the entering edges on the given vertex.
+	 */
+	class Predecessor {
+	public:
+		Predecessor(const CFGGraph& graph, vertex_t v);
+		Predecessor(const Predecessor& p);
+	};
+
+	/**
+	 * Iterator on the leaving edges of the given vertex.
+	 */
+	class Successor {
+	public:
+		Successor(const CFGGraph& graph, vertex_t v);
+		Successor(const Successor& p);
+	};
+
+	/**
+	 * Iterator on the vertices of the graph.
+	 */
+	class Iterator {
+	public:
+		Iterator(const CFGGraph& g);
+		Iterator(const Iterator& i);
+	};
+
+	/**
+	 * Get the index associated with a vertex.
+	 * @param v		Looked vertex.
+	 * @return		Associated vertex.
+	 */
+	int index(vertex_t v) const;
+
+	/**
+	 * Get the count of vertices.
+	 * @return		Count of vertices.
+	 */
+	int count(void) const;
+};
+
+
+/**
+ * Domain concept for ai module.
+ * @ingroup ai
+ */
+class Domain {
+public:
+
+	/**
+	 * Type of domain values.
+	 */
+	typedef void *t;
+
+	/**
+	 * Get the initial domain value.
+	 * @return	Initial value.
+	 */
+	t init(void);
+
+	/**
+	 * Get the bottom value.
+	 * @return	Bottom value.
+	 */
+	t bot(void);
+
+	/**
+	 * Join both value.
+	 * @param v1	First value.
+	 * @param v2	Second value.
+	 * @return		Joined values.
+	 */
+	t join(t v1, t v2);
+
+	/**
+	 * Test if both values are equal.
+	 * @param v1	First value.
+	 * @param v2	Second value.
+	 * @return		True if v1 = v2, false else.
+	 */
+	bool equals(t v1, t v2);
+
+	/**
+	 * Compute input value.
+	 * @param vertex	Current vertex.
+	 * @param ins		Iterator on inputs (implement InputIter concept).
+	 * @return			Input result.
+	 */
+	template <class I>
+	t input(Graph::vertex_t vertex, I& ins);
+
+	/**
+	 * Produce a new state by updating the given in state
+	 * according to the current vertex.
+	 * @param vertex	Current vertex.
+	 * @param in		Input state.
+	 * @param outs		Iterator on output (implements OutputIter concept).
+	 */
+	template <class O>
+	void output(Graph::vertex_t vertex, t in, O& outs);
+
+};
+
+/**
+ * Iterator on input of a vertex.
+ * @ingroup ai
+ */
+class InputIter {
+public:
+
+	/**
+	 * Get current edge.
+	 * @return	Current edge.
+	 */
+	Graph::edge_t edge(void);
+
+	/**
+	 * Get the value associated with current edge.
+	 * @return	Value of the current edge.
+	 */
+	const Domain::t& get(void);
+};
+
+/**
+ * Iterator to set output values.
+ * @ingroup ai
+ */
+class OutputIter {
+public:
+
+	/**
+	 * Get current edge.
+	 * @return	Current edge.
+	 */
+	Graph::edge_t edge(void);
+
+	/**
+	 * Set the value associated with the current edge.
+	 * @param	Value of the current edge.
+	 */
+	void set(const Domain::t& value);
+
+	/**
+	 * Set the value for all edges.
+	 * @param	Value for the whole set of edges.
+	 */
+	void setAll(const Domain::t& value);
+};
+
+}	// ai
 
 }	// otawa

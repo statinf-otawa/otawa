@@ -22,6 +22,8 @@
 
 #include <otawa/dfa/ai.h>
 
+using namespace elm;
+
 namespace otawa { namespace ai {
 
 /**
@@ -73,8 +75,8 @@ namespace otawa { namespace ai {
 /**
  * @class WorkListDriver
  * Driver of abstract interpretation with a simple to-do list.
- * @param D		Current domain (must implement otawa::ai::Domain concept).
- * @param G		Graph (must implement otawa::ai::Graph concept).
+ * @param D		Current domain (must implement @ref otawa::ai::Domain concept).
+ * @param G		Graph (must implement @ref otawa::ai::Graph concept).
  * @param S		Storage.
  * @ingroup ai
  */

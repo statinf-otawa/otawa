@@ -22,22 +22,13 @@
 #define OTAWA_CCG_CCGNODE_H
 
 
-#include <elm/genstruct/SLList.h>
-#include <elm/inhstruct/DLList.h>
-#include <elm/PreIterator.h>
-#include <otawa/instruction.h>
-#include <otawa/ccg/Edge.h>
 #include <otawa/cfg/BasicBlock.h>
-#include <otawa/ilp/Var.h>
-#include <otawa/cache/LBlock.h>
+#include <otawa/ccg/Edge.h>
+#include <otawa/ccg/features.h>
 
-namespace otawa {
+namespace otawa { namespace ccg {
 
-class LBlock;
-
-namespace ccg {
-
-class Node: public GenGraph<Node, Edge>::GenNode {
+class Node: public GenGraph<otawa::ccg::Node, otawa::ccg::Edge>::GenNode {
 public:
 	Node(LBlock *node);
 	LBlock *lblock(){return lbl;};

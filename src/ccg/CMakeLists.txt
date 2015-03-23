@@ -7,6 +7,7 @@ set(ccg_SOURCES
     ccg_DFA.cpp
     ccg_Edge.cpp
     ccg_hook.cpp
+    ccg_LBlockBuilder.cpp
     ccg_Node.cpp
 )
 
