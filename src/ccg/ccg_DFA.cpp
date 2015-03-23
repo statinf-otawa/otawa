@@ -19,17 +19,16 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <elm/assert.h>
-#include <otawa/ccg/DFA.h>
 #include <otawa/cfg.h>
 #include <otawa/instruction.h>
-#include <otawa/ccg/ConstraintBuilder.h>
-#include <otawa/cache/LBlockSet.h>
 #include <elm/genstruct/HashTable.h>
-#include <otawa/ccg/Builder.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/proc/ProcessorException.h>
+#include <otawa/ccg/Builder.h>
+#include <otawa/ccg/ConstraintBuilder.h>
+#include <otawa/ccg/DFA.h>
 
 using namespace otawa::ilp;
 using namespace elm::genstruct;
