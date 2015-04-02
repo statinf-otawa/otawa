@@ -276,43 +276,61 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 				continue; /* Skip first / last l-blocks */
 
 			// create x_miss variable
+			StringBuffer buf1;
 			ilp::Var *miss;
 			if(!_explicit)
 				miss = system->newVar();
-			else {
-				StringBuffer buf1;
-				buf1 << "x" << lblock->bb()->number() << "_miss_" << lblock->address() << "_" << lblock->id();
-				String name1 = buf1.toString();
-				miss = system->newVar(name1);
-			}
-			MISS_VAR(lblock) = miss;
+			else
+				buf1 << "x" << lblock->bb()->number() << "_miss_"
+						<< lblock->address() << "_" << lblock->id();
 
 			// add the constraint depending on the lblock category
 			switch(cache::CATEGORY(lblock)) {
 			case cache::ALWAYS_HIT: {
 				// Add constraint: xmiss = 0
 				Constraint *cons2 = system->newConstraint(ah_msg, Constraint::EQ,0);
-				cons2->addLeft(1, MISS_VAR(lblock));
+				if (_explicit) {
+					buf1 << "_HIT";
+					String name1 = buf1.toString();
+					miss = system->newVar(name1);
+				}
+				cons2->addLeft(1, miss);
 			}
 			break;
 			case cache::FIRST_HIT:
 			case cache::NOT_CLASSIFIED: {
 				// Add constraint: xmiss <= x
 				Constraint *cons3 = system->newConstraint(nc_msg, Constraint::LE);
-				cons3->addLeft(1, MISS_VAR(lblock));
+				if (_explicit) {
+					buf1 << "_NC";
+					String name1 = buf1.toString();
+					miss = system->newVar(name1);
+				}
+				cons3->addLeft(1, miss);
 				cons3->addRight(1, VAR(lblock->bb()));
 			}
 			break;
 			case cache::ALWAYS_MISS: {
 				// Add constraint: xmiss = x
 				Constraint *cons3 = system->newConstraint(am_msg, Constraint::EQ);
-				cons3->addLeft(1, MISS_VAR(lblock));
+				if (_explicit) {
+					buf1 << "_MISS";
+					String name1 = buf1.toString();
+					miss = system->newVar(name1);
+				}
+				cons3->addLeft(1, miss);
 				cons3->addRight(1, VAR(lblock->bb()));
 			}
 			break;
 			case cache::FIRST_MISS: {
 				BasicBlock *header = cache::CATEGORY_HEADER(lblock);
 				ASSERT(header != NULL);
+
+				if (_explicit) {
+					buf1 << "_FMISS";
+					String name1 = buf1.toString();
+					miss = system->newVar(name1);
+				}
 
 				if (LINKED_BLOCKS(lblock) != NULL) {
 					/* linked l-blocks first-miss */
@@ -337,7 +355,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 					/* standard first-miss */
 					/* Add constraint: xmiss <= sum of entry-edges of the loop */
 					Constraint *cons5a = system->newConstraint(fm_msg, Constraint::LE);
-					cons5a->addLeft(1, MISS_VAR(lblock));
+					cons5a->addLeft(1, miss);
 					for (BasicBlock::InIterator inedge(header); inedge; inedge++) {
 						if (!Dominance::dominates(header, inedge->source())) {
 							/* found an entry-edge */
@@ -348,7 +366,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 				// Add constraint: xmiss <= x
 				Constraint *cons1 = system->newConstraint(fm_msg, Constraint::LE);
 				cons1->addRight(1, VAR(lblock->bb()));
-				cons1->addLeft(1, MISS_VAR(lblock));
+				cons1->addLeft(1, miss);
 			}
 			break;
 
@@ -356,6 +374,8 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 				ASSERT(false);
 				break;
 			}
+
+			MISS_VAR(lblock) = miss;
 		}
 	}
 }
