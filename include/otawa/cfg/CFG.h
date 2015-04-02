@@ -55,7 +55,8 @@ public:
 	CFG(Segment *seg, BasicBlock *entry);
 	virtual ~CFG(void);
 	inline Segment *segment(void) const;
-	String label(void);
+	string label(void);
+	string name(void);
 	string format(const Address& addr);
 	inline int number(void);
 	address_t address(void);

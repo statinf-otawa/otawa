@@ -34,6 +34,7 @@
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/flowfact/features.h>
 #include <otawa/cfg/CFGChecker.h>
+#include <otawa/app/Application.h>
 
 using namespace elm;
 using namespace otawa;
@@ -137,7 +138,8 @@ static Identifier<bool> RECORDED("recorded", false);
 
 
 /**
- * Find a name for the current CFG.
+ * Find a name for the current CFG. If there is a label, use it.
+ * Else build an identifier based on its address.
  * @param cfg	Current CFG.
  * @return		Matching name.
  */
@@ -156,19 +158,30 @@ inline string nameOf(CFG *cfg) {
  * possible.
  * @param CFG		Container CFG.
  * @param address	Address of the item.
+ * @param xml		Use XML output.
  * @return			String representing the address of the instruction in F4.
  */
-inline string addressOf(CFG *cfg, Address address) {
+inline string addressOf(CFG *cfg, Address address, bool xml = false) {
 	string label = cfg->label();
-	if(!label)
-		return _ << "0x" << address;
+	if(!label) {
+		if(xml)
+			return _ << "address=\"0x" << address << "\"";
+		else
+			return _ << "0x" << address;
+	}
 	t::uint32 offset = address - cfg->address();
 	StringBuffer buf;
-	buf << '"' << label << '"';
+	if(xml) {
+		buf << "label=\"" << label << "\" offset=\"";
+	}
+	else
+		buf << '"' << label << '"';
 	if(offset > 0)
 		buf << " + 0x" << io::hex(offset);
 	else
 		buf << " - 0x" << io::hex(-offset);
+	if(xml)
+		buf << "\"";
 	return buf.toString();
 }
 
@@ -211,10 +224,230 @@ inline string makeAddress(CFG *cfg, Address addr) {
 }
 
 
+/**
+ * Interface for printing FFXs.
+ */
+class Printer {
+public:
+	Printer(WorkSpace *ws, bool debug): _ws(ws), _debug(debug) { }
+	virtual ~Printer(void) { }
+	virtual void printNoReturn(Output& out, string label) = 0;
+	virtual void printNoCall(Output& out, string label) = 0;
+	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst) = 0;
+	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst) = 0;
+	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) = 0;
+	virtual void startComment(Output& out) = 0;
+	virtual void endComment(Output& out) = 0;
+	virtual void printHeader(Output& out) = 0;
+	virtual void printFooter(Output& out) = 0;
+	virtual void printCheckSum(Output& out, Path path, t::uint32 sum) = 0;
+	virtual void startFunction(Output& out, CFG *cfg) = 0;
+	virtual void endFunction(Output& out) = 0;
+	virtual void startLoop(Output& out, CFG *cfg, Inst *inst) = 0;
+	virtual void endLoop(Output& out) = 0;
+
+protected:
+	void printSourceLine(Output& out, Address address) {
+		if(!_debug)
+			return;
+		Option<Pair< cstring, int> > loc = _ws->process()->getSourceLine(address);
+		if(loc)
+			out << (*loc).fst << ":" << (*loc).snd;
+	}
+
+	void printIndent(Output& out, int n) {
+		for(int i = 0; i < n; i++)
+			out << '\t';
+	}
+
+private:
+	bool _debug;
+	WorkSpace *_ws;
+};
+
+
+
+/**
+ * FF printer.
+ */
+class FFPrinter: public Printer {
+public:
+	FFPrinter(WorkSpace *ws, bool debug): Printer(ws, debug), indent(0) { }
+
+	virtual void printNoReturn(Output& out, string label) {
+		out << "noreturn \"" << label << "\";\n";
+	}
+
+	virtual void printNoCall(Output& out, string label) {
+		out << "nocall \"" << label << "\";\n";
+	}
+
+	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst) {
+		out << "multibranch " << addressOf(cfg, inst->address()) << " to ?;"
+			<< "\t// (" << inst->address() << ") switch-like branch in " << nameOf(cfg) << io::endl;
+	}
+
+	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst) {
+		out << "multicall " << addressOf(cfg, inst->address()) << " to ?;"
+			<< "\t// (" << inst->address() << ") indirect call in " << nameOf(cfg) << io::endl;
+	}
+
+	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) {
+		out << "ignorecontrol " << addressOf(cfg, inst) << ";\t// " << nameOf(cfg) << " function\n";
+	}
+
+	virtual void startComment(Output& out) {
+		out << "// ";
+	}
+
+	virtual void endComment(Output& out) {
+		out << io::endl;
+	}
+
+	virtual void printHeader(Output& out) {
+	}
+
+	virtual void printFooter(Output& out) {
+		cout << "\n";
+	}
+
+	virtual void printCheckSum(Output& out, Path path, t::uint32 sum) {
+		cout << "checksum \"" << path.namePart()
+			 << "\" 0x" << io::hex(sum) << ";\n";
+	}
+
+	virtual void startFunction(Output& out, CFG *cfg) {
+		indent = -1;
+		String label = cfg->label();
+		if(!label)
+			label = _ << "0x" << cfg->address();
+		out << "// Function " << label << " (";
+		this->printSourceLine(out, cfg->address());
+		out << ")\n";
+	}
+
+	virtual void endFunction(Output& out) {
+		out << io::endl;
+	}
+
+	virtual void startLoop(Output& out, CFG *cfg, Inst *inst) {
+		indent++;
+		printIndent(out, indent);
+		if(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst)) {
+			out << "// loop " << addressOf(cfg, inst->address()) << " (";
+			printSourceLine(out, inst->address());
+			out << ")\n";
+		}
+		else
+			out << "loop " << addressOf(cfg, inst->address()) << " ?; // " << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ")\n";
+	}
+
+	virtual void endLoop(Output& out) {
+		indent--;
+	}
+
+private:
+	int indent;
+};
+
+
+/**
+ * FFX printer.
+ */
+class FFXPrinter: public Printer {
+public:
+	FFXPrinter(WorkSpace *ws, bool debug): Printer(ws, debug), indent(0) { }
+
+	virtual void printNoReturn(Output& out, string label) {
+		out << "\t<noreturn label=\"" << label << "\"/>\n";
+	}
+
+	virtual void printNoCall(Output& out, string label) {
+		out << "\t<nocall label=\"" << label << "\"/>\n";
+	}
+
+	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst) {
+		out << "\t!<-- switch-like branch (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
+		out << "\t<multibranch " << addressOf(cfg, inst->address(), true) << ">\n";
+		out << "\t</multibranch>\n";
+	}
+
+	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst) {
+		out << "\t!<-- indirect call (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
+		out << "\t<multicall " << addressOf(cfg, inst->address(), true) << ">\n";
+		out << "\t</multicall>\n";
+	}
+
+	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) {
+		out << "\t!<-- " << nameOf(cfg) << " function -->\n"
+			<< "\t<ignorecontrol " << addressOf(cfg, inst) << "/>\n";
+	}
+
+	virtual void startComment(Output& out) {
+		out << "\t<!-- ";
+	}
+
+	virtual void endComment(Output& out) {
+		out << "-->";
+	}
+
+	virtual void printHeader(Output& out) {
+		cout << "<?xml version=\"1.0\"?>\n<flowfacts>\n";
+	}
+
+	virtual void printFooter(Output& out) {
+		cout << "</flowfacts>\n";
+	}
+
+	virtual void printCheckSum(Output& out, Path path, t::uint32 sum) {
+		// ignored in FFX
+	}
+
+	virtual void startFunction(Output& out, CFG *cfg) {
+		indent = 1;
+		out << "\t<function ";
+		string label = cfg->label();
+		if(label)
+			out << " label=\"" << label << "\"";
+		else
+			out << " address=\"0x" << cfg->address() << "\"";
+		out << "> <!-- 0x" << cfg->address() << " (";
+		printSourceLine(out, cfg->address());
+		out << ") -->\n";
+	}
+
+	virtual void endFunction(Output& out) {
+		out << "\t</function>\n\n";
+	}
+
+	virtual void startLoop(Output& out, CFG *cfg, Inst *inst) {
+		indent++;
+		printIndent(out, indent);
+		out << "<loop " << addressOf(cfg, inst->address(), true);
+		if(!(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst)))
+			out << " maxcount=\"NOCOMP\"";
+		out << "> <!-- 0x" << inst->address() << " (";
+		printSourceLine(out, inst->address());
+		out << ") -->\n";
+	}
+
+	virtual void endLoop(Output& out) {
+		printIndent(out, indent);
+		out << "</loop>\n";
+		indent--;
+	}
+
+private:
+	int indent;
+};
+
+
 // ControlOutput processor
 class ControlOutput: public CFGProcessor {
 public:
-	ControlOutput(void);
+	ControlOutput(Printer& printer);
 protected:
 	virtual void setup(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
@@ -222,13 +455,14 @@ protected:
 private:
 	void prepare(WorkSpace *ws, CFG *cfg);
 	bool one;
+	Printer& _printer;
 };
 
 
 // FFOutput processor
 class FFOutput: public CFGProcessor {
 public:
-	FFOutput(void);
+	FFOutput(Printer& printer);
 protected:
 	virtual void setup(WorkSpace *ws) {
 		has_debug = ws->isProvided(otawa::SOURCE_LINE_FEATURE);
@@ -249,6 +483,7 @@ private:
 	}
 
 	bool has_debug;
+	Printer& _printer;
 };
 
 
@@ -304,91 +539,65 @@ p::declare QuestFlowFactLoader::reg = p::init("QuestFlowFactLoader", Version(1, 
 
 
 // Command class
-class Command: public option::Manager {
+class Command: public Application {
 public:
 	Command(void);
-	~Command(void);
-	void run(int argc, char **argv);
-	
-	// Manager overload
-	virtual void process (String arg);
-
 protected:
-	otawa::Manager manager;
-	WorkSpace *fw;
-	String task;
-	genstruct::Vector<String> added;
-	void perform(String name);
-
+	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::StringOption ff_file;
-	option::BoolOption verb;
+	option::SwitchOption xml;
 };
 
 
 /**
- * Perform the work, get the loop and outputting the flow fact file.
- * @param name	Name of the function to process.
  */
-void Command::perform(String name) {
-	ASSERT(name);
+void Command::work(PropList &props) throw(elm::Exception) {
 
-	// Configuration	
-	PropList props;
-	TASK_ENTRY(props) = &name;
-	for(int i = 0; i < added.length(); i++)
-		CFGCollector::ADDED_FUNCTION(props).add(added[i].toCString());
-	if(ff_file)
-		FLOW_FACTS_PATH(props) = Path(ff_file);
-	if(verb)
-		Processor::VERBOSE(props) = true;
+	// configure the CFG collection
+	TASK_ENTRY(props) = arguments()[0];
+	for(int i = 1; i < arguments().length(); i++)
+		CFGCollector::ADDED_FUNCTION(props).add(arguments()[i].toCString());
 	CFGChecker::NO_EXCEPTION(props) = true;
 
 	// Load flow facts and record unknown values
 	QuestFlowFactLoader ffl;
-	ffl.process(fw, props);
+	ffl.process(workspace(), props);
 	
+	// determine printer
+	Printer *p;
+	if(xml)
+		p = new FFXPrinter(workspace(), true);
+	else
+		p = new FFPrinter(workspace(), true);
+
+	// printer header
+	p->printHeader(cout);
+
 	// Build the checksums of the binary files
 	if(!ffl.checkSummed()) {
-		for(Process::FileIter file(fw->process()); file; file++) {
+		for(Process::FileIter file(workspace()->process()); file; file++) {
 			checksum::Fletcher sum;
 			io::InFileStream stream(file->name());
 			sum.put(stream);
 			elm::system::Path path = file->name();
-			cout << "checksum \"" << path.namePart()
-				 << "\" 0x" << io::hex(sum.sum()) << ";\n";
+			p->printCheckSum(cout, path, sum.sum());
 		}
 		cout << io::endl;
 	}
 
-	// Display low-level flow facts
-	ControlOutput ctrl;
-	ctrl.process(fw, props);
+	// display low-level flow facts
+	ControlOutput ctrl(*p);
+	ctrl.process(workspace(), props);
 	
-	// Display the context tree
-	FFOutput out;
-	out.process(fw, props);
-}
+	// display the context tree
+	FFOutput out(*p);
+	out.process(workspace(), props);
 
+	// output footer for XML
+	p->printFooter(cout);
 
-/**
- * Process the free arguments.
- * @param arg	Free param value.
- */
-void Command::process(String arg) {
-
-	// First free argument is binary path
-	if(!fw) {
-		PropList props;
-		NO_SYSTEM(props) = true;
-		fw = manager.load(arg.toCString(), props);
-	}
-	
-	// Process function names
-	else if(!task)
-		task = arg;
-	else
-		added.add(arg);
+	// cleanup at end
+	delete p;
 }
 
 
@@ -397,50 +606,21 @@ void Command::process(String arg) {
  * Build the command.
  */
 Command::Command(void):
-	Manager(
-		option::program, "mkff",
-		option::version, new Version(1, 0),
-		option::author, "Hugues Cassé",
-		option::copyright, "Copyright (c) 2005-07, IRIT-UPS France",
-		option::description, "Generate a flow fact file for an application.",
-		option::arg_desc, "program [function names...]",
-		option::end),
-	fw(0),
-	ff_file(*this, 'f', "flowfacts", "select flowfact file to use", "flow fact file", ""),
-	verb(*this, 'v', "verbose", "activate the verbose mode", false)
+	otawa::Application(
+		"mkff",
+		Version(1, 1, 0),
+		"Hugues Cassé <casse@irit.fr>",
+		"Generate a flow fact file for an application.",
+		"Copyright (c) 2005-15, IRIT - UPS"),
+		xml(*this, option::cmd, "-x", option::cmd, "--ffx", option::description, "activate FFX output", option::end)
 {
-}
-
-
-/**
- * Run the command.
- * @param argc	Argument count.
- * @param argv	Argument vector.
- */
-void Command::run(int argc, char **argv) {
-	parse(argc, argv);
-	if(!fw) {
-		displayHelp();
-		throw option::OptionException("no binary file to process");
-	}
-	if(!task)
-		task = "main";
-	perform(task);
-}
-
-
-/**
- * Release all command ressources.
- */
-Command::~Command(void) {
-	delete fw;
 }
 
 
 /**
  * Display the flow facts.
  */
-FFOutput::FFOutput(void): CFGProcessor("FFOutput", Version(1, 0, 0)), has_debug(false) {
+FFOutput::FFOutput(Printer& printer): CFGProcessor("FFOutput", Version(1, 0, 0)), has_debug(false), _printer(printer) {
 	require(CONTEXT_TREE_BY_CFG_FEATURE);
 }
 
@@ -467,18 +647,13 @@ void FFOutput::scanFun(ContextTree *ctree) {
 	if(checkLoop(ctree)) {
 		
 		// Display header
-		String label = ctree->cfg()->label();
-		if(!label)
-			label = _ << "0x" << ctree->cfg()->address(); 
-		cout << "// Function " << label << " ";
-		this->printSourceLine(cout, workspace(), ctree->cfg()->address());
-		cout << "\n";
+		_printer.startFunction(out, ctree->cfg());
 		
 		// Scan the loop
 		scanLoop(ctree->cfg(), ctree, 0);		
 		
 		// Displayer footer
-		cout << io::endl;
+		_printer.endFunction(out);
 	}
 }
 
@@ -497,15 +672,19 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
 		
 		// Process loop
 		if(child->kind() == ContextTree::LOOP) {
-			for(int i = 0; i < indent; i++)
+
+			/* for(int i = 0; i < indent; i++)
 				cout << "  ";
 			BasicBlock::InstIter inst(child->bb());
 			if(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst))
 				cout << "// loop " << addressOf(cfg, child->bb()->address()) << io::endl;
 			else 
 				cout << "loop " << addressOf(cfg, child->bb()->address()) << " ?; // "
-					 << child->bb()->address() << io::endl;
+					 << child->bb()->address() << io::endl;*/
+
+			_printer.startLoop(out, cfg, child->bb()->firstInst());
 			scanLoop(cfg, child, indent + 1);
+			_printer.endLoop(out);
 		}
 	}
 }
@@ -534,8 +713,8 @@ bool FFOutput::checkLoop(ContextTree *ctree) {
 /**
  * Constructor.
  */
-ControlOutput::ControlOutput(void)
-: CFGProcessor("ControlOutput", Version(1, 0, 0)) {
+ControlOutput::ControlOutput(Printer& printer)
+: CFGProcessor("ControlOutput", Version(1, 1, 0)), one(false), _printer(printer) {
 }
 
 
@@ -557,10 +736,10 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 		if(label) {
 			for(int i = 0; noreturn_labels[i]; i++)
 				if(label == noreturn_labels[i])
-					out << "noreturn \"" << label << "\";\n";
+					_printer.printNoReturn(out, label);
 			for(int i = 0; nocall_labels[i]; i++)
 				if(label == nocall_labels[i])
-					out << "nocall \"" << label << "\";\n";
+					_printer.printNoCall(out, label);
 		}
 	}
 	
@@ -576,18 +755,11 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 				if(!inst->target()) {
 					if(BRANCH_TARGET(inst).get().isNull()) {
 						prepare(ws, cfg);
+						cstring type, com;
 						if(inst->isCall())
-							out << "multicall ";
+							_printer.printMultiCall(out, cfg, inst);
 						else
-							out << "multibranch ";
-						out << addressOf(cfg, inst->address())
-							<< " to ?;";
-						out << "\t// (" << inst->address() << ") ";
-						if(inst->isCall())
-							out << "indirect call in "; 
-						else
-							out << "switch-like branch in ";
-						out << nameOf(cfg) << io::endl;
+							_printer.printMultiBranch(out, cfg, inst);
 					}
 				}
 				
@@ -595,8 +767,7 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 				else if(inst->isCall()
 				&& inst->target()->address() == inst->topAddress()) {
 					prepare(ws, cfg);
-					out << "ignorecontrol " << addressOf(cfg, inst)
-						<< ";\t// " << nameOf(cfg) << " function\n"; 					
+					_printer.printIgnoreControl(out, cfg, inst);
 				}
 			}
 }
@@ -609,7 +780,9 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
  */
 void ControlOutput::prepare(WorkSpace *ws, CFG *cfg) {
 	if(!one) {
-		out << "// Low-level flow facts\n";
+		_printer.startComment(out);
+		out <<  "Low-level flow facts";
+		_printer.endComment(out);
 		one = true;
 	}
 }
@@ -622,26 +795,4 @@ void ControlOutput::cleanup(WorkSpace *ws) {
 		out << io::endl;
 }
 
-
-/**
- * "dumpcfg" entry point.
- * @param argc		Argument count.
- * @param argv		Argument list.
- * @return		0 for success, >0 for error.
- */
-int main(int argc, char **argv) {
-	try {
-		Command command;
-		command.run(argc, argv);
-		return 0;
-	}
-	catch(option::OptionException& e) {
-		cerr << "ERROR: " << e.message() << io::endl;
-		return 1;
-	}
-	catch(elm::Exception& e) {
-		cerr << "ERROR: " << e.message() << '\n';
-		return 2;
-	}
-}
-
+OTAWA_RUN(Command);

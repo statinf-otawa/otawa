@@ -292,8 +292,8 @@ int Application::run(int argc, char **argv) {
 		}
 		if(!path)
 			throw option::OptionException("no PROGRAM given");
-		if(!entries)
-			entries.add("main");
+		if(!_args)
+			_args.add("main");
 		if(verbose)
 			Processor::VERBOSE(props) = true;
 		if(*log_level)
@@ -388,11 +388,11 @@ void Application::prepare(PropList& props) {
  * @throw	elm::Exception	For any found error.
  */
 void Application::work(PropList &props) throw(elm::Exception) {
-	for(int i = 0; i < entries.count(); i++) {
+	for(int i = 0; i < _args.count(); i++) {
 		props2 = new PropList(props);
 		ASSERT(props2);
-		TASK_ENTRY(props2) = entries[i].toCString();
-		work(entries[i], *props2);
+		TASK_ENTRY(props2) = _args[i].toCString();
+		work(_args[i], *props2);
 		delete props2;
 		props2 = 0;
 	}
@@ -412,6 +412,14 @@ void Application::work(PropList &props) throw(elm::Exception) {
  */
 void Application::work(const string& entry, PropList &props) throw(elm::Exception) {
 }
+
+
+/**
+ * @fn const genstruct::Vector<string> arguments(void) const;
+ * Get the free argument of the application except the first one identified as the binary path.
+ * If there is no free argument, "main" is automatically added.
+ * @return	Free argument array.
+ */
 
 
 /**
@@ -441,7 +449,7 @@ void Application::process(string arg) {
 	if(!path)
 		path = arg;
 	else
-		entries.add(arg);
+		_args.add(arg);
 }
 
 }	// otawa

@@ -83,6 +83,7 @@ using namespace otawa;
 class Summer: public StatCollector::Collector {
 public:
 	Summer(void): s(0) { }
+	virtual ~Summer(void) { }
 	inline int sum(void) const { return s; }
 	virtual void enter(const ContextualStep &step) { }
 	virtual void leave(void) { }

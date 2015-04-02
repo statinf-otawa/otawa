@@ -68,6 +68,8 @@ protected:
 	virtual void process(string arg);
 	inline bool isVerbose(void) const { return verbose; }
 
+	const genstruct::Vector<string> arguments(void) const { return _args; }
+
 private:
 	option::BoolOption help, verbose;
 	option::ListOption<string> sets;
@@ -75,7 +77,7 @@ private:
 	option::ListOption<string> ff;
 	LogOption log_level;
 	elm::system::Path path;
-	genstruct::Vector<string> entries;
+	genstruct::Vector<string> _args;
 	PropList props;
 	PropList *props2;
 	int result;
