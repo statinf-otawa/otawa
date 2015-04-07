@@ -161,7 +161,7 @@ inline string nameOf(CFG *cfg) {
  * @param xml		Use XML output.
  * @return			String representing the address of the instruction in F4.
  */
-inline string addressOf(CFG *cfg, Address address, bool xml = false) {
+/*inline string addressOf(CFG *cfg, Address address, bool xml = false) {
 	string label = cfg->label();
 	if(!label) {
 		if(xml)
@@ -183,7 +183,7 @@ inline string addressOf(CFG *cfg, Address address, bool xml = false) {
 	if(xml)
 		buf << "\"";
 	return buf.toString();
-}
+}*/
 
 
 /**
@@ -193,9 +193,9 @@ inline string addressOf(CFG *cfg, Address address, bool xml = false) {
  * @param inst	Instruction to get address of.
  * @return		String representing the address of the instruction in F4.
  */
-inline string addressOf(CFG *cfg, Inst *inst) {
+/*inline string addressOf(CFG *cfg, Inst *inst) {
 	return addressOf(cfg, inst->address());
-}
+}*/
 
 
 /**
@@ -283,17 +283,23 @@ public:
 	}
 
 	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst) {
-		out << "multibranch " << addressOf(cfg, inst->address()) << " to ?;"
+		out << "multibranch ";
+		addressOf(out, cfg, inst->address());
+		out << " to ?;"
 			<< "\t// (" << inst->address() << ") switch-like branch in " << nameOf(cfg) << io::endl;
 	}
 
 	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst) {
-		out << "multicall " << addressOf(cfg, inst->address()) << " to ?;"
+		out << "multicall ";
+		addressOf(out, cfg, inst->address());
+		out << " to ?;"
 			<< "\t// (" << inst->address() << ") indirect call in " << nameOf(cfg) << io::endl;
 	}
 
 	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) {
-		out << "ignorecontrol " << addressOf(cfg, inst) << ";\t// " << nameOf(cfg) << " function\n";
+		out << "ignorecontrol ";
+		addressOf(out, cfg, inst->address() - cfg->address());
+		out << ";\t// " << nameOf(cfg) << " function\n";
 	}
 
 	virtual void startComment(Output& out) {
@@ -334,12 +340,16 @@ public:
 		indent++;
 		printIndent(out, indent);
 		if(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst)) {
-			out << "// loop " << addressOf(cfg, inst->address()) << " (";
+			out << "// loop ";
+			addressOf(out, cfg, inst->address());
+			out << " (";
 			printSourceLine(out, inst->address());
 			out << ")\n";
 		}
 		else
-			out << "loop " << addressOf(cfg, inst->address()) << " ?; // " << inst->address() << " (";
+			out << "loop ";
+			addressOf(out, cfg, inst->address());
+			out << " ?; // " << inst->address() << " (";
 			printSourceLine(out, inst->address());
 			out << ")\n";
 	}
@@ -350,6 +360,20 @@ public:
 
 private:
 	int indent;
+
+	void addressOf(io::Output& out, CFG *cfg, Address address) {
+		string label = cfg->label();
+		if(!label)
+			out << "0x" << address;
+		else {
+			t::uint32 offset = address - cfg->address();
+			out << '"' << label << '"';
+			if(offset > 0)
+				out << " + 0x" << io::hex(offset);
+			else
+				out << " - 0x" << io::hex(-offset);
+		}
+	}
 };
 
 
@@ -370,19 +394,25 @@ public:
 
 	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst) {
 		out << "\t!<-- switch-like branch (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
-		out << "\t<multibranch " << addressOf(cfg, inst->address(), true) << ">\n";
-		out << "\t</multibranch>\n";
+		out << "\t<multibranch ";
+		addressOf(out, cfg, inst->address());
+		out << ">\n"
+			<< "\t</multibranch>\n";
 	}
 
 	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst) {
 		out << "\t!<-- indirect call (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
-		out << "\t<multicall " << addressOf(cfg, inst->address(), true) << ">\n";
-		out << "\t</multicall>\n";
+		out << "\t<multicall ";
+		addressOf(out, cfg, inst->address());
+		out << ">\n"
+			<< "\t</multicall>\n";
 	}
 
 	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) {
 		out << "\t!<-- " << nameOf(cfg) << " function -->\n"
-			<< "\t<ignorecontrol " << addressOf(cfg, inst) << "/>\n";
+			<< "\t<ignorecontrol ";
+		addressOf(out, cfg, inst->address() - cfg->address());
+		out << "/>\n";
 	}
 
 	virtual void startComment(Output& out) {
@@ -425,7 +455,8 @@ public:
 	virtual void startLoop(Output& out, CFG *cfg, Inst *inst) {
 		indent++;
 		printIndent(out, indent);
-		out << "<loop " << addressOf(cfg, inst->address(), true);
+		out << "<loop ";
+		addressOf(out, cfg, inst->address());
 		if(!(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst)))
 			out << " maxcount=\"NOCOMP\"";
 		out << "> <!-- 0x" << inst->address() << " (";
@@ -441,6 +472,21 @@ public:
 
 private:
 	int indent;
+
+	void addressOf(io::Output& out, CFG *cfg, Address address) {
+		string label = cfg->label();
+		if(!label)
+			out << "address=\"0x" << address << "\"";
+		else {
+			t::uint32 offset = address - cfg->address();
+			out << "label=\"" << label << "\" offset=\"";
+			if(offset > 0)
+				out << " + 0x" << io::hex(offset);
+			else
+				out << " - 0x" << io::hex(-offset);
+			out << "\"";
+		}
+	}
 };
 
 

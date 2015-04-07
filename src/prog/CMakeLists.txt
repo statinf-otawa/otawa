@@ -175,6 +175,7 @@ set(libotawa_SOURCES
 	"stats_BBStatCollector.cpp"
 	"util_AccessedAddress.cpp"
 	"util_StackAnalysis.cpp"
+	"util_SymAddress.cpp"
 	"clp_analysis.cpp"
 	"clp_symbolic_expr.cpp"
 	"ai.cpp"
