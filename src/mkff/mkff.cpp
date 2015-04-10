@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -55,21 +55,21 @@ const char *nocall_labels[] = {
 /**
  * @addtogroup commands
  * @section mkff mkff Command
- * 
+ *
  * This command is used to generate F4 file template file template (usually
  * suffixed by a @e .ff) to pass flow facts
  * to OTAWA. Currently, only constant loop bounds are supported as flow facts.
  * Look the @ref f4 documentation for more details.
- * 
+ *
  * @par SYNTAX
  * @code
  * $ mkff binary_file function1 function2 ...
  * @endcode
- * 
+ *
  * mkff builds the .ff loop statements for each function calling sub-tree for
  * the given binary file. If no function name is given, only the main()
  * function is processed.
- * 
+ *
  * The loop statement are indented according their depth in the context tree
  * and displayed with the current syntax:
  * @code
@@ -82,13 +82,13 @@ const char *nocall_labels[] = {
  * The "?" question marks must be replaced by the maximum loop bound in order
  * to get valid .ff files. A good way to achieve this task is to use the
  * @ref dumpcfg command to get  a graphical display of the CFG.
- * 
+ *
  * @par Example
  * @code
  * $ mkff fft1
  * // Function main
  * loop 0x100006c0 ?;
- * 
+ *
  * // Function fft1
  * loop 0x10000860 ?;
  * loop 0x10000920 ?;
@@ -105,7 +105,7 @@ const char *nocall_labels[] = {
  * @endcode
  *
  * @par Other information
- * 
+ *
  * mkff has the ability to produce automatically other commands to handle
  * problematic or exotic flow fact structures:
  * @li false control instruction (branching to the next instruction to get
@@ -114,21 +114,21 @@ const char *nocall_labels[] = {
  * @li non-returning functions (like exit(), _exit()),
  * @li problematic initialization (like __eabi on EABI based platforms,
  * _main for tricore).
- * 
+ *
  * @par Usage
  * In very complex programs, it may be required to launch mkff several times.
- * 
+ *
  * As mkff may detect unsolved indirect branches (function pointer call or
  * swicth-like statements, the first phase consist to fill this kind
  * information and to relaunch mkff to scan unreachable parts of the program.
  * Possibly, some parts may also be cut to tune the WCET computation.
- * 
+ *
  * As an example, we want to build the flow facts of the program xxx.
  * -# generate a first version: @c{$ mkff xxx > xxx.ff},
  * -# if required, fix the non-loop directives and removes the loop directives,
  * -# generate a new version: @c{$ mkff xxx >> xxx.ff},
  * -# while it remains unfixed non-loop,  restart at step 2.
- * 
+ *
  * In the second phase, you must fix the loop directives, that is, to replace
  * the question marks '?' by actual loop iteration bounds.
  */
@@ -298,7 +298,7 @@ public:
 
 	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) {
 		out << "ignorecontrol ";
-		addressOf(out, cfg, inst->address() - cfg->address());
+		addressOf(out, cfg, inst->address());
 		out << ";\t// " << nameOf(cfg) << " function\n";
 	}
 
@@ -393,7 +393,7 @@ public:
 	}
 
 	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst) {
-		out << "\t!<-- switch-like branch (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
+		out << "\t<!-- switch-like branch (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
 		out << "\t<multibranch ";
 		addressOf(out, cfg, inst->address());
 		out << ">\n"
@@ -401,7 +401,7 @@ public:
 	}
 
 	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst) {
-		out << "\t!<-- indirect call (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
+		out << "\t<!-- indirect call (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
 		out << "\t<multicall ";
 		addressOf(out, cfg, inst->address());
 		out << ">\n"
@@ -481,9 +481,9 @@ private:
 			t::uint32 offset = address - cfg->address();
 			out << "label=\"" << label << "\" offset=\"";
 			if(offset > 0)
-				out << " + 0x" << io::hex(offset);
+				out << "0x" << io::hex(offset);
 			else
-				out << " - 0x" << io::hex(-offset);
+				out << "-0x" << io::hex(-offset);
 			out << "\"";
 		}
 	}
@@ -540,7 +540,7 @@ public:
 	QuestFlowFactLoader(void): FlowFactLoader(reg), check_summed(false) { }
 
 	inline bool checkSummed(void) const { return check_summed; }
-	
+
 protected:
 
 	virtual void onCheckSum(const String& name, unsigned long sum) {
@@ -573,9 +573,9 @@ private:
 		Inst *inst = workSpace()->findInstAt(addr);
 		if(!inst)
 			onError(_ << "no instruction at " << addr);
-		RECORDED(inst) = true;		
+		RECORDED(inst) = true;
 	}
-	
+
 	bool check_summed;
 };
 
@@ -608,7 +608,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	// Load flow facts and record unknown values
 	QuestFlowFactLoader ffl;
 	ffl.process(workspace(), props);
-	
+
 	// determine printer
 	Printer *p;
 	if(xml)
@@ -634,7 +634,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	// display low-level flow facts
 	ControlOutput ctrl(*p);
 	ctrl.process(workspace(), props);
-	
+
 	// display the context tree
 	FFOutput out(*p);
 	out.process(workspace(), props);
@@ -688,16 +688,16 @@ void FFOutput::processCFG(WorkSpace *ws, CFG *cfg) {
  */
 void FFOutput::scanFun(ContextTree *ctree) {
 	ASSERT(ctree);
-	
+
 	// Display header
 	if(checkLoop(ctree)) {
-		
+
 		// Display header
 		_printer.startFunction(out, ctree->cfg());
-		
+
 		// Scan the loop
-		scanLoop(ctree->cfg(), ctree, 0);		
-		
+		scanLoop(ctree->cfg(), ctree, 0);
+
 		// Displayer footer
 		_printer.endFunction(out);
 	}
@@ -712,10 +712,10 @@ void FFOutput::scanFun(ContextTree *ctree) {
  */
 void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
 	ASSERT(ctree);
-	
+
 	for(ContextTree::ChildrenIterator child(ctree); child; child++) {
 		ASSERT(child->kind() != ContextTree::FUNCTION);
-		
+
 		// Process loop
 		if(child->kind() == ContextTree::LOOP) {
 
@@ -724,7 +724,7 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
 			BasicBlock::InstIter inst(child->bb());
 			if(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst))
 				cout << "// loop " << addressOf(cfg, child->bb()->address()) << io::endl;
-			else 
+			else
 				cout << "loop " << addressOf(cfg, child->bb()->address()) << " ?; // "
 					 << child->bb()->address() << io::endl;*/
 
@@ -774,7 +774,7 @@ void ControlOutput::setup(WorkSpace *ws) {
 /**
  */
 void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
-	
+
 	// Look for labels
 	Inst *inst = ws->findInstAt(cfg->address());
 	if(!PRESERVED(inst)) {
@@ -788,7 +788,7 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 					_printer.printNoCall(out, label);
 		}
 	}
-	
+
 	// Look in BB
 	for(CFG::BBIterator bb(cfg); bb; bb++)
 		for(BasicBlock::InstIter inst(bb); inst; inst++)
@@ -796,7 +796,7 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 			&& !inst->isReturn()
 			&& !RECORDED(inst)
 			&& !PRESERVED(inst)) {
-				
+
 				// Undefined branch target
 				if(!inst->target()) {
 					if(BRANCH_TARGET(inst).get().isNull()) {
@@ -808,7 +808,7 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 							_printer.printMultiBranch(out, cfg, inst);
 					}
 				}
-				
+
 				// call to next instruction
 				else if(inst->isCall()
 				&& inst->target()->address() == inst->topAddress()) {

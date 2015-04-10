@@ -241,6 +241,11 @@ void ACSBuilder::configure(const PropList &props) {
 	level = FIRSTMISS_LEVEL(props);
 	unrolling = PSEUDO_UNROLLING(props);
 	must_entry = CACHE_ACS_MUST_ENTRY(props);
+	if(logFor(LOG_PROC)) {
+		log << "\tlevel = " << level << io::endl;
+		log << "\tunrolling = " << unrolling << io::endl;
+		log << "\tmust_entry = " << must_entry << io::endl;
+	}
 }
 
 void ACSBuilder::processWorkSpace(WorkSpace *fw) {

@@ -191,6 +191,9 @@ void CAT2Builder::configure(const PropList &props) {
 	cstats = cache::CATEGORY_STATS(props);
 	if(cstats)
 		cstats->reset();
+	if(logFor(LOG_PROC)) {
+		cerr << "\tlevel = " << firstmiss_level << io::endl;
+	}
 }
 
 
