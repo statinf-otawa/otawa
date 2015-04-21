@@ -144,7 +144,7 @@ extend lhw_zero
 extend lhw_zero_indexed
 	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, UINT16); }
 extend lhw_zero_update
-	otawa_sem = { _add(t1, R(ra), d); load(R(rd), t1, UINT16); set(R(ra), t1); }
+	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); load(R(rd), t1, UINT16); set(R(ra), t1); }
 extend lhw_zero_update_indexed
 	otawa_sem = { _add(t1, R(ra), rb.sem); load(R(rd), t1, UINT16); set(R(ra), t1); }
 
@@ -153,7 +153,7 @@ extend lhw_alg
 extend lhw_alg_indexed
 	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, INT16); }
 extend lhw_alg_update
-	otawa_sem = { _add(t1, R(ra), d); load(R(rd), t1, INT16); set(R(ra), t1); }
+	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); load(R(rd), t1, INT16); set(R(ra), t1); }
 extend lhw_alg_update_indexed
 	otawa_sem = { _add(t1, R(ra), rb.sem); load(R(rd), t1, INT16); set(R(ra), t1); }
 
@@ -162,7 +162,7 @@ extend lw_zero
 extend lw_zero_indexed, lwarx
 	otawa_sem = { if ra.is_zero then set(t1, rb.sem); else _add(t1, ra.sem, rb.sem); endif; load(R(rd), t1, INT32); }
 extend lw_zero_update
-	otawa_sem = { _add(t1, R(ra), d); load(R(rd), t1, INT32); set(R(ra), t1); }
+	otawa_sem = { seti(t1, d); _add(t1, R(ra), t1); load(R(rd), t1, INT32); set(R(ra), t1); }
 extend lw_zero_update_indexed
 	otawa_sem = { _add(t1, R(ra), rb.sem); load(R(rd), t1, INT32); set(R(ra), t1); }
 
