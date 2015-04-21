@@ -424,7 +424,10 @@ public:
 	}
 
 	virtual void printHeader(Output& out) {
-		cout << "<?xml version=\"1.0\"?>\n<flowfacts>\n";
+		cout << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+				"<flowfacts\n"
+				"	xmlns:xi=\"http://www.w3.org/2001/XInclude\"\n"
+				"	xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\n\n";
 	}
 
 	virtual void printFooter(Output& out) {
