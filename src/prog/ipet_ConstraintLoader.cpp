@@ -16,6 +16,7 @@
 
 // Externals
 extern FILE *ipet_in;
+extern int ipet_line;
 
 namespace otawa { namespace ipet {
 
@@ -42,9 +43,25 @@ namespace otawa { namespace ipet {
  * @li expression '/' expression : division,
  * @li '(' expression ')' : parentheses,
  *
- * To be consistant with the current ILP constraint systemin OTAWA, links must
+ * To be consistent with the current ILP constraint system in OTAWA, links must
  * be done with the variables associated with nodes and edges. This is
  * performed by the following commands:
+ * @li 'bb' id address -- name id the variable identifying occurrences of BB at given address,
+ * @li 'bb' id '$' index -- name id the variable identifying occurrences of BB with given index,
+ * @li 'edge' id address address -- name id the variable identifying occurrences edge whose source and target BB are at given address.
+ *
+ * The identifier id are name of variable that may be then used in the constraint description.
+ *
+ * Below is displayed a simple example of mutual exclusive execution:
+ * @code
+ * # variable identification
+ * bb	x_1 	0x125C
+ * bb 	x_2 	$11
+ *
+ * # constraints
+ * x_1 + x_2 <= 1
+ *
+ * @endcode
  */
 
 
@@ -121,7 +138,10 @@ Registration<ConstraintLoader> ConstraintLoader::reg(
 /**
  * Constructor.
  */
-ConstraintLoader::ConstraintLoader(AbstractRegistration& r): CFGProcessor(r) {
+ConstraintLoader::ConstraintLoader(AbstractRegistration& r)
+:	CFGProcessor(r),
+ 	system(0),
+ 	fw(0) {
 }
 
 
@@ -151,19 +171,50 @@ BasicBlock *ConstraintLoader::getBB(address_t addr) {
 
 
 /**
+ * find BB matching the given index from the main CFG.
+ * @param 	index	BB index.
+ * @return	Found BB or null.
+ */
+BasicBlock *ConstraintLoader::getBB(int index) {
+	const CFGCollection& coll = **INVOLVED_CFGS(fw);
+	for(CFG::BBIterator bb(coll[0]); bb; bb++)
+		if(bb->number() == index)
+			return bb;
+	return 0;
+}
+
+
+/**
  * For internal use only.
  */
-bool ConstraintLoader::newBBVar(CString name, address_t addr) {
+void ConstraintLoader::newBBVar(cstring name, address_t addr) {
 	BasicBlock *bb = getBB(addr);
 	if(!bb)
-		return false;
-	ilp::Var *var = ipet::VAR(bb);
-	if(!var)
-		log << "ERROR: variable " << name << " of basic block at " << addr
-			<< " is not defined.\n";
-	else
-		vars.put(name, var);
-	return true;
+		error("cannot find BB at given address");
+	else {
+		ilp::Var *var = ipet::VAR(bb);
+		if(!var)
+			error(_ << "variable " << name << " of basic block at " << addr << " is not defined.");
+		else
+			vars.put(name, var);
+	}
+}
+
+
+/**
+ * For internal use only.
+ */
+void ConstraintLoader::newBBVar(cstring name, int index) {
+	BasicBlock *bb = getBB(index);
+	if(!bb)
+		error("cannot find the BB!");
+	else {
+		ilp::Var *var = ipet::VAR(bb);
+		if(!var)
+			error(_ << "variable " << name << " of basic block " << index << " is not defined.");
+		else
+			vars.put(name, var);
+	}
 }
 
 
@@ -370,6 +421,25 @@ void ConstraintLoader::processCFG(WorkSpace *_fw, CFG *cfg) {
 
 	// Close all
 	fclose(ipet_in);
+}
+
+
+/**
+ * Display an error with line number.
+ * @param message	Message to display.
+ */
+void ConstraintLoader::error(string message) {
+	log << "ERROR: " << ipet_line << ": " << message << io::endl;
+}
+
+
+/**
+ * Display an error message and stop the execution (raising an exception).
+ * @param message	Message to display.
+ */
+void ConstraintLoader::fatal(string message) {
+	error(message);
+	throw otawa::Exception("fatal error: stopping.");
 }
 
 } } // otawa::ipet

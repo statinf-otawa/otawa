@@ -48,7 +48,7 @@ COM		#.*\n
 ">="		return OP_GE;
 "<="		return OP_LE;
 [<>=]		return *yytext;
-[+\-*/()]	return *yytext;
+[+\-*/()$]	return *yytext;
 
 0			ipet_lval.integer = 0; return INTEGER;
 {DEC}		ipet_lval.integer = strtol(yytext, 0, 10); return INTEGER;

@@ -47,7 +47,17 @@ class NormNode;
 class ConstraintLoader: public CFGProcessor {
 	friend int ::ipet_parse(ConstraintLoader *);
 	friend void ::ipet_error(ConstraintLoader *, const char *);
-	
+
+public:
+	static Identifier<String> PATH;
+	static Registration<ConstraintLoader> reg;
+	ConstraintLoader(AbstractRegistration& r = reg);
+
+protected:
+	virtual void processCFG(WorkSpace *fw, CFG *cfg);
+	virtual void configure(const PropList &props = PropList::EMPTY);
+
+private:
 	WorkSpace *fw;
 	ilp::System *system;
 	elm::genstruct::HashTable<Address, BasicBlock *> bbs;
@@ -55,22 +65,18 @@ class ConstraintLoader: public CFGProcessor {
 	elm::String path;
 
 	BasicBlock *getBB(address_t addr);
-	bool newBBVar(elm::CString name, address_t addr);
+	BasicBlock *getBB(int index);
+	void newBBVar(cstring name, address_t addr);
+	void newBBVar(cstring name, int index);
 	bool newEdgeVar(elm::CString name, address_t src, address_t dst);
 	ilp::Var *getVar(CString name);
 	bool addConstraint(ExpNode *left, ilp::Constraint::comparator_t t, ExpNode *right);
 	NormNode *normalize(ExpNode *node, double mult = 1);
 
-protected:
-	virtual void processCFG(WorkSpace *fw, CFG *cfg);
-	virtual void configure(const PropList &props = PropList::EMPTY);
-
-public:
-	static Identifier<String> PATH;
-	static Registration<ConstraintLoader> reg;
-	ConstraintLoader(AbstractRegistration& r = reg);
+	void error(string message);
+	void fatal(string message);
 };
-	
+
 } } // otawa::ipet
 
 #endif 	// OTAWA_IPET_CONSTRAINT_LOADER_H
