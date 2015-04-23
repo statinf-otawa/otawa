@@ -682,13 +682,18 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 		inst->fetchNode()->setLatency(inst->fetchNode()->latency() + event->cost());
 		break;
 
-	case MEM:
-		for(ParExeInst::NodeIterator node(inst); node; node++)
-			if(node->stage()->unit()->isMem()) {
-				node->setLatency(node->latency() + event->cost() - 1);
-				break;
-			}
-		break;
+	case MEM: {
+			bool found = false;
+			for(ParExeInst::NodeIterator node(inst); node; node++)
+				if(node->stage()->unit()->isMem()) {
+					node->setLatency(node->latency() + event->cost() - 1);
+					found = true;
+					break;
+				}
+			if(!found)
+				throw otawa::Exception("no memory stage / FU found in this pipeline");
+			break;
+		}
 
 	case BRANCH:
 		bedge =  new ParExeEdge(getBranchNode(), inst->fetchNode(), ParExeEdge::SOLID, 0, pred_msg);

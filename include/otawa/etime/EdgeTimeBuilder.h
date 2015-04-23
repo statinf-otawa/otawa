@@ -50,6 +50,7 @@ protected:
 	typedef genstruct::Vector<event_t> event_list_t;
 	typedef genstruct::Vector<ConfigSet> config_list_t;
 	virtual ParExeGraph *make(ParExeSequence *seq);
+	virtual void processEdge(WorkSpace *ws, CFG *cfg);
 	virtual void clean(ParExeGraph *graph);
 	void processTimes(const config_list_t& confs);
 	void applyStrictSplit(const config_list_t& confs);
@@ -70,7 +71,6 @@ private:
 			{ return e1.fst->inst()->address().compare(e2.fst->inst()->address()); }
 	};
 
-	void processEdge(WorkSpace *ws, CFG *cfg);
 	void apply(Event *event, ParExeInst *inst);
 	void rollback(Event *event, ParExeInst *inst);
 	EventCollector *get(Event *event);
