@@ -52,7 +52,7 @@ using namespace otawa;
  * The following options are available:
  * @li --cflags -- output compilation C++ flags
  * @li --data -- output the OTAWA data path
- * @li--doc -- output the OTAWA documentation path
+ * @li --doc -- output the OTAWA documentation path
  * @li --has-so -- exit with 0 return code if dynamic libraries are available, non-0 else
  * @li -h, --help -- display the help message
  * @li --list-ilps, --ilp -- list ILP solver plugins available
@@ -67,6 +67,7 @@ using namespace otawa;
  * @li -r, --rpath -- output options to control RPATH on OS supporting it.
  * @li -p, --plugin ELD_FILE -- ouput linkage options for a plugin for the given ELD file.
  * @li -i, --install -- output the directory where installing a plugin.
+ * @li --oversion -- output version of OTAWA.
  */
 
 #if defined(WIN32) || defined(WIN64)
@@ -240,7 +241,8 @@ public:
 		list_scripts(*this, cmd, "--list-scripts", option::description, "output the list of available scripts", end),
 		rpath(*this, cmd, "--rpath", cmd, "-r", option::description, "output options to control RPATH", end),
 		install(SwitchOption::Make(*this).cmd("-i").cmd("--install").description("Output path of plugin directory")),
-		eld(ValueOption<string>::Make(*this).cmd("-p").cmd("--plugin").argDescription("ELD_FILE").description("ELD file to generate linkage options"))
+		eld(ValueOption<string>::Make(*this).cmd("-p").cmd("--plugin").argDescription("ELD_FILE").description("ELD file to generate linkage options")),
+		oversion(SwitchOption::Make(*this).cmd("--oversion").description("output version of OTAWA."))
 	{
 
 		// initialize the modules
@@ -296,6 +298,8 @@ public:
 			adjustELD(config);
 
 		// do the display
+		if(oversion)
+			cout << "OTAWA rev. " << MANAGER.VERSION << " (" << MANAGER.COMPILATION_DATE << ")";
 		if(prefix)
 			cout << config.prefix;
 		if(cflags)
@@ -472,7 +476,8 @@ private:
 		scripts,
 		list_scripts,
 		rpath,
-		install;
+		install,
+		oversion;
 };
 
 int main(int argc, char **argv) {

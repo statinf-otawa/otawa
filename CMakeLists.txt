@@ -14,13 +14,6 @@ if (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
 endif (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
 
 
-# build configuration file
-configure_file (
-  "${PROJECT_SOURCE_DIR}/config.in"
-  "${PROJECT_SOURCE_DIR}/config.h"
-)
-
-
 # install directories
 if(MINGW_LINUX OR WIN32)
 	set(LIBDIR "bin")
@@ -34,7 +27,7 @@ set(ILPDIR       "${PLUGDIR}/ilp")
 
 
 # adding Flex and Bison support
-# the version of flex included with msys is bugged, 
+# the version of flex included with msys is bugged,
 # so those scripts had to be heavily modded
 if(WIN32)
 include(CMakeUserUseBison.cmake RESULT_VARIABLE BISON)
@@ -108,33 +101,35 @@ else()
 	message(STATUS "lp_solve5 library not found")
 endif()
 
-#if(UNIX OR APPLE OR MINGW_LINUX)
-#	set(LP_SOLVE5_PATH ${CMAKE_SOURCE_DIR}/../lp_solve5)
-#	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH}/lpsolve55 NO_DEFAULT_PATH)
-#elseif(WIN32)
-#	set(LP_SOLVE5_PATH "${CMAKE_SOURCE_DIR}/../lp_solve5")
-#	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH})
-#endif()
-#if(LP_SOLVE5)
-#	set(LP_SOLVE5_INCLUDE ${LP_SOLVE5_PATH})
-#endif()
+
+# looking for version
+find_program(HG_PATH hg)
+if(HG_PATH)
+    execute_process(
+        COMMAND "${HG_PATH}" summary
+        OUTPUT_VARIABLE OTAWA_VERSION
+        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    string(REGEX REPLACE "parent: ([^:]+):.*" "\\1" OTAWA_VERSION "${OTAWA_VERSION}")
+endif()
+if(OTAWA_TAG)
+    set(OTAWA_VERSION "${OTAWA_VERSION}-${OTAWA_TAG}")
+endif()
+message(STATUS "OTAWA version: ${OTAWA_VERSION}")
 
 
-
-
-# ==== for Date ====
+# compute the date
 if(WIN32)
 	execute_process(COMMAND "cmd" "/C date /T" OUTPUT_VARIABLE RESULT)
-#	message(STATUS ${RESULT})
 elseif(UNIX OR MINGW_LINUX)
 	execute_process(COMMAND "date" "+%d/%m/%Y" OUTPUT_VARIABLE RESULT OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif(WIN32)
 if(WIN32 AND NOT MINGW_LINUX)
-string(REGEX REPLACE "([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*" "\\1\\2\\3" RESULT ${RESULT})
+    string(REGEX REPLACE "([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*" "\\1\\2\\3" RESULT ${RESULT})
 endif()
-add_definitions(-DDAYDATE=\"${RESULT}\")
+set(OTAWA_DATE "${RESULT}")
+#add_definitions(-DDAYDATE=\"${RESULT}\")
 #	message(STATUS ${RESULT})
-
+message(STATUS "OTAWA date: ${OTAWA_DATE}")
 
 ###########################
 #adding Doxygen support
@@ -158,7 +153,7 @@ else(UNIX AND NOT APPLE)
 	#in case of some more exotic OS
 	message(WARNING "OS not supported")
 endif()
-	
+
 #once Doxygen path has been searched for
 #generation of documentation IF Doxygen has been found
 #tried testing for DEFINED DOXYGEN_DIR, doesn't work
@@ -173,6 +168,13 @@ else(DOXYGEN AND WIN32)
 endif(DOXYGEN AND WIN32)
 
 ###########################
+
+
+# build configuration file
+configure_file (
+  "${PROJECT_SOURCE_DIR}/config.in"
+  "${PROJECT_SOURCE_DIR}/config.h"
+)
 
 
 # linking to elm and gel libraries
@@ -221,7 +223,7 @@ add_custom_target("make-autodoc" ALL DEPENDS "autodoc")
 add_custom_command(
 	OUTPUT "autodoc"
 	DEPENDS "Doxyfile"
-	COMMAND "${DOXYGEN}"	
+	COMMAND "${DOXYGEN}"
 )
 install(DIRECTORY autodoc DESTINATION "${CMAKE_INSTALL_PREFIX}/share/Otawa/")
 endif()

@@ -61,12 +61,14 @@ public:
 class Manager {
 	friend class WorkSpace;
 public:
-	static const CString OTAWA_NS;
-	static const CString OTAWA_NAME;
-	static const CString PROCESSOR_NAME;
-	static const CString CACHE_CONFIG_NAME;
-	static const CString MEMORY_NAME;
-	static const cstring COMPILATION_DATE;
+	static const cstring
+		OTAWA_NS,
+		OTAWA_NAME,
+		PROCESSOR_NAME,
+		CACHE_CONFIG_NAME,
+		MEMORY_NAME,
+		COMPILATION_DATE,
+		VERSION;
 	static elm::system::Path prefixPath(void);
 	static String buildPaths(cstring kind, string paths = "");
 

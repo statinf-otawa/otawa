@@ -724,10 +724,12 @@ Manager MANAGER;
 /**
  * Compilation date of this OTAWA library.
  */
-#if defined(__WIN32) || defined(__WIN64) || defined(OTAWA_CMAKE)
-const cstring Manager::COMPILATION_DATE = DAYDATE;
-#elif defined(__unix)
-const cstring Manager::COMPILATION_DATE = DATE;
-#endif
+const cstring Manager::COMPILATION_DATE = OTAWA_DATE;
+
+
+/**
+ * Current version of sources OTAWA (VCS version).
+ */
+const cstring Manager::VERSION = OTAWA_VERSION;
 
 }	// otawa
