@@ -697,7 +697,7 @@ File *Process::loadFile(elm::CString path) {
 
 	// build the GEL image
 	LTRACE;
-	_gelFile = gel_open(&path, NULL, 0);
+	_gelFile = gel_open(&path, NULL, GEL_OPEN_QUIET);
 	if(!_gelFile)
 		throw LoadException(_ << "cannot load \"" << path << "\": " << gel_strerror());
 	gel_image_t *gimage = gel_image_load(_gelFile, &genv, 0);

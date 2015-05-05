@@ -191,10 +191,42 @@ extend REG_THUMB_INDEX
 
 // ****** 32-bits instruction set extends ******
 
-macro if_cond = \
+/*macro if_cond = \
 	if !cond.otawa_never then \
 		if !cond.otawa_ever then \
 			_if(cond.otawa_not_cond, _CPSR, 1); \
+			cont; \
+		endif;*/
+macro if_cond = \
+	if !cond.otawa_never then \
+		if !cond.otawa_ever then \
+			scratch(rd.i); \
+			cont; \
+		endif;
+macro if_cond_no = \
+	if !cond.otawa_never then \
+		if !cond.otawa_ever then \
+			cont; \
+		endif;
+macro if_cond_r(i) = \
+	if !cond.otawa_never then \
+		if !cond.otawa_ever then \
+			scratch(i); \
+			cont; \
+		endif;
+macro if_cond_store = \
+	if !cond.otawa_never then \
+		if !cond.otawa_ever && setw then \
+			scratch(rn.i); \
+			cont; \
+		endif;
+macro if_cond_load = \
+	if !cond.otawa_never then \
+		if !cond.otawa_ever then \
+			scratch(rd.i); \
+			if setw then \
+				scratch(rn.i); \
+			endif; \
 			cont; \
 		endif;
 
@@ -289,7 +321,7 @@ extend BX_ARM
 
 extend CMN_shr
 	otawa_sem = {
-		if_cond
+		if_cond_no
 			if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			shifter_operand.otawa_sem;
 			neg(t1, t1);
@@ -299,7 +331,7 @@ extend CMN_shr
 
 extend CMN_imm
 	otawa_sem = {
-		if_cond
+		if_cond_no
 			if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t1, -shifter_operand.v);
 			cmp(_CPSR, rn.i, t1);
@@ -308,7 +340,7 @@ extend CMN_imm
 
 extend CMP_shr
 	otawa_sem = {
-		if_cond
+		if_cond_no
 			if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			shifter_operand.otawa_sem;
 			cmp(_CPSR, rn.i, t1);
@@ -317,7 +349,7 @@ extend CMP_shr
 
 extend CMP_imm
 	otawa_sem = {
-		if_cond
+		if_cond_no
 			if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t1, shifter_operand.v);
 			cmp(_CPSR, rn.i, t1);
@@ -391,7 +423,7 @@ extend LDM
 
 extend LDR_imm
 	otawa_sem = {
-		if_cond
+		if_cond_load
 			if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t2, if setu == 0 then -coerce(card(32), offset12) else offset12 endif);
 			if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
@@ -404,7 +436,7 @@ extend LDR_imm
 
 extend LDR_shr
 	otawa_sem = {
-		if_cond
+		if_cond_load
 			if rn.use_pc || shifter_operand.use_pc then seti(R(15), __IADDR + 8); endif;
 			shifter_operand.otawa_sem;
 			if setu == 0 then neg(t1, t1); endif;
@@ -418,7 +450,7 @@ extend LDR_shr
 
 extend LDRH_imm
 	otawa_sem = {
-		if_cond
+		if_cond_load
 			if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
 			if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
@@ -431,7 +463,7 @@ extend LDRH_imm
 
 extend LDRH_shr
 	otawa_sem = {
-		if_cond
+		if_cond_load
 			if rn.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
 			if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
 			if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
@@ -444,7 +476,7 @@ extend LDRH_shr
 
 extend LDRSB_imm
 	otawa_sem = {
-		if_cond
+		if_cond_load
 			if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
 			if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
@@ -457,7 +489,7 @@ extend LDRSB_imm
 
 extend LDRSB_shr
 	otawa_sem = {
-		if_cond
+		if_cond_load
 			if rn.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
 			if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
 			if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
@@ -470,7 +502,7 @@ extend LDRSB_shr
 
 extend LDRSH_imm
 	otawa_sem = {
-		if_cond
+		if_cond_load
 			if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
 			if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
@@ -483,7 +515,7 @@ extend LDRSH_imm
 
 extend LDRSH_shr
 	otawa_sem = {
-		if_cond
+		if_cond_load
 			if rn.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
 			if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
 			if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
@@ -635,7 +667,7 @@ extend STM
 
 extend STR_imm
 	otawa_sem = {
-		if_cond
+		if_cond_store
 			if rn.use_pc || rd.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t2, if setu == 0 then -coerce(card(32), offset12) else offset12 endif);
 			if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
@@ -648,7 +680,7 @@ extend STR_imm
 
 extend STR_shr
 	otawa_sem = {
-		if_cond
+		if_cond_store
 			if rn.use_pc || rd.use_pc || shifter_operand.use_pc then seti(R(15), __IADDR + 8); endif;
 			shifter_operand.otawa_sem;
 			if setu == 0 then neg(t1, t1); endif;
@@ -662,7 +694,7 @@ extend STR_shr
 
 extend STRH_imm
 	otawa_sem = {
-		if_cond
+		if_cond_store
 			if rn.use_pc || rd.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
 			if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
@@ -675,7 +707,7 @@ extend STRH_imm
 
 extend STRH_shr
 	otawa_sem = {
-		if_cond
+		if_cond_store
 			if rn.use_pc || rd.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
 			if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
 			if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
@@ -730,7 +762,7 @@ extend SWP
 
 extend TEQ_shr
 	otawa_sem = {
-		if_cond
+		if_cond_no
 			if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			shifter_operand.otawa_sem;
 			xor(t1, rn.i, t1);
@@ -741,7 +773,7 @@ extend TEQ_shr
 
 extend TEQ_imm
 	otawa_sem = {
-		if_cond
+		if_cond_no
 			if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t1, shifter_operand.v);
 			xor(t1, rn.i, t1);
@@ -752,7 +784,7 @@ extend TEQ_imm
 
 extend TST_shr
 	otawa_sem = {
-		if_cond
+		if_cond_no
 			if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			shifter_operand.otawa_sem;
 			and(t1, rn.i, t1);
@@ -763,7 +795,7 @@ extend TST_shr
 
 extend TST_imm
 	otawa_sem = {
-		if_cond
+		if_cond_no
 			if rn.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t1, shifter_operand.v);
 			and(t1, rn.i, t1);

@@ -287,7 +287,7 @@ WorkSpace *Manager::load(const elm::system::Path&  path, const PropList& props) 
 Loader *Manager::findFileLoader(const elm::system::Path& path) {
 	Output log(io::err);
 
-	gel_file_t *file = gel_open((char *)&path, 0, 0);
+	gel_file_t *file = gel_open((char *)&path, 0, GEL_OPEN_QUIET);
 	if(!file) {
 		resetVerbosity();
 		throw LoadException(gel_strerror());
@@ -348,7 +348,7 @@ WorkSpace *Manager::loadBin(
 
 	// Try with gel
 	if(!loader) {
-		gel_file_t *file = gel_open((char *)&path, 0, 0);
+		gel_file_t *file = gel_open((char *)&path, 0, GEL_OPEN_QUIET);
 		if(!file) {
 			resetVerbosity();
 			throw LoadException(gel_strerror());
