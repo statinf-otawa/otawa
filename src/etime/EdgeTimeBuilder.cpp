@@ -272,9 +272,14 @@ EventCollector::case_t EdgeTimeBuilder::make(const Event *e, EdgeTimeBuilder::pl
  * the gap between max of best set and min of worst set.
  *
  * @par Provided Features
- * @li @ref ipet::BB_TIME_FEATURE
+ * @li @ref etime::EDGE_TIME_FEATURE
+ * @li @ref ipet::OBJECT_FUNCTION_FEATURE
  *
  * @par Required Features
+ * @li @ref ipet::ASSIGNED_VARS_FEATURE
+ * @li @ref ipet::ILP_SYSTEM_FEATURE
+ * @li @ref WEIGHT_FEATURE
+ * @li @ref EVENTS_FEATURE
  *
  * @ingroup etime
  */
@@ -337,7 +342,7 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 /**
  * This method is called to build the parametric execution graph.
- * As a default, build a usual @ref ParExeGraph but it may be overriden
+ * As a default, build a usual @ref ParExeGraph but it may be overridden
  * to build a custom graph.
  * @param seq	Sequence to build graph for.
  * @return		Built graph.
@@ -352,7 +357,7 @@ ParExeGraph *EdgeTimeBuilder::make(ParExeSequence *seq) {
 
 /**
  * Called to cleanup a graph allocated by a call to @ref make().
- * @param grapĥ		Graph to clean.
+ * @param grap	Graph to clean.
  */
 void EdgeTimeBuilder::clean(ParExeGraph *graph) {
 	delete graph;
@@ -410,8 +415,8 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	sortEvents(all_events, target, IN_BLOCK, edge);
 	if(logFor(LOG_BB))
 		for(genstruct::Vector<event_t>::Iterator e(all_events); e; e++)
-			cerr << "\t\t\t\t" << (*e).fst->inst()->address() << " -> "
-				 << (*e).fst->name() << " (" << (*e).fst->detail() << ") in "
+			log << "\t\t\t\t" << (*e).fst->inst()->address() << " -> "
+				 << (*e).fst->name() << " (" << (*e).fst->detail() << ") "
 				 << (*e).snd << io::endl;
 
 	// applying static events (always, never)
@@ -441,16 +446,17 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 		}
 	}
 
-	// check number of events limit
-	// TODO	fall back: analyze the block alone, split the block
-	if(events.count() >= 32)
-		throw ProcessorException(*this, _ << "too many events on edge " << edge);
 	if(logFor(LOG_BB)) {
 		log << "\t\t\t\tdynamic events = " << events.count() << io::endl;
 		for(int i = 0; i < events.count(); i++)
 			log << "\t\t\t\t" << events[i].fst->inst()->address() << "\t" << events[i].fst->name()
 				<< " " << events[i].snd << io::endl;
 	}
+
+	// check number of events limit
+	// TODO	fall back: analyze the block alone, split the block
+	if(events.count() >= 32)
+		throw ProcessorException(*this, _ << "too many events on edge " << edge);
 
 	// simple trivial case
 	if(events.isEmpty()) {
@@ -631,7 +637,7 @@ int EdgeTimeBuilder::splitConfs(const config_list_t& confs, const event_list_t& 
 
 /**
  * Display the list of configuration sorted by cost.
- * @param confs		List of configuration to displayy.
+ * @param confs		List of configuration to display.
  */
 void EdgeTimeBuilder::displayConfs(const genstruct::Vector<ConfigSet>& confs, const event_list_t& events) {
 	for(int i = 0; i < confs.length(); i++) {
@@ -793,7 +799,8 @@ void EdgeTimeBuilder::applyFloppySplit(const config_list_t& confs) {
 			sep_factor * (min_high - max_low)
 			- span_factor * (max_low - min_low)
 			+-int(feasible) * (min_high - max_low);
-		cerr << "\t\t\t p = " << p << " -> " << cost << io::endl;
+		if (isVerbose())
+			log << "\t\t\t p = " << p << " -> " << cost << io::endl;
 		//log << "DEBUG: p = " << p << ", cost = " << cost << ", Ml = " << max_low << ", mh = " << min_high << ", ml = " << min_low << ", f = " << set.isFeasible(events.length()) << io::endl;
 		if(cost > best_cost) {
 			best_p = p;
@@ -878,7 +885,8 @@ void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
 			best_cost = cost;
 		}
 	}
-	cerr << "\t\t\tbest_p = " << best_p << io::endl;
+	if (logFor(LOG_BB))
+		cerr << "\t\t\tbest_p = " << best_p << io::endl;
 
 	// look in the split
 	ConfigSet hts;

@@ -52,7 +52,7 @@ namespace otawa { namespace etime {
  * @li branch prediction by categrory.
  *
  * @par Properties
- *  @li @ref EVENT
+ * @li @ref EVENT
  *
  * @ingroup etime
  */
@@ -63,7 +63,7 @@ p::feature STANDARD_EVENTS_FEATURE("otawa::etime::STANDARD_EVENTS_FEATURE", new 
  * This feature ensures that all timing events on pipeline has been recorded.
  *
  * @par Properties
- *  @li @ref EVENT
+ * @li @ref EVENT
  *
  * @par Default Processor
  * @li @ref StandardEventBuilder
@@ -189,7 +189,7 @@ bool Event::isEstimating(bool on) {
 /**
  * Weight is a coarse-grain estimation of the number of times an event arises.
  * As a default returns 1 but may be customized to get more precise weight estimation.
- * This result bwill be used by heuristic approach to assess the impact of this event.
+ * This result will be used by heuristic approach to assess the impact of this event.
  * @return	Weight of the event.
  */
 int Event::weight(void) const {
