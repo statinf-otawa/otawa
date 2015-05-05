@@ -38,6 +38,8 @@
 #include <otawa/hard/Platform.h>
 #include <otawa/proc/DynFeature.h>
 #include <otawa/util/FlowFactLoader.h>
+#include <otawa/otawa.h>
+#include <elm/debug.h>
 
 using namespace elm;
 
@@ -94,6 +96,11 @@ namespace otawa { namespace script {
  * </script>
  * </otawa-script>
  * ~~~
+ *
+ * In addition to configuration items and to usual XPath symbols, the scripts provide convenient
+ * variables listed below:
+ * @li ORIGIN -- the directory containing the script.
+ * @li PREFIX -- installation prefix of OTAWA.
  */
 
 class ParseError: public otawa::Exception {
@@ -306,7 +313,7 @@ private:
 
 /**
  */
-Script::Script(void): Processor(reg) {
+Script::Script(void): Processor(reg), only_config(false), timed(false) {
 }
 
 
@@ -426,6 +433,7 @@ void Script::work(WorkSpace *ws) {
 
 	// perform the transformation
 	xom::XSLTransform xslt(xsl);
+	declareGlobals(xslt);
 	ScriptErrorHandler handler(log);
 	xslt.setErrorHandler(&handler);
 	for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param; param++) {
@@ -652,6 +660,17 @@ void Script::makeConfig(xom::Element *elem, PropList& props) {
  */
 void Script::onError(error_level_t level, const string &message) {
 	log << getLevelString(level) << ": " << message << io::endl;
+}
+
+
+/**
+ * Declare global variables on the given transformation.
+ * @param trans	Transformation to populate.
+ */
+void Script::declareGlobals(xom::XSLTransform& trans) {
+	trans.setParameter("ORIGIN", _ << '"' << path.parent().toString() << '"');
+	trans.setParameter("PREFIX", _ << '"' << otawa::MANAGER.prefixPath().toString() << '"');
+	trans.setParameter("VERBOSE", _ << int(this->logLevel()));
 }
 
 

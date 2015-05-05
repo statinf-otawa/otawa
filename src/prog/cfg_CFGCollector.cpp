@@ -128,7 +128,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
           entry = ws_entry;
 	else {
 		if(!entry && name) {
-			CFGInfo *info = fw->getCFGInfo();
+			CFGInfo *info = CFGInfo::ID(fw);
 			entry = info->findCFG(name);
 		}
 		if(!entry)
@@ -147,7 +147,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
 	// Added functions
 	for(int i = 0; i < added_funs.length(); i++) {
-		CFGInfo *info = fw->getCFGInfo();
+		CFGInfo *info = CFGInfo::ID(fw);
 		CFG *cfg = info->findCFG(added_funs[i]);
 		if(cfg) {
 			cfgs->add(cfg);

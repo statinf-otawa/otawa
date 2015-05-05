@@ -28,6 +28,7 @@
 #include <otawa/prog/sem.h>
 #include <otawa/loader/arm.h>
 #include <elm/stree/MarkerBuilder.h>
+#include "config.h"
 
 extern "C" {
 #	include <arm/grt.h>
@@ -46,7 +47,7 @@ namespace arm {
  */
 
 #define VERSION "2.1.0"
-OTAWA_LOADER_ID("arm2", VERSION, DAYDATE);
+OTAWA_LOADER_ID("arm2", VERSION, OTAWA_DATE);
 
 /**
  * @class Info
@@ -276,7 +277,7 @@ public:
 		}
 		return out_regs;
 	}
-	
+
 	virtual void semInsts (sem::Block &block);
 protected:
 	Process &proc;

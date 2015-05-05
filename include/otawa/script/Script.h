@@ -29,6 +29,7 @@
 namespace elm { namespace xom {
 	class Node;
 	class Element;
+	class XSLTransform;
 } }
 
 namespace otawa { namespace script {
@@ -85,6 +86,7 @@ protected:
 
 private:
 	void work(WorkSpace *ws);
+	void declareGlobals(xom::XSLTransform& trans);
 	void onError(xom::Node *node, const string& msg);
 	void onWarning(xom::Node *node, const string& msg);
 	void makeConfig(xom::Element *elem, PropList& props);

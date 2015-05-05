@@ -254,7 +254,6 @@ void Dominance::ensure(CFG *cfg) {
  * @return		True if the edge is a back edge, false else.
  */
 bool Dominance::isBackEdge(Edge *edge) {
-	ELM_DEPRECATED
 	ASSERT(edge);
 	ASSERTP(edge->target(), "cannot test back edge if the target is not known");
 	return(BACK_EDGE(edge));
@@ -285,7 +284,7 @@ static SilentFeature::Maker<Dominance> LOOP_HEADERS_MAKER;
  *
  * @Properties
  * @li @ref LOOP_HEADER (BasicBlock).
- * @li @ref BACK_EDGE (Edge). 
+ * @li @ref BACK_EDGE (Edge).
  */
 SilentFeature LOOP_HEADERS_FEATURE("otawa::LOOP_HEADERS_FEATURE", LOOP_HEADERS_MAKER);
 
