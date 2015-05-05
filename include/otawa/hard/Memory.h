@@ -193,7 +193,11 @@ private:
 extern SilentFeature MEMORY_FEATURE;
 extern Identifier<const Memory *> MEMORY;
 
-} } // otawa::hard
+} // hard
+
+io::Output &operator <<(io::Output &o, const hard::Bank::type_t &t);
+
+} // otawa
 
 ENUM(otawa::hard::Bus::type_t);
 ENUM(otawa::hard::Bank::type_t);

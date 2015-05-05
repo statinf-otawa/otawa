@@ -559,7 +559,21 @@ SilentFeature MEMORY_FEATURE("otawa::hard::MEMORY_FEATURE", maker);
  */
 Identifier<const Memory *> MEMORY("otawa::hard::MEMORY", &Memory::full);
 
-} } // otawa::hard
+} // hard
+
+io::Output &operator <<(io::Output &o, const hard::Bank::type_t &t) {
+	static cstring names[] = {
+		"NONE",
+		"DRAM",
+		"SPM",
+		"ROM",
+		"IO"
+	};
+	o << names[t];
+	return o;
+}
+
+} // otawa
 
 SERIALIZE(otawa::hard::ModeTransition);
 SERIALIZE(otawa::hard::Mode);

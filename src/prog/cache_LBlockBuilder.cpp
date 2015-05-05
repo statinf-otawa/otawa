@@ -136,7 +136,7 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct:
 	}
 	
 	// Compute the size
-	Address top = (addr + cache->blockMask()) & ~cache->blockMask();
+	Address top = (addr + cache->blockMask() +1) & ~cache->blockMask();
 	if(top > bb->address() + bb->size())
 		top = bb->address() + bb->size();
 	
@@ -144,7 +144,7 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct:
 	LBlock *lblock = new LBlock(lbset, bb, inst, top - addr, cid);
 	lblocks->set(index, lblock);
 	if(isVerbose())
-		log << "\t\t\t\tblock at " << addr
+		log << "\t\t\t\tblock at " << addr << " size " << top-addr
 			<< " (cache block " << cache->round(inst->address())
 			<< ", cid = " << cid << ")\n";
 	index++;
