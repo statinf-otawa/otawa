@@ -50,6 +50,6 @@ p::declare CAT2NCBuilder::reg = p::init("otawa::CAT2NCBuilder", Version(1, 0, 1)
 	.require(ICACHE_ACS_FEATURE)
 	.require(ICACHE_ACS_MAY_FEATURE)
 	.require(ICACHE_FIRSTLAST_FEATURE)
-	.provide(otawa::cache::ICACHE_CATEGORY_FEATURE);
+	.provide(ICACHE_CATEGORY2_FEATURE);
 
 }	// otawa

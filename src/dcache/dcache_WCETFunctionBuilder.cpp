@@ -78,7 +78,7 @@ void WCETFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 		ilp::Var *var = dcache::MISS_VAR(blocks.snd[i]);
 		ASSERT(var);
 
-		// reador write
+		// read or write
 		bool write;
 		switch(blocks.snd[i].action()) {
 		case BlockAccess::LOAD:		write = false; break;
@@ -115,9 +115,9 @@ void WCETFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 
 /**
- * This feature provide an easy and naive to add data cache time to the WCET computation
- * by adding to the objectif function representing the WCET the miss time multiplied
- * by the number of occurences of the miss.
+ * This feature provides an easy and naive way to add data cache time to the WCET computation
+ * by adding to the objective function representing the WCET the miss time multiplied
+ * by the number of occurrences of the miss.
  */
 p::feature WCET_FUNCTION_FEATURE("otawa::dcache::WCET_FUNCTION_FEATURE", new Maker<WCETFunctionBuilder>());
 

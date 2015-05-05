@@ -166,7 +166,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 						// look in the different levels
 						for(int k = dom.getPers().length() - 1; k >= 0 && header; k--) {
 							if(dom.getPers().isPersistent(b.block().index(), k)) {
-								CATEGORY(b) = FIRST_MISS;
+								CATEGORY(b) = cache::FIRST_MISS;
 								CATEGORY_HEADER(b) = header;
 								done = true;
 								break;
