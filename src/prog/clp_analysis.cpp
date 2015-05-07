@@ -1,17 +1,17 @@
 /*
  *	This file is part of OTAWA
  *	Copyright (c) 2006-11, IRIT UPS.
- *	
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	OTAWA is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -42,7 +42,7 @@
 #include <otawa/ipet/features.h>
 #include <otawa/data/clp/features.h>
 #include <otawa/hard/Memory.h>
- 
+
 using namespace elm;
 using namespace otawa;
 
@@ -52,7 +52,7 @@ using namespace otawa;
 #define TRACED(t)	//t
 // Debug output for the problem
 #define TRACEP(t)	//t
-// Debug output for Update function 
+// Debug output for Update function
 #define TRACEU(t)	//t
 // Debug output for instructions in the update function
 #define TRACEI(t)	//t
@@ -119,21 +119,43 @@ Identifier<Analysis::init_t> Analysis::INITIAL(
 
 
 /**
- * Return the gcd of two long integers
+ * Return positive GCD of two unsigned integers.
+ * @param a	First integer.
+ * @param b	Second integer.
+ * @return	GCD(a, b).
  */
-static long gcd(long a, long b){
-	if(a < 0)
-		a = -a;
-	if(b < 0)
-		b = -b;
-	
+static uintn_t ugcd(uintn_t a, uintn_t b) {
 	if (a == 0)
 		return b;
 	else if (b == 0)
 		return a;
 	else
-		return gcd(b, a % b);
+		return ugcd(b, a % b);
 }
+
+
+/**
+ * Return the GCD (Greatest Common Divisor) of two long integers.
+ * Result is negative if both a and b are negative, positive else.
+ * @param a		First value.
+ * @param b		Second value.
+ * @return		Negative GCD(a, b) if a < 0 and b < 0, positive GCD else.
+ */
+static intn_t gcd(intn_t a, intn_t b){
+	if(a > 0) {
+		if(b > 0)
+			return ugcd(a, b);
+		else
+			return ugcd(a, -b);
+	}
+	else {
+		if(b > 0)
+			return ugcd(-a, b);
+		else
+			return -ugcd(-a, -b);
+	}
+}
+
 
 /**
  * Return the lcm of two long integers
@@ -347,14 +369,14 @@ void Value::join(const Value& val) {
 		set(VAL, val._lower, val._delta, val._mtimes);
 	else if (val._kind == NONE)					/* A U NONE = A (nothing to do) */
 		return;
-	else if (_delta == 0 && _mtimes == 0 && val.isConst()) /* k1 U k2 */
+	else if(isConst() && val.isConst()) /* k1 U k2 */
 		set(VAL, min(_lower, val._lower), elm::abs(_lower - val._lower), 1);
 	else {										/* other cases */
 		uintn_t g = gcd(gcd(elm::abs(start() - val.start()), _delta), val._delta);
 		intn_t ls = min(start(), val.start());
-		int64_t u1 = (int64_t)start() + ((int64_t)elm::abs(_delta))*(int64_t)_mtimes;
-		int64_t u2 = (int64_t)val.start() + ((int64_t)elm::abs(val._delta))*(int64_t)val._mtimes;
-		int64_t umax;
+		t::int64 u1 = t::int64(start()) + t::int64(elm::abs(_delta)) * t::int64(_mtimes);
+		t::int64 u2 = t::int64(val.start()) +t::int64(elm::abs(val._delta)) * t::int64(val._mtimes);
+		t::int64 umax;
 		if (u1 > u2)
 			umax = u1;
 		else
@@ -469,11 +491,11 @@ void Value::inter(const Value& val) {
 		u2 = _lower;
 	else
 		u2 = (int64_t)val._lower + (int64_t)val._delta * (int64_t)val._mtimes;
-	
+
 	// In this function, numbers are refs to doc/inter/clpv2-inter.pdf
-	
+
 	// 2. Special cases ========================
-	
+
 	// 2.1. A n A (T n T)
 	if ((*this) == val){
 		// do nothing
@@ -485,7 +507,7 @@ void Value::inter(const Value& val) {
 	}
 	else if(val.isTop())
 		return;
-	
+
 	// 2.2. cst n cst
 	if (isConst() && val.isConst()){
 		if (l1 == l2)
@@ -516,12 +538,12 @@ void Value::inter(const Value& val) {
 	// 2.4. not overlapping intervals
 	uintn_t l2test = (sta2 - sta1) / elm::abs(d1), m2test = (sto2 - sta1) / elm::abs(d1),
 			l1test = (sta1 - sta2) / elm::abs(d2), m1test = (sto1 - sta2) / elm::abs(d2);
-	
+
 	if (!(	( (0 <= l2test) && (l2test <= m1) ) ||
 			( (0 <= m2test) && (m2test <= m1) ) ||
 			( (0 <= l1test) && (l1test <= m2) ) ||
 			( (0 <= m1test) && (m1test <= m2) ) )){
-		
+
 		set(NONE, 0, 0, 0);
 		return;
 	}
@@ -574,20 +596,20 @@ void Value::inter(const Value& val) {
 		set(VAL, ls, d1, ms);
 		return;
 	}
-	
-	
+
+
 	// 3. Main case ==========================
 	uintn_t d = gcd(d1, d2);
-	
+
 	// 3.1. Test if a solution exists
 	if ((l2 - l1) % d != 0){
 		set(NONE, 0, 0, 0);
 		return;
 	}
-	
+
 	// 3.2. ds: step of the solution
 	uintn_t ds = lcm(d1, d2);
-	
+
 	// 3.4. Research of a particular solution
 	bool solution_found = false;
 	long ip1p;
@@ -605,24 +627,24 @@ void Value::inter(const Value& val) {
 	}
 	long i1p = ip1p * (l2 - l1);
 	long i2p = (1 - d1 * ip1p) / (- d2) * (l2 - l1);
-	
+
 	// 3.5. min of the intersection (ls)
 	long k = max(ceil(-i1p * (float)d1 / ds), ceil(-i2p * (float)d2 / ds));
 	uintn_t i1s = i1p + k * ds / d1;
 	uintn_t i2s = i2p + k * ds / d2;
 	intn_t ls = l1 + d1 * i1s;
 	ASSERT((uintn_t)ls == l2 + d2 * i2s);
-	
+
 	// 3.6. mtimes of the intersection (ms)
 	intn_t umin = min(l1 + d1 * m1, l2 + d2 * m2);
 	uintn_t ms = floor((float)(umin-ls) / ds);
-	
+
 	// normalize constants
 	if((ds == 0) || (ms == 0)){
 		ds = 0;
 		ms = 0;
 	}
-	
+
 	// set the result!
 	set(VAL, ls, ds, ms);
 }
@@ -991,19 +1013,19 @@ void State::copy(const State& state) {
 	// registers
 	registers.copy(state.registers);
 	tmpreg.copy(state.tmpreg);
-	
+
 	TRACED(print(cerr); cerr << io::endl);
 }
-	
+
 /**
  * Remove all nodes from the state
 */
 void State::clear(void) {
-	
+
 	// registers
 	registers.clear();
 	tmpreg.clear();
-	
+
 	// memory
 	for(Node *cur = first.next, *next; cur; cur = next) {
 		next = cur->next;
@@ -1048,17 +1070,17 @@ void State::set(const Value& addr, const Value& val) {
 		TRACED(print(cerr); cerr << io::endl);
 		return;
 	}
-	
+
 	// insert a none in the state (put the state to none)
 	if (val == Value::none){
 		clear();
 		first.val = Value::none;
 		return;
 	}
-	
+
 	// we assume that addr is a constant... (or T)
 	ASSERT(addr.isConst() || addr == Value::all);
-	
+
 	// == Register ==
 	if(addr.kind() == REG) {
 		if (addr.lower() < 0){
@@ -1082,9 +1104,9 @@ void State::set(const Value& addr, const Value& val) {
 		}
 		return;
 	}
-		
+
 	// == or Memory ==
-	
+
 	// consum all memory references
 	if(addr == Value::all) {
 		prev = &first;
@@ -1117,16 +1139,16 @@ void State::set(const Value& addr, const Value& val) {
 	}
 	TRACED(print(cerr); cerr << io::endl);
 }
-	
+
 /**
  * @return if a state is equals to the current one
 */
 bool State::equals(const State& state) const {
-	
+
 	// Registers
 	if (registers.length() != state.registers.length())
 		return false;
-	
+
 	for (int i=0; i < registers.length(); i++)
 		if (registers[i] != state.registers[i])
 			return false;
@@ -1134,11 +1156,11 @@ bool State::equals(const State& state) const {
 	/*for (int i=0; i < tmpreg.length(); i++)
 		if (tmpreg[i] != state.tmpreg[i])
 			return false;*/
-	
+
 	// Memory
 	if(first.val.kind() != state.first.val.kind())
 		return false;
-	
+
 	Node *cur = first.next, *cur2 = state.first.next;
 	while(cur && cur2) {
 		if(cur->addr != cur2->addr)
@@ -1156,7 +1178,7 @@ bool State::equals(const State& state) const {
 */
 void State::join(const State& state) {
 	TRACEJ(cerr << "join(\n\t"; print(cerr); cerr << ",\n\t";  state.print(cerr); cerr << "\n\t) = ");
-	
+
 	// test none states
 	if(state.first.val == Value::none)
 		return;
@@ -1165,7 +1187,7 @@ void State::join(const State& state) {
 		TRACED(print(cerr); cerr << io::endl;);
 		return;
 	}
-	
+
 	// registers
 	for(int i=0; i<registers.length() && i<state.registers.length() ; i++)
 		registers[i].join(state.registers[i]);
@@ -1178,18 +1200,18 @@ void State::join(const State& state) {
 	if (tmpreg.length() < state.tmpreg.length())
 		for(int i=tmpreg.length(); i < state.tmpreg.length(); i++)
 			tmpreg.add(state.tmpreg[i]);
-	
+
 	// memory
 	Node *prev = &first, *cur = first.next, *cur2 = state.first.next, *next;
 	while(cur && cur2) {
-		
+
 		// addr1 < addr2 -> remove cur1
 		if(cur->addr < cur2->addr) {
 			prev->next = cur->next;
 			delete cur;
 			cur = prev->next;
 		}
-		
+
 		// equality ? remove if join result in all
 		else if(cur->addr == cur2->addr) {
 			cur->val.join(cur2->val);
@@ -1204,12 +1226,12 @@ void State::join(const State& state) {
 				cur2 = cur2->next;
 			}
 		}
-		
+
 		// addr1 > addr2 => remove cur2
 		else
 			cur2 = cur2->next;
 	}
-	
+
 	// remove tail
 	prev->next = 0;
 	while(cur) {
@@ -1229,7 +1251,7 @@ void State::join(const State& state) {
 void State::widening(const State& state, int loopBound) {
 	TRACED(cerr << "widening(" << loopBound << "\n\t");
 	TRACED(print(cerr); cerr << ",\n\t";  state.print(cerr); cerr << "\n\t) = ");
-	
+
 	// test none states
 	if(state.first.val == Value::none)
 		return;
@@ -1238,7 +1260,7 @@ void State::widening(const State& state, int loopBound) {
 		TRACED(print(cerr); cerr << io::endl;);
 		return;
 	}
-	
+
 	// registers
 	for(int i=0; i<registers.length() && i<state.registers.length() ; i++)
 		if (loopBound >= 0)
@@ -1257,7 +1279,7 @@ void State::widening(const State& state, int loopBound) {
 	if (tmpreg.length() < state.tmpreg.length())
 		for(int i=tmpreg.length(); i < state.tmpreg.length(); i++)
 			tmpreg.add(state.tmpreg[i]);
-	
+
 	// memory
 	Node *prev = &first, *cur = first.next, *cur2 = state.first.next, *next;
 	while(cur && cur2) {
@@ -1288,7 +1310,7 @@ void State::widening(const State& state, int loopBound) {
 		else
 			cur2 = cur2->next;
 	}
-	
+
 	// remove tail
 	prev->next = 0;
 	while(cur) {
@@ -1338,12 +1360,12 @@ void State::print(io::Output& out, const hard::Platform *pf) const {
 			out << CLP_START << Address(cur->addr);
 			out << " = " << cur->val << CLP_END;
 		}
-		#ifndef STATE_MULTILINE 
+		#ifndef STATE_MULTILINE
 		out << "}";
 		#endif
 	}
 }
- 	
+
 /**
  * Return a stored value
  * @param addr is the addresse to get the value of. The kind of the value
@@ -1374,7 +1396,7 @@ const Value& State::get(const Value& addr) const {
 		return first.val;
 	}
 }
- 
+
 const State State::EMPTY(Value::none), State::FULL(Value::all);
 io::Output& operator<<(io::Output& out, const State& state) { state.print(out); return out; }
 
@@ -1387,10 +1409,10 @@ struct sorter { static inline int compare(Segment *s1, Segment *s2) { return s1-
 class ClpProblem {
 public:
 	typedef clp::State Domain;
-	 
+
 	typedef ClpProblem Problem;
 	Problem& getProb(void) { return *this; }
-	
+
 	ClpProblem(Process *proc)
 	:	specific_analysis(false),
 	 	pack(0),
@@ -1432,7 +1454,7 @@ public:
 		}
 #	endif
 }
-	
+
 	/* Initialize a register in the init state */
 	void initialize(const hard::Register *reg, const Address& address) {
 		Value v;
@@ -1440,10 +1462,10 @@ public:
 		TRACEP(cerr << "init:: r" << reg->platformNumber() << " <- " << v.lower() << "\n");
 		set(_init, reg->platformNumber(), v);
 	}
-	
+
 	/** Provides the Bottom value of the Abstract Domain */
 	inline const Domain& bottom(void) const { return State::EMPTY; }
-	
+
 	/** Provides the entry state of the program */
 	inline const Domain& entry(void) const {
 		TRACEP(cerr << "entry() = " << _init << io::endl);
@@ -1457,7 +1479,7 @@ public:
 	inline void lub(Domain &a, const Domain &b) const {
 		a.join(b);
 	}
-	
+
 	void checkWideningAlarm(Domain& d, Domain& a, Domain& b) const {
 		State::Iter id(d), ia(a), ib(b);
 
@@ -1514,7 +1536,7 @@ public:
 		TRACEA(checkWideningAlarm(a, di, b));
 		TRACEP(cerr << a << io::endl);
 	}
-	
+
 	/**
 	 * Update the domain in a way specific of the edge (for filtering purpose)
 	*/
@@ -1619,14 +1641,14 @@ public:
 		}
 		TRACEP(cerr << "s' = " << dom << io::endl);
 	}
-	
+
 	/** This function does the assignation of a state to another. */
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	/** This functions tests two states for equality. */
 	inline bool equals(const Domain &a, const Domain &b) const {
 		return a.equals(b);
 	}
-	
+
 	inline void enterContext(Domain &dom, BasicBlock *header, hai_context_t ctx) { }
 	inline void leaveContext(Domain &dom, BasicBlock *header, hai_context_t ctx) { }
 
@@ -1919,33 +1941,33 @@ public:
 		}
 		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
 			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
-			
+
 			_nb_inst++;
-			
+
 			// get instructions
 			prepare(inst);
 			state = &out;
-			
+
 			if(specific_analysis && pack){
 				ipack = pack->newPack(inst->address());
 			}
-			
+
 			// perform interpretation
 			while(true) {
-				
+
 				// interpret current
 				while(pc < b.length()) {
 					update(state);
 
 					_nb_sem_inst++;
-					
-					
+
+
 					if (specific_analysis && pack){
 						ipack->append(*state);
 					}
-					
+
 				}
-				
+
 				// pop next
 				if(state != &out) {
 					out.join(*state);
@@ -1958,7 +1980,7 @@ public:
 					pc = p.fst;
 					state = p.snd;
 				}
-				
+
 			}
 			//TRACEI(cerr << "\t-> " << out << io::endl);
 		}
@@ -1966,11 +1988,11 @@ public:
 		TRACEP(cerr << "s' = " << out << io::endl);
 		if (specific_analysis)
 			return;
-		
+
 		// save the output state in the basic block
 		clp::STATE_OUT(bb) = out;
 		TRACEU(cerr << ">>>\tout = " << out << io::endl);
-		
+
 		// if the block has an IF instruction
 		if(has_if /*&& ! se::REG_FILTERS.exists(bb)*/){ // re-evaluate filters, because values can change!
 			//TODO: delete 'old' reg_filters if needed
@@ -1980,7 +2002,7 @@ public:
 		}
 
 	}
-	
+
 	/**
 	 * Get the content of a register
 	 * @param state is the state from wich we want information
@@ -1991,7 +2013,7 @@ public:
 		clp::Value addr(clp::REG, i);
 		return state.get(addr);
 	}
-	
+
 	/**
 	 * Set a register to the given value
 	 * @param state is the initial state
@@ -2003,7 +2025,7 @@ public:
 		clp::Value addr(clp::REG, i);
 		return state.set(addr, v);
 	}
-	
+
 	void fillPack(BasicBlock* bb, clp::ClpStatePack *empty_pack){
 		specific_analysis = true;
 		pack = empty_pack;
@@ -2013,7 +2035,7 @@ public:
 		pack = 0;
 		specific_analysis = false;
 	}
-	
+
 	/**
 	 * Return various statistics about the analysis
 	*/
@@ -2029,28 +2051,28 @@ public:
 	inline clp::STAT_UINT get_nb_filters(void){ return _nb_filters;}
 	inline clp::STAT_UINT get_nb_top_filters(void){ return _nb_top_filters;}
 	inline clp::STAT_UINT get_nb_top_load(void) const { return _nb_top_load; }
-	
+
 	#ifdef DATA_LOADER
 		inline Address dataMin(void) const { return _data_min; }
 		inline Address dataMax(void) const { return _data_max; }
 	#endif
-	
+
 private:
 	clp::State _init;
 	sem::Block b;
 	genstruct::Vector<Pair<int, Domain *> > todo;
 	int pc;
 	bool has_if;
-	
+
 	/* attribute for specific analysis / packing */
 	bool specific_analysis;
 	clp::ClpStatePack *pack;
-	
+
 	#ifdef DATA_LOADER
 		address_t _data_min, _data_max;
 		Process* _process;
 	#endif
-	
+
 	/* attributes for statistics purpose */
 	clp::STAT_UINT _nb_inst;
 	clp::STAT_UINT _nb_sem_inst;
@@ -2109,7 +2131,7 @@ p::declare Analysis::reg = p::init("otawa::clp::Analysis", Version(0, 1, 0))
 	.provide(clp::FEATURE);
 
 Analysis::Analysis(p::declare& r): Processor(r), mem(0),
-								_nb_inst(0), _nb_sem_inst(0), _nb_set(0), 
+								_nb_inst(0), _nb_sem_inst(0), _nb_set(0),
 								_nb_top_set(0), _nb_store(0), _nb_top_store(0),
 								_nb_filters(0), _nb_top_filters(0), _nb_top_load(0),
 								_nb_load(0), _nb_top_store_addr(0), _nb_load_top_addr(0) {
@@ -2122,7 +2144,7 @@ void Analysis::setup(WorkSpace *ws) {
 	mem = hard::MEMORY(ws);
 }
 
- 
+
 /**
  * Perform the analysis by processing the workspace
  * @param ws the workspace to be processed
@@ -2131,22 +2153,22 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	typedef WideningListener<ClpProblem> ClpListener;
 	typedef WideningFixPoint<ClpListener> ClpFP;
 	typedef HalfAbsInt<ClpFP> ClpAI;
-	 
+
 	// get the entry
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
 	CFG *cfg = coll->get(0);
-	
+
 	// set the cleaner
 	CLPStateCleaner *cleaner = new CLPStateCleaner(cfg);
 	addCleaner(clp::FEATURE, cleaner);
-	
+
 	ClpProblem prob(ws->process());
 #	ifdef DATA_LOADER
 		if(logFor(LOG_PROC))
 			cerr << "\tmemory space [" << prob.dataMin() << ", " << prob.dataMax() << "] considered as constant !\n";
 #	endif
-	
+
 	// initialize state with initial register values
 	if(logFor(LOG_CFG))
 		log << "FUNCTION " << cfg->label() << io::endl;
@@ -2203,8 +2225,8 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	_nb_top_filters = prob.get_nb_top_filters();
 	_nb_top_load = prob.get_nb_top_load();
 }
- 
- 
+
+
 /**
  * Build the initial configuration of the Analysis fro a property list
  * @param props the property list
@@ -2214,7 +2236,7 @@ void Analysis::configure(const PropList &props) {
 	for(Identifier<init_t>::Getter init(props, INITIAL); init; init++)
 		inits.add(init);
 }
- 
+
 
 static SilentFeature::Maker<Analysis> maker;
 /**

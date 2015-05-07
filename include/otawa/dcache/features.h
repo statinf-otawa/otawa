@@ -216,14 +216,15 @@ typedef genstruct::Vector<acs_stack_t> acs_stack_table_t;
 
 
 // block analysis
-extern SilentFeature DATA_BLOCK_FEATURE;
+extern p::feature DATA_BLOCK_FEATURE;
+extern p::feature CLP_BLOCK_FEATURE;
 extern Identifier<Pair<int, BlockAccess *> > DATA_BLOCKS;
 extern Identifier<const BlockCollection *> DATA_BLOCK_COLLECTION;
 extern Identifier<Address> INITIAL_SP;
 
 // MUST analysis
-extern SilentFeature MUST_ACS_FEATURE;
-extern SilentFeature PERS_ACS_FEATURE;
+extern p::feature MUST_ACS_FEATURE;
+extern p::feature PERS_ACS_FEATURE;
 extern Identifier<acs_table_t *> MUST_ACS;
 extern Identifier<acs_table_t *> ENTRY_MUST_ACS;
 extern Identifier<acs_table_t *> PERS_ACS;
@@ -233,21 +234,21 @@ extern Identifier<bool> DATA_PSEUDO_UNROLLING;
 extern Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL;
 
 // categories build
-extern SilentFeature CATEGORY_FEATURE;
+extern p::feature CATEGORY_FEATURE;
 extern Identifier<cache::category_t> CATEGORY;
 extern Identifier<BasicBlock*> CATEGORY_HEADER;
 
 // ILP constraint build
-extern SilentFeature CONSTRAINTS_FEATURE;
+extern p::feature CONSTRAINTS_FEATURE;
 extern Identifier<ilp::Var *> MISS_VAR;
 
 // MAY analysis
 extern Identifier<Vector<ACS *> *> ENTRY_MAY_ACS;
-extern SilentFeature MAY_ACS_FEATURE;
+extern p::feature MAY_ACS_FEATURE;
 extern Identifier<Vector<ACS *> *> MAY_ACS;
 
 // Dirty analysis
-extern SilentFeature DIRTY_FEATURE;
+extern p::feature DIRTY_FEATURE;
 extern Identifier<AllocatedTable<DirtyManager::t> > DIRTY;
 
 // Purge analysis

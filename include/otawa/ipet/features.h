@@ -72,9 +72,9 @@ extern SilentFeature FLOW_FACTS_FEATURE;
 extern SilentFeature ILP_SYSTEM_FEATURE;
 extern Identifier<ilp::System *> SYSTEM;
 
-extern SilentFeature DATA_CACHE_SUPPORT_FEATURE;
-
-extern SilentFeature INST_CACHE_SUPPORT_FEATURE;
+extern p::feature DATA_CACHE_SUPPORT_FEATURE;
+extern p::feature INST_CACHE_SUPPORT_FEATURE;
+extern p::feature CACHE_SUPPORT_FEATURE;
 
 extern p::feature WCET_COUNT_RECORDED_FEATURE;
 
