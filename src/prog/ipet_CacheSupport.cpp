@@ -218,4 +218,10 @@ p::declare CacheSupport::reg = p::init("otawa::ipet::CacheSupport", Version(1, 0
 	.require(hard::CACHE_CONFIGURATION_FEATURE)
 	.provide(CACHE_SUPPORT_FEATURE);
 
+
+/**
+ * This feature ensures that analysis for the cache configuration has been performed.
+ */
+p::feature CACHE_SUPPORT_FEATURE("otawa::ipet::CACHE_SUPPORT_FEATURE", new Maker<CacheSupport>());
+
 } } // otawa::ipet
