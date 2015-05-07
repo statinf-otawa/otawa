@@ -236,7 +236,8 @@ p::declare CAT2OnlyConstraintBuilder::reg = p::init("otawa::CAT2OnlyConstraintBu
 
 /**
  */
-CAT2OnlyConstraintBuilder::CAT2OnlyConstraintBuilder(p::declare& r): Processor(r) {
+CAT2OnlyConstraintBuilder::CAT2OnlyConstraintBuilder(p::declare& r) :
+		Processor(r), _explicit(false) {
 }
 
 
@@ -282,7 +283,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 				miss = system->newVar();
 			else
 				buf1 << "x" << lblock->bb()->number() << "_miss_"
-						<< lblock->address() << "_" << lblock->id();
+						<< lblock->address() << "_" << lblock->countInsts();
 
 			// add the constraint depending on the lblock category
 			switch(cache::CATEGORY(lblock)) {
@@ -299,13 +300,13 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 			break;
 			case cache::FIRST_HIT:
 			case cache::NOT_CLASSIFIED: {
-				// Add constraint: xmiss <= x
-				Constraint *cons3 = system->newConstraint(nc_msg, Constraint::LE);
 				if (_explicit) {
 					buf1 << "_NC";
 					String name1 = buf1.toString();
 					miss = system->newVar(name1);
 				}
+				// Add constraint: xmiss <= x
+				Constraint *cons3 = system->newConstraint(nc_msg, Constraint::LE);
 				cons3->addLeft(1, miss);
 				cons3->addRight(1, VAR(lblock->bb()));
 			}
@@ -323,14 +324,14 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 			}
 			break;
 			case cache::FIRST_MISS: {
-				BasicBlock *header = cache::CATEGORY_HEADER(lblock);
-				ASSERT(header != NULL);
-
 				if (_explicit) {
 					buf1 << "_FMISS";
 					String name1 = buf1.toString();
 					miss = system->newVar(name1);
 				}
+
+				BasicBlock *header = cache::CATEGORY_HEADER(lblock);
+				ASSERT(header != NULL);
 
 				if (LINKED_BLOCKS(lblock) != NULL) {
 					/* linked l-blocks first-miss */
