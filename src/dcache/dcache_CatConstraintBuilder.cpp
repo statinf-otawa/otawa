@@ -139,9 +139,6 @@ protected:
 };
 
 
-
-
-static SilentFeature::Maker<CatConstraintBuilder> maker;
 /**
  * This feature ensures that the constraints associated with each data cache block categories
  * has been translated to ILP constraints and that miss count variables are declared.
@@ -153,7 +150,7 @@ static SilentFeature::Maker<CatConstraintBuilder> maker;
  * @li @ref MISS_VAR
  * @ingroup dcache
  */
-SilentFeature CONSTRAINTS_FEATURE("otawa::dcache::CONSTRAINTS_FEATURE", maker);
+p::feature CONSTRAINTS_FEATURE("otawa::dcache::CONSTRAINTS_FEATURE", new Maker<CatConstraintBuilder>());
 
 
 /**

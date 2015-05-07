@@ -212,7 +212,7 @@ void CATBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 	}
 }
 
-static SilentFeature::Maker<CATBuilder> maker;
+
 /**
  * This features ensures that a category each data block access have received
  * a category describing its hit/miss behavior.
@@ -225,7 +225,7 @@ static SilentFeature::Maker<CATBuilder> maker;
  * @li @ref CATEGORY_HEADER
  * @ingroup dcache
  */
-SilentFeature CATEGORY_FEATURE("otawa::dcache::CATEGORY_FEATURE", maker);
+p::feature CATEGORY_FEATURE("otawa::dcache::CATEGORY_FEATURE", new Maker<CATBuilder>());
 
 
 /**

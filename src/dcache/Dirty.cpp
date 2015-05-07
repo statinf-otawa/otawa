@@ -375,7 +375,6 @@ p::declare DirtyAnalysis::reg = p::init("otawa::dcache::DirtyAnalysis", Version(
 	.maker<DirtyAnalysis>();
 
 
-static SilentFeature::Maker<DirtyAnalysis> maker;
 /**
  * This feature is only useful for data cache with write-back mechanism.
  * In this case, it is needed before wiping out a block if it dirty (modified) or not.
@@ -391,7 +390,7 @@ static SilentFeature::Maker<DirtyAnalysis> maker;
  * @p Default Processor
  * @li @ref DirtyAnalysis
  */
-SilentFeature DIRTY_FEATURE("otawa::dcache::DIRTY_FEATURE", maker);
+p::feature DIRTY_FEATURE("otawa::dcache::DIRTY_FEATURE", new Maker<DirtyAnalysis>());
 
 
 /**

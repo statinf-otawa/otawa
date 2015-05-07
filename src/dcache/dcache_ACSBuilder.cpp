@@ -153,7 +153,7 @@ elm::io::Output& operator<<(elm::io::Output& output, const MUSTProblem::Domain& 
 	return output;
 }
 
-SilentFeature::Maker<ACSBuilder> _maker;
+
 /**
  * This feature ensures that the ACS (Abstract Cache State) for the MUST data cache analysis
  * has been built. Usually, the ACS are used to derivate the categories of each data cache access.
@@ -168,7 +168,7 @@ SilentFeature::Maker<ACSBuilder> _maker;
  * @li @ref ENTRY_MUST_ACS
  * @ingroup dcache
  */
-SilentFeature MUST_ACS_FEATURE("otawa::dcache::MUST_ACS_FEATURE", _maker);
+p::feature MUST_ACS_FEATURE("otawa::dcache::MUST_ACS_FEATURE", new Maker<ACSBuilder>());
 
 
 /**
@@ -1022,7 +1022,6 @@ void PERSProblem::Domain::leaveContext(void) {
 }
 
 
-static SilentFeature::Maker<ACSBuilder> maker;
 /**
  * Feature ensuring that the persistence analysis has been performed.
  *
@@ -1036,7 +1035,7 @@ static SilentFeature::Maker<ACSBuilder> maker;
  * @li @ref LEVEL_PERS_ACS
  * @ingroup dcache
  */
-SilentFeature PERS_ACS_FEATURE("otawa::dcache::PERS_ACS_FEATURE", maker);
+p::feature PERS_ACS_FEATURE("otawa::dcache::PERS_ACS_FEATURE", new Maker<ACSBuilder>());
 
 
 /**

@@ -199,7 +199,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	blocks.clear();
 }
 
-static SilentFeature::Maker<BlockBuilder> maker;
+
 /**
  * This feature ensures that information about the data cache accesses has been provided
  * on each basic block.
@@ -212,7 +212,7 @@ static SilentFeature::Maker<BlockBuilder> maker;
  * @li @ref DATA_BLOCKS
  * @ingroup dcache
  */
-SilentFeature DATA_BLOCK_FEATURE("otawa::dcache::DATA_BLOCK_FEATURE", maker);
+p::feature DATA_BLOCK_FEATURE("otawa::dcache::DATA_BLOCK_FEATURE", new Maker<BlockBuilder>());
 
 
 /**
