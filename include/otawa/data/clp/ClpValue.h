@@ -76,7 +76,7 @@ typedef enum {
 		*/
 		inline Value(kind_t kind=VAL, intn_t lower=0, intn_t delta=0,
 			uintn_t mtimes=0): _kind(kind), _lower(lower), _delta(delta),
-			_mtimes(mtimes) { }
+			_mtimes(mtimes) { check(); }
 		/** Copy constructor */
 		inline Value(const Value& val):
 			_kind(val._kind), _lower(val._lower), _delta(val._delta),
@@ -89,10 +89,7 @@ typedef enum {
 			_kind(VAL), _lower(val), _delta(0), _mtimes(0) {}
 		
 		inline Value& operator=(const Value& val){
-			_kind = val._kind;
-			_lower = val._lower;
-			_delta = val._delta;
-			_mtimes = val._mtimes;
+			set(val._kind, val._lower, val._delta, val._mtimes);
 			return *this;
 		}
 		
@@ -236,8 +233,11 @@ typedef enum {
 			_lower = lower;
 			_delta = delta;
 			_mtimes = mtimes;
+			check();
 		}
 	private:
+		inline void check(void) { ASSERT((_delta == 0 && _mtimes == 0) || (_delta != 0 && _mtimes != 0)); }
+
 		kind_t _kind;
 		intn_t _lower;
 		intn_t _delta;

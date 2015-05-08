@@ -439,6 +439,8 @@ void Value::widening(const Value& val) {
 	// else widen((k, d, n), (k', d', n')) = T
 	else
 		*this = all;
+
+	check();
 }
 
 /**
@@ -703,6 +705,8 @@ void Value::ge(intn_t k) {
 	// _ -> (b, d, (k - b) / d
 	else
 		_mtimes = (k - _lower) / _delta;
+
+	check();
 }
 
 
@@ -771,6 +775,8 @@ void Value::le(intn_t k) {
 
 		}
 	}
+
+	check();
 }
 
 
@@ -815,6 +821,8 @@ void Value::geu(uintn_t k) {
 	// _ -> (b, d, (k - b) / d
 	else
 		_mtimes = intn_t(k - _lower) / _delta;
+
+	check();
 }
 
 
@@ -859,6 +867,8 @@ void Value::leu(uintn_t k) {
 	// _ -> (b, d, (k - b) / d
 	else
 		_mtimes = (k - uintn_t(_lower)) / _delta;
+
+	check();
 }
 
 
