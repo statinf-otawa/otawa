@@ -102,6 +102,19 @@ else()
 endif()
 
 
+# looking for CPLEX
+if(CPLEX_ROOT)
+    string(REPLACE "_" "-" x "${CMAKE_SYSTEM_PROCESSOR}")
+    string(TOLOWER "${x}_${CMAKE_SYSTEM_NAME}" CPLEX_OS)
+    set(CPLEX_LIB_PATH "${CPLEX_ROOT}/cplex/lib/${CPLEX_OS}/static_pic")
+    find_library(CPLEX_LIB "ilocplex" PATHS "${CPLEX_LIB_PATH}")
+    if(CPLEX_LIB)
+        message(STATUS "CPLEX found at ${CPLEX_LIB}")
+        set(CPLEX_INCLUDE "${CPLEX_ROOT}/cplex/include" "${CPLEX_ROOT}/concert/include")
+    endif()
+endif()
+
+
 # looking for version
 find_program(HG_PATH hg)
 if(HG_PATH)

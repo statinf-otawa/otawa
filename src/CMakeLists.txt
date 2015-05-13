@@ -11,11 +11,11 @@ elseif(UNIX)
 	#find_package(FLEX 0)
 	include("${CMAKE_SOURCE_DIR}/CMakeUserUseBison.cmake")
 	include("${CMAKE_SOURCE_DIR}/CMakeUserUseFlex.cmake")
-	
+
 endif(WIN32)
 
 
-#include header files	
+#include header files
 include_directories("../include")
 include_directories(".")
 include_directories("..")
@@ -54,6 +54,9 @@ if(HAS_LP_SOLVE)
 endif()
 if(LP_SOLVE5_LIB)
 	add_subdirectory(lp_solve5)
+endif()
+if(CPLEX_LIB)
+    add_subdirectory(cplex)
 endif()
 
 
