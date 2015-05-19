@@ -43,7 +43,7 @@ namespace ipet {
 
 // Common configuration
 extern Identifier<bool> EXPLICIT;
-extern Identifier<cstring> ILP_PLUGIN_NAME;
+extern Identifier<string> ILP_PLUGIN_NAME;
 
 // Features
 extern Feature<NoProcessor> INTERBLOCK_SUPPORT_FEATURE;

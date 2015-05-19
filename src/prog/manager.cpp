@@ -492,38 +492,30 @@ WorkSpace *Manager::load(const PropList& props) {
  * default plugin.
  * @return		A new ILP system ready to use or null (plugin not available).
  */
-ilp::System *Manager::newILPSystem(String name) {
+ilp::System *Manager::newILPSystem(string name) {
 	ilp::ILPPlugin *plugin;
 
-	// Select the first available plugin
-	if(!name) {
-#		ifdef HAS_PLUGIN
-		plugin = (ilp::ILPPlugin *)ilp_plugger.plug("default");
-		if(!plugin)
-#		endif
-		{
-			elm::system::Plugger::Iterator plug(ilp_plugger);
-			if(plug.ended())
-				return 0;
-			plugin = (ilp::ILPPlugin *)plug.plug();
-		}
+	// select "default" if required
+	if(!name)
+		name = "default";
+
+	// try to open named
+	plugin = static_cast<ilp::ILPPlugin *>(ilp_plugger.plug(name));
+
+	// if not found, look the list of available
+	if(!plugin) {
+		elm::system::Plugger::Iterator plug(ilp_plugger);
+		if(!plug.ended())
+			plugin = static_cast<ilp::ILPPlugin *>(plug.plug());
 	}
 
-	// Find a plugin
-	else {
-#		ifdef OTAWA_CMAKE
-			plugin = (ilp::ILPPlugin *)ilp_plugger.plug("lib" + name.toCString());
-#		else
-			plugin = (ilp::ILPPlugin *)ilp_plugger.plug(name.toCString());
-#		endif
-	}
-
-	// Return a system
+	// process error case
 	if(!plugin) {
 		cerr << "ERROR: " << ilp_plugger.lastErrorMessage() << "\n";
 		return 0;
 	}
-	return plugin->newSystem();
+	else
+		return plugin->newSystem();
 }
 
 

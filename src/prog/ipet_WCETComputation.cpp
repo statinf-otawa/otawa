@@ -103,7 +103,7 @@ private:
 /**
  * Build a new WCET computer.
  */
-WCETComputation::WCETComputation(void): Processor(reg) {
+WCETComputation::WCETComputation(void): Processor(reg), system(0) {
 }
 
 

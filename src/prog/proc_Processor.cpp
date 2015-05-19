@@ -618,6 +618,17 @@ void Processor::collectStats(WorkSpace *ws) {
 
 
 /**
+ * Method called after registration requirements
+ * to support dynamic requirements. As a default, do nothing.
+ * @param ws	Current workspace.
+ * @param props	Current properties.
+ */
+void Processor::requireDyn(WorkSpace *ws, const PropList& props) {
+
+}
+
+
+/**
  * Display a warning.
  * @param message	Message to display.
  */

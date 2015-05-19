@@ -12,6 +12,32 @@
 namespace otawa { namespace ilp {
 
 /**
+ * Assistant to perform ILP system dump.
+ */
+class Dumper {
+public:
+	Dumper(void): vcnt(0) { }
+
+	string name(ilp::Var *var) {
+		string r = var->name();
+		if(!r) {
+			r = map.get(var, "");
+			if(!r) {
+				r = _ << "x" << vcnt;
+				map.put(var, r);
+				vcnt++;
+			}
+		}
+		return r;
+	}
+
+private:
+	int vcnt;
+	HashTable<Var *, string> map;
+};
+
+
+/**
  * @class System
  * An ILP system is a colletion of ILP constraint that may maximize or minimize
  * some object function.
@@ -78,305 +104,447 @@ void System::dump(elm::io::OutStream& out) {
 }
 
 /**
- * Dump the system to the given output and format. 
+ * Dump the system to the given output and format.
  * @param out	Used output.
  * @param fmt 	Used format
  */
 void System::dump(format_t fmt, elm::io::OutStream& out) {
-	io::Output output(out);
 	switch(fmt) {
-		case DEFAULT:
-		case LP_SOLVE: 
-
-			dumpSystem(output);
-			break;
-		case CPLEX:
-		{
-			
-			HashTable<Var*, String*> rename;
-			int idx = 0;
-			/* Rename the variables for cplex */ 
-			
-			
-			output << "\\* Objective function *\\\n";
-			output << "Maximize\n";
-			/* dump the objective function */
-			
-			for (ObjTermIterator term(this); term; term++) {
-				t::int32 val = lrint((*term).snd);
-				if (!rename.hasKey((*term).fst)) {
-					rename.put((*term).fst, new String((_ << "x" << idx)));
-					idx++;
-				}
-				if (val == 0)
-					continue;
-				
-				output << " ";
-				if (val == 1) {
-					output << "+" << *rename.get((*term).fst, NULL);
-				} else if (val == -1) {
-					output << "-" << *rename.get((*term).fst, NULL);
-				} else {
-					output << io::sign(val) << " " << *rename.get((*term).fst, NULL);
-				}
-				output << "\n";
-							
-			} 
-				
-
-			output << "\n\n";
-			output << "\\* Constraints *\\\n";
-			output << "Subject To\n";		
-			/* dump the constraints */
-			for (ConstIterator cons2(this); cons2; cons2++) {
-				bool bound = true;
-				int numvar = 0;
-				for (Constraint::TermIterator term(cons2); term; term++) {
-					if ((*term).snd != 1)
-						bound = false;
-					numvar++;
-				}
-				if (numvar != 1)
-					bound = false;
-				
-				if (bound)
-					continue;
-				
-				for (Constraint::TermIterator term(cons2); term; term++) {
-					t::int32 val = lrint((*term).snd);
-					if (!rename.hasKey((*term).fst)) {
-						rename.put((*term).fst, new String((_ << "x" << idx)));
-						idx++;
-					}					
-					if (val == 0)
-						continue;
-					
-					output << " ";
-					if (val == 1) {
-						output << "+" << *rename.get((*term).fst, NULL);
-					} else if (val == -1) {
-						output << "-" << *rename.get((*term).fst, NULL);
-					} else {
-						output << io::sign(val) << " " << *rename.get((*term).fst, NULL);
-					}
-							
-				}
-				switch(cons2->comparator()) {
-					case Constraint::LT:
-						output << " < ";
-						break;
-					case Constraint::LE:
-						output << " <= ";
-						break;
-					case Constraint::EQ:
-						output << " = ";
-						break;
-					case Constraint::GE:
-						output << " >= ";
-						break;
-					case Constraint::GT:
-						output << " > ";
-						break;
-					default:
-						output << " ?? ";; 
-						break;
-				}
-				
-				output << cons2->constant() << "\n";
-			}				
-			output << "\n\n";
-			output << "\\* Variable bounds *\\\n";
-			output << "Bounds\n";		
-			/* dump the bounds */
-			for (ConstIterator cons2(this); cons2; cons2++) {
-				bool bound = true;
-				int numvar = 0;
-				Var *var;
-				for (Constraint::TermIterator term(cons2); term; term++) {
-					if ((*term).snd != 1)
-						bound = false;
-					numvar++;
-					var = (*term).fst;
-				}
-				if (numvar != 1)
-					bound = false;
-				
-				if (!bound)
-					continue;
-				
-				output << " " << *rename.get(var, NULL);
-				switch(cons2->comparator()) {
-					case Constraint::LT:
-						output << " < ";
-						break;
-					case Constraint::LE:
-						output << " <= ";
-						break;
-					case Constraint::EQ:
-						output << " = ";
-						break;
-					case Constraint::GE:
-						output << " >= ";
-						break;
-					case Constraint::GT:
-						output << " > ";
-						break;
-					default:
-						output << " ?? ";; 
-						break;
-				}
-				
-				output << cons2->constant() << "\n";
-			}				
-
-			output << "\n\n";
-			output << "\\* Integer definitions *\\\n";
-			output << "Integer\n";
-				
-			/* dump the integer variable definition */
-			
-			for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
-				String *str = *item;				
-				output << " ";
-				output << *str;
-				delete str;			
-				output << "\n";
-
-			}
-
-				
-			output << "\n\n";
-			output << "End\n";
-			break;
-		}
-case MOSEK:
-		{
-			HashTable<Var*, String*> rename;
-			int idx = 0;
-			/* Rename the variables for cplex */ 
-			
-			
-			output << "[objective maximize 'obj']\n";
-			
-			/* dump the objective function */
-			
-			for (ObjTermIterator term(this); term; term++) {
-				t::int32 val = lrint((*term).snd);
-				if (!rename.hasKey((*term).fst)) {
-					rename.put((*term).fst, new String((_ << "x" << idx)));
-					idx++;
-				}
-				if (val == 0)
-					continue;
-				
-				output << " ";
-				if (val == 1) {
-					output << "+ " << *rename.get((*term).fst, NULL);
-				} else if (val == -1) {
-					output << "- " << *rename.get((*term).fst, NULL);
-				} else {
-					output << io::sign(val) << " " << *rename.get((*term).fst, NULL);
-				}				
-			} 
-				
-			output << "\n";
-			output << "[/objective]\n";
-			output << "[constraints]\n";		
-			/* dump the constraints */
-			for (ConstIterator cons2(this); cons2; cons2++) {
-				output << "[con]";
-				bool bound = true;
-				int numvar = 0;
-				for (Constraint::TermIterator term(cons2); term; term++) {
-					if ((*term).snd != 1)
-						bound = false;
-					numvar++;
-				}
-				if (numvar != 1)
-					bound = false;
-				
-				for (Constraint::TermIterator term(cons2); term; term++) {
-					t::int32 val = lrint((*term).snd);
-					if (!rename.hasKey((*term).fst)) {
-						rename.put((*term).fst, new String((_ << "x" << idx)));
-						idx++;
-					}					
-					if (val == 0)
-						continue;
-					
-					output << " ";
-					if (val == 1) {
-						output << "+" << *rename.get((*term).fst, NULL);
-					} else if (val == -1) {
-						output << "-" << *rename.get((*term).fst, NULL);
-					} else {
-						output << io::sign(val) << " " << *rename.get((*term).fst, NULL);
-					}
-							
-				}
-				switch(cons2->comparator()) {
-					case Constraint::LT:
-						output << " < ";
-						break;
-					case Constraint::LE:
-						output << " <= ";
-						break;
-					case Constraint::EQ:
-						output << " = ";
-						break;
-					case Constraint::GE:
-						output << " >= ";
-						break;
-					case Constraint::GT:
-						output << " > ";
-						break;
-					default:
-						output << " ?? ";; 
-						break;
-				}
-				
-				output << cons2->constant();
-				output << " [/con] \n";
-			}	
-			output << "\n";
-			output << "[/constraints]\n";
-			output << "[bounds]\n";
-			output << "[b] 0 <= * [/b]\n";
-			output << "[/bounds]\n";			
-			
-			output << "[variables]\n";	
-			/* dump the integer variable definition */
-			
-			for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
-				String *str = *item;				
-				output << " ";
-				output << *str;	
-				output << "\n";
-
-			}	
-			output << "\n";			
-			output << "[/variables]\n";
-			output << "[integer]\n";
-				
-			/* dump the integer variable definition */
-			
-			for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
-				String *str = *item;				
-				output << " ";
-				output << *str;
-				delete str;			
-				output << "\n";
-
-			}	
-			output << "\n";			
-			output << "[/integer]\n";			
-			break;
-		}		
-		default:
-			ASSERTP(false, "Unsopported ILP system format.");
-			break;
+	case DEFAULT:	{ io::Output output(out); dumpSystem(output); } break;
+	case LP_SOLVE:	dumpLPSolve(out); break;
+	case CPLEX:		dumpCPlex(out); break;
+	case MOSEK:		dumpMOSEK(out); break;
+	default:		ASSERTP(false, "Unsopported ILP system format."); break;
 	}
 }
+
+
+/**
+ * Output an identifier as a C identifier.
+ * Non-C symbols are escaped to _xx where xx is the hexadecimal ASCII code.
+ * @param out	Output to output to.
+ * @param in	Identifier to output.
+ */
+class CID: public string {
+public:
+	inline CID(string s): string(s) { }
+};
+io::Output& operator<<(io::Output& out, const CID& id) {
+	io::IntFormat fmt = io::IntFormat().hex().width(2).pad(0);
+	if(!id)
+		return out;
+	int i = 0;
+	if(id[0] >= '0' && id[0] <= '9') {
+		i = 1;
+		out << '_' << fmt(id[0]);
+	}
+	for(; i < id.length(); i++) {
+		if((id[i] >= '0' && id[i] <= '9')
+		|| (id[i] >= 'a' && id[i] <= 'z')
+		|| (id[i] >= 'A' && id[i] <= 'Z')
+		|| id[i] == '_')
+			out << id[i];
+		else
+			out << '_' << fmt(id[i]);
+	}
+	return out;
+}
+
+
+/**
+ * Print a term.
+ * @param out		Output to use.
+ * @param term		Term to display.
+ * @param dumper	Dumper assistant.
+ * @param fst		True if the term is the first of the expression.
+ */
+static void printTerm(io::Output& out, Term term, Dumper& dumper, bool fst) {
+	double val = term.snd;
+	if(!val)
+		return;
+	if(val < 0) {
+		out << "- ";
+		if(val != -1)
+			out << -val << ' ';
+	}
+	else {
+		if(!fst)
+			out << "+ ";
+		if(val != 1)
+			out << val << ' ';
+	}
+	out << CID(dumper.name(term.fst));
+}
+
+
+/**
+ * Dump in LPSolve format.
+ * @param _out	Output stream.
+ */
+void System::dumpLPSolve(io::OutStream& _out) {
+	Dumper dumper;
+	io::Output out(_out);
+	out << "/* IPET system */\n";
+	avl::Set<Var *> vars;
+
+	// Output the objective function
+	out << "max:";
+	bool fst = true;
+	for (ObjTermIterator term(this); term; term++) {
+		cout << ' ';
+		printTerm(out, *term, dumper, fst);
+		vars.add((*term).fst);
+		fst = false;
+	}
+	out << ";\n";
+
+	// Output the constraints
+	for(datastruct::Iterator<Constraint *> cons(constraints()); cons; cons++) {
+
+		// print positives
+		bool pos = false;
+		fst = true;
+		for(datastruct::Iterator<Term> term(cons->terms()); term; term++) {
+			if((*term).snd > 0) {
+				if(!fst)
+					cout << ' ';
+				printTerm(out, *term, dumper, fst);
+				vars.add((*term).fst);
+				pos = true;
+				fst = false;
+			}
+		}
+
+		// print negative constant
+		if(cons->constant() < 0) {
+			if(pos)
+				out << " + ";
+			out << -cons->constant();
+		}
+
+		// print comparator
+		out << ' ' << cons->comparator();
+
+		// print negatives
+		bool neg = false;
+		fst = true;
+		for(datastruct::Iterator<Term> term(cons->terms()); term; term++)
+			if((*term).snd < 0) {
+				cout << ' ';
+				printTerm(out, Term((*term).fst, -(*term).snd), dumper, fst);
+				vars.add((*term).fst);
+				neg = true;
+				fst = false;
+			}
+
+		// print positive constant
+		if(cons->constant() > 0 || (cons->constant() == 0 && !pos)) {
+			if(neg)
+				out << " + ";
+			out << cons->constant();
+		}
+
+		// end of constraint
+		out << ";";
+		const string& label = cons->label();
+		if(label)
+			out << "\t/* " << label << "*/";
+		out << io::endl;
+	}
+
+	// Output int constraints
+	for(avl::Set<Var *>::Iterator var(vars); var; var++)
+		switch(var->type()) {
+		case Var::INT:		out << "int " << CID(dumper.name(var)) << ";\n"; break;
+		case Var::FLOAT:	break;
+		case Var::BIN:		out << "bin " << CID(dumper.name(var)) << ";\n"; break;
+		default:			break;
+		}
+}
+
+
+/**
+ * Dump in MOSEK format.
+ * @param _out	Output stream.
+ */
+void System::dumpMOSEK(OutStream& _out) {
+	io::Output out(_out);
+	HashTable<Var*, String*> rename;
+	int idx = 0;
+
+	// dump the objective function
+	out << "[objective maximize 'obj']\n";
+	for (ObjTermIterator term(this); term; term++) {
+		t::int32 val = lrint((*term).snd);
+		if (!rename.hasKey((*term).fst)) {
+			rename.put((*term).fst, new String((_ << "x" << idx)));
+			idx++;
+		}
+		if (val == 0)
+			continue;
+
+		out << " ";
+		if (val == 1) {
+			out << "+ " << *rename.get((*term).fst, 0);
+		} else if (val == -1) {
+			out << "- " << *rename.get((*term).fst, 0);
+		} else {
+			out << io::sign(val) << " " << *rename.get((*term).fst, 0);
+		}
+	}
+	out << "\n";
+	out << "[/objective]\n";
+
+	// dump the constraints
+	out << "[constraints]\n";
+	for (ConstIterator cons2(this); cons2; cons2++) {
+		out << "[con]";
+		bool bound = true;
+		int numvar = 0;
+		for (Constraint::TermIterator term(cons2); term; term++) {
+			if ((*term).snd != 1)
+				bound = false;
+			numvar++;
+		}
+		if (numvar != 1)
+			bound = false;
+
+		for (Constraint::TermIterator term(cons2); term; term++) {
+			t::int32 val = lrint((*term).snd);
+			if (!rename.hasKey((*term).fst)) {
+				rename.put((*term).fst, new String((_ << "x" << idx)));
+				idx++;
+			}
+			if (val == 0)
+				continue;
+
+			out << " ";
+			if (val == 1) {
+				out << "+" << *rename.get((*term).fst, 0);
+			} else if (val == -1) {
+				out << "-" << *rename.get((*term).fst, 0);
+			} else {
+				out << io::sign(val) << " " << *rename.get((*term).fst, 0);
+			}
+
+		}
+		switch(cons2->comparator()) {
+			case Constraint::LT:
+				out << " < ";
+				break;
+			case Constraint::LE:
+				out << " <= ";
+				break;
+			case Constraint::EQ:
+				out << " = ";
+				break;
+			case Constraint::GE:
+				out << " >= ";
+				break;
+			case Constraint::GT:
+				out << " > ";
+				break;
+			default:
+				out << " ?? ";;
+				break;
+		}
+
+		out << cons2->constant();
+		out << " [/con] \n";
+	}
+	out << "\n";
+	out << "[/constraints]\n";
+
+	// dump bounds
+	out << "[bounds]\n";
+	out << "[b] 0 <= * [/b]\n";
+	out << "[/bounds]\n";
+
+	// dump the integer variable definition
+	out << "[variables]\n";
+	for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
+		String *str = *item;
+		out << " ";
+		out << *str;
+		out << "\n";
+
+	}
+	out << "\n";
+	out << "[/variables]\n";
+
+	// dump the integer variable definition
+	out << "[integer]\n";
+	for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
+		String *str = *item;
+		out << " ";
+		out << *str;
+		delete str;
+		out << "\n";
+
+	}
+	out << "\n";
+	out << "[/integer]\n";
+}
+
+
+/**
+ * Dump system in CPlex format.
+ * @param _out	Output stream to use.
+ */
+void System::dumpCPlex(OutStream& _out) {
+	io::Output out(_out);
+	HashTable<Var*, String*> rename;
+	int idx = 0;
+	/* Rename the variables for cplex */
+
+
+	out << "\\* Objective function *\\\n";
+	out << "Maximize\n";
+	/* dump the objective function */
+
+	for (ObjTermIterator term(this); term; term++) {
+		t::int32 val = lrint((*term).snd);
+		if (!rename.hasKey((*term).fst)) {
+			rename.put((*term).fst, new String((_ << "x" << idx)));
+			idx++;
+		}
+		if (val == 0)
+			continue;
+
+		out << " ";
+		if (val == 1) {
+			out << "+" << *rename.get((*term).fst, 0);
+		} else if (val == -1) {
+			out << "-" << *rename.get((*term).fst, 0);
+		} else {
+			out << io::sign(val) << " " << *rename.get((*term).fst, 0);
+		}
+		out << "\n";
+	}
+	out << "\n\n";
+
+	// dump the constraints
+	out << "\\* Constraints *\\\n";
+	out << "Subject To\n";
+	for (ConstIterator cons2(this); cons2; cons2++) {
+		bool bound = true;
+		int numvar = 0;
+		for (Constraint::TermIterator term(cons2); term; term++) {
+			if ((*term).snd != 1)
+				bound = false;
+			numvar++;
+		}
+		if (numvar != 1)
+			bound = false;
+
+		if (bound)
+			continue;
+
+		for (Constraint::TermIterator term(cons2); term; term++) {
+			t::int32 val = lrint((*term).snd);
+			if (!rename.hasKey((*term).fst)) {
+				rename.put((*term).fst, new String((_ << "x" << idx)));
+				idx++;
+			}
+			if (val == 0)
+				continue;
+
+			out << " ";
+			if (val == 1) {
+				out << "+" << *rename.get((*term).fst, 0);
+			} else if (val == -1) {
+				out << "-" << *rename.get((*term).fst, 0);
+			} else {
+				out << io::sign(val) << " " << *rename.get((*term).fst, 0);
+			}
+
+		}
+		switch(cons2->comparator()) {
+			case Constraint::LT:
+				out << " < ";
+				break;
+			case Constraint::LE:
+				out << " <= ";
+				break;
+			case Constraint::EQ:
+				out << " = ";
+				break;
+			case Constraint::GE:
+				out << " >= ";
+				break;
+			case Constraint::GT:
+				out << " > ";
+				break;
+			default:
+				out << " ?? ";;
+				break;
+		}
+
+		out << cons2->constant() << "\n";
+	}
+	out << "\n\n";
+
+	// dump the bounds
+	out << "\\* Variable bounds *\\\n";
+	out << "Bounds\n";
+	for (ConstIterator cons2(this); cons2; cons2++) {
+		bool bound = true;
+		int numvar = 0;
+		Var *var;
+		for (Constraint::TermIterator term(cons2); term; term++) {
+			if ((*term).snd != 1)
+				bound = false;
+			numvar++;
+			var = (*term).fst;
+		}
+		if (numvar != 1)
+			bound = false;
+
+		if (!bound)
+			continue;
+
+		out << " " << *rename.get(var, 0);
+		switch(cons2->comparator()) {
+			case Constraint::LT:
+				out << " < ";
+				break;
+			case Constraint::LE:
+				out << " <= ";
+				break;
+			case Constraint::EQ:
+				out << " = ";
+				break;
+			case Constraint::GE:
+				out << " >= ";
+				break;
+			case Constraint::GT:
+				out << " > ";
+				break;
+			default:
+				out << " ?? ";;
+				break;
+		}
+
+		out << cons2->constant() << "\n";
+	}
+	out << "\n\n";
+
+	// dump the integer variable definition
+	out << "\\* Integer definitions *\\\n";
+	out << "Integer\n";
+	for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
+		String *str = *item;
+		out << " ";
+		out << *str;
+		delete str;
+		out << "\n";
+	}
+	out << "\n\n";
+
+	// dump end
+	out << "End\n";
+}
+
 
 /**
  * Tests if it is possible to dump in the given format.

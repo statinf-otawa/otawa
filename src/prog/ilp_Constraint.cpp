@@ -71,4 +71,20 @@ namespace otawa { namespace ilp {
  * @param var	Variable of the factor.
  */
 
+
+/**
+ */
+io::Output& operator<<(io::Output& out, Constraint::comparator_t comp) {
+	static cstring strs[] = {
+		"<",	//	LT = -2,
+		"<=",	// LE = -1,
+		"=",	// EQ = 0,
+		">=",	// GE = 1,
+		">"		// GT = 2
+	};
+	ASSERT(comp >= Constraint::LT && comp < Constraint::GT);
+	out << strs[comp + 2];
+	return out;
+}
+
 } } // otawa::ilp

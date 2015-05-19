@@ -172,6 +172,9 @@ protected:
 	template <class T> void track(const AbstractFeature& feature, const Ref<T *, const Identifier<T *> >& ref)
 		{ addCleaner(feature, new Deletor<T>(ref)); }
 
+	// internal use only
+	virtual void requireDyn(WorkSpace *ws, const PropList& props);
+
 private:
 	void init(const PropList& props);
 	AbstractRegistration *_reg;
