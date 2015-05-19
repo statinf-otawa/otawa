@@ -67,9 +67,7 @@ public:
 			for(ObjTermIterator term(this); term; term++)
 				expr += (*term).snd * vars[index((*term).fst)];
 			IloObjective obj = IloMaximize(_env, expr);
-			//std::cout << "DEBUG: " << obj << io::endl;
 			model.add(obj);
-			//std::cout << "DEBUG: " << model << io::endl;
 		}
 
 		// build the constraints
@@ -147,7 +145,6 @@ public:
 
 	// ILPPlugin overload
 	virtual ilp::System *newSystem(void) {
-		elm::cerr << "DEBUG: making the system\n";
 		return new System(_env);
 	}
 
