@@ -9,3 +9,4 @@ target_link_libraries(cplex otawa)
 target_link_libraries(cplex ${CPLEX_LIB})
 
 install(TARGETS cplex DESTINATION "${ILPDIR}")
+install(FILES cplex.eld DESTINATION "${ILPDIR}")

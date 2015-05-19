@@ -12,6 +12,32 @@
 namespace otawa { namespace ilp {
 
 /**
+ * Assistant to perform ILP system dump.
+ */
+class Dumper {
+public:
+	Dumper(void): vcnt(0) { }
+
+	string name(ilp::Var *var) {
+		string r = var->name();
+		if(!r) {
+			r = map.get(var, "");
+			if(!r) {
+				r = _ << "x" << vcnt;
+				map.put(var, r);
+				vcnt++;
+			}
+		}
+		return r;
+	}
+
+private:
+	int vcnt;
+	HashTable<Var *, string> map;
+};
+
+
+/**
  * @class System
  * An ILP system is a colletion of ILP constraint that may maximize or minimize
  * some object function.
@@ -117,7 +143,7 @@ io::Output& operator<<(io::Output& out, const CID& id) {
 		|| (id[i] >= 'a' && id[i] <= 'z')
 		|| (id[i] >= 'A' && id[i] <= 'Z')
 		|| id[i] == '_')
-			out << id[0];
+			out << id[i];
 		else
 			out << '_' << fmt(id[i]);
 	}
@@ -127,25 +153,27 @@ io::Output& operator<<(io::Output& out, const CID& id) {
 
 /**
  * Print a term.
- * @param out	Output to use.
- * @param term	Term to display.
+ * @param out		Output to use.
+ * @param term		Term to display.
+ * @param dumper	Dumper assistant.
+ * @param fst		True if the term is the first of the expression.
  */
-static void printTerm(io::Output& out, Term term) {
+static void printTerm(io::Output& out, Term term, Dumper& dumper, bool fst) {
 	double val = term.snd;
 	if(!val)
 		return;
-	out << " ";
 	if(val < 0) {
 		out << "- ";
 		if(val != -1)
-			out << -val;
+			out << -val << ' ';
 	}
 	else {
-		out << "+ ";
+		if(!fst)
+			out << "+ ";
 		if(val != 1)
-			out << val;
+			out << val << ' ';
 	}
-	out << CID(term.fst->name());
+	out << CID(dumper.name(term.fst));
 }
 
 
@@ -154,26 +182,70 @@ static void printTerm(io::Output& out, Term term) {
  * @param _out	Output stream.
  */
 void System::dumpLPSolve(io::OutStream& _out) {
+	Dumper dumper;
 	io::Output out(_out);
 	out << "/* IPET system */\n";
 	avl::Set<Var *> vars;
 
 	// Output the objective function
 	out << "max:";
+	bool fst = true;
 	for (ObjTermIterator term(this); term; term++) {
-		printTerm(out, *term);
+		cout << ' ';
+		printTerm(out, *term, dumper, fst);
 		vars.add((*term).fst);
+		fst = false;
 	}
 	out << ";\n";
 
 	// Output the constraints
 	for(datastruct::Iterator<Constraint *> cons(constraints()); cons; cons++) {
+
+		// print positives
+		bool pos = false;
+		fst = true;
 		for(datastruct::Iterator<Term> term(cons->terms()); term; term++) {
-			printTerm(out, *term);
-			vars.add((*term).fst);
+			if((*term).snd > 0) {
+				if(!fst)
+					cout << ' ';
+				printTerm(out, *term, dumper, fst);
+				vars.add((*term).fst);
+				pos = true;
+				fst = false;
+			}
 		}
-		out << " " << cons->comparator()
-			<< " " << (int)cons->constant() << ";";
+
+		// print negative constant
+		if(cons->constant() < 0) {
+			if(pos)
+				out << " + ";
+			out << -cons->constant();
+		}
+
+		// print comparator
+		out << ' ' << cons->comparator();
+
+		// print negatives
+		bool neg = false;
+		fst = true;
+		for(datastruct::Iterator<Term> term(cons->terms()); term; term++)
+			if((*term).snd < 0) {
+				cout << ' ';
+				printTerm(out, Term((*term).fst, -(*term).snd), dumper, fst);
+				vars.add((*term).fst);
+				neg = true;
+				fst = false;
+			}
+
+		// print positive constant
+		if(cons->constant() > 0 || (cons->constant() == 0 && !pos)) {
+			if(neg)
+				out << " + ";
+			out << cons->constant();
+		}
+
+		// end of constraint
+		out << ";";
 		const string& label = cons->label();
 		if(label)
 			out << "\t/* " << label << "*/";
@@ -183,9 +255,9 @@ void System::dumpLPSolve(io::OutStream& _out) {
 	// Output int constraints
 	for(avl::Set<Var *>::Iterator var(vars); var; var++)
 		switch(var->type()) {
-		case Var::INT:		out << "int " << CID(var->name()) << ";\n"; break;
+		case Var::INT:		out << "int " << CID(dumper.name(var)) << ";\n"; break;
 		case Var::FLOAT:	break;
-		case Var::BIN:		out << "bin " << CID(var->name()) << ";\n"; break;
+		case Var::BIN:		out << "bin " << CID(dumper.name(var)) << ";\n"; break;
 		default:			break;
 		}
 }

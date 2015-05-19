@@ -25,6 +25,7 @@
 #include <otawa/ilp/AbstractSystem.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <otawa/prog/WorkSpace.h>
+#include <elm/debug.h>
 
 #include <ilcplex/ilocplex.h>
 #include <sstream>
@@ -44,33 +45,40 @@ public:
 	}
 
 	virtual bool solve(WorkSpace *ws) {
-		IloModel model;
+		IloModel model(_env);
 
 		// build the variable
-		IloNumVarArray vars;
-		for(VarIter var(this); var; var++)
+		IloNumVarArray vars(_env);
+		for(VarIter var(this); var; var++) {
 			switch(var->type()) {
 			case ilp::Var::BIN:		vars.add(IloNumVar(_env, 0, 1, IloNumVar::Int)); break;
-			case ilp::Var::INT:		vars.add(IloNumVar(_env, -IloInfinity, +IloInfinity, IloNumVar::Int)); break;
+			case ilp::Var::INT:		vars.add(IloNumVar(_env, 0, +IloInfinity, IloNumVar::Int)); break;
 			case ilp::Var::FLOAT:	vars.add(IloNumVar(_env)); break;
-			default:				ASSERTP(false, "unknown type " /*<< var->type()*/ << " for " << var->name()); break;
+			default:				ASSERTP(false,  "unknown type " << int(var->type()) << " for " << var->name()); break;
 			}
+			const elm::string& name = var->name();
+			if(name)
+				vars[vars.getSize() - 1].setName(name.toCString());
+		}
 
 		// build the objective function
 		{
-			IloNumExpr expr;
+			IloNumExpr expr(_env, 0);
 			for(ObjTermIterator term(this); term; term++)
 				expr += (*term).snd * vars[index((*term).fst)];
-			IloObjective obj = IloMaximize(_env);
+			IloObjective obj = IloMaximize(_env, expr);
+			//std::cout << "DEBUG: " << obj << io::endl;
 			model.add(obj);
-			obj.setExpr(expr);
+			//std::cout << "DEBUG: " << model << io::endl;
 		}
 
 		// build the constraints
 		for(AbstractSystem::ConstIter cons(this); cons; cons++) {
-			IloNumExpr expr;
-			for(ilp::AbstractConstraint::TermIter term(cons); term; term++)
+			IloNumExpr expr(_env);
+			for(ilp::AbstractConstraint::TermIter term(cons); term; term++) {
+				ASSERT(index((*term).fst) < vars.getSize());
 				expr += (*term).snd * vars[index((*term).fst)];
+			}
 			switch(cons->comparator()) {
 			case ilp::Constraint::LT:	model.add(expr <  cons->constant()); break;
 			case ilp::Constraint::LE:	model.add(expr <= cons->constant()); break;
@@ -88,7 +96,8 @@ public:
 
 		// look for the solution
 		try {
-			int res = solver->solve();
+			TRACE;
+			bool res = solver->solve();
 
 			// process error
 			if(!res) {
@@ -99,7 +108,8 @@ public:
 
 			// else get the results
 			else {
-
+				vals = new IloNumArray(_env);
+				solver->getValues(vars, *vals);
 			}
 
 			// return now
@@ -137,6 +147,7 @@ public:
 
 	// ILPPlugin overload
 	virtual ilp::System *newSystem(void) {
+		elm::cerr << "DEBUG: making the system\n";
 		return new System(_env);
 	}
 

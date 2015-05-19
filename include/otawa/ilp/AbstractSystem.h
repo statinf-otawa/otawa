@@ -72,6 +72,7 @@ class AbstractSystem: public System {
 	};
 
 public:
+	AbstractSystem(void);
 	virtual ~AbstractSystem(void);
 	virtual Constraint *newConstraint(Constraint::comparator_t comp, double constant);
 	virtual Constraint *newConstraint(const string& label, Constraint::comparator_t comp, double constant);

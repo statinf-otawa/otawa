@@ -80,7 +80,7 @@ void ILPSystemGetter::configure(const PropList &props) {
  * @par Processor Configuration
  * @li @ref ILPSystemGetter
  */
-Identifier<cstring> ILP_PLUGIN_NAME("otawa::ipet::ILP_PLUGIN_NAME", "");
+Identifier<string> ILP_PLUGIN_NAME("otawa::ipet::ILP_PLUGIN_NAME", "default");
 
 
 /**

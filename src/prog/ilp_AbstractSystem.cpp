@@ -143,6 +143,12 @@ elm::datastruct::IteratorInst<Term> *AbstractConstraint::terms(void) {
 
 /**
  */
+AbstractSystem::AbstractSystem(void): cleaning(false) {
+}
+
+
+/**
+ */
 AbstractSystem::~AbstractSystem(void) {
 	cleaning = true;
 
