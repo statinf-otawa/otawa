@@ -62,6 +62,9 @@ to be provided:
 	<xsl:if test="$cache!=''">
 		<config name="otawa::CACHE_CONFIG_PATH" value="{$cache}"/>
 	</xsl:if>
+	<xsl:if test="$VERBOSE > 0">
+		<xsl:message> cache = <xsl:value-of select="$cache"/></xsl:message>
+	</xsl:if>
 
 	<!-- memory configuration -->
 	<xsl:if test="$memory!=''">
@@ -72,9 +75,7 @@ to be provided:
 	<step processor="otawa::Virtualizer"/>
 
 	<!-- cache analysis -->
-	<xsl:if test="$cache!=''">
-		<step require="otawa::CACHE_SUPPORT_FEATURE"/>
-	</xsl:if>
+	<step require="otawa::ipet::CACHE_SUPPORT_FEATURE"/>
 
 	<!-- timing analysis -->
 	<step require="otawa::etime::EDGE_TIME_FEATURE"/>

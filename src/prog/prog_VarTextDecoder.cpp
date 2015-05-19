@@ -100,10 +100,8 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 	// cleanup MARKER
 	for(Process::FileIter file(ws->process()); file; file++)
 		for(File::SegIter seg(file); seg; seg++)
-			for(Segment::ItemIter item(seg); item; item++) {
-				TRACE("DEBUG: cleaning " << item->address());
+			for(Segment::ItemIter item(seg); item; item++)
 				item->removeAllProp(&MARKER);
-			}
 }
 
 

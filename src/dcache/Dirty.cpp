@@ -378,7 +378,7 @@ p::declare DirtyAnalysis::reg = p::init("otawa::dcache::DirtyAnalysis", Version(
 /**
  * This feature is only useful for data cache with write-back mechanism.
  * In this case, it is needed before wiping out a block if it dirty (modified) or not.
- * If it is dirty, additional time is spent to writing its value back to memory.
+ * If it is dirty, additional time is spent writing its value back to memory.
  * Notice that the dirty state is made of a MAY component (better case dirty)
  * and a MUST component (worst case dirty). If the block is in the MUST set, it is asserted
  * it is dirty. If the block is not in the MAY set, it is asserted it is not dirty. Else
@@ -396,7 +396,7 @@ p::feature DIRTY_FEATURE("otawa::dcache::DIRTY_FEATURE", new Maker<DirtyAnalysis
 /**
  * This property contains information about the dirty state of a block.
  * To use it, creates a @ref DirtyManager with the target row of the data cache,
- * the DIRTY value to methods mayBeDirty() or mustBeDirty() and reply the sequence
+ * the DIRTY value to methods mayBeDirty() or mustBeDirty() and apply the sequence
  * of @ref BlockAccess of the concerned basic block.
  *
  * @p Hook

@@ -31,6 +31,7 @@
 #include <otawa/ipet/TrivialInstCacheManager.h>
 #include <otawa/ipet/TrivialBBTime.h>
 #include <otawa/proc/BBProcessor.h>
+#include <otawa/proc/DynFeature.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prog/WorkSpace.h>
 
@@ -180,7 +181,7 @@ public:
 	CacheSupport(p::declare& _reg = reg): Processor(_reg) { }
 
 protected:
-	virtual void processWorkSpace(WorkSpace *ws) {
+	virtual void prepare(WorkSpace *ws) {
 		const hard::CacheConfiguration& conf = **hard::CACHE_CONFIGURATION(ws);
 
 		// no cache needed?
@@ -207,9 +208,21 @@ protected:
 		// process data cache
 		if(conf.dataCache()) {
 			if(conf.dataCache()->replacementPolicy() != hard::Cache::LRU)
-				throw ProcessorException(*this, _ << "data cache L1 unsupported");
-			//require();
+				throw ProcessorException(*this, _ << "replacement policy of data cache L1 unsupported");
+			// TODO		For now, supports only write-through data cache (write-back to be added later)
+			if(conf.dataCache()->writePolicy() != hard::Cache::WRITE_THROUGH)
+				throw ProcessorException(*this, _ << "write policy of data cache L1 unsupported");
+			requireDyn("otawa::dcache::MUST_ACS_FEATURE");
+			requireDyn("otawa::dcache::PERS_ACS_FEATURE");
+			requireDyn("otawa::dcache::MAY_ACS_FEATURE");
+			requireDyn("otawa::dcache::CONSTRAINTS_FEATURE");
 		}
+	}
+
+private:
+	void requireDyn(cstring name) {
+		DynFeature f(name);
+		require(f);
 	}
 };
 

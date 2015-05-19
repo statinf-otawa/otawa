@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2008, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -198,7 +198,7 @@ void LogOption::process(String arg) {
  * @li -v|--verbose -- verbose mode activation,
  * @li first argument as binary program,
  * @li following arguments as task entries.
- * 
+ *
  * @p
  * Usually, it specialized according your application purpose:
  * @code
@@ -212,12 +212,12 @@ void LogOption::process(String arg) {
  * 		{
  * 			...
  * 		}
- * 
+ *
  * protected:
  * void work(PropList &props) throw(elm::Exception) {
  * 			// do_something useful on the opened workspace
- * 		} 
- * 
+ * 		}
+ *
  * private:
  * 		MyOption1 option1;
  * 		MyOption2 option2;
@@ -226,7 +226,7 @@ void LogOption::process(String arg) {
  *
  * OTAWA_RUN(MyApp)
  * @endcode
- * 
+ *
  * @ingroup application
  */
 
@@ -264,7 +264,7 @@ Application::Application(
 	result(0),
 	ws(0)
 { }
-	
+
 
 /**
  */
@@ -283,7 +283,7 @@ Application::~Application(void) {
  */
 int Application::run(int argc, char **argv) {
 	try {
-		
+
 		// process arguments
 		parse(argc, argv);
 		if(help) {
@@ -337,7 +337,7 @@ int Application::run(int argc, char **argv) {
 
 		// prepare the work
 		prepare(props);
-		
+
 		// load the program
 		ws = MANAGER.load(path, props);
 
