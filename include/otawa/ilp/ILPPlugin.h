@@ -10,14 +10,14 @@
 #include <elm/system/Plugin.h>
 
 namespace otawa { namespace ilp {
-	
+
 // External class
 class System;
 
 // Definitions
 #define OTAWA_ILP_HOOK		ilp_plugin
 #define OTAWA_ILP_NAME		"ilp_plugin"
-#define OTAWA_ILP_VERSION	"1.1.0"
+#define OTAWA_ILP_VERSION	"1.2.0"
 #define OTAWA_ILP_ID(name, version, date)	ELM_PLUGIN_ID(OTAWA_ILP_NAME, name " V" version " (" date ") [" OTAWA_ILP_VERSION "]")
 
 // ILPPlugin class

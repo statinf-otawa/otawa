@@ -103,6 +103,39 @@ void System::dump(elm::io::OutStream& out) {
 	dumpSolution(output);
 }
 
+
+/**
+ * Solve the ILP system in the given workspace
+ * using the given monitor to output logs. The workspace may be used
+ * to support cancellation or progression in user interface.
+ * @param ws	Current workspace.
+ * @param mon	Monitor to use.
+ */
+bool System::solve(WorkSpace *ws, otawa::Monitor& mon) {
+	solve(ws);
+}
+
+
+/**
+ * Get the message of the last error.
+ * @since 1.2.0 ILP interface.
+ * @return	Last error message.
+ */
+string System::lastErrorMessage(void) {
+	return "error";
+}
+
+
+
+/**
+ * Return the owner plugin. As a default, return null.
+ * @return	Owner plugin.
+ */
+ILPPlugin *System::plugin(void) {
+	return 0;
+}
+
+
 /**
  * Dump the system to the given output and format.
  * @param out	Used output.

@@ -32,6 +32,7 @@
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/stats/BBStatCollector.h>
 #include <otawa/stats/StatInfo.h>
+#include <otawa/ilp/ILPPlugin.h>
 
 using namespace otawa::ilp;
 
@@ -109,21 +110,28 @@ WCETComputation::WCETComputation(void): Processor(reg), system(0) {
 
 /**
  */
-void WCETComputation::processWorkSpace(WorkSpace *fw) {
-	System *system = SYSTEM(fw);
-	if(!system)
-		throw ProcessorException(*this, "no ILP system defined in this CFG");
+void WCETComputation::processWorkSpace(WorkSpace *ws) {
+	ASSERT(ws);
+	System *system = SYSTEM(ws);
+	ASSERT(system);
 	ot::time wcet = -1;
-	if(logFor(LOG_DEPS))
-		log << "\tlaunching ILP solver\n";
-	if(system->solve(fw)) {
-		if(logFor(LOG_DEPS))
+	if(logFor(LOG_FILE)) {
+		string name = "unknown";
+		ilp::ILPPlugin *p = system->plugin();
+		if(p)
+			name = p->name();
+		log << "\tlaunching ILP solver: " << name << io::endl;
+	}
+	if(system->solve(ws, *this)) {
+		if(logFor(LOG_FILE))
 			log << "\tobjective function = " << system->value() << io::endl;
 		wcet = ot::time(system->value());
+		if(logFor(LOG_FILE))
+			log << "\tWCET = " << wcet << io::endl;
 	}
-	if(logFor(LOG_DEPS))
-		log << "\tWCET = " << wcet << io::endl;
-	WCET(fw) = wcet;
+	else
+		log << "ERROR: " << system->lastErrorMessage() << io::endl;
+	WCET(ws) = wcet;
 }
 
 

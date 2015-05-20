@@ -30,21 +30,82 @@
 #include <ilcplex/ilocplex.h>
 #include <sstream>
 
+extern otawa::ilp::ILPPlugin& cplex_plugin;
+
 namespace otawa { namespace cplex {
 
+class OStreamBuf: public streambuf {
+public:
+	OStreamBuf(Monitor& m): mon(m), eol(true) { }
+	virtual ~OStreamBuf(void) { }
+
+	virtual int overflow(int ch) {
+		if(!mon.logFor(Monitor::LOG_FILE))
+			return ch;
+		if(eol)
+			mon.log << "\t\t";
+		mon.log << char(ch);
+		eol = ch == '\n';
+		return ch;
+	}
+	virtual int underflow(void) { return EOF; }
+	virtual int sync(void) { return 0; }
+private:
+	Monitor& mon;
+	bool eol;
+};
+
+/**
+ * CPlex system class.
+ */
 class System: public ilp::AbstractSystem {
 public:
-	System(IloEnv& env): _env(env), solver(0), vals(0) {
+
+	/**
+	 */
+	System(void): vals(0), result(0) {
 	}
 
+	/**
+	 */
 	virtual ~System(void) {
-		if(solver)
-			delete solver;
 		if(vals)
 			delete vals;
 	}
 
+	/**
+	 */
 	virtual bool solve(WorkSpace *ws) {
+		Monitor mon;
+		return solve(ws, mon);
+	}
+
+
+	/**
+	 */
+	virtual elm::string lastErrorMessage(void) {
+		return this->last_message;
+	}
+
+	/**
+	 */
+	virtual ilp::ILPPlugin *plugin(void) {
+		return &cplex_plugin;
+	}
+
+	/**
+	 */
+	virtual bool solve(WorkSpace *ws, otawa::Monitor& mon) {
+
+		// prepare environment
+		IloEnv _env;
+		_env.setNormalizer(IloTrue);
+		OStreamBuf sbuf(mon);
+		iostream out(&sbuf);
+		_env.setError(out);
+		_env.setOut(out);
+
+		// prepare environment
 		IloModel model(_env);
 
 		// build the variable
@@ -88,26 +149,24 @@ public:
 		}
 
 		// create the solver
-		if(solver)
-			delete solver;
-		solver = new IloCplex(model);
+		IloCplex solver(model);
 
 		// look for the solution
 		try {
-			TRACE;
-			bool res = solver->solve();
+			bool res = solver.solve();
 
 			// process error
 			if(!res) {
 				stringstream s;
-				s << "ERROR: cannot resolve: " << solver->getCplexStatus();
+				mon.log << "ERROR: cannot resolve: " << solver.getCplexStatus();
 				last_message = s.str().c_str();
 			}
 
 			// else get the results
 			else {
+				result = solver.getObjValue();
 				vals = new IloNumArray(_env);
-				solver->getValues(vars, *vals);
+				solver.getValues(vars, *vals);
 			}
 
 			// return now
@@ -115,6 +174,7 @@ public:
 		}
 		catch(IloException& e) {
 			last_message = e.getMessage();
+			mon.log << "ERROR: " << last_message << io::endl;
 			return false;
 		}
 	}
@@ -126,12 +186,11 @@ public:
 
 	virtual double value(void) {
 		ASSERTP(vals, "cplex: solution not computed");
-		return solver->getObjValue();
+		return result;
 	}
 
 private:
-	IloEnv& _env;
-    IloCplex *solver;
+	double result;
     IloNumArray *vals;
     elm::string last_message;
 };
@@ -140,16 +199,13 @@ private:
 class Plugin: public ilp::ILPPlugin {
 public:
 	Plugin(void): ILPPlugin("cplex", Version(1, 0, 0), OTAWA_ILP_VERSION) {
-		_env.setNormalizer(IloTrue);
 	}
 
 	// ILPPlugin overload
 	virtual ilp::System *newSystem(void) {
-		return new System(_env);
+		return new System();
 	}
 
-private:
-	IloEnv _env;
 };
 
 } }		// otawa::cplex

@@ -43,6 +43,8 @@ extern cstring VERBOSE_ENV;
  * @li @ref LOG
  * @li @ref VERBOSE
  * @li @ref LOG_LEVEL
+ *
+ * In addition, verbosity can be activatedby declaring the environment variable 'OTAWA_VERBOSE'.
  */
 
 
@@ -50,6 +52,7 @@ extern cstring VERBOSE_ENV;
  */
 Monitor::Monitor(void): flags(0), log_level(LOG_NONE), ws(0) {
 }
+
 
 /**
  * This property identifier is used for setting the output stream used by
@@ -177,5 +180,18 @@ void Monitor::configure(const PropList& props) {
  * @li LOG_INST -- log operations at instruction level.
  *
  */
+
+static class NullMonitor: public Monitor {
+public:
+	NullMonitor(void) {
+		out.setStream(io::OutStream::null);
+		log.setStream(io::OutStream::null);
+	}
+} __null_mon;
+
+/**
+ * Monitor that output nothing.
+ */
+Monitor& Monitor::null = __null_mon;
 
 }	// otawa

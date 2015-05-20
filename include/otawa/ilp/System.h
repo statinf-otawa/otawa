@@ -26,6 +26,7 @@
 #include <elm/string.h>
 #include <otawa/ilp/Constraint.h>
 #include <elm/datastruct/Iterator.h>
+#include <otawa/proc/Monitor.h>
 
 #include "features.h"
 
@@ -35,10 +36,14 @@ class WorkSpace;
 
 namespace ilp {
 
+class ILPPlugin;
+
 // System class
 class System {
 public:
 	virtual ~System(void) { }
+
+	// 1.0.0 & 1.1.0 interfaces
 	virtual Constraint *newConstraint(Constraint::comparator_t comp,
 		double constant = 0) = 0;
 	virtual Constraint *newConstraint(const string& label,
@@ -53,12 +58,17 @@ public:
 	virtual int countConstraints(void) = 0;
 	virtual elm::datastruct::IteratorInst<ilp::Constraint*> *constraints(void) = 0;
 	virtual elm::datastruct::IteratorInst<ilp::Constraint::Term> *objTerms(void) = 0;
-
-	// output methods
 	virtual void exportLP(io::Output& out = elm::cout) = 0;
 	virtual void dumpSystem(io::Output& out = elm::cout);
 	virtual void dumpSolution(io::Output& out = elm::cout) = 0;
 	virtual void dump(elm::io::OutStream& out = elm::io::out);
+
+	// 1.2.0 interface
+	virtual bool solve(WorkSpace *ws, otawa::Monitor& mon);
+	virtual string lastErrorMessage(void);
+	virtual ILPPlugin *plugin(void);
+
+	// output methods
 	bool hasDump(format_t fmt);
 	void dump(format_t fmt, elm::io::OutStream& out = elm::io::out);
 	void dumpLPSolve(elm::io::OutStream& out = elm::io::out);
@@ -75,6 +85,7 @@ public:
 		}
 
 	};
+
 	class ObjTermIterator: public elm::datastruct::Iterator<Constraint::Term> {
 		public:
 

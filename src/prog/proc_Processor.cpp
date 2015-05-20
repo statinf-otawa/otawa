@@ -196,8 +196,6 @@ using namespace elm::io;
 
 namespace otawa {
 
-extern cstring VERBOSE_ENV;
-
 /**
  * A registration to customize.
  */
@@ -254,7 +252,7 @@ MetaRegistration Processor::reg(
 /**
  * Build a simple anonymous processor.
  */
-Processor::Processor(void): flags(0), stats(0), log_level(LOG_NONE), ws(0) {
+Processor::Processor(void): stats(0), ws(0), _progress(0) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -273,7 +271,7 @@ Processor::~Processor(void) {
  * For internal use only.
  */
 Processor::Processor(AbstractRegistration& registration)
-: flags(0), stats(0), log_level(LOG_NONE), ws(0) {
+: stats(0), ws(0), _progress(0) {
 	_reg = &registration;
 }
 
@@ -282,7 +280,7 @@ Processor::Processor(AbstractRegistration& registration)
  * For internal use only.
  */
 Processor::Processor(String name, Version version, AbstractRegistration& registration)
-: flags(0), stats(0), log_level(LOG_NONE), ws(0) {
+: stats(0), ws(0), _progress(0) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &registration;
@@ -299,7 +297,7 @@ Processor::Processor(String name, Version version, AbstractRegistration& registr
  * @deprecated		Configuration must be passed at the process() call.
  */
 Processor::Processor(elm::String name, elm::Version version,
-const PropList& props): flags(0), stats(0), log_level(LOG_NONE) {
+const PropList& props): stats(0) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -315,7 +313,7 @@ const PropList& props): flags(0), stats(0), log_level(LOG_NONE) {
  * @deprecated
  */
 Processor::Processor(String name, Version version)
-: flags(0), stats(0), log_level(LOG_NONE), ws(0) {
+: stats(0), ws(0), _progress(0) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -329,7 +327,7 @@ Processor::Processor(String name, Version version)
  * @param			Configuration properties.
  * @deprecated		Configuration must be passed at the process() call.
  */
-Processor::Processor(const PropList& props): flags(0), stats(0), log_level(LOG_NONE) {
+Processor::Processor(const PropList& props): stats(0) {
 	_reg = new NullRegistration();
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -348,19 +346,6 @@ void Processor::init(const PropList& props) {
 	// Process statistics
 	stats = STATS(props);
 
-	// Process verbosity
-	bool verbose;
-	if(props.hasProp(VERBOSE))
-		verbose = VERBOSE(props);
-	else
-		verbose = elm::system::System::hasEnv(VERBOSE_ENV);
-	if(verbose) {
-		flags |= IS_VERBOSE;
-		log_level = LOG_BB;
-	}
-	else
-		flags &= ~IS_VERBOSE;
-
 	// Process timing
 	if(logFor(LOG_PROC) || recordsStats()) {
 		if(TIMED(props))
@@ -375,11 +360,6 @@ void Processor::init(const PropList& props) {
 	// configure statistics
 	if(COLLECT_STATS(props))
 		flags |= IS_COLLECTING;
-
-	// get the log level
-	log_level_t level = LOG_LEVEL(props);
-	if(level)
-		log_level = level;
 }
 
 
@@ -426,6 +406,7 @@ void Processor::processWorkSpace(WorkSpace *fw) {
  */
 void Processor::configure(const PropList& props) {
 	init(props);
+	Monitor::configure(props);
 }
 
 
@@ -649,17 +630,17 @@ void Processor::warn(const String& message) {
 /**
  * This property identifier is used for setting the output stream used by
  * the processor to write results.
+ * @deprecated
  */
-Identifier<elm::io::OutStream *>
-	Processor::OUTPUT("otawa::Processor::OUTPUT", &io::out);
+Identifier<elm::io::OutStream *>& Processor::OUTPUT = otawa::OUTPUT;
 
 
 /**
  * This property identifier is used for setting the log stream used by
  * the processor to write messages (information, warning, error).
+ * @deprecated
  */
-Identifier<elm::io::OutStream *>
-	Processor::LOG("otawa::Processor::LOG", &io::err);
+Identifier<elm::io::OutStream *>& Processor::LOG = otawa::LOG;
 
 
 /**
@@ -696,15 +677,17 @@ Identifier<elm::system::time_t> Processor::RUNTIME("otawa::Processor::RUNTIME", 
 /**
  * This property activates the verbose mode of the processor: information about
  * the processor work will be displayed.
+ * @deprecated
  */
-Identifier<bool> Processor::VERBOSE("otawa::Processor::VERBOSE", false);
+Identifier<bool>& Processor::VERBOSE = otawa::VERBOSE;
 
 
 /**
  * Property passed in the configuration property list of a processor
  * to select the log level between LOG_PROC, LOG_CFG or LOG_BB.
+ * @deprecated
  */
-Identifier<Processor::log_level_t> Processor::LOG_LEVEL("otawa::Processor::LOG_LEVEL", LOG_NONE);
+Identifier<Processor::log_level_t>& Processor::LOG_LEVEL = otawa::LOG_LEVEL;
 
 
 /**
