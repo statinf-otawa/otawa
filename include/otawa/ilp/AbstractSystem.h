@@ -86,6 +86,7 @@ public:
 	virtual elm::datastruct::IteratorInst<ilp::Constraint::Term> *objTerms(void);
 	virtual void exportLP(io::Output& out);
 	virtual void dumpSolution(io::Output& out);
+	virtual Var *newVar(Var::type_t type, const string& name);
 
 protected:
 	int index(ilp::Var *var);

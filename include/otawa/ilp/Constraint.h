@@ -75,6 +75,7 @@ public:
 };
 
 io::Output& operator<<(io::Output& out, Constraint::comparator_t comp);
+io::Output& operator<<(io::Output& out, const Term& t);
 
 } } // otawa::ilp
 

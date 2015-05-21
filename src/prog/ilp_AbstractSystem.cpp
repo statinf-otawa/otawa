@@ -208,7 +208,19 @@ void AbstractSystem::addObjectFunction(double coef, Var *var) {
 /**
  */
 Var *AbstractSystem::newVar(const string& name) {
-	AbstractVar *var = new AbstractVar(name, Var::INT);
+	return newVar(Var::INT, name);
+}
+
+
+/**
+ * Build a new variable with the given type.
+ * @param type	Type of the variable.
+ * @param name	Variable name.
+ * @return		Built variable.
+ * @since		ILP 1.2.0
+ */
+Var *AbstractSystem::newVar(Var::type_t type, const string& name) {
+	AbstractVar *var = new AbstractVar(name, type);
 	var->_sys = this;
 	var->_idx = vars.length();
 	vars.add(var);

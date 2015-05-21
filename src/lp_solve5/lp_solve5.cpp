@@ -224,9 +224,11 @@ public:
 
 	class LocalVar: public ilp::Var {
 	public:
-		inline LocalVar(const string& name): ilp::Var(name) { }
+		inline LocalVar(Var::type_t type, const string& name): ilp::Var(name, type) { }
 	};
-	virtual ilp::Var *newVar(const string& name) { return new LocalVar(name); }
+
+	virtual ilp::Var *newVar(const string& name) { return newVar(ilp::Var::INT, name); }
+	virtual ilp::Var *newVar(ilp::Var::type_t type, const string& name) {  return new LocalVar(type, name); }
 
 	// 1.2.0 interface
 	virtual bool solve(WorkSpace *ws, otawa::Monitor& mon) {

@@ -35,7 +35,7 @@ typedef double coef_t;
 class Term {
 public:
 	inline Term(coef_t c, Var *v = 0): fst(v), snd(c) { }
-	inline Term(Var *v, coef_t c = 0): fst(v), snd(c) { }
+	inline Term(Var *v, coef_t c = 1.): fst(v), snd(c) { }
 	Var *fst;
 	coef_t snd;
 };
@@ -44,9 +44,6 @@ class Expression {
 public:
 	inline Expression(void) { }
 	inline Expression(const Expression *expr): terms(expr->terms) { }
-	/*inline Expression(coef_t c) { add(c); }
-	inline Expression(Var *v) { add(1, v); }
-	inline Expression(const Term& t) { add(t); }*/
 
 	void add(coef_t coef, ilp::Var *var = 0);
 	inline void sub(coef_t coef, ilp::Var *var = 0) { terms.add(Term(var, -coef)); }

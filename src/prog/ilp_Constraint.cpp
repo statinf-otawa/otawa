@@ -110,6 +110,21 @@ void Constraint::sub(const Expression& e) {
 
 /**
  */
+io::Output& operator<<(io::Output& out, const Term& t) {
+	if(!t.snd)
+		out << '0';
+	else if(!t.fst)
+		out << t.snd;
+	else if(t.fst->name())
+		out << t.snd << ' ' << t.fst->name();
+	else
+		out << t.snd << " x" << (void *)t.fst;
+	return out;
+}
+
+
+/**
+ */
 io::Output& operator<<(io::Output& out, Constraint::comparator_t comp) {
 	static cstring strs[] = {
 		"<",	//	LT = -2,
@@ -122,5 +137,7 @@ io::Output& operator<<(io::Output& out, Constraint::comparator_t comp) {
 	out << strs[comp + 2];
 	return out;
 }
+
+
 
 } } // otawa::ilp

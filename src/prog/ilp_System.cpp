@@ -127,6 +127,15 @@ string System::lastErrorMessage(void) {
 }
 
 
+/**
+ * @fn Var *System::newVar(Var::type_t type, const string& name);
+ * Build a new variable with the given type.
+ * @param type	Type of the variable.
+ * @param name	Variable name.
+ * @return		Built variable.
+ * @since		ILP 1.2.0
+ */
+
 
 /**
  * Return the owner plugin. As a default, return null.
@@ -272,10 +281,12 @@ void System::dumpLPSolve(io::OutStream& _out) {
 			}
 
 		// print positive constant
-		if(cons->constant() > 0 || (cons->constant() == 0 && !pos)) {
+		if(!neg && cons->constant() <= 0)
+			out << " 0";
+		else if(cons->constant() > 0 || (cons->constant() == 0 && !neg)) {
 			if(neg)
-				out << " + ";
-			out << cons->constant();
+				out << " +";
+			out << ' ' << cons->constant();
 		}
 
 		// end of constraint

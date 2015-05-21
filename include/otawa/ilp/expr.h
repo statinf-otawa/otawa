@@ -32,12 +32,12 @@ public:
 	inline explicit var(System *sys, Var::type_t t = Var::INT, string name = ""): _v(sys->newVar(name)) { }
 	inline var(Var *v): _v(v) { }
 	inline operator Var *(void) const { return _v; }
-	inline operator Term(void) const { return Term(_v); }
+	inline operator Term(void) const { return Term(1, _v); }
 private:
 	Var *_v;
 };
 
-inline var x(Var *v) { return v; }
+inline var x(Var *v) { return var(v); }
 inline Term operator*(coef_t c, var v) { return Term(v, c); }
 inline Term operator*(var v, coef_t c) { return Term(v, c); }
 
@@ -46,7 +46,7 @@ inline Term operator*(var v, coef_t c) { return Term(v, c); }
 class cons {
 public:
 	inline cons(void): c(0), l(true) { }
-	inline cons(Constraint *cc): c(cc), l(c->comparator() == Constraint::UNDEF) { }
+	inline cons(Constraint *cc): c(cc), l(cc->comparator() == Constraint::UNDEF) { }
 
 	inline cons operator+(const Term& t) 		{ if(l) c->add(t); else c->sub(t); return *this; }
 	inline cons operator-(const Term& t) 		{ if(l) c->sub(t); else c->add(t); return *this; }
@@ -58,16 +58,16 @@ public:
 	inline cons operator+=(const Expression& e)	{ if(l) c->add(e); else c->sub(e); return *this; }
 	inline cons operator-=(const Expression& e) { if(l) c->sub(e); else c->add(e);; return *this; }
 
-	inline cons operator==(const Term& t) 		{ set(Constraint::EQ); return *this - t; }
-	inline cons operator==(const Expression& f)	{ set(Constraint::EQ); return *this - f; }
-	inline cons operator<=(const Term& t) 		{ set(Constraint::LE); return *this - t; }
-	inline cons operator<=(const Expression& f) { set(Constraint::LE); return *this - f; }
-	inline cons operator<(const Term& t) 		{ set(Constraint::LT); return *this - t; }
-	inline cons operator<(const Expression& f) 	{ set(Constraint::LT); return *this - f; }
-	inline cons operator>=(const Term& t) 		{ set(Constraint::GE); return *this - t; }
-	inline cons operator>=(const Expression& f) { set(Constraint::GE); return *this - f; }
-	inline cons operator>(const Term& t) 		{ set(Constraint::GT); return *this - t; }
-	inline cons operator>(const Expression& f) 	{ set(Constraint::GT); return *this - f; }
+	inline cons operator==(const Term& t) 		{ set(Constraint::EQ); return *this + t; }
+	inline cons operator==(const Expression& f)	{ set(Constraint::EQ); return *this + f; }
+	inline cons operator<=(const Term& t) 		{ set(Constraint::LE); return *this + t; }
+	inline cons operator<=(const Expression& f) { set(Constraint::LE); return *this + f; }
+	inline cons operator<(const Term& t) 		{ set(Constraint::LT); return *this + t; }
+	inline cons operator<(const Expression& f) 	{ set(Constraint::LT); return *this + f; }
+	inline cons operator>=(const Term& t) 		{ set(Constraint::GE); return *this + t; }
+	inline cons operator>=(const Expression& f) { set(Constraint::GE); return *this + f; }
+	inline cons operator>(const Term& t) 		{ set(Constraint::GT); return *this + t; }
+	inline cons operator>(const Expression& f) 	{ set(Constraint::GT); return *this + f; }
 
 	inline Constraint *operator&(void) const { return c; }
 	inline Constraint *operator->(void) const { return c; }

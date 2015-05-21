@@ -52,8 +52,7 @@ public:
 	virtual void addObjectFunction(double coef, Var *var = 0) = 0;
 	virtual double valueOf(Var *var) = 0;
 	virtual double value(void) = 0;
-	virtual Var *newVar(const string& name) = 0;
-	inline Var *newVar(cstring name = "") { return newVar(string(name)); }
+	virtual Var *newVar(const string& name = "") = 0;
 	virtual int countVars(void) = 0;
 	virtual int countConstraints(void) = 0;
 	virtual elm::datastruct::IteratorInst<ilp::Constraint*> *constraints(void) = 0;
@@ -67,6 +66,7 @@ public:
 	virtual bool solve(WorkSpace *ws, otawa::Monitor& mon);
 	virtual string lastErrorMessage(void);
 	virtual ILPPlugin *plugin(void);
+	virtual Var *newVar(Var::type_t type, const string& name = "") = 0;
 
 	// output methods
 	bool hasDump(format_t fmt);
