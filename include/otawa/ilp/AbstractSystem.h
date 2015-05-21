@@ -43,6 +43,8 @@ public:
 	virtual void add(double coef, Var *var = 0);
 	virtual void sub(double coef, Var *var = 0);
 	virtual elm::datastruct::IteratorInst<Term> *terms(void);
+	virtual void setComparator(comparator_t comp);
+	virtual void setLabel(const string& label);
 
 	class TermIter: public Expression::Iterator {
 	public:

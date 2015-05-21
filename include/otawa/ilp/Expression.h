@@ -31,19 +31,33 @@ class System;
 class Var;
 
 typedef double coef_t;
-typedef elm::Pair<ilp::Var*, coef_t> Term;
+
+class Term {
+public:
+	inline Term(coef_t c, Var *v = 0): fst(v), snd(c) { }
+	inline Term(Var *v, coef_t c = 0): fst(v), snd(c) { }
+	Var *fst;
+	coef_t snd;
+};
 
 class Expression {
 public:
 	inline Expression(void) { }
 	inline Expression(const Expression *expr): terms(expr->terms) { }
+	/*inline Expression(coef_t c) { add(c); }
+	inline Expression(Var *v) { add(1, v); }
+	inline Expression(const Term& t) { add(t); }*/
 
 	void add(coef_t coef, ilp::Var *var = 0);
 	inline void sub(coef_t coef, ilp::Var *var = 0) { terms.add(Term(var, -coef)); }
+	inline void add(const Term& t) { add(t.snd, t.fst); }
+	inline void sub(const Term& t) { sub(t.snd, t.fst); }
 	void add(const Expression *expr, coef_t coef = 1);
 	void sub(const Expression *expr, coef_t coef = 1);
 	void mul(coef_t coef);
 	void div(coef_t coef);
+	void add(const Expression& e);
+	void sub(const Expression& e);
 
 	double eval(System *sys);
 

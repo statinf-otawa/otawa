@@ -89,6 +89,8 @@ public:
 	virtual void add(double coef, ilp::Var *var = 0);
 	virtual void sub(double coef, ilp::Var *var = 0);
 	elm::datastruct::IteratorInst<ilp::Constraint::Term> *terms(void);
+	virtual void setComparator(comparator_t comp) { cmp = comp; }
+	virtual void setLabel(const string& label) { _label = label; }
 
 private:
 	friend class System;
@@ -128,7 +130,7 @@ private:
 		}
 
 		ilp::Constraint::Term item(void) const {
-			return elm::pair(cur->getVar(), cur->coefficient());
+			return Term(cur->getVar(), cur->coefficient());
 
 		}
 

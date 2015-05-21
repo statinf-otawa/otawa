@@ -34,6 +34,7 @@ class Constraint {
 public:
 	typedef otawa::ilp::Term Term;
 	typedef enum comparator_t {
+		UNDEF = -3,		// interface 1.2.0
 		LT = -2,
 		LE = -1,
 		EQ = 0,
@@ -55,13 +56,18 @@ public:
 	inline void addLeft(double coef, Var *var = 0)  { add(coef, var); }
 	inline void addRight(double coef, Var *var = 0) { add(-coef, var); }
 
+	// interface 1.2.0
+	virtual void setComparator(comparator_t comp) = 0;
+	virtual void setLabel(const string& label) = 0;
+	inline void add(const Term& t) { add(t.snd, t.fst); }
+	inline void sub(const Term& t) { sub(t.snd, t.fst); }
+	void add(const Expression& e);
+	void sub(const Expression& e);
+
 	class TermIterator: public elm::datastruct::Iterator<Term> {
 		public:
-
-		inline TermIterator(elm::datastruct::IteratorInst<Term> *_inst)
-			: elm::datastruct::Iterator<Term>(_inst) { }
-		inline TermIterator(Constraint *_cons) : elm::datastruct::Iterator<Term>(_cons->terms()) {
-
+			inline TermIterator(elm::datastruct::IteratorInst<Term> *_inst) : elm::datastruct::Iterator<Term>(_inst) { }
+			inline TermIterator(Constraint *_cons) : elm::datastruct::Iterator<Term>(_cons->terms()) {
 		}
 
 	};

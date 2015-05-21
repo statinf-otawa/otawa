@@ -41,6 +41,7 @@ private:
  * @class System
  * An ILP system is a colletion of ILP constraint that may maximize or minimize
  * some object function.
+ * @ingroup ilp
  */
 
 

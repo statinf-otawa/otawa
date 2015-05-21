@@ -73,6 +73,42 @@ namespace otawa { namespace ilp {
 
 
 /**
+ * void Constraint::setComparator(comparator_t comp);
+ * Change the comparator of the constraint.
+ * @param comp	Comparator to set.
+ * @since ILP interface 1.2.0
+ */
+
+
+/**
+ * void Constraint::setLabel(const string& label);
+ * Change the label of the constraint.
+ * @param label		Label to set.
+ * @since ILP interface 1.2.0
+ */
+
+
+/**
+ * Add an expression to the left part of the constraint.
+ * @param e		Added expression.
+ */
+void Constraint::add(const Expression& e) {
+	for(Expression::Iterator i(&e); i; i++)
+		add(*i);
+}
+
+
+/**
+ * Subtract an expression from the left part of the constraint.
+ * @param e		Subtracted expression.
+ */
+void Constraint::sub(const Expression& e) {
+	for(Expression::Iterator i(&e); i; i++)
+		sub(*i);
+}
+
+
+/**
  */
 io::Output& operator<<(io::Output& out, Constraint::comparator_t comp) {
 	static cstring strs[] = {

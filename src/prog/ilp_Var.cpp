@@ -30,6 +30,7 @@ namespace otawa { namespace ilp {
  * A variable is an identifier used for performing ILP computation.
  * A variable may named or not and may inserted as any property. Have just
  * a thought about releasing it.
+ * @ingroup ilp
  */
 
 

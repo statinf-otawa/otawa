@@ -69,6 +69,20 @@ AbstractConstraint::~AbstractConstraint(void) {
 
 /**
  */
+void AbstractConstraint::setComparator(comparator_t comp) {
+	_comp = comp;
+}
+
+
+/**
+ */
+void AbstractConstraint::setLabel(const string& label) {
+	_label = label;
+}
+
+
+/**
+ */
 double AbstractConstraint::coefficient(Var *var) const {
 	if(!var)
 		return constant();

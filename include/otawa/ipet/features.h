@@ -62,7 +62,7 @@ extern Identifier<ot::time> WCET;
 
 extern SilentFeature OBJECT_FUNCTION_FEATURE;
 
-extern SilentFeature CONTROL_CONSTRAINTS_FEATURE;
+extern p::feature CONTROL_CONSTRAINTS_FEATURE;
 extern Identifier<otawa::ilp::Constraint *> CALLING_CONSTRAINT;
 
 extern SilentFeature FLOW_FACTS_CONSTRAINTS_FEATURE;
