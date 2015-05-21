@@ -225,6 +225,7 @@ public:
 			option::description, "Get building information about the OTAWA framework",
 			option::free_arg, "MODULES...",
 			option::end),
+		eld(ValueOption<string>::Make(*this).cmd("-p").cmd("--plugin").argDescription("ELD_FILE").description("ELD file to generate linkage options")),
 		cflags(*this, cmd, "--cflags", option::description, "output compilation C++ flags", end),
 		data(*this, cmd, "--data", option::description, "output the OTAWA data path", end),
 		doc(*this, cmd, "--doc", option::description, "output the OTAWa document path", end),
@@ -241,7 +242,6 @@ public:
 		list_scripts(*this, cmd, "--list-scripts", option::description, "output the list of available scripts", end),
 		rpath(*this, cmd, "--rpath", cmd, "-r", option::description, "output options to control RPATH", end),
 		install(SwitchOption::Make(*this).cmd("-i").cmd("--install").description("Output path of plugin directory")),
-		eld(ValueOption<string>::Make(*this).cmd("-p").cmd("--plugin").argDescription("ELD_FILE").description("ELD file to generate linkage options")),
 		oversion(SwitchOption::Make(*this).cmd("--oversion").description("output version of OTAWA."))
 	{
 

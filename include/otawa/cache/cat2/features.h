@@ -36,27 +36,7 @@ typedef enum fmlevel {
 		FML_MULTI = 2,
 		FML_NONE
 } fmlevel_t;
-
-static otawa::Output& operator<<(otawa::Output& out, const fmlevel_t &fml) {
-	switch (fml) {
-	case FML_INNER:
-		out << "FML_INNER";
-		break;
-	case FML_OUTER:
-		out << "FML_OUTER";
-		break;
-	case FML_MULTI:
-		out << "FML_MULTI";
-		break;
-	case FML_NONE:
-		out << "FML_NONE";
-		break;
-	default:
-		out << "FML_UNKNOWN";
-		break;
-	}
-	return out;
-}
+otawa::Output& operator<<(otawa::Output& out, const fmlevel_t &fml);
 
 extern Identifier<fmlevel_t> FIRSTMISS_LEVEL;
 extern Identifier<bool> PSEUDO_UNROLLING;

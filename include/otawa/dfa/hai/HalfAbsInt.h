@@ -105,12 +105,12 @@ inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, WorkSpace& _fw)
  	fw(_fw),
  	entry_cfg(**ENTRY_CFG(_fw)),
  	cur_cfg(0),
+ 	current(0),
  	in(_fp.bottom()),
  	out(_fp.bottom()),
  	next_edge(0),
- 	fixpoint(0),
- 	current(0),
  	enter_call(0),
+ 	fixpoint(0),
  	mainEntry(false)
 {
 	workList = new elm::genstruct::Vector<BasicBlock*>();
@@ -237,7 +237,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 				continue;
 			typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
 			//HAI_TRACE("got state: " << *edgeState << "\n");
-			
+
 			ASSERT(edgeState);
 			fp.updateEdge(*inedge, *edgeState);
 			fp.lub(in, *edgeState);
@@ -264,9 +264,6 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 
 	// Fixpoint reached: activate the associated loop-exit-edges
 	if(LOOP_HEADER(current) && fixpoint) {
-        elm::genstruct::Vector<Edge*> *vec;
-        vec = EXIT_LIST(current);
-
 		genstruct::Vector<BasicBlock*> alreadyAdded;
 		if ((!EXIT_LIST(current)) || EXIT_LIST(current)->isEmpty())
 			cerr << "WARNING: infinite loop found at " << current << io::endl;

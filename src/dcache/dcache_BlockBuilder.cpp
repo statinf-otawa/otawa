@@ -61,7 +61,7 @@ Identifier<Address> INITIAL_SP("otawa::dcache::INITIAL_SP", Address::null);
 
 /**
  */
-BlockBuilder::BlockBuilder(p::declare& r): BBProcessor(r), mem(0), cache(0), colls(0), man(0) {
+BlockBuilder::BlockBuilder(p::declare& r): BBProcessor(r), cache(0), mem(0), colls(0), man(0) {
 }
 
 

@@ -119,7 +119,6 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct:
 	ot::mask block = cache->block(inst->address());
 	int cid = block_map.get(block, -1);
 	if(cid < 0) {
-		int set = cache->set(inst->address());
 		cid = lbset->cacheBlockCount();
 		block_map.put(block, cid);
 	}

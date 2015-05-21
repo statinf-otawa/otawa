@@ -100,7 +100,7 @@ private:
 
 
 DirtyManager::DirtyManager(const BlockCollection& coll)
-: _coll(coll), bot(coll.count()), _top(coll.count()) {
+:	bot(coll.count()), _top(coll.count()), _coll(coll) {
 	bot.may().empty();
 	bot.must().fill();
 	_top.may().fill();
@@ -174,6 +174,11 @@ bool DirtyManager::equals(const t& s1, const t& s2) const {
  */
 void DirtyManager::update(t& d, const BlockAccess& acc) {
 	switch(acc.action()) {
+
+	case NONE:
+		ASSERT(false);
+		break;
+
 	case BlockAccess::LOAD:
 		break;
 

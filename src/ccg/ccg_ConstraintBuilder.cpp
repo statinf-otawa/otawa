@@ -218,7 +218,7 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		// Non-entry, non-exit node
 		if(lbloc->id() != 0 && lbloc->id() != lbset->count() - 1) {
 			/*int identif =*/ lbloc->id();
-			address_t address = lbloc->address();
+			//address_t address = lbloc->address();
 
 			/*
 			 * Rule 13:

@@ -55,7 +55,7 @@ p::declare CLPBlockBuilder::reg = p::init("otawa::dcache::CLPBlockBuilder", Vers
 
 /**
  */
-CLPBlockBuilder::CLPBlockBuilder(p::declare& r): BBProcessor(r), mem(0), cache(0), colls(0), man(0) {
+CLPBlockBuilder::CLPBlockBuilder(p::declare& r): BBProcessor(r), cache(0), mem(0), colls(0), man(0) {
 }
 
 

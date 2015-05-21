@@ -1,5 +1,6 @@
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../..")
 set(CMAKE_MACOSX_RPATH true)
+set(CMAKE_CXX_FLAGS "-Wall" )
 
 set(branch_SOURCES
     branch_BranchBuilder.cpp

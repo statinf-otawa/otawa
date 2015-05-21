@@ -152,9 +152,9 @@ public:
 	inline bool isAny(void) const { return _kind == ANY; }
 	inline action_t action(void) const { return action_t(_action); }
 	inline const Block& block(void) const { ASSERT(_kind == BLOCK); return *data.blk; }
-	inline Address::offset_t first(void) const { ASSERT(_kind == RANGE); return data.range.first; }
-	inline Address::offset_t last(void) const { ASSERT(_kind == RANGE); return data.range.last; }
-	inline bool inRange(Address::offset_t block) const { if(first() < last()) return first() <= block && block <= last(); else return block <= first() || last() <= block; }
+	inline int first(void) const { ASSERT(_kind == RANGE); return data.range.first; }
+	inline int last(void) const { ASSERT(_kind == RANGE); return data.range.last; }
+	inline bool inRange(int block) const { if(first() < last()) return first() <= block && block <= last(); else return block <= first() || last() <= block; }
 	bool inSet(int set, const hard::Cache *cache) const;
 	bool in(const Block& block) const;
 

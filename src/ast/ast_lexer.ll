@@ -24,8 +24,10 @@
 #include <otawa/ast.h>
 #include <otawa/ast/ASTLoader.h>
 
-#	include "ast_parser.h"
+#include "ast_parser.h"
 
+/* work-around ugly generated code */
+#pragma GCC diagnostic ignored "-Wunused-function"
 %}
 
 %option noyywrap

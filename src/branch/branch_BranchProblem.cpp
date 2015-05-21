@@ -7,7 +7,7 @@
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
  *	(at your option) any later version.
- * 
+ *
  *	OTAWA is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -34,17 +34,18 @@
 
 namespace otawa {
 
-MUSTBranch::MUSTBranch(const int _size,  WorkSpace *_fw, const int _A, const int _row) 
-:	
-	fw(_fw), row(_row),
+MUSTBranch::MUSTBranch(const int _size,  WorkSpace *_fw, const int _A, const int _row)
+:
+	row(_row),
+	fw(_fw),
 	bot(_size, _A),
 	ent(_size, _A)
 {
-		ent.empty();	
+		ent.empty();
 }
-	
+
 MUSTBranch::~MUSTBranch() {
-	
+
 }
 const MUSTBranch::Domain& MUSTBranch::bottom(void) const {
 		return bot;
@@ -57,20 +58,21 @@ void MUSTBranch::update(Domain& out, const Domain& in, BasicBlock* bb) {
 		cerr << "FATAL: PERSProblem is not to be used directly, use MUSTPERS instead.\n";
 		ASSERT(false);
 }
-	
 
 
-MAYBranch::MAYBranch(const int _size,  WorkSpace *_fw, const int _A, const int _row) 
-:	
-	fw(_fw), row(_row),
+
+MAYBranch::MAYBranch(const int _size,  WorkSpace *_fw, const int _A, const int _row)
+:
+	row(_row),
+	fw(_fw),
 	bot(_size, _A),
 	ent(_size, _A)
 {
-		ent.empty();	
+		ent.empty();
 }
-	
+
 MAYBranch::~MAYBranch() {
-	
+
 }
 const MAYBranch::Domain& MAYBranch::bottom(void) const {
 		return bot;
@@ -85,12 +87,13 @@ void MAYBranch::update(Domain& out, const Domain& in, BasicBlock* bb) {
 }
 
 
-	
-	
 
-	
-PERSBranch::PERSBranch(const int _size,  WorkSpace *_fw, const int _A, const int _row) 
-:	fw(_fw), row(_row),
+
+
+
+PERSBranch::PERSBranch(const int _size,  WorkSpace *_fw, const int _A, const int _row)
+:	row(_row),
+ 	fw(_fw),
 	bot(_size, _A),
 	ent(_size, _A)
 {
@@ -99,7 +102,7 @@ PERSBranch::PERSBranch(const int _size,  WorkSpace *_fw, const int _A, const int
 
 
 }
-	
+
 PERSBranch::~PERSBranch() {
 
 }
@@ -115,29 +118,31 @@ void PERSBranch::update(Domain& out, const Domain& in, BasicBlock* bb)  {
 		cerr << "FATAL: PERSProblem is not to be used directly, use MUSTPERS instead.\n";
 		ASSERT(false);
 }
-	
+
 
 elm::io::Output& operator<<(elm::io::Output& output, const PERSBranch::Domain& dom) {
 	dom.print(output);
 	return output;
 }
 
-	
-BranchProblem::BranchProblem(const int _size,  WorkSpace *_fw,  const int _A, const int _row) 
+
+BranchProblem::BranchProblem(const int _size,  WorkSpace *_fw,  const int _A, const int _row)
 :	mustProb(_size,  _fw, _A, _row),
 	persProb(_size,  _fw, _A, _row),
 	mayProb(_size, _fw, _A, _row),
-	bot(_size, _A), fw(_fw), row(_row),
+	fw(_fw),
+	row(_row),
+	bot(_size, _A),
 	ent(_size, _A)
 	{
-		
+
 		persProb.assign(bot.pers, persProb.bottom());
 		mustProb.assign(bot.must, mustProb.bottom());
-		
+
 		persProb.assign(ent.pers, persProb.entry());
 		mustProb.assign(ent.must, mustProb.entry());
 }
-	
+
 
 const BranchProblem::Domain& BranchProblem::bottom(void) const {
 		return bot;
@@ -145,27 +150,19 @@ const BranchProblem::Domain& BranchProblem::bottom(void) const {
 const BranchProblem::Domain& BranchProblem::entry(void) const {
 		return ent;
 }
-		
+
 
 
 void BranchProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
 	assign(out, in);
 	Inst *last = bb->lastInst();
-	
+
 	if (last != NULL) {
-  		if ((hard::BHT_CONFIG(fw)->line(last->address())) == row) {
-	      	if (branch::COND_NUMBER(bb) != -1) {
-	      		//cout << "Inject cond number " << branch::COND_NUMBER(bb) << " for BB " << bb->number() << "\n";
+  		if (int(hard::BHT_CONFIG(fw)->line(last->address())) == row) {
+	      	if (branch::COND_NUMBER(bb) != -1)
   				out.inject(branch::COND_NUMBER(bb));
-          	}
   		}
   	}
-  	/*cout << "For BB: " << bb->number() << " IN=";
-  	in.print(cout);
-  	cout << " OUT=";
-  	out.print(cout);
-  	cout << "\n";*/
-  	 
 }
 
 }

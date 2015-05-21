@@ -53,12 +53,12 @@ namespace otawa { namespace dcache {
  * @param _A		Associativity of the cache.
  */
 MUSTProblem::MUSTProblem(int _size, int _set, WorkSpace *_fw, const hard::Cache *_cache, int _A)
-:	fw(_fw),
+:	callstate(_size, _A),
+ 	fw(_fw),
 	set(_set),
 	cache(_cache),
 	bot(_size, _A),
 	ent(_size, _A),
-	callstate(_size, _A),
 	size(_size)
 { ent.empty(); }
 
@@ -105,6 +105,10 @@ void MUSTProblem::update(Domain& s, const BlockAccess& access) {
 	ASSERT(access.kind() <= BlockAccess::RANGE);
 	MUST_DEBUG("\t\t\tupdating with " << acc);
 	switch(access.action()) {
+
+	case NONE:
+		ASSERT(false);
+		break;
 
 	case BlockAccess::LOAD:
 	case BlockAccess::STORE:
@@ -244,7 +248,7 @@ p::declare ACSBuilder::reg = p::init("otawa::DataACSBuilder", Version(1, 0, 0))
 
 /**
  */
-ACSBuilder::ACSBuilder(p::declare& r): Processor(r), must_entry(0), unrolling(0), level(DFML_NONE) {
+ACSBuilder::ACSBuilder(p::declare& r): Processor(r), level(DFML_NONE), unrolling(0), must_entry(0) {
 }
 
 
@@ -545,12 +549,12 @@ void ACS::print(elm::io::Output &output) const {
 PERSProblem::PERSProblem(const int _size, const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A)
 :	callstate(_size, _A),
 	lbset(_lbset),
+	cfg(0),
 	fw(_fw),
 	cache(_cache),
 	bot(_size, _A),
 	ent(_size, _A),
-	line(lbset->cacheSet()),
-	cfg(0)
+	line(lbset->cacheSet())
 {
 		bot.setToBottom();
 		ent.empty();
@@ -675,11 +679,11 @@ void MUSTPERS::print(elm::io::Output &output, const Domain& d) const {
 
 
 MUSTPERS::MUSTPERS(const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache)
-:	mustProb(_lbset->count(), _lbset->cacheSet(), _fw, _cache, _cache->wayCount()),
-	persProb(_lbset->count(), _lbset, _fw, _cache, _cache->wayCount()),
-	bot(_lbset->count(),  _cache->wayCount()),
-	ent(_lbset->count(),  _cache->wayCount()),
-	set(_lbset->cacheSet())
+:	bot(_lbset->count(),  _cache->wayCount()),
+ 	ent(_lbset->count(),  _cache->wayCount()),
+	set(_lbset->cacheSet()),
+ 	mustProb(_lbset->count(), _lbset->cacheSet(), _fw, _cache, _cache->wayCount()),
+	persProb(_lbset->count(), _lbset, _fw, _cache, _cache->wayCount())
 {
 
 		persProb.assign(bot.pers, persProb.bottom());
