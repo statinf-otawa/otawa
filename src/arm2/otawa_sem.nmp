@@ -378,29 +378,37 @@ extend EOR_imm
 
 extend LDM
 	otawa_sem = {
-		if rn.use_pc || reglist<15..15> == 1 then seti(R(15), __IADDR + 8); endif;
-		cnt = 0;
-		ii = 0;
-		otawa_sem_cnt;
-		seti(t2, 4);
-		switch(adr_mode) {
-		case MULT_DA:
-			seti(t1, cnt * 4 - 4); sub(t1, rn.i, t1);
-			sub(t3, t1, t2);
-		case MULT_IA:
-			_set(t1, rn.i);
-			seti(t3, cnt * 4); add(t3, t1, t3);
-		case MULT_DB:
-			seti(t1, cnt * 4); sub(t1, rn.i, t1);
-			_set(t3, t1);
-		case MULT_IB:	add(t1, rn.i, t2);
-			add(t1, rn.i, t2);
-			seti(t3, cnt * 4 - 4); add(t3, t1, t3);
-		};
-		ii = 0;
-		otawa_sem_rec;
-		if setw == 1 then _set(rn.i, t3); endif;
-		if reglist<15..15> == 1 then _branch(R(15)); endif;
+		if !cond.otawa_never then
+			if !cond.otawa_ever then
+				ii = 0;
+				otawa_sem_recs;
+				scratch(rn.i);
+			else
+				if rn.use_pc || reglist<15..15> == 1 then seti(R(15), __IADDR + 8); endif;
+				cnt = 0;
+				ii = 0;
+				otawa_sem_cnt;
+				seti(t2, 4);
+				switch(adr_mode) {
+				case MULT_DA:
+					seti(t1, cnt * 4 - 4); sub(t1, rn.i, t1);
+					sub(t3, t1, t2);
+				case MULT_IA:
+					_set(t1, rn.i);
+					seti(t3, cnt * 4); add(t3, t1, t3);
+				case MULT_DB:
+					seti(t1, cnt * 4); sub(t1, rn.i, t1);
+					_set(t3, t1);
+				case MULT_IB:	add(t1, rn.i, t2);
+					add(t1, rn.i, t2);
+					seti(t3, cnt * 4 - 4); add(t3, t1, t3);
+				};
+				ii = 0;
+				otawa_sem_rec;
+				if setw == 1 then _set(rn.i, t3); endif;
+				if reglist<15..15> == 1 then _branch(R(15)); endif;
+			endif;
+		endif;
 	}
 	otawa_sem_cnt = {
 		if ii <= 15 then
@@ -418,6 +426,15 @@ extend LDM
 			endif;
 			ii = ii + 1;
 			otawa_sem_rec;
+		endif;
+	}
+	otawa_sem_recs = {
+		if ii <= 15 then
+			if reglist<ii..ii> == 1 then
+				scratch(R(ii));
+			endif;
+			ii = ii + 1;
+			otawa_sem_recs;
 		endif;
 	}
 
@@ -623,28 +640,38 @@ extend RSB_imm
 
 extend STM
 	otawa_sem = {
-		if rn.use_pc || reglist<15..15> == 1 then seti(R(15), __IADDR + 8); endif;
-		cnt = 0;
-		ii = 0;
-		otawa_sem_cnt;
-		seti(t2, 4);
-		switch(adr_mode) {
-		case MULT_DA:
-			seti(t1, cnt * 4 - 4); sub(t1, rn.i, t1);
-			sub(t3, t1, t2);
-		case MULT_IA:
-			_set(t1, rn.i);
-			seti(t3, cnt * 4); add(t3, t1, t3);
-		case MULT_DB:
-			seti(t1, cnt * 4); sub(t1, rn.i, t1);
-			_set(t3, t1);
-		case MULT_IB:	add(t1, rn.i, t2);
-			add(t1, rn.i, t2);
-			seti(t3, cnt * 4 - 4); add(t3, t1, t3);
-		};
-		ii = 0;
-		otawa_sem_rec;
-		if setw == 1 then _set(rn.i, t3); endif;
+		if !cond.otawa_never then
+			if !cond.otawa_ever then
+				scratch(t1);
+				add(t2, rn.i, t1);
+				store(t1, t2, 4);
+				scratch(rn.i);
+				cont;
+			else
+				if rn.use_pc || reglist<15..15> == 1 then seti(R(15), __IADDR + 8); endif;
+				cnt = 0;
+				ii = 0;
+				otawa_sem_cnt;
+				seti(t2, 4);
+				switch(adr_mode) {
+				case MULT_DA:
+					seti(t1, cnt * 4 - 4); sub(t1, rn.i, t1);
+					sub(t3, t1, t2);
+				case MULT_IA:
+					_set(t1, rn.i);
+					seti(t3, cnt * 4); add(t3, t1, t3);
+				case MULT_DB:
+					seti(t1, cnt * 4); sub(t1, rn.i, t1);
+					_set(t3, t1);
+				case MULT_IB:	add(t1, rn.i, t2);
+					add(t1, rn.i, t2);
+					seti(t3, cnt * 4 - 4); add(t3, t1, t3);
+				};
+				ii = 0;
+				otawa_sem_rec;
+				if setw == 1 then _set(rn.i, t3); endif;
+			endif;
+		endif;
 	}
 	otawa_sem_cnt = {
 		if ii <= 15 then
