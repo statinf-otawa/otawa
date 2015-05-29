@@ -361,6 +361,12 @@ extern int fft_line;
  * possibly causing problems in instruction decoding. This problem may be avoided
  * by marking such symbols with this directive.
  *
+ * @li <b><tt>library;</tt></b> @n
+ * This command is marker informing that the current flow fact file is applied to
+ * a library. The main effect is that if a label does not exist in the current executable,
+ * instead of raising a fatal error, the matching flow fact is quietly ignored
+ * considering that the label of the library is not linked in the current
+ * executable.
  *
  * @par Syntactic items
  *
@@ -490,7 +496,9 @@ FlowFactLoader::FlowFactLoader(p::declare& r):
 	checksummed(false),
 	_fw(0),
 	lines_available(false),
-	mandatory(false)
+	mandatory(false),
+	state(0),
+	lib(false)
 {
 }
 
@@ -667,7 +675,8 @@ void FlowFactLoader::onIgnoreEntry(string name) {
 	}
 
 	// else produces a warning
-	onWarning(_ << "symbol \"" << name << "\" cannot be found.");
+	if(!lib)
+		onWarning(_ << "symbol \"" << name << "\" cannot be found.");
 }
 
 /**
@@ -675,12 +684,9 @@ void FlowFactLoader::onIgnoreEntry(string name) {
  * @param addr	Address of the header of the loop.
  * @param count	Bound on the loop iterations.
  */
-void FlowFactLoader::onLoop(
-	address_t addr,
-	int count,
-	int total,
-	const ContextualPath& path)
-{
+void FlowFactLoader::onLoop(address_t addr, int count, int total, const ContextualPath& path) {
+	if(!addr)
+		return;
 
 	// find the instruction
 	Inst *inst = _fw->process()->findInstAt(addr);
@@ -715,6 +721,8 @@ void FlowFactLoader::onLoop(
  * @param path		Current context.
  */
 void FlowFactLoader::onMemoryAccess(Address iaddr, Address lo, Address hi, const ContextualPath& path) {
+	if(!iaddr)
+		return;
 
 	// find the instruction
 	Inst *inst = _fw->process()->findInstAt(iaddr);
@@ -752,6 +760,8 @@ void FlowFactLoader::onRegSet(string name, const dfa::Value& value) {
  * @param value		Value to set.
  */
 void FlowFactLoader::onMemSet(Address addr, const Type *type, const dfa::Value& value) {
+	if(!addr)
+		return;
 	state->record(dfa::MemCell(addr, type, value));
 }
 
@@ -788,10 +798,22 @@ void FlowFactLoader::onCheckSum(const String& name, t::uint32 sum) {
 
 
 /**
+ * Called to inform that the current FFX file is a library.
+ * The main effect is that, if a label cannot be resolved, the fact is
+ * simply skipped and it does not cause an error.
+ */
+void FlowFactLoader::onLibrary(void) {
+	lib = true;
+}
+
+
+/**
  * This method is called each a "return" statement is found.
  * @param addr	Address of the statement to mark as return.
  */
 void FlowFactLoader::onReturn(address_t addr) {
+	if(!addr)
+		return;
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
 		onError(_ << "no instruction at " << addr);
@@ -806,6 +828,8 @@ void FlowFactLoader::onReturn(address_t addr) {
  * @param addr	Address of the entry of the function.
  */
 void FlowFactLoader::onNoReturn(address_t addr) {
+	if(!addr)
+		return;
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
 	  onError(_ << "no instruction at " << addr);
@@ -819,9 +843,10 @@ void FlowFactLoader::onNoReturn(address_t addr) {
  */
 void FlowFactLoader::onNoReturn(String name) {
 	Inst *inst = _fw->process()->findInstAt(name);
-	if(!inst)
-		throw ProcessorException(*this,
-			_ << " label \"" << name << "\" does not exist.");
+	if(!inst) {
+		if(!lib)
+			throw ProcessorException(*this, _ << " label \"" << name << "\" does not exist.");
+	}
 	else
 		NO_RETURN(inst) = true;
 }
@@ -834,8 +859,12 @@ void FlowFactLoader::onNoReturn(String name) {
  */
 Address FlowFactLoader::addressOf(const string& label) {
 	Address res = _fw->process()->findLabel(label);
-	if(res.isNull())
-		onWarning(_ << "label \"" << label << "\" does not exist.");
+	if(res.isNull()) {
+		if(lib)
+			return Address::null;
+		else
+			onWarning(_ << "label \"" << label << "\" does not exist.");
+	}
 	return res;
 }
 
@@ -846,6 +875,8 @@ Address FlowFactLoader::addressOf(const string& label) {
  * @throw ProcessorException	If the instruction cannot be found.
  */
 void FlowFactLoader::onNoCall(Address address) {
+	if(!address)
+		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
 		onError(_ << " no instruction at  " << address << ".");
@@ -860,6 +891,8 @@ void FlowFactLoader::onNoCall(Address address) {
  * @throw ProcessorException	If the instruction cannot be found.
  */
 void FlowFactLoader::onPreserve(Address address) {
+	if(!address)
+		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
 		onError(_ << " no instruction at  " << address << ".");
@@ -873,6 +906,8 @@ void FlowFactLoader::onPreserve(Address address) {
  * @param address	Address of the ignored instruction.
  */
 void FlowFactLoader::onIgnoreControl(Address address) {
+	if(!address)
+		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
 		onError(_ << " no instruction at  " << address << ".");
@@ -886,6 +921,8 @@ void FlowFactLoader::onIgnoreControl(Address address) {
  * @param address	Address of the ignored instruction.
  */
 void FlowFactLoader::onIgnoreSeq(Address address) {
+	if(!address)
+		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
 		onError(_ << " no instruction at  " << address << ".");
@@ -903,6 +940,9 @@ void FlowFactLoader::onMultiBranch(
 	Address control,
 	const Vector<Address>& targets
 ) {
+	if(!control)
+		return;
+
 	// Find the instruction
 	Inst *inst = _fw->process()->findInstAt(control);
 	if(!inst)
@@ -932,6 +972,9 @@ void FlowFactLoader::onMultiCall(
 	Address control,
 	const Vector<Address>& targets
 ) {
+	if(!control)
+		return;
+
 	// Find the instruction
 	Inst *inst = _fw->process()->findInstAt(control);
 	if(!inst)

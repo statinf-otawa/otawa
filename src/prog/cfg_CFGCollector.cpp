@@ -127,6 +127,10 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
     if(ws_entry)
           entry = ws_entry;
 	else {
+		if(!entry && addr) {
+			CFGInfo *info = CFGInfo::ID(fw);
+			entry = info->findCFG(addr);
+		}
 		if(!entry && name) {
 			CFGInfo *info = CFGInfo::ID(fw);
 			entry = info->findCFG(name);
@@ -220,10 +224,13 @@ void CFGCollector::configure(const PropList& props) {
 	Processor::configure(props);
 
 	// Misc configuration
-	entry = ENTRY_CFG(props);
-	if(!entry)
-		name = TASK_ENTRY(props);
-	rec = otawa::RECURSIVE(props);
+	addr = TASK_ADDRESS(props);
+	if(!addr) {
+		entry = ENTRY_CFG(props);
+		if(!entry)
+			name = TASK_ENTRY(props);
+		rec = otawa::RECURSIVE(props);
+	}
 
 	// Collect added CFGs
 	added_cfgs.clear();

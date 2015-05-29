@@ -46,6 +46,7 @@ protected:
 private:
 	string name;
 	CFG *entry;
+	Address addr;
 	bool rec;
 };
 

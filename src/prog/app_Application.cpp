@@ -23,6 +23,7 @@
 #include <otawa/app/Application.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/util/FlowFactLoader.h>
+#include <otawa/util/SymAddress.h>
 
 namespace otawa {
 
@@ -74,7 +75,9 @@ namespace otawa {
  * @endcode
  *
  * Basically, the produced command takes as first argument the executable and as other free arguments
- * the function names to process. If no other free argument is provided, the command is applied on
+ * the function to process. The functions to process are described either by their name,
+ * or by their address (integer address or 0x-prefixed hexadecimal address).
+ * If no other free argument is provided, the command is applied on
  * the @c main function of the executable. For each function name, a call to @c work() method
  * is performed, the passed property list is initialized accordingly and a workspace ready to use
  * is created. To get it, just call the @ref Application::workspace() method. You can now perform
@@ -388,13 +391,40 @@ void Application::prepare(PropList& props) {
  * @throw	elm::Exception	For any found error.
  */
 void Application::work(PropList &props) throw(elm::Exception) {
+
+	// process each free argument as a function entry
 	for(int i = 0; i < _args.count(); i++) {
+
+		// determine entry address
+		Address addr = parseAddress(_args[i]);
+		TASK_ADDRESS(props) = addr;
+
+		// perform the computation
 		props2 = new PropList(props);
 		ASSERT(props2);
-		TASK_ENTRY(props2) = _args[i].toCString();
+		//TASK_ENTRY(props2) = _args[i].toCString();
 		work(_args[i], *props2);
 		delete props2;
 		props2 = 0;
+	}
+}
+
+
+/**
+ * Parse a symbolic address and return it.
+ * @param s					Address string to parse.
+ * @return					Matching address.
+ * @throw otawa::Exception	If the address cannot be resolved or parsed.
+ */
+Address Application::parseAddress(const string& s) throw(otawa::Exception) {
+	try {
+		SymAddress *saddr = SymAddress::parse(s);
+		Address addr = saddr->toAddress(ws);
+		delete saddr;
+		return addr;
+	}
+	catch(otawa::Exception& e) {
+		throw Exception(_ << "cannot parse entry address '" << s << "'");
 	}
 }
 

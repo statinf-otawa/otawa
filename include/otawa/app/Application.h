@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2008, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_APP_APPLICATION_H_
@@ -55,11 +55,11 @@ public:
 		cstring _copyright = ""
 	);
 	virtual ~Application(void);
-	
-	int run(int argc, char **argv);	
+
+	int run(int argc, char **argv);
 
 protected:
-	virtual void prepare(PropList& props);	
+	virtual void prepare(PropList& props);
 	virtual void work(PropList& props) throw(elm::Exception);
 	virtual void work(const string& entry, PropList &props) throw(elm::Exception);
 
@@ -69,6 +69,7 @@ protected:
 	inline bool isVerbose(void) const { return verbose; }
 
 	const genstruct::Vector<string> arguments(void) const { return _args; }
+	Address parseAddress(const string& s) throw(otawa::Exception);
 
 private:
 	option::BoolOption help, verbose;

@@ -128,6 +128,20 @@ CFG *CFGInfo::findCFG(Inst *inst) {
 
 
 /**
+ * Get a CFG from the address of its first instruction.
+ * @param addr	Address of the first instruction.
+ * @return		Found CFG or null.
+ */
+CFG *CFGInfo::findCFG(Address addr) {
+	const BasicBlock *bb = map.get(addr);
+	if(!bb)
+		return 0;
+	else
+		return findCFG(bb);
+}
+
+
+/**
  * Find the CFG starting at the given basic block.
  * @param bb	Basic block to look at.
  * @return	Found CFG or this BB is not a CFG start.

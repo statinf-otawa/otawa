@@ -5,7 +5,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-07, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -17,7 +17,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <stdlib.h>
@@ -69,6 +69,7 @@ SYM [?;,+-/:@=\[\]()]
 "int16"			util_fft_lval.type = &otawa::Type::int16_type; return TYPE;
 "int32"			util_fft_lval.type = &otawa::Type::int32_type; return TYPE;
 "int64"			util_fft_lval.type = &otawa::Type::int64_type; return TYPE;
+"library"		return KW_LIBRARY;
 "loop"			return LOOP;
 "max"			return KW_MAX;
 "memory"		return KW_MEMORY;

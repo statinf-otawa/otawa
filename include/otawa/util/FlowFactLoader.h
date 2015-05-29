@@ -67,11 +67,8 @@ protected:
 	void onWarning(const string& message);
 
 	virtual void onCheckSum(const String& name, t::uint32 sum);
-	virtual void onLoop(
-		address_t addr,
-		int count,
-		int total,
-		const ContextualPath& path);
+	virtual void onLibrary(void);
+	virtual void onLoop(address_t addr, int count, int total, const ContextualPath& path);
 	virtual void onReturn(address_t addr);
 	virtual void onNoReturn(address_t addr);
 	virtual void onNoReturn(String name);
@@ -104,6 +101,7 @@ private:
 	bool mandatory;
 	bool lines_available;
 	dfa::State *state;
+	bool lib;
 
 	// F4 support
 	void loadF4(const string& path) throw(ProcessorException);

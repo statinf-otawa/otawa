@@ -253,6 +253,7 @@ elm::system::Path Manager::retrieveConfig(const elm::system::Path& path) {
  * @li @ref PROCESSOR_PATH,
  * @li @ref SIMULATOR,
  * @li @ref SIMULATOR_NAME,
+ * @li @ref TASK_ADDRESS,
  * @li @ref TASK_ENTRY.
  *
  * @par
@@ -541,6 +542,13 @@ ilp::System *Manager::newILPSystem(string name) {
  * entry function of the current task.
  */
 Identifier<string> TASK_ENTRY("otawa::TASK_ENTRY", "main");
+
+
+/**
+ * This property, passed to the load configuration, select the task entry
+ * by its address.
+ */
+Identifier<Address> TASK_ADDRESS("otawa::TASK_ADDRESS", Address::null);
 
 
 /**
