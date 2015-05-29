@@ -160,7 +160,7 @@ Identifier<bool> DONT_INLINE("otawa::DONT_INLINE", false);
 
 /**
  */
-Virtualizer::Virtualizer(void): Processor(reg), entry(0), virtual_inlining(false) {
+Virtualizer::Virtualizer(void): Processor(reg), virtual_inlining(false), entry(0) {
 }
 
 // Registration

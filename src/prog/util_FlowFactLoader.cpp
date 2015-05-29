@@ -493,10 +493,10 @@ p::declare FlowFactLoader::reg = p::init("otawa::util::FlowFactLoader", Version(
  */
 FlowFactLoader::FlowFactLoader(p::declare& r):
 	Processor(r),
-	checksummed(false),
 	_fw(0),
-	lines_available(false),
+	checksummed(false),
 	mandatory(false),
+	lines_available(false),
 	state(0),
 	lib(false)
 {

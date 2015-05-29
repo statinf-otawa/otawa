@@ -140,8 +140,8 @@ Registration<ConstraintLoader> ConstraintLoader::reg(
  */
 ConstraintLoader::ConstraintLoader(AbstractRegistration& r)
 :	CFGProcessor(r),
- 	system(0),
- 	fw(0) {
+ 	fw(0),
+ 	system(0) {
 }
 
 
@@ -299,6 +299,7 @@ ExpNode *right) {
 			case ilp::Constraint::GT: log << ">"; break;
 			case ilp::Constraint::LT: log << "<"; break;
 			case ilp::Constraint::LE: log << "<="; break;
+			default:				  ASSERT(false); break;
 			}
 			log << " 0\n";
 		}
@@ -368,14 +369,15 @@ NormNode *ConstraintLoader::normalize(ExpNode *node, double mult) {
 
 	// Division
 	case ExpNode::DIV:
-		if(arg2->isConstant())
+		/* TODO if(arg2->isConstant())
 			return arg1->multiply(1 / arg2->coefficient());
-		else
+		else*/
 			throw NormalizationException();
 
 	// Too bad !
 	default:
 		ASSERT(0);
+		return 0;
 	}
 }
 

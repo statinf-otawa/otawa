@@ -182,11 +182,11 @@ BasicBlock *DelayedBuilder::makeNOp(Inst *inst, int n) {
  * in sequence and a basic block containing a NOP instruction is inserted in
  * the edge of sequential transfer of control (to take into account the delayed
  * instruction effect on memory hierarchy).
- * 
+ *
  * @par Required Features
  * @li @ref COLLECTED_CFG_FEATURE
  * @li @ref DELAYED_FEATURE
- * 
+ *
  * @par Provided Features
  * @li @ref COLLECTED_CFG_FEATURE
  * @li @ref DELAYED_CFG_FEATURE
@@ -208,7 +208,7 @@ Registration<DelayedBuilder> DelayedBuilder::reg(
 
 /**
  */
-DelayedBuilder::DelayedBuilder(void): CFGProcessor(reg), coll(0), cleaner(0), info(0), vcfg(0) {
+DelayedBuilder::DelayedBuilder(void): CFGProcessor(reg), coll(0), cleaner(0), vcfg(0), info(0) {
 }
 
 

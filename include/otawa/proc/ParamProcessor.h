@@ -49,6 +49,7 @@ public:
 
 	class AbstractMaker {
 	public:
+		virtual ~AbstractMaker(void) { }
 		virtual Processor *instantiate(cstring name, Version version, const ActualFeature& feature) const = 0;
 	};
 

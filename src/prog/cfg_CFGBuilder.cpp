@@ -265,7 +265,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 			if(target && (!inst->isCall() || !NO_CALL(target))) {
 				BasicBlock *target_bb = thisBB(target);
 				ASSERT(target_bb);
-				Edge *edge = new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
+				new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
 			}
 
 			// look for target properties

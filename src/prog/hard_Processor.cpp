@@ -118,6 +118,7 @@ hard::Processor *Processor::load(const elm::system::Path& path) throw(LoadExcept
 	catch(otawa::MessageException& e) {
 		cerr << "DEBUG: exn = " << e.message() << io::endl;
 		ASSERT(false);
+		return 0;
 	}
 }
 
@@ -155,7 +156,7 @@ hard::Processor *Processor::load(xom::Element *element) throw(LoadException) {
 class ProcessorProcessor: public otawa::Processor {
 public:
 	static p::declare reg;
-	ProcessorProcessor(p::declare& r = reg): Processor(r), xml(0), config(0) { }
+	ProcessorProcessor(p::declare& r = reg): Processor(r), config(0), xml(0) { }
 
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);

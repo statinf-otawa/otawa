@@ -1,20 +1,20 @@
 /*
  *	$Id$
  *	Symbolic Expression definition and processor
- *	
+ *
  *	This file is part of OTAWA
  *	Copyright (c) 2011, IRIT UPS.
- *	
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	OTAWA is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
@@ -42,9 +42,9 @@ namespace hard {
 }	// hard
 
 namespace se{
-	
+
 	typedef clp::Value V;
-	
+
 	/** Defined operators */
 	typedef enum {
 		NONE,
@@ -69,7 +69,7 @@ namespace se{
 		UGT,
 		OR
 	} op_t;
-	
+
 	/** Symbolic expression*/
 	class SymbExpr{
 	public:
@@ -101,7 +101,7 @@ namespace se{
 		 * This recursively delete a and b childs, and set to NULL the reference
 		 * of this in the parent (if any).
 		*/
-		~SymbExpr(){
+		virtual ~SymbExpr(){
 			delete _a;
 			delete _b;
 			if (_parent != NULL){
@@ -111,7 +111,7 @@ namespace se{
 					_parent->_b = NULL;
 			}
 		}
-		
+
 		/** Operators */
 		/**
 		 * Copy operator
@@ -136,7 +136,7 @@ namespace se{
 		 * @return if the expression doesn't reprensents the same as expr
 		*/
 		bool operator!=(const SymbExpr& expr) const;
-		
+
 		/** Accessors **/
 		/**
 		 * @return the operator of the expression
@@ -158,7 +158,7 @@ namespace se{
 		 * @return a pointer to the parent of this (or NULL)
 		*/
 		SymbExpr* parent(void) const { return _parent; }
-		
+
 		/** Operation **/
 		/**
 		 * Recursively replace in this the searched_se expression by new_se
@@ -195,12 +195,12 @@ namespace se{
 		 * @return a vector of int.
 		*/
 		virtual Vector<V> used_addr(void);
-		
+
 		/** Setters */
 		/**
 		 * Set the first child expression (a)
 		 * @param a a pointer to the new first child
-		 * 
+		 *
 		 * A *copy* of a will be set as first child.
 		 * If there was a first child in this expression, it will be delete, but
 		 * after the copy of a (so it's safe to set_a() a child expression of
@@ -219,7 +219,7 @@ namespace se{
 		/**
 		 * Set the second child expression (b)
 		 * @param b a pointer to the new second child
-		 * 
+		 *
 		 * A *copy* of b will be set as second child.
 		 * If there was a second child in this expression, it will be delete,
 		 * but after the copy of b (so it's safe to set_b() a child expression
@@ -242,7 +242,7 @@ namespace se{
 		 * Warning: this do not remove the reference to this in the old parent.
 		*/
 		void set_parent(SymbExpr *parent) { _parent = parent ; }
-	
+
 	protected:
 		/** Attributes **/
 		op_t _op;
@@ -251,7 +251,7 @@ namespace se{
 		V _val;
 		SymbExpr *_parent;
 	};
-	
+
 	/** Constants */
 	class SEConst: public SymbExpr{
 	public:
@@ -268,7 +268,7 @@ namespace se{
 		 * @param expr the expression to copy
 		*/
 		SEConst(const SEConst &expr): SymbExpr(expr) {}
-		
+
 		/** Operators */
 		/**
 		 * Copy operator
@@ -287,7 +287,7 @@ namespace se{
 		 * @return if the expression reprensents the same as expr (recursively)
 		*/
 		virtual bool operator==(const SymbExpr& expr) const;
-		
+
 		/** Operation **/
 		/**
 		 * @return a string reprensentation of the expression
@@ -299,7 +299,7 @@ namespace se{
 		*/
 		virtual void canonize(void);
 	};
-	
+
 	/** Memory reference */
 	class SEAddr: public SymbExpr{
 	public:
@@ -316,7 +316,7 @@ namespace se{
 		 * @param expr the expression to copy
 		*/
 		SEAddr(const SEAddr &expr): SymbExpr(expr) {}
-		
+
 		/** Operators */
 		/**
 		 * Copy operator
@@ -335,7 +335,7 @@ namespace se{
 		 * @return if the expression doesn't reprensents the same as expr
 		*/
 		virtual bool operator==(const SymbExpr& expr) const;
-		
+
 		/** Operation **/
 		/**
 		 * @return a string reprensentation of the expression
@@ -353,7 +353,7 @@ namespace se{
 		*/
 		virtual Vector<V> used_addr(void);
 	};
-	
+
 	/** Register */
 	class SEReg: public SymbExpr{
 	public:
@@ -370,7 +370,7 @@ namespace se{
 		 * @param expr the expression to copy
 		*/
 		SEReg(const SEReg &expr): SymbExpr(expr) {}
-		
+
 		/** Operators */
 		/**
 		 * Copy operator
@@ -389,7 +389,7 @@ namespace se{
 		 * @return if the expression doesn't reprensents the same as expr
 		*/
 		virtual bool operator==(const SymbExpr& expr) const;
-		
+
 		/** Operation **/
 		/**
 		 * @return a string reprensentation of the expression
@@ -407,7 +407,7 @@ namespace se{
 		*/
 		virtual Vector<V> used_reg(void);
 	};
-	
+
 	/** Negation */
 	class SENeg: public SymbExpr{
 	public:
@@ -426,7 +426,7 @@ namespace se{
 		 * @param expr the expression to copy
 		*/
 		SENeg(const SENeg &expr): SymbExpr(expr) {}
-		
+
 		/** Operators */
 		/**
 		 * Copy operator
@@ -445,7 +445,7 @@ namespace se{
 		 * @return if the expression doesn't reprensents the same as expr
 		*/
 		virtual bool operator==(const SymbExpr& expr) const;
-		
+
 		/** Operation **/
 		/**
 		 * @return a string reprensentation of the expression
@@ -457,7 +457,7 @@ namespace se{
 		*/
 		virtual void canonize(void);
 	};
-	
+
 	/** Addition */
 	class SEAdd: public SymbExpr{
 	public:
@@ -479,7 +479,7 @@ namespace se{
 		 * @param expr the expression to copy
 		*/
 		SEAdd(const SEAdd &expr): SymbExpr(expr) {}
-		
+
 		/** Operators */
 		/**
 		 * Copy operator
@@ -498,7 +498,7 @@ namespace se{
 		 * @return if the expression reprensents the same as expr (recursively)
 		*/
 		virtual bool operator==(const SymbExpr& expr) const;
-		
+
 		/** Operation **/
 		/**
 		 * @return a string reprensentation of the expression
@@ -510,7 +510,7 @@ namespace se{
 		*/
 		virtual void canonize(void);
 	};
-	
+
 	/** Compare symbolic expression
 		This class define three type of compare expression:
 			* condition (if): SECmp(operator, expression)
@@ -543,7 +543,7 @@ namespace se{
 		 * @param expr the expression to copy
 		*/
 		SECmp(const SECmp &expr): SymbExpr(expr) {}
-		
+
 		/** Operators */
 		/**
 		 * Copy operator
@@ -562,7 +562,7 @@ namespace se{
 		 * @return if the expression doesn't reprensents the same as expr
 		*/
 		virtual bool operator==(const SymbExpr& expr) const;
-		
+
 		/** Operation **/
 		/**
 		 * @return a string reprensentation of the expression
@@ -578,11 +578,11 @@ namespace se{
 		*/
 		SECmp* logicalNot(void);
 	};
-	
-	
+
+
 	extern Identifier<Vector<SECmp *> > REG_FILTERS;
 	extern Identifier<Vector<SECmp *> > ADDR_FILTERS;
-	
+
 	class FilterBuilder {
 	public:
 		FilterBuilder(BasicBlock *_bb, clp::ClpProblem& problem);
@@ -601,7 +601,7 @@ namespace se{
 		clp::ClpStatePack pack;
 	};
 
-	
+
 	/**
 	 * Apply a filter on the value
 	 * @param v the CLP to be filtred

@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2008, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_HARD_MEMORY_H
@@ -65,7 +65,7 @@ class Mode {
 		& field("static_power", _static_power)
 		& field("dynamic_power", _dynamic_power)
 		& field("transitions", _transitions));
-public:	
+public:
 	inline Mode(void): _name("no name"), _latency(1), _static_power(0), _dynamic_power(0) { }
 	inline const string& name(void) const { return _name; }
 	inline int latency(void) const { return _latency; }
@@ -111,7 +111,7 @@ public:
 	static Bank full;
 	Bank(void);
 	Bank(cstring name, Address address, size_t size);
-	
+
 	inline const string& name(void) const { return _name; }
 	inline const Address& address(void) const { return _address; }
 	inline const int size(void) const { return _size; }
@@ -175,6 +175,7 @@ private:
 public:
 	static const Memory null, full;
 	Memory(bool full = false);
+	virtual ~Memory(void);
 	inline const Table<const Bank *>& banks(void) const { return _banks; }
 	inline const Table<const Bus *>& buses(void) const  { return _buses; }
 	static Memory *load(const elm::system::Path& path) throw(LoadException);

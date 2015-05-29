@@ -435,6 +435,11 @@ Memory::Memory(bool full) {
 
 
 /**
+ */
+Memory::~Memory(void) {
+}
+
+/**
  * Compute the worst access latency.
  * @return Worst access latency.
  */

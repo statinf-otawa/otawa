@@ -229,7 +229,7 @@ inline string makeAddress(CFG *cfg, Address addr) {
  */
 class Printer {
 public:
-	Printer(WorkSpace *ws, bool debug): _ws(ws), _debug(debug) { }
+	Printer(WorkSpace *ws, bool debug): _debug(debug), _ws(ws) { }
 	virtual ~Printer(void) { }
 	virtual void printNoReturn(Output& out, string label) = 0;
 	virtual void printNoCall(Output& out, string label) = 0;

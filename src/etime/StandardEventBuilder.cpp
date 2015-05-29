@@ -36,7 +36,7 @@ namespace otawa { namespace etime {
 class MissEvent: public Event {
 public:
 	MissEvent(Inst *inst, ot::time cost, LBlock *lb)
-		: Event(inst), _cost(cost), _lb(lb) {	}
+		: Event(inst), _lb(lb), _cost(cost) {	}
 
 	virtual kind_t kind(void) const { return FETCH; }
 	virtual ot::time cost(void) const { return _cost; }
@@ -200,7 +200,7 @@ private:
 /**
  */
 StandardEventBuilder::StandardEventBuilder(p::declare& r)
-: BBProcessor(r), mem(0), has_il1(false), has_dl1(false), has_branch(false), cconf(0), bht(0), bank(0), _explicit(false) {
+: BBProcessor(r), mem(0), cconf(0), bht(0), has_il1(false), has_dl1(false), has_branch(false), bank(0), _explicit(false) {
 }
 
 
@@ -349,6 +349,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 			case branch::FIRST_UNKNOWN:		handleVariableBranchPred(bb, ENCLOSING_LOOP_HEADER(branch::HEADER(bb))); break;
 			case branch::ALWAYS_H:
 			case branch::NOT_CLASSIFIED:	handleVariableBranchPred(bb, bb); break;
+			default:						ASSERT(false); break;
 			}
 		}
 	}

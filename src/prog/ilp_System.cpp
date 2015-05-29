@@ -113,7 +113,7 @@ void System::dump(elm::io::OutStream& out) {
  * @param mon	Monitor to use.
  */
 bool System::solve(WorkSpace *ws, otawa::Monitor& mon) {
-	solve(ws);
+	return solve(ws);
 }
 
 
@@ -344,15 +344,15 @@ void System::dumpMOSEK(OutStream& _out) {
 	out << "[constraints]\n";
 	for (ConstIterator cons2(this); cons2; cons2++) {
 		out << "[con]";
-		bool bound = true;
+		//bool bound = true;
 		int numvar = 0;
 		for (Constraint::TermIterator term(cons2); term; term++) {
-			if ((*term).snd != 1)
-				bound = false;
+			//if ((*term).snd != 1)
+			//	bound = false;
 			numvar++;
 		}
-		if (numvar != 1)
-			bound = false;
+		//if (numvar != 1)
+		//	bound = false;
 
 		for (Constraint::TermIterator term(cons2); term; term++) {
 			t::int32 val = lrint((*term).snd);

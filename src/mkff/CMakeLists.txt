@@ -1,4 +1,5 @@
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../lib")
+set(CMAKE_CXX_FLAGS "-Wall" )
 
 
 add_executable(mkff mkff.cpp)

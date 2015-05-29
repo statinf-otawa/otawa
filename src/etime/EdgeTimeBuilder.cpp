@@ -299,7 +299,7 @@ p::declare EdgeTimeBuilder::reg = p::init("otawa::etime::EdgeTimeBuilder", Versi
 /**
  */
 EdgeTimeBuilder::EdgeTimeBuilder(p::declare& r)
-: GraphBBTime<ParExeGraph>(r), graph(0), source(0), target(0), seq(0) {
+: GraphBBTime<ParExeGraph>(r), bnode(0), bedge(0), source(0), target(0), seq(0),  graph(0), predump(false) {
 }
 
 
@@ -469,7 +469,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	// compute all cases
 	t::uint32 prev = 0;
 	genstruct::Vector<ConfigSet> confs;
-	for(t::uint32 mask = 0; mask < 1 << events.count(); mask++) {
+	for(t::uint32 mask = 0; mask < t::uint32(1 << events.count()); mask++) {
 
 		// adjust the graph
 		for(int i = 0; i < events.count(); i++) {
@@ -601,8 +601,8 @@ int EdgeTimeBuilder::splitConfs(const config_list_t& confs, const event_list_t& 
 	// initialization
 	int p = 1, best_p = -1;
 	float best_cost = type_info<float>::min;
-	int min_low = confs[0].time(), max_low = confs[0].time(), cnt_low = confs[0].count();
-	int min_high = confs[1].time(), max_high = confs[confs.length() - 1].time();
+	int min_low = confs[0].time(), max_low = confs[0].time();	// , cnt_low = confs[0].count();
+	int min_high = confs[1].time();								// , max_high = confs[confs.length() - 1].time();
 	int cnt_high = 0;
 	for(int i = 1; i < confs.length(); i++)
 		cnt_high += confs[i].count();
@@ -774,8 +774,8 @@ void EdgeTimeBuilder::applyFloppySplit(const config_list_t& confs) {
 	// initialization
 	int p = 1, best_p = -1;
 	float best_cost = type_info<float>::min;
-	int min_low = confs[0].time(), max_low = confs[0].time(), cnt_low = confs[0].count();
-	int min_high = confs[1].time(), max_high = confs[confs.length() - 1].time();
+	int min_low = confs[0].time(), max_low = confs[0].time();		// , cnt_low = confs[0].count();
+	int min_high = confs[1].time();									// , max_high = confs[confs.length() - 1].time();
 	int cnt_high = 0;
 	for(int i = 1; i < confs.length(); i++)
 		cnt_high += confs[i].count();
@@ -921,8 +921,8 @@ void EdgeTimeBuilder::applyStrictSplit(const config_list_t& confs) {
 	// initialization
 	int p = 1, best_p = -1;
 	float best_cost = type_info<float>::min;
-	int min_low = confs[0].time(), max_low = confs[0].time(), cnt_low = confs[0].count();
-	int min_high = confs[1].time(), max_high = confs[confs.length() - 1].time();
+	int min_low = confs[0].time(), max_low = confs[0].time();		//, cnt_low = confs[0].count();
+	int min_high = confs[1].time();									//, max_high = confs[confs.length() - 1].time();
 	int cnt_high = 0;
 	for(int i = 1; i < confs.length(); i++)
 		cnt_high += confs[i].count();

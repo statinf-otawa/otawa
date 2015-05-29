@@ -488,7 +488,7 @@ void CFG::scan(void) {
 				if(vtarget)
 					new Edge(vbb, vtarget, edge->kind());
 				else {		// calling jump to a function
-					Edge *nedge = new Edge(vbb, edge->target(), Edge::CALL);
+					new Edge(vbb, edge->target(), Edge::CALL);
 					vbb->flags |= BasicBlock::FLAG_Call;
 					new Edge(vbb, &_exit, Edge::VIRTUAL);
 				}

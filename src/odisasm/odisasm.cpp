@@ -197,7 +197,7 @@ private:
 		// display bytes of instruciton (if required)
 		if(bytes) {
 			cout << '\t';
-			for(int i = 0; i < inst->size(); i++) {
+			for(t::uint32 i = 0; i < inst->size(); i++) {
 				t::uint8 b;
 				workspace()->process()->get(inst->address() + i, b);
 				cout << io::hex(b).pad('0').width(2);
@@ -205,7 +205,7 @@ private:
 			if(inst->size() > max_size)
 				max_size = inst->size();
 			else
-				for(int i = inst->size(); i < max_size; i++)
+				for(t::uint32 i = inst->size(); i < max_size; i++)
 					cout << "  ";
 		}
 
@@ -268,7 +268,7 @@ private:
 	}
 
 	option::SwitchOption regs, kind, sem, target, bytes;
-	int max_size;
+	t::uint32 max_size;
 };
 
 int main(int argc, char **argv) {

@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -35,8 +35,8 @@
 #include <otawa/util/Dominance.h>
 #include <otawa/cache/cat2/CachePenalty.h>
 
-namespace otawa { 
-	
+namespace otawa {
+
 	class ParExeNode;
 	class ParExeEdge;
 	class ParExeGraph;
@@ -54,24 +54,24 @@ namespace otawa {
 		CODE_PARTS_NUMBER  // should be the last value
 	} code_part_t;
 
- 
+
 	/*
 	 * class ParExeInst
 	 *
 	 */
 
-	class ParExeInst {				
+	class ParExeInst {
 	private:
 		Inst * _inst;
 		BasicBlock *_bb;
-		code_part_t _part;                           
+		code_part_t _part;
 		int _index;
 		elm::genstruct::Vector<ParExeNode *> _nodes;
 		ParExeNode * _fetch_node;
 		ParExeNode *_exec_node;
 
 	public:
-		inline ParExeInst(Inst * inst, BasicBlock *bb, code_part_t part, int index) 
+		inline ParExeInst(Inst * inst, BasicBlock *bb, code_part_t part, int index)
 			: _inst(inst), _bb(bb), _part(part), _index(index) {}
 
 		inline Inst * inst()  {return _inst;}
@@ -109,10 +109,10 @@ namespace otawa {
 				: elm::genstruct::Vector<ParExeNode *>::Iterator(inst->_nodes) {}
 		};
 	};
- 
-	/* 
+
+	/*
 	 * class ParExeSequence
-	 * 
+	 *
 	 */
 
 	class ParExeSequence : public elm::genstruct::DLList<ParExeInst *> {
@@ -175,9 +175,9 @@ namespace otawa {
 			}
 			_header[0] = ctxt->_header[0];
 			_header[1] = ctxt->_header[1];
-			_type = ctxt->_type; 
+			_type = ctxt->_type;
 		}
-		~TimingContext() { 
+		~TimingContext() {
 			while (!_node_latencies_list.isEmpty()){
 				NodeLatency * nl = _node_latencies_list.first();
 				_node_latencies_list.removeFirst();
@@ -201,7 +201,7 @@ namespace otawa {
 
 	};
 
- 
+
 	/*
 	 * class ParExeGraph
 	 *
@@ -229,14 +229,14 @@ namespace otawa {
 		int _capacity;
 		int _branch_penalty;
 
-    
+
 	public:
 		ParExeGraph(WorkSpace * ws, ParExeProc *proc, ParExeSequence *seq, const PropList& props = PropList::EMPTY);
-		~ParExeGraph();
+		virtual ~ParExeGraph(void);
 		inline void setFetchSize(int size) { _cache_line_size = size; }
 		inline void setBranchPenalty(int penalty) { _branch_penalty = penalty; }
 		inline ParExeSequence *getSequence(void) const { return _sequence; }
-      
+
 		// graph building
 		virtual void build(bool compressed_code=false);
 		virtual void createNodes(void);
@@ -274,7 +274,7 @@ namespace otawa {
 			{return _sequence->length();}
 		inline ParExeNode * firstNode()
 				{return _first_node;}
-    
+
 		class InstIterator : public ParExeSequence::InstIterator {
 		public:
 			inline InstIterator(const ParExeSequence *sequence)
@@ -286,7 +286,7 @@ namespace otawa {
 		public:
 			inline InstNodeIterator(const ParExeInst *inst)
 				: ParExeInst::NodeIterator(inst) {}
-		};   
+		};
 		class StageIterator : public elm::genstruct::SLList<ParExeStage *>::Iterator {
 		public:
 			inline StageIterator(const SLList<ParExeStage *>  *list)
@@ -303,7 +303,7 @@ namespace otawa {
 		public:
 			inline PreorderIterator(ParExeGraph * graph)
 				: graph::PreorderIterator<ParExeGraph>(*graph, graph->firstNode()) {}
-		}; 
+		};
 
 		class Predecessor: public PreIterator<Predecessor, ParExeNode *> {
 		public:
@@ -315,7 +315,7 @@ namespace otawa {
 		private:
 			GenGraph<ParExeNode,ParExeEdge>::InIterator iter;
 		};
-		
+
 		class Successor: public PreIterator<Successor, ParExeNode *> {
 		public:
 			inline Successor(const ParExeNode* node): iter(node) {}
@@ -326,7 +326,7 @@ namespace otawa {
 		private:
 			GenGraph<ParExeNode,ParExeEdge>::OutIterator iter;
 		};
-	
+
 
 	};
 
@@ -336,8 +336,8 @@ namespace otawa {
 	 */
 	class ParExeNode: public GenGraph<ParExeNode,ParExeEdge>::GenNode{
 	private:
-		ParExeStage *_pipeline_stage;           
-		ParExeInst *_inst;                        
+		ParExeStage *_pipeline_stage;
+		ParExeInst *_inst;
 		int _latency;
 		int _default_latency;
 		elm::String _name;
@@ -350,10 +350,10 @@ namespace otawa {
 		elm::BitVector * _possible_contenders;
 		elm::genstruct::DLList<elm::BitVector *> _contenders_masks_list;
 		int _late_contenders;
-   
+
 	public:
 		inline ParExeNode(ParExeGraph *graph, ParExeStage *stage, ParExeInst *inst)
-			: ParExeGraph::GenNode((otawa::graph::Graph *) graph), 
+			: ParExeGraph::GenNode((otawa::graph::Graph *) graph),
 			_pipeline_stage(stage), _inst(inst),  _latency(stage->latency()), _default_latency(stage->latency()){
 			int num = graph->numResources();
 			_d = new elm::genstruct::AllocatedTable<int>(num);
@@ -368,7 +368,7 @@ namespace otawa {
 				StringBuffer _buffer;
 				_buffer << stage->name() << "(I" << inst->index() << ")";
 				_name = _buffer.toString();
- 
+
 			}
 		}
 
@@ -410,7 +410,7 @@ namespace otawa {
 		int _latency;
 	public:
 		inline ParExeEdge(ParExeNode *source, ParExeNode *target, edge_type_t type, int latency = 0, const string& name = "")
-			: ParExeGraph::GenEdge(source, target), _type(type), _latency(latency), _name(name) { ASSERT(source != target); }
+			: ParExeGraph::GenEdge(source, target), _type(type), _name(name), _latency(latency) { ASSERT(source != target); }
 		inline int latency(void) const{return _latency;}
 		inline void setLatency(int latency) {_latency = latency;}
 		inline edge_type_t type(void) const {return _type;}
@@ -421,33 +421,33 @@ namespace otawa {
 
 
 
-	inline bool ParExeGraph::Predecessor::ended(void) const { 
-		return iter.ended(); 
+	inline bool ParExeGraph::Predecessor::ended(void) const {
+		return iter.ended();
 	}
-	inline ParExeNode *ParExeGraph::Predecessor::item(void) const { 
-		return iter->source(); 
+	inline ParExeNode *ParExeGraph::Predecessor::item(void) const {
+		return iter->source();
 	}
-	inline void ParExeGraph::Predecessor::next(void) { 
-		iter.next(); 
+	inline void ParExeGraph::Predecessor::next(void) {
+		iter.next();
 	}
-	inline ParExeEdge *ParExeGraph::Predecessor::edge(void) const { 
-		return iter; 
-	}
-
-	inline bool ParExeGraph::Successor::ended(void) const { 
-		return iter.ended(); 
-	}
-	inline ParExeNode *ParExeGraph::Successor::item(void) const { 
-		return iter->target(); 
-	}
-	inline void ParExeGraph::Successor::next(void) { 
-		iter.next(); 
-	}
-	inline ParExeEdge *ParExeGraph::Successor::edge(void) const { 
-		return iter; 
+	inline ParExeEdge *ParExeGraph::Predecessor::edge(void) const {
+		return iter;
 	}
 
- 
+	inline bool ParExeGraph::Successor::ended(void) const {
+		return iter.ended();
+	}
+	inline ParExeNode *ParExeGraph::Successor::item(void) const {
+		return iter->target();
+	}
+	inline void ParExeGraph::Successor::next(void) {
+		iter.next();
+	}
+	inline ParExeEdge *ParExeGraph::Successor::edge(void) const {
+		return iter;
+	}
+
+
 } // namespace otawa
 
 #endif //_PAR_EXEGRAPH_H_

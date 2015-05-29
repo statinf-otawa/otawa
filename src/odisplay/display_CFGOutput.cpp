@@ -86,6 +86,8 @@ public:
 		case otawa::Edge::VIRTUAL_RETURN:
 			line.style = LineStyle::DASHED;
 			break;
+		default:
+			break;
 		}
 		CFGOutput *out = OUT(graph.cfg);
 		ASSERT(out);

@@ -12,7 +12,7 @@
 #include <otawa/proc/Processor.h>
 
 namespace otawa { namespace hard {
-	
+
 /**
  * @class CacheConfiguration
  * @ingroup hard
@@ -179,7 +179,7 @@ string CacheConfiguration::cacheName(const Cache *cache) const {
 class CacheConfigurationProcessor: public otawa::Processor {
 public:
 	static p::declare reg;
-	CacheConfigurationProcessor(p::declare& r = reg): Processor(r), xml(0), config(0) { }
+	CacheConfigurationProcessor(p::declare& r = reg): Processor(r), config(0), xml(0) { }
 
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);
