@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2008, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -48,7 +48,7 @@ int ParamExeGraph::Delta(ParamExeNode *a, Resource *res) {
   if (lp->e(r))
     delta = a->d(r) - lp->d(r);
   else {
-    delta = a->d(r) - default_lp; 
+    delta = a->d(r) - default_lp;
   }
   *_trace << L8 << "\t\tbase value is " << delta << "\n";
 
@@ -58,7 +58,7 @@ int ParamExeGraph::Delta(ParamExeNode *a, Resource *res) {
     if (a->e(s) && S->e(r)) {
       *_trace << L8 << "\t\tS=" << S->name();
 
-      if (lp->e(s)){ 
+      if (lp->e(s)){
 	*_trace << L8 << ": both a and lp depend on it ";
 	int tmp = a->d(s) - lp->d(s);
 	if (tmp > delta) {
@@ -134,10 +134,8 @@ int ParamExeGraph::Delta(ParamExeNode *a, Resource *res) {
 int ParamExeGraph::cost() {
   int _cost = 0;
   int _start_cost = 0;
-  int offset;
   ParamExeNode *a = _last_node[BODY];
   for (ResourceIterator res(this) ; res ; res++) {
-    offset = 0;
     int r = res->index();
     if (res->type() == QUEUE) {
       StageResource * upper_bound = ((QueueResource *)(*res))->upperBound();
@@ -166,7 +164,6 @@ int ParamExeGraph::cost() {
     }
   }
   for (ExternalConflictIterator res(this) ; res ; res++) {
-    offset = 0;
     int r = res->index();
     if (res->type() == QUEUE) {
       StageResource * upper_bound = ((QueueResource *)(*res))->upperBound();
@@ -223,7 +220,7 @@ void ParamExeGraph::analyzeContentions() {
 	    else {
 	      if (cont->inst()->index() >= node->inst()->index() - _capacity ) {
 		// if cont finishes surely before node, it is not contemp
-		// if cont is ready after node, it is not contemp	
+		// if cont is ready after node, it is not contemp
 		bool finishes_before = true;
 		bool ready_after = true;
 		for (ResourceIterator res(this) ; res ; res++) {
@@ -233,8 +230,8 @@ void ParamExeGraph::analyzeContentions() {
 		      finishes_before = false;
 		    }
 		    else {
-		      /*int cont_contention_delay = 
-			((cont->lateContenders() + cont->possibleContenders()->countBits()) / stage->width()) 
+		      /*int cont_contention_delay =
+			((cont->lateContenders() + cont->possibleContenders()->countBits()) / stage->width())
 			* node->latency();*/
 		      if (1 /*node->d(r) < cont->d(r) + cont->latency() + cont_contention_delay*/)
 			finishes_before = false;
@@ -254,10 +251,10 @@ void ParamExeGraph::analyzeContentions() {
 		    *_trace << L9 << " because of " << res->name() << "\n";
 		    if (_last_node[PROLOGUE] && (cont->inst()->index() <= _last_node[PROLOGUE]->inst()->index()))
 		      *_trace << L9 << "\tbut is also a contender of node Lp !\n";
-		    num_possible_contenders++; 
+		    num_possible_contenders++;
 		    if (_last_node[PROLOGUE] && (cont->inst()->index() <= _last_node[PROLOGUE]->inst()->index())) {
 		      num_early_contenders++;
-		      node->setContender(index);    
+		      node->setContender(index);
 		    }
 		    break;
 		  }
@@ -292,7 +289,7 @@ void ParamExeNode::buildContendersMasks(){
     }
     else {
       elm::genstruct::SLList<elm::BitVector *> new_masks;
-      for (elm::genstruct::SLList<elm::BitVector *>::Iterator mask(_contenders_masks_list) ; 
+      for (elm::genstruct::SLList<elm::BitVector *>::Iterator mask(_contenders_masks_list) ;
 	   mask ; mask++) {
     	  ASSERT(mask->size() == _possible_contenders->size());
 	elm::BitVector *new_mask = new elm::BitVector(**mask);
@@ -300,7 +297,7 @@ void ParamExeNode::buildContendersMasks(){
 	new_mask->set(one.item());
 	new_masks.addLast(new_mask);
       }
-      for (elm::genstruct::SLList<elm::BitVector *>::Iterator new_mask(new_masks) ; 
+      for (elm::genstruct::SLList<elm::BitVector *>::Iterator new_mask(new_masks) ;
 	   new_mask ; new_mask++)
 	_contenders_masks_list.addLast(new_mask);
     }
@@ -366,8 +363,8 @@ void ParamExeGraph::initDelays() {
   for (InternalConflictIterator res(this) ; res ; res++) {
     ExeInst<ParamExeNode> * inst = ((InternalConflictResource *) *res)->instruction();
     for (InstNodeIterator node(inst) ; node ; node++) {
-      if ( node->needsOperands() 
-	   && 
+      if ( node->needsOperands()
+	   &&
 	   (node->pipelineStage()->orderPolicy() == PipelineStage<ParamExeNode>::OUT_OF_ORDER) ) {
 	node->setE(res->index(),true);
 	((InternalConflictResource *) *res)->setNode(node);
@@ -377,8 +374,8 @@ void ParamExeGraph::initDelays() {
   for (ExternalConflictIterator res(this) ; res ; res++) {
     ExeInst<ParamExeNode> * inst = ((ExternalConflictResource *) *res)->instruction();
     for (InstNodeIterator node(inst) ; node ; node++) {
-      if ( node->needsOperands() 
-	   && 
+      if ( node->needsOperands()
+	   &&
 	   (node->pipelineStage()->orderPolicy() == PipelineStage<ParamExeNode>::OUT_OF_ORDER) ) {
 	node->setE(res->index(),true);
 	node->setContentionDep(inst->index());
@@ -419,7 +416,7 @@ int ParamExeGraph::analyze() {
 
   _capacity = 0;
   for(Microprocessor<ParamExeNode>::QueueIterator queue(_microprocessor); queue; queue++){
-    //capacity += queue->size();		
+    //capacity += queue->size();
     _capacity = queue->size();		//FIXME: capacity should be the size of the queue where instructions can be in conflict to access to FUs
   }
 
@@ -433,7 +430,7 @@ int ParamExeGraph::analyze() {
   }
 
   if (_last_node[PROLOGUE])
-    return(cost());	 
+    return(cost());
   else
     return (_last_node[BODY]->d(0));  // resource 0 is BLOCK_START
 }
@@ -556,14 +553,14 @@ void ParamExeGraph::dump(elm::io::Output& dotFile) {
 
 
   int group_number = 0;
-  for (InstIterator inst(_sequence) ; inst ; inst++) {	
+  for (InstIterator inst(_sequence) ; inst ; inst++) {
     // dump edges
     for (InstNodeIterator node(inst) ; node ; node++) {
       for (Successor next(node) ; next ; next++) {
 	if ( node != inst->firstNode()
 	     ||
-	     (!node->producesOperands()) 
-	     || (node->inst()->index() == next->inst()->index()) ) {				
+	     (!node->producesOperands())
+	     || (node->inst()->index() == next->inst()->index()) ) {
 	  dotFile << "\"" << node->pipelineStage()->shortName();
 	  dotFile << "I" << node->inst()->index() << "\"";
 	  dotFile << " -> ";
@@ -580,10 +577,10 @@ void ParamExeGraph::dump(elm::io::Output& dotFile) {
 	    if (node->inst()->index() == next->inst()->index())
 	      dotFile << ", minlen=4";
 	    dotFile << "] ;\n";
-	    break;	
+	    break;
 	  default:
 	    break;
-	  }	
+	  }
 	  if ((node->inst()->index() == next->inst()->index())
 	      || ((node->pipelineStage()->index() == next->pipelineStage()->index())
 		  && (node->inst()->index() == next->inst()->index()-1)) ) {
@@ -639,14 +636,14 @@ void ParamExeGraph::dumpSimple(elm::io::Output& dotFile) {
 
 
   int group_number = 0;
-  for (InstIterator inst(_sequence) ; inst ; inst++) {	
+  for (InstIterator inst(_sequence) ; inst ; inst++) {
     // dump edges
     for (InstNodeIterator node(inst) ; node ; node++) {
       for (Successor next(node) ; next ; next++) {
 	if ( node != inst->firstNode()
 	     ||
-	     (!node->producesOperands()) 
-	     || (node->inst()->index() == next->inst()->index()) ) {				
+	     (!node->producesOperands())
+	     || (node->inst()->index() == next->inst()->index()) ) {
 	  dotFile << "\"" << node->pipelineStage()->shortName();
 	  dotFile << "I" << node->inst()->index() << "\"";
 	  dotFile << " -> ";
@@ -663,10 +660,10 @@ void ParamExeGraph::dumpSimple(elm::io::Output& dotFile) {
 	    if (node->inst()->index() == next->inst()->index())
 	      dotFile << ", minlen=4";
 	    dotFile << "] ;\n";
-	    break;	
+	    break;
 	  default:
 	    break;
-	  }	
+	  }
 	  if ((node->inst()->index() == next->inst()->index())
 	      || ((node->pipelineStage()->index() == next->pipelineStage()->index())
 		  && (node->inst()->index() == next->inst()->index()-1)) ) {

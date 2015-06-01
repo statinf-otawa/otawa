@@ -11,12 +11,13 @@
 #include <stdio.h>
 #include "ExpNode.h"
 #include <otawa/ipet/ConstraintLoader.h>
-/*#ifdef __APPLE__
-#      include "ipet_parser.hpp"
-#else*/
-#	include <ipet_parser.h>
-//#endif
+#include <ipet_parser.h>
+
 extern int ipet_line;
+
+/* work-around ugly generated code */
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 %}
 
 %option noyywrap

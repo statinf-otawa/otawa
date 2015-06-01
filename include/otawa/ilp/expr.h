@@ -45,8 +45,8 @@ inline Term operator*(var v, coef_t c) { return Term(v, c); }
 // cons class
 class cons {
 public:
-	inline cons(void): c(0), l(true) { }
-	inline cons(Constraint *cc): c(cc), l(cc->comparator() == Constraint::UNDEF) { }
+	inline cons(void): l(true), c(0) { }
+	inline cons(Constraint *cc): l(cc->comparator() == Constraint::UNDEF), c(cc)  { }
 
 	inline cons operator+(const Term& t) 		{ if(l) c->add(t); else c->sub(t); return *this; }
 	inline cons operator-(const Term& t) 		{ if(l) c->sub(t); else c->add(t); return *this; }

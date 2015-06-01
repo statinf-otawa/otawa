@@ -322,7 +322,7 @@ void AbstractSystem::remove(AbstractVar *var) {
 /**
  */
 AbstractSystem::AbstractVar::AbstractVar(const string& name, type_t type)
-: Var(name, type), _idx(0), _sys(0) { }
+: Var(name, type), _sys(0), _idx(0) { }
 
 
 /**

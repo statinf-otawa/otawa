@@ -178,7 +178,7 @@ p::declare ACSBuilder::reg = p::init("otawa::ACSBuilder", Version(1, 1, 0))
 	.provide(ICACHE_ACS_FEATURE)
 	.require(hard::CACHE_CONFIGURATION_FEATURE);
 
-ACSBuilder::ACSBuilder(p::declare& r) : Processor(r), must_entry(0), level(FML_NONE), unrolling(false) {
+ACSBuilder::ACSBuilder(p::declare& r) : Processor(r), level(FML_NONE), unrolling(false), must_entry(0) {
 }
 
 

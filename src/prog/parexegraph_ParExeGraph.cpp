@@ -112,7 +112,7 @@ int ParExeGraph::analyze() {
     //   }
 
     if (_last_prologue_node)
-		return(cost());	 
+		return(cost());
     else
 		return (_last_node->d(0));  // resource 0 is BLOCK_START
 }
@@ -121,11 +121,9 @@ int ParExeGraph::analyze() {
 
 int ParExeGraph::cost() {
     int _cost = 0;
-    int _start_cost = 0;
-    int offset;
     ParExeNode *a = _last_node;
     for (elm::genstruct::Vector<Resource *>::Iterator res(_resources) ; res ; res++) {
-		offset = 0;
+		//offset = 0;
 		if (res->type() != Resource::INTERNAL_CONFLICT) {
 			int r = res->index();
 			if (res->type() == Resource::QUEUE) {
@@ -139,10 +137,8 @@ int ParExeGraph::cost() {
 				}
 			}
 			int tmp = Delta(a,res);
-			if (res->type() == Resource::BLOCK_START) {
-				_start_cost = tmp;
+			if (res->type() == Resource::BLOCK_START)
 				_cost = tmp;
-			}
 			else {
 				if (tmp > _cost) {
 					_cost = tmp;
@@ -163,7 +159,7 @@ void ParExeGraph::propagate() {
 					_latency = pred->latency() + pred.edge()->latency();
 				}
 				else {
-					_latency = 0;	
+					_latency = 0;
 				}
 				for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
 					int index = resource->index();
@@ -286,38 +282,38 @@ void ParExeGraph::analyzeContentions() {
 				ParExeStage* stage = st->fu(i)->firstStage();
 				for (int j=0 ; j<stage->numNodes() ; j++) {
 					ParExeNode *node = stage->node(j);
-					bool stop = false;
+					//bool stop = false;
 					int num_possible_contenders = 0;
 					if (node->latency() > 1)
 						num_possible_contenders = 1; // possible late contender
 					int num_early_contenders = 0;
-	  
+
 					int index = 0;
 					int size = stage->numNodes();
 					node->initContenders(size);		// TODO for several call to apply, possible memory leak
-					stop = false;
+					//stop = false;
 					for (int k=0 ; k<stage->numNodes() ; k++) {
 						ParExeNode *cont = stage->node(k);
 						if (cont->inst()->index() >= node->inst()->index())
-							stop = true;
+							/*stop = true*/;
 						else {
 							if (cont->inst()->index() >= node->inst()->index() - _capacity ) {
 								// if cont finishes surely before node, it is not contemp
-								// if cont is ready after node, it is not contemp	
+								// if cont is ready after node, it is not contemp
 								bool finishes_before = true;
 								bool ready_after = true;
 								for (int r=0 ; r<numResources() ; r++) {
 									Resource *res = resource(r);
-									if ((res->type() != Resource::INTERNAL_CONFLICT) 
-										&& 
+									if ((res->type() != Resource::INTERNAL_CONFLICT)
+										&&
 										((res->type() != Resource::EXTERNAL_CONFLICT))) {
 										if (cont->e(r)) {
 											if (!node->e(r)) {
 												finishes_before = false;
 											}
 											else {
-												// 						int contention_delay = 
-												// 						    ((cont->lateContenders() + cont->possibleContenders()->countBits()) / stage->width()) 
+												// 						int contention_delay =
+												// 						    ((cont->lateContenders() + cont->possibleContenders()->countBits()) / stage->width())
 												// 						    * node->latency();
 												if (1 /*node->d(r) < cont->d(r) + cont->latency() + cont_contention_delay*/)
 													finishes_before = false;
@@ -334,10 +330,10 @@ void ParExeGraph::analyzeContentions() {
 										}
 									}
 									if (!finishes_before && !ready_after){
-										num_possible_contenders++; 
+										num_possible_contenders++;
 										if (_last_prologue_node && (cont->inst()->index() <= _last_prologue_node->inst()->index())) {
 											num_early_contenders++;
-											node->setContender(index);    
+											node->setContender(index);
 										}
 										break;
 									}
@@ -397,20 +393,20 @@ void ParExeGraph::initDelays() {
 		case Resource::EXTERNAL_CONFLICT:{
 			ParExeInst * inst = ((ExternalConflictResource *) *res)->instruction();
 			for (InstNodeIterator node(inst) ; node ; node++) {
-				if ( (node->stage()->category() == ParExeStage::EXECUTE) 
-					 && 
+				if ( (node->stage()->category() == ParExeStage::EXECUTE)
+					 &&
 					 (node->stage()->orderPolicy() == ParExeStage::OUT_OF_ORDER) ) {
 					node->setE(index,true);
 					node->setContentionDep(inst->index());
 				}
 			}
 		}
-			break;	
+			break;
 		case Resource::INTERNAL_CONFLICT: {
 			ParExeInst * inst = ((InternalConflictResource *) *res)->instruction();
 			for (InstNodeIterator node(inst) ; node ; node++) {
 				if ( (node->stage()->category() == ParExeStage::EXECUTE)
-					 && 
+					 &&
 					 (node->stage()->orderPolicy() == ParExeStage::OUT_OF_ORDER) ) {
 					node->setE(index,true);
 					((InternalConflictResource *) *res)->setNode(node);
@@ -498,17 +494,17 @@ void ParExeNode::buildContendersMasks(){
 // ----------------------------------------------------------------
 
 void ParExeGraph::createResources(){
-  
+
     int resource_index = 0;
     bool is_ooo_proc = false;
-  
+
     // build the start resource
     StartResource * new_resource = new StartResource((elm::String) "start", resource_index++);
     _resources.add(new_resource);
-	
+
     // build resource for stages and FUs
     for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
-		if (stage->category() != ParExeStage::EXECUTE) {     
+		if (stage->category() != ParExeStage::EXECUTE) {
 			for (int i=0 ; i<stage->width() ; i++) {
 				StringBuffer buffer;
 				buffer << stage->name() << "[" << i << "]";
@@ -586,7 +582,7 @@ void ParExeGraph::createResources(){
     int reg_bank_count = pf->banks().count();
     for(int i = 0; i <reg_bank_count ; i++) {
 		inputs[i].reg_bank = (otawa::hard::RegBank *) pf->banks()[i];
-		inputs[i]._is_input = 
+		inputs[i]._is_input =
 			new AllocatedTable<bool>(inputs[i].reg_bank->count());
 		inputs[i]._resource_index =
 			new AllocatedTable<int>(inputs[i].reg_bank->count());
@@ -599,7 +595,7 @@ void ParExeGraph::createResources(){
     // build the resource for the used registers
     for (InstIterator inst(_sequence) ; inst ; inst++) {
 		const elm::genstruct::Table<hard::Register *>& reads = inst->inst()->readRegs();
-	
+
 		for(int i = 0; i < reads.count(); i++) {
 			for (int b=0 ; b<reg_bank_count ; b++) {
 				if (inputs[b].reg_bank == reads[i]->bank()) {
@@ -627,20 +623,20 @@ void ParExeGraph::createResources(){
 					inputs[b]._is_input->set(writes[i]->number(), false);
 				}
 			}
-		}	
+		}
     }
-  
+
     // build the resources for out-of-order execution
     if (is_ooo_proc) {
 		int i = 0;
 		for (InstIterator inst(_sequence) ; inst ; inst++) {
 			StringBuffer buffer;
 			buffer << "extconf[" << i << "]";
-			ExternalConflictResource * new_resource = new ExternalConflictResource(buffer.toString(), inst, resource_index++);	
+			ExternalConflictResource * new_resource = new ExternalConflictResource(buffer.toString(), inst, resource_index++);
 			_resources.add(new_resource);
 			StringBuffer another_buffer;
 			another_buffer << "intconf[" << i << "]";
-			InternalConflictResource * another_new_resource = new InternalConflictResource(another_buffer.toString(), inst, resource_index++);	
+			InternalConflictResource * another_new_resource = new InternalConflictResource(another_buffer.toString(), inst, resource_index++);
 			_resources.add(another_new_resource);
 			i++;
 		}
@@ -669,10 +665,10 @@ void ParExeGraph::build(bool compressed_cod) {
 
     addEdgesForMemoryOrder();
     addEdgesForDataDependencies();
-  
+
     addEdgesForQueues();
     findContendingNodes();
-  
+
 }
 
 // ----------------------------------------------------------------
@@ -687,7 +683,7 @@ void ParExeGraph::createNodes() {
     for (InstIterator inst(_sequence) ; inst ; inst++)  {
 		// consider every pipeline stage
 		for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
-	    
+
 			// create node
 			ParExeNode *node;
 			if (stage->category() != ParExeStage::EXECUTE) {
@@ -712,7 +708,7 @@ void ParExeGraph::createNodes() {
 					throw ParExeException(elm::_ << "cannot find FU for instruction " << inst->inst()->address() << " " << inst->inst());
 				int index = 0;
 
-				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {                         
+				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {
 					ParExeNode *fu_node = new ParExeNode(this, fu_stage, inst);
 					inst->addNode(fu_node);
 					fu_stage->addNode(fu_node);
@@ -720,10 +716,10 @@ void ParExeGraph::createNodes() {
 						inst->setExecNode(fu_node);
 					index++;
 				}
-			} 
-    
+			}
+
 		} // endfor each pipeline stage
-    
+
     } // endfor each instruction
 
 }
@@ -852,7 +848,7 @@ void ParExeGraph::addEdgesForFetch(void) {
 			first_cache_line_node = next;
 			current_cache_line = cache_line;
 		}
-		//    }	
+		//    }
     }
 }
 
@@ -918,7 +914,7 @@ void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> 
 			}
 		}
     }
-  
+
     for (StageIterator stage(list) ; stage ; stage++) {
 		int count = 1;
 		int prev = 0;
@@ -935,7 +931,7 @@ void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> 
 					new ParExeEdge(previous,next,ParExeEdge::SOLID, 0, stage->name());
 					prev++;
 				}
-				else 
+				else
 					count++;
 			}
 		}
@@ -1044,23 +1040,23 @@ void ParExeGraph::findContendingNodes(){
 
     // search for contending nodes (i.e. pairs of nodes that use the same pipeline stage)
     for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
-		if (stage->orderPolicy() == ParExeStage::OUT_OF_ORDER) {	
+		if (stage->orderPolicy() == ParExeStage::OUT_OF_ORDER) {
 			if (stage->category() != ParExeStage::EXECUTE)  {
-				for (int i=0 ; i<stage->numNodes() ; i++) 
-					for (int j=0 ; j<stage->numNodes() ; j++) 
-						if (i != j) 
+				for (int i=0 ; i<stage->numNodes() ; i++)
+					for (int j=0 ; j<stage->numNodes() ; j++)
+						if (i != j)
 							stage->node(i)->addContender(stage->node(j));
 			}
 			else {
 				for (int k=0 ; k<stage->numFus() ; k++) {
 					ParExeStage *fu_stage = stage->fu(k)->firstStage();
-					for (int i=0 ; i<fu_stage->numNodes() ; i++) 
-						for (int j=0 ; j<fu_stage->numNodes() ; j++) 
-							if (i != j) 
+					for (int i=0 ; i<fu_stage->numNodes() ; i++)
+						for (int j=0 ; j<fu_stage->numNodes() ; j++)
+							if (i != j)
 								fu_stage->node(i)->addContender(fu_stage->node(j));
 				}
 			}
-		}	
+		}
     }
 }
 
@@ -1124,12 +1120,12 @@ static void escape(io::Output& out, const string& str) {
 		for(int i = 0; i < 256; i++)
 			escape_tab[i] = false;
 		for(int i = 0; i < escaped.length(); i++)
-			escape_tab[escaped[i]] = true;
+			escape_tab[int(escaped[i])] = true;
 	}
 
 	// escape the string
 	for(int i = 0; i < str.length(); i++) {
-		if(escape_tab[str[i]])
+		if(escape_tab[int(str[i])])
 			out << '\\';
 		out << str[i];
 	}
@@ -1191,7 +1187,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 		dotFile << "} ";
     dotFile << "} ";
     dotFile << "\"] ; \n";
-  
+
     // display instruction sequence
     dotFile << "\"code\" [shape=record, label= \"\\l";
     bool body = true;
@@ -1212,7 +1208,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 		dotFile << "\\l";
     }
     dotFile << "\"] ; \n";
-  
+
     // edges between info, legend, code
     if(info)
     	dotFile << "\"info\" -> \"legend\";\n";
@@ -1262,16 +1258,16 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 		}
 		dotFile << "\n";
     }
-  
+
     // display edges
     int group_number = 0;
-    for (InstIterator inst(_sequence) ; inst ; inst++) {	
+    for (InstIterator inst(_sequence) ; inst ; inst++) {
 		// dump edges
 		for (InstNodeIterator node(inst) ; node ; node++) {
 			for (Successor next(node) ; next ; next++) {
 				if ( node != inst->firstNode()
 					 ||
-					 (node->stage()->category() != ParExeStage::EXECUTE) 
+					 (node->stage()->category() != ParExeStage::EXECUTE)
 					 || (node->inst()->index() == next->inst()->index()) ) {
 
 					// display edges
@@ -1316,10 +1312,10 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 							dumpAttr(dotFile, first);
 							dotFile << "minlen=4";
 						}
-						break;	
+						break;
 					default:
 						break;
-					}	
+					}
 
 					// dump attribute end
 					dumpAttrEnd(dotFile, first);
@@ -1358,13 +1354,13 @@ ParExeGraph::ParExeGraph(
 )
 :	_ws(ws),
  	_microprocessor(proc),
+ 	_first_node(0),
+ 	_first_bb_node(0),
+ 	_last_prologue_node(0),
+ 	_last_node(0),
  	_sequence(seq),
- 	_first_node(NULL),
- 	_first_bb_node(NULL),
- 	_last_prologue_node(NULL),
- 	_last_node(NULL),
- 	_branch_penalty(2),
- 	_capacity(0)
+ 	_capacity(0),
+ 	_branch_penalty(2)
 {
 	const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION(ws);
 	if (cache && cache->instCache()) {

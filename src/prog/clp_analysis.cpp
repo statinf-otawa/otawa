@@ -418,9 +418,11 @@ void Value::widening(const Value& val) {
 	// widen((k', d', n'), (k, d, n)) = (stop(k, d, n), -D, -inf / D) with D = |d| if stop(k', d', n') = stop(k, d, n), 1 else
 	else if (val.start() <= start() && val.stop() <= stop()){
 		// go to negatives
-		intn_t absd = elm::abs(_delta);
-		int startd = start() - val.start(), stopd = stop() - val.stop();
-		if(absd != elm::abs(val.delta()) || (stopd != 0 && stopd != absd) || startd != absd)
+		uintn_t absd = elm::abs(_delta);
+		uintn_t startd = start() - val.start(), stopd = stop() - val.stop();
+		if( absd != elm::abs(val.delta())
+		|| (stopd != 0 && stopd != absd)
+		|| startd != absd)
 			absd = 1;
 		set(_kind, stop(), -absd, UMAXn / absd);
 	}
@@ -429,8 +431,8 @@ void Value::widening(const Value& val) {
 	// widen((k', d', n'), (k, d, n)) = (start(k', d', n'), D, -inf / D) with D = |d| if start(k', d', n') = start(k, d, n), 1 else
 	else if (val.start() >= start() && val.stop() >= stop()) {
 		// go the positive
-		intn_t absd = elm::abs(_delta);
-		int startd = val.start() - start(), stopd = val.stop() - stop();
+		uintn_t absd = elm::abs(_delta);
+		uintn_t startd = val.start() - start(), stopd = val.stop() - stop();
 		if(absd != elm::abs(val.delta()) || (startd != 0 && startd != absd) || stopd != absd)
 			absd = 1;
 		set(_kind, start(), absd, UMAXn / absd);
@@ -530,7 +532,7 @@ void Value::inter(const Value& val) {
 	}
 	if (val.isConst()) {
 		if((val.lower() - lower()) % delta() == 0
-		&& (val.lower() - lower()) / delta() <= mtimes())
+		&& uintn_t((val.lower() - lower()) / delta()) <= mtimes())
 			set(VAL, sta2, 0, 0);
 		else
 			set(NONE, 0, 0, 0);
@@ -699,7 +701,7 @@ void Value::ge(intn_t k) {
 	}
 
 	// b + dn >= k -> (b, d, n)
-	if(_lower + _delta * _mtimes >= k)
+	if(_lower + _delta * intn_t(_mtimes) >= k)
 		return;
 
 	// _ -> (b, d, (k - b) / d
@@ -983,16 +985,16 @@ void Value::_and(const Value& val) {
 	}
 
 	// try to rebuild AND  if threshold not reached
-	if(v.mtimes() + 1 < and_threshold) {
+	if(int(v.mtimes() + 1) < and_threshold) {
 		*this = none;
 		intn_t n = v.lower();
-		for(int i = 0; i < v.mtimes(); i++, n += v.delta())
+		for(uintn_t i = 0; i < v.mtimes(); i++, n += v.delta())
 			join(Value(VAL, n & k, 0, 0));
 		return;
 	}
 
 	// else (0, 1 << m, 1 << (n + 1 - m) - 1)
-	*this = Value(VAL, 0, 1 << m, 1 << (n + 1 - m) - 1);
+	*this = Value(VAL, 0, 1 << m, (1 << (n + 1 - m)) - 1);
 }
 
 
@@ -1132,8 +1134,8 @@ void State::set(const Value& addr, const Value& val) {
 
 	// find a value
 	else {
-		for(prev = &first, cur = first.next; cur && cur->addr < addr.lower(); prev = cur, cur = cur->next);
-		if(cur && cur->addr == addr.lower()) {
+		for(prev = &first, cur = first.next; cur && cur->addr < uintn_t(addr.lower()); prev = cur, cur = cur->next);
+		if(cur && cur->addr == uintn_t(addr.lower())) {
 			if(val.kind() != ALL)
 				cur->val = val;
 			else {

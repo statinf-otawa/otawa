@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_MICROPROCESSOR_H
@@ -43,7 +43,7 @@ namespace hard {
 	class Microprocessor;
 } // hard
 
-typedef enum instruction_category_t {	
+typedef enum instruction_category_t {
   IALU = 0,
   FALU = 1,
   MEMORY = 2,
@@ -51,10 +51,10 @@ typedef enum instruction_category_t {
   MUL = 4,
   DIV = 5,
   INST_CATEGORY_NUMBER   // must be the last value
-} instruction_category_t;	
+} instruction_category_t;
 
 instruction_category_t instCategory(Inst *inst);
- 
+
 
 
 // ----------------------------------------------------------------------
@@ -73,7 +73,7 @@ class Queue {
     : _name(name), _size(size) {}
   inline elm::String name(void)
     {return _name;}
-  inline int size(void) 
+  inline int size(void)
     {return _size;}
   inline PipelineStage<N> * fillingStage(void)
     {return _filling_stage;}
@@ -112,7 +112,7 @@ class PipelineStage {
     DELAY=6,
     NUMBER_OF_CATEGORIES=7  // must be the last value
   } pipeline_stage_category_t;
-  
+
   class FunctionalUnit {
     public :
       typedef struct fu_info_t {
@@ -121,13 +121,13 @@ class PipelineStage {
 	bool is_pipelined;
 	int min_latency; // overrides pipeline stage latency
 	int max_latency;
-	int width;	
+	int width;
 	order_policy_t order_policy;
-      } fu_info_t; 
+      } fu_info_t;
   private:
     fu_info_t _info;
     elm::genstruct::Vector<PipelineStage<N> *> _pipeline;
-    Microprocessor<N> * _processor;   
+    Microprocessor<N> * _processor;
   public:
     inline FunctionalUnit(fu_info_t& info, PipelineStage<N> *user_stage, Microprocessor<N> *proc);
     inline elm::String name(void)
@@ -152,7 +152,7 @@ class PipelineStage {
 	: elm::genstruct::Vector<PipelineStage<N> *>::Iterator(fu->_pipeline) {}
     };
   };
-  
+
   typedef struct pipeline_info_t {
     order_policy_t order_policy;
     int stage_width;
@@ -160,11 +160,11 @@ class PipelineStage {
     elm::String stage_short_name;
     pipeline_stage_category_t stage_category;
     Queue<N> *source_queue;
-    Queue<N> *destination_queue;	
+    Queue<N> *destination_queue;
     int min_latency;
     int max_latency;
   } pipeline_info_t;
-  
+
  private:
   pipeline_info_t _info;
   bool _uses_fus;
@@ -181,7 +181,7 @@ class PipelineStage {
     {return _info.order_policy;}
   inline int width(void) const
     {return _info.stage_width;}
-  inline elm::String name(void) 
+  inline elm::String name(void)
     {return _info.stage_name;}
   inline elm::String shortName(void)
     {return _info.stage_short_name;}
@@ -215,7 +215,7 @@ class PipelineStage {
       return NULL;
     return _nodes[index];
   }
-  elm::genstruct::Vector<FunctionalUnit *>& getFUs(void) 
+  elm::genstruct::Vector<FunctionalUnit *>& getFUs(void)
     {return fus;}
   inline void addBinding(Inst::kind_t kind, FunctionalUnit *fu)
     {bindings.add(pair(kind, fu));}
@@ -228,6 +228,7 @@ class PipelineStage {
     }
     cerr << "Unsupported instruction kind : " << io::hex(kind) << io::endl;
     ASSERT(0);
+    return 0;
   }
   class ExeNodeIterator: public elm::genstruct::Vector<N *>::Iterator {
   public:
@@ -239,11 +240,11 @@ class PipelineStage {
 template <class N>
 inline PipelineStage<N>::FunctionalUnit::FunctionalUnit(fu_info_t& fu_info, PipelineStage<N> *user_stage, Microprocessor<N> *proc)
    : _info(fu_info), _processor(proc) {
-   typename PipelineStage<N>::pipeline_info_t pipeline_info;	
+   typename PipelineStage<N>::pipeline_info_t pipeline_info;
    PipelineStage<N> *stage;
    elm::StringBuffer *number;
    elm::String number_string;
-   
+
    user_stage->fus.add(this);
    //pipeline_info.order_policy = user_stage->orderPolicy();
    pipeline_info.order_policy = fu_info.order_policy;
@@ -263,27 +264,27 @@ inline PipelineStage<N>::FunctionalUnit::FunctionalUnit(fu_info_t& fu_info, Pipe
        number = new elm::StringBuffer;
        *number << i;
        number_string = number->toString();
-       pipeline_info.stage_name = fu_info.name.concat(number_string); 
-       pipeline_info.stage_short_name = fu_info.short_name.concat(number_string); 
+       pipeline_info.stage_name = fu_info.name.concat(number_string);
+       pipeline_info.stage_short_name = fu_info.short_name.concat(number_string);
        delete number;
        pipeline_info.min_latency = 1;
        pipeline_info.max_latency = 1;
        pipeline_info.order_policy = PipelineStage::IN_ORDER;
-       
+
        if (i==1) {
 	 pipeline_info.source_queue = user_stage->_info.source_queue;
 	 pipeline_info.order_policy = fu_info.order_policy;
        }
        if (i==fu_info.min_latency) {
 	 pipeline_info.destination_queue = user_stage->_info.destination_queue;
-	 pipeline_info.max_latency = fu_info.max_latency - fu_info.min_latency + 1;	
+	 pipeline_info.max_latency = fu_info.max_latency - fu_info.min_latency + 1;
        }
        stage = new PipelineStage(pipeline_info, _processor);
-       this->_pipeline.add(stage);	
+       this->_pipeline.add(stage);
      }
    }
  }
- 
+
 
 
 // Microprocessor class
@@ -295,7 +296,7 @@ class Microprocessor {
   int _pipeline_stage_index;
   PipelineStage<N> * _operand_reading_stage;
   PipelineStage<N> * _operand_producing_stage;
-  
+
  public:
   Microprocessor(void);
   Microprocessor(const hard::Processor *proc);
@@ -314,19 +315,19 @@ class Microprocessor {
     {return _operand_producing_stage;}
   inline bool isLastStage(PipelineStage<N> *stage)
     {return (_pipeline.get(_pipeline.length()-1) == stage);}
-  
+
   class PipelineIterator: public elm::genstruct::Vector<PipelineStage<N> *>::Iterator {
   public:
     inline PipelineIterator(const Microprocessor<N> *processor)
       : elm::genstruct::Vector<PipelineStage<N> *>::Iterator(processor->_pipeline) {}
   };
-  
+
   class QueueIterator: public elm::genstruct::Vector<Queue<N> *>::Iterator {
   public:
     inline QueueIterator(const Microprocessor<N> *processor)
       : elm::genstruct::Vector<Queue<N> *>::Iterator(processor->_queues) {}
   };
-  
+
 };
 
 template <class N>
@@ -362,14 +363,14 @@ inline PipelineStage<N>::PipelineStage(PipelineStage<N>::pipeline_info_t & info,
     _order_name[IN_ORDER] << "IN_ORDER";
     _order_name[OUT_OF_ORDER] << "OUT_OF_ORDER";
   }
-  
+
 template <class N>
-typename PipelineStage<N>::FunctionalUnit * PipelineStage<N>::addFunctionalUnit(typename PipelineStage<N>::FunctionalUnit::fu_info_t& fu_info) {	
+typename PipelineStage<N>::FunctionalUnit * PipelineStage<N>::addFunctionalUnit(typename PipelineStage<N>::FunctionalUnit::fu_info_t& fu_info) {
 	FunctionalUnit *fu = new FunctionalUnit(fu_info, this, _processor);
 	_uses_fus = true;
 	return fu;
 }
-  
+
 
 /**
  * Build an empty microprocessor.
@@ -391,31 +392,31 @@ Microprocessor<N>::Microprocessor(void)
 
 template <class N>
 Microprocessor<N>::Microprocessor(const hard::Processor *proc)
-:	_pipeline_stage_index(0), 
+:	_pipeline_stage_index(0),
 	_operand_reading_stage(0),
 	_operand_producing_stage(0)
 {
 	ASSERT(proc);
-	
+
 	// Create queues
 	Vector<Queue<N> *> queues;
-	const Table<hard::Queue *>& oqueues = proc->getQueues(); 
+	const Table<hard::Queue *>& oqueues = proc->getQueues();
 	for(int i = 0; i < oqueues.count(); i++)
 		queues.add(addQueue(
 			oqueues[i]->getName(),
 			1 << oqueues[i]->getSize()));
-	
+
 	// Create stages
 	const Table<hard::Stage *>& ostages = proc->getStages();
 	for(int i = 0; i < ostages.count(); i++) {
 		typename PipelineStage<N>::pipeline_info_t info;
-		
+
 		// Common initialization
 		info.stage_name = ostages[i]->getName();
 		info.stage_short_name = ostages[i]->getName();
 		info.stage_width = ostages[i]->getWidth();
 		info.min_latency = info.max_latency = ostages[i]->getLatency();
-		
+
 		// Initialization according type of the stage
 		bool is_exec = false;
 		int exec_stage_index = 0;
@@ -452,10 +453,10 @@ Microprocessor<N>::Microprocessor(const hard::Processor *proc)
 			if(oqueues[j]->getOutput() == ostages[i])
 				info.source_queue = queues[j];
 		}
-		
+
 		// Create the stage
 		PipelineStage<N> *stage = addPipelineStage(info);
-		
+
 		// Add functional units if required
 		if(is_exec) {
 			setOperandReadingStage(stage);
@@ -469,12 +470,12 @@ Microprocessor<N>::Microprocessor(const hard::Processor *proc)
 				info.is_pipelined = fus[j]->isPipelined();
 				info.max_latency = fus[j]->getLatency();
 				info.min_latency = fus[j]->getLatency();
-				info.order_policy = ostages[exec_stage_index]->isOrdered() 
+				info.order_policy = ostages[exec_stage_index]->isOrdered()
 					? PipelineStage<N>::IN_ORDER : PipelineStage<N>::OUT_OF_ORDER;
 				info.width = fus[j]->getWidth();
 				stage->addFunctionalUnit(info);
 			}
-			
+
 			// Build the bindings
 			const Table<hard::Dispatch *>& dispatch = ostages[i]->getDispatch();
 			for(int j = 0; j < dispatch.count(); j++) {
@@ -488,7 +489,7 @@ Microprocessor<N>::Microprocessor(const hard::Processor *proc)
 			}
 		}
 	}
-	
+
 }
 
 
@@ -534,7 +535,7 @@ void Microprocessor<N>::dump(elm::io::Output& out_stream) {
 				}*/
 				out_stream << "\n";
 			}
-			
+
 		}
 	}
 	out_stream << "\n";

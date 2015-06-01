@@ -1,20 +1,20 @@
 /*
  *	$Id$
  *	Symbolic Expression definition and processor
- *	
+ *
  *	This file is part of OTAWA
  *	Copyright (c) 2011, IRIT UPS.
- *	
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
  *	(at your option) any later version.
- *	
+ *
  *	OTAWA is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *	GNU General Public License for more details.
- *	
+ *
  *	You should have received a copy of the GNU General Public License
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -36,7 +36,7 @@
 namespace otawa{
 
 namespace se{
-	
+
 	/************ SymbExpr methods ************/
 	SymbExpr* SymbExpr::copy(void){
 		SymbExpr *newa = NULL;
@@ -104,7 +104,7 @@ namespace se{
 				a_addr.add(b_addr[i]);
 		return a_addr;
 	}
-	
+
 	/************ SEConst methods ************/
 	SEConst* SEConst::copy(void){ return new SEConst(_val); }
 	SymbExpr& SEConst::operator=(const SEConst& expr){
@@ -126,7 +126,7 @@ namespace se{
 					  << ", 0x" << hex(_val.mtimes()) << ')');
 	}
 	void SEConst::canonize(void){}
-	
+
 	/************ SEAddr methods ************/
 	SEAddr* SEAddr::copy(void){ return new SEAddr(_val); }
 	SymbExpr& SEAddr::operator=(const SEAddr& expr){
@@ -151,7 +151,7 @@ namespace se{
 		vect.add(_val);
 		return vect;
 	}
-	
+
 	/************ SEReg methods ************/
 	SEReg* SEReg::copy(void){
 		return new SEReg(_val);
@@ -181,7 +181,7 @@ namespace se{
 		vect.add(_val);
 		return vect;
 	}
-	
+
 	/************ SENeg methods ************/
 	SENeg* SENeg::copy(void){
 		SymbExpr *newa = NULL;
@@ -207,12 +207,12 @@ namespace se{
 		// recursive call
 		if (_a)
 			_a->canonize();
-		
+
 		/* In the next two case, we'll delete this, so we make sure we are
 			referenced by a parent (and not created on the heap) */
 		if(_parent == NULL)
 			return;
-		
+
 		// [-, [K, <val>]] -> [K, eval(val * -1)]
 		if (_a && _a->op() == CONST){
 			if (_parent->a() == this){
@@ -234,7 +234,7 @@ namespace se{
 			}
 		}
 	}
-	
+
 	/************ SEAdd methods ************/
 	SEAdd* SEAdd::copy(void){
 		return new SEAdd(_a->copy(), _b->copy());
@@ -263,7 +263,7 @@ namespace se{
 			_a->canonize();
 		if (_b)
 			_b->canonize();
-		
+
 		// [+, [K, <val1>], [K, <val2>]] -> [K, eval(<val1> + <val2>)]
 		// This case will replace this in _parent !
 		if (_parent && _a && _a->op() == CONST && _b && _b->op() == CONST){
@@ -277,14 +277,14 @@ namespace se{
 				return;
 			}
 		}
-		
+
 		// [+, [K, <val1>], <expr1>] -> [+, <expr1>, [K, <val1>]]
 		if (_a && _a->op() == CONST && _b){
 			SymbExpr *expr = _b;
 			_b = _a;
 			_a = expr;
 		}
-		
+
 		// [+, [+, V, <expr1>], <expr2>] -> [+, V, canonize([+, <expr1>, <expr2>])]
 		// with V either a SEReg or a SEAddr
 		if (_a && _a->op() == ADD && _a->a() &&
@@ -295,7 +295,7 @@ namespace se{
 			set_a(_a->a());
 		}
 	}
-	
+
 	/************ SECmp utility ************/
 	/* reverse a logical operator (to reverse operand in SECmp */
 	op_t reverse(op_t logop){
@@ -321,7 +321,7 @@ namespace se{
 			return logop;
 		}
 	}
-	
+
 	/************ SECmp methods ************/
 	SECmp* SECmp::copy(void){
 		if (_b == NULL)
@@ -395,22 +395,22 @@ namespace se{
 		s = s << ']';
 		return s;
 	}
-	
+
 	void SECmp::canonize(void){
 		// recursive call
 		if (_a)
 			_a->canonize();
 		if (_b)
 			_b->canonize();
-		
+
 		if (_op == CMP || _op == CMPU)
 			return;		// we need a determinated CMP for further canonization
-		
+
 		bool cancont;
-		
+
 		do{
 			cancont=false;
-			
+
 			// [<log_op>, [cmp, <expr1>, <expr2>]] -> [<log_op>, <expr1>, expr2>]
 			if (_a && _a->op() == CMP && _b == NULL){
 				set_b(_a->b()); // we must set b first, because we'll erase _a
@@ -440,7 +440,7 @@ namespace se{
 				set_a(_a->a());
 				cancont = true;
 			}
-			
+
 			// [<log_op>, [K, <valeur>], <expr>] && <expr> != const
 			// -> [reverse(<log_op>), <expr>, [K, <valeur>]]
 			if (_a && _b && _a->op() == CONST && _b->op() != CONST){
@@ -450,7 +450,7 @@ namespace se{
 				_a = expr;
 				cancont = true;
 			}
-			
+
 			// [<log_op>, [+, <expr0>, <expr1>], <expr2>]
 			// -> [<log_op>, <expr0>, canonize([+, <expr2>, [-, <expr1>]])]
 			if (_a && _b && _a->op() == ADD && _a->a() && _a->b()){
@@ -460,7 +460,7 @@ namespace se{
 				_b->canonize();
 				cancont = true;
 			}
-			
+
 			// [<log_op>, [-, <expr0>], expr1]
 			// -> [reverse(<log_op>), <expr0>, canonize([-, <expr1>])]
 			if (_a && _b && _a->op() == NEG && _a->a()){
@@ -474,7 +474,7 @@ namespace se{
 			}
 		}while(cancont);
 	}
-	
+
 	SECmp* SECmp::logicalNot(void){
 		/* not the logical operator */
 		op_t newop;
@@ -520,17 +520,17 @@ namespace se{
 		SECmp *notse = new SECmp(newop, _a->copy(), _b->copy());
 		return notse;
 	}
-	
+
 	Identifier<Vector<SECmp *> > REG_FILTERS("otawa::se::REG_FILTERS");
 	Identifier<Vector<SECmp *> > ADDR_FILTERS("otawa::se::ADDR_FILTERS");
-	
+
 	SECmp *getFilterForReg(SECmp *se, V reg, clp::ClpStatePack &pack, Inst *i, int sem, Vector<V> &used_reg, Vector<V> &used_addr){
-		/* FIXME : This could be otptimized: we do a CLP analysis from the 
+		/* FIXME : This could be otptimized: we do a CLP analysis from the
 			begining of the BB each time we replace a register by its value */
 		clp::State state = pack.state_before(i->address(), sem);
-		
+
 		ASSERT(reg.isConst());
-		
+
 		// replace other registers
 		for (int i=0; i < used_reg.length(); i++){
 			ASSERT(used_reg[i].isConst());
@@ -544,11 +544,11 @@ namespace se{
 				delete val;
 			}
 		}
-		
+
 		// replace other memory refs
 		for (int i=0; i < used_addr.length(); i++){
 			ASSERT(used_addr[i].isConst());
-			// get the actual value of used_addr[i] 
+			// get the actual value of used_addr[i]
 			clp::Value clpval = state.get(used_addr[i]);
 			SEConst *val = new SEConst(clpval);
 			SEAddr *a = new SEAddr(used_addr[i]);
@@ -556,7 +556,7 @@ namespace se{
 			delete a;
 			delete val;
 		}
-		
+
 		// canonize
 		se->canonize();
 		// check if we have a filter
@@ -568,14 +568,14 @@ namespace se{
 			return NULL;
 		}
 	}
-	
+
 	SECmp *getFilterForAddr(SECmp *se, V addr, clp::ClpStatePack &pack, Inst *i, int sem, Vector<V> &used_reg, Vector<V> &used_addr){
-		/* FIXME: this could be otptimized: we do a CLP analysis from the 
+		/* FIXME: this could be otptimized: we do a CLP analysis from the
 			begining of the BB each time we replace an address by its value */
 			clp::State state = pack.state_before(i->address(), sem);
-		
+
 		ASSERT(addr.isConst());
-		
+
 		// replace other registers
 		for (int i=0; i < used_reg.length(); i++){
 			ASSERT(used_reg[i].isConst());
@@ -587,12 +587,12 @@ namespace se{
 			delete r;
 			delete val;
 		}
-		
+
 		// replace other memory refs
 		for (int i=0; i < used_addr.length(); i++){
 			ASSERT(used_addr[i].isConst());
 			if (used_addr[i] != addr){
-				// get the actual value of used_addr[i] 
+				// get the actual value of used_addr[i]
 				clp::Value clpval = state.get(used_addr[i]);
 				SEConst *val = new SEConst(clpval);
 				SEAddr *a = new SEAddr(used_addr[i]);
@@ -601,7 +601,7 @@ namespace se{
 				delete val;
 			}
 		}
-		
+
 		// canonize
 		se->canonize();
 		// check if we have a filter
@@ -613,7 +613,7 @@ namespace se{
 			return NULL;
 		}
 	}
-	
+
 	/**
 	 * Build a filter and install them on the current BB.
 	 * @param _bb	BB to work on.
@@ -954,6 +954,7 @@ namespace se{
 		case sem::ULE:		return sem::UGT;
 		case sem::UGE:		return sem::ULT;
 		case sem::UGT:		return sem::ULE;
+		default:			ASSERT(false); return sem::NO_COND;
 		}
 	}
 
@@ -1015,8 +1016,8 @@ namespace se{
 			v.reverse();
 		}*/
 	}
-	
-	
+
+
 } //se
 
 } // otawa

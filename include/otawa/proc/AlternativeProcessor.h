@@ -40,7 +40,7 @@ public:
 
 	class AlternativeSet: public genstruct::Vector<const Alternative *> {
 	public:
-		inline AlternativeSet& add(const Alternative& alt) { genstruct::Vector<const Alternative *>::add(&alt); };
+		inline AlternativeSet& add(const Alternative& alt) { genstruct::Vector<const Alternative *>::add(&alt); return *this; };
 	};
 
 	AlternativeProcessor(AlternativeSet& alts, AbstractRegistration& r);

@@ -452,6 +452,8 @@ Symbol *Process::findSymbolAt(const Address& address) {
 					case Symbol::FUNCTION:
 						builder.add(sym->address().offset(), sym->address().offset() + sym->size(), *sym);
 						break;
+					default:
+						break;
 					}
 		smap = new stree::Tree<Address::offset_t, Symbol *>();
 		builder.make(*smap);

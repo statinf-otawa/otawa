@@ -158,10 +158,11 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 		// record stats
 		total_cnt++;
 		switch(cache::CATEGORY(lblock)) {
-		case cache::ALWAYS_HIT:		ah_cnt++; break;
-		case cache::ALWAYS_MISS:	am_cnt++; break;
-		case cache::FIRST_MISS:		pers_cnt++; break;
-		case cache::NOT_CLASSIFIED:	nc_cnt++; break;
+		case cache::ALWAYS_HIT:		ah_cnt++; 		break;
+		case cache::ALWAYS_MISS:	am_cnt++; 		break;
+		case cache::FIRST_MISS:		pers_cnt++; 	break;
+		case cache::NOT_CLASSIFIED:	nc_cnt++; 		break;
+		default:					ASSERT(false);	break;
 		}
 		if(logFor(LOG_BB)) {
 			log << "\t\t" << lblock->address() << ": " << *cache::CATEGORY(lblock);

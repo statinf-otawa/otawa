@@ -30,6 +30,8 @@ namespace otawa {
 	int fft_line = 0;
 }
 
+/* work-around ugly generated code */
+#pragma GCC diagnostic ignored "-Wunused-function"
 %}
 
 %option noyywrap
