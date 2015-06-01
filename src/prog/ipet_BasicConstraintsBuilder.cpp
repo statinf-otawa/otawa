@@ -117,6 +117,8 @@ void BasicConstraintsBuilder::addEntryConstraint(System *system, CFG *cfg, Basic
 		c = m(label) + x(VAR(called->entry())) == 0.;
 		CALLING_CONSTRAINT(called) = &c;
 	}
+	else
+		c = *CALLING_CONSTRAINT(called);
 	c += x(var);
 }
 
