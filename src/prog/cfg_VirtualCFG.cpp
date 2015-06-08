@@ -143,8 +143,8 @@ BasicBlock *exit) {
 					if(edge->kind() == Edge::CALL) {
 						called = edge->calledCFG();
 						if (DONT_INLINE(called))
-						        called = NULL;
-                        }
+						        called = 0;
+					}
 
 			// Look edges
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
@@ -226,7 +226,7 @@ VirtualCFG::VirtualCFG(CFG *cfg, bool inlined)
 /**
  * Build a new empty VirtualCFG
  */
-VirtualCFG::VirtualCFG(bool addEntryExit) {
+VirtualCFG::VirtualCFG(bool addEntryExit): _cfg(0) {
   if (addEntryExit) {
     _bbs.add(&_entry);
     _bbs.add(&_exit);
