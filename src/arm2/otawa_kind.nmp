@@ -24,14 +24,14 @@ let IS_NO_DEST			= 0x10000000
 let IS_BL_0				= 0x08000000
 let IS_BL_1				= 0x04000000
 let IS_BX_IP			= 0x02000000
-let IS_THUMB_BX			= 0x01000000			
+let IS_THUMB_BX			= 0x01000000
 
 
 // useful mode extensions
 extend regShift
 	reg_num = r.number
 	no_shift = 0
-	otawa_kind = IS_SHIFTED 
+	otawa_kind = IS_SHIFTED
 
 extend immShift
 	reg_num = r.number
@@ -70,7 +70,7 @@ extend B_thumb
 		| (if cond == 15 then IS_TRAP else 0 endif)
 
 extend BKPT_thumb
-	otawa_kind = IS_CONTROL | IS_TRAP 
+	otawa_kind = IS_CONTROL | IS_TRAP
 
 extend BLX1_thumb
 	otawa_kind =
@@ -78,7 +78,7 @@ extend BLX1_thumb
 		case 0b00: IS_CONTROL
 		case 0b01: IS_BL_1 | IS_CONTROL | IS_CALL | (if offs == 0 then IS_RETURN else 0 endif)
 		case 0b10: IS_BL_0 | IS_ALU
-		case 0b11: IS_BL_1 | IS_CONTROL | IS_CALL | (if offs == 0 then IS_RETURN else 0 endif) 
+		case 0b11: IS_BL_1 | IS_CONTROL | IS_CALL | (if offs == 0 then IS_RETURN else 0 endif)
 		}
 
 extend BLX2_thumb
@@ -102,7 +102,7 @@ extend MOV_shr
 			IS_ALU | IS_INT
 		endif)
 		| (if cond.value == 14 then 0 else IS_COND endif)
- 
+
 extend CMP_imm, CMN_imm, TEQ_imm, TST_imm
 	otawa_kind =
 		  IS_ALU
@@ -119,13 +119,26 @@ extend CMP_shr, CMN_shr, TEQ_shr, TST_shr
 		| (if cond.value == 14 then 0 else IS_COND endif)
 
 extend ADD_imm, ADC_imm, AND_imm, BIC_imm, EOR_imm, MOV_imm, MVN_imm,
-ORR_imm, RSB_imm, RSC_imm, SBC_imm, SUB_imm
+ORR_imm, RSB_imm, RSC_imm, SBC_imm
 	otawa_kind =
 		  IS_ALU
 		| IS_INT
 		| (if cond.value == 14 then 0 else IS_COND endif)
 		| (if rd == 15 then IS_CONTROL else 0 endif)
 		| IS_IMMEDIATE
+
+extend SUB_imm
+	otawa_kind =
+		// return from IRQ
+		if rd == 15 && rn == 14 && sets && shifter_operand == 4 then IS_CONTROL | IS_RETURN | IS_TRAP
+		// usual processing
+		else
+			  IS_ALU
+			| IS_INT
+			| (if cond.value == 14 then 0 else IS_COND endif)
+			| (if rd == 15 then IS_CONTROL else 0 endif)
+			| IS_IMMEDIATE
+		endif
 
 extend ADC_shr, ADD_shr, AND_shr, BIC_shr, EOR_shr, MVN_shr,
 ORR_shr, RSB_shr, RSC_shr, SBC_shr, SUB_shr
@@ -184,7 +197,7 @@ extend POP_thumb
 		| (if P then IS_CONTROL | IS_RETURN else 0 endif)
 
 extend PUSH_thumb, STMIA_thumb
-	otawa_kind = IS_MEM | IS_STORE | IS_MULTI | IS_INT 
+	otawa_kind = IS_MEM | IS_STORE | IS_MULTI | IS_INT
 
 extend LDR_imm, LDR_shr
  	otawa_kind =
@@ -193,7 +206,7 @@ extend LDR_imm, LDR_shr
  		| IS_LOAD
  		| (if cond.value == 14 then 0 else IS_COND endif)
  		| (if rd == 15 then IS_CONTROL else 0 endif)
- 		| (if rd == 15 && rn == 13 then IS_RETURN else 0 endif) 
+ 		| (if rd == 15 && rn == 13 then IS_RETURN else 0 endif)
 
 extend STR_imm, STR_shr
  	otawa_kind =
@@ -225,10 +238,10 @@ LDRSH_imm, LDRSH_shr
 extend LDR_imm_thumb, LDR_shr_thumb, LDR_imm2_thumb, LDR_imm3_thumb,
 LDRB_imm_thumb, LDRB_shr_thumb, LDRH_imm_thumb, LDRH_shr_thumb,
 LDRSB_thumb, LDRSH_thumb
-	otawa_kind = IS_MEM | IS_LOAD | IS_INT 
+	otawa_kind = IS_MEM | IS_LOAD | IS_INT
 
 
- 
+
 // ****** special instructions extensions ******
 
 extend MSR_imm, MSR_shr
@@ -236,7 +249,7 @@ extend MSR_imm, MSR_shr
 		  IS_ALU
 		| IS_INT
  		| (if cond.value == 14 then 0 else IS_COND endif)
- 
+
 extend MRS
 	otawa_kind =
 		  IS_ALU
