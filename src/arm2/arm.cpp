@@ -21,6 +21,7 @@
  */
 
 #include <otawa/prog/Loader.h>
+#include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/hard.h>
 #include <gel/gel.h>
 #include <gel/gel_elf.h>
@@ -951,9 +952,16 @@ public:
 };
 
 
+// plugin definition
+class Plugin: public otawa::ProcessorPlugin {
+public:
+	Plugin(void): otawa::ProcessorPlugin("otawa/arm", Version(VERSION), OTAWA_PROC_VERSION) {
+	}
+};
+
 } }		// otawa::arm2
 
 // hooks
 otawa::arm2::Loader OTAWA_LOADER_HOOK;
 otawa::arm2::Loader& arm2_plugin = OTAWA_LOADER_HOOK;
-
+otawa::arm2::Plugin OTAWA_PROC_HOOK;

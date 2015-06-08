@@ -41,3 +41,4 @@ target_link_libraries(${PROC} ${GLISS_LIB})
 # installation
 install(TARGETS ${PROC} DESTINATION "${LOADERDIR}")
 install(FILES elf_${ELF_NUM}.eld DESTINATION "${LOADERDIR}")
+install(FILES arm.eld DESTINATION "${PROCDIR}/otawa")
