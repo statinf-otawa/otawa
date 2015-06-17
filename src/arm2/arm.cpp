@@ -122,15 +122,24 @@ public:
 	}
 
 	virtual Inst *execute(Inst *inst) {
+
+		// execute current instruction
 		dr = dw = false;
 		arm_inst_t *_inst = arm_decode(decoder, inst->address().offset());
 		arm_execute(state, _inst);
 		arm_free_inst(_inst);
+
+		// get next instruction
+		Inst *next = inst->nextInst();
+		if(next->address().offset() == state->GPR[15])
+			return next;
+		else
+			return this->process()->findInstAt(state->GPR[15]);
 	}
 
 	// register access
 	virtual void setSP(const Address& addr) {
-		state->GPR[15] = addr.offset();
+		state->GPR[13] = addr.offset();
 	}
 
 	// memory accesses
@@ -253,7 +262,7 @@ class Inst: public otawa::Inst {
 public:
 
 	inline Inst(Process& process, kind_t kind, Address addr, int size)
-		: proc(process), _kind(kind), _addr(addr), isRegsDone(false), _size(size) {
+		: proc(process), _kind(kind), _size(size), _addr(addr), isRegsDone(false) {
 		}
 
 	// Inst overload
@@ -361,11 +370,16 @@ public:
 	:	otawa::Process(manager, props),
 	 	_start(0),
 	 	oplatform(pf),
+	 	_platform(0),
 		_memory(0),
-		init(false),
+		_decoder(0),
 		map(0),
+		_file(0),
+		argc(0),
+		argv(0),
+		envp(0),
 		no_stack(true),
-		_file(0)
+		init(false)
 	{
 		ASSERTP(manager, "manager required");
 		ASSERTP(pf, "platform required");
@@ -463,7 +477,7 @@ public:
 		// build the GLISS image
 		gel_image_info_t iinfo;
 		gel_image_infos(gimage, &iinfo);
-		for(int i = 0; i < iinfo.membersnum; i++) {
+		for(t::uint32 i = 0; i < iinfo.membersnum; i++) {
 			gel_cursor_t cursor;
 			gel_block2cursor(iinfo.members[i], &cursor);
 			arm_mem_write(_memory,
@@ -674,9 +688,9 @@ public:
 		for (loc = gel_first_line(&iter, map); loc.file; loc = gel_next_line(&iter)) {
 			cstring lfile = loc.file;
 			if (file == loc.file || lfile.endsWith(file)) {
-				if (line == loc.line)
+				if (t::uint32(line) == loc.line)
 					addresses.add(pair(Address(loc.low_addr), Address(loc.high_addr)));
-				else if(loc.file == ploc.file && line > ploc.line && line < loc.line)
+				else if(loc.file == ploc.file && t::uint32(line) > ploc.line && t::uint32(line) < loc.line)
 					addresses.add(pair(Address(ploc.low_addr), Address(ploc.high_addr)));
 			}
 			ploc = loc;

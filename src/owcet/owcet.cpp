@@ -20,8 +20,9 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/app/Application.h>
 #include <elm/option/StringList.h>
+#include <elm/sys/System.h>
+#include <otawa/app/Application.h>
 #include <otawa/script/Script.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/util/FlowFactLoader.h>
@@ -184,18 +185,22 @@ protected:
 		// display the result
 		ot::time wcet = ipet::WCET(workspace());
 		if(wcet == -1)
-			throw otawa::Exception("no WCET computed (see errors above).");
+			cerr << "ERROR: no WCET computed (see errors above).";
 		else
 			cout << "WCET[" << entry << "] = " << ipet::WCET(workspace()) << " cycles\n";
 
 		// ILP dump
 		if(ilp_dump) {
 			ilp::System *sys = ipet::SYSTEM(workspace());
-			sys->dump(out);
+			if(sys) {
+				OutStream *out = elm::sys::System::createFile(entry + ".lp");
+				sys->dumpLPSolve(*out);
+				delete out;
+			}
 		}
 
 		// display statistics
-		if(display_stats) {
+		if(wcet >= 0 && display_stats) {
 			bool found = false;
 
 			// traverse all stats
