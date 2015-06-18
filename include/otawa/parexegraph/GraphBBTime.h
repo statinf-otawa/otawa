@@ -341,7 +341,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		int index = 0;
 		for (PathContext::BasicBlockIterator block(*ctxt) ; block ; block++){
 			if (block == ctxt->mainBlock())
-				part = BODY;
+				part = BLOCK;
 			for(BasicBlock::InstIterator inst(block); inst; inst++) {
 				ParExeInst * par_exe_inst = new ParExeInst(inst, block, part, index++);
 				seq->addLast(par_exe_inst);

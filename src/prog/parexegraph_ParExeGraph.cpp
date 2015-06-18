@@ -397,7 +397,6 @@ void ParExeGraph::initDelays() {
 					 &&
 					 (node->stage()->orderPolicy() == ParExeStage::OUT_OF_ORDER) ) {
 					node->setE(index,true);
-					node->setContentionDep(inst->index());
 				}
 			}
 		}
@@ -652,18 +651,16 @@ void ParExeGraph::createResources(){
 
 // ----------------------------------------------------------------
 
-void ParExeGraph::build(bool compressed_cod) {
+void ParExeGraph::build() {
 
-    createResources();
-
+    createResources();																			// ======== PLAN IS TO REMOVE THIS FROM THERE - RESOURCE LIST SHOULD BE CREATED OUTSIDE
     createNodes();
-    findDataDependencies();
-
     addEdgesForPipelineOrder();
     addEdgesForFetch();
     addEdgesForProgramOrder();
 
     addEdgesForMemoryOrder();
+    findDataDependencies();
     addEdgesForDataDependencies();
 
     addEdgesForQueues();
@@ -673,139 +670,90 @@ void ParExeGraph::build(bool compressed_cod) {
 
 // ----------------------------------------------------------------
 
-ParExePipeline *ParExeGraph::pipeline(ParExeStage *stage, ParExeInst *inst) {
+ParExePipeline *ParExeGraph::pipeline(ParExeStage *stage, ParExeInst *inst) {						// ======= CHECK IF CAN BE IMPROVED
 	return stage->findFU(inst->inst()->kind());;
 }
-
-void ParExeGraph::createNodes() {
-
-    // consider every instruction
-    for (InstIterator inst(_sequence) ; inst ; inst++)  {
-		// consider every pipeline stage
-		for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
-
-			// create node
-			ParExeNode *node;
-			if (stage->category() != ParExeStage::EXECUTE) {
-				node = new ParExeNode(this, stage, inst);
-				inst->addNode(node);
-				stage->addNode(node);
-				if (stage->category() == ParExeStage::FETCH) {
-					inst->setFetchNode(node);
-				}
-				if (!_first_node)
-					_first_node = node;
-				if (inst->codePart() == PROLOGUE)
-					_last_prologue_node = node;
-				if (!_first_bb_node && (inst->codePart() == BODY) )
-					_first_bb_node = node;
-				_last_node = node;
-			}
-			else {
-				// add FU nodes
-				ParExePipeline *fu = pipeline(stage, inst);
-				if(!fu)
-					throw ParExeException(elm::_ << "cannot find FU for instruction " << inst->inst()->address() << " " << inst->inst());
-				int index = 0;
-
-				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {
-					ParExeNode *fu_node = new ParExeNode(this, fu_stage, inst);
-					inst->addNode(fu_node);
-					fu_stage->addNode(fu_node);
-					if (index == 0)
-						inst->setExecNode(fu_node);
-					index++;
-				}
-			}
-
-		} // endfor each pipeline stage
-
-    } // endfor each instruction
-
-}
-
 
 // ----------------------------------------------------------------
 
 /**
- * Compute for each first FU node which is the FU node producing
- * the required data (and fill the producer list of a FU node).
+ * Relates a node to an instruction in the sequence.
  */
-void ParExeGraph::findDataDependencies() {
 
-	// allocate the rename table
-    otawa::hard::Platform *pf = _ws->platform();
-    AllocatedTable<rename_table_t> rename_tables(pf->banks().count());
-    int reg_bank_count = pf->banks().count();
-    for(int i = 0; i <reg_bank_count ; i++) {
-		rename_tables[i].reg_bank = (otawa::hard::RegBank *) pf->banks()[i];
-		rename_tables[i].table =
-			new AllocatedTable<ParExeNode *>(rename_tables[i].reg_bank->count());
-		for (int j=0 ; j<rename_tables[i].reg_bank->count() ; j++)
-			rename_tables[i].table->set(j,NULL);
-    }
-
-    // consider every instruction
-    for (InstIterator inst(_sequence) ; inst ; inst++)  {
-
-    	// find first and last FU nodes
-		ParExeNode *first_fu_node = NULL, *last_fu_node = NULL;
-		for (InstNodeIterator node(inst); node ; node++){
-			if (node->stage()->category() == ParExeStage::FU){
-				if (!first_fu_node)
-					first_fu_node = node;
-				last_fu_node = node;
-			}
-		}
-
-		// check for data dependencies
-		const elm::genstruct::Table<hard::Register *>& reads = first_fu_node->inst()->inst()->readRegs();
-		for(int i = 0; i < reads.count(); i++) {
-			for (int b=0 ; b<reg_bank_count ; b++) {
-				if (rename_tables[b].reg_bank == reads[i]->bank()) {
-					ParExeNode *producer = rename_tables[b].table->get(reads[i]->number());
-					if (producer != NULL) {
-						first_fu_node->addProducer(producer);
-					}
-				}
-			}
-		}
-
-		// fu_node is the last FU node
-		const elm::genstruct::Table<hard::Register *>& writes = last_fu_node->inst()->inst()->writtenRegs();
-		for(int i = 0; i < writes.count(); i++) {
-			for (int b=0 ; b<reg_bank_count ; b++) {
-				if (rename_tables[b].reg_bank == writes[i]->bank()) {
-					rename_tables[b].table->set(writes[i]->number(),last_fu_node);
-				}
-			}
-		}
-
-    } // endfor each instruction
-
-    // Free rename tables
-    for(int i = 0; i <reg_bank_count ; i++)
-		delete rename_tables[i].table;
+void ParExeInst::addNode(ParExeNode * node)  {
+	_nodes.add(node);
+	if (node->stage()->category() == ParExeStage::FETCH)
+		_fetch_node = node;
+	else if ((node->stage()->category() == ParExeStage::FETCH) && !_exec_node)
+		_exec_node = node;
 
 }
 
+// ----------------------------------------------------------------
 
 /**
- * Called to add edges representing the order of stages traversed by an instruction.
+ * Creates nodes in the graph: one node for each (instruction/pipeline_stage) pair.
+ * For the execution stage, creates as many nodes as stages in the pipeline of the required functional unit.
+ */
+
+void ParExeGraph::createNodes() {
+
+	ParExeNode *node;
+    for (InstIterator inst(_sequence) ; inst ; inst++)  {
+		for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
+			if (stage->category() != ParExeStage::EXECUTE) {
+				node = new ParExeNode(this, stage, inst);
+				// register the new node to the related instruction and pipeline stage
+				inst->addNode(node);
+				stage->addNode(node);
+				_last_node = node;
+			}
+			else {		// EXECUTE stage => expand functional unit's pipeline
+				ParExePipeline *fu = pipeline(stage, inst);
+				assert(fu);
+//				if(!fu)																																// ======== TO BE REMOVED
+//					throw ParExeException(elm::_ << "cannot find FU for instruction " << inst->inst()->address() << " " << inst->inst());
+//				int index = 0;																														// ======== TO BE REMOVED
+				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {
+					ParExeNode *fu_node = new ParExeNode(this, fu_stage, inst);
+					inst->addNode(fu_node);
+					fu_stage->addNode(fu_node);
+//					if (index == 0)																													// ======== TO BE REMOVED
+//						inst->setExecNode(fu_node);
+//					index++;
+				}
+			}
+		}
+    }
+}
+
+
+
+
+
+/**
+ * Adds edges that represent the order of stages in the pipeline.
  */
 void ParExeGraph::addEdgesForPipelineOrder(void) {
-    for (InstIterator inst(_sequence) ; inst ; inst++)
-		for (int i=0 ; i<inst->numNodes()-1 ; i++)
-			new ParExeEdge(inst->node(i), inst->node(i+1), ParExeEdge::SOLID);
+    for (InstIterator inst(_sequence) ; inst ; inst++){
+    	ParExeNode *previous = NULL;
+    	for (ParExeInst::NodeIterator node(inst); node ; node++){
+    		if (previous)
+    			new ParExeEdge(previous, node, ParExeEdge::SOLID);
+    		previous = node;
+    	}
+    	//		for (int i=0 ; i<inst->numNodes()-1 ; i++)																							// ========= TO BE REMOVED
+    	//			new ParExeEdge(inst->node(i), inst->node(i+1), ParExeEdge::SOLID);
+    }
 }
 
 
 /**
- * Add edge for fetch blocking, that is, edges ensuring that instruction in the same
- * block are fetched in the same and that instructions in sequence owned by different blocks
- * require two fetches to be obtained.
+ * Add edges for fetch timing, that is edges ensuring that instruction in the same
+ * block are fetched in the same cycle and that instructions in sequence belonging to different memory blocks
+ * require are fetched in two cycles.
  *
- * For example, for a block size of 16 with fixed size instructions of 4, the instruction
+ * For example, for a block size of 16 with fixed-size instructions of 4 bytes, the instruction
  * sequence is marked with fetches bounds:
  * @li start of basic block
  * @li 0x100C	fetch
@@ -817,78 +765,68 @@ void ParExeGraph::addEdgesForPipelineOrder(void) {
  * @li 0x1014
  */
 void ParExeGraph::addEdgesForFetch(void) {
-	static string cache_trans_msg = "cache", cache_inter_msg = "line", branch_msg = "branch";
+	static string cache_trans_msg = "cache", cache_inter_msg = "line", branch_msg = "branch";			// for debug
     ParExeStage *fetch_stage = _microprocessor->fetchStage();
-
-    // traverse all fetch nodes
     ParExeNode * first_cache_line_node = fetch_stage->firstNode();
-    address_t current_cache_line = fetch_stage->firstNode()->inst()->inst()->address().offset() /  _cache_line_size;
-    for(int i=0 ; i<fetch_stage->numNodes()-1 ; i++) {
-		ParExeNode *node = fetch_stage->node(i);
-		ParExeNode *next = fetch_stage->node(i+1);
+    address_t current_cache_line = first_cache_line_node->inst()->inst()->address().offset() / _cache_line_size;
+    address_t cache_line;
 
-		// taken banch ?
-		if (node->inst()->inst()->topAddress() != next->inst()->inst()->address()){
-			// fixed by casse: topAddress() is address() + size()
-			ParExeEdge * edge = new ParExeEdge(node, next, ParExeEdge::SOLID, 0, branch_msg);
-			edge->setLatency(_branch_penalty); // taken branch penalty when no branch prediction is enabled
-			edge = new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID, cache_inter_msg);
-			edge->setLatency(_branch_penalty);
-		}
-		else
-			new ParExeEdge(node, next, ParExeEdge::SLASHED);
+    // iterates on fetch nodes
+//    for(int i=0 ; i<fetch_stage->numNodes()-1 ; i++) {																						// ========= TO BE REMOVED
+//		ParExeNode *node = fetch_stage->node(i);
+//		ParExeNode *next = fetch_stage->node(i+1);
+//
+//		// taken banch ?
+//		if (node->inst()->inst()->topAddress() != next->inst()->inst()->address()){
+//			// fixed by casse: topAddress() is address() + size()
+//			ParExeEdge * edge = new ParExeEdge(node, next, ParExeEdge::SOLID, 0, branch_msg);
+//			edge->setLatency(_branch_penalty); // taken branch penalty when no branch prediction is enabled
+//			edge = new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID, cache_inter_msg);
+//			edge->setLatency(_branch_penalty);
+//		}
+//		else
+//			new ParExeEdge(node, next, ParExeEdge::SLASHED);
+//
+//		// new cache line?
+//		address_t cache_line = next->inst()->inst()->address().offset() /  _cache_line_size;
+//		if ( cache_line != current_cache_line){
+//			new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID, 0, cache_trans_msg);
+//			if(first_cache_line_node != node)
+//				new ParExeEdge(node, next, ParExeEdge::SOLID, 0, cache_inter_msg);
+//			first_cache_line_node = next;
+//			current_cache_line = cache_line;
+//		}
+//    }
+    ParExeNode *previous = NULL;
+    for (ParExeStage::NodeIterator node(fetch_stage) ; node ; node++){
+    	if (previous){
+    		if (previous->inst()->inst()->topAddress() != node->inst()->inst()->address()){
+    			// if (address(previous)+sizeof(inst) != address(node)) => instructions not in sequence (taken branch)
+    			ParExeEdge * edge = new ParExeEdge(previous, node, ParExeEdge::SOLID, _branch_penalty, branch_msg);
+    			edge = new ParExeEdge(first_cache_line_node, node, ParExeEdge::SOLID, _branch_penalty,cache_inter_msg);
+    		}
+    		else
+    			new ParExeEdge(previous, node, ParExeEdge::SLASHED);
+    		cache_line = node->inst()->inst()->address().offset() / _cache_line_size;
+    		if ( cache_line != current_cache_line){
+    			new ParExeEdge(first_cache_line_node, node, ParExeEdge::SOLID, 0, cache_trans_msg);
+    			if(first_cache_line_node != previous)
+    				new ParExeEdge(previous, node, ParExeEdge::SOLID, 0, cache_inter_msg);
+    			first_cache_line_node = node;
+    			current_cache_line = cache_line;
+    		}
 
-		// new cache line?
-		//if (cache)         FIXME !!!!!!!!!!!!!!!
-		address_t cache_line = next->inst()->inst()->address().offset() /  _cache_line_size;
-		if ( cache_line != current_cache_line){
-			new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID, 0, cache_trans_msg);
-			if(first_cache_line_node != node)
-				new ParExeEdge(node, next, ParExeEdge::SOLID, 0, cache_inter_msg);
-			first_cache_line_node = next;
-			current_cache_line = cache_line;
-		}
-		//    }
+    	}
+    	previous = node;
     }
 }
 
 
-/**
- * This function add edges for the fetch stage. This function is only valid
- * if there is not instruction cache. Basically, it adds slashed edges between each
- * instruction except if an instruction in the sequence is the target of the branch
- * of the previous instruction. In this case, it adds a solid edge.
- */
-void ParExeGraph::addEdgesForFetchWithDecomp(void) {
-
-
-	// add edges for program order
-	elm::genstruct::SLList<ParExeStage *> list;
-	list.add(_microprocessor->fetchStage());
-	addEdgesForProgramOrder(&list);
-
-	// do not forget the branch solid edge
-	ParExeNode *branch = 0;
-	for(ParExeStage::NodeIterator node(_microprocessor->fetchStage()); node; node++) {
-
-		// previously a branch
-		if(branch && branch->inst()->inst()->topAddress() != node->inst()->inst()->address())
-			new ParExeEdge(branch, node, ParExeEdge::SOLID, _branch_penalty);
-
-		// is it a branch?
-		if(node->inst()->inst()->isControl())
-			branch = node;
-		else
-			branch = 0;
-	}
-}
-
 
 /**
- * This function is called to add edges between the nodes to order the stage execution
- * of instruction according to the program order.
- * @param list_of_stages	List of stages to build the edges for
- * 							(if an empty pointer is passed, one is created containing the in-order stages).
+ * Adds edges to reflect processing of instruction in the order of the program.
+  * @param list_of_stages	List of stages that process nodes in order
+ * 							(if an empty pointer is passed, one is created containing the in-order-scheduled stages).
  */
 void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> *list_of_stages){
 
@@ -896,23 +834,24 @@ void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> 
     if (list_of_stages != NULL)
 		list = list_of_stages;
     else {
-		// if no list of stages was provided, built the default list that includes all IN_ORDER stages
-		list = new  elm::genstruct::SLList<ParExeStage *>;
-		for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
-			if (stage->orderPolicy() == ParExeStage::IN_ORDER){
-				if (stage->category() != ParExeStage::FETCH){
-					list->add(stage);
-				}
-				if (stage->category() == ParExeStage::EXECUTE){
-					for (int i=0 ; i<stage->numFus() ; i++){
-						ParExeStage *fu_stage = stage->fu(i)->firstStage();
-						if (fu_stage->hasNodes()){
-							list->add(fu_stage);
-						}
-					}
-				}
-			}
-		}
+    	list = _microprocessor->listOfInorderStages();
+//		// if no list of stages was provided, built the default list that includes all IN_ORDER stages						// ========== THIS IS NOW BUILT AS PART OF PAREXEPROC
+//		list = new  elm::genstruct::SLList<ParExeStage *>;																	// ========== TO BE REMOVED
+//		for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
+//			if (stage->orderPolicy() == ParExeStage::IN_ORDER){
+//				if (stage->category() != ParExeStage::FETCH){
+//					list->add(stage);
+//				}
+//				if (stage->category() == ParExeStage::EXECUTE){
+//					for (int i=0 ; i<stage->numFus() ; i++){
+//						ParExeStage *fu_stage = stage->fu(i)->firstStage();
+//						if (fu_stage->hasNodes()){
+//							list->add(fu_stage);
+//						}
+//					}
+//				}
+//			}
+//		}
     }
 
     for (StageIterator stage(list) ; stage ; stage++) {
@@ -991,6 +930,69 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
     }
 }
 
+// ----------------------------------------------------------------
+
+/**
+ * Compute for each first FU node which is the FU node producing
+ * the required data (and fill the producer list of a FU node).
+ */
+void ParExeGraph::findDataDependencies() {
+
+	// allocate the rename table
+    otawa::hard::Platform *pf = _ws->platform();
+    AllocatedTable<rename_table_t> rename_tables(pf->banks().count());
+    int reg_bank_count = pf->banks().count();
+    for(int i = 0; i <reg_bank_count ; i++) {
+		rename_tables[i].reg_bank = (otawa::hard::RegBank *) pf->banks()[i];
+		rename_tables[i].table =
+			new AllocatedTable<ParExeNode *>(rename_tables[i].reg_bank->count());
+		for (int j=0 ; j<rename_tables[i].reg_bank->count() ; j++)
+			rename_tables[i].table->set(j,NULL);
+    }
+
+    // consider every instruction
+    for (InstIterator inst(_sequence) ; inst ; inst++)  {
+
+    	// find first and last FU nodes
+		ParExeNode *first_fu_node = NULL, *last_fu_node = NULL;
+		for (InstNodeIterator node(inst); node ; node++){
+			if (node->stage()->category() == ParExeStage::FU){
+				if (!first_fu_node)
+					first_fu_node = node;
+				last_fu_node = node;
+			}
+		}
+
+		// check for data dependencies
+		const elm::genstruct::Table<hard::Register *>& reads = first_fu_node->inst()->inst()->readRegs();
+		for(int i = 0; i < reads.count(); i++) {
+			for (int b=0 ; b<reg_bank_count ; b++) {
+				if (rename_tables[b].reg_bank == reads[i]->bank()) {
+					ParExeNode *producer = rename_tables[b].table->get(reads[i]->number());
+					if (producer != NULL) {
+						first_fu_node->addProducer(producer);
+					}
+				}
+			}
+		}
+
+		// fu_node is the last FU node
+		const elm::genstruct::Table<hard::Register *>& writes = last_fu_node->inst()->inst()->writtenRegs();
+		for(int i = 0; i < writes.count(); i++) {
+			for (int b=0 ; b<reg_bank_count ; b++) {
+				if (rename_tables[b].reg_bank == writes[i]->bank()) {
+					rename_tables[b].table->set(writes[i]->number(),last_fu_node);
+				}
+			}
+		}
+
+    } // endfor each instruction
+
+    // Free rename tables
+    for(int i = 0; i <reg_bank_count ; i++)
+		delete rename_tables[i].table;
+
+}
 // ----------------------------------------------------------------
 
 /**
@@ -1190,11 +1192,11 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 
     // display instruction sequence
     dotFile << "\"code\" [shape=record, label= \"\\l";
-    bool body = true;
+    bool in_block = true;
     BasicBlock *bb = 0;
     for (InstIterator inst(_sequence) ; inst ; inst++) {
-		if(inst->codePart() == BODY && body) {
-			body = false;
+		if(inst->codePart() == BLOCK && in_block) {
+			in_block = false;
 			dotFile << "------\\l";
 		}
     	BasicBlock *cbb = inst->basicBlock();
@@ -1228,7 +1230,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 			dotFile << "\"" << node->stage()->name();
 			dotFile << "I" << node->inst()->index() << "\"";
 			dotFile << " [shape=record, ";
-			if (node->inst()->codePart() == BODY)
+			if (node->inst()->codePart() == BLOCK)
 				dotFile << "color=blue, ";
 			dotFile << "label=\"" << node->stage()->name();
 			dotFile << "(I" << node->inst()->index() << ") [" << node->latency() << "]\\l";
@@ -1355,7 +1357,6 @@ ParExeGraph::ParExeGraph(
 :	_ws(ws),
  	_microprocessor(proc),
  	_first_node(0),
- 	_first_bb_node(0),
  	_last_prologue_node(0),
  	_last_node(0),
  	_sequence(seq),

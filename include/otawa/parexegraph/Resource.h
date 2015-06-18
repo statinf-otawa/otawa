@@ -25,8 +25,8 @@
 #define _RESOURCE_H_
 
 #include <otawa/parexegraph/ParExeProc.h>
-//#include <otawa/parexegraph/ParExeGraph.h>
 #include <otawa/hard/Register.h>
+#include <otawa/hard/Platform.h>
 
 namespace otawa { 
 
@@ -36,23 +36,19 @@ namespace otawa {
   public:
     typedef enum {STAGE, QUEUE, REG, EXTERNAL_CONFLICT, INTERNAL_CONFLICT, BLOCK_START, RES_TYPE_NUM} resource_type_t;
     typedef struct input_t {
-    hard::RegBank * reg_bank;
-    elm::genstruct::AllocatedTable<bool> *_is_input;
-    elm::genstruct::AllocatedTable<int> * _resource_index;
-  } input_t;
+    	hard::RegBank * reg_bank;
+    	elm::genstruct::AllocatedTable<bool> *_is_input;
+    	elm::genstruct::AllocatedTable<int> * _resource_index;
+    } input_t;
   private:
     elm::String _name;
     resource_type_t _type;
     int _index;
   public:
-    inline Resource(elm::String name, resource_type_t type, int index)
-      : _name(name), _type(type), _index(index) {}
-    inline elm::String name()
-      {return _name;}
-    inline resource_type_t type()
-      {return _type;}
-    inline int index()
-    	{return _index;}
+    inline Resource(elm::String name, resource_type_t type, int index) : _name(name), _type(type), _index(index) {}
+    inline elm::String name() {return _name;}
+    inline resource_type_t type() {return _type;}
+    inline int index() {return _index;}
    };
   
   class StartResource : public Resource {
@@ -142,7 +138,17 @@ namespace otawa {
     
   };
 
+  class ResourceList{
+  private:
+		elm::genstruct::Vector<Resource *> _resources;				// resources available in the processor: pipeline stages, queue slots, registers, etc.
+  public:
+		ResourceList(WorkSpace *ws, ParExeProc *proc);
+		// provide creation of resource list in the constructor
+		// provide an iterator on resources
+		// provide number of resources
+  };
+
 
 } // namespace otawa
 
-#endif //_PARAM_EXEGRAPH_H_
+#endif //_RESOURCE_H_
