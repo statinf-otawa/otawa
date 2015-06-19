@@ -201,14 +201,21 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
 
 /**
- * Build the CFG collector.
- * @param props	Configuration properties.
  */
-CFGCollector::CFGCollector(void)
-: Processor("CFGCollector", Version(1, 0, 0)), entry(0), rec(false) {
+CFGCollector::CFGCollector(p::declare& r)
+: Processor(r), entry(0), rec(false) {
 	require(CFG_INFO_FEATURE);
 	provide(COLLECTED_CFG_FEATURE);
 }
+
+/**
+ * CFGCollector registration.
+ */
+p::declare CFGCollector::reg = p::init("CFGCollector", Version(1, 1, 0))
+	.require(CFG_INFO_FEATURE)
+	.provide(COLLECTED_CFG_FEATURE)
+	.maker<CFGCollector>();
+
 
 void CFGCollector::cleanup(WorkSpace *ws) {
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
@@ -229,8 +236,8 @@ void CFGCollector::configure(const PropList& props) {
 		entry = ENTRY_CFG(props);
 		if(!entry)
 			name = TASK_ENTRY(props);
-		rec = otawa::RECURSIVE(props);
 	}
+	rec = otawa::RECURSIVE(props);
 
 	// Collect added CFGs
 	added_cfgs.clear();
