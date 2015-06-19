@@ -74,7 +74,7 @@ namespace otawa {
   private: 
     ParExeQueue *_queue;
     int _slot;
-    //StageResource * _upper_bound;												// ====== TO BE REMOVED
+//    StageResource * _upper_bound;
     int _uid;		// upper bound index
     int _offset;
   public:

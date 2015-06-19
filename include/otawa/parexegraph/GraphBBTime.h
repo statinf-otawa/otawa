@@ -281,7 +281,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		// look for memory hierarchy
 		configureMem(_ws);
 
-//		ResourceList *_proc_resources = new ResourceList(_ws, _microprocessor);															// ===== TO BE ENABLED
+		ResourceList *_proc_resources = new ResourceList(_ws, _microprocessor);															// ===== TO BE ENABLED
 
 		// Perform the actual process
 		BBProcessor::processWorkSpace(ws);

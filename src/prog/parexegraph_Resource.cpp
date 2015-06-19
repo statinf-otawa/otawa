@@ -118,9 +118,11 @@ namespace otawa{
 	    }
 
 	    // build resources for registers
-	    elm::genstruct::Table< const hard::RegBank * > * reg_banks;
-		for (int b=0 ; b<reg_banks->count() ; b++) {
-			otawa::hard::RegBank * bank = (otawa::hard::RegBank *) reg_banks->get(b);
+	    const otawa::hard::Platform::banks_t & reg_banks  =  ws->platform()->banks() ;
+		elm::cout << reg_banks.count() << " banks to consider \n";
+		for (int b=0 ; b<reg_banks.count() ; b++) {
+			otawa::hard::RegBank * bank = (otawa::hard::RegBank *) reg_banks.get(b);
+			elm::cout << reg_banks.count() << " bank" << b << " has " << bank->count() << " registers\n";
 			for (int r=0 ; r<bank->count() ; r++)
 			{
 				StringBuffer buffer;
@@ -128,8 +130,9 @@ namespace otawa{
 				RegResource * new_resource = new RegResource(buffer.toString(), bank, r, resource_index++);
 				_resources.add(new_resource);
 			}
-
 		}
+
+
 
 	    // build the resources for out-of-order execution
 //	    if (is_ooo_proc) {																														// ======= TO BE CHECKED (OOO PROC)
