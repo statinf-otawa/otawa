@@ -1402,9 +1402,9 @@ const Value& State::get(const Value& addr) const {
 			return Value::all;
 	} else {
 		// Memory
-		for(cur = first.next; cur && cur->addr < addr.lower(); cur = cur->next) ;
-		if(cur && cur->addr == addr.lower())
-			return cur->val;
+		for(cur = first.next; cur && cur->addr < uintn_t(addr.lower()); cur = cur->next) ;
+			if(cur && cur->addr == uintn_t(addr.lower()))
+				return cur->val;
 		return first.val;
 	}
 }
@@ -2142,12 +2142,22 @@ p::declare Analysis::reg = p::init("otawa::clp::Analysis", Version(0, 1, 0))
 	.require(LOOP_INFO_FEATURE)
 	.provide(clp::FEATURE);
 
-Analysis::Analysis(p::declare& r): Processor(r), mem(0),
-								_nb_inst(0), _nb_sem_inst(0), _nb_set(0),
-								_nb_top_set(0), _nb_store(0), _nb_top_store(0),
-								_nb_filters(0), _nb_top_filters(0), _nb_top_load(0),
-								_nb_load(0), _nb_top_store_addr(0), _nb_load_top_addr(0) {
-}
+Analysis::Analysis(p::declare& r)
+: 	Processor(r),
+	mem(0),
+	_nb_inst(0),
+	_nb_sem_inst(0),
+	_nb_set(0),
+	_nb_top_set(0),
+	_nb_store(0),
+	_nb_top_store(0),
+	_nb_top_store_addr(0),
+	_nb_load(0),
+	_nb_top_load(0),
+	_nb_load_top_addr(0),
+	_nb_filters(0),
+	_nb_top_filters(0)
+{ }
 
 
 /**

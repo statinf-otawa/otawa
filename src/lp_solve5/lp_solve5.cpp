@@ -100,6 +100,7 @@ private:
 	// Factor class
 	class Factor {
 	public:
+		virtual ~Factor(void);
 		inline Factor(double coefficient, Var *variable, Factor *next, ilp::Var *_ilpvar);
 		inline Var *variable(void) const;
 		virtual ilp::Var *getVar(void) const;
@@ -108,7 +109,6 @@ private:
 		inline void add(double value);
 		inline Factor& operator+=(double value);
 		inline Factor& operator-=(double value);
-		inline ~Factor() { }
 	private:
 		Factor *nxt;
 		Var *var;
@@ -380,6 +380,9 @@ ilp::Var *Constraint::Factor::getVar(void) const {
 }
 
 // Constraint::Factor inlines
+Constraint::Factor::~Factor(void) {
+}
+
 inline Constraint::Factor::Factor(double coefficient, Var *variable,
 Factor *next, ilp::Var *_ilpvar) : nxt(next), var(variable), ilpvar(_ilpvar), coef(coefficient)   {
 }

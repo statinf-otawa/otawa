@@ -302,22 +302,28 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 				for(Vector<CFG *>::Iterator called(called_cfgs); called; called++) {
 
 					// Check recursivity
-					bool recursive = false;
+					call_t *rec = 0;
 					for(call_t *cur = &call; cur; cur = cur->back)
 						if(cur->cfg == called) {
-							recursive = true;
-							Edge *edge = new Edge(map.get(bb), cur->entry, Edge::VIRTUAL_CALL);
-							CALLED_CFG(edge) = cur->cfg;
-							RECURSIVE_LOOP(edge) = true;
-							VIRTUAL_RETURN_BLOCK(src) = called_exit;
-							if(logFor(LOG_CFG))
-								out << "INFO: recursivity found at " << bb->address()
-									<< " to " << called->label() << io::endl;
+							rec = cur;
 							break;
 						}
 
-					// Virtualize the called CFG
-					if(!recursive) {
+					// handle recursivity
+					if(rec) {
+						Edge *edge = new Edge(map.get(bb), rec->entry, Edge::VIRTUAL_CALL);
+						CALLED_CFG(edge) = rec->cfg;
+						RECURSIVE_LOOP(edge) = true;
+						VIRTUAL_RETURN_BLOCK(src) = called_exit;
+						new Edge(src, called_exit, Edge::NOT_TAKEN);
+						if(logFor(LOG_CFG))
+							out << "INFO: recursivity found at " << bb->address()
+								<< " to " << called->label() << io::endl;
+						break;
+					}
+
+					// virtualize the called CFG
+					else {
 						ASSERT(called_exit);
 						VIRTUAL_RETURN_BLOCK(src) = called_exit;
 						virtualize(&call, called, vcfg, src, called_exit);

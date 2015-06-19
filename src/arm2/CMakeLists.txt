@@ -7,6 +7,7 @@ set(GLISS_LIB 		"${PROC_PREFIX}/src/lib${PROC}.a")
 set(IRG			    "${PROC_PREFIX}/${PROC}.irg")
 
 # source generation
+set(CMAKE_CXX_FLAGS "-Wall" )
 set(GLISS_ATTR	"${CMAKE_SOURCE_DIR}/../gliss2/gep/gliss-attr")
 include("../../data/cmake/Otawa.cmake")
 MAKE_GLISS_FUNCTION(OTAWA_KIND    "otawa_kind"      "otawa_kind.nmp" "${IRG}"    "return 0;")

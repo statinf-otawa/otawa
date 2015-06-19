@@ -104,6 +104,31 @@
  * @li the @ref otawa::Inst is an instance of @ref otawa::ProgItem that represents a single instruction,
  * @li the @ref otawa::DataItem is an instance of @ref otawa::ProgItem that represents a piece of data,
  * @li the @ref otawa::Symbol represents a named reference on some @ref ProgItem
+ *
+ * To load a program, the following properties may be useful:
+ * @li @ref otawa::TASK_ENTRY -- name of the function used as entry point.
+ * @li @ref otawa::LOADER_NAME -- name of loader to use.
+ * @li @ref otawa::CACHE_CONFIG -- handle on cache configuration.
+ * @li @ref otawa::CACHE_CONFIG_PATH -- path to cache configuration.
+ * @li @ref otawa::MEMORY_OBJECT -- handle on memory configuration.
+ * @li @ref otawa::MEMORY_PATH -- path to memory configuration.
+ * @li @ref otawa::PROCESSOR -- handle on microprocessor configuration.
+ * @li @ref otawa::PROCESSOR_PATH -- path to microprocessor configuration.
+ * @li @ref otawa::LOAD_PARAM -- useful to pass a parameter to a loader in the form "ID=VALUE".
+ *
+ * Expert users can also use the following properties:
+ * @li @ref otawa::LOADER -- handle of loader to use.
+ * @li @ref otawa::ARGC -- count of arguments passed to task on the stack.
+ * @li @ref otawa::ARGV -- null-terminated list of arguments passed to task on the stack.
+ * @li @ref otawa::ENVP -- null-terminated list of environments to task on the stack.
+ * @li @ref otawa::NO_SYSTEM -- no system is running the task.
+ *
+ * A commonly used propertu with IPET method is the property below:
+ * @li @ref otawa::ipet::ILP_PLUGIN_NAME -- to select which to use to solve the IPET ILP system.
+ *
+ * Notice that most properties listed above may be used with @ref owcet command
+ * or most OTAWA command using "--add-prop" option. Ask for command description
+ * with "-h" option or look at @ref otawa::Application for more details.
  */
 
 namespace otawa {

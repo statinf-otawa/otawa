@@ -1,5 +1,6 @@
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
 set(CMAKE_MACOSX_RPATH true)
+set(CMAKE_CXX_FLAGS "-Wall" )
 
 add_library(cplex SHARED "cplex.cpp")
 set_property(TARGET cplex PROPERTY PREFIX "")

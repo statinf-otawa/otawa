@@ -190,8 +190,8 @@ public:
 	}
 
 private:
-	double result;
     IloNumArray *vals;
+	double result;
     elm::string last_message;
 };
 
