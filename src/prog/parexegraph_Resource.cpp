@@ -112,68 +112,24 @@ namespace otawa{
 				}
 				ASSERT(upper_bound);
 				// build the queue resource
-				QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound);
+				QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound, proc->pipeline()->numStages());
 				_resources.add(new_resource);
 			}
 	    }
 
 	    // build resources for registers
-	    otawa::hard::Platform *pf = ws->platform();																						// ==== TO BE REMOVED
-	    int reg_bank_count = ws->platform()->banks().count();
-		for (int b=0 ; b<reg_bank_count ; b++) {
-			StringBuffer buffer;
-			//buffer << reads[i]->bank()->name() << reads[i]->number();																		// ====== TO BE CHECKED
-			//RegResource * new_resource = new RegResource(buffer.toString(), reads[i]->bank(), reads[i]->number(), resource_index++);		// ====== TO BE CHECKED
-			_resources.add(new_resource);
-	//		new_resource->addUsingInst(inst);																								// ===== CHECK USAGE
+	    elm::genstruct::Table< const hard::RegBank * > * reg_banks;
+		for (int b=0 ; b<reg_banks->count() ; b++) {
+			otawa::hard::RegBank * bank = (otawa::hard::RegBank *) reg_banks->get(b);
+			for (int r=0 ; r<bank->count() ; r++)
+			{
+				StringBuffer buffer;
+				buffer << bank->name() << r;
+				RegResource * new_resource = new RegResource(buffer.toString(), bank, r, resource_index++);
+				_resources.add(new_resource);
+			}
+
 		}
-//	    // get the list of registers																										// ======= TO BE REMOVED ONCE CONSTRUCION OF REGISTER RESOURCES HAS BEEN VALIDATED
-//	    AllocatedTable<Resource::input_t> inputs(pf->banks().count());
-//	    for(int i = 0; i <reg_bank_count ; i++) {
-//			inputs[i].reg_bank = (otawa::hard::RegBank *) pf->banks()[i];
-//			inputs[i]._is_input =
-//				new AllocatedTable<bool>(inputs[i].reg_bank->count());
-//			inputs[i]._resource_index =
-//				new AllocatedTable<int>(inputs[i].reg_bank->count());
-//			for (int j=0 ; j<inputs[i].reg_bank->count() ; j++) {
-//				inputs[i]._is_input->set(j,true);
-//				inputs[i]._resource_index->set(j,-1);
-//			}
-//	    }
-//
-//	    // build the resource for the used registers
-//	    for (InstIterator inst(_sequence) ; inst ; inst++) {
-//			const elm::genstruct::Table<hard::Register *>& reads = inst->inst()->readRegs();
-//
-//			for(int i = 0; i < reads.count(); i++) {
-//				for (int b=0 ; b<reg_bank_count ; b++) {
-//					if (inputs[b].reg_bank == reads[i]->bank()) {
-//						if (inputs[b]._is_input->get(reads[i]->number()) == true) {
-//							if (inputs[b]._resource_index->get(reads[i]->number()) == -1) {
-//								//new input coming from outside the sequence
-//								StringBuffer buffer;
-//								buffer << reads[i]->bank()->name() << reads[i]->number();
-//								RegResource * new_resource = new RegResource(buffer.toString(), reads[i]->bank(), reads[i]->number(), resource_index++);
-//								_resources.add(new_resource);
-//								new_resource->addUsingInst(inst);
-//								inputs[b]._resource_index->set(reads[i]->number(), _resources.length()-1);
-//							}
-//							else {
-//								((RegResource *)_resources[inputs[b]._resource_index->get(reads[i]->number())])->addUsingInst(inst);
-//							}
-//						}
-//					}
-//				}
-//			}
-//			const elm::genstruct::Table<hard::Register *>& writes = inst->inst()->writtenRegs();
-//			for(int i = 0; i < writes.count(); i++) {
-//				for (int b=0 ; b<reg_bank_count ; b++) {
-//					if (inputs[b].reg_bank == writes[i]->bank()) {
-//						inputs[b]._is_input->set(writes[i]->number(), false);
-//					}
-//				}
-//			}
-//	    }
 
 	    // build the resources for out-of-order execution
 //	    if (is_ooo_proc) {																														// ======= TO BE CHECKED (OOO PROC)
@@ -191,11 +147,6 @@ namespace otawa{
 //			}
 //	    }
 //
-//	    // clean up
-//	    for(int i = 0; i <reg_bank_count ; i++) {
-//			delete inputs[i]._is_input;
-//			delete inputs[i]._resource_index;
-//	    }
   }
 
 } // namespace otawa

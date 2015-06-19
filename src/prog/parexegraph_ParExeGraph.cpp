@@ -88,8 +88,8 @@ namespace otawa {
  */
 
 /**
- * Compute the cost, in cycles, of the current graph. The cost is the difference between
- * the execution in the commit stage of the last instruction of the considered instruction
+ * Computes the cost, in cycles, of the current graph. The cost is the difference between
+ * the execution date in the commit stage of the last instruction of the considered instruction
  * and of the last prefix instruction.
  * @return	Cost for the current graph.
  */
@@ -97,19 +97,13 @@ int ParExeGraph::analyze() {
 
 	clearDelays();
     initDelays();
-
-    _capacity = 0;
-    for(ParExeProc::QueueIterator queue(_microprocessor); queue; queue++){
-		_capacity = queue->size();		//FIXME: capacity should be the size of the queue where instructions can be in conflict to access to FUs
-    }
-
     propagate();
-    analyzeContentions();
 
-    //   for (int i=0 ; i<RES_TYPE_NUM ; i++) {                       // FIXME: useful?
-    //     res_dep[i] = false;
-    //     res_dep_impact[i] = 0;
-    //   }
+//    _capacity = 0;
+//    for(ParExeProc::QueueIterator queue(_microprocessor); queue; queue++){																			// ========= DISABLED UNTIL OOO IS SUPPORTED AGAIN
+//		_capacity = queue->size();		//FIXME: capacity should be the size of the queue where instructions can be in conflict to access to FU
+//    }
+//    analyzeContentions();
 
     if (_last_prologue_node)
 		return(cost());
@@ -120,234 +114,202 @@ int ParExeGraph::analyze() {
 // --------------------------------------------------------------------------------------------------
 
 int ParExeGraph::cost() {
-    int _cost = 0;
-    ParExeNode *a = _last_node;
-    for (elm::genstruct::Vector<Resource *>::Iterator res(_resources) ; res ; res++) {
-		//offset = 0;
-		if (res->type() != Resource::INTERNAL_CONFLICT) {
-			int r = res->index();
+	int _cost = delta(_last_node, _resources[0]);															// ========= WILL NEED TO REPLACE WITH _proc_resources
+	for (elm::genstruct::Vector<Resource *>::Iterator res(_resources) ; res ; res++) {						// ========= WILL NEED TO REPLACE WITH _proc_resources
+		if (res->type() != Resource::BLOCK_START){
+			//		if (res->type() != Resource::INTERNAL_CONFLICT) {											// ========= DISABLED UNTIL OOO IS SUPPORTED AGAIN
+			int r_id = res->index();
 			if (res->type() == Resource::QUEUE) {
-				StageResource * upper_bound = ((QueueResource *)(*res))->upperBound();
-				int u = upper_bound->index();
-				if ((a->e(r)) && (a->e(u))){
-					if (a->d(r) <= a->d(u)
-						+ (_microprocessor->pipeline()->numStages() - upper_bound->stage()->index())) {
-						continue;
+				//StageResource * upper_bound = ((QueueResource *)(*res))->upperBound();						// ========= TO BE REMOVED
+				//int u_id = upper_bound->index();
+				int u_id = ((QueueResource *)(*res))->uid();
+				if ((_last_node->e(r_id)) && (_last_node->e(u_id))){
+					if (_last_node->d(r_id) <= _last_node->d(u_id) + ((QueueResource *)(*res))->offset()) {  //(_microprocessor->pipeline()->numStages() - upper_bound->stage()->index())) {   ====== TO BE REMOVED
+						continue;     // do not compute Delta
 					}
 				}
 			}
-			int tmp = Delta(a,res);
-			if (res->type() == Resource::BLOCK_START)
-				_cost = tmp;
-			else {
-				if (tmp > _cost) {
-					_cost = tmp;
-				}
+			int diff = delta(_last_node,res);
+			if (diff > _cost) {
+				_cost = diff;
 			}
+			//		}																							// ========= DISABLED UNTIL OOO IS SUPPORTED AGAIN
 		}
-    }
-    return(_cost);
-}
-
-// -----------------------------------------------------------------
-void ParExeGraph::propagate() {
-    for (PreorderIterator node(this); node; node++) {
-		if (node != _first_node) {
-			for (Predecessor pred(node) ; pred ; pred++) {
-				int _latency;
-				if ( pred.edge()->type() == ParExeEdge::SOLID) {
-					_latency = pred->latency() + pred.edge()->latency();
-				}
-				else {
-					_latency = 0;
-				}
-				for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
-					int index = resource->index();
-					if (pred->e(index)) {
-						node->setE(index, true);
-						int _delay = pred->d(index) + _latency;
-						if (_delay > node->d(index)) {
-							node->setD(index, _delay);
-						}
-					}
-				}
-			}
-		}
-    }
+	}
+	return(_cost);
 }
 
 // --------------------------------------------------------------------------------------------------
-int ParExeGraph::Delta(ParExeNode *a, Resource *res) {
-	int r = res->index();
-	if (!a->e(r))
+int ParExeGraph::delta(ParExeNode *node, Resource *res) {
+	int r_id = res->index();
+	if (!node->e(r_id))
 		return (0);
-	ParExeNode *lp = _last_prologue_node;
 
-	int default_lp = lp->d(numResources() - 1);
+	int default_lp = _last_prologue_node->d(numResources() - 1);
 	if(res->type() == Resource::STAGE)
 		default_lp += _microprocessor->pipeline()->numStages() - ((StageResource *)(res))->stage()->index();
 	else if(res->type() == Resource::QUEUE) {
-		StageResource * upper_bound = ((QueueResource *) (res))->upperBound();
-		int u = upper_bound->index();
-		if(lp->e(u)) {
-			int tmp = lp->d(u) + (_microprocessor->pipeline()->numStages() - upper_bound->stage()->index());
+		//StageResource * upper_bound = ((QueueResource *) (res))->upperBound();							// ========= TO BE REMOVED
+		int u_id = ((QueueResource *) (res))->uid();
+		if(_last_prologue_node->e(u_id)) {
+			int tmp = _last_prologue_node->d(u_id) + ((QueueResource *) (res))->offset();
 			if (tmp < default_lp)
 				default_lp = tmp;
 		}
 	}
 
 	int delta;
-	if (lp->e(r))
-		delta = a->d(r) - lp->d(r);
+	if (_last_prologue_node->e(r_id))
+		delta = node->d(r_id) - _last_prologue_node->d(r_id);
 	else
-		delta = a->d(r) - default_lp;
+		delta = node->d(r_id) - default_lp;
 
-	for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources); resource; resource++) {
-		if (resource->type() == Resource::INTERNAL_CONFLICT) {
-			int s = resource->index();
-			ParExeNode * S = ((InternalConflictResource *)*resource)->node();
-			if (a->e(s) && S->e(r)) {
-				if (lp->e(s)) {
-					int tmp = a->d(s) - lp->d(s);
-					if (tmp > delta)
-						delta = tmp;
-				} // end: is lp depends on S
-
-				else { //lp does not depend on S
-					for (elm::genstruct::DLList<elm::BitVector *>::Iterator mask(*(S->contendersMasksList())); mask; mask++) {
-						int tmp = a->d(s);
-						tmp += (((mask->countBits() + S->lateContenders()) / S->stage()->width()) * S->latency());
-						int tmp2 = 0;
-
-						// mask is null == no early contenders
-						if(mask->countBits() == 0) {
-							int tmp3;
-							if (!lp->e(r))
-								tmp3 = tmp + S->d(r) - default_lp;
-							else
-								tmp3 = tmp + S->d(r) - lp->d(r);
-							if (tmp3 > delta)
-								delta = tmp3;
-						}
-
-						// mask is not null
-						else {
-
-							// get the conflicting resource
-							for(elm::BitVector::OneIterator one(**mask); one; one++) {
-								ParExeNode *C = S->stage()->node(one.item());
-								int c = -1;
-								for (elm::genstruct::Vector<Resource *>::Iterator ic(_resources); ic; ic++)
-									if(ic->type() == Resource::INTERNAL_CONFLICT
-									&& ((InternalConflictResource *) *ic)->node() == C)
-										c = ((InternalConflictResource *) *ic)->index();
-								ASSERT(c != -1);
-								ASSERT(lp->e(c));
-								if (lp->d(c) > tmp2)
-									tmp2 = lp->d(c);
-							} // end: foreach one in mask
-
-							// fix the date for the ressource
-							if (lp->e(r)) {
-								if (lp->d(r) - S->d(r) > tmp2)
-									tmp2 = lp->d(r) - S->d(r);
-							}
-							else {
-								int tmp4 = lp->d(numResources() - 1) - S->d(r);
-								if (res->type() == Resource::STAGE)
-									tmp4 += _microprocessor->pipeline()->numStages() - ((StageResource *) (res))->stage()->index();
-								if (tmp4 > tmp2)
-									tmp2 = default_lp - S->d(r);
-							}
-
-							tmp2 = tmp - tmp2;
-							if (tmp2 > delta)
-								delta = tmp2;
-						} // if mask not null
-					}
-				}
-			}
-		} // if resource is INTERNAL_CONFLICT
-	} // end: foreach resource
+//	for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources); resource; resource++) {											// ======= DISABLED UNTIL OOO IS SUPPORTED AGAIN
+//		if (resource->type() == Resource::INTERNAL_CONFLICT) {
+//			int s = resource->index();
+//			ParExeNode * S = ((InternalConflictResource *)*resource)->node();
+//			if (a->e(s) && S->e(r)) {
+//				if (lp->e(s)) {
+//					int tmp = a->d(s) - lp->d(s);
+//					if (tmp > delta)
+//						delta = tmp;
+//				} // end: is lp depends on S
+//
+//				else { //lp does not depend on S
+//					for (elm::genstruct::DLList<elm::BitVector *>::Iterator mask(*(S->contendersMasksList())); mask; mask++) {
+//						int tmp = a->d(s);
+//						tmp += (((mask->countBits() + S->lateContenders()) / S->stage()->width()) * S->latency());
+//						int tmp2 = 0;
+//
+//						// mask is null == no early contenders
+//						if(mask->countBits() == 0) {
+//							int tmp3;
+//							if (!lp->e(r))
+//								tmp3 = tmp + S->d(r) - default_lp;
+//							else
+//								tmp3 = tmp + S->d(r) - lp->d(r);
+//							if (tmp3 > delta)
+//								delta = tmp3;
+//						}
+//
+//						// mask is not null
+//						else {
+//
+//							// get the conflicting resource
+//							for(elm::BitVector::OneIterator one(**mask); one; one++) {
+//								ParExeNode *C = S->stage()->node(one.item());
+//								int c = -1;
+//								for (elm::genstruct::Vector<Resource *>::Iterator ic(_resources); ic; ic++)
+//									if(ic->type() == Resource::INTERNAL_CONFLICT
+//									&& ((InternalConflictResource *) *ic)->node() == C)
+//										c = ((InternalConflictResource *) *ic)->index();
+//								ASSERT(c != -1);
+//								ASSERT(lp->e(c));
+//								if (lp->d(c) > tmp2)
+//									tmp2 = lp->d(c);
+//							} // end: foreach one in mask
+//
+//							// fix the date for the ressource
+//							if (lp->e(r)) {
+//								if (lp->d(r) - S->d(r) > tmp2)
+//									tmp2 = lp->d(r) - S->d(r);
+//							}
+//							else {
+//								int tmp4 = lp->d(numResources() - 1) - S->d(r);
+//								if (res->type() == Resource::STAGE)
+//									tmp4 += _microprocessor->pipeline()->numStages() - ((StageResource *) (res))->stage()->index();
+//								if (tmp4 > tmp2)
+//									tmp2 = default_lp - S->d(r);
+//							}
+//
+//							tmp2 = tmp - tmp2;
+//							if (tmp2 > delta)
+//								delta = tmp2;
+//						} // if mask not null
+//					}
+//				}
+//			}
+//		} // if resource is INTERNAL_CONFLICT
+//	} // end: foreach resource
 	return (delta);
 }
 
 // --------------------------------------------------------------------------------------------------
 
 void ParExeGraph::analyzeContentions() {
-
-    for(ParExePipeline::StageIterator st(_microprocessor->pipeline()); st; st++){
-		if (st->orderPolicy() == ParExeStage::OUT_OF_ORDER) {
-			for (int i=0 ; i<st->numFus() ; i++) {
-				ParExeStage* stage = st->fu(i)->firstStage();
-				for (int j=0 ; j<stage->numNodes() ; j++) {
-					ParExeNode *node = stage->node(j);
-					//bool stop = false;
-					int num_possible_contenders = 0;
-					if (node->latency() > 1)
-						num_possible_contenders = 1; // possible late contender
-					int num_early_contenders = 0;
-
-					int index = 0;
-					int size = stage->numNodes();
-					node->initContenders(size);		// TODO for several call to apply, possible memory leak
-					//stop = false;
-					for (int k=0 ; k<stage->numNodes() ; k++) {
-						ParExeNode *cont = stage->node(k);
-						if (cont->inst()->index() >= node->inst()->index())
-							/*stop = true*/;
-						else {
-							if (cont->inst()->index() >= node->inst()->index() - _capacity ) {
-								// if cont finishes surely before node, it is not contemp
-								// if cont is ready after node, it is not contemp
-								bool finishes_before = true;
-								bool ready_after = true;
-								for (int r=0 ; r<numResources() ; r++) {
-									Resource *res = resource(r);
-									if ((res->type() != Resource::INTERNAL_CONFLICT)
-										&&
-										((res->type() != Resource::EXTERNAL_CONFLICT))) {
-										if (cont->e(r)) {
-											if (!node->e(r)) {
-												finishes_before = false;
-											}
-											else {
-												// 						int contention_delay =
-												// 						    ((cont->lateContenders() + cont->possibleContenders()->countBits()) / stage->width())
-												// 						    * node->latency();
-												if (1 /*node->d(r) < cont->d(r) + cont->latency() + cont_contention_delay*/)
-													finishes_before = false;
-											}
-										}
-										if (node->e(r)) {
-											if (!cont->e(r))
-												ready_after = false;
-											else {
-												int node_contention_delay = (num_possible_contenders / stage->width()) * node->latency();
-												if (cont->d(r) <= node->d(r) + node_contention_delay)
-													ready_after = false;
-											}
-										}
-									}
-									if (!finishes_before && !ready_after){
-										num_possible_contenders++;
-										if (_last_prologue_node && (cont->inst()->index() <= _last_prologue_node->inst()->index())) {
-											num_early_contenders++;
-											node->setContender(index);
-										}
-										break;
-									}
-								}
-							}
-						}
-						index++;
-					} // end: foreach possible contender
-					node->setLateContenders(num_possible_contenders - num_early_contenders);
-					node->buildContendersMasks();
-				} // end: foreach node of the stage
-			} //end: foreach functional unit
-		}
-    } // end: foreach stage
+//
+//    for(ParExePipeline::StageIterator st(_microprocessor->pipeline()); st; st++){
+//		if (st->orderPolicy() == ParExeStage::OUT_OF_ORDER) {
+//			for (int i=0 ; i<st->numFus() ; i++) {
+//				ParExeStage* stage = st->fu(i)->firstStage();
+//				for (int j=0 ; j<stage->numNodes() ; j++) {
+//					ParExeNode *node = stage->node(j);
+//					//bool stop = false;
+//					int num_possible_contenders = 0;
+//					if (node->latency() > 1)
+//						num_possible_contenders = 1; // possible late contender
+//					int num_early_contenders = 0;
+//
+//					int index = 0;
+//					int size = stage->numNodes();
+//					node->initContenders(size);		// TODO for several call to apply, possible memory leak
+//					//stop = false;
+//					for (int k=0 ; k<stage->numNodes() ; k++) {
+//						ParExeNode *cont = stage->node(k);
+//						if (cont->inst()->index() >= node->inst()->index())
+//							/*stop = true*/;
+//						else {
+//							if (cont->inst()->index() >= node->inst()->index() - _capacity ) {
+//								// if cont finishes surely before node, it is not contemp
+//								// if cont is ready after node, it is not contemp
+//								bool finishes_before = true;
+//								bool ready_after = true;
+//								for (int r=0 ; r<numResources() ; r++) {
+//									Resource *res = resource(r);
+//									if ((res->type() != Resource::INTERNAL_CONFLICT)
+//										&&
+//										((res->type() != Resource::EXTERNAL_CONFLICT))) {
+//										if (cont->e(r)) {
+//											if (!node->e(r)) {
+//												finishes_before = false;
+//											}
+//											else {
+//												// 						int contention_delay =
+//												// 						    ((cont->lateContenders() + cont->possibleContenders()->countBits()) / stage->width())
+//												// 						    * node->latency();
+//												if (1 /*node->d(r) < cont->d(r) + cont->latency() + cont_contention_delay*/)
+//													finishes_before = false;
+//											}
+//										}
+//										if (node->e(r)) {
+//											if (!cont->e(r))
+//												ready_after = false;
+//											else {
+//												int node_contention_delay = (num_possible_contenders / stage->width()) * node->latency();
+//												if (cont->d(r) <= node->d(r) + node_contention_delay)
+//													ready_after = false;
+//											}
+//										}
+//									}
+//									if (!finishes_before && !ready_after){
+//										num_possible_contenders++;
+//										if (_last_prologue_node && (cont->inst()->index() <= _last_prologue_node->inst()->index())) {
+//											num_early_contenders++;
+//											node->setContender(index);
+//										}
+//										break;
+//									}
+//								}
+//							}
+//						}
+//						index++;
+//					} // end: foreach possible contender
+//					node->setLateContenders(num_possible_contenders - num_early_contenders);
+//					node->buildContendersMasks();
+//				} // end: foreach node of the stage
+//			} //end: foreach functional unit
+//		}
+//    } // end: foreach stage
 }
 
 // -- initDelays ------------------------------------------------------------------------------------------------
@@ -381,7 +343,7 @@ void ParExeGraph::initDelays() {
 		}
 			break;
 		case Resource::REG : {
-			for (RegResource::UsingInstIterator inst( (RegResource *) *res ) ; inst ; inst++) {
+			for (RegResource::UsingInstIterator inst( (RegResource *) *res ) ; inst ; inst++) {							// ======== NOW NEEDS TO CHECK WHICH INST USE THIS REGISTER
 				for (InstNodeIterator node(inst) ; node ; node++) {
 					if (node->stage()->category() == ParExeStage::EXECUTE) {
 						node->setE(index,true);
@@ -431,6 +393,57 @@ void ParExeGraph::clearDelays() {
 		}
     }
 }
+
+// -----------------------------------------------------------------
+
+//void ParExeGraph::propagate() {
+//    for (PreorderIterator node(this); node; node++) {
+//		if (node != _first_node) {
+//			for (Predecessor pred(node) ; pred ; pred++) {
+//				int _latency;
+//				if ( pred.edge()->type() == ParExeEdge::SOLID) {
+//					_latency = pred->latency() + pred.edge()->latency();
+//				}
+//				else {
+//					_latency = 0;
+//				}
+//				for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {								//========= THIS WILL NEED TO BE REPLACED WITH _proc_resources
+//					int r_id = resource->index();
+//					if (pred->e(r_id)) {
+//						node->setE(r_id, true);
+//						int _delay = pred->d(r_id) + _latency;
+//						if (_delay > node->d(r_id)) {
+//							node->setD(r_id, _delay);
+//						}
+//					}
+//				}
+//			}
+//		}
+//    }
+//}
+
+																																					// ================ NEW VERSION, TO BE CHECKED
+void ParExeGraph::propagate() {
+	for (PreorderIterator node(this); node; node++) {
+		for (Successor succ(node) ; succ ; succ++) {
+			int _latency = 0;
+			if (succ.edge()->type() == ParExeEdge::SOLID) {
+				_latency = node->latency() + succ.edge()->latency();
+			}
+			for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {								//========= THIS WILL NEED TO BE REPLACED WITH _proc_resources
+				int r_id = resource->index();
+				if (node->e(r_id)) {
+					succ->setE(r_id, true);
+					int _delay = node->d(r_id) + _latency;
+					if (_delay > succ->d(r_id)) {
+						succ->setD(r_id, _delay);
+					}
+				}
+			}
+		}
+	}
+}
+
 
 // -- restoreDefaultLatencies ------------------------------------------------------------------------------------------------
 
@@ -570,7 +583,7 @@ void ParExeGraph::createResources(){
 			ASSERT(upper_bound);
 
 			// build the queue resource
-			QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound);
+			QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound, _microprocessor->pipeline()->numStages());
 			_resources.add(new_resource);
 		}
     }
@@ -658,14 +671,11 @@ void ParExeGraph::build() {
     addEdgesForPipelineOrder();
     addEdgesForFetch();
     addEdgesForProgramOrder();
-
     addEdgesForMemoryOrder();
     findDataDependencies();
     addEdgesForDataDependencies();
-
     addEdgesForQueues();
-    findContendingNodes();
-
+   // findContendingNodes();																// ========= IGNORED UNTIL OOO INST SCHEDULING IS AGAIN TAKEN INTO CONSIDERATION
 }
 
 // ----------------------------------------------------------------
@@ -835,51 +845,36 @@ void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> 
 		list = list_of_stages;
     else {
     	list = _microprocessor->listOfInorderStages();
-//		// if no list of stages was provided, built the default list that includes all IN_ORDER stages						// ========== THIS IS NOW BUILT AS PART OF PAREXEPROC
-//		list = new  elm::genstruct::SLList<ParExeStage *>;																	// ========== TO BE REMOVED
-//		for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
-//			if (stage->orderPolicy() == ParExeStage::IN_ORDER){
-//				if (stage->category() != ParExeStage::FETCH){
-//					list->add(stage);
-//				}
-//				if (stage->category() == ParExeStage::EXECUTE){
-//					for (int i=0 ; i<stage->numFus() ; i++){
-//						ParExeStage *fu_stage = stage->fu(i)->firstStage();
-//						if (fu_stage->hasNodes()){
-//							list->add(fu_stage);
-//						}
-//					}
-//				}
-//			}
-//		}
     }
 
     for (StageIterator stage(list) ; stage ; stage++) {
 		int count = 1;
-		int prev = 0;
-		for (int i=0 ; i<stage->numNodes()-1 ; i++){
-			ParExeNode *node = stage->node(i);
-			ParExeNode *next = stage->node(i+1);
-			if (stage->width() == 1){
-				new ParExeEdge(node, next, ParExeEdge::SOLID, 0, stage->name());
-			}
-			else {
-				new ParExeEdge(node, next, ParExeEdge::SLASHED, 0, stage->name());
-				if (count == stage->width()){
-					ParExeNode *previous = stage->node(prev);
-					new ParExeEdge(previous,next,ParExeEdge::SOLID, 0, stage->name());
-					prev++;
+		ParExeNode *previous = NULL;
+		int prev_id = 0;
+		for (ParExeStage::NodeIterator node(stage) ; node ; node++){
+			if (previous){
+				if (stage->width() == 1){
+					new ParExeEdge(previous, node, ParExeEdge::SOLID, 0, stage->name());
 				}
-				else
-					count++;
-			}
+				else {
+					new ParExeEdge(previous, node, ParExeEdge::SLASHED, 0, stage->name());
+					if (count == stage->width()){		// when stage width is reached, add edges to show precedence
+						ParExeNode *not_at_the_same_cycle = stage->node(prev_id);
+						new ParExeEdge(not_at_the_same_cycle,node,ParExeEdge::SOLID, 0, stage->name());
+						prev_id++;
+					}
+					else
+						count++;
+					}
+				}
+			previous = node;
 		}
     }
 }
 
 
 /**
- * Called to add edges to represent contention to access memory, basically, between FUs
+ * Adds edges to represent contention to access memory, basically, between FUs
  * of instructions performing memory access.
  */
 void ParExeGraph::addEdgesForMemoryOrder(void) {
@@ -996,7 +991,7 @@ void ParExeGraph::findDataDependencies() {
 // ----------------------------------------------------------------
 
 /**
- * Called to add edges for data dependencies, that is, if an instruction (a)
+ * Adds edges for data dependencies, that is, if an instruction (a)
  * produces content of a register and instruction (b) uses this register value
  * create a solid edge between their execute stages.
  */
@@ -1014,6 +1009,7 @@ void ParExeGraph::addEdgesForDataDependencies(void){
     }
 }
 
+// ----------------------------------------------------------------
 
 /**
  * Called to add edges representing contention on the different

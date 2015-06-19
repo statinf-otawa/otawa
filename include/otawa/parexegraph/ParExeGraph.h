@@ -215,7 +215,7 @@ namespace otawa {
 			hard::RegBank * reg_bank;
 			elm::genstruct::AllocatedTable<ParExeNode *> *table;
 		} rename_table_t;
-		elm::genstruct::Vector<Resource *> _resources;				// resources used by the sequence of instructions
+		elm::genstruct::Vector<Resource *> _resources;				// resources used by the sequence of instructions		// ====== DEPRECATED?
 
 		ParExeNode *_first_node;									// first node in the graph
 		ParExeNode *_last_prologue_node;																					// ====== REALLY USEFUL? (used in analyze())
@@ -235,7 +235,7 @@ namespace otawa {
 		inline ParExeSequence *getSequence(void) const { return _sequence; }
 		inline ParExeNode * firstNode(){return _first_node;}
 		virtual ParExePipeline *pipeline(ParExeStage *stage, ParExeInst *inst);
-		inline int numResources() {return _resources.length();}
+		inline int numResources() {return _resources.length();}																// ======== TO BE REPLACED WITH _proc_resources
 		inline Resource *resource(int index){return _resources[index];}
 		inline int numInstructions(){return _sequence->length();}
 
@@ -262,7 +262,7 @@ namespace otawa {
 		void propagate();
 		void analyzeContentions();
 		int cost();
-		int Delta(ParExeNode *a, Resource *res);
+		int delta(ParExeNode *a, Resource *res);
 
 		// tracing
 		void dump(elm::io::Output& dotFile, const string& info = "");

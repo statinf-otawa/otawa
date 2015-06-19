@@ -74,16 +74,21 @@ namespace otawa {
   private: 
     ParExeQueue *_queue;
     int _slot;
-    StageResource * _upper_bound;
+    //StageResource * _upper_bound;												// ====== TO BE REMOVED
+    int _uid;		// upper bound index
+    int _offset;
   public:
-    inline QueueResource(elm::String name, ParExeQueue * queue, int slot, int index, StageResource * upper_bound)
-	: Resource(name,QUEUE, index), _queue(queue), _slot(slot), _upper_bound(upper_bound) {}
-    inline ParExeQueue * queue()
-      {return _queue;}
-    inline int slot()
-      {return _slot;}
-    StageResource * upperBound() 
-      {return _upper_bound;}
+    inline QueueResource(elm::String name, ParExeQueue * queue, int slot, int index, StageResource * upper_bound, int num_stages)
+	: Resource(name,QUEUE, index), _queue(queue), _slot(slot)/*, _upper_bound(upper_bound)*/ {
+    	_uid = upper_bound->index();
+    	_offset = num_stages - upper_bound->stage()->index();
+    }
+    inline ParExeQueue * queue() {return _queue;}
+    inline int slot() {return _slot;}
+    inline int uid() {return _uid;}
+    inline int offset() {return _offset;}
+ //   StageResource * upperBound()
+  //    {return _upper_bound;}
   };
 
   class RegResource : public Resource {
@@ -143,9 +148,11 @@ namespace otawa {
 		elm::genstruct::Vector<Resource *> _resources;				// resources available in the processor: pipeline stages, queue slots, registers, etc.
   public:
 		ResourceList(WorkSpace *ws, ParExeProc *proc);
-		// provide creation of resource list in the constructor
-		// provide an iterator on resources
-		// provide number of resources
+		inline int numResources() {return _resources.length();}
+		class ResourceIterator: public elm::genstruct::Vector<Resource *>::Iterator {
+		public:
+			inline ResourceIterator(const ResourceList *list) : elm::genstruct::Vector<Resource *>::Iterator(list->_resources) {}
+		};
   };
 
 
