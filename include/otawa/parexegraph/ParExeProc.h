@@ -199,7 +199,7 @@ namespace otawa {
     elm::genstruct::SLList<ParExeStage *> _inorder_stages;
     ParExeStage * _fetch_stage;
     ParExeStage * _exec_stage;
- 
+
   public:
       typedef enum instruction_category_t {	
     	  IALU = 0,
@@ -224,7 +224,6 @@ namespace otawa {
     inline ParExePipeline *pipeline() {return &_pipeline;}
     inline elm::genstruct::SLList<ParExeStage *> *listOfInorderStages() {return &_inorder_stages;}
     
-
     class QueueIterator: public elm::genstruct::Vector<ParExeQueue *>::Iterator {
     public:
       inline QueueIterator(const ParExeProc *processor)

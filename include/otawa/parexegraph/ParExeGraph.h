@@ -68,10 +68,13 @@ namespace otawa {
 		elm::genstruct::Vector<ParExeNode *> _nodes;	// nodes in the execution graph that are related to this instruction
 		ParExeNode * _fetch_node;						// fetch node related to this instruction
 		ParExeNode *_exec_node;							// execution node related to this instruction
+		ParExeNode *_first_fu_node;
+		ParExeNode *_last_fu_node;
+		elm::genstruct::Vector<ParExeInst *> _producing_insts; // list of instructions this one depends on (some of its operands are produced by those instructions)
 
 	public:
 		inline ParExeInst(Inst * inst, BasicBlock *bb, code_part_t part, int index)
-			: _inst(inst), _bb(bb), _part(part), _index(index), _exec_node(NULL) {}
+			: _inst(inst), _bb(bb), _part(part), _index(index), _exec_node(NULL), _first_fu_node(NULL), _last_fu_node(NULL) {}
 
 		// set/get information on the instruction
 		inline Inst * inst()  {return _inst;}
@@ -79,14 +82,16 @@ namespace otawa {
 		inline int index()  {return _index;}
 		inline void setIndex(int index) {_index=index;}
 		inline ParExeNode * firstNode() { return _nodes[0];}
-//		inline ParExeNode * lastNode() { return _nodes[_nodes.length()-1];}					======= TO BE REMOVED?
-//		inline bool hasNodes() { return (_nodes.length() != 0);}							======= TO BE REMOVED?
-//		inline int numNodes() { return _nodes.length();}									======= TO BE REMOVED?
 		inline ParExeNode *node(int index) { return _nodes[index];}
 		inline void setFetchNode(ParExeNode *node) { _fetch_node = node;}
 		inline void setExecNode(ParExeNode *node) { _exec_node = node;}
+		inline void setFirstFUNode(ParExeNode *node) { _first_fu_node = node;}
+		inline void setLastFUNode(ParExeNode *node) { _last_fu_node = node;}
 		inline ParExeNode * fetchNode() { return _fetch_node;}
 		inline ParExeNode * execNode() { return _exec_node;}
+		inline ParExeNode * firstFUNode() { return _first_fu_node;}
+		inline ParExeNode * lastFUNode() { return _last_fu_node;}
+		inline void addProducingInst(ParExeInst *inst) { _producing_insts.add(inst);}
 		inline BasicBlock * basicBlock()  {return _bb;}
 
 		// add/remove nodes for this instruction
@@ -96,17 +101,18 @@ namespace otawa {
 			if (_nodes.length() != 0) { _nodes.clear();	}
 		}
 
-//		inline void addAfter(ParExeNode *pos, ParExeNode *node) {							======= TO BE REMOVED?
-//			int p = _nodes.indexOf(pos);
-//			ASSERT(p >= 0);
-//			_nodes.insert(p + 1, node);
-//		}
-
 		// iterator on nodes related to the instruction
 		class NodeIterator: public elm::genstruct::Vector<ParExeNode *>::Iterator {
 		public:
 			inline NodeIterator(const ParExeInst *inst) : elm::genstruct::Vector<ParExeNode *>::Iterator(inst->_nodes) {}
 		};
+
+		// iterator on nodes related to the instruction
+		class ProducingInstIterator: public elm::genstruct::Vector<ParExeInst *>::Iterator {
+		public:
+			inline ProducingInstIterator(const ParExeInst *inst) : elm::genstruct::Vector<ParExeInst *>::Iterator(inst->_producing_insts) {}
+		};
+
 	};
 
 	/*
@@ -215,7 +221,7 @@ namespace otawa {
 			hard::RegBank * reg_bank;
 			elm::genstruct::AllocatedTable<ParExeNode *> *table;
 		} rename_table_t;
-		elm::genstruct::Vector<Resource *> _resources;				// resources used by the sequence of instructions		// ====== DEPRECATED?
+		elm::genstruct::Vector<Resource *> _resources;				// resources used by the sequence of instructions
 
 		ParExeNode *_first_node;									// first node in the graph
 		ParExeNode *_last_prologue_node;																					// ====== REALLY USEFUL? (used in analyze())
@@ -228,14 +234,14 @@ namespace otawa {
 
 
 	public:
-		ParExeGraph(WorkSpace * ws, ParExeProc *proc, ParExeSequence *seq, const PropList& props = PropList::EMPTY);
+		ParExeGraph(WorkSpace * ws, ParExeProc *proc,  elm::genstruct::Vector<Resource *> *hw_resources, ParExeSequence *seq, const PropList& props = PropList::EMPTY);
 		virtual ~ParExeGraph(void);
 
 		// set/get information related to the graph
 		inline ParExeSequence *getSequence(void) const { return _sequence; }
 		inline ParExeNode * firstNode(){return _first_node;}
 		virtual ParExePipeline *pipeline(ParExeStage *stage, ParExeInst *inst);
-		inline int numResources() {return _resources.length();}																// ======== TO BE REPLACED WITH _proc_resources
+		inline int numResources() {return _resources.length();}
 		inline Resource *resource(int index){return _resources[index];}
 		inline int numInstructions(){return _sequence->length();}
 
@@ -252,7 +258,7 @@ namespace otawa {
 
 		// compute execution time
 		void findContendingNodes();
-		void createResources();
+		void createSequenceResources();
 		int analyze();
 		void initDelays();
 		void clearDelays();
@@ -336,8 +342,9 @@ namespace otawa {
 		int _latency;												// latency of the node
 		int _default_latency;										// default latency of the node
 		elm::String _name;											// name of the node (for tracing)
-		elm::genstruct::AllocatedTable<int> * _d;					// delays wrt availabilities of resources
-		elm::genstruct::AllocatedTable<bool> * _e;					// dependence on availabilities of resources
+//		elm::genstruct::AllocatedTable<int> * _d;					// delays wrt availabilities of resources
+//		elm::genstruct::AllocatedTable<bool> * _e;					// dependence on availabilities of resources
+		elm::genstruct::AllocatedTable<int> * _delay;				// dependence and delays wrt availabilities of resources
 	protected:
 		elm::genstruct::Vector<ParExeNode *> _producers;			// nodes this one depends on (its predecessors)
 		elm::genstruct::Vector<ParExeNode *> _contenders;																	// ==== STILL USEFUL?
@@ -350,12 +357,7 @@ namespace otawa {
 			: ParExeGraph::GenNode((otawa::graph::Graph *) graph),
 			_pipeline_stage(stage), _inst(inst),  _latency(stage->latency()), _default_latency(stage->latency()){
 			int num = graph->numResources();
-			_d = new elm::genstruct::AllocatedTable<int>(num);
-			_e = new elm::genstruct::AllocatedTable<bool>(num);
-			for (int i=0 ; i<num; i++){
-				(*_e)[i] = false;
-				(*_d)[i] = 0;
-			}
+			_delay = new elm::genstruct::AllocatedTable<int>(num);
 			for (int k=0 ; k<graph->numInstructions() ; k++) {
 				StringBuffer _buffer;
 				_buffer << stage->name() << "(I" << inst->index() << ")";
@@ -376,13 +378,11 @@ namespace otawa {
 		inline void addProducer(ParExeNode *prod) { if (!_producers.contains(prod)) _producers.add(prod); }
 		inline int numProducers(void) { return _producers.length(); }
 		inline ParExeNode *producer(int index) { return _producers[index]; }
-		inline void addContender(ParExeNode *cont) { _contenders.add(cont); }												// ==== STILL USEFUL?
-		inline elm::genstruct::DLList<elm::BitVector *>* contendersMasksList() {return &_contenders_masks_list;}			// ==== STILL USEFUL?
+		inline void addContender(ParExeNode *cont) { _contenders.add(cont); }
+		inline elm::genstruct::DLList<elm::BitVector *>* contendersMasksList() {return &_contenders_masks_list;}
 		inline elm::String name(void) { return _name; }
-		inline int d(int index) { return (*_d)[index]; }
-		inline bool e(int index) { return (*_e)[index]; }
-		inline void setD(int index, int value) { (*_d)[index] = value; }
-		inline void setE(int index, bool value) { (*_e)[index] = value; }
+		inline int delay(int index) {return (*_delay)[index];}
+		inline void setDelay(int index, int value) { (*_delay)[index] = value; }
 		inline void initContenders(int size) {_possible_contenders = new BitVector(size); }									// ==== STILL USEFUL?
 		inline int lateContenders(void) {return _late_contenders; }															// ==== STILL USEFUL?
 		inline void setLateContenders(int num) { _late_contenders = num; }													// ==== STILL USEFUL?

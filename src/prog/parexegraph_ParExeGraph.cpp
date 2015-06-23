@@ -105,64 +105,65 @@ int ParExeGraph::analyze() {
 //    }
 //    analyzeContentions();
 
+    int wcc;
     if (_last_prologue_node)
-		return(cost());
-    else
-		return (_last_node->d(0));  // resource 0 is BLOCK_START
+		wcc = cost();
+    else{
+		wcc = _last_node->delay(0);  // resource 0 is BLOCK_START
+    }
+    return(wcc);
 }
 
 // --------------------------------------------------------------------------------------------------
 
 int ParExeGraph::cost() {
-	int _cost = delta(_last_node, _resources[0]);															// ========= WILL NEED TO REPLACE WITH _proc_resources
-	for (elm::genstruct::Vector<Resource *>::Iterator res(_resources) ; res ; res++) {						// ========= WILL NEED TO REPLACE WITH _proc_resources
+	int wcc = delta(_last_node, _resources[0]);
+	for (elm::genstruct::Vector<Resource *>::Iterator res(_resources) ; res ; res++) {
 		if (res->type() != Resource::BLOCK_START){
 			//		if (res->type() != Resource::INTERNAL_CONFLICT) {											// ========= DISABLED UNTIL OOO IS SUPPORTED AGAIN
 			int r_id = res->index();
 			if (res->type() == Resource::QUEUE) {
-				//StageResource * upper_bound = ((QueueResource *)(*res))->upperBound();						// ========= TO BE REMOVED
-				//int u_id = upper_bound->index();
 				int u_id = ((QueueResource *)(*res))->uid();
-				if ((_last_node->e(r_id)) && (_last_node->e(u_id))){
-					if (_last_node->d(r_id) <= _last_node->d(u_id) + ((QueueResource *)(*res))->offset()) {  //(_microprocessor->pipeline()->numStages() - upper_bound->stage()->index())) {   ====== TO BE REMOVED
+				if ((_last_node->delay(r_id)>=0) && (_last_node->delay(u_id)>=0)){
+					if (_last_node->delay(r_id) <= _last_node->delay(u_id) + ((QueueResource *)(*res))->offset()) {
 						continue;     // do not compute Delta
 					}
 				}
 			}
 			int diff = delta(_last_node,res);
-			if (diff > _cost) {
-				_cost = diff;
+			if (diff > wcc) {
+				wcc = diff;
 			}
 			//		}																							// ========= DISABLED UNTIL OOO IS SUPPORTED AGAIN
 		}
 	}
-	return(_cost);
+
+	return(wcc);
 }
 
 // --------------------------------------------------------------------------------------------------
 int ParExeGraph::delta(ParExeNode *node, Resource *res) {
 	int r_id = res->index();
-	if (!node->e(r_id))
+	if (node->delay(r_id)<0)
 		return (0);
 
-	int default_lp = _last_prologue_node->d(numResources() - 1);
+	int default_lp = _last_prologue_node->delay(numResources() - 1);
 	if(res->type() == Resource::STAGE)
 		default_lp += _microprocessor->pipeline()->numStages() - ((StageResource *)(res))->stage()->index();
 	else if(res->type() == Resource::QUEUE) {
 		//StageResource * upper_bound = ((QueueResource *) (res))->upperBound();							// ========= TO BE REMOVED
 		int u_id = ((QueueResource *) (res))->uid();
-		if(_last_prologue_node->e(u_id)) {
-			int tmp = _last_prologue_node->d(u_id) + ((QueueResource *) (res))->offset();
-			if (tmp < default_lp)
-				default_lp = tmp;
+		if(_last_prologue_node->delay(u_id)>=0) {
+			int diff = _last_prologue_node->delay(u_id) + ((QueueResource *) (res))->offset();
+			if (diff < default_lp)
+				default_lp = diff;
 		}
 	}
-
 	int delta;
-	if (_last_prologue_node->e(r_id))
-		delta = node->d(r_id) - _last_prologue_node->d(r_id);
+	if (_last_prologue_node->delay(r_id)>=0)
+		delta = node->delay(r_id) - _last_prologue_node->delay(r_id);
 	else
-		delta = node->d(r_id) - default_lp;
+		delta = node->delay(r_id) - default_lp;
 
 //	for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources); resource; resource++) {											// ======= DISABLED UNTIL OOO IS SUPPORTED AGAIN
 //		if (resource->type() == Resource::INTERNAL_CONFLICT) {
@@ -320,7 +321,7 @@ void ParExeGraph::initDelays() {
 		switch ( res->type() ) {
 		case Resource::BLOCK_START: {
 			ParExeNode * node = _first_node;
-			node->setE(index,true);
+			node->setDelay(index,0);
 		}
 			break;
 		case Resource::STAGE: {
@@ -328,7 +329,7 @@ void ParExeGraph::initDelays() {
 			int slot = ((StageResource *) *res)->slot();
 			ParExeNode * node = stage->node(slot);
 			if (node) {
-				node->setE(index,true);
+				node->setDelay(index,0);
 			}
 		}
 			break;
@@ -338,42 +339,44 @@ void ParExeGraph::initDelays() {
 			int slot = ((QueueResource *) *res)->slot();
 			ParExeNode * node = stage->node(slot);
 			if (node) {
-				node->setE(index,true);
+				node->setDelay(index,0);
 			}
 		}
 			break;
 		case Resource::REG : {
-			for (RegResource::UsingInstIterator inst( (RegResource *) *res ) ; inst ; inst++) {							// ======== NOW NEEDS TO CHECK WHICH INST USE THIS REGISTER
+			for (RegResource::UsingInstIterator inst( (RegResource *) *res ) ; inst ; inst++) {
 				for (InstNodeIterator node(inst) ; node ; node++) {
 					if (node->stage()->category() == ParExeStage::EXECUTE) {
-						node->setE(index,true);
+						node->setDelay(index,0);
 					}
 				}
 			}
 		}
 			break;
-		case Resource::EXTERNAL_CONFLICT:{
-			ParExeInst * inst = ((ExternalConflictResource *) *res)->instruction();
-			for (InstNodeIterator node(inst) ; node ; node++) {
-				if ( (node->stage()->category() == ParExeStage::EXECUTE)
-					 &&
-					 (node->stage()->orderPolicy() == ParExeStage::OUT_OF_ORDER) ) {
-					node->setE(index,true);
-				}
-			}
-		}
-			break;
-		case Resource::INTERNAL_CONFLICT: {
-			ParExeInst * inst = ((InternalConflictResource *) *res)->instruction();
-			for (InstNodeIterator node(inst) ; node ; node++) {
-				if ( (node->stage()->category() == ParExeStage::EXECUTE)
-					 &&
-					 (node->stage()->orderPolicy() == ParExeStage::OUT_OF_ORDER) ) {
-					node->setE(index,true);
-					((InternalConflictResource *) *res)->setNode(node);
-				}
-			}
-		}
+//		case Resource::EXTERNAL_CONFLICT:{
+//			ParExeInst * inst = ((ExternalConflictResource *) *res)->instruction();
+//			for (InstNodeIterator node(inst) ; node ; node++) {
+//				if ( (node->stage()->category() == ParExeStage::EXECUTE)
+//					 &&
+//					 (node->stage()->orderPolicy() == ParExeStage::OUT_OF_ORDER) ) {
+////					node->setE(index,true);
+//					node->setDelay(index,0);
+//				}
+//			}
+//		}
+//			break;
+//		case Resource::INTERNAL_CONFLICT: {
+//			ParExeInst * inst = ((InternalConflictResource *) *res)->instruction();
+//			for (InstNodeIterator node(inst) ; node ; node++) {
+//				if ( (node->stage()->category() == ParExeStage::EXECUTE)
+//					 &&
+//					 (node->stage()->orderPolicy() == ParExeStage::OUT_OF_ORDER) ) {
+////					node->setE(index,true);
+//					node->setDelay(index,0);
+//					((InternalConflictResource *) *res)->setNode(node);
+//				}
+//			}
+//		}
 			break;
 		case Resource::RES_TYPE_NUM:
 			break;
@@ -388,55 +391,26 @@ void ParExeGraph::clearDelays() {
     for (PreorderIterator node(this); node; node++) {
 		for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
 			int index = resource->index();
-			node->setE(index, false);
-			node->setD(index, 0);
+			node->setDelay(index,-1);
 		}
     }
 }
 
 // -----------------------------------------------------------------
 
-//void ParExeGraph::propagate() {
-//    for (PreorderIterator node(this); node; node++) {
-//		if (node != _first_node) {
-//			for (Predecessor pred(node) ; pred ; pred++) {
-//				int _latency;
-//				if ( pred.edge()->type() == ParExeEdge::SOLID) {
-//					_latency = pred->latency() + pred.edge()->latency();
-//				}
-//				else {
-//					_latency = 0;
-//				}
-//				for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {								//========= THIS WILL NEED TO BE REPLACED WITH _proc_resources
-//					int r_id = resource->index();
-//					if (pred->e(r_id)) {
-//						node->setE(r_id, true);
-//						int _delay = pred->d(r_id) + _latency;
-//						if (_delay > node->d(r_id)) {
-//							node->setD(r_id, _delay);
-//						}
-//					}
-//				}
-//			}
-//		}
-//    }
-//}
-
-																																					// ================ NEW VERSION, TO BE CHECKED
 void ParExeGraph::propagate() {
 	for (PreorderIterator node(this); node; node++) {
 		for (Successor succ(node) ; succ ; succ++) {
-			int _latency = 0;
+			int latency = 0;
 			if (succ.edge()->type() == ParExeEdge::SOLID) {
-				_latency = node->latency() + succ.edge()->latency();
+				latency = node->latency() + succ.edge()->latency();
 			}
-			for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {								//========= THIS WILL NEED TO BE REPLACED WITH _proc_resources
+			for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
 				int r_id = resource->index();
-				if (node->e(r_id)) {
-					succ->setE(r_id, true);
-					int _delay = node->d(r_id) + _latency;
-					if (_delay > succ->d(r_id)) {
-						succ->setD(r_id, _delay);
+				if (node->delay(r_id) != -1) {
+					int delay = node->delay(r_id) + latency;
+					if (delay > succ->delay(r_id)) {
+						succ->setDelay(r_id, delay);
 					}
 				}
 			}
@@ -501,164 +475,71 @@ void ParExeNode::buildContendersMasks(){
     }
 }
 
-
-
 // ----------------------------------------------------------------
 
-void ParExeGraph::createResources(){
+void ParExeGraph::createSequenceResources(){
 
-    int resource_index = 0;
-    bool is_ooo_proc = false;
+    int resource_index = _resources.length();
+    int reg_num = _ws->platform()->regCount();
 
-    // build the start resource
-    StartResource * new_resource = new StartResource((elm::String) "start", resource_index++);
-    _resources.add(new_resource);
-
-    // build resource for stages and FUs
-    for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
-		if (stage->category() != ParExeStage::EXECUTE) {
-			for (int i=0 ; i<stage->width() ; i++) {
-				StringBuffer buffer;
-				buffer << stage->name() << "[" << i << "]";
-				StageResource * new_resource = new StageResource(buffer.toString(), stage, i, resource_index++);
-				_resources.add(new_resource);
-			}
-		}
-		else { // EXECUTE stage
-			if (stage->orderPolicy() == ParExeStage::IN_ORDER) {
-				for (int i=0 ; i<stage->numFus() ; i++) {
-					ParExePipeline * fu = stage->fu(i);
-					ParExeStage *fu_stage = fu->firstStage();
-					for (int j=0 ; j<fu_stage->width() ; j++) {
-						StringBuffer buffer;
-						buffer << fu_stage->name() << "[" << j << "]";
-						StageResource * new_resource = new StageResource(buffer.toString(), fu_stage, j, resource_index++);
-						_resources.add(new_resource);
-					}
-				}
-			}
-			else
-				is_ooo_proc = true;
-		}
+    AllocatedTable<bool> is_input(reg_num);
+    AllocatedTable<ParExeInst *> is_produced_by(reg_num);
+    AllocatedTable<ParExeInst *> is_input_for(reg_num);
+    for (int j=0 ; j<reg_num ; j++){
+    	is_input[j] = false;
+    	is_produced_by[j] = NULL;
     }
 
-    // build resources for queues
-    for (ParExeProc::QueueIterator queue(_microprocessor) ; queue ; queue++) {
-		int num = queue->size();
-		if (num > _sequence->count())
-			num = _sequence->count();
-		for (int i=0 ; i<num ; i++) {
-			StringBuffer buffer;
-			buffer << queue->name() << "[" << i << "]";
-
-			// find emptying stage
-			/*int _i = 0, _empty_i;
-			for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
-				if (stage == queue->emptyingStage())
-					_empty_i = _i;
-				_i++;
-			}*/
-
-			//
-			StageResource * upper_bound;
-			//int upper_bound_offset;
-			for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
-				if (resource->type() == Resource::STAGE) {
-					if (((StageResource *)(*resource))->stage() == queue->emptyingStage()) {
-						if (i < queue->size() - ((StageResource *)(*resource))->stage()->width() - 1) {
-							if (((StageResource *)(*resource))->slot() == ((StageResource *)(*resource))->stage()->width()-1) {
-								upper_bound = (StageResource *) (*resource);
-								//upper_bound_offset = (queue->size() - i) / ((StageResource *)(*resource))->stage()->width();
-							}
-						}
-						else {
-							if (((StageResource *)(*resource))->slot() == i - queue->size() + ((StageResource *)(*resource))->stage()->width()) {
-								upper_bound = (StageResource *) (*resource);
-								//upper_bound_offset = 0;
-							}
-						}
-					}
-				}
-			}
-			ASSERT(upper_bound);
-
-			// build the queue resource
-			QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound, _microprocessor->pipeline()->numStages());
-			_resources.add(new_resource);
-		}
-    }
-
-    // get the list of registers
-    otawa::hard::Platform *pf = _ws->platform();
-    AllocatedTable<Resource::input_t> inputs(pf->banks().count());
-    int reg_bank_count = pf->banks().count();
-    for(int i = 0; i <reg_bank_count ; i++) {
-		inputs[i].reg_bank = (otawa::hard::RegBank *) pf->banks()[i];
-		inputs[i]._is_input =
-			new AllocatedTable<bool>(inputs[i].reg_bank->count());
-		inputs[i]._resource_index =
-			new AllocatedTable<int>(inputs[i].reg_bank->count());
-		for (int j=0 ; j<inputs[i].reg_bank->count() ; j++) {
-			inputs[i]._is_input->set(j,true);
-			inputs[i]._resource_index->set(j,-1);
-		}
-    }
-
-    // build the resource for the used registers
     for (InstIterator inst(_sequence) ; inst ; inst++) {
-		const elm::genstruct::Table<hard::Register *>& reads = inst->inst()->readRegs();
-
-		for(int i = 0; i < reads.count(); i++) {
-			for (int b=0 ; b<reg_bank_count ; b++) {
-				if (inputs[b].reg_bank == reads[i]->bank()) {
-					if (inputs[b]._is_input->get(reads[i]->number()) == true) {
-						if (inputs[b]._resource_index->get(reads[i]->number()) == -1) {
-							//new input coming from outside the sequence
-							StringBuffer buffer;
-							buffer << reads[i]->bank()->name() << reads[i]->number();
-							RegResource * new_resource = new RegResource(buffer.toString(), reads[i]->bank(), reads[i]->number(), resource_index++);
-							_resources.add(new_resource);
-							new_resource->addUsingInst(inst);
-							inputs[b]._resource_index->set(reads[i]->number(), _resources.length()-1);
-						}
-						else {
-							((RegResource *)_resources[inputs[b]._resource_index->get(reads[i]->number())])->addUsingInst(inst);
-						}
-					}
-				}
-			}
-		}
-		const elm::genstruct::Table<hard::Register *>& writes = inst->inst()->writtenRegs();
-		for(int i = 0; i < writes.count(); i++) {
-			for (int b=0 ; b<reg_bank_count ; b++) {
-				if (inputs[b].reg_bank == writes[i]->bank()) {
-					inputs[b]._is_input->set(writes[i]->number(), false);
-				}
-			}
-		}
+     		const elm::genstruct::Table<hard::Register *>& reads = inst->inst()->readRegs();
+    		const elm::genstruct::Table<hard::Register *>& writes = inst->inst()->writtenRegs();
+    		for (int i = 0; i < reads.count(); i++) {
+    			int read_reg = reads[i]->platformNumber();
+    			if (is_produced_by[read_reg] == NULL){	// not produced by an earlier instruction in the sequence
+    				is_input[read_reg] = true;
+    				is_input_for[read_reg] = inst;
+     			}
+    			else{
+    				inst->addProducingInst(is_produced_by[read_reg]);
+    			}
+    		}
+    		for (int i = 0; i < writes.count(); i++) {
+    			int written_reg = writes[i]->platformNumber();
+    			is_produced_by[written_reg] = inst;
+     		}
     }
 
-    // build the resources for out-of-order execution
-    if (is_ooo_proc) {
-		int i = 0;
-		for (InstIterator inst(_sequence) ; inst ; inst++) {
-			StringBuffer buffer;
-			buffer << "extconf[" << i << "]";
-			ExternalConflictResource * new_resource = new ExternalConflictResource(buffer.toString(), inst, resource_index++);
-			_resources.add(new_resource);
-			StringBuffer another_buffer;
-			another_buffer << "intconf[" << i << "]";
-			InternalConflictResource * another_new_resource = new InternalConflictResource(another_buffer.toString(), inst, resource_index++);
-			_resources.add(another_new_resource);
-			i++;
-		}
+    for (int j=0 ; j<reg_num ; j++){
+    	if (is_input[j]){
+    		StringBuffer buffer;
+    		buffer << "r" << j ;
+    		RegResource * new_resource = new RegResource(buffer.toString(), 0, j, resource_index++);
+    		_resources.add(new_resource);
+    		new_resource->addUsingInst(is_input_for[j]);
+    	}
     }
+
+    // build the resources for out-of-order execution															// ========= DISABLED UNTIL OOO IS SUPPORTED AGAIN
+//    if (is_ooo_proc) {
+//		int i = 0;
+//		for (InstIterator inst(_sequence) ; inst ; inst++) {
+//			StringBuffer buffer;
+//			buffer << "extconf[" << i << "]";
+//			ExternalConflictResource * new_resource = new ExternalConflictResource(buffer.toString(), inst, resource_index++);
+//			_resources.add(new_resource);
+//			StringBuffer another_buffer;
+//			another_buffer << "intconf[" << i << "]";
+//			InternalConflictResource * another_new_resource = new InternalConflictResource(another_buffer.toString(), inst, resource_index++);
+//			_resources.add(another_new_resource);
+//			i++;
+//		}
+//    }
 
     // clean up
-    for(int i = 0; i <reg_bank_count ; i++) {
-		delete inputs[i]._is_input;
-		delete inputs[i]._resource_index;
-    }
+//    for(int i = 0; i <r ; i++) {
+//		delete inputs[i]._is_input;
+//		delete inputs[i]._resource_index;
+//    }
 }
 
 
@@ -666,13 +547,12 @@ void ParExeGraph::createResources(){
 
 void ParExeGraph::build() {
 
-    createResources();																			// ======== PLAN IS TO REMOVE THIS FROM THERE - RESOURCE LIST SHOULD BE CREATED OUTSIDE
+    createSequenceResources();
     createNodes();
     addEdgesForPipelineOrder();
     addEdgesForFetch();
     addEdgesForProgramOrder();
     addEdgesForMemoryOrder();
-    findDataDependencies();
     addEdgesForDataDependencies();
     addEdgesForQueues();
    // findContendingNodes();																// ========= IGNORED UNTIL OOO INST SCHEDULING IS AGAIN TAKEN INTO CONSIDERATION
@@ -680,7 +560,7 @@ void ParExeGraph::build() {
 
 // ----------------------------------------------------------------
 
-ParExePipeline *ParExeGraph::pipeline(ParExeStage *stage, ParExeInst *inst) {						// ======= CHECK IF CAN BE IMPROVED
+ParExePipeline *ParExeGraph::pipeline(ParExeStage *stage, ParExeInst *inst) {
 	return stage->findFU(inst->inst()->kind());;
 }
 
@@ -719,22 +599,24 @@ void ParExeGraph::createNodes() {
 				_last_node = node;
 			}
 			else {		// EXECUTE stage => expand functional unit's pipeline
+				elm::cout << "processing stage " << stage->name() << "\n";
 				ParExePipeline *fu = pipeline(stage, inst);
+				ParExeNode *first=NULL, *last=NULL;
 				assert(fu);
-//				if(!fu)																																// ======== TO BE REMOVED
-//					throw ParExeException(elm::_ << "cannot find FU for instruction " << inst->inst()->address() << " " << inst->inst());
-//				int index = 0;																														// ======== TO BE REMOVED
 				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {
 					ParExeNode *fu_node = new ParExeNode(this, fu_stage, inst);
+					if (!first)
+						first = fu_node;
+					last = fu_node;
 					inst->addNode(fu_node);
 					fu_stage->addNode(fu_node);
-//					if (index == 0)																													// ======== TO BE REMOVED
-//						inst->setExecNode(fu_node);
-//					index++;
 				}
+				inst->setFirstFUNode(first);
+				inst->setLastFUNode(last);
+				elm::cout << "last FU node of I" << inst->index() << " is " << inst->firstFUNode()->name() << "\n";
 			}
 		}
-    }
+   }
 }
 
 
@@ -752,8 +634,6 @@ void ParExeGraph::addEdgesForPipelineOrder(void) {
     			new ParExeEdge(previous, node, ParExeEdge::SOLID);
     		previous = node;
     	}
-    	//		for (int i=0 ; i<inst->numNodes()-1 ; i++)																							// ========= TO BE REMOVED
-    	//			new ParExeEdge(inst->node(i), inst->node(i+1), ParExeEdge::SOLID);
     }
 }
 
@@ -781,32 +661,6 @@ void ParExeGraph::addEdgesForFetch(void) {
     address_t current_cache_line = first_cache_line_node->inst()->inst()->address().offset() / _cache_line_size;
     address_t cache_line;
 
-    // iterates on fetch nodes
-//    for(int i=0 ; i<fetch_stage->numNodes()-1 ; i++) {																						// ========= TO BE REMOVED
-//		ParExeNode *node = fetch_stage->node(i);
-//		ParExeNode *next = fetch_stage->node(i+1);
-//
-//		// taken banch ?
-//		if (node->inst()->inst()->topAddress() != next->inst()->inst()->address()){
-//			// fixed by casse: topAddress() is address() + size()
-//			ParExeEdge * edge = new ParExeEdge(node, next, ParExeEdge::SOLID, 0, branch_msg);
-//			edge->setLatency(_branch_penalty); // taken branch penalty when no branch prediction is enabled
-//			edge = new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID, cache_inter_msg);
-//			edge->setLatency(_branch_penalty);
-//		}
-//		else
-//			new ParExeEdge(node, next, ParExeEdge::SLASHED);
-//
-//		// new cache line?
-//		address_t cache_line = next->inst()->inst()->address().offset() /  _cache_line_size;
-//		if ( cache_line != current_cache_line){
-//			new ParExeEdge(first_cache_line_node, next, ParExeEdge::SOLID, 0, cache_trans_msg);
-//			if(first_cache_line_node != node)
-//				new ParExeEdge(node, next, ParExeEdge::SOLID, 0, cache_inter_msg);
-//			first_cache_line_node = next;
-//			current_cache_line = cache_line;
-//		}
-//    }
     ParExeNode *previous = NULL;
     for (ParExeStage::NodeIterator node(fetch_stage) ; node ; node++){
     	if (previous){
@@ -931,61 +785,63 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
  * Compute for each first FU node which is the FU node producing
  * the required data (and fill the producer list of a FU node).
  */
-void ParExeGraph::findDataDependencies() {
+void ParExeGraph::findDataDependencies() {																						// ======= THIS FUNCTION SHOULD NOT BE USED ANYMORE
 
-	// allocate the rename table
-    otawa::hard::Platform *pf = _ws->platform();
-    AllocatedTable<rename_table_t> rename_tables(pf->banks().count());
-    int reg_bank_count = pf->banks().count();
-    for(int i = 0; i <reg_bank_count ; i++) {
-		rename_tables[i].reg_bank = (otawa::hard::RegBank *) pf->banks()[i];
-		rename_tables[i].table =
-			new AllocatedTable<ParExeNode *>(rename_tables[i].reg_bank->count());
-		for (int j=0 ; j<rename_tables[i].reg_bank->count() ; j++)
-			rename_tables[i].table->set(j,NULL);
-    }
-
-    // consider every instruction
-    for (InstIterator inst(_sequence) ; inst ; inst++)  {
-
-    	// find first and last FU nodes
-		ParExeNode *first_fu_node = NULL, *last_fu_node = NULL;
-		for (InstNodeIterator node(inst); node ; node++){
-			if (node->stage()->category() == ParExeStage::FU){
-				if (!first_fu_node)
-					first_fu_node = node;
-				last_fu_node = node;
-			}
-		}
-
-		// check for data dependencies
-		const elm::genstruct::Table<hard::Register *>& reads = first_fu_node->inst()->inst()->readRegs();
-		for(int i = 0; i < reads.count(); i++) {
-			for (int b=0 ; b<reg_bank_count ; b++) {
-				if (rename_tables[b].reg_bank == reads[i]->bank()) {
-					ParExeNode *producer = rename_tables[b].table->get(reads[i]->number());
-					if (producer != NULL) {
-						first_fu_node->addProducer(producer);
-					}
-				}
-			}
-		}
-
-		// fu_node is the last FU node
-		const elm::genstruct::Table<hard::Register *>& writes = last_fu_node->inst()->inst()->writtenRegs();
-		for(int i = 0; i < writes.count(); i++) {
-			for (int b=0 ; b<reg_bank_count ; b++) {
-				if (rename_tables[b].reg_bank == writes[i]->bank()) {
-					rename_tables[b].table->set(writes[i]->number(),last_fu_node);
-				}
-			}
-		}
-
-    } // endfor each instruction
-
-    // Free rename tables
-    for(int i = 0; i <reg_bank_count ; i++)
-		delete rename_tables[i].table;
+//	// allocate the rename table
+//    otawa::hard::Platform *pf = _ws->platform();
+//    AllocatedTable<rename_table_t> rename_tables(pf->banks().count());
+//    int reg_bank_count = pf->banks().count();
+//    for(int i = 0; i <reg_bank_count ; i++) {
+//		rename_tables[i].reg_bank = (otawa::hard::RegBank *) pf->banks()[i];
+//		rename_tables[i].table =
+//			new AllocatedTable<ParExeNode *>(rename_tables[i].reg_bank->count());
+//		for (int j=0 ; j<rename_tables[i].reg_bank->count() ; j++)
+//			rename_tables[i].table->set(j,NULL);
+//    }
+//
+//
+//    // consider every instruction
+//    for (InstIterator inst(_sequence) ; inst ; inst++)  {
+//
+//    	// find first and last FU nodes
+//		ParExeNode *first_fu_node = inst->firstFUNode(), *last_fu_node = inst->lastFUNode();
+////		ParExeNode *other_first_fu_node=NULL, *other_last_fu_node=NULL;
+////		for (InstNodeIterator node(inst); node ; node++){
+////			if (node->stage()->category() == ParExeStage::FU){
+////				if (!other_first_fu_node)
+////					other_first_fu_node = node;
+////				other_last_fu_node = node;
+////			}
+////		}
+//
+//		// check for data dependencies
+//		const elm::genstruct::Table<hard::Register *>& reads = first_fu_node->inst()->inst()->readRegs();
+//		for(int i = 0; i < reads.count(); i++) {
+//			for (int b=0 ; b<reg_bank_count ; b++) {
+//				if (rename_tables[b].reg_bank == reads[i]->bank()) {
+//					ParExeNode *producer = rename_tables[b].table->get(reads[i]->number());
+//					if (producer != NULL) {
+//						first_fu_node->addProducer(producer);
+//					}
+//				}
+//			}
+//		}
+//
+//		// fu_node is the last FU node
+//		const elm::genstruct::Table<hard::Register *>& writes = last_fu_node->inst()->inst()->writtenRegs();
+//		for(int i = 0; i < writes.count(); i++) {
+//			for (int b=0 ; b<reg_bank_count ; b++) {
+//				if (rename_tables[b].reg_bank == writes[i]->bank()) {
+//					rename_tables[b].table->set(writes[i]->number(),last_fu_node);
+//				}
+//			}
+//		}
+//
+//    } // endfor each instruction
+//
+//    // Free rename tables
+//    for(int i = 0; i <reg_bank_count ; i++)
+//		delete rename_tables[i].table;
 
 }
 // ----------------------------------------------------------------
@@ -1001,10 +857,12 @@ void ParExeGraph::addEdgesForDataDependencies(void){
 		ParExeStage *fu_stage = exec_stage->fu(j)->firstStage();
 		for (int k=0 ; k<fu_stage->numNodes() ; k++) {
 			ParExeNode *node = fu_stage->node(k);
-			for (int p=0 ; p<node->numProducers(); p++) {
-				ParExeNode *producer = node->producer(p);
-				new ParExeEdge(producer, node, ParExeEdge::SOLID);
-			}
+				ParExeInst *inst = node->inst();
+				for (ParExeInst::ProducingInstIterator prod(inst) ; prod ; prod ++){
+					ParExeNode *producing_node = prod->lastFUNode();
+					new ParExeEdge(producing_node, node, ParExeEdge::SOLID);
+				}
+//			}
 		}
     }
 }
@@ -1239,8 +1097,8 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 				dotFile << "{ ";
 				while ( j<width ) {
 					if ( (i<num) && (j<num) ) {
-						if (node->e(i))
-							dotFile << node->d(i);
+						if (node->delay(i)>=0)
+							dotFile << node->delay(i);
 					}
 					if (j<width-1)
 						dotFile << " | ";
@@ -1347,6 +1205,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 ParExeGraph::ParExeGraph(
 	WorkSpace *ws,
 	ParExeProc *proc,
+	elm::genstruct::Vector<Resource *> *hw_resources,
 	ParExeSequence *seq,
 	const PropList& props
 )
@@ -1369,6 +1228,10 @@ ParExeGraph::ParExeGraph(
 			_cache_line_size = 1;
 	}
 	_props = props;
+	assert(!hw_resources->isEmpty());
+	for (elm::genstruct::Vector<Resource *>::Iterator res(*hw_resources) ; res ; res++) {
+		_resources.add(res);
+	}
 }
 
 

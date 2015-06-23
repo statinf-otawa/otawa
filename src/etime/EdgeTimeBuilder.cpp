@@ -349,7 +349,7 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
  */
 ParExeGraph *EdgeTimeBuilder::make(ParExeSequence *seq) {
 	PropList props;
-	ParExeGraph *graph = new ParExeGraph(this->workspace(), _microprocessor, seq, props);
+	ParExeGraph *graph = new ParExeGraph(this->workspace(), _microprocessor, &_hw_resources, seq, props);
 	graph->build();
 	return graph;
 }

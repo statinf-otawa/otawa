@@ -143,7 +143,6 @@ namespace otawa {
 		class GraphBBTime: public BBProcessor {
     private:
 		WorkSpace *_ws;
-		int _last_stage_cap;
 		PropList _props;
 		int _prologue_depth;
 		OutStream *_output_stream;
@@ -156,13 +155,14 @@ namespace otawa {
 		const hard::Memory *mem;
 		const hard::Cache *icache;
 		ParExeProc *_microprocessor;
+		elm::genstruct::Vector<Resource *> _hw_resources;
 
 		virtual int cacheMissPenalty(Address addr) const;
 		virtual int memoryLatency(Address addr) const;
 		virtual void buildNCTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
 		virtual void buildFMTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
 		virtual void computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq);
-
+		virtual void BuildVectorOfHwResources();
 		virtual void configureMem(WorkSpace *ws) {
 			icache = hard::CACHE_CONFIGURATION(ws)->instCache();
 			_do_consider_icache = icache;
@@ -269,24 +269,103 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 		_ws = ws;
 		const hard::Processor *proc = hard::PROCESSOR(_ws);
-
 		if(proc == &hard::Processor::null)
 			throw ProcessorException(*this, "no processor to work with");
-		else {
-			_microprocessor = new ParExeProc(proc);
-			_last_stage_cap = _microprocessor->lastStage()->width();
-
-		}
-
-		// look for memory hierarchy
+//		else {
+		_microprocessor = new ParExeProc(proc);
+		BuildVectorOfHwResources();															// ===== TO BE ENABLED
 		configureMem(_ws);
-
-		ResourceList *_proc_resources = new ResourceList(_ws, _microprocessor);															// ===== TO BE ENABLED
+//		}
 
 		// Perform the actual process
 		BBProcessor::processWorkSpace(ws);
 	}
 
+	// -- Build vector of pipeline-related resources -----------------------------------------------------------
+
+	template <class G>
+		void GraphBBTime<G>::BuildVectorOfHwResources(){
+
+    int resource_index = 0;
+    bool is_ooo_proc = false;
+
+    // build the start resource
+    StartResource * new_resource = new StartResource((elm::String) "start", resource_index++);
+    _hw_resources.add(new_resource);
+
+    // build resource for stages and FUs
+    for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
+		if (stage->category() != ParExeStage::EXECUTE) {
+			for (int i=0 ; i<stage->width() ; i++) {
+				StringBuffer buffer;
+				buffer << stage->name() << "[" << i << "]";
+				StageResource * new_resource = new StageResource(buffer.toString(), stage, i, resource_index++);
+				_hw_resources.add(new_resource);
+			}
+		}
+		else { // EXECUTE stage
+			if (stage->orderPolicy() == ParExeStage::IN_ORDER) {
+				for (int i=0 ; i<stage->numFus() ; i++) {
+					ParExePipeline * fu = stage->fu(i);
+					ParExeStage *fu_stage = fu->firstStage();
+					for (int j=0 ; j<fu_stage->width() ; j++) {
+						StringBuffer buffer;
+						buffer << fu_stage->name() << "[" << j << "]";
+						StageResource * new_resource = new StageResource(buffer.toString(), fu_stage, j, resource_index++);
+						_hw_resources.add(new_resource);
+					}
+				}
+			}
+			else
+				is_ooo_proc = true;
+		}
+    }
+
+    // build resources for queues
+    for (ParExeProc::QueueIterator queue(_microprocessor) ; queue ; queue++) {
+		int num = queue->size();
+		for (int i=0 ; i<num ; i++) {
+			StringBuffer buffer;
+			buffer << queue->name() << "[" << i << "]";
+			StageResource * upper_bound;
+			for (elm::genstruct::Vector<Resource *>::Iterator resource(_hw_resources) ; resource ; resource++) {
+				if (resource->type() == Resource::STAGE) {
+					if (((StageResource *)(*resource))->stage() == queue->emptyingStage()) {
+						if (i < queue->size() - ((StageResource *)(*resource))->stage()->width() - 1) {
+							if (((StageResource *)(*resource))->slot() == ((StageResource *)(*resource))->stage()->width()-1) {
+								upper_bound = (StageResource *) (*resource);
+							}
+						}
+						else {
+							if (((StageResource *)(*resource))->slot() == i - queue->size() + ((StageResource *)(*resource))->stage()->width()) {
+								upper_bound = (StageResource *) (*resource);
+							}
+						}
+					}
+				}
+			}
+			ASSERT(upper_bound);
+			// build the queue resource
+			QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound, _microprocessor->pipeline()->numStages());
+			_hw_resources.add(new_resource);
+		}
+    }
+
+    // build resources for registers
+//    const otawa::hard::Platform::banks_t & reg_banks  =  ws->platform()->banks() ;
+//	elm::cout << reg_banks.count() << " banks to consider \n";
+//	for (int b=0 ; b<reg_banks.count() ; b++) {
+//		otawa::hard::RegBank * bank = (otawa::hard::RegBank *) reg_banks.get(b);
+//		elm::cout << reg_banks.count() << " bank" << b << " has " << bank->count() << " registers\n";
+//		for (int r=0 ; r<bank->count() ; r++)
+//		{
+//			StringBuffer buffer;
+//			buffer << bank->name() << r;
+//			RegResource * new_resource = new RegResource(buffer.toString(), bank, r, resource_index++);
+//			_resources.add(new_resource);
+//		}
+//	}
+}
 
 	// -- FillSequence ------------------------------------------------------------------------------------------
  
@@ -296,6 +375,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 										  int depth){
 
 		BasicBlock *bb = ctxt->lastBlock();
+		int last_stage_cap = _microprocessor->lastStage()->width();
 		int num_preds = 0;
 		for(BasicBlock::InIterator edge(bb); edge; edge++) {
 			BasicBlock *pred = edge->source();
@@ -303,7 +383,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 				num_preds++;
 				PathContext *new_ctxt = new PathContext(*ctxt);
 				new_ctxt->addBlock(pred, edge);
-				if ( (new_ctxt->numInsts() >= _last_stage_cap)
+				if ( (new_ctxt->numInsts() >= last_stage_cap)
 					 &&
 					 (new_ctxt->numBlocks() > depth) )
 					context_list->addLast(new_ctxt);
@@ -553,7 +633,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 
 		ParExeSequence *sequence = buildSequence(ctxt);
-		G *execution_graph = new G(_ws,_microprocessor, sequence, _props);
+		G *execution_graph = new G(_ws,_microprocessor, &_hw_resources, sequence, _props);
 		execution_graph->build();
     
 		// no cache
