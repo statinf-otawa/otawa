@@ -358,8 +358,8 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
  */
 ParExeGraph *EdgeTimeBuilder::make(ParExeSequence *seq) {
 	PropList props;
-	ParExeGraph *graph = new ParExeGraph(this->workspace(), _microprocessor, seq, props);
-	graph->build(seq);
+	ParExeGraph *graph = new ParExeGraph(this->workspace(), _microprocessor, &_hw_resources, seq, props);
+	graph->build();
 	return graph;
 }
 
@@ -417,7 +417,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 
 		// fill the current block
 		for(BasicBlock::InstIterator inst(target); inst; inst++) {
-			ParExeInst * par_exe_inst = new ParExeInst(inst, target, BODY, index++);
+			ParExeInst * par_exe_inst = new ParExeInst(inst, target, otawa::BLOCK, index++);
 			seq->addLast(par_exe_inst);
 		}
 
@@ -546,7 +546,7 @@ void EdgeTimeBuilder::processSequence(void) {
 		Event *evt = (*event).fst;
 
 		// find the instruction
-		while((*event).snd != IN_PREFIX && inst->codePart() != otawa::BODY) {
+		while((*event).snd != IN_PREFIX && inst->codePart() != otawa::BLOCK) {
 			inst++;
 			ASSERT(inst);
 		}

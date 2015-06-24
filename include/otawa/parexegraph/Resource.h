@@ -25,8 +25,8 @@
 #define _RESOURCE_H_
 
 #include <otawa/parexegraph/ParExeProc.h>
-//#include <otawa/parexegraph/ParExeGraph.h>
 #include <otawa/hard/Register.h>
+#include <otawa/hard/Platform.h>
 
 namespace otawa { 
 
@@ -34,31 +34,28 @@ namespace otawa {
 	
   class Resource {
   public:
-    typedef enum {STAGE, QUEUE, REG, EXTERNAL_CONFLICT, INTERNAL_CONFLICT, BLOCK_START, RES_TYPE_NUM} resource_type_t;
+    typedef enum {BLOCK_START, STAGE, QUEUE, REG, EXTERNAL_CONFLICT, INTERNAL_CONFLICT, RES_TYPE_NUM} resource_type_t;
+    	// last value must be RES_TYPE_NUM
     typedef struct input_t {
-    hard::RegBank * reg_bank;
-    elm::genstruct::AllocatedTable<bool> *_is_input;
-    elm::genstruct::AllocatedTable<int> * _resource_index;
-  } input_t;
+    	hard::RegBank * reg_bank;
+    	elm::genstruct::AllocatedTable<bool> *_is_input;
+    	elm::genstruct::AllocatedTable<int> * _resource_index;
+    } input_t;
   private:
     elm::String _name;
     resource_type_t _type;
     int _index;
   public:
-    inline Resource(elm::String name, resource_type_t type, int index)
-      : _name(name), _type(type), _index(index) {}
-    inline elm::String name()
-      {return _name;}
-    inline resource_type_t type()
-      {return _type;}
-    inline int index()
-    	{return _index;}
+    inline Resource(elm::String name, resource_type_t type, int index) : _name(name), _type(type), _index(index) {}
+    inline elm::String name() {return _name;}
+    inline resource_type_t type() {return _type;}
+    inline int index() {return _index;}
+    inline void setIndex(int index) {_index = index;}
    };
   
   class StartResource : public Resource {
   public:
-    inline StartResource(elm::String name, int index)
-      :Resource(name,BLOCK_START, index) {}
+    inline StartResource(elm::String name, int index) : Resource(name,BLOCK_START, index) {}
   };
 
   class StageResource : public Resource {
@@ -66,28 +63,27 @@ namespace otawa {
     ParExeStage *_stage;
     int _slot;
   public:
-    inline StageResource(elm::String name, ParExeStage *stage, int slot, int index)
-	: Resource(name,STAGE, index), _stage(stage), _slot(slot)  {}
-    inline ParExeStage * stage()
-      {return _stage;}
-    inline int slot()
-      {return _slot;}
+    inline StageResource(elm::String name, ParExeStage *stage, int slot, int index) : Resource(name,STAGE, index), _stage(stage), _slot(slot)  {}
+    inline ParExeStage * stage() {return _stage;}
+    inline int slot() {return _slot;}
   };
 
   class QueueResource : public Resource {
   private: 
     ParExeQueue *_queue;
     int _slot;
-    StageResource * _upper_bound;
+    int _uid;		// upper bound index
+    int _offset;
   public:
-    inline QueueResource(elm::String name, ParExeQueue * queue, int slot, int index, StageResource * upper_bound)
-	: Resource(name,QUEUE, index), _queue(queue), _slot(slot), _upper_bound(upper_bound) {}
-    inline ParExeQueue * queue()
-      {return _queue;}
-    inline int slot()
-      {return _slot;}
-    StageResource * upperBound() 
-      {return _upper_bound;}
+    inline QueueResource(elm::String name, ParExeQueue * queue, int slot, int index, StageResource * upper_bound, int num_stages)
+	: Resource(name,QUEUE, index), _queue(queue), _slot(slot)/*, _upper_bound(upper_bound)*/ {
+    	_uid = upper_bound->index();
+    	_offset = num_stages - upper_bound->stage()->index();
+    }
+    inline ParExeQueue * queue() {return _queue;}
+    inline int slot() {return _slot;}
+    inline int uid() {return _uid;}
+    inline int offset() {return _offset;}
   };
 
   class RegResource : public Resource {
@@ -101,13 +97,11 @@ namespace otawa {
     inline ~RegResource() {
       _using_instructions.clear();
     }
-    inline otawa::hard::RegBank * regBank()
-      {return _reg_bank;}
-    inline int regIndex()
-      {return _reg_index;}
+    inline otawa::hard::RegBank * regBank() {return _reg_bank;}
+    inline int regIndex() {return _reg_index;}
     inline void addUsingInst(ParExeInst * inst) {
       if (! _using_instructions.contains(inst) )
-	_using_instructions.add(inst);
+    	  _using_instructions.add(inst);
     }
     class UsingInstIterator : public elm::genstruct::Vector<ParExeInst *>::Iterator {
     public:
@@ -116,33 +110,90 @@ namespace otawa {
     };
   };
 
-  class ExternalConflictResource : public Resource {
+//  class ExternalConflictResource : public Resource {
+//  private:
+//    ParExeInst * _instruction;
+//  public:
+//    ExternalConflictResource(elm::String name, ParExeInst * instruction, int index)
+//	: Resource(name,EXTERNAL_CONFLICT, index), _instruction(instruction) {}
+//    ParExeInst * instruction()
+//      {return _instruction;}
+//  };
+//
+//  class InternalConflictResource : public Resource {
+//  private:
+//    ParExeInst * _instruction;
+//    ParExeNode * _node;
+//  public:
+//    InternalConflictResource(elm::String name, ParExeInst * instruction, int index)
+//	: Resource(name,INTERNAL_CONFLICT, index), _instruction(instruction) {}
+//    ParExeInst* instruction()
+//      {return _instruction;}
+//    void setNode(ParExeNode *node)
+//      {_node = node;}
+//    ParExeNode *node()
+//      {return _node;}
+//
+//  };
+
+  class ResourceList{
   private:
-    ParExeInst * _instruction;
+		elm::genstruct::Vector<Resource *> _resources;				// resources available in the processor: pipeline stages, queue slots, registers, etc.
   public:
-    ExternalConflictResource(elm::String name, ParExeInst * instruction, int index)
-	: Resource(name,EXTERNAL_CONFLICT, index), _instruction(instruction) {}
-    ParExeInst * instruction()
-      {return _instruction;}
+		ResourceList(WorkSpace *ws, ParExeProc *proc);
+		inline int numResources() {return _resources.length();}
+		class ResourceIterator: public elm::genstruct::Vector<Resource *>::Iterator {
+		public:
+			inline ResourceIterator(const ResourceList *list) : elm::genstruct::Vector<Resource *>::Iterator(list->_resources) {}
+		};
   };
 
-  class InternalConflictResource : public Resource {
-  private:
-    ParExeInst * _instruction;
-    ParExeNode * _node;
-  public:
-    InternalConflictResource(elm::String name, ParExeInst * instruction, int index)
-	: Resource(name,INTERNAL_CONFLICT, index), _instruction(instruction) {}
-    ParExeInst* instruction()
-      {return _instruction;}
-    void setNode(ParExeNode *node)
-      {_node = node;}
-    ParExeNode *node()
-      {return _node;}
-    
-  };
+//  class ResourceVector{
+//   private:
+// 		elm::genstruct::Vector<Resource *> _resources;				// resources available in the processor: pipeline stages, queue slots, registers, etc.
+// 		int _start_index[Resource::RES_TYPE_NUM];
+// 		int _end_index[Resource::RES_TYPE_NUM];
+// 		int _num_resources;
+//   public:
+// 		ResourceVector() {
+// 			for (int i=0; i<Resource::RES_TYPE_NUM; i++){
+// 				_start_index[i] = -1;
+// 				_end_index[i] = -1;
+// 			}
+// 			_start_index[Resource::BLOCK_START] = 0;
+// 			_end_index[Resource::BLOCK_START] = 0;
+// 		    StartResource * new_resource = new StartResource((elm::String) "start", 0);
+// 		    _resources.add(new_resource);
+// 		   _num_resources = 1;
+// 		}
+// 		inline void addResource(Resource *res, Resource::resource_type_t type){
+// 			res->setIndex(_num_resources);
+// 			_resources.add(res);
+// 			if (_start_index[type]<0)
+// 			 	_start_index[type] = _num_resources;
+// 			_end_index[type] = _num_resources;
+// 			_num_resources++;
+// 		}
+// 		inline int numResources() {return _num_resources;}
+//
+// 		class ResourceIterator: public elm::genstruct::Vector<Resource *>::Iterator {
+// 		public:
+//  			inline ResourceIterator(const ResourceVector *vector) : elm::genstruct::Vector<Resource *>::Iterator(vector->_resources) {}
+// 		};
+//
+// 		class StageResourceIterator: public PreIterator<StageResourceIterator, ResourceVector> {
+// 			public:
+// 				const Vector<Resource *>& _vec;
+// 				int i;
+// 				inline StageResourceIterator(const Vector<Resource *>& vec) : _vec(vec), i(_start_index[Resource::STAGE]) {}
+// 				inline StageResourceIterator(const StageResourceIterator& iter) : _vec(iter._vec), i(iter.i){}
+// 				inline bool ended(void) const {return i >= _end_index[Resource::STAGE];}
+// 				inline const Resource * item(void) const {return _vec[i];}
+// 				inline void next(void) { i++;}
+// 		};
+//   };
 
 
 } // namespace otawa
 
-#endif //_PARAM_EXEGRAPH_H_
+#endif //_RESOURCE_H_
