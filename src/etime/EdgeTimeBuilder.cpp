@@ -28,9 +28,6 @@
 
 namespace otawa { namespace etime {
 
-Identifier<bool> PREDUMP("otawa::etime::PREDUMP", false);
-
-
 io::Output& operator<<(io::Output& out, EdgeTimeBuilder::place_t p) {
 	static cstring msgs[] = {
 			"in prefix",
@@ -299,14 +296,26 @@ p::declare EdgeTimeBuilder::reg = p::init("otawa::etime::EdgeTimeBuilder", Versi
 /**
  */
 EdgeTimeBuilder::EdgeTimeBuilder(p::declare& r)
-: GraphBBTime<ParExeGraph>(r), bnode(0), bedge(0), source(0), target(0), seq(0),  graph(0), predump(false) {
-}
+:	GraphBBTime<ParExeGraph>(r),
+ 	_explicit(false),
+ 	sys(0),
+ 	predump(false),
+ 	event_th(0),
+ 	edge(0),
+ 	seq(0),
+ 	graph(0),
+ 	bnode(0),
+ 	bedge(0),
+ 	source(0),
+ 	target(0)
+{ }
 
 
 void EdgeTimeBuilder::configure(const PropList& props) {
 	GraphBBTime<ParExeGraph>::configure(props);
 	_explicit = ipet::EXPLICIT(props);
 	predump = PREDUMP(props);
+	event_th = EVENT_THRESHOLD(props);
 }
 
 
@@ -372,7 +381,6 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 
 	// initialize the sequence
 	bnode = 0;
-	int index = 0;
 	seq = new ParExeSequence();
 
 	// compute source
@@ -390,34 +398,144 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	else
 		target = edge->target();
 
-	// fill with previous
-	if(source)
-		for(BasicBlock::InstIterator inst(source); inst; inst++) {
-			ParExeInst * par_exe_inst = new ParExeInst(inst, source, PROLOGUE, index++);
-			seq->addLast(par_exe_inst);
-		}
-
-	// fill with current block
-	for(BasicBlock::InstIterator inst(target); inst; inst++) {
-		ParExeInst * par_exe_inst = new ParExeInst(inst, target, BODY, index++);
-		seq->addLast(par_exe_inst);
-	}
-
-	// build the graph
-	PropList props;
-	graph = make(seq);
-	ASSERTP(graph->firstNode(), "no first node found: empty execution graph");
-
 	// collect and sort events
 	all_events.clear();
 	if(source)
 		sortEvents(all_events, source, IN_PREFIX);
 	sortEvents(all_events, target, IN_BLOCK, edge);
+
+	// usual simple case: few events
+	//if(countVarEvents(all_events) <= event_th) {
+		int index = 0;
+
+		// fill the prefix
+		if(source)
+			for(BasicBlock::InstIterator inst(source); inst; inst++) {
+				ParExeInst * par_exe_inst = new ParExeInst(inst, source, PROLOGUE, index++);
+				seq->addLast(par_exe_inst);
+			}
+
+		// fill the current block
+		for(BasicBlock::InstIterator inst(target); inst; inst++) {
+			ParExeInst * par_exe_inst = new ParExeInst(inst, target, BODY, index++);
+			seq->addLast(par_exe_inst);
+		}
+
+		// perform the computation
+		processSequence();
+		return;
+	//}
+#	if 0
+	// remove prefix case
+	all_events.clear();
+	sortEvents(all_events, target, IN_BLOCK, edge);
+	if(countVarEvents(all_events)) {
+
+		// fill the current block
+		int index = 0;
+		for(BasicBlock::InstIterator inst(target); inst; inst++) {
+			ParExeInst * par_exe_inst = new ParExeInst(inst, target, BODY, index++);
+			seq->addLast(par_exe_inst);
+		}
+
+		// perform the computation
+		processSequence();
+		return;
+	}
+
+	// split case
+
+	// find bounds in event list
+	event_list_t events = all_events;
+	all_events.clear();
+	genstruct::Vector<Inst *> bnds;
+	int ecnt = 0, instp = 0;
+	Inst *inst = 0;
+	for(int i = 0; i < events.length(); i++) {
+
+		// determine current instruction
+		if(inst != events[i].fst->inst()) {
+
+			// too many events ?
+			if(ecnt >= event_th) {
+				if(bnds)
+					bnds.add(inst);
+				else
+					bnds.add(events[i].fst->inst());
+			}
+
+			// process next instruction
+			inst = events[i].fst->inst();
+			instp = i;
+		}
+
+		// variable event?
+		if(events[i].fst->occurrence() == SOMETIMES)
+			ecnt++;
+	}
+	if(ecnt == 0)	// no more event, aggregate
+		bnds.pop();
+
+	// process the different blocks
+	Inst *next = bnds ? bnds[0] : 0;
+	int ei = 0, index = 0, bi = 0;
+	for(BasicBlock::InstIter inst(target); inst; inst++) {
+
+		// limit found?
+		if(*inst == next) {
+
+			// launch computation
+			processSequence();
+			next = bnds ? bnds[bi++] : 0;
+
+			// reset state
+			all_events.clear();
+			seq = new ParExeSequence();
+		}
+
+		// append current instruction
+		ParExeInst * par_exe_inst = new ParExeInst(inst, target, BODY, index++);
+		seq->addLast(par_exe_inst);
+		while(ei < events.length() && events[ei].fst->inst() == *inst)
+			all_events.add(events[ei++]);
+	}
+
+	// compute for last block
+	processSequence();
+#	endif
+}
+
+
+/**
+ * Count the number of variable events in the event list.
+ * @param events	Event list to process.
+ * @return			Number of variable events.
+ */
+int EdgeTimeBuilder::countVarEvents(const event_list_t& events) {
+	int cnt = 0;
+	for(int i = 0; i < events.length(); i++)
+		if(events[i].fst->occurrence() == SOMETIMES)
+			cnt++;
+	return cnt;
+}
+
+
+/**
+ * Compute and process the time for the given sequence.
+ */
+void EdgeTimeBuilder::processSequence(void) {
+
+	// log used events
 	if(logFor(LOG_BB))
 		for(genstruct::Vector<event_t>::Iterator e(all_events); e; e++)
 			log << "\t\t\t\t" << (*e).fst->inst()->address() << " -> "
 				 << (*e).fst->name() << " (" << (*e).fst->detail() << ") "
 				 << (*e).snd << io::endl;
+
+	// build the graph
+	PropList props;
+	graph = make(seq);
+	ASSERTP(graph->firstNode(), "no first node found: empty execution graph");
 
 	// applying static events (always, never)
 	events.clear();
@@ -1103,5 +1221,20 @@ void EdgeTimeBuilder::contributeConst(void) {
  * of events has been added to the ILP system.
  */
 p::feature EDGE_TIME_FEATURE("otawa::etime::EDGE_TIME_FEATURE", new Maker<EdgeTimeBuilder>());
+
+
+/**
+ * This property is used to configure the @ref EDGE_TIME_FEATURE and ask to dump the generated
+ * execution graphs.
+ */
+Identifier<bool> PREDUMP("otawa::etime::PREDUMP", false);
+
+
+/**
+ * This property is used to configure the @ref EDGE_TIME_FEATURE  and determine the maximum number of
+ * events to consider to time a block. If a value of n is passed, at most 2^n times will be computed
+ * and if a block gets a bigger number of events, it will be split.
+ */
+Identifier<int> EVENT_THRESHOLD("otawa::etime::EVENT_THRESHOLD", 12);
 
 } }	// otawa::etime

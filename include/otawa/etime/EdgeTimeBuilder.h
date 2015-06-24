@@ -51,6 +51,7 @@ protected:
 	typedef genstruct::Vector<ConfigSet> config_list_t;
 	virtual ParExeGraph *make(ParExeSequence *seq);
 	virtual void processEdge(WorkSpace *ws, CFG *cfg);
+	virtual void processSequence(void);
 	virtual void clean(ParExeGraph *graph);
 	void processTimes(const config_list_t& confs);
 	void applyStrictSplit(const config_list_t& confs);
@@ -79,23 +80,25 @@ private:
 	int splitConfs(const config_list_t& confs, const event_list_t& events, bool& lower);
 	void sortEvents(event_list_t& events, BasicBlock *bb, place_t place, Edge *edge = 0);
 	void displayConfs(const genstruct::Vector<ConfigSet>& confs, const event_list_t& events);
+	int countVarEvents(const event_list_t& events);
 
 	// ILP state
 	bool _explicit;
 	ilp::System *sys;
+	bool predump;
+	int event_th;
 
 	// graph
-	ParExeNode *bnode;
-	ParExeEdge *bedge;
-	BasicBlock *source, *target;
-	ParExeSequence *seq;
-	ParExeGraph *graph;
-	bool predump;
-
-	// events
 	Edge *edge;
 	genstruct::Vector<event_t> all_events;
 	event_list_t events;
+	ParExeSequence *seq;
+	ParExeGraph *graph;
+	ParExeNode *bnode;
+	ParExeEdge *bedge;
+	BasicBlock *source, *target;
+
+	// collector of events
 	genstruct::HashTable<Event *, EventCollector *> colls;
 };
 

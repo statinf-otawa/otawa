@@ -211,7 +211,7 @@ CFGCollector::CFGCollector(p::declare& r)
 /**
  * CFGCollector registration.
  */
-p::declare CFGCollector::reg = p::init("CFGCollector", Version(1, 1, 0))
+p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(1, 1, 0))
 	.require(CFG_INFO_FEATURE)
 	.provide(COLLECTED_CFG_FEATURE)
 	.maker<CFGCollector>();

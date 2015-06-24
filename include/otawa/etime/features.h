@@ -95,6 +95,8 @@ extern p::feature EVENTS_FEATURE;
 extern Identifier<Event *> EVENT;
 
 // configuration feature
+extern Identifier<bool> PREDUMP;
+extern Identifier<int> EVENT_THRESHOLD;
 extern p::feature EDGE_TIME_FEATURE;
 
 } }	// otawa::etime
