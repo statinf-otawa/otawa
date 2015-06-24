@@ -158,7 +158,8 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 		for(BasicBlock::OutIterator edge(bb); edge; edge++)
 			if(edge->kind() != Edge::CALL) {
 				c += x(VAR(edge));
-				if(edge->kind() == Edge::NOT_TAKEN)
+				// VIRTUAL has been to support case of non-call branch at end of CFG
+				if(edge->kind() == Edge::NOT_TAKEN || edge->kind() == Edge::VIRTUAL)
 					nt = edge;
 			}
 			else
@@ -170,6 +171,9 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 	//		if not conditional	x_nt = 	sum{(i,f) in calling_i} x_if
 	//		if conditional		x_nt >= sum{(i,f) in calling_i} x_if
 	if(is_call) {
+		cerr << "DEBUG: " << bb << " in " << bb->cfg() << io::endl;
+		for(BasicBlock::OutIterator e(bb); e; e++)
+			cerr << "DEBUG: " << *e << io::endl;
 		cons c;
 		if(bb->isConditional())
 			c = m(return_label) + x(VAR(nt)) >= 0.;
