@@ -109,7 +109,7 @@ void BasicBlock::setNotTaken(BasicBlock *bb) {
 
 /**
  *  @fn bool BasicBlock::isCall(void) const;
- *  Test if the basuc block is ended by a call to a sub-program.
+ *  Test if the basic block is ended by a call to a sub-program.
  *  @return True if the basic block is call, false else.
  */
 

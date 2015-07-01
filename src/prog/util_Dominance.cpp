@@ -227,8 +227,8 @@ elm::MutableCollection<BasicBlock *> *headers*/) {
 
 
 /**
- * Test if the given baic block is a loop header.
- * @return True if it is a loop ehader, false else.
+ * Test if the given basic block is a loop header.
+ * @return True if it is a loop header, false else.
  */
 bool Dominance::isLoopHeader(BasicBlock *bb) {
 	ELM_DEPRECATED
