@@ -47,39 +47,118 @@ using namespace elm;
  * for integer and address and integer computation, minimal flow of control to allow
  * fast analysis.
  *
+ * Basically, a machine instruction I is translated into a block of n semantic instructions [i0, i1, i2, ..., in-1].
+ * To interpret a semantic block, one has to consider a semantic instruction counter, p. At beginning
+ * of the interpretation, p = 0. According to the interpreted instructions, p is simply incremented (+1)
+ * to perform sequential execution, or changed by adding a positive quantity n to avoid executing some instructions.
+ * Notice that n >= 0 induces that no loop can appear in the interpretation of semantic block and hence no fix point
+ * is required. The execution stops as soon as p >= n.
+ *
+ * A interpretation of a semantic i, |[i]|, can be viewed as a function taking as input (p, s) with s the
+ * state of the program and producing a new (p', s'):
+ *
+ * |[i]|: (p, s) -> (p', s')
+ *
+ * The state s is a an instance of possible states, that is, of functions mapping registers R, temporaries T
+ * and memory addresses A to a value in domain V:
+ *
+ * S: R U T U A -> V
+ *
+ * Set of registers depends on the underlying architecture but is mapped to IN. Temporaries are a subset of negative
+ * integers but A currently represents address on 32-bits. For the remaining of the document, s[i] represents
+ * the value of V in the state s that matches i, that may be a register, a temporary or an address. s[x / y]
+ * represents a new state where value of y is x, that is, s' = s[x / y] = lambda i. if i = y then x else s[i].
+ *
+ * The algorithm to interpret a semantic block follows (s0 is the initial state):
+ * @code
+ *	p <- 0
+ *	s <- s0
+ *	WHILE i < n DO
+ *		(p, s) <- |[ip]| (p, s)
+ * @endcode
+ *
+ * The following sections describes the semantics of each instruction.
+ *
+ *
  * @section sem-set-comp Computation Instructions
  *
  * Basically, our semantic instructions have three operands and works with registers.
  * The first operand d is the target registers to store the result and next ones represents source operands (a and b).
  * The following arithmetics operations exists:
- * @li CMP -- comparison
- * @li CMPU -- unsigned comparison
- * @li ADD -- addition
- * @li SUB -- subtraction
- * @li SHL -- logical shift left
- * @li SHR -- logical shift right
- * @li ASR -- arithmetic shift right
- * @li AND -- binary and
- * @li OR -- binary inclusive or
- * @li XOR -- binary inclusive xor
- * @li MUL -- signed multiplication
- * @li MULU -- unsigned multiplication
- * @li DIV -- signed division
- * @li DIVU -- unsigned division
- * @li MOD -- signed integer division remainder
- * @li MODU -- unsigned integer division remainder
+ * @li ADD -- addition,
+ * @li SUB -- subtraction,
+ * @li SHL -- logical shift left,
+ * @li SHR -- logical shift right,
+ * @li ASR -- arithmetic shift right,
+ * @li AND -- binary and,
+ * @li OR -- binary inclusive or,
+ * @li XOR -- binary inclusive xor,
+ * @li MUL -- signed multiplication,
+ * @li MULU -- unsigned multiplication,
+ * @li DIV -- signed division,
+ * @li DIVU -- unsigned division,
+ * @li MOD -- signed integer division remainder,
+ * @li MODU -- unsigned integer division remainder.
  *
  * The following instructions represents unary operations applied on the a register and stores
  * the result on the d register.
  * @li NEG -- sign negation,
  * @li NOT -- binary complement.
  *
- * There is also a SPEC semantics instruction kind that must be used by
- * instruction effects not tractable with the current semantics instruction set.
- * One using the SPEC instructions must be aware that standard usual analyses
- * will not cope with such instructions: they will need to be customized.
+ * Below is given the semantics of each instruction where:
+ * @li a, b, c represents registers,
+ * @li i represents 32-bits immediate value,
+ * @li operators applies on unsigned values except if they are followed by "+".
  *
- * The comparison puts its result in the target register that may be one of the following constants:
+ * @code
+ * |[add (d, a, b)]| (p, s) = (p + 1, s[s[a] +   s[b] / d])
+ * |[sub (d, a, b)]| (p, s) = (p + 1, s[s[a] -   s[b] / d])
+ * |[shl (d, a, b)]| (p, s) = (p + 1, s[s[a] <<  s[b] / d])
+ * |[shr (d, a, b)]| (p, s) = (p + 1, s[s[a] >>  s[b] / d])
+ * |[asr (d, a, b)]| (p, s) = (p + 1, s[s[a] >>+ s[b] / d])
+ * |[and (d, a, b)]| (p, s) = (p + 1, s[s[a] &   s[b] / d])
+ * |[or  (d, a, b)]| (p, s) = (p + 1, s[s[a] |   s[b] / d])
+ * |[xor (d, a, b)]| (p, s) = (p + 1, s[s[a] ^   s[b] / d])
+ * |[mul (d, a, b)]| (p, s) = (p + 1, s[s[a] *   s[b] / d])
+ * |[mulu(d, a, b)]| (p, s) = (p + 1, s[s[a] *+  s[b] / d])
+ * |[div (d, a, b)]| (p, s) = (p + 1, s[s[a] /   s[b] / d])
+ * |[divu(d, a, b)]| (p, s) = (p + 1, s[s[a] /+  s[b] / d])
+ * |[mod (d, a, b)]| (p, s) = (p + 1, s[s[a] %   s[b] / d])
+ * |[modu(d, a, b)]| (p, s) = (p + 1, s[s[a] %+  s[b] / d])
+ * |[neg (d, a)   ]| (p, s) = (p + 1, s[-s[a]         / d])
+ * |[not (d, a)   ]| (p, s) = (p + 1, s[~s[a]         / d])
+ * @endcode
+ *
+ *
+ * @section sem-set Set Instructions
+ *
+ * There are four set instructions:
+ * @li to transfer content of a register to another one, @p set,
+ * @li to get a constant 32-bits value in a register, @p seti,
+ * @li to assign undefined T value to a register, @p scratch,
+ * @li to set the page of an address for multi-address space architectures, @p setp (very rarely used).
+ *
+ * Their semantics is described below (i is a 32-bits value):
+ *
+ * @code
+ * |[set    (d, a)]| (p, s) = (p + 1, s[s[a] / d])
+ * |[seti   (d, i)]| (p, s) = (p + 1, s[i / d])
+ * |[scratch(d)   ]| (p, s) = (p + 1, s[T / d])
+ * |[setp   (d, i)]| (p, s) = (p + 1, s[p :: s[d] / d])
+ * @endcode
+ *
+ *
+ * @section sem-flow Flow Instructions
+ *
+ * In semantic instructions, there are two types of control flow: machine flow corresponds to PC assignment
+ * in the underlying instruction set and is supported by CFG; semantic flow that controls the execution
+ * flow of semantic instruction. The only instruction concerning the machine control flow is @p branch
+ * that gives the new address stored in the PC but it doesn't change the semantic instruction counter p.
+ *
+ * The semantic control flow is handled by two instruction, @p cont that stops the execution and @p if
+ * that makes following instructions optional. The condition used in @p if is generated from
+ * a comparison result, a ~ b (a compared to b), generated by either a @p cmp instruction, or @cmpu instruction.
+ * Then the @p if statement exploits the comparison results to apply one of the following condition:
  * @li EQ -- a == b
  * @li LT -- a < b
  * @li LE -- a <= b
@@ -87,12 +166,53 @@ using namespace elm;
  * @li GT -- a > b
  * @li NE -- a != b
  * @li ANY_COND -- do not know anything (recall we are performing static analysis).
- *
- * In addition, unsigned comparisons are also needed:
  * @li ULT -- a < b
  * @li ULE -- a <= b
  * @li UGE -- a >= b
  * @li UGT -- a > b
+ *
+ * Below is the semantics of the flow instructions (c is a condition and c[a] returns true
+ * if condition c is satisfied in register a):
+ *
+ * @code
+ * |[branch(a)       ]| (p, s) = (p + 1, s)		// PC <- s[a]
+ * |[cmp   (d, a, b) ]| (p, s) = (p + 1, s[s[a] ~+ s[b] / d])
+ * |[cmpu  (d, a, b) ]| (p, s) = (p + 1, s[s[a] ~  s[b] / d])
+ * |[cont            ]| (p, s) = (n, s)
+ * |[if    (c, a, k) ]| (p, s) = (if c[a] then p + 1 else p + k, s)
+ * @endcode
+ *
+ * @section sem-mem Memory Access Instruction
+ *
+ * There are only two instructions used to perform memory access:
+ * @li @p load allows to get a value from memory using its address and its type,
+ * @li @p store allows to store a register value to a memory address using the given type.
+ *
+ * Notice that the types are required to realize the bytes modified in memory
+ * and to generate correct value in register (including sign extension). The types may be one of:
+ * @li int8 -- signed integer on 8-bits,
+ * @li int16 -- signed integer on 16-bits,
+ * @li int32 -- signed integer on 32-bits,
+ * @li int64 -- signed integer on 64-bits,
+ * @li uint8 -- unsigned integer on 8-bits,
+ * @li uint16 -- unsigned integer on 16-bits,
+ * @li uint32 -- unsigned integer on 32-bits,
+ * @li uint64 -- unsigned integer on 64-bits.
+ *
+ * The semantics of these instructions follows (t is the type, s(t) represents access to state with type t):
+ * @code
+ * |[load (d, a, t)]| (p, s) = (p + 1, s[s(t)[s[a] / d])
+ * |[store(d, a, t)]| (p, s) = (p + 1, s(t)[d / s[b]])
+ * @endcode
+ *
+ * @section sem-spec Special Instruction
+ *
+ * There is also a @spec semantics instruction kind that must be used by
+ * instruction effects not tractable with the current semantics instruction set.
+ * One using the SPEC instructions must be aware that standard usual analyses
+ * will not cope with such instructions: they will need to be customized.
+ * Therefore, the semantics of @p spec is undefined.
+ *
  *
  * @section sem-reg Register and Temporaries
  *
@@ -106,6 +226,7 @@ using namespace elm;
  * identified as they are represented as negative numbers and their maximum number
  * is provided by the @ref Process::tempMax(). Please, notice that the liveness
  * of a temporary must not expand out of the semantics block of an instruction !
+ *
  *
  * @section sem-anal Building Analyses
  *
@@ -133,12 +254,41 @@ using namespace elm;
  * abstract interpretation but also functions to interpret the different
  * semantic instructions.
  *
+ * To help the developer supports the multiple execution
+ * path of a semantic bloc, one can use the class @ref otawa::sem::PathIter that
+ * works like a usual iterator but provides also indications of the executed
+ * paths and instructions:
+ * @li op, d, a, b, cst, reg, addr -- access to instruction description,
+ * @li pathEnd() -- true if execution is at end,
+ * @li isCond() -- true if the current instruction is a @p if, meaning that two paths will start from this point.
+ *
+ * A common way to use @ref otawa::sem::PathIter is to maintain a stack of states where the current state
+ * is pushed when an @p if is found and a state is popped when an execution path ends. The different states
+ * obtained at each end of an execution path can be joined:
+ * @code
+ * 	genstruct::Vector<State> stack;
+ * 	State s = initial_state, result = bottom_state;
+ * 	stack.push(s);
+ * 	for(sem::PathIter i(machine_instruction); i; i++) {
+ * 		if(i.pathEnd()) {
+ * 			result = join(result, s);
+ * 			s = stack.pop();
+ * 		}
+ * 		else {
+ * 			if(i.isCond())
+ *				stack.push(s);
+ *			s = apply(i, s);
+ * 		}
+ * 	}
+ * 	return result;
+ * @endcode
+ *
  * A specific processing is devoted to SPEC instructions. A convenient analysis
  * must let its user to specialize it in order to support these instructions.
  * To achieve this goal, it must provide in the analysis a virtual function
  * that is called each time the SPEC instruction is interpreted. It would be
  * useful if this function takes as parameter the real instruction, the
- * semantics instruction and the current ab stract state. In the initial analysis,
+ * semantics instruction and the current abstract state. In the initial analysis,
  * this function simply do nothing but it lets customizer to overload it
  * in order to customize the interpretation.
  */
@@ -211,6 +361,8 @@ static void printArg(const hard::Platform *pf, io::Output& out, signed short arg
  *
  * @ref CMP, @ref ADD, @ref SUB, @ref SHL, @ref SHR and @ref ASR uses both variable a and b to perform, respectively,
  * comparison, addition, subtraction, logical shift left, logical shift right, arithmetics shift right.
+ *
+ * @ingroup sem
  */
 
 /**
@@ -242,6 +394,7 @@ void Block::print(elm::io::Output& out) const {
  * @class Printer
  * Printer class for semantic instructions (resolve the generic register value
  * to the their real platform name).
+ * @ingroup sem
  */
 
 
@@ -333,6 +486,7 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
  * Invert the given condition.
  * @param cond	Condition to invert.
  * @return		Inverted condition.
+ * @ingroup sem
  */
 cond_t invert(cond_t cond) {
 	static cond_t invs[] = {
@@ -360,6 +514,7 @@ cond_t invert(cond_t cond) {
  * Get the size of the given type.
  * @param type	Type to get size for.
  * @return		Size in bytes.
+ * @ingroup sem
  */
 int size(type_t type) {
 	static int sizes[] = {
@@ -425,6 +580,7 @@ io::Output& operator<<(io::Output& out, cond_t cond) {
  * This iterator allows easily to traverse all execution paths of a block
  * of semantic instructions. As it may consume resources, it is delivered
  * to support iteration on multiple blocks sequentially.
+ * @ingroup sem
  */
 
 
