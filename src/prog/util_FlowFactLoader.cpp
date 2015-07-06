@@ -70,6 +70,9 @@ extern int fft_line;
  * @li @ref NO_RETURN
  * @li @ref TOTAL_ITERATION
  * @li @ref PRESERVED
+ * @li @ref NO_INLINE
+ * @li @ref INLINING_POLICY
+ * @li @ref ACCESS_RANGE
  */
 
 /**
@@ -167,6 +170,13 @@ extern int fft_line;
  * @endcode
  * When virtualizing the located function, default policy will be set to true.
  *
+ * @li <b><tt>memory access INST_ADDRESS1 LOW_ADDRESS .. HIGH_ADDRESS [in STEP1 / STEP2 / ...] ;</tt></b> @n
+ * Sets the memory accessed by the instruction at INST_ADDRESS
+ * to the range from LOW_ADDRESS up to third HIGH_ADDRESS,
+ * optionally in the given context.
+ *
+ * @li <b><tt>memory TYPE ADDRESS = VALUE ;</tt></b> @n
+ * Sets the memory at ADDRESS to the VALUE of type TYPE.
  *
  * @code
  * <inlining-off LOCATION/>
@@ -924,14 +934,18 @@ void FlowFactLoader::onNoCall(Address address) {
  * Called for the F4 production: "noinline ADDRESS" or "inline ADDRESS".
  *
  * @param address	Address of the instruction to work on.
+ * @param no_inline	The boolean value to be set in NO_INLINE
  * @throw ProcessorException	If the instruction cannot be found.
  */
-void FlowFactLoader::onNoInline(Address address, bool no_inline) {
+void FlowFactLoader::onNoInline(Address address, bool no_inline, const ContextualPath& path) {
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
 		onError(_ << " no instruction at  " << address << ".");
 	else
-		NO_INLINE(inst) = no_inline;
+		path.ref(NO_INLINE, inst) = no_inline;
+
+	if(logFor(LOG_BB))
+		log << "\t" << path << "(NO_INLINE," << address << ") = " << no_inline << io::endl;
 }
 
 
@@ -940,14 +954,18 @@ void FlowFactLoader::onNoInline(Address address, bool no_inline) {
  * or "inlining-off ADDRESS".
  *
  * @param address	Address of the instruction to work on.
+ * @param policy	The boolean value to be set in INLINING_POLICY
  * @throw ProcessorException	If the instruction cannot be found.
  */
-void FlowFactLoader::onSetInlining(Address address, bool policy) {
+void FlowFactLoader::onSetInlining(Address address, bool policy, const ContextualPath& path) {
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
 		onError(_ << " no instruction at  " << address << ".");
 	else
-		INLINING_POLICY(inst) = policy;
+		path.ref(INLINING_POLICY, inst) = policy;
+
+	if(logFor(LOG_BB))
+		log << "\t" << path << "(INLINING_POLICY," << address << ") = " << policy << io::endl;
 }
 
 
@@ -1211,7 +1229,7 @@ void FlowFactLoader::scanNoInline(xom::Element *element, ContextualPath& cpath, 
 		return;
 	}
 
-	this->onNoInline(inst->address(), no_inline);
+	this->onNoInline(inst->address(), no_inline, cpath);
 }
 
 
@@ -1236,7 +1254,7 @@ void FlowFactLoader::scanSetInlining(xom::Element *element, ContextualPath& cpat
 		return;
 	}
 
-	this->onSetInlining(inst->address(), policy);
+	this->onSetInlining(inst->address(), policy, cpath);
 }
 
 

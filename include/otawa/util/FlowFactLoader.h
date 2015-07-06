@@ -73,7 +73,7 @@ protected:
 	virtual void onNoReturn(address_t addr);
 	virtual void onNoReturn(String name);
 	virtual void onNoCall(Address address);
-	virtual void onNoInline(Address address, bool no_inline);
+	virtual void onNoInline(Address address, bool no_inline, const ContextualPath& path);
 	virtual void onIgnoreSeq(Address address);
 	virtual void onIgnoreControl(Address address);
 	virtual void onMultiBranch(Address control, const Vector<Address>& target);
@@ -88,7 +88,7 @@ protected:
 	virtual void onMemoryAccess(Address iaddr, Address lo, Address hi, const ContextualPath& path);
 	virtual void onRegSet(string name, const dfa::Value& value);
 	virtual void onMemSet(Address addr, const Type *type, const dfa::Value& value);
-	virtual void onSetInlining(Address address, bool policy);
+	virtual void onSetInlining(Address address, bool policy, const ContextualPath& path);
 
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void configure (const PropList &props);

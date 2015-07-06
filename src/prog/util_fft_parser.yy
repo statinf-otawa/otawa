@@ -131,14 +131,14 @@ command:
 		{ loader->onNoCall(*$2); delete $2; }
 |	KW_NO KW_CALL id_or_address ';'
 		{ loader->onNoCall(*$3); delete $3; }
-|	KW_DOINLINE id_or_address ';'
-		{ loader->onNoInline(*$2, false); delete $2; }
-|	KW_NOINLINE id_or_address ';'
-		{ loader->onNoInline(*$2, true); delete $2; }
-|	KW_INLINING_ON id_or_address ';'
-		{ loader->onSetInlining(*$2, true); delete $2; }
-|	KW_INLINING_OFF id_or_address ';'
-		{ loader->onSetInlining(*$2, false); delete $2; }
+|	KW_DOINLINE id_or_address opt_in ';'
+		{ loader->onNoInline(*$2, false, path); delete $2; path.clear(); }
+|	KW_NOINLINE id_or_address opt_in ';'
+		{ loader->onNoInline(*$2, true, path); delete $2; path.clear(); }
+|	KW_INLINING_ON id_or_address opt_in ';'
+		{ loader->onSetInlining(*$2, true, path); delete $2; path.clear(); }
+|	KW_INLINING_OFF id_or_address opt_in ';'
+		{ loader->onSetInlining(*$2, false, path); delete $2; path.clear(); }
 |	KW_IGNORECONTROL full_address ';'
 		{ loader->onIgnoreControl(*$2); delete $2; }
 |	KW_IGNORE KW_CONTROL full_address ';'
