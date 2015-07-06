@@ -30,7 +30,7 @@
 #include <otawa/manager.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg/Virtualizer.h>
-#include <otawa/cfg/CFGBuilder.h>
+//#include <otawa/cfg/CFGBuilder.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/proc/DynProcessor.h>
 #include <otawa/prog/features.h>

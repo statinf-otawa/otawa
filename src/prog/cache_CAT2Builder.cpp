@@ -133,24 +133,41 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 					header = lblock->bb();
 			  	else header = ENCLOSING_LOOP_HEADER(lblock->bb());
 
-			  	int bound;
-			  	bool perfect_firstmiss = true;
+				bool is_pers = false;
 				PERSProblem::Domain *pers = CACHE_ACS_PERS(lblock->bb())->get(line);
-				bound = 0;
 
-				if ((pers->length() > 1) && (firstmiss_level == FML_INNER))
-					bound = pers->length() - 1;
-				cache::CATEGORY_HEADER(lblock) = NULL;
-			  	for (int k = pers->length() - 1 ; (k >= bound) && (header != NULL); k--) {
-					if (pers->isPersistent(lblock->cacheblock(), k)) {
-						cache::CATEGORY(lblock) = cache::FIRST_MISS;
-						cache::CATEGORY_HEADER(lblock) = header;
-					} else perfect_firstmiss = false;
-					header = ENCLOSING_LOOP_HEADER(header);
+				if(pers->length() >= 1)
+					switch(firstmiss_level) {
+					case FML_OUTER:
+						is_pers = pers->isPersistent(lblock->cacheblock(), 0);
+						while(ENCLOSING_LOOP_HEADER(header))
+							header = ENCLOSING_LOOP_HEADER(header);
+						break;
+					case FML_INNER:
+						is_pers = pers->isPersistent(lblock->cacheblock(), pers->length() - 1);
+						break;
+					case FML_MULTI:
+						for (int k = pers->length() - 1 ; k >= 0; k--) {
+							if(pers->isPersistent(lblock->cacheblock(), k)) {
+								if (is_pers)
+									header = ENCLOSING_LOOP_HEADER(header);
+								is_pers = true;
+							}
+							else
+								break;
+						}
+						break;
+					default:
+						ASSERT(0);
+						break;
+					}
+
+				if(is_pers) {
+					cache::CATEGORY(lblock) = cache::FIRST_MISS;
+					cache::CATEGORY_HEADER(lblock) = header;
 				}
-
-				if ((firstmiss_level == FML_OUTER) && (perfect_firstmiss == false))
-					cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
+				else
+					cache::CATEGORY(lblock) = cache::NOT_CLASSIFIED;
 			} /* of category condition test */
 		} else
 			cache::CATEGORY(lblock) = cache::ALWAYS_MISS;

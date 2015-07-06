@@ -30,16 +30,13 @@
 namespace otawa {
 
 // Useful
-inline bool isReturn(Inst *inst) {
+static inline bool isReturn(Inst *inst) {
 	return inst->isReturn() || IS_RETURN(inst);
 }
 
 
-/**
- */
-static Identifier<bool> IS_ENTRY("", false);
+/* For internal use only */
 static Identifier<CodeBasicBlock *> BB("", 0);
-
 
 
 /**
@@ -62,17 +59,24 @@ static Identifier<CodeBasicBlock *> BB("", 0);
  * CFG builder constructor.
  */
 CFGBuilder::CFGBuilder(void)
-: Processor("otawa::CFGBuilder", Version(1, 0, 0)) {
+: Processor("otawa::CFGBuilder", Version(1, 0, 0)), info(0) {
 	provide(CFG_INFO_FEATURE);
 	require(DECODED_TEXT);
 }
 
 
 /**
+ * Add a new CFG that starts at the given BB (if not already declared).
+ * @param bb	Entry BB of the CFG.
  */
-void CFGBuilder::processWorkSpace(WorkSpace *fw) {
-	ASSERT(fw);
-	buildAll(fw);
+void CFGBuilder::addCFG(Segment *seg, BasicBlock *bb) {
+	if(ENTRY(bb))
+		return;
+	CFG *cfg = new CFG(seg, bb);
+	ENTRY(bb) = cfg;
+	info->add(cfg);
+	if(logFor(LOG_FUN))
+		log << "\t\tadded cfg " << cfg->label() << " (0x" << bb->address() << ")\n";
 }
 
 
@@ -128,14 +132,14 @@ CodeBasicBlock *CFGBuilder::thisBB(Inst *inst) {
 
 /**
  * Record the given instruction as the startup of a sub-program.
+ * @param seg	Owner segment.
  * @param inst	Subprogram startup.
  */
-void CFGBuilder::addSubProgram(Inst *inst) {
+void CFGBuilder::addSubProgram(Segment *seg, Inst *inst) {
+	ASSERT(seg);
 	ASSERT(inst);
-	if(logFor(LOG_CFG))
-		log << "\tadd subprogram " << inst->address() << " (" << FUNCTION_LABEL(inst) << ")\n";
 	BasicBlock *bb = thisBB(inst);
-	IS_ENTRY(bb) = true;
+	addCFG(seg, bb);
 }
 
 
@@ -165,7 +169,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 				BasicBlock *bb = thisBB(target);
 				ASSERT(bb);
 				if(inst->isCall())
-					IS_ENTRY(bb) = true;
+					addCFG(seg, bb);
 			}
 
 			// verbose message for non-return
@@ -183,7 +187,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 						BasicBlock *bb = thisBB(target_inst);
 						ASSERT(bb);
 						if(inst->isCall())
-							IS_ENTRY(bb) = true;
+							addCFG(seg, bb);
 					}
 				}
 
@@ -193,7 +197,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 					if(target_inst) {
 						BasicBlock *bb = thisBB(target_inst);
 						ASSERT(bb);
-						IS_ENTRY(bb) = true;
+						addCFG(seg, bb);
 					}
 				}
 			}
@@ -239,12 +243,6 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 				follow = true;
 			}
 
-			// record entries
-			if(IS_ENTRY(bb)) {
-				ASSERT(!entries.contains(bb));
-				entries.add(bb);
-				IS_ENTRY(bb).remove();
-			}
 		}
 
 		// end of block
@@ -323,14 +321,6 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 		info->add(bb);
 	}
 
-	// Recording the CFG
-	for(int i = 0; i < entries.length(); i++) {
-		CFG *cfg = new CFG(seg, entries[i]);
-		_cfgs.add(cfg);
-		ENTRY(entries[i]) = cfg;
-		if(logFor(LOG_CFG))
-			log << "\tadded CFG " << cfg->label() << " at " << cfg->address() << io::endl;
-	}
 }
 
 
@@ -345,9 +335,18 @@ void CFGBuilder::addFile(WorkSpace *ws, File *file) {
 	// Scan file symbols
 	for(File::SymIter sym(file); sym; sym++)
 		if(sym->kind() == Symbol::FUNCTION) {
+
+			// find segment
+			Segment *fseg = file->findSegmentAt(sym->address());
+			if(!fseg) {
+				warn(_ << "function \"" << sym->name() << "\" cannot be allocated in any segment");
+				continue;
+			}
+
+			// find instruction
 			Inst *inst = sym->findInst();
 			if(inst)
-				addSubProgram(inst);
+				addSubProgram(fseg, inst);
 			else
 				warn(_ << "function symbol \"" << sym->name() << "\" does not match any instruction");
 	}
@@ -366,30 +365,22 @@ void CFGBuilder::addFile(WorkSpace *ws, File *file) {
 
 
 /**
- * Build the CFG of the program.
- * @param fw	Current framework.
  */
-void CFGBuilder::buildAll(WorkSpace *fw) {
-	ASSERT(fw);
-	_cfgs.clear();
+void CFGBuilder::processWorkSpace(WorkSpace *ws) {
+	ASSERT(ws);
 
 	// create CFG info
-	info = new CFGInfo(fw);
-	//this->addCleaner(CFG_INFO_FEATURE, deletor(CFGInfo::ID, fw, info));
-	track(CFG_INFO_FEATURE, CFGInfo::ID(fw) = info);
+	info = new CFGInfo(ws);
+	track(CFG_INFO_FEATURE, CFGInfo::ID(ws) = info);
 
 	// Find and mark the start
-	Inst *start = fw->start();
+	Inst *start = ws->start();
 	if(start)
-		addSubProgram(start);
+		addSubProgram(ws->process()->program()->findSegmentAt(start->address()), start);
 
 	// Compute CFG for each code piece
-	for(Process::FileIter file(fw->process()); file; file++)
-		addFile(fw, file);
-
-	// Build the CFGInfo
-	for(genstruct::Vector<CFG *>::Iterator cfg(_cfgs); cfg; cfg++)
-		info->add(cfg);
+	for(Process::FileIter file(ws->process()); file; file++)
+		addFile(ws, file);
 }
 
 
@@ -399,7 +390,7 @@ void CFGBuilder::configure(const PropList& props) {
 	Processor::configure(props);
 }
 
-static SilentFeature::Maker<CFGBuilder> CFG_INFO_MAKER;
+
 /**
  * Feature asserting that the CFG has been scanned in the program. The result
  * is put the @ref CFGInfo::ID.
@@ -409,6 +400,6 @@ static SilentFeature::Maker<CFGBuilder> CFG_INFO_MAKER;
  *
  * @ingroup cfg
  */
-SilentFeature CFG_INFO_FEATURE("otawa::CFG_INFO_FEATURE", CFG_INFO_MAKER);
+p::feature CFG_INFO_FEATURE("otawa::CFG_INFO_FEATURE", new Maker<CFGBuilder>());
 
 } // otawa

@@ -230,6 +230,9 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
 			for(int j = 0; j < ab.fst; j++) {
 				BlockAccess& b = ab.snd[j];
+				// Non-blocking WRITEs
+				if (b.action() == BlockAccess::STORE)
+					continue;
 
                 // Create x_miss variable
 				StringBuffer buf;

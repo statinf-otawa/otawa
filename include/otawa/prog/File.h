@@ -55,12 +55,11 @@ public:
 	
 	// Segment management
 	inline void addSegment(Segment *seg) { segs.add(seg); }
+	Segment *findSegmentAt(Address addr);
 	class SegIter: public Vector<Segment *>::Iterator {
 	public:
-		inline SegIter(const File *file)
-			: Vector<Segment *>::Iterator(file->segs) { }
-		inline SegIter(const SegIter& iter)
-			: Vector<Segment *>::Iterator(iter) { }
+		inline SegIter(const File *file): Vector<Segment *>::Iterator(file->segs) { }
+		inline SegIter(const SegIter& iter): Vector<Segment *>::Iterator(iter) { }
 	};
 	
 	// Symbol management
