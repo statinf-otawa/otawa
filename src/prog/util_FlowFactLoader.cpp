@@ -150,7 +150,28 @@ extern int fft_line;
  * @code
  * <nocall LOCATION/>
  * @endcode
- * When OTAWA encounters a call to the located function, it will be ignored
+ * When OTAWA encounters a call to the located function, it will be ignored.
+ *
+ * @code
+ * <doinline LOCATION/>
+ * @endcode
+ * When virtualizing, calls to the located function will be inlined.
+ *
+ * @code
+ * <noinline LOCATION/>
+ * @endcode
+ * When virtualizing, calls to the located function will not be inlined.
+ *
+ * @code
+ * <inlining-on LOCATION/>
+ * @endcode
+ * When virtualizing the located function, default policy will be set to true.
+ *
+ *
+ * @code
+ * <inlining-off LOCATION/>
+ * @endcode
+ * When virtualizing the located function, default policy will be set to false.
  *
  * @code
  * <function LOCATION>
@@ -352,6 +373,20 @@ extern int fft_line;
  * Process each call to the given function as a non-control instruction.
  * It may be useful to remove call to intrusive initialization function like
  * "__eabi" in main.
+ *
+ * @li <b><tt>doinline FUNCTION_ADDRESS ;</tt></b> @n
+ * When virtualizing, calls to the given function will be inlined.
+ *
+ * @li <b><tt>noinline FUNCTION_ADDRESS ;</tt></b> @n
+ * When virtualizing, calls to the given function will not be inlined.
+ *
+ * @li <b><tt>inlining-on FUNCTION_ADDRESS ;</tt></b> @n
+ * When virtualizing the given function, default inlining policy
+ * will be set to true.
+ *
+ * @li <b><tt>inlining-off FUNCTION_ADDRESS ;</tt></b> @n
+ * When virtualizing the given function, default inlining policy
+ * will be set to false.
  *
  * @li <b><tt>preserve ADDRESS ;</tt></b> @n
  * Ensure that flow fact loader will not change the addressed instruction.
@@ -886,6 +921,37 @@ void FlowFactLoader::onNoCall(Address address) {
 
 
 /**
+ * Called for the F4 production: "noinline ADDRESS" or "inline ADDRESS".
+ *
+ * @param address	Address of the instruction to work on.
+ * @throw ProcessorException	If the instruction cannot be found.
+ */
+void FlowFactLoader::onNoInline(Address address, bool no_inline) {
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		onError(_ << " no instruction at  " << address << ".");
+	else
+		NO_INLINE(inst) = no_inline;
+}
+
+
+/**
+ * Called for the F4 production: "inlining-on ADDRESS"
+ * or "inlining-off ADDRESS".
+ *
+ * @param address	Address of the instruction to work on.
+ * @throw ProcessorException	If the instruction cannot be found.
+ */
+void FlowFactLoader::onSetInlining(Address address, bool policy) {
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		onError(_ << " no instruction at  " << address << ".");
+	else
+		INLINING_POLICY(inst) = policy;
+}
+
+
+/**
  * Called for the F4 production: "preserver ADDRESS".
  * @param address	Address of instruction to preserve.
  * @throw ProcessorException	If the instruction cannot be found.
@@ -1053,7 +1119,9 @@ void FlowFactLoader::loadXML(const string& path) throw(ProcessorException) {
 /**
  * Supports an XML flow fact content.
  * Supported elements includes "loop", "function", "noreturn", "return",
- * "nocall", "flowfacts".
+ * "nocall", "doinline", "noinline", "inlining-on", "inlining-off",
+ * "flowfacts", "ignore-entry", "multibranch", "multicall", "ignorecontrol",
+ * "ignoreseq", "mem-access", "mem-set", "reg-set".
  * @param body	Content of the file.
  * @param cpath	Contextual path.
  */
@@ -1089,6 +1157,14 @@ throw(ProcessorException) {
 				else
 					onWarning(_ << "ignoring this because its address cannot be determined: " << xline(element));
 			}
+			else if(name == "doinline")
+				scanNoInline(element, cpath, false);
+			else if(name == "noinline")
+				scanNoInline(element, cpath, true);
+			else if(name == "inlining-on")
+				scanSetInlining(element, cpath, true);
+			else if(name == "inlining-off")
+				scanSetInlining(element, cpath, false);
 			else if(name == "flowfacts")
 				scanXBody(element, cpath);
 			else if(name == "ignore-entry")
@@ -1111,6 +1187,56 @@ throw(ProcessorException) {
 				warn(_ << "garbage at \"" << xline(child) << "\"");
 		}
 	}
+}
+
+
+/**
+ * Scan a noinline/doinline XML element.
+ * @param element	ignoreseq element
+ * @param cpath		contextual path
+ */
+void FlowFactLoader::scanNoInline(xom::Element *element, ContextualPath& cpath, bool no_inline) {
+	MemArea mem_area = scanAddress(element, cpath);
+	if(mem_area.isNull()) {
+		onWarning(_ << "ignoreseq ignored at " << xline(element) << " ... address cannot be determined");
+		return;
+	}
+
+	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
+	while (inst && !inst->isControl()
+			&& inst->address() <= mem_area.lastAddress())
+		inst = workSpace()->process()->findInstAt(inst->topAddress());
+	if (!inst || inst->address() > mem_area.lastAddress()) {
+		onWarning(_ << "ignoreseq ignored at " << xline(element) << " ... no control found");
+		return;
+	}
+
+	this->onNoInline(inst->address(), no_inline);
+}
+
+
+/**
+ * Scan a inlining-off/inlining-on XML element.
+ * @param element	ignoreseq element
+ * @param cpath		contextual path
+ */
+void FlowFactLoader::scanSetInlining(xom::Element *element, ContextualPath& cpath, bool policy) {
+	MemArea mem_area = scanAddress(element, cpath);
+	if(mem_area.isNull()) {
+		onWarning(_ << "ignoreseq ignored at " << xline(element) << " ... address cannot be determined");
+		return;
+	}
+
+	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
+	while (inst && !inst->isControl()
+			&& inst->address() <= mem_area.lastAddress())
+		inst = workSpace()->process()->findInstAt(inst->topAddress());
+	if (!inst || inst->address() > mem_area.lastAddress()) {
+		onWarning(_ << "ignoreseq ignored at " << xline(element) << " ... no control found");
+		return;
+	}
+
+	this->onSetInlining(inst->address(), policy);
 }
 
 
@@ -1825,6 +1951,31 @@ Identifier<bool> FLOW_FACTS_MANDATORY("otawa::FLOW_FACTS_MANDATORY", false);
  * @ingroup ff
  */
 Identifier<bool> NO_CALL("otawa::NO_CALL", false);
+
+
+/**
+ * Put on the first instruction of a function to indicate whether it should be
+ * inlined or not during virtualization.
+ * This overrides @ref VIRTUAL_INLINING default policy of @ref Virtualizer
+ * and @ref INLINING_POLICY of the caller CFG.
+ * @li @ref FLOW_FACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier<bool> NO_INLINE("otawa::NO_INLINE");
+
+
+/**
+ * Put on the first instruction of a function to set default inlining behavior
+ * during its virtualization.
+ * This overrides @ref VIRTUAL_INLINING default policy of @ref Virtualizer.
+ * @li @ref FLOW_FACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier<bool> INLINING_POLICY("otawa::INLINING_POLICY");
 
 
 /**

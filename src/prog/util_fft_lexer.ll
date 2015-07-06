@@ -62,11 +62,14 @@ SYM [?;,+-/:@=\[\]()]
 "call"			return KW_CALL;
 "checksum"		return CHECKSUM;
 "control"		return KW_CONTROL;
+"doinline"		return KW_DOINLINE;
 "entry"			return KW_ENTRY;
 "ignore"		return KW_IGNORE;
 "ignorecontrol"	return KW_IGNORECONTROL;
 "ignoreseq"		return KW_IGNORESEQ;
 "in"			return KW_IN;
+"inlining-off"	return KW_INLINING_OFF;
+"inlining-on"	return KW_INLINING_ON;
 "int8"			util_fft_lval.type = &otawa::Type::int8_type; return TYPE;
 "int16"			util_fft_lval.type = &otawa::Type::int16_type; return TYPE;
 "int32"			util_fft_lval.type = &otawa::Type::int32_type; return TYPE;
@@ -78,6 +81,7 @@ SYM [?;,+-/:@=\[\]()]
 "multibranch"	return KW_MULTIBRANCH;
 "multicall"		return KW_MULTICALL;
 "nocall"		return KW_NOCALL;
+"noinline"		return KW_NOINLINE;
 "preserve"		return KW_PRESERVE;
 "no"			return KW_NO;
 "noreturn"		return NORETURN;

@@ -26,6 +26,7 @@
 #include <otawa/cfg/VirtualCFG.h>
 #include <otawa/cfg/VirtualBasicBlock.h>
 #include <otawa/cfg/features.h>
+#include <otawa/util/FlowFactLoader.h>
 
 namespace otawa {
 
@@ -142,14 +143,15 @@ BasicBlock *exit) {
 				for(BasicBlock::OutIterator edge(bb); edge; edge++)
 					if(edge->kind() == Edge::CALL) {
 						called = edge->calledCFG();
-						if (DONT_INLINE(called))
+						if (NO_INLINE(called->firstInst()))
+							
 						        called = 0;
 					}
 
 			// Look edges
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL) {
-					if(!isInlined() || DONT_INLINE(edge->calledCFG()))
+					if(!isInlined() || NO_INLINE(edge->calledCFG()->firstInst()))						
 						new Edge(src, edge->target(), Edge::CALL);
 				}
 				else if(edge->target()) {

@@ -149,6 +149,8 @@ void CFGBuilder::addSubProgram(Segment *seg, Inst *inst) {
  */
 void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 	ASSERT(seg);
+	if(logFor(LOG_FUN))
+		log << "\tsegment " << seg->name() << io::endl;
 
 	// Add the initial basic block
 	Segment::ItemIter item(seg);

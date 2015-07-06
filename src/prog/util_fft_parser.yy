@@ -62,11 +62,14 @@ static void reset_counts(void) {
 %token KW_ACCESS
 %token KW_CALL
 %token KW_CONTROL
+%token KW_DOINLINE
 %token KW_ENTRY
 %token KW_IGNORE
 %token KW_IGNORECONTROL
 %token KW_IGNORESEQ
 %token KW_IN
+%token KW_INLINING_OFF
+%token KW_INLINING_ON
 %token KW_LIBRARY
 %token KW_MAX
 %token KW_MEMORY
@@ -74,6 +77,7 @@ static void reset_counts(void) {
 %token KW_MULTICALL
 %token KW_NO
 %token KW_NOCALL
+%token KW_NOINLINE
 %token KW_PRESERVE
 %token KW_REG
 %token KW_SEQ
@@ -127,6 +131,14 @@ command:
 		{ loader->onNoCall(*$2); delete $2; }
 |	KW_NO KW_CALL id_or_address ';'
 		{ loader->onNoCall(*$3); delete $3; }
+|	KW_DOINLINE id_or_address ';'
+		{ loader->onNoInline(*$2, false); delete $2; }
+|	KW_NOINLINE id_or_address ';'
+		{ loader->onNoInline(*$2, true); delete $2; }
+|	KW_INLINING_ON id_or_address ';'
+		{ loader->onSetInlining(*$2, true); delete $2; }
+|	KW_INLINING_OFF id_or_address ';'
+		{ loader->onSetInlining(*$2, false); delete $2; }
 |	KW_IGNORECONTROL full_address ';'
 		{ loader->onIgnoreControl(*$2); delete $2; }
 |	KW_IGNORE KW_CONTROL full_address ';'

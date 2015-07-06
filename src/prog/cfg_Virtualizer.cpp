@@ -28,6 +28,7 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/prog/Manager.h>
 #include <otawa/prop/info.h>
+#include <otawa/util/FlowFactLoader.h>
 
 using namespace otawa;
 using namespace elm;
@@ -123,7 +124,6 @@ Identifier<BasicBlock *> RETURN_OF("otawa::RETURN_OF", 0);
  *
  * @par Configuration
  * @li @ref VIRTUAL_INLINING
- * @li @ref DONT_INLINE
  *
  * @par Required features
  * @li @ref FLOW_FACTS_FEATURE
@@ -141,22 +141,15 @@ Identifier<BasicBlock *> RETURN_OF("otawa::RETURN_OF", 0);
 
 
 /**
- * Configuration property of @ref Virtualizer: it activates the inlining of function call
- * during virtualization (default to true).
+ * Configuration property of @ref Virtualizer: it set the default behavior for
+ * inlining of function call during virtualization (default to true).
+ * The default behavior can be overridden by @ref NO_INLINE
  *
  * @par Hooks
  * @li Configuration of @ref Virtualizer code processor.
  */
 Identifier<bool> VIRTUAL_INLINING("otawa::VIRTUAL_INLINING", true);
 
-
-/**
- * This property tells the VirtualCFG to not inline a call to a function.
- *
- * @par Hooks
- * @li @ref CFG
- */
-Identifier<bool> DONT_INLINE("otawa::DONT_INLINE", false);
 
 /**
  */
@@ -181,8 +174,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 	entry = coll->get(0);
 
 	// virtualize the entry CFG
-	virtual_inlining = VIRTUAL_INLINING(fw);
-	VirtualCFG *vcfg = virtualizeCFG(0, entry);
+	VirtualCFG *vcfg = virtualizeCFG(0, entry, none);
 	if(logFor(LOG_CFG))
 		log << "\tINFO: " << vcfg->countBB() << " basic blocks." << io::endl;
 }
@@ -192,16 +184,29 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
  */
 void Virtualizer::configure(const PropList &props) {
 	entry = ENTRY_CFG(props);
+	virtual_inlining = VIRTUAL_INLINING(props);
 	Processor::configure(props);
 }
 
 
 /**
- * Test if inlining has been activated.
+ * Test if inlining has been activated on @param target CFG within
+ * @param source CFG.
  * @return	True if inlining is activated, false else.
  */
-bool Virtualizer::isInlined() {
-	return(virtual_inlining);
+bool Virtualizer::isInlined(CFG *cfg, Option<int> local_inlining) {
+	Inst *inst = cfg->firstInst();
+
+	// First look if inlining is requested for the CFG
+	if (inst->hasProp(NO_INLINE))
+		return !NO_INLINE(inst);
+
+	// Then check if local inlining policy is set
+	if (local_inlining.isOne())
+		return local_inlining.value();
+
+	// Finally decide based on global inlining policy
+	return virtual_inlining;
 }
 
 
@@ -212,7 +217,7 @@ bool Virtualizer::isInlined() {
  * @param entry		Basic block performing the call.
  * @param exit		Basic block after the return.
  */
-void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, BasicBlock *entry, BasicBlock *exit) {
+void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, BasicBlock *entry, BasicBlock *exit, Option<int> local_inlining) {
 	ASSERT(cfg);
 	ASSERT(entry);
 	ASSERT(exit);
@@ -245,29 +250,30 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 			if(logFor(LOG_BB))
 				cerr << "\t\tprocessing " << *bb << io::endl;
 
+			// Update local inlining policy
+			if(cfg->firstInst()->hasProp(INLINING_POLICY))
+				local_inlining = INLINING_POLICY(cfg->firstInst());
+
 			// Resolve source
 			BasicBlock *src = map.get(bb, 0);
 			ASSERT(src);
 
 			// process call edges
-			if(isInlined())
-				for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-					if(edge->kind() == Edge::CALL && edge->calledCFG()) {
-						if(DONT_INLINE(edge->calledCFG()))  {
-							if(!cfgMap.exists(edge->calledCFG()))
-								virtualizeCFG(&call, edge->calledCFG());
-						}
-						else
-							called_cfgs.add(edge->calledCFG());
-					}
+			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+				if(edge->kind() == Edge::CALL && edge->calledCFG()) {
+					if(isInlined(edge->calledCFG(), local_inlining))
+						called_cfgs.add(edge->calledCFG());
+					else if(!cfgMap.exists(edge->calledCFG()))
+						virtualizeCFG(&call, edge->calledCFG(), local_inlining);
 				}
+			}
 
 			// generate the edges
 			BasicBlock *called_exit = 0;
 			bool fix_exit = false;
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL) {
-					if(!isInlined() || (edge->calledCFG() && DONT_INLINE(edge->calledCFG()))) {
+					if(edge->calledCFG() && !isInlined(edge->calledCFG(), local_inlining)) {
 						VirtualCFG *vcalled = cfgMap.get(edge->calledCFG(), 0);
 						ASSERT(vcalled);
 						Edge *vedge = new Edge(src, vcalled->entry(), Edge::CALL);
@@ -326,7 +332,7 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 					else {
 						ASSERT(called_exit);
 						VIRTUAL_RETURN_BLOCK(src) = called_exit;
-						virtualize(&call, called, vcfg, src, called_exit);
+						virtualize(&call, called, vcfg, src, called_exit, local_inlining);
 						if(fix_exit)
 							for(BasicBlock::InIterator vin(called_exit); vin; vin++)
 								for(Identifier<CFG *>::Getter found(vin, CALLED_CFG); found; found++)
@@ -350,12 +356,12 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
  * @param call	Call string.
  * @param cfg	CFG to virtualize.
  */
-VirtualCFG *Virtualizer::virtualizeCFG(struct call_t *call, CFG *cfg) {
+VirtualCFG *Virtualizer::virtualizeCFG(struct call_t *call, CFG *cfg, Option<int> local_inlining) {
 	VirtualCFG *vcalled = new VirtualCFG(false);
 	cfgMap.put(cfg, vcalled);
 	ENTRY(vcalled->entry()) = vcalled;
 	vcalled->addBB(vcalled->entry());
-	virtualize(call, cfg, vcalled, vcalled->entry(), vcalled->exit());
+	virtualize(call, cfg, vcalled, vcalled->entry(), vcalled->exit(), local_inlining);
 	vcalled->addBB(vcalled->exit());
 	vcalled->numberBB();
 	return vcalled;
