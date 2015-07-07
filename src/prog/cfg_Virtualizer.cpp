@@ -194,12 +194,12 @@ void Virtualizer::configure(const PropList &props) {
  * @param source CFG.
  * @return	True if inlining is activated, false else.
  */
-bool Virtualizer::isInlined(CFG *cfg, Option<int> local_inlining) {
+bool Virtualizer::isInlined(CFG *cfg, Option<int> local_inlining, ContextualPath &path) {
 	Inst *inst = cfg->firstInst();
 
 	// First look if inlining is requested for the CFG
-	if (inst->hasProp(NO_INLINE))
-		return !NO_INLINE(inst);
+	if (path(NO_INLINE, inst).exists())
+		return !path.get(NO_INLINE, inst);
 
 	// Then check if local inlining policy is set
 	if (local_inlining.isOne())
@@ -217,7 +217,8 @@ bool Virtualizer::isInlined(CFG *cfg, Option<int> local_inlining) {
  * @param entry		Basic block performing the call.
  * @param exit		Basic block after the return.
  */
-void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, BasicBlock *entry, BasicBlock *exit, Option<int> local_inlining) {
+void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg,
+		BasicBlock *entry, BasicBlock *exit, Option<int> local_inlining, ContextualPath &path) {
 	ASSERT(cfg);
 	ASSERT(entry);
 	ASSERT(exit);
@@ -238,11 +239,15 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 		}
 
 	// Find local entry
+	BasicBlock *to = NULL;
 	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++) {
 		call.entry = map.get(edge->target(), 0);
 		Edge *vedge = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
 		CALLED_CFG(vedge) = cfg;
+		to = edge->target();
 	}
+	ASSERT(to);
+	enteringCall(entry, to, path);
 
 	// Translate edges
 	for(CFG::BBIterator bb(cfg); bb; bb++)
@@ -251,8 +256,8 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 				cerr << "\t\tprocessing " << *bb << io::endl;
 
 			// Update local inlining policy
-			if(cfg->firstInst()->hasProp(INLINING_POLICY))
-				local_inlining = INLINING_POLICY(cfg->firstInst());
+			if(path(INLINING_POLICY, cfg->firstInst()).exists())
+				local_inlining = path.get(INLINING_POLICY, cfg->firstInst());
 
 			// Resolve source
 			BasicBlock *src = map.get(bb, 0);
@@ -261,7 +266,7 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 			// process call edges
 			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
 				if(edge->kind() == Edge::CALL && edge->calledCFG()) {
-					if(isInlined(edge->calledCFG(), local_inlining))
+					if(isInlined(edge->calledCFG(), local_inlining, path))
 						called_cfgs.add(edge->calledCFG());
 					else if(!cfgMap.exists(edge->calledCFG()))
 						virtualizeCFG(&call, edge->calledCFG(), local_inlining);
@@ -273,7 +278,7 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 			bool fix_exit = false;
 			for(BasicBlock::OutIterator edge(bb); edge; edge++)
 				if(edge->kind() == Edge::CALL) {
-					if(edge->calledCFG() && !isInlined(edge->calledCFG(), local_inlining)) {
+					if(edge->calledCFG() && !isInlined(edge->calledCFG(), local_inlining, path)) {
 						VirtualCFG *vcalled = cfgMap.get(edge->calledCFG(), 0);
 						ASSERT(vcalled);
 						Edge *vedge = new Edge(src, vcalled->entry(), Edge::CALL);
@@ -332,7 +337,7 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 					else {
 						ASSERT(called_exit);
 						VIRTUAL_RETURN_BLOCK(src) = called_exit;
-						virtualize(&call, called, vcfg, src, called_exit, local_inlining);
+						virtualize(&call, called, vcfg, src, called_exit, local_inlining, path);
 						if(fix_exit)
 							for(BasicBlock::InIterator vin(called_exit); vin; vin++)
 								for(Identifier<CFG *>::Getter found(vin, CALLED_CFG); found; found++)
@@ -348,6 +353,7 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg, B
 
 	if(logFor(LOG_CFG))
 		log << "\tend inlining " << cfg->label() << io::endl;
+	leavingCall(exit, path);
 }
 
 
@@ -361,12 +367,36 @@ VirtualCFG *Virtualizer::virtualizeCFG(struct call_t *call, CFG *cfg, Option<int
 	cfgMap.put(cfg, vcalled);
 	ENTRY(vcalled->entry()) = vcalled;
 	vcalled->addBB(vcalled->entry());
-	virtualize(call, cfg, vcalled, vcalled->entry(), vcalled->exit(), local_inlining);
+	ContextualPath path;
+	virtualize(call, cfg, vcalled, vcalled->entry(), vcalled->exit(), local_inlining, path);
 	vcalled->addBB(vcalled->exit());
 	vcalled->numberBB();
 	return vcalled;
 }
 
+
+void Virtualizer::enteringCall(BasicBlock *caller, BasicBlock *callee, ContextualPath &path) {
+	if (!caller->isEntry()) {
+		Inst *call = caller->lastInst();
+		if (!call->isCall()) {
+			for (BasicBlock::InstIter inst(caller); inst; inst++)
+				if (inst->isControl())
+					call = inst;
+			if (!call)
+				call = caller->lastInst();
+			ASSERT(call);
+		}
+		path.push(ContextualStep::CALL, call->address());
+	}
+	path.push(ContextualStep::FUNCTION, callee->address());
+}
+
+
+void Virtualizer::leavingCall(BasicBlock *to, ContextualPath& path) {
+	path.pop();
+	if (!to->isExit())
+		path.pop();
+}
 
 
 /**
