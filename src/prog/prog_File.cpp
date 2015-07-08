@@ -151,6 +151,20 @@ Inst *File::findInstAt(address_t address) {
 	return 0;
 }
 
+
+/**
+ * Find the segment at the given address.
+ * @param addr		Looked address.
+ * @return			Found segment or null.
+ */
+Segment *File::findSegmentAt(Address addr) {
+	for(SegIter seg(this); seg; seg++)
+		if(seg->contains(addr))
+			return seg;
+	return 0;
+}
+
+
 /**
  * Find a program item by its address.
  * @param address	Program item address.

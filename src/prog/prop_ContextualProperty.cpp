@@ -161,6 +161,7 @@ ContextualProperty::ContextualProperty(void): Property(ID) {
 
 ContextualPath::ContextualPath(const ContextualPath& path) {
 	// TODO
+	ASSERTP(false, "Not Implemented!");
 }
 
 
