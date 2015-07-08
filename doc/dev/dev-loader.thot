@@ -15,57 +15,66 @@ analysis implemented on OTAWA independent of the actual
 architecture of the processed program. This does not mean
 that the analyzes cannot be aware of the particular properties
 of the processed program but that they do not have to be tuned
-for a particular microprocessor. Yet, the analyzes can have
+for a particular instruction (ISA). Yet, the analyzes can have
 as many information as required from the actual form of the
 processed program.
 
-The architecture //architecture abstraction layer// is mainly
+The //architecture abstraction layer// is mainly
 formed of two parts:
   * a set of objects describing program image in memory, the files, the symbols and the instructions,
   * a translator to get semantics of the actual instruction set expressed in a language of semantics instructions.
 
+
 ==== Abstraction Objects ====
 
-The UML diagram below describes the classes and the relationship of C++ objects involved in the //architecture description layer//.
+The UML diagram below describes the classes and the relationship of C++ objects
+involved in the //architecture description layer//.
 
 {{ aal-uml.png }}
 
-The root class of the //architecture abstract layer// is the ''Process'' that represents the program ready to run in memory.
-It contains all information about the program in memory (start instruction, platform, file composing the memory image) with other information provided in the executable files like
-debugging information (matches between source lines and memory addresses). The ''Process'' is the root result of a loader work.
+The root class of the //architecture abstract layer// is the ''Process'' that represents the program ready
+to run in memory. It contains all information about the program in memory (start instruction, platform,
+file composing the memory image) with other information provided in the executable files like
+debugging information (matches between source lines and memory addresses). The ''Process'' is
+the root object and the result of a loader work.
 
-In addition, the ''Process'' contains also information about the programming model of the architecture thanks to the ''Platform'' object:
-mainly, the list of register banks with their description.
+In addition, the ''Process'' contains also information about the programming model of the architecture
+thanks to the ''Platform'' object: mainly, the list of register banks with their description.
 
-From the ''Process'', one can get the list of executable file composing the program image in memory. Although most OTAWA loader,
-at this time, only supported application made of a monolithic executable file, the framework is able to cope with processes
-made of several file: at least one ''program'' file and possibly several library files.
+From the ''Process'', one can get the list of executable file composing the program image in memory.
+Although most OTAWA loader, at this time, only supports applications made of a monolithic executable file,
+the framework is able to cope with processes made of several file: at least one ''program'' file and
+possibly several library files.
 
-The files, in turn, contains bits composing the program image in memory, called the ''Segments'' but also more functional information,
-the ''Symbol''. The ''Symbol''s matches any object with a name produced by the compiler, that is, function, data, labels, etc. The symbols
-may occupy a place in the memory (defined by its address and its size) or not (constants values, compiler or OS internal symbols).
+The files, in turn, contains bits composing the program image in memory, called the ''Segments''
+but also more functional information like ''Symbol''. The ''Symbol'' matches any object
+with a name produced by the compiler, that is, function, data, labels, etc. The symbols
+may occupy a place in the memory (defined by its address and its size) or not (constants values,
+compiler or OS internal symbols).
 
-The ''Segment'' objects represents slices of memory sharing common properties. They may be initialized or not. Closer concepts
-from the ELF file format are either sections, or program headers. Whatever, a ''Segment'' has usually a name, an address, asize
-and may be executable or writable. They are composed of ''ProgItem'' object.
+The ''Segment'' objects represents slices of memory sharing common properties. They may be initialized
+or not. Closer concepts from the ELF file format are either sections, or program headers. Whatever,
+a ''Segment'' has usually a name, an address, a size and may be executable or writable. They are composed
+of ''ProgItem'' object.
 
+A ''ProgItem'' object represents any atomic entity in the program, mainly, instructions and data items.
+The current version of OTAWA only supports instructions, ''Inst'' class, but next versions may be able
+to recognize data and add representation objects. Whatever, a program item is identified by its address
+and its size.
 
-A ''ProgItem'' object represents any atomic entity in the program, mainly, instructions and data items. The current version
-of OTAWA only supports instructions, ''Inst'' class, but next versions may be able to recognize data and add representation objects.
-Whatever, a program item is identified by its address and its size.
-
-Specializing the ''ProgItem'' class, the ''Inst'' objects represents the actual machine instructions of the architecture.
-The role of these objects is to give an abstract description of machine instructions as precise as possible to let higher level
-analyzes to work with the instruction. An ''Inst'' object have the following interface:
-  * ''dump'' - allows to get a textual representation (useful for debugging or for user output),
-  * ''kind'' - information about the nature of the instructions,
+Specializing the ''ProgItem'' class, the ''Inst'' objects represents the actual machine instructions
+of the current ISA. The role of these objects is to give an abstract description of machine instructions
+as precise as possible to let higher level analyzes to work with the instruction. An ''Inst'' object
+have the following interface:
+  * ''dump'' - to get a textual representation (useful for debugging or for user output),
+  * ''kind'' - information about the nature of the instruction,
   * ''readRegs'' - set of read registers,
   * ''writtenRegs'' - set of written registers,
-  * ''target'' - when the instruction is a control, the target of the branch,
-  * ''semInsts'' - translate the instruction into semantics instruction.
+  * ''target'' - when the instruction is a control, the target of the branch (if one can be determined),
+  * ''semInsts'' - translate the instruction into semantics instructions.
 
-The ''kind'' allows to identify the type of an instruction whatever the used instruction set. It is composed of a bit vector
-with each bit giving a specific information:
+The ''kind'' allows to identify the type of an instruction whatever the used instruction set.
+It is composed of a bit vector with each bit giving a specific information:
   * ''IS_COND'' - set if the instruction is conditional,
   * ''IS_CONTROL'' - set if the instruction performs a branch, that is, changes the PC,
     * ''IS_CALL'' - set if the instruction is a sub-program call (ever induces ''IS_CONTROL'' to be set),
@@ -74,7 +83,7 @@ with each bit giving a specific information:
   * ''IS_MEM'' - set if the instruction performs memory access,
     * ''IS_LOAD'' - set if the instruction performs memory load (ever induces ''IS_MEM'' to be set),
     * ''IS_STORE'' - set if the instruction performs memory store (ever induces ''IS_MEM'' to be set),
-    * ''IS_MULTI'' - set if the instruction performs multiple memory accesses of the same type (ever induces ''IS_MEM'' to be set), 
+    * ''IS_MULTI'' - set if the instruction performs multiple memory accesses of the same type (ever induces ''IS_MEM'' to be set),
   * ''IS_INT'' - set if the instruction handles integer,
   * ''IS_FLOAT'' - set if the  instruction handles floats,
   * ''IS_ALU'' - set if the instruction performs arithmetic or logic operations,
@@ -84,44 +93,338 @@ with each bit giving a specific information:
   * ''IS_INTERN'' - set if the instructions performs operation internal to the microprocessor (hardware driving),
   * ''IS_SPECIAL'' - set if the instruction is unusual (often found in old CISC ISA).
 
-A lot of facilities provided by the //architecture abstraction layer// are optional and the analyzes must be able to handle it:
-either assuming worst case configuration, or aborting the analysis. Whatever, each information availability
+A lot of facilities provided by the //architecture abstraction layer// are optional
+and the analyzes must be able to handle this: either assuming worst case configuration,
+or aborting the analysis. Whatever, each information availability
 is represented by a specific feature put on the ''Process'' and included in the ''WorkSpace'':
   *	''MEMORY_ACCESS_FEATURE'' -- analyzes can read integer values in the process memory,
   * ''FLOAT_MEMORY_ACCESS_FEATURE'' -- analyzes can read float values in the process memory,
-  * ''REGISTER_USAGE_FEATURE'' -- ensures that read and written registers are available,
+  * ''REGISTER_USAGE_FEATURE'' -- ensures that lists of read and written registers are available,
   * ''CONTROL_DECODING_FEATURE'' -- ensures that the control instruction target is decoded,
   * ''SOURCE_LINE_FEATURE'' -- ensures that the source/line debugging information is available,
   * ''SEMANTICS_INFO'' -- ensures that the semantics instruction translation is provided,
   * ''DELAYED_FEATURE'' -- means that information about delayed control is provided,
-  * ''SEMANTICS_INFO_EXTENDED'' - means that the semantics instructions extension is available (multiplication, division, binary operations),
-  * ''SEMANTICS_INFO_FLOAT'' - means that the semantics instructions supports float operations.
+  * ''SEMANTICS_INFO_EXTENDED'' - means that the semantics instructions extension is available
+(multiplication, division, binary operations),
 
 
 
 ==== Semantics Instructions ====
 
-Semantics instructions provides a way to cope with the functional behavior of the instructions.
-Basically, the semantics instructions is a minimal regular instructions set including usual operations
-with the following features:
-  * the control flow is bound to a conditional instruction (no loop can be created),
-  * the memory operations are only performed by two specific instruction,
+Semantics instructions provides a way to cope with the functional behavior of the instructions
+independently of the ISA. Basically, the semantic instruction set is a minimal regular
+instruction set including usual operations with the following features:
+  * the control flow is bound to a forward-branching conditional instruction (no loop can be created),
+  * the memory operations are only performed by two specific instruction, ''load'' and ''store'',
   * the instructions can either use registers, or temporaries (not involved in the program state),
   * constant values can only be processed through a specific instruction, ''seti'',
-  * the comparison instructions can only produces results based on inequality operators,
-  * as it is impossible, without adding a lot of complexity, to cope with any machine instruction, a specific one, ''scratch'', can inform that a result is unknown.
+  * the comparison instructions can only produces results based on the usual comparison operators,
+  * as it is impossible, without adding a lot of complexity, to cope with all possible machine instructions,
+the instruction, ''scratch'', can inform that a result is unknown.
 
-The goal of this language is to make possible data flow analysis of the program, that is static analyzes like abstract interpretation.
-As such analyzes may have polynomial complexity, the interpretation must be as fast as possible. Therefore, the semantics instructions
-cannot create loops to avoid to have to compute fix points on the translation of the instruction. The idea is that the control flow
-is viewable inside the instruction but the control flow of the program is handled at an upper level (in the Control Flow Graph for example).
+The goal of this language is to make possible data flow analysis of the program, that is static analyzes
+like abstract interpretation without needing to specialize it to a specific ISA.
+As such analyzes may have polynomial complexity, the interpretation must be as fast as possible.
+Hence, the semantics instructions can not create loops (inside the machine instruction they are defining)
+to avoid to have to compute fix points on the translation of the instruction. The idea is that
+the machine control flow is viewable inside the instruction but the control flow of the program
+is handled at an upper level (in the Control Flow Graph for example).
 
-The only conditional instruction, ''if''(//c//, //r//, //s//) allows to have several parallel interpretation paths but no loop. It means that
-if the condition //c// is true in register //r//, the interpretation path continue, else //s// instructions must be skipped. The misnamed
-instructions ''branch'' or ''trap'' means the instruction is performing a branch instruction here 
+The only conditional instruction, ''if''(//c//, //r//, //s//) allows to have several parallel interpretation paths
+but no loop. It means that if the condition //c// is true in register //r//, the interpretation path continue,
+else //s// instructions must be skipped. The misnamed instructions ''branch'' or ''trap'' means the instruction
+is performing a branch instruction here, that is, from a CFG point of view, that the branch-taken edge is followed.
+Finally ''cont'' semantic instruction stops the execution of the semantic instruction for the current machine
+instruction. If no ''branch'' has been found on the current execution path, the CFG edge representing sequential
+control flow is considered to be followed. Notice that ''branch'' does not stop the execution of the semantic
+instruction: from an ISA point of view, it just changes the PC register of the machine.
+
+For computation, the following instructions are available. Most of them works as three-operand operations
+on register or variable registers with //d// the destination register, //a// the first source operand
+and //b// the second source operand.
+  * ''set(d, a)'' -- register copy,
+  * ''add''(d, a, b) -- addition,
+  * ''sub''(d, a, b) -- subtraction,
+  * ''shl''(d, a, b) -- logical shift left,
+  * ''shr''(d, a, b) -- logical shift right,
+  * ''asr''(d, a, b) -- arithmetic shift right,
+  * ''cmp''(d, a, b) -- comparison of a and b,
+  * ''cmpu''(d, a, b) -- unsigned comparison of a and b.
+
+If the feature ''SEMANTICS_INFO_EXTENDED'' is provided by the process, the following instructions
+may also be used:
+  * ''neg''(d, a) -- sign inversion,
+  * ''mul''(d, a, b) -- signed multiplication,
+  * ''mulu''(d, a, b) -- unsigned multiplication,
+  * ''div''(d, a, b) -- signed division,
+  * ''divu''(d, a, b) -- unsigned division,
+  * ''mod''(d, a, b) -- signed modulo,
+  * ''modu''(d, a, b) -- unsigned modulo,
+  * ''not''(d, a) -- bit-to-bit not,
+  * ''and''(d, a, b) -- bit-to-bit and,
+  * ''or''(d, a, b) -- bit-to-bit inclusive-or,
+  * ''xor''(d, a, b) -- bit-to-bit exclusive-or,
 
 
 ===== Developing a Loader =====
+
+A loader is basically a plugin whose handle implements ''otawa::Loader''. The handle object is used
+to load a binary file and to build the process representing the program. To illustrate the procedure,
+we will implement (partially) a loader for a MIPS ISA. Let declare the loader handle:
+
+<code c++>
+#include <otawa/prog/Loader.h>
+
+namespace mips {
+
+// loader class
+static string table[] = { "elf_20" };
+static elm::genstruct::Table<string> aliases(table, 1);
+
+class Loader: public otawa::Loader {
+public:
+	Loader(void): otawa::Loader("mips", Version(1, 0, 0), OTAWA_LOADER_VERSION, aliases)
+		{ }
+	virtual CString getName(void) const
+		{ return "mips"; }
+
+	virtual otawa::Process *load(Manager *_man, CString path, const PropList& props) {
+		otawa::Process *proc = create(man, props);
+		if(!proc->loadProgram(path)) {
+			delete proc;
+			proc = 0;
+		}
+		return proc;
+	}
+
+	virtual otawa::Process *create(Manager *_man, const PropList& props)
+		{ return new Process(man, new Platform(props), props); }
+};
+
+}	// mips
+
+mips::Loader OTAWA_LOADER_HOOK;
+mips::Loader& mips_plugin = OTAWA_LOADER_HOOK;
+</code>
+
+The more interesting part is in ''create''() method that builds a platform of types ''mips::Platform''
+and the process itself of type ''mips::Process''. The description of these object is detailed below.
+When a binary is opened from an ELF file, OTAWA looks for the matching plugin using ISA field of ELF header,
+install the loader and call method ''load''(). This one creates a process and and load the program
+in the process. If there is an error, process object is cleaned and a null is returned.
+
+Now, we have to describe the structure of MIPS state in the platform object. First, we have to declare
+the platform that is mainly composed of registers as a banks of identical register or separate registers:
+
+<code c++>
+#include <otawa/hard/Platform.h>
+#include <otawa/hard/Register.h>
+
+namespace mips {
+
+class Platform: public hard::Platform {
+public:
+	static const Identification ID;
+	Platform(const PropList& props = PropList::EMPTY): hard::Platform(ID, props)
+		{ setBanks(banks_table); }
+
+	static const hard::Register PC, HI, LO;
+	static const hard::PlainBank GR;
+	static const hard::PlainBank FPR;
+	static const hard::MeltedBank MISC;
+	static const elm::genstruct::Table<const RegBank *> banks;
+
+	virtual bool accept(const Identification& id)
+		{ return id.abi() == "elf" && id.architecture() == "mips"; }
+};
+
+const Platform::Identification Platform::ID("mips-elf-");
+
+const hard::PlainBank Platform::GR("GR", hard::Register::INT,  32, "$%d", 32);
+const hard::PlainBank Platform::FPR("FPR", hard::Register::FLOAT,  64, "$f%d", 32);
+const hard::Register Platform::PC("pc", hard::Register::INT, 32);
+const hard::Register Platform::HI("hi", hard::Register::INT, 32);
+const hard::Register Platform::LO("lo", hard::Register::INT, 32);
+const hard::MeltedBank Platform::MISC("MISC", &Platform::PC, &Platform::HI, &Platform::LO, 0);
+
+static const RegBank *banks[] = {
+	&Platform::GR,
+	&Platform::FPR,
+	&Platform::MISC
+};
+const elm::genstruct::Table<const RegBank *> Platform::banks(banks, 3);
+
+}	// mips
+</code>
+
+The main point is that the constructor of MIPS platform **must** record the hardware register
+using the ''setBanks''() method. This method takes as input a ''genstruct::Table'', that is, a list
+of register banks. In the banks, some may be uniforms like //GR// or //FPR//, some are a melt
+of different registers like //MISC//. A uniform ''PlainBank'' register bank is constructed using
+its name, its type (one of ''INT'', ''FLOAT'', ''ADDR'' or ''BITS''), the size of its register
+in bits, a format string to name bank register containing a "%d" that will be replaced by the actual
+register index and the count of registers in the banl.
+
+To declare a register alone (like //PC//, //HI// or //LO//), one has to pass the register name,
+its type and its size in bits. Non-regular registers are then grouped in //MISC//. They are passed
+to the bank constructor as a null-ended list of register pointers.
+
+''ID'' and ''accept'' are added here for backward compatibility, to identify the platform, but they
+are rarely used by OTAWA.
+
+Now the MIPS ''Process'' itself may be declared (this is the minimal version):
+<code c++>
+#include <otawa/proc/Process.h>
+
+namespace mips {
+
+class Process: public otawa::Process {
+public:
+	Process(Manager *manager, hard::Platform *pf, const PropList& props = PropList::EMPTY);
+
+	virtual hard::Platform *platform(void) { return _pf; }
+	virtual Inst *start(void);
+	virtual int instSize(void) const;
+	virtual File *loadFile(elm::CString path);
+
+private:
+	hard::Platform *_pf;
+};
+
+}	// mips
+</code>
+
+The method ''start''() gives the first instruction of the program while ''loadFile'' is called
+by ''loadProgram''() to install the executable file in the current process (copying code and data segments).
+''instSize''() provides the size of instruction in bytes if the instruction set is regular, 0 else. This declaration
+is a very minimal ''Process'', more customization will be added afterward in the following sections
+to provide more facilities.
+
+To go further in the description of MIPS ''Process'', a loader library must be chosen and used. The following
+section gives the implemetation using the GEL library (GEL is delivered with OTAWA).
+
+==== Developing a loader with GEL ====
+
+GEL is the usual library used by OTAWA to handle ELF binaries. It is a C library but it is perfectly
+compatible with OTAWA C++. The very first method that will use GEL is ''loadFile''() so we extend our
+process description with data structure useful for GEL:
+
+<code c++>
+#include <gel/gel.h>
+#include <gel/gel_elf.h>
+#include <gel/image.h>
+
+namespace mips {
+
+class Process: public otawa Process {
+public:
+	...
+	virtual Inst *start(void) { return _start; }
+private:
+	...
+	Inst *_start;
+	gel_file_t *gel_file;
+};
+
+}	// mips
+</code>
+
+The ''loadFile''() is described now:
+<code c++>
+File *Process::loadFile(elm::CString path) {
+
+	// (a) Check if there is not an already opened file !
+	if(program())
+		throw LoadException("loader cannot open multiple files !");
+
+	// (b) create file
+	File *file = new otawa::File(path);
+	addFile(file);
+
+	// (c) open the binary
+	gel_file = gel_open(&path, 0, GEL_OPEN_NOPLUGINS);
+	if(!gel_file)
+		throw LoadException(_ << "cannot load \"" << path << "\".");
+
+	// (d) build the segments
+	gel_file_info_t infos;
+	gel_file_infos(gel_file, &infos);
+	for (int i = 0; i < infos.sectnum; i++) {
+		gel_sect_info_t infos;
+		gel_sect_t *sect = gel_getsectbyidx(_gelFile, i);
+		gel_sect_infos(sect, &infos);
+		if(infos.flags & SHF_EXECINSTR) {
+			Segment *seg = new Segment(*this, infos.name, infos.vaddr, infos.size);
+			file->addSegment(seg);
+		}
+	}
+
+	// (e) initialize symbols
+	gel_enum_t *iter = gel_enum_file_symbol(gel_file);
+	gel_enum_initpos(iter);
+	for(char *name = (char *)gel_enum_next(iter); name; name = (char *)gel_enum_next(iter)) {
+
+		// scan the symbol
+		address_t addr = 0;
+		Symbol::kind_t kind;
+		gel_sym_t *sym = gel_find_file_symbol(_gelFile, name);
+		gel_sym_info_t infos;
+		gel_sym_infos(sym, &infos);
+		switch(ELF32_ST_TYPE(infos.info)) {
+		case STT_FUNC:
+			kind = Symbol::FUNCTION;
+			addr = (address_t)infos.vaddr;
+			TRACE("SYMBOL: function " << infos.name << " at " << addr);
+			break;
+		case STT_NOTYPE:
+			kind = Symbol::LABEL;
+			addr = (address_t)infos.vaddr;
+			TRACE("SYMBOL: notype " << infos.name << " at " << addr);
+			break;
+		default:
+			continue;
+		}
+
+		// build the label if required
+		if(addr) {
+			String label(infos.name);
+			Symbol *sym = new Symbol(*file, label, kind, addr);
+			file->addSymbol(sym);
+			TRACE("function " << label << " at " << addr);
+		}
+	}
+	gel_enum_free(iter);
+
+	// (f) find sart point
+	_start = findInstAt(Address(infos.entry));
+	return file;
+}
+
+</code>
+
+This method is the more complex part of the loading procedure as it opens the binary
+and examine it to build the OTAWA program representation. For the sake of simplicity,
+the presented version accepts in the process only one binary, the main program, but
+OTAWA is designed to support shared libraries also. So the first block of code (a)
+ensures there is no other program opened.Block (c) create the file itself and at it
+to the process. Block (c) uses GEL to open the binary file and stores the handle in
+''gel_file''. This handle will be used all along the process life and is stored
+in attributes.
+
+Block (d) looks in the section composing the executable and builds OTAWA ''Segment''
+for each section that represents a part of the program in memory. ELF contains
+lots of sections but only some aims to be involved in the execution. Some contains
+informations on the code like symbols table or debugging sections. Block (e) allows
+translating symbols in ELF executable as symbols in the process. Notice that only
+symbols corresponding to an address in the memory are kept. Finally, block (f)
+retrieve the OTAWA instruction representing the first instruction of the program.
+
+Each time an instruction is accessed, it must be decoded and built as an ''Inst'' object.
+This is usually done by calling ''findInstAt''(). Yet, it is not straight: OTAWA maintains
+a list of decoded instruction to reduce memory footprint. In fact, the decoding is
+performed by a call to the segment containing the instruction (through ''findInstAt''()).
+
+
 
 
 ===== Developing a Loader with GLISS2 =====
