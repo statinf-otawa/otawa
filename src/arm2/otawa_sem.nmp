@@ -84,6 +84,7 @@ macro exts(v) = (coerce(int(32), v))
 macro extu(v) = (coerce(card(32), v))
 
 var ii[1, s32]
+var sem_rec_first[1, s32] // boolean for otawa_sem_rec
 var cnt[1, u32]
 
 // ****** mode extends ******
@@ -404,6 +405,7 @@ extend LDM
 					seti(t3, cnt * 4 - 4); add(t3, t1, t3);
 				};
 				ii = 0;
+				sem_rec_first = 1;
 				otawa_sem_rec;
 				if setw == 1 then _set(rn.i, t3); endif;
 				if reglist<15..15> == 1 then _branch(R(15)); endif;
@@ -421,8 +423,11 @@ extend LDM
 	otawa_sem_rec = {
 		if ii <= 15 then
 			if reglist<ii..ii> == 1 then
+				if sem_rec_first == 0 then
+					add(t1, t1, t2);
+				endif;
 				load(R(ii), t1, UINT32);
-				add(t1, t1, t2);
+				sem_rec_first = 0;
 			endif;
 			ii = ii + 1;
 			otawa_sem_rec;
@@ -668,6 +673,7 @@ extend STM
 					seti(t3, cnt * 4 - 4); add(t3, t1, t3);
 				};
 				ii = 0;
+				sem_rec_first = 1;
 				otawa_sem_rec;
 				if setw == 1 then _set(rn.i, t3); endif;
 			endif;
@@ -684,8 +690,11 @@ extend STM
 	otawa_sem_rec = {
 		if ii <= 15 then
 			if reglist<ii..ii> == 1 then
+				if sem_rec_first == 0 then
+					add(t1, t1, t2);
+				endif;
 				store(R(ii), t1, 4);
-				add(t1, t1, t2);
+				sem_rec_first = 0;
 			endif;
 			ii = ii + 1;
 			otawa_sem_rec;
@@ -952,14 +961,18 @@ extend LDMIA_thumb
 		_set(t1, rn.i);
 		seti(t2, 4);
 		ii = 0;
+		sem_rec_first = 1;
 		otawa_sem_rec;
 		_set(rn.i, t1);
 	}
 	otawa_sem_rec = {
 		if ii < 8 then
 			if llist<ii..ii> == 1 then
+				if sem_rec_first == 0 then
+					add(t1, t1, t2);
+				endif;
 				load(R(ii), t1, UINT32);
-				add(t1, t1, t2);
+				sem_rec_first = 0;
 			endif;
 			ii = ii + 1;
 			otawa_sem_rec;
