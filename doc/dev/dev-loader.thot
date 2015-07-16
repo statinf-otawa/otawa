@@ -342,7 +342,7 @@ File *Process::loadFile(elm::CString path) {
 	addFile(file);
 
 	// (c) open the binary
-	gel_file = gel_open(&path, 0, GEL_OPEN_NOPLUGINS);
+	gel_file = gel_open(&path, 0, GEL_OPEN_NOPLUGINS | GEL_OPEN_QUIET);
 	if(!gel_file)
 		throw LoadException(_ << "cannot load \"" << path << "\".");
 
@@ -422,9 +422,360 @@ retrieve the OTAWA instruction representing the first instruction of the program
 Each time an instruction is accessed, it must be decoded and built as an ''Inst'' object.
 This is usually done by calling ''findInstAt''(). Yet, it is not straight: OTAWA maintains
 a list of decoded instruction to reduce memory footprint. In fact, the decoding is
-performed by a call to the segment containing the instruction (through ''findInstAt''()).
+performed by a call to the segment, containing the instruction (through ''findInstAt''() ),
+that manages the list of instructions. This will be shown in the next section.
 
+Whatever, GEL provides also access to debugging information of the ELF file. So it may
+be used to implement ''SOURCE_LINE_FEATURE'' as below:
 
+<code c++>
+class Process: public otawa::Process {
+public:
+	...
+
+	Option<Pair<cstring, int> > Process::getSourceLine(Address addr) throw (UnsupportedFeatureException) {
+
+		// build line map
+		setup();
+		if (!map)
+			return none;
+
+		// look for address
+		const char *file;
+		int line;
+		if(!map || gel_line_from_address(map, addr.offset(), &file, &line) < 0)
+			return none;
+		return some(pair(cstring(file), line));
+	}
+
+	void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses) throw (UnsupportedFeatureException) {
+
+		// build line map
+		setup();
+
+		// look for source line
+		addresses.clear();
+		if (!map)
+			return;
+		gel_line_iter_t iter;
+		gel_location_t loc, ploc = { 0, 0, 0, 0 };
+		for (loc = gel_first_line(&iter, map); loc.file; loc = gel_next_line(&iter)) {
+		cstring lfile = loc.file;
+		if (file == loc.file || lfile.endsWith(file))
+		{
+			if (line == loc.line)
+				addresses.add(pair(Address(loc.low_addr), Address(loc.high_addr)));
+			else if(loc.file == ploc.file && line > ploc.line && line < loc.line)
+				addresses.add(pair(Address(ploc.low_addr), Address(ploc.high_addr)));
+		}
+		ploc = loc;
+	}
+
+	void Process::setup(void) {
+		if(init)
+			return;
+		init = true;
+		map = gel_new_line_map(gel_file);
+	}
+
+private:
+	...
+	struct gel_line_map_t *map;
+	bool init;
+};
+</code>
+
+The first function, ''getSourceLine''() returns, if any, source name and source file matching
+the given address. The second, ''getAddresses''() computes a set of addresses matching the
+given source file and source line. Both use a call to ''setup''() to obtain the line map.
+The ''setup''() function simply checks wether an attempt to build the line map has not
+already been done otherwise it tries to build the line map, that may fail if no debugging
+information is available.
 
 
 ===== Developing a Loader with GLISS2 =====
+
+If GEL is used to build the program image in memory, it does not provide facilities to support
+instruction set. Instead, OTAWA uses an ISS (Instruction Set Simulatpor) called GLISS.
+The instruction set is described using an ADL (Architecture Description Language), SimNML for GLISS,
+and the generator produces what is required to perform the simulation : memory emulator,
+system call emulator, simulator and, what is specially used by OTAWA, an instruction decoder
+and a disassembler. Using an ADL like SimNML and a generator like GLISS allows adding user
+attributes and also generating code to access to these attributes from a decoded instruction.
+This feature is exploited a lot by OTAWA to obtain information on the semantic of instructions.
+
+Below is an excerpt from a SimNML file describing the ''add'' instruction of MIPS ISA:
+<code>
+op add(rd: card(5), rs: card(5), rt: card(5))
+	image = format("000000 %5b %5b %5b 00000 100000", rs, rt, rd)
+	syntax = format("add $%d, $%d, $%d", rd, rs, rt)
+	action = {
+		temp = (GPR[rs]<31..31> :: GPR[rs]) + (GPR[rd]<31..31> :: GPR[rt]);
+		if temp<32..32> != temp<31..31> then
+			SignalException(IntegerOverflow);
+		else
+			GPR[rd] = temp;
+		endif;
+	}
+</code>
+
+The first line identify the instruction with 3 logical parameters, //rd//, //rs// and //rt//
+then come attribute definitions. The //syntax// attributes specifies the opcode of the instruction
+and particularly bits dedicated to encode the parameters. The //syntax// attibutes defines
+the assembly form of the instruction. Both previous attributes use a-la ''printf'' format string
+and arguments. Finally, the //action// attribute provides the semantics of the instruction
+using an algorithmic-like language. Basically, the information required by OTAWA is fully
+available in the SimNML but not so easy to extract, particularly about instruction behaviour.
+
+Whatever, SimNML provides a good base for decoding instructions. The first thing to do is
+to instantiate a GLISS decode inside our plugin and to build the program image in
+the memory emulation of GLISS. The following modifications are done to our ''Process'' class:
+
+<code c++>
+#include <mips/api.h>
+...
+
+class Process: public otawa::Process {
+	...
+private:
+	...
+	mips_platform_t *_mips_pf;
+	mips_memory_t *_mips_mem;
+	mips_decoder_t *_mips_dec;
+};
+
+File *Process::loadFile(elm::CString path) {
+	...
+
+	// (g) allocate GLISS resources
+	_mips_pf = mips_new_platform();
+	_mips_dec = mips_new_decoder(_mips_pf);
+	_mips_mem = mips_get_memory(_mips_pf, ARM_MAIN_MEMORY);
+	mips_lock_platform(_mips_platform);
+
+	// (h) build the memory
+	gel_image_t *gimage = gel_image_load(_file, 0, 0);
+	if(!gimage) {
+		gel_close(_file);
+		throw LoadException(_ << "cannot build image of \"" << path << "\": " << gel_strerror());
+	}
+	gel_image_info_t iinfo;
+	gel_image_infos(gimage, &iinfo);
+	for(t::uint32 i = 0; i < iinfo.membersnum; i++) {
+		gel_cursor_t cursor;
+		gel_block2cursor(iinfo.members[i], &cursor);
+		mips_mem_write(_memory,
+			gel_cursor_vaddr(cursor),
+			gel_cursor_addr(&cursor),
+			gel_cursor_avail(cursor));
+	}
+
+}
+</code>
+
+The block (g) obtains all required resources from MIPS GLISS to perform decoding
+and disassembly while block (h) build the program image in the GLISS memory emulator.
+
+It becomes now possible to decode instructions from memory emulator and to build
+an OTAWA instruction:
+
+<code c++>
+namespace mips {
+
+class Inst: public otawa::Inst {
+public:
+	inline Inst(Process& process, kind_t kind, Address addr, int size)
+		: proc(process), _kind(kind), _size(size), _addr(addr), isRegsDone(false) { }
+	virtual void dump(io::Output& out);
+	virtual kind_t kind() { return _kind; }
+	virtual address_t address() const { return _addr; }
+	virtual t::uint32 size() const { return _size; }
+	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
+	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
+	virtual void semInsts (sem::Block &block);
+
+protected:
+	Process &proc;
+	kind_t _kind;
+	int _size;
+private:
+	elm::genstruct::AllocatedTable<hard::Register *> in_regs;
+	elm::genstruct::AllocatedTable<hard::Register *> out_regs;
+	arm_address_t _addr;
+	bool isRegsDone;
+};
+</code>
+
+The instruction class store very basic information like kind, address and size of the instruction
+and a reference on the process. Very basic method like ''kind''(), ''address''() or ''size''() or
+easy to implement from information passed to the instruction constructor. Other information
+are more complex as obtaining the disassembly of the instruction and required calls to the GLISS API:
+<code c++>
+void Inst::dump(io::Output& out) {
+	char out_buffer[200];
+	mips_inst_t *inst = mips_decode(proc._mips_dec, mips_address_t(_addr.offset()));
+	arm_disasm(out_buffer, inst);
+	mips_free_inst(inst);
+	out << out_buffer;
+}
+</code>
+
+In the previous code, a decoded handle of the instruction is first obtaine from the address
+of the instruction. This handle is used to get the disassembled instruction in ''out_buffer''
+that is displayed on the ''out'' stream. To be clean, the handle needs then to be fried.
+
+In fact, the decoding of an instruction works in the same way. But it is performed
+in a customized ''Segment'' class:
+<code c++>
+class Segment: public otawa::Segment {
+public:
+	Segment(Process& process, CString name, address_t address, t::uint32 size, int flags = EXECUTABLE)
+		: otawa::Segment(name, address, size, flags), proc(process) { }
+protected:
+	virtual otawa::Inst *decode(Address addr) {
+		mips_inst_t *inst = mips_decode(proc._mips_dec, mips_address_t(_addr.offset()));
+		Inst::kind_t kind = 0;
+		otawa::Inst *result = 0;
+		kind = mips_kind(inst);
+		int size = mips_get_inst_size(inst) >> 3;
+		free_inst(inst);
+		result = new Inst(*this, kind, addr, size);
+		return result;
+	}
+private:
+	Process& proc;
+};
+</code>
+
+The main work is done in ''decode''() function. As in the previous example, a GLISS instruction
+handle is obtained and used to collect information on the instruction. The obtained information
+allows building the OTAWA instruction in the end. Instruction address is part of the decoding
+call cause by a call ton ''findInstAt''(). Notice that an instruction is only decoded once
+and then saved by OTAWA in a dedicated structure. The size of the instruction is also
+a standard information provided by GLISS in function ''mips_size''. It is given bits and so
+must be divided by 8 to convert in bytes.
+
+Yet, GLISS has not the concept of kind as used by OTAWA. Basically, we need to assign to each
+information declared in the ADL. According to the instruction, this may be relatively complex
+as not only the type of instruction is needed but also, sometimes, the value of the parameters.
+For example, on ARM instruction set, as the PC is like a general purpose register, any instruction
+assigning it can be considered as a control. Fortunately, GLISS provides custom attributes
+to help to build kind according the full set of parameters. First, a NMP file (in SimNML)
+with the definition of the kind must be written; an excerpt of ''kind.nmp'' for MIPS is given below:
+<code>
+let NO_KIND		= 0x00000000
+let IS_COND		= 0x00000001
+let IS_CONTROL	= 0x00000002
+let IS_CALL		= 0x00000004
+let IS_RETURN	= 0x00000008
+let IS_MEM		= 0x00000010
+let IS_LOAD		= 0x00000020
+let IS_STORE	= 0x00000040
+let IS_INT		= 0x00000080
+let IS_FLOAT	= 0x00000100
+let IS_ALU		= 0x00000200
+let IS_MUL		= 0x00000400
+let IS_DIV		= 0x00000800
+let IS_SHIFT	= 0x00001000
+let IS_TRAP		= 0x00002000
+let IS_SPECIAL	= 0x00010000
+
+extend add
+	otawa_kind = IS_ALU | IS_INT
+
+...
+</code>
+
+Then, a template file for code generation needs to be written. We name it ''kind.tpl'':
+<code>
+/* Generated by gliss-attr ($(date)) copyright (c) 2009 IRIT - UPS */
+#include <$(proc)/api.h>
+#include <$(proc)/id.h>
+#include <$(proc)/macros.h>
+#include <$(proc)/grt.h>
+
+typedef unsigned long otawa_kind_t;
+typedef otawa_kind_t (*fun_t)($(proc)_inst_t *inst);
+
+/*** function definition ***/
+static otawa_kind_t otawa_kind_UNKNOWN($(proc)_inst_t *inst) {
+	return 0;
+}
+
+$(foreach instructions)
+static otawa_kind_t otawa_kind_$(IDENT)($(proc)_inst_t *inst) {
+$(otawa_kind)
+};
+
+$(end)
+
+
+/*** function table ***/
+static fun_t kind_funs[] = {
+	otawa_kind_UNKNOWN$(foreach instructions),
+	otawa_kind_$(IDENT)$(end)
+};
+
+otawa_kind_t $(proc)_kind($(proc)_inst_t *inst) {
+	return kind_funs[inst->ident](inst);
+}
+</code>
+
+Finally the actual C will be generated with a command like:
+<code sh>
+gliss-attr mips.irg -o kind.c -a kind -f -t kind.tpl -d "return 0\\;" -e kind.nmp
+</code>
+The only special file in the command above is ''mips.irg'' that is available in the
+generation of the ISS for MIPS by GLISS. This approach may be used also to compute branch
+address of a control instruction. Let the inconditional branch instruction of MIPS
+described in SimNML with:
+<code>
+op J(instr_index: card(26))
+	image = format("000010 %26b", instr_index)
+	target = __IADDR<31..28> :: instr_index :: 0b00
+	syntax = format("J %l", target)
+	action = { PC = target; }
+</code>
+
+
+Now, it is easy to provide a new template like:
+<code c++>
+/* Generated by gliss-attr ($(date)) copyright (c) 2009 IRIT - UPS */
+#include <$(proc)/api.h>
+#include <$(proc)/id.h>
+#include <$(proc)/macros.h>
+
+typedef uint32_t otawa_target_t;
+typedef otawa_target_t (*target_fun_t)($(proc)_inst_t *inst);
+
+/* functions */
+static otawa_target_t otawa_target_UNKNOWN($(proc)_inst_t *inst) {
+        /* this code should also be used as default value if
+        an instruction has no otawa_target field */
+        return 0;
+}
+
+$(foreach instructions)
+static otawa_target_t otawa_target_$(IDENT)($(proc)_inst_t *inst) {
+$(otawa_target)
+};
+
+$(end)
+
+/* function table */
+static target_fun_t $(proc)_target_table[] = {
+	otawa_target_UNKNOWN$(foreach instructions),
+	otawa_target_$(IDENT)$(end)
+};
+
+otawa_target_t $(proc)_target($(proc)_inst_t *inst) {
+        return $(proc)_target_table[inst->ident](inst);
+}
+</code>
+
+And the generation command will be:
+<code sh>
+gliss-attr mips.irg -o target.c -a target -f -t target.tpl -d "return 0\\;"
+</code>
+As //target// attribute is already available in the original NMP file, we do not
+add extension fill with option ''-e''.
