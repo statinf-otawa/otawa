@@ -23,6 +23,7 @@
 #include <elm/io.h>
 #include <otawa/proc/Registry.h>
 #include <otawa/ipet.h>
+#include <otawa/ipet/VarAssignment.h>
 
 using namespace elm;
 using namespace otawa;
