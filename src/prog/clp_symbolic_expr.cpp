@@ -965,7 +965,7 @@ namespace se{
 	 * @param f CLP to filter with
 	*/
 	void applyFilter(V &v, se::op_t cmp_op, V f){
-		bool reverse;
+		//bool reverse;
 		V b;
 		//clp::intn_t oldvdelta = v.delta();
 		switch(cmp_op){

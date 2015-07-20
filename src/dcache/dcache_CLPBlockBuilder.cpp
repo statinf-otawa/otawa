@@ -50,7 +50,8 @@ p::declare CLPBlockBuilder::reg = p::init("otawa::dcache::CLPBlockBuilder", Vers
 	.maker<CLPBlockBuilder>()
 	.provide(DATA_BLOCK_FEATURE)
 	.require(otawa::clp::FEATURE)
-	.require(hard::CACHE_CONFIGURATION_FEATURE);
+	.require(hard::CACHE_CONFIGURATION_FEATURE)
+	.require(hard::MEMORY_FEATURE);
 
 
 /**
@@ -71,7 +72,7 @@ void CLPBlockBuilder::setup(WorkSpace *ws) {
 		throw otawa::Exception("unsupported replacement policy in data cache !");
 
 	// get memory
-	mem = &ws->process()->platform()->memory();
+	mem = hard::MEMORY(ws);
 
 	// build the block collection
 	colls = new BlockCollection[cache->rowCount()];
@@ -139,6 +140,8 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 						if(!bank)
 							throw otawa::Exception(_ << "no memory bank for address " << Address(l)
 									<< " accessed from " << man->inst()->address());
+						if(!bank->isCached())
+							continue;
 						const Block& block = colls[cache->set(l)].obtain(cache->round(l));
 						accs.add(BlockAccess(inst, p.snd, block));
 					}
@@ -154,6 +157,8 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 							if(!bank)
 								throw otawa::Exception(_ << "no memory bank for address " << Address(l)
 										<< " accessed from " << man->inst()->address());
+							else if(!bank->isCached())
+								continue;
 							else if(cache->block(l) == cache->block(h)) {
 								const Block& block = colls[cache->set(l)].obtain(l);
 								accs.add(BlockAccess(inst, p.snd, block));

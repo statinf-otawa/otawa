@@ -1466,7 +1466,7 @@ void FlowFactLoader::scanRegSet(xom::Element *element) {
 
 	// get the value
 	dfa::Value val;
-	Option<xom::String> value = element->getAttributeValue("name");
+	Option<xom::String> value = element->getAttributeValue("value");
 	if(value)
 		val = dfa::Value::parse(*value);
 	else

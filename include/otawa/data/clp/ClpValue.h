@@ -237,7 +237,7 @@ typedef enum {
 			check();
 		}
 	private:
-		inline void check(void) { ASSERT((_delta == 0 && _mtimes == 0) || (_delta != 0 && _mtimes != 0)); }
+		inline void check(void) { /*ASSERT((_delta == 0 && _mtimes == 0) || (_delta != 0 && _mtimes != 0));*/ }
 
 		kind_t _kind;
 		intn_t _lower;
