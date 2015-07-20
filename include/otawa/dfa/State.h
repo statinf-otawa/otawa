@@ -47,6 +47,7 @@ public:
 	Value(t::uint32 base);
 	Value(t::uint32 lo, t::uint32 up);
 	Value(t::uint32 base, t::uint32 delta, t::uint32 count);
+	static Value parse(const string& str) throw(io::IOException);
 
 	inline kind_t kind(void) const { return _kind; }
 	inline operator bool(void) const { return _kind != NONE; }

@@ -1465,7 +1465,12 @@ void FlowFactLoader::scanRegSet(xom::Element *element) {
 		onError(_ << "name attribute required at " << xline(element));
 
 	// get the value
-	dfa::Value val = scanValue(element);
+	dfa::Value val;
+	Option<xom::String> value = element->getAttributeValue("name");
+	if(value)
+		val = dfa::Value::parse(*value);
+	else
+		val = scanValue(element);
 
 	// perform the instruction
 	onRegSet(*name, val);

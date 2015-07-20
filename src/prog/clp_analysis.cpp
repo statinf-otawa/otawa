@@ -42,6 +42,7 @@
 #include <otawa/ipet/features.h>
 #include <otawa/data/clp/features.h>
 #include <otawa/hard/Memory.h>
+#include <otawa/dfa/State.h>
 
 using namespace elm;
 using namespace otawa;
@@ -1467,12 +1468,36 @@ public:
 #	endif
 }
 
-	/* Initialize a register in the init state */
+	/**
+	 *  Initialize a register in the init state from an address.
+	 *  @param reg		Register to initialize.
+	 *  @param address	Address to set in register.
+	 */
 	void initialize(const hard::Register *reg, const Address& address) {
 		Value v;
 		v = Value(VAL, address.offset());
 		TRACEP(cerr << "init:: r" << reg->platformNumber() << " <- " << v.lower() << "\n");
 		set(_init, reg->platformNumber(), v);
+	}
+
+	/**
+	 * Initialize a register from a DFA value.
+	 * @param reg	Register to initialize.
+	 * @param val	DFA value.
+	 */
+	void initialize(const hard::Register *reg, const dfa::Value val) {
+		Value v(VAL, val.base(), val.delta(), val.count());
+		TRACEP(cerr << "init:: r" << reg->platformNumber() << " <- " << v << "\n");
+		set(_init, reg->platformNumber(), v);
+	}
+
+	/**
+	 * Initialize a memory cell from a DFA value.
+	 */
+	void initialize(Address addr, const dfa::Value val) {
+		Value v(VAL, val.base(), val.delta(), val.count());
+		TRACEP(cerr << "init:: @" << addr << " <- " << v << "\n");
+		_init.set(Value(REG, addr.offset()), v);
 	}
 
 	/** Provides the Bottom value of the Abstract Domain */
@@ -2140,6 +2165,7 @@ p::declare Analysis::reg = p::init("otawa::clp::Analysis", Version(0, 1, 0))
 	.maker<Analysis>()
 	.require(VIRTUALIZED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
+	.require(dfa::INITIAL_STATE_FEATURE)
 	.provide(clp::FEATURE);
 
 Analysis::Analysis(p::declare& r)
@@ -2197,6 +2223,19 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	for(int i = 0; i < inits.count(); i++)
 		prob.initialize(inits[i].fst, inits[i].snd);
 
+	// support initial state
+	dfa::State *istate = dfa::INITIAL_STATE(ws);
+	if(istate) {
+
+		// initialize registers
+		for(dfa::State::RegIter r(istate); r; r++)
+			prob.initialize((*r).fst, (*r).snd);
+
+		// initialize memory
+		for(dfa::State::MemIter m(istate); m; m++)
+			prob.initialize((*m).address(), (*m).value());
+	}
+
 	// look for a stack value
 	const hard::Register *sp = ws->process()->platform()->getSP();
 	if(!sp)
@@ -2218,7 +2257,7 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 				}
 				if(addr) {
 					log << "WARNING: setting stack at " << addr << io::endl;
-					prob.initialize(sp, addr.offset());
+					prob.initialize(sp, addr);
 					found = true;
 				}
 			}
