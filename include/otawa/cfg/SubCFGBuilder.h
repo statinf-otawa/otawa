@@ -26,18 +26,19 @@
 #include <otawa/proc/Registration.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/prop/Identifier.h>
+#include <otawa/cfg/CFGAdapter.h>
 
 namespace otawa {
 
 // predeclaration
 class VirtualCFG;
 
+
 // SubCFGBuilder class
 class SubCFGBuilder: public Processor {
 public:
 	SubCFGBuilder(void);
 	static Registration<SubCFGBuilder> reg;
-
 	virtual void configure(const PropList &props);
 protected:
 	virtual void processWorkSpace(WorkSpace *ws);
@@ -45,7 +46,24 @@ protected:
 private:
 	Address start;
 	elm::genstruct::Vector<Address> stops;
+	BasicBlock *_start_bb;
+	elm::genstruct::Vector<BasicBlock *> _stop_bbs;
 	VirtualCFG *vcfg;
+	CFG *cfg;
+	void floodForward();
+	void floodBackward();
+	static const char BOTTOM = -1,
+						  FALSE = 0,
+						  TRUE = 1;
+	inline static char toString(char c) {
+			switch(c) {
+			case BOTTOM: return '_';
+			case FALSE: return 'F';
+			case TRUE: return 'T';
+			default: return '?';
+			}
+		}
+
 };
 
 extern Identifier<Address> CFG_START;

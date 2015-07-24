@@ -74,6 +74,7 @@ public:
 
 		// loop until fixpoint
 		OTAWA_AILD(cerr << "\nINTERPRETING\n");
+
 		while(todo) {
 			typename G::Vertex v = pop();
 			OTAWA_AILD(cerr << "NEXT: " << v << io::endl);
