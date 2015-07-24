@@ -148,50 +148,7 @@ namespace otawa {
 		};
   };
 
-//  class ResourceVector{
-//   private:
-// 		elm::genstruct::Vector<Resource *> _resources;				// resources available in the processor: pipeline stages, queue slots, registers, etc.
-// 		int _start_index[Resource::RES_TYPE_NUM];
-// 		int _end_index[Resource::RES_TYPE_NUM];
-// 		int _num_resources;
-//   public:
-// 		ResourceVector() {
-// 			for (int i=0; i<Resource::RES_TYPE_NUM; i++){
-// 				_start_index[i] = -1;
-// 				_end_index[i] = -1;
-// 			}
-// 			_start_index[Resource::BLOCK_START] = 0;
-// 			_end_index[Resource::BLOCK_START] = 0;
-// 		    StartResource * new_resource = new StartResource((elm::String) "start", 0);
-// 		    _resources.add(new_resource);
-// 		   _num_resources = 1;
-// 		}
-// 		inline void addResource(Resource *res, Resource::resource_type_t type){
-// 			res->setIndex(_num_resources);
-// 			_resources.add(res);
-// 			if (_start_index[type]<0)
-// 			 	_start_index[type] = _num_resources;
-// 			_end_index[type] = _num_resources;
-// 			_num_resources++;
-// 		}
-// 		inline int numResources() {return _num_resources;}
-//
-// 		class ResourceIterator: public elm::genstruct::Vector<Resource *>::Iterator {
-// 		public:
-//  			inline ResourceIterator(const ResourceVector *vector) : elm::genstruct::Vector<Resource *>::Iterator(vector->_resources) {}
-// 		};
-//
-// 		class StageResourceIterator: public PreIterator<StageResourceIterator, ResourceVector> {
-// 			public:
-// 				const Vector<Resource *>& _vec;
-// 				int i;
-// 				inline StageResourceIterator(const Vector<Resource *>& vec) : _vec(vec), i(_start_index[Resource::STAGE]) {}
-// 				inline StageResourceIterator(const StageResourceIterator& iter) : _vec(iter._vec), i(iter.i){}
-// 				inline bool ended(void) const {return i >= _end_index[Resource::STAGE];}
-// 				inline const Resource * item(void) const {return _vec[i];}
-// 				inline void next(void) { i++;}
-// 		};
-//   };
+
 
 
 } // namespace otawa
