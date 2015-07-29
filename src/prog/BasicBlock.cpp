@@ -240,6 +240,7 @@ BasicBlock::~BasicBlock(void) {
 
 
 /**
+ * @fn IteratorInst<Edge *> *BasicBlock::inEdges(void);
  * Get an iterator on the entering edges.
  * @return	Entering edge iterator.
  * @deprecated	Use InIterator instead.
@@ -251,6 +252,7 @@ BasicBlock::~BasicBlock(void) {
 
 
 /**
+ * @fn IteratorInst<Edge *> *BasicBlock::outEdges(void);
  * Get an iterator on the leaving edges.
  * @return	Leaving edge iterator.
  * @deprecated	Use OutIterator instead.
