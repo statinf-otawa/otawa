@@ -46,7 +46,7 @@ public:
 		otawa::Edge *edge;
 	};
 	
-	class Successor: public PreIterator<Successor, Edge> {
+	class Successor: public VolatilePreIterator<Successor, Edge> {
 	public:
 		inline Successor(const CFGAdapter& ad, Vertex source): iter(source.bb)
 			{ step(); }
@@ -63,7 +63,7 @@ public:
 	};
 	
 	// Collection concept
-	class Iterator: public PreIterator<Iterator, Vertex> {
+	class Iterator: public VolatilePreIterator<Iterator, Vertex> {
 	public:
 		inline Iterator(const CFGAdapter& adapter): iter(adapter.cfg) { }
 		inline Iterator(const Iterator& _iter): iter(_iter.iter) { }

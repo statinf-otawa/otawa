@@ -23,7 +23,7 @@
 #define OTAWA_GRAPH_GRAPH_H
 
 #include <elm/assert.h>
-#include <elm/PreIterator.h>
+#include <elm/VolatilePreIterator.h>
 #include <elm/genstruct/FragTable.h>
 #include <elm/util/BitVector.h>
 #include <elm/genstruct/VectorQueue.h>
@@ -50,7 +50,7 @@ protected:
 public:
 	
 	// Successor class
-	class Successor: public elm::PreIterator<Successor, Node *> {
+	class Successor: public elm::VolatilePreIterator<Successor, Node *> {
 		Edge *_edge;
 	public:
 		inline Successor(const Node *node);
@@ -61,7 +61,7 @@ public:
 	};
 	
 	// Predecessor class
-	class Predecessor: public elm::PreIterator<Predecessor, Node *> {
+	class Predecessor: public elm::VolatilePreIterator<Predecessor, Node *> {
 		Edge *_edge;
 	public:
 		inline Predecessor(const Node *node);
@@ -159,7 +159,7 @@ public:
 	bool isSuccessorOf(Node *succ, Node *ref) const;
 
 	// OutIterator class
-	class OutIterator: public elm::PreIterator<OutIterator, graph::Edge *> {
+	class OutIterator: public elm::VolatilePreIterator<OutIterator, graph::Edge *> {
 	public:
 		inline OutIterator(const Node *source): iter(source) { }
 		inline OutIterator(const Graph& graph, const Node *source): iter(source) { }
@@ -177,7 +177,7 @@ public:
 	bool isPredecessorOf(Node *prev, Node *ref) const;
 
 	// InIterator class
-	class InIterator: public elm::PreIterator<InIterator, graph::Edge *> {
+	class InIterator: public elm::VolatilePreIterator<InIterator, graph::Edge *> {
 	public:
 		inline InIterator(const Node *source): iter(source) { }
 		inline InIterator(const Graph& graph, const Node *source): iter(source) { }

@@ -41,7 +41,7 @@ namespace otawa { namespace dfa {
 class Successor;
 
 // Predecessor
-class Predecessor: public PreIterator<Predecessor, BasicBlock *> {
+class Predecessor: public VolatilePreIterator<Predecessor, BasicBlock *> {
 	BasicBlock::InIterator iter;
 	inline void look(void) {
 		while(iter && iter->kind() == Edge::CALL)
@@ -60,7 +60,7 @@ public:
 
 
 // Successor
-class Successor: public PreIterator<Successor, BasicBlock *> {
+class Successor: public VolatilePreIterator<Successor, BasicBlock *> {
 	BasicBlock::OutIterator iter;
 	inline void look(void) {
 		while(iter && iter->kind() == Edge::CALL)

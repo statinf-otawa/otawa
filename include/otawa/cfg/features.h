@@ -59,7 +59,7 @@ public:
 			: elm::genstruct::FragTable<CFG *>::Iterator(cfgs.cfgs) { }
 	};
 
-	class BBIterator: public PreIterator<BBIterator, BasicBlock *> {
+	class BBIterator: public VolatilePreIterator<BBIterator, BasicBlock *> {
 	public:
 		inline BBIterator(const CFGCollection *cfgs): cfg(cfgs), bb(*cfg) { }
 		inline BBIterator(const BBIterator& i): cfg(i.cfg), bb(i.bb) { }

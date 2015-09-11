@@ -24,6 +24,7 @@
 #define _PAR_EXEGRAPH_H_
 
 #include <otawa/graph/GenGraph.h>
+#include <elm/VolatilePreIterator.h>
 #include <elm/string/StringBuffer.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/parexegraph/ParExeProc.h>
@@ -305,7 +306,7 @@ namespace otawa {
 				: graph::PreorderIterator<ParExeGraph>(*graph, graph->firstNode()) {}
 		};
 
-		class Predecessor: public PreIterator<Predecessor, ParExeNode *> {
+		class Predecessor: public VolatilePreIterator<Predecessor, ParExeNode *> {
 		public:
 			inline Predecessor(const ParExeNode* node): iter(node) { }
 			inline bool ended(void) const;
@@ -316,7 +317,7 @@ namespace otawa {
 			GenGraph<ParExeNode,ParExeEdge>::InIterator iter;
 		};
 
-		class Successor: public PreIterator<Successor, ParExeNode *> {
+		class Successor: public VolatilePreIterator<Successor, ParExeNode *> {
 		public:
 			inline Successor(const ParExeNode* node): iter(node) {}
 			inline bool ended(void) const;
