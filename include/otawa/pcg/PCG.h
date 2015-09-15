@@ -4,7 +4,7 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/CFG.h>
 #include <elm/genstruct/Vector.h>
-#include <elm/PreIterator.h>
+#include <elm/VolatilePreIterator.h>
 
 #include "PCGBlock.h"
 namespace otawa {
@@ -22,7 +22,7 @@ public :
 	//void PCG_Construction(BasicBlock* bb,CFG* cfg,PCGBuilder *PCGBD);
 	//void afficherPCG(FrameWork *fw,PCGBuilder * PCGBD);
 
-	class PCGIterator: public elm::PreIterator<PCGIterator, PCGBlock *> {
+	class PCGIterator: public elm::VolatilePreIterator<PCGIterator, PCGBlock *> {
 		elm::genstruct::Vector<PCGBlock *>& pcgbs;
 		int pos;
 	public:

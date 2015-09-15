@@ -58,7 +58,7 @@ public:
 	inline void setSize(size_t size) { _size = size; }
 
 	// InstIter class
-	class InstIter: public PreIterator<InstIter, Inst *> {
+	class InstIter: public VolatilePreIterator<InstIter, Inst *> {
 	public:
 		inline InstIter(const BB *bb): inst(bb->first()), top(bb->topAddress()) { }
 		inline InstIter(const InstIter& iter): inst(iter.inst), top(iter.top) { }

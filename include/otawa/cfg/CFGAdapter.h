@@ -45,7 +45,7 @@ public:
 	inline bool isPredecessorOf(Vertex pred, const Vertex& ref) { for(Predecessor s(*this, ref); s; s++) if(sourceOf(s) == pred) return true; return false; }
 	inline bool isLoopHeader(Vertex v) const { return LOOP_HEADER(v); }
 
-	class Predecessor: public PreIterator<Predecessor, Edge> {
+	class Predecessor: public VolatilePreIterator<Predecessor, Edge> {
 	public:
 		inline Predecessor(const ForwardCFGAdapter& g, const Vertex& v): iter(v) { }
 		inline bool ended (void) const { return iter.ended(); }
@@ -55,7 +55,7 @@ public:
 		BasicBlock::InIterator iter;
 	};
 
-	class Successor: public PreIterator<Successor, Edge> {
+	class Successor: public VolatilePreIterator<Successor, Edge> {
 	public:
 		inline Successor(const ForwardCFGAdapter& g, const Vertex& v): iter(v) { step(); }
 		inline bool ended (void) const { return iter.ended(); }
@@ -98,7 +98,7 @@ public:
 	inline bool isPredecessorOf(const Vertex& pred, const Vertex& ref) { for(Predecessor s(*this, ref); s; s++) if(sourceOf(s) == pred) return true; return false; }
 	inline bool isLoopHeader(Vertex v) const { return LOOP_HEADER(v); }
 
-	class Successor: public PreIterator<Successor, Edge> {
+	class Successor: public VolatilePreIterator<Successor, Edge> {
 	public:
 		inline Successor(const BackwardCFGAdapter& g, const Vertex& v): iter(v) { }
 		inline bool ended (void) const { return iter.ended(); }
@@ -108,7 +108,7 @@ public:
 		BasicBlock::InIterator iter;
 	};
 
-	class Predecessor: public PreIterator<Predecessor, Edge> {
+	class Predecessor: public VolatilePreIterator<Predecessor, Edge> {
 	public:
 		inline Predecessor(const BackwardCFGAdapter& g, const Vertex& v): iter(v) { step(); }
 		inline bool ended (void) const { return iter.ended(); }

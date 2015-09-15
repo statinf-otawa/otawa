@@ -3,7 +3,7 @@ project("otawa")
 set(PACKAGE "otawa")
 
 # debugging activated
-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g3")
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g")
 file(READ "VERSION" VERSION)
 
 # gcc based compiler lack of support by cmake (opposed to VS)
