@@ -738,7 +738,28 @@ public:
 		return r;
 	}
 
+	virtual void handleIO(Address addr, t::uint32 size, otawa::arm::IOManager& man) {
+#		ifndef ARM_MEM_IO
+			ASSERTP(false, "WITH_MEM_IO not configured in arm GLISS plugin!");
+#		else
+			//io_man = &man;
+			arm_set_range_callback(memory(), addr.offset(), addr.offset() + size, io_callback, &man);
+#		endif
+	}
+
 private:
+
+#	ifdef ARM_MEM_IO
+	static void io_callback(arm_address_t addr, int size, void *data, int type_access, void *cdata) {
+		otawa::arm::IOManager *man = static_cast<otawa::arm::IOManager *>(cdata);
+		if(type_access == ARM_MEM_READ)
+			man->read(addr, size, static_cast<t::uint8 *>(data));
+		else if(type_access == ARM_MEM_WRITE)
+			man->write(addr, size, static_cast<t::uint8 *>(data));
+		else
+			ASSERT(0);
+	}
+#	endif
 
 	/**
 	 * Test if the given address matches a thumb code area.
@@ -774,7 +795,10 @@ private:
 	bool no_stack;
 	bool init;
 #	ifdef ARM_THUMB
-	area_tree_t area_tree;
+		area_tree_t area_tree;
+#	endif
+#	ifdef ARM_MEM_IO
+		otawa::arm::IOManager *io_man;
 #	endif
 };
 
