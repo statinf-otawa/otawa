@@ -4,7 +4,7 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/CFG.h>
 #include <elm/genstruct/Vector.h>
-#include <elm/VolatilePreIterator.h>
+#include <elm/PreIterator.h>
 
 namespace otawa {
 class PCGBlock: public PropList {
@@ -23,7 +23,7 @@ public:
 	inline elm::genstruct::Vector<PCGBlock*>& getSons(){return outs;};
 	inline CFG *getCFG(void) const { return cfg; }
 	
-	class PCGBlockInIterator: public elm::VolatilePreIterator<PCGBlockInIterator, PCGBlock *> {
+	class PCGBlockInIterator: public elm::PreIterator<PCGBlockInIterator, PCGBlock *> {
 		elm::genstruct::Vector<PCGBlock *>& ins;
 		int pos;
 	public:
@@ -33,7 +33,7 @@ public:
 		inline void next(void) {pos++;};
 	};
 	
-	class PCGBlockOutIterator: public elm::VolatilePreIterator<PCGBlockOutIterator, PCGBlock *> {
+	class PCGBlockOutIterator: public elm::PreIterator<PCGBlockOutIterator, PCGBlock *> {
 		elm::genstruct::Vector<PCGBlock *>& outs;
 		int pos;
 	public:

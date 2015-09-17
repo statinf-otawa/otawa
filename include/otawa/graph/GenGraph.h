@@ -22,7 +22,6 @@
 #ifndef OTAWA_GRAPH_GEN_GRAPH_H
 #define OTAWA_GRAPH_GEN_GRAPH_H
 #include <elm/PreIterator.h>
-#include <elm/VolatilePreIterator.h>
 #include <otawa/graph/Graph.h>
 
 // GCC work-around
@@ -76,7 +75,7 @@ public:
  	inline operator bool(void) const { return !isEmpty(); }
 	
 	// Iterator class
-	class Iterator: public elm::VolatilePreIterator<Iterator, N *> {
+	class Iterator: public elm::PreIterator<Iterator, N *> {
 		graph::Graph::Iterator iter;
 	public:
 		inline Iterator(const GenGraph<N, E> *graph): iter(graph) { }
@@ -102,7 +101,7 @@ public:
 	inline bool isSuccessorOf(N *succ, N *ref) const { return Graph::isSuccessorOf(succ, ref); }
 
 	// OutIterator class
-	class OutIterator: public elm::VolatilePreIterator<OutIterator, E *> {
+	class OutIterator: public elm::PreIterator<OutIterator, E *> {
 	public:
 		inline OutIterator(const N *node): iter(_(node)) { }
 		inline OutIterator(const GenGraph<N, E>& graph, const N *node): iter(_(node)) { }
@@ -119,7 +118,7 @@ public:
 	inline bool isPredecessorOf(N *succ, N *ref) const { return Graph::isPredecessorOf(succ, ref); }
 
 	// InIterator class
-	class InIterator: public elm::VolatilePreIterator<InIterator, E *> {
+	class InIterator: public elm::PreIterator<InIterator, E *> {
 	public:
 		inline InIterator(const N *node): iter(_(node)) { }
 		inline InIterator(const GenGraph<N, E>& graph, const N *node): iter(_(node)) { }

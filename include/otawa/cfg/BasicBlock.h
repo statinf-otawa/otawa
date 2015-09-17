@@ -27,7 +27,7 @@
 #include <elm/genstruct/SLList.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/utility.h>
-#include <elm/VolatilePreIterator.h>
+#include <elm/PreIterator.h>
 #include <otawa/program.h>
 #include <otawa/instruction.h>
 
@@ -65,7 +65,7 @@ protected:
 
 public:
 	// InstIterator class
-	class InstIter: public VolatilePreIterator<InstIter, Inst *> {
+	class InstIter: public PreIterator<InstIter, Inst *> {
 	public:
 		inline InstIter(void): inst(0) { }
 		inline InstIter(const BasicBlock *bb)

@@ -49,7 +49,7 @@ private:
 class Element;
 class Factory;
 
-class Parser: public VolatilePreIterator<Parser, xom::Node *> {
+class Parser: public PreIterator<Parser, xom::Node *> {
 public:
 	Parser(Factory *factory, Element& element, xom::Element *parent): fact(factory) {
 		cur.elt = &element;

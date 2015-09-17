@@ -22,7 +22,7 @@
 #define OTAWA_PROG_SEGMENT_H
 
 #include <elm/types.h>
-#include <elm/VolatilePreIterator.h>
+#include <elm/PreIterator.h>
 #include <elm/inhstruct/DLList.h>
 #include <otawa/prog/ProgItem.h>
 #include <otawa/prog/Symbol.h>
@@ -61,7 +61,7 @@ public:
 	inline bool contains(const Address& addr) const { return address() <= addr && addr < topAddress(); }
 
 	// ItemIter class	
-	class ItemIter: public VolatilePreIterator<ItemIter, ProgItem *> {
+	class ItemIter: public PreIterator<ItemIter, ProgItem *> {
 		ProgItem *cur;
 	public:
 		inline ItemIter(Segment *seg): cur((ProgItem *)seg->items.first())

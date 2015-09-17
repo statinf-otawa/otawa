@@ -23,7 +23,7 @@
 #define OTAWA_PROC_PROC_REGISTRY_H
 
 #include <elm/genstruct/HashTable.h>
-#include <elm/VolatilePreIterator.h>
+#include <elm/PreIterator.h>
 #include <otawa/proc/Registration.h>
 
 namespace otawa {
@@ -55,7 +55,7 @@ inline const AbstractRegistration& registration(void) { return T::__reg; }
 
 
 // ConfigIter class
-class ConfigIter: public VolatilePreIterator<ConfigIter, AbstractIdentifier *> {
+class ConfigIter: public PreIterator<ConfigIter, AbstractIdentifier *> {
 public:
 	inline ConfigIter(const AbstractRegistration& registration, bool all = true)
 		: reg(&registration), iter(reg->configs), _all(all) { step(); }
@@ -72,7 +72,7 @@ private:
 
 
 // FeatureIter class
-class FeatureIter: public VolatilePreIterator<FeatureIter, const FeatureUsage *> {
+class FeatureIter: public PreIterator<FeatureIter, const FeatureUsage *> {
 public:
 	inline FeatureIter(const AbstractRegistration& registration)
 		: reg(&registration), iter(reg->features) { step(); }

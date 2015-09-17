@@ -28,7 +28,7 @@ namespace otawa { namespace graph {
 
 // PreorderIterator class
 template <class G>
-class PreorderIterator: public elm::VolatilePreIterator<PreorderIterator<G>, typename G::Vertex> {
+class PreorderIterator: public elm::PreIterator<PreorderIterator<G>, typename G::Vertex> {
 public:
 
 	PreorderIterator(const G& graph, typename G::Vertex entry)

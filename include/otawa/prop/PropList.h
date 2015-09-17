@@ -22,7 +22,7 @@
 #define OTAWA_PROP_PROPLIST_H
 
 #include <elm/utility.h>
-#include <elm/VolatilePreIterator.h>
+#include <elm/PreIterator.h>
 #include <elm/util/VarArg.h>
 
 namespace elm { template <class T> class Initializer; }
@@ -89,7 +89,7 @@ public:
 		{ clearProps(); addProps(props); return *this; }
 
 	// Iter class
-	class Iter: public elm::VolatilePreIterator<Iter, Property *> {
+	class Iter: public elm::PreIterator<Iter, Property *> {
 		Property *prop;
 	public:
 		inline Iter(const PropList& list): prop(list.head) { }
@@ -108,7 +108,7 @@ public:
 	};
 
 	// Getter class
-	class Getter: public elm::VolatilePreIterator<Getter, Property *> {
+	class Getter: public elm::PreIterator<Getter, Property *> {
 	public:
 		inline Getter(const PropList *list, const AbstractIdentifier& id)
 			: iter(*list), _id(id) { look(); }
