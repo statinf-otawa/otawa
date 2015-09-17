@@ -112,24 +112,26 @@ namespace arm2 {
 class SimState: public otawa::SimState {
 public:
 	SimState(Process *process, arm_platform_t *platform, arm_decoder_t *_decoder)
-	:	otawa::SimState(process), decoder(_decoder) {
-		state = arm_new_state(platform);
+	:	otawa::SimState(process) {
+		sim = arm_new_sim(platform);
 		arm_mem_set_spy(arm_get_memory(platform, 0), spy, this);
 	}
 
 	virtual ~SimState(void) {
-		arm_delete_state(state);
+		arm_delete_sim(sim);
 	}
 
 	virtual Inst *execute(Inst *inst) {
 
 		// execute current instruction
 		dr = dw = false;
-		arm_inst_t *_inst = arm_decode(decoder, inst->address().offset());
+		arm_step(sim);
+		/*arm_inst_t *_inst = arm_decode(decoder, inst->address().offset());
 		arm_execute(state, _inst);
-		arm_free_inst(_inst);
+		arm_free_inst(_inst);*/
 
 		// get next instruction
+		arm_state_t *state = sim_state(sim);
 		Inst *next = inst->nextInst();
 		if(next->address().offset() == state->GPR[15])
 			return next;
@@ -160,8 +162,7 @@ public:
 	}
 
 private:
-	arm_state_t *state;
-	arm_decoder_t *decoder;
+	arm_sim_t *sim;
 	bool dr, dw;
 	arm_address_t lr, ur, lw, uw;
 

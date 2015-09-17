@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003-8, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_PROGRAM_PROCESS_H
@@ -64,8 +64,8 @@ public:
 	inline ProcessException(Process *process, const string& message): Exception(message), proc(process)
 		{ ASSERTP(process, "null process passed"); }
 	inline Process *process(void) const { return proc; }
- 	virtual String message(void); 
-	
+ 	virtual String message(void);
+
 private:
 	Process *proc;
 };
@@ -74,29 +74,29 @@ private:
 // UnsupportedFeatureException class
 class UnsupportedFeatureException: public ProcessException {
 public:
-	
+
  	inline UnsupportedFeatureException(
  		Process *proc,
  		const AbstractFeature& feature
  	): ProcessException(proc), f(feature) { }
- 		
+
  	 inline UnsupportedFeatureException(const AbstractFeature& feature)
  	 : ProcessException(0), f(feature) { }
- 	 		
+
  	 inline const AbstractFeature& feature(void) const { return f; }
- 	virtual String message(void); 
+ 	virtual String message(void);
 private:
 	const AbstractFeature& f;
 };
 
 
 // OutOfSegmentException class
-class OutOfSegmentException: public ProcessException { 
+class OutOfSegmentException: public ProcessException {
 public:
 	OutOfSegmentException(Process *proc, Address address)
 		: ProcessException(proc), addr(address) { }
 	inline Address address(void) const { return addr; }
- 	virtual String 	message(void); 	
+ 	virtual String 	message(void);
 private:
 	Address addr;
 };
@@ -116,9 +116,11 @@ public:
 	virtual ~SimState(void);
 	inline Process *process(void) const { return proc; }
 	virtual Inst *execute(Inst *inst) = 0;
-	
+
 	// register access
 	virtual void setSP(const Address& addr);
+	virtual t::uint32 getReg(hard::Register *r);
+	virtual void setReg(hard::Register *r, t::uint32 v);
 
 	// memory accesses
 	virtual Address lowerRead(void);
@@ -135,7 +137,7 @@ class Process: public PropList, public Lock {
 public:
 	Process(Manager *manager, const PropList& props = EMPTY, File *program = 0);
 	virtual ~Process(void);
-	
+
 	// Accessors
 	virtual hard::Platform *platform(void) = 0;
 	inline Manager *manager(void) { return man; }
@@ -170,14 +172,14 @@ public:
 	virtual void get(Address at, long double& val);
 	virtual void get(Address at, string& str);
 	virtual void get(Address at, char *buf, int size);
-	
+
 	// LineNumber feature
 	virtual Option<Pair<cstring, int> > getSourceLine(Address addr)
 		throw (UnsupportedFeatureException);
 	virtual void getAddresses(cstring file, int line,
 		Vector<Pair<Address, Address> >& addresses)
 		throw (UnsupportedFeatureException);
-	
+
 	// Simulation management
 	virtual SimState *newState(void);
 	virtual sim::Simulator *simulator(void);
@@ -185,16 +187,16 @@ public:
 	// Constructors
 	File *loadProgram(elm::CString path);
 	virtual File *loadFile(elm::CString path) = 0;
-	
+
 	// loader 1.2.0
 	virtual Address defaultStack(void) const;
 
-	// FileIterator 
+	// FileIterator
 	class FileIter: public Vector<File *>::Iterator {
 	public:
 		inline FileIter(const Process *process)
 			: Vector<File *>::Iterator(process->files) { }
-		inline FileIter(const FileIter& iter)  
+		inline FileIter(const FileIter& iter)
 			: Vector<File *>::Iterator(iter) { }
 	};
 
@@ -215,7 +217,7 @@ private:
 
 
 // Process display
-elm::io::Output& operator<<(elm::io::Output& out, Process *proc); 
+elm::io::Output& operator<<(elm::io::Output& out, Process *proc);
 
 } // otawa
 
