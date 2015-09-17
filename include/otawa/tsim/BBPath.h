@@ -69,7 +69,7 @@ public:
 	//inline Collection<BasicBlock*>& bbs();
 	
 	// Iterator
-	class BBIterator: public elm::VolatilePreIterator<BBIterator, BasicBlock *> {
+	class BBIterator: public elm::PreIterator<BBIterator, BasicBlock *> {
 		elm::genstruct::Vector<BasicBlock *>& bbs;
 		int pos;
 	public:

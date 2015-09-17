@@ -139,7 +139,7 @@ public:
 		PCGBlock *src, *snk;
 	};
 
-	class Successor: public VolatilePreIterator<Successor, Edge> {
+	class Successor: public PreIterator<Successor, Edge> {
 	public:
 	 	inline Successor(const PCGAdapter& pcg, const Vertex &source)
 	 		: blk(source.blk), iter(source.blk)	{  look(); }
@@ -172,7 +172,7 @@ public:
 	inline bool isEmpty (void) const { return _pcg->pcgbs(); }
 	inline operator bool (void) const { return !isEmpty(); }
 
-	class Iterator: public VolatilePreIterator<Iterator, Vertex> {
+	class Iterator: public PreIterator<Iterator, Vertex> {
 	public:
 		inline Iterator(const PCGAdapter& ad)
 			: iter(ad._pcg) { look(); }

@@ -272,7 +272,7 @@ class ExeInst {
        : PipelineStage<N>::ExeNodeIterator(stage) {}
    };
 
-   class Predecessor: public VolatilePreIterator<Predecessor, N *> {
+   class Predecessor: public PreIterator<Predecessor, N *> {
    public:
      inline Predecessor(const N* node): iter(node) { }
      inline bool ended(void) const { return iter.ended(); }
@@ -283,7 +283,7 @@ class ExeInst {
      typename GenGraph<N,ExeEdge>::InIterator iter;
    };
 		
-   class Successor: public VolatilePreIterator<Successor, N *> {
+   class Successor: public PreIterator<Successor, N *> {
    public:
      inline Successor(const N* node): iter(node) {}
      inline bool ended(void) const { return iter.ended(); }

@@ -48,7 +48,7 @@ public:
 		typename G::_Edge *edge;
 	};
 	
-	class Successor: public VolatilePreIterator<Successor, Edge> {
+	class Successor: public PreIterator<Successor, Edge> {
 	public:
 		inline Successor(const GenGraphAdapter& graph, Vertex source)
 			: iter(source.node) { }
@@ -60,7 +60,7 @@ public:
 		typename G::Successor iter;
 	};
 	
-	class Iterator: public VolatilePreIterator<Iterator, Vertex> {
+	class Iterator: public PreIterator<Iterator, Vertex> {
 	public:
 		inline Iterator(const GenGraphAdapter& adapter): iter(adapter.graph) { }
 		inline Iterator(const Iterator& _iter): iter(_iter.iter) { }

@@ -111,7 +111,7 @@ public:
 		{ return GenericProperty<T>::make(this, get(&prop)); }
 
 	// Getter class
-	class Getter: public PreIterator<Getter, T> {
+	class Getter: public PreIterator<Getter, const T&> {
 	public:
 		inline Getter(const PropList *list, Identifier<T>& id): getter(list, id) { }
 		inline Getter(const PropList& list, Identifier<T>& id): getter(list, id) { }

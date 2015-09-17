@@ -26,7 +26,7 @@
 
 namespace otawa { namespace sem {
 
-class PathIter: public VolatilePreIterator<PathIter, sem::inst> {
+class PathIter: public PreIterator<PathIter, sem::inst> {
 public:
 
 	inline void start(Inst *inst) {
