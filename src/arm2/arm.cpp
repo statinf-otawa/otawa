@@ -113,7 +113,7 @@ class SimState: public otawa::SimState {
 public:
 	SimState(Process *process, arm_platform_t *platform, arm_decoder_t *_decoder)
 	:	otawa::SimState(process) {
-		sim = arm_new_sim(platform);
+		sim = arm_new_sim(arm_new_state(platform), process->start()->address(), 0);
 		arm_mem_set_spy(arm_get_memory(platform, 0), spy, this);
 	}
 
@@ -126,12 +126,9 @@ public:
 		// execute current instruction
 		dr = dw = false;
 		arm_step(sim);
-		/*arm_inst_t *_inst = arm_decode(decoder, inst->address().offset());
-		arm_execute(state, _inst);
-		arm_free_inst(_inst);*/
 
 		// get next instruction
-		arm_state_t *state = sim_state(sim);
+		arm_state_t *state = sim->state;
 		Inst *next = inst->nextInst();
 		if(next->address().offset() == state->GPR[15])
 			return next;
@@ -141,8 +138,24 @@ public:
 
 	// register access
 	virtual void setSP(const Address& addr) {
-		state->GPR[13] = addr.offset();
+		sim->state->GPR[13] = addr.offset();
 	}
+
+	virtual t::uint32 getReg(hard::Register *r) {
+		t::uint32 temp = 0;
+		if((r->bank()->name() == "misc") && (r->name() == "sr"))
+			temp = sim->state->Ucpsr;
+		else if (r->bank()->name() == "GPR")
+			temp = sim->state->GPR[r->number()];
+		return temp;
+	}
+
+	virtual void setReg(hard::Register *r, t::uint32 v) {
+		if((r->bank()->name() == "misc") && (r->name() == "sr"))
+			sim->state->Ucpsr = v;
+		else if (r->bank()->name() == "GPR")
+			sim->state->GPR[r->number()] = v;
+	 }
 
 	// memory accesses
 	virtual Address lowerRead(void) {

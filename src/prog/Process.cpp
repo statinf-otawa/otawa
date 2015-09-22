@@ -134,6 +134,26 @@ void SimState::setSP(const Address& addr) {
 
 
 /**
+ * Get register value from the state.
+ * @param r	Looked register.
+ */
+t::uint32 SimState::getReg(hard::Register *r) {
+	ASSERTP(false, "SimState::getReg() unsupported");
+	return 0;
+}
+
+
+/**
+ * Set register value in the state.
+ * @param r		Register to change.
+ * @param v		Value to set.
+ */
+void SimState::setReg(hard::Register *r, t::uint32 v) {
+	ASSERTP(false, "SimState::setReg() unsupported");
+}
+
+
+/**
  * @class Process
  * A process is the realization of a program on a platform. It represents the
  * program and its implementation on the platform. A process may be formed
