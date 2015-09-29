@@ -142,28 +142,42 @@ int ParExeGraph::cost() {
 }
 
 // --------------------------------------------------------------------------------------------------
+/**
+ * This method is called to compute the delay of a given node compared to the last node of the prologue
+ * (i.e. the last node of the preceding block) with respect to a given resource.
+ * @param node	The node for which the delay is computed (e.g., the last node of the basic block under analysis)
+ * @param res The resource for which the delay is computed.
+ * @return	Delay (number of cycles).
+ */
+
 int ParExeGraph::delta(ParExeNode *node, Resource *res) {
 	int r_id = res->index();
+	// if the node does not depend on the resource, return 0
 	if (node->delay(r_id)<0)
 		return (0);
 
-	int default_lp = _last_prologue_node->delay(numResources() - 1);
-	if(res->type() == Resource::STAGE)
-		default_lp += _microprocessor->pipeline()->numStages() - ((StageResource *)(res))->stage()->index();
-	else if(res->type() == Resource::QUEUE) {
-		//StageResource * upper_bound = ((QueueResource *) (res))->upperBound();							// ========= TO BE REMOVED
-		int u_id = ((QueueResource *) (res))->uid();
-		if(_last_prologue_node->delay(u_id)>=0) {
-			int diff = _last_prologue_node->delay(u_id) + ((QueueResource *) (res))->offset();
-			if (diff < default_lp)
-				default_lp = diff;
-		}
-	}
 	int delta;
+	// if both the node and the last node of the prologue depend on the resource availability date
+	// then return the difference between their respective delay wrt the resource
 	if (_last_prologue_node->delay(r_id)>=0)
 		delta = node->delay(r_id) - _last_prologue_node->delay(r_id);
-	else
-		delta = node->delay(r_id) - default_lp;
+	// otherwise we need to estimate an upper bound on the resource availability date (i.e. when the resource is available at worst)
+	//		RegResource: at worst, the register is written by the instruction just before the prologue (in the last pipeline stage)
+	//				then an upper bound on the resource availability date is
+	else {
+		int upper_bound_on_res_avail = _last_prologue_node->delay(numResources() - 1);
+		if(res->type() == Resource::STAGE)
+			upper_bound_on_res_avail += _microprocessor->pipeline()->numStages() - ((StageResource *)(res))->stage()->index();
+		else if (res->type() == Resource::QUEUE) {
+			int u_id = ((QueueResource *) (res))->uid();
+			if(_last_prologue_node->delay(u_id)>=0) {
+				int diff = _last_prologue_node->delay(u_id) + ((QueueResource *) (res))->offset();
+				if (diff < upper_bound_on_res_avail)
+					upper_bound_on_res_avail = diff;
+			}
+		}
+		delta = node->delay(r_id) - upper_bound_on_res_avail;
+	}
 
 //	for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources); resource; resource++) {											// ======= DISABLED UNTIL OOO IS SUPPORTED AGAIN
 //		if (resource->type() == Resource::INTERNAL_CONFLICT) {
@@ -599,7 +613,6 @@ void ParExeGraph::createNodes() {
 				_last_node = node;
 			}
 			else {		// EXECUTE stage => expand functional unit's pipeline
-				elm::cout << "processing stage " << stage->name() << "\n";
 				ParExePipeline *fu = pipeline(stage, inst);
 				ParExeNode *first=NULL, *last=NULL;
 				assert(fu);
@@ -613,7 +626,6 @@ void ParExeGraph::createNodes() {
 				}
 				inst->setFirstFUNode(first);
 				inst->setLastFUNode(last);
-				elm::cout << "last FU node of I" << inst->index() << " is " << inst->firstFUNode()->name() << "\n";
 			}
 		}
    }

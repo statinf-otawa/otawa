@@ -112,26 +112,26 @@ namespace arm2 {
 class SimState: public otawa::SimState {
 public:
 	SimState(Process *process, arm_platform_t *platform, arm_decoder_t *_decoder)
-	:	otawa::SimState(process), decoder(_decoder) {
-		state = arm_new_state(platform);
+	:	otawa::SimState(process) {
+		sim = arm_new_sim(arm_new_state(platform), process->start()->address(), 0);
 		arm_mem_set_spy(arm_get_memory(platform, 0), spy, this);
 	}
 
 	virtual ~SimState(void) {
-		arm_delete_state(state);
+		arm_delete_sim(sim);
 	}
 
 	virtual Inst *execute(Inst *inst) {
 
 		// execute current instruction
-		dr = dw = false;
-		arm_inst_t *_inst = arm_decode(decoder, inst->address().offset());
-		arm_execute(state, _inst);
-		arm_free_inst(_inst);
+		dr = dw = 0; // enable spy
+		arm_step(sim);
+		dr = dw = -1; // disable spy
 
 		// get next instruction
+		arm_state_t *state = sim->state;
 		Inst *next = inst->nextInst();
-		if(next->address().offset() == state->GPR[15])
+		if(next && (next->address().offset() == state->GPR[15]))
 			return next;
 		else
 			return this->process()->findInstAt(state->GPR[15]);
@@ -139,8 +139,24 @@ public:
 
 	// register access
 	virtual void setSP(const Address& addr) {
-		state->GPR[13] = addr.offset();
+		sim->state->GPR[13] = addr.offset();
 	}
+
+	virtual t::uint32 getReg(hard::Register *r) {
+		t::uint32 temp = 0;
+		if((r->bank()->name() == "misc") && (r->name() == "sr"))
+			temp = sim->state->Ucpsr;
+		else if (r->bank()->name() == "GPR")
+			temp = sim->state->GPR[r->number()];
+		return temp;
+	}
+
+	virtual void setReg(hard::Register *r, t::uint32 v) {
+		if((r->bank()->name() == "misc") && (r->name() == "sr"))
+			sim->state->Ucpsr = v;
+		else if (r->bank()->name() == "GPR")
+			sim->state->GPR[r->number()] = v;
+	 }
 
 	// memory accesses
 	virtual Address lowerRead(void) {
@@ -160,17 +176,21 @@ public:
 	}
 
 private:
-	arm_state_t *state;
-	arm_decoder_t *decoder;
-	bool dr, dw;
+	arm_sim_t *sim;
+	int dr, dw; // -1: disable, 0:ready to serve, 1:first data, 2+: later data
 	arm_address_t lr, ur, lw, uw;
 
 	static void spy(arm_memory_t *mem, arm_address_t addr, arm_size_t size, arm_access_t access, void *data) {
 		SimState *ss = static_cast<SimState *>(data);
 		if(access == arm_access_read) {
-			if(!ss->dr) {
+			if(ss->dr == -1) { } // ignore other reads due to non-ISS operations
+			else if(ss->dr == 0) { // read instruction from memory
 				ss->lr = ss->ur = addr;
-				ss->dr = true;
+				ss->dr = 1;
+			}
+			else if(ss->dr == 1) { // first data read set the lower and upper read to the same value
+				ss->lr = ss->ur = addr;
+				ss->dr++;
 			}
 			else if(addr < ss->lr)
 				ss->lr = addr;
@@ -178,9 +198,10 @@ private:
 				ss->ur = addr;
 		}
 		else {
-			if(!ss->dw) {
+			if(ss->dw == -1) { } // ignore other writes due to non-ISS operation
+			else if(ss->dw == 0) { // first write to data
 				ss->lw = ss->uw = addr;
-				ss->dw = true;
+				ss->dw = 1;
 			}
 			else if(addr < ss->lw)
 				ss->lw = addr;
@@ -738,7 +759,28 @@ public:
 		return r;
 	}
 
+	virtual void handleIO(Address addr, t::uint32 size, otawa::arm::IOManager& man) {
+#		ifndef ARM_MEM_IO
+			ASSERTP(false, "WITH_MEM_IO not configured in arm GLISS plugin!");
+#		else
+			//io_man = &man;
+			arm_set_range_callback(memory(), addr.offset(), addr.offset() + size, io_callback, &man);
+#		endif
+	}
+
 private:
+
+#	ifdef ARM_MEM_IO
+	static void io_callback(arm_address_t addr, int size, void *data, int type_access, void *cdata) {
+		otawa::arm::IOManager *man = static_cast<otawa::arm::IOManager *>(cdata);
+		if(type_access == ARM_MEM_READ)
+			man->read(addr, size, static_cast<t::uint8 *>(data));
+		else if(type_access == ARM_MEM_WRITE)
+			man->write(addr, size, static_cast<t::uint8 *>(data));
+		else
+			ASSERT(0);
+	}
+#	endif
 
 	/**
 	 * Test if the given address matches a thumb code area.
@@ -774,7 +816,10 @@ private:
 	bool no_stack;
 	bool init;
 #	ifdef ARM_THUMB
-	area_tree_t area_tree;
+		area_tree_t area_tree;
+#	endif
+#	ifdef ARM_MEM_IO
+		otawa::arm::IOManager *io_man;
 #	endif
 };
 
