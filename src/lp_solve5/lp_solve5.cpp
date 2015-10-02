@@ -277,6 +277,9 @@ public:
 		if(ws)
 			put_abortfunc(lp, test_cancellation, ws);
 
+		// Set a timeout of 60 secs
+		//::set_timeout(lp, 60);
+
 		// launch the resolution
 		int fail = ::solve(lp);
 

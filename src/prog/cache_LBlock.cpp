@@ -77,11 +77,12 @@ LBlock::~LBlock(void) {
  */
 int LBlock::countInsts(void) {
 	int cnt = 0;
-	
-	if(_bb != 0)
-		for (Inst *inst = instruction(); inst->address() < address() + size();
-				inst = inst->nextInst())
-			cnt++;
+	Address addr = _inst->address();
+
+	if (_bb != 0)
+		for(BasicBlock::InstIter instr(_bb); instr; instr++)
+			if(instr->address() >= addr && instr->address() < addr + _size)
+				cnt++;
 	
 	return cnt;	
 }

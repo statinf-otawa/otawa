@@ -124,13 +124,14 @@ public:
 	virtual Inst *execute(Inst *inst) {
 
 		// execute current instruction
-		dr = dw = false;
+		dr = dw = 0; // enable spy
 		arm_step(sim);
+		dr = dw = -1; // disable spy
 
 		// get next instruction
 		arm_state_t *state = sim->state;
 		Inst *next = inst->nextInst();
-		if(next->address().offset() == state->GPR[15])
+		if(next && (next->address().offset() == state->GPR[15]))
 			return next;
 		else
 			return this->process()->findInstAt(state->GPR[15]);
@@ -176,15 +177,20 @@ public:
 
 private:
 	arm_sim_t *sim;
-	bool dr, dw;
+	int dr, dw; // -1: disable, 0:ready to serve, 1:first data, 2+: later data
 	arm_address_t lr, ur, lw, uw;
 
 	static void spy(arm_memory_t *mem, arm_address_t addr, arm_size_t size, arm_access_t access, void *data) {
 		SimState *ss = static_cast<SimState *>(data);
 		if(access == arm_access_read) {
-			if(!ss->dr) {
+			if(ss->dr == -1) { } // ignore other reads due to non-ISS operations
+			else if(ss->dr == 0) { // read instruction from memory
 				ss->lr = ss->ur = addr;
-				ss->dr = true;
+				ss->dr = 1;
+			}
+			else if(ss->dr == 1) { // first data read set the lower and upper read to the same value
+				ss->lr = ss->ur = addr;
+				ss->dr++;
 			}
 			else if(addr < ss->lr)
 				ss->lr = addr;
@@ -192,9 +198,10 @@ private:
 				ss->ur = addr;
 		}
 		else {
-			if(!ss->dw) {
+			if(ss->dw == -1) { } // ignore other writes due to non-ISS operation
+			else if(ss->dw == 0) { // first write to data
 				ss->lw = ss->uw = addr;
-				ss->dw = true;
+				ss->dw = 1;
 			}
 			else if(addr < ss->lw)
 				ss->lw = addr;

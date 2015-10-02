@@ -17,6 +17,10 @@ let IS_TRAP		= 0x00002000
 let IS_INTERN	= 0x00004000
 let IS_MULTI	= 0x00008000
 let IS_SPECIAL	= 0x00010000
+let IS_MLA = 0x00100000
+let IS_TWO_REG = 0x00200000
+let IS_SEMIHOST = 0x00400000
+let IS_SWP = 0x00800000
 let IS_DATA_PROCESSING	= 0x80000000
 let IS_IMMEDIATE		= 0x40000000
 let IS_SHIFTED			= 0x20000000
@@ -62,6 +66,7 @@ extend SWI
 		  IS_CONTROL
 		| IS_TRAP
  		| (if cond.value == 14 then 0 else IS_COND endif)
+ 		| (if Immed_24 == 0x123456 then IS_SEMIHOST else 0 endif)
 
 extend B_thumb
 	otawa_kind =
@@ -169,10 +174,18 @@ extend MOV_shr2_thumb
 			IS_ALU | IS_INT
 		endif
 
-extend CLZ, SWP
+extend CLZ
 	otawa_kind =
 		  IS_ALU
 		| IS_INT
+		| (if cond.value == 14 then 0 else IS_COND endif)
+		| (if rd == 15 then IS_CONTROL else 0 endif)
+
+extend SWP
+	otawa_kind =
+		  IS_ALU
+		| IS_INT
+		| IS_SWP
 		| (if cond.value == 14 then 0 else IS_COND endif)
 		| (if rd == 15 then IS_CONTROL else 0 endif)
 
@@ -260,7 +273,7 @@ extend MRS
 
 // ****** multiplication instructions extensions ******
 
-extend MLA, MUL
+extend MUL
 	otawa_kind =
 		  IS_ALU
 		| IS_INT
@@ -268,14 +281,34 @@ extend MLA, MUL
  		| (if cond.value == 14 then 0 else IS_COND endif)
  		| (if rd == 15 then IS_CONTROL else 0 endif)
 
+extend MLA
+	otawa_kind =
+		  IS_ALU
+		| IS_INT
+		| IS_MLA
+ 		| (if cond.value == 14 then 0 else IS_COND endif)
+ 		| (if rd == 15 then IS_CONTROL else 0 endif)
 
-extend SMULL, UMULL, SMLAL, UMLAL
+
+extend SMLAL, UMLAL
+	otawa_kind =
+		  IS_ALU
+		| IS_INT
+		| IS_MLA
+		| IS_TWO_REG
+ 		| (if cond.value == 14 then 0 else IS_COND endif)
+ 		| (if rdhi == 15 || rdlo == 15 then IS_CONTROL else 0 endif)
+ 		
+extend SMULL, UMULL
 	otawa_kind =
 		  IS_ALU
 		| IS_INT
 		| IS_MUL
+		| IS_TWO_REG
  		| (if cond.value == 14 then 0 else IS_COND endif)
  		| (if rdhi == 15 || rdlo == 15 then IS_CONTROL else 0 endif)
+
+ 		
 
 extend MUL_thumb
 	otawa_kind = IS_ALU | IS_INT | IS_MUL
