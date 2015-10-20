@@ -38,6 +38,7 @@
 #include <otawa/loader/powerpc.h>
 #include <otawa/prog/sem.h>
 #include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/program.h>
 
 extern "C"
 {

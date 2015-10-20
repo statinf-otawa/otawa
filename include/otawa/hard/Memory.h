@@ -31,6 +31,7 @@
 #include <elm/system/Path.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/prog/Manager.h>
+#include <otawa/proc/SilentFeature.h>
 
 namespace elm { namespace xom { class Element; } }
 

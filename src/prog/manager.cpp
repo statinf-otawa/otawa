@@ -21,8 +21,8 @@
  */
 
 #include <config.h>
-#include <otawa/platform.h>
-#include <otawa/manager.h>
+//#include <otawa/platform.h>
+#include <otawa/prog/Manager.h>
 #include <otawa/cfg.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <gel/gel.h>

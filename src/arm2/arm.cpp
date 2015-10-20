@@ -23,6 +23,7 @@
 #include <otawa/prog/Loader.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/hard.h>
+#include <otawa/program.h>
 #include <gel/gel.h>
 #include <gel/gel_elf.h>
 #include <gel/debug_line.h>

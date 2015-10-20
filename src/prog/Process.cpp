@@ -20,7 +20,10 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/deprecated.h>
+#include <elm/stree/SegmentBuilder.h>
 #include <elm/xom.h>
+
 #include <otawa/prog/Process.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
@@ -30,8 +33,7 @@
 #include <otawa/prog/FixedTextDecoder.h>
 #include <elm/genstruct/DAGNode.h>
 #include <otawa/proc/Feature.h>
-#include <elm/deprecated.h>
-#include <elm/stree/SegmentBuilder.h>
+#include <otawa/prog/File.h>
 
 using namespace elm;
 

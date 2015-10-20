@@ -20,6 +20,7 @@
  */
 #include <otawa/prog/Loader.h>
 #include <otawa/loader/gliss.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 
@@ -28,7 +29,7 @@ namespace otawa {
  * This interface is implemented by all objects that may build and provide
  * a process. Many kind of loader may exists from the simple binary
  * loader to the complex program builder.
- * 
+ *
  * The loader may put on the created processes zero or several of the following
  * features according the machine-level feature provided:
  * @li @ref FLOAT_MEMORY_ACCESS_FEATURE

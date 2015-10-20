@@ -146,6 +146,12 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
  */
 
 /**
+ * @var Inst::IS_BUNDLE
+ * Applied on a VLIW architecture, marks instructions part of a bundle but
+ * not at end of the bundle.
+ */
+
+/**
  * @type Instr::kind_t;
  * The kind of an instruction is a bit array where each bit represents an
  * instruction property. The following masks gives access to the property bits:
@@ -277,6 +283,22 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
 
 
 /**
+ * @fn bool Inst::isBundle(void);
+ * On VLIW architecture, mark an instruction that is part of a bundle but not last instruction.
+ * @return	True if it is a not bundle-ending instruction, false else.
+ * @see Inst::IS_BUNDLE, Inst::isBundleEnd()
+ */
+
+
+/**
+ * @fn bool Inst::isBundleEnd(void);
+ * On VLIW architecture, mark an instruction that is the last instruction of a bundle.
+ * @return	True if it is a bundle-ending instruction, false else.
+ * @see Inst::IS_BUNDLE, Inst::isBundle.
+ */
+
+
+/**
  * @fn Inst *Inst::next(void) const;
  * Get the next instruction.
  * @return Next instruction.
@@ -327,6 +349,28 @@ Inst *Inst::target(void) {
 
 
 /**
+ * Get the list of register read by the instruction.
+ * @param set	Set filled with platform numbers of read registers.
+ */
+void Inst::readRegSet(RegSet& set) {
+	const elm::genstruct::Table<hard::Register *>&tab = readRegs();
+	for(int i = 0; i < tab.count(); i++)
+		set.add(tab[i]->platformNumber());
+}
+
+
+/**
+ * Get the list of register written by the instruction.
+ * @param set	Set filled with platform numbers of written registers.
+ */
+void Inst::writeRegSet(RegSet& set) {
+	const elm::genstruct::Table<hard::Register *>&tab = writtenRegs();
+	for(int i = 0; i < tab.count(); i++)
+		set.add(tab[i]->platformNumber());
+}
+
+
+/**
  * Get the registers read by the instruction.
  * @return	Read register table.
  * @warning	This method is only implemented when the owner loader
@@ -367,6 +411,37 @@ const elm::genstruct::Table<hard::Register *>& Inst::writtenRegs(void) {
  * 				translates parts of code.
  */
 void Inst::semInsts(sem::Block& block) {
+}
+
+
+/**
+ * Same as Inst::semInsts(sem::Block& block) to transform a machine instruction
+ * into machine instructions but temp is used as a base to encode temporaries.
+ * This is used for VLIW where instructions are executed in parallel and register
+ * write-back only occurs at end of the semantic instructions.
+ * @param block		Block to translate instruction in.
+ * @param temp		Base number for temporaries used for write-back register saving.
+ * @return			Number of used temporaries for write-back.
+ * @see	@ref proc_vliw
+ */
+int Inst::semInsts(sem::Block& block, int temp) {
+	semInsts(block);
+	return 0;
+}
+
+
+/**
+ * VLIW instructions of a bundle perform read and write-back of registers
+ * in parallel. This is mimicked in OTAWA by concatenating semantic instructions
+ * of each machine instruction and only writing into temporaries.
+ * by this method.
+ * @param block		Block to fill with write-back semantic instructions.
+ * @param temp		Base number for temporaries used for write-back register saving.
+ * @return			Number of temporaries used by this instruction.
+ * @see	@ref prog_vliw
+ */
+int Inst::semWriteBack(sem::Block& block, int temp) {
+	return 0;
 }
 
 
