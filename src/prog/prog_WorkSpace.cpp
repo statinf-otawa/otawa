@@ -54,16 +54,16 @@
  *  File -> Process [ arrowhead = diamond, label="files", taillabel="1..*" ];
  *  Process -> File [ label="program", headlabel="1" ];
  *  Segment -> File [ arrowhead = diamond, label="segments", taillabel="1..*" ];
- *  CodeItem -> Segment [ arrowhead = diamond, label="items", taillabel="0..*" ];
+ *  ProgItem -> Segment [ arrowhead = diamond, label="items", taillabel="0..*" ];
  *  Symbol -> File[ arrowhead = diamond, label="symbols", taillabel="0..*" ];
- *  Inst -> CodeItem [ arrowhead = empty ];
+ *  Inst -> ProgItem [ arrowhead = empty ];
  *
  *  Manager [ label="{Manager||}", URL="@ref otawa::Manager", root=true ]
  *  WorkSpace [ label="{WorkSpace||}", URL="@ref otawa::WorkSpace" ]
  *  Process [ label="{Process||}", URL="@ref otawa::Process" ]
  *  File [ label="{File||}", URL="@ref otawa::File" ]
  *  Segment [ label="{Segment||}", URL="@ref otawa::Segment" ]
- *  CodeItem [ label="{CodeItem||}", URL="@ref otawa::CodeItem" ]
+ *  ProgItem [ label="{ProgItem||}", URL="@ref otawa::ProgItem" ]
  *  Inst [ label="{Inst||}", URL="@ref otawa::Inst" ]
  *  Symbol [ label="{Symbol||}", URL="@ref otawa::Symbol" ]
  * }
@@ -101,7 +101,7 @@
  * @li the @ref otawa::File represents a binary file involved in the building of the execution environments
  *   (each program has at least one file containing the main program and possibly
  *   other file for dynamically linked libraries -- most often zero in embedded systems),
- * @li the @ref otawa::Segment divides the program in different parts (code, date, etc),
+ * @li the @ref otawa::Segment divides the program in different parts (code, data, etc),
  * @li the @ref otawa::ProgItem decompose each segment into code or data items,
  * @li the @ref otawa::Inst is an instance of @ref otawa::ProgItem that represents a single instruction,
  * @li the @ref otawa::DataItem is an instance of @ref otawa::ProgItem that represents a piece of data,
