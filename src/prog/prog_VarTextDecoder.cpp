@@ -87,7 +87,7 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 				}
 				else {
 					if(logFor(LOG_CFG))
-						log << "\tprocessing function \"" << sym->name() << " at " << sym->address() << io::endl;
+						log << "\tprocessing function \"" << sym->name() << "\" at " << sym->address() << io::endl;
 					Inst *inst = ws->findInstAt(sym->address());
 					if(inst)
 						processEntry(ws, sym->address());

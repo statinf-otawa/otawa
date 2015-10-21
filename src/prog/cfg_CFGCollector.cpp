@@ -130,14 +130,19 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 		if(!entry && addr) {
 			CFGInfo *info = CFGInfo::ID(fw);
 			entry = info->findCFG(addr);
+			if (entry && logFor(LOG_CFG))
+				log << "\tCFG found for address 0x" << addr << endl;
 		}
 		if(!entry && name) {
 			CFGInfo *info = CFGInfo::ID(fw);
 			entry = info->findCFG(name);
+			if (entry && logFor(LOG_CFG))
+				log << "\tCFG found for label " << name << endl;
 		}
 		if(!entry)
 			throw ProcessorException(*this, _
-				<< "cannot find task entry point \"" << name << "\"");
+				<< "cannot find task entry point for address 0x" << addr
+				<< " nor for label \"" << name << "\"");
 		ENTRY_CFG(fw) = entry;
 	}
 
