@@ -133,6 +133,8 @@ extern Identifier<hard::Processor *> PROCESSOR;
 
 extern Identifier<string> LOAD_PARAM;
 
+extern Manager MANAGER;
+
 } // otawa
 
 #endif	// OTAWA_MANAGER_H

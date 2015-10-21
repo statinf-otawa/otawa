@@ -24,7 +24,7 @@
 
 #include <elm/options.h>
 #include <elm/option/ListOption.h>
-#include <otawa/otawa.h>
+#include <otawa/proc/Processor.h>
 
 namespace otawa {
 

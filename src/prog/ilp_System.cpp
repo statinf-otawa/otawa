@@ -5,7 +5,8 @@
  *	src/ilp_System.h -- documentation of the system interface.
  */
 
-#include <otawa/otawa.h>
+//#include <otawa/otawa.h>
+#include <elm/avl/Set.h>
 #include <otawa/ilp/System.h>
 #include <math.h>
 

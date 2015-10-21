@@ -37,15 +37,11 @@ class CFGCollector;
 class CFGInfo;
 class Edge;
 class LoopUnroller;
-namespace pfg { class PFG; class BB; }
 class SESERegion;
 typedef elm::genstruct::Tree<SESERegion*> PSTree;
 
 // CFGCollection Class
 class CFGCollection {
-	/*friend class CFGCollector;
-	friend class LoopUnroller;*/
-	elm::genstruct::FragTable<CFG *> cfgs;
 public:
 	inline int count(void) const { return cfgs.length(); }
 	inline CFG *get(int index) const { return cfgs[index]; }
@@ -61,28 +57,26 @@ public:
 
 	class BBIterator: public PreIterator<BBIterator, BasicBlock *> {
 	public:
-		inline BBIterator(const CFGCollection *cfgs): cfg(cfgs), bb(*cfg) { }
+		inline BBIterator(const CFGCollection *cfgs): cfg(cfgs), bb(cfg->blocks()) { }
 		inline BBIterator(const BBIterator& i): cfg(i.cfg), bb(i.bb) { }
 		inline BBIterator& operator=(const BBIterator& i) { cfg = i.cfg; bb = i.bb; return *this; }
 		inline bool ended(void) const { return bb.ended(); }
-		inline BasicBlock *item(void) const { return *bb; }
-		inline void next(void) { bb++; if(!bb) { cfg++; if(cfg) bb = CFG::BBIterator(*cfg); } }
+		inline Block *item(void) const { return *bb; }
+		inline void next(void) { bb++; if(!bb) { cfg++; if(cfg) bb = CFG::BlockIter(cfg->blocks()); } }
 	private:
 		Iterator cfg;
-		CFG::BBIterator bb;
+		CFG::BlockIter bb;
 	};
 
 	void add(CFG *cfg);
-};
 
-// PFG_FEATURE
-extern SilentFeature PFG_FEATURE;
-extern Identifier<pfg::PFG *> PFG;
-extern Identifier<pfg::BB *> PFG_BB;
+private:
+	elm::genstruct::FragTable<CFG *> cfgs;
+};
 
 // COLLECTED_CFG_FEATURE
 extern Identifier<CFG *> ENTRY_CFG;
-extern SilentFeature COLLECTED_CFG_FEATURE;
+extern p::feature COLLECTED_CFG_FEATURE;
 extern Identifier<const CFGCollection *> INVOLVED_CFGS;
 extern Identifier<Edge *> CALLED_BY;
 

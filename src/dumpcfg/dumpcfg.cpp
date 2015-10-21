@@ -29,15 +29,13 @@
 #include <otawa/app/Application.h>
 #include <otawa/manager.h>
 #include <otawa/cfg/CFGCollector.h>
-#include <otawa/cfg/Virtualizer.h>
-//#include <otawa/cfg/CFGBuilder.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/proc/DynProcessor.h>
 #include <otawa/prog/features.h>
 
 #include "SimpleDisplayer.h"
 #include "DisassemblerDisplayer.h"
-#include "DotDisplayer.h"
+//#include "DotDisplayer.h"
 
 using namespace elm;
 using namespace otawa;
@@ -124,10 +122,48 @@ using namespace otawa;
  * @li -v -- verbose information about the work.
  */
 
+
+/**
+ */
+Displayer::Displayer(cstring name, const Version version):
+	Processor(name, version),
+	display_assembly(false),
+	source_info(false),
+	display_all(false)
+{
+	require(otawa::COLLECTED_CFG_FEATURE);
+}
+
+
+/**
+ * Select disassembling option.
+ */
+Identifier<bool> Displayer::DISASSEMBLE("", false);
+
+/**
+ * Select source information display.
+ */
+Identifier<bool> Displayer::SOURCE("", false);
+
+/**
+ * Display all CFGs.
+ */
+Identifier<bool> Displayer::ALL("", false);
+
+/**
+ */
+void Displayer::configure(const PropList& props) {
+	Processor::configure(props);
+	display_assembly = DISASSEMBLE(props);
+	source_info = SOURCE(props);
+	display_all = ALL(props);
+}
+
+
 // Displayers
 SimpleDisplayer simple_displayer;
 DisassemblerDisplayer disassembler_displayer;
-DotDisplayer dot_displayer;
+//DotDisplayer dot_displayer;
 
 
 // DumpCFG class
@@ -146,6 +182,8 @@ public:
 	option::BoolOption dot;
 	option::SwitchOption source;
 	option::SwitchOption xml;
+	option::SwitchOption all;
+
 	Displayer *displayer;
 
 protected:
@@ -166,8 +204,8 @@ void DumpCFG::prepare(PropList &props) {
 		displayer = &simple_displayer;
 	else if(disassemble)
 		displayer = &disassembler_displayer;
-	else if(dot)
-		displayer = &dot_displayer;
+	/*else if(dot)
+		displayer = &dot_displayer;*/
 }
 
 
@@ -188,12 +226,12 @@ DumpCFG::DumpCFG(void):
 	all_functions(*this, 'a', "all", "Dump all functions.", false),
 	inline_calls(*this, 'i', "inline", "Inline the function calls.", false),
 	display_assembly(*this, 'd', "display", "Display assembly instructions.", false),
-	//verbose(*this, 'v', "verbose", "activate verbose mode", false),
 	simple(*this, 'S', "simple", "Select simple output (default).", false),
 	disassemble(*this, 'L', "list", "Select listing output.", false),
 	dot(*this, 'D', "dot", "Select DOT output.", false),
 	source(*this, option::short_cmd, 's', option::cmd, "--source", option::description, "enable source debugging information output", option::def, false, option::end),
 	xml(option::SwitchOption::Make(*this).cmd("-x").cmd("--xml").description("output the CFG as an XML file")),
+	all(option::SwitchOption::Make(*this).cmd("-R").cmd("--recursive").description("display the current and called CFGs")),
 
 	displayer(&simple_displayer)
 {
@@ -201,42 +239,51 @@ DumpCFG::DumpCFG(void):
 
 
 /**
- * Dump the CFG.
- * @param cfg	CFG to dump.
+ * Process the given CFG, that is, build the sorted list of BB in the CFG and then display it.
+ * @param name	Name of the function to process.
  */
-void DumpCFG::dump(CFG *cfg, PropList& props) {
+void DumpCFG::dump(const string& name, PropList& props) {
+	/*require(COLLECTED_CFG_FEATURE);
+	const CFGCollection& coll = **INVOLVED_CFGS(workspace());
 	CFG *current_inline = 0;
 	WorkSpace *my_ws = new WorkSpace(workspace());
-	ENTRY_CFG(my_ws) = cfg;
+	ENTRY_CFG(my_ws) = cfg;*/
 
 	// if required, build the delayed
+	/* TODO
 	if(workspace()->isProvided(DELAYED_FEATURE)
 	|| workspace()->isProvided(DELAYED2_FEATURE))
-		my_ws->require(DELAYED_CFG_FEATURE, props);
+		require(DELAYED_CFG_FEATURE);*/
 
 	// if required, virtualize
-	if(inline_calls)
-		my_ws->require(VIRTUALIZED_CFG_FEATURE, props);
+	/*	TODO
+	 if(inline_calls)
+		require(VIRTUALIZED_CFG_FEATURE);*/
 
 	// get the CFG
-	my_ws->require(COLLECTED_CFG_FEATURE);
-	const CFGCollection *coll = INVOLVED_CFGS(my_ws);
-	CFG *vcfg = (*coll)[0];
+	require(COLLECTED_CFG_FEATURE);
+	//const CFGCollection *coll = INVOLVED_CFGS(workspace());
+	//CFG *vcfg = (*coll)[0];
 
 	// set options
-	displayer->display_assembly = display_assembly;
-	displayer->source_info = source;
+	if(display_assembly)
+		Displayer::DISASSEMBLE(props) = display_assembly;
+	if(source)
+		Displayer::SOURCE(props) = source;
+	if(all)
+		Displayer::ALL(props) = all;
 
 	// XML case (will become the generic case)
-	if(xml) {
+	/*if(xml) {		TODO
 		//XMLDisplayer dis;
 		DynProcessor dis("otawa::cfgio::Output");
 		dis.process(my_ws);
 	}
 
 	// Dump the CFG
-	else {
-		displayer->onProgramBegin(my_ws);
+	else {*/
+	displayer->process(workspace(), props);
+	/*	displayer->onProgramBegin(my_ws);
 		displayer->onCFGBegin(vcfg);
 		for(CFG::BBIterator bb(vcfg); bb; bb++) {
 
@@ -273,26 +320,8 @@ void DumpCFG::dump(CFG *cfg, PropList& props) {
 		if(current_inline)
 			displayer->onInlineEnd(current_inline);
 		displayer->onCFGEnd(vcfg);
-		displayer->onProgramEnd(my_ws);
-	}
-}
-
-
-/**
- * Process the given CFG, that is, build the sorted list of BB in the CFG and then display it.
- * @param name	Name of the function to process.
- */
-void DumpCFG::dump(const string& name, PropList& props) {
-	/*require(CFG_INFO_FEATURE);
-	CFGInfo *info = CFGInfo::ID(workspace());
-	ASSERT(info);
-	CFG *cfg = info->findCFG(name);
-	if(!cfg)
-		throw elm::MessageException(_ << "cannot find function named \"" << name << '"');
-	dump(cfg, props);*/
-	require(COLLECTED_CFG_FEATURE);
-	const CFGCollection& coll = **INVOLVED_CFGS(workspace());
-	dump(coll[0], props);
+		displayer->onProgramEnd(my_ws);*/
+	//}
 }
 
 

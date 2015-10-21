@@ -23,7 +23,7 @@
 #include <config.h>
 #include <otawa/platform.h>
 #include <otawa/manager.h>
-#include <otawa/cfg.h>
+//#include <otawa/cfg.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <gel/gel.h>
 #include <elm/xom.h>
@@ -384,7 +384,7 @@ WorkSpace *Manager::loadBin(
 	// any configuration ?
 	Path cpath = loader->path().parent() / (loader->name() + "-config.xml");
 	if(cpath.exists()) {
-		if(isVerbose())
+		/*if(isVerbose())
 			cerr << "INFO: starting evaluation of load configuration file\n";
 		XSLTScript script(cpath, elm::monitor, isVerbose());
 		script.setConfiguration();
@@ -392,7 +392,7 @@ WorkSpace *Manager::loadBin(
 		script.transform();
 		script.fillProps(used_props, "load");
 		if(isVerbose())
-			cerr << "INFO: ended evaluation of load configuration file\n";
+			cerr << "INFO: ended evaluation of load configuration file\n";*/
 	}
 
 	// Try to load the binary

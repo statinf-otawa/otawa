@@ -24,7 +24,7 @@
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/ast/ASTInfo.h>
 #include <otawa/ilp/System.h>
-#include <otawa/cfg/CFGBuilder.h>
+//#include <otawa/cfg/CFGBuilder.h>
 #include <config.h>
 #include <elm/xom.h>
 #include <otawa/proc/FeatureDependency.h>
@@ -249,7 +249,8 @@ string WorkSpace::format(Address addr, bool with_address) {
  */
 CFGInfo *WorkSpace::getCFGInfo(void) {
 	DEPRECATED;
-
+	return 0;
+#	if 0
 	// Already built ?
 	CFGInfo *info = CFGInfo::ID(this);
 	if(info)
@@ -259,6 +260,7 @@ CFGInfo *WorkSpace::getCFGInfo(void) {
 	CFGBuilder builder;
 	builder.process(this);
 	return CFGInfo::ID(this);
+#	endif
 }
 
 
@@ -269,7 +271,9 @@ CFGInfo *WorkSpace::getCFGInfo(void) {
  */
 CFG *WorkSpace::getStartCFG(void) {
 	DEPRECATED;
+	return 0;
 
+#	if 0
 	// Find the entry
 	Inst *_start = start();
 	if(!_start)
@@ -280,6 +284,7 @@ CFG *WorkSpace::getStartCFG(void) {
 
 	// Find CFG attached to the entry
 	return info->findCFG(_start);
+#	endif
 }
 
 

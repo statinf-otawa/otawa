@@ -31,24 +31,31 @@ namespace otawa {
 // CFGCollector Class
 class CFGCollector: public Processor {
 public:
+	static Identifier<Address> ADDED_CFG;
+	static Identifier<CString> ADDED_FUNCTION;
 	static p::declare reg;
+
 	CFGCollector(p::declare& r = reg);
 	virtual void configure(const PropList& props);
-	virtual void cleanup(WorkSpace *ws);
-
-	// Configuration
-	static Identifier<CFG *> ADDED_CFG;
-	static Identifier<CString> ADDED_FUNCTION;
 
 protected:
-	void processWorkSpace(WorkSpace *fw);
+	void processWorkSpace(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
+
 private:
+	void processCFG(Inst *i);
+	void scanCFG(Inst *i, genstruct::FragTable<Inst *>& bbs);
+	void buildBBs(CFGMaker& maker, const genstruct::FragTable<Inst *>& bbs);
+	void buildEdges(CFGMaker& maker);
+	void cleanBBs(const genstruct::FragTable<Inst *>& bbs);
+	CFGMaker &maker(Inst *i);
+	void seq(CFGMaker& m, BasicBlock *b, Block *src);
+
 	string name;
-	CFG *entry;
 	Address addr;
-	bool rec;
-	elm::genstruct::Vector<CFG *> added_cfgs;
-	elm::genstruct::Vector<CString> added_funs;
+	genstruct::Vector<string> added_funs;
+	genstruct::Vector<Address> added_cfgs;
+	genstruct::FragTable<Pair<Inst *, CFGMaker *> > makers;
 };
 
 } // otawa

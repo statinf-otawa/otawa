@@ -13,23 +13,18 @@
 using namespace otawa;
 
 // Displayer class
-class Displayer {
+class Displayer: public Processor {
+	friend class DumpCFG;
 public:
+	static Identifier<bool> DISASSEMBLE;
+	static Identifier<bool> SOURCE;
+	static Identifier<bool> ALL;
+	Displayer(cstring name, const Version version);
+protected:
+	virtual void configure(const PropList& props);
 	bool display_assembly;
 	bool source_info;
-	virtual ~Displayer(void) { }
-	virtual void onProgramBegin(WorkSpace *ws) { }
-	virtual void onProgramEnd(WorkSpace *ws) { }
-	virtual void onCFGBegin(otawa::CFG *cfg) = 0;
-	virtual void onCFGEnd(otawa::CFG *cfg) = 0;
-	virtual void onBBBegin(otawa::BasicBlock *bb, int index) = 0;
-	virtual void onEdge(otawa::CFGInfo *info, otawa::BasicBlock *source,
-		int source_index, otawa::edge_kind_t kind, otawa::BasicBlock *target,
-		int target_index) = 0;
-	virtual void onBBEnd(otawa::BasicBlock *bb, int index) = 0;
-	virtual void onCall(otawa::Edge *edge) = 0;
-	virtual void onInlineBegin(otawa::CFG *cfg) = 0;
-	virtual void onInlineEnd(otawa::CFG *cfg) = 0;
+	bool display_all;
 };
 
 #endif	// OTAWA_DUMPCFG_DISPLAYER_H

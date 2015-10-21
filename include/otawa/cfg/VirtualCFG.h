@@ -24,9 +24,9 @@
 #include <otawa/cfg/CFG.h>
 
 namespace otawa {
-	
+
 // VirtualCFG class
-class VirtualCFG: public CFG {
+/*class VirtualCFG: public CFG {
 	CFG *_cfg;
 	void virtualize(struct call_t *stack, CFG *cfg,
 		BasicBlock *entry, BasicBlock *exit);
@@ -39,7 +39,7 @@ public:
 	void addBB(BasicBlock *bb);
 	void removeBB(BasicBlock *bb);
 	void numberBBs(void);
-};
+};*/
 
 } // otawa
 

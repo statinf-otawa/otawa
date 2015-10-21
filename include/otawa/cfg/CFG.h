@@ -23,101 +23,162 @@
 #define OTAWA_CFG_CFG_H
 
 #include <elm/assert.h>
-#include <elm/genstruct/FragTable.h>
-#include <otawa/cfg/BasicBlock.h>
+#include <otawa/sgraph/DiGraph.h>
+#include <otawa/prop/PropList.h>
+#include <otawa/prog/Inst.h>
+
+using namespace elm;
 
 namespace otawa {
 
-// Classes
 class BasicBlock;
-class CodeItem;
+class Block;
 class CFG;
-class CFGInfo;
+class CFGMaker;
+class SynthBlock;
 
-// Properties
-extern Identifier<CFG *> ENTRY;
-extern Identifier<int> INDEX;
-
-// CFG class
-class CFG: public PropList {
-	typedef genstruct::FragTable<BasicBlock *> bbs_t;
+class Edge: public PropList, public sgraph::GenEdge<Block, Edge> {
+	friend class CFGMaker;
 public:
-	//static Identifier ID_Dom;
+	inline Block *target(void) const;
+private:
+	Block *src, *snk;
+};
+io::Output& operator<<(io::Output& out, Edge *edge);
 
-	// Iterator
-	class BBIterator: public bbs_t::Iterator {
+
+class Block: public PropList, public sgraph::GenVertex<Block, Edge> {
+	friend class CFGMaker;
+public:
+	static const t::uint16
+		IS_END   = 0 << 0,
+		IS_BASIC = 1 << 0,
+		IS_SYNTH = 2 << 0,
+		IS_ENTRY = 0 << 2,
+		IS_EXIT  = 1 << 2,
+		IS_UNKN	 = 2 << 2,
+		IS_VIRT  = 3 << 2,
+		IS_CALL  = 0x2 << 0,
+		MASK1 	 = 0x3,
+		MASK12	 = MASK1 | (0x3 << 2);
+
+	inline bool isEnd(void)   const   { return (_type & MASK1)  == IS_END; }
+	inline bool isEntry(void) const   { return (_type & MASK12) == (IS_END | IS_ENTRY); }
+	inline bool isExit(void)  const   { return (_type & MASK12) == (IS_END | IS_EXIT); }
+	inline bool isUnknwon(void) const { return (_type & MASK12) == (IS_END | IS_UNKN); }
+	inline bool isVirtual(void) const { return (_type & MASK12) == (IS_END | IS_VIRT); }
+	inline bool isSynth(void) const   { return (_type & MASK1)  == IS_SYNTH; }
+	inline bool isCall(void)  const   { return (_type & MASK12) == (IS_SYNTH | IS_CALL); }
+	inline bool isBasic(void) const   { return (_type & MASK1)  == IS_BASIC; }
+
+	inline BasicBlock *toBasic(void);
+	inline SynthBlock *toSynth(void);
+	inline operator BasicBlock *(void) { return toBasic(); }
+	inline operator SynthBlock  *(void) { return toSynth(); }
+
+	inline Edge *sequence(void) const { return seq; }
+
+protected:
+	Block(t::uint16 type = IS_BASIC);
+
+private:
+	t::uint16 _type;
+	Edge *seq;
+};
+io::Output& operator<<(io::Output& out, Block *block);
+
+
+class SynthBlock: public Block {
+	friend class CFGMaker;
+public:
+	SynthBlock(t::uint32 type = IS_CALL);
+	inline CFG *cfg(void) const { return _cfg; }
+private:
+	CFG *_cfg;
+};
+
+
+class BasicBlock: public Block {
+public:
+	BasicBlock(const Table<Inst *>& insts);
+	~BasicBlock(void);
+
+	inline Address address(void) const { return first()->address(); }
+	int size(void);
+	inline Address topAddress(void) { return address() + size(); }
+
+	inline Inst *first(void) const { return insts[0]; }
+	Inst *control(void);
+	Inst *last(void);
+	int count(void) const;
+
+	class InstIter: public AllocatedTable<Inst *>::Iterator {
 	public:
-		inline BBIterator(CFG *cfg): bbs_t::Iterator(cfg->getBBS()) { }
-		inline BBIterator(const BBIterator& iter): bbs_t::Iterator(iter) { }
+		InstIter(const BasicBlock *bb): AllocatedTable<Inst *>::Iterator(bb->insts) { }
+		InstIter(const InstIter& i): AllocatedTable<Inst *>::Iterator(i) { }
 	};
 
-	// Methods
-	CFG(Segment *seg, BasicBlock *entry);
-	virtual ~CFG(void);
-	inline Segment *segment(void) const;
+private:
+	DeletableTable<Inst *> insts;
+};
+
+// delayed inlines
+inline Block *Edge::target(void) const	{ return sink(); }
+inline BasicBlock *Block::toBasic(void) { ASSERT(isBasic()); return static_cast<BasicBlock *>(this); }
+inline SynthBlock *Block::toSynth(void) { ASSERT(isCall());  return static_cast<SynthBlock  *>(this); }
+
+
+class CFG: public PropList, public sgraph::GenDiGraph<Block, Edge> {
+	friend class CFGMaker;
+	friend class CFGCollection;
+public:
+	typedef t::uint8 type_t;
+	static const type_t
+		NONE = 0,
+		SUBPROG = 1,
+		SYNTH = 2,
+		USER = 128;
+
+	~CFG(void);
+
+	typedef VertexIter BlockIter;
 	string label(void);
 	string name(void);
 	string format(const Address& addr);
-	inline int number(void);
-	address_t address(void);
-	inline BasicBlock *entry(void)
-		{ if(!(flags & FLAG_Scanned)) scan(); return &_entry; }
-	inline BasicBlock *exit(void)
-		 { if(!(flags & FLAG_Scanned)) scan(); return &_exit; }
-	inline int countBB(void);
-	inline bool isVirtual(void) const;
-	inline bool isInlined(void) const;
-	void numberBB(void);
-	BasicBlock *firstBB(void);
-	Inst *firstInst(void);
-	void print(io::Output& out);
-
-protected:
-	friend class CFGInfo;
-
-	unsigned long flags;
-	EndBasicBlock _entry, _exit;
-	static const unsigned long FLAG_Scanned = 0x01;
-	static const unsigned long FLAG_Virtual = 0x02;
-	static const unsigned long FLAG_Inlined = 0x04;
-	bbs_t _bbs;
-
-	CFG(void);
-	virtual void scan(void);
+	inline int index(void) const { return idx; }
+	inline BasicBlock *first(void) const { return fst; }
+	inline Address address(void) const { return first()->address(); }
+	inline Block *exit(void) const { return _exit; }
+	inline Block *unknown(void) const { return _unknown; }
+	inline BlockIter blocks(void) const { return vertices(); }
+	inline type_t type(void) const { return _type; }
 
 private:
-	inline const bbs_t& getBBS(void) {
-		if(!(flags & FLAG_Scanned))
-			scan();
-		return _bbs;
-	}
-	Segment *_seg;
-	mutable BasicBlock *ent;
+	CFG(type_t type = SUBPROG);
+	int idx;
+	type_t _type;
+	BasicBlock *fst;
+	Block *_exit, *_unknown;
 };
-inline io::Output& operator<<(io::Output& out, CFG *cfg) { cfg->print(out); return out; }
+io::Output& operator<<(io::Output& out, CFG *cfg);
 
-
-// CFG inlines
-inline Segment *CFG::segment(void) const {
-	return _seg;
+class CFGMaker: public sgraph::GenDiGraphBuilder<Block, Edge> {
+public:
+	CFGMaker(void);
+	inline Block *entry(void) const { return cfg->entry(); }
+	Block *exit(void) const;
+	Block *unknown(void);
+	CFG *build(void);
+	void seq(BasicBlock *v, BasicBlock *w, Edge *edge);
+	void add(Block *v);
+	void add(SynthBlock *v, CFG *cfg);
+	void add(SynthBlock *v, const CFGMaker& cfg);
+	inline void add(Block *v, Block *w, Edge *e) { sgraph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }
+	inline CFG::BlockIter blocks(void) const { return cfg->vertices(); }
+private:
+	CFG *cfg;
+	Block *u;
 };
-
-inline int CFG::countBB(void) {
-	if(!(flags & FLAG_Scanned))
-		scan();
-	return _bbs.length();
-}
-
-inline int CFG::number(void) {
-	return(INDEX(this));
-}
-
-inline bool CFG::isVirtual(void) const {
-	return flags & FLAG_Virtual;
-}
-inline bool CFG::isInlined(void) const {
-	return flags & FLAG_Inlined;
-}
 
 } // otawa
 

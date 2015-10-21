@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2008, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_PROG_FEATURES_H_
@@ -44,6 +44,10 @@ public:
 extern Feature<NoProcessor> DELAYED2_FEATURE;
 extern Identifier<DelayedInfo *> DELAYED_INFO;
 
+
+// Common properties
+extern Identifier<String> LABEL;
+extern Identifier<String> FUNCTION_LABEL;
 
 // Process information
 extern Identifier<Address> ARGV_ADDRESS;

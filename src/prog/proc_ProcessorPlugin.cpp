@@ -24,7 +24,8 @@
 #include <elm/system/Path.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/proc/Registry.h>
-#include <otawa/otawa.h>
+//#include <otawa/otawa.h>
+#include <otawa/manager.h>
 #include "config.h"
 
 namespace otawa {
@@ -107,6 +108,8 @@ elm::genstruct::Table<AbstractRegistration *>& ProcessorPlugin::processors(void)
 }
 
 #define CSTR(x) #x
+
+extern Manager MANAGER;
 
 /**
  * Initialize the plugger.

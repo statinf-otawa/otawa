@@ -6,11 +6,84 @@
  */
 
 #include <elm/io.h>
+#include <otawa/cfg/features.h>
 #include "SimpleDisplayer.h"
 
 using namespace elm;
 using namespace otawa;
 
+/**
+ */
+Identifier<int> SimpleDisplayer::OFFSET("", -1);
+
+/**
+ */
+SimpleDisplayer::SimpleDisplayer(void): Displayer("SimpleDisplayer", Version(1, 0, 0)), cfg_cnt(0) {
+	require(otawa::COLLECTED_CFG_FEATURE);
+}
+
+/**
+ */
+void SimpleDisplayer::processWorkSpace(WorkSpace *ws) {
+	const CFGCollection& coll = **otawa::INVOLVED_CFGS(ws);
+
+	// process CFGs
+	for(int i = 0; i < coll.count(); i++) {
+		if(!display_all && i > 0)
+			break;
+
+		// get next CFG
+		CFG *cfg = coll[i];
+		int off = offset(cfg);
+
+		// put header
+		cout << "!" << cfg->name() << io::endl;
+
+		// generate blocks
+		for(CFG::BlockIter v(cfg->blocks()); v; v++)
+			if(v->isBasic()) {
+				BasicBlock *b = **v;
+				cout << (b->index() + off - 1) << ' ' << b->address() << ' ' << b->last()->address();
+
+				// look leaving edges
+				for(Block::EdgeIter e = b->outs(); e; e++) {
+					Block *w = e->sink();
+					if(w->isBasic())
+						cout << ' ' << (w->index() + off - 1);
+					else if(w->isSynth())
+						cout << ' ' << offset(w->toSynth()->cfg());
+				}
+
+				cout << " -1\n";
+			}
+	}
+}
+
+/**
+ * Get offset (in basic block count) of the CFG.
+ * @param cfg	CFG to get offset for.
+ * @return		CFG offset.
+ */
+int SimpleDisplayer::offset(CFG *cfg) {
+	int off = OFFSET(cfg);
+	if(off < 0) {
+
+		// count real BB
+		int cnt = 0;
+		for(CFG::BlockIter v(cfg->blocks()); v; v++)
+			if(v->isBasic())
+				cnt++;
+
+		// compute offset
+		off = cfg_cnt;
+		OFFSET(cfg) = off;
+		cfg_cnt += cnt;
+	}
+	return off;
+}
+
+
+#if	0
 /**
  */
 void SimpleDisplayer::onCFGBegin(CFG *cfg) {
@@ -31,27 +104,28 @@ void SimpleDisplayer::onCall(Edge *edge) {
 
 /**
  */
-void SimpleDisplayer::onBBBegin(BasicBlock *bb, int index) {
+void SimpleDisplayer::onBBBegin(BasicBlock *bb) {
 	if(!bb->isEntry() && !bb->isExit())
-		cout << index - 1
-			 << ' ' << ot::address(bb->address())
-			 << ' ' << ot::address(bb->address() + bb->getBlockSize() - 4);
+		cout << bb->index()
+			 << ' ' << Address(bb->address())
+			 << ' ' << Address(bb->last()->address());
 }
 
 
 /**
  */
-void SimpleDisplayer::onEdge(CFGInfo *info, BasicBlock *source, int source_index,
-edge_kind_t kind, BasicBlock *target, int target_index) {
-	if(!source->isEntry() && !source->isExit())
-		if(target_index >= 0)
-			cout << ' ' << target_index - 1;
+void SimpleDisplayer::onEdge(Edge *edge) {
+	int target_index = edge->target()->index();
+	if(!edge->source()->isEntry()
+	&& !edge->source()->isExit()
+	&& target_index >= 0)
+			cout << ' ' << target_index;
 }
 
 
 /**
  */
-void SimpleDisplayer::onBBEnd(BasicBlock *bb, int index) {
+void SimpleDisplayer::onBBEnd(BasicBlock *bb) {
 	if(!bb->isEntry() && !bb->isExit())
 		cout << " -1\n";
 }
@@ -70,4 +144,5 @@ void SimpleDisplayer::onInlineBegin(CFG *cfg) {
  */
 void SimpleDisplayer::onInlineEnd(CFG *cfg) {
 }
+#endif
 
