@@ -169,12 +169,13 @@ public:
 	Block *exit(void) const;
 	Block *unknown(void);
 	CFG *build(void);
-	void seq(BasicBlock *v, BasicBlock *w, Edge *edge);
+	void seq(Block *v, Block *w, Edge *edge);
 	void add(Block *v);
 	void add(SynthBlock *v, CFG *cfg);
 	void add(SynthBlock *v, const CFGMaker& cfg);
 	inline void add(Block *v, Block *w, Edge *e) { sgraph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }
 	inline CFG::BlockIter blocks(void) const { return cfg->vertices(); }
+	inline Block *first(void) const { return cfg->first(); }
 private:
 	CFG *cfg;
 	Block *u;

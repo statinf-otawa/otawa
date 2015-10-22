@@ -656,7 +656,7 @@ CFG *CFGMaker::build(void) {
  * @param w		Sink BB.
  * @param e		Edge itself.
  */
-void CFGMaker::seq(BasicBlock *v, BasicBlock *w, Edge *e) {
+void CFGMaker::seq(Block *v, Block *w, Edge *e) {
 	GenDiGraphBuilder<Block, Edge>::add(v, w, e);
 	v->seq = e;
 }
@@ -668,11 +668,8 @@ void CFGMaker::seq(BasicBlock *v, BasicBlock *w, Edge *e) {
  */
 void CFGMaker::add(Block *v) {
 	sgraph::GenDiGraphBuilder<Block, Edge>::add(v);
-	if(!cfg->fst) {
-		BasicBlock *bb = *v;
-		if(bb)
-			cfg->fst = bb;
-	}
+	if(!cfg->fst && v->isBasic())
+		cfg->fst = v->toBasic();
 }
 
 /**

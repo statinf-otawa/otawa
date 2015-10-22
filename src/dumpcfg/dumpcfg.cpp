@@ -35,7 +35,7 @@
 
 #include "SimpleDisplayer.h"
 #include "DisassemblerDisplayer.h"
-//#include "DotDisplayer.h"
+#include "DotDisplayer.h"
 
 using namespace elm;
 using namespace otawa;
@@ -163,7 +163,7 @@ void Displayer::configure(const PropList& props) {
 // Displayers
 SimpleDisplayer simple_displayer;
 DisassemblerDisplayer disassembler_displayer;
-//DotDisplayer dot_displayer;
+DotDisplayer dot_displayer;
 
 
 // DumpCFG class
@@ -204,8 +204,8 @@ void DumpCFG::prepare(PropList &props) {
 		displayer = &simple_displayer;
 	else if(disassemble)
 		displayer = &disassembler_displayer;
-	/*else if(dot)
-		displayer = &dot_displayer;*/
+	else if(dot)
+		displayer = &dot_displayer;
 }
 
 

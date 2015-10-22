@@ -26,7 +26,7 @@ DotDisplayer::DotDisplayer(void): Displayer("DotDisplayer", Version(2, 0, 0)) {
  * @param v		Current block.
  */
 void DotDisplayer::displayName(CFG *g, otawa::Block *v) {
-	cout << '"' << g->name() << "_" << g->index() << '"';
+	cout << '"' << g->name() << "_" << v->index() << '"';
 }
 
 
@@ -75,7 +75,7 @@ void DotDisplayer::processWorkSpace(WorkSpace *ws) {
 					cout << "\t";
 					displayName(sb->cfg(), sb->cfg()->exit());
 					cout << " -> ";
-					displayName(cfg, v);
+					displayName(cfg, sb->outs()->sink());
 					cout << " [label=\"return\", style=dashed, weight=1];\n";
 				}
 
@@ -92,6 +92,8 @@ void DotDisplayer::processWorkSpace(WorkSpace *ws) {
 					cout << " [ ";
 					if(v->isEntry() || e->sink()->isExit())
 						cout << "style=dashed, weight=1";
+					else if(v->isSynth())
+						cout << "label=\"return\", style=dashed, weight=1";
 					else if(e->sink()->isSynth())
 						cout << "label=\"call\", style=dashed, weight=1";
 					else if(e == v->sequence())
@@ -130,8 +132,10 @@ void DotDisplayer::displayLabel(Block *v) {
 		cout << "EXIT";
 	else if(v->isUnknwon())
 		cout << "unknown";
-	else if(v->isSynth())
-		cout << "";
+	else if(v->isSynth()) {
+		SynthBlock *sb = v->toSynth();
+		cout << sb->cfg()->name();
+	}
 	else if(v->isBasic()) {
 		BasicBlock *bb = v->toBasic();
 		if(display_assembly)

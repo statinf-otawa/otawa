@@ -162,11 +162,12 @@ void CFGCollector::scanCFG(Inst *e, genstruct::FragTable<Inst *>& bbs) {
 		bbs.add(i);
 
 		// iterate until basic block start or branch
-		i = i->nextInst();
-		while(i && !i->isControl()) {
-			if(BB(i).exists())
-				continue;
-			i = i->nextInst();
+		Inst *next = i->nextInst();
+		while(next && !BB(next).exists()) {
+			i = next;
+			if(i->isControl())
+				break;
+			next = i->nextInst();
 		}
 
 		// push sequence if required
@@ -224,7 +225,7 @@ void CFGCollector::buildBBs(CFGMaker& maker, const genstruct::FragTable<Inst *>&
 void CFGCollector::seq(CFGMaker& m, BasicBlock *b, Block *src) {
 	Inst *ni = b->last()->nextInst();
 	if(ni)
-		m.add(src, BB(ni), new Edge());
+		m.seq(src, BB(ni), new Edge());
 }
 
 /**
@@ -233,13 +234,15 @@ void CFGCollector::seq(CFGMaker& m, BasicBlock *b, Block *src) {
  */
 void CFGCollector::buildEdges(CFGMaker& m) {
 	for(CFG::BlockIter v(m.blocks()); v; v++)
-		if(v->isBasic()) {
+		if(v->isEntry())
+			m.add(v, m.first(), new Edge());
+		else if(v->isBasic()) {
 			BasicBlock *bb = **v;
 			if(bb) {
 				Inst *i = bb->control();
 
 				// conditional or call case -> sequential edge
-				if(!i || i->isConditional() || i->isCall())
+				if(!i || i->isConditional())
 					seq(m, bb, bb);
 
 				// branch cases
