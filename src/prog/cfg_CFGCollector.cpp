@@ -233,10 +233,19 @@ void CFGCollector::seq(CFGMaker& m, BasicBlock *b, Block *src) {
  * @param m	Current CFG maker.
  */
 void CFGCollector::buildEdges(CFGMaker& m) {
+	bool first = true;
 	for(CFG::BlockIter v(m.blocks()); v; v++)
 		if(v->isEntry())
-			m.add(v, m.first(), new Edge());
+			continue;
 		else if(v->isBasic()) {
+
+			// first block: do not forget edge with entry!
+			if(first) {
+				first = false;
+				m.add(m.entry(), v, new Edge());
+			}
+
+			// process basic block
 			BasicBlock *bb = **v;
 			if(bb) {
 				Inst *i = bb->control();
@@ -330,7 +339,7 @@ CFGMaker &CFGCollector::maker(Inst *i) {
 	if(idx >= 0)
 		return *makers[idx].snd;
 	else {
-		CFGMaker *maker = new CFGMaker();
+		CFGMaker *maker = new CFGMaker(i);
 		CFG_INDEX(i) = makers.count();
 		makers.add(pair(i, maker));
 		return *maker;
@@ -383,7 +392,7 @@ void CFGCollector::cleanup(WorkSpace *ws) {
 	for(int i = 0; i < makers.count(); i++) {
 		CFG *cfg = makers[i].snd->build();
 		coll->add(cfg);
-		CFG_INDEX(cfg->first()->first()).remove();
+		CFG_INDEX(cfg->first()).remove();
 	}
 
 	// cleanup makers

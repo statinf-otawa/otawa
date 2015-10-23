@@ -478,10 +478,11 @@ int BasicBlock::count(void) const {
 
 /**
  * Build the CFG.
+ * @param first		First instruction of CFG.
  * @param type		Type of CFG (one of SUBPROG, SYNTH or any user type).
  */
-CFG::CFG(type_t type)
-: idx(0), _type(type), fst(0), _exit(0), _unknown(0) {
+CFG::CFG(Inst *first, type_t type)
+: idx(0), _type(type), fst(first), _exit(0), _unknown(0) {
 }
 
 /**
@@ -516,10 +517,9 @@ CFG::~CFG(void) {
 String CFG::label(void) {
 	string id = LABEL(this);
 	if(!id) {
-		Inst *first = fst->first();
-		id = FUNCTION_LABEL(first);
+		id = FUNCTION_LABEL(fst);
 		if(!id)
-			id = LABEL(first);
+			id = LABEL(fst);
 	}
 	return id;
 }
@@ -603,10 +603,10 @@ io::Output& operator<<(io::Output& out, CFG *cfg) {
 
 /**
  * Build a CFG.
- * @param first	First basic block of CFG.
+ * @param first	First instruction of CFG.
  */
-CFGMaker::CFGMaker(void)
-: GenDiGraphBuilder<Block, Edge>(cfg = new CFG(), new Block(Block::IS_END | Block::IS_ENTRY)), u(0) {
+CFGMaker::CFGMaker(Inst *first)
+: GenDiGraphBuilder<Block, Edge>(cfg = new CFG(first), new Block(Block::IS_END | Block::IS_ENTRY)), u(0) {
 }
 
 /**
@@ -662,15 +662,11 @@ void CFGMaker::seq(Block *v, Block *w, Edge *e) {
 }
 
 /**
+ * @fn void CFGMaker::add(Block *v);
  * Add a basic block to the CFG. If it is the first,
  * it is considered as the entry point of the CFG.
  * @param v		Added block.
  */
-void CFGMaker::add(Block *v) {
-	sgraph::GenDiGraphBuilder<Block, Edge>::add(v);
-	if(!cfg->fst && v->isBasic())
-		cfg->fst = v->toBasic();
-}
 
 /**
  * Add a synthetic block.

@@ -146,7 +146,7 @@ public:
 	string name(void);
 	string format(const Address& addr);
 	inline int index(void) const { return idx; }
-	inline BasicBlock *first(void) const { return fst; }
+	inline Inst *first(void) const { return fst; }
 	inline Address address(void) const { return first()->address(); }
 	inline Block *exit(void) const { return _exit; }
 	inline Block *unknown(void) const { return _unknown; }
@@ -154,28 +154,29 @@ public:
 	inline type_t type(void) const { return _type; }
 
 private:
-	CFG(type_t type = SUBPROG);
+	CFG(Inst *first, type_t type = SUBPROG);
 	int idx;
 	type_t _type;
-	BasicBlock *fst;
+	Inst *fst;
+	//BasicBlock *fst;
 	Block *_exit, *_unknown;
 };
 io::Output& operator<<(io::Output& out, CFG *cfg);
 
 class CFGMaker: public sgraph::GenDiGraphBuilder<Block, Edge> {
 public:
-	CFGMaker(void);
+	CFGMaker(Inst *first);
 	inline Block *entry(void) const { return cfg->entry(); }
 	Block *exit(void) const;
 	Block *unknown(void);
 	CFG *build(void);
 	void seq(Block *v, Block *w, Edge *edge);
-	void add(Block *v);
+	inline void add(Block *v) { sgraph::GenDiGraphBuilder<Block, Edge>::add(v); }
 	void add(SynthBlock *v, CFG *cfg);
 	void add(SynthBlock *v, const CFGMaker& cfg);
 	inline void add(Block *v, Block *w, Edge *e) { sgraph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }
 	inline CFG::BlockIter blocks(void) const { return cfg->vertices(); }
-	inline Block *first(void) const { return cfg->first(); }
+	//inline Block *first(void) const { return cfg->first(); }
 private:
 	CFG *cfg;
 	Block *u;
