@@ -22,7 +22,7 @@ namespace sim {
 
 
 // Useful defines
-#define OTAWA_LOADER_VERSION	"1.2.0"
+#define OTAWA_LOADER_VERSION	"2.0.0"
 #define OTAWA_LOADER_HOOK		loader_plugin
 #define OTAWA_LOADER_NAME		"loader_plugin"
 #define OTAWA_LOADER_ID(name, version, date)	ELM_PLUGIN_ID(OTAWA_LOADER_NAME, name " V" version " (" date ") [" OTAWA_LOADER_VERSION "]")
