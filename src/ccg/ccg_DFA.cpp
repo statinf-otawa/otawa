@@ -19,17 +19,16 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <elm/assert.h>
-#include <otawa/ccg/DFA.h>
 #include <otawa/cfg.h>
 #include <otawa/instruction.h>
-#include <otawa/ccg/ConstraintBuilder.h>
-#include <otawa/cache/LBlockSet.h>
 #include <elm/genstruct/HashTable.h>
-#include <otawa/ccg/Builder.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/proc/ProcessorException.h>
+#include <otawa/ccg/Builder.h>
+#include <otawa/ccg/ConstraintBuilder.h>
+#include <otawa/ccg/DFA.h>
 
 using namespace otawa::ilp;
 using namespace elm::genstruct;
@@ -52,9 +51,9 @@ Domain *Problem::gen(CFG *cfg, BasicBlock *bb) {
 		bitset->add(0);
 		return bitset;
 	}
-	else {	
+	else {
 		address_t adlbloc;
-	    int identif = 0;	    
+	    int identif = 0;
 		for(BasicBlock::InstIter inst(bb); inst; inst++) {
 			adlbloc = inst->address();
 			for (LBlockSet::Iterator lbloc(*ccggraph); lbloc; lbloc++) {
@@ -63,7 +62,7 @@ Domain *Problem::gen(CFG *cfg, BasicBlock *bb) {
 					identif = lbloc->id();
 			}
 		}
-	
+
 		if(identif != 0)
 		 	bitset->add(identif);
 		return bitset;
@@ -77,8 +76,8 @@ Domain *Problem::preserve(CFG *cfg, BasicBlock *bb) {
 	bool testnotconflit = false;
 	bool visit = false;
 	address_t adlbloc;
-    int identif1 = 0 , identnonconf = 0 , identif2 = 0;
-    
+    int identif1 = 0;
+
 	for(BasicBlock::InstIter inst(bb); inst; inst++) {
 		visit = false;
 		int dec = cach->blockBits();
@@ -93,11 +92,9 @@ Domain *Problem::preserve(CFG *cfg, BasicBlock *bb) {
 					unsigned long tag = ((unsigned long)adlbloc) >> dec;
 					for(LBlockSet::Iterator lbloc1(*ccggraph); lbloc1; lbloc1++) {
 						unsigned long taglblock = ((unsigned long)lbloc1->address()) >> dec;
-						address_t faddress = lbloc1->address();
 						if(adlbloc != lbloc1->address() && tag == taglblock
 						&& bb != lbloc1->bb()) {
-							identnonconf = lbloc1->id();
-							/*LBlock *ccgnode =*/ ccggraph->lblock(identif1);
+							ccggraph->lblock(identif1);
 							break;
 						}
 					}
@@ -106,19 +103,17 @@ Domain *Problem::preserve(CFG *cfg, BasicBlock *bb) {
 
 			}
 			visit = true;
-							
+
 			if (!visit) {
 				for (LBlockSet::Iterator lbloc(*ccggraph); lbloc; lbloc++) {
-					if(adlbloc == lbloc->address() && bb != lbloc->bb()) {
-						identif2 = lbloc->id();
+					if(adlbloc == lbloc->address() && bb != lbloc->bb())
 						break ;
-					}
 				}
 			}
-				
+
 		}
 	}
-	
+
 	// the bit vector of kill
 	/*int length =*/ ccggraph->count();
 	Domain *kill;

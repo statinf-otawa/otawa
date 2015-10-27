@@ -104,7 +104,6 @@ extern Identifier<Edge *> FROM_EDGE;
 extern Identifier<PSTree *> PROGRAM_STRUCTURE_TREE;
 
 // VIRTUALIZED_CFG_FEATURE
-extern Identifier<bool> DONT_INLINE;
 extern p::feature VIRTUALIZED_CFG_FEATURE;
 extern Identifier<bool> VIRTUAL_INLINING;
 extern Identifier<BasicBlock *> VIRTUAL_RETURN_BLOCK;

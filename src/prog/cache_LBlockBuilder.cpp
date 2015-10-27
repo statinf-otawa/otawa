@@ -9,7 +9,7 @@
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
  *	(at your option) any later version.
- * 
+ *
  *	OTAWA is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -31,7 +31,7 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/cfg/CFGCollector.h>
-#include <elm/genstruct/Vector.h> 
+#include <elm/genstruct/Vector.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/genstruct/Table.h>
 
@@ -41,12 +41,12 @@ namespace otawa {
  * @class LBlockBuilder
  * This processor builds the list of l-blocks for each lines of instruction
  * cache and stores it in the CFG.
- * 
+ *
  * @par Required Features
  * @li @ref INVOLVED_CFGS_FEATURE
  * @li @ref require(hard::CACHE_CONFIGURATION_FEATURE)
  * @li @ref require(hard::MEMORY_FEATURE)
- * 
+ *
  * @par Provided Features
  * @li @ref COLLECTED_LBLOCKS_FEATURE
  */
@@ -98,7 +98,7 @@ void LBlockBuilder::setup(WorkSpace *fw) {
  */
 void LBlockBuilder::cleanup(WorkSpace *fw) {
 	ASSERT(fw);
-	
+
 	// Add end blocks
 	for(int i = 0; i < cache->rowCount(); i++)
 		new LBlock(lbsets[i], 0, 0, 0, lbsets[i]->cacheBlockCount());
@@ -113,7 +113,7 @@ void LBlockBuilder::cleanup(WorkSpace *fw) {
  * @paramlblocks	BB lblock table.
  */
 void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct::AllocatedTable<LBlock*> *lblocks) {
-	
+
 	// test if the l-block is cacheable
 	Address addr = inst->address();
 	const hard::Bank *bank = mem->get(addr);
@@ -130,21 +130,20 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct:
 	ot::mask block = cache->block(inst->address());
 	int cid = block_map.get(block, -1);
 	if(cid < 0) {
-		int set = cache->set(inst->address());
 		cid = lbset->cacheBlockCount();
 		block_map.put(block, cid);
 	}
-	
+
 	// Compute the size
-	Address top = (addr + cache->blockMask()) & ~cache->blockMask();
+	Address top = (addr + cache->blockMask() +1) & ~cache->blockMask();
 	if(top > bb->address() + bb->size())
 		top = bb->address() + bb->size();
-	
+
 	// Build the lblock
 	LBlock *lblock = new LBlock(lbset, bb, inst, top - addr, cid);
 	lblocks->set(index, lblock);
 	if(isVerbose())
-		log << "\t\t\t\tblock at " << addr
+		log << "\t\t\t\tblock at " << addr << " size " << top-addr
 			<< " (cache block " << cache->round(inst->address())
 			<< ", cid = " << cid << ")\n";
 	index++;
@@ -157,11 +156,11 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 	ASSERT(fw);
 	ASSERT(cfg);
 	ASSERT(bb);
-	
+
 	// Do not process entry and exit
 	if (bb->isEnd())
 		return;
-		
+
 	// Allocate the BB lblock table
 	int num_lblocks =
 		((bb->address() + bb->size() + cache->blockMask()) >> cache->blockBits())
@@ -192,7 +191,7 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 /**
  * This feature ensures that the L-blocks of the current task has been
  * collected.
- * 
+ *
  * @par Properties
  * @li @ref LBLOCKS
  * @li @ref BB_LBLOCKS

@@ -36,7 +36,6 @@ public:
 protected:
 	virtual void processWorkSpace(otawa::WorkSpace*);
 	bool _explicit;
-	bool no_obj;
 };
 
 

@@ -84,7 +84,7 @@ elm::io::Output& operator<<(elm::io::Output& output, const MAYProblem::Domain& d
 	return output;
 }
 
-static SilentFeature::Maker<ACSMayBuilder> maker;
+
 /**
  * This feature that the MAY analysis has been performed for the L1 data cache
  * and that the ACS are provided at the entry of each basic block.
@@ -99,7 +99,7 @@ static SilentFeature::Maker<ACSMayBuilder> maker;
  * @li @ref ENTRY_MAY_ACS
  * @ingroup dcache
  */
-SilentFeature MAY_ACS_FEATURE("otawa::dcache::MAY_ACS_FEATURE", maker);
+p::feature MAY_ACS_FEATURE("otawa::dcache::MAY_ACS_FEATURE", new Maker<ACSMayBuilder>());
 
 
 /**

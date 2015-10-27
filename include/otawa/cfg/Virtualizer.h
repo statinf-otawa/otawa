@@ -33,6 +33,8 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/prop/PropList.h>
+#include <elm/util/Option.h>
+#include <otawa/prop/ContextualProperty.h>
 
 
 namespace otawa {
@@ -53,9 +55,12 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 
 private:
-	void virtualize(struct call_t*, CFG *cfg, VirtualCFG *vcfg, BasicBlock *entry, BasicBlock *exit);
-	VirtualCFG *virtualizeCFG(struct call_t *call, CFG *cfg);
-	bool isInlined(void);
+	void virtualize(struct call_t*, CFG *cfg, VirtualCFG *vcfg, BasicBlock *entry,
+			BasicBlock *exit, elm::Option<int> local_inlining, ContextualPath &path);
+	VirtualCFG *virtualizeCFG(struct call_t *call, CFG *cfg, elm::Option<int> local_inlining);
+	void enteringCall(BasicBlock *caller, BasicBlock *callee, ContextualPath &path);
+	void leavingCall(BasicBlock *to, ContextualPath &path);
+	bool isInlined(CFG* cfg, Option<int> local_inlining, ContextualPath &path);
 	bool virtual_inlining;
 	CFG *entry;
 	elm::genstruct::HashTable<void *, VirtualCFG *> cfgMap;

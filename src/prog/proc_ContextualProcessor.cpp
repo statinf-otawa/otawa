@@ -177,6 +177,10 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 				}
 			}
 			break;
+
+		default:
+			ASSERT(false);
+			break;
 		}
 
 		// process basic block

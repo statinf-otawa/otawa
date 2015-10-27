@@ -35,7 +35,7 @@ public:
 	virtual ~CFGInfo(void);
 
 	// Accessors
-	//BasicBlock *findBB(Inst *inst);
+	CFG *findCFG(Address addr);
 	CFG *findCFG(Inst *inst);
 	CFG *findCFG(const BasicBlock *bb);
 	CFG *findCFG(String label);

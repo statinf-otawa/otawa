@@ -33,6 +33,55 @@ namespace otawa { namespace dfa {
  * Represents a value of the data state.
  */
 
+
+/**
+ * Parse value from a string. Supported forms includes:
+ * @li INT (decimal, hexadecimal, binary) -- simple integer value,
+ * @li [INT,INT] -- interval of integers,
+ * @li (INT,INT, INT) -- CLP value.
+ *
+ * @param str				String to parse.
+ * @throw io::IOException	If the string cannot be parsed.
+ */
+Value Value::parse(const string& str) throw(io::IOException) {
+	if(!str)
+		throw io::IOException("empty value");
+
+	// interval parsing
+	if(str[0] == '[' && str.endsWith("]")) {
+		int c = str.substring(1).indexOf(',');
+		if(c < 0)
+			throw io::IOException("',' missing, malformed interval");
+		t::uint32 lo, hi;
+		str.substring(1, c - 1) >> lo;
+		str.substring(c + 1, str.length() - c - 1) >> hi;
+		return Value(lo, hi);
+	}
+
+	// CLP parsing
+	else if(str[0] == '(' && str.endsWith(")")) {
+		int c1 = str.indexOf(',');
+		if(c1 < 0)
+			throw io::IOException("',' missing, malformed CLP");
+		int c2 = str.substring(c1 + 1).indexOf(',');
+		if(c2 < 0)
+			throw io::IOException("second ',' missing, malformed CLP");
+		t::uint32 base, delta, cnt;
+		str.substring(1, c1 - 1) >> base;
+		str.substring(c1 + 1, c2 - c1) >> delta;
+		str.substring(c2 + 1, str.length() - c2 - 1) >> cnt;
+		return Value(base, delta, cnt);
+	}
+
+	// integer parsing
+	else {
+		t::int32 i;
+		str >> i;
+		return i;
+	}
+}
+
+
 /**
  * Build a none value.
  */
@@ -56,7 +105,7 @@ Value::Value(t::uint32 base): _kind(CONST), _base(base), _delta(0), _count(0) {
 Value::Value(t::uint32 lo, t::uint32 up) {
 	if(lo == up) {
 		_kind = CONST;
-		_base = 0;
+		_base = lo;
 		_delta = 0;
 		_count = 0;
 	}
@@ -198,7 +247,7 @@ Value State::get(const hard::Register *reg) const {
 
 
 /**
- * @fn bool State::isInitialized(Address addr);
+ * @fn bool State::isInitialized(Address addr) const;
  * Test if the current state contains initialized data.
  * @param addr	Address to test.
  * @return		True if the data is initialized, false else.

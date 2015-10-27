@@ -8,7 +8,7 @@
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
  *	(at your option) any later version.
- * 
+ *
  *	OTAWA is distributed in the hope that it will be useful,
  *	but WITHOUT ANY WARRANTY; without even the implied warranty of
  *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -26,7 +26,7 @@
 #include <otawa/util/FirstUnrollingFixPoint.h>
 #include <otawa/cfg/CFG.h>
 #include <otawa/cfg/features.h>
- 
+
 #include <otawa/branch/BranchBuilder.h>
 #include <otawa/branch/BranchProblem.h>
 #include <otawa/hard/BHT.h>
@@ -134,7 +134,7 @@ BranchBuilder::BranchBuilder(void) : Processor(reg) {
 void BranchBuilder::categorize(BasicBlock *bb, BranchProblem::Domain *dom, BasicBlock* &cat_header, category_t &cat) {
 	BasicBlock *current_header;
 	int id = COND_NUMBER(bb);
-	
+
 	if (dom->getMust().contains(id)) {
 		cat = ALWAYS_H;
 		//cout << "always history: " << cat << "\n";
@@ -146,10 +146,10 @@ void BranchBuilder::categorize(BasicBlock *bb, BranchProblem::Domain *dom, Basic
 		if (Dominance::isLoopHeader(bb))
 			current_header = bb;
 		else current_header = ENCLOSING_LOOP_HEADER(bb);
-		  	
+
 		int bound = 0;
 		cat_header = NULL;
-				
+
 		  for (int k = dom->getPers().length() - 1 ; (k >= bound) && (current_header != NULL); k--) {
 				if (dom->getPers().isPersistent(id, k)) {
 					cat = FIRST_UNKNOWN;
@@ -159,10 +159,10 @@ void BranchBuilder::categorize(BasicBlock *bb, BranchProblem::Domain *dom, Basic
 				current_header = ENCLOSING_LOOP_HEADER(current_header);
 		  }
 	}
-													
+
 	if(logFor(LOG_BB))
 		log << "\t\tcat result: " << cat << "\n";
-	
+
 }
 
 /**
@@ -171,7 +171,7 @@ void BranchBuilder::processWorkSpace(WorkSpace* ws) {
 	int size;
 	int row;
 
-        
+
 	for (row = 0; row < hard::BHT_CONFIG(ws)->rowCount(); row++) {
               size = COND_MAX(ws)[row];
 
@@ -180,10 +180,10 @@ void BranchBuilder::processWorkSpace(WorkSpace* ws) {
 		FirstUnrollingFixPoint<UnrollingListener<BranchProblem> > fixp(list);
 		util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<BranchProblem> > > hai(fixp, *ws);
 		hai.solve();
-	
+
 		for (CFGCollection::Iterator cfg(*INVOLVED_CFGS(ws)); cfg; cfg++) {
 			for (CFG::BBIterator bb(*cfg); bb; bb++) {
-				if ((COND_NUMBER(bb) != -1) && (hard::BHT_CONFIG(ws)->line(bb->lastInst()->address()) == row)) {
+				if ((COND_NUMBER(bb) != -1) && int(hard::BHT_CONFIG(ws)->line(bb->lastInst()->address())) == row) {
 
 					if(logFor(LOG_BB))
 						log << "\tcategorize jump on bb " << bb->number() << " on row " << row << "\n";
@@ -194,7 +194,8 @@ void BranchBuilder::processWorkSpace(WorkSpace* ws) {
 					categorize(bb, dom, header, cat);
 
 					CATEGORY(bb) = cat;
-					HEADER(bb) = header;
+					if(header)
+						HEADER(bb) = header;
 
 				}
 			}

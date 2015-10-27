@@ -3,7 +3,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -15,7 +15,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -56,7 +56,7 @@
  * framework. In the following, you will find a guide to explore theses modules. Notice that
  * the OTAWA module splitting is not ever reflected by the header files and the libraries,
  * specially the kernel module of OTAWA.
- * 
+ *
  * OTAWA is logically split in different layer matching module:
  * @li @ref prog -- the main module and the root any work in OTAWA provides the abstract
  * representation of the program to handle.
@@ -73,7 +73,7 @@
  * @li @ref graph -- module providing classes to handle graphs.
  * @li @ref display -- module providing facilities to display graphs.
  * @li @ref application -- module helping to write command line applications.
- * 
+ *
  * In addition, some utilities are provided:
  * @li @ref dumpcfg -- outputs CFG with different format (textual, .dot).
  * @li @ref odfa -- performs and outputs data flow analysis.
@@ -301,18 +301,18 @@
 
 /**
  * @defgroup features Available Features and Processors
- * 
+ *
  * This page provides quick access to analyzes proposed by OTAWA core.
  * It contains mainly common features and sometimes, when no feature is provided,
  * processor for specific facilities (marked as processors).
  *
  * @par Flow Fact Features
- * 
+ *
  * @li @ref otawa::FLOW_FACTS_FEATURE
  * @li @ref otawa::MKFF_PRESERVATION_FEATURE
- * 
+ *
  * @par CFG Features
- * 
+ *
  * Includes @ref otawa/cfg/features.h
  *
  * @li @ref otawa::CFG_CHECKSUM_FEATURE
@@ -332,9 +332,9 @@
  * @li @ref otawa::REDUCED_LOOPS_FEATURE
  * @li @ref otawa::UNROLLED_LOOPS_FEATURE
  * @li @ref otawa::VIRTUALIZED_CFG_FEATURE
- * 
+ *
  * @par IPET Features
- * 
+ *
  * @li @ref otawa::ipet::ASSIGNED_VARS_FEATURE
  * @li @ref otawa::ipet::BB_TIME_FEATURE
  * @li @ref otawa::ipet::CONTROL_CONSTRAINTS_FEATURE
@@ -348,7 +348,7 @@
  * @li @ref otawa::ipet::OBJECT_FUNCTION_FEATURE
  * @li @ref otawa::ipet::WCET_COUNT_RECORDED_FEATURE
  * @li @ref otawa::ipet::WCET_FEATURE
- * 
+ *
  * @par Output Features
  *
  * @li @ref otawa::display::CFGOutput (processor)
@@ -356,7 +356,7 @@
  * @li @ref otawa::ilp::OUTPUT_FEATURE
  *
  * @par Instruction Cache features
- * 
+ *
  * @li @ref otawa::CCG_FEATURE
  * @li @ref otawa::COLLECTED_LBLOCKS_FEATURE
  * @li @ref otawa::ICACHE_ACS_FEATURE
@@ -368,16 +368,24 @@
  * @li @ref otawa::ICACHE_EDGE_CATEGORY2_FEATURE
  * @li @ref otawa::ICACHE_FIRSTLAST_FEATURE
  * @li @ref otawa::ICACHE_ONLY_CONSTRAINT2_FEATURE
- * 
+ *
  * @par Process Features
- * 
+ *
  * @li @ref otawa::CONTROL_DECODING_FEATURE
  * @li @ref otawa::DECODED_TEXT
  * @li @ref otawa::DELAYED_FEATURE
+ * @li @ref otawa::DELAYED2_FEATURE
  * @li @ref otawa::FLOAT_MEMORY_ACCESS_FEATURE
+ * @li @ref otawa::MEMORY_ACCESS
  * @li @ref otawa::MEMORY_ACCESS_FEATURE
+ * @li @ref otawa::FLOAT_MEMORY_ACCESS_FEATURE
  * @li @ref otawa::REGISTER_USAGE_FEATURE
+ * @li @ref otawa::SEMANTICS_INFO
+ * @li @ref otawa::SEMANTICS_INFO_EXTENDED
+ * @li @ref otawa::SEMANTICS_INFO_FLOAT
  * @li @ref otawa::SOURCE_LINE_FEATURE
+ * @li @ref otawa::VLIW_SUPPORTED
+ *
  *
  * @par Hardware Configuration Features
  *

@@ -25,11 +25,10 @@
 #include <elm/system/Path.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/util/MessageException.h>
+#include <elm/xom.h>
 #include <elm/system/Plugger.h>
 #include <otawa/properties.h>
 #include <otawa/base.h>
-#include <otawa/program.h>
-#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 
@@ -39,17 +38,15 @@ using namespace elm;
 class File;
 class Loader;
 class Manager;
-namespace ilp {
-	class System;
-}
-namespace sim {
-	class Simulator;
-}
+class WorkSpace;
 namespace hard {
 	class CacheConfiguration;
 	class Memory;
+	class Platform;
 	class Processor;
 }
+namespace ilp { class System; }
+namespace sim { class Simulator; }
 
 // LoadException class
 class LoadException: public MessageException {
@@ -61,12 +58,14 @@ public:
 class Manager {
 	friend class WorkSpace;
 public:
-	static const CString OTAWA_NS;
-	static const CString OTAWA_NAME;
-	static const CString PROCESSOR_NAME;
-	static const CString CACHE_CONFIG_NAME;
-	static const CString MEMORY_NAME;
-	static const cstring COMPILATION_DATE;
+	static const cstring
+		OTAWA_NS,
+		OTAWA_NAME,
+		PROCESSOR_NAME,
+		CACHE_CONFIG_NAME,
+		MEMORY_NAME,
+		COMPILATION_DATE,
+		VERSION;
 	static elm::system::Path prefixPath(void);
 	static String buildPaths(cstring kind, string paths = "");
 
@@ -77,8 +76,7 @@ public:
 	WorkSpace *load(const elm::system::Path& path,
 		const PropList& props = PropList::EMPTY);
 	WorkSpace *load(const PropList& props = PropList::EMPTY);
-	WorkSpace *load(xom::Element *elem,
-		const PropList& props = PropList::EMPTY);
+	WorkSpace *load(xom::Element *elem, const PropList& props = PropList::EMPTY);
 	ilp::System *newILPSystem(String plugin = "");
 	elm::system::Path retrieveConfig(const elm::system::Path& path);
 	Loader *findFileLoader(const elm::system::Path& path);
@@ -99,6 +97,7 @@ private:
 
 // Configuration Properties
 extern Identifier<string> TASK_ENTRY;
+extern Identifier<Address> TASK_ADDRESS;
 extern Identifier<hard::Platform *> PLATFORM;
 extern Identifier<Loader *> LOADER;
 extern Identifier<elm::CString> PLATFORM_NAME;

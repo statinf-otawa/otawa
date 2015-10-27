@@ -86,8 +86,8 @@ namespace otawa {
  * This class represents edges in the CFG representation.
  * They allow hooking annotations.
  */
- 
- 
+
+
 /**
  * Build a new edge.
  */
@@ -98,8 +98,7 @@ Edge::Edge(BasicBlock *source, BasicBlock *target, edge_kind_t kind)
 	ASSERTP(kind != EDGE_Null, "null kind edge");
 	ASSERTP(kind == CALL || source->cfg() == target->cfg(), "nodes in different CFG");
 	src->addOutEdge(this);
-	if(knd != CALL)
-		tgt->addInEdge(this);
+	tgt->addInEdge(this);
 }
 
 

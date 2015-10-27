@@ -14,6 +14,7 @@ Optional tool:
   * Doxygen
   * GraphViz
   * Thot
+  * CPlex
 
 Internal dependencies (that must be compiled at the same level than OTAWA directory):
   * GEL
@@ -41,3 +42,14 @@ To install it:
 <code sh>
 make install
 </code>
+
+
+===== Installation with Options =====
+
+To use CPlex, pass the following option at CMake invocation:
+<code sh>
+cmake . -DCMAKE_INSTALL_PREFIX=path_to_install_to -DCPLEX_ROOT=<cplex root>
+</code>
+
+where <cplex root> is the top-level directory of CPlex. This directory should contains at least ''cplex'' and ''concert'' subirectories.
+

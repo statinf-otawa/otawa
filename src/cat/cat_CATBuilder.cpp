@@ -369,10 +369,6 @@ BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
 		int lcount = lcache->count();
 		BitSet *set = new BitSet(lcount);
 		BitSet *v = new BitSet(lcount);
-		bool inloop = false;
-
-		if (root->kind()== ContextTree::LOOP )
-				inloop = true;
 		int ident;
 
 		/*

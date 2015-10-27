@@ -20,8 +20,9 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/app/Application.h>
 #include <elm/option/StringList.h>
+#include <elm/sys/System.h>
+#include <otawa/app/Application.h>
 #include <otawa/script/Script.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/util/FlowFactLoader.h>
@@ -30,6 +31,7 @@
 #include <otawa/cfg/features.h>
 
 using namespace otawa;
+using namespace elm::option;
 
 /**
  * @addtogroup commands
@@ -83,6 +85,7 @@ using namespace otawa;
 class Summer: public StatCollector::Collector {
 public:
 	Summer(void): s(0) { }
+	virtual ~Summer(void) { }
 	inline int sum(void) const { return s; }
 	virtual void enter(const ContextualStep &step) { }
 	virtual void leave(void) { }
@@ -98,17 +101,17 @@ class OWCET: public Application {
 public:
 	OWCET(void): Application(
 		"owcet",
-		Version(1, 0, 0),
+		Version(1, 2, 0),
 		"Compute the WCET of task using a processor script (.osx)."
 		"H. Cassé <casse@irit.fr>",
 		"Copyright (c) IRIT - UPS <casse@irit.fr>"
 	),
-	params(*this, 'p', "param", "parameter passed to the script", "IDENTIFIER=VALUE"),
-	script(*this, 's', "script", "script used to compute WCET", "PATH", ""),
-	ilp_dump(*this, option::cmd, "-i", option::cmd, "--dump-ilp", option::help, "dump ILP system to stdandard output", option::end),
-	list(*this, option::cmd, "--list", option::help, "list configuration items", option::end),
-	timed(*this, option::cmd, "--timed", option::cmd, "-t", option::help, "display computation", option::end),
-	display_stats(*this, option::cmd, "-S", option::cmd, "--stats", option::help, "display statistics", option::end)
+	params(ListOption<string>::Make(*this).cmd("-p").cmd("--param").description("parameter passed to the script").argDescription("IDENTIFIER=VALUE")),
+	script(ValueOption<string>::Make(*this).cmd("-s").cmd("--script").description("script used to compute WCET").argDescription("PATH")),
+	ilp_dump(SwitchOption::Make(*this).cmd("-i").cmd("--dump-ilp").description("dump ILP system to standard output")),
+	list(SwitchOption::Make(*this).cmd("--list").cmd("-l").description("list configuration items")),
+	timed(SwitchOption::Make(*this).cmd("--timed").cmd("-t").description("display computation")),
+	display_stats(SwitchOption::Make(*this).cmd("-S").cmd("--stats").description("display statistics"))
 	{ }
 
 protected:
@@ -182,18 +185,22 @@ protected:
 		// display the result
 		ot::time wcet = ipet::WCET(workspace());
 		if(wcet == -1)
-			throw otawa::Exception("no WCET computed (see errors above).");
+			cerr << "ERROR: no WCET computed (see errors above)." << io::endl;
 		else
-			cout << "WCET[" << entry << "] = " << ipet::WCET(workspace()) << " cycles\n";
+			cout << "WCET[" << entry << "] = " << wcet << " cycles\n";
 
 		// ILP dump
 		if(ilp_dump) {
 			ilp::System *sys = ipet::SYSTEM(workspace());
-			sys->dump(out);
+			if(sys) {
+				OutStream *out = elm::sys::System::createFile(entry + ".lp");
+				sys->dumpLPSolve(*out);
+				delete out;
+			}
 		}
 
 		// display statistics
-		if(display_stats) {
+		if(wcet >= 0 && display_stats) {
 			bool found = false;
 
 			// traverse all stats
@@ -219,13 +226,13 @@ protected:
 	}
 
 private:
-	option::StringList params;
-	option::StringOption script;
-	option::SwitchOption ilp_dump;
-	option::SwitchOption list;
-	option::SwitchOption timed;
+	ListOption<string> params;
+	ValueOption<string> script;
+	SwitchOption ilp_dump;
+	SwitchOption list;
+	SwitchOption timed;
+	SwitchOption display_stats;
 	string bin, task;
-	option::SwitchOption display_stats;
 };
 
 int main(int argc, char **argv) {

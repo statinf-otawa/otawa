@@ -38,6 +38,7 @@
 #include <otawa/cache/cat2/CAT2Builder.h>
 #include <otawa/cache/cat2/MUSTProblem.h>
 #include <otawa/cache/cat2/MAYProblem.h>
+
 using namespace otawa;
 using namespace otawa::ilp;
 using namespace otawa::ipet;
@@ -132,24 +133,41 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 					header = lblock->bb();
 			  	else header = ENCLOSING_LOOP_HEADER(lblock->bb());
 
-			  	int bound;
-			  	bool perfect_firstmiss = true;
+				bool is_pers = false;
 				PERSProblem::Domain *pers = CACHE_ACS_PERS(lblock->bb())->get(line);
-				bound = 0;
 
-				if ((pers->length() > 1) && (firstmiss_level == FML_INNER))
-					bound = pers->length() - 1;
-				cache::CATEGORY_HEADER(lblock) = NULL;
-			  	for (int k = pers->length() - 1 ; (k >= bound) && (header != NULL); k--) {
-					if (pers->isPersistent(lblock->cacheblock(), k)) {
-						cache::CATEGORY(lblock) = cache::FIRST_MISS;
-						cache::CATEGORY_HEADER(lblock) = header;
-					} else perfect_firstmiss = false;
-					header = ENCLOSING_LOOP_HEADER(header);
+				if(pers->length() >= 1)
+					switch(firstmiss_level) {
+					case FML_OUTER:
+						is_pers = pers->isPersistent(lblock->cacheblock(), 0);
+						while(ENCLOSING_LOOP_HEADER(header))
+							header = ENCLOSING_LOOP_HEADER(header);
+						break;
+					case FML_INNER:
+						is_pers = pers->isPersistent(lblock->cacheblock(), pers->length() - 1);
+						break;
+					case FML_MULTI:
+						for (int k = pers->length() - 1 ; k >= 0; k--) {
+							if(pers->isPersistent(lblock->cacheblock(), k)) {
+								if (is_pers)
+									header = ENCLOSING_LOOP_HEADER(header);
+								is_pers = true;
+							}
+							else
+								break;
+						}
+						break;
+					default:
+						ASSERT(0);
+						break;
+					}
+
+				if(is_pers) {
+					cache::CATEGORY(lblock) = cache::FIRST_MISS;
+					cache::CATEGORY_HEADER(lblock) = header;
 				}
-
-				if ((firstmiss_level == FML_OUTER) && (perfect_firstmiss == false))
-					cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
+				else
+					cache::CATEGORY(lblock) = cache::NOT_CLASSIFIED;
 			} /* of category condition test */
 		} else
 			cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
@@ -157,10 +175,11 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 		// record stats
 		total_cnt++;
 		switch(cache::CATEGORY(lblock)) {
-		case cache::ALWAYS_HIT:		ah_cnt++; break;
-		case cache::ALWAYS_MISS:	am_cnt++; break;
-		case cache::FIRST_MISS:		pers_cnt++; break;
-		case cache::NOT_CLASSIFIED:	nc_cnt++; break;
+		case cache::ALWAYS_HIT:		ah_cnt++; 		break;
+		case cache::ALWAYS_MISS:	am_cnt++; 		break;
+		case cache::FIRST_MISS:		pers_cnt++; 	break;
+		case cache::NOT_CLASSIFIED:	nc_cnt++; 		break;
+		default:					ASSERT(false);	break;
 		}
 		if(logFor(LOG_BB)) {
 			log << "\t\t" << lblock->address() << ": " << *cache::CATEGORY(lblock);
@@ -191,6 +210,9 @@ void CAT2Builder::configure(const PropList &props) {
 	cstats = cache::CATEGORY_STATS(props);
 	if(cstats)
 		cstats->reset();
+	if(logFor(LOG_PROC)) {
+		cerr << "\tlevel = " << firstmiss_level << io::endl;
+	}
 }
 
 
@@ -216,7 +238,7 @@ void CAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
 			log << "\tAH = " << ah_cnt << " (" << (ah_cnt * 100 / total_cnt) << "%)\n"
 				<< "\tAM = " << am_cnt << " (" << (am_cnt * 100 / total_cnt) << "%)\n"
 				<< "\tPERS = " << pers_cnt << " (" << (pers_cnt * 100 / total_cnt) << "%)\n"
-				<< "\tAM = " << nc_cnt << " (" << (nc_cnt * 100 / total_cnt) << "%)\n";
+				<< "\tNC = " << nc_cnt << " (" << (nc_cnt * 100 / total_cnt) << "%)\n";
 	}
 }
 

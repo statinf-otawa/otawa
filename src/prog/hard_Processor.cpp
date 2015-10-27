@@ -20,9 +20,10 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Processor.h>
 #include <otawa/hard/ProcessorBuilder.h>
-#include <otawa/manager.h>
 #include <elm/serial2/XOMUnserializer.h>
 
 namespace otawa { namespace hard {
@@ -38,7 +39,7 @@ namespace otawa { namespace hard {
 /**
  * @class Stage
  * @ingroup hard
- * 
+ *
  * This class represents a stage in a pipeline. The stages have a type:
  * @li @ref otawa::hard::Stage::FETCH -- a stage loading instruction from memory
  * (usually the initial stage of a pipeline).
@@ -47,7 +48,7 @@ namespace otawa { namespace hard {
  * (it contains functionnal units that performs the work of the instructions),
  * @li @ref otawa::hard::Stage::COMMIT -- a stage that writes result of an instruction
  * in the processor state (usually the end of the traversal of the instructions).
- * 
+ *
  * The stages are described by the following attributes:
  * @li the name,
  * @li the width (number of instructions traversing in parallel the stage),
@@ -60,7 +61,7 @@ namespace otawa { namespace hard {
 /**
  * @class Queue
  * @ingroup hard
- * 
+ *
  * The instructions queues stores instruction that come from one stage to another one.
  * Possibly, an instruction queue may have an internal execution stage that uses
  * the stored instruction to compute their result.
@@ -69,12 +70,12 @@ namespace otawa { namespace hard {
 /**
  * @class FunctionalUnit
  * @ingroup hard
- * 
+ *
  * A functional unit is specialized in the computation of some kinds of instructions.
- * They are contained in a stage (@ref otawa::hard::Stage) of type EXEC. 
+ * They are contained in a stage (@ref otawa::hard::Stage) of type EXEC.
  * The selection of a functional unit is performed thanks to the @ref otawa::hard::Dispatch
  * objects provided in the execution stage.
- * 
+ *
  * A functional unit is defined by:
  * @li its latency (computation time in cycles),
  * @li its width (number of instructions traversing the functional unit in parallel),
@@ -85,7 +86,7 @@ namespace otawa { namespace hard {
 /**
  * @class Dispatch
  * @ingroup hard
- * 
+ *
  * A dispatch object allows to map some kinds of instructions to a functional unit.
  * To find if the dispatch match an instruction, an AND is performed between the
  * instruction kind and the dispatch type and if the result is equal to the dispatch
@@ -114,6 +115,11 @@ hard::Processor *Processor::load(const elm::system::Path& path) throw(LoadExcept
 	catch(elm::io::IOException& e) {
 		delete _processor;
 		throw LoadException(&e.message());
+	}
+	catch(otawa::MessageException& e) {
+		cerr << "DEBUG: exn = " << e.message() << io::endl;
+		ASSERT(false);
+		return 0;
 	}
 }
 
@@ -151,7 +157,7 @@ hard::Processor *Processor::load(xom::Element *element) throw(LoadException) {
 class ProcessorProcessor: public otawa::Processor {
 public:
 	static p::declare reg;
-	ProcessorProcessor(p::declare& r = reg): Processor(r), xml(0), config(0) { }
+	ProcessorProcessor(p::declare& r = reg): Processor(r), config(0), xml(0) { }
 
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);

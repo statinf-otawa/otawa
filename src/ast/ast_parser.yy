@@ -18,7 +18,7 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-%{
+%code requires {
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
@@ -35,7 +35,7 @@ using namespace otawa::ast;
 int ast_lex(void);
 void ast_error(otawa::ast::ASTLoader *loader, const char *msg);
 
-%}
+}
 
 %name-prefix="ast_"
 %locations
@@ -73,7 +73,7 @@ defs:
 
 def:
 	NAME '=' ast
-		{ 
+		{
 			ast::ASTInfo *info = ASTInfo::getInfo(loader->ws);
 			address_t addr = loader->file->findLabel($1 + 1);
 			if(!addr)

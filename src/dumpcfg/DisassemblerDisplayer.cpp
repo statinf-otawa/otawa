@@ -90,6 +90,10 @@ int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
 	case Edge::VIRTUAL:
 		cout << " V(" << target_index << ")";
 		break;
+
+	default:
+		ASSERT(false);
+		break;
 	}
 }
 

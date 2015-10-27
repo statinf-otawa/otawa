@@ -19,7 +19,6 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <elm/io.h>
-#include <otawa/ccg/Builder.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/dfa/XIterativeDFA.h>
 #include <otawa/dfa/XCFGVisitor.h>
@@ -28,10 +27,13 @@
 #include <otawa/hard/Cache.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
-#include <otawa/util/LBlockBuilder.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/prop/DeletableProperty.h>
+#include <otawa/cfg/BasicBlock.h>
+#include <otawa/ccg/Builder.h>
 #include <otawa/ccg/DFA.h>
+#include <otawa/ccg/Edge.h>
+#include <otawa/ccg/Node.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
@@ -100,7 +102,7 @@ Identifier<bool> Builder::NON_CONFLICT("otawa::ccg::Builder::NON_CONFLICT", fals
 
 /**
  */
-void Builder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
+void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 	ASSERT(fw);
 	ASSERT(lbset);
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();

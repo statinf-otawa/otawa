@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -50,6 +50,8 @@ namespace elm {
 	};
 } // elm
 
+extern otawa::ilp::ILPPlugin& lp_solve5_plugin;
+
 namespace otawa { namespace lp_solve5 {
 
 // Predeclaration
@@ -81,21 +83,24 @@ public:
 	void resetRow(double *row);
 	void dump(elm::io::Output& out);
 
-	// ilp::Constraint overload	
+	// ilp::Constraint overload
 	virtual double coefficient(ilp::Var *var = 0) const;
 	virtual comparator_t comparator(void) const;
 	virtual void add(double coef, ilp::Var *var = 0);
 	virtual void sub(double coef, ilp::Var *var = 0);
 	elm::datastruct::IteratorInst<ilp::Constraint::Term> *terms(void);
+	virtual void setComparator(comparator_t comp) { cmp = comp; }
+	virtual void setLabel(const string& label) { _label = label; }
 
 private:
 	friend class System;
-	
-	
-	
+
+
+
 	// Factor class
 	class Factor {
 	public:
+		virtual ~Factor(void);
 		inline Factor(double coefficient, Var *variable, Factor *next, ilp::Var *_ilpvar);
 		inline Var *variable(void) const;
 		virtual ilp::Var *getVar(void) const;
@@ -104,35 +109,34 @@ private:
 		inline void add(double value);
 		inline Factor& operator+=(double value);
 		inline Factor& operator-=(double value);
-		inline ~Factor() { }
 	private:
 		Factor *nxt;
 		Var *var;
 		ilp::Var *ilpvar;
 		double coef;
 	};
-	
+
 	Factor *getFacts();
 	// TermIterInst class
 	class TermIterInst: public elm::datastruct::IteratorInst<ilp::Constraint::Term> {
-	
+
 		Factor *cur;
 		public:
 		TermIterInst(Constraint *_cons) : cur(_cons->getFacts()) {
 		}
-		
+
 		bool ended (void) const {
 			return (!cur);
 		}
-		
+
 		ilp::Constraint::Term item(void) const {
-			return elm::pair(cur->getVar(), cur->coefficient());
+			return Term(cur->getVar(), cur->coefficient());
 
 		}
-		
+
 		void next(void) {
 			cur = cur->next();
-			
+
 		}
 	};
 	// Attributes
@@ -168,6 +172,27 @@ private:
 };
 
 
+// INTERNAL -- test if workspace action has been cancelled
+#if defined(__WIN32) || defined(__WIN64)
+#	define DECFUN		__WINAPI
+#else
+#	define DECFUN
+#endif
+
+static int DECFUN test_cancellation(lprec *lp, void *userhandle) {
+	WorkSpace *ws = (WorkSpace *)userhandle;
+	if(ws->isCancelled())
+		return 1;
+	else
+		return 0;
+}
+
+static void DECFUN log_mon(lprec *lp, void *userhandle, char *buf) {
+	Monitor& mon = *static_cast<Monitor *>(userhandle);
+	mon.log << "\t\tDEBUG:" << buf;
+}
+
+
 /**
  * This the lp_solve5 version of the ilp::System class.
  * As lp_solve is very bound in its API, this class mainly gather information
@@ -180,13 +205,13 @@ public:
 	~System(void);
 	Var *findVar(ilp::Var *var);
 	Var *getVar(ilp::Var *var);
-	
+
 	// ilp::System overload
 	virtual ilp::Constraint *newConstraint(ilp::Constraint::comparator_t comp,
 		double constant = 0);
 	virtual ilp::Constraint *newConstraint(const string& label,
 		ilp::Constraint::comparator_t comp, double constant = 0);
-	virtual bool solve(WorkSpace *ws = 0);
+	virtual bool solve(WorkSpace *ws) { return solve(ws, Monitor::null); }
 	virtual void addObjectFunction(double coef, ilp::Var *var = 0);
 	virtual double valueOf(ilp::Var *var);
 	virtual double value(void);
@@ -196,45 +221,157 @@ public:
 	virtual void dumpSolution(io::Output& out = elm::cout);
 	elm::datastruct::IteratorInst<ilp::Constraint*> *constraints(void);
 	elm::datastruct::IteratorInst<ilp::Constraint::Term> *objTerms(void);
+
 	class LocalVar: public ilp::Var {
 	public:
-		inline LocalVar(const string& name): ilp::Var(name) { }
+		inline LocalVar(Var::type_t type, const string& name): ilp::Var(name, type) { }
 	};
-	virtual ilp::Var *newVar(const string& name) { return new LocalVar(name); }
 
-private:	
+	virtual ilp::Var *newVar(const string& name) { return newVar(ilp::Var::INT, name); }
+	virtual ilp::Var *newVar(ilp::Var::type_t type, const string& name) {  return new LocalVar(type, name); }
+
+	// 1.2.0 interface
+	virtual bool solve(WorkSpace *ws, otawa::Monitor& mon) {
+		static short comps[] = { LE, LE, EQ, GE, GE };
+		static double corr[] = { -1, 0, 0, 0, +1 };
+
+		// allocate and initialize the lp_solve data structure
+		lprec *lp = make_lp(0, cols);
+		set_verbose(lp, IMPORTANT);
+		put_logfunc(lp, log_mon, &mon);
+		REAL row[cols + 1];
+		for(int i = 1; i <= cols; i++)
+			row[i] = 0;
+
+		// set the type of variable
+		for(var_map_t::Iterator var(vars); var; var++)
+			switch(var->variable()->type()) {
+			case ilp::Var::INT:		set_int(lp, var->column(), TRUE); break;
+			case ilp::Var::BIN:		set_binary(lp, var->column(), TRUE); break;
+			case ilp::Var::FLOAT:	break;
+			default:				ASSERT(false); break;
+			}
+
+		// Build the object function
+		ofun->fillRow(row);
+		row[0] = 0;
+		set_obj_fn(lp, row);
+		ofun->resetRow(row);
+		if(ofun->comparator() >= 0)
+			set_maxim(lp);
+		else
+			set_minim(lp);
+
+		// Build the matrix
+		for(Constraint *cons = conss; cons; cons = cons->next()) {
+			cons->fillRow(row);
+			Constraint::comparator_t comp = cons->comparator();
+			double cst = cons->constant();
+			add_constraint(lp, row,
+				comps[comp - Constraint::LT],
+				cst + corr[comp - Constraint::LT]);
+			cons->resetRow(row);
+		}
+
+		// if required, record the cancellation test
+		if(ws)
+			put_abortfunc(lp, test_cancellation, ws);
+
+		// Set a timeout of 60 secs
+		//::set_timeout(lp, 60);
+
+		// launch the resolution
+		int fail = ::solve(lp);
+
+		// Record the result
+		int result = false;
+		if(!ws || !ws->isCancelled()) {
+			if(fail == OPTIMAL) {
+				result = true;
+
+				// Record variables values
+				for(elm::genstruct::HashTable<ilp::Var *, Var *>::Iterator var(vars);
+				var; var++)
+					var->setValue((double)lp->best_solution[lp->rows + var->column()]);
+
+
+				// Get optimization result
+				val = rint(get_objective(lp));
+			}
+
+			// record error message
+			else {
+
+				// messages
+	#			define ERRORM(x)	{ x, #x }
+				static struct {
+					int code;
+					cstring msg;
+				} msgs[] = {
+					ERRORM(UNKNOWNERROR),
+					ERRORM(DATAIGNORED),
+					ERRORM(NOBFP),
+					ERRORM(NOMEMORY),
+					ERRORM(NOTRUN),
+					ERRORM(OPTIMAL),
+					ERRORM(SUBOPTIMAL),
+					ERRORM(INFEASIBLE),
+					ERRORM(UNBOUNDED),
+					ERRORM(DEGENERATE),
+					ERRORM(NUMFAILURE),
+					ERRORM(USERABORT),
+					ERRORM(TIMEOUT),
+					ERRORM(RUNNING),
+					ERRORM(PRESOLVED),
+					{ 0, "" }
+				};
+
+				// display message
+				int i;
+				for(i = 0; msgs[i].msg; i++)
+					if(msgs[i].code == fail)
+						break;
+				last_error = _ << "failed due to " << fail << " (" << msgs[i].msg << ")";
+			}
+		}
+
+		// clean up
+		delete_lp(lp);
+		return result;
+	}
+
+	virtual string lastErrorMessage(void) {
+		return last_error;
+	}
+
+	virtual ilp::ILPPlugin *plugin(void) {
+		return &lp_solve5_plugin;
+	}
+
+private:
 	friend class Constraint;
-	
+
 	Constraint *getConss(void);
+	void removeConstraint(Constraint *cons);
+
 	// ConstIterInst
 	class ConstIterInst: public elm::datastruct::IteratorInst<ilp::Constraint*> {
 		System *sys;
 		Constraint *cur;
-		public:
-		ConstIterInst(System *_sys) : sys(_sys), cur(_sys->getConss()) {
-		}
-		
-		bool ended (void) const {
-			return (!cur);	
-		}
-		
-		ilp::Constraint* item(void) const {
-			return(cur);
-		}
-		
-		void next(void) {
-			cur = cur->next();
-		}
-	};	
-	
+	public:
+		ConstIterInst(System *_sys) : sys(_sys), cur(_sys->getConss()) { }
+		bool ended (void) const { return (!cur); }
+		ilp::Constraint* item(void) const { return(cur); }
+		void next(void) { cur = cur->next(); }
+	};
+
 	typedef elm::genstruct::HashTable<ilp::Var *, Var *> var_map_t;
 	var_map_t vars;
 	Constraint *conss;
 	Constraint *ofun;
 	int cols, rows;
 	double val;
-
-	void removeConstraint(Constraint *cons);
+	string last_error;
 };
 
 inline Constraint *System::getConss(void) {
@@ -246,7 +383,10 @@ ilp::Var *Constraint::Factor::getVar(void) const {
 }
 
 // Constraint::Factor inlines
-inline Constraint::Factor::Factor(double coefficient, Var *variable, 
+Constraint::Factor::~Factor(void) {
+}
+
+inline Constraint::Factor::Factor(double coefficient, Var *variable,
 Factor *next, ilp::Var *_ilpvar) : nxt(next), var(variable), ilpvar(_ilpvar), coef(coefficient)   {
 }
 
@@ -307,7 +447,7 @@ inline Constraint::Factor *Constraint::Factor::next(void) const {
 }
 
 elm::datastruct::IteratorInst<ilp::Constraint::Term> *Constraint::terms(void) {
-		 return(new TermIterInst(this)); 
+		 return(new TermIterInst(this));
 }
 
 inline Constraint *Constraint::next(void) const {
@@ -449,11 +589,11 @@ Var *System::getVar(ilp::Var *var) {
 }
 
 elm::datastruct::IteratorInst<ilp::Constraint*> *System::constraints(void) {
-	 return(new ConstIterInst(this)); 
+	 return(new ConstIterInst(this));
 }
 
 elm::datastruct::IteratorInst<ilp::Constraint::Term> *System::objTerms(void) {
-	 return(new Constraint::TermIterInst(ofun)); 
+	 return(new Constraint::TermIterInst(ofun));
 }
 /**
  * Free all ressources.
@@ -525,23 +665,12 @@ double System::value(void) {
 	return val;
 }
 
-#if defined(__WIN32) || defined(__WIN64)
-static int __WINAPI test_cancellation(lprec *lp, void *userhandle) {
-#else
-static int test_cancellation(lprec *lp, void *userhandle) {
-#endif
-	WorkSpace *ws = (WorkSpace *)userhandle;
-	if(ws->isCancelled())
-		return 1;
-	else
-		return 0;
-}
-
 // Overload
+#if 0
 bool System::solve(WorkSpace *ws) {
 	static short comps[] = { LE, LE, EQ, GE, GE };
 	static double corr[] = { -1, 0, 0, 0, +1 };
-	
+
 	// allocate and initialize the lp_solve data structure
 	lprec *lp = make_lp(0, cols);
 	set_verbose(lp, IMPORTANT);
@@ -558,7 +687,7 @@ bool System::solve(WorkSpace *ws) {
 		case ilp::Var::FLOAT:	break;
 		default:				ASSERT(false); break;
 		}
-	
+
 	// Build the object function
 	ofun->fillRow(row);
 	row[0] = 0;
@@ -568,7 +697,7 @@ bool System::solve(WorkSpace *ws) {
 		set_maxim(lp);
 	else
 		set_minim(lp);
-	
+
 	// Build the matrix
 	for(Constraint *cons = conss; cons; cons = cons->next()) {
 		cons->fillRow(row);
@@ -583,14 +712,14 @@ bool System::solve(WorkSpace *ws) {
 		cout << io::endl;*/
 		cons->resetRow(row);
 	}
-	
+
 	// if required, record the cancellation test
 	if(ws)
 		put_abortfunc(lp, test_cancellation, ws);
 
 	// Launch the resolution
 	int fail = ::solve(lp);
-	
+
 	// Record the result
 	int result = false;
 	if(!ws || !ws->isCancelled()) {
@@ -607,7 +736,7 @@ bool System::solve(WorkSpace *ws) {
 			//cout << "=> " << get_objective(lp) << " <=> " << int(get_objective(lp)) << "<=\n";
 			val = rint(get_objective(lp));
 		}
-		
+
 		// !!DEBUG!!
 		else {
 
@@ -648,6 +777,7 @@ bool System::solve(WorkSpace *ws) {
 	delete_lp(lp);
 	return result;
 }
+#endif
 
 
 /**
@@ -668,8 +798,8 @@ int System::countConstraints(void) {
  */
 void System::exportLP(io::Output& out) {
 	static CString texts[] = { "<", "<=", "=", ">=", ">" };
-	out << "/* IPET system */\n"; 
-	
+	out << "/* IPET system */\n";
+
 	// Output the objective function
 	if(ofun->comparator() >= 0)
 		out << "max: ";
@@ -677,7 +807,7 @@ void System::exportLP(io::Output& out) {
 		out << "min: ";
 	ofun->dump(out);
 	out << ";\n";
-	
+
 	// Output the constraints
 	for(Constraint *cons = conss; cons; cons = cons->next()) {
 		cons->dump(out);
@@ -686,9 +816,9 @@ void System::exportLP(io::Output& out) {
 		const string& label = cons->label();
 		if(label)
 			out << "\t/* " << label << "*/";
-		out << io::endl; 
+		out << io::endl;
 	}
-	
+
 	// Output int constraints
 	for(genstruct::HashTable<ilp::Var *, Var *>::Iterator var(vars);
 	var; var++)
@@ -711,7 +841,7 @@ void System::dumpSolution(io::Output& out) {
 class Plugin: public ilp::ILPPlugin {
 public:
 	Plugin(void);
-	
+
 	// ILPPlugin overload
 	virtual System *newSystem(void);
 };

@@ -109,7 +109,7 @@ void BasicBlock::setNotTaken(BasicBlock *bb) {
 
 /**
  *  @fn bool BasicBlock::isCall(void) const;
- *  Test if the basuc block is ended by a call to a sub-program.
+ *  Test if the basic block is ended by a call to a sub-program.
  *  @return True if the basic block is call, false else.
  */
 
@@ -240,6 +240,7 @@ BasicBlock::~BasicBlock(void) {
 
 
 /**
+ * @fn IteratorInst<Edge *> *BasicBlock::inEdges(void);
  * Get an iterator on the entering edges.
  * @return	Entering edge iterator.
  * @deprecated	Use InIterator instead.
@@ -251,6 +252,7 @@ BasicBlock::~BasicBlock(void) {
 
 
 /**
+ * @fn IteratorInst<Edge *> *BasicBlock::outEdges(void);
  * Get an iterator on the leaving edges.
  * @return	Leaving edge iterator.
  * @deprecated	Use OutIterator instead.
@@ -378,5 +380,109 @@ Inst *BasicBlock::controlInst(void) const {
 		control = last;
 	return control;
 }
+
+
+/**
+ * @class BasicBlock::Bundle
+ * A bundle, in a VLIW processors, is a group of instructions executed in parallel.
+ * When used with a non-VLIW instruction set, a bundle is equivalent to an instruction.
+ * @see @ref prog_vliw
+ * @ingroup cfg
+ */
+
+/**
+ * @fn Address BasicBlock::Bundle::address(void) const;
+ * Get the base address of the bundle.
+ * @return	Bundle base address.
+ */
+
+/**
+ * @fn Address BasicBlock::Bundle::topAddress(void) const;
+ * Get the top address of the bundle.
+ * @return	Bundle top address.
+ */
+
+/**
+ * @fn t::uint32 BasicBlock::Bundle::size(void) const;
+ * Get the size of the bundle.
+ * @return	Bundle size (in bytes).
+ */
+
+/**
+ * @fn InstIter BasicBlock::Bundle::insts(void) const;
+ * Get an iterator on instructions composing the bundle.
+ * @return	Bundle instruction iterator.
+ */
+
+/**
+ * Get the semantic instruction to perform semantic analysis
+ * on the bundle.
+ * @param block		Semantic instruction block to fill in.
+ */
+void BasicBlock::Bundle::semInsts(sem::Block& block) {
+	int t = -1;
+	for(InstIter i = insts(); i; i++)
+		t -= i->semInsts(block, t);
+	t = 0;
+	for(InstIter i = insts(); i; i++)
+		t -= i->semWriteBack(block, t);
+}
+
+/**
+ * Get the set of registers read by the bundle.
+ * @param set	Register set filled with read registers.
+ * @see RegSet, RegIter.
+ */
+void BasicBlock::Bundle::readRegSet(RegSet& set) {
+	for(InstIter i = insts(); i; i++)
+		i->readRegSet(set);
+}
+
+/**
+ * Get the set of registers written by the bundle.
+ * @param set	Register set filled with written registers.
+ * @see RegSet, RegIter.
+ */
+void BasicBlock::Bundle::writeRegSet(RegSet& set) {
+	for(InstIter i = insts(); i; i++)
+		i->writeRegSet(set);
+}
+
+/**
+ * @fn BasicBlock::Bundle::Bundle(void);
+ * Simple bundle constructor.
+ * @ingroup cfg
+ */
+
+/**
+ * @fn void BasicBlock::Bundle::move(Inst *inst, Address top);
+ * Move the bundle to a next bundle in program image.
+ * @param inst	First instruction of new bundle.
+ * @param top	Top address of the block containing the bundle.
+ */
+
+/**
+ * @fn void BasicBlock::Bundle::end(void);
+ * Mark the bundle as empty.
+ */
+
+
+/**
+ * @class BasicBlock::BundleIter;
+ * Iterator on bundles composing a basic block.
+ * @see @ref prog_vliw
+ * @ingroup cfg
+ */
+
+/**
+ * @fn BasicBlock::Bundle::BundleIter(void);
+ * Null constructor.
+ */
+
+/**
+ * @fn BasicBlock::Bundle::BundleIter(BasicBlock *bb);
+ * Build an iterator to traverse bundles of a basic block.
+ * @param bb	Basic block to look bundles in.
+ */
 
 } // otawa

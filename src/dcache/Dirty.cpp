@@ -100,7 +100,7 @@ private:
 
 
 DirtyManager::DirtyManager(const BlockCollection& coll)
-: _coll(coll), bot(coll.count()), _top(coll.count()) {
+:	bot(coll.count()), _top(coll.count()), _coll(coll) {
 	bot.may().empty();
 	bot.must().fill();
 	_top.may().fill();
@@ -174,6 +174,11 @@ bool DirtyManager::equals(const t& s1, const t& s2) const {
  */
 void DirtyManager::update(t& d, const BlockAccess& acc) {
 	switch(acc.action()) {
+
+	case NONE:
+		ASSERT(false);
+		break;
+
 	case BlockAccess::LOAD:
 		break;
 
@@ -375,11 +380,10 @@ p::declare DirtyAnalysis::reg = p::init("otawa::dcache::DirtyAnalysis", Version(
 	.maker<DirtyAnalysis>();
 
 
-static SilentFeature::Maker<DirtyAnalysis> maker;
 /**
  * This feature is only useful for data cache with write-back mechanism.
  * In this case, it is needed before wiping out a block if it dirty (modified) or not.
- * If it is dirty, additional time is spent to writing its value back to memory.
+ * If it is dirty, additional time is spent writing its value back to memory.
  * Notice that the dirty state is made of a MAY component (better case dirty)
  * and a MUST component (worst case dirty). If the block is in the MUST set, it is asserted
  * it is dirty. If the block is not in the MAY set, it is asserted it is not dirty. Else
@@ -391,13 +395,13 @@ static SilentFeature::Maker<DirtyAnalysis> maker;
  * @p Default Processor
  * @li @ref DirtyAnalysis
  */
-SilentFeature DIRTY_FEATURE("otawa::dcache::DIRTY_FEATURE", maker);
+p::feature DIRTY_FEATURE("otawa::dcache::DIRTY_FEATURE", new Maker<DirtyAnalysis>());
 
 
 /**
  * This property contains information about the dirty state of a block.
  * To use it, creates a @ref DirtyManager with the target row of the data cache,
- * the DIRTY value to methods mayBeDirty() or mustBeDirty() and reply the sequence
+ * the DIRTY value to methods mayBeDirty() or mustBeDirty() and apply the sequence
  * of @ref BlockAccess of the concerned basic block.
  *
  * @p Hook

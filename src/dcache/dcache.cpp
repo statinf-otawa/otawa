@@ -38,17 +38,17 @@ bool BlockAccess::inSet(int set, const hard::Cache *cache) const {
 
 	// range over the whole cache
 	if(first() < last()) {
-		if(cache->tag(last()) - cache->tag(first())  >= cache->setCount())
+		if(int(cache->tag(last()) - cache->tag(first()))  >= cache->setCount())
 			return true;
 	}
-	else if(cache->tag(first()) + cache->setCount() - cache->tag(last()) >= cache->setCount())
+	else if(int(cache->tag(first()) + cache->setCount() - cache->tag(last())) >= cache->setCount())
 		return true;
 
 	// computes sets
 	if(cache->set(first()) < cache->set(last()))
-		return cache->set(first()) <= set && set <= cache->set(last());
+		return int(cache->set(first())) <= set && set <= int(cache->set(last()));
 	else
-		return set <= cache->set(first()) || cache->set(last()) <= set;
+		return set <= int(cache->set(first())) || int(cache->set(last())) <= set;
 }
 
 
@@ -68,6 +68,9 @@ bool BlockAccess::in(const Block& block) const {
 			return Address(first()) <= block.address() && block.address() <= Address(last());
 		else
 			return block.address() <= Address(first()) || Address(last()) <= block.address();
+	default:
+		ASSERT(false);
+		return false;
 	}
 }
 

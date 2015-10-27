@@ -17,7 +17,7 @@ int ipet_lex(void);
 int ipet_line = 1;
 %}
 
-%name-prefix="ipet_"
+%name-prefix "ipet_"
 %locations
 %defines
 %error-verbose
@@ -58,7 +58,9 @@ lines:
 line:
 	/* empty */
 |	BB ID INTEGER
-		{ if(!loader->newBBVar($2, otawa::Address($3))) YYABORT; free($2); }
+		{ loader->newBBVar($2, otawa::Address($3)); free($2); }
+|	BB ID '$' INTEGER
+		{ loader->newBBVar($2, $4); free($2); }
 |	EDGE ID INTEGER INTEGER
 		{ if(!loader->newEdgeVar($2, otawa::Address($3), otawa::Address($4))) YYABORT; free($2); }
 |	exp  comparator exp

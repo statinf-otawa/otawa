@@ -19,7 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <otawa/ccg/Node.h>
-#include <otawa/cache/LBlockSet.h>
+#include <otawa/ccg/features.h>
 #include <otawa/cfg/BasicBlock.h>
 
 

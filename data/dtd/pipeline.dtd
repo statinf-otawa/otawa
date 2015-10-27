@@ -9,8 +9,8 @@
 
 <!ELEMENT stages (state+)>
 
-<!ELEMENT stages ((name|width|latency|type|dispatch|fus|ordered)+)>
-<!ATTLIST stages	id	ID	#REQUIRED>
+<!ELEMENT stage ((name|width|latency|type|dispatch|fus|ordered)+)>
+<!ATTLIST stage	id	ID	#REQUIRED>
 
 <!ELEMENT name		(#PCDATA)>
 <!ELEMENT width		(#PCDATA)>		<!-- integer -->
@@ -22,7 +22,7 @@
 <!ELEMENT inst		(type,fu)>
 <!ELEMENT type		(#PCDATA)>		<!-- IS_XXX combination separated by | -->
 <!ELEMENT fu		EMPTY>
-<!ATTLIST fu		ref		IDREF	#REQUIRED>
+<!ATTLIST fu		ref		IDREF>	<!-- should be #REQUIRED but two fu version impossible -->
 
 <!ELEMENT fus		(fu+)>
 <!ELEMENT fu		((name|latency|width|pipelined)*)>
@@ -38,4 +38,3 @@
 <!ATTLIST input		ref 	IDREF 	#REQUIRED>
 <!ELEMENT output	EMPTY>
 <!ATTLIST output	ref 	IDREF 	#REQUIRED>
-	

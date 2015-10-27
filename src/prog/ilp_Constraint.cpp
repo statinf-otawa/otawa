@@ -71,4 +71,73 @@ namespace otawa { namespace ilp {
  * @param var	Variable of the factor.
  */
 
+
+/**
+ * void Constraint::setComparator(comparator_t comp);
+ * Change the comparator of the constraint.
+ * @param comp	Comparator to set.
+ * @since ILP interface 1.2.0
+ */
+
+
+/**
+ * void Constraint::setLabel(const string& label);
+ * Change the label of the constraint.
+ * @param label		Label to set.
+ * @since ILP interface 1.2.0
+ */
+
+
+/**
+ * Add an expression to the left part of the constraint.
+ * @param e		Added expression.
+ */
+void Constraint::add(const Expression& e) {
+	for(Expression::Iterator i(&e); i; i++)
+		add(*i);
+}
+
+
+/**
+ * Subtract an expression from the left part of the constraint.
+ * @param e		Subtracted expression.
+ */
+void Constraint::sub(const Expression& e) {
+	for(Expression::Iterator i(&e); i; i++)
+		sub(*i);
+}
+
+
+/**
+ */
+io::Output& operator<<(io::Output& out, const Term& t) {
+	if(!t.snd)
+		out << '0';
+	else if(!t.fst)
+		out << t.snd;
+	else if(t.fst->name())
+		out << t.snd << ' ' << t.fst->name();
+	else
+		out << t.snd << " x" << (void *)t.fst;
+	return out;
+}
+
+
+/**
+ */
+io::Output& operator<<(io::Output& out, Constraint::comparator_t comp) {
+	static cstring strs[] = {
+		"<",	//	LT = -2,
+		"<=",	// LE = -1,
+		"=",	// EQ = 0,
+		">=",	// GE = 1,
+		">"		// GT = 2
+	};
+	ASSERT(comp >= Constraint::LT && comp < Constraint::GT);
+	out << strs[comp + 2];
+	return out;
+}
+
+
+
 } } // otawa::ilp

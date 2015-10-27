@@ -161,16 +161,12 @@ namespace otawa {
     ParExeStage * _last_stage;
     ParExeStage * _first_stage;
   public:
-    ParExePipeline()
-      : _first_stage(NULL){    }
+    ParExePipeline()  : _first_stage(NULL){}
     ~ParExePipeline() {    }
-    inline ParExeStage *lastStage()
-    {return _last_stage;}
-    inline ParExeStage *firstStage()
-    {return _first_stage; }
+    inline ParExeStage *lastStage() {return _last_stage;}
+    inline ParExeStage *firstStage() {return _first_stage; }
     inline void addStage(ParExeStage *stage);
-    inline int numStages()
-    {return _stages.length();}
+    inline int numStages() {return _stages.length();}
 
     class StageIterator: public elm::genstruct::Vector<ParExeStage *>::Iterator {
     public:
@@ -200,53 +196,41 @@ namespace otawa {
   private:
     elm::genstruct::Vector<ParExeQueue *> _queues;
     ParExePipeline _pipeline;
+    elm::genstruct::SLList<ParExeStage *> _inorder_stages;
     ParExeStage * _fetch_stage;
     ParExeStage * _exec_stage;
- 
+
   public:
       typedef enum instruction_category_t {	
-	IALU = 0,
-	FALU = 1,
-	MEMORY = 2,
-	CONTROL = 3,
-	MUL = 4,
-	DIV = 5,
-	INST_CATEGORY_NUMBER   // must be the last value
+    	  IALU = 0,
+    	  FALU = 1,
+    	  MEMORY = 2,
+    	  CONTROL = 3,
+    	  MUL = 4,
+    	  DIV = 5,
+    	  INST_CATEGORY_NUMBER   // must be the last value
       } instruction_category_t;	
 
 
     ParExeProc(const hard::Processor *proc);
-    inline void addQueue(elm::String name, int size){
-        _queues.add(new ParExeQueue(name, size));
-    }
-    inline ParExeQueue * queue(int index){
-      return _queues[index];
-    }
-    inline void setFetchStage(ParExeStage * stage)
-      {_fetch_stage = stage;}
-    inline ParExeStage * fetchStage(void)
-      {return _fetch_stage;}
-    inline void setExecStage(ParExeStage * stage)
-      {_exec_stage = stage;}
-    inline ParExeStage * execStage(void)
-      {return _exec_stage;}
-    inline ParExeStage * lastStage(void)
-    {return _pipeline.lastStage() ;}
-    inline bool isLastStage(ParExeStage *stage)
-     {return (_pipeline.lastStage() == stage);}
-    inline ParExePipeline *pipeline()
-     { return &_pipeline;}
+    inline void addQueue(elm::String name, int size){_queues.add(new ParExeQueue(name, size));}
+    inline ParExeQueue * queue(int index) {return _queues[index];}
+    inline void setFetchStage(ParExeStage * stage) {_fetch_stage = stage;}
+    inline ParExeStage * fetchStage(void) {return _fetch_stage;}
+    inline void setExecStage(ParExeStage * stage) {_exec_stage = stage;}
+    inline ParExeStage * execStage(void) {return _exec_stage;}
+    inline ParExeStage * lastStage(void) {return _pipeline.lastStage() ;}
+    inline bool isLastStage(ParExeStage *stage) {return (_pipeline.lastStage() == stage);}
+    inline ParExePipeline *pipeline() {return &_pipeline;}
+    inline elm::genstruct::SLList<ParExeStage *> *listOfInorderStages() {return &_inorder_stages;}
     
     class QueueIterator: public elm::genstruct::Vector<ParExeQueue *>::Iterator {
     public:
       inline QueueIterator(const ParExeProc *processor)
-	: elm::genstruct::Vector<ParExeQueue *>::Iterator(processor->_queues) {}
+      	  : elm::genstruct::Vector<ParExeQueue *>::Iterator(processor->_queues) {}
     };
 
   };
-
-
-
  
   inline ParExeStage::ParExeStage(pipeline_stage_category_t category, int latency, int width, order_t policy, ParExeQueue *sq, ParExeQueue *dq, elm::String name, int index, const hard::PipelineUnit *unit)
   : _unit(unit), _category(category), _latency(latency), _width(width), _order_policy(policy),

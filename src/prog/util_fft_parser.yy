@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-10, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 %{
@@ -40,7 +40,7 @@ static void reset_counts(void) {
 }
 %}
 
-%name-prefix="util_fft_"
+%name-prefix "util_fft_"
 %locations
 %defines
 %error-verbose
@@ -62,17 +62,22 @@ static void reset_counts(void) {
 %token KW_ACCESS
 %token KW_CALL
 %token KW_CONTROL
+%token KW_DOINLINE
 %token KW_ENTRY
 %token KW_IGNORE
 %token KW_IGNORECONTROL
 %token KW_IGNORESEQ
 %token KW_IN
+%token KW_INLINING_OFF
+%token KW_INLINING_ON
+%token KW_LIBRARY
 %token KW_MAX
 %token KW_MEMORY
 %token KW_MULTIBRANCH
 %token KW_MULTICALL
 %token KW_NO
 %token KW_NOCALL
+%token KW_NOINLINE
 %token KW_PRESERVE
 %token KW_REG
 %token KW_SEQ
@@ -126,6 +131,14 @@ command:
 		{ loader->onNoCall(*$2); delete $2; }
 |	KW_NO KW_CALL id_or_address ';'
 		{ loader->onNoCall(*$3); delete $3; }
+|	KW_DOINLINE id_or_address opt_in ';'
+		{ loader->onNoInline(*$2, false, path); delete $2; path.clear(); }
+|	KW_NOINLINE id_or_address opt_in ';'
+		{ loader->onNoInline(*$2, true, path); delete $2; path.clear(); }
+|	KW_INLINING_ON id_or_address opt_in ';'
+		{ loader->onSetInlining(*$2, true, path); delete $2; path.clear(); }
+|	KW_INLINING_OFF id_or_address opt_in ';'
+		{ loader->onSetInlining(*$2, false, path); delete $2; path.clear(); }
 |	KW_IGNORECONTROL full_address ';'
 		{ loader->onIgnoreControl(*$2); delete $2; }
 |	KW_IGNORE KW_CONTROL full_address ';'
@@ -154,6 +167,8 @@ command:
 		{ loader->onRegSet(*$2, *$4); delete $2; delete $4; }
 |	KW_MEMORY TYPE full_address '=' value ';'
 		{ loader->onMemSet(*$3, $2, *$5); delete $3; delete $5; }
+|	KW_LIBRARY ';'
+		{ }
 ;
 
 counts:

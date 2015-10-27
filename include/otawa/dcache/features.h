@@ -152,9 +152,9 @@ public:
 	inline bool isAny(void) const { return _kind == ANY; }
 	inline action_t action(void) const { return action_t(_action); }
 	inline const Block& block(void) const { ASSERT(_kind == BLOCK); return *data.blk; }
-	inline Address::offset_t first(void) const { ASSERT(_kind == RANGE); return data.range.first; }
-	inline Address::offset_t last(void) const { ASSERT(_kind == RANGE); return data.range.last; }
-	inline bool inRange(Address::offset_t block) const { if(first() < last()) return first() <= block && block <= last(); else return block <= first() || last() <= block; }
+	inline int first(void) const { ASSERT(_kind == RANGE); return data.range.first; }
+	inline int last(void) const { ASSERT(_kind == RANGE); return data.range.last; }
+	inline bool inRange(int block) const { if(first() < last()) return first() <= block && block <= last(); else return block <= first() || last() <= block; }
 	bool inSet(int set, const hard::Cache *cache) const;
 	bool in(const Block& block) const;
 
@@ -216,14 +216,15 @@ typedef genstruct::Vector<acs_stack_t> acs_stack_table_t;
 
 
 // block analysis
-extern SilentFeature DATA_BLOCK_FEATURE;
+extern p::feature DATA_BLOCK_FEATURE;
+extern p::feature CLP_BLOCK_FEATURE;
 extern Identifier<Pair<int, BlockAccess *> > DATA_BLOCKS;
 extern Identifier<const BlockCollection *> DATA_BLOCK_COLLECTION;
 extern Identifier<Address> INITIAL_SP;
 
 // MUST analysis
-extern SilentFeature MUST_ACS_FEATURE;
-extern SilentFeature PERS_ACS_FEATURE;
+extern p::feature MUST_ACS_FEATURE;
+extern p::feature PERS_ACS_FEATURE;
 extern Identifier<acs_table_t *> MUST_ACS;
 extern Identifier<acs_table_t *> ENTRY_MUST_ACS;
 extern Identifier<acs_table_t *> PERS_ACS;
@@ -233,21 +234,21 @@ extern Identifier<bool> DATA_PSEUDO_UNROLLING;
 extern Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL;
 
 // categories build
-extern SilentFeature CATEGORY_FEATURE;
+extern p::feature CATEGORY_FEATURE;
 extern Identifier<cache::category_t> CATEGORY;
 extern Identifier<BasicBlock*> CATEGORY_HEADER;
 
 // ILP constraint build
-extern SilentFeature CONSTRAINTS_FEATURE;
+extern p::feature CONSTRAINTS_FEATURE;
 extern Identifier<ilp::Var *> MISS_VAR;
 
 // MAY analysis
 extern Identifier<Vector<ACS *> *> ENTRY_MAY_ACS;
-extern SilentFeature MAY_ACS_FEATURE;
+extern p::feature MAY_ACS_FEATURE;
 extern Identifier<Vector<ACS *> *> MAY_ACS;
 
 // Dirty analysis
-extern SilentFeature DIRTY_FEATURE;
+extern p::feature DIRTY_FEATURE;
 extern Identifier<AllocatedTable<DirtyManager::t> > DIRTY;
 
 // Purge analysis

@@ -21,8 +21,8 @@
  */
 
 #include <config.h>
-#include <otawa/platform.h>
-#include <otawa/manager.h>
+//#include <otawa/platform.h>
+#include <otawa/prog/Manager.h>
 #include <otawa/cfg.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <gel/gel.h>
@@ -253,6 +253,7 @@ elm::system::Path Manager::retrieveConfig(const elm::system::Path& path) {
  * @li @ref PROCESSOR_PATH,
  * @li @ref SIMULATOR,
  * @li @ref SIMULATOR_NAME,
+ * @li @ref TASK_ADDRESS,
  * @li @ref TASK_ENTRY.
  *
  * @par
@@ -287,7 +288,7 @@ WorkSpace *Manager::load(const elm::system::Path&  path, const PropList& props) 
 Loader *Manager::findFileLoader(const elm::system::Path& path) {
 	Output log(io::err);
 
-	gel_file_t *file = gel_open((char *)&path, 0, 0);
+	gel_file_t *file = gel_open((char *)&path, 0, GEL_OPEN_QUIET);
 	if(!file) {
 		resetVerbosity();
 		throw LoadException(gel_strerror());
@@ -348,7 +349,7 @@ WorkSpace *Manager::loadBin(
 
 	// Try with gel
 	if(!loader) {
-		gel_file_t *file = gel_open((char *)&path, 0, 0);
+		gel_file_t *file = gel_open((char *)&path, 0, GEL_OPEN_QUIET);
 		if(!file) {
 			resetVerbosity();
 			throw LoadException(gel_strerror());
@@ -492,38 +493,30 @@ WorkSpace *Manager::load(const PropList& props) {
  * default plugin.
  * @return		A new ILP system ready to use or null (plugin not available).
  */
-ilp::System *Manager::newILPSystem(String name) {
+ilp::System *Manager::newILPSystem(string name) {
 	ilp::ILPPlugin *plugin;
 
-	// Select the first available plugin
-	if(!name) {
-#		ifdef HAS_PLUGIN
-		plugin = (ilp::ILPPlugin *)ilp_plugger.plug("default");
-		if(!plugin)
-#		endif
-		{
-			elm::system::Plugger::Iterator plug(ilp_plugger);
-			if(plug.ended())
-				return 0;
-			plugin = (ilp::ILPPlugin *)plug.plug();
-		}
+	// select "default" if required
+	if(!name)
+		name = "default";
+
+	// try to open named
+	plugin = static_cast<ilp::ILPPlugin *>(ilp_plugger.plug(name));
+
+	// if not found, look the list of available
+	if(!plugin) {
+		elm::system::Plugger::Iterator plug(ilp_plugger);
+		if(!plug.ended())
+			plugin = static_cast<ilp::ILPPlugin *>(plug.plug());
 	}
 
-	// Find a plugin
-	else {
-#		ifdef OTAWA_CMAKE
-			plugin = (ilp::ILPPlugin *)ilp_plugger.plug("lib" + name.toCString());
-#		else
-			plugin = (ilp::ILPPlugin *)ilp_plugger.plug(name.toCString());
-#		endif
-	}
-
-	// Return a system
+	// process error case
 	if(!plugin) {
 		cerr << "ERROR: " << ilp_plugger.lastErrorMessage() << "\n";
 		return 0;
 	}
-	return plugin->newSystem();
+	else
+		return plugin->newSystem();
 }
 
 
@@ -549,6 +542,13 @@ ilp::System *Manager::newILPSystem(String name) {
  * entry function of the current task.
  */
 Identifier<string> TASK_ENTRY("otawa::TASK_ENTRY", "main");
+
+
+/**
+ * This property, passed to the load configuration, select the task entry
+ * by its address.
+ */
+Identifier<Address> TASK_ADDRESS("otawa::TASK_ADDRESS", Address::null);
 
 
 /**
@@ -724,10 +724,12 @@ Manager MANAGER;
 /**
  * Compilation date of this OTAWA library.
  */
-#if defined(__WIN32) || defined(__WIN64) || defined(OTAWA_CMAKE)
-const cstring Manager::COMPILATION_DATE = DAYDATE;
-#elif defined(__unix)
-const cstring Manager::COMPILATION_DATE = DATE;
-#endif
+const cstring Manager::COMPILATION_DATE = OTAWA_DATE;
+
+
+/**
+ * Current version of sources OTAWA (VCS version).
+ */
+const cstring Manager::VERSION = OTAWA_VERSION;
 
 }	// otawa

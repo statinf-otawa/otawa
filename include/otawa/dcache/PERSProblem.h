@@ -3,7 +3,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007-13, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -15,7 +15,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
@@ -54,11 +54,11 @@ public:
 		void addDamage(const int id, int damage);
 		void ageAll(void);
 	};
-	
+
 	class Domain {
 	public:
 		inline Domain(const int _size, const int _A): whole(_size, _A), isBottom(true) { }
-		inline Domain(const Domain &source): isBottom(source.isBottom), whole(source.whole)
+		inline Domain(const Domain &source): whole(source.whole), isBottom(source.isBottom)
 			{ for (int i = 0; i < source.data.length(); i++) data.add(new Item(*source.data[i])); }
 		inline ~Domain(void) { for (int i = 0; i < data.length(); i++) delete data[i]; }
 
@@ -104,15 +104,15 @@ public:
 		bool isBottom;
 	};
 
-	
+
 	Domain callstate;
-	
+
 public:
 	PERSProblem(const int _size, const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A);
 	~PERSProblem(void);
 	const Domain& bottom(void) const;
 	const Domain& entry(void) const;
-		
+
 	inline void lub(Domain &a, const Domain &b) const { a.lub(b); }
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
@@ -120,11 +120,11 @@ public:
 	void update(Domain& s, const BlockAccess& access);
 	void purge(Item& item, const BlockAccess& acc);
 	void purge(Domain& domain, const BlockAccess& acc);
-	
+
 	inline void enterContext(Domain& dom, BasicBlock *header, util::hai_context_t ctx) {
 #ifndef PERFTEST
 		if (ctx == util::CTX_LOOP)
-			dom.enterContext(); 
+			dom.enterContext();
 #endif
 	}
 
@@ -132,8 +132,8 @@ public:
 #ifndef PERFTEST
 		if (ctx == util::CTX_LOOP)
 			dom.leaveContext();
-#endif		
-	}	
+#endif
+	}
 
 private:
 	const BlockCollection *lbset;

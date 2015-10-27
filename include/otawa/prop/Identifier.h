@@ -40,6 +40,12 @@ using namespace elm::io;
 class PropList;
 
 
+namespace p {
+	template <class T> inline void print(Output& out, const T& v) { cout << v; }
+	template <class T> inline void print(Output& out, T *p) { if(!p) cout << "<null>"; else cout << p; }
+}
+
+
 // GenericIdentifier class
 template <class T>
 class Identifier: public AbstractIdentifier {
@@ -102,16 +108,16 @@ public:
 
 	// Identifier overload
 	virtual void print(elm::io::Output& out, const Property *prop) const
-		{ out << (!prop ? def : get(*prop)); }
+		{ p::print(out, !prop ? def : get(*prop)); }
 	virtual void printFormatted(io::Output& out, const Property *prop) const
-		{ out << (!prop ? def : get(*prop)); }
+		{ p::print(out, !prop ? def : get(*prop)); }
 	virtual const Type& type(void) const { return otawa::type<T>(); }
 	virtual void fromString(PropList& props, const string& str) const;
 	virtual Property *copy(Property& prop) const
 		{ return GenericProperty<T>::make(this, get(&prop)); }
 
 	// Getter class
-	class Getter: public PreIterator<Getter, T> {
+	class Getter: public PreIterator<Getter, const T&> {
 	public:
 		inline Getter(const PropList *list, Identifier<T>& id): getter(list, id) { }
 		inline Getter(const PropList& list, Identifier<T>& id): getter(list, id) { }

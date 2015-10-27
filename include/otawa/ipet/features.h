@@ -22,7 +22,7 @@
 #define OTAWA_IPET_FEATURES_H
 
 #include <otawa/prop/Identifier.h>
-#include <otawa/proc/Feature.h>
+#include <otawa/proc/SilentFeature.h>
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/prog/WorkSpace.h>
 
@@ -43,7 +43,7 @@ namespace ipet {
 
 // Common configuration
 extern Identifier<bool> EXPLICIT;
-extern Identifier<cstring> ILP_PLUGIN_NAME;
+extern Identifier<string> ILP_PLUGIN_NAME;
 
 // Features
 extern Feature<NoProcessor> INTERBLOCK_SUPPORT_FEATURE;
@@ -62,7 +62,7 @@ extern Identifier<ot::time> WCET;
 
 extern SilentFeature OBJECT_FUNCTION_FEATURE;
 
-extern SilentFeature CONTROL_CONSTRAINTS_FEATURE;
+extern p::feature CONTROL_CONSTRAINTS_FEATURE;
 extern Identifier<otawa::ilp::Constraint *> CALLING_CONSTRAINT;
 
 extern SilentFeature FLOW_FACTS_CONSTRAINTS_FEATURE;
@@ -72,9 +72,9 @@ extern SilentFeature FLOW_FACTS_FEATURE;
 extern SilentFeature ILP_SYSTEM_FEATURE;
 extern Identifier<ilp::System *> SYSTEM;
 
-extern SilentFeature DATA_CACHE_SUPPORT_FEATURE;
-
-extern SilentFeature INST_CACHE_SUPPORT_FEATURE;
+extern p::feature DATA_CACHE_SUPPORT_FEATURE;
+extern p::feature INST_CACHE_SUPPORT_FEATURE;
+extern p::feature CACHE_SUPPORT_FEATURE;
 
 extern p::feature WCET_COUNT_RECORDED_FEATURE;
 

@@ -34,6 +34,21 @@ static inline bool isReturn(Inst *inst) {
 	return inst->isReturn() || IS_RETURN(inst);
 }
 
+/**
+ * Find end of bundle starting at the given instruction.
+ * @param i		Instruction starting the bundle.
+ * @return		Bundle end.
+ */
+static Inst *bundleEnd(Inst *i) {
+	while(!i->isBundleEnd()) {
+		Inst *l = i;
+		i = i->nextInst();
+		if(!i)
+			return l;
+	}
+	return i;
+}
+
 
 /* For internal use only */
 static Identifier<CodeBasicBlock *> BB("", 0);
@@ -149,6 +164,8 @@ void CFGBuilder::addSubProgram(Segment *seg, Inst *inst) {
  */
 void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 	ASSERT(seg);
+	if(logFor(LOG_FUN))
+		log << "\tsegment " << seg->name() << io::endl;
 
 	// Add the initial basic block
 	Segment::ItemIter item(seg);
@@ -230,7 +247,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 			// end of current BB
 			else {
 				if(!bb->size()) {
-					bb->setSize(inst->address() - bb->address());
+					bb->setSize(bundleEnd(inst)->address() - bb->address());
 					info->add(bb);
 				}
 
@@ -247,7 +264,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 
 		// end of block
 		if(IS_RETURN(inst) || (inst->target() && NO_RETURN(inst->target()))) {
-			bb->setSize(inst->topAddress() - bb->address());
+			bb->setSize(bundleEnd(inst)->topAddress() - bb->address());
 			info->add(bb);
 			bb->flags |= BasicBlock::FLAG_Return;
 			follow = false;
@@ -255,7 +272,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 
 		else if(inst->isControl() && !IGNORE_CONTROL(inst)) {
 			ASSERTP(bb, "no BB at " << inst->address() << io::endl);
-			bb->setSize(inst->topAddress() - bb->address());
+			bb->setSize(bundleEnd(inst)->topAddress() - bb->address());
 			info->add(bb);
 
 			// record the taken edge
@@ -263,7 +280,7 @@ void CFGBuilder::buildCFG(WorkSpace *ws, Segment *seg) {
 			if(target && (!inst->isCall() || !NO_CALL(target))) {
 				BasicBlock *target_bb = thisBB(target);
 				ASSERT(target_bb);
-				Edge *edge = new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
+				new Edge(bb, target_bb, inst->isCall() ? EDGE_Call : EDGE_Taken);
 			}
 
 			// look for target properties

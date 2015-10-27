@@ -3,7 +3,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2013, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -15,7 +15,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
@@ -70,7 +70,7 @@ public:
 	void update(Domain& s, const BlockAccess& access);
 	inline void ageAll(Domain& d) const { d.must.ageAll(); d.pers.ageAll();  }
 	inline void inject(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.inject(id); }
-	
+
 	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
 		persProb.enterContext(dom.pers, header, ctx);
 		mustProb.enterContext(dom.must, header, ctx);
@@ -79,12 +79,12 @@ public:
 	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
 		persProb.leaveContext(dom.pers, header, ctx);
 		mustProb.leaveContext(dom.must, header, ctx);
-	}		
+	}
 
 private:
 	Domain bot;
 	Domain ent;
-	unsigned int set;
+	int set;
 	MUSTProblem mustProb;
 	PERSProblem persProb;
 };

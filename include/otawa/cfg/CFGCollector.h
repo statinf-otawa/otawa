@@ -30,10 +30,9 @@ namespace otawa {
 
 // CFGCollector Class
 class CFGCollector: public Processor {
-	elm::genstruct::Vector<CFG *> added_cfgs;
-	elm::genstruct::Vector<CString> added_funs;
 public:
-	CFGCollector(void);
+	static p::declare reg;
+	CFGCollector(p::declare& r = reg);
 	virtual void configure(const PropList& props);
 	virtual void cleanup(WorkSpace *ws);
 
@@ -46,7 +45,10 @@ protected:
 private:
 	string name;
 	CFG *entry;
+	Address addr;
 	bool rec;
+	elm::genstruct::Vector<CFG *> added_cfgs;
+	elm::genstruct::Vector<CString> added_funs;
 };
 
 } // otawa

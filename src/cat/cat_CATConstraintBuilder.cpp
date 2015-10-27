@@ -295,7 +295,6 @@ void CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , ContextTree *root)
 		bool inloop = false;
 		if (root->kind()== ContextTree::LOOP )
 				inloop = true;
-		int ident;
 
 		/*
 		 * Call recursively buildLBLOCKSET for each ContextTree children
@@ -314,10 +313,8 @@ void CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , ContextTree *root)
 			for(BasicBlock::InstIter inst(bb); inst; inst++) {
 				address_t adlbloc = inst->address();
 				for (LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
-					if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
-						ident = lbloc->id();
+					if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb()))
 						NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);
-					}
 				}
 			}
 		}

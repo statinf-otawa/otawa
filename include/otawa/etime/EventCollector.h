@@ -31,7 +31,7 @@ namespace otawa { namespace etime {
 class EventCollector {
 public:
 
-	EventCollector(Event *event): evt(event), imprec(0) { }
+	EventCollector(Event *event): imprec(0), evt(event) { }
 	typedef enum {
 		PREFIX_OFF = 0,
 		PREFIX_ON = 1,

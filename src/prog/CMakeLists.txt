@@ -1,5 +1,6 @@
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN")
 set(CMAKE_MACOSX_RPATH true)
+set(CMAKE_CXX_FLAGS "-Wall" )
 
 # sources
 set(libotawa_SOURCES
@@ -18,6 +19,7 @@ set(libotawa_SOURCES
 	"PCGBuilder.cpp"
 	"app_Application.cpp"
 	"app_AddressOption.cpp"
+	"ilp_AbstractSystem.cpp"
 	"ilp_Constraint.cpp"
 	"ilp_Expression.cpp"
 	"ilp_ILPPlugin.cpp"
@@ -25,6 +27,7 @@ set(libotawa_SOURCES
 	"ilp_Output.cpp"
 	"ilp_System.cpp"
 	"ilp_Var.cpp"
+	"proc_AlternativeProcessor.cpp"
 	"proc_Processor.cpp"
 	"proc_CFGProcessor.cpp"
 	"proc_ContextualProcessor.cpp"
@@ -50,6 +53,7 @@ set(libotawa_SOURCES
 	"prop_PropList.cpp"
 	"ipet_BasicConstraintsBuilder.cpp"
 	"ipet_BasicObjectFunctionBuilder.cpp"
+	"ipet_CacheSupport.cpp"
 	"ipet_ConstraintLoader.cpp"
 	"ipet_FlowFactLoader.cpp"
 	"ipet_FlowFactConstraintBuilder.cpp"
@@ -57,8 +61,6 @@ set(libotawa_SOURCES
 	"ipet_IPET.cpp"
 	"ipet_TreePath.cpp"
 	"ipet_TrivialBBTime.cpp"
-	"ipet_TrivialDataCacheManager.cpp"
-	"ipet_TrivialInstCacheManager.cpp"
 	"ipet_VarAssignment.cpp"
 	"ipet_WCETComputation.cpp"
 	"ipet_WCETCountRecorder.cpp"
@@ -175,6 +177,7 @@ set(libotawa_SOURCES
 	"stats_BBStatCollector.cpp"
 	"util_AccessedAddress.cpp"
 	"util_StackAnalysis.cpp"
+	"util_SymAddress.cpp"
 	"clp_analysis.cpp"
 	"clp_symbolic_expr.cpp"
 	"ai.cpp"

@@ -108,6 +108,30 @@ Identifier<fmlevel_t> FIRSTMISS_LEVEL("otawa::FIRSTMISS_LEVEL", FML_MULTI);
 
 
 /**
+ */
+otawa::Output& operator<<(otawa::Output& out, const fmlevel_t &fml) {
+	switch (fml) {
+	case FML_INNER:
+		out << "FML_INNER";
+		break;
+	case FML_OUTER:
+		out << "FML_OUTER";
+		break;
+	case FML_MULTI:
+		out << "FML_MULTI";
+		break;
+	case FML_NONE:
+		out << "FML_NONE";
+		break;
+	default:
+		out << "FML_UNKNOWN";
+		break;
+	}
+	return out;
+}
+
+
+/**
  * @class ACSBuilder
  *
  * This processor builds the MUST and PERS cache states before each basic block.
@@ -154,7 +178,7 @@ p::declare ACSBuilder::reg = p::init("otawa::ACSBuilder", Version(1, 1, 0))
 	.provide(ICACHE_ACS_FEATURE)
 	.require(hard::CACHE_CONFIGURATION_FEATURE);
 
-ACSBuilder::ACSBuilder(p::declare& r) : Processor(r), must_entry(0), level(FML_NONE), unrolling(false) {
+ACSBuilder::ACSBuilder(p::declare& r) : Processor(r), level(FML_NONE), unrolling(false), must_entry(0) {
 }
 
 
@@ -241,6 +265,11 @@ void ACSBuilder::configure(const PropList &props) {
 	level = FIRSTMISS_LEVEL(props);
 	unrolling = PSEUDO_UNROLLING(props);
 	must_entry = CACHE_ACS_MUST_ENTRY(props);
+	if(logFor(LOG_PROC)) {
+		log << "\tlevel = " << level << io::endl;
+		log << "\tunrolling = " << unrolling << io::endl;
+		log << "\tmust_entry = " << must_entry << io::endl;
+	}
 }
 
 void ACSBuilder::processWorkSpace(WorkSpace *fw) {

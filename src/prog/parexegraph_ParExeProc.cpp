@@ -43,19 +43,19 @@ namespace otawa {
       int latency = hstage->getLatency();
       switch(hstage->getType()) {
       case hard::Stage::FETCH:
-	category = ParExeStage::FETCH;
-	break;
+    	  category = ParExeStage::FETCH;
+    	  break;
       case hard::Stage::LAZY:
-	category = ParExeStage::DECODE;
-	break;
+    	  category = ParExeStage::DECODE;
+    	  break;
       case hard::Stage::EXEC:
-	policy = ostages[i]->isOrdered() ? ParExeStage::IN_ORDER : ParExeStage::OUT_OF_ORDER;
-	category = ParExeStage::EXECUTE;
-	latency = 0;
-	break;
+    	  policy = ostages[i]->isOrdered() ? ParExeStage::IN_ORDER : ParExeStage::OUT_OF_ORDER;
+    	  category = ParExeStage::EXECUTE;
+    	  latency = 0;
+    	  break;
       case hard::Stage::COMMIT:
-	category = ParExeStage::COMMIT;
-	break;
+    	  category = ParExeStage::COMMIT;
+    	  break;
       default:
     	  ASSERT(0);
     	  break;
@@ -64,40 +64,48 @@ namespace otawa {
       ParExeQueue *source_queue = NULL;
       ParExeQueue *destination_queue = NULL;
       for(int j = 0; j < oqueues.count(); j++) {
-	if(oqueues[j]->getInput() == hstage)
-	  destination_queue = queue(j);
-	if(oqueues[j]->getOutput() == hstage)
-	  source_queue = queue(j);
+    	  if(oqueues[j]->getInput() == hstage)
+    		  destination_queue = queue(j);
+    	  if(oqueues[j]->getOutput() == hstage)
+    		  source_queue = queue(j);
       }
       
       // Create the stage
       ParExeStage *stage = new ParExeStage(category, latency, hstage->getWidth(), policy, source_queue, destination_queue, hstage->getName(), _pipeline.numStages(), hstage);
       _pipeline.addStage(stage);
-      
+
       if (category == ParExeStage::FETCH)
-	setFetchStage(stage);
-      
-      // Add functional units if required
-      if (category == ParExeStage::EXECUTE) {
-	setExecStage(stage);
-	// Build the FUs
-	const Table<hard::FunctionalUnit *>& fus = hstage->getFUs();
-	for(int j = 0; j < fus.count(); j++) {
-	  hard::FunctionalUnit *fu = fus[j];
-	  stage->addFunctionalUnit(fu->isPipelined(), fu->getLatency(), fu->getWidth(), fu->getName(), fu);
-	}
-	
-	// Build the bindings
-	const Table<hard::Dispatch *>& dispatch = hstage->getDispatch();
-	for(int j = 0; j < dispatch.count(); j++) {
-	  bool found = false;
-	  for(int k = 0; k < fus.count(); k++)
-	    if(fus[k] == dispatch[j]->getFU()) {
-		stage->addBinding(dispatch[j]->getType(), stage->fu(k));
-	      found = true;
-	    }
-	  ASSERT(found);
-	}
+    	  setFetchStage(stage);
+      else {	// other than FETCH
+    	  if (category == ParExeStage::EXECUTE) {
+    		  setExecStage(stage);
+    		  const Table<hard::FunctionalUnit *>& fus = hstage->getFUs();
+    		  for(int j = 0; j < fus.count(); j++) {
+    			  hard::FunctionalUnit *fu = fus[j];
+    			  stage->addFunctionalUnit(fu->isPipelined(), fu->getLatency(), fu->getWidth(), fu->getName(), fu);
+    		  }
+    		  const Table<hard::Dispatch *>& dispatch = hstage->getDispatch();
+    		  for(int j = 0; j < dispatch.count(); j++) {
+    			  bool found = false;
+    			  for(int k = 0; k < fus.count(); k++)
+    				  if(fus[k] == dispatch[j]->getFU()) {
+    					  stage->addBinding(dispatch[j]->getType(), stage->fu(k));
+    					  found = true;
+    				  }
+    			  ASSERT(found);
+    		  }
+    	  }
+    	  if (policy == ParExeStage::IN_ORDER){
+    		  _inorder_stages.add(stage);
+    		  if (category == ParExeStage::EXECUTE){
+    			  for (int i=0 ; i<stage->numFus() ; i++){
+    				  ParExeStage *fu_stage = stage->fu(i)->firstStage();
+    				  if (fu_stage->hasNodes()){
+    					  _inorder_stages.add(fu_stage);
+    				  }
+    			  }
+    		  }
+    	  }
       }
     }
   }

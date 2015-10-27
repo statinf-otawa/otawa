@@ -139,9 +139,6 @@ protected:
 };
 
 
-
-
-static SilentFeature::Maker<CatConstraintBuilder> maker;
 /**
  * This feature ensures that the constraints associated with each data cache block categories
  * has been translated to ILP constraints and that miss count variables are declared.
@@ -153,7 +150,7 @@ static SilentFeature::Maker<CatConstraintBuilder> maker;
  * @li @ref MISS_VAR
  * @ingroup dcache
  */
-SilentFeature CONSTRAINTS_FEATURE("otawa::dcache::CONSTRAINTS_FEATURE", maker);
+p::feature CONSTRAINTS_FEATURE("otawa::dcache::CONSTRAINTS_FEATURE", new Maker<CatConstraintBuilder>());
 
 
 /**
@@ -213,10 +210,7 @@ void CatConstraintBuilder::configure(const PropList& props) {
 /**
  */
 void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
-	const hard::Cache *cache = hard::CACHE_CONFIGURATION(ws)->dataCache();
 	ilp::System *system = ipet::SYSTEM(ws);
-	int penalty = cache->missPenalty();
-	//LBlockSet **lbsets = LBLOCKS(fw);
 
 	// traverse CFG
 	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
@@ -236,36 +230,61 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
 			for(int j = 0; j < ab.fst; j++) {
 				BlockAccess& b = ab.snd[j];
+				// Non-blocking WRITEs
+				if (b.action() == BlockAccess::STORE)
+					continue;
 
                 // Create x_miss variable
+				StringBuffer buf;
                 ilp::Var *miss;
                 if(!_explicit)
                         miss = system->newVar();
                 else
-                        miss = system->newVar(_ << "xm_data_bb" << bb->number() << "_i" << b.instruction()->address() << "_" << j);
-                MISS_VAR(b) = miss;
+                        buf << "xm_data_bb" << bb->number() << "_i" << b.instruction()->address() << "_" << j;
 
                 // Add the constraint depending on the block access category
                 switch(dcache::CATEGORY(b)) {
                 	case cache::ALWAYS_HIT: { // Add constraint: xmiss = 0
+                			if (_explicit) {
+                				buf << "_HIT";
+                				String name = buf.toString();
+                				miss = system->newVar(name);
+                			}
 	                		ilp::Constraint *cons2 = system->newConstraint(ilp::Constraint::EQ,0);
     	            		cons2->addLeft(1, miss);
 						}
                 		break;
 					case cache::FIRST_HIT:
 					case cache::NOT_CLASSIFIED: { // Add constraint: xmiss <= x
+							if (_explicit) {
+								buf << "_NC";
+								if (b.kind() == BlockAccess::ANY)
+									buf << "_ANY";
+								String name = buf.toString();
+								miss = system->newVar(name);
+							}
 							ilp::Constraint *cons3 = system->newConstraint(ilp::Constraint::LE);
     	            		cons3->addLeft(1, miss);
         	        		cons3->addRight(1, ipet::VAR(bb));
 						}
 					break;
                 	case cache::ALWAYS_MISS: { // Add constraint: xmiss = x
+        					if (_explicit) {
+        						buf << "_MISS";
+        						String name = buf.toString();
+        						miss = system->newVar(name);
+        					}
 							ilp::Constraint *cons3 = system->newConstraint(ilp::Constraint::EQ);
     	            		cons3->addLeft(1, miss);
         	        		cons3->addRight(1, ipet::VAR(bb));
 						}
                 		break;
 					case cache::FIRST_MISS: {
+							if (_explicit) {
+								buf << "_FMISS";
+								String name = buf.toString();
+								miss = system->newVar(name);
+							}
 							BasicBlock *header = dcache::CATEGORY_HEADER(b);
 							ASSERT(header);
 
@@ -288,6 +307,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 				break;
                 }
 
+                MISS_VAR(b) = miss;
 			}
 		}
 	}

@@ -35,8 +35,8 @@ public:
 	inline t::uint32 bits(void) const { return b; }
 	inline void set(int n) { b |= 1 << n; }
 	inline void clear(int n) { b &= ~(1 << n); }
-	inline bool bit(int n) { return b & (1 << n); }
-	string toString(int n);
+	inline bool bit(int n) const { return b & (1 << n); }
+	string toString(int n) const;
 
 private:
 	t::uint32 b;

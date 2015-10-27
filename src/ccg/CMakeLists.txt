@@ -1,5 +1,6 @@
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../..")
 set(CMAKE_MACOSX_RPATH true)
+set(CMAKE_CXX_FLAGS "-Wall" )
 
 set(ccg_SOURCES
     ccg_Builder.cpp
@@ -7,6 +8,7 @@ set(ccg_SOURCES
     ccg_DFA.cpp
     ccg_Edge.cpp
     ccg_hook.cpp
+    ccg_LBlockBuilder.cpp
     ccg_Node.cpp
 )
 

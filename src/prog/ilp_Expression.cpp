@@ -92,6 +92,26 @@ void Expression::sub(const Expression *expr, coef_t coef) {
 
 
 /**
+ * Add an expression to an existing expression.
+ * @param e		Added expression.
+ */
+void Expression::add(const Expression& e) {
+	for(Iterator i(&e); i; i++)
+		add(*i);
+}
+
+
+/**
+ * Subtract an expression to an existing expression.
+ * @param e		Subtracted expression.
+ */
+void Expression::sub(const Expression& e) {
+	for(Iterator i(&e); i; i++)
+		sub(*i);
+}
+
+
+/**
  * Multiply all terms of the expression by the given coefficient.
  * @param coef	Coefficient to multiply with.
  */

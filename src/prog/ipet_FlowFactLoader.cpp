@@ -61,12 +61,12 @@ p::declare FlowFactLoader::reg = p::init("otawa::ipet::FlowFactLoader", Version(
 FlowFactLoader::FlowFactLoader(p::declare& r)
 :	ContextualProcessor(r),
  	lines_available(false),
- 	total(0),
  	total_loop(0),
- 	line_loop(0),
- 	min(0),
  	found_loop(0),
- 	max(0)
+ 	line_loop(0),
+ 	max(0),
+ 	total(0),
+ 	min(0)
 {
 }
 

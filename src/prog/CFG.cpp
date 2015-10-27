@@ -363,7 +363,7 @@ CFG::CFG(void):
 
 /**
  * Get some label to identify the CFG.
- * @return	CFG label or any other identification way.
+ * @return	CFG label (if any) or empty string.
  */
 String CFG::label(void) {
 	if(!ent) {
@@ -380,10 +380,20 @@ String CFG::label(void) {
 			if(!id)
 				id = LABEL(first);
 		}
-		if(!id)
-			id = _ << "__0x" << ent->address();
 	}
 	return id;
+}
+
+
+/**
+ * Build a name that identifies this CFG and is valid C name.
+ * @return	Name of the CFG.
+ */
+string CFG::name(void) {
+	string name = label();
+	if(!name)
+		name = _ << "__0x" << ent->address();
+	return name;
 }
 
 
@@ -478,7 +488,7 @@ void CFG::scan(void) {
 				if(vtarget)
 					new Edge(vbb, vtarget, edge->kind());
 				else {		// calling jump to a function
-					Edge *nedge = new Edge(vbb, edge->target(), Edge::CALL);
+					new Edge(vbb, edge->target(), Edge::CALL);
 					vbb->flags |= BasicBlock::FLAG_Call;
 					new Edge(vbb, &_exit, Edge::VIRTUAL);
 				}

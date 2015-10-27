@@ -29,14 +29,34 @@
 #include <otawa/prog/ProgItem.h>
 #include <otawa/properties.h>
 #include <otawa/prog/features.h>
+#include <otawa/hard/Platform.h>
 
 namespace otawa {
 
 // Declaration
 class Inst;
 //class PseudoInst;
-namespace hard { class Register; }
+namespace hard {
+	class Platform;
+	class Register;
+}
 namespace sem { class Block; }
+
+// Register usage
+typedef genstruct::Vector<t::uint16> RegSet;
+class RegIter: public PreIterator<RegIter, const hard::Register *> {
+public:
+	inline RegIter(const RegSet& s, hard::Platform *p): set(s), i(0), pf(p) { }
+	//inline RegIter(const RegSet& s, WorkSpace *ws): set(s), i(0), pf(ws->process()->platform()) { }
+	inline bool ended(void) const { return i >= set.length(); }
+	inline const hard::Register *item(void) const { return pf->findReg(set[i]); }
+	inline void next(void) { i++; }
+private:
+	const RegSet& set;
+	int i;
+	hard::Platform *pf;
+};
+
 
 // Inst class
 class Inst: public ProgItem {
@@ -65,6 +85,7 @@ public:
 	static const kind_t IS_INDIRECT	= 0x10000;
 	static const kind_t IS_UNKNOWN	= 0x20000;
 	static const kind_t IS_ATOMIC	= 0x40000;
+	static const kind_t IS_BUNDLE	= 0x80000;
 
 	// null instruction
 	static Inst& null;
@@ -99,21 +120,28 @@ public:
 	inline bool isIndirect(void) { return oneOf(IS_INDIRECT); }
 	inline bool isUnknown(void) { return oneOf(IS_UNKNOWN); }
 	inline bool isAtomic(void) { return oneOf(IS_ATOMIC); }
-	 
+	inline bool isBundle(void) { return oneOf(IS_BUNDLE); }
+	inline bool isBundleEnd(void) { return !oneOf(IS_BUNDLE); }
+
 	// other accessors
-	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
-	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
 	virtual Inst *target(void);
 	virtual Type *type(void);
 	virtual void semInsts(sem::Block& block);
+	virtual int semInsts(sem::Block& block, int temp);
+	virtual int semWriteBack(sem::Block& block, int temp);
 	virtual delayed_t delayType(void);
 	virtual int delaySlots(void);
+	virtual void readRegSet(RegSet& set);
+	virtual void writeRegSet(RegSet& set);
 
 	// ProgItem overload
 	virtual Inst *toInst(void);
 
 	// deprecated
+	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
+	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
 	virtual int multiCount(void);
+
 
 protected:
 	static const elm::genstruct::Table<hard::Register *> no_regs;

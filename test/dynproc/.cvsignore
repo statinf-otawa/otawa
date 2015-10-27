@@ -1,8 +1,0 @@
-dyn.la
-Makefile.in
-test_dynproc
-dyn.lo
-Makefile
-.libs
-.deps
-.otawa

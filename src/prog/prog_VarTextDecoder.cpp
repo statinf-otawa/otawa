@@ -87,7 +87,7 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 				}
 				else {
 					if(logFor(LOG_CFG))
-						log << "\tprocessing function \"" << sym->name() << " at " << sym->address() << io::endl;
+						log << "\tprocessing function \"" << sym->name() << "\" at " << sym->address() << io::endl;
 					Inst *inst = ws->findInstAt(sym->address());
 					if(inst)
 						processEntry(ws, sym->address());
@@ -100,10 +100,8 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 	// cleanup MARKER
 	for(Process::FileIter file(ws->process()); file; file++)
 		for(File::SegIter seg(file); seg; seg++)
-			for(Segment::ItemIter item(seg); item; item++) {
-				TRACE("DEBUG: cleaning " << item->address());
+			for(Segment::ItemIter item(seg); item; item++)
 				item->removeAllProp(&MARKER);
-			}
 }
 
 

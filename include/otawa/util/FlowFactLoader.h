@@ -67,15 +67,13 @@ protected:
 	void onWarning(const string& message);
 
 	virtual void onCheckSum(const String& name, t::uint32 sum);
-	virtual void onLoop(
-		address_t addr,
-		int count,
-		int total,
-		const ContextualPath& path);
+	virtual void onLibrary(void);
+	virtual void onLoop(address_t addr, int count, int total, const ContextualPath& path);
 	virtual void onReturn(address_t addr);
 	virtual void onNoReturn(address_t addr);
 	virtual void onNoReturn(String name);
 	virtual void onNoCall(Address address);
+	virtual void onNoInline(Address address, bool no_inline, const ContextualPath& path);
 	virtual void onIgnoreSeq(Address address);
 	virtual void onIgnoreControl(Address address);
 	virtual void onMultiBranch(Address control, const Vector<Address>& target);
@@ -90,6 +88,7 @@ protected:
 	virtual void onMemoryAccess(Address iaddr, Address lo, Address hi, const ContextualPath& path);
 	virtual void onRegSet(string name, const dfa::Value& value);
 	virtual void onMemSet(Address addr, const Type *type, const dfa::Value& value);
+	virtual void onSetInlining(Address address, bool policy, const ContextualPath& path);
 
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void configure (const PropList &props);
@@ -104,6 +103,7 @@ private:
 	bool mandatory;
 	bool lines_available;
 	dfa::State *state;
+	bool lib;
 
 	// F4 support
 	void loadF4(const string& path) throw(ProcessorException);
@@ -122,6 +122,7 @@ private:
 	void scanXBody(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXCall(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	string xline(xom::Node *element);
+	void scanNoInline(xom::Element *element, ContextualPath& cpath, bool no_inline);
 	void scanIgnoreEntry(xom::Element *element);
 	void scanMultiBranch(xom::Element *element, ContextualPath& cpath);
 	void scanMultiCall(xom::Element *element, ContextualPath& cpath);
@@ -131,6 +132,7 @@ private:
 	void scanMemAccess(xom::Element *element);
 	void scanRegSet(xom::Element *element);
 	void scanMemSet(xom::Element *element);
+	void scanSetInlining(xom::Element *element, ContextualPath& cpath, bool policy);
 };
 
 // Properties
@@ -149,6 +151,8 @@ extern Identifier<int> MAX_ITERATION;
 extern Identifier<int> MIN_ITERATION;
 extern Identifier<int> TOTAL_ITERATION;
 extern Identifier<bool> NO_CALL;
+extern Identifier<bool> NO_INLINE;
+extern Identifier<bool> INLINING_POLICY;
 extern Identifier<bool> IGNORE_CONTROL;
 extern Identifier<bool> IGNORE_SEQ;
 extern Identifier<Address> BRANCH_TARGET;

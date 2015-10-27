@@ -1,1 +1,7 @@
+#ifndef OTAWA_CONFIG_H
+#define OTAWA_CONFIG_H
 
+#define OTAWA_VERSION	"@OTAWA_VERSION@"
+#define OTAWA_DATE		"@OTAWA_DATE@"
+
+#endif	// OTAWA_CONFIG_H

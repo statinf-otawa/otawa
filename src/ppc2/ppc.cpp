@@ -38,6 +38,7 @@
 #include <otawa/loader/powerpc.h>
 #include <otawa/prog/sem.h>
 #include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/program.h>
 
 extern "C"
 {
@@ -364,7 +365,7 @@ class Inst: public otawa::Inst {
 public:
 
 	inline Inst(Process& process, kind_t kind, Address addr)
-		: proc(process), _kind(kind), _addr(addr), isRegsDone(false) { }
+		: _kind(kind), proc(process), _addr(addr), isRegsDone(false) { }
 
 	/**
 	 */
@@ -539,12 +540,17 @@ Process::Process(Manager *manager, hard::Platform *platform, const PropList& pro
 :	otawa::Process(manager, props),
  	_start(0),
  	_platform(platform),
+ 	_ppcPlatform(0),
 	_ppcMemory(0),
+	_ppcDecoder(0),
+	argc(0),
+	argv(0),
+	envp(0),
+	no_stack(true),
 	init(false),
 	map(0),
-	no_stack(true),
-	vle_enabled(otawa::ppc::VLE_ENABLED(props)),
-	_gelFile(0)
+	_gelFile(0),
+	vle_enabled(otawa::ppc::VLE_ENABLED(props))
 {
 	ASSERTP(manager, "manager required");
 	ASSERTP(platform, "platform required");
@@ -624,21 +630,13 @@ void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address>
 		return;
 	dwarf_line_iter_t iter;
 	dwarf_location_t loc, ploc = { 0, 0, 0, 0 };
-	for (loc = dwarf_first_line(&iter, map); loc.file; loc = dwarf_next_line(&iter))
-	{
+	for(loc = dwarf_first_line(&iter, map); loc.file; loc = dwarf_next_line(&iter)) {
 		cstring lfile = loc.file;
-		if (file == loc.file || lfile.endsWith(file))
-		{
-			if (line == loc.line)
-			{
-				//cerr << "added (1) " << loc.file << ":" << loc.line << " -> " << loc.low_addr << io::endl;
+		if(file == loc.file || lfile.endsWith(file)) {
+			if(t::uint32(line) == loc.line)
 				addresses.add(pair(Address(loc.low_addr), Address(loc.high_addr)));
-			}
-			else if(loc.file == ploc.file && line > ploc.line && line < loc.line)
-			{
-				//cerr << "added (2) " << ploc.file << ":" << ploc.line << " -> " << ploc.low_addr << io::endl;
+			else if(loc.file == ploc.file && t::uint32(line) > ploc.line && t::uint32(line) < loc.line)
 				addresses.add(pair(Address(ploc.low_addr), Address(ploc.high_addr)));
-			}
 		}
 		ploc = loc;
 	}
@@ -697,7 +695,7 @@ File *Process::loadFile(elm::CString path) {
 
 	// build the GEL image
 	LTRACE;
-	_gelFile = gel_open(&path, NULL, 0);
+	_gelFile = gel_open(&path, NULL, GEL_OPEN_QUIET);
 	if(!_gelFile)
 		throw LoadException(_ << "cannot load \"" << path << "\": " << gel_strerror());
 	gel_image_t *gimage = gel_image_load(_gelFile, &genv, 0);
@@ -709,7 +707,7 @@ File *Process::loadFile(elm::CString path) {
 	// build the GLISS image
 	gel_image_info_t iinfo;
 	gel_image_infos(gimage, &iinfo);
-	for(int i = 0; i < iinfo.membersnum; i++) {
+	for(t::uint32 i = 0; i < iinfo.membersnum; i++) {
 		gel_cursor_t cursor;
 		gel_block2cursor(iinfo.members[i], &cursor);
 		ppc_mem_write(_ppcMemory,

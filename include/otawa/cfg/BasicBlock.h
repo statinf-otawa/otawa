@@ -64,21 +64,57 @@ protected:
 	};
 
 public:
-	// InstIterator class
+	class Bundle;
+	class BundleIter;
+
 	class InstIter: public PreIterator<InstIter, Inst *> {
 	public:
 		inline InstIter(void): inst(0) { }
 		inline InstIter(const BasicBlock *bb)
 			{ ASSERT(bb); if(bb->isEnd()) inst = 0; else { inst = bb->firstInst(); top = bb->topAddress(); } }
-		inline InstIter(const InstIter& iter): inst(iter.inst) { }
+		//inline InstIter(const InstIter& iter): inst(iter.inst) { }
 		inline bool ended(void) const { return !inst; }
 		inline Inst *item(void) const { return inst; }
 		inline void next(void)  { if(inst->topAddress() >= top) inst = 0; else inst = inst->nextInst(); }
 	private:
+		friend class Bundle;
+		inline InstIter(Inst *i, Address t): inst(i), top(t) { }
 		otawa::Inst *inst;
 		Address top;
 	};
 	typedef InstIter InstIterator;
+
+	class Bundle {
+	public:
+		inline Address address(void) const { return fi->address(); }
+		inline Address topAddress(void) const { return li->topAddress(); }
+		inline t::uint32 size(void) const { return topAddress() - address(); }
+		inline InstIter insts(void) const { return InstIter(fi, li->topAddress()); }
+		void semInsts(sem::Block& block);
+		void readRegSet(RegSet& set);
+		void writeRegSet(RegSet& set);
+
+	private:
+		friend class BundleIter;
+		inline Bundle(void): fi(0), li(0) { }
+		inline void move(Inst *inst, Address top)
+			{ fi = inst; li = fi; while(!li->isBundleEnd() && li->topAddress() < top) li = li->nextInst(); }
+		inline void end(void) { fi = li = 0; }
+		Inst *fi, *li;
+	};
+
+	class BundleIter: public PreIterator<BundleIter, Bundle> {
+	public:
+		inline BundleIter(void) { }
+		inline BundleIter(BasicBlock *bb)
+			{ ASSERT(bb); if(!bb->isEnd()) { top = bb->topAddress(); b.move(bb->firstInst(), top); } }
+		inline bool ended(void) const { return !b.li; }
+		inline const Bundle& item(void) const { return b; }
+		inline void next(void)  { if(b.li->topAddress() >= top) b.end(); else b.move(b.li->nextInst(), top); }
+	private:
+		Bundle b;
+		Address top;
+	};
 
 protected:
 	static BasicBlock& null_bb;
@@ -101,7 +137,7 @@ public:
 	inline bool isExit(void) const { return flags & FLAG_Exit; };
 	inline bool isEnd(void) const { return flags & (FLAG_Entry | FLAG_Exit); };
 	inline bool isConditional(void) const { return flags & FLAG_Cond; }
-	inline address_t address(void) const { return first->address(); };
+	inline Address address(void) const { return first->address(); };
 	inline Address topAddress(void) const { return address() + size(); }
 	virtual int countInsts(void) const;
 	inline t::uint32 size(void) const { return _size; }

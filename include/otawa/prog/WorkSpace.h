@@ -68,7 +68,7 @@ class WorkSpace: public PropList {
 public:
 	WorkSpace(Process *_proc);
 	WorkSpace(const WorkSpace *ws);
-	~WorkSpace(void);
+	virtual ~WorkSpace(void);
 	inline Process *process(void) const { return &proc; };
 
 	// Process overload

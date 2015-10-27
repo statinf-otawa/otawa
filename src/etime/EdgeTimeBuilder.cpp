@@ -28,9 +28,6 @@
 
 namespace otawa { namespace etime {
 
-Identifier<bool> PREDUMP("otawa::etime::PREDUMP", false);
-
-
 io::Output& operator<<(io::Output& out, EdgeTimeBuilder::place_t p) {
 	static cstring msgs[] = {
 			"in prefix",
@@ -57,7 +54,7 @@ io::Output& operator<<(io::Output& out, EdgeTimeBuilder::place_t p) {
  * @param n		Number of bits in the configuration.
  * @return		String display of the configuration.
  */
-string Config::toString(int n) {
+string Config::toString(int n) const {
 	StringBuffer buf;
 	for(int i = 0; i < n; i++)
 		buf << (bit(i) ? "+" : "-");
@@ -272,9 +269,14 @@ EventCollector::case_t EdgeTimeBuilder::make(const Event *e, EdgeTimeBuilder::pl
  * the gap between max of best set and min of worst set.
  *
  * @par Provided Features
- * @li @ref ipet::BB_TIME_FEATURE
+ * @li @ref etime::EDGE_TIME_FEATURE
+ * @li @ref ipet::OBJECT_FUNCTION_FEATURE
  *
  * @par Required Features
+ * @li @ref ipet::ASSIGNED_VARS_FEATURE
+ * @li @ref ipet::ILP_SYSTEM_FEATURE
+ * @li @ref WEIGHT_FEATURE
+ * @li @ref EVENTS_FEATURE
  *
  * @ingroup etime
  */
@@ -294,14 +296,26 @@ p::declare EdgeTimeBuilder::reg = p::init("otawa::etime::EdgeTimeBuilder", Versi
 /**
  */
 EdgeTimeBuilder::EdgeTimeBuilder(p::declare& r)
-: GraphBBTime<ParExeGraph>(r), graph(0), source(0), target(0), seq(0) {
-}
+:	GraphBBTime<ParExeGraph>(r),
+ 	_explicit(false),
+ 	sys(0),
+ 	predump(false),
+ 	event_th(0),
+ 	edge(0),
+ 	seq(0),
+ 	graph(0),
+ 	bnode(0),
+ 	bedge(0),
+ 	source(0),
+ 	target(0)
+{ }
 
 
 void EdgeTimeBuilder::configure(const PropList& props) {
 	GraphBBTime<ParExeGraph>::configure(props);
 	_explicit = ipet::EXPLICIT(props);
 	predump = PREDUMP(props);
+	event_th = EVENT_THRESHOLD(props);
 }
 
 
@@ -309,6 +323,7 @@ void EdgeTimeBuilder::configure(const PropList& props) {
  */
 void EdgeTimeBuilder::setup(WorkSpace *ws) {
 	sys = ipet::SYSTEM(ws);
+
 }
 
 
@@ -337,22 +352,22 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 /**
  * This method is called to build the parametric execution graph.
- * As a default, build a usual @ref ParExeGraph but it may be overriden
+ * As a default, build a usual @ref ParExeGraph but it may be overridden
  * to build a custom graph.
  * @param seq	Sequence to build graph for.
  * @return		Built graph.
  */
 ParExeGraph *EdgeTimeBuilder::make(ParExeSequence *seq) {
 	PropList props;
-	ParExeGraph *graph = new ParExeGraph(this->workspace(), _microprocessor, seq, props);
-	graph->build(seq);
+	ParExeGraph *graph = new ParExeGraph(this->workspace(), _microprocessor, &_hw_resources, seq, props);
+	graph->build();
 	return graph;
 }
 
 
 /**
  * Called to cleanup a graph allocated by a call to @ref make().
- * @param grapĥ		Graph to clean.
+ * @param grap	Graph to clean.
  */
 void EdgeTimeBuilder::clean(ParExeGraph *graph) {
 	delete graph;
@@ -367,7 +382,6 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 
 	// initialize the sequence
 	bnode = 0;
-	int index = 0;
 	seq = new ParExeSequence();
 
 	// compute source
@@ -385,34 +399,144 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	else
 		target = edge->target();
 
-	// fill with previous
-	if(source)
-		for(BasicBlock::InstIterator inst(source); inst; inst++) {
-			ParExeInst * par_exe_inst = new ParExeInst(inst, source, PROLOGUE, index++);
-			seq->addLast(par_exe_inst);
-		}
-
-	// fill with current block
-	for(BasicBlock::InstIterator inst(target); inst; inst++) {
-		ParExeInst * par_exe_inst = new ParExeInst(inst, target, BODY, index++);
-		seq->addLast(par_exe_inst);
-	}
-
-	// build the graph
-	PropList props;
-	graph = make(seq);
-	ASSERTP(graph->firstNode(), "no first node found: empty execution graph");
-
 	// collect and sort events
 	all_events.clear();
 	if(source)
 		sortEvents(all_events, source, IN_PREFIX);
 	sortEvents(all_events, target, IN_BLOCK, edge);
+
+	// usual simple case: few events
+	//if(countVarEvents(all_events) <= event_th) {
+		int index = 0;
+
+		// fill the prefix
+		if(source)
+			for(BasicBlock::InstIterator inst(source); inst; inst++) {
+				ParExeInst * par_exe_inst = new ParExeInst(inst, source, PROLOGUE, index++);
+				seq->addLast(par_exe_inst);
+			}
+
+		// fill the current block
+		for(BasicBlock::InstIterator inst(target); inst; inst++) {
+			ParExeInst * par_exe_inst = new ParExeInst(inst, target, otawa::BLOCK, index++);
+			seq->addLast(par_exe_inst);
+		}
+
+		// perform the computation
+		processSequence();
+		return;
+	//}
+#	if 0
+	// remove prefix case
+	all_events.clear();
+	sortEvents(all_events, target, IN_BLOCK, edge);
+	if(countVarEvents(all_events)) {
+
+		// fill the current block
+		int index = 0;
+		for(BasicBlock::InstIterator inst(target); inst; inst++) {
+			ParExeInst * par_exe_inst = new ParExeInst(inst, target, BODY, index++);
+			seq->addLast(par_exe_inst);
+		}
+
+		// perform the computation
+		processSequence();
+		return;
+	}
+
+	// split case
+
+	// find bounds in event list
+	event_list_t events = all_events;
+	all_events.clear();
+	genstruct::Vector<Inst *> bnds;
+	int ecnt = 0, instp = 0;
+	Inst *inst = 0;
+	for(int i = 0; i < events.length(); i++) {
+
+		// determine current instruction
+		if(inst != events[i].fst->inst()) {
+
+			// too many events ?
+			if(ecnt >= event_th) {
+				if(bnds)
+					bnds.add(inst);
+				else
+					bnds.add(events[i].fst->inst());
+			}
+
+			// process next instruction
+			inst = events[i].fst->inst();
+			instp = i;
+		}
+
+		// variable event?
+		if(events[i].fst->occurrence() == SOMETIMES)
+			ecnt++;
+	}
+	if(ecnt == 0)	// no more event, aggregate
+		bnds.pop();
+
+	// process the different blocks
+	Inst *next = bnds ? bnds[0] : 0;
+	int ei = 0, index = 0, bi = 0;
+	for(BasicBlock::InstIter inst(target); inst; inst++) {
+
+		// limit found?
+		if(*inst == next) {
+
+			// launch computation
+			processSequence();
+			next = bnds ? bnds[bi++] : 0;
+
+			// reset state
+			all_events.clear();
+			seq = new ParExeSequence();
+		}
+
+		// append current instruction
+		ParExeInst * par_exe_inst = new ParExeInst(inst, target, BODY, index++);
+		seq->addLast(par_exe_inst);
+		while(ei < events.length() && events[ei].fst->inst() == *inst)
+			all_events.add(events[ei++]);
+	}
+
+	// compute for last block
+	processSequence();
+#	endif
+}
+
+
+/**
+ * Count the number of variable events in the event list.
+ * @param events	Event list to process.
+ * @return			Number of variable events.
+ */
+int EdgeTimeBuilder::countVarEvents(const event_list_t& events) {
+	int cnt = 0;
+	for(int i = 0; i < events.length(); i++)
+		if(events[i].fst->occurrence() == SOMETIMES)
+			cnt++;
+	return cnt;
+}
+
+
+/**
+ * Compute and process the time for the given sequence.
+ */
+void EdgeTimeBuilder::processSequence(void) {
+
+	// log used events
 	if(logFor(LOG_BB))
 		for(genstruct::Vector<event_t>::Iterator e(all_events); e; e++)
-			cerr << "\t\t\t\t" << (*e).fst->inst()->address() << " -> "
-				 << (*e).fst->name() << " (" << (*e).fst->detail() << ") in "
+			log << "\t\t\t\t" << (*e).fst->inst()->address() << " -> "
+				 << (*e).fst->name() << " (" << (*e).fst->detail() << ") "
 				 << (*e).snd << io::endl;
+
+	// build the graph
+	PropList props;
+	graph = make(seq);
+	ASSERTP(graph->firstNode(), "no first node found: empty execution graph");
 
 	// applying static events (always, never)
 	events.clear();
@@ -423,7 +547,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 		Event *evt = (*event).fst;
 
 		// find the instruction
-		while((*event).snd != IN_PREFIX && inst->codePart() != otawa::BODY) {
+		while((*event).snd != IN_PREFIX && inst->codePart() != otawa::BLOCK) {
 			inst++;
 			ASSERT(inst);
 		}
@@ -441,16 +565,17 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 		}
 	}
 
-	// check number of events limit
-	// TODO	fall back: analyze the block alone, split the block
-	if(events.count() >= 32)
-		throw ProcessorException(*this, _ << "too many events on edge " << edge);
 	if(logFor(LOG_BB)) {
 		log << "\t\t\t\tdynamic events = " << events.count() << io::endl;
 		for(int i = 0; i < events.count(); i++)
 			log << "\t\t\t\t" << events[i].fst->inst()->address() << "\t" << events[i].fst->name()
 				<< " " << events[i].snd << io::endl;
 	}
+
+	// check number of events limit
+	// TODO	fall back: analyze the block alone, split the block
+	if(events.count() >= 32)
+		throw ProcessorException(*this, _ << "too many events on edge " << edge);
 
 	// simple trivial case
 	if(events.isEmpty()) {
@@ -463,7 +588,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	// compute all cases
 	t::uint32 prev = 0;
 	genstruct::Vector<ConfigSet> confs;
-	for(t::uint32 mask = 0; mask < 1 << events.count(); mask++) {
+	for(t::uint32 mask = 0; mask < t::uint32(1 << events.count()); mask++) {
 
 		// adjust the graph
 		for(int i = 0; i < events.count(); i++) {
@@ -595,8 +720,8 @@ int EdgeTimeBuilder::splitConfs(const config_list_t& confs, const event_list_t& 
 	// initialization
 	int p = 1, best_p = -1;
 	float best_cost = type_info<float>::min;
-	int min_low = confs[0].time(), max_low = confs[0].time(), cnt_low = confs[0].count();
-	int min_high = confs[1].time(), max_high = confs[confs.length() - 1].time();
+	int min_low = confs[0].time(), max_low = confs[0].time();	// , cnt_low = confs[0].count();
+	int min_high = confs[1].time();								// , max_high = confs[confs.length() - 1].time();
 	int cnt_high = 0;
 	for(int i = 1; i < confs.length(); i++)
 		cnt_high += confs[i].count();
@@ -631,7 +756,7 @@ int EdgeTimeBuilder::splitConfs(const config_list_t& confs, const event_list_t& 
 
 /**
  * Display the list of configuration sorted by cost.
- * @param confs		List of configuration to displayy.
+ * @param confs		List of configuration to display.
  */
 void EdgeTimeBuilder::displayConfs(const genstruct::Vector<ConfigSet>& confs, const event_list_t& events) {
 	for(int i = 0; i < confs.length(); i++) {
@@ -682,13 +807,18 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 		inst->fetchNode()->setLatency(inst->fetchNode()->latency() + event->cost());
 		break;
 
-	case MEM:
-		for(ParExeInst::NodeIterator node(inst); node; node++)
-			if(node->stage()->unit()->isMem()) {
-				node->setLatency(node->latency() + event->cost() - 1);
-				break;
-			}
-		break;
+	case MEM: {
+			bool found = false;
+			for(ParExeInst::NodeIterator node(inst); node; node++)
+				if(node->stage()->unit()->isMem()) {
+					node->setLatency(node->latency() + event->cost() - 1);
+					found = true;
+					break;
+				}
+			if(!found)
+				throw otawa::Exception("no memory stage / FU found in this pipeline");
+			break;
+		}
 
 	case BRANCH:
 		bedge =  new ParExeEdge(getBranchNode(), inst->fetchNode(), ParExeEdge::SOLID, 0, pred_msg);
@@ -763,8 +893,8 @@ void EdgeTimeBuilder::applyFloppySplit(const config_list_t& confs) {
 	// initialization
 	int p = 1, best_p = -1;
 	float best_cost = type_info<float>::min;
-	int min_low = confs[0].time(), max_low = confs[0].time(), cnt_low = confs[0].count();
-	int min_high = confs[1].time(), max_high = confs[confs.length() - 1].time();
+	int min_low = confs[0].time(), max_low = confs[0].time();		// , cnt_low = confs[0].count();
+	int min_high = confs[1].time();									// , max_high = confs[confs.length() - 1].time();
 	int cnt_high = 0;
 	for(int i = 1; i < confs.length(); i++)
 		cnt_high += confs[i].count();
@@ -788,7 +918,8 @@ void EdgeTimeBuilder::applyFloppySplit(const config_list_t& confs) {
 			sep_factor * (min_high - max_low)
 			- span_factor * (max_low - min_low)
 			+-int(feasible) * (min_high - max_low);
-		cerr << "\t\t\t p = " << p << " -> " << cost << io::endl;
+		if (isVerbose())
+			log << "\t\t\t p = " << p << " -> " << cost << io::endl;
 		//log << "DEBUG: p = " << p << ", cost = " << cost << ", Ml = " << max_low << ", mh = " << min_high << ", ml = " << min_low << ", f = " << set.isFeasible(events.length()) << io::endl;
 		if(cost > best_cost) {
 			best_p = p;
@@ -873,7 +1004,8 @@ void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
 			best_cost = cost;
 		}
 	}
-	cerr << "\t\t\tbest_p = " << best_p << io::endl;
+	if (logFor(LOG_BB))
+		cerr << "\t\t\tbest_p = " << best_p << io::endl;
 
 	// look in the split
 	ConfigSet hts;
@@ -908,8 +1040,8 @@ void EdgeTimeBuilder::applyStrictSplit(const config_list_t& confs) {
 	// initialization
 	int p = 1, best_p = -1;
 	float best_cost = type_info<float>::min;
-	int min_low = confs[0].time(), max_low = confs[0].time(), cnt_low = confs[0].count();
-	int min_high = confs[1].time(), max_high = confs[confs.length() - 1].time();
+	int min_low = confs[0].time(), max_low = confs[0].time();		//, cnt_low = confs[0].count();
+	int min_high = confs[1].time();									//, max_high = confs[confs.length() - 1].time();
 	int cnt_high = 0;
 	for(int i = 1; i < confs.length(); i++)
 		cnt_high += confs[i].count();
@@ -1090,5 +1222,20 @@ void EdgeTimeBuilder::contributeConst(void) {
  * of events has been added to the ILP system.
  */
 p::feature EDGE_TIME_FEATURE("otawa::etime::EDGE_TIME_FEATURE", new Maker<EdgeTimeBuilder>());
+
+
+/**
+ * This property is used to configure the @ref EDGE_TIME_FEATURE and ask to dump the generated
+ * execution graphs.
+ */
+Identifier<bool> PREDUMP("otawa::etime::PREDUMP", false);
+
+
+/**
+ * This property is used to configure the @ref EDGE_TIME_FEATURE  and determine the maximum number of
+ * events to consider to time a block. If a value of n is passed, at most 2^n times will be computed
+ * and if a block gets a bigger number of events, it will be split.
+ */
+Identifier<int> EVENT_THRESHOLD("otawa::etime::EVENT_THRESHOLD", 12);
 
 } }	// otawa::etime

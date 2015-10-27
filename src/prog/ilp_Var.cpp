@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-07, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <otawa/ilp/Var.h>
@@ -30,6 +30,7 @@ namespace otawa { namespace ilp {
  * A variable is an identifier used for performing ILP computation.
  * A variable may named or not and may inserted as any property. Have just
  * a thought about releasing it.
+ * @ingroup ilp
  */
 
 
@@ -141,7 +142,7 @@ double Var::eval(System *sys) {
 
 /**
  */
-io::Output operator<<(io::Output& out, Var::type_t type) {
+io::Output& operator<<(io::Output& out, Var::type_t type) {
 	cstring msgs[] = {
 		"null",
 		"int",

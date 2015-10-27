@@ -70,6 +70,9 @@ extern int fft_line;
  * @li @ref NO_RETURN
  * @li @ref TOTAL_ITERATION
  * @li @ref PRESERVED
+ * @li @ref NO_INLINE
+ * @li @ref INLINING_POLICY
+ * @li @ref ACCESS_RANGE
  */
 
 /**
@@ -150,7 +153,35 @@ extern int fft_line;
  * @code
  * <nocall LOCATION/>
  * @endcode
- * When OTAWA encounters a call to the located function, it will be ignored
+ * When OTAWA encounters a call to the located function, it will be ignored.
+ *
+ * @code
+ * <doinline LOCATION/>
+ * @endcode
+ * When virtualizing, calls to the located function will be inlined.
+ *
+ * @code
+ * <noinline LOCATION/>
+ * @endcode
+ * When virtualizing, calls to the located function will not be inlined.
+ *
+ * @code
+ * <inlining-on LOCATION/>
+ * @endcode
+ * When virtualizing the located function, default policy will be set to true.
+ *
+ * @li <b><tt>memory access INST_ADDRESS1 LOW_ADDRESS .. HIGH_ADDRESS [in STEP1 / STEP2 / ...] ;</tt></b> @n
+ * Sets the memory accessed by the instruction at INST_ADDRESS
+ * to the range from LOW_ADDRESS up to third HIGH_ADDRESS,
+ * optionally in the given context.
+ *
+ * @li <b><tt>memory TYPE ADDRESS = VALUE ;</tt></b> @n
+ * Sets the memory at ADDRESS to the VALUE of type TYPE.
+ *
+ * @code
+ * <inlining-off LOCATION/>
+ * @endcode
+ * When virtualizing the located function, default policy will be set to false.
  *
  * @code
  * <function LOCATION>
@@ -353,6 +384,20 @@ extern int fft_line;
  * It may be useful to remove call to intrusive initialization function like
  * "__eabi" in main.
  *
+ * @li <b><tt>doinline FUNCTION_ADDRESS ;</tt></b> @n
+ * When virtualizing, calls to the given function will be inlined.
+ *
+ * @li <b><tt>noinline FUNCTION_ADDRESS ;</tt></b> @n
+ * When virtualizing, calls to the given function will not be inlined.
+ *
+ * @li <b><tt>inlining-on FUNCTION_ADDRESS ;</tt></b> @n
+ * When virtualizing the given function, default inlining policy
+ * will be set to true.
+ *
+ * @li <b><tt>inlining-off FUNCTION_ADDRESS ;</tt></b> @n
+ * When virtualizing the given function, default inlining policy
+ * will be set to false.
+ *
  * @li <b><tt>preserve ADDRESS ;</tt></b> @n
  * Ensure that flow fact loader will not change the addressed instruction.
  *
@@ -361,6 +406,12 @@ extern int fft_line;
  * possibly causing problems in instruction decoding. This problem may be avoided
  * by marking such symbols with this directive.
  *
+ * @li <b><tt>library;</tt></b> @n
+ * This command is marker informing that the current flow fact file is applied to
+ * a library. The main effect is that if a label does not exist in the current executable,
+ * instead of raising a fatal error, the matching flow fact is quietly ignored
+ * considering that the label of the library is not linked in the current
+ * executable.
  *
  * @par Syntactic items
  *
@@ -487,10 +538,12 @@ p::declare FlowFactLoader::reg = p::init("otawa::util::FlowFactLoader", Version(
  */
 FlowFactLoader::FlowFactLoader(p::declare& r):
 	Processor(r),
-	checksummed(false),
 	_fw(0),
+	checksummed(false),
+	mandatory(false),
 	lines_available(false),
-	mandatory(false)
+	state(0),
+	lib(false)
 {
 }
 
@@ -667,7 +720,8 @@ void FlowFactLoader::onIgnoreEntry(string name) {
 	}
 
 	// else produces a warning
-	onWarning(_ << "symbol \"" << name << "\" cannot be found.");
+	if(!lib)
+		onWarning(_ << "symbol \"" << name << "\" cannot be found.");
 }
 
 /**
@@ -675,12 +729,9 @@ void FlowFactLoader::onIgnoreEntry(string name) {
  * @param addr	Address of the header of the loop.
  * @param count	Bound on the loop iterations.
  */
-void FlowFactLoader::onLoop(
-	address_t addr,
-	int count,
-	int total,
-	const ContextualPath& path)
-{
+void FlowFactLoader::onLoop(address_t addr, int count, int total, const ContextualPath& path) {
+	if(!addr)
+		return;
 
 	// find the instruction
 	Inst *inst = _fw->process()->findInstAt(addr);
@@ -715,6 +766,8 @@ void FlowFactLoader::onLoop(
  * @param path		Current context.
  */
 void FlowFactLoader::onMemoryAccess(Address iaddr, Address lo, Address hi, const ContextualPath& path) {
+	if(!iaddr)
+		return;
 
 	// find the instruction
 	Inst *inst = _fw->process()->findInstAt(iaddr);
@@ -752,6 +805,8 @@ void FlowFactLoader::onRegSet(string name, const dfa::Value& value) {
  * @param value		Value to set.
  */
 void FlowFactLoader::onMemSet(Address addr, const Type *type, const dfa::Value& value) {
+	if(!addr)
+		return;
 	state->record(dfa::MemCell(addr, type, value));
 }
 
@@ -788,10 +843,22 @@ void FlowFactLoader::onCheckSum(const String& name, t::uint32 sum) {
 
 
 /**
+ * Called to inform that the current FFX file is a library.
+ * The main effect is that, if a label cannot be resolved, the fact is
+ * simply skipped and it does not cause an error.
+ */
+void FlowFactLoader::onLibrary(void) {
+	lib = true;
+}
+
+
+/**
  * This method is called each a "return" statement is found.
  * @param addr	Address of the statement to mark as return.
  */
 void FlowFactLoader::onReturn(address_t addr) {
+	if(!addr)
+		return;
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
 		onError(_ << "no instruction at " << addr);
@@ -806,6 +873,8 @@ void FlowFactLoader::onReturn(address_t addr) {
  * @param addr	Address of the entry of the function.
  */
 void FlowFactLoader::onNoReturn(address_t addr) {
+	if(!addr)
+		return;
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
 	  onError(_ << "no instruction at " << addr);
@@ -819,9 +888,10 @@ void FlowFactLoader::onNoReturn(address_t addr) {
  */
 void FlowFactLoader::onNoReturn(String name) {
 	Inst *inst = _fw->process()->findInstAt(name);
-	if(!inst)
-		throw ProcessorException(*this,
-			_ << " label \"" << name << "\" does not exist.");
+	if(!inst) {
+		if(!lib)
+			throw ProcessorException(*this, _ << " label \"" << name << "\" does not exist.");
+	}
 	else
 		NO_RETURN(inst) = true;
 }
@@ -834,8 +904,12 @@ void FlowFactLoader::onNoReturn(String name) {
  */
 Address FlowFactLoader::addressOf(const string& label) {
 	Address res = _fw->process()->findLabel(label);
-	if(res.isNull())
-		onWarning(_ << "label \"" << label << "\" does not exist.");
+	if(res.isNull()) {
+		if(lib)
+			return Address::null;
+		else
+			onWarning(_ << "label \"" << label << "\" does not exist.");
+	}
 	return res;
 }
 
@@ -846,6 +920,8 @@ Address FlowFactLoader::addressOf(const string& label) {
  * @throw ProcessorException	If the instruction cannot be found.
  */
 void FlowFactLoader::onNoCall(Address address) {
+	if(!address)
+		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
 		onError(_ << " no instruction at  " << address << ".");
@@ -855,11 +931,52 @@ void FlowFactLoader::onNoCall(Address address) {
 
 
 /**
+ * Called for the F4 production: "noinline ADDRESS" or "inline ADDRESS".
+ *
+ * @param address	Address of the instruction to work on.
+ * @param no_inline	The boolean value to be set in NO_INLINE
+ * @throw ProcessorException	If the instruction cannot be found.
+ */
+void FlowFactLoader::onNoInline(Address address, bool no_inline, const ContextualPath& path) {
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		onError(_ << " no instruction at  " << address << ".");
+	else
+		path.ref(NO_INLINE, inst) = no_inline;
+
+	if(logFor(LOG_BB))
+		log << "\t" << path << "(NO_INLINE," << address << ") = " << no_inline << io::endl;
+}
+
+
+/**
+ * Called for the F4 production: "inlining-on ADDRESS"
+ * or "inlining-off ADDRESS".
+ *
+ * @param address	Address of the instruction to work on.
+ * @param policy	The boolean value to be set in INLINING_POLICY
+ * @throw ProcessorException	If the instruction cannot be found.
+ */
+void FlowFactLoader::onSetInlining(Address address, bool policy, const ContextualPath& path) {
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		onError(_ << " no instruction at  " << address << ".");
+	else
+		path.ref(INLINING_POLICY, inst) = policy;
+
+	if(logFor(LOG_BB))
+		log << "\t" << path << "(INLINING_POLICY," << address << ") = " << policy << io::endl;
+}
+
+
+/**
  * Called for the F4 production: "preserver ADDRESS".
  * @param address	Address of instruction to preserve.
  * @throw ProcessorException	If the instruction cannot be found.
  */
 void FlowFactLoader::onPreserve(Address address) {
+	if(!address)
+		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
 		onError(_ << " no instruction at  " << address << ".");
@@ -873,6 +990,8 @@ void FlowFactLoader::onPreserve(Address address) {
  * @param address	Address of the ignored instruction.
  */
 void FlowFactLoader::onIgnoreControl(Address address) {
+	if(!address)
+		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
 		onError(_ << " no instruction at  " << address << ".");
@@ -886,6 +1005,8 @@ void FlowFactLoader::onIgnoreControl(Address address) {
  * @param address	Address of the ignored instruction.
  */
 void FlowFactLoader::onIgnoreSeq(Address address) {
+	if(!address)
+		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
 		onError(_ << " no instruction at  " << address << ".");
@@ -903,6 +1024,9 @@ void FlowFactLoader::onMultiBranch(
 	Address control,
 	const Vector<Address>& targets
 ) {
+	if(!control)
+		return;
+
 	// Find the instruction
 	Inst *inst = _fw->process()->findInstAt(control);
 	if(!inst)
@@ -932,6 +1056,9 @@ void FlowFactLoader::onMultiCall(
 	Address control,
 	const Vector<Address>& targets
 ) {
+	if(!control)
+		return;
+
 	// Find the instruction
 	Inst *inst = _fw->process()->findInstAt(control);
 	if(!inst)
@@ -1010,7 +1137,9 @@ void FlowFactLoader::loadXML(const string& path) throw(ProcessorException) {
 /**
  * Supports an XML flow fact content.
  * Supported elements includes "loop", "function", "noreturn", "return",
- * "nocall", "flowfacts".
+ * "nocall", "doinline", "noinline", "inlining-on", "inlining-off",
+ * "flowfacts", "ignore-entry", "multibranch", "multicall", "ignorecontrol",
+ * "ignoreseq", "mem-access", "mem-set", "reg-set".
  * @param body	Content of the file.
  * @param cpath	Contextual path.
  */
@@ -1046,6 +1175,14 @@ throw(ProcessorException) {
 				else
 					onWarning(_ << "ignoring this because its address cannot be determined: " << xline(element));
 			}
+			else if(name == "doinline")
+				scanNoInline(element, cpath, false);
+			else if(name == "noinline")
+				scanNoInline(element, cpath, true);
+			else if(name == "inlining-on")
+				scanSetInlining(element, cpath, true);
+			else if(name == "inlining-off")
+				scanSetInlining(element, cpath, false);
 			else if(name == "flowfacts")
 				scanXBody(element, cpath);
 			else if(name == "ignore-entry")
@@ -1068,6 +1205,56 @@ throw(ProcessorException) {
 				warn(_ << "garbage at \"" << xline(child) << "\"");
 		}
 	}
+}
+
+
+/**
+ * Scan a noinline/doinline XML element.
+ * @param element	ignoreseq element
+ * @param cpath		contextual path
+ */
+void FlowFactLoader::scanNoInline(xom::Element *element, ContextualPath& cpath, bool no_inline) {
+	MemArea mem_area = scanAddress(element, cpath);
+	if(mem_area.isNull()) {
+		onWarning(_ << "ignoreseq ignored at " << xline(element) << " ... address cannot be determined");
+		return;
+	}
+
+	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
+	while (inst && !inst->isControl()
+			&& inst->address() <= mem_area.lastAddress())
+		inst = workSpace()->process()->findInstAt(inst->topAddress());
+	if (!inst || inst->address() > mem_area.lastAddress()) {
+		onWarning(_ << "ignoreseq ignored at " << xline(element) << " ... no control found");
+		return;
+	}
+
+	this->onNoInline(inst->address(), no_inline, cpath);
+}
+
+
+/**
+ * Scan a inlining-off/inlining-on XML element.
+ * @param element	ignoreseq element
+ * @param cpath		contextual path
+ */
+void FlowFactLoader::scanSetInlining(xom::Element *element, ContextualPath& cpath, bool policy) {
+	MemArea mem_area = scanAddress(element, cpath);
+	if(mem_area.isNull()) {
+		onWarning(_ << "ignoreseq ignored at " << xline(element) << " ... address cannot be determined");
+		return;
+	}
+
+	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
+	while (inst && !inst->isControl()
+			&& inst->address() <= mem_area.lastAddress())
+		inst = workSpace()->process()->findInstAt(inst->topAddress());
+	if (!inst || inst->address() > mem_area.lastAddress()) {
+		onWarning(_ << "ignoreseq ignored at " << xline(element) << " ... no control found");
+		return;
+	}
+
+	this->onSetInlining(inst->address(), policy, cpath);
 }
 
 
@@ -1278,7 +1465,12 @@ void FlowFactLoader::scanRegSet(xom::Element *element) {
 		onError(_ << "name attribute required at " << xline(element));
 
 	// get the value
-	dfa::Value val = scanValue(element);
+	dfa::Value val;
+	Option<xom::String> value = element->getAttributeValue("value");
+	if(value)
+		val = dfa::Value::parse(*value);
+	else
+		val = scanValue(element);
 
 	// perform the instruction
 	onRegSet(*name, val);
@@ -1782,6 +1974,31 @@ Identifier<bool> FLOW_FACTS_MANDATORY("otawa::FLOW_FACTS_MANDATORY", false);
  * @ingroup ff
  */
 Identifier<bool> NO_CALL("otawa::NO_CALL", false);
+
+
+/**
+ * Put on the first instruction of a function to indicate whether it should be
+ * inlined or not during virtualization.
+ * This overrides @ref VIRTUAL_INLINING default policy of @ref Virtualizer
+ * and @ref INLINING_POLICY of the caller CFG.
+ * @li @ref FLOW_FACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier<bool> NO_INLINE("otawa::NO_INLINE");
+
+
+/**
+ * Put on the first instruction of a function to set default inlining behavior
+ * during its virtualization.
+ * This overrides @ref VIRTUAL_INLINING default policy of @ref Virtualizer.
+ * @li @ref FLOW_FACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier<bool> INLINING_POLICY("otawa::INLINING_POLICY");
 
 
 /**

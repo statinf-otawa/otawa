@@ -30,12 +30,13 @@
 namespace otawa {
 
 // ACS feature
-typedef enum fmlevel_t {
+typedef enum fmlevel {
 		FML_INNER = 0,
 		FML_OUTER = 1,
 		FML_MULTI = 2,
 		FML_NONE
 } fmlevel_t;
+otawa::Output& operator<<(otawa::Output& out, const fmlevel_t &fml);
 
 extern Identifier<fmlevel_t> FIRSTMISS_LEVEL;
 extern Identifier<bool> PSEUDO_UNROLLING;

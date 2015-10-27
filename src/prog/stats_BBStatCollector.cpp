@@ -151,6 +151,10 @@ void BBStatCollector::processCFG(Collector& collector, CFG *cfg) {
 				}
 			}
 			break;
+
+		default:
+			ASSERT(false);
+			break;
 		}
 
 		// process basic block

@@ -3,7 +3,7 @@ project("otawa")
 set(PACKAGE "otawa")
 
 # debugging activated
-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g3")
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g")
 file(READ "VERSION" VERSION)
 
 # gcc based compiler lack of support by cmake (opposed to VS)
@@ -12,13 +12,6 @@ if (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
   set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -Wl,--kill-at -Wl,--add-stdcall-alias")
   set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wl,--kill-at -Wl,--add-stdcall-alias")
 endif (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
-
-
-# build configuration file
-configure_file (
-  "${PROJECT_SOURCE_DIR}/config.in"
-  "${PROJECT_SOURCE_DIR}/config.h"
-)
 
 
 # install directories
@@ -34,7 +27,7 @@ set(ILPDIR       "${PLUGDIR}/ilp")
 
 
 # adding Flex and Bison support
-# the version of flex included with msys is bugged, 
+# the version of flex included with msys is bugged,
 # so those scripts had to be heavily modded
 if(WIN32)
 include(CMakeUserUseBison.cmake RESULT_VARIABLE BISON)
@@ -113,6 +106,11 @@ if(EXISTS "${LP_SOLVE5_PATH}")
 	else()
 		find_library(LP_SOLVE5_LIB lpsolve55 PATHS "${LP_SOLVE5_PATH}/lpsolve55" NO_DEFAULT_PATH)
 	endif()
+else()
+    find_library(LP_SOLVE5_LIB NAMES liblpsolve55.so liblpsolve55_pic.a)
+      FIND_PATH(LPSOLVE_INCLUDE_PATH lpsolve/lp_lib.h ${LPSOLVE_INCLUDE_PATH} ${LPSOLVE_INCLUDE_TRIAL_PATH})
+      message(STATUS ${LPSOLVE_INCLUDE_PATH})
+      include_directories(${LPSOLVE_INCLUDE_PATH}/lpsolve/)
 endif()
 if(LP_SOLVE5_LIB)
 	message(STATUS "lp_solve5 library found at ${LP_SOLVE5_LIB}")
@@ -120,33 +118,66 @@ else()
 	message(STATUS "lp_solve5 library not found")
 endif()
 
-#if(UNIX OR APPLE OR MINGW_LINUX)
-#	set(LP_SOLVE5_PATH ${CMAKE_SOURCE_DIR}/../lp_solve5)
-#	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH}/lpsolve55 NO_DEFAULT_PATH)
-#elseif(WIN32)
-#	set(LP_SOLVE5_PATH "${CMAKE_SOURCE_DIR}/../lp_solve5")
-#	find_library(LP_SOLVE5 lpsolve55 PATHS ${LP_SOLVE5_PATH})
-#endif()
-#if(LP_SOLVE5)
-#	set(LP_SOLVE5_INCLUDE ${LP_SOLVE5_PATH})
-#endif()
+
+# looking for CPLEX
+if(CPLEX_ROOT)
+    string(REPLACE "_" "-" x "${CMAKE_SYSTEM_PROCESSOR}")
+    string(TOLOWER "${x}_${CMAKE_SYSTEM_NAME}" CPLEX_OS)
+    set(CPLEX_LIB_PATH "${CPLEX_ROOT}/cplex/lib/${CPLEX_OS}/static_pic")
+    find_library(CPLEX_ILOCPLEX_LIB    "ilocplex"       PATHS "${CPLEX_LIB_PATH}")
+    find_library(CPLEX_CPLEX_LIB        "cplex"         PATHS "${CPLEX_LIB_PATH}")
+    set(CPLEX_CONCERT_PATH "${CPLEX_ROOT}/concert/lib/${CPLEX_OS}/static_pic")
+    find_library(CPLEX_CONCERT_LIB      "concert"       PATHS "${CPLEX_CONCERT_PATH}")
+    if(CPLEX_CPLEX_LIB AND CPLEX_ILOCPLEX_LIB AND CPLEX_DISTMIP_LIB AND CPLEX_CONCERT_LIB)
+        set(CPLEX_LIB "${CPLEX_ILOCPLEX_LIB}" "${CPLEX_CPLEX_LIB}" "${CPLEX_CONCERT_LIB}")
+        message(STATUS "CPLEX found at ${CPLEX_LIB}")
+        set(CPLEX_INCLUDE "${CPLEX_ROOT}/cplex/include" "${CPLEX_ROOT}/concert/include")
+    endif()
+endif()
 
 
+# setting default ILP plugin
+if(LP_SOLVE5_LIB)
+    set(DEFAULT_ILP lp_solve5)
+elseif(CPLEX_LIB)
+    set(DEFAULT_ILP cplex)
+endif()
+if(DEFAULT_ILP)
+    file(WRITE "default.eld"
+"[elm-plugin]
+path=$ORIGIN/${DEFAULT_ILP}
+")
+    install(FILES default.eld DESTINATION "${ILPDIR}")
+endif()
+
+# looking for version
+find_program(HG_PATH hg)
+if(HG_PATH)
+    execute_process(
+        COMMAND "${HG_PATH}" summary
+        OUTPUT_VARIABLE OTAWA_VERSION
+        ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+    string(REGEX REPLACE "parent: ([^:]+):.*" "\\1" OTAWA_VERSION "${OTAWA_VERSION}")
+endif()
+if(OTAWA_TAG)
+    set(OTAWA_VERSION "${OTAWA_VERSION}-${OTAWA_TAG}")
+endif()
+message(STATUS "OTAWA version: ${OTAWA_VERSION}")
 
 
-# ==== for Date ====
+# compute the date
 if(WIN32)
 	execute_process(COMMAND "cmd" "/C date /T" OUTPUT_VARIABLE RESULT)
-#	message(STATUS ${RESULT})
 elseif(UNIX OR MINGW_LINUX)
 	execute_process(COMMAND "date" "+%d/%m/%Y" OUTPUT_VARIABLE RESULT OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif(WIN32)
 if(WIN32 AND NOT MINGW_LINUX)
-string(REGEX REPLACE "([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*" "\\1\\2\\3" RESULT ${RESULT})
+    string(REGEX REPLACE "([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*" "\\1\\2\\3" RESULT ${RESULT})
 endif()
-add_definitions(-DDAYDATE=\"${RESULT}\")
+set(OTAWA_DATE "${RESULT}")
+#add_definitions(-DDAYDATE=\"${RESULT}\")
 #	message(STATUS ${RESULT})
-
+message(STATUS "OTAWA date: ${OTAWA_DATE}")
 
 ###########################
 #adding Doxygen support
@@ -170,7 +201,7 @@ else(UNIX AND NOT APPLE)
 	#in case of some more exotic OS
 	message(WARNING "OS not supported")
 endif()
-	
+
 #once Doxygen path has been searched for
 #generation of documentation IF Doxygen has been found
 #tried testing for DEFINED DOXYGEN_DIR, doesn't work
@@ -185,6 +216,13 @@ else(DOXYGEN AND WIN32)
 endif(DOXYGEN AND WIN32)
 
 ###########################
+
+
+# build configuration file
+configure_file (
+  "${PROJECT_SOURCE_DIR}/config.in"
+  "${PROJECT_SOURCE_DIR}/config.h"
+)
 
 
 # linking to elm and gel libraries
@@ -212,13 +250,7 @@ add_subdirectory(include)
 
 
 # share installation
-set(EXCLUDED_FILES PATTERN "CVS" EXCLUDE PATTERN "Makefile*" EXCLUDE PATTERN ".cvsignore" EXCLUDE)
-install(DIRECTORY data/caches DESTINATION share/Otawa/ ${EXCLUDED_FILES})
-install(DIRECTORY data/makefiles DESTINATION share/Otawa/ ${EXCLUDED_FILES})
-install(DIRECTORY data/procs DESTINATION share/Otawa/ ${EXCLUDED_FILES})
-install(DIRECTORY data/scripts DESTINATION share/Otawa/ ${EXCLUDED_FILES})
-install(DIRECTORY data/dtd DESTINATION share/Otawa/ ${EXCLUDED_FILES})
-
+add_subdirectory(data)
 
 # testing
 if(OTAWA_TEST)
@@ -233,7 +265,7 @@ add_custom_target("make-autodoc" ALL DEPENDS "autodoc")
 add_custom_command(
 	OUTPUT "autodoc"
 	DEPENDS "Doxyfile"
-	COMMAND "${DOXYGEN}"	
+	COMMAND "${DOXYGEN}"
 )
 install(DIRECTORY autodoc DESTINATION "${CMAKE_INSTALL_PREFIX}/share/Otawa/")
 endif()

@@ -20,6 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/hard/Memory.h>
 #include <elm/serial2/XOMUnserializer.h>
 
@@ -435,6 +436,11 @@ Memory::Memory(bool full) {
 
 
 /**
+ */
+Memory::~Memory(void) {
+}
+
+/**
  * Compute the worst access latency.
  * @return Worst access latency.
  */
@@ -559,7 +565,21 @@ SilentFeature MEMORY_FEATURE("otawa::hard::MEMORY_FEATURE", maker);
  */
 Identifier<const Memory *> MEMORY("otawa::hard::MEMORY", &Memory::full);
 
-} } // otawa::hard
+} // hard
+
+io::Output &operator <<(io::Output &o, const hard::Bank::type_t &t) {
+	static cstring names[] = {
+		"NONE",
+		"DRAM",
+		"SPM",
+		"ROM",
+		"IO"
+	};
+	o << names[t];
+	return o;
+}
+
+} // otawa
 
 SERIALIZE(otawa::hard::ModeTransition);
 SERIALIZE(otawa::hard::Mode);

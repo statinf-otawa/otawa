@@ -26,6 +26,7 @@
 #include <otawa/cfg.h>
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/ipet/ILPSystemGetter.h>
+#include <otawa/ilp/expr.h>
 
 using namespace otawa::ilp;
 
@@ -39,29 +40,55 @@ Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::CALLING_CONSTRAINT", 0
 
 /**
  * @class BaseConstraintsBuilder
- * <p>This code processor create or re-use the ILP system in the framework and
- * add to it basic IPET system constraints as described in the article below:</p>
- * <p>Y-T. S. Li, S. Malik, <i>Performance analysis of embedded software using
+ * This code processor create or re-use the ILP system in the framework and
+ * add to it basic IPET system constraints as described in the article below:
+ *
+ * Y-T. S. Li, S. Malik, <i>Performance analysis of embedded software using
  * implicit path enumeration</i>, Workshop on languages, compilers, and tools
- * for real-time systems, 1995.</p>
+ * for real-time systems, 1995.
  *
- * <p>For each basic bloc, the following
- * constraint is added:</p>
- * <p>
- * 		ni = i1 + i2 + ... + in<br>
- * 		ni = o1 + o2 + ... + om
- * </p>
- * <p> where </p>
- * <dl>
- * 	<dt>ni</dt><dd>Count of executions of basic block i.</dd>
- *  <dt>ik</dt><dd>Count of traversal of input edge k in basic block i</dd>
- *  <dt>ok</dt><dd>Count of traversal of output edge k in basic block i</dd>
- * </dl>
+ * In a CFG G=(V, E), for each basic bloc_i, the following
+ * constraints are added:</p>
  *
- * <p>And, finally, put the constraint on the entry basic block of the CFG:</p>
- * <p>
- * 		n1 = 1
- * </p>
+ * 		x_i = \sum{(j, i) in E} x_j,i<br>
+ * 		ni = \sum{(i, j) in E} x_i,j
+ *
+ * where
+ * 	@li x_i -- Count of executions of basic block i,
+ *  @li x_j,i -- Count of traversal of input edge (j,i) in basic block i,
+ *  @li x_i,j -- Count of traversal of output edge (i,j) in basic block i.
+
+ *
+ * In addition, put the constraint on the entry basic block e of the CFG:</p>
+ *
+ * 		x_e = 1
+ *
+ * There are a special processing for basic block performing a function call.
+ * First, the entry node e_f of function f executes as many times as it is called:
+ *
+ * 		x_i = \sum{(i, f) in called_i} x_i,f
+ *
+ * where
+ * @li called_i -- edges performing a call from basic block i,
+ * @li x_i,f -- execution occurrences of edges calling f from i.
+ *
+ * Then, a work-around must be introduced to support OTAWA CFG implementation
+ * that handles in parallel returning edges and calling edges. To maintain
+ * consistency, the no-taken edge of a calling BB is considered as the number of times
+ * the call is returning.
+ *
+ * If we have an uncondtional call with not-taken edge (i, k), we have the following constraints:
+ *
+ * 		x_i = \sum{(i, j) in E \ calling_i } x_j,i
+ *		x_i,k = \sum{(i, f) in calling_i} x_i,f
+ *
+ *	where calling_i = { set of calling edges of i }
+ *
+ *  If i is conditional call BB (meaning the not-taken edge (i, k) maybe taken without a call),
+ *  we get:
+ *
+ *  	x_i = \sum{(i, j) in E \ calling_i } x_j,i
+ *  	x_i,k >= \sum{(i, f) in calling_i} x_i,f
  *
  * @par Provided Features
  * @li @ref ipet::CONTROL_CONSTRAINTS_FEATURE
@@ -81,16 +108,18 @@ Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::CALLING_CONSTRAINT", 0
  */
 void BasicConstraintsBuilder::addEntryConstraint(System *system, CFG *cfg, BasicBlock *bb, CFG *called, Var *var) {
 	static string label = "call constraint";
-	//if(_explicit)
-	//	label = _ << "call constraint from BB" << INDEX(bb) << "/" << cfg->label() << " to " << called->label();
-	Constraint *cons = CALLING_CONSTRAINT(called);
-	if(!cons) {
-		cons = system->newConstraint(label, Constraint::EQ);
-		ASSERT(cons);
-		cons->addLeft(1, VAR(called->entry()));
-		CALLING_CONSTRAINT(called) = cons;
+
+	// compute incrementally
+	//		x_entry^f = \sum x_call^f
+	model m(system);
+	cons c;
+	if(!called->hasProp(CALLING_CONSTRAINT)) {
+		c = m(label) + x(VAR(called->entry())) == 0.;
+		CALLING_CONSTRAINT(called) = &c;
 	}
-	cons->addRight(1, var);
+	else
+		c = *CALLING_CONSTRAINT(called);
+	c += x(var);
 }
 
 
@@ -100,113 +129,83 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, BasicBlock *bb
 {
 	static string 	input_label = "structural input constraint",
 					output_label = "structural output constraint",
-					multiple_label = "multiple call constraint";
+					return_label = "return constraint";
 	ASSERT(fw);
 	ASSERT(cfg);
 	ASSERT(bb);
 
 	// Prepare data
-	Constraint *cons;
-	bool used;
-	CFG *called = 0;
-	System *system = SYSTEM(fw);
-	ASSERT(system);
-	Var *bbv = VAR( bb);
+	//Constraint *cons;
+	//bool used = false;
+	model m(SYSTEM(fw));
+	var bbv(VAR(bb));
 
-	// Input constraint
-	//string label;
-	//if(_explicit)
-	//	label = _ << "structural input constraint of BB" << INDEX(bb) << "/" << cfg->label();
-	cons = system->newConstraint(input_label, Constraint::EQ);
-	cons->addLeft(1, bbv);
-	used = false;
-	for(BasicBlock::InIterator edge(bb); edge; edge++)
-		if(edge->kind() != Edge::CALL) {
-			cons->addRight(1, VAR(edge));
-			used = true;
-		}
-	if(!used)
-		delete cons;
+	// input constraint (call input on entry node are ignored)
+	//		x_i = \sum{(j, i) in E /\ not call (j, i)} x_j,i (a)
+	if(!bb->isEntry()) {
+		cons c = m(input_label) + bbv == 0.;
+		for(BasicBlock::InIterator edge(bb); edge; edge++)
+			if(edge->kind() != Edge::CALL)
+				c += x(VAR(edge));
+	}
 
-	// Output constraint
-	//if(_explicit)
-	//	label = _ << "structural output constraint of BB" << INDEX(bb) << "/" << cfg->label();
-	bool many_calls = false;
-	cons = system->newConstraint(output_label, Constraint::EQ);
-	cons->addLeft(1, bbv);
-	used = false;
-	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-		if(edge->kind() != Edge::CALL) {
-			cons->addRight(1, VAR(edge));
-			used = true;
-		}
-		else {
-			if(!edge->calledCFG())
-				throw ProcessorException(*this, _ << "unresolved call at " << bb->address());
-			if(called)
-				many_calls = true;
+	// Output constraint (why separating call from other and specially many calls?)
+	//		x_i = \sum{(i, j) in E /\ not call (i, j)} x_i,j
+	bool is_call = false;
+	Edge *nt = 0;
+	if(!bb->isExit()) {
+		cons c = m(output_label) + bbv == 0.;
+		for(BasicBlock::OutIterator edge(bb); edge; edge++)
+			if(edge->kind() != Edge::CALL) {
+				c += x(VAR(edge));
+				// VIRTUAL has been to support case of non-call branch at end of CFG
+				if(edge->kind() == Edge::NOT_TAKEN || edge->kind() == Edge::VIRTUAL)
+					nt = edge;
+			}
 			else
-				called = edge->calledCFG();
-		}
+				is_call = true;
 	}
-	if(!used)
-		delete cons;
 
-	// Process the call
-	if(called) {
 
-		// Simple call
-		if(!many_calls)
-			addEntryConstraint(system, cfg, bb, called, bbv);
-
-		// Multiple calls
-		else {
-			//if(_explicit)
-			//	label << "multiple from BB" << INDEX(bb) << "/" << cfg->label();
-			Constraint *call_cons = system->newConstraint(multiple_label, Constraint::EQ);
-			ASSERT(call_cons);
-			call_cons->addLeft(1, bbv);
-			for(BasicBlock::OutIterator edge(bb); edge; edge++)
-				if(edge->kind() == Edge::CALL) {
-					CFG *called_cfg = edge->calledCFG();
-
-					// Create the variable
-					String name;
-					if(_explicit)
-						name = _ << "call_" << bb->number() << '_' << cfg->label()
-							<< "_to_" << called_cfg->label();
-					Var *call_var = system->newVar(name);
-
-					// Add the variable to the constraints
-					addEntryConstraint(system, cfg, bb, called_cfg, call_var);
-					call_cons->addRight(1, call_var);
-				}
-		}
+	// process calls if any
+	//		if not conditional	x_nt = 	sum{(i,f) in calling_i} x_if
+	//		if conditional		x_nt >= sum{(i,f) in calling_i} x_if
+	if(is_call) {
+		cons c;
+		if(bb->isConditional())
+			c = m(return_label) + x(VAR(nt)) >= 0.;
+		else
+			c = m(return_label) + x(VAR(nt)) == 0.;
+		for(BasicBlock::OutIterator edge(bb); edge; edge++)
+			if(edge->kind() == Edge::CALL) {
+				CFG *called = edge->calledCFG();
+				if(!called)
+					throw ProcessorException(*this, _ << "unresolved call at " << bb->address());
+				addEntryConstraint(m, cfg, bb, called, VAR(edge));
+				c += x(VAR(edge));
+			}
 	}
+
 }
-
 
 /**
  */
 void BasicConstraintsBuilder::processWorkSpace(WorkSpace *fw) {
 	ASSERT(fw);
 	static string label = "program entry constraint";
+	CFG *cfg = ENTRY_CFG(fw);
+	ASSERT(cfg);
+	BasicBlock *entry = cfg->entry();
+	ASSERT(entry);
 
 	// Call the orignal processing
 	BBProcessor::processWorkSpace(fw);
 
-	// Just record the constraint "entry = 1"
-	CFG *cfg = ENTRY_CFG(fw);
-	ASSERT(cfg);
-	System *system = SYSTEM(fw);
-	BasicBlock *entry = cfg->entry();
-	ASSERT(entry);
-	//string label;
-	//if(_explicit)
-	//	label = "program entry constraint";
-	Constraint *cons = system->newConstraint(label, Constraint::EQ, 1);
-	cons->addLeft(1, VAR(entry));
-	CALLING_CONSTRAINT(cfg) = cons;
+	// initial constraint
+	//		x_e = 1
+	model m(SYSTEM(fw));
+	cons c = m(label) + x(VAR(entry)) == 1;
+	CALLING_CONSTRAINT(cfg) = &c;
 };
 
 
@@ -214,7 +213,7 @@ void BasicConstraintsBuilder::processWorkSpace(WorkSpace *fw) {
  * Build basic constraint builder processor.
  */
 BasicConstraintsBuilder::BasicConstraintsBuilder(void)
-: BBProcessor("otawa::ipet::BasicConstraintsBuilder", Version(1, 0, 0)) {
+: BBProcessor("otawa::ipet::BasicConstraintsBuilder", Version(1, 0, 0)), _explicit(false) {
 	provide(CONTROL_CONSTRAINTS_FEATURE);
 	require(ASSIGNED_VARS_FEATURE);
 	require(ILP_SYSTEM_FEATURE);
@@ -227,7 +226,6 @@ void BasicConstraintsBuilder::configure(const PropList &props) {
 }
 
 
-static SilentFeature::Maker<BasicConstraintsBuilder> maker;
 /**
  * This feature ensures that control constraints has been added to the
  * current ILP system.
@@ -235,6 +233,6 @@ static SilentFeature::Maker<BasicConstraintsBuilder> maker;
  * @par Properties
  * @li otawa::ipet::CONTROL_CONSTRAINTS_FEATURE
  */
-SilentFeature CONTROL_CONSTRAINTS_FEATURE("otawa::ipet::CONTROL_CONSTRAINTS_FEATURE", maker);
+p::feature CONTROL_CONSTRAINTS_FEATURE("otawa::ipet::CONTROL_CONSTRAINTS_FEATURE", new Maker<BasicConstraintsBuilder>());
 
 } } //otawa::ipet

@@ -27,11 +27,14 @@
 namespace otawa {
 
 using namespace elm;
+class Processor;
 class WorkSpace;
 
 
 class Monitor {
 public:
+	static Monitor& null;
+
 	Monitor(void);
 
 	typedef enum log_level_t {
@@ -55,9 +58,9 @@ public:
 	inline bool isVerbose(void) const { return flags & IS_VERBOSE; }
 	inline bool logFor(log_level_t tested) const { return tested <= log_level; }
 	inline log_level_t logLevel(void) const { return log_level; }
+	void configure(const PropList& props);
 
 protected:
-	void configure(const PropList& props);
 	inline void setWorkspace(WorkSpace *workspace) { ws = workspace; }
 	static const t::uint32
 		IS_VERBOSE		= 0x01,

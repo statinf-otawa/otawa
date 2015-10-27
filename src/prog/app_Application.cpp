@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2008, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,13 +16,14 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/app/Application.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/util/FlowFactLoader.h>
+#include <otawa/util/SymAddress.h>
 
 namespace otawa {
 
@@ -74,7 +75,9 @@ namespace otawa {
  * @endcode
  *
  * Basically, the produced command takes as first argument the executable and as other free arguments
- * the function names to process. If no other free argument is provided, the command is applied on
+ * the function to process. The functions to process are described either by their name,
+ * or by their address (integer address or 0x-prefixed hexadecimal address).
+ * If no other free argument is provided, the command is applied on
  * the @c main function of the executable. For each function name, a call to @c work() method
  * is performed, the passed property list is initialized accordingly and a workspace ready to use
  * is created. To get it, just call the @ref Application::workspace() method. You can now perform
@@ -198,7 +201,7 @@ void LogOption::process(String arg) {
  * @li -v|--verbose -- verbose mode activation,
  * @li first argument as binary program,
  * @li following arguments as task entries.
- * 
+ *
  * @p
  * Usually, it specialized according your application purpose:
  * @code
@@ -212,12 +215,12 @@ void LogOption::process(String arg) {
  * 		{
  * 			...
  * 		}
- * 
+ *
  * protected:
  * void work(PropList &props) throw(elm::Exception) {
  * 			// do_something useful on the opened workspace
- * 		} 
- * 
+ * 		}
+ *
  * private:
  * 		MyOption1 option1;
  * 		MyOption2 option2;
@@ -226,7 +229,7 @@ void LogOption::process(String arg) {
  *
  * OTAWA_RUN(MyApp)
  * @endcode
- * 
+ *
  * @ingroup application
  */
 
@@ -264,7 +267,7 @@ Application::Application(
 	result(0),
 	ws(0)
 { }
-	
+
 
 /**
  */
@@ -283,7 +286,7 @@ Application::~Application(void) {
  */
 int Application::run(int argc, char **argv) {
 	try {
-		
+
 		// process arguments
 		parse(argc, argv);
 		if(help) {
@@ -292,8 +295,8 @@ int Application::run(int argc, char **argv) {
 		}
 		if(!path)
 			throw option::OptionException("no PROGRAM given");
-		if(!entries)
-			entries.add("main");
+		if(!_args)
+			_args.add("main");
 		if(verbose)
 			Processor::VERBOSE(props) = true;
 		if(*log_level)
@@ -337,7 +340,7 @@ int Application::run(int argc, char **argv) {
 
 		// prepare the work
 		prepare(props);
-		
+
 		// load the program
 		ws = MANAGER.load(path, props);
 
@@ -388,13 +391,40 @@ void Application::prepare(PropList& props) {
  * @throw	elm::Exception	For any found error.
  */
 void Application::work(PropList &props) throw(elm::Exception) {
-	for(int i = 0; i < entries.count(); i++) {
+
+	// process each free argument as a function entry
+	for(int i = 0; i < _args.count(); i++) {
+
+		// determine entry address
+		Address addr = parseAddress(_args[i]);
+		TASK_ADDRESS(props) = addr;
+
+		// perform the computation
 		props2 = new PropList(props);
 		ASSERT(props2);
-		TASK_ENTRY(props2) = entries[i].toCString();
-		work(entries[i], *props2);
+		//TASK_ENTRY(props2) = _args[i].toCString();
+		work(_args[i], *props2);
 		delete props2;
 		props2 = 0;
+	}
+}
+
+
+/**
+ * Parse a symbolic address and return it.
+ * @param s					Address string to parse.
+ * @return					Matching address.
+ * @throw otawa::Exception	If the address cannot be resolved or parsed.
+ */
+Address Application::parseAddress(const string& s) throw(otawa::Exception) {
+	try {
+		SymAddress *saddr = SymAddress::parse(s);
+		Address addr = saddr->toAddress(ws);
+		delete saddr;
+		return addr;
+	}
+	catch(otawa::Exception& e) {
+		throw Exception(_ << "cannot parse entry address '" << s << "'");
 	}
 }
 
@@ -412,6 +442,14 @@ void Application::work(PropList &props) throw(elm::Exception) {
  */
 void Application::work(const string& entry, PropList &props) throw(elm::Exception) {
 }
+
+
+/**
+ * @fn const genstruct::Vector<string> arguments(void) const;
+ * Get the free argument of the application except the first one identified as the binary path.
+ * If there is no free argument, "main" is automatically added.
+ * @return	Free argument array.
+ */
 
 
 /**
@@ -441,7 +479,7 @@ void Application::process(string arg) {
 	if(!path)
 		path = arg;
 	else
-		entries.add(arg);
+		_args.add(arg);
 }
 
 }	// otawa

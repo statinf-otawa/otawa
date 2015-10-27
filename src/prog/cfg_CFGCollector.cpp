@@ -127,13 +127,22 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
     if(ws_entry)
           entry = ws_entry;
 	else {
+		if(!entry && addr) {
+			CFGInfo *info = CFGInfo::ID(fw);
+			entry = info->findCFG(addr);
+			if (entry && logFor(LOG_CFG))
+				log << "\tCFG found for address 0x" << addr << endl;
+		}
 		if(!entry && name) {
-			CFGInfo *info = fw->getCFGInfo();
+			CFGInfo *info = CFGInfo::ID(fw);
 			entry = info->findCFG(name);
+			if (entry && logFor(LOG_CFG))
+				log << "\tCFG found for label " << name << endl;
 		}
 		if(!entry)
 			throw ProcessorException(*this, _
-				<< "cannot find task entry point \"" << name << "\"");
+				<< "cannot find task entry point for address 0x" << addr
+				<< " nor for label \"" << name << "\"");
 		ENTRY_CFG(fw) = entry;
 	}
 
@@ -147,7 +156,7 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
 	// Added functions
 	for(int i = 0; i < added_funs.length(); i++) {
-		CFGInfo *info = fw->getCFGInfo();
+		CFGInfo *info = CFGInfo::ID(fw);
 		CFG *cfg = info->findCFG(added_funs[i]);
 		if(cfg) {
 			cfgs->add(cfg);
@@ -197,14 +206,21 @@ void CFGCollector::processWorkSpace (WorkSpace *fw) {
 
 
 /**
- * Build the CFG collector.
- * @param props	Configuration properties.
  */
-CFGCollector::CFGCollector(void)
-: Processor("CFGCollector", Version(1, 0, 0)), entry(0), rec(false) {
+CFGCollector::CFGCollector(p::declare& r)
+: Processor(r), entry(0), rec(false) {
 	require(CFG_INFO_FEATURE);
 	provide(COLLECTED_CFG_FEATURE);
 }
+
+/**
+ * CFGCollector registration.
+ */
+p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(1, 1, 0))
+	.require(CFG_INFO_FEATURE)
+	.provide(COLLECTED_CFG_FEATURE)
+	.maker<CFGCollector>();
+
 
 void CFGCollector::cleanup(WorkSpace *ws) {
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
@@ -220,9 +236,12 @@ void CFGCollector::configure(const PropList& props) {
 	Processor::configure(props);
 
 	// Misc configuration
-	entry = ENTRY_CFG(props);
-	if(!entry)
-		name = TASK_ENTRY(props);
+	addr = TASK_ADDRESS(props);
+	if(!addr) {
+		entry = ENTRY_CFG(props);
+		if(!entry)
+			name = TASK_ENTRY(props);
+	}
 	rec = otawa::RECURSIVE(props);
 
 	// Collect added CFGs

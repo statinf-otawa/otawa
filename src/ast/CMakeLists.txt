@@ -1,6 +1,8 @@
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../..")
 set(CMAKE_MACOSX_RPATH true)
 
+set(CMAKE_CXX_FLAGS "-Wall" )
+
 set(ast_la_SOURCES
 	"ast_ASTLoader.cpp"
 	"AST.cpp"

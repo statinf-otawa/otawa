@@ -31,6 +31,7 @@
 #include <otawa/properties.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/proc/Registration.h>
+#include <otawa/proc/Monitor.h>
 
 namespace otawa {
 
@@ -45,7 +46,7 @@ class StatCollector;
 
 
 // Processor class
-class Processor {
+class Processor: public otawa::Monitor {
 
 	template <class T>
 	class Remover: public elm::Cleaner {
@@ -66,7 +67,7 @@ class Processor {
 
 public:
 
-	typedef enum log_level_t {
+	/*typedef enum log_level_t {
 		LOG_NONE = 0,
 		LOG_PROC = 1,
 		LOG_FILE = 2,
@@ -76,7 +77,7 @@ public:
 		LOG_BLOCK = 4,
 		LOG_BB = LOG_BLOCK,
 		LOG_INST = 5
-	} log_level_t;
+	} log_level_t;*/
 
 	// Constructors
 	Processor(void);
@@ -95,15 +96,17 @@ public:
 	void process(WorkSpace *ws, const PropList& props = PropList::EMPTY);
 
 	// Configuration Properties
-	static Identifier<elm::io::OutStream *> OUTPUT;
-	static Identifier<elm::io::OutStream *> LOG;
 	static Identifier<PropList *> STATS;
 	static Identifier<bool> TIMED;
-	static Identifier<bool> VERBOSE;
 	static Identifier<bool> RECURSIVE;
 	static Identifier<Progress *> PROGRESS;
 	static Identifier<bool> COLLECT_STATS;
-	static Identifier<log_level_t> LOG_LEVEL;
+
+	// deprecated
+	static Identifier<elm::io::OutStream *>& OUTPUT;
+	static Identifier<elm::io::OutStream *>& LOG;
+	static Identifier<bool>& VERBOSE;
+	static Identifier<log_level_t>& LOG_LEVEL;
 
 	// Statistics Properties
 	static Identifier<elm::system::time_t> RUNTIME;
@@ -114,26 +117,26 @@ public:
 
 protected:
 	static const t::uint32
-		IS_TIMED		= 0x01,
-		IS_VERBOSE		= 0x02,
-		IS_ALLOCATED	= 0x04,
-		IS_PREPARED		= 0x08,
-		IS_COLLECTING	= 0x10;
-	unsigned long flags;
-	elm::io::Output out;
-	elm::io::Output log;
+		IS_TIMED		= 0x01 << CUSTOM_SHIFT,
+		//IS_VERBOSE		= 0x02,
+		IS_ALLOCATED	= 0x04 << CUSTOM_SHIFT,
+		IS_PREPARED		= 0x08 << CUSTOM_SHIFT,
+		IS_COLLECTING	= 0x10 << CUSTOM_SHIFT;
+	//unsigned long flags;
+	//elm::io::Output out;
+	//elm::io::Output log;
 	PropList *stats;
 
 	// accessors
 	friend class FeatureRequirer;
-	inline bool isVerbose(void) const { return flags & IS_VERBOSE; }
+	//inline bool isVerbose(void) const { return flags & IS_VERBOSE; }
 	inline bool isTimed(void) const { return flags & IS_TIMED; }
 	inline bool recordsStats(void) const { return stats; }
 	inline bool isAllocated(void) const { return flags & IS_ALLOCATED; }
 	inline bool isPrepared(void) const { return flags & IS_PREPARED; }
 	inline bool isCollectingStats(void) const { return flags & IS_COLLECTING; }
-	inline bool logFor(log_level_t tested) const { return tested <= log_level; }
-	inline log_level_t logLevel(void) const { return log_level; }
+	//inline bool logFor(log_level_t tested) const { return tested <= log_level; }
+	//inline log_level_t logLevel(void) const { return log_level; }
 
 	// configuration
 	void require(const AbstractFeature& feature);
@@ -165,12 +168,16 @@ protected:
 
 	// Deprecated
 	virtual void processFrameWork(WorkSpace *fw);
+
 	template <class T> T *track(const AbstractFeature& feature, T *object)
 		{ addCleaner(feature, new elm::Deletor<T>(object)); return object; }
 	template <class T> void track(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
 		{ addCleaner(feature, new Deletor<T>(ref)); }
 	template <class T> void track(const AbstractFeature& feature, const Ref<T *, const Identifier<T *> >& ref)
 		{ addCleaner(feature, new Deletor<T>(ref)); }
+
+	// internal use only
+	virtual void requireDyn(WorkSpace *ws, const PropList& props);
 
 private:
 	void init(const PropList& props);
@@ -180,7 +187,7 @@ private:
 	typedef elm::genstruct::SLList<clean_t> clean_list_t;
 	clean_list_t cleaners;
 	Progress *_progress;
-	log_level_t log_level;
+	//log_level_t log_level;
 };
 
 

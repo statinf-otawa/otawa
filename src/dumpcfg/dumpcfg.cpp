@@ -283,13 +283,16 @@ void DumpCFG::dump(CFG *cfg, PropList& props) {
  * @param name	Name of the function to process.
  */
 void DumpCFG::dump(const string& name, PropList& props) {
-	require(CFG_INFO_FEATURE);
+	/*require(CFG_INFO_FEATURE);
 	CFGInfo *info = CFGInfo::ID(workspace());
 	ASSERT(info);
 	CFG *cfg = info->findCFG(name);
 	if(!cfg)
 		throw elm::MessageException(_ << "cannot find function named \"" << name << '"');
-	dump(cfg, props);
+	dump(cfg, props);*/
+	require(COLLECTED_CFG_FEATURE);
+	const CFGCollection& coll = **INVOLVED_CFGS(workspace());
+	dump(coll[0], props);
 }
 
 

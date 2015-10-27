@@ -1,5 +1,6 @@
 set(CMAKE_INSTALL_RPATH "\\$ORIGIN:\\$ORIGIN/../../..")
 set(CMAKE_MACOSX_RPATH true)
+set(CMAKE_CXX_FLAGS "-Wall" )
 
 set(ets_la_SOURCES
 	"ets_AbstractCacheState.cpp"
@@ -12,10 +13,10 @@ set(ets_la_SOURCES
 	"ets_TrivialAstBlockTime.cpp"
 	"ets_WCETComputation.cpp"
 	)
-	
+
 include_directories(".")
 
-	
+
 add_library(ets SHARED ${ets_la_SOURCES})
 set_property(TARGET ets PROPERTY PREFIX "")
 set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
