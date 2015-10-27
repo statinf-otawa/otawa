@@ -323,6 +323,7 @@ void EdgeTimeBuilder::configure(const PropList& props) {
  */
 void EdgeTimeBuilder::setup(WorkSpace *ws) {
 	sys = ipet::SYSTEM(ws);
+
 }
 
 
