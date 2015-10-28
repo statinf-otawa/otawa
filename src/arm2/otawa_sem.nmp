@@ -1,5 +1,40 @@
 include "defs.nmp"
 
+var sem_rec_first[1, s32]
+
+macro if_cond = \
+	if !cond.otawa_never then \
+		if !cond.otawa_ever then \
+			scratch(rd.i); \
+			cont; \
+		endif;
+macro if_cond_no = \
+	if !cond.otawa_never then \
+		if !cond.otawa_ever then \
+			cont; \
+		endif;
+macro if_cond_r(i) = \
+	if !cond.otawa_never then \
+		if !cond.otawa_ever then \
+			scratch(i); \
+			cont; \
+		endif;
+macro if_cond_store = \
+	if !cond.otawa_never then \
+		if !cond.otawa_ever && setw then \
+			scratch(rn.i); \
+			cont; \
+		endif;
+macro if_cond_load = \
+	if !cond.otawa_never then \
+		if !cond.otawa_ever then \
+			scratch(rd.i); \
+			if setw then \
+				scratch(rn.i); \
+			endif; \
+			cont; \
+		endif;
+
 // ****** 32-bits instruction set extends ******
 
 extend ADD_shr
@@ -89,11 +124,11 @@ extend BX_ARM
 			endif;
 		endif;
 	}
-	
+
 extend CBNZ_CBZ_thumb
 	otawa_sem = {
-		if nonzero ^ (R(rn) == 0) then 
-			_branch(__IADDR + 4 + imm32); 
+		if nonzero ^ (R(rn) == 0) then
+			_branch(__IADDR + 4 + imm32);
 		endif;
 	}
 
@@ -770,7 +805,7 @@ extend LSL_shr_thumb
 	otawa_sem = { shl(rd.i, rd.i, rs.i); scratch(_CPSR); }
 
 extend LSR_imm_thumb
-	otawa_sem = { seti(t1, imm); shr(rd.i, rm.i, t1); scratch(_CPSR); }
+	otawa_sem = { seti(t1, imm5); shr(Rd.i, Rm.i, t1); scratch(_CPSR); }
 
 extend LSR_shr_thumb
 	otawa_sem = { shr(rd.i, rd.i, rs.i); scratch(_CPSR); }
@@ -791,7 +826,7 @@ extend MVN_thumb
 	otawa_sem = { not(rd.i, rm.i); scratch(_CPSR); }
 
 extend NEG_thumb
-	otawa_sem = { neg(rd.i, rm.i); scratch(_CPSR); }
+	otawa_sem = { neg(rd.i, rn.i); scratch(_CPSR); }
 
 extend ORR_thumb
 	otawa_sem = { or(rd.i, rd.i, rm.i); scratch(_CPSR); }

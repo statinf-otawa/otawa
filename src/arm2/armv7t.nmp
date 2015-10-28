@@ -3,7 +3,7 @@ include "defs2.nmp"
 
 let ARMV7T = 1
 
-extend B_T3
+extend B_T3_thumb2
 	otawa_kind =
 		if cond.value<3..1> == 0b111
 		then 0
@@ -11,34 +11,38 @@ extend B_T3
 			IS_CONTROL
 			| (if cond.value == 14 then 0 else IS_COND endif)
 		endif
-	otawa_target = target
+	otawa_target = addr
 
-extend B_T4
+extend B_T4_thumb2
 	otawa_kind = IS_CONTROL
-	otawa_target = target
+	otawa_target = addr
 
-extend BL_immediate_T1
-	otawa_kind = IS_CONTROL | IS_CALL
-	otawa_target = addr	
-
-extend BLX_immediate_T2
+extend BL_imm_T1
 	otawa_kind = IS_CONTROL | IS_CALL
 	otawa_target = targetAddress
 
+extend BLX_imm_T2
+	otawa_kind = IS_CONTROL | IS_CALL
+	otawa_target = targetAddress
+
+extend CBNZ_CBZ_thumb
+	otawa_target = target
+
 extend TBB_TBH
 	otawa_kind = IS_CONTROL | IS_MEM | IS_LOAD
+	otawa_target = target
 
-extend LDR_immediate_T3, LDR_immediate_T4
+extend LDR_imm_T3, LDR_imm_T4
  	otawa_kind =
  		  IS_MEM
  		| IS_INT
  		| IS_LOAD
  		| (if Rt.number == 15 then IS_CONTROL else 0 endif)
- 		| (if Rt.number == 15 && Rn.number == 13 then IS_RETURN else 0 endif) 
-	otawa_target = 
+ 		| (if Rt.number == 15 && Rn.number == 13 then IS_RETURN else 0 endif)
+	otawa_target =
 		if Rn.number == 15 then data
 		else 0 endif
-	
+
 extend LDM_T2
 	otawa_kind = IS_MEM | IS_LOAD | IS_MULTI | IS_INT
 		| (if register_list.has_pc then IS_CONTROL else 0 endif)
@@ -49,7 +53,7 @@ extend LDM_T2
 		ii = 0;
 		otawa_sem_cnt;
 		seti(t2, 4);
-		// addr_mode = MULT_IA 
+		// addr_mode = MULT_IA
 		_set(t1, Rn.i);
 		seti(t3, cnt * 4); add(t3, t1, t3);
 		ii = 0;
@@ -79,4 +83,13 @@ extend LDM_T2
 extend STMDB_T1
 	otawa_kind = IS_MEM | IS_STORE | IS_MULTI | IS_INT
 	otawa_multi = register_list
-	
+
+extend RSB_imm_T2
+	otawa_kind =
+		  IS_ALU
+		| IS_INT
+		| (if Rd.number == 15 then IS_CONTROL else 0 endif)
+		| IS_IMMEDIATE
+	otawa_target =
+		if Rn.number == 15 then result
+		else 0 endif

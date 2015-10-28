@@ -2,26 +2,28 @@ type word = card(32)
 
 canon word "_GPR"(word)
 canon word "_CPSR"()
-canon "sem::set"(word, word)
-canon "sem::seti"(word, word)
-canon "sem::shl"(word, word, word)
-canon "sem::shr"(word, word, word)
-canon "sem::asr"(word, word, word)
-canon "sem::add"(word, word, word)
-canon "sem::sub"(word, word, word)
-canon "sem::cmp"(word, word, word)
-canon "sem::mul"(word, word, word)
-canon "sem::_and"(word, word, word)
-canon "sem::_not"(word, word)
-canon "sem::_xor"(word, word, word)
-canon "sem::_or"(word, word, word)
-canon "sem::neg"(word, word)
-canon "sem::_if"(word, word, word)
-canon "sem::scratch"(word)
-canon "sem::load"(word, word, word)
-canon "sem::store"(word, word, word)
-canon "sem::trap"()
-canon "sem::branch"(word)
+canon word "sem::set"(word, word)
+canon word "sem::seti"(word, word)
+canon word "sem::shl"(word, word, word)
+canon word "sem::shr"(word, word, word)
+canon word "sem::asr"(word, word, word)
+canon word "sem::add"(word, word, word)
+canon word "sem::sub"(word, word, word)
+canon word "sem::cmp"(word, word, word)
+canon word "sem::mul"(word, word, word)
+canon word "sem::_and"(word, word, word)
+canon word "sem::_not"(word, word)
+canon word "sem::_xor"(word, word, word)
+canon word "sem::_or"(word, word, word)
+canon word "sem::neg"(word, word)
+canon word "sem::_if"(word, word, word)
+canon word "sem::scratch"(word)
+canon word "sem::load"(word, word, word)
+canon word "sem::store"(word, word, word)
+canon word "sem::trap"()
+canon word "sem::branch"(word)
+canon "block.add"(word)
+
 
 canon card(32) "sem::ANY_COND"
 canon card(32) "sem::EQ"
@@ -69,7 +71,7 @@ extend regShift
 		case LSL: shl(t1, r.i, shiftAmt.i);
 		case LSR: shr(t1, r.i, shiftAmt.i);
 		case ASR: asr(t1, r.i, shiftAmt.i);
-		case ROR: scratch(t1); 
+		case ROR: scratch(t1);
 		};
 	}
 	use_pc = r.use_pc

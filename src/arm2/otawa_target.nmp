@@ -1,19 +1,11 @@
-extend B_Cond
-	otawa_target = target
-
 extend B_thumb
 	otawa_target =
 		if cond == 0b1111 then 0
 		else target
 		endif
 
-extend B_thumb_T2
+extend B_Cond
 	otawa_target = target
-	
-extend BX_thumb
-	otawa_target =
-		if rm.number == 15 then __IADDR + 4
-		else 0 endif
-	
-extend CBNZ_CBZ_thumb
+
+extend B_thumb_T2
 	otawa_target = target

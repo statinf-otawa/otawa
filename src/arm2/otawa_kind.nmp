@@ -42,12 +42,15 @@ extend B_thumb
 
 extend B_thumb_T2
 	otawa_kind = IS_CONTROL
-	
+
 extend BKPT_thumb
 	otawa_kind = IS_CONTROL | IS_TRAP
 
 extend BX_thumb
 	otawa_kind = IS_CONTROL | IS_THUMB_BX | (if rm.number == 14 then IS_RETURN else 0 endif)
+
+extend BLX2_thumb
+	otawa_kind = IS_CONTROL | IS_THUMB_BX | IS_CALL | (if rm.number == 14 then IS_RETURN else 0 endif)
 
 extend SWI
 	otawa_kind =
@@ -101,13 +104,13 @@ ORR_imm, RSB_imm, RSC_imm, SBC_imm
 extend SUB_imm
 	otawa_kind =
 		// return from IRQ
-		if rd == 15 && rn == 14 && sets && shifter_operand == 4 then IS_CONTROL | IS_RETURN | IS_TRAP
+		if rd.number == 15 && rn.number == 14 && sets && shifter_operand == 4 then IS_CONTROL | IS_RETURN | IS_TRAP
 		// usual processing
 		else
 			  IS_ALU
 			| IS_INT
 			| (if cond.value == 14 then 0 else IS_COND endif)
-			| (if rd == 15 then IS_CONTROL else 0 endif)
+			| (if rd.number == 15 then IS_CONTROL else 0 endif)
 			| IS_IMMEDIATE
 		endif
 
@@ -253,7 +256,7 @@ extend MLA
 		| IS_INT
 		| IS_MLA
  		| (if cond.value == 14 then 0 else IS_COND endif)
- 		| (if rd == 15 then IS_CONTROL else 0 endif)
+ 		| (if rd.number == 15 then IS_CONTROL else 0 endif)
 
 
 extend SMLAL, UMLAL
@@ -264,7 +267,7 @@ extend SMLAL, UMLAL
 		| IS_TWO_REG
  		| (if cond.value == 14 then 0 else IS_COND endif)
  		| (if rdhi.number == 15 || rdlo.number == 15 then IS_CONTROL else 0 endif)
- 		
+
 extend SMULL, UMULL
 	otawa_kind =
 		  IS_ALU
@@ -274,7 +277,7 @@ extend SMULL, UMULL
  		| (if cond.value == 14 then 0 else IS_COND endif)
  		| (if rdhi.number == 15 || rdlo.number == 15 then IS_CONTROL else 0 endif)
 
- 		
+
 
 extend MUL_thumb
 	otawa_kind = IS_ALU | IS_INT | IS_MUL

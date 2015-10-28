@@ -23,7 +23,10 @@ let IS_NO_DEST			= 0x10000000
 let IS_BL_0				= 0x08000000
 let IS_BL_1				= 0x04000000
 let IS_BX_IP			= 0x02000000
-let IS_THUMB_BX			= 0x01000000			
+let IS_THUMB_BX			= 0x01000000
+let IS_SWP				= 0x00800000
+let IS_MLA				= 0x00400000
+let IS_TWO_REG			= 0x00200000
 
 
 let NO_TYPE = 0
@@ -42,7 +45,6 @@ let FLOAT64 = 10
 let t1					= -1
 let t2					= -2
 let t3					= -3
-
 
 macro R(i) 				= "_GPR"(i)
 macro _CPSR				= "_CPSR"()
