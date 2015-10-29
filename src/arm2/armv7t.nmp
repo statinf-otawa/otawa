@@ -30,7 +30,7 @@ extend CBNZ_CBZ_thumb
 
 extend TBB_TBH
 	otawa_kind = IS_CONTROL | IS_MEM | IS_LOAD
-	otawa_target = target
+	otawa_target = 0
 
 extend LDR_imm_T3, LDR_imm_T4
  	otawa_kind =
