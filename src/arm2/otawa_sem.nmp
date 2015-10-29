@@ -461,7 +461,7 @@ extend STM
 			if !cond.otawa_ever then
 				scratch(t1);
 				add(t2, rn.i, t1);
-				store(t1, t2, 4);
+				store(t1, t2, UINT32);
 				scratch(rn.i);
 				cont;
 			else
@@ -505,7 +505,7 @@ extend STM
 				if sem_rec_first == 0 then
 					add(t1, t1, t2);
 				endif;
-				store(R(ii), t1, 4);
+				store(R(ii), t1, UINT32);
 				sem_rec_first = 0;
 			endif;
 			ii = ii + 1;
@@ -519,7 +519,7 @@ extend STR_imm
 			if rn.use_pc || rd.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t2, if setu == 0 then -coerce(card(32), offset12) else offset12 endif);
 			if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
-			store(rd.i, t1, if setb then 1 else 4 endif);
+			store(rd.i, t1, if setb then UINT8 else UINT32 endif);
 			if setpre == 0 then 	add(rn.i, t1, t2);
 			else if setw == 1 then	_set(rn.i, t1);
 			endif; endif;
@@ -533,7 +533,7 @@ extend STR_shr
 			shifter_operand.otawa_sem;
 			if setu == 0 then neg(t1, t1); endif;
 			if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
-			store(rd.i, t2, if setb == 1 then 1 else 4 endif);
+			store(rd.i, t2, if setb == 1 then UINT8 else UINT32 endif);
 			if setpre == 0 then add(rn.i, rn.i, t1);
 			else if setw == 1 then _set(rn.i, t2);
 			endif; endif;
@@ -546,7 +546,7 @@ extend STRH_imm
 			if rn.use_pc || rd.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
 			if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
-			store(rd.i, t1, 2);
+			store(rd.i, t1, UINT16);
 			if setpre == 0 then add(rn.i, rn.i, t2);
 			else if setw == 1 then _set(rn.i, t1);
 			endif; endif;
@@ -559,7 +559,7 @@ extend STRH_shr
 			if rn.use_pc || rd.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
 			if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
 			if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
-			store(rd.i, t2, 2);
+			store(rd.i, t2, UINT16);
 			if setpre == 0 then add(rn.i, rn.i, t1);
 			else if setw == 1 then _set(rn.i, t2);
 			endif; endif;

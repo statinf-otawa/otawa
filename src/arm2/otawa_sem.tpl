@@ -16,7 +16,7 @@ static void otawa_sem_UNKNOWN($(proc)_inst_t *inst, otawa::sem::Block& block) {
 
 $(foreach instructions)
 static void otawa_sem_$(IDENT)($(proc)_inst_t *inst, otawa::sem::Block& block) {
-$(otawa_sem)
+$(otawa_sem!)
 };
 
 $(end)

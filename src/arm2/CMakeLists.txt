@@ -37,7 +37,7 @@ if(ARM_SIM)
 endif()
 
 # module definition
-set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}/../../")
 set(CMAKE_MACOSX_RPATH true)
 add_library(${PROC} SHARED ${SOURCES})
 set_property(TARGET ${PROC} PROPERTY PREFIX "")

@@ -1,4 +1,4 @@
-set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../lib/")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}/../lib/")
 set(CMAKE_CXX_FLAGS "-Wall -g" )
 
 set(owcet_SOURCES

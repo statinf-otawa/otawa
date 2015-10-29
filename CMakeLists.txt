@@ -5,6 +5,7 @@ set(PACKAGE "otawa")
 # debugging activated
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g")
 file(READ "VERSION" VERSION)
+set(ORIGIN $ORIGIN)
 
 # gcc based compiler lack of support by cmake (opposed to VS)
 # so need to make some manual adjustment in this case
