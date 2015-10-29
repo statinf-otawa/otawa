@@ -650,14 +650,15 @@ public:
 			result = new BranchInst(*this, kind, addr, size);
 		else
 			result = new Inst(*this, kind, addr, size);
+		ASSERT(result);
 		t::uint16 multi = arm_multi(inst);
 		if(multi)
 			otawa::arm::NUM_REGS_LOAD_STORE(result) = elm::ones(multi);
-		char buf[256];
+		/*char buf[256];
 		arm_disasm(buf, inst);
 		t::uint8 b0, b1;
 		get(addr, b0);
-		get(addr + 1, b1);
+		get(addr + 1, b1);*/
 		free_inst(inst);
 		return result;
 	}
