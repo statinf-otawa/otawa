@@ -135,7 +135,7 @@ public:
 		"odisasm",
 		Version(1, 0, 0),
 		"Disassemble instruction to OTAWA instruction description",
-		"H. Cass�� <casse@irit.fr>"),
+		"H. Cassé <casse@irit.fr>"),
 	regs(*this, option::cmd, "-r", option::cmd, "--regs", option::help, "display register information", option::end),
 	kind(*this, option::cmd, "-k", option::cmd, "--kind", option::help, "display kind of instructions", option::end),
 	sem(*this, option::cmd, "-s", option::cmd, "--semantics", option::help, "display translation of instruction in semantics language", option::end),
@@ -238,20 +238,28 @@ private:
 
 			// display read registers
 			genstruct::SortedSLList<string> srr;
-			const elm::genstruct::Table<hard::Register * >& rr = inst->readRegs();
-			for(int i = 0; i < rr.count(); i++)
-				srr.add(_ << rr[i]->name() << " (" << rr[i]->platformNumber() << ")");
-			cout << "\tread regs = ";
+			RegSet rr;
+			inst->readRegSet(rr);
+			for(int i = 0; i < rr.count(); i++) {
+				hard::Register *reg = workspace()->platform()->findReg(rr[i]);
+				ASSERTP(reg, "No register found in platform for unique identifier " << rr[i]);
+				srr.add(_ << reg->name() << " (" << reg->platformNumber() << ")");
+			}
+			cout << "\t\tread regs = ";
 			for(genstruct::SortedSLList<string>::Iterator r(srr); r; r++)
 				cout << *r << " ";
 			cout << io::endl;
 
 			// display read registers
 			genstruct::SortedSLList<string> swr;
-			const elm::genstruct::Table<hard::Register * >& wr = inst->writtenRegs();
-			for(int i = 0; i < wr.count(); i++)
-				srr.add(_ << wr[i]->name() << " (" << wr[i]->platformNumber() << ")");
-			cout << "\twritten regs = ";
+			RegSet wr;
+			inst->writeRegSet(wr);
+			for(int i = 0; i < wr.count(); i++) {
+				hard::Register *reg = workspace()->platform()->findReg(wr[i]);
+				ASSERTP(reg, "No register found in platform for unique identifier " << rr[i]);
+				swr.add(_ << reg->name() << " (" << reg->platformNumber() << ")");
+			}
+			cout << "\t\twritten regs = ";
 			for(genstruct::SortedSLList<string>::Iterator r(swr); r; r++)
 				cout << *r << " ";
 			cout << io::endl;
@@ -260,10 +268,17 @@ private:
 		// display semantics
 		if(sem) {
 			otawa::sem::Block block;
-			inst->semInsts(block);
+			inst->semInsts(block, -1);
+			int wb = block.count();
+			inst->semWriteBack(block, -1);
 			cout << "\t\tsemantics\n";
-			for(int i = 0; i < block.count(); i++)
-				cout << "\t\t\t" << block[i] << io::endl;
+			otawa::sem::Printer printer(workspace()->platform());
+			for(int i = 0; i < block.count(); i++) {
+				if (i == wb) cout << "\t\t\t--------\n";
+				cout << "\t\t\t";
+				printer.print(cout, block[i]);
+				cout << io::endl;
+			}
 		}
 	}
 
