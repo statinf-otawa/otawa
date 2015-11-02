@@ -410,8 +410,10 @@ void Block::print(elm::io::Output& out) const {
  * @param block	Block to output.
  */
 void Printer::print(elm::io::Output& out, const Block& block) const {
-	for(Block::InstIter inst(block); inst; inst++)
+	for(Block::InstIter inst(block); inst; inst++) {
 		print(out, inst);
+		out << io::endl;
+	}
 }
 
 
