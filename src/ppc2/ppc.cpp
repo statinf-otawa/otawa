@@ -128,7 +128,7 @@ static const PlainBank CR_bank("CR", hard::Register::BITS, 4, "cr%d", 8);
 static hard::Register CTR_reg("ctr", hard::Register::BITS, 32);
 static hard::Register LR_reg("lr", hard::Register::ADDR, 32);
 static hard::Register XER_reg("xer", hard::Register::INT, 32);
-static const hard::MeltedBank MISC_bank("MISC", &CTR_reg, &LR_reg, &XER_reg, 0);
+static const hard::MeltedBank MISC_bank("MISC", &CTR_reg, &LR_reg, &XER_reg, (void*) 0);
 
 // Register banks
 static const RegBank *banks[] = {
@@ -175,9 +175,9 @@ static const elm::genstruct::Table<const RegBank *> banks_table(banks, 4);
 #define _shl(d, a, b)	block.add(otawa::sem::shl(d, a, b))
 #define _shr(d, a, b)	block.add(otawa::sem::shr(d, a, b))
 #define _store(d, a, b)	block.add(otawa::sem::store(d, a, b))
-#define _scratch(a)		block.add(otawa::sem::scratch(a));
+#define _scratch(a)		block.add(otawa::sem::scratch(a))
 #define _sub(d, a, b)	block.add(otawa::sem::sub(d, a, b))
-#define _xor(d, a, b)		block.add(otawa::sem::_xor(d, a, b))
+#define _xor(d, a, b)	block.add(otawa::sem::_xor(d, a, b))
 
 #include "otawa_sem.h"
 
