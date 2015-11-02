@@ -216,7 +216,7 @@ private:
 // registers
 static hard::PlainBank gpr("GPR", hard::Register::INT, 32, "r%d", 16);
 static hard::Register sr("sr", hard::Register::BITS, 32);
-static hard::MeltedBank misc("misc", &sr, 0);
+static hard::MeltedBank misc("misc", &sr, (void *) 0);
 static const hard::RegBank *banks_tab[] = { &gpr, &misc };
 static genstruct::Table<const hard::RegBank *> banks_table(banks_tab, 2);
 
