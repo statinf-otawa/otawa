@@ -3,6 +3,17 @@ include "defs2.nmp"
 
 let ARMV7T = 1
 
+extend RegisterListThumb
+	has_pc = _P
+
+// included here for ascending compatibility
+extend B_Cond
+	otawa_target = target
+
+extend B_thumb_T2
+	otawa_kind = IS_CONTROL
+	otawa_target = target
+
 extend B_T3_thumb2
 	otawa_kind =
 		if cond.value<3..1> == 0b111
@@ -27,10 +38,19 @@ extend BLX_imm_T2
 
 extend CBNZ_CBZ_thumb
 	otawa_target = target
+	otawa_sem = {
+		if nonzero ^ (R(rn) == 0) then
+			_branch(__IADDR + 4 + imm32);
+		endif;
+	}
+
 
 extend TBB_TBH
 	otawa_kind = IS_CONTROL | IS_MEM | IS_LOAD
 	otawa_target = 0
+
+extend CBNZ_CBZ_thumb
+	otawa_kind = IS_CONTROL | IS_COND
 
 extend LDR_imm_T3, LDR_imm_T4
  	otawa_kind =
@@ -39,9 +59,6 @@ extend LDR_imm_T3, LDR_imm_T4
  		| IS_LOAD
  		| (if Rt.number == 15 then IS_CONTROL else 0 endif)
  		| (if Rt.number == 15 && Rn.number == 13 then IS_RETURN else 0 endif)
-	otawa_target =
-		if Rn.number == 15 then data
-		else 0 endif
 
 extend LDM_T2
 	otawa_kind = IS_MEM | IS_LOAD | IS_MULTI | IS_INT
@@ -91,5 +108,5 @@ extend RSB_imm_T2
 		| (if Rd.number == 15 then IS_CONTROL else 0 endif)
 		| IS_IMMEDIATE
 	otawa_target =
-		if Rn.number == 15 then result
+		if Rn.number == 15 then __IADDR + 4 - imm32
 		else 0 endif

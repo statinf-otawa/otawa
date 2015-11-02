@@ -4,8 +4,4 @@ extend B_thumb
 		else target
 		endif
 
-extend B_Cond
-	otawa_target = target
 
-extend B_thumb_T2
-	otawa_target = target

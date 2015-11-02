@@ -230,7 +230,11 @@ public:
 			map[i] = 0;
 
 		// initialize it
-		map[ARM_REG_APSR] = &sr;
+#		ifdef ARM7
+			map[ARM_REG_APSR] = &sr;
+#		else
+			map[ARM_REG_UCPSR] = &sr;
+#		endif
 		for(int i = 0; i < 16; i++)
 			map[ARM_REG_GPR(i)] = gpr[i];
 	}
@@ -654,11 +658,11 @@ public:
 		t::uint16 multi = arm_multi(inst);
 		if(multi)
 			otawa::arm::NUM_REGS_LOAD_STORE(result) = elm::ones(multi);
-		/*char buf[256];
+		char buf[256];
 		arm_disasm(buf, inst);
 		t::uint8 b0, b1;
 		get(addr, b0);
-		get(addr + 1, b1);*/
+		get(addr + 1, b1);
 		free_inst(inst);
 		return result;
 	}

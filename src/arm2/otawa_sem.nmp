@@ -125,13 +125,6 @@ extend BX_ARM
 		endif;
 	}
 
-extend CBNZ_CBZ_thumb
-	otawa_sem = {
-		if nonzero ^ (R(rn) == 0) then
-			_branch(__IADDR + 4 + imm32);
-		endif;
-	}
-
 extend CMN_shr
 	otawa_sem = {
 		if_cond_no
@@ -805,7 +798,7 @@ extend LSL_shr_thumb
 	otawa_sem = { shl(rd.i, rd.i, rs.i); scratch(_CPSR); }
 
 extend LSR_imm_thumb
-	otawa_sem = { seti(t1, imm5); shr(Rd.i, Rm.i, t1); scratch(_CPSR); }
+	otawa_sem = { seti(t1, imm5); shr(rd.i, rm.i, t1); scratch(_CPSR); }
 
 extend LSR_shr_thumb
 	otawa_sem = { shr(rd.i, rd.i, rs.i); scratch(_CPSR); }
@@ -826,7 +819,7 @@ extend MVN_thumb
 	otawa_sem = { not(rd.i, rm.i); scratch(_CPSR); }
 
 extend NEG_thumb
-	otawa_sem = { neg(rd.i, rn.i); scratch(_CPSR); }
+	otawa_sem = { neg(rd.i, rm.i); scratch(_CPSR); }
 
 extend ORR_thumb
 	otawa_sem = { or(rd.i, rd.i, rm.i); scratch(_CPSR); }
