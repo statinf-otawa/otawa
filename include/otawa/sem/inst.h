@@ -175,6 +175,7 @@ inline inst divu(int d, int a, int b) { return inst(DIVU, d, a, b); }
 inline inst mod(int d, int a, int b) { return inst(MOD, d, a, b); }
 inline inst modu(int d, int a, int b) { return inst(MODU, d, a, b); }
 inline inst _xor(int d, int a, int b) { return inst(XOR, d, a, b); }
+inline inst spec(int d, unsigned long cst) { inst i(SPEC, d); i.args.cst = cst; return i; }
 
 // Block class
 class Block: public elm::genstruct::Vector<inst> {
