@@ -423,7 +423,7 @@ void BasicBlock::Bundle::semInsts(sem::Block& block) {
 	int t = -1;
 	for(InstIter i = insts(); i; i++)
 		t -= i->semInsts(block, t);
-	t = 0;
+	t = -1;
 	for(InstIter i = insts(); i; i++)
 		t -= i->semWriteBack(block, t);
 }
