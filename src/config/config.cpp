@@ -288,7 +288,6 @@ public:
 		// perform adjustment according to the plugins
 		for(int i = 0; i < plugs.length(); i++) {
 			Path path = plugs[i]->path();
-			cerr << "DEBUG: [" << path << "]\n";
 			config.libs << ' ' << path;
 			config.addRPath(path.parent());
 		}
