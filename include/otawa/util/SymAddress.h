@@ -61,7 +61,10 @@ private:
 	t::int32 _offset;
 };
 
-io::Output& operator<<(io::Output& out, SymAddress *addr);
+inline io::Output& operator<<(io::Output& out, SymAddress *addr) {
+	addr->print(out);
+	return out;
+}
 
 }	//otawa
 
