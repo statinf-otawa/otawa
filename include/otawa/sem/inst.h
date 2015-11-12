@@ -42,7 +42,7 @@ typedef enum opcode {
 	BRANCH,		// perform a branch on content of register a
 	TRAP,		// perform a trap
 	CONT,		// stop the execution of the block
-	IF,			// continue if condition cond is meet in register sr, else skip "jump" instructions
+	IF,			// continue if condition cond is met in register sr, else skip "jump" instructions
 	LOAD,		// rd <- MEM_rb(ra)
 	STORE,		// MEM_rb(ra) <- rd
 	SCRATCH,	// d <- T
@@ -67,7 +67,8 @@ typedef enum opcode {
 	DIVU,		// d <- unsigned(a) / unsigned(b)
 	MOD,		// d <- a % b
 	MODU,		// d <- unsigned(a) % unsigned(b)
-	SPEC		// special instruction (d: code, cst: sub-code)
+	SPEC,		// special instruction (d: code, cst: sub-code)
+	MULH		// d <- (a * b) >> bitlength(d)
 } opcode;
 
 
@@ -176,6 +177,7 @@ inline inst mod(int d, int a, int b) { return inst(MOD, d, a, b); }
 inline inst modu(int d, int a, int b) { return inst(MODU, d, a, b); }
 inline inst _xor(int d, int a, int b) { return inst(XOR, d, a, b); }
 inline inst spec(int d, unsigned long cst) { inst i(SPEC, d); i.args.cst = cst; return i; }
+inline inst mulh(int d, int a, int b) { return inst(MULH, d, a, b); }
 
 // Block class
 class Block: public elm::genstruct::Vector<inst> {
