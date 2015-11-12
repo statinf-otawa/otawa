@@ -140,7 +140,7 @@ public:
 	kind(*this, option::cmd, "-k", option::cmd, "--kind", option::help, "display kind of instructions", option::end),
 	sem(*this, option::cmd, "-s", option::cmd, "--semantics", option::help, "display translation of instruction in semantics language", option::end),
 	target(*this, option::cmd, "-t", option::cmd, "--target", option::help, "display target of control instructions", option::end),
-	bytes(option::SwitchOption::Make(this).cmd("-b").cmd("--byes").description("display bytes composing the instrucion")),
+	bytes(option::SwitchOption::Make(this).cmd("-b").cmd("--bytes").description("display bytes composing the instrucion")),
 	max_size(0)
 	{ }
 
