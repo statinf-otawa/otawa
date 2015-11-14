@@ -41,8 +41,8 @@ class PropList;
 
 
 namespace p {
-	template <class T> inline void print(Output& out, const T& v) { cout << v; }
-	template <class T> inline void print(Output& out, T *p) { if(!p) cout << "<null>"; else cout << p; }
+	template <class T> inline void print(Output& out, const T& v) { out << v; }
+	template <class T> inline void print(Output& out, T *p) { if(!p) out << "<null>"; else out << p; }
 }
 
 
