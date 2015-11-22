@@ -274,3 +274,17 @@ extend MUL_thumb
 	otawa_kind = IS_ALU | IS_INT | IS_MUL
 
 
+// ****** coprocessor instructions extensions ******
+
+extend LDC
+	otawa_kind = IS_MEM
+		| IS_INT
+		| IS_LOAD
+		| (if cond.value == 14 || cond.value == 15 then 0 else IS_COND endif)
+
+extend STC
+	otawa_kind = IS_MEM
+		| IS_INT
+		| IS_STORE
+		| (if cond.value == 14 || cond.value == 15 then 0 else IS_COND endif)
+
