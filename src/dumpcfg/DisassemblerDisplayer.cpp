@@ -39,7 +39,7 @@ void DisassemblerDisplayer::processWorkSpace(WorkSpace *ws) {
 			cout << "BB " << v->index() << ": ";
 			for(Block::EdgeIter e = v->outs(); e; e++) {
 				if(e->sink()->isSynth())
-					cout << " C(" << e->sink()->toSynth()->cfg()->label() << ")";
+					cout << " C(" << e->sink()->toSynth()->callee()->label() << ")";
 				else {
 					if(v->isEntry() || e->sink()->isExit())
 						cout << " V(";

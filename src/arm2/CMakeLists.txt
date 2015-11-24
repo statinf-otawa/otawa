@@ -2,18 +2,25 @@
 
 set(PROC 			"arm")
 set(ELF_NUM			"40")
-set(PROC_PREFIX 	"${CMAKE_SOURCE_DIR}/../armv5t/")
+set(PROC_PREFIX     "${ARM_PATH}")
 set(GLISS_LIB 		"${PROC_PREFIX}/src/lib${PROC}.a")
 set(IRG			    "${PROC_PREFIX}/${PROC}.irg")
+
+if(ARM7)
+    set(ARM_AUX "armv7t.nmp")
+else()
+    set(ARM_AUX "armv5t.nmp")
+endif()
+
 
 # source generation
 set(CMAKE_CXX_FLAGS "-Wall" )
 set(GLISS_ATTR	"${CMAKE_SOURCE_DIR}/../gliss2/gep/gliss-attr")
 include("../../data/cmake/Otawa.cmake")
-MAKE_GLISS_FUNCTION(OTAWA_KIND    "otawa_kind"      "otawa_kind.nmp" "${IRG}"    "return 0;")
-MAKE_GLISS_FUNCTION(OTAWA_TARGET  "otawa_target"    "otawa_target.nmp" "${IRG}"  "return 0;")
-MAKE_GLISS_PROCEDURE(OTAWA_SEM     "otawa_sem"       "otawa_sem.nmp" "${IRG}"     ";")
-MAKE_GLISS_FUNCTION(OTAWA_MULTI   "otawa_multi"     "otawa_multi.nmp" "${IRG}"   "return 0;")
+MAKE_GLISS_FUNCTION(OTAWA_KIND    "otawa_kind"      "otawa_kind.nmp" "${IRG}"    "return 0;"    "${ARM_AUX}")
+MAKE_GLISS_FUNCTION(OTAWA_TARGET  "otawa_target"    "otawa_target.nmp" "${IRG}"  "return 0;"    "${ARM_AUX}")
+MAKE_GLISS_PROCEDURE(OTAWA_SEM    "otawa_sem"       "otawa_sem.nmp" "${IRG}"      ";"           "${ARM_AUX}")
+MAKE_GLISS_FUNCTION(OTAWA_MULTI   "otawa_multi"     "otawa_multi.nmp" "${IRG}"   "return 0;"    "${ARM_AUX}")
 
 set(SOURCES
 	"${PROC}.cpp"
@@ -30,7 +37,7 @@ if(ARM_SIM)
 endif()
 
 # module definition
-set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}/../../")
 set(CMAKE_MACOSX_RPATH true)
 add_library(${PROC} SHARED ${SOURCES})
 set_property(TARGET ${PROC} PROPERTY PREFIX "")

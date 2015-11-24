@@ -23,6 +23,7 @@
 #ifndef OTAWA_CFG_CFGCHECKER_H_
 #define OTAWA_CFG_CFGCHECKER_H_
 
+#include <otawa/cfg/features.h>
 #include <otawa/proc/BBProcessor.h>
 
 namespace otawa {

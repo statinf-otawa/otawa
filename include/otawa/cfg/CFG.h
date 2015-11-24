@@ -23,6 +23,7 @@
 #define OTAWA_CFG_CFG_H
 
 #include <elm/assert.h>
+#include <elm/genstruct/SLList.h>
 #include <otawa/sgraph/DiGraph.h>
 #include <otawa/prop/PropList.h>
 #include <otawa/prog/Inst.h>
@@ -92,9 +93,10 @@ class SynthBlock: public Block {
 	friend class CFGMaker;
 public:
 	SynthBlock(t::uint32 type = IS_CALL);
-	inline CFG *cfg(void) const { return _cfg; }
+	inline CFG *callee(void) const { return _callee; }
+	inline CFG *caller(void) const { return _caller; }
 private:
-	CFG *_cfg;
+	CFG *_callee, *_caller;
 };
 
 
@@ -107,19 +109,20 @@ public:
 	int size(void);
 	inline Address topAddress(void) { return address() + size(); }
 
-	inline Inst *first(void) const { return insts[0]; }
+	inline Inst *first(void) const { return _insts[0]; }
 	Inst *control(void);
 	Inst *last(void);
 	int count(void) const;
 
 	class InstIter: public AllocatedTable<Inst *>::Iterator {
 	public:
-		InstIter(const BasicBlock *bb): AllocatedTable<Inst *>::Iterator(bb->insts) { }
-		InstIter(const InstIter& i): AllocatedTable<Inst *>::Iterator(i) { }
+		InstIter(const BasicBlock *bb): AllocatedTable<Inst *>::Iterator(bb->_insts) { }
+		//InstIter(const InstIter& i): AllocatedTable<Inst *>::Iterator(i) { }
 	};
+	inline InstIter insts(void) const { return InstIter(this); }
 
 private:
-	DeletableTable<Inst *> insts;
+	DeletableTable<Inst *> _insts;
 };
 
 // delayed inlines
@@ -142,6 +145,8 @@ public:
 	~CFG(void);
 
 	typedef VertexIter BlockIter;
+	typedef genstruct::SLList<SynthBlock *>::Iterator CallerIter;
+
 	string label(void);
 	string name(void);
 	string format(const Address& addr);
@@ -152,14 +157,15 @@ public:
 	inline Block *unknown(void) const { return _unknown; }
 	inline BlockIter blocks(void) const { return vertices(); }
 	inline type_t type(void) const { return _type; }
+	inline CallerIter callers(void) const { return CallerIter(_callers); }
 
 private:
 	CFG(Inst *first, type_t type = SUBPROG);
 	int idx;
 	type_t _type;
 	Inst *fst;
-	//BasicBlock *fst;
 	Block *_exit, *_unknown;
+	genstruct::SLList<SynthBlock *> _callers;
 };
 io::Output& operator<<(io::Output& out, CFG *cfg);
 

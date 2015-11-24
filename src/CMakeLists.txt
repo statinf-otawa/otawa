@@ -1,5 +1,7 @@
 
 
+# $ORIGIN setting
+set(ORIGIN $ORIGIN)
 
 # generating c files from Bison and Flex files
 if(WIN32)

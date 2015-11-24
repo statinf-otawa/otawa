@@ -24,21 +24,16 @@
 #ifndef OTAWA_CFG_VIRTUALIZER_H_
 #define OTAWA_CFG_VIRTUALIZER_H_
 
-#include <otawa/proc/Processor.h>
-#include <otawa/proc/Feature.h>
-#include <otawa/prop/Identifier.h>
 #include <elm/genstruct/HashTable.h>
-#include <otawa/cfg/CFG.h>
-#include <otawa/cfg/VirtualCFG.h>
-#include <otawa/cfg/BasicBlock.h>
-#include <otawa/prog/WorkSpace.h>
-#include <otawa/prop/PropList.h>
 #include <elm/util/Option.h>
+#include <otawa/proc/Processor.h>
+#include <otawa/cfg/features.h>
 #include <otawa/prop/ContextualProperty.h>
 
 
 namespace otawa {
 
+using namespace elm;
 class CFGCollection;
 
 // Virtualizer class
@@ -55,15 +50,17 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 
 private:
-	void virtualize(struct call_t*, CFG *cfg, VirtualCFG *vcfg, BasicBlock *entry,
-			BasicBlock *exit, elm::Option<int> local_inlining, ContextualPath &path);
-	VirtualCFG *virtualizeCFG(struct call_t *call, CFG *cfg, elm::Option<int> local_inlining);
+	void make(struct call_t *stack, CFG *cfg, CFGMaker *maker, elm::Option<int> local_inlining, ContextualPath &path);
+	void makeCFG(struct call_t *call, CFG *cfg, Option<int> local_inlining);
 	void enteringCall(BasicBlock *caller, BasicBlock *callee, ContextualPath &path);
 	void leavingCall(BasicBlock *to, ContextualPath &path);
+	CFGMaker *maker(CFG *cfg);
 	bool isInlined(CFG* cfg, Option<int> local_inlining, ContextualPath &path);
-	bool virtual_inlining;
+	bool virtualize;
 	CFG *entry;
-	elm::genstruct::HashTable<void *, VirtualCFG *> cfgMap;
+	genstruct::HashTable<CFG *, CFGMaker *> map;
+	genstruct::SLList<CFG *> todo;
+	CFGCollection *coll;
 };
 
 }	// otawa

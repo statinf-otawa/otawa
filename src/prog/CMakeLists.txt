@@ -1,4 +1,4 @@
-set(CMAKE_INSTALL_RPATH "\\$ORIGIN")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}")
 set(CMAKE_MACOSX_RPATH true)
 set(CMAKE_CXX_FLAGS "-Wall" )
 
@@ -28,16 +28,12 @@ set(libotawa_SOURCES
 #	"cfg_CFGCheckSummer.cpp"
 #	"cfg_DelayedBuilder.cpp"
 #	"cfg_LoopInfoBuilder.cpp"
-#	"cfg_VirtualBasicBlock.cpp"
 #	"cfg_PSTBuilder.cpp"
 #	"cfg_LoopUnroller.cpp"
 #	"cfg_LoopReductor.cpp"
-#	"cfg_PFG.cpp"
-#	"cfg_PFGBuilder.cpp"
 #	"cfg_SpanningTreeBuilder.cpp"
 #	"cfg_SubCFGBuilder.cpp"
-#	"cfg_Virtualizer.cpp"
-#	"cfg_VirtualCFG.cpp"
+	"cfg_Virtualizer.cpp"
 #	"cfg_Weighter.cpp"
 #	"cfg_CFGBuilder.cpp"
 #	"BBRatioDisplayer.cpp"

@@ -1,203 +1,8 @@
-let t1					= -1
-let t2					= -2
-let t3					= -3
-macro R(i) 				= "_GPR"(i)
-macro _CPSR				= "_CPSR"()
-macro _branch(t)		= "block.add"("sem::branch"(t))
-macro trap				= "block.add"("sem::trap"())
-macro cont				= "block.add"("sem::cont"())
-macro _if(c, r, o)		= "block.add"("sem::_if"(c, r, o))
-macro load(d, a, b)		= "block.add"("sem::load"(d, a, b))
-macro store(d, a, b)	= "block.add"("sem::store"(d, a, b))
-macro scratch(d)		= "block.add"("sem::scratch"(d))
-macro _set(d, a)		= "block.add"("sem::set"(d, a))
-macro seti(d, a)		= "block.add"("sem::seti"(d, a))
-macro cmp(d, a, b)		= "block.add"("sem::cmp"(d, a, b))
-macro cmpu(d, a, b)		= "block.add"("sem::cmpu"(d, a, b))
-macro add(d, a, b)		= "block.add"("sem::add"(d, a, b))
-macro sub(d, a, b)		= "block.add"("sem::sub"(d, a, b))
-macro shl(d, a, b)		= "block.add"("sem::shl"(d, a, b))
-macro shr(d, a, b)		= "block.add"("sem::shr"(d, a, b))
-macro asr(d, a, b)		= "block.add"("sem::asr"(d, a, b))
-macro neg(d, a)			= "block.add"("sem::neg"(d, a))
-macro not(d, a)			= "block.add"("sem::_not"(d, a))
-macro and(d, a, b)		= "block.add"("sem::_and"(d, a, b))
-macro or(d, a, b)		= "block.add"("sem::_or"(d, a, b))
-macro xor(d, a, b)		= "block.add"("sem::_xor"(d, a, b))
-macro mul(d, a, b)		= "block.add"("sem::mul"(d, a, b))
-macro mulu(d, a, b)		= "block.add"("sem::mulu"(d, a, b))
-macro div(d, a, b)		= "block.add"("sem::div"(d, a, b))
-macro divu(d, a, b)		= "block.add"("sem::divu"(d, a, b))
-macro mod(d, a, b)		= "block.add"("sem::mod"(d, a, b))
-macro modu(d, a, b)		= "block.add"("sem::modu"(d, a, b))
+include "defs.nmp"
+include "defs2.nmp"
 
-let NO_TYPE = 0
-let INT8 = 1
-let INT16 = 2
-let INT32 = 3
-let INT64 = 4
-let UINT8 = 5
-let UINT16 = 6
-let UINT32 = 7
-let UINT64 = 8
-let FLOAT32 = 9
-let FLOAT64 = 10
+var sem_rec_first[1, s32]
 
-type word = card(32)
-
-canon word "_GPR"(word)
-canon word "_CPSR"()
-canon "sem::set"(word, word)
-canon "sem::seti"(word, word)
-canon "sem::shl"(word, word, word)
-canon "sem::shr"(word, word, word)
-canon "sem::asr"(word, word, word)
-canon "sem::add"(word, word, word)
-canon "sem::sub"(word, word, word)
-canon "sem::cmp"(word, word, word)
-canon "sem::mul"(word, word, word)
-canon "sem::_and"(word, word, word)
-canon "sem::_not"(word, word)
-canon "sem::_xor"(word, word, word)
-canon "sem::_or"(word, word, word)
-canon "sem::neg"(word, word)
-canon "sem::_if"(word, word, word)
-canon "sem::scratch"(word)
-canon "sem::load"(word, word, word)
-canon "sem::store"(word, word, word)
-canon "sem::trap"()
-canon "sem::branch"(word)
-
-canon card(32) "sem::ANY_COND"
-canon card(32) "sem::EQ"
-canon card(32) "sem::NE"
-canon card(32) "sem::LT"
-canon card(32) "sem::LE"
-canon card(32) "sem::GT"
-canon card(32) "sem::GE"
-canon card(32) "sem::ULT"
-canon card(32) "sem::ULE"
-canon card(32) "sem::UGT"
-canon card(32) "sem::UGE"
-
-macro exts(v) = (coerce(int(32), v))
-macro extu(v) = (coerce(card(32), v))
-
-var ii[1, s32]
-var sem_rec_first[1, s32] // boolean for otawa_sem_rec
-var cnt[1, u32]
-
-// ****** mode extends ******
-
-extend REG_INDEX
-	i = R(r)
-	use_pc = r == 15
-
-// mode shiftedRegister = immShift | regShift
-// result in t1
-
-extend immShift
-	otawa_sem = {
-		if shiftAmt == 0 then _set(t1, r.i); else
-			seti(t1, shiftAmt);
-			switch (shiftKind) {
-			case LSL: shl(t1, r.i, t1);
-			case LSR: shr(t1, r.i, t1);
-			case ASR: asr(t1, r.i, t1);
-			case ROR: scratch(t1); if shiftAmt == 0 then scratch(_CPSR); endif;
-			};
-		endif;
-	}
-	use_pc = r.use_pc
-
-extend regShift
-	otawa_sem = {
-		switch(shiftKind) {
-		case LSL: shl(t1, r.i, R(shiftAmt));
-		case LSR: shr(t1, r.i, R(shiftAmt));
-		case ASR: asr(t1, r.i, R(shiftAmt));
-		case ROR: scratch(t1);
-		};
-	}
-	use_pc = r.use_pc
-
-extend rotatedImmediate
-	v = extu(v) >>> (extu(rotate) << 1)
-
-
-// condition extension
-extend condition
-	otawa_ever = cond == 14
-	otawa_never = cond == 15
-	otawa_cond =
-		switch(cond) {
-		case 0:		"sem::EQ"
-		case 1:		"sem::NE"
-		case 2:		"sem::UGE"
-		case 3:		"sem::ULT"
-		case 8:		"sem::UGT"
-		case 9:		"sem::ULE"
-		case 10:	"sem::GE"
-		case 11:	"sem::LT"
-		case 12:	"sem::GT"
-		case 13:	"sem::LE"
-		default:	"sem::ANY_COND"
-	}
-	otawa_not_cond =
-		switch(cond) {
-		case 0:		"sem::NE"
-		case 1:		"sem::EQ"
-		case 2:		"sem::ULT"
-		case 3:		"sem::UGE"
-		case 8:		"sem::ULE"
-		case 9:		"sem::UGT"
-		case 10:	"sem::LT"
-		case 11:	"sem::GE"
-		case 12:	"sem::LE"
-		case 13:	"sem::GT"
-		default:	"sem::ANY_COND"
-	}
-
-
-// load-store shifted operand (produce result in t1)
-extend loadstoreSpecifiedShift
-	otawa_sem = {
-		if shiftAmt == 0 then
-			_set(t1, r.i);
-		else
-			seti(t1, shiftAmt);
-			switch(shiftKind) {
-			case LSL:	shl(t1, r.i, t1);
-			case LSR:	shr(t1, r.i, t1);
-			case ASR:	asr(t1, r.i, t1);
-			case ROR:	scratch(t1);
-			};
-		endif;
-	}
-	use_pc = r.use_pc
-
-
-extend setBon
-	value = 1
-
-extend setBoff
-	value = 0
-
-
-// thumb modes
-extend REG_THUMB_INDEX
-	i = R(ro)
-	hi = R(ro + 8)
-
-
-// ****** 32-bits instruction set extends ******
-
-/*macro if_cond = \
-	if !cond.otawa_never then \
-		if !cond.otawa_ever then \
-			_if(cond.otawa_not_cond, _CPSR, 1); \
-			cont; \
-		endif;*/
 macro if_cond = \
 	if !cond.otawa_never then \
 		if !cond.otawa_ever then \
@@ -231,6 +36,7 @@ macro if_cond_load = \
 			cont; \
 		endif;
 
+// ****** 32-bits instruction set extends ******
 
 extend ADD_shr
 	otawa_sem = {
@@ -649,7 +455,7 @@ extend STM
 			if !cond.otawa_ever then
 				scratch(t1);
 				add(t2, rn.i, t1);
-				store(t1, t2, 4);
+				store(t1, t2, UINT32);
 				scratch(rn.i);
 				cont;
 			else
@@ -693,7 +499,7 @@ extend STM
 				if sem_rec_first == 0 then
 					add(t1, t1, t2);
 				endif;
-				store(R(ii), t1, 4);
+				store(R(ii), t1, UINT32);
 				sem_rec_first = 0;
 			endif;
 			ii = ii + 1;
@@ -707,7 +513,7 @@ extend STR_imm
 			if rn.use_pc || rd.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t2, if setu == 0 then -coerce(card(32), offset12) else offset12 endif);
 			if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
-			store(rd.i, t1, if setb then 1 else 4 endif);
+			store(rd.i, t1, if setb then UINT8 else UINT32 endif);
 			if setpre == 0 then 	add(rn.i, t1, t2);
 			else if setw == 1 then	_set(rn.i, t1);
 			endif; endif;
@@ -721,7 +527,7 @@ extend STR_shr
 			shifter_operand.otawa_sem;
 			if setu == 0 then neg(t1, t1); endif;
 			if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
-			store(rd.i, t2, if setb == 1 then 1 else 4 endif);
+			store(rd.i, t2, if setb == 1 then UINT8 else UINT32 endif);
 			if setpre == 0 then add(rn.i, rn.i, t1);
 			else if setw == 1 then _set(rn.i, t2);
 			endif; endif;
@@ -734,7 +540,7 @@ extend STRH_imm
 			if rn.use_pc || rd.use_pc then seti(R(15), __IADDR + 8); endif;
 			seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
 			if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
-			store(rd.i, t1, 2);
+			store(rd.i, t1, UINT16);
 			if setpre == 0 then add(rn.i, rn.i, t2);
 			else if setw == 1 then _set(rn.i, t1);
 			endif; endif;
@@ -747,7 +553,7 @@ extend STRH_shr
 			if rn.use_pc || rd.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
 			if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
 			if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
-			store(rd.i, t2, 2);
+			store(rd.i, t2, UINT16);
 			if setpre == 0 then add(rn.i, rn.i, t1);
 			else if setw == 1 then _set(rn.i, t2);
 			endif; endif;
@@ -870,7 +676,7 @@ extend ADD_reg1_thumb
 	otawa_sem = { add(rd.i, rm.i, rn.i); scratch(_CPSR); }
 
 extend ADD_reg2_thumb
-	otawa_sem = { add(rd.i, if H == 1 then rd.hi else rd.i endif, rm.i); }
+	otawa_sem = { add(rd.i, rd.i, rm.i); }
 
 extend AND_thumb
 	otawa_sem = { and(rd.i, rd.i, rm.i); scratch(_CPSR); }
@@ -911,29 +717,6 @@ extend BIC_thumb
 		and(rd.i, rd.i, t1);
 		scratch(_CPSR);
 	}
-
-extend BLX1_thumb
-	otawa_sem = {
-		switch(H) {
-		case 0b00:
-			_branch(__IADDR + 4 + exts(offs) << 1);
-		case 0b01:
-			seti(t1, exts(offs) << 1);
-			add(t1, t1, R(14));
-			_branch(t1);
-			seti(R(14), __IADDR + 2);
-		case 0b10:
-			seti(R(14), __IADDR + 4 + exts(offs) << 12);
-		case 0b11:
-			seti(t1, exts(offs) << 1);
-			add(t1, R(14), t1);
-			_branch(t1);
-			seti(R(14), __IADDR + 2);
-		};
-	}
-
-extend BLX2_thumb
-	otawa_sem = { seti(R(14), __IADDR + 2); _branch(rm.i); }
 
 extend BX_thumb
 	otawa_sem = { _branch(rm.i); }
@@ -1016,7 +799,7 @@ extend LSL_shr_thumb
 	otawa_sem = { shl(rd.i, rd.i, rs.i); scratch(_CPSR); }
 
 extend LSR_imm_thumb
-	otawa_sem = { seti(t1, imm); shr(rd.i, rm.i, t1); scratch(_CPSR); }
+	otawa_sem = { seti(t1, imm5); shr(rd.i, rm.i, t1); scratch(_CPSR); }
 
 extend LSR_shr_thumb
 	otawa_sem = { shr(rd.i, rd.i, rs.i); scratch(_CPSR); }

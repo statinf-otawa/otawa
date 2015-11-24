@@ -1,31 +1,4 @@
-
-let NO_KIND		= 0x00000000
-let IS_COND		= 0x00000001
-let IS_CONTROL	= 0x00000002
-let IS_CALL		= 0x00000004	// save PC before branching
-let IS_RETURN	= 0x00000008
-let IS_MEM		= 0x00000010
-let IS_LOAD		= 0x00000020
-let IS_STORE	= 0x00000040
-let IS_INT		= 0x00000080
-let IS_FLOAT	= 0x00000100
-let IS_ALU		= 0x00000200	// basic arithmetic operations (like "+", "-")
-let IS_MUL		= 0x00000400
-let IS_DIV		= 0x00000800
-let IS_SHIFT	= 0x00001000
-let IS_TRAP		= 0x00002000
-let IS_INTERN	= 0x00004000
-let IS_MULTI	= 0x00008000
-let IS_SPECIAL	= 0x00010000
-let IS_DATA_PROCESSING	= 0x80000000
-let IS_IMMEDIATE		= 0x40000000
-let IS_SHIFTED			= 0x20000000
-let IS_NO_DEST			= 0x10000000
-let IS_BL_0				= 0x08000000
-let IS_BL_1				= 0x04000000
-let IS_BX_IP			= 0x02000000
-let IS_THUMB_BX			= 0x01000000
-
+include "defs.nmp"
 
 // useful mode extensions
 extend regShift
@@ -44,24 +17,19 @@ extend rotatedImmediate
 extend REG_LIST
 	has_pc = r & (1 << 15)
 
+
 // ****** branch instructions extensions ******
 
 extend B_Cond
 	otawa_kind = IS_CONTROL
-		| (if setl then IS_CALL else 0 endif)
+		| (if setl || cond.value == 0b1111 then IS_CALL else 0 endif)
 		| (if cond.value == 14 then 0 else IS_COND endif)
 
 extend BX_ARM
 	otawa_kind = IS_CONTROL
-		| (if rd == 14 then IS_RETURN else 0 endif)
+		| (if rd.number == 14 then IS_RETURN else 0 endif)
 		| (if cond.value == 14 then 0 else IS_COND endif)
-		| (if rd == 12 then IS_BX_IP else 0 endif)
-
-extend SWI
-	otawa_kind =
-		  IS_CONTROL
-		| IS_TRAP
- 		| (if cond.value == 14 then 0 else IS_COND endif)
+		| (if rd.number == 12 then IS_BX_IP else 0 endif)
 
 extend B_thumb
 	otawa_kind =
@@ -72,20 +40,17 @@ extend B_thumb
 extend BKPT_thumb
 	otawa_kind = IS_CONTROL | IS_TRAP
 
-extend BLX1_thumb
-	otawa_kind =
-		switch(H) {
-		case 0b00: IS_CONTROL
-		case 0b01: IS_BL_1 | IS_CONTROL | IS_CALL | (if offs == 0 then IS_RETURN else 0 endif)
-		case 0b10: IS_BL_0 | IS_ALU
-		case 0b11: IS_BL_1 | IS_CONTROL | IS_CALL | (if offs == 0 then IS_RETURN else 0 endif)
-		}
+extend BX_thumb
+	otawa_kind = IS_CONTROL | IS_THUMB_BX | (if rm.number == 14 then IS_RETURN else 0 endif)
 
 extend BLX2_thumb
-	otawa_kind = IS_CONTROL | IS_CALL
+	otawa_kind = IS_CONTROL | IS_THUMB_BX | IS_CALL | (if rm.number == 14 then IS_RETURN else 0 endif)
 
-extend BX_thumb
-	otawa_kind = IS_CONTROL | IS_THUMB_BX | (if rm == 14 then IS_RETURN else 0 endif)
+extend SWI
+	otawa_kind =
+		  IS_CONTROL
+		| IS_TRAP
+		| (if cond.value == 14 then 0 else IS_COND endif)
 
 extend SWI_thumb
 	otawa_kind = IS_CONTROL | IS_TRAP
@@ -124,19 +89,19 @@ ORR_imm, RSB_imm, RSC_imm, SBC_imm
 		  IS_ALU
 		| IS_INT
 		| (if cond.value == 14 then 0 else IS_COND endif)
-		| (if rd == 15 then IS_CONTROL else 0 endif)
+		| (if rd.number == 15 then IS_CONTROL else 0 endif)
 		| IS_IMMEDIATE
 
 extend SUB_imm
 	otawa_kind =
 		// return from IRQ
-		if rd == 15 && rn == 14 && sets && shifter_operand == 4 then IS_CONTROL | IS_RETURN | IS_TRAP
+		if rd.number == 15 && rn.number == 14 && sets && shifter_operand == 4 then IS_CONTROL | IS_RETURN | IS_TRAP
 		// usual processing
 		else
 			  IS_ALU
 			| IS_INT
 			| (if cond.value == 14 then 0 else IS_COND endif)
-			| (if rd == 15 then IS_CONTROL else 0 endif)
+			| (if rd.number == 15 then IS_CONTROL else 0 endif)
 			| IS_IMMEDIATE
 		endif
 
@@ -146,7 +111,7 @@ ORR_shr, RSB_shr, RSC_shr, SBC_shr, SUB_shr
 		  IS_ALU
 		| IS_INT
 		| (if cond.value == 14 then 0 else IS_COND endif)
-		| (if rd == 15 then IS_CONTROL else 0 endif)
+		| (if rd.number == 15 then IS_CONTROL else 0 endif)
 		| shifter_operand.otawa_kind
 
 extend ADC_thumb, ADD_reg1_thumb, ADD_reg2_thumb, AND_thumb, CMN_shr_thumb,
@@ -164,17 +129,25 @@ SUB_imm2_thumb, SUB_imm3_thumb
 extend MOV_shr2_thumb
 	otawa_kind =
 		if H == 1 && rd == 7 then
-			IS_CONTROL | (if rm == 14 then IS_RETURN else 0 endif)
+			IS_CONTROL | (if rm.number == 14 then IS_RETURN else 0 endif)
 		else
 			IS_ALU | IS_INT
 		endif
 
-extend CLZ, SWP
+extend CLZ
 	otawa_kind =
 		  IS_ALU
 		| IS_INT
 		| (if cond.value == 14 then 0 else IS_COND endif)
-		| (if rd == 15 then IS_CONTROL else 0 endif)
+		| (if rd.number == 15 then IS_CONTROL else 0 endif)
+
+extend SWP
+	otawa_kind =
+		  IS_ALU
+		| IS_INT
+		| IS_SWP
+		| (if cond.value == 14 then 0 else IS_COND endif)
+		| (if rd.number == 15 then IS_CONTROL else 0 endif)
 
 
 // ****** memory instructions extensions ******
@@ -205,8 +178,8 @@ extend LDR_imm, LDR_shr
  		| IS_INT
  		| IS_LOAD
  		| (if cond.value == 14 then 0 else IS_COND endif)
- 		| (if rd == 15 then IS_CONTROL else 0 endif)
- 		| (if rd == 15 && rn == 13 then IS_RETURN else 0 endif)
+ 		| (if rd.number == 15 then IS_CONTROL else 0 endif)
+ 		| (if rd.number == 15 && rn.number == 13 then IS_RETURN else 0 endif)
 
 extend STR_imm, STR_shr
  	otawa_kind =
@@ -233,7 +206,7 @@ LDRSH_imm, LDRSH_shr
  		| IS_INT
  		| (if cond.value == 14 then 0 else IS_COND endif)
  		| IS_LOAD
- 		| (if rd == 15 then IS_CONTROL else 0 endif)
+ 		| (if rd.number == 15 then IS_CONTROL else 0 endif)
 
 extend LDR_imm_thumb, LDR_shr_thumb, LDR_imm2_thumb, LDR_imm3_thumb,
 LDRB_imm_thumb, LDRB_shr_thumb, LDRH_imm_thumb, LDRH_shr_thumb,
@@ -255,27 +228,47 @@ extend MRS
 		  IS_ALU
 		| IS_INT
  		| (if cond.value == 14 then 0 else IS_COND endif)
- 		| (if rn == 15 then IS_CONTROL else 0 endif)
+ 		| (if rn.number == 15 then IS_CONTROL else 0 endif)
 
 
 // ****** multiplication instructions extensions ******
 
-extend MLA, MUL
+extend MUL
 	otawa_kind =
 		  IS_ALU
 		| IS_INT
 		| IS_MUL
  		| (if cond.value == 14 then 0 else IS_COND endif)
- 		| (if rd == 15 then IS_CONTROL else 0 endif)
+ 		| (if rd.number == 15 then IS_CONTROL else 0 endif)
+
+extend MLA
+	otawa_kind =
+		  IS_ALU
+		| IS_INT
+		| IS_MLA
+ 		| (if cond.value == 14 then 0 else IS_COND endif)
+ 		| (if rd.number == 15 then IS_CONTROL else 0 endif)
 
 
-extend SMULL, UMULL, SMLAL, UMLAL
+extend SMLAL, UMLAL
+	otawa_kind =
+		  IS_ALU
+		| IS_INT
+		| IS_MLA
+		| IS_TWO_REG
+ 		| (if cond.value == 14 then 0 else IS_COND endif)
+ 		| (if rdhi.number == 15 || rdlo.number == 15 then IS_CONTROL else 0 endif)
+
+extend SMULL, UMULL
 	otawa_kind =
 		  IS_ALU
 		| IS_INT
 		| IS_MUL
+		| IS_TWO_REG
  		| (if cond.value == 14 then 0 else IS_COND endif)
- 		| (if rdhi == 15 || rdlo == 15 then IS_CONTROL else 0 endif)
+ 		| (if rdhi.number == 15 || rdlo.number == 15 then IS_CONTROL else 0 endif)
+
+
 
 extend MUL_thumb
 	otawa_kind = IS_ALU | IS_INT | IS_MUL

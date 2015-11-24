@@ -1977,31 +1977,6 @@ Identifier<bool> NO_CALL("otawa::NO_CALL", false);
 
 
 /**
- * Put on the first instruction of a function to indicate whether it should be
- * inlined or not during virtualization.
- * This overrides @ref VIRTUAL_INLINING default policy of @ref Virtualizer
- * and @ref INLINING_POLICY of the caller CFG.
- * @li @ref FLOW_FACTS_FEATURE
- * @par Hooks
- * @li @ref Inst
- * @ingroup ff
- */
-Identifier<bool> NO_INLINE("otawa::NO_INLINE");
-
-
-/**
- * Put on the first instruction of a function to set default inlining behavior
- * during its virtualization.
- * This overrides @ref VIRTUAL_INLINING default policy of @ref Virtualizer.
- * @li @ref FLOW_FACTS_FEATURE
- * @par Hooks
- * @li @ref Inst
- * @ingroup ff
- */
-Identifier<bool> INLINING_POLICY("otawa::INLINING_POLICY");
-
-
-/**
  * Put on a control instruction to prevent it to be interpreted as is.
  * @par Features
  * @li @ref FLOW_FACTS_FEATURE

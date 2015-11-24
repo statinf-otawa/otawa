@@ -283,44 +283,6 @@ void DumpCFG::dump(const string& name, PropList& props) {
 	// Dump the CFG
 	else {*/
 	displayer->process(workspace(), props);
-	/*	displayer->onProgramBegin(my_ws);
-		displayer->onCFGBegin(vcfg);
-		for(CFG::BBIterator bb(vcfg); bb; bb++) {
-
-			// Looking for start of inline
-			for(BasicBlock::InIterator edge(bb); edge; edge++)
-				if(edge->kind() == Edge::VIRTUAL_CALL) {
-					if(current_inline)
-						displayer->onInlineEnd(current_inline);
-					current_inline = CALLED_CFG(edge);
-					displayer->onInlineBegin(current_inline);
-				}
-
-			// BB begin
-			int index = bb->number();
-			displayer->onBBBegin(bb, index);
-
-			// Look out edges
-			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-				int target_index = -1;
-				if(edge->target() && edge->kind() != Edge::CALL) {
-					target_index = edge->target()->number();
-					displayer->onEdge(0, bb, index, edge->kind(), edge->target(),
-						target_index);
-				} else {
-					displayer->onCall(edge);
-				}
-			}
-
-			// BB end
-			displayer->onBBEnd(bb, index);
-		}
-
-		// Perform end
-		if(current_inline)
-			displayer->onInlineEnd(current_inline);
-		displayer->onCFGEnd(vcfg);
-		displayer->onProgramEnd(my_ws);*/
 	//}
 }
 

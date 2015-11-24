@@ -51,7 +51,7 @@ void SimpleDisplayer::processWorkSpace(WorkSpace *ws) {
 					if(w->isBasic())
 						cout << ' ' << (w->index() + off - 1);
 					else if(w->isSynth())
-						cout << ' ' << offset(w->toSynth()->cfg());
+						cout << ' ' << offset(w->toSynth()->callee());
 				}
 
 				cout << " -1\n";

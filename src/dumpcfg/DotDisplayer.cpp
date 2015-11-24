@@ -68,12 +68,12 @@ void DotDisplayer::processWorkSpace(WorkSpace *ws) {
 					cout << "\t";
 					displayName(cfg, v);
 					cout << " -> ";
-					displayName(sb->cfg(), sb->cfg()->entry());
+					displayName(sb->callee(), sb->callee()->entry());
 					cout << " [label=\"call\", style=dashed, weight=1];\n";
 
 					// return edge
 					cout << "\t";
-					displayName(sb->cfg(), sb->cfg()->exit());
+					displayName(sb->callee(), sb->callee()->exit());
 					cout << " -> ";
 					displayName(cfg, sb->outs()->sink());
 					cout << " [label=\"return\", style=dashed, weight=1];\n";
@@ -134,7 +134,7 @@ void DotDisplayer::displayLabel(Block *v) {
 		cout << "unknown";
 	else if(v->isSynth()) {
 		SynthBlock *sb = v->toSynth();
-		cout << sb->cfg()->name();
+		cout << sb->callee()->name();
 	}
 	else if(v->isBasic()) {
 		BasicBlock *bb = v->toBasic();

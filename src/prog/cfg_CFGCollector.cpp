@@ -61,6 +61,12 @@ static Identifier<BasicBlock *> BB("", 0);
  */
 
 /**
+ * @fn CFG *CFGCollection::entry(void) const;
+ * Get the entry CFG of the collection.
+ * @return	Entry CFG.
+ */
+
+/**
  * @class CFGCollection::Iterator
  * Iterator on the CFG contained in a @ref CFGCollection.
  */
