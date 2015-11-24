@@ -23,7 +23,6 @@
 #define OTAWA_PROG_FEATURES_H_
 
 #include <otawa/proc/Feature.h>
-#include <otawa/proc/SilentFeature.h>
 
 namespace otawa {
 
@@ -41,7 +40,6 @@ public:
 	virtual delayed_t type(Inst *inst) = 0;
 	virtual int count(Inst *inst);
 };
-extern Feature<NoProcessor> DELAYED2_FEATURE;
 extern Identifier<DelayedInfo *> DELAYED_INFO;
 
 
@@ -57,17 +55,18 @@ extern Identifier<Address> SP_ADDRESS;
 extern Identifier<delayed_t> DELAYED;
 
 // Features
-extern Feature<NoProcessor> MEMORY_ACCESS_FEATURE;
-extern Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE;
-extern Feature<NoProcessor> STACK_USAGE_FEATURE;
-extern Feature<NoProcessor> REGISTER_USAGE_FEATURE;
-extern Feature<NoProcessor> CONTROL_DECODING_FEATURE;
-extern Feature<NoProcessor> SOURCE_LINE_FEATURE;
-extern SilentFeature MEMORY_ACCESSES;
-extern SilentFeature SEMANTICS_INFO;
-extern Feature<NoProcessor> DELAYED_FEATURE;
-extern SilentFeature SEMANTICS_INFO_EXTENDED;
-extern SilentFeature SEMANTICS_INFO_FLOAT;
+extern p::feature CONTROL_DECODING_FEATURE;
+extern p::feature DELAYED_FEATURE;
+extern p::feature DELAYED2_FEATURE;
+extern p::feature FLOAT_MEMORY_ACCESS_FEATURE;
+extern p::feature MEMORY_ACCESS_FEATURE;
+extern p::feature MEMORY_ACCESSES;
+extern p::feature REGISTER_USAGE_FEATURE;
+extern p::feature SEMANTICS_INFO_EXTENDED;
+extern p::feature SEMANTICS_INFO_FLOAT;
+extern p::feature SEMANTICS_INFO;
+extern p::feature SOURCE_LINE_FEATURE;
+extern p::feature VLIW_SUPPORTED;
 
 } // otawa
 

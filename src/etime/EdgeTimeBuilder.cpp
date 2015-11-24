@@ -54,7 +54,7 @@ io::Output& operator<<(io::Output& out, EdgeTimeBuilder::place_t p) {
  * @param n		Number of bits in the configuration.
  * @return		String display of the configuration.
  */
-string Config::toString(int n) {
+string Config::toString(int n) const {
 	StringBuffer buf;
 	for(int i = 0; i < n; i++)
 		buf << (bit(i) ? "+" : "-");
@@ -323,6 +323,7 @@ void EdgeTimeBuilder::configure(const PropList& props) {
  */
 void EdgeTimeBuilder::setup(WorkSpace *ws) {
 	sys = ipet::SYSTEM(ws);
+
 }
 
 

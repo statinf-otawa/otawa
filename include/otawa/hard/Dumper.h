@@ -27,7 +27,7 @@
 
 namespace otawa { namespace hard {
 
-class Dumper: public Processor {
+class Dumper: public otawa::Processor {
 public:
 	static Registration<Dumper> reg;
 	Dumper(void);

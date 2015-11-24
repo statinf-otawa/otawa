@@ -20,9 +20,10 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Processor.h>
 #include <otawa/hard/ProcessorBuilder.h>
-#include <otawa/manager.h>
 #include <elm/serial2/XOMUnserializer.h>
 
 namespace otawa { namespace hard {

@@ -20,7 +20,10 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/deprecated.h>
+#include <elm/stree/SegmentBuilder.h>
 #include <elm/xom.h>
+
 #include <otawa/prog/Process.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
@@ -30,8 +33,7 @@
 #include <otawa/prog/FixedTextDecoder.h>
 #include <elm/genstruct/DAGNode.h>
 #include <otawa/proc/Feature.h>
-#include <elm/deprecated.h>
-#include <elm/stree/SegmentBuilder.h>
+#include <otawa/prog/File.h>
 
 using namespace elm;
 
@@ -48,7 +50,7 @@ namespace otawa {
  * @li @ref otawa::DELAYED
  *
  */
-Feature<NoProcessor> DELAYED_FEATURE("otawa::DELAYED_FEATURE");
+p::feature DELAYED_FEATURE("otawa::DELAYED_FEATURE", new Maker<NoProcessor>());
 
 
 /**
@@ -130,6 +132,26 @@ Address SimState::upperWrite(void) {
  */
 void SimState::setSP(const Address& addr) {
   ASSERTP(false, "SimState::setSP() unsupported");
+}
+
+
+/**
+ * Get register value from the state.
+ * @param r	Looked register.
+ */
+t::uint32 SimState::getReg(hard::Register *r) {
+	ASSERTP(false, "SimState::getReg() unsupported");
+	return 0;
+}
+
+
+/**
+ * Set register value in the state.
+ * @param r		Register to change.
+ * @param v		Value to set.
+ */
+void SimState::setReg(hard::Register *r, t::uint32 v) {
+	ASSERTP(false, "SimState::setReg() unsupported");
 }
 
 
@@ -410,14 +432,6 @@ void Process::unlink(WorkSpace *ws) {
 void Process::provide(AbstractFeature& feature) {
 	provided.add(&feature);
 }
-
-
-/**
- * This feature ensure that stack information are available, that is, that
- * Inst::stackSet() and Inst::stackUse() methods returns meaningful results.
- * This feature is usually provided by the program loader.
- */
-Feature<NoProcessor> STACK_USAGE_FEATURE("otawa::STACK_USAGE_FEATURE");
 
 
 /**
@@ -822,7 +836,7 @@ String OutOfSegmentException::message(void) {
  * @par Provided Methods
  * @li @ref Process::get() family of methods.
  */
-Feature<NoProcessor> MEMORY_ACCESS_FEATURE("otawa::MEMORY_ACCESS_FEATURE");
+p::feature MEMORY_ACCESS_FEATURE("otawa::MEMORY_ACCESS_FEATURE", new Maker<NoProcessor>());
 
 
 /**
@@ -833,7 +847,7 @@ Feature<NoProcessor> MEMORY_ACCESS_FEATURE("otawa::MEMORY_ACCESS_FEATURE");
  * @li @ref Process::get(Address, double&),
  * @li @ref Process::get(Address, long double&),
  */
-Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE("otawa::FLOAT_MEMORY_ACCES_FEATURE");
+p::feature FLOAT_MEMORY_ACCESS_FEATURE("otawa::FLOAT_MEMORY_ACCES_FEATURE", new Maker<NoProcessor>());
 
 
 /**
@@ -843,7 +857,7 @@ Feature<NoProcessor> FLOAT_MEMORY_ACCESS_FEATURE("otawa::FLOAT_MEMORY_ACCES_FEAT
  * @li @ref	Inst::readRegs(void);
  * @li @ref Inst::writtenRegs(void);
  */
-Feature<NoProcessor> REGISTER_USAGE_FEATURE("otawa::REGISTER_USAGE_FEATURE");
+p::feature REGISTER_USAGE_FEATURE("otawa::REGISTER_USAGE_FEATURE", new Maker<NoProcessor>());
 
 
 /**
@@ -852,7 +866,7 @@ Feature<NoProcessor> REGISTER_USAGE_FEATURE("otawa::REGISTER_USAGE_FEATURE");
  * @par Provided Methods
  * @li @ref Inst::target()
  */
-Feature<NoProcessor> CONTROL_DECODING_FEATURE("otawa::CONTROL_DECODING_FEATURE");
+p::feature CONTROL_DECODING_FEATURE("otawa::CONTROL_DECODING_FEATURE", new Maker<NoProcessor>());
 
 
 /**
@@ -862,7 +876,16 @@ Feature<NoProcessor> CONTROL_DECODING_FEATURE("otawa::CONTROL_DECODING_FEATURE")
  * @li @ref Process::getSourceLine()
  * @li @ref Process::getAddresses()
  */
-Feature<NoProcessor> SOURCE_LINE_FEATURE("otawa::SOURCE_LINE_FEATURE");
+p::feature SOURCE_LINE_FEATURE("otawa::SOURCE_LINE_FEATURE", new Maker<NoProcessor>());
+
+
+
+/**
+ * This feature is provided on Process objects by architecture implementing VLIW
+ * facilities. This means mainly that Inst::IS_BUNDLE and Inst::semWriteBack() are used
+ * in instructions.
+ */
+p::feature VLIW_SUPPORTED("otawa::VLIW_SUPPORTED", new Maker<NoProcessor>());
 
 
 /**
@@ -917,7 +940,6 @@ DecodingException::DecodingException(const string& message):
 }
 
 
-static SilentFeature::Maker<NoProcessor> mem_maker;
 /**
  * This feature, put on a process, informs that the functional simulator
  * provides the ability to give information about memory accesses.
@@ -931,7 +953,7 @@ static SilentFeature::Maker<NoProcessor> mem_maker;
  * @li @ref otawa::sim::State::lowerWrite()
  * @li @ref otawa::sim::State::upperWrite()
  */
-SilentFeature MEMORY_ACCESSES("otawa::MEMORY_ACCESSES", mem_maker);
+p::feature MEMORY_ACCESSES("otawa::MEMORY_ACCESSES", new Maker<NoProcessor>());
 
 
 /**
@@ -944,7 +966,7 @@ SilentFeature MEMORY_ACCESSES("otawa::MEMORY_ACCESSES", mem_maker);
  * @par Activated Methods
  * @li @ref otawa::Inst::semInsts() method.
  */
-SilentFeature SEMANTICS_INFO("otawa::SEMANTICS_INFO", mem_maker);
+p::feature SEMANTICS_INFO("otawa::SEMANTICS_INFO", new Maker<NoProcessor>());
 
 
 /**
@@ -970,7 +992,7 @@ SilentFeature SEMANTICS_INFO("otawa::SEMANTICS_INFO", mem_maker);
  * @par Activated Methods
  * @li @ref otawa::Inst::semInsts() method.
  */
-SilentFeature SEMANTICS_INFO_EXTENDED("otawa::SEMANTICS_INFO_EXTENDED", mem_maker);
+p::feature SEMANTICS_INFO_EXTENDED("otawa::SEMANTICS_INFO_EXTENDED", new Maker<NoProcessor>());
 
 
 /**
@@ -985,7 +1007,7 @@ SilentFeature SEMANTICS_INFO_EXTENDED("otawa::SEMANTICS_INFO_EXTENDED", mem_make
  * @par Activated Methods
  * @li @ref otawa::Inst::semInsts() method.
  */
-SilentFeature SEMANTICS_INFO_FLOAT("otawa::SEMANTICS_INFO_FLOAT", mem_maker);
+p::feature SEMANTICS_INFO_FLOAT("otawa::SEMANTICS_INFO_FLOAT", new Maker<NoProcessor>());
 
 
 /**
@@ -1129,7 +1151,7 @@ int DelayedInfo::count(Inst *inst) {
  * @par Properties
  * @li @ref DELAYED_INFO
  */
-Feature<NoProcessor> DELAYED2_FEATURE("otawa::DELAYED2_FEATURE");
+p::feature DELAYED2_FEATURE("otawa::DELAYED2_FEATURE", new Maker<NoProcessor>());
 
 
 /**

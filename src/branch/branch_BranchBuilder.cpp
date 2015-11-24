@@ -194,7 +194,8 @@ void BranchBuilder::processWorkSpace(WorkSpace* ws) {
 					categorize(bb, dom, header, cat);
 
 					CATEGORY(bb) = cat;
-					HEADER(bb) = header;
+					if(header)
+						HEADER(bb) = header;
 
 				}
 			}

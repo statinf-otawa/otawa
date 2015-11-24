@@ -32,7 +32,7 @@ set(ppc2_SOURCES
 	${OTAWA_SEM}
 )
 
-set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}/../../")
 set(CMAKE_MACOSX_RPATH true)
 
 

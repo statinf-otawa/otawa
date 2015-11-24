@@ -63,6 +63,7 @@ protected:
 	void contributeConst(void);
 	void contributeSplit(const config_list_t& confs, t::uint32 pos, t::uint32 neg, t::uint32 com, ot::time lts_time, ot::time hts_time);
 	void makeSplit(const config_list_t& confs, int p, ConfigSet& hts, ot::time& lts_time, ot::time& hts_time);
+	inline genstruct::Vector<Resource *> *ressources(void) { return &_hw_resources; }
 
 private:
 

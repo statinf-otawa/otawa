@@ -95,6 +95,7 @@ using namespace elm;
  * @li XOR -- binary inclusive xor,
  * @li MUL -- signed multiplication,
  * @li MULU -- unsigned multiplication,
+ * @li MULH -- higher order bits of multiplication,
  * @li DIV -- signed division,
  * @li DIVU -- unsigned division,
  * @li MOD -- signed integer division remainder,
@@ -121,6 +122,7 @@ using namespace elm;
  * |[xor (d, a, b)]| (p, s) = (p + 1, s[s[a] ^   s[b] / d])
  * |[mul (d, a, b)]| (p, s) = (p + 1, s[s[a] *   s[b] / d])
  * |[mulu(d, a, b)]| (p, s) = (p + 1, s[s[a] *+  s[b] / d])
+ * |[mulh(d, a, b)]| (p, s) = (p + 1, s[(s[a] *  s[b]) >> bitlength(d) / d])
  * |[div (d, a, b)]| (p, s) = (p + 1, s[s[a] /   s[b] / d])
  * |[divu(d, a, b)]| (p, s) = (p + 1, s[s[a] /+  s[b] / d])
  * |[mod (d, a, b)]| (p, s) = (p + 1, s[s[a] %   s[b] / d])
@@ -326,7 +328,8 @@ static cstring inst_names[] = {
 	"divu",		// DIVU
 	"mod",		// MOD
 	"modu",		// MODU
-	"spec"		// SPEC
+	"spec",		// SPEC
+	"mulh"		// MULH
 };
 
 static void printArg(const hard::Platform *pf, io::Output& out, signed short arg) {
@@ -410,8 +413,10 @@ void Block::print(elm::io::Output& out) const {
  * @param block	Block to output.
  */
 void Printer::print(elm::io::Output& out, const Block& block) const {
-	for(Block::InstIter inst(block); inst; inst++)
+	for(Block::InstIter inst(block); inst; inst++) {
 		print(out, inst);
+		out << io::endl;
+	}
 }
 
 
@@ -449,6 +454,8 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
 	case SETP:
 		out << ' '; printArg(pf, out, inst.d());
 		out << ", 0x" << io::hex(inst.cst()) << " (" << inst.cst() << ")";
+		if (inst.cst() > type_info<t::int32>::max)
+			out << " (" << (t::int32)inst.cst() << ")";
 		break;
 	case IF:
 		out << ' ' << inst.cond();
@@ -466,6 +473,7 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
 	case OR:
 	case MUL:
 	case MULU:
+	case MULH:
 	case DIV:
 	case DIVU:
 	case MOD:

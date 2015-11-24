@@ -25,11 +25,10 @@
 #include <elm/system/Path.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/util/MessageException.h>
+#include <elm/xom.h>
 #include <elm/system/Plugger.h>
 #include <otawa/properties.h>
 #include <otawa/base.h>
-#include <otawa/program.h>
-#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 
@@ -39,17 +38,15 @@ using namespace elm;
 class File;
 class Loader;
 class Manager;
-namespace ilp {
-	class System;
-}
-namespace sim {
-	class Simulator;
-}
+class WorkSpace;
 namespace hard {
 	class CacheConfiguration;
 	class Memory;
+	class Platform;
 	class Processor;
 }
+namespace ilp { class System; }
+namespace sim { class Simulator; }
 
 // LoadException class
 class LoadException: public MessageException {
@@ -79,8 +76,7 @@ public:
 	WorkSpace *load(const elm::system::Path& path,
 		const PropList& props = PropList::EMPTY);
 	WorkSpace *load(const PropList& props = PropList::EMPTY);
-	WorkSpace *load(xom::Element *elem,
-		const PropList& props = PropList::EMPTY);
+	WorkSpace *load(xom::Element *elem, const PropList& props = PropList::EMPTY);
 	ilp::System *newILPSystem(String plugin = "");
 	elm::system::Path retrieveConfig(const elm::system::Path& path);
 	Loader *findFileLoader(const elm::system::Path& path);

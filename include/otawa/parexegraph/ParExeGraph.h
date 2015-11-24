@@ -24,6 +24,7 @@
 #define _PAR_EXEGRAPH_H_
 
 #include <otawa/graph/GenGraph.h>
+#include <elm/PreIterator.h>
 #include <elm/string/StringBuffer.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/parexegraph/ParExeProc.h>

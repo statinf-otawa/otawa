@@ -602,6 +602,7 @@ bool System::hasDump(format_t fmt) {
 		case DEFAULT:
 		case LP_SOLVE:
 		case CPLEX:
+		case MOSEK:
 			return true;
 			break;
 		default:

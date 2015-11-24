@@ -647,7 +647,7 @@ void Platform::loadMemory(elm::xom::Element *element) throw(LoadException) {
 /**
  * Set the list of banks for an actual platform.
  * @param banks	Table of register banks.
- * @notice	This method is only accessible from derivated class implementing
+ * @note	This method is only accessible from derived class implementing
  *			an actual platform.
  */
 void Platform::setBanks(const banks_t& banks) {

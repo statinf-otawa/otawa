@@ -23,6 +23,7 @@
 #define OTAWA_PROC_PROC_REGISTRY_H
 
 #include <elm/genstruct/HashTable.h>
+#include <elm/PreIterator.h>
 #include <otawa/proc/Registration.h>
 
 namespace otawa {

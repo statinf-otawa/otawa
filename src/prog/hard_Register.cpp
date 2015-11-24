@@ -283,7 +283,7 @@ PlainBank::~PlainBank(void) {
 
 
 /**
- * Build a melted bank with the registers pass in the variable list arguments
+ * Build a melted bank with the registers passed in the variable list arguments
  * (ended by null).
  * @param name	Name of the bank.
  * @param ...	List of registers in the bank.

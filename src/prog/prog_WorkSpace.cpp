@@ -54,20 +54,22 @@
  *  File -> Process [ arrowhead = diamond, label="files", taillabel="1..*" ];
  *  Process -> File [ label="program", headlabel="1" ];
  *  Segment -> File [ arrowhead = diamond, label="segments", taillabel="1..*" ];
- *  CodeItem -> Segment [ arrowhead = diamond, label="items", taillabel="0..*" ];
+ *  ProgItem -> Segment [ arrowhead = diamond, label="items", taillabel="0..*" ];
  *  Symbol -> File[ arrowhead = diamond, label="symbols", taillabel="0..*" ];
- *  Inst -> CodeItem [ arrowhead = empty ];
+ *  Inst -> ProgItem [ arrowhead = empty ];
  *
  *  Manager [ label="{Manager||}", URL="@ref otawa::Manager", root=true ]
  *  WorkSpace [ label="{WorkSpace||}", URL="@ref otawa::WorkSpace" ]
  *  Process [ label="{Process||}", URL="@ref otawa::Process" ]
  *  File [ label="{File||}", URL="@ref otawa::File" ]
  *  Segment [ label="{Segment||}", URL="@ref otawa::Segment" ]
- *  CodeItem [ label="{CodeItem||}", URL="@ref otawa::CodeItem" ]
+ *  ProgItem [ label="{ProgItem||}", URL="@ref otawa::ProgItem" ]
  *  Inst [ label="{Inst||}", URL="@ref otawa::Inst" ]
  *  Symbol [ label="{Symbol||}", URL="@ref otawa::Symbol" ]
  * }
  * @enddot
+ *
+ * @section prog_desc	Description
  *
  * The program representation module of OTAWA is the main module providing all details
  * about the processed program. It provides a representation built from the program
@@ -99,7 +101,7 @@
  * @li the @ref otawa::File represents a binary file involved in the building of the execution environments
  *   (each program has at least one file containing the main program and possibly
  *   other file for dynamically linked libraries -- most often zero in embedded systems),
- * @li the @ref otawa::Segment divides the program in different parts (code, date, etc),
+ * @li the @ref otawa::Segment divides the program in different parts (code, data, etc),
  * @li the @ref otawa::ProgItem decompose each segment into code or data items,
  * @li the @ref otawa::Inst is an instance of @ref otawa::ProgItem that represents a single instruction,
  * @li the @ref otawa::DataItem is an instance of @ref otawa::ProgItem that represents a piece of data,
@@ -129,6 +131,89 @@
  * Notice that most properties listed above may be used with @ref owcet command
  * or most OTAWA command using "--add-prop" option. Ask for command description
  * with "-h" option or look at @ref otawa::Application for more details.
+ *
+ *
+ * @section prog_vliw	VLIW Support
+ *
+ * VLIW (Very Long Instruction Word) is a technology allowing to execute in parallel
+ * several instructions, in order, without the logic needed to analyze dependencies
+ * between instructions and to re-order instructions as found in out-of-order
+ * architectures. Instruction are grouped into bundles that are guaranteed
+ * by compiler to be executable in parallel.
+ *
+ * For instance, runned on a VLIW computer, the ARM instructions below perform
+ * actually an exchange of register R0 and R1 (end of bundle is denoted by double semi-colon):
+ * @code
+ * 	MOV R0, R1;
+ * 	MOV R1, R0;;
+ * @endcode
+ * In fact, when the bundle above is executed, registers R1 and R0 are read in parallel and the
+ * assignment to R0, respectively to R1, is also performed in parallel.
+ *
+ * OTAWA provides a specific support for VLIW but the bundle-aware resources can be used as is
+ * by non-VLIW instruction set: bundles will be composed of only one instruction in this case.
+ * Whatever, using bundle-aware architecture allows adaptation for free of analyzes to VLIW and
+ * non-VLIW  architectures. Following bundle facilities are available:
+ * @li Inst::isBundleEnd() -- end of bundle detection,
+ * @li Inst::semInsts(sem::Block&, int temp) -- semantic instruction generation with temporary re-basing,
+ * @li Inst::semWriteBack() -- parallel write-back generation of registers from temporaries to actual registers,
+ * @li BasicBlock::BundleIter -- iterator on the bundle composing a basic block.
+ *
+ * A special attention must be devoted to supporting semantic instruction. Model of execution of
+ * semantic instruction is purely sequential. Hence, VLIW instruction set semantic cannot be preserved
+ * if semantic instructions of machine are executed sequentially. Re-using the example of register
+ * exchange above, the straight translation into semantics will only copy R1 to R0:
+ * @code
+ *	MOV R0, R1
+ *		SET(R0, R1)
+ *	MOV R1, R0
+ *		SET(R1, R0)
+ * @endcode
+ *
+ * A simple trick allows maintaining the current semantic instruction behavior and to adapt without effort
+ * existing analysis to VLIW: just copy write-back registers into temporaries and delay write-back to
+ * the end of execution of semantic instructions. Therefore, the semantic instructions implementing a
+ * machine instructions of a bundle need only to be concatenated and ended by write-back operations.
+ * uses these temporaries instead (our example continued):
+ * @code
+ * 	MOV R0, R1
+ * 		SET(T1, R1)		// T1 refers to R0
+ * 	MOV R1, R0			// T2 refers to R1
+ * 		SET(T2, R0)
+ *
+ * 		SET(R0, T1)
+ * 		SET(R1, R2)
+ * @endcode
+ *
+ * This requires the help of the VLIW instructions to build such a sequence. Usually, the template
+ * to translate into semantic instructions looks like:
+ * @code
+ *	MOV ri, rj
+ *		SET(ri, rj)
+ * @endcode
+ *
+ * For VLIW, this template must be re-defined to perform write-back on temporaries:
+ * @code
+ * 	MOV ri, rj
+ * 		semantic
+ * 			SET(temp, rj)
+ * 		write-back (1 temporary used)
+ * 			SET(ri, temp)
+ * @endcode
+ *
+ * Write-back sequence is obtained by a call to Inst::semWriteBack() that returns also the number
+ * of used temporaries and Inst::semInsts() allows generating the semantic instruction using
+ * a specific temporary base. To detail the example, we get:
+ * @code
+ * 	Inst(MOV R0, R1).semInsts(block, T1) = 1
+ * 		SET(T1, R1)
+ * 	Inst(MOV R1, R0).semInsts(block, T2) = 1
+ * 		SET(T2, R0)
+ *	Inst(MOV R0, R1).semWriteBack(block, T1) = 1
+ *		SET(R0, T1)
+ *	Inst(MOV R1, R0).semWriteBack(block, T2) = 1
+ *		SET(R1, T2)
+ * @endcode
  */
 
 namespace otawa {

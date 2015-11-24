@@ -42,9 +42,9 @@ typedef enum opcode {
 	BRANCH,		// perform a branch on content of register a
 	TRAP,		// perform a trap
 	CONT,		// stop the execution of the block
-	IF,			// continue if condition cond is meet in register sr, else skip "jump" instructions
-	LOAD,		// reg <- MEM_type(addr)
-	STORE,		// MEM_type(addr) <- reg
+	IF,			// continue if condition cond is met in register sr, else skip "jump" instructions
+	LOAD,		// rd <- MEM_rb(ra)
+	STORE,		// MEM_rb(ra) <- rd
 	SCRATCH,	// d <- T
 	SET,		// d <- a
 	SETI,		// d <- cst
@@ -67,7 +67,8 @@ typedef enum opcode {
 	DIVU,		// d <- unsigned(a) / unsigned(b)
 	MOD,		// d <- a % b
 	MODU,		// d <- unsigned(a) % unsigned(b)
-	SPEC		// special instruction (d: code, cst: sub-code)
+	SPEC,		// special instruction (d: code, cst: sub-code)
+	MULH		// d <- (a * b) >> bitlength(d)
 } opcode;
 
 
@@ -149,10 +150,10 @@ inline inst branch(int to) { return inst(BRANCH, to); }
 inline inst trap(void) { return inst(TRAP); }
 inline inst cont(void) { return inst(CONT); }
 inline inst _if(int cond, int sr, int jump) { ASSERT(cond >= 0 && cond < MAX_COND); return inst(IF, cond, sr, jump); }
-inline inst load(int d, int a, int b) { return inst(LOAD, d, a, b); }
-inline inst load(int d, int a, type_t b) { return inst(LOAD, d, a, b); }
-inline inst store(int d, int a, int b) { return inst(STORE, d, a, b); }
-inline inst store(int d, int a, type_t b) { return inst(STORE, d, a, b); }
+inline inst load(int d, int a, int t) { return inst(LOAD, d, a, t); }
+inline inst load(int d, int a, type_t t) { return inst(LOAD, d, a, t); }
+inline inst store(int d, int a, int t) { return inst(STORE, d, a, t); }
+inline inst store(int d, int a, type_t t) { return inst(STORE, d, a, t); }
 inline inst scratch(int d) { return inst(SCRATCH, d); }
 inline inst set(int d, int a) { return inst(SET, d, a); }
 inline inst seti(int d, unsigned long cst) { inst i(SETI, d); i.args.cst = cst; return i; }
@@ -175,6 +176,8 @@ inline inst divu(int d, int a, int b) { return inst(DIVU, d, a, b); }
 inline inst mod(int d, int a, int b) { return inst(MOD, d, a, b); }
 inline inst modu(int d, int a, int b) { return inst(MODU, d, a, b); }
 inline inst _xor(int d, int a, int b) { return inst(XOR, d, a, b); }
+inline inst spec(int d, unsigned long cst) { inst i(SPEC, d); i.args.cst = cst; return i; }
+inline inst mulh(int d, int a, int b) { return inst(MULH, d, a, b); }
 
 // Block class
 class Block: public elm::genstruct::Vector<inst> {

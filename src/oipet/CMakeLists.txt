@@ -1,10 +1,10 @@
-set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../lib")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}/../lib")
 
 
 set(oipet_SOURCES
 	"oipet.cpp"
 	)
-	
+
 add_executable(oipet ${oipet_SOURCES})
 
 target_link_libraries(oipet ${LIBELM})

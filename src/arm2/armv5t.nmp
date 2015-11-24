@@ -1,0 +1,50 @@
+include "defs.nmp"
+include "defs2.nmp"
+
+extend B_Cond
+	otawa_target = __IADDR + 8 + (coerce(int(32), signed_immed_24) :: 0b00)
+
+
+extend BLX1_thumb
+	otawa_kind =
+		switch(H) {
+		case 0b00: IS_CONTROL
+		case 0b01: IS_BL_1 | IS_CONTROL | IS_CALL | (if offs == 0 then IS_RETURN else 0 endif)
+		case 0b10: IS_BL_0 | IS_ALU
+		case 0b11: IS_BL_1 | IS_CONTROL | IS_CALL | (if offs == 0 then IS_RETURN else 0 endif)
+		}
+
+extend BLX2_thumb
+	otawa_kind = IS_CONTROL | IS_CALL
+
+extend BLX1_thumb
+	otawa_target =
+		switch(H) {
+		case 0b00: target
+		case 0b01: (coerce(u32, offs) << 1) & 0xfffffffc
+		case 0b10: __IADDR + 4 + (coerce(s32, offs) << 12)
+		case 0b11: coerce(u32, offs) << 1
+		}
+
+extend BLX1_thumb
+	otawa_sem = {
+		switch(H) {
+		case 0b00:
+			_branch(__IADDR + 4 + exts(offs) << 1);
+		case 0b01:
+			seti(t1, exts(offs) << 1);
+			add(t1, t1, R(14));
+			_branch(t1);
+			seti(R(14), __IADDR + 2);
+		case 0b10:
+			seti(R(14), __IADDR + 4 + exts(offs) << 12);
+		case 0b11:
+			seti(t1, exts(offs) << 1);
+			add(t1, R(14), t1);
+			_branch(t1);
+			seti(R(14), __IADDR + 2);
+		};
+	}
+
+extend BLX2_thumb
+	otawa_sem = { seti(R(14), __IADDR + 2); _branch(rm.i); }

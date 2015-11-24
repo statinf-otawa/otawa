@@ -85,7 +85,7 @@ namespace clp {
 		
 		static const State EMPTY, FULL;
 
-		class Iter: public PreIterator<Iter, Value> {
+		class Iter: public PreIterator<Iter, const Value&> {
 		public:
 			inline Iter(State& s): state(s), i(0), node(state.first.getNext()) { }
 			inline Iter(const Iter& iter): state(iter.state), i(iter.i), node(iter.node) { }

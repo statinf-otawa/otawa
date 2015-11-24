@@ -3,7 +3,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-13, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -15,7 +15,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_HARD_PLATFORM_H
@@ -36,9 +36,9 @@ namespace elm {
 namespace otawa {
 
 class Manager;
-	
+
 namespace hard {
-	
+
 // Extern Classes
 class CacheConfiguration;
 class Memory;
@@ -53,14 +53,14 @@ public:
 
 	// Architecture
 	static const elm::String POWERPC;
-	
+
 	// ABI
 	static const elm::String ELF;
 	static const elm::String EABI;
 	static const elm::String LINUX;
 	static const elm::String LINUX_2_4;
 	static const elm::String LINUX_2_6;
-	
+
 	// Platform
 	static const elm::String MAC;
 	static const elm::String SIM;
@@ -95,7 +95,7 @@ public:
 	virtual bool accept(const Identification& id);
 	inline bool accept(elm::CString name);
 	inline bool accept(const elm::String& name);
-	
+
 	// Register bank access
 	inline const banks_t& banks(void) const;
 	inline int regCount(void) const { return rcnt; }
@@ -103,14 +103,14 @@ public:
 	const Register *findReg(const string& name) const;
 	virtual const Register *getSP(void) const;
 	virtual const Register *getPC(void) const;
-	
+
 	// deprecated
 	inline const CacheConfiguration& cache(void) const;
 	void loadCacheConfig(const elm::system::Path& path);
 	void loadCacheConfig(elm::xom::Element *element);
 	inline const Memory& memory(void) const { return *_memory; }
 	void loadMemory(const elm::system::Path& path) throw(otawa::LoadException);
-	void loadMemory(elm::xom::Element *element) throw(otawa::LoadException); 
+	void loadMemory(elm::xom::Element *element) throw(otawa::LoadException);
 	void loadProcessor(const elm::system::Path& path);
 	void loadProcessor(elm::xom::Element *element);
 	inline const Processor *processor(void) const { return _processor; };

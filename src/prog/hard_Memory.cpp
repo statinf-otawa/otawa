@@ -20,6 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/hard/Memory.h>
 #include <elm/serial2/XOMUnserializer.h>
 
