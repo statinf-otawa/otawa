@@ -7,6 +7,27 @@ set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g")
 file(READ "VERSION" VERSION)
 set(ORIGIN $ORIGIN)
 
+# installation level
+set(INSTALL_TYPE "bin,lib,inc,doc" CACHE STRING "Type of installation (a ',' separated combination of bin, lib, inc, doc).")
+if(NOT INSTALL_TYPE OR INSTALL_TYPE MATCHES "all")
+	set(INSTALL_BIN yes)
+	set(INSTALL_LIB yes)
+	set(INSTALL_INC yes)
+	set(INSTALL_DOC yes)
+endif()
+if(INSTALL_TYPE MATCHES ".*bin.*")
+	set(INSTALL_BIN yes)
+endif()
+if(INSTALL_TYPE MATCHES ".*lib.*")
+	set(INSTALL_LIB yes)
+endif()
+if(INSTALL_TYPE MATCHES ".*inc.*")
+	set(INSTALL_INC yes)
+endif()
+if(INSTALL_TYPE MATCHES ".*doc.*")
+	set(INSTALL_DOC yes)
+endif()
+
 # gcc based compiler lack of support by cmake (opposed to VS)
 # so need to make some manual adjustment in this case
 if (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
@@ -258,15 +279,13 @@ if(OTAWA_TEST)
 	add_subdirectory(test)
 endif()
 
-
-
 # handle autodoc
-if(DOXYGEN)
-add_custom_target("make-autodoc" ALL DEPENDS "autodoc")
-add_custom_command(
-	OUTPUT "autodoc"
-	DEPENDS "Doxyfile"
-	COMMAND "${DOXYGEN}"
-)
-install(DIRECTORY autodoc DESTINATION "${CMAKE_INSTALL_PREFIX}/share/Otawa/")
+if(DOXYGEN AND INSTALL_DOC)
+	add_custom_target("make-autodoc" ALL DEPENDS "autodoc")
+	add_custom_command(
+		OUTPUT "autodoc"
+		DEPENDS "Doxyfile"
+		COMMAND "${DOXYGEN}"
+	)
+	install(DIRECTORY autodoc DESTINATION "${CMAKE_INSTALL_PREFIX}/share/Otawa/")
 endif()
