@@ -1,5 +1,4 @@
 include "defs.nmp"
-include "defs2.nmp"
 
 var sem_rec_first[1, s32]
 

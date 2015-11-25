@@ -27,6 +27,7 @@
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/prog/Manager.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/prop/info.h>
 #include <otawa/util/FlowFactLoader.h>
 

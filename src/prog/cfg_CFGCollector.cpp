@@ -24,8 +24,10 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg/features.h>
 #include <otawa/proc/CFGProcessor.h>
+#include <otawa/prog/File.h>
 #include <otawa/prog/Manager.h>
 #include <otawa/prog/TextDecoder.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/util/FlowFactLoader.h>
 
 namespace otawa {
@@ -112,6 +114,10 @@ void CFGCollection::add(CFG *cfg) {
  *
  * @par Required Features
  * @li @ref CFG_INFO_FEATURE
+ *
+ * @par Algorithm
+ *
+ *
  *
  * @ingroup cfg
  */
@@ -230,6 +236,7 @@ void CFGCollector::buildBBs(CFGMaker& maker, const genstruct::FragTable<Inst *>&
  */
 void CFGCollector::seq(CFGMaker& m, BasicBlock *b, Block *src) {
 	Inst *ni = b->last()->nextInst();
+	cerr << "DEBUG: ni = " << ni->address() << io::endl;
 	if(ni)
 		m.seq(src, BB(ni), new Edge());
 }

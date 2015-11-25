@@ -20,19 +20,19 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <config.h>
-#include <otawa/platform.h>
-#include <otawa/manager.h>
-//#include <otawa/cfg.h>
-#include <otawa/ilp/ILPPlugin.h>
-#include <gel/gel.h>
-#include <elm/xom.h>
-#include <otawa/sim/Simulator.h>
-#include <otawa/prog/Loader.h>
-#include <elm/system/System.h>
-#include <elm/xom/XSLTransform.h>
-#include <otawa/util/XSLTScript.h>
+//#include <config.h>
 #include "../../config.h"
+#include <elm/system/System.h>
+#include <elm/xom.h>
+#include <elm/xom/XSLTransform.h>
+#include <gel/gel.h>
+#include <otawa/ilp/ILPPlugin.h>
+#include <otawa/manager.h>
+#include <otawa/platform.h>
+#include <otawa/prog/Loader.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/util/XSLTScript.h>
+#include <otawa/sim/Simulator.h>
 
 using namespace elm;
 
