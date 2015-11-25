@@ -3,9 +3,31 @@ project("otawa")
 set(PACKAGE "otawa")
 
 # debugging activated
-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g3")
 file(READ "VERSION" VERSION)
 set(ORIGIN $ORIGIN)
+set(ORIGIN $ORIGIN)
+
+# installation level
+set(INSTALL_TYPE "bin,lib,inc,doc" CACHE STRING "Type of installation (a ',' separated combination of bin, lib, inc, doc).")
+if(NOT INSTALL_TYPE OR INSTALL_TYPE MATCHES "all")
+	set(INSTALL_BIN yes)
+	set(INSTALL_LIB yes)
+	set(INSTALL_INC yes)
+	set(INSTALL_DOC yes)
+endif()
+if(INSTALL_TYPE MATCHES ".*bin.*")
+	set(INSTALL_BIN yes)
+endif()
+if(INSTALL_TYPE MATCHES ".*lib.*")
+	set(INSTALL_LIB yes)
+endif()
+if(INSTALL_TYPE MATCHES ".*inc.*")
+	set(INSTALL_INC yes)
+endif()
+if(INSTALL_TYPE MATCHES ".*doc.*")
+	set(INSTALL_DOC yes)
+endif()
 
 # gcc based compiler lack of support by cmake (opposed to VS)
 # so need to make some manual adjustment in this case
@@ -63,6 +85,7 @@ if(ARM_PATH)
 		if(EXISTS ${path})
 			set(path "${path}")
 		endif()
+		set(ARM_LIB "${path}" CACHE PATH "path to ARM library")
 	else()
 		find_library(ARM_LIB arm PATHS "${ARM_PATH}/src" NO_DEFAULT_PATH)
 	endif()
@@ -261,12 +284,12 @@ endif()
 
 
 # handle autodoc
-if(DOXYGEN)
-add_custom_target("make-autodoc" ALL DEPENDS "autodoc")
-add_custom_command(
-	OUTPUT "autodoc"
-	DEPENDS "Doxyfile"
-	COMMAND "${DOXYGEN}"
-)
-install(DIRECTORY autodoc DESTINATION "${CMAKE_INSTALL_PREFIX}/share/Otawa/")
+if(DOXYGEN AND INSTALL_DOC)
+	add_custom_target("make-autodoc" ALL DEPENDS "autodoc")
+	add_custom_command(
+		OUTPUT "autodoc"
+		DEPENDS "Doxyfile"
+		COMMAND "${DOXYGEN}"
+	)
+	install(DIRECTORY autodoc DESTINATION "${CMAKE_INSTALL_PREFIX}/share/Otawa/")
 endif()

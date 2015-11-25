@@ -20,19 +20,19 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <config.h>
-//#include <otawa/platform.h>
-#include <otawa/prog/Manager.h>
-#include <otawa/cfg.h>
-#include <otawa/ilp/ILPPlugin.h>
-#include <gel/gel.h>
-#include <elm/xom.h>
-#include <otawa/sim/Simulator.h>
-#include <otawa/prog/Loader.h>
-#include <elm/system/System.h>
-#include <elm/xom/XSLTransform.h>
-#include <otawa/util/XSLTScript.h>
+//#include <config.h>
 #include "../../config.h"
+#include <elm/system/System.h>
+#include <elm/xom.h>
+#include <elm/xom/XSLTransform.h>
+#include <gel/gel.h>
+#include <otawa/ilp/ILPPlugin.h>
+#include <otawa/manager.h>
+#include <otawa/platform.h>
+#include <otawa/prog/Loader.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/util/XSLTScript.h>
+#include <otawa/sim/Simulator.h>
 
 using namespace elm;
 
@@ -384,7 +384,7 @@ WorkSpace *Manager::loadBin(
 	// any configuration ?
 	Path cpath = loader->path().parent() / (loader->name() + "-config.xml");
 	if(cpath.exists()) {
-		if(isVerbose())
+		/*if(isVerbose())
 			cerr << "INFO: starting evaluation of load configuration file\n";
 		XSLTScript script(cpath, elm::monitor, isVerbose());
 		script.setConfiguration();
@@ -392,7 +392,7 @@ WorkSpace *Manager::loadBin(
 		script.transform();
 		script.fillProps(used_props, "load");
 		if(isVerbose())
-			cerr << "INFO: ended evaluation of load configuration file\n";
+			cerr << "INFO: ended evaluation of load configuration file\n";*/
 	}
 
 	// Try to load the binary

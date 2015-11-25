@@ -154,9 +154,11 @@ Address AbsoluteAddress::toAddress(WorkSpace *ws) {
 /**
  */
 CFG *AbsoluteAddress::cfg(WorkSpace *ws) {
+	/* TODO
 	ASSERT(ws->isProvided(CFG_INFO_FEATURE));
 	CFGInfo *info = CFGInfo::ID(ws);
-	return info->findCFG(ws->findInstAt(_addr));
+	return info->findCFG(ws->findInstAt(_addr));*/
+	return 0;
 }
 
 
@@ -197,9 +199,11 @@ CFG *LabelAddress::cfg(WorkSpace *ws) {
 		return 0;
 
 	// find CFG
+	/*	TODO
 	ASSERT(ws->isProvided(CFG_INFO_FEATURE));
 	CFGInfo *info = CFGInfo::ID(ws);
-	return info->findCFG(ws->findInstAt(addr));
+	return info->findCFG(ws->findInstAt(addr));*/
+	return 0;
 }
 
 /**

@@ -27,6 +27,7 @@
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/prog/Manager.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/prop/info.h>
 #include <otawa/util/FlowFactLoader.h>
 
@@ -42,8 +43,45 @@ namespace otawa {
 typedef struct call_t {
         struct call_t *back;
         CFG *cfg;
-        BasicBlock *entry;
+        CFGMaker *maker;
 } call_t;
+
+
+/**
+ * Put on the first instruction of a function to indicate whether it should be
+ * inlined or not during virtualization.
+ * This overrides @ref VIRTUAL_INLINING default policy of @ref Virtualizer
+ * and @ref INLINING_POLICY of the caller CFG.
+ * @li @ref FLOW_FACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup cfg
+ */
+Identifier<bool> NO_INLINE("otawa::NO_INLINE");
+
+
+/**
+ * Put on the first instruction of a function to set default inlining behavior
+ * during its virtualization.
+ * This overrides @ref VIRTUAL_INLINING default policy of @ref Virtualizer.
+ * @li @ref FLOW_FACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup cfg
+ */
+Identifier<bool> INLINING_POLICY("otawa::INLINING_POLICY");
+
+
+/**
+ * Configuration property of @ref Virtualizer: it set the default behavior for
+ * inlining of function call during virtualization (default to true).
+ * The default behavior can be overridden by @ref NO_INLINE
+ *
+ * @par Hooks
+ * @li Configuration of @ref Virtualizer code processor.
+ */
+Identifier<bool> VIRTUAL_DEFAULT("otawa::VIRTUAL_DEFAULT", true);
+
 
 
 /**
@@ -53,42 +91,15 @@ typedef struct call_t {
  * @par Header
  * <otawa/cfg/features.h>
  *
+ * @par Configuration
+ * @li @ref NO_INLINE
+ * @li @ref INLINING_POLICY
+ *
  * @par Properties
- * @li @ref CALLED_CFG
  * @li @ref RECURSIVE_LOOP
- * @li @ref VIRTUAL_RETURN_BLOCK
- * @li @ref RETURN_OF
  *
  */
 p::feature VIRTUALIZED_CFG_FEATURE("otawa::VIRTUALIZED_CFG_FEATURE", new Maker<Virtualizer>());
-
-
-/**
- * This property is put on a BB performing a function call that has been virtualized (inlined
- * in the current CFG). It gives the BB after the return of the inlined CFG. It is useful
- * to jump over inlinved CFG.
- *
- * @par Hooks
- * @li @ref BasicBlock
- *
- * @par Features
- * @li @ref VIRTUALIZED_CFG_FEATURE
- */
-Identifier<BasicBlock*> VIRTUAL_RETURN_BLOCK("otawa::VIRTUAL_RETURN_BLOCK", 0);
-
-
-/**
- * A property with this identifier is hooked to the edges performing virtual
- * calls and virtual returns when inlining is used. The associated value is the CFG of the called
- * function.
- *
- * @par Hooks
- * @li @ref Edge
- *
- * @par Features
- * @li @ref VIRTUALIZED_CFG_FEATURE
- */
-Identifier<CFG *> CALLED_CFG("otawa::CALLED_CFG", 0);
 
 
 /**
@@ -105,25 +116,12 @@ Identifier<bool> RECURSIVE_LOOP("otawa::RECURSIVE_LOOP", false);
 
 
 /**
- * This property is put on a returning basic block and provides
- * the matching entry block of the function.
- *
- * @par Hooks
- * @li @ref BasicBlock
- *
- * @par Features
- * @li @ref VIRTUALIZED_CFG_FEATURE
- */
-Identifier<BasicBlock *> RETURN_OF("otawa::RETURN_OF", 0);
-
-
-/**
  * @class Virtualizer
  *
  * This processor inlines the function calls.
  *
  * @par Configuration
- * @li @ref VIRTUAL_INLINING
+ * @li @ref VIRTUAL_DEFAULT
  *
  * @par Required features
  * @li @ref FLOW_FACTS_FEATURE
@@ -141,23 +139,12 @@ Identifier<BasicBlock *> RETURN_OF("otawa::RETURN_OF", 0);
 
 
 /**
- * Configuration property of @ref Virtualizer: it set the default behavior for
- * inlining of function call during virtualization (default to true).
- * The default behavior can be overridden by @ref NO_INLINE
- *
- * @par Hooks
- * @li Configuration of @ref Virtualizer code processor.
  */
-Identifier<bool> VIRTUAL_INLINING("otawa::VIRTUAL_INLINING", true);
-
-
-/**
- */
-Virtualizer::Virtualizer(void): Processor(reg), virtual_inlining(false), entry(0) {
+Virtualizer::Virtualizer(void): Processor(reg), virtualize(false), entry(0), coll(0) {
 }
 
 // Registration
-p::declare Virtualizer::reg = p::init("otawa::Virtualizer", Version(1, 2, 0))
+p::declare Virtualizer::reg = p::init("otawa::Virtualizer", Version(2, 0, 0))
 	.maker<Virtualizer>()
 	.use(COLLECTED_CFG_FEATURE)
 	.invalidate(COLLECTED_CFG_FEATURE)
@@ -170,13 +157,13 @@ p::declare Virtualizer::reg = p::init("otawa::Virtualizer", Version(1, 2, 0))
 void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 
 	// get the entry CFG
-	const CFGCollection *coll = INVOLVED_CFGS(fw);
-	entry = coll->get(0);
+	const CFGCollection *old_coll = INVOLVED_CFGS(fw);
+	entry = old_coll->get(0);
 
 	// virtualize the entry CFG
-	VirtualCFG *vcfg = virtualizeCFG(0, entry, none);
-	if(logFor(LOG_CFG))
-		log << "\tINFO: " << vcfg->countBB() << " basic blocks." << io::endl;
+	todo.push(entry);
+	while(todo)
+		makeCFG(0, todo.pop(), none);
 }
 
 
@@ -184,7 +171,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
  */
 void Virtualizer::configure(const PropList &props) {
 	entry = ENTRY_CFG(props);
-	virtual_inlining = VIRTUAL_INLINING(props);
+	virtualize = VIRTUAL_DEFAULT(props);
 	Processor::configure(props);
 }
 
@@ -195,7 +182,7 @@ void Virtualizer::configure(const PropList &props) {
  * @return	True if inlining is activated, false else.
  */
 bool Virtualizer::isInlined(CFG *cfg, Option<int> local_inlining, ContextualPath &path) {
-	Inst *inst = cfg->firstInst();
+	Inst *inst = cfg->first();
 
 	// First look if inlining is requested for the CFG
 	if (path(NO_INLINE, inst).exists())
@@ -206,7 +193,7 @@ bool Virtualizer::isInlined(CFG *cfg, Option<int> local_inlining, ContextualPath
 		return local_inlining.value();
 
 	// Finally decide based on global inlining policy
-	return virtual_inlining;
+	return virtualize;
 }
 
 
@@ -217,7 +204,44 @@ bool Virtualizer::isInlined(CFG *cfg, Option<int> local_inlining, ContextualPath
  * @param entry		Basic block performing the call.
  * @param exit		Basic block after the return.
  */
-void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg,
+void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker *maker, elm::Option<int> local_inlining, ContextualPath &path) {
+	ASSERT(cfg);
+	genstruct::HashTable<Block *, Block *> bmap;
+
+	// add initial blocks
+	bmap.put(cfg->entry(), maker->entry());
+	bmap.put(cfg->exit(), maker->exit());
+	if(cfg->unknown())
+		bmap.put(cfg->unknown(), maker->unknown());
+
+	// add other blocks
+	for(CFG::BlockIter v = cfg->blocks(); v; v++)
+
+		// process end block
+		if(v->isEnd())
+			continue;
+
+		// process basic block
+		else if(v->isBasic()) {
+			BasicBlock *bb = v->toBasic();
+			genstruct::Vector<Inst *> insts(bb->count());
+			for(BasicBlock::InstIter i = bb->insts(); i; i++)
+				insts.add(i);
+			maker->add(new BasicBlock(insts.detach()));
+		}
+
+		// process synthetic block
+		else {
+
+		}
+
+	// add edges
+	for(CFG::BlockIter v = cfg->blocks(); v; v++)
+		for(BasicBlock::EdgeIter e = v->outs(); e; e++)
+			maker->add(bmap.get(e->source()), bmap.get(e->sink()), new Edge());
+}
+
+/*void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg,
 		BasicBlock *entry, BasicBlock *exit, Option<int> local_inlining, ContextualPath &path) {
 	ASSERT(cfg);
 	ASSERT(entry);
@@ -354,7 +378,7 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg,
 	if(logFor(LOG_CFG))
 		log << "\tend inlining " << cfg->label() << io::endl;
 	leavingCall(exit, path);
-}
+}*/
 
 
 /**
@@ -362,28 +386,21 @@ void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg,
  * @param call	Call string.
  * @param cfg	CFG to virtualize.
  */
-VirtualCFG *Virtualizer::virtualizeCFG(struct call_t *call, CFG *cfg, Option<int> local_inlining) {
-	VirtualCFG *vcalled = new VirtualCFG(false);
-	cfgMap.put(cfg, vcalled);
-	ENTRY(vcalled->entry()) = vcalled;
-	vcalled->addBB(vcalled->entry());
+void Virtualizer::makeCFG(struct call_t *call, CFG *cfg, Option<int> local_inlining) {
 	ContextualPath path;
-	virtualize(call, cfg, vcalled, vcalled->entry(), vcalled->exit(), local_inlining, path);
-	vcalled->addBB(vcalled->exit());
-	vcalled->numberBB();
-	return vcalled;
+	make(call, cfg, maker(cfg), local_inlining, path);
 }
 
 
 void Virtualizer::enteringCall(BasicBlock *caller, BasicBlock *callee, ContextualPath &path) {
 	if (!caller->isEntry()) {
-		Inst *call = caller->lastInst();
+		Inst *call = caller->last();
 		if (!call->isCall()) {
 			for (BasicBlock::InstIter inst(caller); inst; inst++)
 				if (inst->isControl())
 					call = inst;
 			if (!call)
-				call = caller->lastInst();
+				call = caller->last();
 			ASSERT(call);
 		}
 		path.push(ContextualStep::CALL, call->address());
@@ -400,23 +417,36 @@ void Virtualizer::leavingCall(BasicBlock *to, ContextualPath& path) {
 
 
 /**
+ * Obtain the maker for a particular CFG.
+ * @param cfg	CFG to look a maker for.
+ * @return		Associated CFG maker.
+ */
+CFGMaker *Virtualizer::maker(CFG *cfg) {
+	CFGMaker *r = map.get(cfg);
+	if(!r) {
+		r = new CFGMaker(cfg->first());
+		map.put(cfg, r);
+	}
+	return r;
+}
+
+
+/**
  */
 void Virtualizer::cleanup(WorkSpace *ws) {
 
 	// allocate the collection
-	CFGCollection *coll = new CFGCollection();
 	addDeletor(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = coll);
 
-
 	// get entry CFG
-	CFG *entry_vcfg = cfgMap.get(entry, 0);
-	addRemover(VIRTUALIZED_CFG_FEATURE, ENTRY_CFG(ws) = entry_vcfg);
+	CFGMaker *entry_maker = map.get(entry, 0);
+	CFG *entry_vcfg = entry_maker->build();
+	addRemover(VIRTUALIZED_CFG_FEATURE, ENTRY_CFG(ws) = coll->get(0));
 
-	// fill the collection
+	// release makers
 	coll->add(entry_vcfg);
-	for(genstruct::HashTable<void *, VirtualCFG *>::Iterator vcfg(cfgMap); vcfg; vcfg++)
-		if(*vcfg != entry_vcfg)
-			coll->add(*vcfg);
+	for(genstruct::HashTable<CFG *, CFGMaker *>::Iterator vcfg(map); vcfg; vcfg++)
+		delete *vcfg;
 }
 
 

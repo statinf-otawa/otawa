@@ -13,6 +13,7 @@
 #include <elm/inhstruct/DLList.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/util/MemBlockMap.h>
+#include <otawa/cfg/features.h>
 
 namespace otawa {
 

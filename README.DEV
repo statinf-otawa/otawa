@@ -1,0 +1,10 @@
+To compile and install OTAWA, follow directives of INSTALL file.
+
+===== INSTALL_TYPE =====
+Installation of OTAWA may also be customized passing INSTALL_TYPE to CMake invocation
+(or modifying in CMakeCache.txt). INSTALL_TYPE contains a comma-separated combination
+of:
+  * ''lib'' to install libraries and data files,
+  * ''bin'' to install commands,
+  * ''inc'' to install development files like includes,
+  * ''doc'' to build and install automatic documentation.

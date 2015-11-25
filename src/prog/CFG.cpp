@@ -20,16 +20,9 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/assert.h>
-#include <elm/debug.h>
-#include <otawa/cfg.h>
-#include <elm/debug.h>
-#include <otawa/util/Dominance.h>
-#include <otawa/dfa/BitSet.h>
-#include <elm/genstruct/HashTable.h>
-#include <elm/genstruct/VectorQueue.h>
-
-using namespace elm::genstruct;
+#include <elm/util/array.h>
+#include <otawa/cfg/CFG.h>
+#include <otawa/prog/File.h>
 
 namespace otawa {
 
@@ -38,8 +31,14 @@ namespace otawa {
  *
  * This module allows to represents program as a Control Flow Graph (CFG).
  * The CFG is graph representation of the execution path of the program where
- * nodes, @ref BasicBlock, represents blocks of sequential instructions
- * and edges, @ref Edge, the control flow transitions between blocks.
+ * nodes represents either a basic block, or a synthetic blocks, and edges, @ref Edge,
+ * the control flow transitions between blocks. A @ref BasicBlock, represents
+ * blocks of sequential instructions. A synthetic represents sub-CFG references a CFG
+ * that may be a subprogram call or a separated subgraph of blocks. Whatever, CFG
+ * have usually a single entry point and a single exit point. Only subprograms
+ * with unresolved control target supports a second exit node, called "unknown":
+ * unresolved branches are implemented as edges from the current basic block
+ * to the unknown node.
  *
  * @section cfg-using Using the CFG
  *
@@ -51,19 +50,21 @@ namespace otawa {
  * #include <otawa/cfg/features.h>
  * @endcode
  *
- * A CFG is made mainly of 3 classes:
+ * A CFG is made mainly of 5 classes:
  * @li @ref CFG -- the CFG itself providing entry and exit virtual nodes and the list of BB,
- * @li @ref BasicBlock -- a BB in the CFG with an address, a size, list of input edges and list of output edges,
- * @li @ref Edge -- an edge in the CFG linking a source BB with a target BB.
+ * @li @ref Edge -- an edge in the CFG linking a source BB with a target BB,
+ * @li @ref Block -- a block with a list of input edges and list of output edges,
+ * @li @ref BasicBlock -- subclass of @ref Block, sequence of instructions with address and size,
+ * @li @ref SynthBlock -- subclass of @ref Block, sub-CFG, potentially a subprogram.
  *
  * These classes are subclasses of @ref PropList and therefore support properties.
  *
- * To visit a CFG, one has to start from either the entry, or the exit BB (that are not virtual blocks
+ * To visit a CFG, one has to start from either the entry, or the exit block (that are not virtual blocks
  * and does not match any code in the program) and follows the edges (be aware that a CFG may contain
  * loops !). To get the outputting edges of a BB, the following code based on the iterator @ref BasicBlock::OutIterator
  * may apply:
  * @code
- * for(BasicBlock::OutIterator edge(bb); edge; edge++)
+ * for(BasicBlock::OutIter edge = bb->outs(); edge; edge++)
  * 		process(edge);
  * @endcode
  *
@@ -88,35 +89,17 @@ namespace otawa {
  * 		if(bb->isEnd())
  * 			return;
  *		cout << "\t" << bb << io::endl;
- *		for(BasicBlock::InstIterator inst(bb); inst; inst++)
+ *		for(BasicBlock::InstIter inst = bb->insts(); inst; inst++)
  *			cout << "\t\t" << inst->address() << "\t" << *inst << io::endl;
  * 	}
  * };
  * @endcode
  *
- * The traversal of the graph following edges requires the understanding of the kind of the edges:
- * @li  @ref Edge::NONE -- unused kind,
- * @li  @ref Edge::TAKEN -- represents a branch instruction that is taken (conditional or not),
- * @li  @ref Edge::NOT_TAKEN -- represents a branch instruction that is not-taken (only conditional),
- * @li  @ref Edge::CALL -- represents a sub-program (do not use the Edge::target() but Edge::calledCFG() to get the called CFG),
- * @li  @ref Edge::VIRTUAL -- one of special edges starting from the entry BB or leading to the exit BB,
- * @li  @ref Edge::VIRTUAL_CALL -- represents a sub-program call whose CFG has been inlined,
- * @li  @ref Edge::VIRTUAL_RETURN -- represents a sub-program return whose CFG has been inlined,
- * @li  @ref Edge::EXN_CALL -- represents an exception call whose CFG has been inlined,
- * @li  @ref Edge::EXN_RETURN represents an exception return whose CFG has been inlined,
- *
- * Notice that you shouldn't use the Edge::target() method for an edge of type Edge::CALL but instead
- * the Edge::calledCFG() that gives the CFG of the called sub-program.
- *
  * One may also observe that the CFG representation fully supports transformations like inlining
  * of called sub-program or the representation of a possible exception raise. As shown in the section
  * on the transformation of CFG, these transformations does not duplicate code or changes the original
  * program. Only the representation is modified and aims at improving the precision in some particular
- * cases. Whatevern the @ref Edge::VIRTUAL_CALL, @ref Edge::VIRTUAL_RETURN, @ref Edge::EXN_CALL and
- * @ref Edge::EXN_RETURN provides more information on the transformed CFG:
- * @li @ref CALLED_CFG -- put on virtual call and return edges, gives the original global CFG,
- * @li @ref RECURSIVE_LOOP -- put on the edge representing the recursive call of an inlined sub-program,
- * @li @ref VIRTUAL_RETURN_BLOCK -- put on the block performing the sub-program call, gives the basic block the sub-program returns to (useful to skip an inlined CFG).
+ * cases.
  *
  * Finally, a CFG may be called at different points in the other CFGs of the program, the properties
  * @ref CALLED_BY hooked to the CFG allows to get the matching calling edges:
@@ -158,8 +141,8 @@ namespace otawa {
  * Once the global CFGs of the program are built, the user is usually interested only in a subset
  * of CFGS corresponding to the task the WCET is computed for. This subset is gathered by the
  * @ref CFGCollector analysis from one of the following properties:
- * @li @ref TASK_ENTRY (in the configuration properties)
- * @li @ref ENTRY_CFG (in the configuration properties or on the workspace)
+ * @li @ref TASK_ENTRY 	(in the configuration properties)
+ * @li @ref ENTRY_CFG	(in the configuration properties or on the workspace)
  * @li @ref CFGCollector::ADDED_CFG -- CFG to add to the collection,
  * @li @ref CFGCollection::ADD_FUNCTION -- function to add to the collection.
  *
@@ -258,33 +241,306 @@ namespace otawa {
 
 
 /**
- * Identifier used for storing and retrieving the CFG on its entry BB.
- *
+ * @class Edge
+ * Edge between two blocks of a CFG.
  * @ingroup cfg
  */
-Identifier<CFG *> ENTRY("otawa::ENTRY", 0);
+
+/**
+ */
+io::Output& operator<<(io::Output& out, Edge *edge) {
+	out << edge->source() << " -> " << edge->sink();
+	return out;
+}
 
 
 /**
- * Identifier used for storing in each basic block from the CFG its index.
- * Also used for storing each CFG's index.
- *
- * @par Hooks
- * @li @ref BasicBlock
- * @li @ref CFG
- *
+ * @class Block;
+ * A node in the CFG. This class is abstract and usually subclassed
+ * as BasicBlock or SynthBlock.
  * @ingroup cfg
  */
-Identifier<int> INDEX("otawa::INDEX", -1);
+
+/**
+ * @fn bool Block::isEnd(void)   const;
+ * Test if the block is an end, i.e. an entry, exit or unknown block.
+ * @return	True if block is an end.
+ */
+
+/**
+ * @fn Block::isEntry(void) const;
+ * Test if a block is an entry.
+ * @return	True if block is an entry.
+ */
+
+/**
+ * @fn Block::isExit(void) const;
+ * Test if a block is an exit.
+ * @return	True if block is an exit.
+ */
+
+/**
+ * @fn Block::isUnknown(void) const;
+ * Test if a block is unknown.
+ * @return	True if block is unknown.
+ */
+
+/**
+ * @fn Block::isSynth(void) const;
+ * Test if a block is synthetic, that is, may be subclassed to SynthBlock.
+ * @return	True if block is synthetic.
+ */
+
+/**
+ * @fn Block::isBasic(void) const;
+ * Test if a block is basic, that is, may be subclassed to BasicBlock.
+ * @return	True if block is basic.
+ */
+
+/**
+ * @fn bool Block::isCall(void) const;
+ * Test if a synthetic block is subprogram call.
+ * @return	True if block is a synthetic subprogram call.
+ */
+
+/**
+ * @fn Block::operator BasicBlock *(void);
+ * Convert current block to BasicBlock. An assertion failure is raised
+ * if it can't be.
+ * @return	Matching basic block.
+ */
+
+ /**
+  * @fn Block::operator SynthBlock *(void);
+  * Convert current block to SynthBlock. An assertion failure is raised
+  * if it can't be.
+  * @return	Matching synthetic block.
+  */
+
+/**
+ * @fn Edge *Block::sequence(void) const;
+ * Get the sequence output edge of the block (if any).
+ * @return	Sequence output edge or null.
+ */
+
+/**
+ * Build a CFG block.
+ * @param type	Block type.
+ */
+Block::Block(t::uint16 type): _type(type), seq(0) {
+}
 
 
 /**
- * @class CFG
- * Control Flow Graph representation. Its entry basic block is given and
- * the graph is built using following taken and not-taken properties of the block.
- *
+ */
+io::Output& operator<<(io::Output& out, Block *block) {
+
+	// end processing
+	if(block->isEnd()) {
+		if(block->isEntry())
+			out << "entry";
+		else if(block->isExit())
+			out << "exit";
+		else
+			out << "unknown";
+	}
+
+	// common block processing
+	else {
+		out << "BB " << block->index() << " (";
+		if(block->isBasic()) {
+			BasicBlock *bb = *block;
+			out << bb->address();
+		}
+		else {
+			SynthBlock *sb = *block;
+			out << sb->callee();
+		}
+		out << ')';
+	}
+
+	return out;
+}
+
+
+/**
+ * @class SynthBlock;
+ * A CFG block representing a branch or a call to a sub-CFG.
  * @ingroup cfg
  */
+
+/**
+ * Build a synthetic block.
+ * @param type		Type of block (it will be at least marked as synthetic).
+ */
+SynthBlock::SynthBlock(t::uint32 type): Block(type | IS_SYNTH), _callee(0), _caller(0) {
+}
+
+/**
+ * @fn CFG *SynthBlock::callee(void) const;
+ * Get the CFG called in a synthetic block (if any).
+ * @return	Synthetic block CFG or null.
+ */
+
+/**
+ * @fn CFG *SynthBlock::caller(void) const;
+ * Get the CFG owner of a synthetic block (if any).
+ * @return	Caller / owner CFG.
+ */
+
+
+/**
+ * @class BasicBlock
+ * A basic block of the CFG.
+ * @ingroup cfg
+ */
+
+/**
+ * Build a basic block.
+ * @param instructions	Null-ended array of instructions.
+ */
+BasicBlock::BasicBlock(const Table<Inst *>& instructions): Block(IS_BASIC), _insts(instructions) {
+	ASSERTP(instructions, "unsupported empty array of instructions");
+}
+
+/**
+ */
+BasicBlock::~BasicBlock(void) {
+}
+
+/**
+ * @fn Address BasicBlock::address(void) const;
+ * Get initial address of the block.
+ * @return Block initial address.
+ */
+
+/**
+ * Get size of the basic block.
+ * @return	Block size (in bytes).
+ */
+int BasicBlock::size(void) {
+	return _insts[_insts.count() - 1]->topAddress() - _insts[0]->address();
+}
+
+/**
+ * @fn Address BasicBlock::topAddress(void);
+ * Get top address, that is, the address of the byte following the basic block.
+ * @param	Block top address.
+ */
+
+/**
+ * @fn Inst *BasicBlock::first(void) const;
+ * Get the first instruction of the block.
+ * @return	Block first instruction?
+ */
+
+/**
+ * Get the control instruction of the block (if any).
+ * @return	Block control instruction.
+ */
+Inst *BasicBlock::control(void) {
+	for(InstIter i(this); i; i++)
+		if(i->isControl())
+			return i;
+	return 0;
+}
+
+
+/**
+ * Get the last instruction of the block.
+ * @return	Block last instruction.
+ */
+Inst *BasicBlock::last(void) {
+	Inst *r = 0;
+	for(InstIter i(this); i; i++)
+		r = i;
+	return r;
+}
+
+/**
+ * Count the number of instructions in the block.
+ * @return	Instruction count.
+ */
+int BasicBlock::count(void) const {
+	int c = 0;
+	for(InstIter i(this); i; i++)
+		c++;
+	return c;
+}
+
+
+/**
+ * @class BasicBlock::InstIter;
+ * Iterator for instruction of a basic block.
+ * @ingroup cfg
+ */
+
+
+/**
+ * @class CFG;
+ * Control Flow Graph of OTAWA.
+ * @ingroup cfg
+ */
+
+/**
+ * Build the CFG.
+ * @param first		First instruction of CFG.
+ * @param type		Type of CFG (one of SUBPROG, SYNTH or any user type).
+ */
+CFG::CFG(Inst *first, type_t type)
+: idx(0), _type(type), fst(first), _exit(0), _unknown(0) {
+}
+
+/**
+ */
+CFG::~CFG(void) {
+
+	// delete edges
+	for(BlockIter b = this->vertices(); b; b++)
+		for(Block::EdgeIter e = b->outs(); e; e++)
+			delete e;
+
+	// delete nodes
+	for(BlockIter b = this->vertices(); b; b++) {
+		if(b->isEnd())
+			delete b;
+		else if(b->isBasic()) {
+			BasicBlock *bb = **b;
+			delete bb;
+		}
+		else {
+			SynthBlock *sb = **b;
+			delete sb;
+		}
+	}
+
+}
+
+/**
+ * Get some label associated with CFG.
+ * @return	CFG label (if any) or empty string.
+ */
+String CFG::label(void) {
+	string id = LABEL(this);
+	if(!id) {
+		id = FUNCTION_LABEL(fst);
+		if(!id)
+			id = LABEL(fst);
+	}
+	return id;
+}
+
+
+/**
+ * Build a name that identifies this CFG and is valid C name.
+ * @return	Name of the CFG.
+ */
+string CFG::name(void) {
+	string name = label();
+	if(!name)
+		name = _ << "__0x" << fst->address();
+	return name;
+}
 
 
 /**
@@ -293,7 +549,7 @@ Identifier<int> INDEX("otawa::INDEX", -1);
  * @return		Formatted address.
  */
 string CFG::format(const Address& addr) {
-	string lab = LABEL(this);
+	string lab = label();
 	if(!lab)
 		return _ << addr;
 	else {
@@ -305,40 +561,11 @@ string CFG::format(const Address& addr) {
 	}
 }
 
-
 /**
- * Constructor. Add a property to the basic block for quick retrieval of
- * the matching CFG.
+ * @fn int CFG::index(void) const;
+ * Get index of the CFG in the current task.
+ * @return	CFG index.
  */
-CFG::CFG(Segment *seg, BasicBlock *entry):
-	flags(0),
-	_entry(BasicBlock::FLAG_Entry),
-	_exit(BasicBlock::FLAG_Exit),
-	_seg(seg),
-	ent(entry)
-{
-	ASSERT(seg && entry);
-
-	// Get label
-	BasicBlock::InstIter inst(entry);
-	String label = FUNCTION_LABEL(inst);
-	if(label)
-		LABEL(this) = label;
-}
-
-
-/**
- * Build an empty CFG.
- */
-CFG::CFG(void):
-	 flags(0),
-	_entry(BasicBlock::FLAG_Entry),
-	_exit(BasicBlock::FLAG_Exit),
-	_seg(0),
-	ent(0)
-{
-}
-
 
 /**
  * @fn BasicBlock *CFG::entry(void);
@@ -353,224 +580,130 @@ CFG::CFG(void):
  * @return Exit basic block.
  */
 
-
 /**
- * @fn Code *CFG::code(void) const;
- * Get the code containing the CFG.
- * @return Container code.
+ * @fn BasicBlock *CFG::unknown(void);
+ * Get the unknown basic block of the CFG (if any).
+ * @return Unknown basic block or null.
  */
 
-
 /**
- * Get some label to identify the CFG.
- * @return	CFG label (if any) or empty string.
+ * @fn CallerIter CFG::callers(void) const;
+ * Get the list of synthetic block performing a call to this CFG.
+ * @return	Caller synthetic block iterator.
  */
-String CFG::label(void) {
-	if(!ent) {
-		BasicBlock::OutIterator out(entry());
-		if(!out)
-			return "";
-		ent = out->target();
-	}
-	string id = LABEL(this);
-	if(!id) {
-		Inst *first = ent->firstInst();
-		if(first) {
-			id = FUNCTION_LABEL(first);
-			if(!id)
-				id = LABEL(first);
-		}
-	}
-	return id;
-}
-
 
 /**
- * Build a name that identifies this CFG and is valid C name.
- * @return	Name of the CFG.
- */
-string CFG::name(void) {
-	string name = label();
-	if(!name)
-		name = _ << "__0x" << ent->address();
-	return name;
-}
-
-
-/**
+ * Address CFG::address(void);
  * Get the address of the first instruction of the CFG.
  * @return	Return address of the first instruction.
  */
-Address CFG::address(void) {
-	if(!ent) {
-		BasicBlock::OutIterator edge(entry());
-		if(edge)
-			ent = edge->target();
-		if(!ent)
-			return Address::null;
+
+io::Output& operator<<(io::Output& out, CFG *cfg) {
+	out << cfg->name();
+	return out;
+}
+
+
+/**
+ * @class CFGMaker
+ * Constructor for a CFG. Notice it is the only way to build
+ * a CFG. After the construction, CFG can not be modified any more.
+ * Modification must be done by cloning and modifying a particular CFG.
+ * @ingroup cfg
+ */
+
+
+/**
+ * Build a CFG.
+ * @param first	First instruction of CFG.
+ */
+CFGMaker::CFGMaker(Inst *first)
+: GenDiGraphBuilder<Block, Edge>(cfg = new CFG(first), new Block(Block::IS_END | Block::IS_ENTRY)), u(0) {
+}
+
+/**
+ * @fn Block *CFGMaker::entry(void) const;
+ * Get entry block.
+ * @return Entry block.
+ */
+
+/**
+ * Get the exit block.
+ * @eturn	Exit block.
+ */
+Block *CFGMaker::exit(void) const {
+	Block *e = cfg->exit();
+	if(!e) {
+		e = new Block(Block::IS_EXIT);
+		cfg->_exit = e;
 	}
-	return ent->address();
+	return e;
 }
 
-
 /**
- * @fn elm::Collection<BasicBlock *>& CFG::bbs(void);
- * Get an iterator on basic blocks of the CFG.
- * @return	Basic block iterator.
+ * Get the unknown edge.
+ * @return	Unknown edge.
  */
-
-
-/**
- * Scan the CFG for finding exit and builds virtual edges with entry and exit.
- * For memory-place and time purposes, this method is only called when the CFG
- * is used (call to an accessors method).
- */
-void CFG::scan(void) {
-
-	// Prepare data
-	typedef HashTable<BasicBlock *, BasicBlock *> map_t;
-	map_t map;
-	VectorQueue<BasicBlock *> todo;
-	todo.put(ent);
-
-	// Find all BB
-	_bbs.add(&_entry);
-	while(todo) {
-		BasicBlock *bb = todo.get();
-		ASSERT(bb);
-
-		// second case : calling jump to a function
-		if(map.exists(bb) || (bb != ent && ENTRY(bb)))
-			continue;
-
-		// build the virtual BB
-		BasicBlock *vbb = new VirtualBasicBlock(bb);
-		_bbs.add(vbb);
-		map.put(bb, vbb);
-		ASSERTP(map.exists(bb), "not for " << bb->address());
-
-		// resolve targets
-		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-			ASSERT(edge->target());
-			if(edge->kind() != Edge::CALL)
-				todo.put(edge->target());
-		}
+Block *CFGMaker::unknown(void) {
+	if(!u) {
+		SynthBlock *sb = new SynthBlock();
+		sb->_caller = cfg;
+		u = sb;
 	}
-
-	// Relink the BB
-	BasicBlock *vent = map.get(ent, 0);
-	ASSERT(vent);
-	new Edge(&_entry, vent, Edge::VIRTUAL);
-	for(bbs_t::Iterator vbb(_bbs); vbb; vbb++) {
-		if(vbb->isEnd())
-			continue;
-		BasicBlock *bb = ((VirtualBasicBlock *)*vbb)->bb();
-		if(bb->isReturn())
-			new Edge(vbb, &_exit, Edge::VIRTUAL);
-
-		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-
-			// A call
-			if(edge->kind() == Edge::CALL) {
-				Edge *vedge = new Edge(vbb, edge->target(), Edge::CALL);
-				vedge->toCall();
-			}
-
-			// Pending edge
-			else if(!edge->target()) {
-				new Edge(vbb, 0, edge->kind());
-			}
-
-			// Possibly a not explicit call
-			else {
-				ASSERT(edge->target());
-				BasicBlock *vtarget = map.get(edge->target(), 0);
-				if(vtarget)
-					new Edge(vbb, vtarget, edge->kind());
-				else {		// calling jump to a function
-					new Edge(vbb, edge->target(), Edge::CALL);
-					vbb->flags |= BasicBlock::FLAG_Call;
-					new Edge(vbb, &_exit, Edge::VIRTUAL);
-				}
-			}
-
-		}
-	}
-	_bbs.add(&_exit);
-
-	// Number the BB
-	for(int i = 0; i < _bbs.length(); i++) {
-		INDEX(_bbs[i]) = i;
-		_bbs[i]->_cfg = this;
-	}
-	flags |= FLAG_Scanned;
-
+	return u;
 }
-
 
 /**
- * Number the basic block of the CFG, that is, hook a property with ID_Index
- * identifier and the integer value of the number to each basic block. The
- * entry get the number 0 et the exit the last number.
+ * Build and return the CFG itself.
+ * @return	Built CFG.
  */
-void CFG::numberBB(void) {
-	for(int i = 0; i < _bbs.length(); i++)
-		INDEX(_bbs[i]) = i;
+CFG *CFGMaker::build(void) {
+	if(cfg->exit())
+		add(cfg->exit());
+	if(u)
+		add(u);
+	return cfg;
 }
-
 
 /**
+ * Add an edge for a sequence.
+ * @param v		Source BB.
+ * @param w		Sink BB.
+ * @param e		Edge itself.
  */
-CFG::~CFG(void) {
-
-	// remove edges
-	for(int i = 0; i < _bbs.length() - 1; i++) {
-		BasicBlock *bb = _bbs[i];
-		while(true) {
-			BasicBlock::OutIterator edge(bb);
-			if(edge)
-				delete *edge;
-			else
-				break;
-		}
-	}
-
-	// remover basic blocks
-	for(int i = 1; i < _bbs.length() - 1; i++)
-		delete _bbs[i];
+void CFGMaker::seq(Block *v, Block *w, Edge *e) {
+	GenDiGraphBuilder<Block, Edge>::add(v, w, e);
+	v->seq = e;
 }
-
 
 /**
- * Get the first basic block of the CFG.
- * @return	First basic block.
+ * @fn void CFGMaker::add(Block *v);
+ * Add a basic block to the CFG. If it is the first,
+ * it is considered as the entry point of the CFG.
+ * @param v		Added block.
  */
-BasicBlock *CFG::firstBB(void) {
-	if(!(flags & FLAG_Scanned))
-		scan();
-	return _bbs[1];
-}
-
 
 /**
- * Get the first instruction of the CFG.
- * @return	First instruction of the CFG.
+ * Add a synthetic block.
+ * @param v			Added synthetic block.
+ * @param callee	CFG of the synthetic block.
  */
-Inst *CFG::firstInst(void) {
-	if(!(flags & FLAG_Scanned))
-		scan();
-	BasicBlock *bb = firstBB();
-	BasicBlock::InstIter inst(bb);
-	return *inst;
+void CFGMaker::add(SynthBlock *v, CFG *callee) {
+	sgraph::GenDiGraphBuilder<Block, Edge>::add(v);
+	v->_caller = this->cfg;
+	v->_callee = callee;
 }
-
 
 /**
- * Print a reference for the CFG.
- * @param out	Output stream.
+ * Add a synthetic block.
+ * @param v		Added synthetic block.
+ * @param maker	Maker of the CFG.
  */
-void CFG::print(io::Output& out) {
-	out << label();
+void CFGMaker::add(SynthBlock *v, const CFGMaker& maker) {
+	sgraph::GenDiGraphBuilder<Block, Edge>::add(v);
+	v->_caller = cfg;
+	v->_callee = maker.cfg;
+	cerr << "DEBUG: add synth " << v << " (caller=" << cfg << ", callee=" << maker.cfg << ")\n";
 }
 
-} // namespace otawa
+}	// otawa

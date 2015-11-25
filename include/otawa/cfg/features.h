@@ -22,7 +22,7 @@
 #ifndef OTAWA_CFG_FEATURES_H_
 #define OTAWA_CFG_FEATURES_H_
 
-#include <otawa/proc/SilentFeature.h>
+#include <otawa/proc/Feature.h>
 #include <elm/genstruct/FragTable.h>
 #include <otawa/cfg/CFG.h>
 
@@ -37,19 +37,16 @@ class CFGCollector;
 class CFGInfo;
 class Edge;
 class LoopUnroller;
-namespace pfg { class PFG; class BB; }
 class SESERegion;
 typedef elm::genstruct::Tree<SESERegion*> PSTree;
 
 // CFGCollection Class
 class CFGCollection {
-	/*friend class CFGCollector;
-	friend class LoopUnroller;*/
-	elm::genstruct::FragTable<CFG *> cfgs;
 public:
 	inline int count(void) const { return cfgs.length(); }
 	inline CFG *get(int index) const { return cfgs[index]; }
 	inline CFG *operator[](int index) const { return cfgs[index]; }
+	inline CFG *entry(void) const { return get(0); }
 
 	class Iterator: public elm::genstruct::FragTable<CFG *>::Iterator {
 	public:
@@ -61,28 +58,26 @@ public:
 
 	class BBIterator: public PreIterator<BBIterator, BasicBlock *> {
 	public:
-		inline BBIterator(const CFGCollection *cfgs): cfg(cfgs), bb(*cfg) { }
+		inline BBIterator(const CFGCollection *cfgs): cfg(cfgs), bb(cfg->blocks()) { }
 		inline BBIterator(const BBIterator& i): cfg(i.cfg), bb(i.bb) { }
 		inline BBIterator& operator=(const BBIterator& i) { cfg = i.cfg; bb = i.bb; return *this; }
 		inline bool ended(void) const { return bb.ended(); }
-		inline BasicBlock *item(void) const { return *bb; }
-		inline void next(void) { bb++; if(!bb) { cfg++; if(cfg) bb = CFG::BBIterator(*cfg); } }
+		inline Block *item(void) const { return *bb; }
+		inline void next(void) { bb++; if(!bb) { cfg++; if(cfg) bb = CFG::BlockIter(cfg->blocks()); } }
 	private:
 		Iterator cfg;
-		CFG::BBIterator bb;
+		CFG::BlockIter bb;
 	};
 
 	void add(CFG *cfg);
-};
 
-// PFG_FEATURE
-extern SilentFeature PFG_FEATURE;
-extern Identifier<pfg::PFG *> PFG;
-extern Identifier<pfg::BB *> PFG_BB;
+private:
+	elm::genstruct::FragTable<CFG *> cfgs;
+};
 
 // COLLECTED_CFG_FEATURE
 extern Identifier<CFG *> ENTRY_CFG;
-extern SilentFeature COLLECTED_CFG_FEATURE;
+extern p::feature COLLECTED_CFG_FEATURE;
 extern Identifier<const CFGCollection *> INVOLVED_CFGS;
 extern Identifier<Edge *> CALLED_BY;
 
@@ -91,40 +86,33 @@ extern p::feature CFG_INFO_FEATURE;
 extern Identifier<CFGInfo *> CFG_INFO;
 
 // REDUCED_LOOPS_FEATURE
-extern SilentFeature REDUCED_LOOPS_FEATURE;
+extern p::feature REDUCED_LOOPS_FEATURE;
 
 // UNROLLED_LOOPS_FEATURE
-extern SilentFeature UNROLLED_LOOPS_FEATURE;
+extern p::feature UNROLLED_LOOPS_FEATURE;
 extern Identifier<BasicBlock*> UNROLLED_FROM;
 
-// PST_FEATURE
-extern SilentFeature PST_FEATURE;
-extern Identifier<BasicBlock*> FROM_BB;
-extern Identifier<Edge *> FROM_EDGE;
-extern Identifier<PSTree *> PROGRAM_STRUCTURE_TREE;
-
 // VIRTUALIZED_CFG_FEATURE
+extern Identifier<bool> VIRTUAL_DEFAULT;
+extern Identifier<bool> NO_INLINE;
+extern Identifier<bool> INLINING_POLICY;
 extern p::feature VIRTUALIZED_CFG_FEATURE;
-extern Identifier<bool> VIRTUAL_INLINING;
-extern Identifier<BasicBlock *> VIRTUAL_RETURN_BLOCK;
-extern Identifier<CFG *> CALLED_CFG;
-extern Identifier<bool> RECURSIVE_LOOP;
-extern Identifier<BasicBlock *> RETURN_OF;
+extern Identifier<bool> RECURSIVE_CALL;
 
 // CFG_CHECKSUM_FEATURE
-extern SilentFeature CFG_CHECKSUM_FEATURE;
+extern p::feature CFG_CHECKSUM_FEATURE;
 extern Identifier<unsigned long > CHECKSUM;
 
 // CHECKED_CFG_FEATURE
-extern SilentFeature CHECKED_CFG_FEATURE;
+extern p::feature CHECKED_CFG_FEATURE;
 
 // DELAYED_CFG_FEATURE
-extern SilentFeature DELAYED_CFG_FEATURE;
+extern p::feature DELAYED_CFG_FEATURE;
 extern Identifier<bool> DELAYED_INST;
 extern Identifier<bool> DELAYED_NOP;
 
 // LOOP_HEADERS_FEATURE
-extern SilentFeature LOOP_HEADERS_FEATURE;
+extern p::feature LOOP_HEADERS_FEATURE;
 extern Identifier<bool> LOOP_HEADER;
 extern Identifier<bool> BACK_EDGE;
 

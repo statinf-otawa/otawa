@@ -6,6 +6,7 @@
  */
 
 #include <elm/io.h>
+#include <otawa/cfg/features.h>
 #include "DisassemblerDisplayer.h"
 
 using namespace elm;
@@ -13,122 +14,63 @@ using namespace otawa;
 
 /**
  */
-void DisassemblerDisplayer::onCFGBegin(CFG *cfg) {
-	cout << "# Function " << cfg->label() << '\n';
+DisassemblerDisplayer::DisassemblerDisplayer(void): Displayer("DisassemblerDisplayer", Version(2, 0, 0)) {
 }
 
 
 /**
  */
-void DisassemblerDisplayer::onCFGEnd(CFG *cfg) {
-}
+void DisassemblerDisplayer::processWorkSpace(WorkSpace *ws) {
+	const CFGCollection& coll = **otawa::INVOLVED_CFGS(ws);
 
-/**
- */
-void DisassemblerDisplayer::onCall(Edge *edge) {
-}
+	// process CFGs
+	for(int i = 0; i < coll.count(); i++) {
+		if(!display_all && i > 0)
+			break;
 
+		// display function head
+		CFG *cfg = coll[i];
+		cout << "# Function " << cfg->label() << '\n';
 
-/**
- */
-void DisassemblerDisplayer::onBBBegin(BasicBlock *bb, int index) {
-	cout << "BB " << index << ": ";
-}
+		// display blocks
+		for(CFG::BlockIter v = cfg->blocks(); v; v++) {
 
-/**
- */
-void DisassemblerDisplayer::onEdge(CFGInfo *info, BasicBlock *source,
-int source_index, edge_kind_t kind, BasicBlock *target, int target_index) {
-	switch(kind) {
+			// display header
+			cout << "BB " << v->index() << ": ";
+			for(Block::EdgeIter e = v->outs(); e; e++) {
+				if(e->sink()->isSynth())
+					cout << " C(" << e->sink()->toSynth()->callee()->label() << ")";
+				else {
+					if(v->isEntry() || e->sink()->isExit())
+						cout << " V(";
+					else if(e == v->sequence())
+						cout << " NT(";
+					else
+						cout << " T(";
+					cout << e->sink()->index() << ")";
+				}
+			}
+			cout << io::endl;
 
-	case EDGE_Null:
-		if(target_index >= 0)
-			cout << " R(" << target_index << ")";
-		else
-			cout << " R";
-		break;
+			// if needed, display code
+			if(v->isBasic()) {
+				BasicBlock *bb = **v;
+				for(BasicBlock::InstIter i(bb); i; i++) {
 
-	case EDGE_NotTaken:
-		cout << " NT(" << target_index << ')';
-		break;
+					// Put the label
+					for(Identifier<String>::Getter label(i, FUNCTION_LABEL); label; label++)
+						cout << '\t' << *label << ":\n";
+					for(Identifier<String>::Getter label(i, LABEL); label; label++)
+						cout << '\t' << *label << ":\n";
 
-	case EDGE_Taken:
-		cout << " T(";
-		if(target_index >= 0)
-			cout << target_index;
-		else
-			cout << '?';
-		cout << ")";
-		break;
+					// Disassemble the instruction
+					cout << "\t\t" << ot::address(i->address()) << ' ';
+					i->dump(cout);
+					cout << '\n';
 
-	case EDGE_Call:
-		cout << " C(";
-		if(target_index >= 0)
-			cout << target_index;
-		else if(!target)
-			cout << '?';
-		else {
-			CFG *cfg = info->findCFG(target);
-			if(!cfg)
-				cout << '?';
-			else if(cfg->label())
-				cout << cfg->label();
-			else
-				cout << ot::address(cfg->address());
+				}
+			}
 		}
-		cout << ")";
-		break;
-
-	case Edge::VIRTUAL_CALL:
-		cout << " VC(" << target_index << ")";
-		break;
-
-	case Edge::VIRTUAL_RETURN:
-		cout << " VR(" << target_index << ")";
-		break;
-
-	case Edge::VIRTUAL:
-		cout << " V(" << target_index << ")";
-		break;
-
-	default:
-		ASSERT(false);
-		break;
 	}
+
 }
-
-
-/**
- */
-void DisassemblerDisplayer::onBBEnd(BasicBlock *bb, int index) {
-	cout << '\n';
-	for(BasicBlock::InstIter inst(bb); inst; inst++) {
-
-		// Put the label
-		for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
-			cout << '\t' << *label << ":\n";
-		for(Identifier<String>::Getter label(inst, LABEL); label; label++)
-			cout << '\t' << *label << ":\n";
-
-		// Disassemble the instruction
-		cout << "\t\t" << ot::address(inst->address()) << ' ';
-		inst->dump(cout);
-		cout << '\n';
-	}
-}
-
-
-/**
- * Handle an inline of a program call.
- */
-void DisassemblerDisplayer::onInlineBegin(CFG *cfg) {
-	cout << "# Inlining " << cfg->label() << '\n';
-}
-
-
-/**
- * Handle an end of inline.
- */
-void DisassemblerDisplayer::onInlineEnd(CFG *cfg) {
-}
-

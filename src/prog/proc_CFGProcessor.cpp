@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -33,11 +33,11 @@ namespace otawa {
  * This is a specialization of the processor class dedicated to CFG
  * processing. The @ref Processor::processFrameWork() method just take each
  * CFG of the framework and apply the processor on.
- * 
+ *
  * It accepts in configuration the following properties:
  * @li @ref ENTRY_CFG: the entry CFG of the task to work with,
  * @li @ref RECURSIVE: to go down recursively in the task CFG.
- * 
+ *
  * If statistics are required, it provides:
  * @li @ref PROCESSED_CFG: records the count of processed CFG.
  *
@@ -92,10 +92,10 @@ void CFGProcessor::processWorkSpace(WorkSpace *fw) {
 		processCFG(fw, cfg);
 		count++;
 	}
-	
+
 	// Record stats
 	if(recordsStats())
-		PROCESSED_CFG(stats) = count;	
+		PROCESSED_CFG(stats) = count;
 }
 
 
@@ -119,14 +119,6 @@ void CFGProcessor::doCleanUp(void) {
 	for(int i = 0; i < coll->count(); i++)
 		cleanupCFG(workspace(), coll->get(i));
 }
-
-
-/**
- * This property may be used to pass the entry CFG to a CFG processor or
- * is used by the CFG processor to record in the framework the entry CFG
- * of the currently processed task.
- */
-Identifier<CFG *> ENTRY_CFG("otawa::entry_cfg", 0);
 
 
 /**

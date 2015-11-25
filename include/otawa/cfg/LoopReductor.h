@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,11 +16,11 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
- 
+
 #ifndef CFG_LOOPREDUCTOR_H_
 #define CFG_LOOPREDUCTOR_H_
 
@@ -30,6 +30,7 @@
 #include <otawa/cfg/VirtualBasicBlock.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/dfa/BitSet.h>
+#include <otawa/cfg/features.h>
 
 namespace otawa {
 
@@ -40,10 +41,10 @@ class LoopReductor: public Processor {
 	public:
 	LoopReductor(bool _reduce_loops = true);
 	virtual void processWorkSpace(WorkSpace*);
-	
-	
-	private:	
-	
+
+
+	private:
+
 	void reduce(otawa::VirtualCFG *vcfg, otawa::CFG *cfg);
 	void depthFirstSearch(otawa::BasicBlock *bb, Vector<BasicBlock*> *ancestors);
 	Vector<VirtualCFG*> vcfgvec;
@@ -59,4 +60,4 @@ class LoopReductor: public Processor {
 }
 
 
-#endif 
+#endif

@@ -43,6 +43,10 @@ public:
 extern Identifier<DelayedInfo *> DELAYED_INFO;
 
 
+// Common properties
+extern Identifier<String> LABEL;
+extern Identifier<String> FUNCTION_LABEL;
+
 // Process information
 extern Identifier<Address> ARGV_ADDRESS;
 extern Identifier<Address> ENVP_ADDRESS;

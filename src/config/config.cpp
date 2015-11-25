@@ -24,15 +24,15 @@
 #include <elm/options.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/string/StringBuffer.h>
-#include <otawa/otawa.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/system/Plugger.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <elm/sys/Directory.h>
 #include <elm/sys/System.h>
 #include <elm/ini.h>
-#include <otawa/proc/ProcessorPlugin.h>
 #include <elm/util/AutoDestructor.h>
+#include <otawa/prog/Manager.h>
+#include <otawa/proc/ProcessorPlugin.h>
 
 using namespace elm;
 using namespace elm::option;
