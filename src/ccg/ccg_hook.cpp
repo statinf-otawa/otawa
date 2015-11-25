@@ -59,5 +59,6 @@ public:
 
 } }		// otawa::cg
 
-otawa::ccg::Plugin OTAWA_PROC_HOOK;
-otawa::ccg::Plugin& otawa_ccg = OTAWA_PROC_HOOK;
+otawa::ccg::Plugin otawa_ccg;
+ELM_PLUGIN(otawa_ccg, OTAWA_PROC_HOOK);
+

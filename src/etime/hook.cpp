@@ -222,5 +222,6 @@ public:
 
 } }	// otawa::etime
 
-otawa::etime::Plugin OTAWA_PROC_HOOK;
-otawa::etime::Plugin& otawa_etime = OTAWA_PROC_HOOK;
+otawa::etime::Plugin otawa_etime;
+ELM_PLUGIN(otawa_etime, OTAWA_PROC_HOOK);
+

@@ -134,5 +134,6 @@ public:
 
 } } // otawa::dcache
 
-otawa::dcache::Plugin OTAWA_PROC_HOOK;
-otawa::dcache::Plugin& otawa_dcache = OTAWA_PROC_HOOK;
+otawa::dcache::Plugin otawa_dcache;
+ELM_PLUGIN(otawa_dcache, OTAWA_PROC_HOOK);
+

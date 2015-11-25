@@ -1026,7 +1026,8 @@ public:
 
 } }		// otawa::arm2
 
-// hooks
-otawa::arm2::Loader OTAWA_LOADER_HOOK;
-otawa::arm2::Loader& arm2_plugin = OTAWA_LOADER_HOOK;
-otawa::arm2::Plugin OTAWA_PROC_HOOK;
+otawa::arm2::Loader otawa_arm2_loader;
+ELM_PLUGIN(otawa_arm2_loader, OTAWA_LOADER_HOOK);
+otawa::arm2::Plugin arm2_plugin;
+ELM_PLUGIN(arm2_plugin, OTAWA_PROC_HOOK);
+

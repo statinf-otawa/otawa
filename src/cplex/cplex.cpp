@@ -210,5 +210,5 @@ public:
 
 } }		// otawa::cplex
 
-otawa::cplex::Plugin OTAWA_ILP_HOOK;
-otawa::ilp::ILPPlugin& cplex_plugin = OTAWA_ILP_HOOK;
+ELM_PLUGIN(otawa::cplex::Plugin, OTAWA_ILP_HOOK);
+int cplex_plugin;
