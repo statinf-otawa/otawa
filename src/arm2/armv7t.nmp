@@ -110,3 +110,14 @@ extend RSB_imm_T2
 	otawa_target =
 		if Rn.number == 15 then __IADDR + 4 - imm32
 		else 0 endif
+
+extend LDC_thumb2
+	otawa_kind = IS_MEM
+		| IS_INT
+		| IS_LOAD
+
+extend STC_thumb2
+	otawa_kind = IS_MEM
+		| IS_INT
+		| IS_STORE
+
