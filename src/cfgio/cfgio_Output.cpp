@@ -237,5 +237,5 @@ public:
 
 } }	// otawa::cfgio
 
-otawa::cfgio::Plugin OTAWA_PROC_HOOK;
-otawa::cfgio::Plugin& otawa_dcache = OTAWA_PROC_HOOK;
+otawa::cfgio::Plugin otawa_cfgio;
+ELM_PLUGIN(otawa_cfgio, OTAWA_PROC_HOOK);

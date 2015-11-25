@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2008, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -67,7 +67,7 @@ static SilentFeature::Maker<BPredProcessor> maker;
  * @class BPredProcessor
  * This is a specialization of the CFGProcessor class dedicated to branch
  * prediction.
- * 
+ *
  * @p Configuration Properties
  * @li @ref METHOD
  * @li @ref HISTORY_SIZE
@@ -205,7 +205,7 @@ BPredProcessor::~BPredProcessor() {
 
 /**
  * Converts a string containing a binary number into a bitset and sets the class parameter mitraInit.
- * 
+ *
  * @param binary_histo	A constant char array containing the binary number, terminated by \0.
  */
 void BPredProcessor::setMitraInit(const char* binary_histo)
@@ -223,9 +223,9 @@ void BPredProcessor::setMitraInit(const char* binary_histo)
 
 /**
  * Converts a BitSet into a String.
- * 
+ *
  * @param bs	A constant reference to the BitSet.
- * 
+ *
  * @return A String containing the binary number that corresponds to the given BitSet.
  */
 String BPredProcessor::BitSet_to_String(const dfa::BitSet& bs) {
@@ -238,11 +238,11 @@ String BPredProcessor::BitSet_to_String(const dfa::BitSet& bs) {
 
 /**
  * Operates a left-shift to the BitSet, filling the new free bit(s) with the given state (true or false).
- * 
+ *
  * @param bs		BitSet to apply the left-shift from.
  * @param dec		The number of bits to shift.
  * @param val_in	The state to set the new bits.
- * 
+ *
  * @return A new BitSet corresponding to the left shift applied to the given BitSet.
  */
 dfa::BitSet BPredProcessor::lshift_BitSet(dfa::BitSet bs,int dec,bool val_in) {
@@ -264,7 +264,7 @@ dfa::BitSet BPredProcessor::lshift_BitSet(dfa::BitSet bs,int dec,bool val_in) {
 
 /**
  * That's the overloaded method that creates the new constraint system defined by the given method.
- * 
+ *
  * @param fw	Current workspace.
  * @param cfg	CFG from which the constraints system must be created.
  */
@@ -286,7 +286,7 @@ void BPredProcessor::processCFG(WorkSpace *fw, CFG *cfg) {
 				break;
 		}
 	}
-	
+
     if(this->withStats) {
     	this->stats_str = genStats(fw,cfg);
     }
@@ -295,7 +295,7 @@ void BPredProcessor::processCFG(WorkSpace *fw, CFG *cfg) {
 
 /**
  * Configures the parameters of the class from the given PropList.
- * 
+ *
  * @param props	PropList containg the parameters.
  */
 void BPredProcessor::configure(const PropList& props) {
@@ -309,7 +309,7 @@ void BPredProcessor::configure(const PropList& props) {
 	this->withStats 		= WITH_STATS(props);
 	this->withMitra 		= WITH_MITRA(props);
 	this->explicit_mode		= EXPLICIT_MODE(props);
-	//ipet::EXPLICIT(props) 	= this->explicit_mode ;	
+	//ipet::EXPLICIT(props) 	= this->explicit_mode ;
 	this->mitraInit 		= new dfa::BitSet(this->BHG_history_size);
 	setMitraInit(INIT_HISTORY_BINARYVALUE(props));
 }
@@ -345,5 +345,5 @@ public:
 
 } } // otawa::bpred
 
-otawa::bpred::Plugin OTAWA_PROC_HOOK;
-otawa::bpred::Plugin& otawa_bpred = OTAWA_PROC_HOOK;
+otawa::bpred::Plugin otawa_bpred;
+ELM_PLUGIN(otawa_bpred, OTAWA_PROC_HOOK);

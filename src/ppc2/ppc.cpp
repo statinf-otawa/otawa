@@ -1088,6 +1088,7 @@ public:
 
 
 // PowerPC GLISS Loader entry point
-otawa::ppc2::Loader OTAWA_LOADER_HOOK;
-otawa::ppc2::Loader& ppc2_plugin = OTAWA_LOADER_HOOK;
-otawa::ppc2::Plugin OTAWA_PROC_HOOK;
+otawa::ppc2::Loader otawa_ppc_loader;
+ELM_PLUGIN(otawa_ppc_loader, OTAWA_LOADER_HOOK);
+otawa::ppc2::Plugin otawa_ppc;
+ELM_PLUGIN(otawa_ppc, OTAWA_PROC_HOOK);

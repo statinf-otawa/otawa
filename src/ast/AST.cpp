@@ -46,7 +46,7 @@
  */
 
 namespace otawa { namespace ast {
-	
+
 /**
  * NOP AST class.
  */
@@ -166,7 +166,7 @@ AST& AST::UNDEF = undef_inst;
  * Test if the AST is the undefined AST.
  * @return True if it is the undefined AST, false else.
  */
- 
+
  /**
  * Count the number of instructions in the ast block.
  * @return	Number of instruction in the ast block.
@@ -185,5 +185,5 @@ public:
 
 } }		// otawa::ast
 
-otawa::ast::Plugin OTAWA_PROC_HOOK;
-otawa::ast::Plugin& otawa_ast = OTAWA_PROC_HOOK;
+otawa::ast::Plugin otawa_ast;
+ELM_PLUGIN(otawa_ast, OTAWA_PROC_HOOK);

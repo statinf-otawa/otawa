@@ -47,5 +47,5 @@ public:
 
 } }		// otawa::cg
 
-otawa::cat::Plugin OTAWA_PROC_HOOK;
-otawa::cat::Plugin& otawa_cat = OTAWA_PROC_HOOK;
+otawa::cat::Plugin otawa_cat;
+ELM_PLUGIN(otawa_cat, OTAWA_PROC_HOOK);

@@ -52,5 +52,5 @@ public:
 
 } }		// otawa::cg
 
-otawa::branch::Plugin OTAWA_PROC_HOOK;
-otawa::branch::Plugin& otawa_branch = OTAWA_PROC_HOOK;
+otawa::branch::Plugin otawa_branch;
+ELM_PLUGIN(otawa_branch, OTAWA_PROC_HOOK);

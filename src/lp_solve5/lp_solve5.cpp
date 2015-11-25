@@ -50,7 +50,7 @@ namespace elm {
 	};
 } // elm
 
-extern otawa::ilp::ILPPlugin& lp_solve5_plugin;
+//extern otawa::ilp::ILPPlugin& lp_solve5_plugin;
 
 namespace otawa { namespace lp_solve5 {
 
@@ -201,7 +201,7 @@ static void DECFUN log_mon(lprec *lp, void *userhandle, char *buf) {
  */
 class System: public ilp::System {
 public:
-	System(bool max = true);
+	System(ilp::ILPPlugin *plugin, bool max = true);
 	~System(void);
 	Var *findVar(ilp::Var *var);
 	Var *getVar(ilp::Var *var);
@@ -345,7 +345,7 @@ public:
 	}
 
 	virtual ilp::ILPPlugin *plugin(void) {
-		return &lp_solve5_plugin;
+		return _plugin;
 	}
 
 private:
@@ -372,6 +372,8 @@ private:
 	int cols, rows;
 	double val;
 	string last_error;
+	ilp::ILPPlugin *_plugin;
+
 };
 
 inline Constraint *System::getConss(void) {
@@ -556,9 +558,10 @@ void Constraint::dump(elm::io::Output& out) {
 
 /**
  * Build a new lp_solve system.
- * @param max	True for maximizing, false for minimizing.
+ * @param plugin	Builder plugin.
+ * @param max		True for maximizing, false for minimizing.
  */
-System::System(bool max): conss(0), cols(0), rows(0) {
+System::System(ilp::ILPPlugin *plugin, bool max): conss(0), cols(0), rows(0), _plugin(plugin) {
 	 ofun = new Constraint(this, max ? Constraint::GT : Constraint::LT, 0, 0);
 }
 
@@ -858,7 +861,7 @@ Plugin::Plugin(void)
 /**
  */
 System *Plugin::newSystem(void) {
-	return new System();
+	return new System(this);
 }
 
 } } // otawa::lp_solve5
@@ -866,5 +869,5 @@ System *Plugin::newSystem(void) {
 /**
  * Define the actual plugin.
  */
-otawa::lp_solve5::Plugin OTAWA_ILP_HOOK;
-otawa::ilp::ILPPlugin& lp_solve5_plugin = OTAWA_ILP_HOOK;
+otawa::lp_solve5::Plugin lp_solve5_plugin;
+ELM_PLUGIN(lp_solve5_plugin, OTAWA_ILP_HOOK);
