@@ -61,7 +61,7 @@ void DotDisplayer::processWorkSpace(WorkSpace *ws) {
 			for(Block::EdgeIter e = v->outs(); e; e++) {
 
 				// case of a call with display of all
-				if(e->sink()->isSynth() && display_all) {
+				if(e->sink()->isSynth() && display_all && e->sink()->toSynth()->callee()) {
 					SynthBlock *sb = e->sink()->toSynth();
 
 					// call edge
@@ -134,7 +134,10 @@ void DotDisplayer::displayLabel(Block *v) {
 		cout << "unknown";
 	else if(v->isSynth()) {
 		SynthBlock *sb = v->toSynth();
-		cout << sb->callee()->name();
+		if(sb->callee())
+			cout << sb->callee()->name();
+		else
+			cout << "unknown";
 	}
 	else if(v->isBasic()) {
 		BasicBlock *bb = v->toBasic();

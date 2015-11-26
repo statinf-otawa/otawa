@@ -178,11 +178,10 @@ public:
 	CFG *build(void);
 	void seq(Block *v, Block *w, Edge *edge);
 	inline void add(Block *v) { sgraph::GenDiGraphBuilder<Block, Edge>::add(v); }
-	void add(SynthBlock *v, CFG *cfg);
-	void add(SynthBlock *v, const CFGMaker& cfg);
+	void call(SynthBlock *v, CFG *cfg);
+	void call(SynthBlock *v, const CFGMaker& cfg);
 	inline void add(Block *v, Block *w, Edge *e) { sgraph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }
 	inline CFG::BlockIter blocks(void) const { return cfg->vertices(); }
-	//inline Block *first(void) const { return cfg->first(); }
 private:
 	CFG *cfg;
 	Block *u;

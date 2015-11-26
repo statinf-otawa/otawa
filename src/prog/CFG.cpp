@@ -658,8 +658,9 @@ Block *CFGMaker::unknown(void) {
  * @return	Built CFG.
  */
 CFG *CFGMaker::build(void) {
-	if(cfg->exit())
-		add(cfg->exit());
+	if(!cfg->exit())
+		exit();
+	add(cfg->exit());
 	if(u)
 		add(u);
 	return cfg;
@@ -688,7 +689,7 @@ void CFGMaker::seq(Block *v, Block *w, Edge *e) {
  * @param v			Added synthetic block.
  * @param callee	CFG of the synthetic block.
  */
-void CFGMaker::add(SynthBlock *v, CFG *callee) {
+void CFGMaker::call(SynthBlock *v, CFG *callee) {
 	sgraph::GenDiGraphBuilder<Block, Edge>::add(v);
 	v->_caller = this->cfg;
 	v->_callee = callee;
@@ -699,11 +700,10 @@ void CFGMaker::add(SynthBlock *v, CFG *callee) {
  * @param v		Added synthetic block.
  * @param maker	Maker of the CFG.
  */
-void CFGMaker::add(SynthBlock *v, const CFGMaker& maker) {
+void CFGMaker::call(SynthBlock *v, const CFGMaker& maker) {
 	sgraph::GenDiGraphBuilder<Block, Edge>::add(v);
 	v->_caller = cfg;
 	v->_callee = maker.cfg;
-	cerr << "DEBUG: add synth " << v << " (caller=" << cfg << ", callee=" << maker.cfg << ")\n";
 }
 
 }	// otawa

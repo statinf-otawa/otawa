@@ -30,6 +30,15 @@
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/util/FlowFactLoader.h>
 
+//#define DO_DEBUG
+#if defined(NDEBUG) || !defined(DO_DEBUG)
+#	define TRACE(x)		;
+#	define ON_DEBUG(x)	;
+#elif defined(DO_DEBUG)
+#	define TRACE(x)		cerr << "DEBUG: " << x << endl
+#	define ON_DEBUG(x)	x
+#endif
+
 namespace otawa {
 
 static Identifier<int> CFG_INDEX("", -1);
@@ -115,12 +124,84 @@ void CFGCollection::add(CFG *cfg) {
  * @par Required Features
  * @li @ref CFG_INFO_FEATURE
  *
- * @par Algorithm
- *
- *
- *
  * @ingroup cfg
  */
+
+
+/**
+ * Test if instruction is control, instruction itself
+ * or as an effect of annotations.
+ * @param i		Examined instruction.
+ * @return		True if it is control, false else.
+ */
+bool isControl(Inst *i) {
+	return i->isControl();
+}
+
+
+/**
+ * Test if an instruction is marked as a block begin.
+ * @param i		Instruction to look in.
+ * @return		True if it is block start, false else.
+ */
+bool isBlockStart(Inst *i) {
+	return BB(i).exists();
+}
+
+
+/**
+ * Test if, for the given instruction, the control can flows
+ * after (conditional branch, function call).
+ * @param i		Instruction to look in.
+ * @return		True if flow can continue, false else.
+ */
+bool canFlowAfter(Inst *i) {
+	return i->isConditional() || i->isCall();
+}
+
+
+/**
+ * Test if the instruction is a return.
+ * @param i	Instruction to test.
+ * @return	True if i is a return, false else.
+ */
+bool isReturn(Inst *i) {
+	return i->isReturn();
+}
+
+
+/**
+ * Test if the instruction is a call.
+ * @param i	Instruction to test.
+ * @return	True if i is a call, false else.
+ */
+bool isCall(Inst *i) {
+	return i->isCall();
+}
+
+
+/**
+ * Get target of a non-return branch.
+ * @param i		Instruction to get target from.
+ * @param t		Vector store targets in.
+ * @param ws	Current workspace.
+ * @param id	Target identifiers.
+ */
+void targets(Inst *i, genstruct::Vector<Inst *>& t, WorkSpace *ws, Identifier<Address>& id) {
+	if(i->target())
+		t.add(i->target());
+	else {
+		for(Identifier<Address>::Getter a(i, id); a; a++) {
+			Inst *i = ws->findInstAt(a);
+			if(i)
+				t.add(i);
+		}
+	}
+	ON_DEBUG(
+		for(int j = 0; j < t.count(); j++)
+			cerr << "DEBUG: " << i->address() << " branch to " << t[j]->address() << io::endl;
+	)
+}
 
 
 /**
@@ -161,44 +242,47 @@ void CFGCollector::scanCFG(Inst *e, genstruct::FragTable<Inst *>& bbs) {
 	if(logFor(Processor::LOG_FUN))
 		log << "\tscanning CFG at " << e->address() << io::endl;
 
-	// traverse all BBs until end
+	// traverse all instruction sequences until end
+	genstruct::Vector<Inst *> ts;
 	genstruct::Vector<Inst *> todo;
 	todo.add(e);
 	while(todo) {
 
 		// next block
 		Inst *i = todo.pop();
-		if(BB(i).exists())
+
+		// already known?
+		if(isBlockStart(i))
 			continue;
+
+		// record the new block
 		BB(i) = 0;
 		bbs.add(i);
 
-		// iterate until basic block start or branch
-		Inst *next = i->nextInst();
-		while(next && !BB(next).exists()) {
-			i = next;
-			if(i->isControl())
+		// iterate until sequence end
+		while(!isControl(i)) {
+			Inst *n = i->nextInst();
+			if(!n || isBlockStart(n))
 				break;
-			next = i->nextInst();
+			i = n;
+			TRACE(i->address() << " seq to " << n->address());
 		}
 
 		// push sequence if required
-		if(i->isConditional() || i->isCall())
-			if(i->nextInst())
+		if(canFlowAfter(i))
+			if(i->nextInst()) {
 				todo.push(i->nextInst());
-
-		// push target(s) if any
-		if(i->isReturn() || i->isCall())
-			continue;
-		if(i->target())
-			todo.push(i->target());
-		else {
-			for(Identifier<Address>::Getter t(i, otawa::BRANCH_TARGET); t; t++) {
-				Inst *i = workspace()->findInstAt(addr);
-				if(i)
-					todo.push(i);
+				TRACE(i->address() << " seq to " << i->nextInst()->address());
 			}
-		}
+
+		// delay return and call processing
+		if(isReturn(i) || isCall(i))
+			continue;
+
+		// push targets
+		targets(i, ts, workspace(), otawa::BRANCH_TARGET);
+		todo.addAll(ts);
+		ts.clear();
 	}
 }
 
@@ -213,14 +297,15 @@ void CFGCollector::buildBBs(CFGMaker& maker, const genstruct::FragTable<Inst *>&
 		// build list of instructions
 		genstruct::Vector<Inst *> insts;
 		insts.add(e);
-		for(Inst *i = e->nextInst(); i && !BB(i).exists(); i = i->nextInst()) {
+		for(Inst *i = e->nextInst(); i && !isBlockStart(i); i = i->nextInst()) {
 			insts.add(i);
-			if(i->isControl())
+			if(isControl(i))
 				break;
 		}
 
 		// create the basic block
 		BasicBlock *v = new BasicBlock(insts.detach());
+		TRACE("bb at " << v->address() << " to " << v->topAddress());
 		maker.add(v);
 		BB(e) = v;
 		if(logFor(LOG_BLOCK))
@@ -236,7 +321,7 @@ void CFGCollector::buildBBs(CFGMaker& maker, const genstruct::FragTable<Inst *>&
  */
 void CFGCollector::seq(CFGMaker& m, BasicBlock *b, Block *src) {
 	Inst *ni = b->last()->nextInst();
-	cerr << "DEBUG: ni = " << ni->address() << io::endl;
+	TRACE("next instruction = " << ni->address());
 	if(ni)
 		m.seq(src, BB(ni), new Edge());
 }
@@ -246,10 +331,15 @@ void CFGCollector::seq(CFGMaker& m, BasicBlock *b, Block *src) {
  * @param m	Current CFG maker.
  */
 void CFGCollector::buildEdges(CFGMaker& m) {
+	genstruct::Vector<Inst *> ts;
 	bool first = true;
 	for(CFG::BlockIter v(m.blocks()); v; v++)
+
+		// nothing to do with entry
 		if(v->isEntry())
 			continue;
+
+		// explore BB
 		else if(v->isBasic()) {
 
 			// first block: do not forget edge with entry!
@@ -271,26 +361,19 @@ void CFGCollector::buildEdges(CFGMaker& m) {
 				if(i) {
 
 					// return case
-					if(i->isReturn())
+					if(isReturn(i))
 						m.add(bb, m.exit(), new Edge());
 
-					// not a call
-					else if(!i->isCall()) {
+					// not a call: build simple edges
+					else if(!isCall(i)) {
+						ts.clear();
+						targets(i, ts, workspace(), otawa::BRANCH_TARGET);
 
-						// compute list of targets
-						genstruct::Vector<Inst *> ts;
-						if(i->target())
-							ts.add(i->target());
-						else
-							for(Identifier<Address>::Getter a(i, BRANCH_TARGET); a; a++) {
-								Inst *t = workspace()->findInstAt(a);
-								if(t)
-									ts.add(t);
-							}
-
-						// buildes edges
+						// no target: unresolved branch
 						if(!ts)
 							m.add(bb, m.unknown(), new Edge());
+
+						// create edges
 						else
 							for(genstruct::Vector<Inst *>::Iterator t(ts); t; t++)
 								m.add(bb, BB(t), new Edge());
@@ -298,30 +381,24 @@ void CFGCollector::buildEdges(CFGMaker& m) {
 
 					// a call
 					else {
+						ts.clear();
+						targets(i, ts, workspace(), otawa::CALL_TARGET);
 
-						// compute list of targets
-						genstruct::Vector<Inst *> cs;
-						if(i->target())
-							cs.add(i->target());
-						else
-							for(Identifier<Address>::Getter a(i, BRANCH_TARGET); a; a++) {
-								Inst *t = workspace()->findInstAt(a);
-								if(t)
-									cs.add(t);
-							}
-
-						// build edges
-						if(!cs) {
+						// no target: unresolved call target
+						if(!ts) {
 							Block *b = new SynthBlock();
 							m.add(b);
 							m.add(bb, b, new Edge());
 							seq(m, bb, b);
 						}
+
+						// build call vertices
 						else
-							for(genstruct::Vector<Inst *>::Iterator c(cs); c; c++) {
+							for(genstruct::Vector<Inst *>::Iterator c(ts); c; c++) {
+								TRACE(i->address() << " is call");
 								SynthBlock *cb = new SynthBlock();
 								CFGMaker& cm = maker(c);
-								m.add(cb, cm);
+								m.call(cb, cm);
 								m.add(bb, cb, new Edge());
 								seq(m, bb, cb);
 							}
@@ -331,6 +408,7 @@ void CFGCollector::buildEdges(CFGMaker& m) {
 			}
 		}
 }
+
 
 /**
  * Remove markers on instruction header of basic blocks.
