@@ -3,18 +3,19 @@
 
 <!ELEMENT cfg 	(property*,entry,bb*,exit,edge*)>
 <!ATTLIST cfg 	id		ID		#REQUIRED>
-<!ATTLIST cfg 	address	CDATA	#REQUIRED> 
+<!ATTLIST cfg 	address	CDATA	#REQUIRED>
 <!ATTLIST cfg 	label	CDATA	"">
-<!ATTLIST cfg	number	CDATA	#REQUIRED>	
+<!ATTLIST cfg	number	CDATA	#REQUIRED>
 
 <!ELEMENT entry EMPTY>
 <!ATTLIST entry id		ID 		#REQUIRED>
 
-<!ELEMENT bb (property*,inst*)>
-<!ATTLIST bb 	id			ID 		#REQUIRED>
-<!ATTLIST bb 	address	CDATA 	#REQUIRED>
-<!ATTLIST bb 	size		CDATA	#REQUIRED>
-<!ATTLIST bb	number	CDATA	#REQUIRED>	
+<!ELEMENT block (property*,inst*)>
+<!ATTLIST block	id		ID 		#REQUIRED>
+<!ATTLIST block	index	CDATA	#REQUIRED>
+<!ATTLIST block	address	CDATA 	#IMPLIED>
+<!ATTLIST block	size	CDATA	#IMPLIED>
+<!ATTLIST block	call	CDATA	#IMPLIED>
 
 <!ELEMENT exit EMPTY>
 <!ATTLIST exit id		ID 		#REQUIRED>
@@ -22,8 +23,6 @@
 <!ELEMENT edge (property*)>
 <!ATTLIST edge source	IDREF	#REQUIRED>
 <!ATTLIST edge target	IDREF	#IMPLIED>	<!-- should be ignored for call kind -->
-<!ATTLIST edge called	IDREF	#IMPLIED> 	<!-- only for call kind -->
-<!ATTLIST edge kind		(taken|not-taken|virtual|call|virtual-call|virtual-return)	#REQUIRED>
 
 <!ELEMENT inst EMPTY>
 <!ATTLIST inst	address	CDATA	#REQUIRED>

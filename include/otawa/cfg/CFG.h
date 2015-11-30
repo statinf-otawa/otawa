@@ -78,6 +78,7 @@ public:
 	inline operator SynthBlock  *(void) { return toSynth(); }
 
 	inline Edge *sequence(void) const { return seq; }
+	inline CFG *cfg(void) const { return _cfg; }
 
 protected:
 	Block(t::uint16 type = IS_BASIC);
@@ -85,6 +86,7 @@ protected:
 private:
 	t::uint16 _type;
 	Edge *seq;
+	CFG *_cfg;
 };
 io::Output& operator<<(io::Output& out, Block *block);
 
@@ -94,9 +96,9 @@ class SynthBlock: public Block {
 public:
 	SynthBlock(t::uint32 type = IS_CALL);
 	inline CFG *callee(void) const { return _callee; }
-	inline CFG *caller(void) const { return _caller; }
+	inline CFG *caller(void) const { return cfg(); }
 private:
-	CFG *_callee, *_caller;
+	CFG *_callee;
 };
 
 
@@ -117,7 +119,6 @@ public:
 	class InstIter: public AllocatedTable<Inst *>::Iterator {
 	public:
 		InstIter(const BasicBlock *bb): AllocatedTable<Inst *>::Iterator(bb->_insts) { }
-		//InstIter(const InstIter& i): AllocatedTable<Inst *>::Iterator(i) { }
 	};
 	inline InstIter insts(void) const { return InstIter(this); }
 
@@ -129,6 +130,7 @@ private:
 inline Block *Edge::target(void) const	{ return sink(); }
 inline BasicBlock *Block::toBasic(void) { ASSERT(isBasic()); return static_cast<BasicBlock *>(this); }
 inline SynthBlock *Block::toSynth(void) { ASSERT(isCall());  return static_cast<SynthBlock  *>(this); }
+Output& operator<<(Output& out, Block *b);
 
 
 class CFG: public PropList, public sgraph::GenDiGraph<Block, Edge> {
@@ -177,7 +179,7 @@ public:
 	Block *unknown(void);
 	CFG *build(void);
 	void seq(Block *v, Block *w, Edge *edge);
-	inline void add(Block *v) { sgraph::GenDiGraphBuilder<Block, Edge>::add(v); }
+	void add(Block *v);
 	void call(SynthBlock *v, CFG *cfg);
 	void call(SynthBlock *v, const CFGMaker& cfg);
 	inline void add(Block *v, Block *w, Edge *e) { sgraph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }

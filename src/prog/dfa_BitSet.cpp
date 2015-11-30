@@ -201,7 +201,7 @@ namespace otawa { namespace dfa {
  * @fn BitSet& BitSet::operator|=(const BitSet& set);
  * Same as @ref add(const BitSet&).
  */
- 
+
 
 /**
  * @fn BitSet& BitSet::operator&=(const BitSet& set);
@@ -285,5 +285,21 @@ namespace otawa { namespace dfa {
 #ifdef OTAWA_BITSET_SIZE
 int BitSet::__used_size = 0, BitSet::__max_size = 0, BitSet::__total_size = 0;
 #endif
+
+elm::io::Output& operator<<(elm::io::Output& output, const BitSet& bits) {
+        output << "{";
+        bool first = true;
+        for(int i = 0; i < bits.size(); i++)
+                if(bits.contains(i)) {
+                        if(first)
+                                first = false;
+                        else
+                                output << ", ";
+                        output << i;
+                }
+        output << "}";
+        return output;
+
+}
 
 } }	// otawa::dfa

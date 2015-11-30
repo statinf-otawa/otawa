@@ -17,10 +17,7 @@ set(libotawa_SOURCES
 #    CFG module
 	"CFG.cpp"
 	"cfg_CFGCollector.cpp"
-#	"BasicBlock.cpp"
 #	"CFGInfo.cpp"
-#	"cfg_io.cpp"
-#	"Edge.cpp"
 #	"PCGBlock.cpp"
 #	"PCGBuilder.cpp"
 #	"cfg_CFGAdapter.cpp"
@@ -51,7 +48,7 @@ set(libotawa_SOURCES
 #   proc module
 	"proc_AlternativeProcessor.cpp"
 	"proc_Processor.cpp"
-#	"proc_CFGProcessor.cpp"
+	"proc_CFGProcessor.cpp"
 #	"proc_ContextualProcessor.cpp"
 	"proc_DynFeature.cpp"
 	"proc_DynProcessor.cpp"
@@ -59,7 +56,7 @@ set(libotawa_SOURCES
 	"proc_Feature.cpp"
 	"proc_FeatureRequirer.cpp"
 #	"proc_LBlockProcessor.cpp"
-#	"proc_BBProcessor.cpp"
+	"proc_BBProcessor.cpp"
 	"proc_Monitor.cpp"
 #	"proc_ParamFeature.cpp"
 #	"proc_ParamProcessor.cpp"
@@ -94,7 +91,7 @@ set(libotawa_SOURCES
 #	"ilp_Output.cpp"
 
 #   data-flow analysis module
-#	"dfa_BitSet.cpp"
+	"dfa_BitSet.cpp"
 #	"dfa_hai_DefaultFixPoint.cpp"
 #	"dfa_hai_DefaultListener.cpp"
 #	"dfa_hai_FirstUnrollingFixPoint.cpp"
@@ -125,7 +122,7 @@ set(libotawa_SOURCES
 	"util_FlowFactLoader.cpp"
 #	"util_CFGNormalizer.cpp"
 #	"util_MemBlockMap.cpp"
-#	"util_Dominance.cpp"
+	"util_Dominance.cpp"
 #	"util_PostDominance.cpp"
 #	"util_ContextTree.cpp"
 	"util_Bag.cpp"

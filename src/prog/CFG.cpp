@@ -354,7 +354,10 @@ io::Output& operator<<(io::Output& out, Block *block) {
 		}
 		else {
 			SynthBlock *sb = *block;
-			out << sb->callee();
+			if(sb->callee())
+				out << sb->callee();
+			else
+				out << "unknown";
 		}
 		out << ')';
 	}
@@ -373,7 +376,7 @@ io::Output& operator<<(io::Output& out, Block *block) {
  * Build a synthetic block.
  * @param type		Type of block (it will be at least marked as synthetic).
  */
-SynthBlock::SynthBlock(t::uint32 type): Block(type | IS_SYNTH), _callee(0), _caller(0) {
+SynthBlock::SynthBlock(t::uint32 type): Block(type | IS_SYNTH), _callee(0) {
 }
 
 /**
@@ -619,6 +622,7 @@ io::Output& operator<<(io::Output& out, CFG *cfg) {
  */
 CFGMaker::CFGMaker(Inst *first)
 : GenDiGraphBuilder<Block, Edge>(cfg = new CFG(first), new Block(Block::IS_END | Block::IS_ENTRY)), u(0) {
+	entry()->_cfg = cfg;
 }
 
 /**
@@ -636,6 +640,7 @@ Block *CFGMaker::exit(void) const {
 	if(!e) {
 		e = new Block(Block::IS_EXIT);
 		cfg->_exit = e;
+		e->_cfg = cfg;
 	}
 	return e;
 }
@@ -647,8 +652,8 @@ Block *CFGMaker::exit(void) const {
 Block *CFGMaker::unknown(void) {
 	if(!u) {
 		SynthBlock *sb = new SynthBlock();
-		sb->_caller = cfg;
 		u = sb;
+		sb->_cfg = cfg;
 	}
 	return u;
 }
@@ -690,10 +695,15 @@ void CFGMaker::seq(Block *v, Block *w, Edge *e) {
  * @param callee	CFG of the synthetic block.
  */
 void CFGMaker::call(SynthBlock *v, CFG *callee) {
-	sgraph::GenDiGraphBuilder<Block, Edge>::add(v);
-	v->_caller = this->cfg;
 	v->_callee = callee;
+	add(v);
 }
+
+void CFGMaker::add(Block *v) {
+	sgraph::GenDiGraphBuilder<Block, Edge>::add(v);
+	v->_cfg = cfg;
+}
+
 
 /**
  * Add a synthetic block.
@@ -701,9 +711,8 @@ void CFGMaker::call(SynthBlock *v, CFG *callee) {
  * @param maker	Maker of the CFG.
  */
 void CFGMaker::call(SynthBlock *v, const CFGMaker& maker) {
-	sgraph::GenDiGraphBuilder<Block, Edge>::add(v);
-	v->_caller = cfg;
 	v->_callee = maker.cfg;
+	add(v);
 }
 
 }	// otawa

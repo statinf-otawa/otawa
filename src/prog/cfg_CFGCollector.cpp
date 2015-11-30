@@ -135,7 +135,7 @@ void CFGCollection::add(CFG *cfg) {
  * @return		True if it is control, false else.
  */
 bool isControl(Inst *i) {
-	return i->isControl();
+	return (i->isControl() && !IGNORE_CONTROL(i)) || IS_RETURN(i);
 }
 
 
@@ -156,7 +156,7 @@ bool isBlockStart(Inst *i) {
  * @return		True if flow can continue, false else.
  */
 bool canFlowAfter(Inst *i) {
-	return i->isConditional() || i->isCall();
+	return (i->isConditional() || i->isCall()) && !IGNORE_SEQ(i);
 }
 
 
@@ -166,7 +166,7 @@ bool canFlowAfter(Inst *i) {
  * @return	True if i is a return, false else.
  */
 bool isReturn(Inst *i) {
-	return i->isReturn();
+	return i->isReturn() || IS_RETURN(i);
 }
 
 
@@ -393,15 +393,21 @@ void CFGCollector::buildEdges(CFGMaker& m) {
 						}
 
 						// build call vertices
-						else
-							for(genstruct::Vector<Inst *>::Iterator c(ts); c; c++) {
-								TRACE(i->address() << " is call");
-								SynthBlock *cb = new SynthBlock();
-								CFGMaker& cm = maker(c);
-								m.call(cb, cm);
-								m.add(bb, cb, new Edge());
-								seq(m, bb, cb);
-							}
+						else {
+							bool one = false;
+							for(genstruct::Vector<Inst *>::Iterator c(ts); c; c++)
+								if(!NO_CALL(*c)) {
+									TRACE(i->address() << " is call");
+									SynthBlock *cb = new SynthBlock();
+									CFGMaker& cm = maker(c);
+									m.call(cb, cm);
+									m.add(bb, cb, new Edge());
+									seq(m, bb, cb);
+									one = true;
+								}
+							if(!one && !i->isConditional())
+								seq(m, bb, bb);
+						}
 					}
 
 				}
@@ -508,10 +514,9 @@ void CFGCollector::configure(const PropList& props) {
 		added_cfgs.add(addr);
 	else {
 		name = TASK_ENTRY(props);
-		if(!name) {
+		if(!name)
 			name = "main";
-			added_funs.add(name);
-		}
+		added_funs.add(name);
 	}
 
 	// collect added CFGs

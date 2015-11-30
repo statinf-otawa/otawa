@@ -21,10 +21,11 @@
 #ifndef OTAWA_CFGIO_OUTPUT_H_
 #define OTAWA_CFGIO_OUTPUT_H_
 
-#include <otawa/cfg.h>
-#include <otawa/proc/BBProcessor.h>
+#include <elm/avl/Set.h>
 #include <elm/xom.h>
-#include <elm/genstruct/Vector.h>
+#include <otawa/cfg.h>
+#include <otawa/cfgio/features.h>
+#include <otawa/proc/BBProcessor.h>
 
 namespace otawa { namespace cfgio {
 
@@ -35,16 +36,20 @@ public:
 	static p::declare reg;
 	Output(void);
 protected:
+	virtual void configure(const PropList& props);
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void processCFG(WorkSpace *ws, CFG *cfg);
-	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b);
 private:
 	string id(CFG *cfg);
-	string id(BasicBlock *bb);
-	void processProps(xom::Element *parent, PropList& props);
+	string id(Block *bb);
+	void processProps(xom::Element *parent, const PropList& props);
 	xom::Element *root, *cfg_node;
 	int last_bb;
-	genstruct::Vector<Edge *> edges;
+	avl::Set<const AbstractIdentifier *> ids;
+	Path path;
+	bool all;
+	bool no_insts;
 };
 
 } }	// otawa::cfgio

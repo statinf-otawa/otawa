@@ -131,6 +131,19 @@ extern Identifier<sys::Path> CFG_IO_PATH;
 extern Identifier<int> WEIGHT;
 extern p::feature WEIGHT_FEATURE;
 
+// Dominance feature
+class DomInfo {
+public:
+	virtual ~DomInfo(void);
+	virtual bool dom(Block *b1, Block *b2) = 0;
+	virtual bool isBackEdge(Edge *edge) = 0;
+
+	inline bool dominates(Block *b1, Block *b2) { return dom(b1, b2); }
+	inline bool isDominated(Block *b1, Block *b2) { return dominates(b2, b1); }
+};
+extern p::feature DOMINANCE_FEATURE;
+extern Identifier<DomInfo *> DOM_INFO;
+
 } // otawa
 
 #endif /* OTAWA_CFG_FEATURES_H_ */

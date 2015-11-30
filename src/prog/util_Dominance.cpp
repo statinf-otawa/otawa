@@ -20,28 +20,46 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <elm/deprecated.h>
-#include <otawa/util/Dominance.h>
-#include <otawa/dfa/IterativeDFA.h>
-#include <otawa/dfa/BitSet.h>
 #include <otawa/cfg.h>
-#include <otawa/prop/DeletableProperty.h>
 #include <otawa/cfg/features.h>
+#include <otawa/dfa/BitSet.h>
+#include <otawa/dfa/IterativeDFA.h>
 #include <otawa/proc/BBProcessor.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/util/Dominance.h>
 
 using namespace otawa::dfa;
 
 namespace otawa {
+
+class MyDomInfo: public DomInfo {
+public:
+	virtual bool dom(Block *b1, Block *b2) {
+		ASSERT(b1);
+		ASSERT(b2);
+		const BitSet *set = REVERSE_DOM(b2);
+		ASSERT(set);
+		return set->contains(b1->index());
+
+	}
+
+	virtual bool isBackEdge(Edge *edge) {
+		ASSERT(edge);
+		return BACK_EDGE(edge);
+	}
+
+};
 
 class DominanceCleaner: public BBCleaner {
 public:
 	DominanceCleaner(WorkSpace *ws): BBCleaner(ws) { }
 
 protected:
-	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+	virtual void clean(WorkSpace *ws, CFG *cfg, Block *bb) {
 		bb->removeProp(REVERSE_DOM);
 		if(LOOP_HEADER(bb)) {
 			bb->removeProp(LOOP_HEADER);
-			for(BasicBlock::InIterator edge(bb); edge; edge++)
+			for(BasicBlock::EdgeIter edge(bb->ins()); edge; edge++)
 				bb->removeProp(BACK_EDGE);
 		}
 	}
@@ -53,7 +71,7 @@ protected:
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<BitSet *> REVERSE_DOM("otawa::REVERSE_DOM", 0);
+Identifier<const BitSet *> REVERSE_DOM("otawa::REVERSE_DOM", 0);
 
 
 /**
@@ -61,6 +79,7 @@ Identifier<BitSet *> REVERSE_DOM("otawa::REVERSE_DOM", 0);
  *
  * @par Hooks
  * @li @ref BasicBlock
+ * @ingroup cfg
  */
 Identifier<bool> LOOP_HEADER("otawa::LOOP_HEADER", false);
 
@@ -69,9 +88,51 @@ Identifier<bool> LOOP_HEADER("otawa::LOOP_HEADER", false);
  *
  * @par Hooks
  * @li @ref BasicBlock
+ * @ingroup cfg
  */
 Identifier<bool> BACK_EDGE("otawa::BACK_EDGE", false);
 
+
+/**
+ * Property providing domination information interface.
+ *
+ * @par Hooks
+ * @li @ref WorkSpace
+ *
+ * @par @li Features
+ * @li @ref DOMINANCE_FEATURE
+ *
+ * @ingroup cfg
+ */
+Identifier<DomInfo *> DOM_INFO("otawa::DOM_INFO", 0);
+
+
+/**
+ * @class DomInfo
+ * Interface providing information on the computed dominance relation.
+ * @see DOM_INFO, DOMINANCE_FEATURE
+ * @ingroup cfg
+ */
+
+/**
+ */
+DomInfo::~DomInfo(void) {
+}
+
+/**
+ * @fn bool DomInfo::dom(Block *b1, Block *b2);
+ * Test if the block b1 dominates block b2.
+ * @param b1	Dominating block.
+ * @param b2	Dominated block.
+ * @return		True if b1 dominates b2, false else.
+ */
+
+/**
+ * @fn bool DomInfo::isBackEdge(Edge *e);
+ * Test if the given edge is a back edge.
+ * @param e		Edge to test.
+ * @return		True if it is a back edge, false else.
+ */
 
 
 /**
@@ -87,7 +148,7 @@ class DominanceProblem {
 public:
 	DominanceProblem(CFG *_cfg) {
 		cfg = _cfg;
-		size = _cfg->countBB();
+		size = _cfg->count();
 	}
 
 	BitSet *empty(void) {
@@ -96,13 +157,13 @@ public:
 		return result;
 	}
 
-	BitSet *gen(BasicBlock *bb) {
+	BitSet *gen(Block *bb) {
 		BitSet *result = new BitSet(size);
-		result->add(bb->number());
+		result->add(bb->index());
 		return result;
 	}
 
-	BitSet *kill(BasicBlock *bb) {
+	BitSet *kill(Block *bb) {
 		BitSet *result = new BitSet(size);
 		if(bb->isEntry())
 			result->fill();
@@ -161,20 +222,18 @@ Dominance::Dominance(void): CFGProcessor("otawa::dominance", Version(1, 1, 0)) {
  * @param bb2	Dominated BB.
  * @return		True if bb1 dominates bb2.
  */
-bool Dominance::dominates(BasicBlock *bb1, BasicBlock *bb2) {
+bool Dominance::dominates(Block *bb1, Block *bb2) {
 	ASSERTP(bb1, "null BB 1");
 	ASSERTP(bb2, "null BB 2");
-	ASSERTP(bb1->cfg() == bb2->cfg(), "both BB are not owned by the same CFG");
-	int index = bb1->number();
+	//ASSERTP(bb1->cfg() == bb2->cfg(), "both BB are not owned by the same CFG");
+	int index = bb1->index();
 	ASSERTP(index >= 0, "no index for BB 1");
-	BitSet *set = REVERSE_DOM(bb2);
+	const BitSet *set = REVERSE_DOM(bb2);
 	ASSERTP(set, "no index for BB 2");
 	ASSERTP(bb1 == bb2
-		||	!REVERSE_DOM(bb1)->contains(bb2->number())
-		||  !REVERSE_DOM(bb2)->contains(bb1->number()),
-			"CFG with disconnected nodes (BB "
-				<< bb1->number() << ":" << bb1->address()
-				<< ", BB " << bb2->number() << ":" << bb2->address() << ")");
+	||	!REVERSE_DOM(bb1)->contains(bb2->index())
+	||  !REVERSE_DOM(bb2)->contains(bb1->index()),
+		"CFG with disconnected nodes (" << bb1 << ", " << bb2 << ")");
 	return set->contains(index);
 }
 
@@ -196,7 +255,7 @@ void Dominance::processCFG(WorkSpace *ws, CFG *cfg) {
 	DominanceProblem dp(cfg);
 	dfa::IterativeDFA<DominanceProblem, BitSet> engine(dp, *cfg);
 	engine.compute();
-	for (CFG::BBIterator bb(cfg); bb; bb++) {
+	for (CFG::VertexIter bb(cfg->vertices()); bb; bb++) {
 	  BitSet *b = engine.outSet(*bb);
 	  b = new BitSet(*b);
 	  REVERSE_DOM(bb) = b;
@@ -207,18 +266,23 @@ void Dominance::processCFG(WorkSpace *ws, CFG *cfg) {
 
 
 /**
+ */
+void Dominance::cleanup(WorkSpace *ws) {
+	this->track(DOMINANCE_FEATURE, DOM_INFO(ws) = new MyDomInfo());
+}
+
+
+
+/**
  * Using a CFG where dominance relation has been computed, mark loop headers.
  * @param cfg		CFG to process.
  * @param headers	Collection filled with found headers.
  */
-void Dominance::markLoopHeaders(CFG *cfg/*,
-elm::MutableCollection<BasicBlock *> *headers*/) {
+void Dominance::markLoopHeaders(CFG *cfg) {
 	ASSERT(cfg);
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
-		for(BasicBlock::OutIterator edge(bb); edge; edge++)
-			if(edge->target()
-			&& edge->kind() != Edge::CALL
-			&& dominates(edge->target(), bb)) {
+	for(CFG::VertexIter bb(cfg->vertices()); bb; bb++) {
+		for(BasicBlock::EdgeIter edge(bb->outs()); edge; edge++)
+			if(dominates(edge->target(), bb)) {
 				LOOP_HEADER(edge->target()) = true;
 				BACK_EDGE(edge) = true;
 			}
@@ -230,7 +294,7 @@ elm::MutableCollection<BasicBlock *> *headers*/) {
  * Test if the given basic block is a loop header.
  * @return True if it is a loop header, false else.
  */
-bool Dominance::isLoopHeader(BasicBlock *bb) {
+bool Dominance::isLoopHeader(Block *bb) {
 	ELM_DEPRECATED
 	return(LOOP_HEADER(bb));
 }
@@ -260,21 +324,24 @@ bool Dominance::isBackEdge(Edge *edge) {
 }
 
 
-static SilentFeature::Maker<Dominance> DOMINANCE_MAKER;
 /**
  * This feature ensures that information about domination between nodes
- * of a CFG is vailable.
+ * of a CFG is available. Back edges are marked with @ref BACK_EDGE property
+ * while dominance may be tested using an interface of type @ref DomInfo
+ * and provided by @ref DOM_INFO property.
  *
- * @par Include
- * <otawa/util/Dominance.h>
+ * OTAWA provides several implementation of domination calculation:
+ * @li @ref otawa::Dominance
  *
  * @par Properties
- * @li @ref REVERSE_DOM (BasicBlock)
+ * @li @ref BACK_EDGE
+ * @li @ref DOM_INFO
+ *
+ * @ingroup cfg
  */
-SilentFeature DOMINANCE_FEATURE("otawa::DOMINANCE_FEATURE", DOMINANCE_MAKER);
+p::feature DOMINANCE_FEATURE("otawa::DOMINANCE_FEATURE", new Maker<Dominance>());
 
 
-static SilentFeature::Maker<Dominance> LOOP_HEADERS_MAKER;
 /**
  * This feature ensures that all loop header are marked with a @ref LOOP_HEADER
  * property, and the backedges are marked with a @ref BACK_EDGE property.
@@ -286,6 +353,6 @@ static SilentFeature::Maker<Dominance> LOOP_HEADERS_MAKER;
  * @li @ref LOOP_HEADER (BasicBlock).
  * @li @ref BACK_EDGE (Edge).
  */
-SilentFeature LOOP_HEADERS_FEATURE("otawa::LOOP_HEADERS_FEATURE", LOOP_HEADERS_MAKER);
+p::feature LOOP_HEADERS_FEATURE("otawa::LOOP_HEADERS_FEATURE", new Maker<Dominance>());
 
 } // otawa

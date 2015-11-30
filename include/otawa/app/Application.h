@@ -62,13 +62,14 @@ protected:
 	virtual void prepare(PropList& props);
 	virtual void work(PropList& props) throw(elm::Exception);
 	virtual void work(const string& entry, PropList &props) throw(elm::Exception);
+	virtual void complete(PropList& props) throw(elm::Exception);
 
 	inline WorkSpace *workspace(void) const { return ws; }
 	void require(const AbstractFeature&  feature);
 	virtual void process(string arg);
 	inline bool isVerbose(void) const { return verbose; }
 
-	const genstruct::Vector<string> arguments(void) const { return _args; }
+	const genstruct::Vector<string>& arguments(void) const { return _args; }
 	Address parseAddress(const string& s) throw(otawa::Exception);
 
 private:

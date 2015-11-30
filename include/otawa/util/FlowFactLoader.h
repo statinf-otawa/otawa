@@ -22,17 +22,18 @@
 #ifndef OTAWA_UTIL_FLOW_FACT_LOADER_H
 #define OTAWA_UTIL_FLOW_FACT_LOADER_H
 
-#include <elm/string.h>
-#include <elm/utility.h>
-#include <elm/io.h>
-#include <elm/system/Path.h>
-#include <otawa/base.h>
-#include <otawa/prop/Identifier.h>
-#include <otawa/proc/Feature.h>
 #include <elm/genstruct/Vector.h>
-#include <otawa/prop/ContextualProperty.h>
+#include <elm/io.h>
+#include <elm/string.h>
+#include <elm/system/Path.h>
 #include <elm/types.h>
+#include <elm/utility.h>
+#include <otawa/base.h>
 #include <otawa/dfa/State.h>
+#include <otawa/flowfact/features.h>
+#include <otawa/proc/Feature.h>
+#include <otawa/prop/ContextualProperty.h>
+#include <otawa/prop/Identifier.h>
 
 // Externals
 namespace otawa  { class FlowFactLoader; }
@@ -134,33 +135,6 @@ private:
 	void scanMemSet(xom::Element *element);
 	void scanSetInlining(xom::Element *element, ContextualPath& cpath, bool policy);
 };
-
-// Properties
-extern Identifier<Path> FLOW_FACTS_PATH;
-extern Identifier<xom::Element *> FLOW_FACTS_NODES;
-extern Identifier<bool> FLOW_FACTS_MANDATORY;
-
-// Features
-extern Feature<FlowFactLoader> FLOW_FACTS_FEATURE;
-extern Feature<FlowFactLoader> MKFF_PRESERVATION_FEATURE;
-
-// Annotations
-extern Identifier<bool> IS_RETURN;
-extern Identifier<bool> NO_RETURN;
-extern Identifier<int> MAX_ITERATION;
-extern Identifier<int> MIN_ITERATION;
-extern Identifier<int> TOTAL_ITERATION;
-extern Identifier<bool> NO_CALL;
-extern Identifier<bool> NO_INLINE;
-extern Identifier<bool> INLINING_POLICY;
-extern Identifier<bool> IGNORE_CONTROL;
-extern Identifier<bool> IGNORE_SEQ;
-extern Identifier<Address> BRANCH_TARGET;
-extern Identifier<bool> PRESERVED;
-extern Identifier<bool> IGNORE_ENTRY;
-extern Identifier<Address> CALL_TARGET;
-extern Identifier<Pair<Address, Address> > ACCESS_RANGE;
-
 } // otawa
 
 #endif	// OTAWA_UTIL_FLOW_FACT_READER_H

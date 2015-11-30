@@ -35,7 +35,7 @@ public:
 	BBCleaner(WorkSpace *_ws): ws(_ws) { }
 	virtual void clean(void);
 protected:
-	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb) = 0;
+	virtual void clean(WorkSpace *ws, CFG *cfg, Block *bb) = 0;
 private:
 	WorkSpace *ws;
 };
@@ -72,15 +72,14 @@ protected:
 class BBProcessor: public CFGProcessor {
 protected:
 	virtual void processCFG(WorkSpace *ws, CFG *cfg);
-	virtual void processBB(WorkSpace *ws, CFG *cfd, BasicBlock *bb) = 0;
+	virtual void processBB(WorkSpace *ws, CFG *cfd, Block *bb) = 0;
 	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
-	virtual void cleanupBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+	virtual void cleanupBB(WorkSpace *ws, CFG *cfg, Block *bb);
 
 public:
 	BBProcessor(void);
 	inline BBProcessor(AbstractRegistration& reg): CFGProcessor(reg) { }
-	inline BBProcessor(cstring name, const Version& version, AbstractRegistration& reg)
-		: CFGProcessor(name, version, reg) { }
+	inline BBProcessor(cstring name, const Version& version, AbstractRegistration& reg): CFGProcessor(name, version, reg) { }
 	BBProcessor(cstring name, elm::Version version = elm::Version::ZERO);
 
 protected:

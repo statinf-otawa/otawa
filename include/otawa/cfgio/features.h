@@ -25,6 +25,12 @@
 
 namespace otawa { namespace cfgio {
 
+// Output configuration
+extern Identifier<cstring> INCLUDE;
+extern Identifier<bool> NO_INSTS;
+extern Identifier<Path> OUTPUT;
+
+// Input configuration
 extern Identifier<Path> FROM;
 
 } }		// otawa::cfgio

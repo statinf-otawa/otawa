@@ -102,12 +102,12 @@ public:
 	inline BitSet(int size): vec(size) { OTAWA_BITSET_ALLOC }
 	inline BitSet(const BitSet& set): vec(set.vec) { OTAWA_BITSET_ALLOC }
 	inline ~BitSet(void) { OTAWA_BITSET_FREE }
-	
+
 	inline bool isEmpty(void) const { return vec.isEmpty(); }
 	inline bool isFull(void) const { return vec.countBits() == vec.size(); }
 	inline void fill(void) { vec.set(); }
 	inline void empty(void) { vec.clear(); }
-	
+
 	inline bool contains(int index) const { return vec.bit(index); }
 	inline void add(int index) { OTAWA_BITSET_FREE vec.set(index); OTAWA_BITSET_ALLOC }
 	inline void remove(int index) { OTAWA_BITSET_FREE vec.clear(index); OTAWA_BITSET_ALLOC }
@@ -126,7 +126,7 @@ public:
 	inline BitSet doUnion(const BitSet& set) const { return BitSet(vec.makeOr(set.vec)); }
 	inline BitSet doInter(const BitSet& set) const { return BitSet(vec.makeAnd(set.vec)); }
 	inline BitSet doDiff(const BitSet& set) const { return BitSet(vec.makeReset(set.vec)); }
-	
+
 	inline BitSet& operator=(const BitSet& set) { OTAWA_BITSET_FREE vec = set.vec; OTAWA_BITSET_ALLOC return *this; }
 
 	inline BitSet& operator+=(int index) { add(index); return *this; }
@@ -135,19 +135,19 @@ public:
 	inline BitSet& operator-=(const BitSet& set) { remove(set); return *this; }
 	inline BitSet operator+(const BitSet& set) { return doUnion(set); }
 	inline BitSet operator-(const BitSet& set) { return doDiff(set); }
-	
+
 	inline BitSet& operator|=(const BitSet& set) { add(set); return *this; }
 	inline BitSet& operator&=(const BitSet& set) { mask(set); return *this; }
 	inline BitSet operator|(const BitSet& set) { return doUnion(set); }
 	inline BitSet operator&(const BitSet& set) { return doInter(set); }
-	
+
 	inline bool operator==(const BitSet& set) const { return equals(set); }
 	inline bool operator!=(const BitSet& set) const { return !equals(set); }
 	inline bool operator>=(const BitSet& set) const { return includes(set); }
 	inline bool operator<=(const BitSet& set) const { return set.includes(*this); }
 	inline bool operator>(const BitSet& set) const { return includesStrictly(set); }
 	inline bool operator<(const BitSet& set) const { return set.includesStrictly(*this); }
-	
+
 	// Iterator class
 	class Iterator: public vec_t::OneIterator {
 	public:
@@ -158,21 +158,8 @@ private:
 	inline BitSet(const vec_t& ivec): vec(ivec) { }
 };
 
-inline elm::io::Output& operator<<(elm::io::Output& output, const BitSet& bits) {
-        output << "{";
-        bool first = true;
-        for(int i = 0; i < bits.size(); i++)
-                if(bits.contains(i)) {
-                        if(first)
-                                first = false;
-                        else
-                                output << ", ";
-                        output << i;
-                }
-        output << "}";
-        return output;
-
-}
+elm::io::Output& operator<<(elm::io::Output& out, const BitSet& bits);
+inline elm::io::Output& operator<<(elm::io::Output& out, const BitSet *bits) { out << *bits; return out; }
 
 } } // otawa::dfa
 

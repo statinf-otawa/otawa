@@ -41,40 +41,30 @@ namespace otawa { namespace dfa {
 class Successor;
 
 // Predecessor
-class Predecessor: public PreIterator<Predecessor, BasicBlock *> {
-	BasicBlock::InIterator iter;
-	inline void look(void) {
-		while(iter && iter->kind() == Edge::CALL)
-			iter++;
-	}
+class Predecessor: public PreIterator<Predecessor, Block *> {
 public:
 	typedef Successor Forward;
-	inline Predecessor(BasicBlock *bb): iter(bb) {
-		look();
-	};
-	static inline BasicBlock *entry(CFG& cfg) { return cfg.entry(); }
-	inline BasicBlock *item(void) const { return iter.item()->source(); };
-	inline bool ended(void) const { return iter.ended(); };
-	inline void next(void) { iter.next(); look(); };
+	static inline Block *entry(CFG& cfg) { return cfg.entry(); }
+	inline Predecessor(Block *bb): iter(bb->ins()) { }
+	inline Block *item(void) const { return iter.item()->source(); }
+	inline bool ended(void) const { return iter.ended(); }
+	inline void next(void) { iter.next(); }
+private:
+	Block::EdgeIter iter;
 };
 
 
 // Successor
-class Successor: public PreIterator<Successor, BasicBlock *> {
-	BasicBlock::OutIterator iter;
-	inline void look(void) {
-		while(iter && iter->kind() == Edge::CALL)
-			iter++;
-	}
+class Successor: public PreIterator<Successor, Block *> {
 public:
 	typedef Predecessor Forward;
-	inline Successor(BasicBlock *bb): iter(bb) {
-		look();
-	};
-	static inline BasicBlock *entry(CFG& cfg) { return cfg.exit(); }
-	inline BasicBlock *item(void) const { return iter.item()->target(); };
-	inline bool ended(void) const { return iter.ended(); };
-	inline void next(void) { iter.next(); look(); };
+	static inline Block *entry(CFG& cfg) { return cfg.exit(); }
+	inline Successor(Block *bb): iter(bb->outs()) { }
+	inline Block *item(void) const { return iter.item()->target(); }
+	inline bool ended(void) const { return iter.ended(); }
+	inline void next(void) { iter.next(); }
+private:
+	Block::EdgeIter iter;
 };
 
 
@@ -89,23 +79,23 @@ public:
 	inline IterativeDFA(Problem& problem, CFG& cfg);
 	inline ~IterativeDFA(void);
 	inline void compute(void);
-	inline Set *inSet(BasicBlock *bb);
-	inline Set *outSet(BasicBlock *bb);
-	inline Set *genSet(BasicBlock *bb);
-	inline Set *killSet(BasicBlock *bb);
+	inline Set *inSet(Block *bb);
+	inline Set *outSet(Block *bb);
+	inline Set *genSet(Block *bb);
+	inline Set *killSet(Block *bb);
 };
 
 
 // IterativeDFA::IterativeDFA inline
 template <class Problem, class Set, class Iter>
 inline IterativeDFA<Problem, Set, Iter>::IterativeDFA(Problem& problem, CFG& cfg)
-: prob(problem), _cfg(cfg), cnt(cfg.countBB()) {
+: prob(problem), _cfg(cfg), cnt(cfg.count()) {
 	ins = new Set *[cnt];
 	outs = new Set *[cnt];
 	gens = new Set *[cnt];
 	kills = new Set *[cnt];
-	for(CFG::BBIterator bb(&_cfg); bb; bb++) {
-		int idx = INDEX(bb);
+	for(CFG::VertexIter bb = _cfg.vertices(); bb; bb++) {
+		int idx = bb->index();
 		ins[idx] = prob.empty();
 		outs[idx] = prob.empty();
 		gens[idx] = prob.gen(bb);
@@ -134,29 +124,29 @@ inline IterativeDFA<Problem, Set, Iter>::~IterativeDFA(void) {
 
 // IterativeDFA::inSet() inline
 template <class Problem, class Set, class Iter>
-inline Set *IterativeDFA<Problem, Set, Iter>::inSet(BasicBlock *bb) {
-	return ins[INDEX(bb)];
+inline Set *IterativeDFA<Problem, Set, Iter>::inSet(Block *bb) {
+	return ins[bb->index()];
 }
 
 
 // IterativeDFA::outSet() inline
 template <class Problem, class Set, class Iter>
-inline Set *IterativeDFA<Problem, Set, Iter>::outSet(BasicBlock *bb) {
-	return outs[INDEX(bb)];
+inline Set *IterativeDFA<Problem, Set, Iter>::outSet(Block *bb) {
+	return outs[bb->index()];
 }
 
 
 // IterativeDFA::genSet() inline
 template <class Problem, class Set, class Iter>
-inline Set *IterativeDFA<Problem, Set, Iter>::genSet(BasicBlock *bb) {
-	return gens[INDEX(bb)];
+inline Set *IterativeDFA<Problem, Set, Iter>::genSet(Block *bb) {
+	return gens[bb->index()];
 }
 
 
 // IterativeDFA::killSet() inline
 template <class Problem, class Set, class Iter>
-inline Set *IterativeDFA<Problem, Set, Iter>::killSet(BasicBlock *bb) {
-	return kills[INDEX(bb)];
+inline Set *IterativeDFA<Problem, Set, Iter>::killSet(Block *bb) {
+	return kills[bb->index()];
 }
 
 
@@ -165,19 +155,19 @@ template <class Problem, class Set, class Iter>
 inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 
 	// initialization
-	VectorQueue<BasicBlock *> todo;
-	BitVector present(_cfg.countBB());
+	VectorQueue<Block *> todo;
+	BitVector present(_cfg.count());
 	Set *comp = prob.empty(), *ex;
-	for(CFG::BBIterator bb(&_cfg); bb; bb++) {
+	for(CFG::BlockIter bb = _cfg.vertices(); bb; bb++) {
 			OTAWA_IDFA_TRACE("DFA: push BB" << bb->number());
 			todo.put(bb);
-			present.set(bb->number());
+			present.set(bb->index());
 		}
 
 	// perform until no change
 	while(todo) {
-		BasicBlock *bb = todo.get();
-		int idx = bb->number();
+		Block *bb = todo.get();
+		int idx = bb->index();
 		ASSERT(idx >= 0);
 		present.clear(idx);
 		OTAWA_IDFA_TRACE("DFA: processing BB" << idx);
@@ -185,8 +175,8 @@ inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 		// IN = union OUT of predecessors
 		prob.reset(ins[idx]);
 		for(Iter pred(bb); pred; pred++) {
-			BasicBlock *bb_pred = pred;
-			int pred_idx = bb_pred->number();
+			Block *bb_pred = pred;
+			int pred_idx = bb_pred->index();
 			ASSERT(pred_idx >= 0);
 			prob.merge(ins[idx], outs[pred_idx]);
 		}
@@ -210,10 +200,10 @@ inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 
 			// add successors
 			for(typename Iter::Forward next(bb); next; next++)
-				if(!present.bit(next->number())) {
+				if(!present.bit(next->index())) {
 					OTAWA_IDFA_TRACE("DFA: push BB" << next->number());
 					todo.put(next);
-					present.set(next->number());
+					present.set(next->index());
 				}
 		}
 		prob.reset(comp);

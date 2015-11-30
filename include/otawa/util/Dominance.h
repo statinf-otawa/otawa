@@ -22,9 +22,9 @@ namespace dfa { class BitSet; }
 class Dominance: public CFGProcessor {
 public:
 	static void ensure(CFG *cfg);
-	static bool dominates(BasicBlock *bb1, BasicBlock *bb2);
-	static inline bool isDominated(BasicBlock *bb1, BasicBlock *bb2);
-	static bool isLoopHeader(BasicBlock *bb);
+	static bool dominates(Block *bb1, Block *bb2);
+	static inline bool isDominated(Block *bb1, Block *bb2) { return dominates(bb2, bb1); }
+	static bool isLoopHeader(Block *bb);
 	static bool isBackEdge(Edge *edge);
 
 	// Constructor
@@ -32,13 +32,13 @@ public:
 
 protected:
 	virtual void processCFG(WorkSpace *fw, CFG *cfg);
+	virtual void cleanup(WorkSpace *ws);
 private:
 	void markLoopHeaders(CFG *cfg);
 };
 
 // Features
-extern SilentFeature DOMINANCE_FEATURE;
-extern Identifier<dfa::BitSet *> REVERSE_DOM;
+extern Identifier<const dfa::BitSet *> REVERSE_DOM;
 
 } // otawa
 

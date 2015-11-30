@@ -171,7 +171,7 @@ string CFGProcessor::str(const Address& address) {
 string CFGProcessor::str(const Address& base, const Address& address) {
 	Inst *first;
 	if(base.isNull())
-		first = _cfg->firstInst();
+		first = _cfg->first();
 	else
 		first = workspace()->findInstAt(base);
 	String label;

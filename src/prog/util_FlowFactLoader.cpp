@@ -1909,7 +1909,7 @@ Identifier<xom::Element *> FLOW_FACTS_NODES("otawa::FLOW_FACTS_NODES");
  * @li @ref NO_RETURN
  * @li @ref MAX_ITERATION
  */
-Feature<FlowFactLoader> FLOW_FACTS_FEATURE("otawa::FLOW_FACTS_FEATURE");
+p::feature FLOW_FACTS_FEATURE("otawa::FLOW_FACTS_FEATURE", new Maker<FlowFactLoader>());
 
 
 /**
@@ -1920,7 +1920,7 @@ Feature<FlowFactLoader> FLOW_FACTS_FEATURE("otawa::FLOW_FACTS_FEATURE");
  * @par Hooked Properties
  * @li @ref PRESERVED
  */
-Feature<FlowFactLoader> MKFF_PRESERVATION_FEATURE("otawa::MKFF_PRESERVATION_FEATURE");
+p::feature MKFF_PRESERVATION_FEATURE("otawa::MKFF_PRESERVATION_FEATURE", new Maker<FlowFactLoader>());
 
 
 /**

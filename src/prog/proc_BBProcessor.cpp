@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-08, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,12 +16,12 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/proc/BBProcessor.h>
-#include <otawa/cfg.h>
+#include <otawa/cfg/CFG.h>
 #include <otawa/cfg/features.h>
 #include <otawa/prog/WorkSpace.h>
 
@@ -66,10 +66,9 @@ BBProcessor::BBProcessor(cstring name, elm::Version version)
  * See @ref CFGProcessor::processCFG()
  */
 void BBProcessor::processCFG(WorkSpace *fw, CFG *cfg) {
-	for(CFG::BBIterator bb(cfg); bb; bb++) {		
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 		if(logFor(LOG_BB))
-			log << "\t\tprocess BB " << bb->number()
-				<< " (" << ot::address(bb->address()) << ")\n";
+			log << "\t\tprocess " << *bb << io::endl;
 		processBB(fw, cfg, bb);
 	}
 }
@@ -78,7 +77,7 @@ void BBProcessor::processCFG(WorkSpace *fw, CFG *cfg) {
 /**
  */
 void BBProcessor::cleanupCFG(WorkSpace *ws, CFG *cfg) {
-	for(CFG::BBIterator bb(cfg); bb; bb++)
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 		cleanupBB(ws, cfg, bb);
 }
 
@@ -93,7 +92,7 @@ void BBProcessor::cleanupCFG(WorkSpace *ws, CFG *cfg) {
  * @param cfg	Current CFG.
  * @param bb	Current BB.
  */
-void BBProcessor::cleanupBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+void BBProcessor::cleanupBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 }
 
 
@@ -109,7 +108,7 @@ void BBCleaner::clean(void) {
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
 	for(CFGCollection::Iterator cfg(coll); cfg; cfg++)
-		for(CFG::BBIterator bb(cfg); bb; bb++)
+		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 			clean(ws, cfg, bb);
 }
 

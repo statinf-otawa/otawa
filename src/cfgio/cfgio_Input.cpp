@@ -19,16 +19,14 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/proc/Processor.h>
+#include <elm/io/BlockInStream.h>
+#include <elm/genstruct/HashTable.h>
+#include <elm/util/AutoDestructor.h>
+#include <elm/xom.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfgio/features.h>
+#include <otawa/proc/Processor.h>
 #include <otawa/prog/TextDecoder.h>
-#include <otawa/cfg/CFGCollector.h>
-#include <elm/xom.h>
-#include <elm/genstruct/HashTable.h>
-#include <otawa/cfg/VirtualCFG.h>
-#include <elm/util/AutoDestructor.h>
-#include <elm/io/BlockInStream.h>
 
 namespace elm {
 
@@ -547,9 +545,9 @@ protected:
 				raiseError(celt, _ << "id " << *id << " at least used two times.");
 
 			// build the CFG
-			VirtualCFG *cfg = new VirtualCFG();
-			cfg_map.put(*id, cfg);
-			coll->add(cfg);
+			//CFGMaker *maker = new CFGMaker();
+			//cfg_map.put(*id, maker);
+			//coll->add(cfg);
 
 			// get entry
 			xom::Element *eelt = celt->getFirstChildElement("entry");
@@ -560,7 +558,7 @@ protected:
 				raiseError(eelt, "no ID");
 			if(bb_map.hasKey(*eid))
 				raiseError(eelt, _ << "ID " << *id << " used at least two times.");
-			bb_map.put(*eid, cfg->entry());
+			//bb_map.put(*eid, cfg->entry());
 
 			// get exit
 			eelt = celt->getFirstChildElement("exit");
@@ -571,7 +569,7 @@ protected:
 				raiseError(eelt, "no ID");
 			if(bb_map.hasKey(*eid))
 				raiseError(eelt, _ << "ID " << *id << " used at least two times.");
-			bb_map.put(*eid, cfg->exit());
+			//bb_map.put(*eid, cfg->exit());
 
 			// build the BBs
 			AutoDestructor<xom::Elements> bb_elts = celt->getChildElements("bb");
@@ -595,7 +593,7 @@ protected:
 private:
 	Path path;
 	CFGCollection *coll;
-	genstruct::HashTable<xom::String, VirtualCFG *> cfg_map;
+	genstruct::HashTable<xom::String, CFGMaker *> cfg_map;
 	genstruct::HashTable<xom::String, BasicBlock *> bb_map;
 
 	void reset(void) {

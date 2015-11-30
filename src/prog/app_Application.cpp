@@ -346,16 +346,13 @@ int Application::run(int argc, char **argv) {
 		ws = MANAGER.load(path, props);
 
 		// if required, load the flowfacts
-		if(ff) {
+		if(ff)
 			for(int i = 0; i < ff.count(); i++)
 				otawa::FLOW_FACTS_PATH(props).add(Path(ff[i]));
-			// Delay loading of flowfacts in order to
-			// let scripts hook flowfacts nodes.
-			//ws->require(FLOW_FACTS_FEATURE, props);
-		}
 
 		// do the work
 		work(props);
+		complete(props);
 	}
 	catch(option::OptionException& e) {
 		cerr << "ERROR: " << e.message() << io::endl;
@@ -383,6 +380,15 @@ void Application::prepare(PropList& props) {
 }
 
 
+
+/**
+ * This method is called at end of the processing of the
+ * free arguments of command line.
+ */
+void Application::complete(PropList& props) throw(elm::Exception) {
+}
+
+
 /**
  * This method must be overriden to implement the action of the application.
  * As a default, it call the work(string, props) method for each free argument on a command line
@@ -403,10 +409,10 @@ void Application::work(PropList &props) throw(elm::Exception) {
 		// perform the computation
 		props2 = new PropList(props);
 		ASSERT(props2);
-		//TASK_ENTRY(props2) = _args[i].toCString();
 		work(_args[i], *props2);
 		delete props2;
 		props2 = 0;
+
 	}
 }
 
