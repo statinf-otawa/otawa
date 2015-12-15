@@ -21,13 +21,13 @@
  */
 
 //#define OTAWA_IDFA_DEBUG
-#include <otawa/cfg/features.h>
-#include <otawa/util/Dominance.h>
 #include <elm/genstruct/Vector.h>
-#include <elm/genstruct/SortedSLList.h>
+#include <elm/SortedList.h>
 #include <otawa/cfg.h>
-#include <otawa/dfa/IterativeDFA.h>
+#include <otawa/cfg/features.h>
 #include <otawa/dfa/BitSet.h>
+#include <otawa/dfa/IterativeDFA.h>
+#include <otawa/prog/WorkSpace.h>
 
 using namespace elm;
 using namespace otawa;
@@ -60,9 +60,6 @@ public:
         virtual void processCFG(otawa::WorkSpace*, otawa::CFG*);
 
 private:
-		/**
-		 * Builds the EXIT_LIST property for all the loop headers.
-		 */
 		void buildLoopExitList(otawa::CFG* cfg);
 };
 
@@ -70,23 +67,17 @@ private:
 /**
  * @class LoopInfoProblem
  *
- * This class defines a DFA problem for detecting which loop
+ * This class defines an Iterative DFA problem for detecting which loop
  * contains a BB.
  * @par
- * We consider the CFG as pair <N, E>, N the set
- * of basic blocks and E the set of edges. We use a DFA that works on a
- * rever sed CFG using the following set :
- * <dl>
- * 	<dt>LOOP</dt><dd>set of loop headers</dd>
- * </dl>
- * @par
- * The gen set is built is a follow :
- * gen(n) =<br>
- * 		if n in LOOP, { }<br>
- * 		else { m / (n, m) in E and m dom n }
- * @par
- * And the kill set is as follow :<br>
- *		kill(n) = { n / n in LOOP}
+ * Let a CFG, in OTAWA meaning, is <V, E, e>, tuple made of block vertices, edges
+ * and entry point. The iterative DFA problem is defined by:
+ * @li OUT(v) = { } initially
+ * @li GEN(v) = { } if exist (w, v) in E /\ v dom w
+ * @li GEN(v) = { w / (v, w) in E /\ w dom v } else
+ * @li KILL(v) = { v / exists (w, v) in E /\ v dom w }
+ *
+ * And represents the set of
  */
 
 /**
@@ -108,7 +99,7 @@ p::feature LOOP_INFO_FEATURE("otawa::LOOP_INFO_FEATURE", new Maker<LoopInfoBuild
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<BasicBlock*> ENCLOSING_LOOP_HEADER("otawa::ENCLOSING_LOOP_HEADER", 0);
+Identifier<Block*> ENCLOSING_LOOP_HEADER("otawa::ENCLOSING_LOOP_HEADER", 0);
 
 /**
  * Is defined for an Edge if this Edge is the exit-edge of any loop.
@@ -118,7 +109,8 @@ Identifier<BasicBlock*> ENCLOSING_LOOP_HEADER("otawa::ENCLOSING_LOOP_HEADER", 0)
  * @par Hooks
  * @li @ref Edge
  */
-Identifier<BasicBlock*> LOOP_EXIT_EDGE("otawa::LOOP_EXIT_EDGE", 0);
+Identifier<Block*> LOOP_EXIT_EDGE("otawa::LOOP_EXIT_EDGE", 0);
+
 /**
  * Defined for any BasicBlock that is a loop header.
  * Contain a list of the exit edges associated with the loop
@@ -127,31 +119,34 @@ Identifier<BasicBlock*> LOOP_EXIT_EDGE("otawa::LOOP_EXIT_EDGE", 0);
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<elm::genstruct::Vector<Edge*>*> EXIT_LIST("otawa::EXIT_LIST", 0);
+Identifier<elm::genstruct::Vector<Edge *> *> EXIT_LIST("otawa::EXIT_LIST", 0);
 
 
 // LoopInfoProblem class
 class LoopInfoProblem {
+
 	class DominanceOrder {
- 		public:
- 		static inline int compare(BasicBlock *bb1, BasicBlock *bb2) {
- 			if(Dominance::dominates(bb1, bb2))
+ 	public:
+		DominanceOrder(DomInfo& info): _info(info) { }
+
+ 		inline int doCompare(Block *bb1, Block *bb2) {
+ 			if(_info.dom(bb1, bb2))
  				return +1;
- 			else if(Dominance::dominates(bb2, bb1))
+ 			else if(_info.dom(bb2, bb1))
  				return -1;
  			else
  				return 0;
  		}
+ 	private:
+ 		DomInfo& _info;
  	};
-	CFG& _cfg;
-	genstruct::SortedSLList<BasicBlock *, DominanceOrder> headersLList;
-	genstruct::Vector<BasicBlock *> hdrs;
 
- 	public:
- 	LoopInfoProblem(CFG& cfg);
+public:
+
+	LoopInfoProblem(CFG& cfg, DomInfo& info);
  	inline dfa::BitSet *empty(void) const;
- 	dfa::BitSet *gen(BasicBlock *bb) const;
- 	dfa::BitSet *kill(BasicBlock *bb) const;
+ 	dfa::BitSet *gen(Block *bb) const;
+ 	dfa::BitSet *kill(Block *bb) const;
  	bool equals(dfa::BitSet *set1, dfa::BitSet *set2) const;
  	void reset(dfa::BitSet *set) const;
  	void merge(dfa::BitSet *dst, dfa::BitSet *src) const;
@@ -159,28 +154,33 @@ class LoopInfoProblem {
  	void add(dfa::BitSet *dst, dfa::BitSet *src) const;
  	void diff(dfa::BitSet *dst, dfa::BitSet *src);
  	inline int count(void) const;
- 	inline BasicBlock *get(int index) const;
+ 	inline Block *get(int index) const;
  	inline void free(dfa::BitSet *set) { delete set; }
 #ifndef NDEBUG
  	void dump(elm::io::Output& out, dfa::BitSet *set);
 #endif
 
+private:
+	CFG& _cfg;
+	DomInfo& d;
+	SortedList<Block *, DominanceOrder> headersLList;
+	genstruct::Vector<Block *> hdrs;
+
 };
 
 /* Constructors/Methods for LoopInfoProblem */
-LoopInfoProblem::LoopInfoProblem(CFG& cfg): _cfg(cfg), headersLList() {
+LoopInfoProblem::LoopInfoProblem(CFG& cfg, DomInfo& info): _cfg(cfg), d(info), headersLList(DominanceOrder(info)) {
 
 		/*
 		 * Find all the headers of the CFG
 		 * Adds them in a SORTED list
 		 */
-		for (CFG::BBIterator bb(&cfg); bb; bb++) {
-			if (!bb->isEntry() && LOOP_HEADER(bb)) {
+		for (CFG::BlockIter bb = cfg.blocks(); bb; bb++)
+			if(!bb->isEntry() && LOOP_HEADER(bb))
 				headersLList.add(bb);
-			}
-		}
-		 /* Converting to Vector, because a linked list is not very practical ... */
-		for (genstruct::SortedSLList<BasicBlock*, DominanceOrder>::Iterator iter(headersLList); iter; iter++) {
+
+		/* Converting to Vector, because a linked list is not very practical ... */
+		for(SortedList<Block*, DominanceOrder>::Iterator iter(headersLList); iter; iter++) {
 			hdrs.add(*iter);
 		}
 	}
@@ -189,18 +189,16 @@ inline dfa::BitSet* LoopInfoProblem::empty(void) const {
 		return new dfa::BitSet(hdrs.length());
 }
 
-dfa::BitSet* LoopInfoProblem::gen(BasicBlock *bb) const {
+dfa::BitSet* LoopInfoProblem::gen(Block *bb) const {
 		dfa::BitSet *result = empty();
-		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-			if(edge->kind() != Edge::CALL
-			&& bb != edge->target()		// required for single BB loop
-			&& Dominance::dominates(edge->target(), bb))
+		for(Block::EdgeIter edge = bb->outs(); edge; edge++)
+			if(bb != edge->target()			// not for single BB loop
+			&& d.dom(edge->target(), bb))
 				result->add(hdrs.indexOf(edge->target()));
-		}
 		return result;
 }
 
-dfa::BitSet* LoopInfoProblem::kill(BasicBlock *bb) const {
+dfa::BitSet* LoopInfoProblem::kill(Block *bb) const {
 		dfa::BitSet *result = empty();
 		if(LOOP_HEADER(bb))
 			result->add(hdrs.indexOf(bb));
@@ -235,7 +233,7 @@ inline int LoopInfoProblem::count(void) const {
 		return hdrs.length();
 }
 
-inline BasicBlock* LoopInfoProblem::get(int index) const {
+inline Block* LoopInfoProblem::get(int index) const {
 		return hdrs[index];
 }
 
@@ -251,7 +249,7 @@ inline BasicBlock* LoopInfoProblem::get(int index) const {
 						first = false;
 					else
 						out << ", ";
-					out << hdrs[i]->number();
+					out << hdrs[i]->index();
 				}
 			out << " }";
 	}
@@ -262,7 +260,7 @@ inline BasicBlock* LoopInfoProblem::get(int index) const {
 
 /* Constructors/Methods for LoopInfoBuilder */
 
-LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", Version(1, 0, 0)) {
+LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", Version(2, 0, 0)) {
 	require(DOMINANCE_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
 	provide(LOOP_INFO_FEATURE);
@@ -273,8 +271,8 @@ LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", V
  * Annotate each loop-header with the list of edges exiting the loop.
  */
  void LoopInfoBuilder::buildLoopExitList(otawa::CFG* cfg) {
- 	for (CFG::BBIterator bb(cfg); bb; bb++) {
- 		for (BasicBlock::OutIterator outedge(*bb); outedge; outedge++) {
+ 	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+ 		for (BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
  			if (LOOP_EXIT_EDGE(*outedge)) {
  				if (!EXIT_LIST(LOOP_EXIT_EDGE(*outedge))) {
  					EXIT_LIST(LOOP_EXIT_EDGE(*outedge)) = new elm::genstruct::Vector<Edge*>();
@@ -287,71 +285,55 @@ LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", V
 
 
 void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
-        int i;
-    	LoopInfoProblem prob(*cfg);
+	int i;
 
-    	if (prob.count() == 0)
-    		return;
-        IterativeDFA<LoopInfoProblem, dfa::BitSet, Successor> dfa(prob, *cfg);
-        dfa.compute();
+	// resolve the problem
+	DomInfo *info = DOM_INFO(fw);
+	ASSERT(info);
+	LoopInfoProblem prob(*cfg, *info);
+	if(prob.count() == 0)
+		return;
+	IterativeDFA<LoopInfoProblem, dfa::BitSet, Successor> dfa(prob, *cfg);
+	dfa.compute();
 
+	// Iterate to find the enclosing loop headers
+	for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 
-        /* Iterate to find the enclosing loop headers */
-        for (CFG::BBIterator bb(cfg); bb; bb++) {
+		// Detects the enclosing loop header of this bb by selecting the last element
+		//	(that is, the lowest in the order defined by the Dominance relation)
+		dfa::BitSet::Iterator bit(*dfa.outSet(bb));
+		if (bit) {
+			ENCLOSING_LOOP_HEADER(bb) = prob.get(*bit);
+			if(logFor(LOG_BLOCK))
+				log << "\t\t\tloop of " << *bb << " is " << ENCLOSING_LOOP_HEADER(bb) << io::endl;
+		}
 
-			/*
-			 * Detects the enclosing loop header of this bb by selecting the last element (that is, the lowest in the
-			 * order defined by the Dominance relation)
-			 */
-        	dfa::BitSet::Iterator bit(*dfa.outSet(bb));
+	}
 
-        	if (bit) {
-        		ENCLOSING_LOOP_HEADER(bb) = prob.get(*bit);
-        		if(logFor(LOG_BLOCK))
-        			cerr << "\t\t\tloop of " << *bb << " is " << ENCLOSING_LOOP_HEADER(bb) << io::endl;
-        	}
+	// for the loop-exit-edge analysis, we need to have each loop header bitset containing itself.
+	for (i = 0; i < prob.count(); i++)
+		dfa.outSet(prob.get(i))->add(i);
 
-        }
+	// iterate to find loop exit edges
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+		if(ENCLOSING_LOOP_HEADER(bb) || LOOP_HEADER(bb)) {
+			// If this basicBlock is in a loop, then we try to detect
+			// the loop-exit edges starting from it.
+			// We use LOOP_HEADER() to not forget the loop-header
+			// of the most outer loop.
+			for(BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
+				dfa::BitSet *targetSet = dfa.outSet(outedge->target());
+				dfa::BitSet result(*dfa.outSet(bb));
+				result.remove(*targetSet);
+				dfa::BitSet::Iterator bit(result);
+				if (bit)
+					LOOP_EXIT_EDGE(outedge) = prob.get(*bit);
+			}
+		}
+	}
 
-        /*
-         * For the loop-exit-edge analysis, we need to have each loop header bitset
-         * containing itself.
-         */
-        for (i = 0; i < prob.count(); i++)
-                dfa.outSet(prob.get(i))->add(i);
-
-        /* Iterate to find loop exit edges */
-        for (CFG::BBIterator bb(cfg); bb; bb++) {
-                if (ENCLOSING_LOOP_HEADER(bb) || LOOP_HEADER(bb)) {
-                        /* If this basicBlock is in a loop, then we try to detect
-                         * the loop-exit edges starting from it.
-                         * We use LOOP_HEADER() to not forget the loop-header
-                         * of the most outer loop.
-                         */
-        		for (BasicBlock::OutIterator outedge(*bb); outedge; outedge++) {
-        		        if (outedge->kind() != Edge::CALL) {
-        		                /* The outer exited loop header is the greatest element
-                                         * (in the Domination order) of sourceSet - targetSet
-                                         */
-
-                                        dfa::BitSet *targetSet = dfa.outSet(outedge->target());
-                                        dfa::BitSet result(*dfa.outSet(bb));
-
-                                        result.remove(*targetSet);
-                                        dfa::BitSet::Iterator bit(result);
-                                        if (bit)
-                                                LOOP_EXIT_EDGE(outedge) = prob.get(*bit);
-                                }
-                        }
-                }
-
-        }
-
-        buildLoopExitList(cfg);
-
-
+	buildLoopExitList(cfg);
 }
 
+}	// otawa
 
-
-}

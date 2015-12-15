@@ -117,8 +117,8 @@ extern Identifier<bool> LOOP_HEADER;
 extern Identifier<bool> BACK_EDGE;
 
 // LOOP_INFO_FEATURE
-extern Identifier<BasicBlock*> ENCLOSING_LOOP_HEADER;
-extern Identifier<BasicBlock*> LOOP_EXIT_EDGE;
+extern Identifier<Block*> ENCLOSING_LOOP_HEADER;
+extern Identifier<Block*> LOOP_EXIT_EDGE;
 extern Identifier<elm::genstruct::Vector<Edge*> *> EXIT_LIST;
 extern p::feature LOOP_INFO_FEATURE;
 

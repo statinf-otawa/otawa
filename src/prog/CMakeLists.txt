@@ -14,6 +14,8 @@ set(libotawa_SOURCES
 	"Loader.cpp"
 	"Process.cpp"
 
+	"dfa_MemorySet.cpp"
+
 #    CFG module
 	"CFG.cpp"
 	"cfg_CFGCollector.cpp"
@@ -24,7 +26,7 @@ set(libotawa_SOURCES
 #	"cfg_CFGChecker.cpp"
 #	"cfg_CFGCheckSummer.cpp"
 #	"cfg_DelayedBuilder.cpp"
-#	"cfg_LoopInfoBuilder.cpp"
+	"cfg_LoopInfoBuilder.cpp"
 #	"cfg_PSTBuilder.cpp"
 #	"cfg_LoopUnroller.cpp"
 #	"cfg_LoopReductor.cpp"

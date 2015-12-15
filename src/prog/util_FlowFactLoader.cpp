@@ -1155,21 +1155,21 @@ throw(ProcessorException) {
 			else if(name == "function")
 				scanXFun(element, cpath);
 			else if(name == "noreturn") {
-				Address addr = scanAddress(element, cpath);
+				Address addr = scanAddress(element, cpath).address();
 				if(!addr.isNull())
 					onNoReturn(addr);
 				else
 					onWarning(_ << "ignoring this because its address cannot be determined: " << xline(element));
 			}
 			else if(name == "return") {
-				Address addr = scanAddress(element, cpath);
+				Address addr = scanAddress(element, cpath).address();
 				if(!addr.isNull())
 					onReturn(addr);
 				else
 					onWarning(_ << "ignoring this because its address cannot be determined: " << xline(element));
 			}
 			else if(name == "nocall") {
-				Address addr = scanAddress(element, cpath);
+				Address addr = scanAddress(element, cpath).address();
 				if(!addr.isNull())
 					onNoCall(addr);
 				else
@@ -1286,7 +1286,7 @@ void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpat
 		if(target_area.isNull())
 			onWarning(_ << "target of multibranch ignored at " << xline(items->get(i)));
 		else
-			targets.add(target_area);
+			targets.add(target_area.address());
 	}
 	delete items;
 	this->onMultiBranch(inst->address(), targets);
@@ -1321,7 +1321,7 @@ void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath)
 		if(target_area.isNull())
 			onWarning(_ << "target of multicall ignored at " << xline(items->get(i)));
 		else
-			targets.add(target_area);
+			targets.add(target_area.address());
 	}
 	delete items;
 	this->onMultiCall(inst->address(), targets);
@@ -1390,7 +1390,7 @@ dfa::Value FlowFactLoader::scanValue(xom::Element *element) {
 
 		// get the initial address
 		ContextualPath c;
-		Address addr = this->scanAddress(velem, c);
+		Address addr = this->scanAddress(velem, c).address();
 
 		// look for step and count
 		Option<long> step = scanInt(velem, "step");
@@ -1406,8 +1406,8 @@ dfa::Value FlowFactLoader::scanValue(xom::Element *element) {
 	xom::Element *lelem = element->getFirstChildElement("low");
 	if(helem && lelem) {
 		ContextualPath c;
-		Address haddr = scanAddress(helem, c);
-		Address laddr = scanAddress(lelem, c);
+		Address haddr = scanAddress(helem, c).address();
+		Address laddr = scanAddress(lelem, c).address();
 		return dfa::Value(laddr.offset(), haddr.offset());
 	}
 
@@ -1514,7 +1514,7 @@ void FlowFactLoader::scanMemSet(xom::Element *element) {
 
 	// get the address
 	ContextualPath c;
-	Address addr = this->scanAddress(element, c);
+	Address addr = this->scanAddress(element, c).address();
 
 	// get the value
 	dfa::Value val = scanValue(element);
@@ -1578,7 +1578,7 @@ void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) thro
 	if(elems->size() != 0) {
 
 		// get the address
-		Address addr = scanAddress(element, path);
+		Address addr = scanAddress(element, path).address();
 		if(addr.isNull()) {
 			onWarning(_ << "ignoring this call whose address cannot be found: " << xline(element));
 			return;
@@ -1599,7 +1599,7 @@ void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) thro
 	else {
 
 		// get the address
-		Address addr = scanAddress(element, path);
+		Address addr = scanAddress(element, path).address();
 		if(addr.isNull()) {
 			onWarning(_ << "ignoring this call whose address cannot be found: " << xline(element));
 			return;
@@ -1630,7 +1630,7 @@ void FlowFactLoader::scanXLoop(xom::Element *element, ContextualPath& path)
 throw(ProcessorException) {
 
 	// get the address
-	Address addr = scanAddress(element, path);
+	Address addr = scanAddress(element, path).address();
 	if(addr.isNull()) {
 		onWarning(_ << "ignoring this loop whose address cannot be computed: " << xline(element));
 		return;

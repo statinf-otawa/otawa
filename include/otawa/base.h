@@ -63,7 +63,6 @@ public:
 	inline Address(offset_t offset): pg(0), off(offset) { }
 	inline Address(page_t page, offset_t offset): pg(page), off(offset) { }
 	inline Address(const Address& address): pg(address.pg), off(address.off) { }
-	inline Address(const MemArea& mem_area);
 
 	// Accessors
 	inline page_t page(void) const { return pg; }
@@ -139,7 +138,7 @@ public:
 	inline void moveTop(const Address& top) { _base = top - _size; }
 	inline void resize(const ot::size size) { _size = size; }
 
-	inline operator bool(void) const { return isEmpty(); }
+	inline operator bool(void) const { return !isEmpty(); }
 	inline bool operator==(const MemArea& a) const { return equals(a); }
 	inline bool operator!=(const MemArea& a) const { return !equals(a); }
 	inline bool operator>=(const MemArea& a) const { return includes(a); }
@@ -158,10 +157,6 @@ private:
 	ot::size _size;
 };
 io::Output& operator<<(io::Output& out, const MemArea& a);
-
-
-// Address inlines
-Address::Address(const MemArea& mem_area): pg(mem_area.address().pg), off(mem_area.address().off) { }
 
 
 // Exception class
