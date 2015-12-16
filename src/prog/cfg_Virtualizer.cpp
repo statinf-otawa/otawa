@@ -140,7 +140,7 @@ Identifier<bool> RECURSIVE_LOOP("otawa::RECURSIVE_LOOP", false);
 
 /**
  */
-Virtualizer::Virtualizer(void): Processor(reg), virtualize(false), entry(0), coll(0) {
+Virtualizer::Virtualizer(void): Processor(reg), virtualize(false), entry(0) {
 }
 
 // Registration
@@ -204,15 +204,21 @@ bool Virtualizer::isInlined(CFG *cfg, Option<int> local_inlining, ContextualPath
  * @param entry		Basic block performing the call.
  * @param exit		Basic block after the return.
  */
-void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker *maker, elm::Option<int> local_inlining, ContextualPath &path) {
+void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Option<int> local_inlining, ContextualPath &path) {
+	ASSERT(stack);
 	ASSERT(cfg);
+
+	// preparation
 	genstruct::HashTable<Block *, Block *> bmap;
+	call_t call = { stack, cfg, 0 };
+	if(logFor(LOG_CFG))
+		log << "\tbegin inlining " << cfg->label() << io::endl;
 
 	// add initial blocks
-	bmap.put(cfg->entry(), maker->entry());
-	bmap.put(cfg->exit(), maker->exit());
+	bmap.put(cfg->entry(), maker.entry());
+	bmap.put(cfg->exit(), maker.exit());
 	if(cfg->unknown())
-		bmap.put(cfg->unknown(), maker->unknown());
+		bmap.put(cfg->unknown(), maker.unknown());
 
 	// add other blocks
 	for(CFG::BlockIter v = cfg->blocks(); v; v++)
@@ -227,159 +233,53 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker *maker, elm::Opt
 			genstruct::Vector<Inst *> insts(bb->count());
 			for(BasicBlock::InstIter i = bb->insts(); i; i++)
 				insts.add(i);
-			maker->add(new BasicBlock(insts.detach()));
+			BasicBlock *nv = new BasicBlock(insts.detach());
+			maker.add(nv);
+			bmap.add(*v, nv);
 		}
 
 		// process synthetic block
 		else {
+
+			// build synth block
+			SynthBlock *sb = v->toSynth();
+			SynthBlock *nsb = new SynthBlock();
+			bmap.put(sb, nsb);
+
+			// link with callee
+			if(!sb->callee())
+				maker.add(nsb);
+			else if(isInlined(cfg, local_inlining, path)) {
+				CFGMaker& callee = newMaker(sb->callee()->first());
+				maker.call(nsb, callee);
+			}
+			else {
+				todo.push(sb->callee());
+				CFGMaker& cmaker = makerOf(sb->callee());
+				maker.call(nsb, makerOf(sb->callee()));
+				Inst *calli = sb->callInst();
+				if(cfg->type() == CFG::SUBPROG)
+					path.push(ContextualStep(ContextualStep::FUNCTION, cfg->address()));
+				if(calli)
+					path.push(ContextualStep(ContextualStep::CALL, calli->address()));
+				make(&call, sb->callee(), cmaker, local_inlining, path);
+				if(calli)
+					path.pop();
+				if(cfg->type() == CFG::SUBPROG)
+					path.pop();
+			}
 
 		}
 
 	// add edges
 	for(CFG::BlockIter v = cfg->blocks(); v; v++)
 		for(BasicBlock::EdgeIter e = v->outs(); e; e++)
-			maker->add(bmap.get(e->source()), bmap.get(e->sink()), new Edge());
-}
+			maker.add(bmap.get(e->source()), bmap.get(e->sink()), new Edge());
 
-/*void Virtualizer::virtualize(struct call_t *stack, CFG *cfg, VirtualCFG *vcfg,
-		BasicBlock *entry, BasicBlock *exit, Option<int> local_inlining, ContextualPath &path) {
-	ASSERT(cfg);
-	ASSERT(entry);
-	ASSERT(exit);
-
-	// Prepare data
-	elm::genstruct::HashTable<void *, BasicBlock *> map;
-	call_t call = { stack, cfg, 0 };
-	Vector<CFG *> called_cfgs;
-	if(logFor(LOG_CFG))
-		log << "\tbegin inlining " << cfg->label() << io::endl;
-
-	// Translate BB
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-		if(!bb->isEntry() && !bb->isExit()) {
-			BasicBlock *new_bb = new VirtualBasicBlock(bb);
-			map.put(bb, new_bb);
-			vcfg->addBB(new_bb);
-		}
-
-	// Find local entry
-	BasicBlock *to = NULL;
-	for(BasicBlock::OutIterator edge(cfg->entry()); edge; edge++) {
-		call.entry = map.get(edge->target(), 0);
-		Edge *vedge = new Edge(entry, call.entry, Edge::VIRTUAL_CALL);
-		CALLED_CFG(vedge) = cfg;
-		to = edge->target();
-	}
-	ASSERT(to);
-	enteringCall(entry, to, path);
-
-	// Translate edges
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-		if(!bb->isEnd()) {
-			if(logFor(LOG_BB))
-				cerr << "\t\tprocessing " << *bb << io::endl;
-
-			// Update local inlining policy
-			if(path(INLINING_POLICY, cfg->firstInst()).exists())
-				local_inlining = path.get(INLINING_POLICY, cfg->firstInst());
-
-			// Resolve source
-			BasicBlock *src = map.get(bb, 0);
-			ASSERT(src);
-
-			// process call edges
-			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-				if(edge->kind() == Edge::CALL && edge->calledCFG()) {
-					if(isInlined(edge->calledCFG(), local_inlining, path))
-						called_cfgs.add(edge->calledCFG());
-					else if(!cfgMap.exists(edge->calledCFG()))
-						virtualizeCFG(&call, edge->calledCFG(), local_inlining);
-				}
-			}
-
-			// generate the edges
-			BasicBlock *called_exit = 0;
-			bool fix_exit = false;
-			for(BasicBlock::OutIterator edge(bb); edge; edge++)
-				if(edge->kind() == Edge::CALL) {
-					if(edge->calledCFG() && !isInlined(edge->calledCFG(), local_inlining, path)) {
-						VirtualCFG *vcalled = cfgMap.get(edge->calledCFG(), 0);
-						ASSERT(vcalled);
-						Edge *vedge = new Edge(src, vcalled->entry(), Edge::CALL);
-						CALLED_BY(vedge->calledCFG()).add(vedge);
-					}
-				}
-				else if(edge->target()) {
-					if(edge->target()->isExit()) {
-						called_exit = exit;
-						if(!called_cfgs) {
-							Edge *edge = new Edge(src, exit, Edge::VIRTUAL_RETURN);
-							RETURN_OF(src) = call.entry;
-							CALLED_CFG(edge) = cfg;
-						}
-						else // shared return edge will be added afterwards
-							fix_exit = true;
-					}
-					else {
-						BasicBlock *tgt = map.get(edge->target(), 0);
-						ASSERT(tgt);
-						if(edge->kind() == Edge::NOT_TAKEN && called_cfgs)
-							called_exit = tgt;
-						else
-							new Edge(src, tgt, edge->kind());
-					}
-				}
-
-			// Process the call
-			if(called_cfgs) {
-
-				// Process each call
-				for(Vector<CFG *>::Iterator called(called_cfgs); called; called++) {
-
-					// Check recursivity
-					call_t *rec = 0;
-					for(call_t *cur = &call; cur; cur = cur->back)
-						if(cur->cfg == called) {
-							rec = cur;
-							break;
-						}
-
-					// handle recursivity
-					if(rec) {
-						Edge *edge = new Edge(map.get(bb), rec->entry, Edge::VIRTUAL_CALL);
-						CALLED_CFG(edge) = rec->cfg;
-						RECURSIVE_LOOP(edge) = true;
-						VIRTUAL_RETURN_BLOCK(src) = called_exit;
-						new Edge(src, called_exit, Edge::NOT_TAKEN);
-						if(logFor(LOG_CFG))
-							out << "INFO: recursivity found at " << bb->address()
-								<< " to " << called->label() << io::endl;
-						break;
-					}
-
-					// virtualize the called CFG
-					else {
-						ASSERT(called_exit);
-						VIRTUAL_RETURN_BLOCK(src) = called_exit;
-						virtualize(&call, called, vcfg, src, called_exit, local_inlining, path);
-						if(fix_exit)
-							for(BasicBlock::InIterator vin(called_exit); vin; vin++)
-								for(Identifier<CFG *>::Getter found(vin, CALLED_CFG); found; found++)
-									if(*called == *found)
-										CALLED_CFG(vin).add(cfg);
-					}
-				}
-
-				// Reset the called list
-				called_cfgs.clear();
-			}
-		}
-
+	// leaving call
 	if(logFor(LOG_CFG))
 		log << "\tend inlining " << cfg->label() << io::endl;
-	leavingCall(exit, path);
-}*/
-
+}
 
 /**
  * Virtualize a CFG and add it to the cfg map.
@@ -388,11 +288,11 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker *maker, elm::Opt
  */
 void Virtualizer::makeCFG(struct call_t *call, CFG *cfg, Option<int> local_inlining) {
 	ContextualPath path;
-	make(call, cfg, maker(cfg), local_inlining, path);
+	make(call, cfg, makerOf(cfg), local_inlining, path);
 }
 
 
-void Virtualizer::enteringCall(BasicBlock *caller, BasicBlock *callee, ContextualPath &path) {
+/*void Virtualizer::enteringCall(BasicBlock *caller, BasicBlock *callee, ContextualPath &path) {
 	if (!caller->isEntry()) {
 		Inst *call = caller->last();
 		if (!call->isCall()) {
@@ -413,7 +313,7 @@ void Virtualizer::leavingCall(BasicBlock *to, ContextualPath& path) {
 	path.pop();
 	if (!to->isExit())
 		path.pop();
-}
+}*/
 
 
 /**
@@ -421,32 +321,38 @@ void Virtualizer::leavingCall(BasicBlock *to, ContextualPath& path) {
  * @param cfg	CFG to look a maker for.
  * @return		Associated CFG maker.
  */
-CFGMaker *Virtualizer::maker(CFG *cfg) {
+CFGMaker& Virtualizer::makerOf(CFG *cfg) {
 	CFGMaker *r = map.get(cfg);
 	if(!r) {
-		r = new CFGMaker(cfg->first());
+		r = &newMaker(cfg->first());
 		map.put(cfg, r);
 	}
-	return r;
+	return *r;
+}
+
+
+/**
+ * Build a new maker for a CFG (an inlined CFG).
+ * @param 	First instruction of CFG.
+ * @return	Built maker.
+ */
+CFGMaker& Virtualizer::newMaker(Inst *first) {
+	CFGMaker *m = new CFGMaker(first);
+	makers.add(m);
+	return *m;
 }
 
 
 /**
  */
 void Virtualizer::cleanup(WorkSpace *ws) {
-
-	// allocate the collection
+	CFGCollection *coll = new CFGCollection();
+	for(genstruct::FragTable<CFGMaker *>::Iterator m(makers); m; m++) {
+		coll->add(m->build());
+		delete *m;
+	}
 	addDeletor(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = coll);
-
-	// get entry CFG
-	CFGMaker *entry_maker = map.get(entry, 0);
-	CFG *entry_vcfg = entry_maker->build();
-	addRemover(VIRTUALIZED_CFG_FEATURE, ENTRY_CFG(ws) = coll->get(0));
-
-	// release makers
-	coll->add(entry_vcfg);
-	for(genstruct::HashTable<CFG *, CFGMaker *>::Iterator vcfg(map); vcfg; vcfg++)
-		delete *vcfg;
+	// TODO add deletion of CFGs
 }
 
 

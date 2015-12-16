@@ -20,6 +20,7 @@
  *	02110-1301  USA
  */
 
+#include <elm/util/misc.h>
 #include <otawa/dfa/MemorySet.h>
 
 namespace otawa { namespace dfa {
@@ -446,27 +447,24 @@ MemorySet::t MemorySet::meet(t m1, t m2) {
 
 		// overlapping blocks
 		else {
-			Address base, top;
 
-			// consume q common
-			if(p->address() < q->address()) {
-				while(q && q->address() <= p->topAddress()) {
-					*n = allocate(MemArea(q->address(), min(q->topAddress(), p->topAddress())));
-					n = &((*n)->next);
-					q = q->next;
-				}
-				p = p->next;
-			}
+			// select base node
+			if(p->address() > q->address())
+				swap(p, q);
 
-			// consume p common
-			else {
-				while(p && p->address() <= q->topAddress()) {
-					*n = allocate(MemArea(p->address(), min(p->topAddress(), q->topAddress())));
-					n = &((*n)->next);
-					p = p->next;
-				}
+			// consume intersecting nodes
+			while(q && q->topAddress() <= p->topAddress()) {
+				*n = allocate(q->area);
+				n = &((*n)->next);
 				q = q->next;
 			}
+
+			// last one
+			if(q->address() < p->topAddress()) {
+				*n = allocate(MemArea(q->address(), p->topAddress()));
+				n = &((*n)->next);
+			}
+			p = p->next;
 		}
 	}
 

@@ -97,6 +97,7 @@ public:
 	SynthBlock(t::uint32 type = IS_CALL);
 	inline CFG *callee(void) const { return _callee; }
 	inline CFG *caller(void) const { return cfg(); }
+	Inst *callInst(void);
 private:
 	CFG *_callee;
 };

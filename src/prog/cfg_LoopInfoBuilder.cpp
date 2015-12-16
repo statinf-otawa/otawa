@@ -22,7 +22,7 @@
 
 //#define OTAWA_IDFA_DEBUG
 #include <elm/genstruct/Vector.h>
-#include <elm/SortedList.h>
+#include <elm/data/SortedList.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/features.h>
 #include <otawa/dfa/BitSet.h>

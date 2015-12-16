@@ -379,6 +379,23 @@ io::Output& operator<<(io::Output& out, Block *block) {
 SynthBlock::SynthBlock(t::uint32 type): Block(type | IS_SYNTH), _callee(0) {
 }
 
+
+/**
+ * If the current synthetic block is a call, return the address of the instruction
+ * performing the call.
+ * @return	Calling instruction or null (synthetic is not a function call).
+ */
+Inst *SynthBlock::callInst(void) {
+	EdgeIter i = ins();
+	if(!i)
+		return 0;
+	else if(!i->source()->isBasic())
+		return 0;
+	else
+		return i->source()->toBasic()->control();
+}
+
+
 /**
  * @fn CFG *SynthBlock::callee(void) const;
  * Get the CFG called in a synthetic block (if any).

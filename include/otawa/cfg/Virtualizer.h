@@ -50,17 +50,18 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 
 private:
-	void make(struct call_t *stack, CFG *cfg, CFGMaker *maker, elm::Option<int> local_inlining, ContextualPath &path);
+	void make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Option<int> local_inlining, ContextualPath &path);
 	void makeCFG(struct call_t *call, CFG *cfg, Option<int> local_inlining);
-	void enteringCall(BasicBlock *caller, BasicBlock *callee, ContextualPath &path);
-	void leavingCall(BasicBlock *to, ContextualPath &path);
-	CFGMaker *maker(CFG *cfg);
+	//void enteringCall(BasicBlock *caller, BasicBlock *callee, ContextualPath &path);
+	//void leavingCall(BasicBlock *to, ContextualPath &path);
+	CFGMaker& makerOf(CFG *cfg);
+	CFGMaker& newMaker(Inst *first);
 	bool isInlined(CFG* cfg, Option<int> local_inlining, ContextualPath &path);
 	bool virtualize;
 	CFG *entry;
-	genstruct::HashTable<CFG *, CFGMaker *> map;
 	genstruct::SLList<CFG *> todo;
-	CFGCollection *coll;
+	genstruct::HashTable<CFG *, CFGMaker *> map;
+	genstruct::FragTable<CFGMaker *> makers;
 };
 
 }	// otawa
