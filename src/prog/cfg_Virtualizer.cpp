@@ -3,7 +3,7 @@
  *	Virtualize class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-09, IRIT UPS.
+ *	Copyright (c) 2005-15, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -33,8 +33,6 @@
 
 using namespace otawa;
 using namespace elm;
-
-
 
 namespace otawa {
 
@@ -213,6 +211,8 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 	call_t call = { stack, cfg, 0 };
 	if(logFor(LOG_CFG))
 		log << "\tbegin inlining " << cfg->label() << io::endl;
+	if(path(INLINING_POLICY, cfg->first()).exists())
+		local_inlining = path.get(INLINING_POLICY, cfg->first());
 
 	// add initial blocks
 	bmap.put(cfg->entry(), maker.entry());
@@ -290,30 +290,6 @@ void Virtualizer::makeCFG(struct call_t *call, CFG *cfg, Option<int> local_inlin
 	ContextualPath path;
 	make(call, cfg, makerOf(cfg), local_inlining, path);
 }
-
-
-/*void Virtualizer::enteringCall(BasicBlock *caller, BasicBlock *callee, ContextualPath &path) {
-	if (!caller->isEntry()) {
-		Inst *call = caller->last();
-		if (!call->isCall()) {
-			for (BasicBlock::InstIter inst(caller); inst; inst++)
-				if (inst->isControl())
-					call = inst;
-			if (!call)
-				call = caller->last();
-			ASSERT(call);
-		}
-		path.push(ContextualStep::CALL, call->address());
-	}
-	path.push(ContextualStep::FUNCTION, callee->address());
-}
-
-
-void Virtualizer::leavingCall(BasicBlock *to, ContextualPath& path) {
-	path.pop();
-	if (!to->isExit())
-		path.pop();
-}*/
 
 
 /**
