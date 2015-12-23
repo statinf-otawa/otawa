@@ -19,18 +19,21 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/app/Application.h>
-#include <elm/option/SwitchOption.h>
-#include <otawa/data/clp/ClpAnalysis.h>
-#include <otawa/cfg/features.h>
-#include <otawa/proc/BBProcessor.h>
-#include <elm/option/ListOption.h>
 #include <elm/io/BlockInStream.h>
-#include <otawa/hard.h>
-#include <otawa/prog/sem.h>
+#include <elm/option/ListOption.h>
+#include <elm/option/SwitchOption.h>
+
+#include <otawa/app/Application.h>
+#include <otawa/cfg/features.h>
+#include <otawa/data/clp/features.h>
+#include <otawa/data/clp/ClpAnalysis.h>
 #include <otawa/data/clp/SymbolicExpr.h>
 #include <otawa/display/CFGOutput.h>
-#include <otawa/data/clp/features.h>
+#include <otawa/hard.h>
+#include <otawa/proc/BBProcessor.h>
+#include <otawa/prog/sem.h>
+#include <otawa/stack/features.h>
+#include <otawa/stack/AccessedAddress.h>
 
 using namespace elm;
 using namespace otawa;
@@ -67,86 +70,298 @@ Identifier<bool> FILTER("", false);
  */
 
 
+/**
+ * Generic interface for displaying the result of analyses.
+ */
+class Displayer {
+public:
+	friend class ODFA;
+	virtual ~Displayer(void) { }
+
+	/**
+	 * Called once for each handled work space. Displayer can perform requirement
+	 * of analysis at this point.
+	 * @param ws	Current work space.
+	 */
+	virtual void prepare(WorkSpace *ws, const PropList& props) { }
+
+	/**
+	 * Called to display the state before BB.
+	 * @param out	Current output.
+	 * @param bb	Basic to display input state for.
+	 */
+	virtual void displayBefore(io::Output& out, BasicBlock *bb) = 0;
+
+	/**
+	 * Called to display the state after BB.
+	 * @param out	Current output.
+	 * @param bb	Basic to display output state for.
+	 */
+	virtual void displayAfter(io::Output& out, BasicBlock *bb) = 0;
+
+	/**
+	 * Called to display filters associated with a condition of basic blocks.
+	 * @param out	Current output.
+	 * @param bb	Basic block to display filters for.
+	 */
+	virtual void displayFilters(io::Output& out, BasicBlock *bb) { }
+
+	/**
+	 * Called to display statistics.
+	 */
+	virtual void displayStats(io::Output& out) { }
+
+	/**
+	 * Start the traversal of a basic block with computation.
+	 * @param bb	Started basic block.
+	 */
+	virtual void start(BasicBlock *bb) { }
+
+	/**
+	 * Go to next instruction.
+	 */
+	virtual void next(void) { }
+
+	/**
+	 * Display the current state.
+	 * @param out	Current output.
+	 */
+	virtual void display(io::Output& out) { }
+
+	/**
+	 * Ensure that addresses of memory accesses has been built.
+	 * @param ws	Workspace to work on.
+	 * @param props	Configuration properties.
+	 */
+	virtual void buildAddresses(WorkSpace *ws, const PropList& props) { }
+};
+
+
+// CLP textual displayer
+class CLPDisplayer: public Displayer {
+protected:
+
+	virtual void prepare(WorkSpace *ws, const PropList& props) {
+		_ws = ws;
+		ws->require(otawa::clp::FEATURE, props);
+	}
+
+ 	virtual void displayBefore(io::Output& out, BasicBlock *bb) {
+ 		clp::State state = clp::STATE_IN(bb);
+ 		state.print(out, _ws->process()->platform());
+ 		out<< io::endl;
+ 	}
+
+ 	virtual void displayAfter(io::Output& out, BasicBlock *bb) {
+ 		clp::State state = clp::STATE_OUT(bb);
+ 		state.print(out, _ws->process()->platform());
+ 		out<< io::endl;
+ 	}
+
+ 	virtual void displayFilters(io::Output& out, BasicBlock *bb) {
+		Vector<se::SECmp *> reg_filters = se::REG_FILTERS(bb);
+		Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(bb);
+		if(reg_filters.length() != 0 || addr_filters.length() != 0) {
+			out << "\tFILTERS = \n";
+			for(int i = 0; i < reg_filters.count(); i++) {
+				out << "\n\t\t";
+				reg_filters[i]->print(out, _ws->process()->platform());
+			}
+			for(int i = 0; i < addr_filters.count(); i++) {
+				out << "\n\t\t";
+				addr_filters[i]->print(out, _ws->process()->platform());
+			}
+		}
+ 	}
+
+ 	virtual void displayStats(io::Output& out) {
+		/*cerr << "machine instructions: " << clpa.get_nb_inst() << io::endl;
+		cerr << "semantic instructions: " << clpa.get_nb_sem_inst() << io::endl;
+		cerr << "sets: " << clpa.get_nb_set() << io::endl;
+		cerr << "sets to T: " << clpa.get_nb_top_set() << io::endl;
+		cerr << "stores: " << clpa.get_nb_store() << io::endl;
+		cerr << "stores of T: " << clpa.get_nb_top_store() << io::endl;
+		cerr << "stores at T: " << clpa.get_nb_top_store_addr() << io::endl;
+		cerr << "loads: " << clpa.get_nb_load() << io::endl;
+		cerr << "loads of T: " << clpa.get_nb_top_load() << io::endl;
+		cerr << "loads at T: " << clpa.get_nb_load_top_addr() << io::endl;
+		cerr << "filters: " << clpa.get_nb_filters() << io::endl;
+		cerr << "filters to T: " << clpa.get_nb_top_filters() << io::endl;
+
+		cerr << "precise sets: " << (100 - (float(clpa.get_nb_inst() + clpa.get_nb_top_store() + clpa.get_nb_load_top_addr()) * 100 / (clpa.get_nb_sem_inst() + clpa.get_nb_store() + clpa.get_nb_load()))) << io::endl;
+		cerr << "precise addresses: " << (100 - (float(clpa.get_nb_top_store_addr() + clpa.get_nb_load_top_addr()) * 100 / (clpa.get_nb_store() + clpa.get_nb_load()))) << io::endl;
+		cerr << "precise filters: " << (100 - (float(clpa.get_nb_top_filters()) * 100 / clpa.get_nb_filters())) << io::endl;*/
+ 	}
+
+private:
+ 	WorkSpace *_ws;
+};
+
+
+/**
+ * Displayer for stack analysis.
+ */
+class StackDisplayer: public Displayer {
+public:
+
+	StackDisplayer(WorkSpace *ws): i(ws) { }
+
+	virtual void prepare(WorkSpace *ws, const PropList& props) {
+		_ws = ws;
+		ws->require(otawa::STACK_ANALYSIS_FEATURE, props);
+	}
+
+	virtual void displayBefore(io::Output& out, BasicBlock *bb) {
+		if(bb->isEnd())
+			return;
+		stack::Iter i(_ws);
+		i.start(bb);
+		out << i.state() << io::endl;
+	}
+
+	virtual void displayAfter(io::Output& out, BasicBlock *bb) {
+		if(bb->isEnd())
+			return;
+		stack::Iter i(_ws);
+		i.start(bb);
+		while(!i.ended())
+			i.next();
+		out << i.state() << io::endl;
+	}
+
+	virtual void start(BasicBlock *bb) {
+		i.start(bb);
+	}
+
+	virtual void next(void) {
+		i.nextInst();
+	}
+
+	virtual void display(io::Output& out) {
+		out << i.state() << io::endl;
+	}
+
+	virtual void buildAddresses(WorkSpace *ws, const PropList& props) {
+		ws->require(stack::ADDRESS_FEATURE, props);
+	}
+
+private:
+	WorkSpace *_ws;
+	stack::Iter i;
+};
+
+
+/**
+ * All information to perform the display.
+ */
+class DisplayContext {
+public:
+	DisplayContext(WorkSpace *ws, const PropList& ps)
+		: before(false), after(false), filter(false), sem(false), stats(false), insts(false), _ws(ws), _ps(ps) { }
+
+	virtual ~DisplayContext(void) {
+		for(int i = 0; i < disps.count(); i++)
+			delete disps[i];
+	}
+
+	inline const genstruct::Vector<Displayer *>& displayers(void) const { return disps; }
+
+	void add(Displayer *d) {
+		disps.add(d);
+		d->prepare(_ws, _ps);
+	}
+
+	virtual void displayBefore(io::Output& out, BasicBlock *bb) {
+		for(int i = 0; i < disps.count(); i++)
+			disps[i]->displayBefore(out, bb);
+	}
+
+	virtual void displayAfter(io::Output& out, BasicBlock *bb) {
+		for(int i = 0; i < disps.count(); i++) {
+			out << "\t\t";
+			disps[i]->displayAfter(out, bb);
+		}
+	}
+
+	virtual void displayFilters(io::Output& out, BasicBlock *bb) {
+		for(int i = 0; i < disps.count(); i++)
+			disps[i]->displayFilters(out, bb);
+	}
+
+	virtual void displayStats(io::Output& out) {
+		for(int i = 0; i < disps.count(); i++)
+			disps[i]->displayStats(out);
+	}
+
+	virtual void start(BasicBlock *bb) {
+		for(int i = 0; i < disps.count(); i++)
+			disps[i]->start(bb);
+	}
+
+	virtual void next(void) {
+		for(int i = 0; i < disps.count(); i++)
+			disps[i]->next();
+	}
+
+	virtual void display(io::Output& out) {
+		for(int i = 0; i < disps.count(); i++) {
+			out << "\t\t";
+			disps[i]->display(out);
+		}
+	}
+
+	virtual void buildAddresses(WorkSpace *ws, const PropList& props) {
+		for(int i = 0; i < disps.count(); i++)
+			disps[i]->buildAddresses(ws, props);
+	}
+
+	bool before, after, filter, sem, stats, insts, addrs;
+
+private:
+	genstruct::Vector<Displayer *> disps;
+	WorkSpace *_ws;
+	const PropList& _ps;
+};
+
+
 // CLPCFGOutput class
 class CLPCFGOutput: public display::CFGOutput {
 public:
-	CLPCFGOutput(void): before(false), after(false), filter(false), sem(false) { }
+	CLPCFGOutput(DisplayContext& context): ctx(context) { }
 
 protected:
 	virtual void genBBInfo(CFG *cfg, BasicBlock *bb, Output& out) {
 
 		// display state before
-		if(before) {
+		if(ctx.before) {
 			out << "\n---\nbefore:";
-	 		clp::State state = clp::STATE_IN(bb);
-	 		state.print(out, workspace()->process()->platform());
+			ctx.displayBefore(out, bb);
 		}
 
 		// display state after
-		if(after) {
+		if(ctx.after) {
 			out << "\n---\nafter:";
-	 		clp::State state = clp::STATE_OUT(bb);
-	 		state.print(out, workspace()->process()->platform());
+			ctx.displayAfter(out, bb);
 		}
 
 		// display filters
-		if(filter) {
+		if(ctx.filter) {
 			out << "\n---\nfilters:";
-			Vector<se::SECmp *> reg_filters = se::REG_FILTERS(bb);
-			Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(bb);
-			if(reg_filters.length() != 0 || addr_filters.length() != 0) {
-				out << "\tFILTERS = \n";
-				for(int i = 0; i < reg_filters.count(); i++) {
-					out << "\n\t\t";
-					reg_filters[i]->print(out, workspace()->process()->platform());
-				}
-				for(int i = 0; i < addr_filters.count(); i++) {
-					out << "\n\t\t";
-					addr_filters[i]->print(out, workspace()->process()->platform());
-				}
-			}
+			ctx.displayFilters(out, bb);
 		}
 	}
 
- 	virtual void configure(const PropList& props) {
- 		CFGOutput::configure(props);
-		before = BEFORE(props);
- 		after = AFTER(props);
- 		if(!before && !after) {
- 			before = true;
- 			after = true;
- 		}
- 		sem = SEM(props);
- 		filter = FILTER(props);
- 	}
-
 private:
-	//ClpAnalysis& clpa;
-	bool before, after, filter, sem;
+	DisplayContext& ctx;
 };
+
 
 // Generic textual displayer
 class TextualDisplayer: public BBProcessor {
 public:
-	TextualDisplayer(void): after(false), before(false), sem(false), filter(false) { }
- 	TextualDisplayer(AbstractRegistration& reg): BBProcessor(reg), after(false), before(false), sem(false), filter(false)  { }
+	TextualDisplayer(DisplayContext& context): ctx(context) { }
 
 protected:
-
- 	virtual void displayBefore(WorkSpace *ws, CFG *cfg, BasicBlock *bb) = 0;
- 	virtual void displayAfter(WorkSpace *ws, CFG *cfg, BasicBlock *bb) = 0;
-
- 	virtual void configure(const PropList& props) {
- 		BBProcessor::configure(props);
- 		before = BEFORE(props);
- 		after = AFTER(props);
- 		if(!before && !after) {
- 			before = true;
- 			after = true;
- 		}
- 		sem = SEM(props);
- 		filter = FILTER(props);
- 	}
 
 	virtual void processCFG(WorkSpace *ws, CFG *cfg) {
 		out << "#function " << cfg->label() << io::endl;
@@ -167,8 +382,10 @@ protected:
 		// normal BB
 		else {
 			out << "BB " << bb->number() << " (" << bb->address() << ")\n";
-			if(before)
-				displayBefore(ws, cfg, bb);
+			if(ctx.before)
+				ctx.displayBefore(out, bb);
+			if(ctx.insts)
+				ctx.start(bb);
 			for(BasicBlock::InstIter inst(bb); inst; inst++) {
 
 				// display symbols
@@ -176,13 +393,13 @@ protected:
 					out << '\t' << sym->name() << io::endl;
 
 				// disassemble the instruction
-				out << "\t\t" << *inst;
+				out << "\t" << inst->address() << ' ' << *inst;
 				if(inst->isControl() && inst->target())
 					out << " (" << inst->target()->address() << ")";
 				out << io::endl;
 
 				// disassemble semantic instructions
-				if(sem) {
+				if(ctx.sem) {
 					sem::Block block;
 					inst->semInsts(block);
 					for(int i = 0; i < block.count(); i++) {
@@ -192,26 +409,26 @@ protected:
 						out << io::endl;
 					}
 				}
-			}
-			if(after) {
-				if(filter) {
-					Vector<se::SECmp *> reg_filters = se::REG_FILTERS(bb);
-					Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(bb);
-					if(reg_filters.length() != 0 || addr_filters.length() != 0) {
-						out << "\tFILTERS = \n";
-						for(int i = 0; i < reg_filters.count(); i++) {
-							out << "\t\t";
-							reg_filters[i]->print(out, ws->process()->platform());
-							out << "\n";
-						}
-						for(int i = 0; i < addr_filters.count(); i++) {
-							out << "\t\t";
-							addr_filters[i]->print(out, ws->process()->platform());
-							out << "\n";
-						}
-					}
+
+				// display state after
+				if(ctx.insts) {
+					ctx.next();
+					ctx.display(out);
 				}
-				displayAfter(ws, cfg, bb);
+			}
+
+			// display state after basic block
+			if(ctx.after) {
+				if(ctx.filter)
+					ctx.displayFilters(out, bb);
+				ctx.displayAfter(out, bb);
+			}
+
+			// display accessed addresses
+			if(ctx.addrs) {
+				AccessedAddresses *as = otawa::ADDRESSES(bb);
+				if(as)
+					out << as << io::endl;
 			}
 
 		}
@@ -219,25 +436,7 @@ protected:
 
 	}
 
-	bool after, before, sem, filter;
-};
-
-// CLP textual displayer
-class CLPDisplayer: public TextualDisplayer {
-protected:
-
- 	virtual void displayBefore(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
- 		clp::State state = clp::STATE_IN(bb);
- 		state.print(out, ws->process()->platform());
- 		out<< io::endl;
- 	}
-
- 	virtual void displayAfter(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
- 		clp::State state = clp::STATE_OUT(bb);
- 		state.print(out, ws->process()->platform());
- 		out<< io::endl;
- 	}
-
+	DisplayContext& ctx;
 };
 
 
@@ -247,18 +446,21 @@ public:
 	ODFA(void)
 	: Application(
 		"odfa",
-		Version(1, 0, 0),
+		Version(2, 0, 0),
 		"DataFlow Analysis Displayer",
 		"H. Cassé <casse@irit.fr>"),
-	clp(*this, option::cmd, "-c", option::cmd, "--clp", option::help, "display CLP information", option::end),
-	list(*this, option::cmd, "-l", option::cmd, "--list", option::help, "display the list of registers", option::end),
-	before(*this, option::cmd, "--before", option::help, "display state before the BB", option::end),
-	after(*this, option::cmd, "--after", option::help, "display state after the BB", option::end),
-	sem(*this, option::cmd, "-s", option::cmd, "--sem", option::help, "display semantic instructions", option::end),
-	filter(*this, option::cmd, "-F", option::cmd, "--filter", option::help, "display filters", option::end),
-	stats(*this, option::cmd, "-S", option::cmd, "--stats", option::help, "display statistics of the analysis", option::end),
-	cfg(*this, option::cmd, "-C", option::cmd, "--cfg", option::help, "dump the CFG in .dot format"),
-	inits(*this, option::cmd, "-r", option::cmd, "--reg", option::help, "add an initialization register", option::arg_desc, "REGISTER=VALUE", option::end)
+	clp		(option::SwitchOption::Make(*this).cmd("-c").cmd("--clp")		.description("display CLP information")),
+	list	(option::SwitchOption::Make(*this).cmd("-l").cmd("--list")		.description("display the list of registers")),
+	before	(option::SwitchOption::Make(*this).cmd("-B").cmd("--before")	.description("display state before the BB")),
+	after	(option::SwitchOption::Make(*this).cmd("-A").cmd("--after")		.description("display state after the BB")),
+	sem		(option::SwitchOption::Make(*this).cmd("-s").cmd("--sem")		.description("display semantic instructions")),
+	filter	(option::SwitchOption::Make(*this).cmd("-F").cmd("--filter")	.description("display filters")),
+	stats	(option::SwitchOption::Make(*this).cmd("-S").cmd("--stats")		.description("display statistics of the analysis")),
+	cfg		(option::SwitchOption::Make(*this).cmd("-C").cmd("--cfg")		.description("dump the CFG in .dot format")),
+	stack	(option::SwitchOption::Make(*this).cmd("-P").cmd("--stack")		.description("perform stack analysis and display results")),
+	insts	(option::SwitchOption::Make(*this).cmd("-I").cmd("--insts")		.description("display state after each instruction")),
+	addrs	(option::SwitchOption::Make(*this).cmd("-a").cmd("--address")	.description("display addresses of memory access")),
+	inits	(*this, option::cmd, "-r", option::cmd, "--reg", option::help, "add an initialization register", option::arg_desc, "REGISTER=VALUE", option::end)
 	{ }
 
 protected:
@@ -266,8 +468,8 @@ protected:
 	void work(const string& entry, PropList& props) throw (elm::Exception) {
 		if(list)
 			performList();
-		else if(clp)
-			performCLP(props);
+		else
+			performAnalysis(props);
 	}
 
 private:
@@ -294,53 +496,41 @@ private:
 		}
 	}
 
-	void performCLP(PropList& props) throw (elm::Exception) {
-
-		// initialization
+	void performAnalysis(PropList& props) throw (elm::Exception) {
 		fillRegs(props);
-		BEFORE(props) = before;
-		AFTER(props) = after;
-		SEM(props) = sem;
-		FILTER(props) = filter;
 
 		// perform the analysis
 		if(workspace()->isProvided(DELAYED_FEATURE)
 		|| workspace()->isProvided(DELAYED2_FEATURE))
 			require(DELAYED_CFG_FEATURE);
 		require(otawa::VIRTUALIZED_CFG_FEATURE);
-		clp::Analysis clpa;
-		clpa.process(workspace(), props);
+
+		// prepare analysis
+		DisplayContext ctx(workspace(), props);
+		ctx.before = *before || !*after;
+		ctx.after = (*after || !*before) && !insts;
+		ctx.sem = sem;
+		ctx.filter = filter;
+		ctx.insts = insts;
+		ctx.addrs = addrs;
+		if(clp)
+			ctx.add(new CLPDisplayer());
+		if(stack)
+			ctx.add(new StackDisplayer(workspace()));
+		if(addrs)
+			ctx.buildAddresses(workspace(), props);
 
 		// display the CFG
 		if(cfg) {
 			display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
-			CLPCFGOutput output;
+			CLPCFGOutput output(ctx);
 			output.process(workspace(), props);
 		}
 		else {
-			CLPDisplayer displayer;
+			TextualDisplayer displayer(ctx);
 			displayer.process(workspace(), props);
 		}
 
-		// display the statistics
-		if(stats) {
-			cerr << "machine instructions: " << clpa.get_nb_inst() << io::endl;
-			cerr << "semantic instructions: " << clpa.get_nb_sem_inst() << io::endl;
-			cerr << "sets: " << clpa.get_nb_set() << io::endl;
-			cerr << "sets to T: " << clpa.get_nb_top_set() << io::endl;
-			cerr << "stores: " << clpa.get_nb_store() << io::endl;
-			cerr << "stores of T: " << clpa.get_nb_top_store() << io::endl;
-			cerr << "stores at T: " << clpa.get_nb_top_store_addr() << io::endl;
-			cerr << "loads: " << clpa.get_nb_load() << io::endl;
-			cerr << "loads of T: " << clpa.get_nb_top_load() << io::endl;
-			cerr << "loads at T: " << clpa.get_nb_load_top_addr() << io::endl;
-			cerr << "filters: " << clpa.get_nb_filters() << io::endl;
-			cerr << "filters to T: " << clpa.get_nb_top_filters() << io::endl;
-
-			cerr << "precise sets: " << (100 - (float(clpa.get_nb_inst() + clpa.get_nb_top_store() + clpa.get_nb_load_top_addr()) * 100 / (clpa.get_nb_sem_inst() + clpa.get_nb_store() + clpa.get_nb_load()))) << io::endl;
-			cerr << "precise addresses: " << (100 - (float(clpa.get_nb_top_store_addr() + clpa.get_nb_load_top_addr()) * 100 / (clpa.get_nb_store() + clpa.get_nb_load()))) << io::endl;
-			cerr << "precise filters: " << (100 - (float(clpa.get_nb_top_filters()) * 100 / clpa.get_nb_filters())) << io::endl;
-		}
 	}
 
 	void fillRegs(PropList& props) {
@@ -374,11 +564,9 @@ private:
 		}
 	}
 
-	option::SwitchOption clp, list, before, after, sem, filter, stats, cfg;
+	option::SwitchOption clp, list, before, after, sem, filter, stats, cfg, stack, insts, addrs;
 	option::ListOption<string> inits;
 };
 
-int main(int argc, char **argv) {
-	ODFA app;
-	return app.run(argc, argv);
-}
+OTAWA_RUN(ODFA);
+

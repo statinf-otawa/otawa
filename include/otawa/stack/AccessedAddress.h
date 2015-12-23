@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	AccessAddress and AccessesAddresses classes interface
  *
  *	This file is part of OTAWA
@@ -20,17 +19,22 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
-#ifndef OTAWA_STACK_ACCESSEDADDRESS_H_
-#define OTAWA_STACK_ACCESSEDADDRESS_H_
+#ifndef OTAWA_ACCESSEDADDRESS_H_
+#define OTAWA_ACCESSEDADDRESS_H_
 
 #include <otawa/base.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/proc/BBProcessor.h>
+#include <otawa/stack/features.h>
 
 namespace otawa {
 
 class Inst;
+
+typedef struct address_stat_t {
+	int all, sprel, abs, total;
+} address_stat_t;
 
 class AccessedAddress {
 public:
@@ -58,12 +62,12 @@ private:
 
 class SPAddress: public AccessedAddress {
 public:
-	inline SPAddress(Inst *instruction, bool is_store, long offset)
+	inline SPAddress(Inst *instruction, bool is_store, t::int32 offset)
 		: AccessedAddress(instruction, is_store, SP), off(offset) { }
-	inline long offset(void) const { return off; }
+	inline t::int32 offset(void) const { return off; }
 
 private:
-	long off;
+	t::int32 off;
 };
 
 
@@ -117,19 +121,17 @@ private:
 	AccessedAddress **addrs;
 };
 inline io::Output& operator<<(io::Output& out, const AccessedAddresses *aa) { aa->print(out); return out; }
+inline io::Output& operator<<(io::Output& out, AccessedAddresses *aa) { aa->print(out); return out; }
 
 
-// AddressStats process
-class AddressStats: public BBProcessor {
+// AccessedAddressFromStack class
+class AccessedAddressFromStack: public BBProcessor {
 public:
-	typedef struct stat_t {
-		int all, sprel, abs, total;
-	} stat_t;
-	static Identifier<stat_t *> STATS;
 	static Identifier<bool> DISPLAY;
 
-	AddressStats(void);
-	virtual void configure(const PropList &props);
+	static p::declare reg;
+	AccessedAddressFromStack(p::declare& r = reg);
+	virtual void configure(const PropList& props);
 
 protected:
 	virtual void setup (WorkSpace *fw);
@@ -137,16 +139,17 @@ protected:
 	virtual void processBB (WorkSpace *fw, CFG *cfd, BasicBlock *bb);
 
 private:
-	stat_t istats, *stats;
+	address_stat_t istats, *stats;
 	bool display;
 };
 
+io::Output& operator<<(io::Output& out, address_stat_t *s);
 
-//  features
-extern Feature<NoProcessor> ADDRESS_ANALYSIS_FEATURE;
+extern p::feature ADDRESS_ANALYSIS_FEATURE;
 extern Identifier<AccessedAddresses *> ADDRESSES;
+extern Identifier<address_stat_t *> ADDRESS_STATS;
 
 }	//otawa
 
-#endif /* OTAWA_STACK_ACCESSEDADDRESS_H_ */
+#endif /* OTAWA_ACCESSEDADDRESS_H_ */
 
