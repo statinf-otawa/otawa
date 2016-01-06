@@ -117,10 +117,11 @@ void Output::processCFG(WorkSpace *ws, CFG *cfg) {
 	// build the CFG node
 	cfg_node = new xom::Element("cfg");
 	root->appendChild(cfg_node);
-	string addr = id(cfg);
+	string addr = _ << "0x" << cfg->address();
 	string label = cfg->label();
 	string num = _ << cfg->index();
-	cfg_node->addAttribute(new xom::Attribute("id", &addr));
+	string _id = id(cfg);
+	cfg_node->addAttribute(new xom::Attribute("id", &_id));
 	cfg_node->addAttribute(new xom::Attribute("address", &addr));
 	cfg_node->addAttribute(new xom::Attribute("label", &label));
 	cfg_node->addAttribute(new xom::Attribute("number", &num));
@@ -162,7 +163,7 @@ void Output::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		// basic block specialization
 		if(b->isBasic()) {
 			BasicBlock *bb = b->toBasic();
-			string addr = _ << bb->address();
+			string addr = _ << "0x" << bb->address();
 			string size = _ << bb->size();
 			bb_node->addAttribute(new xom::Attribute("address", &addr));
 			bb_node->addAttribute(new xom::Attribute("size", &size));
@@ -178,7 +179,7 @@ void Output::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 			for(BasicBlock::InstIter inst= b->toBasic()->insts(); inst; inst++) {
 				xom::Element *inst_node = new xom::Element("inst");
 				bb_node->appendChild(inst_node);
-				string addr = _ << inst->address();
+				string addr = _ << "0x" << inst->address();
 				inst_node->addAttribute(new xom::Attribute("address", &addr));
 				Option<Pair<cstring, int> > line_info = ws->process()->getSourceLine(inst->address());
 				if(line_info) {
