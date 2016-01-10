@@ -680,11 +680,19 @@ Block *CFGMaker::unknown(void) {
  * @return	Built CFG.
  */
 CFG *CFGMaker::build(void) {
+
+	// add exit block if required
 	if(!cfg->exit())
 		exit();
 	add(cfg->exit());
+
+	// add unknown block if required
 	if(u)
 		add(u);
+
+	// copy properties
+	cfg->takeProps(*this);
+
 	return cfg;
 }
 

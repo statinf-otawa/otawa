@@ -172,7 +172,7 @@ private:
 };
 io::Output& operator<<(io::Output& out, CFG *cfg);
 
-class CFGMaker: public sgraph::GenDiGraphBuilder<Block, Edge> {
+class CFGMaker: public sgraph::GenDiGraphBuilder<Block, Edge>, public PropList {
 public:
 	CFGMaker(Inst *first);
 	inline Block *entry(void) const { return cfg->entry(); }

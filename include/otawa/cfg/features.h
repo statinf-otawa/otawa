@@ -22,9 +22,10 @@
 #ifndef OTAWA_CFG_FEATURES_H_
 #define OTAWA_CFG_FEATURES_H_
 
-#include <otawa/proc/Feature.h>
 #include <elm/genstruct/FragTable.h>
 #include <otawa/cfg/CFG.h>
+#include <otawa/proc/Feature.h>
+#include <otawa/prop/ContextualProperty.h>
 
 namespace elm { namespace genstruct { template <class T> class Tree; } }
 
@@ -74,6 +75,11 @@ public:
 private:
 	elm::genstruct::FragTable<CFG *> cfgs;
 };
+
+// context support
+extern Identifier<ContextualPath> CONTEXT;
+extern Identifier<ContextualStep> ENTER;
+extern Identifier<int> LEAVE;
 
 // COLLECTED_CFG_FEATURE
 extern Identifier<CFG *> ENTRY_CFG;

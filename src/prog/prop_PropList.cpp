@@ -350,6 +350,18 @@ void PropList::addProps(const PropList& props) {
 
 
 /**
+ * Take properties from props to the current property list.
+ * @param props		Property list to move properties from.
+ */
+void PropList::takeProps(PropList& props) {
+	clearProps();
+	this->head = props.head;
+	props.head = 0;
+}
+
+
+
+/**
  * Find a property by its identifier.
  * @param id	Identifier of the property to find.
  * @return		Found property or null.

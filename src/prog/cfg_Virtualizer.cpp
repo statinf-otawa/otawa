@@ -205,6 +205,7 @@ bool Virtualizer::isInlined(CFG *cfg, Option<int> local_inlining, ContextualPath
 void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Option<int> local_inlining, ContextualPath &path) {
 	ASSERT(stack);
 	ASSERT(cfg);
+	CONTEXT(maker) = path;
 
 	// preparation
 	genstruct::HashTable<Block *, Block *> bmap;

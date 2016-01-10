@@ -122,7 +122,7 @@ void ContextualPath::print(io::Output& out) const {
  * Get the address of the function enclosing immediately the current context.
  * @return	Enclosing function address or Address::null if no function is found.
  */
-Address ContextualPath::getEnclosingFunction(void) {
+Address ContextualPath::getEnclosingFunction(void) const {
 	int i = stack.count() - 1;
 	while(i >= 0) {
 		if(stack[i].kind() == ContextualStep::FUNCTION)

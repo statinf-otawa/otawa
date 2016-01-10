@@ -47,7 +47,7 @@ namespace otawa { namespace ipet {
  * @li @ref ipet::FLOW_FACTS_FEATURE
  */
 
-p::declare FlowFactLoader::reg = p::init("otawa::ipet::FlowFactLoader", Version(1, 1, 1))
+p::declare FlowFactLoader::reg = p::init("otawa::ipet::FlowFactLoader", Version(2, 0, 0))
 	.base(ContextualProcessor::reg)
 	.maker<FlowFactLoader>()
 	.require(LOOP_HEADERS_FEATURE)
@@ -72,40 +72,12 @@ FlowFactLoader::FlowFactLoader(p::declare& r)
 
 
 /**
- */
-void FlowFactLoader::enteringCall(WorkSpace *ws, CFG *cfg, BasicBlock *caller, BasicBlock *callee) {
-	if(!caller->isEntry()) {
-		Inst *call = caller->lastInst();
-		if(!call->isCall()) {
-			for(BasicBlock::InstIter inst(caller); inst; inst++)
-				if(inst->isControl())
-					call = inst;
-			if(!call)
-				call = caller->lastInst();
-			ASSERT(call);
-		}
-		path.push(ContextualStep::CALL, call->address());
-	}
-	path.push(ContextualStep::FUNCTION, callee->address());
-}
-
-
-/**
- */
-void FlowFactLoader::leavingCall(WorkSpace *ws, CFG *cfg, BasicBlock *to) {
-	path.pop();
-	if(!to->isExit())
-		path.pop();
-}
-
-
-/**
  * Transfer flow information from the given source instruction to the given BB.
  * @param source	Source instruction.
  * @param bb		Target BB.
  * @return			True if some loop bound information has been found, false else.
  */
-bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb) {
+bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb, const ContextualPath& path) {
 	bool all = true;
 
 	// look for MAX_ITERATION
@@ -183,7 +155,7 @@ void FlowFactLoader::cleanup(WorkSpace *ws) {
  * @param bb	BB to put the bound to.
  * @return		True if the bound has been found, false else.
  */
-bool FlowFactLoader::lookLineAt(Inst *inst, BasicBlock *bb) {
+bool FlowFactLoader::lookLineAt(Inst *inst, BasicBlock *bb, const ContextualPath& path) {
 	if(!lines_available)
 		return false;
 
@@ -201,7 +173,7 @@ bool FlowFactLoader::lookLineAt(Inst *inst, BasicBlock *bb) {
 	ASSERT(line_inst);
 
 	// perform transfer
-	bool trans = transfer(line_inst, bb);
+	bool trans = transfer(line_inst, bb, path);
 	if(trans)
 		line_loop++;
 	return trans;
@@ -210,7 +182,7 @@ bool FlowFactLoader::lookLineAt(Inst *inst, BasicBlock *bb) {
 
 /**
  */
-void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb, const ContextualPath& path) {
 	ASSERT(ws);
 	ASSERT(cfg);
 	ASSERT(bb);
@@ -228,25 +200,27 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	// Look in the first instruction of the BB
 	BasicBlock::InstIter iter(bb);
 	ASSERT(iter);
-	if(transfer(iter, bb))
+	if(transfer(iter, bb, path))
 		return;
 
 	// Attempt to look at the start of the matching source line
-	if(lookLineAt(bb->firstInst(), bb))
+	if(lookLineAt(bb->first(), bb, path))
 		return;
 
 	// Look all instruction in the header
 	// (in case of aggregation in front of the header)
 	for(BasicBlock::InstIter inst(bb); inst; inst++)
-		if(lookLineAt(inst, bb))
+		if(lookLineAt(inst, bb, path))
 			return;
 
 	// look in back edge in case of "while() ..." to "do ... while(...)" optimization
-	for(BasicBlock::InIterator edge(bb); edge; edge++)
-		if(Dominance::isBackEdge(edge))
-			for(BasicBlock::InstIter inst(edge->source()); inst; inst++)
-				if(lookLineAt(inst, bb))
+	for(BasicBlock::EdgeIter edge(bb->ins()); edge; edge++)
+		if(Dominance::isBackEdge(edge)) {
+			ASSERT(edge->source()->isBasic());
+			for(BasicBlock::InstIter inst(edge->source()->toBasic()); inst; inst++)
+				if(lookLineAt(inst, bb, path))
 					return;
+		}
 
 	// warning for lacking loops
 	if(max < 0 && total < 0) {

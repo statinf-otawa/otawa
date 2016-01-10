@@ -84,6 +84,7 @@ public:
 	// Global management
 	void clearProps(void);
 	void addProps(const PropList& props);
+	void takeProps(PropList& props);
 	void print(elm::io::Output& out) const;
 	inline PropList& operator=(const PropList& props)
 		{ clearProps(); addProps(props); return *this; }

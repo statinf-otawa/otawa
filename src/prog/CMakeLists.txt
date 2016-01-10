@@ -81,7 +81,7 @@ set(libotawa_SOURCES
 #	"ipet_BasicObjectFunctionBuilder.cpp"
 #	"ipet_CacheSupport.cpp"
 #	"ipet_ConstraintLoader.cpp"
-#	"ipet_FlowFactLoader.cpp"
+	"ipet_FlowFactLoader.cpp"
 #	"ipet_FlowFactConstraintBuilder.cpp"
 #	"ipet_ILPSystemGetter.cpp"
 #	"ipet_IPET.cpp"
