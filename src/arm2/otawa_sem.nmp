@@ -390,6 +390,21 @@ extend MUL
 		endif;
 	}
 
+extend SMULL
+	otawa_sem = {
+		if !cond.otawa_never then
+			if !cond.otawa_ever then
+				scratch(rdlo.i);
+				scratch(rdhi.i);
+				cont;
+			endif;
+				if rs.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
+				mul(rdlo.i, rm.i, rs.i);
+				mulh(rdhi.i, rm.i, rs.i);
+				if sets then scratch(_CPSR); endif;
+		endif;
+	}
+
 extend MVN_shr
 	otawa_sem = {
 		if_cond
@@ -889,7 +904,7 @@ extend ADC_imm, RSC_imm, SBC_imm
 		if sets then scratch(_CPSR); endif;
 	}
 
-extend SMULL, UMULL, SMLAL, UMLAL
+extend UMULL, SMLAL, UMLAL
 	otawa_sem = {
 		scratch(rdlo.i);
 		scratch(rdhi.i);

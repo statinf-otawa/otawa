@@ -22,8 +22,11 @@
  */
 
 #include <elm/string.h>
-#include <otawa/prog/sem.h>
 #include <otawa/hard/Platform.h>
+#include <otawa/prog/Process.h>
+#include <otawa/sem/BBIter.h>
+#include <otawa/sem/inst.h>
+#include <otawa/sem/StateIter.h>
 
 using namespace elm;
 
@@ -593,6 +596,58 @@ io::Output& operator<<(io::Output& out, cond_t cond) {
 
 
 /**
+ * Start interpretation of an instruction.
+ * @param inst	Instruction to interpret.
+ */
+void PathIter::start(Inst *inst) {
+	bb.clear();
+	inst->semInsts(bb);
+	todo.clear();
+	pc = 0;
+	bb.add(sem::cont());
+}
+
+
+/**
+ * Start interpretation of the initialization semantic instructions
+ * of a process.
+ */
+void PathIter::start(Process *proc) {
+	bb.clear();
+	proc->semInit(bb);
+	todo.clear();
+	pc = 0;
+	bb.add(sem::cont());
+}
+
+
+/**
+ * Start interpretation of a semantic block.
+ * @param block		Block to interpret.
+ */
+void PathIter::start(const sem::Block& block) {
+	bb = block;
+	todo.clear();
+	pc = 0;
+	bb.add(sem::cont());
+}
+
+
+/**
+ * Go to next semantic instruction.
+ */
+void PathIter::next(void) {
+	if(pathEnd())
+		pc = todo.pop();
+	else {
+		if(isCond())
+			todo.push(pc + bb[pc].jump());
+		pc++;
+	}
+}
+
+
+/**
  * @fn bool PathIter::pathEnd(void) const;
  * Test if the current instruction is a path end.
  * @return	True if it is a path end, false else.
@@ -604,6 +659,141 @@ io::Output& operator<<(io::Output& out, cond_t cond) {
  * Test if the current instruction is a conditional, that means that
  * two different paths will be created from this point.
  * @return	True if it is a condition, false else.
+ */
+
+/**
+ * @class BBIter
+ * This class is an iterator on the semantic instruction paths of a basic block.
+ * Basically, a machine instruction is made of semantic instructions that may exhibit
+ * several executions paths (but no loop). This iterator enumerates all instructions
+ * of a basic block and for each instruction, all semantic paths of each instruction.
+ * As this iterator is relatively expansive, it should be allocated once and restarted
+ * for each basic block using start() method.
+ *
+ * Several accessors allow to get the current execution point:
+ * @li item() gets the current semantic instruction,
+ * @li instruction() gets the current machine instruction.
+ *
+ * This class provides also several end methods for:
+ * @li ended() for the end of the basic block,
+ * @li instEnd() for the end of a particular instruction (all semantic paths),
+ * @li pathEnd() for the end of a particular semantic execution path.
+ *
+ */
+
+/**
+ * Start the traversal of a different basic block.
+ * @param bb	Basic block to start with.
+ */
+void BBIter::start(BasicBlock *bb) {
+	i = BasicBlock::InstIter(bb);
+	if(*i)
+		si.start(*i);
+}
+
+/**
+ * @fn bool BBIter::pathEnd(void) const;
+ * Test if the iteration point is at the end of an semantic execution path.
+ * @return	True if it is the end of a semantic instruction path, false else.
+ */
+
+/**
+ * @fn bool BBIter::isCond(void) const;
+ * Test if the current instruction is a condition, that is a fork between two
+ * semantic execution paths.
+ * @return	True if the current instruction is a condition, false else.
+ */
+
+/**
+ * @fn bool BBIter::instEnd(void) const;
+ * Test if the iterator is at the end of a machine instruction.
+ * @return	True if at end of machine instruction, false else.
+ */
+
+/**
+ * @fn bool BBIter::ended(void) const;
+ * Test if the iterator has ended the block.
+ * @return	True if at end of the block, false else.
+ */
+
+/**
+ * @fn inst BBIter::item(void) const;
+ * Get the current semantic instruction.
+ * @return	Current semantic instruction.
+ */
+
+/**
+ * @fn Inst *BBIter::instruction(void) const;
+ * Get the current machine instruction.
+ * @return	Current machine instruction.
+ */
+
+/**
+ * Go to next semantic instruction (including changing
+ * instruction or changing execution path).
+ */
+void BBIter::next(void) {
+	if(si.ended()) {
+		i++;
+		if(i)
+			si.start(i);
+		else
+			return;
+	}
+	else
+		si.next();
+}
+
+/**
+ * Go to the start of the next instruction, performing
+ * the remaining execution paths of the current instruction.
+ */
+void BBIter::nextInst(void) {
+	next();
+	while(!instEnd())
+		next();
+}
+
+/**
+ * Go to the end of the basic block.
+ */
+void BBIter::toEnd(void) {
+	while(!ended())
+		next();
+}
+
+
+/**
+ * @class StateIter
+ * This class, based on @ref BBIter, allows to traverse all semantic execution paths
+ * of a basic block while maintaining the consistency of the analysis state. The parameter
+ * class must be implement the @ref StateManager concept described below:
+ *
+ * @code
+ * class StateManager {
+ * public:
+ * 		typedef ... t;				// type of states
+ * 		t bot(void);				// bottom least value
+ * 		void free(t s);				// free a state
+ * 		bool equals(t s1, t s2);	// test for equality
+ * 		t copy(t s);				// provide a fresh copy of state (fried by free())
+ * 		t join(t s1, t s2);			// join both states
+ * };
+ * @endcode
+ * And type StateManager::t must support the assignment operation.
+ *
+ * @param S		State manager (must implement StateManager concept above).
+ */
+
+/**
+ * @fn StateIter::StateIter(S& manager);
+ * Build a state iterator using the given state manager.
+ * @param manager	State manager.
+ */
+
+/**
+ * @fn S::t& StateIter::state(void) const;
+ * Get the state matching the current point.
  */
 
 

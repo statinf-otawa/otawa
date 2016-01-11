@@ -4,7 +4,7 @@
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
- * 
+ *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation; either version 2 of the License, or
@@ -16,7 +16,7 @@
  *	GNU General Public License for more details.
  *
  *	You should have received a copy of the GNU General Public License
- *	along with OTAWA; if not, write to the Free Software 
+ *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
@@ -29,17 +29,17 @@ namespace otawa { namespace concept {
 /**
  * This concept attempts to provide a representation of a digraph that may only
  * be traversed in the edge direction.
- * 
+ *
  * @note	A specificity of OTAWA is that each vertex is associated with an
  * 			index in the range of 0 and the count of vertices in the graph.
- * 			This is useful to implement some optimizations. 
+ * 			This is useful to implement some optimizations.
  */
 class DiGraph: public elm::concept::Collection<Vertex> {
 public:
 
 	/** Vertex class. */
 	class Vertex { };
-	
+
 	/** Opaque type for the edges. */
 	class Edge { };
 
@@ -49,7 +49,7 @@ public:
 	 * @return		Sink of the given edge.
 	 */
 	const Vertex& sinkOf(Edge& edge);
-	
+
 	/**
 	 * Get the output degree of the vertex.
 	 * @param vertex	Vertex to get the out degree.
@@ -68,20 +68,20 @@ public:
 	/** Outing edge iterator on a node. */
 	class Successor: public Iterator<Edge> {
 	public:
-		
+
 		/**
 		 * Build the iterator on the successor edge of the source.
 		 * @param source	Source node.
 		 */
 		Successor(const DiGraph& graph, const Vertex& source);
-		
+
 		/**
 		 * Clone the given successor iterator.
 		 * @param forward	Iterator to clone.
 		 */
 		Successor(const OutIterator& iterator);
 	};
-	
+
 };
 
 
@@ -96,7 +96,7 @@ class DiGraphWithLoop: public DiGraph {
 };
 
 
-/** This kind of digraph contain indexed graph. */ 
+/** This kind of digraph contain indexed graph. */
 class DiGraphWithIndexedVertex: public DiGraph {
 public:
 	int indexOf(const Vertex& vertex) const;
@@ -109,20 +109,20 @@ class BiDiGraph: public DiGraph {
 	/** Entering-in edge iterator on a node. */
 	class Predecessor: public Iterator<Edge> {
 	public:
-		
+
 		/**
 		 * Build the iterator on the entering-in edges of the source.
 		 * @param source	Source node.
 		 */
 		Predecessor(const DiGraph& graph, const Vertex& source);
-		
+
 		/**
 		 * Clone the given predecessor iterator.
 		 * @param forward	Iterator to clone.
 		 */
 		Predecessor(const InIterator& iterator);
 	};
-	
+
 	/**
 	 * Get the source of the given edge.
 	 * @param edge	Edge to get target of.
@@ -136,7 +136,7 @@ class BiDiGraph: public DiGraph {
 	 * @return			In degree.
 	 */
 	int inDegree(const Vertex& vertex) const;
-	
+
 	/**
 	 * Test if the pred vertex is predecessor of the ref vertex.
 	 * @param pred	Predecessor vertex.
@@ -149,7 +149,7 @@ class BiDiGraph: public DiGraph {
 
 /** Concept of directed graph providing a vertex map. */
 class DiGraphWithVertexMap: public DiGraph {
-public:	
+public:
 	/** Efficient map for the nodes. */
 	template <class T> class VertexMap: public Map<Vertex, T> { };
 };
@@ -193,7 +193,7 @@ public:
 	 * @return	Size in bytes.
 	 */
 	size_t size(void);
-	
+
 	/**
 	 * Address succeeding the last byte of the block.
 	 * @return	address() + size().
@@ -205,16 +205,16 @@ public:
 	 * @return	Number of instructions.
 	 */
 	int countInsts(void);
-	
+
 	/**
 	 * Iterator on the instruction of the block.
 	 */
 	class InstIter: public Iterator<Inst *> {
 	public:
-	
+
 		/** Build an iterator on the given block. */
 		InstIter(const InstBlock *block);
-		
+
 		/** Build an iterator cloning the given one. */
 		InstIter(const InstIter& iter);
 	};
@@ -231,14 +231,14 @@ public:
 
 	/** Type of the values of the domain. */
 	typedef T t;
-	
+
 	/** Get the initial value (at graph entry). */
 	t initial(void);
-	
+
 	/** Get the smallest value of the domain "_"
 	 *  such that forall d in domain, join(_, d) = joind(d, _) = d */
 	t bottom(void);
-	
+
 	/**
 	 * Perform the join of two values, d = join(d1, d2)
 	 * and must satisfy the property: d1 <= d and d2 <= d.
@@ -246,14 +246,14 @@ public:
 	 * @param s		Second value to join.
 	 */
 	void join(t& d, t s);
-	
+
 	/**
 	 *  Test if two values are equal.
 	 * 	@param v1	First value.
 	 *  @param v2	Secondd value.
 	 *	@return		True if both values are equal. */
 	bool equals(t v1, t v2);
-	
+
 	/**
 	 *  Assign the value s to the value d.
 	 * 	@param d	Assigned value.
@@ -268,7 +268,7 @@ public:
 	 * @param c		Value to output.
 	 */
 	void dump(io::Output& out, t c);
-	
+
 	/**
 	 * Update the value according to the given graph vertex.
 	 * Notice that this function must be monotonic:
@@ -286,7 +286,7 @@ public:
 
 	/** Type of the set of the problem. */
 	typedef struct Set Set;
-	
+
 	/**
 	 * Build a new empty set (set constructor).
 	 * @eturn	New empty set.
@@ -297,14 +297,14 @@ public:
 	 * Build the generating set for the given basic block.
 	 * @param bb	Basic block to get generating set from.
 	 * @return		Generating set.
-	 */	
+	 */
 	Set *gen(BasicBlock *bb);
-	
+
 	/**
 	 * Build the killing set for the given basic block.
 	 * @param bb	Basic block to get killing set from.
 	 * @return		killing set.
-	 */	
+	 */
 	Set *kill(BasicBlock *bb);
 
 	/**
@@ -321,35 +321,35 @@ public:
 	 * @param set	Set to reset.
 	 */
 	void reset(Set *set);
-	
+
 	/**
 	 * Merge two sets, as after a selection or at the entry of a loop.
 	 * @param set1	First set to merge and result of the merge.
 	 * @param set2	Second set to merge.
 	 */
 	void merge(Set *set1, Set *set2);
-	
+
 	/**
 	 * Assign a set to another one.
 	 * @param dset	Destination set.
 	 * @param tset	Source set.
 	 */
 	void set(Set *dset, Set *tset);
-	
+
 	/**
 	 * Perform union of a set in another one (generate action).
 	 * @param dset	First source and destination set.
 	 * @param tset	Second source set.
 	 */
 	void add(Set *dset, Set *tset);
-	
+
 	/**
 	 * Makes the difference between two sets (kill action).
 	 * @param dset	Destination and first operand set.
 	 * @param tset	Second operand set.
 	 */
 	void diff(Set *dset, Set *tset);
-	
+
 	/**
 	 * Free the ressources used by the given set.
 	 * @param set	Set to remove.
@@ -555,5 +555,67 @@ public:
 };
 
 }	// ai
+
+namespace sem {
+
+/**
+ * In DFA of OTAWA, intermediate state are only stored at basic block level. To find back
+ * state inside the basic block, one has to re-interpret instruction of the basic block.
+ * This class provides a generic concept to support re-interpretation of the state and
+ * should be efficient-enough to support both paradigm of state representation:
+ * @li immutable -- state is an immutable data structure allowing re-use for join and update operations,
+ * @li mutable -- state is a mutable data structure modified by join and update opperations.
+ */
+template <class T>
+class StateManager {
+public:
+	typedef T t;
+
+	/**
+	 * Get the bottom value.
+	 * @return	Bottom value.
+	 */
+	t bot(void);
+
+	/**
+	 * Free the given state.
+	 * @param s		State to delete.
+	 */
+	void free(t s);
+
+	/**
+	 * Test for equality.
+	 * @param s1	First state.
+	 * @param s2	Second state.
+	 * @return		True if they are equal, false else.
+	 */
+	bool equals(t s1, t s2);
+
+	/**
+	 * Build a copy of given state.
+	 * @param s		State to copy.
+	 * @return		Copied state.
+	 */
+	t copy(t s);
+
+	/**
+	 * Join both state s1 and s2 and release no more used s1 or s2.
+	 * @param s1	First state.
+	 * @param s2	Second state.
+	 * @return		Join of states.
+	 */
+	t joinPath(t s1, t s2);
+
+	/**
+	 * Interpret the given semantic instruction on the given state.
+	 * After the update, s is no more used (and may be released if needed).
+	 * @param s		State to update.
+	 * @param i		Semantic instruction to update with.
+	 * @return		State result of update.
+	 */
+	t updatePath(t s, sem::inst i);
+};
+
+}	// sem
 
 }	// otawa

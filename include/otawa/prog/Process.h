@@ -24,12 +24,12 @@
 
 #include <elm/string.h>
 #include <elm/system/Path.h>
+#include <elm/stree/Tree.h>
 #include <elm/util/AutoPtr.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/instruction.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prog/features.h>
-#include <elm/stree/Tree.h>
 
 namespace elm { namespace xom {
 	class Element;
@@ -132,6 +132,8 @@ private:
 	Process *proc;
 };
 
+
+
 // Process class
 class Process: public PropList, public Lock {
 public:
@@ -190,6 +192,7 @@ public:
 
 	// loader 1.2.0
 	virtual Address defaultStack(void) const;
+	virtual void semInit(sem::Block& block) const;
 
 	// FileIterator
 	class FileIter: public Vector<File *>::Iterator {

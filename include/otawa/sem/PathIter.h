@@ -24,35 +24,26 @@
 #include <otawa/prog/Inst.h>
 #include <otawa/sem/inst.h>
 
-namespace otawa { namespace sem {
+namespace otawa {
+
+class Process;
+
+namespace sem {
 
 class PathIter: public PreIterator<PathIter, sem::inst> {
 public:
 
-	inline void start(Inst *inst) {
-		bb.clear();
-		_inst = inst;
-		inst->semInsts(bb);
-		todo.clear();
-		pc = 0;
-		bb.add(sem::cont());
-	}
+	void start(Inst *inst);
+	void start(Process *proc);
+	void start(const sem::Block& block);
 
 	inline bool pathEnd(void) const { return bb[pc].op == sem::CONT; }
 	inline bool isCond(void) const { return bb[pc].op == sem::IF; }
 
 	inline bool ended(void) const { return pathEnd() && !todo; }
 	inline sem::inst item(void) const { return bb[pc]; }
-	inline void next(void) {
-		if(pathEnd())
-			pc = todo.pop();
-		else {
-			if(isCond())
-				todo.push(pc + bb[pc].jump());
-			pc++;
-		}
-	}
-	
+	void next(void);
+
 	inline opcode op(void) const { return opcode(item().op); }
 	inline t::int16 d(void) const { return item().d(); }
 	inline t::int16 a(void) const { return item().a(); }
@@ -62,7 +53,6 @@ public:
 	inline t::uint32 addr(void) const { return item().addr(); }
 
 private:
-	Inst *_inst;
 	sem::Block bb;
 	genstruct::Vector<int> todo;
 	int pc;

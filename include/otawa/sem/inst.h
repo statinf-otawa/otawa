@@ -106,6 +106,16 @@ typedef enum type_t {
 	MAX_TYPE = 11
 } type_t;
 
+// useful types
+typedef int	reg_t;
+typedef t::uint32 uint_t;
+typedef t::int32 int_t;
+
+// useful types
+typedef int	reg_t;
+typedef t::uint32 uint_t;
+typedef t::int32 int_t;
+
 // inst type
 typedef struct inst {
 	t::uint16 op;
@@ -124,60 +134,61 @@ typedef struct inst {
 	inst(opcode _op, int d, int a, int b): op(_op)
 		{ _d = d; args.regs.a = a; args.regs.b = b; }
 
-	inline t::int16 d(void) const { return _d; }
-	inline t::int16 a(void) const { return args.regs.a; }
-	inline t::int16 b(void) const { return args.regs.b; }
+	inline reg_t d(void) const { return _d; }
+	inline reg_t a(void) const { return args.regs.a; }
+	inline reg_t b(void) const { return args.regs.b; }
 
 	// seti/setp instruction
-	inline t::uint32 cst(void) const { return args.cst; }
+	inline uint_t cst(void) const { return args.cst; }
 
 	// load/store instruction
-	inline t::int16 reg(void) const { return d(); }
-	inline t::int16 addr(void) const { return a(); }
+	inline reg_t reg(void) const { return d(); }
+	inline reg_t addr(void) const { return a(); }
 	inline type_t type(void) const { return type_t(b()); }
 
 	// "if" instruction
 	inline cond_t cond(void) const { return cond_t(d()); }
-	inline t::int16 sr(void) const { return a(); }
-	inline t::uint16 jump(void) const { return b(); }
+	inline reg_t sr(void) const { return a(); }
+	inline uint_t jump(void) const { return b(); }
 
 	void print(elm::io::Output& out) const;
 } inst;
 inline elm::io::Output& operator<<(elm::io::Output& out, inst i) { i.print(out); return out; }
 
-inline inst nop(void) { return inst(NOP); }
-inline inst branch(int to) { return inst(BRANCH, to); }
-inline inst trap(void) { return inst(TRAP); }
-inline inst cont(void) { return inst(CONT); }
-inline inst _if(int cond, int sr, int jump) { ASSERT(cond >= 0 && cond < MAX_COND); return inst(IF, cond, sr, jump); }
-inline inst load(int d, int a, int t) { return inst(LOAD, d, a, t); }
-inline inst load(int d, int a, type_t t) { return inst(LOAD, d, a, t); }
-inline inst store(int d, int a, int t) { return inst(STORE, d, a, t); }
-inline inst store(int d, int a, type_t t) { return inst(STORE, d, a, t); }
-inline inst scratch(int d) { return inst(SCRATCH, d); }
-inline inst set(int d, int a) { return inst(SET, d, a); }
-inline inst seti(int d, unsigned long cst) { inst i(SETI, d); i.args.cst = cst; return i; }
-inline inst setp(int d, unsigned long cst) { inst i(SETP, d); i.args.cst = cst; return i; }
-inline inst cmp(int d, int a, int b) { return inst(CMP, d, a, b); }
-inline inst cmpu(int d, int a, int b) { return inst(CMPU, d, a, b); }
-inline inst add(int d, int a, int b) { return inst(ADD, d, a, b); }
-inline inst sub(int d, int a, int b) { return inst(SUB, d, a, b); }
-inline inst shl(int d, int a, int b) { return inst(SHL, d, a, b); }
-inline inst shr(int d, int a, int b) { return inst(SHR, d, a, b); }
-inline inst asr(int d, int a, int b) { return inst(ASR, d, a, b); }
-inline inst neg(int d, int a) { return inst(NEG, d, a); }
-inline inst _not(int d, int a) { return inst(NOT, d, a); }
-inline inst _and(int d, int a, int b) { return inst(AND, d, a, b); }
-inline inst _or(int d, int a, int b) { return inst(OR, d, a, b); }
-inline inst mul(int d, int a, int b) { return inst(MUL, d, a, b); }
-inline inst mulu(int d, int a, int b) { return inst(MULU, d, a, b); }
-inline inst div(int d, int a, int b) { return inst(DIV, d, a, b); }
-inline inst divu(int d, int a, int b) { return inst(DIVU, d, a, b); }
-inline inst mod(int d, int a, int b) { return inst(MOD, d, a, b); }
-inline inst modu(int d, int a, int b) { return inst(MODU, d, a, b); }
-inline inst _xor(int d, int a, int b) { return inst(XOR, d, a, b); }
-inline inst spec(int d, unsigned long cst) { inst i(SPEC, d); i.args.cst = cst; return i; }
-inline inst mulh(int d, int a, int b) { return inst(MULH, d, a, b); }
+inline inst nop		(void) 							{ return inst(NOP); }
+inline inst branch	(uint_t to) 					{ return inst(BRANCH, to); }
+inline inst trap	(void) 							{ return inst(TRAP); }
+inline inst cont	(void) 							{ return inst(CONT); }
+inline inst _if		(cond_t c, reg_t s, uint_t j) 	{ ASSERT(c >= 0 && c < MAX_COND); return inst(IF, c, s, j); }
+inline inst _if		(uint_t c, reg_t s, uint_t j) 	{ ASSERT(c >= 0 && c < MAX_COND); return inst(IF, c, s, j); }
+inline inst load	(reg_t d, reg_t a, int t) 		{ return inst(LOAD, d, a, t); }
+inline inst load	(reg_t d, reg_t a, type_t t)	{ return inst(LOAD, d, a, t); }
+inline inst store	(reg_t d, reg_t a, int t) 		{ return inst(STORE, d, a, t); }
+inline inst store	(reg_t d, reg_t a, type_t t)	{ return inst(STORE, d, a, t); }
+inline inst scratch	(reg_t d) 						{ return inst(SCRATCH, d); }
+inline inst set		(reg_t d, reg_t a) 				{ return inst(SET, d, a); }
+inline inst seti	(reg_t d, uint_t cst) 			{ inst i(SETI, d); i.args.cst = cst; return i; }
+inline inst setp	(reg_t d, uint_t cst) 			{ inst i(SETP, d); i.args.cst = cst; return i; }
+inline inst cmp		(reg_t d, reg_t a, reg_t b)		{ return inst(CMP, d, a, b); }
+inline inst cmpu	(reg_t d, reg_t a, reg_t b) 	{ return inst(CMPU, d, a, b); }
+inline inst add		(reg_t d, reg_t a, reg_t b)		{ return inst(ADD, d, a, b); }
+inline inst sub		(reg_t d, reg_t a, reg_t b)		{ return inst(SUB, d, a, b); }
+inline inst shl		(reg_t d, reg_t a, reg_t b) 	{ return inst(SHL, d, a, b); }
+inline inst shr		(reg_t d, reg_t a, reg_t b)		{ return inst(SHR, d, a, b); }
+inline inst asr		(reg_t d, reg_t a, reg_t b)		{ return inst(ASR, d, a, b); }
+inline inst neg		(reg_t d, reg_t a)				{ return inst(NEG, d, a); }
+inline inst _not	(reg_t d, reg_t a)				{ return inst(NOT, d, a); }
+inline inst _and	(reg_t d, reg_t a, reg_t b) 	{ return inst(AND, d, a, b); }
+inline inst _or		(reg_t d, reg_t a, reg_t b) 	{ return inst(OR, d, a, b); }
+inline inst mul		(reg_t d, reg_t a, reg_t b) 	{ return inst(MUL, d, a, b); }
+inline inst mulu	(reg_t d, reg_t a, reg_t b) 	{ return inst(MULU, d, a, b); }
+inline inst div		(reg_t d, reg_t a, reg_t b) 	{ return inst(DIV, d, a, b); }
+inline inst divu	(reg_t d, reg_t a, reg_t b) 	{ return inst(DIVU, d, a, b); }
+inline inst mod		(reg_t d, reg_t a, reg_t b) 	{ return inst(MOD, d, a, b); }
+inline inst modu	(reg_t d, reg_t a, reg_t b) 	{ return inst(MODU, d, a, b); }
+inline inst _xor	(reg_t d, reg_t a, reg_t b) 	{ return inst(XOR, d, a, b); }
+inline inst spec	(reg_t d, uint_t cst) 			{ inst i(SPEC, d); i.args.cst = cst; return i; }
+inline inst mulh	(reg_t d, reg_t a, reg_t b) 	{ return inst(MULH, d, a, b); }
 
 // Block class
 class Block: public elm::genstruct::Vector<inst> {
@@ -188,10 +199,10 @@ public:
 		inline InstIter(const Block& block): S::Iterator(block) { }
 		inline InstIter(const InstIter& iter): S::Iterator(iter) { }
 		inline opcode op(void) const { return opcode(item().op); }
-		inline t::int16 d(void) const { return item().d(); }
-		inline t::int16 a(void) const { return item().a(); }
-		inline t::int16 b(void) const { return item().b(); }
-		inline t::uint32 cst(void) const { return item().cst(); }
+		inline reg_t d(void) const { return item().d(); }
+		inline reg_t a(void) const { return item().a(); }
+		inline reg_t b(void) const { return item().b(); }
+		inline uint_t cst(void) const { return item().cst(); }
 	};
 	void print(elm::io::Output& out) const;
 };

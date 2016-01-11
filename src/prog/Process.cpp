@@ -308,6 +308,14 @@ Address Process::defaultStack(void) const {
 
 
 /**
+ * Provide semantic sequence to initialize the environment
+ * before performing static analysis. As a default, do nothing.
+ */
+void Process::semInit(sem::Block& block) const {
+}
+
+
+/**
  * Find the simulator used for the current process.
  * @return	A simulator for the current process or null if none is found.
  */
