@@ -20,10 +20,11 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/cfg/CFGChecker.h>
-#include <otawa/cfg/features.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/CFG.h>
+#include <otawa/cfg/CFGChecker.h>
+#include <otawa/cfg/features.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 
@@ -85,18 +86,22 @@ void CFGChecker::setup(WorkSpace *ws) {
 
 /**
  */
-void CFGChecker::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+void CFGChecker::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+	if(!b->isBasic())
+		return;
+	BasicBlock *bb = b->toBasic();
 
-	// look for resolved indirect branch
-	if(bb->isTargetUnknown()) {
-		failed = true;
-		warn(_ << bb << " contains an unresolved indirect branch (" << ws->format(bb->controlInst()->address()) << ")");
-	}
+	// look for unresolved indirect branch
+	for(Block::EdgeIter e = bb->outs(); e; e++)
+		if(e->source()->isUnknwon()) {
+			failed = true;
+			warn(_ << bb << " contains an unresolved indirect branch (" << ws->format(bb->control()->address()) << ")");
+		}
 
 	// look predecessors
 	if(!bb->isEntry()) {
-		BasicBlock::InIterator in(bb);
-		if(!in) {
+		BasicBlock::EdgeIter e = bb->ins();
+		if(!e) {
 			failed = true;
 			warn(_ << bb << " has no predecessor: disconnected CFG (" << ws->format(bb->address()) << ")");
 		}
@@ -104,10 +109,10 @@ void CFGChecker::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 	// look successors
 	if(!bb->isExit()) {
-		BasicBlock::OutIterator out(bb);
-		if(!out) {
+		BasicBlock::EdgeIter e = bb->outs();
+		if(!e) {
 			failed = true;
-			warn(_ << bb << " has no successor: disconnected CFG (" << ws->format(bb->lastInst()->address()) << ")");
+			warn(_ << bb << " has no successor: disconnected CFG (" << ws->format(bb->last()->address()) << ")");
 		}
 	}
 
@@ -134,8 +139,8 @@ void CFGChecker::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
  */
 void CFGChecker::processCFG(WorkSpace *ws, CFG *cfg) {
 	BBProcessor::processCFG(ws, cfg);
-	BasicBlock::InIterator in(cfg->exit());
-	if(!in) {
+	BasicBlock::EdgeIter e = cfg->exit()->ins();
+	if(!e) {
 		failed = true;
 		warn(_ << "CFG " << cfg->label() << " is not connected (this may be due to infinite or unresolved branches).");
 	}
@@ -150,7 +155,6 @@ void CFGChecker::cleanup(WorkSpace *ws) {
 }
 
 
-static SilentFeature::Maker<CFGChecker> maker;
 /**
  * This feature ensures that
  * @li	there exists at least one path from the entry to the exit,
@@ -161,6 +165,6 @@ static SilentFeature::Maker<CFGChecker> maker;
  *
  * @ingroup cfg
  */
-SilentFeature CHECKED_CFG_FEATURE("otawa::CHECKED_CFG_FEATURE", maker);
+p::feature CHECKED_CFG_FEATURE("otawa::CHECKED_CFG_FEATURE", new Maker<CFGChecker>());
 
 }	// otawa

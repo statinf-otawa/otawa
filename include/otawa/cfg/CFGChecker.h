@@ -39,7 +39,7 @@ public:
 	virtual void configure(const PropList& props);
 	virtual void setup(WorkSpace *ws);
 	virtual void processCFG(WorkSpace *ws, CFG *cfg);
-	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *bb);
 	virtual void cleanup(WorkSpace *ws);
 
 private:

@@ -21,7 +21,8 @@
  */
 
 #include <elm/data/ListQueue.h>
-#include <elm/util/SharedPtr.h>
+#include <elm/util/AutoPtr.h>
+#include <elm/util/BitVector.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/features.h>
@@ -68,7 +69,7 @@ using namespace elm::genstruct;
  * @ingroup proc
  */
 
-class Point {
+class Point: public Lock {
 public:
 
 	Point(CFG *cfg) {
@@ -76,20 +77,20 @@ public:
 		path.push(ContextualStep::FUNCTION, cfg->address());
 	}
 
-	SharedPtr<Point> enter(ContextualStep step) {
-		return Point(*this, step);
+	AutoPtr<Point> enter(ContextualStep step) {
+		return new Point(this, step);
 	}
 
-	SharedPtr<Point> leave(void) {
+	AutoPtr<Point> leave(void) {
 		return parent;
 	}
 
 	ContextualPath path;
-	SharedPtr<Point> parent;
+	AutoPtr<Point> parent;
 
 private:
-	Point(const Point& p, ContextualStep s) {
-		path = p.path;
+	Point(Point *p, ContextualStep s) {
+		path = p->path;
 		path.push(s);
 		parent = p;
 	}
@@ -97,7 +98,6 @@ private:
 
 
 p::declare ContextualProcessor::reg = p::init("otawa::ContextualProcessor", Version(2, 0, 0))
-	.maker<ContextualProcessor>()
 	.require(CHECKED_CFG_FEATURE);
 
 
@@ -110,10 +110,10 @@ ContextualProcessor::ContextualProcessor(p::declare& reg): CFGProcessor(reg) {
  */
 void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 	BitVector done(cfg->count());
-	SharedPtr<Point> path = new Point(cfg);
+	AutoPtr<Point> path = new Point(cfg);
 
 	// define queue
-	typedef Pair<Block *, SharedPtr<Point> > item_t;
+	typedef Pair<Block *, AutoPtr<Point> > item_t;
 	ListQueue<item_t> todo;
 
 	// initialization
@@ -124,21 +124,22 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 	while(todo) {
 
 		// process next block
-		item_t i = todo.get();
-		if(i.fst->isBasic())
-			this->processBB(ws, cfg, i.fst->toBasic(), i.snd->path);
-		done.set(i.fst->index());
+		item_t it = todo.get();
+		if(it.fst->isBasic())
+			this->processBB(ws, cfg, it.fst->toBasic(), it.snd->path);
+		done.set(it.fst->index());
 
 		// put next blocks
-		for(Block::EdgeIter e = i.fst->outs(); e; e++)
+		for(Block::EdgeIter e = it.fst->outs(); e; e++)
 			if(!done[e->sink()->index()]) {
-				SharedPtr<Point> p = i.snd;
+				AutoPtr<Point> p = it.snd;
 				for(int i = 0; i < LEAVE(e); i++)
 					p = p->leave();
 				for(Identifier<ContextualStep>::Getter s(e, ENTER); s; s++)
 					p = p->enter(s);
-				todo.put(pair(e->sink(), i.snd));
+				todo.put(pair(e->sink(), it.snd));
 			}
+	}
 }
 
 
@@ -151,5 +152,40 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
  * @param bb		Current basic block.
  * @param path		Current context path.
  */
+
+
+/**
+ * Provide context for the referred object.
+ *
+ * @par Hooks
+ * @li  @ref CFG
+ */
+Identifier<ContextualPath> CONTEXT("otawa::CONTEXT");
+
+
+/**
+ * Note the entry into a particular context provided by the property.
+ * To put a context entry s onto an edge e, just do:
+ * <code>
+ * ENTER(e).add(s);
+ * </code>
+ *
+ * @par Hooks
+ * @li @ref Edge
+ */
+Identifier<ContextualStep> ENTER("otawa::ENTER");
+
+
+/**
+ * Leave the number of context provided by the number of argument.
+ * To mark the edge e as leaving a context, do:
+ * <code>
+ * LEAVE(e)++;
+ * </code>
+ *
+ * @par Hooks
+ * @li @ref Edge
+ */
+Identifier<int> LEAVE("otawa::LEAVE", 0);
 
 } // otawa

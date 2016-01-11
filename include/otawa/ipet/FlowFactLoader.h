@@ -32,7 +32,7 @@ public:
 protected:
 	virtual void setup(WorkSpace *ws);
 	virtual void cleanup (WorkSpace *fw);
-	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb, const ContextualPath& path);
+	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb, const ContextualPath& path);
 
 private:
 	bool lines_available;
