@@ -5,8 +5,11 @@ set(PACKAGE "otawa")
 # debugging activated
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g3")
 file(READ "VERSION" VERSION)
-set(ORIGIN $ORIGIN)
-set(ORIGIN $ORIGIN)
+if(NOT APPLE)
+	set(ORIGIN $ORIGIN)
+else()
+	set(ORIGIN @executable_path)
+endif()
 
 # installation level
 set(INSTALL_TYPE "bin,lib,inc,doc" CACHE STRING "Type of installation (a ',' separated combination of bin, lib, inc, doc).")

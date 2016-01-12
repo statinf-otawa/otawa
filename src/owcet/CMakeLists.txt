@@ -11,7 +11,3 @@ target_link_libraries(owcet ${LIBELM})
 target_link_libraries(owcet otawa)
 
 install(TARGETS owcet DESTINATION bin)
-
-if(APPLE)
-	set_target_properties(owcet PROPERTIES INSTALL_RPATH "@executable_path/../lib")
-endif()

@@ -11,7 +11,3 @@ target_link_libraries(ostat ${LIBELM})
 target_link_libraries(ostat otawa)
 
 install(TARGETS ostat DESTINATION bin)
-
-if(APPLE)
-	set_target_properties(ostat PROPERTIES INSTALL_RPATH "@executable_path/../lib")
-endif()

@@ -1,8 +1,3 @@
-
-
-# $ORIGIN setting
-set(ORIGIN $ORIGIN)
-
 # generating c files from Bison and Flex files
 if(WIN32)
 	# Compiling Flex and Bison files to C files, and adding them to source files.
