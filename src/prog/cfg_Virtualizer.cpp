@@ -203,7 +203,6 @@ bool Virtualizer::isInlined(CFG *cfg, Option<int> local_inlining, ContextualPath
  * @param exit		Basic block after the return.
  */
 void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Option<int> local_inlining, ContextualPath &path) {
-	ASSERT(stack);
 	ASSERT(cfg);
 	CONTEXT(maker) = path;
 
@@ -299,7 +298,7 @@ void Virtualizer::makeCFG(struct call_t *call, CFG *cfg, Option<int> local_inlin
  * @return		Associated CFG maker.
  */
 CFGMaker& Virtualizer::makerOf(CFG *cfg) {
-	CFGMaker *r = map.get(cfg);
+	CFGMaker *r = map.get(cfg, 0);
 	if(!r) {
 		r = &newMaker(cfg->first());
 		map.put(cfg, r);
