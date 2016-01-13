@@ -27,8 +27,10 @@
 #include <otawa/hard/Register.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/CFGProcessor.h>
+#include <otawa/prog/File.h>
 #include <otawa/prog/sem.h>
 #include <otawa/stack/AccessedAddress.h>
+#include <otawa/stack/features.h>
 #include <otawa/stack/StackAnalysis.h>
 #include <otawa/util/HalfAbsInt.h>
 #include <otawa/util/DefaultFixPoint.h>
@@ -640,8 +642,8 @@ public:
 	inline void lub(Domain &a, const Domain &b) const { a.join(b); }
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return a.equals(b); }
-	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
 
 	stack::Value get(const stack::State& state, int i) {
 		if(i <  0)
@@ -833,13 +835,14 @@ public:
 		TRACEI(cerr << "\t -> " << is << io::endl);
 	}
 
-	void update(Domain& out, const Domain& in, BasicBlock* bb) {
-		out.copy(in);
-		TRACEU(cerr << "update(BB" << bb->number() << ", " << in << ")\n");
-		for(BasicBlock::InstIterator inst(bb); inst; inst++)
-			update(out, inst);
-		TRACEU(cerr << "\tout = " << out << io::endl);
-
+	void update(Domain& out, const Domain& in, Block* bb) {
+		if(bb->isBasic()) {
+			out.copy(in);
+			TRACEU(cerr << "update(BB" << bb->number() << ", " << in << ")\n");
+			for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++)
+				update(out, inst);
+			TRACEU(cerr << "\tout = " << out << io::endl);
+		}
 	}
 
 	inline stack::Value load(Domain& s, stack::Value addr, int size) const { return s.get(addr, proc, size); }
@@ -916,10 +919,10 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	sai.solve(cfg);
 
 	// record the results
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 		if(logFor(LOG_BLOCK))
-			log << *bb << ": " << *list.results[0][bb->number()] << io::endl;
-		stack::STATE(bb) = new stack::State(*list.results[0][bb->number()]);
+			log << *bb << ": " << *list.results[0][bb->index()] << io::endl;
+		stack::STATE(bb) = new stack::State(*list.results[0][bb->index()]);
 	}
 }
 
@@ -929,7 +932,7 @@ class StackStateCleaner: public otawa::BBCleaner {
 public:
 	StackStateCleaner(WorkSpace *ws): BBCleaner(ws) { }
 protected:
-	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+	virtual void clean(WorkSpace *ws, CFG *cfg, Block *bb) {
 		ASSERT(stack::STATE(bb));
 		delete *stack::STATE(bb);
 	}
@@ -1105,14 +1108,14 @@ protected:
 		delete iter;
 	}
 
-	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-		if(bb->isEnd())
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
+		if(!bb->isBasic())
 			return;
 		Iter& i = *iter;
 
 		// collect addresses
 		genstruct::Vector<AccessedAddress *> addrs;
-		for(i.start(bb); i; i++)
+		for(i.start(bb->toBasic()); i; i++)
 			if((*i).op == sem::LOAD || (*i).op == sem::STORE) {
 				bool is_store = (*i).op == sem::STORE;
 				int r = (*i).addr();

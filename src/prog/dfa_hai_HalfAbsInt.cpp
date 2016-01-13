@@ -28,11 +28,11 @@ namespace otawa { namespace dfa { namespace hai {
  * Implements abstract interpretation.
  *
  * @par
- * 
+ *
  * @param FixPoint Class used to manage loops.
- * 
+ *
  * @par FixPoint
- * 
+ *
  * This parameter must match the following signature:
  * <code><pre>
  * class FixPoint {
@@ -40,14 +40,14 @@ namespace otawa { namespace dfa { namespace hai {
  * 		class FixPointState {
  * 			...
  * 		};
- * 
+ *
  * 		void init(CFG*, HalfAbsInt<FixPoint>*);
  * 		FixPointState *newState(void);
  * 		void fixPoint(BasicBlock*, bool&, Domain&, bool) const;
  * 		void markEdge(Edge*, Domain&);
  * 		void unmarkEdge(Edge*);
  * 		Domain* getMark(Edge*);
- * 
+ *
  * 		const Domain& bottom(void);
  *		void lub(Domain &, const Domain &) const;
  *		void assign(Domain &, const Domain &) const;
@@ -58,9 +58,9 @@ namespace otawa { namespace dfa { namespace hai {
  * 		const Domain& entry(void);
  * }
  * </pre></code>
- * 
- * @par Signature explanation 
- * 
+ *
+ * @par Signature explanation
+ *
  * @li Domain -- this type is the Domain of the abstract values used in the abstract interpretation.
  * @li FixPointState -- this class can holds, for each loop, status informations needed by FixPoint.
  * This status information can be accessed and modified by calling the halfAbsInt::getFixPointState() method.
@@ -113,11 +113,11 @@ namespace otawa { namespace dfa { namespace hai {
  * }
  * @endcode
  */
- 
+
 /**
  * This property is attached to the loop headers, and is true if
  * the FixPoint for the associated loop has been reached.
- * 
+ *
  * @par Hooks
  * @li @ref BasicBlock
  */
@@ -128,18 +128,18 @@ Identifier<bool> FIXED("otawa::util::fixed", false);
  * the first iteration of the associated loop is not done yet.
  * This is useful to determine if we can add the loop header to the worklist
  * even if the back edges going to it are not marked yet.
- *  
+ *
  * @par Hooks
  * @li @ref BasicBlock
  */
 Identifier<bool> FIRST_ITER("otawa::util::first_iter", true);
 
 /**
- * This property, when set to TRUE on a BasicBlock or a CFG, 
+ * This property, when set to TRUE on a BasicBlock or a CFG,
  * prevents HalfAbsInt from following edges to this BasicBlock
  * or CFG.
  * NOTE: It is deprecated to use this property to prevent HalfAbsint
- * from entering a sub-CFG. Use HAI_BYPASS_EDGE instead. 
+ * from entering a sub-CFG. Use HAI_BYPASS_EDGE instead.
  */
 Identifier<bool> HAI_DONT_ENTER("otawa::util::hai_dont_enter", false);
 
@@ -149,58 +149,58 @@ Identifier<bool> HAI_DONT_ENTER("otawa::util::hai_dont_enter", false);
  * mean to reach target basic block from source basic block.
  * This should be used only to bypass function calls in inlined CFGs.
  */
- 
-Identifier<BasicBlock*> HAI_BYPASS_SOURCE("otawa::util::HAI_BYPASS_SOURCE", 0);
-Identifier<BasicBlock*> HAI_BYPASS_TARGET("otawa::util::HAI_BYPASS_TARGET", 0);
+
+Identifier<Block*> HAI_BYPASS_SOURCE("otawa::util::HAI_BYPASS_SOURCE", 0);
+Identifier<Block*> HAI_BYPASS_TARGET("otawa::util::HAI_BYPASS_TARGET", 0);
 
 /**
  * @fn typename FixPoint::FixPointState *HalfAbsInt::getFixPointState(BasicBlock *bb);
  * Get the FixPointState of a loop.
- * 
+ *
  * @param bb The header of the loop which we want to get the state.
  * @return The requested FixPointState info.
  */
- 
+
 /**
  * @fn int HalfAbsInt::solve(void)
  * Do the abstract interpretation of the CFG.
- * 
+ *
  * @return The number of iterations of the algorithm.
  */
- 
+
 /**
  * @fn typename FixPoint::Domain HalfAbsInt::backEdgeUnion(BasicBlock *bb)
  * Given a loop header, returns the union of the value of its back edges.
- *  
+ *
  * @param bb The loop header.
  * @return The unionized value.
  */
- 
+
 /**
  * @fn typename FixPoint::Domain HalfAbsInt::entryEdgeUnion(BasicBlock *bb)
  * Given a loop header, returns the union of the value of is entry edges (the entry edges
- * are the in-edges that are not back-edges.) 
- * 
+ * are the in-edges that are not back-edges.)
+ *
  * @param bb The loop header
  * @return The unionized value.
  */
- 
+
 /**
  * @fn void HalfAbsInt::tryAddToWorkList(BasicBlock *bb)
  * Try to add the BasicBlock to the worklist.
- * In order to be added, the BasicBlock's in-edges 
+ * In order to be added, the BasicBlock's in-edges
  * must verify some conditions. These conditions are verified by isEdgeDone()
- * 
+ *
  * @param bb The BasicBlock to try to add.
  */
- 
+
 /**
  * @fn inline bool HalfAbsInt::isEdgeDone(Edge *edge)
  * Tests if an edge verify the conditions needed to add its target BasicBlock.
- * 
+ *
  * @param edge The edge to test
- * @return Returns false if the edge's target cannot be added to the worklist. True otherwise.  
+ * @return Returns false if the edge's target cannot be added to the worklist. True otherwise.
  */
- 
+
 
 } } } // otawa::dfa::hai

@@ -24,6 +24,7 @@
 #ifndef OTAWA_STACK_STACKANALYSIS_H_
 #define OTAWA_STACK_STACKANALYSIS_H_
 
+#include <otawa/stack/features.h>
 #include <otawa/proc/Processor.h>
 
 namespace otawa {
@@ -42,10 +43,9 @@ public:
 
 protected:
 	virtual void processWorkSpace(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
 	genstruct::Vector<init_t> inits;
 };
-
-extern Feature<StackAnalysis> STACK_ANALYSIS_FEATURE;
 
 }	// otawa
 

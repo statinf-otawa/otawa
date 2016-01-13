@@ -119,7 +119,8 @@ public:
 
 	class InstIter: public AllocatedTable<Inst *>::Iterator {
 	public:
-		InstIter(const BasicBlock *bb): AllocatedTable<Inst *>::Iterator(bb->_insts) { }
+		inline InstIter(void) { }
+		inline InstIter(const BasicBlock *bb): AllocatedTable<Inst *>::Iterator(bb->_insts) { }
 	};
 	inline InstIter insts(void) const { return InstIter(this); }
 

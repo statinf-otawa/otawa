@@ -67,10 +67,10 @@ private:
 	WorkSpace &fw;
 	CFG& entry_cfg;
 	CFG *cur_cfg;
-	elm::genstruct::Vector<BasicBlock*> *workList;
+	elm::genstruct::Vector<Block*> *workList;
 	elm::genstruct::Vector<Edge*> *callStack;
 	elm::genstruct::Vector<CFG*> *cfgStack;
-	BasicBlock *current;
+	Block *current;
 	typename FixPoint::Domain in,out;
 	elm::genstruct::Vector<Edge*> call_edges; /* call_edge == current node's call-edge to another CFG */
 	Edge *next_edge;
@@ -93,7 +93,7 @@ public:
 	inline HalfAbsInt(FixPoint& _fp, WorkSpace& _fw);
 	inline ~HalfAbsInt(void);
 	inline typename FixPoint::Domain backEdgeUnion(Block *bb);
-	inline typename FixPoint::Domain entryEdgeUnion(BasicBlock *bb);
+	inline typename FixPoint::Domain entryEdgeUnion(Block *bb);
 };
 
 template <class FixPoint>
@@ -113,7 +113,7 @@ inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, WorkSpace& _fw)
  	fixpoint(0),
  	mainEntry(false)
 {
-	workList = new elm::genstruct::Vector<BasicBlock*>();
+	workList = new elm::genstruct::Vector<Block*>();
 	callStack = new elm::genstruct::Vector<Edge*>();
 	cfgStack = new elm::genstruct::Vector<CFG*>();
 	fp.init(this);
@@ -145,13 +145,16 @@ inline typename FixPoint::FixPointState *HalfAbsInt<FixPoint>::getFixPointState(
 	return(FIXPOINT_STATE(bb));
 }
 
-/* This function computes the IN state, and unmark the not-needed-anymore edges.
+/**
+ * This function computes the IN state, and unmark the not-needed-anymore edges.
+ * @param entdom
  */
 template <class FixPoint>
 void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	fp.assign(in, fp.bottom());
 
 	// main entry case
+	// TODO case not really needed: put entry domain in the fp directly -> aggregate with next case
 	if(mainEntry) {
 		fp.assign(in, entdom);
 		mainEntry = false;
@@ -185,6 +188,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
         	FIXPOINT_STATE(current) = fp.newState();
     	fp.fixPoint(current, fixpoint, in, FIRST_ITER(current));
     	HAI_TRACE("\t\tat loop header " << current << ", fixpoint reached = " << fixpoint);
+    	// TODO ever perform it
     	if(FIRST_ITER(current)) {
     		ASSERT(!fixpoint);
     		FIRST_ITER(current) = false;
@@ -195,23 +199,29 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
          * If fixpoint, unmark all in-edges, else unmark only back-edges
          */
 
-    	/* In any case, the values of the back-edges are not needed anymore */
+    	// In any case, the values of the back-edges are not needed anymore
     	for(Block::EdgeIter inedge = current->ins(); inedge; inedge++) {
+    		// TODO no more needed case (isn't it?)
     		if(inedge->sink()->isSynth())
     			continue;
     		if(Dominance::dominates(current, inedge->source()))
     			fp.unmarkEdge(*inedge);
     	}
 
-		if (fixpoint) {
-			/* Cleanups associated with end of the processing of a loop */
+		if(fixpoint) {
+
+			// cleanups associated with end of the processing of a loop
 			fp.fixPointReached(current);
 			delete FIXPOINT_STATE(current);
+			// TODO it's better to remove the property here
 			FIXPOINT_STATE(current) = 0;
+			// TODO FIRST_ITER should work in reverse direction
 			FIRST_ITER(current) = true;
 
-			/* The values of the entry edges are not needed anymore */
+			// TODO duplication with case above?
+			// The values of the entry edges are not needed anymore
 	    	for(Block::EdgeIter inedge = current->ins(); inedge; inedge++) {
+	    		// TODO no more needed
 	    		if(inedge->sink()->isSynth())
 					continue;
 				/* TODO fix when inlined virtualization will be re-activated
@@ -228,14 +238,13 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	// Case of the simple basic block: IN = union of the OUTs of the predecessors
 	else {
 
-		// Un-mark all the in-edges since the values are not needed.
+		// un-mark all the in-edges since the values are not needed.
 		for(Block::EdgeIter inedge = current->ins(); inedge; inedge++) {
 			ASSERT(!inedge->sink()->isSynth());
 			/* TODO fix when inlined virtualization will be re-activated
 			if (HAI_BYPASS_TARGET(current) && (inedge->kind() == Edge::VIRTUAL_RETURN))
 				continue;*/
 			typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
-
 			ASSERT(edgeState);
 			fp.updateEdge(*inedge, *edgeState);
 			fp.lub(in, *edgeState);
@@ -259,7 +268,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 
 	// Fixpoint reached: activate the associated loop-exit-edges
 	if(LOOP_HEADER(current) && fixpoint) {
-		genstruct::Vector<BasicBlock*> alreadyAdded;
+		genstruct::Vector<Block*> alreadyAdded;
 		if((!EXIT_LIST(current)) || EXIT_LIST(current)->isEmpty())
 			cerr << "WARNING: infinite loop found at " << current << io::endl;
 		else
@@ -286,7 +295,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 
 		// record function output state
        	fp.markEdge(edge, out);
-       	workList->push(edge->source());
+       	workList->push(edge->source()->toBasic());
 	}
 
 	// process call node, and there is still function calls to process
@@ -298,7 +307,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 		    for (elm::genstruct::Vector<Edge*>::Iterator iter(call_edges); iter; iter++) {
 				// Mark all the function entries
 		    	// TODO add support for unknown synthetic CFG
-				BasicBlock *func_entry = iter->sink()->toSynth()->callee()->entry();
+				Block *func_entry = iter->sink()->toSynth()->callee()->entry();
 				fp.markEdge(func_entry, out);
 		    }
 		}
@@ -355,8 +364,18 @@ void HalfAbsInt<FixPoint>::addSuccessors() {
 	}
 }
 
+
+/**
+ * This function build the list of call edges and return the next call edge to process.
+ * @param enter_call	True if all calls have been processed, false else.
+ * @param call_edges	List of call edges (out).
+ * @param bb			Current block.
+ * @return				Next call to process.
+ */
 template <class FixPoint>
 Edge *HalfAbsInt<FixPoint>::detectCalls(bool &enter_call, elm::genstruct::Vector<Edge*> &call_edges, Block *bb) {
+	// TODO in CFGv1, even with a non-inlined graph, call computations are performed separately.
+	// In v2, input must accumulated and output propagated to all call site. To fix.
 	Edge *next_edge = 0;
 	enter_call = true;
 	call_edges.clear();
@@ -369,7 +388,7 @@ Edge *HalfAbsInt<FixPoint>::detectCalls(bool &enter_call, elm::genstruct::Vector
     		else if(!next_edge)
     			next_edge = *outedge;
     	}
-    return(next_edge);
+    return (next_edge);
 }
 
 
@@ -397,12 +416,15 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, typename FixPoint::Domain 
 	workList->push(start_bb);
 
 	// main loop
-	while (!workList->isEmpty()) {
+	while(!workList->isEmpty()) {
+
+		// next step
 		iterations++;
 		fixpoint = false;
 		current = workList->pop();
-		next_edge = detectCalls(enter_call, call_edges, current);
 
+		// update the state
+		next_edge = detectCalls(enter_call, call_edges, current);
 		HAI_TRACE("\n\tPROCESSING " << current);
 		inputProcessing(*entdom);
 		HAI_TRACE("\t\tunion of inputs = " << in);
@@ -439,31 +461,32 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::backEdgeUnion(Block *bb) 
 
 
 template <class FixPoint>
-inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(BasicBlock *bb) {
-        typename FixPoint::Domain result(fp.bottom());
+inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(Block *bb) {
+	typename FixPoint::Domain result(fp.bottom());
 
-        HAI_TRACE("\t\tunion of input edges");
-        for (BasicBlock::InIterator inedge(bb); inedge; inedge++) {
-        		if (inedge->kind() == Edge::CALL)
-            			continue;
-            	if (HAI_BYPASS_TARGET(bb) && (inedge->kind() == Edge::VIRTUAL_RETURN))
-            		continue;
-                if (!Dominance::dominates(bb, inedge->source())) {
-                        typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
-                        ASSERT(edgeState);
-                        HAI_TRACE("\t\t\twith " << *inedge << " = " << *edgeState);
-                        fp.lub(result, *edgeState);
-                }
+	HAI_TRACE("\t\tunion of input edges");
+	for(Block::EdgeIter inedge = bb->ins(); inedge; inedge++) {
+		if (inedge->sink()->isSynth())
+			continue;
+		/* TODO fix it when Inlining will be  re-activated.
+		if(HAI_BYPASS_TARGET(bb) && (inedge->kind() == Edge::VIRTUAL_RETURN))
+			continue;*/
+		if(!Dominance::dominates(bb, inedge->source())) {
+			typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
+			ASSERT(edgeState);
+			HAI_TRACE("\t\t\twith " << *inedge << " = " << *edgeState);
+			fp.lub(result, *edgeState);
+		}
+	}
 
-        }
-        if (HAI_BYPASS_TARGET(bb)) {
-        	typename FixPoint::Domain *bypassState = fp.getMark(bb);
-        	ASSERT(bypassState);
-        	fp.lub(result, *bypassState);
-        }
-        fp.enterContext(result, bb, CTX_LOOP);
-        //HAI_TRACE("\t\tgiving " << result);
-        return(result);
+	if (HAI_BYPASS_TARGET(bb)) {
+		typename FixPoint::Domain *bypassState = fp.getMark(bb);
+		ASSERT(bypassState);
+		fp.lub(result, *bypassState);
+	}
+
+	fp.enterContext(result, bb, CTX_LOOP);
+	return(result);
 }
 
 
