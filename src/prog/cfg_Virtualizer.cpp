@@ -213,6 +213,7 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 		log << "\tbegin inlining " << cfg->label() << io::endl;
 	if(path(INLINING_POLICY, cfg->first()).exists())
 		local_inlining = path.get(INLINING_POLICY, cfg->first());
+	CONTEXT(maker) = path;
 
 	// add initial blocks
 	bmap.put(cfg->entry(), maker.entry());
@@ -250,23 +251,29 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 			if(!sb->callee())
 				maker.add(nsb);
 			else if(isInlined(cfg, local_inlining, path)) {
-				CFGMaker& callee = newMaker(sb->callee()->first());
-				maker.call(nsb, callee);
-			}
-			else {
-				todo.push(sb->callee());
-				CFGMaker& cmaker = makerOf(sb->callee());
-				maker.call(nsb, makerOf(sb->callee()));
+
+				// prepare context
 				Inst *calli = sb->callInst();
 				if(cfg->type() == CFG::SUBPROG)
 					path.push(ContextualStep(ContextualStep::FUNCTION, cfg->address()));
 				if(calli)
 					path.push(ContextualStep(ContextualStep::CALL, calli->address()));
+
+				// build CFG
+				CFGMaker& cmaker = newMaker(sb->callee()->first());
 				make(&call, sb->callee(), cmaker, local_inlining, path);
+				maker.call(nsb, cmaker);
+
+				// pope context
 				if(calli)
 					path.pop();
 				if(cfg->type() == CFG::SUBPROG)
 					path.pop();
+
+			}
+			else {
+				todo.push(sb->callee());
+				maker.call(nsb, makerOf(sb->callee()));
 			}
 
 		}

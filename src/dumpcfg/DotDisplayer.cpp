@@ -26,7 +26,7 @@ DotDisplayer::DotDisplayer(void): Displayer("DotDisplayer", Version(2, 0, 0)) {
  * @param v		Current block.
  */
 void DotDisplayer::displayName(CFG *g, otawa::Block *v) {
-	cout << '"' << g->name() << "_" << v->index() << '"';
+	cout << '"' << g->name() << "_" << g->index() << "_" << v->index() << '"';
 }
 
 

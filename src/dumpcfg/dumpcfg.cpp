@@ -180,9 +180,7 @@ public:
 	option::BoolOption simple;
 	option::BoolOption disassemble;
 	option::BoolOption dot;
-	option::SwitchOption source;
-	option::SwitchOption xml;
-	option::SwitchOption all;
+	option::SwitchOption source, xml, all, virt;
 
 	Displayer *displayer;
 
@@ -215,11 +213,11 @@ void DumpCFG::prepare(PropList &props) {
 DumpCFG::DumpCFG(void):
 	Application(
 		"DumpCFG",
-		Version(0, 3),
+		Version(2, 0, 0),
 		"Dump to the standard output the CFG of functions."
 			"If no function name is given, the main function is dumped.",
 		"Hugues Casse <casse@irit.fr",
-		"Copyright (c) 2004-08, IRIT-UPS France"
+		"Copyright (c) 2016, IRIT-UPS France"
 	),
 
 	remove_eabi(*this, 'r', "remove", "Remove __eabi function call, if available.", false),
@@ -232,6 +230,7 @@ DumpCFG::DumpCFG(void):
 	source(*this, option::short_cmd, 's', option::cmd, "--source", option::description, "enable source debugging information output", option::def, false, option::end),
 	xml(option::SwitchOption::Make(*this).cmd("-x").cmd("--xml").description("output the CFG as an XML file")),
 	all(option::SwitchOption::Make(*this).cmd("-R").cmd("--recursive").description("display the current and called CFGs")),
+	virt(option::SwitchOption::Make(*this).cmd("-V").cmd("--virtualize").description("virtualize the called CFG, i.e. duplicate them at each call site")),
 
 	displayer(&simple_displayer)
 {
@@ -262,6 +261,8 @@ void DumpCFG::dump(const string& name, PropList& props) {
 
 	// get the CFG
 	require(COLLECTED_CFG_FEATURE);
+	if(virt)
+		require(VIRTUALIZED_CFG_FEATURE);
 	//const CFGCollection *coll = INVOLVED_CFGS(workspace());
 	//CFG *vcfg = (*coll)[0];
 
