@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	FlowFactLoader analyzer implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-07, IRIT UPS.
+ *	Copyright (c) 2016, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -526,7 +525,7 @@ extern int fft_line;
  * @author H. Cassé <casse@irit.fr>
  */
 
-p::declare FlowFactLoader::reg = p::init("otawa::util::FlowFactLoader", Version(1, 3, 0))
+p::declare FlowFactLoader::reg = p::init("otawa::util::FlowFactLoader", Version(1, 4, 0))
 	.maker<FlowFactLoader>()
 	.require(dfa::INITIAL_STATE_FEATURE)
 	.provide(FLOW_FACTS_FEATURE)
@@ -1578,21 +1577,17 @@ void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) thro
 	if(elems->size() != 0) {
 
 		// get the address
-		Address addr = scanAddress(element, path).address();
+		Address addr = scanAddress(element, path, true).address();
 		if(addr.isNull()) {
 			onWarning(_ << "ignoring this call whose address cannot be found: " << xline(element));
 			return;
 		}
-		Inst *inst = _fw->process()->findInstAt(addr);
-		if(!inst)
-			throw ProcessorException(*this,
-				_ << " no instruction at  " << addr << " from " << xline(element));
-		//path.push(ContextualStep::CALL, addr);
 
 		// scan the content
+		path.push(ContextualStep::CALL, addr);
 		for(int i = 0; i < elems->size(); i++)
 			scanXFun(elems->get(i), path);
-		//path.pop();
+		path.pop();
 	}
 
 	// old form
@@ -1653,12 +1648,44 @@ throw(ProcessorException) {
 
 
 /**
+ * Look in the instruction matching the given (file, line) location for a call.
+ * @param file		Source file path.
+ * @param line		Source file line.
+ * @param r			Address of the found call instruction.
+ * @return			Number of found calls.
+ */
+int FlowFactLoader::findCall(cstring file, int line, Address& r) {
+	int c = 0;
+
+	// get areas
+	Vector<Pair<Address, Address> > areas;
+	workspace()->process()->getAddresses(file, line, areas);
+	if(!areas)
+		return 0;
+
+	// look in areas
+	for(int i = 0; i < areas.count(); i++) {
+		Inst *inst = workspace()->findInstAt(areas[i].fst);
+		do {
+			if(inst->isCall()) {
+				c++;
+				r = inst->address();
+			}
+			inst = workspace()->findInstAt(inst->topAddress());
+		} while(inst && inst->address() < areas[i].snd);
+	}
+	return c;
+}
+
+
+/**
  * Retrieve the address of an element (function, loop, ...) from its XML element.
  * @param element	Element to scan in.
  * @param path		Context path.
+ * @param call		Location for a call is required.
  * @return			Address of the element or null if there is an error.
  */
-MemArea FlowFactLoader::scanAddress(xom::Element *element, ContextualPath& path)
+MemArea FlowFactLoader::scanAddress(xom::Element *element, ContextualPath& path, bool call)
 throw(ProcessorException) {
 
 	// look for "symbol" attribute
@@ -1702,7 +1729,18 @@ throw(ProcessorException) {
 		if(!line)
 			throw ProcessorException(*this,
 				_ << "no 'line' but a 'source' at " << xline(element));
-		return addressOf(*source, *line);
+		if(!call)
+			return addressOf(*source, *line);
+		else {
+			Address a;
+			int c = findCall(*source, *line, a);
+			if(!c)
+				throw ProcessorException(*this, _ << "no call found at " << *source << ":" << *line << " in " << xline(element));
+			else if(c > 1)
+				throw ProcessorException(*this, _ << "location ambiguous for call at " << *source << ":" << *line << " in " << xline(element));
+			else
+				return MemArea(a, 1);
+		}
 	}
 
 	// it is an error

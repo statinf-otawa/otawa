@@ -115,7 +115,8 @@ private:
 	void scanXLoop(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXFun(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXConditional(xom::Element *element, ContextualPath& path) throw(ProcessorException);
-	MemArea scanAddress(xom::Element *element, ContextualPath& path) throw(ProcessorException);
+	MemArea scanAddress(xom::Element *element, ContextualPath& path, bool call = false) throw(ProcessorException);
+	int findCall(cstring file, int line, Address& r);
 	Option<long> scanInt(xom::Element *element, cstring name) throw(ProcessorException);
 	Option<unsigned long> scanUInt(xom::Element *element, cstring name) throw(ProcessorException);
 	Option<long> scanBound(xom::Element *element, cstring name) throw(ProcessorException);
