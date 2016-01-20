@@ -76,19 +76,14 @@ public:
 		style.shape = ShapeStyle::SHAPE_MRECORD;
 		CFGOutput *out = OUT(graph.cfg);
 		ASSERT(out);
-		out->genBBLabel(graph.cfg, vertex.bb, content);
+		out->genBBLabel(graph.cfg, vertex.b, content);
 	}
 
 	static void decorate(const CFGAdapter &graph, const CFGAdapter::Edge edge, Output &label, TextStyle &text, LineStyle &line) {
-		switch(edge.edge->kind()){
-		case otawa::Edge::VIRTUAL_CALL:
-		case otawa::Edge::VIRTUAL:
-		case otawa::Edge::VIRTUAL_RETURN:
+		if(edge.edge->sink()->isSynth()
+		|| edge.edge->source()->isEnd()
+		|| edge.edge->sink()->isEnd())
 			line.style = LineStyle::DASHED;
-			break;
-		default:
-			break;
-		}
 		CFGOutput *out = OUT(graph.cfg);
 		ASSERT(out);
 		out->genEdgeLabel(graph.cfg, edge.edge, label);
@@ -176,22 +171,21 @@ void CFGOutput::genGraphLabel(CFG *cfg, Output& out) {
  * In the end, this method call the genBBInfo() method.
  * To add a separation bar in genBBInfo(), frist output "---\n".
  * @param cfg	Displayed CFG.
- * @param bb	Displayed BB.
+ * @param b		Displayed Block.
  * @param out	Output to generate the CFG label to.
  */
-void CFGOutput::genBBLabel(CFG *cfg, BasicBlock *bb, Output& out) {
+void CFGOutput::genBBLabel(CFG *cfg, Block *b, Output& out) {
 
-	// special of entry or exit
-	if(bb->isEnd()) {
-		if(bb->isEntry())
-			out << "ENTRY";
-		else if(bb->isExit())
-			out << "EXIT";
+	// display title
+	out << b;
+
+	// special of entry, exit or synthetic
+	if(b->isEnd() || b->isSynth())
 		return;
-	}
+	BasicBlock *bb = b->toBasic();
 
 	// make title
-	out << bb << "\n---\n";
+	out << "\n---\n";
 	StringBuffer title;
 
 	// make body
@@ -223,15 +217,12 @@ void CFGOutput::genBBLabel(CFG *cfg, BasicBlock *bb, Output& out) {
  * @param out	Output to generate the CFG label to.
  */
 void CFGOutput::genEdgeLabel(CFG *cfg, otawa::Edge *edge, Output& out) {
-	switch(edge->kind()){
-	case otawa::Edge::CALL: 			out << "call";		break;
-	case otawa::Edge::TAKEN:			out << "taken";		break;
-	case otawa::Edge::NOT_TAKEN:							break;
-	case otawa::Edge::VIRTUAL:			out << "virtual";	break;
-	case otawa::Edge::VIRTUAL_CALL:		out << "call";		break;
-	case otawa::Edge::VIRTUAL_RETURN:	out << "return";	break;
-	default:							ASSERT(false);		break;
-	}
+	if(edge->sink()->isSynth())
+		out << "call";
+	else if(edge->source()->isSynth())
+		out << "return";
+	else if(edge->source()->isTaken(edge))
+		out << "taken";
 	genEdgeInfo(cfg, edge, out);
 }
 
@@ -242,7 +233,7 @@ void CFGOutput::genEdgeLabel(CFG *cfg, otawa::Edge *edge, Output& out) {
  * @param bb	Displayed BB.
  * @param out	Output to generate the CFG label to.
  */
-void CFGOutput::genBBInfo(CFG *cfg, BasicBlock *bb, Output& out) {
+void CFGOutput::genBBInfo(CFG *cfg, Block *bb, Output& out) {
 	out << "---\n";
 	for(PropList::Iter prop(bb); prop; prop++) {
 		out << prop->id()->name() << " = ";

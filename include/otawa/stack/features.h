@@ -109,37 +109,8 @@ private:
 
 inline io::Output& operator<<(io::Output& out, const Value& v) { v.print(out); return out; }
 io::Output& operator<<(io::Output& out, const State& state);
-
-
-/*class Iter: public PreIterator<Iter, sem::inst> {
-public:
-	Iter(WorkSpace *ws);
-	~Iter(void);
-
-	void start(BasicBlock *bb);
-
-	inline bool pathEnd(void) const { return si.pathEnd(); }
-	inline bool isCond(void) const { return si.isCond(); }
-	inline bool instEnd(void) const { return si.ended(); }
-
-	inline bool ended(void) const { return i.ended() && si.ended(); }
-	inline sem::inst item(void) const { return si.item(); }
-	void next(void);
-	void nextInst(void);
-
-	inline State& state(void) const { return *s; }
-	Value getReg(int i);
-	Value getMem(Value addr, int size);
-	inline Inst *instruction(void) const { return *i; }
-
-private:
-	sem::Block b;
-	sem::PathIter si;
-	BasicBlock::InstIter i;
-	State *s, *es;
-	genstruct::Vector<State *> ss;
-	StackProblem *p;
-};*/
+inline io::Output& operator<<(io::Output& out, const State *state) { return out << *state; }
+inline io::Output& operator<<(io::Output& out, State *state) { return out << *state; }
 
 class Manager {
 public:

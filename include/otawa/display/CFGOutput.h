@@ -22,8 +22,9 @@
 #ifndef OTAWA_CFGOUTPUT_H_
 #define OTAWA_CFGOUTPUT_H_
 
-#include <otawa/proc/CFGProcessor.h>
 #include <otawa/display/AbstractDrawer.h>
+#include <otawa/proc/CFGProcessor.h>
+#include <otawa/cfg/BasicBlock.h>
 
 namespace otawa {
 
@@ -45,9 +46,9 @@ public:
 	static Identifier<string> PATH;
 
 	virtual void genGraphLabel(CFG *cfg, Output& out);
-	virtual void genBBLabel(CFG *cfg, BasicBlock *bb, Output& out);
+	virtual void genBBLabel(CFG *cfg, Block *bb, Output& out);
 	virtual void genEdgeLabel(CFG *cfg, otawa::Edge *edge, Output& out);
-	virtual void genBBInfo(CFG *cfg, BasicBlock *bb, Output& out);
+	virtual void genBBInfo(CFG *cfg, Block *bb, Output& out);
 	virtual void genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out);
 
 protected:

@@ -21,6 +21,9 @@
  */
 
 //#define DEBUG
+#ifdef DEBUG
+#	define HAI_DEBUG
+#endif
 
 #include <otawa/dfa/State.h>
 #include <otawa/hard/Platform.h>
@@ -637,6 +640,7 @@ public:
 		set(_init, reg->platformNumber(), v);
 	}
 
+	inline const Domain& top(void) const { return stack::State::FULL; }
 	inline const Domain& bottom(void) const { return stack::State::EMPTY; }
 	inline const Domain& entry(void) const { TRACED(cerr << "entry() = " << _init << io::endl); return _init; }
 	inline void lub(Domain &a, const Domain &b) const { a.join(b); }
@@ -843,6 +847,8 @@ public:
 				update(out, inst);
 			TRACEU(cerr << "\tout = " << out << io::endl);
 		}
+		else
+			out.copy(in);
 	}
 
 	inline stack::Value load(Domain& s, stack::Value addr, int size) const { return s.get(addr, proc, size); }
@@ -919,10 +925,13 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	sai.solve(cfg);
 
 	// record the results
-	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-		if(logFor(LOG_BLOCK))
-			log << *bb << ": " << *list.results[0][bb->index()] << io::endl;
-		stack::STATE(bb) = new stack::State(*list.results[0][bb->index()]);
+	if(logFor(LOG_BLOCK))
+		log << "\tSTORING RESULTS\n";
+	for(CFGCollection::Iterator cfg(coll); cfg; cfg++)
+		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+			if(logFor(LOG_BLOCK))
+				log << "\t\t" << *bb << "[" << cfg->index() << "][" << cfg->index() << "]: " << *list.results[cfg->index()][bb->index()] << io::endl;
+			stack::STATE(bb) = new stack::State(*list.results[cfg->index()][bb->index()]);
 	}
 }
 

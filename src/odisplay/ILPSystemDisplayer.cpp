@@ -21,9 +21,10 @@
  */
 
 #include <elm/system/System.h>
-#include <otawa/ipet.h>
-#include <otawa/display/ILPSystemDisplayer.h>
 #include <otawa/cfg/CFGCollector.h>
+#include <otawa/display/ILPSystemDisplayer.h>
+#include <otawa/ipet.h>
+#include <otawa/prog/File.h>
 
 namespace otawa { namespace display {
 

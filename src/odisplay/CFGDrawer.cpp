@@ -68,25 +68,16 @@ void CFGDrawer::make(){
 
 	// Construct the Graph
 	HashTable<void*, Node*> map;
-	for(CFG::BBIterator bb(_cfg); bb; bb++){
+	for(CFG::BlockIter b = _cfg->blocks(); b; b++){
 		Node *node = _graph->newNode();
-		map.put(*bb, node);
-		onNode(*bb, node);
+		map.put(*b, node);
+		onNode(*b, node);
 	}
-	for(CFG::BBIterator bb(_cfg); bb; bb++){
-		Node *node = map.get(*bb);
-		for(BasicBlock::OutIterator edge(bb); edge; edge++){
-			if(edge->kind() != otawa::Edge::CALL){
-				display::Edge *display_edge;
-				display_edge = _graph->newEdge(node,map.get(edge->target()));
-				onEdge(*edge, display_edge);
-			}
-			else {
-				Node *cfg_node = _graph->newNode();
-				onCall(edge->calledCFG(), cfg_node);
-				display::Edge *display_edge = _graph->newEdge(node, cfg_node);
-				onEdge(edge, display_edge);
-			}
+	for(CFG::BlockIter b = _cfg->blocks(); b; b++){
+		Node *node = map.get(*b);
+		for(Block::EdgeIter edge = b->outs(); edge; edge++) {
+			display::Edge *display_edge = _graph->newEdge(node, map.get(edge->target()));
+			onEdge(*edge, display_edge);
 		}
 	}
 	onEnd(_graph);
@@ -114,7 +105,6 @@ void CFGDrawer::onInit(PropList& graph, PropList& nodes, PropList& edges){
 	SHAPE(nodes) = ShapeStyle::SHAPE_MRECORD;
 	FONT_SIZE(nodes) = 12;
 	FONT_SIZE(edges) = 12;
-	EXCLUDE(nodes).add(&INDEX);
 }
 
 
@@ -124,52 +114,47 @@ void CFGDrawer::onInit(PropList& graph, PropList& nodes, PropList& edges){
  * @param bb BasicBlock from which the node has been made
  * @param node Node made. One can give some properties to it
  */
-void CFGDrawer::onNode(otawa::BasicBlock *bb, otawa::display::Node *node){
+void CFGDrawer::onNode(otawa::Block *b, otawa::display::Node *node){
 	SHAPE(node) = ShapeStyle::SHAPE_MRECORD;
 
 	// make title
 	StringBuffer title;
-	title << bb; //->number() << " (0x" << fmt::address(bb->address()) << ')';
+	title << b;
 	TITLE(node) = title.toString();
 
-	// make body
-	StringBuffer body;
-	for(BasicBlock::InstIter inst(bb); inst; inst++){
-		if(body.length() > 0)
-			body << '\n';
+	// body for basic
+	if(b->isBasic()) {
+		BasicBlock *bb = b->toBasic();
+		StringBuffer body;
+		for(BasicBlock::InstIter inst(bb); inst; inst++){
+			if(body.length() > 0)
+				body << '\n';
 
-		// Display labels
-		for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
-			body << *label << ":\n";
-		for(Identifier<String>::Getter label(inst, otawa::LABEL); label; label++)
-			body << *label << ":\n";
+			// Display labels
+			for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
+				body << *label << ":\n";
+			for(Identifier<String>::Getter label(inst, otawa::LABEL); label; label++)
+				body << *label << ":\n";
 
 
-		/*if(inst->hasProp(FUNCTION_LABEL)){
-			String label = FUNCTION_LABEL(inst);
-			body << label << ":\n";
+			/*if(inst->hasProp(FUNCTION_LABEL)){
+				String label = FUNCTION_LABEL(inst);
+				body << label << ":\n";
+			}
+			if(inst->hasProp(LABEL)){
+				String label = LABEL(inst);
+				body << label << ":\n";
+			}*/
+
+			body << "0x" << ot::address(inst->address()) << ":  ";
+			inst->dump(body);
 		}
-		if(inst->hasProp(LABEL)){
-			String label = LABEL(inst);
-			body << label << ":\n";
-		}*/
-
-		body << "0x" << ot::address(inst->address()) << ":  ";
-		inst->dump(body);
+		if(body.length() > 0)
+			BODY(node) = body.toString();
 	}
-	if(body.length() > 0)
-		BODY(node) = body.toString();
 
 	// give special format for Entry and Exit
-	if(bb->isEntry()){
-		TITLE(node) = "ENTRY";
-	}
-	else if(bb->isExit()){
-		TITLE(node) = "EXIT";
-	}
-	else {
-		node->setProps(*bb);
-	}
+	node->setProps(*b);
 }
 
 
@@ -180,31 +165,14 @@ void CFGDrawer::onNode(otawa::BasicBlock *bb, otawa::display::Node *node){
  * @param display_edge Edge of the Graph made. One can give properties to it
  */
 void CFGDrawer::onEdge(otawa::Edge *cfg_edge, otawa::display::Edge *display_edge){
-	switch(cfg_edge->kind()){
-		case otawa::Edge::CALL:
-			LABEL(display_edge) = "call";
-			break;
-		case otawa::Edge::TAKEN:
-			LABEL(display_edge) = "taken";
-			break;
-		case otawa::Edge::NOT_TAKEN:
-			LABEL(display_edge) = "";
-			break;
-		case otawa::Edge::VIRTUAL:
-			LABEL(display_edge) = "virtual";
-			STYLE(display_edge) = STYLE_DASHED;
-			break;
-		case otawa::Edge::VIRTUAL_CALL:
-			LABEL(display_edge) = "call";
-			STYLE(display_edge) = STYLE_DASHED;
-			break;
-		case otawa::Edge::VIRTUAL_RETURN:
-			LABEL(display_edge) = "return";
-			STYLE(display_edge) = STYLE_DASHED;
-			break;
-		default:
-			ASSERT(false);
+	if(cfg_edge->sink()->isSynth()) {
+		LABEL(display_edge) = "call";
+		STYLE(display_edge) = STYLE_DASHED;
 	}
+	else if(cfg_edge->source()->isTaken(cfg_edge))
+		LABEL(display_edge) = "taken";
+	else if(cfg_edge->source()->isEnd())
+		STYLE(display_edge) = STYLE_DASHED;
 	display_edge->setProps(*cfg_edge);
 }
 
@@ -218,13 +186,5 @@ void CFGDrawer::onEdge(otawa::Edge *cfg_edge, otawa::display::Edge *display_edge
 void CFGDrawer::onEnd(otawa::display::Graph *graph){
 }
 
-
-/**
- * This function is called to display a node representing a called CFG.
- */
-void CFGDrawer::onCall(CFG *cfg, display::Node *node) {
-	TITLE(node) = cfg->label();
-}
-
-} }
+} }	// otawa::display
 

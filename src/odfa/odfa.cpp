@@ -25,13 +25,15 @@
 
 #include <otawa/app/Application.h>
 #include <otawa/cfg/features.h>
-#include <otawa/data/clp/features.h>
+/*#include <otawa/data/clp/features.h>
 #include <otawa/data/clp/ClpAnalysis.h>
-#include <otawa/data/clp/SymbolicExpr.h>
+#include <otawa/data/clp/SymbolicExpr.h>*/
 #include <otawa/display/CFGOutput.h>
 #include <otawa/hard.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/prog/sem.h>
+#include <otawa/prog/Symbol.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/stack/features.h>
 #include <otawa/stack/AccessedAddress.h>
 
@@ -138,6 +140,7 @@ public:
 
 
 // CLP textual displayer
+#if 0
 class CLPDisplayer: public Displayer {
 protected:
 
@@ -196,6 +199,7 @@ protected:
 private:
  	WorkSpace *_ws;
 };
+#endif
 
 
 /**
@@ -204,41 +208,40 @@ private:
 class StackDisplayer: public Displayer {
 public:
 
-	StackDisplayer(WorkSpace *ws): i(ws) { }
+	StackDisplayer(WorkSpace *ws): i(0) { }
+	~StackDisplayer(void) { if(i) delete i; }
 
 	virtual void prepare(WorkSpace *ws, const PropList& props) {
-		_ws = ws;
 		ws->require(otawa::STACK_ANALYSIS_FEATURE, props);
+		i = new stack::Iter(ws);
 	}
 
 	virtual void displayBefore(io::Output& out, BasicBlock *bb) {
 		if(bb->isEnd())
 			return;
-		stack::Iter i(_ws);
-		i.start(bb);
-		out << i.state() << io::endl;
+		i->start(bb);
+		out << i->state() << io::endl;
 	}
 
 	virtual void displayAfter(io::Output& out, BasicBlock *bb) {
 		if(bb->isEnd())
 			return;
-		stack::Iter i(_ws);
-		i.start(bb);
-		while(!i.ended())
-			i.next();
-		out << i.state() << io::endl;
+		i->start(bb);
+		while(!i->ended())
+			i->next();
+		out << *i->state() << io::endl;
 	}
 
 	virtual void start(BasicBlock *bb) {
-		i.start(bb);
+		i->start(bb);
 	}
 
 	virtual void next(void) {
-		i.nextInst();
+		i->nextInst();
 	}
 
 	virtual void display(io::Output& out) {
-		out << i.state() << io::endl;
+		out << i->state() << io::endl;
 	}
 
 	virtual void buildAddresses(WorkSpace *ws, const PropList& props) {
@@ -246,8 +249,7 @@ public:
 	}
 
 private:
-	WorkSpace *_ws;
-	stack::Iter i;
+	stack::Iter *i;
 };
 
 
@@ -257,7 +259,7 @@ private:
 class DisplayContext {
 public:
 	DisplayContext(WorkSpace *ws, const PropList& ps)
-		: before(false), after(false), filter(false), sem(false), stats(false), insts(false), _ws(ws), _ps(ps) { }
+		: before(false), after(false), filter(false), sem(false), stats(false), insts(false), addrs(false), _ws(ws), _ps(ps) { }
 
 	virtual ~DisplayContext(void) {
 		for(int i = 0; i < disps.count(); i++)
@@ -369,19 +371,25 @@ protected:
 		out << io::endl;
 	}
 
-	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 		// ends
-		if(bb->isEnd()) {
-			if(bb->isEntry())
+		if(b->isEnd()) {
+			if(b->isEntry())
 				out << "ENTRY\n";
 			else
 				out << "EXIT\n";
 		}
 
+		// synthetic block
+		else if(b->isSynth()) {
+
+		}
+
 		// normal BB
 		else {
-			out << "BB " << bb->number() << " (" << bb->address() << ")\n";
+			BasicBlock *bb = b->toBasic();
+			out << "BB " << bb->index() << " (" << bb->address() << ")\n";
 			if(ctx.before)
 				ctx.displayBefore(out, bb);
 			if(ctx.insts)
@@ -500,9 +508,10 @@ private:
 		fillRegs(props);
 
 		// perform the analysis
-		if(workspace()->isProvided(DELAYED_FEATURE)
+		// TODO
+		/*if(workspace()->isProvided(DELAYED_FEATURE)
 		|| workspace()->isProvided(DELAYED2_FEATURE))
-			require(DELAYED_CFG_FEATURE);
+			require(DELAYED_CFG_FEATURE);*/
 		require(otawa::VIRTUALIZED_CFG_FEATURE);
 
 		// prepare analysis
@@ -513,8 +522,8 @@ private:
 		ctx.filter = filter;
 		ctx.insts = insts;
 		ctx.addrs = addrs;
-		if(clp)
-			ctx.add(new CLPDisplayer());
+		/*if(clp)
+			ctx.add(new CLPDisplayer());*/
 		if(stack)
 			ctx.add(new StackDisplayer(workspace()));
 		if(addrs)
@@ -556,7 +565,7 @@ private:
 			case hard::Register::INT:
 				t::uint32 v;
 				in >> v;
-				clp::Analysis::INITIAL(props).add( pair(reg, Address(v)) );
+				//clp::Analysis::INITIAL(props).add( pair(reg, Address(v)) );
 				break;
 			default:
 				throw option::OptionException(_ << "unsupported register kind for initialization: " << s);

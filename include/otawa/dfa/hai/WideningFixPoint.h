@@ -95,6 +95,7 @@ class WideningFixPoint {
 	inline void updateEdge(Edge *edge, Domain &dom);
 	
 	// Problem wrapper functions
+	inline const Domain& top(void) { return prob.top(); }
 	inline const Domain& bottom(void) const;
 	inline const Domain& entry(void) const;
 	inline void lub(Domain &a, const Domain &b) const;

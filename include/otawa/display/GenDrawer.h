@@ -69,12 +69,12 @@ GenDrawer<G, D>::GenDrawer(const G& graph): _graph(graph) {
 	
 	// Process the vertices
 	for(typename G::Iterator vertex(graph); vertex; vertex++)
-		map.put(vertex, new Vertex(*this, _graph, vertex));
+		map.put(*vertex, new Vertex(*this, _graph, *vertex));
 	
 	// Process the edges
 	for(typename G::Iterator vertex(graph); vertex; vertex++)
-		for(typename G::Successor edge(_graph, vertex); edge; edge++)
-			new Edge(*this, _graph, map.get(vertex), map.get((*edge).sink()), *edge); 
+		for(typename G::Successor edge(_graph, *vertex); edge; edge++)
+			new Edge(*this, _graph, map.get(*vertex), map.get((*edge).sink()), *edge);
 }
 
 

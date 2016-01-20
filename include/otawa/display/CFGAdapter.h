@@ -33,9 +33,9 @@ public:
 	// DiGraph concept
 	class Vertex {
 	public:
-		inline Vertex(BasicBlock *_bb): bb(_bb) { }
-		inline int index(void) { return bb->number(); }
-		BasicBlock *bb;
+		inline Vertex(Block *_b): b(_b) { }
+		inline int index(void) { return b->index(); }
+		Block *b;
 	};
 
 	class Edge {
@@ -48,30 +48,23 @@ public:
 	
 	class Successor: public PreIterator<Successor, Edge> {
 	public:
-		inline Successor(const CFGAdapter& ad, Vertex source): iter(source.bb)
-			{ step(); }
-		inline Successor(const Successor& succ): iter(succ.iter) { }
-		inline bool ended(void) const { return iter.ended(); }
-		inline Edge item(void) const { return Edge(*iter); }
-		inline void next(void) { iter.next(); step(); }
+		inline Successor(const CFGAdapter& ad, Vertex source): i(source.b->outs()) { }
+		inline bool ended(void) const { return i.ended(); }
+		inline Edge item(void) const { return Edge(*i); }
+		inline void next(void) { i.next(); }
 	private:
-		void step(void) {
-			while(!iter.ended() && iter->kind() == otawa::Edge::CALL)
-				iter.next();
-		}
-		BasicBlock::OutIterator iter;
+		Block::EdgeIter i;
 	};
 	
 	// Collection concept
 	class Iterator: public PreIterator<Iterator, Vertex> {
 	public:
-		inline Iterator(const CFGAdapter& adapter): iter(adapter.cfg) { }
-		inline Iterator(const Iterator& _iter): iter(_iter.iter) { }
-		inline bool ended(void) const { return iter.ended(); }
-		inline Vertex item(void) const { return Vertex(iter); }
-		inline void next(void) { iter.next(); }
+		inline Iterator(const CFGAdapter& adapter): i(adapter.cfg->blocks()) { }
+		inline bool ended(void) const { return i.ended(); }
+		inline Vertex item(void) const { return Vertex(*i); }
+		inline void next(void) { i.next(); }
 	private:
-		CFG::BBIterator iter;
+		CFG::BlockIter i;
 	};
 	
 	// DiGraphWithVertexMap concept
@@ -81,15 +74,15 @@ public:
 		inline VertexMap(const CFGAdapter& adapter)
 			: vals(new T[adapter.count()]) { }
 		inline const T& get(const Vertex& vertex) const
-			{ return vals[vertex.bb->number()]; }
+			{ return vals[vertex.b->index()]; }
 		inline void put(const Vertex& vertex, const T& val)
-			{ vals[vertex.bb->number()] = val; }
+			{ vals[vertex.b->index()] = val; }
 	private:
 		T *vals;
 	};
 	
 	inline CFGAdapter(CFG *_cfg, WorkSpace *_ws = 0): cfg(_cfg), ws(_ws) { }
-	inline int count(void) const{ return cfg->countBB(); }
+	inline int count(void) const{ return cfg->count(); }
 	CFG *cfg;
 	WorkSpace *ws;
 };

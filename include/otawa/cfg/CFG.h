@@ -77,7 +77,9 @@ public:
 	inline operator BasicBlock *(void) { return toBasic(); }
 	inline operator SynthBlock  *(void) { return toSynth(); }
 
-	inline Edge *sequence(void) const { return seq; }
+	inline Edge *sequence(void) const { return seq; }		// DEPRECATED
+	inline bool isNotTaken(Edge *e) const { return true; }	// TODO
+	inline bool isTaken(Edge *e) const { return !isNotTaken(e); }
 	inline CFG *cfg(void) const { return _cfg; }
 
 protected:

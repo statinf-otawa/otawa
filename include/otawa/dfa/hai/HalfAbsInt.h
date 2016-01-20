@@ -72,7 +72,6 @@ private:
 	elm::genstruct::Vector<CFG*> *cfgStack;
 	Block *current;
 	typename FixPoint::Domain in,out;
-	elm::genstruct::Vector<Edge*> call_edges; /* call_edge == current node's call-edge to another CFG */
 	Edge *next_edge;
 	bool enter_call; /* enter_call == true: we need to process this call. enter_call == false: already processed (call return) */
 	bool fixpoint;
@@ -158,26 +157,13 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	if(mainEntry) {
 		fp.assign(in, entdom);
 		mainEntry = false;
+		HAI_TRACE("\t\tentry state = " << in);
 	}
 
 	// function-call entry case, state is on the called CFG's entry
 	else if(current->isEntry()) {
 		fp.assign(in, *fp.getMark(current));
 		fp.unmarkEdge(current);
-	}
-
-	// call return case, merge return-state for all functions called from this node
-	else if(!next_edge && !call_edges.isEmpty()) {
-
-		// join return edges of functions
-		for (elm::genstruct::Vector<Edge*>::Iterator iter(call_edges); iter; iter++) {
-			fp.lub(in, *fp.getMark(*iter));
-			fp.unmarkEdge(*iter);
-		}
-
-		// cleanup entry edges
-		for(Block::EdgeIter in = current->ins(); in; in++)
-			fp.unmarkEdge(*in);
 	}
 
 	// loop header case: launch fixPoint()
@@ -240,7 +226,6 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 
 		// un-mark all the in-edges since the values are not needed.
 		for(Block::EdgeIter inedge = current->ins(); inedge; inedge++) {
-			ASSERT(!inedge->sink()->isSynth());
 			/* TODO fix when inlined virtualization will be re-activated
 			if (HAI_BYPASS_TARGET(current) && (inedge->kind() == Edge::VIRTUAL_RETURN))
 				continue;*/
@@ -248,7 +233,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			ASSERT(edgeState);
 			fp.updateEdge(*inedge, *edgeState);
 			fp.lub(in, *edgeState);
-			if(!next_edge)
+			//if(!next_edge)
 				fp.unmarkEdge(*inedge);
 		}
 		if(HAI_BYPASS_TARGET(current)) {
@@ -295,40 +280,39 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 
 		// record function output state
        	fp.markEdge(edge, out);
-       	workList->push(edge->source()->toBasic());
+       	workList->push(edge->sink());
 	}
 
-	// process call node, and there is still function calls to process
-	else if (next_edge) {
-		/* If first time, mark entry points. */
-		if (enter_call) {
-			HAI_TRACE("\t\tupdating for BB " << current << " while visiting call-node for the first time");
-			fp.update(out, in, current);
-		    for (elm::genstruct::Vector<Edge*>::Iterator iter(call_edges); iter; iter++) {
-				// Mark all the function entries
-		    	// TODO add support for unknown synthetic CFG
-				Block *func_entry = iter->sink()->toSynth()->callee()->entry();
-				fp.markEdge(func_entry, out);
-		    }
+	// from synthetic block
+	// <HKC>
+	else if(current->isSynth()) {
+		// TODO		Support for multiple successors in leaving edge
+		Edge *return_edge = current->outs();
+
+		// unknown CFG
+		if(!current->toSynth()->callee()) {
+			fp.assign(out, fp.top());
+			fp.markEdge(return_edge, out);
+			workList->push(return_edge->sink());
 		}
 
-		// save current context
-        callStack->push(next_edge);
-        cfgStack->push(cur_cfg);
+		// push call context
+		else {
 
-        // setup new context
-        cur_cfg = next_edge->sink()->toSynth()->callee();
-        HAI_TRACE("\tcalling CFG " << cur_cfg->label());
-        workList->push(cur_cfg->entry());
-        fp.enterContext(out, cur_cfg->entry(), CTX_FUNC);
-	}
+			// push call context
+			callStack->push(return_edge);
+	        cfgStack->push(cur_cfg);
+	        cur_cfg = current->toSynth()->callee();
+	        fp.enterContext(out, cur_cfg->entry(), CTX_FUNC);
+			HAI_TRACE("\tcalling CFG " << cur_cfg->label());
 
-	// visit call-node for the last-time, propagate state to successors
-	else if(!call_edges.isEmpty()) {
-		HAI_TRACE("\t\treturning from function calls at " << current);
-		fp.assign(out, in);
-		addSuccessors();
+	        // propagate to function entry
+			fp.assign(out, in);
+			fp.markEdge(cur_cfg->entry(), out);
+			workList->push(cur_cfg->entry());
+		}
 	}
+	// </HKC>
 
 	// Standard case, update and propagate state to successors
 	else {
@@ -344,8 +328,8 @@ void HalfAbsInt<FixPoint>::addSuccessors() {
 
 	for(Block::EdgeIter outedge = current->outs(); outedge; outedge++) {
 
-		if(outedge->sink()->isSynth())
-	    	continue;
+		/*if(outedge->sink()->isSynth())
+	    	continue;*/
 
 		/* TODO fix it when inline virtualization will be re-activated
 		if (HAI_BYPASS_SOURCE(current) && outedge->kind() == Edge::VIRTUAL_CALL)
@@ -424,8 +408,8 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, typename FixPoint::Domain 
 		current = workList->pop();
 
 		// update the state
-		next_edge = detectCalls(enter_call, call_edges, current);
-		HAI_TRACE("\n\tPROCESSING " << current);
+		//next_edge = detectCalls(enter_call, call_edges, current);
+		HAI_TRACE("\n\tPROCESSING " << current << " (" << current->cfg() << ")");
 		inputProcessing(*entdom);
 		HAI_TRACE("\t\tunion of inputs = " << in);
 		outputProcessing();
