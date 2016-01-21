@@ -43,7 +43,7 @@ void DisassemblerDisplayer::processWorkSpace(WorkSpace *ws) {
 				else {
 					if(v->isEntry() || e->sink()->isExit())
 						cout << " V(";
-					else if(e == v->sequence())
+					else if(e->isNotTaken())
 						cout << " NT(";
 					else
 						cout << " T(";

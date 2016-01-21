@@ -221,7 +221,7 @@ void CFGOutput::genEdgeLabel(CFG *cfg, otawa::Edge *edge, Output& out) {
 		out << "call";
 	else if(edge->source()->isSynth())
 		out << "return";
-	else if(edge->source()->isTaken(edge))
+	else if(edge->isTaken())
 		out << "taken";
 	genEdgeInfo(cfg, edge, out);
 }

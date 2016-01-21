@@ -327,7 +327,7 @@ io::Output& operator<<(io::Output& out, Edge *edge) {
  * Build a CFG block.
  * @param type	Block type.
  */
-Block::Block(t::uint16 type): _type(type), seq(0) {
+Block::Block(t::uint16 type): _type(type) {
 }
 
 
@@ -704,7 +704,7 @@ CFG *CFGMaker::build(void) {
  */
 void CFGMaker::seq(Block *v, Block *w, Edge *e) {
 	GenDiGraphBuilder<Block, Edge>::add(v, w, e);
-	v->seq = e;
+	e->flags = Edge::NOT_TAKEN;
 }
 
 /**

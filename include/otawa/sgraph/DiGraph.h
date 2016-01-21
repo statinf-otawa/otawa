@@ -22,7 +22,7 @@
 #ifndef OTAWA_SIGRAPH_DIGRAPH_H_
 #define OTAWA_SIGRAPH_DIGRAPH_H_
 
-#include <elm/genstruct/SLList.h>
+#include <elm/data/List.h>
 #include <elm/genstruct/FragTable.h>
 
 namespace otawa {
@@ -50,11 +50,11 @@ private:
 
 class Vertex {
 	friend class DiGraphBuilder;
-	typedef elm::genstruct::SLList<Edge *> edges_t;
+	typedef elm::List<Edge *> edges_t;
 public:
 	inline int index(void) const { return idx; }
 
-	typedef edges_t::Iterator EdgeIter;
+	typedef edges_t::iter EdgeIter;
 	inline EdgeIter ins(void) const { return EdgeIter(_ins); }
 	inline EdgeIter outs(void) const { return EdgeIter(_outs); }
 
@@ -108,6 +108,7 @@ public:
 	class EdgeIter: public PreIterator<EdgeIter, E *> {
 		friend class GenVertex<V, E>;
 	public:
+		EdgeIter(void) { }
 		EdgeIter(const EdgeIter& it): i(it.i) { }
 		inline bool ended(void) const { return i.ended(); }
 		inline E *item(void) const { return static_cast<E *>(*i); }

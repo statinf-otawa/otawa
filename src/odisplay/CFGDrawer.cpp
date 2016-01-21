@@ -169,7 +169,7 @@ void CFGDrawer::onEdge(otawa::Edge *cfg_edge, otawa::display::Edge *display_edge
 		LABEL(display_edge) = "call";
 		STYLE(display_edge) = STYLE_DASHED;
 	}
-	else if(cfg_edge->source()->isTaken(cfg_edge))
+	else if(cfg_edge->isTaken())
 		LABEL(display_edge) = "taken";
 	else if(cfg_edge->source()->isEnd())
 		STYLE(display_edge) = STYLE_DASHED;

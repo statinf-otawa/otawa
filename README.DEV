@@ -8,3 +8,179 @@ of:
   * ''bin'' to install commands,
   * ''inc'' to install development files like includes,
   * ''doc'' to build and install automatic documentation.
+
+  
+===== PARALLEL OTAWA =====
+
+The development of multicores provides an utterly important sources of computation power
+but the price is the adoption of parallel way of programming. Unfortunately, this means
+that an application is split thread running concurrently with the possibility
+of synchronization problem leading to the use of time costly synchronization facilities
+that may possibly waste lot of computation power or memory space. In OTAWA, we will follow
+a lock-free approach as much as possible whose principles will be described here.
+
+
+==== Principles ====
+
+The main parallelization problems concerns the property lists that are the main storage
+of information for analyzes.
+
+[P0] OTAWA concurrent execution only works on microprocessor ensuring atomic read or write
+of pointers.
+
+[P1] at some time t of the computation, a property list is owned by at most 1 thread.
+
+[P2] only the owner thread can modify the property list (change a property, add a new property
+or remove a property).
+
+[P3] not-owner threads of a property can visit its property at any time without being
+disturbed by any change to the properties.
+
+[P4] Property list being a data structure too small, its changes must be done in an atomic way.
+
+[P5] Only store of basic types are atomic. Basic types includes bool, pointer, integer o
+ 8, 16 and 32-bits integer, float and cstring on 32-bits machines. On 64-bits machine,
+ 64-bits integer and double are added to basic types.
+ 
+ [P6] Analyzes must adopt these principles to be OTAWA parallel-compliant. If they don't,
+ they will be executed in mono-thread way. The code processor will record which analyzes
+ are parallel-compliant.
+ 
+ [P7] Tasks executed on two different thread can not rely on the property for synchronization.
+ If a synchronization is needed (but it is discouraged), the analyzes must provide their own
+ way to implement it. As a consequence, order of update of the property list is irrelevant
+ to implement an analyzes unless an external synchronization facility is provided.
+ 
+ 
+ ==== Lock-free Property Lists ====
+ 
+ Only the owner can modify the property list. A property list has the following structure:
+ 	template <class T>
+ 	class Property {
+ 		Property *next;
+ 		T value;
+ 	};
+ 	class PropertyList {
+ 		Property *head;
+ 	};
+
+As described below, property will implement read-copy-update (RCU) approach
+with the owner of the property list being the lonely updater.
+ 
+ Adding a list must be done in an atomic way, set of a pointer and, therefore,
+ must be done by inserting a property at the header (the faster way) or at the
+ end. This way, a reader may or may not show the property at insertion time
+ but this behavior is compliant with P7.
+ 
+ 	void addProp(PropertList *props, Property *prop) {
+ 		prop->next = props->header;
+ 		// property list is not modified by the owner thread is the only modifier
+ 		props->head = prop;
+ 		// atomic modification of the list: new list includes now new property and old propertis
+ 	}
+ 
+ Changing an existing value must be done an atomic way. That is the value in Property must be of type
+ T for basic types and T* for non-basic type. Whatever the case, this will be assure atomic change
+ of the set value without disturbing an existing reader.
+ 
+The deletion is trickier because a reader may be reading the removed property at removal time.
+The main ideas will be (a) to change the pointer of next of the previous property in an atomic way
+and (b) to preserve the removed property until all reader has left the property. This last action
+is maybe the more complex one: when could we be sure that there is no more reader on a particular
+property? [[https://www.efficios.com/pub/rcu/urcu-supp.pdf]]
+
+  * When a synthetic method is used (get, set, remove, add), we now that the traversal will be
+  short in time (less than 1 second for example and we can have a list of delayed properties
+  with a kind of time but the implementation of the list must be lock-free but it may be easy
+  using the atomic write of next field and one list by thread).
+  * Property iterators make things more complex. In parallel analyzes, iterators should be
+  replaced by collector methods that will fill a data structures with properties matching a
+  specific identifier ensuring the read of the property list to be short in time.
+  	template <class T>
+  	void collect(AbstractIdentifier& id, genstruct::Vector<T>& data); 
+
+
+==== Lock-free Assignment of Tasks ====
+
+As the property lists are implemented using lock-free approaches, an analyzes will typically divide
+its work in jobs, that is group of data to be processed. For example, a basic block based
+analysis will distribute the basic block in jobs (at least as many as available core) and lets
+the threads pick tasks until all tasks are performed. This may mean that a thread that has ended
+job will pick another one to complete the computation. We will discuss here several ways to implement
+this job-aware lock-free mechanism.
+
+
+
+
+==== Analysis-level Parallelism ====
+ 
+
+==== Practical Approach ====
+
+  * think to protect data possibly modified by different core using C "volatile" modifier.
+  * be careful with code reorganization of the compiler, put memory barriers around the atomic pointer write!
+  	(http://lwn.net/Articles/262464/)
+
+
+==== Issues ====
+
+The RCU update of ProptyList should work most of the time (while PropertyList access duration, grace time, is
+under 1s but is clearly not a guarantee of soundness of the application. Is there is any non-blocking
+cheap way to provide such a guarantee.
+
+=== Global Approach ===
+
+For each N core, we can have a collection of bytes for each property list:
+	byte M[N]
+For a read lock of core i:
+	M[i] <- 1
+For a read unlock of core i:
+	M[i] <- 0
+When all M[i] = 0, no more thread is reading the list and we can free the deleted data.
+As it is relatively costly, it may be implemented globally and from time to time, variables
+can be looked and owned property by the current could be deleted.
+
+This policy refine in the following way at read unlock:
+	M[i] <- 0
+	if all M[i] = 0 then signal all thread for deletion
+
+Ensuring the global quiescent state is detected by last entering core
+and alert other cores. This will improve of the approach but we are not free
+of starving (by never reaching global quiescent state). 
+
+=== Local Approach ===
+
+If we could identify the owner of a Property list, let be core o, each may be their
+own set of markers and be alerted as soon there is no more reader on their property list:
+	byte M[N][N];
+
+read_lock(o) core i
+	M[o][i] <- 1
+
+read_unlock(o) core i
+	M[o][i] <- 0
+	if all M[o][j] = 0 then signal thread o for deletion
+
+But it would be too costly or not flexible enough to store owner in property list.
+This policy may leveraged with:
+
+read_lock() core i
+	M[j][i] <- 1 for all j in [0, N[
+
+read_unlock() core i
+	M[j][i] <- 0 for all j in [0, N[
+	if there a j s.t. M[k][j] for k in [0,N[ then alert core j
+
+It works but read_lock() and read_unlock() are much more expensive.
+A better way would to let Properties cooperate with higher level code
+processor to find point of deletion.
+
+
+==== References ====
+https://en.wikipedia.org/wiki/Non-blocking_algorithm
+https://en.wikipedia.org/wiki/Software_transactional_memory
+https://en.wikipedia.org/wiki/Read-copy-update
+http://www.cl.cam.ac.uk/research/srg/netos/projects/archive/lock-free/
+http://kukuruku.co/hub/cpp/lock-free-data-structures-introduction
+
+ 

@@ -23,7 +23,7 @@
 #define OTAWA_CFG_CFG_H
 
 #include <elm/assert.h>
-#include <elm/genstruct/SLList.h>
+//#include <elm/data/List.h>
 #include <otawa/sgraph/DiGraph.h>
 #include <otawa/prop/PropList.h>
 #include <otawa/prog/Inst.h>
@@ -40,10 +40,14 @@ class SynthBlock;
 
 class Edge: public PropList, public sgraph::GenEdge<Block, Edge> {
 	friend class CFGMaker;
+	static const t::uint32 NOT_TAKEN = 0x00000001;
 public:
 	inline Block *target(void) const;
+	inline bool isNotTaken(void) const { return flags & NOT_TAKEN; }
+	inline bool isTaken(void) const { return !isNotTaken(); }
 private:
 	Block *src, *snk;
+	t::uint32 flags;
 };
 io::Output& operator<<(io::Output& out, Edge *edge);
 
@@ -76,10 +80,6 @@ public:
 	inline SynthBlock *toSynth(void);
 	inline operator BasicBlock *(void) { return toBasic(); }
 	inline operator SynthBlock  *(void) { return toSynth(); }
-
-	inline Edge *sequence(void) const { return seq; }		// DEPRECATED
-	inline bool isNotTaken(Edge *e) const { return true; }	// TODO
-	inline bool isTaken(Edge *e) const { return !isNotTaken(e); }
 	inline CFG *cfg(void) const { return _cfg; }
 
 protected:
@@ -87,7 +87,7 @@ protected:
 
 private:
 	t::uint16 _type;
-	Edge *seq;
+	EdgeIter ntak;
 	CFG *_cfg;
 };
 io::Output& operator<<(io::Output& out, Block *block);

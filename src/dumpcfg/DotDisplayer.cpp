@@ -96,7 +96,7 @@ void DotDisplayer::processWorkSpace(WorkSpace *ws) {
 						cout << "label=\"return\", style=dashed, weight=1";
 					else if(e->sink()->isSynth())
 						cout << "label=\"call\", style=dashed, weight=1";
-					else if(e == v->sequence())
+					else if(e->isNotTaken())
 						cout << "weight=4";
 					else
 						cout << "label=\"taken\", weight=3";
