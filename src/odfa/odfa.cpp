@@ -25,9 +25,9 @@
 
 #include <otawa/app/Application.h>
 #include <otawa/cfg/features.h>
-/*#include <otawa/data/clp/features.h>
+#include <otawa/data/clp/features.h>
 #include <otawa/data/clp/ClpAnalysis.h>
-#include <otawa/data/clp/SymbolicExpr.h>*/
+#include <otawa/data/clp/SymbolicExpr.h>
 #include <otawa/display/CFGOutput.h>
 #include <otawa/hard.h>
 #include <otawa/proc/BBProcessor.h>
@@ -140,7 +140,6 @@ public:
 
 
 // CLP textual displayer
-#if 0
 class CLPDisplayer: public Displayer {
 protected:
 
@@ -199,7 +198,6 @@ protected:
 private:
  	WorkSpace *_ws;
 };
-#endif
 
 
 /**
@@ -522,8 +520,8 @@ private:
 		ctx.filter = filter;
 		ctx.insts = insts;
 		ctx.addrs = addrs;
-		/*if(clp)
-			ctx.add(new CLPDisplayer());*/
+		if(clp)
+			ctx.add(new CLPDisplayer());
 		if(stack)
 			ctx.add(new StackDisplayer(workspace()));
 		if(addrs)

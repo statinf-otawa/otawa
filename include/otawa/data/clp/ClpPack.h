@@ -26,6 +26,7 @@
 
 #include <elm/genstruct/Vector.h>
 #include <otawa/data/clp/ClpState.h>
+#include <otawa/prog/Process.h>
 
 namespace otawa {
 

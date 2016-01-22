@@ -57,10 +57,10 @@ class WideningListener {
 		  	results_out = new typename Problem::Domain**[col->count()];
 		for (int i = 0; i < col->count();  i++) {
 			CFG *cfg = col->get(i); 
-			results[i] = new typename Problem::Domain*[cfg->countBB()];
+			results[i] = new typename Problem::Domain*[cfg->count()];
 			if (store_out)
-			  results_out[i] = new typename Problem::Domain*[cfg->countBB()];
-			for (int j = 0; j < cfg->countBB(); j++){
+			  results_out[i] = new typename Problem::Domain*[cfg->count()];
+			for (int j = 0; j < cfg->count(); j++){
 				results[i][j] = new typename Problem::Domain(prob.bottom());
 				if (store_out)
 				  results_out[i][j] = new typename Problem::Domain(prob.bottom());
@@ -72,7 +72,7 @@ class WideningListener {
 		const CFGCollection *col = INVOLVED_CFGS(fw);
 		for (int i = 0; i < col->count();  i++) {
 			CFG *cfg = col->get(i); 
-			for (int j = 0; j < cfg->countBB(); j++){
+			for (int j = 0; j < cfg->count(); j++){
 				delete results[i][j];	
 				if (store_out)
 				  delete results_out[i][j];
@@ -86,9 +86,9 @@ class WideningListener {
 		  delete [] results_out;
 	}
 
-	void blockInterpreted(const WideningFixPoint< WideningListener >  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
+	void blockInterpreted(const WideningFixPoint< WideningListener >  *fp, Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
 	
-	void fixPointReached(const WideningFixPoint<WideningListener > *fp, BasicBlock*bb );
+	void fixPointReached(const WideningFixPoint<WideningListener > *fp, Block*bb );
 	
 	inline Problem& getProb() {
 		return(prob);
@@ -109,10 +109,10 @@ template <class Problem >
 Identifier<typename Problem::Domain*> WideningListener<Problem>::BB_OUT_STATE("", 0);
 
 template <class Problem >
-void WideningListener<Problem>::blockInterpreted(const WideningFixPoint<WideningListener>  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
+void WideningListener<Problem>::blockInterpreted(const WideningFixPoint<WideningListener>  *fp, Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
 
-		int bbnumber = bb->number() ;
-		int cfgnumber = cur_cfg->number();
+		int bbnumber = bb->index() ;
+		int cfgnumber = cur_cfg->index();
 	
 		prob.lub(*results[cfgnumber][bbnumber], in);
 		
@@ -127,7 +127,7 @@ void WideningListener<Problem>::blockInterpreted(const WideningFixPoint<Widening
 }
 
 template <class Problem >
-void WideningListener<Problem>::fixPointReached(const WideningFixPoint<WideningListener> *fp, BasicBlock*bb ) {
+void WideningListener<Problem>::fixPointReached(const WideningFixPoint<WideningListener> *fp, Block*bb ) {
 }
 	
 } } }	// otawa::dfa::hai

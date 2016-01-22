@@ -284,7 +284,6 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 	}
 
 	// from synthetic block
-	// <HKC>
 	else if(current->isSynth()) {
 		// TODO		Support for multiple successors in leaving edge
 		Edge *return_edge = current->outs();
@@ -312,7 +311,6 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 			workList->push(cur_cfg->entry());
 		}
 	}
-	// </HKC>
 
 	// Standard case, update and propagate state to successors
 	else {

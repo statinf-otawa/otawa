@@ -20,8 +20,10 @@
 //#define HAI_DEBUG
 #include <math.h>
 #include <elm/genstruct/HashTable.h>
-#include <otawa/prog/sem.h>
+#include <otawa/prog/File.h>
 #include <otawa/prog/Process.h>
+#include <otawa/prog/Segment.h>
+#include <otawa/prog/sem.h>
 #include <otawa/hard/Register.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/util/LoopInfoBuilder.h>
@@ -1502,6 +1504,7 @@ public:
 
 	/** Provides the Bottom value of the Abstract Domain */
 	inline const Domain& bottom(void) const { return State::EMPTY; }
+	inline const Domain& top(void) const { return State::FULL; }
 
 	/** Provides the entry state of the program */
 	inline const Domain& entry(void) const {
@@ -1565,7 +1568,7 @@ public:
 	 * This will be used to perform the junction between to iteration of
 	 * a loop.
 	*/
-	inline void widening(BasicBlock *bb, Domain &a, Domain b) const{
+	inline void widening(Block *bb, Domain &a, Domain b) const{
 		TRACEA(Domain di = a);
 		TRACEP(cerr << "*** widening ****\n");
 		TRACEP(cerr << "s1 = " << a << "\ns2 = " << b << ") = ");
@@ -1578,10 +1581,10 @@ public:
 	 * Update the domain in a way specific of the edge (for filtering purpose)
 	*/
 	inline void updateEdge(Edge *edge, Domain &dom){
-		BasicBlock *source = edge->source();
+		Block *source = edge->source();
 		TRACEP(cerr << "\n*** Update edge from " << source
 					<< " to " << edge->target()
-					<< " [taken=" << (edge->kind() == Edge::TAKEN) << "] ***\n");
+					<< " [taken=" << edge->isTaken() << "] ***\n");
 		TRACEP(cerr << "s = " << dom << io::endl);
 		if(se::REG_FILTERS.exists(source)) {
 			TRACEP(cerr << "\tApply filter on this edge!\n");
@@ -1591,7 +1594,7 @@ public:
 			// if not taken, invert conditions
 			// TODO Fixme! Generate two sets of predicates!
 			bool to_free = false;
-			if(edge->kind() != Edge::TAKEN) {
+			if(!edge->isTaken()) {
 				to_free = true;
 				for(int i = 0; i < reg_filters.count(); i++)
 					reg_filters[i] = reg_filters[i]->logicalNot();
@@ -1686,8 +1689,8 @@ public:
 		return a.equals(b);
 	}
 
-	inline void enterContext(Domain &dom, BasicBlock *header, hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, BasicBlock *header, hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, Block *header, hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, Block *header, hai_context_t ctx) { }
 
 
 	/**
@@ -1964,8 +1967,13 @@ public:
 	 * It gives the output state, given the input state and a pointer to the
 	 * basic block.
 	*/
-	void update(Domain& out, const Domain& in, BasicBlock* bb) {
+	void update(Domain& out, const Domain& in, Block* bb) {
 		out.copy(in);
+
+		// do nothing for an end block
+		if(bb->isEnd())
+			return;
+
 		Domain *state;
 		has_if = false;
 		clp::ClpStatePack::InstPack *ipack = 0;
@@ -1976,7 +1984,7 @@ public:
 		if(!specific_analysis){
 				clp::STATE_IN(bb) = in;
 		}
-		for(BasicBlock::InstIterator inst(bb); inst; inst++) {
+		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
 
 			_nb_inst++;
@@ -2035,7 +2043,7 @@ public:
 			//TODO: delete 'old' reg_filters if needed
 			//use Symbolic Expressions to get filters for this basic block
 			TRACEP(cerr << "> IF detected, getting filters..." << io::endl);
-			se::FilterBuilder builder(bb, *this);
+			se::FilterBuilder builder(bb->toBasic(), *this);
 		}
 
 	}
@@ -2131,7 +2139,7 @@ public:
 	inline CLPStateCleaner(CFG *_cfg) {cfg = _cfg;}
 	//virtual ~CLPStateCleaner(void) {}
 	virtual void clean(void) {
-		for(CFG::BBIterator bbi(cfg); bbi; bbi++){
+		for(CFG::BlockIter bbi = cfg->blocks(); bbi; bbi++){
 			clp::STATE_IN(*bbi).remove();
 			clp::STATE_OUT(*bbi).remove();
 		}
@@ -2506,21 +2514,21 @@ void DeadCodeAnalysis::processWorkSpace(WorkSpace *ws){
 	ASSERT(coll);
 	CFG *cfg = coll->get(0);
 	/* for each bb */
-	for(otawa::CFG::BBIterator bbi(cfg); bbi; bbi++){
+	for(CFG::BlockIter bbi = cfg->blocks(); bbi; bbi++){
 		clp::State st = clp::STATE_OUT(*bbi);
 		/* if the bb state is None : */
 		if (st == clp::State::EMPTY){
 			/* mark all (in|out) edges as never taken */
-			for(BasicBlock::InIterator edge(*bbi); edge; edge++)
+			for(Block::EdgeIter edge = bbi->ins(); edge; edge++)
 				NEVER_TAKEN(*edge) = true;
-			for(BasicBlock::OutIterator edge(*bbi); edge; edge++)
+			for(Block::EdgeIter edge = bbi->outs(); edge; edge++)
 				NEVER_TAKEN(*edge) = true;
 		} else {
 			/* mark all (in|out) edges as not never taken */
-			for(BasicBlock::InIterator edge(*bbi); edge; edge++)
+			for(Block::EdgeIter edge = bbi->ins(); edge; edge++)
 				if (!NEVER_TAKEN.exists(*edge))
 					NEVER_TAKEN(*edge) = false;
-			for(BasicBlock::OutIterator edge(*bbi); edge; edge++)
+			for(Block::EdgeIter edge = bbi->outs(); edge; edge++)
 				if (!NEVER_TAKEN.exists(*edge))
 					NEVER_TAKEN(*edge) = false;
 		}

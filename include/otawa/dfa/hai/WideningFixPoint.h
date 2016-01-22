@@ -86,7 +86,7 @@ class WideningFixPoint {
 	inline void init(HalfAbsInt<WideningFixPoint> *_ai);
 	
 	// FixPoint function
-	void fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const;
+	void fixPoint(Block *bb, bool &fixpoint, Domain &in, bool firstTime) const;
 	
 	// Edge marking functions
 	inline void markEdge(PropList *e, const Domain &s);
@@ -101,11 +101,11 @@ class WideningFixPoint {
 	inline void lub(Domain &a, const Domain &b) const;
 	inline void assign(Domain &a, const Domain &b) const;
 	inline bool equals(const Domain &a, const Domain &b) const;
-	inline void update(Domain &out, const Domain &in, BasicBlock* bb);
-	inline void blockInterpreted(BasicBlock* bb, const Domain& in, const Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
-	inline void fixPointReached(BasicBlock* bb) const;
-	inline void enterContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const;
-	inline void leaveContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const;
+	inline void update(Domain &out, const Domain &in, Block* bb);
+	inline void blockInterpreted(Block* bb, const Domain& in, const Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
+	inline void fixPointReached(Block* bb) const;
+	inline void enterContext(Domain &dom, Block* bb, hai_context_t ctx) const;
+	inline void leaveContext(Domain &dom, Block* bb, hai_context_t ctx) const;
 	
 };
 	
@@ -118,7 +118,7 @@ inline void WideningFixPoint<Listener >::init(HalfAbsInt<WideningFixPoint> *_ai)
 
 	
 template < class Listener >	
-void WideningFixPoint<Listener >::fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const {
+void WideningFixPoint<Listener >::fixPoint(Block *bb, bool &fixpoint, Domain &in, bool firstTime) const {
 		
 		FixPointState *fpstate = ai->getFixPointState(bb);
 		Domain newHeaderState(bottom());
@@ -207,35 +207,37 @@ inline bool WideningFixPoint<Listener >::equals(const typename Problem::Domain &
 }
 
 template < class Listener >	
-inline void WideningFixPoint<Listener>::update(Domain &out, const typename Problem::Domain &in, BasicBlock* bb)  {
+inline void WideningFixPoint<Listener>::update(Domain &out, const typename Problem::Domain &in, Block* bb)  {
 		prob.update(out,in,bb);
 }
 	
 template < class Listener >	
-inline void WideningFixPoint<Listener>::blockInterpreted(BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
+inline void WideningFixPoint<Listener>::blockInterpreted(Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
 		list.blockInterpreted(this, bb, in, out, cur_cfg, callStack);
 }
 
 template < class Listener >	
-inline void WideningFixPoint<Listener >::fixPointReached(BasicBlock* bb) const {
+inline void WideningFixPoint<Listener >::fixPointReached(Block* bb) const {
 		list.fixPointReached(this, bb);
 }
 	
 template < class Listener >	
-inline void WideningFixPoint<Listener >::enterContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const {
+inline void WideningFixPoint<Listener >::enterContext(Domain &dom, Block* bb, hai_context_t ctx) const {
 		prob.enterContext(dom, bb, ctx);
 }
 	
 template < class Listener >	
-inline void WideningFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const {
+inline void WideningFixPoint<Listener>::leaveContext(Domain &dom, Block* bb, hai_context_t ctx) const {
 		prob.leaveContext(dom, bb, ctx);
 }
 
 template < class Listener >
 inline void WideningFixPoint<Listener>::updateEdge(Edge *edge, Domain &dom) {
+		HAI_TRACE("update to " << edge->sink() << " from " << dom);
 		prob.updateEdge(edge, dom);
+		HAI_TRACE("to " << dom);
 }
-	
+
 	
 } } } // otawa::dfa::hai
 

@@ -323,7 +323,7 @@ void CFGCollector::seq(CFGMaker& m, BasicBlock *b, Block *src) {
 	Inst *ni = b->last()->nextInst();
 	TRACE("next instruction = " << ni->address());
 	if(ni)
-		m.seq(src, BB(ni), new Edge());
+		m.add(src, BB(ni), new Edge(Edge::NOT_TAKEN));
 }
 
 /**

@@ -318,16 +318,10 @@ io::Output& operator<<(io::Output& out, Edge *edge) {
   */
 
 /**
- * @fn Edge *Block::sequence(void) const;
- * Get the sequence output edge of the block (if any).
- * @return	Sequence output edge or null.
- */
-
-/**
  * Build a CFG block.
  * @param type	Block type.
  */
-Block::Block(t::uint16 type): _type(type) {
+Block::Block(t::uint16 type): _type(type), _cfg(0) {
 }
 
 
@@ -694,17 +688,6 @@ CFG *CFGMaker::build(void) {
 	cfg->takeProps(*this);
 
 	return cfg;
-}
-
-/**
- * Add an edge for a sequence.
- * @param v		Source BB.
- * @param w		Sink BB.
- * @param e		Edge itself.
- */
-void CFGMaker::seq(Block *v, Block *w, Edge *e) {
-	GenDiGraphBuilder<Block, Edge>::add(v, w, e);
-	e->flags = Edge::NOT_TAKEN;
 }
 
 /**
