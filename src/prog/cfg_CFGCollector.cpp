@@ -569,8 +569,6 @@ Identifier<Edge *> CALLED_BY("otawa::CALLED_BY", 0);
  * @par Properties
  * @ref ENTRY_CFG (@ref WorkSpace).
  * @ref INVOLVED_CFGS (@ref WorkSpace).
- * @ref INDEX (@ref CFG)
- * @ref CALLED_BY (@ref CFG)
  *
  * @ingroup cfg
  */

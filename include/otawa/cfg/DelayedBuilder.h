@@ -46,9 +46,9 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 
 private:
-	typedef genstruct::HashTable<BasicBlock *, BasicBlock *> map_t;
+	typedef genstruct::HashTable<Block *, BasicBlock *> map_t;
 	void fix(Edge *oedge, Edge *nedge);
-	void cloneEdge(Edge *edge, BasicBlock *source, Edge::kind_t kind);
+	void cloneEdge(Edge *edge, Block *source, t::uint32 flags);
 	void insert(Edge *edge, BasicBlock *ibb);
 	BasicBlock *makeBB(Inst *inst, int n = 1);
 	BasicBlock *makeNOp(Inst *inst, int n = 1);
@@ -58,14 +58,14 @@ private:
 	int count(Inst *inst);
 	ot::size size(Inst *inst, int n = 1);
 	Inst *next(Inst *inst, int n = 1);
-	Edge *makeEdge(BasicBlock *src, BasicBlock *tgt, Edge::kind_t kind);
+	Edge *makeEdge(Block *src, Block *tgt, t::uint32 flags);
 	void mark(CFG *cfg);
 
 	CFGCollection *coll;
 	DelayedCleaner *cleaner;
-	genstruct::HashTable<CFG *, VirtualCFG *> cfg_map;
+	genstruct::HashTable<CFG *, CFGMaker *> cfg_map;
 	map_t map;
-	VirtualCFG *vcfg;
+	CFGMaker *vcfg;
 	DelayedInfo *info;
 };
 

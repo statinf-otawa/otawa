@@ -35,9 +35,11 @@ class CFGBuilder: public Processor {
 public:
 	CFGBuilder(void);
 
-	// Processor overload
-	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void configure(const PropList& props = PropList::EMPTY);
+protected:
+	virtual void processWorkSpace(WorkSpace *ws);
+
+	virtual void makeCFG(WorkSpace *ws, CFG *cfg);
+	virtual void makeBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
 
 private:
 	CodeBasicBlock *nextBB(Inst *inst);

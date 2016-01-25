@@ -8,19 +8,19 @@
 
 namespace otawa {
 class PCGBlock: public PropList {
-	BasicBlock *bb;
+	Block *bb;
 	elm::genstruct::Vector<PCGBlock *> ins, outs;
 	CFG* cfg;
 public:
-	inline PCGBlock(BasicBlock *bb,CFG* cfg):bb(bb),cfg(cfg){};
-	virtual inline ~PCGBlock(void){};
+	inline PCGBlock(Block *bb, CFG *cfg): bb(bb), cfg(cfg) { };
+	virtual inline ~PCGBlock(void) { };
 	inline void addInLink(PCGBlock *pcgb) { ins.add(pcgb); };
 	inline void addOutLink(PCGBlock *pcgb) { outs.add(pcgb); };
-	inline BasicBlock* getBB(void){return bb;};
+	inline Block *getBB(void){return bb;};
 	inline address_t getAddress(){return cfg->address();};
 	inline String getName(){return cfg->label();};
-	inline elm::genstruct::Vector<PCGBlock*>& getFathers(){return ins;};
-	inline elm::genstruct::Vector<PCGBlock*>& getSons(){return outs;};
+	inline elm::genstruct::Vector<PCGBlock*>& getParents(void) { return ins; };
+	inline elm::genstruct::Vector<PCGBlock*>& getChildren(void) { return outs; };
 	inline CFG *getCFG(void) const { return cfg; }
 	
 	class PCGBlockInIterator: public elm::PreIterator<PCGBlockInIterator, PCGBlock *> {

@@ -67,7 +67,7 @@ p::declare BBRatioDisplayer::reg = p::init("otawa::BBRatioDisplayer", Version(1,
  * Build the processor.
  */
 BBRatioDisplayer::BBRatioDisplayer(AbstractRegistration& r)
-: BBProcessor(r), path(""), to_file(false), stream(0), line(false) {
+: BBProcessor(r), wcet(0), system(0), path(""), to_file(false), stream(0), line(false) {
 }
 
 
@@ -129,15 +129,16 @@ void BBRatioDisplayer::processCFG(WorkSpace *fw, CFG *cfg) {
 
 /**
  */
-void BBRatioDisplayer::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
-	if(bb->isEnd())
+void BBRatioDisplayer::processBB(WorkSpace *fw, CFG *cfg, Block *b) {
+	if(!b->isBasic())
 		return;
+	BasicBlock *bb = b->toBasic();
 	int count = (int)system->valueOf(ipet::VAR(bb)),
 		time = ipet::TIME(bb),
 		total = time * count;
 	SUM(cfg) = SUM(cfg) + total;
 	out << bb->address() << '\t'
-		<< bb->number() << '\t'
+		<< bb->index() << '\t'
 		<< bb->size() << '\t'
 		<< time << '\t'
 		<< count << '\t'

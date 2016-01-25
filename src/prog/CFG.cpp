@@ -411,7 +411,7 @@ Inst *SynthBlock::callInst(void) {
 
 /**
  * Build a basic block.
- * @param instructions	Null-ended array of instructions.
+ * @param instructions	Array of instructions.
  */
 BasicBlock::BasicBlock(const Table<Inst *>& instructions): Block(IS_BASIC), _insts(instructions) {
 	ASSERTP(instructions, "unsupported empty array of instructions");

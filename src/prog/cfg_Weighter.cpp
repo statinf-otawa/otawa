@@ -32,20 +32,20 @@ public:
 	Weighter(p::declare& r = reg): BBProcessor(r) { }
 
 protected:
-	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 		compute(bb);
 	}
 
 private:
 
-	void compute(BasicBlock *bb) {
+	void compute(Block *bb) {
 
 		// already computed?
 		if(bb->hasProp(WEIGHT))
 			return;
 
 		// if no parent, look in loop properties
-		BasicBlock *parent = otawa::ENCLOSING_LOOP_HEADER(bb);
+		Block *parent = otawa::ENCLOSING_LOOP_HEADER(bb);
 		if(!parent) {
 
 			// not an header: weight is 1
@@ -62,7 +62,7 @@ private:
 					if(max >= 0)
 						WEIGHT(bb) = max;
 					else
-						throw ProcessorException(*this, _ << "cannot compute weight for loop at " << workspace()->format(bb->address()));
+						throw ProcessorException(*this, _ << "cannot compute weight for loop at " << workspace()->format(bb->toBasic()->address()));
 				}
 			}
 
@@ -86,7 +86,7 @@ private:
 					if(max >= 0)
 						WEIGHT(bb) = max * WEIGHT(parent);
 					else
-						throw ProcessorException(*this, _ << "cannot compute weight for loop at " << workspace()->format(bb->address()));
+						throw ProcessorException(*this, _ << "cannot compute weight for loop at " << workspace()->format(bb->toBasic()->address()));
 				}
 			}
 		}

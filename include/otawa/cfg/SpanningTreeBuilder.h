@@ -24,26 +24,18 @@
 #ifndef CFG_SPANNINGTREEBUILDER_H_
 #define CFG_SPANNINGTREEBUILDER_H_
 
-#include <otawa/proc/Processor.h>
-#include <otawa/cfg/VirtualCFG.h>
-#include <otawa/cfg/CFGCollector.h>
-#include <otawa/cfg/VirtualBasicBlock.h>
-#include <otawa/proc/Feature.h>
 #include <otawa/dfa/BitSet.h>
+#include <otawa/cfg/CFGCollector.h>
+#include <otawa/proc/Feature.h>
+#include <otawa/proc/Processor.h>
 
 namespace otawa {
 
-
-
 class SpanningTreeBuilder: public LoopReductor {
-
-	public:
+public:
 	SpanningTreeBuilder(void);
-
-	
 };
 
-}
-
+}	// otawa
 
 #endif 

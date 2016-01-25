@@ -8,9 +8,10 @@
 #include <elm/assert.h>
 #include <elm/PreIterator.h>
 #include <otawa/manager.h>
+#include <otawa/cfg/features.h>
 #include <otawa/cfg/Edge.h>
 #include <otawa/pcg/PCGBuilder.h>
-#include <otawa/cfg/CFGCollector.h>
+#include <otawa/prog/WorkSpace.h>
 
 using namespace elm;
 using namespace otawa;
@@ -76,24 +77,20 @@ void PCGBuilder::processCFG(CFG* cfg,PCG* pcg,CFG * src, stack_t *up)
 	stack_t ablock = { up, cfg };
 
 	// Look for call BB
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 		if(bb->isEntry())
-			addPCGBlock(bb,cfg,pcg,src);
-		if(bb->isCall())
-		{
-			for(otawa::BasicBlock::OutIterator edge(bb);edge;edge++)
-			{
-				if(edge->kind()==Edge::CALL)
-					processCFG(edge->calledCFG(), pcg, cfg, &ablock);
-			}
-		}
+			addPCGBlock(bb, cfg, pcg, src);
+		if(bb->isSynth())
+			for(Block::EdgeIter edge = bb->outs(); edge; edge++)
+				// TODO	support for unknown CFG
+				processCFG(bb->toSynth()->callee(), pcg, cfg, &ablock);
 	}
 
 }
 /*
  * adds the PCGBlock to the PCG
  */
-void PCGBuilder::addPCGBlock(BasicBlock *bb,CFG* cfg,PCG* pcg,CFG *src)
+void PCGBuilder::addPCGBlock(Block *bb,CFG* cfg,PCG* pcg,CFG *src)
 {
 	PCGBlock* pcg_bb;
 	if(mapBB.get(bb,0)==0)
@@ -108,16 +105,16 @@ void PCGBuilder::addPCGBlock(BasicBlock *bb,CFG* cfg,PCG* pcg,CFG *src)
 	//avant d'établir de nouveaux liens entre les PCGBlocks il faut voir si ces leins existent déjà
 	if((src==NULL)&&(cfg->label()!="main"))
 	{
-		if(!pcg_bb->getFathers().contains(mapCFG.get(cfg,0)))
+		if(!pcg_bb->getParents().contains(mapCFG.get(cfg,0)))
 			pcg_bb->addInLink(mapCFG.get(cfg,0));
-		if(!mapCFG.get(cfg,0)->getSons().contains(pcg_bb))
+		if(!mapCFG.get(cfg,0)->getChildren().contains(pcg_bb))
 			mapCFG.get(cfg,0)->addOutLink(pcg_bb);
 	}
 	if(src!=NULL)
 	{
-		if(!mapCFG.get(src,0)->getSons().contains(pcg_bb))
+		if(!mapCFG.get(src,0)->getChildren().contains(pcg_bb))
 			mapCFG.get(src,0)->addOutLink(pcg_bb);
-		if(!pcg_bb->getFathers().contains(mapCFG.get(src,0)))
+		if(!pcg_bb->getParents().contains(mapCFG.get(src,0)))
 			pcg_bb->addInLink(mapCFG.get(src,0));
 	}
 }
@@ -138,10 +135,11 @@ PCGBuilder::PCGBuilder(void):Processor("PCGBuilder", Version(1, 0, 0)){
 
 /**
  */
-void PCGBuilder::processWorkSpace(WorkSpace *fw) {
-	CFG *cfg = ENTRY_CFG(fw);
+void PCGBuilder::processWorkSpace(WorkSpace *ws) {
+	const CFGCollection *coll = otawa::INVOLVED_CFGS(ws);
+	CFG *cfg = coll->entry();
 	ASSERT(cfg);
-	PCG::ID(fw) = buildPCG(cfg);
+	PCG::ID(ws) = buildPCG(cfg);
 }
 
 

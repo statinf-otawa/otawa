@@ -44,7 +44,7 @@ protected:
 	virtual void setup(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
 	virtual void processCFG(WorkSpace *fw, CFG *cfg);
-	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb);
 private:
 	static otawa::Identifier<int> SUM;
 	int wcet;

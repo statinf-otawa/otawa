@@ -110,11 +110,12 @@ typedef enum type_t {
 typedef int	reg_t;
 typedef t::uint32 uint_t;
 typedef t::int32 int_t;
-
-// useful types
-typedef int	reg_t;
-typedef t::uint32 uint_t;
-typedef t::int32 int_t;
+enum {
+	intmin 	= 0x80000000,
+	intmax 	= 0x7fffffff,
+	uintmin	= 0,
+	uintmax = 0xffffffff
+};
 
 // inst type
 typedef struct inst {

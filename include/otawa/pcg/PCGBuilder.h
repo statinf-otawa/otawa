@@ -21,13 +21,13 @@ class PCGBuilder: public Processor
 	elm::genstruct::HashTable <void *, PCGBlock *> mapCFG;
 	elm::genstruct::HashTable <void *, PCGBlock *> mapBB;
 
-	void processCFGBlocks(BasicBlock *bb,CFG* cfg,PCG* pcg,PCGBlock *src);
+	void processCFGBlocks(Block *bb, CFG* cfg, PCG* pcg, PCGBlock *src);
 	PCG* buildPCG(CFG*cfg);
-	void addPCGBlock(BasicBlock*bb,CFG*cfg,PCG*pcg,CFG*src);
+	void addPCGBlock(Block *bb, CFG *cfg, PCG *pcg, CFG *src);
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void processCFG(CFG* cfg, PCG *pcg, CFG*src, stack_t *up);
+	virtual void processCFG(CFG *cfg, PCG *pcg, CFG *src, stack_t *up);
 
 public:	
 	PCGBuilder(void);

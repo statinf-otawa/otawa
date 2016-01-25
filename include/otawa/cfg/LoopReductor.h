@@ -24,13 +24,11 @@
 #ifndef CFG_LOOPREDUCTOR_H_
 #define CFG_LOOPREDUCTOR_H_
 
-#include <otawa/proc/Processor.h>
-#include <otawa/cfg/VirtualCFG.h>
-#include <otawa/cfg/CFGCollector.h>
-#include <otawa/cfg/VirtualBasicBlock.h>
-#include <otawa/proc/Feature.h>
-#include <otawa/dfa/BitSet.h>
 #include <otawa/cfg/features.h>
+#include <otawa/cfg/CFGCollector.h>
+#include <otawa/dfa/BitSet.h>
+#include <otawa/proc/Feature.h>
+#include <otawa/proc/Processor.h>
 
 namespace otawa {
 

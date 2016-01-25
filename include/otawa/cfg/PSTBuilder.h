@@ -35,29 +35,15 @@
 
 namespace otawa {
 	
-
 /*
  * This represents a Cycle-Equivalence class: two edges are cycle-equivalent if each cycle passing thru an edge also passes thru the other.
  * (two edges are also cycle-equivalent if no cycle passes through the edges)
  */
 class CEClass {		
+public:
+	
+	inline CEClass(void) : count(0), first(true), backEdge(NULL) { }
 
-	int count; // number of edges in this class
-	bool first;
-	
-	Edge *backEdge; // backEdge associated with the class, if any. There is at most 1 backEdge per class (and at least 0).
-	
-	public:
-	
-	// Constructors
-	inline CEClass(void) : count(0), first(true), backEdge(NULL) {
-	}
-	
-	// Account for tree edges in this class
-	inline void inc(void) {
-		count++;
-	}
-	
 	// Account for the backedge of this class, verifying that it is counted only once.
 	inline void inc(Edge *bracket) {
 		// Two back-edges cannot be cycle-equivalent.
@@ -66,133 +52,88 @@ class CEClass {
 			count++;
 		backEdge = bracket;
 	}		
-	inline void dec(void) {
-		count--;
-		first = false;
-	}
+
+	inline void inc(void) { count++; }	// Account for tree edges in this class
+	inline void dec(void) { count--; first = false; }
+	inline bool isLast(void) { return (count == 1); }
+	inline bool isFirst(void) { return first; }
+	inline int getCount(void) { return(count); }
 	
-	inline bool isLast(void) {
-		return (count == 1);
-	}
-	
-	inline bool isFirst(void) {
-		return first;
-	}
-	
-	inline int getCount(void) {
-		return(count);
-	}
-	
-	// Accessors
-		
+private:
+	int count; // number of edges in this class
+	bool first;
+	Edge *backEdge; // backEdge associated with the class, if any. There is at most 1 backEdge per class (and at least 0).
 };
 
-class SESERegion;
-
-class SESERegion : public PropList {
+class SESERegion: public PropList {
+public:
 	
-
-
-	Edge *entry;
-	Edge *exit;	
-	CFG *cfg;	
-	PSTree *parent;		
-	Vector<BasicBlock*> bbs;
-	bool first,last;
-	CEClass *classe;	
-	
+	class BBIterator: public elm::genstruct::Vector<Block*>::Iterator {
 	public:
-	
-	class BBIterator: public elm::genstruct::Vector<BasicBlock*>::Iterator {
-		public:
-		
-	
-		inline BBIterator(Vector<BasicBlock*> &_vec) :  elm::genstruct::Vector<BasicBlock*>::Iterator(_vec){
-			
-		}
-		inline BBIterator(SESERegion *region) : elm::genstruct::Vector<BasicBlock*>::Iterator(region->bbs){
-			
-		}
+		inline BBIterator(Vector<Block*> &_vec):  elm::genstruct::Vector<Block*>::Iterator(_vec) { }
+		inline BBIterator(SESERegion *region): elm::genstruct::Vector<Block*>::Iterator(region->bbs) { }
 	};
-	inline SESERegion(CFG *_cfg, Edge *_entry, PSTree *_parent, bool _first, CEClass *_class) : entry(_entry), exit(NULL), cfg(_cfg),parent(_parent), first(_first), last(false), classe (_class) {
-	}
 	
-	inline SESERegion(CFG *_cfg) : entry(NULL), exit(NULL), cfg(_cfg), parent(NULL),  classe(NULL) {
-		BasicBlock::OutIterator outedge(cfg->entry());
+	inline SESERegion(CFG *_cfg, Edge *_entry, PSTree *_parent, bool _first, CEClass *_class)
+		: entry(_entry), exit(NULL), cfg(_cfg),parent(_parent), first(_first), last(false), classe (_class) { }
+	inline SESERegion(CFG *_cfg): entry(NULL), exit(NULL), cfg(_cfg), parent(NULL), first(0), last(0), classe(NULL) {
+		Block::EdgeIter outedge = cfg->entry()->outs();
 		entry = *outedge;
-		
-		BasicBlock::InIterator inedge(cfg->exit());
+		Block::EdgeIter inedge = cfg->exit()->ins();
 		exit = *inedge;
 	}
 	
-	inline PSTree *getParent() {
-		return parent;
-	}
-	
-	inline int countBB() {
-		return(bbs.length());
-	}
-	inline void addBB(BasicBlock *_bb) {
-		bbs.add(_bb);
-	}
-	inline void setExit(Edge *_exit) {
-		exit = _exit;
-	}
+	inline PSTree *getParent(void) { return parent; }
+	inline int countBB(void) { return(bbs.length()); }
+	inline void addBB(Block *_bb) { bbs.add(_bb); }
+	inline void setExit(Edge *_exit) { exit = _exit; }
 	inline void print() {
-		cout << "Region: " << getEntry()->source()->number() << "->" << getEntry()->target()->number();
-		if (getExit() != NULL) {
-			cout << " to " << getExit()->source()->number() << "->" << getExit()->target()->number() ;
-		} else cout << " to ???";		
+		cout << "Region: " << getEntry()->source() << "->" << getEntry()->target();
+		if (getExit() != NULL)
+			cout << " to " << getExit()->source() << "->" << getExit()->target() ;
+		else
+			cout << " to ???";
 	}
-	inline Edge* getEntry() {
-		return(entry);
-	}
-	inline Edge* getExit() {
-		return(exit);
-	}
-	inline void setLast() {
-		last = true;
-	}
-	inline bool isFirst() {
-		return first;
-	}
-	CFG *getCFG() {
-		return cfg;
-	}
-	const Vector<BasicBlock*> &getBBs() {
-		return bbs;
-	}
-	inline bool isLast() {
-		return last;
-	}
-	inline bool isRoot() {
-		return (parent == NULL);
-	}
-	inline CEClass *getClass() {
-		return classe;
-	}
-	
+	inline Edge* getEntry(void) { return(entry); }
+	inline Edge* getExit(void) { return(exit); }
+	inline void setLast(void) { last = true; }
+	inline bool isFirst(void) { return first; }
+	CFG *getCFG() { return cfg; }
+	const Vector<Block*> &getBBs() { return bbs; }
+	inline bool isLast(void) { return last; }
+	inline bool isRoot(void) { return (parent == NULL); }
+	inline CEClass *getClass() { return classe; }
+
+private:
+	Edge *entry;
+	Edge *exit;
+	CFG *cfg;
+	PSTree *parent;
+	Vector<Block *> bbs;
+	bool first,last;
+	CEClass *classe;
 };
 
 
-
 class PSTBuilder : public otawa::CFGProcessor {
-	
-	// Types
-	typedef elm::Pair<Edge*,int> BSCName;
-	typedef elm::genstruct::DLList<Edge*> BracketSet;
-	
+	typedef elm::Pair<Edge *, int> BSCName;
+	typedef elm::genstruct::DLList<Edge *> BracketSet;
 
+public:
+	PSTBuilder(void);
+	virtual void processCFG(WorkSpace *, CFG*);
+	//static VirtualCFG *getVCFG(PSTree *tree, HashTable<BasicBlock*, BasicBlock*> &map);
+	static int displayTree(PSTree *node, int col = 0, bool ending = false);
 
-	
+private:
 	// Properties
 	static Identifier<int> PST_DFSNUM;
 	static Identifier<int> PST_HI;
-	static Identifier<BracketSet*> PST_BSET;
+	static Identifier<BracketSet *> PST_BSET;
 	
-	static Identifier<CEClass*> PST_CLASS;
+	static Identifier<CEClass *> PST_CLASS;
 	static Identifier<int> PST_RECENTSIZE;
-	static Identifier<CEClass*> PST_RECENTCLASS;
+	static Identifier<CEClass *> PST_RECENTCLASS;
 	
 	static Identifier<bool> PST_IS_CAPPING;
 	static Identifier<bool> DFS_IS_BACKEDGE;
@@ -200,22 +141,15 @@ class PSTBuilder : public otawa::CFGProcessor {
 	
 	// Private members
 	int cur_dfsnum;
-	BasicBlock **node;
-	Edge *fakeEdge;
-	
+	Block **node;
+	//Edge *fakeEdge;
 	PSTree *pst;
 	 
 	// Private methods
-	void depthFirstSearch(BasicBlock *bb);
+	void depthFirstSearch(Block *bb);
 	void assignClasses(CFG *cfg);
-	void buildTree(CFG *cfg, BasicBlock *bb, PSTree *subtree);
+	void buildTree(CFG *cfg, Block *bb, PSTree *subtree);
 	
-	public:
-	PSTBuilder(void);
-	virtual void processCFG(WorkSpace *, CFG*);
-	static VirtualCFG *getVCFG(PSTree *tree, HashTable<BasicBlock*,BasicBlock*> &map);
-	static int displayTree(PSTree *node, int col = 0, bool ending = false);
-		
 };
 
 }

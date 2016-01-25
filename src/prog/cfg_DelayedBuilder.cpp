@@ -73,7 +73,6 @@ typedef enum action_t {
 static Identifier<action_t> ACTION("", DO_NOTHING);
 static Identifier<BasicBlock *> DELAYED_TARGET("", 0);
 
-static SilentFeature::Maker<DelayedBuilder> maker;
 /**
  * This feature informs that the current microprocessor supports
  * delayed branches and that the CFG has been changed to reflect effect
@@ -88,7 +87,7 @@ static SilentFeature::Maker<DelayedBuilder> maker;
  *
  * @ingroup cfg
  */
-SilentFeature DELAYED_CFG_FEATURE("otawa::DELAYED_CFG_FEATURE", maker);
+p::feature DELAYED_CFG_FEATURE("otawa::DELAYED_CFG_FEATURE", new Maker<DelayedBuilder>());
 
 
 /**
@@ -126,9 +125,14 @@ Identifier<bool> DELAYED_NOP("otawa::DELAYED_NOP", false);
  * @return		Built basic block.
  */
 BasicBlock *DelayedBuilder::makeBB(Inst *inst, int n) {
-	CodeBasicBlock *rbb = new CodeBasicBlock(inst);
-	rbb->setSize(size(inst, n));
-	vcfg->addBB(rbb);
+	genstruct::Vector<Inst *> is;
+	is.add(inst);
+	while(n) {
+		inst = inst->nextInst();
+		n--;
+	}
+	BasicBlock *rbb = new BasicBlock(is.detach());
+	vcfg->add(rbb);
 	return rbb;
 }
 
@@ -142,14 +146,12 @@ BasicBlock *DelayedBuilder::makeBB(Inst *inst, int n) {
 BasicBlock *DelayedBuilder::makeNOp(Inst *inst, int n) {
 
 	// build the list of instructions
-	Inst *first = 0;
-	ot::size size = 0;
-	inhstruct::DLList *list = cleaner->allocList();
+	genstruct::Vector<Inst *> insts;
 	for(; n; n--) {
 
 		// make the new nop
 		NOPInst *nop = cleaner->allocNop(inst->address(), inst->size());
-		nop->append(*list);
+		insts.add(nop);
 
 		// go to next instruction
 		if(!inst->nextInst())
@@ -159,10 +161,8 @@ BasicBlock *DelayedBuilder::makeNOp(Inst *inst, int n) {
 	}
 
 	// build the block itself
-	//Inst *nop = workspace()->process()->newNOp(bb->lastInst()->nextInst()->address());
-	CodeBasicBlock *rbb = new CodeBasicBlock(first);
-	rbb->setSize(size);
-	vcfg->addBB(rbb);
+	BasicBlock *rbb = new BasicBlock(insts.detach());
+	vcfg->add(rbb);
 	return rbb;
 }
 
@@ -253,22 +253,24 @@ void DelayedBuilder::cleanup(WorkSpace *ws) {
  * @param cfg	CFG to mark.
  */
 void DelayedBuilder::mark(CFG *cfg) {
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
-		Inst *control = bb->controlInst();
-		if(control) {
-			switch(type(control)) {
-			case DELAYED_None:
-				break;
-			case DELAYED_Always:
-				TO_DELAY(next(control)) = count(control);
-				ACTION(bb) = DO_SWALLOW;
-				break;
-			case DELAYED_Taken:
-				TO_DELAY(next(control)) = count(control);
-				ACTION(bb) = DO_INSERT;
-				break;
+	for(CFG::BlockIter b = cfg->blocks(); b; b++)
+		if(b->isBasic()) {
+			BasicBlock *bb = b->toBasic();
+			Inst *control = bb->control();
+			if(control) {
+				switch(type(control)) {
+				case DELAYED_None:
+					break;
+				case DELAYED_Always:
+					TO_DELAY(next(control)) = count(control);
+					ACTION(bb) = DO_SWALLOW;
+					break;
+				case DELAYED_Taken:
+					TO_DELAY(next(control)) = count(control);
+					ACTION(bb) = DO_INSERT;
+					break;
+				}
 			}
-		}
 	}
 }
 
@@ -285,7 +287,7 @@ void DelayedBuilder::processWorkSpace(WorkSpace *ws) {
 		mark(cfg);
 
 		// build CFG
-		vcfg = new VirtualCFG(false);
+		vcfg = new CFGMaker(cfg->first());
 		this->coll->add(vcfg);
 		cfg_map.put(cfg, vcfg);
 	}

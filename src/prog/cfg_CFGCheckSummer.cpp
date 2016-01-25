@@ -59,8 +59,9 @@ CFGCheckSummer::CFGCheckSummer(void): CFGProcessor("otawa::CFGCheckSummer", Vers
  */
 void CFGCheckSummer::processCFG(WorkSpace *ws, CFG *cfg) {
 	checksum::Fletcher sum;
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-		if(!bb->isEnd()) {
+	for(CFG::BlockIter b = cfg->blocks(); b; b++)
+		if(b->isBasic()) {
+			BasicBlock *bb = b->toBasic();
 			char buf[bb->size()];
 			ws->process()->get(bb->address(), buf, bb->size());
 			sum.put(buf, bb->size());
@@ -71,7 +72,6 @@ void CFGCheckSummer::processCFG(WorkSpace *ws, CFG *cfg) {
 }
 
 
-static SilentFeature::Maker<CFGCheckSummer> maker;
 /**
  * This feature ensures that each CFG has hooked a checksum allowing
  * to check binary modifications between launch of an OTAWA application.
@@ -81,7 +81,7 @@ static SilentFeature::Maker<CFGCheckSummer> maker;
  *
  * @ingroup cfg
  */
-SilentFeature CFG_CHECKSUM_FEATURE("otawa::CFG_CHECKSUM_FEATURE", maker);
+p::feature CFG_CHECKSUM_FEATURE("otawa::CFG_CHECKSUM_FEATURE", new Maker<CFGCheckSummer>());
 
 
 /**
