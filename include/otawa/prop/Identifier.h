@@ -76,7 +76,7 @@ public:
 	inline const T& value(const PropList& list) const;
 	inline Ref<T, Identifier> value(PropList& list) const;
 	inline void remove(PropList& list) const { list.removeProp(this); }
-	inline bool exists(PropList& list) const { return list.getProp(this); }
+	inline bool exists(const PropList& list) const { return list.getProp(this); }
 	inline void copy(PropList& list, Property *prop)
 		{ list.addProp(GenericProperty<T>::make(this, get(prop))); }
 
