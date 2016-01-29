@@ -92,7 +92,7 @@ void FirstLastBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 	//LBlockSet **lbsets = LBLOCKS(fw);
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
 
-	for (CFG::BBIterator bb(cfg); bb; bb++)
+	for (CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 			LAST_LBLOCK(bb) = new LBlock*[cache->rowCount()];
 
 	max_addr = new address_t[cache->rowCount()];
@@ -104,7 +104,7 @@ void FirstLastBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 	 * Detects the first/last lblock for each basicblock (for the current cache line)
 	 * This information is used for the ACS creation
 	 */
-	for (CFG::BBIterator bb(cfg); bb; bb++) {
+	for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 		for (int line = 0; line < cache->rowCount(); line++) {
 			max_lblock[line] = NULL;
 			min_lblock[line] = NULL;

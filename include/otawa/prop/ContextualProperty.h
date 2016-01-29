@@ -19,9 +19,10 @@
 #ifndef OTAWA_PROP_CONTEXTUALPROPERTY_H_
 #define OTAWA_PROP_CONTEXTUALPROPERTY_H_
 
-#include <elm/inhstruct/Tree.h>
 #include <elm/genstruct/Vector.h>
+#include <elm/inhstruct/Tree.h>
 #include <elm/io.h>
+#include <elm/ptr.h>
 #include <otawa/base.h>
 #include <otawa/prop/Property.h>
 #include <otawa/prop/Identifier.h>
@@ -48,6 +49,8 @@ public:
 	inline ContextualStep(void): _kind(NONE) { }
 	inline ContextualStep(kind_t kind, const Address &address): _kind(kind), addr(address) { };
 	inline ContextualStep(const ContextualStep& step): _kind(step._kind), addr(step.addr) { };
+	static ContextualStep null;
+
 	inline ContextualStep& operator=(const ContextualStep& step)
 		{ _kind = step._kind; addr = step.addr; return *this; }
 
@@ -101,6 +104,24 @@ private:
 };
 
 
+class ContextualList: public Lock {
+public:
+	inline ContextualList(const ContextualStep& step): s(step) { }
+	inline ContextualList(const ContextualStep& step, const LockPtr<ContextualList> next)
+		: s(step), n(next) { }
+
+	inline const ContextualStep& step(void) const { return s; }
+	inline const LockPtr<ContextualList>& next(void) const { return n; }
+	int count(void) const;
+	const ContextualStep& ith(int i) const;
+	inline const ContextualStep& operator[](int i) const { return ith(i); }
+
+private:
+	ContextualStep s;
+	LockPtr<ContextualList> n;
+};
+
+
 // ContextualPath class
 class ContextualPath {
 public:
@@ -124,7 +145,7 @@ public:
 		inline void print(io::Output& out) { i.print(out, find(p, cp, i).getProp(&i)); }
 
 		// mutable part
-		inline const Ref &add(const T &value) const { i(ContextualProperty::make(p, cp, i)).add(value); }
+		inline const Ref<T> &add(const T &value) const { return i(ContextualProperty::make(p, cp, i)).add(value); }
 		inline void remove(void) const { ContextualProperty::make(p, cp).removeProp(i); }
 		inline T& ref(void) const { return i.ref(ContextualProperty::ref(p, cp, i)); }
 		inline T& 	operator&(void) const { return ref(); }
@@ -152,21 +173,19 @@ public:
 
 	// constructors
 	inline ContextualPath(void) { }
-	ContextualPath(const ContextualPath& path);
-	ContextualPath& operator=(const ContextualPath& path);
 
-	inline void clear(void) { stack.clear(); }
-	inline void push(const ContextualStep& step) { stack.push(step); }
-	inline void push(ContextualStep::kind_t kind, const Address& addr)
-		{ stack.push(ContextualStep(kind, addr)); }
-	inline void pop(void) {stack.pop(); }
+	inline void clear(void) { p = 0; }
+	inline void push(const ContextualStep& step) { p = new ContextualList(step, p); }
+	inline void push(ContextualStep::kind_t kind, const Address& addr) { push(ContextualStep(kind, addr)); }
+	inline void pop(void) { p = p->next(); }
 
-	inline bool isEmpty(void) const { return stack.isEmpty(); }
-	inline int count(void) const { return stack.count(); }
-	inline const ContextualStep& step(int i) const { return stack[i]; }
+	inline bool isEmpty(void) const { return p.isNull(); }
+	inline int count(void) const { return p->count(); }
+	inline const ContextualStep& step(int i) const { return p->ith(p->count() - i - 1); }
 	inline const ContextualStep& operator[](int i) const { return step(i); }
 	inline operator bool(void) const { return !isEmpty(); }
 	void print(io::Output& out) const;
+	inline const ContextualList *list(void) const { return &p; }
 
 	Address getEnclosingFunction(void) const;
 
@@ -192,7 +211,7 @@ public:
 		{ return ref(id, props); }
 
 private:
-	genstruct::Vector<ContextualStep> stack;
+	LockPtr<ContextualList> p;
 };
 
 // I/O

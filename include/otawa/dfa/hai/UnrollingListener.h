@@ -53,8 +53,8 @@ class UnrollingListener {
 		
 		for (int i = 0; i < col->count();  i++) {
 			CFG *cfg = col->get(i); 
-			results[i] = new typename Problem::Domain*[cfg->countBB()];
-			for (int j = 0; j < cfg->countBB(); j++)
+			results[i] = new typename Problem::Domain*[cfg->count()];
+			for (int j = 0; j < cfg->count(); j++)
 				results[i][j] = new typename Problem::Domain(prob.bottom());
 		} 
 	}
@@ -63,16 +63,16 @@ class UnrollingListener {
 		const CFGCollection *col = INVOLVED_CFGS(fw);
 		for (int i = 0; i < col->count();  i++) {
 			CFG *cfg = col->get(i); 
-			for (int j = 0; j < cfg->countBB(); j++)
+			for (int j = 0; j < cfg->count(); j++)
 				delete results[i][j];	
 			delete [] results[i];
 		} 
 		delete [] results;			
 	}
 
-	void blockInterpreted(const FirstUnrollingFixPoint< UnrollingListener >  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
+	void blockInterpreted(const FirstUnrollingFixPoint< UnrollingListener >  *fp, Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
 	
-	void fixPointReached(const FirstUnrollingFixPoint<UnrollingListener > *fp, BasicBlock*bb );
+	void fixPointReached(const FirstUnrollingFixPoint<UnrollingListener > *fp, Block*bb );
 	
 	inline Problem& getProb() {
 		return(prob);
@@ -94,10 +94,10 @@ template <class Problem >
 Identifier<typename Problem::Domain*> UnrollingListener<Problem>::BB_OUT_STATE("", 0);
  
 template <class Problem >
-void UnrollingListener<Problem>::blockInterpreted(const FirstUnrollingFixPoint<UnrollingListener>  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
+void UnrollingListener<Problem>::blockInterpreted(const FirstUnrollingFixPoint<UnrollingListener>  *fp, Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
 
-		int bbnumber = bb->number() ;
-		int cfgnumber = cur_cfg->number();
+		int bbnumber = bb->index() ;
+		int cfgnumber = cur_cfg->index();
 	
 		prob.lub(*results[cfgnumber][bbnumber], in);
 
@@ -111,7 +111,7 @@ void UnrollingListener<Problem>::blockInterpreted(const FirstUnrollingFixPoint<U
 }
 
 template <class Problem >
-void UnrollingListener<Problem>::fixPointReached(const FirstUnrollingFixPoint<UnrollingListener> *fp, BasicBlock*bb ) {
+void UnrollingListener<Problem>::fixPointReached(const FirstUnrollingFixPoint<UnrollingListener> *fp, Block*bb ) {
 }
 	
 } } }	// otawa::dfa::hai

@@ -63,7 +63,7 @@ public:
 	virtual int mergeContext(int v1, int v2) { return max(v1, v2); }
 	virtual int mergeAgreg(int v1, int v2) { return v1 + v2; }
 
-	void collect(Collector& collector, BasicBlock *bb) {
+	void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) {
 		if(bb->isEnd())
 			return;
 		ot::time time = TIME(bb);
@@ -75,7 +75,7 @@ public:
 		int cnt = int(system->valueOf(var));
 		if(cnt < 0)
 			return;
-		collector.collect(bb->address(), bb->size(), cnt * time);
+		collector.collect(bb->address(), bb->size(), cnt * time, path);
 	}
 
 private:
@@ -142,13 +142,12 @@ void WCETComputation::collectStats(WorkSpace *ws) {
 }
 
 
-static SilentFeature::Maker<WCETComputation> maker;
 /**
  * This feature ensures that the WCET has been computed using IPET approach.
  *
  * @par Properties
  * @li @ref otawa::ipet::WCET (FrameWork)
  */
-SilentFeature WCET_FEATURE("otawa::ipet::WCET_FEATURE", maker);
+p::feature WCET_FEATURE("otawa::ipet::WCET_FEATURE", new Maker<WCETComputation>());
 
 } } // otawa::ipet

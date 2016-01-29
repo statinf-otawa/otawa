@@ -23,6 +23,7 @@
 #define OTAWA_STATS_BBSTATCOLLECTOR_H_
 
 #include <otawa/cfg.h>
+#include <otawa/proc/ContextualProcessor.h>
 #include "StatCollector.h"
 
 namespace otawa {
@@ -33,10 +34,11 @@ public:
 	virtual void collect(Collector& collector);
 
 protected:
+
 	inline WorkSpace *ws(void) const { return _ws; }
 	inline CFG *cfg(void) const { return _cfg; }
 	virtual int total(void);
-	virtual void collect(Collector& collector, BasicBlock *bb) = 0;
+	virtual void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) = 0;
 	virtual int total(BasicBlock *bb);
 
 private:

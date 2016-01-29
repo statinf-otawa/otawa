@@ -191,6 +191,7 @@ class MAYProblem {
 	const int line;
 	const hard::Cache *cache;
 	Domain bot;
+	Domain _top;
 	Domain ent;
 	
 	public:
@@ -206,6 +207,7 @@ class MAYProblem {
 	
 	// Problem methods
 	const Domain& bottom(void) const;
+	const Domain& top(void) const;
 	const Domain& entry(void) const;
 	
 		
@@ -220,12 +222,12 @@ class MAYProblem {
 	}
 	
 
-	void update(Domain& out, const Domain& in, BasicBlock* bb);
-	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+	void update(Domain& out, const Domain& in, Block* bb);
+	inline void enterContext(Domain &dom, Block *header, util::hai_context_t ctx) {
 
 	}
 
-	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+	inline void leaveContext(Domain &dom, Block *header, util::hai_context_t ctx) {
 
 	}		
 

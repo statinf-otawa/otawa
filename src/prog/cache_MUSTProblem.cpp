@@ -40,6 +40,7 @@ MUSTProblem::MUSTProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, con
 	line(lbset->line()),
 	cache(_cache), 
 	bot(_size, _A),
+	_top(_size, _A),
 	ent(_size, _A),
 	callstate(_size, _A)
 {
@@ -52,11 +53,14 @@ MUSTProblem::~MUSTProblem() {
 const MUSTProblem::Domain& MUSTProblem::bottom(void) const {
 		return bot;
 }
+const MUSTProblem::Domain& MUSTProblem::top(void) const {
+		return _top;
+}
 const MUSTProblem::Domain& MUSTProblem::entry(void) const {
 		return ent;
 }
 
-void MUSTProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
+void MUSTProblem::update(Domain& out, const Domain& in, Block* bb) {
 	assign(out, in);
 	LBlock *lblock = LAST_LBLOCK(bb)[line];
     if (lblock != NULL)

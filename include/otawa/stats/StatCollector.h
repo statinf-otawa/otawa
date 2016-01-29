@@ -42,9 +42,7 @@ public:
 	// collection
 	class Collector {
 	public:
-		virtual void enter(const ContextualStep& step) = 0;
-		virtual void collect(const Address& address, t::uint32 size, int value) = 0;
-		virtual void leave(void) = 0;
+		virtual void collect(const Address& address, t::uint32 size, int value, const ContextualPath& path) = 0;
 	};
 	virtual void collect(Collector& collector) = 0;
 

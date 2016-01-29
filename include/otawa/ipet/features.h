@@ -46,30 +46,30 @@ extern Identifier<bool> EXPLICIT;
 extern Identifier<string> ILP_PLUGIN_NAME;
 
 // Features
-extern Feature<NoProcessor> INTERBLOCK_SUPPORT_FEATURE;
+extern p::feature INTERBLOCK_SUPPORT_FEATURE;
 
-extern SilentFeature BB_TIME_FEATURE;
+extern p::feature BB_TIME_FEATURE;
 extern Identifier<ot::time> TIME;
 extern Identifier<ot::time> TIME_DELTA;
 
 extern Identifier<int> COUNT;
 
-extern SilentFeature ASSIGNED_VARS_FEATURE;
+extern p::feature ASSIGNED_VARS_FEATURE;
 extern Identifier<ilp::Var *> VAR;
 
-extern SilentFeature WCET_FEATURE;
+extern p::feature WCET_FEATURE;
 extern Identifier<ot::time> WCET;
 
-extern SilentFeature OBJECT_FUNCTION_FEATURE;
+extern p::feature OBJECT_FUNCTION_FEATURE;
 
 extern p::feature CONTROL_CONSTRAINTS_FEATURE;
 extern Identifier<otawa::ilp::Constraint *> CALLING_CONSTRAINT;
 
-extern SilentFeature FLOW_FACTS_CONSTRAINTS_FEATURE;
+extern p::feature FLOW_FACTS_CONSTRAINTS_FEATURE;
 
-extern SilentFeature FLOW_FACTS_FEATURE;
+extern p::feature FLOW_FACTS_FEATURE;
 
-extern SilentFeature ILP_SYSTEM_FEATURE;
+extern p::feature ILP_SYSTEM_FEATURE;
 extern Identifier<ilp::System *> SYSTEM;
 
 extern p::feature DATA_CACHE_SUPPORT_FEATURE;

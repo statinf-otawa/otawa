@@ -20,7 +20,7 @@ class TrivialDataCacheManager: public BBProcessor {
 	void configure(WorkSpace *fw);
 
 protected:
-	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb);
 
 public:
 	TrivialDataCacheManager(void);

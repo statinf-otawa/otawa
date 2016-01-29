@@ -53,7 +53,7 @@ extern p::feature ICACHE_ACS_MAY_FEATURE;
 
 
 // category feature
-extern SilentFeature ICACHE_CATEGORY2_FEATURE;
+extern p::feature ICACHE_CATEGORY2_FEATURE;
 
 // constraint feature2
 extern p::feature ICACHE_ONLY_CONSTRAINT2_FEATURE;

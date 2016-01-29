@@ -20,20 +20,17 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/cfg.h>
 #include <elm/io.h>
+#include <otawa/cfg.h>
+#include <otawa/cfg/CFGCollector.h>
+#include <otawa/dfa/BitSet.h>
+#include <otawa/flowfact/features.h>
+#include <otawa/ilp.h>
 #include <otawa/ipet/FlowFactConstraintBuilder.h>
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ipet/IPET.h>
-#include <otawa/util/Dominance.h>
-#include <otawa/ilp.h>
-#include <otawa/cfg/LoopUnroller.h>
-#include <otawa/proc/ProcessorException.h>
-#include <otawa/cfg/CFGCollector.h>
-#include <otawa/util/Dominance.h>
 #include <otawa/ipet/VarAssignment.h>
-#include <otawa/flowfact/features.h>
-#include <otawa/dfa/BitSet.h>
+#include <otawa/util/Dominance.h>
 #include <otawa/util/FlowFactLoader.h>
 
 namespace otawa { namespace ipet {
@@ -82,7 +79,7 @@ void FlowFactConstraintBuilder::setup(WorkSpace *ws) {
 
 /**
  */
-void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 
 	if (LOOP_HEADER(bb)) {
 
@@ -103,21 +100,20 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 
 		// Generate the constraint
 		if(max < 0 && total < 0) {
-			warn(_ << "no flow fact constraint for loop at " << bb->address() << " (" << ws->format(bb->address()) << ')');
+			warn(_ << "no flow fact constraint for loop at " << bb << io::endl);
 			return;
 		}
 
 		// constraint for MAX_ITERATION
 		if(max >= 0) {
 
-			ASSERT(max >= 0);
-
 			// Substract unrolling from loop bound
-			for (BasicBlock *bb2 = UNROLLED_FROM(bb); bb2; bb2 = UNROLLED_FROM(bb2))
-				max--;
+			// TODO		to be re-activated
+			//for (BasicBlock *bb2 = UNROLLED_FROM(bb); bb2; bb2 = UNROLLED_FROM(bb2))
+			//	max--;
 
 			// Set execution count to 0 for each unrolled iteration that cannot be taken
-			if (max < 0) {
+			/*if (max < 0) {
 				BasicBlock *bb2 = bb;
 				string label;
 				if(_explicit)
@@ -131,14 +127,14 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 					}
 					bb2 = UNROLLED_FROM(bb2);
 				}
-			}
+			}*/
 
 			// sum{(i,h) / h dom i} eih <= max * sum{(i, h) / not h dom x} xeih
 			string label;
 			if(_explicit)
-				label = _ << "loop constraint on BB" << INDEX(bb) << "/" << cfg->label();
+				label = _ << "loop constraint on " << bb;
 			otawa::ilp::Constraint *cons = system->newConstraint(label, otawa::ilp::Constraint::LE);
-			for(BasicBlock::InIterator edge(bb); edge; edge++) {
+			for(Block::EdgeIter edge = bb->ins(); edge; edge++) {
 				ASSERT(edge->source());
 				otawa::ilp::Var *var = VAR(edge);
 				if(Dominance::dominates(bb, edge->source()))
@@ -154,18 +150,18 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 			ASSERT(min >= 0);
 
 			// Substract unrolling from loop bound
-			for (BasicBlock *bb2 = UNROLLED_FROM(bb); bb2; bb2 = UNROLLED_FROM(bb2))
+			for (Block *bb2 = UNROLLED_FROM(bb); bb2; bb2 = UNROLLED_FROM(bb2))
 				min--;
 
 			// Set execution count to 0 for each unrolled iteration that cannot be taken
 			if (min < 0) {
-				BasicBlock *bb2 = bb;
+				Block *bb2 = bb;
 				string label;
 				if(_explicit)
-					label = _ << "unrolled loop constraint for BB" << INDEX(bb) << "/" << cfg->label();
+					label = _ << "unrolled loop constraint for " << bb;
 				otawa::ilp::Constraint *cons0 = system->newConstraint(label, otawa::ilp::Constraint::EQ);
 				for(int i = 0; i < (-min); i++) {
-					for(BasicBlock::InIterator edge(bb); edge; edge++) {
+					for(Block::EdgeIter edge = bb->ins(); edge; edge++) {
 						ASSERT(edge->source());
 						otawa::ilp::Var *var  = VAR(edge);
 						cons0->addLeft(1, var);
@@ -177,9 +173,9 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 			// sum{(i,h) / h dom i} eih >= min * sum{(i, h) / not h dom x} xeih
 			string label;
 			if(_explicit)
-				label = _ << "loop constraint on BB" << INDEX(bb) << "/" << cfg->label();
+				label = _ << "loop constraint on " << bb;
 			otawa::ilp::Constraint *cons = system->newConstraint(label, otawa::ilp::Constraint::GE);
-			for(BasicBlock::InIterator edge(bb); edge; edge++) {
+			for(Block::EdgeIter edge = bb->ins(); edge; edge++) {
 				ASSERT(edge->source());
 				otawa::ilp::Var *var = VAR(edge);
 				if(Dominance::dominates(bb, edge->source()))
@@ -199,11 +195,11 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 			// build constraints
 			string label;
 			if(_explicit)
-				label = _ << "total loop constraint for BB" << INDEX(bb) << "/" << cfg->label();
+				label = _ << "total loop constraint for " << bb;
 			otawa::ilp::Constraint *cons = system->newConstraint(label, otawa::ilp::Constraint::LE);
 			label = "";
 			if(_explicit)
-				label = _ << "0-execution for total loop constraint for BB" << INDEX(bb) << "/" << cfg->label();
+				label = _ << "0-execution for total loop constraint for " << bb;
 			otawa::ilp::Constraint *zero = system->newConstraint(label, otawa::ilp::Constraint::LE);
 
 			// 0 <= total
@@ -212,7 +208,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 
 			// sum {h dom i} eih <= total
 			// sum {h dom i} eih <= total * sum {(i, h) in V & h -dom i} eih
-			for(BasicBlock::InIterator edge(bb); edge; edge++) {
+			for(Block::EdgeIter edge =bb ->ins(); edge; edge++) {
 				ASSERT(edge->source());
 				if(Dominance::dominates(bb, edge->source())) {
 					cons->addLeft(1, VAR(edge));
@@ -224,8 +220,8 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *b
 
 			// sum{h dom i} eih + sum {u in unrolled(h))} eiu <= total
 			// sum {h dom i} eih <= total * sum {(i, h) in V & h -dom i} eih
-			for(BasicBlock *hd = UNROLLED_FROM(bb); hd; hd = UNROLLED_FROM(hd))
-				for(BasicBlock::InIterator edge(hd); edge; edge++)
+			for(Block *hd = UNROLLED_FROM(bb); hd; hd = UNROLLED_FROM(hd))
+				for(Block::EdgeIter edge = hd->ins(); edge; edge++)
 					if(Dominance::dominates(edge->source(), hd))
 						cons->addLeft(1, VAR(edge));
 		}
@@ -246,7 +242,7 @@ SilentFeature::Maker<FlowFactConstraintBuilder> maker;
  * This feature asserts that constraints tied to the flow fact information
  * has been added to the ILP system.
  */
-SilentFeature FLOW_FACTS_CONSTRAINTS_FEATURE("otawa::ipet::FLOW_FACTS_CONSTRAINTS_FEATURE", maker);
+p::feature FLOW_FACTS_CONSTRAINTS_FEATURE("otawa::ipet::FLOW_FACTS_CONSTRAINTS_FEATURE", new Maker<FlowFactConstraintBuilder>());
 
 }
 

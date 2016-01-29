@@ -69,34 +69,28 @@ BasicObjectFunctionBuilder::BasicObjectFunctionBuilder(p::declare& r)
 
 /**
  */
-void BasicObjectFunctionBuilder::processBB(
-	WorkSpace *fw,
-	CFG *cfg,
-	BasicBlock *bb)
-{
+void BasicObjectFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 	if (!bb->isEntry() && !bb->isExit()) {
-		System *system = SYSTEM(fw);
+		System *system = SYSTEM(ws);
 		int time;
-		for (BasicBlock::InIterator edge(bb); edge; edge++) {
+		for (Block::EdgeIter edge = bb->ins(); edge; edge++) {
 			if (TIME(edge) >= 0)
 				time = TIME(edge);
 			else
 				time = TIME(bb);
 			if (time < 0)
-				throw ProcessorException(*this,
-						_ << "no time on BB " << bb->address() << " ("
-						<< bb->number() << " of " << &cfg->label());
+				throw ProcessorException(*this, _ << "no time on BB " << bb);
 			system->addObjectFunction(time, VAR(edge));
 		}
 	}
 }
 
-static SilentFeature::Maker<BasicObjectFunctionBuilder> maker;
+
 /**
  * This feature ensures that the object function of the ILP system to solve
  * has been built.
  */
-SilentFeature OBJECT_FUNCTION_FEATURE("otawa::ipet::OBJECT_FUNCTION_FEATURE", maker);
+p::feature OBJECT_FUNCTION_FEATURE("otawa::ipet::OBJECT_FUNCTION_FEATURE", new Maker<BasicObjectFunctionBuilder>());
 
 
 } } // otawa::ipet

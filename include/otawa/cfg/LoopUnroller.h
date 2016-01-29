@@ -23,30 +23,28 @@
 #ifndef OTAWA_CFG_LOOPUNROLLER_H_
 #define OTAWA_CFG_LOOPUNROLLER_H_
 
-#include <otawa/proc/Processor.h>
-#include <otawa/cfg/VirtualCFG.h>
-#include <otawa/cfg/CFGCollector.h>
-#include <otawa/cfg/VirtualBasicBlock.h>
 #include <elm/genstruct/HashTable.h>
-#include <otawa/proc/Feature.h>
+#include <otawa/cfg/CFGCollector.h>
+#include <otawa/cfg/CFGTransformer.h>
 #include <otawa/cfg/features.h>
+#include <otawa/proc/Feature.h>
+#include <otawa/proc/Processor.h>
 
 namespace otawa {
 
 // LoopUnroller class
-class LoopUnroller: public Processor {
+class LoopUnroller: public CFGTransformer {
 public:
 	static p::declare reg;
 	LoopUnroller(p::declare& r = reg);
 
 protected:
-	virtual void processWorkSpace(WorkSpace *ws);
-	virtual void cleanup(WorkSpace *ws);
+	virtual void makeCFG(CFG *cfg, CFGMaker *maker);
 
 private:
-	void unroll(otawa::CFG *cfg, BasicBlock *header, VirtualCFG *vcfg);
+	void unroll(CFG *cfg, Block *header, CFGMaker *vcfg);
 
-	elm::genstruct::HashTable<void *, VirtualBasicBlock *> map;
+	elm::genstruct::HashTable<void *, Block *> map;
 	CFGCollection *coll;
 	int idx;
 };

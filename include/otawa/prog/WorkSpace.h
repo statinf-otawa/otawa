@@ -112,7 +112,7 @@ private:
 	void delFeatDep(const AbstractFeature* feature);
 
 private:
-	AutoPtr<Process> proc;
+	LockPtr<Process> proc;
 	typedef HashTable<const AbstractFeature*, FeatureDependency*> feat_map_t;
 	feat_map_t featMap;
 	bool cancelled;

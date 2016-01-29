@@ -49,7 +49,7 @@ void WCETCountRecorder::cleanup(WorkSpace *fw) {
 
 /**
  */
-void WCETCountRecorder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
+void WCETCountRecorder::processBB(WorkSpace *fw, CFG *cfg, Block *bb) {
 	ASSERT(fw);
 	ASSERT(cfg);
 	ASSERT(bb);
@@ -60,7 +60,7 @@ void WCETCountRecorder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 		COUNT(bb) = (int)system->valueOf(var);
 
 	// Record out var count
-	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+	for(BasicBlock::EdgeIter edge = bb->outs(); edge; edge++) {
 		ilp::Var *var = VAR(edge);
 		if(var)
 			COUNT(edge) = (int)system->valueOf(var);

@@ -123,6 +123,7 @@ class MUSTPERS {
 	
 	private:
 	Domain bot;
+	Domain _top;
 	Domain ent;
 	unsigned int line;
 
@@ -133,6 +134,7 @@ class MUSTPERS {
 
 	// Problem methods
 	const Domain& bottom(void) const;
+	const Domain& top(void) const;
 	const Domain& entry(void) const;
 		
 	inline void lub(Domain &a, const Domain &b) const {
@@ -145,15 +147,15 @@ class MUSTPERS {
 		return (a.equals(b));
 	}
 	
-	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	void update(Domain& out, const Domain& in, Block* bb);
 	
-	inline void enterContext(Domain &dom, BasicBlock *header, hai_context_t ctx) {
+	inline void enterContext(Domain &dom, Block *header, hai_context_t ctx) {
 		persProb.enterContext(dom.pers, header, ctx);
 		mustProb.enterContext(dom.must, header, ctx);
 		
 	}
 
-	inline void leaveContext(Domain &dom, BasicBlock *header, hai_context_t ctx) {
+	inline void leaveContext(Domain &dom, Block *header, hai_context_t ctx) {
 		persProb.leaveContext(dom.pers, header, ctx);
 		mustProb.leaveContext(dom.must, header, ctx);
 

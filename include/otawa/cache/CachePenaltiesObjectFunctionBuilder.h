@@ -27,7 +27,7 @@ protected:
 	bool _explicit;
 
 	// BBProcessor overload
-	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb);
 };
 
 } } // otawa::ipet

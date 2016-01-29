@@ -24,7 +24,7 @@ class TrivialInstCacheManager: public BBProcessor {
 protected:
 	virtual void setup(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
-	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *bb);
 
 public:
 	TrivialInstCacheManager(void);

@@ -8,7 +8,7 @@
 #define OTAWA_CFG_CFG_INFO_H
 
 #include <elm/utility.h>
-#include <elm/util/AutoPtr.h>
+#include <elm/util/LockPtr.h>
 #include <elm/genstruct/FragTable.h>
 #include <elm/inhstruct/DLList.h>
 #include <otawa/cfg/BasicBlock.h>

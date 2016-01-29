@@ -54,9 +54,9 @@ namespace otawa {
 		}
 		void dump(elm::io::Output &out){
 			if (_header[0]){
-				out << "h0=b" << _header[0]->number();
+				out << "h0=b" << _header[0]->index();
 				if (_header[1])
-					out << " - h1=b" << _header[1]->number();
+					out << " - h1=b" << _header[1]->index();
 				if (!_header[1])
 					out << " - p[MISS]=" << _penalty[MISS];
 				else {

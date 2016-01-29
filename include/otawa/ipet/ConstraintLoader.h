@@ -26,8 +26,9 @@
 #include <elm/genstruct/HashTable.h>
 #include <elm/string.h>
 #include <otawa/base.h>
-#include <otawa/proc/CFGProcessor.h>
+#include <otawa/cfg/CFG.h>
 #include <otawa/ilp.h>
+#include <otawa/proc/CFGProcessor.h>
 
 // External class
 namespace otawa {
@@ -64,8 +65,8 @@ private:
 	elm::genstruct::HashTable<String, ilp::Var *> vars;
 	elm::String path;
 
-	BasicBlock *getBB(address_t addr);
-	BasicBlock *getBB(int index);
+	Block *getBB(address_t addr);
+	Block *getBB(int index);
 	void newBBVar(cstring name, address_t addr);
 	void newBBVar(cstring name, int index);
 	bool newEdgeVar(elm::CString name, address_t src, address_t dst);

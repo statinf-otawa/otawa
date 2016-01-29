@@ -287,51 +287,48 @@ LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", V
 void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 	int i;
 
-	// resolve the problem
-	DomInfo *info = DOM_INFO(fw);
-	ASSERT(info);
-	LoopInfoProblem prob(*cfg, *info);
-	if(prob.count() == 0)
+	// computes set of headers
+	LoopInfoProblem prob(*cfg, **otawa::DOM_INFO(fw));
+	if (prob.count() == 0)
 		return;
 	IterativeDFA<LoopInfoProblem, dfa::BitSet, Successor> dfa(prob, *cfg);
 	dfa.compute();
 
-	// Iterate to find the enclosing loop headers
-	for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+	// compute enclosing loop header for each BB
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 
-		// Detects the enclosing loop header of this bb by selecting the last element
-		//	(that is, the lowest in the order defined by the Dominance relation)
+		// enclosing loop header is the first element of set
+		// (headers are sorted according by increasing domination)
 		dfa::BitSet::Iterator bit(*dfa.outSet(bb));
 		if (bit) {
 			ENCLOSING_LOOP_HEADER(bb) = prob.get(*bit);
-			if(logFor(LOG_BLOCK))
-				log << "\t\t\tloop of " << *bb << " is " << ENCLOSING_LOOP_HEADER(bb) << io::endl;
+			if (logFor(LOG_BLOCK))
+				cerr << "\t\t\tloop of " << *bb << " is " << ENCLOSING_LOOP_HEADER(bb) << io::endl;
 		}
-
 	}
 
-	// for the loop-exit-edge analysis, we need to have each loop header bitset containing itself.
+	// add blocks themselves to the outing sets
 	for (i = 0; i < prob.count(); i++)
 		dfa.outSet(prob.get(i))->add(i);
 
-	// iterate to find loop exit edges
-	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-		if(ENCLOSING_LOOP_HEADER(bb) || LOOP_HEADER(bb)) {
-			// If this basicBlock is in a loop, then we try to detect
-			// the loop-exit edges starting from it.
-			// We use LOOP_HEADER() to not forget the loop-header
-			// of the most outer loop.
-			for(BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
+	// compute loop exit edges
+	for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+		// process block in loops
+		if (ENCLOSING_LOOP_HEADER(bb) || LOOP_HEADER(bb))
+			for(Block::EdgeIter outedge = bb->outs(); outedge; outedge++) {
+				// result = out set of edge source - out set of edge target
+				// result = { headers dominating source but not target }
 				dfa::BitSet *targetSet = dfa.outSet(outedge->target());
 				dfa::BitSet result(*dfa.outSet(bb));
 				result.remove(*targetSet);
-				dfa::BitSet::Iterator bit(result);
-				if (bit)
+
+				// last bit is the left outermost header
+				for(dfa::BitSet::Iterator bit(result); bit; bit++)
 					LOOP_EXIT_EDGE(outedge) = prob.get(*bit);
 			}
-		}
 	}
 
+	// build loop exit lists
 	buildLoopExitList(cfg);
 }
 

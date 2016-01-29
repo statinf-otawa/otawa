@@ -28,7 +28,7 @@ set(libotawa_SOURCES
 #	"cfg_DelayedBuilder.cpp"
 	"cfg_LoopInfoBuilder.cpp"
 #	"cfg_PSTBuilder.cpp"
-#	"cfg_LoopUnroller.cpp"
+	"cfg_LoopUnroller.cpp"
 #	"cfg_LoopReductor.cpp"
 #	"cfg_SpanningTreeBuilder.cpp"
 #	"cfg_SubCFGBuilder.cpp"
@@ -61,13 +61,11 @@ set(libotawa_SOURCES
 #	"proc_LBlockProcessor.cpp"
 	"proc_BBProcessor.cpp"
 	"proc_Monitor.cpp"
-#	"proc_ParamFeature.cpp"
-#	"proc_ParamProcessor.cpp"
 	"proc_ProcessorException.cpp"
 	"proc_ProcessorPlugin.cpp"
 	"proc_Registry.cpp"
 	"stats.cpp"
-#	"stats_BBStatCollector.cpp"
+	"stats_BBStatCollector.cpp"
 
 #    property module
 	"prop_AbstractIdentifier.cpp"
@@ -78,20 +76,20 @@ set(libotawa_SOURCES
 	"prop_PropList.cpp"
 
 #   ipet module
-#	"ipet_BasicConstraintsBuilder.cpp"
-#	"ipet_BasicObjectFunctionBuilder.cpp"
-#	"ipet_CacheSupport.cpp"
-#	"ipet_ConstraintLoader.cpp"
+	"ipet_BasicConstraintsBuilder.cpp"
+	"ipet_BasicObjectFunctionBuilder.cpp"
+	"ipet_CacheSupport.cpp"
+	"ipet_ConstraintLoader.cpp"
 	"ipet_FlowFactLoader.cpp"
-#	"ipet_FlowFactConstraintBuilder.cpp"
+	"ipet_FlowFactConstraintBuilder.cpp"
 	"ipet_ILPSystemGetter.cpp"
 	"ipet_IPET.cpp"
 #	"ipet_TreePath.cpp"
-#	"ipet_TrivialBBTime.cpp"
-#	"ipet_VarAssignment.cpp"
-#	"ipet_WCETComputation.cpp"
-#	"ipet_WCETCountRecorder.cpp"
-#	"ilp_Output.cpp"
+	"ipet_TrivialBBTime.cpp"
+	"ipet_VarAssignment.cpp"
+	"ipet_WCETComputation.cpp"
+	"ipet_WCETCountRecorder.cpp"
+	"ilp_Output.cpp"
 
 #   data-flow analysis module
 	"dfa_BitSet.cpp"
@@ -153,23 +151,23 @@ set(libotawa_SOURCES
 	"hard_Memory.cpp"
 
 #    instruction cache module
-#	"cache_ACSBuilder.cpp"
-#	"cache_ACSMayBuilder.cpp"
-#	"cache_categories.cpp"
-#	"cache_CAT2Builder.cpp"
-#	"cache_CAT2NCBuilder.cpp"
-#	"cache_CAT2ConstraintBuilder.cpp"
-#	"cache_CachePenalty.cpp"
-#	"cache_MUSTProblem.cpp"
-#	"cache_MAYProblem.cpp"
-# 	"cache_PERSProblem.cpp"
-#	"cache_MUSTPERS.cpp"
-#	"cache_LinkedBlocksDetector.cpp"
-#	"cache_LBlock.cpp"
-#	"cache_FirstLastBuilder.cpp"
-#	"cache_LBlockSet.cpp"
-#	"cache_CachePenaltiesObjectFunctionBuilder.cpp"
-#	"cache_LBlockBuilder.cpp"
+	"cache_ACSBuilder.cpp"
+	"cache_ACSMayBuilder.cpp"
+	"cache_categories.cpp"
+	"cache_CAT2Builder.cpp"
+	"cache_CAT2NCBuilder.cpp"
+	"cache_CAT2ConstraintBuilder.cpp"
+	"cache_CachePenalty.cpp"
+	"cache_MUSTProblem.cpp"
+	"cache_MAYProblem.cpp"
+ 	"cache_PERSProblem.cpp"
+	"cache_MUSTPERS.cpp"
+	"cache_LinkedBlocksDetector.cpp"
+	"cache_LBlock.cpp"
+	"cache_FirstLastBuilder.cpp"
+	"cache_LBlockSet.cpp"
+	"cache_CachePenaltiesObjectFunctionBuilder.cpp"
+	"cache_LBlockBuilder.cpp"
 
 #   program representation module
 	"prog_File.cpp"
@@ -216,9 +214,9 @@ set(libotawa_SOURCES
 
 include_directories(".")
 
-#BISON_TARGET(ipet_parser ipet_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.h)
-#FLEX_TARGET(ipet_lexer ipet_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/ipet_lexer.cc)
-#ADD_FLEX_BISON_DEPENDENCY(ipet_lexer ipet_parser)
+BISON_TARGET(ipet_parser ipet_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.h)
+FLEX_TARGET(ipet_lexer ipet_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/ipet_lexer.cc)
+ADD_FLEX_BISON_DEPENDENCY(ipet_lexer ipet_parser)
 BISON_TARGET(util_fft_parser util_fft_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/util_fft_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/util_fft_parser.h)
 FLEX_TARGET(util_fft_lexer util_fft_lexer.ll  ${CMAKE_CURRENT_BINARY_DIR}/util_fft_lexer.cc)
 ADD_FLEX_BISON_DEPENDENCY(util_fft_lexer util_fft_parser)

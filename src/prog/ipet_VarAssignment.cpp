@@ -56,16 +56,16 @@ class Cleaner: public BBCleaner {
 public:
 	Cleaner(WorkSpace *ws): BBCleaner(ws) { }
 protected:
-	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+	virtual void clean(WorkSpace *ws, CFG *cfg, Block *bb) {
 
-		// remove BB var
+		// remove var of block
 		ilp::Var *v = VAR(bb);
 		if(v)
 			delete v;
 		bb->removeProp(VAR);
 
-		// remove BB of edges
-		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+		// remove var of edges
+		for(Block::EdgeIter edge = bb->outs(); edge; edge++) {
 			ilp::Var *v = VAR(edge);
 			if(v)
 				delete v;
@@ -97,7 +97,7 @@ void VarAssignment::setup(WorkSpace *ws) {
 
 /**
  */
-void VarAssignment::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+void VarAssignment::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 
 	// Check BB
 	if(!VAR(bb)) {
@@ -113,7 +113,7 @@ void VarAssignment::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	}
 
 	// Check out edges
-	for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+	for(Block::EdgeIter edge = bb->outs(); edge; edge++) {
 		if(!VAR(edge)) {
 			String name = "";
 			if(_explicit) {
@@ -159,19 +159,9 @@ void VarAssignment::configure(const PropList& props) {
  * @param cfg	Owner CFG.
  * @return		Basic block variable name.
  */
-String VarAssignment::makeNodeVar(BasicBlock *bb, CFG *cfg) {
+String VarAssignment::makeNodeVar(Block *bb, CFG *cfg) {
 	ASSERT(bb);
-	StringBuffer buf;
-	buf << "x";
-	int num = bb->number();
-	if(num >= 0) {
-		buf << num;
-		if(_recursive)
-			buf << "_" << cfg->label();
-	}
-	else
-		buf << bb->address();
-	return buf.toString();
+	return _ << 'x' << bb->index() << '_' << cfg->label();
 }
 
 
@@ -183,38 +173,12 @@ String VarAssignment::makeNodeVar(BasicBlock *bb, CFG *cfg) {
  */
 String VarAssignment::makeEdgeVar(Edge *edge, CFG *cfg) {
 	ASSERT(edge);
-	StringBuffer buf;
-	buf << "e";
-
-	// Write source
-	int num = edge->source()->number();
-	if(num >= 0)
-		buf << num;
-	else
-		buf << edge->source()->address();
-	buf << "_";
-
-	// Write target
-	if(edge->kind() == Edge::CALL) {
-		if(_recursive)
-			buf << "_" << cfg->label() << "___";
-		if(!edge->calledCFG())
-			buf << "unknown";
-		else
-			buf << edge->calledCFG()->label();
-	}
-	else {
-		num = edge->target()->number();
-		if(num >= 0)
-			buf << num;
-		else
-			buf << edge->target()->address();
-		if(_recursive)
-			buf << "_" << cfg->label();
-	}
-
-	// Return result
-	return buf.toString();
+	return _ 	<< "e"
+				<< edge->source()->index()
+				<< '_'
+				<< edge->target()->index()
+				<< '_'
+				<< cfg->label();
 }
 
 
@@ -226,6 +190,6 @@ static SilentFeature::Maker<VarAssignment> maker;
  * @par Properties
  * @li @ref ipet::VAR
  */
-SilentFeature ASSIGNED_VARS_FEATURE("otawa::ipet::ASSIGNED_VARS_FEATURE", maker);
+p::feature ASSIGNED_VARS_FEATURE("otawa::ipet::ASSIGNED_VARS_FEATURE", new Maker<VarAssignment>());
 
 } } // otawa::ipet

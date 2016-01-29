@@ -43,13 +43,13 @@ public:
 	BasicConstraintsBuilder(void);
 
 protected:
-	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+	virtual void processCFG(WorkSpace *ws, CFG *cfg);
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *bb);
 	virtual void configure(const PropList &props);
 	
 private:
 	bool _explicit;
-	void addEntryConstraint(ilp::System *system, CFG *caller, BasicBlock *bb, CFG *callee, ilp::Var *var);
+	//void addEntryConstraint(ilp::System *system, CFG *caller, Block *bb, CFG *callee, ilp::Var *var);
 };
 
 } } // otawa::ipet

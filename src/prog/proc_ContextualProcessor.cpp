@@ -21,10 +21,9 @@
  */
 
 #include <elm/data/ListQueue.h>
-#include <elm/util/AutoPtr.h>
+#include <elm/util/LockPtr.h>
 #include <elm/util/BitVector.h>
 #include <elm/genstruct/Vector.h>
-#include <otawa/cfg.h>
 #include <otawa/cfg/features.h>
 #include <otawa/proc/ContextualProcessor.h>
 
@@ -69,34 +68,6 @@ using namespace elm::genstruct;
  * @ingroup proc
  */
 
-class Point: public Lock {
-public:
-
-	Point(CFG *cfg) {
-		path = CONTEXT(cfg);
-		path.push(ContextualStep::FUNCTION, cfg->address());
-	}
-
-	AutoPtr<Point> enter(ContextualStep step) {
-		return new Point(this, step);
-	}
-
-	AutoPtr<Point> leave(void) {
-		return parent;
-	}
-
-	ContextualPath path;
-	AutoPtr<Point> parent;
-
-private:
-	Point(Point *p, ContextualStep s) {
-		path = p->path;
-		path.push(s);
-		parent = p;
-	}
-};
-
-
 p::declare ContextualProcessor::reg = p::init("otawa::ContextualProcessor", Version(2, 0, 0))
 	.require(CHECKED_CFG_FEATURE);
 
@@ -110,15 +81,14 @@ ContextualProcessor::ContextualProcessor(p::declare& reg): CFGProcessor(reg) {
  */
 void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 	BitVector done(cfg->count());
-	AutoPtr<Point> path = new Point(cfg);
 
 	// define queue
-	typedef Pair<Block *, AutoPtr<Point> > item_t;
+	typedef Pair<Block *, ContextualPath > item_t;
 	ListQueue<item_t> todo;
 
 	// initialization
 	for(BasicBlock::EdgeIter edge = cfg->entry()->outs(); edge; edge++)
-		todo.put(pair(edge->sink(), path));
+		todo.put(pair(edge->sink(), ContextualPath()));
 
 	// traverse until the end
 	while(todo) {
@@ -126,18 +96,18 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 		// process next block
 		item_t it = todo.get();
 		if(it.fst->isBasic())
-			this->processBB(ws, cfg, it.fst->toBasic(), it.snd->path);
+			this->processBB(ws, cfg, it.fst->toBasic(), it.snd);
 		done.set(it.fst->index());
 
 		// put next blocks
 		for(Block::EdgeIter e = it.fst->outs(); e; e++)
 			if(!done[e->sink()->index()]) {
-				AutoPtr<Point> p = it.snd;
+				ContextualPath p = it.snd;
 				for(int i = 0; i < LEAVE(e); i++)
-					p = p->leave();
+					p.pop();
 				for(Identifier<ContextualStep>::Getter s(e, ENTER); s; s++)
-					p = p->enter(s);
-				todo.put(pair(e->sink(), it.snd));
+					p.push(s);
+				todo.put(pair(e->sink(), p));
 			}
 	}
 }

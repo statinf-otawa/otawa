@@ -39,7 +39,7 @@ public:
 	};
 
 	inline SilentFeature(cstring name, const AbstractMaker& maker): AbstractFeature(name), _maker(maker) { }
-	virtual void process(WorkSpace *fw, const PropList& props = PropList::EMPTY) const;
+	virtual void process(WorkSpace *ws, const PropList& props = PropList::EMPTY) const;
 	virtual void check(otawa::WorkSpace*) const { }
 	virtual void clean(otawa::WorkSpace*) const { }
 

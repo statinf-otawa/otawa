@@ -61,9 +61,9 @@ public:
 	inline FirstUnrollingFixPoint(Listener & _list):prob(_list.getProb()), list(_list) ,ai(0) { }
 	inline ~FirstUnrollingFixPoint(void) { }
 
-	inline int getIter(BasicBlock *bb) const { return(ai->getFixPointState(bb)->numIter); }
+	inline int getIter(Block *bb) const { return(ai->getFixPointState(bb)->numIter); }
 	inline void init(HalfAbsInt<FirstUnrollingFixPoint> *_ai) { ai = _ai; }
-	void fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const;
+	void fixPoint(Block *bb, bool &fixpoint, Domain &in, bool firstTime) const;
 	
 	// edge marking functions
 	inline void markEdge(PropList *e, const Domain &s);
@@ -78,18 +78,18 @@ public:
 	inline void lub(Domain &a, const Domain &b) const;
 	inline void assign(Domain &a, const Domain &b) const;
 	inline bool equals(const Domain &a, const Domain &b) const;
-	inline void update(Domain &out, const Domain &in, BasicBlock* bb);
-	inline void blockInterpreted(BasicBlock* bb, const Domain& in, const Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
-	inline void fixPointReached(BasicBlock* bb) const;
-	inline void enterContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const;
-	inline void leaveContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const;
+	inline void update(Domain &out, const Domain &in, Block* bb);
+	inline void blockInterpreted(Block* bb, const Domain& in, const Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
+	inline void fixPointReached(Block* bb) const;
+	inline void enterContext(Domain &dom, Block* bb, hai_context_t ctx) const;
+	inline void leaveContext(Domain &dom, Block* bb, hai_context_t ctx) const;
 };
 
 template <class Listener>
 Identifier<typename Listener::Problem::Domain*> FirstUnrollingFixPoint<Listener>::STATE("", 0);
 	
 template < class Listener >	
-void FirstUnrollingFixPoint<Listener >::fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const {
+void FirstUnrollingFixPoint<Listener >::fixPoint(Block *bb, bool &fixpoint, Domain &in, bool firstTime) const {
 	FixPointState *fpstate = ai->getFixPointState(bb);
 	Domain newHeaderState(bottom());
 	fixpoint = false;
@@ -188,27 +188,27 @@ inline bool FirstUnrollingFixPoint<Listener >::equals(const typename Problem::Do
 }
 
 template < class Listener >	
-inline void FirstUnrollingFixPoint<Listener>::update(Domain &out, const typename Problem::Domain &in, BasicBlock* bb)  {
+inline void FirstUnrollingFixPoint<Listener>::update(Domain &out, const typename Problem::Domain &in, Block* bb)  {
 		prob.update(out,in,bb);
 }
 	
 template < class Listener >	
-inline void FirstUnrollingFixPoint<Listener>::blockInterpreted(BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
+inline void FirstUnrollingFixPoint<Listener>::blockInterpreted(Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
 		list.blockInterpreted(this, bb, in, out, cur_cfg, callStack);
 }
 
 template < class Listener >	
-inline void FirstUnrollingFixPoint<Listener >::fixPointReached(BasicBlock* bb) const {
+inline void FirstUnrollingFixPoint<Listener >::fixPointReached(Block* bb) const {
 		list.fixPointReached(this, bb);
 }
 	
 template < class Listener >	
-inline void FirstUnrollingFixPoint<Listener >::enterContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const {
+inline void FirstUnrollingFixPoint<Listener >::enterContext(Domain &dom, Block* bb, hai_context_t ctx) const {
 		prob.enterContext(dom, bb, ctx);
 }
 	
 template < class Listener >	
-inline void FirstUnrollingFixPoint<Listener>::leaveContext(Domain &dom, BasicBlock* bb, hai_context_t ctx) const {
+inline void FirstUnrollingFixPoint<Listener>::leaveContext(Domain &dom, Block* bb, hai_context_t ctx) const {
 		prob.leaveContext(dom, bb, ctx);
 }
 

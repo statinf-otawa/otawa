@@ -40,7 +40,7 @@ public:
 	virtual void configure(const PropList& props = PropList::EMPTY);
 
 protected:
-	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *bb);
 	virtual void setup(WorkSpace *ws);
 private:
 	ilp::System *system;

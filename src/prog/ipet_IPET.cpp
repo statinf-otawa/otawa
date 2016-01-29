@@ -157,7 +157,6 @@ ilp::System *getSystem(WorkSpace *fw, CFG *cfg) {
  * @ref @li Delta
  * @ingroup ipet
  */
-Feature<NoProcessor>
-	INTERBLOCK_SUPPORT_FEATURE("otawa::ipet::INTERBLOCK_SUPPORT_FEATURE");
+p::feature INTERBLOCK_SUPPORT_FEATURE("otawa::ipet::INTERBLOCK_SUPPORT_FEATURE", new Maker<NoProcessor>());
 
 } } // otawa::ipet

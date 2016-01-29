@@ -54,7 +54,7 @@ using namespace cache;
 class NumberOrder {
 public:
 	static inline int compare(LBlock *lb1, LBlock *lb2) {
-		return cache::CATEGORY_HEADER(lb1)->number() - cache::CATEGORY_HEADER(lb2)->number();
+		return cache::CATEGORY_HEADER(lb1)->index() - cache::CATEGORY_HEADER(lb2)->index();
 	}
 };
 typedef genstruct::SortedSLList<LBlock*, NumberOrder> LinkedBlockList;
@@ -139,11 +139,11 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 			if (blockList[j] != NULL) {
 
 				Vector<LBlock*> equiv;
-				BasicBlock *old_header = NULL;
+				Block *old_header = NULL;
 				equiv.clear();
 				for (LinkedBlockList::Iterator iter(*blockList[j]); iter; iter++) {
 					/* We want to build another "equiv" set from scratch whenever the firstmiss-header changes */
-					BasicBlock *header = cache::CATEGORY_HEADER(*iter);
+					Block *header = cache::CATEGORY_HEADER(*iter);
 					if ((old_header) && (old_header != header)) {
 						recordBlocks(&equiv);
 						equiv.clear();

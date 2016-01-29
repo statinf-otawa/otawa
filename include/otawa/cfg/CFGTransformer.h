@@ -42,6 +42,7 @@ protected:
 	virtual void makeCFG(CFG *cfg, CFGMaker *maker);
 	virtual Block *makeBlock(CFG *cfg, Block *b);
 	virtual Edge *makeEdge(CFG *cfg, Edge *edge);
+	virtual Edge *makeEdge(Block *src, Edge *edge, Block *snk);
 
 	Block *clone(Block *b);
 	Edge *clone(Edge *b);

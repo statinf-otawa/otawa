@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
+
 #include <otawa/cache/categories.h>
 
 namespace otawa { namespace cache {
@@ -123,7 +124,7 @@ Identifier<category_t> CATEGORY("otawa::category", INVALID_CATEGORY);
  * @par Hooks
  * @li @ref LBlocks
  */
-Identifier<BasicBlock*> CATEGORY_HEADER("otawa::CATEGORY_HEADER", 0);
+Identifier<Block*> CATEGORY_HEADER("otawa::CATEGORY_HEADER", 0);
 
 
 /**
@@ -158,7 +159,7 @@ io::Output& operator<<(io::Output& out, const CategoryStats& stats) {
 }
 
 Identifier<category_t>& CATEGORY = cache::CATEGORY;
-Identifier<BasicBlock *>& CATEGORY_HEADER = cache::CATEGORY_HEADER;
+Identifier<Block *>& CATEGORY_HEADER = cache::CATEGORY_HEADER;
 Identifier<CategoryStats *>& CATEGORY_STATS = cache::CATEGORY_STATS;
 
 }	// otawa::cache

@@ -96,7 +96,7 @@ extern p::feature REDUCED_LOOPS_FEATURE;
 
 // UNROLLED_LOOPS_FEATURE
 extern p::feature UNROLLED_LOOPS_FEATURE;
-extern Identifier<BasicBlock*> UNROLLED_FROM;
+extern Identifier<Block*> UNROLLED_FROM;
 
 // VIRTUALIZED_CFG_FEATURE
 extern Identifier<bool> VIRTUAL_DEFAULT;

@@ -84,9 +84,15 @@ void TrivialInstCacheManager::cleanup(WorkSpace *fw) {
 
 /**
  */
-void TrivialInstCacheManager::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb)
-{
+void TrivialInstCacheManager::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 	if(cache) {
+
+		// process only basic block
+		if(!b->isBasic())
+			return;
+		BasicBlock *bb = b->toBasic();
+
+		// compute the l-blocks
 		int misses = 0;
 		int size = bb->size();
 		int offset = cache->offset(bb->address());
@@ -137,11 +143,15 @@ TrivialDataCacheManager::TrivialDataCacheManager(void)
 
 /**
  */
-void TrivialDataCacheManager::processBB(WorkSpace *framework, CFG *cfg,
-BasicBlock *bb) {
+void TrivialDataCacheManager::processBB(WorkSpace *framework, CFG *cfg, Block *b) {
 	ASSERT(framework);
 	ASSERT(cfg);
-	ASSERT(bb);
+	ASSERT(b);
+
+	// only for basic block
+	if(!b->isBasic())
+		return;
+	BasicBlock *bb = b->toBasic();
 
 	// Check configuration
 	if(framework != fw)

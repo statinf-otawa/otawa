@@ -62,8 +62,11 @@ void TrivialBBTime::configure(const PropList& props) {
 
 /**
  */
-void TrivialBBTime::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
-	TIME(bb) = dep * bb->countInsts();
+void TrivialBBTime::processBB(WorkSpace *fw, CFG *cfg, Block *bb) {
+	if(!bb->isBasic())
+		TIME(bb) = 0;
+	else
+		TIME(bb) = dep * bb->toBasic()->count();
 }
 
 
@@ -77,7 +80,6 @@ void TrivialBBTime::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 Identifier<unsigned> PIPELINE_DEPTH("otawa::ipet::PIPELINE_DEPTH", 5);
 
 
-static SilentFeature::Maker<TrivialBBTime> maker;
 /**
  * This feature ensures that the execution time of each basic block has been
  * computed.
@@ -86,6 +88,6 @@ static SilentFeature::Maker<TrivialBBTime> maker;
  * @li otawa::ipet::TIME
  * @li otawa::ipet::DELTA_TIME
  */
-SilentFeature BB_TIME_FEATURE("otawa::ipet::BB_TIME_FEATURE", maker);
+p::feature BB_TIME_FEATURE("otawa::ipet::BB_TIME_FEATURE", new Maker<TrivialBBTime>());
 
 } } // otawa::ipet

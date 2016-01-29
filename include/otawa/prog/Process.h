@@ -25,7 +25,7 @@
 #include <elm/string.h>
 #include <elm/system/Path.h>
 #include <elm/stree/Tree.h>
-#include <elm/util/AutoPtr.h>
+#include <elm/util/LockPtr.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/instruction.h>
 #include <otawa/proc/Feature.h>

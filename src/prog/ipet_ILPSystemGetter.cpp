@@ -93,7 +93,6 @@ Identifier<string> ILP_PLUGIN_NAME("otawa::ipet::ILP_PLUGIN_NAME", "default");
 Identifier<ilp::System *> SYSTEM("otawa::ipet::SYSTEM", 0);
 
 
-static SilentFeature::Maker<ILPSystemGetter> maker;
 /**
  * This feature assert that an ILP is available for IPET computation.
  * @par Properties
@@ -101,6 +100,6 @@ static SilentFeature::Maker<ILPSystemGetter> maker;
  * @par Default Processor
  * @ref @ref ILPSystemGetter
  */
-SilentFeature ILP_SYSTEM_FEATURE("otawa::ipet::ILP_SYSTEM_FEATURE", maker);
+p::feature ILP_SYSTEM_FEATURE("otawa::ipet::ILP_SYSTEM_FEATURE", new Maker<ILPSystemGetter>());
 
 } } // otawa::ipet

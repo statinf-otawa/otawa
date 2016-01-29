@@ -196,6 +196,7 @@ class MUSTProblem {
 	const int line;
 	const hard::Cache *cache;
 	Domain bot;
+	Domain _top;
 	Domain ent;
 	
 	public:
@@ -210,6 +211,7 @@ class MUSTProblem {
 	~MUSTProblem();
 	
 	// Problem methods
+	const Domain& top(void) const;
 	const Domain& bottom(void) const;
 	const Domain& entry(void) const;
 		
@@ -226,12 +228,12 @@ class MUSTProblem {
 	}
 	
 
-	void update(Domain& out, const Domain& in, BasicBlock* bb);
-	inline void enterContext(Domain &dom, BasicBlock *header, hai_context_t ctx) {
+	void update(Domain& out, const Domain& in, Block* bb);
+	inline void enterContext(Domain &dom, Block *header, hai_context_t ctx) {
 
 	}
 
-	inline void leaveContext(Domain &dom, BasicBlock *header, hai_context_t ctx) {
+	inline void leaveContext(Domain &dom, Block *header, hai_context_t ctx) {
 
 	}		
 

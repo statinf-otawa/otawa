@@ -35,7 +35,7 @@ public:
 
 protected:
 	virtual void configure(const PropList& props);
-	void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+	void processBB(WorkSpace *fw, CFG *cfg, Block *bb);
 
 private:
 	unsigned dep;

@@ -57,6 +57,7 @@ MAYProblem::MAYProblem(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const
 	line(lbset->line()),
 	cache(_cache),
 	bot(_size, _A),
+	_top(_size, 0),
 	ent(_size, _A),
 	callstate(_size, _A)
 {
@@ -69,12 +70,15 @@ MAYProblem::~MAYProblem() {
 const MAYProblem::Domain& MAYProblem::bottom(void) const {
 		return bot;
 }
+const MAYProblem::Domain& MAYProblem::top(void) const {
+		return _top;
+}
 const MAYProblem::Domain& MAYProblem::entry(void) const {
 		return ent;
 }
 	
 
-void MAYProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
+void MAYProblem::update(Domain& out, const Domain& in, Block* bb) {
 	assign(out, in);
 	LBlock *lblock = LAST_LBLOCK(bb)[line];
     if (lblock != NULL)

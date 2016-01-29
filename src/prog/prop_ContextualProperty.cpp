@@ -80,7 +80,19 @@ namespace otawa {
  *
  */
 
+/**
+ * @class ContextualStep
+ * A context is a path representing different entities composing a program
+ * and a step is the smallest part of this path. A contextual step is defined
+ * by a kind (function, call, loop, etc) and an address allowing to identify
+ * uniquely the entity.
+ *
+ * @ingroup context
+ */
 
+
+/**
+ */
 void ContextualStep::print(io::Output& out) const {
 	switch(_kind) {
 	case NONE: out << "NONE"; break;
@@ -92,11 +104,17 @@ void ContextualStep::print(io::Output& out) const {
 }
 
 
-ContextualPath& ContextualPath::operator=(const ContextualPath& path) {
-	stack.clear();
-	for(int i = 0; i < path.count(); i++)
-		push(path[i]);
-	return *this;
+/**
+ */
+static bool print_rec(io::Output& out, ContextualList *l) {
+	if(!l)
+		return false;
+	else {
+		if(print_rec(out, &(l->next())))
+			out << ", ";
+		out << l->step();
+		return true;
+	}
 }
 
 
@@ -105,15 +123,8 @@ ContextualPath& ContextualPath::operator=(const ContextualPath& path) {
  * @param out	Stream to output to.
  */
 void ContextualPath::print(io::Output& out) const {
-	bool first = true;
 	out << "[";
-	for(int i = 0; i < stack.count(); i++) {
-		if(first)
-			first = false;
-		else
-			out << ", ";
-		out << stack[i];
-	}
+	print_rec(out, &p);
 	out << "]";
 }
 
@@ -123,12 +134,9 @@ void ContextualPath::print(io::Output& out) const {
  * @return	Enclosing function address or Address::null if no function is found.
  */
 Address ContextualPath::getEnclosingFunction(void) const {
-	int i = stack.count() - 1;
-	while(i >= 0) {
-		if(stack[i].kind() == ContextualStep::FUNCTION)
-			return stack[i].address();
-		i--;
-	}
+	for(ContextualList *l = &p; l; l = &(l->next()))
+		if(p->step().kind() == ContextualStep::FUNCTION)
+			return p->step().address();
 	return Address::null;
 }
 
@@ -149,6 +157,8 @@ Address ContextualPath::getEnclosingFunction(void) const {
  * whose path is [c1, c3] as it is considered as [c1, *, c2],
  * that is more general that the given path. * means "any
  * component".
+ *
+ * @ingroup context
  */
 
 
@@ -156,11 +166,6 @@ Address ContextualPath::getEnclosingFunction(void) const {
  * Build a contextual property.
  */
 ContextualProperty::ContextualProperty(void): Property(ID) {
-}
-
-
-ContextualPath::ContextualPath(const ContextualPath& path) {
-	stack = path.stack;
 }
 
 
@@ -180,16 +185,15 @@ const PropList& ContextualProperty::findProps(
 	// fill the stack
 	stack.push(&props);
 	const Node *node = &root;
-	for(int i = path.count() - 1; i >= 0; i--) {
+	for(const ContextualList *l = path.list(); l; l = &l->next())
 		for(Node::Iterator child(node); child; child++) {
 			Node *cur = (Node *)*child;
-			if(cur->step == path[i]) {
+			if(cur->step == l->step()) {
 				stack.push(cur);
 				node = cur;
 				break;
 			}
 		}
-	}
 
 	// find the identifier
 	for(int i = stack.count() - 1; i >= 0; i--)
@@ -206,18 +210,18 @@ const PropList& ContextualProperty::findProps(
  */
 PropList& ContextualProperty::makeProps(const ContextualPath& path) {
 	Node *parent = &root;
-	for(int i = path.count() - 1; i >= 0; i--) {
+	for(const ContextualList *l = path.list(); l; l = &l->next()) {
 		bool found = false;
 		for(Node::Iterator child(parent); child; child++) {
 			Node *node = (Node *)*child;
-			if(node->step == path[i]) {
+			if(node->step == l->step()) {
 				parent = node;
 				found = true;
 				break;
 			}
 		}
 		if(!found) {
-			Node *node = new Node(path[i]);
+			Node *node = new Node(l->step());
 			parent->add(node);
 			parent = node;
 		}
@@ -382,9 +386,62 @@ void ContextualProperty::print(io::Output& out, const Node& node, int indent) co
 }
 
 
+
+/**
+ * @class ContextualList
+ * Represent a list node in a path describing a context path.
+ *
+ * @ingroup context
+ */
+
+
+/**
+ * Count the number of node sin the list.
+ * @return	Number of nodes.
+ */
+int ContextualList::count(void) const {
+	int c = 0;
+	for(const ContextualList *l = this; l; l = &l->next())
+		c++;
+	return c;
+}
+
+
+/**
+ * Get the ith element in the current node list.
+ * @note 		First element has an index i of 0.
+ * @param i		Element number to look for.
+ * @return		Step corresponding to the element number.
+ */
+const ContextualStep& ContextualList::ith(int i) const {
+	for(const ContextualList *l = this; l; l = &l->next(), i--)
+		if(!i)
+			return l->step();
+	ASSERTP(false, "out of bound index in ContextualList::ith");
+	return ContextualStep::null;
+}
+
+
+/**
+ * Null path.
+ */
+ContextualStep ContextualStep::null;
+
+
 /**
  * Private identifier for contextual properties.
  */
 AbstractIdentifier ContextualProperty::ID;
+
+
+/**
+ * @class ContextualPath
+ * A contextual path represents the chain of context containing a particular entity.
+ * It is composed of ContextualStep summing up function, call and loop traversed to reach
+ * the entity. Contextual paths may be used as identifiers to access a property from a
+ * PropList depending on the context.
+ *
+ * @ingroup context
+ */
 
 }	// otawa

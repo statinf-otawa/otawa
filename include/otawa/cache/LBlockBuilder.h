@@ -41,7 +41,7 @@ public:
 	LBlockBuilder(AbstractRegistration& r = reg);
 
 protected:
-	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb);
 	virtual void cleanup(WorkSpace *fw);
 	virtual void setup(WorkSpace *fw);
 

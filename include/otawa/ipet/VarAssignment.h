@@ -34,20 +34,21 @@ namespace ipet {
 
 // VarAsignment class
 class VarAssignment: public BBProcessor {
-	bool _explicit, _recursive;
-	ilp::System *sys;
-	String makeNodeVar(BasicBlock *bb, CFG *cfg);
-	String makeEdgeVar(Edge *edge, CFG *cfg);
-
-protected:
-	virtual void processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb);
-	virtual void setup(WorkSpace *ws);
-	virtual void cleanup(WorkSpace *ws);
-
 public:
 	VarAssignment(void);
 	virtual void configure(const PropList& props);
 	static Registration<VarAssignment> reg;
+
+protected:
+	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb);
+	virtual void setup(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
+
+private:
+	bool _explicit, _recursive;
+	ilp::System *sys;
+	String makeNodeVar(Block *bb, CFG *cfg);
+	String makeEdgeVar(Edge *edge, CFG *cfg);
 };
 
 // Features

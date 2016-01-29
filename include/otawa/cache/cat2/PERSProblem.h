@@ -433,14 +433,14 @@ class PERSProblem {
 	}
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
 	
-	inline void enterContext(Domain& dom, BasicBlock *header, hai_context_t ctx) {
+	inline void enterContext(Domain& dom, Block *header, hai_context_t ctx) {
 #ifndef PERFTEST
 		if (ctx == CTX_LOOP)
 			dom.enterContext(); 
 #endif
 	}
 
-	inline void leaveContext(Domain& dom, BasicBlock *header, hai_context_t ctx) {
+	inline void leaveContext(Domain& dom, Block *header, hai_context_t ctx) {
 #ifndef PERFTEST
 		if (ctx == CTX_LOOP)
 			dom.leaveContext();

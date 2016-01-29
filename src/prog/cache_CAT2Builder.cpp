@@ -117,7 +117,7 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 			MAYProblem::Domain *may = NULL;
 			if (CACHE_ACS_MAY(lblock->bb()) != NULL)
 				may = CACHE_ACS_MAY(lblock->bb())->get(line);
-			BasicBlock *header;
+			Block *header;
 			if (may) {
 				cache::CATEGORY(lblock) = cache::NOT_CLASSIFIED;
 			} else {
@@ -243,7 +243,6 @@ void CAT2Builder::processCFG(otawa::WorkSpace *fw, otawa::CFG *cfg) {
 }
 
 
-static SilentFeature::Maker<CAT2Builder> cat_maker;
 /**
  * This feature ensures that the categories for instruction cache according to the following
  * method has been computed:
@@ -258,6 +257,6 @@ static SilentFeature::Maker<CAT2Builder> cat_maker;
  * @par Processors
  * @li @ref CAT2Builder (default)
  */
-SilentFeature ICACHE_CATEGORY2_FEATURE("otawa::ICACHE_CATEGORY2_FEATURE", cat_maker);
+p::feature ICACHE_CATEGORY2_FEATURE("otawa::ICACHE_CATEGORY2_FEATURE", new Maker<CAT2Builder>());
 
 }	// otawa

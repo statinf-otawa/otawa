@@ -70,7 +70,7 @@ void CachePenaltiesObjectFunctionBuilder::configure(const PropList& props) {
 void CachePenaltiesObjectFunctionBuilder::processBB(
 	WorkSpace *fw,
 	CFG *cfg,
-	BasicBlock *bb)
+	Block *bb)
 {
 	
 	// do not process entry and exit
@@ -81,7 +81,7 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 	System *system = SYSTEM(fw);
 	
 	// examine each input
-	for (BasicBlock::InIterator edge(bb); edge; edge++) {
+	for (Block::EdgeIter edge = bb->ins(); edge; edge++) {
 		CachePenalty * cache_penalty = ICACHE_PENALTY(edge);
 		
 		// process a cache penalty
@@ -90,7 +90,7 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 			// only one header: add to objective function: t_miss * x_(h, j)
 			if (!cache_penalty->header(1)){
 				ASSERT(cache_penalty->header(0));
-				for (BasicBlock::InIterator h_edge(cache_penalty->header(0)) ; h_edge ; h_edge++)
+				for(Block::EdgeIter h_edge = cache_penalty->header(0)->ins() ; h_edge ; h_edge++)
 					if (!Dominance::isBackEdge(h_edge))
 						system->addObjectFunction(cache_penalty->penalty(CachePenalty::MISS), VAR(h_edge));
 			}
@@ -107,10 +107,10 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 				else {
 					BasicBlock *h0 = cache_penalty->header(0);
 					StringBuffer buf1, buf2;
-					buf1 << "XENTRY_b" << h0->number();
+					buf1 << "XENTRY_b" << h0->index();
 					String name1 = buf1.toString();
 					entry = system->newVar(name1);
-					buf2 << "XLOOP_b" << h0->number();
+					buf2 << "XLOOP_b" << h0->index();
 					String name2 = buf2.toString();
 					loop = system->newVar(name2);
 				}
@@ -122,7 +122,7 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 				// c2: x_loop = sum{e_h0i not in back(h0)} e_h0i - sum{e_h0i not in back(h0)} e_h0i
 				Constraint *cons_loop = system->newConstraint("double FM header: sum of entering and backing", Constraint::EQ, 0);
 				cons_loop->addLeft(1, loop);
-				for (BasicBlock::InIterator edge(cache_penalty->header(0)) ; edge ; edge++){
+				for (Block::EdgeIter edge = cache_penalty->header(0)->ins(); edge ; edge++){
 					if (!Dominance::isBackEdge(edge)){
 						cons_entry->addRight(1, VAR(edge));
 						cons_loop->addRight(-1, VAR(edge));
@@ -143,16 +143,16 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 				}
 				else {
 					StringBuffer buf1, buf2;
-					buf1 << "XENTRY_b" << h1->number();
+					buf1 << "XENTRY_b" << h1->index();
 					String name1 = buf1.toString();
 					entry = system->newVar(name1);
-					buf2 << "XLOOP_b" << h1->number();
+					buf2 << "XLOOP_b" << h1->index();
 					String name2 = buf2.toString();
 					loop = system->newVar(name2);
 				}
 				cons_loop = system->newConstraint("double FM header: sum of entering", Constraint::EQ,0);
 				cons_loop->addLeft(1, loop);
-				for (BasicBlock::InIterator edge(cache_penalty->header(1)) ; edge ; edge++){
+				for (Block::EdgeIter edge = cache_penalty->header(1)->ins() ; edge ; edge++){
 					if (!Dominance::isBackEdge(edge)){
 						cons_loop->addRight(-1, VAR(edge));
 					}

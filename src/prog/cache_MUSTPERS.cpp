@@ -90,6 +90,7 @@ MUSTPERS::MUSTPERS(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const har
 :	mustProb(_size, _lbset, _fw, _cache, _A),
 	persProb(_size, _lbset, _fw, _cache, _A),
 	bot(_size, _A),
+	_top(_size, _A),
 	ent(_size, _A),
 	line(_lbset->line())
 {
@@ -105,11 +106,14 @@ MUSTPERS::MUSTPERS(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const har
 const MUSTPERS::Domain& MUSTPERS::bottom(void) const {
 		return bot;
 }
+const MUSTPERS::Domain& MUSTPERS::top(void) const {
+		return _top;
+}
 const MUSTPERS::Domain& MUSTPERS::entry(void) const {
 		return ent;
 }
 		
-void MUSTPERS::update(Domain& out, const Domain& in, BasicBlock* bb) {
+void MUSTPERS::update(Domain& out, const Domain& in, Block* bb) {
 		LBlock *lblock;
 				                
 	    assign(out, in);

@@ -7,11 +7,12 @@
 
 #include <stdio.h>
 #include <elm/string/StringBuffer.h>
-#include <otawa/cfg/CFGCollector.h>
-#include <otawa/ipet/IPET.h>
-#include <otawa/ipet/ConstraintLoader.h>
 #include <otawa/cfg.h>
+#include <otawa/cfg/CFGCollector.h>
+#include <otawa/ipet/ConstraintLoader.h>
+#include <otawa/ipet/IPET.h>
 #include <otawa/ipet/VarAssignment.h>
+#include <otawa/prog/File.h>
 #include "ExpNode.h"
 
 // Externals
@@ -150,12 +151,13 @@ ConstraintLoader::ConstraintLoader(AbstractRegistration& r)
  * @param addr	Address of BB to find.
  * @return		Found BB or null.
  */
-BasicBlock *ConstraintLoader::getBB(address_t addr) {
+Block *ConstraintLoader::getBB(address_t addr) {
 	BasicBlock *bb = bbs.get(addr, 0);
 	if(!bb) {
 		for (CFGCollection::Iterator icfg(INVOLVED_CFGS(fw)); icfg; icfg++) {
-			for (CFG::BBIterator ibb(icfg); ibb; ibb++)
-				if(!ibb->isEnd()) {
+			for (CFG::BlockIter b = icfg->blocks(); b; b++)
+				if(!b->isBasic()) {
+					BasicBlock *ibb = b->toBasic();
 					if(ibb->address() <= addr && addr < ibb->topAddress())
 						bb = ibb;
 				}
@@ -175,10 +177,10 @@ BasicBlock *ConstraintLoader::getBB(address_t addr) {
  * @param 	index	BB index.
  * @return	Found BB or null.
  */
-BasicBlock *ConstraintLoader::getBB(int index) {
+Block *ConstraintLoader::getBB(int index) {
 	const CFGCollection& coll = **INVOLVED_CFGS(fw);
-	for(CFG::BBIterator bb(coll[0]); bb; bb++)
-		if(bb->number() == index)
+	for(CFG::BlockIter bb = coll[0]->blocks(); bb; bb++)
+		if(bb->index() == index)
 			return bb;
 	return 0;
 }
@@ -188,7 +190,7 @@ BasicBlock *ConstraintLoader::getBB(int index) {
  * For internal use only.
  */
 void ConstraintLoader::newBBVar(cstring name, address_t addr) {
-	BasicBlock *bb = getBB(addr);
+	Block *bb = getBB(addr);
 	if(!bb)
 		error("cannot find BB at given address");
 	else {
@@ -205,7 +207,7 @@ void ConstraintLoader::newBBVar(cstring name, address_t addr) {
  * For internal use only.
  */
 void ConstraintLoader::newBBVar(cstring name, int index) {
-	BasicBlock *bb = getBB(index);
+	Block *bb = getBB(index);
 	if(!bb)
 		error("cannot find the BB!");
 	else {
@@ -224,15 +226,15 @@ void ConstraintLoader::newBBVar(cstring name, int index) {
 bool ConstraintLoader::newEdgeVar(CString name, address_t src, address_t dst) {
 
 	// Find basic blocks
-	BasicBlock *src_bb = getBB(src);
+	Block *src_bb = getBB(src);
 	if(!src_bb)
 		return false;
-	BasicBlock *dst_bb = getBB(dst);
+	Block *dst_bb = getBB(dst);
 	if(!dst_bb)
 		return false;
 
 	// Find edge
-	for(BasicBlock::OutIterator edge(src_bb); edge; edge++) {
+	for(Block::EdgeIter edge = src_bb->outs(); edge; edge++) {
 		if(edge->target() == dst_bb) {
 			ilp::Var *var = ipet::VAR(edge);
 			if(var) {

@@ -149,6 +149,21 @@ Edge *CFGTransformer::makeEdge(CFG *cfg, Edge *edge) {
 
 
 /**
+ * Build a new edge with the same characteristics as the given one
+ * with new source and sink.
+ * @param src	Source vertex.
+ * @param edge	Edge to copy.
+ * @param snk	Sink vertex.
+ * @return		Built edge.
+ */
+Edge *CFGTransformer::makeEdge(Block *src, Edge *edge, Block *snk) {
+	Edge *r = new Edge(edge->flags());
+	cur->add(src, snk, r);
+	return r;
+}
+
+
+/**
  * Clone the given block and it to the built CFG.
  * @param b		Block to clone.
  * @return		Cloned block.

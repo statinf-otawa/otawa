@@ -70,10 +70,10 @@ public:
 	virtual int mergeContext(int v1, int v2) { return v1 + v2; }
 	virtual int mergeAgreg(int v1, int v2) { return v1 + v2; }
 
-	void collect(Collector& collector, BasicBlock *bb) {
+	void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) {
 		if(bb->isEnd())
 			return;
-		collector.collect(bb->address(), bb->size(), count(bb));
+		collector.collect(bb->address(), bb->size(), count(bb), path);
 	}
 
 protected:
@@ -282,7 +282,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 			if(!_explicit)
 				miss = system->newVar();
 			else
-				buf1 << "x" << lblock->bb()->number() << "_miss_"
+				buf1 << "x" << lblock->bb()->index() << "_miss_"
 						<< lblock->address() << "_" << lblock->countInsts();
 
 			// add the constraint depending on the lblock category
@@ -330,7 +330,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 					miss = system->newVar(name1);
 				}
 
-				BasicBlock *header = cache::CATEGORY_HEADER(lblock);
+				Block *header = cache::CATEGORY_HEADER(lblock);
 				ASSERT(header != NULL);
 
 				if (LINKED_BLOCKS(lblock) != NULL) {
@@ -344,7 +344,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 						for (genstruct::Vector<LBlock *>::Iterator iter(linked); iter; iter++) {
 							cons6->addLeft(1, MISS_VAR(iter));
 						}
-						for (BasicBlock::InIterator inedge(header); inedge; inedge++) {
+						for (Block::EdgeIter inedge = header->ins(); inedge; inedge++) {
 							if (!Dominance::dominates(header, inedge->source())) {
 								/* found an entry-edge */
 								cons6->addRight(1, VAR(*inedge));
@@ -357,7 +357,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 					/* Add constraint: xmiss <= sum of entry-edges of the loop */
 					Constraint *cons5a = system->newConstraint(fm_msg, Constraint::LE);
 					cons5a->addLeft(1, miss);
-					for (BasicBlock::InIterator inedge(header); inedge; inedge++) {
+					for (BasicBlock::EdgeIter inedge = header->ins(); inedge; inedge++) {
 						if (!Dominance::dominates(header, inedge->source())) {
 							/* found an entry-edge */
 							cons5a->addRight(1, VAR(*inedge));
