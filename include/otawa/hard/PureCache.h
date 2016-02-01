@@ -39,7 +39,6 @@ private:
 		DFIELD(way_bits,0) & 	
 		elm::field("replace", replace, LRU)
 	);
-	const PureCache *_next;
 
 public:
 	inline PureCache(void);

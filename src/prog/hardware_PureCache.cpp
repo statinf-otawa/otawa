@@ -143,7 +143,7 @@ namespace otawa { namespace hard {
  */
 void PureCache::setBlockBits(int block_bits) {
 	ASSERTP(block_bits >= 0, "bad block bits");
-	block_bits = block_bits;
+	this->block_bits = block_bits;
 }
 
 
@@ -154,7 +154,7 @@ void PureCache::setBlockBits(int block_bits) {
  */
 void PureCache::setRowBits(int row_bits) {
 	ASSERTP(row_bits >= 0, "bad row bits");
-	row_bits = row_bits;
+	this->row_bits = row_bits;
 }
 
 
@@ -165,7 +165,7 @@ void PureCache::setRowBits(int row_bits) {
  */
 void PureCache::setWayBits(int way_bits) {
 	ASSERTP(way_bits >= 0, "bad way bits");
-	way_bits = way_bits;
+	this->way_bits = way_bits;
 }
 
 
@@ -175,7 +175,7 @@ void PureCache::setWayBits(int way_bits) {
  */
 void PureCache::setReplacePolicy(replace_policy_t replace) {
 	ASSERTP(replace >= OTHER && replace <= PLRU, "bad replace policy");
-	replace = replace;
+	this->replace = replace;
 }
 
 

@@ -136,7 +136,7 @@ public:
 protected:
 	virtual void setup (WorkSpace *fw);
 	virtual void cleanup (WorkSpace *fw);
-	virtual void processBB (WorkSpace *fw, CFG *cfd, BasicBlock *bb);
+	virtual void processBB (WorkSpace *fw, CFG *cfd, Block *bb);
 
 private:
 	address_stat_t istats, *stats;

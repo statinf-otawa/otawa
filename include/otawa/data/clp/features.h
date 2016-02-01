@@ -57,7 +57,6 @@ private:
 	BasicBlock::InstIter mi;
 	clp::State s, *cs;
 	int i;
-	bool new_path;
 };
 
 extern SilentFeature FEATURE;

@@ -41,14 +41,13 @@ class SynthBlock;
 class Edge: public PropList, public sgraph::GenEdge<Block, Edge> {
 	friend class CFGMaker;
 public:
-	inline Edge(t::uint32 flags = 0): src(0), snk(0), _flags(flags) { }
+	inline Edge(t::uint32 flags = 0): _flags(flags) { }
 	inline Block *target(void) const;
 	inline bool isNotTaken(void) const { return _flags & NOT_TAKEN; }
 	inline bool isTaken(void) const { return !isNotTaken(); }
 	inline t::uint32 flags(void) const { return _flags; }
 	static const t::uint32 NOT_TAKEN = 0x00000001;
 private:
-	Block *src, *snk;
 	t::uint32 _flags;
 };
 io::Output& operator<<(io::Output& out, Edge *edge);

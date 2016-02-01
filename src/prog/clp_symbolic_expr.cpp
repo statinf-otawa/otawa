@@ -357,13 +357,13 @@ namespace se{
 			s = s << "cmpu";
 			break;
 		case LE:
-			s = s << "≤";
+			s = s << "<=";
 			break;
 		case LT:
 			s = s << '<';
 			break;
 		case GE:
-			s = s << "≥";
+			s = s << ">=";
 			break;
 		case GT:
 			s = s << '>';
@@ -372,16 +372,16 @@ namespace se{
 			s = s << '=';
 			break;
 		case NE:
-			s = s << "≠";
+			s = s << "/=";
 			break;
 		case ULE:
-			s = s << "u≤";
+			s = s << "u<=";
 			break;
 		case ULT:
 			s = s << "u<";
 			break;
 		case UGE:
-			s = s << "u≥";
+			s = s << "u>=";
 			break;
 		case UGT:
 			s = s << "u>";
@@ -746,25 +746,26 @@ namespace se{
 			// build the matching SE
 			switch(i.op){
 
-			case sem::IF:	// If inst is a if:
-				// create a new symbexpr
-				op_t log_op;
-				switch(i.cond()){
-				case sem::LE: 		log_op = LE; break;
-				case sem::LT: 		log_op = LT; break;
-				case sem::GE: 		log_op = GE; break;
-				case sem::GT: 		log_op = GT; break;
-				case sem::EQ: 		log_op = EQ; break;
-				case sem::NE:		log_op = NE; break;
-				case sem::ULE: 		log_op = ULE; break;
-				case sem::ULT: 		log_op = ULT; break;
-				case sem::UGE: 		log_op = UGE; break;
-				case sem::UGT: 		log_op = UGT; break;
-				case sem::ANY_COND:	log_op = NONE; break;
-				default:			ASSERTP(false, "unsupported condition " << i.cond() << " at " << cur_inst->address()); break;
+			case sem::IF: { // If inst is a if:
+					// create a new symbexpr
+					op_t log_op = NONE;
+					switch(i.cond()){
+					case sem::LE: 		log_op = LE; break;
+					case sem::LT: 		log_op = LT; break;
+					case sem::GE: 		log_op = GE; break;
+					case sem::GT: 		log_op = GT; break;
+					case sem::EQ: 		log_op = EQ; break;
+					case sem::NE:		log_op = NE; break;
+					case sem::ULE: 		log_op = ULE; break;
+					case sem::ULT: 		log_op = ULT; break;
+					case sem::UGE: 		log_op = UGE; break;
+					case sem::UGT: 		log_op = UGT; break;
+					case sem::ANY_COND:	log_op = NONE; break;
+					default:			ASSERTP(false, "unsupported condition " << i.cond() << " at " << cur_inst->address()); break;
+					}
+					if(log_op)
+						se = new SECmp(log_op, new SEReg(i.a()));
 				}
-				if(log_op)
-					se = new SECmp(log_op, new SEReg(i.a()));
 				break;
 
 			case sem::SET:

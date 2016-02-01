@@ -234,7 +234,7 @@ void Value::add(const Value& val){
 	else if (_kind == ALL || val._kind == ALL) 	/* ALL + anything = ALL */
 		set(ALL, 0, 1, UMAXn);
 	else if (_delta == 0 && val._delta == 0) 	/* two constants */
-		set(_kind, _lower + val._lower, 0, 0);
+		set(_kind, _base + val._base, 0, 0);
 	else {										/* other cases */
 		uintn_t g = gcd(_delta, val._delta);
 		set(VAL, start() + val.start(), g,
@@ -256,7 +256,7 @@ void Value::sub(const Value& val) {
 	else if (_kind == ALL || val._kind == ALL)	/* ALL - anything = ALL */
 		set(ALL, 0, 1, UMAXn);
 	else if (_delta == 0 && val._delta == 0)	/* two constants */
-		set(_kind, _lower - val._lower, 0, 0);
+		set(_kind, _base - val._base, 0, 0);
 	else {										/* other cases */
 		uintn_t g = gcd(_delta, val._delta);
 		set(VAL, start() - val.stop(), g,
@@ -277,10 +277,10 @@ void Value::print(io::Output& out) const {
 	else if (_kind == NONE)
 		out << '_';
 	else if ((_delta == 0) && (_mtimes ==  0))
-		out << "k(0x" << io::hex(_lower) << ')';
+		out << "k(0x" << io::hex(_base) << ')';
 		//out << "k(" << _lower << ')';
 	else
-		out << "(0x" << io::hex(_lower) << ", " << _delta << \
+		out << "(0x" << io::hex(_base) << ", " << _delta << \
 			", 0x" << io::hex(_mtimes) << ')';
 		//out << '(' << _lower << ", " << _delta << ", " << _mtimes << ')';
 }
@@ -291,13 +291,13 @@ void Value::print(io::Output& out) const {
  *				constant.
 */
 void Value::shl(const Value& val) {
-	if(!val.isConst() || val._lower < 0){
+	if(!val.isConst() || val._base < 0){
 		set(ALL, 0, 1, UMAXn);
 	} else if (_kind != NONE && _kind != ALL) {
 		if (_delta == 0 && _mtimes == 0)
-			set(VAL, _lower << val._lower, 0, 0);
+			set(VAL, _base << val._base, 0, 0);
 		else
-			set(VAL, _lower << val._lower, _delta << val._lower, _mtimes);
+			set(VAL, _base << val._base, _delta << val._base, _mtimes);
 	}
 }
 
@@ -307,17 +307,17 @@ void Value::shl(const Value& val) {
  *				constant.
 */
 void Value::shr(const Value& val) {
-	if(!val.isConst() || val._lower < 0){
+	if(!val.isConst() || val._base < 0){
 		set(ALL, 0, 1, UMAXn);
 	} else
 	if (_kind != NONE && _kind != ALL) {
 		if (_delta == 0 && _mtimes == 0)
-			set(VAL, _lower >> val._lower, 0, 0);
+			set(VAL, _base >> val._base, 0, 0);
 		else if (_delta % 2 == 0)
-			set(VAL, _lower >> val._lower, _delta >> val._lower, _mtimes);
+			set(VAL, _base >> val._base, _delta >> val._base, _mtimes);
 		else
-			set(VAL, _lower >> val._lower, 1,
-				(_delta * _mtimes) >> val._lower);
+			set(VAL, _base >> val._base, 1,
+				(_delta * _mtimes) >> val._base);
 	}
 }
 
@@ -334,7 +334,7 @@ void Value::_or(const Value& val) {
 	}
 	if(val.isConst()) {
 		if(isConst())
-			_lower |= val._lower;
+			_base |= val._base;
 		/*else if(val._lower < _delta)
 			_lower |= val._lower;*/		// TO CHECK
 		else
@@ -369,11 +369,11 @@ void Value::join(const Value& val) {
 	else if (_kind == ALL || val._kind == ALL)  /* ALL U anything = ALL */
 		set(ALL, 0, 1, UMAXn);
 	else if (_kind == NONE)						/* NONE U A = A */
-		set(VAL, val._lower, val._delta, val._mtimes);
+		set(VAL, val._base, val._delta, val._mtimes);
 	else if (val._kind == NONE)					/* A U NONE = A (nothing to do) */
 		return;
 	else if(isConst() && val.isConst()) /* k1 U k2 */
-		set(VAL, min(_lower, val._lower), elm::abs(_lower - val._lower), 1);
+		set(VAL, min(_base, val._base), elm::abs(_base - val._base), 1);
 	else {										/* other cases */
 		uintn_t g = gcd(gcd(elm::abs(start() - val.start()), _delta), val._delta);
 		intn_t ls = min(start(), val.start());
@@ -409,7 +409,7 @@ void Value::widening(const Value& val) {
 
 	// widen((k, 0, 0), (k', 0, 0)) = (k, k' - k, 1)
 	else if (isConst() && val.isConst()) {
-		_delta = val._lower - _lower;
+		_delta = val._base - _base;
 		_mtimes = clp::UMAXn;
 	}
 
@@ -461,17 +461,17 @@ void Value::ffwidening(const Value& val, int loopBound){
 	else if (*this == val)					/* this == val -> do nothing */
 		return;
 	else if (isConst() && val.isConst()) {
-		if (_lower < val._lower)
+		if (_base < val._base)
 			/* widen((k1, 0, 0), (k2, 0, 0)) = (k1, k2 - k1, N) */
-			set(VAL, _lower, val._lower - _lower, loopBound);
+			set(VAL, _base, val._base - _base, loopBound);
 		else {
 			/* widen((k1, 0, 0), (k2, 0, 0)) = (k1-N(k1-k2),k1-k2,N) */
-			int step = _lower - val._lower;
-			set(VAL, _lower - loopBound * step, step, loopBound);
+			int step = _base - val._base;
+			set(VAL, _base - loopBound * step, step, loopBound);
 		}
 	}
 	else if ((_delta == val._delta) &&		/* avoid division by 0 */
-			 ((val._lower - _lower) % _delta == 0) &&
+			 ((val._base - _base) % _delta == 0) &&
 			 (_mtimes >= val._mtimes))
 		return;				/* val == this + k => this */
 	else
@@ -484,20 +484,20 @@ void Value::ffwidening(const Value& val, int loopBound){
  * @param val the value to do the intersection with
  */
 void Value::inter(const Value& val) {
-	intn_t l1 = _lower, l2 = val._lower;
+	intn_t l1 = _base, l2 = val._base;
 	intn_t sta1 = start(), sta2 = val.start();
 	intn_t sto1 = stop(), sto2 = val.stop();
 	intn_t d1 = _delta, d2 = val._delta;
 	uintn_t m1 = _mtimes, m2 = val._mtimes;
 	int64_t u1, u2;
 	if (_delta < 0)
-		u1 = _lower;
+		u1 = _base;
 	else
-		u1 = (int64_t)_lower + (int64_t)_delta * (int64_t)_mtimes;
+		u1 = (int64_t)_base + (int64_t)_delta * (int64_t)_mtimes;
 	if (val._delta < 0)
-		u2 = _lower;
+		u2 = _base;
 	else
-		u2 = (int64_t)val._lower + (int64_t)val._delta * (int64_t)val._mtimes;
+		u2 = (int64_t)val._base + (int64_t)val._delta * (int64_t)val._mtimes;
 
 	// In this function, numbers are refs to doc/inter/clpv2-inter.pdf
 
@@ -665,7 +665,7 @@ void Value::reverse(void){
 		uintn_t dist = (uintn_t)abs(start() - stop());
 		set(clp::VAL, stop(), -delta(), dist / delta());
 	}*/
-	set(clp::VAL, _lower + _delta * _mtimes, -_delta, _mtimes);
+	set(clp::VAL, _base + _delta * _mtimes, -_delta, _mtimes);
 }
 
 
@@ -681,7 +681,7 @@ void Value::ge(intn_t k) {
 
 	// case of constant
 	if(isConst()) {
-		if(k > _lower)
+		if(k > _base)
 			*this = none;
 		return;
 	}
@@ -698,18 +698,18 @@ void Value::ge(intn_t k) {
 		_mtimes = (MAXn - k) / (-_delta);
 
 	// b <= k -> _
-	if(_lower <= k) {
+	if(_base <= k) {
 		*this = none;
 		return;
 	}
 
 	// b + dn >= k -> (b, d, n)
-	if(_lower + _delta * intn_t(_mtimes) >= k)
+	if(_base + _delta * intn_t(_mtimes) >= k)
 		return;
 
 	// _ -> (b, d, (k - b) / d
 	else
-		_mtimes = (k - _lower) / _delta;
+		_mtimes = (k - _base) / _delta;
 
 	check();
 }
@@ -747,7 +747,7 @@ void Value::le(intn_t k) {
 	if(*this == all || *this == none)
 		return;
 	if(isConst()) {
-		if(k < _lower)
+		if(k < _base)
 			*this = none;
 		return;
 	}
@@ -758,9 +758,9 @@ void Value::le(intn_t k) {
 		// wrap fix
 		if(swrap()) {
 			if(_delta >= 0)
-				_mtimes = (uintn_t(MAXn) - _lower) / _delta;
+				_mtimes = (uintn_t(MAXn) - _base) / _delta;
 			else
-				_mtimes = (uintn_t(MINn) + _lower) / (-_delta);
+				_mtimes = (uintn_t(MINn) + _base) / (-_delta);
 		}
 
 		// apply le
@@ -770,11 +770,11 @@ void Value::le(intn_t k) {
 			return;
 		else {				// case b
 			if(_delta >= 0)
-				_mtimes = (k - _lower) / _delta;
+				_mtimes = (k - _base) / _delta;
 			else {
-				intn_t s = (_lower - k - _delta - 1) / (-_delta);
+				intn_t s = (_base - k - _delta - 1) / (-_delta);
 				ASSERT(s >= 0);
-				_lower = _lower + _delta * s;
+				_base = _base + _delta * s;
 				_mtimes -= s;
 			}
 
@@ -797,7 +797,7 @@ void Value::geu(uintn_t k) {
 
 	// case of constant
 	if(isConst()) {
-		if(k > uintn_t(_lower))
+		if(k > uintn_t(_base))
 			*this = none;
 		return;
 	}
@@ -814,18 +814,18 @@ void Value::geu(uintn_t k) {
 		_mtimes = (UMAXn - k) / (-_delta);
 
 	// b <= k -> _
-	if(uintn_t(_lower) <= k) {
+	if(uintn_t(_base) <= k) {
 		*this = none;
 		return;
 	}
 
 	// b + dn >= k -> (b, d, n)
-	if(uintn_t(_lower + _delta * _mtimes) >= k)
+	if(uintn_t(_base + _delta * _mtimes) >= k)
 		return;
 
 	// _ -> (b, d, (k - b) / d
 	else
-		_mtimes = intn_t(k - _lower) / _delta;
+		_mtimes = intn_t(k - _base) / _delta;
 
 	check();
 }
@@ -843,7 +843,7 @@ void Value::leu(uintn_t k) {
 
 	// case of constant
 	if(isConst()) {
-		if(k < uintn_t(_lower))
+		if(k < uintn_t(_base))
 			*this = none;
 		return;
 	}
@@ -860,18 +860,18 @@ void Value::leu(uintn_t k) {
 		_mtimes = k / _delta;
 
 	// b >= k -> _
-	if(uintn_t(_lower) >= k) {
+	if(uintn_t(_base) >= k) {
 		*this = none;
 		return;
 	}
 
 	// b + dn >= k -> (b, d, n)
-	if(uintn_t(_lower + _delta * _mtimes) <= k)
+	if(uintn_t(_base + _delta * _mtimes) <= k)
 		return;
 
 	// _ -> (b, d, (k - b) / d
 	else
-		_mtimes = (k - uintn_t(_lower)) / _delta;
+		_mtimes = (k - uintn_t(_base)) / _delta;
 
 	check();
 }

@@ -161,7 +161,6 @@ public:
 #endif
 
 private:
-	CFG& _cfg;
 	DomInfo& d;
 	SortedList<Block *, DominanceOrder> headersLList;
 	genstruct::Vector<Block *> hdrs;
@@ -169,7 +168,7 @@ private:
 };
 
 /* Constructors/Methods for LoopInfoProblem */
-LoopInfoProblem::LoopInfoProblem(CFG& cfg, DomInfo& info): _cfg(cfg), d(info), headersLList(DominanceOrder(info)) {
+LoopInfoProblem::LoopInfoProblem(CFG& cfg, DomInfo& info): d(info), headersLList(DominanceOrder(info)) {
 
 		/*
 		 * Find all the headers of the CFG

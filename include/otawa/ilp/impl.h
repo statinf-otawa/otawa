@@ -37,7 +37,7 @@ public:
 class ConstraintImpl: public Constraint {
 public:
 	ConstraintImpl(comparator_t comparator, string label = "");
-	virtual double coefficient(Var *var);
+	virtual double coefficient(Var *var) const;
 	virtual double constant(void) const;
 	virtual comparator_t comparator(void) const;
 	virtual const string& label(void) const;
