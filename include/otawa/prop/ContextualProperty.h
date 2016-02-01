@@ -111,7 +111,7 @@ public:
 		: s(step), n(next) { }
 
 	inline const ContextualStep& step(void) const { return s; }
-	inline const LockPtr<ContextualList>& next(void) const { return n; }
+	inline LockPtr<ContextualList> next(void) const { return n; }
 	int count(void) const;
 	const ContextualStep& ith(int i) const;
 	inline const ContextualStep& operator[](int i) const { return ith(i); }
@@ -177,7 +177,7 @@ public:
 	inline void clear(void) { p = 0; }
 	inline void push(const ContextualStep& step) { p = new ContextualList(step, p); }
 	inline void push(ContextualStep::kind_t kind, const Address& addr) { push(ContextualStep(kind, addr)); }
-	inline void pop(void) { p = p->next(); }
+	inline void pop(void) { ASSERT(&p); p = p->next(); }
 
 	inline bool isEmpty(void) const { return p.isNull(); }
 	inline int count(void) const { return p->count(); }
