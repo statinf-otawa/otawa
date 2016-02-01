@@ -76,21 +76,21 @@ typedef enum {
 		*	@param mtimes the number of time the delta is applied
 		*/
 		inline Value(kind_t kind=VAL, intn_t lower=0, intn_t delta=0,
-			uintn_t mtimes=0): _kind(kind), _lower(lower), _delta(delta),
+			uintn_t mtimes=0): _kind(kind), _base(lower), _delta(delta),
 			_mtimes(mtimes) { check(); }
 		/** Copy constructor */
 		inline Value(const Value& val):
-			_kind(val._kind), _lower(val._lower), _delta(val._delta),
+			_kind(val._kind), _base(val._base), _delta(val._delta),
 			_mtimes(val._mtimes) { }
 		/** Singleton constructor
 		*	@param val the single integer element of the CLP
 		*	@return the CLP (val, 0, 0)
 		*/
 		inline Value(const int val):
-			_kind(VAL), _lower(val), _delta(0), _mtimes(0) {}
+			_kind(VAL), _base(val), _delta(0), _mtimes(0) {}
 
 		inline Value& operator=(const Value& val){
-			set(val._kind, val._lower, val._delta, val._mtimes);
+			set(val._kind, val._base, val._delta, val._mtimes);
 			return *this;
 		}
 
@@ -99,7 +99,7 @@ typedef enum {
 		inline bool operator==(const Value& val) const {
 			return (
 						(_kind == val._kind &&
-						 _lower == val._lower &&
+						 _base == val._base &&
 						 _delta == val._delta &&
 						 _mtimes == val._mtimes)
 						 /* WARNING: keep in order to verify it does not break something else
@@ -116,12 +116,12 @@ typedef enum {
 		Value operator+(const Value& val) const;
 		Value operator-(const Value& val) const;
 		inline bool operator>=(const int val) const {
-			return _lower >= val;
+			return _base >= val;
 		}
 
 		inline kind_t kind(void) const { return _kind; }
-		inline intn_t lower(void) const { return _lower; }
-		inline intn_t upper(void) const { return _lower + _delta * _mtimes; }
+		inline intn_t lower(void) const { return _base; }
+		inline intn_t upper(void) const { return _base + _delta * _mtimes; }
 		inline intn_t delta(void) const { return _delta; }
 		inline uintn_t mtimes(void) const { return _mtimes; }
 
@@ -130,9 +130,9 @@ typedef enum {
 		*/
 		inline intn_t start(void) const {
 			if (_delta < 0)
-				return _lower + _delta * _mtimes;
+				return _base + _delta * _mtimes;
 			else
-				return _lower;
+				return _base;
 		}
 
 		/** @return the "stop" of the CLP, i.e. the upper bound if delta >= 0,
@@ -140,9 +140,9 @@ typedef enum {
 		*/
 		inline intn_t stop(void) const {
 			if (_delta < 0)
-				return _lower;
+				return _base;
 			else
-				return _lower + _delta * _mtimes;
+				return _base + _delta * _mtimes;
 		}
 
 		/**
@@ -203,9 +203,9 @@ typedef enum {
 		void reverse(void);
 
 		inline bool swrap(void) const
-			{ return _delta != 0 && _mtimes > (MAXn - _lower) / elm::abs(_delta); }
+			{ return _delta != 0 && _mtimes > (MAXn - _base) / elm::abs(_delta); }
 		inline bool uwrap(void) const
-			{ return _delta != 0 && _mtimes > (UMAXn - _lower) / elm::abs(_delta); }
+			{ return _delta != 0 && _mtimes > (UMAXn - _base) / elm::abs(_delta); }
 
 		void ge(intn_t k);
 		void geu(uintn_t k);
@@ -231,7 +231,7 @@ typedef enum {
 		inline void set(kind_t kind, intn_t lower, intn_t delta,
 						uintn_t mtimes){
 			_kind = kind;
-			_lower = lower;
+			_base = lower;
 			_delta = delta;
 			_mtimes = mtimes;
 			check();
@@ -240,7 +240,7 @@ typedef enum {
 		inline void check(void) { /*ASSERT((_delta == 0 && _mtimes == 0) || (_delta != 0 && _mtimes != 0));*/ }
 
 		kind_t _kind;
-		intn_t _lower;
+		intn_t _base;
 		intn_t _delta;
 		uintn_t _mtimes;
 	};

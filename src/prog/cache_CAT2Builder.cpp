@@ -20,7 +20,6 @@
  *	02110-1301  USA
  */
 
-#include <stdio.h>
 #include <elm/io.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/util/LBlockBuilder.h>

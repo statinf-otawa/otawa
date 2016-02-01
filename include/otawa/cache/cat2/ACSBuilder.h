@@ -23,11 +23,11 @@
 #ifndef OTAWA_CACHE_ACSBUILDER_H_
 #define OTAWA_CACHE_ACSBUILDER_H_
 
-#include <otawa/prop/Identifier.h>
-#include <otawa/proc/Processor.h>
-#include <otawa/hard/Cache.h>
-#include <otawa/cache/LBlockSet.h>
 #include <elm/genstruct/Vector.h>
+#include <otawa/hard/Cache.h>
+#include <otawa/proc/Processor.h>
+#include <otawa/prop/Identifier.h>
+#include <otawa/cache/LBlockSet.h>
 #include "features.h"
 
 namespace otawa {
@@ -47,9 +47,10 @@ private:
 	fmlevel_t level;
 	bool unrolling;
 	genstruct::Vector<MUSTProblem::Domain *> *must_entry;
+	genstruct::Vector<PERSProblem::Domain *> *pers_entry;
 	
 };
 
-}
+}	// elm
 
 #endif /* OTAWA_CACHE_ACSBUILDER_H_*/

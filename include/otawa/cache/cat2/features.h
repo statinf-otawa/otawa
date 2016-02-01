@@ -41,6 +41,7 @@ otawa::Output& operator<<(otawa::Output& out, const fmlevel_t &fml);
 extern Identifier<fmlevel_t> FIRSTMISS_LEVEL;
 extern Identifier<bool> PSEUDO_UNROLLING;
 extern Identifier<genstruct::Vector<MUSTProblem::Domain*>*> CACHE_ACS_MUST_ENTRY;
+extern Identifier<genstruct::Vector<PERSProblem::Domain*>*> CACHE_ACS_PERS_ENTRY;
 extern p::feature ICACHE_ACS_FEATURE;
 extern Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST;
 extern Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS;

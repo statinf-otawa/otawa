@@ -1,5 +1,25 @@
+/*
+ *	ACSBuilder processor implementation
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2007-08, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
+ */
 
-#include <stdio.h>
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/cache/LBlockSet.h>
@@ -55,8 +75,12 @@ void Identifier<fmlevel_t>::fromString (PropList &props, const string &str) cons
  *
  * This feature represents the availability of Abstract Cache State informations.
  *
+ * @par Configuration
+ * @li @ref CACHE_ACS_MUST_ENTRY
+ *
  * @par Properties
- * @li @ref CACHE_ACS
+ * @li @ref CACHE_ACS_MUST
+ * @li @ref CACHE_ACS_PERS
  *
  * @par Processors
  * @li @ref ACSBuilder (default)
@@ -64,23 +88,31 @@ void Identifier<fmlevel_t>::fromString (PropList &props, const string &str) cons
 p::feature ICACHE_ACS_FEATURE("otawa::ICACHE_ACS_FEATURE", new Maker<ACSBuilder>());
 
 /**
- * This property represents the "must" Abstract Cache State of a basic block.
+ * This property represents the MUST Abstract Cache State of a basic block.
  * The vector stores the abstract cache states corresponding to all cache lines.
  *
  * @par Hooks
  * @li @ref BasicBlock
  */
- Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST("otawa::CACHE_ACS_MUST", NULL);
+Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST("otawa::CACHE_ACS_MUST", 0);
 
 /**
- * This property allows us to set an entry must ACS.
+ * This property allows to set an entry MUST ACS. It must be set in the property list passed
+ * to the invocation of a code processor.
  *
  * @par Hooks
- * @li @ref PropList
+ * @li @ref PropList (code processor configuration)
  */
- Identifier<Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST_ENTRY("otawa::CACHE_ACS_MUST_ENTRY", NULL);
+Identifier<Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST_ENTRY("otawa::CACHE_ACS_MUST_ENTRY", 0);
 
-
+/**
+ * This property allows to set an entry PERS ACS. It must be set in the property list passed
+ * to the invocation of a code processor.
+ *
+ * @par Hooks
+ * @li @ref PropList (code processor configuration)
+ */
+Identifier<Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS_ENTRY("otawa::CACHE_ACS_PERS_ENTRY", 0);
 
 /**
  * This property represents the "persistence" Abstract Cache State of a basic block.
@@ -89,7 +121,7 @@ p::feature ICACHE_ACS_FEATURE("otawa::ICACHE_ACS_FEATURE", new Maker<ACSBuilder>
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS("otawa::CACHE_ACS_PERS", NULL);
+Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS("otawa::CACHE_ACS_PERS", 0);
 
 /**
  * This property represents the "persistence" Abstract Cache State of a basic block.
@@ -151,7 +183,7 @@ otawa::Output& operator<<(otawa::Output& out, const fmlevel_t &fml) {
  *
  * @par Configuration
  * @li @ref FIRSTMISS_LEVEL identifier determines the First Miss method (FML_OUTER, FML_INNER, FML_MULTI, FML_NONE). FML_MULTI is the default.
- * @li @ref PSEUDO_UNROLLIG identifier determines if we do the Pseudo-Unrolling while doing the abstract interpretation.
+ * @li @ref PSEUDO_UNROLLING identifier determines if we do the Pseudo-Unrolling while doing the abstract interpretation.
  *
  * @par Required features
  * @li @ref DOMINANCE_FEATURE
@@ -167,6 +199,9 @@ otawa::Output& operator<<(otawa::Output& out, const fmlevel_t &fml) {
  * none
  */
 
+
+/**
+ */
 p::declare ACSBuilder::reg = p::init("otawa::ACSBuilder", Version(1, 1, 0))
 	.base(Processor::reg)
 	.maker<ACSBuilder>()
@@ -178,10 +213,14 @@ p::declare ACSBuilder::reg = p::init("otawa::ACSBuilder", Version(1, 1, 0))
 	.provide(ICACHE_ACS_FEATURE)
 	.require(hard::CACHE_CONFIGURATION_FEATURE);
 
-ACSBuilder::ACSBuilder(p::declare& r) : Processor(r), level(FML_NONE), unrolling(false), must_entry(0) {
+/**
+ */
+ACSBuilder::ACSBuilder(p::declare& r) : Processor(r), level(FML_NONE), unrolling(false), must_entry(0), pers_entry(0) {
 }
 
 
+/**
+ */
 void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::Cache *cache) {
 
 	int line = lbset->line();
@@ -202,7 +241,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			UnrollingListener<MUSTProblem> mustList(fw, mustProb);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > mustFp(mustList);
 			HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > > mustHai(mustFp, *fw);
-			mustHai.solve(NULL, must_entry ? must_entry->get(line) : NULL);
+			mustHai.solve(0, must_entry ? must_entry->get(line) : 0);
 
 
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
@@ -213,7 +252,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			DefaultListener<MUSTProblem> mustList(fw, mustProb);
 			DefaultFixPoint<DefaultListener<MUSTProblem> > mustFp(mustList);
 			HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTProblem> > > mustHai(mustFp, *fw);
-			mustHai.solve(NULL, must_entry ? must_entry->get(line) : NULL);
+			mustHai.solve(0, must_entry ? must_entry->get(line) : 0);
 
 
 			/* Store the resulting ACS into the properties */
@@ -228,13 +267,16 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			UnrollingListener<MUSTPERS> mustpersList( fw, mustpers);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > mustpersFp(mustpersList);
 			HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
-			mustHai.solve();
+			MUSTPERS::Domain entry(
+				must_entry ? *must_entry->get(line) : mustpers.entry().getMust(),
+				pers_entry ? *pers_entry->get(line) : mustpers.entry().getPers());
+			mustHai.solve(0, &entry, 0);
 
 			/* Store. */
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-					MUSTProblem::Domain &must= mustpersList.results[cfg->index()][bb->index()]->getMust();
-					PERSProblem::Domain &pers= mustpersList.results[cfg->index()][bb->index()]->getPers();
+					const MUSTProblem::Domain &must= mustpersList.results[cfg->index()][bb->index()]->getMust();
+					const PERSProblem::Domain &pers= mustpersList.results[cfg->index()][bb->index()]->getPers();
 					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(must));
 					CACHE_ACS_PERS(bb)->add(new PERSProblem::Domain(pers));
 
@@ -246,13 +288,16 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			DefaultListener<MUSTPERS> mustpersList( fw, mustpers);
 			DefaultFixPoint<DefaultListener<MUSTPERS> > mustpersFp(mustpersList);
 			HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
-			mustHai.solve();
+			MUSTPERS::Domain entry(
+				must_entry ? *must_entry->get(line) : mustpers.entry().getMust(),
+				pers_entry ? *pers_entry->get(line) : mustpers.entry().getPers());
+			mustHai.solve(0, &entry, 0);
 
 			/* Store. */
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-					MUSTProblem::Domain &must= mustpersList.results[cfg->index()][bb->index()]->getMust();
-					PERSProblem::Domain &pers= mustpersList.results[cfg->index()][bb->index()]->getPers();
+					const MUSTProblem::Domain &must= mustpersList.results[cfg->index()][bb->index()]->getMust();
+					const PERSProblem::Domain &pers= mustpersList.results[cfg->index()][bb->index()]->getPers();
 					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(must));
 					CACHE_ACS_PERS(bb)->add(new PERSProblem::Domain(pers));
 			}
@@ -260,15 +305,21 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 	}
 }
 
+
+/**
+ */
 void ACSBuilder::configure(const PropList &props) {
 	Processor::configure(props);
 	level = FIRSTMISS_LEVEL(props);
 	unrolling = PSEUDO_UNROLLING(props);
 	must_entry = CACHE_ACS_MUST_ENTRY(props);
-	if(logFor(LOG_PROC)) {
+
+	pers_entry = CACHE_ACS_PERS(props);
+	if(logFor(LOG_FUN)) {
 		log << "\tlevel = " << level << io::endl;
 		log << "\tunrolling = " << unrolling << io::endl;
 		log << "\tmust_entry = " << must_entry << io::endl;
+		log << "\tpers_entry = " << pers_entry << io::endl;
 	}
 }
 

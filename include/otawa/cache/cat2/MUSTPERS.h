@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	This file describes the Must & Pers combined problem.
+ *	MUSTPERS class interface
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
@@ -35,80 +34,37 @@
 namespace otawa {
 
 class MUSTPERS {
+public:
 
-	MUSTProblem mustProb;
-	PERSProblem persProb;
-		
-	// Types
-	public:	
 	class Domain {
-			friend class MUSTPERS;
-
-			PERSProblem::Domain pers;
-			MUSTProblem::Domain must;  			
-									
-			public:
-			inline Domain(const int _size, const int _A)
-			: pers(PERSProblem::Domain(_size, _A)), must(MUSTProblem::Domain(_size, _A)) {	
-	
-			}
+		friend class MUSTPERS;
+	public:
+		inline Domain(const int _size, const int _A)
+			: pers(PERSProblem::Domain(_size, _A)), must(MUSTProblem::Domain(_size, _A))
+			{ }
 			
+			inline Domain(const Domain &source) : pers(source.pers), must(source.must) { }
+			inline Domain(const MUSTProblem::Domain& m, const PERSProblem::Domain& p)
+				: pers(p), must(m) { }
 			
-			inline Domain(const Domain &source) : pers(source.pers), must(source.must) {
-			} 
-			
-			inline Domain& operator=(const Domain &src) {
-				pers = src.pers;
-				must = src.must;
-				return *this;
-			}
-
-			inline MUSTProblem::Domain& getMust() {
-				return must;
-			}	
-	
-
-		        inline PERSProblem::Domain& getPers() {
-				return pers;
-			}	
-			
-			inline void lub(const Domain &dom) {
-				pers.lub(dom.pers);
-				must.lub(dom.must);
-			}
-			
-			inline int getSize(void) {
-				return must.getSize();
-			}
-			
-			inline bool equals(const Domain &dom) const {
-				return (pers.equals(dom.pers) && must.equals(dom.must));
-			}
-			
-			inline void empty() {
-				must.empty();
-				pers.empty();
-			}
-			
-			inline bool mustContains(const int id) {
-				return(must.contains(id));			
-			}
-			
-			inline bool persContains(const int id, const int index) {
-				return(pers.contains(id, index));			
-			}	
-					
-			inline bool isWiped(const int id, const int index) {
-				return(pers.isWiped(id, index));				
-			}
-			
-			inline bool isPersistent(const int id, const int index) {
-				return(pers.isPersistent(id, index));			
-			}			
-			inline void inject(const int id) {
-				pers.inject(&must, id);
-				must.inject(id);
-			}
+			inline Domain& operator=(const Domain &src)
+				{ pers = src.pers; must = src.must; return *this; }
+			inline const MUSTProblem::Domain& getMust(void) const { return must; }
+			inline const PERSProblem::Domain& getPers(void) const { return pers; }
+			inline void lub(const Domain &dom) { pers.lub(dom.pers); must.lub(dom.must); }
+			inline int getSize(void) { return must.getSize(); }
+			inline bool equals(const Domain &dom) const
+				{ return (pers.equals(dom.pers) && must.equals(dom.must)); }
+			inline void empty() { must.empty(); pers.empty(); }
+			inline bool mustContains(const int id) { return(must.contains(id)); }
+			inline bool persContains(const int id, const int index)
+				{ return(pers.contains(id, index)); }
+			inline bool isWiped(const int id, const int index)
+				{ return(pers.isWiped(id, index)); }
+			inline bool isPersistent(const int id, const int index)
+				{ return(pers.isPersistent(id, index)); }
+			inline void inject(const int id)
+				{ pers.inject(&must, id); must.inject(id); }
 			
 			inline void print(elm::io::Output &output) const {
 				output << "PERS=[ ";
@@ -118,16 +74,13 @@ class MUSTPERS {
 				output << "]";
 			}
 
+		private:
+			PERSProblem::Domain pers;
+			MUSTProblem::Domain must;
 	};
 	
 	
-	private:
-	Domain bot;
-	Domain _top;
-	Domain ent;
-	unsigned int line;
-
-	public:
+public:
 	
 	// Constructors
 	MUSTPERS(const int _size, LBlockSet *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A);
@@ -137,15 +90,9 @@ class MUSTPERS {
 	const Domain& top(void) const;
 	const Domain& entry(void) const;
 		
-	inline void lub(Domain &a, const Domain &b) const {
-		a.lub(b);
-	}
-	inline void assign(Domain &a, const Domain &b) const {
-		a = b;
-	}
-	inline bool equals(const Domain &a, const Domain &b) const {
-		return (a.equals(b));
-	}
+	inline void lub(Domain &a, const Domain &b) const { a.lub(b); }
+	inline void assign(Domain &a, const Domain &b) const { a = b; }
+	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
 	
 	void update(Domain& out, const Domain& in, Block* bb);
 	
@@ -161,10 +108,17 @@ class MUSTPERS {
 
 	}		
 
+private:
+	MUSTProblem mustProb;
+	PERSProblem persProb;
+	Domain bot;
+	Domain _top;
+	Domain ent;
+	unsigned int line;
 };
 
 elm::io::Output& operator<<(elm::io::Output& output, const MUSTPERS::Domain& dom);
 
-}
+}	// elm
 
 #endif /*CACHE_MUSTPROBLEM_H_*/
