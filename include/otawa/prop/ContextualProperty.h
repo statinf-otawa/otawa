@@ -91,13 +91,13 @@ public:
 
 	static const PropList& find(const PropList& props, const ContextualPath& path, const AbstractIdentifier& id);
 	static PropList& make(PropList& props, const ContextualPath& path);
-	static void print(io::Output& out, const PropList& props);
+	static void printFrom(io::Output& out, const PropList& props);
 
 private:
 	const PropList& findProps(const PropList& props, const ContextualPath& path, const AbstractIdentifier& id) const;
 	PropList& makeProps(const ContextualPath& path);
 	PropList& refProps(PropList& props, const ContextualPath& path, const AbstractIdentifier& id);
-	void print(io::Output& out, const Node& node, int indent = 0) const;
+	void printRec(io::Output& out, const Node& node, int indent = 0) const;
 
 	Node root;
 	static AbstractIdentifier ID;

@@ -546,10 +546,10 @@ void Value::inter(const Value& val) {
 	uintn_t l2test = (sta2 - sta1) / elm::abs(d1), m2test = (sto2 - sta1) / elm::abs(d1),
 			l1test = (sta1 - sta2) / elm::abs(d2), m1test = (sto1 - sta2) / elm::abs(d2);
 
-	if (!(	( (0 <= l2test) && (l2test <= m1) ) ||
-			( (0 <= m2test) && (m2test <= m1) ) ||
-			( (0 <= l1test) && (l1test <= m2) ) ||
-			( (0 <= m1test) && (m1test <= m2) ) )){
+	if(!((sta2 <= sta1 && l2test <= m1) ||
+		 (sto2 <= sto1 && m2test <= m1) ||
+		 (sta1 <= sta2 && l1test <= m2) ||
+		 (sto1 <= sto2 && m1test <= m2) )) {
 
 		set(NONE, 0, 0, 0);
 		return;
@@ -1405,9 +1405,10 @@ const Value& State::get(const Value& addr) const {
 			return Value::all;
 	} else {
 		// Memory
-		for(cur = first.next; cur && cur->addr < uintn_t(addr.lower()); cur = cur->next) ;
-			if(cur && cur->addr == uintn_t(addr.lower()))
-				return cur->val;
+		for(cur = first.next; cur && cur->addr < uintn_t(addr.lower()); cur = cur->next)
+				;
+		if(cur && cur->addr == uintn_t(addr.lower()))
+			return cur->val;
 		return first.val;
 	}
 }

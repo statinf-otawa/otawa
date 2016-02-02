@@ -41,21 +41,22 @@ extern const AbstractIdentifier END;
 // Property description
 class Property {
 	friend class PropList;
-	mutable Property *_next;
-	const AbstractIdentifier *_id;
-protected:
-	virtual ~Property(void) { };
-	virtual Property *copy(void) { return new Property(_id); };
 public:
 	static const AbstractIdentifier *getID(elm::CString name);
-	inline Property(const AbstractIdentifier *id): _id(id) { };
-	inline Property(const AbstractIdentifier& id): _id(&id) { };
+	inline Property(const AbstractIdentifier *id): _id(id), _next(0) { };
+	inline Property(const AbstractIdentifier& id): _id(&id), _next(0) { };
 	inline Property(elm::CString name): _id(getID(name)) { };
 	inline const AbstractIdentifier *id(void) const { return _id; };
 	inline Property *next(void) const { return _next; };
 	template <class T> inline const T& get(void) const;
 	template <class T> inline void set(const T& value);
 	virtual void print(elm::io::Output& out) const;
+protected:
+	virtual ~Property(void) { };
+	virtual Property *copy(void) { return new Property(_id); };
+private:
+	const AbstractIdentifier *_id;
+	mutable Property *_next;
 };
 
 

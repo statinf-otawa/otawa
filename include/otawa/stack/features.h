@@ -48,7 +48,8 @@ public:
 private:
 	static const int_t
 		bot_id = -1,
-		top_id = -2;
+		top_id = -2,
+		max_id = 0x80000000;
 	typedef t::int32 page_t;
 	static const page_t
 		spec_page 	= Address::null_page - 2,
@@ -69,7 +70,7 @@ public:
 
 	inline bool isTop(void) const { return _page == spec_page && _val == top_id; }
 	inline bool isBot(void) const { return _page == spec_page && _val == bot_id; }
-	inline bool isReg(void) const { return _page == spec_page && _val >= 0; }
+	inline bool isReg(void) const { return _page == spec_page && _val < max_id; }
 	inline bool isSP(void) const { return _page == sp_page; }
 	inline bool isConst(void) const { return _page > sp_page; }
 

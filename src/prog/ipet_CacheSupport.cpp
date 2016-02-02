@@ -119,25 +119,29 @@ p::feature INST_CACHE_SUPPORT_FEATURE("otawa::ipet::INST_CACHE_SUPPORT_FEATURE",
  * each memory access instruction in the basic block.
  */
 
-void TrivialDataCacheManager::configure(WorkSpace *framework) {
-	fw = framework;
-	if(!hard::CACHE_CONFIGURATION(fw)->hasDataCache()) {
+void TrivialDataCacheManager::setup(WorkSpace *ws) {
+	if(!hard::CACHE_CONFIGURATION(ws)->hasDataCache()) {
 		time = 0;
 		log << "WARNING: there is no data cache here !\n";
 	}
 	else
-		time = fw->cache().dataCache()->missPenalty();
+		time = ws->cache().dataCache()->missPenalty();
 }
 
 
 /**
+ */
+p::declare TrivialDataCacheManager::reg =
+	p::init("otawa::ipet::TrivialDataCacheManager", Version(1, 0, 0))
+	.maker<TrivialDataCacheManager>()
+	.provide(DATA_CACHE_SUPPORT_FEATURE)
+	.require(COLLECTED_CFG_FEATURE)
+	.require(BB_TIME_FEATURE);
+
+/**
  * Build the trivial data cache manager.
  */
-TrivialDataCacheManager::TrivialDataCacheManager(void)
-: BBProcessor("ipet::TrivialDataCacheManager", Version(1, 0, 0)), fw(0), time(0) {
-	provide(DATA_CACHE_SUPPORT_FEATURE);
-	require(COLLECTED_CFG_FEATURE);
-	require(BB_TIME_FEATURE);
+TrivialDataCacheManager::TrivialDataCacheManager(p::declare& r): BBProcessor(r), time(0) {
 }
 
 
@@ -154,8 +158,6 @@ void TrivialDataCacheManager::processBB(WorkSpace *framework, CFG *cfg, Block *b
 	BasicBlock *bb = b->toBasic();
 
 	// Check configuration
-	if(framework != fw)
-		configure(framework);
 	if(!time)
 		return;
 

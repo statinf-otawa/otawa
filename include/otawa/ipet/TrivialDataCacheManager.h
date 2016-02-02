@@ -15,15 +15,16 @@ namespace otawa { namespace ipet {
 
 // TrivialBBTime class
 class TrivialDataCacheManager: public BBProcessor {
-	WorkSpace *fw;
-	int time;
-	void configure(WorkSpace *fw);
+public:
+	static p::declare reg;
+	TrivialDataCacheManager(p::declare& r = reg);
 
 protected:
+	virtual void setup(WorkSpace *ws);
 	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb);
 
-public:
-	TrivialDataCacheManager(void);
+private:
+	int time;
 };
 
 } } // otawa::ipet

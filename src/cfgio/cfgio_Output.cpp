@@ -85,7 +85,7 @@ Identifier<Path> OUTPUT("otawa::cfgio::OUTPUT");
 
 /**
  */
-Output::Output(void): BBProcessor(reg), root(0), cfg_node(0), last_bb(0), no_insts(false) {
+Output::Output(void): BBProcessor(reg), root(0), cfg_node(0), last_bb(0), all(false), no_insts(false) {
 }
 
 

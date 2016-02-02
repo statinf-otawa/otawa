@@ -363,25 +363,25 @@ PropList& ContextualProperty::refProps(
  * @param out	Stream to output to.
  * @param props	Property list.
  */
-void ContextualProperty::print(io::Output& out, const PropList& props) {
+void ContextualProperty::printFrom(io::Output& out, const PropList& props) {
 	ContextualProperty *prop = (ContextualProperty *)props.getProp(&ID);
 	if(!prop)
 		out << "<no contextual information>\n";
 	else
-		prop->print(out, prop->root);
+		prop->printRec(out, prop->root);
 }
 
 
 /**
  */
-void ContextualProperty::print(io::Output& out, const Node& node, int indent) const {
+void ContextualProperty::printRec(io::Output& out, const Node& node, int indent) const {
 	for(int i = 0; i < indent; i++)
 		out << '\t';
 	out << node.step << ' ' << (void *)&(const PropList&)node << ' ';
 	node.print(out); out << '\n';
 	for(Node::Iterator child(&node); child; child++) {
 		Node *node = (Node *)*child;
-		print(out, *node, indent + 1);
+		printRec(out, *node, indent + 1);
 	}
 }
 
