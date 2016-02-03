@@ -230,7 +230,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			if (HAI_BYPASS_TARGET(current) && (inedge->kind() == Edge::VIRTUAL_RETURN))
 				continue;*/
 			typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
-			ASSERT(edgeState);
+			ASSERTP(edgeState, "no state for " << *inedge  << " (" << inedge->source()->cfg() << ")");
 			fp.updateEdge(*inedge, *edgeState);
 			fp.lub(in, *edgeState);
 			//if(!next_edge)
@@ -280,7 +280,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 
 		// record function output state
        	fp.markEdge(edge, out);
-       	workList->push(edge->sink());
+       	tryAddToWorkList(edge->sink()); //workList->push(edge->sink());
 	}
 
 	// from synthetic block
