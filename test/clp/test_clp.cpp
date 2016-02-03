@@ -181,7 +181,7 @@ int main(void) {
 		CHECK(v == clp::Value::none);
 		v = clp::Value(clp::VAL, 15, 1, 10);
 		v.geu(10);
-		CHECK(v == clp::Value(clp::VAL, 15, 1, 10));
+		CHECK_EQUAL(v, clp::Value(clp::VAL, 15, 1, 10));
 		v = clp::Value(clp::VAL, 0, 1, 20);
 		v.geu(10);
 		CHECK_EQUAL(v, clp::Value(clp::VAL, 10, 1, 10));
@@ -237,6 +237,31 @@ int main(void) {
 		v = clp::Value(clp::VAL, 15, -1, 10);
 		v.leu(10);
 		CHECK_EQUAL(v, clp::Value(clp::VAL, 5, 1, 5));
+	}
+
+	// substractions
+	{
+		CHECK_EQUAL(val(8, -1, 0xFFFFFFFF) - val(1, 0, 0), val(7, -1, 0xFFFFFFFF)); // inf1- k
+		CHECK_EQUAL(val(2, 3, 2) - val(8, 1, 0xFFFFFFFF), val(0, -1, 0xFFFFFFFF)); // xxx - inf2
+		CHECK_EQUAL(val(8, 1, 0xFFFFFFFF) - val(2, 3, 2), val(0, 1, 0xFFFFFFFF)); // inf1 - xxx
+		CHECK_EQUAL(val(8, 1, 1) - val(2, 3, 2), val(0, 1, 7)); // xxx - yyy
+		CHECK_EQUAL(val(2, 3, 0xFFFFFFFF) - val(8, 1, 0xFFFFFFFF), all); // inf1 - inf2
+		CHECK_EQUAL(val(2, -3, 2) - val(8, -1, 0xFFFFFFFF), val(-12, 1, 0xFFFFFFFF));
+		CHECK_EQUAL(val(8, -1, 0xFFFFFFFF) - val(2, -3, 2), val(12, -1, 0xFFFFFFFF));
+		CHECK_EQUAL(val(8, -1, 1) - val(2, -3, 2), val(5, 1, 7));
+		CHECK_EQUAL(val(7, 1, 1) - val(-4, 3, 2), val(5, 1, 7));
+		CHECK_EQUAL(val(2, -3, 0xFFFFFFFF) - val(8, -1, 0xFFFFFFFF), all);
+		CHECK_EQUAL(val(2, 3, 0xFFFFFFFF) - val(8, -1, 0xFFFFFFFF), val(-6, 1, 0xFFFFFFFF));
+		CHECK_EQUAL(val(2, -3, 0xFFFFFFFF) - val(8, 1, 0xFFFFFFFF), val(-6, -1, 0xFFFFFFFF));
+		CHECK_EQUAL(val(2, 3, 0xFFFFFFFF) - val(8, -1, 1), val(-6, 1, 0xFFFFFFFF));
+		CHECK_EQUAL(val(2, -3, 0xFFFFFFFF) - val(8, 1, 1), val(-6, -1, 0xFFFFFFFF));
+		CHECK_EQUAL(val(2, 3, 2) - val(8, -1, 1), val(-6, 1, 7));
+		CHECK_EQUAL(val(2, -3, 2) - val(8, 1, 1), val(-6, -1, 7));
+		CHECK_EQUAL(val(2, 3, 0xFFFFFFFF) - val(8, -1, 0xFFFFFFFF), val(-6, 1, 0xFFFFFFFF));
+		CHECK_EQUAL(val(2, -3, 0xFFFFFFFF) - val(8, 1, 1), val(-6, -1, 0xFFFFFFFF));
+		CHECK_EQUAL(val(2, -3, 2) - val(8, 1, 0xFFFFFFFF), val(-6, -1, 0xFFFFFFFF));
+		CHECK_EQUAL(val(2, 3, 2) - val(8, -1, 0xFFFFFFFF), val(-6, 1, 0xFFFFFFFF));
+		CHECK_EQUAL(val(0, 1, 0xFFFFFFFE) - val(0, -2, 0x7FFFFFFE), val(0, 1, 0xFFFFFFFF)); // testing the overflow
 	}
 
 	CHECK_END

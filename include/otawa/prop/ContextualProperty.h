@@ -180,7 +180,7 @@ public:
 	inline void pop(void) { ASSERT(&p); p = p->next(); }
 
 	inline bool isEmpty(void) const { return p.isNull(); }
-	inline int count(void) const { return p->count(); }
+	inline int count(void) const { return p.isNull() ? 0 : p->count(); }
 	inline const ContextualStep& step(int i) const { return p->ith(p->count() - i - 1); }
 	inline const ContextualStep& operator[](int i) const { return step(i); }
 	inline operator bool(void) const { return !isEmpty(); }

@@ -139,7 +139,7 @@ int main(void) {
 
 		// simple case
 		ID(props) = 111;
-		ContextualProperty::print(cerr, props);
+		ContextualProperty::printFrom(cerr, props);
 		CHECK(ID(props) == 111);
 		CHECK(BAD(props) == -1);
 		CHECK(path(ID, props) == 111);
@@ -148,7 +148,7 @@ int main(void) {
 		// simple path
 		path.push(ContextualStep::FUNCTION, Address(1));
 		path(ID, props) = 222;
-		ContextualProperty::print(cerr, props);
+		ContextualProperty::printFrom(cerr, props);
 		CHECK(ID(props) == 111);
 		CHECK(BAD(props) == -1);
 		CHECK_EQUAL((int)path(ID, props), 222);
@@ -156,7 +156,7 @@ int main(void) {
 
 		// double value
 		path(ID2, props) = 333;
-		ContextualProperty::print(cerr, props);
+		ContextualProperty::printFrom(cerr, props);
 		CHECK_EQUAL((int)ID2(props), -1);
 		CHECK(path(ID2, props) == 333);
 
@@ -166,7 +166,7 @@ int main(void) {
 		path.push(ContextualStep::FUNCTION, Address(2));
 		path.push(ContextualStep::FUNCTION, Address(1));
 		path(ID, props) = 444;
-		ContextualProperty::print(cerr, props);
+		ContextualProperty::printFrom(cerr, props);
 		CHECK_EQUAL((int)ID(props), 111);
 		CHECK_EQUAL(int(path(ID, props)), 444);
 		CHECK_EQUAL(int(path(ID2, props)), 333);
@@ -176,7 +176,7 @@ int main(void) {
 		path.push(ContextualStep::FUNCTION, Address(3));
 		path.push(ContextualStep::FUNCTION, Address(1));
 		path.ref(ID, props) = 555;
-		ContextualProperty::print(cerr, props);
+		ContextualProperty::printFrom(cerr, props);
 		CHECK(path(ID, props) == 555);
 		CHECK(path(ID2, props) == 333);
 

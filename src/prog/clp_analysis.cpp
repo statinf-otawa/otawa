@@ -228,20 +228,52 @@ Value Value::operator-(const Value& val) const{
  * @param val the value to add
  */
 void Value::add(const Value& val){
-	bool needreverse = (delta() < 0) || (val.delta() < 0);
 	if (_kind == NONE && val._kind == NONE) 	/* NONE + NONE = NONE */
-		set(NONE, 0, 0, 0);
+		*this = none;
 	else if (_kind == ALL || val._kind == ALL) 	/* ALL + anything = ALL */
-		set(ALL, 0, 1, UMAXn);
+		*this = all;
 	else if (_delta == 0 && val._delta == 0) 	/* two constants */
 		set(_kind, _base + val._base, 0, 0);
-	else {										/* other cases */
-		uintn_t g = gcd(_delta, val._delta);
-		set(VAL, start() + val.start(), g,
-		    _mtimes * (elm::abs(_delta) / g) + val._mtimes * (elm::abs(val._delta) / g));
+	else if(direction() == val.direction()) {
+		if(isInf() || val.isInf()) { // same direction, either one of the component is inf
+			intn_t g = gcd(_delta, val._delta);
+			intn_t l = _base + val._base;
+			set(VAL, l, g, UMAXn);
+		}
+		else { // same direction, other cases
+			intn_t g = gcd(_delta, val._delta);
+			intn_t l = _base + val._base;
+			uintn_t m1 = _mtimes * (elm::abs(_delta) / elm::abs(g));
+			uintn_t m2 = val._mtimes * (elm::abs(val._delta) / elm::abs(g));
+			uintn_t mtimes =  m1 + m2;
+			if(UMAXn - m1 < m2)
+				mtimes = UMAXn;
+			set(VAL, l, g, mtimes);
+
+		}
 	}
-	if (needreverse){
-		reverse();
+	else {
+		if(isInf() && val.isInf()) // diff direction, both of the component are inf
+			*this = Value::all;
+		else { // different direction
+				Value temp(val);
+				if(isInf()) 			// inf will take more effect
+					temp.reverse(); 	// temp2 needs to follow temp1's direction
+				else if (val.isInf())
+					reverse();
+				else if(_delta < 0) 	// if none of them is infinite, then make the negative delta to the positive one by reversing it
+					reverse();
+				else 					// same for the 2nd operand
+					temp.reverse();
+				intn_t g = gcd(_delta, temp._delta);
+				intn_t l = _base + temp._base;
+				uintn_t m1 = _mtimes * (elm::abs(_delta) / elm::abs(g));
+				uintn_t m2 = temp._mtimes * (elm::abs(temp._delta) / elm::abs(g));
+				uintn_t mtimes =  m1 + m2;
+				if((UMAXn - m1) < m2)
+					mtimes = UMAXn;
+				set(VAL, l, g, mtimes);
+		}
 	}
 }
 
@@ -250,22 +282,20 @@ void Value::add(const Value& val){
  * @param val the value to subtract
  */
 void Value::sub(const Value& val) {
-	bool needreverse = (delta() < 0) || (val.delta() < 0);
 	if (_kind == NONE && val._kind == NONE)		/* NONE - NONE = NONE */
-		set(NONE, 0, 0, 0);
+		*this = none;
 	else if (_kind == ALL || val._kind == ALL)	/* ALL - anything = ALL */
-		set(ALL, 0, 1, UMAXn);
+		*this = all;
 	else if (_delta == 0 && val._delta == 0)	/* two constants */
 		set(_kind, _base - val._base, 0, 0);
-	else {										/* other cases */
-		uintn_t g = gcd(_delta, val._delta);
-		set(VAL, start() - val.stop(), g,
-			_mtimes * (elm::abs(_delta) / g) + val._mtimes * (elm::abs(val._delta) / g));
-	}
-	if (needreverse){
-		reverse();
+	else {
+		Value temp(val);
+		temp._delta = -temp._delta;
+		temp._base = -temp._base;
+		add(temp);
 	}
 }
+
 
 /**
  * Print a human representation of the CLP
@@ -1003,6 +1033,7 @@ void Value::_and(const Value& val) {
 
 //inline io::Output& operator<<(io::Output& out, const Value& v) { v.print(out); return out; }
 const Value Value::none(NONE), Value::all(ALL, 0, 1, UMAXn);
+const Value Value::bot(NONE), Value::top(ALL, 0, 1, UMAXn);
 
 /* *** State methods *** */
 

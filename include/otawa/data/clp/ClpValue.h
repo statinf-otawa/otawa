@@ -124,6 +124,8 @@ typedef enum {
 		inline intn_t upper(void) const { return _base + _delta * _mtimes; }
 		inline intn_t delta(void) const { return _delta; }
 		inline uintn_t mtimes(void) const { return _mtimes; }
+		inline bool isInf(void) const { return (_mtimes == UMAXn); }
+		inline bool direction(void) const { return (delta() > 0); }
 
 		/** @return the "start" of the CLP, i.e. the lower bound if delta >= 0,
 		*	lower + delta * mtimes else.
@@ -217,8 +219,10 @@ typedef enum {
 
 		/** Represents the bottom element */
 		static const Value none;
+		static const Value bot;
 		/** Represents the top element */
 		static const Value all;
+		static const Value top;
 
 		/**
 		 * Set the values for the current object
