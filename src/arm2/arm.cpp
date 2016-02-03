@@ -979,12 +979,20 @@ otawa::Inst *Segment::decode(address_t address) {
 
 
 void Inst::semInsts (sem::Block &block) {
+
+	// get the block
 	arm_inst_t *inst = proc.decode_raw(address());
 	if(inst->ident == ARM_UNKNOWN)
 		return;
 	arm_sem(inst, block);
 	arm_free_inst(inst);
 
+	// fix spurious instructions possibly generated with conditional instructions
+	for(int i = 0; i < block.length(); i++)
+		if(block[i].op == sem::CONT) {
+			block.setLength(i);
+			break;
+		}
 }
 
 /****** loader definition ******/
