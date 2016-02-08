@@ -213,8 +213,16 @@ inline uintn_t umax(uintn_t a, uintn_t b){
  * @ingroup clp
  */
 
-// TODO		check it
+
+/**
+ * Forms two CLP values which are the components of [base value, the value just before overflow]
+ * and [the value just after overflow, upper bound of this part]. Refer to the beginning of the
+ * section 6 of [Sen et Srikant, 2007].
+ * @param p the CLP value contains [base value, the value just before overflow]
+ * @param q the CLP value contains [the value just after overflow, upper bound of this part]
+ */
 void Value::PQValue(Value &p, Value &q) {
+	ASSERT(_delta >= 0);
 	intn_t l, u;
 	l = _base;
 	u = _base + _delta * _mtimes;
