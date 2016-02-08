@@ -126,6 +126,7 @@ typedef enum {
 		inline uintn_t mtimes(void) const { return _mtimes; }
 		inline bool isInf(void) const { return (_mtimes == UMAXn); }
 		inline bool direction(void) const { return (delta() > 0); }
+		void PQValue(Value &p, Value &q);
 
 		/** @return the "start" of the CLP, i.e. the lower bound if delta >= 0,
 		*	lower + delta * mtimes else.
@@ -181,7 +182,8 @@ typedef enum {
 		 * Join another set to the current one
 		 * @param val the value to be joined with
 		 */
-		void join(const Value& val);
+		Value& join(const Value& val);
+
 		/**
 		 * Perform a widening to the infinite (to be filtred later)
 		 * @param val the value of the next iteration state
@@ -197,7 +199,8 @@ typedef enum {
 		 * Intersection with the current value.
 		 * @param val the value to do the intersection with
 		 */
-		void inter(const Value& val);
+		Value& inter(const Value& val);
+
 		/**
 		 * Reverse the CLP direction (swap upper and lower bounds, and use
 		 * the opposite of delta as new delta).

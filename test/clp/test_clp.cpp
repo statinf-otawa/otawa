@@ -264,6 +264,38 @@ int main(void) {
 		CHECK_EQUAL(val(0, 1, 0xFFFFFFFE) - val(0, -2, 0x7FFFFFFE), val(0, 1, 0xFFFFFFFF)); // testing the overflow
 	}
 
+	// checking intersections
+	{
+		clp::Value v = val(1, 1, 0x7FFFFFFE);
+		clp::Value u = val(-1, -1, 0x7FFFFFFE);
+		v.inter(u);
+		CHECK_EQUAL(v, clp::Value::none);
+
+		v = val(1, 1, 0x7FFFFFFF);
+		u = val(-1, -1, 0x7FFFFFFF);
+		v.inter(u);
+		CHECK_EQUAL(v, val(0x80000000, 0, 0));
+
+		v = val(2, -1, -1);
+		u = val(2, 1, 1);
+		v.inter(u);
+		CHECK_EQUAL(v, val(0x2, 1, 0x1));
+
+		v = val(2, -2, -1); // even though v circulates all even values
+		u = val(2, 1, 1);
+		v.inter(u); // when intersect with u, only "2" matches
+		CHECK_EQUAL(v, val(0x2, 0, 0));
+
+		v = clp::Value::none; // none intersect with anything is none
+		u = val(2, 1, 1);
+		v.inter(u);
+		CHECK_EQUAL(v, clp::Value::none);
+
+		CHECK_EQUAL(val(2,-1,-1).inter(val(2,0,0)), val(2, 0, 0));
+		CHECK_EQUAL(val(2,0,-0).inter(val(2,-1,-1)), val(2, 0, 0));
+
+	}
+
 	CHECK_END
 	return 0;
 }

@@ -68,6 +68,8 @@ using namespace otawa;
 // Debug only, alarm on store to T
 #define ALARM_STORE_TOP(t)	//t
 //#define STATE_MULTILINE
+#define TRACE_INTERSECT(t) //t
+
 
 // enable to load data from segments when load results with T
 #define DATA_LOADER
@@ -211,6 +213,37 @@ inline uintn_t umax(uintn_t a, uintn_t b){
  * @ingroup clp
  */
 
+// TODO		check it
+void Value::PQValue(Value &p, Value &q) {
+	intn_t l, u;
+	l = _base;
+	u = _base + _delta * _mtimes;
+	if(l <= u) {
+		p = *this;
+		q = Value::none;
+	}
+	else {
+
+		// calculate the P value
+		// just to be careful with sign and unsigned ops, so use int64 and break the operation apart......
+		t::int64 maxPm = MAXn;
+		maxPm = maxPm - l;
+		maxPm = maxPm / _delta;
+		intn_t maxPd = (maxPm == 0)? 0 : _delta;
+		p.set(VAL, l, maxPd, maxPm);
+
+		// calculate the Q value
+		t::int64 minQm = u;
+		minQm = minQm - MINn;
+		minQm = minQm / _delta;
+		intn_t minQ = u - _delta * minQm;
+		intn_t minQd = (minQm == 0)? 0 : _delta;
+		q.set(VAL, minQ, minQd, minQm);
+	}
+}
+
+/**
+ */
 Value Value::operator+(const Value& val) const{
 	Value v = *this;
 	v.add(val);
@@ -393,15 +426,15 @@ void Value::_or(const Value& val) {
  * Join another set to the current one
  * @param val the value to be joined with
  */
-void Value::join(const Value& val) {
+Value& Value::join(const Value& val) {
 	if ((*this) == val)							/* A U A = A (nothing to do) */
-		return;
+		return *this;
 	else if (_kind == ALL || val._kind == ALL)  /* ALL U anything = ALL */
 		set(ALL, 0, 1, UMAXn);
 	else if (_kind == NONE)						/* NONE U A = A */
 		set(VAL, val._base, val._delta, val._mtimes);
 	else if (val._kind == NONE)					/* A U NONE = A (nothing to do) */
-		return;
+		return *this;
 	else if(isConst() && val.isConst()) /* k1 U k2 */
 		set(VAL, min(_base, val._base), elm::abs(_base - val._base), 1);
 	else {										/* other cases */
@@ -416,6 +449,7 @@ void Value::join(const Value& val) {
 			umax = u2;
 		set(VAL, ls, g, (umax - ls) / g);
 	}
+	return *this;
 }
 
 /**
@@ -513,177 +547,184 @@ void Value::ffwidening(const Value& val, int loopBound){
  * Intersection with the current value.
  * @param val the value to do the intersection with
  */
-void Value::inter(const Value& val) {
-	intn_t l1 = _base, l2 = val._base;
-	intn_t sta1 = start(), sta2 = val.start();
-	intn_t sto1 = stop(), sto2 = val.stop();
-	intn_t d1 = _delta, d2 = val._delta;
-	uintn_t m1 = _mtimes, m2 = val._mtimes;
-	int64_t u1, u2;
-	if (_delta < 0)
-		u1 = _base;
-	else
-		u1 = (int64_t)_base + (int64_t)_delta * (int64_t)_mtimes;
-	if (val._delta < 0)
-		u2 = _base;
-	else
-		u2 = (int64_t)val._base + (int64_t)val._delta * (int64_t)val._mtimes;
+Value& Value::inter(const Value& val) {
 
 	// In this function, numbers are refs to doc/inter/clpv2-inter.pdf
 
 	// 2. Special cases ========================
 
-	// 2.1. A n A (T n T)
-	if ((*this) == val){
-		// do nothing
-		return;
+	// 2.0 bottom
+	if(((*this) == Value::none) || (val == Value::none)) {
+		*this = Value::none;
+		return *this;
 	}
-	if(isTop()) {
+
+	// 2.1. A n A (T n T)
+	if ((*this) == val)
+		return *this;
+	else if(isTop()) {
 		*this = val;
-		return;
+		return *this;
 	}
 	else if(val.isTop())
-		return;
+		return *this;
 
 	// 2.2. cst n cst
-	if (isConst() && val.isConst()){
-		if (l1 == l2)
-			set(VAL, l1, 0, 0);
-		else
+	if(isConst() && val.isConst()){
+		if(_base != val._base)
 			set(NONE, 0, 0, 0);
-		return ;
+		return *this;
 	}
 
 	// 2.3. cst n clp || clp n cst
+	// TODO		direction problem?
 	if (isConst()) {
-		if ( ((sta1 >= sta2) && ((sta1 - sta2) % d2 == 0) && (u1 <= u2)) ||
-		     (val == all))
-			set(VAL, sta1, 0, 0);
+		Value temp(val);
+		if(!temp.direction())
+			temp.reverse();
+		if((uintn_t)((_base - temp._base) / temp._delta) > temp._mtimes)
+			*this = Value::none;
 		else
-			set(NONE, 0, 0, 0);
-		return ;
+			set(VAL, _base, 0, 0);
+			return *this;
 	}
-	if (val.isConst()) {
-		if((val.lower() - lower()) % delta() == 0
-		&& uintn_t((val.lower() - lower()) / delta()) <= mtimes())
-			set(VAL, sta2, 0, 0);
+
+	if(val.isConst()) {
+		Value temp(*this);
+		if(!temp.direction())
+			temp.reverse();
+		if((uintn_t)((val._base - temp._base) / temp._delta) > temp._mtimes)
+			*this = Value::none;
 		else
-			set(NONE, 0, 0, 0);
-		return;
+			set(VAL, _base, 0, 0);
+		return *this;
+	 }
+
+
+	// need to make sure they go to the same, and positive direction
+	TRACE_INTERSECT(elm::cout << "*this = " << *this << io::endl;)
+	TRACE_INTERSECT(elm::cout << "  val = " << val << io::endl;)
+	Value val1(*this);
+	Value val2(val);
+	if(!val1.direction())
+		val1.reverse();
+	if(!val2.direction())
+		val2.reverse();
+
+	TRACE_INTERSECT(elm::cout << "val1  = " << val1 << io::endl;)
+	TRACE_INTERSECT(elm::cout << "val2  = " << val2 << io::endl;)
+
+	TRACE_INTERSECT(elm::cout << "_base = " << val1._base << io::endl;)
+	TRACE_INTERSECT(elm::cout << "_delta = " << val1._delta << io::endl;)
+	TRACE_INTERSECT(elm::cout << "_mtimes = " << (val1._mtimes) << " HEX: " << hex(val1._mtimes) << io::endl;)
+	TRACE_INTERSECT(elm::cout << "val2._base = " << val2._base << io::endl;)
+	TRACE_INTERSECT(elm::cout << "val2._delta = " << val2._delta << io::endl;)
+	TRACE_INTERSECT(elm::cout << "val2._mtimes = " << (val2._mtimes) << " HEX: " << hex(val2._mtimes) << io::endl;)
+
+	// 2.5 now carry out intersection, first we take care of the circularity and overflow as section 6 in [Sen et Srikant, 2007]
+	// if upperbound < lowerbound, means circularity and overflow
+	intn_t val1upper = val1._base + val1._delta * val1._mtimes;
+	intn_t val2upper = val2._base + val2._delta * val2._mtimes;
+	TRACE_INTERSECT(elm::cout << "val1upper = " << val1upper << io::endl;)
+	TRACE_INTERSECT(elm::cout << "val2upper = " << val2upper << io::endl;)
+	if((val1upper < val1._base) || (val2upper < val2._base)) {
+		static int iii = 0;
+		iii++;
+		assert(iii == 1);
+		// make P and Q for A and B
+		Value PA, PB, QA, QB, PA2, QA2;
+		val1.PQValue(PA, QA);
+		val2.PQValue(PB, QB);
+		PA2 = PA;
+		QA2 = QA;
+		TRACE_INTERSECT(elm::cout << "PA = " << PA << io::endl;)
+		TRACE_INTERSECT(elm::cout << "QA = " << QA << io::endl;)
+		TRACE_INTERSECT(elm::cout << "PB = " << PB << io::endl;)
+		TRACE_INTERSECT(elm::cout << "QB = " << QB << io::endl;)
+
+		// intersection for each component
+		PA.inter(PB);
+		PA2.inter(QB);
+		QA.inter(PB);
+		QA2.inter(QB);
+		TRACE_INTERSECT(elm::cout << "PAx = " << PA << io::endl;)
+		TRACE_INTERSECT(elm::cout << "PA2x = " << PA2 << io::endl;)
+		TRACE_INTERSECT(elm::cout << "QAx = " << QA << io::endl;)
+		TRACE_INTERSECT(elm::cout << "QA2x = " << QA2 << io::endl;)
+
+		// join the results
+		PA.join(PA2).join(QA).join(QA2);
+		*this = PA;
+		iii--;
+		return *this;
 	}
 
-	// 2.4. not overlapping intervals
-	uintn_t l2test = (sta2 - sta1) / elm::abs(d1), m2test = (sto2 - sta1) / elm::abs(d1),
-			l1test = (sta1 - sta2) / elm::abs(d2), m1test = (sto1 - sta2) / elm::abs(d2);
-
-	if(!((sta2 <= sta1 && l2test <= m1) ||
-		 (sto2 <= sto1 && m2test <= m1) ||
-		 (sta1 <= sta2 && l1test <= m2) ||
-		 (sto1 <= sto2 && m1test <= m2) )) {
-
+	// 2.5.0 not overlapping intervals
+	// the one with lower start, should have enough mtimes to catch up the start of the other
+	if(	((val1._base > val2._base) && ((elm::abs(val1._base - val2._base) / val2._delta) > val2._mtimes)) ||
+		((val2._base > val1._base) && ((elm::abs(val2._base - val1._base) / val1._delta) > val1._mtimes)) ) {
 		set(NONE, 0, 0, 0);
-		return;
+		return *this;
 	}
 
-	// 2.5 intersection with a continue interval
-	if (d1 == 1 || d1 == -1){
-		intn_t ls;
-		uintn_t ms;
-		if (d2 > 0){
-			//ls = max(l2, (intn_t)ceil((float)(sta1 - l2)/d2) * d2 + l2);
-			ls = max(l2, roundup(sta1 - l2, d2) + l2);
-			ms = umin(
-				(uintn_t)(sto1 - ls) / d2,
-				(uintn_t)(sto2 - ls) / d2
-			);
-		}else{
-			ASSERT(d2 < 0); // the d2==0 case is 2.2 or 2.3
-			ls = min(l2, ((sto1 - l2) / d2) * d2 + l2);
-			ms = min(
-				m2 + (l2 - ls) / d2,
-				(uintn_t)(ls - sta1) / -d2
-			);
-		}
-		// normalize constants
-		if(ms == 0)
-			d2 = 0;
-		set(VAL, ls, d2, ms);
-		return;
+	// 2.5.1 then for non overflowing CLP values, we take similar steps in 5.1 of [Sen et Srikant, 2007]
+	intn_t u1x, u2x; // upper bound of the CLP values
+	intn_t resultBase; // the lower bound of the resulting CLP
+	uintn_t resultMtimes, resultDelta; // the mtimes and delta for the result
+	// for following the assumption, largerBaseV._base > smallerBaseV.base
+	Value largerBaseV, smallerBaseV;
+	if(val1._base >= val2._base) {
+		largerBaseV = val1;
+		smallerBaseV = val2;
 	}
-	if (d2 == 1 || d2 == -1){
-		intn_t ls;
-		uintn_t ms;
-		if (d1 > 0){
-			ls = max(l1, intn_t(roundup(sta2 - l1, d1) + l1));
-			ms = umin(
-				(uintn_t)(sto2 - ls) / d1,
-				(uintn_t)(sto1 - ls) / d1
-			);
-		}else{
-			ASSERT(d1 < 0); // the d1==0 case is 2.2 or 2.3
-			ls = min(l1, ((sto2 - l1) / d1) * d1 + l1);
-			ms = min(
-				m1 + (l1 - ls) / d1,
-				(uintn_t)(ls - sta2) / -d1
-			);
-		}
-		// normalize constants
-		if(ms == 0)
-			d1 = 0;
-		set(VAL, ls, d1, ms);
-		return;
+	else {
+		largerBaseV = val2;
+		smallerBaseV = val1;
 	}
-
-
-	// 3. Main case ==========================
-	uintn_t d = gcd(d1, d2);
-
-	// 3.1. Test if a solution exists
-	if ((l2 - l1) % d != 0){
-		set(NONE, 0, 0, 0);
-		return;
-	}
-
-	// 3.2. ds: step of the solution
-	uintn_t ds = lcm(d1, d2);
-
-	// 3.4. Research of a particular solution
-	bool solution_found = false;
-	long ip1p;
-	for(uintn_t i = 1; i < (uintn_t)elm::abs(d2); i++){
-		if((d1 * i - 1) % d2 == 0){
-			ip1p = i;
-			solution_found = true;
+	// find the new delta
+	resultDelta = lcm(largerBaseV._delta, smallerBaseV._delta);
+	// find the minimal j'
+	uintn_t j = 0;
+	bool foundj = false;
+	for(j = 0; j < (uintn_t)smallerBaseV._delta; j++) {
+		if((largerBaseV._base - smallerBaseV._base + j * largerBaseV._delta) % smallerBaseV._delta == 0) {
+			foundj = true;
 			break;
 		}
 	}
-	// FIXME: this case should not append (see 3.1)
-	if(!solution_found){
+
+	if(foundj == false) {
+		*this = none;
+		return *this;
+	}
+
+	// find the new base
+	resultBase = largerBaseV._base + j * largerBaseV._delta;
+	// check if the new base is lower than the upper bounds of the both CLP
+	u1x = smallerBaseV._base + smallerBaseV._delta * smallerBaseV._mtimes;
+	u2x = largerBaseV._base + largerBaseV._delta * largerBaseV._mtimes;
+	if(resultBase > min(u1x,u2x)) {
 		set(NONE, 0, 0, 0);
-		return;
+		return *this;
 	}
-	long i1p = ip1p * (l2 - l1);
-	long i2p = (1 - d1 * ip1p) / (- d2) * (l2 - l1);
+	// find the new mtimes
+	resultMtimes = (min(u1x, u2x) - resultBase) / resultDelta;
+	if(resultMtimes == 0) // in case mtimes is 0, which means a constant value
+		resultDelta = 0;
 
-	// 3.5. min of the intersection (ls)
-	long k = max(ceil(-i1p * (float)d1 / ds), ceil(-i2p * (float)d2 / ds));
-	uintn_t i1s = i1p + k * ds / d1;
-	uintn_t i2s = i2p + k * ds / d2;
-	intn_t ls = l1 + d1 * i1s;
-	ASSERT((uintn_t)ls == l2 + d2 * i2s);
+	val1.set(VAL, resultBase, resultDelta, resultMtimes);
 
-	// 3.6. mtimes of the intersection (ms)
-	intn_t umin = min(l1 + d1 * m1, l2 + d2 * m2);
-	uintn_t ms = floor((float)(umin-ls) / ds);
-
-	// normalize constants
-	if((ds == 0) || (ms == 0)){
-		ds = 0;
-		ms = 0;
+	// if both directions are the same, we keep the direction
+	if(direction() == val.direction())
+		*this = val1;
+	// if different directions, we need to have positive delta
+	else if (!val1.direction()) {
+		val1.reverse();
+		*this = val1;
 	}
-
-	// set the result!
-	set(VAL, ls, ds, ms);
+	else
+		*this = val1;
+	return *this;
 }
 
 /**
