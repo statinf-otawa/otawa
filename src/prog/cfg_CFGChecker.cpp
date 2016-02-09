@@ -93,7 +93,7 @@ void CFGChecker::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 	// look for unresolved indirect branch
 	for(Block::EdgeIter e = bb->outs(); e; e++)
-		if(e->source()->isUnknwon()) {
+		if(e->source()->isUnknown()) {
 			failed = true;
 			warn(_ << bb << " contains an unresolved indirect branch (" << ws->format(bb->control()->address()) << ")");
 		}

@@ -130,7 +130,7 @@ void DotDisplayer::displayLabel(Block *v) {
 		cout <<  "ENTRY";
 	else if(v->isExit())
 		cout << "EXIT";
-	else if(v->isUnknwon())
+	else if(v->isUnknown())
 		cout << "unknown";
 	else if(v->isSynth()) {
 		SynthBlock *sb = v->toSynth();

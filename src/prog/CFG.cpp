@@ -632,7 +632,7 @@ io::Output& operator<<(io::Output& out, CFG *cfg) {
  * @param first	First instruction of CFG.
  */
 CFGMaker::CFGMaker(Inst *first)
-: GenDiGraphBuilder<Block, Edge>(cfg = new CFG(first), new Block(Block::IS_END | Block::IS_ENTRY)), u(0) {
+: GenDiGraphBuilder<Block, Edge>(cfg = new CFG(first), new Block(Block::IS_END | Block::IS_ENTRY)) {
 	entry()->_cfg = cfg;
 }
 
@@ -661,12 +661,11 @@ Block *CFGMaker::exit(void) const {
  * @return	Unknown edge.
  */
 Block *CFGMaker::unknown(void) {
-	if(!u) {
-		SynthBlock *sb = new SynthBlock();
-		u = sb;
-		sb->_cfg = cfg;
+	if(!cfg->_unknown) {
+		cfg->_unknown = new Block(Block::IS_END | Block::IS_UNKN);
+		cfg->_unknown->_cfg = cfg;
 	}
-	return u;
+	return cfg->_unknown;
 }
 
 /**
@@ -681,8 +680,8 @@ CFG *CFGMaker::build(void) {
 	add(cfg->exit());
 
 	// add unknown block if required
-	if(u)
-		add(u);
+	if(cfg->_unknown)
+		add(cfg->_unknown);
 
 	// copy properties
 	cfg->takeProps(*this);

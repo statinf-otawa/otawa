@@ -20,14 +20,17 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/app/Application.h>
-#include <otawa/prog/TextDecoder.h>
-#include <otawa/hard/Register.h>
+#include <elm/genstruct/AVLTree.h>
 #include <elm/genstruct/SortedSLList.h>
 #include <elm/option/SwitchOption.h>
+
+#include <otawa/app/Application.h>
 #include <otawa/cfg/features.h>
-#include <elm/genstruct/AVLTree.h>
+#include <otawa/hard/Register.h>
 #include <otawa/prog/sem.h>
+#include <otawa/prog/TextDecoder.h>
+#include <otawa/prog/WorkSpace.h>
+
 
 /**
  * @addtogroup commands
@@ -169,9 +172,9 @@ private:
 		// put BB in the right order
 		typedef elm::genstruct::AVLTree<BasicBlock *, BasicBlockComparator> avl_t;
 		avl_t avl;
-		for(CFG::BBIterator bb(cfg); bb; bb++)
-			if(!bb->isEnd())
-				avl.add(bb);
+		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
+			if(bb->isBasic())
+				avl.add(bb->toBasic());
 
 		// disassemble the BB
 		for(avl_t::Iterator bb(avl); bb; bb++)

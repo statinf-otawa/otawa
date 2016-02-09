@@ -64,7 +64,7 @@ add_subdirectory(odfa)
 #add_subdirectory(ostat)
 #add_subdirectory(opcg)
 add_subdirectory(operform)
-#add_subdirectory(odisasm)
+add_subdirectory(odisasm)
 #add_subdirectory(owcet)
 
 

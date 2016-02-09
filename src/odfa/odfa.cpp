@@ -372,16 +372,11 @@ protected:
 	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 		// ends
-		if(b->isEnd()) {
-			if(b->isEntry())
-				out << "ENTRY\n";
-			else
-				out << "EXIT\n";
-		}
+		if(b->isEnd())
+			out << b << io::endl;
 
 		// synthetic block
 		else if(b->isSynth()) {
-
 		}
 
 		// normal BB

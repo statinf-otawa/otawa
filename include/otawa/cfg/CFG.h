@@ -71,7 +71,7 @@ public:
 	inline bool isEnd(void)   const   { return (_type & MASK1)  == IS_END; }
 	inline bool isEntry(void) const   { return (_type & MASK12) == (IS_END | IS_ENTRY); }
 	inline bool isExit(void)  const   { return (_type & MASK12) == (IS_END | IS_EXIT); }
-	inline bool isUnknwon(void) const { return (_type & MASK12) == (IS_END | IS_UNKN); }
+	inline bool isUnknown(void) const { return (_type & MASK12) == (IS_END | IS_UNKN); }
 	inline bool isVirtual(void) const { return (_type & MASK12) == (IS_END | IS_VIRT); }
 	inline bool isSynth(void) const   { return (_type & MASK1)  == IS_SYNTH; }
 	inline bool isCall(void)  const   { return (_type & MASK12) == (IS_SYNTH | IS_CALL); }
@@ -190,7 +190,6 @@ public:
 	inline CFG::BlockIter blocks(void) const { return cfg->vertices(); }
 private:
 	CFG *cfg;
-	Block *u;
 };
 
 } // otawa
