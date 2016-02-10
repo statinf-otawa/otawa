@@ -93,6 +93,7 @@ set(libotawa_SOURCES
 
 #   data-flow analysis module
 	"dfa_BitSet.cpp"
+	"dfa_Debug.cpp"
 	"dfa_hai_DefaultFixPoint.cpp"
 	"dfa_hai_DefaultListener.cpp"
 #	"dfa_hai_FirstUnrollingFixPoint.cpp"

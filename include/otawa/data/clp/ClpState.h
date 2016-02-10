@@ -87,7 +87,7 @@ namespace clp {
 
 		class Iter: public PreIterator<Iter, const Value&> {
 		public:
-			inline Iter(State& s): state(s), i(0), node(state.first.getNext()) { }
+			inline Iter(const State& s): state(s), i(0), node(state.first.getNext()) { }
 			inline Iter(const Iter& iter): state(iter.state), i(iter.i), node(iter.node) { }
 			inline const Value& item(void) const
 				{ if(isReg()) return state.registers[i]; else return node->getValue(); }
@@ -97,7 +97,7 @@ namespace clp {
 
 		private:
 			inline bool isReg(void) const { return i < state.registers.count(); }
-			State& state;
+			const State& state;
 			int i;
 			Node *node;
 		};

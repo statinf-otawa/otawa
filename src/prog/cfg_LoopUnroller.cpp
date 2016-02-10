@@ -91,8 +91,8 @@ Identifier<Block *> UNROLLED_FROM("otawa::UNROLLED_FROM", 0);
  * @ingroup cfg
  */
 
-p::declare LoopUnroller::reg = p::init("otawa::LoopUnroller", Version(1, 1, 0))
-	.base(Processor::reg)
+p::declare LoopUnroller::reg = p::init("otawa::LoopUnroller", Version(2, 1, 0))
+	.base(CFGTransformer::reg)
 	.maker<LoopUnroller>()
 	.use(DOMINANCE_FEATURE)
 	.use(LOOP_HEADERS_FEATURE)
@@ -110,17 +110,24 @@ LoopUnroller::LoopUnroller(p::declare& r): CFGTransformer(r), coll(new CFGCollec
 /**
  */
 void LoopUnroller::makeCFG(CFG *cfg, CFGMaker *maker) {
-		unroll(cfg, 0, maker);
+	cerr << "DEBUG: makeCFG(" << cfg << ")\n";
+	unroll(cfg, 0, maker);
 }
 
 
 /**
  */
 void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
+	if(logFor(LOG_FUN))
+		log << "\tunrolling " << cfg << " for " << (header ? header : cfg->entry()) << io::endl;
+
+	// workList := { }
 	VectorQueue<Block*> workList;
+	// loopList := { }
 	VectorQueue<Block*> loopList;
-	VectorQueue<Block*> virtualCallList;
+	// doneList ::= { }
 	genstruct::Vector<Block*> doneList;
+	// backEdges ::= { }
 	typedef genstruct::Vector<Pair<Block *, Edge *> > BackEdgePairVector;
 	BackEdgePairVector backEdges;
 	bool dont_unroll = false;
@@ -128,34 +135,45 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 	int start;
 
 	// avoid unrolling loops with LOOP_COUNT of 0, since it would create a LOOP_COUNT of -1 for the non-unrolled part of the loop
+	// dont_unroll ::= header && MAX(header) = 0
 	if(header && (MAX_ITERATION(header) == 0))
 		dont_unroll = true;
+	// start := dont_runol ? 1 : 0
 	start = dont_unroll ? 1 : 0;
 
 	// duplicate the loop body
+	// for in in [start, 1] do
 	for(int i = start; ((i < 2) && header) || (i < 1); i++) {
-		doneList.clear();
+		cerr << "DEBUG: iteration " << i << io::endl;
 		ASSERT(workList.isEmpty());
 		ASSERT(loopList.isEmpty());
 		ASSERT(doneList.isEmpty());
 
+		// bbs := {}
+		genstruct::Vector<Block*> bbs;
+		// workList := { header if any, entry else }
 		workList.put(header ? header : cfg->entry());
+		// doneList := { header if any, entry else }
+		doneList.clear();
 		doneList.add(header ? header : cfg->entry());
 
-		genstruct::Vector<Block*> bbs;
-
 		// duplicate the blocks
+		// while workList /= { } do
 		while (!workList.isEmpty()) {
 
+			// current::workList := workList
 			Block *current = workList.get();
 
 			// record sub-loop headers
+			// if LOOP_HEADER(current) /\ current != header
 			if (LOOP_HEADER(current) && current != header) {
 
 				// save current
+				// loopList U= { current }
 				loopList.put(current);
 
 				// add exit edges destinations to the worklist
+				// workList U= EXIT_LIST(current)
 				for (genstruct::Vector<Edge*>::Iterator exitedge(**EXIT_LIST(current)); exitedge; exitedge++) {
 					if (!doneList.contains(exitedge->target())) {
 						workList.put(exitedge->target());
@@ -164,36 +182,47 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 				}
 			}
 
-			// other basic blocks
+			// clone the block
 			else {
 
-				// duplicate the current basic block
+				// new_bb := clone(current)
 				Block *new_bb = clone(current);
+
+				// if current = header /\ not(dont_unroll)
 				if (current == header && !dont_unroll) {
 					if (i == 0)
 						unrolled_from = new_bb;
 					else
 						UNROLLED_FROM(new_bb) = unrolled_from;
 				}
-				map.put(current, new_bb);
-				bbs.add(new_bb);
 
+				// map[current] := new_bb
+				map.put(current, new_bb);
+				// bbs U= { new_bb }
+				bbs.add(new_bb);
+				cerr << "DEBUG: " << current << ": " << (void *)current << " -> " << (void *)new_bb << io::endl;
 
 				// add successors which are in loop (including possible sub-loop headers)
+				// for (current, sink) /\ sink /= entry in E do
 				for(Block::EdgeIter outedge = current->outs(); outedge; outedge++) {
 					if (outedge->target() == cfg->exit())
 						continue;
 
 					// block inside current loop
+					// if sink in loop(header) /\ sink not in doneList
 					if(ENCLOSING_LOOP_HEADER(outedge->target()) == header
 					&& !doneList.contains(outedge->target())) {
+						// workList U= sink
+						// doneList U= sink
 						workList.put(outedge->target());
 						doneList.add(outedge->target());
 					}
 
 					// connect exit edge case
+					// if LOOP_EXIT_EDGE(outedge) then
 					if(LOOP_EXIT_EDGE(outedge)) {
 						ASSERT(new_bb);
+						// new edge(new_bb, map[sink])
 						Block *vdst = map.get(outedge->target());
 						makeEdge(new_bb, outedge, vdst);
 					}
@@ -202,13 +231,16 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 		}
 
 		// duplicate sub-loops
+		// for loop in loopList do
 		while(!loopList.isEmpty()) {
 			Block *loop = loopList.get();
 			unroll(cfg, loop, vcfg);
 		}
 
 		// connect the internal edges for the current loop
+		// for bb in bbs do
 		for(genstruct::Vector<Block*>::Iterator bb(bbs); bb; bb++)
+			// for (bb, sink) in E /\ not EXIT_EDGE(bb, sink) /\ not(LOOP_HEADER(sink) /\ sink /= header) /\ sink /= exit do
 			for(Block::EdgeIter outedge = bb->outs(); outedge; outedge++) {
 
 				// nothing ti di with exit edge, sub-loop headers and CFG exit
@@ -220,19 +252,28 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 					continue;
 
 				// find mapped source and sink blocks
+				cerr << "DEBUG: " << *outedge << ": " << (*LOOP_EXIT_EDGE(outedge) != 0) << io::endl;
 				Block *vsrc = map.get(*bb, 0);
+				ASSERT(vsrc);
 				Block *vdst = map.get(outedge->target(), 0);
+				ASSERT(vdst);
 
 				// make the edge
+				// if sink /= header \/ i = 1
 				if(outedge->target() != header || i == 1)
+					// E' U= (map[bb], map[sink])
 					makeEdge(vsrc, outedge, vdst);
 				else
+					// backEdges U= {(map[bb], (bb, sink))}
 					backEdges.add(pair(vsrc, *outedge));
 			}
 
 		// first unroll iteration: virtual entry edges
+		// if i == start then
 		if(i == start) {
+			// if header then
 			if(header) {
+				// for (src, header) in E /\ header not dom src /\ src /= entry do
 				for(Block::EdgeIter inedge = header->ins(); inedge; inedge++) {
 					if(Dominance::dominates(header, inedge->source()))
 						continue; 	// skip back edges
@@ -240,6 +281,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 						continue;	// skip edge from CFG entry
 					Block *vsrc = map.get(inedge->source());
 					Block *vdst = map.get(header);
+					// E' U= {(map[src], map[header])}
 					makeEdge(vsrc, inedge, vdst);
 				}
 			}
@@ -247,8 +289,10 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 
 		// other unroll iterations: connect virtual backedge from the first to other iterations
 		else
+			// for (src', e) in backEdges do
 			for(BackEdgePairVector::Iterator b(backEdges); b; b++) {
 				Block *vdst = map.get(header);
+				// E' U= {(src', map[header])}
 				makeEdge((*b).fst, (*b).snd, vdst);
 			}
 	}
@@ -258,17 +302,21 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 
 		// add main entry edges
 		for(Block::EdgeIter outedge = cfg->entry()->outs(); outedge; outedge++) {
-			Block *vdst = map.get(outedge->target());
+			cerr << "DEBUG: e = " << *outedge << io::endl;
+			Block *vdst = map.get(outedge->target(), 0);
+			ASSERT(vdst);
 			makeEdge(vcfg->entry(), *outedge, vdst);
 		}
 
 		// add main exit edges
 		for(BasicBlock::EdgeIter inedge = cfg->exit()->ins(); inedge; inedge++) {
-			Block *vsrc = map.get(inedge->source());
+			Block *vsrc = map.get(inedge->source(), 0);
+			ASSERT(vsrc);
 			makeEdge(vsrc, *inedge, vcfg->exit());
 		}
 	}
 
+	cerr << "DEBUG: unrolling end\n";
 }
 
 } // otawa

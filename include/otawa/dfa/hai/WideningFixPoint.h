@@ -106,7 +106,9 @@ class WideningFixPoint {
 	inline void fixPointReached(Block* bb) const;
 	inline void enterContext(Domain &dom, Block* bb, hai_context_t ctx) const;
 	inline void leaveContext(Domain &dom, Block* bb, hai_context_t ctx) const;
-	
+#	ifdef HAI_JSON
+		inline void dumpJSON(const Domain& dom, json::Saver& saver) { prob.dumpJSON(dom, saver); }
+#	endif
 };
 	
 template < class Listener > Identifier<typename Listener::Problem::Domain*> WideningFixPoint<Listener >::STATE("", 0);

@@ -18,6 +18,7 @@
  */
 
 //#define HAI_DEBUG
+//#define HAI_JSON
 #include <math.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/prog/File.h>
@@ -1551,6 +1552,33 @@ public:
 #	endif
 }
 
+#	ifdef HAI_JSON
+		void dumpJSON(const Domain& dom, json::Saver& saver) {
+			if(dom == Domain::EMPTY)
+				saver.put("_");
+			else if(dom == Domain::FULL)
+				saver.put("T");
+			else {
+				saver.beginObject();
+				for(Domain::Iter i(dom); i; i++)
+					switch(i.id().kind()) {
+					case NONE:
+					case ALL:
+						break;
+					case REG:
+						saver.addField(_ << i.id().lower());
+						saver.put(_ << *i);
+						break;
+					case VAL:
+						saver.addField(_ << "0x" << ot::address(i.id().lower()));
+						saver.put(_ << *i);
+						break;
+					}
+				saver.endObject();
+			}
+		}
+#	endif
+
 	/**
 	 *  Initialize a register in the init state from an address.
 	 *  @param reg		Register to initialize.
@@ -1879,6 +1907,9 @@ public:
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
 					ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T\n");
+#					ifdef HAI_JSON
+						HAI_BASE->addEvent("store to T");
+#					endif
 				}
 
 				// store all on the area (too many addresses)
@@ -1894,6 +1925,9 @@ public:
 						if(!sym) {
 							_nb_top_store_addr++;
 							ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T (unbounded address)\n");
+#						ifdef HAI_JSON
+							HAI_BASE->addEvent("store to T");
+#						endif
 						}
 						else
 							state->clear(sym->address().offset(), sym->size());

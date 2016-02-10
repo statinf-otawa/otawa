@@ -46,7 +46,7 @@ p::declare CFGTransformer::reg = p::init("otawa::CFGTransformer", Version(1, 0, 
 
 /**
  */
-CFGTransformer::CFGTransformer(p::declare& r): entry(0), cur(0) {
+CFGTransformer::CFGTransformer(p::declare& r): Processor(r), entry(0), cur(0) {
 }
 
 
@@ -74,11 +74,12 @@ void CFGTransformer::processWorkSpace(WorkSpace *ws) {
 
 	// initialize working list
 	entry = coll->entry();
-	wl.put(pair(entry, get(entry)));
+	get(entry);
 
 	// process each CFG in turn
 	while(wl) {
 		Pair<CFG *, CFGMaker *> p = wl.get();
+		setCurrent(p.snd);
 		makeCFG(p.fst, p.snd);
 	}
 }
@@ -93,7 +94,6 @@ void CFGTransformer::processWorkSpace(WorkSpace *ws) {
  * @param maker	Maker to use.
  */
 void CFGTransformer::makeCFG(CFG *cfg, CFGMaker *maker) {
-	setCurrent(maker);
 	clone(cfg);
 }
 
@@ -176,7 +176,7 @@ Block *CFGTransformer::clone(Block *b) {
 			return cur->entry();
 		else if(b->isExit())
 			return cur->exit();
-		else if(b->isUnknwon())
+		else if(b->isUnknown())
 			return cur->unknown();
 		else {
 			ASSERT(false);

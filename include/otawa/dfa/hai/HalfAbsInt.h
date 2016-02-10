@@ -35,6 +35,9 @@
 #include <otawa/util/LoopInfoBuilder.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/prog/WorkSpace.h>
+#ifdef	HAI_JSON
+#	include <otawa/dfa/Debug.h>
+#endif
 
 
 // debugging
@@ -45,6 +48,17 @@
 #endif
 
 namespace otawa { namespace dfa { namespace hai {
+
+#ifdef HAI_JSON
+#	ifndef HAI_JSON_LOG
+#		define HAI_JSON_LOG "log.json"
+#	endif
+#	ifndef HAI_JSON_NAME
+#		define HAI_JSON_NAME
+#	endif
+#	define HAI_BASE		debug##HAI_JSON_NAME
+	Debug *HAI_BASE = 0;
+#endif
 
 // context definition
 typedef enum hai_context_t {
@@ -62,9 +76,18 @@ extern Identifier<Block*> HAI_BYPASS_TARGET;
 // abstract interpretater
 template <class FixPoint>
 class HalfAbsInt {
+public:
+	inline HalfAbsInt(FixPoint& _fp, WorkSpace& _fw);
+	inline ~HalfAbsInt(void);
+  	inline typename FixPoint::FixPointState *getFixPointState(Block *bb);
+	int solve(otawa::CFG *main_cfg = 0,
+		typename FixPoint::Domain *entdom = 0, Block *start_bb = 0);
+	inline typename FixPoint::Domain backEdgeUnion(Block *bb);
+	inline typename FixPoint::Domain entryEdgeUnion(Block *bb);
+
 private:
 	FixPoint& fp;
-	WorkSpace &fw;
+	WorkSpace &ws;
 	CFG& entry_cfg;
 	CFG *cur_cfg;
 	elm::genstruct::Vector<Block*> *workList;
@@ -84,15 +107,6 @@ private:
 	void inputProcessing(typename FixPoint::Domain &entdom);
 	void outputProcessing(void);
 	void addSuccessors(void);
-
-public:
-  	inline typename FixPoint::FixPointState *getFixPointState(Block *bb);
-	int solve(otawa::CFG *main_cfg = 0,
-		typename FixPoint::Domain *entdom = 0, Block *start_bb = 0);
-	inline HalfAbsInt(FixPoint& _fp, WorkSpace& _fw);
-	inline ~HalfAbsInt(void);
-	inline typename FixPoint::Domain backEdgeUnion(Block *bb);
-	inline typename FixPoint::Domain entryEdgeUnion(Block *bb);
 };
 
 template <class FixPoint>
@@ -101,7 +115,7 @@ Identifier<typename FixPoint::FixPointState*> HalfAbsInt<FixPoint>::FIXPOINT_STA
 template <class FixPoint>
 inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, WorkSpace& _fw)
 :	fp(_fp),
- 	fw(_fw),
+ 	ws(_fw),
  	entry_cfg(**ENTRY_CFG(_fw)),
  	cur_cfg(0),
  	current(0),
@@ -315,8 +329,14 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 	// Standard case, update and propagate state to successors
 	else {
 		HAI_TRACE("\t\tupdating " << current);
+#		ifdef HAI_JSON
+			json::Saver& saver = HAI_BASE->addState(current);
+#		endif
         fp.update(out, in, current);
         fp.blockInterpreted(current, in, out, cur_cfg, callStack);
+#		ifdef HAI_JSON
+        	fp.dumpJSON(out, saver);
+#		endif
         addSuccessors();
 	}
 }
@@ -393,6 +413,11 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, typename FixPoint::Domain 
     ASSERT(main_cfg);
     ASSERT(start_bb);
 
+    // json debugging initialization
+#	ifdef HAI_JSON
+    	HAI_BASE = new Debug(&ws, HAI_JSON_LOG);
+#	endif
+
 	// work list initialization
 	cur_cfg = main_cfg;
 	workList->push(start_bb);
@@ -413,6 +438,13 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, typename FixPoint::Domain 
 		outputProcessing();
 		HAI_TRACE("\t\toutput = " << out);
 	}
+
+    // json debugging finalization
+#	ifdef HAI_JSON
+    	delete HAI_BASE;
+    	HAI_BASE = 0;
+#	endif
+
 	return(iterations);
 }
 
