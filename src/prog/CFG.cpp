@@ -703,6 +703,7 @@ CFG *CFGMaker::build(void) {
  */
 void CFGMaker::call(SynthBlock *v, CFG *callee) {
 	v->_callee = callee;
+	callee->_callers.add(v);
 	add(v);
 }
 
@@ -719,7 +720,9 @@ void CFGMaker::add(Block *v) {
  */
 void CFGMaker::call(SynthBlock *v, const CFGMaker& maker) {
 	v->_callee = maker.cfg;
+	maker.cfg->_callers.add(v);
 	add(v);
+	cerr << "DEBUG: added call to " << maker.cfg << io::endl;
 }
 
 }	// otawa

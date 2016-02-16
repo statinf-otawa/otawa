@@ -231,8 +231,8 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 			for(int j = 0; j < ab.fst; j++) {
 				BlockAccess& b = ab.snd[j];
 				// Non-blocking WRITEs
-				if (b.action() == BlockAccess::STORE)
-					continue;
+				//if (b.action() == BlockAccess::STORE)
+				//	continue;
 
                 // Create x_miss variable
 				StringBuffer buf;
@@ -307,6 +307,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 				break;
                 }
 
+                ASSERT(miss);
                 MISS_VAR(b) = miss;
 			}
 		}

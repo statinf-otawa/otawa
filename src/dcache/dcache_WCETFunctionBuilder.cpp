@@ -76,10 +76,7 @@ void WCETFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 		// get variable
 		ilp::Var *var = dcache::MISS_VAR(blocks.snd[i]);
-		if(!var) {	// case of non-blocking write operation
-			ASSERT(blocks.snd[i].action() == dcache::BlockAccess::STORE);
-			continue;
-		}
+		ASSERT(var);
 
 		// read or write
 		bool write;

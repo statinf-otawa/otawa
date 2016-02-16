@@ -284,7 +284,13 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 
 		// apply current block
 		HAI_TRACE("\t\tupdating exit block while returning from call at " << current);
+#		ifdef HAI_JSON
+			json::Saver& saver = HAI_BASE->addState(current);
+#		endif
        	fp.update(out, in, current);
+#		ifdef HAI_JSON
+        	fp.dumpJSON(out, saver);
+#		endif
 
        	// restore previous context
        	Edge *edge = callStack->pop();

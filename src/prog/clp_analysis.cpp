@@ -18,7 +18,7 @@
  */
 
 //#define HAI_DEBUG
-//#define HAI_JSON
+#define HAI_JSON
 #include <math.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/prog/File.h>
@@ -67,7 +67,7 @@ using namespace otawa;
 // Debug only the join function
 #define TRACEJ(t)	//t
 // Debug only, alarm on store to T
-#define ALARM_STORE_TOP(t)	//t
+#define ALARM_STORE_TOP(t)	t
 //#define STATE_MULTILINE
 #define TRACE_INTERSECT(t) //t
 

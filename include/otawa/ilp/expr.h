@@ -48,11 +48,15 @@ public:
 	inline cons(void): l(true), c(0) { }
 	inline cons(Constraint *cc): l(cc->comparator() == Constraint::UNDEF), c(cc)  { }
 
+	inline cons operator+(int t) 				{ if(l) c->add(t); else c->sub(t); return *this; }
+	inline cons operator-(int t) 				{ if(l) c->sub(t); else c->add(t); return *this; }
 	inline cons operator+(const Term& t) 		{ if(l) c->add(t); else c->sub(t); return *this; }
 	inline cons operator-(const Term& t) 		{ if(l) c->sub(t); else c->add(t); return *this; }
 	inline cons operator+(const Expression& e)	{ if(l) c->add(e); else c->sub(e); return *this; }
 	inline cons operator-(const Expression& e) 	{ if(l) c->sub(e); else c->add(e);; return *this; }
 
+	inline cons operator+=(int t) 				{ if(l) c->add(t); else c->sub(t); return *this; }
+	inline cons operator-=(int t) 				{ if(l) c->sub(t); else c->add(t); return *this; }
 	inline cons operator+=(const Term& t) 		{ if(l) c->add(t); else c->sub(t); return *this; }
 	inline cons operator-=(const Term& t) 		{ if(l) c->sub(t); else c->add(t); return *this; }
 	inline cons operator+=(const Expression& e)	{ if(l) c->add(e); else c->sub(e); return *this; }
@@ -80,9 +84,19 @@ private:
 
 class model {
 public:
+
+	class model_cons: public cons {
+	public:
+		inline model_cons(const cons& c): cons(c) { }
+		inline cons operator%(int t) { return cons::operator+(t); }
+		inline cons operator%(const Term& t) { return cons::operator+(t); }
+		inline cons operator%(const Expression& t) { return cons::operator+(t); }
+		inline operator cons(void) const { return *this; }
+	};
+
 	inline model(System *s): _s(s) { }
-	inline cons operator()(void) const { return cons(_s->newConstraint(Constraint::UNDEF)); }
-	inline cons operator()(const string& label) const { cons c(_s->newConstraint(Constraint::UNDEF)); c->setLabel(label); return c; }
+	inline model_cons operator()(void) const { return cons(_s->newConstraint(Constraint::UNDEF)); }
+	inline model_cons operator()(const string& label) const { cons c(_s->newConstraint(Constraint::UNDEF)); c->setLabel(label); return c; }
 	inline System *operator&(void) const { return _s; }
 	inline System *operator->(void) const { return _s; }
 	inline operator System *(void) const { return _s; }

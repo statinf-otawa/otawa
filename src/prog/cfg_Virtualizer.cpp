@@ -226,10 +226,8 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 
 		// process end block
 		if(v->isEnd()) {
-			if(v->isUnknown()) {
-				cerr << "DEBUG: adding " << (void *)*v << " = " << (void *)cfg->unknown() << io::endl;
+			if(v->isUnknown())
 				bmap.put(cfg->unknown(), maker.unknown());
-			}
 			else
 				continue;
 		}
@@ -286,10 +284,8 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 
 	// add edges
 	for(CFG::BlockIter v = cfg->blocks(); v; v++)
-		for(BasicBlock::EdgeIter e = v->outs(); e; e++) {
-			cerr << "DEBUG: " << *e << io::endl;
+		for(BasicBlock::EdgeIter e = v->outs(); e; e++)
 			maker.add(bmap.get(e->source()), bmap.get(e->sink()), new Edge(e->flags()));
-		}
 
 	// leaving call
 	if(logFor(LOG_CFG))
