@@ -7,5 +7,6 @@ add_executable(operform ${operform_SOURCES})
 target_link_libraries(operform ${LIBELM})
 target_link_libraries(operform otawa)
 target_link_libraries(operform cfgio)
+target_link_libraries(operform odisplay)
 
 install(TARGETS operform DESTINATION bin)

@@ -329,8 +329,12 @@ Block::Block(t::uint16 type): _type(type), _cfg(0) {
  */
 io::Output& operator<<(io::Output& out, Block *block) {
 
+	// null pointer
+	if(!block)
+		out << "<null>";
+
 	// end processing
-	if(block->isEnd()) {
+	else if(block->isEnd()) {
 		if(block->isEntry())
 			out << "entry";
 		else if(block->isExit())
@@ -722,7 +726,6 @@ void CFGMaker::call(SynthBlock *v, const CFGMaker& maker) {
 	v->_callee = maker.cfg;
 	maker.cfg->_callers.add(v);
 	add(v);
-	cerr << "DEBUG: added call to " << maker.cfg << io::endl;
 }
 
 }	// otawa

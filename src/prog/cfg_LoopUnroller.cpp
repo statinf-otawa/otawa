@@ -110,7 +110,6 @@ LoopUnroller::LoopUnroller(p::declare& r): CFGTransformer(r), coll(new CFGCollec
 /**
  */
 void LoopUnroller::makeCFG(CFG *cfg, CFGMaker *maker) {
-	cerr << "DEBUG: makeCFG(" << cfg << ")\n";
 	unroll(cfg, 0, maker);
 }
 
@@ -144,10 +143,8 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 	// duplicate the loop body
 	// for in in [start, 1] do
 	for(int i = start; ((i < 2) && header) || (i < 1); i++) {
-		cerr << "DEBUG: iteration " << i << io::endl;
 		ASSERT(workList.isEmpty());
 		ASSERT(loopList.isEmpty());
-		ASSERT(doneList.isEmpty());
 
 		// bbs := {}
 		genstruct::Vector<Block*> bbs;
@@ -199,8 +196,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 				// map[current] := new_bb
 				map.put(current, new_bb);
 				// bbs U= { new_bb }
-				bbs.add(new_bb);
-				cerr << "DEBUG: " << current << ": " << (void *)current << " -> " << (void *)new_bb << io::endl;
+				bbs.add(current);
 
 				// add successors which are in loop (including possible sub-loop headers)
 				// for (current, sink) /\ sink /= entry in E do
@@ -252,7 +248,6 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 					continue;
 
 				// find mapped source and sink blocks
-				cerr << "DEBUG: " << *outedge << ": " << (*LOOP_EXIT_EDGE(outedge) != 0) << io::endl;
 				Block *vsrc = map.get(*bb, 0);
 				ASSERT(vsrc);
 				Block *vdst = map.get(outedge->target(), 0);
@@ -302,7 +297,6 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 
 		// add main entry edges
 		for(Block::EdgeIter outedge = cfg->entry()->outs(); outedge; outedge++) {
-			cerr << "DEBUG: e = " << *outedge << io::endl;
 			Block *vdst = map.get(outedge->target(), 0);
 			ASSERT(vdst);
 			makeEdge(vcfg->entry(), *outedge, vdst);
@@ -316,7 +310,6 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 		}
 	}
 
-	cerr << "DEBUG: unrolling end\n";
 }
 
 } // otawa

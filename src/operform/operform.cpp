@@ -8,6 +8,7 @@
 #include <otawa/app/Application.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfgio/Output.h>
+#include <otawa/display/CFGOutput.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/prog/WorkSpace.h>
 
@@ -20,7 +21,8 @@ public:
 		Application("operform", Version(0, 1, 0)),
 		ids(option::ListOption<cstring>::Make(*this).cmd("-p").cmd("--prop").description("select which property to output").argDescription("ID")),
 		out(option::ValueOption<string>::Make(*this).cmd("-o").cmd("--out").description("select output file").argDescription("PATH")),
-		no_insts(option::Switch::Make(*this).cmd("-I").cmd("--no-insts").description("do not include instructions in output"))
+		no_insts(option::Switch::Make(*this).cmd("-I").cmd("--no-insts").description("do not include instructions in output")),
+		dot(option::Switch::Make(*this).cmd("-D").cmd("--dot").description("select .dot output"))
 	{
 		info.description("perform a set of analysis (feature or code processor) and dump the resulting CFG collection.");
 		info.free_argument("EXECUTABLE ENTRY? (require:FEATURE|process:PROCESSOR)*");
@@ -71,10 +73,23 @@ protected:
 	void complete(PropList& props) throw(elm::Exception) {
 		if(!workspace()->isProvided(COLLECTED_CFG_FEATURE))
 			workspace()->require(COLLECTED_CFG_FEATURE, props);
-		if(out)
-			cfgio::OUTPUT(props) = *out;
-		cfgio::Output output;
-		output.process(workspace(), props);
+
+		// XML output
+		if(!dot) {
+			if(out)
+				cfgio::OUTPUT(props) = *out;
+			cfgio::Output output;
+			output.process(workspace(), props);
+		}
+
+		// DOT output
+		else {
+			if(out)
+				display::CFGOutput::PATH(props) = *out;
+			display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
+			display::CFGOutput output;
+			output.process(workspace(), props);
+		}
 	}
 
 private:
@@ -92,6 +107,7 @@ private:
 	option::ListOption<string> ids;
 	option::ValueOption<string> out;
 	option::Switch no_insts;
+	option::Switch dot;
 };
 
 OTAWA_RUN(OPerform);
