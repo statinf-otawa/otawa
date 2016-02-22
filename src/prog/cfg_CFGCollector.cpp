@@ -297,11 +297,12 @@ void CFGCollector::buildBBs(CFGMaker& maker, const genstruct::FragTable<Inst *>&
 		// build list of instructions
 		genstruct::Vector<Inst *> insts;
 		insts.add(e);
-		for(Inst *i = e->nextInst(); i && !isBlockStart(i); i = i->nextInst()) {
-			insts.add(i);
-			if(isControl(i))
-				break;
-		}
+		if(!e->isControl())
+			for(Inst *i = e->nextInst(); i && !isBlockStart(i); i = i->nextInst()) {
+				insts.add(i);
+				if(isControl(i))
+					break;
+			}
 
 		// create the basic block
 		BasicBlock *v = new BasicBlock(insts.detach());
