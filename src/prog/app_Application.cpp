@@ -424,15 +424,18 @@ void Application::work(PropList &props) throw(elm::Exception) {
  * @throw otawa::Exception	If the address cannot be resolved or parsed.
  */
 Address Application::parseAddress(const string& s) throw(otawa::Exception) {
+	SymAddress *saddr;
 	try {
-		SymAddress *saddr = SymAddress::parse(s);
-		Address addr = saddr->toAddress(ws);
-		delete saddr;
-		return addr;
+		saddr = SymAddress::parse(s);
 	}
 	catch(otawa::Exception& e) {
 		throw Exception(_ << "cannot parse entry address '" << s << "'");
 	}
+	Address addr = saddr->toAddress(ws);
+	if(!addr)
+		throw Exception(_ << "address " << saddr << " cannot be resolved.");
+	delete saddr;
+	return addr;
 }
 
 
