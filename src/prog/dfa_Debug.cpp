@@ -21,7 +21,7 @@
 
 #include <otawa/cfg/features.h>
 #include <otawa/cfg/Edge.h>
-#include "../../../otawa2/include/otawa/dfa/Debug.h"
+#include <otawa/dfa/Debug.h>
 
 namespace otawa { namespace dfa {
 
