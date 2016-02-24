@@ -60,6 +60,7 @@ private:
 	CFG *entry;
 	ListQueue<Pair<CFG *, CFGMaker *> > wl;
 	CFGMaker *cur;
+	genstruct::FragTable<CFGMaker *> makers;
 	genstruct::HashTable<CFG *, CFGMaker *> cmap;
 	genstruct::HashTable<Block *, Block *> bmap;
 };

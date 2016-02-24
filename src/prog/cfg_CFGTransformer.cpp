@@ -59,6 +59,7 @@ CFGMaker *CFGTransformer::get(CFG *cfg) {
 	CFGMaker *m = cmap.get(cfg, 0);
 	if(!m) {
 		m = new CFGMaker(cfg->first());
+		makers.add(m);
 		cmap.put(cfg, m);
 		wl.put(pair(cfg, m));
 	}
@@ -281,15 +282,15 @@ SynthBlock *CFGTransformer::make(CFG *callee) {
  */
 void CFGTransformer::cleanup(WorkSpace *ws) {
 	CFGCollection *coll = new CFGCollection();
-	CFGMaker *em = cmap.get(entry);
-	CFG *nentry = em->build();
-	coll->add(nentry);
-	for(genstruct::HashTable<CFG *, CFGMaker *>::PairIterator c(cmap); c; c++) {
-		if((*c).fst != entry)
-			coll->add((*c).snd->build());
-		delete (*c).snd;
+	CFG *nentry = 0;
+	for(genstruct::FragTable<CFGMaker *>::Iterator m(makers); m; m++) {
+		CFG *cfg = m->build();
+		if(!nentry)
+			nentry = cfg;
+		coll->add(cfg);
+		delete *m;
 	}
-
+	ASSERT(nentry);
 	addRemover(COLLECTED_CFG_FEATURE, ENTRY_CFG(ws) = nentry);
 	track(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = coll);
 }
