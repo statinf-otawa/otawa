@@ -97,7 +97,10 @@ extern Identifier<Event *> EVENT;
 // configuration feature
 extern Identifier<bool> PREDUMP;
 extern Identifier<int> EVENT_THRESHOLD;
+extern Identifier<bool> RECORD_TIME;
 extern p::feature EDGE_TIME_FEATURE;
+extern Identifier<ot::time> LTS_TIME;
+extern Identifier<ot::time> HTS_OFFSET;
 
 } }	// otawa::etime
 

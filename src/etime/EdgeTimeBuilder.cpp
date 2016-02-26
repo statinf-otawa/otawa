@@ -307,7 +307,8 @@ EdgeTimeBuilder::EdgeTimeBuilder(p::declare& r)
  	bnode(0),
  	bedge(0),
  	source(0),
- 	target(0)
+ 	target(0),
+	record(false)
 { }
 
 
@@ -316,6 +317,7 @@ void EdgeTimeBuilder::configure(const PropList& props) {
 	_explicit = ipet::EXPLICIT(props);
 	predump = PREDUMP(props);
 	event_th = EVENT_THRESHOLD(props);
+	record = RECORD_TIME(props);
 }
 
 
@@ -656,6 +658,8 @@ void EdgeTimeBuilder::genForOneCost(ot::time cost, Edge *edge, event_list_t& eve
 
 	// add to the objective function
 	sys->addObjectFunction(cost, var);
+	if(record)
+		LTS_TIME(edge) = cost;
 
 	// generate constant contrubtion
 	contributeConst();
@@ -1155,6 +1159,10 @@ void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos,
 	ilp::Var *x_edge = ipet::VAR(edge);
 	sys->addObjectFunction(lts_time, x_edge);
 	sys->addObjectFunction(hts_time - lts_time, x_hts);
+	if(record) {
+		LTS_TIME(edge) = lts_time;
+		HTS_OFFSET(edge) = hts_time - lts_time;
+	}
 
 	// 0 <= x_hts <= x_edge
 	ilp::Constraint *cons = sys->newConstraint("0 <= x_hts", ilp::Constraint::LE);
@@ -1220,8 +1228,40 @@ void EdgeTimeBuilder::contributeConst(void) {
  * This feature ensures that block cost has been computed according to the context
  * of edges. Basically, this means that both the objective function and the constraint
  * of events has been added to the ILP system.
+ *
+ * @p Configuration
+ * @li @ref RECORD_TIME
+ *
+ * @p Properties
+ * @li @ref LTS_TIME
+ * @li @ref HTS_OFFSET
  */
 p::feature EDGE_TIME_FEATURE("otawa::etime::EDGE_TIME_FEATURE", new Maker<EdgeTimeBuilder>());
+
+/**
+ * Configuration property of EDGE_TIME_FEATURE, if true, enable the production
+ * of LTS_TIME and HTS_OFFSET on the edge.
+ */
+Identifier<bool> RECORD_TIME("otawa::etime::RECORD_TIME", false);
+
+/**
+ * Produced only if the RECORD_TIME configuration is set,
+ * record for each edge the low-time-set maximum time in cycles.
+ *
+ * @par Hooks
+ * @li @ref Edge
+ */
+Identifier<ot::time> LTS_TIME("otawa::etime::LTS_TIME", -1);
+
+/**
+ * Produced only if the RECORD_TIME configuration is set,
+ * record for each edge the difference between maximum time of low-time-set
+ * and the maximum time of high-time-set (in cycles).
+ *
+ * @par Hooks
+ * @li @ref Edge
+ */
+Identifier<ot::time> HTS_OFFSET("otawa::etime::HTS_OFFSET", 0);
 
 
 /**

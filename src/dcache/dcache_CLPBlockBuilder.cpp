@@ -101,6 +101,10 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	clp::Manager::step_t step = man->start(bb);
 	genstruct::Vector<Pair<clp::Value, BlockAccess::action_t> > addrs;
 	while(step) {
+		if(man->state()->equals(clp::State::EMPTY)) {
+			step = man->next();
+			continue;
+		}
 
 		// scan the instruction
 		sem::inst i = man->sem();

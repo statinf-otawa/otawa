@@ -101,6 +101,9 @@ private:
 
 	// collector of events
 	genstruct::HashTable<Event *, EventCollector *> colls;
+
+	// configuration
+	bool record;
 };
 
 } }	// otawa::etime
