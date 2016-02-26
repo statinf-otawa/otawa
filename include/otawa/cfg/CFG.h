@@ -77,6 +77,7 @@ public:
 	inline bool isCall(void)  const   { return (_type & MASK12) == (IS_SYNTH | IS_CALL); }
 	inline bool isBasic(void) const   { return (_type & MASK1)  == IS_BASIC; }
 
+	inline int id(void) const;
 	inline BasicBlock *toBasic(void);
 	inline SynthBlock *toSynth(void);
 	inline operator BasicBlock *(void) { return toBasic(); }
@@ -131,13 +132,6 @@ private:
 	DeletableTable<Inst *> _insts;
 };
 
-// delayed inlines
-inline Block *Edge::target(void) const	{ return sink(); }
-inline BasicBlock *Block::toBasic(void) { ASSERT(isBasic()); return static_cast<BasicBlock *>(this); }
-inline SynthBlock *Block::toSynth(void) { ASSERT(isCall());  return static_cast<SynthBlock  *>(this); }
-Output& operator<<(Output& out, Block *b);
-
-
 class CFG: public PropList, public sgraph::GenDiGraph<Block, Edge> {
 	friend class CFGMaker;
 	friend class CFGCollection;
@@ -158,6 +152,7 @@ public:
 	string name(void);
 	string format(const Address& addr);
 	inline int index(void) const { return idx; }
+	inline int offset(void) const { return _offset; }
 	inline Inst *first(void) const { return fst; }
 	inline Address address(void) const { return first()->address(); }
 	inline Block *exit(void) const { return _exit; }
@@ -168,13 +163,23 @@ public:
 
 private:
 	CFG(Inst *first, type_t type = SUBPROG);
-	int idx;
+	int idx, _offset;
 	type_t _type;
 	Inst *fst;
 	Block *_exit, *_unknown;
 	genstruct::SLList<SynthBlock *> _callers;
 };
 io::Output& operator<<(io::Output& out, CFG *cfg);
+
+
+// delayed inlines
+inline Block *Edge::target(void) const	{ return sink(); }
+inline int Block::id(void) const { return index() + _cfg->offset(); }
+inline BasicBlock *Block::toBasic(void) { ASSERT(isBasic()); return static_cast<BasicBlock *>(this); }
+inline SynthBlock *Block::toSynth(void) { ASSERT(isCall());  return static_cast<SynthBlock  *>(this); }
+Output& operator<<(Output& out, Block *b);
+
+
 
 class CFGMaker: public sgraph::GenDiGraphBuilder<Block, Edge>, public PropList {
 public:

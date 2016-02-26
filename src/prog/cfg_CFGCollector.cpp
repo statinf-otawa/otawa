@@ -100,7 +100,20 @@ static Identifier<BasicBlock *> BB("", 0);
  */
 void CFGCollection::add(CFG *cfg) {
 	cfg->idx = cfgs.count();
+	cfg->_offset = cfgs.isEmpty() ? 0 : cfgs[cfgs.length()-1]->offset() + cfgs[cfgs.length()-1]->count();
 	cfgs.add(cfg);
+}
+
+/**
+ * Count the number of BB in the CFG collection
+ * (sum of BB count of each CFG).
+ * @return	Collection BB number.
+ */
+int CFGCollection::countBB(void) const {
+	if(!cfgs)
+		return 0;
+	else
+		return cfgs[count() - 1]->offset() + cfgs[count() - 1]->count();
 }
 
 

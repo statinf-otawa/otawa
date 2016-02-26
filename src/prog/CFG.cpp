@@ -318,6 +318,16 @@ io::Output& operator<<(io::Output& out, Edge *edge) {
   */
 
 /**
+ * @fn int Block::id(void) const;
+ * Returns a Block identifier that is unique to the whole program.
+ * This number if positive or null and less than the countBB() of the CFG
+ * collection containing the parent CFG of this block.
+ * @return	Unique identifier.
+*/
+
+
+
+/**
  * Build a CFG block.
  * @param type	Block type.
  */
@@ -485,7 +495,6 @@ int BasicBlock::count(void) const {
 		c++;
 	return c;
 }
-
 
 /**
  * @class BasicBlock::InstIter;

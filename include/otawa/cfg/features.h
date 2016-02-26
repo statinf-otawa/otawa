@@ -48,6 +48,7 @@ public:
 	inline CFG *get(int index) const { return cfgs[index]; }
 	inline CFG *operator[](int index) const { return cfgs[index]; }
 	inline CFG *entry(void) const { return get(0); }
+	int countBB(void) const;
 
 	class Iterator: public elm::genstruct::FragTable<CFG *>::Iterator {
 	public:
