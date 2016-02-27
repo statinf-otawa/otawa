@@ -649,7 +649,13 @@ public:
 		Inst::kind_t kind = 0;
 		otawa::Inst *result = 0;
 		kind = arm_kind(inst);
-		int size = arm_get_inst_size(inst) >> 3;
+		int size;
+		if(inst->ident != 0)
+			size = arm_get_inst_size(inst) >> 3;
+		else if(isThumb(addr))
+			size = 2;
+		else
+			size = 4;
 		if(kind & Inst::IS_CONTROL)
 			result = new BranchInst(*this, kind, addr, size);
 		else
