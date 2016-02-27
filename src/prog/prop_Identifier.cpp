@@ -21,6 +21,7 @@
 #include <otawa/prop/PropList.h>
 #include <elm/io/BlockInStream.h>
 #include <elm/io/Input.h>
+#include <otawa/util/SymAddress.h>
 
 namespace otawa {
 
@@ -33,6 +34,23 @@ namespace otawa {
  * @p Note that the property management functions of this class are safer to
  * use than the rough @ref PropList functions because they ensure safe value
  * type management.
+ *
+ * Identifiers provide also a way to read their argument from string using fromString() method
+ * that calls, in turn, the from_string() function. from_string() is provided for most used
+ * types of OTAWA and will raise an exception else. Use can customize the from_string() function
+ * with their own types using the code below:
+ * @code
+ * namespace otawa {
+ * 	class MyType {
+ * 		...
+ * 	};
+ *
+ * 	template <> void from_string(const string& s, MyType& v) {
+ * 		// some work on string s to produce v
+ * 	}
+ * }
+ * @endcode
+ *
  * @ingroup prop
  */
 
@@ -295,68 +313,39 @@ void Identifier<String>::scan(PropList& props, VarArg& args) const {
  */
 
 
-template <> void Identifier<bool>::fromString(PropList& props, const string& str) const {
-	io::BlockInStream stream(str);
-	io::Input in(stream);
-	set(props, in.scanBool());
-}
+// specialization of from_string
+template <> void from_string(const string& str, bool& v)
+	{ io::BlockInStream stream(str); io::Input in(stream); v = in.scanBool(); }
 
+template <> void from_string(const string& str, int& v)
+	{ io::BlockInStream stream(str); io::Input in(stream); v = in.scanLong(); }
 
-template <> void Identifier<int>::fromString(PropList& props, const string& str) const {
-	io::BlockInStream stream(str);
-	io::Input in(stream);
-	set(props, in.scanLong());
-}
+template <> void from_string(const string& str, unsigned int& v)
+	{ io::BlockInStream stream(str); io::Input in(stream); v = in.scanULong(); }
 
+template <> void from_string(const string& str, long& v)
+	{ io::BlockInStream stream(str); io::Input in(stream); v = in.scanLong(); }
 
-template <> void Identifier<unsigned int>::fromString(PropList& props, const string& str) const {
-	io::BlockInStream stream(str);
-	io::Input in(stream);
-	set(props, in.scanULong());
-}
+template <> void from_string(const string& str, unsigned long& v)
+	{ io::BlockInStream stream(str); io::Input in(stream); v = in.scanULong(); }
 
+template <> void from_string(const string& str, long long& v)
+	{ io::BlockInStream stream(str); io::Input in(stream); v = in.scanLLong(); }
 
-template <> void Identifier<long>::fromString(PropList& props, const string& str) const {
-	io::BlockInStream stream(str);
-	io::Input in(stream);
-	set(props, in.scanLong());
-}
+template <> void from_string(const string& str, unsigned long long& v)
+	{ io::BlockInStream stream(str); io::Input in(stream); v = in.scanULLong(); }
 
+template <> void from_string(const string& str, double& v)
+	{ io::BlockInStream stream(str); io::Input in(stream); v = in.scanDouble(); }
 
-template <> void Identifier<unsigned long>::fromString(PropList& props, const string& str) const {
-	io::BlockInStream stream(str);
-	io::Input in(stream);
-	set(props, in.scanULong());
-}
+template <> void from_string(const string& str, string& v)
+	{ v = str; }
 
+template <> void from_string(const string& str, sys::Path& v)
+	{ v = str; }
 
-template <> void Identifier<long long>::fromString(PropList& props, const string& str) const {
-	io::BlockInStream stream(str);
-	io::Input in(stream);
-	set(props, in.scanLLong());
-}
-
-
-template <> void Identifier<unsigned long long>::fromString(PropList& props, const string& str) const {
-	io::BlockInStream stream(str);
-	io::Input in(stream);
-	set(props, in.scanULLong());
-}
-
-
-template <> void Identifier<double>::fromString(PropList& props, const string& str) const {
-	io::BlockInStream stream(str);
-	io::Input in(stream);
-	set(props, in.scanDouble());
-}
-
-
-template <> void Identifier<string>::fromString(PropList& props, const string& str) const {
-	set(props, str);
-}
-
-
-template <> void Identifier<Address>::fromString(PropList& props, const string& str) const {
+template <> void from_string(const string& str, Address& addr) {
+	cerr << "DEBUG: from_string_address(" << str << ")\n";
 	string buf = str;
 	Address::page_t page = 0;
 	int pos = buf.indexOf(':');
@@ -369,12 +358,21 @@ template <> void Identifier<Address>::fromString(PropList& props, const string& 
 	io::BlockInStream stream(str);
 	io::Input in(stream);
 	Address::offset_t off = in.scanULong();
-	set(props, Address(page, off));
+	addr = Address(page, off);
 }
 
-template <>
-void Identifier<elm::sys::Path>::fromString(PropList& props, const string& str) const {
-	set(props, sys::Path(str));
+template <> void from_string(const string& str, SymAddress*& v) {
+	v = SymAddress::parse(str);
+}
+
+void from_string_split(const string& str, genstruct::Vector<string>& items) {
+	int i = str.indexOf(','), j = 0;
+	while(i >= 0) {
+		items.add(str.substring(j, i - j));
+		j = i + 1;
+		i = str.indexOf(',', j);
+	}
+	items.add(str.substring(j));
 }
 
 }	// otawa

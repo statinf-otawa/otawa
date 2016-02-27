@@ -29,6 +29,7 @@
 #include <otawa/prop/PropList.h>
 #include <otawa/prop/AbstractIdentifier.h>
 #include <otawa/prop/Ref.h>
+#include <otawa/util/Bag.h>
 #include <elm/sys/Path.h>
 
 namespace otawa {
@@ -233,32 +234,34 @@ inline void Identifier<T>::__simple::scan(const Identifier<T>& id, PropList& pro
 	id.set(props, ptr);
 }
 
-/*template <class T>
-void Identifier<T>::scan(PropList& props, VarArg& args) const {
-	_if<type_info<T>::is_scalar || type_info<T>::is_ptr, __simple, __class>
-	::_::scan(*this, props, args);
-}
-
-template <> void Identifier<elm::CString>::scan(PropList& props, VarArg& args) const;
-template <> void Identifier<cstring>::scan(PropList& props, VarArg& args) const;
-template <> void Identifier<elm::String>::scan(PropList& props, VarArg& args) const;*/
-
-
 // GenericIdentifier<T>::fromString
+template <class T> void from_string(const string& s, T& v)
+	{ StringInput in(s); in >> v; }
 template <class T> inline void Identifier<T>::fromString(PropList& props, const string& str) const
-	{ T v; StringInput in(str); in >> v; set(props, v); }
-//	{ throw io::IOException("type not supported for Identifier::fromString() call"); }
-template <> void Identifier<bool>::fromString(PropList& props, const string& str) const;
-template <> void Identifier<int>::fromString(PropList& props, const string& str) const;
-template <> void Identifier<unsigned int>::fromString(PropList& props, const string& str) const;
-template <> void Identifier<long>::fromString(PropList& props, const string& str) const;
-template <> void Identifier<unsigned long>::fromString(PropList& props, const string& str) const;
-template <> void Identifier<long long>::fromString(PropList& props, const string& str) const;
-template <> void Identifier<unsigned long long>::fromString(PropList& props, const string& str) const;
-template <> void Identifier<double>::fromString(PropList& props, const string& str) const;
-template <> void Identifier<string>::fromString(PropList& props, const string& str) const;
-template <> void Identifier<Address>::fromString(PropList& props, const string& str) const;
-template <> void Identifier<elm::sys::Path>::fromString(PropList& props, const string& str) const;
+	{ T v; from_string(str, v); set(props, v); }
+
+template <> void from_string(const string& str, bool& v);
+template <> void from_string(const string& str, int& v);
+template <> void from_string(const string& str, unsigned int& v);
+template <> void from_string(const string& str, long& v);
+template <> void from_string(const string& str, unsigned long& v);
+template <> void from_string(const string& str, long long& v);
+template <> void from_string(const string& str, unsigned long long& v);
+template <> void from_string(const string& str, double& v);
+template <> void from_string(const string& str, string& v);
+template <> void from_string(const string& str, Address& v);
+template <> void from_string(const string& str, sys::Path& v);
+
+class SymAddress;
+template <> void from_string(const string& str, SymAddress*& v);
+
+void from_string_split(const string& str, genstruct::Vector<string>& items);
+template <class T> void from_string(const string& str, Bag<T>& bag) {
+	genstruct::Vector<string> strs; from_string_split(str, strs);
+	genstruct::Vector<T> list(strs.length()); list.setLength(strs.length());
+	for(int i = 0; i < strs.length(); i++) from_string(strs[i], list[i]);
+	bag = list;
+}
 
 } // otawa
 
