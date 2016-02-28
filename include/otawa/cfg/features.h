@@ -26,6 +26,7 @@
 #include <otawa/cfg/CFG.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prop/ContextualProperty.h>
+#include <otawa/util/Bag.h>
 
 namespace elm { namespace genstruct { template <class T> class Tree; } }
 
@@ -84,6 +85,7 @@ extern Identifier<int> LEAVE;
 
 // COLLECTED_CFG_FEATURE
 extern Identifier<CFG *> ENTRY_CFG;
+extern Identifier<Bag<Address> > BB_BOUNDS;
 extern p::feature COLLECTED_CFG_FEATURE;
 extern Identifier<const CFGCollection *> INVOLVED_CFGS;
 extern Identifier<Edge *> CALLED_BY;

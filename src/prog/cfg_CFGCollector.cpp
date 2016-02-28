@@ -496,7 +496,30 @@ p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(2, 0, 0))
 
 /**
  */
+void CFGCollector::setup(WorkSpace *ws) {
+	for(int i = 0; i < bounds.count(); i++) {
+		Inst *inst = ws->findInstAt(bounds[i]);
+		if(!inst)
+			this->warn(_ << "no instruction at " << bounds[i]);
+		else {
+			BB(inst) = 0;
+			if(logFor(LOG_BB))
+				log << "\tset BB bound at " << bounds[i] << io::endl;
+		}
+	}
+}
+
+
+/**
+ */
 void CFGCollector::cleanup(WorkSpace *ws) {
+
+	// cleanup added bounds
+	for(int i = 0; i < bounds.count(); i++) {
+		Inst *inst = ws->findInstAt(bounds[i]);
+		if(inst)
+			inst->removeProp(BB);
+	}
 
 	// build the CFG collection and clean markers
 	CFGCollection *coll = new CFGCollection();
@@ -538,6 +561,7 @@ void CFGCollector::configure(const PropList& props) {
 		added_cfgs.add(cfg);
 	for(Identifier<CString>::Getter fun(props, ADDED_FUNCTION); fun; fun++)
 		added_funs.add(*fun);
+	bounds = BB_BOUNDS(props);
 }
 
 
@@ -580,13 +604,25 @@ Identifier<Edge *> CALLED_BY("otawa::CALLED_BY", 0);
  * This feature asserts that all CFG involved in the current computation has
  * been collected and accessible thanks to @ref INVOLVED_CFGS property
  *
+ * @par Configuration
+ * @li @ref BB_BOUNDS
+ * @li @ref ENTRY_CFG
+ *
  * @par Properties
- * @ref ENTRY_CFG (@ref WorkSpace).
- * @ref INVOLVED_CFGS (@ref WorkSpace).
+ * @li @ref ENTRY_CFG (@ref WorkSpace).
+ * @li @ref INVOLVED_CFGS (@ref WorkSpace).
  *
  * @ingroup cfg
  */
 p::feature COLLECTED_CFG_FEATURE("otawa::COLLECTED_CFG_FEATURE", new Maker<CFGCollector>());
+
+
+/**
+ * Configuration identifier, provides a list of BB start point
+ * (whatever the control flow of the executable).
+ * @ingroup cfg
+ */
+Identifier<Bag<Address> > BB_BOUNDS("otawa::BB_BOUNDS");
 
 
 /**

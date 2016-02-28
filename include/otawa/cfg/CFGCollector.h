@@ -40,6 +40,7 @@ public:
 
 protected:
 	void processWorkSpace(WorkSpace *ws);
+	virtual void setup(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
 
 private:
@@ -56,6 +57,7 @@ private:
 	genstruct::Vector<string> added_funs;
 	genstruct::Vector<Address> added_cfgs;
 	genstruct::FragTable<Pair<Inst *, CFGMaker *> > makers;
+	Bag<Address> bounds;
 };
 
 } // otawa
