@@ -57,6 +57,8 @@ public:
 	typedef edges_t::iter EdgeIter;
 	inline EdgeIter ins(void) const { return EdgeIter(_ins); }
 	inline EdgeIter outs(void) const { return EdgeIter(_outs); }
+	inline int countIns(void) const { return _ins.count(); }
+	inline int countOuts(void) const { return _outs.count(); }
 
 protected:
 	~Vertex(void);
