@@ -18,7 +18,7 @@
  */
 
 //#define HAI_DEBUG
-#define HAI_JSON
+//#define HAI_JSON
 #include <math.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/prog/File.h>

@@ -345,7 +345,6 @@ template <> void from_string(const string& str, sys::Path& v)
 	{ v = str; }
 
 template <> void from_string(const string& str, Address& addr) {
-	cerr << "DEBUG: from_string_address(" << str << ")\n";
 	string buf = str;
 	Address::page_t page = 0;
 	int pos = buf.indexOf(':');
