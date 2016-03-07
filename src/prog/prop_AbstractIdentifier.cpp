@@ -102,7 +102,6 @@ AbstractIdentifier *AbstractIdentifier::find(const string& name) {
  */
 AbstractIdentifier::AbstractIdentifier(void)
 :	nam("") {
-		//ASSERT(!((((unsigned int)this) > 0xbf000000) && (((unsigned int)this) < 0xc0000000)));
 }
 
 
@@ -114,14 +113,9 @@ AbstractIdentifier::AbstractIdentifier(void)
  * @param parent	Parent namespace.
  */
 AbstractIdentifier::AbstractIdentifier(cstring name)
-:	nam(name)
-{
-	//ASSERT(!((((unsigned int)this) > 0xbf000000) && (((unsigned int)this) < 0xc0000000)));
-	TRACE("construct(" << (void *)this << ", " << nam << ")");
-	if(name) {
-		TRACE("record(" << (void *)this << ", " << nam << ")");
+:	nam(name) {
+	if(name)
 		ids.init.record(this);
-	}
 }
 
 
@@ -137,6 +131,23 @@ AbstractIdentifier::AbstractIdentifier(cstring name)
 AbstractIdentifier::AbstractIdentifier(cstring name, Property *prop, VarArg& args)
 : nam(name) {
 	initProps(prop, args);
+	if(name)
+		ids.init.record(this);
+}
+
+
+/**
+ * Initialize an identifier with a property list (mainly useful for named
+ * object deriving from AbstractIdentifier).
+ *
+ * @param name	Identifier name (possibly empty).
+ * @param props	Configuration properties.
+ */
+AbstractIdentifier::AbstractIdentifier(cstring name, const PropList& props)
+: nam(name) {
+	initProps(props);
+	if(name)
+		ids.init.record(this);
 }
 
 
@@ -151,6 +162,16 @@ void AbstractIdentifier::initProps(Property *prop, VarArg& args) {
 		addProp(prop);
 		prop = args.next<Property *>();
 	}
+}
+
+
+/**
+ * Initialize properties coming from the constructor.
+ */
+void AbstractIdentifier::initProps(const PropList& props) {
+	cstring new_name = IDENTIFIER_ID(props);
+	if(new_name)
+		nam = new_name;
 }
 
 
@@ -280,6 +301,15 @@ const Type& Identifier<char *>::type(void) const { return Type::cstring_type; }
 #elif defined(__WIN32) || defined(__WIN64)
 inline const Type& Identifier<char *>::type(void) const { return Type::cstring_type; }
 #endif
+
+
+/**
+ * Configuration identifier for objects inheriting from @ref AbstractIdentifier
+ * to customize the name and make the object reachable by this name.
+ *
+ * @ingroup prop
+ */
+Identifier<cstring> IDENTIFIER_ID("otawa::IDENTIFIER_ID", "");
 
 
 /**

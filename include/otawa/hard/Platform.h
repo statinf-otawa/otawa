@@ -45,7 +45,7 @@ class Memory;
 class Processor;
 
 // Platform class
-class Platform {
+class Platform: public AbstractIdentifier {
 public:
 	typedef elm::genstruct::Table<const hard::RegBank *> banks_t;
 
@@ -88,6 +88,7 @@ public:
 	// Constructors
 	static const Identification ANY_PLATFORM;
 	Platform(const Identification& id, const PropList& props = PropList::EMPTY);
+	Platform(cstring name, const Identification& id, const PropList& props = PropList::EMPTY);
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
 
 	// Identification

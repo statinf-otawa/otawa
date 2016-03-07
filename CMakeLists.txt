@@ -274,6 +274,7 @@ endif()
 add_subdirectory(src)
 add_subdirectory(doc)
 add_subdirectory(include)
+add_subdirectory(bin)
 
 
 # share installation

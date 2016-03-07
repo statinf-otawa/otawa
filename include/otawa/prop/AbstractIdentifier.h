@@ -37,7 +37,7 @@ public:
 
 	AbstractIdentifier(void);
 	AbstractIdentifier(cstring name);
-	AbstractIdentifier(cstring name, Property *prop, VarArg& args);
+	AbstractIdentifier(cstring name, const PropList& props);
 	virtual ~AbstractIdentifier(void) { }
 
 	inline const string name(void) const { return nam; }
@@ -59,8 +59,12 @@ public:
 	virtual void serialize(Property *prop, elm::serial2::Serializer& serializer);
 	virtual Property *unserialize(elm::serial2::Unserializer& unserializer);
 
+	// deprecated
+	AbstractIdentifier(cstring name, Property *prop, VarArg& args);
+
 protected:
 	void initProps(Property *prop, VarArg& args);
+	void initProps(const PropList& props);
 
 private:
 	string nam;

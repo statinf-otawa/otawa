@@ -250,6 +250,23 @@ Platform::Platform(const Platform::Identification& _id, const PropList& props)
 
 
 /**
+ */
+Platform::Platform(cstring name, const Identification& _id, const PropList& props)
+:	AbstractIdentifier(name),
+	flags(0),
+	id(_id),
+	_cache(&CacheConfiguration::NO_CACHE),
+	_processor(0),
+	_memory(&Memory::full),
+	depth(5),
+	rcnt(0),
+	_banks(&null_banks)
+{
+	configure(props);
+}
+
+
+/**
  * Build a platform by cloning and reconfiguring the new platform.
  * @param platform	Platform to clone.
  * @param props		Description properties.

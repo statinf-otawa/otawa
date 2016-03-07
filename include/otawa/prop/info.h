@@ -40,6 +40,7 @@ inline Property *make(const Identifier<string>& id, const char *v)
 
 
 // identifiers
+extern Identifier<cstring> IDENTIFIER_ID;
 extern Identifier<cstring> IDENTIFIER_LABEL;
 extern Identifier<cstring> IDENTIFIER_DESC;
 inline Property *idLabel(cstring label) { return make(IDENTIFIER_LABEL, label); }
