@@ -102,7 +102,7 @@ set(libotawa_SOURCES
 #	"dfa_hai_WideningFixPoint.cpp"
 #	"dfa_hai_WideningListener.cpp"
 #	"dfa_IterativeDFA.cpp"
-#	"dfa_XCFGVisitor.cpp"
+	"dfa_XCFGVisitor.cpp"
 #	"dfa_XIterativeDFA.cpp"
 	"util_AccessedAddress.cpp"
 	"util_StackAnalysis.cpp"

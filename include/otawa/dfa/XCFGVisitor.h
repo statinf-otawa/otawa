@@ -50,7 +50,7 @@ public:
 
 	typedef Pair<CFG *, BasicBlock *> key_t;
 	inline int index(const key_t& key)
-		{ return offs[INDEX(key.fst)] + otawa::INDEX(key.snd); }
+		{ return offs[key.fst->index()] + key.snd->index(); }
 
 	inline int size(void) { return nodes.length(); }
 	void visitPreds(XIterativeDFA< XCFGVisitor<P> >& engine, int node);
@@ -70,39 +70,23 @@ XCFGVisitor<D>::XCFGVisitor(const CFGCollection& _cfgs, D& domain)
 	offs[0] = 0;
 	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++) {
 		INDEX(cfg) = i++;
-		offs[i] = offs[i - 1] + cfg->countBB();
+		offs[i] = offs[i - 1] + cfg->count();
 	}
 	nodes.alloc(offs[i]);
 	
 	// Record nodes and CFG next nodes
-	// !!NOTE!! Does not support CFG ending with a branch on another CFG
-	// !!TOCHECK!! For multicall
 	int bbi = 0, cfgi = 0;
 	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++, cfgi++)
-		for(CFG::BBIterator bb(cfg); bb; bb++, bbi++) {
+		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++, bbi++) {
 			nodes[bbi].bb = bb;
 			nodes[bbi].cfg = cfgi;
-			BasicBlock *next = 0;
-			//CFG *called = 0;
-			for(BasicBlock::OutIterator edge(bb); edge; edge++) {
-				if(edge->kind() == Edge::CALL) {
-					CFG *called = edge->calledCFG();
-					int called_index = INDEX(called);
-					nodes[bbi].to = offs[called_index];
-					nodes[offs[cfgi] + next->number()].from =
-						offs[called_index + 1] - 1;
-					preds[called_index].add(bbi);
-				}
-				/*else
-					next = edge->target();*/
-			}
-			/*if(called) {
-				int called_index = INDEX(called);
+			if(bb->isSynth()) {
+				int called_index = bb->toSynth()->index();
 				nodes[bbi].to = offs[called_index];
-				nodes[offs[cfgi] + next->number()].from =
-					offs[called_index + 1] - 1;
+				ASSERT(bb->ins());
+				nodes[offs[cfgi] + bb->ins()->sink()->index()].from = offs[called_index + 1] - 1;
 				preds[called_index].add(bbi);
-			}*/
+			}
 		}
 }
 
@@ -132,8 +116,8 @@ void XCFGVisitor<D>::visitPreds(XIterativeDFA< XCFGVisitor<D> >& engine, int nod
 	else if(info.from != -1)
 		engine.nextPred(info.from);
 	else
-		for(BasicBlock::InIterator edge(info.bb); edge; edge++)
-			engine.nextPred(offs[info.cfg] + edge->source()->number());
+		for(BasicBlock::EdgeIter edge = info.bb->ins(); edge; edge++)
+			engine.nextPred(offs[info.cfg] + edge->source()->index());
 }
 
 
