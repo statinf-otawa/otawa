@@ -32,7 +32,7 @@ namespace otawa {
 
 
 /**
- * Identifier of annotation containing reverse-postdominance information.
+ * Identifier of annotation containing reverse-post-dominance information.
  *
  * @par Hooks
  * @li @ref BasicBlock
@@ -40,20 +40,34 @@ namespace otawa {
 Identifier<BitSet *> REVERSE_POSTDOM("otawa::REVERSE_POSTDOM", 0);
 
 
+// default post-dominance
+class DefaultPostDomInfo: public PostDomInfo {
+public:
+	virtual bool pdom(Block *b1, Block *b2)  {
+		ASSERT(b1);
+		ASSERT(b2);
+		ASSERTP(b1->cfg() == b2->cfg(), "both BB are not owned by the same CFG");
+		BitSet *set = REVERSE_POSTDOM(b2);
+		ASSERT(set);
+		return set->contains(b1->index());
+
+	}
+};
+
+
 /**
- * This is the Problem used to instanciate DFAEngine for computing the
- * reverse postdomination relation. For each basic block, the set of postdominators
+ * This is the Problem used to instantiate DFAEngine for computing the
+ * reverse post-domination relation. For each basic block, the set of post-dominators
  * is computed and hooked to the basic block. Then, a simple bit test is
  * used for testing the relation.
  */
-
 class PostDominanceProblem {
 	CFG *cfg;
 	int size;
 public:
 	PostDominanceProblem(CFG *_cfg) {
 		cfg = _cfg;
-		size = _cfg->countBB();
+		size = _cfg->count();
 	}
 
 	BitSet *empty(void) {
@@ -62,13 +76,13 @@ public:
 		return result;
 	}
 
-	BitSet *gen(BasicBlock *bb) {
+	BitSet *gen(Block *bb) {
 		BitSet *result = new BitSet(size);
-		result->add(bb->number());
+		result->add(bb->index());
 		return result;
 	}
 
-	BitSet *kill(BasicBlock *bb) {
+	BitSet *kill(Block *bb) {
 		BitSet *result = new BitSet(size);
 		if(bb->isExit())
 			result->fill();
@@ -99,43 +113,14 @@ public:
 
 /**
  * @class PostDominance
- * This CFG processor computes and hook to the CFG the postdominance relation
- * that, tehn, may be tested with @ref PostDominance::postDominate() function.
+ * @ingroup CFG
+ * This CFG processor implements @ref POSTDOMINANCE_FEATURE.
+ *
+ * @par Used Features
+ *
+ * @par Provided Features
+ * @li @ref POSTDOMINANCE_FEATURE
  */
-
-
-/**
- * Test if the first basic block postdominates the second one.
- * @param bb1	Dominator BB.
- * @param bb2	Dominated BB.
- * @return		True if bb1 postdominates bb2.
- */
-bool PostDominance::postDominates(BasicBlock *bb1, BasicBlock *bb2) {
-	ASSERTP(bb1, "null BB 1");
-	ASSERTP(bb2, "null BB 2");
-	ASSERTP(bb1->cfg() == bb2->cfg(), "both BB are not owned by the same CFG");
-	int index = bb1->number();
-	ASSERTP(index >= 0, "no index for BB 1");
-	BitSet *set = REVERSE_POSTDOM(bb2);
-	ASSERTP(set, "no index for BB 2");
-
-	ASSERTP(bb1 == bb2
-		||	!REVERSE_POSTDOM(bb1)->contains(bb2->number())
-		||  !REVERSE_POSTDOM(bb2)->contains(bb1->number()),
-			"CFG with disconnected nodes");
-
-	return set->contains(index);
-}
-
-
-/**
- * @fn bool PostDominance::isDominated(BasicBlock *bb1, BasicBlock *bb2);
- * Test if the first block is postdominated by the second one.
- * @param bb1	Dominated BB.
- * @param bb2	Dominator BB.
- * @return		True if bb2 postdominates bb1.
- */
-
 
 /**
  * Computes the postdomination relation.
@@ -145,7 +130,7 @@ void PostDominance::processCFG(WorkSpace *fw, CFG *cfg) {
 	PostDominanceProblem dp(cfg);
 	dfa::IterativeDFA<PostDominanceProblem, BitSet, Successor> engine(dp, *cfg);
 	engine.compute();
-	for (CFG::BBIterator blocks(cfg); blocks; blocks++) {
+	for (CFG::BlockIter blocks = cfg->blocks(); blocks; blocks++) {
 	  BitSet *b = engine.outSet(blocks.item());
 	  b = new BitSet(*b);
 	  //blocks->addDeletable<BitSet *>(REVERSE_POSTDOM, b);
@@ -155,37 +140,64 @@ void PostDominance::processCFG(WorkSpace *fw, CFG *cfg) {
 
 
 /**
- * Check if the postdominance informance is available. Else compute it.
- * @param cfg	CFG to look at.
  */
-void PostDominance::ensure(CFG *cfg) {
-	if(!REVERSE_POSTDOM(cfg->entry())) {
-		PostDominance postdom;
-		postdom.processCFG(0, cfg);
-	}
-}
-
+p::declare PostDominance::reg = p::init("otawa::PostDominance", Version(2, 0, 0))
+	.provide(POSTDOMINANCE_FEATURE)
+	.base(CFGProcessor::reg)
+	.maker<PostDominance>();
 
 /**
  * The postdominance processors computes postdominance relation
  * on the current CFG.
+ * @ingroup cfg
  *
- * @Provided Features
- * @li @ref POSTDOMINANCE_FEATURE
+ * @par Provided Features
+ * @li @ref PDOM_INFO
+ *
+ * @par Required Features
+ * @li @ref COLLECTED_CFG_FEATURE
  */
-PostDominance::PostDominance(void): CFGProcessor("otawa::PostDominance", Version(1, 1, 0)) {
-	provide(POSTDOMINANCE_FEATURE);
+PostDominance::PostDominance(p::declare& r): CFGProcessor(reg) {
 }
-
 
 /**
  * This feature ensures that information about postdomination between nodes
  * of a CFG is vailable.
+ * @ingroup cfg
  *
  * @par Properties
  * @li @ref REVERSE_DOM (BasicBlock)
  */
-Feature<PostDominance> POSTDOMINANCE_FEATURE("otawa::POSTDOMINANCE_FEATURE");
+p::feature POSTDOMINANCE_FEATURE("otawa::POSTDOMINANCE_FEATURE", new Maker<PostDominance>());
 
+/**
+ * Provide post-domination information.
+ *
+ * @par Hooks
+ * @li @ref WorkSpace
+ *
+ * @par Providing Features
+ * @li @ref POSTDOMINANCE_FEATURE
+ */
+Identifier<PostDomInfo *> PDOM_INFO("otawa::PDOM_INFO", 0);
+
+/**
+ * @class PostDomInfo
+ * Allows to test if one block post-dominates another one.
+ * @ingroup cfg
+ */
+
+/**
+ */
+PostDomInfo::~PostDomInfo(void) {
+}
+
+/**
+ * @fn bool PostDomInfo::pdom(Block *b1, Block *b2);
+ * Test if b1 post-dominates b2.
+ * @param b1	First block.
+ * @param b2	Second block.
+ * @return		True if b1 post-dominates b2, false else.
+ */
 
 } // otawa

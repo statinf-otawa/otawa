@@ -153,6 +153,16 @@ public:
 extern p::feature DOMINANCE_FEATURE;
 extern Identifier<DomInfo *> DOM_INFO;
 
+// Post-domination
+extern p::feature POSTDOMINANCE_FEATURE;
+class PostDomInfo {
+public:
+	virtual ~PostDomInfo(void) = 0;
+	virtual bool pdom(Block *b1, Block *b2) = 0;
+};
+namespace dfa { class BitSet; }
+extern Identifier<PostDomInfo *> PDOM_INFO;
+
 } // otawa
 
 #endif /* OTAWA_CFG_FEATURES_H_ */

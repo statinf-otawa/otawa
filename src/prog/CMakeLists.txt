@@ -117,15 +117,12 @@ set(libotawa_SOURCES
 #	"ai.cpp"
 
 
-#	"tsim_Delta.cpp"
-#	"tsim_TimeDeltaObjectFunctionModifier.cpp"
-
 #    utility module
 	"util_FlowFactLoader.cpp"
 #	"util_CFGNormalizer.cpp"
 #	"util_MemBlockMap.cpp"
 	"util_Dominance.cpp"
-#	"util_PostDominance.cpp"
+	"util_PostDominance.cpp"
 #	"util_ContextTree.cpp"
 	"util_Bag.cpp"
 	"util_Graph.cpp"
@@ -181,26 +178,7 @@ set(libotawa_SOURCES
 	"prog_WorkSpace.cpp"
 	"sem.cpp"
 
-#   simulator interface
-#	"sim_AbstractCacheDriver.cpp"
-#	"sim_CacheDriver.cpp"
-#	"sim_Simulator.cpp"
-#	"sim_State.cpp"
-#	"sim_TrivialSimulator.cpp"
-#	"sim_Driver.cpp"
-#	"sim_BasicBlockDriver.cpp"
-#	"sim_BBPathDriver.cpp"
-#	"BBTimeSimulator.cpp"
-#	"BBPath.cpp"
-
 #   execution graph module
-#	"exegraph_ExeGraphBBTime.cpp"
-#	"exegraph_ExeGraph.cpp"
-#	"exegraph_LiExeGraphBBTime.cpp"
-#	"exegraph_LiExeGraph.cpp"
-#	"exegraph_Microprocessor.cpp"
-#	"exegraph_ParamExeGraph.cpp"
-#	"exegraph_ParamExeGraphBBTime.cpp"
 	"parexegraph_ParExeProc.cpp"
 	"parexegraph_Resource.cpp"
 	"parexegraph_ParExeGraph.cpp"
@@ -235,3 +213,26 @@ target_link_libraries(otawa "${LIBGEL_DWARF}")
 
 # installation
 install(TARGETS otawa DESTINATION ${LIBDIR})
+
+
+# deprecated sources
+#	"exegraph_ExeGraphBBTime.cpp"
+#	"exegraph_ExeGraph.cpp"
+#	"exegraph_LiExeGraphBBTime.cpp"
+#	"exegraph_LiExeGraph.cpp"
+#	"exegraph_Microprocessor.cpp"
+#	"exegraph_ParamExeGraph.cpp"
+#	"exegraph_ParamExeGraphBBTime.cpp"
+#	"sim_AbstractCacheDriver.cpp"
+#	"sim_CacheDriver.cpp"
+#	"sim_Simulator.cpp"
+#	"sim_State.cpp"
+#	"sim_TrivialSimulator.cpp"
+#	"sim_Driver.cpp"
+#	"sim_BasicBlockDriver.cpp"
+#	"sim_BBPathDriver.cpp"
+#	"BBTimeSimulator.cpp"
+#	"BBPath.cpp"
+#	"tsim_Delta.cpp"
+#	"tsim_TimeDeltaObjectFunctionModifier.cpp"
+

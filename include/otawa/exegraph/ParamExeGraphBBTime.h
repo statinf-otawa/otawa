@@ -32,7 +32,7 @@ class ParamExeGraphBBTime: public ExeGraphBBTime<ParamExeGraph> {
   Trace *_trace;
  public:
   ParamExeGraphBBTime(const PropList& props = PropList::EMPTY, int prologue_depth=0);
-  void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+  void processBB(WorkSpace *ws, CFG *cfg, Block *bb);
   void buildPrologueList(BasicBlock * bb,
 			 ExeSequence<ExeNode> * prologue, 
 			 int capacity, 

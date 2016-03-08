@@ -66,8 +66,8 @@ void ParamExeGraphBBTime::buildPrologueList(BasicBlock * bb,
 					    elm::genstruct::DLList<ExeSequence<ExeNode> *> * prologue_list,
 					    int depth) {
   // prologues are recursively built by considering preceeding nodes in the CFG
-  for(BasicBlock::InIterator edge(bb); edge; edge++) {
-    BasicBlock * pred = edge->source();
+  for(BasicBlock::EdgeIter edge = bb->ins(); edge; edge++) {
+    Block * pred = edge->source();
     ExeSequence<ExeNode> * new_prologue = new ExeSequence<ExeNode>();
     for (InstIterator inst(prologue) ; inst ; inst++) {
       ExeInst<ExeNode> * eg_inst =
@@ -75,7 +75,7 @@ void ParamExeGraphBBTime::buildPrologueList(BasicBlock * bb,
       new_prologue->addLast(eg_inst);
     }
     
-    if (pred->countInstructions() == 0) {
+    if (pred->count() == 0) {
       if (!new_prologue->isEmpty()) {
 	// current sequence is terminated (not more instructions to add)
 	// (end of recursive building)		 	 	
@@ -85,7 +85,7 @@ void ParamExeGraphBBTime::buildPrologueList(BasicBlock * bb,
     else {
       // build new sequence from pred
       elm::genstruct::DLList<Inst *> inst_list;
-      for(BasicBlock::InstIterator inst(pred); inst; inst++) {
+      for(BasicBlock::InstIter inst = pred->insts(); inst; inst++) {
 	inst_list.addLast(inst);
       }
       while ( !inst_list.isEmpty() ) {
@@ -110,12 +110,15 @@ void ParamExeGraphBBTime::buildPrologueList(BasicBlock * bb,
 
 /**
  */
-void ParamExeGraphBBTime::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-  if (bb->countInstructions() == 0)
-    return;
+void ParamExeGraphBBTime::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+	if(!b->isBasic())
+		return;
+	BasicBlock *bb = b->toBasic();
+	if(bb->count() == 0)
+		return;
   
   *_output << "================================================================\n";
-  *_output << "Processing block b" << bb->number() << " (starts at " << bb->address() << " - " << bb->countInstructions() << " instructions)\n\n";
+  *_output << "Processing block b" << bb->index() << " (starts at " << bb->address() << " - " << bb->count() << " instructions)\n\n";
 
   int context_index = 0;
   int maxExecTime = 0;

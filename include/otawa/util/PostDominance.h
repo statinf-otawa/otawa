@@ -7,36 +7,19 @@
 #ifndef OTAWA_UTIL_POSTDOMINANCE_H
 #define OTAWA_UTIL_POSTDOMINANCE_H
 
+#include <otawa/cfg/features.h>
 #include <otawa/proc/CFGProcessor.h>
-#include <otawa/proc/Feature.h>
 
 namespace otawa {
 
-// External
-class BasicBlock;
-namespace dfa {
-	class BitSet;
-}
-
-// PostDominance class
 class PostDominance: public CFGProcessor {
 public:
-	static void ensure(CFG *cfg);
-	static bool postDominates(BasicBlock *bb1, BasicBlock *bb2);
-	static inline bool isPostDominated(BasicBlock *bb1, BasicBlock *bb2);
+	static p::declare reg;
+	PostDominance(p::declare& r = reg);
 
-	// Constructor
-	PostDominance(void);
-	
-	// CFGProcessor overload
+protected:
 	virtual void processCFG(WorkSpace *fw, CFG *cfg);
 };
-
-// Features
-extern Feature<PostDominance> POSTDOMINANCE_FEATURE;
-
-// Properties
-extern Identifier<dfa::BitSet *> REVERSE_POSTDOM;
 
 } // otawa
 
