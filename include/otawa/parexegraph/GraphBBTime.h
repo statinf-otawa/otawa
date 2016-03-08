@@ -64,12 +64,12 @@ namespace otawa {
     			return otawa::INVALID_CATEGORY;
     	}
 
-    	inline BasicBlock *header(void) const { return hd; }
+    	inline Block *header(void) const { return hd; }
 
     private:
     	BasicBlock *bb;
     	genstruct::AllocatedTable<LBlock*> *lbs;
-    	BasicBlock *hd;
+    	Block *hd;
     	int i;
     };
 
@@ -87,7 +87,7 @@ namespace otawa {
     public:
 		PathContext(BasicBlock *bb){
 			_bb_list.addFirst(bb);
-			_num_insts = bb->countInstructions();
+			_num_insts = bb->count();
 			_num_bbs = 1;
 			_bb = bb;
 			_edge = NULL;
@@ -105,7 +105,7 @@ namespace otawa {
 		}
 		void addBlock(BasicBlock * new_bb, Edge * edge){
 			_bb_list.addFirst(new_bb);
-			_num_insts += new_bb->countInstructions();
+			_num_insts += new_bb->count();
 			_num_bbs += 1;
 			if (_num_bbs == 1)
 				_bb = new_bb;
@@ -124,7 +124,7 @@ namespace otawa {
 		{ return _edge;}
 		void dump(io::Output& output) {
 			for (elm::genstruct::SLList<BasicBlock *>::Iterator bb(_bb_list) ; bb ; bb++){
-				output << "b" << bb->number() << "-";
+				output << "b" << bb->index() << "-";
 			}
 		}
 
@@ -176,7 +176,7 @@ namespace otawa {
 		virtual void configure(const PropList& props);
 
 		void processWorkSpace(WorkSpace *ws);
-		void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+		void processBB(WorkSpace *ws, CFG *cfg, Block *bb);
 		elm::genstruct::SLList<PathContext *> * buildListOfPathContexts(BasicBlock *bb, int depth = 1);
 		void FillSequence(PathContext *ctxt,
 						  elm::genstruct::SLList<PathContext *> *context_list, 		       
@@ -287,7 +287,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		void GraphBBTime<G>::BuildVectorOfHwResources(){
 
     int resource_index = 0;
-    bool is_ooo_proc = false;
+    //bool is_ooo_proc = false;
 
     // build the start resource
     StartResource * new_resource = new StartResource((elm::String) "start", resource_index++);
@@ -316,8 +316,8 @@ void GraphBBTime<G>::configure(const PropList& props) {
 					}
 				}
 			}
-			else
-				is_ooo_proc = true;
+			/*else
+				is_ooo_proc = true;*/
 		}
     }
 
@@ -377,9 +377,10 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		BasicBlock *bb = ctxt->lastBlock();
 		int last_stage_cap = _microprocessor->lastStage()->width();
 		int num_preds = 0;
-		for(BasicBlock::InIterator edge(bb); edge; edge++) {
-			BasicBlock *pred = edge->source();
-			if (!pred->isEntry() && !pred->isExit()) {
+		for(BasicBlock::EdgeIter edge = bb->ins(); edge; edge++) {
+			Block *pred = edge->source();
+			if (pred->isBasic()) {
+				BasicBlock *pred = edge->source()->toBasic();
 				num_preds++;
 				PathContext *new_ctxt = new PathContext(*ctxt);
 				new_ctxt->addBlock(pred, edge);
@@ -422,7 +423,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		for (PathContext::BasicBlockIterator block(*ctxt) ; block ; block++){
 			if (block == ctxt->mainBlock())
 				part = BLOCK;
-			for(BasicBlock::InstIterator inst(block); inst; inst++) {
+			for(BasicBlock::InstIter inst = block->insts(); inst; inst++) {
 				ParExeInst * par_exe_inst = new ParExeInst(inst, block, part, index++);
 				seq->addLast(par_exe_inst);
 			}
@@ -489,8 +490,8 @@ void GraphBBTime<G>::configure(const PropList& props) {
 	template <class G>
 		void GraphBBTime<G>::buildFMTimingContextListForICache(elm::genstruct::SLList<TimingContext *> * list, ParExeSequence *seq){
  
-		BasicBlock *header0 = NULL;
-		BasicBlock *header1 = NULL;
+		Block *header0 = NULL;
+		Block *header1 = NULL;
 		int num_headers = 0;
 
 		// process FIRST_MISS lblocks
@@ -501,7 +502,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			category_t cat = lbm.next(inst->basicBlock(), inst->inst());
 			if (cat != otawa::INVALID_CATEGORY){
 				if (cat == cache::FIRST_MISS){
-					BasicBlock *header = lbm.header();
+					Block *header = lbm.header();
 					//		elm::cout << "found header b" << header->number() << "\n";
 					if (header0 == NULL){
 						header0 = header;
@@ -575,7 +576,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 					cache::category_t cat = lbm.next(inst->basicBlock(), inst->inst());
 					if (cat != cache::INVALID_CATEGORY){
 						if (cat == cache::FIRST_MISS){
-							BasicBlock *header = lbm.header();
+							Block *header = lbm.header();
 							NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 							tctxt_first_first->addNodeLatency(nl);
 							nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
@@ -646,7 +647,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		if(isVerbose())
 			log << "\t\treference cost = " << reference_cost << "\n\n";
 		if (_do_output_graphs){
-			outputGraph(execution_graph, bb->number(), context_index, case_index++,
+			outputGraph(execution_graph, bb->index(), context_index, case_index++,
 				_ << "reference cost = " << reference_cost);
 		}
 
@@ -668,7 +669,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 							log << "ALWAYS_MISS\n";
 							break;
 						case cache::FIRST_MISS:
-							log << "FIRST_MISS (with header b" << lbm.header()->number() << ")\n";
+							log << "FIRST_MISS (with header b" << lbm.header()->index() << ")\n";
 							break;
 						case cache::NOT_CLASSIFIED:
 							log << "NOT_CLASSIFIED\n";
@@ -701,7 +702,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 					for (TimingContext::NodeLatencyIterator nl(default_timing_context) ; nl ; nl++)
 						buf << "I" << nl->node()->inst()->index() << ", ";
 					buf << ")";
-					outputGraph(execution_graph, bb->number(), context_index, case_index++, buf.toString());
+					outputGraph(execution_graph, bb->index(), context_index, case_index++, buf.toString());
 				}
 				if(isVerbose())
 					log << "cost = " << default_icache_cost << " (only accounting for fixed latencies)\n\n";
@@ -763,7 +764,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 									for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++)
 										buf << "I" << (nl.item())->node()->inst()->index() << ",";
 								buf << ")";
-								outputGraph(execution_graph, bb->number(), context_index, case_index++, buf.toString());
+								outputGraph(execution_graph, bb->index(), context_index, case_index++, buf.toString());
 							}
 						} 
 					}
@@ -791,7 +792,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 								for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++)
 									buf << "I" << (nl.item())->node()->inst()->index() << ",";
 							buf << ")";
-							outputGraph(execution_graph, bb->number(), context_index, case_index++, buf.toString());
+							outputGraph(execution_graph, bb->index(), context_index, case_index++, buf.toString());
 						}
 					}
 				}
@@ -816,7 +817,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 						for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++)
 							buf << "I" << (nl.item())->node()->inst()->index() << ",";
 						buf << ")";
-						outputGraph(execution_graph, bb->number(), context_index, case_index++, buf.toString());
+						outputGraph(execution_graph, bb->index(), context_index, case_index++, buf.toString());
 					}
 				}
 			}
@@ -854,15 +855,18 @@ void GraphBBTime<G>::configure(const PropList& props) {
 	// -- processBB ------------------------------------------------------------------------------------------
   
 	template <class G>  
-		void GraphBBTime<G>::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+		void GraphBBTime<G>::processBB(WorkSpace *ws, CFG *cfg, Block *block) {
 
 		// ignore empty basic blocks
-		if (bb->countInstructions() == 0)
+		if(!block->isBasic())
+			return;
+		BasicBlock *bb = block->toBasic();
+		if(!bb->count())
 			return;
 
 		if(isVerbose()) {
 			log << "\n\t\t================================================================\n";
-			log << "\t\tProcessing block b" << bb->number() << " (starts at " << bb->address() << " - " << bb->countInstructions() << " instructions)\n";
+			log << "\t\tProcessing block b" << bb->index() << " (starts at " << bb->address() << " - " << bb->count() << " instructions)\n";
 		}
 
 		int context_index = 0;

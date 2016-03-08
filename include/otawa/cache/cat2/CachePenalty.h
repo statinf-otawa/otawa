@@ -32,7 +32,7 @@ namespace otawa {
 	public:
 		typedef enum {MISS, MISS_MISS, HIT_MISS, x_HIT} cache_penalty_type_t;
 	private:
-		BasicBlock *_header[2];
+		Block *_header[2];
 		int _penalty[4];  
 	public:
 		CachePenalty(){
@@ -42,9 +42,9 @@ namespace otawa {
 				_penalty[i] = 0;
 			}
 		}
-		inline void setHeader(int index, BasicBlock *bb)
+		inline void setHeader(int index, Block *bb)
 		{ _header[index] = bb;}
-		inline BasicBlock *header(int index){
+		inline Block *header(int index){
 			return _header[index];
 		}
 		inline void setPenalty(cache_penalty_type_t type, int value)

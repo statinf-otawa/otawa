@@ -394,6 +394,8 @@ void ParExeGraph::initDelays() {
 			break;
 		case Resource::RES_TYPE_NUM:
 			break;
+		default:
+			ASSERT(false);
 		}
 		index++;
     }
@@ -678,8 +680,8 @@ void ParExeGraph::addEdgesForFetch(void) {
     	if (previous){
     		if (previous->inst()->inst()->topAddress() != node->inst()->inst()->address()){
     			// if (address(previous)+sizeof(inst) != address(node)) => instructions not in sequence (taken branch)
-    			ParExeEdge * edge = new ParExeEdge(previous, node, ParExeEdge::SOLID, _branch_penalty, branch_msg);
-    			edge = new ParExeEdge(first_cache_line_node, node, ParExeEdge::SOLID, _branch_penalty,cache_inter_msg);
+    			/*ParExeEdge * edge =*/ new ParExeEdge(previous, node, ParExeEdge::SOLID, _branch_penalty, branch_msg);
+    			/* edge = */ new ParExeEdge(first_cache_line_node, node, ParExeEdge::SOLID, _branch_penalty,cache_inter_msg);
     		}
     		else
     			new ParExeEdge(previous, node, ParExeEdge::SLASHED);

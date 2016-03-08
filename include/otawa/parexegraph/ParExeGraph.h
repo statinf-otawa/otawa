@@ -154,14 +154,14 @@ namespace otawa {
 	class TimingContext {
 	private:
 		elm::genstruct::SLList<NodeLatency *> _node_latencies_list;
-		BasicBlock *_header[2];
+		Block *_header[2];
 		CachePenalty::cache_penalty_type_t _type;
 	public:
 		TimingContext(){
 			_header[0] = NULL;
 			_header[1] = NULL;
 		}
-		TimingContext(BasicBlock *h0, BasicBlock *h1=NULL){
+		TimingContext(Block *h0, Block *h1=NULL){
 			_header[0] = h0;
 			_header[1] = h1;
 		}
@@ -196,7 +196,7 @@ namespace otawa {
 			_header[0] = h0;
 			_header[1] = h1;
 		}
-		inline BasicBlock *header(int index)
+		inline Block *header(int index)
 		{ return _header[index]; }
 		inline void setType(CachePenalty::cache_penalty_type_t type)
 		{ _type = type; }

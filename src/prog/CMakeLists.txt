@@ -136,13 +136,13 @@ set(libotawa_SOURCES
 #	"flowfact_ContextualLoopBound.cpp"
 
 #   script module
-#	"util_XSLTScript.cpp"
-#	"script_NamedObject.cpp"
-#	"script_Script.cpp"
+	"util_XSLTScript.cpp"
+	"script_NamedObject.cpp"
+	"script_Script.cpp"
 
 #    hardware module
 	"hard_Dumper.cpp"
-#	"hard_BHT.cpp"
+	"hard_BHT.cpp"
 	"hard_Processor.cpp"
 	"hardware_Cache.cpp"
 	"hardware_CacheConfiguration.cpp"
@@ -201,11 +201,11 @@ set(libotawa_SOURCES
 #	"exegraph_Microprocessor.cpp"
 #	"exegraph_ParamExeGraph.cpp"
 #	"exegraph_ParamExeGraphBBTime.cpp"
-#	"parexegraph_ParExeProc.cpp"
-#	"parexegraph_Resource.cpp"
-#	"parexegraph_ParExeGraph.cpp"
-#	"parexegraph_GraphBBTime.cpp"
-#	"util_Trace.cpp"
+	"parexegraph_ParExeProc.cpp"
+	"parexegraph_Resource.cpp"
+	"parexegraph_ParExeGraph.cpp"
+	"parexegraph_GraphBBTime.cpp"
+	"util_Trace.cpp"
 
 #    sgraph module
     "sgraph_DiGraph.cpp"

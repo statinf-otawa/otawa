@@ -53,7 +53,7 @@ namespace otawa{
 
 	ResourceList::ResourceList(WorkSpace *ws, ParExeProc *proc){
 	    int resource_index = 0;
-	    bool is_ooo_proc = false;
+	    //bool is_ooo_proc = false;
 
 	    // build the start resource
 	    StartResource * new_resource = new StartResource((elm::String) "start", resource_index++);
@@ -82,8 +82,8 @@ namespace otawa{
 						}
 					}
 				}
-				else
-					is_ooo_proc = true;
+				//else
+				//	is_ooo_proc = true;
 			}
 	    }
 

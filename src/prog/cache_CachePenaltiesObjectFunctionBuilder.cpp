@@ -105,7 +105,7 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 					loop = system->newVar();;
 				}
 				else {
-					BasicBlock *h0 = cache_penalty->header(0);
+					Block *h0 = cache_penalty->header(0);
 					StringBuffer buf1, buf2;
 					buf1 << "XENTRY_b" << h0->index();
 					String name1 = buf1.toString();
@@ -136,7 +136,7 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 				system->addObjectFunction(cache_penalty->penalty(CachePenalty::MISS_MISS), entry);
 				system->addObjectFunction(cache_penalty->penalty(CachePenalty::HIT_MISS), loop);
 
-				BasicBlock *h1 = cache_penalty->header(1);
+				Block *h1 = cache_penalty->header(1);
 				if(!_explicit){
 					entry = system->newVar();
 					loop = system->newVar();;
