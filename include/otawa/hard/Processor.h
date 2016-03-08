@@ -31,11 +31,14 @@
 #include <elm/system/Path.h>
 #include <otawa/prog/Manager.h>
 
-namespace otawa { namespace hard {
+namespace otawa {
+
+class Process;
+
+namespace hard {
 
 using namespace elm;
 using namespace elm::genstruct;
-class ProcessorBuilder;
 
 // PipelineUnit class
 class PipelineUnit {
@@ -305,7 +308,10 @@ public:
 
 	typedef genstruct::Vector<Step> steps_t;
 	virtual void execute(Inst *inst, steps_t& steps);
-	virtual Processor *instantiate(Platform *platform, cstring name = "");
+	virtual Processor *instantiate(Process *process, cstring name = "");
+
+protected:
+	inline Process *process(void) const { return _process; }
 
 private:
 	string arch;
@@ -314,7 +320,7 @@ private:
 	AllocatedTable<Stage *> stages;
 	AllocatedTable<Queue *> queues;
 	t::uint64 frequency;
-	Platform *pf;
+	Process *_process;
 };
 
 

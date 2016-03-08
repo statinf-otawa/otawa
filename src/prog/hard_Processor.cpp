@@ -424,7 +424,7 @@ Dispatch::~Dispatch(void)
 
 /**
  */
-Processor::Processor(void): AbstractIdentifier(""), frequency(0), pf(0) {
+Processor::Processor(void): AbstractIdentifier(""), frequency(0), _process(0) {
 }
 
 
@@ -437,7 +437,7 @@ Processor::Processor(const Make& m, cstring name)
   model(m._model),
   builder(m._builder),
   frequency(m._frequency),
-  pf(0)
+  _process(0)
 {
 	if(m.stages) {
 		stages.allocate(m.stages.length());
@@ -463,7 +463,7 @@ Processor::Processor(const Processor& proc, cstring name)
 	model(proc.model),
 	builder(proc.builder),
 	frequency(proc.frequency),
-	pf(proc.pf)
+	_process(proc._process)
 {
 	if(proc.stages.count()) {
 
@@ -585,7 +585,7 @@ void Processor::execute(Inst *inst, genstruct::Vector<Step>& steps) {
 
 		// add read registers
 		inst->readRegSet(regs);
-		for(RegIter r(regs, pf); r; r++)
+		for(RegIter r(regs, _process->platform()); r; r++)
 			steps.add(Step(Step::READ, *r));
 
 		// add other cycles
@@ -599,7 +599,7 @@ void Processor::execute(Inst *inst, genstruct::Vector<Step>& steps) {
 
 		// add written registers
 		inst->writeRegSet(regs);
-		for(RegIter r(regs, pf); r; r++)
+		for(RegIter r(regs, _process->platform()); r; r++)
 			steps.add(Step(Step::WRITE, *r));
 	}
 }
@@ -607,13 +607,13 @@ void Processor::execute(Inst *inst, genstruct::Vector<Step>& steps) {
 
 /**
  * Perform a copy a copy of the current processor
- * specialized for the given platform.
- * @param platform		Platform to use.
+ * specialized for the given process.
+ * @param process		Process to use.
  * @param name			Name of the created entity (optional).
  */
-Processor *Processor::instantiate(Platform *platform, cstring name) {
+Processor *Processor::instantiate(Process *process, cstring name) {
 	Processor *proc = new Processor(*this, name);
-	proc->pf = platform;
+	proc->_process = process;
 	return proc;
 }
 
@@ -662,7 +662,7 @@ protected:
 			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = proc);
 			if(logFor(LOG_DEPS))
 				log << "\tprocessor configuration from XML element\n";
-			proc->pf = ws->process()->platform();
+			proc->_process = ws->process();
 			config = proc;
 		}
 
@@ -672,7 +672,7 @@ protected:
 				log << "\tprocessor configuration from \"" << path << "\"\n";
 			hard::Processor *proc = hard::Processor::load(path);
 			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = proc);
-			proc->pf = ws->process()->platform();
+			proc->_process = ws->process();
 			config = proc;
 		}
 
@@ -683,7 +683,7 @@ protected:
 				throw ProcessorException(*this, _ << "cannot find processor named " << id);
 			if(logFor(LOG_DEPS))
 				log << "\tprocessor configuration from \"" << id << "\"\n";
-			hard::Processor *proc = orig->instantiate(ws->process()->platform());
+			hard::Processor *proc = orig->instantiate(ws->process());
 			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = proc);
 			config = proc;
 		}
