@@ -166,6 +166,27 @@ template <class FixPoint>
 void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	fp.assign(in, fp.bottom());
 
+	// exit with remaining back-end
+    // if unknown vertex, look for dead-end blocks
+    if(current->isExit() && current->cfg()->unknown() != 0) {
+
+    	// find remaining block
+    	int rem = -1;
+    	for(int i = workList->length() - 1; i >= 0; i--)
+    		if(workList->get(i)->cfg() == current->cfg()) {
+    			rem = i;
+    			break;
+    		}
+
+    	// re-schedule remaining
+    	if(rem >= 0) {
+    		Block *bb = workList->get(rem);
+    		workList->set(rem, current);
+    		current = bb;
+    		HAI_TRACE("\tDELAYED BY " << current);
+    	}
+    }
+
 	// main entry case
 	// TODO case not really needed: put entry domain in the fp directly -> aggregate with next case
 	if(mainEntry) {
@@ -247,8 +268,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			ASSERTP(edgeState, "no state for " << *inedge  << " (" << inedge->source()->cfg() << ")");
 			fp.updateEdge(*inedge, *edgeState);
 			fp.lub(in, *edgeState);
-			//if(!next_edge)
-				fp.unmarkEdge(*inedge);
+			fp.unmarkEdge(*inedge);
 		}
 		if(HAI_BYPASS_TARGET(current)) {
 			typename FixPoint::Domain *bypassState = fp.getMark(current);
@@ -292,15 +312,15 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
         	fp.dumpJSON(out, saver);
 #		endif
 
-       	// restore previous context
-       	Edge *edge = callStack->pop();
-       	cur_cfg = cfgStack->pop();
-       	HAI_TRACE("\t\treturning to CFG " << cur_cfg->label());
+		// restore previous context
+		Edge *edge = callStack->pop();
+		cur_cfg = cfgStack->pop();
+		HAI_TRACE("\t\treturning to CFG " << cur_cfg->label());
 		fp.leaveContext(out, cur_cfg->entry(), CTX_FUNC);
 
 		// record function output state
-       	fp.markEdge(edge, out);
-       	tryAddToWorkList(edge->sink()); //workList->push(edge->sink());
+		fp.markEdge(edge, out);
+		tryAddToWorkList(edge->sink()); //workList->push(edge->sink());
 	}
 
 	// from synthetic block
