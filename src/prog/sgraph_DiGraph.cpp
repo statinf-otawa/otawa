@@ -89,6 +89,20 @@ Vertex::~Vertex(void) {
 
 
 /**
+ * @fn EdgeIter Vertex::countIns(void) const;
+ * Get the amount of entering edges on the current vertex.
+ * @return	Iterator on entering edges.
+ */
+
+
+/**
+ * @fn EdgeIter Vertex::countOuts(void) const;
+ * Get the amount of leaving edges on the current vertex.
+ * @return	Iterator on leaving edges.
+ */
+
+
+/**
  * @class DiGraph
  * Directed graph representation in the @ref sgraph group.
  * @ingroup sgraph
