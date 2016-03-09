@@ -274,7 +274,7 @@ void CFGCollector::scanCFG(Inst *e, genstruct::FragTable<Inst *>& bbs) {
 
 		// iterate until sequence end
 		while(!isControl(i)) {
-			Inst *n = i->nextInst();
+			Inst *n = workspace()->findInstAt(i->topAddress());
 			if(!n || isBlockStart(n))
 				break;
 			i = n;
