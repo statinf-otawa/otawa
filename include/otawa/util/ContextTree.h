@@ -27,6 +27,7 @@
 #include <otawa/properties.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/proc/Feature.h>
+#include <otawa/cfg/CFG.h>
 
 namespace otawa {
 
@@ -47,13 +48,13 @@ private:
 	kind_t _kind;
 	BasicBlock *_bb;
 	CFG *_cfg;
-	elm::genstruct::Vector<BasicBlock *> _bbs;
+	elm::genstruct::Vector<Block *> _bbs;
 	elm::genstruct::Vector<ContextTree *> _children;
 	
 	ContextTree *_parent;
 	ContextTree(BasicBlock *bb, CFG *cfg, ContextTree *parent);
 	void addChild(ContextTree *tree);
-	void addBB(BasicBlock *bb, bool _inline);
+	void addBlock(Block *bb, bool _inline);
 public:
 
 	// Methods
@@ -63,8 +64,6 @@ public:
 	inline kind_t kind(void) const;
 	inline CFG *cfg(void) const;
 	inline ContextTree *parent(void) const;
-	/*inline elm::Collection<ContextTree *>& children(void);
-	inline elm::Collection<BasicBlock *>& bbs(void);*/
 	inline bool isChildOf(const ContextTree *ct);
 	ContextTree *enclosingFunction(void);
 	
@@ -75,10 +74,10 @@ public:
 	};
 	
 	// BBIterator class
-	class BBIterator: public elm::genstruct::Vector<BasicBlock *>::Iterator {
+	class BlockIterator: public elm::genstruct::Vector<Block *>::Iterator {
 	public:
-		inline BBIterator(ContextTree *tree):
-			elm::genstruct::Vector<BasicBlock *>::Iterator(tree->_bbs) { }
+		inline BlockIterator(ContextTree *tree):
+			elm::genstruct::Vector<Block *>::Iterator(tree->_bbs) { }
 	};
 };
 
@@ -122,15 +121,6 @@ inline ContextTree::kind_t ContextTree::kind(void) const {
 inline ContextTree *ContextTree::parent(void) const {
 	return _parent;
 };
-
-/*inline elm::Collection<BasicBlock *>& ContextTree::bbs(void) {
-	return _bbs;
-}
-
-inline elm::Collection<ContextTree *>& ContextTree::children(void) {
-	return _children;
-}*/
-
 
 inline bool ContextTree::isChildOf(const ContextTree *ct) {
 	ContextTree *cur = this;

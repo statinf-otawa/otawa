@@ -123,7 +123,7 @@ set(libotawa_SOURCES
 	"util_FlowFactLoader.cpp"
 #	"util_CFGNormalizer.cpp"
 #	"util_MemBlockMap.cpp"
-#	"util_ContextTree.cpp"
+	"util_ContextTree.cpp"
 	"util_Bag.cpp"
 	"util_Graph.cpp"
 	"util_Node.cpp"

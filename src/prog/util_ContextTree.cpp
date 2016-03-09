@@ -20,14 +20,15 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/util/ContextTree.h>
-#include <otawa/util/Dominance.h>
-#include <otawa/util/LoopInfoBuilder.h>
 #include <elm/genstruct/Vector.h>
+
 #include <otawa/cfg.h>
-#include <otawa/dfa/IterativeDFA.h>
+#include <otawa/cfg/Dominance.h>
 #include <otawa/dfa/BitSet.h>
+#include <otawa/dfa/IterativeDFA.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/util/ContextTree.h>
+#include <otawa/util/LoopInfoBuilder.h>
 
 //#define TRACE(x) cerr << x << io::endl;
 #define TRACE(x)
@@ -69,26 +70,28 @@ namespace otawa {
  */
 ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 	_kind(ROOT),
-	_bb(cfg->entry()),
 	_cfg(cfg),
 	_parent(parent)
 {
+	for(Block::EdgeIter ei=cfg->entry()->outs(); ei; ei++)
+		_bb = ei->target()->toBasic();
+
 	ASSERT(cfg);
 	TRACE("Computing " << cfg->label());
 	
 	/*
 	 * First, create a ContextTree for each loop.
 	 */
-	for (CFG::BBIterator bb(cfg); bb; bb++)
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 		if (LOOP_HEADER(bb)) {
-			OWNER_CONTEXT_TREE(bb) = new ContextTree(bb, cfg, this);
-			OWNER_CONTEXT_TREE(bb)->addBB(bb, _inline);
+			OWNER_CONTEXT_TREE(bb) = new ContextTree(bb->toBasic(), cfg, this);
+			OWNER_CONTEXT_TREE(bb)->addBlock(bb, _inline);
 		}
-	
+	}
 	/*
 	 * Then, link each ContextTree to its parents.
 	 */
-	for (CFG::BBIterator bb(cfg); bb; bb++) {
+	for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 		if (LOOP_HEADER(bb)) {
 			/* Loop header: add the ContextTree to its parent ContextTree */
 			if (!ENCLOSING_LOOP_HEADER(bb)) {
@@ -102,12 +105,12 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 			/* Not loop header: add the BasicBlock to its ContextTree */		
 			if (!ENCLOSING_LOOP_HEADER(bb)) {
 				/* bb is not in a loop: add bb to the root ContextTree */
-				addBB(bb, _inline);
+				addBlock(bb, _inline);
 				OWNER_CONTEXT_TREE(bb)=this;			
 			} else {
 				/* The bb is in a loop: add the bb to the loop's ContextTree. */
 				ContextTree *parent = OWNER_CONTEXT_TREE(ENCLOSING_LOOP_HEADER(bb));
-				parent->addBB(bb, _inline);
+				parent->addBlock(bb, _inline);
 				OWNER_CONTEXT_TREE(bb) = parent;
 			}
 		}
@@ -146,7 +149,7 @@ ContextTree::~ContextTree(void) {
  * @param bb	Added BB.
  * @param bb	If true, inline the call.
  */
-void ContextTree::addBB(BasicBlock *bb, bool _inline) {
+void ContextTree::addBlock(Block *bb, bool _inline) {
 	ASSERT(bb);
 	TRACE("inline=" << _inline);
 	
@@ -154,21 +157,20 @@ void ContextTree::addBB(BasicBlock *bb, bool _inline) {
 	_bbs.add(bb);
 	
 	// Process call
-	if(_inline && bb->isCall())
-		for(BasicBlock::OutIterator edge(bb); edge; edge++)
-			if(edge->kind() == Edge::CALL && edge->calledCFG()) {
+	if(_inline && bb->isCall()) {
+			if(bb->toSynth()->callee()) {
+
 				
 				// Detect recursivity
 				for(ContextTree *cur = this; cur; cur = cur->parent())
-					if(cur->kind() != LOOP && edge->calledCFG() == cur->cfg()) {
-						//_children.add(cur);
+					if(cur->kind() != LOOP && bb->toSynth()->callee() == cur->cfg()) {
 						return;
 					}
 				
 				// Add the child 
-				addChild(new ContextTree(edge->calledCFG(), enclosingFunction()));
+				addChild(new ContextTree(bb->toSynth()->callee(), enclosingFunction()));
 			}
-			
+	}
 }
 
 
