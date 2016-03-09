@@ -26,6 +26,7 @@
 
 #include <otawa/app/Application.h>
 #include <otawa/cfg/features.h>
+#include <otawa/hard/Processor.h>
 #include <otawa/hard/Register.h>
 #include <otawa/prog/sem.h>
 #include <otawa/prog/TextDecoder.h>
@@ -57,7 +58,8 @@
  * @li -k, --kind: display kind of instructions,
  * @li -s, --semantics:	display translation of instruction into semantics language,
  * @li -t, --target: display target of control instructions
- * @li -b, --byres: display bytes of instructions
+ * @li -b, --bytes: display bytes of instructions
+ * @li -p, --pipeline PROCESSOR_NAME: display execution pipeline of instructions for the given processor
  *
  * @par Example
  * @code
@@ -143,16 +145,22 @@ public:
 	kind(*this, option::cmd, "-k", option::cmd, "--kind", option::help, "display kind of instructions", option::end),
 	sem(*this, option::cmd, "-s", option::cmd, "--semantics", option::help, "display translation of instruction in semantics language", option::end),
 	target(*this, option::cmd, "-t", option::cmd, "--target", option::help, "display target of control instructions", option::end),
-	bytes(option::SwitchOption::Make(this).cmd("-b").cmd("--bytes").description("display bytes composing the instrucion")),
-	max_size(0)
+	bytes(option::SwitchOption::Make(this).cmd("-b").cmd("--bytes").description("display bytes composing the instruction")),
+	pipeline(*this, 'p', "pipeline", "display execution pipeline of instructions for the given processor", "PROCESSOR_NAME", ""),
+	max_size(0), proc(NULL)
 	{ }
 
 	virtual void work (const string &entry, PropList &props) throw (elm::Exception) {
 		require(otawa::COLLECTED_CFG_FEATURE);
+		if(pipeline) {
+			hard::PROCESSOR_ID(props) = pipeline;
+			workspace()->require(hard::PROCESSOR_FEATURE, props);
+			proc = *hard::PROCESSOR(workspace());
+			ASSERTP(proc, "No processor found in platform");
+		}
 		const CFGCollection *coll = otawa::INVOLVED_CFGS(workspace());
 		for(int i = 0; i < coll->count(); i++)
 			processCFG(coll->get(i));
-
 	}
 
 
@@ -197,7 +205,7 @@ private:
 		// display the address
 		cout << inst->address();
 
-		// display bytes of instruciton (if required)
+		// display bytes of instruction (if required)
 		if(bytes) {
 			cout << '\t';
 			for(t::uint32 i = 0; i < inst->size(); i++) {
@@ -217,7 +225,7 @@ private:
 
 		// display kind if required
 		if(kind) {
-			cout << "\tkind = ";
+			cout << "\t\tkind = ";
 			Inst::kind_t kind = inst->kind();
 			for(int i = 0; kinds[i].kind; i++)
 				if(kinds[i].kind & kind)
@@ -228,10 +236,12 @@ private:
 		// display target if any
 		if(target) {
 			if(inst->isControl() && !inst->isReturn() && !(kind & Inst::IS_TRAP)) {
-				cout << "\ttarget = ";
+				cout << "\t\ttarget = ";
 				Inst *target = inst->target();
 				if(!target)
 					cout << "unknown";
+				else
+					cout << target->address();
 				cout << io::endl;
 			}
 		}
@@ -283,10 +293,48 @@ private:
 				cout << io::endl;
 			}
 		}
+
+		// display pipeline
+		if(pipeline) {
+			hard::Processor::steps_t steps;
+			proc->execute(inst, steps);
+			dumpExeGraph(steps, cout, "\t\t");
+		}
+	}
+
+	void dumpExeGraph(hard::Processor::steps_t& steps, Output out = otawa::cout, String start = "") {
+		out << start << "pipeline\n" << start;
+		for (int i = 0; i < steps.length(); i++) {
+			switch (steps[i].kind()) {
+			case hard::Step::STAGE:
+				out << "\t" << steps[i].stage()->getName();
+				break;
+			case hard::Step::FU:
+				out << "\t" << steps[i].fu()->getName();
+				break;
+			case hard::Step::READ:
+				out << " r:" << steps[i].getReg()->name();
+				break;
+			case hard::Step::WRITE:
+				out << " w:" << steps[i].getReg()->name();
+				break;
+			case hard::Step::USE:
+				out << "\tuse:" << steps[i].getQueue()->getName();
+				break;
+			case hard::Step::RELEASE:
+				out << "\trel:" << steps[i].getQueue()->getName();
+				break;
+			default:
+				out << " [unknown]";
+			}
+		}
+		out << endl;
 	}
 
 	option::SwitchOption regs, kind, sem, target, bytes;
+	option::StringOption pipeline;
 	t::uint32 max_size;
+	const hard::Processor *proc;
 };
 
 int main(int argc, char **argv) {

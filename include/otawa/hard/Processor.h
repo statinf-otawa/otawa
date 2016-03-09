@@ -249,8 +249,8 @@ public:
 	inline kind_t kind(void) const { return _kind; }
 	inline Stage *stage(void) const { ASSERT(_kind == STAGE); return arg.stage; }
 	inline PipelineUnit *fu(void) const { ASSERT(_kind == FU); return arg.fu; }
-	inline const Register *getReg(void) const { ASSERT(_kind == READ && _kind == WRITE); return arg.reg; }
-	inline Queue *getQueue(void) const { ASSERT(_kind == USE && _kind == RELEASE); return arg.queue; }
+	inline const Register *getReg(void) const { ASSERT(_kind == READ || _kind == WRITE); return arg.reg; }
+	inline Queue *getQueue(void) const { ASSERT(_kind == USE || _kind == RELEASE); return arg.queue; }
 
 private:
 	kind_t _kind;
@@ -307,8 +307,9 @@ public:
 	static Processor *load(xom::Element *element) throw(LoadException);
 
 	typedef genstruct::Vector<Step> steps_t;
-	virtual void execute(Inst *inst, steps_t& steps);
-	virtual Processor *instantiate(Process *process, cstring name = "");
+	virtual void execute(Inst *inst, steps_t& steps) const;
+	virtual Processor *clone(cstring name = "") const;
+	virtual Processor *instantiate(Process *process, cstring name = "") const;
 
 protected:
 	inline Process *process(void) const { return _process; }

@@ -64,7 +64,8 @@ PipelineUnit::PipelineUnit(void)
  * Build a pipeline unit using a maker.
  */
 PipelineUnit::PipelineUnit(const Make& maker)
-:	latency(maker._latency),
+:	name(maker._name),
+	latency(maker._latency),
 	width(maker._width),
 	branch(maker.branch),
 	mem(maker.mem)
@@ -559,7 +560,7 @@ hard::Processor *Processor::load(xom::Element *element) throw(LoadException) {
  * @param inst	Instruction (or bundle) to generate execution for.
  * @param steps	Vector to receive the steps of the instructions.
  */
-void Processor::execute(Inst *inst, genstruct::Vector<Step>& steps) {
+void Processor::execute(Inst *inst, genstruct::Vector<Step>& steps) const {
 	RegSet regs;
 	steps.clear();
 	for(table<Stage *>::Iterator stage(stages); stage; stage++) {
@@ -605,14 +606,19 @@ void Processor::execute(Inst *inst, genstruct::Vector<Step>& steps) {
 }
 
 
+Processor *Processor::clone(cstring name) const {
+	return new Processor(*this, name);
+}
+
+
 /**
  * Perform a copy a copy of the current processor
  * specialized for the given process.
  * @param process		Process to use.
  * @param name			Name of the created entity (optional).
  */
-Processor *Processor::instantiate(Process *process, cstring name) {
-	Processor *proc = new Processor(*this, name);
+Processor *Processor::instantiate(Process *process, cstring name) const {
+	Processor *proc = clone(name);
 	proc->_process = process;
 	return proc;
 }
