@@ -23,6 +23,8 @@
 #define OTAWA_FLOWFACT_FEATURES_H_
 
 #include <otawa/properties.h>
+#include <elm/xom/Element.h>
+#include <otawa/proc/AbstractFeature.h>
 
 namespace otawa {
 

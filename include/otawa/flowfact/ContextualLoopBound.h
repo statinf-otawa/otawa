@@ -91,6 +91,8 @@ private:
 	void print(genstruct::Tree<data_t> *cur, int tab = 0);
 };
 
+extern Identifier<ContextualLoopBound *> CONTEXTUAL_LOOP_BOUND;
+
 } // otawa
 
 #endif /* OTAWA_FLOWFACT_CONTEXTUALLOOPBOUND_H_ */
