@@ -6,7 +6,7 @@
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet.h>
-#include <otawa/util/Dominance.h>
+#include <otawa/cfg/Dominance.h>
 
 #include <otawa/cfg.h>
 #include <otawa/util/LoopInfoBuilder.h>

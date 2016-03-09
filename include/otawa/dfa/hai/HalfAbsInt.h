@@ -30,8 +30,8 @@
 #include <elm/genstruct/Vector.h>
 #include <otawa/cfg/CFG.h>
 #include <otawa/cfg/BasicBlock.h>
+#include <otawa/cfg/Dominance.h>
 #include <otawa/cfg/Edge.h>
-#include <otawa/util/Dominance.h>
 #include <otawa/util/LoopInfoBuilder.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/prog/WorkSpace.h>

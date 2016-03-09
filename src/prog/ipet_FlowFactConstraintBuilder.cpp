@@ -23,6 +23,7 @@
 #include <elm/io.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/CFGCollector.h>
+#include <otawa/cfg/Dominance.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/flowfact/features.h>
 #include <otawa/ilp.h>
@@ -30,7 +31,6 @@
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/VarAssignment.h>
-#include <otawa/util/Dominance.h>
 #include <otawa/util/FlowFactLoader.h>
 
 namespace otawa { namespace ipet {

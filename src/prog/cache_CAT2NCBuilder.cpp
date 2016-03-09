@@ -1,7 +1,7 @@
 #include <otawa/proc/Processor.h>
 #include <otawa/cache/cat2/CAT2Builder.h>
 #include <otawa/cache/cat2/CAT2NCBuilder.h>
-#include <otawa/util/Dominance.h>
+#include <otawa/cfg/Dominance.h>
 #include <otawa/cache/cat2/ACSBuilder.h>
 #include <otawa/cache/cat2/ACSMayBuilder.h>
 #include <otawa/cache/FirstLastBuilder.h>

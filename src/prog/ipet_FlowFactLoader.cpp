@@ -20,15 +20,15 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/cfg.h>
 #include <elm/io.h>
-#include <otawa/ipet/IPET.h>
-#include <otawa/ipet/FlowFactLoader.h>
-#include <otawa/util/Dominance.h>
-#include <otawa/proc/ProcessorException.h>
-#include <otawa/util/FlowFactLoader.h>
+#include <otawa/cfg.h>
+#include <otawa/cfg/Dominance.h>
 #include <otawa/flowfact/features.h>
+#include <otawa/ipet/FlowFactLoader.h>
+#include <otawa/ipet/IPET.h>
+#include <otawa/proc/ProcessorException.h>
 #include <otawa/prog/Inst.h>
+#include <otawa/util/FlowFactLoader.h>
 
 namespace otawa { namespace ipet {
 

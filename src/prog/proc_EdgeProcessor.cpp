@@ -54,8 +54,8 @@ EdgeProcessor::EdgeProcessor(cstring name, const Version& version, AbstractRegis
 /**
  */
 void EdgeProcessor::processCFG(WorkSpace *ws, CFG *cfg) {
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-		for(BasicBlock::OutIterator edge(bb); edge; edge++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
+		for(Block::EdgeIter edge = bb->outs(); edge; edge++) {
 			if(logFor(Processor::LOG_BLOCK))
 				cerr << "\t\t" << *edge << io::endl;
 			processEdge(ws, cfg, edge);
@@ -66,7 +66,7 @@ void EdgeProcessor::processCFG(WorkSpace *ws, CFG *cfg) {
 /**
  */
 void EdgeProcessor::cleanupCFG(WorkSpace *ws, CFG *cfg) {
-	for(CFG::BBIterator bb(cfg); bb; bb++)
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 		cleanupBB(ws, cfg, bb);
 }
 
@@ -81,8 +81,8 @@ void EdgeProcessor::cleanupCFG(WorkSpace *ws, CFG *cfg) {
  * @param cfg	Current CFG.
  * @param bb	Current BB.
  */
-void EdgeProcessor::cleanupBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-	for(BasicBlock::OutIterator edge(bb); edge; edge++)
+void EdgeProcessor::cleanupBB(WorkSpace *ws, CFG *cfg, Block *bb) {
+	for(Block::EdgeIter edge = bb->outs(); edge; edge++)
 		cleanupEdge(ws, cfg, edge);
 }
 

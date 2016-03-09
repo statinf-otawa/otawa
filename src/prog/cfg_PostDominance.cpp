@@ -20,10 +20,10 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/util/PostDominance.h>
-#include <otawa/dfa/IterativeDFA.h>
-#include <otawa/dfa/BitSet.h>
 #include <otawa/cfg.h>
+#include <otawa/cfg/PostDominance.h>
+#include <otawa/dfa/BitSet.h>
+#include <otawa/dfa/IterativeDFA.h>
 #include <otawa/prop/DeletableProperty.h>
 
 using namespace otawa::dfa;

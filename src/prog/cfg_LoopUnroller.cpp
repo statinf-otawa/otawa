@@ -30,10 +30,10 @@
 #include <otawa/cfg.h>
 #include <otawa/cfg/CFG.h>
 #include <otawa/cfg/CFGCollector.h>
+#include <otawa/cfg/Dominance.h>
 #include <otawa/cfg/LoopUnroller.h>
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ipet/IPET.h>
-#include <otawa/util/Dominance.h>
 #include <otawa/util/LoopInfoBuilder.h>
 #include <otawa/util/FlowFactLoader.h>
 

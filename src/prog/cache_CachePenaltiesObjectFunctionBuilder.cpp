@@ -6,15 +6,15 @@
  */
 
 
-#include <otawa/ipet/IPET.h>
-#include <otawa/cfg.h>
-#include <otawa/ilp.h>
 #include <otawa/cache/CachePenaltiesObjectFunctionBuilder.h>
+#include <otawa/cfg.h>
+#include <otawa/cfg/Dominance.h>
+#include <otawa/ilp.h>
 #include <otawa/proc/ProcessorException.h>
-#include <otawa/ipet/VarAssignment.h>
-#include <otawa/ipet/TrivialBBTime.h>
 #include <otawa/ipet/ILPSystemGetter.h>
-#include <otawa/util/Dominance.h>
+#include <otawa/ipet/IPET.h>
+#include <otawa/ipet/TrivialBBTime.h>
+#include <otawa/ipet/VarAssignment.h>
 
 using namespace otawa::ilp;
 

@@ -21,12 +21,12 @@
  */
 #include <elm/deprecated.h>
 #include <otawa/cfg.h>
+#include <otawa/cfg/Dominance.h>
 #include <otawa/cfg/features.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/prog/WorkSpace.h>
-#include <otawa/util/Dominance.h>
 
 using namespace otawa::dfa;
 

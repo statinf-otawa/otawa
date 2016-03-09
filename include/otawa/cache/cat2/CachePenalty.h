@@ -23,6 +23,7 @@
 #ifndef CACHE_PENALTY_H_
 #define CACHE_PENALTY_H_
 
+#include <otawa/cfg/CFG.h>
 #include <otawa/prop/Identifier.h>
 
 

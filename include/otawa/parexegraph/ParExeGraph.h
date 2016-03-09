@@ -23,18 +23,18 @@
 #ifndef _PAR_EXEGRAPH_H_
 #define _PAR_EXEGRAPH_H_
 
-#include <otawa/graph/GenGraph.h>
 #include <elm/PreIterator.h>
 #include <elm/string/StringBuffer.h>
+#include <otawa/cache/cat2/CachePenalty.h>
+#include <otawa/cfg/BasicBlock.h>
+#include <otawa/cfg/Dominance.h>
+#include <otawa/hard/Platform.h>
+#include <otawa/graph/GenGraph.h>
+#include <otawa/graph/PreorderIterator.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/parexegraph/ParExeProc.h>
 #include <otawa/parexegraph/Resource.h>
-#include <otawa/cfg/BasicBlock.h>
-#include <otawa/hard/Platform.h>
-#include <otawa/parexegraph/ParExeProc.h>
-#include <otawa/graph/PreorderIterator.h>
-#include <otawa/util/Dominance.h>
-#include <otawa/cache/cat2/CachePenalty.h>
+
 
 namespace otawa {
 
