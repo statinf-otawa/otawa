@@ -130,7 +130,7 @@ set(libotawa_SOURCES
 	"util_Edge.cpp"
 	"util_GenGraph.cpp"
 	"graph_PreorderIterator.cpp"
-#	"flowfact_ContextualLoopBound.cpp"
+	"flowfact_ContextualLoopBound.cpp"
 
 #   script module
 	"util_XSLTScript.cpp"
