@@ -44,6 +44,7 @@ public:
 	// Configuration
 	static Identifier<display::kind_t> KIND;
 	static Identifier<string> PATH;
+	static Identifier<string> PREFIX;
 
 	virtual void genGraphLabel(CFG *cfg, Output& out);
 	virtual void genBBLabel(CFG *cfg, Block *bb, Output& out);
@@ -58,6 +59,7 @@ protected:
 private:
 	display::kind_t kind;
 	string path;
+	string prefix;
 };
 
 } }	// otawa::display
