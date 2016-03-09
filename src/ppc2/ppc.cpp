@@ -161,7 +161,7 @@ static const elm::genstruct::Table<const RegBank *> banks_table(banks, 4);
 #define _asr(d, a, b)	block.add(otawa::sem::asr(d, a, b))
 #define _branch(d)		block.add(otawa::sem::branch(d))
 #define _cmp(d, a, b)	block.add(otawa::sem::cmp(d, a, b))
-#define _cmpu(d, a, b)	block.add(otawa::sem::cmp(d, a, b))
+#define _cmpu(d, a, b)	block.add(otawa::sem::cmpu(d, a, b))
 #define _div(d, a, b)	block.add(otawa::sem::div(d, a, b))
 #define _divu(d, a, b)	block.add(otawa::sem::divu(d, a, b))
 #define _if(d, a, b)	block.add(otawa::sem::_if(d, a, b))
