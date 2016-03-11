@@ -62,7 +62,7 @@ p::declare CFGTransformer::reg = p::init("otawa::CFGTransformer", Version(1, 0, 
 
 /**
  */
-CFGTransformer::CFGTransformer(p::declare& r): Processor(r), entry(0), cur(0), no_unknown(false) {
+CFGTransformer::CFGTransformer(p::declare& r): Processor(r), _entry(0), cur(0), no_unknown(false) {
 }
 
 /**
@@ -268,19 +268,28 @@ CFGMaker *CFGTransformer::get(CFG *cfg) {
 }
 
 /**
+ * Get the block in new CFG matching the given old CFG block.
+ * @param b		Old CFG block.
+ * @return		New CFG block.
+ */
+Block *CFGTransformer::get(Block *b) {
+	return bmap.get(b);
+}
+
+/**
  */
 void CFGTransformer::processWorkSpace(WorkSpace *ws) {
 	const CFGCollection *coll = otawa::INVOLVED_CFGS(ws);
 	ASSERT(coll);
 
 	// initialize working list
-	entry = coll->entry();
-	get(entry);
+	_entry = coll->entry();
+	get(_entry);
 
 	// process each CFG in turn
 	while(wl) {
 		Pair<CFG *, CFGMaker *> p = wl.get();
-		install(p.fst, p.snd);
+		install(p.fst, *p.snd);
 		transform(p.fst, *p.snd);
 	}
 }
@@ -307,13 +316,36 @@ void CFGTransformer::cleanup(WorkSpace *ws) {
  * @param cfg	CFG to transform.
  * @param maker	Maker of the CFG.
  */
-void CFGTransformer::install(CFG *cfg, CFGMaker *maker) {
-	cur = maker;
+void CFGTransformer::install(CFG *cfg, CFGMaker& maker) {
+	cur = &maker;
 	bmap.clear();
-	bmap.put(cfg->entry(), maker->entry());
-	bmap.put(cfg->exit(), maker->exit());
+	bmap.put(cfg->entry(), maker.entry());
+	bmap.put(cfg->exit(), maker.exit());
 	if(!no_unknown && cfg->unknown())
-		bmap.put(cfg->unknown(), maker->unknown());
+		bmap.put(cfg->unknown(), maker.unknown());
+}
+
+/**
+ * Add a CFG to process. A new CFG is always added and no duplication
+ * test is performed but no map between old and new CFG is recorded.
+ * @param cfg	CFG to add.
+ * @return		Matching CFG maker.
+ */
+CFGMaker& CFGTransformer::add(CFG *cfg) {
+	CFGMaker *maker = new CFGMaker(cfg->first());
+	add(cfg, *maker);
+	return *maker;
+}
+
+/**
+ * Add a CFG and its maker to process. A new CFG is always added and no duplication
+ * test is performed but no map between old and new CFG is recorded.
+ * @param cfg		CFG to add.
+ * @param maker		Matching CFG maker.
+ */
+void CFGTransformer::add(CFG *cfg, CFGMaker& maker) {
+	makers.add(&maker);
+	wl.put(pair(cfg, &maker));
 }
 
 /**
@@ -329,7 +361,9 @@ void CFGTransformer::install(CFG *cfg, CFGMaker *maker) {
  * @return	No-unknown configuration.
  */
 
+/**
+ * @fn CFG *CFGTransformer::entry(void) const;
+ * Get the entry CFG.
+ */
+
 }	// otawa
-
-
-

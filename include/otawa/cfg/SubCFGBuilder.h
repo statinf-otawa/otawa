@@ -23,38 +23,33 @@
 #define OTAWA_CFG_SUBCFGBUILDER_H_
 
 #include <elm/genstruct/Vector.h>
+#include <otawa/cfg/CFGTransformer.h>
 #include <otawa/proc/Registration.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/prop/Identifier.h>
-#include <otawa/cfg/CFGAdapter.h>
 
 namespace otawa {
 
-// predeclaration
-class VirtualCFG;
-
-
 // SubCFGBuilder class
-class SubCFGBuilder: public Processor {
+class SubCFGBuilder: public CFGTransformer {
 public:
 	SubCFGBuilder(void);
-	static Registration<SubCFGBuilder> reg;
+	static p::declare reg;
 	virtual void configure(const PropList &props);
 protected:
-	virtual void processWorkSpace(WorkSpace *ws);
-	virtual void cleanup (WorkSpace *fw);
+	virtual void transform(CFG *cfg, CFGMaker& maker);
 private:
 	Address start;
 	elm::genstruct::Vector<Address> stops;
-	BasicBlock *_start_bb;
-	elm::genstruct::Vector<BasicBlock *> _stop_bbs;
-	VirtualCFG *vcfg;
+	Block *_start_bb;
+	elm::genstruct::Vector<Block *> _stop_bbs;
+	CFGMaker *maker;
 	CFG *cfg;
-	void floodForward();
-	void floodBackward();
+	void floodForward(void);
+	void floodBackward(void);
 	static const char BOTTOM = -1,
-						  FALSE = 0,
-						  TRUE = 1;
+					  FALSE = 0,
+					  TRUE = 1;
 	inline static char toString(char c) {
 			switch(c) {
 			case BOTTOM: return '_';

@@ -20,14 +20,13 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/cfg/SubCFGBuilder.h>
-#include <otawa/cfg/features.h>
-#include <otawa/prog/WorkSpace.h>
+#include <elm/genstruct/FragTable.h>
 #include <otawa/cfg.h>
+#include <otawa/cfg/features.h>
+#include <otawa/cfg/SubCFGBuilder.h>
 #include <otawa/dfa/AbsIntLite.h>
-#include <otawa/cfg/CFGAdapter.h>
+#include <otawa/prog/WorkSpace.h>
 #include <elm/util/BitVector.h>
-#include <elm/genstruct/HashTable.h>
 
 using namespace elm;
 using namespace otawa::dfa;
@@ -36,95 +35,22 @@ namespace otawa {
 
 /**
  */
-SubCFGBuilder::SubCFGBuilder(): Processor(reg) {
+SubCFGBuilder::SubCFGBuilder(void)
+: CFGTransformer(reg), _start_bb(0), maker(0), cfg(0) {
 }
 
-Registration<SubCFGBuilder> SubCFGBuilder::reg(
-	"otawa::SubCFGBuilder",
-	Version(1, 0, 0),
-	p::require, &COLLECTED_CFG_FEATURE,
-	p::use, &VIRTUALIZED_CFG_FEATURE,
-	p::invalidate, &COLLECTED_CFG_FEATURE,
-	p::provide, &VIRTUALIZED_CFG_FEATURE,
-	p::end
-);
+/**
+ */
+p::declare SubCFGBuilder::reg = p::init("otawa::SubCFGBuilder", Version(2, 0, 0))
+	.require(COLLECTED_CFG_FEATURE)
+	.base(CFGTransformer::reg)
+	.maker<SubCFGBuilder>();
 
 
 Identifier<bool> IS_START("", false);
 Identifier<bool> IS_STOP("", false);
 Identifier<bool> IS_ON_FORWARD_PATH("", false);
 Identifier<bool> IS_ON_BACKWARD_PATH("", false);
-
-class Domain {
-public:
-	typedef char t;
-	static const char BOTTOM = -1,
-					  FALSE = 0,
-					  TRUE = 1;
-	inline t initial(void) const { return FALSE; }
-	inline t bottom(void) const { return BOTTOM; }
-	inline void join(t& d, t s) const { if(d < s) d = s; }
-	inline bool equals(t v1, t v2) const { return v1 == v2; }
-	inline void set(t& d, t s) const { d = s; }
-
-	inline static char toString(t c) {
-		switch(c) {
-		case BOTTOM: return '_';
-		case FALSE: return 'F';
-		case TRUE: return 'T';
-		default: return '?';
-		}
-	}
-
-	inline void dump(io::Output& out, t c) { out << toString(c); }
-};
-
-class StartDomain: public Domain {
-public:
-	inline StartDomain(const Address& _start, const genstruct::Vector<Address>& _stops)
-	: start(_start), stops(_stops) { }
-
-	void update(BasicBlock *bb, t& d) {
-		if (bb->number() < 40)
-			cout << "start.ai:processing bb" << bb->number() << "\n";
-		if(bb->isEnd())
-			return;
-		if(IS_START(bb))
-			d = TRUE;
-		if(IS_STOP(bb))
-			d = FALSE;
-	}
-
-private:
-	const Address& start;
-	const genstruct::Vector<Address> &stops;
-};
-
-
-class StopDomain: public Domain {
-public:
-	inline StopDomain(const Address& _start, const genstruct::Vector<Address>& _stops)
-	: start(_start), stops(_stops) { }
-
-	void update(BasicBlock *bb, t& d) {
-		if (bb->number() < 40)
-			cout << "stop.ai:processing bb" << bb->number() << "\n";
-		if(bb->isEnd())
-			return;
-		if(IS_STOP(bb)){
-			d = TRUE;
-			cout << "bb" << bb->number() << " is stop\n";
-		}
-		if(IS_START(bb)){
-			d = FALSE;
-			cout << "bb" << bb->number() << " is not start\n";
-		}
-	}
-
-private:
-	const Address& start;
-	const genstruct::Vector<Address> &stops;
-};
 
 
 /**
@@ -136,10 +62,9 @@ private:
  * of the same CFG (original CFG or virtualized CFG).
  *
  * @par Required features
- * @li @ref otawa::VIRTUALIZED_CFG_FEATURE
+ * @li @ref otawa::COLLECTED_CFG_FEATURE
  *
  * @par Provided features
- * @li @ref otawa::VIRTUALIZED_CFG_FEATURE
  * @li @ref otawa::COLLECTED_CFG_FEATURE
  *
  * @par Configuration
@@ -159,69 +84,74 @@ void SubCFGBuilder::configure(const PropList &props) {
 }
 
 /**
+ * Flood forward start reachable marker.
  */
-void SubCFGBuilder::floodForward() {
-	genstruct::VectorQueue<BasicBlock *> todo;
+void SubCFGBuilder::floodForward(void) {
+	genstruct::VectorQueue<Block *> todo;
 	todo.put(_start_bb);
 	while (todo){
-		BasicBlock *bb = todo.get();
+		Block *bb = todo.get();
 		IS_ON_FORWARD_PATH(*bb) = true;
 		if (!IS_STOP(*bb)){
-			for (BasicBlock::OutIterator next(bb) ; next ; next++){
-				BasicBlock *nextbb = next->target();
-				if (!IS_ON_FORWARD_PATH(*nextbb) && !todo.contains(nextbb)){
+			for(BasicBlock::EdgeIter next = bb->outs(); next; next++){
+				Block *nextbb = next->target();
+				if(!IS_ON_FORWARD_PATH(*nextbb) && !todo.contains(nextbb))
 					todo.put(nextbb);
-				}
 			}
 		}
 	}
 }
 
+/**
+ * Flood backward stop reachable markers.
+ */
 void SubCFGBuilder::floodBackward() {
-	genstruct::VectorQueue<BasicBlock *> todo;
-	for(genstruct::Vector<BasicBlock *>::Iterator stop(_stop_bbs); stop; stop++){
+	genstruct::VectorQueue<Block *> todo;
+	for(genstruct::Vector<Block *>::Iterator stop(_stop_bbs); stop; stop++)
 		todo.put(stop);
-	}
 	while (todo){
-		BasicBlock *bb = todo.get();
+		Block *bb = todo.get();
 		IS_ON_BACKWARD_PATH(*bb) = true;
 		if (!IS_START(*bb)){
-			for (BasicBlock::InIterator prev(bb) ; prev ; prev++){
-				BasicBlock *prevbb = prev->source();
-				if (!IS_ON_BACKWARD_PATH(*prevbb) && !todo.contains(prevbb)){
+			for(Block::EdgeIter prev = bb->ins(); prev ; prev++){
+				Block *prevbb = prev->source();
+				if (!IS_ON_BACKWARD_PATH(*prevbb) && !todo.contains(prevbb))
 					todo.put(prevbb);
-				}
 			}
 		}
 	}
-
 }
+
 /**
  */
-void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
+void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
 
-	cfg = ENTRY_CFG(ws).get();
-	ASSERTP(cfg->isVirtual(),
-            "Error! SubCFGBuilder: cfg is not virtual.");
+	// special process only for entry CFG
+	if(cfg != entry()) {
+		CFGTransformer::transform(cfg, maker);
+		return;
+	}
 
-	if (!start){
-		BasicBlock::OutIterator next(cfg->entry());
+	// marker start and stops
+	if(!start){
+		Block::EdgeIter next = cfg->entry()->outs();
 		_start_bb = next->target();
 	}
 	else
 		_start_bb = NULL;  // needs to scan CFG
 	if (!stops){
-		BasicBlock::InIterator prev( cfg->exit());
-		ASSERTP(prev,"Error! No predecessor for cfg->exit() -- you need to specify a stop address");
+		Block::EdgeIter prev = cfg->exit()->ins();
+		ASSERTP(prev, "Error! No predecessor for cfg->exit() -- you need to specify a stop address");
 		_stop_bbs.add(prev->source());
 	}
 	else
 		_stop_bbs.clear();   // needs to scan CFG
 
 	//scan CFG
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
-		if(bb->isEnd())
+	for(CFG::BlockIter b = cfg->blocks(); b; b++) {
+		if(!b->isBasic())
 			continue;
+		BasicBlock *bb = b->toBasic();
 		if(bb->address() <= start && start < bb->address() + bb->size()){
 			IS_START(bb) = true;
 			_start_bb = bb;
@@ -237,46 +167,10 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 	// start flood analysis
 	floodForward();
 	floodBackward();
-//	StartDomain start_dom(start, stops);
-//	ForwardCFGAdapter start_adapter(cfg);
-//	AbsIntLite<ForwardCFGAdapter, StartDomain> start_ai(start_adapter, start_dom);
-//	start_ai.process();
-/*	cout << "\nFORWARD\n";
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-		cout << *bb
-			 << "\tIN=" << Domain::toString(start_ai.in(bb))
-			 << "\tOUT=" << Domain::toString(start_ai.out(bb))
-			 << io::endl;
- */
-
-	// stop flood analysis
-//	StopDomain stop_dom(start, stops);
-//	BackwardCFGAdapter stop_adapter(cfg);
-//	AbsIntLite<BackwardCFGAdapter, StopDomain> stop_ai(stop_adapter, stop_dom);
-//	stop_ai.process();
-//
-	/*	cout << "\nBACKWARD\n";
-	for(CFG::BBIterator bb(cfg); bb; bb++)
-		cout << *bb
-			 << "\tIN=" << Domain::toString(stop_ai.in(bb))
-			 << "\tOUT=" << Domain::toString(stop_ai.out(bb))
-			 << io::endl;
-*/
-	// find list of accepted nodes
-	cout << "\nRESULT\n";
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
-		if (IS_ON_FORWARD_PATH(*bb) && IS_ON_BACKWARD_PATH(*bb))
-			cout << " bb" << *bb << " is on path\n";
-	}
-
-	// build the new CFG
-	vcfg = new VirtualCFG(false);
-	genstruct::HashTable<BasicBlock *, BasicBlock *> bbs;
-	genstruct::Vector<BasicBlock *> orgs;
 
 	// make all virtual BB
-	vcfg->addBB(vcfg->entry());
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
+	genstruct::FragTable<Block *> orgs;
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 
 		// remove non-useful blocks
 		if(bb->isEnd())
@@ -285,62 +179,35 @@ void SubCFGBuilder::processWorkSpace(WorkSpace *ws) {
 			continue;
 
 		// build the new basic block
-		BasicBlock *vbb = new VirtualBasicBlock(bb);
-		vcfg->addBB(vbb);
-		bbs.put(bb, vbb);
+		CFGTransformer::transform(*bb);
+		//bbs.put(bb, vbb);
 		orgs.add(bb);
 	}
-	vcfg->addBB(vcfg->exit());
 
 	// build the virtual edges
-	for(genstruct::Vector<BasicBlock *>::Iterator src(orgs); src; src++) {
-		BasicBlock *vsrc = bbs.get(src, 0);
-		ASSERT(vsrc);
+	for(genstruct::FragTable<Block *>::Iterator src(orgs); src; src++) {
+		Block *vsrc = get(src);
 
 		// manage start
 		if(IS_START(src)) {
-			new Edge(vcfg->entry(), vsrc, Edge::VIRTUAL_CALL);
+			build(maker.entry(), vsrc, 0);
 			src->removeProp(IS_START);
 		}
 
 		// manage stop
 		if(IS_STOP(src)) {
-			new Edge(vsrc, vcfg->exit(), Edge::VIRTUAL_RETURN);
+			build(vsrc, maker.exit(), 0);
 			src->removeProp(IS_STOP);
 			continue;
 		}
 
 		// manage successors
-		for(BasicBlock::OutIterator edge(src); edge; edge++) {
-
-			// !!BUGGY!! we should build new CFG for the collection !
-			if(edge->kind() == Edge::CALL)
-				new Edge(vsrc, edge->target(), edge->kind());
-
-			// try to duplicate
-			else {
-				BasicBlock *vtarget = bbs.get(edge->target(), 0);
-				if(vtarget) {
-					new Edge(vsrc, vtarget, edge->kind());
-
-					// take care of VIRTUAL_RETURN_BLOCK
-					if(edge->kind() == Edge::VIRTUAL_CALL) {
-						BasicBlock *ret = VIRTUAL_RETURN_BLOCK(src);
-						BasicBlock *vret = bbs.get(ret);
-						VIRTUAL_RETURN_BLOCK(vsrc) = vret ? vret :  vcfg->exit();
-					}
-				}
+		for(Block::EdgeIter edge = src->outs(); edge; edge++)
+			if(orgs.contains(edge->sink())){
+				Block *vtarget = get(edge->target());
+				build(vsrc, vtarget, 0);
 			}
-		}
 	}
-
-	// finalize the new CFG
-	vcfg->numberBBs();
-}
-
-
-void SubCFGBuilder::cleanup (WorkSpace *ws) {
-	track(VIRTUALIZED_CFG_FEATURE, ENTRY_CFG(ws) = vcfg);
 }
 
 

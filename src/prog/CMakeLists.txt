@@ -33,7 +33,7 @@ set(libotawa_SOURCES
 #	"cfg_LoopReductor.cpp"
 	"cfg_PostDominance.cpp"
 #	"cfg_SpanningTreeBuilder.cpp"
-#	"cfg_SubCFGBuilder.cpp"
+	"cfg_SubCFGBuilder.cpp"
 	"cfg_CFGTransformer.cpp"
 	"cfg_Virtualizer.cpp"
 	"cfg_Weighter.cpp"
@@ -115,7 +115,7 @@ set(libotawa_SOURCES
 
 #    abstract interpretation module
 #	"dfa_FastState.cpp"
-#	"dfa_AbsIntLite.cpp"
+	"dfa_AbsIntLite.cpp"
 #	"ai.cpp"
 
 

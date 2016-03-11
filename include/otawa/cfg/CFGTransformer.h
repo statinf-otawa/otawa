@@ -54,13 +54,17 @@ protected:
 	virtual Edge *transform(Edge *e);
 	void map(Block *ob, Block *nb);
 	CFGMaker *get(CFG *cfg);
-	void install(CFG *cfg, CFGMaker *maker);
+	Block *get(Block *b);
+	void install(CFG *cfg, CFGMaker& maker);
+	CFGMaker& add(CFG *cfg);
+	void add(CFG *cfg, CFGMaker& maker);
 
+	inline CFG *entry(void) const { return _entry; }
 	inline void setNoUnknown(bool v) { no_unknown = v; }
 	inline bool getNoUnknown(void) const { return no_unknown; }
 
 private:
-	CFG *entry;
+	CFG *_entry;
 	ListQueue<Pair<CFG *, CFGMaker *> > wl;
 	CFGMaker *cur;
 	genstruct::FragTable<CFGMaker *> makers;
