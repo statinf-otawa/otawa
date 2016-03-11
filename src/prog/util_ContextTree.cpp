@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	ContextTree class implementation
  *
  *	This file is part of OTAWA

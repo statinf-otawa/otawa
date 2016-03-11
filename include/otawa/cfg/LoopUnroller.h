@@ -39,7 +39,7 @@ public:
 	LoopUnroller(p::declare& r = reg);
 
 protected:
-	virtual void makeCFG(CFG *cfg, CFGMaker *maker);
+	virtual void transform(CFG *cfg, CFGMaker& maker);
 
 private:
 	void unroll(CFG *cfg, Block *header, CFGMaker *vcfg);

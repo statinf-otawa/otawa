@@ -115,8 +115,8 @@ LoopUnroller::LoopUnroller(p::declare& r): CFGTransformer(r), coll(new CFGCollec
 
 /**
  */
-void LoopUnroller::makeCFG(CFG *cfg, CFGMaker *maker) {
-	unroll(cfg, 0, maker);
+void LoopUnroller::transform(CFG *cfg, CFGMaker& maker) {
+	unroll(cfg, 0, &maker);
 }
 
 
@@ -193,7 +193,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 				// add delayed edge
 				if(i == start && current->hasProp(DELAYED_EDGE)) {
 					for(List<Pair<Block *, Edge *> >::iter d(DELAYED_EDGE(current)); d; d++)
-						makeEdge((*d).fst, (*d).snd, new_bb);
+						clone((*d).fst, (*d).snd, new_bb);
 					current->removeProp(DELAYED_EDGE);
 				}
 
@@ -233,7 +233,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 
 						// simple exit
 						if(vdst)
-							makeEdge(new_bb, outedge, vdst);
+							clone(new_bb, outedge, vdst);
 
 						// delayed exit
 						else if(i == start)
@@ -277,7 +277,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 				// if sink /= header \/ i = 1
 				if(outedge->target() != header || i == 1)
 					// E' U= (map[bb], map[sink])
-					makeEdge(vsrc, outedge, vdst);
+					clone(vsrc, outedge, vdst);
 				else
 					// backEdges U= {(map[bb], (bb, sink))}
 					backEdges.add(pair(vsrc, *outedge));
@@ -295,7 +295,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 					Block *vsrc = map.get(inedge->source());
 					Block *vdst = map.get(header);
 					// E' U= {(map[src], map[header])}
-					makeEdge(vsrc, inedge, vdst);
+					clone(vsrc, inedge, vdst);
 				}
 
 		// other unroll iterations: connect virtual backedge from the first to other iterations
@@ -304,7 +304,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 			for(BackEdgePairVector::Iterator b(backEdges); b; b++) {
 				Block *vdst = map.get(header);
 				// E' U= {(src', map[header])}
-				makeEdge((*b).fst, (*b).snd, vdst);
+				clone((*b).fst, (*b).snd, vdst);
 			}
 
 	}
@@ -314,7 +314,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 		for(BasicBlock::EdgeIter inedge = cfg->exit()->ins(); inedge; inedge++) {
 			Block *vsrc = map.get(inedge->source(), 0);
 			ASSERT(vsrc);
-			makeEdge(vsrc, *inedge, vcfg->exit());
+			clone(vsrc, *inedge, vcfg->exit());
 		}
 
 }

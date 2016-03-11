@@ -39,22 +39,25 @@ public:
 protected:
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
-	virtual void makeCFG(CFG *cfg, CFGMaker *maker);
-	virtual Block *makeBlock(CFG *cfg, Block *b);
-	virtual Edge *makeEdge(CFG *cfg, Edge *edge);
-	virtual Edge *makeEdge(Block *src, Edge *edge, Block *snk);
 
-	Block *clone(Block *b);
-	Edge *clone(Edge *b);
-	void clone(CFG *cfg);
+	BasicBlock *build(Inst *inst, int n);
+	BasicBlock *build(genstruct::Table<Inst *> insts);
+	SynthBlock *build(CFGMaker *callee);
+	SynthBlock *build(CFG *callee);
+	Edge *build(Block *src, Block *snk, t::uint32 flags);
 
-	BasicBlock *make(Inst *inst, int n);
-	BasicBlock *make(genstruct::Table<Inst *> insts);
-	SynthBlock *make(CFGMaker *callee);
-	SynthBlock *make(CFG *callee);
+	virtual Block *clone(Block *b);
+	virtual Edge *clone(Block *src, Edge *edge, Block *snk);
 
+	virtual void transform(CFG *g, CFGMaker& m);
+	virtual Block *transform(Block *b);
+	virtual Edge *transform(Edge *e);
+	void map(Block *ob, Block *nb);
 	CFGMaker *get(CFG *cfg);
-	inline void setCurrent(CFGMaker *maker) { cur = maker; }
+	void install(CFG *cfg, CFGMaker *maker);
+
+	inline void setNoUnknown(bool v) { no_unknown = v; }
+	inline bool getNoUnknown(void) const { return no_unknown; }
 
 private:
 	CFG *entry;
@@ -63,6 +66,7 @@ private:
 	genstruct::FragTable<CFGMaker *> makers;
 	genstruct::HashTable<CFG *, CFGMaker *> cmap;
 	genstruct::HashTable<Block *, Block *> bmap;
+	bool no_unknown;
 };
 
 }	// otawa

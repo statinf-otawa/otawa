@@ -121,8 +121,8 @@ set(libotawa_SOURCES
 
 #    utility module
 	"util_FlowFactLoader.cpp"
-#	"util_CFGNormalizer.cpp"
-#	"util_MemBlockMap.cpp"
+	"util_CFGNormalizer.cpp"
+	"util_MemBlockMap.cpp"
 	"util_ContextTree.cpp"
 	"util_Bag.cpp"
 	"util_Graph.cpp"
@@ -130,6 +130,8 @@ set(libotawa_SOURCES
 	"util_Edge.cpp"
 	"util_GenGraph.cpp"
 	"graph_PreorderIterator.cpp"
+
+#	flow facts
 	"flowfact_ContextualLoopBound.cpp"
 
 #   script module
