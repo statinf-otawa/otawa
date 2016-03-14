@@ -497,7 +497,7 @@ Symbol *Process::findSymbolAt(const Address& address) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, t::int8& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -513,7 +513,7 @@ void Process::get(Address at, t::int8& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, t::uint8& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -529,7 +529,7 @@ void Process::get(Address at, t::uint8& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, t::int16& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -545,7 +545,7 @@ void Process::get(Address at, t::int16& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, t::uint16& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -561,7 +561,7 @@ void Process::get(Address at, t::uint16& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, t::int32& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -577,7 +577,7 @@ void Process::get(Address at, t::int32& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, t::uint32& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -593,7 +593,7 @@ void Process::get(Address at, t::uint32& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, t::int64& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -609,7 +609,7 @@ void Process::get(Address at, t::int64& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, t::uint64& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -625,7 +625,7 @@ void Process::get(Address at, t::uint64& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, Address& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -641,7 +641,7 @@ void Process::get(Address at, Address& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, float& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -657,7 +657,7 @@ void Process::get(Address at, float& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, double& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -673,7 +673,7 @@ void Process::get(Address at, double& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, long double& val) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -689,7 +689,7 @@ void Process::get(Address at, long double& val) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, String& str) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
@@ -706,7 +706,7 @@ void Process::get(Address at, String& str) {
  * 		@ref MEMORY_ACCESS_FEATURE is provided.
  */
 void Process::get(Address at, char *buf, int size) {
-	throw new UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
+	throw UnsupportedFeatureException(this, MEMORY_ACCESS_FEATURE);
 }
 
 
