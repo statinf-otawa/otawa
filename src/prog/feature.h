@@ -50,7 +50,7 @@
  * class, we advise to use the alphabetic of classes from the menu Classes > Class Index.
  *
  *
- * @section content Content
+ * @section content Contents
  *
  * OTAWA is logically split in different module representing different layers and usage of the
  * framework. In the following, you will find a guide to explore theses modules. Notice that
@@ -102,6 +102,7 @@
  * @li ets (@ref ets) -- very basic implementation of Extended Timing Schema.
  * @li display (@ref display) -- various display facilities for CFG.
  *
+ * To get answers for devloper questions, you can take a look to our @ref faq.
  *
  * @section howto How to read the API ?
  *
@@ -421,4 +422,26 @@
  * @li @ref otawa::STACK_ANALYSIS_FEATURE
  */
 
+namespace otawa {
 
+/**
+ * @defgroup faq Frequently Asked Questions
+ *
+ * @par How to get values from the constant sections of the code?
+ *
+ * In OTAWA, program bytes are considered as constants if they are
+ * part of an executable section  or of data section marked as non-writable.
+ *
+ * The class @ref dfa::State provides a simple to access this information.
+ * you have to use first the method isInitialized() to known if the address
+ * concerns constant section and then you can use one of get() method to get
+ * the actual value.
+ *
+ * The state is obtainable by the identifier @ref dfa::INITIAL_STATE put on the
+ * workspace once the feature @ref dfa::INITIAL_STATE_FEATURE has been provided.
+ * Notice that this state object contains also initial values provided
+ * by the flow fact files. See @ref ff for more details.
+ *
+ */
+
+}	// otawa
