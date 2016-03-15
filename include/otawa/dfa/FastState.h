@@ -95,7 +95,7 @@ public:
 	 * @param r	Register to get.
 	 * @return	Register value.
 	 */
-	value_t get(t s, register_t r) {
+	value_t& get(t s, register_t r) const {
 		ASSERTP(r < nrblock * rblock_size, "register index out of bound");
 		return s->regs[r >> rblock_shift][r & rblock_mask];
 	}
@@ -107,7 +107,7 @@ public:
 	 * @param v		Value to set.
 	 * @return		State after change.
 	 */
-	t set(t s, register_t r, value_t v) {
+	t set(t s, register_t r, const value_t& v) {
 		ASSERTP(r < nrblock * rblock_size, "register index out of bound");
 		//cerr << "DEBUG: set(" << r << ", "; dom->dump(cerr, v); cerr << ")\n";
 		typename D::t *rblock = allocator.allocate<typename D::t>(rblock_size);
@@ -163,7 +163,7 @@ public:
 	 * @param a		Address to load from.
 	 * @return		Load value.
 	 */
-	value_t load(t s, address_t a) {
+	const value_t& load(t s, address_t a) {
 		if(s == bot)
 			return dom->bot;
 		for(node_t *cur = s->mem; cur; cur = cur->n)
@@ -301,8 +301,11 @@ public:
 		node_t **pn = &mem;
 		while(cur1 != cur2 && cur1 && cur2) {
 			if(cur1->a == cur2->a) {
-				*pn = new(allocator) node_t(cur1->a, dom->join(cur1->v, cur2->v));
-				pn = &(*pn)->n;
+				value_t v = dom->join(cur1->v, cur2->v);
+				if(v != dom->top) {
+					*pn = new(allocator) node_t(cur1->a, v);
+					pn = &(*pn)->n;
+				}
 				cur1 = cur1->n;
 				cur2 = cur2->n;
 			}
@@ -430,8 +433,7 @@ public:
 		return true;
 	}
 
-	void print(io::Output& out, t s) {
-
+	void printRegister(io::Output& out, t s) {
 		// display registers
 		out << '\t';
 		bool fst = true;
@@ -448,10 +450,12 @@ public:
 		if(fst)
 			out << "no register set";
 		out << io::endl;
+	}
 
+	void printMemory(io::Output& out, t s) {
 		// display memory
 		out << '\t';
-		fst = true;
+		bool fst = true;
 		for(node_t *n = s->mem; n; n = n->n) {
 			if(fst)
 				fst = false;
@@ -463,6 +467,11 @@ public:
 		if(fst)
 			out << "no memory set";
 		out << io::endl;
+	}
+
+	void print(io::Output& out, t s) {
+		printRegister(out, s);
+		printMemory(out, s);
 	}
 
 	/**
@@ -520,8 +529,11 @@ public:
 
 			// join the common address
 			if(cur1->a == cur2->a) {
-				*pn = new(allocator) node_t(cur1->a, w.process(cur1->v, cur2->v));
-				pn = &((*pn)->n);
+				value_t v = w.process(cur1->v, cur2->v);
+				if(v != dom->top) {
+					*pn = new (allocator) node_t(cur1->a, v);
+					pn = &((*pn)->n);
+				}
 				cur1 = cur1->n;
 				cur2 = cur2->n;
 			}
