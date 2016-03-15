@@ -304,6 +304,11 @@ io::Output& operator<<(io::Output& out, Edge *edge) {
  */
 
 /**
+ * @fn int Block::id(void) const;
+ * Returns a Block identifier that is unique to the whole program
+ */
+
+/**
  * @fn Block::operator BasicBlock *(void);
  * Convert current block to BasicBlock. An assertion failure is raised
  * if it can't be.

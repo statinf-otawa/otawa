@@ -101,6 +101,7 @@ static Identifier<BasicBlock *> BB("", 0);
 void CFGCollection::add(CFG *cfg) {
 	cfg->idx = cfgs.count();
 	cfg->_offset = cfgs.isEmpty() ? 0 : cfgs[cfgs.length()-1]->offset() + cfgs[cfgs.length()-1]->count();
+	cfg->_offset = cfgs.isEmpty() ? 0 : cfgs[cfgs.length()-1]->offset() + cfgs[cfgs.length()-1]->count();
 	cfgs.add(cfg);
 }
 

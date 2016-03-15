@@ -23,7 +23,6 @@
 #define OTAWA_CFG_CFG_H
 
 #include <elm/assert.h>
-//#include <elm/data/List.h>
 #include <otawa/sgraph/DiGraph.h>
 #include <otawa/prop/PropList.h>
 #include <otawa/prog/Inst.h>
