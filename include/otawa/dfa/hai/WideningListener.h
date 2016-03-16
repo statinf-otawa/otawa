@@ -112,7 +112,7 @@ template <class Problem >
 void WideningListener<Problem>::blockInterpreted(const WideningFixPoint<WideningListener>  *fp, Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
 
 		int bbnumber = bb->index() ;
-		int cfgnumber = cur_cfg->index();
+		int cfgnumber = bb->cfg()->index();
 	
 		prob.lub(*results[cfgnumber][bbnumber], in);
 		

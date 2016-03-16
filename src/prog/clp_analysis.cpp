@@ -46,6 +46,7 @@
 #include <otawa/data/clp/features.h>
 #include <otawa/hard/Memory.h>
 #include <otawa/dfa/State.h>
+#include <elm/log/Log.h>
 
 using namespace elm;
 using namespace otawa;
@@ -823,6 +824,28 @@ void Value::ge(intn_t k) {
  */
 void Value::le(intn_t k) {
 
+	// make the value from ALL to [k, -inf]
+	if(*this == all) {
+		// first obtain the difference between k and -inf (MINn), use a 64 bit value to prevent overflow
+		t::int64 m = k;
+		m = m - MINn;
+		Value temp(VAL, k, -1, m);
+		// since we have ALL, there is no way to know the direction, so we make it positive d = 1
+		temp.reverse();
+		*this = temp;
+		return;
+	}
+
+	// simple cases
+	if(*this == none)
+	//if(*this == all || *this == none)
+		return;
+	if(isConst()) {
+		if(k < _base)
+			*this = none;
+		return;
+	}
+
 	// simple cases
 	if(*this == all || *this == none)
 		return;
@@ -917,8 +940,14 @@ void Value::geu(uintn_t k) {
  */
 void Value::leu(uintn_t k) {
 
-	// top and none cases
-	if(*this == all || *this == none)
+	// for un-signed case, ALL will be filtered to [0, k]
+	if(*this == all) {
+		*this = Value(VAL, 0, 1, k);
+		return;
+	}
+
+	// nothing to filter will be nothing still
+	if(*this == none)
 		return;
 
 	// case of constant
@@ -1418,11 +1447,11 @@ void State::widening(const State& state, int loopBound) {
 }
 
 /**
- * Print the state
+ * Print the state, the printing does not include the newline at the end
 */
 void State::print(io::Output& out, const hard::Platform *pf) const {
 	if(first.val == Value::none)
-		out << "None (bottom)\n";
+		out << "None (bottom)";
 	else {
 		#ifdef STATE_MULTILINE
 			#define CLP_START "\t"
@@ -1550,6 +1579,13 @@ public:
 			i++;
 		}
 #	endif
+
+	// put the READ_ONLY segments into rodata (Read Only DATA) table, which will be used by the
+	File *program = proc->program();
+	for(File::SegIter seg(program); seg; seg++) {
+		if(!seg->isWritable())
+			rodata.addFirst(pair(seg->address(), seg->topAddress()-1));
+	}
 }
 
 #	ifdef HAI_JSON
@@ -1828,7 +1864,6 @@ public:
 	void update(State *state) {
 		TRACEI(cerr << "\t\t" << i << io::endl);
 		sem::inst& i = b[pc];
-
 		switch(i.op) {
 		case sem::BRANCH:
 			pc = b.length();
@@ -1852,6 +1887,7 @@ public:
 				_nb_load++;
 				Value addrclp = get(*state, i.a());
 				TRACESI(cerr << "\t\t\tload(" << i.d() << ", " << addrclp << ") = ");
+				// first try to read the values from CLP state
 				if (addrclp == Value::all){
 					set(*state, i.d(), addrclp);
 					_nb_load_top_addr++;
@@ -1876,23 +1912,40 @@ public:
 					TRACESI(cerr << "T (too many)\n");
 					TRACEA(cerr << "\t\t\tALARM! load too many\n");
 				}
-				#ifdef DATA_LOADER
-					// if the value loaded is T, load from the process
-					if(get(*state, i.d()) == Value::all
-					&& addrclp.isConst()) {
-						/*cerr << "\t\t\tlooking in memory for " << addrclp
-							 << " in [" << _data_min << ", " << _data_max << "] "
-							 << ", problem = " << (void *)this << io::endl;*/
-						if(*_data_min <= (uintn_t)addrclp.start()
-						&& (uintn_t)addrclp.start() < *_data_max) {
-							Value r = readFromMem(addrclp.lower(), i.type());
-							//cerr << " -> loading data from process: " << r << io::endl;
-							set(*state, i.d(), r);
-						}
-					}
-					/*if ((get(*state, i.d()) == Value::all) && *_data_min != 0)
-						cerr << '\n';*/
-				#endif
+
+				// if the value is not available, read it from binary
+				if(get(*state, i.d()) == Value::all) {
+					Value val = Value::none;
+					// need to make sure the starting address to load is within the READ_ONLY_AREA
+					bool startingAddressInROData = inROData((uintn_t)addrclp.start());
+					for(unsigned int m = 0; (m <= addrclp.mtimes()) && startingAddressInROData; m++){
+						Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
+						if(inROData((uintn_t)addr.start())) {
+							Value r = readFromMem(addr.lower(), i.type());
+							val.join(r);
+							set(*state, i.d(), val);
+						} // end of each valid address to load
+					} // for each address
+				}
+
+//				#ifdef DATA_LOADER
+//					// if the value loaded is T, load from the process
+//					if(get(*state, i.d()) == Value::all
+//					&& addrclp.isConst()) {
+//						/*cerr << "\t\t\tlooking in memory for " << addrclp
+//							 << " in [" << _data_min << ", " << _data_max << "] "
+//							 << ", problem = " << (void *)this << io::endl;*/
+//						if(*_data_min <= (uintn_t)addrclp.start()
+//						&& (uintn_t)addrclp.start() < *_data_max) {
+//							Value r = readFromMem(addrclp.lower(), i.type());
+//							//cerr << " -> loading data from process: " << r << io::endl;
+//							set(*state, i.d(), r);
+//						}
+//					}
+//					/*if ((get(*state, i.d()) == Value::all) && *_data_min != 0)
+//						cerr << '\n';*/
+//				#endif
+
 				if(get(*state, i.d()) == Value::all)
 						_nb_top_load++;
 			} break;
@@ -1906,7 +1959,7 @@ public:
 					state->set(addrclp, get(*state, i.d()));
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
-					ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T\n");
+					ALARM_STORE_TOP(cerr << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: " << i << " store to T\n");
 #					ifdef HAI_JSON
 						HAI_BASE->addEvent("store to T");
 #					endif
@@ -1924,7 +1977,7 @@ public:
 						Symbol *sym = this->_process->findSymbolAt(addrclp.lower());
 						if(!sym) {
 							_nb_top_store_addr++;
-							ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T (unbounded address)\n");
+							ALARM_STORE_TOP(cerr << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: " << i << " store to T (unbounded address)\n");
 #						ifdef HAI_JSON
 							HAI_BASE->addEvent("store to T");
 #						endif
@@ -2101,7 +2154,6 @@ public:
 		}
 		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
-
 			_nb_inst++;
 
 			// get instructions
@@ -2231,6 +2283,15 @@ private:
 	#ifdef DATA_LOADER
 		address_t _data_min, _data_max;
 		Process* _process;
+		Vector<Pair<Address, Address> > rodata;
+		inline bool inROData(Address addr) {
+			for(Vector<Pair<Address, Address> >::Iterator i(rodata); i; i++) {
+				if((addr >= (*i).fst) && (addr <= (*i).snd))
+					return true;
+			}
+
+			return false;
+		}
 	#endif
 
 	/* attributes for statistics purpose */
@@ -2362,30 +2423,30 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	// look for a stack value
 	const hard::Register *sp = ws->process()->platform()->getSP();
 	if(!sp)
-		log << "WARNING: no stack pointer in the architecture.\n";
+		log << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: no stack pointer in the architecture.\n";
 	else {
 		Value v = prob.entry().get(Value(REG, sp->platformNumber()));
 		if(v.isTop()) {
 			bool found = false;
 			if(mem) {
-				log << "WARNING: no initial for stack pointer: looking in memory.\n";
+				log << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: no initial for stack pointer: looking in memory.\n";
 				Address addr;
 				const genstruct::Table< const hard::Bank * > &banks = mem->banks();
 				for(int i = 0; i < banks.count(); i++)
 					if(banks[i]->isWritable() && (!addr || banks[i]->address() > addr))
 						addr = banks[i]->topAddress();
 				if(!addr) {
-					log << "WARNING: no writable memory: reverting to loader stack address.\n";
+					log << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: no writable memory: reverting to loader stack address.\n";
 					addr = ws->process()->defaultStack();
 				}
 				if(addr) {
-					log << "WARNING: setting stack at " << addr << io::endl;
+					log << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: setting stack at " << addr << io::endl;
 					prob.initialize(sp, addr);
 					found = true;
 				}
 			}
 			if(!found)
-				log << "WARNING: no value for the initial stack pointer\n";
+				log << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: no value for the initial stack pointer\n";
 		}
 	}
 

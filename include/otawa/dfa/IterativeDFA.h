@@ -159,7 +159,7 @@ inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 	BitVector present(_cfg.count());
 	Set *comp = prob.empty(), *ex;
 	for(CFG::BlockIter bb = _cfg.vertices(); bb; bb++) {
-			OTAWA_IDFA_TRACE("DFA: push BB" << bb->number());
+			OTAWA_IDFA_TRACE("DFA: push BB" << bb->index());
 			todo.put(bb);
 			present.set(bb->index());
 		}
@@ -201,7 +201,7 @@ inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 			// add successors
 			for(typename Iter::Forward next(bb); next; next++)
 				if(!present.bit(next->index())) {
-					OTAWA_IDFA_TRACE("DFA: push BB" << next->number());
+					OTAWA_IDFA_TRACE("DFA: push BB" << next->index());
 					todo.put(next);
 					present.set(next->index());
 				}

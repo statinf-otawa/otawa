@@ -114,6 +114,10 @@ Identifier<display::kind_t> CFGOutput::KIND("otawa::display::CFGOutput::KIND", O
  */
 Identifier<string> CFGOutput::PATH("otawa::display::CFGOutput::PATH", ".");
 
+/**
+ * Configuration identifier of @ref CFGOutput for the prefix file name
+ */
+Identifier<string> CFGOutput::PREFIX("otawa::display::CFGOutput::PREFIX", "");
 
 /**
  */
@@ -121,6 +125,7 @@ void CFGOutput::configure(const PropList &props) {
 	CFGProcessor::configure(props);
 	kind = KIND(props);
 	path = PATH(props);
+	prefix = PREFIX(props);
 }
 
 
@@ -131,9 +136,10 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 	ASSERT(cfg);
 
 	// Compute the name
-	string label = cfg->label();
+	string label = prefix;
+	label = _ << prefix << cfg->label();
 	if(label == "")
-		label = _ << "cfg_" << cfg->label();
+		label = _ << prefix << "cfg_" << cfg->label();
 	Path out_path = path;
 	out_path = out_path / label;
 	out_path = out_path.setExtension(exts[kind]);
