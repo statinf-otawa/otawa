@@ -93,11 +93,12 @@ public:
 	inline long long maxBranchCount(void) const { return bra_max; };
 	inline double branchRatio(void) const { return (double)bra_cnt * 100 / inst_cnt; }
 
-	void addBB(BasicBlock *bb) {
+	void addBB(Block *b) {
 
 		// do not process virtual
-		if(bb->isEnd())
+		if(!b->isBasic())
 			return;
+		BasicBlock *bb = b->toBasic();
 
 		// initialize statistics
 		long long insts = 0;
@@ -198,7 +199,7 @@ protected:
 class CFGStatistics: public Statistics {
 public:
 	CFGStatistics(CFG *cfg): _cfg(cfg) {
-		for(CFG::BBIterator bb(cfg); bb; bb++)
+		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 			addBB(bb);
 	}
 	inline CFG *cfg(void) { return _cfg; };

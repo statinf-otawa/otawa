@@ -89,7 +89,7 @@ public:
 	inline int sum(void) const { return s; }
 	virtual void enter(const ContextualStep &step) { }
 	virtual void leave(void) { }
-	virtual void collect (const Address &address, t::uint32 size, int value) {
+	virtual void collect(const Address &address, t::uint32 size, int value, const ContextualPath& ctx) {
 		s += value;
 	}
 private:
