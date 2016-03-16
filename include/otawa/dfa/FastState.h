@@ -95,7 +95,7 @@ public:
 	 * @param r	Register to get.
 	 * @return	Register value.
 	 */
-	value_t get(t s, register_t r) {
+	const value_t& get(t s, register_t r) {
 		ASSERTP(r < nrblock * rblock_size, "register index out of bound");
 		return s->regs[r >> rblock_shift][r & rblock_mask];
 	}
@@ -163,7 +163,7 @@ public:
 	 * @param a		Address to load from.
 	 * @return		Load value.
 	 */
-	value_t load(t s, address_t a) {
+	const value_t& load(t s, address_t a) {
 		if(s == bot)
 			return dom->bot;
 		for(node_t *cur = s->mem; cur; cur = cur->n)

@@ -30,14 +30,22 @@
 #include <otawa/prog/sem.h>
 #include <otawa/data/clp/ClpAnalysis.h>
 #include <otawa/data/clp/ClpPack.h>
+#include <otawa/data/clp/features.h>
 #include "PotentialValue.h"
 #include "GlobalAnalysis.h"
 #include "MemType.h"
 
+
+
+
+
 // TODO	Move it in separate file.
-#define DEBUG true
+#define DEBUGDYN true
 #define NB_EXEC 1000
-#define PRINT_DEBUG(a) if(isDebug) { cout << a << endl ; } 
+//#define PRINT_DEBUG(a) if(isDebug) { cout << a << endl ; }
+#define PRINT_DEBUG(a)  { elm::cout << __SOURCE_INFO__ << a << io::endl ; }
+
+using namespace global;
 
 namespace otawa { namespace dynbranch {
 
@@ -47,18 +55,44 @@ class DynamicBranchingAnalysis: public BBProcessor {
 public:
 	static p::declare reg;
 	DynamicBranchingAnalysis(p::declare& r = reg);
-	void processBB(WorkSpace*, CFG *cfg , BasicBlock *bb);
+	void processBB(WorkSpace*, CFG *cfg , Block *b);
 	void configure(const PropList &props) ;
+
+	inline void writeReg(int reg, const PotentialValue& pv) {
+		if(reg < 0) return; // only for general register
+		if(_regValues.length() < (reg+1))
+			_regValues.setLength(reg+1);
+		_regValues[reg] = pv;
+	}
+
+	/*
+	inline const PotentialValue& readReg(int reg) {
+		if(_regValues.length() < (reg+1))
+			_regValues.setLength(reg+1);
+		return _regValues[reg];
+	}
+	*/
 
 private:
 	void addTargetToBB(BasicBlock*) ;
-	PotentialValue find(MemID id,clp::State clpin , global::State globalin, Vector<sem::inst> semantics) ;
+	PotentialValue find(BasicBlock* bb, MemID id,const clp::State & clpin , global::State & globalin, Vector<sem::inst> semantics) ;
 	bool isDebug ;
 	bool time ;
+	Vector<PotentialValue> _regValues;
+	WorkSpace* _workspace;
+
+
+
+	clp::Manager* clpManager;
+
+	Vector<otawa::clp::State> clpState;
+	PropList propss;
+
 };
 
 extern p::feature FEATURE;
 extern Identifier<bool> TIME ;
+
 
 } } // otawa::dynbranch
 

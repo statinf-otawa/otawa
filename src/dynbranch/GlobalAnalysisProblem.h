@@ -26,52 +26,68 @@
 #include <otawa/cfg.h>
 #include <otawa/cfg/features.h>
 #include <otawa/prog/sem.h>
-#include <otawa/data/clp/ClpAnalysis.h>
-
 #include "State.h"
 
-#define GLOBAL_MEMORY_LOADER false
+#define GLOBAL_MEMORY_LOADER true
 
-using namespace elm::genstruct ;
-using namespace otawa ;
+using namespace elm::genstruct;
+using namespace otawa;
 
 namespace global {
 
-  typedef State Domain ;
+class GlobalAnalysisProblem {
+public:
+	typedef State Domain;
+	GlobalAnalysisProblem(WorkSpace* workspace, bool verbose, Domain & entry);
+	const Domain& bottom();
+	const Domain& top();
+	const Domain& entry();
+	void lub(Domain& a, const Domain& b) const;
+	void assign(Domain& a, const Domain &b) const;
+	void widening(otawa::Block* ob, Domain& a, Domain b) const;
+	void updateEdge(Edge *edge, Domain& d);
+	bool equals(const Domain &a, const Domain &b) const;
+	void update(Domain& out, const Domain& in, Block *b);
+	void enterContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
+	void leaveContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
 
-  class GlobalAnalysisProblem {
-    public  :
-      typedef State Domain ;
+	inline void printTempRegs(string begin = "", string end="") {
+		int j = 0;
+		for(Vector<PotentialValue>::Iterator i(*_tempRegs); i; i++, j++) {
+			if((*i).length() == 0)
+				continue;
+		}
+	}
 
-      GlobalAnalysisProblem(WorkSpace* workspace, bool verbose, Domain entry) ;
+	inline void setReg(Domain& out, int regNum, const PotentialValue& pv) {
+		if(regNum >= 0)
+			out.setReg(regNum, pv);
+		else {
+			_tempRegs->set(-regNum, pv);
+		}
+	}
 
-      const Domain& bottom() ;
+	inline const PotentialValue& readReg(Domain& out, int regNum) {
+		if(regNum >= 0)
+			return out.readReg(regNum);
+		else
+			_tempRegs->get(-regNum);
+	}
 
-      const Domain& entry() ;
+private:
+	WorkSpace* ws;
+	Domain bot;
+	Domain topd;
+	Domain ent;
+	bool verbose;
+	Vector<PotentialValue>* _tempRegs;
 
-      void lub(Domain& a, const Domain& b) const ;
+};
 
-      void assign(Domain& a,const Domain &b) const;
-
-      void widening(Domain &a,Domain b) const ; 
-
-      void updateEdge(Edge *edge, Domain& d) ;
-
-      bool equals(const Domain &a, const Domain &b) const;
-
-      void update(Domain& out, const Domain& in, BasicBlock *bb) ;
-
-      void enterContext(Domain &dom, BasicBlock *header,  util::hai_context_t ctx) {} ;
-      void leaveContext(Domain &dom, BasicBlock *header,  util::hai_context_t ctx) {} ;
-
-    private :
-      WorkSpace* ws ;
-      Domain bot ;
-      Domain ent ;
-      bool verbose ;
-  };
-
-  bool operator== (const Domain& a, const Domain& b) ; 
+// need to implement when necessary
+inline bool operator==(const Domain& a, const Domain& b) {
+	assert(0);
+}
 
 } // global
 

@@ -28,6 +28,9 @@ using namespace elm;
 template <typename T>
 class Set : public genstruct::Vector<T> {
 public:
+
+	Set<T>(void) : genstruct::Vector<T>() { }
+
 	void insert(const T& val) {
 		if(!genstruct::Vector<T>::contains(val))
 			genstruct::Vector<T>::push(val);

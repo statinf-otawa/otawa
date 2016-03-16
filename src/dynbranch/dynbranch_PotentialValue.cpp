@@ -20,66 +20,86 @@
  */
 #include "PotentialValue.h"
 
-PotentialValue::PotentialValue(void) {
-}
+PotentialValue PotentialValue::bot;
+PotentialValue PotentialValue::top;
+PotentialValue PotentialValue::DEFAULT;
+
+PotentialValue::PotentialValue() : Set<elm::t::uint32>() { }
 
 PotentialValue& PotentialValue::operator=(const PotentialValue& a) {
-	clear() ;
-	for (PotentialValue::Iterator ita(a); ita; ita++)
-		insert(*ita) ;
-	return *this ;
+	// need this for FastState because the memory are initialized as chars but not as the objects
+	// (!)LESSON LEARNT: when calling =, the target (this) may not be initialized yet,
+	// which means the capacity is 0, this is a big nono, hence we we grow the capacity with the same size of a
+
+	// ok someone has to be dirty
+	memset(this, 0, sizeof(PotentialValue));
+
+	//if(a.capacity() > capacity()) grow(a.capacity());
+	Vector<elm::t::uint32>::operator=(a);
+	clear();
+	for(PotentialValue::Iterator ita(a); ita; ita++)
+		insert(*ita);
+	return *this;
+}
+
+PotentialValue operator&(const PotentialValue& a, const PotentialValue& b) {
+	PotentialValue res;
+	for(PotentialValue::Iterator ita(a); ita; ita++)
+		for(PotentialValue::Iterator itb(b); itb; itb++)
+			res.insert(*ita & *itb);
+	return res;
 }
 
 PotentialValue operator+(const PotentialValue& a, const PotentialValue& b) {
-	PotentialValue res ;
+	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
-			res.insert(*ita + *itb ) ;
-	return res ;
+			res.insert(*ita + *itb);
+	return res;
 }
 
 PotentialValue operator-(const PotentialValue& a, const PotentialValue& b) {
-	PotentialValue res ;
+	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
-			res.insert(*ita - *itb ) ;
-	return res ;
+			res.insert(*ita - *itb);
+	return res;
 }
 
 PotentialValue operator>>(const PotentialValue& a, const PotentialValue& b) {
-	PotentialValue res ;
+	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++) {
 		for(PotentialValue::Iterator itb(b); itb; itb++) {
-			res.insert(*ita >> *itb ) ;
+			res.insert(*ita >> *itb);
 		}
 	}
-	return res ;
+	return res;
 }
 
 PotentialValue operator<<(const PotentialValue& a, const PotentialValue& b) {
-	PotentialValue res ;
+	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
-			res.insert(*ita << *itb ) ;
-	return res ;
+			res.insert(*ita << *itb);
+	return res;
 }
 
 PotentialValue operator||(const PotentialValue& a, const PotentialValue& b) {
-	PotentialValue res ;
+	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
-			res.insert(*ita +*itb ) ;
-	return res ;
+			res.insert(*ita + *itb);
+	return res;
 }
 
 PotentialValue merge(const PotentialValue& a, const PotentialValue& b) {
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		res.insert(*ita);
-	for ( PotentialValue::Iterator itb(b) ; itb ; itb++) {
+	for(PotentialValue::Iterator itb(b); itb; itb++) {
 		res.insert(*itb);
 	}
-	return res ;
+	return res;
 }
 
 bool operator==(const PotentialValue& a, const PotentialValue& b) {
@@ -88,14 +108,14 @@ bool operator==(const PotentialValue& a, const PotentialValue& b) {
 			return false;
 	for(PotentialValue::Iterator isb(b); isb; isb++)
 		if(!a.contains(*isb))
-			return false ;
-	return true ;
+			return false;
+	return true;
 }
 
 Output& operator<<(Output& o, PotentialValue const& pv) {
-	o << "{ " ;
+	o << "{ ";
 	for(PotentialValue::Iterator i(pv); i; i++)
-		o << "0x" << hex(*i) << " " ;
-	o << "}" ;
-	return o  ;
+		o << "0x" << hex(*i) << " ";
+	o << "}";
+	return o;
 }

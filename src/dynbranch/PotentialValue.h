@@ -24,25 +24,45 @@
 #include "Set.h"
 #include <elm/io/OutStream.h>
 
-using namespace elm ;
-using namespace elm::io ;
-using namespace elm::genstruct ;
+using namespace elm;
+using namespace elm::io;
+using namespace elm::genstruct;
 
-class PotentialValue : public Set<int> {
-  friend Output& operator<< (Output& o, PotentialValue const& pv) ;
-  public :
-      PotentialValue(void);
-      PotentialValue& operator=(const PotentialValue& obj) ;
-  private :
+//namespace global {
+
+class PotentialValue: public Set<elm::t::uint32> {
+	friend Output& operator<<(Output& o, PotentialValue const& pv);
+public:
+	PotentialValue(void);
+	PotentialValue& operator=(const PotentialValue& obj);
+	typedef PotentialValue t;
+	static PotentialValue bot;
+	static PotentialValue top;
+	static PotentialValue DEFAULT;
+
+
+	inline void dump(Output& o, PotentialValue &pv) {
+		o << "{ ";
+		for(PotentialValue::Iterator i(pv); i; i++)
+			o << "0x" << hex(*i) << " ";
+		o << "}";
+	}
+
+	inline bool equals(PotentialValue &a, PotentialValue &b) { return a == b; }
+
+private:
+	int k;
 };
 
+PotentialValue operator&(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator+(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator-(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator>>(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator<<(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator||(const PotentialValue& a, const PotentialValue& b);
-bool operator==(const PotentialValue& a, const PotentialValue& b) ;
-PotentialValue merge(const PotentialValue& a, const PotentialValue& b) ;
+bool operator==(const PotentialValue& a, const PotentialValue& b);
+PotentialValue merge(const PotentialValue& a, const PotentialValue& b);
 
+//}
 #endif	// OTAWA_DYNBRANCH_POTENTIAL_VALUE_H
 

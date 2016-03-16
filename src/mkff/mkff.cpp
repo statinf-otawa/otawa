@@ -35,6 +35,8 @@
 #include <otawa/flowfact/features.h>
 #include <otawa/cfg/CFGChecker.h>
 #include <otawa/app/Application.h>
+#include <otawa/flowfact/ContextualLoopBound.h>
+#include <otawa/dynbranch/features.h>
 
 using namespace elm;
 using namespace otawa;
@@ -233,8 +235,8 @@ public:
 	virtual ~Printer(void) { }
 	virtual void printNoReturn(Output& out, string label) = 0;
 	virtual void printNoCall(Output& out, string label) = 0;
-	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst) = 0;
-	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst) = 0;
+	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va = 0) = 0;
+	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va = 0) = 0;
 	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) = 0;
 	virtual void startComment(Output& out) = 0;
 	virtual void endComment(Output& out) = 0;
@@ -282,18 +284,59 @@ public:
 		out << "nocall \"" << label << "\";\n";
 	}
 
-	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst) {
+	/**
+	 * Generate the target of multiple branch program structure
+	 * @param out	The output destination
+	 * @param CFG	Container CFG.
+	 * @param inst	Instruction to get address of.
+	 * @param va	The vector pointer containing the target addresses
+	 */
+	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
 		out << "multibranch ";
 		addressOf(out, cfg, inst->address());
-		out << " to ?;"
-			<< "\t// (" << inst->address() << ") switch-like branch in " << nameOf(cfg) << io::endl;
+
+		if(va) {
+			out << " to\n";
+			for(Vector<Address>::Iterator vai(*va); vai; vai++) {
+				out << "\t";
+				addressOf(out, cfg, *vai);
+				if(*vai == va->last())
+					out << ";";
+				else
+					out << ",";
+				out << "    // " << *vai << " (";
+				printSourceLine(out, *vai);
+				out << ") switch-like branch in " << nameOf(cfg) << io::endl;
+			}
+		}
+		else {
+			out << " to ?;"
+				<< "\t// (" << inst->address() << ") switch-like branch in " << nameOf(cfg) << io::endl;
+		}
 	}
 
-	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst) {
+	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
 		out << "multicall ";
 		addressOf(out, cfg, inst->address());
-		out << " to ?;"
-			<< "\t// (" << inst->address() << ") indirect call in " << nameOf(cfg) << io::endl;
+
+		if(va) {
+			out << " to\n";
+			for(Vector<Address>::Iterator vai(*va); vai; vai++) {
+				out << "\t";
+				addressOf(out, cfg, *vai);
+				if(*vai == va->last())
+					out << ";";
+				else
+					out << ",";
+				out << "    // " << *vai << " (";
+				printSourceLine(out, *vai);
+				out << ") indirect call in " << nameOf(cfg) << io::endl;
+			}
+		}
+		else {
+			out << " to ?;"
+				<< "\t// (" << inst->address() << ") indirect call in " << nameOf(cfg) << io::endl;
+		}
 	}
 
 	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) {
@@ -392,20 +435,35 @@ public:
 		out << "\t<nocall label=\"" << label << "\"/>\n";
 	}
 
-	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst) {
+	virtual void printMulti(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
+		if(va)
+			for(Vector<Address>::Iterator vai(*va); vai; vai++) {
+				out << "\t\t<target ";
+				addressOf(out, cfg, *vai);
+				out << "/> ";
+				out << "<!-- 0x" << *vai << " (";
+				printSourceLine(out, *vai);
+				out << ") -->";
+				out << "\n";
+			} // end of for
+	}
+
+	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
 		out << "\t<!-- switch-like branch (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
 		out << "\t<multibranch ";
 		addressOf(out, cfg, inst->address());
-		out << ">\n"
-			<< "\t</multibranch>\n";
+		out << ">\n";
+		printMulti(out, cfg, inst, va);
+		out << "\t</multibranch>\n";
 	}
 
-	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst) {
+	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
 		out << "\t<!-- indirect call (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
 		out << "\t<multicall ";
 		addressOf(out, cfg, inst->address());
-		out << ">\n"
-			<< "\t</multicall>\n";
+		out << ">\n";
+		printMulti(out, cfg, inst, va);
+		out	<< "\t</multicall>\n";
 	}
 
 	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) {
@@ -522,6 +580,8 @@ private:
 	void scanFun(ContextTree *ctree);
 	void scanLoop(CFG *cfg, ContextTree *ctree, int indent);
 	bool checkLoop(ContextTree *ctree);
+	void scanTargets(CFG *cfg);
+
 
 	void printSourceLine(Output& out, WorkSpace *ws, Address address) {
 		if(!has_debug)
@@ -594,7 +654,7 @@ public:
 protected:
 	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::SwitchOption xml;
+	option::SwitchOption xml, dynbranch;
 };
 
 
@@ -607,6 +667,24 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	for(int i = 1; i < arguments().length(); i++)
 		CFGCollector::ADDED_FUNCTION(props).add(arguments()[i].toCString());
 	CFGChecker::NO_EXCEPTION(props) = true;
+
+	// Enable the dynamic branch
+	if(dynbranch) {
+		// init the flag
+		otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false;
+		workspace()->require(otawa::dynbranch::FEATURE);
+		// the loop goes on searching new branch target when there is a new target found
+		bool branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
+		while(branchDetected) {
+			// reconstruct the CFG because there new discovered target(s)
+			workspace()->invalidate(COLLECTED_CFG_FEATURE);
+			workspace()->require(COLLECTED_CFG_FEATURE);
+			// re-init the flag
+			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false;
+			workspace()->require(otawa::dynbranch::FEATURE);
+			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
+		}
+	}
 
 	// Load flow facts and record unknown values
 	QuestFlowFactLoader ffl;
@@ -661,7 +739,8 @@ Command::Command(void):
 		"Hugues Cassé <casse@irit.fr>",
 		"Generate a flow fact file for an application.",
 		"Copyright (c) 2005-15, IRIT - UPS"),
-		xml(*this, option::cmd, "-x", option::cmd, "--ffx", option::description, "activate FFX output", option::end)
+		xml(*this, option::cmd, "-x", option::cmd, "--ffx", option::description, "activate FFX output", option::end),
+		dynbranch(*this, option::cmd, "-D", option::cmd, "--dynbranch", option::description, "check for dynamic branches", option::end)
 {
 }
 
@@ -682,8 +761,39 @@ void FFOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 	ContextTree *ctree = CONTEXT_TREE(cfg);
 	ASSERT(ctree);
 	scanFun(ctree);
+	scanTargets(cfg);
 }
 
+/**
+ * Find the instruction with multiple branch/call target
+ * @param cfg The current working CFG
+ */
+void FFOutput::scanTargets(CFG *cfg) {
+	for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
+
+		// only treats BB
+		if(!bi->isBasic())
+			continue;
+
+		BasicBlock* bb = bi->toBasic();
+		Inst* lastInst = bb->last();
+
+		if(BRANCH_TARGET(lastInst).exists()) {
+			Vector<Address> va;
+			for(Identifier<Address>::Getter target(lastInst, BRANCH_TARGET); target; target++)
+				va.push(*target);
+
+			_printer.printMultiBranch(out, cfg, lastInst, &va);
+		}
+		else if(CALL_TARGET(lastInst).exists()) {
+			Vector<Address> va;
+			for(Identifier<Address>::Getter target(lastInst, CALL_TARGET); target; target++)
+				va.push(*target);
+
+			_printer.printMultiCall(out, cfg, lastInst, &va);
+		}
+	}
+}
 
 /**
  * Process a function context tree node.
@@ -731,7 +841,7 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
 				cout << "loop " << addressOf(cfg, child->bb()->address()) << " ?; // "
 					 << child->bb()->address() << io::endl;*/
 
-			_printer.startLoop(out, cfg, child->bb()->firstInst());
+			_printer.startLoop(out, cfg, child->bb()->first());
 			scanLoop(cfg, child, indent + 1);
 			_printer.endLoop(out);
 		}
@@ -793,7 +903,12 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 	}
 
 	// Look in BB
-	for(CFG::BBIterator bb(cfg); bb; bb++)
+	//for(CFG::BBIterator bb(cfg); bb; bb++)
+	for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
+		if(!bi->isBasic())
+			continue;
+		BasicBlock* bb = bi->toBasic();
+
 		for(BasicBlock::InstIter inst(bb); inst; inst++)
 			if(inst->isControl()
 			&& !inst->isReturn()
@@ -819,6 +934,7 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 					_printer.printIgnoreControl(out, cfg, inst);
 				}
 			}
+	}
 }
 
 

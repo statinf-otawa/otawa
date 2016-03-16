@@ -20,30 +20,130 @@
  */
 #ifndef OTAWA_DYNBRANCH_STATE_H
 #define OTAWA_DYNBRANCH_STATE_H
-
-#include <elm/avl/Map.h>
 #include <elm/io/OutStream.h>
 #include "PotentialValue.h"
-#include "MemType.h"
+#include <otawa/dfa/FastState.h>
+#include <otawa/prog/WorkSpace.h>
+using namespace elm;
 
 namespace global {
 
 using namespace elm::io ;
 using namespace elm::genstruct ;
 
-class State: public avl::Map<MemID, PotentialValue> {
+class LUBFastStateCombineProcessor {
 public:
-	State(void);
-	State(const State& s);
-	bool getBottom(void) const;
-	void setBottom(bool);
-	bool isBottom(void) const;
-
-private:
-	bool bottom;
-	friend Output& operator<<(Output& o, State const& s);
+	inline const PotentialValue process(const PotentialValue& pva, const PotentialValue& pvb) {
+		// only add the values exist in both domain
+		if((pva.length() == 0) || (pvb.length() == 0))
+			return PotentialValue::top;
+		return merge(pva, pvb);
+	}
 };
 
+class WideningFastStateCombineProcessor {
+public:
+	inline const PotentialValue process(const PotentialValue& pva, const PotentialValue& pvb) {
+		if(pva != pvb) {
+			PotentialValue pv;
+			pv.insert(0x99);
+			//return pv; //PotentialValue::top;
+			return PotentialValue::top;
+		}
+		else
+			return pva;
+	}
+};
+
+class FastStateWrapper {
+public:
+	typedef otawa::dfa::FastState<PotentialValue>::t state_t;
+	typedef otawa::dfa::FastState<PotentialValue>* fast_state_t;
+	typedef elm::t::uint32 address_t;
+
+	inline friend Output& operator<<(Output& o, FastStateWrapper const& pv) {
+		//o << "state  = " << pv._state;
+		o << io::endl;
+		state_t _state = pv._state;
+		fast_state_t _fastState = pv._fastState;
+		return o;
+	}
+
+	inline FastStateWrapper(void) : _fastState(0), _state(0), _bottom(true) { // default constructor
+	}
+
+	inline FastStateWrapper(const FastStateWrapper& fsw){ // copy constructor
+		assert(fsw._fastState);
+		copy(fsw);
+	}
+
+	inline void setBottom(bool b) { _bottom = b; }
+	inline bool isBottom(void) const { return _bottom; }
+	inline void setFastState(otawa::dfa::FastState<PotentialValue>* fs) { _fastState = fs; }
+	inline otawa::dfa::FastState<PotentialValue>* getFastState(void) { return _fastState; }
+
+	inline void setState(otawa::dfa::FastState<PotentialValue>::t s) { _state = s; } // or initialize state with _fastState->bot
+
+	inline void setReg(int regNum, const PotentialValue& pv) {
+		assert(_fastState);
+		_state = _fastState->set(_state, regNum, pv);
+		_bottom = false;
+	}
+
+	inline const PotentialValue& readReg(int regNum) {
+		assert(_fastState);
+		return _fastState->get(_state, regNum);
+	}
+
+	inline void copy(const FastStateWrapper & fsw) { 	_bottom = fsw._bottom; _fastState = fsw._fastState; _state = fsw._state; }
+	inline otawa::dfa::FastState<PotentialValue>::t getState(void) const { return _state; }
+
+
+	inline void storeMemory(address_t addr, const PotentialValue &pv) {
+		_bottom = false;
+		_state = _fastState->store(_state, addr, pv);
+	}
+
+	inline const PotentialValue& loadMemory(address_t addr) {
+		return _fastState->load(_state, addr);
+	}
+
+	inline void lub(const FastStateWrapper & fsw) {
+		LUBFastStateCombineProcessor temp;
+		_state = _fastState->combine<LUBFastStateCombineProcessor>(_state, fsw._state, temp);
+	}
+
+	inline void widening(const FastStateWrapper & fsw) {
+		WideningFastStateCombineProcessor temp;
+		_state = _fastState->combine<WideningFastStateCombineProcessor>(_state, fsw._state, temp);
+	}
+
+	inline bool equals(const FastStateWrapper & fsw) const {
+		return _fastState->equals(_state, fsw._state);
+	}
+
+private:
+	bool _bottom;
+	state_t _state;
+	fast_state_t _fastState;
+};
+
+typedef FastStateWrapper Domain;
+typedef FastStateWrapper State;
+
 } // global
+
+namespace otawa { namespace dynbranch {
+
+extern Identifier<Vector<Pair<Address, Address> >* > DATA_IN_READ_ONLY_REGION;
+inline bool inROData(Address addr, WorkSpace* ws) {
+	Vector<Pair<Address, Address> > *rodata = DATA_IN_READ_ONLY_REGION(ws);;
+	for(Vector<Pair<Address, Address> >::Iterator i(*rodata); i; i++) {
+		if((addr >= (*i).fst) && (addr <= (*i).snd))
+			return true;
+	}
+	return false;
+}
+} }
 
 #endif 	// OTAWA_DYNBRANCH_STATE_H

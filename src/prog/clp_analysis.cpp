@@ -1959,7 +1959,7 @@ public:
 					state->set(addrclp, get(*state, i.d()));
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
-					ALARM_STORE_TOP(cerr << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: " << i << " store to T\n");
+					ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T\n");
 #					ifdef HAI_JSON
 						HAI_BASE->addEvent("store to T");
 #					endif
@@ -1977,7 +1977,7 @@ public:
 						Symbol *sym = this->_process->findSymbolAt(addrclp.lower());
 						if(!sym) {
 							_nb_top_store_addr++;
-							ALARM_STORE_TOP(cerr << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: " << i << " store to T (unbounded address)\n");
+							ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T (unbounded address)\n");
 #						ifdef HAI_JSON
 							HAI_BASE->addEvent("store to T");
 #						endif
@@ -2423,30 +2423,30 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	// look for a stack value
 	const hard::Register *sp = ws->process()->platform()->getSP();
 	if(!sp)
-		log << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: no stack pointer in the architecture.\n";
+		warn("no stack pointer in the architecture.");
 	else {
 		Value v = prob.entry().get(Value(REG, sp->platformNumber()));
 		if(v.isTop()) {
 			bool found = false;
 			if(mem) {
-				log << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: no initial for stack pointer: looking in memory.\n";
+				warn("no initial for stack pointer: looking in memory.");
 				Address addr;
 				const genstruct::Table< const hard::Bank * > &banks = mem->banks();
 				for(int i = 0; i < banks.count(); i++)
 					if(banks[i]->isWritable() && (!addr || banks[i]->address() > addr))
 						addr = banks[i]->topAddress();
 				if(!addr) {
-					log << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: no writable memory: reverting to loader stack address.\n";
+					warn("no writable memory: reverting to loader stack address.");
 					addr = ws->process()->defaultStack();
 				}
 				if(addr) {
-					log << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: setting stack at " << addr << io::endl;
+					warn(_ << "setting stack at " << addr);
 					prob.initialize(sp, addr);
 					found = true;
 				}
 			}
 			if(!found)
-				log << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "WARNING: no value for the initial stack pointer\n";
+				warn("no value for the initial stack pointer");
 		}
 	}
 

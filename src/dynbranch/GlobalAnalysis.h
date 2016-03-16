@@ -28,6 +28,8 @@
 #include <otawa/prog/sem.h>
 
 #include "State.h"
+#include "elm/alloc/StackAllocator.h"
+//#include "GlobalAnalysisProblem.h"
 
 #define TIME_NB_EXEC_GLOBAL 1000
 
@@ -36,24 +38,32 @@ namespace otawa { namespace dynbranch {
 using namespace otawa ;
 using namespace otawa::util ;
 
+
+
 class GlobalAnalysis: public Processor {
 public:
 	static p::declare reg;
 	GlobalAnalysis(p::declare& r = reg);
+
 protected:
 	void processWorkSpace(WorkSpace*) ;
 	void configure(const PropList &props) ;
 private:
-	global::State entry ;
+	PotentialValue pv;
+	//elm::StackAllocator allocator;
+	global::State entry;
 	bool time ;
+
+
 };
 
 extern p::feature GLOBAL_ANALYSIS_FEATURE;
 extern Identifier<bool> TIME;
 
-extern Identifier<global::State> GLOBAL_STATE_IN;
-extern Identifier<global::State> GLOBAL_STATE_OUT;
-extern Identifier<global::State> GLOBAL_STATE_ENTRY;
+extern Identifier<global::Domain> GLOBAL_STATE_IN;
+extern Identifier<global::Domain> GLOBAL_STATE_OUT;
+extern Identifier<global::Domain> GLOBAL_STATE_ENTRY;
+
 
 } } // otawa::dynbranch
 

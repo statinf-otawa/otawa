@@ -20,11 +20,11 @@
  */
 #include "GlobalAnalysis.h"
 #include "GlobalAnalysisProblem.h"
-
 #include <otawa/otawa.h>
 #include <otawa/util/WideningListener.h>
 #include <otawa/util/WideningFixPoint.h>
 #include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/FastState.h>
 
 namespace otawa { namespace dynbranch {
 
@@ -37,7 +37,6 @@ p::declare GlobalAnalysis::reg = p::init("GlobalAnalysisFeature", Version(1,0,0)
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
 	.provide(GLOBAL_ANALYSIS_FEATURE);
-;
 
 /**
  */
@@ -48,20 +47,41 @@ GlobalAnalysis::GlobalAnalysis(p::declare& r): Processor(r), time(false) {
 /**
  */
 void GlobalAnalysis::configure(const PropList &props) {
-	Processor::configure(props) ;
-	entry = GLOBAL_STATE_ENTRY(props) ;
-	time = TIME(props) ;
+	Processor::configure(props);
+	//GLOBAL_STATE_ENTRY(props);
+	//entry(&pv, dfa::INITIAL_STATE(workspace()), allocator);
+	time = TIME(props);
 }
 
 
 /**
  */
 void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
+	// initialize the DATA_IN_READ_ONLY_REGION
+	Vector<Pair<Address, Address> >* globalData = DATA_IN_READ_ONLY_REGION(ws);
+	if(!globalData) {
+		globalData = new Vector<Pair<Address, Address> >();
+		File *prog = ws->process()->program();
+		// sort the segments
+		for(File::SegIter seg(prog); seg; seg++) {
+			if(!seg->isWritable())
+				globalData->addFirst(pair(seg->address(), seg->topAddress()-1));
+		}
+		DATA_IN_READ_ONLY_REGION(ws) = globalData;
+	}
+
+
+
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
 	CFG *cfg = coll->get(0) ;
 
 	system::StopWatch watch ;
+
+	elm::StackAllocator* psa = new elm::StackAllocator(); // need to keep this in the heap so that the content of the fastState can be used between the Processors
+	dfa::FastState<PotentialValue> *fs = new dfa::FastState<PotentialValue>(&pv, dfa::INITIAL_STATE(ws), *psa);
+	entry.setFastState(fs);
+
 	global::GlobalAnalysisProblem prob(ws,isVerbose(), entry);
 	WideningListener<global::GlobalAnalysisProblem> list(ws, prob);
 	WideningFixPoint<WideningListener<global::GlobalAnalysisProblem> > fp(list);
@@ -70,11 +90,16 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 
 	// Check the results
 	int i = 0 ;
-	for(otawa::CFG::BBIterator bbi(cfg); bbi; bbi++){
-		GLOBAL_STATE_IN(*bbi) = *list.results[0][bbi->number()] ;
-		otawa::CFG::BBIterator nextit(bbi) ;
-		if (isVerbose()) {cout << *bbi << endl << GLOBAL_STATE_IN(*bbi) << endl ; }
+	for(CFGCollection::Iterator cfgi(*coll); cfgi; cfgi++) {
+		for(otawa::CFG::BlockIter bbi = cfgi->blocks(); bbi; bbi++) {
+			if(!bbi->isBasic())
+				continue;
+
+			GLOBAL_STATE_IN(*bbi) = *list.results[cfgi->index()][bbi->index()] ;
+		}
 	}
+
+
 	if (time) {
 		watch.start() ;
 		for (int i=0 ; i < TIME_NB_EXEC_GLOBAL ; i++) {hai.solve(cfg) ; }
@@ -98,21 +123,26 @@ p::feature GLOBAL_ANALYSIS_FEATURE("otawa::dynbranch::GLOBAL_ANALYSIS_FEATURE", 
 /**
  * TODO
  */
-Identifier<global::State> GLOBAL_STATE_IN("otawa::dynbranch::GLOBAL_STATE_IN") ;
+//Identifier<global::State*> GLOBAL_STATE_IN("otawa::dynbranch::GLOBAL_STATE_IN") ;
+Identifier<global::Domain> GLOBAL_STATE_IN("otawa::dynbranch::GLOBAL_STATE_IN") ;
 
 
 /**
  */
-Identifier<global::State> GLOBAL_STATE_OUT("otawa::dynbranch::GLOBAL_STATE_OUT") ;
+//Identifier<global::State*> GLOBAL_STATE_OUT("otawa::dynbranch::GLOBAL_STATE_OUT") ;
+Identifier<global::Domain> GLOBAL_STATE_OUT("otawa::dynbranch::GLOBAL_STATE_OUT") ;
 
 
 /**
  */
-Identifier<global::State> GLOBAL_STATE_ENTRY("otawa::dynbranch::GLOBAL_STATE_ENTRY") ;
+//Identifier<global::State*> GLOBAL_STATE_ENTRY("otawa::dynbranch::GLOBAL_STATE_ENTRY") ;
+Identifier<global::Domain> GLOBAL_STATE_ENTRY("otawa::dynbranch::GLOBAL_STATE_ENTRY") ;
 
 
 /**
  */
 Identifier<bool> TIME("otawa::global::TIME") ;
+
+Identifier<Vector<Pair<Address, Address> >* > DATA_IN_READ_ONLY_REGION("otawa::dynbranch::DATA_IN_READ_ONLY_REGION", 0);
 
 } }	// otawa::dynbranch

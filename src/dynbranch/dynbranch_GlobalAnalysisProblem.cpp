@@ -22,19 +22,38 @@
 
 namespace global {
 
-GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domain entry) :
-		verbose(v),
-		ws(workspace),
-		ent(entry)
-{
-	// Bottom
-	Domain b ;
-	b.setBottom(true) ;
-	bot = b ;
+GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domain & entry) : verbose(v), ws(workspace) {
+	// initial the BOT state
+	bot.setBottom(true);
+	bot.setFastState(entry.getFastState());
+	bot.setState(entry.getFastState()->bot);
+
+	// initial the TOP state
+	topd.setBottom(false);
+	topd.setFastState(entry.getFastState());
+	topd.setState(entry.getFastState()->top);
+
+	// initial the ENTRY state
+	ent.setBottom(false); // not bottom
+	ent.setFastState(entry.getFastState());
+	ent.setState(entry.getFastState()->bot);
+	PotentialValue pvEntry;
+	pvEntry.insert(ws->process()->defaultStack());
+	ent.setReg(ws->process()->platform()->getSP()->platformNumber(), pvEntry);
+
+	// setting up temp regs
+	PotentialValue pv;
+	_tempRegs = new Vector<PotentialValue>(workspace->process()->platform()->regCount());
+	for(int i = 0; i < workspace->process()->platform()->regCount(); i++)
+		_tempRegs->add(pv);
 }
 
 const Domain& GlobalAnalysisProblem::bottom() {
 	return bot ;
+}
+
+const Domain& GlobalAnalysisProblem::top() {
+	return topd ;
 }
 
 const Domain& GlobalAnalysisProblem::entry() {
@@ -42,73 +61,45 @@ const Domain& GlobalAnalysisProblem::entry() {
 }
 
 void GlobalAnalysisProblem::updateEdge(Edge *edge, Domain& d) {
+	// this is for filtering purpose......, no need to implement for now
 	//TODO
 }
 
 void GlobalAnalysisProblem::lub(Domain& a,const Domain& b) const {
-	//cout << " LUB DANS " << &a << " valant " << a << " AVEC " << &b << " valant " << b << endl ;
-	if (b.isBottom()) { //A U Bottom = A   Nothing to do on A
+	if (b.isBottom()) //A U Bottom = A   Nothing to do on A
 		return ;
-	}
-
 	if (a.isBottom()) { // BOttom U B = B
 		a = b ;
 		return ;
 	}
-
-	for(Domain::MutableIterator it(a); it; it++) {
-		if(b.hasKey((*it).fst)) ;
-			it.set(merge((*it).snd, *b.get((*it).fst)));
-	}
-
-	for(Domain::Iterator it(b); it; it++) {
-		if(!a.hasKey((*it).fst))
-			a.remove(it);
-	}
+	a.lub(b);
 }
 
 void GlobalAnalysisProblem::assign(Domain& a,const Domain &b) const {
-	//cout << " ASSIGN DE " << &b << " valant " << b << " DANS " << &a << " valant " << a << endl << " FIN ASSIGN " << endl ;
-	a.clear();
-	for(Domain::Iterator it(b); it; it++)
-		a.put((*it).fst, (*it).snd);
+	a.copy(b); // just point to the same state variable for fast state
 }
 
 bool GlobalAnalysisProblem::equals(const Domain &a, const Domain &b) const {
-	return a == b ;
+	return a.equals(b);
 }
 
-void GlobalAnalysisProblem::widening(Domain &a,Domain b) const {
-	/* The Widening operation is gonna be really basic
-	 * It put TOP to all the value which has been modified during the iteration
-	 */
-
-	// select entries to delete
-	genstruct::Vector<MemID> to_delete;
-	for(Domain::Iterator it(a); it; it++) {
-		Option<PotentialValue> val = b.get((*it).fst);
-
-		// if it doesn't exist in b, it shouldn't exist in A either!
-		if(!val)
-			to_delete.add((*it).fst);
-
-		// we must ensure they are the same
-		else if(*val != (*it).snd)
-			to_delete.add((*it).fst);
-	}
-
-	// delete them
-	for(genstruct::Vector<MemID>::Iterator it(to_delete); it; it++)
-		a.remove(*it);
+void GlobalAnalysisProblem::widening(otawa::Block* ob, Domain& a, Domain b) const {
+	// if a has something but not in b, remove it (make it TOP)
+	// if a and b both have something but of different value, remove it (make it TOP)
+	a.widening(b);
 }
 
-void GlobalAnalysisProblem::update(Domain& out, const Domain& in, BasicBlock *bb) {
+void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
+	// initially the output state equals to the input state
 	out = in ;
+
+	if(!b->isBasic()) // only process the BB
+		return;
+
+	BasicBlock *bb = b->toBasic();
 
 	// process each instruction in turn
 	for(BasicBlock::InstIter inst(bb) ; inst ; inst++) {
-		//  cout << "\t" << *inst << endl ;
-
 		// get semantic instructions
 		sem::Block block;
 		inst->semInsts(block);
@@ -116,7 +107,6 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, BasicBlock *bb
 		// process the semantic instruction
 		for(sem::Block::InstIter semi(block) ; semi ; semi++) {
 			sem::inst inst = *semi ;
-			//  cout << "\t\t" << inst << endl ;
 
 			// unsupported instructions without side-effects
 			switch(inst.op) {
@@ -132,8 +122,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, BasicBlock *bb
 			case sem::CMPU:		// d <- a ~u b
 			case sem::SETP:		// page(d) <- cst
 			{
-				MemID i = elm::Pair<Memtype,int>(REG, inst.d()) ;
-				out.remove(i) ;
+				setReg(out, inst.d(), PotentialValue::top);
 				break ;
 			}
 
@@ -141,115 +130,146 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, BasicBlock *bb
 			{
 				PotentialValue pv ;
 				pv.insert(inst.cst()) ;
-				MemID i = elm::Pair<Memtype,int>(REG, inst.d()) ;
-				out.put(i, pv);
-				break ;
+				setReg(out, inst.d(), pv);
+				break;
 			}
 
 			case sem::SET:		// d <- a
 			{
-				MemID id1 = elm::Pair<Memtype,int>(REG, inst.d());
-				MemID id2 = elm::Pair<Memtype,int>(REG, inst.a());
-				Option<PotentialValue> val = out.get(id2);
-				if(val)
-					out.put(id1, *val);
-				else	// we dont know, so its TOP
-					out.remove(id1) ;
+				const PotentialValue& vala = readReg(out, inst.a());
+				setReg(out, inst.d(), vala);
 				break ;
 			}
 
 			case sem::ADD:		// d <- a + b
 			{
-				MemID idret = elm::Pair<Memtype,int>(REG, inst.d());
-				MemID ida = elm::Pair<Memtype,int>(REG, inst.a());
-				MemID idb = elm::Pair<Memtype,int>(REG, inst.b());
-				Option<PotentialValue> vala = out.get(ida);
-				Option<PotentialValue> valb = out.get(idb);
-				if(vala && valb)
-					out.put(idret, *vala + *valb);
-				else
-					out.remove(idret);
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue sum = vala + valb;
+					setReg(out, inst.d(), sum);
+				}
+				else {
+					// removing the entry (because we don't know the results, so we make an assumption that it is TOP)
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
 				break ;
 			}
 
 			case sem::STORE:		// MEMb(a) <- d
 			{
-				MemID ida = elm::Pair<Memtype,int>(REG, inst.a()) ;
-				MemID idd = elm::Pair<Memtype,int>(REG, inst.d()) ;
-
-				Option<PotentialValue> addr = out.get(ida);
-				if(addr) {
-					if((*addr).length() == 1) { //We can't store to multiple addresses
-						int m = (*addr).get(0) ;
-						MemID mem = elm::Pair<Memtype,int>(MEM, m) ;
-
-						Option<PotentialValue> vd = out.get(idd);
-						if(vd)
-							out.put(mem, *vd);
-						else
-							out.remove(mem) ;
-					}
-					else
-						cout << " Warning : we can't store to multiple potential memory addresses " << endl ;
+				const PotentialValue& address = readReg(out, inst.a());
+				if(address.length() == 1) {
+					elm::t::uint32 addressToStore = address[0];
+					const PotentialValue& data = readReg(out, inst.d());
+					out.storeMemory(addressToStore, data);
 				}
-				else
-					cout << "WARNING: we can't find the memory address for store" << endl ;
+				else if(address.length() > 1) {
+					elm::cout << "Warning : we can't store to multiple potential memory addresses!" << io::endl;
+					assert(0); // just in case, want to see
+				}
+				else { // no address found
+					elm::cout << "WARNING: we can't find the memory address for store" << io::endl;
+				}
 				break ;
 			}
 
 			case sem::LOAD:		// d <- MEMb(a)
 			{
-				MemID ida = elm::Pair<Memtype,int>(REG, inst.a());
-				MemID idreg = elm::Pair<Memtype,int>(REG, inst.d());
+				const PotentialValue& address = readReg(out, inst.a());
+				if(address.length() == 1) {
+					elm::t::uint32 addressToLoad = address[0];
+					const PotentialValue& data = out.loadMemory(addressToLoad);
 
-				Option<PotentialValue> addr = out.get(ida);
-				if(addr) {
-					if((*addr).length() == 1) { //We can't load from multiple addresses
-						int m = (*addr).get(0) ;
-						MemID idmem = elm::Pair<Memtype,int>(MEM, m) ;
-						Option<PotentialValue> va = out.get(idmem);
-						if(va)	// this value is not a TOP
-							out.put(idreg, *va);
-						else {
-							// Here is a decision , do we try to load the value from memory or we put top?
-							// The mode should be specified in a header
-							if(GLOBAL_MEMORY_LOADER) {
-								PotentialValue res;
-								t::uint32 val = 0;		// must be fixed
-								ws->process()->get(m, val);
-								res.insert(val);
-								out.put(idreg, res);
-							}
-							else
-								out.remove(idreg) ;
+					// If we couldn't find the memory info from the Global State, lets try to see if this info exists in the Read Only Region
+					if(data.length() == 0) {
+						if(otawa::dynbranch::inROData(addressToLoad, ws)) {
+							t::uint32 dataFromMemDirectory;
+							ws->process()->get(addressToLoad, dataFromMemDirectory);
+							PotentialValue pv;
+							pv.insert(dataFromMemDirectory);
+							setReg(out, inst.d(), pv);
 						}
-					} else
-						out.remove(idreg) ;
-
-				} else {
-					out.remove(idreg) ;
-					cout << "WARNING: we can't find the memory address (load)" << endl ;
+						else
+							setReg(out, inst.d(), data);
+					}
+					else
+						setReg(out, inst.d(), data);
 				}
-				break ;
+				else if(address.length() > 1) {
+					elm::cout << "Warning : we can't load to multiple potential memory addresses!" << io::endl;
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+					// but we might lose some address ?
+					assert(0); // lets check when this happen
+				}
+				else { // no address found
+					if(verbose) elm::cout << "WARNING: we can't find the memory address to load" << io::endl;
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+				break;
 			}
 
 			case sem::SHL:		// d <- unsigned(a) << b
 			{
-				MemID idret = elm::Pair<Memtype,int>(REG, inst.d());
-				MemID ida = elm::Pair<Memtype,int>(REG, inst.a());
-				MemID idb = elm::Pair<Memtype,int>(REG, inst.b());
-				Option<PotentialValue> va = out.get(ida);
-				Option<PotentialValue> vb = out.get(idb);
-				if(va && vb)
-					out.put(idret,  *va << *vb);
-				else
-					out.remove(idret) ;
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue result = vala << valb;
+					setReg(out, inst.d(), result);
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
 				break ;
 			}
 
+			case sem::SUB:		// d <- a - b
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue sum = vala - valb;
+					setReg(out, inst.d(), sum);
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+				break ;
+			}
+
+			case sem::AND:		// d <- a & b
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue sum = vala & valb;
+					setReg(out, inst.d(), sum);
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+				break ;
+			}
+
+			case sem::ASR:		// d <- a >> b
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue sum = vala >> valb;
+					setReg(out, inst.d(), sum);
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+				break ;
+			}
 			/*
-            IF,			// continue if condition a is meet in register b, else jump c instructions
-            SUB,		// d <- a - b
             SHR,		// d <- unsigned(a) >> b
             ASR,		// d <- a >> b
             NEG,		// d <- -a
@@ -264,13 +284,15 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, BasicBlock *bb
             MODU		// d <- unsigned(a) % unsigned(b)
               break ;
 			 */
-			default:
-				if (verbose) {cout << "Warning : Unsupported instruction " << inst.op << endl ; }
+			case sem:: IF:
 				break;
-			}
-			//      cout << out ;
-		}
-	}
-}
+			default:
+				elm::cout << "Warning : Unsupported instruction " << inst.op << io::endl;
+				assert(0); // need to think about the implementation here! or we just leave it TOP?
+				break;
+			} // end switch(inst.op) {
+		} // end of each semantic instruction
+	} // end of each instruction
+} // end of the BB
 
 } // global
