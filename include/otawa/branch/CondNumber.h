@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	CondNumber processor interface
  *
  *	This file is part of OTAWA
@@ -25,7 +24,6 @@
 #include <otawa/cfg/features.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/proc/BBProcessor.h>
-#include <otawa/cfg/BasicBlock.h>
 
 #include "features.h"
 
@@ -39,7 +37,7 @@ public:
 	static p::declare reg;
 	CondNumber(void);
 protected:
-	virtual void processBB(otawa::WorkSpace*, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(otawa::WorkSpace*, CFG *cfg, Block *bb);
 	virtual void setup(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);	
 private:

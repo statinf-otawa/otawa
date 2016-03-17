@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	BranchBuilder processor interface
  *
  *	This file is part of OTAWA
@@ -39,12 +38,10 @@ class BranchBuilder : public otawa::Processor {
 public:
 	static p::declare reg;
 	BranchBuilder(void);
-
 protected:
 	virtual void processWorkSpace(otawa::WorkSpace*);
-	
 private:
-	void categorize(BasicBlock *bb, BranchProblem::Domain *dom, BasicBlock* &header, category_t &cat);
+	void categorize(BasicBlock *bb, BranchProblem::Domain *dom, Block* &header, category_t &cat);
 };
 
 } }		// otawa::branch

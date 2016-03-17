@@ -18,20 +18,21 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include <otawa/util/Dominance.h>
-#include <otawa/util/PostDominance.h>
-#include <otawa/util/HalfAbsInt.h>
-#include <otawa/util/UnrollingListener.h>
-#include <otawa/util/FirstUnrollingFixPoint.h>
+
+#include <otawa/branch/BranchBuilder.h>
+#include <otawa/branch/CondNumber.h>
+#include <otawa/branch/ConsBuilder.h>
 #include <otawa/cfg/CFG.h>
 #include <otawa/cfg/features.h>
+#include <otawa/cfg/Dominance.h>
+#include <otawa/cfg/PostDominance.h>
+#include <otawa/dfa/hai/FirstUnrollingFixPoint.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
+#include <otawa/dfa/hai/UnrollingListener.h>
+#include <otawa/hard/BHT.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet.h>
 
-#include <otawa/branch/ConsBuilder.h>
-#include <otawa/branch/BranchBuilder.h>
-#include <otawa/hard/BHT.h>
-#include <otawa/branch/CondNumber.h>
 
 namespace otawa { namespace branch {
 
@@ -92,6 +93,8 @@ Identifier<ilp::Var*> MISSPRED_VAR("otawa::branch::MISSPRED_VAR", NULL);
  * @ingroup branch
  */
 
+/**
+ */
 p::declare OnlyConsBuilder::reg =
 		p::init("otawa::ConsBuilder", Version(1,0,0), BBProcessor::reg)
 		.require(ipet::ASSIGNED_VARS_FEATURE)
@@ -100,22 +103,29 @@ p::declare OnlyConsBuilder::reg =
 		.provide(CONSTRAINTS_FEATURE)
 		.maker<ConsBuilder>();
 
-
-OnlyConsBuilder::OnlyConsBuilder(p::declare& r) : BBProcessor(r) {
+/**
+ */
+OnlyConsBuilder::OnlyConsBuilder(p::declare& r) : BBProcessor(r), _explicit(false) {
 }
 
-void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
+/**
+ */
+void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, Block *b) {
 	static string 	ad_msg = "always-D branch prediction constraint",
 					ah_msg = "always-H branch prediction constraint",
 					fu_msg = "first-unknown branch prediction constraint",
 					nc_msg = "not-classified branch prediction constraint";
 
+	if(!b->isBasic())
+		return;
+	BasicBlock *bb = b->toBasic();
+
 	if (branch::COND_NUMBER(bb) != -1) {
-		int row = hard::BHT_CONFIG(ws)->line(bb->lastInst()->address());
+		int row = hard::BHT_CONFIG(ws)->line(bb->control()->address());
 		if(logFor(LOG_BLOCK))
-			log << "\t\t\tprocess jump on bb " << bb->number() << " on row " << row << "\n";
+			log << "\t\t\tprocess jump on " << *bb << " on row " << row << "\n";
 		branch::category_t cat = branch::CATEGORY(bb);
-		BasicBlock *cat_header = branch::HEADER(bb);
+		Block *cat_header = branch::HEADER(bb);
 		ilp::System *sys = ipet::SYSTEM(ws);
 		ilp::Constraint *cons; 
 		ilp::Var *misspred;
@@ -127,7 +137,7 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
                 misspred = sys->newVar();
         else {
                 StringBuffer buf1;
-                buf1 << "x_mpred_" << bb->number() << "\n";
+                buf1 << "x_mpred_" << bb->index() << "\n";
                 String name1 = buf1.toString();
                 misspred = sys->newVar(name1);
         }
@@ -141,8 +151,8 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 			
 				// get the not-taken edge
 				Tvar = NULL;
-            	for (BasicBlock::OutIterator outedge(bb); outedge; outedge++)
-            		if (outedge->kind() == Edge::NOT_TAKEN) {
+            	for (BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++)
+            		if(outedge->isNotTaken()) {
 						ASSERT(Tvar == NULL);
 						Tvar = VAR(outedge);                			
             		}
@@ -159,12 +169,12 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 				// find taken and not-taken edges
 				NTvar = NULL;
 				Tvar = NULL;
-            	for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
-            		if (outedge->kind() == Edge::NOT_TAKEN) {
+            	for (BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
+            		if(outedge->isNotTaken()) {
 						ASSERT(NTvar == NULL);
 						NTvar = VAR(outedge);                			
             		}
-            		if (outedge->kind() == Edge::TAKEN) {
+            		else {
 						ASSERT(Tvar == NULL);
 						Tvar = VAR(outedge);                			
             		}            		
@@ -191,12 +201,12 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 				NTvar = NULL;
 				Tvar = NULL;
 				
-            	for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
-            		if (outedge->kind() == Edge::NOT_TAKEN) {
+            	for(BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
+            		if(outedge->isNotTaken()) {
 						ASSERT(NTvar == NULL);
 						NTvar = VAR(outedge);                			
             		}
-            		if (outedge->kind() == Edge::TAKEN) {
+            		else {
 						ASSERT(Tvar == NULL);
 						Tvar = VAR(outedge);                			
             		}            		
@@ -205,7 +215,7 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 				cons = sys->newConstraint(fu_msg, Constraint::LE, 0);
 				cons->addLeft(1, misspred);	
 				cons->addRight(2, Tvar);
-				for (BasicBlock::InIterator inedge(cat_header); inedge; inedge++)
+				for(Block::EdgeIter inedge = cat_header->ins(); inedge; inedge++)
 					if (!Dominance::dominates(cat_header, inedge->source()))
 						cons->addRight(2, VAR(inedge));
 				
@@ -213,8 +223,8 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 				cons = sys->newConstraint(fu_msg, Constraint::LE, 0);
 				cons->addLeft(1, misspred);	
 				cons->addRight(2, NTvar);
-				for (BasicBlock::InIterator inedge(cat_header); inedge; inedge++)
-					if (!Dominance::dominates(cat_header, inedge->source()))
+				for(Block::EdgeIter inedge = cat_header->ins(); inedge; inedge++)
+					if(!Dominance::dominates(cat_header, inedge->source()))
 						cons->addRight(2, VAR(inedge));
 				
 				/* misspred <= bbvar */			
@@ -241,6 +251,8 @@ void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
 	
 }
 
+/**
+ */
 void OnlyConsBuilder::configure(const PropList &props) {
 	BBProcessor::configure(props);
 	_explicit = ipet::EXPLICIT(props);
@@ -274,19 +286,21 @@ p::declare ConsBuilder::reg =
 ConsBuilder::ConsBuilder(p::declare& r) : BBProcessor(r) {
 }
 
-void ConsBuilder::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
+void ConsBuilder::processBB(WorkSpace* ws, CFG *cfg, Block *b) {
+	if(!b->isBasic())
+		return;
+	BasicBlock *bb = b->toBasic();
 	if(branch::COND_NUMBER(bb) != -1) {
 		ilp::System *sys = ipet::SYSTEM(ws);
 	    int penalty;
-	    if (bb->lastInst()->isIndirect()) {
-	    	if (bb->lastInst()->isConditional()) {
+	    if(bb->control()->isUnknown()) {
+	    	if(bb->control()->isConditional())
 	    		penalty = hard::BHT_CONFIG(ws)->getCondIndirectPenalty();
-	    	} else {
+	    	else
 	    		penalty = hard::BHT_CONFIG(ws)->getIndirectPenalty();
-	    	}
-	    } else {
-	    	penalty = hard::BHT_CONFIG(ws)->getCondPenalty();
 	    }
+	    else
+	    	penalty = hard::BHT_CONFIG(ws)->getCondPenalty();
 	    ilp::Var *misspred = MISSPRED_VAR(bb);
 		sys->addObjectFunction(penalty, misspred);
 	}

@@ -33,13 +33,12 @@ namespace otawa { namespace branch {
 	
 using namespace elm;
 
-
 // OnlyConsBuilder processor
 class OnlyConsBuilder: public BBProcessor {
 public:
 	static p::declare reg;
 	OnlyConsBuilder(p::declare& r = reg);
-	virtual void processBB(otawa::WorkSpace*, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(otawa::WorkSpace*, CFG *cfg, Block *bb);
 	virtual void configure(const PropList &props);
 private:
 	bool _explicit;
@@ -50,7 +49,7 @@ class ConsBuilder: public BBProcessor {
 public:
 	static p::declare reg;
 	ConsBuilder(p::declare& r = reg);
-	virtual void processBB(otawa::WorkSpace*, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(otawa::WorkSpace*, CFG *cfg, Block *bb);
 };
 
 } }		// otawa::branch
