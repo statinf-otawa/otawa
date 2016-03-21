@@ -106,6 +106,21 @@ Registration<BHTGetter> BHTGetter::reg(
  * @li default prediction behavior.
  */
 
+/**
+ */
+BHT::BHT(void)
+:	cond_penalty(10),
+	indirect_penalty(10),
+	cond_indirect_penalty(10),
+	def_predict(10)
+{
+}
+
+/**
+ */
+BHT::~BHT(void) {
+}
+
 
 /**
  * This feature ensures that the BHT description has been loaded.
