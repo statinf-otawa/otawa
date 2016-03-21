@@ -26,9 +26,15 @@
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/display/CFGOutput.h>
 #include <otawa/dynbranch/features.h>
+#include <otawa/data/clp/SymbolicExpr.h> // to use the filters
+#include <elm/log/Log.h> // to use the debugging messages
 
-namespace otawa {
-namespace dynbranch {
+#define DEBUG_FILTERS(x) // x
+#define DEBUG_CLP(x) // x
+
+using namespace elm::log;
+using namespace elm::color;
+namespace otawa { namespace dynbranch {
 
 static Identifier<Vector<Address> > POSSIBLE_BRANCH_TARGETS("otawa::dynbranch::POSSIBLE_BRANCH_TARGETS"); // only in this file, for the set of target addresses
 Identifier<bool> NEW_BRANCH_TARGET_FOUND("otawa::dynbranch::NEW_BRANCH_TARGET_FOUND", false); // on workspace
@@ -76,7 +82,7 @@ static PotentialValue setFromClp(clp::Value v) {
 /**
  * Note that the vector of semantic instruction is "copied" for each find calls.
  */
-PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const clp::State & clpin, global::State & globalin, Vector<sem::inst> semantics) {
+PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const clp::State & clpin, State & globalin, Vector<sem::inst> semantics) {
 	// TODO: instead copy the whole vector of semantic, use the index ?
 
 	/* Stop case
@@ -90,7 +96,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 		if (id.fst == MEM) {
 			// Priority of memory reading: RO MEM -> Global Analysis -> CLP
 			// the value is available in the READ ONLY REGION, then read from it
-			if(otawa::dynbranch::inROData(id.snd, workspace())) {
+			if(istate && istate->isInitialized(id.snd)) {
 				PotentialValue r;
 				unsigned long val = 0;
 				workspace()->process()->get(id.snd,val);
@@ -139,7 +145,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 			// We need to know this value, if we don't, we can't analyze anything
 			if (valreg.kind() != clp::VAL) {
 				if (isVerbose()) {cout << " Warning : we need a value from the analysis which is not here, be careful with results.. " << endl;}
-				assert(0); // just to see what brings us here
+				// We will fall back to the first place (the first find call which obtain the { } ) and try the clp there.
 				return PotentialValue();
 			}
 			return setFromClp(valreg);
@@ -175,33 +181,31 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 				return find(bb,id,clpin,globalin,semantics);
 			}
 
-
 			PotentialValue v;
 			switch(i.op) {
-				case sem::NEG:	// d <- -a
-				case sem::NOT:// d <- ~a
-				case sem::MUL:// d <- a * b
-				case sem::MULU:// d <- unsigned(a) * unsigned(b)
-				case sem::DIV:// d <- a / b
-				case sem::DIVU:// d <- unsigned(a) / unsigned(b)
-				case sem::MOD:// d <- a % b
-				case sem::MODU:// d <- unsigned(a) % unsigned(b)
-				case sem::NOP :
-				case sem::TRAP:// perform a trap
-				case sem::CONT:// continue in sequence with next instruction
-				case sem::IF:// continue if condition a is meet in register b, else jump c instructions
-				case sem::CMP:// d <- a ~ b
-				case sem::ASR:// d <- a +>> b
-				case sem::CMPU:// d <- a ~u b
-				case sem::STORE:// MEMb(a) <- d
-				case sem::AND:// MEMb(a) <- d
-				case sem::SETP:// page(d) <- cst
-				assert(0);// want to know, these are ignored instructions......!
+				case sem::NEG:		// d <- -a
+				case sem::NOT:		// d <- ~a
+				case sem::MUL:		// d <- a * b
+				case sem::MULU:		// d <- unsigned(a) * unsigned(b)
+				case sem::DIV:		// d <- a / b
+				case sem::DIVU:		// d <- unsigned(a) / unsigned(b)
+				case sem::MOD:		// d <- a % b
+				case sem::MODU:		// d <- unsigned(a) % unsigned(b)
+				case sem::NOP:
+				case sem::TRAP:		// perform a trap
+				case sem::CONT:		// continue in sequence with next instruction
+				case sem::IF:		// continue if condition a is meet in register b, else jump c instructions
+				case sem::CMP:		// d <- a ~ b
+				case sem::CMPU:		// d <- a ~u b
+				case sem::STORE:	// MEMb(a) <- d
+				case sem::SETP:		// page(d) <- cst
+				elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "fail to process sem inst: " << i << io::endl;
+				assert(0);			// want to know, these are ignored instructions......!
 				return find(bb,id,clpin,globalin,semantics);
 
-				case sem::SCRATCH:// d <- T
-				case sem::BRANCH:// perform a branch on content of register a
-				ASSERT(false);// No branch in a BB
+				case sem::SCRATCH:	// d <- T
+				case sem::BRANCH:	// perform a branch on content of register a
+				ASSERT(false);		// No branch in a BB
 				break;
 
 				case sem::LOAD:// d <- MEMb(a)
@@ -209,10 +213,10 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 					PotentialValue r;
 					MemID rega = elm::Pair<Memtype,int>(REG,i.a());
 					PotentialValue toget = find(bb,rega,clpin,globalin,semantics);
-					// Get the value in memory from each possible addresses
 
-					for ( PotentialValue::Iterator it(toget); it; it++) {
-						if(otawa::dynbranch::inROData(*it, workspace())) {
+					// Get the value in memory from each possible addresses
+					for(PotentialValue::Iterator it(toget); it; it++) {
+						if(istate && istate->isInitialized(*it)) {
 							unsigned int val = 0;
 							workspace()->process()->get(*it,val);
 							r.insert(val);
@@ -226,26 +230,26 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 					}
 
 					if(r == PotentialValue::bot) { // means couldn't be found from the memory, lets try CLP?
-						if(toget.length() > 0) {
-							elm::cout << "toget[0] = " << hex(toget[0]) << io::endl;
-							clp::Value x = clpState[semantics.length()-1].get(clp::Value(clp::VAL, toget[0], 0,0));
-							elm::cout << "CLP result = " << x << io::endl;
-							assert(0); // future work, see what it brings to us here
+						for(PotentialValue::Iterator it(toget); it; it++) {
+							clp::Value valueFromCLP = clpState[semantics.length()-1].get(clp::Value(clp::VAL, *it, 0,0));
+							if(valueFromCLP != clp::Value::top) {
+								PotentialValue p = setFromClp(valueFromCLP);
+								r = merge(r, p);
+							}
 						}
+
+						DEBUG_CLP(if(toget.length() > 0) elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "CLP result = " << r << io::endl;)
 					}
-					writeReg(i.d(), r);
 					return r;
 				}
 				case sem::SET:    // d <- a
 				{
 					MemID rega = elm::Pair<Memtype,int>(REG,i.a());
 					v = find(bb,rega,clpin,globalin,semantics);
-					writeReg(i.d(), v);
 					return v;
 				}
 				case sem::SETI:   // d <- cst
 				v.insert(i.cst());
-				writeReg(i.d(), v);
 				return v;
 
 				case sem::OR:
@@ -253,7 +257,17 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 					MemID rega = elm::Pair<Memtype,int>(REG,i.a());
 					MemID regb = elm::Pair<Memtype,int>(REG,i.b());
 					v = find(bb,rega,clpin,globalin, semantics) || find(bb,regb,clpin,globalin,semantics);
-					writeReg(i.d(), v);
+					return v;
+				}
+				case sem::AND:    // d <- a & b
+				{
+					MemID rega = elm::Pair<Memtype,int>(REG,i.a());
+					MemID regb = elm::Pair<Memtype,int>(REG,i.b());
+					PotentialValue va = find(bb,rega,clpin,globalin, semantics);
+					takingCLPValueIfNecessary(va, semantics.length(), clp::Value(clp::REG,i.a()));
+					PotentialValue vb = find(bb,regb,clpin,globalin,semantics);
+					takingCLPValueIfNecessary(vb, semantics.length(), clp::Value(clp::REG,i.b()));
+					v =  va & vb;
 					return v;
 				}
 				case sem::ADD:    // d <- a + b
@@ -261,7 +275,6 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 					MemID rega = elm::Pair<Memtype,int>(REG,i.a());
 					MemID regb = elm::Pair<Memtype,int>(REG,i.b());
 					v = find(bb,rega,clpin,globalin, semantics) + find(bb,regb,clpin,globalin,semantics);
-					writeReg(i.d(), v);
 					return v;
 				}
 				case sem::SUB:    // d <- a - b
@@ -269,7 +282,6 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 					MemID rega = elm::Pair<Memtype,int>(REG,i.a());
 					MemID regb = elm::Pair<Memtype,int>(REG,i.b());
 					v = find(bb,rega,clpin,globalin, semantics) - find(bb,regb,clpin,globalin,semantics);
-					writeReg(i.d(), v);
 					return v;
 				}
 				case sem::SHL:    // d <- a << b
@@ -277,17 +289,32 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 					MemID rega = elm::Pair<Memtype,int>(REG,i.a());
 					MemID regb = elm::Pair<Memtype,int>(REG,i.b());
 					PotentialValue va = find(bb,rega,clpin,globalin, semantics);
+					takingCLPValueIfNecessary(va, semantics.length(), clp::Value(clp::REG,i.a()));
 					PotentialValue vb = find(bb,regb,clpin,globalin,semantics);
+					takingCLPValueIfNecessary(vb, semantics.length(), clp::Value(clp::REG,i.b()));
 					v =  va << vb;
-					writeReg(i.d(), v);
 					return v;
 				}
-				case sem::SHR:    // d <- a >> b
+				case sem::SHR:    // d <- a +>> b
 				{
 					MemID rega = elm::Pair<Memtype,int>(REG,i.a());
 					MemID regb = elm::Pair<Memtype,int>(REG,i.b());
-					v = find(bb,rega,clpin,globalin, semantics) >> find(bb,regb,clpin,globalin,semantics);
-					writeReg(i.d(), v);
+					PotentialValue va = find(bb,rega,clpin,globalin, semantics);
+					takingCLPValueIfNecessary(va, semantics.length(), clp::Value(clp::REG,i.a()));
+					PotentialValue vb = find(bb,regb,clpin,globalin,semantics);
+					takingCLPValueIfNecessary(vb, semantics.length(), clp::Value(clp::REG,i.b()));
+					v =  logicalShiftRight(va, vb);
+					return v;
+				}
+				case sem::ASR:    // d <- a >> b
+				{
+					MemID rega = elm::Pair<Memtype,int>(REG,i.a());
+					MemID regb = elm::Pair<Memtype,int>(REG,i.b());
+					PotentialValue va = find(bb,rega,clpin,globalin, semantics);
+					takingCLPValueIfNecessary(va, semantics.length(), clp::Value(clp::REG,i.a()));
+					PotentialValue vb = find(bb,regb,clpin,globalin,semantics);
+					takingCLPValueIfNecessary(vb, semantics.length(), clp::Value(clp::REG,i.b()));
+					v =  va >> vb;
 					return v;
 				}
 
@@ -298,6 +325,18 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 		}
 	}
 	return PotentialValue();
+}
+
+/*
+ * If the find() method returns empty PotentialValue, we are looking into the CLP state to see if we can obtain the value
+ */
+void DynamicBranchingAnalysis::takingCLPValueIfNecessary(PotentialValue& pv, int semanticInstIndex, const clp::Value& regOrAddr) {
+	if(pv.length() == 0) { // if there is no value for the potential value
+		clp::Value clpva = clpState[semanticInstIndex].get(regOrAddr); // obtain the value from the CLP state
+		if(clpva != clp::Value::all) { // if the CLP value is not Top
+			pv = setFromClp(clpva); // convert to PotentialValue
+		}
+	}
 }
 
 /**
@@ -380,6 +419,7 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 p::declare DynamicBranchingAnalysis::reg = p::init("DynamicBranchingAnalysis", Version(1, 0, 0))
 											.require(clp::FEATURE)
 											.require(GLOBAL_ANALYSIS_FEATURE)
+											.require(dfa::INITIAL_STATE_FEATURE)
 											.provide(FEATURE);
 
 /**
@@ -391,6 +431,8 @@ DynamicBranchingAnalysis::DynamicBranchingAnalysis(p::declare& r)
 /**
  */
 void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+
+	istate = dfa::INITIAL_STATE(ws);
 
 	// only creates the clp manager once (performance)
 	if(!clpManager)
@@ -418,13 +460,65 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 	int currentDynBranchTargetCount = DYNBRANCH_TARGET_COUNT(bb->last());
 	int previousDynBranchTargetCount = DYNBRANCH_TARGET_COUNT_PREV(bb->last());
 
-	if(currentDynBranchTargetCount != previousDynBranchTargetCount) {
+	bool cond1 = (currentDynBranchTargetCount != previousDynBranchTargetCount); // when there is newly found target address
+	bool cond2 = (currentDynBranchTargetCount == previousDynBranchTargetCount) && (currentDynBranchTargetCount == 0); // when unknwon is identified but target is not found yet
+
+	if(cond1 || cond2) {
 		DYNBRANCH_TARGET_COUNT_PREV(bb->last()) = currentDynBranchTargetCount;
 
 		// collecting all the CLP state for each semantic instruction in the block, maybe not necessary
 		clp::Manager::step_t s = clpManager->start(bb);
+
+		// obtain the filters (if there is any) in this BB.
+		// FIXME: assumption: ONLY ONE IF per BB!
+		Vector<se::SECmp *> regFilters = se::REG_FILTERS(bb);
+		Vector<se::SECmp *> addrFilters = se::ADDR_FILTERS(bb);
+
 		clpState.clear();
+
+		int semInstIndex = 0;
+		Inst* inst = 0;
 		while(s) {
+			// check if the current semantic instruction is an IF
+			sem::inst si = clpManager->sem();
+
+			DEBUG_FILTERS(
+			if(inst != clpManager->inst()) {
+				inst = clpManager->inst();
+				elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << inst << io::endl;
+			}
+			)
+			DEBUG_FILTERS(elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "    " << si << io::endl;)
+			DEBUG_FILTERS(elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "        [" << semInstIndex++ << "] "; (clpManager->state()->print(elm::cout)); elm::cout << io::endl;)
+
+			if(si.op == sem::IF) {
+				for (int i=0; i < regFilters.length(); i++) { // now look into register filters
+					se::SECmp *filter = regFilters[i];
+					// we only take care of the comparisons...
+					if(filter->op() < se::LE)
+						continue;
+
+					DEBUG_FILTERS(elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "        " << "Applying filter " << filter->asString() << io::endl;)
+					clp::Value rval = filter->a()->val();
+					clp::Value r = clp::Value(clp::REG, rval.lower(), 0, 0);
+					clp::Value v = clpManager->state()->get(r);
+					applyFilter(v, filter->op(), filter->b()->val());
+					clpManager->state()->set(r, v);
+				} // end of register filtering
+				for (int i=0; i < addrFilters.length(); i++) { // now look into memory filters
+					se::SECmp *filter = addrFilters[i];
+					// we only take care of the comparisons...
+					if(filter->op() < se::LE)
+						continue;
+
+					DEBUG_FILTERS(elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "        " << "Applying filter " << filter->asString() << io::endl;)
+					clp::Value rval = filter->a()->val();
+					clp::Value v = clpManager->state()->get(rval);
+					applyFilter(v, filter->op(), filter->b()->val());
+					clpManager->state()->set(rval, v);
+				} // end of register filtering
+			} // end of IF (possible filtering)
+
 			clpState.push(*clpManager->state());
 			s = clpManager->next();
 		}

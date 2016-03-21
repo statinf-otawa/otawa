@@ -27,13 +27,22 @@ macro if_cond_store = \
 		endif;
 macro if_cond_load = \
 	if !cond.otawa_never then \
-		if !cond.otawa_ever then \
+		if !cond.otawa_ever && !rd.use_pc then \
 			scratch(rd.i); \
 			if setw then \
 				scratch(rn.i); \
 			endif; \
 			cont; \
-		endif;
+		endif;				
+//macro if_cond_load = \
+//	if !cond.otawa_never then \
+//		if !cond.otawa_ever then \
+//			scratch(rd.i); \
+//			if setw then \
+//				scratch(rn.i); \
+//			endif; \
+//			cont; \
+//		endif;
 
 // ****** 32-bits instruction set extends ******
 
@@ -261,17 +270,52 @@ extend LDR_imm
 		endif;
 	}
 
+//extend LDR_shr
+//	otawa_sem = {
+//		if_cond_load
+//			if rn.use_pc || shifter_operand.use_pc then seti(R(15), __IADDR + 8); endif;
+//			shifter_operand.otawa_sem;
+//			if setu == 0 then neg(t1, t1); endif;
+//			if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
+//			load(rd.i, t2, if setb == 1 then UINT8 else UINT32 endif);
+//			if setpre == 0 then add(rn.i, rn.i, t1);
+//			else if setw == 1 then _set(rn.i, t2);
+//			endif; endif;
+//		endif;
+//	}
 extend LDR_shr
-	otawa_sem = {
+	otawa_sem = {		
 		if_cond_load
+			if rd.use_pc then
+				if setw == 1 then
+					_if(cond.otawa_cond, _CPSR, 7); 
+				else
+					_if(cond.otawa_cond, _CPSR, 6);
+				endif;
+			endif;
+			
 			if rn.use_pc || shifter_operand.use_pc then seti(R(15), __IADDR + 8); endif;
 			shifter_operand.otawa_sem;
 			if setu == 0 then neg(t1, t1); endif;
-			if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
-			load(rd.i, t2, if setb == 1 then UINT8 else UINT32 endif);
-			if setpre == 0 then add(rn.i, rn.i, t1);
-			else if setw == 1 then _set(rn.i, t2);
-			endif; endif;
+			if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;			
+			if setpre == 0 then add(rn.i, rn.i, t1); endif;
+			
+					
+			if rd.use_pc then
+				load(t3, t2, if setb == 1 then UINT8 else UINT32 endif);
+				if setw == 1 then					
+					_set(rn.i, t2);
+					_branch(t3);
+				else					
+					
+					_branch(t3);
+				endif;
+			else
+				if setw == 1 then _set(rn.i, t2); endif;
+				load(rd.i, t2, if setb == 1 then UINT8 else UINT32 endif);
+			endif;		
+
+	
 		endif;
 	}
 

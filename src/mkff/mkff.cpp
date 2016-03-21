@@ -37,6 +37,7 @@
 #include <otawa/app/Application.h>
 #include <otawa/flowfact/ContextualLoopBound.h>
 #include <otawa/dynbranch/features.h>
+#include <otawa/display/CFGOutput.h>
 
 using namespace elm;
 using namespace otawa;
@@ -304,7 +305,7 @@ public:
 					out << ";";
 				else
 					out << ",";
-				out << "    // " << *vai << " (";
+				out << "\t// " << *vai << " (";
 				printSourceLine(out, *vai);
 				out << ") switch-like branch in " << nameOf(cfg) << io::endl;
 			}
@@ -328,7 +329,7 @@ public:
 					out << ";";
 				else
 					out << ",";
-				out << "    // " << *vai << " (";
+				out << "\t// " << *vai << " (";
 				printSourceLine(out, *vai);
 				out << ") indirect call in " << nameOf(cfg) << io::endl;
 			}
@@ -654,7 +655,7 @@ public:
 protected:
 	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::SwitchOption xml, dynbranch;
+	option::SwitchOption xml, dynbranch, outputCFG, outputVirtualizedCFG;
 };
 
 
@@ -670,20 +671,40 @@ void Command::work(PropList &props) throw(elm::Exception) {
 
 	// Enable the dynamic branch
 	if(dynbranch) {
-		// init the flag
-		otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false;
-		workspace()->require(otawa::dynbranch::FEATURE);
-		// the loop goes on searching new branch target when there is a new target found
-		bool branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
-		while(branchDetected) {
-			// reconstruct the CFG because there new discovered target(s)
-			workspace()->invalidate(COLLECTED_CFG_FEATURE);
-			workspace()->require(COLLECTED_CFG_FEATURE);
-			// re-init the flag
-			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false;
+		class CFGOutput: public otawa::display::CFGOutput { // for simple CFG output facility
+			inline void genBBInfo(CFG *cfg, Block *bb, Output& out) { /* for the separation bar */ }
+			inline void genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out) { /* nothing on the edge */ }
+		};
+
+		otawa::display::CFGOutput::INLINING(props) = outputVirtualizedCFG;
+		if(!otawa::display::CFGOutput::KIND(props).exists())
+			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_DOT;
+		if(!otawa::display::CFGOutput::PATH(props).exists())
+			otawa::display::CFGOutput::PATH(props) = ".";
+
+		int iteration = 0;
+		bool branchDetected = false;
+		bool first = true;
+		do {
+			if(first)
+				first = false;
+			else {
+				workspace()->invalidate(COLLECTED_CFG_FEATURE);
+				workspace()->require(COLLECTED_CFG_FEATURE);
+			}
+
+			if(outputVirtualizedCFG || outputCFG) {
+				string iterationString = _ << iteration << "_";
+				otawa::display::CFGOutput::PREFIX(props) = iterationString;
+				CFGOutput().process(workspace(), props);
+			}
+
+			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false; // clear the flag
 			workspace()->require(otawa::dynbranch::FEATURE);
+			// the loop goes on searching new branch target when there is a new target found
 			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
-		}
+			iteration++;
+		} while(branchDetected);
 	}
 
 	// Load flow facts and record unknown values
@@ -740,7 +761,9 @@ Command::Command(void):
 		"Generate a flow fact file for an application.",
 		"Copyright (c) 2005-15, IRIT - UPS"),
 		xml(*this, option::cmd, "-x", option::cmd, "--ffx", option::description, "activate FFX output", option::end),
-		dynbranch(*this, option::cmd, "-D", option::cmd, "--dynbranch", option::description, "check for dynamic branches", option::end)
+		dynbranch(*this, option::cmd, "-D", option::cmd, "--dynbranch", option::description, "check for dynamic branches", option::end),
+		outputCFG(*this, option::cmd, "-C", option::cmd, "--cfg_output", option::description, "output cfg in a given fashion (otawa::display::CFGOutput::PATH, KIND)", option::end),
+		outputVirtualizedCFG(*this, option::cmd, "-I", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::INLINED = true), implies -C", option::end)
 {
 }
 

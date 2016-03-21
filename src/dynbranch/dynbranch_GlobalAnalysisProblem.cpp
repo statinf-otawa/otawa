@@ -19,10 +19,16 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include "GlobalAnalysisProblem.h"
+#include <elm/log/Log.h> // to use the debugging messages
 
-namespace global {
+using namespace elm::log;
+using namespace elm::color;
+
+namespace otawa { namespace dynbranch {
 
 GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domain & entry) : verbose(v), ws(workspace) {
+	istate = dfa::INITIAL_STATE(workspace);
+
 	// initial the BOT state
 	bot.setBottom(true);
 	bot.setFastState(entry.getFastState());
@@ -167,7 +173,16 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				}
 				else if(address.length() > 1) {
 					elm::cout << "Warning : we can't store to multiple potential memory addresses!" << io::endl;
-					assert(0); // just in case, want to see
+					//assert(0); // just in case, want to see
+					//					for(PotentialValue::Iterator pi(address); pi; pi++) {
+					//						elm::t::uint32 addressToStore = *pi;
+					//						PotentialValue temp = out.loadMemory(addressToStore);
+					//						const PotentialValue& data = readReg(out, inst.d());
+					//						temp.insert(data);
+					//						out.storeMemory(addressToStore, temp);
+					//					}
+
+
 				}
 				else { // no address found
 					elm::cout << "WARNING: we can't find the memory address for store" << io::endl;
@@ -184,7 +199,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 
 					// If we couldn't find the memory info from the Global State, lets try to see if this info exists in the Read Only Region
 					if(data.length() == 0) {
-						if(otawa::dynbranch::inROData(addressToLoad, ws)) {
+						if(istate && istate->isInitialized(addressToLoad)) {
 							t::uint32 dataFromMemDirectory;
 							ws->process()->get(addressToLoad, dataFromMemDirectory);
 							PotentialValue pv;
@@ -199,9 +214,34 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				}
 				else if(address.length() > 1) {
 					elm::cout << "Warning : we can't load to multiple potential memory addresses!" << io::endl;
-					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+					//setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
 					// but we might lose some address ?
-					assert(0); // lets check when this happen
+					//assert(0); // lets check when this happen
+					int origCount = readReg(out, inst.d()).count();
+					for(int xyz = 0; xyz < address.length(); xyz++) {
+						elm::t::uint32 addressToLoad = address[xyz];
+						const PotentialValue& data = out.loadMemory(addressToLoad);
+						if((data.length() == 0) && (GLOBAL_MEMORY_LOADER)) {
+							if(istate && istate->isInitialized(addressToLoad)) {
+								t::uint32 dataFromMemDirectory;
+								ws->process()->get(addressToLoad, dataFromMemDirectory);
+								elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "    " << IGre << "dataFromMemDirectory = " << hex(dataFromMemDirectory) << RCol << io::endl;
+								PotentialValue pv;
+								pv.insert(dataFromMemDirectory);
+								PotentialValue temp = readReg(out, inst.d());
+								for(PotentialValue::Iterator pi(pv); pi; pi++)
+									temp.insert(*pi);
+								setReg(out, inst.d(), temp);
+							}
+						}
+						else {
+							PotentialValue temp = readReg(out, inst.d());
+							for(PotentialValue::Iterator pi(data); pi; pi++)
+								temp.insert(*pi);
+							setReg(out, inst.d(), temp);
+						}
+					}
+
 				}
 				else { // no address found
 					if(verbose) elm::cout << "WARNING: we can't find the memory address to load" << io::endl;
@@ -269,6 +309,84 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				}
 				break ;
 			}
+
+			case sem::SHR:		// d <- unsigned(a) >> b
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue result = logicalShiftRight(vala, valb);
+					setReg(out, inst.d(), result);
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+				break ;
+			}
+
+			case sem::OR:		// d <- a | b
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue result = vala | valb;
+					setReg(out, inst.d(), result);
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+				break ;
+			}
+
+			case sem::XOR:		// d <- a ^ b
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue result = vala ^ valb;
+					setReg(out, inst.d(), result);
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+				break ;
+			}
+
+			case sem::NOT:		// d <- ~a
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				if(vala.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue result = ~vala;
+					setReg(out, inst.d(), result);
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+				break ;
+			}
+
+			case sem::MUL:
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					//PotentialValue result = vala ^ valb;
+					//setReg(out, inst.d(), result);
+					elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "Let me think about it....." << io::endl;
+					elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "i.a() = " << readReg(out, inst.a()) << io::endl;
+					elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "i.b() = " << readReg(out, inst.b()) << io::endl;
+
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+				break ;
+			}
 			/*
             SHR,		// d <- unsigned(a) >> b
             ASR,		// d <- a >> b
@@ -287,7 +405,9 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 			case sem:: IF:
 				break;
 			default:
-				elm::cout << "Warning : Unsupported instruction " << inst.op << io::endl;
+				elm::cout << "Warning : Unsupported instruction " << inst.op << " of " << inst << io::endl;
+				elm::cout << "i.a() = " << readReg(out, inst.a()) << io::endl;
+				elm::cout << "i.b() = " << readReg(out, inst.b()) << io::endl;
 				assert(0); // need to think about the implementation here! or we just leave it TOP?
 				break;
 			} // end switch(inst.op) {
@@ -295,4 +415,4 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 	} // end of each instruction
 } // end of the BB
 
-} // global
+}} // namespace otawa { namespace dynbranch {

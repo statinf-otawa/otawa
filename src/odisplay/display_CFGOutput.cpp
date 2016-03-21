@@ -107,7 +107,6 @@ CFGOutput::CFGOutput(AbstractRegistration& _reg): CFGProcessor(_reg), kind(OUTPU
  */
 Identifier<display::kind_t> CFGOutput::KIND("otawa::display::CFGOutput::KIND", OUTPUT_DOT);
 
-
 /**
  * Configuration identifier of @ref CFGOutput for the directory path where to
  * create the output file.
@@ -120,12 +119,18 @@ Identifier<string> CFGOutput::PATH("otawa::display::CFGOutput::PATH", ".");
 Identifier<string> CFGOutput::PREFIX("otawa::display::CFGOutput::PREFIX", "");
 
 /**
+ * Configuration identifier of @ref CFGOutput to decide if only generating one file for the whole program
+ */
+Identifier<bool> CFGOutput::INLINING("otawa::display::CFGOutput::INLINING", false);
+
+/**
  */
 void CFGOutput::configure(const PropList &props) {
 	CFGProcessor::configure(props);
 	kind = KIND(props);
 	path = PATH(props);
 	prefix = PREFIX(props);
+	inlining = INLINING(props);
 }
 
 
@@ -134,6 +139,10 @@ void CFGOutput::configure(const PropList &props) {
 void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 	ASSERT(fw);
 	ASSERT(cfg);
+
+	// when inlining is enable, we only output the main CFG
+	if(inlining && (cfg->index() > 0))
+		return;
 
 	// Compute the name
 	string label = prefix;
@@ -148,8 +157,9 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 	if(logFor(LOG_PROC))
 		cout << "\toutput " << label << " to " << out_path << io::endl;
 	OUT(cfg) = this;
-	CFGAdapter cfga(cfg);
-	GenDrawer<CFGAdapter, CFGOutputDecorator> drawer(cfga);
+	CFGAdapter cfga(cfg, inlining);
+	GenDrawer<CFGAdapter, CFGOutputDecorator> drawer(cfga, inlining);
+
 	drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
 	drawer.default_vertex.text.size = 12;
 	drawer.default_edge_text.size = 12;
@@ -227,7 +237,7 @@ void CFGOutput::genEdgeLabel(CFG *cfg, otawa::Edge *edge, Output& out) {
 		out << "call";
 	else if(edge->source()->isSynth())
 		out << "return";
-	else if(edge->isTaken())
+	else if(edge->isTaken() && !edge->source()->isEntry() && !edge->target()->isExit())
 		out << "taken";
 	genEdgeInfo(cfg, edge, out);
 }

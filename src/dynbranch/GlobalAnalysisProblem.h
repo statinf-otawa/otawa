@@ -33,7 +33,7 @@
 using namespace elm::genstruct;
 using namespace otawa;
 
-namespace global {
+namespace otawa { namespace dynbranch {
 
 class GlobalAnalysisProblem {
 public:
@@ -76,6 +76,7 @@ public:
 
 private:
 	WorkSpace* ws;
+	dfa::State* istate;
 	Domain bot;
 	Domain topd;
 	Domain ent;
@@ -89,6 +90,6 @@ inline bool operator==(const Domain& a, const Domain& b) {
 	assert(0);
 }
 
-} // global
+}} // otawa::dynbranch
 
 #endif	// OTAWA_DYNBRANCH_GLOBAL_ANALYSIS_PROBLEM_H

@@ -50,9 +50,9 @@ protected:
 	void configure(const PropList &props) ;
 private:
 	PotentialValue pv;
-	//elm::StackAllocator allocator;
-	global::State entry;
+	State entry;
 	bool time ;
+	dfa::State* istate;
 
 
 };
@@ -60,9 +60,9 @@ private:
 extern p::feature GLOBAL_ANALYSIS_FEATURE;
 extern Identifier<bool> TIME;
 
-extern Identifier<global::Domain> GLOBAL_STATE_IN;
-extern Identifier<global::Domain> GLOBAL_STATE_OUT;
-extern Identifier<global::Domain> GLOBAL_STATE_ENTRY;
+extern Identifier<Domain> GLOBAL_STATE_IN;
+extern Identifier<Domain> GLOBAL_STATE_OUT;
+extern Identifier<Domain> GLOBAL_STATE_ENTRY;
 
 
 } } // otawa::dynbranch

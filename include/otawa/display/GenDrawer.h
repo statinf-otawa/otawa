@@ -23,6 +23,7 @@
 #define OTAWA_DISPLAY_GENDRAWER_H
 
 #include <otawa/display/AbstractDrawer.h>
+#include <elm/avl/Map.h>
 
 namespace otawa { namespace display {
 
@@ -30,7 +31,7 @@ namespace otawa { namespace display {
 template <class G, class D>
 class GenDrawer: public AbstractDrawer {
 public:
-	inline GenDrawer(const G& graph);
+	inline GenDrawer(const G& graph, bool inlineAll);
 
 private:
 	
@@ -64,19 +65,49 @@ private:
 
 // GenDrawer::GenDrawer constructor
 template <class G, class D>
-GenDrawer<G, D>::GenDrawer(const G& graph): _graph(graph) {
+GenDrawer<G, D>::GenDrawer(const G& graph, bool inlining): _graph(graph) {
 	typename G::template VertexMap<Vertex *> map(graph);
-	
-	// Process the vertices
-	for(typename G::Iterator vertex(graph); vertex; vertex++)
-		map.put(*vertex, new Vertex(*this, _graph, *vertex));
-	
-	// Process the edges
-	for(typename G::Iterator vertex(graph); vertex; vertex++)
-		for(typename G::Successor edge(_graph, *vertex); edge; edge++)
-			new Edge(*this, _graph, map.get(*vertex), map.get((*edge).sink()), *edge);
-}
 
+	// Process the vertices
+	for(typename G::Iterator vertex(graph); vertex; vertex++) {
+		Vertex* n = new Vertex(*this, _graph, *vertex);
+		map.put(*vertex, n);
+	}
+
+	// Process the edges, for each Block, create edges by following all the out-going edges of the Block
+	if(inlining) {
+		// However, if the inlining mode, the Synth block is not shown, hence we have to bridge the caller block with the entry block of the calleee
+		for(typename G::Iterator vertex(graph); vertex; vertex++) {
+			for(typename G::Successor edge(_graph, *vertex); edge; edge++) {
+				if((*edge).sink().hasCallee()) {
+					Vertex *so = map.get(*vertex); // the caller
+					Vertex *sn = map.get((*edge).sink().calleeEntry()); // the callee
+					new Edge(*this, _graph, so, sn, *edge); // make the entry
+					// we also need to take care of the exit block of the callee, to the out-going blocks of the caller
+					Vertex *so2 = map.get((*edge).sink().calleeExit()); // the exit block of the callee
+					for(typename G::Successor edge2(_graph, (*edge).sink()); edge2; edge2++) { // find the out going blocks from the caller
+						Vertex *sn2 = map.get((*edge2).sink()); // for each target block, we create an edge
+						new Edge(*this, _graph, so2, sn2, *edge2);
+					}
+				}
+				else {
+					Vertex *so = map.get(*vertex);
+					Vertex *sn = map.get((*edge).sink());
+					new Edge(*this, _graph, so, sn, *edge);
+				}
+			}
+		}
+	} // end inlineAll
+	else {
+		// Process the edges
+		for(typename G::Iterator vertex(graph); vertex; vertex++)
+			for(typename G::Successor edge(_graph, *vertex); edge; edge++) {
+				Vertex *so = map.get(*vertex);
+				Vertex *sn = map.get((*edge).sink());
+				new Edge(*this, _graph, so, sn, *edge);
+			}
+	} // end of edge processing
+}
 
 // DefaultDecorator class
 template <class G>

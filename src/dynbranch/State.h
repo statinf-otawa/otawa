@@ -26,7 +26,7 @@
 #include <otawa/prog/WorkSpace.h>
 using namespace elm;
 
-namespace global {
+namespace otawa { namespace dynbranch {
 
 using namespace elm::io ;
 using namespace elm::genstruct ;
@@ -44,12 +44,8 @@ public:
 class WideningFastStateCombineProcessor {
 public:
 	inline const PotentialValue process(const PotentialValue& pva, const PotentialValue& pvb) {
-		if(pva != pvb) {
-			PotentialValue pv;
-			pv.insert(0x99);
-			//return pv; //PotentialValue::top;
+		if(pva != pvb)
 			return PotentialValue::top;
-		}
 		else
 			return pva;
 	}
@@ -131,19 +127,17 @@ private:
 typedef FastStateWrapper Domain;
 typedef FastStateWrapper State;
 
-} // global
+//
+//extern Identifier<Vector<Pair<Address, Address> >* > DATA_IN_READ_ONLY_REGION;
+//inline bool inROData(Address addr, WorkSpace* ws) {
+//	Vector<Pair<Address, Address> > *rodata = DATA_IN_READ_ONLY_REGION(ws);;
+//	for(Vector<Pair<Address, Address> >::Iterator i(*rodata); i; i++) {
+//		if((addr >= (*i).fst) && (addr <= (*i).snd))
+//			return true;
+//	}
+//	return false;
+//}
 
-namespace otawa { namespace dynbranch {
-
-extern Identifier<Vector<Pair<Address, Address> >* > DATA_IN_READ_ONLY_REGION;
-inline bool inROData(Address addr, WorkSpace* ws) {
-	Vector<Pair<Address, Address> > *rodata = DATA_IN_READ_ONLY_REGION(ws);;
-	for(Vector<Pair<Address, Address> >::Iterator i(*rodata); i; i++) {
-		if((addr >= (*i).fst) && (addr <= (*i).snd))
-			return true;
-	}
-	return false;
-}
 } }
 
 #endif 	// OTAWA_DYNBRANCH_STATE_H

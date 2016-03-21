@@ -76,6 +76,9 @@ using namespace otawa;
 // enable to load data from segments when load results with T
 #define DATA_LOADER
 
+// reading 1K mem at a time is strange enough
+#define MEMORY_ACCESS_THRESHOLD 1024
+
 namespace otawa { namespace clp {
 
 /**
@@ -1540,7 +1543,11 @@ public:
 	Problem& getProb(void) { return *this; }
 
 	ClpProblem(Process *proc)
-	:	specific_analysis(false),
+	:	pc(0),
+		has_if(false),
+		specific_analysis(false),
+		_process(proc),
+		istate(0),
 	 	pack(0),
 	 	_nb_inst(0),
 	 	_nb_sem_inst(0),
@@ -1554,39 +1561,12 @@ public:
 	 	_nb_filters(0),
 	 	_nb_top_filters(0),
 	 	_nb_top_load(0)
-{
-	// find the address interval of data from the process
-#	ifdef DATA_LOADER
-		_process = proc;
-		File *prog = proc->program();
+{ }
 
-		// sort the segments
-		Vector<Segment *> segs;
-		for(File::SegIter seg(prog); seg; seg++)
-			segs.add(seg);
-		elm::genstruct::quicksort<Segment *, Vector, sorter>(segs);
-
-		// find address of start
-		int i = 0;
-		while(i < segs.count() && segs[i]->isWritable())
-			i++;
-		if(i < segs.count())
-			_data_min = segs[i]->address();
-
-		// find the end non-writable area
-		while(i < segs.count() && !segs[i]->isWritable()) {
-			_data_max = segs[i]->topAddress();
-			i++;
-		}
-#	endif
-
-	// put the READ_ONLY segments into rodata (Read Only DATA) table, which will be used by the
-	File *program = proc->program();
-	for(File::SegIter seg(program); seg; seg++) {
-		if(!seg->isWritable())
-			rodata.addFirst(pair(seg->address(), seg->topAddress()-1));
-	}
-}
+	/*
+	 *
+	 */
+	inline void setInitialState(dfa::State* ds) { istate = ds; }
 
 #	ifdef HAI_JSON
 		void dumpJSON(const Domain& dom, json::Saver& saver) {
@@ -1893,9 +1873,9 @@ public:
 					_nb_load_top_addr++;
 					TRACESI(cerr << "T\n");
 					TRACEA(cerr << "\t\t\tALARM ! Load at T !\n");
-				} else if (addrclp.mtimes() < 42){
+				} else if (addrclp.mtimes() < MEMORY_ACCESS_THRESHOLD){
 					// if the addr is not cst, load only if
-					// there is less than 42 values to join
+					// there is less than MEMORY_ACCESS_THRESHOLD values to join
 					Value addr(VAL, addrclp.lower());
 					set(*state, i.d(), state->get(addr));
 					for(unsigned int m = 1; m <= addrclp.mtimes(); m++){
@@ -1913,38 +1893,28 @@ public:
 					TRACEA(cerr << "\t\t\tALARM! load too many\n");
 				}
 
-				// if the value is not available, read it from binary
+				// if the value is not available, read it from Initialized State
 				if(get(*state, i.d()) == Value::all) {
 					Value val = Value::none;
 					// need to make sure the starting address to load is within the READ_ONLY_AREA
-					bool startingAddressInROData = inROData((uintn_t)addrclp.start());
-					for(unsigned int m = 0; (m <= addrclp.mtimes()) && startingAddressInROData; m++){
+					bool addressInInitMem = false;
+					if(istate && istate->isInitialized(Address((uintn_t)addrclp.start())))
+						addressInInitMem = true;
+
+					bool warningFlag = true;
+					for(unsigned int m = 0; (m <= addrclp.mtimes()) && addressInInitMem && (addrclp.mtimes() != clp::UMAXn); m++){
+						if((addrclp.mtimes() > MEMORY_ACCESS_THRESHOLD) && warningFlag) {
+							elm::cerr << "WARNING: accessing more than " << MEMORY_ACCESS_THRESHOLD << " locations in the initialized memory (" << addrclp.mtimes() << ")" << io::endl;
+							warningFlag = false;
+						}
 						Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
-						if(inROData((uintn_t)addr.start())) {
+						if(istate && istate->isInitialized((uintn_t)addr.start())) {
 							Value r = readFromMem(addr.lower(), i.type());
 							val.join(r);
 							set(*state, i.d(), val);
 						} // end of each valid address to load
 					} // for each address
 				}
-
-//				#ifdef DATA_LOADER
-//					// if the value loaded is T, load from the process
-//					if(get(*state, i.d()) == Value::all
-//					&& addrclp.isConst()) {
-//						/*cerr << "\t\t\tlooking in memory for " << addrclp
-//							 << " in [" << _data_min << ", " << _data_max << "] "
-//							 << ", problem = " << (void *)this << io::endl;*/
-//						if(*_data_min <= (uintn_t)addrclp.start()
-//						&& (uintn_t)addrclp.start() < *_data_max) {
-//							Value r = readFromMem(addrclp.lower(), i.type());
-//							//cerr << " -> loading data from process: " << r << io::endl;
-//							set(*state, i.d(), r);
-//						}
-//					}
-//					/*if ((get(*state, i.d()) == Value::all) && *_data_min != 0)
-//						cerr << '\n';*/
-//				#endif
 
 				if(get(*state, i.d()) == Value::all)
 						_nb_top_load++;
@@ -1966,7 +1936,7 @@ public:
 				}
 
 				// store all on the area (too many addresses)
-				else if (addrclp.mtimes() >= 42) {
+				else if (addrclp.mtimes() >= MEMORY_ACCESS_THRESHOLD) {
 					_nb_store++;
 					_nb_top_store ++;
 					if(addrclp.mtimes() < UMAXn) {
@@ -2264,11 +2234,6 @@ public:
 	inline clp::STAT_UINT get_nb_top_filters(void){ return _nb_top_filters;}
 	inline clp::STAT_UINT get_nb_top_load(void) const { return _nb_top_load; }
 
-	#ifdef DATA_LOADER
-		inline Address dataMin(void) const { return _data_min; }
-		inline Address dataMax(void) const { return _data_max; }
-	#endif
-
 private:
 	clp::State _init;
 	sem::Block b;
@@ -2278,21 +2243,9 @@ private:
 
 	/* attribute for specific analysis / packing */
 	bool specific_analysis;
+	Process* _process;
+	dfa::State *istate;
 	clp::ClpStatePack *pack;
-
-	#ifdef DATA_LOADER
-		address_t _data_min, _data_max;
-		Process* _process;
-		Vector<Pair<Address, Address> > rodata;
-		inline bool inROData(Address addr) {
-			for(Vector<Pair<Address, Address> >::Iterator i(rodata); i; i++) {
-				if((addr >= (*i).fst) && (addr <= (*i).snd))
-					return true;
-			}
-
-			return false;
-		}
-	#endif
 
 	/* attributes for statistics purpose */
 	clp::STAT_UINT _nb_inst;
@@ -2396,10 +2349,6 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	addCleaner(clp::FEATURE, cleaner);
 
 	ClpProblem prob(ws->process());
-#	ifdef DATA_LOADER
-		if(logFor(LOG_PROC))
-			cerr << "\tmemory space [" << prob.dataMin() << ", " << prob.dataMax() << "] considered as constant !\n";
-#	endif
 
 	// initialize state with initial register values
 	if(logFor(LOG_CFG))
@@ -2418,6 +2367,8 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 		// initialize memory
 		for(dfa::State::MemIter m(istate); m; m++)
 			prob.initialize((*m).address(), (*m).value());
+
+		prob.setInitialState(istate);
 	}
 
 	// look for a stack value
@@ -2731,6 +2682,7 @@ namespace clp {
  */
 Manager::Manager(WorkSpace *ws) {
 	p = new ClpProblem(ws->process());
+	p->setInitialState(dfa::INITIAL_STATE(ws));
 }
 
 

@@ -36,6 +36,7 @@ namespace otawa { namespace dynbranch {
 p::declare GlobalAnalysis::reg = p::init("GlobalAnalysisFeature", Version(1,0,0))
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
+	.require(dfa::INITIAL_STATE_FEATURE)
 	.provide(GLOBAL_ANALYSIS_FEATURE);
 
 /**
@@ -57,24 +58,11 @@ void GlobalAnalysis::configure(const PropList &props) {
 /**
  */
 void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
-	// initialize the DATA_IN_READ_ONLY_REGION
-	Vector<Pair<Address, Address> >* globalData = DATA_IN_READ_ONLY_REGION(ws);
-	if(!globalData) {
-		globalData = new Vector<Pair<Address, Address> >();
-		File *prog = ws->process()->program();
-		// sort the segments
-		for(File::SegIter seg(prog); seg; seg++) {
-			if(!seg->isWritable())
-				globalData->addFirst(pair(seg->address(), seg->topAddress()-1));
-		}
-		DATA_IN_READ_ONLY_REGION(ws) = globalData;
-	}
-
-
-
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
 	CFG *cfg = coll->get(0) ;
+
+	istate = dfa::INITIAL_STATE(ws);
 
 	system::StopWatch watch ;
 
@@ -82,10 +70,10 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 	dfa::FastState<PotentialValue> *fs = new dfa::FastState<PotentialValue>(&pv, dfa::INITIAL_STATE(ws), *psa);
 	entry.setFastState(fs);
 
-	global::GlobalAnalysisProblem prob(ws,isVerbose(), entry);
-	WideningListener<global::GlobalAnalysisProblem> list(ws, prob);
-	WideningFixPoint<WideningListener<global::GlobalAnalysisProblem> > fp(list);
-	HalfAbsInt<WideningFixPoint<WideningListener<global::GlobalAnalysisProblem> > > hai(fp, *ws);
+	dynbranch::GlobalAnalysisProblem prob(ws,isVerbose(), entry);
+	WideningListener<dynbranch::GlobalAnalysisProblem> list(ws, prob);
+	WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > fp(list);
+	HalfAbsInt<WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > > hai(fp, *ws);
 	hai.solve(cfg);
 
 	// Check the results
@@ -123,25 +111,25 @@ p::feature GLOBAL_ANALYSIS_FEATURE("otawa::dynbranch::GLOBAL_ANALYSIS_FEATURE", 
 /**
  * TODO
  */
-//Identifier<global::State*> GLOBAL_STATE_IN("otawa::dynbranch::GLOBAL_STATE_IN") ;
-Identifier<global::Domain> GLOBAL_STATE_IN("otawa::dynbranch::GLOBAL_STATE_IN") ;
+//Identifier<dynbranch::State*> GLOBAL_STATE_IN("otawa::dynbranch::GLOBAL_STATE_IN") ;
+Identifier<dynbranch::Domain> GLOBAL_STATE_IN("otawa::dynbranch::GLOBAL_STATE_IN") ;
 
 
 /**
  */
-//Identifier<global::State*> GLOBAL_STATE_OUT("otawa::dynbranch::GLOBAL_STATE_OUT") ;
-Identifier<global::Domain> GLOBAL_STATE_OUT("otawa::dynbranch::GLOBAL_STATE_OUT") ;
+//Identifier<dynbranch::State*> GLOBAL_STATE_OUT("otawa::dynbranch::GLOBAL_STATE_OUT") ;
+Identifier<dynbranch::Domain> GLOBAL_STATE_OUT("otawa::dynbranch::GLOBAL_STATE_OUT") ;
 
 
 /**
  */
-//Identifier<global::State*> GLOBAL_STATE_ENTRY("otawa::dynbranch::GLOBAL_STATE_ENTRY") ;
-Identifier<global::Domain> GLOBAL_STATE_ENTRY("otawa::dynbranch::GLOBAL_STATE_ENTRY") ;
+//Identifier<dynbranch::State*> GLOBAL_STATE_ENTRY("otawa::dynbranch::GLOBAL_STATE_ENTRY") ;
+Identifier<dynbranch::Domain> GLOBAL_STATE_ENTRY("otawa::dynbranch::GLOBAL_STATE_ENTRY") ;
 
 
 /**
  */
-Identifier<bool> TIME("otawa::global::TIME") ;
+Identifier<bool> TIME("otawa::dynbranch::TIME") ;
 
 Identifier<Vector<Pair<Address, Address> >* > DATA_IN_READ_ONLY_REGION("otawa::dynbranch::DATA_IN_READ_ONLY_REGION", 0);
 

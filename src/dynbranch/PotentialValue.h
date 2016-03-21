@@ -28,7 +28,7 @@ using namespace elm;
 using namespace elm::io;
 using namespace elm::genstruct;
 
-//namespace global {
+namespace otawa { namespace dynbranch {
 
 class PotentialValue: public Set<elm::t::uint32> {
 	friend Output& operator<<(Output& o, PotentialValue const& pv);
@@ -40,7 +40,6 @@ public:
 	static PotentialValue top;
 	static PotentialValue DEFAULT;
 
-
 	inline void dump(Output& o, PotentialValue &pv) {
 		o << "{ ";
 		for(PotentialValue::Iterator i(pv); i; i++)
@@ -49,20 +48,21 @@ public:
 	}
 
 	inline bool equals(PotentialValue &a, PotentialValue &b) { return a == b; }
-
-private:
-	int k;
 };
 
 PotentialValue operator&(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator+(const PotentialValue& a, const PotentialValue& b);
+PotentialValue operator|(const PotentialValue& a, const PotentialValue& b);
+PotentialValue operator^(const PotentialValue& a, const PotentialValue& b);
+PotentialValue operator~(const PotentialValue& a);
 PotentialValue operator-(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator>>(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator<<(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator||(const PotentialValue& a, const PotentialValue& b);
 bool operator==(const PotentialValue& a, const PotentialValue& b);
 PotentialValue merge(const PotentialValue& a, const PotentialValue& b);
+PotentialValue logicalShiftRight(const PotentialValue& a, const PotentialValue& b);
 
-//}
+}}
 #endif	// OTAWA_DYNBRANCH_POTENTIAL_VALUE_H
 

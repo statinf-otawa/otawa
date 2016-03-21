@@ -20,6 +20,8 @@
  */
 #include "PotentialValue.h"
 
+namespace otawa { namespace dynbranch {
+
 PotentialValue PotentialValue::bot;
 PotentialValue PotentialValue::top;
 PotentialValue PotentialValue::DEFAULT;
@@ -50,6 +52,29 @@ PotentialValue operator&(const PotentialValue& a, const PotentialValue& b) {
 	return res;
 }
 
+PotentialValue operator|(const PotentialValue& a, const PotentialValue& b) {
+	PotentialValue res;
+	for(PotentialValue::Iterator ita(a); ita; ita++)
+		for(PotentialValue::Iterator itb(b); itb; itb++)
+			res.insert(*ita | *itb);
+	return res;
+}
+
+PotentialValue operator^(const PotentialValue& a, const PotentialValue& b) {
+	PotentialValue res;
+	for(PotentialValue::Iterator ita(a); ita; ita++)
+		for(PotentialValue::Iterator itb(b); itb; itb++)
+			res.insert(*ita ^ *itb);
+	return res;
+}
+
+PotentialValue operator~(const PotentialValue& a) {
+	PotentialValue res;
+	for(PotentialValue::Iterator ita(a); ita; ita++)
+			res.insert(~(*ita));
+	return res;
+}
+
 PotentialValue operator+(const PotentialValue& a, const PotentialValue& b) {
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
@@ -76,6 +101,16 @@ PotentialValue operator>>(const PotentialValue& a, const PotentialValue& b) {
 	return res;
 }
 
+PotentialValue logicalShiftRight(const PotentialValue& a, const PotentialValue& b) {
+	PotentialValue res;
+	for(PotentialValue::Iterator ita(a); ita; ita++) {
+		for(PotentialValue::Iterator itb(b); itb; itb++) {
+			res.insert((unsigned int)*ita >> *itb);
+		}
+	}
+	return res;
+}
+
 PotentialValue operator<<(const PotentialValue& a, const PotentialValue& b) {
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
@@ -88,7 +123,7 @@ PotentialValue operator||(const PotentialValue& a, const PotentialValue& b) {
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
-			res.insert(*ita + *itb);
+			res.insert(*ita || *itb);
 	return res;
 }
 
@@ -119,3 +154,5 @@ Output& operator<<(Output& o, PotentialValue const& pv) {
 	o << "}";
 	return o;
 }
+
+}} // end of namespace otawa { namespace dynbranch {
