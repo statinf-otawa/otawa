@@ -170,7 +170,8 @@ inline void WideningFixPoint<Listener>::markEdge(PropList *e, const Domain &s) {
 template < class Listener >	
 inline void WideningFixPoint<Listener >::unmarkEdge(PropList *e) {
 		delete STATE(e);
-		STATE(e) = 0;
+		STATE(e).remove();
+		// STATE(e) = 0;
 }
 
 template < class Listener >		

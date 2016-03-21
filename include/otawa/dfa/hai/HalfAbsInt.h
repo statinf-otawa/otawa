@@ -138,6 +138,8 @@ inline HalfAbsInt<FixPoint>::~HalfAbsInt(void) {
 
 	// clean worklist
 	delete workList;
+	delete callStack;
+	delete cfgStack;
 
 	// clean remaining states
 	genstruct::Vector<CFG *> cfgs;

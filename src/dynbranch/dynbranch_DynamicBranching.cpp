@@ -61,7 +61,6 @@ extern Identifier<bool> TIME;
 /**
  */
 void DynamicBranchingAnalysis::configure(const PropList &props) {
-	propss = props;
 	time = TIME(props);
 	BBProcessor::configure(props);
 }
@@ -428,6 +427,16 @@ DynamicBranchingAnalysis::DynamicBranchingAnalysis(p::declare& r)
 		: BBProcessor(r), isDebug(false), time(false), clpManager(0), clpState() {
 }
 
+/*
+ *
+ */
+DynamicBranchingAnalysis:: ~DynamicBranchingAnalysis(void) {
+	if(clpManager) {
+		delete clpManager;
+		clpManager = 0;
+	}
+}
+
 /**
  */
 void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
@@ -548,6 +557,8 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 			cout << "\t\tNothing to do for this BB (no dynamic branching detected)" << endl;
 		}
 	}
+
+	DYNBRANCH_POTENTIAL_VALUE_LIST(workspace()) = &PotentialValue::potentialValueCollector;
 }
 
 } // end namespace dynbranch

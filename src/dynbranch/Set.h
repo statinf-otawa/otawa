@@ -25,6 +25,9 @@
 
 using namespace elm;
 
+namespace otawa { namespace dynbranch {
+
+
 template <typename T>
 class Set : public genstruct::Vector<T> {
 public:
@@ -36,5 +39,7 @@ public:
 			genstruct::Vector<T>::push(val);
 	}
 };
+
+}}
 
 #endif	// OTAWA_DYNBRANCH_SET_H

@@ -39,6 +39,8 @@ class GlobalAnalysisProblem {
 public:
 	typedef State Domain;
 	GlobalAnalysisProblem(WorkSpace* workspace, bool verbose, Domain & entry);
+	~GlobalAnalysisProblem(void);
+
 	const Domain& bottom();
 	const Domain& top();
 	const Domain& entry();

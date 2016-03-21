@@ -25,6 +25,7 @@
 #include <otawa/util/WideningFixPoint.h>
 #include <otawa/util/HalfAbsInt.h>
 #include <otawa/dfa/FastState.h>
+#include <otawa/dynbranch/features.h>
 
 namespace otawa { namespace dynbranch {
 
@@ -66,6 +67,11 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 
 	system::StopWatch watch ;
 
+	if(PotentialValue::MAGIC == 0)
+		PotentialValue::MAGIC = 0xCAFEBABE;
+	else
+		PotentialValue::MAGIC++;
+
 	elm::StackAllocator* psa = new elm::StackAllocator(); // need to keep this in the heap so that the content of the fastState can be used between the Processors
 	dfa::FastState<PotentialValue> *fs = new dfa::FastState<PotentialValue>(&pv, dfa::INITIAL_STATE(ws), *psa);
 	entry.setFastState(fs);
@@ -87,6 +93,8 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 		}
 	}
 
+	// clear the memory
+	DYNBRANCH_STACK_ALLOCATOR(ws) = psa;
 
 	if (time) {
 		watch.start() ;
@@ -132,5 +140,9 @@ Identifier<dynbranch::Domain> GLOBAL_STATE_ENTRY("otawa::dynbranch::GLOBAL_STATE
 Identifier<bool> TIME("otawa::dynbranch::TIME") ;
 
 Identifier<Vector<Pair<Address, Address> >* > DATA_IN_READ_ONLY_REGION("otawa::dynbranch::DATA_IN_READ_ONLY_REGION", 0);
+
+Identifier<elm::StackAllocator*> DYNBRANCH_STACK_ALLOCATOR("", 0);
+
+Identifier<PotentialValue::potential_value_list_t*> DYNBRANCH_POTENTIAL_VALUE_LIST("");
 
 } }	// otawa::dynbranch

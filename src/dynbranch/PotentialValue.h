@@ -23,6 +23,7 @@
 
 #include "Set.h"
 #include <elm/io/OutStream.h>
+#include <elm/genstruct/SLList.h>
 
 using namespace elm;
 using namespace elm::io;
@@ -30,11 +31,16 @@ using namespace elm::genstruct;
 
 namespace otawa { namespace dynbranch {
 
+class PotentialValueMem;
+
 class PotentialValue: public Set<elm::t::uint32> {
 	friend Output& operator<<(Output& o, PotentialValue const& pv);
 public:
 	PotentialValue(void);
+	PotentialValue(const PotentialValue& cpv);
 	PotentialValue& operator=(const PotentialValue& obj);
+	~PotentialValue(void);
+	// for FastState:
 	typedef PotentialValue t;
 	static PotentialValue bot;
 	static PotentialValue top;
@@ -48,6 +54,16 @@ public:
 	}
 
 	inline bool equals(PotentialValue &a, PotentialValue &b) { return a == b; }
+	static unsigned int MAGIC;
+	unsigned int magic;
+#ifdef SAFE_MEM_ACCESS
+	static SLList<PotentialValueMem*> potentialValueCollector;
+	typedef SLList<PotentialValueMem*> potential_value_list_t;
+	PotentialValueMem* pvm;
+#else
+	static SLList<PotentialValue*> potentialValueCollector;
+	typedef SLList<PotentialValue*> potential_value_list_t;
+#endif
 };
 
 PotentialValue operator&(const PotentialValue& a, const PotentialValue& b);
@@ -62,6 +78,14 @@ PotentialValue operator||(const PotentialValue& a, const PotentialValue& b);
 bool operator==(const PotentialValue& a, const PotentialValue& b);
 PotentialValue merge(const PotentialValue& a, const PotentialValue& b);
 PotentialValue logicalShiftRight(const PotentialValue& a, const PotentialValue& b);
+
+#ifdef SAFE_MEM_ACCESS
+class PotentialValueMem {
+public:
+	PotentialValue* pv;
+	bool status;
+};
+#endif
 
 }}
 #endif	// OTAWA_DYNBRANCH_POTENTIAL_VALUE_H

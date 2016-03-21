@@ -45,6 +45,7 @@ public:
 	static bool isEnded(step_t s) { return !s; }
 
 	Manager(WorkSpace *ws);
+	~Manager();
 	step_t start(BasicBlock *bb);
 	step_t next(void);
 	sem::inst sem(void);

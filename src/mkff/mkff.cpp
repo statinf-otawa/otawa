@@ -314,6 +314,7 @@ public:
 			out << " to ?;"
 				<< "\t// (" << inst->address() << ") switch-like branch in " << nameOf(cfg) << io::endl;
 		}
+		out << io::endl;
 	}
 
 	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
@@ -338,6 +339,7 @@ public:
 			out << " to ?;"
 				<< "\t// (" << inst->address() << ") indirect call in " << nameOf(cfg) << io::endl;
 		}
+		out << io::endl;
 	}
 
 	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) {
@@ -570,7 +572,7 @@ private:
 // FFOutput processor
 class FFOutput: public CFGProcessor {
 public:
-	FFOutput(Printer& printer);
+	FFOutput(Printer& printer, bool removeDuplicatedTarget);
 protected:
 	virtual void setup(WorkSpace *ws) {
 		has_debug = ws->isProvided(otawa::SOURCE_LINE_FEATURE);
@@ -594,6 +596,8 @@ private:
 
 	bool has_debug;
 	Printer& _printer;
+	Vector<Address> displayedInstructions; // used to prevent same instruction being displayed twice.
+	bool _removeDuplicatedTarget;
 };
 
 
@@ -655,7 +659,7 @@ public:
 protected:
 	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::SwitchOption xml, dynbranch, outputCFG, outputVirtualizedCFG;
+	option::SwitchOption xml, dynbranch, outputCFG, outputVirtualizedCFG, removeDuplicatedTarget;
 };
 
 
@@ -704,6 +708,30 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			// the loop goes on searching new branch target when there is a new target found
 			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
 			iteration++;
+
+			// clear the PotentialValues
+			dynbranch::PotentialValue::potential_value_list_t* potentialValueList = dynbranch::DYNBRANCH_POTENTIAL_VALUE_LIST(workspace());
+			if(isVerbose())
+				elm::cerr << "potentialValueList length = " << potentialValueList->count() << io::endl;
+			for(dynbranch::PotentialValue::potential_value_list_t::Iterator slli(*potentialValueList); slli; slli++) {
+#ifdef SAFE_MEM_ACCESS
+				dynbranch::PotentialValueMem *pv = *slli;
+				if(pv->status == true) {
+					pv->pv->~Vector();
+				}
+				delete pv;
+#else
+				dynbranch::PotentialValue *pv = *slli;
+				if(pv->magic != dynbranch::PotentialValue::MAGIC)
+					continue;
+				pv->~Vector();
+#endif
+			}
+			potentialValueList->clear();
+
+			elm::StackAllocator* psa = dynbranch::DYNBRANCH_STACK_ALLOCATOR(workspace());
+			assert(psa);
+			delete psa;
 		} while(branchDetected);
 	}
 
@@ -738,7 +766,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	ctrl.process(workspace(), props);
 
 	// display the context tree
-	FFOutput out(*p);
+	FFOutput out(*p, removeDuplicatedTarget);
 	out.process(workspace(), props);
 
 	// output footer for XML
@@ -763,7 +791,8 @@ Command::Command(void):
 		xml(*this, option::cmd, "-x", option::cmd, "--ffx", option::description, "activate FFX output", option::end),
 		dynbranch(*this, option::cmd, "-D", option::cmd, "--dynbranch", option::description, "check for dynamic branches", option::end),
 		outputCFG(*this, option::cmd, "-C", option::cmd, "--cfg_output", option::description, "output cfg in a given fashion (otawa::display::CFGOutput::PATH, KIND)", option::end),
-		outputVirtualizedCFG(*this, option::cmd, "-I", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::INLINED = true), implies -C", option::end)
+		outputVirtualizedCFG(*this, option::cmd, "-I", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::INLINED = true), implies -C", option::end),
+		removeDuplicatedTarget(*this, option::cmd, "-S", option::cmd, "--no_repeat_multibranch", option::description, "do not output the multi-call/branch with the same target addresses", option::end)
 {
 }
 
@@ -771,7 +800,7 @@ Command::Command(void):
 /**
  * Display the flow facts.
  */
-FFOutput::FFOutput(Printer& printer): CFGProcessor("FFOutput", Version(1, 0, 0)), has_debug(false), _printer(printer) {
+FFOutput::FFOutput(Printer& printer, bool removeDuplicatedTarget): CFGProcessor("FFOutput", Version(1, 0, 0)), has_debug(false), _printer(printer), _removeDuplicatedTarget(removeDuplicatedTarget) {
 	require(CONTEXT_TREE_BY_CFG_FEATURE);
 }
 
@@ -806,12 +835,32 @@ void FFOutput::scanTargets(CFG *cfg) {
 			for(Identifier<Address>::Getter target(lastInst, BRANCH_TARGET); target; target++)
 				va.push(*target);
 
+			if(_removeDuplicatedTarget) {
+				// to prevent same instruction printed twice
+				if(displayedInstructions.contains(lastInst->address())) {
+					continue;
+				}
+				else if(va) {
+					displayedInstructions.add(lastInst->address());
+				}
+			}
+
 			_printer.printMultiBranch(out, cfg, lastInst, &va);
 		}
 		else if(CALL_TARGET(lastInst).exists()) {
 			Vector<Address> va;
 			for(Identifier<Address>::Getter target(lastInst, CALL_TARGET); target; target++)
 				va.push(*target);
+
+			if(_removeDuplicatedTarget) {
+				// to prevent same instruction printed twice
+				if(displayedInstructions.contains(lastInst->address())) {
+					continue;
+				}
+				else if(va) {
+					displayedInstructions.add(lastInst->address());
+				}
+			}
 
 			_printer.printMultiCall(out, cfg, lastInst, &va);
 		}

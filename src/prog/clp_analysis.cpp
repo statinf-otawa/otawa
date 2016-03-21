@@ -2685,6 +2685,9 @@ Manager::Manager(WorkSpace *ws) {
 	p->setInitialState(dfa::INITIAL_STATE(ws));
 }
 
+Manager::~Manager() {
+	delete p;
+}
 
 /**
  * Start the interpretation of a basic block.

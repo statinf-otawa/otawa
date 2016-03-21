@@ -56,6 +56,10 @@ GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domai
 		_tempRegs->add(pv);
 }
 
+GlobalAnalysisProblem::~GlobalAnalysisProblem(void) {
+	delete _tempRegs;
+}
+
 const Domain& GlobalAnalysisProblem::bottom() {
 	return bot ;
 }
@@ -174,7 +178,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 					out.storeMemory(addressToStore, data);
 				}
 				else if(address.length() > 1) {
-					elm::cerr << "WARNING: we can't store to multiple potential memory addresses!" << io::endl;
+					if(verbose) { elm::cerr << "WARNING: we can't store to multiple potential memory addresses!" << io::endl; }
 //					assert(0); // just in case, want to see
 //					for (PotentialValue::Iterator pi(address); pi; pi++) {
 //						elm::t::uint32 addressToStore = *pi;
@@ -185,7 +189,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 //					}
 				}
 				else { // no address found
-					elm::cerr << "WARNING: we can't find the memory address for store" << io::endl;
+					if(verbose) elm::cerr << "WARNING: we can't find the memory address for store" << io::endl;
 				}
 				break ;
 			}
@@ -213,38 +217,34 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 						setReg(out, inst.d(), data);
 				}
 				else if(address.length() > 1) {
-					elm::cerr << "WARNING: we can't load to multiple potential memory addresses!" << io::endl;
-					//setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
-					// but we might lose some address ?
-					//assert(0); // lets check when this happen
-					int origCount = readReg(out, inst.d()).count();
-					for(int xyz = 0; xyz < address.length(); xyz++) {
-						elm::t::uint32 addressToLoad = address[xyz];
-						const PotentialValue& data = out.loadMemory(addressToLoad);
-						if((data.length() == 0) && (GLOBAL_MEMORY_LOADER)) {
-							if(istate && istate->isInitialized(addressToLoad)) {
-								t::uint32 dataFromMemDirectory;
-								ws->process()->get(addressToLoad, dataFromMemDirectory);
-								DEBUG_MEM(elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "    " << IGre << "dataFromMemDirectory = " << hex(dataFromMemDirectory) << RCol << io::endl;)
-								PotentialValue pv;
-								pv.insert(dataFromMemDirectory);
-								PotentialValue temp = readReg(out, inst.d());
-								for(PotentialValue::Iterator pi(pv); pi; pi++)
-									temp.insert(*pi);
-								setReg(out, inst.d(), temp);
-							}
-						}
-						else {
-							PotentialValue temp = readReg(out, inst.d());
-							for(PotentialValue::Iterator pi(data); pi; pi++)
-								temp.insert(*pi);
-							setReg(out, inst.d(), temp);
-						}
-					}
+					if(verbose)
+						elm::cerr << "WARNING: we can't load from multiple potential memory addresses!" << io::endl;
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
 
-				}
+//					bool firstValue = true;
+//					PotentialValue temp; // empty value
+//					for(int currAddr = 0; currAddr < address.length(); currAddr++) {
+//						elm::t::uint32 addressToLoad = address[currAddr];
+//						const PotentialValue& data = out.loadMemory(addressToLoad); // try to load the value from the Global analysis
+//						if((data.length() == 0) && (GLOBAL_MEMORY_LOADER)) {	// if the value is empty, try to read from the initialized memory
+//							if(istate && istate->isInitialized(addressToLoad)) {
+//								t::uint32 dataFromMemDirectory;
+//								ws->process()->get(addressToLoad, dataFromMemDirectory);
+//								DEBUG_MEM(elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "    " << IGre << "dataFromMemDirectory = " << hex(dataFromMemDirectory) << RCol << io::endl;)
+//								PotentialValue pv;
+//								temp.insert(dataFromMemDirectory);
+//							}
+//						}
+//						else {
+//							for(PotentialValue::Iterator pi(data); pi; pi++)
+//								temp.insert(*pi);
+//						}
+//					}
+//					setReg(out, inst.d(), temp); // put the collected data
+				} // end else if(address.length() > 1) {
 				else { // no address found
-					if(verbose) elm::cerr << "WARNING: we can't find the memory address to load" << io::endl;
+					if(verbose)
+						elm::cerr << "WARNING: we can't find the memory address to load" << io::endl;
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
 				}
 				break;

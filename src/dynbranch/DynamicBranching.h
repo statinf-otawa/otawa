@@ -49,6 +49,7 @@ class DynamicBranchingAnalysis: public BBProcessor {
 public:
 	static p::declare reg;
 	DynamicBranchingAnalysis(p::declare& r = reg);
+	~DynamicBranchingAnalysis();
 	void processBB(WorkSpace*, CFG *cfg , Block *b);
 	void configure(const PropList &props) ;
 
@@ -62,7 +63,6 @@ private:
 	WorkSpace* _workspace;
 	clp::Manager* clpManager;
 	Vector<otawa::clp::State> clpState;
-	PropList propss;
 	dfa::State *istate;
 };
 } } // otawa::dynbranch
