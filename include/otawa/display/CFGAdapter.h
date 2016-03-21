@@ -34,7 +34,7 @@ public:
 	class Vertex {
 	public:
 		inline Vertex(Block *_b): b(_b) { }
-		inline int index(void) { return b->index(); } // b->index();
+		inline int index(void) { return b->id(); }
 		inline bool hasCallee(void) { return (b->isSynth() && b->toSynth()->callee()); }
 		inline Vertex calleeEntry(void) { return Vertex(b->toSynth()->callee()->entry()); }
 		inline Vertex calleeExit(void) { return Vertex(b->toSynth()->callee()->exit()); }

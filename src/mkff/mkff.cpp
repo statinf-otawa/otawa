@@ -690,7 +690,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				first = false;
 			else {
 				workspace()->invalidate(COLLECTED_CFG_FEATURE);
-				workspace()->require(COLLECTED_CFG_FEATURE);
+				workspace()->require(COLLECTED_CFG_FEATURE, props);
 			}
 
 			if(outputVirtualizedCFG || outputCFG) {
@@ -700,7 +700,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			}
 
 			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false; // clear the flag
-			workspace()->require(otawa::dynbranch::FEATURE);
+			workspace()->require(otawa::dynbranch::FEATURE, props);
 			// the loop goes on searching new branch target when there is a new target found
 			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
 			iteration++;
@@ -940,7 +940,7 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 
 				// Undefined branch target
 				if(!inst->target()) {
-					if(BRANCH_TARGET(inst).get().isNull()) {
+					if(BRANCH_TARGET(inst).get().isNull() && CALL_TARGET(inst).get().isNull()) {
 						prepare(ws, cfg);
 						cstring type, com;
 						if(inst->isCall())

@@ -21,6 +21,8 @@
 #include "GlobalAnalysisProblem.h"
 #include <elm/log/Log.h> // to use the debugging messages
 
+#define DEBUG_MEM(x)
+
 using namespace elm::log;
 using namespace elm::color;
 
@@ -172,20 +174,18 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 					out.storeMemory(addressToStore, data);
 				}
 				else if(address.length() > 1) {
-					elm::cout << "Warning : we can't store to multiple potential memory addresses!" << io::endl;
-					//assert(0); // just in case, want to see
-					//					for(PotentialValue::Iterator pi(address); pi; pi++) {
-					//						elm::t::uint32 addressToStore = *pi;
-					//						PotentialValue temp = out.loadMemory(addressToStore);
-					//						const PotentialValue& data = readReg(out, inst.d());
-					//						temp.insert(data);
-					//						out.storeMemory(addressToStore, temp);
-					//					}
-
-
+					elm::cerr << "WARNING: we can't store to multiple potential memory addresses!" << io::endl;
+//					assert(0); // just in case, want to see
+//					for (PotentialValue::Iterator pi(address); pi; pi++) {
+//						elm::t::uint32 addressToStore = *pi;
+//						PotentialValue temp = out.loadMemory(addressToStore);
+//						const PotentialValue& data = readReg(out, inst.d());
+//						temp.insert(data);
+//						out.storeMemory(addressToStore, temp);
+//					}
 				}
 				else { // no address found
-					elm::cout << "WARNING: we can't find the memory address for store" << io::endl;
+					elm::cerr << "WARNING: we can't find the memory address for store" << io::endl;
 				}
 				break ;
 			}
@@ -213,7 +213,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 						setReg(out, inst.d(), data);
 				}
 				else if(address.length() > 1) {
-					elm::cout << "Warning : we can't load to multiple potential memory addresses!" << io::endl;
+					elm::cerr << "WARNING: we can't load to multiple potential memory addresses!" << io::endl;
 					//setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
 					// but we might lose some address ?
 					//assert(0); // lets check when this happen
@@ -225,7 +225,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 							if(istate && istate->isInitialized(addressToLoad)) {
 								t::uint32 dataFromMemDirectory;
 								ws->process()->get(addressToLoad, dataFromMemDirectory);
-								elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "    " << IGre << "dataFromMemDirectory = " << hex(dataFromMemDirectory) << RCol << io::endl;
+								DEBUG_MEM(elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "    " << IGre << "dataFromMemDirectory = " << hex(dataFromMemDirectory) << RCol << io::endl;)
 								PotentialValue pv;
 								pv.insert(dataFromMemDirectory);
 								PotentialValue temp = readReg(out, inst.d());
@@ -244,7 +244,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 
 				}
 				else { // no address found
-					if(verbose) elm::cout << "WARNING: we can't find the memory address to load" << io::endl;
+					if(verbose) elm::cerr << "WARNING: we can't find the memory address to load" << io::endl;
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
 				}
 				break;
@@ -405,9 +405,9 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 			case sem:: IF:
 				break;
 			default:
-				elm::cout << "Warning : Unsupported instruction " << inst.op << " of " << inst << io::endl;
-				elm::cout << "i.a() = " << readReg(out, inst.a()) << io::endl;
-				elm::cout << "i.b() = " << readReg(out, inst.b()) << io::endl;
+				elm::cerr << "WARNING: Unsupported instruction " << inst.op << " of " << inst << io::endl;
+				elm::cerr << "i.a() = " << readReg(out, inst.a()) << io::endl;
+				elm::cerr << "i.b() = " << readReg(out, inst.b()) << io::endl;
 				assert(0); // need to think about the implementation here! or we just leave it TOP?
 				break;
 			} // end switch(inst.op) {

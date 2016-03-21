@@ -450,7 +450,11 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 	// initialize the target count to 0 (from -1)
 	for(Block::EdgeIter ei = b->outs(); ei; ei++) {
 		if(ei->sink()->isUnknown()) {
-			DYNBRANCH_TARGET_COUNT(bb->last()) = 0;
+			DYNBRANCH_TARGET_COUNT(bb->last()) = 0; // from -1
+			break;
+		}
+		if(ei->sink()->isSynth() && !ei->sink()->toSynth()->callee()) { // for calls without targets
+			DYNBRANCH_TARGET_COUNT(bb->last()) = 0; // from -1
 			break;
 		}
 	}

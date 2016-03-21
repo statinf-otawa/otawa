@@ -283,11 +283,16 @@ void CFGCollector::scanCFG(Inst *e, genstruct::FragTable<Inst *>& bbs) {
 		}
 
 		// push sequence if required
-		if(canFlowAfter(i))
-			if(i->nextInst()) {
-				todo.push(i->nextInst());
-				TRACE(i->address() << " seq to " << i->nextInst()->address());
+		if(canFlowAfter(i)) {
+			Inst *n = workspace()->findInstAt(i->topAddress());
+			// if(i->nextInst()) {
+			if(n) { // need to make sure that the next instruction is the adjacent instruction
+				//todo.push(i->nextInst());
+				todo.push(n);
+				//TRACE(i->address() << " seq to " << i->nextInst()->address());
+				TRACE(i->address() << " seq to " << n->address());
 			}
+		}
 
 		// delay return and call processing
 		if(isReturn(i) || isCall(i))
