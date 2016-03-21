@@ -70,7 +70,7 @@ public:
 };
 
 extern p::feature BHT_FEATURE;
-extern Identifier<BHT*> BHT_CONFIG;
+extern Identifier<BHT *> BHT_CONFIG;
 
 } } // otawa::hard
 

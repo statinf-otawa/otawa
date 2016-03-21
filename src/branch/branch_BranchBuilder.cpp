@@ -1,5 +1,5 @@
 /*
- *	$Id$
+ *	BranchBuilder class implementation
  *	Copyright (c) 2007, IRIT UPS <casse@irit.fr>
  *
  *	This file is part of OTAWA
@@ -19,18 +19,17 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/util/Dominance.h>
-#include <otawa/util/PostDominance.h>
-#include <otawa/util/HalfAbsInt.h>
-#include <otawa/util/UnrollingListener.h>
-#include <otawa/util/FirstUnrollingFixPoint.h>
-#include <otawa/cfg/CFG.h>
-#include <otawa/cfg/features.h>
-
 #include <otawa/branch/BranchBuilder.h>
 #include <otawa/branch/BranchProblem.h>
-#include <otawa/hard/BHT.h>
 #include <otawa/branch/CondNumber.h>
+#include <otawa/cfg/CFG.h>
+#include <otawa/cfg/Dominance.h>
+#include <otawa/cfg/features.h>
+#include <otawa/cfg/PostDominance.h>
+#include <otawa/dfa/hai/FirstUnrollingFixPoint.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
+#include <otawa/dfa/hai/UnrollingListener.h>
+#include <otawa/hard/BHT.h>
 
 namespace otawa { namespace branch {
 
@@ -60,7 +59,7 @@ Identifier<category_t> CATEGORY("otawa::branch::CATEGORY", branch::NOT_CLASSIFIE
  *
  * @ingroup branch
  */
-Identifier<BasicBlock*> HEADER("otawa::branch::HEADER", NULL);
+Identifier<Block*> HEADER("otawa::branch::HEADER", NULL);
 
 
 /**
@@ -131,8 +130,8 @@ BranchBuilder::BranchBuilder(void) : Processor(reg) {
 /**
  * Assign categories to the basic blocks.
  */
-void BranchBuilder::categorize(BasicBlock *bb, BranchProblem::Domain *dom, BasicBlock* &cat_header, category_t &cat) {
-	BasicBlock *current_header;
+void BranchBuilder::categorize(BasicBlock *bb, BranchProblem::Domain *dom, Block* &cat_header, category_t &cat) {
+	Block *current_header;
 	int id = COND_NUMBER(bb);
 
 	if (dom->getMust().contains(id)) {
@@ -182,22 +181,24 @@ void BranchBuilder::processWorkSpace(WorkSpace* ws) {
 		hai.solve();
 
 		for (CFGCollection::Iterator cfg(*INVOLVED_CFGS(ws)); cfg; cfg++) {
-			for (CFG::BBIterator bb(*cfg); bb; bb++) {
-				if ((COND_NUMBER(bb) != -1) && int(hard::BHT_CONFIG(ws)->line(bb->lastInst()->address())) == row) {
+			for(CFG::BlockIter b = cfg->blocks(); b; b++)
+				if(b->isBasic()) {
+					BasicBlock *bb = b->toBasic();
+					if ((COND_NUMBER(bb) != -1) && int(hard::BHT_CONFIG(ws)->line(bb->control()->address())) == row) {
 
-					if(logFor(LOG_BB))
-						log << "\tcategorize jump on bb " << bb->number() << " on row " << row << "\n";
-					BasicBlock *header = NULL;
-					category_t cat = NOT_CLASSIFIED;
-					BranchProblem::Domain *dom = list.results[cfg->number()][bb->number()];
+						if(logFor(LOG_BB))
+							log << "\tcategorize jump on " << *bb << " on row " << row << "\n";
+						Block *header = NULL;
+						category_t cat = NOT_CLASSIFIED;
+						BranchProblem::Domain *dom = list.results[cfg->index()][bb->index()];
 
-					categorize(bb, dom, header, cat);
+						categorize(bb, dom, header, cat);
 
-					CATEGORY(bb) = cat;
-					if(header)
-						HEADER(bb) = header;
+						CATEGORY(bb) = cat;
+						if(header)
+							HEADER(bb) = header;
 
-				}
+					}
 			}
 		}
 	}

@@ -20,6 +20,7 @@
  */
 
 #include <otawa/app/Application.h>
+#include <otawa/program.h>
 #include <otawa/util/FlowFactLoader.h>
 
 using namespace elm;

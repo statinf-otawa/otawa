@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	DelayedBuilder
+ *	DelayedBuilder class implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2010, IRIT UPS.

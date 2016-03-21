@@ -1,4 +1,5 @@
-/*	$Id$
+/*
+ * 	BranchProblem class implementation
  *	Copyright (c) 2007, IRIT UPS <casse@irit.fr>
  *
  *	This file is part of OTAWA
@@ -18,154 +19,219 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/util/Dominance.h>
-#include <otawa/cfg.h>
-#include <otawa/cfg/features.h>
-#include <otawa/cache/LBlockSet.h>
-#include <otawa/util/LBlockBuilder.h>
-#include <otawa/ilp.h>
-#include <otawa/ipet.h>
-#include <otawa/cfg/Edge.h>
-#include <otawa/util/LoopInfoBuilder.h>
-
-#include <otawa/hard/BHT.h>
 #include <otawa/branch/BranchProblem.h>
 #include <otawa/branch/CondNumber.h>
+#include <otawa/cache/LBlockSet.h>
+#include <otawa/cfg.h>
+#include <otawa/cfg/Dominance.h>
+#include <otawa/cfg/features.h>
+#include <otawa/hard/BHT.h>
+#include <otawa/ilp.h>
+#include <otawa/ipet.h>
+#include <otawa/util/LBlockBuilder.h>
+#include <otawa/util/LoopInfoBuilder.h>
+
 
 namespace otawa {
 
-MUSTBranch::MUSTBranch(const int _size,  WorkSpace *_fw, const int _A, const int _row)
-:
-	row(_row),
-	fw(_fw),
-	bot(_size, _A),
-	ent(_size, _A)
-{
-		ent.empty();
-}
+/*
+ * Soundness of branch analysis requires:
+ * 	\forall x \in D,
+ * 		x U _ = _ U x = x
+ * 		x U T = T U x = x
+ *
+ *  Age			U		_	T
+ *  MUST		max		0	A
+ *  PERS		max		_	A
+ *  MAY			min		A	0
+ */
 
+/**
+ * @class MUSTBranch
+ * Implementation of MUST analysis for BHT.
+ */
+
+/**
+ */
+MUSTBranch::MUSTBranch(const int _size, const int _A, const int _row)
+: row(_row), bot(_size, _A, 0), _top(_size, _A, _A)
+	{ }
+
+/**
+ */
 MUSTBranch::~MUSTBranch() {
-
-}
-const MUSTBranch::Domain& MUSTBranch::bottom(void) const {
-		return bot;
-}
-const MUSTBranch::Domain& MUSTBranch::entry(void) const {
-		return ent;
 }
 
-void MUSTBranch::update(Domain& out, const Domain& in, BasicBlock* bb) {
-		cerr << "FATAL: PERSProblem is not to be used directly, use MUSTPERS instead.\n";
-		ASSERT(false);
+/**
+ */
+void MUSTBranch::update(Domain& out, const Domain& in, Block* bb) {
+		ASSERTP(false, "FATAL: PERSProblem is not to be used directly, use MUSTPERS instead.");
+}
+
+/**
+ * Print the domain value.
+ * @param output	Output to use.
+ */
+void MUSTBranch::Domain::print(elm::io::Output &output) const {
+	bool first = true;
+	output << "[";
+	for (int i = 0; i < size; i++) {
+		if (age[i] != A) {
+			if (!first)
+				output << ", ";
+			output << i;
+			output << ":";
+			output << age[i];
+			first = false;
+		}
+	}
+	output << "]";
 }
 
 
+/**
+ * @class MAYBranch
+ * Implementation of MAY analysis for BHT.
+ */
 
-MAYBranch::MAYBranch(const int _size,  WorkSpace *_fw, const int _A, const int _row)
-:
-	row(_row),
-	fw(_fw),
-	bot(_size, _A),
-	ent(_size, _A)
-{
-		ent.empty();
+/**
+ */
+MAYBranch::MAYBranch(int _size, int _A, int _row)
+: row(_row), bot(_size, _A, _A), _top(_size, _A, 0)
+{ }
+
+/**
+ */
+MAYBranch::~MAYBranch(void) {
 }
 
-MAYBranch::~MAYBranch() {
-
-}
-const MAYBranch::Domain& MAYBranch::bottom(void) const {
-		return bot;
-}
-const MAYBranch::Domain& MAYBranch::entry(void) const {
-		return ent;
-}
-
+/**
+ */
 void MAYBranch::update(Domain& out, const Domain& in, BasicBlock* bb) {
-		cerr << "FATAL: PERSProblem is not to be used directly, use MUSTPERS instead.\n";
-		ASSERT(false);
+		ASSERTP(false, "FATAL: PERSProblem is not to be used directly, use MUSTPERS instead.");
+}
+
+/**
+ * Print the domain value.
+ * @param output	Output to use.
+ */
+void MAYBranch::Domain::print(elm::io::Output &output) const {
+	bool first = true;
+	output << "[";
+	for (int i = 0; i < size; i++) {
+		if (age[i] != A) {
+			if (!first)
+				output << ", ";
+			output << i;
+			output << ":";
+			output << age[i];
+			first = false;
+		}
+	}
+	output << "]";
 }
 
 
+/**
+ * @class PERSBranch
+ * Implementation of PERS analysis for BHT.
+ */
 
+/**
+ */
+PERSBranch::PERSBranch(int _size,  int _A, int _row)
+: row(_row), bot(_size, _A, BOT), _top(_size, _A, _A)
+{ }
 
-
-
-PERSBranch::PERSBranch(const int _size,  WorkSpace *_fw, const int _A, const int _row)
-:	row(_row),
- 	fw(_fw),
-	bot(_size, _A),
-	ent(_size, _A)
-{
-		bot.setToBottom();
-		ent.empty();
-
-
+/**
+ */
+PERSBranch::~PERSBranch(void) {
 }
 
-PERSBranch::~PERSBranch() {
-
-}
-const PERSBranch::Domain& PERSBranch::bottom(void) const {
-		return bot;
+void PERSBranch::update(Domain& out, const Domain& in, Block* bb)  {
+	ASSERTP(false, "FATAL: PERSProblem is not to be used directly, use MUSTPERS instead.");
 }
 
-const PERSBranch::Domain& PERSBranch::entry(void) const {
-		return ent;
+void PERSBranch::Domain::print(elm::io::Output &output) const {
+	bool first = true;
+	if (isBottom) {
+		output << "BOTTOM";
+		return;
+	}
+	output << "(W=";
+	whole.print(output);
+	output << ", ";
+	for (int i = 0; i < data.length(); i++) {
+		if (!first)
+			output << "|";
+		data[i]->print(output);
+		first = false;
+	}
+	output << ")";
 }
 
-void PERSBranch::update(Domain& out, const Domain& in, BasicBlock* bb)  {
-		cerr << "FATAL: PERSProblem is not to be used directly, use MUSTPERS instead.\n";
-		ASSERT(false);
-}
-
-
+/**
+ */
 elm::io::Output& operator<<(elm::io::Output& output, const PERSBranch::Domain& dom) {
 	dom.print(output);
 	return output;
 }
 
 
-BranchProblem::BranchProblem(const int _size,  WorkSpace *_fw,  const int _A, const int _row)
-:	mustProb(_size,  _fw, _A, _row),
-	persProb(_size,  _fw, _A, _row),
-	mayProb(_size, _fw, _A, _row),
-	fw(_fw),
-	row(_row),
-	bot(_size, _A),
-	ent(_size, _A)
-	{
+/**
+ * Print an item.
+ * @param output	Output to use.
+ */
+void PERSBranch::Item::print(elm::io::Output &output) const {
+	bool first = true;
+	output << "[";
+	for (int i = 0; i < size; i++) {
+		if (age[i] != -1) {
+			if (!first)
+				output << ", ";
+			output << i << ":" << age[i];
+			first = false;
+		}
+	}
+	output << "]";
+}
 
+
+/**
+ * Accumulated analysis problems for MUST, MAY and PERS
+ */
+
+/**
+ */
+BranchProblem::BranchProblem(const int _size,  WorkSpace *_fw,  const int _A, const int _row)
+: 	bot(_size, _A), _top(_size, _A),
+	mustProb(_size, _A, _row), persProb(_size, _A, _row), mayProb(_size, _A, _row),
+	fw(_fw), row(_row)
+{
 		persProb.assign(bot.pers, persProb.bottom());
 		mustProb.assign(bot.must, mustProb.bottom());
-
-		persProb.assign(ent.pers, persProb.entry());
-		mustProb.assign(ent.must, mustProb.entry());
+		persProb.assign(_top.pers, persProb.entry());
+		mustProb.assign(_top.must, mustProb.entry());
 }
 
 
-const BranchProblem::Domain& BranchProblem::bottom(void) const {
-		return bot;
-}
-const BranchProblem::Domain& BranchProblem::entry(void) const {
-		return ent;
-}
-
-
-
-void BranchProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
+/**
+ */
+void BranchProblem::update(Domain& out, const Domain& in, Block* b) {
 	assign(out, in);
-	Inst *last = bb->lastInst();
+	if(!b->isBasic())
+		return;
+	BasicBlock *bb = b->toBasic();
+	Inst *last = bb->control();
 
-	if (last != NULL) {
-  		if (int(hard::BHT_CONFIG(fw)->line(last->address())) == row) {
-	      	if (branch::COND_NUMBER(bb) != -1)
-  				out.inject(branch::COND_NUMBER(bb));
-  		}
-  	}
+	if (last
+	&& int(hard::BHT_CONFIG(fw)->line(last->address())) == row
+	&& branch::COND_NUMBER(bb) != -1)
+		out.inject(branch::COND_NUMBER(bb));
 }
 
-}
+}	// otawa
+
 
 
 

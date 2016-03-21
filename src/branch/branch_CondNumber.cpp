@@ -1,5 +1,5 @@
 /*
- *	$Id$
+ *	CondNumber class interface
  *	Copyright (c) 2007, IRIT UPS <casse@irit.fr>
  *
  *	This file is part of OTAWA
@@ -19,13 +19,13 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/util/Dominance.h>
-#include <otawa/util/PostDominance.h>
-#include <otawa/cfg/CFG.h>
-#include <otawa/cfg/features.h>
- 
 #include <otawa/branch/CondNumber.h>
+#include <otawa/cfg/CFG.h>
+#include <otawa/cfg/Dominance.h>
+#include <otawa/cfg/features.h>
 #include <otawa/hard/BHT.h>
+#include <otawa/cfg/PostDominance.h>
+ 
 
 namespace otawa { namespace branch {
 
@@ -94,20 +94,19 @@ p::declare CondNumber::reg =
 CondNumber::CondNumber(void): BBProcessor(reg) {
 }
 
-void CondNumber::processBB(WorkSpace* ws, CFG *cfg, BasicBlock *bb) {
-	Inst *last = bb->lastInst();
+void CondNumber::processBB(WorkSpace* ws, CFG *cfg, Block *b) {
+	if(!b->isBasic())
+		return;
+	BasicBlock *bb = b->toBasic();
+	Inst *last = bb->control();
 	cleanup(ws);
-	if (last != NULL) {
-		if (last->isConditional() || last->isIndirect()) {
-
-			int row = hard::BHT_CONFIG(ws)->line(last->address());
-			if(logFor(Processor::LOG_BB))
-				log << "\t\t\tconditional: " << bb->number() << " (row " << row << ")\n";
-			COND_NUMBER(bb) = current_index[row];
-			current_index[row]++;
-		}
+	if(last && (last->isConditional() || last->isIndirect())) {
+		int row = hard::BHT_CONFIG(ws)->line(last->address());
+		if(logFor(Processor::LOG_BB))
+			log << "\t\t\tconditional: " << *bb << " (row " << row << ")\n";
+		COND_NUMBER(bb) = current_index[row];
+		current_index[row]++;
 	}
-  
 }
 
 void CondNumber::setup(WorkSpace *ws) {

@@ -1,5 +1,5 @@
 /*
- *	ConsBuilder processor interface
+ *	branch module features
  *	Copyright (c) 2011, IRIT UPS.
  *
  *	This file is part of OTAWA
@@ -26,16 +26,14 @@
 namespace otawa {
 
 using namespace elm;
-
 namespace ilp { class Var; }
 
 namespace branch {
 
 // numbered conditions feature
 extern Identifier<int> COND_NUMBER;
-extern Identifier<int*> COND_MAX;
+extern Identifier<int *> COND_MAX;
 extern p::feature NUMBERED_CONDITIONS_FEATURE;
-
 
 // category feature
 typedef enum category_t {
@@ -50,9 +48,8 @@ io::Output& operator<<(io::Output& out, category_t cat);
 
 // category feature
 extern Identifier<category_t> CATEGORY;
-extern Identifier<BasicBlock*> HEADER;
+extern Identifier<Block*> HEADER;
 extern p::feature CATEGORY_FEATURE;
-
 
 // branch constraints feature
 extern p::feature CONSTRAINTS_FEATURE;
