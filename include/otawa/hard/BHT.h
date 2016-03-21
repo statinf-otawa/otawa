@@ -53,8 +53,8 @@ private:
 	);
 
 public:
-	inline BHT(void) { }
-	virtual ~BHT(void) { }
+	BHT(void);
+	virtual ~BHT(void);
 	
 	// Modifiers
 	inline void setCondPenalty(int time) { cond_penalty = time; }
