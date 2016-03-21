@@ -146,7 +146,7 @@ inline HalfAbsInt<FixPoint>::~HalfAbsInt(void) {
 		for(CFG::BlockIter bb = cfgs[i]->blocks(); bb; bb++)
 			for(BasicBlock::EdgeIter out = bb->outs(); out; out++) {
 				this->fp.unmarkEdge(*out);
-				if(out->sink()->isSynth() && !cfgs.contains(out->sink()->toSynth()->callee()))
+				if(out->sink()->isSynth() && out->sink()->toSynth()->callee() && !cfgs.contains(out->sink()->toSynth()->callee()))
 					cfgs.add(out->sink()->toSynth()->callee());
 			}
 }

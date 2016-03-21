@@ -186,6 +186,10 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 		Inst *first_inst = todo.get();
 		if(!first_inst)
 			continue;
+
+		if(!first_inst->kind()) // when there is no kind information, means the instruction is not recognizable.
+			continue;
+
 		TRACE("otawa::VarTextDecoder::processEntry: starting from " << first_inst->address());
 		Inst *inst = first_inst;
 
