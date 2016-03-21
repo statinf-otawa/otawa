@@ -239,7 +239,8 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 						
 						if(toget.length() == 0) { // if there is no address to load, we look the value of the register in CLP state directly
 							clp::Value x = clpState[semantics.length()-1].get(clp::Value(clp::REG, i.d(), 0,0));
-							r = setFromClp(x);
+							if(x.mtimes() < 65535)
+								r = setFromClp(x);
 						}
 
 						DEBUG_CLP(if(toget.length() > 0) elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "CLP result = " << r << io::endl;)

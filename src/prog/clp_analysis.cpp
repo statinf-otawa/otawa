@@ -759,8 +759,14 @@ void Value::reverse(void){
  */
 void Value::ge(intn_t k) {
 
-	// top and none cases
-	if(*this == all || *this == none)
+	// all cases
+	if(*this == all) {
+		*this = Value(VAL, k, 1, MAXn-k);
+		return;
+	}
+
+	// none cases
+	if(*this == none)
 		return;
 
 	// case of constant
@@ -897,8 +903,14 @@ void Value::le(intn_t k) {
  */
 void Value::geu(uintn_t k) {
 
-	// top and none cases
-	if(*this == all || *this == none)
+	// all case
+	if(*this == all) {
+		*this = Value(VAL, k, 1, UMAXn-k);
+		return;
+	}
+
+	// none cases
+	if(*this == none)
 		return;
 
 	// case of constant
