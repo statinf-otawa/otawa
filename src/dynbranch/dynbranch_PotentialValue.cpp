@@ -22,6 +22,8 @@
 
 namespace otawa { namespace dynbranch {
 
+//Identifier<potential_value_list_t*> DYNBRANCH_POTENTIAL_VALUE_LIST("");
+
 PotentialValue PotentialValue::bot;
 PotentialValue PotentialValue::top;
 PotentialValue PotentialValue::DEFAULT;
@@ -211,9 +213,15 @@ bool operator==(const PotentialValue& a, const PotentialValue& b) {
 }
 
 Output& operator<<(Output& o, PotentialValue const& pv) {
-	o << "{ ";
-	for(PotentialValue::Iterator i(pv); i; i++)
-		o << "0x" << hex(*i) << " ";
+	o << "{";
+	bool fst = true;
+	for(PotentialValue::Iterator i(pv); i; i++) {
+		if(!fst)
+			o << ", ";
+		else
+			fst = false;
+		o << "0x" << hex(*i);
+	}
 	o << "}";
 	return o;
 }

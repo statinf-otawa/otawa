@@ -28,6 +28,7 @@
 #include <otawa/dfa/BitSet.h>
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/proc/BBProcessor.h>
 
 using namespace elm;
 using namespace otawa;
@@ -35,6 +36,21 @@ using namespace otawa::dfa;
 
 namespace otawa {
 
+/*
+ * Cleaner used to clear the ENCLOSING_LOOP_HEADER identifier when the
+ * LOOP_INFO_FEATURE is invalidated.
+ */
+class LoopInfoCleaner: public BBCleaner {
+public:
+	 LoopInfoCleaner(WorkSpace *ws): otawa::BBCleaner(ws) { }
+
+protected:
+	virtual void clean(WorkSpace *ws, CFG *cfg, Block *bb) {
+		if(ENCLOSING_LOOP_HEADER(bb).exists()) {
+			ENCLOSING_LOOP_HEADER(bb).remove();
+		}
+	}
+};
 
 /**
  * This processor produces loop informations:
@@ -282,7 +298,6 @@ LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", V
  	}
  }
 
-
 void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 	int i;
 
@@ -329,6 +344,8 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 
 	// build loop exit lists
 	buildLoopExitList(cfg);
+
+	addCleaner(LOOP_INFO_FEATURE, new LoopInfoCleaner(fw));
 }
 
 }	// otawa

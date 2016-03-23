@@ -58,10 +58,9 @@ public:
 	typedef elm::t::uint32 address_t;
 
 	inline friend Output& operator<<(Output& o, FastStateWrapper const& pv) {
-		//o << "state  = " << pv._state;
-		o << io::endl;
-		state_t _state = pv._state;
-		fast_state_t _fastState = pv._fastState;
+		o << "{";
+		pv._fastState->print(o, pv._state);
+		o << "}";
 		return o;
 	}
 

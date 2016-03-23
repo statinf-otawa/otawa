@@ -433,7 +433,6 @@ public:
 	void print(io::Output& out, t s) {
 
 		// display registers
-		out << '\t';
 		bool fst = true;
 		for(int i = 0; i < nrblock; i++)
 			for(int j = 0; j < rblock_size; j++)
@@ -445,13 +444,8 @@ public:
 					out << "r" << ((i * rblock_size) + j) << " = ";
 					dom->dump(out, s->regs[i][j]);
 				}
-		if(fst)
-			out << "no register set";
-		out << io::endl;
 
 		// display memory
-		out << '\t';
-		fst = true;
 		for(node_t *n = s->mem; n; n = n->n) {
 			if(fst)
 				fst = false;
@@ -460,9 +454,6 @@ public:
 			out << Address(n->a) << " = ";
 			dom->dump(out, n->v);
 		}
-		if(fst)
-			out << "no memory set";
-		out << io::endl;
 	}
 
 	/**

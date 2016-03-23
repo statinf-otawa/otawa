@@ -1483,22 +1483,30 @@ void State::print(io::Output& out, const hard::Platform *pf) const {
 			if (val.kind() == VAL)
 				out << CLP_START << "t" << i << " = " << val << CLP_END;
 		}*/
+		bool fst = true;
 		// registers
 		for(int i = 0; i < registers.length(); i++){
 			Value val = registers[i];
 			if (val.kind() == VAL) {
-				out << CLP_START;
+				if(!fst)
+					out << ", ";
+				else
+					fst = false;
 				if(!pf)
 					out << "r" << i;
 				else
 					out << pf->findReg(i)->name();
-				out << " = " << val << CLP_END;
+				out << " = " << val;
 			}
 		}
 		// memory
 		for(Node *cur = first.next; cur; cur = cur->next) {
+			if(!fst)
+				out << ", ";
+			else
+				fst = false;
 			out << CLP_START << Address(cur->addr);
-			out << " = " << cur->val << CLP_END;
+			out << " = " << cur->val;
 		}
 		#ifndef STATE_MULTILINE
 		out << "}";
@@ -2132,7 +2140,10 @@ public:
 		// save the input state in the basic block, join with an existing state
 		// if needed
 		if(!specific_analysis){
-				clp::STATE_IN(bb) = in;
+			if(clp::STATE_IN(bb).exists())
+				clp::STATE_IN(bb).remove();
+
+			clp::STATE_IN(bb) = in;
 		}
 		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
@@ -2184,6 +2195,9 @@ public:
 			return;
 
 		// save the output state in the basic block
+		if(clp::STATE_OUT(bb).exists())
+			clp::STATE_OUT(bb).remove();
+
 		clp::STATE_OUT(bb) = out;
 		TRACEU(cerr << ">>>\tout = " << out << io::endl);
 
@@ -2283,6 +2297,21 @@ public:
 		for(CFG::BlockIter bbi = cfg->blocks(); bbi; bbi++){
 			clp::STATE_IN(*bbi).remove();
 			clp::STATE_OUT(*bbi).remove();
+
+			if(se::REG_FILTERS(*bbi).exists()) {
+				Vector<se::SECmp *> vse = se::REG_FILTERS(*bbi);
+				for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+					delete *vsei;
+				se::REG_FILTERS(*bbi).remove();
+			}
+
+			if(se::ADDR_FILTERS(*bbi).exists()) {
+				Vector<se::SECmp *> vse = se::ADDR_FILTERS(*bbi);
+				for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+					delete *vsei;
+				se::ADDR_FILTERS(*bbi).remove();
+			}
+
 		}
 	}
 private:
@@ -2312,7 +2341,8 @@ private:
 
 p::declare Analysis::reg = p::init("otawa::clp::Analysis", Version(0, 1, 0))
 	.maker<Analysis>()
-	.require(VIRTUALIZED_CFG_FEATURE)
+	//.require(VIRTUALIZED_CFG_FEATURE)
+	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
 	.require(dfa::INITIAL_STATE_FEATURE)
 	.provide(clp::FEATURE);
