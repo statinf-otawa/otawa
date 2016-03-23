@@ -22,24 +22,13 @@
 #define OTAWA_DYNAMIC_BRANCHING_FEATURES_H
 
 #include <otawa/otawa.h>
-#include <elm/alloc/StackAllocator.h>
-#include <otawa/dfa/FastState.h>
 
 namespace otawa { namespace dynbranch {
 
 extern p::feature DYNBRANCH_FEATURE;
 extern Identifier<bool> TIME ;
-
-// if any target is found in the dynamic branching analysis
-// if the values of DYNBRANCH_TARGET_COUNT and DYNBRANCH_TARGET_COUNT_PREV differ, it means that there is a new target found, NEW_BRANCH_TARGET_FOUND will be set to true
-extern Identifier<bool> NEW_BRANCH_TARGET_FOUND;
+extern Identifier<bool> NEW_BRANCH_TARGET_FOUND; // if any target is found in the dynamic branching analysis
     
-// the current branching target counts for a given instruction
-extern Identifier<int> DYNBRANCH_TARGET_COUNT;
-
-// the previous branching target counts for a given instruction
-extern Identifier<int> DYNBRANCH_TARGET_COUNT_PREV;
-
 } } // otawa::dynbranch
 
 #endif	// OTAWA_DYNAMIC_BRANCHING_ANALYSIS_H

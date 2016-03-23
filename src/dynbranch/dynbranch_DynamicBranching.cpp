@@ -37,12 +37,6 @@ using namespace elm::color;
 
 namespace otawa { namespace dynbranch {
 
-static Identifier<Vector<Address> > POSSIBLE_BRANCH_TARGETS("otawa::dynbranch::POSSIBLE_BRANCH_TARGETS"); // only in this file, for the set of target addresses
-Identifier<bool> NEW_BRANCH_TARGET_FOUND("otawa::dynbranch::NEW_BRANCH_TARGET_FOUND", false); // on workspace
-Identifier<int> DYNBRANCH_TARGET_COUNT("otawa::dynbranch::DYNBRANCH_TARGET_COUNT", -1); // // the current branching target counts for a given instruction
-Identifier<int> DYNBRANCH_TARGET_COUNT_PREV("otawa::dynbranch::DYNBRANCH_TARGET_COUNT_PREV", -1); // the previous branching target counts for a given instruction
-
-
 /**
  * This feature try to compute for each dynamic/indirect branch the set of possible
  * targets. The result is stored on the branch instruction as a set of @ref BRANCH_TARGET
@@ -54,9 +48,13 @@ Identifier<int> DYNBRANCH_TARGET_COUNT_PREV("otawa::dynbranch::DYNBRANCH_TARGET_
  */
 p::feature DYNBRANCH_FEATURE("otawa::dynbranch::DYNBRANCH_FEATURE", new Maker<DynamicBranchingAnalysis>());
 
-/*
- * Identifier<bool> TIME("otawa::dynbranch::TIME") ;
- */
+
+static Identifier<Vector<Address> > POSSIBLE_BRANCH_TARGETS("otawa::dynbranch::POSSIBLE_BRANCH_TARGETS"); // only in this file, for the set of target addresses
+Identifier<bool> NEW_BRANCH_TARGET_FOUND("otawa::dynbranch::NEW_BRANCH_TARGET_FOUND", false); // on workspace
+// if the values of DYNBRANCH_TARGET_COUNT and DYNBRANCH_TARGET_COUNT_PREV differ, it means that there is a new target found, NEW_BRANCH_TARGET_FOUND will be set to true
+Identifier<int> DYNBRANCH_TARGET_COUNT("otawa::dynbranch::DYNBRANCH_TARGET_COUNT", -1); // // the current branching target counts for a given instruction
+Identifier<int> DYNBRANCH_TARGET_COUNT_PREV("otawa::dynbranch::DYNBRANCH_TARGET_COUNT_PREV", -1); // the previous branching target counts for a given instruction
+
 
 /*
  * The Cleaner class for DYNBRANCH_FEATURE
