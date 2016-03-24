@@ -56,7 +56,10 @@ public:
 
 protected:
 	virtual void clean(WorkSpace *ws, CFG *cfg, Block *bb) {
-		bb->removeProp(REVERSE_DOM);
+		if(REVERSE_DOM(bb).exists()) {
+			delete REVERSE_DOM(bb);
+			bb->removeProp(REVERSE_DOM);
+		}
 		if(LOOP_HEADER(bb)) {
 			bb->removeProp(LOOP_HEADER);
 			for(BasicBlock::EdgeIter edge(bb->ins()); edge; edge++)

@@ -96,7 +96,8 @@ class ContextTreeByCFGBuilder: public CFGProcessor {
 public:
 	ContextTreeByCFGBuilder(void);
 protected:
-	virtual void processCFG(WorkSpace *fw, CFG *cfg);	
+	virtual void processCFG(WorkSpace *fw, CFG *cfg);
+	bool fst;
 };
 
 // Features

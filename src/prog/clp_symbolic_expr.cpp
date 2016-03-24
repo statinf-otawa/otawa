@@ -216,10 +216,14 @@ namespace se{
 		// [-, [K, <val>]] -> [K, eval(val * -1)]
 		if (_a && _a->op() == CONST){
 			if (_parent->a() == this){
-				_parent->set_a(new SEConst(V(0) - _a->val())); // WILL DELETE this !
+				SEConst* temp = new SEConst(V(0) - _a->val());
+				_parent->set_a(temp); // WILL DELETE this !
+				delete temp;
 				return;
 			} else if (_parent->b() == this){
-				_parent->set_b(new SEConst(V(0) - _a->val())); // WILL DELETE this !
+				SEConst* temp = new SEConst(V(0) - _a->val());
+				_parent->set_b(temp); // WILL DELETE this !
+				delete temp;
 				return;
 			}
 		}
@@ -269,11 +273,15 @@ namespace se{
 		if (_parent && _a && _a->op() == CONST && _b && _b->op() == CONST){
 			if (_parent->a() == this){
 				// WILL DELETE this !
-				_parent->set_a(new SEConst(_a->val() + _b->val()));
+				SEConst* temp = new SEConst(_a->val() + _b->val());
+				_parent->set_a(temp);
+				delete temp;
 				return;
 			} else if (_parent->b() == this){
 				// WILL DELETE this !
-				_parent->set_b(new SEConst(_a->val() + _b->val()));
+				SEConst* temp = new SEConst(_a->val() + _b->val());
+				_parent->set_b(temp);
+				delete temp;
 				return;
 			}
 		}

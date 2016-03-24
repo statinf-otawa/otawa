@@ -2387,8 +2387,7 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	CFG *cfg = coll->get(0);
 
 	// set the cleaner
-	CLPStateCleaner *cleaner = new CLPStateCleaner(cfg);
-	addCleaner(clp::FEATURE, cleaner);
+	addCleaner(clp::FEATURE, new CLPStateCleaner(cfg));
 
 	ClpProblem prob(ws->process());
 
