@@ -2291,31 +2291,33 @@ private:
 // CLPStateCleaner
 class CLPStateCleaner: public Cleaner {
 public:
-	inline CLPStateCleaner(CFG *_cfg) {cfg = _cfg;}
-	//virtual ~CLPStateCleaner(void) {}
+	inline CLPStateCleaner(WorkSpace* _ws) : ws(_ws) { }
+
 	virtual void clean(void) {
-		for(CFG::BlockIter bbi = cfg->blocks(); bbi; bbi++){
-			clp::STATE_IN(*bbi).remove();
-			clp::STATE_OUT(*bbi).remove();
+		const CFGCollection *cfgc = INVOLVED_CFGS(ws);
+		for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+			for(CFG::BlockIter bbi = cfg->blocks(); bbi; bbi++){
+				clp::STATE_IN(*bbi).remove();
+				clp::STATE_OUT(*bbi).remove();
 
-			if(se::REG_FILTERS(*bbi).exists()) {
-				Vector<se::SECmp *> vse = se::REG_FILTERS(*bbi);
-				for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
-					delete *vsei;
-				se::REG_FILTERS(*bbi).remove();
+				if(se::REG_FILTERS(*bbi).exists()) {
+					Vector<se::SECmp *> vse = se::REG_FILTERS(*bbi);
+					for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+						delete *vsei;
+					se::REG_FILTERS(*bbi).remove();
+				}
+
+				if(se::ADDR_FILTERS(*bbi).exists()) {
+					Vector<se::SECmp *> vse = se::ADDR_FILTERS(*bbi);
+					for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+						delete *vsei;
+					se::ADDR_FILTERS(*bbi).remove();
+				}
 			}
-
-			if(se::ADDR_FILTERS(*bbi).exists()) {
-				Vector<se::SECmp *> vse = se::ADDR_FILTERS(*bbi);
-				for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
-					delete *vsei;
-				se::ADDR_FILTERS(*bbi).remove();
-			}
-
 		}
 	}
 private:
-	CFG *cfg;
+	WorkSpace* ws;
 };
 
 /**
@@ -2387,7 +2389,7 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	CFG *cfg = coll->get(0);
 
 	// set the cleaner
-	addCleaner(clp::FEATURE, new CLPStateCleaner(cfg));
+	addCleaner(clp::FEATURE, new CLPStateCleaner(ws));
 
 	ClpProblem prob(ws->process());
 
