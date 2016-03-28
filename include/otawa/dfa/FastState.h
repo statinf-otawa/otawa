@@ -109,6 +109,14 @@ public:
 	 */
 	t set(t s, register_t r, value_t v) {
 		ASSERTP(r < nrblock * rblock_size, "register index out of bound");
+
+		value_t temp = s->regs[r >> rblock_shift][r & rblock_mask]; // if the existing value is the same as the value to assign, then no change
+		if(dom->equals(temp, v)) //
+			return s;
+
+		if(s == top && dom->equals(v, dom->top)) // assigning T to any register of the T state, will return T
+			return top;
+
 		//cerr << "DEBUG: set(" << r << ", "; dom->dump(cerr, v); cerr << ")\n";
 		typename D::t *rblock = allocator.allocate<typename D::t>(rblock_size);
 		elm::array::copy(rblock, s->regs[r >> rblock_shift], rblock_size);
@@ -118,6 +126,10 @@ public:
 		regs[r >> rblock_shift] = rblock;
 		t res = new(allocator) state_t(regs, s->mem);
 		//cerr << "RESULT="; print(cerr, res);
+
+		if(dom->equals(v, dom->top) && equals(res, top)) // if the resulted state is T
+			return top;
+
 		return res;
 	}
 
@@ -132,7 +144,25 @@ public:
 		node_t *mem, *cur;
 		node_t **pn = &mem;
 
-		// look for position
+		// check if it is necessary to have a new state_t, given a T state, assigning an address with a value of T, will maintain T
+		if(s == top && dom->equals(v, dom->top))
+			return top;
+
+		// try to find the corresponding address in the state, if existed, then checking if the existing value and the assigned values are the same
+		bool found = false;
+		for(cur = s->mem; cur; cur = cur->n) { // find the address
+			if(cur->a == a) {
+				if(dom->equals(cur->v, v)) // if the value to assign is the same as the holding value, no need to allocate a new state
+					return s;
+				found = true;
+				break;
+			}
+		}
+
+		if(!found && dom->equals(v, dom->top)) // write bot/top to an address not in a record does not require a new state
+			return s;
+
+		// look for position, while creating a node_t for each address
 		for(cur = s->mem; cur && cur->a < a; cur = cur->n) {
 			*pn = new(allocator) node_t(cur);
 			pn = &((*pn)->n);
@@ -148,7 +178,7 @@ public:
 			next = cur;
 
 		// create the new node
-		if(v == dom->top)
+		if(dom->equals(v, dom->top)) // if the address is found, it is not necessary to store the Top value
 			*pn = next;
 		else
 			*pn = new(allocator) node_t(a, v, next);
@@ -433,10 +463,19 @@ public:
 	void print(io::Output& out, t s) {
 
 		// display registers
+		if(s == top) {
+			out << "T";
+			return;
+		}
+		else if(s == bot) {
+			out << "⊥";
+			return;
+		}
+
 		bool fst = true;
 		for(int i = 0; i < nrblock; i++)
 			for(int j = 0; j < rblock_size; j++)
-				if(!dom->equals(s->regs[i][j], dom->bot)) {
+				if(!dom->equals(s->regs[i][j], dom->bot) && !dom->equals(s->regs[i][j], dom->top)) {
 					if(!fst)
 						out << ", ";
 					else
@@ -511,8 +550,13 @@ public:
 
 			// join the common address
 			if(cur1->a == cur2->a) {
-				*pn = new(allocator) node_t(cur1->a, w.process(cur1->v, cur2->v));
-				pn = &((*pn)->n);
+				value_t temp = w.process(cur1->v, cur2->v);
+				if(temp == dom->top) { }
+				else if(temp == dom->bot) { }
+				else {
+					*pn = new(allocator) node_t(cur1->a, temp);
+					pn = &((*pn)->n);
+				}
 				cur1 = cur1->n;
 				cur2 = cur2->n;
 			}
@@ -530,8 +574,13 @@ public:
 		else
 			*pn = 0;
 
+		t res  = new(allocator) state_t(regs, mem);
+		bool resultedTop = equals(res, top); // if the resulted state is top
+		if(resultedTop)
+			return top;
+
 		// return join state
-		return new(allocator) state_t(regs, mem);
+		return res;
 	}
 
 private:
@@ -546,7 +595,10 @@ private:
 		for(int i = 0; i < nrblock; i++) {
 			regs[i] = allocator.allocate<value_t>(rblock_size);
 			for(int j = 0; j < rblock_size; j++)
-				regs[i][j] = dom->bot;
+				if(bot)
+					regs[i][j] = dom->bot;
+				else
+					regs[i][j] = dom->top;
 		}
 		return new(allocator) state_t(regs, 0);
 	}
