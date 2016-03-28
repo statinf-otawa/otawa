@@ -56,7 +56,7 @@ public:
 	inline void printTempRegs(string begin = "", string end="") {
 		int j = 0;
 		for(Vector<PotentialValue>::Iterator i(*_tempRegs); i; i++, j++) {
-			if((*i).length() == 0)
+			if(((*i).bTop == false) && ((*i).length() == 0))
 				continue;
 		}
 	}
@@ -73,7 +73,7 @@ public:
 		if(regNum >= 0)
 			return out.readReg(regNum);
 		else
-			_tempRegs->get(-regNum);
+			return _tempRegs->get(-regNum);
 	}
 
 private:

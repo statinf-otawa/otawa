@@ -89,7 +89,7 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 			if(!bbi->isBasic())
 				continue;
 
-			GLOBAL_STATE_IN(*bbi) = *list.results[cfgi->index()][bbi->index()] ;
+			GLOBAL_STATE_IN(*bbi) = *list.results[cfgi->index()][bbi->index()];
 		}
 	}
 

@@ -59,7 +59,10 @@ public:
 
 	inline friend Output& operator<<(Output& o, FastStateWrapper const& pv) {
 		o << "{";
-		pv._fastState->print(o, pv._state);
+		if(pv._state == pv._fastState->top)
+			o << "T";
+		else
+			pv._fastState->print(o, pv._state);
 		o << "}";
 		return o;
 	}
