@@ -20,27 +20,28 @@
  *	02110-1301  USA
  */
 
+#include <elm/genstruct/HashTable.h>
 #include <elm/io.h>
-#include <otawa/cat/CATConstraintBuilder.h>
-#include <otawa/instruction.h>
-#include <otawa/cat/CATNode.h>
-#include <otawa/cfg/CFGCollector.h>
-#include <otawa/cat/CATDFA.h>
+
 #include <otawa/cache/LBlockSet.h>
+#include <otawa/cat/CATBuilder.h>
+#include <otawa/cat/CATConstraintBuilder.h>
+#include <otawa/cat/CATDFA.h>
+#include <otawa/cat/CATNode.h>
+#include <otawa/cfg.h>
+#include <otawa/cfg/CFGCollector.h>
+#include <otawa/cfg/Dominance.h>
+#include <otawa/dfa/XCFGVisitor.h>
+#include <otawa/dfa/XIterativeDFA.h>
+#include <otawa/hard/CacheConfiguration.h>
+#include <otawa/hard/Platform.h>
 #include <otawa/ilp.h>
+#include <otawa/instruction.h>
 #include <otawa/ipet.h>
 #include <otawa/ipet/IPET.h>
-#include <otawa/util/ContextTree.h>
-#include <elm/genstruct/HashTable.h>
-#include <otawa/util/Dominance.h>
-#include <otawa/cfg.h>
-#include <otawa/hard/CacheConfiguration.h>
-#include <otawa/cat/CATBuilder.h>
-#include <otawa/hard/Platform.h>
-#include <otawa/dfa/XIterativeDFA.h>
-#include <otawa/dfa/XCFGVisitor.h>
-#include <otawa/util/LBlockBuilder.h>
 #include <otawa/ipet/TrivialInstCacheManager.h>
+#include <otawa/util/ContextTree.h>
+#include <otawa/util/LBlockBuilder.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
@@ -154,7 +155,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 			miss = system->newVar();
 		else {
 			StringBuffer buf1;
-			buf1 << "xmiss_bb" << bb->number() << "_i" << lblock->address();
+			buf1 << "xmiss_bb" << bb->index() << "_i" << lblock->address();
 			String name1 = buf1.toString();
 			miss = system->newVar(name1);
 		}
@@ -188,7 +189,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 				cons = system->newConstraint(Constraint::EQ);
 				cons->addLeft(1, HIT_VAR(bloc));
 				bool used = false;
-				for(BasicBlock::InIterator edge(bb); edge; edge++) {
+				for(BasicBlock::EdgeIter edge = bb->ins(); edge; edge++) {
 					if (!Dominance::dominates(bb, edge->source())){
 						cons->addRight(1, VAR(edge));
 						used = true;
@@ -230,7 +231,7 @@ void CATConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *id ) {
 				//}
 						Constraint * boundingmiss = system->newConstraint(Constraint::LE);
 						boundingmiss->addLeft(1, MISS_VAR(bloc));
-						for(BasicBlock::InIterator entry(NODE(bloc)->HEADERLBLOCK());
+						for(Block::EdgeIter entry = NODE(bloc)->HEADERLBLOCK()->ins();
 							entry; entry++) {
 							if (!Dominance::dominates(NODE(bloc)->HEADERLBLOCK(), entry->source())){
 								boundingmiss->addRight(1, VAR(entry));
@@ -308,16 +309,15 @@ void CATConstraintBuilder::buildLBLOCKSET(LBlockSet *lcache , ContextTree *root)
 		 *   - Set the lblock's categorization to INVALID
 		 *   - Add this lblock to the current set.
 		 */
-		for(ContextTree::BBIterator bb(root); bb; bb++){
-			if ((!bb->isEntry())&&(!bb->isExit())){ /* XXX */
-			for(BasicBlock::InstIter inst(bb); inst; inst++) {
-				address_t adlbloc = inst->address();
-				for (LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
-					if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb()))
-						NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);
+		for(ContextTree::BlockIterator bb(root); bb; bb++){
+			if(bb->isBasic())
+				for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
+					address_t adlbloc = inst->address();
+					for (LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
+						if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb()))
+							NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);
+					}
 				}
-			}
-		}
 	}
 }
 
