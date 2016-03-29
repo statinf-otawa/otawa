@@ -174,6 +174,7 @@ The platform provide details about the hardware feature of the targeted system.
 	<!-- PIPELINE -->?
 	<!-- CACHES -->?
 	<!-- MEMORY -->?
+	<!-- BHT -->?
 </platform>
 </code>
 
@@ -1103,5 +1104,49 @@ For example, flash memories are readable word by word but are written block by b
 dedicated IO registers.
 
 
+===== BHT Description =====
 
+BHT (Branch Hit Table) is a current implementation of branch prediction mechanism.
+Basically, a BHT can be viewed as a cache memory indexed on branch instruction addresses
+(supporting direct mapping and associativity) but providing at each entry an hint to
+predict the behaviour of the branch instruction: taken or not-taken. For now, we consider
+only bi-modal branch prediction with saturation (2 bits for states Strongly-Taken,
+Weakly-Taken, Weakly-Not-Taken, Strongly-Not-Taken) but we plan to support more branch
+prediction in next versions.
+
+The format of BHT is displayed below:
+<code xml>
+<!-- BHT ::= -->
+	<bht class="otawa::hard::BHT">
+	
+		<block_bits>INT</block_bits>
+		<row_bits>INT</row_bits>
+		<way_bits>INT</way_bits>
+		<replace>LRU|RANDOM|FIFO|PLRU</replace>
+	
+		<cond_penalty>INT</cond_penalty>?
+		<indirect_penalty>INT</indirect_penalty>
+		<cond_indirect_penalty>INT>/cond_indirect_penalty>
+		<def_predict>PREDICT_TAKEN|PREDICT_NOT_TAKEN|PREDICT_DIRECT</def_predict>
+	</bht>	
+</code>
+
+The first four elements describes the cache nature of the BHT:
+  * ''block_bits'' -- if its value is //n//, the branch address is divided by 2<sup>n</sup>,
+  * ''row_bits'' -- number of sets in the cache (if its values is //n//, there are 2<sup>n</sup> sets),
+  * ''way_bits'' -- number of branch stored in each set (if its values is //n//, there are 2<sup>n</sup> branches in each set),
+  * ''replace'' -- describe how the branches are managed and replaced in each set.
+    * LRU -- Least Recently Used,
+    * RANDOM -- Random Replacement,
+    * FIFO -- First-In First-Out (also called Round-Robin),
+    * PLRU -- Pseudo-Least Recently Used.
+
+The next fields are specific to a branch predictor:
+  * ''cond_penalty'' -- cost of a misprediction in cycles for a simple conditional branch,
+  * ''indirect_penalty'' -- cost of a misprediction in cyles for an indirect branch,
+  * ''cond_indirect_penalty'' -- cost of a misprediction in cyles for an conditional indirect branch,
+  * ''def_predict'' -- default prediction to apply when a branch is not in BHT:
+    * ''PREDICT_TAKEN'' -- branch is considered as taken,
+    * ''PREDICT_NOT_TAKEN'' -- branch is considered as not-taken,
+    * ''PREDICT_DIRECT'' -- backward branch considered taken, forward as not-tkabe.
 
