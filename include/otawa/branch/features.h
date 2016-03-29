@@ -22,10 +22,13 @@
 #define OTAWA_BRANCH_FEATURES_H_
 
 #include <elm/io.h>
+#include <otawa/proc/AbstractFeature.h>
+#include <otawa/properties.h>
 
 namespace otawa {
 
 using namespace elm;
+class Block;
 namespace ilp { class Var; }
 
 namespace branch {
@@ -48,7 +51,7 @@ io::Output& operator<<(io::Output& out, category_t cat);
 
 // category feature
 extern Identifier<category_t> CATEGORY;
-extern Identifier<Block*> HEADER;
+extern Identifier<Block *> HEADER;
 extern p::feature CATEGORY_FEATURE;
 
 // branch constraints feature
@@ -57,6 +60,9 @@ extern Identifier<ilp::Var*> MISSPRED_VAR;
 
 // support feature
 extern p::feature SUPPORT_FEATURE;
+
+// etime feature
+extern p::feature EVENT_FEATURE;
 
 } }		// otawa::branch
 
