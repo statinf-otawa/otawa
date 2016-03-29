@@ -21,12 +21,10 @@ include_directories("../../gel/include")
 
 # subdirectories
 add_subdirectory(prog)
-add_subdirectory(ast)
 add_subdirectory(branch)
 add_subdirectory(cfgio)
 add_subdirectory(dynbranch)
 #add_subdirectory(etime)
-add_subdirectory(ets)
 add_subdirectory(ocpp)
 add_subdirectory(odec)
 add_subdirectory(odisplay)
@@ -74,6 +72,8 @@ endif()
 
 # legacy code
 if(USE_LEGACY)
+	add_subdirectory(ast)
 	add_subdirectory(cat)
 	add_subdirectory(ccg)
+	add_subdirectory(ets)
 endif()
