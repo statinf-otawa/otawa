@@ -21,21 +21,28 @@
 #ifndef OTAWA_HARD_BHT_H
 #define OTAWA_HARD_BHT_H
 
+#include <elm/genstruct/Vector.h>
 #include <elm/io.h>
 #include <elm/serial2/macros.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/sys/Path.h>
+
 #include <otawa/base.h>
 #include <otawa/hard/PureCache.h>
-#include <otawa/proc/SilentFeature.h>
+#include <otawa/proc/AbstractFeature.h>
+
+namespace elm { namespace xom { class Element; } }
 
 namespace otawa { namespace hard {
 
 // default prediction type
-const static int PREDICT_NONE = 0,
-				 PREDICT_TAKEN = 1,
-				 PREDICT_NOT_TAKEN = 2,
-				 PREDICT_DIRECT = 3,
-				 PREDICT_UNKNOWN = 4;
+typedef enum predict_t {
+	PREDICT_NONE = 0,
+	PREDICT_TAKEN = 1,
+	PREDICT_NOT_TAKEN = 2,
+	PREDICT_DIRECT = 3,
+	PREDICT_UNKNOWN = 4
+} predict_t;
+
 
 // BHT class
 class BHT: public PureCache {
@@ -43,7 +50,7 @@ private:
 	int cond_penalty;
 	int indirect_penalty;
 	int cond_indirect_penalty;
-	int def_predict;
+	predict_t def_predict;
 	
 	SERIALIZABLE(BHT, ELM_BASE(PureCache) &
 		DFIELD(cond_penalty, 10) &
@@ -60,18 +67,25 @@ public:
 	inline void setCondPenalty(int time) { cond_penalty = time; }
 	inline void setIndirectPenalty(int time) { indirect_penalty = time; }
 	inline void setCondIndirectPenalty(int time) { cond_indirect_penalty = time; }
-	inline void setDefaultPrediction(int def) { def_predict = def; }
+	inline void setDefaultPrediction(predict_t def) { def_predict = def; }
 	
 	// Accessors
 	inline int getCondPenalty(void) const { return cond_penalty; }
 	inline int getIndirectPenalty(void) const { return indirect_penalty; }
 	inline int getCondIndirectPenalty(void) const { return cond_indirect_penalty; }
 	inline int getDefaultPrediction(void) const { return def_predict; }
+
+	// Convenient methods
+	int actualDefaultPrediction(Address branch, Address target);
 };
 
 extern p::feature BHT_FEATURE;
 extern Identifier<BHT *> BHT_CONFIG;
+extern Identifier<xom::Element *> BHT_ELEMENT;
+extern Identifier<elm::sys::Path> BHT_PATH;
 
 } } // otawa::hard
+
+ENUM(otawa::hard::predict_t);
 
 #endif // OTAWA_HARD_BHT_H

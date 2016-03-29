@@ -64,6 +64,7 @@ namespace otawa { namespace hard {
  * @li @ref otawa::hard::PROCESSOR_FEATURE
  * @li @ref otawa::hard::CACHE_CONFIGURATION_FEATURE
  * @li @ref otawa::hard::MEMORY_FEATURE
+ * @li @ref otawa::hard::BHT
  *
  * @par Processor Format
  *
