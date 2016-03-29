@@ -158,7 +158,7 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 		cout << "\toutput " << label << " to " << out_path << io::endl;
 	OUT(cfg) = this;
 	CFGAdapter cfga(cfg, inlining);
-	GenDrawer<CFGAdapter, CFGOutputDecorator> drawer(cfga, inlining);
+	GenDrawer<CFGAdapter, CFGOutputDecorator> drawer(cfga);
 
 	drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
 	drawer.default_vertex.text.size = 12;
