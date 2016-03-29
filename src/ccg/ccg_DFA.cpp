@@ -44,17 +44,17 @@ int Problem::vars = 0;
 
 /**
  */
-Domain *Problem::gen(CFG *cfg, BasicBlock *bb) {
+Domain *Problem::gen(CFG *cfg, Block *bb) {
 	/*int length =*/ ccggraph->count();
 	Domain *bitset = empty();
 	if(bb->isEntry() && (cfg == ENTRY_CFG(fw))) {
 		bitset->add(0);
 		return bitset;
 	}
-	else {
+	else if(bb->isBasic()) {
 		address_t adlbloc;
 	    int identif = 0;
-		for(BasicBlock::InstIter inst(bb); inst; inst++) {
+		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 			adlbloc = inst->address();
 			for (LBlockSet::Iterator lbloc(*ccggraph); lbloc; lbloc++) {
 				address_t address = lbloc->address();
@@ -67,18 +67,21 @@ Domain *Problem::gen(CFG *cfg, BasicBlock *bb) {
 		 	bitset->add(identif);
 		return bitset;
 	}
-
+	else
+		return bitset;
 }
 
 /**
  */
-Domain *Problem::preserve(CFG *cfg, BasicBlock *bb) {
+Domain *Problem::preserve(CFG *cfg, Block *bb) {
+	if(!bb->isBasic())
+		return empty();
 	bool testnotconflit = false;
 	bool visit = false;
 	address_t adlbloc;
     int identif1 = 0;
 
-	for(BasicBlock::InstIter inst(bb); inst; inst++) {
+	for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 		visit = false;
 		int dec = cach->blockBits();
 		adlbloc = inst->address();

@@ -18,25 +18,26 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include <elm/io.h>
-#include <otawa/ccg/ConstraintBuilder.h>
-#include <otawa/cfg.h>
-#include <otawa/instruction.h>
-#include <otawa/ccg/Node.h>
-#include <otawa/cache/LBlockSet.h>
-#include <otawa/ccg/DFA.h>
-#include <otawa/ilp.h>
-#include <otawa/ipet/IPET.h>
+
 #include <elm/genstruct/HashTable.h>
-#include <otawa/util/Dominance.h>
-#include <otawa/util/ContextTree.h>
+#include <elm/io.h>
+
+#include <otawa/cache/LBlockSet.h>
+#include <otawa/ccg/Builder.h>
+#include <otawa/ccg/ConstraintBuilder.h>
+#include <otawa/ccg/DFA.h>
+#include <otawa/ccg/Node.h>
 #include <otawa/cfg.h>
+#include <otawa/cfg/Dominance.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
-#include <otawa/ccg/Builder.h>
+#include <otawa/ilp.h>
 #include <otawa/ipet.h>
-#include <otawa/util/LBlockBuilder.h>
+#include <otawa/ipet/IPET.h>
 #include <otawa/ipet/TrivialInstCacheManager.h>
+#include <otawa/instruction.h>
+#include <otawa/util/ContextTree.h>
+#include <otawa/util/LBlockBuilder.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
@@ -153,7 +154,7 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			if(_explicit) {
 				StringBuffer buf;
 				buf << "xhit_" << lblock->address()
-					<< '_' << lblock->bb()->number()
+					<< '_' << lblock->bb()->index()
 					<< '_' << lblock->bb()->cfg()->label();
 				namex = buf.toString();
 			}
@@ -165,7 +166,7 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			if(_explicit) {
 				StringBuffer buf1;
 				buf1 << "xmiss_" << lblock->address()
-					 << '_' << lblock->bb()->number()
+					 << '_' << lblock->bb()->index()
 					 << '_' << lblock->bb()->cfg()->label();
 			 	name1 = buf1.toString();
 			}
@@ -184,14 +185,14 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 					buf << "ENTRY";
 				else
 					buf << lblock->address()
-						<< '_' << lblock->bb()->number()
+						<< '_' << lblock->bb()->index()
 						<< '_' << lblock->bb()->cfg()->label();
 				buf << '_';
 				if(!succ->lblock()->address())
 					buf << "EXIT";
 				else
 					buf << succ->lblock()->address()
-						<< '_' << succ->lblock()->bb()->number()
+						<< '_' << succ->lblock()->bb()->index()
 						<< '_' << succ->lblock()->bb()->cfg()->label();
 				name = buf.toString();
 			}
@@ -395,7 +396,7 @@ void ConstraintBuilder::addConstraintHeader(
 		addConstraintHeader(system, graph, son, boc);
 	BasicBlock *b = boc->bb();
 	if(cont->kind() == ContextTree::LOOP){
-		for(ContextTree::BBIterator bs(cont); bs; bs++) {
+		for(ContextTree::BlockIterator bs(cont); bs; bs++) {
 			if (b == bs){
 			    // p(uv, ij) / header not dom bb(uv) <= sum xi
 			    // / (xi, header) in E and header not dom xi
@@ -426,8 +427,8 @@ void ConstraintBuilder::addConstraintHeader(
 				}
 				if(used) {
 				        bool set = false;
-					for(BasicBlock::InIterator inedg(header); inedg ; inedg++) {
-						BasicBlock *preheader = inedg->source();
+					for(Block::EdgeIter inedg = header->ins(); inedg ; inedg++) {
+						Block *preheader = inedg->source();
 						if(!Dominance::dominates(header, inedg->source()))
 						cons32->addRight(1, VAR(preheader));
 						set = true;

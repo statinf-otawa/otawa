@@ -60,8 +60,8 @@ public:
 		return(tmp);
 	}
 	
-	Domain *gen(CFG *cfg, BasicBlock *bb);
-	Domain *preserve(CFG *cfg, BasicBlock *bb);
+	Domain *gen(CFG *cfg, Block *bb);
+	Domain *preserve(CFG *cfg, Block *bb);
 
 	inline void free(Domain *d) { delete d; }
 

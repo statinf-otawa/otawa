@@ -19,10 +19,11 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <otawa/ccg/LBlockBuilder.h>
 #include <otawa/cfg/features.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Memory.h>
-#include <otawa/ccg/LBlockBuilder.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa { namespace ccg {
 
@@ -141,14 +142,15 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct:
 
 /**
  */
-void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
+void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, Block *block) {
 	ASSERT(fw);
 	ASSERT(cfg);
-	ASSERT(bb);
+	ASSERT(block);
 
 	// Do not process entry and exit
-	if (bb->isEnd())
+	if(!block->isBasic())
 		return;
+	BasicBlock *bb = block->toBasic();
 
 	// Allocate the BB lblock table
 	int num_lblocks =
@@ -159,8 +161,8 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb) {
 
 	// Traverse instruction
 	int index = 0;
-	hard::Cache::set_t set = cache->set(bb->firstInst()->address()) - 1;
-	for(BasicBlock::InstIterator inst(bb); inst; inst++)
+	hard::Cache::set_t set = cache->set(bb->first()->address()) - 1;
+	for(BasicBlock::InstIter inst = bb->insts(); inst; inst++)
 		if(set != cache->set(inst->address())) {
 			set = cache->set(inst->address());
 			addLBlock(bb, inst, index, lblocks);

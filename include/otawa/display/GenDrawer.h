@@ -31,7 +31,7 @@ namespace otawa { namespace display {
 template <class G, class D>
 class GenDrawer: public AbstractDrawer {
 public:
-	inline GenDrawer(const G& graph, bool inlineAll);
+	inline GenDrawer(const G& graph, bool inlineAll = false);
 
 private:
 	
