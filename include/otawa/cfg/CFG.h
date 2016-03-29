@@ -41,11 +41,13 @@ class Edge: public PropList, public sgraph::GenEdge<Block, Edge> {
 	friend class CFGMaker;
 public:
 	inline Edge(t::uint32 flags = 0): _flags(flags) { }
-	inline Block *target(void) const;
+	inline Block *target(void) const { return sink(); }
 	inline bool isNotTaken(void) const { return _flags & NOT_TAKEN; }
 	inline bool isTaken(void) const { return !isNotTaken(); }
 	inline t::uint32 flags(void) const { return _flags; }
 	static const t::uint32 NOT_TAKEN = 0x00000001;
+	inline bool isForward(void) const;
+	inline bool isBackward(void) const { return !isForward(); }
 private:
 	t::uint32 _flags;
 };
@@ -82,6 +84,7 @@ public:
 	inline operator BasicBlock *(void) { return toBasic(); }
 	inline operator SynthBlock  *(void) { return toSynth(); }
 	inline CFG *cfg(void) const { return _cfg; }
+	inline Address address(void);
 
 protected:
 	Block(t::uint16 type = IS_BASIC);
@@ -101,6 +104,7 @@ public:
 	inline CFG *callee(void) const { return _callee; }
 	inline CFG *caller(void) const { return cfg(); }
 	Inst *callInst(void);
+	inline Address address(void) const;
 private:
 	CFG *_callee;
 };
@@ -172,12 +176,16 @@ io::Output& operator<<(io::Output& out, CFG *cfg);
 
 
 // delayed inlines
-inline Block *Edge::target(void) const	{ return sink(); }
+//inline Block *Edge::target(void) const	{ return sink(); }
+inline bool Edge::isForward(void) const { ASSERT(isTaken()); return source()->address() < sink()->address(); }
 inline int Block::id(void) const { return index() + _cfg->offset(); }
 inline BasicBlock *Block::toBasic(void) { ASSERT(isBasic()); return static_cast<BasicBlock *>(this); }
 inline SynthBlock *Block::toSynth(void) { ASSERT(isCall());  return static_cast<SynthBlock  *>(this); }
 Output& operator<<(Output& out, Block *b);
-
+inline Address Block::address(void)
+	{ if(isBasic()) return toBasic()->address(); if(isSynth()) return toSynth()->address(); else return Address::null; }
+inline Address SynthBlock::address(void) const
+	{ if(_callee) return _callee->first()->address(); else return Address::null; }
 
 
 class CFGMaker: public sgraph::GenDiGraphBuilder<Block, Edge>, public PropList {

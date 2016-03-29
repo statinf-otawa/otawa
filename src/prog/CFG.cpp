@@ -247,6 +247,46 @@ namespace otawa {
  */
 
 /**
+ * @fn bool Edge::isNotTaken(void) const;
+ * Test if the edge is marked as not-taken, that is, represents control
+ * flow in sequence between the last instruction of source block and
+ * the first instruction of sink block.
+ * @return	True if it is not taken, false else.
+ */
+
+/**
+ * @fn bool Edge::isTaken(void) const;
+ * Test if the edge is marked as taken, that is, represents control flow
+ * when the branch os a basic block is taken and the sink block is
+ * the target of the taken branch.
+ * @return	True if it is taken, false else.
+ */
+
+/**
+ * @fn t::uint32 Edge::flags(void) const;
+ * Get flags associated with the edge.
+ * @return	Edge flags.
+ */
+
+/**
+ * @fn bool Edge::isForward(void) const;
+ * Test if the edge is a forward edge, that is, branch to an address bigger
+ * than the branch instruction address.
+ * @return	True if it is forward branch, false else.
+ *
+ */
+
+/**
+ * @fn bool Edge::isBackward(void) const;
+ * Test if the edge is a backward edge, that is, branch to an address less
+ * or equal to the branch instruction address. Backward branch represents
+ * often back edge of loops (but it is not mandatory).
+ * @return	True if it is back branch, false else.
+ */
+
+
+
+/**
  */
 io::Output& operator<<(io::Output& out, Edge *edge) {
 	out << edge->source() << " -> " << edge->sink();
