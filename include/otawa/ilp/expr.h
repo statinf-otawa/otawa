@@ -40,6 +40,8 @@ private:
 inline var x(Var *v) { return var(v); }
 inline Term operator*(coef_t c, var v) { return Term(v, c); }
 inline Term operator*(var v, coef_t c) { return Term(v, c); }
+inline Term operator*(int c, var v) { return Term(v, c); }
+inline Term operator*(var v, int c) { return Term(v, c); }
 
 
 // cons class
@@ -62,14 +64,19 @@ public:
 	inline cons operator+=(const Expression& e)	{ if(l) c->add(e); else c->sub(e); return *this; }
 	inline cons operator-=(const Expression& e) { if(l) c->sub(e); else c->add(e);; return *this; }
 
+	inline cons operator==(int t) 				{ set(Constraint::EQ); return *this + t; }
 	inline cons operator==(const Term& t) 		{ set(Constraint::EQ); return *this + t; }
 	inline cons operator==(const Expression& f)	{ set(Constraint::EQ); return *this + f; }
+	inline cons operator<=(int t) 				{ set(Constraint::LE); return *this + t; }
 	inline cons operator<=(const Term& t) 		{ set(Constraint::LE); return *this + t; }
 	inline cons operator<=(const Expression& f) { set(Constraint::LE); return *this + f; }
+	inline cons operator<(int t) 				{ set(Constraint::LT); return *this + t; }
 	inline cons operator<(const Term& t) 		{ set(Constraint::LT); return *this + t; }
 	inline cons operator<(const Expression& f) 	{ set(Constraint::LT); return *this + f; }
+	inline cons operator>=(int t) 				{ set(Constraint::GE); return *this + t; }
 	inline cons operator>=(const Term& t) 		{ set(Constraint::GE); return *this + t; }
 	inline cons operator>=(const Expression& f) { set(Constraint::GE); return *this + f; }
+	inline cons operator>(int t) 				{ set(Constraint::GT); return *this + t; }
 	inline cons operator>(const Term& t) 		{ set(Constraint::GT); return *this + t; }
 	inline cons operator>(const Expression& f) 	{ set(Constraint::GT); return *this + f; }
 
@@ -100,6 +107,7 @@ public:
 	inline System *operator&(void) const { return _s; }
 	inline System *operator->(void) const { return _s; }
 	inline operator System *(void) const { return _s; }
+	inline ilp::var var(const string& name) const { return _s->newVar(name); }
 private:
 	System *_s;
 };
