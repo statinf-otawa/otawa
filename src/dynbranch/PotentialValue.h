@@ -24,6 +24,7 @@
 #include "Set.h"
 #include <elm/io/OutStream.h>
 #include <elm/genstruct/SLList.h>
+#include <otawa/prop/Identifier.h>
 
 using namespace elm;
 using namespace elm::io;
@@ -31,38 +32,36 @@ using namespace elm::genstruct;
 
 namespace otawa { namespace dynbranch {
 
+#ifdef SAFE_MEM_ACCESS
 class PotentialValueMem;
+typedef SLList<PotentialValueMem*> potential_value_list_t;
+#else
+class PotentialValue;
+typedef SLList<PotentialValue*> potential_value_list_t;
+#endif
 
 class PotentialValue: public Set<elm::t::uint32> {
 	friend Output& operator<<(Output& o, PotentialValue const& pv);
+	friend bool operator==(const PotentialValue& a, const PotentialValue& b);
 public:
-	PotentialValue(void);
+	PotentialValue(bool top=false);
 	PotentialValue(const PotentialValue& cpv);
 	PotentialValue& operator=(const PotentialValue& obj);
 	~PotentialValue(void);
 	// for FastState:
 	typedef PotentialValue t;
-	static PotentialValue bot;
-	static PotentialValue top;
+	static PotentialValue bot; // ⊥
+	static PotentialValue top; // ⊤
 	static PotentialValue DEFAULT;
+	inline void dump(Output& o, PotentialValue &pv) { o << pv; }
 
-	inline void dump(Output& o, PotentialValue &pv) {
-		o << "{ ";
-		for(PotentialValue::Iterator i(pv); i; i++)
-			o << "0x" << hex(*i) << " ";
-		o << "}";
-	}
-
-	inline bool equals(PotentialValue &a, PotentialValue &b) { return a == b; }
+	inline bool equals(const PotentialValue &a, const PotentialValue &b) { return a == b; }
 	static unsigned int MAGIC;
 	unsigned int magic;
+	static potential_value_list_t potentialValueCollector;
+	bool bTop;
 #ifdef SAFE_MEM_ACCESS
-	static SLList<PotentialValueMem*> potentialValueCollector;
-	typedef SLList<PotentialValueMem*> potential_value_list_t;
 	PotentialValueMem* pvm;
-#else
-	static SLList<PotentialValue*> potentialValueCollector;
-	typedef SLList<PotentialValue*> potential_value_list_t;
 #endif
 };
 
@@ -87,6 +86,7 @@ public:
 };
 #endif
 
+//extern Identifier<potential_value_list_t* > DYNBRANCH_POTENTIAL_VALUE_LIST;
 }}
 #endif	// OTAWA_DYNBRANCH_POTENTIAL_VALUE_H
 

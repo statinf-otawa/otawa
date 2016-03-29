@@ -64,6 +64,8 @@ extern Identifier<Domain> GLOBAL_STATE_IN;
 extern Identifier<Domain> GLOBAL_STATE_OUT;
 extern Identifier<Domain> GLOBAL_STATE_ENTRY;
 
+extern Identifier<elm::StackAllocator*> DYNBRANCH_STACK_ALLOCATOR;
+extern Identifier<dfa::FastState<PotentialValue>*> DYNBRANCH_FASTSTATE;
 
 } } // otawa::dynbranch
 

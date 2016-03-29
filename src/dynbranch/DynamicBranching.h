@@ -64,6 +64,7 @@ private:
 	clp::Manager* clpManager;
 	Vector<otawa::clp::State> clpState;
 	dfa::State *istate;
+	bool first;
 };
 } } // otawa::dynbranch
 

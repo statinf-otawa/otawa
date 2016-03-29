@@ -237,7 +237,8 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			fp.fixPointReached(current);
 			delete FIXPOINT_STATE(current);
 			// TODO it's better to remove the property here
-			FIXPOINT_STATE(current) = 0;
+			// FIXPOINT_STATE(current) = 0;
+			FIXPOINT_STATE(current).remove();
 			// TODO FIRST_ITER should work in reverse direction
 			FIRST_ITER(current) = true;
 

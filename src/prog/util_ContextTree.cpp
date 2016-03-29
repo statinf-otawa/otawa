@@ -36,6 +36,29 @@ using namespace elm;
 
 namespace otawa {
 
+/*
+ * Cleaner used to clear the ENCLOSING_LOOP_HEADER identifier when the
+ * LOOP_INFO_FEATURE is invalidated.
+ */
+class ContextTreeAllCleaner: public elm::Cleaner {
+public:
+	 ContextTreeAllCleaner(WorkSpace *_ws): ws(_ws) { }
+
+protected:
+	virtual void clean() {
+		const CFGCollection* cfgc = INVOLVED_CFGS(ws);
+		for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+			if(CONTEXT_TREE(cfg).exists()) {
+				delete CONTEXT_TREE(cfg);
+				CONTEXT_TREE(cfg).remove();
+			}
+		}
+	}
+private:
+	WorkSpace* ws;
+};
+
+
 /**
  * @enum ContextTree::kind_t
  * This enumerate represents the kind of a context tree.
@@ -317,6 +340,7 @@ ContextTreeBuilder::ContextTreeBuilder(void)
  */
 void ContextTreeBuilder::processWorkSpace(WorkSpace *fw) {
 	CONTEXT_TREE(fw) = new ContextTree(ENTRY_CFG(fw));
+	addCleaner(CONTEXT_TREE_FEATURE, new ContextTreeAllCleaner(fw));
 }
 
 
@@ -344,7 +368,7 @@ void ContextTreeBuilder::processWorkSpace(WorkSpace *fw) {
 /**
  */
 ContextTreeByCFGBuilder::ContextTreeByCFGBuilder(void)
-: CFGProcessor("otawa::ContextTreeByCFGBuilder", Version(1, 0, 0)) {
+: CFGProcessor("otawa::ContextTreeByCFGBuilder", Version(1, 0, 0)), fst(true) {
 	require(DOMINANCE_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
 	require(LOOP_INFO_FEATURE);
@@ -355,7 +379,11 @@ ContextTreeByCFGBuilder::ContextTreeByCFGBuilder(void)
 /**
  */
 void ContextTreeByCFGBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
-	CONTEXT_TREE(cfg) = new ContextTree(cfg, 0, false);	
+	CONTEXT_TREE(cfg) = new ContextTree(cfg, 0, false);
+	if(fst) { // only add the cleaner for the first time
+		addCleaner(CONTEXT_TREE_BY_CFG_FEATURE, new ContextTreeAllCleaner(fw));
+		fst = false;
+	}
 }
 
 

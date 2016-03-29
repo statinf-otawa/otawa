@@ -216,10 +216,14 @@ namespace se{
 		// [-, [K, <val>]] -> [K, eval(val * -1)]
 		if (_a && _a->op() == CONST){
 			if (_parent->a() == this){
-				_parent->set_a(new SEConst(V(0) - _a->val())); // WILL DELETE this !
+				SEConst* temp = new SEConst(V(0) - _a->val());
+				_parent->set_a(temp); // WILL DELETE this !
+				delete temp;
 				return;
 			} else if (_parent->b() == this){
-				_parent->set_b(new SEConst(V(0) - _a->val())); // WILL DELETE this !
+				SEConst* temp = new SEConst(V(0) - _a->val());
+				_parent->set_b(temp); // WILL DELETE this !
+				delete temp;
 				return;
 			}
 		}
@@ -269,11 +273,15 @@ namespace se{
 		if (_parent && _a && _a->op() == CONST && _b && _b->op() == CONST){
 			if (_parent->a() == this){
 				// WILL DELETE this !
-				_parent->set_a(new SEConst(_a->val() + _b->val()));
+				SEConst* temp = new SEConst(_a->val() + _b->val());
+				_parent->set_a(temp);
+				delete temp;
 				return;
 			} else if (_parent->b() == this){
 				// WILL DELETE this !
-				_parent->set_b(new SEConst(_a->val() + _b->val()));
+				SEConst* temp = new SEConst(_a->val() + _b->val());
+				_parent->set_b(temp);
+				delete temp;
 				return;
 			}
 		}
@@ -521,6 +529,25 @@ namespace se{
 		return notse;
 	}
 
+	/*
+	 * To output a set of filters
+	 */
+	Output& operator<<(Output& o, Vector<SECmp *> const& exprs) {
+		bool fst = true;
+		o << "{";
+		for(Vector<SECmp *>::Iterator vsei(exprs); vsei; vsei++) {
+			if(!fst)
+				o << ", ";
+			else
+				fst = false;
+
+			o << vsei->asString();
+		}
+		o << "}";
+		return o;
+	}
+
+
 	Identifier<Vector<SECmp *> > REG_FILTERS("otawa::se::REG_FILTERS");
 	Identifier<Vector<SECmp *> > ADDR_FILTERS("otawa::se::ADDR_FILTERS");
 
@@ -652,6 +679,21 @@ namespace se{
 			iterateBranchPaths(branch, insts);
 
 		// Set properties on the BB
+		// need to make sure they are clean first
+		if(se::REG_FILTERS(bb).exists()) {
+			Vector<se::SECmp *> vse = se::REG_FILTERS(bb);
+			for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+				delete *vsei;
+			se::REG_FILTERS(bb).remove();
+		}
+
+		if(se::ADDR_FILTERS(bb).exists()) {
+			Vector<se::SECmp *> vse = se::ADDR_FILTERS(bb);
+			for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+				delete *vsei;
+			se::ADDR_FILTERS(bb).remove();
+		}
+
 		REG_FILTERS(bb) = reg_filters;
 		ADDR_FILTERS(bb) = addr_filters;
 	}
@@ -763,8 +805,12 @@ namespace se{
 					case sem::ANY_COND:	log_op = NONE; break;
 					default:			ASSERTP(false, "unsupported condition " << i.cond() << " at " << cur_inst->address()); break;
 					}
-					if(log_op)
+					if(log_op) {
+						if(se)
+							delete se;
+
 						se = new SECmp(log_op, new SEReg(i.a()));
+					}
 				}
 				break;
 

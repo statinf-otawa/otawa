@@ -659,7 +659,7 @@ public:
 protected:
 	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::SwitchOption xml, dynbranch, outputCFG, outputVirtualizedCFG, removeDuplicatedTarget;
+	option::SwitchOption xml, dynbranch, outputCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps;
 };
 
 
@@ -676,8 +676,21 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	// Enable the dynamic branch
 	if(dynbranch) {
 		class CFGOutput: public otawa::display::CFGOutput { // for simple CFG output facility
-			inline void genBBInfo(CFG *cfg, Block *bb, Output& out) { /* for the separation bar */ }
+		public:
+			CFGOutput(bool _showProp): otawa::display::CFGOutput(), showProp(_showProp) { }
+			inline void genBBInfo(CFG *cfg, Block *bb, Output& out) {
+				if(!showProp)
+					return;
+				out << "---\n";
+				for(PropList::Iter prop(bb); prop; prop++) {
+					out << prop->id()->name() << " = ";
+					prop->id()->print(out, prop);
+					out << io::endl;
+				}
+			}
 			inline void genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out) { /* nothing on the edge */ }
+		private:
+			bool showProp;
 		};
 
 		otawa::display::CFGOutput::INLINING(props) = outputVirtualizedCFG;
@@ -695,43 +708,19 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			else {
 				workspace()->invalidate(COLLECTED_CFG_FEATURE);
 				workspace()->require(COLLECTED_CFG_FEATURE, props);
-			}
+			} // end of the first time
+
+			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false; // clear the flag
+			workspace()->require(otawa::dynbranch::DYNBRANCH_FEATURE, props);
+			// the loop goes on searching new branch target when there is a new target found
+			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
 
 			if(outputVirtualizedCFG || outputCFG) {
 				string iterationString = _ << iteration << "_";
 				otawa::display::CFGOutput::PREFIX(props) = iterationString;
-				CFGOutput().process(workspace(), props);
+				CFGOutput(showBlockProps).process(workspace(), props);
 			}
-
-			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false; // clear the flag
-			workspace()->require(otawa::dynbranch::FEATURE, props);
-			// the loop goes on searching new branch target when there is a new target found
-			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
 			iteration++;
-
-			// clear the PotentialValues
-			dynbranch::PotentialValue::potential_value_list_t* potentialValueList = dynbranch::DYNBRANCH_POTENTIAL_VALUE_LIST(workspace());
-			if(isVerbose())
-				elm::cerr << "potentialValueList length = " << potentialValueList->count() << io::endl;
-			for(dynbranch::PotentialValue::potential_value_list_t::Iterator slli(*potentialValueList); slli; slli++) {
-#ifdef SAFE_MEM_ACCESS
-				dynbranch::PotentialValueMem *pv = *slli;
-				if(pv->status == true) {
-					pv->pv->~Vector();
-				}
-				delete pv;
-#else
-				dynbranch::PotentialValue *pv = *slli;
-				if(pv->magic != dynbranch::PotentialValue::MAGIC)
-					continue;
-				pv->~Vector();
-#endif
-			}
-			potentialValueList->clear();
-
-			elm::StackAllocator* psa = dynbranch::DYNBRANCH_STACK_ALLOCATOR(workspace());
-			assert(psa);
-			delete psa;
 		} while(branchDetected);
 	}
 
@@ -792,7 +781,8 @@ Command::Command(void):
 		dynbranch(*this, option::cmd, "-D", option::cmd, "--dynbranch", option::description, "check for dynamic branches", option::end),
 		outputCFG(*this, option::cmd, "-C", option::cmd, "--cfg_output", option::description, "output cfg in a given fashion (otawa::display::CFGOutput::PATH, KIND)", option::end),
 		outputVirtualizedCFG(*this, option::cmd, "-I", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::INLINED = true), implies -C", option::end),
-		removeDuplicatedTarget(*this, option::cmd, "-S", option::cmd, "--no_repeat_multibranch", option::description, "do not output the multi-call/branch with the same target addresses", option::end)
+		removeDuplicatedTarget(*this, option::cmd, "-S", option::cmd, "--no_repeat_multibranch", option::description, "do not output the multi-call/branch with the same target addresses", option::end),
+		showBlockProps(*this, option::cmd, "-P", option::cmd, "--show_block_props", option::description, "shows the properties of the block", option::end)
 {
 }
 

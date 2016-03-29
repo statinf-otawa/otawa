@@ -89,12 +89,13 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 			if(!bbi->isBasic())
 				continue;
 
-			GLOBAL_STATE_IN(*bbi) = *list.results[cfgi->index()][bbi->index()] ;
+			GLOBAL_STATE_IN(*bbi) = *list.results[cfgi->index()][bbi->index()];
 		}
 	}
 
 	// clear the memory
 	DYNBRANCH_STACK_ALLOCATOR(ws) = psa;
+	DYNBRANCH_FASTSTATE(ws) = fs;
 
 	if (time) {
 		watch.start() ;
@@ -139,10 +140,8 @@ Identifier<dynbranch::Domain> GLOBAL_STATE_ENTRY("otawa::dynbranch::GLOBAL_STATE
  */
 Identifier<bool> TIME("otawa::dynbranch::TIME") ;
 
-Identifier<Vector<Pair<Address, Address> >* > DATA_IN_READ_ONLY_REGION("otawa::dynbranch::DATA_IN_READ_ONLY_REGION", 0);
-
 Identifier<elm::StackAllocator*> DYNBRANCH_STACK_ALLOCATOR("", 0);
+Identifier<dfa::FastState<PotentialValue>*>DYNBRANCH_FASTSTATE("", 0);
 
-Identifier<PotentialValue::potential_value_list_t*> DYNBRANCH_POTENTIAL_VALUE_LIST("");
 
 } }	// otawa::dynbranch

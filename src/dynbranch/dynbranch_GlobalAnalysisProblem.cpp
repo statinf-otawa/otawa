@@ -79,10 +79,10 @@ void GlobalAnalysisProblem::updateEdge(Edge *edge, Domain& d) {
 
 void GlobalAnalysisProblem::lub(Domain& a,const Domain& b) const {
 	if (b.isBottom()) //A U Bottom = A   Nothing to do on A
-		return ;
+		return;
 	if (a.isBottom()) { // BOttom U B = B
-		a = b ;
-		return ;
+		a = b;
+		return;
 	}
 	a.lub(b);
 }
