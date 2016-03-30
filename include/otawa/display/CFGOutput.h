@@ -46,6 +46,7 @@ public:
 	static Identifier<string> PATH;
 	static Identifier<string> PREFIX;
 	static Identifier<bool> INLINING;
+	static Identifier<bool> VIRTUALIZED;
 
 	virtual void genGraphLabel(CFG *cfg, Output& out);
 	virtual void genBBLabel(CFG *cfg, Block *bb, Output& out);
@@ -62,6 +63,7 @@ private:
 	string path;
 	string prefix;
 	bool inlining;
+	bool virtualized;
 };
 
 } }	// otawa::display

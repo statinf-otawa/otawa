@@ -1922,9 +1922,9 @@ public:
 						addressInInitMem = true;
 
 					bool warningFlag = true;
-					for(unsigned int m = 0; (m <= addrclp.mtimes()) && addressInInitMem && (addrclp.mtimes() != clp::UMAXn); m++){
+					for(unsigned int m = 0; (m <= addrclp.mtimes()) && addressInInitMem && (addrclp.mtimes() < MEMORY_ACCESS_THRESHOLD*2 /*!= clp::UMAXn*/); m++){
 						if((addrclp.mtimes() > MEMORY_ACCESS_THRESHOLD) && warningFlag) {
-							elm::cerr << "WARNING: accessing more than " << MEMORY_ACCESS_THRESHOLD << " locations in the initialized memory (" << addrclp.mtimes() << ")" << io::endl;
+							elm::cerr << "WARNING: accessing more than " << MEMORY_ACCESS_THRESHOLD << " locations in the initialized memory (" << addrclp.mtimes() << " times)" << io::endl;
 							warningFlag = false;
 						}
 						Value addr(VAL, addrclp.lower() + addrclp.delta() * m);

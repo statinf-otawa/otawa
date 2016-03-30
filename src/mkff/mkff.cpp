@@ -659,7 +659,7 @@ public:
 protected:
 	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::SwitchOption xml, dynbranch, outputCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps;
+	option::SwitchOption xml, dynbranch, outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps;
 };
 
 
@@ -693,7 +693,8 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			bool showProp;
 		};
 
-		otawa::display::CFGOutput::INLINING(props) = outputVirtualizedCFG;
+		otawa::display::CFGOutput::INLINING(props) = outputInlinedCFG;
+		otawa::display::CFGOutput::VIRTUALIZED(props) = outputVirtualizedCFG;
 		if(!otawa::display::CFGOutput::KIND(props).exists())
 			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_DOT;
 		if(!otawa::display::CFGOutput::PATH(props).exists())
@@ -715,7 +716,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			// the loop goes on searching new branch target when there is a new target found
 			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
 
-			if(outputVirtualizedCFG || outputCFG) {
+			if(outputInlinedCFG || outputVirtualizedCFG || outputCFG) {
 				string iterationString = _ << iteration << "_";
 				otawa::display::CFGOutput::PREFIX(props) = iterationString;
 				CFGOutput(showBlockProps).process(workspace(), props);
@@ -780,7 +781,8 @@ Command::Command(void):
 		xml(*this, option::cmd, "-x", option::cmd, "--ffx", option::description, "activate FFX output", option::end),
 		dynbranch(*this, option::cmd, "-D", option::cmd, "--dynbranch", option::description, "check for dynamic branches", option::end),
 		outputCFG(*this, option::cmd, "-C", option::cmd, "--cfg_output", option::description, "output cfg in a given fashion (otawa::display::CFGOutput::PATH, KIND)", option::end),
-		outputVirtualizedCFG(*this, option::cmd, "-I", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::INLINED = true), implies -C", option::end),
+		outputInlinedCFG(*this, option::cmd, "-I", option::cmd, "--inlined_cfg", option::description, "the output cfg is inlined (otawa::display::CFGOutput::INLINED = true), implies -C", option::end),
+		outputVirtualizedCFG(*this, option::cmd, "-V", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::VIRTUALIZED = true), implies -C -I", option::end),
 		removeDuplicatedTarget(*this, option::cmd, "-S", option::cmd, "--no_repeat_multibranch", option::description, "do not output the multi-call/branch with the same target addresses", option::end),
 		showBlockProps(*this, option::cmd, "-P", option::cmd, "--show_block_props", option::description, "shows the properties of the block", option::end)
 {
