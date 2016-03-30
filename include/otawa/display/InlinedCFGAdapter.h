@@ -44,8 +44,12 @@ public:
 		inline Edge(otawa::Edge *_edge): CFGAdapter::Edge(_edge), edge(_edge) { }
 		inline Vertex source(void) const { return Vertex(edge->source()); }
 		inline Vertex sink(void) const {
-			if(edge->target()->isSynth()) // the edge is between the caller and callee
-				return Vertex(edge->target()->toSynth()->callee()->entry());
+			if(edge->target()->isSynth()) { // the edge is between the caller and callee
+				if(edge->target()->toSynth()->callee()) // the edge is between the caller and callee
+					return Vertex(edge->target()->toSynth()->callee()->entry());
+				else
+					return Vertex(edge->target());
+			}
 			else // the edge is between Blocks of the same CFG
 				return Vertex(edge->target());
 		}
@@ -168,6 +172,7 @@ public:
 			if(found)
 				return vals[index];
 			else {
+				elm::cerr << "not found BB " << vertex.b->cfg()->index() << "-" << vertex.b->index() << " (id=" << vertex.b->id() << ")" << " @ " << (void*)vertex.b << " [" << index << "]" << io::endl;
 				ASSERTP(false, "Element not found in the Vertex Map");
 				return vals[0];
 			}
@@ -186,7 +191,6 @@ public:
 			}
 			if(found) {
 				vals[index] = val;
-				elm::cout << "re-assign BB " << vertex.b->cfg()->index() << "-" << vertex.b->index() << " (id=" << vertex.b->id() << ")" << " @ " << (void*)vertex.b << " at index " << index << io::endl;
 			}
 			else {
 				vals[currIndex] = val;
