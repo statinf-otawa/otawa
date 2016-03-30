@@ -659,7 +659,7 @@ public:
 protected:
 	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::SwitchOption xml, dynbranch, outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps;
+	option::SwitchOption xml, dynbranch, outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps, rawoutput;
 };
 
 
@@ -699,6 +699,8 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_DOT;
 		if(!otawa::display::CFGOutput::PATH(props).exists())
 			otawa::display::CFGOutput::PATH(props) = ".";
+		if(rawoutput)
+			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_RAW_DOT;
 
 		int iteration = 0;
 		bool branchDetected = false;
@@ -784,7 +786,8 @@ Command::Command(void):
 		outputInlinedCFG(*this, option::cmd, "-I", option::cmd, "--inlined_cfg", option::description, "the output cfg is inlined (otawa::display::CFGOutput::INLINED = true), implies -C", option::end),
 		outputVirtualizedCFG(*this, option::cmd, "-V", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::VIRTUALIZED = true), implies -C -I", option::end),
 		removeDuplicatedTarget(*this, option::cmd, "-S", option::cmd, "--no_repeat_multibranch", option::description, "do not output the multi-call/branch with the same target addresses", option::end),
-		showBlockProps(*this, option::cmd, "-P", option::cmd, "--show_block_props", option::description, "shows the properties of the block", option::end)
+		showBlockProps(*this, option::cmd, "-P", option::cmd, "--show_block_props", option::description, "shows the properties of the block", option::end),
+		rawoutput(*this, option::cmd, "-R", option::cmd, "--raw_output", option::description, "generate raw dot output file (without calling dot)", option::end)
 {
 }
 

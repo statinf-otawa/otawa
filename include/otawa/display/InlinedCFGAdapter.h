@@ -99,7 +99,7 @@ public:
 					// this is the case if the block obtained is also a synth block
 					// i.e. BB6->BB7, both BB6 and BB7 are synth blocks. When cfg of BB6 finishes, BB7 is loaded
 					// however we don't want synth block in the CFG hence we go into the synth block right away
-					if (i->isSynth() && i->toSynth()->callee()) { // when entering a function
+					while (i->isSynth() && i->toSynth()->callee()) { // when entering a function
 						if(!travledCFG.contains(i->toSynth()->callee())) {
 							travledCFG.add(i->toSynth()->callee());
 							CFG::BlockIter j(i->toSynth()->callee()->blocks()); // j is just for temp
@@ -122,7 +122,7 @@ public:
 			if(stop)
 				return;
 
-			if (i->isSynth() && i->toSynth()->callee()) { // when entering a function
+			while(i->isSynth() && i->toSynth()->callee()) { // when entering a function
 				if(!travledCFG.contains(i->toSynth()->callee())) {
 					travledCFG.add(i->toSynth()->callee());
 					CFG::BlockIter j(i->toSynth()->callee()->blocks()); // j is just for temp

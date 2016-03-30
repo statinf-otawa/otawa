@@ -59,7 +59,8 @@ cstring exts[] = {
 	"gif",
 	"jpg",
 	"svg",
-	"dot"
+	"dot",
+	"raw"
 };
 
 // backlink to the CFGOutput
