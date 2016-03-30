@@ -113,17 +113,20 @@ private:
 		const CFGCollection *cfgs = otawa::INVOLVED_CFGS(ws);
 		State state(ws, cache, coll);
 		for(int i = 0; i < cfgs->count(); i++)
-			for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++)
+			for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb; bb++)
 					processBB(coll.cacheSet(), bb, state);
 	}
 
 	/**
 	 * Perform the analysis for the current set and BB.
 	 * @param set	Current set.
-	 * @param bb	Current BB.
+	 * @param b		Current BB.
 	 * @param state	Group together dirty, must, pers and may states.
 	 */
-	void processBB(int set, BasicBlock *bb, State& state) {
+	void processBB(int set, otawa::Block *b, State& state) {
+		if(!b->isBasic())
+			return;
+		BasicBlock *bb = b->toBasic();
 		state.start(bb);
 		if(logFor(LOG_BLOCK))
 			log << "\t\t" << bb << io::endl;

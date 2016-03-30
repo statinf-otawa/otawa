@@ -22,20 +22,24 @@
 //#define HAI_DEBUG
 
 #include <elm/assert.h>
-#include <otawa/prog/WorkSpace.h>
-#include <otawa/util/HalfAbsInt.h>
-#include <otawa/hard/Cache.h>
-#include <otawa/util/UnrollingListener.h>
-#include <otawa/util/DefaultListener.h>
-#include <otawa/hard/Platform.h>
-#include <otawa/hard/CacheConfiguration.h>
+
+#include <otawa/cfg/CFG.h>
 #include <otawa/dcache/ACSBuilder.h>
 #include <otawa/dcache/BlockBuilder.h>
 #include <otawa/dcache/MUSTPERS.h>
+#include <otawa/dfa/hai/DefaultListener.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
+#include <otawa/dfa/hai/UnrollingListener.h>
+#include <otawa/hard/Cache.h>
+#include <otawa/hard/CacheConfiguration.h>
+#include <otawa/hard/Platform.h>
+#include <otawa/prog/WorkSpace.h>
 
 #define MUST_DEBUG(x)	//cerr << x << io::endl
 
 namespace otawa { namespace dcache {
+
+using namespace otawa;
 
 /**
  * @class MUSTProblem
@@ -58,9 +62,9 @@ MUSTProblem::MUSTProblem(int _size, int _set, WorkSpace *_fw, const hard::Cache 
 	set(_set),
 	cache(_cache),
 	bot(_size, _A),
-	ent(_size, _A),
+	_top(_size, _A),
 	size(_size)
-{ ent.empty(); }
+{ _top.empty(); }
 
 
 /**
@@ -69,7 +73,7 @@ const MUSTProblem::Domain& MUSTProblem::bottom(void) const { return bot; }
 
 /**
  */
-const MUSTProblem::Domain& MUSTProblem::entry(void) const { return ent; }
+const MUSTProblem::Domain& MUSTProblem::top(void) const { return _top; }
 
 
 /**
@@ -140,7 +144,7 @@ void MUSTProblem::update(Domain& s, const BlockAccess& access) {
 
 /**
  */
-void MUSTProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
+void MUSTProblem::update(Domain& out, const Domain& in, otawa::Block* bb) {
 	assign(out, in);
 	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
 	for(int i = 0; i < accesses.fst; i++) {
@@ -286,8 +290,8 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
-				for (CFG::BBIterator bb(cfg); bb; bb++) {
-					MUST_ACS(bb)->set(line, new ACS(*mustList.results[cfg->number()][bb->number()]));
+				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+					MUST_ACS(bb)->set(line, new ACS(*mustList.results[cfg->index()][bb->index()]));
 					if(logFor(LOG_BLOCK)) {
 						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
 						//log << "\t\t\t" << *bb << ": " << *mustList.results[cfg->number()][bb->number()] << io::endl;
@@ -316,9 +320,9 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
-				for (CFG::BBIterator bb(cfg); bb; bb++) {
+				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 					ASSERT(line == coll.cacheSet());
-					MUST_ACS(bb)->set(line, new ACS(*mustList.results[cfg->number()][bb->number()]));
+					MUST_ACS(bb)->set(line, new ACS(*mustList.results[cfg->index()][bb->index()]));
 					if(logFor(LOG_BLOCK))
 						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
 				}
@@ -342,9 +346,9 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
-				for (CFG::BBIterator bb(cfg); bb; bb++) {
-					MUSTProblem::Domain &must = mustpersList.results[cfg->number()][bb->number()]->getMust();
-					PERSProblem::Domain &pers = mustpersList.results[cfg->number()][bb->number()]->getPers();
+				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+					MUSTProblem::Domain &must = mustpersList.results[cfg->index()][bb->index()]->getMust();
+					PERSProblem::Domain &pers = mustpersList.results[cfg->index()][bb->index()]->getPers();
 					MUST_ACS(bb)->set(line, new ACS(must));
 					if(logFor(LOG_BLOCK))
 						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
@@ -372,9 +376,11 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
-				for (CFG::BBIterator bb(cfg); bb; bb++) {
-					MUSTProblem::Domain &must= mustpersList.results[cfg->number()][bb->number()]->getMust();
-					PERSProblem::Domain &pers= mustpersList.results[cfg->number()][bb->number()]->getPers();
+				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+					if(!bb->isBasic())
+						continue;
+					MUSTProblem::Domain &must= mustpersList.results[cfg->index()][bb->index()]->getMust();
+					PERSProblem::Domain &pers= mustpersList.results[cfg->index()][bb->index()]->getPers();
 					MUST_ACS(bb)->set(line, new ACS(must));
 					if(logFor(LOG_BLOCK))
 						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
@@ -420,7 +426,7 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 
 	// Build the vectors for receiving the ACS...
 	for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-		for (CFG::BBIterator bb(cfg); bb; bb++) {
+		for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 			MUST_ACS(bb) = new acs_result_t(temp);
 			if(level != DFML_NONE) {
 				PERS_ACS(bb) = new acs_result_t(temp);
@@ -553,11 +559,11 @@ PERSProblem::PERSProblem(const int _size, const BlockCollection *_lbset, WorkSpa
 	fw(_fw),
 	cache(_cache),
 	bot(_size, _A),
-	ent(_size, _A),
+	_top(_size, _A),
 	line(lbset->cacheSet())
 {
 		bot.setToBottom();
-		ent.empty();
+		_top.empty();
 #ifdef PERFTEST
 		bot.enterContext();
 		ent.enterContext();
@@ -572,11 +578,11 @@ const PERSProblem::Domain& PERSProblem::bottom(void) const {
 		return bot;
 }
 
-const PERSProblem::Domain& PERSProblem::entry(void) const {
-		return ent;
+const PERSProblem::Domain& PERSProblem::top(void) const {
+		return _top;
 }
 
-void PERSProblem::update(Domain& out, const Domain& in, BasicBlock* bb)  {
+void PERSProblem::update(Domain& out, const Domain& in, otawa::Block* bb)  {
 		cerr << "FATAL: PERSProblem is not to be used directly, use MUSTPERS instead.\n";
 		ASSERT(false);
 }
@@ -678,8 +684,9 @@ void MUSTPERS::print(elm::io::Output &output, const Domain& d) const {
 }
 
 
-MUSTPERS::MUSTPERS(const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache)
-:	bot(_lbset->count(),  _cache->wayCount()),
+MUSTPERS::MUSTPERS(const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache):
+ 	_top(_lbset->count(),  _cache->wayCount()),
+	bot(_lbset->count(),  _cache->wayCount()),
  	ent(_lbset->count(),  _cache->wayCount()),
 	set(_lbset->cacheSet()),
  	mustProb(_lbset->count(), _lbset->cacheSet(), _fw, _cache, _cache->wayCount()),
@@ -691,12 +698,28 @@ MUSTPERS::MUSTPERS(const BlockCollection *_lbset, WorkSpace *_fw, const hard::Ca
 
 		persProb.assign(ent.pers, persProb.entry());
 		mustProb.assign(ent.must, mustProb.entry());
+
+		persProb.assign(_top.pers, persProb.top());
+		mustProb.assign(_top.must, mustProb.top());
 }
 
 
+/**
+ */
+const MUSTPERS::Domain& MUSTPERS::top(void) const {
+		return _top;
+}
+
+
+/**
+ */
 const MUSTPERS::Domain& MUSTPERS::bottom(void) const {
 		return bot;
 }
+
+
+/**
+ */
 const MUSTPERS::Domain& MUSTPERS::entry(void) const {
 		return ent;
 }
@@ -746,7 +769,7 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 
 /**
  */
-void MUSTPERS::update(Domain& out, const Domain& in, BasicBlock* bb) {
+void MUSTPERS::update(Domain& out, const Domain& in, otawa::Block* bb) {
 	assign(out, in);
 	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
 	for(int i = 0; i < accesses.fst; i++) {
