@@ -26,6 +26,8 @@
 #include <otawa/display/CFGDrawer.h>
 #include <otawa/display/GenDrawer.h>
 #include <otawa/display/CFGAdapter.h>
+#include <otawa/display/InlinedCFGAdapter.h>
+#include <otawa/display/VirtualizedCFGAdapter.h>
 
 namespace otawa { namespace display {
 
@@ -97,7 +99,7 @@ p::declare CFGOutput::reg =
 /**
  * Build the processor.
  */
-CFGOutput::CFGOutput(AbstractRegistration& _reg): CFGProcessor(_reg), kind(OUTPUT_DOT) {
+CFGOutput::CFGOutput(AbstractRegistration& _reg): CFGProcessor(_reg), kind(OUTPUT_DOT), inlining(false), virtualized(false) {
 
 }
 
@@ -119,9 +121,14 @@ Identifier<string> CFGOutput::PATH("otawa::display::CFGOutput::PATH", ".");
 Identifier<string> CFGOutput::PREFIX("otawa::display::CFGOutput::PREFIX", "");
 
 /**
- * Configuration identifier of @ref CFGOutput to decide if only generating one file for the whole program
+ * Configuration identifier of @ref CFGOutput to decide if only generating one file containing the inlined CFG for the whole program
  */
 Identifier<bool> CFGOutput::INLINING("otawa::display::CFGOutput::INLINING", false);
+
+/**
+ * Configuration identifier of @ref CFGOutput to decide if only generating one file containing the virtualized CFG for the whole program
+ */
+Identifier<bool> CFGOutput::VIRTUALIZED("otawa::display::CFGOutput::VIRTUALIZED", false);
 
 /**
  */
@@ -131,6 +138,7 @@ void CFGOutput::configure(const PropList &props) {
 	path = PATH(props);
 	prefix = PREFIX(props);
 	inlining = INLINING(props);
+	virtualized = VIRTUALIZED(props);
 }
 
 
@@ -141,7 +149,7 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 	ASSERT(cfg);
 
 	// when inlining is enable, we only output the main CFG
-	if(inlining && (cfg->index() > 0))
+	if((inlining || virtualized) && (cfg->index() > 0))
 		return;
 
 	// Compute the name
@@ -157,15 +165,37 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 	if(logFor(LOG_PROC))
 		cout << "\toutput " << label << " to " << out_path << io::endl;
 	OUT(cfg) = this;
-	CFGAdapter cfga(cfg, inlining);
-	GenDrawer<CFGAdapter, CFGOutputDecorator> drawer(cfga);
 
-	drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
-	drawer.default_vertex.text.size = 12;
-	drawer.default_edge_text.size = 12;
-	drawer.kind = kind;
-	drawer.path = out_path.toString().toCString();
-	drawer.draw();
+	if(virtualized) {
+		VirtualizedCFGAdapter cfga(cfg);
+		GenDrawer<VirtualizedCFGAdapter, CFGOutputDecorator> drawer(cfga);
+		drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
+		drawer.default_vertex.text.size = 12;
+		drawer.default_edge_text.size = 12;
+		drawer.kind = kind;
+		drawer.path = out_path.toString().toCString();
+		drawer.draw();
+	}
+	else if(inlining) {
+		InlinedCFGAdapter cfga(cfg);
+		GenDrawer<InlinedCFGAdapter, CFGOutputDecorator> drawer(cfga);
+		drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
+		drawer.default_vertex.text.size = 12;
+		drawer.default_edge_text.size = 12;
+		drawer.kind = kind;
+		drawer.path = out_path.toString().toCString();
+		drawer.draw();
+	}
+	else {
+		CFGAdapter cfga(cfg);
+		GenDrawer<CFGAdapter, CFGOutputDecorator> drawer(cfga);
+		drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
+		drawer.default_vertex.text.size = 12;
+		drawer.default_edge_text.size = 12;
+		drawer.kind = kind;
+		drawer.path = out_path.toString().toCString();
+		drawer.draw();
+	}
 	cfg->removeProp(OUT);
 }
 
