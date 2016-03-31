@@ -2725,7 +2725,20 @@ namespace clp {
  */
 Manager::Manager(WorkSpace *ws) {
 	p = new ClpProblem(ws->process());
-	p->setInitialState(dfa::INITIAL_STATE(ws));
+	// support initial state
+	dfa::State *istate = dfa::INITIAL_STATE(ws);
+	if(istate) {
+
+		// initialize registers
+		for(dfa::State::RegIter r(istate); r; r++)
+			p->initialize((*r).fst, (*r).snd);
+
+		// initialize memory
+		for(dfa::State::MemIter m(istate); m; m++)
+			p->initialize((*m).address(), (*m).value());
+
+		p->setInitialState(istate);
+	}
 }
 
 Manager::~Manager() {

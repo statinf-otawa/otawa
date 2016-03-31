@@ -697,6 +697,8 @@ void Command::work(PropList &props) throw(elm::Exception) {
 		otawa::display::CFGOutput::VIRTUALIZED(props) = outputVirtualizedCFG;
 		if(!otawa::display::CFGOutput::KIND(props).exists())
 			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_DOT;
+
+		otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_RAW_DOT;
 		if(!otawa::display::CFGOutput::PATH(props).exists())
 			otawa::display::CFGOutput::PATH(props) = ".";
 		if(rawoutput)
@@ -976,31 +978,32 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 			continue;
 		BasicBlock* bb = bi->toBasic();
 
-		for(BasicBlock::InstIter inst(bb); inst; inst++)
-			if(inst->isControl()
-			&& !inst->isReturn()
-			&& !RECORDED(inst)
-			&& !PRESERVED(inst)) {
+		//for(BasicBlock::InstIter inst(bb); inst; inst++)
+		Inst *inst = bb->last();
+		if(inst->isControl()
+		&& !inst->isReturn()
+		&& !RECORDED(inst)
+		&& !PRESERVED(inst)) {
 
-				// Undefined branch target
-				if(!inst->target()) {
-					if(BRANCH_TARGET(inst).get().isNull() && CALL_TARGET(inst).get().isNull()) {
-						prepare(ws, cfg);
-						cstring type, com;
-						if(inst->isCall())
-							_printer.printMultiCall(out, cfg, inst);
-						else
-							_printer.printMultiBranch(out, cfg, inst);
-					}
-				}
-
-				// call to next instruction
-				else if(inst->isCall()
-				&& inst->target()->address() == inst->topAddress()) {
+			// Undefined branch target
+			if(!inst->target()) {
+				if(!BRANCH_TARGET(inst).exists() && !CALL_TARGET(inst).exists()) {
 					prepare(ws, cfg);
-					_printer.printIgnoreControl(out, cfg, inst);
+					cstring type, com;
+					if(inst->isCall())
+						_printer.printMultiCall(out, cfg, inst);
+					else
+						_printer.printMultiBranch(out, cfg, inst);
 				}
 			}
+
+			// call to next instruction
+			else if(inst->isCall()
+			&& inst->target()->address() == inst->topAddress()) {
+				prepare(ws, cfg);
+				_printer.printIgnoreControl(out, cfg, inst);
+			}
+		}
 	}
 }
 
