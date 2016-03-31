@@ -80,6 +80,8 @@ private:
 	bool _hasTitle;
 	/** node body */
 	String _body;
+	/** whether or not to use the raw information for the body */
+	bool _raw_node;
 	/** true if the body have been set, even if it is an empty string */
 	bool _hasBody;
 	/** true if the shape selected can be cutted into sub-boxes */

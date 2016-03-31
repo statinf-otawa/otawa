@@ -69,6 +69,7 @@ static Identifier<CFGOutput *> OUT("", 0);
 // CFGOutputDecorator class
 class CFGOutputDecorator {
 public:
+	static bool rawInfo;
 	static void decorate(const CFGAdapter &graph, Output &caption, TextStyle &text, FillStyle &fill) {
 		CFGOutput *out = OUT(graph.cfg);
 		ASSERT(out);
@@ -77,6 +78,7 @@ public:
 
 	static void decorate(const CFGAdapter &graph, const CFGAdapter::Vertex vertex, Output &content, ShapeStyle &style) {
 		style.shape = ShapeStyle::SHAPE_MRECORD;
+		style.raw = rawInfo;
 		CFGOutput *out = OUT(graph.cfg);
 		ASSERT(out);
 		out->genBBLabel(graph.cfg, vertex.b, content);
@@ -92,6 +94,7 @@ public:
 		out->genEdgeLabel(graph.cfg, edge.edge, label);
 	}
 };
+bool CFGOutputDecorator::rawInfo = false;
 
 p::declare CFGOutput::reg =
 	p::init("otawa::display::CFGOutput", Version(1, 1, 0), CFGProcessor::reg)
@@ -131,6 +134,12 @@ Identifier<bool> CFGOutput::INLINING("otawa::display::CFGOutput::INLINING", fals
  */
 Identifier<bool> CFGOutput::VIRTUALIZED("otawa::display::CFGOutput::VIRTUALIZED", false);
 
+
+/**
+ * Configuration identifier of @ref CFGOutput to decide if the blocks will be using the raw information from the CFGOutput::genBBLabel()
+ */
+Identifier<bool> CFGOutput::RAW_BLOCK_INFO("otawa::display::CFGOutput::RAW_BLOCK_INFO", false);
+
 /**
  */
 void CFGOutput::configure(const PropList &props) {
@@ -140,6 +149,7 @@ void CFGOutput::configure(const PropList &props) {
 	prefix = PREFIX(props);
 	inlining = INLINING(props);
 	virtualized = VIRTUALIZED(props);
+	rawInfo = RAW_BLOCK_INFO(props);
 }
 
 
@@ -169,6 +179,7 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 
 	if(virtualized) {
 		VirtualizedCFGAdapter cfga(cfg);
+		CFGOutputDecorator::rawInfo = rawInfo;
 		GenDrawer<VirtualizedCFGAdapter, CFGOutputDecorator> drawer(cfga);
 		drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
 		drawer.default_vertex.text.size = 12;
@@ -179,6 +190,7 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 	}
 	else if(inlining) {
 		InlinedCFGAdapter cfga(cfg);
+		CFGOutputDecorator::rawInfo = rawInfo;
 		GenDrawer<InlinedCFGAdapter, CFGOutputDecorator> drawer(cfga);
 		drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
 		drawer.default_vertex.text.size = 12;

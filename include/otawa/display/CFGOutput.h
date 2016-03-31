@@ -47,6 +47,7 @@ public:
 	static Identifier<string> PREFIX;
 	static Identifier<bool> INLINING;
 	static Identifier<bool> VIRTUALIZED;
+	static Identifier<bool> RAW_BLOCK_INFO;
 
 	virtual void genGraphLabel(CFG *cfg, Output& out);
 	virtual void genBBLabel(CFG *cfg, Block *bb, Output& out);
@@ -64,6 +65,7 @@ private:
 	string prefix;
 	bool inlining;
 	bool virtualized;
+	bool rawInfo;
 };
 
 } }	// otawa::display

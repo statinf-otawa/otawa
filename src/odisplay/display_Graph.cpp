@@ -128,6 +128,13 @@ Identifier<elm::String> BODY("otawa::display::body");
 
 
 /**
+ * Identifier to determine if raw information is used for the node
+ * @ingroup display
+ */
+Identifier<bool> RAW_NODE("otawa::display::raw_node");
+
+
+/**
  * Identifier of a shape of a node. Must be one of @ref shape_t
  * @ingroup display
  */

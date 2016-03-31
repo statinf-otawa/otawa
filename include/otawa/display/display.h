@@ -113,12 +113,13 @@ public:
 		SHAPE_DIAMOND
 	} shape_t;
 
-	inline ShapeStyle(void): shape(SHAPE_RECORD) { }
+	inline ShapeStyle(void): shape(SHAPE_RECORD), raw(false) { }
 
 	shape_t shape;
 	FillStyle fill;
 	LineStyle line;
 	TextStyle text;
+	bool raw;
 };
 
 } } // otawa::display

@@ -77,9 +77,24 @@ static inline string processSeparations(string text) {
 }
 
 
-void GraphVizNode::printOthersAttributes(elm::io::Output& out){
+void GraphVizNode::printOthersAttributes(elm::io::Output& out){ // called by GraphVizItem::attributes
 	String props = getPropertiesString();
 	if(_hasTitle || _hasBody || props.length() > 0){
+		if(_raw_node) {
+			out << "label=<{";
+			int newline = _title.indexOf("\n"); // get rid of the \n in title
+			if(newline!= -1)
+				out << _title.substring(0, newline);
+			else
+				out << _title;
+			if(_hasBody)
+				out << " | " << _body;
+			if(props.length() > 0)
+				out << " | " << props;
+			out << "}>";
+			return;
+		}
+
 		out << "label=\"";
 		if(_shapeAcceptsBody){
 			out << "{ " << quoteSpecials(_title);
@@ -118,6 +133,10 @@ bool GraphVizNode::printAttribute(elm::io::Output &out, const PropList::Iter& pr
 	else if(prop == BODY){
 		_body = BODY(prop);
 		_hasBody = true;
+		return false;
+	}
+	else if(prop == RAW_NODE){
+		_raw_node = RAW_NODE(prop);
 		return false;
 	}
 	else if(prop == SHAPE){

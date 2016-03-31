@@ -681,14 +681,83 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			inline void genBBInfo(CFG *cfg, Block *bb, Output& out) {
 				if(!showProp)
 					return;
-				out << "---\n";
+				out << " | ";
 				for(PropList::Iter prop(bb); prop; prop++) {
 					out << prop->id()->name() << " = ";
-					prop->id()->print(out, prop);
-					out << io::endl;
+					StringBuffer temp;
+					prop->id()->print(elm::cout, prop);
+					prop->id()->print(temp, prop);
+					String tempString = temp.toString();
+					StringBuffer buf;
+					for(int i = 0; i < tempString.length(); i++){
+						char c = tempString[i];
+						if(
+							   c == '{'
+							|| c == '}'
+							|| c == '<'
+							|| c == '>'
+							|| c == '|'
+							|| c == '\\'
+							|| c == '"')
+						{
+							buf << '\\';
+						}
+						buf << c;
+					}
+					out << buf.toString();
+					out << "<br ALIGN=\"LEFT\"/>";
 				}
 			}
 			inline void genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out) { /* nothing on the edge */ }
+
+			void genBBLabel(CFG *cfg, Block *b, Output& out) {
+
+				// display title
+				out << b;
+
+				// special of entry, exit or synthetic
+				if(b->isEnd() || b->isSynth())
+					return;
+				BasicBlock *bb = b->toBasic();
+
+				// make title
+				out << "\n---\n";
+				StringBuffer title;
+
+				// make body
+				cstring file;
+				int line = 0;
+				for(BasicBlock::InstIter inst(bb); inst; inst++){
+
+					// display labels
+					for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
+						out << *label << ":<br ALIGN=\"LEFT\"/>";
+					for(Identifier<String>::Getter label(inst, otawa::LABEL); label; label++)
+						out << *label << ":<br ALIGN=\"LEFT\"/>";
+
+					Option<Pair<cstring, int> > info = workspace()->process()->getSourceLine(inst->address());
+					if(info) {
+						if((*info).fst != file || (*info).snd != line) {
+							file = (*info).fst;
+							line = (*info).snd;
+							out << file << ":" << line << "<br ALIGN=\"LEFT\"/>";
+						}
+					}
+					else {
+						file = "";
+						line = 0;
+					}
+
+					// display the instruction
+					out << "0x" << ot::address(inst->address()) << ":  ";
+					inst->dump(out);
+					out << "<br ALIGN=\"LEFT\"/>";
+				}
+
+				// give special format for Entry and Exit
+				genBBInfo(cfg, bb, out);
+			}
+
 		private:
 			bool showProp;
 		};
@@ -697,12 +766,12 @@ void Command::work(PropList &props) throw(elm::Exception) {
 		otawa::display::CFGOutput::VIRTUALIZED(props) = outputVirtualizedCFG;
 		if(!otawa::display::CFGOutput::KIND(props).exists())
 			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_DOT;
-
-		otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_RAW_DOT;
 		if(!otawa::display::CFGOutput::PATH(props).exists())
 			otawa::display::CFGOutput::PATH(props) = ".";
 		if(rawoutput)
 			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_RAW_DOT;
+
+		CFGOutput::RAW_BLOCK_INFO(props) = true;
 
 		int iteration = 0;
 		bool branchDetected = false;
@@ -769,7 +838,6 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	// cleanup at end
 	delete p;
 }
-
 
 
 /**

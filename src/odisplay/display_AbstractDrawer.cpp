@@ -65,6 +65,7 @@ static void setLineStyle(PropList *props, const LineStyle& style) {
 static void setShapeStyle(PropList *props, const ShapeStyle& style) {
 	if(style.shape)
 		SHAPE(props) = style.shape;
+	RAW_NODE(props) = style.raw;
 	setFillStyle(props, style.fill);
 	setLineStyle(props, style.line);
 	setTextStyle(props, style.text);
