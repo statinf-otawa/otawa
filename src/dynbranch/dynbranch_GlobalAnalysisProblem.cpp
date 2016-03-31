@@ -399,13 +399,10 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				break ;
 			}
 			/*
-            SHR,		// d <- unsigned(a) >> b
-            ASR,		// d <- a >> b
             NEG,		// d <- -a
             NOT,		// d <- ~a
             AND,		// d <- a & b
             OR,			// d <- a | b
-            MUL,		// d <- a * b
             MULU,		// d <- unsigned(a) * unsigned(b)
             DIV,		// d <- a / b
             DIVU,		// d <- unsigned(a) / unsigned(b)

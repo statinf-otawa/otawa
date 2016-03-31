@@ -75,7 +75,6 @@ PotentialValue operator-(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator>>(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator<<(const PotentialValue& a, const PotentialValue& b);
 PotentialValue operator||(const PotentialValue& a, const PotentialValue& b);
-
 bool operator==(const PotentialValue& a, const PotentialValue& b);
 PotentialValue merge(const PotentialValue& a, const PotentialValue& b);
 PotentialValue logicalShiftRight(const PotentialValue& a, const PotentialValue& b);

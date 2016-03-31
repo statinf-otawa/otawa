@@ -340,6 +340,8 @@ void Virtualizer::cleanup(WorkSpace *ws) {
 	}
 	addDeletor(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = coll);
 	// TODO add deletion of CFGs
+
+	ENTRY_CFG(ws) = (*coll)[0];
 }
 
 
