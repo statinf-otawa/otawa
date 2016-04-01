@@ -259,8 +259,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 					// Get the value in memory from each possible addresses
 					for(PotentialValue::Iterator it(toget); it; it++) {
 						if(istate && istate->isInitialized(*it)) {
-							unsigned int val = 0;
-							workspace()->process()->get(*it,val);
+							potential_value_type val = readFromMem(*it, i.type());// workspace()->process()->get(*it,val);
 							r.insert(val);
 						}
 						else {
@@ -613,6 +612,24 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		if (isVerbose()) {
 			cout << "\t\tNothing to do for this BB (no dynamic branching detected)" << endl;
 		}
+	}
+}
+
+/**
+ * Read a value from the memory.
+ * @param address	Address to read.
+ * @param type		Type of the data.
+ * @return			Read data value.
+ */
+potential_value_type DynamicBranchingAnalysis::readFromMem(potential_value_type address, sem::type_t type) {
+	switch(type) {
+	case sem::INT8: 	{ t::int8 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	case sem::INT16: 	{ t::int16 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	case sem::INT32: 	{ t::int32 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	case sem::UINT8: 	{ t::uint8 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	case sem::UINT16: 	{ t::uint16 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	case sem::UINT32: 	{ t::uint32 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	default:			ASSERTP(false, "The type is unknown, please check."); return potential_value_type(0);
 	}
 }
 

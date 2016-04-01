@@ -57,6 +57,7 @@ private:
 	void addTargetToBB(BasicBlock*) ;
 	PotentialValue find(BasicBlock* bb, MemID id, const clp::State & clpin, State & globalin, Vector<sem::inst> semantics) ;
 	void takingCLPValueIfNecessary(PotentialValue& pv, int semanticInstIndex, const clp::Value& regOrAddr);
+	unsigned int readFromMem(unsigned int address, sem::type_t type);
 	bool isDebug ;
 	bool time ;
 	Vector<PotentialValue> _regValues;

@@ -40,7 +40,9 @@ class PotentialValue;
 typedef SLList<PotentialValue*> potential_value_list_t;
 #endif
 
-class PotentialValue: public Set<elm::t::uint32> {
+typedef t::uint32 potential_value_type ;
+
+class PotentialValue: public Set<potential_value_type> {
 	friend Output& operator<<(Output& o, PotentialValue const& pv);
 	friend bool operator==(const PotentialValue& a, const PotentialValue& b);
 public:

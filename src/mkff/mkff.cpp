@@ -312,7 +312,9 @@ public:
 		}
 		else {
 			out << " to ?;"
-				<< "\t// (" << inst->address() << ") switch-like branch in " << nameOf(cfg) << io::endl;
+				<< "\t// " << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ") switch-like branch in " << nameOf(cfg) << io::endl;
 		}
 		out << io::endl;
 	}
@@ -337,7 +339,9 @@ public:
 		}
 		else {
 			out << " to ?;"
-				<< "\t// (" << inst->address() << ") indirect call in " << nameOf(cfg) << io::endl;
+				<< "\t// (";
+			printSourceLine(out, inst->address());
+			out << ") indirect call in " << nameOf(cfg) << io::endl;
 		}
 		out << io::endl;
 	}
@@ -677,6 +681,22 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	if(dynbranch) {
 		class CFGOutput: public otawa::display::CFGOutput { // for simple CFG output facility
 		public:
+			void processCharacters(StringBuffer& sb, Output& out) {
+				String tempString = sb.toString();
+				for(int i = 0; i < tempString.length(); i++){
+					char c = tempString[i];
+					if(c == '{' || c == '}' || c == '|' || c == '\\' || c == '"') { // adding '\' as the escape character
+						out << '\\';
+						out << c;
+					}
+					else if(c == '<')
+						out << "&lt;";
+					else if(c == '>')
+						out << "&gt;";
+					else
+						out << c;
+				}
+			}
 			CFGOutput(bool _showProp, bool _forFun): otawa::display::CFGOutput(), showProp(_showProp), forFun(_forFun) { }
 			inline void genBBInfo(CFG *cfg, Block *bb, Output& out) {
 				if(!showProp)
@@ -686,22 +706,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 					out << prop->id()->name() << " = ";
 					StringBuffer temp;
 					prop->id()->print(temp, prop);
-					String tempString = temp.toString();
-					StringBuffer buf;
-					for(int i = 0; i < tempString.length(); i++){
-						char c = tempString[i];
-						if(c == '{' || c == '}' || c == '|' || c == '\\' || c == '"') { // adding '\' as the escape character
-							buf << '\\';
-							buf << c;
-						}
-						else if(c == '<')
-							buf << "&lt;";
-						else if(c == '>')
-							buf << "&gt;";
-						else
-							buf << c;
-					}
-					out << buf.toString();
+					processCharacters(temp, out);
 					out << "<br ALIGN=\"LEFT\"/>";
 				}
 			}
@@ -747,7 +752,10 @@ void Command::work(PropList &props) throw(elm::Exception) {
 					if(forFun)
 						out << "<Font color=\"#" << hex(rand()%255) << hex(rand()%255) << hex(rand()%255) << "\">";
 					out << "0x" << ot::address(inst->address()) << ":  ";
-					inst->dump(out);
+					// inst->dump(out);
+					StringBuffer temp;
+					inst->dump(temp);
+					processCharacters(temp, out);
 					if(forFun)
 						out << "</Font>";
 					out << "<br ALIGN=\"LEFT\"/>";
