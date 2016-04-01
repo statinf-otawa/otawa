@@ -95,9 +95,10 @@ void CLPBlockBuilder::cleanup(WorkSpace *ws) {
 
 /**
  */
-void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-	if(bb->isEnd())
+void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
+	if(!b->isBasic())
 		return;
+	BasicBlock *bb = b->toBasic();
 	clp::Manager::step_t step = man->start(bb);
 	genstruct::Vector<Pair<clp::Value, BlockAccess::action_t> > addrs;
 	while(step) {

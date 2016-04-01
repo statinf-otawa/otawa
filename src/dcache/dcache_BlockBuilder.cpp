@@ -103,7 +103,7 @@ void BlockBuilder::setup(WorkSpace *ws) {
 
 /**
  */
-void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
 	AccessedAddresses *addrs = ADDRESSES(bb);
 	if(!addrs)
 		return;

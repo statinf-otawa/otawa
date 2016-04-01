@@ -62,7 +62,7 @@ public:
 	: _prob(prob), _set(set), _id(id) {
 		const CFGCollection *col = INVOLVED_CFGS(ws);
 		for(int i = 0; i < col->count();  i++)
-			for (CFG::BBIterator bb(col->get(i)); bb; bb++)
+			for(CFG::BlockIter bb = col->get(i)->blocks(); bb; bb++)
 				prob.init(_id(bb)[_set], prob.bottom());
 	}
 
@@ -296,20 +296,21 @@ class Problem {
 public:
 	typedef DirtyManager::t Domain;
 	Problem(const BlockCollection& coll): man(coll) { }
+	inline const Domain& top(void) const { return man.top(); }
 	inline const Domain& bottom(void) const { return man.bottom(); }
 	inline const Domain& entry(void) const { return man.bottom(); }	/* very ugly and unsound, should be fixed */
 	inline void lub(Domain &a, const Domain &b) const { man.join(a, b); }
 	inline void assign(Domain &a, const Domain &b) const { man.set(a, b); }
 	inline bool equals(const Domain &a, const Domain &b) const { return man.equals(a, b); }
 	inline void init(Domain& d, const Domain& s) const { man.set(d, s); }
-	inline void update(Domain& out, const Domain& in, BasicBlock* bb) {
+	inline void update(Domain& out, const Domain& in, otawa::Block* bb) {
 		Pair<int, BlockAccess *> blocks = DATA_BLOCKS(bb);
 		man.set(out, in);
 		for(int i = 0; i < blocks.fst; i++)
 			man.update(out, blocks.snd[i]);
 	}
-	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
 private:
 	DirtyManager man;
 };
@@ -347,7 +348,7 @@ protected:
 
 		// initialize the dirty sets
 		for(CFGCollection::Iterator cfg(otawa::INVOLVED_CFGS(ws)); cfg; cfg++)
-			for(CFG::BBIterator bb(cfg); bb; bb++)
+			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 				DIRTY(bb).ref().allocate(cache->rowCount());
 
 		// perform the analysis
@@ -367,8 +368,8 @@ protected:
 
 		// put the results
 		for(CFGCollection::Iterator cfg(otawa::INVOLVED_CFGS(ws)); cfg; cfg++)
-			for(CFG::BBIterator bb(cfg); bb; bb++)
-				(*DIRTY(bb))[coll.cacheSet()] = *listener.results[cfg->number()][bb->number()];
+			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
+				(*DIRTY(bb))[coll.cacheSet()] = *listener.results[cfg->index()][bb->index()];
 	}
 };
 

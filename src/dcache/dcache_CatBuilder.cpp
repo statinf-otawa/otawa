@@ -80,8 +80,8 @@ void CATBuilder::cleanup(WorkSpace *ws) {
 	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
 	ASSERT(cfgs);
 	for(int i = 0; i < cfgs->count(); i++)
-		for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++) {
-			cerr << "\tBB " << bb->number() << " (" << bb->address() << ")\n";
+		for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb; bb++) {
+			cerr << "\tBB " << bb->index() << " (" << bb->address() << ")\n";
 			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
 			for(int j = 0; j < ab.fst; j++) {
 				BlockAccess& b = ab.snd[j];
@@ -111,7 +111,9 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 		if(logFor(LOG_BB))
 			log << "\t\tCFG " << cfgs->get(i) << io::endl;
 
-		for(CFG::BBIterator bb(cfgs->get(i)); bb; bb++) {
+		for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb; bb++) {
+			if(!bb->isBasic())
+				continue;
 			if(logFor(LOG_BB))
 				log << "\t\t\t" << *bb << io::endl;
 
@@ -157,7 +159,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					else if(has_pers) {
 
 						// find the initial header
-						BasicBlock *header;
+						otawa::Block *header;
 						if (LOOP_HEADER(bb))
 							header = bb;
 					  	else
@@ -236,7 +238,7 @@ p::feature CATEGORY_FEATURE("otawa::dcache::CATEGORY_FEATURE", new Maker<CATBuil
  * @li @ref BlockAccess
  * @ingroup dcache
  */
-Identifier<BasicBlock*> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
+Identifier<otawa::Block *> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
 
 
 /**
@@ -246,7 +248,7 @@ Identifier<BasicBlock*> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
  * @li @ref BlockAccess
  * @ingroup dcache
  */
-Identifier<cache::category_t> CATEGORY("otawa::dcache::category", cache::INVALID_CATEGORY);
+Identifier<cache::category_t> CATEGORY("otawa::dcache::CATEGORY", cache::INVALID_CATEGORY);
 
 
 /**

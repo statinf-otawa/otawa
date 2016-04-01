@@ -56,6 +56,7 @@ public:
 	inline void setPers(Domain& d, const ACS& acs, const acs_stack_t& s) { d.pers.set(acs, s); }
 
 	// abstract interpretation
+	const Domain& top(void) const;
 	const Domain& bottom(void) const;
 	const Domain& entry(void) const;
 	inline void lub(Domain &a, const Domain &b) const
@@ -66,22 +67,23 @@ public:
 		{ return (persProb.equals(a.pers, b.pers) && mustProb.equals(a.must, b.must)); };
 	void print(elm::io::Output &output, const Domain& d) const;
 
-	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	void update(Domain& out, const Domain& in, otawa::Block* bb);
 	void update(Domain& s, const BlockAccess& access);
 	inline void ageAll(Domain& d) const { d.must.ageAll(); d.pers.ageAll();  }
 	inline void inject(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.inject(id); }
 
-	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+	inline void enterContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) {
 		persProb.enterContext(dom.pers, header, ctx);
 		mustProb.enterContext(dom.must, header, ctx);
 	}
 
-	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+	inline void leaveContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) {
 		persProb.leaveContext(dom.pers, header, ctx);
 		mustProb.leaveContext(dom.must, header, ctx);
 	}
 
 private:
+	Domain _top;
 	Domain bot;
 	Domain ent;
 	int set;

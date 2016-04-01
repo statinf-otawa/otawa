@@ -1565,6 +1565,8 @@ public:
 	ClpProblem(Process *proc)
 	:	pc(0),
 		has_if(false),
+		bb(0),
+		inst(0),
 		specific_analysis(false),
 		_process(proc),
 		istate(0),
@@ -1949,7 +1951,7 @@ public:
 					state->set(addrclp, get(*state, i.d()));
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
-					ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T\n");
+					ALARM_STORE_TOP(warnStoreToTop());
 #					ifdef HAI_JSON
 						HAI_BASE->addEvent("store to T");
 #					endif
@@ -1967,7 +1969,7 @@ public:
 						Symbol *sym = this->_process->findSymbolAt(addrclp.lower());
 						if(!sym) {
 							_nb_top_store_addr++;
-							ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T (unbounded address)\n");
+							ALARM_STORE_TOP(warnStoreToTop());
 #						ifdef HAI_JSON
 							HAI_BASE->addEvent("store to T");
 #						endif
@@ -2131,6 +2133,7 @@ public:
 		// do nothing for an end block
 		if(bb->isEnd())
 			return;
+		this->bb = bb;
 
 		Domain *state;
 		has_if = false;
@@ -2146,6 +2149,7 @@ public:
 			clp::STATE_IN(bb) = in;
 		}
 		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
+			this->inst = inst;
 			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
 			_nb_inst++;
 
@@ -2189,6 +2193,10 @@ public:
 			}
 			//TRACEI(cerr << "\t-> " << out << io::endl);
 		}
+
+		// reset tracking
+		this->inst = 0;
+		this->bb = 0;
 
 		TRACEP(cerr << "s' = " << out << io::endl);
 		if (specific_analysis)
@@ -2266,6 +2274,8 @@ private:
 	genstruct::Vector<Pair<int, Domain *> > todo;
 	int pc;
 	bool has_if;
+	Block *bb;
+	Inst *inst;
 
 	/* attribute for specific analysis / packing */
 	bool specific_analysis;
@@ -2273,7 +2283,7 @@ private:
 	dfa::State *istate;
 	clp::ClpStatePack *pack;
 
-	/* attributes for statistics purpose */
+	// attributes for statistics purpose
 	clp::STAT_UINT _nb_inst;
 	clp::STAT_UINT _nb_sem_inst;
 	clp::STAT_UINT _nb_set;
@@ -2286,6 +2296,18 @@ private:
 	clp::STAT_UINT _nb_filters;
 	clp::STAT_UINT _nb_top_filters;
 	clp::STAT_UINT _nb_top_load;
+
+	// store to T management
+	genstruct::SLList<Pair<Inst *, Block *> > top_stores;
+	void warnStoreToTop(void) {
+		if(!inst || !bb)
+			return;
+		Pair<Inst *, Block *> p = pair(inst, bb);
+		if(!top_stores.contains(p)) {
+			top_stores.add(p);
+			cerr << "WARNING: (" << p.snd << "):" << p.fst->address() << ": " << p.fst << " store to T (unbounded address)\n";
+		}
+	}
 };
 
 // CLPStateCleaner
@@ -2741,9 +2763,10 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 	s = STATE_IN(bb);
 	cs = &s;
 	p->prepare(mi);
-	p->update(cs);
 	i = 0;
-	return NEW_INST | NEW_PATH | NEW_SEM;
+	//p->update(cs);
+	//return NEW_INST | NEW_PATH | NEW_SEM;
+	return next();
 }
 
 

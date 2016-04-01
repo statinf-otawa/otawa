@@ -236,7 +236,7 @@ extern Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL;
 // categories build
 extern p::feature CATEGORY_FEATURE;
 extern Identifier<cache::category_t> CATEGORY;
-extern Identifier<BasicBlock*> CATEGORY_HEADER;
+extern Identifier<otawa::Block *> CATEGORY_HEADER;
 
 // ILP constraint build
 extern p::feature CONSTRAINTS_FEATURE;

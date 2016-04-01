@@ -66,7 +66,7 @@ void WCETFunctionBuilder::setup(WorkSpace *ws) {
 
 /**
  */
-void WCETFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+void WCETFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
 	if(bb->isEnd())
 		return;
 

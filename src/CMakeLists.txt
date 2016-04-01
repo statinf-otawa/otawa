@@ -28,7 +28,7 @@ add_subdirectory(dynbranch)
 add_subdirectory(ocpp)
 add_subdirectory(odec)
 add_subdirectory(odisplay)
-#add_subdirectory(dcache)
+add_subdirectory(dcache)
 
 
 # loader plugins
