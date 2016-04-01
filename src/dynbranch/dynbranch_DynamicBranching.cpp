@@ -452,6 +452,12 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 			}
 		}
 
+		// Check if the address found is in the program memory
+		if(istate && !istate->isInitialized(*pvi)) {
+			targetToAdd = false;
+			elm::cerr << "WARNING: address " << hex(*pvi) << " is not in the initialized memory, ignored by the dynamic branching analysis" << io::endl;
+		}
+
 		// when there are some targets for the BB
 		if(targetToAdd) {
 			// check the type: Branch or Call
