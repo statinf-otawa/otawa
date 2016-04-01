@@ -310,6 +310,12 @@ public:
 				out << ") switch-like branch in " << nameOf(cfg) << io::endl;
 			}
 		}
+		else if(IGNORE_CONTROL(inst)) {
+			out << " has no target (infeasible path)."
+				<< "\t// " << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ") switch-like branch in " << nameOf(cfg) << io::endl;
+		}
 		else {
 			out << " to ?;"
 				<< "\t// " << inst->address() << " (";
@@ -336,6 +342,12 @@ public:
 				printSourceLine(out, *vai);
 				out << ") indirect call in " << nameOf(cfg) << io::endl;
 			}
+		}
+		else if(IGNORE_CONTROL(inst)) {
+			out << " has no target (infeasible path)."
+				<< "\t// " << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ") switch-like branch in " << nameOf(cfg) << io::endl;
 		}
 		else {
 			out << " to ?;"

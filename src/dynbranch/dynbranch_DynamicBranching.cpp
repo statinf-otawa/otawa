@@ -29,8 +29,8 @@
 #include <otawa/data/clp/SymbolicExpr.h> // to use the filters
 #include <elm/log/Log.h> // to use the debugging messages
 
-#define DEBUG_FILTERS(x) // x
-#define DEBUG_CLP(x) // x
+#define DEBUG_FILTERS(x)  // x
+#define DEBUG_CLP(x)  // x
 
 using namespace elm::log;
 using namespace elm::color;
@@ -421,6 +421,12 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 		if(isVerbose()) {
 			cout << "\t\tNo branch addresses found" << endl;
 		}
+
+		clp::State in = clp::STATE_IN(bb);
+		if(in == clp::State::EMPTY) { // when CLP_IN STATE is empty, this means the block is infeasible.
+			IGNORE_CONTROL(bb->last()) = true;
+		}
+
 		return;
 	} else {
 		for(Set<elm::t::uint32>::Iterator it(addresses); it; it++) {
