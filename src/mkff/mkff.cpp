@@ -690,9 +690,16 @@ void Command::work(PropList &props) throw(elm::Exception) {
 					StringBuffer buf;
 					for(int i = 0; i < tempString.length(); i++){
 						char c = tempString[i];
-						if(c == '{' || c == '}' || c == '<' || c == '>' || c == '|' || c == '\\' || c == '"') // adding '\' as the escape character
+						if(c == '{' || c == '}' || c == '|' || c == '\\' || c == '"') { // adding '\' as the escape character
 							buf << '\\';
-						buf << c;
+							buf << c;
+						}
+						else if(c == '<')
+							buf << "&lt;";
+						else if(c == '>')
+							buf << "&gt;";
+						else
+							buf << c;
 					}
 					out << buf.toString();
 					out << "<br ALIGN=\"LEFT\"/>";
