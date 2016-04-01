@@ -236,7 +236,7 @@ bool Dominance::dominates(Block *bb1, Block *bb2) {
 	ASSERTP(bb1 == bb2
 	||	!REVERSE_DOM(bb1)->contains(bb2->index())
 	||  !REVERSE_DOM(bb2)->contains(bb1->index()),
-		"CFG with disconnected nodes (" << bb1 << ", " << bb2 << ")");
+		"CFG with disconnected nodes for CFG " << bb1->cfg()->index() << ": " << bb1->cfg()->name() << "(" << bb1 << ", " << bb2 << ")");
 	return set->contains(index);
 }
 

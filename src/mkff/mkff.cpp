@@ -297,7 +297,10 @@ public:
 		addressOf(out, cfg, inst->address());
 
 		if(va) {
-			out << " to\n";
+			out << " to "
+				<< "\t// 0x" << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ")\n";
 			for(Vector<Address>::Iterator vai(*va); vai; vai++) {
 				out << "\t";
 				addressOf(out, cfg, *vai);
@@ -305,20 +308,20 @@ public:
 					out << ";";
 				else
 					out << ",";
-				out << "\t// " << *vai << " (";
+				out << "\t// 0x" << *vai << " (";
 				printSourceLine(out, *vai);
 				out << ") switch-like branch in " << nameOf(cfg) << io::endl;
 			}
 		}
 		else if(IGNORE_CONTROL(inst)) {
 			out << " has no target (infeasible path)."
-				<< "\t// " << inst->address() << " (";
+				<< "\t// 0x" << inst->address() << " (";
 			printSourceLine(out, inst->address());
 			out << ") switch-like branch in " << nameOf(cfg) << io::endl;
 		}
 		else {
 			out << " to ?;"
-				<< "\t// " << inst->address() << " (";
+				<< "\t// 0x" << inst->address() << " (";
 			printSourceLine(out, inst->address());
 			out << ") switch-like branch in " << nameOf(cfg) << io::endl;
 		}
@@ -330,7 +333,10 @@ public:
 		addressOf(out, cfg, inst->address());
 
 		if(va) {
-			out << " to\n";
+			out << " to "
+				<< "\t// 0x" << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ")\n";
 			for(Vector<Address>::Iterator vai(*va); vai; vai++) {
 				out << "\t";
 				addressOf(out, cfg, *vai);
@@ -338,20 +344,20 @@ public:
 					out << ";";
 				else
 					out << ",";
-				out << "\t// " << *vai << " (";
+				out << "\t// 0x" << *vai << " (";
 				printSourceLine(out, *vai);
 				out << ") indirect call in " << nameOf(cfg) << io::endl;
 			}
 		}
 		else if(IGNORE_CONTROL(inst)) {
 			out << " has no target (infeasible path)."
-				<< "\t// " << inst->address() << " (";
+				<< "\t// 0x" << inst->address() << " (";
 			printSourceLine(out, inst->address());
-			out << ") switch-like branch in " << nameOf(cfg) << io::endl;
+			out << ") indirect call in " << nameOf(cfg) << io::endl;
 		}
 		else {
 			out << " to ?;"
-				<< "\t// (";
+				<< "\t// 0x" << inst->address() << " (";
 			printSourceLine(out, inst->address());
 			out << ") indirect call in " << nameOf(cfg) << io::endl;
 		}
@@ -800,18 +806,25 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				workspace()->require(COLLECTED_CFG_FEATURE, props);
 			} // end of the first time
 
-			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false; // clear the flag
-			workspace()->require(otawa::dynbranch::DYNBRANCH_FEATURE, props);
-			// the loop goes on searching new branch target when there is a new target found
-			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
-
 			if(outputInlinedCFG || outputVirtualizedCFG || outputCFG) {
 				string iterationString = _ << iteration << "_";
 				otawa::display::CFGOutput::PREFIX(props) = iterationString;
 				CFGOutput(showBlockProps, forFun).process(workspace(), props);
 			}
+
+			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false; // clear the flag
+			workspace()->require(otawa::dynbranch::DYNBRANCH_FEATURE, props);
+			// the loop goes on searching new branch target when there is a new target found
+			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
+
 			iteration++;
 		} while(branchDetected);
+
+		if(outputInlinedCFG || outputVirtualizedCFG || outputCFG) {
+			string iterationString = _ << iteration << "_";
+			otawa::display::CFGOutput::PREFIX(props) = iterationString;
+			CFGOutput(showBlockProps, forFun).process(workspace(), props);
+			}
 	}
 
 	// Load flow facts and record unknown values
