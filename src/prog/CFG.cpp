@@ -598,6 +598,8 @@ String CFG::label(void) {
 		id = FUNCTION_LABEL(fst);
 		if(!id)
 			id = LABEL(fst);
+		if(!id)
+			id = _ << address();
 	}
 	return id;
 }
@@ -608,9 +610,14 @@ String CFG::label(void) {
  * @return	Name of the CFG.
  */
 string CFG::name(void) {
-	string name = label();
-	if(!name)
-		name = _ << "__0x" << fst->address();
+	string name = LABEL(this);
+	if(!name) {
+		name = FUNCTION_LABEL(fst);
+		if(!name)
+			name = LABEL(fst);
+		if(!name)
+			name = _ << "__0x" << fst->address();
+	}
 	return name;
 }
 

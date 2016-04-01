@@ -2194,6 +2194,10 @@ public:
 			//TRACEI(cerr << "\t-> " << out << io::endl);
 		}
 
+		// reset tracking
+		this->inst = 0;
+		this->bb = 0;
+
 		TRACEP(cerr << "s' = " << out << io::endl);
 		if (specific_analysis)
 			return;
@@ -2296,6 +2300,8 @@ private:
 	// store to T management
 	genstruct::SLList<Pair<Inst *, Block *> > top_stores;
 	void warnStoreToTop(void) {
+		if(!inst || !bb)
+			return;
 		Pair<Inst *, Block *> p = pair(inst, bb);
 		if(!top_stores.contains(p)) {
 			top_stores.add(p);
