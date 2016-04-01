@@ -375,12 +375,23 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				const PotentialValue& valb = readReg(out, inst.b());
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
-					//PotentialValue result = vala ^ valb;
-					//setReg(out, inst.d(), result);
-					elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "Let me think about it....." << io::endl;
-					elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "i.a() = " << readReg(out, inst.a()) << io::endl;
-					elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "i.b() = " << readReg(out, inst.b()) << io::endl;
+					PotentialValue result = vala * valb;
+					setReg(out, inst.d(), result);
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+				break ;
+			}
 
+			case sem::MULH: // d <- (a * b) >> bitlength(d)
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue result = MULH(vala,valb);
+					setReg(out, inst.d(), result);
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
@@ -388,13 +399,10 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				break ;
 			}
 			/*
-            SHR,		// d <- unsigned(a) >> b
-            ASR,		// d <- a >> b
             NEG,		// d <- -a
             NOT,		// d <- ~a
             AND,		// d <- a & b
             OR,			// d <- a | b
-            MUL,		// d <- a * b
             MULU,		// d <- unsigned(a) * unsigned(b)
             DIV,		// d <- a / b
             DIVU,		// d <- unsigned(a) / unsigned(b)

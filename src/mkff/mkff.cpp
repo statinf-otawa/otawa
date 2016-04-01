@@ -659,7 +659,7 @@ public:
 protected:
 	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::SwitchOption xml, dynbranch, outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps;
+	option::SwitchOption xml, dynbranch, outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps, rawoutput;
 };
 
 
@@ -681,14 +681,83 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			inline void genBBInfo(CFG *cfg, Block *bb, Output& out) {
 				if(!showProp)
 					return;
-				out << "---\n";
+				out << " | ";
 				for(PropList::Iter prop(bb); prop; prop++) {
 					out << prop->id()->name() << " = ";
-					prop->id()->print(out, prop);
-					out << io::endl;
+					StringBuffer temp;
+					prop->id()->print(elm::cout, prop);
+					prop->id()->print(temp, prop);
+					String tempString = temp.toString();
+					StringBuffer buf;
+					for(int i = 0; i < tempString.length(); i++){
+						char c = tempString[i];
+						if(
+							   c == '{'
+							|| c == '}'
+							|| c == '<'
+							|| c == '>'
+							|| c == '|'
+							|| c == '\\'
+							|| c == '"')
+						{
+							buf << '\\';
+						}
+						buf << c;
+					}
+					out << buf.toString();
+					out << "<br ALIGN=\"LEFT\"/>";
 				}
 			}
 			inline void genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out) { /* nothing on the edge */ }
+
+			void genBBLabel(CFG *cfg, Block *b, Output& out) {
+
+				// display title
+				out << b;
+
+				// special of entry, exit or synthetic
+				if(b->isEnd() || b->isSynth())
+					return;
+				BasicBlock *bb = b->toBasic();
+
+				// make title
+				out << "\n---\n";
+				StringBuffer title;
+
+				// make body
+				cstring file;
+				int line = 0;
+				for(BasicBlock::InstIter inst(bb); inst; inst++){
+
+					// display labels
+					for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
+						out << *label << ":<br ALIGN=\"LEFT\"/>";
+					for(Identifier<String>::Getter label(inst, otawa::LABEL); label; label++)
+						out << *label << ":<br ALIGN=\"LEFT\"/>";
+
+					Option<Pair<cstring, int> > info = workspace()->process()->getSourceLine(inst->address());
+					if(info) {
+						if((*info).fst != file || (*info).snd != line) {
+							file = (*info).fst;
+							line = (*info).snd;
+							out << file << ":" << line << "<br ALIGN=\"LEFT\"/>";
+						}
+					}
+					else {
+						file = "";
+						line = 0;
+					}
+
+					// display the instruction
+					out << "0x" << ot::address(inst->address()) << ":  ";
+					inst->dump(out);
+					out << "<br ALIGN=\"LEFT\"/>";
+				}
+
+				// give special format for Entry and Exit
+				genBBInfo(cfg, bb, out);
+			}
+
 		private:
 			bool showProp;
 		};
@@ -699,6 +768,10 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_DOT;
 		if(!otawa::display::CFGOutput::PATH(props).exists())
 			otawa::display::CFGOutput::PATH(props) = ".";
+		if(rawoutput)
+			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_RAW_DOT;
+
+		CFGOutput::RAW_BLOCK_INFO(props) = true;
 
 		int iteration = 0;
 		bool branchDetected = false;
@@ -767,7 +840,6 @@ void Command::work(PropList &props) throw(elm::Exception) {
 }
 
 
-
 /**
  * Build the command.
  */
@@ -784,7 +856,8 @@ Command::Command(void):
 		outputInlinedCFG(*this, option::cmd, "-I", option::cmd, "--inlined_cfg", option::description, "the output cfg is inlined (otawa::display::CFGOutput::INLINED = true), implies -C", option::end),
 		outputVirtualizedCFG(*this, option::cmd, "-V", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::VIRTUALIZED = true), implies -C -I", option::end),
 		removeDuplicatedTarget(*this, option::cmd, "-S", option::cmd, "--no_repeat_multibranch", option::description, "do not output the multi-call/branch with the same target addresses", option::end),
-		showBlockProps(*this, option::cmd, "-P", option::cmd, "--show_block_props", option::description, "shows the properties of the block", option::end)
+		showBlockProps(*this, option::cmd, "-P", option::cmd, "--show_block_props", option::description, "shows the properties of the block", option::end),
+		rawoutput(*this, option::cmd, "-R", option::cmd, "--raw_output", option::description, "generate raw dot output file (without calling dot)", option::end)
 {
 }
 
@@ -973,31 +1046,32 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 			continue;
 		BasicBlock* bb = bi->toBasic();
 
-		for(BasicBlock::InstIter inst(bb); inst; inst++)
-			if(inst->isControl()
-			&& !inst->isReturn()
-			&& !RECORDED(inst)
-			&& !PRESERVED(inst)) {
+		//for(BasicBlock::InstIter inst(bb); inst; inst++)
+		Inst *inst = bb->last();
+		if(inst->isControl()
+		&& !inst->isReturn()
+		&& !RECORDED(inst)
+		&& !PRESERVED(inst)) {
 
-				// Undefined branch target
-				if(!inst->target()) {
-					if(BRANCH_TARGET(inst).get().isNull() && CALL_TARGET(inst).get().isNull()) {
-						prepare(ws, cfg);
-						cstring type, com;
-						if(inst->isCall())
-							_printer.printMultiCall(out, cfg, inst);
-						else
-							_printer.printMultiBranch(out, cfg, inst);
-					}
-				}
-
-				// call to next instruction
-				else if(inst->isCall()
-				&& inst->target()->address() == inst->topAddress()) {
+			// Undefined branch target
+			if(!inst->target()) {
+				if(!BRANCH_TARGET(inst).exists() && !CALL_TARGET(inst).exists()) {
 					prepare(ws, cfg);
-					_printer.printIgnoreControl(out, cfg, inst);
+					cstring type, com;
+					if(inst->isCall())
+						_printer.printMultiCall(out, cfg, inst);
+					else
+						_printer.printMultiBranch(out, cfg, inst);
 				}
 			}
+
+			// call to next instruction
+			else if(inst->isCall()
+			&& inst->target()->address() == inst->topAddress()) {
+				prepare(ws, cfg);
+				_printer.printIgnoreControl(out, cfg, inst);
+			}
+		}
 	}
 }
 

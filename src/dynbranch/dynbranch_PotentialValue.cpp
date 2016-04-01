@@ -158,6 +158,14 @@ PotentialValue operator-(const PotentialValue& a, const PotentialValue& b) {
 	return res;
 }
 
+PotentialValue operator*(const PotentialValue& a, const PotentialValue& b) {
+	PotentialValue res;
+	for(PotentialValue::Iterator ita(a); ita; ita++)
+		for(PotentialValue::Iterator itb(b); itb; itb++)
+			res.insert((*ita)*(*itb));
+	return res;
+}
+
 PotentialValue operator>>(const PotentialValue& a, const PotentialValue& b) {
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++) {
@@ -175,6 +183,17 @@ PotentialValue logicalShiftRight(const PotentialValue& a, const PotentialValue& 
 			res.insert((unsigned int)*ita >> *itb);
 		}
 	}
+	return res;
+}
+
+PotentialValue MULH(const PotentialValue& a, const PotentialValue& b) {
+	PotentialValue res;
+	for(PotentialValue::Iterator ita(a); ita; ita++)
+		for(PotentialValue::Iterator itb(b); itb; itb++) {
+			t::int64 temp = (*ita)*(*itb);
+			t::uint32 temp2 = temp >> 32;
+			res.insert(temp2);
+		}
 	return res;
 }
 

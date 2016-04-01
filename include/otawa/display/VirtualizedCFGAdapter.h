@@ -68,8 +68,12 @@ public:
 		inline Vertex sink(void) const {
 			if(returnEdge) // the edge is between the Exit Block of the CFG and the block to return in the caller CFG
 				return Vertex(edge->target(), associatedReturningSynth);
-			else if(edge->target()->isSynth()) // the edge is between the caller and callee
-				return Vertex(edge->target()->toSynth()->callee()->entry(), (otawa::Block*)(edge->target()));
+			else if(edge->target()->isSynth()) {
+				if(edge->target()->toSynth()->callee()) // the edge is between the caller and callee
+					return Vertex(edge->target()->toSynth()->callee()->entry(), edge->target());
+				else
+					return Vertex(edge->target()->toSynth(), associatedSynth);
+			}
 			else // the edge is between Blocks of the same CFG
 				return Vertex(edge->target(), associatedSynth);
 		}
@@ -144,8 +148,8 @@ public:
 					// however we don't want synth otawa::Block in the CFG hence we go into the synth otawa::Block right away
 					if (i->isSynth() && i->toSynth()->callee()) { // when entering a function
 						returnSynth = currentSynth;
-						synthList.push((otawa::Block*)currentSynth);
-						currentSynth = (otawa::Block*)(*i);
+						synthList.push(currentSynth);
+						currentSynth = (*i);
 						returnCallStack.push(blockToReturn);
 						blockToReturn = i->outs()[0].target();
 						returnEdgeCallStack.push(edgeToReturn);
@@ -170,8 +174,8 @@ public:
 
 			if (i->isSynth() && i->toSynth()->callee()) { // when entering a function
 				returnSynth = currentSynth;
-				synthList.push((otawa::Block*)currentSynth);
-				currentSynth = (otawa::Block*)(*i);
+				synthList.push(currentSynth);
+				currentSynth = (*i);
 				returnCallStack.push(blockToReturn);
 				blockToReturn = i->outs()[0].target();
 				returnEdgeCallStack.push(edgeToReturn);
@@ -228,7 +232,7 @@ public:
 			if(found)
 				return vals[index];
 			else {
-				elm::cout << "not found BB " << vertex.b->cfg()->index() << "-" << vertex.b->index() << " (id=" << vertex.b->id() << ")" << " @ " << (void*)vertex.b << " [" << index << "]" << ", c = " << (void*)vertex.c << ", r = " << (void*)vertex.r << ", rb = " << (void*)(vertex.bR) << io::endl;
+				elm::cerr << "not found BB " << vertex.b->cfg()->index() << "-" << vertex.b->index() << " (id=" << vertex.b->id() << ")" << " @ " << (void*)vertex.b << " [" << index << "]" << ", c = " << (void*)vertex.c << ", r = " << (void*)vertex.r << ", rb = " << (void*)(vertex.bR) << io::endl;
 				ASSERTP(false, "Element not found in the Vertex Map");
 				return vals[0];
 			}
@@ -250,7 +254,7 @@ public:
 			}
 			else {
 				vals[currIndex] = val;
-				bAddrs[currIndex] = (otawa::Block*)vertex.b;
+				bAddrs[currIndex] = vertex.b;
 				synthAddrs[currIndex] = vertex.c;
 				currIndex++;
 			}
