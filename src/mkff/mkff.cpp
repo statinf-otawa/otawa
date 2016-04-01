@@ -659,7 +659,7 @@ public:
 protected:
 	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::SwitchOption xml, dynbranch, outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps, rawoutput;
+	option::SwitchOption xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps, rawoutput, forFun;
 };
 
 
@@ -677,7 +677,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	if(dynbranch) {
 		class CFGOutput: public otawa::display::CFGOutput { // for simple CFG output facility
 		public:
-			CFGOutput(bool _showProp): otawa::display::CFGOutput(), showProp(_showProp) { }
+			CFGOutput(bool _showProp, bool _forFun): otawa::display::CFGOutput(), showProp(_showProp), forFun(_forFun) { }
 			inline void genBBInfo(CFG *cfg, Block *bb, Output& out) {
 				if(!showProp)
 					return;
@@ -685,23 +685,13 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				for(PropList::Iter prop(bb); prop; prop++) {
 					out << prop->id()->name() << " = ";
 					StringBuffer temp;
-					prop->id()->print(elm::cout, prop);
 					prop->id()->print(temp, prop);
 					String tempString = temp.toString();
 					StringBuffer buf;
 					for(int i = 0; i < tempString.length(); i++){
 						char c = tempString[i];
-						if(
-							   c == '{'
-							|| c == '}'
-							|| c == '<'
-							|| c == '>'
-							|| c == '|'
-							|| c == '\\'
-							|| c == '"')
-						{
+						if(c == '{' || c == '}' || c == '<' || c == '>' || c == '|' || c == '\\' || c == '"') // adding '\' as the escape character
 							buf << '\\';
-						}
 						buf << c;
 					}
 					out << buf.toString();
@@ -711,33 +701,32 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			inline void genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out) { /* nothing on the edge */ }
 
 			void genBBLabel(CFG *cfg, Block *b, Output& out) {
-
 				// display title
 				out << b;
-
 				// special of entry, exit or synthetic
 				if(b->isEnd() || b->isSynth())
 					return;
 				BasicBlock *bb = b->toBasic();
-
-				// make title
+				// this is used by the AbstractDrawer::Vertex::setup as the separator between the title and the content of the node body
 				out << "\n---\n";
-				StringBuffer title;
-
 				// make body
 				cstring file;
 				int line = 0;
-				for(BasicBlock::InstIter inst(bb); inst; inst++){
-
+				system::StopWatch watch;
+				if(forFun) { // get the random seed
+					watch.start();
+					watch.stop();
+					srand (watch.startTime());
+				}
+				for(BasicBlock::InstIter inst(bb); inst; inst++){ // the body:
 					// display labels
 					for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
 						out << *label << ":<br ALIGN=\"LEFT\"/>";
 					for(Identifier<String>::Getter label(inst, otawa::LABEL); label; label++)
 						out << *label << ":<br ALIGN=\"LEFT\"/>";
-
 					Option<Pair<cstring, int> > info = workspace()->process()->getSourceLine(inst->address());
 					if(info) {
-						if((*info).fst != file || (*info).snd != line) {
+						if((*info).fst != file || (*info).snd != line) { // only output once if a file:line is of many instructions
 							file = (*info).fst;
 							line = (*info).snd;
 							out << file << ":" << line << "<br ALIGN=\"LEFT\"/>";
@@ -747,19 +736,20 @@ void Command::work(PropList &props) throw(elm::Exception) {
 						file = "";
 						line = 0;
 					}
-
 					// display the instruction
+					if(forFun)
+						out << "<Font color=\"#" << hex(rand()%255) << hex(rand()%255) << hex(rand()%255) << "\">";
 					out << "0x" << ot::address(inst->address()) << ":  ";
 					inst->dump(out);
+					if(forFun)
+						out << "</Font>";
 					out << "<br ALIGN=\"LEFT\"/>";
 				}
-
 				// give special format for Entry and Exit
 				genBBInfo(cfg, bb, out);
 			}
-
 		private:
-			bool showProp;
+			bool showProp, forFun;
 		};
 
 		otawa::display::CFGOutput::INLINING(props) = outputInlinedCFG;
@@ -770,7 +760,6 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			otawa::display::CFGOutput::PATH(props) = ".";
 		if(rawoutput)
 			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_RAW_DOT;
-
 		CFGOutput::RAW_BLOCK_INFO(props) = true;
 
 		int iteration = 0;
@@ -792,7 +781,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			if(outputInlinedCFG || outputVirtualizedCFG || outputCFG) {
 				string iterationString = _ << iteration << "_";
 				otawa::display::CFGOutput::PREFIX(props) = iterationString;
-				CFGOutput(showBlockProps).process(workspace(), props);
+				CFGOutput(showBlockProps, forFun).process(workspace(), props);
 			}
 			iteration++;
 		} while(branchDetected);
@@ -857,7 +846,8 @@ Command::Command(void):
 		outputVirtualizedCFG(*this, option::cmd, "-V", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::VIRTUALIZED = true), implies -C -I", option::end),
 		removeDuplicatedTarget(*this, option::cmd, "-S", option::cmd, "--no_repeat_multibranch", option::description, "do not output the multi-call/branch with the same target addresses", option::end),
 		showBlockProps(*this, option::cmd, "-P", option::cmd, "--show_block_props", option::description, "shows the properties of the block", option::end),
-		rawoutput(*this, option::cmd, "-R", option::cmd, "--raw_output", option::description, "generate raw dot output file (without calling dot)", option::end)
+		rawoutput(*this, option::cmd, "-R", option::cmd, "--raw_output", option::description, "generate raw dot output file (without calling dot)", option::end),
+		forFun(*this, option::cmd, "-F", option::cmd, "--for_fun", option::description, "the generated dot files will be colourful :)", option::end)
 {
 }
 

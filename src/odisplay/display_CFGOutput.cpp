@@ -177,9 +177,9 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 		cout << "\toutput " << label << " to " << out_path << io::endl;
 	OUT(cfg) = this;
 
+	CFGOutputDecorator::rawInfo = rawInfo;
 	if(virtualized) {
 		VirtualizedCFGAdapter cfga(cfg);
-		CFGOutputDecorator::rawInfo = rawInfo;
 		GenDrawer<VirtualizedCFGAdapter, CFGOutputDecorator> drawer(cfga);
 		drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
 		drawer.default_vertex.text.size = 12;
@@ -190,7 +190,6 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 	}
 	else if(inlining) {
 		InlinedCFGAdapter cfga(cfg);
-		CFGOutputDecorator::rawInfo = rawInfo;
 		GenDrawer<InlinedCFGAdapter, CFGOutputDecorator> drawer(cfga);
 		drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
 		drawer.default_vertex.text.size = 12;
