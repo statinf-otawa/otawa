@@ -29,8 +29,8 @@
 #include <otawa/data/clp/SymbolicExpr.h> // to use the filters
 #include <elm/log/Log.h> // to use the debugging messages
 
-#define DEBUG_FILTERS(x)  // x
-#define DEBUG_CLP(x)  // x
+#define DEBUG_FILTERS(x) // x
+#define DEBUG_CLP(x) // x
 
 using namespace elm::log;
 using namespace elm::color;
@@ -185,14 +185,12 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 			clp::Value valreg;
 			valreg = clpin.get(reg);
 			// We need to know this value, if we don't, we can't analyze anything
-			if (valreg.kind() != clp::VAL) {
-				if (isVerbose()) {cout << " Warning : we need a value from the analysis which is not here, be careful with results.. " << endl;}
-				// We will fall back to the first place (the first find call which obtain the { } ) and try the clp there.
-				return PotentialValue();
-			}
+			if (valreg.kind() != clp::VAL)
+				return PotentialValue();	// TO CHECK!
 			return setFromClp(valreg);
 		}
-	} else { // WHEN SEM INST COUNT > 1
+	}
+	else { // WHEN SEM INST COUNT > 1
 
 		sem::inst i = semantics.top();
 		semantics.pop();
@@ -418,23 +416,16 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 
 	// when there is no addresses found
 	if(addresses.length() < 1) {
-		if(isVerbose()) {
-			cout << "\t\tNo branch addresses found" << endl;
-		}
-
-		clp::State in = clp::STATE_IN(bb);
-		if(in == clp::State::EMPTY) { // when CLP_IN STATE is empty, this means the block is infeasible.
-			IGNORE_CONTROL(bb->last()) = true;
-		}
-
+		warn(_ << bb << ": no branch addresses found!");
 		return;
-	} else {
+	}
+	/*else {
 		for(Set<elm::t::uint32>::Iterator it(addresses); it; it++) {
-			if(isVerbose()) {
-				cout << "\t\t Possible branching addresses : 0x" << hex(*it) << endl;
+			if(logFor(LOG_BB)) {
+				log << "\t\t\tPossible branching addresses: " << *it << endl;
 			}
 		}
-	}
+	}*/
 
 	for(PotentialValue::Iterator pvi(addresses); pvi; pvi++) {
 		Address targetAddr = Address(*pvi);
@@ -471,16 +462,23 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 
 		if(!isExecutable) {
 			targetToAdd = false;
-			elm::cerr << "WARNING: address " << hex(*pvi) << " is not in the executable memory region, ignored by the dynamic branching analysis" << io::endl;
+			log << "WARNING: address " << hex(*pvi) << " is not in the initialized memory, ignored by the dynamic branching analysis" << io::endl;
 		}
 
 		// when there are some targets for the BB
 		if(targetToAdd) {
+
+			// log
+			if(logFor(LOG_BB)) {
+				log << "\t\t\tPossible branching addresses: " << targetAddr << endl;
+			}
+
 			// check the type: Branch or Call
 			if(last->isBranch())
 				BRANCH_TARGET(last).add(targetAddr);
 			else
 				CALL_TARGET(last).add(targetAddr);
+
 			// set NEW_BRANCH_TARGET_FOUND to true so notified there is a new target addresses detected
 			NEW_BRANCH_TARGET_FOUND(workspace()) = true;
 			// increment the target count
@@ -629,10 +627,6 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 			cout << " ---------- End Time stat for " << bb << "------------" << endl;
 		} else {
 			addTargetToBB(bb);
-		}
-	} else {
-		if (isVerbose()) {
-			cout << "\t\tNothing to do for this BB (no dynamic branching detected)" << endl;
 		}
 	}
 }
