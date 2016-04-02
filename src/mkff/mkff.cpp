@@ -824,7 +824,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			string iterationString = _ << iteration << "_";
 			otawa::display::CFGOutput::PREFIX(props) = iterationString;
 			CFGOutput(showBlockProps, forFun).process(workspace(), props);
-			}
+		}
 	}
 
 	// Load flow facts and record unknown values

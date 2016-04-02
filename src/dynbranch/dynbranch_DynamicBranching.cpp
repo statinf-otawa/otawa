@@ -29,8 +29,8 @@
 #include <otawa/data/clp/SymbolicExpr.h> // to use the filters
 #include <elm/log/Log.h> // to use the debugging messages
 
-#define DEBUG_FILTERS(x) // x
-#define DEBUG_CLP(x) // x
+#define DEBUG_FILTERS(x)  // x
+#define DEBUG_CLP(x)  // x
 
 using namespace elm::log;
 using namespace elm::color;
@@ -185,12 +185,14 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 			clp::Value valreg;
 			valreg = clpin.get(reg);
 			// We need to know this value, if we don't, we can't analyze anything
-			if (valreg.kind() != clp::VAL)
-				return PotentialValue();	// TO CHECK!
+			if (valreg.kind() != clp::VAL) {
+				if (isVerbose()) {cout << " Warning : we need a value from the analysis which is not here, be careful with results.. " << endl;}
+				// We will fall back to the first place (the first find call which obtain the { } ) and try the clp there.
+				return PotentialValue();
+			}
 			return setFromClp(valreg);
 		}
-	}
-	else { // WHEN SEM INST COUNT > 1
+	} else { // WHEN SEM INST COUNT > 1
 
 		sem::inst i = semantics.top();
 		semantics.pop();
@@ -270,22 +272,16 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 
 					if(r == PotentialValue::bot) { // means couldn't be found from the memory, lets try CLP?
 						for(PotentialValue::Iterator it(toget); it; it++) {
-							clp::Value valueFromCLP = clpState[semantics.length()-1].get(clp::Value(clp::VAL, *it, 0,0));
-							if(valueFromCLP != clp::Value::top) {
+							clp::Value valueFromCLP = clpState[semantics.length()].get(clp::Value(clp::VAL, *it, 0,0));
+							if(valueFromCLP != clp::Value::top && valueFromCLP.mtimes() < POTENTIAL_VALUE_LIMIT) {
 								PotentialValue p = setFromClp(valueFromCLP);
 								r = merge(r, p);
 							}
 						}
 						
 						if(toget.length() == 0) { // if there is no address to load, we look the value of the register in CLP state directly
-							clp::Value x = clpState[semantics.length()-1].get(clp::Value(clp::REG, i.d(), 0,0));
-							if(x.mtimes() < 65535)
-								r = setFromClp(x);
-						}
-
-						if(toget.length() == 0) { // if there is no address to load, we look the value of the register in CLP state directly
-							clp::Value x = clpState[semantics.length()-1].get(clp::Value(clp::REG, i.d(), 0,0));
-							if(x.mtimes() < 65535)
+							clp::Value x = clpState[semantics.length()].get(clp::Value(clp::REG, i.d(), 0,0));
+							if(x.mtimes() < POTENTIAL_VALUE_LIMIT)
 								r = setFromClp(x);
 						}
 

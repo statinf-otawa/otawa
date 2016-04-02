@@ -23,6 +23,9 @@
 
 #include <otawa/otawa.h>
 
+#define POTENTIAL_VALUE_WARNING_SIZE 10000
+#define POTENTIAL_VALUE_LIMIT 65535
+
 namespace otawa { namespace dynbranch {
 
 extern p::feature DYNBRANCH_FEATURE;

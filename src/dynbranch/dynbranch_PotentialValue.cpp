@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include "PotentialValue.h"
+#include <otawa/dynbranch/features.h>
 
 namespace otawa { namespace dynbranch {
 
@@ -112,6 +113,8 @@ PotentialValue& PotentialValue::operator=(const PotentialValue& a) {
 }
 
 PotentialValue operator&(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
@@ -120,6 +123,8 @@ PotentialValue operator&(const PotentialValue& a, const PotentialValue& b) {
 }
 
 PotentialValue operator|(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
@@ -128,6 +133,8 @@ PotentialValue operator|(const PotentialValue& a, const PotentialValue& b) {
 }
 
 PotentialValue operator^(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
@@ -143,6 +150,12 @@ PotentialValue operator~(const PotentialValue& a) {
 }
 
 PotentialValue operator+(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << __LINE__ << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << io::endl;
+		return PotentialValue::bot;
+	}
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
@@ -151,6 +164,12 @@ PotentialValue operator+(const PotentialValue& a, const PotentialValue& b) {
 }
 
 PotentialValue operator-(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << __LINE__ << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << io::endl;
+		return PotentialValue::bot;
+	}
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
@@ -159,6 +178,12 @@ PotentialValue operator-(const PotentialValue& a, const PotentialValue& b) {
 }
 
 PotentialValue operator*(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << __LINE__ << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << io::endl;
+		return PotentialValue::bot;
+	}
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
@@ -167,6 +192,12 @@ PotentialValue operator*(const PotentialValue& a, const PotentialValue& b) {
 }
 
 PotentialValue operator>>(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << __LINE__ << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << io::endl;
+		return PotentialValue::bot;
+	}
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++) {
 		for(PotentialValue::Iterator itb(b); itb; itb++) {
@@ -177,6 +208,12 @@ PotentialValue operator>>(const PotentialValue& a, const PotentialValue& b) {
 }
 
 PotentialValue logicalShiftRight(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << __LINE__ << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << io::endl;
+		return PotentialValue::bot;
+	}
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++) {
 		for(PotentialValue::Iterator itb(b); itb; itb++) {
@@ -187,6 +224,12 @@ PotentialValue logicalShiftRight(const PotentialValue& a, const PotentialValue& 
 }
 
 PotentialValue MULH(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << __LINE__ << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << io::endl;
+		return PotentialValue::bot;
+	}
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++) {
@@ -198,6 +241,12 @@ PotentialValue MULH(const PotentialValue& a, const PotentialValue& b) {
 }
 
 PotentialValue operator<<(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << __LINE__ << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << io::endl;
+		return PotentialValue::bot;
+	}
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
@@ -206,6 +255,12 @@ PotentialValue operator<<(const PotentialValue& a, const PotentialValue& b) {
 }
 
 PotentialValue operator||(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << __LINE__ << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << io::endl;
+		return PotentialValue::bot;
+	}
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
@@ -214,6 +269,12 @@ PotentialValue operator||(const PotentialValue& a, const PotentialValue& b) {
 }
 
 PotentialValue merge(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()+b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << __LINE__ << "WARNING: large set of potential value with size = " << a.count() << " + " << b.count() << " = " << (a.count()+b.count()) << io::endl;
+		return PotentialValue::bot;
+	}
 	PotentialValue res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		res.insert(*ita);
