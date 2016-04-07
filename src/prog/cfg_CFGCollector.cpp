@@ -378,7 +378,7 @@ void CFGCollector::buildEdges(CFGMaker& m) {
 					seq(m, bb, bb);
 
 				// branch cases
-				if(i) {
+				if(i && !IGNORE_CONTROL(i)) {
 
 					// return case
 					if(isReturn(i))
