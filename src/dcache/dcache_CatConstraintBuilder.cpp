@@ -19,20 +19,21 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/ilp.h>
-#include <otawa/ipet/VarAssignment.h>
-#include <otawa/util/Dominance.h>
-#include <otawa/ipet/IPET.h>
-#include <otawa/ipet/TrivialDataCacheManager.h>
-#include <otawa/hard/Platform.h>
-#include <otawa/hard/CacheConfiguration.h>
-#include <otawa/hard/Cache.h>
 #include <otawa/cfg/CFGCollector.h>
+#include <otawa/cfg/Dominance.h>
+#include <otawa/cache/categories.h>
 #include <otawa/dcache/CatBuilder.h>
 #include <otawa/dcache/CatConstraintBuilder.h>
-#include <otawa/cache/categories.h>
+#include <otawa/hard/Cache.h>
+#include <otawa/hard/CacheConfiguration.h>
+#include <otawa/hard/Platform.h>
+#include <otawa/ilp.h>
 #include <otawa/ipet/ILPSystemGetter.h>
+#include <otawa/ipet/IPET.h>
+#include <otawa/ipet/TrivialDataCacheManager.h>
+#include <otawa/ipet/VarAssignment.h>
 #include <otawa/stats/BBStatCollector.h>
+
 
 namespace otawa { namespace dcache {
 
@@ -59,10 +60,11 @@ public:
 		return dbs.fst * int(system->valueOf(var));
 	}
 
-	void collect(Collector& collector, BasicBlock *bb) {
-		if(bb->isEnd())
+	void collect(Collector& collector, BasicBlock *b, const ContextualPath& ctx) {
+		if(!b->isBasic())
 			return;
-		collector.collect(bb->address(), bb->size(), count(bb));
+		BasicBlock *bb = b->toBasic();
+		collector.collect(bb->address(), bb->size(), count(bb), ctx);
 	}
 
 	virtual int mergeContext(int v1, int v2) { return v1 + v2; }
@@ -221,9 +223,9 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 			log << "\tprocess CFG " << cfg->label() << io::endl;
 
 		// traverse basic blocks
-		for(CFG::BBIterator bb(cfg); bb; bb++) {
+		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 			if(logFor(LOG_BB))
-				log << "\t\tprocess BB " << bb->number()
+				log << "\t\tprocess BB " << bb->index()
 					<< " (" << ot::address(bb->address()) << ")\n";
 
 			// traverse blocks accesses
@@ -240,7 +242,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
                 if(!_explicit)
                         miss = system->newVar();
                 else
-                        buf << "xm_data_bb" << bb->number() << "_i" << b.instruction()->address() << "_" << j;
+                        buf << "xm_data_bb" << bb->index() << "_i" << b.instruction()->address() << "_" << j;
 
                 // Add the constraint depending on the block access category
                 switch(dcache::CATEGORY(b)) {
@@ -285,13 +287,13 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 								String name = buf.toString();
 								miss = system->newVar(name);
 							}
-							BasicBlock *header = dcache::CATEGORY_HEADER(b);
+							otawa::Block *header = dcache::CATEGORY_HEADER(b);
 							ASSERT(header);
 
 							// Add constraint: xmiss <= sum of entry-edges of the loop
 							ilp::Constraint *cons5a = system->newConstraint(ilp::Constraint::LE);
 						 	cons5a->addLeft(1, miss);
-						 	for(BasicBlock::InIterator inedge(header); inedge; inedge++)
+						 	for(otawa::Block::EdgeIter inedge = header->ins(); inedge; inedge++)
 						 		if (!Dominance::dominates(header, inedge->source()))
 						 			cons5a->addRight(1, ipet::VAR(*inedge));
 

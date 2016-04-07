@@ -22,27 +22,19 @@ MAYProblem::MAYProblem(
 	const BlockCollection& collection,
 	WorkSpace *_fw,
 	const hard::Cache *_cache)
-:	coll(collection),
+:	callstate(collection.count(), cache->wayCount()),
+	coll(collection),
 	fw(_fw),
 	line(collection.cacheSet()),
 	cache(_cache),
-	bot(collection.count(), cache->wayCount()),
-	ent(collection.count(), cache->wayCount()),
-	callstate(collection.count(), cache->wayCount())
+	_top(collection.count(), cache->wayCount()),
+	bot(collection.count(), cache->wayCount())
 {
-		ent.empty();
+		_top.empty();
 }
 
 
 MAYProblem::~MAYProblem(void) {
-}
-
-
-const MAYProblem::Domain& MAYProblem::bottom(void) const {
-	return bot;
-}
-const MAYProblem::Domain& MAYProblem::entry(void) const {
-	return ent;
 }
 
 
@@ -70,7 +62,7 @@ void MAYProblem::update(Domain& s, const BlockAccess& access) {
  * @param in	Input state.
  * @param bb	BB to to analyze.
  */
-void MAYProblem::update(Domain& out, const Domain& in, BasicBlock* bb) {
+void MAYProblem::update(Domain& out, const Domain& in, otawa::Block* bb) {
     assign(out, in);
 	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
 	for(int i = 0; i < accesses.fst; i++) {
@@ -171,9 +163,9 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll,
 		if(may_entry)
 			entry_dom = *may_entry->get(line);
 		mayHai.solve(0, &entry_dom);
-		for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-			for (CFG::BBIterator bb(cfg); bb; bb++)
-				MAY_ACS(bb)->set(line, new MAYProblem::Domain(*mayList.results[cfg->number()][bb->number()]));
+		for(CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
+			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
+				MAY_ACS(bb)->set(line, new MAYProblem::Domain(*mayList.results[cfg->index()][bb->index()]));
 
 	}
 	else {
@@ -186,8 +178,8 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll,
 		mayHai.solve(0, &entry_dom);
 		/* Store the resulting ACS into the properties */
 		for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-			for (CFG::BBIterator bb(cfg); bb; bb++)
-				MAY_ACS(bb)->set(line, new MAYProblem::Domain(*mayList.results[cfg->number()][bb->number()]));
+			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
+				MAY_ACS(bb)->set(line, new MAYProblem::Domain(*mayList.results[cfg->index()][bb->index()]));
 	}
 }
 
@@ -212,7 +204,7 @@ void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
 
 	// Build the vectors for receiving the ACS...
 	for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
-		for (CFG::BBIterator bb(cfg); bb; bb++)
+		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 			MAY_ACS(bb) = new acs_result_t(temp);
 	}
 

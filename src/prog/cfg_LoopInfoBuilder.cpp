@@ -28,6 +28,7 @@
 #include <otawa/dfa/BitSet.h>
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/proc/BBProcessor.h>
 
 using namespace elm;
 using namespace otawa;
@@ -35,6 +36,36 @@ using namespace otawa::dfa;
 
 namespace otawa {
 
+/*
+ * Cleaner used to clear the ENCLOSING_LOOP_HEADER identifier when the
+ * LOOP_INFO_FEATURE is invalidated.
+ */
+class LoopInfoCleaner: public elm::Cleaner {
+public:
+	 LoopInfoCleaner(WorkSpace *_ws): ws(_ws) { }
+
+protected:
+	virtual void clean() {
+		const CFGCollection* cfgc = INVOLVED_CFGS(ws);
+		for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+				for (BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
+					if (LOOP_EXIT_EDGE(*outedge)) {
+						if (EXIT_LIST(LOOP_EXIT_EDGE(*outedge))) {
+							delete EXIT_LIST(LOOP_EXIT_EDGE(*outedge));
+							EXIT_LIST(LOOP_EXIT_EDGE(*outedge)).remove();
+						}
+						LOOP_EXIT_EDGE(*outedge).remove();
+					}
+				} // for each outedge
+				if(ENCLOSING_LOOP_HEADER(bb).exists())
+					ENCLOSING_LOOP_HEADER(bb).remove();
+			} // for each bb
+		}
+	}
+private:
+	WorkSpace* ws;
+};
 
 /**
  * This processor produces loop informations:
@@ -61,6 +92,7 @@ public:
 
 private:
 		void buildLoopExitList(otawa::CFG* cfg);
+		bool fst;
 };
 
 
@@ -259,7 +291,7 @@ inline Block* LoopInfoProblem::get(int index) const {
 
 /* Constructors/Methods for LoopInfoBuilder */
 
-LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", Version(2, 0, 0)) {
+LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", Version(2, 0, 0)), fst(true) {
 	require(DOMINANCE_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
 	provide(LOOP_INFO_FEATURE);
@@ -281,7 +313,6 @@ LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", V
  		}
  	}
  }
-
 
 void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 	int i;
@@ -329,6 +360,11 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 
 	// build loop exit lists
 	buildLoopExitList(cfg);
+
+	if(fst) { // only add the cleaner for the first time
+		addCleaner(LOOP_INFO_FEATURE, new LoopInfoCleaner(fw));
+		fst = false;
+	}
 }
 
 }	// otawa

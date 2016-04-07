@@ -39,7 +39,6 @@ public:
 protected:
 	virtual void processBB(otawa::WorkSpace*, CFG *cfg, Block *bb);
 	virtual void setup(WorkSpace *ws);
-	virtual void cleanup(WorkSpace *ws);	
 private:
 	int *current_index;
 };

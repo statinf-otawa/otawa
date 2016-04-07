@@ -22,11 +22,12 @@
 #ifndef OTAWA_CAT_CATDFA_H_
 #define OTAWA_CAT_CATDFA_H_
 
+#include <otawa/cfg.h>
 #include <otawa/dfa/BitSet.h>
-#include <otawa/ipet/IPET.h>
-#include <otawa/ilp.h>
-#include <otawa/prop/Identifier.h>
 #include <otawa/hard/Cache.h>
+#include <otawa/ilp.h>
+#include <otawa/ipet/IPET.h>
+#include <otawa/prop/Identifier.h>
 
 
 namespace otawa {
@@ -73,8 +74,8 @@ class CATProblem {
 		return(tmp);
 	}
 	
-	CATDomain *gen(CFG *cfg, BasicBlock *bb);
-	CATDomain *preserve(CFG *cfg, BasicBlock *bb);
+	CATDomain *gen(CFG *cfg, Block *bb);
+	CATDomain *preserve(CFG *cfg, Block *bb);
 
 	void free(CATDomain *d) {
 		delete d;

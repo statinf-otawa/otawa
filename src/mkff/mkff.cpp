@@ -297,7 +297,10 @@ public:
 		addressOf(out, cfg, inst->address());
 
 		if(va) {
-			out << " to\n";
+			out << " to "
+				<< "\t// 0x" << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ")\n";
 			for(Vector<Address>::Iterator vai(*va); vai; vai++) {
 				out << "\t";
 				addressOf(out, cfg, *vai);
@@ -305,14 +308,22 @@ public:
 					out << ";";
 				else
 					out << ",";
-				out << "\t// " << *vai << " (";
+				out << "\t// 0x" << *vai << " (";
 				printSourceLine(out, *vai);
 				out << ") switch-like branch in " << nameOf(cfg) << io::endl;
 			}
 		}
+		else if(IGNORE_CONTROL(inst)) {
+			out << " has no target (infeasible path)."
+				<< "\t// 0x" << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ") switch-like branch in " << nameOf(cfg) << io::endl;
+		}
 		else {
 			out << " to ?;"
-				<< "\t// (" << inst->address() << ") switch-like branch in " << nameOf(cfg) << io::endl;
+				<< "\t// 0x" << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ") switch-like branch in " << nameOf(cfg) << io::endl;
 		}
 		out << io::endl;
 	}
@@ -322,7 +333,10 @@ public:
 		addressOf(out, cfg, inst->address());
 
 		if(va) {
-			out << " to\n";
+			out << " to "
+				<< "\t// 0x" << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ")\n";
 			for(Vector<Address>::Iterator vai(*va); vai; vai++) {
 				out << "\t";
 				addressOf(out, cfg, *vai);
@@ -330,14 +344,22 @@ public:
 					out << ";";
 				else
 					out << ",";
-				out << "\t// " << *vai << " (";
+				out << "\t// 0x" << *vai << " (";
 				printSourceLine(out, *vai);
 				out << ") indirect call in " << nameOf(cfg) << io::endl;
 			}
 		}
+		else if(IGNORE_CONTROL(inst)) {
+			out << " has no target (infeasible path)."
+				<< "\t// 0x" << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ") indirect call in " << nameOf(cfg) << io::endl;
+		}
 		else {
 			out << " to ?;"
-				<< "\t// (" << inst->address() << ") indirect call in " << nameOf(cfg) << io::endl;
+				<< "\t// 0x" << inst->address() << " (";
+			printSourceLine(out, inst->address());
+			out << ") indirect call in " << nameOf(cfg) << io::endl;
 		}
 		out << io::endl;
 	}
@@ -659,7 +681,7 @@ public:
 protected:
 	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::SwitchOption xml, dynbranch, outputCFG, outputVirtualizedCFG, removeDuplicatedTarget;
+	option::SwitchOption xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps, rawoutput, forFun;
 };
 
 
@@ -668,6 +690,7 @@ private:
 void Command::work(PropList &props) throw(elm::Exception) {
 
 	// configure the CFG collection
+	Application::parseAddress(arguments()[0]); // make sure the entry symbol is valid
 	TASK_ENTRY(props) = arguments()[0];
 	for(int i = 1; i < arguments().length(); i++)
 		CFGCollector::ADDED_FUNCTION(props).add(arguments()[i].toCString());
@@ -676,15 +699,102 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	// Enable the dynamic branch
 	if(dynbranch) {
 		class CFGOutput: public otawa::display::CFGOutput { // for simple CFG output facility
-			inline void genBBInfo(CFG *cfg, Block *bb, Output& out) { /* for the separation bar */ }
+		public:
+			void processCharacters(StringBuffer& sb, Output& out) {
+				String tempString = sb.toString();
+				for(int i = 0; i < tempString.length(); i++){
+					char c = tempString[i];
+					if(c == '{' || c == '}' || c == '|' || c == '\\' || c == '"') { // adding '\' as the escape character
+						out << '\\';
+						out << c;
+					}
+					else if(c == '<')
+						out << "&lt;";
+					else if(c == '>')
+						out << "&gt;";
+					else
+						out << c;
+				}
+			}
+			CFGOutput(bool _showProp, bool _forFun): otawa::display::CFGOutput(), showProp(_showProp), forFun(_forFun) { }
+			inline void genBBInfo(CFG *cfg, Block *bb, Output& out) {
+				if(!showProp)
+					return;
+				out << " | ";
+				for(PropList::Iter prop(bb); prop; prop++) {
+					out << prop->id()->name() << " = ";
+					StringBuffer temp;
+					prop->id()->print(temp, prop);
+					processCharacters(temp, out);
+					out << "<br ALIGN=\"LEFT\"/>";
+				}
+			}
 			inline void genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out) { /* nothing on the edge */ }
+
+			void genBBLabel(CFG *cfg, Block *b, Output& out) {
+				// display title
+				out << b;
+				// special of entry, exit or synthetic
+				if(b->isEnd() || b->isSynth())
+					return;
+				BasicBlock *bb = b->toBasic();
+				// this is used by the AbstractDrawer::Vertex::setup as the separator between the title and the content of the node body
+				out << "\n---\n";
+				// make body
+				cstring file;
+				int line = 0;
+				system::StopWatch watch;
+				if(forFun) { // get the random seed
+					watch.start();
+					watch.stop();
+					srand (watch.startTime());
+				}
+				for(BasicBlock::InstIter inst(bb); inst; inst++){ // the body:
+					// display labels
+					for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
+						out << *label << ":<br ALIGN=\"LEFT\"/>";
+					for(Identifier<String>::Getter label(inst, otawa::LABEL); label; label++)
+						out << *label << ":<br ALIGN=\"LEFT\"/>";
+					Option<Pair<cstring, int> > info = workspace()->process()->getSourceLine(inst->address());
+					if(info) {
+						if((*info).fst != file || (*info).snd != line) { // only output once if a file:line is of many instructions
+							file = (*info).fst;
+							line = (*info).snd;
+							out << file << ":" << line << "<br ALIGN=\"LEFT\"/>";
+						}
+					}
+					else {
+						file = "";
+						line = 0;
+					}
+					// display the instruction
+					if(forFun)
+						out << "<Font color=\"#" << hex(rand()%255) << hex(rand()%255) << hex(rand()%255) << "\">";
+					out << "0x" << ot::address(inst->address()) << ":  ";
+					// inst->dump(out);
+					StringBuffer temp;
+					inst->dump(temp);
+					processCharacters(temp, out);
+					if(forFun)
+						out << "</Font>";
+					out << "<br ALIGN=\"LEFT\"/>";
+				}
+				// give special format for Entry and Exit
+				genBBInfo(cfg, bb, out);
+			}
+		private:
+			bool showProp, forFun;
 		};
 
-		otawa::display::CFGOutput::INLINING(props) = outputVirtualizedCFG;
+		otawa::display::CFGOutput::INLINING(props) = outputInlinedCFG;
+		otawa::display::CFGOutput::VIRTUALIZED(props) = outputVirtualizedCFG;
 		if(!otawa::display::CFGOutput::KIND(props).exists())
 			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_DOT;
 		if(!otawa::display::CFGOutput::PATH(props).exists())
 			otawa::display::CFGOutput::PATH(props) = ".";
+		if(rawoutput)
+			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_RAW_DOT;
+		CFGOutput::RAW_BLOCK_INFO(props) = true;
 
 		int iteration = 0;
 		bool branchDetected = false;
@@ -695,44 +805,27 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			else {
 				workspace()->invalidate(COLLECTED_CFG_FEATURE);
 				workspace()->require(COLLECTED_CFG_FEATURE, props);
-			}
+			} // end of the first time
 
-			if(outputVirtualizedCFG || outputCFG) {
+			if(outputInlinedCFG || outputVirtualizedCFG || outputCFG) {
 				string iterationString = _ << iteration << "_";
 				otawa::display::CFGOutput::PREFIX(props) = iterationString;
-				CFGOutput().process(workspace(), props);
+				CFGOutput(showBlockProps, forFun).process(workspace(), props);
 			}
 
 			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false; // clear the flag
-			workspace()->require(otawa::dynbranch::FEATURE, props);
+			workspace()->require(otawa::dynbranch::DYNBRANCH_FEATURE, props);
 			// the loop goes on searching new branch target when there is a new target found
 			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
+
 			iteration++;
-
-			// clear the PotentialValues
-			dynbranch::PotentialValue::potential_value_list_t* potentialValueList = dynbranch::DYNBRANCH_POTENTIAL_VALUE_LIST(workspace());
-			if(isVerbose())
-				elm::cerr << "potentialValueList length = " << potentialValueList->count() << io::endl;
-			for(dynbranch::PotentialValue::potential_value_list_t::Iterator slli(*potentialValueList); slli; slli++) {
-#ifdef SAFE_MEM_ACCESS
-				dynbranch::PotentialValueMem *pv = *slli;
-				if(pv->status == true) {
-					pv->pv->~Vector();
-				}
-				delete pv;
-#else
-				dynbranch::PotentialValue *pv = *slli;
-				if(pv->magic != dynbranch::PotentialValue::MAGIC)
-					continue;
-				pv->~Vector();
-#endif
-			}
-			potentialValueList->clear();
-
-			elm::StackAllocator* psa = dynbranch::DYNBRANCH_STACK_ALLOCATOR(workspace());
-			assert(psa);
-			delete psa;
 		} while(branchDetected);
+
+		if(outputInlinedCFG || outputVirtualizedCFG || outputCFG) {
+			string iterationString = _ << iteration << "_";
+			otawa::display::CFGOutput::PREFIX(props) = iterationString;
+			CFGOutput(showBlockProps, forFun).process(workspace(), props);
+		}
 	}
 
 	// Load flow facts and record unknown values
@@ -777,7 +870,6 @@ void Command::work(PropList &props) throw(elm::Exception) {
 }
 
 
-
 /**
  * Build the command.
  */
@@ -791,8 +883,12 @@ Command::Command(void):
 		xml(*this, option::cmd, "-x", option::cmd, "--ffx", option::description, "activate FFX output", option::end),
 		dynbranch(*this, option::cmd, "-D", option::cmd, "--dynbranch", option::description, "check for dynamic branches", option::end),
 		outputCFG(*this, option::cmd, "-C", option::cmd, "--cfg_output", option::description, "output cfg in a given fashion (otawa::display::CFGOutput::PATH, KIND)", option::end),
-		outputVirtualizedCFG(*this, option::cmd, "-I", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::INLINED = true), implies -C", option::end),
-		removeDuplicatedTarget(*this, option::cmd, "-S", option::cmd, "--no_repeat_multibranch", option::description, "do not output the multi-call/branch with the same target addresses", option::end)
+		outputInlinedCFG(*this, option::cmd, "-I", option::cmd, "--inlined_cfg", option::description, "the output cfg is inlined (otawa::display::CFGOutput::INLINED = true), implies -C", option::end),
+		outputVirtualizedCFG(*this, option::cmd, "-V", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::VIRTUALIZED = true), implies -C -I", option::end),
+		removeDuplicatedTarget(*this, option::cmd, "-S", option::cmd, "--no_repeat_multibranch", option::description, "do not output the multi-call/branch with the same target addresses", option::end),
+		showBlockProps(*this, option::cmd, "-P", option::cmd, "--show_block_props", option::description, "shows the properties of the block", option::end),
+		rawoutput(*this, option::cmd, "-R", option::cmd, "--raw_output", option::description, "generate raw dot output file (without calling dot)", option::end),
+		forFun(*this, option::cmd, "-F", option::cmd, "--for_fun", option::description, "the generated dot files will be colourful :)", option::end)
 {
 }
 
@@ -981,31 +1077,32 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 			continue;
 		BasicBlock* bb = bi->toBasic();
 
-		for(BasicBlock::InstIter inst(bb); inst; inst++)
-			if(inst->isControl()
-			&& !inst->isReturn()
-			&& !RECORDED(inst)
-			&& !PRESERVED(inst)) {
+		//for(BasicBlock::InstIter inst(bb); inst; inst++)
+		Inst *inst = bb->last();
+		if(inst->isControl()
+		&& !inst->isReturn()
+		&& !RECORDED(inst)
+		&& !PRESERVED(inst)) {
 
-				// Undefined branch target
-				if(!inst->target()) {
-					if(BRANCH_TARGET(inst).get().isNull() && CALL_TARGET(inst).get().isNull()) {
-						prepare(ws, cfg);
-						cstring type, com;
-						if(inst->isCall())
-							_printer.printMultiCall(out, cfg, inst);
-						else
-							_printer.printMultiBranch(out, cfg, inst);
-					}
-				}
-
-				// call to next instruction
-				else if(inst->isCall()
-				&& inst->target()->address() == inst->topAddress()) {
+			// Undefined branch target
+			if(!inst->target()) {
+				if(!BRANCH_TARGET(inst).exists() && !CALL_TARGET(inst).exists()) {
 					prepare(ws, cfg);
-					_printer.printIgnoreControl(out, cfg, inst);
+					cstring type, com;
+					if(inst->isCall())
+						_printer.printMultiCall(out, cfg, inst);
+					else
+						_printer.printMultiBranch(out, cfg, inst);
 				}
 			}
+
+			// call to next instruction
+			else if(inst->isCall()
+			&& inst->target()->address() == inst->topAddress()) {
+				prepare(ws, cfg);
+				_printer.printIgnoreControl(out, cfg, inst);
+			}
+		}
 	}
 }
 

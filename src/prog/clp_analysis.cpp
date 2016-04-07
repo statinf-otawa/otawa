@@ -1483,22 +1483,30 @@ void State::print(io::Output& out, const hard::Platform *pf) const {
 			if (val.kind() == VAL)
 				out << CLP_START << "t" << i << " = " << val << CLP_END;
 		}*/
+		bool fst = true;
 		// registers
 		for(int i = 0; i < registers.length(); i++){
 			Value val = registers[i];
 			if (val.kind() == VAL) {
-				out << CLP_START;
+				if(!fst)
+					out << ", ";
+				else
+					fst = false;
 				if(!pf)
 					out << "r" << i;
 				else
 					out << pf->findReg(i)->name();
-				out << " = " << val << CLP_END;
+				out << " = " << val;
 			}
 		}
 		// memory
 		for(Node *cur = first.next; cur; cur = cur->next) {
+			if(!fst)
+				out << ", ";
+			else
+				fst = false;
 			out << CLP_START << Address(cur->addr);
-			out << " = " << cur->val << CLP_END;
+			out << " = " << cur->val;
 		}
 		#ifndef STATE_MULTILINE
 		out << "}";
@@ -1557,6 +1565,8 @@ public:
 	ClpProblem(Process *proc)
 	:	pc(0),
 		has_if(false),
+		bb(0),
+		inst(0),
 		specific_analysis(false),
 		_process(proc),
 		istate(0),
@@ -1914,9 +1924,9 @@ public:
 						addressInInitMem = true;
 
 					bool warningFlag = true;
-					for(unsigned int m = 0; (m <= addrclp.mtimes()) && addressInInitMem && (addrclp.mtimes() != clp::UMAXn); m++){
+					for(unsigned int m = 0; (m <= addrclp.mtimes()) && addressInInitMem && (addrclp.mtimes() < MEMORY_ACCESS_THRESHOLD*2 /*!= clp::UMAXn*/); m++){
 						if((addrclp.mtimes() > MEMORY_ACCESS_THRESHOLD) && warningFlag) {
-							elm::cerr << "WARNING: accessing more than " << MEMORY_ACCESS_THRESHOLD << " locations in the initialized memory (" << addrclp.mtimes() << ")" << io::endl;
+							elm::cerr << "WARNING: accessing more than " << MEMORY_ACCESS_THRESHOLD << " locations in the initialized memory (" << addrclp.mtimes() << " times)" << io::endl;
 							warningFlag = false;
 						}
 						Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
@@ -1941,7 +1951,7 @@ public:
 					state->set(addrclp, get(*state, i.d()));
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
-					ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T\n");
+					ALARM_STORE_TOP(warnStoreToTop());
 #					ifdef HAI_JSON
 						HAI_BASE->addEvent("store to T");
 #					endif
@@ -1959,7 +1969,7 @@ public:
 						Symbol *sym = this->_process->findSymbolAt(addrclp.lower());
 						if(!sym) {
 							_nb_top_store_addr++;
-							ALARM_STORE_TOP(cerr << "WARNING: " << i << " store to T (unbounded address)\n");
+							ALARM_STORE_TOP(warnStoreToTop());
 #						ifdef HAI_JSON
 							HAI_BASE->addEvent("store to T");
 #						endif
@@ -2123,6 +2133,7 @@ public:
 		// do nothing for an end block
 		if(bb->isEnd())
 			return;
+		this->bb = bb;
 
 		Domain *state;
 		has_if = false;
@@ -2132,9 +2143,13 @@ public:
 		// save the input state in the basic block, join with an existing state
 		// if needed
 		if(!specific_analysis){
-				clp::STATE_IN(bb) = in;
+			if(clp::STATE_IN(bb).exists())
+				clp::STATE_IN(bb).remove();
+
+			clp::STATE_IN(bb) = in;
 		}
 		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
+			this->inst = inst;
 			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
 			_nb_inst++;
 
@@ -2179,11 +2194,18 @@ public:
 			//TRACEI(cerr << "\t-> " << out << io::endl);
 		}
 
+		// reset tracking
+		this->inst = 0;
+		this->bb = 0;
+
 		TRACEP(cerr << "s' = " << out << io::endl);
 		if (specific_analysis)
 			return;
 
 		// save the output state in the basic block
+		if(clp::STATE_OUT(bb).exists())
+			clp::STATE_OUT(bb).remove();
+
 		clp::STATE_OUT(bb) = out;
 		TRACEU(cerr << ">>>\tout = " << out << io::endl);
 
@@ -2252,6 +2274,8 @@ private:
 	genstruct::Vector<Pair<int, Domain *> > todo;
 	int pc;
 	bool has_if;
+	Block *bb;
+	Inst *inst;
 
 	/* attribute for specific analysis / packing */
 	bool specific_analysis;
@@ -2259,7 +2283,7 @@ private:
 	dfa::State *istate;
 	clp::ClpStatePack *pack;
 
-	/* attributes for statistics purpose */
+	// attributes for statistics purpose
 	clp::STAT_UINT _nb_inst;
 	clp::STAT_UINT _nb_sem_inst;
 	clp::STAT_UINT _nb_set;
@@ -2272,21 +2296,50 @@ private:
 	clp::STAT_UINT _nb_filters;
 	clp::STAT_UINT _nb_top_filters;
 	clp::STAT_UINT _nb_top_load;
+
+	// store to T management
+	genstruct::SLList<Pair<Inst *, Block *> > top_stores;
+	void warnStoreToTop(void) {
+		if(!inst || !bb)
+			return;
+		Pair<Inst *, Block *> p = pair(inst, bb);
+		if(!top_stores.contains(p)) {
+			top_stores.add(p);
+			cerr << "WARNING: (" << p.snd << "):" << p.fst->address() << ": " << p.fst << " store to T (unbounded address)\n";
+		}
+	}
 };
 
 // CLPStateCleaner
 class CLPStateCleaner: public Cleaner {
 public:
-	inline CLPStateCleaner(CFG *_cfg) {cfg = _cfg;}
-	//virtual ~CLPStateCleaner(void) {}
+	inline CLPStateCleaner(WorkSpace* _ws) : ws(_ws) { }
+
 	virtual void clean(void) {
-		for(CFG::BlockIter bbi = cfg->blocks(); bbi; bbi++){
-			clp::STATE_IN(*bbi).remove();
-			clp::STATE_OUT(*bbi).remove();
+		const CFGCollection *cfgc = INVOLVED_CFGS(ws);
+		for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+			for(CFG::BlockIter bbi = cfg->blocks(); bbi; bbi++){
+				clp::STATE_IN(*bbi).remove();
+				clp::STATE_OUT(*bbi).remove();
+
+				if(se::REG_FILTERS(*bbi).exists()) {
+					Vector<se::SECmp *> vse = se::REG_FILTERS(*bbi);
+					for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+						delete *vsei;
+					se::REG_FILTERS(*bbi).remove();
+				}
+
+				if(se::ADDR_FILTERS(*bbi).exists()) {
+					Vector<se::SECmp *> vse = se::ADDR_FILTERS(*bbi);
+					for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+						delete *vsei;
+					se::ADDR_FILTERS(*bbi).remove();
+				}
+			}
 		}
 	}
 private:
-	CFG *cfg;
+	WorkSpace* ws;
 };
 
 /**
@@ -2312,7 +2365,8 @@ private:
 
 p::declare Analysis::reg = p::init("otawa::clp::Analysis", Version(0, 1, 0))
 	.maker<Analysis>()
-	.require(VIRTUALIZED_CFG_FEATURE)
+	//.require(VIRTUALIZED_CFG_FEATURE)
+	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
 	.require(dfa::INITIAL_STATE_FEATURE)
 	.provide(clp::FEATURE);
@@ -2357,8 +2411,7 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	CFG *cfg = coll->get(0);
 
 	// set the cleaner
-	CLPStateCleaner *cleaner = new CLPStateCleaner(cfg);
-	addCleaner(clp::FEATURE, cleaner);
+	addCleaner(clp::FEATURE, new CLPStateCleaner(ws));
 
 	ClpProblem prob(ws->process());
 
@@ -2710,9 +2763,10 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 	s = STATE_IN(bb);
 	cs = &s;
 	p->prepare(mi);
-	p->update(cs);
 	i = 0;
-	return NEW_INST | NEW_PATH | NEW_SEM;
+	//p->update(cs);
+	//return NEW_INST | NEW_PATH | NEW_SEM;
+	return next();
 }
 
 

@@ -83,6 +83,9 @@ Identifier<int *> COND_MAX("otawa::branch::COND_MAX", NULL);
  *
  * @ingroup branch
  */
+
+/**
+ */
 p::declare CondNumber::reg =
 		p::init("otawa::branch::CondNumber", Version(1,0,0), BBProcessor::reg)
 		.require(COLLECTED_CFG_FEATURE)
@@ -90,18 +93,21 @@ p::declare CondNumber::reg =
 		.provide(NUMBERED_CONDITIONS_FEATURE)
 		.maker<CondNumber>();
 
-
-CondNumber::CondNumber(void): BBProcessor(reg) {
+/**
+ */
+CondNumber::CondNumber(void): BBProcessor(reg), current_index(0) {
 }
 
+/**
+ */
 void CondNumber::processBB(WorkSpace* ws, CFG *cfg, Block *b) {
 	if(!b->isBasic())
 		return;
 	BasicBlock *bb = b->toBasic();
-	Inst *last = bb->control();
+	Inst *control = bb->control();
 	cleanup(ws);
-	if(last && (last->isConditional() || last->isIndirect())) {
-		int row = hard::BHT_CONFIG(ws)->line(last->address());
+	if(control && (control->isConditional() || control->isIndirect())) {
+		int row = hard::BHT_CONFIG(ws)->line(control->address());
 		if(logFor(Processor::LOG_BB))
 			log << "\t\t\tconditional: " << *bb << " (row " << row << ")\n";
 		COND_NUMBER(bb) = current_index[row];
@@ -109,18 +115,14 @@ void CondNumber::processBB(WorkSpace* ws, CFG *cfg, Block *b) {
 	}
 }
 
+/**
+ */
 void CondNumber::setup(WorkSpace *ws) {
 	int num_rows = hard::BHT_CONFIG(ws)->rowCount();
 	current_index = new int[num_rows];
-	for (int i = 0; i < num_rows; i++) {
+	for (int i = 0; i < num_rows; i++)
 		current_index[i] = 0;
-	}
-	COND_MAX(ws) = current_index;
-} 
-
-void CondNumber::cleanup(WorkSpace *ws) {
-	// not cleaned
-	COND_MAX(ws) = current_index;	
+	track(branch::NUMBERED_CONDITIONS_FEATURE, COND_MAX(ws) = current_index);
 } 
 
 } }		// otawa::branch

@@ -51,6 +51,7 @@ class Node: public Item {
 };
 extern Identifier<elm::String> TITLE;
 extern Identifier<elm::String> BODY;
+extern Identifier<bool> RAW_NODE;
 
 // form_t enum
 extern Identifier<int> SHAPE;

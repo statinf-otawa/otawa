@@ -576,7 +576,10 @@ void Processor::setup(WorkSpace *ws) {
 
 /**
  * This method is called after the end of the processor analysis to let it
- * do some clean up.
+ * do some clean up. Some data such as Identifiers set in in the processor
+ * analysis may still be used in the later analysis. Please refer to
+ * elm::addCleaner() to clean the such data when the feature provided by
+ * the processor analysis is removed/invalidated.
  * @param ws	Workspace to work on.
  */
 void Processor::cleanup(WorkSpace *ws) {

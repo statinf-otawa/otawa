@@ -505,7 +505,8 @@ private:
 		/*if(workspace()->isProvided(DELAYED_FEATURE)
 		|| workspace()->isProvided(DELAYED2_FEATURE))
 			require(DELAYED_CFG_FEATURE);*/
-		require(otawa::VIRTUALIZED_CFG_FEATURE);
+		require(otawa::VIRTUALIZED_CFG_FEATURE); //should shift to require(otawa::COLLECTED_CFG_FEATURE);
+
 
 		// prepare analysis
 		DisplayContext ctx(workspace(), props);

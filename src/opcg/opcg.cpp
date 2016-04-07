@@ -95,7 +95,7 @@ protected:
 			eval(called);
 			total += TOTAL(*called);
 		}
-		int cnt = block->getCFG()->countBB();
+		int cnt = block->getCFG()->count();
 		COUNT(block) = cnt;
 		TOTAL(block) = total + cnt;
 	}

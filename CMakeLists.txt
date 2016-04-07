@@ -66,6 +66,8 @@ add_definitions(-DSIMULATOR_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/sim\")
 add_definitions(-DPROC_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/proc\")
 add_definitions(-DHAS_RELOCATION)
 add_definitions(-DOTAWA_CMAKE)
+add_definitions(-g3)
+add_definitions(-g3)
 
 # looking for ARM loader
 set(ARM5_PATH "${CMAKE_SOURCE_DIR}/../armv5t")

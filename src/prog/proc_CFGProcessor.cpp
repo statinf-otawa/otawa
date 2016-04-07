@@ -61,7 +61,7 @@ MetaRegistration CFGProcessor::reg(
 /**
  * Build a new CFG processor.
  */
-CFGProcessor::CFGProcessor(void): Processor(reg) {
+CFGProcessor::CFGProcessor(void): Processor(reg), _cfg(0) {
 }
 
 
@@ -71,7 +71,7 @@ CFGProcessor::CFGProcessor(void): Processor(reg) {
  * @param version	Processor version.
  */
 CFGProcessor::CFGProcessor(cstring name, elm::Version version)
-: Processor(name, version, reg) {
+: Processor(name, version, reg), _cfg(0) {
 }
 
 

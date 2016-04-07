@@ -27,17 +27,17 @@ int CATProblem::vars = 0;
 
 /**
  */
-CATDomain *CATProblem::gen(CFG *cfg, BasicBlock *bb) {
+CATDomain *CATProblem::gen(CFG *cfg, Block *bb) {
 	int length = lines->count();
 	CATDomain *bitset = new CATDomain(length);
 	if (bb->isEntry()){
 		bitset->add(0);
 		return bitset;
 	}
-	else {	
+	else if(bb->isBasic()) {
 		address_t adlbloc;
 	    int identif=0;	    
-	    for(BasicBlock::InstIter inst(bb); inst; inst++) {
+	    for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 			adlbloc = inst->address();				
 			for (LBlockSet::Iterator lbloc(*lines); lbloc; lbloc++){
 				address_t address = lbloc->address();
@@ -49,18 +49,21 @@ CATDomain *CATProblem::gen(CFG *cfg, BasicBlock *bb) {
 	    if (identif != 0)bitset->add(identif);
 	    	return bitset;
 	}
-
+	else
+		return bitset;
 }
 
 /**
  */
-CATDomain *CATProblem::preserve(CFG *cfg, BasicBlock *bb) {
+CATDomain *CATProblem::preserve(CFG *cfg, Block *bb) {
 	//Inst *inst;
+	if(!bb->isBasic())
+		return new CATDomain(lines->count());
 	bool testnotconflit = false;
 	bool visit = false;
 	address_t adlbloc;
 	int identif1 = 0 , identnonconf = 0 , identif2 = 0;
-	for(BasicBlock::InstIter inst(bb); inst; inst++) {
+	for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 		visit = false;
 		// decallage x where each block containts 2^x ocets
 		int dec = cach->blockBits();

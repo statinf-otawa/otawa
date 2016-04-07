@@ -111,24 +111,25 @@ public:
 	PERSProblem(const int _size, const BlockCollection *_lbset, WorkSpace *_fw, const hard::Cache *_cache, const int _A);
 	~PERSProblem(void);
 	const Domain& bottom(void) const;
-	const Domain& entry(void) const;
+	const Domain& top(void) const;
+	inline const Domain& entry(void) const { return top(); }
 
 	inline void lub(Domain &a, const Domain &b) const { a.lub(b); }
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
-	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	void update(Domain& out, const Domain& in, otawa::Block* bb);
 	void update(Domain& s, const BlockAccess& access);
 	void purge(Item& item, const BlockAccess& acc);
 	void purge(Domain& domain, const BlockAccess& acc);
 
-	inline void enterContext(Domain& dom, BasicBlock *header, util::hai_context_t ctx) {
+	inline void enterContext(Domain& dom, otawa::Block *header, util::hai_context_t ctx) {
 #ifndef PERFTEST
 		if (ctx == util::CTX_LOOP)
 			dom.enterContext();
 #endif
 	}
 
-	inline void leaveContext(Domain& dom, BasicBlock *header, util::hai_context_t ctx) {
+	inline void leaveContext(Domain& dom, otawa::Block *header, util::hai_context_t ctx) {
 #ifndef PERFTEST
 		if (ctx == util::CTX_LOOP)
 			dom.leaveContext();
@@ -141,7 +142,7 @@ private:
 	WorkSpace *fw;
 	const hard::Cache *cache;
 	Domain bot;
-	Domain ent;
+	Domain _top;
 	const int line;
 };
 

@@ -92,29 +92,30 @@ public:
 
 	};
 
-private:
-	const BlockCollection& coll;
-	WorkSpace *fw;
-	int line;
-	const hard::Cache *cache;
-	Domain bot;
-	Domain ent;
-
 public:
 	Domain callstate;
 
 	MAYProblem(const  BlockCollection& coll, WorkSpace *_fw, const hard::Cache *_cache);
 	~MAYProblem(void);
 
-	const Domain& bottom(void) const;
-	const Domain& entry(void) const;
+	inline const Domain& top(void) const { return _top; }
+	inline const Domain& bottom(void) const { return bot; }
+	inline const Domain& entry(void) const { return top(); }
 	inline void lub(Domain &a, const Domain &b) const { a.lub(b); }
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
-	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	void update(Domain& out, const Domain& in, otawa::Block* bb);
 	void update(Domain& s, const BlockAccess& access);
-	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
+
+private:
+	const BlockCollection& coll;
+	WorkSpace *fw;
+	int line;
+	const hard::Cache *cache;
+	Domain _top;
+	Domain bot;
 };
 
 elm::io::Output& operator<<(elm::io::Output& output, const MAYProblem::Domain& dom);

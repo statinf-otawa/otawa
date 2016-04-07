@@ -41,20 +41,6 @@ public:
 		inline Domain(const ACS& source): ACS(source) { }
 		inline Domain& operator=(const ACS& d) { ACS::operator=(d); return *this; }
 
-		/*inline void glb(const Domain &dom) {
-			ASSERT((A == dom.A) && (size == dom.size));
-			for (int i = 0; i < size; i++)
-				if (((age[i] > dom.age[i]) && (dom.age[i] != -1)) || (age[i] == -1))
-					age[i] = dom.age[i];
-		}*/
-
-		/*inline void lub(const Domain &dom) {
-			ASSERT((A == dom.A) && (size == dom.size));
-			for (int i = 0; i < size; i++)
-				if (((age[i] < dom.age[i]) && (age[i] != -1))|| (dom.age[i] == -1))
-					age[i] = dom.age[i];
-		}*/
-
 		inline void addDamage(const int id, const int damage) {
 			ASSERT((id >= 0) && (id < size));
 			if (age[id] == -1)
@@ -96,7 +82,8 @@ public:
 	MUSTProblem(int _size, int _set, WorkSpace *_fw, const hard::Cache *_cache, int _A);
 
 	const Domain& bottom(void) const;
-	const Domain& entry(void) const;
+	const Domain& top(void) const;
+	inline const Domain& entry(void) const { return _top; }
 	inline void lub(Domain &a, const Domain &b) const {
 		for (int i = 0; i < size; i++)
 			if (((a[i] < b[i]) && (a[i] != -1))|| (b[i] == -1))
@@ -105,18 +92,18 @@ public:
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline void assign(Domain &a, const ACS &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
-	void update(Domain& out, const Domain& in, BasicBlock* bb);
+	void update(Domain& out, const Domain& in, otawa::Block* bb);
 	void update(Domain& s, const BlockAccess& access);
 	void purge(Domain& out, const BlockAccess& acc);
-	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
 
 private:
 	WorkSpace *fw;
 	int set;
 	const hard::Cache *cache;
 	Domain bot;
-	Domain ent;
+	Domain _top;
 	int size;
 };
 

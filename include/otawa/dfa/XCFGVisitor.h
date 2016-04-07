@@ -25,7 +25,7 @@ extern Identifier<int> INDEX;
 template <class P>
 class XCFGVisitor {
 	typedef struct node_t {
-		BasicBlock *bb;
+		Block *bb;
 		int cfg, to, from;
 		inline node_t(void): bb(0), cfg(-1), to(-1), from(-1) { }
 	} node_t;

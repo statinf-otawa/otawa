@@ -220,8 +220,6 @@ void Output::configure(const PropList& props) {
 		else {
 			ids.add(id);
 			all = false;
-			if(logFor(LOG_DEPS))
-				log << "\tproperty " << *name << " include in the output\n";
 		}
 	}
 
@@ -234,6 +232,11 @@ void Output::configure(const PropList& props) {
 /**
  */
 void Output::processWorkSpace(WorkSpace *ws) {
+
+	// initial log
+	if(logFor(LOG_DEPS))
+		for(avl::Set<const AbstractIdentifier *>::Iterator id(ids); id; id++)
+			log << "\tproperty " << id->name() << " include in the output\n";
 
 	// build the root node
 	root = new xom::Element("cfg-collection");
@@ -274,7 +277,7 @@ void Output::processWorkSpace(WorkSpace *ws) {
 void Output::processProps(xom::Element *parent, const PropList& props) {
 	for(PropList::Iter prop(props); prop; prop++)
 
-		if((all && prop->id()->name()) || ids.contains(prop->id())) {
+		if((all/* && prop->id()->name()*/) || ids.contains(prop->id())) {
 
 			// make node
 			xom::Element *prop_node = new xom::Element("property");

@@ -31,7 +31,9 @@
 #include <otawa/dfa/hai/UnrollingListener.h>
 #include <otawa/hard/BHT.h>
 #include <otawa/ilp.h>
+#include <otawa/ilp/expr.h>
 #include <otawa/ipet.h>
+#include <otawa/prog/WorkSpace.h>
 
 
 namespace otawa { namespace branch {
@@ -100,155 +102,181 @@ p::declare OnlyConsBuilder::reg =
 		.require(ipet::ASSIGNED_VARS_FEATURE)
 		.require(LOOP_INFO_FEATURE)
 		.require(CATEGORY_FEATURE)
+		.require(hard::BHT_FEATURE)
 		.provide(CONSTRAINTS_FEATURE)
 		.maker<ConsBuilder>();
 
 /**
  */
-OnlyConsBuilder::OnlyConsBuilder(p::declare& r) : BBProcessor(r), _explicit(false) {
+OnlyConsBuilder::OnlyConsBuilder(p::declare& r) : BBProcessor(r), _explicit(false), bht(0) {
+}
+
+/**
+ */
+void OnlyConsBuilder::setup(WorkSpace *ws) {
+	bht = hard::BHT_CONFIG(ws);
+}
+
+/**
+ * Build constraints for always-default predicted.
+ * @param model		ILP model to use.
+ * @param x_mp		Miss prediction count variable.
+ * @param bb		Current basic block.
+ */
+void OnlyConsBuilder::genAlwaysDefault(ilp::model& model, ilp::var x_mp, BasicBlock *bb) {
+	static string 	ad_msg = "always-D branch prediction constraint";
+
+	// direct control or not direct prediction
+	if(bb->control()->target() || bht->getDefaultPrediction() != hard::PREDICT_DIRECT) {
+		int def = bht->actualDefaultPrediction(bb->control()->address(), bb->control()->target()->address());
+
+		// if default = not-taken then x^mp_i = x_T,i
+		if(def == hard::PREDICT_NOT_TAKEN) {
+			ilp::cons c = model(ad_msg) + x_mp == 0;
+			for(Block::EdgeIter e = bb->outs(); e; e++)
+				if(e->isTaken())
+					c += *VAR(e);
+		}
+
+		// else (default = taken) x^mp_i = x_NT,i
+		else {
+			ilp::cons c = model(ad_msg) + x_mp == 0;
+			for(Block::EdgeIter e = bb->outs(); e; e++)
+				if(e->isNotTaken())
+					c += *VAR(e);
+		}
+
+	}
+
+	// indirect control and default = direct
+	else {
+
+		// x^mp >= x_T,F
+		cons c1 = model(ad_msg) + x_mp >= 0;
+		for(Block::EdgeIter e = bb->outs(); e; e++)
+			if(e->isTaken() && e->isForward())
+				c1 += *VAR(e);
+
+		// x^mp <= x_NT + x_T,F
+		cons c2 = model(ad_msg) + x_mp <= 0;
+		for(Block::EdgeIter e = bb->outs(); e; e++)
+			if(e->isNotTaken() || e->isForward())
+				c2 += *VAR(e);
+	}
+
+}
+
+/**
+ * Generate constraint for Always-Hit category.
+ * @param model		ILP model to complete.
+ * @param x_mp		Miss-prediction counter variable.
+ * @param bb		Current basic block.
+ */
+void OnlyConsBuilder::genAlwaysHit(ilp::model& model, ilp::var x_mp, BasicBlock *bb) {
+	static string ah_msg = "always-H branch prediction constraint";
+
+	// x_mp <= 2 x_T + 2
+	cons c1 = model(ah_msg) + x_mp <= 2;
+	for(Block::EdgeIter e = bb->outs(); e; e++)
+		if(e->isTaken())
+			c1 += 2 * var(VAR(e));
+
+	// x_mp <= 2 x_NT + 2
+	cons c2 = model(ah_msg) + x_mp <= 2;
+	for(Block::EdgeIter e = bb->outs(); e; e++)
+		if(e->isNotTaken())
+			c2 += 2 * var(VAR(e));
+
+	// x_mp <= x_i
+	model(ah_msg) + x_mp <= *VAR(bb);
+}
+
+/**
+ * Generate constraints for category First-Unknown.
+ * @param model		ILP model to complete.
+ * @param x_mp		Miss-prediction counter variable.
+ * @param bb		Current basic block.
+ */
+void OnlyConsBuilder::genFirstUnknown(ilp::model& model, ilp::var x_mp, BasicBlock *bb) {
+	static string fu_msg = "first-unknown branch prediction constraint";
+	Block *h = HEADER(bb);
+	ASSERT(h);
+
+	// x_mp <= 2 x_T + 2 sum{(i,h) /\ h not-dom i} x_i,h
+	cons c1 = model(fu_msg) + x_mp <= 0;
+	for(Block::EdgeIter e = bb->outs(); e; e++)
+		if(e->isTaken())
+			c1 += 2 * var(VAR(e));
+	for(Block::EdgeIter e = h->ins(); e; e++)
+		if(!Dominance::dominates(h, e->sink()))
+			c1 += 2 * var(VAR(e));
+
+	// x_mp <= 2 x_NT + + 2 sum{(i,h) /\ h not-dom i} x_i,h
+	cons c2 = model(fu_msg) + x_mp <= 0;
+	for(Block::EdgeIter e = bb->outs(); e; e++)
+		if(e->isNotTaken())
+			c2 += 2 * var(VAR(e));
+	for(Block::EdgeIter e = h->ins(); e; e++)
+		if(!Dominance::dominates(h, e->sink()))
+			c2 += 2 * var(VAR(e));
+
+	// x_mp <= x_i
+	model(fu_msg) + x_mp <= *VAR(bb);
+}
+
+/**
+ * Generate constraints for unknown category.
+ * @param model		ILP model to complete.
+ * @param x_mp		Miss-prediction counter variable.
+ * @param bb		Current basic block.
+ */
+void OnlyConsBuilder::genNotClassified(ilp::model& model, ilp::var x_mp, BasicBlock *bb) {
+	static string nc_msg = "not-classified branch prediction constraint";
+	// x_mp <= x_i
+	model(nc_msg) + x_mp <= *VAR(bb);
 }
 
 /**
  */
 void OnlyConsBuilder::processBB(WorkSpace* ws, CFG *cfg, Block *b) {
-	static string 	ad_msg = "always-D branch prediction constraint",
-					ah_msg = "always-H branch prediction constraint",
-					fu_msg = "first-unknown branch prediction constraint",
-					nc_msg = "not-classified branch prediction constraint";
 
-	if(!b->isBasic())
+	// only for basic block with a conditional branch
+	if(!b->isBasic() || branch::COND_NUMBER(b) == -1)
 		return;
 	BasicBlock *bb = b->toBasic();
 
-	if (branch::COND_NUMBER(bb) != -1) {
-		int row = hard::BHT_CONFIG(ws)->line(bb->control()->address());
-		if(logFor(LOG_BLOCK))
-			log << "\t\t\tprocess jump on " << *bb << " on row " << row << "\n";
-		branch::category_t cat = branch::CATEGORY(bb);
-		Block *cat_header = branch::HEADER(bb);
-		ilp::System *sys = ipet::SYSTEM(ws);
-		ilp::Constraint *cons; 
-		ilp::Var *misspred;
-		ilp::Var *bbvar = ipet::VAR(bb);
-		ilp::Var *NTvar, *Tvar;
-		
-		// build the miss-prediction variable
-        if(!_explicit)
-                misspred = sys->newVar();
-        else {
-                StringBuffer buf1;
-                buf1 << "x_mpred_" << bb->index() << "\n";
-                String name1 = buf1.toString();
-                misspred = sys->newVar(name1);
-        }
-        MISSPRED_VAR(bb) = misspred;
-			
-        // add constraint according to the category
-		switch(cat) {
+	// display log
+	if(logFor(LOG_BLOCK))
+		log << "\t\t\tprocess jump on " << *bb << " on row " << bht->line(bb->control()->address())
+			<< " (" << *CATEGORY(bb) << ", " << *HEADER(bb) << ")\n";
 
-			// always default prediction (not-taken)
-			case branch::ALWAYS_D:
-			
-				// get the not-taken edge
-				Tvar = NULL;
-            	for (BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++)
-            		if(outedge->isNotTaken()) {
-						ASSERT(Tvar == NULL);
-						Tvar = VAR(outedge);                			
-            		}
+	// build x_mp
+	ilp::model model(ipet::SYSTEM(ws));
+	string name;
+	if(_explicit)
+		name << "x_mp_" << bb->index() << "_" << bb->cfg()->label();
+	var x_mp = model.var(name);
+	MISSPRED_VAR(bb) = x_mp;
 
-            	// x_misspred = e_not-taken
-            	cons = sys->newConstraint(ad_msg, Constraint::EQ, 0);
-            	cons->addLeft(1, misspred);
-                cons->addRight(1, Tvar); 
-				break;
-
-			// always in the BHT
-			case branch::ALWAYS_H:
-				
-				// find taken and not-taken edges
-				NTvar = NULL;
-				Tvar = NULL;
-            	for (BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
-            		if(outedge->isNotTaken()) {
-						ASSERT(NTvar == NULL);
-						NTvar = VAR(outedge);                			
-            		}
-            		else {
-						ASSERT(Tvar == NULL);
-						Tvar = VAR(outedge);                			
-            		}            		
-            	}
-            	
-				// x_misspred <= 2 * e_taken + 2
-				cons = sys->newConstraint(ah_msg, Constraint::LE, 2);
-				cons->addLeft(1, misspred);	
-				cons->addRight(2, Tvar);
-				
-				// misspred <= 2 * e_not-taken + 2
-				cons = sys->newConstraint(ah_msg, Constraint::LE, 2);
-				cons->addLeft(1, misspred);	
-				cons->addRight(2, NTvar);
-
-				// x_misspred <= x_bb
-				cons = sys->newConstraint(ah_msg, Constraint::LE, 0);
-                cons->addLeft(1, misspred);
-                cons->addRight(1, bbvar); 		
-				break;
-
-			case branch::FIRST_UNKNOWN:
-				
-				NTvar = NULL;
-				Tvar = NULL;
-				
-            	for(BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
-            		if(outedge->isNotTaken()) {
-						ASSERT(NTvar == NULL);
-						NTvar = VAR(outedge);                			
-            		}
-            		else {
-						ASSERT(Tvar == NULL);
-						Tvar = VAR(outedge);                			
-            		}            		
-            	}
-            	/* misspred <= 2*taken + 2*(sum of entry-edges) */ 				
-				cons = sys->newConstraint(fu_msg, Constraint::LE, 0);
-				cons->addLeft(1, misspred);	
-				cons->addRight(2, Tvar);
-				for(Block::EdgeIter inedge = cat_header->ins(); inedge; inedge++)
-					if (!Dominance::dominates(cat_header, inedge->source()))
-						cons->addRight(2, VAR(inedge));
-				
-            	/* misspred <= 2*not-taken + 2*(sum of entry-edges) */ 								
-				cons = sys->newConstraint(fu_msg, Constraint::LE, 0);
-				cons->addLeft(1, misspred);	
-				cons->addRight(2, NTvar);
-				for(Block::EdgeIter inedge = cat_header->ins(); inedge; inedge++)
-					if(!Dominance::dominates(cat_header, inedge->source()))
-						cons->addRight(2, VAR(inedge));
-				
-				/* misspred <= bbvar */			
-				cons = sys->newConstraint(fu_msg, Constraint::LE, 0);
-                cons->addLeft(1, misspred);
-                cons->addRight(1, bbvar);	
-                			
-				break;		
-								
-			case branch::NOT_CLASSIFIED:
-			
-				/* misspred <= bbvar */
-				cons = sys->newConstraint(nc_msg, Constraint::LE, 0);
-                cons->addLeft(1, misspred);
-                cons->addRight(1, bbvar);
-                				
-				break;			
-			default:
-				cout << "unknown cat: " << cat << "\n";
-				ASSERT(false);
-				break;
-		} 
+	// add constraint according to the category
+	switch(CATEGORY(bb)) {
+	case branch::ALWAYS_D:
+		genAlwaysDefault(model, x_mp, bb);
+		break;
+	case branch::ALWAYS_H:
+		genAlwaysHit(model, x_mp, bb);
+		break;
+	case branch::FIRST_UNKNOWN:
+		genFirstUnknown(model, x_mp, bb);
+		break;
+	case branch::NOT_CLASSIFIED:
+		genNotClassified(model, x_mp, bb);
+		break;
+	default:
+		cout << "unknown cat: " << *CATEGORY(bb) << "\n";
+		ASSERT(false);
+		break;
 	}
-	
 }
 
 /**
@@ -276,16 +304,21 @@ void OnlyConsBuilder::configure(const PropList &props) {
  * @ingroup branch
  */
 
-p::declare ConsBuilder::reg =
-		p::init("otawa::ConsBuilder", Version(1,0,0), BBProcessor::reg)
-		.require(CONSTRAINTS_FEATURE)
-		.provide(SUPPORT_FEATURE)
-		.maker<ConsBuilder>();
+p::declare ConsBuilder::reg = p::init("otawa::ConsBuilder", Version(1,0,0), BBProcessor::reg)
+	.require(CONSTRAINTS_FEATURE)
+	.require(hard::BHT_FEATURE)
+	.provide(SUPPORT_FEATURE)
+	.maker<ConsBuilder>();
 
 
+/**
+ */
 ConsBuilder::ConsBuilder(p::declare& r) : BBProcessor(r) {
 }
 
+
+/**
+ */
 void ConsBuilder::processBB(WorkSpace* ws, CFG *cfg, Block *b) {
 	if(!b->isBasic())
 		return;

@@ -37,7 +37,7 @@ public:
 
 protected:
 	virtual void setup(WorkSpace *ws);
-	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *ws, CFG *cfg, otawa::Block *bb);
 
 private:
 	ilp::System *sys;

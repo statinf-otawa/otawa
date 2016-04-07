@@ -19,21 +19,23 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
+
 #include <elm/io.h>
-#include <otawa/cat/CATBuilder.h>
+
 #include <otawa/cache/LBlock.h>
 #include <otawa/cache/LBlockSet.h>
-#include <otawa/cfg.h>
-#include <otawa/hard/CacheConfiguration.h>
-#include <otawa/util/LBlockBuilder.h>
-#include <otawa/hard/Platform.h>
-#include <otawa/util/ContextTree.h>
-#include <otawa/dfa/XCFGVisitor.h>
+#include <otawa/cat/CATBuilder.h>
 #include <otawa/cat/CATDFA.h>
-#include <otawa/prog/WorkSpace.h>
-#include <otawa/proc/ProcessorException.h>
-#include <otawa/prop/DeletableProperty.h>
 #include <otawa/cache/categories.h>
+#include <otawa/cfg.h>
+#include <otawa/dfa/XCFGVisitor.h>
+#include <otawa/hard/CacheConfiguration.h>
+#include <otawa/hard/Platform.h>
+#include <otawa/proc/ProcessorException.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/prop/DeletableProperty.h>
+#include <otawa/util/ContextTree.h>
+#include <otawa/util/LBlockBuilder.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
@@ -90,24 +92,23 @@ void CATBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 
 	// Assign ACS to BB
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
-		for (CFG::BBIterator block(*cfg); block; block++) {
-			dfa::XCFGVisitor<CATProblem>::key_t pair(*cfg, *block);
-			BitSet *bitset = engine.in(pair);
-			block->addProp(new DeletableProperty<BitSet *>(IN, new BitSet(*bitset)));
-		}
+		for(CFG::BlockIter block = cfg->blocks(); block; block++)
+			if(block->isBasic()) {
+				dfa::XCFGVisitor<CATProblem>::key_t pair(*cfg, block->toBasic());
+				BitSet *bitset = engine.in(pair);
+				block->addProp(new DeletableProperty<BitSet *>(IN, new BitSet(*bitset)));
+			}
 	}
 
 	// Build categories
 	ContextTree *ct = CONTEXT_TREE(fw);
 	ASSERT(ct);
-	/*for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++)
-		CATBuilder::NODE(lblock) += new CATNode(lblock);*/
-	/*BitSet *virtuel =*/ buildLBLOCKSET(lbset, ct);
+	buildLBLOCKSET(lbset, ct);
 	setCATEGORISATION(lbset, ct, cach->blockBits());
 
 	// Clean up
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++)
-		for (CFG::BBIterator block(*cfg); block; block++)
+		for (CFG::BlockIter block = cfg->blocks(); block; block++)
 			IN(block).remove();
 }
 
@@ -196,17 +197,18 @@ void CATBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S ,int dec){
 		/*
 		 * Call worst() on each l-block of this ContextTree.
 		 */
-		for(ContextTree::BBIterator bk(S); bk; bk++){
-			for(BasicBlock::InstIter inst(bk); inst; inst++) {
-				address_t adlbloc = inst->address();
-				for (LBlockSet::Iterator lbloc(*lineset); lbloc; lbloc++){
-					if ((adlbloc == (lbloc->address()))&&(bk == lbloc->bb())){
-						ident = lbloc->id();
-						cachelin = lineset->lblock(ident);
-						worst(cachelin ,S , lineset,dec);
+		for(ContextTree::BlockIterator bk(S); bk; bk++) {
+			if(bk->isBasic())
+				for(BasicBlock::InstIter inst = bk->toBasic()->insts(); inst; inst++) {
+					address_t adlbloc = inst->address();
+					for (LBlockSet::Iterator lbloc(*lineset); lbloc; lbloc++){
+						if ((adlbloc == (lbloc->address()))&&(bk == lbloc->bb())){
+							ident = lbloc->id();
+							cachelin = lineset->lblock(ident);
+							worst(cachelin ,S , lineset,dec);
+						}
 					}
 				}
-			}
 		}
 
 	}
@@ -366,41 +368,39 @@ void CATBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *idset, int 
  *
  */
 BitSet *CATBuilder::buildLBLOCKSET(LBlockSet *lcache, ContextTree *root){
-		int lcount = lcache->count();
-		BitSet *set = new BitSet(lcount);
-		BitSet *v = new BitSet(lcount);
-		int ident;
+	int lcount = lcache->count();
+	BitSet *set = new BitSet(lcount);
+	BitSet *v = new BitSet(lcount);
+	int ident;
 
-		/*
-		 * Call recursively buildLBLOCKSET for each ContextTree children
-		 * Merge result with current set
-		 */
-		for(ContextTree::ChildrenIterator son(root); son; son++){
-			 v = buildLBLOCKSET(lcache, son);
-			 set->add(*v);
-		}
+	/*
+	 * Call recursively buildLBLOCKSET for each ContextTree children
+	 * Merge result with current set
+	 */
+	for(ContextTree::ChildrenIterator son(root); son; son++){
+		 v = buildLBLOCKSET(lcache, son);
+		 set->add(*v);
+	}
 
-		/*
-		 * For each lblock that is part of any non-(entry|exit) BB of the current ContextTree:
-		 *   - Set the lblock's categorization to INVALID
-		 *   - Add this lblock to the current set.
-		 */
-		for(ContextTree::BBIterator bb(root); bb; bb++){
-			if ((!bb->isEntry())&&(!bb->isExit())){ /* XXX */
+	/*
+	 * For each lblock that is part of any non-(entry|exit) BB of the current ContextTree:
+	 *   - Set the lblock's categorization to INVALID
+	 *   - Add this lblock to the current set.
+	 */
+	for(ContextTree::BlockIterator b(root); b; b++)
+		if(b->isBasic()) {
+			BasicBlock *bb = b->toBasic();
 			for(BasicBlock::InstIter inst(bb); inst; inst++) {
 				address_t adlbloc = inst->address();
-				for (LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
-					if ((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())){
+				for(LBlockSet::Iterator lbloc(*lcache); lbloc; lbloc++){
+					if((adlbloc == (lbloc->address()))&&(bb == lbloc->bb())) {
 						ident = lbloc->id();
 						cache::CATEGORY(lbloc).add(cache::INVALID_CATEGORY);
-						//CATBuilder::NODE(lbloc)->setHEADERLBLOCK(root->bb(),inloop);
 						set->BitSet::add(ident);
-
 					}
 				}
 			}
 		}
-	}
 
 	/*
 	 * For loops, annotate the loop-header with the set of all l-blocks in the loop

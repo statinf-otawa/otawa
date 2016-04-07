@@ -29,18 +29,13 @@
 #include <otawa/data/clp/SymbolicExpr.h> // to use the filters
 #include <elm/log/Log.h> // to use the debugging messages
 
-#define DEBUG_FILTERS(x) // x
-#define DEBUG_CLP(x) // x
+#define DEBUG_FILTERS(x)  // x
+#define DEBUG_CLP(x)  // x
 
 using namespace elm::log;
 using namespace elm::color;
+
 namespace otawa { namespace dynbranch {
-
-static Identifier<Vector<Address> > POSSIBLE_BRANCH_TARGETS("otawa::dynbranch::POSSIBLE_BRANCH_TARGETS"); // only in this file, for the set of target addresses
-Identifier<bool> NEW_BRANCH_TARGET_FOUND("otawa::dynbranch::NEW_BRANCH_TARGET_FOUND", false); // on workspace
-Identifier<int> DYNBRANCH_TARGET_COUNT("otawa::dynbranch::DYNBRANCH_TARGET_COUNT", -1); // on last instruction of the BB
-Identifier<int> DYNBRANCH_TARGET_COUNT_PREV("otawa::dynbranch::DYNBRANCH_TARGET_COUNT_PREV", -1); // on last instruction of the BB, previous
-
 
 /**
  * This feature try to compute for each dynamic/indirect branch the set of possible
@@ -51,12 +46,60 @@ Identifier<int> DYNBRANCH_TARGET_COUNT_PREV("otawa::dynbranch::DYNBRANCH_TARGET_
  * @li @ref BRANCH_TARGET
  * @li @ref CALL_TARGET
  */
-p::feature FEATURE("otawa::dynbranch::FEATURE", new Maker<DynamicBranchingAnalysis>());
+p::feature DYNBRANCH_FEATURE("otawa::dynbranch::DYNBRANCH_FEATURE", new Maker<DynamicBranchingAnalysis>());
 
-/**
+
+static Identifier<Vector<Address> > POSSIBLE_BRANCH_TARGETS("otawa::dynbranch::POSSIBLE_BRANCH_TARGETS"); // only in this file, for the set of target addresses
+Identifier<bool> NEW_BRANCH_TARGET_FOUND("otawa::dynbranch::NEW_BRANCH_TARGET_FOUND", false); // on workspace
+// if the values of DYNBRANCH_TARGET_COUNT and DYNBRANCH_TARGET_COUNT_PREV differ, it means that there is a new target found, NEW_BRANCH_TARGET_FOUND will be set to true
+Identifier<int> DYNBRANCH_TARGET_COUNT("otawa::dynbranch::DYNBRANCH_TARGET_COUNT", -1); // // the current branching target counts for a given instruction
+Identifier<int> DYNBRANCH_TARGET_COUNT_PREV("otawa::dynbranch::DYNBRANCH_TARGET_COUNT_PREV", -1); // the previous branching target counts for a given instruction
+
+
+/*
+ * The Cleaner class for DYNBRANCH_FEATURE
  */
-//Identifier<bool> TIME("otawa::dynbranch::TIME") ;
-extern Identifier<bool> TIME;
+class DynamicBranchingCleaner: public Cleaner {
+public:
+	DynamicBranchingCleaner(WorkSpace* _ws, potential_value_list_t* _pvl, bool _verbose) : ws(_ws), pvl(_pvl), verbose(_verbose) { }
+
+protected:
+	virtual void clean(void) {
+		// clear the PotentialValues
+		if(verbose)
+			elm::cerr << "potentialValueList length = " << pvl->count() << io::endl;
+
+		for(potential_value_list_t::Iterator slli(*pvl); slli; slli++) {
+#ifdef SAFE_MEM_ACCESS
+			dynbranch::PotentialValueMem *pv = *slli;
+			if(pv->status == true) {
+				pv->pv->~Vector();
+			}
+			delete pv;
+#else
+			dynbranch::PotentialValue *pv = *slli;
+			if(pv->magic != PotentialValue::MAGIC)
+				continue;
+			pv->~Vector();
+#endif
+		}
+		pvl->clear();
+
+		elm::StackAllocator* psa = dynbranch::DYNBRANCH_STACK_ALLOCATOR(ws);
+		assert(psa);
+		delete psa;
+		dynbranch::DYNBRANCH_STACK_ALLOCATOR(ws).remove();
+
+		dfa::FastState<dynbranch::PotentialValue>* dfs = dynbranch::DYNBRANCH_FASTSTATE(ws);
+		assert(dfs);
+		delete dfs;
+		dynbranch::DYNBRANCH_FASTSTATE(ws).remove();
+	}
+private:
+	WorkSpace* ws;
+	potential_value_list_t* pvl;
+	bool verbose;
+};
 
 /**
  */
@@ -216,8 +259,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 					// Get the value in memory from each possible addresses
 					for(PotentialValue::Iterator it(toget); it; it++) {
 						if(istate && istate->isInitialized(*it)) {
-							unsigned int val = 0;
-							workspace()->process()->get(*it,val);
+							potential_value_type val = readFromMem(*it, i.type());// workspace()->process()->get(*it,val);
 							r.insert(val);
 						}
 						else {
@@ -230,16 +272,16 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 
 					if(r == PotentialValue::bot) { // means couldn't be found from the memory, lets try CLP?
 						for(PotentialValue::Iterator it(toget); it; it++) {
-							clp::Value valueFromCLP = clpState[semantics.length()-1].get(clp::Value(clp::VAL, *it, 0,0));
-							if(valueFromCLP != clp::Value::top) {
+							clp::Value valueFromCLP = clpState[semantics.length()].get(clp::Value(clp::VAL, *it, 0,0));
+							if(valueFromCLP != clp::Value::top && valueFromCLP.mtimes() < POTENTIAL_VALUE_LIMIT) {
 								PotentialValue p = setFromClp(valueFromCLP);
 								r = merge(r, p);
 							}
 						}
 						
 						if(toget.length() == 0) { // if there is no address to load, we look the value of the register in CLP state directly
-							clp::Value x = clpState[semantics.length()-1].get(clp::Value(clp::REG, i.d(), 0,0));
-							if(x.mtimes() < 65535)
+							clp::Value x = clpState[semantics.length()].get(clp::Value(clp::REG, i.d(), 0,0));
+							if(x.mtimes() < POTENTIAL_VALUE_LIMIT)
 								r = setFromClp(x);
 						}
 
@@ -370,17 +412,16 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 
 	// when there is no addresses found
 	if(addresses.length() < 1) {
-		if(isVerbose()) {
-			cout << "\t\tNo branch addresses found" << endl;
-		}
+		warn(_ << bb << ": no branch addresses found!");
 		return;
-	} else {
+	}
+	/*else {
 		for(Set<elm::t::uint32>::Iterator it(addresses); it; it++) {
-			if(isVerbose()) {
-				cout << "\t\t Possible branching addresses : 0x" << hex(*it) << endl;
+			if(logFor(LOG_BB)) {
+				log << "\t\t\tPossible branching addresses: " << *it << endl;
 			}
 		}
-	}
+	}*/
 
 	for(PotentialValue::Iterator pvi(addresses); pvi; pvi++) {
 		Address targetAddr = Address(*pvi);
@@ -404,13 +445,36 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 			}
 		}
 
+		// Check if the address found is in the program memory
+		bool isExecutable = false;
+		for(Process::FileIter pfi(workspace()->process()); pfi; pfi++) {
+			for(File::SegIter fsi(*pfi); fsi && !isExecutable; fsi++) {
+				if(fsi->isExecutable() && (*pvi) >= fsi->address() && (*pvi) <= fsi->topAddress()) {
+					isExecutable = true;
+					break;
+				}
+			}
+		}
+
+		if(!isExecutable) {
+			targetToAdd = false;
+			log << "WARNING: address " << hex(*pvi) << " is not in the initialized memory, ignored by the dynamic branching analysis" << io::endl;
+		}
+
 		// when there are some targets for the BB
 		if(targetToAdd) {
+
+			// log
+			if(logFor(LOG_BB)) {
+				log << "\t\t\tPossible branching addresses: " << targetAddr << endl;
+			}
+
 			// check the type: Branch or Call
 			if(last->isBranch())
 				BRANCH_TARGET(last).add(targetAddr);
 			else
 				CALL_TARGET(last).add(targetAddr);
+
 			// set NEW_BRANCH_TARGET_FOUND to true so notified there is a new target addresses detected
 			NEW_BRANCH_TARGET_FOUND(workspace()) = true;
 			// increment the target count
@@ -425,12 +489,12 @@ p::declare DynamicBranchingAnalysis::reg = p::init("DynamicBranchingAnalysis", V
 											.require(clp::FEATURE)
 											.require(GLOBAL_ANALYSIS_FEATURE)
 											.require(dfa::INITIAL_STATE_FEATURE)
-											.provide(FEATURE);
+											.provide(DYNBRANCH_FEATURE);
 
 /**
  */
 DynamicBranchingAnalysis::DynamicBranchingAnalysis(p::declare& r)
-		: BBProcessor(r), isDebug(false), time(false), clpManager(0), clpState() {
+		: BBProcessor(r), isDebug(false), time(false), clpManager(0), clpState(), first(true) {
 }
 
 /*
@@ -447,14 +511,16 @@ DynamicBranchingAnalysis:: ~DynamicBranchingAnalysis(void) {
  */
 void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
-	istate = dfa::INITIAL_STATE(ws);
+	if(first) {
+		PotentialValue p;
+		_workspace = ws;
+		istate = dfa::INITIAL_STATE(ws);
+		clpManager = new clp::Manager(ws); // only creates the clp manager once (performance)
+		isDebug = DEBUGDYN && isVerbose(); // need to be verbose to be debug
+		addCleaner(COLLECTED_CFG_FEATURE, new DynamicBranchingCleaner(ws, &PotentialValue::potentialValueCollector, isVerbose()));
+		first = false;
+	}
 
-	// only creates the clp manager once (performance)
-	if(!clpManager)
-		clpManager = new clp::Manager(ws);
-
-	_workspace = ws;
-	isDebug = DEBUGDYN && isVerbose(); // need to be verbose to be debug
 
 	if(!b->isBasic())
 		return;
@@ -558,13 +624,25 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		} else {
 			addTargetToBB(bb);
 		}
-	} else {
-		if (isVerbose()) {
-			cout << "\t\tNothing to do for this BB (no dynamic branching detected)" << endl;
-		}
 	}
+}
 
-	DYNBRANCH_POTENTIAL_VALUE_LIST(workspace()) = &PotentialValue::potentialValueCollector;
+/**
+ * Read a value from the memory.
+ * @param address	Address to read.
+ * @param type		Type of the data.
+ * @return			Read data value.
+ */
+potential_value_type DynamicBranchingAnalysis::readFromMem(potential_value_type address, sem::type_t type) {
+	switch(type) {
+	case sem::INT8: 	{ t::int8 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	case sem::INT16: 	{ t::int16 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	case sem::INT32: 	{ t::int32 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	case sem::UINT8: 	{ t::uint8 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	case sem::UINT16: 	{ t::uint16 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	case sem::UINT32: 	{ t::uint32 d; workspace()->process()->get(address, d); return potential_value_type(d); }
+	default:			ASSERTP(false, "The type is unknown, please check."); return potential_value_type(0);
+	}
 }
 
 } // end namespace dynbranch

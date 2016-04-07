@@ -21,10 +21,12 @@
 #ifndef BRANCH_CONSBUILDER_H_
 #define BRANCH_CONSBUILDER_H_
 
-#include <otawa/cfg/features.h>
-#include <otawa/prog/WorkSpace.h>
-#include <otawa/proc/BBProcessor.h>
 #include <otawa/cfg/BasicBlock.h>
+#include <otawa/cfg/features.h>
+#include <otawa/hard/BHT.h>
+#include <otawa/ilp/expr.h>
+#include <otawa/proc/BBProcessor.h>
+#include <otawa/prog/WorkSpace.h>
 
 #include "features.h"
 #include "BranchBuilder.h"
@@ -38,10 +40,18 @@ class OnlyConsBuilder: public BBProcessor {
 public:
 	static p::declare reg;
 	OnlyConsBuilder(p::declare& r = reg);
-	virtual void processBB(otawa::WorkSpace*, CFG *cfg, Block *bb);
 	virtual void configure(const PropList &props);
+protected:
+	virtual void setup(WorkSpace *ws);
+	virtual void processBB(otawa::WorkSpace*, CFG *cfg, Block *bb);
 private:
+	void genAlwaysDefault(ilp::model& model, ilp::var x_mp, BasicBlock *bb);
+	void genAlwaysHit(ilp::model& model, ilp::var x_mp, BasicBlock *bb);
+	void genFirstUnknown(ilp::model& model, ilp::var x_mp, BasicBlock *bb);
+	void genNotClassified(ilp::model& model, ilp::var x_mp, BasicBlock *bb);
+
 	bool _explicit;
+	hard::BHT *bht;
 };
 
 // ConsBuilder processor

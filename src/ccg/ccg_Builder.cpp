@@ -132,11 +132,12 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 
 	// Add the annotations from the DFA result
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
-		for (CFG::BBIterator block(*cfg); block; block++) {
-			dfa::XCFGVisitor<Problem>::key_t pair(*cfg, *block);
-			dfa::BitSet *bitset = engine.in(pair);
-			block->addProp(new DeletableProperty<dfa::BitSet *>(IN, new dfa::BitSet(*bitset)));
-		}
+		for (CFG::BlockIter block = cfg->blocks(); block; block++)
+			if(block->isBasic())	{
+				dfa::XCFGVisitor<Problem>::key_t pair(*cfg, block->toBasic());
+				dfa::BitSet *bitset = engine.in(pair);
+				block->addProp(new DeletableProperty<dfa::BitSet *>(IN, new dfa::BitSet(*bitset)));
+			}
 	}
 
 	// Detecting the non conflict state of each lblock
@@ -161,13 +162,13 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 	LBlock *aux;
 
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
-		for (CFG::BBIterator bb(*cfg); bb; bb++) {
-			if ((cfg != ENTRY_CFG(fw)) || (!bb->isEntry() && !bb->isExit())) {
+		for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+			if (cfg != ENTRY_CFG(fw) || bb->isBasic()) {
 				dfa::BitSet *info = IN(bb);
 				ASSERT(info);
 				bool test = false;
 				bool visit;
-				for(BasicBlock::InstIter inst(bb); inst; inst++) {
+				for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 					visit = false;
 					adinst = inst->address();
 					for (LBlockSet::Iterator lbloc(*lbset); lbloc; lbloc++){
@@ -198,7 +199,7 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 	}
 
 	// build edge to LBlock end
-	BasicBlock *exit = ENTRY_CFG(fw)->exit();
+	Block *exit = ENTRY_CFG(fw)->exit();
 	LBlock *end = lbset->lblock(length-1);
 	dfa::BitSet *info = IN(exit);
 	for (int i = 0; i< length; i++)
@@ -213,7 +214,7 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 
 	// Cleanup the DFA annotations
 	for (CFGCollection::Iterator cfg(coll); cfg; cfg++)
-		for (CFG::BBIterator block(cfg); block; block++)
+		for (CFG::BlockIter block = cfg->blocks(); block; block++)
 			block->removeProp(&IN);
 }
 

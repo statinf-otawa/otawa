@@ -79,10 +79,10 @@ void GlobalAnalysisProblem::updateEdge(Edge *edge, Domain& d) {
 
 void GlobalAnalysisProblem::lub(Domain& a,const Domain& b) const {
 	if (b.isBottom()) //A U Bottom = A   Nothing to do on A
-		return ;
+		return;
 	if (a.isBottom()) { // BOttom U B = B
-		a = b ;
-		return ;
+		a = b;
+		return;
 	}
 	a.lub(b);
 }
@@ -177,20 +177,22 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 					const PotentialValue& data = readReg(out, inst.d());
 					out.storeMemory(addressToStore, data);
 				}
+#ifdef DYNBRANCH_EXPERIMENT
 				else if(address.length() > 1) {
 					if(verbose) { elm::cerr << "WARNING: we can't store to multiple potential memory addresses!" << io::endl; }
-//					assert(0); // just in case, want to see
-//					for (PotentialValue::Iterator pi(address); pi; pi++) {
-//						elm::t::uint32 addressToStore = *pi;
-//						PotentialValue temp = out.loadMemory(addressToStore);
-//						const PotentialValue& data = readReg(out, inst.d());
-//						temp.insert(data);
-//						out.storeMemory(addressToStore, temp);
-//					}
+					assert(0); // just in case, want to see
+					for (PotentialValue::Iterator pi(address); pi; pi++) {
+						elm::t::uint32 addressToStore = *pi;
+						PotentialValue temp = out.loadMemory(addressToStore);
+						const PotentialValue& data = readReg(out, inst.d());
+						temp.insert(data);
+						out.storeMemory(addressToStore, temp);
+					}
 				}
 				else { // no address found
 					if(verbose) elm::cerr << "WARNING: we can't find the memory address for store" << io::endl;
 				}
+#endif
 				break ;
 			}
 
@@ -216,37 +218,43 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 					else
 						setReg(out, inst.d(), data);
 				}
+#ifndef DYNBRANCH_EXPERIMENT
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+#else
 				else if(address.length() > 1) {
 					if(verbose)
 						elm::cerr << "WARNING: we can't load from multiple potential memory addresses!" << io::endl;
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
 
-//					bool firstValue = true;
-//					PotentialValue temp; // empty value
-//					for(int currAddr = 0; currAddr < address.length(); currAddr++) {
-//						elm::t::uint32 addressToLoad = address[currAddr];
-//						const PotentialValue& data = out.loadMemory(addressToLoad); // try to load the value from the Global analysis
-//						if((data.length() == 0) && (GLOBAL_MEMORY_LOADER)) {	// if the value is empty, try to read from the initialized memory
-//							if(istate && istate->isInitialized(addressToLoad)) {
-//								t::uint32 dataFromMemDirectory;
-//								ws->process()->get(addressToLoad, dataFromMemDirectory);
-//								DEBUG_MEM(elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "    " << IGre << "dataFromMemDirectory = " << hex(dataFromMemDirectory) << RCol << io::endl;)
-//								PotentialValue pv;
-//								temp.insert(dataFromMemDirectory);
-//							}
-//						}
-//						else {
-//							for(PotentialValue::Iterator pi(data); pi; pi++)
-//								temp.insert(*pi);
-//						}
-//					}
-//					setReg(out, inst.d(), temp); // put the collected data
+					bool firstValue = true;
+					PotentialValue temp; // empty value
+					for(int currAddr = 0; currAddr < address.length(); currAddr++) {
+						elm::t::uint32 addressToLoad = address[currAddr];
+						const PotentialValue& data = out.loadMemory(addressToLoad); // try to load the value from the Global analysis
+						if((data.length() == 0) && (GLOBAL_MEMORY_LOADER)) {	// if the value is empty, try to read from the initialized memory
+							if(istate && istate->isInitialized(addressToLoad)) {
+								t::uint32 dataFromMemDirectory;
+								ws->process()->get(addressToLoad, dataFromMemDirectory);
+								DEBUG_MEM(elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "    " << IGre << "dataFromMemDirectory = " << hex(dataFromMemDirectory) << RCol << io::endl;)
+								PotentialValue pv;
+								temp.insert(dataFromMemDirectory);
+							}
+						}
+						else {
+							for(PotentialValue::Iterator pi(data); pi; pi++)
+								temp.insert(*pi);
+						}
+					}
+					setReg(out, inst.d(), temp); // put the collected data
 				} // end else if(address.length() > 1) {
 				else { // no address found
 					if(verbose)
 						elm::cerr << "WARNING: we can't find the memory address to load" << io::endl;
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
 				}
+#endif
 				break;
 			}
 
@@ -375,12 +383,23 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				const PotentialValue& valb = readReg(out, inst.b());
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
-					//PotentialValue result = vala ^ valb;
-					//setReg(out, inst.d(), result);
-					elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "Let me think about it....." << io::endl;
-					elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "i.a() = " << readReg(out, inst.a()) << io::endl;
-					elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "i.b() = " << readReg(out, inst.b()) << io::endl;
+					PotentialValue result = vala * valb;
+					setReg(out, inst.d(), result);
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
+				}
+				break ;
+			}
 
+			case sem::MULH: // d <- (a * b) >> bitlength(d)
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue result = MULH(vala,valb);
+					setReg(out, inst.d(), result);
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
@@ -388,13 +407,10 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				break ;
 			}
 			/*
-            SHR,		// d <- unsigned(a) >> b
-            ASR,		// d <- a >> b
             NEG,		// d <- -a
             NOT,		// d <- ~a
             AND,		// d <- a & b
             OR,			// d <- a | b
-            MUL,		// d <- a * b
             MULU,		// d <- unsigned(a) * unsigned(b)
             DIV,		// d <- a / b
             DIVU,		// d <- unsigned(a) / unsigned(b)

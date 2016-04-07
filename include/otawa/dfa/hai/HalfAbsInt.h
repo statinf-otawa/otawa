@@ -142,15 +142,18 @@ inline HalfAbsInt<FixPoint>::~HalfAbsInt(void) {
 	delete cfgStack;
 
 	// clean remaining states
-	genstruct::Vector<CFG *> cfgs;
+	// genstruct::Vector<CFG *> cfgs;
+	SLList<CFG* > cfgs;
 	cfgs.add(&entry_cfg);
-	for(int i = 0; i < cfgs.count(); i++)
-		for(CFG::BlockIter bb = cfgs[i]->blocks(); bb; bb++)
+	while(cfgs.count()) { // for(int i = 0; i < cfgs.count(); i++)
+		CFG* cfg = cfgs.pop();
+		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 			for(BasicBlock::EdgeIter out = bb->outs(); out; out++) {
 				this->fp.unmarkEdge(*out);
 				if(out->sink()->isSynth() && out->sink()->toSynth()->callee() && !cfgs.contains(out->sink()->toSynth()->callee()))
-					cfgs.add(out->sink()->toSynth()->callee());
+					cfgs.addLast(out->sink()->toSynth()->callee());
 			}
+	}
 }
 
 
@@ -237,7 +240,8 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			fp.fixPointReached(current);
 			delete FIXPOINT_STATE(current);
 			// TODO it's better to remove the property here
-			FIXPOINT_STATE(current) = 0;
+			// FIXPOINT_STATE(current) = 0;
+			FIXPOINT_STATE(current).remove();
 			// TODO FIRST_ITER should work in reverse direction
 			FIRST_ITER(current) = true;
 

@@ -32,7 +32,7 @@ protected:
 
 	virtual void prepare(PropList &props) {
 		for(int i = 0; i < ids.count(); i++)
-			cfgio::INCLUDE(props) = &ids[i];
+			cfgio::INCLUDE(props).add(&ids[i]);
 		if(no_insts)
 			cfgio::NO_INSTS(props) = true;
 	}

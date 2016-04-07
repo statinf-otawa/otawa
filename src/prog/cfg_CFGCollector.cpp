@@ -44,6 +44,32 @@ namespace otawa {
 static Identifier<int> CFG_INDEX("", -1);
 static Identifier<BasicBlock *> BB("", 0);
 
+/*
+ * The Cleaner class for COLLECTED_CFG_FEATURE
+ */
+class CollectedCFGCleaner: public Cleaner {
+public:
+	CollectedCFGCleaner(WorkSpace *_ws): ws(_ws) { }
+
+protected:
+	virtual void clean(void) {
+		const CFGCollection* cfgc = INVOLVED_CFGS(ws);
+		assert(cfgc);
+		SLList<CFG*> cfgsToDelete;
+		// collects the things to delete
+		for(CFGCollection::Iterator cfgi(cfgc); cfgi; cfgi++) {
+			cfgsToDelete.add(*cfgi); // collect the CFGs
+		}
+		// the removed of Blocks and Edges are handled by ~CFG()
+		for(SLList<CFG*>::Iterator slli(cfgsToDelete); slli; slli++)
+			delete *slli;
+		// clean the Collection
+		delete INVOLVED_CFGS(ws);
+		INVOLVED_CFGS(ws).remove();
+	}
+private:
+	WorkSpace* ws;
+};
 
 /**
  * @class CFGCollection <otawa/cfg/features.h>
@@ -543,6 +569,9 @@ void CFGCollector::cleanup(WorkSpace *ws) {
 	// installing the collection
 	otawa::INVOLVED_CFGS(ws) = coll;
 	ENTRY_CFG(ws) = (*coll)[0];
+	
+	// for invalidate
+	addCleaner(COLLECTED_CFG_FEATURE, new CollectedCFGCleaner(ws));
 }
 
 
