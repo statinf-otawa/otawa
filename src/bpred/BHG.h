@@ -69,13 +69,13 @@ private:
 	bool m_exit_T; // exits with Taken
 	bool m_exit_NT; // exits with NotTaken
 	otawa::dfa::BitSet *m_history;
-	otawa::BasicBlock *m_bb;
+	otawa::Block *m_bb;
 	int m_history_size;
 public:
-	BHGNode(otawa::BasicBlock* cfg_bb,const otawa::dfa::BitSet& bs, bool entry=false, bool exit=false, bool exit_T=false, bool exit_NT=false);
+	BHGNode(otawa::Block* cfg_bb,const otawa::dfa::BitSet& bs, bool entry=false, bool exit=false, bool exit_T=false, bool exit_NT=false);
 	~BHGNode();
 	
-	otawa::BasicBlock* getCorrespondingBB();
+	otawa::Block* getCorrespondingBB();
 	otawa::dfa::BitSet& getHistory();
 	bool isEntry();
 	bool isExit();

@@ -85,7 +85,7 @@ private:
 	void processCFG__Global1B(WorkSpace *ws,CFG* cfg);
 	void generateBBHG(CFG* cfg,BBHG& bbhg);
 	bool contains(const elm::genstruct::Vector< BBHGNode* >& v, BBHGNode& n, BBHGNode * &contained);
-	bool isBranch(BasicBlock* bb);
+	bool isBranch(Block* bb);
 	
 	// Global 2bits
 	void CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstruct::Vector<BCG*> &graphs ,	elm::genstruct::HashTable<String ,ilp::Var*>& ht_vars) ;
@@ -95,8 +95,8 @@ private:
 	bool contains(const elm::genstruct::Vector< BHGNode* >& v, BHGNode& n, BHGNode * &contained);
 	void historyPlusOne(dfa::BitSet& h);
 	bool isLinked(BHGEdge* dir, BHGNode* dest, dfa::BitSet& h, elm::genstruct::HashTable<BHGNode* , BHGNode*>& visited_nodes);
-	BasicBlock* getFirstBranch(BasicBlock *bb, CFG* cfg);
-	void getBranches(BasicBlock* bb,dfa::BitSet bs, elm::genstruct::Vector<BHGNode* >& suivants, CFG* cfg, BasicBlock* entryBr);
+	Block* getFirstBranch(Block *bb, CFG* cfg);
+	void getBranches(Block* bb,dfa::BitSet bs, elm::genstruct::Vector<BHGNode* >& suivants, CFG* cfg, Block* entryBr);
 	void generateBHG(CFG* cfg,BHG& bhg);
 	void generateBCGs(elm::genstruct::Vector<BCG*>& bcgs, BHG& bhg);
 	void processCFG__Global2B(WorkSpace *ws,CFG* cfg);
@@ -110,7 +110,7 @@ private:
 	void CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstruct::Vector<BCG*> &graphs);
 	void generateClasses(CFG *cfg, BSets& bs);
 	void computePredecessors(CFG 				*cfg, 
-						BasicBlock			*bb, 
+						Block			*bb,
 						elm::genstruct::Vector<int> 	*bit_sets, 
 						elm::genstruct::Vector<int> 	&in_outs, 
 						BSets 				&bs,

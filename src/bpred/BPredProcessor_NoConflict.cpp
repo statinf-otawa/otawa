@@ -108,12 +108,12 @@ void BPredProcessor::CS__NoConflict_2bCounter(WorkSpace* fw,BasicBlock* bb) {
 
 		// edge
 			// creation des variables
-			for(BasicBlock::OutIterator edge(bb); edge ; edge++ ) {
-				if(edge->kind() == Edge::TAKEN) {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
+			for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+				if(edge->isTaken()) {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
 					EdgeT = ipet::VAR( edge);
 					assert(EdgeT);
 				}
-				else if(edge->kind() == Edge::NOT_TAKEN) {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
+				else {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
 					EdgeNT = ipet::VAR(edge);
 					ASSERT(EdgeNT);
 					//					NEW_VAR_FROM_BUFF(EdgeNT, 	"e" << bb->number() << "_" << edge->target()->number());
@@ -125,12 +125,12 @@ void BPredProcessor::CS__NoConflict_2bCounter(WorkSpace* fw,BasicBlock* bb) {
 		
 		// wrong
 			// creation des variables
-			for(BasicBlock::OutIterator edge(bb); edge ; edge++ ) {
-				if(edge->kind() == Edge::TAKEN) { // WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
-					NEW_VAR_FROM_BUFF(WrongT,	"m" << bb->number() << "_" << edge->target()->number())
+			for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+				if(edge->isTaken()) { // WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
+					NEW_VAR_FROM_BUFF(WrongT,	"m" << bb->index() << "_" << edge->target()->index())
 				}
-				else if(edge->kind() == Edge::NOT_TAKEN) {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
-					NEW_VAR_FROM_BUFF(WrongNT,	"m" << bb->number() << "_" << edge->target()->number())
+				else {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
+					NEW_VAR_FROM_BUFF(WrongNT,	"m" << bb->index() << "_" << edge->target()->index())
 				}
 			}
 			
@@ -254,21 +254,21 @@ void BPredProcessor::CS__NoConflict_2bCounter(WorkSpace* fw,BasicBlock* bb) {
  * @param cfg	CFG to extract the branches from.
  */
 void BPredProcessor::processCFG__NoConflict_2bCounter(WorkSpace *fw, CFG *cfg) {
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 
 		unsigned int nb_OE = 0;
 		// Parcours des OutEdges
-		for(BasicBlock::OutIterator edge(bb); edge ; edge++ ) {
+		for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
 			// on incremente que s'il s'agit d'un edge TAKEN ou NOT_TAKEN
-			if(edge->kind() == Edge::TAKEN) nb_OE++;
-			else if(edge->kind() == Edge::NOT_TAKEN) nb_OE++;
+			if(edge->isTaken()) nb_OE++;
+			else nb_OE++;
 		}
 
 		// Si un branchement a ete trouve ...
-		if(nb_OE == 2 ) {
+		if(bb->isBasic() && nb_OE >= 2 ) {
 			//cerr << " - Branchement trouve : x" << bb->number() << "@" << cfg->label() << io::endl; 
 
-			CS__NoConflict_2bCounter(fw,bb);
+			CS__NoConflict_2bCounter(fw, bb->toBasic());
 
 		}
 

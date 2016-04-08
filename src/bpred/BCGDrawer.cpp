@@ -122,7 +122,6 @@ void BCGDrawer::onInit(PropList& graph, PropList& nodes, PropList& edges){
 	display::SHAPE(nodes) = display::ShapeStyle::SHAPE_MRECORD;
 	display::FONT_SIZE(nodes) = 12;
 	display::FONT_SIZE(edges) = 12;
-	display::EXCLUDE(nodes).add(&INDEX);
 }
 
 

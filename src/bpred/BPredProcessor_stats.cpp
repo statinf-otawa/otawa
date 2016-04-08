@@ -79,14 +79,14 @@ String BPredProcessor::predictorToString() {
  */
 int countBranches(CFG *cfg) {
 	int res = 0;
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 
 		unsigned int nb_OE = 0;
 		// Parcours des OutEdges
-		for(BasicBlock::OutIterator edge(bb); edge ; edge++ ) {
+		for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
 			// on incremente que s'il s'agit d'un edge TAKEN ou NOT_TAKEN
-			if(edge->kind() == Edge::TAKEN) nb_OE++;
-			else if(edge->kind() == Edge::NOT_TAKEN) nb_OE++;
+			if(edge->isTaken()) nb_OE++;
+			else if(edge->isNotTaken()) nb_OE++;
 		}
 
 		// Si un branchement a ete trouve ...
@@ -152,7 +152,7 @@ String BPredProcessor::genStats(WorkSpace *fw,CFG *cfg) {
 	f_out << "Predicteur  : " << predictorToString() <<"\n";
 	f_out << "Taille BHT  : " << ((this->BHT+1)/4) << "\n";
 	f_out << "Taille Hist.: " << (1 << (this->BHG_history_size)) << "\n";
-	f_out << "Nb Blocs    : " << cfg->countBB() << "\n";
+	f_out << "Nb Blocs    : " << cfg->count() << "\n";
 	f_out << "Nb Brcht    : " << countBranches(cfg) << "\n";
 	f_out << "Conflits : \n";
 	if(this->method == BI_MODAL) {

@@ -96,9 +96,9 @@ BCGNode* getBCGNode(int id,BCG* bcg) {
  * @return 		The BasicBlock found.
  */
 BasicBlock* BPredProcessor::getBB(int id,CFG* cfg) {
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 		// on incremente que s'il s'agit d'un edge TAKEN ou NOT_TAKEN
-		if(bb->number() == id) return bb;
+		if(bb->index() == id) return bb->toBasic();
 	}
 	return NULL;
 }
@@ -193,15 +193,16 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 			// 2.1: Pour chacun des successeurs de br
 			//////////////////////////////////////////
 			for( int cpt=0 ; cpt<2; cpt++ ) {
-				Edge::kind_t t = (cpt == 1) ? (Edge::TAKEN) : (Edge::NOT_TAKEN);
+				//Edge::kind_t t = (cpt == 1) ? (Edge::TAKEN) : (Edge::NOT_TAKEN);
+				bool t = cpt == 1;
 				NEW_SPECIAL_CONSTRAINT(B21,LE,0); 
 					
 	
 				
 				// on recherche l'edge ayant le meme 'd' que celui du bcg pour en extraire le nom de variable associe
 				Var *eb = NULL;
-				for(BasicBlock::OutIterator edge(bb); edge ; edge++) {
-					if(edge->kind() == t ) {
+				for(Block::EdgeIter edge = bb->outs(); edge ; edge++) {
+					if(edge->isTaken() == t ) {
 						eb = ipet::VAR(edge);
 						ASSERT(edge);
 						break;
@@ -213,7 +214,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 
 				// recherche des membres de gauche à ajouter
 				for(BCG::OutIterator s(br);s;s++) {
-					if( s->isTaken() == (t == Edge::TAKEN) ) {
+					if( s->isTaken() == t ) {
 						Var *C00,*C01,*C10,*C11;
 						NEW_VAR_FROM_BUFF(C00,Xi->name() << "A" << bcg->getClass() << "C00D" << cpt << "S" << s->target()->getCorrespondingBBNumber());
 						NEW_VAR_FROM_BUFF(C01,Xi->name() << "A" << bcg->getClass() << "C01D" << cpt << "S" << s->target()->getCorrespondingBBNumber());
@@ -226,7 +227,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 					}
 				}
 				
-				if(br->isExit() && ( (br->exitsWithT() == (t == Edge::TAKEN) ) || (br->exitsWithNT() == (t == Edge::NOT_TAKEN) ) )){
+				if(br->isExit() && ( (br->exitsWithT() == t) || (br->exitsWithNT() == !t ) )){
 					Var *C00,*C01,*C10,*C11;
 					NEW_VAR_FROM_BUFF(C00,Xi->name() << "A" << bcg->getClass() << "C00D" << cpt << "end");
 					NEW_VAR_FROM_BUFF(C01,Xi->name() << "A" << bcg->getClass() << "C01D" << cpt << "end");
@@ -248,8 +249,8 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 			{
 				// il faut s'assurer qu'on n'ajoute qu'une seule fois chaque variable 
 				// en creant un tableau d'indicateurs et en l'initialisant a 0
-				int var_added[cfg->countBB()];
-				for(int i=0;i<cfg->countBB();++i) var_added[i]=0;
+				int var_added[cfg->count()];
+				for(int i=0;i<cfg->count();++i) var_added[i]=0;
 	
 	
 				
@@ -291,7 +292,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 	
 				
 				// on réinitialise le tableau d'incdicateurs pour les successeurs
-				for(int i=0;i<cfg->countBB();++i) var_added[i]=0;
+				for(int i=0;i<cfg->count();++i) var_added[i]=0;
 				
 				NEW_SPECIAL_CONSTRAINT(B22_succ,EQ,0);
 				Var *v_succ;
@@ -334,8 +335,8 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 			//////////////////////////////////////////////////////
 			{
 				// on doit s'assurer de l'unicité
-				int var_added[cfg->countBB()];
-				for(int i=0;i<cfg->countBB();++i) var_added[i]=0;
+				int var_added[cfg->count()];
+				for(int i=0;i<cfg->count();++i) var_added[i]=0;
 
 				for(BCG::OutIterator s(br) ; s ; s++ ){
 					if(var_added[s->target()->getCorrespondingBBNumber()]==0) {
@@ -459,8 +460,8 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				C11_2->addLeft(1,v11);
 
 				// on doit s'assurer de l'unicité
-				int var_added[cfg->countBB()];
-				for(int i=0;i<cfg->countBB();++i) var_added[i]=0;
+				int var_added[cfg->count()];
+				for(int i=0;i<cfg->count();++i) var_added[i]=0;
 
 				for(BCG::InIterator p(br);p;p++) {
 					if(var_added[p->source()->getCorrespondingBBNumber()]==0) {
@@ -510,7 +511,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				}
 				
 				// toujours pour l'unicité des contraintes
-				for(int i=0;i<cfg->countBB();++i) var_added[i]=0;
+				for(int i=0;i<cfg->count();++i) var_added[i]=0;
 				for(BCG::OutIterator s(br);s;s++) {
 					if(var_added[s->target()->getCorrespondingBBNumber()]==0) {
 						bool withT=false, withNT=false;
@@ -577,12 +578,12 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				NEW_SPECIAL_CONSTRAINT(M_T,EQ,0);
 				NEW_SPECIAL_CONSTRAINT(M_NT,EQ,0);
 				Var *m0, *m1;
-				for(BasicBlock::OutIterator edge(bb); edge ; edge++ ) {
-					if(edge->kind() == Edge::TAKEN) { // WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
-						NEW_VAR_FROM_BUFF(m1,	"m" << bb->number() << "_" << edge->target()->number())
+				for(BasicBlock::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+					if(edge->isTaken()) { // WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
+						NEW_VAR_FROM_BUFF(m1,	"m" << bb->index() << "_" << edge->target()->index())
 					}
-					else if(edge->kind() == Edge::NOT_TAKEN) {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
-						NEW_VAR_FROM_BUFF(m0,	"m" << bb->number() << "_" << edge->target()->number())
+					else if(edge->isNotTaken()) {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
+						NEW_VAR_FROM_BUFF(m0,	"m" << bb->index() << "_" << edge->target()->index())
 					}
 				}
 				system->addObjectFunction(5.0, m0);
@@ -591,8 +592,8 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 				M_NT->addLeft(1,m0);
 
 				// unicité
-				int var_added[cfg->countBB()];
-				for(int i=0;i<cfg->countBB();++i) var_added[i]=0;
+				int var_added[cfg->count()];
+				for(int i=0;i<cfg->count();++i) var_added[i]=0;
 
 				for(BCG::OutIterator s(br);s;s++) {
 	
@@ -653,17 +654,17 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
  */
 void BPredProcessor::simplifyCFG(CFG* cfg, BSets& bs, int addr, elm::genstruct::Vector<BCG*> &graphs) {
 	// create the bitSet
-	elm::genstruct::Vector<int> *bit_sets = new elm::genstruct::Vector<int>[cfg->countBB()+1];
+	elm::genstruct::Vector<int> *bit_sets = new elm::genstruct::Vector<int>[cfg->count()+1];
 	elm::genstruct::Vector<int> in_outs;
-	for(int i = 0 ; i < cfg->countBB()+1 ; ++i){
-		for(int j = 0 ; j<cfg->countBB() ; ++j ) {
+	for(int i = 0 ; i < cfg->count()+1 ; ++i){
+		for(int j = 0 ; j<cfg->count() ; ++j ) {
 			bit_sets[i].add(0);
 		}
 		in_outs.add(0);
 	}
 	
-	int visited[cfg->countBB()];
-	for(int i=0;i<cfg->countBB() ; ++i)
+	int visited[cfg->count()];
+	for(int i=0;i<cfg->count() ; ++i)
 		visited[i]=0;
 	
 	computePredecessors(cfg, cfg->entry(), bit_sets, in_outs, bs, addr, visited);
@@ -676,19 +677,19 @@ void BPredProcessor::simplifyCFG(CFG* cfg, BSets& bs, int addr, elm::genstruct::
 //	cout << "\n";
 //	///////////////
 
-	BCGNode* bb_created[cfg->countBB()];
-	for(int i=0; i<cfg->countBB(); ++i ) bb_created[i]=NULL;
+	BCGNode* bb_created[cfg->count()];
+	for(int i=0; i<cfg->count(); ++i ) bb_created[i]=NULL;
 	BCG* g=new BCG(addr);
 	BCGNode *n_org, *n_pred;
 	BCGEdge *e;
-	for(int i = 0 ; i<cfg->countBB(); ++i) {
+	for(int i = 0 ; i<cfg->count(); ++i) {
 		if(addr == bs.get_addr(i)) {
 			// si le BCGNode correspondant n'existe pas, on le crée
 			if(bb_created[i] == NULL) {
 				if(getBit(in_outs[i],1)==1) {
 					n_org= new BCGNode(i,getBit(in_outs[i],0)==1 , true,
-									getBit((bit_sets[cfg->countBB()])[i],1)==1, // Taken ?
-									getBit((bit_sets[cfg->countBB()])[i],0)==1); // Not Taken ?
+									getBit((bit_sets[cfg->count()])[i],1)==1, // Taken ?
+									getBit((bit_sets[cfg->count()])[i],0)==1); // Not Taken ?
 				}
 				else {
 					n_org= new BCGNode(i,getBit(in_outs[i],0)==1 , false, false, false);					
@@ -699,14 +700,14 @@ void BPredProcessor::simplifyCFG(CFG* cfg, BSets& bs, int addr, elm::genstruct::
 			else
 				n_org = bb_created[i];
 				
-			for(int j=0 ; j<cfg->countBB(); ++j) {
+			for(int j=0 ; j<cfg->count(); ++j) {
 				if(addr == bs.get_addr(j) && getBit((bit_sets[i])[j],2) == 1) {
 					// si le BCGNode correspondant n'existe pas, on le crée
 					if(bb_created[j] == NULL) {
 						if(getBit(in_outs[j],1)==1) {
 							n_pred= new BCGNode(j,getBit(in_outs[j],0)==1 , true, 
-											getBit((bit_sets[cfg->countBB()])[j],1)==1, // Taken ?
-											getBit((bit_sets[cfg->countBB()])[j],0)==1); // Not Taken ?
+											getBit((bit_sets[cfg->count()])[j],1)==1, // Taken ?
+											getBit((bit_sets[cfg->count()])[j],0)==1); // Not Taken ?
 						}
 						else {
 							n_pred= new BCGNode(j,getBit(in_outs[j],0)==1 , false, false, false);					
@@ -749,50 +750,50 @@ void BPredProcessor::simplifyCFG(CFG* cfg, BSets& bs, int addr, elm::genstruct::
  * @param addr		Address class of the BasicBlock.
  * @param visited	Array that remembers which basic block has been visited.
  */
-void BPredProcessor::computePredecessors(CFG* cfg, BasicBlock* bb, elm::genstruct::Vector<int> *bit_sets, elm::genstruct::Vector<int> &in_outs, BSets& bs, int addr,int visited[]) {
-	visited[bb->number()]++;
+void BPredProcessor::computePredecessors(CFG* cfg, Block* bb, elm::genstruct::Vector<int> *bit_sets, elm::genstruct::Vector<int> &in_outs, BSets& bs, int addr,int visited[]) {
+	visited[bb->index()]++;
 	if(bb != cfg->exit()) {
 		
 		// in_out
 		if(bb == cfg->entry()) {
-			setBit( in_outs[bb->number()], 0 ); // set IN bit
+			setBit( in_outs[bb->index()], 0 ); // set IN bit
 		}
 		/////////
 
-		for(BasicBlock::OutIterator edge(bb); edge ; edge++) {
-			BasicBlock *next_bb = edge->target();
+		for(Block::EdgeIter edge = bb->outs(); edge ; edge++) {
+			Block *next_bb = edge->target();
 			
-			if(bs.get_addr(bb->number()) == addr ){
+			if(bs.get_addr(bb->index()) == addr ){
 				// si ce bloc appartient bien a la classe addr alors on met a jour les bitsets suivants 
 				// si cela ne produit aucun changement, alors on ne continue pas recursivement
-				if( getBit((bit_sets[next_bb->number()])[bb->number()],2) == 1){
-						if( 	(edge->kind() == Edge::TAKEN && getBit((bit_sets[next_bb->number()])[bb->number()],1) == 1)
-							||	(edge->kind() == Edge::NOT_TAKEN && getBit((bit_sets[next_bb->number()])[bb->number()],0) == 1)){
+				if( getBit((bit_sets[next_bb->index()])[bb->index()],2) == 1){
+						if( 	(edge->isTaken() && getBit((bit_sets[next_bb->index()])[bb->index()],1) == 1)
+							||	(edge->isNotTaken() && getBit((bit_sets[next_bb->index()])[bb->index()],0) == 1)){
 							continue;
 						}
 				}
-				setBit((bit_sets[next_bb->number()])[bb->number()],2);
-				if(edge->kind() == Edge::TAKEN ) setBit((bit_sets[next_bb->number()])[bb->number()],1);
-				if(edge->kind() == Edge::NOT_TAKEN ) setBit((bit_sets[next_bb->number()])[bb->number()],0);
+				setBit((bit_sets[next_bb->index()])[bb->index()],2);
+				if(edge->isTaken() ) setBit((bit_sets[next_bb->index()])[bb->index()],1);
+				if(edge->isNotTaken() ) setBit((bit_sets[next_bb->index()])[bb->index()],0);
 				
 
 			}
 			else {
 				// sinon on propage le bitset aux suivants
 				bool changed = false;
-				for(int i=0 ; i<bit_sets[bb->number()].length() ; ++i) {
-					int k = (bit_sets[next_bb->number()])[i] ;
-					(bit_sets[next_bb->number()])[i] |= (bit_sets[bb->number()])[i];
-					changed = changed || (k != (bit_sets[next_bb->number()])[i]) ;
+				for(int i=0 ; i<bit_sets[bb->index()].length() ; ++i) {
+					int k = (bit_sets[next_bb->index()])[i] ;
+					(bit_sets[next_bb->index()])[i] |= (bit_sets[bb->index()])[i];
+					changed = changed || (k != (bit_sets[next_bb->index()])[i]) ;
 				}
 
 				//in_out
-				if(getBit(in_outs[bb->number()],0) == 1) {
-					setBit(in_outs[next_bb->number()],0);
+				if(getBit(in_outs[bb->index()],0) == 1) {
+					setBit(in_outs[next_bb->index()],0);
 				}
 				////////
 				
-				if(visited[next_bb->number()] > 0 && !changed ) continue;
+				if(visited[next_bb->index()] > 0 && !changed ) continue;
 				
 
 			}	
@@ -801,9 +802,9 @@ void BPredProcessor::computePredecessors(CFG* cfg, BasicBlock* bb, elm::genstruc
 			computePredecessors(cfg,next_bb,bit_sets, in_outs,bs,addr, visited);
 
 			// in_out
-			if(bs.get_addr(next_bb->number()) != addr) {
-				if(getBit(in_outs[next_bb->number()],1) == 1) {
-					setBit(in_outs[bb->number()],1);
+			if(bs.get_addr(next_bb->index()) != addr) {
+				if(getBit(in_outs[next_bb->index()],1) == 1) {
+					setBit(in_outs[bb->index()],1);
 				}
 			}
 			/////////
@@ -811,18 +812,18 @@ void BPredProcessor::computePredecessors(CFG* cfg, BasicBlock* bb, elm::genstruc
 	}
 	// in_out
 	else {
-		setBit(in_outs[bb->number()],1);
-		int exit_num = cfg->countBB();
+		setBit(in_outs[bb->index()],1);
+		int exit_num = cfg->count();
 
-		if(bs.get_addr(bb->number()) == addr ) {
-			setBit((bit_sets[exit_num])[bb->number()],2);
-			setBit((bit_sets[exit_num])[bb->number()],1);
-			setBit((bit_sets[exit_num])[bb->number()],0);
+		if(bs.get_addr(bb->index()) == addr ) {
+			setBit((bit_sets[exit_num])[bb->index()],2);
+			setBit((bit_sets[exit_num])[bb->index()],1);
+			setBit((bit_sets[exit_num])[bb->index()],0);
 		}
 		else {
-			for(int i=0 ; i<bit_sets[bb->number()].length() ; ++i) {
+			for(int i=0 ; i<bit_sets[bb->index()].length() ; ++i) {
 				int k = (bit_sets[exit_num])[i] ;
-				(bit_sets[exit_num])[i] |= (bit_sets[bb->number()])[i];
+				(bit_sets[exit_num])[i] |= (bit_sets[bb->index()])[i];
 			}
 			
 		}
@@ -837,23 +838,23 @@ void BPredProcessor::computePredecessors(CFG* cfg, BasicBlock* bb, elm::genstruc
  * @param bs	BSets structure to fill-in.
  */
 void BPredProcessor::generateClasses(CFG *cfg, BSets& bs) {
-	for(CFG::BBIterator bb(cfg); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 		unsigned int nb_OE = 0;
 
 		// Parcours des OutEdges
-		for(BasicBlock::OutIterator edge(bb); edge ; edge++ ) {
+		for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
 			// on incremente que s'il s'agit d'un edge TAKEN ou NOT_TAKEN
-			if(edge->kind() == Edge::TAKEN) nb_OE++;
-			else if(edge->kind() == Edge::NOT_TAKEN) nb_OE++;
+			if(edge->isTaken()) nb_OE++;
+			else if(edge->isNotTaken() == Edge::NOT_TAKEN) nb_OE++;
 		}
 
 		// Si un branchement a ete trouve ...
 		if(nb_OE == 2 ) {
 			Inst* inst = NULL;
-			for(BasicBlock::InstIter i(bb); i; i++) {
+			for(BasicBlock::InstIter i(bb->toBasic()); i; i++) {
 				inst=i;
 			}
-			bs.add((inst->address() & (this->BHT)), bb->number());
+			bs.add((inst->address() & (this->BHT)), bb->index());
 		}
 	}
 }

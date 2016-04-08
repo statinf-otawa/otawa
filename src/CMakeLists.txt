@@ -65,10 +65,7 @@ add_subdirectory(owcet)
 
 
 # dependent tools
-#add_subdirectory(bpred)
-if(HAS_LP_SOLVE OR LP_SOLVE5_LIB)
-#	add_subdirectory(oipet)
-endif()
+add_subdirectory(bpred)
 
 # legacy code
 if(USE_LEGACY)
@@ -76,4 +73,7 @@ if(USE_LEGACY)
 	add_subdirectory(cat)
 	add_subdirectory(ccg)
 	add_subdirectory(ets)
+	if(HAS_LP_SOLVE OR LP_SOLVE5_LIB)
+	#	add_subdirectory(oipet)
+	endif()
 endif()
