@@ -47,7 +47,7 @@ bool BHGEdge::isTaken() {
 
 
 /// BHGNode
-BHGNode::BHGNode(otawa::BasicBlock* cfg_bb,const otawa::dfa::BitSet &bs,bool entry, bool exit,bool exit_T, bool exit_NT) {
+BHGNode::BHGNode(otawa::Block* cfg_bb,const otawa::dfa::BitSet &bs,bool entry, bool exit,bool exit_T, bool exit_NT) {
 	this->m_bb = cfg_bb;
 	this->m_entry = entry;
 	this->m_exit = exit;
@@ -61,7 +61,7 @@ BHGNode::~BHGNode() {
 	delete this->m_history;
 }
 
-otawa::BasicBlock* BHGNode::getCorrespondingBB() {
+otawa::Block* BHGNode::getCorrespondingBB() {
 	return this->m_bb;
 }
 
@@ -85,7 +85,7 @@ bool BHGNode::isSuccessor(BHGNode* succ,bool& withT, bool& withNT) {
 	withT = false;
 	withNT = false;
 	for(BHG::OutIterator s(this);s ;s++) {
-		if(s->target()->getCorrespondingBB()->number() == succ->getCorrespondingBB()->number()) {
+		if(s->target()->getCorrespondingBB()->index() == succ->getCorrespondingBB()->index()) {
 			withT = withT || s->isTaken();
 			withNT = withNT || !(s->isTaken());
 		}
@@ -99,7 +99,7 @@ otawa::dfa::BitSet& BHGNode::getHistory() {
 
 
 bool BHGNode::equals(const BHGNode& b) {
-	return (this->m_bb->number() == b.m_bb->number() && *(this->m_history) == *(b.m_history));
+	return (this->m_bb->index() == b.m_bb->index() && *(this->m_history) == *(b.m_history));
 }
 
 void BHGNode::setExit(bool withT , bool withNT ) {

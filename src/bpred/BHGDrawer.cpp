@@ -123,7 +123,6 @@ void BHGDrawer::onInit(PropList& graph, PropList& nodes, PropList& edges){
 	display::SHAPE(nodes) = display::ShapeStyle::SHAPE_MRECORD;
 	display::FONT_SIZE(nodes) = 12;
 	display::FONT_SIZE(edges) = 12;
-	display::EXCLUDE(nodes).add(&INDEX);
 }
 
 
@@ -139,7 +138,7 @@ void BHGDrawer::onNode(BHGNode *bb, otawa::display::Node *node){
 	// make title
 
 	StringBuffer title;
-	title << bb->getCorrespondingBB()->number() << ":";
+	title << bb->getCorrespondingBB()->index() << ":";
 	for(int i=bb->getHistory().size()-1;i>=0;--i)
 		title << ((bb->getHistory().contains(i))?"1":"0");
 	display::TITLE(node) = title.toString();
