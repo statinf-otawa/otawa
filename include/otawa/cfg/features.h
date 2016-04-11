@@ -134,7 +134,7 @@ extern p::feature LOOP_INFO_FEATURE;
 // Loop Header Iterator
 class LoopHeaderIter: public PreIterator<LoopHeaderIter, Block*> {
 public:
-	inline LoopHeaderIter(Block* b): lh(LOOP_HEADER(b) ? b : ENCLOSING_LOOP_HEADER.get(lh, NULL)) { }
+	inline LoopHeaderIter(Block* b): lh(LOOP_HEADER(b) ? b : ENCLOSING_LOOP_HEADER.get(b, NULL)) { }
 	inline LoopHeaderIter(const LoopHeaderIter& i): lh(i.lh) { }
 	inline LoopHeaderIter& operator=(const LoopHeaderIter& i) { lh = i.lh; return *this; }
 
