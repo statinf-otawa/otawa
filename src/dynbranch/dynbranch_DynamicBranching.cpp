@@ -80,7 +80,7 @@ protected:
 			dynbranch::PotentialValue *pv = *slli;
 			if(pv->magic != PotentialValue::MAGIC)
 				continue;
-			pv->~Vector();
+			((Vector<t::uint32> *)pv)->~Vector();
 #endif
 		}
 		pvl->clear();
@@ -140,7 +140,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 			// the value is available in the READ ONLY REGION, then read from it
 			if(istate && istate->isInitialized(id.snd)) {
 				PotentialValue r;
-				unsigned long val = 0;
+				t::uint64 val = 0;
 				workspace()->process()->get(id.snd,val);
 				r.insert(val);
 				return r;
