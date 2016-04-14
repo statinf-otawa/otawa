@@ -49,13 +49,11 @@ namespace otawa {
  */
 
 
-// registration
-MetaRegistration CFGProcessor::reg(
-	"otawa::CFGProcessor",
-	Version(1, 0, 0),
-	p::require, &COLLECTED_CFG_FEATURE,
-	p::end
-);
+/**
+ */
+p::declare CFGProcessor::reg = p::init("otawa::CFGProcessor", Version(2, 0, 0))
+	.require(COLLECTED_CFG_FEATURE)
+	.require(LABEL_FEATURE);
 
 
 /**

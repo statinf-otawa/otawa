@@ -28,8 +28,6 @@ public:
 		DATA = 3
 	} kind_t;
 
-	static Identifier<Symbol *> ID;
-
 	Symbol(File& file, String name, kind_t kind, address_t address, ot::size size = 0);
 	inline File& file(void) const { return _file; }
 	inline kind_t kind(void) const { return _kind; }

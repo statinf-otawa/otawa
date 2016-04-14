@@ -68,7 +68,7 @@ protected:
 				if(sym->kind() == Symbol::FUNCTION || sym->kind() == Symbol::LABEL) {
 					Inst *inst = workspace()->findInstAt(sym->address());
 					if(inst) {
-						Symbol::ID(inst).add(*sym);
+						SYMBOL(inst).add(*sym);
 						switch(sym->kind()) {
 						case Symbol::FUNCTION:
 							FUNCTION_LABEL(inst).add(sym->name());
@@ -120,7 +120,7 @@ protected:
 					if(inst) {
 						if(MARKER(inst))
 							cout << io::endl;
-						for(Identifier<Symbol *>::Getter sym(inst, Symbol::ID); sym; sym++)
+						for(Identifier<Symbol *>::Getter sym(inst, SYMBOL); sym; sym++)
 							cout << "\t" << sym->name() << ":\n";
 						cout << "\t\t" << inst->address() << "  ";
 						if(inst->isUnknown()) {

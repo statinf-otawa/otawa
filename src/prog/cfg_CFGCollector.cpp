@@ -30,46 +30,25 @@
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/util/FlowFactLoader.h>
 
-//#define DO_DEBUG
-#if defined(NDEBUG) || !defined(DO_DEBUG)
-#	define TRACE(x)		;
-#	define ON_DEBUG(x)	;
-#elif defined(DO_DEBUG)
-#	define TRACE(x)		cerr << "DEBUG: " << x << endl
-#	define ON_DEBUG(x)	x
-#endif
-
 namespace otawa {
 
-static Identifier<int> CFG_INDEX("", -1);
-static Identifier<BasicBlock *> BB("", 0);
-
-/*
- * The Cleaner class for COLLECTED_CFG_FEATURE
- */
-class CollectedCFGCleaner: public Cleaner {
+class CollectorCleaner: public Cleaner {
 public:
-	CollectedCFGCleaner(WorkSpace *_ws): ws(_ws) { }
 
-protected:
+	CollectorCleaner(WorkSpace *ws, CFGCollection *coll): _ws(ws), _coll(coll) { }
+
 	virtual void clean(void) {
-		const CFGCollection* cfgc = INVOLVED_CFGS(ws);
-		assert(cfgc);
-		SLList<CFG*> cfgsToDelete;
-		// collects the things to delete
-		for(CFGCollection::Iterator cfgi(cfgc); cfgi; cfgi++) {
-			cfgsToDelete.add(*cfgi); // collect the CFGs
-		}
-		// the removed of Blocks and Edges are handled by ~CFG()
-		for(SLList<CFG*>::Iterator slli(cfgsToDelete); slli; slli++)
-			delete *slli;
-		// clean the Collection
-		delete INVOLVED_CFGS(ws);
-		INVOLVED_CFGS(ws).remove();
+		for(CFGCollection::Iterator g(_coll); g; g++)
+			delete g;
+		delete _coll;
+		INVOLVED_CFGS(_ws).remove();
 	}
+
 private:
-	WorkSpace* ws;
+	WorkSpace *_ws;
+	CFGCollection *_coll;
 };
+
 
 /**
  * @class CFGCollection <otawa/cfg/features.h>
@@ -161,93 +140,28 @@ int CFGCollection::countBB(void) const {
  * @par Provided Features
  * @ref COLLECTED_CFG_FEATURE
  *
- * @par Required Features
- * @li @ref CFG_INFO_FEATURE
- *
  * @ingroup cfg
  */
 
 
 /**
- * Test if instruction is control, instruction itself
- * or as an effect of annotations.
- * @param i		Examined instruction.
- * @return		True if it is control, false else.
  */
-bool isControl(Inst *i) {
-	return (i->isControl() && !IGNORE_CONTROL(i)) || IS_RETURN(i);
+CFGCollector::CFGCollector(p::declare& r): AbstractCFGBuilder(r) {
 }
-
 
 /**
- * Test if an instruction is marked as a block begin.
- * @param i		Instruction to look in.
- * @return		True if it is block start, false else.
+ * CFGCollector registration.
  */
-bool isBlockStart(Inst *i) {
-	return BB(i).exists();
-}
-
-
-/**
- * Test if, for the given instruction, the control can flows
- * after (conditional branch, function call).
- * @param i		Instruction to look in.
- * @return		True if flow can continue, false else.
- */
-bool canFlowAfter(Inst *i) {
-	return (i->isConditional() || i->isCall()) && !IGNORE_SEQ(i);
-}
-
-
-/**
- * Test if the instruction is a return.
- * @param i	Instruction to test.
- * @return	True if i is a return, false else.
- */
-bool isReturn(Inst *i) {
-	return i->isReturn() || IS_RETURN(i);
-}
-
-
-/**
- * Test if the instruction is a call.
- * @param i	Instruction to test.
- * @return	True if i is a call, false else.
- */
-bool isCall(Inst *i) {
-	return i->isCall();
-}
-
-
-/**
- * Get target of a non-return branch.
- * @param i		Instruction to get target from.
- * @param t		Vector store targets in.
- * @param ws	Current workspace.
- * @param id	Target identifiers.
- */
-void targets(Inst *i, genstruct::Vector<Inst *>& t, WorkSpace *ws, Identifier<Address>& id) {
-	if(i->target())
-		t.add(i->target());
-	else {
-		for(Identifier<Address>::Getter a(i, id); a; a++) {
-			Inst *i = ws->findInstAt(a);
-			if(i)
-				t.add(i);
-		}
-	}
-	ON_DEBUG(
-		for(int j = 0; j < t.count(); j++)
-			cerr << "DEBUG: " << i->address() << " branch to " << t[j]->address() << io::endl;
-	)
-}
+p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(2, 0, 1))
+	.require(otawa::FLOW_FACTS_FEATURE)
+	.provide(COLLECTED_CFG_FEATURE)
+	.maker<CFGCollector>();
 
 
 /**
  */
-void CFGCollector::processWorkSpace(WorkSpace *ws) {
-	genstruct::Vector<Inst *> todo;
+void CFGCollector::setup(WorkSpace *ws) {
+	AbstractCFGBuilder::setup(ws);
 
 	// find address of label
 	for(int i = 0; i < added_funs.count(); i++) {
@@ -268,277 +182,6 @@ void CFGCollector::processWorkSpace(WorkSpace *ws) {
 		maker(inst);
 	}
 
-	// process CFGs until end
-	for(int i = 0; i < makers.count(); i++)
-		processCFG(makers[i].fst);
-}
-
-/**
- * Scan the CFG to find all BBs.
- * @param e		Entry instruction.
- * @param bbs	To store found basic blocks.
- */
-void CFGCollector::scanCFG(Inst *e, genstruct::FragTable<Inst *>& bbs) {
-	if(logFor(Processor::LOG_FUN))
-		log << "\tscanning CFG at " << e->address() << io::endl;
-
-	// traverse all instruction sequences until end
-	genstruct::Vector<Inst *> ts;
-	genstruct::Vector<Inst *> todo;
-	todo.add(e);
-	while(todo) {
-
-		// next block
-		Inst *i = todo.pop();
-
-		// already known?
-		if(isBlockStart(i))
-			continue;
-
-		// record the new block
-		BB(i) = 0;
-		bbs.add(i);
-
-		// iterate until sequence end
-		while(!isControl(i)) {
-			Inst *n = workspace()->findInstAt(i->topAddress());
-			if(!n || isBlockStart(n))
-				break;
-			i = n;
-			TRACE(i->address() << " seq to " << n->address());
-		}
-
-		// push sequence if required
-		if(canFlowAfter(i)) {
-			Inst *n = workspace()->findInstAt(i->topAddress());
-			// if(i->nextInst()) {
-			if(n) { // need to make sure that the next instruction is the adjacent instruction
-				//todo.push(i->nextInst());
-				todo.push(n);
-				//TRACE(i->address() << " seq to " << i->nextInst()->address());
-				TRACE(i->address() << " seq to " << n->address());
-			}
-		}
-
-		// delay return and call processing
-		if(isReturn(i) || isCall(i))
-			continue;
-
-		// push targets
-		targets(i, ts, workspace(), otawa::BRANCH_TARGET);
-		todo.addAll(ts);
-		ts.clear();
-	}
-}
-
-/**
- * Build the required basic blocks.
- * @param bbs	Basic block entries.
- * @param maker	Current CFG maker.
- */
-void CFGCollector::buildBBs(CFGMaker& maker, const genstruct::FragTable<Inst *>& bbs) {
-	for(genstruct::FragTable<Inst *>::Iterator e(bbs); e; e++) {
-
-		// build list of instructions
-		genstruct::Vector<Inst *> insts;
-		insts.add(e);
-		if(!e->isControl())
-			for(Inst *i = e->nextInst(); i && !isBlockStart(i); i = i->nextInst()) {
-				insts.add(i);
-				if(isControl(i))
-					break;
-			}
-
-		// create the basic block
-		BasicBlock *v = new BasicBlock(insts.detach());
-		TRACE("bb at " << v->address() << " to " << v->topAddress());
-		maker.add(v);
-		BB(e) = v;
-		if(logFor(LOG_BLOCK))
-			log << "\t\tmaking BB at " << e->address() << ":" << v->topAddress() << io::endl;
-	}
-}
-
-/**
- * Create a sequential edge.
- * @param m		Maker.
- * @param b		Basic block containing code.
- * @param src	Source block.
- */
-void CFGCollector::seq(CFGMaker& m, BasicBlock *b, Block *src) {
-	Inst *ni = b->last()->nextInst();
-	TRACE("next instruction = " << ni->address());
-	if(ni)
-		m.add(src, BB(ni), new Edge(Edge::NOT_TAKEN));
-}
-
-/**
- * Build edges between basic blocks.
- * @param m	Current CFG maker.
- */
-void CFGCollector::buildEdges(CFGMaker& m) {
-	genstruct::Vector<Inst *> ts;
-	bool first = true;
-	for(CFG::BlockIter v(m.blocks()); v; v++)
-
-		// nothing to do with entry
-		if(v->isEntry())
-			continue;
-
-		// explore BB
-		else if(v->isBasic()) {
-
-			// first block: do not forget edge with entry!
-			if(first) {
-				first = false;
-				m.add(m.entry(), v, new Edge());
-			}
-
-			// process basic block
-			BasicBlock *bb = **v;
-			if(bb) {
-				Inst *i = bb->control();
-
-				// conditional or call case -> sequential edge
-				if(!i || i->isConditional())
-					seq(m, bb, bb);
-
-				// branch cases
-				if(i && !IGNORE_CONTROL(i)) {
-
-					// return case
-					if(isReturn(i))
-						m.add(bb, m.exit(), new Edge());
-
-					// not a call: build simple edges
-					else if(!isCall(i)) {
-						ts.clear();
-						targets(i, ts, workspace(), otawa::BRANCH_TARGET);
-
-						// no target: unresolved branch
-						if(!ts)
-							m.add(bb, m.unknown(), new Edge());
-
-						// create edges
-						else
-							for(genstruct::Vector<Inst *>::Iterator t(ts); t; t++)
-								m.add(bb, BB(t), new Edge());
-					}
-
-					// a call
-					else {
-						ts.clear();
-						targets(i, ts, workspace(), otawa::CALL_TARGET);
-
-						// no target: unresolved call target
-						if(!ts) {
-							Block *b = new SynthBlock();
-							m.add(b);
-							m.add(bb, b, new Edge());
-							seq(m, bb, b);
-						}
-
-						// build call vertices
-						else {
-							bool one = false;
-							for(genstruct::Vector<Inst *>::Iterator c(ts); c; c++)
-								if(!NO_CALL(*c)) {
-									TRACE(i->address() << " is call");
-									SynthBlock *cb = new SynthBlock();
-									CFGMaker& cm = maker(c);
-									m.call(cb, cm);
-									m.add(bb, cb, new Edge());
-									seq(m, bb, cb);
-									one = true;
-								}
-							if(!one && !i->isConditional())
-								seq(m, bb, bb);
-						}
-					}
-
-				}
-			}
-		}
-}
-
-
-/**
- * Remove markers on instruction header of basic blocks.
- * @param bbs	Heads of basic block.
- */
-void CFGCollector::cleanBBs(const genstruct::FragTable<Inst *>& bbs) {
-	for(int i = 0; i < bbs.count(); i++)
-		BB(bbs[i]).remove();
-}
-
-
-/**
- * Get maker for the given instruction as function entry.
- * @param i		First instruction of CFG.
- * @return		Matching maker.
- */
-CFGMaker &CFGCollector::maker(Inst *i) {
-	int idx = CFG_INDEX(i);
-	if(idx >= 0)
-		return *makers[idx].snd;
-	else {
-		CFGMaker *maker = new CFGMaker(i);
-		CFG_INDEX(i) = makers.count();
-		makers.add(pair(i, maker));
-		return *maker;
-	}
-}
-
-/**
- * Process a new CFG starting at the given instruction.
- * @param i	Instruction starting the CFG.
- */
-void CFGCollector::processCFG(Inst *i) {
-	genstruct::FragTable<Inst *> entries;
-	CFGMaker& m = maker(i);
-
-	// traverse the BBs and mark them (ignore calls)
-	scanCFG(i, entries);
-
-	// build the basic blocks
-	buildBBs(m, entries);
-
-	// build the edges + call nodes
-	buildEdges(m);
-
-	// cleanup markers
-	cleanBBs(entries);
-}
-
-
-/**
- */
-CFGCollector::CFGCollector(p::declare& r)
-: Processor(r) {
-}
-
-/**
- * CFGCollector registration.
- */
-p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(2, 0, 0))
-	.require(DECODED_TEXT)
-	.provide(COLLECTED_CFG_FEATURE)
-	.maker<CFGCollector>();
-
-
-/**
- */
-void CFGCollector::setup(WorkSpace *ws) {
-	for(int i = 0; i < bounds.count(); i++) {
-		Inst *inst = ws->findInstAt(bounds[i]);
-		if(!inst)
-			this->warn(_ << "no instruction at " << bounds[i]);
-		else {
-			BB(inst) = 0;
-			if(logFor(LOG_BB))
-				log << "\tset BB bound at " << bounds[i] << io::endl;
-		}
-	}
 }
 
 
@@ -546,46 +189,34 @@ void CFGCollector::setup(WorkSpace *ws) {
  */
 void CFGCollector::cleanup(WorkSpace *ws) {
 
-	// cleanup added bounds
-	for(int i = 0; i < bounds.count(); i++) {
-		Inst *inst = ws->findInstAt(bounds[i]);
-		if(inst)
-			inst->removeProp(BB);
-	}
-
 	// build the CFG collection and clean markers
 	CFGCollection *coll = new CFGCollection();
-	for(int i = 0; i < makers.count(); i++) {
-		CFG *cfg = makers[i].snd->build();
-		coll->add(cfg);
-		CFG_INDEX(cfg->first()).remove();
+	for(Iter m(*this); m; m++) {
+		CFG *g = m->build();
+		coll->add(g);
 	}
 
-	// cleanup makers
-	for(int i = 0; i < makers.count(); i++)
-		delete makers[i].snd;
-	makers.clear();
-
-	// installing the collection
+	// install the collection
 	otawa::INVOLVED_CFGS(ws) = coll;
 	ENTRY_CFG(ws) = (*coll)[0];
-	
-	// for invalidate
-	addCleaner(COLLECTED_CFG_FEATURE, new CollectedCFGCleaner(ws));
+	addCleaner(COLLECTED_CFG_FEATURE, new CollectorCleaner(ws, coll));
+
+	// cleanup all
+	AbstractCFGBuilder::cleanup(ws);
 }
 
 
 /**
  */
 void CFGCollector::configure(const PropList& props) {
-	Processor::configure(props);
+	AbstractCFGBuilder::configure(props);
 
 	// Misc configuration
-	addr = TASK_ADDRESS(props);
+	Address addr = TASK_ADDRESS(props);
 	if(addr)
 		added_cfgs.add(addr);
 	else {
-		name = TASK_ENTRY(props);
+		string name = TASK_ENTRY(props);
 		if(!name)
 			name = "main";
 		added_funs.add(name);
@@ -596,7 +227,6 @@ void CFGCollector::configure(const PropList& props) {
 		added_cfgs.add(cfg);
 	for(Identifier<CString>::Getter fun(props, ADDED_FUNCTION); fun; fun++)
 		added_funs.add(*fun);
-	bounds = BB_BOUNDS(props);
 }
 
 
@@ -642,6 +272,8 @@ Identifier<Edge *> CALLED_BY("otawa::CALLED_BY", 0);
  * @par Configuration
  * @li @ref BB_BOUNDS
  * @li @ref ENTRY_CFG
+ * @li @ref ADDED_CFG
+ * @li @ref ADDED_FUNCTION
  *
  * @par Properties
  * @li @ref ENTRY_CFG (@ref WorkSpace).
@@ -653,20 +285,12 @@ p::feature COLLECTED_CFG_FEATURE("otawa::COLLECTED_CFG_FEATURE", new Maker<CFGCo
 
 
 /**
- * Configuration identifier, provides a list of BB start point
- * (whatever the control flow of the executable).
- * @ingroup cfg
- */
-Identifier<Bag<Address> > BB_BOUNDS("otawa::BB_BOUNDS");
-
-
-/**
  * This configuration property allows to add unlinked CFG to the used CFG
  * collection.
  *
  * @ingroup cfg
  */
-Identifier<Address> CFGCollector::ADDED_CFG("otawa::CFGCollector::ADDED_CFG", 0);
+Identifier<Address> ADDED_CFG("otawa::ADDED_CFG", 0);
 
 
 /**
@@ -675,6 +299,6 @@ Identifier<Address> CFGCollector::ADDED_CFG("otawa::CFGCollector::ADDED_CFG", 0)
  *
  * @ingroup cfg
  */
-Identifier<CString> CFGCollector::ADDED_FUNCTION("otawa::CFGCollector::ADDED_FUNCTION", 0);
+Identifier<CString> ADDED_FUNCTION("otawa::ADDED_FUNCTION", 0);
 
 } // otawa

@@ -1,18 +1,29 @@
 /*
- *	$Id$
- *	Copyright (c) 2003-07, IRIT UPS.
+ *	CFGInfo class interface
  *
- *	otawa/cfg/CFGInfo.h -- interface of CFGInfo class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2004-16, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #ifndef OTAWA_CFG_CFG_INFO_H
 #define OTAWA_CFG_CFG_INFO_H
 
-#include <elm/utility.h>
-#include <elm/util/LockPtr.h>
-#include <elm/genstruct/FragTable.h>
-#include <elm/inhstruct/DLList.h>
+#include <elm/genstruct/HashTable.h>
+
 #include <otawa/cfg/BasicBlock.h>
-#include <otawa/util/MemBlockMap.h>
 #include <otawa/cfg/features.h>
 
 namespace otawa {
@@ -27,39 +38,30 @@ class WorkSpace;
 class Inst;
 
 // CFGInfo class
-class CFGInfo: public elm::Lock {
+class CFGInfo {
+	typedef genstruct::HashTable<Address, CFG *> map_t;
 public:
-	static Identifier<CFGInfo *>& ID;
+	static Identifier<const CFGInfo *>& ID;
 
-	// Constructors
-	CFGInfo(WorkSpace *fw);
+	CFGInfo(WorkSpace *ws);
 	virtual ~CFGInfo(void);
 
-	// Accessors
-	CFG *findCFG(Address addr);
-	CFG *findCFG(Inst *inst);
-	CFG *findCFG(const BasicBlock *bb);
+	CFG *findCFG(Address addr) const;
+	inline CFG *findCFG(Inst *inst) const { return findCFG(inst->address()); }
 	CFG *findCFG(String label);
 
-	// Modifiers
 	void add(CFG *cfg);
-	void add(BasicBlock *bb);
 	void clear(void);
 
 	// Iter class
-	class Iter: public genstruct::FragTable<CFG *>::Iterator {
+	class Iter: public map_t::Iterator {
 	public:
-		inline Iter(CFGInfo *info)
-			: genstruct::FragTable<CFG *>::Iterator(info->_cfgs) { }
-		inline Iter(const Iter& iter)
-			: genstruct::FragTable<CFG *>::Iterator(iter) { }
+		inline Iter(CFGInfo *info): map_t::Iterator(info->_cfgs) { }
 	};
 
 private:
-	WorkSpace *fw;
-	genstruct::FragTable<CFG *> _cfgs;
-	genstruct::FragTable<BasicBlock *> bbs;
-	MemBlockMap<BasicBlock> map;
+	WorkSpace *_ws;
+	mutable map_t _cfgs;
 };
 
 } // otawa

@@ -24,40 +24,25 @@
 
 #include <elm/genstruct/Vector.h>
 #include <otawa/cfg/features.h>
-#include <otawa/proc/Processor.h>
+#include <otawa/cfg/AbstractCFGBuilder.h>
 
 namespace otawa {
 
 // CFGCollector Class
-class CFGCollector: public Processor {
+class CFGCollector: public AbstractCFGBuilder {
 public:
-	static Identifier<Address> ADDED_CFG;
-	static Identifier<CString> ADDED_FUNCTION;
 	static p::declare reg;
 
 	CFGCollector(p::declare& r = reg);
 	virtual void configure(const PropList& props);
 
 protected:
-	void processWorkSpace(WorkSpace *ws);
 	virtual void setup(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
 
 private:
-	void processCFG(Inst *i);
-	void scanCFG(Inst *i, genstruct::FragTable<Inst *>& bbs);
-	void buildBBs(CFGMaker& maker, const genstruct::FragTable<Inst *>& bbs);
-	void buildEdges(CFGMaker& maker);
-	void cleanBBs(const genstruct::FragTable<Inst *>& bbs);
-	CFGMaker &maker(Inst *i);
-	void seq(CFGMaker& m, BasicBlock *b, Block *src);
-
-	string name;
-	Address addr;
 	genstruct::Vector<string> added_funs;
 	genstruct::Vector<Address> added_cfgs;
-	genstruct::FragTable<Pair<Inst *, CFGMaker *> > makers;
-	Bag<Address> bounds;
 };
 
 } // otawa

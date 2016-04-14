@@ -693,7 +693,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	Application::parseAddress(arguments()[0]); // make sure the entry symbol is valid
 	TASK_ENTRY(props) = arguments()[0];
 	for(int i = 1; i < arguments().length(); i++)
-		CFGCollector::ADDED_FUNCTION(props).add(arguments()[i].toCString());
+		ADDED_FUNCTION(props).add(arguments()[i].toCString());
 	CFGChecker::NO_EXCEPTION(props) = true;
 
 	// Enable the dynamic branch
