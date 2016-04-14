@@ -231,9 +231,11 @@ MemorySet::t MemorySet::remove(t mem, MemArea area) {
 		else {
 
 			if(area.address() <= p->address()) {
-				if(p->topAddress() <= area.topAddress())
+				if(p->topAddress() <= area.topAddress()) {
 					// area.addr <= p.addr /\ p.top <= area.top -> p inside area
-					break;
+					p = p->next; // ignore the current block
+					continue; // in case the area covers more than one blocks
+				}
 				else {
 					// area.addr <= p.addr /\ area.top < p.top -> p at end of area
 					*n = allocate(MemArea(area.topAddress(), p->topAddress()));
