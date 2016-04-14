@@ -20,17 +20,20 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/prog/Loader.h>
-#include <otawa/proc/ProcessorPlugin.h>
-#include <otawa/hard.h>
-#include <otawa/program.h>
+#include <gel/debug_line.h>
 #include <gel/gel.h>
 #include <gel/gel_elf.h>
-#include <gel/debug_line.h>
-#include <otawa/prog/sem.h>
-#include <otawa/loader/arm.h>
+
 #include <elm/stree/MarkerBuilder.h>
+#include <elm/stree/SegmentBuilder.h>
+
 #include "config.h"
+#include <otawa/hard.h>
+#include <otawa/loader/arm.h>
+#include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/prog/Loader.h>
+#include <otawa/prog/sem.h>
+#include <otawa/program.h>
 
 extern "C" {
 #	include <arm/grt.h>
@@ -315,6 +318,7 @@ public:
 	}
 
 	virtual void semInsts (sem::Block &block);
+
 protected:
 	Process &proc;
 	kind_t _kind;
@@ -334,18 +338,16 @@ class BranchInst: public Inst {
 public:
 
 	inline BranchInst(Process& process, kind_t kind, Address addr, int size)
-		: Inst(process, fixKind(process, addr, kind), addr, size), _target(0), isTargetDone(false)
+		: Inst(process, kind & ~IS_CONTROL, addr, size), _target(0), isTargetDone(false)
 		{ }
 
 	virtual otawa::Inst *target();
+	virtual kind_t kind(void);
 
 protected:
 	arm_address_t decodeTargetAddress(void);
 
 private:
-
-	static kind_t fixKind(Process& process, const Address& addr, kind_t kind);
-
 	otawa::Inst *_target;
 	bool isTargetDone;
 };
@@ -516,6 +518,7 @@ public:
 		gel_image_close(gimage);
 
 		// build segments
+		stree::SegmentBuilder<t::uint32, bool> builder(false);
 		gel_file_info_t infos;
 		gel_file_infos(_file, &infos);
 		for (int i = 0; i < infos.sectnum; i++) {
@@ -525,8 +528,10 @@ public:
 			gel_sect_infos(sect, &infos);
 			if(infos.vaddr != 0 && infos.size != 0) {
 				int flags = 0;
-				if(infos.flags & SHF_EXECINSTR)
+				if(infos.flags & SHF_EXECINSTR) {
 					flags |= Segment::EXECUTABLE;
+					builder.add(infos.vaddr, infos.vaddr + infos.size, true);
+				}
 				if(infos.flags & SHF_WRITE)
 					flags |= Segment::WRITABLE;
 				if(infos.type == SHT_PROGBITS)
@@ -535,6 +540,8 @@ public:
 				file->addSegment(seg);
 			}
 		}
+		stree::Tree<t::uint32, bool> execs;
+		builder.make(execs);
 
 		// Initialize symbols
 #		ifdef ARM_THUMB
@@ -547,8 +554,6 @@ public:
 		for(sym = gel_sym_first(&iter, _file); sym; sym = gel_sym_next(&iter)) {
 
 			// get the symbol description
-			//gel_sym_t *sym = gel_find_file_symbol(_file, name);
-			//assert(sym);
 			gel_sym_info_t infos;
 			gel_sym_infos(sym, &infos);
 
@@ -577,6 +582,8 @@ public:
 				mask = 0xfffffffe;
 				break;
 			case STT_NOTYPE:
+				if(!execs.contains(infos.vaddr & mask))
+					continue;
 				kind = Symbol::LABEL;
 				break;
 			case STT_OBJECT:
@@ -890,14 +897,16 @@ arm_address_t BranchInst::decodeTargetAddress(void) {
 	Address target_addr = arm_target(inst);
 
 	// thumb-1 case
+
 #		ifdef ARM_THUMB
 
 		// blx/0; blx/1
 		if(_kind & Process::IS_BL_1) {
 			arm_inst_t *pinst = proc.decode_raw(address() - 2);
 			Inst::kind_t pkind = arm_kind(pinst);
-			if(pkind & Process::IS_BL_0)
+			if(pkind & Process::IS_BL_0) {
 				target_addr = arm_target(pinst) + target_addr.offset();
+			}
 			proc.free_inst(pinst);
 		}
 
@@ -928,52 +937,48 @@ arm_address_t BranchInst::decodeTargetAddress(void) {
 
 
 /**
- * Fix possibly the kind of a branch instruction.
- * @param process	Current process.
- * @param kind		Original kind.
- * @return			Fixed kind.
  */
-Inst::kind_t BranchInst::fixKind(Process& process, const Address& addr, kind_t kind) {
+BranchInst::kind_t BranchInst::kind(void) {
+	if(!(_kind & IS_CONTROL)) {
+		_kind |= IS_CONTROL;
 
-	// pop { ..., ri, ... }; bx ri
-	if(kind && Process::IS_THUMB_BX) {
-		t::uint16 pre_half, cur_half;
-		process.get(addr, cur_half);
-		process.get(addr - 2, pre_half);
-		int r = (cur_half >> 3) & 0xf;
-		if(r < 8
-		&& (pre_half & 0xff00) == 0xbc00
-		&& (pre_half & (1 << r)))
-			kind |= IS_RETURN;
+		// thumb: pop { ..., ri, ... }; bx ri
+		if(_kind & Process::IS_THUMB_BX) {
+			t::uint16 pre_half, cur_half;
+			process().get(address(), cur_half);
+			process().get(address() - 2, pre_half);
+			int r = (cur_half >> 3) & 0xf;
+			if(r < 8
+			&& (pre_half & 0xff00) == 0xbc00
+			&& (pre_half & (1 << r)))
+				_kind |= IS_RETURN;
+		}
+
+		// mov lr, pc; mov pc, ri
+		else if(size() == 4 && prevInst()->topAddress() == address()) {
+
+			// get instruction words
+			t::uint32 cword, pword;
+			process().get(address(), cword);
+			process().get(prevInst()->address(), pword);
+
+			// check instructions
+			if((pword & 0x0fffffff) == 0x01a0e00f				// mov pc, lr
+			&& (pword & 0xf0000000) == (cword & 0xf0000000)		// same condition
+			&& (cword & 0x0ffff000) == 0x01a0f000)
+				_kind |= IS_CALL;
+		}
+
 	}
-
-	// no modification
-	return kind;
+	return _kind;
 }
-
 
 otawa::Inst *BranchInst::target() {
 	if (!isTargetDone) {
 		isTargetDone = true;
-
-		// try to decode the address
 		arm_address_t a = decodeTargetAddress();
 		if (a)
 			_target = process().findInstAt(a);
-
-		// else try to scan if it is a call
-		// TODO		Seems a bit strange and bad documented
-		else if(size() == 4) {
-			otawa::Inst *prev = this->prevInst();
-			if(prev && prev->size() == 4) {
-				t::uint32 my_word, prev_word;
-				proc.get(address(), my_word);
-				proc.get(prev->address(), prev_word);
-				if((prev_word & 0x0fffffff) == 0x01a0e00f 					// test previous opcode
-				&& (prev_word & 0xf0000000) == (my_word & 0xf0000000))		// test same condition
-					_kind |= IS_CALL;
-			}
-		}
 	}
 	return _target;
 }
