@@ -86,13 +86,15 @@ extern Identifier<int> LEAVE;
 // COLLECTED_CFG_FEATURE
 extern Identifier<CFG *> ENTRY_CFG;
 extern Identifier<Bag<Address> > BB_BOUNDS;
+extern Identifier<Address> ADDED_CFG;
+extern Identifier<CString> ADDED_FUNCTION;
 extern p::feature COLLECTED_CFG_FEATURE;
 extern Identifier<const CFGCollection *> INVOLVED_CFGS;
 extern Identifier<Edge *> CALLED_BY;
 
 // CFGInfoFeature
 extern p::feature CFG_INFO_FEATURE;
-extern Identifier<CFGInfo *> CFG_INFO;
+extern Identifier<const CFGInfo *> CFG_INFO;
 
 // REDUCED_LOOPS_FEATURE
 extern p::feature REDUCED_LOOPS_FEATURE;

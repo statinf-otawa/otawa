@@ -138,7 +138,7 @@ io::Output& operator<<(io::Output& out, Symbol::kind_t k) {
  * @par Hooks
  * @li @ref Inst
  */
-Identifier<Symbol *> Symbol::ID("otawa::Symbol::ID", 0);
+//Identifier<Symbol *> Symbol::ID("otawa::Symbol::ID", 0);
 
 
 /**

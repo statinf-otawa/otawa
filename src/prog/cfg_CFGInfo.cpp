@@ -1,9 +1,9 @@
 /*
  *	$Id$
- *	CFGInfo processor implementation
+ *	CFGInfo class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2004-08, IRIT UPS.
+ *	Copyright (c) 2004-16, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -20,24 +20,15 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/assert.h>
+
+#include <otawa/cfg.h>
+#include <otawa/cfg/CFGBuilder.h>
 #include <otawa/cfg/features.h>
 #include <otawa/instruction.h>
 #include <otawa/manager.h>
-#include <otawa/cfg.h>
-#include <elm/assert.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/prop/DeletableProperty.h>
-
-// Trace
-//#	define TRACE_CFG_INFO
-#if defined(NDEBUG) || !defined(TRACE_CFG_INFO)
-#	define TRACE(str)
-#else
-#		define TRACE(str) \
-			{ \
-				cerr << __FILE__ << ':' << __LINE__ << ": " << str << '\n'; \
-				cerr.flush(); \
-			}
-#endif
 
 namespace otawa {
 
@@ -58,16 +49,14 @@ namespace otawa {
  * @see CFG_INFO
  * @ingroup cfg
  */
-Identifier<CFGInfo *>& CFGInfo::ID = CFG_INFO;
+Identifier<const CFGInfo *>& CFGInfo::ID = CFG_INFO;
 
 
 /**
  * Build a new CFGInfo.
- * @param fw	Workspace that the CFG information applies to.
+ * @param ws	Workspace that the CFG information applies to.
  */
-CFGInfo::CFGInfo(WorkSpace *_fw)
-: fw(_fw) {
-	TRACE(this << ".CFGInfo::CFGInfo(" << _fw << ")");
+CFGInfo::CFGInfo(WorkSpace *ws): _ws(ws) {
 }
 
 
@@ -75,7 +64,6 @@ CFGInfo::CFGInfo(WorkSpace *_fw)
  * Delete the CFG information contained in this program.
  */
 CFGInfo::~CFGInfo(void) {
-	TRACE(this << ".CFGInfo::~CFGInfo()");
 	clear();
 }
 
@@ -84,47 +72,18 @@ CFGInfo::~CFGInfo(void) {
  * Remove all CFG stored in this CFG information.
  */
 void CFGInfo::clear(void) {
-
-	// remove CFG
-	for(int i = 0; i < _cfgs.length(); i++)
-		delete _cfgs[i];
+	for(Iter g(this); g; g++)
+		delete g;
 	_cfgs.clear();
-
-	// remove edges
-	for(FragTable<BasicBlock *>::Iterator bb(bbs); bb; bb++)
-		while(true) {
-			BasicBlock::OutIterator edge(bb);
-			if(edge)
-				delete *edge;
-			else
-				break;
-		}
-
-	// remove BB
-	for(FragTable<BasicBlock *>::Iterator bb(bbs); bb; bb++)
-		delete *bb;
-	bbs.clear();
 }
 
 
 /**
+ * @fn CFG *CFGInfo::findCFG(Inst *inst) const;
  * Find the CFG starting by the basic block containing this instruction.
- * If the CFG does not exists, it is created and added.
- * @par
- * The current algorithm does not allow detecting all CFG due to the irregular
- * nature of the assembly code. Specially, function entries also used as
- * loop head or as jump target of a function without continuation.
- * Using this method, the user may inform the system about other existing CFG.
  * @param inst	Instruction to find the CFG starting with.
- * @return 	Matching CFG or null.
+ * @return 		Matching CFG or null.
  */
-CFG *CFGInfo::findCFG(Inst *inst) {
-	const BasicBlock *bb = map.get(inst->address());
-	if(!bb)
-		return 0;
-	else
-		return findCFG(bb);
-}
 
 
 /**
@@ -132,22 +91,8 @@ CFG *CFGInfo::findCFG(Inst *inst) {
  * @param addr	Address of the first instruction.
  * @return		Found CFG or null.
  */
-CFG *CFGInfo::findCFG(Address addr) {
-	const BasicBlock *bb = map.get(addr);
-	if(!bb)
-		return 0;
-	else
-		return findCFG(bb);
-}
-
-
-/**
- * Find the CFG starting at the given basic block.
- * @param bb	Basic block to look at.
- * @return	Found CFG or this BB is not a CFG start.
- */
-CFG *CFGInfo::findCFG(const BasicBlock *bb) {
-	return ENTRY(bb);
+CFG *CFGInfo::findCFG(Address addr) const {
+	return _cfgs.get(addr, static_cast<CFG *>(0));
 }
 
 
@@ -157,7 +102,7 @@ CFG *CFGInfo::findCFG(const BasicBlock *bb) {
  * @return			Matching CFG or null.
  */
 CFG *CFGInfo::findCFG(String label) {
-	Inst *inst = fw->process()->findInstAt(label);
+	Inst *inst = _ws->process()->findInstAt(label);
 	if(!inst)
 		return 0;
 	else
@@ -170,18 +115,8 @@ CFG *CFGInfo::findCFG(String label) {
  * @param cfg	Added CFG.
  */
 void CFGInfo::add(CFG *cfg) {
-	ASSERTP(cfg, "null cfg given");
-	_cfgs.add(cfg);
-}
-
-
-/**
- * Add the given BB to the CFG information.
- * @param bb	BB to add.
- */
-void CFGInfo::add(BasicBlock *bb) {
-	bbs.add(bb);
-	map.add(bb);
+	ASSERTP(cfg, "null CFG given");
+	_cfgs.put(cfg->address(), cfg);
 }
 
 
@@ -196,6 +131,18 @@ void CFGInfo::add(BasicBlock *bb) {
  *
  * @ingroup cfg
  */
-Identifier<CFGInfo *> CFG_INFO("otawa::CFG_INFO", 0);
+Identifier<const CFGInfo *> CFG_INFO("otawa::CFG_INFO", 0);
+
+/**
+ * Feature asserting that the CFG has been scanned in the program. The result
+ * is put the @ref CFGInfo::ID.
+ *
+ * @Properties
+ * @li @ref CFG_INFO
+ *
+ * @ingroup cfg
+ */
+p::feature CFG_INFO_FEATURE("otawa::CFG_INFO_FEATURE", new Maker<CFGBuilder>());
+
 
 } // otawa

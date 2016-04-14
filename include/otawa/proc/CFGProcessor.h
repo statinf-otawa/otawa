@@ -34,13 +34,14 @@ class BasicBlock;
 // Processor class
 class CFGProcessor: public Processor {
 public:
+	static p::declare reg;
+
 	CFGProcessor(void);
 	CFGProcessor(cstring name, elm::Version version);
 	inline CFGProcessor(AbstractRegistration& reg): Processor(reg) { }
 	inline CFGProcessor(cstring name, const Version& version, AbstractRegistration& reg)
 		: Processor(name, version, reg) { }
 	virtual void configure(const PropList& props);
-	static MetaRegistration reg;
 
 protected:
 

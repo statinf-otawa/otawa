@@ -44,6 +44,9 @@ extern Identifier<DelayedInfo *> DELAYED_INFO;
 
 
 // Common properties
+class Symbol;
+extern p::feature LABEL_FEATURE;
+extern Identifier<Symbol *> SYMBOL;
 extern Identifier<String> LABEL;
 extern Identifier<String> FUNCTION_LABEL;
 

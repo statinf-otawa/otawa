@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	WorkSpace class implementation
  *
  *	This file is part of OTAWA
@@ -303,7 +302,7 @@ string WorkSpace::format(Address addr, bool with_address) {
 	if(!done) {
 		Inst *inst = findInstAt(addr);
 		while(inst && !done) {
-			for(Identifier<Symbol *>::Getter sym(inst, Symbol::ID); sym; sym++)
+			for(Identifier<Symbol *>::Getter sym(inst, SYMBOL); sym; sym++)
 				/*if(sym->kind() == Symbol::FUNCTION)*/ {
 					done = true;
 					buf << '"' << sym->name() << '"';

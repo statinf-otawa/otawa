@@ -24,34 +24,20 @@
 #define OTAWA_CFG_CFG_BUILDER_H
 
 #include <elm/genstruct/Vector.h>
-#include <otawa/cfg/features.h>
-#include <otawa/proc/Processor.h>
+#include <otawa/cfg/AbstractCFGBuilder.h>
 #include <otawa/cfg/CFGInfo.h>
 
 namespace otawa {
 
 // CFGBuilder class
-class CFGBuilder: public Processor {
+class CFGBuilder: public AbstractCFGBuilder {
 public:
-	CFGBuilder(void);
+	static p::declare reg;
+	CFGBuilder(p::declare& r = reg);
 
 protected:
-	virtual void processWorkSpace(WorkSpace *ws);
-
-	virtual void makeCFG(WorkSpace *ws, CFG *cfg);
-	virtual void makeBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
-
-private:
-	CodeBasicBlock *nextBB(Inst *inst);
-	CodeBasicBlock *thisBB(Inst *inst);
-	void addSubProgram(Segment *seg, Inst *inst);
-	void buildCFG(WorkSpace *ws, Segment *seg);
-	void addFile(WorkSpace *ws, File *file);
-	//void buildAll(WorkSpace *fw);
-	void addCFG(Segment *seg, BasicBlock *bb);
-
-	//genstruct::Vector<CFG *> _cfgs;
-	CFGInfo *info;
+	virtual void setup(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
 };
 
 } // otawa

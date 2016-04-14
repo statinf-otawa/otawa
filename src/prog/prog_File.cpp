@@ -1,8 +1,22 @@
 /*
- *	$Id$
- *	Copyright (c) 2006, IRIT UPS.
- *
  *	File class implementation
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2007, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
 #include <otawa/prog/File.h>
@@ -45,22 +59,6 @@ namespace otawa {
  * Get the name of the file. It is usually its absolute path.
  * @return Name of the file.
  */
-
-
-/**
- * Property with this identifier is put on instructions or basic blocks which a symbol is known for.
- */
-Identifier<String> LABEL("otawa::LABEL", "",
-	idLabel("label"),
-	idDesc("label in assembly code"),
-	0);
-
-
-/**
- * This property is put on instruction. An instruction may accept many
- * properties of this type.
- */
-Identifier<String> FUNCTION_LABEL("otawa::FUNCTION_LABEL", "");
 
 
 /**
