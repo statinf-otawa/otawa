@@ -133,21 +133,6 @@ extern Identifier<Block*> LOOP_EXIT_EDGE;
 extern Identifier<elm::genstruct::Vector<Edge*> *> EXIT_LIST;
 extern p::feature LOOP_INFO_FEATURE;
 
-// Loop Header Iterator
-class LoopHeaderIter: public PreIterator<LoopHeaderIter, Block*> {
-public:
-	inline LoopHeaderIter(Block* b): lh(LOOP_HEADER(b) ? b : ENCLOSING_LOOP_HEADER.get(b, NULL)) { }
-	inline LoopHeaderIter(const LoopHeaderIter& i): lh(i.lh) { }
-	inline LoopHeaderIter& operator=(const LoopHeaderIter& i) { lh = i.lh; return *this; }
-
-	inline bool ended(void) const { return lh == NULL; }
-	Block* item(void) const { return lh; }
-	inline void next(void) { lh = ENCLOSING_LOOP_HEADER.get(lh, NULL); }
-
-private:
-	Block* lh; // can be NULL
-};
-
 // CFG I/O service
 class CFGSaver;
 class CFGLoader;
