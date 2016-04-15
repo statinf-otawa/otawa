@@ -84,15 +84,15 @@ bool GraphVizItem::printAttribute(elm::io::Output &out, const PropList::Iter& pr
 		return false;
 	}
 	else if(prop == COLOR){
-		out << "color=\"" << quoteSpecials(COLOR(prop)) << '"';
+		out << "color=\"" << quoteSpecials(COLOR(prop), false) << '"';
 		return true;
 	}
 	if(prop == BACKGROUND){
-		out << "bgcolor=\"" << quoteSpecials(BACKGROUND(prop)) << '"';
+		out << "bgcolor=\"" << quoteSpecials(BACKGROUND(prop), false) << '"';
 		return true;
 	}
 	else if(prop == HREF){
-		out << "href=\"" << quoteSpecials(HREF(prop)) << '"';
+		out << "href=\"" << quoteSpecials(HREF(prop), false) << '"';
 		return true;
 	}
 	return false;

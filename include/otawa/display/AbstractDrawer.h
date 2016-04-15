@@ -74,6 +74,7 @@ public:
 	virtual void configure(Output& caption, TextStyle& text, FillStyle& fill);
 	
 	// Configuration
+	bool html;
 	kind_t kind;
 	String path;
 	FillStyle page_fill;

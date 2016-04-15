@@ -42,7 +42,7 @@ bool GraphVizGraphElement::printAttribute(elm::io::Output &out, const PropList::
 		return true;
 	}
 	else if(prop == FONT_COLOR){
-		out << "fontcolor=\"" << quoteSpecials(FONT_COLOR(prop)) << '"';
+		out << "fontcolor=\"" << quoteSpecials(FONT_COLOR(prop), false) << '"';
 		return true;
 	}
 	else if(prop == FONT_SIZE){
@@ -50,7 +50,7 @@ bool GraphVizGraphElement::printAttribute(elm::io::Output &out, const PropList::
 		return true;
 	}
 	else if(prop == FONT){
-		out << "fontname=\"" << quoteSpecials(FONT(prop)) << '"';
+		out << "fontname=\"" << quoteSpecials(FONT(prop), false) << '"';
 		return true;
 	}
 	return GraphVizItem::printAttribute(out, prop);

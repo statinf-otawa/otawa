@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	dumpcfg command implementation
  *
  *	This file is part of OTAWA
@@ -36,6 +35,7 @@
 #include "SimpleDisplayer.h"
 #include "DisassemblerDisplayer.h"
 #include "DotDisplayer.h"
+#include "MultipleDotDisplayer.h"
 
 using namespace elm;
 using namespace otawa;
@@ -151,12 +151,18 @@ Identifier<bool> Displayer::SOURCE("", false);
 Identifier<bool> Displayer::ALL("", false);
 
 /**
+ * Display all CFGs.
+ */
+Identifier<string> Displayer::OUT("");
+
+/**
  */
 void Displayer::configure(const PropList& props) {
 	Processor::configure(props);
 	display_assembly = DISASSEMBLE(props);
 	source_info = SOURCE(props);
 	display_all = ALL(props);
+	out = OUT(props);
 }
 
 
@@ -164,6 +170,7 @@ void Displayer::configure(const PropList& props) {
 SimpleDisplayer simple_displayer;
 DisassemblerDisplayer disassembler_displayer;
 DotDisplayer dot_displayer;
+MultipleDotDisplayer mult_displayer;
 
 
 // DumpCFG class
@@ -180,7 +187,8 @@ public:
 	option::BoolOption simple;
 	option::BoolOption disassemble;
 	option::BoolOption dot;
-	option::SwitchOption source, xml, all, virt;
+	option::SwitchOption source, xml, all, virt, mult;
+	option::ValueOption<string> out;
 
 	Displayer *displayer;
 
@@ -204,6 +212,8 @@ void DumpCFG::prepare(PropList &props) {
 		displayer = &disassembler_displayer;
 	else if(dot)
 		displayer = &dot_displayer;
+	else if(mult)
+		displayer = &mult_displayer;
 }
 
 
@@ -231,6 +241,8 @@ DumpCFG::DumpCFG(void):
 	xml(option::SwitchOption::Make(*this).cmd("-x").cmd("--xml").description("output the CFG as an XML file")),
 	all(option::SwitchOption::Make(*this).cmd("-R").cmd("--recursive").description("display the current and called CFGs")),
 	virt(option::SwitchOption::Make(*this).cmd("-V").cmd("--virtualize").description("virtualize the called CFG, i.e. duplicate them at each call site")),
+	mult(option::SwitchOption::Make(*this).cmd("-M").cmd("--multiple-dot").description("output multiple .dot file (one for each CFG) linked with URLs")),
+	out(option::ValueOption<string>::Make(*this).cmd("-o").cmd("--output").description("select the output file or directory (-M option)")),
 
 	displayer(&simple_displayer)
 {
@@ -273,6 +285,8 @@ void DumpCFG::dump(const string& name, PropList& props) {
 		Displayer::SOURCE(props) = source;
 	if(all)
 		Displayer::ALL(props) = all;
+	if(out)
+		Displayer::OUT(props) = out;
 
 	// XML case (will become the generic case)
 	/*if(xml) {		TODO

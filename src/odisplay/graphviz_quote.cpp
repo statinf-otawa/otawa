@@ -33,28 +33,29 @@ String quoteNewlines(String str){
  * This function escapes all the special characters,
  * and replaces the newlines by \\l (left-align in dot)
  */
-String quoteSpecials(String str){
+String quoteSpecials(String str, bool html){
 	StringBuffer buf;
-	for(int i = 0; i < str.length(); i++){
-		char c = str[i];
-		if(
-			   c == '{'
-			|| c == '}'
-			|| c == '<'
-			|| c == '>'
-			|| c == '|'
-			|| c == '\\'
-			|| c == '"')
-		{
-			buf << '\\';
-		}
-		//buf << c;
-		if(c != '\n')
-			buf << c;
-		else
+	for(int i = 0; i < str.length(); i++)
+		switch(str[i]) {
+		case '\n':
 			buf << "\\l";
-
-	}
+			break;
+		case '<':
+		case '>':
+			if(html) {
+				buf << str[i];
+				break;
+			}
+		case '{':
+		case '}':
+		case '|':
+		case  '\\':
+		case '"':
+			buf << '\\';
+			/* no break */
+		default:
+			buf << str[i];
+		}
 	return buf.toString();
 }
 

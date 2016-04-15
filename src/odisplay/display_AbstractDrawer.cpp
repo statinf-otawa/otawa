@@ -97,9 +97,7 @@ static void setShapeStyle(PropList *props, const ShapeStyle& style) {
  * Build a drawer with the default driver.
  * @throws display::Exception	If there is no driver available.
  */
-AbstractDrawer::AbstractDrawer(void):
-	kind(OUTPUT_ANY)
-{
+AbstractDrawer::AbstractDrawer(void): html(false), kind(OUTPUT_ANY) {
 	Driver *driver = Driver::find();
 	if(!driver)
 		throw new Exception("no display driver available");
@@ -112,7 +110,7 @@ AbstractDrawer::AbstractDrawer(void):
  * Build a drawer with the given driver.
  * @param driver	Driver to use.
  */
-AbstractDrawer::AbstractDrawer(Driver& driver): kind(OUTPUT_DOT) {
+AbstractDrawer::AbstractDrawer(Driver& driver): html(false), kind(OUTPUT_DOT) {
 	graph = driver.newGraph();
 	ASSERT(graph);
 }
@@ -135,6 +133,8 @@ void AbstractDrawer::draw(void) {
 		OUTPUT_PATH(graph) = path;
 	if(kind)
 		OUTPUT_KIND(graph) = kind;
+	if(html)
+		HTML(graph) = true;
 	
 	// Setup the vertices and edges
 	for(FragTable<Vertex *>::Iterator vertex(vertices); vertex; vertex++)

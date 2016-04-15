@@ -168,7 +168,7 @@ public:
 
 /******************************************************************************/
 
-extern String quoteSpecials(String str);
+extern String quoteSpecials(String str, bool html);
 extern String quoteNewlines(String str);
 
 } }

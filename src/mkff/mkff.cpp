@@ -20,16 +20,18 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/checksum/Fletcher.h>
+#include <elm/genstruct/Vector.h>
 #include <elm/io.h>
+#include <elm/io/InFileStream.h>
 #include <elm/options.h>
 #include <elm/option/StringOption.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/system/Path.h>
+#include <elm/system/System.h>
+
 #include <otawa/cfg.h>
 #include <otawa/otawa.h>
 #include <otawa/util/ContextTree.h>
-#include <elm/checksum/Fletcher.h>
-#include <elm/io/InFileStream.h>
-#include <elm/system/Path.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/flowfact/features.h>
@@ -744,11 +746,13 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				cstring file;
 				int line = 0;
 				system::StopWatch watch;
-				if(forFun) { // get the random seed
+				/*
+				 * Fixed using System::random()
+				 	 if(forFun) { // get the random seed
 					watch.start();
 					watch.stop();
 					srand (watch.startTime());
-				}
+				}*/
 				for(BasicBlock::InstIter inst(bb); inst; inst++){ // the body:
 					// display labels
 					for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
@@ -769,7 +773,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 					}
 					// display the instruction
 					if(forFun)
-						out << "<Font color=\"#" << hex(rand()%255) << hex(rand()%255) << hex(rand()%255) << "\">";
+						out << "<Font color=\"#" << hex(sys::System::random(255)) << hex(sys::System::random(255)) << hex(sys::System::random(255)) << "\">";
 					out << "0x" << ot::address(inst->address()) << ":  ";
 					// inst->dump(out);
 					StringBuffer temp;

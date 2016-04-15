@@ -65,7 +65,7 @@ void GraphVizGraph::printOthersAttributes(Output& out){
 	//String props = getPropertiesString();
 	string label = BODY(this);
 	if(label)
-		out << "label=\"" << quoteSpecials(label) << "\\l\"";
+		out << "label=\"" << quoteSpecials(label, HTML(this)) << "\\l\"";
 }
 
 
@@ -124,6 +124,7 @@ Edge *GraphVizGraph::newEdge(
  * DOT needs to create the graph information
  */
 void GraphVizGraph::printGraphData(Output& out){
+	bool html = HTML(this);
 	out << "digraph main{\n";
 	String attrs = attributes();
 	if(!attrs.isEmpty())
@@ -132,6 +133,8 @@ void GraphVizGraph::printGraphData(Output& out){
 		GraphVizNode *node;
 		node = iter.item();
 		out << "\tNode" << node->number();
+		if(html)
+			HTML(node) = true;
 		out << ' ' << node->attributes() << ";\n";
 	}
 	for(FragTable<GraphVizEdge*>::Iterator iter(_edges); !iter.ended(); iter.next()){
@@ -142,6 +145,8 @@ void GraphVizGraph::printGraphData(Output& out){
 		src = edge->source();
 		dest = edge->target();
 		out << "\tNode" << src->number() << " -> Node" << dest->number();
+		if(html)
+			HTML(edge) = true;
 		out << ' ' << edge->attributes() << ";\n";
 	}
 	out << "}\n";

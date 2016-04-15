@@ -114,6 +114,13 @@ Identifier<elm::CString> HREF("otawa::display::href");
 
 
 /**
+ * Activate HTML support in caption output. "<", ">" and "&"
+ * are no more escaped.
+ */
+Identifier<bool> HTML("otawa::display::HTML");
+
+
+/**
  * Identifier of the title of a node
  * @ingroup display
  */
@@ -163,6 +170,10 @@ Identifier<int> WEIGHT("otawa::display::weight");
  * @ingroup display
  */
 
+/**
+ */
+Item::~Item(void) {
+}
 
 /**
  * @fn Item::setProps(const PropList& props)
@@ -180,6 +191,10 @@ Identifier<int> WEIGHT("otawa::display::weight");
  * @ingroup display
  */
 
+/**
+ */
+Graph::~Graph(void) {
+}
 
 /**
  * @fn Graph::newNode(const PropList& style, const PropList& props)

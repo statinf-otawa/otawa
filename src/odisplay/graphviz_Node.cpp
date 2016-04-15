@@ -97,24 +97,24 @@ void GraphVizNode::printOthersAttributes(elm::io::Output& out){ // called by Gra
 
 		out << "label=\"";
 		if(_shapeAcceptsBody){
-			out << "{ " << quoteSpecials(_title);
+			out << "{ " << quoteSpecials(_title, HTML(this));
 			if(_hasBody){
-				out << "|\\l" << processSeparations(quoteSpecials(_body)) << "\\l";
+				out << "|\\l" << processSeparations(quoteSpecials(_body, HTML(this))) << "\\l";
 			}
 			if(props.length() > 0){
-				out << "|\\l" << quoteSpecials(props) << "\\l";
+				out << "|\\l" << quoteSpecials(props, HTML(this)) << "\\l";
 			}
 			out << '}';
 		}
 		else {
-			out << quoteSpecials(_title);
+			out << quoteSpecials(_title, HTML(this));
 			if(_hasTitle && (_hasBody || props.length() > 0))
 				out << "\\l";
 			if(_hasBody){
-				out << quoteSpecials(_body) << "\\l";
+				out << quoteSpecials(_body, HTML(this)) << "\\l";
 			}
 			if(props.length() > 0){
-				out << quoteSpecials(props) << "\\l";
+				out << quoteSpecials(props, HTML(this)) << "\\l";
 			}
 		}
 		out << '"';

@@ -58,10 +58,10 @@ void GraphVizEdge::printOthersAttributes(elm::io::Output& out){
 	if(props.length() > 0 || _hasLabel){
 		out << "label=\"";
 		if(_hasLabel){
-			out << quoteSpecials(_label) << "\\l";
+			out << quoteSpecials(_label, HTML(this)) << "\\l";
 		}
 		if(props.length() > 0){
-			out << quoteSpecials(props) << "\\l";
+			out << quoteSpecials(props, HTML(this)) << "\\l";
 		}
 		out << '"';
 	}

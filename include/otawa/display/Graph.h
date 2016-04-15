@@ -22,6 +22,7 @@ extern Identifier<AbstractIdentifier*> DEFAULT;
 // Item class
 class Item: public PropList {
 public:
+	virtual ~Item(void);
 	virtual void setProps(const PropList& props) = 0;
 };
 extern Identifier<elm::CString> BACKGROUND;
@@ -43,11 +44,12 @@ extern Identifier<int>  FONT_SIZE;
 extern Identifier<int>& TEXT_SIZE;
 extern Identifier<elm::CString> FONT;
 extern Identifier<elm::CString> HREF;
-
+extern Identifier<bool> HTML;
 
 
 // Node class
 class Node: public Item {
+public:
 };
 extern Identifier<elm::String> TITLE;
 extern Identifier<elm::String> BODY;
@@ -76,11 +78,9 @@ public:
 // Graph class
 class Graph: public Item {
 public:
-	virtual Node *newNode(const PropList& style = PropList::EMPTY,
-		const PropList& props = PropList::EMPTY) = 0;
-	virtual Edge *newEdge(Node *source, Node *target,
-		const PropList& style = PropList::EMPTY,
-		const PropList& props = PropList::EMPTY) = 0;
+	virtual ~Graph(void);
+	virtual Node *newNode(const PropList& style = PropList::EMPTY, const PropList& props = PropList::EMPTY) = 0;
+	virtual Edge *newEdge(Node *source, Node *target, const PropList& style = PropList::EMPTY, const PropList& props = PropList::EMPTY) = 0;
 	virtual void display(void) throw(DisplayException) = 0;
 };
 
