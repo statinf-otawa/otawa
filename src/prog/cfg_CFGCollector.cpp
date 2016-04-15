@@ -153,7 +153,8 @@ CFGCollector::CFGCollector(p::declare& r): AbstractCFGBuilder(r) {
  * CFGCollector registration.
  */
 p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(2, 0, 1))
-	.require(otawa::FLOW_FACTS_FEATURE)
+	.require(FLOW_FACTS_FEATURE)
+	.require(LABEL_FEATURE)
 	.provide(COLLECTED_CFG_FEATURE)
 	.maker<CFGCollector>();
 
