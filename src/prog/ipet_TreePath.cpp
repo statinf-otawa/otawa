@@ -75,7 +75,7 @@ namespace otawa { namespace tsim {
 /**
  * @fn void TreePath::add(elm::genstruct::Vector<T1> &path, const T2 data, int from_index = 0);
  * Adds a value attached to the path given
- * @param path the path wich we want to attach some data
+ * @param path the path which we want to attach some data
  * @param data data to attach to the path
  * @param from_index if we don't want to start searching the path with the index 0 of the Vector
  */
@@ -83,7 +83,7 @@ namespace otawa { namespace tsim {
 /**
  * @fn void TreePath::add(elm::genstruct::Vector<T1> *path, const T2 data, int from_index = 0);
  * Adds a value attached to the path given
- * @param path the path wich we want to attach some data
+ * @param path the path which we want to attach some data
  * @param data data to attach to the path
  * @param from_index if we don't want to start searching the path with the index 0 of the Vector
  */

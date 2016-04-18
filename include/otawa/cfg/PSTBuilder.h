@@ -36,7 +36,7 @@
 namespace otawa {
 	
 /*
- * This represents a Cycle-Equivalence class: two edges are cycle-equivalent if each cycle passing thru an edge also passes thru the other.
+ * This represents a Cycle-Equivalence class: two edges are cycle-equivalent if each cycle passing through an edge also passes through the other.
  * (two edges are also cycle-equivalent if no cycle passes through the edges)
  */
 class CEClass {		

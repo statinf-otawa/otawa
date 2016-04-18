@@ -107,7 +107,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 		// constraint for MAX_ITERATION
 		if(max >= 0) {
 
-			// Substract unrolling from loop bound
+			// Subtract unrolling from loop bound
 			// TODO		to be re-activated
 			//for (BasicBlock *bb2 = UNROLLED_FROM(bb); bb2; bb2 = UNROLLED_FROM(bb2))
 			//	max--;
@@ -149,7 +149,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 		if(min >= 0) {
 			ASSERT(min >= 0);
 
-			// Substract unrolling from loop bound
+			// Subtract unrolling from loop bound
 			for (Block *bb2 = UNROLLED_FROM(bb); bb2; bb2 = UNROLLED_FROM(bb2))
 				min--;
 

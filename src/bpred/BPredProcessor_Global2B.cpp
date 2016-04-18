@@ -1174,7 +1174,7 @@ bool BPredProcessor::isLinked(BHGEdge* dir, BHGNode* dest, dfa::BitSet& h, HashT
 /**
  * Creates the BCGs from a given BHG and stores them in a vector.
  * 
- * @param bcgs	Refernce to the vector to store the generated BCGs in.
+ * @param bcgs	Reference to the vector to store the generated BCGs in.
  * @param bhg	BHG to extract the BCGs from.
  */
 void BPredProcessor::generateBCGs(elm::genstruct::Vector<BCG*>& bcgs, BHG& bhg) {

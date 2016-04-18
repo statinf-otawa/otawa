@@ -36,7 +36,7 @@ class ClpProblem;
 
 
 /** A pack of CLP states inside a BasicBlock.
-*	Use it to retreive the state of a specific instruction or semantic
+*	Use it to retrieve the state of a specific instruction or semantic
 *	instruction.
 */
 class ClpStatePack{

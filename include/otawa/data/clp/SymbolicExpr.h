@@ -51,7 +51,7 @@ namespace se{
 		CONST,		/** Constant */
 		ADDR,		/** Memory reference */
 		REG,		/** Register */
-		NEG,		/** Oposite of */
+		NEG,		/** Opposite of */
 		ADD,		/** Addition */
 		CMP,		/** Undeterminate compare */
 		CMPU,		/** Undeterminate unsigned compare */

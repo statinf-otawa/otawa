@@ -159,7 +159,7 @@ Identifier<bool> WITH_MITRA("otawa::bpred::WITH_MITRA",	false);
 Identifier<bool> WITH_STATS("otawa::bpred::WITH_STATS",	false);
 
 /**
- * Configuration property to select the inital value for history.
+ * Configuration property to select the initial value for history.
  *
  * @p Feature
  * @li otawa::bpred::BRANCH_PREDICTION_FEATURE

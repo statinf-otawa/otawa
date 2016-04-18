@@ -553,7 +553,7 @@ namespace se{
 
 	SECmp *getFilterForReg(SECmp *se, V reg, clp::ClpStatePack &pack, Inst *i, int sem, Vector<V> &used_reg, Vector<V> &used_addr){
 		/* FIXME : This could be otptimized: we do a CLP analysis from the
-			begining of the BB each time we replace a register by its value */
+			beginning of the BB each time we replace a register by its value */
 		clp::State state = pack.state_before(i->address(), sem);
 
 		ASSERT(reg.isConst());
@@ -598,7 +598,7 @@ namespace se{
 
 	SECmp *getFilterForAddr(SECmp *se, V addr, clp::ClpStatePack &pack, Inst *i, int sem, Vector<V> &used_reg, Vector<V> &used_addr){
 		/* FIXME: this could be otptimized: we do a CLP analysis from the
-			begining of the BB each time we replace an address by its value */
+			beginning of the BB each time we replace an address by its value */
 			clp::State state = pack.state_before(i->address(), sem);
 
 		ASSERT(addr.isConst());
@@ -828,7 +828,7 @@ namespace se{
 			case sem::LOAD:
 				if (se){
 					SEReg *rd = new SEReg(i.d());
-					// get the adress of the register i.a()
+					// get the address of the register i.a()
 					clp::State state = pack.state_after(cur_inst->address(), pc);
 					clp::Value val = state.get(clp::Value(clp::REG, i.a()));
 					if (val != clp::Value::all){
@@ -1027,7 +1027,7 @@ namespace se{
 		case EQ:	v.inter(f); break;
 		case NE:
 			/* We can't do anything if the filter is not a constant.
-			   We cannnot test if the value is in the filter, because the filter
+			   We cannot test if the value is in the filter, because the filter
 			   will never - at execution time - be the whole set, but just a
 			   value in this set. */
 			/*if (f.isConst()){

@@ -114,7 +114,7 @@ extern int fft_line;
  * @endcode
  * This form provide a bit more portability and usability as the previous one.
  * The address is represented as a label found in the code (usually a function
- * label) and a signed integer offset to add to or substract from the label address.
+ * label) and a signed integer offset to add to or subtract from the label address.
  * This location may be useful for symbol found in libraries. As the actual
  * address is not known before program linkage, the location may be used
  * and remains valid after linkage.

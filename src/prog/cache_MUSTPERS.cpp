@@ -74,7 +74,7 @@ using namespace otawa::ipet;
  * Each item of the stack correspond to a loop: 
  * in other words, an ACS computed before a basic block BB, which is in N levels
  * of nested loops, will be a stack of length N, with each item containing
- * a standard pers ACS taking into account only block replacement occuring
+ * a standard pers ACS taking into account only block replacement occurring
  * in the N-th loop (starting from outer-most loop).
  * 
  * To implement this, the Update() is modified to push

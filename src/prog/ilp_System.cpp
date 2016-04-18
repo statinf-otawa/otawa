@@ -62,7 +62,7 @@ private:
  * Solve the ILP system.
  * @param ws	If passed (default to null), the given workspace is used to test
  * 				if the computation is cancelled in order to stop the solver.
- * @return		True if the resolution is succesful or false else (mainly due
+ * @return		True if the resolution is successful or false else (mainly due
  * 				to lack of constraint).
  */
 

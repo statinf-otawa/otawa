@@ -125,7 +125,7 @@ protected:
 		if(!script)
 			throw option::OptionException("a script must be given !");
 
-		// fullfill the parameters
+		// fulfill the parameters
 		for(int i = 0; i < params.count(); i++) {
 			string param = params[i];
 			int idx = param.indexOf('=');

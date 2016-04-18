@@ -82,7 +82,7 @@ namespace otawa { namespace branch {
  * Several events are created and put on the edges according two
  * policies, taken (T) and not-taken(T).
  *
- * In the simpler case, ALWAYS_D, the occurence is:
+ * In the simpler case, ALWAYS_D, the occurrence is:
  * @li NEVER on the default prediction direction,
  * @li ALWAYS in the reverse case (bounded the edge occurrences).
  *
@@ -143,10 +143,10 @@ public:
 	}
 
 	/**
-	 * Compute the occurence type of the given edge.
-	 * @return	Occurence type.
+	 * Compute the occurrence type of the given edge.
+	 * @return	Occurrence type.
 	 */
-	etime::occurrence_t occurence(Edge *e) {
+	etime::occurrence_t occurrence(Edge *e) {
 		switch(CATEGORY(e->source())) {
 		case ALWAYS_D:
 			if(checkDefaultPred(e))
@@ -223,7 +223,7 @@ public:
 	virtual otawa::etime::kind_t kind(void) const { return otawa::etime::BRANCH; }
 	virtual ot::time cost(void) const { return m.cost(e); }
 	virtual etime::type_t type(void) const { return otawa::etime::EDGE; }
-	virtual etime::occurrence_t occurrence(void) const { return m.occurence(e); }
+	virtual etime::occurrence_t occurrence(void) const { return m.occurrence(e); }
 	virtual cstring name(void) const { return "branch misprediction"; }
 	virtual string detail(void) const { return _ << "midsprediction of " << inst() << " along edge " << e; }
 	virtual bool isEstimating(bool on) { return on; }

@@ -68,7 +68,7 @@ namespace otawa { namespace ets {
 
 /**
  * @fn bool AbstractCacheState::areDifferent(AbstractCacheState *other);
- * Return true if other is not equal whith this, else return false.
+ * Return true if other is not equal to this, false otherwise.
  * @param other	AbstractCacheState to compare.
  */
 bool AbstractCacheState::areDifferent(AbstractCacheState *other){

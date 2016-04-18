@@ -43,7 +43,7 @@ using namespace ipet;
 
 /**
  * This feature adds to the objective function of the ILP system the raw cost of the BHT behaviour
- * (that is the branch misprediction penalties multiplied by the number of occurences).
+ * (that is the branch misprediction penalties multiplied by the number of occurrences).
  *
  * @ingroup branch
  */

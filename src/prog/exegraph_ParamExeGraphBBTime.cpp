@@ -65,7 +65,7 @@ void ParamExeGraphBBTime::buildPrologueList(BasicBlock * bb,
 					    int capacity, 
 					    elm::genstruct::DLList<ExeSequence<ExeNode> *> * prologue_list,
 					    int depth) {
-  // prologues are recursively built by considering preceeding nodes in the CFG
+  // prologues are recursively built by considering preceding nodes in the CFG
   for(BasicBlock::EdgeIter edge = bb->ins(); edge; edge++) {
     Block * pred = edge->source();
     ExeSequence<ExeNode> * new_prologue = new ExeSequence<ExeNode>();

@@ -44,7 +44,7 @@ void LiExeGraphBBTime::buildPrologueList(
 	ExeSequence<ExeNode> * prologue,
 	int capacity,
 	elm::genstruct::DLList<ExeSequence<ExeNode> *> * prologue_list) {
-	// prologues are recursively built by considering preceeding nodes
+	// prologues are recursively built by considering preceding nodes
 	for(BasicBlock::InIterator edge(bb); edge; edge++) {
 		BasicBlock * pred = edge->source();
 		ExeSequence<ExeNode> * new_prologue = new ExeSequence<ExeNode>();

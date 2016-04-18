@@ -95,7 +95,7 @@ Exception::Exception(string message, elm::Exception& exn)
 
 
 /**
- * Null address. Please that the null address is not the adress 0 but an
+ * Null address. Please that the null address is not the address 0 but an
  * invalid address that can not be mapped to the platform memory :
  * <center>Address::null != Address(0x00000000)</center>
  */

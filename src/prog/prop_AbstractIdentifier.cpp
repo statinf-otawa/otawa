@@ -107,7 +107,7 @@ AbstractIdentifier::AbstractIdentifier(void)
 
 /**
  * Build a new identifier. Only one identifier may exists in the OTAWA with
- * a given name. If there is a name clash, the framework will immediatelly be
+ * a given name. If there is a name clash, the framework will immediately be
  * stopped.
  * @param name		Name of the identifier.
  * @param parent	Parent namespace.

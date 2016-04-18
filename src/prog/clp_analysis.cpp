@@ -2221,7 +2221,7 @@ public:
 
 	/**
 	 * Get the content of a register
-	 * @param state is the state from wich we want information
+	 * @param state is the state from which we want information
 	 * @param i is the identifier of the register
 	 * @return the value of the register
 	 */
@@ -2515,7 +2515,7 @@ static SilentFeature::Maker<Analysis> maker;
 SilentFeature FEATURE("otawa::clp::FEATURE", maker);
 
 /**
- * Put on a basic block, it's the CLP state at the begining of the block
+ * Put on a basic block, it's the CLP state at the beginning of the block
  * @ingroup clp
 */
 Identifier<clp::State> STATE_IN("otawa::clp::STATE_IN");

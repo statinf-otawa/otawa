@@ -33,7 +33,7 @@ namespace otawa {
  * Normal work of the Bag class is to perform a copy of the arguments passed
  * to the constructor and it will manage the new allocated array.
  * If a transfer of array is needed (the array has been allocated by another class
- * but the responsibility for releasing the array is transfered to the Bag),
+ * but the responsibility for releasing the array is transferred to the Bag),
  * the array must be passed through a small @ref Give object. @ref Give objects
  * may be built from a pair (array count, array pointer) but also from
  * a @ref elm::genstruct::Vector (in this case, the array is detached).
