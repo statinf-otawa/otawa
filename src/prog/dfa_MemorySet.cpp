@@ -455,7 +455,7 @@ MemorySet::t MemorySet::meet(t m1, t m2) {
 		// p    |------|      |---------|
 		// q               |----------|
 		// we ignore p1
-		if(p->topAddress() =< q->address()) /* whole p before q */
+		if(p->topAddress() <= q->address()) /* whole p before q */
 			continue;
 
 		// here p and q over-laps
