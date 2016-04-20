@@ -43,9 +43,14 @@ inline io::IntFormat hex2(int v) {
  * @param red	Red component.
  * @param green	Green component.
  * @param blue	Blue component.
+ * @param alpha	Alpha component.
  */
-Color::Color(comp_t red, comp_t green, comp_t blue) {
-	text = _ << '#' << hex2(red) << hex2(green) << hex2(blue);
+Color::Color(comp_t red, comp_t green, comp_t blue, int alpha) {
+	StringBuffer b;
+	b << '#' << hex2(red) << hex2(green) << hex2(blue);
+	if(alpha > 0)
+		b << hex2(alpha);
+	text = b.toString();
 }
 
 
@@ -171,6 +176,41 @@ class Plugin: public otawa::ProcessorPlugin {
 public:
 	Plugin(void): ProcessorPlugin("otawa::display", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
 };
+
+
+/**
+ * @class Text
+ * Special output class to generate the content of nodes. Support specially styling of text
+ * and URL associated to a vertex.
+ *
+ * In addition, this class supports operator "<<" as classic @ref elm::io::Output:
+ * operators working on "<<" for @ref elm::io::Output will work also for this class.
+ * @ingroup display
+ */
+
+
+/**
+ */
+Text::~Text(void) {
+}
+
+/**
+ * @fn io::Output& Text::out(void);
+ * Get the stream to output plain text.
+ * @return	Output stream.
+ */
+
+/**
+ * @fn void Text::tag(const Tag& tag);
+ * Output a tag to change text style or layout.
+ * @param tag	Tag to set.
+ */
+
+/**
+ * @fn void Text::setURL(const string& url);
+ * Set the URL for the full text.
+ * @param url	Full-text URL.
+ */
 
 } } // otawa::display
 

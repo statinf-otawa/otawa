@@ -95,14 +95,27 @@ void GraphVizNode::printOthersAttributes(elm::io::Output& out){ // called by Gra
 			return;
 		}
 
-		out << "label=\"";
+		if(HTML(this))
+			out << "label=<";
+		else
+			out << "label=\"";
 		if(_shapeAcceptsBody){
 			out << "{ " << quoteSpecials(_title, HTML(this));
 			if(_hasBody){
-				out << "|\\l" << processSeparations(quoteSpecials(_body, HTML(this))) << "\\l";
+				out << "|";
+				if(!HTML(this))
+					out << "\\l";
+				out << processSeparations(quoteSpecials(_body, HTML(this)));
+				if(!HTML(this))
+					out << "\\l";
 			}
 			if(props.length() > 0){
-				out << "|\\l" << quoteSpecials(props, HTML(this)) << "\\l";
+				out << "|";
+				if(!HTML(this))
+					out << "\\l";
+				out << quoteSpecials(props, HTML(this));
+				if(!HTML(this))
+					out << "\\l";
 			}
 			out << '}';
 		}
@@ -117,7 +130,10 @@ void GraphVizNode::printOthersAttributes(elm::io::Output& out){ // called by Gra
 				out << quoteSpecials(props, HTML(this)) << "\\l";
 			}
 		}
-		out << '"';
+		if(HTML(this))
+			out << '>';
+		else
+			out << '"';
 	}
 }
 

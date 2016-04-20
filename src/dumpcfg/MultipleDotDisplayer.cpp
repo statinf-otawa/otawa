@@ -31,24 +31,11 @@
 using namespace elm;
 using namespace otawa;
 
-template <class T>
-class Tag {
+class Escape {
 public:
-	inline Tag(const T& v): val(v) { }
-protected:
-	T val;
+	typedef string t;
+	static void print(io::Output& out, const string& s) { xom::String(&s).escape(out); }
 };
-
-template <class T>
-io::Output& operator<<(io::Output& out, const Tag<T>& p) { p.print(out); return out; }
-
-
-class Escape: public Tag<string> {
-public:
-	inline Escape(string s): Tag<string>(s) { }
-	void print(io::Output& out) { xom::String(&val).escape(out); }
-};
-
 
 class MultipleDecorator {
 public:
@@ -58,13 +45,14 @@ public:
 	}
 
 	static void decorate(const display::CFGAdapter& g, const display::CFGAdapter::Vertex& v, Output &content, display::ShapeStyle &style) {
+		style.shape = display::ShapeStyle::SHAPE_MRECORD;
 		if(v.b->isBasic()) {
 			if(html)
-				content << "<B>" << Escape(_ << v.b) << "</B>" << " (" << v.b->address() << ")";
+				content << "<B>" << io::Tag<Escape>(_ << v.b) << "</B>";
 			else
 				content << v.b << " (" << v.b->address() << ")";
 			if(display_assembly) {
-				content << "---\n";
+				content << "\n---\n";
 				BasicBlock *bb = v.b->toBasic();
 				cstring file;
 				int line = 0;
@@ -77,7 +65,7 @@ public:
 							file = (*src).fst;
 							line = (*src).snd;
 							if(html)
-								content << "<FONT COLOR=\"green\">" << Escape(file) << ":" << line << "</FONT>" << io::endl;
+								content << "<FONT COLOR=\"green\">" << io::Tag<Escape>(file) << ":" << line << "</FONT>" << io::endl;
 							else
 								content << file << ":" << line << io::endl;
 						}
@@ -164,6 +152,7 @@ void MultipleDotDisplayer::processWorkSpace(WorkSpace *ws) {
 		else
 			drawer.path = dir / string(_ << cfg->index() << ".dot");
 		drawer.html = true;
+		drawer.default_vertex.shape = display::ShapeStyle::SHAPE_MRECORD;
 
 		// perform the draw
 		drawer.kind = display::OUTPUT_RAW_DOT;

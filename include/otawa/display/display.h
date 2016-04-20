@@ -22,6 +22,7 @@
 #ifndef OTAWA_DISPLAY_DISPLAY_H
 #define OTAWA_DISPLAY_DISPLAY_H
 
+#include <elm/io.h>
 #include <elm/string.h>
 
 namespace otawa { namespace display {
@@ -34,7 +35,7 @@ public:
 	typedef t::uint8 comp_t;
 	
 	inline Color(void) { }
-	Color(comp_t red, comp_t green, comp_t blue);
+	Color(comp_t red, comp_t green, comp_t blue, int alpha = -1);
 	Color(t::uint32 color);
 	Color(string name);
 	inline const string& asText(void) const { return text; }
@@ -121,6 +122,46 @@ public:
 	TextStyle text;
 	bool raw;
 };
+
+typedef enum {
+	NONE = 0,
+	BOLD = 1,
+	ITALIC = 2,
+	UNDERLINE = 3,
+	SUPER = 4,
+	SUB = 5,
+	TABLE = 6,
+	ROW = 7,
+	CELL = 8,
+	TCOLOR = 9
+} text_style_t;
+
+class Tag {
+public:
+	inline Tag(text_style_t style, bool end): _end(end), _style(style) { }
+	inline Tag(const Color& color, bool end): _end(end), _style(TCOLOR), _color(color) { }
+private:
+	bool _end;
+	text_style_t _style;
+	Color _color;
+};
+
+class Text {
+public:
+	virtual ~Text(void);
+	virtual io::Output& out(void) = 0;
+	virtual void tag(const Tag& tag) = 0;
+	virtual void setURL(const string& url) = 0;
+};
+
+inline Tag begin(text_style_t style) { return Tag(style, false); }
+inline Tag begin(const Color& color) { return Tag(color, false); }
+inline Tag end(text_style_t style) { return Tag(style, true); }
+inline Tag end(const Color& color) { return Tag(color, true); }
+
+inline Text& operator<<(Text& out, const Tag& t) { out.tag(t); return out; }
+template <class T>
+inline Text& operator<<(Text& out, const T& v) { out.out() << v; return out; }
 
 } } // otawa::display
 

@@ -38,10 +38,14 @@ String quoteSpecials(String str, bool html){
 	for(int i = 0; i < str.length(); i++)
 		switch(str[i]) {
 		case '\n':
-			buf << "\\l";
+			if(html)
+				buf << "<br align=\"left\"/>";
+			else
+				buf << "\\l";
 			break;
 		case '<':
 		case '>':
+		case '"':
 			if(html) {
 				buf << str[i];
 				break;
@@ -50,7 +54,6 @@ String quoteSpecials(String str, bool html){
 		case '}':
 		case '|':
 		case  '\\':
-		case '"':
 			buf << '\\';
 			/* no break */
 		default:
