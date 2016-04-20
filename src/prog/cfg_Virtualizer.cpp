@@ -208,7 +208,7 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 
 	// preparation
 	genstruct::HashTable<Block *, Block *> bmap;
-	call_t call = { stack, cfg, 0 };
+	call_t call = { stack, cfg, &maker };
 	if(logFor(LOG_CFG))
 		log << "\tbegin inlining " << cfg->label() << io::endl;
 	if(path(INLINING_POLICY, cfg->first()).exists())
@@ -256,23 +256,36 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 				maker.add(nsb);
 			else if(isInlined(cfg, local_inlining, path)) {
 
-				// prepare context
-				Inst *calli = sb->callInst();
-				if(cfg->type() == CFG::SUBPROG)
-					path.push(ContextualStep(ContextualStep::FUNCTION, cfg->address()));
-				if(calli)
-					path.push(ContextualStep(ContextualStep::CALL, calli->address()));
+				// recursive call case
+				bool rec = false;
+				for(struct call_t *c = &call; c; c = c->back)
+					if(c->cfg == sb->callee()) {
+						maker.call(nsb, *c->maker);
+						rec = true;
+						break;
+					}
 
-				// build CFG
-				CFGMaker& cmaker = newMaker(sb->callee()->first());
-				make(&call, sb->callee(), cmaker, local_inlining, path);
-				maker.call(nsb, cmaker);
+				// non-recursive call
+				if(!rec) {
 
-				// pope context
-				if(calli)
-					path.pop();
-				if(cfg->type() == CFG::SUBPROG)
-					path.pop();
+					// prepare context
+					Inst *calli = sb->callInst();
+					if(cfg->type() == CFG::SUBPROG)
+						path.push(ContextualStep(ContextualStep::FUNCTION, cfg->address()));
+					if(calli)
+						path.push(ContextualStep(ContextualStep::CALL, calli->address()));
+
+					// build CFG
+					CFGMaker& cmaker = newMaker(sb->callee()->first());
+					make(&call, sb->callee(), cmaker, local_inlining, path);
+					maker.call(nsb, cmaker);
+
+					// pop context
+					if(calli)
+						path.pop();
+					if(cfg->type() == CFG::SUBPROG)
+						path.pop();
+				}
 
 			}
 			else {

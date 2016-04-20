@@ -187,7 +187,7 @@ public:
 	option::BoolOption simple;
 	option::BoolOption disassemble;
 	option::BoolOption dot;
-	option::SwitchOption source, xml, all, virt, mult;
+	option::SwitchOption source, xml, mult;
 	option::ValueOption<string> out;
 
 	Displayer *displayer;
@@ -239,8 +239,6 @@ DumpCFG::DumpCFG(void):
 	dot(*this, 'D', "dot", "Select DOT output.", false),
 	source(*this, option::short_cmd, 's', option::cmd, "--source", option::description, "enable source debugging information output", option::def, false, option::end),
 	xml(option::SwitchOption::Make(*this).cmd("-x").cmd("--xml").description("output the CFG as an XML file")),
-	all(option::SwitchOption::Make(*this).cmd("-R").cmd("--recursive").description("display the current and called CFGs")),
-	virt(option::SwitchOption::Make(*this).cmd("-V").cmd("--virtualize").description("virtualize the called CFG, i.e. duplicate them at each call site")),
 	mult(option::SwitchOption::Make(*this).cmd("-M").cmd("--multiple-dot").description("output multiple .dot file (one for each CFG) linked with URLs")),
 	out(option::ValueOption<string>::Make(*this).cmd("-o").cmd("--output").description("select the output file or directory (-M option)")),
 
@@ -254,11 +252,6 @@ DumpCFG::DumpCFG(void):
  * @param name	Name of the function to process.
  */
 void DumpCFG::dump(const string& name, PropList& props) {
-	/*require(COLLECTED_CFG_FEATURE);
-	const CFGCollection& coll = **INVOLVED_CFGS(workspace());
-	CFG *current_inline = 0;
-	WorkSpace *my_ws = new WorkSpace(workspace());
-	ENTRY_CFG(my_ws) = cfg;*/
 
 	// if required, build the delayed
 	/* TODO
@@ -266,39 +259,33 @@ void DumpCFG::dump(const string& name, PropList& props) {
 	|| workspace()->isProvided(DELAYED2_FEATURE))
 		require(DELAYED_CFG_FEATURE);*/
 
-	// if required, virtualize
-	/*	TODO
-	 if(inline_calls)
-		require(VIRTUALIZED_CFG_FEATURE);*/
-
 	// get the CFG
 	require(COLLECTED_CFG_FEATURE);
-	if(virt)
-		require(VIRTUALIZED_CFG_FEATURE);
-	//const CFGCollection *coll = INVOLVED_CFGS(workspace());
-	//CFG *vcfg = (*coll)[0];
-
-	// set options
-	if(display_assembly)
-		Displayer::DISASSEMBLE(props) = display_assembly;
-	if(source)
-		Displayer::SOURCE(props) = source;
-	if(all)
-		Displayer::ALL(props) = all;
-	if(out)
-		Displayer::OUT(props) = out;
 
 	// XML case (will become the generic case)
-	/*if(xml) {		TODO
-		//XMLDisplayer dis;
+	if(xml) {
 		DynProcessor dis("otawa::cfgio::Output");
-		dis.process(my_ws);
+		dis.process(workspace());
 	}
 
 	// Dump the CFG
-	else {*/
-	displayer->process(workspace(), props);
-	//}
+	else {
+
+		if(inline_calls)
+			require(VIRTUALIZED_CFG_FEATURE);
+
+		// set options
+		if(display_assembly)
+			Displayer::DISASSEMBLE(props) = display_assembly;
+		if(source)
+			Displayer::SOURCE(props) = source;
+		if(inline_calls)
+			Displayer::ALL(props) = inline_calls;
+		if(out)
+			Displayer::OUT(props) = out;
+
+		displayer->process(workspace(), props);
+	}
 }
 
 
