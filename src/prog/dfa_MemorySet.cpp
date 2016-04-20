@@ -439,11 +439,78 @@ MemorySet::t MemorySet::meet(t m1, t m2) {
 	node_t *r = 0;
 	node_t **n = &r;
 
-	while(p && q) {
+#ifndef USE_OLD_MEMORY_SET_MEET
+	for(p = m1; p; p = p->next) {
+		// p                               |------|
+		// q   |-------|     |---------|     |----------|
+		//        q1              q2              q3
+		// we ignore q1 and q2
+		while(q && p->address() > q->topAddress()) /* whole p after q */
+			q = q->next;
 
+		if(!q) // no more overlapping
+			break;
+
+		//         p1             p2
+		// p    |------|      |---------|
+		// q               |----------|
+		// we ignore p1
+		if(p->topAddress() < q->address()) /* whole p before q */
+			continue;
+
+		// here p and q over-laps
+		if(p->topAddress() > q->topAddress()) {
+			while(q && p->topAddress() > q->topAddress()) {
+
+				// p      |---------------------------------------------|
+				// q   |-----|
+				if(p->address() > q->address()) {
+					*n = allocate(MemArea(p->address(), q->topAddress()));
+					n = &((*n)->next);
+				}
+				// p      |---------------------------------------------|
+				// q           |-----|
+				else {
+					*n = allocate(q->area);
+					n = &((*n)->next);
+				}
+				q = q -> next;
+			}
+
+			// when reaching this position here
+			// p   |--------------------------------|
+			// q                                 |------|
+			if(q && q->address() < p->topAddress()) {
+				*n = allocate(MemArea(q->address(), p->topAddress()));
+				n = &((*n)->next);
+			}
+		}
+		else {
+			// p      |-----------|
+			// q   |------------------|
+			if(p->address() > q->address()) {
+				*n = allocate(p->area);
+				n = &((*n)->next);
+			}
+			else {
+				// p    |-----------|
+				// q        |---------------|
+				*n = allocate(MemArea(q->address(), p->topAddress()));
+				n = &((*n)->next);
+			}
+		}
+	}
+#else
+	while(p && q) {
 		// ignore non-overlapping blocks
+		// this does not work with
+		// p     |-------------|
+		// q  |---------------------|
 		if(p->topAddress() < q->topAddress())
 			p = p->next;
+		// this does not work with
+		// p     |-------------|
+		// q         |-----|
 		else if(q->topAddress() < p->topAddress())
 			q = q->next;
 
@@ -451,10 +518,15 @@ MemorySet::t MemorySet::meet(t m1, t m2) {
 		else {
 
 			// select base node
-			if(p->address() > q->address())
+			if(p->address() > q->address()) {
+				elm::cout << "haha" << io::endl;
 				swap(p, q);
+			}
 
 			// consume intersecting nodes
+			// this does not work with
+			// p   |-------------|
+			// q        |---|
 			while(q && q->topAddress() <= p->topAddress()) {
 				*n = allocate(q->area);
 				n = &((*n)->next);
@@ -462,13 +534,14 @@ MemorySet::t MemorySet::meet(t m1, t m2) {
 			}
 
 			// last one
-			if(q->address() < p->topAddress()) {
+			if(q && q->address() < p->topAddress()) { // if(q->address() < p->topAddress()) {
 				*n = allocate(MemArea(q->address(), p->topAddress()));
 				n = &((*n)->next);
 			}
 			p = p->next;
 		}
 	}
+#endif
 
 	*n = 0;
 	return POSTCOND(r, ordered(r));
