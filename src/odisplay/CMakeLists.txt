@@ -7,7 +7,9 @@ set(libodisplay_la_SOURCES
 	"display.cpp"
 	"display_AbstractDrawer.cpp"
 	"display_CFGAdapter.cpp"
+	"display_CFGDisplayer.cpp"
 	"display_CFGOutput.cpp"
+	"display_Displayer.cpp"
 	"display_GenDrawer.cpp"
 	"display_Graph.cpp"
 	"display_graphviz.cpp"
@@ -21,7 +23,7 @@ set(libodisplay_la_SOURCES
 	"graphviz_quote.cpp"
 	"ILPSystemDisplayer.cpp"
 	"utility.cpp"
-	)
+)
 
 include_directories(".")
 

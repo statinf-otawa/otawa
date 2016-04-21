@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	display classes interface
  *
  *	This file is part of OTAWA
@@ -72,10 +71,9 @@ public:
 		DASHED
 	} style_t;
 	
-	inline LineStyle(void): weight(0), style(PLAIN) { }
+	inline LineStyle(void): style(PLAIN) { }
 
 	Color color;
-	int weight;
 	style_t style;
 };
 
@@ -88,15 +86,15 @@ public:
 		FILL_SOLID
 	} fill_t;
 	
-	inline FillStyle(void): color(0xffffff), fill(FILL_NONE) { }
+	inline FillStyle(void): fill(FILL_NONE) { }
 	
 	Color color;
 	fill_t fill;
 };
 
 
-// ShapeStyle class
-class ShapeStyle {
+// VertexStyle class
+class VertexStyle {
 public:
 	typedef enum shape_t {
 		SHAPE_NONE = 0,
@@ -114,14 +112,37 @@ public:
 		SHAPE_DIAMOND
 	} shape_t;
 
-	inline ShapeStyle(void): shape(SHAPE_RECORD), raw(false) { }
+	inline VertexStyle(void): shape(SHAPE_RECORD), margin(-1), raw(false) { }
 
 	shape_t shape;
 	FillStyle fill;
 	LineStyle line;
 	TextStyle text;
+	int margin;
 	bool raw;
 };
+typedef VertexStyle ShapeStyle;
+
+// EdgeStyle class
+class EdgeStyle {
+public:
+	TextStyle text;
+	LineStyle line;
+};
+
+// GraphStyle class
+class GraphStyle {
+public:
+	TextStyle text;
+};
+
+typedef enum layout_t {
+	MAPPED = 0,
+	SPRING = 1,
+	RADIAL = 2,
+	CIRCULAR = 3
+} layout_t;
+
 
 typedef enum {
 	NONE = 0,
@@ -132,36 +153,72 @@ typedef enum {
 	SUB = 5,
 	TABLE = 6,
 	ROW = 7,
-	CELL = 8,
-	TCOLOR = 9
+	CELL = 8
 } text_style_t;
+
+template <class T>
+class Begin {
+public:
+	inline Begin(const T& v): value(v) { }
+	T value;
+};
+
+template <class T>
+class End {
+public:
+	inline End(const T& v): value(v) { }
+	T value;
+};
+
+template <class T> Begin<T> begin(const T& v) { return Begin<T>(v); }
+template <class T> End<T> end(const T& v) { return End<T>(v); }
+
+typedef enum {
+	BR,
+	BR_LEFT,
+	BR_CENTER,
+	BR_RIGHT,
+	HR
+} tag_t;
 
 class Tag {
 public:
-	inline Tag(text_style_t style, bool end): _end(end), _style(style) { }
-	inline Tag(const Color& color, bool end): _end(end), _style(TCOLOR), _color(color) { }
-private:
-	bool _end;
-	text_style_t _style;
-	Color _color;
+	inline Tag(tag_t _tag): tag(_tag) { }
+	tag_t tag;
 };
+extern const Tag br, left, center, right, hr;
 
 class Text {
 public:
 	virtual ~Text(void);
 	virtual io::Output& out(void) = 0;
-	virtual void tag(const Tag& tag) = 0;
+	virtual void tag(text_style_t style, bool end) = 0;
+	virtual void color(const Color& color, bool end) = 0;
 	virtual void setURL(const string& url) = 0;
+	virtual void tag(const Tag& nl) = 0;
 };
 
-inline Tag begin(text_style_t style) { return Tag(style, false); }
-inline Tag begin(const Color& color) { return Tag(color, false); }
-inline Tag end(text_style_t style) { return Tag(style, true); }
-inline Tag end(const Color& color) { return Tag(color, true); }
-
-inline Text& operator<<(Text& out, const Tag& t) { out.tag(t); return out; }
+inline Text& operator<<(Text& out, const Begin<text_style_t>& s) { out.tag(s.value, false); return out; }
+inline Text& operator<<(Text& out, const End<text_style_t>& s) { out.tag(s.value, true); return out; }
+inline Text& operator<<(Text& out, const Begin<Color>& c) { out.color(c.value, false); return out; }
+inline Text& operator<<(Text& out, const End<Color>& c) { out.color(c.value, true); return out; }
+inline Text& operator<<(Text& out, const Tag& tag) { out.tag(tag); return out; }
 template <class T>
 inline Text& operator<<(Text& out, const T& v) { out.out() << v; return out; }
+
+// Kind class
+typedef enum output_mode_t {
+	OUTPUT_ANY = 0,
+	OUTPUT_PS,
+	OUTPUT_PDF,
+	OUTPUT_PNG,
+	OUTPUT_GIF,
+	OUTPUT_JPG,
+	OUTPUT_SVG,
+	OUTPUT_DOT,
+	OUTPUT_RAW_DOT
+} output_mode_t;
+typedef output_mode_t kind_t;		// deprecated
 
 } } // otawa::display
 

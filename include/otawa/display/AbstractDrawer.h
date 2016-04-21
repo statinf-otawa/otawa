@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	AbstractDrawer class interface
  *
  *	This file is part of OTAWA

@@ -3,5 +3,6 @@
 
 #define OTAWA_VERSION	"@OTAWA_VERSION@"
 #define OTAWA_DATE		"@OTAWA_DATE@"
+#define DOT				"@DOT@"
 
 #endif	// OTAWA_CONFIG_H

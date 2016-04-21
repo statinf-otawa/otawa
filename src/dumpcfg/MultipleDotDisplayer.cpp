@@ -24,91 +24,27 @@
 #include <elm/sys/System.h>
 #include <elm/xom/String.h>
 #include <otawa/cfg.h>
-#include <otawa/display/CFGAdapter.h>
-#include <otawa/display/GenDrawer.h>
+#include <otawa/display/CFGDisplayer.h>
 #include <otawa/program.h>
 
 using namespace elm;
 using namespace otawa;
 
-class Escape {
+class MultipleDotDecorator: public display::CFGDecorator {
 public:
-	typedef string t;
-	static void print(io::Output& out, const string& s) { xom::String(&s).escape(out); }
-};
-
-class MultipleDecorator {
-public:
-
-	static void decorate(const display::CFGAdapter& g, Output &caption, display::TextStyle &text, display::FillStyle &fill) {
-		caption << g.cfg->label() << " function";
-	}
-
-	static void decorate(const display::CFGAdapter& g, const display::CFGAdapter::Vertex& v, Output &content, display::ShapeStyle &style) {
-		style.shape = display::ShapeStyle::SHAPE_MRECORD;
-		if(v.b->isBasic()) {
-			if(html)
-				content << "<B>" << io::Tag<Escape>(_ << v.b) << "</B>";
+	MultipleDotDecorator(WorkSpace *ws): display::CFGDecorator(ws) { }
+protected:
+	virtual void displaySynthBlock(CFG *g, SynthBlock *b, display::Text& content, display::VertexStyle& style) const {
+		display::CFGDecorator::displaySynthBlock(g, b, content, style);
+		if(b->callee()) {
+			if(!b->callee()->index())
+				content.setURL("index.dot");
 			else
-				content << v.b << " (" << v.b->address() << ")";
-			if(display_assembly) {
-				content << "\n---\n";
-				BasicBlock *bb = v.b->toBasic();
-				cstring file;
-				int line = 0;
-				for(BasicBlock::InstIter i = bb->insts(); i; i++) {
-
-					// display source line
-					if(source_info) {
-						Option<Pair<cstring, int> > src = proc->getSourceLine(i->address());
-						if(src && ((*src).fst != file || (*src).snd != line)) {
-							file = (*src).fst;
-							line = (*src).snd;
-							if(html)
-								content << "<FONT COLOR=\"green\">" << io::Tag<Escape>(file) << ":" << line << "</FONT>" << io::endl;
-							else
-								content << file << ":" << line << io::endl;
-						}
-					}
-
-					// display labels
-					for(Identifier<Symbol *>::Getter l(i, SYMBOL); l; l++) {
-						if(html)
-							content << "<FONT COLOR =\"blue\">" << l->name() << ":" << "</FONT>" << "\n";
-						else
-							content << l->name() << ":" << "\n";
-					}
-
-					// display instruction
-					content << ot::address(i->address()) << "  " << *i << io::endl;
-				}
-			}
+				content.setURL(_ << b->callee()->index() << ".dot");
 		}
-		else
-			content << v.b;
 	}
 
-	static void decorate(const display::CFGAdapter& graph, const display::CFGAdapter::Edge& e, Output &label, display::TextStyle &text, display::LineStyle &line) {
-		if(e.edge->source()->isEntry()
-		|| e.edge->sink()->isExit()
-		|| e.edge->source()->isSynth()
-		|| e.edge->sink()->isSynth())
-			line.style = display::LineStyle::DASHED;
-		else if(e.edge->isTaken())
-			label << "taken";
-	}
-
-	static Process *proc;
-	static bool display_assembly;
-	static bool source_info;
-	static bool html;
 };
-
-Process *MultipleDecorator::proc;
-bool MultipleDecorator::display_assembly;
-bool MultipleDecorator::source_info;
-bool MultipleDecorator::html;
-
 
 /**
  */
@@ -135,27 +71,24 @@ void MultipleDotDisplayer::setup(WorkSpace *ws) {
 void MultipleDotDisplayer::processWorkSpace(WorkSpace *ws) {
 	const CFGCollection& coll = **otawa::INVOLVED_CFGS(ws);
 
+	// configuration of decorator
+	MultipleDotDecorator decor(ws);
+	decor.display_source_line = source_info;
+	decor.display_assembly = display_assembly;
+
+	// get the provider
+	display::Provider *prov = display::Provider::get(display::OUTPUT_RAW_DOT);
+	if(!prov)
+		throw ProcessorException(*this, "no provider of dot output");
 
 	for(CFGCollection::Iterator cfg(coll); cfg; cfg++) {
-
-		// configure decorator
-		MultipleDecorator::source_info = source_info;
-		MultipleDecorator::display_assembly = display_assembly;
-		MultipleDecorator::html = true;
-		MultipleDecorator::proc = ws->process();
-
-		// configure the drawer
-		display::CFGAdapter cfga(cfg, ws);
-		display::GenDrawer<display::CFGAdapter, MultipleDecorator> drawer(cfga);
+		display::DisplayedCFG dcfg(**cfg);
+		display::Displayer *disp = prov->make(dcfg, decor);
 		if(cfg->index() == 0)
-			drawer.path = dir / "index.dot";
+			disp->setPath(dir / "index.dot");
 		else
-			drawer.path = dir / string(_ << cfg->index() << ".dot");
-		drawer.html = true;
-		drawer.default_vertex.shape = display::ShapeStyle::SHAPE_MRECORD;
-
-		// perform the draw
-		drawer.kind = display::OUTPUT_RAW_DOT;
-		drawer.draw();
+			disp->setPath(dir / string(_ << cfg->index() << ".dot"));
+		disp->process();
+		delete disp;
 	}
 }

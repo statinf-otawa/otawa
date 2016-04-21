@@ -121,6 +121,8 @@ void ProcessorPlugin::init(void) {
 	plugger.addPath(path);
 	path = elm::system::Path::home().append(".otawa/proc");
 	plugger.addPath(path);
+	path = MANAGER.prefixPath() / "lib/otawa";
+	plugger.addPath(path);
 	path = MANAGER.prefixPath() / "lib/otawa/proc";
 	plugger.addPath(path);
 	path = Path(CSTR(PROC_PATHS));

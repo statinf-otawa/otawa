@@ -29,20 +29,6 @@ namespace otawa { namespace display {
 using namespace elm;
 
 
-// Kind class
-typedef enum kind_t {
-	OUTPUT_ANY = 0,
-	OUTPUT_PS,
-	OUTPUT_PDF,
-	OUTPUT_PNG,
-	OUTPUT_GIF,
-	OUTPUT_JPG,
-	OUTPUT_SVG,
-	OUTPUT_DOT,
-	OUTPUT_RAW_DOT
-} kind_t;
-
-
 // Driver class
 class Driver {
 public:

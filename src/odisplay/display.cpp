@@ -212,6 +212,8 @@ Text::~Text(void) {
  * @param url	Full-text URL.
  */
 
+const Tag br(BR), left(BR_LEFT), center(BR_CENTER), right(BR_RIGHT), hr(HR);
+
 } } // otawa::display
 
 otawa::display::Plugin otawa_display;

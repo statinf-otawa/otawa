@@ -30,6 +30,15 @@ add_subdirectory(odec)
 add_subdirectory(odisplay)
 add_subdirectory(dcache)
 
+# graphviz
+find_program(DOT "dot" HINTS ${GRAPHVIZ_PATH}/bin)
+if(DOT)
+	message(STATUS "dot found at ${DOT}")
+	add_subdirectory(graphviz)
+else()
+	message(STATUS "dot not found")
+endif()
+
 
 # loader plugins
 if(ARM_LIB)

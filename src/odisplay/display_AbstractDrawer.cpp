@@ -44,8 +44,8 @@ static void setTextStyle(PropList *props, const TextStyle& style) {
 static void setLineStyle(PropList *props, const LineStyle& style) {
 	if(style.color.asText())
 		COLOR(props) = style.color.asText().toCString();
-	if(style.weight)
-		WEIGHT(props) = style.weight;
+	/*if(style.weight)
+		WEIGHT(props) = style.weight;*/
 	switch(style.style) {
 	case LineStyle::HIDDEN:
 		STYLE(props) = STYLE_NONE;
