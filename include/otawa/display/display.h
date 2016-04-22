@@ -216,7 +216,8 @@ typedef enum output_mode_t {
 	OUTPUT_JPG,
 	OUTPUT_SVG,
 	OUTPUT_DOT,
-	OUTPUT_RAW_DOT
+	OUTPUT_RAW_DOT,
+	OUTPUT_VIEW
 } output_mode_t;
 typedef output_mode_t kind_t;		// deprecated
 

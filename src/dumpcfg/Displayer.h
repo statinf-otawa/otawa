@@ -20,12 +20,14 @@ public:
 	static Identifier<bool> SOURCE;
 	static Identifier<bool> ALL;
 	static Identifier<string> OUT;
+	static Identifier<bool> VIEW;
 	Displayer(cstring name, const Version version);
 protected:
 	virtual void configure(const PropList& props);
 	bool display_assembly;
 	bool source_info;
 	bool display_all;
+	bool perform_view;
 	sys::Path out;
 };
 

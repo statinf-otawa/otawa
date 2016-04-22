@@ -246,13 +246,6 @@ endif(DOXYGEN AND WIN32)
 ###########################
 
 
-# build configuration file
-configure_file (
-  "${PROJECT_SOURCE_DIR}/config.in"
-  "${PROJECT_SOURCE_DIR}/config.h"
-)
-
-
 # linking to elm and gel libraries
 # linking is hardcoded, but libraries will be searched for
 # in all directories in PATH
@@ -271,6 +264,59 @@ else()
 endif()
 
 
+# look for graphviz
+find_program(DOT "dot" HINTS ${GRAPHVIZ_PATH}/bin)
+if(DOT)
+	message(STATUS "GraphViz dot found at ${DOT}")
+else()
+	message(STATUS "GraphViz dot not found")
+endif()
+
+# look for python
+find_package(PythonInterp)
+
+# look for pygtk
+if(PYTHONINTERP_FOUND)
+	execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import pygtk" RESULT_VARIABLE res)
+	if("${res}" EQUAL "0")
+		set(PYGTK ON)
+		message(STATUS "pygtk found")
+	else()
+		set(PYGTK OFF)
+		message(STATUS "pygtk not found")
+	endif()
+endif()
+
+
+# enabled otawa-xdot?
+if(DOT AND PYGTK)
+	message(STATUS "otawa-xdot.py can be installed.")
+	set(XDOT_ENABLED ON)
+else()
+	message(STATUS "otawa-xdot.py cannot be installed.")
+	set(XDOT_ENABLED OFF)
+endif()
+
+
+# look for system view
+if(UNIX)
+	find_program(XDG_OPEN "xdg-open")
+	if(XDG_OPEN)
+		set(SYSTEM_VIEW_ENABLED ON)
+		set(SYSTEM_VIEW ${XDG_OPEN})
+	else()
+		set(SYSTEM_VIEW_ENABLED OFF)
+	endif()
+else()
+	set(SYSTEM_VIEW_ENABLED OFF)
+endif()
+if(SYSTEM_VIEW_ENABLED)
+	message(STATUS "system view tool found (${SYSTEM_VIEW})")
+else()
+	message(STATUS "no system view tool found")
+endif()
+
+
 # add subdirectories
 add_subdirectory(src)
 add_subdirectory(doc)
@@ -286,6 +332,12 @@ if(OTAWA_TEST)
 	add_subdirectory(test)
 endif()
 
+
+# build configuration file
+configure_file (
+  "${PROJECT_SOURCE_DIR}/config.in"
+  "${PROJECT_SOURCE_DIR}/config.h"
+)
 
 
 # handle autodoc

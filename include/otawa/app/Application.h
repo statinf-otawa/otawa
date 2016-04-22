@@ -47,6 +47,7 @@ private:
 // Application class
 class Application: public option::Manager {
 public:
+	Application(const Make& make);
 	Application(
 		cstring _program,
 		Version _version = Version::ZERO,

@@ -19,12 +19,15 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "config.h"
 #include "MultipleDotDisplayer.h"
 
+#include <elm/sys/ProcessBuilder.h>
 #include <elm/sys/System.h>
 #include <elm/xom/String.h>
 #include <otawa/cfg.h>
 #include <otawa/display/CFGDisplayer.h>
+#include <otawa/manager.h>
 #include <otawa/program.h>
 
 using namespace elm;
@@ -81,6 +84,7 @@ void MultipleDotDisplayer::processWorkSpace(WorkSpace *ws) {
 	if(!prov)
 		throw ProcessorException(*this, "no provider of dot output");
 
+	// generate the CFGs
 	for(CFGCollection::Iterator cfg(coll); cfg; cfg++) {
 		display::DisplayedCFG dcfg(**cfg);
 		display::Displayer *disp = prov->make(dcfg, decor);
@@ -90,5 +94,30 @@ void MultipleDotDisplayer::processWorkSpace(WorkSpace *ws) {
 			disp->setPath(dir / string(_ << cfg->index() << ".dot"));
 		disp->process();
 		delete disp;
+	}
+
+	// if requested, launch the viewer
+	if(perform_view) {
+#		if defined(XDOT_ENABLED) || defined(SYSTEM_VIEW_ENABLED)
+#			ifdef XDOT_ENABLED
+				sys::Path command = MANAGER.prefixPath() / "bin" / "otawa-xdot.py";
+#			else
+				sys::Path command = SYSTEM_VIEW;
+#			endif
+			sys::ProcessBuilder builder(command);
+			builder += dir / "index.dot";
+			builder.setNewSession(true);
+			try {
+				sys::Process *proc = builder.run();
+				//proc->wait();
+				delete proc;
+			}
+			catch(sys::SystemException& e) {
+				cerr << "ERROR: cannot launch otawa-xdot: " << e << io::endl;
+			}
+#	else
+		warn("neither otawa-xdot, nor system viewer are available to view the graph!");
+#	endif
+
 	}
 }

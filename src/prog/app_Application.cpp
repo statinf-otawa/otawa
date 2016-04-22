@@ -236,12 +236,42 @@ void LogOption::process(String arg) {
 
 
 /**
+ * Build an application using the new Manager make-based approach
+ * (look ELM documentation for more detail). To build the application,
+ * you have just to do something like:
+ * @code
+ * class MyApllication: public Application {
+ * public:
+ * 		MyApplication(void): Application(Make("my_program", Version(1, 0, 3))
+ * 			.description("this is my application")
+ * 			.author("me <me@here.com")) { }
+ * };
+ * @endcode
+ *
+ * @param make	Maker instance to use.
+ */
+Application::Application(const Make& make):
+	Manager(make),
+	help(*this, 'h', "help", "display this help", false),
+	verbose(*this, 'v', "verbose", "verbose display of the process (same as --log bb)", false),
+	sets(*this, option::cmd, "--add-prop", option::description, "set a configuration property", option::arg_desc, "ID=VALUE", option::end),
+	params(*this, option::cmd, "--load-param", option::description, "add a load parameter", option::arg_desc, "ID=VALUE", option::end),
+	ff(*this, option::cmd, "--flowfacts", option::cmd, "-f", option::description, "select the flowfacts to load", option::arg_desc, "PATH", option::end),
+	log_level(*this),
+	props2(0),
+	result(0),
+	ws(0)
+{ }
+
+
+/**
  * Build the application.
  * @param _program		Program name.
  * @param _version		Current version (optional).
  * @param _description	Description of the application (optional).
  * @param _author		Author identification.
  * @param _copyright	Applied copyright.
+ * @deprecated
  */
 Application::Application(
 	cstring _program,

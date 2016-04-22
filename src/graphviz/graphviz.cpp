@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include "config.h"
 #include <elm/sys/ProcessBuilder.h>
 #include <elm/sys/System.h>
 #include <otawa/display/Displayer.h>
@@ -387,6 +388,9 @@ public:
 		case display::OUTPUT_SVG:
 		case display::OUTPUT_DOT:
 		case display::OUTPUT_RAW_DOT:
+#		if defined(XDOT_ENABLED) or defined(SYSTEM_VIEW_ENABLED)
+			case display::OUTPUT_VIEW:
+#		endif
 			return true;
 		default:
 			return false;

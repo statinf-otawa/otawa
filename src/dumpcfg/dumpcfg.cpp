@@ -39,6 +39,7 @@
 
 using namespace elm;
 using namespace otawa;
+namespace opt = elm::option;
 
 
 /**
@@ -156,6 +157,11 @@ Identifier<bool> Displayer::ALL("", false);
 Identifier<string> Displayer::OUT("");
 
 /**
+ * If possible, launch a viewer of the produced output.
+ */
+Identifier<bool> Displayer::VIEW("");
+
+/**
  */
 void Displayer::configure(const PropList& props) {
 	Processor::configure(props);
@@ -163,6 +169,7 @@ void Displayer::configure(const PropList& props) {
 	source_info = SOURCE(props);
 	display_all = ALL(props);
 	out = OUT(props);
+	perform_view = VIEW(props);
 }
 
 
@@ -180,15 +187,18 @@ public:
 	DumpCFG(void);
 
 	// options
-	option::BoolOption remove_eabi;
-	option::BoolOption all_functions;
-	option::BoolOption inline_calls;
-	option::BoolOption display_assembly;
-	option::BoolOption simple;
-	option::BoolOption disassemble;
-	option::BoolOption dot;
-	option::SwitchOption source, xml, mult;
-	option::ValueOption<string> out;
+	opt::Switch	remove_eabi,
+				all_functions,
+				inline_calls,
+				display_assembly,
+				simple,
+				disassemble,
+				dot,
+				source,
+				xml,
+				mult,
+				view;
+	opt::Value<string> out;
 
 	Displayer *displayer;
 
@@ -221,26 +231,26 @@ void DumpCFG::prepare(PropList &props) {
  * Build the command.
  */
 DumpCFG::DumpCFG(void):
-	Application(
-		"DumpCFG",
-		Version(2, 0, 0),
-		"Dump to the standard output the CFG of functions."
-			"If no function name is given, the main function is dumped.",
-		"Hugues Casse <casse@irit.fr",
-		"Copyright (c) 2016, IRIT-UPS France"
+	Application(Make("dumpcfg", Version(2, 0, 0))
+		.description(
+			"Dump to the standard output the CFG of functions.\n"
+			"If no function name is given, the main function is dumped.")
+		.copyright("Copyright (c) 2016, IRIT - UPS")
+		.author("H. Cassé <casse@irit.fr>")
 	),
 
-	remove_eabi(*this, 'r', "remove", "Remove __eabi function call, if available.", false),
-	all_functions(*this, 'a', "all", "Dump all functions.", false),
-	inline_calls(*this, 'i', "inline", "Inline the function calls.", false),
-	display_assembly(*this, 'd', "display", "Display assembly instructions.", false),
-	simple(*this, 'S', "simple", "Select simple output (default).", false),
-	disassemble(*this, 'L', "list", "Select listing output.", false),
-	dot(*this, 'D', "dot", "Select DOT output.", false),
-	source(*this, option::short_cmd, 's', option::cmd, "--source", option::description, "enable source debugging information output", option::def, false, option::end),
-	xml(option::SwitchOption::Make(*this).cmd("-x").cmd("--xml").description("output the CFG as an XML file")),
-	mult(option::SwitchOption::Make(*this).cmd("-M").cmd("--multiple-dot").description("output multiple .dot file (one for each CFG) linked with URLs")),
-	out(option::ValueOption<string>::Make(*this).cmd("-o").cmd("--output").description("select the output file or directory (-M option)")),
+	remove_eabi		(make_switch()			.cmd("-r").cmd("--remove")		.description("Remove __eabi function call, if available.")),
+	all_functions	(make_switch()			.cmd("-a").cmd("--all")			.description("Dump all functions.")),
+	inline_calls	(make_switch()			.cmd("-i").cmd("--inline")		.description("Inline the function calls.")),
+	display_assembly(make_switch()			.cmd("-d").cmd("--display")		.description("Display assembly instructions.")),
+	simple			(make_switch()			.cmd("-S").cmd("--simple")		.description("Select simple output (default).")),
+	disassemble		(make_switch()			.cmd("-L").cmd("--list")		.description("Select listing output.")),
+	dot				(make_switch()			.cmd("-D").cmd("--dot")			.description("Select DOT output.")),
+	source			(make_switch()			.cmd("-s").cmd("--source")		.description("enable source debugging information output")),
+	xml				(make_switch()			.cmd("-x").cmd("--xml")			.description("output the CFG as an XML file")),
+	mult			(make_switch()			.cmd("-M").cmd("--multiple-dot").description("output multiple .dot file (one for each CFG) linked with URLs")),
+	view			(make_switch()			.cmd("-w").cmd("--view")		.description("if available, view the produced output with the system viewer")),
+	out				(make_value<string>()	.cmd("-o").cmd("--output")		.description("select the output file or directory (-M option)")),
 
 	displayer(&simple_displayer)
 {
@@ -281,6 +291,8 @@ void DumpCFG::dump(const string& name, PropList& props) {
 			Displayer::SOURCE(props) = source;
 		if(inline_calls)
 			Displayer::ALL(props) = inline_calls;
+		if(view)
+			Displayer::VIEW(props) = view;
 		if(out)
 			Displayer::OUT(props) = out;
 

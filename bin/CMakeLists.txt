@@ -1,2 +1,6 @@
-
-install(PROGRAMS "otawa-gen.py" DESTINATION "bin")
+if(PYTHONINTERP_FOUND)
+	install(PROGRAMS "otawa-gen.py" DESTINATION "bin")
+	if(XDOT_ENABLED)
+		install(PROGRAMS "otawa-xdot.py" DESTINATION "bin")
+	endif()
+endif()

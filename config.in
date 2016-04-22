@@ -4,5 +4,8 @@
 #define OTAWA_VERSION	"@OTAWA_VERSION@"
 #define OTAWA_DATE		"@OTAWA_DATE@"
 #define DOT				"@DOT@"
+#cmakedefine XDOT_ENABLED
+#cmakedefine SYSTEM_VIEW_ENABLED
+#define SYSTEM_VIEW		"@SYSTEM_VIEW@"
 
 #endif	// OTAWA_CONFIG_H
