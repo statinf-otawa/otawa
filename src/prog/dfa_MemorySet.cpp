@@ -103,7 +103,7 @@ MemorySet::t const MemorySet::empty(0);
 MemorySet::t MemorySet::add(t mem, MemArea area) {
 	PRECOND(ordered(mem));
 	ASSERT(!area.isNull());
-	ASSERT(area.size() > 1);
+	//ASSERT(area.size() > 1);
 	node_t *m = mem;
 	node_t *r = empty.h;
 	node_t **l = &r;
