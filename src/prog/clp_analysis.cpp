@@ -382,7 +382,7 @@ void Value::shl(const Value& val) {
  * @param val the value to shift the current one with. Must be a positive
  *				constant.
 */
-void Value::shr(const Value& val) {
+Value& Value::shr(const Value& val) {
 	if(!val.isConst() || val._base < 0){
 		set(ALL, 0, 1, UMAXn);
 	} else
@@ -395,6 +395,7 @@ void Value::shr(const Value& val) {
 			set(VAL, _base >> val._base, 1,
 				(_delta * _mtimes) >> val._base);
 	}
+	return *this;
 }
 
 /**
@@ -757,29 +758,29 @@ void Value::reverse(void){
  * Filter the current value with signed values greater than k.
  * @param k		Threshold.
  */
-void Value::ge(intn_t k) {
+Value& Value::ge(intn_t k) {
 
 	// all cases
 	if(*this == all) {
 		*this = Value(VAL, k, 1, MAXn-k);
-		return;
+		return *this;
 	}
 
 	// none cases
 	if(*this == none)
-		return;
+		return *this;
 
 	// case of constant
 	if(isConst()) {
 		if(k > _base)
 			*this = none;
-		return;
+		return *this;
 	}
 
 	// d >= 0 => inter((b, d, n), (k, 1, inf+ - k)
 	if(_delta > 0) {
 		inter(Value(VAL, k, 1, MAXn - k));
-		return;
+		return *this;
 	}
 
 	// d < 0 !!!
@@ -790,18 +791,19 @@ void Value::ge(intn_t k) {
 	// b <= k -> _
 	if(_base <= k) {
 		*this = none;
-		return;
+		return *this;
 	}
 
 	// b + dn >= k -> (b, d, n)
 	if(_base + _delta * intn_t(_mtimes) >= k)
-		return;
+		return *this;
 
 	// _ -> (b, d, (k - b) / d
 	else
 		_mtimes = (k - _base) / _delta;
 
 	check();
+	return *this;
 }
 
 
@@ -831,7 +833,7 @@ void Value::ge(intn_t k) {
  * Filter the current value with signed values lesser than k.
  * @param k		Threshold.
  */
-void Value::le(intn_t k) {
+Value& Value::le(intn_t k) {
 
 	// make the value from ALL to [k, -inf]
 	if(*this == all) {
@@ -842,26 +844,26 @@ void Value::le(intn_t k) {
 		// since we have ALL, there is no way to know the direction, so we make it positive d = 1
 		temp.reverse();
 		*this = temp;
-		return;
+		return *this;
 	}
 
 	// simple cases
 	if(*this == none)
 	//if(*this == all || *this == none)
-		return;
+		return *this;
 	if(isConst()) {
 		if(k < _base)
 			*this = none;
-		return;
+		return *this;
 	}
 
 	// simple cases
 	if(*this == all || *this == none)
-		return;
+		return *this;
 	if(isConst()) {
 		if(k < _base)
 			*this = none;
-		return;
+		return *this;
 	}
 
 	// not so simple
@@ -879,7 +881,7 @@ void Value::le(intn_t k) {
 		if(start() > k)		// case a
 			*this = none;
 		else if(stop() < k)	// case c
-			return;
+			return *this;
 		else {				// case b
 			if(_delta >= 0)
 				_mtimes = (k - _base) / _delta;
@@ -894,6 +896,7 @@ void Value::le(intn_t k) {
 	}
 
 	check();
+	return *this;
 }
 
 
@@ -901,29 +904,29 @@ void Value::le(intn_t k) {
  * Filter the current value with unsigned values greater than k.
  * @param k		Threshold.
  */
-void Value::geu(uintn_t k) {
+Value& Value::geu(uintn_t k) {
 
 	// all case
 	if(*this == all) {
 		*this = Value(VAL, k, 1, UMAXn-k);
-		return;
+		return *this;
 	}
 
 	// none cases
 	if(*this == none)
-		return;
+		return *this;
 
 	// case of constant
 	if(isConst()) {
 		if(k > uintn_t(_base))
 			*this = none;
-		return;
+		return *this;
 	}
 
 	// d >= 0 => inter((b, d, n), (k, 1, inf+ - k)
 	if(_delta > 0) {
 		inter(Value(VAL, k, 1, UMAXn - k));
-		return;
+		return *this;
 	}
 
 	// d < 0 !!!
@@ -934,18 +937,19 @@ void Value::geu(uintn_t k) {
 	// b <= k -> _
 	if(uintn_t(_base) <= k) {
 		*this = none;
-		return;
+		return *this;
 	}
 
 	// b + dn >= k -> (b, d, n)
 	if(uintn_t(_base + _delta * _mtimes) >= k)
-		return;
+		return *this;
 
 	// _ -> (b, d, (k - b) / d
 	else
 		_mtimes = intn_t(k - _base) / _delta;
 
 	check();
+	return *this;
 }
 
 
@@ -953,29 +957,29 @@ void Value::geu(uintn_t k) {
  * Filter the current value with unsigned values lesser than k.
  * @param k		Threshold.
  */
-void Value::leu(uintn_t k) {
+Value& Value::leu(uintn_t k) {
 
 	// for un-signed case, ALL will be filtered to [0, k]
 	if(*this == all) {
 		*this = Value(VAL, 0, 1, k);
-		return;
+		return *this;
 	}
 
 	// nothing to filter will be nothing still
 	if(*this == none)
-		return;
+		return *this;
 
 	// case of constant
 	if(isConst()) {
 		if(k < uintn_t(_base))
 			*this = none;
-		return;
+		return *this;
 	}
 
 	// d < 0 => inter((b, d, n), (k, 1, inf+ - k)
 	if(_delta < 0) {
 		inter(Value(VAL, 0, 1, k));
-		return;
+		return *this;
 	}
 
 	// d > 0 !!!
@@ -986,18 +990,19 @@ void Value::leu(uintn_t k) {
 	// b >= k -> _
 	if(uintn_t(_base) >= k) {
 		*this = none;
-		return;
+		return *this;
 	}
 
 	// b + dn >= k -> (b, d, n)
 	if(uintn_t(_base + _delta * _mtimes) <= k)
-		return;
+		return *this;
 
 	// _ -> (b, d, (k - b) / d
 	else
 		_mtimes = (k - uintn_t(_base)) / _delta;
 
 	check();
+	return *this;	
 }
 
 
