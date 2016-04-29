@@ -1040,22 +1040,22 @@ int Value::and_threshold = 8;
  * Perform AND on the current value.
  * @param val	Value to perform AND on.
  */
-void Value::_and(const Value& val) {
+Value& Value::_and(const Value& val) {
 
 	// T & v = v & T = T
 	if(*this == all)
-		return;
+		return *this;
 	if(val == all) {
 		*this = all;
-		return;
+		return *this;
 	}
 
 	// _ & v = v & _ = _
 	if(*this == none)
-		return;
+		return *this;
 	if(val == none) {
 		*this = none;
-		return;
+		return *this;
 	}
 
 	// check for any constant
@@ -1064,7 +1064,7 @@ void Value::_and(const Value& val) {
 	if(isConst()) {
 		if(val.isConst()) {		// k1 & k2
 			*this = val.lower() & lower();
-			return;
+			return *this;
 		}
 		k = lower();
 		v = val;
@@ -1075,13 +1075,13 @@ void Value::_and(const Value& val) {
 	}
 	else {						// no k : cannot compute
 		*this = all;
-		return;
+		return *this;
 	}
 
 	// v & 0 = 0
 	if(k == 0) {
 		*this = 0;
-		return;
+		return *this;
 	}
 
 	// find the field of [n, m]
@@ -1091,7 +1091,7 @@ void Value::_and(const Value& val) {
 	n--;
 	if(k & ~((1 << n) - 1)) {	// pure field ? (no one after n)
 		*this = all;
-		return;
+		return *this;
 	}
 
 	// base % (1 << m) = 0
@@ -1102,7 +1102,7 @@ void Value::_and(const Value& val) {
 			// delta % (1 << m) = 0 -> (base, delta, n)
 			if(v.delta() % (1 << m) == 0) {
 				*this = v;
-				return;
+				return *this;
 			}
 		}
 
@@ -1111,7 +1111,7 @@ void Value::_and(const Value& val) {
 			// (1 << m) % delta = 0 -> (base, 1 << m, (n + 1) / ((1 << m) / delta - 1)
 			if((1 << m) % v.delta() == 0) {
 				*this = Value(VAL, v.lower(), 1 << m, (v.mtimes() + 1) / ((1 << m) / v.delta()) - 1);
-				return;
+				return *this;
 			}
 		}
 	}
@@ -1122,11 +1122,12 @@ void Value::_and(const Value& val) {
 		intn_t n = v.lower();
 		for(uintn_t i = 0; i < v.mtimes(); i++, n += v.delta())
 			join(Value(VAL, n & k, 0, 0));
-		return;
+		return *this;
 	}
 
 	// else (0, 1 << m, 1 << (n + 1 - m) - 1)
 	*this = Value(VAL, 0, 1 << m, (1 << (n + 1 - m)) - 1);
+	return *this;
 }
 
 
@@ -2123,6 +2124,7 @@ public:
 	void prepare(Inst *inst) {
 		b.clear();
 		inst->semInsts(b);
+		elm::cout << "for " << inst << " @ " << inst->address() << ", b.count = " << b.count() << io::endl;
 		pc = 0;
 		todo.clear();
 	}
@@ -2764,6 +2766,10 @@ Manager::~Manager() {
  * @param bb	Basic block to interpret.
  */
 Manager::step_t Manager::start(BasicBlock *bb) {
+	for(BasicBlock::InstIter bbi(bb); bbi; bbi++ )
+	{
+		elm::cout << bbi << " @ " << bbi->address() << io::endl;
+	}
 	mi = BasicBlock::InstIter(bb);
 	s = STATE_IN(bb);
 	cs = &s;

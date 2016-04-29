@@ -295,13 +295,26 @@ int main(void) {
 	
 	// checking join
 	{
-		CHECK_EQUAL(val(0x84c4,0,0).join(val(0x84c4,-112,0xffffffff)), val(0x84c4, -112, 0xffffffff));
+		CHECK_EQUAL(val(0x84c4, 0, 0).join(val(0x84c4, -112, 0xffffffff)), val(0x84c4, -112, 0xffffffff));
 		CHECK_EQUAL(val(0x2, 1, 0xffffffff).join(val(0x0, 8, 0x1)), val(0, 1, 0xffffffff));
 	}
 	
 	// checking shr
 	{
 		CHECK_EQUAL(val(0x8, -0x1, 0xffffffff).shr(val(1, 0, 0)), val(4, -1, 0xffffffff)); // [-inf, 8] >> 2 = { -inf, ..... , 3, 4 }
+		CHECK_EQUAL(val(0x9, -0x1, 0xfffffffd).shr(val(1, 0, 0)), val(0x4, -0x1, 0x7FFFFFFF) /* >> with value with inf mtimes */ );
+	}
+	
+	// checking +
+	{
+		CHECK_EQUAL(val(0x8, -0x4, 0xffffffff) + val(0x0, 0x1, 0x1), val(0x9, -0x1, 0xffffffff) /* adding with value with inf mtimes */);
+	}
+	
+	// checking and
+	{
+		CHECK_EQUAL(val(0xa7, -1, 0x63)._and(val(0xc0000, 0, 0)), val(0, 0, 0));
+		CHECK_EQUAL(val(7, -1, 3)._and(val(0xc0000, 0, 0)), val(0, 0, 0));
+		
 	}
 
 	CHECK_END
