@@ -23,8 +23,9 @@
 #ifndef OTAWA_PROG_WORK_SPACE_H
 #define OTAWA_PROG_WORK_SPACE_H
 
-#include <elm/system/Path.h>
 #include <elm/genstruct/Vector.h>
+#include <elm/sys/Path.h>
+#include <elm/sys/Thread.h>
 #include <otawa/properties.h>
 #include <otawa/prog/Process.h>
 
@@ -99,6 +100,11 @@ public:
 	virtual void serialize(elm::serial2::Serializer& serializer);
 	virtual void unserialize(elm::serial2::Unserializer& unserializer);
 
+	// concurrency support
+	static sys::Thread *run(sys::Runnable& run);
+	static void runAll(sys::Runnable& run);
+	static void remove(Property *prop);
+
 	// deprecated
 	ast::ASTInfo *getASTInfo(void);
 	ilp::System *newILPSystem(bool max = true);
@@ -111,7 +117,6 @@ private:
 	bool hasFeatDep(const AbstractFeature* feature);
 	void delFeatDep(const AbstractFeature* feature);
 
-private:
 	LockPtr<Process> proc;
 	typedef HashTable<const AbstractFeature*, FeatureDependency*> feat_map_t;
 	feat_map_t featMap;

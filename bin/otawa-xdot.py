@@ -1951,6 +1951,7 @@ class DotWindow(Gtk.Window):
 
     def __init__(self, widget=None):
         Gtk.Window.__init__(self)
+        self.filter = None
 
         self.graph = Graph()
 
@@ -1962,8 +1963,9 @@ class DotWindow(Gtk.Window):
         vbox = Gtk.VBox()
         window.add(vbox)
 
-        self.dotwidget = widget or DotWidget()
-        self.dotwidget.connect("clicked", self.handle_url, None)
+        self.dotwidget = widget	# or DotWidget()
+        if widget:
+            self.dotwidget.connect("clicked", self.handle_url, None)
 
         # Create a UIManager instance
         uimanager = self.uimanager = Gtk.UIManager()
@@ -1980,11 +1982,11 @@ class DotWindow(Gtk.Window):
         actiongroup.add_actions((
             ('Open', Gtk.STOCK_OPEN, None, None, None, self.on_open),
             ('Reload', Gtk.STOCK_REFRESH, None, None, None, self.on_reload),
-            ('Print', Gtk.STOCK_PRINT, None, None, "Prints the currently visible part of the graph", self.dotwidget.on_print),
-            ('ZoomIn', Gtk.STOCK_ZOOM_IN, None, None, None, self.dotwidget.on_zoom_in),
-            ('ZoomOut', Gtk.STOCK_ZOOM_OUT, None, None, None, self.dotwidget.on_zoom_out),
-            ('ZoomFit', Gtk.STOCK_ZOOM_FIT, None, None, None, self.dotwidget.on_zoom_fit),
-            ('Zoom100', Gtk.STOCK_ZOOM_100, None, None, None, self.dotwidget.on_zoom_100),
+            ('Print', Gtk.STOCK_PRINT, None, None, "Prints the currently visible part of the graph", self.on_print),
+            ('ZoomIn', Gtk.STOCK_ZOOM_IN, None, None, None, self.on_zoom_in),
+            ('ZoomOut', Gtk.STOCK_ZOOM_OUT, None, None, None, self.on_zoom_out),
+            ('ZoomFit', Gtk.STOCK_ZOOM_FIT, None, None, None, self.on_zoom_fit),
+            ('Zoom100', Gtk.STOCK_ZOOM_100, None, None, None, self.on_zoom_100),
         ))
 
         find_action = FindMenuToolAction("Find", None,
@@ -2001,7 +2003,12 @@ class DotWindow(Gtk.Window):
         toolbar = uimanager.get_widget('/ToolBar')
         vbox.pack_start(toolbar, False, False, 0)
 
-        vbox.pack_start(self.dotwidget, True, True, 0)
+        # dot display notebook
+        self.notebook = Gtk.Notebook()
+        self.notebook.connect("switch-page", self.switch_page, None)
+        vbox.pack_start(self.notebook, True, True, 0)
+        if widget:
+            self.notebook.append_page(self.dotwidget, Gtk.Label("dot"))
 
         self.last_open_dir = "."
 
@@ -2019,12 +2026,32 @@ class DotWindow(Gtk.Window):
 
         self.show_all()
 
+    def on_print(self, *args):
+        self.dotwidget.on_print(*args)
+
+    def on_zoom_in(self, *args):
+        self.dotwidget.on_zoom_in(*args)
+
+    def on_zoom_out(self, *args):
+        self.dotwidget.on_zoom_out(*args)
+	
+    def on_zoom_fit(self, *args):
+        self.dotwidget.on_zoom_fit(*args)
+
+    def on_zoom_100(self, *args):
+        self.dotwidget.on_zoom_100(*args)
+
     def handle_url(self, event, url, el, data):
         if self.filename:
             base = "file://" + os.path.abspath(self.filename)
         else:
             base = "file://" + os.getcwd() + "/ok"
-        Gtk.show_uri(None, urllib.parse.urljoin(base, url), Gdk.CURRENT_TIME)
+        url = urllib.parse.urljoin(base, url)
+        r = urllib.parse.urlparse(url)
+        if r.scheme == "file" and r.path.endswith(".dot"):
+            self.open_file(r.path)
+        else:
+            Gtk.show_uri(None, url, Gdk.CURRENT_TIME)
 
     def find_text(self, entry_text):
         found_items = []
@@ -2058,12 +2085,38 @@ class DotWindow(Gtk.Window):
             dot_widget.animate_to(found_items[0].x, found_items[0].y)
 
     def set_filter(self, filter):
-        self.dotwidget.set_filter(filter)
+        self.filter = filter
 
-    def set_dotcode(self, dotcode, filename=None):
-        if self.dotwidget.set_dotcode(dotcode, filename):
-            self.update_title(filename)
+    def close_page(self, button, page):
+        self.notebook.remove_page(self.notebook.page_num(page))
+
+    def add_dotcode(self, dotcode, filename=None):
+        dotwidget = DotWidget()
+        dotwidget.filename = filename
+        if self.filter:
+            dotwidget.set_filter(self.filter)
+        if dotwidget.set_dotcode(dotcode, filename):
+            name = os.path.basename(filename)
+            title = Gtk.HBox()
+            title.pack_start(Gtk.Label(name), True, True, 0)
+            image = Gtk.Image()
+            image.set_from_stock(Gtk.STOCK_CLOSE, Gtk.IconSize.MENU)	#Gtk.ICON_SIZE_MENU)
+            close = Gtk.Button()
+            close.set_image(image)
+            close.set_relief(Gtk.ReliefStyle.NONE)
+            close.connect("clicked", self.close_page, dotwidget)
+            title.pack_start(close, False, False, 4)
+            title.show_all()
+            i = self.notebook.append_page(dotwidget, title)
+            dotwidget.show()
+            self.dotwidget = dotwidget
             self.dotwidget.zoom_to_fit()
+            self.update_title(name)
+            self.dotwidget.connect("clicked", self.handle_url, None)
+            self.notebook.set_current_page(i)
+
+    def switch_page(self, notebook, page, page_num, arg):
+        self.dotwidget = page
 
     def set_xdotcode(self, xdotcode, filename=None):
         if self.dotwidget.set_xdotcode(xdotcode):
@@ -2071,16 +2124,25 @@ class DotWindow(Gtk.Window):
             self.dotwidget.zoom_to_fit()
         
     def update_title(self, filename=None):
+        filename = os.path.abspath(filename)
         if filename is None:
             self.set_title(self.base_title)
         else:
             self.set_title(os.path.basename(filename) + ' - ' + self.base_title)
 
     def open_file(self, filename):
+
+        # not already opened?
+        for i in range(0, self.notebook.get_n_pages()):
+            if filename == self.notebook.get_nth_page(i).filename:
+                self.notebook.set_current_page(i)
+                return
+
+        # ok, open the file
         self.filename = filename
         try:
             fp = open(filename, 'rt')
-            self.set_dotcode(fp.read(), filename)
+            self.add_dotcode(fp.read(), filename)
             fp.close()
         except IOError as ex:
             self.error_dialog(str(ex))
@@ -2167,7 +2229,7 @@ Shortcuts:
     win.set_filter(options.filter)
     if len(args) >= 1:
         if args[0] == '-':
-            win.set_dotcode(sys.stdin.read())
+            win.add_dotcode(sys.stdin.read(), "<stdin>")
         else:
             win.open_file(args[0])
     Gtk.main()

@@ -53,6 +53,7 @@ public:
 
 	class Iterator: public elm::genstruct::FragTable<CFG *>::Iterator {
 	public:
+		inline Iterator(void) { }
 		inline Iterator(const CFGCollection *cfgs)
 			: elm::genstruct::FragTable<CFG *>::Iterator(cfgs->cfgs) { }
 		inline Iterator(const CFGCollection& cfgs)

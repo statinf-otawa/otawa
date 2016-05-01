@@ -2,7 +2,7 @@
  *	PropList class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-8, IRIT UPS.
+ *	Copyright (c) 2003-16, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -18,9 +18,13 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+#include "config.h"
 #include <elm/io.h>
 #include <elm/util/VarArg.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/properties.h>
+
 using namespace elm;
 
 namespace otawa {
@@ -369,15 +373,21 @@ void PropList::takeProps(PropList& props) {
 Property *PropList::getProp(const AbstractIdentifier *id) const {
 
 	/* Look in this list */
-	for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next())
-		if(cur->id() == id) {
-			if(prev) {
-				prev->_next = cur->next();
-				cur->_next = head;
-				head = cur;
+#	ifndef OTAWA_CONC
+		for(Property *cur = head, *prev = 0; cur; prev = cur, cur = cur->next())
+			if(cur->id() == id) {
+				if(prev) {
+					prev->_next = cur->next();
+					cur->_next = head;
+					head = cur;
+				}
+				return cur;
 			}
-			return cur;
-		}
+#	else
+		for(Property *cur = head; cur; cur = cur->next())
+			if(cur->id() == id)
+				return cur;
+#	endif
 
 	/* Perform deep search */
 	return 0;
@@ -425,7 +435,11 @@ void PropList::removeProp(const AbstractIdentifier *id) {
 				prev->_next = cur->next();
 			else
 				head = cur->next();
-			delete cur;
+#			ifdef OTAWA_CONC
+				WorkSpace::remove(cur);
+#			else
+				delete cur;
+#			endif
 			break;
 		}
 }

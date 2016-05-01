@@ -41,6 +41,8 @@ extern const AbstractIdentifier END;
 // Property description
 class Property {
 	friend class PropList;
+	friend class RCURunnable;
+	friend class WorkSpace;
 public:
 	static const AbstractIdentifier *getID(elm::CString name);
 	inline Property(const AbstractIdentifier *id): _id(id), _next(0) { };

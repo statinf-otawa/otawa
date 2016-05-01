@@ -61,3 +61,8 @@ by defining the constant ''USE_LEGACY'':
 cmake . -DCMAKE_INSTALL_PREFIX=path_to_install_to -DUSE_LEGACY=YES
 </code>
 
+OTAWA2 introduces also parallel execution of analyses. As this feature is experimental for now, it is not enabled
+as a default. To enable it, just type:
+<code sh>
+cmake . -DOTAWA_CONC=ON
+</code>

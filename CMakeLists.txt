@@ -68,6 +68,14 @@ add_definitions(-DHAS_RELOCATION)
 add_definitions(-DOTAWA_CMAKE)
 add_definitions(-g3)
 
+# concurrency support
+if(OTAWA_CONC)
+	message(STATUS "concurrency support enabled!")
+else()
+	message(STATUS "concurrency support disabled!")
+endif()
+
+
 # looking for ARM loader
 set(ARM5_PATH "${CMAKE_SOURCE_DIR}/../armv5t")
 set(ARM7_PATH "${CMAKE_SOURCE_DIR}/../armv7t")

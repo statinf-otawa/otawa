@@ -7,5 +7,6 @@
 #cmakedefine XDOT_ENABLED
 #cmakedefine SYSTEM_VIEW_ENABLED
 #define SYSTEM_VIEW		"@SYSTEM_VIEW@"
+#cmakedefine OTAWA_CONC
 
 #endif	// OTAWA_CONFIG_H

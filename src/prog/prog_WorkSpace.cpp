@@ -19,17 +19,18 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/manager.h>
-#include <otawa/prog/WorkSpace.h>
+#include <elm/data/List.h>
+#include <elm/deprecated.h>
+#include <elm/serial2/serial.h>
+#include <elm/xom.h>
+
+#include <config.h>
 #include <otawa/ast/ASTInfo.h>
 #include <otawa/ilp/System.h>
-//#include <otawa/cfg/CFGBuilder.h>
-#include <config.h>
-#include <elm/xom.h>
+#include <otawa/manager.h>
 #include <otawa/proc/FeatureDependency.h>
-#include <elm/deprecated.h>
- #include <elm/serial2/serial.h>
 #include <otawa/prog/Loader.h>
+#include <otawa/prog/WorkSpace.h>
 
 // Trace
 //#define FRAMEWORK_TRACE
@@ -605,6 +606,201 @@ void WorkSpace::serialize(elm::serial2::Serializer& serializer) {
  */
 void WorkSpace::unserialize(elm::serial2::Unserializer& unserializer) {
 	// do nothing for now
+}
+
+
+#ifdef OTAWA_CONC
+#	define CONC_DEBUG(x)	// cerr << x
+	class RCURunnable: public sys::Runnable {
+		friend class WorkSpace;
+	public:
+
+		RCURunnable(void): to_run(0) {
+			sys::Thread::make(*this);
+		}
+
+		inline bool isRoot(void) const { return this == &root; }
+
+		virtual void run(void) {
+			ASSERT(to_run);
+			CONC_DEBUG("DEBUG: running " << (void *)this << " on " << (void *)to_run << io::endl);
+
+			// launch the runnable
+			to_run->run();
+
+			// end launching
+			mutex->lock();
+			running.remove(this);
+			avail.add(this);
+			check();
+			mutex->unlock();
+		}
+
+		void clean(void) {
+			for(List<Property *>::iter i(to_free); i; i++)
+				delete *i;
+			to_free.clear();
+		}
+
+		static void init(void) {
+			static bool initialized = false;
+			if(!initialized) {
+				mutex = sys::Mutex::make();
+				core_count = 4;		// TODO
+			}
+		}
+
+		static void check(void) {
+			if(!running) {
+				for(List<RCURunnable *>::iter i(avail); i; i++)
+					i->clean();
+				root.clean();
+			}
+		}
+
+		static void runInRoot(sys::Runnable *runnable) {
+			runnable->run();
+			mutex->lock();
+			check();
+			mutex->unlock();
+		}
+
+		static sys::Thread *run(sys::Runnable *runnable) {
+
+			// lock
+			init();
+			mutex->lock();
+
+			// look for a free thread
+			if(avail) {
+				RCURunnable *t = avail.pop();
+				running.add(t);
+				CONC_DEBUG("DEBUG: " << (void *)t << " has to run " << (void *)runnable << io::endl);
+				t->to_run = runnable;
+				t->thread()->start();
+				mutex->unlock();
+				return t->thread();
+			}
+
+			// add a new one if any core is remaining
+			else if(running.count() < core_count - 1) {
+				RCURunnable *t = new RCURunnable();
+				CONC_DEBUG(cerr << "DEBUG: created " << (void *)t << io::endl);
+				running.add(t);
+				CONC_DEBUG(cerr << "DEBUG: " << (void *)t << " has to run " << (void *)runnable << io::endl);
+				t->to_run = runnable;
+				t->thread()->start();
+				mutex->unlock();
+				return t->thread();
+			}
+
+			// only main core remains: run in main core
+			else {
+				mutex->unlock();
+				runInRoot(runnable);
+				return 0;
+			}
+		}
+
+		static void runAll(Runnable *runnable) {
+			CONC_DEBUG("DEBUG: RCU::runAll()\n");
+
+			// count available threads
+			init();
+			mutex->lock();
+			int c = RCURunnable::core_count - running.count() - 1;
+			mutex->unlock();
+			CONC_DEBUG(cerr << "DEBUG: " << c << " threads available.\n");
+
+			// run available threads
+			genstruct::Vector<sys::Thread *> to_wait;
+			for(int i = 0; i < c; i++) {
+				to_wait.add(run(runnable));
+				CONC_DEBUG("DEBUG: launched thread " << (void *)to_wait.top() << io::endl);
+			}
+			runInRoot(runnable);		// root thread
+
+			// wait for end of used threads
+			for(int i = 0; i < to_wait.count(); i++)
+				if(to_wait[i]) {
+					CONC_DEBUG("DEBUG: waiting for thread " << (void *)to_wait[i] << io::endl);
+					to_wait[i]->join();
+					CONC_DEBUG("DEBUG: ended for thread " << (void *)to_wait[i] << io::endl);
+				}
+		}
+
+		static void remove(Property *prop) {
+			if(!running)
+				delete prop;
+			else
+				static_cast<RCURunnable&>(current()).to_free.add(prop);
+		}
+
+	private:
+		sys::Runnable *to_run;
+		List<Property *> to_free;
+
+		static RCURunnable root;
+		static sys::Mutex *mutex;
+		static List<RCURunnable *> avail, running;
+		static int core_count;
+	};
+
+	RCURunnable RCURunnable::root;
+	sys::Mutex *RCURunnable::mutex = 0;
+	List<RCURunnable *> RCURunnable::avail, RCURunnable::running;
+	int RCURunnable::core_count = 4;		// TODO -- get it from OS
+#endif
+
+
+/**
+ * Launch in a different thread the given runnable.
+ * If no more thread is available, launch the runnable in the
+ * current thread.
+ *
+ * Using this method to start a thread allows the
+ * management of property in thread-safe way.
+ *
+ * @param runnable	Runnable to launch.
+ * @return			Started thread or null if the runnable has been launched
+ * in the current thread.
+ */
+sys::Thread *WorkSpace::run(sys::Runnable& runnable) {
+#	ifdef OTAWA_CONC
+		return RCURunnable::run(&runnable);
+#	else
+		runnable.run();
+		return 0;
+#	endif
+}
+
+/**
+ * Run all threads with the given runnable. Return only
+ * when all threads has stopped.
+ *
+ * Using this method to start a thread allows the
+ * management of property in thread-safe way.
+ *
+ * @param runnable	Runnable to launch.
+ */
+void WorkSpace::runAll(sys::Runnable& runnable) {
+#	ifdef OTAWA_CONC
+		RCURunnable::runAll(&runnable);
+#	else
+		runnable.run();
+#	endif
+}
+
+/**
+ * Remove a property in a thread-safe way.
+ * @param prop	Property to remove.
+ */
+void WorkSpace::remove(Property *prop) {
+#	ifdef OTAWA_CONC
+		RCURunnable::remove(prop);
+#	else
+		delete prop;
+#	endif
 }
 
 } // otawa

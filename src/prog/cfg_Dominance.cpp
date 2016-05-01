@@ -207,15 +207,19 @@ public:
  * @li @ref CHECKED_CFG_FEATURE
  */
 
+/**
+ */
+p::declare Dominance::reg = p::init("otawa::dominance", Version(1, 1, 0))
+	.provide(DOMINANCE_FEATURE)
+	.provide(LOOP_HEADERS_FEATURE)
+	.base(ConcurrentCFGProcessor::reg)
+	.maker<Dominance>();
 
 /**
  * The dominance processors computes dominance relation and the loop headers
  * on the current CFG.
  */
-Dominance::Dominance(void): CFGProcessor("otawa::dominance", Version(1, 1, 0)) {
-	provide(DOMINANCE_FEATURE);
-	provide(LOOP_HEADERS_FEATURE);
-	//require(CHECKED_CFG_FEATURE);
+Dominance::Dominance(void): ConcurrentCFGProcessor(reg) {
 }
 
 

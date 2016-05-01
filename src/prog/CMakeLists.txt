@@ -55,6 +55,7 @@ set(libotawa_SOURCES
 	"proc_AlternativeProcessor.cpp"
 	"proc_Processor.cpp"
 	"proc_CFGProcessor.cpp"
+	"proc_ConcurrentCFGProcessor.cpp"
 	"proc_ContextualProcessor.cpp"
 	"proc_DynFeature.cpp"
 	"proc_DynProcessor.cpp"

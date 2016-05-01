@@ -21,7 +21,7 @@
 #ifndef OTAWA_CFG_DOMINANCE_H
 #define OTAWA_CFG_DOMINANCE_H
 
-#include <otawa/proc/CFGProcessor.h>
+#include <otawa/proc/ConcurrentCFGProcessor.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/cfg/features.h>
 
@@ -33,16 +33,17 @@ class Edge;
 namespace dfa { class BitSet; }
 
 // Dominance class
-class Dominance: public CFGProcessor {
+class Dominance: public ConcurrentCFGProcessor {
 public:
+
+	static p::declare reg;
+	Dominance(void);
+
 	static void ensure(CFG *cfg);
 	static bool dominates(Block *bb1, Block *bb2);
 	static inline bool isDominated(Block *bb1, Block *bb2) { return dominates(bb2, bb1); }
 	static bool isLoopHeader(Block *bb);
 	static bool isBackEdge(Edge *edge);
-
-	// Constructor
-	Dominance(void);
 
 protected:
 	virtual void processCFG(WorkSpace *fw, CFG *cfg);
