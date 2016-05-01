@@ -91,10 +91,10 @@ int main(void) {
 		// T and _
 		clp::Value v = clp::Value::all;
 		v.ge(10);
-		CHECK(v == clp::Value::all);
+		CHECK_EQUAL(clp::Value(clp::Value::all).ge(10), clp::Value::all);
 		v = clp::Value::none;
 		v.ge(10);
-		CHECK(v == clp::Value::none);
+		CHECK_EQUAL(clp::Value(clp::Value::none).ge(10), clp::Value::none);
 
 		// constant
 		v = clp::Value(clp::VAL, 15, 0, 0);
@@ -160,12 +160,9 @@ int main(void) {
 	// geu tests
 	{
 		// T and _
-		clp::Value v = clp::Value::all;
-		v.geu(10);
-		CHECK(v == clp::Value::all);
-		v = clp::Value::none;
-		v.geu(10);
-		CHECK(v == clp::Value::none);
+		CHECK_EQUAL(clp::Value(clp::Value::all).geu(10), clp::Value::all); // should be (0xa, 1, 0xfffffff5)
+		clp::Value v;
+		CHECK_EQUAL(clp::Value(clp::Value::none).geu(10), clp::Value::none); 
 
 		// constant
 		v = clp::Value(clp::VAL, 15, 0, 0);
@@ -203,7 +200,7 @@ int main(void) {
 		// T and _
 		clp::Value v = clp::Value::all;
 		v.leu(10);
-		CHECK(v == clp::Value::all);
+		CHECK_EQUAL(clp::Value(clp::Value::all).leu(10), clp::Value::all);
 		v = clp::Value::none;
 		v.leu(10);
 		CHECK(v == clp::Value::none);
@@ -293,7 +290,31 @@ int main(void) {
 
 		CHECK_EQUAL(val(2,-1,-1).inter(val(2,0,0)), val(2, 0, 0));
 		CHECK_EQUAL(val(2,0,-0).inter(val(2,-1,-1)), val(2, 0, 0));
-
+		CHECK_EQUAL(val(3,0,0).inter(val(2,2,1000)), clp::Value::none);
+	}
+	
+	// checking join
+	{
+		CHECK_EQUAL(val(0x84c4, 0, 0).join(val(0x84c4, -112, 0xffffffff)), val(0x84c4, -112, 0xffffffff));
+		CHECK_EQUAL(val(0x2, 1, 0xffffffff).join(val(0x0, 8, 0x1)), val(0, 1, 0xffffffff));
+	}
+	
+	// checking shr
+	{
+		CHECK_EQUAL(val(0x8, -0x1, 0xffffffff).shr(val(1, 0, 0)), val(4, -1, 0xffffffff)); // [-inf, 8] >> 2 = { -inf, ..... , 3, 4 }
+		CHECK_EQUAL(val(0x9, -0x1, 0xfffffffd).shr(val(1, 0, 0)), val(0x4, -0x1, 0x7FFFFFFF) /* >> with value with inf mtimes */ );
+	}
+	
+	// checking +
+	{
+		CHECK_EQUAL(val(0x8, -0x4, 0xffffffff) + val(0x0, 0x1, 0x1), val(0x9, -0x1, 0xffffffff) /* adding with value with inf mtimes */);
+	}
+	
+	// checking and
+	{
+		CHECK_EQUAL(val(0xa7, -1, 0x63)._and(val(0xc0000, 0, 0)), val(0, 0, 0));
+		CHECK_EQUAL(val(7, -1, 3)._and(val(0xc0000, 0, 0)), val(0, 0, 0));
+		
 	}
 
 	CHECK_END

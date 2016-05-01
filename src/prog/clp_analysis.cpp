@@ -382,7 +382,7 @@ void Value::shl(const Value& val) {
  * @param val the value to shift the current one with. Must be a positive
  *				constant.
 */
-void Value::shr(const Value& val) {
+Value& Value::shr(const Value& val) {
 	if(!val.isConst() || val._base < 0){
 		set(ALL, 0, 1, UMAXn);
 	} else
@@ -395,6 +395,7 @@ void Value::shr(const Value& val) {
 			set(VAL, _base >> val._base, 1,
 				(_delta * _mtimes) >> val._base);
 	}
+	return *this;
 }
 
 /**
@@ -757,29 +758,29 @@ void Value::reverse(void){
  * Filter the current value with signed values greater than k.
  * @param k		Threshold.
  */
-void Value::ge(intn_t k) {
+Value& Value::ge(intn_t k) {
 
 	// all cases
 	if(*this == all) {
 		*this = Value(VAL, k, 1, MAXn-k);
-		return;
+		return *this;
 	}
 
 	// none cases
 	if(*this == none)
-		return;
+		return *this;
 
 	// case of constant
 	if(isConst()) {
 		if(k > _base)
 			*this = none;
-		return;
+		return *this;
 	}
 
 	// d >= 0 => inter((b, d, n), (k, 1, inf+ - k)
 	if(_delta > 0) {
 		inter(Value(VAL, k, 1, MAXn - k));
-		return;
+		return *this;
 	}
 
 	// d < 0 !!!
@@ -790,18 +791,19 @@ void Value::ge(intn_t k) {
 	// b <= k -> _
 	if(_base <= k) {
 		*this = none;
-		return;
+		return *this;
 	}
 
 	// b + dn >= k -> (b, d, n)
 	if(_base + _delta * intn_t(_mtimes) >= k)
-		return;
+		return *this;
 
 	// _ -> (b, d, (k - b) / d
 	else
 		_mtimes = (k - _base) / _delta;
 
 	check();
+	return *this;
 }
 
 
@@ -831,7 +833,7 @@ void Value::ge(intn_t k) {
  * Filter the current value with signed values lesser than k.
  * @param k		Threshold.
  */
-void Value::le(intn_t k) {
+Value& Value::le(intn_t k) {
 
 	// make the value from ALL to [k, -inf]
 	if(*this == all) {
@@ -842,26 +844,26 @@ void Value::le(intn_t k) {
 		// since we have ALL, there is no way to know the direction, so we make it positive d = 1
 		temp.reverse();
 		*this = temp;
-		return;
+		return *this;
 	}
 
 	// simple cases
 	if(*this == none)
 	//if(*this == all || *this == none)
-		return;
+		return *this;
 	if(isConst()) {
 		if(k < _base)
 			*this = none;
-		return;
+		return *this;
 	}
 
 	// simple cases
 	if(*this == all || *this == none)
-		return;
+		return *this;
 	if(isConst()) {
 		if(k < _base)
 			*this = none;
-		return;
+		return *this;
 	}
 
 	// not so simple
@@ -879,7 +881,7 @@ void Value::le(intn_t k) {
 		if(start() > k)		// case a
 			*this = none;
 		else if(stop() < k)	// case c
-			return;
+			return *this;
 		else {				// case b
 			if(_delta >= 0)
 				_mtimes = (k - _base) / _delta;
@@ -894,6 +896,7 @@ void Value::le(intn_t k) {
 	}
 
 	check();
+	return *this;
 }
 
 
@@ -901,29 +904,29 @@ void Value::le(intn_t k) {
  * Filter the current value with unsigned values greater than k.
  * @param k		Threshold.
  */
-void Value::geu(uintn_t k) {
+Value& Value::geu(uintn_t k) {
 
 	// all case
 	if(*this == all) {
 		*this = Value(VAL, k, 1, UMAXn-k);
-		return;
+		return *this;
 	}
 
 	// none cases
 	if(*this == none)
-		return;
+		return *this;
 
 	// case of constant
 	if(isConst()) {
 		if(k > uintn_t(_base))
 			*this = none;
-		return;
+		return *this;
 	}
 
 	// d >= 0 => inter((b, d, n), (k, 1, inf+ - k)
 	if(_delta > 0) {
 		inter(Value(VAL, k, 1, UMAXn - k));
-		return;
+		return *this;
 	}
 
 	// d < 0 !!!
@@ -934,18 +937,19 @@ void Value::geu(uintn_t k) {
 	// b <= k -> _
 	if(uintn_t(_base) <= k) {
 		*this = none;
-		return;
+		return *this;
 	}
 
 	// b + dn >= k -> (b, d, n)
 	if(uintn_t(_base + _delta * _mtimes) >= k)
-		return;
+		return *this;
 
 	// _ -> (b, d, (k - b) / d
 	else
 		_mtimes = intn_t(k - _base) / _delta;
 
 	check();
+	return *this;
 }
 
 
@@ -953,29 +957,29 @@ void Value::geu(uintn_t k) {
  * Filter the current value with unsigned values lesser than k.
  * @param k		Threshold.
  */
-void Value::leu(uintn_t k) {
+Value& Value::leu(uintn_t k) {
 
 	// for un-signed case, ALL will be filtered to [0, k]
 	if(*this == all) {
 		*this = Value(VAL, 0, 1, k);
-		return;
+		return *this;
 	}
 
 	// nothing to filter will be nothing still
 	if(*this == none)
-		return;
+		return *this;
 
 	// case of constant
 	if(isConst()) {
 		if(k < uintn_t(_base))
 			*this = none;
-		return;
+		return *this;
 	}
 
 	// d < 0 => inter((b, d, n), (k, 1, inf+ - k)
 	if(_delta < 0) {
 		inter(Value(VAL, 0, 1, k));
-		return;
+		return *this;
 	}
 
 	// d > 0 !!!
@@ -986,18 +990,19 @@ void Value::leu(uintn_t k) {
 	// b >= k -> _
 	if(uintn_t(_base) >= k) {
 		*this = none;
-		return;
+		return *this;
 	}
 
 	// b + dn >= k -> (b, d, n)
 	if(uintn_t(_base + _delta * _mtimes) <= k)
-		return;
+		return *this;
 
 	// _ -> (b, d, (k - b) / d
 	else
 		_mtimes = (k - uintn_t(_base)) / _delta;
 
 	check();
+	return *this;	
 }
 
 
@@ -1035,22 +1040,22 @@ int Value::and_threshold = 8;
  * Perform AND on the current value.
  * @param val	Value to perform AND on.
  */
-void Value::_and(const Value& val) {
+Value& Value::_and(const Value& val) {
 
 	// T & v = v & T = T
 	if(*this == all)
-		return;
+		return *this;
 	if(val == all) {
 		*this = all;
-		return;
+		return *this;
 	}
 
 	// _ & v = v & _ = _
 	if(*this == none)
-		return;
+		return *this;
 	if(val == none) {
 		*this = none;
-		return;
+		return *this;
 	}
 
 	// check for any constant
@@ -1059,7 +1064,7 @@ void Value::_and(const Value& val) {
 	if(isConst()) {
 		if(val.isConst()) {		// k1 & k2
 			*this = val.lower() & lower();
-			return;
+			return *this;
 		}
 		k = lower();
 		v = val;
@@ -1070,13 +1075,13 @@ void Value::_and(const Value& val) {
 	}
 	else {						// no k : cannot compute
 		*this = all;
-		return;
+		return *this;
 	}
 
 	// v & 0 = 0
 	if(k == 0) {
 		*this = 0;
-		return;
+		return *this;
 	}
 
 	// find the field of [n, m]
@@ -1086,7 +1091,7 @@ void Value::_and(const Value& val) {
 	n--;
 	if(k & ~((1 << n) - 1)) {	// pure field ? (no one after n)
 		*this = all;
-		return;
+		return *this;
 	}
 
 	// base % (1 << m) = 0
@@ -1097,7 +1102,7 @@ void Value::_and(const Value& val) {
 			// delta % (1 << m) = 0 -> (base, delta, n)
 			if(v.delta() % (1 << m) == 0) {
 				*this = v;
-				return;
+				return *this;
 			}
 		}
 
@@ -1106,7 +1111,7 @@ void Value::_and(const Value& val) {
 			// (1 << m) % delta = 0 -> (base, 1 << m, (n + 1) / ((1 << m) / delta - 1)
 			if((1 << m) % v.delta() == 0) {
 				*this = Value(VAL, v.lower(), 1 << m, (v.mtimes() + 1) / ((1 << m) / v.delta()) - 1);
-				return;
+				return *this;
 			}
 		}
 	}
@@ -1117,11 +1122,12 @@ void Value::_and(const Value& val) {
 		intn_t n = v.lower();
 		for(uintn_t i = 0; i < v.mtimes(); i++, n += v.delta())
 			join(Value(VAL, n & k, 0, 0));
-		return;
+		return *this;
 	}
 
 	// else (0, 1 << m, 1 << (n + 1 - m) - 1)
 	*this = Value(VAL, 0, 1 << m, (1 << (n + 1 - m)) - 1);
+	return *this;
 }
 
 
@@ -2118,6 +2124,7 @@ public:
 	void prepare(Inst *inst) {
 		b.clear();
 		inst->semInsts(b);
+		elm::cout << "for " << inst << " @ " << inst->address() << ", b.count = " << b.count() << io::endl;
 		pc = 0;
 		todo.clear();
 	}
@@ -2759,6 +2766,10 @@ Manager::~Manager() {
  * @param bb	Basic block to interpret.
  */
 Manager::step_t Manager::start(BasicBlock *bb) {
+	for(BasicBlock::InstIter bbi(bb); bbi; bbi++ )
+	{
+		elm::cout << bbi << " @ " << bbi->address() << io::endl;
+	}
 	mi = BasicBlock::InstIter(bb);
 	s = STATE_IN(bb);
 	cs = &s;

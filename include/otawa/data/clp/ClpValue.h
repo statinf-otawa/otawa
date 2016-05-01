@@ -174,7 +174,7 @@ typedef enum {
 		 * @param val the value to shift the current one with. Must be a
 		 *            positive constant.
 		*/
-		void shr(const Value& val);
+		Value& shr(const Value& val);
 
 		void _or(const Value& val);
 
@@ -212,13 +212,13 @@ typedef enum {
 		inline bool uwrap(void) const
 			{ return _delta != 0 && _mtimes > (UMAXn - _base) / elm::abs(_delta); }
 
-		void ge(intn_t k);
-		void geu(uintn_t k);
-		void le(intn_t k);
-		void leu(uintn_t k);
+		Value& ge(intn_t k);
+		Value& geu(uintn_t k);
+		Value& le(intn_t k);
+		Value& leu(uintn_t k);
 		void eq(uintn_t k);
 		void ne(uintn_t k);
-		void _and(const Value& val);
+		Value& _and(const Value& val);
 
 		/** Represents the bottom element */
 		static const Value none;
