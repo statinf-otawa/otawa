@@ -508,10 +508,11 @@ public:
 		for(t::uint32 i = 0; i < iinfo.membersnum; i++) {
 			gel_cursor_t cursor;
 			gel_block2cursor(iinfo.members[i], &cursor);
-			arm_mem_write(_memory,
-				gel_cursor_vaddr(cursor),
-				gel_cursor_addr(&cursor),
-				gel_cursor_avail(cursor));
+			if(gel_cursor_avail(cursor) > 0)
+				arm_mem_write(_memory,
+					gel_cursor_vaddr(cursor),
+					gel_cursor_addr(&cursor),
+					gel_cursor_avail(cursor));
 		}
 
 		// cleanup image

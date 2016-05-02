@@ -710,10 +710,11 @@ File *Process::loadFile(elm::CString path) {
 	for(t::uint32 i = 0; i < iinfo.membersnum; i++) {
 		gel_cursor_t cursor;
 		gel_block2cursor(iinfo.members[i], &cursor);
-		ppc_mem_write(_ppcMemory,
-			gel_cursor_vaddr(cursor),
-			gel_cursor_addr(&cursor),
-			gel_cursor_avail(cursor));
+		if(gel_cursor_avail(cursor) > 0)
+			ppc_mem_write(_ppcMemory,
+				gel_cursor_vaddr(cursor),
+				gel_cursor_addr(&cursor),
+				gel_cursor_avail(cursor));
 	}
 
 	// cleanup image
