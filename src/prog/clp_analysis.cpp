@@ -2124,7 +2124,6 @@ public:
 	void prepare(Inst *inst) {
 		b.clear();
 		inst->semInsts(b);
-		elm::cout << "for " << inst << " @ " << inst->address() << ", b.count = " << b.count() << io::endl;
 		pc = 0;
 		todo.clear();
 	}
