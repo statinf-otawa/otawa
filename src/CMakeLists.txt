@@ -58,6 +58,7 @@ endif()
 
 
 # tools
+add_subdirectory(bpred)
 add_subdirectory(config)
 add_subdirectory(dumpcfg)
 add_subdirectory(mkff)
@@ -69,8 +70,15 @@ add_subdirectory(odisasm)
 add_subdirectory(owcet)
 
 
-# dependent tools
-add_subdirectory(bpred)
+# Python bindings
+#if(WITH_PYTHON)
+#	if(PYTHONLIBS_FOUND)
+#		add_subdirectory(opy)
+#	else()
+#		message(FATAL "cannot build Python binding: Python library not found") 
+#	endif()
+#endif()
+
 
 # legacy code
 if(USE_LEGACY)

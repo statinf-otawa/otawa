@@ -22,14 +22,21 @@ extend REG_LIST
 
 extend B_Cond
 	otawa_kind = IS_CONTROL
-		| (if setl || cond.value == 0b1111 then IS_CALL else 0 endif)
-		| (if cond.value == 14 then 0 else IS_COND endif)
+		| (if cond.value == 0b1111 then IS_CALL						// BLX A2
+		   else									
+		   		  (if setl then IS_CALL else 0 endif) 				// BLcc A1
+				| (if cond.value == 14 then 0 else IS_COND endif)	// Bcc
+		   endif)
 
 extend BX_ARM
 	otawa_kind = IS_CONTROL
 		| (if rd.number == 14 then IS_RETURN else 0 endif)
 		| (if cond.value == 14 then 0 else IS_COND endif)
 		| (if rd.number == 12 then IS_BX_IP else 0 endif)
+
+extend BLX_ARM
+	otawa_kind = IS_CONTROL | IS_CALL
+		| (if cond.value == 14 then 0 else IS_COND endif)
 
 extend B_thumb
 	otawa_kind =

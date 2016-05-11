@@ -282,6 +282,7 @@ endif()
 
 # look for python
 find_package(PythonInterp)
+find_package(PythonLibs)
 
 # look for pygtk
 if(PYTHONINTERP_FOUND)

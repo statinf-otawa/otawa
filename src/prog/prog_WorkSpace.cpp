@@ -22,6 +22,7 @@
 #include <elm/data/List.h>
 #include <elm/deprecated.h>
 #include <elm/serial2/serial.h>
+#include <elm/sys/System.h>
 #include <elm/xom.h>
 
 #include <config.h>
@@ -610,7 +611,7 @@ void WorkSpace::unserialize(elm::serial2::Unserializer& unserializer) {
 
 
 #ifdef OTAWA_CONC
-#	define CONC_DEBUG(x)	// cerr << x
+#	define CONC_DEBUG(x)	//cerr << x
 	class RCURunnable: public sys::Runnable {
 		friend class WorkSpace;
 	public:
@@ -645,8 +646,9 @@ void WorkSpace::unserialize(elm::serial2::Unserializer& unserializer) {
 		static void init(void) {
 			static bool initialized = false;
 			if(!initialized) {
+				initialized = true;
 				mutex = sys::Mutex::make();
-				core_count = 4;		// TODO
+				core_count = sys::System::coreCount();
 			}
 		}
 
@@ -710,7 +712,7 @@ void WorkSpace::unserialize(elm::serial2::Unserializer& unserializer) {
 			mutex->lock();
 			int c = RCURunnable::core_count - running.count() - 1;
 			mutex->unlock();
-			CONC_DEBUG(cerr << "DEBUG: " << c << " threads available.\n");
+			CONC_DEBUG("DEBUG: " << c << " threads available (" << core_count << ").\n");
 
 			// run available threads
 			genstruct::Vector<sys::Thread *> to_wait;
@@ -749,7 +751,7 @@ void WorkSpace::unserialize(elm::serial2::Unserializer& unserializer) {
 	RCURunnable RCURunnable::root;
 	sys::Mutex *RCURunnable::mutex = 0;
 	List<RCURunnable *> RCURunnable::avail, RCURunnable::running;
-	int RCURunnable::core_count = 4;		// TODO -- get it from OS
+	int RCURunnable::core_count = 0;
 #endif
 
 

@@ -83,11 +83,11 @@ extend rotatedImmediate
 
 
 // condition extension
-extend condition
-	otawa_ever = cond == 14
-	otawa_never = cond == 15
+extend condition, full_condition
+	otawa_ever = value == 14
+	otawa_never = value == 15
 	otawa_cond =
-		switch(cond) {
+		switch(value) {
 		case 0:		"sem::EQ"
 		case 1:		"sem::NE"
 		case 2:		"sem::UGE"

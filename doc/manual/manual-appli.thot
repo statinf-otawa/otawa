@@ -27,14 +27,15 @@ Now, we will write a simple C++ source file to perform our work. We call it ''ip
 #include <elm/io.h>
 #include <otawa/otawa.h>
 #include <otawa/ipet.h>
+#include <iostream>
 
 using namespace elm;
 using namespace otawa;
 </code>
 
-The first include ''<elm/io.h>'' imports classes to perform outputs. ELM is a general purpose library delivered and used by OTAWA. It provides I/O facilities and generic data structues (OTAWA main author is allergic to STL but this one may be used seamlessly with OTAWA).
+The first include ''<elm/io.h>'' imports classes to perform outputs. ELM is a general purpose library delivered and used by OTAWA. It provides I/O facilities and generic data structures (OTAWA main author is allergic to STL but this one may be used seamlessly with OTAWA).
 
-The following inclusion ''<otawa/otawa.h'' provides OTAWA main classes while the next one, ''otawa/ipet.h'', is dedicated to IPET classes. The last two lines just open the namespaces where ELM and OTAWA classes lie in.
+The following inclusion ''<otawa/otawa.h>'' provides OTAWA main classes while the next one, ''otawa/ipet.h'', is dedicated to IPET classes. The last two lines just open the namespaces where ELM and OTAWA classes lie in.
 
 
 ===== Main Function =====
@@ -44,11 +45,11 @@ Now, we can write the main function :
 <code c>
 int main(void) {
   try {
-    WorkSpace *ws = manager.load("program to analyze");
+    WorkSpace *ws = MANAGER.load("program to analyze");
     ...
   }
   catch(elm::Exception& e) {
-    cerr << "ERROR: " << e.message() << '\n';
+    std::cerr << "ERROR: " << e.message() << '\n';
   }
 </code>
 
