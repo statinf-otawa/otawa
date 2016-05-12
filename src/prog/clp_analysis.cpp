@@ -2765,10 +2765,6 @@ Manager::~Manager() {
  * @param bb	Basic block to interpret.
  */
 Manager::step_t Manager::start(BasicBlock *bb) {
-	for(BasicBlock::InstIter bbi(bb); bbi; bbi++ )
-	{
-		elm::cout << bbi << " @ " << bbi->address() << io::endl;
-	}
 	mi = BasicBlock::InstIter(bb);
 	s = STATE_IN(bb);
 	cs = &s;
