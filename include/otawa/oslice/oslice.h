@@ -98,7 +98,7 @@ public:
 	otawa::dfa::MemorySet::t _workingMems;
 	//inline WorkingElement(BasicBlock* bb, Inst* inst, elm::BitVector bv, clp_value_set_t & rd) :
 	inline WorkingElement(BasicBlock* bb, Inst* inst, elm::BitVector bv, otawa::dfa::MemorySet::t & rd) :
-			_bb(bb), _inst(inst), _workingRegs(bv), _workingMems(rd) {
+			_bb(bb), _workingRegs(bv), _inst(inst), _workingMems(rd) {
 	}
 };
 

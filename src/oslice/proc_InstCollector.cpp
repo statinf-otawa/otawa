@@ -39,7 +39,6 @@ void InstCollector::configure(const PropList &props) {
 void InstCollector::processWorkSpace(WorkSpace *fw) {
 	// obtain the collected CFG from the program
 	const CFGCollection& coll = **otawa::INVOLVED_CFGS(fw);
-	const CFGCollection * a = otawa::INVOLVED_CFGS(fw);
 	// first lets make the control instructions the interested instructions that we want to slice for
 	interested_instructions_t *interestedInstructions = INTERESTED_INSTRUCTIONS(fw);
 	if(!interestedInstructions) {

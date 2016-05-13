@@ -30,7 +30,6 @@ DotDisplayer::DotDisplayer(WorkSpace* ws, String path, int showSlicing) {
 	_workspace = ws;
 
 	if(!path.isEmpty()) {
-		int sumCounts = 0;
 		OutStream * _output_stream = new elm::io::OutFileStream(path);
 		_output = Output(*_output_stream);
 		_skip = 0;

@@ -102,7 +102,6 @@ void LivenessChecker::processWorkSpace(WorkSpace *fw) {
 			}
 			Inst* currentInst = currentII->getInst();
 			BasicBlock* currentBB = currentII->getBB();
-			Inst* firstInstOfCurrentBB = currentBB->first();
 
 			elm::BitVector workingRegs(workspace()->platform()->regCount(), false);
 			provideRegisters(currentInst, workingRegs, 0);
@@ -477,7 +476,7 @@ void LivenessChecker::getMems(BasicBlock* bb, Inst* inst, int & currentIndex, ot
 			}
 			else {
 				//assert(0); // FIXME
-				for(int i = 0; i <= temp.mtimes(); i++) {
+				for(elm::t::uint32 i = 0; i <= temp.mtimes(); i++) {
 					dfa::MemorySet ms;
 					memorySet = ms.add(memorySet, MemArea(temp.lower() + i* temp.delta(), memBag[currentIndex].size));
 				}

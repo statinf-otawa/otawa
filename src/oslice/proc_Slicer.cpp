@@ -98,7 +98,6 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 			}
 			Inst* currentInst = currentII->getInst();
 			BasicBlock* currentBB = currentII->getBB();
-			Inst* firstInstOfCurrentBB = currentBB->first();
 			SET_OF_REMAINED_INSTRUCTIONS(currentBB)->add(currentInst);
 
 			// we know the BB, we know the instruction, then we can obtain its state from the oslice manager
