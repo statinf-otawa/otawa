@@ -25,8 +25,8 @@
 #define __OTAWA_OSLICE_COND_BRANCH_COLLECTOR_H__
 
 #include <elm/log/Log.h>
-#include "oslice_InstCollector.h"
-#include "oslice.h"
+#include <otawa/oslice/InstCollector.h>
+#include <otawa/oslice/oslice.h>
 
 
 

@@ -1,4 +1,4 @@
-#include "otawa/oslice/oslice_Slicer.h"
+#include <otawa/oslice/Slicer.h>
 
 namespace otawa { namespace oslice {
 

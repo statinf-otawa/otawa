@@ -9,7 +9,7 @@
 #include <elm/options.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/cfg/features.h>
-#include <otawa/oslice/oslice_DotDisplayer.h>
+#include <otawa/oslice/DotDisplayer.h>
 #include <elm/io/OutFileStream.h>
 #include <otawa/oslice/oslice.h>
 

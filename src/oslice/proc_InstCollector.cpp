@@ -22,7 +22,7 @@
  *     02110-1301  USA
  */
 
-#include "otawa/oslice/oslice_InstCollector.h"
+#include <otawa/oslice/InstCollector.h>
 namespace otawa { namespace oslice {
 #define DEBUGGING_MESSAGE(x) // x
 /**

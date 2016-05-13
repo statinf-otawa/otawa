@@ -1,12 +1,12 @@
 #ifndef __OTAWA_OSLICE_SLICER_H__
 #define __OTAWA_OSLICE_SLICER_H__
 
-#include "oslice.h"
-#include "oslice_DotDisplayer.h"
+#include <otawa/oslice/oslice.h>
+#include <otawa/oslice/DotDisplayer.h>
 #include <otawa/prog/Inst.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <elm/util/BitVector.h>
-#include "oslice_LivenessChecker.h"
+#include <otawa/oslice/LivenessChecker.h>
 
 namespace otawa { namespace oslice {
 

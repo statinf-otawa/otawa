@@ -1,4 +1,4 @@
-#include "otawa/oslice/oslice_CondBranchCollector.h"
+#include <otawa/oslice/CondBranchCollector.h>
 
 namespace otawa { namespace oslice {
 

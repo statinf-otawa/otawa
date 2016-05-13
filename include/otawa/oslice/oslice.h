@@ -29,7 +29,7 @@
 #include <otawa/prog/Inst.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/data/clp/features.h> // to use the CLP features
-#include "oslice_features.h"
+#include <otawa/oslice/features.h>
 #include <elm/compare.h>
 #include <otawa/dfa/MemorySet.h>
 
