@@ -53,6 +53,16 @@ void LivenessChecker::configure(const PropList &props) {
 	_debugLevel = LIVENESS_DEBUG_LEVEL(props);
 }
 
+/**
+ * @class LivenessChecker
+ * The LivenessChecker provides the status of the liveness of the registers and memory addresses
+ * @ingroup oslice
+ */
+
+/**
+ * Processing the workspace.
+ * @param fw		Current workspace.
+ */
 void LivenessChecker::processWorkSpace(WorkSpace *fw) {
 	_defaultRegisters = BitVector(workspace()->platform()->regCount(), false);
 	const CFGCollection& coll = **otawa::INVOLVED_CFGS(workspace());
