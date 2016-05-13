@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	DelayedBuilder
  *
  *	This file is part of OTAWA
@@ -23,7 +22,7 @@
 #define OTAWA_DELAYEDBUILDER_H_
 
 #include <elm/genstruct/SLList.h>
-#include <otawa/proc/CFGProcessor.h>
+#include <otawa/cfg/CFGTransformer.h>
 #include <otawa/cfg/Edge.h>
 #include <otawa/cfg/features.h>
 
@@ -34,26 +33,24 @@ class Inst;
 class Process;
 class VirtualCFG;
 
-class DelayedBuilder: public CFGProcessor {
+class DelayedBuilder: public CFGTransformer {
 public:
-	static Registration<DelayedBuilder> reg;
+	static p::declare reg;
 	DelayedBuilder(void);
 
 protected:
-	virtual void setup(WorkSpace *ws);
 	virtual void processWorkSpace(WorkSpace *ws);
-	virtual void processCFG(WorkSpace *ws, CFG *cfg);
+	virtual void setup(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
+	virtual void transform(CFG *g, CFGMaker& m);
 
 private:
-	typedef genstruct::HashTable<Block *, BasicBlock *> map_t;
-	void fix(Edge *oedge, Edge *nedge);
 	void cloneEdge(Edge *edge, Block *source, t::uint32 flags);
 	void insert(Edge *edge, BasicBlock *ibb);
 	BasicBlock *makeBB(Inst *inst, int n = 1);
 	BasicBlock *makeNOp(Inst *inst, int n = 1);
-	void buildBB(CFG *cfg);
-	void buildEdges(CFG *cfg);
+	void buildBB(CFG *cfg, CFGMaker& maker);
+	void buildEdges(CFG *cfg, CFGMaker& maker);
 	delayed_t type(Inst *inst);
 	int count(Inst *inst);
 	ot::size size(Inst *inst, int n = 1);
@@ -61,11 +58,7 @@ private:
 	Edge *makeEdge(Block *src, Block *tgt, t::uint32 flags);
 	void mark(CFG *cfg);
 
-	CFGCollection *coll;
 	DelayedCleaner *cleaner;
-	genstruct::HashTable<CFG *, CFGMaker *> cfg_map;
-	map_t map;
-	CFGMaker *vcfg;
 	DelayedInfo *info;
 };
 
