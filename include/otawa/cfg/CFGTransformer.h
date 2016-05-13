@@ -53,6 +53,7 @@ protected:
 	virtual Block *transform(Block *b);
 	virtual Edge *transform(Edge *e);
 	void map(Block *ob, Block *nb);
+	bool isMapped(Block *b);
 	CFGMaker *get(CFG *cfg);
 	Block *get(Block *b);
 	void install(CFG *cfg, CFGMaker& maker);
