@@ -52,9 +52,7 @@ typedef elm::avl::Set<BasicBlock*, elm::Comparator<BasicBlock*> > BBSet; // used
 typedef elm::avl::Set<clp::Value, elm::Comparator<clp::Value> > clp_value_set_t;
 
 // for OSlicer and LivenessChecker
-//typedef otawa::Bag<elm::Pair<otawa::Inst*, otawa::clp::Value> > inst_clp_bag_t;
 typedef otawa::Bag<MemoryAccessInformation> inst_clp_bag_t;
-//typedef genstruct::Vector<elm::Pair<otawa::Inst*, otawa::clp::Value> > clp_vector_t;
 typedef genstruct::Vector<MemoryAccessInformation> clp_vector_t;
 typedef otawa::Bag<otawa::clp::Value> clp_bag_t;
 
@@ -67,7 +65,7 @@ extern Identifier<interested_instructions_t*> INTERESTED_INSTRUCTIONS;
 extern Identifier<InstSet*> SET_OF_REMAINED_INSTRUCTIONS;
 extern Identifier<String> SLICED_CFG_OUTPUT_PATH;
 extern Identifier<String> SLICING_CFG_OUTPUT_PATH;
-extern Identifier<int> DEBUG_LEVEL;
+//extern Identifier<int> SLICE_DEBUG_LEVEL;
 
 static const t::uint32
 	DISPLAY_BB_MEM_ACCESS = 0x01,
@@ -94,9 +92,7 @@ public:
 	BasicBlock* _bb;
 	elm::BitVector _workingRegs;
 	Inst* _inst;
-	//clp_value_set_t _workingMems;
 	otawa::dfa::MemorySet::t _workingMems;
-	//inline WorkingElement(BasicBlock* bb, Inst* inst, elm::BitVector bv, clp_value_set_t & rd) :
 	inline WorkingElement(BasicBlock* bb, Inst* inst, elm::BitVector bv, otawa::dfa::MemorySet::t & rd) :
 			_bb(bb), _workingRegs(bv), _inst(inst), _workingMems(rd) {
 	}

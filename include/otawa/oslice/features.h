@@ -16,7 +16,8 @@ extern p::feature LIVENESS_FEATURE;
 
 extern Identifier<String> SLICED_CFG_OUTPUT_PATH;
 extern Identifier<String> SLICING_CFG_OUTPUT_PATH;
-extern Identifier<elm::t::uint32> LIVENESS_DEBUG_LEVEL;
+extern Identifier<int> LIVENESS_DEBUG_LEVEL;
+extern Identifier<int> SLICE_DEBUG_LEVEL;
 
 class Manager {
 public:

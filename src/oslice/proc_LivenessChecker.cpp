@@ -24,7 +24,7 @@ static Identifier<int> MEM_ACCESS_IDENTIFIED("", 0);
 
 namespace otawa { namespace oslice {
 
-Identifier<elm::t::uint32> LIVENESS_DEBUG_LEVEL("otawa::oslice::LIVENESS_MANAGER_DEBUG_LEVEL", 0);
+Identifier<int> LIVENESS_DEBUG_LEVEL("otawa::oslice::LIVENESS_MANAGER_DEBUG_LEVEL", 0);
 p::feature LIVENESS_FEATURE("otawa::oslice::LIVENESS_FEATURE", new Maker<LivenessChecker>());
 
 p::declare LivenessChecker::reg = p::init("otawa::oslice::LivenessChecker", Version(2, 0, 0))
@@ -431,8 +431,6 @@ void LivenessChecker::updateAddrsFromInstruction(otawa::dfa::MemorySet::t & work
 
 //bool LivenessChecker::containsAllAddrs(clp_value_set_t & a, clp_value_set_t & b) {
 bool LivenessChecker::containsAllAddrs(otawa::dfa::MemorySet::t & a, otawa::dfa::MemorySet::t & b) {
-//	for(clp_value_set_t::Iterator iter(b); iter; iter++)
-//		if(!a.contains(iter)) return false; return true;
 	dfa::MemorySet ms;
 	for(dfa::MemorySet::Iter msi = b.areas(); msi; msi++)
 		if(!ms.contains(a, msi))
@@ -448,7 +446,11 @@ bool LivenessChecker::interestingRegs(elm::BitVector const & a, elm::BitVector c
 	return true;
 }
 
-//void LivenessChecker::getMems(BasicBlock* bb, Inst* inst, int & currentIndex, clp_value_set_t & clpSet, int readOrWrite) {
+
+/**
+ * Processing the workspace.
+ * @param bb		The current processing basic block
+ */
 void LivenessChecker::getMems(BasicBlock* bb, Inst* inst, int & currentIndex, otawa::dfa::MemorySet::t & memorySet, int readOrWrite) {
 	inst_clp_bag_t memBag;
 	if(readOrWrite == 0) // read

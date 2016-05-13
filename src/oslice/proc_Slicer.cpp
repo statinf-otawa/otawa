@@ -53,16 +53,6 @@ private:
 /**
  */
 Slicer::Slicer(AbstractRegistration& _reg) : otawa::Processor(_reg) {
-//	elm::log::Debug::setSourcePathLength(60);
-//	elm::log::Debug::setDebugFlag(true);
-//	elm::log::Debug::setSourceInfoFlag(true);
-//#ifndef NO_COLOR
-//	elm::log::Debug::setColorFlag(true);
-//#else
-//	elm::log::Debug::setColorFlag(false);
-//#endif
-//	elm::log::Debug::setPrefixColor(elm::color::IWhi);
-	//_debugLevel |= DISPLAY_SLICING_STAGES;
 }
 
 /**
@@ -71,8 +61,7 @@ void Slicer::configure(const PropList &props) {
 	Processor::configure(props);
 	slicingCFGOutputPath = SLICING_CFG_OUTPUT_PATH(props);
 	slicedCFGOutputPath = SLICED_CFG_OUTPUT_PATH(props);
-	_debugLevel = DEBUG_LEVEL(props);
-
+	_debugLevel = SLICE_DEBUG_LEVEL(props);
 }
 
 
@@ -580,12 +569,6 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 			}
 		} // end of finding predecessors of the current BB
 
-
-
-
-
-
-
 		if(predecessors.count() == 0)
 			if(_debugLevel & DISPLAY_SLICING_STAGES)
 				elm::cout << __SOURCE_INFO__ << __RED__ << "No predecessor for BB @ " << currentBB_wl->address() << __RESET__ << io::endl;
@@ -627,36 +610,11 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 }
 
 // check if any element in b is in a
-//inline bool Slicer::interestingAddrs(clp_value_set_t const & a, clp_value_set_t const & b) {
 inline bool Slicer::interestingAddrs(otawa::dfa::MemorySet::t const & a, otawa::dfa::MemorySet::t const & b) {
 	dfa::MemorySet ms;
-//	for(clp_value_set_t::Iterator addr(b); addr; ++addr)
-//		if(a.contains(*addr))
-//			return true;
-//
-//	return false;
-//	for(dfa::MemorySet::Iter msi = b.areas(); msi; msi++) {
-//
-//		elm::cout << "a = " << a << ", msi = " << *msi << io::endl;
-//
-//		if(ms.contains(a, msi)) {
-//			return true;
-//		}
-//	}
-//
-//	for(dfa::MemorySet::Iter msi = a.areas(); msi; msi++) {
-//
-//		elm::cout << "b = " << b << ", msi = " << *msi << io::endl;
-//
-//		if(ms.contains(b, msi)) {
-//			return true;
-//		}
-//	}
-
 	dfa::MemorySet::t intersection = ms.meet(a, b);
 	if(intersection == dfa::MemorySet::empty)
 		return false;
-
 
 	return true;
 }

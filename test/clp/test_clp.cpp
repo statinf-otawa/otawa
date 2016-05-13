@@ -91,7 +91,7 @@ int main(void) {
 		// T and _
 		clp::Value v = clp::Value::all;
 		v.ge(10);
-		CHECK_EQUAL(clp::Value(clp::Value::all).ge(10), clp::Value::all);
+		CHECK_EQUAL(clp::Value(clp::Value::all).ge(10), clp::Value(clp::VAL, 10, 1, 0x7FFFFFF5));
 		v = clp::Value::none;
 		v.ge(10);
 		CHECK_EQUAL(clp::Value(clp::Value::none).ge(10), clp::Value::none);
@@ -130,7 +130,7 @@ int main(void) {
 	// le tests
 	{
 		// T and _
-		CHECK(test_le(all, 10, all));
+		CHECK(test_le(all, 10, clp::Value(clp::VAL, 0x80000000, 1, 0x8000000a)));
 		CHECK(test_le(none, 10, none));
 
 		// constant
@@ -160,7 +160,7 @@ int main(void) {
 	// geu tests
 	{
 		// T and _
-		CHECK_EQUAL(clp::Value(clp::Value::all).geu(10), clp::Value::all); // should be (0xa, 1, 0xfffffff5)
+		CHECK_EQUAL(clp::Value(clp::Value::all).ge(10), clp::Value(clp::VAL, 10, 1, 0x7FFFFFF5));
 		clp::Value v;
 		CHECK_EQUAL(clp::Value(clp::Value::none).geu(10), clp::Value::none); 
 
@@ -200,7 +200,7 @@ int main(void) {
 		// T and _
 		clp::Value v = clp::Value::all;
 		v.leu(10);
-		CHECK_EQUAL(clp::Value(clp::Value::all).leu(10), clp::Value::all);
+		CHECK_EQUAL(clp::Value(clp::Value::all).leu(10), clp::Value(clp::VAL, 0x0, 1, 0xa));
 		v = clp::Value::none;
 		v.leu(10);
 		CHECK(v == clp::Value::none);

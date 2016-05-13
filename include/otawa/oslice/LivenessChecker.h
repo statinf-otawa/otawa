@@ -1,7 +1,7 @@
 #ifndef __OSLICE_LIVENESS_CHECKER_H__
 #define __OSLICE_LIVENESS_CHECKER_H__
 
-#include "oslice.h"
+#include <otawa/oslice/oslice.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/features.h>
@@ -22,15 +22,8 @@ public:
 	virtual void processWorkSpace(WorkSpace *fw);
 	inline static elm::BitVector getRegisters() { return _defaultRegisters; }
  	static void provideRegisters(Inst* inst, elm::BitVector& regsToModify, int readOrWrite);
- 	//static void displayAddrs(io::Output& out, clp_value_set_t & v);
  	template<class T>
  	inline static void displayAddrs(io::Output& out, T & v) {
-// 		if(v.count() == 0) {
-// 			out << "None";
-// 			return;
-// 		}
-// 		for(class T::Iterator p(v); p; ++p)
-// 			out << *p << " ";
  		out << v;
  	}
  	inline static void displayAddrs(io::Output& out, clp_bag_t & v) {
@@ -40,17 +33,11 @@ public:
  			out << "None ";
  	}
 
-
- 	//static void getMems(BasicBlock* bb, Inst* inst, int & currentIndex, clp_value_set_t & clpSet, int readOrWrite);
  	static void getMems(BasicBlock* bb, Inst* inst, int & currentIndex, otawa::dfa::MemorySet::t & clpSet, int readOrWrite);
- 	//static bool containsAllAddrs(clp_value_set_t & a, clp_value_set_t & b);
  	static bool containsAllAddrs(otawa::dfa::MemorySet::t & a, otawa::dfa::MemorySet::t & b);
- 	//static void updateAddrsFromInstruction(clp_value_set_t & workingMem, clp_value_set_t & readMem, clp_value_set_t & writeMem, t::uint32 debugLevel);
  	static void updateAddrsFromInstruction(otawa::dfa::MemorySet::t & workingMem, otawa::dfa::MemorySet::t & readMem, otawa::dfa::MemorySet::t & writeMem, t::uint32 debugLevel);
 
 protected:
-
-	//virtual bool interestingAddrs(clp_value_set_t const & a, clp_value_set_t const & b);
  	virtual bool interestingAddrs(dfa::MemorySet::t const & a, dfa::MemorySet::t const & b);
 	virtual bool interestingRegs(elm::BitVector const & a, elm::BitVector const & b);
 
@@ -64,9 +51,6 @@ private:
  	clp::Manager *clpManager;
  	static elm::BitVector _defaultRegisters;
  	static t::uint32 _debugLevel;
-
- 	//void intersect()
-
 }; // class LivenessChecker
 
 }} // otawa::oslice
