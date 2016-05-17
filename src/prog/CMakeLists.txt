@@ -2,6 +2,14 @@ set(CMAKE_INSTALL_RPATH "${ORIGIN}")
 set(CMAKE_MACOSX_RPATH true)
 set(CMAKE_CXX_FLAGS "-Wall" )
 
+# TODO
+#	"cfg_PSTBuilder.cpp"
+#	"cfg_LoopReductor.cpp"
+#	"cfg_SpanningTreeBuilder.cpp"
+#	"dfa_FastState.cpp"
+#	"ipet_TreePath.cpp"
+#	"ai.cpp"
+
 # sources
 set(libotawa_SOURCES
 
@@ -27,14 +35,11 @@ set(libotawa_SOURCES
 	"cfg_CFGChecker.cpp"
 	"cfg_CFGCheckSummer.cpp"
 	"cfg_CFGInfo.cpp"
-#	"cfg_DelayedBuilder.cpp"
+	"cfg_DelayedBuilder.cpp"
 	"cfg_Dominance.cpp"
 	"cfg_LoopInfoBuilder.cpp"
-#	"cfg_PSTBuilder.cpp"
 	"cfg_LoopUnroller.cpp"
-#	"cfg_LoopReductor.cpp"
 	"cfg_PostDominance.cpp"
-#	"cfg_SpanningTreeBuilder.cpp"
 	"cfg_SubCFGBuilder.cpp"
 	"cfg_CFGTransformer.cpp"
 	"cfg_Virtualizer.cpp"
@@ -88,7 +93,6 @@ set(libotawa_SOURCES
 	"ipet_FlowFactConstraintBuilder.cpp"
 	"ipet_ILPSystemGetter.cpp"
 	"ipet_IPET.cpp"
-#	"ipet_TreePath.cpp"
 	"ipet_TrivialBBTime.cpp"
 	"ipet_VarAssignment.cpp"
 	"ipet_WCETComputation.cpp"
@@ -116,9 +120,7 @@ set(libotawa_SOURCES
 	"dfa_State.cpp"
 
 #    abstract interpretation module
-#	"dfa_FastState.cpp"
 	"dfa_AbsIntLite.cpp"
-#	"ai.cpp"
 
 
 #    utility module

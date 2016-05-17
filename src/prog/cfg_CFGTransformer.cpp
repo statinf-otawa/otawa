@@ -141,7 +141,8 @@ Edge *CFGTransformer::build(Block *src, Block *snk, t::uint32 flags) {
 
 /**
  * Clone a block. Notice that, if the block is a special block
- * (entry, exit, unknown), the own of the current made CFG are returned.
+ * (entry, exit, unknown), the own block of the current made CFG are returned.
+ * Notice that no entry is added to the map between old and new blocks.
  * @param b		Block to clone.
  * @return		Cloned block.
  */
@@ -277,6 +278,16 @@ Block *CFGTransformer::get(Block *b) {
 }
 
 /**
+ * Test if the given block of the original CFG
+ * is mapped with a block of the new CFG.
+ * @param b		Block to test.
+ * @return		True if it is mapped, false else.
+ */
+bool CFGTransformer::isMapped(Block *b) {
+	return bmap.hasKey(b);
+}
+
+/**
  */
 void CFGTransformer::processWorkSpace(WorkSpace *ws) {
 	const CFGCollection *coll = otawa::INVOLVED_CFGS(ws);
@@ -289,6 +300,8 @@ void CFGTransformer::processWorkSpace(WorkSpace *ws) {
 	// process each CFG in turn
 	while(wl) {
 		Pair<CFG *, CFGMaker *> p = wl.get();
+		if(logFor(LOG_FUN))
+			log << "\ttransform " << p.fst << io::endl;
 		install(p.fst, *p.snd);
 		transform(p.fst, *p.snd);
 	}

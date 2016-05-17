@@ -896,6 +896,15 @@ p::feature SOURCE_LINE_FEATURE("otawa::SOURCE_LINE_FEATURE", new Maker<NoProcess
 p::feature VLIW_SUPPORTED("otawa::VLIW_SUPPORTED", new Maker<NoProcessor>());
 
 
+
+/**
+ * This feature is provided by @ref Process which architecture provides conditional
+ * instructions. A common example are the ARM microprocessors which instructions,
+ * at least in normal mode, can be conditional. The architectures providing this
+ * feature implement the method Inst::condition().
+ */
+p::feature CONDITIONAL_INSTRUCTIONS_FEATURE("otawa::CONDITIONAL_INSTRUCTIONS_FEATURE", new Maker<NoProcessor>());
+
 /**
  * This feature is put on the process object whose image supports Unix-like
  * argument passing. It contains the image address of the argv vector.

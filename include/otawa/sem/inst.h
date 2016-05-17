@@ -74,19 +74,19 @@ typedef enum opcode {
 
 // type of conditions
 typedef enum cond_t {
-	NO_COND = 0,
-	EQ,
-	LT,
-	LE,
-	GE,
-	GT,
-	ANY_COND = 8,
-	NE,
-	ULT,
-	ULE,
-	UGE,
-	UGT,
-	MAX_COND
+	NO_COND 	= 0,
+	EQ			= 1,
+	LT			= 2,
+	LE			= 3,
+	GE			= 4,
+	GT			= 5,
+	ANY_COND	= 8,
+	NE			= 9,
+	ULT			= 10,
+	ULE			= 11,
+	UGE			= 12,
+	UGT			= 13,
+	MAX_COND	= 14
 } cond_t;
 
 

@@ -46,6 +46,19 @@ let t1					= -1
 let t2					= -2
 let t3					= -3
 
+let NO_COND 	= 0
+let EQ			= 1
+let LT			= 2
+let LE			= 3
+let GE			= 4
+let GT			= 5
+let ANY_COND	= 8
+let NE			= 9
+let ULT			= 10
+let ULE			= 11
+let UGE			= 12
+let UGT			= 13
+
 macro R(i) 				= "_GPR"(i)
 macro _CPSR				= "_CPSR"()
 macro _branch(t)		= "block.add"("sem::branch"(t))

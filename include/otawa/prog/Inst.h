@@ -1,5 +1,4 @@
 /*
- *	$Id $
  *	Inst class interface
  *
  *	This file is part of OTAWA
@@ -30,17 +29,16 @@
 #include <otawa/properties.h>
 #include <otawa/prog/features.h>
 #include <otawa/hard/Platform.h>
+#include <otawa/sem/inst.h>
 
 namespace otawa {
 
 // Declaration
 class Inst;
-//class PseudoInst;
 namespace hard {
 	class Platform;
 	class Register;
 }
-namespace sem { class Block; }
 
 // Register usage
 typedef genstruct::Vector<t::uint16> RegSet;
@@ -142,6 +140,8 @@ public:
 	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
 	virtual int multiCount(void);
 
+	// guarded information
+	virtual sem::cond_t condition(void);
 
 protected:
 	static const elm::genstruct::Table<hard::Register *> no_regs;

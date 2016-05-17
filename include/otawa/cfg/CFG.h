@@ -95,7 +95,10 @@ private:
 	CFG *_cfg;
 };
 io::Output& operator<<(io::Output& out, Block *block);
-
+inline io::Output& operator<<(io::Output& out, BasicBlock *block)
+	{ return out << (Block *)block; }
+inline io::Output& operator<<(io::Output& out, SynthBlock *block)
+	{ return out << (Block *)block; }
 
 class SynthBlock: public Block {
 	friend class CFGMaker;
@@ -173,6 +176,7 @@ private:
 	genstruct::SLList<SynthBlock *> _callers;
 };
 io::Output& operator<<(io::Output& out, CFG *cfg);
+inline io::Output& operator<<(io::Output& out, const CFG::BlockIter& i) { return out << *i; }
 
 
 // delayed inlines

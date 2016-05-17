@@ -286,6 +286,8 @@ const Platform::Identification Platform::ID("arm-eabi-");
 
 class Process;
 
+#include "otawa_condition.h"
+
 // Inst class
 class Inst: public otawa::Inst {
 public:
@@ -317,7 +319,8 @@ public:
 		return out_regs;
 	}
 
-	virtual void semInsts (sem::Block &block);
+	virtual void semInsts(sem::Block &block);
+	virtual sem::cond_t condition(void);
 
 protected:
 	Process &proc;
@@ -448,6 +451,7 @@ public:
 		provide(CONTROL_DECODING_FEATURE);
 		provide(REGISTER_USAGE_FEATURE);
 		provide(MEMORY_ACCESSES);
+		provide(CONDITIONAL_INSTRUCTIONS_FEATURE);
 		Info::ID(this) = this;
 	}
 
@@ -1006,6 +1010,29 @@ void Inst::semInsts (sem::Block &block) {
 			break;
 		}
 }
+
+
+sem::cond_t Inst::condition(void) {
+	arm_inst_t *inst = proc.decode_raw(address());
+	sem::cond_t res;
+	switch (arm_condition(inst)) {
+	case 0: 	res = sem::EQ; 			break;
+	case 1: 	res = sem::NE; 			break;
+	case 2: 	res = sem::UGE; 		break;
+	case 3: 	res = sem::ULT; 		break;
+	case 8: 	res = sem::UGT; 		break;
+	case 9:		res = sem::ULE; 		break;
+	case 10:	res = sem::GE; 			break;
+	case 11:	res = sem::LT; 			break;
+	case 12:	res = sem::GT; 			break;
+	case 13: 	res = sem::LE; 			break;
+	case 14:	res = sem::NO_COND; 	break;
+	default: 	res = sem::ANY_COND;	break;
+	}
+	arm_free_inst(inst);
+	return res;
+}
+
 
 /****** loader definition ******/
 
