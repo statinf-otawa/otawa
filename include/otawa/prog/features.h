@@ -70,6 +70,7 @@ extern p::feature SEMANTICS_INFO_FLOAT;
 extern p::feature SEMANTICS_INFO;
 extern p::feature SOURCE_LINE_FEATURE;
 extern p::feature VLIW_SUPPORTED;
+extern p::feature CONDITIONAL_INSTRUCTIONS_FEATURE;
 
 } // otawa
 
