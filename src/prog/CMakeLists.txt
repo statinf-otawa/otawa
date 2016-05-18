@@ -182,6 +182,7 @@ set(libotawa_SOURCES
 	"prog_Symbol.cpp"
 	"prog_TextDecoder.cpp"
 	"prog_VarTextDecoder.cpp"
+	"prog_VirtualInst.cpp"
 	"prog_WorkSpace.cpp"
 	"sem.cpp"
 
