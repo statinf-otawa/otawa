@@ -711,7 +711,6 @@ p::declare ProcessorProcessor::reg = p::init("otawa::ProcessorProcessor", Versio
 	.maker<ProcessorProcessor>();
 
 
-static SilentFeature::Maker<ProcessorProcessor> maker;
 /**
  * This feature ensures we have obtained the memory configuration
  * of the system.
@@ -720,7 +719,7 @@ static SilentFeature::Maker<ProcessorProcessor> maker;
  * @li @ref otawa::hard::PROCESSOR
  * @li @ref otawa::hard::PROCESSOR_ID
  */
-SilentFeature PROCESSOR_FEATURE("otawa::hard::PROCESSOR_FEATURE", maker);
+p::feature PROCESSOR_FEATURE("otawa::hard::PROCESSOR_FEATURE", p::make<ProcessorProcessor>());
 
 
 /**

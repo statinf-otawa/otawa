@@ -21,7 +21,6 @@
 #ifndef OTAWA_CLP_FEATURES_H_
 #define OTAWA_CLP_FEATURES_H_
 
-#include <otawa/proc/SilentFeature.h>
 #include <otawa/data/clp/ClpState.h>
 #include <otawa/prog/sem.h>
 
@@ -60,7 +59,7 @@ private:
 	int i;
 };
 
-extern SilentFeature FEATURE;
+extern p::feature FEATURE;
 
 extern Identifier<clp::State> STATE_IN;
 extern Identifier<clp::State> STATE_OUT;

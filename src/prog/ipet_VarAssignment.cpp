@@ -35,15 +35,12 @@ namespace otawa {
 namespace ipet {
 
 // Registration
-Registration<VarAssignment> VarAssignment::reg(
-	"otawa::ipet::VarAssignment",
-	Version(1, 0, 0),
-	p::base, &BBProcessor::reg,
-	p::require, &ILP_SYSTEM_FEATURE,
-	p::provide, &ASSIGNED_VARS_FEATURE,
-	p::config, &EXPLICIT,
-	p::end
-);
+p::declare VarAssignment::reg = p::init("otawa::ipet::VarAssignment", Version(1, 0, 0))
+	.extend<BBProcessor>()
+	.require(ILP_SYSTEM_FEATURE)
+	.provide(ASSIGNED_VARS_FEATURE)
+	.config(EXPLICIT)
+	.make<VarAssignment>();
 
 /**
  *
@@ -140,7 +137,7 @@ void VarAssignment::cleanup(WorkSpace *ws) {
  * Build a new variable assignment processor.
  */
 VarAssignment::VarAssignment(void)
-: BBProcessor(reg), _explicit(false), _recursive(false) {
+: BBProcessor(reg), _explicit(false), _recursive(false), sys(0) {
 }
 
 
@@ -182,7 +179,6 @@ String VarAssignment::makeEdgeVar(Edge *edge, CFG *cfg) {
 }
 
 
-static SilentFeature::Maker<VarAssignment> maker;
 /**
  * This feature asserts that each block and each edge has a variable
  * name asserted.
@@ -190,6 +186,6 @@ static SilentFeature::Maker<VarAssignment> maker;
  * @par Properties
  * @li @ref ipet::VAR
  */
-p::feature ASSIGNED_VARS_FEATURE("otawa::ipet::ASSIGNED_VARS_FEATURE", new Maker<VarAssignment>());
+p::feature ASSIGNED_VARS_FEATURE("otawa::ipet::ASSIGNED_VARS_FEATURE", p::make<VarAssignment>());
 
 } } // otawa::ipet

@@ -83,7 +83,7 @@ private:
 };
 
 extern p::feature VIRTUAL_INST_FEATURE;
-extern Identifier<VirtualInstManager *> VIRTUAL_INST_MANAGER;
+extern p::id<VirtualInstManager *> VIRTUAL_INST_MANAGER;
 
 }	// otawa
 

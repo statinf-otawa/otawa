@@ -27,7 +27,6 @@
 #include <elm/genstruct/Table.h>
 #include <otawa/prog/Inst.h>
 #include <elm/util/strong_type.h>
-#include <otawa/proc/SilentFeature.h>
 #include <elm/system/Path.h>
 #include <otawa/prog/Manager.h>
 
@@ -341,7 +340,7 @@ inline T Stage::select(Inst::kind_t kind, const T table[]) const {
 }
 
 // features
-extern SilentFeature PROCESSOR_FEATURE;
+extern p::feature PROCESSOR_FEATURE;
 extern Identifier<const Processor *> PROCESSOR;
 extern Identifier<string> PROCESSOR_ID;
 

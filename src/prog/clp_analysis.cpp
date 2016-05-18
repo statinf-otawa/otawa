@@ -2505,7 +2505,6 @@ void Analysis::configure(const PropList &props) {
 }
 
 
-static SilentFeature::Maker<Analysis> maker;
 /**
  * This features ensure that the clp analysis has been identified.
  *
@@ -2518,7 +2517,7 @@ static SilentFeature::Maker<Analysis> maker;
  *
  * @ingroup clp
  */
-SilentFeature FEATURE("otawa::clp::FEATURE", maker);
+p::feature FEATURE("otawa::clp::FEATURE", p::make<Analysis>());
 
 /**
  * Put on a basic block, it's the CLP state at the beginning of the block

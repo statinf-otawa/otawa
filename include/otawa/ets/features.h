@@ -22,7 +22,6 @@
 #define OTAWA_ETS_ETS_H
 
 #include <otawa/prop/Identifier.h>
-#include <otawa/proc/SilentFeature.h>
 
 namespace otawa { namespace ets {
 
@@ -30,23 +29,23 @@ namespace otawa { namespace ets {
 class AbstractCacheState;
 
 // features
-extern SilentFeature ACS_FEATURE;
+extern p::feature ACS_FEATURE;
 extern Identifier<AbstractCacheState *> ACS;
 
-extern SilentFeature CACHE_FIRST_MISS_FEATURE;
+extern p::feature CACHE_FIRST_MISS_FEATURE;
 extern Identifier<int> FIRST_MISSES;
 
-extern SilentFeature CACHE_HIT_FEATURE;
+extern p::feature CACHE_HIT_FEATURE;
 extern Identifier<int> HITS;
 
-extern SilentFeature CACHE_MISS_FEATURE;
+extern p::feature CACHE_MISS_FEATURE;
 extern Identifier<int> MISSES;
 
-extern SilentFeature FLOWFACT_FEATURE;
+extern p::feature FLOWFACT_FEATURE;
 extern Identifier<int> LOOP_COUNT;
 
-extern SilentFeature BLOCK_TIME_FEATURE;
-extern SilentFeature WCET_FEATURE;
+extern p::feature BLOCK_TIME_FEATURE;
+extern p::feature WCET_FEATURE;
 extern Identifier<int> WCET;
 extern Identifier<int> CONFLICTS;
 		

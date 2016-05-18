@@ -163,6 +163,8 @@ protected:
 			script::ONLY_CONFIG(props) = true;
 		if(timed)
 			script::TIME_STAT(props) = true;
+		if(ilp_dump)
+			ipet::EXPLICIT(props) = true;
 		TASK_ENTRY(props) = entry;
 		script::PATH(props) = path;
 		script::Script scr;

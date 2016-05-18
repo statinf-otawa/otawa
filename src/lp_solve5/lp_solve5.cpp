@@ -287,6 +287,7 @@ public:
 		int result = false;
 		if(!ws || !ws->isCancelled()) {
 			if(fail == OPTIMAL) {
+				cerr << "DEBUG: optimal solution!\n";
 				result = true;
 
 				// Record variables values
@@ -297,10 +298,12 @@ public:
 
 				// Get optimization result
 				val = rint(get_objective(lp));
+				cerr << "DEBUG: objective = " << val << io::endl;
 			}
 
 			// record error message
 			else {
+				cerr << "DEBUG: non-optimal solutio!\n";
 
 				// messages
 	#			define ERRORM(x)	{ x, #x }

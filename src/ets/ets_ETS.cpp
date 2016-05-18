@@ -37,7 +37,6 @@ namespace otawa { namespace ets {
  */
 
 
-static SilentFeature::Maker<ACSComputation> acs_maker;
 /**
  * Compute the Abstract Cache State at entry of each AST for L1 instruction cache.
  *
@@ -49,7 +48,7 @@ static SilentFeature::Maker<ACSComputation> acs_maker;
  *
  * @ingroup ets
  */
-SilentFeature ACS_FEATURE("otawa::ets::ACS_FEATURE", acs_maker);
+p::feature ACS_FEATURE("otawa::ets::ACS_FEATURE", p::make<ACSComputation>());
 
 /**
  * This identifier (AbstractCacheState *) is used for storing the abstract cache
@@ -60,7 +59,6 @@ SilentFeature ACS_FEATURE("otawa::ets::ACS_FEATURE", acs_maker);
 Identifier<AbstractCacheState *> ACS("otawa::ets::ACS", 0);
 
 
-static SilentFeature::Maker<CacheFirstMissComputation> fmiss_maker;
 /**
  * Provide the computation of occurrences of first-misses of instruction cache.
  *
@@ -72,7 +70,7 @@ static SilentFeature::Maker<CacheFirstMissComputation> fmiss_maker;
  *
  * @ingroup ets
  */
-SilentFeature CACHE_FIRST_MISS_FEATURE("otawa::ets::CACHE_FIRST_MISS_FEATURE", fmiss_maker);
+p::feature CACHE_FIRST_MISS_FEATURE("otawa::ets::CACHE_FIRST_MISS_FEATURE", p::make<CacheFirstMissComputation>());
 
 
 /**
@@ -84,7 +82,6 @@ SilentFeature CACHE_FIRST_MISS_FEATURE("otawa::ets::CACHE_FIRST_MISS_FEATURE", f
 Identifier<int> FIRST_MISSES("otawa::ets::FIRST_MISSES", 0);
 
 
-static SilentFeature::Maker<CacheHitComputation> hit_maker;
 /**
  * Provided the computation of the number of hits for the L1 instruction cache.
  *
@@ -96,7 +93,7 @@ static SilentFeature::Maker<CacheHitComputation> hit_maker;
  *
  * @ingroup ets
  */
-SilentFeature CACHE_HIT_FEATURE("otawa::ets::CACHE_HIT_FEATURE", hit_maker);
+p::feature CACHE_HIT_FEATURE("otawa::ets::CACHE_HIT_FEATURE", p::make<CacheHitComputation>());
 
 
 /**
@@ -108,7 +105,6 @@ SilentFeature CACHE_HIT_FEATURE("otawa::ets::CACHE_HIT_FEATURE", hit_maker);
 Identifier<int> HITS("otawa::ets::HITS", -1);
 
 
-static SilentFeature::Maker<CacheMissComputation> miss_maker;
 /**
  * Provide the number of misses for a L1 instruction cache.
  *
@@ -120,7 +116,7 @@ static SilentFeature::Maker<CacheMissComputation> miss_maker;
  *
  * @ingroup ets
  */
-SilentFeature CACHE_MISS_FEATURE("otawa::ets::CACHE_MISS_FEATURE", miss_maker);
+p::feature CACHE_MISS_FEATURE("otawa::ets::CACHE_MISS_FEATURE", p::make<CacheMissComputation>());
 
 
 /**
@@ -132,7 +128,6 @@ SilentFeature CACHE_MISS_FEATURE("otawa::ets::CACHE_MISS_FEATURE", miss_maker);
 Identifier<int> MISSES("otawa::ets::misses", 0);
 
 
-static SilentFeature::Maker<FlowFactLoader> ff_maker;
 /**
  * Provide flow facts in the AST.
  *
@@ -144,7 +139,7 @@ static SilentFeature::Maker<FlowFactLoader> ff_maker;
  *
  * @ingroup ets
  */
-SilentFeature FLOWFACT_FEATURE("otawa::ets::FLOWFACT_FEATURE", ff_maker);
+p::feature FLOWFACT_FEATURE("otawa::ets::FLOWFACT_FEATURE", p::make<FlowFactLoader>());
 
 
 /**
@@ -156,7 +151,6 @@ SilentFeature FLOWFACT_FEATURE("otawa::ets::FLOWFACT_FEATURE", ff_maker);
 Identifier<int> LOOP_COUNT("otawa::ets::LOOP_COUNT", -1);
 
 
-static SilentFeature::Maker<TrivialAstBlockTime> bt_maker;
 /**
  * Provide WCET for each AST.
  *
@@ -168,10 +162,9 @@ static SilentFeature::Maker<TrivialAstBlockTime> bt_maker;
  *
  * @ingroup ets
  */
-SilentFeature BLOCK_TIME_FEATURE("otawa::ets::BLOCK_TIME_FEATURE", bt_maker);
+p::feature BLOCK_TIME_FEATURE("otawa::ets::BLOCK_TIME_FEATURE", p::make<TrivialAstBlockTime>());
 
 
-static SilentFeature::Maker<WCETComputation> w_maker;
 /**
  * Provide the WCET of a task using the ETS approach.
  *
@@ -183,7 +176,7 @@ static SilentFeature::Maker<WCETComputation> w_maker;
  *
  * @ingroup ets
  */
-SilentFeature WCET_FEATURE("otawa::ets::WCET_FEATURE", w_maker);
+p::feature WCET_FEATURE("otawa::ets::WCET_FEATURE", p::make<WCETComputation>());
 
 
 /**

@@ -33,7 +33,7 @@ typedef enum {
 } method_t;
 
 // feature
-extern SilentFeature BRANCH_PREDICTION_FEATURE;
+extern p::feature BRANCH_PREDICTION_FEATURE;
 
 // Configuration Properties
 extern Identifier<method_t>		METHOD;

@@ -67,18 +67,6 @@ class Processor: public otawa::Monitor {
 
 public:
 
-	/*typedef enum log_level_t {
-		LOG_NONE = 0,
-		LOG_PROC = 1,
-		LOG_FILE = 2,
-		LOG_DEPS = LOG_FILE,
-		LOG_FUN = 3,
-		LOG_CFG = LOG_FUN,
-		LOG_BLOCK = 4,
-		LOG_BB = LOG_BLOCK,
-		LOG_INST = 5
-	} log_level_t;*/
-
 	// Constructors
 	Processor(void);
 	Processor(AbstractRegistration& registration);
@@ -118,25 +106,18 @@ public:
 protected:
 	static const t::uint32
 		IS_TIMED		= 0x01 << CUSTOM_SHIFT,
-		//IS_VERBOSE		= 0x02,
 		IS_ALLOCATED	= 0x04 << CUSTOM_SHIFT,
 		IS_PREPARED		= 0x08 << CUSTOM_SHIFT,
 		IS_COLLECTING	= 0x10 << CUSTOM_SHIFT;
-	//unsigned long flags;
-	//elm::io::Output out;
-	//elm::io::Output log;
 	PropList *stats;
 
 	// accessors
 	friend class FeatureRequirer;
-	//inline bool isVerbose(void) const { return flags & IS_VERBOSE; }
 	inline bool isTimed(void) const { return flags & IS_TIMED; }
 	inline bool recordsStats(void) const { return stats; }
 	inline bool isAllocated(void) const { return flags & IS_ALLOCATED; }
 	inline bool isPrepared(void) const { return flags & IS_PREPARED; }
 	inline bool isCollectingStats(void) const { return flags & IS_COLLECTING; }
-	//inline bool logFor(log_level_t tested) const { return tested <= log_level; }
-	//inline log_level_t logLevel(void) const { return log_level; }
 
 	// configuration
 	void require(const AbstractFeature& feature);
@@ -187,7 +168,6 @@ private:
 	typedef elm::genstruct::SLList<clean_t> clean_list_t;
 	clean_list_t cleaners;
 	Progress *_progress;
-	//log_level_t log_level;
 };
 
 

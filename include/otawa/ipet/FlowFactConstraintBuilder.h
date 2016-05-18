@@ -36,7 +36,8 @@ namespace ipet {
 // FlowFactConstraintBuilder class
 class FlowFactConstraintBuilder: public BBProcessor {
 public:
-	FlowFactConstraintBuilder(void);
+	static p::declare reg;
+	FlowFactConstraintBuilder(p::declare& r = reg);
 	virtual void configure(const PropList& props = PropList::EMPTY);
 
 protected:

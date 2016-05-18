@@ -31,7 +31,6 @@
 #include <elm/system/Path.h>
 #include <elm/genstruct/HashTable.h>
 #include <otawa/prog/Manager.h>
-#include <otawa/proc/SilentFeature.h>
 
 namespace elm { namespace xom { class Element; } }
 
@@ -192,7 +191,7 @@ private:
 };
 
 // features
-extern SilentFeature MEMORY_FEATURE;
+extern p::feature MEMORY_FEATURE;
 extern Identifier<const Memory *> MEMORY;
 
 } // hard

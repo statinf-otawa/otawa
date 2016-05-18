@@ -170,18 +170,6 @@ namespace p {
 // make class
 class init {
 	friend class declare;
-
-	/*class AbstractMaker {
-	public:
-		virtual ~AbstractMaker(void) { }
-		virtual Processor *make(void) = 0;
-	};
-
-	template <class T> class Maker: public AbstractMaker {
-	public:
-		virtual Processor *make(void) { return new T(); }
-	};*/
-
 public:
 	inline init(string name, Version version)
 		: _name(name), _version(version), _base(0), _maker(0) { }
@@ -198,6 +186,8 @@ public:
 	inline init& config(AbstractIdentifier& id) { configs.add(&id); return *this; }
 	inline init& base(AbstractRegistration& base) { _base = &base; return *this; }
 	template <class T> inline init& maker(void) { _maker = new Maker<T>(); return *this; }
+	template <class T> inline init& make(void) { _maker = new Maker<T>(); return *this; }
+	template <class T> inline init& extend(void) { _base = &T::reg; return *this; }
 
 private:
 	string _name;

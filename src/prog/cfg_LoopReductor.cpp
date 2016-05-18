@@ -298,12 +298,9 @@ void LoopReductor::reduce(VirtualCFG *vcfg, CFG *cfg) {
 }
 
 
-static SilentFeature::Maker<LoopReductor> REDUCED_LOOPS_MAKER;
 /**
  *
  */
-SilentFeature REDUCED_LOOPS_FEATURE ("otawa::REDUCED_LOOPS_FEATURE", REDUCED_LOOPS_MAKER);
-
-
+p::feature REDUCED_LOOPS_FEATURE ("otawa::REDUCED_LOOPS_FEATURE", p::make<LoopReductor>());
 
 } // otawa

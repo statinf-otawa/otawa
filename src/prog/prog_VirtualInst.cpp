@@ -28,8 +28,8 @@ namespace otawa {
 
 /**
  */
-static Identifier<VirtualInst *> TAG("", 0);
-static Identifier<bool> USED("", false);
+static p::id<VirtualInst *> TAG("", 0);
+static p::id<bool> USED("", false);
 
 
 /**
@@ -299,7 +299,7 @@ protected:
 p::declare VirtualInstBuilder::reg =
 	p::init("otawa::VirtualInstBuilder", Version(1, 0, 0))
 	.provide(VIRTUAL_INST_FEATURE)
-	.maker<VirtualInstBuilder>();
+	.make<VirtualInstBuilder>();
 
 
 /**
@@ -309,7 +309,7 @@ p::declare VirtualInstBuilder::reg =
  * @par Properties
  * @li @ref VIRTUAL_INST_MANAGER
  */
-p::feature VIRTUAL_INST_FEATURE("otawa::VIRTUAL_INST_FEATURE", new Maker<VirtualInstBuilder>());
+p::feature VIRTUAL_INST_FEATURE("otawa::VIRTUAL_INST_FEATURE", p::make<VirtualInstBuilder>());
 
 
 /**
@@ -321,6 +321,6 @@ p::feature VIRTUAL_INST_FEATURE("otawa::VIRTUAL_INST_FEATURE", new Maker<Virtual
  * Hooked to:
  * @li @ref WorkSpace
  */
-Identifier<VirtualInstManager *> VIRTUAL_INST_MANAGER("otawa::VIRTUAL_INST_MANAGER", 0);
+p::id<VirtualInstManager *> VIRTUAL_INST_MANAGER("otawa::VIRTUAL_INST_MANAGER", 0);
 
 }	// otawa

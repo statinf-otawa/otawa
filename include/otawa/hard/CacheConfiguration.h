@@ -22,10 +22,10 @@
 #ifndef OTAWA_HARD_CONFIGURATION_CACHE_H
 #define OTAWA_HARD_CONFIGURATION_CACHE_H
 
-#include <otawa/hard/Cache.h>
 #include <elm/system/Path.h>
-#include <otawa/proc/SilentFeature.h>
+#include <otawa/hard/Cache.h>
 #include <otawa/proc/Accessor.h>
+#include <otawa/proc/Feature.h>
 
 namespace elm { namespace xom {
 	class Element;
@@ -59,7 +59,7 @@ protected:
 
 
 // features
-extern SilentFeature CACHE_CONFIGURATION_FEATURE;
+extern p::feature CACHE_CONFIGURATION_FEATURE;
 extern Identifier<const CacheConfiguration *> CACHE_CONFIGURATION;
 extern FunAccessor<const Cache *> L1_ICACHE;
 extern FunAccessor<const Cache *> L1_DCACHE;

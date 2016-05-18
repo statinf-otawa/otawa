@@ -21,7 +21,6 @@
  */
 
 #include <otawa/proc/Feature.h>
-#include <otawa/proc/SilentFeature.h>
 #include <otawa/proc/FeatureDependency.h>
 
 namespace otawa {
@@ -116,6 +115,24 @@ feature::feature(cstring name, AbstractMaker *maker): AbstractFeature(name), _ma
 
 /**
  */
+class RegistrationMaker: public AbstractMaker {
+public:
+	RegistrationMaker(p::declare& reg): _reg(reg) { }
+	virtual Processor *make(void) const { return _reg.make(); }
+private:
+	p::declare& _reg;
+};
+
+/**
+ * Build a feature from processor registration.
+ * @param name	Feature name.
+ */
+feature::feature(cstring name, p::declare& reg): AbstractFeature(name), _maker(new RegistrationMaker(reg)) {
+}
+
+
+/**
+ */
 feature::~feature(void) {
 	if(_maker != null_maker && _maker != no_maker)
 		delete _maker;
@@ -126,6 +143,7 @@ feature::~feature(void) {
  */
 void feature::process(WorkSpace *ws, const PropList& props) const {
 	Processor *p = _maker->make();
+	ASSERT(p);
 	p->process(ws, props);
 	delete p;
 }
@@ -168,69 +186,6 @@ void feature::clean(WorkSpace *ws) const {
  * @fn Feature::GenFeature(CString name);
  * Build a feature.
  * @param name	Feature name.
- */
-
-
-/**
- * @class SilentFeature;
- * The usual @ref Feature class has as drawback to exhibit completely the processing of the feature
- * and therefore, in C++, to require too much header file inclusion (like the default processor
- * or the default handler structure).
- *
- * @par
- *
- * This class allow to fix this using default processor builder that does not need to be included
- * in the feature declaration. The constructor of this class requires as parameter the name of
- * the feature and a factory class for the processor, @ref SilentFeature::AbstractMaker.
- * Usually, the factory object is implemented used the @ref SilenfFeature::Maker, that is a template
- * but does only need to be declared in the source file. Consequently, the header file declaring
- * the feature is no more overloaded with the inclusion of the default processor.
- *
- * Here is an example of use, first the header file "my_feature.h":
- * @code
- * #include <otawa/proc/SilentFeature.h>
- *
- * extern SilentFeature MyFeature;
- * @endcode
- *
- * Then, the source is defined as:
- * @code
- * #include <path_to/MyFeature.h>
- * #include <path_to/MyDefaultProcessor.h>
- *
- * static SilentFeature::Maker<MyDefaultProcessor> maker;
- * SilentFeature MyFeature("MyFeature", maker);
- * @endcode
- * @ingroup proc
- */
-
-
-/**
- * @fn SilentFeature::SilentFeature(cstring name, const AbstractMaker& maker);
- * Build a silent feature.
- * @param name	Name of the feature.
- * @param maker	Factory to build the default processor.
- */
-
-
-/**
- */
-void SilentFeature::process(WorkSpace *fw, const PropList& props) const {
-	Processor *processor = _maker.make();
-	processor->process(fw, props);
-}
-
-
-/**
- * @class SilentFeature::AbstractMaker;
- * Interface for the processor maker of @ref SilentFeature.
- */
-
-
-/**
- * @fn Processor *SilentFeature::make(void) const;
- * Build the linked processor.
- * @return	Built processor.
  */
 
 

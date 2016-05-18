@@ -263,6 +263,17 @@ template <class T> void from_string(const string& str, Bag<T>& bag) {
 	bag = list;
 }
 
+namespace p {
+
+template <class T>
+class id: public Identifier<T> {
+public:
+	inline id(cstring name): Identifier<T>(name) { }
+	inline id(cstring name, const T& def): Identifier<T>(name, def) { }
+};
+
+} // p
+
 } // otawa
 
 #endif	// OTAWA_PROP_IDENTIFIER_H

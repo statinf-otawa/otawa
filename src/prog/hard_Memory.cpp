@@ -540,7 +540,6 @@ p::declare MemoryProcessor::reg = p::init("otawa::MemoryProcessor", Version(1, 0
 	.maker<MemoryProcessor>();
 
 
-static SilentFeature::Maker<MemoryProcessor> maker;
 /**
  * This feature ensures we have obtained the memory configuration
  * of the system.
@@ -548,7 +547,7 @@ static SilentFeature::Maker<MemoryProcessor> maker;
  * @par Properties
  * @li @ref otawa::hard::MEMORY
  */
-SilentFeature MEMORY_FEATURE("otawa::hard::MEMORY_FEATURE", maker);
+p::feature MEMORY_FEATURE("otawa::hard::MEMORY_FEATURE", p::make<MemoryProcessor>());
 
 
 /**

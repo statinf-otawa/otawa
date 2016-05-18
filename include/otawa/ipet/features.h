@@ -22,7 +22,6 @@
 #define OTAWA_IPET_FEATURES_H
 
 #include <otawa/prop/Identifier.h>
-#include <otawa/proc/SilentFeature.h>
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/prog/WorkSpace.h>
 

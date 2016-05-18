@@ -50,14 +50,21 @@ public:
 namespace p {
 	class feature: public AbstractFeature {
 	public:
+
 		feature(cstring name, AbstractMaker *maker);
+		feature(cstring name, p::declare& reg);
 		~feature(void);
+
 		virtual void process(WorkSpace *ws, const PropList& props) const;
 		virtual void check(WorkSpace *fw) const;
 		virtual void clean(WorkSpace *ws) const;
+
 	private:
 		AbstractMaker *_maker;
 	};
+
+	template <class T>
+	static inline p::declare& make(void) { return T::reg; }
 }
 
 } // otawa

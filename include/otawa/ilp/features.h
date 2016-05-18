@@ -22,8 +22,7 @@
 #define OTAWA_ILP_FEATURES_H_
 
 #include <elm/sys/Path.h>
-#include <otawa/proc/SilentFeature.h>
-//#include <elm/enum_info.h>
+#include <otawa/proc/Feature.h>
 
 namespace otawa { namespace ilp {
 
@@ -35,7 +34,7 @@ typedef enum format_t {
 } format_t;
 
 // Output feature
-extern SilentFeature OUTPUT_FEATURE;
+extern p::feature OUTPUT_FEATURE;
 extern Identifier<format_t> OUTPUT_FORMAT;
 extern Identifier<sys::Path> OUTPUT_PATH;
 extern Identifier<elm::io::OutStream *> OUTPUT;

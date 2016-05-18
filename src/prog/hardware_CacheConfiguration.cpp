@@ -226,7 +226,6 @@ p::declare CacheConfigurationProcessor::reg = p::init("otawa::CacheConfiguration
 	.maker<CacheConfigurationProcessor>();
 
 
-static SilentFeature::Maker<CacheConfigurationProcessor> maker;
 /**
  * This feature ensures we have obtained the cache configuration
  * of the system.
@@ -238,7 +237,7 @@ static SilentFeature::Maker<CacheConfigurationProcessor> maker;
  * @li @ref otawa::L1_ICACHE
  * @li @ref otawa::L2_DCACHE
  */
-SilentFeature CACHE_CONFIGURATION_FEATURE("otawa::hard::CACHE_CONFIGURATION_FEATURE", maker);
+p::feature CACHE_CONFIGURATION_FEATURE("otawa::hard::CACHE_CONFIGURATION_FEATURE", p::make<CacheConfigurationProcessor>());
 
 
 /**

@@ -27,7 +27,6 @@
 
 namespace otawa { namespace ilp {
 
-static SilentFeature::Maker<Output> maker;
 /**
  * This feature ensures that an output of the ILP system has been produced.
  *
@@ -39,7 +38,7 @@ static SilentFeature::Maker<Output> maker;
  * @li @ref OUTPUT_PATH
  * @li @ref OUTPUT
  */
-SilentFeature OUTPUT_FEATURE("otawa::ilp::OUTPUT_FEATURE", maker);
+p::feature OUTPUT_FEATURE("otawa::ilp::OUTPUT_FEATURE", p::make<Output>());
 
 /**
  * Select the output format to build the @ref OUTPUT_FEATURE.

@@ -37,7 +37,7 @@ class VarAssignment: public BBProcessor {
 public:
 	VarAssignment(void);
 	virtual void configure(const PropList& props);
-	static Registration<VarAssignment> reg;
+	static p::declare reg;
 
 protected:
 	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb);

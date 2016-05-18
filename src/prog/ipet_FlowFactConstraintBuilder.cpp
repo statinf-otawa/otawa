@@ -55,18 +55,23 @@ namespace otawa { namespace ipet {
 
 
 /**
+ */
+p::declare FlowFactConstraintBuilder::reg = p::init("otawa::ipet::FlowFactConstraintBuilder", Version(1, 1, 0))
+	.require(COLLECTED_CFG_FEATURE)
+	.require(LOOP_HEADERS_FEATURE)
+	.require(ASSIGNED_VARS_FEATURE)
+	.require(FLOW_FACTS_FEATURE)
+	.provide(FLOW_FACTS_CONSTRAINTS_FEATURE)
+	.make<FlowFactConstraintBuilder>()
+	.extend<BBProcessor>();
+
+
+/**
  * Build a new flow fact loader.
  */
-FlowFactConstraintBuilder::FlowFactConstraintBuilder(void)
-:	BBProcessor("otawa::ipet::FlowFactConstraintBuilder", Version(1, 1, 0)),
-	_explicit(false)
-{
-	require(COLLECTED_CFG_FEATURE);
-	require(LOOP_HEADERS_FEATURE);
-	require(ASSIGNED_VARS_FEATURE);
-	require(FLOW_FACTS_FEATURE);
-	provide(FLOW_FACTS_CONSTRAINTS_FEATURE);
-}
+FlowFactConstraintBuilder::FlowFactConstraintBuilder(p::declare& r)
+: BBProcessor(r), system(0), _explicit(false)
+{ }
 
 
 /**
@@ -237,12 +242,11 @@ void FlowFactConstraintBuilder::configure(const PropList& props) {
 }
 
 
-SilentFeature::Maker<FlowFactConstraintBuilder> maker;
 /**
  * This feature asserts that constraints tied to the flow fact information
  * has been added to the ILP system.
  */
-p::feature FLOW_FACTS_CONSTRAINTS_FEATURE("otawa::ipet::FLOW_FACTS_CONSTRAINTS_FEATURE", new Maker<FlowFactConstraintBuilder>());
+p::feature FLOW_FACTS_CONSTRAINTS_FEATURE("otawa::ipet::FLOW_FACTS_CONSTRAINTS_FEATURE", p::make<FlowFactConstraintBuilder>());
 
 }
 

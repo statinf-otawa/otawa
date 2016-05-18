@@ -62,7 +62,6 @@ using namespace elm;
  * @li header: <otawa/bpred/features.h>
  */
 
-static SilentFeature::Maker<BPredProcessor> maker;
 /**
  * @class BPredProcessor
  * This is a specialization of the CFGProcessor class dedicated to branch
@@ -83,7 +82,7 @@ static SilentFeature::Maker<BPredProcessor> maker;
  *
  * @ingroup bpred
  */
-SilentFeature BRANCH_PREDICTION_FEATURE("otawa::bpred::BRANCH_PREDICTION_FEATURE", maker);
+p::feature BRANCH_PREDICTION_FEATURE("otawa::bpred::BRANCH_PREDICTION_FEATURE", p::make<BPredProcessor>());
 
 
 /**
