@@ -64,13 +64,13 @@ Identifier<Constraint *> CALLING_CONSTRAINT("otawa::ipet::CALLING_CONSTRAINT", 0
  * 		x_e = 1
  *
  * There are a special processing for basic block performing a function call.
- * First, the entry node e_f of function f executes as many times as it is called:
+ * First, the entry node x_e of function f executes as many times as it is called:
  *
- * 		x_i = \sum{(i, f) in called_i} x_i,f
+ * 		x_e = \sum{x_c in called_i} x_c
  *
  * where
- * @li called_i -- edges performing a call from basic block i,
- * @li x_i,f -- execution occurrences of edges calling f from i.
+ * @li called_i -- synthetic blocks performing a call to f,
+ * @li x_f -- execution frequency of synthetic block calling f.
  *
  * @par Provided Features
  * @li @ref ipet::CONTROL_CONSTRAINTS_FEATURE
@@ -99,10 +99,13 @@ void BasicConstraintsBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 	// call case
 	//	x_e = sum{i in caller(f)} x_i
 	else {
-		cons c = m(call_label) + x(VAR(entry)) <= 0.;
+		cons c = m(call_label) + x(VAR(entry)) == 0.;
 		for(CFG::CallerIter call = cfg->callers(); call; call++)
-			c += x(VAR(call->callee()->entry()));
+			c += x(VAR(*call));
 	}
+
+	// call parent
+	BBProcessor::processCFG(ws, cfg);
 }
 
 
@@ -118,8 +121,6 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, Block *bb)
 	ASSERT(bb);
 
 	// Prepare data
-	//Constraint *cons;
-	//bool used = false;
 	model m(SYSTEM(fw));
 	var bbv(VAR(bb));
 
@@ -127,7 +128,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, Block *bb)
 	//		x_i = \sum{(j, i) in E /\ not call (j, i)} x_j,i (a)
 	if(!bb->isEntry()) {
 		cons c = m(input_label) + bbv == 0.;
-		for(BasicBlock::EdgeIter edge = bb->ins(); edge; edge++)
+		for(Block::EdgeIter edge = bb->ins(); edge; edge++)
 				c += x(VAR(edge));
 	}
 
@@ -135,7 +136,7 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, Block *bb)
 	//		x_i = \sum{(i, j) in E /\ not call (i, j)} x_i,j
 	if(!bb->isExit()) {
 		cons c = m(output_label) + bbv == 0.;
-		for(BasicBlock::EdgeIter edge = bb->outs(); edge; edge++)
+		for(Block::EdgeIter edge = bb->outs(); edge; edge++)
 			c += x(VAR(edge));
 	}
 }

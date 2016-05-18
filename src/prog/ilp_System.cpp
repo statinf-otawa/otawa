@@ -235,7 +235,7 @@ void System::dumpLPSolve(io::OutStream& _out) {
 	out << "max:";
 	bool fst = true;
 	for (ObjTermIterator term(this); term; term++) {
-		cout << ' ';
+		out << ' ';
 		printTerm(out, *term, dumper, fst);
 		vars.add((*term).fst);
 		fst = false;
@@ -251,13 +251,15 @@ void System::dumpLPSolve(io::OutStream& _out) {
 		for(datastruct::Iterator<Term> term(cons->terms()); term; term++) {
 			if((*term).snd > 0) {
 				if(!fst)
-					cout << ' ';
+					out << ' ';
 				printTerm(out, *term, dumper, fst);
 				vars.add((*term).fst);
 				pos = true;
 				fst = false;
 			}
 		}
+		if(fst)
+			out << '0';
 
 		// print negative constant
 		if(cons->constant() < 0) {
@@ -274,7 +276,7 @@ void System::dumpLPSolve(io::OutStream& _out) {
 		fst = true;
 		for(datastruct::Iterator<Term> term(cons->terms()); term; term++)
 			if((*term).snd < 0) {
-				cout << ' ';
+				out << ' ';
 				printTerm(out, Term((*term).fst, -(*term).snd), dumper, fst);
 				vars.add((*term).fst);
 				neg = true;
