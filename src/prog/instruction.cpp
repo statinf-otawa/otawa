@@ -474,6 +474,17 @@ Inst *Inst::toInst(void) {
 
 
 /**
+ * Return the condition associated with the current instruction.
+ * In its default implementation, return sem::NO_COND for
+ * all instructions.
+ * @return	Condition of the instruction.
+ */
+sem::cond_t Inst::condition(void) {
+	return sem::NO_COND;
+}
+
+
+/**
  * This function is only defined for ISA supporting the @ref IS_MULTI attribute.
  * It returns the number of stored during the multi-memory access
  * (in term of memory accesses).

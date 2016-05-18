@@ -60,7 +60,7 @@ public:
 			: elm::genstruct::FragTable<CFG *>::Iterator(cfgs.cfgs) { }
 	};
 
-	class BBIterator: public PreIterator<BBIterator, BasicBlock *> {
+	class BBIterator: public PreIterator<BBIterator, Block *> {
 	public:
 		inline BBIterator(const CFGCollection *cfgs): cfg(cfgs), bb(cfg->blocks()) { }
 		inline BBIterator(const BBIterator& i): cfg(i.cfg), bb(i.bb) { }

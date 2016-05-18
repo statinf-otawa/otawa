@@ -37,10 +37,10 @@ namespace otawa {
  * @li @ref odec
  * @li @ref odfa
  * @li @ref odisasm
- * @li @ref oipet (deprecated)
  * @li @ref opcg
  * @li @ref ostat
  * @li @ref otawa-config
+ * @li @ref otawa-install
  * @li @ref owcet
  */
 
