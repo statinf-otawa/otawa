@@ -1,0 +1,17 @@
+package:gliss2
+download:hg:https://anon:ok@wwwsecu.irit.fr/hg/TRACES/gliss2/trunk
+tools:c++,make,ocamlc,hg
+build:make::
+
+package:sparc
+download:hg:https://anon:ok@wwwsecu.irit.fr/hg/TRACES/sparc/trunk
+tools:c++,cmake,hg
+uses:gliss2
+build:make:WITH_DYNLIB=1:
+
+package:otawa-sparc
+download:hg:https://anon:ok@wwwsecu.irit.fr/hg/TRACES/otawa-sparc/trunk
+tools:c++,cmake,hg
+uses:sparc
+build:cmake::
+test:lib/lib/otawa/loader/sparc.so
