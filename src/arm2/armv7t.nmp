@@ -3,6 +3,25 @@ include "defs2.nmp"
 
 let ARMV7T = 1
 
+// condition extension
+extend full_condition
+	otawa_ever = value == 14
+	otawa_never = value == 15
+	otawa_cond =
+		switch(value) {
+		case 0:		"sem::EQ"
+		case 1:		"sem::NE"
+		case 2:		"sem::UGE"
+		case 3:		"sem::ULT"
+		case 8:		"sem::UGT"
+		case 9:		"sem::ULE"
+		case 10:	"sem::GE"
+		case 11:	"sem::LT"
+		case 12:	"sem::GT"
+		case 13:	"sem::LE"
+		default:	"sem::ANY_COND"
+	}
+
 extend RegisterListThumb
 	has_pc = _P
 
@@ -35,6 +54,10 @@ extend BL_imm_T1
 extend BLX_imm_T2
 	otawa_kind = IS_CONTROL | IS_CALL
 	otawa_target = targetAddress
+
+extend BLX_ARM
+	otawa_kind = IS_CONTROL | IS_CALL
+		| (if cond.value == 14 then 0 else IS_COND endif)
 
 extend CBNZ_CBZ_thumb
 	otawa_target = target
