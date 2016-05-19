@@ -1,6 +1,8 @@
+FILE(GLOB MANUALS *.thot)
+message(STATUS "MANUALS=${MANUALS}")
 add_custom_command(
 	OUTPUT manual.html
-	DEPENDS manual.thot
+	DEPENDS ${MANUALS}
 	COMMAND python
 	ARGS  ${THOT_PATH} -t html manual.thot -o manual.html -DHTML_ONE_FILE_PER=chapter)
 add_custom_target(all ALL DEPENDS manual.html)	

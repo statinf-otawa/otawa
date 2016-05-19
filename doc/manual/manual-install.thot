@@ -1,10 +1,8 @@
 ====== Building OTAWA ======
 
-This section describes the requirements to build and use the OTAWA framework.
+This section describes the requirements to build and use the @(OTAWA) framework.
 
 ===== Requirements =====
-
-OTAWA has been mainly tested on a 32 and 64-bits Linux OS but it should work well with any other POSIX-compliant Unix system. Feel free to contact us for any problem at [[mailto:otawa@irit.fr|otawa@irit.fr]].
 
 To build OTAWA, the following tools are required:
 
@@ -14,77 +12,85 @@ To build OTAWA, the following tools are required:
 | CMake | 2.6 | http://www.cmake.org/ |
 | Flex | 2.5.4 |  |
 | Bison | 2.0 |  |
-
-Depending on the use of OTAWA, you should also install :
-
-^ Package ^ Version ^ URL ^
-| gliss2 | 1 | http://www.irit.fr/recherches/ARCHI/MARCH/rubrique.php3?id_rubrique=54 |
-| ppc | 1 | http://www.irit.fr/recherches/ARCHI/MARCH/rubrique.php3?id_rubrique=54 |
-| lp_solve | 4.0 | ftp://ftp.es.ele.tue.nl/pub/lp_solve/old_versions_which_you_probably_dont_want/ |
-| lp_solve | 5.0 | http://lpsolve.sourceforge.net/5.5/ |
 | OCAML | 3.0 | http://caml.inria.fr/ocaml/release.fr.html |
-| FrontC | 3.2 | http://www.irit.fr/recherches/ARCHI/MARCH/rubrique.php3?id_rubrique=61 |
-| SystemC | 2.1, 2.2 | http://www.systemc.org/ |
+
+Depending on the use of @(OTAWA), you should also install :
 
 OTAWA has been tested on the following platforms:
 ^ Distribution ^ Version ^ Architecture ^ Remarks ^
-| Linux | Ubuntu from 6.10 | x86, x86_64 |  |
-|  | Mandrake/driva | x86, x86_64 |  |
+| Linux | Debian and RPM based | x86, x86_64 |  |
 | MacOSX |  | x86_64 |  |
-| Windows | XP, 7 | x86, x86_64 |  |
+| Windows | XP, 7 | x86, x86_64 | Needs MinGW. |
 
 
+===== Building automatically from the source repository =====
 
-===== Installing from the binary package =====
+Maybe, the easier way to get OTAWA compiled for your preferred OS is the use of our
+distribution builder. This method requires [[https://www.python.org/|Python]] and
+[[https://www.mercurial-scm.org/|Mercurial]] to be installed.
 
-Just download the binary version from http://www.otawa.fr .
+==== Building the core ====
 
-Unzip the archive and that is: it is ready to use:
+First, get the distribution package itself:
 <code sh>
-$ tar xvf package.tar.bz2
+> hg clone https://anon:ok@wwwsecu.irit.fr/hg/TRACES/dist
 </code>
 
-Replace "package" with the right package name.
-
-OTAWA commands are available in the directory package/bin and you should want
-to add them to your PATH:
+Then, the build of OTAWA may be launched:
 <code sh>
-	set PATH=$PATH:absolute_path_to_otawa_package/bin
+> cd dist
+> ./build.sh -D -p otawa-core
+</code>
+Be patient, this may take a while.
+
+Finally, you will find OTAWA binaries in the archive ''otawa-core-''//DATE//''-''//OS//''.tar.bz2''
+where:
+  * DATE is the concatenation of 2-last numbers of the year, the month number and the day number.
+  * OS is one of linux-x86, linux-x86_64, win32, win64, etc according your OS version.
+
+If you encounter any error, contact us at [[mailto:otawa@irit.fr]] and join to the email
+a copy of the file ''build.log'' that contains details about the building process.
+
+
+==== Installing extensions ====
+
+@(OTAWA) is heavily based on plug-in system and therefore provides lots of extensions.
+The tool ''otawa-install.py'' provides a simple way to install new extensions. Yet, it
+requires that the @(OTAWA) ''bin'' directory to be on the executable file paths.
+
+To get the list of extensions, simply type:
+<code sh>
+> otawa-install.py -l
+</code>
+
+To get a particular extension, named EXTENSION, just type:
+<code sh>
+> otawa-install.py EXTENSION
+</code>
+
+Notice that the sources will be retrieved and will be compiled in the current
+directory. To change this behavior, just pass the path to the building directory, BUILD_PATH
+with:
+<code sh>
+> otawa-install.py EXTENSION -B BUILD_PATH
 </code>
 
 
+===== Building by hand from the source repository =====
 
-===== Building from source package =====
-
-Just download the source version from http://www.otawa.fr .
-
-Unzip the archive, choose an installation directory and launch the build script:
-<code sh>
-$ tar xvf package.tar.bz2
-$ cd package
-$ make PREFIX=installation_directory
-</code>
-
-Replace the "package" by the right package name and installation_directory by the directory
-where OTAWA has to be installed.
-
-
-===== Building from the source repository =====
-
-Although it is a bit harder, it may be useful to install OTAWA directly from the source repository
-to stay up to date with the OTAWA development process. OTAWA is using the Mercurial source manager
+Although it is a bit harder, it may be useful to install @(OTAWA) directly from the source repository
+to stay up to date with the @(OTAWA) development process. @(OTAWA) is using the Mercurial source manager
 (http://mercurial.selenic.com/).
 
-To get a module composing OTAWA (called MODULE in the commands below), you have to type:
+To get a module composing @(OTAWA) (called MODULE in the commands below), you have to type:
 <code sh>
 hg clone https://anon:ok@wwwsecu.irit.fr/hg/TRACES/MODULE/trunk MODULE
 </code>
 
-
 ==== Building the core ====
 
-The idea is that all OTAWA dependencies sources have been unpacked in a directory at the same level
-as the sources of OTAWA. We call this directory //BUILD_DIR// and call the installation directory //INSTALL_DIR//.
+The idea is that all @(OTAWA) dependencies sources have been unpacked in a directory at the same level
+as the sources of @(OTAWA). We call this directory //BUILD_DIR// and call the installation directory //INSTALL_DIR//.
 
   * move to the building directory
 <code>
@@ -106,7 +112,7 @@ $ make WITH_DYNLIB=1
   * get the the lp_solve package, unpack it and rename it ''lp_solve5''. Apply the following commands to compile it:
 <code>
 $ cd lp_solve5
-$ patch -p1 < PACTH_FILE
+$ patch -p1 < PATCH_FILE
 $ cd lpsolve55
 $ sh ccc
 </code>
@@ -150,5 +156,35 @@ Notice that some extensions have dependencies on GLISS2 packages
 (for example, ''otawa-sparc'' extensions requires the ''sparc'' instruction set).
 In this case, compile the GLISS extension before the OTAWA extension.
 
+
+===== Building from source package =====
+
+Just download the source version from http://www.otawa.fr .
+
+Unzip the archive, choose an installation directory and launch the build script:
+<code sh>
+$ tar xvf package.tar.bz2
+$ cd package
+$ make PREFIX=installation_directory
 </code>
 
+Replace the "package" by the right package name and installation_directory by the directory
+where OTAWA has to be installed.
+
+
+===== Installing from the binary package =====
+
+Just download the binary version from http://www.otawa.fr .
+
+Unzip the archive and that is: it is ready to use:
+<code sh>
+$ tar xvf package.tar.bz2
+</code>
+
+Replace "package" with the right package name.
+
+OTAWA commands are available in the directory ''package/bin'' and you should want
+to add them to your PATH:
+<code sh>
+	set PATH=$PATH:absolute_path_to_otawa_package/bin
+</code>

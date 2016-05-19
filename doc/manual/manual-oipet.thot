@@ -1,174 +1,166 @@
 ====== Computing a WCET ======
 
-Although OTAWA is designed as a generic framework to develop static analyses for WCET computation,
-some facilities are provided to compute WCET using dedicated commands.
+Although @(OTAWA) is designed as a generic framework to develop static analyses for WCET computation, some facilities are provided to compute WCET using dedicated scripts.
 
-Although OTAWA does implement and implements several approaches to WCET computation,
-IPET (Implicit Path Enumeration Technique) is the more mature one. In addition, IPET seems to be the method
-that has been the most developed and that gave the most interesting and precise results.
+@(OTAWA) can implement several approaches to WCET computation, IPET (Implicit Path Enumeration Technique) is currently the more mature one. In addition, IPET seems to be the method that has been the most developed and that gave the most interesting and precise results.
 
-In OTAWA, there are four ways to compute a WCET:
-  * ''oipet'' command provides minimal support for IPET computation and may be used for basic computations,
+In @(OTAWA), there are four ways to compute a WCET:
   * ''owcet'' command allows to perform computation based on script adapted to specific architecture,
-  * the Eclispe plug-in gives access to architecture scripts in more friendly graphic way inside the Eclipse IDE,
-  * by writing your own program benefiting from the facilities of the framework (that is explored in the following sections).
+  * the Eclispe plug-in gives access to architecture scripts in a more friendly graphic way inside the Eclipse IDE,
+  * by writing your own program benefiting from the facilities of the framework (that is explored in different sections).
 
 
+==== Using ''owcet'' ====
 
-===== ''oipet'' command =====
+''owcet'' aims to compute WCET based on scripts describing the target
+architecture hardware and to provided adapted analyses. To use ''owcet'',
+you need a script adapted to your hardware: either you can write your
+own script, or use a script automatically installed with @(OTAWA) core,
+or to download an extension describing your hardware from the @(OTAWA)
+website. Notice that, in @(OTAWA) 2, the tool ''otawa-install.py''
+makes much easier the installation of a new extension. However, we will the builtin script, ''trivial'', to show the work
+of ''owcet''. 
 
-==== First Contact ====
+First, you need a binary application that is supported by @(OTAWA). In the core distribution, only binary loaders for ''ARM'' and ''PowerPC'' are provided by extensions for ''sparc'' and ''tricore'' are also available.
 
-''oipet'' implements the IPET approach to compute WCETs. It may be simply called from a command line interface (shell)
-and only requires the path to the executable file to time.
+These binaries are usually obtained using a cross-compiler from your x86 platform. GCC on Linux OSes provides lots cross-compilers but cross-compilers also exists for other platforms. You can also look for pre-compiled binaries on the @(OTAWA) website.
 
-<code sh>
-  $ oipet executable_path
-  WARNING: there is no data cache here !
-  WCET [executable_path:main] = w
-</code>
+Second, the program you want to process must fit the complexity of the software found in critical hard real-time systems. This mainly means that, if they contains dynamic memory allocation or formatted input-output (aka ''printf''), you will have hard time to make it working:
+  * very big computation time (dominated by formatted input/output functions),
+  * very imprecise analysis of the data cache,
+  * very complex loops to bound.
+Real-time applications are used split into tasks that are called periodically and which input-output are network accesses or sensors / actuators. Often, they work stand-alone on bare-metal platforms with a very tiny layer of OS.
 
-This command computes the WCET of the given executable file starting at the ''main'' function considering a scalar
-in-order pipelined processor with five stages without any cache (as stated by the warning sentence). You may experiment
-this command with the binary codes delivered with OTAWA ([[:resources:program_examples]]).
+For this example, we will uses the ''crc.c'' sample of the  [[http://www.mrtc.mdh.se/projects/wcet/benchmarks.html|Mälardalen benchmark]]:
+<code c,line>
+typedef unsigned char uchar;
+#define LOBYTE(x) ((uchar)((x) & 0xFF))
+#define HIBYTE(x) ((uchar)((x) >> 8))
 
-To load the binary code, the OTAWA framework first retrieves the kind of the executable file. If it is supported,
-the matching loader plugin processes the file. Currently, only PowerPC and ARM architectures are delivered by the core package
-but more are available on the OTAWA site (Sparc, TriCore, M68HCS12). Note that you may develop your own architecture plugin
-to be used in OTAWA (see the //developer manual//). 
+unsigned char lin[256] = "asdffeagewaHAFEFaeDsFEawFdsFaefaeerdjgp";
 
-Then, the WCET is computed according to a sequence of analysis stages and the result is displayed (expressed in processor cycles).
-To get the accurate time //t// in seconds, consider the frequency //f// of the processor and the WCET //w// and perform the calculation below:
+unsigned short icrc1(unsigned short crc, unsigned char onech)
+{
+	int i;
+	unsigned short ans=(crc^onech << 8);
 
-<m> t = w / f </m>
+	for (i=0;i<8;i++) {
+		if (ans & 0x8000)
+			ans = (ans <<= 1) ^ 4129;
+		else
+			ans <<= 1;
+	}
+	return ans;
+}
 
-Usually, an embedded executable contains many different tasks to time that are called from an un-ended loop implemented in the ''main'' function.
-In OTAWA, we consider that tasks are identified by an entry function performing the task job. To apply ''oipet'' to a particular function,
-called ''task_entry'', just append the function name to the command.
+unsigned short icrc(unsigned short crc, unsigned long len,
+		    short jinit, int jrev)
+{
+  unsigned short icrc1(unsigned short crc, unsigned char onech);
+  static unsigned short icrctb[256],init=0;
+  static uchar rchr[256];
+  unsigned short tmp1, tmp2, j,cword=crc;
+  static uchar it[16]={0,8,4,12,2,10,6,14,1,9,5,13,3,11,7,15};
 
-<code sh>
-  $ oipet executable_path task_entry
-  WCET [executable_path:task_entry] = w
-</code>
-
-As one may notice watching at the OTAWA samples, a single executable is not enough.
-First, the host architecture of the embedded program may be different from the default scalar non-pipelined processor.
-Second, some information cannot be automatically extracted from the program and must be provided by the developer.
-They are called flow facts and concerns mainly loop bounds.
-
-
-
-
-==== Selecting the Hardware ====
-
-Although the architecture family is provided in executable files, there are usually many different implementations
-of an ISA -- Instruction Set Architecture. For example, many different OEM and chips support the ARM instruction set
-and their time behavior is quite different among the different implementations.
-
-The hardware description is defined by several models:
-  * the processor model describes the pipeline,
-  * the cache model describes the cache,
-  * the address space describes how the memory is organized,
-  * the branch prediction model describes the branch predictor configuration.
-
-Both models are expressed using XML files some of which are provided with OTAWA in the directory ''INSTALL_DIRECTORY/share/Otawa/''.
-
-^ file ^ description ^
-| procs/op1.xml | in-order superscalar processor with 2-instructions width |
-| procs/op2.xml | out-of-order superscalar processor with 4-instructions width |
-| caches/inst-64x16x1.xml | single instruction cache of 64 Kb with direct-mapped 16-bytes blocks |
-
-You may freely examine these files to figure out the simple used encoding and possibly write your own hardware models.
-Take a look at the //developer manual// for more details on the format.
-
-To configure the hardware model with ''oipet'', you must use the following options:
-  * ''-p'' //processor_path// to select the processor model,
-  * ''-c'' //cache_path// to select the cache model.
-
-Then, you may select policies that will perform more accurate computation of the WCET depending on the hardware configuration.
-
-The ''-i'' option accepts an argument selecting how the instruction is analyzed:
-  * ''-i none'': do not handle the instruction cache (default),
-  * ''-i ccg'': use the Cache Conflict Graph approach of ((Y.-T. S. Li, S. Malik, A. Wolfe, //Efficient microarchitecture modelling and path analysis for real-time software//, Proceedings of the 16th IEEE Real-Time Systems Symposium, December 1995.)),
-  * ''-i cat'': use an adaptation of the Category method of [Muller] to IPET.
-
-Conversely, there are many ways to take into account the pipeline effects on the timing with option ''-t'':
-  * ''-t trivial'': use the simple scalar 5-stages pipeline (default),
-  * ''-t sim'': use a simulator to compute time of instruction blocks,
-  * ''-t delta'': improve the ''sim'' method with an inter-block computation from ((J. Engblom, A. Ermedahl, M. Sjoedin, J. Gustafsson, H. Hansson, //Worst-case execution-time analysis for embedded real-time systems//, Journal of Software Tools for Technology Transfer, 2001.)) (not safe with out-of-order processors),
-  * ''-t exegraph'': use the ExeGraph approach of ((X. Li, A. Roychoudhury, T. Mitra, //Modeling Out-of-Order Processors for Software Timing Analysis//, Proceedings of the 25th IEEE International Real-Time Systems Symposium (RTSS’04), 2004.)).
-
-
-==== Specifying the Flow Facts ====
-
-Currently, OTAWA has not the ability to derive automatically loop bounds from the executable. To compute a WCET,
-the user must provides them in a ''.ff'' flow fact file. This file path may be passed to ''oipet'' using option ''-f path''
-or it is silently loaded by OTAWA deriving its name by appending ''.ff'' to the executable file path.
-
-''.ff'' has a simple text syntax where loops are identified by their header block. As in the sample below,
-a maximal count of iteration must be associated with the header block.
-
-**fibcall.c**
-<code c>
-int fib(int n) {
-  int  i, Fnew, Fold, temp,ans;
-  Fnew = 1;  Fold = 0;
-  i = 2;
-  while( i <= n ) {
-    temp = Fnew;
-    Fnew = Fnew + Fold;
-    Fold = temp;
-    i++;
+  if (!init) {
+    init=1;
+    for (j=0;j<=255;j++) {
+      icrctb[j]=icrc1(j << 8,(uchar)0);
+      rchr[j]=(uchar)(it[j & 0xF] << 4 | it[j >> 4]);
+    }
   }
-  ans = Fnew;
-  return ans;
+  if (jinit >= 0) cword=((uchar) jinit) | (((uchar) jinit) << 8);
+  else if (jrev < 0)
+    cword=rchr[HIBYTE(cword)] | rchr[LOBYTE(cword)] << 8;
+  for (j=1;j<=len;j++) {
+    if (jrev < 0) {
+      tmp1 = rchr[lin[j]]^ HIBYTE(cword);
+    }
+    else {
+      tmp1 = lin[j]^ HIBYTE(cword);
+    }
+    cword = icrctb[tmp1] ^ LOBYTE(cword) << 8;
+  }
+  if (jrev >= 0) {
+    tmp2 = cword;
+  }
+  else {
+    tmp2 = rchr[HIBYTE(cword)] | rchr[LOBYTE(cword)] << 8;
+  }
+  return (tmp2 );
 }
-    
-main() {
-  int a;
-  a = 30;
-  fib(a);
+
+
+int main(void)
+{
+
+  unsigned short i1,i2;
+  unsigned long n;
+
+  n=40;
+  lin[n+1]=0;
+  i1=icrc(0,n,(short)0,1);
+  lin[n+1]=HIBYTE(i1);
+  lin[n+2]=LOBYTE(i1);
+  i2=icrc(i1,n+2,(short)0,1);
+  return 0;
 }
 </code>
+This benchmark is small enough for human understanding but provides any effects to demonstrate the work of @(OTAWA).
 
-**fibcall.ff**
-<code>
-checksum "fibcall" 0x86c6f217;
-
-// Function fib
-loop 0x0005013c 29;
-</code>
-
-Building a flow fact file in OTAWA is currently a hard task: loop headers are identified by their address in the execution memory space.
-The easier way to build a ''.ff'' file is to use the ''mkff'' utility. Called on the executable,
-it generates a template ''.ff'' file where the loop counts are replaced by ''?'' marks.
-
+On a Linux platform, you can compile with:
 <code sh>
-$ mkff executable > executable.ff
+> arm-linux-gnueabi-gcc crc.c -o crc.elf -g3 -static
 </code>
+The ''-static'' option ensures that the ''crc'' is compiled statically without any link to a dynamic library. ''-g3'' enables the debugging information generation in the executable: it is not mandatory but it will help us a lot for communicating with @(OTAWA).
 
-**Template fibcall.ff**
-<code>
-checksum "fibcall" 0x86c6f217;
-
-// Function fib
-loop 0x0005013c ?;
-</code>
-
-The user has to edit by hand with any text editor the generated file and to replace each ''?'' mark
-by the program maximal loop count. The ''checksum'' must not be changed: it is used to check consistency
-of the flow fact file with the executable as header addresses may change when an executable is recompiled.
-
-To help in the match of ''.ff'' loop and source loop, ''mkff'' comments the name of the function containing the loop
-and indents loops according to their nesting depth. If these indications are not enough,
-you may use ''dumpcfg'' utility to produce a representation of the CFG -- Control Flow Graph -- of the function.
-
+Now, we can launch the WCET computation with the ''trivial'' script:
 <code sh>
-$ dump -Did executable_path function_name > function_name.dot
-$ dot -Tps function_name.dot > function_name.ps
+> owcet -t trivial crc.elf
+WARNING: otawa::util::FlowFactLoader 1.4.0:no flow fact file for crc.elf
+WARNING: otawa::ipet::FlowFactLoader 2.0.0:no limit for the loop at icrc + 0xdc (00008ea0).
+WARNING: otawa::ipet::FlowFactLoader 2.0.0: in the context []
+WARNING: otawa::ipet::FlowFactLoader 2.0.0:no limit for the loop at icrc + 0x248 (0000900c).
+WARNING: otawa::ipet::FlowFactLoader 2.0.0: in the context []
+WARNING: otawa::ipet::FlowFactLoader 2.0.0:no limit for the loop at icrc + 0x248 (0000900c).
+WARNING: otawa::ipet::FlowFactLoader 2.0.0: in the context []
+WARNING: otawa::ipet::FlowFactLoader 2.0.0:no limit for the loop at icrc1 + 0x98 (00008da4).
+WARNING: otawa::ipet::FlowFactLoader 2.0.0: in the context []
+WARNING: otawa::ipet::FlowFactConstraintBuilder 1.1.0:no flow fact constraint for loop at BB 5 (0000900c)
+WARNING: otawa::ipet::FlowFactConstraintBuilder 1.1.0:no flow fact constraint for loop at BB 17 (00008ea0)
+WARNING: otawa::ipet::FlowFactConstraintBuilder 1.1.0:no flow fact constraint for loop at BB 2 (00008da4)
+ERROR: failed due to 3 (UNBOUNDED)
+ERROR: no WCET computed (see errors above).
 </code>
 
-This command produces a PostScript file that may be displayed with your preferred postscript viewer.
+The output is a bit verbose but it is clear that the result was not computed. In fact, the warning lines inform us that some loop bounds are missing! As they are not bounded, they are considered as iterating an infinite number of times and hence the WCET cannot be obtained.
+
+In fact, the loop bounding is a main issue we will encounter when we have to compute a WCET. It is a hard problem, as hard as proving a program tertminates. However, in the type of program targetted by OTAWA, the loops are often relatively simple and a bound can be computed. As bounding loops is not always feasible and may require a lot of computation power, it is performed in a preliminary phase of the WCET computation and maintained as soon as the source are not modified.
+
+
+==== Specifying the Flow Facts by Hand ====
+
+The first choice, to provide loop bounds (or more generally //flow facts//), is to fulfill a flow fact file suffixed by ''.ff''. Writing such a file is not very easy so that @(OTAWA) provides a tool to help you a bit, ''mkff''. Let execute it on our binary file:
+<code sh>
+> mkff crc.elf > crc.ff
+</code>
+
+Now, take a look to the obtained file:
+<code>
+checksum "crc.elf" 0x4cdc7edb;
+
+// Function icrc (crc.c:23)
+loop "icrc" + 0x248 ?; // 0000900c (crc.c:40)
+loop "icrc" + 0xdc ?; // 00008ea0 (crc.c:32)
+
+// Function icrc1 (crc.c:8)
+loop "icrc1" + 0x98 ?; // 00008da4 (crc.c:12)
+</code>
+
+The ''.ff'' files have a simple text syntax where loops are identified by their address, absolute or relative to the functon containing it. The start address of the last loop is 0x98 bytes after the label of function ''icrc1''. Remark that ''mkff'' provides in comment (after ''//'') as many information as possible: the corresponding absolte address and, if the debugging information is available, the source file and the source line containing the loop. This help us to match the loop with the source to fulfill the missing bounds represented as questions marks.
+
+The user has to edit by hand with any text editor the generated file and to replace each ''?'' mark by the program maximal loop count. The ''checksum'' must not be changed: it is used to check consistency of the flow fact file with the executable as header addresses may change when an executable is recompiled.
+
 
 
 

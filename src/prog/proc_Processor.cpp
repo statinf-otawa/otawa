@@ -617,7 +617,7 @@ void Processor::requireDyn(WorkSpace *ws, const PropList& props) {
  * @param message	Message to display.
  */
 void Processor::warn(const String& message) {
-	log << "WARNING:" << name() << ' ' << version()
+	log << "WARNING: " << name() << ' ' << version()
 		<< ':' << message << io::endl;
 }
 

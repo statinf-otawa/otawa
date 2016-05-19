@@ -105,7 +105,7 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 
 		// Generate the constraint
 		if(max < 0 && total < 0) {
-			warn(_ << "no flow fact constraint for loop at " << bb << io::endl);
+			warn(_ << "no flow fact constraint for loop at " << bb);
 			return;
 		}
 

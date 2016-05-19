@@ -1,0 +1,69 @@
+include "defs.nmp"
+
+extend condition
+	otawa_condition = cond<3..0>
+
+extend full_condition
+	otawa_condition = cond<3..0>
+
+
+extend 	ADD_shr, ADD_imm,
+		ADC_shr, ADC_imm,
+		AND_shr, AND_imm,
+		BFIC,
+		BIC_shr, BIC_imm,
+		BLX_ARM,
+		BX_ARM,
+		CLZ,
+		CMN_shr,
+		CMN_imm,
+		CMP_shr,
+		CMP_imm,
+		EOR_shr,
+		EOR_imm,
+		LDM,
+		LDR_shr, LDR_imm,
+		LDREX_A1,
+		LDREXB_A1,
+		LDREXD_A1,
+		LDREXH_A1,
+		LDRH_shr, LDRH_imm,
+		LDRSB_shr, LDRSB_imm,
+		LDRSH_shr, LDRSH_imm,
+		MLA,
+		MOV_shr, MOV_imm,
+		MOVW_imm,
+		MOVT,
+		MRS,
+		MSR_shr, MSR_imm,
+		MUL,
+		MVN_shr, MVN_imm,
+		ORR_shr, ORR_imm,
+		RSB_shr, RSB_imm,
+		RSC_shr, RSC_imm,
+		SBC_shr, SBC_imm,
+		SMLAL,
+		SMULL,
+		STM,
+		STR_shr, STR_imm,
+		STRD_imm,
+		STREX_A1,
+		STREXB_A1,
+		STREXD_A1,
+		STREXH_A1,
+		STRH_shr, STRH_imm,
+		SUB_shr, SUB_imm,
+		SWI,
+		SWP,
+		TEQ_shr, TEQ_imm,
+		TST_shr, TST_imm,
+		UMLAL,
+		UMULL
+	otawa_condition = cond.otawa_condition
+
+extend	B_Cond,
+		CDP,
+		LDC,
+		MRC,
+		STC
+	otawa_condition = cond.otawa_condition
