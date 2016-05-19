@@ -83,7 +83,7 @@ extend rotatedImmediate
 
 
 // condition extension
-extend condition, full_condition
+extend condition
 	otawa_ever = value == 14
 	otawa_never = value == 15
 	otawa_cond =
