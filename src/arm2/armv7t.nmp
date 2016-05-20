@@ -22,6 +22,9 @@ extend full_condition
 		default:	"sem::ANY_COND"
 	}
 
+extend full_condition
+	otawa_condition = cond<3..0>
+
 extend RegisterListThumb
 	has_pc = _P
 
@@ -83,6 +86,9 @@ extend LDR_imm_T3, LDR_imm_T4
  		| (if Rt.number == 15 then IS_CONTROL else 0 endif)
  		| (if Rt.number == 15 && Rn.number == 13 then IS_RETURN else 0 endif)
 
+extend BLX_ARM, LDREX_A1, LDREXB_A1, LDREXD_A1, LDREXH_A1, MOVW_imm, MOVT, STRD_imm, STREX_A1, STREXB_A1, STREXD_A1, STREXH_A1
+	otawa_condition = cond.otawa_condition
+	
 extend LDM_T2
 	otawa_kind = IS_MEM | IS_LOAD | IS_MULTI | IS_INT
 		| (if register_list.has_pc then IS_CONTROL else 0 endif)
