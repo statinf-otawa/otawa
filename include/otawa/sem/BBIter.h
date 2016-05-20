@@ -32,7 +32,8 @@ public:
 	void start(BasicBlock *bb);
 
 	inline bool pathEnd(void) const { return si.pathEnd(); }
-	inline bool isCond(void) const { return si.isCond(); }
+	inline bool isCond(void) const { return si.isFork(); }
+	inline bool isFork(void) const { return si.isFork(); }
 	inline bool instEnd(void) const { return si.ended(); }
 	inline bool ended(void) const { return i.ended() && si.ended(); }
 

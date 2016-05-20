@@ -42,7 +42,7 @@ typedef enum opcode {
 	BRANCH,		// perform a branch on content of register a
 	TRAP,		// perform a trap
 	CONT,		// stop the execution of the block
-	IF,			// continue if condition cond is met in register sr, else skip "jump" instructions
+	IF,			// continue if condition cond is met in register sr, else skip "jump" instructions (deprecated)
 	LOAD,		// rd <- MEM_rb(ra)
 	STORE,		// MEM_rb(ra) <- rd
 	SCRATCH,	// d <- T
@@ -68,7 +68,9 @@ typedef enum opcode {
 	MOD,		// d <- a % b
 	MODU,		// d <- unsigned(a) % unsigned(b)
 	SPEC,		// special instruction (d: code, cst: sub-code)
-	MULH		// d <- (a * b) >> bitlength(d)
+	MULH,		// d <- (a * b) >> bitlength(d)
+	ASSUME,		// assume that cond in sr is true
+	FORK		// creates two executions paths: one at pc+1, other at pc + jump
 } opcode;
 
 
@@ -160,8 +162,6 @@ inline inst nop		(void) 							{ return inst(NOP); }
 inline inst branch	(uint_t to) 					{ return inst(BRANCH, to); }
 inline inst trap	(void) 							{ return inst(TRAP); }
 inline inst cont	(void) 							{ return inst(CONT); }
-inline inst _if		(cond_t c, reg_t s, uint_t j) 	{ ASSERT(c >= 0 && c < MAX_COND); return inst(IF, c, s, j); }
-inline inst _if		(uint_t c, reg_t s, uint_t j) 	{ ASSERT(c >= 0 && c < MAX_COND); return inst(IF, c, s, j); }
 inline inst load	(reg_t d, reg_t a, int t) 		{ return inst(LOAD, d, a, t); }
 inline inst load	(reg_t d, reg_t a, type_t t)	{ return inst(LOAD, d, a, t); }
 inline inst store	(reg_t d, reg_t a, int t) 		{ return inst(STORE, d, a, t); }
@@ -190,6 +190,14 @@ inline inst modu	(reg_t d, reg_t a, reg_t b) 	{ return inst(MODU, d, a, b); }
 inline inst _xor	(reg_t d, reg_t a, reg_t b) 	{ return inst(XOR, d, a, b); }
 inline inst spec	(reg_t d, uint_t cst) 			{ inst i(SPEC, d); i.args.cst = cst; return i; }
 inline inst mulh	(reg_t d, reg_t a, reg_t b) 	{ return inst(MULH, d, a, b); }
+inline inst assume	(cond_t c, reg_t s)				{ ASSERT(c >= 0 && c < MAX_COND); return inst(ASSUME, c, s); }
+inline inst fork	(uint_t j)						{ return inst(FORK, 0, 0, j); }
+
+
+// deprecated
+inline inst _if		(cond_t c, reg_t s, uint_t j) 	{ ASSERT(c >= 0 && c < MAX_COND); return inst(IF, c, s, j); }
+inline inst _if		(uint_t c, reg_t s, uint_t j) 	{ ASSERT(c >= 0 && c < MAX_COND); return inst(IF, c, s, j); }
+
 
 // Block class
 class Block: public elm::genstruct::Vector<inst> {

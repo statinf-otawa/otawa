@@ -60,7 +60,7 @@ public:
 		}
 
 		else {				// next semantic instruction
-			if(i.isCond())
+			if(i.isFork())
 				ss.push(man.copy(s));
 			s = man.updatePath(s, *i);
 		}

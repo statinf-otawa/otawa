@@ -39,6 +39,7 @@ public:
 
 	inline bool pathEnd(void) const { return bb[pc].op == sem::CONT; }
 	inline bool isCond(void) const { return bb[pc].op == sem::IF; }
+	inline bool isFork(void) const { return bb[pc].op == sem::IF || bb[pc].op == sem::FORK; }
 
 	inline bool ended(void) const { return pathEnd() && !todo; }
 	inline sem::inst item(void) const { return bb[pc]; }
