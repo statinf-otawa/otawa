@@ -148,6 +148,7 @@ class DomInfo {
 public:
 	virtual ~DomInfo(void);
 	virtual bool dom(Block *b1, Block *b2) = 0;
+	virtual Block* idom(Block* b) = 0;
 	virtual bool isBackEdge(Edge *edge) = 0;
 
 	inline bool dominates(Block *b1, Block *b2) { return dom(b1, b2); }

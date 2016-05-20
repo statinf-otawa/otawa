@@ -43,6 +43,11 @@ public:
 
 	}
 
+	virtual Block* idom(Block* b) {
+		ASSERTP(false, "idom not yet implemented"); // TODO
+		return NULL;
+	}
+
 	virtual bool isBackEdge(Edge *edge) {
 		ASSERT(edge);
 		return BACK_EDGE(edge);
