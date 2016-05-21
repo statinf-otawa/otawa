@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	features of module cfg
  *
  *	This file is part of OTAWA
@@ -80,18 +79,18 @@ private:
 };
 
 // context support
-extern Identifier<ContextualPath> CONTEXT;
-extern Identifier<ContextualStep> ENTER;
-extern Identifier<int> LEAVE;
+extern p::id<ContextualPath> CONTEXT;
+extern p::id<ContextualStep> ENTER;
+extern p::id<int> LEAVE;
 
 // COLLECTED_CFG_FEATURE
-extern Identifier<CFG *> ENTRY_CFG;
-extern Identifier<Bag<Address> > BB_BOUNDS;
-extern Identifier<Address> ADDED_CFG;
-extern Identifier<CString> ADDED_FUNCTION;
+extern p::id<CFG *> ENTRY_CFG;
+extern p::id<Bag<Address> > BB_BOUNDS;
+extern p::id<Address> ADDED_CFG;
+extern p::id<CString> ADDED_FUNCTION;
 extern p::feature COLLECTED_CFG_FEATURE;
-extern Identifier<const CFGCollection *> INVOLVED_CFGS;
-extern Identifier<Edge *> CALLED_BY;
+extern p::id<const CFGCollection *> INVOLVED_CFGS;
+extern p::id<Edge *> CALLED_BY;
 
 // CFGInfoFeature
 extern p::feature CFG_INFO_FEATURE;
@@ -133,6 +132,9 @@ extern Identifier<Block*> ENCLOSING_LOOP_HEADER;
 extern Identifier<Block*> LOOP_EXIT_EDGE;
 extern Identifier<elm::genstruct::Vector<Edge*> *> EXIT_LIST;
 extern p::feature LOOP_INFO_FEATURE;
+
+// CONDITIONAL_RESTRUCTURED_FEATURE
+extern p::feature CONDITIONAL_RESTRUCTURED_FEATURE;
 
 // CFG I/O service
 class CFGSaver;

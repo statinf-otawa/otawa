@@ -200,6 +200,6 @@ string CFGProcessor::str(const Address& base, const Address& address) {
  * processed later after the current CFG. Note that each function is only
  * processed once !
  */
-Identifier<bool> RECURSIVE("otawa::recursive", true);
+p::id<bool> RECURSIVE("otawa::recursive", true);
 
 } // otawa

@@ -240,7 +240,7 @@ void CFGCollector::configure(const PropList& props) {
  *
  * @ingroup cfg
  */
-Identifier<const CFGCollection *> INVOLVED_CFGS("otawa::INVOLVED_CFGS", 0);
+p::id<const CFGCollection *> INVOLVED_CFGS("otawa::INVOLVED_CFGS", 0);
 
 
 /**
@@ -252,7 +252,7 @@ Identifier<const CFGCollection *> INVOLVED_CFGS("otawa::INVOLVED_CFGS", 0);
  *
  * @ingroup cfg
  */
-Identifier<CFG *> ENTRY_CFG("otawa::entry_cfg", 0);
+p::id<CFG *> ENTRY_CFG("otawa::entry_cfg", 0);
 
 
 /**
@@ -263,7 +263,7 @@ Identifier<CFG *> ENTRY_CFG("otawa::entry_cfg", 0);
  *
  * @ingroup cfg
  */
-Identifier<Edge *> CALLED_BY("otawa::CALLED_BY", 0);
+p::id<Edge *> CALLED_BY("otawa::CALLED_BY", 0);
 
 
 /**
@@ -291,7 +291,7 @@ p::feature COLLECTED_CFG_FEATURE("otawa::COLLECTED_CFG_FEATURE", new Maker<CFGCo
  *
  * @ingroup cfg
  */
-Identifier<Address> ADDED_CFG("otawa::ADDED_CFG", 0);
+p::id<Address> ADDED_CFG("otawa::ADDED_CFG", 0);
 
 
 /**
@@ -300,6 +300,6 @@ Identifier<Address> ADDED_CFG("otawa::ADDED_CFG", 0);
  *
  * @ingroup cfg
  */
-Identifier<CString> ADDED_FUNCTION("otawa::ADDED_FUNCTION", 0);
+p::id<CString> ADDED_FUNCTION("otawa::ADDED_FUNCTION", 0);
 
 } // otawa

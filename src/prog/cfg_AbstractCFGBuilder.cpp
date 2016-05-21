@@ -422,6 +422,6 @@ void AbstractCFGBuilder::configure(const PropList& props) {
  * (whatever the control flow of the executable).
  * @ingroup cfg
  */
-Identifier<Bag<Address> > BB_BOUNDS("otawa::BB_BOUNDS");
+p::id<Bag<Address> > BB_BOUNDS("otawa::BB_BOUNDS");
 
 } // otawa

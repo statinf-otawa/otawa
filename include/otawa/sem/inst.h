@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	sem module interface
  *
  *	This file is part of OTAWA

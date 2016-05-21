@@ -38,9 +38,9 @@ public:
 
 	CFGProcessor(void);
 	CFGProcessor(cstring name, elm::Version version);
-	inline CFGProcessor(AbstractRegistration& reg): Processor(reg) { }
+	inline CFGProcessor(AbstractRegistration& reg): Processor(reg), _cfg(0) { }
 	inline CFGProcessor(cstring name, const Version& version, AbstractRegistration& reg)
-		: Processor(name, version, reg) { }
+		: Processor(name, version, reg), _cfg(0) { }
 	virtual void configure(const PropList& props);
 
 protected:
@@ -62,8 +62,8 @@ private:
 };
 
 // Configuration Properties
-extern Identifier<CFG *> ENTRY_CFG;
-extern Identifier<bool> RECURSIVE;
+extern p::id<CFG *> ENTRY_CFG;
+extern p::id<bool> RECURSIVE;
 
 // Statistics Properties
 extern Identifier<int> PROCESSED_CFG;

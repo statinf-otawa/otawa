@@ -75,6 +75,7 @@ using namespace otawa::display;
 Identifier<bool> SELECTED("", false);
 
 // BBCounter analysis
+#if 0
 class BBCounter: public Processor {
 public:
 	static Identifier<int> COUNT;
@@ -111,20 +112,19 @@ private:
 };
 Identifier<int> BBCounter::COUNT("BBCounter::COUNT", -1);
 Identifier<int> BBCounter::TOTAL("BBCounter::TOTAL", -1);
+#endif
 
 // PCGAdapter class
+
 class PCGAdapter {
 public:
-	inline PCGAdapter(PCG *pcg)
-		: _pcg(pcg) { ASSERT(pcg); }
-	
+	inline PCGAdapter(PCG *pcg): _pcg(pcg) { ASSERT(pcg); }
+
 	// DiGraph concept
 	class Vertex {
 	public:
 		inline Vertex(void): blk(0) { }
 		inline Vertex(PCGBlock *block): blk(block) { }
-		inline int outDegree(void) const { return -1; }
-		inline int inDegree(void) const { return -1; }
 		inline bool operator==(const Vertex& vertex) const { return blk == vertex.blk; }
 		PCGBlock *blk;
 	};
@@ -141,22 +141,13 @@ public:
 
 	class Successor: public PreIterator<Successor, Edge> {
 	public:
-	 	inline Successor(const PCGAdapter& pcg, const Vertex &source)
-	 		: blk(source.blk), iter(source.blk)	{  look(); }
-	 	//Successor(const Forward &forward)		!!TODO!!
+	 	inline Successor(const PCGAdapter& pcg, const Vertex &source): blk(source.blk), iter(source.blk) { }
 	 	inline bool ended(void) const { return iter.ended(); }
-	 	inline Edge item (void) const { return Edge(blk, *iter); }
-	 	void next(void) { iter.next(); look(); }
+	 	inline Edge item (void) const { return Edge(blk, iter->target()); }
+	 	void next(void) { iter.next(); }
 	private:
-		void look(void) {
-			while(iter) {
-				if(SELECTED(iter))
-					break;
-				iter.next();
-			}			
-		}
 		PCGBlock *blk;
-		PCGBlock::PCGBlockOutIterator iter;
+		PCG::OutIterator iter;
 	};
 	
 	// DiGraphWithVertexMap concept
@@ -167,10 +158,10 @@ public:
 	};
 
 	// Collection<Vertex> concept
-	inline int count(void) const { return _pcg->nbPCGBlocks(); }
-	inline bool contains(const Vertex &item) const { return _pcg->pcgbs().contains(item.blk); }
-	inline bool isEmpty (void) const { return _pcg->pcgbs(); }
-	inline operator bool (void) const { return !isEmpty(); }
+	inline int count(void) const { return _pcg->count(); }
+	//inline bool contains(const Vertex &item) const { return _pcg->pcgbs().contains(item.blk); }
+	//inline bool isEmpty (void) const { return _pcg->pcgbs(); }
+	//inline operator bool (void) const { return !isEmpty(); }
 
 	class Iterator: public PreIterator<Iterator, Vertex> {
 	public:
@@ -187,7 +178,7 @@ public:
 				iter.next();
 			}
 		}
-		PCG::PCGIterator iter;
+		PCG::Iterator iter;
 	};
 
 private:
@@ -205,7 +196,7 @@ public:
 		TextStyle &text,
 		FillStyle &fill
 	) {
-		caption << "Program Call Graph of " << graph._pcg->getCFG()->label();
+		caption << "PCG of " << graph._pcg->entry()->cfg()->label();
 	}
 	
 	static void decorate(
@@ -214,15 +205,15 @@ public:
 		Output &content,
 		ShapeStyle &style
 	) {
-		content << vertex.blk->getName();
+		/*content << vertex.blk->getName();
 		int cnt = BBCounter::COUNT(vertex.blk),
 			total = BBCounter::TOTAL(vertex.blk);
 		if(cnt >= 0)
-			content << "\nBB: " << cnt << " / " << total;
+			content << "\nBB: " << cnt << " / " << total;*/
 	}
 	
 	static void decorate(
-			const PCGAdapter& graph,
+		const PCGAdapter& graph,
 		const PCGAdapter::Edge& edge,
 		Output &label,
 		TextStyle &text,
@@ -278,18 +269,19 @@ protected:
 		string name = block->getName();
 		return name && !name.startsWith("_");		
 	}
-	
+
+#	if 0
 	void selectChain(PCG *pcg, string chain) {
 		
 		// Find the chain
 		PCGBlock *to = 0;
-		for(PCG::PCGIterator block(pcg); block; block++) {
+		/*for(PCG::PCGIterator block(pcg); block; block++) {
 			//cerr << "===>" << block->getName() << "<====\n";
 			if(block->getName() == chain) {
 				to = block;
 				break;
 			}
-		}
+		}*/
 		if(!to)
 			throw OptionException(_ << "no looked function \"" << chain << "\".");
 		
@@ -308,6 +300,7 @@ protected:
 					todo.put(parent);
 		}
 	}
+#	endif
 
 	virtual void work(const string &entry, PropList &props) throw(elm::Exception) {
 
@@ -315,27 +308,27 @@ protected:
 		PCGBuilder builder;
 		TASK_ENTRY(props) = &entry;
 		builder.process(workspace(), props);
-		PCG *pcg = PCG::ID(workspace());
+		PCG *pcg = PROGRAM_CALL_GRAPH(workspace());
 		ASSERT(pcg);
 	
 		// Select the interesting PCG blocks
-		if(chain)
+		/*if(chain)
 			selectChain(pcg, chain);
 		else
 			for(PCG::PCGIterator block(pcg); block; block++)
-				SELECTED(block) = accept(block);
+				SELECTED(block) = accept(block);*/
 		
 		// count BB if required
-		if(bb_cnt) {
+		/* if(bb_cnt) {
 			BBCounter counter;
 			counter.process(workspace(), props);
-		}
+		} */
 
 		// Display the PCG
 		PCGAdapter ad(pcg);
 		GenDrawer<PCGAdapter, PCGDecorator> drawer(ad);
-		drawer.kind = (kind_t)out.value();
-		drawer.path = entry + "." + out_values[out.value()].name;
+		/*drawer.kind = (kind_t)out.value();
+		drawer.path = entry + "." + out_values[out.value()].name;*/
 		drawer.draw();
 		
 	}
