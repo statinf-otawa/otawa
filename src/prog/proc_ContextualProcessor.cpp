@@ -130,7 +130,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
  * @par Hooks
  * @li  @ref CFG
  */
-Identifier<ContextualPath> CONTEXT("otawa::CONTEXT");
+p::id<ContextualPath> CONTEXT("otawa::CONTEXT");
 
 
 /**
@@ -143,7 +143,7 @@ Identifier<ContextualPath> CONTEXT("otawa::CONTEXT");
  * @par Hooks
  * @li @ref Edge
  */
-Identifier<ContextualStep> ENTER("otawa::ENTER");
+p::id<ContextualStep> ENTER("otawa::ENTER");
 
 
 /**
@@ -156,6 +156,6 @@ Identifier<ContextualStep> ENTER("otawa::ENTER");
  * @par Hooks
  * @li @ref Edge
  */
-Identifier<int> LEAVE("otawa::LEAVE", 0);
+p::id<int> LEAVE("otawa::LEAVE", 0);
 
 } // otawa

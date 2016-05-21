@@ -1,8 +1,8 @@
 /*
- *	PCGBlock class interface
+ *	ConditionalRestructurer class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003, IRIT UPS.
+ *	Copyright (c) 2016, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -16,12 +16,26 @@
  *
  *	You should have received a copy of the GNU General Public License
  *	along with OTAWA; if not, write to the Free Software
- *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
- *	02110-1301  USA
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_PCG_PCGBLOCK_H
-#define OTAWA_PCG_PCGBLOCK_H
+#ifndef OTAWA_CFG_CONDITIONALRESTRUCTURER_H_
+#define OTAWA_CFG_CONDITIONALRESTRUCTURER_H_
 
-#include "PCG.h"
+#include "CFGTransformer.h"
+#include "features.h"
 
-#endif
+namespace otawa {
+
+class ConditionalRestructurer: public CFGTransformer {
+public:
+	static p::declare reg;
+	ConditionalRestructurer(p::declare& r = reg);
+
+protected:
+	virtual Block *transform(Block *b);
+	virtual Edge *transform(Edge *e);
+};
+
+} // otawa
+
+#endif /* OTAWA_CFG_CONDITIONALRESTRUCTURER_H_ */

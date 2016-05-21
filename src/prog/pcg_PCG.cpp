@@ -1,5 +1,5 @@
 /*
- *	PCGBlock class interface
+ *	PCG class implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2003, IRIT UPS.
@@ -19,9 +19,55 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
-#ifndef OTAWA_PCG_PCGBLOCK_H
-#define OTAWA_PCG_PCGBLOCK_H
 
-#include "PCG.h"
+#include <otawa/pcg/PCG.h>
 
-#endif
+namespace otawa {
+
+/**
+ * @class PCG
+ * A PCG (Program Call Graph) provides the call structure of the program.
+ *
+ * @ingroup cfg
+ */
+
+/**
+ * Build a new PCG.
+ * @param entry		Entry function.
+ */
+PCG::PCG(PCGBlock *entry): _entry(entry) {
+}
+
+
+/**
+ * @class PCGBlock
+ * Represents a function in the CFG.
+ *
+ * @ingroup cfg
+ */
+
+/**
+ */
+PCGBlock::PCGBlock(CFG *cfg): _cfg(cfg) {
+}
+
+/**
+ */
+PCGBlock::~PCGBlock(void) {
+}
+
+
+/**
+ * @class PCFGEdge
+ * Represents a call in the CFG.
+ *
+ * @ingroup cfg
+ */
+
+/**
+ */
+PCGEdge::PCGEdge(PCGBlock *caller, SynthBlock *block, PCGBlock *callee)
+: GenGraph<PCGBlock, PCGEdge>::GenEdge(caller, callee), _block(block) {
+}
+
+}	// otawa
