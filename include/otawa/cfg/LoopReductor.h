@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	LoopReductor processor interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2007-08, IRIT UPS.
+ *	Copyright (c) 2007-16, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -21,41 +20,36 @@
  *	02110-1301  USA
  */
 
-#ifndef CFG_LOOPREDUCTOR_H_
-#define CFG_LOOPREDUCTOR_H_
+#ifndef OTAWA_CFG_LOOPREDUCTOR_H_
+#define OTAWA_CFG_LOOPREDUCTOR_H_
 
 #include <otawa/cfg/features.h>
-#include <otawa/cfg/CFGCollector.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/proc/Processor.h>
 
 namespace otawa {
 
-
-
 class LoopReductor: public Processor {
-
-	public:
-	LoopReductor(bool _reduce_loops = true);
+public:
+	static p::declare reg;
+	LoopReductor(p::declare& r = reg);
 	virtual void processWorkSpace(WorkSpace*);
 
+private:
+	void reduce(CFGMaker *vcfg, CFG *cfg);
+	void depthFirstSearch(Block *bb, Vector<Block *> *ancestors);
+	Block *clone(CFGMaker& maker, Block *b);
 
-	private:
-
-	void reduce(otawa::VirtualCFG *vcfg, otawa::CFG *cfg);
-	void depthFirstSearch(otawa::BasicBlock *bb, Vector<BasicBlock*> *ancestors);
-	Vector<VirtualCFG*> vcfgvec;
-	static Identifier<bool> MARK;
-
-	static Identifier<BasicBlock*> DUPLICATE_OF;
-	static Identifier<dfa::BitSet*> IN_LOOPS;
+	Vector<CFGMaker *> vcfgvec;
 	int idx;
-	bool reduce_loops;
-;
+
+	static Identifier<bool> MARK;
+	static Identifier<Block*> DUPLICATE_OF;
+	static Identifier<dfa::BitSet*> IN_LOOPS;
 };
 
-}
+}	// otawa
 
+#endif	//. OTAWA_CFG_LOOPREDUCTOR_H_
 
-#endif
