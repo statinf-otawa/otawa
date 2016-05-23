@@ -40,6 +40,8 @@ namespace otawa { namespace sgraph {
 /**
  */
 Edge::~Edge(void) {
+	src->_outs.remove(this);
+	snk->_ins.remove(this);
 }
 
 /**

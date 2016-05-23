@@ -34,7 +34,10 @@ class LoopReductor: public Processor {
 public:
 	static p::declare reg;
 	LoopReductor(p::declare& r = reg);
-	virtual void processWorkSpace(WorkSpace*);
+
+protected:
+	virtual void processWorkSpace(WorkSpace *ws);
+	virtual void cleanup(WorkSpace *ws);
 
 private:
 	void reduce(CFGMaker *vcfg, CFG *cfg);

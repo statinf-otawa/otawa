@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	LoopReductor class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-07, IRIT UPS.
+ *	Copyright (c) 2005-16, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -20,17 +19,15 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/genstruct/SortedSLList.h>
+#include <otawa/cfg.h>
+#include <otawa/dfa/BitSet.h>
+#include <otawa/proc/Feature.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/prog/WorkSpace.h>
-#include <otawa/proc/Feature.h>
-#include <otawa/dfa/BitSet.h>
-#include <otawa/cfg.h>
-#include <otawa/util/Dominance.h>
-#include <elm/genstruct/SortedSLList.h>
-#include <otawa/cfg/LoopReductor.h>
+#include <otawa/cfg/Dominance.h>
 #include <otawa/cfg/features.h>
-
-/* a virer plus tard */
+#include <otawa/cfg/LoopReductor.h>
 
 using namespace otawa::dfa;
 
@@ -56,241 +53,278 @@ namespace otawa {
  * @ingroup cfg
  */
 
-LoopReductor::LoopReductor(bool _reduce_loops) : Processor((_reduce_loops ? "otawa::LoopReductor" : "otawa::SpanningTreeBuilder"), Version(1, 0, 0)), reduce_loops(_reduce_loops) {
-	require(COLLECTED_CFG_FEATURE);
-	invalidate(COLLECTED_CFG_FEATURE);
-	provide(LOOP_HEADERS_FEATURE);
-	if (reduce_loops) {
-		provide(REDUCED_LOOPS_FEATURE);
-	}
+p::declare LoopReductor::reg = p::init("otawa::LoopReductor", Version(2, 0, 0))
+	.require(COLLECTED_CFG_FEATURE)
+	.invalidate(COLLECTED_CFG_FEATURE)
+	.provide(LOOP_HEADERS_FEATURE)
+	.provide(COLLECTED_CFG_FEATURE)
+	.provide(REDUCED_LOOPS_FEATURE)
+	.make<LoopReductor>();
+
+LoopReductor::LoopReductor(p::declare& r)
+	: Processor(r), idx(0)
+{
 }
 
-Identifier<BasicBlock*> LoopReductor::DUPLICATE_OF("otawa::LoopReductor::DUPLICATE_OF", 0);
+Identifier<Block*> LoopReductor::DUPLICATE_OF("otawa::LoopReductor::DUPLICATE_OF", 0);
 Identifier<bool> LoopReductor::MARK("otawa::LoopReductor::MARK", false);
 
 Identifier<dfa::BitSet*> LoopReductor::IN_LOOPS("otawa::LoopReductor::IN_LOOPS", 0);
 
-void LoopReductor::processWorkSpace(otawa::WorkSpace *fw) {
+/**
+ */
+void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
+	const CFGCollection *orig_coll = INVOLVED_CFGS(ws);
 
-	int idx = 0;
+	// make the makers
+	for(CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++) {
+		CFGMaker *vcfg = new CFGMaker(cfg->first());
+		vcfgvec.add(vcfg);
+	}
 
-	const CFGCollection *orig_coll = INVOLVED_CFGS(fw);
-	if (reduce_loops) {
-
-		for (CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++) {
-			VirtualCFG *vcfg = new VirtualCFG(false);
-			if (ENTRY_CFG(fw) == *cfg)
-				ENTRY_CFG(fw) = vcfg;
-			vcfgvec.add(vcfg);
-			INDEX(vcfg) = INDEX(cfg);
-			LABEL(vcfg) = LABEL(cfg);
-			ENTRY(vcfg->entry()) = vcfg;
-
-		}
-
-		int i = 0;
-		for (CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++, i++) {
-			VirtualCFG *vcfg = vcfgvec.get(i);
-
-			idx = 0;
-			INDEX(vcfg->entry()) = idx;
-			vcfg->addBB(vcfg->entry());
-			idx++;
-
-			reduce(vcfg, cfg);
-
-			INDEX(vcfg->exit()) = idx;
-			vcfg->addBB(vcfg->exit());
-
-			/* Renum basic blocks */
-			idx = 0;
-			for (CFG::BBIterator bb(vcfg); bb; bb++) {
-				INDEX(bb) = idx;
-				idx++;
-			}
-		}
-
-	INVOLVED_CFGS(fw) = NULL;
-	} else {
-		for (CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++) {
-
-			Vector<BasicBlock*> *ancestors = new Vector<BasicBlock*>();
-
-			for (CFG::BBIterator bb(cfg); bb; bb++) {
-				IN_LOOPS(bb) = new dfa::BitSet(cfg->countBB());
-			}
-
-			/* Do the Depth-First Search, compute the ancestors sets, and mark loop headers */
-			depthFirstSearch(cfg->entry(), ancestors);
-			delete ancestors;
-		}
-
+	// reduce loops
+	int i = 0;
+	for(CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++, i++) {
+		CFGMaker *vcfg = vcfgvec.get(i);
+		reduce(vcfg, cfg);
 	}
 
 }
 
+
+/**
+ */
+void LoopReductor::cleanup(WorkSpace *ws) {
+	CFGCollection *new_coll = new CFGCollection();
+	for(int i = 0; i < vcfgvec.count(); i++) {
+		CFG *cfg = vcfgvec[i]->build();
+		new_coll->add(cfg);
+		if(i == 0)
+			addRemover(COLLECTED_CFG_FEATURE, ENTRY_CFG(ws) = cfg);
+		delete vcfgvec[i];
+	}
+	track(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = new_coll);
+}
+
+
+
+// sort edge by increasing target address
 class EdgeDestOrder {
-	public:
+public:
 	static inline int compare(Edge *e1, Edge *e2) {
-		if (e1->target() && e2->target() && e1->target()->address() && e2->target()->address()) {
-			if (e1->target()->address() > e2->target()->address()) {
+		if(e1->target() && e2->target() && e1->target()->address() && e2->target()->address())
+			if (e1->target()->address() > e2->target()->address())
 				return 1;
-			} else {
+			else
 				return -1;
-			}
-		} else {
+		else
 			return 0;
-		}
 	}
 };
 
-void LoopReductor::depthFirstSearch(BasicBlock *bb, Vector<BasicBlock*> *ancestors) {
+
+/**
+ * Perform the depth-first search
+ * @param bb		Root of the spanning tree.
+ * @param ancestors	Used to store ancestors.
+ */
+void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
 	ancestors->push(bb);
 	MARK(bb) = true;
 
-
-	SortedSLList<Edge*, EdgeDestOrder> successors;
-	for (BasicBlock::OutIterator edge(bb); edge; edge++)
+	// S = { v / (bb, v) in E }
+	SortedSLList<Edge *, EdgeDestOrder> successors;
+	for(Block::EdgeIter edge = bb->outs(); edge; edge++)
 		successors.add(*edge);
 
-	for (SortedSLList<Edge*, EdgeDestOrder>::Iterator edge(successors); edge; edge++) {
-		if ((edge->kind() != Edge::CALL) && !edge->target()->isExit()){
-			if (MARK(edge->target()) == false) {
+	// foreach (bb, v) in S
+	for(SortedSLList<Edge*, EdgeDestOrder>::Iterator edge(successors); edge; edge++) {
+		if(!edge->target()->isExit()) {
+
+			// if not MARK(v) go down
+			if (MARK(edge->target()) == false)
 				depthFirstSearch(edge->target(), ancestors);
-			} else {
-				if (ancestors->contains(edge->target())) {
+
+			// else assert MARK(v)
+			else {
+
+				// is it a back edge?
+				if(ancestors->contains(edge->target())) {
 					LOOP_HEADER(edge->target()) = true;
 					BACK_EDGE(edge) = true;
-					bool inloop = false;
-					for (Vector<BasicBlock*>::Iterator member(*ancestors); member; member++) {
-						if (*member == edge->target())
-							inloop = true;
-						if (inloop) {
-							IN_LOOPS(member)->add(edge->target()->number());
-						}
 
+					// foreach w in S[v, bb] do IN_LOOPS(w) <- IN_LOOPS U { v }
+					bool inloop = false;
+					for(Vector<Block*>::Iterator member(*ancestors); member; member++) {
+						if(*member == edge->target())
+							inloop = true;
+						if(inloop)
+							IN_LOOPS(member)->add(edge->target()->index());
 					}
 				}
-				/* GRUIIIIIIIIIK !!! pas performant, mais bon.. */
+
+				// foreach t in IN_LOOPS(v) do
 				for (dfa::BitSet::Iterator bit(**IN_LOOPS(edge->target())); bit; bit++) {
 					bool inloop = false;
-					for (Vector<BasicBlock*>::Iterator member(*ancestors); member; member++) {
-						if (member->number() == *bit)
-							inloop = true;
-						if (inloop) {
-							IN_LOOPS(member)->add(*bit);
-						}
 
+					// foreach w in S[v, bb] do IN_LOOPS[w] <- IN_LOOPS[w] U { t }
+					for (Vector<Block*>::Iterator member(*ancestors); member; member++) {
+						if (member->index() == *bit)
+							inloop = true;
+						if (inloop)
+							IN_LOOPS(member)->add(*bit);
 					}
 				}
 			}
 		}
 	}
+
+	// go up
 	ancestors->pop();
 }
 
-void LoopReductor::reduce(VirtualCFG *vcfg, CFG *cfg) {
 
-	HashTable<BasicBlock*,BasicBlock*> map;
+/**
+ * Duplicate the given block.
+ * @param maker	CFG maker to use.
+ * @param b		Block to duplicate (must not be an end).
+ * @return		Duplicated block.
+ */
+Block *LoopReductor::clone(CFGMaker& maker, Block *b) {
+
+	if(b->isBasic()) {
+		BasicBlock *bb = b->toBasic();
+		genstruct::Table<Inst *> insts(new Inst *[bb->count()], bb->count());
+		int j = 0;
+		for(BasicBlock::InstIter i = bb->insts(); i; i++, j++)
+			insts[j] = i;
+		BasicBlock *nbb = new BasicBlock(insts);
+		maker.add(nbb);
+		return nbb;
+	}
+
+	else if(b->isSynth()) {
+		SynthBlock *sb = b->toSynth();
+		SynthBlock *nsb = new SynthBlock();
+		if(sb)
+			maker.call(nsb, *vcfgvec[sb->callee()->index()]);
+		else
+			maker.call(nsb, 0);
+		return nsb;
+	}
+
+	else {
+		ASSERT(false);
+		return 0;
+	}
+}
+
+
+/**
+ * Reduce irregular loops.
+ */
+void LoopReductor::reduce(CFGMaker *vcfg, CFG *cfg) {
+
+	HashTable<Block *, Block *> map;
 	map.put(cfg->entry(), vcfg->entry());
 	map.put(cfg->exit(),vcfg->exit());
 
-	idx = 1;
-	/* duplicate the basic blocks */
-	for (CFG::BBIterator bb(cfg); bb; bb++) {
-		if (!bb->isEnd()) {
-			BasicBlock *vbb = new VirtualBasicBlock(*bb);
-			INDEX(vbb) = idx;
-			idx++;
-			map.put(bb, vbb);
-			vcfg->addBB(vbb);
+	// duplicate the basic blocks
+	map.put(cfg->entry(), vcfg->entry());
+	for(CFG::BlockIter b = cfg->blocks(); b; b++)
+		if(!b->isEnd()) {
+			Block *nb = clone(*vcfg, b);
+			map.put(b, nb);
 		}
-	}
-	INDEX(vcfg->exit()) = idx;
-	idx++;
+	map.put(cfg->exit(), vcfg->exit());
 
-	/* connect edges */
-	for (CFG::BBIterator bb(cfg); bb; bb++) {
-		for (BasicBlock::OutIterator edge(bb); edge; edge++) {
-			if (edge->kind() == Edge::CALL) {
-				BasicBlock *vsource = map.get(edge->source(), NULL);
-				CFG *vcalled = vcfgvec.get(INDEX(edge->calledCFG()));
-				ASSERT(vsource && vcalled);
-				Edge *vedge = new Edge(vsource, vcalled->entry(), Edge::CALL);
-				CALLED_CFG(vedge) = vcalled;
-
-			} else {
-				BasicBlock *vsource = map.get(edge->source(), NULL);
-				BasicBlock *vtarget = map.get(edge->target(), NULL);
-				ASSERT(vsource && vtarget);
-				new Edge(vsource, vtarget, edge->kind());
-			}
+	// connect edges
+	for(CFG::BlockIter b = cfg->blocks(); b; b++) {
+		for(Block::EdgeIter edge = b->outs(); edge; edge++) {
+			Block *vsource = map.get(edge->source(), 0);
+			Block *vtarget = map.get(edge->target(), 0);
+			ASSERT(vsource && vtarget);
+			Edge *nedge = new Edge(edge->flags());
+			vcfg->add(vsource, vtarget, nedge);
 		}
 	}
 
-
-	Vector<BasicBlock*> *ancestors = new Vector<BasicBlock*>();
-
-	for (CFG::BBIterator bb(vcfg); bb; bb++) {
-		IN_LOOPS(bb) = new dfa::BitSet(vcfg->countBB());
+	// prepare irregular analysis
+	Vector<Block*> *ancestors = new Vector<Block*>();
+	for(CFG::BlockIter bb = vcfg->blocks(); bb; bb++) {
+		IN_LOOPS(bb) = new dfa::BitSet(cfg->count());
+		cerr << "DEBUG: IN_LOOP(" << *bb << ") = " << (void *)*IN_LOOPS(bb) << io::endl;
 	}
 
-	/* Do the Depth-First Search, compute the ancestors sets, and mark loop headers */
+	// do the Depth-First Search, compute the ancestors sets, and mark loop headers
 	depthFirstSearch(vcfg->entry(), ancestors);
 
-	/* Collect all loop headers in a bitset */
-/*
-	for (CFG::BBIterator bb(vcfg); bb; bb++)
-		if (LOOP_HEADER(bb)) {
-			realhdr.add(bb->number());
-		}
-		*/
-	/*
-	HashTable<int, BasicBlock*> hdrmap;
-	Vector<BasicBlock*> dups;
-	*/
-
-
+	// perform the transformation
 	bool done = false;
-	while (!done) {
+	while(!done) {
+		cerr << "\nDEBUG: next pass\n";
 		done = true;
-		for (CFG::BBIterator bb(vcfg); bb; bb++) {
-			Vector<Edge*> toDel;
-			BasicBlock *duplicate = NULL;
-			for (BasicBlock::InIterator edge(bb); edge; edge++) {
 
-				/* compute loops entered by the edge */
-				dfa::BitSet enteredLoops(**IN_LOOPS(bb));
+		// foreach b in V do
+		for(CFG::BlockIter b = vcfg->blocks(); b; b++) {
+			Vector<Edge*> toDel;
+			//Block *duplicate = 0;
+			cerr << "DEBUG: b = " << *b << io::endl;
+
+			// foreach (v, b) in E do
+			for(Block::EdgeIter edge = b->ins(); edge; edge++) {
+				cerr << "DEBUG:\t" << *edge << io::endl;
+
+				// compute loops entered by the edge
+				// enteredLoops = IN_LOOPS(b) \ IN_LOOPS(v)
+				dfa::BitSet enteredLoops(**IN_LOOPS(b));
 				enteredLoops.remove(**IN_LOOPS(edge->source()));
 
-				/* The edge is a regular entry if it enters one loop, and edge->target() == loop header */
-				if (!((enteredLoops.count() == 0) || ((enteredLoops.count() == 1) && (enteredLoops.contains(bb->number()))))) {
-					if (!duplicate) {
-						duplicate = new VirtualBasicBlock(bb);
-						ASSERT(DUPLICATE_OF(bb) == NULL);
-						DUPLICATE_OF(bb) = duplicate;
-						INDEX(duplicate) = idx;
-						idx++;
-						vcfg->addBB(duplicate);
+				// the edge is a irregular entry if it enters one loop, and edge->target() == loop header
+				// if |enteredLoops| > 1 /\ b in enteredLoops then
+				if(!((enteredLoops.count() == 0) || ((enteredLoops.count() == 1) && (enteredLoops.contains(b->index()))))) {
+
+					// d <- duplicate(v)
+					Block *duplicate = DUPLICATE_OF(b);
+					if(!duplicate) {
+						done = false;
+
+						// DUPLICATE_OF(b) <- d
+						duplicate = clone(*vcfg, b);
+						ASSERT(DUPLICATE_OF(b) == 0);
+						DUPLICATE_OF(b) = duplicate;
+						cerr << "DEBUG:\tduplicated " << *b << " as " << duplicate << io::endl;
+
+						// IN_LOOPS(d) <- IN_LOOPS(v)
 						IN_LOOPS(duplicate) = new dfa::BitSet(**IN_LOOPS(edge->source()));
-						for (BasicBlock::OutIterator outedge(bb); outedge; outedge++) {
-							if (DUPLICATE_OF(outedge->target())) {
-								new Edge(duplicate, DUPLICATE_OF(outedge->target()), outedge->kind());
+
+						// E <- E U { (d, DUPLICATE_OF(w)) / (b, w) in E }
+						for(Block::EdgeIter outedge = b->outs(); outedge; outedge++) {
+							if(DUPLICATE_OF(outedge->target())) {
+								Edge *nedge = new Edge(outedge->flags());
+								vcfg->add(duplicate, DUPLICATE_OF(outedge->target()), nedge);
+								cerr << "DEBUG:\t\tnew " << nedge << io::endl;
 							} else {
-								new Edge(duplicate, outedge->target(), outedge->kind());
+								Edge *nedge = new Edge(outedge->flags());
+								vcfg->add(duplicate, outedge->target(), nedge);
+								cerr << "DEBUG:\t\tnew " << nedge << io::endl;
 							}
 						}
 
+						// E <- E U { (v, d) } \ { (v, b) }
+						Edge *nedge = new Edge(edge->flags());
+						vcfg->add(edge->source(), duplicate, nedge);
+						cerr << "DEBUG:\t\tnew " << nedge << io::endl;
+						toDel.add(edge);
 					}
-					done = false;
 
-					new Edge(edge->source(), duplicate, edge->kind());
-
-					toDel.add(edge);
 				}
 			}
-			for (Vector<Edge*>::Iterator edge(toDel); edge; edge++)
+
+			for (Vector<Edge*>::Iterator edge(toDel); edge; edge++) {
+				cerr << "DEBUG: remove " << *edge << io::endl;
 				delete *edge;
+			}
 		}
 	}
 
@@ -299,7 +333,7 @@ void LoopReductor::reduce(VirtualCFG *vcfg, CFG *cfg) {
 
 
 /**
- *
+ * Ensure that no more irregular loop remains in the program representation.
  */
 p::feature REDUCED_LOOPS_FEATURE ("otawa::REDUCED_LOOPS_FEATURE", p::make<LoopReductor>());
 

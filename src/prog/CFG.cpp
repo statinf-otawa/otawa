@@ -560,7 +560,7 @@ int BasicBlock::count(void) const {
  * @param type		Type of CFG (one of SUBPROG, SYNTH or any user type).
  */
 CFG::CFG(Inst *first, type_t type)
-: idx(0), _type(type), fst(first), _exit(0), _unknown(0) {
+: idx(0),  _offset(0), _type(type), fst(first), _exit(0), _unknown(0) {
 }
 
 /**
@@ -568,9 +568,13 @@ CFG::CFG(Inst *first, type_t type)
 CFG::~CFG(void) {
 
 	// delete edges
-	for(BlockIter b = this->vertices(); b; b++)
-		for(Block::EdgeIter e = b->outs(); e; e++)
+	for(BlockIter b = this->vertices(); b; b++) {
+		Block::EdgeIter e = b->outs();
+		while(e) {
 			delete e;
+			e = b->outs();
+		}
+	}
 
 	// delete nodes
 	for(BlockIter b = this->vertices(); b; b++) {

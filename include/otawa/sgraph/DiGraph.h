@@ -49,6 +49,7 @@ private:
 };
 
 class Vertex {
+	friend class Edge;
 	friend class DiGraphBuilder;
 	typedef elm::List<Edge *> edges_t;
 public:
