@@ -112,6 +112,9 @@ void DynamicBranchingAnalysis::configure(const PropList &props) {
  */
 static PotentialValue setFromClp(clp::Value v) {
 	PotentialValue res;
+	if(v.mtimes() >= POTENTIAL_VALUE_LIMIT)
+		return res;
+
 	int val = v.lower();
 	res.insert(val);
 	for(unsigned int nb = v.mtimes(); nb > 0; nb--) {
@@ -295,7 +298,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 					v = find(bb,rega,clpin,globalin,semantics);
 					return v;
 				}
-				case sem::SETI:   // d <- cst
+				case sem::SETI:    // d <- cst
 				v.insert(i.cst());
 				return v;
 
@@ -321,14 +324,18 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 				{
 					MemID rega = elm::Pair<Memtype,int>(REG,i.a());
 					MemID regb = elm::Pair<Memtype,int>(REG,i.b());
-					v = find(bb,rega,clpin,globalin, semantics) + find(bb,regb,clpin,globalin,semantics);
+					PotentialValue va = find(bb,rega,clpin,globalin, semantics);
+					PotentialValue vb = find(bb,regb,clpin,globalin,semantics);
+					v = va + vb;
 					return v;
 				}
 				case sem::SUB:    // d <- a - b
 				{
 					MemID rega = elm::Pair<Memtype,int>(REG,i.a());
 					MemID regb = elm::Pair<Memtype,int>(REG,i.b());
-					v = find(bb,rega,clpin,globalin, semantics) - find(bb,regb,clpin,globalin,semantics);
+					PotentialValue va = find(bb,rega,clpin,globalin, semantics);
+					PotentialValue vb = find(bb,regb,clpin,globalin,semantics);
+					v =  va - vb;
 					return v;
 				}
 				case sem::SHL:    // d <- a << b

@@ -282,7 +282,7 @@ PotentialValue operator||(const PotentialValue& a, const PotentialValue& b) {
 }
 
 PotentialValue merge(const PotentialValue& a, const PotentialValue& b) {
-	if(a.count() == 0 || b.count() == 0)
+	if(a.count() == 0 && b.count() == 0)
 		return PotentialValue::bot;
 	if(a.count()+b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
 		elm::cerr << "WARNING: large set of potential value with size = " << a.count() << " + " << b.count() << " = " << (a.count()*b.count()) << " @ " << __FILE__ << ":" << __LINE__ << io::endl;

@@ -101,7 +101,6 @@ public:
 		inline Edge item(void) const {
 			if(exitBlockProcessed)
 				return Edge(0, associatedSynth /* not used */, returnSynth, eR);
-			
 			return Edge(*i, associatedSynth); // for edge between Blocks in the same CFG
 		}
 		inline void next(void) {

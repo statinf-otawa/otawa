@@ -70,7 +70,8 @@ public:
 		}
 
 		inline bool ended(void) const { return i.ended(); }
-		inline Edge item(void) const { return Edge(*i); }
+		inline Edge item(void) const {
+			return Edge(*i); }
 		inline void next(void) {
 			i.next();
 			if(!i)

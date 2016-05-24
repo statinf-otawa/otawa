@@ -111,7 +111,7 @@ public:
 		ASSERTP(r < nrblock * rblock_size, "register index out of bound");
 
 		value_t temp = s->regs[r >> rblock_shift][r & rblock_mask]; // if the existing value is the same as the value to assign, then no change
-		if(dom->equals(temp, v)) //
+		if(dom->equals(temp, v))
 			return s;
 
 		if(s == top && dom->equals(v, dom->top)) // assigning T to any register of the T state, will return T

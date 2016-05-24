@@ -26,6 +26,7 @@
 #include <otawa/util/HalfAbsInt.h>
 #include <otawa/dfa/FastState.h>
 #include <otawa/dynbranch/features.h>
+#include <time.h>
 
 namespace otawa { namespace dynbranch {
 
@@ -59,6 +60,7 @@ void GlobalAnalysis::configure(const PropList &props) {
 /**
  */
 void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
+
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
 	CFG *cfg = coll->get(0) ;
@@ -108,6 +110,7 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 		cout << " Average time (microsec): " << t/TIME_NB_EXEC_GLOBAL << endl ;
 		cout << " ----------------------------------------------------" << endl  ;
 	}
+
 }
 
 
