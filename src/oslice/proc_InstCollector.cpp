@@ -41,11 +41,15 @@ void InstCollector::processWorkSpace(WorkSpace *fw) {
 	const CFGCollection& coll = **otawa::INVOLVED_CFGS(fw);
 	// first lets make the control instructions the interested instructions that we want to slice for
 	interested_instructions_t *interestedInstructions = INTERESTED_INSTRUCTIONS(fw);
+	interestedInstructionsLocal = new interested_instructions_t();
 	if(!interestedInstructions) {
 		interestedInstructions = new interested_instructions_t();
 		INTERESTED_INSTRUCTIONS(fw) = interestedInstructions;
 	}
 	collectInterestedInstructions(coll, interestedInstructions);
+
+	interested_instructions_t* p = INTERESTED_INSTRUCTIONS(fw);
+	assert(p);
 
 } // end of function InstCollector::work
 
@@ -60,10 +64,12 @@ void InstCollector::collectInterestedInstructions(const CFGCollection& coll, int
 			BasicBlock *bb = v->toBasic();
 			for(BasicBlock::InstIter inst(bb); inst; inst++) {
 				if(interested(inst)) {
-					DEBUGGING_MESSAGE(elm::cout << __SOURCE_INFO__ << "adding the interested instruction " << *inst << " @ " << inst->address() << io::endl;)
+					DEBUGGING_MESSAGE(elm::cerr << __SOURCE_INFO__ << "adding the interested instruction " << *inst << " @ " << inst->address() << io::endl;)
+					elm::cerr << "adding the interested instruction " << *inst << " @ " << inst->address() << io::endl;
 					// put the interested instructions in the bucket
 					InterestedInstruction* interestedInstruction = new InterestedInstruction(inst, bb);
 					interestedInstructions->add(interestedInstruction);
+					interestedInstructionsLocal->add(interestedInstruction);
 				} // end of the checking interested instruction
 			} // end of each instruction in BB
 		} // end for (CFG::BlockIter v = cfg->blocks(); v; v++) {

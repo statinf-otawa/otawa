@@ -103,7 +103,6 @@ void GlobalAnalysisProblem::widening(otawa::Block* ob, Domain& a, Domain b) cons
 
 void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 	// initially the output state equals to the input state
-	cerr << "DEBUG: updating " << b << io::endl;
 	out = in ;
 
 	if(!b->isBasic()) // only process the BB

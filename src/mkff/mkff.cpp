@@ -40,6 +40,8 @@
 #include <otawa/flowfact/ContextualLoopBound.h>
 #include <otawa/dynbranch/features.h>
 #include <otawa/display/CFGOutput.h>
+#include <otawa/data/clp/features.h>
+#include <otawa/oslice/features.h>
 
 using namespace elm;
 using namespace otawa;
@@ -597,6 +599,7 @@ private:
 class FFOutput: public CFGProcessor {
 public:
 	FFOutput(Printer& printer, bool removeDuplicatedTarget);
+	inline void setProcessingFullCFG(bool b) { processingFullCFG = b; }
 protected:
 	virtual void setup(WorkSpace *ws) {
 		has_debug = ws->isProvided(otawa::SOURCE_LINE_FEATURE);
@@ -622,6 +625,7 @@ private:
 	Printer& _printer;
 	Vector<Address> displayedInstructions; // used to prevent same instruction being displayed twice.
 	bool _removeDuplicatedTarget;
+	bool processingFullCFG;
 };
 
 
@@ -683,7 +687,7 @@ public:
 protected:
 	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::SwitchOption xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps, rawoutput, forFun;
+	option::SwitchOption xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps, rawoutput, forFun, slicing;
 };
 
 
@@ -698,8 +702,41 @@ void Command::work(PropList &props) throw(elm::Exception) {
 		ADDED_FUNCTION(props).add(arguments()[i].toCString());
 	CFGChecker::NO_EXCEPTION(props) = true;
 
+	// Load flow facts and record unknown values
+	QuestFlowFactLoader ffl;
+	ffl.process(workspace(), props);
+
+	// determine printer
+	Printer *p;
+	if(xml)
+		p = new FFXPrinter(workspace(), true);
+	else
+		p = new FFPrinter(workspace(), true);
+
+	// printer header
+	p->printHeader(cout);
+
+	// Build the checksums of the binary files
+	if(!ffl.checkSummed()) {
+		for(Process::FileIter file(workspace()->process()); file; file++) {
+			checksum::Fletcher sum;
+			io::InFileStream stream(file->name());
+			sum.put(stream);
+			elm::system::Path path = file->name();
+			p->printCheckSum(cout, path, sum.sum());
+		}
+		cout << io::endl;
+	}
+
+	// display the context tree
+	workspace()->require(CONTEXT_TREE_BY_CFG_FEATURE, props);
+	FFOutput out(*p, removeDuplicatedTarget);
+	out.setProcessingFullCFG(true); // working on a non-sliced CFG
+	out.process(workspace(), props);
+
 	// Enable the dynamic branch
 	if(dynbranch) {
+
 		class CFGOutput: public otawa::display::CFGOutput { // for simple CFG output facility
 		public:
 			void processCharacters(StringBuffer& sb, Output& out) {
@@ -745,14 +782,6 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				// make body
 				cstring file;
 				int line = 0;
-				system::StopWatch watch;
-				/*
-				 * Fixed using System::random()
-				 	 if(forFun) { // get the random seed
-					watch.start();
-					watch.stop();
-					srand (watch.startTime());
-				}*/
 				for(BasicBlock::InstIter inst(bb); inst; inst++){ // the body:
 					// display labels
 					for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
@@ -808,6 +837,10 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				first = false;
 			else {
 				workspace()->invalidate(COLLECTED_CFG_FEATURE);
+				if(slicing) {
+					workspace()->invalidate(otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE);
+					workspace()->invalidate(otawa::oslice::SLICER_FEATURE);
+				}
 				workspace()->require(COLLECTED_CFG_FEATURE, props);
 			} // end of the first time
 
@@ -817,10 +850,51 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				CFGOutput(showBlockProps, forFun).process(workspace(), props);
 			}
 
+
+			clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = true;
+
 			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false; // clear the flag
-			workspace()->require(otawa::dynbranch::DYNBRANCH_FEATURE, props);
+
+			if(slicing) {
+				// before performing the analysis, maybe it is better to slice away the unnecessary ?
+				workspace()->require(otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE, props);
+
+				// output the CFG before and after slicing, this is debugging purpose only
+				if(outputCFG)
+				{
+					string iterationString1 = _ << iteration << "_full_slicing.dot";
+					otawa::oslice::SLICING_CFG_OUTPUT_PATH(props) =  iterationString1;
+					string iterationString2 = _ << iteration << "_full_sliced.dot";
+					otawa::oslice::SLICED_CFG_OUTPUT_PATH(props) =  iterationString2;
+					otawa::oslice::CFG_OUTPUT(props) = true;
+					otawa::oslice::SLICE_DEBUG_LEVEL(props)=0xFFFF;
+					otawa::oslice::LIVENESS_DEBUG_LEVEL(props)=0xFFFF;
+				}
+
+				// output each individual CFG before slicing
+				if(outputCFG)
+				{
+					string iterationString = _ << iteration << "_before_slicing_";
+					otawa::display::CFGOutput::PREFIX(props) = iterationString;
+					CFGOutput(showBlockProps, forFun).process(workspace(), props);
+				}
+
+				workspace()->require(otawa::oslice::SLICER_FEATURE, props);
+
+				// output each individual CFG after slicing
+				if(outputCFG)
+				{
+					string iterationString = _ << iteration << "_after_slicing_";
+					otawa::display::CFGOutput::PREFIX(props) = iterationString;
+					CFGOutput(showBlockProps, forFun).process(workspace(), props);
+				}
+			} // end of slicing
+
+			workspace()->require(otawa::dynbranch::DYNBRANCH_FEATURE, props); // perform the analysis
 			// the loop goes on searching new branch target when there is a new target found
 			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
+
+			clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = false;
 
 			iteration++;
 		} while(branchDetected);
@@ -832,38 +906,11 @@ void Command::work(PropList &props) throw(elm::Exception) {
 		}
 	}
 
-	// Load flow facts and record unknown values
-	QuestFlowFactLoader ffl;
-	ffl.process(workspace(), props);
-
-	// determine printer
-	Printer *p;
-	if(xml)
-		p = new FFXPrinter(workspace(), true);
-	else
-		p = new FFPrinter(workspace(), true);
-
-	// printer header
-	p->printHeader(cout);
-
-	// Build the checksums of the binary files
-	if(!ffl.checkSummed()) {
-		for(Process::FileIter file(workspace()->process()); file; file++) {
-			checksum::Fletcher sum;
-			io::InFileStream stream(file->name());
-			sum.put(stream);
-			elm::system::Path path = file->name();
-			p->printCheckSum(cout, path, sum.sum());
-		}
-		cout << io::endl;
-	}
-
 	// display low-level flow facts
 	ControlOutput ctrl(*p);
 	ctrl.process(workspace(), props);
 
-	// display the context tree
-	FFOutput out(*p, removeDuplicatedTarget);
+	out.setProcessingFullCFG(false); // working on a possibly sliced CFG
 	out.process(workspace(), props);
 
 	// output footer for XML
@@ -892,7 +939,8 @@ Command::Command(void):
 		removeDuplicatedTarget(*this, option::cmd, "-S", option::cmd, "--no_repeat_multibranch", option::description, "do not output the multi-call/branch with the same target addresses", option::end),
 		showBlockProps(*this, option::cmd, "-P", option::cmd, "--show_block_props", option::description, "shows the properties of the block", option::end),
 		rawoutput(*this, option::cmd, "-R", option::cmd, "--raw_output", option::description, "generate raw dot output file (without calling dot)", option::end),
-		forFun(*this, option::cmd, "-F", option::cmd, "--for_fun", option::description, "the generated dot files will be colourful :)", option::end)
+		forFun(*this, option::cmd, "-F", option::cmd, "--for_fun", option::description, "the generated dot files will be colourful :)", option::end),
+		slicing(*this, option::cmd, "-T", option::cmd, "--test", option::description, "apply the slicing during dynamic branching analysis", option::end)
 {
 }
 
@@ -901,7 +949,7 @@ Command::Command(void):
  * Display the flow facts.
  */
 FFOutput::FFOutput(Printer& printer, bool removeDuplicatedTarget): CFGProcessor("FFOutput", Version(1, 0, 0)), has_debug(false), _printer(printer), _removeDuplicatedTarget(removeDuplicatedTarget) {
-	require(CONTEXT_TREE_BY_CFG_FEATURE);
+	//require(CONTEXT_TREE_BY_CFG_FEATURE);
 }
 
 
@@ -910,10 +958,14 @@ FFOutput::FFOutput(Printer& printer, bool removeDuplicatedTarget): CFGProcessor(
 void FFOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 	ASSERT(ws);
 	ASSERT(cfg);
-	ContextTree *ctree = CONTEXT_TREE(cfg);
-	ASSERT(ctree);
-	scanFun(ctree);
-	scanTargets(cfg);
+	if(processingFullCFG) {
+		ContextTree *ctree = CONTEXT_TREE(cfg);
+		ASSERT(ctree);
+		scanFun(ctree);
+	}
+	else {
+		scanTargets(cfg);
+	}
 }
 
 /**

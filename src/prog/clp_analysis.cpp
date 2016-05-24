@@ -2782,6 +2782,8 @@ void Analysis::setup(WorkSpace *ws) {
  * @param ws the workspace to be processed
  */
 void Analysis::processWorkSpace(WorkSpace *ws) {
+	clock_t clockWorkSpace;
+	clockWorkSpace = clock();
 	typedef WideningListener<ClpProblem> ClpListener;
 	typedef WideningFixPoint<ClpListener> ClpFP;
 	typedef HalfAbsInt<ClpFP> ClpAI;
@@ -2866,6 +2868,8 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	_nb_filters = prob.get_nb_filters();
 	_nb_top_filters = prob.get_nb_top_filters();
 	_nb_top_load = prob.get_nb_top_load();
+	clockWorkSpace = clock() - clockWorkSpace;
+	elm::cerr << "CLP Analyse takes " << clockWorkSpace << " micro-seconds" << io::endl;
 }
 
 

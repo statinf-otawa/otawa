@@ -12,12 +12,14 @@ namespace otawa { namespace oslice {
 extern p::feature DUMMY_SLICER_FEATURE;
 extern p::feature SLICER_FEATURE;
 extern p::feature COND_BRANCH_COLLECTOR_FEATURE;
+extern p::feature UNKNOWN_TARGET_COLLECTOR_FEATURE;
 extern p::feature LIVENESS_FEATURE;
 
 extern Identifier<String> SLICED_CFG_OUTPUT_PATH;
 extern Identifier<String> SLICING_CFG_OUTPUT_PATH;
 extern Identifier<int> LIVENESS_DEBUG_LEVEL;
 extern Identifier<int> SLICE_DEBUG_LEVEL;
+extern Identifier<bool> CFG_OUTPUT;
 
 class Manager {
 public:

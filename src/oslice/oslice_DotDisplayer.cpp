@@ -45,9 +45,13 @@ DotDisplayer::DotDisplayer(WorkSpace* ws, String path, int showSlicing) {
  * @param g		Owner CFG.
  * @param v		Current block.
  */
-void DotDisplayer::displayName(CFG *g, otawa::Block *v) {
+void DotDisplayer::displayName(CFG *g, otawa::Block *v, otawa::Block *u) {
 	//_output << '"' << g->name() << "_" << v->index() << '"';
-	_output << '"' << g->name() << "_" << g->index() << "_" << v->index() << '"';
+	_output << '"' << g->name() << "_" << g->index() << "_" << v->index() ;
+	if(u != 0)
+		_output << "_" << u->index();
+
+	_output << '"';
 }
 
 
@@ -65,6 +69,12 @@ void DotDisplayer::display(const CFGCollection& coll) {
 
 		// get next CFG
 		CFG *cfg = coll[i];
+
+//		for(CFG::CallerIter cci=cfg->callers(); cci; cci++) {
+//			elm::cout << "Caller " << cci->index() << ":" << cci->cfg()->name() << " calls " << cfg->name() << io::endl;
+//		}
+//		elm::cout << "==== end callers ====" << io::endl;
+
 		if(i > 0 && !display_all)
 			break;
 
@@ -98,39 +108,113 @@ void DotDisplayer::display(const CFGCollection& coll) {
 						_output << "];\n";
 					}
 
-				} // end of checking sliced
+				} // end of checking sliced (synth block has no callee)
+
+				// if the synth block has callee
+				// then the exit block of the callee should be linked with the target, either the normal block or entry block of a call
+
+				else {
+					// locate the exit block
+					// Block* exitBlock = v->toSynth()->callee()->exit();
+					// locate the out going block
+					if(v->toSynth()->outs()->sink()->isSynth()) {
+						SynthBlock* sb = v->toSynth()->outs()->sink()->toSynth();
+						if(sb->callee()) {
+							_output << "\t";
+							displayName(v->toSynth()->callee(), v->toSynth()->callee()->exit(), v);
+							_output << " -> ";
+							displayName(sb->callee(), sb->callee()->entry(), sb);
+							_output << " [label=\"return then call\", style=dashed, weight=1];\n";
+						}
+						else
+							assert(0);
+					}
+					else {
+						// normal block here
+						CFG::CallerIter cci = cfg->callers();
+						do {
+							SynthBlock* xyz = 0;
+							if(cci)
+								xyz = *cci;
+
+							_output << "\t";
+							displayName(v->toSynth()->callee(), v->toSynth()->callee()->exit(), v);
+							_output << " -> ";
+							// to the output node of the synth node
+							displayName(cfg, v->toSynth()->outs()->sink(), xyz);
+							_output << " [label=\"return\", style=dashed, weight=1];\n";
+
+							if(cci)
+								cci++;
+						} while(cci);
+					}
+
+				}
+
 
 
 				continue;
 			}
 
 			// display block header
-			_output << "\t";
-			displayName(cfg, v);
-			_output << " [label=";
-			displayLabel(v);
-			_output << "];\n";
+			if(!v->isEntry() && !v->isExit()) {
+
+			}
+
+			// for each call, create a node
+			CFG::CallerIter cci = cfg->callers();
+			do {
+
+				SynthBlock* xyz = 0;
+				if(cci)
+					xyz = *cci;
+				_output << "\t";
+				displayName(cfg, v, xyz);
+				_output << " [label=";
+				displayLabel(v);
+				_output << "];\n";
+
+
+
+//			for(CFG::CallerIter cci=cfg->callers(); cci; cci++) {
+//				_output << "\t";
+//				displayName(cfg, v, cci);
+//				_output << " [label=";
+//				displayLabel(v);
+//				_output << "];\n";
+//			}
+//
+//			if(!cfg->callers()) {
+//				_output << "\t";
+//				displayName(cfg, v);
+//				_output << " [label=";
+//				displayLabel(v);
+//				_output << "];\n";
+//			}
 
 			// display edges
 			for(Block::EdgeIter e = v->outs(); e; e++) {
-
 				// case of a call with display of all
 				if(e->sink()->isSynth() && display_all && e->sink()->toSynth()->callee()) {
 					SynthBlock *sb = e->sink()->toSynth();
 
 					// call edge
 					_output << "\t";
-					displayName(cfg, v);
+					displayName(cfg, v, xyz);
 					_output << " -> ";
-					displayName(sb->callee(), sb->callee()->entry());
+					displayName(sb->callee(), sb->callee()->entry(), sb);
 					_output << " [label=\"call\", style=dashed, weight=1];\n";
 
-					// return edge
-					_output << "\t";
-					displayName(sb->callee(), sb->callee()->exit());
-					_output << " -> ";
-					displayName(cfg, sb->outs()->sink());
-					_output << " [label=\"return\", style=dashed, weight=1];\n";
+					// already handled by the synthblock
+//					// return edge
+//					// from EXIT block
+//					_output << "\t";
+//					displayName(sb->callee(), sb->callee()->exit());
+//					_output << " -> ";
+//					// to the output node of the synth node
+//					elm::cout << "Synthblock " << sb->index() << " has output to BB " << sb->outs()->sink()->index() << io::endl;
+//					displayName(cfg, sb->outs()->sink());
+//					_output << " [label=\"return\", style=dashed, weight=1];\n";
 				}
 
 				else if(e->sink()->isSynth() && display_all) { // no callee .... sliced?
@@ -150,9 +234,9 @@ void DotDisplayer::display(const CFGCollection& coll) {
 
 					// display edge header
 					_output << "\t";
-					displayName(cfg, v);
+					displayName(cfg, v, xyz);
 					_output << " -> ";
-					displayName(cfg, e->sink());
+					displayName(cfg, e->sink(), xyz);
 
 					// display properties
 					_output << " [ ";
@@ -178,7 +262,12 @@ void DotDisplayer::display(const CFGCollection& coll) {
 
 				}
 			}
-		}
+
+			if(cci)
+				cci++;
+		} while(cci);
+
+		} // for each block
 	}
 
 	_output << "}\n";
@@ -192,10 +281,12 @@ void DotDisplayer::displayLabel(Block *v) {
 	cstring file;
 	int line = 0;
 
-	if(v->isEntry())
-		_output <<  "ENTRY";
-	else if(v->isExit())
-		_output << "EXIT";
+	if(v->isEntry()) {
+		_output <<  "\"ENTRY\\n" << v->cfg()->name() << "\"";
+	}
+	else if(v->isExit()) {
+		_output << "\"EXIT\\n" << v->cfg()->name() << "\"";
+	}
 	else if(v->isUnknown())
 		_output << "unknown";
 	else if(v->isSynth()) {

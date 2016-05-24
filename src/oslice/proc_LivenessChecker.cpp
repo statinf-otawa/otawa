@@ -35,17 +35,10 @@ p::declare LivenessChecker::reg = p::init("otawa::oslice::LivenessChecker", Vers
 
 elm::BitVector LivenessChecker::_defaultRegisters = 1;
 t::uint32 LivenessChecker::_debugLevel = 0;
+clp::Manager *LivenessChecker::clpManager = 0;
+
 
 LivenessChecker::LivenessChecker(AbstractRegistration& _reg) : otawa::Processor(_reg) {
-	elm::log::Debug::setSourcePathLength(60);
-	elm::log::Debug::setDebugFlag(true);
-	elm::log::Debug::setSourceInfoFlag(true);
-#ifndef NO_COLOR
-	elm::log::Debug::setColorFlag(true);
-#else
-	elm::log::Debug::setColorFlag(false);
-#endif
-	elm::log::Debug::setPrefixColor(elm::color::IWhi);
 }
 
 void LivenessChecker::configure(const PropList &props) {
@@ -295,6 +288,9 @@ void LivenessChecker::processWorkingList(elm::genstruct::Vector<WorkingElement*>
 					elm::cout << "Callee of the current Synth Block = " << b->toSynth()->callee()->label() << io::endl;
 				}
 
+				// find the BB which is the last block before the exit block of the callee
+				if(!b->toSynth()->callee())
+					continue;
 				Block* end = b->toSynth()->callee()->exit();
 				// each edge to the exit block is a possible BB which will goes to the current block
 				for (Block::EdgeIter EdgeToExit = end->ins(); EdgeToExit; EdgeToExit++) {
@@ -358,6 +354,9 @@ void LivenessChecker::processWorkingList(elm::genstruct::Vector<WorkingElement*>
 void LivenessChecker::clearAddrs(BasicBlock* bb) {
 }
 
+/*
+ * It uses clp manager to determine the addresses accessed by the semantic instructions
+ */
 void LivenessChecker::identifyAddrs(BasicBlock* bb) {
 	int identified = MEM_ACCESS_IDENTIFIED(bb);
 	if(identified == 1) {
@@ -500,6 +499,10 @@ void LivenessChecker::buildReverseSynthLink(const CFGCollection& coll) {
 		// for each BB in the CFG
 		for(CFG::BlockIter v = cfg->blocks(); v; v++) {
 			if (v->isSynth()) {
+				if(!v->toSynth()->callee()) {
+					elm::cout << __SOURCE_INFO__ << "Block " << v->cfg()->index() << ":" << v->index() << " of CFG " << v->cfg()->name() << " has no callee" << io::endl;
+					continue;
+				}
 				// find all the edge goes into the synth block, which are the callers of the block
 				for (Block::EdgeIter e = v->ins(); e; e++) {
 					// the source of an edge is one caller

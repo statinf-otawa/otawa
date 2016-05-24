@@ -21,7 +21,7 @@ public:
 	void display(const CFGCollection& coll);
 private:
 	void displayLabel(Block *bb);
-	void displayName(CFG *g, otawa::Block *v);
+	void displayName(CFG *g, otawa::Block *v, otawa::Block *u = 0);
 
 	bool display_all, display_assembly, source_info;
 	elm::io::Output _output;

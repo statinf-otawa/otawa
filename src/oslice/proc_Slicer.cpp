@@ -1,4 +1,5 @@
 #include <otawa/oslice/Slicer.h>
+#include <time.h> //FIXME: will need to adapt this to StopWatch class
 
 namespace otawa { namespace oslice {
 
@@ -12,10 +13,14 @@ static Identifier<Vector<Block*>*> EDGE_TARGETS("");
 static Identifier<Vector<Block*>*> EDGE_SOURCES("");
 
 p::feature SLICER_FEATURE("otawa::oslice::SLICER_FEATURE", new Maker<Slicer>());
-
+#define NO_LIVE
 p::declare Slicer::reg = p::init("otawa::oslice::Slicer", Version(2, 0, 0))
        .maker<Slicer>()
-       .require(LIVENESS_FEATURE)
+#ifndef NO_LIVE
+       .use(LIVENESS_FEATURE)
+#else
+	   .use(otawa::clp::FEATURE)
+#endif
 	   .require(COLLECTED_CFG_FEATURE)
 	   .invalidate(COLLECTED_CFG_FEATURE)
 	   .provide(COLLECTED_CFG_FEATURE)
@@ -62,10 +67,25 @@ void Slicer::configure(const PropList &props) {
 	slicingCFGOutputPath = SLICING_CFG_OUTPUT_PATH(props);
 	slicedCFGOutputPath = SLICED_CFG_OUTPUT_PATH(props);
 	_debugLevel = SLICE_DEBUG_LEVEL(props);
+	outputCFG = CFG_OUTPUT(props);
 }
 
 
 void Slicer::processWorkSpace(WorkSpace *fw) {
+#ifndef USE_STOPWATCH
+	clock_t clockWorkSpace;
+	clockWorkSpace = clock();
+#else
+	system::StopWatch watchWorkSpace;
+	system::StopWatch watchWorkCFGReconstruction;
+	watchWorkSpace.start();
+#endif
+	
+#ifdef NO_LIVE
+	if(!LivenessChecker::clpManager)
+		LivenessChecker::clpManager = new clp::Manager(workspace());
+#endif	
+	
 	// obtain the collected CFG from the program, provided by the COLLECTED_CFG_FEATURE
 	const CFGCollection& coll = **otawa::INVOLVED_CFGS(workspace());
 	initIdentifiersForEachBB(coll);
@@ -73,17 +93,25 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 	// will make use of osliceManager
 	oslice::Manager osliceManager(workspace());
 
+	LivenessChecker::buildReverseSynthLink(coll);
+
+
 	// get a list of interested instruction
 	interested_instructions_t *interestedInstructions = INTERESTED_INSTRUCTIONS(fw);
+	assert(interestedInstructions);
 	if (interestedInstructions) {
-		if(_debugLevel & DISPLAY_SLICING_STAGES)
-			elm::cout << __SOURCE_INFO__<< "The list of interested instructions: " << io::endl;
+		if(_debugLevel & DISPLAY_SLICING_STAGES) {
+			elm::cerr << __SOURCE_INFO__<< "The list of interested instructions: " << io::endl;
+			for(interested_instructions_t::Iterator currentII(*interestedInstructions); currentII; currentII++) {
+				elm::cerr << __SOURCE_INFO__ << "    " << currentII->getInst() << " @ " << currentII->getInst()->address() << " from BB " << currentII->getBB()->index() << io::endl;
+			}
+		}
 
 		// now we look into each of these instructions
 		for(interested_instructions_t::Iterator currentII(*interestedInstructions); currentII; currentII++) {
 			if(_debugLevel & DISPLAY_SLICING_STAGES) {
-				elm::cout << __SOURCE_INFO__ << "    " << currentII->getInst() << " @ " << currentII->getInst()->address() << " from BB " << currentII->getBB()->index() << io::endl;
-				elm::cout << __SOURCE_INFO__ << "Popping interested instruction " << currentII->getInst() << " @ " << currentII->getInst()->address() << io::endl;
+				//elm::cerr << __SOURCE_INFO__ << "    " << currentII->getInst() << " @ " << currentII->getInst()->address() << " from BB " << currentII->getBB()->index() << io::endl;
+				elm::cerr << __SOURCE_INFO__ << "Popping interested instruction " << currentII->getInst() << " @ " << currentII->getInst()->address() << io::endl;
 			}
 			Inst* currentInst = currentII->getInst();
 			BasicBlock* currentBB = currentII->getBB();
@@ -93,14 +121,17 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 			elm::BitVector workingRegs(workspace()->platform()->regCount(), false);
 			LivenessChecker::provideRegisters(currentInst, workingRegs, 0);
 			//clp_value_set_t workingMems;
+#ifdef NO_LIVE
+			LivenessChecker::identifyAddrs(currentBB);
+#endif
 			otawa::dfa::MemorySet::t workingMems = otawa::dfa::MemorySet::empty;
 			int currentReadMemIndex = 0;
 			LivenessChecker::getMems(currentBB, currentInst, currentReadMemIndex, workingMems, 0);
 
 			if(_debugLevel & DISPLAY_SLICING_STAGES) {
-				elm::cout << __SOURCE_INFO__ << "Creating the initial Regs from " << currentInst << " @ " << currentInst->address() << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Working regs = " << workingRegs << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Working mems = "; LivenessChecker::displayAddrs(elm::cout, workingMems); elm::cout << io::endl;
+				elm::cerr << __SOURCE_INFO__ << "Creating the initial Regs from " << currentInst << " @ " << currentInst->address() << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Working regs = " << workingRegs << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Working mems = "; LivenessChecker::displayAddrs(elm::cerr, workingMems); elm::cerr << io::endl;
 			}
 
 			// define the working list of BB
@@ -112,7 +143,8 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 	}
 
 	// now try to dump the CFG here
-	DotDisplayer(workspace(), slicingCFGOutputPath, 1).display(coll);
+	if(outputCFG)
+		DotDisplayer(workspace(), slicingCFGOutputPath, 1).display(coll);
 
 	Vector<Block*> workingList;
 	for (CFGCollection::Iterator c(coll); c; c++) {
@@ -123,7 +155,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 				// if all the instruction are sliced
 				if (setInst->count() == 0) {
 					if(_debugLevel & DISPLAY_CFG_CREATION)
-						elm::cout << __SOURCE_INFO__<< "all instructions are sliced in BB" << bb->index() << " @ " << bb->address() << io::endl;
+						elm::cerr << __SOURCE_INFO__<< "all instructions are sliced in BB" << bb->index() << " @ " << bb->address() << io::endl;
 					// mark the BB sliced
 					TO_REMOVE(bb) = true;
 					workingList.add(bb);
@@ -132,10 +164,17 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		}
 	} // finish putting the block to remove in the working list
 
+#ifndef USE_STOPWATCH
+	clock_t clockWorkCFGReconstruction;
+	clockWorkCFGReconstruction = clock();
+#else
+	watchWorkCFGReconstruction.start();
+#endif
+
 	while(workingList.count()) {
 		Block *b = workingList.pop();
 		if(_debugLevel & DISPLAY_CFG_CREATION)
-			elm::cout << __SOURCE_INFO__ << "Popping BB " << b->index() << " of CFG " << b->cfg()->index() << " from the BB-removing working list" << io::endl;
+			elm::cerr << __SOURCE_INFO__ << "Popping BB " << b->index() << " of CFG " << b->cfg()->index() << " from the BB-removing working list" << io::endl;
 
 		Vector<Block*> predecessors;
 		Vector<Block*> successors;
@@ -144,13 +183,13 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 				predecessors.add(in->source());
 			TO_REMOVE(*in) = true;
 			if(_debugLevel & DISPLAY_CFG_CREATION)
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Removing an input edge " << *in << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an input edge " << *in << io::endl;
 		}
 		Vector<Block* > *edgeSources = EDGE_SOURCES(b);
 		if(edgeSources) {
 			for(Vector<Block*>::Iterator in(*edgeSources); in; in++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
-					elm::cout << __SOURCE_INFO__ << __TAB__ << "Removing an input edge from BB " << in->index() << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an input edge from BB " << in->index() << io::endl;
 				predecessors.add(*in);
 				Vector<Block* > *edgeTargets = EDGE_TARGETS(*in);
 				if(edgeTargets)
@@ -165,13 +204,13 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 				successors.add(out->sink());
 			TO_REMOVE(*out) = true;
 			if(_debugLevel & DISPLAY_CFG_CREATION)
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Removing an output edge " << *out << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an output edge " << *out << io::endl;
 		}
 		Vector<Block* > *edgeTargets = EDGE_TARGETS(b);
 		if(edgeTargets) {
 			for(Vector<Block*>::Iterator out(*edgeTargets); out; out++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
-					elm::cout << __SOURCE_INFO__ << __TAB__ << "Removing an output edge to BB " << out->index() << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an output edge to BB " << out->index() << io::endl;
 				successors.add(*out);
 				Vector<Block* > *edgeSources = EDGE_SOURCES(*out);
 				if(edgeSources)
@@ -189,7 +228,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 				continue;
 			if(edgeTargets->contains(b)) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
-					elm::cout << __SOURCE_INFO__ << "predecessor BB " << predecessor->index() << " has a edge to current BB, removing...." << io::endl;
+					elm::cerr << __SOURCE_INFO__ << "predecessor BB " << predecessor->index() << " has a edge to current BB, removing...." << io::endl;
 				edgeTargets->remove(b);
 			}
 		}
@@ -200,7 +239,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 				continue;
 			if(edgeSources->contains(b)) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
-					elm::cout << __SOURCE_INFO__ << "successor BB " << successor->index() << " has a edge to current BB, removing...." << io::endl;
+					elm::cerr << __SOURCE_INFO__ << "successor BB " << successor->index() << " has a edge to current BB, removing...." << io::endl;
 				edgeSources->remove(b);
 			}
 		}
@@ -222,11 +261,11 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 					found = true;
 				if(found) {
 					if(_debugLevel & DISPLAY_CFG_CREATION)
-						elm::cout << __SOURCE_INFO__ <<__TAB__ << "Already existing an edge between BB " << predecessor->index() << " to BB " << successor->index() << io::endl;
+						elm::cerr << __SOURCE_INFO__ <<__TAB__ << "Already existing an edge between BB " << predecessor->index() << " to BB " << successor->index() << io::endl;
 				}
 				else {
 					if(_debugLevel & DISPLAY_CFG_CREATION)
-						elm::cout << __SOURCE_INFO__ << __TAB__ << "Adding edge between BB " << predecessor->index() << " to BB " << successor->index() << io::endl;
+						elm::cerr << __SOURCE_INFO__ << __TAB__ << "Adding edge between BB " << predecessor->index() << " to BB " << successor->index() << io::endl;
 					Vector<Block* > *edgeTargets = EDGE_TARGETS(predecessor);
 					if(!edgeTargets) {
 						edgeTargets = new Vector<Block* >();
@@ -244,7 +283,6 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		} // finish linking the predecessors and successors of the removal BB
 	} // end of the working list
 
-
 	for(CFGCollection::Iterator c(coll); c; c++) {
 		makeCFG(c);
 	}
@@ -254,8 +292,45 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 	        sliced_coll->add(m->build());
 	        delete *m;
 	}
+	//watchWorkCFGReconstruction.stop();
 
-	DotDisplayer(workspace(), slicedCFGOutputPath, 0).display(*sliced_coll);
+//	for(CFGCollection::Iterator cfgi(*sliced_coll); cfgi; cfgi++) {
+//		elm::cerr << "for cfg " << cfgi->index() << io::endl;
+//		for(CFG::BlockIter cfgb=cfgi->blocks(); cfgb; cfgb++) {
+//			elm::cerr << "  for BB " << cfgb->index() << io::endl;
+//			for(Block::EdgeIter bei=cfgb->ins(); bei; bei++) {
+//				elm::cerr << "    from BB " << bei->source()->index() << io::endl;
+//			}
+//			for(Block::EdgeIter bei=cfgb->outs(); bei; bei++) {
+//				elm::cerr << "      to BB " << bei->target()->index() << io::endl;
+//			}
+//		}
+//	}
+
+#ifndef USE_STOPWATCH
+	clockWorkCFGReconstruction = clock() - clockWorkCFGReconstruction;
+	elm::cerr << "CFG SLI takes " << (((float)clockWorkCFGReconstruction)/(CLOCKS_PER_SEC/1000000)) << " micro-seconds" << io::endl;
+#else
+	watchWorkCFGReconstruction.stop();
+	otawa::ot::time t2 = watchWorkCFGReconstruction.delay();
+	elm::cerr << "OSlicer_CFG takes " << t2 << " micro-seconds" << io::endl;
+#endif
+
+	if(outputCFG)
+		DotDisplayer(workspace(), slicedCFGOutputPath, 0).display(*sliced_coll);
+
+#ifndef USE_STOPWATCH
+	clockWorkSpace = clock() - clockWorkSpace;
+	elm::cerr << "OSlicer takes " << clockWorkSpace << " micro-seconds" << io::endl;
+#else
+	watchWorkSpace.stop();
+	otawa::ot::time t = watchWorkSpace.delay();
+	elm::cerr << "OSlicer takes " << t << " micro-seconds" << io::endl;
+#endif
+
+
+
+
 
 } // end of function Slicer::work
 
@@ -286,7 +361,8 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 
 			  InstSet* setInst = SET_OF_REMAINED_INSTRUCTIONS(bb);
 			  genstruct::Vector<Inst *> insts(setInst->count());
-
+			  
+			  // only add the non-sliced instruction to the vector insts
 			  for(BasicBlock::InstIter i = bb->insts(); i; i++) {
 				   if(setInst->contains(i))
 					    insts.add(i);
@@ -316,12 +392,12 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 	// add edges
 	for(CFG::BlockIter v = cfg->blocks(); v; v++) {
 		if (_debugLevel & DISPLAY_CFG_CREATION)
-			elm::cout << __SOURCE_INFO__<< "looking at the BB " << v->index() << " of CFG " << cfg->index() << io::endl;
+			elm::cerr << __SOURCE_INFO__<< "looking at the BB " << v->index() << " of CFG " << cfg->index() << io::endl;
 
 		if(TO_REMOVE(*v))
 		{
 			if(_debugLevel & DISPLAY_CFG_CREATION)
-			elm::cout << __SOURCE_INFO__ << __TAB__ << "this node is removed, ignored" << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << "this node is removed, ignored" << io::endl;
 			TO_REMOVE(*v).remove();
 			Vector<Block* > *edgeTargets = EDGE_TARGETS(*v);
 			if(edgeTargets)
@@ -336,10 +412,10 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 
 		for(BasicBlock::EdgeIter e = v->outs(); e; e++) {
 			if(_debugLevel & DISPLAY_CFG_CREATION)
-			elm::cout << __SOURCE_INFO__ << __TAB__ << e->source()->index() << " to " << e->sink()->index() << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << e->source()->index() << " to " << e->sink()->index() << io::endl;
 			if(TO_REMOVE(*e)) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
-					elm::cout << __SOURCE_INFO__ << __TAB__ << __TAB__ << "this edge is removed, ignored" << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "this edge is removed, ignored" << io::endl;
 				TO_REMOVE(*v).remove();
 				continue;
 			}
@@ -351,8 +427,8 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 		if(edgeTargets) {
 			for(Vector<Block* >::Iterator i(*edgeTargets); i; i++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION) {
-					elm::cout << __SOURCE_INFO__ << __TAB__ << v->index() << " to " << i->index() << io::endl;
-					elm::cout << __SOURCE_INFO__ << __TAB__ << __TAB__ << "this edge is created due to BB removal" << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << v->index() << " to " << i->index() << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "this edge is created due to BB removal" << io::endl;
 				}
 				maker.add(bmap.get(*v), bmap.get(*i), new Edge());
 			}
@@ -446,10 +522,10 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 			currentInst_wl = we->_inst;
 
 		if(_debugLevel & DISPLAY_SLICING_STAGES) {
-			elm::cout << __SOURCE_INFO__ << __RED__ << "Popping new working element out: BB " << currentBB_wl->index() << " @ " <<  currentBB_wl->address() << __RESET__ << io::endl;
-			elm::cout << __SOURCE_INFO__ << __TAB__ << "Starting witt " << currentInst_wl << " @ " << currentInst_wl->address() << io::endl;
-			elm::cout << __SOURCE_INFO__ << __TAB__ << "with working Regs  = " << currentRegs_wl << io::endl;
-			elm::cout << __SOURCE_INFO__ << __TAB__ << "with working MEM   = "; LivenessChecker::displayAddrs(elm::cout, currentMems_wl); elm::cout << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __RED__ << "Popping new working element out: BB " << currentBB_wl->index() << " @ " <<  currentBB_wl->address() << __RESET__ << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << "Starting witt " << currentInst_wl << " @ " << currentInst_wl->address() << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << "with working Regs  = " << currentRegs_wl << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << "with working MEM   = "; LivenessChecker::displayAddrs(elm::cerr, currentMems_wl); elm::cerr << io::endl;
 		}
 		delete we;
 
@@ -460,25 +536,28 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 		while(!beginingOfCurrentBB_wl)
 		{
 			if(_debugLevel & DISPLAY_SLICING_STAGES)
-				elm::cout << __SOURCE_INFO__ << __YELLOW__ << "Processing " << currentInst_wl << " @ " << currentInst_wl->address() << __RESET__ << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __YELLOW__ << "Processing " << currentInst_wl << " @ " << currentInst_wl->address() << __RESET__ << io::endl;
 			elm::BitVector currentRegsDef(workspace()->platform()->regCount(), false);
 			elm::BitVector currentRegsUse(workspace()->platform()->regCount(), false);
 			LivenessChecker::provideRegisters(currentInst_wl, currentRegsUse, 0);
 			LivenessChecker::provideRegisters(currentInst_wl, currentRegsDef, 1);
 
 			// for memory access
+#ifdef NO_LIVE
+			LivenessChecker::identifyAddrs(currentBB_wl);
+#endif
 			//clp_value_set_t addressInstRead, addressInstWrite;
 			otawa::dfa::MemorySet::t addressInstRead(0), addressInstWrite(0);
 			LivenessChecker::getMems(currentBB_wl, currentInst_wl, currentReadMemIndex, addressInstRead, 0);
 			LivenessChecker::getMems(currentBB_wl, currentInst_wl, currentWriteMemIndex, addressInstWrite, 1);
 
 			if(_debugLevel & DISPLAY_SLICING_STAGES) {
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Reg Def       = " << currentRegsDef << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Reg Use       = " << currentRegsUse << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Mem Def       = "; LivenessChecker::displayAddrs(elm::cout, addressInstWrite); elm::cout << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Mem Use       = "; LivenessChecker::displayAddrs(elm::cout, addressInstRead); elm::cout << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "RegSet Before = " << currentRegs_wl << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "MemSet Before = "; LivenessChecker::displayAddrs(elm::cout, currentMems_wl); elm::cout << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Reg Def       = " << currentRegsDef << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Reg Use       = " << currentRegsUse << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Mem Def       = "; LivenessChecker::displayAddrs(elm::cerr, addressInstWrite); elm::cerr << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Mem Use       = "; LivenessChecker::displayAddrs(elm::cerr, addressInstRead); elm::cerr << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "RegSet Before = " << currentRegs_wl << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "MemSet Before = "; LivenessChecker::displayAddrs(elm::cerr, currentMems_wl); elm::cerr << io::endl;
 			}
 
 			// check if the def address is over lap with the working addrs
@@ -491,7 +570,7 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 			if(memInterested | regInsterested) {
 
 				if(_debugLevel & DISPLAY_SLICING_STAGES)
-					elm::cout << __SOURCE_INFO__ << __GREEN__ << __TAB__ << "We are interested in instruction " << currentInst_wl << __RESET__ << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __GREEN__ << __TAB__ << "We are interested in instruction " << currentInst_wl << __RESET__ << io::endl;
 
 				// update the working Regs
 				currentRegs_wl = (currentRegs_wl - currentRegsDef) | currentRegsUse;
@@ -502,11 +581,11 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 			}
 			else
 				if(_debugLevel & DISPLAY_SLICING_STAGES)
-					elm::cout << __SOURCE_INFO__ << __RED__ << __TAB__ << "We slice away instruction " << currentInst_wl << __RESET__ << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __RED__ << __TAB__ << "We slice away instruction " << currentInst_wl << __RESET__ << io::endl;
 
 			if(_debugLevel & DISPLAY_SLICING_STAGES) {
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "RegSet After  = " << currentRegs_wl << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "MemSet After  = "; LivenessChecker::displayAddrs(elm::cout, currentMems_wl); elm::cout << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "RegSet After  = " << currentRegs_wl << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "MemSet After  = "; LivenessChecker::displayAddrs(elm::cerr, currentMems_wl); elm::cerr << io::endl;
 			}
 
 			if(currentInst_wl == currentBB_wl->first())
@@ -529,7 +608,7 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 
 				for(BBSet::Iterator caller(*callers); caller ; ++caller) {
 					if(_debugLevel & DISPLAY_SLICING_STAGES)
-						elm::cout << __SOURCE_INFO__ << "Found a caller @ " << caller->address() << io::endl;
+						elm::cerr << __SOURCE_INFO__ << "Found a caller @ " << caller->address() << io::endl;
 					// we now add the caller BB
 					predecessors.add(caller);
 				}
@@ -537,41 +616,42 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 			else if (b->isBasic()) {
 				// we put the BB here into the working list with given
 				if(_debugLevel & DISPLAY_SLICING_STAGES)
-					elm::cout << __SOURCE_INFO__ << "Found predecessor BB @ " << b->toBasic()->address() << io::endl;
+					elm::cerr << __SOURCE_INFO__ << "Found predecessor BB @ " << b->toBasic()->address() << io::endl;
 				predecessors.add(b->toBasic());
 			} // end of handling the basic block
 			else if (b->isSynth()) {
+				if(!b->toSynth()->callee())
+					continue;
 				// this means that we reach current BB from the returning of a function
 				// we obtain the exit block of the function that it returns from
 				if(_debugLevel & DISPLAY_SLICING_STAGES) {
-					elm::cout << "Caller of the current Synth Block = " << b->toSynth()->caller()->label() << io::endl;
-					elm::cout << "Callee of the current Synth Block = " << b->toSynth()->callee()->label() << io::endl;
+					elm::cerr << "Caller of the current Synth Block = " << b->toSynth()->caller()->label() << io::endl;
+					elm::cerr << "Callee of the current Synth Block = " << b->toSynth()->callee()->label() << io::endl;
 				}
-
 				Block* end = b->toSynth()->callee()->exit();
 				// each edge to the exit block is a possible BB which will goes to the current block
 				for (Block::EdgeIter EdgeToExit = end->ins(); EdgeToExit; EdgeToExit++) {
 					BasicBlock* BB_BeforeReturn = EdgeToExit->source()->toBasic();
 					if(_debugLevel & DISPLAY_SLICING_STAGES)
-						elm::cout << __SOURCE_INFO__ << "Found a callee @ " << BB_BeforeReturn->address() << io::endl;
+						elm::cerr << __SOURCE_INFO__ << "Found a callee @ " << BB_BeforeReturn->address() << io::endl;
 					predecessors.add(BB_BeforeReturn);
 				}
 
 			} // end of handling the synth block
 			else {
 				if (b->isEntry())
-					elm::cout << "ENTRY" << io::endl;
+					elm::cerr << "ENTRY" << io::endl;
 				else if (b->isExit())
-					elm::cout << "EXIT" << io::endl;
+					elm::cerr << "EXIT" << io::endl;
 				else if (b->isUnknown())
-					elm::cout << "unknown" << io::endl;
+					elm::cerr << "unknown" << io::endl;
 				ASSERTP(false, "Encounter an unexpected block");
 			}
 		} // end of finding predecessors of the current BB
 
 		if(predecessors.count() == 0)
 			if(_debugLevel & DISPLAY_SLICING_STAGES)
-				elm::cout << __SOURCE_INFO__ << __RED__ << "No predecessor for BB @ " << currentBB_wl->address() << __RESET__ << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __RED__ << "No predecessor for BB @ " << currentBB_wl->address() << __RESET__ << io::endl;
 
 		// process the collected BBs
 		// now we need to see if the input (register and memory uses) feed from the successor matches totally or a subset of the pred BB
@@ -584,14 +664,14 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 			bool notContainsAllMems = !LivenessChecker::containsAllAddrs(*memIn, currentMems_wl);
 
 			if(_debugLevel & DISPLAY_SLICING_STAGES) {
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "for BB @ " << predecessor->address() << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << __TAB__ << "Register used: " << bv << " contains all of " << currentRegs_wl << " ? "<< !notContainsAllRegs << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << __TAB__ << "Mem      used: "; LivenessChecker::displayAddrs(elm::cout, *memIn); elm::cout << " contains all of "; LivenessChecker::displayAddrs(elm::cout, currentMems_wl); elm::cout << "? " << !notContainsAllMems << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "for BB @ " << predecessor->address() << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "Register used: " << bv << " contains all of " << currentRegs_wl << " ? "<< !notContainsAllRegs << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "Mem      used: "; LivenessChecker::displayAddrs(elm::cerr, *memIn); elm::cerr << " contains all of "; LivenessChecker::displayAddrs(elm::cerr, currentMems_wl); elm::cerr << "? " << !notContainsAllMems << io::endl;
 			}
 
 			if(notContainsAllRegs | notContainsAllMems) {
 				if(_debugLevel & DISPLAY_SLICING_STAGES)
-					elm::cout << __SOURCE_INFO__ << __RED__ << "Adding BB @ " << predecessor->address() << " to the working list." << __RESET__ << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __RED__ << "Adding BB @ " << predecessor->address() << " to the working list." << __RESET__ << io::endl;
 				bv = bv | currentRegs_wl;
 				REG_BB_END_IN(predecessor) = bv;
 				//memIn->addAll(currentMems_wl);
@@ -603,7 +683,7 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 			}
 			else
 				if(_debugLevel & DISPLAY_SLICING_STAGES)
-					elm::cout << __SOURCE_INFO__ << __RED__ << "NOT adding BB @ " << predecessor->address() << " to the working list." << __RESET__ << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __RED__ << "NOT adding BB @ " << predecessor->address() << " to the working list." << __RESET__ << io::endl;
 		}
 
 	} // end of the current working list
@@ -620,7 +700,10 @@ inline bool Slicer::interestingAddrs(otawa::dfa::MemorySet::t const & a, otawa::
 }
 
 inline bool Slicer::interestingRegs(elm::BitVector const & a, elm::BitVector const & b) {
-	return !((a & b).isEmpty());
+	elm::BitVector c(a.size(), true);
+	c.clear(15);
+
+	return !((a & b & c).isEmpty());
 }
 
 } }

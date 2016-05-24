@@ -37,18 +37,23 @@ public:
  	static bool containsAllAddrs(otawa::dfa::MemorySet::t & a, otawa::dfa::MemorySet::t & b);
  	static void updateAddrsFromInstruction(otawa::dfa::MemorySet::t & workingMem, otawa::dfa::MemorySet::t & readMem, otawa::dfa::MemorySet::t & writeMem, t::uint32 debugLevel);
 
+ 	static void identifyAddrs(BasicBlock* bb);
+ 	static clp::Manager *clpManager;
+
+ 	static void buildReverseSynthLink(const otawa::CFGCollection& coll);
+
 protected:
  	virtual bool interestingAddrs(dfa::MemorySet::t const & a, dfa::MemorySet::t const & b);
 	virtual bool interestingRegs(elm::BitVector const & a, elm::BitVector const & b);
 
 private:
- 	void buildReverseSynthLink(const otawa::CFGCollection& coll);
+
  	void processWorkingList(elm::genstruct::Vector<WorkingElement*>& workingList);
  	void initIdentifiersForEachBB(const CFGCollection& coll);
- 	void identifyAddrs(BasicBlock* bb);
+
  	void clearAddrs(BasicBlock* bb);
 
- 	clp::Manager *clpManager;
+
  	static elm::BitVector _defaultRegisters;
  	static t::uint32 _debugLevel;
 }; // class LivenessChecker

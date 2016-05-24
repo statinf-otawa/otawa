@@ -60,6 +60,8 @@ void GlobalAnalysis::configure(const PropList &props) {
 /**
  */
 void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
+	clock_t clockWorkSpace;
+	clockWorkSpace = clock();
 
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
@@ -111,6 +113,8 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 		cout << " ----------------------------------------------------" << endl  ;
 	}
 
+	clockWorkSpace = clock() - clockWorkSpace;
+	elm::cerr << "Global Analyse takes " << clockWorkSpace << " micro-seconds" << io::endl;
 }
 
 

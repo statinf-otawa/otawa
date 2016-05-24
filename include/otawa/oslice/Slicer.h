@@ -47,6 +47,7 @@ protected:
     String slicedCFGOutputPath;
     CFGCollection *sliced_coll;
     t::uint32 _debugLevel;
+    bool outputCFG;
 };
 
 } } // otawa::oslice
