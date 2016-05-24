@@ -1349,9 +1349,12 @@ Value& Value::_and(const Value& val) {
 	// find the mtimes
 	// first find the max possible value for the result
 	STAT_UINT max_possible_value = 1;
-	max_possible_value = max_possible_value << n_v;
+	max_possible_value = max_possible_value << (n_v + 1);
 	max_possible_value = max_possible_value - 1;
-	max_possible_value = max_possible_value & ((1 << (n_k + 1)) - 1);
+	STAT_UINT max_possible_value2 = 1;
+	max_possible_value2 = max_possible_value2 << (n_k + 1);
+	max_possible_value2 = max_possible_value2 - 1;
+	max_possible_value = max_possible_value & max_possible_value2;
 
 
 	// obtain the mtimes
