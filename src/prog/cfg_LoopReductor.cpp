@@ -223,20 +223,22 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b) {
 /**
  * Reduce irregular loops.
  */
-void LoopReductor::reduce(CFGMaker *vcfg, CFG *cfg) {
+void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 
 	HashTable<Block *, Block *> map;
-	map.put(cfg->entry(), vcfg->entry());
-	map.put(cfg->exit(),vcfg->exit());
+	map.put(cfg->entry(), maker->entry());
+	map.put(cfg->exit(),maker->exit());
+	if(cfg->unknown())
+		map.put(cfg->unknown(), maker->unknown());
 
 	// duplicate the basic blocks
-	map.put(cfg->entry(), vcfg->entry());
+	map.put(cfg->entry(), maker->entry());
 	for(CFG::BlockIter b = cfg->blocks(); b; b++)
 		if(!b->isEnd()) {
-			Block *nb = clone(*vcfg, b);
+			Block *nb = clone(*maker, b);
 			map.put(b, nb);
 		}
-	map.put(cfg->exit(), vcfg->exit());
+	map.put(cfg->exit(), maker->exit());
 
 	// connect edges
 	for(CFG::BlockIter b = cfg->blocks(); b; b++) {
@@ -245,35 +247,30 @@ void LoopReductor::reduce(CFGMaker *vcfg, CFG *cfg) {
 			Block *vtarget = map.get(edge->target(), 0);
 			ASSERT(vsource && vtarget);
 			Edge *nedge = new Edge(edge->flags());
-			vcfg->add(vsource, vtarget, nedge);
+			maker->add(vsource, vtarget, nedge);
 		}
 	}
 
 	// prepare irregular analysis
 	Vector<Block*> *ancestors = new Vector<Block*>();
-	for(CFG::BlockIter bb = vcfg->blocks(); bb; bb++) {
+	for(CFG::BlockIter bb = maker->blocks(); bb; bb++)
 		IN_LOOPS(bb) = new dfa::BitSet(cfg->count());
-		cerr << "DEBUG: IN_LOOP(" << *bb << ") = " << (void *)*IN_LOOPS(bb) << io::endl;
-	}
 
 	// do the Depth-First Search, compute the ancestors sets, and mark loop headers
-	depthFirstSearch(vcfg->entry(), ancestors);
+	depthFirstSearch(maker->entry(), ancestors);
 
 	// perform the transformation
 	bool done = false;
 	while(!done) {
-		cerr << "\nDEBUG: next pass\n";
 		done = true;
 
 		// foreach b in V do
-		for(CFG::BlockIter b = vcfg->blocks(); b; b++) {
+		for(CFG::BlockIter b = maker->blocks(); b; b++) {
 			Vector<Edge*> toDel;
 			//Block *duplicate = 0;
-			cerr << "DEBUG: b = " << *b << io::endl;
 
 			// foreach (v, b) in E do
 			for(Block::EdgeIter edge = b->ins(); edge; edge++) {
-				cerr << "DEBUG:\t" << *edge << io::endl;
 
 				// compute loops entered by the edge
 				// enteredLoops = IN_LOOPS(b) \ IN_LOOPS(v)
@@ -290,10 +287,9 @@ void LoopReductor::reduce(CFGMaker *vcfg, CFG *cfg) {
 						done = false;
 
 						// DUPLICATE_OF(b) <- d
-						duplicate = clone(*vcfg, b);
+						duplicate = clone(*maker, b);
 						ASSERT(DUPLICATE_OF(b) == 0);
 						DUPLICATE_OF(b) = duplicate;
-						cerr << "DEBUG:\tduplicated " << *b << " as " << duplicate << io::endl;
 
 						// IN_LOOPS(d) <- IN_LOOPS(v)
 						IN_LOOPS(duplicate) = new dfa::BitSet(**IN_LOOPS(edge->source()));
@@ -302,29 +298,24 @@ void LoopReductor::reduce(CFGMaker *vcfg, CFG *cfg) {
 						for(Block::EdgeIter outedge = b->outs(); outedge; outedge++) {
 							if(DUPLICATE_OF(outedge->target())) {
 								Edge *nedge = new Edge(outedge->flags());
-								vcfg->add(duplicate, DUPLICATE_OF(outedge->target()), nedge);
-								cerr << "DEBUG:\t\tnew " << nedge << io::endl;
+								maker->add(duplicate, DUPLICATE_OF(outedge->target()), nedge);
 							} else {
 								Edge *nedge = new Edge(outedge->flags());
-								vcfg->add(duplicate, outedge->target(), nedge);
-								cerr << "DEBUG:\t\tnew " << nedge << io::endl;
+								maker->add(duplicate, outedge->target(), nedge);
 							}
 						}
 
 						// E <- E U { (v, d) } \ { (v, b) }
 						Edge *nedge = new Edge(edge->flags());
-						vcfg->add(edge->source(), duplicate, nedge);
-						cerr << "DEBUG:\t\tnew " << nedge << io::endl;
+						maker->add(edge->source(), duplicate, nedge);
 						toDel.add(edge);
 					}
 
 				}
 			}
 
-			for (Vector<Edge*>::Iterator edge(toDel); edge; edge++) {
-				cerr << "DEBUG: remove " << *edge << io::endl;
+			for (Vector<Edge*>::Iterator edge(toDel); edge; edge++)
 				delete *edge;
-			}
 		}
 	}
 
