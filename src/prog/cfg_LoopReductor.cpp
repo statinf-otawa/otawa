@@ -165,7 +165,6 @@ void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
 
 				// foreach t in IN_LOOPS(v) do
 				dfa::BitSet *il_v = IN_LOOPS(edge->target());
-				cerr << "DEBUG: got from " << edge->target() << io::endl;
 				ASSERT(il_v);
 				for (dfa::BitSet::Iterator bit(*il_v); bit; bit++) {
 					bool inloop = false;
@@ -189,11 +188,12 @@ void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
 
 /**
  * Duplicate the given block.
- * @param maker	CFG maker to use.
- * @param b		Block to duplicate (must not be an end).
- * @return		Duplicated block.
+ * @param maker		CFG maker to use.
+ * @param b			Block to duplicate (must not be an end).
+ * @param duplicate	If true, the cloned block has already been cloned.
+ * @return			Duplicated block.
  */
-Block *LoopReductor::clone(CFGMaker& maker, Block *b) {
+Block *LoopReductor::clone(CFGMaker& maker, Block *b, bool duplicate) {
 
 	if(b->isBasic()) {
 		BasicBlock *bb = b->toBasic();
@@ -209,10 +209,12 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b) {
 	else if(b->isSynth()) {
 		SynthBlock *sb = b->toSynth();
 		SynthBlock *nsb = new SynthBlock();
-		if(sb)
-			maker.call(nsb, *vcfgvec[sb->callee()->index()]);
-		else
+		if(!sb->callee())
 			maker.call(nsb, 0);
+		else if(duplicate)
+			maker.call(nsb, sb->callee());
+		else
+			maker.call(nsb, *vcfgvec[sb->callee()->index()]);
 		return nsb;
 	}
 
@@ -256,11 +258,8 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 
 	// prepare irregular analysis
 	Vector<Block*> *ancestors = new Vector<Block*>();
-	for(HashTable<Block *, Block *>::Iterator bb(map); bb; bb++) {
-	//for(CFG::BlockIter bb = maker->blocks(); bb; bb++) {
+	for(HashTable<Block *, Block *>::Iterator bb(map); bb; bb++)
 		IN_LOOPS(bb) = new dfa::BitSet(cfg->count());
-		cerr << "DEBUG: added to " << *bb << io::endl;
-	}
 
 	// do the Depth-First Search, compute the ancestors sets, and mark loop headers
 	depthFirstSearch(maker->entry(), ancestors);
@@ -273,7 +272,6 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 		// foreach b in V do
 		for(CFG::BlockIter b = maker->blocks(); b; b++) {
 			Vector<Edge*> toDel;
-			//Block *duplicate = 0;
 
 			// foreach (v, b) in E do
 			for(Block::EdgeIter edge = b->ins(); edge; edge++) {
@@ -293,7 +291,7 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 						done = false;
 
 						// DUPLICATE_OF(b) <- d
-						duplicate = clone(*maker, b);
+						duplicate = clone(*maker, b, true);
 						ASSERT(DUPLICATE_OF(b) == 0);
 						DUPLICATE_OF(b) = duplicate;
 

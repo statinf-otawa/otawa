@@ -42,7 +42,7 @@ protected:
 private:
 	void reduce(CFGMaker *vcfg, CFG *cfg);
 	void depthFirstSearch(Block *bb, Vector<Block *> *ancestors);
-	Block *clone(CFGMaker& maker, Block *b);
+	Block *clone(CFGMaker& maker, Block *b, bool duplicate = false);
 
 	Vector<CFGMaker *> vcfgvec;
 	int idx;
