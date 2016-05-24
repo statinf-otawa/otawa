@@ -63,6 +63,7 @@ void PCGBuilder::processWorkSpace(WorkSpace *ws) {
 	PCGBlock *b = new PCGBlock(cfg);
 	map.put(cfg, b);
 	otawa::PCG *pcg = new otawa::PCG(b);
+	pcg->add(b);
 
 	// build a block for each CFG
 	for(cfg++; cfg; cfg++) {
@@ -74,7 +75,7 @@ void PCGBuilder::processWorkSpace(WorkSpace *ws) {
 	// build the links
 	for(CFGCollection::Iterator cfg(coll); cfg; cfg++)
 		for(CFG::CallerIter call = cfg->callers(); call; call++)
-			new PCGEdge(map.get(cfg), call, map.get(call->callee()));
+			new PCGEdge(map.get(call->caller()), call, map.get(cfg));
 
 	// install all
 	track(otawa::PCG_FEATURE, PROGRAM_CALL_GRAPH(ws) = pcg);
