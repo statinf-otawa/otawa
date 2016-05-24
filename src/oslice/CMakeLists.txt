@@ -3,14 +3,14 @@ set(CMAKE_MACOSX_RPATH true)
 set(CMAKE_CXX_FLAGS "-Wall" )
 
 set(liboslice_la_SOURCES
-	"oslice_DotDisplayer.cpp"
+	"DotDisplayer.cpp"
 	"oslice_hook.cpp"
 	"oslice_identifiers.cpp"
-	"proc_CondBranchCollector.cpp"
-	"proc_DummySlicer.cpp"
-	"proc_InstCollector.cpp"
-	"proc_LivenessChecker.cpp"
-	"proc_Slicer.cpp"
+	"CondBranchCollector.cpp"
+	"DummySlicer.cpp"
+	"InstructionCollector.cpp"
+	"LivenessChecker.cpp"
+	"Slicer.cpp"
 )
 
 include_directories(".")
