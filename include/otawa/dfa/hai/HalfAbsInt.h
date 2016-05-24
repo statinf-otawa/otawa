@@ -324,9 +324,19 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 		HAI_TRACE("\t\treturning to CFG " << cur_cfg->label());
 		fp.leaveContext(out, cur_cfg->entry(), CTX_FUNC);
 
+#		ifdef WITHOUT_SLICING
 		// record function output state
 		fp.markEdge(edge, out);
 		tryAddToWorkList(edge->sink()); //workList->push(edge->sink());
+#		else
+		// the output state of a block should be assigned to all the out-going edges of the block
+		// such edges could be created as a result of slicing
+		Block* b = edge->source();
+		for(Block::EdgeIter bei = b->outs(); bei; bei++) {
+			fp.markEdge(bei, out);
+			tryAddToWorkList(bei->sink());
+		}
+#		endif
 	}
 
 	// from synthetic block
@@ -337,6 +347,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 		// unknown CFG
 		if(!current->toSynth()->callee()) {
 			fp.assign(out, fp.top());
+			fp.update(out, fp.top(), current); // the unknown block will have top state since we can not make any assumption on its behaviour
 			fp.markEdge(return_edge, out);
 			workList->push(return_edge->sink());
 		}
@@ -497,6 +508,9 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::backEdgeUnion(Block *bb) 
                         typename FixPoint::Domain *edgeState = fp.getMark(*inedge);
                         ASSERT(edgeState);
                         HAI_TRACE("\t\t\twith " << *inedge << " = " << *edgeState);
+#						ifdef FILTERING_BEFORE_WIDENING
+                        fp.updateEdge(*inedge, *edgeState);
+#						endif
                         fp.lub(result, *edgeState);
                 }
 
@@ -548,6 +562,7 @@ inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(Block *bb) {
     }
 	if(add)
 		for (Block::EdgeIter inedge = bb->ins(); inedge; inedge++) {
+#		ifdef WITHOUT_SLICING
 			if(inedge->sink()->isSynth())
 				continue;
 			/* TODO		fix with (a) virtualization
@@ -555,6 +570,12 @@ inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(Block *bb) {
 				continue;*/
 			else if(!isEdgeDone(*inedge))
 				add = false;
+#		else
+			// with program slicing, it is possible to have a synth block connecting to a synth block directly
+			// to be safe, we check every incoming edge to the block
+			if(!isEdgeDone(*inedge))
+				add = false;
+#		endif
 		}
 
 	// if required, add the block

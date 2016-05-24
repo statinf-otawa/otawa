@@ -135,6 +135,14 @@ void WideningFixPoint<Listener >::fixPoint(Block *bb, bool &fixpoint, Domain &in
 			// TODO Uncomment and fix!
 			prob.widening(bb, newHeaderState, ai->backEdgeUnion(bb));
 
+#			ifdef FILTERING_AFTER_WIDENING // for future testing, whether to have widening before or after the filtering
+			for(Block::EdgeIter inedge = bb->ins(); !bb->isSynth() && inedge; inedge++) {
+				// if the edge is within the loop, then perform the filtering on the edge and the state
+				if (Dominance::dominates(bb, inedge->source())) {
+					prob.updateEdge(inedge, newHeaderState);
+				}
+			}
+#			endif
 			
 			if (prob.equals(newHeaderState, fpstate->headerState))
 				fixpoint = true;
