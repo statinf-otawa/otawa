@@ -108,8 +108,8 @@ class Edge {
 protected:
 	virtual ~Edge(void);
 public:
-	inline Edge(Node *source, Node *target): src(source), tgt(target) {
-		ASSERT(source->graph() == target->graph());
+	inline Edge(Node *source, Node *sink): src(source), tgt(sink) {
+		ASSERT(source->graph() == sink->graph());
 		sedges = src->outs;
 		src->outs = this;
 		tedges = tgt->ins;
@@ -118,6 +118,9 @@ public:
 
 	// Accessors
 	inline Node *source(void) const  { return src; }
+	inline Node *sink(void) const  { return tgt; }
+
+	// deprecated
 	inline Node *target(void) const  { return tgt; }
 };
 
@@ -158,7 +161,7 @@ public:
 	inline void remove(const Iterator& iter) { nodes.remove(iter); }
 	
 	// DiGraph concept
-	Node *sinkOf(graph::Edge *edge) const { return edge->target(); }
+	Node *sinkOf(graph::Edge *edge) const { return edge->sink(); }
 	int outDegree(Node *vertex) const;
 	bool isSuccessorOf(Node *succ, Node *ref) const;
 
@@ -253,7 +256,7 @@ inline bool Node::Successor::ended(void) const {
 }
 
 inline Node *Node::Successor::item(void) const {
-	return _edge->target();
+	return _edge->sink();
 }
 
 inline void Node::Successor::next(void) {

@@ -95,7 +95,7 @@ public:
 	inline void remove(GenEdge *edge) { graph::Graph::remove(edge); }
 
 	// DiGraph concept
-	inline N *sinkOf(E *edge) const { return Graph::sinkOf(edge); }
+	inline N *sinkOf(E *edge) const { return OTAWA_GCAST(N *, Graph::sinkOf(edge)); }
 	inline int outDegree(N *vertex) const { return Graph::outDegree(vertex); }
 	inline bool isSuccessorOf(N *succ, N *ref) const { return Graph::isSuccessorOf(succ, ref); }
 
@@ -112,7 +112,7 @@ public:
 	};
 	
 	// DiGraph concept
-	inline N *sourceOf(E *edge) const { return Graph::sourceOf(edge); }
+	inline N *sourceOf(E *edge) const { return OTAWA_GCAST(N *, Graph::sourceOf(edge)); }
 	inline int inDegree(N *vertex) const { return Graph::inDegree(vertex); }
 	inline bool isPredecessorOf(N *succ, N *ref) const { return Graph::isPredecessorOf(succ, ref); }
 
