@@ -63,6 +63,7 @@ extern p::feature FEATURE;
 
 extern Identifier<clp::State> STATE_IN;
 extern Identifier<clp::State> STATE_OUT;
+extern Identifier<bool> UNKOWN_BLOCK_EVALUATION;
 
 } }		// otawa::clp
 

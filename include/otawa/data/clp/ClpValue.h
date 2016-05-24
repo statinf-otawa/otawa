@@ -152,7 +152,7 @@ typedef enum {
 		 * Add another set to the current one
 		 * @param val the value to add
 		 */
-		void add(const Value& val);
+		Value& add(const Value& val);
 		/**
 		 * Subtract anothe set to the current one
 		 * @param val the value to subtract

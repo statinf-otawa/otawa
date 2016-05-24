@@ -16,7 +16,7 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
+//#define CATCH_STT
 //#define HAI_DEBUG
 //#define HAI_JSON
 #include <math.h>
@@ -47,6 +47,7 @@
 #include <otawa/hard/Memory.h>
 #include <otawa/dfa/State.h>
 #include <elm/log/Log.h>
+#include <time.h>
 
 using namespace elm;
 using namespace otawa;
@@ -70,7 +71,7 @@ using namespace otawa;
 // Debug only, alarm on store to T
 #define ALARM_STORE_TOP(t)	t
 //#define STATE_MULTILINE
-#define TRACE_INTERSECT(t) //t
+#define TRACE_INTERSECT(t) // t
 
 
 // enable to load data from segments when load results with T
@@ -273,7 +274,7 @@ Value Value::operator-(const Value& val) const{
  * Add another set to the current one
  * @param val the value to add
  */
-void Value::add(const Value& val){
+Value& Value::add(const Value& val){
 	if (_kind == NONE && val._kind == NONE) 	/* NONE + NONE = NONE */
 		*this = none;
 	else if (_kind == ALL || val._kind == ALL) 	/* ALL + anything = ALL */
@@ -292,7 +293,9 @@ void Value::add(const Value& val){
 			uintn_t m1 = _mtimes * (elm::abs(_delta) / elm::abs(g));
 			uintn_t m2 = val._mtimes * (elm::abs(val._delta) / elm::abs(g));
 			uintn_t mtimes =  m1 + m2;
-			if(UMAXn - m1 < m2)
+			if(isInf() || val.isInf()) // if one of the value is with inf mtimes, then the result should be infinite too.
+				mtimes = UMAXn;
+			else if(UMAXn - m1 < m2) // check if m1 + m2 > UMAXn, however UMAXn is the largest value, so we use UMAXn - m1 to see if there is an overflow
 				mtimes = UMAXn;
 			set(VAL, l, g, mtimes);
 
@@ -316,11 +319,14 @@ void Value::add(const Value& val){
 				uintn_t m1 = _mtimes * (elm::abs(_delta) / elm::abs(g));
 				uintn_t m2 = temp._mtimes * (elm::abs(temp._delta) / elm::abs(g));
 				uintn_t mtimes =  m1 + m2;
-				if((UMAXn - m1) < m2)
+				if(isInf() || val.isInf()) // if one of the value is with inf mtimes, then the result should be infinite too.
+					mtimes = UMAXn;
+				else if((UMAXn - m1) < m2)
 					mtimes = UMAXn;
 				set(VAL, l, g, mtimes);
 		}
 	}
+	return *this;
 }
 
 /**
@@ -355,10 +361,17 @@ void Value::print(io::Output& out) const {
 	else if ((_delta == 0) && (_mtimes ==  0))
 		out << "k(0x" << io::hex(_base) << ')';
 		//out << "k(" << _lower << ')';
-	else
-		out << "(0x" << io::hex(_base) << ", " << _delta << \
-			", 0x" << io::hex(_mtimes) << ')';
-		//out << '(' << _lower << ", " << _delta << ", " << _mtimes << ')';
+	else {
+		if(_base >= 0)
+			out << "(0x" << io::hex(_base);
+		else
+			out << "(-0x" << io::hex(0-_base);
+		if(_delta >= 0)
+			out << ", 0x" << io::hex(_delta);
+		else
+			out << ", -0x" << io::hex(0-_delta);
+		out << ", 0x" << io::hex(_mtimes) << ')';
+	}
 }
 
 /**
@@ -389,11 +402,33 @@ Value& Value::shr(const Value& val) {
 	if (_kind != NONE && _kind != ALL) {
 		if (_delta == 0 && _mtimes == 0)
 			set(VAL, _base >> val._base, 0, 0);
+
+#		ifdef USE_ORIGINAL_SHR
 		else if (_delta % 2 == 0)
 			set(VAL, _base >> val._base, _delta >> val._base, _mtimes);
 		else
-			set(VAL, _base >> val._base, 1,
-				(_delta * _mtimes) >> val._base);
+			set(VAL, _base >> val._base, 1, (_delta * _mtimes) >> val._base);
+#		else
+		else if(_delta % (1 << val._base) == 0) {
+			set(VAL, _base >> val._base, _delta >> val._base, _mtimes);
+		}
+		else {
+			t::uint64 mtimes_new = _mtimes;
+			mtimes_new = mtimes_new * elm::abs(_delta);
+			mtimes_new = (mtimes_new >> val._base) + 1;
+			intn_t delta_new;
+			if(_delta >= 0)
+				delta_new = 1;
+			else
+				delta_new = -1;
+			
+			// over-approximation
+			if(_mtimes == UMAXn)
+				mtimes_new = UMAXn;
+			
+			set(VAL, _base >> val._base, delta_new, mtimes_new);
+		}
+#		endif		
 	}
 	return *this;
 }
@@ -452,6 +487,110 @@ Value& Value::join(const Value& val) {
 	else if(isConst() && val.isConst()) /* k1 U k2 */
 		set(VAL, min(_base, val._base), elm::abs(_base - val._base), 1);
 	else {										/* other cases */
+		if(isConst() || val.isConst()) {
+			// k is the constant value
+			// v is the none constant value
+			Value v, k;
+			if(isConst()) {
+				k = *this;
+				v = val;
+			}
+			else {
+				k = val;
+				v = *this;
+			}
+
+			// now check if k is within v
+			if(k.inter(v).kind() != NONE) {
+				*this = v;
+				return *this;
+			}
+		}
+
+		if((isInf() && val.isInf())) {
+			//  <--------------------------| *this join
+			//                  |----------------------------------> val
+			//  <--------------------------------------------------> = T (result)
+			if((delta() >= 0 && val.delta() < 0) || (delta() < 0 && val.delta() >= 0)) {
+				*this = ALL;
+			}
+			//             |-------------------------------> *this join
+			//   |-----------------------------------------> val
+			//   |-----------------------------------------> (result)
+			// OR
+			//   <------------------------| *this join
+			//   <------------------------------| val
+			//   <------------------------------| (result)
+			else {
+				intn_t new_delta = gcd(_delta, val._delta);
+				intn_t new_base;
+				if((new_delta > 0 && _base < val._base) || (new_delta < 0 && _base > val._base))
+					new_base = _base;
+				else
+					new_base = val._base;
+				set(VAL, new_base, new_delta, UMAXn);
+			}
+			return *this;
+		}
+
+		if(isInf() || val.isInf()) {
+			Value a, b; // a is with inifite mtimes, b is not
+			if(isInf()) {
+				a = *this;
+				b = val;
+			}
+			else {
+				a = val;
+				b = *this;
+			}
+
+			// make sure the delta will go with the infinite
+			if((a.delta() >= 0 && b.delta() < 0) || (a.delta() < 0 && b.delta() >= 0)) {
+				b.reverse();
+			}
+
+			intn_t new_delta = gcd(a.delta(), b.delta());
+			//  |-------------------------------> a
+			//       |---------------| b
+			//  |-------------------------------> result
+			// OR
+			//          |-----------------------> a
+			//  |----------| b
+			//  |-------------------------------> result
+			// OR
+			//                   |--------------> a
+			//  |------| b
+			//  |-------------------------------> result
+			if(a.delta() >= 0) {
+				intn_t new_base;
+				if(a.lower() < b.lower())
+					new_base = a.lower();
+				else
+					new_base = b.lower();
+				set(VAL, new_base, new_delta, UMAXn);
+			}
+			//  <-------------------------------| a
+			//       |---------------| b
+			//  <-------------------------------| result
+			// OR
+			//  <------------| a
+			//            |----------| b
+			//  <--------------------| result
+			// OR
+			//  <--------------| a
+			//                           |------| b
+			//  <-------------------------------- result
+			else {
+				intn_t new_base;
+				if(a.lower() > b.lower())
+					new_base = a.lower();
+				else
+					new_base = b.lower();
+				set(VAL, new_base, new_delta, UMAXn);
+			}
+			return *this;
+		}
+
 		uintn_t g = gcd(gcd(elm::abs(start() - val.start()), _delta), val._delta);
 		intn_t ls = min(start(), val.start());
 		t::int64 u1 = t::int64(start()) + t::int64(elm::abs(_delta)) * t::int64(_mtimes);
@@ -522,6 +661,10 @@ void Value::widening(const Value& val) {
 	// else widen((k, d, n), (k', d', n')) = T
 	else
 		*this = all;
+
+	// regulate the results, if delta or mtimes is 0, then treat the result as a constant
+	if(_kind == VAL && (_delta == 0 || _mtimes == 0))
+		set(_kind, _base, 0, 0);
 
 	check();
 }
@@ -596,21 +739,35 @@ Value& Value::inter(const Value& val) {
 		Value temp(val);
 		if(!temp.direction())
 			temp.reverse();
+		// if the difference of the values is not a multiple of the delta, then the value does not fall on the interval
+		if((_base - temp._base) % temp._delta) {
+			*this = Value::none;
+			return *this;
+		}
+
 		if((uintn_t)((_base - temp._base) / temp._delta) > temp._mtimes)
 			*this = Value::none;
 		else
 			set(VAL, _base, 0, 0);
-			return *this;
+		return *this;
 	}
 
 	if(val.isConst()) {
 		Value temp(*this);
 		if(!temp.direction())
 			temp.reverse();
-		if((uintn_t)((val._base - temp._base) / temp._delta) > temp._mtimes)
+		// if the difference of the values is not a multiple of the delta, then the value does not fall on the interval
+		if((val._base - temp._base) % temp._delta) {
 			*this = Value::none;
+			return *this;
+		}
+
+		if((uintn_t)((val._base - temp._base) / temp._delta) > temp._mtimes) {
+			*this = Value::none;
+			return *this;
+		}
 		else
-			set(VAL, _base, 0, 0);
+			set(VAL, val._base, 0, 0);
 		return *this;
 	 }
 
@@ -630,10 +787,10 @@ Value& Value::inter(const Value& val) {
 
 	TRACE_INTERSECT(elm::cout << "_base = " << val1._base << io::endl;)
 	TRACE_INTERSECT(elm::cout << "_delta = " << val1._delta << io::endl;)
-	TRACE_INTERSECT(elm::cout << "_mtimes = " << (val1._mtimes) << " HEX: " << hex(val1._mtimes) << io::endl;)
+	TRACE_INTERSECT(elm::cout << "_mtimes = " << (val1._mtimes) << " HEX: 0x" << hex(val1._mtimes) << io::endl;)
 	TRACE_INTERSECT(elm::cout << "val2._base = " << val2._base << io::endl;)
 	TRACE_INTERSECT(elm::cout << "val2._delta = " << val2._delta << io::endl;)
-	TRACE_INTERSECT(elm::cout << "val2._mtimes = " << (val2._mtimes) << " HEX: " << hex(val2._mtimes) << io::endl;)
+	TRACE_INTERSECT(elm::cout << "val2._mtimes = " << (val2._mtimes) << " HEX: 0x" << hex(val2._mtimes) << io::endl;)
 
 	// 2.5 now carry out intersection, first we take care of the circularity and overflow as section 6 in [Sen et Srikant, 2007]
 	// if upperbound < lowerbound, means circularity and overflow
@@ -987,6 +1144,19 @@ Value& Value::leu(uintn_t k) {
 	if(uwrap())
 		_mtimes = k / _delta;
 
+
+	// check if 0 falls in the middle of the range (zero-crossing)
+	// then move the base to be >= 0
+	if(_base < 0 && (_base + _delta * _mtimes) > 0) {
+		intn_t newbase = (((0 - _base) / _delta)) * _delta + _base;
+		if(newbase < 0)
+			newbase = newbase + _delta;
+		_base = newbase;
+		// calculate the new mtimes
+		_mtimes = (k - uintn_t(_base)) / _delta;
+		return *this;
+	}
+
 	// b >= k -> _
 	if(uintn_t(_base) >= k) {
 		*this = none;
@@ -1002,7 +1172,7 @@ Value& Value::leu(uintn_t k) {
 		_mtimes = (k - uintn_t(_base)) / _delta;
 
 	check();
-	return *this;	
+	return *this;
 }
 
 
@@ -1041,6 +1211,162 @@ int Value::and_threshold = 8;
  * @param val	Value to perform AND on.
  */
 Value& Value::_and(const Value& val) {
+#ifndef USE_ORIGINAL_AND
+	// if both of them are all, return all
+	if((*this == all) && (val == all))
+		return *this;
+
+	// _ & v = v & _ = _
+	if(*this == none)
+		return *this;
+	if(val == none) {
+		*this = none;
+		return *this;
+	}
+
+	// check for any constant
+	Value v; // the CLP value
+	uintn_t k; // the constant value to apply the AND relation on v
+	if(isConst()) {
+		if(val.isConst()) {		// k1 & k2
+			*this = val.lower() & lower();
+			return *this;
+		}
+		k = lower();
+		v = val;
+	}
+	else if(val.isConst()) {
+		v = *this;
+		k = val.lower();
+	}
+	else {						// no k : cannot compute
+		*this = all;
+		return *this;
+	}
+
+	// v & 0 = 0
+	if(k == 0) {
+		*this = 0;
+		return *this;
+	}
+
+
+	// for any value, m is the least significant bit of 1, and n is the most significant bit of 1
+	// 000000000111110000000
+	//          n   m
+	// 000000000000000100110
+	//                n   m
+	// 111111111111100000000
+	// n           m
+
+	// first find the m and n for the constant k
+	int n_k, m_k;
+	int mode = 0;
+	intn_t temp = k;
+	for (int i = 0; i < 32; i++) {
+		if ((mode == 0) && ((temp & 1) == 1)) {
+			mode = 1;
+			m_k = i;
+			n_k = i;
+		}
+		else if ((mode == 1) && ((temp & 1) == 1)) {
+			n_k = i;
+		}
+		temp = temp >> 1;
+	}
+
+	// T & v = v & T = T
+	if(v == all) {
+		STAT_UINT x = 1;
+		x = (x << (n_k + 1 - m_k));
+		x = x - 1;
+		*this = Value(VAL, 0, 1 << m_k, x);
+		return *this;
+	}
+
+	// first get the m of m_v_base and m_v_delta
+	// m_v_base
+	int m_v_base = -1;
+	intn_t v_base = v._base;
+	for(int i = 0; i < 32; i++) {
+		if(v_base & 1) {
+			m_v_base = i;
+			break;
+		}
+		v_base = v_base >> 1;
+	}
+
+
+	int m_v_delta = -1;
+	intn_t v_delta = v._delta;
+	for(int i = 0; i < 32; i++) {
+		if(v_delta & 1) {
+			m_v_delta = i;
+			break;
+		}
+		v_delta = v_delta >> 1;
+	}
+
+
+	int m_v;
+	if(m_v_base == -1) // if base is 0, then we take the m of delta
+		m_v = m_v_delta;
+	else if(m_v_base < m_v_delta) // f base has smaller m value, we take it
+		m_v = m_v_base;
+	else
+		m_v = m_v_delta;
+
+
+	// then we look for max(m_v, m)
+	int m;
+	if(m_v > m_k)
+		m = m_v;
+	else
+		m = m_k;
+
+
+	STAT_UINT v_max_cand1 = v._base;
+	STAT_UINT v_max_cand2 = v._base + v._delta * v.mtimes();
+	STAT_UINT v_max;
+	if(v_max_cand1 > v_max_cand2)
+		v_max = v_max_cand1;
+	else
+		v_max = v_max_cand2;
+
+
+	// find n_v
+	int n_v = 0;
+	STAT_UINT v_max_comp = (STAT_UINT)1 << 63;
+	for(int i = 63; i >= 0; i--) {
+		if(v_max_comp & v_max) {
+			n_v = i;
+			break;
+		}
+		v_max_comp = v_max_comp >> 1;
+	}
+
+
+	// find the mtimes
+	// first find the max possible value for the result
+	STAT_UINT max_possible_value = 1;
+	max_possible_value = max_possible_value << n_v;
+	max_possible_value = max_possible_value - 1;
+	max_possible_value = max_possible_value & ((1 << (n_k + 1)) - 1);
+
+
+	// obtain the mtimes
+	max_possible_value = max_possible_value >> m;
+
+
+	// if mtimes is 0, then we set delta to 0 too, and the resulted value is 0
+	if(max_possible_value == 0)
+		*this = Value(VAL, 0, 0, 0);
+	else
+		*this = Value(VAL, 0, (1 << m), max_possible_value);
+
+	return *this;
+
+#else	
 
 	// T & v = v & T = T
 	if(*this == all)
@@ -1128,6 +1454,7 @@ Value& Value::_and(const Value& val) {
 	// else (0, 1 << m, 1 << (n + 1 - m) - 1)
 	*this = Value(VAL, 0, 1 << m, (1 << (n + 1 - m)) - 1);
 	return *this;
+#endif	
 }
 
 
@@ -1341,11 +1668,13 @@ void State::join(const State& state) {
 		for(int i=registers.length(); i < state.registers.length(); i++)
 			registers.add(state.registers[i]);
 	// temp registers
+#	ifdef JOIN_TEMP_REGISTERS
 	for(int i=0; i<tmpreg.length() && i<state.tmpreg.length() ; i++)
 		tmpreg[i].join(state.tmpreg[i]);
 	if (tmpreg.length() < state.tmpreg.length())
 		for(int i=tmpreg.length(); i < state.tmpreg.length(); i++)
 			tmpreg.add(state.tmpreg[i]);
+#	endif
 
 	// memory
 	Node *prev = &first, *cur = first.next, *cur2 = state.first.next, *next;
@@ -1872,11 +2201,17 @@ public:
 	void update(State *state) {
 		TRACEI(cerr << "\t\t" << i << io::endl);
 		sem::inst& i = b[pc];
+		if(state->equals(Domain::EMPTY)) { // handles the bottom state input (possibly infeasible path)
+			pc++;
+			return;
+		}
+
 		switch(i.op) {
-		case sem::BRANCH:
+		case sem::BRANCH: {
 			pc = b.length();
 			TRACESI(cerr << "\t\t\tbranch(" << get(*state, i.d()) << ")\n");
 			break;
+		}
 		case sem::TRAP:
 			pc = b.length();
 			TRACESI(cerr << "\t\t\ttrap\n");
@@ -1958,6 +2293,9 @@ public:
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
 					ALARM_STORE_TOP(warnStoreToTop());
+#ifdef CATCH_STT
+					assert(0);
+#endif
 #					ifdef HAI_JSON
 						HAI_BASE->addEvent("store to T");
 #					endif
@@ -1968,7 +2306,7 @@ public:
 					_nb_store++;
 					_nb_top_store ++;
 					if(addrclp.mtimes() < UMAXn) {
-						state->set(Value::all, get(*state, i.d()));
+						// state->set(Value::all, get(*state, i.d())); // instead of setting all, we only clear a range of the memories
 						state->clear(addrclp.start(), elm::abs(addrclp.delta()) * addrclp.mtimes());
 					}
 					else {
@@ -2054,6 +2392,8 @@ public:
 					   && get(*state, i.b()) != Value::all
 					   && v == Value::all) cerr << "\t\t\tALARM! shl\n");
 				set(*state, i.d(), v);
+				if(v == Value::all)
+					_nb_top_set++;
 			} break;
 		case sem::SHR: case sem::ASR: {
 				Value v = get(*state, i.a());
@@ -2064,6 +2404,8 @@ public:
 					   && get(*state, i.b()) != Value::all
 					   && v == Value::all) cerr << "\t\t\tALARM! shr\n");
 				set(*state, i.d(), v);
+				if(v == Value::all)
+					_nb_top_set++;
 			} break;
 		case sem::OR: {
 				Value v = get(*state, i.a());
@@ -2074,7 +2416,19 @@ public:
 					   && get(*state, i.b()) != Value::all
 					   && v == Value::all) cerr << "\t\t\tALARM! or\n");
 				set(*state, i.d(), v);
+				if(v == Value::all)
+					_nb_top_set++;
 			} break;
+
+		case sem::AND: {
+				Value v = get(*state, i.a());
+				TRACESI(cerr << "\t\t\tand(" << i.d() << ", " << v << ", " << get(*state, i.b()));
+				v._and(get(*state, i.b()));
+				if(v == Value::all)
+					_nb_top_set++;
+				TRACESI(cerr << ") = " << v << io::endl);
+				set(*state, i.d(), v);
+		} break;
 		default: {
 				set(*state, i.d(), Value::all);
 			} break;
@@ -2139,6 +2493,21 @@ public:
 		// do nothing for an end block
 		if(bb->isEnd())
 			return;
+
+		// the unknown block
+		if(bb->isSynth() && !bb->toSynth()->callee()) {
+			// UNKOWN_BLOCK_EVALUATION is an identifier associated with the process, if it is set to true
+			// the unknown block will be evaluated to bottom. This is to prevent the unknown block brings the
+			// state to top to wipe out the useful state....
+			if(UNKOWN_BLOCK_EVALUATION(_process)) {
+				out = bottom();
+			}
+			else {
+				out = top();
+			}
+			return;
+		}
+
 		this->bb = bb;
 
 		Domain *state;
@@ -2154,6 +2523,10 @@ public:
 
 			clp::STATE_IN(bb) = in;
 		}
+
+		if(out.equals(Domain::EMPTY)) // if the in state is bottom, then we don't have to evaluate this...
+			return;
+
 		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 			this->inst = inst;
 			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
@@ -2166,7 +2539,6 @@ public:
 			if(specific_analysis && pack){
 				ipack = pack->newPack(inst->address());
 			}
-
 			// perform interpretation
 			while(true) {
 
@@ -2530,6 +2902,13 @@ Identifier<clp::State> STATE_IN("otawa::clp::STATE_IN");
  * @ingroup clp
 */
 Identifier<clp::State> STATE_OUT("otawa::clp::STATE_OUT");
+
+/**
+ * How to treat the unknown block: true - generate bottoms value, false - generates top value
+ * @ingroup clp
+*/
+Identifier<bool> UNKOWN_BLOCK_EVALUATION("otawa::clp::UNKOWN_BLOCK_EVALUATION", false);
+
 
 /**
  * @class ClpStatePack::Context

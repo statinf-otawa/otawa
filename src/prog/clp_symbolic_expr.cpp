@@ -1062,9 +1062,10 @@ namespace se{
 		/*if (oldvdelta < 0){
 			v.reverse();
 		}*/
+		if(v.mtimes() == 0 || v.delta() == 0) { // regulating the result, if the mtimes or the delta is 0, then make the value to be constant
+			v.set(v.kind(), v.lower(), 0, 0);
+		}
 	}
-
-
 } //se
 
 } // otawa
