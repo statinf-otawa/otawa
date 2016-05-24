@@ -103,7 +103,7 @@ MemorySet::t const MemorySet::empty(0);
 MemorySet::t MemorySet::add(t mem, MemArea area) {
 	PRECOND(ordered(mem));
 	ASSERT(!area.isNull());
-	//ASSERT(area.size() > 1);
+	// ASSERT(area.size() > 1); // comment out because for byte operation, the size is 1.
 	node_t *m = mem;
 	node_t *r = empty.h;
 	node_t **l = &r;
@@ -518,10 +518,8 @@ MemorySet::t MemorySet::meet(t m1, t m2) {
 		else {
 
 			// select base node
-			if(p->address() > q->address()) {
-				elm::cout << "haha" << io::endl;
+			if(p->address() > q->address())
 				swap(p, q);
-			}
 
 			// consume intersecting nodes
 			// this does not work with
