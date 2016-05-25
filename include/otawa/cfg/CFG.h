@@ -204,6 +204,7 @@ public:
 	void call(SynthBlock *v, const CFGMaker& cfg);
 	inline void add(Block *v, Block *w, Edge *e) { sgraph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }
 	inline CFG::BlockIter blocks(void) const { return cfg->vertices(); }
+	int count(void);
 private:
 	CFG *cfg;
 };

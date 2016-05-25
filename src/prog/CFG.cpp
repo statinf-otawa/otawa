@@ -738,6 +738,15 @@ Block *CFGMaker::unknown(void) {
 }
 
 /**
+ * Get the count of vertices (without unknown).
+ * @return	Count of vertices.
+ */
+int CFGMaker::count(void) {
+	return cfg->count();
+}
+
+
+/**
  * Build and return the CFG itself.
  * @return	Built CFG.
  */

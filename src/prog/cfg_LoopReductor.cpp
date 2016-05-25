@@ -152,6 +152,7 @@ void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
 				if(ancestors->contains(edge->target())) {
 					LOOP_HEADER(edge->target()) = true;
 					BACK_EDGE(edge) = true;
+					//cerr << "DEBUG:\tback edge " << *edge << io::endl;
 
 					// foreach w in S[v, bb] do IN_LOOPS(w) <- IN_LOOPS U { v }
 					bool inloop = false;
@@ -258,16 +259,27 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 
 	// prepare irregular analysis
 	Vector<Block*> *ancestors = new Vector<Block*>();
-	for(HashTable<Block *, Block *>::Iterator bb(map); bb; bb++)
-		IN_LOOPS(bb) = new dfa::BitSet(cfg->count());
+	//for(CFG::BlockIter bb = maker->blocks(); bb; bb++)
+	//	IN_LOOPS(bb) = new dfa::BitSet(maker->count());
 
 	// do the Depth-First Search, compute the ancestors sets, and mark loop headers
-	depthFirstSearch(maker->entry(), ancestors);
+	//depthFirstSearch(maker->entry(), ancestors);
 
 	// perform the transformation
 	bool done = false;
 	while(!done) {
+		//cerr << "\nDEBUG: new pass: " << maker->count() << "\n";
 		done = true;
+
+		// build IN_LOOPS
+		ancestors->clear();
+		for(CFG::BlockIter bb = maker->blocks(); bb; bb++)
+			IN_LOOPS(bb) = new dfa::BitSet(maker->count());
+		depthFirstSearch(maker->entry(), ancestors);
+		for(CFG::BlockIter bb = maker->blocks(); bb; bb++) {
+			MARK(bb) = false;
+			DUPLICATE_OF(bb) = 0;
+		}
 
 		// foreach b in V do
 		for(CFG::BlockIter b = maker->blocks(); b; b++) {
