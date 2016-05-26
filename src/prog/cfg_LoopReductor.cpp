@@ -86,7 +86,7 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 	int i = 0;
 	for(CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++, i++) {
 		if(logFor(LOG_FUN))
-			log << "\reducing function " << *cfg << io::endl;
+			log << "\treducing function " << *cfg << io::endl;
 		CFGMaker *vcfg = vcfgvec.get(i);
 		reduce(vcfg, cfg);
 	}
@@ -307,12 +307,12 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 		dfa::BitSet *D[maker->count()];
 		genstruct::Vector<Block *> S;
 		for(CFG::BlockIter v = maker->blocks(); v; v++) {
+			//cerr << "DEBUG: " << *v << " in " << **IN_LOOPS(v) << io::endl;
 			V[v->index()] = v;
 			D[v->index()] = new dfa::BitSet(maker->count());
 			for(Block::EdgeIter e = v->ins(); e; e++) {
 				Block *w = e->source();
 				dfa::BitSet d = **IN_LOOPS(v);
-				//cerr << "DEBUG: " << *e << " in " << d << io::endl;
 				d.remove(**IN_LOOPS(w));
 				D[v->index()]->add(d);
 			}
@@ -355,31 +355,63 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 
 		// (3) find best of each class
 		static Identifier<bool> BEST("", false);
-		int com[maker->count()];
+		int cost[maker->count()];
 		for(int i = 0; i < CC->count(); i++) {
+			int bcost = 0, bvi = -1;
+			if(logFor(LOG_BLOCK))
+				log << "\t\tirreducible nest " << *((*CC)[i].fst) << io::endl;
 
-			// compute commons
-			dfa::BitSet *s = (*CC)[i].snd;
+			//cerr << "DEBUG: mask = " << *(*CC)[i].fst << ", set = " << *(*CC)[i].snd << io::endl;
+
+			// compute costs (based on more represented header)
+			/*dfa::BitSet *s = (*CC)[i].snd;
 			for(dfa::BitSet::Iterator vi(*s); vi; vi++) {
-				com[*vi] = 0;
+				cost[*vi] = 0;
 				for(dfa::BitSet::Iterator wi(*s); wi; wi++)
 					if(*wi != *vi && D[*wi]->contains(*vi))
-						com[*vi]++;
+						cost[*vi]++;
 				//cerr << "DEBUG: com[" << *vi << "] = " << com[*vi] << " (" << *D[*vi] << ")\n";
 			}
-
-			// find best
-			int bcom = 0, bvi = 0;
 			for(dfa::BitSet::Iterator vi(*s); vi; vi++)
-				if(com[*vi] > bcom) {
-					bcom = com[*vi];
+				if(cost[*vi] > bcom) {
+					bcom = cost[*vi];
 					bvi = *vi;
+				}*/
+
+			// compute costs (based on maximal duplication)
+			dfa::BitSet *m = (*CC)[i].fst;
+			for(dfa::BitSet::Iterator vi(*m); vi; vi++) {
+				cost[*vi] = 0;
+				genstruct::Vector<int> wl;
+				dfa::BitSet done(maker->count());
+				done.add(*vi);
+				for(dfa::BitSet::Iterator wi(*m); wi; wi++)
+					if(*wi != *vi)
+						wl.add(*wi);
+				while(wl) {
+					int wi = wl.pop();
+					cost[*vi]++;
+					done.add(wi);
+					for(Block::EdgeIter e = V[wi]->outs(); e; e++) {
+						Block *u = e->target();
+						int ui = u->index();
+						if(!done.contains(ui) && m->meets(**IN_LOOPS(u)))
+							wl.push(ui);
+					}
 				}
+				if(logFor(LOG_BLOCK))
+					log << "\t\t\tcost[" << *vi << "] = " << cost[*vi] << io::endl;
+				if(bvi < 0 || bcost > cost[*vi]) {
+					bvi = *vi;
+					bcost = cost[*vi];
+				}
+			}
 
 			// mark the best!
 			BEST(V[bvi]) = true;
+			//BEST(V[4]) = true;
 			if(logFor(LOG_FUN))
-				log << "\t\tnest " << *s << ", chosen is " << bvi << io::endl;
+				log << "\t\t" << bvi << " is chosen in nest " << *m << io::endl;
 		}
 
 		// foreach b in V do
