@@ -149,6 +149,16 @@ typedef enum {
 		}
 
 		/**
+		 * Multiply another set to the current one with the lower 32 bits
+		 * @param val the value to add
+		 */
+		Value& mul(const Value& val);
+		/**
+		 * Multiply another set to the current one with the higher 32 bits
+		 * @param val the value to add
+		 */
+		Value& mulh(const Value& val);
+		/**
 		 * Add another set to the current one
 		 * @param val the value to add
 		 */

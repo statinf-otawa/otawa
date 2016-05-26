@@ -234,7 +234,7 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b, bool duplicate) {
  * Reduce irregular loops.
  */
 void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
-
+	cerr << "DEBUG: fun " << cfg << io::endl;
 	HashTable<Block *, Block *> map;
 	map.put(cfg->entry(), maker->entry());
 	map.put(cfg->exit(),maker->exit());
@@ -283,6 +283,7 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 		log << "\t\t" << maker->count() << " vertices before\n";
 	while(!done) {
 		//cerr << "\nDEBUG: new pass: " << maker->count() << "\n";
+		cerr << "\nDEBUG: new pass: " << maker->count() << "\n";
 		done = true;
 		rnd++;
 

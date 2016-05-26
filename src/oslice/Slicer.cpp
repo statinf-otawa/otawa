@@ -90,8 +90,8 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 	const CFGCollection& coll = **otawa::INVOLVED_CFGS(workspace());
 	initIdentifiersForEachBB(coll);
 
-	// will make use of osliceManager
-	oslice::Manager osliceManager(workspace());
+//	// will make use of osliceManager
+//	oslice::Manager osliceManager(workspace());
 
 	LivenessChecker::buildReverseSynthLink(coll);
 

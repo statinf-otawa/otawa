@@ -41,6 +41,7 @@ public:
  	static clp::Manager *clpManager;
 
  	static void buildReverseSynthLink(const otawa::CFGCollection& coll);
+ 	inline static void setDebugLevel(t::uint32 _dl) { _debugLevel = _dl; }
 
 protected:
  	virtual bool interestingAddrs(dfa::MemorySet::t const & a, dfa::MemorySet::t const & b);

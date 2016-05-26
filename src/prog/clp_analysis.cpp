@@ -270,6 +270,45 @@ Value Value::operator-(const Value& val) const{
 	return v;
 }
 
+
+/**
+ * Multiply another set to the current one with the higher 32 bits
+ * @param val the value to multiply
+ */
+Value& Value::mulh(const Value& val){
+	if (_kind == NONE && val._kind == NONE) 	/* NONE + NONE = NONE */
+		*this = none;
+	else if (_kind == ALL || val._kind == ALL) 	/* ALL + anything = ALL */
+		*this = all;
+	else if (_delta == 0 && val._delta == 0) {	/* two constants */
+	}
+	else
+		*this = all;
+
+	return *this;
+}
+
+
+/**
+ * Multiply another set to the current one with the lower 32 bits
+ * @param val the value to multiply
+ */
+Value& Value::mul(const Value& val){
+	if (_kind == NONE && val._kind == NONE) 	/* NONE + NONE = NONE */
+		*this = none;
+	else if (_kind == ALL || val._kind == ALL) 	/* ALL + anything = ALL */
+		*this = all;
+	else if (_delta == 0 && val._delta == 0) {	/* two constants */
+		uintn_t result = _base;
+//		_base = _base *
+	}
+	else
+		*this = all;
+
+	return *this;
+}
+
+
 /**
  * Add another set to the current one
  * @param val the value to add
@@ -2432,6 +2471,16 @@ public:
 				TRACESI(cerr << ") = " << v << io::endl);
 				set(*state, i.d(), v);
 		} break;
+//		case sem::MUL: {
+//				Value v = get(*state, i.a());
+//				TRACESI(cerr << "\t\t\tmul(" << i.d() << ", " << v << ", " << get(*state, i.b()));
+//				v.add(get(*state, i.b()));
+//				TRACESI(cerr << ") = " << v << io::endl);
+//				TRACEA(if(get(*state, i.a()) != Value::all
+//					   && get(*state, i.b()) != Value::all
+//					   && v == Value::all) cerr << "\t\t\tALARM! add\n");
+//				set(*state, i.d(), v);
+//			} break;
 		default: {
 				set(*state, i.d(), Value::all);
 			} break;

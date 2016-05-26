@@ -477,7 +477,7 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 			}
 
 			// check the type: Branch or Call
-			if(last->isBranch())
+			if(last->isControl() && last->isConditional())
 				BRANCH_TARGET(last).add(targetAddr);
 			else
 				CALL_TARGET(last).add(targetAddr);

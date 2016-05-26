@@ -3,12 +3,11 @@
 
 #include <otawa/proc/AbstractFeature.h>
 #include <elm/util/BitVector.h>
-#include <otawa/util/Bag.h>
-#include <otawa/data/clp/ClpValue.h>
-#include <otawa/cfg/CFG.h>
 #include <otawa/dfa/MemorySet.h>
 
 namespace otawa { namespace oslice {
+typedef elm::avl::Set<Inst*, elm::Comparator<Inst*> > InstSet;
+
 extern p::feature DUMMY_SLICER_FEATURE;
 extern p::feature SLICER_FEATURE;
 extern p::feature COND_BRANCH_COLLECTOR_FEATURE;
@@ -20,6 +19,7 @@ extern Identifier<String> SLICING_CFG_OUTPUT_PATH;
 extern Identifier<int> LIVENESS_DEBUG_LEVEL;
 extern Identifier<int> SLICE_DEBUG_LEVEL;
 extern Identifier<bool> CFG_OUTPUT;
+extern Identifier<InstSet*> SET_OF_REMAINED_INSTRUCTIONS;
 
 class Manager {
 public:
