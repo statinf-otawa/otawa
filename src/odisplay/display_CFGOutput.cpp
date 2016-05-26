@@ -241,6 +241,7 @@ void CFGOutput::genBBLabel(CFG *cfg, Block *b, Output& out) {
 	if(b->isEnd() || b->isSynth())
 		return;
 	BasicBlock *bb = b->toBasic();
+	return;	// DEBUG:
 
 	// make title
 	out << "\n---\n";
