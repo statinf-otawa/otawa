@@ -85,6 +85,8 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 	// reduce loops
 	int i = 0;
 	for(CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++, i++) {
+		if(logFor(LOG_FUN))
+			log << "\reducing function " << *cfg << io::endl;
 		CFGMaker *vcfg = vcfgvec.get(i);
 		reduce(vcfg, cfg);
 	}
@@ -130,7 +132,7 @@ public:
  */
 void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
 	ancestors->push(bb);
-	MARK(bb) = true;
+	//MARK(bb) = true;
 
 	// S = { v / (bb, v) in E }
 	SortedSLList<Edge *, EdgeDestOrder> successors;
@@ -142,7 +144,8 @@ void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
 		if(!edge->target()->isExit()) {
 
 			// if not MARK(v) go down
-			if (MARK(edge->target()) == false)
+			//if (MARK(edge->target()) == false)
+			if(!ancestors->contains(edge->target()))
 				depthFirstSearch(edge->target(), ancestors);
 
 			// else assert MARK(v)
@@ -170,7 +173,7 @@ void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
 				for (dfa::BitSet::Iterator bit(*il_v); bit; bit++) {
 					bool inloop = false;
 
-					// foreach w in S[v, bb] do IN_LOOPS[w] <- IN_LOOPS[w] U { t }
+					// foreach w in S[t, bb] do IN_LOOPS[w] <- IN_LOOPS[w] U { t }
 					for (Vector<Block*>::Iterator member(*ancestors); member; member++) {
 						if (member->index() == *bit)
 							inloop = true;
@@ -183,6 +186,7 @@ void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
 	}
 
 	// go up
+	MARK(bb) = true;
 	ancestors->pop();
 }
 
@@ -263,22 +267,119 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 	//	IN_LOOPS(bb) = new dfa::BitSet(maker->count());
 
 	// do the Depth-First Search, compute the ancestors sets, and mark loop headers
-	//depthFirstSearch(maker->entry(), ancestors);
+	/*depthFirstSearch(maker->entry(), ancestors);
+	for(CFG::BlockIter v = maker->blocks(); v; v++) {
+		cerr << "DEBUG: B" << v->index() << " in ";
+		for(dfa::BitSet::Iterator w(**IN_LOOPS(v)); w; w++)
+			cerr << ", B" << *w;
+		cerr << io::endl;
+	}*/
+	//return;
 
 	// perform the transformation
 	bool done = false;
+	int rnd = 0;
+	if(logFor(LOG_FUN))
+		log << "\t\t" << maker->count() << " vertices before\n";
 	while(!done) {
 		//cerr << "\nDEBUG: new pass: " << maker->count() << "\n";
 		done = true;
+		rnd++;
 
 		// build IN_LOOPS
 		ancestors->clear();
 		for(CFG::BlockIter bb = maker->blocks(); bb; bb++)
 			IN_LOOPS(bb) = new dfa::BitSet(maker->count());
 		depthFirstSearch(maker->entry(), ancestors);
-		for(CFG::BlockIter bb = maker->blocks(); bb; bb++) {
-			MARK(bb) = false;
-			DUPLICATE_OF(bb) = 0;
+		for(CFG::BlockIter v = maker->blocks(); v; v++) {
+			MARK(v) = false;
+			DUPLICATE_OF(v) = 0;
+			for(Block::EdgeIter e = v->ins(); e; e++) {
+				Block *w = e->source();
+				dfa::BitSet d = **IN_LOOPS(v);
+				d.remove(**IN_LOOPS(w));
+				//cout << "DEBUG: " << *e << " -> " << d.count() << "\t" << d << io::endl;
+			}
+		}
+
+		// (1) compute the D
+		Block *V[maker->count()];
+		dfa::BitSet *D[maker->count()];
+		genstruct::Vector<Block *> S;
+		for(CFG::BlockIter v = maker->blocks(); v; v++) {
+			V[v->index()] = v;
+			D[v->index()] = new dfa::BitSet(maker->count());
+			for(Block::EdgeIter e = v->ins(); e; e++) {
+				Block *w = e->source();
+				dfa::BitSet d = **IN_LOOPS(v);
+				//cerr << "DEBUG: " << *e << " in " << d << io::endl;
+				d.remove(**IN_LOOPS(w));
+				D[v->index()]->add(d);
+			}
+			if(D[v->index()]->count() > 1)
+				S.add(v);
+		}
+		if(!S)		// no irreducible loop: simply exit
+			break;
+
+		// (2) build the classes
+		genstruct::Vector<Pair<dfa::BitSet *, dfa::BitSet *> > C1;
+		genstruct::Vector<Pair<dfa::BitSet *, dfa::BitSet *> > C2;
+		genstruct::Vector<Pair<dfa::BitSet *, dfa::BitSet *> > *CC = &C1;
+		genstruct::Vector<Pair<dfa::BitSet *, dfa::BitSet *> > *CN = &C2;
+		for(int i = 0; i < S.count(); i++) {
+			Block *v = S[i];
+			dfa::BitSet *m = new dfa::BitSet(*D[v->index()]);
+			dfa::BitSet *s = new dfa::BitSet(maker->count());
+			s->add(v->index());
+			CN->add(pair(m, s));
+			for(int j = 0; j < CC->count(); j++) {
+				dfa::BitSet *mp = (*CC)[j].fst;
+				dfa::BitSet *sp = (*CC)[j].snd;
+				//cerr << "DEBUG: " << *m << " (" << *s << ") meets " << *mp << " (" << *sp  << ") = ";
+				if(m->meets(*mp)) {
+					m->add(*mp);
+					s->add(*sp);
+					//cerr << true << io::endl;
+				}
+				else {
+					CN->add(pair(mp, sp));
+					//cerr << false << io::endl;
+				}
+			}
+			CC->clear();
+			genstruct::Vector<Pair<dfa::BitSet *, dfa::BitSet *> > *CT = CC;
+			CC = CN;
+			CN = CT;
+		}
+
+		// (3) find best of each class
+		static Identifier<bool> BEST("", false);
+		int com[maker->count()];
+		for(int i = 0; i < CC->count(); i++) {
+
+			// compute commons
+			dfa::BitSet *s = (*CC)[i].snd;
+			for(dfa::BitSet::Iterator vi(*s); vi; vi++) {
+				com[*vi] = 0;
+				for(dfa::BitSet::Iterator wi(*s); wi; wi++)
+					if(*wi != *vi && D[*wi]->contains(*vi))
+						com[*vi]++;
+				//cerr << "DEBUG: com[" << *vi << "] = " << com[*vi] << " (" << *D[*vi] << ")\n";
+			}
+
+			// find best
+			int bcom = 0, bvi = 0;
+			for(dfa::BitSet::Iterator vi(*s); vi; vi++)
+				if(com[*vi] > bcom) {
+					bcom = com[*vi];
+					bvi = *vi;
+				}
+
+			// mark the best!
+			BEST(V[bvi]) = true;
+			if(logFor(LOG_FUN))
+				log << "\t\tnest " << *s << ", chosen is " << bvi << io::endl;
 		}
 
 		// foreach b in V do
@@ -295,8 +396,12 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 
 				// the edge is a irregular entry if it enters one loop, and edge->target() == loop header
 				// if |enteredLoops| > 1 /\ b in enteredLoops then
-				if(!((enteredLoops.count() == 0) || ((enteredLoops.count() == 1) && (enteredLoops.contains(b->index()))))) {
-
+				//cerr << "DEBUG: " << *edge << " => " << enteredLoops.count() << io::endl;
+				//cerr << "DEBUG: !(" << (enteredLoops.count() == 0) << " || (" << (enteredLoops.count() == 1) << " && " << (enteredLoops.contains(b->index())) << ")\n";
+				//if(!(enteredLoops.count() == 0 || (enteredLoops.count() == 1 && enteredLoops.contains(b->index())))) {
+				//if(enteredLoops.count() > 1 && edge->target()->index() != 4 /* *dfa::BitSet::Iterator(enteredLoops)*/) {
+				//cerr << "DEBUG: " << *edge << " --> " << enteredLoops.count() << io::endl;
+				if(enteredLoops.count() > 1 && !BEST(b)) {
 					// d <- duplicate(v)
 					Block *duplicate = DUPLICATE_OF(b);
 					if(!duplicate) {
@@ -306,6 +411,7 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 						duplicate = clone(*maker, b, true);
 						ASSERT(DUPLICATE_OF(b) == 0);
 						DUPLICATE_OF(b) = duplicate;
+						//cerr << "DEBUG: duplicating " << duplicate << " from " << *b << io::endl;
 
 						// IN_LOOPS(d) <- IN_LOOPS(v)
 						IN_LOOPS(duplicate) = new dfa::BitSet(**IN_LOOPS(edge->source()));
@@ -333,6 +439,9 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 			for (Vector<Edge*>::Iterator edge(toDel); edge; edge++)
 				delete *edge;
 		}
+
+		if(logFor(LOG_FUN))
+			log << "\t\tround " << rnd << ": " << maker->count() << " vertices\n";
 	}
 
 	delete ancestors;

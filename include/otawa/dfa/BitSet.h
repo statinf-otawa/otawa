@@ -121,6 +121,7 @@ public:
 	inline void remove(const BitSet& set) { OTAWA_BITSET_FREE vec.applyReset(set.vec); OTAWA_BITSET_ALLOC }
 	inline void mask(const BitSet& set) { OTAWA_BITSET_FREE vec.applyAnd(set.vec); OTAWA_BITSET_ALLOC }
 	inline int count(void) const { return vec.countBits(); }
+	inline bool meets(const BitSet& set) { return vec.meets(set.vec); }
 
 	inline BitSet doComp(void) const { return BitSet(vec.makeNot()); }
 	inline BitSet doUnion(const BitSet& set) const { return BitSet(vec.makeOr(set.vec)); }
