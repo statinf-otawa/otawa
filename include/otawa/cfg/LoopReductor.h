@@ -43,6 +43,7 @@ private:
 	void reduce(CFGMaker *vcfg, CFG *cfg);
 	void depthFirstSearch(Block *bb, Vector<Block *> *ancestors);
 	Block *clone(CFGMaker& maker, Block *b, bool duplicate = false);
+	void computeInLoops(CFGMaker *maker);
 
 	Vector<CFGMaker *> vcfgvec;
 	int idx;

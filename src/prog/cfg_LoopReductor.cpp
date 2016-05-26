@@ -132,7 +132,8 @@ public:
  */
 void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
 	ancestors->push(bb);
-	//MARK(bb) = true;
+	MARK(bb) = true;
+	//cerr << "DEBUG: visiting " << bb << " (" << bb->cfg() << ")" << io::endl;
 
 	// S = { v / (bb, v) in E }
 	SortedSLList<Edge *, EdgeDestOrder> successors;
@@ -144,8 +145,8 @@ void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
 		if(!edge->target()->isExit()) {
 
 			// if not MARK(v) go down
-			//if (MARK(edge->target()) == false)
-			if(!ancestors->contains(edge->target()))
+			if (MARK(edge->target()) == false)
+			//if(!ancestors->contains(edge->target()))
 				depthFirstSearch(edge->target(), ancestors);
 
 			// else assert MARK(v)
@@ -186,8 +187,60 @@ void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
 	}
 
 	// go up
-	MARK(bb) = true;
+	MARK(bb) = false;
 	ancestors->pop();
+}
+
+
+/**
+ * Compute the IN_LOOPS sets.
+ * @param maker		Graph to work with.
+ */
+void LoopReductor::computeInLoops(CFGMaker *maker) {
+	genstruct::Vector<Block *> S;
+	dfa::BitSet D(maker->count() + 2);
+	S.add(maker->entry());
+	while(S) {
+		Block *v = S.top();
+		D.add(v->index());
+		bool pushed = false;
+		for(Block::EdgeIter e = v->outs(); e; e++) {
+			Block *w = e->sink();
+			if(w->isEnd())
+				continue;
+
+			// if w not in D then dig deeper
+			if(!D.contains(w->index())) {
+				S.push(w);
+				pushed = true;
+				break;
+			}
+
+			// is it a loop?
+			else if(S.contains(w)) {
+				LOOP_HEADER(w) = true;
+				BACK_EDGE(e) = true;
+				for(int i = S.length() - 1; S[i] != w; i--) {
+					IN_LOOPS(S[i])->add(w->index());
+					//cerr << "DEBUG: il(" << S[i] << ") = " << **IN_LOOPS(S[i]) << io::endl;
+				}
+				IN_LOOPS(w)->add(w->index());
+			}
+
+			// irreducible loop?
+			else {
+				dfa::BitSet il = **IN_LOOPS(w);
+				il.remove(**IN_LOOPS(v));
+				if(il.count() > 0 && !il.contains(w->index())) {
+					//cerr << "DEBUG: source il(" << v << ") = " << **IN_LOOPS(v) << io::endl;
+					//cerr << "DEBUG: sink il(" << w << ") = " << **IN_LOOPS(w) << io::endl;
+					IN_LOOPS(w)->add(w->index());
+				}
+			}
+		}
+		if(!pushed)
+			S.pop();
+	}
 }
 
 
@@ -234,7 +287,6 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b, bool duplicate) {
  * Reduce irregular loops.
  */
 void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
-	cerr << "DEBUG: fun " << cfg << io::endl;
 	HashTable<Block *, Block *> map;
 	map.put(cfg->entry(), maker->entry());
 	map.put(cfg->exit(),maker->exit());
@@ -283,7 +335,7 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 		log << "\t\t" << maker->count() << " vertices before\n";
 	while(!done) {
 		//cerr << "\nDEBUG: new pass: " << maker->count() << "\n";
-		cerr << "\nDEBUG: new pass: " << maker->count() << "\n";
+		//cerr << "\nDEBUG: new pass: " << maker->count() << "\n";
 		done = true;
 		rnd++;
 
@@ -291,7 +343,8 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 		ancestors->clear();
 		for(CFG::BlockIter bb = maker->blocks(); bb; bb++)
 			IN_LOOPS(bb) = new dfa::BitSet(maker->count());
-		depthFirstSearch(maker->entry(), ancestors);
+		//depthFirstSearch(maker->entry(), ancestors);
+		computeInLoops(maker);
 		for(CFG::BlockIter v = maker->blocks(); v; v++) {
 			MARK(v) = false;
 			DUPLICATE_OF(v) = 0;
@@ -475,6 +528,7 @@ void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
 
 		if(logFor(LOG_FUN))
 			log << "\t\tround " << rnd << ": " << maker->count() << " vertices\n";
+		break;
 	}
 
 	delete ancestors;

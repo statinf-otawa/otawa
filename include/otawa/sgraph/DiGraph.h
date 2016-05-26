@@ -53,6 +53,7 @@ class Vertex {
 	friend class DiGraphBuilder;
 	typedef elm::List<Edge *> edges_t;
 public:
+	inline Vertex(void): idx(0) { }
 	inline int index(void) const { return idx; }
 
 	typedef edges_t::iter EdgeIter;
