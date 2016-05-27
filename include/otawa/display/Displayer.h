@@ -94,11 +94,13 @@ public:
 	virtual bool accepts(output_mode_t out) = 0;
 	virtual Displayer *make(const AbstractGraph& g, const Decorator& d, output_mode_t out = OUTPUT_ANY) = 0;
 
+	static Displayer *display(const AbstractGraph& g, const Decorator& d, output_mode_t out = OUTPUT_ANY);
 	static Provider *get(cstring name = "");
 	static Provider *get(output_mode_t out);
 
 private:
 	static List<Provider *> provs;
+	static Provider *def;
 };
 
 } }	// otawa::display

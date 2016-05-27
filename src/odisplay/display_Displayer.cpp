@@ -204,6 +204,10 @@ Provider::~Provider(void) {
 /**
  * @fn Displayer *DisplayProvider::make(const AbstractGraph& g, const Decorator& d, output_t out);
  * Called to generate a displayer for the given graph, decorator and, optionally the output mode.
+ * @param g		Graph to display.
+ * @param d		Decorator to generate vertices and edges content.
+ * @param out	Required output.
+ * @return		Graph displayer.
  */
 
 /**
@@ -272,9 +276,34 @@ Provider *Provider::get(output_mode_t out) {
 
 }
 
+
+/**
+ * Build a displayer from the default provider.
+ * Called to generate a displayer for the given graph, decorator and, optionally the output mode.
+ * @param g		Graph to display.
+ * @param d		Decorator to generate vertices and edges content.
+ * @param out	Required output.
+ * @return		Graph displayer.
+ */
+Displayer *Provider::display(const AbstractGraph& g, const Decorator& d, output_mode_t out) {
+	if(!def) {
+		def = Provider::get(out);
+		if(!def)
+			throw otawa::Exception(_ << "no display can be found!");
+	}
+	return def->make(g, d, out);
+}
+
+
 /**
  * List of display providers.
  */
 List<Provider *> Provider::provs;
+
+
+/**
+ * Default provider.
+ */
+Provider *Provider::def = 0;
 
 } }	// otawa::display
