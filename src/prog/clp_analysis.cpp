@@ -47,7 +47,6 @@
 #include <otawa/hard/Memory.h>
 #include <otawa/dfa/State.h>
 #include <elm/log/Log.h>
-#include <time.h>
 
 using namespace elm;
 using namespace otawa;
@@ -679,9 +678,9 @@ void Value::widening(const Value& val) {
 		// go to negatives
 		uintn_t absd = elm::abs(_delta);
 		uintn_t startd = start() - val.start(), stopd = stop() - val.stop();
-		if( absd != elm::abs(val.delta())
-		|| (stopd != 0 && stopd != absd)
-		|| startd != absd)
+		if( absd != elm::abs(val.delta())	// if the absolute value of the deltas are different
+		|| (stopd != 0 && stopd != absd)	// if the difference between stop values do not fall on delta... should be (stopd % absd) != 0
+		|| startd != absd)	// if the difference between start values do not fall on dela ... should be (startd % absd) != 0
 			absd = 1;
 		set(_kind, stop(), -absd, UMAXn / absd);
 	}
@@ -2833,6 +2832,10 @@ void Analysis::setup(WorkSpace *ws) {
 void Analysis::processWorkSpace(WorkSpace *ws) {
 	clock_t clockWorkSpace;
 	clockWorkSpace = clock();
+
+	system::StopWatch watchWorkSpace;
+	watchWorkSpace.start();
+
 	typedef WideningListener<ClpProblem> ClpListener;
 	typedef WideningFixPoint<ClpListener> ClpFP;
 	typedef HalfAbsInt<ClpFP> ClpAI;
@@ -2917,8 +2920,13 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	_nb_filters = prob.get_nb_filters();
 	_nb_top_filters = prob.get_nb_top_filters();
 	_nb_top_load = prob.get_nb_top_load();
+
 	clockWorkSpace = clock() - clockWorkSpace;
 	elm::cerr << "CLP Analyse takes " << clockWorkSpace << " micro-seconds" << io::endl;
+
+//	watchWorkSpace.stop();
+//	otawa::ot::time t = watchWorkSpace.delay();
+//	elm::cerr << "CLP Analysew takes " << t << " micro-seconds" << io::endl;
 }
 
 
