@@ -7,4 +7,5 @@ Identifier<String> SLICING_CFG_OUTPUT_PATH("otawa::oslice::SLICING_CFG_OUTPUT_PA
 Identifier<InstSet*> SET_OF_REMAINED_INSTRUCTIONS("otawa::oslice::SET_OF_REMAINED_INSTRUCTIONS", 0);
 Identifier<int> SLICE_DEBUG_LEVEL("otawa::oslice::DEBUG_LEVEL", 0);
 Identifier<bool> CFG_OUTPUT("otawa::oslice::CFG_OUTPUT", false);
+Identifier<bool> ENABLE_LIGHT_SLICING("otawa::oslice::ENABLE_LIGHT_SLICING", false);
 }}

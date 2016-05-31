@@ -56,16 +56,11 @@ typedef otawa::Bag<MemoryAccessInformation> inst_clp_bag_t;
 typedef genstruct::Vector<MemoryAccessInformation> clp_vector_t;
 typedef otawa::Bag<otawa::clp::Value> clp_bag_t;
 
-//// for OSlicer and LivenessChecker
-//extern Identifier<inst_clp_bag_t> MEM_READ_BAG_BB;
-//extern Identifier<inst_clp_bag_t> MEM_WRITE_BAG_BB;
-
 // for OSlicer, and InstCollector
 extern Identifier<interested_instructions_t*> INTERESTED_INSTRUCTIONS;
 extern Identifier<InstSet*> SET_OF_REMAINED_INSTRUCTIONS;
 extern Identifier<String> SLICED_CFG_OUTPUT_PATH;
 extern Identifier<String> SLICING_CFG_OUTPUT_PATH;
-//extern Identifier<int> SLICE_DEBUG_LEVEL;
 
 static const t::uint32
 	DISPLAY_BB_MEM_ACCESS = 0x01,

@@ -65,7 +65,6 @@ void InstCollector::collectInterestedInstructions(const CFGCollection& coll, int
 			for(BasicBlock::InstIter inst(bb); inst; inst++) {
 				if(interested(inst)) {
 					DEBUGGING_MESSAGE(elm::cerr << __SOURCE_INFO__ << "adding the interested instruction " << *inst << " @ " << inst->address() << io::endl;)
-					elm::cerr << "adding the interested instruction " << *inst << " @ " << inst->address() << io::endl;
 					// put the interested instructions in the bucket
 					InterestedInstruction* interestedInstruction = new InterestedInstruction(inst, bb);
 					interestedInstructions->add(interestedInstruction);

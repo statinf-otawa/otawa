@@ -10,6 +10,7 @@ typedef elm::avl::Set<Inst*, elm::Comparator<Inst*> > InstSet;
 
 extern p::feature DUMMY_SLICER_FEATURE;
 extern p::feature SLICER_FEATURE;
+extern p::feature LIGHT_SLICER_FEATURE;
 extern p::feature COND_BRANCH_COLLECTOR_FEATURE;
 extern p::feature UNKNOWN_TARGET_COLLECTOR_FEATURE;
 extern p::feature LIVENESS_FEATURE;
@@ -20,6 +21,7 @@ extern Identifier<int> LIVENESS_DEBUG_LEVEL;
 extern Identifier<int> SLICE_DEBUG_LEVEL;
 extern Identifier<bool> CFG_OUTPUT;
 extern Identifier<InstSet*> SET_OF_REMAINED_INSTRUCTIONS;
+extern Identifier<bool> ENABLE_LIGHT_SLICING;
 
 class Manager {
 public:
