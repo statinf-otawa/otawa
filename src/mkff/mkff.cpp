@@ -44,11 +44,94 @@
 #include <otawa/data/clp/features.h>
 #include <otawa/oslice/features.h>
 #include <otawa/oslice_reg/features.h>
-#include <otawa/oslice/LivenessChecker.h>
 #include <time.h>
-
+#define FF
 using namespace elm;
 using namespace otawa;
+
+class CFGOutput: public otawa::display::CFGOutput { // for simple CFG output facility
+public:
+	void processCharacters(StringBuffer& sb, Output& out) {
+		String tempString = sb.toString();
+		for(int i = 0; i < tempString.length(); i++){
+			char c = tempString[i];
+			if(c == '{' || c == '}' || c == '|' || c == '\\' || c == '"') { // adding '\' as the escape character
+				out << '\\';
+				out << c;
+			}
+			else if(c == '<')
+				out << "&lt;";
+			else if(c == '>')
+				out << "&gt;";
+			else
+				out << c;
+		}
+	}
+	CFGOutput(bool _showProp, bool _forFun): otawa::display::CFGOutput(), showProp(_showProp), forFun(_forFun) { }
+	inline void genBBInfo(CFG *cfg, Block *bb, Output& out) {
+		if(!showProp)
+			return;
+		out << " | ";
+		for(PropList::Iter prop(bb); prop; prop++) {
+			out << prop->id()->name() << " = ";
+			StringBuffer temp;
+			prop->id()->print(temp, prop);
+			processCharacters(temp, out);
+			out << "<br ALIGN=\"LEFT\"/>";
+		}
+	}
+	inline void genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out) { /* nothing on the edge */ }
+
+	void genBBLabel(CFG *cfg, Block *b, Output& out) {
+		// display title
+		out << b;
+		// special of entry, exit or synthetic
+		if(b->isEnd() || b->isSynth())
+			return;
+
+		BasicBlock *bb = b->toBasic();
+		// this is used by the AbstractDrawer::Vertex::setup as the separator between the title and the content of the node body
+		out << "\n---\n";
+		// make body
+		cstring file;
+		int line = 0;
+
+		for(BasicBlock::InstIter inst(bb); inst; inst++){ // the body:
+			// display labels
+			for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
+				out << *label << ":<br ALIGN=\"LEFT\"/>";
+			for(Identifier<String>::Getter label(inst, otawa::LABEL); label; label++)
+				out << *label << ":<br ALIGN=\"LEFT\"/>";
+			Option<Pair<cstring, int> > info = workspace()->process()->getSourceLine(inst->address());
+			if(info) {
+				if((*info).fst != file || (*info).snd != line) { // only output once if a file:line is of many instructions
+					file = (*info).fst;
+					line = (*info).snd;
+					out << file << ":" << line << "<br ALIGN=\"LEFT\"/>";
+				}
+			}
+			else {
+				file = "";
+				line = 0;
+			}
+			// display the instruction
+			if(forFun)
+				out << "<Font color=\"#" << hex(sys::System::random(255)) << hex(sys::System::random(255)) << hex(sys::System::random(255)) << "\">";
+			out << "0x" << ot::address(inst->address()) << ":  ";
+			// inst->dump(out);
+			StringBuffer temp;
+			inst->dump(temp);
+			processCharacters(temp, out);
+			if(forFun)
+				out << "</Font>";
+			out << "<br ALIGN=\"LEFT\"/>";
+		}
+		// give special format for Entry and Exit
+		genBBInfo(cfg, bb, out);
+	}
+private:
+	bool showProp, forFun;
+}; // end of the CLASS
 
 const char *noreturn_labels[] = {
 	"_exit",
@@ -603,7 +686,7 @@ private:
 class FFOutput: public CFGProcessor {
 public:
 	FFOutput(Printer& printer, bool removeDuplicatedTarget);
-	inline void setProcessingFullCFG(bool b) { processingFullCFG = b; }
+
 protected:
 	virtual void setup(WorkSpace *ws) {
 		has_debug = ws->isProvided(otawa::SOURCE_LINE_FEATURE);
@@ -629,7 +712,6 @@ private:
 	Printer& _printer;
 	Vector<Address> displayedInstructions; // used to prevent same instruction being displayed twice.
 	bool _removeDuplicatedTarget;
-	bool processingFullCFG;
 };
 
 
@@ -691,7 +773,8 @@ public:
 protected:
 	virtual void work(PropList &props) throw(elm::Exception);
 private:
-	option::SwitchOption xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget, showBlockProps, rawoutput, forFun, slicing, slicing_reg;
+	option::SwitchOption xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget,
+		showBlockProps, rawoutput, forFun, slicing, slicing_reg, showSlicing, lightSlicing;
 };
 
 
@@ -699,7 +782,6 @@ private:
  */
 void Command::work(PropList &props) throw(elm::Exception) {
 	clock_t mkfftime = clock();
-
 
 	// configure the CFG collection
 	Application::parseAddress(arguments()[0]); // make sure the entry symbol is valid
@@ -734,106 +816,10 @@ void Command::work(PropList &props) throw(elm::Exception) {
 		}
 		cout << io::endl;
 	}
-
-	// display the context tree
-	workspace()->require(CONTEXT_TREE_BY_CFG_FEATURE, props);
-	FFOutput out(*p, removeDuplicatedTarget);
-	out.setProcessingFullCFG(true); // working on a non-sliced CFG
-	out.process(workspace(), props);
 #endif
+
 	// Enable the dynamic branch
 	if(dynbranch) {
-
-		class CFGOutput: public otawa::display::CFGOutput { // for simple CFG output facility
-		public:
-			void processCharacters(StringBuffer& sb, Output& out) {
-				String tempString = sb.toString();
-				for(int i = 0; i < tempString.length(); i++){
-					char c = tempString[i];
-					if(c == '{' || c == '}' || c == '|' || c == '\\' || c == '"') { // adding '\' as the escape character
-						out << '\\';
-						out << c;
-					}
-					else if(c == '<')
-						out << "&lt;";
-					else if(c == '>')
-						out << "&gt;";
-					else
-						out << c;
-				}
-			}
-			CFGOutput(bool _showProp, bool _forFun): otawa::display::CFGOutput(), showProp(_showProp), forFun(_forFun) { }
-			inline void genBBInfo(CFG *cfg, Block *bb, Output& out) {
-				if(!showProp)
-					return;
-				out << " | ";
-				for(PropList::Iter prop(bb); prop; prop++) {
-					out << prop->id()->name() << " = ";
-					StringBuffer temp;
-					prop->id()->print(temp, prop);
-					processCharacters(temp, out);
-					out << "<br ALIGN=\"LEFT\"/>";
-				}
-			}
-			inline void genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out) { /* nothing on the edge */ }
-
-			void genBBLabel(CFG *cfg, Block *b, Output& out) {
-				// display title
-				out << b;
-				// special of entry, exit or synthetic
-				if(b->isEnd() || b->isSynth())
-					return;
-
-				BasicBlock *bb = b->toBasic();
-#ifdef NOCODE
-				// this is used by the AbstractDrawer::Vertex::setup as the separator between the title and the content of the node body
-				out << "\n---\n";
-				// make body
-				cstring file;
-				int line = 0;
-
-				for(BasicBlock::InstIter inst(bb); inst; inst++){ // the body:
-					// display labels
-					for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
-						out << *label << ":<br ALIGN=\"LEFT\"/>";
-					for(Identifier<String>::Getter label(inst, otawa::LABEL); label; label++)
-						out << *label << ":<br ALIGN=\"LEFT\"/>";
-					Option<Pair<cstring, int> > info = workspace()->process()->getSourceLine(inst->address());
-					if(info) {
-						if((*info).fst != file || (*info).snd != line) { // only output once if a file:line is of many instructions
-							file = (*info).fst;
-							line = (*info).snd;
-							out << file << ":" << line << "<br ALIGN=\"LEFT\"/>";
-						}
-					}
-					else {
-						file = "";
-						line = 0;
-					}
-					// display the instruction
-					if(forFun)
-						out << "<Font color=\"#" << hex(sys::System::random(255)) << hex(sys::System::random(255)) << hex(sys::System::random(255)) << "\">";
-
-//					elm::avl::Set<Inst*, elm::Comparator<Inst*> >* setInst = oslice::SET_OF_REMAINED_INSTRUCTIONS(b);
-//					if(!setInst->contains(inst))
-//						out << "<Font color=\"#FF0000\">";
-
-					out << "0x" << ot::address(inst->address()) << ":  ";
-					// inst->dump(out);
-					StringBuffer temp;
-					inst->dump(temp);
-					processCharacters(temp, out);
-					if(forFun)
-						out << "</Font>";
-					out << "<br ALIGN=\"LEFT\"/>";
-				}
-#endif
-				// give special format for Entry and Exit
-				genBBInfo(cfg, bb, out);
-			}
-		private:
-			bool showProp, forFun;
-		};
 
 		otawa::display::CFGOutput::INLINING(props) = outputInlinedCFG;
 		otawa::display::CFGOutput::VIRTUALIZED(props) = outputVirtualizedCFG;
@@ -845,9 +831,9 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_RAW_DOT;
 		CFGOutput::RAW_BLOCK_INFO(props) = true;
 
-		int iteration = 0;
-		bool branchDetected = false;
-		bool first = true;
+		int iteration = 0; // the nth time of the iteration
+		bool branchDetected = false; // assuming there is no new branched detected, will be changed by the results of dynamic branch resolution
+		bool first = true; // the first iteration
 		do {
 			if(first)
 				first = false;
@@ -861,7 +847,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 					workspace()->invalidate(otawa::oslice_reg::UNKNOWN_TARGET_COLLECTOR_FEATURE);
 					workspace()->invalidate(otawa::oslice_reg::SLICER_FEATURE);
 				}
-				workspace()->require(COLLECTED_CFG_FEATURE, props);
+				workspace()->require(COLLECTED_CFG_FEATURE, props); // rebuild the CFG
 			} // end of the first time
 
 			if(outputInlinedCFG || outputVirtualizedCFG || outputCFG) {
@@ -870,40 +856,23 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				CFGOutput(showBlockProps, forFun).process(workspace(), props);
 			}
 
+			// before performing the analysis, maybe it is better to slice away the unnecessary ?
+			if(slicing || slicing_reg || lightSlicing) {
 
-			clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = true;
-
-			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false; // clear the flag
-
-			if(slicing || slicing_reg) {
-				// before performing the analysis, maybe it is better to slice away the unnecessary ?
-
-				if(slicing)
+				if(slicing || lightSlicing)
 					workspace()->require(otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE, props);
-				if(slicing_reg)
+				else if(slicing_reg)
 					workspace()->require(otawa::oslice_reg::UNKNOWN_TARGET_COLLECTOR_FEATURE, props);
 
-#define WILLIE_BEGIN_G(x) x
 
-				// output the CFG before and after slicing, this is debugging purpose only
-				if(outputCFG)
-				{
-					string iterationString1 = _ << iteration << "_full_slicing.dot";
-					string iterationString2 = _ << iteration << "_full_sliced.dot";
-
-					if(slicing) {
-						otawa::oslice::SLICING_CFG_OUTPUT_PATH(props) =  iterationString1;
-						otawa::oslice::SLICED_CFG_OUTPUT_PATH(props) =  iterationString2;
-						otawa::oslice::CFG_OUTPUT(props) = true;
-						oslice::LivenessChecker::setDebugLevel(0xFFFF);
-					}
-					if(slicing_reg) {
-						otawa::oslice_reg::SLICING_CFG_OUTPUT_PATH(props) =  iterationString1;
-						otawa::oslice_reg::SLICED_CFG_OUTPUT_PATH(props) =  iterationString2;
-						otawa::oslice_reg::CFG_OUTPUT(props) = true;
-						oslice::LivenessChecker::setDebugLevel(0xFFFF);
-					}
+				if(showSlicing) {
+					otawa::oslice::CFG_OUTPUT(props) = true;
+					String dir = _ << "./" << iteration << "_slicing";
+					otawa::oslice::SLICING_CFG_OUTPUT_PATH(props) = dir;
+					dir = _ << "./" << iteration << "_sliced";
+					otawa::oslice::SLICED_CFG_OUTPUT_PATH(props) = dir;
 				}
+
 
 				// output each individual CFG before slicing
 				if(outputCFG)
@@ -913,38 +882,14 @@ void Command::work(PropList &props) throw(elm::Exception) {
 					CFGOutput(showBlockProps, forFun).process(workspace(), props);
 				}
 
-				{
-					int sum = 0;
-					const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
-					for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
-						for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
-							// only treats BB
-							if(!bi->isBasic())
-								continue;
-							sum = sum + bi->toBasic()->count();
-						}
-					}
-					elm::cerr << "Before slicing : " << sum << " instructions " << io::endl;
-				}
 
-				if(slicing)
+				if(slicing && !lightSlicing)
 					workspace()->require(otawa::oslice::SLICER_FEATURE, props);
-				if(slicing_reg)
+				else if(lightSlicing)
+					workspace()->require(otawa::oslice::LIGHT_SLICER_FEATURE, props);
+				else if(slicing_reg)
 					workspace()->require(otawa::oslice_reg::SLICER_FEATURE, props);
 
-				{
-					int sum = 0;
-					const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
-					for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
-						for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
-							// only treats BB
-							if(!bi->isBasic())
-								continue;
-							sum = sum + bi->toBasic()->count();
-						}
-					}
-					elm::cerr << " After slicing : " << sum << " instructions " << io::endl;
-				}
 
 				// output each individual CFG after slicing
 				if(outputCFG)
@@ -956,7 +901,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 
 				workspace()->require(otawa::REDUCED_LOOPS_FEATURE, props);
 
-				// output each individual CFG after slicing
+				// output the CFG after loop reduction
 				if(outputCFG)
 				{
 					string iterationString = _ << iteration << "_after_reduced_";
@@ -966,27 +911,39 @@ void Command::work(PropList &props) throw(elm::Exception) {
 
 			} // end of slicing
 
+			// STEP: dynamic branch analysis
+			// to ensure that the unknown block does not generate top values which wipes out the whole state
+			clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = true;
+			// set it to false so the branch targets will be detected
+			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false;
+
 			workspace()->require(otawa::dynbranch::DYNBRANCH_FEATURE, props); // perform the analysis
 			// the loop goes on searching new branch target when there is a new target found
 			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
-
 			clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = false;
 
 			iteration++;
 		} while(branchDetected);
 
-		if(outputInlinedCFG || outputVirtualizedCFG || outputCFG) {
-			string iterationString = _ << iteration << "_";
-			otawa::display::CFGOutput::PREFIX(props) = iterationString;
-			CFGOutput(showBlockProps, forFun).process(workspace(), props);
-		}
 	}
 #ifdef FF
+
+	workspace()->invalidate(COLLECTED_CFG_FEATURE); // clean the sliced CFG
+	workspace()->require(COLLECTED_CFG_FEATURE, props); // the final full CFG
+
+	// the final CFG
+	if(outputInlinedCFG || outputVirtualizedCFG || outputCFG) {
+		string iterationString = _ << "final_";
+		otawa::display::CFGOutput::PREFIX(props) = iterationString;
+		CFGOutput(showBlockProps, forFun).process(workspace(), props);
+	}
+
 	// display low-level flow facts
 	ControlOutput ctrl(*p);
 	ctrl.process(workspace(), props);
 
-	out.setProcessingFullCFG(false); // working on a possibly sliced CFG
+	// display the context tree
+	FFOutput out(*p, removeDuplicatedTarget);
 	out.process(workspace(), props);
 
 	// output footer for XML
@@ -996,6 +953,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	delete p;
 #endif
 
+#ifndef FF
 	class printer {
 	public:
 		void addressOf(io::Output& out, CFG *cfg, Address address) {
@@ -1012,21 +970,13 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			}
 		}
 
-		void printSourceLine(Output& out, Address address, WorkSpace* _ws) {
-//			Option<Pair< cstring, int> > loc = _ws->process()->getSourceLine(address);
-//			if(loc)
-//				out << (*loc).fst << ":" << (*loc).snd;
-		}
-
 		void printMulti(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va, WorkSpace* _ws, String s) {
 			out << s << " ";
 			addressOf(out, cfg, inst->address());
 
 			if(va) {
 				out << " to "
-					<< "\t// 0x" << inst->address() << " (";
-				printSourceLine(out, inst->address(), _ws);
-				out << ")\n";
+					<< "\t// 0x" << inst->address() << "\n";
 				for(Vector<Address>::Iterator vai(*va); vai; vai++) {
 					out << "\t";
 					addressOf(out, cfg, *vai);
@@ -1034,22 +984,16 @@ void Command::work(PropList &props) throw(elm::Exception) {
 						out << ";";
 					else
 						out << ",";
-					out << "\t// 0x" << *vai << " (";
-					printSourceLine(out, *vai, _ws);
-					out << ") switch-like branch in " << nameOf(cfg) << io::endl;
+					out << "\t// 0x" << *vai << " switch-like branch in " << nameOf(cfg) << io::endl;
 				}
 			}
 			else if(IGNORE_CONTROL(inst)) {
 				out << " has no target (infeasible path)."
-					<< "\t// 0x" << inst->address() << " (";
-				printSourceLine(out, inst->address(), _ws);
-				out << ") switch-like branch in " << nameOf(cfg) << io::endl;
+					<< "\t// 0x" << inst->address() << " switch-like branch in " << nameOf(cfg) << io::endl;
 			}
 			else {
 				out << " to ?;"
-					<< "\t// 0x" << inst->address() << " (";
-				printSourceLine(out, inst->address(), _ws);
-				out << ") switch-like branch in " << nameOf(cfg) << io::endl;
+					<< "\t// 0x" << inst->address() << " switch-like branch in " << nameOf(cfg) << io::endl;
 			}
 			out << io::endl;
 		}
@@ -1063,50 +1007,40 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				// only treats BB
 				if(!bi->isBasic())
 					continue;
-
 				BasicBlock* bb = bi->toBasic();
 				Inst* lastInst = bb->last();
-
 				if(BRANCH_TARGET(lastInst).exists()) {
 					Vector<Address> va;
 					for(Identifier<Address>::Getter target(lastInst, BRANCH_TARGET); target; target++)
 						va.push(*target);
-
 					if(removeDuplicatedTarget) {
 						// to prevent same instruction printed twice
-						if(displayedInstructions.contains(lastInst->address())) {
+						if(displayedInstructions.contains(lastInst->address()))
 							continue;
-						}
-						else if(va) {
+						else if(va)
 							displayedInstructions.add(lastInst->address());
-						}
 					}
-
 					printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multibranch");
 				}
 				else if(CALL_TARGET(lastInst).exists()) {
 					Vector<Address> va;
 					for(Identifier<Address>::Getter target(lastInst, CALL_TARGET); target; target++)
 						va.push(*target);
-
 					if(removeDuplicatedTarget) {
 						// to prevent same instruction printed twice
-						if(displayedInstructions.contains(lastInst->address())) {
+						if(displayedInstructions.contains(lastInst->address()))
 							continue;
-						}
-						else if(va) {
+						else if(va)
 							displayedInstructions.add(lastInst->address());
-						}
 					}
-
 					printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multicall");
 				}
-			}
-		}
+			} // for each BB
+		} // for each CFG
 	}
-
+#endif
 	mkfftime = clock() - mkfftime;
-	elm::cerr << "mkff: " << mkfftime << " micro-seconds" << io::endl;
+	elm::cerr << "mkff takes " << mkfftime << " micro-seconds" << io::endl;
 }
 
 
@@ -1130,7 +1064,9 @@ Command::Command(void):
 		rawoutput(*this, option::cmd, "-R", option::cmd, "--raw_output", option::description, "generate raw dot output file (without calling dot)", option::end),
 		forFun(*this, option::cmd, "-F", option::cmd, "--for_fun", option::description, "the generated dot files will be colourful :)", option::end),
 		slicing(*this, option::cmd, "-T", option::cmd, "--test", option::description, "apply the slicing during dynamic branching analysis", option::end),
-		slicing_reg(*this, option::cmd, "-G", option::cmd, "--slicing_reg", option::description, "apply the slicing (lite) during dynamic branching analysis", option::end)
+		slicing_reg(*this, option::cmd, "-G", option::cmd, "--slicing_reg", option::description, "apply the slicing (lite) during dynamic branching analysis", option::end),
+		showSlicing(*this, option::cmd, "-SS", option::cmd, "--show_slicing", option::description, "showing the progress of the slicing in dot files. User may specify otawa::oslice::SLICED_CFG_OUTPUT_PATH and otawa::oslice::SLICING_CFG_OUTPUT_PATH for the output folder", option::end),
+		lightSlicing(*this, option::cmd, "-LS", option::cmd, "--light_slicing", option::description, "apply the slicing (lite) during dynamic branching analysis", option::end)
 {
 }
 
@@ -1139,7 +1075,7 @@ Command::Command(void):
  * Display the flow facts.
  */
 FFOutput::FFOutput(Printer& printer, bool removeDuplicatedTarget): CFGProcessor("FFOutput", Version(1, 0, 0)), has_debug(false), _printer(printer), _removeDuplicatedTarget(removeDuplicatedTarget) {
-	//require(CONTEXT_TREE_BY_CFG_FEATURE);
+	require(CONTEXT_TREE_BY_CFG_FEATURE);
 }
 
 
@@ -1148,14 +1084,10 @@ FFOutput::FFOutput(Printer& printer, bool removeDuplicatedTarget): CFGProcessor(
 void FFOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 	ASSERT(ws);
 	ASSERT(cfg);
-	if(processingFullCFG) {
-		ContextTree *ctree = CONTEXT_TREE(cfg);
-		ASSERT(ctree);
-		scanFun(ctree);
-	}
-	else {
-		scanTargets(cfg);
-	}
+	ContextTree *ctree = CONTEXT_TREE(cfg);
+	ASSERT(ctree);
+	scanFun(ctree);
+	scanTargets(cfg);
 }
 
 /**
