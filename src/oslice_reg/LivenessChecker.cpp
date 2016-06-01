@@ -24,7 +24,7 @@ static Identifier<int> MEM_ACCESS_IDENTIFIED("", 0);
 
 namespace otawa { namespace oslice_reg {
 
-Identifier<int> LIVENESS_DEBUG_LEVEL("otawa::oslice_reg::LIVENESS_MANAGER_DEBUG_LEVEL", 0);
+Identifier<int> LIVENESS_DEBUG_LEVEL("otawa::oslice_reg::LIVENESS_DEBUG_LEVEL", 0);
 p::feature LIVENESS_FEATURE("otawa::oslice_reg::LIVENESS_FEATURE", new Maker<LivenessChecker>());
 
 p::declare LivenessChecker::reg = p::init("otawa::oslice_reg::LivenessChecker", Version(2, 0, 0))

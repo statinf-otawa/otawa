@@ -228,8 +228,9 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
     	// In any case, the values of the back-edges are not needed anymore
     	for(Block::EdgeIter inedge = current->ins(); inedge; inedge++) {
     		// TODO no more needed case (isn't it?)
-    		if(inedge->sink()->isSynth())
-    			continue;
+    		// REMOVED: if the header of the loop is a SynthBlock, this will not remove the states from the back edges.
+    		//if(inedge->sink()->isSynth())
+    		//	continue;
     		if(Dominance::dominates(current, inedge->source()))
     			fp.unmarkEdge(*inedge);
     	}
@@ -347,7 +348,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 		// unknown CFG
 		if(!current->toSynth()->callee()) {
 			fp.assign(out, fp.top());
-			fp.update(out, fp.top(), current); // the unknown block will have top state since we can not make any assumption on its behaviour
+			fp.update(out, fp.top(), current); // the unknown block will have top state since we can not make any assumption on its behavior
 			fp.markEdge(return_edge, out);
 			workList->push(return_edge->sink());
 		}
@@ -364,7 +365,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 
 	        // propagate to function entry
 			fp.assign(out, in);
-			fp.markEdge(cur_cfg->entry(), out);
+			fp.markEdge(cur_cfg->entry(), out); // the state of the block = the output state = the input state
 			workList->push(cur_cfg->entry());
 		}
 	}
@@ -526,8 +527,9 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(Block *bb)
 
 	HAI_TRACE("\t\tunion of input edges");
 	for(Block::EdgeIter inedge = bb->ins(); inedge; inedge++) {
-		if (inedge->sink()->isSynth())
-			continue;
+		// REMOVED: this statement needs to be removed otherwise the state from the input edge to a SynthBlock will not be used.
+		//if (inedge->sink()->isSynth())
+		//	continue;
 		/* TODO fix it when Inlining will be  re-activated.
 		if(HAI_BYPASS_TARGET(bb) && (inedge->kind() == Edge::VIRTUAL_RETURN))
 			continue;*/

@@ -35,7 +35,7 @@ namespace otawa { namespace dynbranch {
  * TODO
  */
 
-p::declare GlobalAnalysis::reg = p::init("GlobalAnalysisFeature", Version(1,0,0))
+p::declare GlobalAnalysis::reg = p::init("otawa::dynbranch::GlobalAnalysisFeature", Version(1,0,0))
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
 	.require(dfa::INITIAL_STATE_FEATURE)

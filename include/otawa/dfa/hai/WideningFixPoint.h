@@ -121,7 +121,6 @@ inline void WideningFixPoint<Listener >::init(HalfAbsInt<WideningFixPoint> *_ai)
 	
 template < class Listener >	
 void WideningFixPoint<Listener >::fixPoint(Block *bb, bool &fixpoint, Domain &in, bool firstTime) const {
-		
 		FixPointState *fpstate = ai->getFixPointState(bb);
 		Domain newHeaderState(bottom());
 		fixpoint = false;
@@ -143,11 +142,10 @@ void WideningFixPoint<Listener >::fixPoint(Block *bb, bool &fixpoint, Domain &in
 				}
 			}
 #			endif
-			
 			if (prob.equals(newHeaderState, fpstate->headerState))
 				fixpoint = true;
 		}
-		
+
 		assign(fpstate->headerState, newHeaderState);
 		assign(in, newHeaderState);
 		HAIW_TRACE("after widening " << in << io::endl);

@@ -10,13 +10,12 @@
 
 namespace otawa { namespace oslice {
 
-
-
 class Slicer: public otawa::Processor {
 public:
 
 	Slicer(AbstractRegistration& _reg = reg);
 	static p::declare reg;
+
 	virtual void configure(const PropList &props);
 
 protected:
@@ -37,18 +36,25 @@ protected:
     genstruct::HashTable<CFG *, CFGMaker *> map;
     genstruct::FragTable<CFGMaker *> makers;
 
-
-	//bool interestingAddrs(clp_value_set_t const & a, clp_value_set_t const & b);
     bool interestingAddrs(otawa::dfa::MemorySet::t const & a, otawa::dfa::MemorySet::t const & b);
 	bool interestingRegs(elm::BitVector const & a, elm::BitVector const & b);
 
     // used for debugging
-    String slicingCFGOutputPath;
-    String slicedCFGOutputPath;
+    String _slicingCFGOutputPath;
+    String _slicedCFGOutputPath;
     CFGCollection *sliced_coll;
     t::uint32 _debugLevel;
-    bool outputCFG;
+    bool _outputCFG;
+    bool _lightSlicing;
 };
+
+
+class LightSlicer: public Slicer {
+public:
+	LightSlicer(AbstractRegistration& _reg = reg): Slicer(_reg) { _lightSlicing = true; }
+	static p::declare reg;
+};
+
 
 } } // otawa::oslice
 
