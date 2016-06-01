@@ -72,6 +72,7 @@ public:
 	inline bool contains(N *item) const { return Graph::contains(item); }
 	inline bool isEmpty(void) const { return Graph::isEmpty(); }
  	inline operator bool(void) const { return !isEmpty(); }
+ 	inline N *at(int i) const { return OTAWA_GCAST(N *, at(i)); }
 	
 	// Iterator class
 	class Iterator: public elm::PreIterator<Iterator, N *> {

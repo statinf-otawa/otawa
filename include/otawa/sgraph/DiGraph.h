@@ -78,6 +78,7 @@ public:
 	typedef v_t::Iterator VertexIter;
 	inline VertexIter vertices(void) const { return VertexIter(v); }
 	inline int count(void) const { return v.count(); }
+	inline Vertex *at(int index) const { return v[index]; }
 private:
 	Vertex *e;
 	v_t v;
@@ -144,6 +145,7 @@ public:
 
 	inline V *entry(void) const { return static_cast<V *>(DiGraph::entry()); }
 	inline VertexIter vertices(void) const { return VertexIter(DiGraph::vertices()); }
+	inline V *at(int index) const { return static_cast<V *>(DiGraph::at(index)); }
 
 };
 

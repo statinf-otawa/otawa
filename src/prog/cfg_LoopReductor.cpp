@@ -19,7 +19,9 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/genstruct/HashTable.h>
 #include <elm/genstruct/SortedSLList.h>
+#include <elm/util/misc.h>
 #include <otawa/cfg.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/proc/Feature.h>
@@ -29,7 +31,19 @@
 #include <otawa/cfg/features.h>
 #include <otawa/cfg/LoopReductor.h>
 
+#include <otawa/display/Displayer.h>
+#include <otawa/display/CFGDisplayer.h>
+
 using namespace otawa::dfa;
+
+extern "C" void exit(int);
+
+//#define DO_DEBUG
+#ifdef DO_DEBUG
+#	define DEBUG(s)	cerr << "DEBUG: " << s
+#else
+#	define DEBUG(s)
+#endif
 
 namespace otawa {
 
@@ -56,7 +70,7 @@ namespace otawa {
 p::declare LoopReductor::reg = p::init("otawa::LoopReductor", Version(2, 0, 0))
 	.require(COLLECTED_CFG_FEATURE)
 	.invalidate(COLLECTED_CFG_FEATURE)
-	.provide(LOOP_HEADERS_FEATURE)
+	//.provide(LOOP_HEADERS_FEATURE)
 	.provide(COLLECTED_CFG_FEATURE)
 	.provide(REDUCED_LOOPS_FEATURE)
 	.make<LoopReductor>();
@@ -71,6 +85,24 @@ Identifier<bool> LoopReductor::MARK("otawa::LoopReductor::MARK", false);
 
 Identifier<dfa::BitSet*> LoopReductor::IN_LOOPS("otawa::LoopReductor::IN_LOOPS", 0);
 
+#ifdef DO_DEBUG
+	static Identifier<bool> TO_DUMP("", false);
+	static void displayCFG(WorkSpace *ws, CFG *cfg, cstring tag) {
+		static display::Provider *prov = 0;
+		if(!prov)
+			prov = display::Provider::get();
+		display::CFGDecorator deco(ws);
+		deco.display_assembly = false;
+		deco.display_props = false;
+		display::DisplayedCFG dcfg(*cfg);
+		display::Displayer *disp = prov->make(dcfg, deco, display::OUTPUT_RAW_DOT);
+		disp->setPath(sys::Path(_ << "graphs/" << cfg->label() << "." << tag << ".dot"));
+		disp->process();
+		delete disp;
+	}
+#endif
+
+
 /**
  */
 void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
@@ -78,17 +110,47 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 
 	// make the makers
 	for(CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++) {
-		CFGMaker *vcfg = new CFGMaker(cfg->first());
+		CFGMaker *vcfg = new CFGMaker(cfg->first(), true);
 		vcfgvec.add(vcfg);
 	}
 
 	// reduce loops
 	int i = 0;
-	for(CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++, i++) {
+	for(CFGCollection::Iterator g(*orig_coll); g; g++, i++) {
+		//displayCFG(ws, cfg, "old");
 		if(logFor(LOG_FUN))
-			log << "\treducing function " << *cfg << io::endl;
-		CFGMaker *vcfg = vcfgvec.get(i);
-		reduce(vcfg, cfg);
+			log << "\treducing function " << *g << io::endl;
+
+		// duplicate graph
+		CFGMaker& maker = *vcfgvec.get(i);
+		genstruct::HashTable<Block *, Block *> map;
+		for(CFG::BlockIter v = g->blocks(); v; v++)
+			map.put(v, clone(maker, v));
+		for(CFG::BlockIter v = g->blocks(); v; v++)
+			for(Block::EdgeIter e = v->outs(); e; e++)
+				maker.add(map.get(v), map.get(e->sink()), new Edge(e->flags()));
+
+		// find loops
+		genstruct::Vector<dfa::BitSet *> L;
+		computeInLoops(maker, L);
+
+		// split nodes
+		reduce(maker, L);
+#		ifdef DO_DEBUG
+			if(TO_DUMP(maker))
+				displayCFG(ws, g, "old");
+#		endif
+		if(logFor(LOG_FUN) && g->count() != maker.count())
+			log << "\t\tirreducible loops of " << *g << " ("<< g->count() << " blocks)"
+				<< " removed (" << maker.count() << " blocks)\n";
+
+		// cleanup
+		for(loops_t::Iterator l(L); l; l++)
+			delete l;
+		for(CFG::BlockIter v = maker.blocks(); v; v++) {
+			delete IN_LOOPS(v);
+			v->removeProp(IN_LOOPS);
+		}
 	}
 
 }
@@ -99,8 +161,15 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 void LoopReductor::cleanup(WorkSpace *ws) {
 	CFGCollection *new_coll = new CFGCollection();
 	for(int i = 0; i < vcfgvec.count(); i++) {
+#		ifdef DO_DEBUG
+			bool to_dump = TO_DUMP(vcfgvec[i]);
+#		endif
 		CFG *cfg = vcfgvec[i]->build();
 		new_coll->add(cfg);
+#		ifdef DO_DEBUG
+			if(to_dump)
+				displayCFG(ws, cfg, "new");
+#endif
 		if(i == 0)
 			addRemover(COLLECTED_CFG_FEATURE, ENTRY_CFG(ws) = cfg);
 		delete vcfgvec[i];
@@ -108,140 +177,6 @@ void LoopReductor::cleanup(WorkSpace *ws) {
 	track(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = new_coll);
 }
 
-
-
-// sort edge by increasing target address
-class EdgeDestOrder {
-public:
-	static inline int compare(Edge *e1, Edge *e2) {
-		if(e1->target() && e2->target() && e1->target()->address() && e2->target()->address())
-			if (e1->target()->address() > e2->target()->address())
-				return 1;
-			else
-				return -1;
-		else
-			return 0;
-	}
-};
-
-
-/**
- * Perform the depth-first search
- * @param bb		Root of the spanning tree.
- * @param ancestors	Used to store ancestors.
- */
-void LoopReductor::depthFirstSearch(Block *bb, Vector<Block *> *ancestors) {
-	ancestors->push(bb);
-	MARK(bb) = true;
-	//cerr << "DEBUG: visiting " << bb << " (" << bb->cfg() << ")" << io::endl;
-
-	// S = { v / (bb, v) in E }
-	SortedSLList<Edge *, EdgeDestOrder> successors;
-	for(Block::EdgeIter edge = bb->outs(); edge; edge++)
-		successors.add(*edge);
-
-	// foreach (bb, v) in S
-	for(SortedSLList<Edge*, EdgeDestOrder>::Iterator edge(successors); edge; edge++) {
-		if(!edge->target()->isExit()) {
-
-			// if not MARK(v) go down
-			if (MARK(edge->target()) == false)
-			//if(!ancestors->contains(edge->target()))
-				depthFirstSearch(edge->target(), ancestors);
-
-			// else assert MARK(v)
-			else {
-
-				// is it a back edge?
-				if(ancestors->contains(edge->target())) {
-					LOOP_HEADER(edge->target()) = true;
-					BACK_EDGE(edge) = true;
-					//cerr << "DEBUG:\tback edge " << *edge << io::endl;
-
-					// foreach w in S[v, bb] do IN_LOOPS(w) <- IN_LOOPS U { v }
-					bool inloop = false;
-					for(Vector<Block*>::Iterator member(*ancestors); member; member++) {
-						if(*member == edge->target())
-							inloop = true;
-						if(inloop)
-							IN_LOOPS(member)->add(edge->target()->index());
-					}
-				}
-
-				// foreach t in IN_LOOPS(v) do
-				dfa::BitSet *il_v = IN_LOOPS(edge->target());
-				ASSERT(il_v);
-				for (dfa::BitSet::Iterator bit(*il_v); bit; bit++) {
-					bool inloop = false;
-
-					// foreach w in S[t, bb] do IN_LOOPS[w] <- IN_LOOPS[w] U { t }
-					for (Vector<Block*>::Iterator member(*ancestors); member; member++) {
-						if (member->index() == *bit)
-							inloop = true;
-						if (inloop)
-							IN_LOOPS(member)->add(*bit);
-					}
-				}
-			}
-		}
-	}
-
-	// go up
-	MARK(bb) = false;
-	ancestors->pop();
-}
-
-
-/**
- * Compute the IN_LOOPS sets.
- * @param maker		Graph to work with.
- */
-void LoopReductor::computeInLoops(CFGMaker *maker) {
-	genstruct::Vector<Block *> S;
-	dfa::BitSet D(maker->count() + 2);
-	S.add(maker->entry());
-	while(S) {
-		Block *v = S.top();
-		D.add(v->index());
-		bool pushed = false;
-		for(Block::EdgeIter e = v->outs(); e; e++) {
-			Block *w = e->sink();
-			if(w->isEnd())
-				continue;
-
-			// if w not in D then dig deeper
-			if(!D.contains(w->index())) {
-				S.push(w);
-				pushed = true;
-				break;
-			}
-
-			// is it a loop?
-			else if(S.contains(w)) {
-				LOOP_HEADER(w) = true;
-				BACK_EDGE(e) = true;
-				for(int i = S.length() - 1; S[i] != w; i--) {
-					IN_LOOPS(S[i])->add(w->index());
-					//cerr << "DEBUG: il(" << S[i] << ") = " << **IN_LOOPS(S[i]) << io::endl;
-				}
-				IN_LOOPS(w)->add(w->index());
-			}
-
-			// irreducible loop?
-			else {
-				dfa::BitSet il = **IN_LOOPS(w);
-				il.remove(**IN_LOOPS(v));
-				if(il.count() > 0 && !il.contains(w->index())) {
-					//cerr << "DEBUG: source il(" << v << ") = " << **IN_LOOPS(v) << io::endl;
-					//cerr << "DEBUG: sink il(" << w << ") = " << **IN_LOOPS(w) << io::endl;
-					IN_LOOPS(w)->add(w->index());
-				}
-			}
-		}
-		if(!pushed)
-			S.pop();
-	}
-}
 
 
 /**
@@ -276,262 +211,312 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b, bool duplicate) {
 		return nsb;
 	}
 
+	else if(b->isEntry())
+		return maker.entry();
+	else if(b->isExit())
+		return maker.exit();
+	else if(b->isUnknown())
+		return maker.unknown();
 	else {
 		ASSERT(false);
 		return 0;
 	}
+
 }
 
 
 /**
  * Reduce irregular loops.
+ * @param G		Graph to process.
+ * @param L		List of header loops.
  */
-void LoopReductor::reduce(CFGMaker *maker, CFG *cfg) {
-	HashTable<Block *, Block *> map;
-	map.put(cfg->entry(), maker->entry());
-	map.put(cfg->exit(),maker->exit());
-	if(cfg->unknown())
-		map.put(cfg->unknown(), maker->unknown());
+void LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 
-	// duplicate the basic blocks
-	map.put(cfg->entry(), maker->entry());
-	for(CFG::BlockIter b = cfg->blocks(); b; b++)
-		if(!b->isEnd()) {
-			Block *nb = clone(*maker, b);
-			map.put(b, nb);
-		}
-	map.put(cfg->exit(), maker->exit());
+	// for l ∈ L do
+	for(loops_t::Iterator l(L); l; l++)
 
-	// connect edges
-	for(CFG::BlockIter b = cfg->blocks(); b; b++) {
-		for(Block::EdgeIter edge = b->outs(); edge; edge++) {
-			Block *vsource = map.get(edge->source(), 0);
-			Block *vtarget = map.get(edge->target(), 0);
-			ASSERT(vsource && vtarget);
-			Edge *nedge = new Edge(edge->flags());
-			maker->add(vsource, vtarget, nedge);
-		}
-	}
+		// if |l| > 1 then
+		if(l->count() > 1) {
+#			ifdef DO_DEBUG
+				TO_DUMP(G) = true;
+#			endif
 
-	// prepare irregular analysis
-	Vector<Block*> *ancestors = new Vector<Block*>();
-	//for(CFG::BlockIter bb = maker->blocks(); bb; bb++)
-	//	IN_LOOPS(bb) = new dfa::BitSet(maker->count());
-
-	// do the Depth-First Search, compute the ancestors sets, and mark loop headers
-	/*depthFirstSearch(maker->entry(), ancestors);
-	for(CFG::BlockIter v = maker->blocks(); v; v++) {
-		cerr << "DEBUG: B" << v->index() << " in ";
-		for(dfa::BitSet::Iterator w(**IN_LOOPS(v)); w; w++)
-			cerr << ", B" << *w;
-		cerr << io::endl;
-	}*/
-	//return;
-
-	// perform the transformation
-	bool done = false;
-	int rnd = 0;
-	if(logFor(LOG_FUN))
-		log << "\t\t" << maker->count() << " vertices before\n";
-	while(!done) {
-		//cerr << "\nDEBUG: new pass: " << maker->count() << "\n";
-		//cerr << "\nDEBUG: new pass: " << maker->count() << "\n";
-		done = true;
-		rnd++;
-
-		// build IN_LOOPS
-		ancestors->clear();
-		for(CFG::BlockIter bb = maker->blocks(); bb; bb++)
-			IN_LOOPS(bb) = new dfa::BitSet(maker->count());
-		//depthFirstSearch(maker->entry(), ancestors);
-		computeInLoops(maker);
-		for(CFG::BlockIter v = maker->blocks(); v; v++) {
-			MARK(v) = false;
-			DUPLICATE_OF(v) = 0;
-			for(Block::EdgeIter e = v->ins(); e; e++) {
-				Block *w = e->source();
-				dfa::BitSet d = **IN_LOOPS(v);
-				d.remove(**IN_LOOPS(w));
-				//cout << "DEBUG: " << *e << " -> " << d.count() << "\t" << d << io::endl;
-			}
-		}
-
-		// (1) compute the D
-		Block *V[maker->count()];
-		dfa::BitSet *D[maker->count()];
-		genstruct::Vector<Block *> S;
-		for(CFG::BlockIter v = maker->blocks(); v; v++) {
-			//cerr << "DEBUG: " << *v << " in " << **IN_LOOPS(v) << io::endl;
-			V[v->index()] = v;
-			D[v->index()] = new dfa::BitSet(maker->count());
-			for(Block::EdgeIter e = v->ins(); e; e++) {
-				Block *w = e->source();
-				dfa::BitSet d = **IN_LOOPS(v);
-				d.remove(**IN_LOOPS(w));
-				D[v->index()]->add(d);
-			}
-			if(D[v->index()]->count() > 1)
-				S.add(v);
-		}
-		if(!S)		// no irreducible loop: simply exit
-			break;
-
-		// (2) build the classes
-		genstruct::Vector<Pair<dfa::BitSet *, dfa::BitSet *> > C1;
-		genstruct::Vector<Pair<dfa::BitSet *, dfa::BitSet *> > C2;
-		genstruct::Vector<Pair<dfa::BitSet *, dfa::BitSet *> > *CC = &C1;
-		genstruct::Vector<Pair<dfa::BitSet *, dfa::BitSet *> > *CN = &C2;
-		for(int i = 0; i < S.count(); i++) {
-			Block *v = S[i];
-			dfa::BitSet *m = new dfa::BitSet(*D[v->index()]);
-			dfa::BitSet *s = new dfa::BitSet(maker->count());
-			s->add(v->index());
-			CN->add(pair(m, s));
-			for(int j = 0; j < CC->count(); j++) {
-				dfa::BitSet *mp = (*CC)[j].fst;
-				dfa::BitSet *sp = (*CC)[j].snd;
-				//cerr << "DEBUG: " << *m << " (" << *s << ") meets " << *mp << " (" << *sp  << ") = ";
-				if(m->meets(*mp)) {
-					m->add(*mp);
-					s->add(*sp);
-					//cerr << true << io::endl;
-				}
-				else {
-					CN->add(pair(mp, sp));
-					//cerr << false << io::endl;
-				}
-			}
-			CC->clear();
-			genstruct::Vector<Pair<dfa::BitSet *, dfa::BitSet *> > *CT = CC;
-			CC = CN;
-			CN = CT;
-		}
-
-		// (3) find best of each class
-		static Identifier<bool> BEST("", false);
-		int cost[maker->count()];
-		for(int i = 0; i < CC->count(); i++) {
-			int bcost = 0, bvi = -1;
-			if(logFor(LOG_BLOCK))
-				log << "\t\tirreducible nest " << *((*CC)[i].fst) << io::endl;
-
-			//cerr << "DEBUG: mask = " << *(*CC)[i].fst << ", set = " << *(*CC)[i].snd << io::endl;
-
-			// compute costs (based on more represented header)
-			/*dfa::BitSet *s = (*CC)[i].snd;
-			for(dfa::BitSet::Iterator vi(*s); vi; vi++) {
-				cost[*vi] = 0;
-				for(dfa::BitSet::Iterator wi(*s); wi; wi++)
-					if(*wi != *vi && D[*wi]->contains(*vi))
-						cost[*vi]++;
-				//cerr << "DEBUG: com[" << *vi << "] = " << com[*vi] << " (" << *D[*vi] << ")\n";
-			}
-			for(dfa::BitSet::Iterator vi(*s); vi; vi++)
-				if(cost[*vi] > bcom) {
-					bcom = cost[*vi];
-					bvi = *vi;
-				}*/
-
-			// compute costs (based on maximal duplication)
-			dfa::BitSet *m = (*CC)[i].fst;
-			for(dfa::BitSet::Iterator vi(*m); vi; vi++) {
-				cost[*vi] = 0;
-				genstruct::Vector<int> wl;
-				dfa::BitSet done(maker->count());
-				done.add(*vi);
-				for(dfa::BitSet::Iterator wi(*m); wi; wi++)
-					if(*wi != *vi)
-						wl.add(*wi);
-				while(wl) {
-					int wi = wl.pop();
-					cost[*vi]++;
-					done.add(wi);
-					for(Block::EdgeIter e = V[wi]->outs(); e; e++) {
-						Block *u = e->target();
-						int ui = u->index();
-						if(!done.contains(ui) && m->meets(**IN_LOOPS(u)))
-							wl.push(ui);
-					}
-				}
-				if(logFor(LOG_BLOCK))
-					log << "\t\t\tcost[" << *vi << "] = " << cost[*vi] << io::endl;
-				if(bvi < 0 || bcost > cost[*vi]) {
-					bvi = *vi;
-					bcost = cost[*vi];
-				}
-			}
-
-			// mark the best!
-			BEST(V[bvi]) = true;
-			//BEST(V[4]) = true;
+			// compute best header and nodes to duplicate	O(|L| × |N|)
 			if(logFor(LOG_FUN))
-				log << "\t\t" << bvi << " is chosen in nest " << *m << io::endl;
-		}
+				log << "\t\tirregular loop headed by " << **l << io::endl;
 
-		// foreach b in V do
-		for(CFG::BlockIter b = maker->blocks(); b; b++) {
-			Vector<Edge*> toDel;
+			// bh ← 0; bc ← ∅
+			dfa::BitSet s1(G.count());
+			dfa::BitSet s2(G.count());
+			Block *bh = 0;
+			dfa::BitSet *bs = &s1, *cs = &s2;
 
-			// foreach (v, b) in E do
-			for(Block::EdgeIter edge = b->ins(); edge; edge++) {
+			// for h ∈ l do
+			for(dfa::BitSet::Iterator hi(**l); hi; hi++) {
+				Block *h = G.at(hi);
 
-				// compute loops entered by the edge
-				// enteredLoops = IN_LOOPS(b) \ IN_LOOPS(v)
-				dfa::BitSet enteredLoops(**IN_LOOPS(b));
-				enteredLoops.remove(**IN_LOOPS(edge->source()));
+				// C ← ∅
+				dfa::BitSet& C = *cs;
+				C.empty();
 
-				// the edge is a irregular entry if it enters one loop, and edge->target() == loop header
-				// if |enteredLoops| > 1 /\ b in enteredLoops then
-				//cerr << "DEBUG: " << *edge << " => " << enteredLoops.count() << io::endl;
-				//cerr << "DEBUG: !(" << (enteredLoops.count() == 0) << " || (" << (enteredLoops.count() == 1) << " && " << (enteredLoops.contains(b->index())) << ")\n";
-				//if(!(enteredLoops.count() == 0 || (enteredLoops.count() == 1 && enteredLoops.contains(b->index())))) {
-				//if(enteredLoops.count() > 1 && edge->target()->index() != 4 /* *dfa::BitSet::Iterator(enteredLoops)*/) {
-				//cerr << "DEBUG: " << *edge << " --> " << enteredLoops.count() << io::endl;
-				if(enteredLoops.count() > 1 && !BEST(b)) {
-					// d <- duplicate(v)
-					Block *duplicate = DUPLICATE_OF(b);
-					if(!duplicate) {
-						done = false;
+				// W ← l \ h; C ← l \ h
+				genstruct::Vector<Block *> W;
+				for(dfa::BitSet::Iterator ch(**l); ch; ch++)
+					if(*hi != *ch) {
+						W.add(G.at(ch));
+						C.add(ch);
+					}
 
-						// DUPLICATE_OF(b) <- d
-						duplicate = clone(*maker, b, true);
-						ASSERT(DUPLICATE_OF(b) == 0);
-						DUPLICATE_OF(b) = duplicate;
-						//cerr << "DEBUG: duplicating " << duplicate << " from " << *b << io::endl;
+				// while W ≠ ∅ ∧ |C| < |bc| do
+				while(W && (!bh || C.count() < bs->count())) {
 
-						// IN_LOOPS(d) <- IN_LOOPS(v)
-						IN_LOOPS(duplicate) = new dfa::BitSet(**IN_LOOPS(edge->source()));
+					// let v = get(W) in
+					Block *v = W.pop();
 
-						// E <- E U { (d, DUPLICATE_OF(w)) / (b, w) in E }
-						for(Block::EdgeIter outedge = b->outs(); outedge; outedge++) {
-							if(DUPLICATE_OF(outedge->target())) {
-								Edge *nedge = new Edge(outedge->flags());
-								maker->add(duplicate, DUPLICATE_OF(outedge->target()), nedge);
-							} else {
-								Edge *nedge = new Edge(outedge->flags());
-								maker->add(duplicate, outedge->target(), nedge);
-							}
+					// for (v, w) ∈ E do
+					for(Block::EdgeIter e = v->outs(); e; e++) {
+						Block *w = e->sink();
+
+						// if w ∉ l ∧ w ∉ C ∧ IL(h) ⊆ IL(w) then
+						if(!l->contains(w->index())
+						&& !C.contains(w->index())
+						&& IN_LOOPS(w)->includes(**IN_LOOPS(h))) {
+
+								// W ← W ∪ { w }
+								W.add(w);
+
+								// C ← C ∪ { w }
+								C.add(w->index());
 						}
 
-						// E <- E U { (v, d) } \ { (v, b) }
-						Edge *nedge = new Edge(edge->flags());
-						maker->add(edge->source(), duplicate, nedge);
-						toDel.add(edge);
 					}
+				}
 
+				// if |C| > |bs| then
+				if(logFor(LOG_BLOCK))
+					log << "\t\t\theader " << *hi << " would consume at least " << C.count() << " blocks.\n";
+				if(!bh || C.count() < bs->count()) {
+
+					// bc ← C
+					swap(bs, cs);
+
+					// bh ← h
+					bh = h;
 				}
 			}
+			if(logFor(LOG_FUN))
+				log << "\t\theader " << bh << " chosen as header of " << **l << io::endl;
 
-			for (Vector<Edge*>::Iterator edge(toDel); edge; edge++)
-				delete *edge;
+			// perform the duplication	O(|BC|)
+			Block *map[G.count()];
+			for(CFG::BlockIter v = G.blocks(); v; v++)
+				map[v->index()] = v;
+
+			// for v ∈  bs do
+			for(dfa::BitSet::Iterator v(*bs); v; v++) {
+
+				// let v' ← duplicate(v) in
+				// V' ← V' ∪ { v' }
+				Block *nv = clone(G, G.at(v), true);
+				if(logFor(LOG_BLOCK))
+					log << "\t\t\t" << G.at(v) << " duplicated as " << nv << io::endl;
+
+				// σ ← λw . if w = v then v' else σ(w)
+				map[*v] = nv;
+			}
+
+			// for v ∈ bs do
+			for(dfa::BitSet::Iterator v(*bs); v; v++) {
+
+				// for (v, w)  ∈ E do
+				for(Block::EdgeIter e = G.at(v)->outs(); e; e++)
+
+					// E' ← E' ∪ { (σ(v), σ(w)) }
+					G.add(map[e->source()->index()], map[e->sink()->index()], new Edge(e->flags()));
+			}
+
+			// for v ∈ l \ { bh } do
+			genstruct::Vector<Edge *> D;
+			for(dfa::BitSet::Iterator vi(**l); vi; vi++) {
+				Block *v = G.at(vi);
+				if(v != bh)
+
+					// for (w, v) ∈ E ∧ v ∉ IL(w) do
+					for(Block::EdgeIter e = v->ins(); e; e++)
+						if(!IN_LOOPS(e->source())->contains(v->index())) {
+							Block *w = e->source();
+
+							// E' ← E' ∪ { (σ(w), σ(v)) }; D ← D ∪ { (w, v) }
+							G.add(map[w->index()], map[v->index()], new Edge(e->flags()));
+							D.add(e);
+						}
+			}
+
+			// E' ← E' \ D
+			for(genstruct::Vector<Edge *>::Iterator e(D); e; e++)
+				delete e;
 		}
 
-		if(logFor(LOG_FUN))
-			log << "\t\tround " << rnd << ": " << maker->count() << " vertices\n";
-		break;
+}
+
+typedef genstruct::Vector<Pair<Block *, Block::EdgeIter> > stack_t;
+
+#ifdef DO_DEBUG
+static void displayStack(stack_t& S) {
+	cerr << "[";
+	bool fst = true;
+	for(stack_t::Iterator v(S); v; v++) {
+		if(fst)
+			fst = false;
+		else
+			cerr << ", ";
+		cerr << (*v).fst->index();
+	}
+	cerr << "]";
+}
+#endif
+
+
+/**
+ * Compute IN_LOOPS properties and computes the list
+ * of loop entries.
+ * @param maker	CFG to work on.
+ * @param L		To store found loops.
+ */
+void LoopReductor::computeInLoops(CFGMaker& G, loops_t &L) {
+
+	// D ← { ν }
+	dfa::BitSet D(G.count());
+	// S ← [(ν, {(ν, v) ∈ E})]
+	stack_t S;
+	S.add(pair(G.entry(), G.entry()->outs()));
+	dfa::BitSet SS(G.count());
+	SS.add(G.entry()->index());
+	// L ← ∅
+	L.clear();
+
+	// for v ∈ V do IL(v) ← ∅
+	for(CFG::BlockIter v = G.blocks(); v; v++)
+		IN_LOOPS(v) = new dfa::BitSet(G.count());
+
+	// while S ≠ [] do
+	while(S) {
+		DEBUG(""; displayStack(S); cerr << io::endl);
+
+		// let (v, e) = top(S) in
+		Block *v = S.top().fst;
+		Block::EdgeIter &e = S.top().snd;
+
+		// if e = ∅ then
+		if(e.ended()) {
+			S.pop();
+			SS.remove(v->index());
+			DEBUG("pop " << v->index() << io::endl);
+		}
+
+		else {
+
+			// let (v, w)::t = e in
+			Block *w = (*e)->sink();
+			// top(S) ← (v, t)
+			e.next();
+
+			// if w ∉ D then
+			if(!D.contains(w->index())) {
+
+				// push(w, {(w, u) ∈ E})
+				S.push(pair(w, w->outs()));
+				SS.add(w->index());
+
+				// D ← D ∪ { v }
+				D.add(w->index());
+				DEBUG("push " << w->index() << io::endl);
+				continue;
+			}
+
+			// if w ∈ S then -- loop found
+			int p;
+			for(p = S.length() - 1; p >= 0 && S[p].fst != w; p--);
+			if(p >= 0) {
+				DEBUG("loop found at " << w->index() << io::endl);
+
+				// if ¬∃ l ∈ L ∧ h ∈ L then
+				if(!IN_LOOPS(w)->contains(w->index())) {
+
+					// L ← L ∪ { { w } }
+					dfa::BitSet *hs = new dfa::BitSet(G.count());
+					hs->add(w->index());
+					L.add(hs);
+
+					// IL(w) ← IL(w) ∪ { w }
+					IN_LOOPS(w)->add(w->index());
+				}
+
+				// for u  ∈ S[w, v] do IL(u) ← IL(w)
+				for(int i = p; i < S.length(); i++)
+					IN_LOOPS(S[i].fst)->add(**IN_LOOPS(w));
+			}
+
+			// else if IL(w) ⊆ S then -- path join
+			else if(SS.includes(**IN_LOOPS(w))) {
+				DEBUG("join found at " << w->index() << io::endl);
+
+				// if ∃ h = last{u ∈ S ∧ u ∈ IL(w)} then
+				int h;
+				for(h = S.length() - 1; h >= 0 && !IN_LOOPS(w)->contains(S[h].fst->index()); h--);
+				if(h >= 0)
+					// for u ∈ S[h, w] do IL(u) ← IL[h]
+					for(int u = h; u < S.length(); u++)
+						IN_LOOPS(S[u].fst)->add(**IN_LOOPS(S[h].fst));
+			}
+
+			// irreducible loop
+			else {
+				DEBUG("irreducible found at " << w->index() << io::endl);
+
+				// if ∃h = last{u ∈ S ∧ u ∈ IL(w) } then
+				int h;
+				for(h = S.length() - 1; h >= 0 && !IN_LOOPS(w)->contains(S[h].fst->index()); h--);
+				if(h >= 0)
+
+					// for u ∈ S[h, w] do IL(u) ← IL[h]
+					for(int u = h; u < S.length(); u++)
+						IN_LOOPS(S[u].fst)->add(**IN_LOOPS(S[h].fst));
+
+				// IL(w) ← IL(w) ∪ { w }
+				IN_LOOPS(w)->add(w->index());
+
+				// let l = ∪{l ∈ L ∧ l ∩ IL(w) ≠ ∅ } l in
+				// L ← { l ∈ L ∧ l ∩ l = ∅ } ∪ { l }
+				dfa::BitSet *hs = new dfa::BitSet(G.count());
+				hs->add(w->index());
+				int j = 0;
+				for(int i = 0; i < L.length(); i++)
+					if(L[i]->meets(**IN_LOOPS(w))) {
+						hs->add(*L[i]);
+						delete L[i];
+					}
+					else
+						L[j++] = L[i];
+					L.setLength(j);
+				L.add(hs);
+			}
+		}
 	}
 
-	delete ancestors;
+	// closure of headers
+	for(loops_t::Iterator l(L); l; l++) {
+		for(dfa::BitSet::Iterator h(**l); h; h++)
+			IN_LOOPS(G.at(h))->add(**l);
+		if(logFor(LOG_BLOCK))
+			log << "\t\tloop headed by " << **l << io::endl;
+	}
+	for(CFG::BlockIter v = G.blocks(); v; v++) {
+		for(dfa::BitSet::Iterator h(**IN_LOOPS(v)); h; h++)
+			IN_LOOPS(v)->add(**IN_LOOPS(G.at(h)));
+		if(logFor(LOG_BLOCK))
+			log << "\t\t" << *v << " in " << **IN_LOOPS(v) << io::endl;
+	}
 }
 
 

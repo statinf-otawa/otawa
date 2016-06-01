@@ -40,10 +40,10 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 
 private:
-	void reduce(CFGMaker *vcfg, CFG *cfg);
-	void depthFirstSearch(Block *bb, Vector<Block *> *ancestors);
-	Block *clone(CFGMaker& maker, Block *b, bool duplicate = false);
-	void computeInLoops(CFGMaker *maker);
+	typedef genstruct::Vector<dfa::BitSet *> loops_t;
+	void reduce(CFGMaker& G, loops_t& L);
+	Block *clone(CFGMaker& G, Block *b, bool duplicate = false);
+	void computeInLoops(CFGMaker& maker, loops_t& L);
 
 	Vector<CFGMaker *> vcfgvec;
 	int idx;

@@ -140,6 +140,7 @@ public:
 	inline bool contains(Node *item) const { return nodes.contains(item); }
 	inline bool isEmpty(void) const { return nodes.isEmpty(); }
  	inline operator bool(void) const { return !isEmpty(); }
+ 	inline Node *at(int i) const { return nodes[i]; }
 	
 	// Iterator class
 	class Iterator: public elm::genstruct::FragTable<Node *>::Iterator {

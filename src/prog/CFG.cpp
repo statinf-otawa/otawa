@@ -699,9 +699,12 @@ io::Output& operator<<(io::Output& out, CFG *cfg) {
 /**
  * Build a CFG.
  * @param first	First instruction of CFG.
+ * @param fix	If true, unknown and exit vertices addition (and numbering)
+ * 				is not delayed.
  */
-CFGMaker::CFGMaker(Inst *first)
-: GenDiGraphBuilder<Block, Edge>(cfg = new CFG(first), new Block(Block::IS_END | Block::IS_ENTRY)) {
+CFGMaker::CFGMaker(Inst *first, bool fix)
+: GenDiGraphBuilder<Block, Edge>(cfg = new CFG(first), new Block(Block::IS_END | Block::IS_ENTRY)),
+  _fix(fix) {
 	entry()->_cfg = cfg;
 }
 
@@ -715,12 +718,14 @@ CFGMaker::CFGMaker(Inst *first)
  * Get the exit block.
  * @eturn	Exit block.
  */
-Block *CFGMaker::exit(void) const {
+Block *CFGMaker::exit(void) {
 	Block *e = cfg->exit();
 	if(!e) {
 		e = new Block(Block::IS_EXIT);
 		cfg->_exit = e;
 		e->_cfg = cfg;
+		if(_fix)
+			add(e);
 	}
 	return e;
 }
@@ -733,6 +738,8 @@ Block *CFGMaker::unknown(void) {
 	if(!cfg->_unknown) {
 		cfg->_unknown = new Block(Block::IS_END | Block::IS_UNKN);
 		cfg->_unknown->_cfg = cfg;
+		if(_fix)
+			add(cfg->_unknown);
 	}
 	return cfg->_unknown;
 }
@@ -755,10 +762,11 @@ CFG *CFGMaker::build(void) {
 	// add exit block if required
 	if(!cfg->exit())
 		exit();
-	add(cfg->exit());
+	if(!_fix)
+		add(cfg->exit());
 
 	// add unknown block if required
-	if(cfg->_unknown)
+	if(cfg->_unknown && !_fix)
 		add(cfg->_unknown);
 
 	// copy properties

@@ -192,11 +192,11 @@ inline Address SynthBlock::address(void) const
 	{ if(_callee) return _callee->first()->address(); else return Address::null; }
 
 
-class CFGMaker: public sgraph::GenDiGraphBuilder<Block, Edge>, public PropList {
+class CFGMaker: public PropList, public sgraph::GenDiGraphBuilder<Block, Edge>  {
 public:
-	CFGMaker(Inst *first);
+	CFGMaker(Inst *first, bool fix = false);
 	inline Block *entry(void) const { return cfg->entry(); }
-	Block *exit(void) const;
+	Block *exit(void);
 	Block *unknown(void);
 	CFG *build(void);
 	void add(Block *v);
@@ -205,8 +205,10 @@ public:
 	inline void add(Block *v, Block *w, Edge *e) { sgraph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }
 	inline CFG::BlockIter blocks(void) const { return cfg->vertices(); }
 	int count(void);
+	inline Block *at(int index) const { return cfg->at(index); }
 private:
 	CFG *cfg;
+	bool _fix;
 };
 
 } // otawa
