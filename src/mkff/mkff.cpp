@@ -903,8 +903,8 @@ if(!debugging) {
 					elm::cerr << "[mkff] After slicing: " << sumCFG << " CFGs, " << sumB << " Blocks, " << sum << " instructions" << io::endl;
 				}
 
-				if(outputCFG)
-					generateCFGs(String("") << iteration << "_after_slicing" /*, GeneratedCFGType::MULTIDOT*/);
+				if(outputCFG || showReducedCFG)
+					generateCFGs(String("") << iteration << "_sliced" /*, GeneratedCFGType::MULTIDOT*/);
 
 				workspace()->require(otawa::REDUCED_LOOPS_FEATURE, props);
 
@@ -934,8 +934,10 @@ if(!debugging) {
 
 			} // end of slicing
 
-			elm::cout << "assert just to stop the program for debugging" << io::endl;
-			assert(0);
+			if(showReducedCFG) {
+				elm::cout << "assert just to stop the program for debugging" << io::endl;
+				assert(0);
+			}
 
 			// STEP: dynamic branch analysis
 			// to ensure that the unknown block does not generate top values which wipes out the whole state
