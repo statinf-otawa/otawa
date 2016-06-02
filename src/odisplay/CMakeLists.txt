@@ -8,6 +8,7 @@ set(libodisplay_la_SOURCES
 	"display_AbstractDrawer.cpp"
 	"display_CFGAdapter.cpp"
 	"display_CFGDisplayer.cpp"
+	"display_InlinedCFGDisplayer.cpp"
 	"display_CFGOutput.cpp"
 	"display_Displayer.cpp"
 	"display_GenDrawer.cpp"

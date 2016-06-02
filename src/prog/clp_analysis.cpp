@@ -2541,7 +2541,7 @@ public:
 	void update(Domain& out, const Domain& in, Block* bb) {
 		out.copy(in);
 
-		// do nothing for an end block
+		// do nothing for an end block, just simply pass the in state to out state
 		if(bb->isEnd())
 			return;
 
