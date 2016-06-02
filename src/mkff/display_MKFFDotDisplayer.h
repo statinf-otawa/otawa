@@ -28,7 +28,12 @@ namespace otawa { namespace display {
 
 class MKFFDotDecorator: public display::CFGDecorator {
 public:
-	inline MKFFDotDecorator(WorkSpace *ws, bool rc = false): display::CFGDecorator(ws), randomColors(rc) { }
+	inline MKFFDotDecorator(WorkSpace *ws, bool rc = false, bool ns = false): display::CFGDecorator(ws), randomColors(rc), noSource(ns) {
+		if(ns) {
+			display_assembly = false;
+			display_props = false;
+		}
+	}
 protected:
 	virtual void displaySynthBlock(CFG *g, SynthBlock *b, display::Text& content, display::VertexStyle& style) const;
 	virtual void displayEndBlock(CFG *graph, Block *block, display::Text& content, display::VertexStyle& style) const;
@@ -36,6 +41,7 @@ protected:
 	virtual void displayAssembly(CFG *graph, BasicBlock *block, display::Text& content) const;
 private:
 	bool randomColors;
+	bool noSource;
 }; // class MKFFDotDecorator: public display::CFGDecorator {
 
 }} // namespace otawa { namespace display {

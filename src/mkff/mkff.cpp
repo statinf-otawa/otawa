@@ -705,7 +705,7 @@ private:
 	};
 	void generateCFGs(String path, int type = GeneratedCFGType::MULTIDOT);
 	option::SwitchOption xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget,
-		showBlockProps, rawoutput, forFun, slicing, slicing_reg, showSlicing, showReducedCFG, lightSlicing, debugging;
+		showBlockProps, rawoutput, forFun, slicing, slicing_reg, showSlicing, showReducedCFG, lightSlicing, debugging, nosource;
 };
 
 
@@ -727,9 +727,10 @@ void Command::generateCFGs(String path, int type) {
 		else {
 			ag = new display::DisplayedCFG(**cfg);
 			if(type & GeneratedCFGType::COLORED)
-				d = new display::MKFFDotDecorator(workspace(), true);
+				d = new display::MKFFDotDecorator(workspace(), true, nosource);
 			else
-				d = new display::MultipleDotDecorator(workspace());
+				d = new display::MKFFDotDecorator(workspace(), false, nosource);
+				//d = new display::MultipleDotDecorator(workspace());
 		}
 
 		// obtain the displayer
@@ -933,6 +934,9 @@ if(!debugging) {
 
 			} // end of slicing
 
+			elm::cout << "assert just to stop the program for debugging" << io::endl;
+			assert(0);
+
 			// STEP: dynamic branch analysis
 			// to ensure that the unknown block does not generate top values which wipes out the whole state
 			clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = true;
@@ -1100,7 +1104,8 @@ Command::Command(void):
 		showSlicing(*this, option::cmd, "-SS", option::cmd, "--show_slicing", option::description, "showing the progress of the slicing in dot files.", option::end),
 		showReducedCFG(*this, option::cmd, "-SR", option::cmd, "--show_reduced", option::description, "showing the result of the reduced CFG in dot files.", option::end),
 		lightSlicing(*this, option::cmd, "-LS", option::cmd, "--light_slicing", option::description, "apply the slicing (lite) during dynamic branching analysis", option::end),
-		debugging(*this, option::cmd, "-DBG", option::cmd, "--debugging", option::description, "fast output generation", option::end)
+		debugging(*this, option::cmd, "-DBG", option::cmd, "--debugging", option::description, "fast output generation", option::end),
+		nosource(*this, option::cmd, "-NS", option::cmd, "--no_source", option::description, "do not output source code in the generated CFGs", option::end)
 {
 }
 

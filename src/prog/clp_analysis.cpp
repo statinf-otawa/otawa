@@ -2575,8 +2575,9 @@ public:
 			clp::STATE_IN(bb) = in;
 		}
 
-		if(out.equals(Domain::EMPTY)) // if the in state is bottom, then we don't have to evaluate this...
+		if(out.equals(Domain::EMPTY)) { // if the in state is bottom, then we don't have to evaluate this...
 			return;
+		}
 
 		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 			this->inst = inst;
