@@ -33,6 +33,8 @@ extern Identifier<Path> OUTPUT;
 // Input configuration
 extern Identifier<Path> FROM;
 
+extern p::feature CFG_FILE_INPUT_FEATURE;
+
 } }		// otawa::cfgio
 
 #endif /* OTAWA_CFGIO_FEATURES_H_ */
