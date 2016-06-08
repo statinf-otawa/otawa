@@ -318,6 +318,13 @@ int main(void) {
 		CHECK_EQUAL(val(7, -1, 3)._and(val(0xc0000, 0, 0)), val(0, 0, 0));
 		CHECK_EQUAL(val(0x0, 0x1, 0x2)._and(val(0xa0000002, 0, 0)), val(0, 2, 1));
 	}
+	
+	// checking widening
+	{
+		CHECK_EQUAL(val(0, 0, 0).widening(val(0, 1, 0xffffffff)), val(0, 1, 0xffffffff));
+		CHECK_EQUAL(val(-1, -1, 0xffffffff).widening(val(0x0, -1, 0xffffffff)), clp::Value::all);
+		
+	}
 
 	CHECK_END
 	return 0;

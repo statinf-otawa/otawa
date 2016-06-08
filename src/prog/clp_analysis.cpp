@@ -402,12 +402,16 @@ void Value::print(io::Output& out) const {
 	else {
 		if(_base >= 0)
 			out << "(0x" << io::hex(_base);
-		else
-			out << "(-0x" << io::hex(0-_base);
+		else {
+			intn_t _baseToPrint = 0 - _base;
+			out << "(-0x" << io::hex(_baseToPrint);
+		}
 		if(_delta >= 0)
 			out << ", 0x" << io::hex(_delta);
-		else
-			out << ", -0x" << io::hex(0-_delta);
+		else {
+			intn_t _deltaToPrint =  0-_delta;
+			out << ", -0x" << io::hex(_deltaToPrint);
+		}
 		out << ", 0x" << io::hex(_mtimes) << ')';
 	}
 }
@@ -647,11 +651,11 @@ Value& Value::join(const Value& val) {
  * Perform a widening to the infinite (to be filtred later)
  * @param val the value of the next iteration state
 */
-void Value::widening(const Value& val) {
+Value& Value::widening(const Value& val) {
 
 	/* widen(NONE, NONE) = NONE */
 	if (_kind == NONE && val._kind == NONE)
-		return;
+		return *this;
 
 	/* widen(ALL, *) = ALL */
 	else if (_kind == ALL || val._kind == ALL)
@@ -660,12 +664,19 @@ void Value::widening(const Value& val) {
 
 	/* this == val = val */
 	else if (*this == val)
-		return;
+		return *this;
 
 	// widen((k, 0, 0), (k', 0, 0)) = (k, k' - k, 1)
 	else if (isConst() && val.isConst()) {
 		_delta = val._base - _base;
 		_mtimes = clp::UMAXn;
+	}
+
+	if(isInf() && val.isInf()) {
+		if((_base != val._base) || (_delta != val._delta)) {
+			*this = all;
+			return *this;
+		}
 	}
 
 	// when d != d' /\ d != -d', widen((k, d, -), (k', d', -)) = T
@@ -704,6 +715,7 @@ void Value::widening(const Value& val) {
 	if(_kind == VAL && (_delta == 0 || _mtimes == 0))
 		set(_kind, _base, 0, 0);
 
+	return *this;
 	check();
 }
 
@@ -1118,6 +1130,46 @@ Value& Value::geu(uintn_t k) {
 		return *this;
 	}
 
+#ifndef CLP_ORIGINAL_GEU
+	if(_delta > 0) {
+		// see if we need to replace the _base
+		intn_t new_base = _base;
+		if(((uintn_t)_base) < k)
+			new_base = k;
+		// calculate the upper bound
+		t::uint64 v = _delta;
+		v = _delta * _mtimes;
+		v = v + _base;
+		if(v < k) { // means the whole CLP is less than k
+			*this = none;
+			return *this;
+		}
+		// find the new mtimes
+		uintn_t new_mtimes = (v - new_base) / _delta;
+		*this = Value(VAL, new_base, _delta, new_mtimes);
+		return *this;
+	}
+	else {
+		reverse();
+		// see if we need to replace the _base
+		intn_t new_base = _base;
+		if(((uintn_t)_base) < k)
+			new_base = k;
+		// calculate the upper bound
+		t::uint64 v = _delta;
+		v = _delta * _mtimes;
+		v = v + _base;
+		if(v < k) { // means the whole CLP is less than k
+			*this = none;
+			return *this;
+		}
+		// find the new mtimes
+		uintn_t new_mtimes = (v - new_base) / _delta;
+		*this = Value(VAL, new_base, _delta, new_mtimes);
+		reverse();
+		return *this;
+	}
+#else
 	// d >= 0 => inter((b, d, n), (k, 1, inf+ - k)
 	if(_delta > 0) {
 		inter(Value(VAL, k, 1, UMAXn - k));
@@ -1142,7 +1194,7 @@ Value& Value::geu(uintn_t k) {
 	// _ -> (b, d, (k - b) / d
 	else
 		_mtimes = intn_t(k - _base) / _delta;
-
+#endif
 	check();
 	return *this;
 }
