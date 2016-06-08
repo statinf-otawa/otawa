@@ -2,7 +2,7 @@ set(CMAKE_INSTALL_RPATH "${ORIGIN}")
 set(CMAKE_MACOSX_RPATH true)
 set(CMAKE_CXX_FLAGS "-Wall" )
 
-set(liboslice_la_SOURCES
+set(SOURCES
 	"DotDisplayer.cpp"
 	"oslice_hook.cpp"
 	"oslice_identifiers.cpp"
@@ -15,10 +15,10 @@ set(liboslice_la_SOURCES
 
 include_directories(".")
 
-add_library(oslice SHARED ${liboslice_la_SOURCES})
-install(TARGETS oslice DESTINATION ${LIBDIR})
+add_library(oslice SHARED ${SOURCES})
+set_property(TARGET oslice PROPERTY PREFIX "")
+set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
+#target_link_libraries(oslice otawa ${LIBELM} odisplay)
 
-target_link_libraries(oslice otawa)
-target_link_libraries(oslice ${LIBELM} odisplay)
-
-install(FILES oslice.eld DESTINATION "${LIBDIR}/otawa/proc/otawa")
+install(TARGETS oslice DESTINATION "${PLUGDIR}/otawa")
+install(FILES oslice.eld DESTINATION "${PLUGDIR}/otawa")

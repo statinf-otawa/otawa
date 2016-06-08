@@ -34,5 +34,5 @@ public:
 
 } }		// otawa::oslice
 
-otawa::oslice::Plugin OTAWA_PROC_HOOK;
-otawa::oslice::Plugin& otawa_leon = OTAWA_PROC_HOOK;
+otawa::oslice::Plugin otawa_oslice_plugin;
+ELM_PLUGIN(otawa_oslice_plugin, OTAWA_PROC_HOOK);

@@ -181,7 +181,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 	interested_instructions_t *interestedInstructions = INTERESTED_INSTRUCTIONS(fw);
 	assert(interestedInstructions);
 	if (interestedInstructions) {
-		elm::cerr << __SOURCE_INFO__ << "we have " << interestedInstructions->count() << " to resolve" << io::endl;
+		warn(String("") << interestedInstructions->count() << " instructions to resolve");
 		if(_debugLevel & DISPLAY_SLICING_STAGES) {
 			elm::cerr << __SOURCE_INFO__<< "The list of interested instructions: " << io::endl;
 			for(interested_instructions_t::Iterator currentII(*interestedInstructions); currentII; currentII++) {
