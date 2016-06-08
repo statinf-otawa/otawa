@@ -21,10 +21,12 @@
 <!ATTLIST exit id		ID 		#REQUIRED>
 
 <!ELEMENT edge (property*)>
-<!ATTLIST edge source	IDREF	#REQUIRED>
-<!ATTLIST edge target	IDREF	#IMPLIED>	<!-- should be ignored for call kind -->
+<!ATTLIST edge source		IDREF		#REQUIRED>
+<!ATTLIST edge target		IDREF		#IMPLIED>	<!-- should be ignored for call kind -->
+<!ATTLIST edge taken		(yes|no)	"no">
+<!ATTLIST edge not-taken	(yes|no)	"no">
 
-<!ELEMENT inst EMPTY>
+<!ELEMENT inst (property*)>
 <!ATTLIST inst	address	CDATA	#REQUIRED>
 <!ATTLIST inst	file	CDATA	#IMPLIED>
 <!ATTLIST inst	line	CDATA	#IMPLIED>
