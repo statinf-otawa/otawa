@@ -25,6 +25,35 @@
 #include <otawa/oslice/InstCollector.h>
 namespace otawa { namespace oslice {
 #define DEBUGGING_MESSAGE(x) // x
+
+
+bool interestedInstruction(otawa::Inst* inst) { assert(0); return true; }
+
+/*
+ *
+ *	The FPTR_FOR_COLLECTING can be used as the following:
+ *
+ *	bool f(Inst* inst) { if(inst->isLoad()) return true; else return false; }
+ *	otawa::oslice::FPTR_FOR_COLLECTING(workspace()) = f;
+ *	workspace()->require(otawa::oslice::INSTRUCTION_COLLECTOR_FEATURE, props);
+ *
+ *	The f is a function which takes a pointer of an instruction, and return bool, assigned to the FPTR_FOR_COLLECTING
+ *	This will be used by the default instruction collector.
+ *	Once the collector is used, please remember to remove this Identifier, so the behaviors won't be over-ridden.
+ */
+Identifier<bool (*)(otawa::Inst*)> FPTR_FOR_COLLECTING("", &interestedInstruction);
+
+
+p::feature INSTRUCTION_COLLECTOR_FEATURE("otawa::oslice::INSTRUCTION_COLLECTOR_FEATURE", new Maker<InstCollector>());
+
+
+Registration<InstCollector> InstCollector::reg(
+	"otawa::oslice::InstCollector", Version(1, 0, 0),
+	p::require, &COLLECTED_CFG_FEATURE,
+	p::provide, &INSTRUCTION_COLLECTOR_FEATURE,
+	p::end
+);
+
 /**
  */
 InstCollector::InstCollector(AbstractRegistration& _reg)
@@ -34,6 +63,10 @@ InstCollector::InstCollector(AbstractRegistration& _reg)
  */
 void InstCollector::configure(const PropList &props) {
 	Processor::configure(props);
+}
+
+bool InstCollector::interested(Inst* i) { // default behavior for overriden
+	return true;
 }
 
 void InstCollector::processWorkSpace(WorkSpace *fw) {
@@ -63,7 +96,13 @@ void InstCollector::collectInterestedInstructions(const CFGCollection& coll, int
 				continue;
 			BasicBlock *bb = v->toBasic();
 			for(BasicBlock::InstIter inst(bb); inst; inst++) {
-				if(interested(inst)) {
+				bool collecting = true;
+				if(FPTR_FOR_COLLECTING(workspace()) != &interestedInstruction)
+					collecting = (*FPTR_FOR_COLLECTING(workspace()))(inst);
+				else
+					collecting = interested(inst);
+
+				if(collecting) {
 					DEBUGGING_MESSAGE(elm::cerr << __SOURCE_INFO__ << "adding the interested instruction " << *inst << " @ " << inst->address() << io::endl;)
 					elm::cerr << "adding the interested instruction " << *inst << " @ " << inst->address() << io::endl;
 					// put the interested instructions in the bucket

@@ -10,7 +10,7 @@ static Identifier<otawa::dfa::MemorySet::t* > MEM_BB_END_IN("", 0);
 static Identifier<BitVector> REG_BB_END_IN("");
 
 static Identifier<bool> TO_REMOVE("", false);
-static Identifier<Vector<Block*>*> EDGE_TARGETS("");
+static Identifier<Vector<Block*>*> ARTIFICIAL_SUCCESSORS("");
 static Identifier<Vector<Block*>*> ARTIFICIAL_PREDECESSORS("");
 
 p::feature SLICER_FEATURE("otawa::oslice_reg::SLICER_FEATURE", new Maker<Slicer>());
@@ -279,7 +279,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an input edge from BB " << in->index() << io::endl;
 				predecessors.add(*in);
 				// remove the current block from the successors of the its predecessor
-				Vector<Block* > *edgeTargets = EDGE_TARGETS(*in);
+				Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(*in);
 				if(edgeTargets)
 					edgeTargets->remove(b);
 			}
@@ -298,7 +298,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an output edge " << *out << io::endl;
 		}
 		// now we process the successors of the current block due to the removals of the other blocks
-		Vector<Block* > *edgeTargets = EDGE_TARGETS(b);
+		Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(b);
 		if(edgeTargets) {
 			for(Vector<Block*>::Iterator out(*edgeTargets); out; out++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
@@ -310,7 +310,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 					edgeSources->remove(b);
 			}
 			delete edgeTargets;
-			EDGE_TARGETS(b).remove();
+			ARTIFICIAL_SUCCESSORS(b).remove();
 		}
 
 		// special case, only one out going edge and pointed to iself (infinite loop ... often seen in the systems with waits for the interrupts
@@ -323,7 +323,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		// actually this may not be necessary
 		// if the predecessor has the targets of the current block, remove the current block from the target
 		for (Vector<Block*>::Iterator predecessor(predecessors); predecessor; predecessor++) {
-			Vector<Block* > *edgeTargets = EDGE_TARGETS(predecessor);
+			Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(predecessor);
 			if(!edgeTargets)
 				continue;
 			if(edgeTargets->contains(b)) {
@@ -360,7 +360,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 					}
 				}
 				// then check the artificial edge
-				Vector<Block* > *edgeTargets = EDGE_TARGETS(predecessor);
+				Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(predecessor);
 				if(edgeTargets && edgeTargets->contains(*successor))
 					found = true;
 
@@ -373,11 +373,11 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 					if(_debugLevel & DISPLAY_CFG_CREATION)
 						elm::cerr << __SOURCE_INFO__ << __TAB__ << "Adding edge between BB " << predecessor->index() << " to BB " << successor->index() << io::endl;
 					// connecting the predecessor with all of the successors
-					Vector<Block* > *edgeTargets = EDGE_TARGETS(predecessor);
+					Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(predecessor);
 					// in case the EDGE_TARGET is not initialized
 					if(!edgeTargets) {
 						edgeTargets = new Vector<Block* >();
-						EDGE_TARGETS(predecessor) = edgeTargets;
+						ARTIFICIAL_SUCCESSORS(predecessor) = edgeTargets;
 					}
 					edgeTargets->add(successor);
 					Vector<Block* > *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
@@ -515,10 +515,10 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 			if(_debugLevel & DISPLAY_CFG_CREATION)
 			elm::cerr << __SOURCE_INFO__ << __TAB__ << "this node is removed, ignored" << io::endl;
 			TO_REMOVE(*v).remove();
-			Vector<Block* > *edgeTargets = EDGE_TARGETS(*v);
+			Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(*v);
 			if(edgeTargets)
 			delete edgeTargets;
-			EDGE_TARGETS(*v).remove();
+			ARTIFICIAL_SUCCESSORS(*v).remove();
 			Vector<Block* > *edgeSources = ARTIFICIAL_PREDECESSORS(*v);
 			if(edgeSources)
 			delete edgeSources;
@@ -539,7 +539,7 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 		} // end for(BasicBlock::EdgeIter e = v->outs(); e; e++) {
 
 		 // linking the artificial edge
-		Vector<Block* > *edgeTargets = EDGE_TARGETS(*v);
+		Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(*v);
 		if(edgeTargets) {
 			for(Vector<Block* >::Iterator i(*edgeTargets); i; i++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION) {
@@ -550,7 +550,7 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 			}
 			delete edgeTargets;
 		}
-		EDGE_TARGETS(*v).remove();
+		ARTIFICIAL_SUCCESSORS(*v).remove();
 		Vector<Block* > *edgeSources = ARTIFICIAL_PREDECESSORS(*v);
 		if(edgeSources)
 		delete edgeSources;

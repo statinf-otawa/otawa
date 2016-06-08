@@ -11,12 +11,16 @@ static Identifier<otawa::dfa::MemorySet::t* > MEM_BB_END_IN("", 0);
 static Identifier<BitVector> REG_BB_END_IN("");
 
 static Identifier<bool> TO_REMOVE("", false);
+typedef Pair<Block*, t::uint32> predecessor_t;
+typedef Vector<predecessor_t> predecessor_list_t;
+static Identifier<Vector<Pair<Block*, t::uint32 /* flag of the edge */ > >*> ARTIFICIAL_PREDECESSORS("");
 static Identifier<Vector<Block*>*> ARTIFICIAL_SUCCESSORS("");
-static Identifier<Vector<Block*>*> ARTIFICIAL_PREDECESSORS("");
+
 
 p::declare Slicer::reg = p::init("otawa::oslice::Slicer", Version(16, 5, 3116))
        .maker<Slicer>()
 	   .use(otawa::clp::FEATURE)
+	   .use(INSTRUCTION_COLLECTOR_FEATURE)
 	   .require(COLLECTED_CFG_FEATURE)
 	   .invalidate(COLLECTED_CFG_FEATURE)
 	   .provide(COLLECTED_CFG_FEATURE)
@@ -24,7 +28,8 @@ p::declare Slicer::reg = p::init("otawa::oslice::Slicer", Version(16, 5, 3116))
 p::feature SLICER_FEATURE("otawa::oslice::SLICER_FEATURE", new Maker<Slicer>());
 
 p::declare LightSlicer::reg = p::init("otawa::oslice::LightSlicer", Version(16, 5, 3116))
-       .maker<Slicer>()
+       .maker<LightSlicer>()
+	   .use(INSTRUCTION_COLLECTOR_FEATURE)
 	   .require(COLLECTED_CFG_FEATURE)
 	   .invalidate(COLLECTED_CFG_FEATURE)
 	   .provide(COLLECTED_CFG_FEATURE)
@@ -207,8 +212,11 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 			if(_debugLevel & DISPLAY_SLICING_STAGES) {
 				elm::cerr << __SOURCE_INFO__ << "Creating the initial Regs from " << currentInst << " @ " << currentInst->address() << io::endl;
 				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Working regs = " << workingRegs << io::endl;
-				if(!_lightSlicing)
-					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Working mems = "; LivenessChecker::displayAddrs(elm::cerr, workingMems); elm::cerr << io::endl;
+				if(!_lightSlicing) {
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Working mems = ";
+					LivenessChecker::displayAddrs(elm::cerr, workingMems);
+					elm::cerr << io::endl;
+				}
 			}
 
 			// define the working list of BB
@@ -276,32 +284,33 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		if(_debugLevel & DISPLAY_CFG_CREATION)
 			elm::cerr << __SOURCE_INFO__ << "Popping BB " << b->index() << " of CFG " << b->cfg()->index() << " from the BB-removing working list" << io::endl;
 
-		Vector<Block*> predecessors;
+		predecessor_list_t predecessors;
 		Vector<Block*> successors;
 		// Collect the predecessors of the current block
 		// incoming edges exited in the original CFG
 		for (Block::EdgeIter in = b->ins(); in; in++) { // just to be safe not to remove the element during iter ops.
 			// if the edge is not marked as removed, then we add the source of the edge to the list of predecessor
-			if(!TO_REMOVE(*in))
-				predecessors.add(in->source());
+			if(!TO_REMOVE(*in)) {
+				predecessors.add(pair(in->source(),in->flags()));
+				// mark the incoming edge removed
+				TO_REMOVE(*in) = true;
+				if(_debugLevel & DISPLAY_CFG_CREATION)
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an input edge " << *in << io::endl;
+			}
 			else {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << *in << " has already been removed, ignored." << io::endl;
 			}
-			// mark it removed
-			TO_REMOVE(*in) = true;
-			if(_debugLevel & DISPLAY_CFG_CREATION)
-				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an input edge " << *in << io::endl;
 		}
 		// now processing the predecessor of the current block due to the removals of the other blocks
-		Vector<Block* > *edgeSources = ARTIFICIAL_PREDECESSORS(b);
+		predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(b);
 		if(edgeSources) {
-			for(Vector<Block*>::Iterator in(*edgeSources); in; in++) {
+			for(predecessor_list_t::Iterator in(*edgeSources); in; in++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
-					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an input edge from BB " << in->index() << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an input edge from BB " << (*in).fst->index() << " to " << b->index() << io::endl;
 				predecessors.add(*in);
 				// remove the current block from the successors of the its predecessor
-				Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(*in);
+				Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*in).fst);
 				if(edgeTargets)
 					edgeTargets->remove(b);
 			}
@@ -327,9 +336,14 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an output edge to BB " << out->index() << io::endl;
 				successors.add(*out);
 				// remove the current block from the list of the predecessors of its successor
-				Vector<Block* > *edgeSources = ARTIFICIAL_PREDECESSORS(*out);
-				if(edgeSources)
-					edgeSources->remove(b);
+				predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(*out);
+				if(edgeSources) {
+					//edgeSources->remove(b);
+					for(predecessor_list_t::Iterator plti(*edgeSources); plti; plti++) { // scan through each predecessor
+						if((*plti).fst == b)
+							edgeSources->remove(plti);
+					}
+				}
 			}
 			delete edgeTargets;
 			ARTIFICIAL_SUCCESSORS(b).remove();
@@ -345,68 +359,118 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		// ========= TO REMOVE =========
 		// actually this may not be necessary
 		// if the predecessor has the targets of the current block, remove the current block from the target
-		for (Vector<Block*>::Iterator predecessor(predecessors); predecessor; predecessor++) {
-			Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(predecessor);
+		for (predecessor_list_t::Iterator predecessor(predecessors); predecessor; predecessor++) {
+			Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*predecessor).fst);
 			if(!edgeTargets)
 				continue;
 			if(edgeTargets->contains(b)) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
-					elm::cerr << __SOURCE_INFO__ << "predecessor BB " << predecessor->index() << " has a edge to current BB, removing...." << io::endl;
+					elm::cerr << __SOURCE_INFO__ << "predecessor BB " << (*predecessor).fst->index() << " has a edge to current BB, removing...." << io::endl;
 				assert(0);
 				edgeTargets->remove(b);
 			}
 		}
 		// if the successor has predecessor of the current block, remove the current block from the source
 		for (Vector<Block*>::Iterator successor(successors); successor; successor++) {
-			Vector<Block* > *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
+			predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
 			if(!edgeSources)
 				continue;
-			if(edgeSources->contains(b)) {
-				if(_debugLevel & DISPLAY_CFG_CREATION)
-					elm::cerr << __SOURCE_INFO__ << "successor BB " << successor->index() << " has a edge to current BB, removing...." << io::endl;
-				assert(0);
-				edgeSources->remove(b);
+			//edgeSources->remove(b);
+			for(predecessor_list_t::Iterator plti(*edgeSources); plti; plti++) { // scan through each predecessor
+				if((*plti).fst == b) {
+					if(_debugLevel & DISPLAY_CFG_CREATION)
+						elm::cerr << __SOURCE_INFO__ << "successor BB " << successor->index() << " has a edge to current BB, removing...." << io::endl;
+					assert(0);
+					edgeSources->remove(plti);
+				}
 			}
 		}
 		// ========= TO REMOVE END =========
 
 		// now connect the predecessor with the successor
 		 // for each predecessor, need to wire the edge between the predecessor and its successor
-		for (Vector<Block*>::Iterator predecessor(predecessors); predecessor; predecessor++) {
+		for (predecessor_list_t::Iterator predecessor(predecessors); predecessor; predecessor++) {
 			for (Vector<Block*>::Iterator successor(successors); successor; successor++) {
 				// check if the successor is already linked with the predecessor
 				// first check the real link
-				bool found = false;
-				for(Block::EdgeIter ei = predecessor->outs(); ei; ei++) {
-					if(ei->target() == *successor) {
-						found = true;
+				bool foundRealEdge = false;
+				bool foundArtificialEdge = false;
+				Edge* realEdge = 0;
+				for(Block::EdgeIter ei = (*predecessor).fst->outs(); ei; ei++) {
+					if(ei->target() == *successor && (*TO_REMOVE(*ei)) == false) {
+						foundRealEdge = true;
+						realEdge = *ei;
 						break;
 					}
 				}
 				// then check the artificial edge
-				Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(predecessor);
-				if(edgeTargets && edgeTargets->contains(*successor))
-					found = true;
+				Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*predecessor).fst);
+				if(edgeTargets && edgeTargets->contains(*successor)) {
+					foundArtificialEdge = true;
+				}
 
-				if(found) {
-					if(_debugLevel & DISPLAY_CFG_CREATION)
-						elm::cerr << __SOURCE_INFO__ <<__TAB__ << "Already existing an edge between BB " << predecessor->index() << " to BB " << successor->index() << io::endl;
+				// in this case, we need to remove the exiting edge, creating an artificial edge whose flag is a combination of
+				// the existing predecessor and current predecessor
+				if(foundRealEdge) {
+					// remove the existing real edge
+					TO_REMOVE(realEdge) = true;
+					t::uint32 existingFlag = realEdge->flags(); // extract the flag
+
+					if(_debugLevel & DISPLAY_CFG_CREATION) {
+						elm::cerr << __SOURCE_INFO__ << __TAB__ << "Already existing a real edge between CFG " << (*predecessor).fst->cfg()->index() << ", BB " << (*predecessor).fst->index() << " to BB " << successor->index() << ", need to remove" << io::endl;
+						elm::cout << __SOURCE_INFO__ << __TAB__ << __TAB__ << "exiting edge flag = " << existingFlag << io::endl;
+						elm::cout << __SOURCE_INFO__ << __TAB__ << __TAB__ << "new edge flag     = " << (*predecessor).snd << io::endl;
+					}
+
+					// add the successor edge from the predecessor as the replacement
+					if(!edgeTargets) {
+						edgeTargets = new Vector<Block* >();
+						ARTIFICIAL_SUCCESSORS((*predecessor).fst) = edgeTargets;
+					}
+					edgeTargets->add(successor);
+
+					// similarly we add the predecessor with the desired exiting flag
+					predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
+					if(!edgeSources) {
+						edgeSources = new predecessor_list_t();
+						ARTIFICIAL_PREDECESSORS(successor) = edgeSources;
+					}
+					existingFlag = existingFlag | (*predecessor).snd;
+					edgeSources->add(pair((*predecessor).fst, existingFlag));
+				}
+				else if(foundArtificialEdge) {
+					t::uint32 existingFlag = 0;
+					// we need to find the predecessor!
+					predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
+					for (predecessor_list_t::Iterator edgeSource(*edgeSources); edgeSource; edgeSource++) {
+						if((*edgeSource).fst == (*predecessor).fst) {
+							if(_debugLevel & DISPLAY_CFG_CREATION) {
+								elm::cerr << __SOURCE_INFO__ <<__TAB__ << "Already existing a artificial edge between CFG " << (*predecessor).fst->cfg()->index() << ", BB " << (*predecessor).fst->index() << " to BB " << successor->index() << ", need to remove" << io::endl;
+								elm::cout << __SOURCE_INFO__ <<__TAB__ << __TAB__ << "exiting edge flag = " << (*edgeSource).snd << io::endl;
+								elm::cout << __SOURCE_INFO__ <<__TAB__ << __TAB__ << "new edge flag     = " << (*predecessor).snd << io::endl;
+							}
+							existingFlag = (*edgeSource).snd | (*predecessor).snd;
+							edgeSources->remove(edgeSource);
+							break;
+						}
+					}
+					edgeSources->add(pair((*predecessor).fst, existingFlag));
 				}
 				else {
 					// make the wiring
 					if(_debugLevel & DISPLAY_CFG_CREATION)
-						elm::cerr << __SOURCE_INFO__ << __TAB__ << "Adding edge between BB " << predecessor->index() << " to BB " << successor->index() << io::endl;
+						elm::cerr << __SOURCE_INFO__ << __TAB__ << "Adding edge between BB " << (*predecessor).fst->index() << " to BB " << successor->index() << io::endl;
 					// connecting the predecessor with all of the successors
-					Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(predecessor);
+					Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*predecessor).fst);
 					// in case the EDGE_TARGET is not initialized
 					if(!edgeTargets) {
 						edgeTargets = new Vector<Block* >();
-						ARTIFICIAL_SUCCESSORS(predecessor) = edgeTargets;
+						ARTIFICIAL_SUCCESSORS((*predecessor).fst) = edgeTargets;
 					}
 					edgeTargets->add(successor);
-					Vector<Block* > *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
+					predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
 					if(!edgeSources) {
-						edgeSources = new Vector<Block* >();
+						edgeSources = new predecessor_list_t();
 						ARTIFICIAL_PREDECESSORS(successor) = edgeSources;
 					}
 					edgeSources->add(predecessor);
@@ -543,7 +607,7 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 			if(edgeTargets)
 			delete edgeTargets;
 			ARTIFICIAL_SUCCESSORS(*v).remove();
-			Vector<Block* > *edgeSources = ARTIFICIAL_PREDECESSORS(*v);
+			predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(*v);
 			if(edgeSources)
 			delete edgeSources;
 			ARTIFICIAL_PREDECESSORS(*v).remove();
@@ -559,10 +623,29 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 				TO_REMOVE(*v).remove();
 				continue;
 			}
-			maker.add(bmap.get(e->source()), bmap.get(e->sink()), new Edge());
+			maker.add(bmap.get(e->source()), bmap.get(e->sink()), new Edge(e->flags()));
 		} // end for(BasicBlock::EdgeIter e = v->outs(); e; e++) {
 
 		 // linking the artificial edge
+		predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(*v);
+		if(edgeSources) { // for each edge
+			for(predecessor_list_t::Iterator plti(*edgeSources); plti; plti++) {
+				if(_debugLevel & DISPLAY_CFG_CREATION) {
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << "In CFG " << v->cfg() << ", " << (*plti).fst->index() << " to " << v->index() << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "this edge is created due to BB removal" << io::endl;
+				}
+				maker.add(bmap.get((*plti).fst), bmap.get(*v), new Edge((*plti).snd));
+			}
+			delete edgeSources;
+		}
+		ARTIFICIAL_PREDECESSORS(*v).remove();
+		Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(*v);
+		if(edgeTargets)
+			delete edgeTargets;
+		ARTIFICIAL_SUCCESSORS(*v).remove();
+
+		// removed because for artificial edges we use incoming edges instead of the out-going ones.
+		/*
 		Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(*v);
 		if(edgeTargets) {
 			for(Vector<Block* >::Iterator i(*edgeTargets); i; i++) {
@@ -575,10 +658,11 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 			delete edgeTargets;
 		}
 		ARTIFICIAL_SUCCESSORS(*v).remove();
-		Vector<Block* > *edgeSources = ARTIFICIAL_PREDECESSORS(*v);
+		predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(*v);
 		if(edgeSources)
-		delete edgeSources;
+			delete edgeSources;
 		ARTIFICIAL_PREDECESSORS(*v).remove();
+		*/
 		continue;
 	}
 }
@@ -662,8 +746,11 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 			elm::cerr << __SOURCE_INFO__ << __RED__ << "Popping new working element out: BB " << currentBB_wl->index() << " @ " <<  currentBB_wl->address() << __RESET__ << io::endl;
 			elm::cerr << __SOURCE_INFO__ << __TAB__ << "Starting witt " << currentInst_wl << " @ " << currentInst_wl->address() << io::endl;
 			elm::cerr << __SOURCE_INFO__ << __TAB__ << "with working Regs  = " << currentRegs_wl << io::endl;
-			if(!_lightSlicing)
-				elm::cerr << __SOURCE_INFO__ << __TAB__ << "with working MEM   = "; LivenessChecker::displayAddrs(elm::cerr, currentMems_wl); elm::cerr << io::endl;
+			if(!_lightSlicing) {
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "with working MEM   = ";
+				LivenessChecker::displayAddrs(elm::cerr, currentMems_wl);
+				elm::cerr << io::endl;
+			}
 		}
 		delete we;
 
@@ -696,8 +783,9 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Mem Use       = "; LivenessChecker::displayAddrs(elm::cerr, addressInstRead); elm::cerr << io::endl;
 				}
 				elm::cerr << __SOURCE_INFO__ << __TAB__ << "RegSet Before = " << currentRegs_wl << io::endl;
-				if(!_lightSlicing)
-					elm::cerr << __SOURCE_INFO__ << __TAB__ << "MemSet Before = "; LivenessChecker::displayAddrs(elm::cerr, currentMems_wl); elm::cerr << io::endl;
+				if(!_lightSlicing) {
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << "MemSet Before = ";  LivenessChecker::displayAddrs(elm::cerr, currentMems_wl);  elm::cerr << io::endl;
+				}
 			}
 
 			// check if the def address is over lap with the working addrs
@@ -730,8 +818,9 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 
 			if(_debugLevel & DISPLAY_SLICING_STAGES) {
 				elm::cerr << __SOURCE_INFO__ << __TAB__ << "RegSet After  = " << currentRegs_wl << io::endl;
-				if(!_lightSlicing)
+				if(!_lightSlicing) {
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << "MemSet After  = "; LivenessChecker::displayAddrs(elm::cerr, currentMems_wl); elm::cerr << io::endl;
+				}
 			}
 
 			if(currentInst_wl == currentBB_wl->first())
@@ -771,8 +860,8 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 				// this means that we reach current BB from the returning of a function
 				// we obtain the exit block of the function that it returns from
 				if(_debugLevel & DISPLAY_SLICING_STAGES) {
-					elm::cerr << "Caller of the current Synth Block = " << b->toSynth()->caller()->label() << io::endl;
-					elm::cerr << "Callee of the current Synth Block = " << b->toSynth()->callee()->label() << io::endl;
+					elm::cerr << __SOURCE_INFO__ << "Caller of the current Synth Block = " << b->toSynth()->caller()->label() << io::endl;
+					elm::cerr << __SOURCE_INFO__ << "Callee of the current Synth Block = " << b->toSynth()->callee()->label() << io::endl;
 				}
 				Block* end = b->toSynth()->callee()->exit();
 				// each edge to the exit block is a possible BB which will goes to the current block
@@ -815,8 +904,11 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 			if(_debugLevel & DISPLAY_SLICING_STAGES) {
 				elm::cerr << __SOURCE_INFO__ << __TAB__ << "for BB @ " << predecessor->address() << io::endl;
 				elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "Register used: " << bv << " contains all of " << currentRegs_wl << " ? "<< !notContainsAllRegs << io::endl;
-				if(!_lightSlicing)
-					elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "Mem      used: "; LivenessChecker::displayAddrs(elm::cerr, *memIn); elm::cerr << " contains all of "; LivenessChecker::displayAddrs(elm::cerr, currentMems_wl); elm::cerr << "? " << !notContainsAllMems << io::endl;
+				if(!_lightSlicing) {
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "Mem      used: ";
+					LivenessChecker::displayAddrs(elm::cerr, *memIn); elm::cerr << " contains all of ";
+					LivenessChecker::displayAddrs(elm::cerr, currentMems_wl); elm::cerr << "? " << !notContainsAllMems << io::endl;
+				}
 			}
 
 			if(notContainsAllRegs | notContainsAllMems) {
@@ -851,8 +943,12 @@ inline bool Slicer::interestingAddrs(otawa::dfa::MemorySet::t const & a, otawa::
 
 inline bool Slicer::interestingRegs(elm::BitVector const & a, elm::BitVector const & b) {
 	elm::BitVector c(a.size(), true);
-	c.clear(15); // ignore PC (ARM)
-	c.clear(14); // ignore LR (ARM)
+	c.clear(15); // ignore PC (ARM) cover 31->27
+	c.clear(14); // ignore LR (ARM) cover 31->25
+//	Processing bx lr @ 00200968
+//		Reg Def       = 00000000000000010
+//		Reg Use       = 00000000000000100
+
 	return !((a & b & c).isEmpty());
 }
 
