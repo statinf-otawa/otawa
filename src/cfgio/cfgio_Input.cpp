@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/avl/Map.h>
 #include <elm/io/BlockInStream.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/util/AutoDestructor.h>
@@ -27,6 +28,8 @@
 #include <otawa/cfgio/features.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/prog/TextDecoder.h>
+#include <otawa/prog/WorkSpace.h>
+
 
 namespace elm {
 
@@ -479,6 +482,7 @@ dtd::Element edge(dtd::make("edge", _EDGE).attr(source).attr(target).attr(called
 dtd::Element cfg(dtd::make("cfg", _CFG).attr(id).content((entry, *bb, exit, *edge)));
 dtd::Element cfg_collection(dtd::make("cfg-collection", _COLL).content((cfg, *cfg)));
 
+static Identifier<Option<xom::String> > SYNTH_TARGET("");
 
 /**
  * This processor allows to read-back CFG produced by cfgio::Output
@@ -496,6 +500,13 @@ dtd::Element cfg_collection(dtd::make("cfg-collection", _COLL).content((cfg, *cf
  * @ingroup cfgio
  */
 class Input: public Processor {
+	typedef avl::Map<xom::String, Block *> bb_map_t;
+	//typedef genstruct::HashTable<xom::String, Block *> bb_map_t;
+	typedef Vector<bb_map_t*> bb_map_table_t;
+	typedef Vector<Pair<xom::String, xom::String> > edge_list_t;
+	typedef Vector<edge_list_t*> edge_list_table_t;
+private:
+
 public:
 	static p::declare reg;
 	Input(p::declare& r = reg): Processor(r) { }
@@ -516,8 +527,7 @@ protected:
 		reset();
 	}
 
-	virtual void process(WorkSpace *ws) {
-
+	virtual void processWorkSpace(WorkSpace *ws) {
 		// open the document
 		xom::Builder builder;
 		xom::Document *doc = builder.build(path.toString().toCString());
@@ -533,68 +543,205 @@ protected:
 			raiseError(top, "no CFG");
 
 		// prepare the CFGs and the BBs
-		coll = new CFGCollection();
 		for(int i = 0; i < cfg_elts->size(); i++) {
+			CFGMaker *maker = 0; // the CFG maker
+			bb_map_t* bb_map = new bb_map_t;
+			bb_map_table.add(bb_map);
 
 			// get information
 			xom::Element *celt = cfg_elts->get(i);
-			Option<xom::String> id = celt->getAttributeValue("id");
-			if(!id)
+			Option<xom::String> cfgID = celt->getAttributeValue("id");
+			if(!cfgID)
 				raiseError(celt, "no 'id' attribute");
-			if(cfg_map.hasKey(*id))
-				raiseError(celt, _ << "id " << *id << " at least used two times.");
+			if(cfg_map.hasKey(*cfgID))
+				raiseError(celt, _ << "id " << *cfgID << " at least used two times.");
 
-			// build the CFG
-			//CFGMaker *maker = new CFGMaker();
-			//cfg_map.put(*id, maker);
-			//coll->add(cfg);
 
 			// get entry
 			xom::Element *eelt = celt->getFirstChildElement("entry");
 			if(!eelt)
 				raiseError(celt, "no entry element");
-			Option<xom::String> eid = eelt->getAttributeValue("id");
-			if(!eid)
-				raiseError(eelt, "no ID");
-			if(bb_map.hasKey(*eid))
-				raiseError(eelt, _ << "ID " << *id << " used at least two times.");
-			//bb_map.put(*eid, cfg->entry());
+			Option<xom::String> entryID = eelt->getAttributeValue("id");
+			if(!entryID)
+				raiseError(eelt, "no entryID");
+			if(bb_map->hasKey(*entryID))
+				raiseError(eelt, _ << "entryID " << *entryID << " used at least two times.");
 
 			// get exit
 			eelt = celt->getFirstChildElement("exit");
 			if(!eelt)
 				raiseError(celt, "no exit element");
-			eid = eelt->getAttributeValue("id");
-			if(!eid)
-				raiseError(eelt, "no ID");
-			if(bb_map.hasKey(*eid))
-				raiseError(eelt, _ << "ID " << *id << " used at least two times.");
-			//bb_map.put(*eid, cfg->exit());
+			Option<xom::String> exitID = eelt->getAttributeValue("id");
+			if(!exitID)
+				raiseError(eelt, "no exitID");
+			if(bb_map->hasKey(*exitID))
+				raiseError(eelt, _ << "exitID " << *exitID << " used at least two times.");
 
 			// build the BBs
 			AutoDestructor<xom::Elements> bb_elts = celt->getChildElements("bb");
 			if(bb_elts->size() == 0)
-				raiseError(celt, _ << "no BB in CFG " << *id);
+				raiseError(celt, _ << "no BB in CFG " << *cfgID);
+
+			Inst* firstInst = &otawa::Inst::null;
 			for(int j = 0; j < bb_elts->size(); j++) {
-
-				// get information
-
+				// get information, e.g.
+				// <bb id="_0-1" number="1" address="0x00008d0c" size="24">
+				xom::Element *bb_elt = bb_elts->get(j); // BB element
+				Option<xom::String> blockID = bb_elt->getAttributeValue("id");
+				if(!blockID)
+					raiseError(eelt, "no blockID");
+				if(bb_map->hasKey(*blockID))
+					raiseError(eelt, _ << "blockID " << *blockID << " used at least two times.");
 
 				// build the basic block
+				// first we collect the instructions
+				AutoDestructor<xom::Elements> inst_elts = bb_elt->getChildElements("inst");
+				Vector<Inst *> insts(inst_elts->size()!=0?inst_elts->size():1); // we need size of 1 to have empty BB
+				for(int k = 0; k < inst_elts->size(); k++) {
+					// <inst address="0x0020099c" file="cover.c" line="232"/>
+					xom::Element *inst_elt = inst_elts->get(k); // current instruction
+					Option<xom::String> bbAddress = inst_elt->getAttributeValue("address");
+					t::uint32 address = 0;
+					if(bbAddress)
+						*bbAddress >> address;
+					Inst* currentInst = ws->process()->findInstAt(Address(address));
+					insts.add(currentInst);
+					if((firstInst == &otawa::Inst::null) && currentInst) {
+						firstInst = currentInst;
+					}
+				}
 
+				Block *nbb;
+				if(insts.count()) {
+					nbb = new BasicBlock(insts.detach());
+				}
+				else {
+					Option<xom::String> callID = bb_elt->getAttributeValue("call");
+					if(callID) {
+						nbb = new SynthBlock(); // a basic block without instruction
+						SYNTH_TARGET(nbb) = callID;
+					}
+					else {
+						// this block suppose to be empty for other use.
+						//insts.add(&otawa::Inst::null);
+						//nbb = new BasicBlock(insts.detach());
+						nbb = new SynthBlock();
+					}
+				}
+
+				// since the edges uses the BB id to connect, we need to use a map of id and the BBs
+				bb_map->put(*blockID, nbb);
 			}
-		}
+
+			// build the CFG
+			maker = new CFGMaker(firstInst);
+			bb_map->put(*entryID, maker->entry()); // put the entry in the map
+			cfg_map.put(*cfgID, maker);
+			cfgMakers.add(maker);
+
+			// add basic block in order ...
+			for(bb_map_t::Iterator bmpti(*bb_map); bmpti; bmpti++) {
+				if(bmpti->isBasic())
+					maker->add(*bmpti);
+			}
+
+			bb_map->put(*exitID, maker->exit()); // put the exit in the map
+
+			// collect the Edges
+			AutoDestructor<xom::Elements> edge_elts = celt->getChildElements("edge");
+			if(edge_elts->size() == 0)
+				raiseError(celt, _ << "no Edge in CFG " << *cfgID);
+
+			edge_list_t* edge_list = new edge_list_t(edge_elts->size());
+			edge_list_table.add(edge_list);
+			for(int j = 0; j < edge_elts->size(); j++) {
+				// get information, e.g.
+				// <edge source="_0-5" target="_0-8"/>
+				xom::Element *edge_elt = edge_elts->get(j); // BB element
+				Option<xom::String> sourceID = edge_elt->getAttributeValue("source");
+				if(!sourceID)
+					raiseError(eelt, "no sourceID");
+				Option<xom::String> targetID = edge_elt->getAttributeValue("target");
+				if(!targetID)
+					raiseError(eelt, "no targetID");
+				edge_list->add(pair(*sourceID, *targetID));
+			} // end of each edge
+		} // end of each CFG
+
+		// now we have all the CFGs, we can fill the info of CFGs to the Synth Blocks
+		int cfgIndex = 0;
+		for(bb_map_table_t::Iterator bbmtti(bb_map_table); bbmtti; bbmtti++, cfgIndex++) { // for each CFG
+			CFGMaker* cfgMaker = cfgMakers[cfgIndex];
+			for(bb_map_t::Iterator bbmti(**bbmtti); bbmti; bbmti++) { // for each entry in the bb_map
+				if(bbmti->isSynth()) { // now process the synth block. basic block were processed previously
+					if(*SYNTH_TARGET(*bbmti)) { // if there is an ID of the caller
+						cfgMaker->call(*bbmti->toSynth(),**cfg_map.get(**SYNTH_TARGET(*bbmti))); // get the map ID from the cfg_map
+						SYNTH_TARGET(*bbmti).remove(); // clear the property
+					}
+					else
+						cfgMaker->add(*bbmti);
+				}
+
+			} // for each Block
+		} // for each CFG
 
 		// build the edges
+		cfgIndex = 0;
+		for(edge_list_table_t::Iterator eltti(edge_list_table); eltti; eltti++, cfgIndex++) { // for each CFG
+			CFGMaker* cfgMaker = cfgMakers[cfgIndex];
+			bb_map_t* bb_map = bb_map_table[cfgIndex];
+			for(bb_map_t::KeyIterator xyz(*bb_map); xyz; xyz++) {
+			}
+
+			for(edge_list_t::Iterator elti(**eltti); elti; elti++) {
+				Block* sourceBlock = 0;
+				if(bb_map->hasKey((*elti).fst))
+					sourceBlock = bb_map->get((*elti).fst);
+				else
+					sourceBlock = cfgMaker->unknown();
+
+				Block* targetBlock = 0;
+				if(bb_map->hasKey((*elti).snd))
+					targetBlock = bb_map->get((*elti).snd);
+				else {
+					//targetBlock = cfgMaker->unknown();
+					targetBlock = new SynthBlock();
+					cfgMaker->add(targetBlock);
+				}
+
+
+				cfgMaker->add(sourceBlock, targetBlock, new Edge()); // build the edge
+			} // for each Edge
+		} // For each CFG
 
 		// cleanup
+		for(bb_map_table_t::Iterator i(bb_map_table); i; i++)
+			delete *i;
+		for(edge_list_table_t::Iterator i(edge_list_table); i; i++)
+			delete *i;
+	}
+
+	virtual void cleanup(WorkSpace *ws) {
+		CFGCollection *new_coll = new CFGCollection();
+		for(int i = 0; i < cfgMakers.count(); i++) {
+			CFG *cfg = cfgMakers[i]->build();
+			new_coll->add(cfg);
+			if(i == 0)
+				addRemover(COLLECTED_CFG_FEATURE, ENTRY_CFG(ws) = cfg);
+			delete cfgMakers[i];
+		}
+		track(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = new_coll);
 	}
 
 private:
+
 	Path path;
 	CFGCollection *coll;
-	genstruct::HashTable<xom::String, CFGMaker *> cfg_map;
-	genstruct::HashTable<xom::String, BasicBlock *> bb_map;
+	//genstruct::HashTable<xom::String, CFGMaker *> cfg_map;
+	avl::Map<xom::String, CFGMaker *> cfg_map;
+	bb_map_table_t bb_map_table;
+	edge_list_table_t edge_list_table;
+	Vector<CFGMaker*> cfgMakers;
 
 	void reset(void) {
 		coll = 0;
@@ -616,10 +763,13 @@ private:
 	}
 };
 
+p::feature CFG_FILE_INPUT_FEATURE("otawa::cfgio::CFG_FILE_INPUT_FEATURE", new Maker<Input>());
+
 p::declare Input::reg = p::init("otawa::cfgio::Input", Version(1, 0, 0))
 	.maker<Input>()
 	.require(otawa::DECODED_TEXT)
-	.provide(otawa::COLLECTED_CFG_FEATURE);
+	.provide(otawa::COLLECTED_CFG_FEATURE)
+	.provide(otawa::cfgio::CFG_FILE_INPUT_FEATURE);
 
 /**
  *

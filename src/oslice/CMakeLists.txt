@@ -19,6 +19,6 @@ add_library(oslice SHARED ${liboslice_la_SOURCES})
 install(TARGETS oslice DESTINATION ${LIBDIR})
 
 target_link_libraries(oslice otawa)
-target_link_libraries(oslice ${LIBELM})
+target_link_libraries(oslice ${LIBELM} odisplay)
 
 install(FILES oslice.eld DESTINATION "${LIBDIR}/otawa/proc/otawa")

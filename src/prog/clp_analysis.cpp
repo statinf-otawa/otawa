@@ -2541,7 +2541,7 @@ public:
 	void update(Domain& out, const Domain& in, Block* bb) {
 		out.copy(in);
 
-		// do nothing for an end block
+		// do nothing for an end block, just simply pass the in state to out state
 		if(bb->isEnd())
 			return;
 
@@ -2575,8 +2575,9 @@ public:
 			clp::STATE_IN(bb) = in;
 		}
 
-		if(out.equals(Domain::EMPTY)) // if the in state is bottom, then we don't have to evaluate this...
+		if(out.equals(Domain::EMPTY)) { // if the in state is bottom, then we don't have to evaluate this...
 			return;
+		}
 
 		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 			this->inst = inst;
