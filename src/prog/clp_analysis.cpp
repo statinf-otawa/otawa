@@ -2161,7 +2161,7 @@ public:
 					<< " to " << edge->target()
 					<< " [taken=" << edge->isTaken() << "] ***\n");
 		TRACEP(cerr << "s = " << dom << io::endl);
-		if(se::REG_FILTERS.exists(source)) {
+		if(!edge->isBoth() && se::REG_FILTERS.exists(source)) {
 			TRACEP(cerr << "\tApply filter on this edge!\n");
 			Vector<se::SECmp *> reg_filters = se::REG_FILTERS(source);
 			Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(source);

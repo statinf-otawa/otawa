@@ -40,12 +40,14 @@ class SynthBlock;
 class Edge: public PropList, public sgraph::GenEdge<Block, Edge> {
 	friend class CFGMaker;
 public:
-	inline Edge(t::uint32 flags = 0): _flags(flags) { }
+	inline Edge(t::uint32 flags = TAKEN): _flags(flags) { }
 	inline Block *target(void) const { return sink(); }
-	inline bool isNotTaken(void) const { return _flags & NOT_TAKEN; }
-	inline bool isTaken(void) const { return !isNotTaken(); }
+	inline bool isNotTaken(void) const { return _flags & NOT_TAKEN & !isBoth(); }
+	inline bool isTaken(void) const { return !isNotTaken() & !isBoth(); }
+	inline bool isBoth(void) const { return (_flags & TAKEN) && (_flags & NOT_TAKEN); }
 	inline t::uint32 flags(void) const { return _flags; }
 	static const t::uint32 NOT_TAKEN = 0x00000001;
+	static const t::uint32 TAKEN = 0x00000002;
 	inline bool isForward(void) const;
 	inline bool isBackward(void) const { return !isForward(); }
 private:
