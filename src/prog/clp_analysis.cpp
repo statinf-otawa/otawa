@@ -280,6 +280,10 @@ Value& Value::mulh(const Value& val){
 	else if (_kind == ALL || val._kind == ALL) 	/* ALL + anything = ALL */
 		*this = all;
 	else if (_delta == 0 && val._delta == 0) {	/* two constants */
+		t::uint64 result = _base;
+		result = result * val._base;
+		result = result >> 32;
+		_base = result;
 	}
 	else
 		*this = all;
@@ -298,8 +302,10 @@ Value& Value::mul(const Value& val){
 	else if (_kind == ALL || val._kind == ALL) 	/* ALL + anything = ALL */
 		*this = all;
 	else if (_delta == 0 && val._delta == 0) {	/* two constants */
-		uintn_t result = _base;
-//		_base = _base *
+		t::uint64 result = _base;
+		result = result * val._base;
+		result = result & 0xFFFF;
+		_base = (intn_t)result;
 	}
 	else
 		*this = all;

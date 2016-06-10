@@ -7,8 +7,8 @@
 namespace otawa { namespace oslice {
 
 
-static Identifier<otawa::dfa::MemorySet::t* > SLICER_MEM_BB_END_IN("otawa::oslice::SLICER_MEM_BB_END_IN", 0);
-static Identifier<BitVector> SLICER_REG_BB_END_IN("otawa::oslice::SLICER_REG_BB_END_IN");
+static Identifier<otawa::dfa::MemorySet::t* > SLICER_MEM_BB_END("otawa::oslice::SLICER_MEM_BB_END", 0);
+static Identifier<BitVector> SLICER_REG_BB_END("otawa::oslice::SLICER_REG_BB_END");
 
 static Identifier<bool> TO_REMOVE("", false);
 typedef Pair<Block*, t::uint32> predecessor_t;
@@ -493,8 +493,8 @@ void Slicer::initIdentifiersForEachBB(const CFGCollection& coll) {
 			if(!v->isBasic())
 				continue;
 			SET_OF_REMAINED_INSTRUCTIONS(*v) = new InstSet();
-			SLICER_REG_BB_END_IN(*v) = BitVector(workspace()->platform()->regCount(), false);
-			SLICER_MEM_BB_END_IN(*v) = new otawa::dfa::MemorySet::t(0);
+			SLICER_REG_BB_END(*v) = BitVector(workspace()->platform()->regCount(), false);
+			SLICER_MEM_BB_END(*v) = new otawa::dfa::MemorySet::t(0);
 		} // end for (CFG::BlockIter v = cfg->blocks(); v; v++) {
 	} // end for (int i = 0; i < coll.count(); i++) {
 }
@@ -505,14 +505,11 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 	{
 		// pop the first element to process
 		WorkingElement* we = workingList.pop();
-		BasicBlock* currentBB_wl = we->_bb->toBasic();
+		Block* currentBB_wl = we->_bb;
 		elm::BitVector currentRegs_wl = we->_workingRegs;
 		// load the memory access set
-		//clp_value_set_t currentMems_wl(we->_workingMems);
 		otawa::dfa::MemorySet::t currentMems_wl(we->_workingMems);
-		Inst* currentInst_wl = currentBB_wl->last();
-		if(we->_inst != currentBB_wl->last())
-			currentInst_wl = we->_inst;
+		Inst* currentInst_wl = we->_inst;
 
 		if(_debugLevel & DISPLAY_SLICING_STAGES) {
 			elm::cerr << __SOURCE_INFO__ << __RED__ << "Popping new working element out: BB " << currentBB_wl->index() << " @ " <<  currentBB_wl->address() << __RESET__ << io::endl;
@@ -528,9 +525,16 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 
 		int currentReadMemIndex = 0;
 		int currentWriteMemIndex = 0;
+		bool reachFirstInstCurrentBB_wl = true;
 
-		bool beginingOfCurrentBB_wl = false;
-		while(!beginingOfCurrentBB_wl)
+		if(currentBB_wl->isBasic()) {
+			reachFirstInstCurrentBB_wl = false;
+			// here we fill the memory access information for each instruction
+			if(!_lightSlicing)
+				LivenessChecker::identifyAddrs(currentBB_wl->toBasic());
+		}
+
+		while(!reachFirstInstCurrentBB_wl)
 		{
 			if(_debugLevel & DISPLAY_SLICING_STAGES)
 				elm::cerr << __SOURCE_INFO__ << __YELLOW__ << "Processing " << currentInst_wl << " @ " << currentInst_wl->address() << __RESET__ << io::endl;
@@ -542,9 +546,8 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 			// for memory access
 			otawa::dfa::MemorySet::t addressInstRead(0), addressInstWrite(0);
 			if(!_lightSlicing) {
-				LivenessChecker::identifyAddrs(currentBB_wl);
-				LivenessChecker::getMems(currentBB_wl, currentInst_wl, currentReadMemIndex, addressInstRead, 0);
-				LivenessChecker::getMems(currentBB_wl, currentInst_wl, currentWriteMemIndex, addressInstWrite, 1);
+				LivenessChecker::getMems(currentBB_wl->toBasic(), currentInst_wl, currentReadMemIndex, addressInstRead, 0);
+				LivenessChecker::getMems(currentBB_wl->toBasic(), currentInst_wl, currentWriteMemIndex, addressInstWrite, 1);
 			}
 
 			if(_debugLevel & DISPLAY_SLICING_STAGES) {
@@ -595,8 +598,8 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 				}
 			}
 
-			if(currentInst_wl == currentBB_wl->first())
-				beginingOfCurrentBB_wl = true;
+			if(currentInst_wl == currentBB_wl->toBasic()->first())
+				reachFirstInstCurrentBB_wl = true;
 			else
 				currentInst_wl = currentInst_wl->prevInst();
 		} // reaches the beginning of the BB
@@ -604,20 +607,22 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 		// here reaches the beginning of the BB, now we need to list the list of incoming edges
 		// so we can keep trace back the previous BB
 		// first we find the predecessors of the BB to process
-		elm::genstruct::Vector<BasicBlock *> predecessors;
+		elm::genstruct::Vector<Block *> predecessors;
 
 		for (Block::EdgeIter e = currentBB_wl->ins(); e; e++) {
 			Block* b = e->source(); // find the source of the edge, the predecessor of current BB
-			if (b->isEntry()) {
-				BBSet* callers = SetOfCallers(b);
-				if(!callers)
-					continue; // means we reach the program entry
 
-				for(BBSet::Iterator caller(*callers); caller ; ++caller) {
+			if (b->isEntry()) {
+				// then get the set of the callers
+				for(CFG::CallerIter caller = b->cfg()->callers(); caller; caller++) {
 					if(_debugLevel & DISPLAY_SLICING_STAGES)
-						elm::cerr << __SOURCE_INFO__ << "Found a caller @ " << caller->address() << io::endl;
-					// we now add the caller BB
-					predecessors.add(caller);
+						elm::cerr << __SOURCE_INFO__ << "Found a caller @ CFG " << caller->cfg()->index() << ", BB " << caller->index() << io::endl;
+
+					for(Block::EdgeIter bei = caller->ins(); bei; bei++) {
+						if(_debugLevel & DISPLAY_SLICING_STAGES)
+							elm::cerr << __SOURCE_INFO__ << __TAB__ << __GREEN__ << "Adding the block @ CFG " << bei->source()->cfg()->index() << ", " << bei->source() << __RESET__ << io::endl;
+						predecessors.add(bei->source());
+					}
 				}
 			} // end of handling the entry block
 			else if (b->isBasic()) {
@@ -632,18 +637,16 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 				// this means that we reach current BB from the returning of a function
 				// we obtain the exit block of the function that it returns from
 				if(_debugLevel & DISPLAY_SLICING_STAGES) {
-					elm::cerr << __SOURCE_INFO__ << "Caller of the current Synth Block = " << b->toSynth()->caller()->label() << io::endl;
-					elm::cerr << __SOURCE_INFO__ << "Callee of the current Synth Block = " << b->toSynth()->callee()->label() << io::endl;
+					elm::cerr << __SOURCE_INFO__ << "Found a Synth block with the callee to " << b->toSynth()->callee()->label() << io::endl;
 				}
 				Block* end = b->toSynth()->callee()->exit();
 				// each edge to the exit block is a possible BB which will goes to the current block
 				for (Block::EdgeIter EdgeToExit = end->ins(); EdgeToExit; EdgeToExit++) {
-					BasicBlock* BB_BeforeReturn = EdgeToExit->source()->toBasic();
+					Block* BB_BeforeReturn = EdgeToExit->source();
 					if(_debugLevel & DISPLAY_SLICING_STAGES)
-						elm::cerr << __SOURCE_INFO__ << "Found a callee @ " << BB_BeforeReturn->address() << io::endl;
+						elm::cerr << __SOURCE_INFO__ << __GREEN__ << "Adding block CFG " << BB_BeforeReturn->cfg()->index() << ", " << BB_BeforeReturn << __RESET__ << io::endl;
 					predecessors.add(BB_BeforeReturn);
 				}
-
 			} // end of handling the synth block
 			else {
 				if (b->isEntry())
@@ -662,10 +665,10 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 
 		// process the collected BBs
 		// now we need to see if the input (register and memory uses) feed from the successor matches totally or a subset of the pred BB
-		for(elm::genstruct::Vector<BasicBlock *>::Iterator predecessor(predecessors); predecessor; ++predecessor) {
-			BitVector bv = SLICER_REG_BB_END_IN(predecessor);
-			//clp_value_set_t* memIn = SLICER_MEM_BB_END_IN(predecessor);
-			otawa::dfa::MemorySet::t *memIn = SLICER_MEM_BB_END_IN(predecessor);
+		for(elm::genstruct::Vector<Block *>::Iterator predecessor(predecessors); predecessor; ++predecessor) {
+			BitVector bv = SLICER_REG_BB_END(predecessor);
+			//clp_value_set_t* memIn = SLICER_MEM_BB_END(predecessor);
+			otawa::dfa::MemorySet::t *memIn = SLICER_MEM_BB_END(predecessor);
 
 			bool notContainsAllRegs = !bv.includes(currentRegs_wl);
 			bool notContainsAllMems = false;
@@ -683,16 +686,19 @@ void Slicer::processWorkingList(elm::genstruct::Vector<WorkingElement*>& working
 				}
 			}
 
-			if(notContainsAllRegs | notContainsAllMems) {
+			if(notContainsAllRegs | notContainsAllMems | !currentBB_wl->isBasic()) {
 				if(_debugLevel & DISPLAY_SLICING_STAGES)
 					elm::cerr << __SOURCE_INFO__ << __RED__ << "Adding BB @ " << predecessor->address() << " to the working list." << __RESET__ << io::endl;
 				bv = bv | currentRegs_wl;
-				SLICER_REG_BB_END_IN(predecessor) = bv;
+				SLICER_REG_BB_END(predecessor) = bv;
 				if(!_lightSlicing) {
 					*memIn = dfa::MemorySet().join(*memIn, currentMems_wl);
-					SLICER_MEM_BB_END_IN(predecessor) = memIn;
+					SLICER_MEM_BB_END(predecessor) = memIn;
 				}
-				WorkingElement *we = new WorkingElement(predecessor, predecessor->last(), currentRegs_wl, currentMems_wl);
+				Inst* lastInstruction = 0;
+				if(predecessor->isBasic())
+					lastInstruction = predecessor->toBasic()->last();
+				WorkingElement *we = new WorkingElement(predecessor, lastInstruction, currentRegs_wl, currentMems_wl);
 				workingList.add(we);
 			}
 			else

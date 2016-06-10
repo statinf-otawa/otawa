@@ -29,28 +29,31 @@
 #include <elm/system/Path.h>
 #include <elm/system/System.h>
 
-#include <otawa/cfg.h>
-#include <otawa/cfg/features.h>
-#include <otawa/otawa.h>
-#include <otawa/util/ContextTree.h>
-#include <otawa/cfg/CFGCollector.h>
-#include <otawa/util/FlowFactLoader.h>
-#include <otawa/flowfact/features.h>
-#include <otawa/cfg/CFGChecker.h>
 #include <otawa/app/Application.h>
-#include <otawa/flowfact/ContextualLoopBound.h>
-#include <otawa/dynbranch/features.h>
-//#include <otawa/display/CFGOutput.h>
+#include <otawa/cfg.h>
+#include <otawa/cfg/CFGChecker.h>
+#include <otawa/cfg/CFGCollector.h>
+#include <otawa/cfg/features.h>
+#include <otawa/cfgio/features.h>
 #include <otawa/data/clp/features.h>
-#include <otawa/oslice/features.h>
-#include <otawa/oslice_reg/features.h>
-#include <time.h>
-#include <otawa/display/InlinedCFGDisplayer.h>
 #include <otawa/display/CFGDisplayer.h>
+#include <otawa/display/InlinedCFGDisplayer.h>
+#include <otawa/dynbranch/features.h>
+#include <otawa/flowfact/ContextualLoopBound.h>
+#include <otawa/flowfact/features.h>
+#include <otawa/otawa.h>
+#include <otawa/oslice/features.h>
+#include <otawa/proc/DynFeature.h>
+#include <otawa/proc/DynProcessor.h>
+#include <otawa/prop/DynIdentifier.h>
+#include <otawa/util/ContextTree.h>
+#include <otawa/util/FlowFactLoader.h>
+
 #include "display_MultipleDotDisplayer.h"
 #include "display_MKFFDotDisplayer.h"
+#include <time.h>
 
-#define FF
+
 using namespace elm;
 using namespace otawa;
 
@@ -280,6 +283,9 @@ private:
 	WorkSpace *_ws;
 };
 
+bool k(Inst* i) {
+	return false;
+}
 
 
 /**
@@ -705,7 +711,7 @@ private:
 	};
 	void generateCFGs(String path, int type = GeneratedCFGType::MULTIDOT);
 	option::SwitchOption xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget,
-		showBlockProps, rawoutput, forFun, slicing, slicing_reg, showSlicing, showReducedCFG, lightSlicing, debugging, nosource;
+		showBlockProps, rawoutput, forFun, slicing, showSlicing, showReducedCFG, lightSlicing, debugging, nosource, debugSlicing;
 };
 
 
@@ -764,16 +770,6 @@ void Command::generateCFGs(String path, int type) {
  */
 void Command::work(PropList &props) throw(elm::Exception) {
 
-//		otawa::display::CFGOutput::INLINING(props) = outputInlinedCFG;
-//		otawa::display::CFGOutput::VIRTUALIZED(props) = outputVirtualizedCFG;
-//		if(!otawa::display::CFGOutput::KIND(props).exists())
-//			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_DOT;
-//		if(!otawa::display::CFGOutput::PATH(props).exists())
-//			otawa::display::CFGOutput::PATH(props) = ".";
-//		if(rawoutput)
-//			otawa::display::CFGOutput::KIND(props) = otawa::display::OUTPUT_RAW_DOT;
-//		CFGOutput::RAW_BLOCK_INFO(props) = true;
-
 	clock_t mkfftime = clock();
 
 	// outputing the original CFG when required
@@ -791,33 +787,33 @@ void Command::work(PropList &props) throw(elm::Exception) {
 
 	Printer *p;
 
-if(!debugging) {
-	// Load flow facts and record unknown values
-	QuestFlowFactLoader ffl;
-	ffl.process(workspace(), props);
+	if(!debugging) {
+		// Load flow facts and record unknown values
+		QuestFlowFactLoader ffl;
+		ffl.process(workspace(), props);
 
-	// determine printer
+		// determine printer
 
-	if(xml)
-		p = new FFXPrinter(workspace(), true);
-	else
-		p = new FFPrinter(workspace(), true);
+		if(xml)
+			p = new FFXPrinter(workspace(), true);
+		else
+			p = new FFPrinter(workspace(), true);
 
-	// printer header
-	p->printHeader(cout);
+		// printer header
+		p->printHeader(cout);
 
-	// Build the checksums of the binary files
-	if(!ffl.checkSummed()) {
-		for(Process::FileIter file(workspace()->process()); file; file++) {
-			checksum::Fletcher sum;
-			io::InFileStream stream(file->name());
-			sum.put(stream);
-			elm::system::Path path = file->name();
-			p->printCheckSum(cout, path, sum.sum());
+		// Build the checksums of the binary files
+		if(!ffl.checkSummed()) {
+			for(Process::FileIter file(workspace()->process()); file; file++) {
+				checksum::Fletcher sum;
+				io::InFileStream stream(file->name());
+				sum.put(stream);
+				elm::system::Path path = file->name();
+				p->printCheckSum(cout, path, sum.sum());
+			}
+			cout << io::endl;
 		}
-		cout << io::endl;
 	}
-}
 
 	// Enable the dynamic branch
 	if(dynbranch) {
@@ -830,13 +826,17 @@ if(!debugging) {
 			else {
 				workspace()->invalidate(COLLECTED_CFG_FEATURE);
 				if(slicing) {
+#ifndef USE_PLUGINS
+					DynFeature f1("otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE");
+					workspace()->invalidate(f1);
+					DynFeature f2("otawa::oslice::SLICER_FEATURE");
+					workspace()->invalidate(f2);
+#else
 					workspace()->invalidate(otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE);
 					workspace()->invalidate(otawa::oslice::SLICER_FEATURE);
+#endif
 				}
-				if(slicing_reg) {
-					workspace()->invalidate(otawa::oslice_reg::UNKNOWN_TARGET_COLLECTOR_FEATURE);
-					workspace()->invalidate(otawa::oslice_reg::SLICER_FEATURE);
-				}
+
 				workspace()->require(COLLECTED_CFG_FEATURE, props); // rebuild the CFG
 			} // end of the first time
 
@@ -845,63 +845,37 @@ if(!debugging) {
 			}
 
 			// before performing the analysis, maybe it is better to slice away the unnecessary ?
-			if(slicing || slicing_reg || lightSlicing) {
+			if(slicing || lightSlicing) {
 
-				if(slicing || lightSlicing)
-					workspace()->require(otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE, props);
-				else if(slicing_reg)
-					workspace()->require(otawa::oslice_reg::UNKNOWN_TARGET_COLLECTOR_FEATURE, props);
+				if(debugSlicing) {
+					//otawa::oslice::SLICE_DEBUG_LEVEL(props)=0xFFFF;
+					DynIdentifier<int> sliceDebugLevel("otawa::oslice::DEBUG_LEVEL");
+					sliceDebugLevel(props) = 0xFFFF;
+				}
 
+				//workspace()->require(otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE, props);
+				workspace()->require(DynFeature("otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE"), props);
 
 				if(showSlicing) {
-					otawa::oslice::CFG_OUTPUT(props) = true;
-					otawa::oslice::SLICING_CFG_OUTPUT_PATH(props) = (String("./") << iteration << "_slicing");
-					otawa::oslice::SLICED_CFG_OUTPUT_PATH(props) = (String("./") << iteration << "_sliced");
+					// otawa::oslice::CFG_OUTPUT(props) = true;
+					DynIdentifier<bool> cfgOutput("otawa::oslice::CFG_OUTPUT");
+					cfgOutput(props) = true;
+
+					//otawa::oslice::SLICING_CFG_OUTPUT_PATH(props) = (String("./") << iteration << "_slicing");
+					DynIdentifier<String> slicingCFGOutput("otawa::oslice::SLICING_CFG_OUTPUT_PATH");
+					slicingCFGOutput(props) = (String("./") << iteration << "_slicing");
+
+					//otawa::oslice::SLICED_CFG_OUTPUT_PATH(props) = (String("./") << iteration << "_sliced");
+					DynIdentifier<String> slicedCFGOutput("otawa::oslice::SLICED_CFG_OUTPUT_PATH");
+					slicedCFGOutput(props) = (String("./") << iteration << "_sliced");
 				}
 
-				{
-					int sum = 0;
-					int sumCFG = 0;
-					int sumB = 0;
-					const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
-					for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
-						sumCFG++;
-						for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
-							sumB++;
-							if(bi->isBasic())
-								sum = sum + bi->toBasic()->count();
-							else
-								continue;
-						} // for each BB
-					} // for each CFG
-					elm::cerr << "[mkff] Before slicing: " << sumCFG << " CFGs, " << sumB << " Blocks, " << sum << " instructions" << io::endl;
-				}
-
-				if(slicing && !lightSlicing)
-					workspace()->require(otawa::oslice::SLICER_FEATURE, props);
+				if(slicing)
+					// workspace()->require(otawa::oslice::SLICER_FEATURE, props);
+					workspace()->require(DynFeature("otawa::oslice::SLICER_FEATURE"), props);
 				else if(lightSlicing)
-					workspace()->require(otawa::oslice::LIGHT_SLICER_FEATURE, props);
-				else if(slicing_reg)
-					workspace()->require(otawa::oslice_reg::SLICER_FEATURE, props);
-
-
-				{
-					int sum = 0;
-					int sumCFG = 0;
-					int sumB = 0;
-					const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
-					for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
-						sumCFG++;
-						for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
-							sumB++;
-							if(bi->isBasic())
-								sum = sum + bi->toBasic()->count();
-							else
-								continue;
-						} // for each BB
-					} // for each CFG
-					elm::cerr << "[mkff] After slicing: " << sumCFG << " CFGs, " << sumB << " Blocks, " << sum << " instructions" << io::endl;
-				}
+					//workspace()->require(otawa::oslice::LIGHT_SLICER_FEATURE, props);
+					workspace()->require(DynFeature("otawa::oslice::LIGHT_SLICER_FEATURE"), props);
 
 				if(outputCFG || showReducedCFG)
 					generateCFGs(String("") << iteration << "_sliced" /*, GeneratedCFGType::MULTIDOT*/);
@@ -934,25 +908,24 @@ if(!debugging) {
 
 			} // end of slicing
 
-			if(showReducedCFG) {
-				elm::cout << "assert just to stop the program for debugging" << io::endl;
-				assert(0);
-			}
-
 			// STEP: dynamic branch analysis
 			// to ensure that the unknown block does not generate top values which wipes out the whole state
 			clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = true;
 			// set it to false so the branch targets will be detected
-			otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false;
+			// otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false;
+			DynIdentifier<bool> newBranchTargetFound("otawa::dynbranch::NEW_BRANCH_TARGET_FOUND");
+			newBranchTargetFound(workspace()) = false;
 
-			workspace()->require(otawa::dynbranch::DYNBRANCH_FEATURE, props); // perform the analysis
+			// workspace()->require(otawa::dynbranch::DYNBRANCH_FEATURE, props); // perform the analysis
+			workspace()->require(DynFeature("otawa::dynbranch::DYNBRANCH_FEATURE"), props);
+
 			// the loop goes on searching new branch target when there is a new target found
-			branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
+			//branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
+			branchDetected = newBranchTargetFound(workspace());
 			clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = false;
 
 			iteration++;
 		} while(branchDetected);
-
 	}
 
 
@@ -962,123 +935,119 @@ if(!debugging) {
 	if(outputCFG)
 		generateCFGs(String("") << "final" /*, GeneratedCFGType::MULTIDOT*/);
 
-if(!debugging) {
-	// display low-level flow facts
-	ControlOutput ctrl(*p);
-	ctrl.process(workspace(), props);
+	if(!debugging) {
+		// display low-level flow facts
+		ControlOutput ctrl(*p);
+		ctrl.process(workspace(), props);
 
-	// display the context tree
-	FFOutput out(*p, removeDuplicatedTarget);
-	out.process(workspace(), props);
+		// display the context tree
+		FFOutput out(*p, removeDuplicatedTarget);
+		out.process(workspace(), props);
 
-	// output footer for XML
-	p->printFooter(cout);
+		// output footer for XML
+		p->printFooter(cout);
 
-	// cleanup at end
-	delete p;
-}
-else {
-	class printer {
-	public:
-		void addressOf(io::Output& out, CFG *cfg, Address address) {
-			string label = cfg->label();
-			if(!label)
-				out << "0x" << address;
-			else {
-				t::uint32 offset = address - cfg->address();
-				out << '"' << label << '"';
-				if(offset > 0)
-					out << " + 0x" << io::hex(offset);
-				else
-					out << " - 0x" << io::hex(-offset);
-			}
-		}
-
-		void printMulti(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va, WorkSpace* _ws, String s) {
-			out << s << " ";
-			addressOf(out, cfg, inst->address());
-
-			if(va->count()) {
-				out << " to "
-					<< "\t// 0x" << inst->address() << "\n";
-				for(Vector<Address>::Iterator vai(*va); vai; vai++) {
-					out << "\t";
-					addressOf(out, cfg, *vai);
-					if(*vai == va->last())
-						out << ";";
+		// cleanup at end
+		delete p;
+	}
+	else {
+		class printer {
+		public:
+			void addressOf(io::Output& out, CFG *cfg, Address address) {
+				string label = cfg->label();
+				if(!label)
+					out << "0x" << address;
+				else {
+					t::uint32 offset = address - cfg->address();
+					out << '"' << label << '"';
+					if(offset > 0)
+						out << " + 0x" << io::hex(offset);
 					else
-						out << ",";
-					out << "\t// 0x" << *vai << " switch-like branch in " << nameOf(cfg) << io::endl;
+						out << " - 0x" << io::hex(-offset);
 				}
 			}
-			else if(IGNORE_CONTROL(inst)) {
-				out << " has no target (infeasible path)."
-					<< "\t// 0x" << inst->address() << " switch-like branch in " << nameOf(cfg) << io::endl;
-			}
-			else {
-				out << " to ?;"
-					<< "\t// 0x" << inst->address() << " switch-like branch in " << nameOf(cfg) << io::endl;
-			}
-			out << io::endl;
-		}
-	};
 
+			void printMulti(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va, WorkSpace* _ws, String s) {
+				out << s << " ";
+				addressOf(out, cfg, inst->address());
 
-	Vector<Address> displayedInstructions;
-	const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
-	for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
-		for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
-			// only treats BB
-			if(!bi->isBasic())
-				continue;
-			BasicBlock* bb = bi->toBasic();
-			Inst* lastInst = bb->last();
-
-			if(lastInst->isControl() && !lastInst->isReturn() && !RECORDED(lastInst) && !PRESERVED(lastInst) && !lastInst->target()) {
-			}
-			else
-				continue;
-
-			if(BRANCH_TARGET(lastInst).exists()) {
-				Vector<Address> va;
-				for(Identifier<Address>::Getter target(lastInst, BRANCH_TARGET); target; target++)
-					va.push(*target);
-				if(removeDuplicatedTarget) {
-					// to prevent same instruction printed twice
-					if(displayedInstructions.contains(lastInst->address()))
-						continue;
-					else if(va)
-						displayedInstructions.add(lastInst->address());
+				if(va->count()) {
+					out << " to "
+						<< "\t// 0x" << inst->address() << "\n";
+					for(Vector<Address>::Iterator vai(*va); vai; vai++) {
+						out << "\t";
+						addressOf(out, cfg, *vai);
+						if(*vai == va->last())
+							out << ";";
+						else
+							out << ",";
+						out << "\t// 0x" << *vai << " switch-like branch in " << nameOf(cfg) << io::endl;
+					}
 				}
-				printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multibranch");
-			}
-			else if(CALL_TARGET(lastInst).exists()) {
-				Vector<Address> va;
-				for(Identifier<Address>::Getter target(lastInst, CALL_TARGET); target; target++)
-					va.push(*target);
-				if(removeDuplicatedTarget) {
-					// to prevent same instruction printed twice
-					if(displayedInstructions.contains(lastInst->address()))
-						continue;
-					else if(va)
-						displayedInstructions.add(lastInst->address());
-				}
-				printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multicall");
-			}
-			else {
-				Vector<Address> va;
-				if(lastInst->isControl() && lastInst->isConditional())
-					printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multibranch");
+				else if(IGNORE_CONTROL(inst))
+					out << " has no target (infeasible path)." << "\t// 0x" << inst->address() << " switch-like branch in " << nameOf(cfg) << io::endl;
 				else
-					printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multicall");
+					out << " to ?;" << "\t// 0x" << inst->address() << " switch-like branch in " << nameOf(cfg) << io::endl;
+				out << io::endl;
 			}
+		};
 
-		} // for each BB
-	} // for each CFG
-} // debugging
+
+		Vector<Address> displayedInstructions;
+		const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
+		for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+			for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
+				// only treats BB
+				if(!bi->isBasic())
+					continue;
+				BasicBlock* bb = bi->toBasic();
+				Inst* lastInst = bb->last();
+
+				if(lastInst->isControl() && !lastInst->isReturn() && !RECORDED(lastInst) && !PRESERVED(lastInst) && !lastInst->target()) {
+				}
+				else
+					continue;
+
+				if(BRANCH_TARGET(lastInst).exists()) {
+					Vector<Address> va;
+					for(Identifier<Address>::Getter target(lastInst, BRANCH_TARGET); target; target++)
+						va.push(*target);
+					if(removeDuplicatedTarget) {
+						// to prevent same instruction printed twice
+						if(displayedInstructions.contains(lastInst->address()))
+							continue;
+						else if(va)
+							displayedInstructions.add(lastInst->address());
+					}
+					printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multibranch");
+				}
+				else if(CALL_TARGET(lastInst).exists()) {
+					Vector<Address> va;
+					for(Identifier<Address>::Getter target(lastInst, CALL_TARGET); target; target++)
+						va.push(*target);
+					if(removeDuplicatedTarget) {
+						// to prevent same instruction printed twice
+						if(displayedInstructions.contains(lastInst->address()))
+							continue;
+						else if(va)
+							displayedInstructions.add(lastInst->address());
+					}
+					printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multicall");
+				}
+				else {
+					Vector<Address> va;
+					if(lastInst->isControl() && lastInst->isConditional())
+						printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multibranch");
+					else
+						printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multicall");
+				}
+
+			} // for each BB
+		} // for each CFG
+	} // debugging
 
 	mkfftime = clock() - mkfftime;
-	elm::cerr << "mkff takes " << mkfftime << " micro-seconds" << io::endl;
+	elm::cerr << "mkff: " << mkfftime << " micro-seconds" << io::endl;
 }
 
 
@@ -1102,12 +1071,12 @@ Command::Command(void):
 		rawoutput(*this, option::cmd, "-R", option::cmd, "--raw_output", option::description, "generate raw dot output file (without calling dot)", option::end),
 		forFun(*this, option::cmd, "-F", option::cmd, "--for_fun", option::description, "the generated dot files will be colourful :)", option::end),
 		slicing(*this, option::cmd, "-T", option::cmd, "--test", option::description, "apply the slicing during dynamic branching analysis", option::end),
-		slicing_reg(*this, option::cmd, "-G", option::cmd, "--slicing_reg", option::description, "apply the slicing (lite) during dynamic branching analysis", option::end),
 		showSlicing(*this, option::cmd, "-SS", option::cmd, "--show_slicing", option::description, "showing the progress of the slicing in dot files.", option::end),
 		showReducedCFG(*this, option::cmd, "-SR", option::cmd, "--show_reduced", option::description, "showing the result of the reduced CFG in dot files.", option::end),
 		lightSlicing(*this, option::cmd, "-LS", option::cmd, "--light_slicing", option::description, "apply the slicing (lite) during dynamic branching analysis", option::end),
 		debugging(*this, option::cmd, "-DBG", option::cmd, "--debugging", option::description, "fast output generation", option::end),
-		nosource(*this, option::cmd, "-NS", option::cmd, "--no_source", option::description, "do not output source code in the generated CFGs", option::end)
+		nosource(*this, option::cmd, "-NS", option::cmd, "--no_source", option::description, "do not output source code in the generated CFGs", option::end),
+		debugSlicing(*this, option::cmd, "-DS", option::cmd, "--debug_slicing", option::description, "show the debugging message of slicing", option::end)
 {
 }
 

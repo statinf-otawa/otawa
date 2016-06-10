@@ -81,9 +81,8 @@ void LivenessChecker::processWorkSpace(WorkSpace *fw) {
 	// we need to get the CLP information in order to do address access
 	clpManager = new clp::Manager(workspace());
 
-	buildReverseSynthLink(coll);
-
 #ifdef ORIG
+	buildReverseSynthLink(coll);
 	initIdentifiersForEachBB(coll);
 	if (interestedInstructions) {
 		if(_debugLevel & DISPLAY_LIVENESS_STAGES)
