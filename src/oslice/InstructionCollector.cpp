@@ -41,7 +41,7 @@ bool interestedInstruction(otawa::Inst* inst) { assert(0); return true; }
  *	This will be used by the default instruction collector.
  *	Once the collector is used, please remember to remove this Identifier, so the behaviors won't be over-ridden.
  */
-Identifier<bool (*)(otawa::Inst*)> FPTR_FOR_COLLECTING("", &interestedInstruction);
+Identifier<bool (*)(otawa::Inst*)> FPTR_FOR_COLLECTING("otawa::oslice::FPTR_FOR_COLLECTING", &interestedInstruction);
 
 
 p::feature INSTRUCTION_COLLECTOR_FEATURE("otawa::oslice::INSTRUCTION_COLLECTOR_FEATURE", new Maker<InstCollector>());

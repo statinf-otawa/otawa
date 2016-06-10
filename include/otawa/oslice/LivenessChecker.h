@@ -13,6 +13,17 @@
 using namespace otawa;
 
 namespace otawa { namespace oslice {
+template<class T>
+inline void displayAddrs(io::Output& out, T & v) {
+	out << v;
+}
+inline void displayAddrs(io::Output& out, clp_bag_t & v) {
+	for(int i = 0; i < v.count(); ++i)
+		out << v[i] << " ";
+	if(v.count() == 0)
+		out << "None ";
+}
+
 class LivenessChecker: public otawa::Processor {
 public:
 
@@ -22,17 +33,6 @@ public:
 	virtual void processWorkSpace(WorkSpace *fw);
 	inline static elm::BitVector getRegisters() { return _defaultRegisters; }
  	static void provideRegisters(Inst* inst, elm::BitVector& regsToModify, int readOrWrite);
- 	template<class T>
- 	inline static void displayAddrs(io::Output& out, T & v) {
- 		out << v;
- 	}
- 	inline static void displayAddrs(io::Output& out, clp_bag_t & v) {
- 		for(int i = 0; i < v.count(); ++i)
- 			out << v[i] << " ";
- 		if(v.count() == 0)
- 			out << "None ";
- 	}
-
  	static void getMems(BasicBlock* bb, Inst* inst, int & currentIndex, otawa::dfa::MemorySet::t & clpSet, int readOrWrite);
  	static bool containsAllAddrs(otawa::dfa::MemorySet::t & a, otawa::dfa::MemorySet::t & b);
  	static void updateAddrsFromInstruction(otawa::dfa::MemorySet::t & workingMem, otawa::dfa::MemorySet::t & readMem, otawa::dfa::MemorySet::t & writeMem, t::uint32 debugLevel);

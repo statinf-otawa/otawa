@@ -25,6 +25,13 @@ extern Identifier<InstSet*> SET_OF_REMAINED_INSTRUCTIONS;
 extern Identifier<bool> ENABLE_LIGHT_SLICING;
 extern Identifier<bool (*)(otawa::Inst*)> FPTR_FOR_COLLECTING;
 
+extern Identifier<dfa::MemorySet::t* > MEM_BB_END_IN;
+extern Identifier<BitVector> REG_BB_END_IN;
+extern Identifier<dfa::MemorySet::t*> MEM_BB_BEGIN_OUT;
+extern Identifier<BitVector> REG_BB_BEGIN_OUT;
+
+
+
 class Manager {
 public:
 	typedef t::uint32 step_t;

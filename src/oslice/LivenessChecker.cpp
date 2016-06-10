@@ -3,20 +3,17 @@
 #include <elm/util/Pair.h>
 
 namespace otawa { namespace oslice {
-//static Identifier<otawa::oslice::clp_value_set_t* > MEM_BB_END_IN("", NULL);
-static Identifier<dfa::MemorySet::t* > MEM_BB_END_IN("", NULL);
-//static Identifier<otawa::oslice::clp_value_set_t* > MEM_BB_BEGIN_OUT("", NULL);
-static Identifier<dfa::MemorySet::t*> MEM_BB_BEGIN_OUT("", NULL);
-static Identifier<BitVector> REG_BB_END_IN("");
-static Identifier<BitVector> REG_BB_BEGIN_OUT("");
-extern Identifier<otawa::oslice::BBSet*> SetOfCallers;
-static Identifier<inst_clp_bag_t> MEM_READ_BAG_BB("");
-static Identifier<inst_clp_bag_t> MEM_WRITE_BAG_BB("");
+Identifier<dfa::MemorySet::t* > MEM_BB_END_IN("otawa::oslice::LIVING_MEM_IN", NULL);
+Identifier<dfa::MemorySet::t*> MEM_BB_BEGIN_OUT("otawa::oslice::LIVING_MEM_OUT", NULL);
+Identifier<BitVector> REG_BB_END_IN("otawa::oslice::LIVING_REG_IN");
+Identifier<BitVector> REG_BB_BEGIN_OUT("otawa::oslice::LIVING_REG_OUT");
+
+static Identifier<inst_clp_bag_t> MEM_READ_BAG_BB("otawa::oslice::LIVING_MEM_READ_BAG");
+static Identifier<inst_clp_bag_t> MEM_WRITE_BAG_BB("otawa::oslice::LIVING_MEM_WRITE_BAG");
 // for manager
-//static Identifier<clp_bag_t> MEM_INST("");
-static Identifier<dfa::MemorySet::t*> MEM_INST("");
-static Identifier<BitVector> REG_INST("");
-static Identifier<int> MEM_ACCESS_IDENTIFIED("", 0);
+static Identifier<dfa::MemorySet::t*> MEM_INST("otawa::oslice::MEM_INST");
+static Identifier<BitVector> REG_INST("otawa::oslice::REG_INST");
+static Identifier<int> MEM_ACCESS_IDENTIFIED("otawa::oslice::MEM_ACCESS_IDENTIFIED", 0);
 }}
 
 
@@ -24,7 +21,7 @@ static Identifier<int> MEM_ACCESS_IDENTIFIED("", 0);
 
 namespace otawa { namespace oslice {
 
-Identifier<int> LIVENESS_DEBUG_LEVEL("otawa::oslice::LIVENESS_MANAGER_DEBUG_LEVEL", 0);
+Identifier<int> LIVENESS_DEBUG_LEVEL("otawa::oslice::LIVENESS_DEBUG_LEVEL", 0);
 p::feature LIVENESS_FEATURE("otawa::oslice::LIVENESS_FEATURE", new Maker<LivenessChecker>());
 
 p::declare LivenessChecker::reg = p::init("otawa::oslice::LivenessChecker", Version(2, 0, 0))
@@ -44,6 +41,7 @@ LivenessChecker::LivenessChecker(AbstractRegistration& _reg) : otawa::Processor(
 void LivenessChecker::configure(const PropList &props) {
 	Processor::configure(props);
 	_debugLevel = LIVENESS_DEBUG_LEVEL(props);
+	LIVENESS_DEBUG_LEVEL(workspace()) = _debugLevel;
 }
 
 /**
@@ -64,6 +62,8 @@ void LivenessChecker::processWorkSpace(WorkSpace *fw) {
 	CFG *cfg = coll[0];
 	// now lets find the program exit block
 	Block* programExit = cfg->exit();
+
+#ifdef ORIG
 	// we have a list of blocks which will go to the end of the program ?
 	interested_instructions_t *interestedInstructions = new interested_instructions_t();
 	for (Block::EdgeIter edge = programExit->ins(); edge; edge++) {
@@ -75,23 +75,25 @@ void LivenessChecker::processWorkSpace(WorkSpace *fw) {
 	// DBG: list a list of BBs
 	if(_debugLevel & DISPLAY_LIVENESS_STAGES)
 		for(interested_instructions_t::Iterator iter(*interestedInstructions); iter; ++iter)
-			elm::cout << __SOURCE_INFO__ << "Block to start: BB " << iter->getBB()->index() << " @ " << iter->getBB()->address() << ", ends with instruction " << iter->getInst() << " @ " << iter->getBB()->address() << io::endl;
+			elm::cerr << __SOURCE_INFO__ << "Block to start: BB " << iter->getBB()->index() << " @ " << iter->getBB()->address() << ", ends with instruction " << iter->getInst() << " @ " << iter->getBB()->address() << io::endl;
+#endif
 
 	// we need to get the CLP information in order to do address access
 	clpManager = new clp::Manager(workspace());
 
 	buildReverseSynthLink(coll);
-	initIdentifiersForEachBB(coll);
 
+#ifdef ORIG
+	initIdentifiersForEachBB(coll);
 	if (interestedInstructions) {
 		if(_debugLevel & DISPLAY_LIVENESS_STAGES)
-			elm::cout << __SOURCE_INFO__<< "The list of interested instructions: " << io::endl;
+			elm::cerr << __SOURCE_INFO__<< "The list of interested instructions: " << io::endl;
 
 		// now we look into each of these instructions
 		for(interested_instructions_t::Iterator currentII(*interestedInstructions); currentII; currentII++) {
 			if(_debugLevel & DISPLAY_LIVENESS_STAGES) {
-				elm::cout << __SOURCE_INFO__ << "    " << currentII->getInst() << " @ " << currentII->getInst()->address() << " from BB " << currentII->getBB()->index() << io::endl;
-				elm::cout << __SOURCE_INFO__ << "Popping interested instruction " << currentII->getInst() << " @ " << currentII->getInst()->address() << io::endl;
+				elm::cerr << __SOURCE_INFO__ << "    " << currentII->getInst() << " @ " << currentII->getInst()->address() << " from BB " << currentII->getBB()->index() << io::endl;
+				elm::cerr << __SOURCE_INFO__ << "Popping interested instruction " << currentII->getInst() << " @ " << currentII->getInst()->address() << io::endl;
 			}
 			Inst* currentInst = currentII->getInst();
 			BasicBlock* currentBB = currentII->getBB();
@@ -101,8 +103,8 @@ void LivenessChecker::processWorkSpace(WorkSpace *fw) {
 
 			// obtain the working register
 			if(_debugLevel & DISPLAY_LIVENESS_STAGES) {
-				elm::cout << __SOURCE_INFO__ << "Creating the initial Regs from " << currentInst << " @ " << currentInst->address() << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Working regs = " << workingRegs << io::endl;
+				elm::cerr << __SOURCE_INFO__ << "Creating the initial Regs from " << currentInst << " @ " << currentInst->address() << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Working regs = " << workingRegs << io::endl;
 			}
 
 			// obtain the working memory
@@ -116,7 +118,7 @@ void LivenessChecker::processWorkSpace(WorkSpace *fw) {
 
 			// workingMem is going to be different for each working element, therefore we allocate the memory
 			if(_debugLevel & DISPLAY_LIVENESS_STAGES) {
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Working mems = "; displayAddrs(elm::cout, workingMems); elm::cout << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Working mems = "; displayAddrs(elm::cerr, workingMems); elm::cerr << io::endl;
 			}
 
 			// define the working list of BB
@@ -135,7 +137,18 @@ void LivenessChecker::processWorkSpace(WorkSpace *fw) {
 		delete (*iter);
 	interestedInstructions->clear();
 	delete interestedInstructions;
-
+#else
+	// get the working register
+	elm::BitVector workingRegs(workspace()->platform()->regCount(), false);
+	// at the end of the program, no memory address will be used
+	dfa::MemorySet::t workingMems(0);
+	// define the working list of BB
+	elm::genstruct::Vector<WorkingElement*> workingList;
+	// the first element of the list is the exit block
+	workingList.add(new WorkingElement(programExit, 0, workingRegs, workingMems));
+	// process the working list
+	processWorkingList(workingList);
+#endif
 	// end of using manager
 	delete clpManager;
 } // processWorkSpace
@@ -150,9 +163,7 @@ void LivenessChecker::initIdentifiersForEachBB(const CFGCollection& coll) {
 				continue;
 			REG_BB_END_IN(*v) = BitVector(workspace()->platform()->regCount(), false);
 			REG_BB_BEGIN_OUT(*v) = BitVector(workspace()->platform()->regCount(), false);
-			//MEM_BB_END_IN(*v) = new clp_value_set_t();
 			MEM_BB_END_IN(*v) = new dfa::MemorySet::t(0);
-			//MEM_BB_BEGIN_OUT(*v) = new clp_value_set_t();
 			MEM_BB_BEGIN_OUT(*v) = new dfa::MemorySet::t(0);
 		} // end for (CFG::BlockIter v = cfg->blocks(); v; v++) {
 	} // end for (int i = 0; i < coll.count(); i++) {
@@ -176,49 +187,48 @@ void LivenessChecker::processWorkingList(elm::genstruct::Vector<WorkingElement*>
 	{
 		// pop the first element to process
 		WorkingElement* we = workingList.pop();
-		BasicBlock* currentBB_wl = we->_bb;
+		Block* currentBB_wl = we->_bb;
 		elm::BitVector currentRegs_wl = we->_workingRegs;
-		// load the memory access set
-		//clp_value_set_t currentMems_wl(we->_workingMems);
-		dfa::MemorySet::t currentMems_wl(we->_workingMems);
-
-		Inst* currentInst_wl = currentBB_wl->last();
+		dfa::MemorySet::t currentMems_wl(we->_workingMems); // load the memory access set
+		Inst* currentInst_wl = we->_inst;
 		if(_debugLevel & DISPLAY_LIVENESS_STAGES) {
-			elm::cout << __SOURCE_INFO__ << __RED__ << "Popping new working element out: BB " << currentBB_wl->index() << " @ " <<  currentBB_wl->address() << __RESET__ << io::endl;
-			elm::cout << __SOURCE_INFO__ << __TAB__ << "with working Regs  = " << currentRegs_wl << io::endl;
-			elm::cout << __SOURCE_INFO__ << __TAB__ << "with working MEM   = "; displayAddrs(elm::cout, currentMems_wl); elm::cout << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __RED__ << "Popping new working element out: CFG " << currentBB_wl->cfg()->index() << ", " <<  currentBB_wl << __RESET__ << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << "with working Regs  = " << currentRegs_wl << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << "with working MEM   = "; displayAddrs(elm::cerr, currentMems_wl); elm::cerr << io::endl;
 		}
 		delete we;
 
-		// here we fill the memory access information for each instruction
-		identifyAddrs(currentBB_wl);
-
 		int currentReadMemIndex = 0;
 		int currentWriteMemIndex = 0;
+		bool reachFirstInstCurrentBB_wl = true;
 
-		bool beginingOfCurrentBB_wl = false;
-		while(!beginingOfCurrentBB_wl)
+		if(currentBB_wl->isBasic()) {
+			reachFirstInstCurrentBB_wl = false;
+			// here we fill the memory access information for each instruction
+			identifyAddrs(currentBB_wl->toBasic());
+		}
+
+		while(!reachFirstInstCurrentBB_wl) // only comes in when the block fetched in is a Basic Block with instructions
 		{
 			if(_debugLevel & DISPLAY_LIVENESS_STAGES)
-				elm::cout << __SOURCE_INFO__ << "Processing " << currentInst_wl << " @ " << currentInst_wl->address() << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __CYAN__ << "Processing " << currentInst_wl << " @ " << currentInst_wl->address() << __RESET__ << io::endl;
 			elm::BitVector currentRegsDef(workspace()->platform()->regCount(), false);
 			elm::BitVector currentRegsUse(workspace()->platform()->regCount(), false);
 			provideRegisters(currentInst_wl, currentRegsUse, 0);
 			provideRegisters(currentInst_wl, currentRegsDef, 1);
 
 			// for memory access
-			//clp_value_set_t addressInstRead, addressInstWrite;
 			dfa::MemorySet::t addressInstRead(0), addressInstWrite(0);
-			LivenessChecker::getMems(currentBB_wl, currentInst_wl, currentReadMemIndex, addressInstRead, 0);
-			LivenessChecker::getMems(currentBB_wl, currentInst_wl, currentWriteMemIndex, addressInstWrite, 1);
+			LivenessChecker::getMems(currentBB_wl->toBasic(), currentInst_wl, currentReadMemIndex, addressInstRead, 0);
+			LivenessChecker::getMems(currentBB_wl->toBasic(), currentInst_wl, currentWriteMemIndex, addressInstWrite, 1);
 
 			if(_debugLevel & DISPLAY_LIVENESS_STAGES) {
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Reg Def       = " << currentRegsDef << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Reg Use       = " << currentRegsUse << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Mem Def       = "; displayAddrs(elm::cout, addressInstWrite); elm::cout << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "Mem Use       = "; displayAddrs(elm::cout, addressInstRead); elm::cout << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "RegSet Before = " << currentRegs_wl << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "MemSet Before = "; displayAddrs(elm::cout, currentMems_wl); elm::cout << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Reg Def       = " << currentRegsDef << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Reg Use       = " << currentRegsUse << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Mem Def       = "; displayAddrs(elm::cerr, addressInstWrite); elm::cerr << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Mem Use       = "; displayAddrs(elm::cerr, addressInstRead); elm::cerr << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "RegSet Before = " << currentRegs_wl << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "MemSet Before = "; displayAddrs(elm::cerr, currentMems_wl); elm::cerr << io::endl;
 			}
 
 			// check if the def address is over lap with the working addrs
@@ -236,47 +246,54 @@ void LivenessChecker::processWorkingList(elm::genstruct::Vector<WorkingElement*>
 			}
 
 			if(_debugLevel & DISPLAY_LIVENESS_STAGES) {
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "RegSet After  = " << currentRegs_wl << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "MemSet After  = "; displayAddrs(elm::cout, currentMems_wl); elm::cout << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "RegSet After  = " << currentRegs_wl << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "MemSet After  = "; displayAddrs(elm::cerr, currentMems_wl); elm::cerr << io::endl;
 			}
 
-			if(currentInst_wl == currentBB_wl->first())
-				beginingOfCurrentBB_wl = true;
+			if(currentInst_wl == currentBB_wl->toBasic()->first())
+				reachFirstInstCurrentBB_wl = true;
 			else
 				currentInst_wl = currentInst_wl->prevInst();
 		} // reaches the beginning of the BB
 
 		// merge current working state with the previous state at the beginning of the BB
 		elm::BitVector t1 = REG_BB_BEGIN_OUT(currentBB_wl);
-		REG_BB_BEGIN_OUT(currentBB_wl) = t1 | currentRegs_wl;
-		//clp_value_set_t* temp = MEM_BB_BEGIN_OUT(currentBB_wl);
-		//temp->addAll(currentMems_wl);
+		if(!t1.size()) // if t1 is empty that means there is no info about the register
+			REG_BB_BEGIN_OUT(currentBB_wl) = currentRegs_wl;
+		else
+			REG_BB_BEGIN_OUT(currentBB_wl) = t1 | currentRegs_wl;
+
 		dfa::MemorySet::t *temp = MEM_BB_BEGIN_OUT(currentBB_wl);
+		if(!temp) {
+			temp = new dfa::MemorySet::t(0);
+			MEM_BB_BEGIN_OUT(currentBB_wl) = temp;
+		}
 		*temp = dfa::MemorySet().join(*temp, currentMems_wl);
 
 		// here reaches the beginning of the BB, now we need to list the list of incoming edges
 		// so we can keep trace back the previous BB
 		// first we find the predecessors of the BB to process
-		elm::genstruct::Vector<BasicBlock *> predecessors;
+		elm::genstruct::Vector<Block *> predecessors;
 
 		for (Block::EdgeIter e = currentBB_wl->ins(); e; e++) {
 			Block* b = e->source(); // find the source of the edge, the predecessor of current BB
 			if (b->isEntry()) {
-				BBSet* callers = SetOfCallers(b);
-				if(!callers)
-					continue; // means we reach the program entry
-
-				for(BBSet::Iterator caller(*callers); caller ; ++caller) {
+				// then get the set of the callers
+				for(CFG::CallerIter caller = b->cfg()->callers(); caller; caller++) {
 					if(_debugLevel & DISPLAY_LIVENESS_STAGES)
-						elm::cout << __SOURCE_INFO__ << "Found a caller @ " << caller->address() << io::endl;
-					// we now add the caller BB
-					predecessors.add(caller);
+						elm::cerr << __SOURCE_INFO__ << "Found a caller @ CFG " << caller->cfg()->index() << ", BB " << caller->index() << io::endl;
+
+					for(Block::EdgeIter bei = caller->ins(); bei; bei++) {
+						if(_debugLevel & DISPLAY_LIVENESS_STAGES)
+							elm::cerr << __SOURCE_INFO__ << __TAB__ << __GREEN__ << "Adding the block @ CFG " << bei->source()->cfg()->index() << ", " << bei->source() << __RESET__ << io::endl;
+						predecessors.add(bei->source());
+					}
 				}
 			} // end of handling the entry block
 			else if (b->isBasic()) {
 				// we put the BB here into the working list with given
 				if(_debugLevel & DISPLAY_LIVENESS_STAGES)
-					elm::cout << __SOURCE_INFO__ << "Found predecessor BB @ " << b->toBasic()->address() << io::endl;
+					elm::cerr << __SOURCE_INFO__ << "Found predecessor BB @ " << b->toBasic()->address() << io::endl;
 				predecessors.add(b->toBasic());
 			} // end of handling the basic block
 			else if (b->isSynth()) {
@@ -284,8 +301,7 @@ void LivenessChecker::processWorkingList(elm::genstruct::Vector<WorkingElement*>
 				// we obtain the exit block of the function that it returns from
 
 				if(_debugLevel & DISPLAY_LIVENESS_STAGES) {
-					elm::cout << "Caller of the current Synth Block = " << b->toSynth()->caller()->label() << io::endl;
-					elm::cout << "Callee of the current Synth Block = " << b->toSynth()->callee()->label() << io::endl;
+					elm::cerr << __SOURCE_INFO__ << "Found a Synth block with the callee to " << b->toSynth()->callee()->label() << io::endl;
 				}
 
 				// find the BB which is the last block before the exit block of the callee
@@ -294,60 +310,69 @@ void LivenessChecker::processWorkingList(elm::genstruct::Vector<WorkingElement*>
 				Block* end = b->toSynth()->callee()->exit();
 				// each edge to the exit block is a possible BB which will goes to the current block
 				for (Block::EdgeIter EdgeToExit = end->ins(); EdgeToExit; EdgeToExit++) {
-					BasicBlock* BB_BeforeReturn = EdgeToExit->source()->toBasic();
+					Block* BB_BeforeReturn = EdgeToExit->source();
 					if(_debugLevel & DISPLAY_LIVENESS_STAGES)
-						elm::cout << __SOURCE_INFO__ << "Found a callee @ " << BB_BeforeReturn->address() << io::endl;
+						elm::cerr << __SOURCE_INFO__ << __GREEN__ << "Adding block CFG " << BB_BeforeReturn->cfg()->index() << ", " << BB_BeforeReturn << __RESET__ << io::endl;
 					predecessors.add(BB_BeforeReturn);
 				}
 
 			} // end of handling the synth block
 			else {
 				if (b->isEntry())
-					elm::cout << "ENTRY" << io::endl;
+					elm::cerr << "ENTRY" << io::endl;
 				else if (b->isExit())
-					elm::cout << "EXIT" << io::endl;
+					elm::cerr << "EXIT" << io::endl;
 				else if (b->isUnknown())
-					elm::cout << "unknown" << io::endl;
+					elm::cerr << "unknown" << io::endl;
 				ASSERTP(false, "Encounter an unexpected block");
 			}
 		} // end of finding predecessors of the current BB
 
 		if(predecessors.count() == 0)
 			if(_debugLevel & DISPLAY_LIVENESS_STAGES)
-				elm::cout << __SOURCE_INFO__ << __RED__ << "No predecessor for BB @ " << currentBB_wl->address() << __RESET__ << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __RED__ << "No predecessor for BB @ " << currentBB_wl->address() << __RESET__ << io::endl;
 
 		// process the collected BBs
 		// now we need to see if the input (register and memory uses) feed from the successor matches totally or a subset of the pred BB
-		for(elm::genstruct::Vector<BasicBlock *>::Iterator predecessor(predecessors); predecessor; ++predecessor) {
+		for(elm::genstruct::Vector<Block *>::Iterator predecessor(predecessors); predecessor; ++predecessor) {
 			BitVector bv = REG_BB_END_IN(predecessor);
-			//clp_value_set_t* memIn = MEM_BB_END_IN(predecessor);
+			if(!bv.size()) {
+				bv = BitVector(workspace()->platform()->regCount(), false);
+				REG_BB_END_IN(predecessor) = bv;
+			}
 			dfa::MemorySet::t* memIn = MEM_BB_END_IN(predecessor);
+			if(!memIn) {
+				memIn = new dfa::MemorySet::t(0);
+				MEM_BB_END_IN(predecessor) = memIn;
+			}
 
 			bool notContainsAllRegs = !bv.includes(currentRegs_wl);
 			bool notContainsAllMems = !containsAllAddrs(*memIn, currentMems_wl);
 
 			if(_debugLevel & DISPLAY_LIVENESS_STAGES) {
-				elm::cout << __SOURCE_INFO__ << __TAB__ << "for BB @ " << predecessor->address() << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << __TAB__ << "Register used: " << bv << " contains all of " << currentRegs_wl << " ? "<< !notContainsAllRegs << io::endl;
-				elm::cout << __SOURCE_INFO__ << __TAB__ << __TAB__ << "Mem      used: "; displayAddrs(elm::cout, *memIn); elm::cout << " contains all of "; displayAddrs(elm::cout, currentMems_wl); elm::cout << "? " << !notContainsAllMems << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "for BB @ " << predecessor->address() << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "Register used: " << bv << " contains all of " << currentRegs_wl << " ? "<< !notContainsAllRegs << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "Mem      used: "; displayAddrs(elm::cerr, *memIn); elm::cerr << " contains all of "; displayAddrs(elm::cerr, currentMems_wl); elm::cerr << "? " << !notContainsAllMems << io::endl;
 			}
 
-			if(notContainsAllRegs | notContainsAllMems) {
+			if(notContainsAllRegs | notContainsAllMems | !currentBB_wl->isBasic()) {
 				if(_debugLevel & DISPLAY_LIVENESS_STAGES)
-					elm::cout << __SOURCE_INFO__ << __RED__ << "Adding BB @ " << predecessor->address() << " to the working list." << __RESET__ << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __GREEN__ << "Adding BB @ CFG " << predecessor->cfg()->index() << ", " << *predecessor << " to the working list." << __RESET__ << io::endl;
 				bv = bv | currentRegs_wl;
 				REG_BB_END_IN(predecessor) = bv;
 				//memIn->addAll(currentMems_wl);
 				*memIn = dfa::MemorySet().join(*memIn, currentMems_wl);
 				MEM_BB_END_IN(predecessor) = memIn;
-				WorkingElement *we = new WorkingElement(predecessor, predecessor->last(), currentRegs_wl, currentMems_wl);
+				Inst* lastInstruction = 0;
+				if(predecessor->isBasic())
+					lastInstruction = predecessor->toBasic()->last();
+				WorkingElement *we = new WorkingElement(predecessor, lastInstruction, currentRegs_wl, currentMems_wl);
 				workingList.add(we);
 			}
 			else
 				if(_debugLevel & DISPLAY_LIVENESS_STAGES)
-					elm::cout << __SOURCE_INFO__ << __RED__ << "NOT adding BB @ " << predecessor->address() << " to the working list." << __RESET__ << io::endl;
+					elm::cerr << __SOURCE_INFO__ << __RED__ << "NOT adding BB @ " << predecessor->address() << " to the working list." << __RESET__ << io::endl;
 		}
-
 	} // end of the current working list
 }
 
@@ -361,7 +386,7 @@ void LivenessChecker::identifyAddrs(BasicBlock* bb) {
 	int identified = MEM_ACCESS_IDENTIFIED(bb);
 	if(identified == 1) {
 		if(_debugLevel & IDENTIFY_MEM_ACCESS)
-			elm::cout << __SOURCE_INFO__ << "The memory access for BB " << bb->index() << " @ " << bb->address() << " has been identified." << io::endl;
+			elm::cerr << __SOURCE_INFO__ << "The memory access for BB " << bb->index() << " @ " << bb->address() << " has been identified." << io::endl;
 		return;
 	}
 	else
@@ -371,7 +396,7 @@ void LivenessChecker::identifyAddrs(BasicBlock* bb) {
 	clp_vector_t memWriteVector;
 	clp::Manager::step_t step = clpManager->start(bb);
 	if(_debugLevel & IDENTIFY_MEM_ACCESS)
-		elm::cout << __SOURCE_INFO__<< __TAB__ << __YELLOW__ << "In BB " << bb->index() << " @ " << bb->address() << ", the following memory accesses are identified:" << __RESET__ << io::endl;
+		elm::cerr << __SOURCE_INFO__<< __TAB__ << __YELLOW__ << "In BB " << bb->index() << " @ " << bb->address() << ", the following memory accesses are identified:" << __RESET__ << io::endl;
 
 	// the current instruction
 	while(step) {
@@ -388,7 +413,7 @@ void LivenessChecker::identifyAddrs(BasicBlock* bb) {
 		if (mode != -1) {
 			clp::Value v = clpManager->state()->get(clp::Value(clp::REG, clpManager->sem().addr()));
 			if(_debugLevel & IDENTIFY_MEM_ACCESS)
-				elm::cout << __SOURCE_INFO__<< __TAB__ << __TAB__ << __YELLOW__ << clpManager->sem() << " of " << clpManager->inst() << " @ " << clpManager->inst()->address() << ((mode == 0)?" loads ":" stores ") << v << __RESET__<< io::endl;
+				elm::cerr << __SOURCE_INFO__<< __TAB__ << __TAB__ << __YELLOW__ << clpManager->sem() << " of " << clpManager->inst() << " @ " << clpManager->inst()->address() << ((mode == 0)?" loads ":" stores ") << v << __RESET__<< io::endl;
 
 			sem::inst si = clpManager->sem();
 			int dataSize = 0;
@@ -421,7 +446,7 @@ void LivenessChecker::updateAddrsFromInstruction(otawa::dfa::MemorySet::t & work
 	dfa::MemorySet::t intersection = ms.meet(workingMem, writeMem);
 	for(dfa::MemorySet::Iter msi = intersection.areas(); msi; msi++) {
 		if(debugLevel & DISPLAY_LIVENESS_STAGES) {
-			elm::cout << __SOURCE_INFO__ << __TAB__ << __BLUE__ << "Removing " << *msi << " from the workingMems" << __RESET__ << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << __BLUE__ << "Removing " << *msi << " from the workingMems" << __RESET__ << io::endl;
 		}
 		workingMem = ms.remove(workingMem, *msi);
 	}
@@ -461,7 +486,7 @@ void LivenessChecker::getMems(BasicBlock* bb, Inst* inst, int & currentIndex, ot
 		clp::Value temp = memBag[currentIndex].clpValue;
 
 		if(_debugLevel & DISPLAY_WIP)
-			elm::cout << __SOURCE_INFO__ << "temp = " << temp << io::endl;
+			elm::cerr << __SOURCE_INFO__ << "temp = " << temp << io::endl;
 
 		if(temp.kind() == clp::ALL) {
 			dfa::MemorySet ms;
@@ -469,7 +494,7 @@ void LivenessChecker::getMems(BasicBlock* bb, Inst* inst, int & currentIndex, ot
 		}
 		else if(temp.delta()) {
 			if(_debugLevel & DISPLAY_WIP)
-				elm::cout << __SOURCE_INFO__ << "size = " << memBag[currentIndex].size << io::endl;
+				elm::cerr << __SOURCE_INFO__ << "size = " << memBag[currentIndex].size << io::endl;
 			//if(temp.mtimes() == (unsigned)(-1)) {
 			if(temp.mtimes() > CLP_THRESHOLD) {
 				dfa::MemorySet ms;
@@ -500,7 +525,7 @@ void LivenessChecker::buildReverseSynthLink(const CFGCollection& coll) {
 		for(CFG::BlockIter v = cfg->blocks(); v; v++) {
 			if (v->isSynth()) {
 				if(!v->toSynth()->callee()) {
-					elm::cout << __SOURCE_INFO__ << "Block " << v->cfg()->index() << ":" << v->index() << " of CFG " << v->cfg()->name() << " has no callee" << io::endl;
+					elm::cerr << __SOURCE_INFO__ << "Block " << v->cfg()->index() << ":" << v->index() << " of CFG " << v->cfg()->name() << " has no callee" << io::endl;
 					continue;
 				}
 				// find all the edge goes into the synth block, which are the callers of the block
@@ -539,9 +564,7 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 	_currInstIndex = 0;
 
 	// load the state (regs + mems) information from the bb
-	//clp_value_set_t* memBeginState = MEM_BB_BEGIN_OUT(bb);
 	dfa::MemorySet::t* memBeginState = MEM_BB_BEGIN_OUT(bb);
-	//clp_value_set_t* memEndState = MEM_BB_END_IN(bb);
 	dfa::MemorySet::t* memEndState = MEM_BB_END_IN(bb);
 	elm::BitVector regBeginState = REG_BB_BEGIN_OUT(bb);
 	elm::BitVector regEndState = REG_BB_END_IN(bb);
@@ -551,20 +574,20 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 
 	// output the information of the current BB
 	if(_debugLevel & DISPLAY_BB_STATE_INFO) {
-		elm::cout << __SOURCE_INFO__ << __GREEN__ << "The manager starts at the BB " << bb->index() << " @ " << bb->address() << __RESET__ << io::endl;
-		elm::cout << __SOURCE_INFO__ << __TAB__ << "memBeginState = "; LivenessChecker::displayAddrs(elm::cout, *memBeginState); elm::cout << io::endl;
-		elm::cout << __SOURCE_INFO__ << __TAB__ << "memEndState   = "; LivenessChecker::displayAddrs(elm::cout, *memEndState); elm::cout << io::endl;
-		elm::cout << __SOURCE_INFO__ << __TAB__ << "regBeginState = " << regBeginState << io::endl;
-		elm::cout << __SOURCE_INFO__ << __TAB__ << "regEndState   = " << regEndState << io::endl;
+		elm::cerr << __SOURCE_INFO__ << __GREEN__ << "The manager starts at the BB " << bb->index() << " @ " << bb->address() << __RESET__ << io::endl;
+		elm::cerr << __SOURCE_INFO__ << __TAB__ << "memBeginState = "; otawa::oslice::displayAddrs(elm::cerr, *memBeginState); elm::cerr << io::endl;
+		elm::cerr << __SOURCE_INFO__ << __TAB__ << "memEndState   = "; otawa::oslice::displayAddrs(elm::cerr, *memEndState); elm::cerr << io::endl;
+		elm::cerr << __SOURCE_INFO__ << __TAB__ << "regBeginState = " << regBeginState << io::endl;
+		elm::cerr << __SOURCE_INFO__ << __TAB__ << "regEndState   = " << regEndState << io::endl;
 	}
 
 	if(_debugLevel & DISPLAY_BB_MEM_ACCESS) {
-		elm::cout << __SOURCE_INFO__ << "The list of accessed memories and associated instructions:" << __RESET__ << io::endl;
+		elm::cerr << __SOURCE_INFO__ << "The list of accessed memories and associated instructions:" << __RESET__ << io::endl;
 		for(int i = 0; i < mrbg.count(); i++) {
-			elm::cout << __SOURCE_INFO__ << mrbg[i].inst << " @ " << mrbg[i].inst->address() << " reads " << mrbg[i].clpValue << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << mrbg[i].inst << " @ " << mrbg[i].inst->address() << " reads " << mrbg[i].clpValue << io::endl;
 		}
 		for(int i = 0; i < mwbg.count(); i++) {
-			elm::cout << __SOURCE_INFO__ << mwbg[i].inst << " @ " << mwbg[i].inst->address() << " writes " << mwbg[i].clpValue << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << mwbg[i].inst << " @ " << mwbg[i].inst->address() << " writes " << mwbg[i].clpValue << io::endl;
 		}
 	}
 
@@ -589,11 +612,15 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 		workingReg = (workingReg - regDef) | regUse;
 		REG_INST(workingInst) = workingReg;
 
+		if(_debugLevel & DISPLAY_BB_MEM_ACCESS)
+			elm::cerr << __SOURCE_INFO__ << __CYAN__ << "Processing " << workingInst << " @ " << workingInst->address() << io::endl;
+
 		while((currentWriteMemIndex < mwbg.count()) && (mwbg[currentWriteMemIndex].inst == workingInst)) {
 			clp::Value temp = mwbg[currentWriteMemIndex].clpValue;
 			// because the memory is defined in this instruction, hence it has to be removed from the working mems for the previous instructions
 			dfa::MemorySet ms;
-			elm::cout << __SOURCE_INFO__ << "Removing " << temp << io::endl;
+			if(_debugLevel & DISPLAY_BB_MEM_ACCESS)
+				elm::cerr << __SOURCE_INFO__ << "Removing " << temp << "from the workingMem" << io::endl;
 			if(temp.kind() == clp::ALL) {
 				dfa::MemorySet ms;
 				*workingMem = dfa::MemorySet::empty;
@@ -610,9 +637,9 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 
 		while((currentReadMemIndex < mrbg.count()) && (mrbg[currentReadMemIndex].inst == workingInst)) {
 			clp::Value temp = mrbg[currentReadMemIndex].clpValue;
-			elm::cout << __SOURCE_INFO__ << "Adding " << temp << io::endl;
+			if(_debugLevel & DISPLAY_BB_MEM_ACCESS)
+				elm::cerr << __SOURCE_INFO__ << "Adding " << temp << " to the workingMem" << io::endl;
 			if(temp.kind() == clp::ALL) {
-				assert(0);
 				dfa::MemorySet ms;
 				*workingMem = ms.add(*workingMem, MemArea(0, 0xFFFFFFFF));
 			}
@@ -631,23 +658,27 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 //		//for(clp_value_set_t::Iterator currMem(*workingMem); currMem; ++currMem)
 //		for(dfa::MemorySet::Iter msi = workingMem->areas(); msi; msi++) {
 //			// tempCLPVector.add(*currMem); FIXME
-//			elm::cout << "Adding " << *msi << io::endl;
+//			elm::cerr << "Adding " << *msi << io::endl;
 //			assert(0);
 //		}
 //		MEM_INST(workingInst) = clp_bag_t(tempCLPVector);
 		MEM_INST(workingInst) = new dfa::MemorySet::t(*workingMem);
 
 		if(_debugLevel & DISPLAY_WORKING_SET) {
-			elm::cout << __SOURCE_INFO__ << "workingInst = " << workingInst << " @ " << workingInst->address() << io::endl;
-			elm::cout << __SOURCE_INFO__ << __TAB__ << "reg = " << workingReg << io::endl;
-			elm::cout << __SOURCE_INFO__ << __TAB__ << "mem = "; LivenessChecker::displayAddrs(elm::cout, *workingMem); elm::cout << io::endl;
+			elm::cerr << __SOURCE_INFO__ << "workingInst = " << workingInst << " @ " << workingInst->address() << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << "reg = " << workingReg << io::endl;
+			elm::cerr << __SOURCE_INFO__ << __TAB__ << "mem = "; otawa::oslice::displayAddrs(elm::cerr, *workingMem); elm::cerr << io::endl;
 		}
 
 		workingInst = workingInst->prevInst();
 	}
 
 	// make sure the resulted regs is the same as the previous run
-	assert(workingReg == regBeginState);
+	if(workingReg != regBeginState) {
+		elm::cerr << __SOURCE_INFO__ << "workingReg    = " << workingReg << io::endl;
+		elm::cerr << __SOURCE_INFO__ << "regBeginState = " << regBeginState << io::endl;
+		assert(workingReg == regBeginState);
+	}
 	assert(*workingMem == *memBeginState);
 
 	// working mem must be freed here...
@@ -664,7 +695,7 @@ Manager::step_t Manager::next(void) {
 	_currInstIndex++;
 	_currInst = _currInst->nextInst();
 
-	//displayState(elm::cout);
+	//displayState(elm::cerr);
 	return NEW_INST;
 }
 
@@ -672,11 +703,11 @@ void Manager::displayState(io::Output & output) {
 	//clp_bag_t v =  MEM_INST(_currInst);
 	dfa::MemorySet::t* v =  MEM_INST(_currInst);
 	BitVector r = REG_INST(_currInst);
-	elm::cout << __SOURCE_INFO__ << __BLUE__ << "Instruction " << _currInst << " @ " << _currInst->address() << __RESET__ << io::endl;
-	elm::cout << __SOURCE_INFO__ << __TAB__ << "reg = " << r << io::endl;
-	elm::cout << __SOURCE_INFO__ << __TAB__ << "mem = ";
-	LivenessChecker::displayAddrs(elm::cout, *v);
-	elm::cout << io::endl;
+	elm::cerr << __SOURCE_INFO__ << __BLUE__ << "Instruction " << _currInst << " @ " << _currInst->address() << __RESET__ << io::endl;
+	elm::cerr << __SOURCE_INFO__ << __TAB__ << "reg = " << r << io::endl;
+	elm::cerr << __SOURCE_INFO__ << __TAB__ << "mem = ";
+	otawa::oslice::displayAddrs(elm::cerr, *v);
+	elm::cerr << io::endl;
 }
 
 elm::BitVector Manager::workingRegs(void) {

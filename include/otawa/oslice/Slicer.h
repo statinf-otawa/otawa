@@ -21,7 +21,7 @@ public:
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void cleanup(WorkSpace *ws);
-
+	virtual void slicing(void);
 
  	void processWorkingList(elm::genstruct::Vector<WorkingElement*>& workingList);
  	void initIdentifiersForEachBB(const CFGCollection& coll);

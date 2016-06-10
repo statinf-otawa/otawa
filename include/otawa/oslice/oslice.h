@@ -39,6 +39,8 @@
 #define __RED__ elm::color::IRed
 #define __BLUE__ elm::color::IBlu
 #define __YELLOW__ elm::color::IYel
+#define __CYAN__ elm::color::ICya
+#define __PURPLE__ elm::color::IPur
 #define __TAB__ "    "
 
 namespace otawa { namespace oslice {
@@ -62,6 +64,8 @@ extern Identifier<InstSet*> SET_OF_REMAINED_INSTRUCTIONS;
 extern Identifier<String> SLICED_CFG_OUTPUT_PATH;
 extern Identifier<String> SLICING_CFG_OUTPUT_PATH;
 
+extern Identifier<otawa::oslice::BBSet*> SetOfCallers;
+
 static const t::uint32
 	DISPLAY_BB_MEM_ACCESS = 0x01,
 	DISPLAY_WORKING_SET = 0x02,
@@ -84,11 +88,11 @@ public:
 
 class WorkingElement {
 public:
-	BasicBlock* _bb;
+	Block* _bb;
 	elm::BitVector _workingRegs;
 	Inst* _inst;
 	otawa::dfa::MemorySet::t _workingMems;
-	inline WorkingElement(BasicBlock* bb, Inst* inst, elm::BitVector bv, otawa::dfa::MemorySet::t & rd) :
+	inline WorkingElement(Block* bb, Inst* inst, elm::BitVector bv, otawa::dfa::MemorySet::t & rd) :
 			_bb(bb), _workingRegs(bv), _inst(inst), _workingMems(rd) {
 	}
 };

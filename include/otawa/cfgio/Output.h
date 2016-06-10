@@ -40,7 +40,7 @@ protected:
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void processCFG(WorkSpace *ws, CFG *cfg);
 	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b);
-private:
+// private:
 	string id(CFG *cfg);
 	string id(Block *bb);
 	void processProps(xom::Element *parent, const PropList& props);
