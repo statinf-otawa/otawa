@@ -68,6 +68,7 @@ using namespace otawa;
  * @li -p, --plugin ELD_FILE -- ouput linkage options for a plugin for the given ELD file.
  * @li -i, --install -- output the directory where installing a plugin.
  * @li --oversion -- output version of OTAWA.
+ * @li -R, --origin-rpath -- output options to control RPATH for installation in OTAWA directory on OS supporting it.
  */
 
 #if defined(WIN32) || defined(WIN64)
@@ -79,7 +80,7 @@ using namespace otawa;
 // Configuration class
 class Configuration {
 public:
-	Configuration(void) {
+	Configuration(void): _origin(false) {
 		prefix = MANAGER.prefixPath();
 		cflags << "-I" << prefix.append("include");
 		libs << "-L" << prefix.append(LIB_DIR) << " -lotawa -lelm -lgel";
@@ -90,7 +91,11 @@ public:
 	 * Add an RPATH.
 	 * @param path	Added path.
 	 */
-	void addRPath(const elm::system::Path& path) {
+	void addRPath(elm::system::Path path) {
+		//cerr << "DEBUG: path=" << path << ", prefix=" << MANAGER.prefixPath() << io::endl;
+		sys::Path prefix = MANAGER.prefixPath();
+		if(_origin && path.subPathOf(prefix))
+			path = sys::Path(_ << "\\$ORIGIN") / path.toString().substring(prefix.toString().length() + 1);
 		if(!rpath.contains(path))
 			rpath.add(path);
 	}
@@ -109,10 +114,17 @@ public:
 		return buf.toString();
 	}
 
+	void setOrigin(bool origin) {
+		_origin = origin;
+		rpath.clear();
+		addRPath(prefix.append(LIB_DIR));
+	}
+
 	StringBuffer cflags, libs;
 	elm::system::Path prefix;
 private:
 	genstruct::Vector<sys::Path> rpath;
+	bool _origin;
 };
 
 // Module classes
@@ -143,57 +155,6 @@ private:
 	genstruct::Vector<Module *> reqs;
 };
 
-class Library: public Module {
-public:
-	class Make: public Module::Make<Library> {
-	public:
-		inline Make(const string& name): Module::Make<Library>(new Library(name))  { }
-		inline Make& lib(const string& name) { static_cast<Library *>(mod)->libname = name; return *this; }
-	};
-
-	virtual void adjust(::Configuration& config) {
-		sys::Path path = config.prefix.append("lib");
-		config.libs << " -L" << path << " -l" << libname;
-		config.addRPath(path);
-	}
-
-protected:
-	Library(const string& name): Module(name) { libname = name; }
-private:
-	string libname;
-};
-
-class Solver: public Module {
-public:
-	class Make: public Module::Make<Solver> {
-	public:
-		inline Make(const string& name): Module::Make<Solver>(new Solver(name))  { }
-	};
-
-	virtual void adjust(::Configuration& config) {
-		sys::Path path = config.prefix.append("lib/otawa/ilp");
-		config.libs << " -u" << name() << "_plugin " <<  path.append(sys::System::getPluginFileName(name()));
-		config.addRPath(path);
-	}
-protected:
-	Solver(const string& name): Module(name) { }
-};
-
-class Loader: public Module {
-public:
-	class Make: public Module::Make<Loader> {
-	public:
-		inline Make(const string& name): Module::Make<Loader>(new Loader(name))  { }
-	};
-
-	Loader(const string& name): Module(name) { }
-	virtual void adjust(::Configuration& config) {
-		sys::Path path = config.prefix.append("lib/otawa/loader");
-		config.libs << " -u" << name() << "_plugin " << path.append(sys::System::getPluginFileName(name()));
-		config.addRPath(path);
-	}
-};
-
 class Proc: public Module {
 public:
 	class Make: public Module::Make<Proc> {
@@ -213,51 +174,34 @@ private:
 };
 
 // Main class
-
 class Config: public option::Manager {
 public:
 	Config(void):
-		Manager(
-			option::program, "otawa-config",
-			option::version, new Version(2, 1, 0),
-			option::author, "H. Cassé <casse@irit.fr>",
-			option::copyright, "LGPL v2",
-			option::description, "Get building information about the OTAWA framework",
-			option::free_arg, "MODULES...",
-			option::end),
-		eld(ValueOption<string>::Make(*this).cmd("-p").cmd("--plugin").argDescription("ELD_FILE").description("ELD file to generate linkage options")),
-		cflags(*this, cmd, "--cflags", option::description, "output compilation C++ flags", end),
-		data(*this, cmd, "--data", option::description, "output the OTAWA data path", end),
-		doc(*this, cmd, "--doc", option::description, "output the OTAWa document path", end),
-		has_so(*this, cmd, "--has-so", option::description, "exit with 0 if dynamic libraries are available, non-0 else", end),
-		help(*this, cmd, "-h", cmd, "--help", option::description, "display the help message", end),
-		ilp(*this, cmd, "--list-ilps", cmd, "--ilp", option::description, "list ILP solver plugins available", end),
-		libs(*this, cmd, "--libs", option::description, "output linkage C++ flags", end),
-		loader(*this, cmd, "--list-loaders", cmd, "--loader", option::description, "list loader plugins available", end),
-		modules(*this, cmd, "--list-modules", cmd, "--modules", option::description, "list available modules", end),
-		prefix(*this, cmd, "--prefix", option::description, "output the prefix directory of OTAWA", end),
-		procs(*this, cmd, "--list-procs", cmd, "--procs", option::description, "list available processor collections", end),
-		show_version(*this, cmd, "--version", option::description, "output the current version", end),
-		scripts(*this, cmd, "--scripts", option::description, "output the scripts path", end),
-		list_scripts(*this, cmd, "--list-scripts", option::description, "output the list of available scripts", end),
-		rpath(*this, cmd, "--rpath", cmd, "-r", option::description, "output options to control RPATH", end),
-		install(SwitchOption::Make(*this).cmd("-i").cmd("--install").description("Output path of plugin directory")),
-		oversion(SwitchOption::Make(*this).cmd("--oversion").description("output version of OTAWA."))
+		Manager(Manager::Make("otawa-config", Version(2, 2, 0))
+			.author("H. Cassé <casse@irit.fr>")
+			.copyright("LGPL v2")
+			.description("Get building information about the OTAWA framework")
+			.free_argument("MODULES...")),
+		eld				(ValueOption<string>::Make(*this).cmd("-p").cmd("--plugin")			.description("ELD file to generate linkage options").argDescription("ELD_FILE")),
+		cflags			(SwitchOption::Make(*this).cmd("--cflags")							.description("output compilation C++ flags")),
+		data			(SwitchOption::Make(*this).cmd("--data")							.description("output the OTAWA data path")),
+		doc				(SwitchOption::Make(*this).cmd("--doc")								.description("output the OTAWa document path")),
+		has_so			(SwitchOption::Make(*this).cmd("--has-so")							.description("exit with 0 if dynamic libraries are available, non-0 else")),
+		ilp				(SwitchOption::Make(*this).cmd("--list-ilps").cmd("--ilp")			.description("list ILP solver plugins available")),
+		libs			(SwitchOption::Make(*this).cmd("--libs")							.description("output linkage C++ flags")),
+		loader			(SwitchOption::Make(*this).cmd("--list-loaders").cmd("--loader")	.description("list loader plugins available")),
+		modules			(SwitchOption::Make(*this).cmd("--list-modules").cmd("--modules")	.description("list available modules")),
+		prefix			(SwitchOption::Make(*this).cmd("--prefix")							.description("output the prefix directory of OTAWA")),
+		procs			(SwitchOption::Make(*this).cmd("--list-procs").cmd("--procs")		.description("list available processor collections")),
+		show_version	(SwitchOption::Make(*this).cmd("--version")							.description("output the current version")),
+		scripts			(SwitchOption::Make(*this).cmd("--scripts")							.description("output the scripts path")),
+		list_scripts	(SwitchOption::Make(*this).cmd("--list-scripts")					.description("output the list of available scripts")),
+		rpath			(SwitchOption::Make(*this).cmd("--rpath").cmd("-r")					.description("output options to control RPATH")),
+		install			(SwitchOption::Make(*this).cmd("-i").cmd("--install")				.description("Output path of plugin directory")),
+		oversion		(SwitchOption::Make(*this).cmd("--oversion")						.description("output version of OTAWA.")),
+		orpath			(SwitchOption::Make(*this).cmd("-R").cmd("--origin-rpath")			.description("output options to control RPATH for an installation relative to OTAWA")),
+		help			(SwitchOption::Make(*this).cmd("-h").cmd("--help")			.description("display this help message."))
 	{
-
-		// initialize the modules
-		add(Library::Make("display").doc("graph displayer library").lib("odisplay"));
-		add(Library::Make("gensim").doc("generic temporal simulator"));
-		add(Solver::Make("lp_solve4").doc("lp_solve 4.x ILP solver"));
-		add(Solver::Make("lp_solve5").doc("config_lp_solve5"));
-		add(::Loader::Make("ppc2").doc("PowerPC architecture loader"));
-		add(::Loader::Make("arm2").doc("ARM architecture loader"));
-		add(Proc::Make("bpred").doc("branch prediction library").path("otawa"));
-		add(Proc::Make("dcache").doc("simple L1 data cache analysis").path("otawa"));
-		add(Proc::Make("cfgio").doc("CFG input/output").path("otawa"));
-		Module *ast = Proc::Make("ast").path("otawa").doc("Abstract Syntactic Tree library");
-		add(ast);
-		add(Proc::Make("ets").path("otawa").require(ast).doc("Extended Timing Schema library"));
 	}
 
 	void run(int argc, char **argv) {
@@ -268,6 +212,10 @@ public:
 			displayHelp();
 			return;
 		}
+
+		// record the origin
+		if(orpath)
+			config.setOrigin(true);
 
 		// close the list of modules
 		genstruct::Vector<Module *> cmods;
@@ -320,7 +268,7 @@ public:
 			cout  << getScriptDir();
 		if(list_scripts)
 			showScripts();
-		if(rpath)
+		if(rpath || orpath)
 			cout << "-Wl,-rpath -Wl," << config.getRPath() << ' ';
 		if(libs)
 			cout << config.libs.toString();
@@ -464,7 +412,6 @@ private:
 		data,
 		doc,
 		has_so,
-		help,
 		ilp,
 		libs,
 		loader,
@@ -476,7 +423,9 @@ private:
 		list_scripts,
 		rpath,
 		install,
-		oversion;
+		oversion,
+		orpath,
+		help;
 };
 
 int main(int argc, char **argv) {
